@@ -1,0 +1,9 @@
+<library path="lib/libgnc_ros_wrapper">
+  <class name="gnc_ros_wrapper/gnc"
+	 type="gnc_ros_wrapper::GncWrapperNodelet"
+	 base_class_type="nodelet::Nodelet">
+    <description>
+      This nodelet wraps GNC's implementations of the EKF, control, and force allocation module.
+    </description>
+  </class>
+</library>

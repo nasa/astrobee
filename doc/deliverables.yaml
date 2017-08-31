@@ -1,0 +1,272 @@
+#
+# FSW Deliverables, listed by binary products
+#
+
+# - When converting the CSV, the first entry dictionary keys are used as
+#   columns, using this first ordering.
+# - the key "subsytem" is used to describe the Astrobee subsystem
+# responsible for this deliverable.
+#
+- Sample software product:
+    type: COTS firmware, FF firmware, Linux Kernel, etc.
+    board_name: Target board or device on which this code will run
+    count: number of targets the software is deployed on
+    CM: Control Managment of the deliverable
+    form: How the software is build/delivered for the target
+    upgrade_path: Way to upgrade the software
+    safety_critical: Is this software component safety critical or not
+    board_model: Model of the target Processor
+    subsystem: FF Subsystem Responsible for delivering the code
+    source: Creator of the software
+    note: Some additional information
+- Impeller firmware:
+    type: COTS firmware
+    board_name: Impeller Motor Controller
+    board_model: Maxon ESCON
+    count: 2
+    subsystem: Propulsion
+    source: vendor
+    upgrade_path: ground harness
+    safety_critical: yes
+    CM: target git Avionics submodule
+    form: binary (updated before assembly?)
+    note: configured by Astrobee Propulsion?
+- PerchArm Servo firmware:
+    type: COTS firmware
+    board_name: PerchArm Servo Motor
+    board_model: unkwown
+    count: 2
+    subsystem: PerchArm
+    source: vendor
+    upgrade_path: ground harness
+    safety_critical: yes
+    CM: target git Avionics submodule
+    form: binary (updated before assembly?)
+    note: configured by Astrobee PerchArm?
+- Dock retractable magnet firmware:
+    type: COTS firmware
+    board_name: Dock Linear Actuator
+    board_model: unknown
+    count: 4
+    subsystem: Avionics
+    source: vendor
+    upgrade_path: none (built in)
+    safety_critical: yes
+    CM: none, come with hardware
+    form: binary (do not deliver)
+    note: none
+- USB Cameras firmware (TIS):
+    type: COTS firmware
+    board_name: DFM 42BUC03-ML
+    board_model: proprietary
+    count: 2
+    subsystem: Avionics
+    source: Localozation
+    upgrade_path: USB from MLP
+    safety_critical: no
+    CM: git from TheImagingSource
+    form: binary (updated before assembly)
+    note: none
+- Nozzle Servo firmware:
+    type: COTS firmware
+    board_name: Nozzles Servo Motor
+    board_model: unknown
+    subsystem: Propulsion
+    count: 12
+    configuration: none
+    source: vendor
+    upgrade_path: unknown
+    safety_critical: no
+    CM: target git Avionics submodule
+    form: binary (do not deliver)
+    note: none
+- Dock control firmware:
+    type: FF firmware
+    board_name: Dock Controller
+    board_model: PIC32MX795F512H
+    count: 1
+    subsystem: Avionics
+    source: Astrobee Avionics
+    upgrade_path: Dock Processor via I2C
+    safety_critical: no
+    CM: FSW git repo (Avionics submodule)
+    form: FSW firmware build
+    note: does not exist yet
+- EPS firmware:
+    type: FF firmware
+    board_name: EPS
+    board_model: PIC32MX795F512H
+    count: 1
+    subsystem: Avionics
+    source: Astrobee Avionics
+    upgrade_path: LLP via I2C
+    safety_critical: no
+    CM: FSW git repo (Avionics submodule)
+    form: FSW firmware build
+    note: none
+- PMC firmware:
+    type: FF firmware
+    board_name: PMC
+    board_model: PIC32MX795F512H
+    count: 2
+    subsystem: Propulsion
+    source: Astrobee Propulsion
+    upgrade_path: LLP via I2C
+    safety_critical: no
+    CM: FSW git repo (Avionics submodule)
+    form: FSW firmware build
+    note: need to merge svn into git
+- TerraRanger firmware:
+    type: FF firmware
+    board_name: TerraRanger Duo
+    board_model: proprietary
+    count: 1
+    subsystem: Avionics
+    source: Astrobee Avionics
+    upgrade_path: ground harness only
+    safety_critical: no
+    CM: to be defined
+    form: unknown
+    note: verify if under CM yet
+- Speedcam PX4flow firmware:
+    type: FF firmware
+    board_name: Pixhawk PX4flow
+    board_model: ARM Cortex M4
+    count: 1
+    subsystem: Avionics
+    source: Astrobee Avionics
+    upgrade_path: LLP via USB
+    safety_critical: no
+    CM: to be defined
+    form: unknown
+    note: verify if under CM yet
+- Signal lights firmware:
+    type: FF firmware
+    board_name: Signal Lights
+    board_model: PIC32MX795F512H
+    count: 2
+    subsystem: Propulsion
+    source: Astrobee Propulsion
+    upgrade_path: LLP via I2C
+    safety_critical: no
+    CM: FSW git repo (Avionis submodule)
+    form: FSW firmware build
+    note: does not exist yet
+- PerchArm firmware:
+    type: FF firmware
+    board_name: PerchArm
+    board_model: dsPIC33EP512MC806
+    count: 1
+    subsystem: PerchArm
+    source: Astrobee PerchArm
+    upgrade_path: MLP via Serial over USB
+    safety_critical: no
+    CM: FSW git repo
+    form: FSW firmware build
+- Wandboard Kernel:
+    type: Linux Kernel
+    board_name:
+      - Dock Processor
+      - LLP Processor
+    board_model: Wandboard Dual, Dual core i.MX6
+    count: 2
+    subsystem: FSW
+    source: vendor + Astrobee patches
+    upgrade_path: Ethernet from Dock using Recovery
+    safety_critical: no
+    CM: FSW git repo
+    form: instructions and script
+- Inforce Kernel:
+    type: Linux Kernel
+    board_name:
+      - MLP Processor
+      - HLP Processor
+    board_model: Inforce, Quad core Snapdragon 805
+    count: 2
+    subsystem: FSW
+    source: vendor + Astrobee patches
+    upgrade_path: fastboot over USB from LLP
+    safety_critical: no
+    CM: FSW git repo
+    form: instructions and script
+- Linux Base OS:
+    type: Linux Ubuntu
+    board_name:
+      - Dock Processor
+      - LLP Processor
+      - MLP Processor
+    board_model:
+      - Wandboard
+      - Inforce
+    count: 3
+    subsystem: FSW
+    source: Ubuntu
+    upgrade_path: fastboot (Inforce) or recovery (Wandboard)
+    safety_critical: no
+    CM: FSW git repo
+    form: instructions and script
+- Android Base OS:
+    type: Android OS
+    board_name: HLP Processor
+    board_model: Inforce
+    count: 1
+    subsystem: FSW
+    source: Google
+    upgrade_path: fastboot using USB from LLP
+    safety_critical: no
+    CM: FSW git repo
+    form: build instructions
+- FSW Linux Dependencies:
+    type: Debian packages
+    board_name:
+      - Dock Processor
+      - LLP Processor
+      - MLP Processor
+    board_model:
+      - Wandboard
+      - Inforce
+    count: 3
+    subsystem: FSW
+    source: open source + Astrobee patches
+    upgrade_path: apt using Ethernet from Dock
+    safety_critical: no
+    CM: FSW git repo
+    form: instructions and script
+- FSW for Linux:
+    type: FSW
+    board_name:
+      - Dock Processor
+      - LLP Processor
+      - MLP Processor
+    board_model:
+      - Wandboard
+      - Inforce
+    count: 3
+    subsystem: FSW
+    source: Astrobee FSW
+    upgrade_path: apt using Ethernet from Dock
+    safety_critical: no
+    CM: FSW git repo
+    form: FSW build
+- FSW for Android:
+    type: FSW
+    board_name: HLP Processor
+    board_model: Inforce
+    count: 1
+    subsystem: FSW
+    source: Astrobee FSW
+    upgrade_path: adb over Ethernet from MLP
+    safety_critical: no
+    CM: FSW git repo
+    form: Android Studio build or binary?
+- dock software repository:
+    type: Debian packages
+    board_name: Dock Processor
+    board_model: Wandboard
+    count: 1
+    subsystem: FSW
+    source: various
+    upgrade_path: rsync over Ethernet from ground
+    safety_critical: no
+    CM: only build products
+    form: rsync with scripts from ground

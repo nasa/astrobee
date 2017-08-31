@@ -1,0 +1,115 @@
+Index: libdbow2/CMakeLists.txt
+===================================================================
+--- libdbow2.orig/CMakeLists.txt
++++ libdbow2/CMakeLists.txt
+@@ -1,5 +1,5 @@
+ cmake_minimum_required(VERSION 2.8)
+-project(DBoW2)
++project(dbow2)
+ include(ExternalProject)
+ 
+ option(BUILD_DBoW2   "Build DBoW2"            ON)
+@@ -33,6 +33,9 @@ set(SRCS
+ set(DEPENDENCY_DIR ${CMAKE_CURRENT_BINARY_DIR}/dependencies)
+ set(DEPENDENCY_INSTALL_DIR ${DEPENDENCY_DIR}/install)
+ 
++list(APPEND CMAKE_INSTALL_RPATH "/opt/ros/kinetic/lib") # find opencv3
++find_path(OpenCV_DIR OpenCVConfig.cmake PATHS /opt/ros/kinetic/share/
++  PATH_SUFFIXES OpenCV-3.1.0 OpenCV-3.1.0-dev OpenCV-3.2.0 OpenCV-3.2.0-dev)
+ find_package(OpenCV REQUIRED)
+ include_directories(${OpenCV_INCLUDE_DIRS})
+ 
+@@ -49,13 +52,15 @@ else(${DLib_FOUND})
+   message("DLib library not found in the system, it will be downloaded on build")
+   option(DOWNLOAD_DLib_dependency "Download DLib dependency" ON)
+   if(${DOWNLOAD_DLib_dependency})
++    set(EXTRA_ARGS "-DCMAKE_INSTALL_PREFIX=<INSTALL_DIR> ")
+     ExternalProject_Add(DLib
+       PREFIX ${DEPENDENCY_DIR}
+       GIT_REPOSITORY http://github.com/dorian3d/DLib
+       GIT_TAG v1.1-free
+       INSTALL_DIR ${DEPENDENCY_INSTALL_DIR}
+-      CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>)
++      CMAKE_ARGS ${EXTRA_ARGS})
+     add_custom_target(Dependencies ${CMAKE_COMMAND} ${CMAKE_SOURCE_DIR} DEPENDS DLib)
++    include_directories("${DEPENDENCY_INSTALL_DIR}/include/DLib")
+   else()
+     message(SEND_ERROR "Please, activate DOWNLOAD_DLib_dependency option or download manually")
+   endif(${DOWNLOAD_DLib_dependency})
+@@ -74,15 +79,39 @@ if(BUILD_Demo)
+   file(COPY demo/images DESTINATION ${CMAKE_BINARY_DIR}/)
+ endif(BUILD_Demo)
+ 
+-configure_file(src/DBoW2.cmake.in
+-  "${PROJECT_BINARY_DIR}/DBoW2Config.cmake" @ONLY)
+-
+-install(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
++#configure_file(src/DBoW2.cmake.in
++#  "${PROJECT_BINARY_DIR}/DBoW2Config.cmake" @ONLY)
++#
++#install(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
+ if(BUILD_DBoW2)
+   install(DIRECTORY include/DBoW2 DESTINATION ${CMAKE_INSTALL_PREFIX}/include)
+ endif()
+-install(FILES "${CMAKE_CURRENT_BINARY_DIR}/DBoW2Config.cmake"
+-  DESTINATION ${CMAKE_INSTALL_PREFIX}/include/${PROJECT_NAME})
+-install(FILES "${PROJECT_BINARY_DIR}/DBoW2Config.cmake" 
+-  DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/cmake/DBoW2/)
++#install(FILES "${CMAKE_CURRENT_BINARY_DIR}/DBoW2Config.cmake"
++#  DESTINATION ${CMAKE_INSTALL_PREFIX}/include/${PROJECT_NAME})
++#install(FILES "${PROJECT_BINARY_DIR}/DBoW2Config.cmake"
++#  DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/cmake/DBoW2/)
+ install(DIRECTORY ${DEPENDENCY_INSTALL_DIR}/ DESTINATION ${CMAKE_INSTALL_PREFIX} OPTIONAL)
++
++
++file(RELATIVE_PATH REL_INCLUDE_DIR "${CMAKE_INSTALL_PREFIX}/share/dbow2/cmake" "${CMAKE_INSTALL_PREFIX}/include")
++file(RELATIVE_PATH REL_INCLUDE_DIR_DLIB "${CMAKE_INSTALL_PREFIX}/share/dbow2/cmake" "${CMAKE_INSTALL_PREFIX}/include/DLib")
++set(CONF_INCLUDE_DIRS "\${DBOW2_CMAKE_DIR}/${REL_INCLUDE_DIR};\${DBOW2_CMAKE_DIR}/${REL_INCLUDE_DIR_DLIB}")
++export(TARGETS ${PROJECT_NAME} FILE "${PROJECT_BINARY_DIR}/dbow2Targets.cmake")
++export(PACKAGE ${PROJECT_NAME})
++configure_file(cmake/dbow2Config.cmake.in "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/dbow2Config.cmake" @ONLY)
++configure_file(cmake/dbow2ConfigVersion.cmake.in "${PROJECT_BINARY_DIR}/dbow2ConfigVersion.cmake" @ONLY)
++
++install(TARGETS ${PROJECT_NAME}
++  EXPORT dbow2Targets
++  LIBRARY DESTINATION lib COMPONENT shlib
++)
++#install(FILES ${DBOW2_ROOT_HEADER_FILES} DESTINATION ${CMAKE_INSTALL_PREFIX}/include/DBoW2)
++#install(FILES ${DBOW2_DUTILS_HEADER_FILES} DESTINATION ${CMAKE_INSTALL_PREFIX}/include/DLib/DUtils)
++#install(FILES ${DBOW2_DUTILSCV_HEADER_FILES} DESTINATION ${CMAKE_INSTALL_PREFIX}/include/DLib/DUtilsCV)
++#install(FILES ${DBOW2_DVISION_HEADER_FILES} DESTINATION ${CMAKE_INSTALL_PREFIX}/include/DLib/DVision)
++install(FILES "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/dbow2Config.cmake"
++              "${PROJECT_BINARY_DIR}/dbow2ConfigVersion.cmake"
++              DESTINATION "${CMAKE_INSTALL_PREFIX}/share/dbow2/cmake" COMPONENT dev)
++#install(EXPORT dbow2Targets DESTINATION lib COMPONENT dev)
++install(EXPORT dbow2Targets
++  DESTINATION share/dbow2/cmake FILE dbow2Targets.cmake)
+Index: libdbow2/cmake/dbow2Config.cmake.in
+===================================================================
+--- /dev/null
++++ libdbow2/cmake/dbow2Config.cmake.in
+@@ -0,0 +1,8 @@
++get_filename_component(DBOW2_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
++set(DBOW2_INCLUDE_DIRS "@CONF_INCLUDE_DIRS@")
++
++if (NOT TARGET dbow2 AND NOT dbow2_BINARY_DIR)
++  include("${DBOW2_CMAKE_DIR}/dbow2Targets.cmake")
++endif()
++
++set(DBOW2_LIBRARIES dbow2)
+Index: libdbow2/cmake/dbow2ConfigVersion.cmake.in
+===================================================================
+--- /dev/null
++++ libdbow2/cmake/dbow2ConfigVersion.cmake.in
+@@ -0,0 +1,11 @@
++set(PACKAGE_VERSION "@DBOW2_VERSION@")
++
++# Check whether the requested PACKAGE_FIND_VERSION is compatible
++if("${PACKAGE_VERSION}" VERSION_LESS "${PACKAGE_FIND_VERSION}")
++  set(PACKAGE_VERSION_COMPATIBLE FALSE)
++else()
++  set(PACKAGE_VERSION_COMPATIBLE TRUE)
++  if ("${PACKAGE_VERSION}" VERSION_EQUAL "${PACKAGE_FIND_VERSION}")
++    set(PACKAGE_VERSION_EXACT TRUE)
++  endif()
++endif()

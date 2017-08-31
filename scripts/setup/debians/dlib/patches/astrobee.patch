@@ -1,0 +1,94 @@
+Index: libdbowdlib/CMakeLists.txt
+===================================================================
+--- libdbowdlib.orig/CMakeLists.txt
++++ libdbowdlib/CMakeLists.txt
+@@ -5,6 +5,10 @@ option(BUILD_DUtils   "Build DUtils (bas
+ option(BUILD_DUtilsCV "Build DUtilsCV (OpenCV functions, requires DUtils)." ON)
+ option(BUILD_DVision  "Build DVision (computer vision functions, requires DUtilsCV)." ON)
+ 
++list(APPEND CMAKE_INSTALL_RPATH "/opt/ros/kinetic/lib") # find opencv3
++find_path(OpenCV_DIR OpenCVConfig.cmake PATHS /opt/ros/kinetic/share/
++  PATH_SUFFIXES OpenCV-3.1.0 OpenCV-3.1.0-dev OpenCV-3.2.0 OpenCV-3.2.0-dev)
++
+ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+   set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build." FORCE)
+   set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release"
+@@ -74,29 +78,32 @@ if(BUILD_DUtilsCV OR BUILD_DVision)
+   find_package(OpenCV REQUIRED)
+ endif(BUILD_DUtilsCV OR BUILD_DVision)
+ 
+-set(LIB_SHARED "SHARED")
+-if(WIN32)
+-  set(LIB_SHARED "STATIC")
+-endif(WIN32)
+-
+ include_directories(include/DUtils include/DUtilsCV include/DVision ${OpenCV_INCLUDE_DIRS})
+-add_library(${PROJECT_NAME} ${LIB_SHARED} ${SRCS})
+-target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBS})
++add_library(DLib SHARED ${SRCS})
++target_link_libraries(DLib ${OpenCV_LIBS})
+ 
+-configure_file(src/DLib.cmake.in
+-  "${PROJECT_BINARY_DIR}/DLibConfig.cmake" @ONLY)
++file(RELATIVE_PATH REL_INCLUDE_DIR "${CMAKE_INSTALL_PREFIX}/share/dlib/cmake" "${CMAKE_INSTALL_PREFIX}/include/DLib")
++set(CONF_INCLUDE_DIRS "\${DLIB_CMAKE_DIR}/${REL_INCLUDE_DIR}")
++export(TARGETS DLib FILE "${PROJECT_BINARY_DIR}/dlibTargets.cmake")
++export(PACKAGE DLib)
++configure_file(cmake/dlibConfig.cmake.in "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/dlibConfig.cmake" @ONLY)
++configure_file(cmake/dlibConfigVersion.cmake.in "${PROJECT_BINARY_DIR}/dlibConfigVersion.cmake" @ONLY)
+ 
+-install(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
++install(TARGETS DLib EXPORT dlibTargets
++  LIBRARY DESTINATION lib COMPONENT shlib)
+ if(BUILD_DUtils)
+-  install(DIRECTORY include/DUtils DESTINATION ${CMAKE_INSTALL_PREFIX}/include)
++  install(DIRECTORY include/DUtils DESTINATION ${CMAKE_INSTALL_PREFIX}/include/DLib)
+ endif()
+ if(BUILD_DUtilsCV)
+-  install(DIRECTORY include/DUtilsCV DESTINATION ${CMAKE_INSTALL_PREFIX}/include)
++  install(DIRECTORY include/DUtilsCV DESTINATION ${CMAKE_INSTALL_PREFIX}/include/DLib)
+ endif()
+ if(BUILD_DVision)
+-  install(DIRECTORY include/DVision DESTINATION ${CMAKE_INSTALL_PREFIX}/include)
++  install(DIRECTORY include/DVision DESTINATION ${CMAKE_INSTALL_PREFIX}/include/DLib)
+ endif()
+-install(FILES "${CMAKE_CURRENT_BINARY_DIR}/DLibConfig.cmake"
+-  DESTINATION ${CMAKE_INSTALL_PREFIX}/include/${PROJECT_NAME})
+-install(FILES "${PROJECT_BINARY_DIR}/DLibConfig.cmake" 
+-  DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/cmake/DLib/)
++
++install(FILES "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/dlibConfig.cmake"
++              "${PROJECT_BINARY_DIR}/dlibConfigVersion.cmake"
++              DESTINATION "${CMAKE_INSTALL_PREFIX}/share/dlib/cmake")
++install(EXPORT dlibTargets DESTINATION lib COMPONENT dev)
++install(EXPORT dlibTargets
++  DESTINATION share/dlib/cmake FILE dlibTargets.cmake)
+Index: libdbowdlib/cmake/dlibConfig.cmake.in
+===================================================================
+--- /dev/null
++++ libdbowdlib/cmake/dlibConfig.cmake.in
+@@ -0,0 +1,8 @@
++get_filename_component(DLIB_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
++set(DLIB_INCLUDE_DIRS "@CONF_INCLUDE_DIRS@")
++
++if (NOT TARGET dlib AND NOT dlib_BINARY_DIR)
++  include("${DLIB_CMAKE_DIR}/dlibTargets.cmake")
++endif()
++
++set(DLIB_LIBRARIES DLib)
+Index: libdbowdlib/cmake/dlibConfigVersion.cmake.in
+===================================================================
+--- /dev/null
++++ libdbowdlib/cmake/dlibConfigVersion.cmake.in
+@@ -0,0 +1,11 @@
++set(PACKAGE_VERSION "@DLIB_VERSION@")
++
++# Check whether the requested PACKAGE_FIND_VERSION is compatible
++if("${PACKAGE_VERSION}" VERSION_LESS "${PACKAGE_FIND_VERSION}")
++  set(PACKAGE_VERSION_COMPATIBLE FALSE)
++else()
++  set(PACKAGE_VERSION_COMPATIBLE TRUE)
++  if ("${PACKAGE_VERSION}" VERSION_EQUAL "${PACKAGE_FIND_VERSION}")
++    set(PACKAGE_VERSION_EXACT TRUE)
++  endif()
++endif()

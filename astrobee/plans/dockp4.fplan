@@ -1,0 +1,99 @@
+{
+  "type" : "ModuleBayPlan",
+  "operatingLimits" : {
+    "name" : "Conservative",
+    "maxAVelocity" : 0.2,
+    "obstacleDistanceLimit" : 0.1,
+    "allowBlindFlying" : false,
+    "keepoutMargin" : 0.1,
+    "checkKeepouts" : true,
+    "maxVelocity" : 0.1,
+    "maxAcceleration" : 0.01,
+    "maxAAcceleration" : 0.1
+  },
+  "platform" : {
+    "type" : "Platform",
+    "name" : "FreeFlyer",
+    "id" : "FreeFlyer"
+  },
+  "site" : {
+    "type" : "Site",
+    "bbox" : [ -0.7, -0.5, -0.65, 0.7, 0.5, 0.65 ],
+    "crs" : {
+      "properties" : {
+        "name" : "ISS Module"
+      }
+    },
+    "name" : "ISS Analysis Frame",
+    "id" : "iss"
+  },
+  "visible" : true,
+  "valid" : true,
+  "xpjson" : "0.1",
+  "defaultSpeed" : 0.05,
+  "defaultTolerance" : 1.0,
+  "dateCreated" : "2016-05-31T20:07:37Z",
+  "creator" : "lfluckig",
+  "schemaUrl" : "http://www.example.com/freeFlyerPlanSchema.json",
+  "planNumber" : 0,
+  "dateModified" : "2016-06-14T21:09:50Z",
+  "libraryURLs" : [ ],
+  "sequence" : [ {
+    "type" : "ModuleBayStation",
+    "coordinate" : {
+      "type" : "ModuleBayPoint",
+      "x" : -0.15,
+      "y" : 0.57,
+      "z" : -0.8,
+      "roll" : 0.0,
+      "pitch" : 0.0,
+      "yaw" : 4.0,
+      "ignoreOrientation" : false,
+      "moduleBayValid" : false,
+      "bookmark" : null,
+      "bookmarkValid" : false
+    },
+    "tolerance" : 0.1,
+    "stopOnArrival" : false,
+    "name" : "0",
+    "id" : "ModuleBayStation",
+    "sequence" : [ ]
+  }, {
+    "type" : "Segment",
+    "waypoints" : [ [ 0.0, -0.15000000596046448, 0.5699999928474426, -0.800000011920929, -0.0, 0.0, 0.0, -0.009999999776482582, 0.0, 0.0, 0.0, 0.0, 0.03489946723613097, 0.9993908280480837, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ], [ 1.1000000186264518, -0.15605000603012742, 0.5699999928474426, -0.800000011920929, -0.010999999940395355, 0.0, 0.0, -0.0, 0.0, 0.0, 0.0, 0.0, 0.03489946723613097, 0.9993908280480837, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ], [ 35.45454705549666, -0.5339500213880092, 0.5699999928474426, -0.800000011920929, -0.010999999940395355, 0.0, 0.0, 0.009999999776482582, -0.0, -0.0, 0.0, 0.0, 0.03489946723613097, 0.9993908280480837, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ], [ 36.554547074123114, -0.5400000214576721, 0.5699999928474426, -0.800000011920929, -0.0, 0.0, 0.0, -0.0, 0.0, 0.0, 0.0, 0.0, 0.03489946723613097, 0.9993908280480837, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ] ],
+    "waypointType" : "PoseVelAccel",
+    "tolerance" : 0.0,
+    "speed" : 0.011,
+    "useCustomSpeed" : true,
+    "maxAVel" : -1.0,
+    "maxAccel" : -1.0,
+    "maxAAccel" : -1.0,
+    "stopAtEnd" : true,
+    "faceForward" : false,
+    "name" : "0-1",
+    "id" : "Segment",
+    "sequence" : [ ]
+  }, {
+    "type" : "ModuleBayStation",
+    "coordinate" : {
+      "type" : "ModuleBayPoint",
+      "x" : -0.54,
+      "y" : 0.57,
+      "z" : -0.8,
+      "roll" : 0.0,
+      "pitch" : 0.0,
+      "yaw" : 4.0,
+      "ignoreOrientation" : false,
+      "moduleBayValid" : false,
+      "bookmark" : null,
+      "bookmarkValid" : false
+    },
+    "tolerance" : 0.01,
+    "stopOnArrival" : false,
+    "name" : "1",
+    "id" : "ModuleBayStation",
+    "sequence" : [ ]
+  } ],
+  "name" : "dockp4",
+  "id" : "dockp4"
+}

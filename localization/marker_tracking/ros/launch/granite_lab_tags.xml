@@ -1,0 +1,119 @@
+
+<tags>
+
+  <!-- Position of the AR targets on the dock
+
+      The position of the marker corners below are
+      computed with the script:
+      astrobee/config/granite_lab_markers.config
+
+      This is only a temporaty measure, waiting to replace
+      the arxmlio.cc with a working arxmlconfig.cc. When
+      the new reader will be available, this xml file
+      will disapear and the the marker localizaiton will
+      directly get its input from the lua config file.
+
+      This version of the position correspond to
+      dock_markers.config @ ffe7444ad
+      Which generates the target pattern installed on the
+      updated dock with berths for P4D.
+
+       Note for previous version (obsolete on 02/01/17):
+       These position are computed from a Matlab script
+       (new_dock_targets.m). The location of each of the
+       9 AR tags are known relative to the dock itself.
+       The position of the dock relative to the world
+       reference (center of the granite table) needs to
+       be measured (and offset added in the matlab script).
+  -->
+
+  <ar id="18"
+    topleft="-0.721 0.483 -0.872"
+    topright="-0.721 0.461 -0.872"
+    bottomleft="-0.712 0.483 -0.852"
+  />
+  <ar id="19"
+    topleft="-0.699 0.483 -0.823"
+    topright="-0.699 0.461 -0.823"
+    bottomleft="-0.689 0.483 -0.803"
+  />
+  <ar id="20"
+    topleft="-0.710 0.461 -0.848"
+    topright="-0.710 0.439 -0.848"
+    bottomleft="-0.701 0.461 -0.828"
+  />
+  <ar id="21"
+    topleft="-0.728 0.428 -0.886"
+    topright="-0.728 0.385 -0.886"
+    bottomleft="-0.709 0.428 -0.846"
+  />
+  <ar id="22"
+    topleft="-0.701 0.428 -0.830"
+    topright="-0.701 0.385 -0.830"
+    bottomleft="-0.683 0.428 -0.790"
+  />
+  <ar id="23"
+    topleft="-0.721 0.161 -0.872"
+    topright="-0.721 0.139 -0.872"
+    bottomleft="-0.712 0.161 -0.852"
+  />
+  <ar id="24"
+    topleft="-0.699 0.161 -0.823"
+    topright="-0.699 0.139 -0.823"
+    bottomleft="-0.689 0.161 -0.803"
+  />
+  <ar id="25"
+    topleft="-0.710 0.182 -0.848"
+    topright="-0.710 0.161 -0.848"
+    bottomleft="-0.701 0.182 -0.828"
+  />
+  <ar id="26"
+    topleft="-0.728 0.236 -0.886"
+    topright="-0.728 0.193 -0.886"
+    bottomleft="-0.709 0.236 -0.846"
+  />
+  <ar id="27"
+    topleft="-0.701 0.236 -0.830"
+    topright="-0.701 0.193 -0.830"
+    bottomleft="-0.683 0.236 -0.790"
+  />
+  <ar id="17"
+    topleft="-0.724 0.354 -0.878"
+    topright="-0.724 0.267 -0.878"
+    bottomleft="-0.687 0.354 -0.798"
+  />
+
+  <!--
+      Old comments for reference (invalid since we do not measure the
+      location of the AR tags):
+
+      This file contains 3D measurements at several locations in the
+      granite lab.
+
+      The numbers below refer to the black corners of the AR tag on
+      the docking station.  The AR tag was mounted upside down, so
+      what is topleft below is physically bottomright as seen from the
+      bot camera.
+
+      The AR tag corners were measured with an un-referenced total
+      station. The location in the granite table reference frame was
+      then computed by using original location of room corners and
+      deriving the back transform with a Matlab script.
+
+  -->
+
+  <!--
+       Measurements for the granite lab room corners. These
+       must be kept in sync with what is in
+       communications/ff_frame_store/launch/ff_frame_store.launch
+       The front of the room is towards the window.
+       Face the back of the room, so look towards
+       the granite table (the window is at your back).
+       The door is on the right.
+  -->
+  <!-- Overhead Camera Location: -0.013 -0.078 -1.805 -->
+  <!-- Room Back Upper Right: 02.325 -2.820 -1.797 -->
+  <!-- Room Front Upper Rght: 02.060 05.514 -1.795 -->
+  <!-- Room Front Upper Left: -1.869 05.513 -1.796 -->
+
+</tags>

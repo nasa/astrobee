@@ -1,0 +1,5 @@
+<library path="lib/libplanner_trapezoidal">
+  <class name="planner_trapezoidal/PlannerTrapezoidalNodelet" type="planner_trapezoidal::PlannerTrapezoidalNodelet" base_class_type="nodelet::Nodelet">
+    <description>Nodelet for mobility::planner::trapezoidal</description>
+  </class>
+</library>

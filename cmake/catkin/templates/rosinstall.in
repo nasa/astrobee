@@ -1,0 +1,2 @@
+- setup-file:
+    local-name: @SETUP_DIR@/setup.sh

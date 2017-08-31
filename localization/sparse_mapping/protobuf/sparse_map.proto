@@ -1,0 +1,126 @@
+package sparse_mapping_protobuf;
+
+message Feature {
+  required double x                      = 1;
+  required double y                      = 2;
+  required bytes description             = 3;
+  optional float scale                   = 4;
+  optional float orientation             = 5;
+}
+
+message Affine3d {
+  required double r00 =  1;
+  required double r01 =  2;
+  required double r02 =  3;
+  required double r10 =  4;
+  required double r11 =  5;
+  required double r12 =  6;
+  required double r20 =  7;
+  required double r21 =  8;
+  required double r22 =  9;
+  required double t0  = 10;
+  required double t1  = 11;
+  required double t2  = 12;
+}
+
+message Covariance {
+  required double r00 =  1;
+  required double r01 =  2;
+  required double r02 =  3;
+  required double r11 =  4;
+  required double r12 =  5;
+  required double r22 =  6;
+}
+
+message Frame {
+  optional string name     = 1;
+  repeated Feature feature = 2;
+  optional Affine3d pose   = 3;
+}
+
+message Vector3d {
+  required double x = 1;
+  required double y = 2;
+  required double z = 3;
+}
+
+message Matching {
+  required int32 camera_id  = 1;
+  required int32 feature_id = 2;
+}
+
+message Landmark {
+  required Vector3d loc   = 1;
+  repeated Matching match = 2;
+  optional Covariance cov = 3;
+}
+
+message DBoWInvertedIndexEntry {
+  required int32 word_id = 1;
+  required int32 entry_id = 2;
+  required double weight   = 3;
+}
+
+message DBoWNode {
+  required int32 node_id       = 1;
+  required int32 parent_id     = 2;
+  required double weight       = 3;
+  required bytes feature       = 4;
+}
+
+message DBoWWord {
+  required int32 word_id = 1;
+  required int32 node_id = 2;
+}
+
+// these fields are all defined in TemplatedVocabulary and TempaltedDatabase
+// from DBoW
+message DBoWVocab {
+  required int32 k                  = 1;
+  required int32 l                  = 2;
+  required int32 scoring_type       = 3; // enum
+  required int32 weighting_type     = 4; // enum
+  required int32 num_nodes          = 5;
+  required int32 num_words          = 6;
+}
+
+message DBoWDB {
+  required int32 num_entries        = 1;
+  required int32 num_inverted_index = 4;
+}
+
+message CameraModel {
+  // Focal length is a vector x, y. In pixels. This length is the same for both
+  // distorted and undistorted imagery.
+  repeated double focal_length   = 1;
+  // Optical offset is the location of the optical axis in the distorted
+  // coordinate frame or 'DISTORTED' in camera params lingo.
+  repeated double optical_offset = 2;
+  // Image size in pixels
+  repeated int32 distorted_image_size = 3;
+  // Image size in pixels. This will be the same as in distorted_image_size if
+  // the camera model was already undistorted or 'metric'.
+  repeated int32 undistorted_image_size = 4;
+  // Distortion vector comes in multiple sizes. Size 0, there is no lens
+  // distortion. Size 1, this is an FOV/Tangent lens distortion. Size 4 and 5
+  // are TSAI OpenCV coefficients.
+  repeated double distortion     = 5;
+}
+
+message Map {
+  optional string descriptor_name = 1; // this is no longer used, only detector_name is needed
+  required string detector_name   = 2;
+  required CameraModel camera     = 3;
+  required int32 descriptor_depth = 4;  // This is the same as cv::Mat::depth()
+  required int32 num_frames       = 5;
+  required int32 num_landmarks    = 6;
+  enum VocabDB {
+    NONE = 0;
+    BINARYDB = 1;
+    FLOATDB = 2;
+    VOCABTREE = 3;
+  }
+  optional VocabDB vocab_db = 7 [default = NONE];
+  optional int32 orgbrisk_threshold = 8;  // this is no longer used but remains for compatability
+}
+

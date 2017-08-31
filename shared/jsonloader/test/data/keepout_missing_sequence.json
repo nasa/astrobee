@@ -1,0 +1,12 @@
+{	"type": "Keepout",
+
+  "safe": false,
+
+	// TESTING: sequence should be MISSING
+
+	"name": "ISS_US_FREEDOM",
+	"author": "tfmorse",
+	"dateCreated": "2015-04-11T14:26Z",
+	"notes": "Don't go here."
+}
+

@@ -1,0 +1,14 @@
+# ROS frame ID
+frame_id: "fam_cmd_i2c"
+
+# ROS topics.
+topic_fam_cmd: "/fam"
+
+# Device file for the I2C bus being used.
+# This version assumes that all PMCs are on the same i2c bus.
+i2c_bus_file: "/dev/i2c-2"
+
+i2c_addr: 0x40
+
+# Number of I2C retries when device not acknowledging.
+i2c_retries: 3

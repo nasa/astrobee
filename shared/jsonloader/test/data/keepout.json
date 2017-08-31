@@ -1,0 +1,36 @@
+// TODO(tfmorse): Possibly figure out how to squeeze units in here.
+// Maybe a "crs" object?
+
+// Each zone will be in a separate file. This is just one example file. Each
+// file would contain one of the below objects.
+
+// Sample filename: "ISS_US_FREEDOM.json"
+{	
+	// Required fields.
+	
+	// Type of thing this is
+	"type": "Keepout",
+	
+  // Whether this is a safe zone for the robot to be in or not.
+  "safe": false,
+
+	// A sequence of bboxes. For a negative spaces, the sequence may only have
+	// 1 element. For positive spaces, such as the ISS walls, this may have
+	// many elements.
+	"sequence": [ 
+
+		// Each bounding box is an array of 6 numbers, representing:
+		// [ x0, y0, z0, x1, y1, z1 ]
+		[ 0, 0, 0, 1, 1, 1 ]
+
+	],
+
+	// Optional fields
+
+	// Useful metadata for the potential GUI, not needed for FSW
+	"name": "ISS_US_FREEDOM",
+	"author": "tfmorse",
+	"dateCreated": "2015-04-11T14:26Z",
+	"notes": "Don't go here."
+}
+

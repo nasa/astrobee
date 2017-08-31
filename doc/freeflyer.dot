@@ -1,0 +1,291 @@
+# dot -Tpng freeflyer.dot -o freeflyer.png
+digraph G {
+  ratio = 0.7;
+  rankdir = LR;
+  node [shape=box, width=2.65, fontsize=16, fontname="helvetica"];
+  edge [arrowsize=2, weight=2.];
+  fontname = "helvetica";
+
+  subgraph cluster_legend {
+    edge[style=invis]
+    k1[color=lightpink,style=filled,label=Communciations];
+    k2[color=lightgrey,style=filled,label=GNC];
+    k3[color=lightblue,style=filled,label=Hardware];
+    k4[color=gold,style=filled,label=Management];
+    k5[color=darkolivegreen1,style=filled,label=Localization];
+    k6[color=aquamarine,style=filled,label=Mobility];
+    k1 -> k2
+    k2 -> k3
+    k3 -> k4
+    k4 -> k5
+    k5 -> k6
+    color = white;
+  }
+
+  subgraph cluster_note {
+    edge[style=invis]
+    l0[color=white,style=filled,label="VERSION: 6"];
+    l1[color=white,style=filled,label="Small box: ROS node"];
+    l2[color=white,style=filled,label="Small box color: subsystem"];
+    l3[color=white,style=filled,label="Arrow: 'uses' relationship"];
+    l4[color=white,style=filled,label="White box: nodelet managers"];
+    l5[color=white,style=filled,label="Large box: processor"];
+    color = white;
+  }
+
+  subgraph cluster_llp {
+
+    node [style=filled];
+
+    subgraph cluster_llp_imu {
+      node [style=filled, fillcolor=lightblue, color=black];
+      epson_imu;
+      fontsize = 20;
+      label = "llp_imu";
+      labeljust = "r";
+      labelloc = "t";
+      color = white;
+      style = filled;
+    }
+
+    subgraph cluster_llp_pmc {
+      node [style=filled, fillcolor=lightblue, color=black];
+      pmc_actuator;
+      fontsize = 20;
+      label = "llp_pmc";
+      labeljust = "r";
+      labelloc = "t";
+      color = white;
+      style = filled;
+    }
+
+    subgraph cluster_llp_gnc {
+      node [style=filled, fillcolor=lightgrey, color=black];
+      gnc_ros_wrapper;
+      fontsize = 20;
+      label = "llp_gnc";
+      labeljust = "r";
+      labelloc = "t";
+      color = white;
+      style = filled;
+    }
+
+    subgraph cluster_llp_monitors {
+      node [style=filled, fillcolor=gold, color=black];
+      llp_cpu_monitor[label=<cpu_monitor<BR /><FONT POINT-SIZE="15">LLP</FONT>>];
+      llp_disk_monitor[label=<disk_monitor<BR /><FONT POINT-SIZE="15">LLP</FONT>>];
+      fontsize = 20;
+      label = "llp_monitors";
+      labeljust = "r";
+      labelloc = "t";
+      color = white;
+      style = filled;
+    }
+
+    subgraph cluster_llp_i2c {
+      node [style=filled, fillcolor=lightblue, color=black];
+      signal_light;
+      laser;
+      dock;
+      flashlight_front[label=<flashlight<BR /><FONT POINT-SIZE="15">flashlight_front</FONT>>];
+      flashlight_aft[label=<flashlight<BR /><FONT POINT-SIZE="15">flashlight_aft</FONT>>];
+      temp_monitor;
+      eps_driver;
+      fontsize = 20;
+      label = "llp_i2c";
+      labeljust = "r";
+      labelloc = "t";
+      color = white;
+      style = filled;
+    }
+
+    subgraph cluster_llp_serial {
+      node [style=filled, fillcolor=lightblue, color=black];
+      speed_cam;
+      fontsize = 20;
+      label = "llp_serial";
+      labeljust = "r";
+      labelloc = "t";
+      color = white;
+      style = filled;
+    }
+
+    fontsize = 30;
+    label = "Low Level Processor";
+    labelloc = "b";
+    color = steelblue;
+    style = filled;
+  }
+
+  subgraph cluster_mlp {
+  
+    node [style=filled];
+
+    subgraph cluster_mlp_monitors {
+      node [style=filled, fillcolor=gold, color=black];
+      mlp_cpu_monitor[label=<cpu_monitor<BR /><FONT POINT-SIZE="15">MLP</FONT>>];
+      mlp_disk_monitor[label=<disk_monitor<BR /><FONT POINT-SIZE="15">MLP</FONT>>];
+      sys_monitor;
+      fontsize = 20;
+      label = "mlp_monitors";
+      labeljust = "l";
+      labelloc = "b";
+      color = white;
+      style = filled;
+    }
+
+    subgraph cluster_mlp_management {
+      node [style=filled, fillcolor=gold, color=black];
+      access_control;
+      executive -> {access_control, sys_monitor};
+      fontsize = 20;
+      label = "mlp_management";
+      labeljust = "l";
+      labelloc = "b";
+      color = white;
+      style = filled;
+    }
+
+    subgraph cluster_mlp_localization {
+      node [style=filled, fillcolor=darkolivegreen1, color=black];
+      localization_manager;
+      fontsize = 20;
+      label = "mlp_localization";
+      labeljust = "r";
+      labelloc = "t";
+      color = white;
+      style = filled;
+    }
+
+    subgraph cluster_mlp_communications {
+      node [style=filled, fillcolor=lightpink, color=black];
+      dds_ros_bridge;
+      fontsize = 20;
+      label = "mlp_communications";
+      labeljust = "l";
+      labelloc = "t";
+      color = white;
+      style = filled;
+    }
+
+    subgraph cluster_mlp_mobility {
+      node [style=filled, fillcolor=aquamarine, color=black];
+      mapper -> planner;
+      mapper -> framestore;
+      planner_qp -> mapper;
+      planner_trapezoidal -> mapper;
+      choreographer -> {planner, planner_trapezoidal, planner_qp};
+      docker -> {choreographer};
+      percher -> {choreographer};
+      choreographer -> framestore;
+      framestore;
+      fontsize = 20;
+      label = "mlp_mobility";
+      labeljust = "r";
+      labelloc = "t";
+      color = white;
+      style = filled;
+    }
+
+    subgraph cluster_mlp_depth_cam {
+      node [style=filled, fillcolor=darkolivegreen1, color=black];
+      pico_driver[fillcolor=lightblue];
+      handrail_detect -> pico_driver;
+      sentinel[fillcolor=aquamarine];
+      fontsize = 20;
+      label = "mlp_depth_cam";
+      labeljust = "r";
+      labelloc = "t";
+      color = white;
+      style = filled;
+    }
+
+
+    subgraph cluster_mlp_serial {
+      node [style=filled, fillcolor=lightblue, color=black];
+      perching_arm;
+      fontsize = 20;
+      label = "mlp_serial";
+      labeljust = "l";
+      labelloc = "b";
+      color = white;
+      style = filled;
+    }
+
+    subgraph cluster_mlp_nav_cam {
+      node [style=filled, fillcolor=darkolivegreen1, color=black];
+      nav_cam[fillcolor=lightblue, label=<is_camera<BR /><FONT POINT-SIZE="15">nav_cam</FONT>>];
+      nav_sampler[fillcolor=gold,label=<image_sampler<BR /><FONT POINT-SIZE="15">nav_cam</FONT>>];
+      nav_sampler -> nav_cam;
+      sparse_mapping -> nav_cam;
+      lk_optical_flow -> nav_cam;
+      fontsize = 20;
+      label = "mlp_nav_cam";
+      labeljust = "r";
+      labelloc = "t";
+      color = white;
+      style = filled;
+    }
+
+    subgraph cluster_mlp_dock_cam {
+      node [style=filled, fillcolor=darkolivegreen1, color=black];
+      dock_cam[fillcolor=lightblue, label=<is_camera<BR /><FONT POINT-SIZE="15">dock_cam</FONT>>];
+      dock_sampler[fillcolor=gold,label=<image_sampler<BR /><FONT POINT-SIZE="15">dock_cam</FONT>>];
+      dock_sampler -> dock_cam;
+      marker_tracking -> dock_cam;
+      fontsize = 20;
+      label = "mlp_dock_cam";
+      labeljust = "r";
+      labelloc = "t";
+      color = white;
+      style = filled;
+    }
+
+
+
+    core [color=black,fontcolor=white,label="ROSCORE",shape=ellipse,fontsize=20];
+    nav_cam -> core [style=invis];
+
+    fontsize = 30;
+    label = "Mid Level Processor";
+    labeljust = "r";
+    labelloc = "b";
+    color = thistle3;
+    style = filled;
+  }
+
+  subgraph cluster_hlp {
+  
+    node [style=filled, fillcolor=gold, color=black];
+    sci_cam_streaming[fillcolor=lightblue];
+    audio_manager[fillcolor=lightblue];
+    hlp_cpu_monitor[label=<cpu_monitor<BR /><FONT POINT-SIZE="15">HLP</FONT>>];
+    hlp_disk_monitor[label=<disk_monitor<BR /><FONT POINT-SIZE="15">HLP</FONT>>];
+    guest_science_manager;
+    android_ros_bridge;
+
+    fontsize = 30;
+    label = "High Level Processor";
+    labelloc = "b";
+    color = seagreen2;
+    style = "filled";
+  }
+
+  # Inter-nodelet relationship
+  gnc_ros_wrapper -> {pmc_actuator, epson_imu, handrail_detect, sparse_mapping, marker_tracking, lk_optical_flow};
+  executive -> dds_ros_bridge;
+  executive -> {nav_sampler, dock_sampler, choreographer, percher, docker};
+  executive -> {hlp_cpu_monitor, hlp_disk_monitor};
+  executive -> {mlp_cpu_monitor, mlp_disk_monitor};
+  executive -> {llp_cpu_monitor, llp_disk_monitor};
+  executive -> {sci_cam_streaming, audio_manager, guest_science_manager, android_ros_bridge};
+  executive -> {laser, flashlight_front, flashlight_aft, eps_driver, temp_monitor, speed_cam, signal_light}
+  framestore -> {gnc_ros_wrapper};
+  localization_manager -> {gnc_ros_wrapper};
+  choreographer -> {gnc_ros_wrapper, sentinel};
+  docker -> {localization_manager, dock};
+  percher -> {localization_manager, perching_arm};
+  localization_manager -> {pico_driver, dock_cam, nav_cam, sparse_mapping, handrail_detect, marker_tracking};
+  sentinel -> pico_driver;
+  mapper -> pico_driver;
+}

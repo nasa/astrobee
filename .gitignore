@@ -1,0 +1,102 @@
+##----------------------------------------------------------------
+## Free Flyer .gitignore.  Determines file types for GIT to ignore
+##---------------------------------------------------------------
+
+.astrobee_repo
+*.bag
+
+# Documents currently open in windows
+*.autosave
+*.asv
+*~
+
+# Simulink Project Folder
+*.mexw64
+*.mexa64
+*.mexmaci64
+*.dmr
+slprj/
+
+# Operating System Auto-generated Files
+*.DS_Store
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+# Emacs temporary
+
+# ViM swap files
+*.swp
+*.swo
+
+# Precompile python
+*.pyc
+
+Vagrantfile.local
+
+# Folders that probably shouldn't be checked in
+install
+.vagrant
+
+build
+arm_build
+arm_build_release
+arm_build_debug
+armhf
+build_native
+data
+doc/html
+doc/latex
+
+# dds config files, they are maintained in the astrobee common submodule
+astrobee/config/dds
+ 
+#zones bin
+astrobee/zones/*.bin
+astrobee/freeflyer/*.bin
+/freeflyer.sublime-project
+/freeflyer.sublime-workspace
+/simulation/iss-description
+/simulation/granite-description
+
+# catkin
+/.catkin_tools
+/*-build
+/*-devel
+/*-install
+/*-rootfs
+/*-kernel
+/*-logs
+/qped.sublime-workspace
+*.egg
+*.egg-info
+
+# Tags & config
+tags
+.ctags

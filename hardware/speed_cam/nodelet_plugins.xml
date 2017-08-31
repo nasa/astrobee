@@ -1,0 +1,5 @@
+<library path="lib/libspeed_cam">
+  <class name="speed_cam/SpeedCamNode" type="speed_cam::SpeedCamNode" base_class_type="nodelet::Nodelet">
+    <description>Nodelet for the speed camera</description>
+  </class>
+</library>

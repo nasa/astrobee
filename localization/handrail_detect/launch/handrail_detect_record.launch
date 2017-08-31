@@ -1,0 +1,22 @@
+<launch>
+  <!-- Arguments that can be passed in -->
+  <arg name="platform_name" default="ff" />  <!-- Platform name -->
+  <arg name="bag" default="handrail.bag" />   <!-- Bag name -->
+  <!-- Needed for FSW  -->
+  <env name="ASTROBEE_CONFIG_DIR" value="$(find astrobee)/config" />
+  <env name="ASTROBEE_ZONE_DIR" value="$(find astrobee)/zones" />
+  <!-- Set the platform name -->
+  <group ns="$(arg platform_name)">
+    <!-- Set the platform version -->
+    <env name="ASTROBEE_CONFIG_VERSION" value="p4" />
+    <!-- Bring up a manager for everyone to live in -->
+    <node pkg="nodelet" type="nodelet" name="handrail_nodelet_manager"
+          args=" manager" output="screen" required="true"/>
+    <!-- Bring up a perch camera (check UUID matches in cameras.config) -->
+    <node pkg="nodelet" type="nodelet" name="perch_cam"
+          args="load pico_driver/PicoDriverNodelet handrail_nodelet_manager" output="screen" required="true"/>
+    <!-- Save the point clouds to file -->
+    <node pkg="rosbag" type="record" name="rosbag_record_pico_driver"
+          args="-o $(arg bag) $(arg platform_name)/hw/depth_perch/points"/>
+  </group>
+</launch>

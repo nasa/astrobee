@@ -1,0 +1,146 @@
+<!-- Copyright (c) 2017, United States Government, as represented by the     -->
+<!-- Administrator of the National Aeronautics and Space Administration.     -->
+<!--                                                                         -->
+<!-- All rights reserved.                                                    -->
+<!--                                                                         -->
+<!-- The Astrobee platform is licensed under the Apache License, Version 2.0 -->
+<!-- (the "License"); you may not use this file except in compliance with    -->
+<!-- the License. You may obtain a copy of the License at                    -->
+<!--                                                                         -->
+<!--     http://www.apache.org/licenses/LICENSE-2.0                          -->
+<!--                                                                         -->
+<!-- Unless required by applicable law or agreed to in writing, software     -->
+<!-- distributed under the License is distributed on an "AS IS" BASIS,       -->
+<!-- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or         -->
+<!-- implied. See the License for the specific language governing            -->
+<!-- permissions and limitations under the License.                          -->
+
+<launch>
+
+  <!-- Context options (NB: THESE ARE OVERRIDDEN BY ENVIRONMENT VARIABLES, IF SET)    -->
+  <arg name="robot" default="p4d" />                   <!-- Robot description         -->
+  <arg name="world" default="granite" />               <!-- World name                -->
+  <arg name="ns" default="" />                         <!-- Robot namespace           -->
+  <arg name="nodes" default=""/>                       <!-- Launch specific nodes     -->
+  <arg name="dds" default="true" />                    <!-- Enable DDS                -->
+
+  <!-- Remaining options -->
+  <arg name="drivers" default="true" />                <!-- Should we launch drivers? -->
+  <arg name="sim" default="local" />                   <!-- SIM IP address            -->
+  <arg name="llp" default="local" />                   <!-- LLP IP address            -->
+  <arg name="mlp" default="local" />                   <!-- MLP IP address            -->
+  
+
+  <!-- Simulation options only -->
+  <arg name="pose" default="0 0 0 0 0 0 1" />          <!-- Initial pose (sim only)   -->
+
+  <!-- It doesn't matter that the calling launch file (granite, mtff, etc.) sets these
+       environment variables in the same way. They will be compeletely overridden here. -->
+  <env if="$(eval optenv('ASTROBEE_ROBOT','')=='')" 
+       name="ASTROBEE_ROBOT" value="$(arg robot)" />
+  <env if="$(eval optenv('ASTROBEE_WORLD','')=='')" 
+       name="ASTROBEE_WORLD" value="$(arg world)" />
+  <env if="$(eval optenv('ASTROBEE_CONFIG_DIR','')=='')" 
+       name="ASTROBEE_CONFIG_DIR" value="$(find astrobee)/config" />
+  <env if="$(eval optenv('ASTROBEE_RESOURCE_DIR','')=='')" 
+       name="ASTROBEE_RESOURCE_DIR" value="$(find astrobee)/resources" />
+  <env if="$(eval optenv('ROSCONSOLE_CONFIG_FILE','')=='')" 
+       name="ROSCONSOLE_CONFIG_FILE" value="$(find astrobee)/resources/logging.config"/>
+
+  <!-- Launch the platform on its own namespace -->
+  <group ns="/$(arg ns)">
+
+    <!-- Set the TF prefix, create a robot description and joint state publisher -->
+    <param name="tf_prefix" value="$(arg ns)" />
+    <param name="robot_description"
+           command="$(find xacro)/xacro --inorder $(find astrobee_description)/urdf/astrobee.urdf.xacro" />
+    <node pkg="robot_state_publisher" type="robot_state_publisher"
+          name="robot_state_publisher" />  
+
+    <!-- If we aren't loading drivers, we need to load a bag or simulation-->
+    <group unless="$(arg drivers)">
+
+      <!-- Connect and update environment variables if required -->
+      <machine unless="$(eval arg('sim')=='local')" name="sim_server" default="true"
+               address="$(arg sim)" user="astrobee" password="astrobee" timeout="10"/>
+
+      <!-- Update the environment variables relating to absolute paths -->
+      <env unless="$(eval arg('sim')=='local')"
+           name="ASTROBEE_CONFIG_DIR" value="/home/astrobee/native/config" />
+      <env unless="$(eval arg('sim')=='local')"
+           name="ASTROBEE_RESOURCE_DIR" value="home/astrobee/native/resources" />
+      <env unless="$(eval arg('sim')=='local')"
+           name="ROSCONSOLE_CONFIG_FILE" value="/home/astrobee/native/resources/logging.config"/>
+      <env unless="$(eval arg('sim')=='local')"
+           name="DISPLAY" value=":0"/>
+      <env unless="$(eval arg('sim')=='local')"
+           name="ROS_IP" value="$(arg sim)"/>
+
+      <!-- Launch simulated hardware -->
+      <include file="$(find astrobee)/launch/controller/sim_spawn.launch">
+        <arg name="ns" value="$(arg ns)"/>
+        <arg name="pose" value="$(arg pose)"/>
+      </include>
+
+    </group>
+
+    <!-- LLP -->
+    <group unless="$(eval arg('llp')=='disabled')">
+
+      <!-- Connect and update environment variables if required -->
+      <machine unless="$(eval arg('llp')=='local')" timeout="10"
+               name="llp" address="$(arg llp)" user="astrobee" password="astrobee"
+               env-loader="/home/astrobee/armhf/env_wrapper.sh" default="true">
+      </machine>
+
+      <!-- Update the environment variables relating to absolute paths -->
+      <env unless="$(eval arg('llp')=='local')"
+           name="ASTROBEE_CONFIG_DIR" value="/home/astrobee/armhf/config" />
+      <env unless="$(eval arg('llp')=='local')"
+           name="ASTROBEE_RESOURCE_DIR" value="/res" />
+      <env unless="$(eval arg('llp')=='local')"
+           name="ROSCONSOLE_CONFIG_FILE" value="/res/logging.config"/>
+
+      <!-- If we have specified a bag, then play it back into flight software-->
+      <include file="$(find astrobee)/launch/robot/LLP.launch" >
+        <arg name="drivers" value="$(arg drivers)"/>
+        <arg name="nodes" value="$(arg nodes)" />
+      </include> 
+
+      <!-- If we have specified a bag, then play it back into flight software-->
+      <!-- node pkg="astrobee" type="check_env.sh" name="llp_check_env" output="screen" -->
+
+    </group>
+
+    <!-- MLP -->
+    <group unless="$(eval arg('mlp')=='disabled')">
+
+      <!-- Connect and update environment variables if required -->
+      <machine unless="$(eval arg('mlp')=='local')" timeout="10"
+               name="mlp" address="$(arg mlp)" user="astrobee" password="astrobee"
+               env-loader="/home/astrobee/armhf/env_wrapper.sh" default="true">
+      </machine>
+
+      <!-- Update the environment variables relating to absolute paths -->
+      <env unless="$(eval arg('mlp')=='local')"
+           name="ASTROBEE_CONFIG_DIR" value="/home/astrobee/armhf/config" />
+      <env unless="$(eval arg('mlp')=='local')"
+           name="ASTROBEE_RESOURCE_DIR" value="/res" />
+      <env unless="$(eval arg('mlp')=='local')"
+           name="ROSCONSOLE_CONFIG_FILE" value="/res/logging.config"/>
+
+      <!-- If we have specified a bag, then play it back into flight software-->
+      <include file="$(find astrobee)/launch/robot/MLP.launch" >
+        <arg name="drivers" value="$(arg drivers)"/>
+        <arg name="dds" value="$(arg dds)"/>
+        <arg name="nodes" value="$(arg nodes)" />
+      </include>
+
+      <!-- If we have specified a bag, then play it back into flight software-->
+      <!-- node pkg="astrobee" type="check_env.sh" name="mlp_check_env" output="screen" -->
+
+    </group>
+
+  </group>
+
+</launch>

@@ -1,0 +1,44 @@
+<?xml version="1.0"?>
+<package>
+  <name>astrobee_gazebo</name>
+  <version>0.0.0</version>
+  <description>
+    Gazebo plugins for the Astrobee simulator
+  </description>
+  <license>
+    Apache License, Version 2.0
+  </license>
+  <author email="astrobee-fsw@nx.arc.nasa.gov">
+    Astrobee Flight Software
+  </author>
+  <maintainer email="astrobee-fsw@nx.arc.nasa.gov">
+    Astrobee Flight Software
+  </maintainer>
+  <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>roscpp</build_depend>
+  <build_depend>visualization_msgs</build_depend>
+  <build_depend>tf2</build_depend>
+  <build_depend>tf2_ros</build_depend>
+  <build_depend>tf2_msgs</build_depend>
+  <build_depend>tf2_eigen</build_depend>
+  <build_depend>gazebo_ros</build_depend>
+  <build_depend>sensor_msgs</build_depend>
+  <build_depend>ff_msgs</build_depend>
+  <build_depend>ff_hw_msgs</build_depend>
+  <build_depend>ff_util</build_depend>
+  <run_depend>visualization_msgs</run_depend>
+  <run_depend>tf2</run_depend>
+  <run_depend>tf2_ros</run_depend>
+  <run_depend>tf2_msgs</run_depend>
+  <run_depend>tf2_eigen</run_depend>
+  <run_depend>gazebo_ros</run_depend>
+  <run_depend>sensor_msgs</run_depend>
+  <run_depend>ff_msgs</run_depend>
+  <run_depend>ff_hw_msgs</run_depend>
+  <run_depend>ff_util</run_depend>
+  <export>
+    <gazebo_ros
+      gazebo_media_path="${prefix}"
+      plugin_path="${prefix}/lib"/>
+  </export>
+</package>

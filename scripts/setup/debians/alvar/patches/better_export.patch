@@ -1,0 +1,60 @@
+Index: libalvar/src/CMakeLists.txt
+===================================================================
+--- libalvar.orig/src/CMakeLists.txt
++++ libalvar/src/CMakeLists.txt
+@@ -42,8 +42,8 @@ set(ALVAR_HEADERS
+     Container3d.h
+     Draw.h
+     EC.h
+-    FernImageDetector.h
+-    FernPoseEstimator.h
++    #FernImageDetector.h
++    #FernPoseEstimator.h
+     FileFormat.h
+     FileFormatUtils.h
+     Filter.h
+@@ -77,8 +77,8 @@ set(ALVAR_SOURCES
+     ConnectedComponents.cpp
+     Draw.cpp
+     EC.cpp
+-    FernImageDetector.cpp
+-    FernPoseEstimator.cpp
++    #FernImageDetector.cpp
++    #FernPoseEstimator.cpp
+     FileFormatUtils.cpp
+     Filter.cpp
+     IntegralImage.cpp
+@@ -110,9 +110,9 @@ add_library(ALVAR
+     ${ALVAR_HEADERS}
+     ${ALVAR_SOURCES}
+ )
+-set_target_properties(ALVAR PROPERTIES OUTPUT_NAME alvar${ALVAR_VERSION_NODOTS})
++set_target_properties(ALVAR PROPERTIES OUTPUT_NAME alvar)
+ set_target_properties(ALVAR PROPERTIES DEBUG_POSTFIX d)
+-set_target_properties(ALVAR PROPERTIES PUBLIC_HEADER "${ALVAR_HEADERS}")
++set_target_properties(ALVAR PROPERTIES PUBLIC_HEADER "${ALVAR_HEADERS};${ALVAR_GLOBAL_HEADER}")
+ 
+ # link alvar library target to required libraries
+ target_link_libraries(ALVAR
+@@ -139,8 +139,10 @@ configure_file(../cmake/AlvarConfig.cmak
+ configure_file(../cmake/AlvarConfigVersion.cmake.in "${PROJECT_BINARY_DIR}/AlvarConfigVersion.cmake" @ONLY)
+ install(FILES "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/AlvarConfig.cmake"
+               "${PROJECT_BINARY_DIR}/AlvarConfigVersion.cmake"
+-              DESTINATION "${CMAKE_INSTALL_PREFIX}/share/alvar/cmake")
+-install(EXPORT AlvarTargets DESTINATION ${CMAKE_INSTALL_PREFIX}/share/alvar/cmake)
++              DESTINATION "share/alvar/cmake")
++install(EXPORT AlvarTargets DESTINATION lib)
++install(EXPORT AlvarTargets
++  DESTINATION share/alvar/cmake FILE AlvarTargets.cmake)
+ 
+ # set include directories and libraries variables for alvar
+ list(APPEND ALVAR_INCLUDE_DIRS
+@@ -177,7 +179,7 @@ else(NOT ${MSVC_IDE})
+ endif(NOT ${MSVC_IDE})
+ 
+ # process sub directories
+-add_subdirectory(platform)
++#add_subdirectory(platform)
+ 
+ # add include directories and libraries variables to the cache
+ list(REMOVE_DUPLICATES ALVAR_INCLUDE_DIRS)

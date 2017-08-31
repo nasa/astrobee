@@ -1,0 +1,5 @@
+<library path="lib/libpercher">
+  <class name="percher/Percher" type="percher::Percher" base_class_type="nodelet::Nodelet">
+    <description>Nodelet for mobility::percher</description>
+  </class>
+</library>

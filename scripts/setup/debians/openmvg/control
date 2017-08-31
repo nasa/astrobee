@@ -1,0 +1,22 @@
+Source: libopenmvg
+Priority: optional
+Maintainer: Brian Coltin <nospam@nospam.org>
+Build-Depends: debhelper (>=9), cmake (>=3.5), libeigen3-dev (>=3.2), libceres-dev (>=1.12) 
+Standards-Version: 3.9.6
+Section: libs
+Homepage: https://github.com/openMVG/openMVG
+#Vcs-Git: git://anonscm.debian.org/collab-maint/libopenmvg.git
+#Vcs-Browser: https://anonscm.debian.org/cgit/collab-maint/libopenmvg.git
+
+Package: libopenmvg-dev
+Section: libdevel
+Architecture: any
+Depends: libceres1 (>=1.12), libopenmvg1 (= ${binary:Version}), ${misc:Depends}
+Description: Multi-view geometry library.
+ <insert long description, indented with spaces>
+
+Package: libopenmvg1
+Architecture: any
+Depends: libceres-dev (>=1.12), ${shlibs:Depends}, ${misc:Depends}
+Description: Multi-view geometry library.
+ <insert long description, indented with spaces>

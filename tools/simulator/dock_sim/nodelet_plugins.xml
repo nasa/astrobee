@@ -1,0 +1,9 @@
+<library path="lib/libdock_sim">
+  <class name="dock_sim/DockSim"
+    type="dock_sim::DockSim"
+    base_class_type="nodelet::Nodelet">
+    <description>
+      Nodelet to simulate the dock."
+    </description>
+  </class>
+</library>

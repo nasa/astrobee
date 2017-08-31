@@ -1,0 +1,5 @@
+<launch>
+  <node name="fam_cmd_i2c_node" pkg="fam_cmd_i2c" type="fam_cmd_i2c_node" output="screen" >
+    <rosparam file="$(find fam_cmd_i2c)/launch/fam_cmd_i2c.yaml" command="load" />
+  </node>
+</launch>

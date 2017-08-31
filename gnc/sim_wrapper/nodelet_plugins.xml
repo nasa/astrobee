@@ -1,0 +1,5 @@
+<library path="lib/libsim_wrapper">
+  <class name="sim_wrapper/SimWrapperNodelet" type="sim_wrapper::SimWrapperNodelet" base_class_type="nodelet::Nodelet">
+    <description>Nodelet for sim_wrapper::SimWrapperNodelet</description>
+  </class>
+</library>

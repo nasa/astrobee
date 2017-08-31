@@ -1,0 +1,5 @@
+# generated from catkin/cmake/template/order_packages.context.py.in
+source_root_dir = "@CMAKE_CURRENT_SOURCE_DIR@"
+whitelisted_packages = "@CATKIN_WHITELIST_PACKAGES@".split(';') if "@CATKIN_WHITELIST_PACKAGES@" != "" else []
+blacklisted_packages = "@CATKIN_BLACKLIST_PACKAGES@".split(';') if "@CATKIN_BLACKLIST_PACKAGES@" != "" else []
+underlay_workspaces = "@CATKIN_WORKSPACES@".split(';') if "@CATKIN_WORKSPACES@" != "" else []

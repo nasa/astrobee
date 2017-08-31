@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<robot name="astrobee">
+  <link name="body"> 
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://rviz_visualizer/model/astrobee_mesh.stl" />
+      </geometry>
+      <material name="grey">
+        <color rgba="0.5 0.5 0.0 0.9"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <box size="0.305 0.305 0.305"/>
+      </geometry>
+    </collision>
+  </link>
+</robot>

@@ -1,0 +1,8 @@
+<library path="lib/libvisualeyez">
+  <class name="visualeyez/VisualeyezBridge" type="visualeyez::VisualeyezBridge" base_class_type="nodelet::Nodelet">
+    <description>Nodelet for converting UDP client data to ROS messages</description>
+  </class>
+  <class name="visualeyez/VisualeyezServer" type="visualeyez::VisualeyezServer" base_class_type="nodelet::Nodelet">
+    <description>Nodelet for tracking and calibration</description>
+  </class>
+</library>

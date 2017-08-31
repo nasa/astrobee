@@ -1,0 +1,114 @@
+# Copyright (c) 2017, United States Government, as represented by the
+# Administrator of the National Aeronautics and Space Administration.
+# 
+# All rights reserved.
+# 
+# The Astrobee platform is licensed under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with the
+# License. You may obtain a copy of the License at
+# 
+#     http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+#
+# List of command constants.
+
+string PARAM_NAME_ACTION_TYPE_PAN = Pan
+string PARAM_NAME_ACTION_TYPE_TILT = Tilt
+string PARAM_NAME_ACTION_TYPE_BOTH = Both
+string PARAM_NAME_DOWNLOAD_METHOD_IMMEDIATE = Immediate
+string PARAM_NAME_DOWNLOAD_METHOD_DELAYED = Delayed
+string PARAM_NAME_POWERED_COMPONENT_LASER_POINTER = Laser Pointer
+string PARAM_NAME_POWERED_COMPONENT_PAYLOAD_TOP_AFT = Payload Top Aft
+string PARAM_NAME_POWERED_COMPONENT_PAYLOAD_BOTTOM_AFT = Payload Bottom Aft
+string PARAM_NAME_POWERED_COMPONENT_PAYLOAD_BOTTOM_FRONT = Payload Bottom Front
+string PARAM_NAME_CAMERA_NAME_SCI = Science
+string PARAM_NAME_CAMERA_NAME_NAV = Navigation
+string PARAM_NAME_CAMERA_NAME_HAZ = Hazard
+string PARAM_NAME_CAMERA_NAME_DOCK = Dock
+string PARAM_NAME_CAMERA_NAME_PERCH = Perch
+string PARAM_NAME_CAMERA_RESOLUTION_224X172 = 224x172
+string PARAM_NAME_CAMERA_RESOLUTION_320X240 = 320x240
+string PARAM_NAME_CAMERA_RESOLUTION_480X270 = 480x270
+string PARAM_NAME_CAMERA_RESOLUTION_640X480 = 640x480
+string PARAM_NAME_CAMERA_RESOLUTION_960X540 = 960x540
+string PARAM_NAME_CAMERA_RESOLUTION_1024X768 = 1024x768
+string PARAM_NAME_CAMERA_RESOLUTION_1280X720 = 1280x720
+string PARAM_NAME_CAMERA_RESOLUTION_1280X960 = 1280x960
+string PARAM_NAME_CAMERA_RESOLUTION_1920X1080 = 1920x1080
+string PARAM_NAME_FLASHLIGHT_LOCATION_BACK = Back
+string PARAM_NAME_FLASHLIGHT_LOCATION_FRONT = Front
+string PARAM_NAME_FLIGHT_MODE_NOMINAL = Nominal
+string PARAM_NAME_FLIGHT_MODE_CONSERVATIVE = Conservative
+string PARAM_NAME_FLIGHT_MODE_SPEEDY = Speedy
+string PARAM_NAME_FLIGHT_MODE_IGNORE_OBSTACLES = IgnoreObstacles
+string PARAM_NAME_TELEMETRY_TYPE_COMM_STATUS = CommStatus
+string PARAM_NAME_TELEMETRY_TYPE_CPU_STATE = CpuState
+string PARAM_NAME_TELEMETRY_TYPE_DISK_STATE = DiskState
+string PARAM_NAME_TELEMETRY_TYPE_EKF_STATE = EkfState
+string PARAM_NAME_TELEMETRY_TYPE_GNCC_STATE = GncState
+string PARAM_NAME_TELEMETRY_TYPE_POSITION = Position
+
+string CMD_NAME_GRAB_CONTROL = grabControl
+string CMD_NAME_REQUEST_CONTROL = requestControl
+string CMD_NAME_FAULT = fault
+string CMD_NAME_LOAD_NODELET = loadNodelet
+string CMD_NAME_NO_OP = noOp
+string CMD_NAME_REACQUIRE_POSITION = reacquirePosition
+string CMD_NAME_SHUTDOWN = shutdown
+string CMD_NAME_UNLOAD_NODELET = unloadNodelet
+string CMD_NAME_WAKE = wake
+string CMD_NAME_WIPE_HLP = wipeHlp
+string CMD_NAME_ARM_PAN_AND_TILT = armPanAndTilt
+string CMD_NAME_GRIPPER_CONTROL = gripperControl
+string CMD_NAME_STOP_ARM = stopArm
+string CMD_NAME_STOW_ARM = stowArm
+string CMD_NAME_CLEAR_DATA = clearData
+string CMD_NAME_DOWNLOAD_DATA = downloadData
+string CMD_NAME_SET_DATA_TO_DISK = setDataToDisk
+string CMD_NAME_STOP_DOWNLOAD = stopDownload
+string CMD_NAME_CUSTOM_GUEST_SCIENCE = customGuestScience
+string CMD_NAME_START_GUEST_SCIENCE = startGuestScience
+string CMD_NAME_STOP_GUEST_SCIENCE = stopGuestScience
+string CMD_NAME_AUTO_RETURN = autoReturn
+string CMD_NAME_DOCK = dock
+string CMD_NAME_IDLE_PROPULSION = idlePropulsion
+string CMD_NAME_PERCH = perch
+string CMD_NAME_SIMPLE_MOVE6DOF = simpleMove6DOF
+string CMD_NAME_STOP_ALL_MOTION = stopAllMotion
+string CMD_NAME_UNDOCK = undock
+string CMD_NAME_UNPERCH = unperch
+string CMD_NAME_PAUSE_PLAN = pausePlan
+string CMD_NAME_RUN_PLAN = runPlan
+string CMD_NAME_SET_PLAN = setPlan
+string CMD_NAME_SKIP_PLAN_STEP = skipPlanStep
+string CMD_NAME_WAIT = wait
+string CMD_NAME_POWER_OFF_ITEM = powerOffItem
+string CMD_NAME_POWER_ON_ITEM = powerOnItem
+string CMD_NAME_GENERIC_COMMAND = genericCommand
+string CMD_NAME_SET_CAMERA = setCamera
+string CMD_NAME_SET_CAMERA_RECORDING = setCameraRecording
+string CMD_NAME_SET_CAMERA_STREAMING = setCameraStreaming
+string CMD_NAME_SET_CHECK_OBSTACLES = setCheckObstacles
+string CMD_NAME_SET_CHECK_ZONES = setCheckZones
+string CMD_NAME_SET_ENABLE_AUTO_RETURN = setEnableAutoReturn
+string CMD_NAME_SET_FLASHLIGHT_BRIGHTNESS = setFlashlightBrightness
+string CMD_NAME_SET_HOLONOMIC_MODE = setHolonomicMode
+string CMD_NAME_SET_INERTIA = setInertia
+string CMD_NAME_SET_OPERATING_LIMITS = setOperatingLimits
+string CMD_NAME_SET_TELEMETRY_RATE = setTelemetryRate
+string CMD_NAME_SET_ZONES = setZones
+
+string CMD_SUBSYS_ACCESS_CONTROL = AccessControl
+string CMD_SUBSYS_ADMIN = Admin
+string CMD_SUBSYS_ARM = Arm
+string CMD_SUBSYS_DATA = Data
+string CMD_SUBSYS_GUEST_SCIENCE = GuestScience
+string CMD_SUBSYS_MOBILITY = Mobility
+string CMD_SUBSYS_PLAN = Plan
+string CMD_SUBSYS_POWER = Power
+string CMD_SUBSYS_SETTINGS = Settings

@@ -1,0 +1,5 @@
+<library path="lib/libchoreographer">
+  <class name="choreographer/ChoreographerNodelet" type="choreographer::ChoreographerNodelet" base_class_type="nodelet::Nodelet">
+		<description>Nodelet for mobility::choreographer</description>
+  </class>
+</library>

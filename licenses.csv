@@ -1,0 +1,51 @@
+Type,Name,URL,License,Modified?,Notes
+Library (external),A Library for Virtual and Augmented Reality (ALVAR),http://virtual.vtt.fi/virtual/proj2/multimedia/alvar/index.html ,GNU LGPLv2.1,YES,In Brian's branch to work with OpenCV 3
+Library (external),DBoW2: bag-of-words library for C++ with generic descriptors,http://webdiis.unizar.es/~dorian,CC-BY-NC-SA,YES,In Brian's branch to work with OpenCV 3
+Library (external),Google Test: Google's C++ test framework,https://github.com/google/googletest ,BSD-3-Clause,NO,None
+Library (external),JsonCpp: a C++ library for manipulating JSON values,https://github.com/open-source-parsers/jsoncpp,MIT license,NO,None
+Library (external),OpenMVG: Open Multiple View Geometry,http://imagine.enpc.fr/~moulonp/openMVG ,MLP2,YES,Moving to system library
+Library (external),Lua config reader,http://www.cs.cmu.edu/~coral/projects/localization/source.html,GNU LGPLv2.1,YES,Substantial modifications
+Library (updating),Binary Robust Invariant Scalable Keypoints (BRISK),https://wp.doc.ic.ac.uk/sleutene/software ,BSD-3-Clause,YES,Moving to system library
+Library (updating),Ceres Solver,http://ceres-solver.org,BSD-3-Clause,YES,Moving to system library
+Library (updating),Eigen: a C++ template library for linear algebra,http://eigen.tuxfamily.org,MLP2,NO,Moving to system library
+Library (updating),OpenCV: Open Source Computer Vision,http://opencv.org,BSD-3-Clause,YES,Moving to system library
+Library (updating),OpenCV: SURF (third party),http://www.vision.ee.ethz.ch/~surf/download.html,Non-commercial,NO,Moving to system library
+Library (updating),OpenSIFT: An Open-Source SIFT Library,https://robwhess.github.io/opensift,Modified BSD-3-Clause,YES,Deprecated
+Library (system),Robotics Operating System (ROS),http://www.ros.org ,BSD-3-Clause, NO,None
+Library (system),Glog: C++ implementation of the Google logging module,https://github.com/google/glog ,BSD-3-Clause,NO,None
+Library (system),Protobuf-c compiler,https://github.com/protobuf-c/protobuf-c ,BSD-2-Clause,NO,None
+Library (system),Gflags: a C++ library that processes commandline flags,https://github.com/gflags/gflags ,BSD-3-Clause,NO,None
+Library (system),Boost: peer-reviewed portable C++ source libraries,http://www.boost.org ,Boost Software License,NO,None
+Library (system),Zlib: a massively spiffy yet delicately unobtrusive compression library.,http://www.zlib.net ,Own license/no restrictions,NO,None
+Library (system),Luajit-cpp: A C++ JIT compiler for the Lua language,https://github.com/cslarsen/luajit-cpp ,Public domain,NO,None
+Library (system),VTK: The Visualization Toolkit,http://www.vtk.org/ ,BSD-3-Clause,NO,None
+Library (system),ACE: a C++ network programming framework,http://www.cs.wustl.edu/~schmidt/ACE.html ,Own license/no restrictions,NO,None
+Library (system),YAMLCPP: A YAML parser and emitter in C++,https://github.com/jbeder/yaml-cpp ,Own license/no restrictions,NO,None
+Library (system),SuiteSparse: a suite of sparse matrix algorithms,http://faculty.cse.tamu.edu/davis/suitesparse.html ,Multiple licenses,NO,Deprecated (unused)
+Library (system),SoraCore: interfaces and RAPID implementation for SORA,https://github.com/mallanmba/soraCore ,Apache 2.0,YES,None
+Library (system),Qt4: cross-platform application framework,http://qt-project.org/,LGPLv3,NO,None
+Library (system),Miro: Middleware for Robots,https://github.com/hhutz/Miro,GNU LGPLv2.1,YES,None
+Library (system),libusb: a C library that provides generic access to USB devices,http://www.libusb.org,GNU LGPLv2.1,NO,None
+Library (system),Video4Linux2,http://www.linuxtv.org ,GNU LGPLv2.1,NO,None
+Library (system),gazebo: C++ robot simulator,http://gazebosim.org,Apache 2.0,NO,None
+Library (external),MAVLink: Micro Air Vehicle Message Marshalling Library, https://github.com/mavlink/mavlink, GNU LGPLv3, NO, None
+Library (optional),RTI DDS SDK,http://www.rti.com/,Source license,NO,None
+Library (optional),PicoFlexx SDK,http://pmdtec.com/picoflexx/software,Closed source,YES,None
+Library (optional),Flycapture SDK,https://www.ptgrey.com/flycapture-sdk ,Closed source,NO,None
+ROS package,ros_core,https://github.com/ros/metapackages,BSD-3-Clause,NO,None
+ROS package,common_msgs,https://github.com/ros/common_msgs ,BSD-3-Clause,NO,None
+ROS package,nodelet,https://github.com/ros/nodelet_core,BSD-3-Clause,NO,None
+ROS package,pluginlib,https://github.com/ros/pluginlib,BSD-3-Clause,NO,None
+ROS package,actionlib,https://github.com/ros/actionlib,BSD-3-Clause,NO,None
+ROS package,geometry2,https://github.com/ros/geometry2 ,BSD-3-Clause,NO,None
+ROS package,image_common,https://github.com/ros-perception/image_common,BSD-3-Clause,NO,None
+ROS package,rviz,https://github.com/ros-visualization/rviz,BSD-3-Clause,NO,None
+ROS package,rqt,https://github.com/ros-visualization/rqt,BSD-3-Clause,NO,None
+ROS package,rqt_common_plugins,https://github.com/ros-visualization/rqt_common_plugins ,BSD-3-Clause,NO,None
+ROS package,rqt_robot_plugins,https://github.com/ros-visualization/rqt_robot_plugins ,BSD-3-Clause,NO,None
+ROS package,ros_comm,https://github.com/ros/ros_comm ,BSD-3-Clause,NO,None
+ROS package,gazebo_ros_pkgs,https://github.com/ros-simulation/gazebo_ros_pkgs,BSD/LGPL/Apache 2.0,NO,None
+ROS package,vision_opencv,https://github.com/ros-perception/vision_opencv,BSD-3-Clause,NO,None
+Build tool,GCC / G++ / OpenMP,http://www.openmp.org ,GPLv3,NO,None
+Build tool,MATLAB Coder,https://www.mathworks.com/products/matlab-coder.html,Proprietary,NO,None
+Build tool,Doxygen,http://www.stack.nl/~dimitri/doxygen,GPLv2,NO,None

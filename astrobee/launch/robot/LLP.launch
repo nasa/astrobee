@@ -1,0 +1,110 @@
+<!-- Copyright (c) 2017, United States Government, as represented by the     -->
+<!-- Administrator of the National Aeronautics and Space Administration.     -->
+<!--                                                                         -->
+<!-- All rights reserved.                                                    -->
+<!--                                                                         -->
+<!-- The Astrobee platform is licensed under the Apache License, Version 2.0 -->
+<!-- (the "License"); you may not use this file except in compliance with    -->
+<!-- the License. You may obtain a copy of the License at                    -->
+<!--                                                                         -->
+<!--     http://www.apache.org/licenses/LICENSE-2.0                          -->
+<!--                                                                         -->
+<!-- Unless required by applicable law or agreed to in writing, software     -->
+<!-- distributed under the License is distributed on an "AS IS" BASIS,       -->
+<!-- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or         -->
+<!-- implied. See the License for the specific language governing            -->
+<!-- permissions and limitations under the License.                          -->
+
+<launch>
+
+  <!-- Additional options -->
+  <arg name="drivers"/>
+  <arg name="nodes" default=""/>
+  <arg name="output" default="log"/>
+
+  <!-- Launch all nodelet managers -->
+  <group if="$(eval optenv('ASTROBEE_NODEGRAPH','')=='')">
+    <node pkg="nodelet" type="nodelet" args="manager"
+          name="llp_gnc" output="$(arg output)"/>
+    <node pkg="nodelet" type="nodelet" args="manager"
+          name="llp_monitors" output="$(arg output)"/>
+    <node pkg="nodelet" type="nodelet" args="manager"
+          name="llp_i2c" output="$(arg output)"/>
+    <node pkg="nodelet" type="nodelet" args="manager"
+          name="llp_serial" output="$(arg output)"/>
+    <node pkg="nodelet" type="nodelet" args="manager"
+          name="llp_pmc" output="$(arg output)"/>
+    <node pkg="nodelet" type="nodelet" args="manager"
+          name="llp_imu" output="$(arg output)"/>
+  </group>
+
+  <!-- Launch GNC nodes -->
+  <include file="$(find gnc_ros_wrapper)/launch/gnc_ros_wrapper.launch"
+    if="$(eval arg('nodes') == '' or arg('nodes').find('gnc_ros_wrapper') != -1)">
+    <arg name="name" value="gnc_node" />
+    <arg name="manager" value="llp_gnc" />
+  </include>
+
+  <!-- Launch driver nodes, if required -->
+  <group if="$(arg drivers)">
+    <include file="$(find epson_imu)/launch/epson_imu.launch"
+      if="$(eval arg('nodes') == '' or arg('nodes').find('epson_imu') != -1)">
+      <arg name="name" value="epson_imu" />
+      <arg name="manager" value="llp_imu" />
+    </include>
+    <include file="$(find pmc_actuator)/launch/pmc_actuator.launch"
+      if="$(eval arg('nodes') == '' or arg('nodes').find('pmc_actuator') != -1)">
+      <arg name="name" value="pmc_actuator" />
+      <arg name="manager" value="llp_pmc" />
+    </include>
+    <include file="$(find eps_driver)/launch/eps_driver.launch"
+      if="$(eval arg('nodes') == '' or arg('nodes').find('eps_driver') != -1)">
+      <arg name="name" value="eps_driver" />
+      <arg name="manager" value="llp_i2c" />
+    </include>
+    <include file="$(find dock)/launch/dock.launch"
+      if="$(eval arg('nodes') == '' or arg('nodes').find('dock') != -1)">
+      <arg name="name" value="dock" />
+      <arg name="manager" value="llp_i2c" />
+    </include>
+    <include file="$(find laser)/launch/laser.launch"
+      if="$(eval arg('nodes') == '' or arg('nodes').find('laser') != -1)">
+      <arg name="name" value="laser" />
+      <arg name="manager" value="llp_i2c" />
+    </include>
+    <include file="$(find flashlight)/launch/flashlight.launch"
+      if="$(eval arg('nodes') == '' or arg('nodes').find('flashlight_front') != -1)">
+      <arg name="name" value="flashlight_front" />
+      <arg name="manager" value="llp_i2c" />
+    </include>
+    <include file="$(find flashlight)/launch/flashlight.launch"
+      if="$(eval arg('nodes') == '' or arg('nodes').find('flashlight_aft') != -1)">
+      <arg name="name" value="flashlight_aft" />
+      <arg name="manager" value="llp_i2c" />
+    </include>
+    <!--
+    <include file="$(find signal_light)/launch/signal_light.launch"
+      if="$(eval arg('nodes') == '' or arg('nodes').find('signal_light') != -1)">
+      <arg name="name" value="signal_light" />
+      <arg name="manager" value="llp_i2c" />
+    </include>
+    -->
+    <include file="$(find speed_cam)/launch/speed_cam.launch"
+      if="$(eval arg('nodes') == '' or arg('nodes').find('speed_cam') != -1)">
+      <arg name="name" value="speed_cam" />
+      <arg name="manager" value="llp_serial" />
+    </include>
+    <include file="$(find cpu_monitor)/launch/cpu_monitor.launch"
+      if="$(eval arg('nodes') == '' or arg('nodes').find('llp_cpu_monitor') != -1)">
+      <arg name="name" value="llp_cpu_monitor" />
+      <arg name="manager" value="llp_monitors" />
+    </include>
+    <include file="$(find disk_monitor)/launch/disk_monitor.launch"
+      if="$(eval arg('nodes') == '' or arg('nodes').find('llp_disk_monitor') != -1)">
+      <arg name="name" value="llp_disk_monitor" />
+      <arg name="manager" value="llp_monitors" />
+    </include>
+
+  </group>
+
+</launch>

@@ -1,0 +1,53 @@
+{ "type": "FreeFlyerPlan",
+	"site": { "type": "Site", "id": "iss" },
+	"defaultTolerance": 1.0,
+	"defaultSpeed": 1.0,
+	"valid": true,
+	"sequence": [ {
+		"type": "Station",
+		"tolerance": 1.0,
+		"stopOnArrival": true,
+		"coordinate": {
+			"type": "Point6Dof",
+			"x": 0.0, "y": 0.0, "z": 0.0,
+			"roll": 0.0, "pitch": 0.0, "yaw": 0.0
+		},
+		"sequence": [ ]
+	}, {
+		"type": "Segment",
+		"tolerance": 0.0,
+		"speed": 0.05,
+		"stopAtEnd": true,
+		"faceForward": true,
+		"waypointType": "ControlValues20",
+		"waypoints": [ ]
+	}, {
+		"type": "Station",
+		"tolerance": 1.0,
+		"stopOnArrival": true,
+		"coordinate": {
+			"type": "Point6Dof",
+			"x": 0.0, "y": 0.0, "z": 0.0,
+			"roll": 0.0, "pitch": 0.0, "yaw": 0.0
+		},
+		"sequence": [ ]
+	}, {
+		"type": "Segment",
+		"tolerance": 0.0,
+		"speed": 0.05,
+		"stopAtEnd": true,
+		"faceForward": true,
+		"waypointType": "NotUsed",
+		"waypoints": [ ]
+	}, {
+		"type": "Station",
+		"tolerance": 1.0,
+		"stopOnArrival": true,
+		"coordinate": {
+			"type": "Point6Dof",
+			"x": 0.0, "y": 0.0, "z": 0.0,
+			"roll": 0.0, "pitch": 0.0, "yaw": 0.0
+		},
+		"sequence": [ ]
+	} ]
+}

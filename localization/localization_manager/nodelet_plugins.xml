@@ -1,0 +1,5 @@
+<library path="lib/liblocalization_manager">
+  <class name="localization_manager/LocalizationManagerNodelet" type="localization_manager::LocalizationManagerNodelet" base_class_type="nodelet::Nodelet">
+		<description>Nodelet for localization_manager::Manager</description>
+  </class>
+</library>

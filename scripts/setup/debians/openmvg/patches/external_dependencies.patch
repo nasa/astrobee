@@ -1,0 +1,280 @@
+Use external dependencies, not internal.
+Index: libopenmvg-1.1/src/CMakeLists.txt
+===================================================================
+--- libopenmvg-1.1.orig/src/CMakeLists.txt
++++ libopenmvg-1.1/src/CMakeLists.txt
+@@ -20,9 +20,9 @@ endif()
+ option(OpenMVG_BUILD_SHARED "Build OpenMVG shared libs" OFF)
+ option(OpenMVG_BUILD_TESTS "Build OpenMVG tests" OFF)
+ option(OpenMVG_BUILD_DOC "Build OpenMVG documentation" ON)
+-option(OpenMVG_BUILD_EXAMPLES "Build OpenMVG samples applications." ON)
++option(OpenMVG_BUILD_EXAMPLES "Build OpenMVG samples applications." OFF)
+ option(OpenMVG_BUILD_OPENGL_EXAMPLES "Build OpenMVG openGL examples" OFF)
+-option(OpenMVG_BUILD_SOFTWARES "Build OpenMVG softwares" ON)
++option(OpenMVG_BUILD_SOFTWARES "Build OpenMVG softwares" OFF)
+ option(OpenMVG_BUILD_COVERAGE "Enable code coverage generation (gcc only)" OFF)
+ option(OpenMVG_USE_OPENMP "Enable OpenMP parallelization" ON)
+ # ==============================================================================
+@@ -235,11 +235,7 @@ ENDMACRO(UNIT_TEST)
+ # - internal by default,
+ # - external if EIGEN_INCLUDE_DIR_HINTS is defined
+ # ==============================================================================
+-if (NOT DEFINED EIGEN_INCLUDE_DIR_HINTS)
+-  set(EIGEN_INCLUDE_DIR_HINTS ${CMAKE_CURRENT_SOURCE_DIR}/third_party/eigen)
+-  set(OpenMVG_USE_INTERNAL_EIGEN ON)
+-endif()
+-find_package(Eigen QUIET)
++find_package(Eigen REQUIRED)
+ if (EIGEN_FOUND)
+   include_directories(${EIGEN_INCLUDE_DIRS})
+ endif (EIGEN_FOUND)
+@@ -250,17 +246,7 @@ endif (EIGEN_FOUND)
+ # - internal by default (ceres-solver+cxsparse+miniglog),
+ # - external if CERES_DIR_HINTS and FIND_PACKAGE return a valid Ceres setup
+ # ==============================================================================
+-find_package(Ceres QUIET HINTS ${CERES_DIR_HINTS})
+-if (NOT Ceres_FOUND)
+-  set(OpenMVG_USE_INTERNAL_CERES ON)
+-  set(CERES_INCLUDE_DIRS
+-    ${CMAKE_CURRENT_SOURCE_DIR}/third_party/ceres-solver/include
+-    ${CMAKE_CURRENT_SOURCE_DIR}/third_party/ceres-solver/internal/ceres/miniglog
+-    ${PROJECT_BINARY_DIR}/third_party/ceres-solver/config)
+-    FILE(READ "${CMAKE_CURRENT_SOURCE_DIR}/third_party/ceres-solver/VERSION" CERES_CONFIG)
+-    STRING(REGEX REPLACE "version ([0-9.]+).*" "\\1" CERES_VERSION ${CERES_CONFIG})
+-  set(CERES_LIBRARIES ceres cxsparse)
+-endif()
++find_package(Ceres REQUIRED)
+ 
+ # ==============================================================================
+ # Flann
+@@ -268,14 +254,7 @@ endif()
+ # - internal by default (flann),
+ # - external if FLANN_INCLUDE_DIR_HINTS and a valid Flann setup is found
+ # ==============================================================================
+-if (NOT DEFINED FLANN_INCLUDE_DIR_HINTS)
+-  set(FLANN_INCLUDE_DIR_HINTS ${CMAKE_CURRENT_SOURCE_DIR}/third_party/flann/src/cpp)
+-  set(OpenMVG_USE_INTERNAL_FLANN ON)
+-endif()
+-find_package(Flann QUIET)
+-if (NOT FLANN_FOUND OR OpenMVG_USE_INTERNAL_FLANN)
+-  set(FLANN_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/third_party/flann/src/cpp)
+-endif()
++find_package(Flann REQUIRED)
+ 
+ # ==============================================================================
+ # CoinUtils
+@@ -283,15 +262,7 @@ endif()
+ # - internal by default (CoinUtils),
+ # - external if COINUTILS_INCLUDE_DIR_HINTS and a valid CoinUtils setup is found
+ # ==============================================================================
+-if (NOT DEFINED COINUTILS_INCLUDE_DIR_HINTS)
+-  set(COINUTILS_INCLUDE_DIR_HINTS ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/osi_clp/CoinUtils/src/)
+-  set(OpenMVG_USE_INTERNAL_COINUTILS ON)
+-endif()
+-find_package(CoinUtils QUIET)
+-if (NOT COINUTILS_FOUND OR OpenMVG_USE_INTERNAL_COINUTILS)
+-  set(COINUTILS_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/osi_clp/CoinUtils/src/)
+-  set(COINUTILS_LIBRARY lib_CoinUtils)
+-endif()
++find_package(CoinUtils REQUIRED)
+ 
+ ## ==============================================================================
+ ## Clp
+@@ -299,17 +270,7 @@ endif()
+ ## - internal by default (Clp),
+ ## - external if CLP_INCLUDE_DIR_HINTS and a valid Clp setup is found
+ ## ==============================================================================
+-if (NOT DEFINED CLP_INCLUDE_DIR_HINTS)
+-  set(CLP_INCLUDE_DIR_HINTS ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/osi_clp/Clp/src/)
+-  set(OpenMVG_USE_INTERNAL_CLP ON)
+-endif()
+-find_package(Clp QUIET)
+-if (NOT CLP_FOUND OR OpenMVG_USE_INTERNAL_CLP)
+-  set(CLP_INCLUDE_DIRS
+-     ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/osi_clp/Clp/src/
+-     ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/osi_clp/Clp/src/OsiClp/)
+-  set(CLP_LIBRARIES lib_clp lib_OsiClpSolver)
+-endif()
++find_package(Clp REQUIRED)
+ 
+ # ==============================================================================
+ # Osi
+@@ -317,15 +278,7 @@ endif()
+ # - internal by default (Osi),
+ # - external if OSI_INCLUDE_DIR_HINTS and a valid Osi setup is found
+ # ==============================================================================
+-if (NOT DEFINED OSI_INCLUDE_DIR_HINTS)
+-  set(OSI_INCLUDE_DIR_HINTS ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/osi_clp/Osi/src/)
+-  set(OpenMVG_USE_INTERNAL_OSI ON)
+-endif()
+-find_package(Osi QUIET)
+-if (NOT OSI_FOUND OR OpenMVG_USE_INTERNAL_OSI)
+-  set(OSI_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/osi_clp/Osi/src/Osi/)
+-  set(OSI_LIBRARY lib_Osi)
+-endif()
++find_package(Osi REQUIRED)
+ 
+ # ==============================================================================
+ # Internal CLP/OSI/COINUTILS libraries:
+@@ -440,9 +393,6 @@ if (OpenMVG_BUILD_SOFTWARES)
+   add_subdirectory(software)
+ endif (OpenMVG_BUILD_SOFTWARES)
+ 
+-# Included for research purpose only
+-add_subdirectory(nonFree)
+-
+ # ==============================================================================
+ # Documentation
+ # --------------------------
+@@ -618,7 +568,7 @@ endif (OpenMVG_USE_INTERNAL_CERES)
+ # Create a OpenMVGConfig.cmake file. <name>Config.cmake files are searched by
+ # FIND_PACKAGE() automatically. We configure that file so that we can put any
+ # information we want in it, e.g. version numbers, include directories, etc.
+-configure_file("${CMAKE_SOURCE_DIR}/cmakeFindModules/OpenMVGConfig.cmake.in"
++configure_file("${CMAKE_CURRENT_SOURCE_DIR}/cmakeFindModules/OpenMVGConfig.cmake.in"
+                "${CMAKE_CURRENT_BINARY_DIR}/OpenMVGConfig.cmake" @ONLY)
+ 
+ install(FILES "${CMAKE_CURRENT_BINARY_DIR}/OpenMVGConfig.cmake"
+Index: libopenmvg-1.1/src/cmakeFindModules/FindCeres.cmake
+===================================================================
+--- /dev/null
++++ libopenmvg-1.1/src/cmakeFindModules/FindCeres.cmake
+@@ -0,0 +1,60 @@
++# - Find Ceres library
++# Find the native Ceres includes and library
++# This module defines
++#  CERES_INCLUDE_DIRS, where to find ceres.h, Set when
++#                      CERES_INCLUDE_DIR is found.
++#  CERES_LIBRARIES, libraries to link against to use Ceres.
++#  CERES_ROOT_DIR, The base directory to search for Ceres.
++#                  This can also be an environment variable.
++#  CERES_FOUND, If false, do not try to use Ceres.
++#
++# also defined, but not for general use are
++#  CERES_LIBRARY, where to find the Ceres library.
++
++# If CERES_ROOT_DIR was defined in the environment, use it.
++IF(NOT CERES_ROOT_DIR AND NOT $ENV{CERES_ROOT_DIR} STREQUAL "")
++  SET(CERES_ROOT_DIR $ENV{CERES_ROOT_DIR})
++ENDIF()
++
++SET(_ceres_SEARCH_DIRS
++  ${CERES_ROOT_DIR}
++  /usr/local
++  /sw # Fink
++  /opt/local # DarwinPorts
++  /opt/csw # Blastwave
++  /opt/lib/ceres
++)
++
++FIND_PATH(CERES_INCLUDE_DIR
++  NAMES
++    ceres/ceres.h
++  HINTS
++    ${_ceres_SEARCH_DIRS}
++  PATH_SUFFIXES
++    include
++)
++
++FIND_LIBRARY(CERES_LIBRARY
++  NAMES
++    ceres
++  HINTS
++    ${_ceres_SEARCH_DIRS}
++  PATH_SUFFIXES
++    lib64 lib
++  )
++
++# handle the QUIETLY and REQUIRED arguments and set CERES_FOUND to TRUE if
++# all listed variables are TRUE
++INCLUDE(FindPackageHandleStandardArgs)
++FIND_PACKAGE_HANDLE_STANDARD_ARGS(ceres DEFAULT_MSG
++    CERES_LIBRARY CERES_INCLUDE_DIR)
++
++IF(CERES_FOUND)
++  SET(CERES_LIBRARIES ${CERES_LIBRARY})
++  SET(CERES_INCLUDE_DIRS ${CERES_INCLUDE_DIR})
++ENDIF(CERES_FOUND)
++
++MARK_AS_ADVANCED(
++  CERES_INCLUDE_DIR
++  CERES_LIBRARY
++)
+Index: libopenmvg-1.1/src/cmakeFindModules/FindClp.cmake
+===================================================================
+--- libopenmvg-1.1.orig/src/cmakeFindModules/FindClp.cmake
++++ libopenmvg-1.1/src/cmakeFindModules/FindClp.cmake
+@@ -3,7 +3,7 @@
+ #----------------------------------------------------------
+ 
+ FIND_PATH(CLP_DIR ClpConfig.h
+-    HINTS "${CLP_ROOT}" "$ENV{CLP_ROOT}" "${CLP_INCLUDE_DIR_HINTS}"
++    HINTS "${CLP_ROOT}" "$ENV{CLP_ROOT}" "${CLP_INCLUDE_DIR_HINTS}" "/usr/include/coin"
+     PATHS "$ENV{PROGRAMFILES}/Clp" "$ENV{PROGRAMW6432}/Clp" "/usr" "/usr/local"
+     PATH_SUFFIXES Clp
+     DOC "Root directory of CLP includes")
+@@ -51,7 +51,7 @@ IF(EXISTS "${CLP_DIR}" AND NOT "${CLP_DI
+         SET(CLP_INCLUDE_DIR ${CLP_DIR})
+ 
+         FIND_LIBRARY(CLP_LIBRARY NAMES Clp)
+-        FIND_LIBRARY(CLPSOLVER_LIBRARY NAMES ClpSolver)
++        FIND_LIBRARY(CLPSOLVER_LIBRARY NAMES Clp)
+         FIND_LIBRARY(OSICLP_LIBRARY NAMES OsiClp)
+ 
+         # locate Clp libraries
+Index: libopenmvg-1.1/src/cmakeFindModules/FindCoinUtils.cmake
+===================================================================
+--- libopenmvg-1.1.orig/src/cmakeFindModules/FindCoinUtils.cmake
++++ libopenmvg-1.1/src/cmakeFindModules/FindCoinUtils.cmake
+@@ -3,7 +3,7 @@
+ #----------------------------------------------------------
+ 
+ FIND_PATH(COINUTILS_DIR CoinUtilsConfig.h
+-    HINTS "${COINUTILS_ROOT}" "$ENV{COINUTILS_ROOT}" "${COINUTILS_INCLUDE_DIR_HINTS}"
++    HINTS "${COINUTILS_ROOT}" "$ENV{COINUTILS_ROOT}" "${COINUTILS_INCLUDE_DIR_HINTS}" "/usr/include/coin"
+     PATHS "$ENV{PROGRAMFILES}/CoinUtils" "$ENV{PROGRAMW6432}/CoinUtils" "/usr" "/usr/local"
+     PATH_SUFFIXES CoinUtils
+     DOC "Root directory of COINUTILS includes")
+Index: libopenmvg-1.1/src/cmakeFindModules/FindOsi.cmake
+===================================================================
+--- libopenmvg-1.1.orig/src/cmakeFindModules/FindOsi.cmake
++++ libopenmvg-1.1/src/cmakeFindModules/FindOsi.cmake
+@@ -3,7 +3,7 @@
+ #----------------------------------------------------------
+ 
+ FIND_PATH(OSI_DIR OsiConfig.h
+-    HINTS "${OSI_ROOT}" "$ENV{OSI_ROOT}" "${OSI_INCLUDE_DIR_HINTS}"
++    HINTS "${OSI_ROOT}" "$ENV{OSI_ROOT}" "${OSI_INCLUDE_DIR_HINTS}" "/usr/include/coin"
+     PATHS "$ENV{PROGRAMFILES}/Osi" "$ENV{PROGRAMW6432}/Osi" "/usr" "/usr/local"
+     PATH_SUFFIXES Osi
+     DOC "Root directory of OSI includes")
+Index: libopenmvg-1.1/src/third_party/CMakeLists.txt
+===================================================================
+--- libopenmvg-1.1.orig/src/third_party/CMakeLists.txt
++++ libopenmvg-1.1/src/third_party/CMakeLists.txt
+@@ -71,7 +71,7 @@ endif (NOT TIFF_FOUND)
+ ##
+ 
+ # Add svg library
+-add_subdirectory(vectorGraphics)
++#add_subdirectory(vectorGraphics)
+ 
+ # Add ceres-solver (A Nonlinear Least Squares Minimizer)
+ if (DEFINED OpenMVG_USE_INTERNAL_CERES)
+@@ -90,12 +90,12 @@ if (DEFINED OpenMVG_USE_INTERNAL_FLANN)
+ endif()
+ 
+ # Exif data parsing
+-set(EASYEXIF_INCLUDE_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/include/openMVG/third_party/easyexif)
+-add_subdirectory(easyexif)
++#set(EASYEXIF_INCLUDE_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/include/openMVG/third_party/easyexif)
++#add_subdirectory(easyexif)
+ 
+ # Fast corner detector
+-set(FAST_INCLUDE_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/include/openMVG/third_party/fast)
+-add_subdirectory(fast)
++#set(FAST_INCLUDE_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/include/openMVG/third_party/fast)
++#add_subdirectory(fast)
+ 
+ ##
+ # Install Header only libraries if necessary

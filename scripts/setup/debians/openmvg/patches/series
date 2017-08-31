@@ -1,0 +1,8 @@
+submodules_add.patch
+eigen_alignment.patch
+external_dependencies.patch
+disable_libraries.patch
+shared_libraries.patch
+shared_internal_libs.patch
+find_quiet.patch
+no_infty_computer_vision.patch

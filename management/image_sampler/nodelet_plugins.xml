@@ -1,0 +1,10 @@
+<library path="lib/libimage_sampler">
+  <class name="image_sampler/ImageSampler"
+    type="image_sampler::ImageSampler"
+    base_class_type="nodelet::Nodelet">
+    <description>
+      Nodelet to downsample images from a camera, in both
+      resolution and rate.
+    </description>
+  </class>
+</library>

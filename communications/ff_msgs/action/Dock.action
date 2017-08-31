@@ -1,0 +1,66 @@
+# Copyright (c) 2017, United States Government, as represented by the
+# Administrator of the National Aeronautics and Space Administration.
+# 
+# All rights reserved.
+# 
+# The Astrobee platform is licensed under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with the
+# License. You may obtain a copy of the License at
+# 
+#     http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+#
+# Dock action for the Docking node
+
+# Goal
+std_msgs/Header header
+uint8 bay
+---
+# Result
+std_msgs/Header header
+int32 status
+
+int32 UNKNOWN          = 0
+
+# success codes
+int32 DOCKED         = 1     # success!
+int32 ALREADY_DOCKED = 2     # technically success, the best kind of success
+int32 CANCELED       = 3     # i guess success?
+
+# error codes
+int32 ACTION_IN_PROGRESS = -101  # we are already trying to dock
+int32 DOCK_HW_ERROR      = -102  # i2c error or something with dock
+int32 NO_CAMERA_SVC      = -103  # unable to communicate with camera service
+int32 CANNOT_ENABLE_CAM  = -104
+int32 NO_EKF_SVC         = -105  # unable to communicate with the EKF service
+int32 CANNOT_SWITCH_EKF  = -106
+int32 NO_MOBILITY_SVC    = -107  # unable to communicate with the choreograhper
+int32 NO_PMC_SVC         = -108
+int32 CANNOT_DISABLE_PMC = -109  # can't turn ourselves off
+
+# localization error codes
+int32 NO_FEATURES      = -201  # could not get a location lock
+int32 HIGH_COVARIANCE  = -202  # covariance drifted too much
+
+---
+# Feedback
+std_msgs/Header header
+float32 progress  # distance from dock? something?
+
+int32 status      # one of the status codes below, typically increases
+
+int32 UNKNOWN          = 0
+int32 PREPARING        = 1
+int32 MOVE_TO_START    = 2
+int32 SWITCHING_CAMERA = 3
+int32 SWITCHING_MODE   = 4
+int32 WAITING_FOR_LOC  = 5
+int32 INGRESSING       = 6
+int32 DEACTIVATING_PMC = 7
+int32 MAX_STATE        = 7
+

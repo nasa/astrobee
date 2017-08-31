@@ -1,0 +1,17 @@
+libdbow2 (0.1-3) unstable; urgency=medium
+
+  * Separate dlib into separate debian.
+
+ -- Brian Coltin <nospam@nospam.org>  Tue, 29 Aug 2017 15:30:32 -0700
+
+libdbow2 (0.1-2) unstable; urgency=medium
+
+  * Built from original tarball, not version in git.
+
+ -- Brian Coltin <nospam@nospam.org>  Tue, 01 Aug 2017 15:29:05 -0700
+
+libdbow2 (0.1-1) unstable; urgency=medium
+
+  * Initial release.
+
+ -- Brian Coltin <nospam@nospam.org>  Tue, 17 Jan 2017 11:21:32 -0800

@@ -1,0 +1,5 @@
+<library path="lib/libplanner_qp">
+  <class name="planner_qp/Planner" type="planner_qp::Planner" base_class_type="nodelet::Nodelet">
+    <description>Nodelet for mobility::planner::qp</description>
+  </class>
+</library>

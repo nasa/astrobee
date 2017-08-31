@@ -1,0 +1,9 @@
+<library path="lib/liblaser_nodelet">
+  <class name="laser/LaserNodelet"
+	 type="laser::ros::LaserNodelet"
+	 base_class_type="nodelet::Nodelet">
+    <description>
+	  Nodelet to control an LASER BEAM (pew pew!)
+    </description>
+  </class>
+</library>

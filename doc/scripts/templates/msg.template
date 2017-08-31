@@ -1,0 +1,11 @@
+\defgroup msg ROS messages
+\ingroup comms
+\defgroup msg_%(package)s %(package)s
+\ingroup msg
+\defgroup %(package)s_%(message)s %(message)s
+\ingroup msg_%(package)s
+%(description)s
+
+| Type          | Name (value)  | Description |
+| -------------:|:------------- |:------------|
+%(content)s

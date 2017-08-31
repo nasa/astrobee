@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<package>
+  <name>mobility</name>
+  <version>0.0.0</version>
+  <description>
+    The mobility system
+  </description>
+  <license>
+    Apache License, Version 2.0
+  </license>
+  <author email="astrobee-fsw@nx.arc.nasa.gov">
+    Astrobee Flight Software
+  </author>
+  <maintainer email="astrobee-fsw@nx.arc.nasa.gov">
+    Astrobee Flight Software
+  </maintainer>
+  <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>ff_msgs</build_depend>
+  <build_depend>ff_util</build_depend>
+  <run_depend>ff_msgs</run_depend>
+  <run_depend>ff_util</run_depend>
+  <run_depend>choreographer</run_depend>
+  <run_depend>mapper</run_depend>
+  <run_depend>sentinel</run_depend>
+  <run_depend>planner_trapezoidal</run_depend>
+  <run_depend>planner_qp</run_depend>
+  <run_depend>docker</run_depend>
+</package>

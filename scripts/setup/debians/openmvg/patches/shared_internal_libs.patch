@@ -1,0 +1,14 @@
+Build internal libraries as shared.
+Index: libopenmvg/src/third_party/CMakeLists.txt
+===================================================================
+--- libopenmvg.orig/src/third_party/CMakeLists.txt
++++ libopenmvg/src/third_party/CMakeLists.txt
+@@ -3,7 +3,7 @@
+ #---------------------
+ 
+ # libs should be static
+-set(BUILD_SHARED_LIBS OFF)
++#set(BUILD_SHARED_LIBS OFF)
+ 
+ # use PIC code for link into shared lib
+ if(UNIX)

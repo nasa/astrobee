@@ -1,0 +1,10 @@
+<library path="lib/libaccess_control">
+  <class name="access_control/AccessControl"
+    type="access_control::AccessControl"
+    base_class_type="nodelet::Nodelet">
+    <description>
+      Nodelet to change operator control and reject commands for operators 
+      without control.
+    </description>
+  </class>
+</library>

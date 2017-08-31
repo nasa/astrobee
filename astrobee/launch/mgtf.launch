@@ -1,0 +1,82 @@
+<!-- Copyright (c) 2017, United States Government, as represented by the     -->
+<!-- Administrator of the National Aeronautics and Space Administration.     -->
+<!--                                                                         -->
+<!-- All rights reserved.                                                    -->
+<!--                                                                         -->
+<!-- The Astrobee platform is licensed under the Apache License, Version 2.0 -->
+<!-- (the "License"); you may not use this file except in compliance with    -->
+<!-- the License. You may obtain a copy of the License at                    -->
+<!--                                                                         -->
+<!--     http://www.apache.org/licenses/LICENSE-2.0                          -->
+<!--                                                                         -->
+<!-- Unless required by applicable law or agreed to in writing, software     -->
+<!-- distributed under the License is distributed on an "AS IS" BASIS,       -->
+<!-- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or         -->
+<!-- implied. See the License for the specific language governing            -->
+<!-- permissions and limitations under the License.                          -->
+
+<launch>
+
+  <!-- Context options (NB: SOME OVERRIDDEN BY /etc or ENVIRONMENT VARIABLES, IF SET)        -->
+  <arg name="robot" default="p4c" />                          <!-- Robot name                -->
+  <arg name="world" default="mgtf" />                         <!-- World name                -->
+  <arg name="ns" default="" />                                <!-- Robot namespace prefix    -->
+  <arg name="nodes" default=""/>                              <!-- Launch specific nodes     -->
+  <arg name="mlp" default="10.42.0.25" />                     <!-- MLP IP address            -->
+  <arg name="llp" default="10.42.0.26" />                     <!-- LLP IP address            -->
+  <arg name="rec" default="" />                               <!-- Enable recording of data  -->
+  <arg name="dds" default="true" />                           <!-- Enable DDS                -->
+
+  <!-- General options -->
+  <arg name="visualeyez" default="false" />                   <!-- Overhead camera           -->
+  <arg name="vive" default="false" />                         <!-- Vive ground truth         -->
+  <arg name="gviz" default="false" />                         <!-- GNC visualizer            -->
+  <arg name="rviz" default="false" />                         <!-- Robot visualizater        -->
+  <arg name="rqt" default="false" />                          <!-- Start user interface      -->
+  <arg name="gds" default="false" />                          <!-- Enable ground data system -->
+
+<!-- Make sure all environment variables are set for controller -->
+  <env if="$(eval optenv('ASTROBEE_ROBOT','')=='')" 
+       name="ASTROBEE_ROBOT" value="$(arg robot)" />
+  <env if="$(eval optenv('ASTROBEE_WORLD','')=='')" 
+       name="ASTROBEE_WORLD" value="$(arg world)" />
+  <env if="$(eval optenv('ASTROBEE_CONFIG_DIR','')=='')" 
+       name="ASTROBEE_CONFIG_DIR" value="$(find astrobee)/config" />
+  <env if="$(eval optenv('ASTROBEE_RESOURCE_DIR','')=='')" 
+       name="ASTROBEE_RESOURCE_DIR" value="$(find astrobee)/resources" />
+  <env if="$(eval optenv('ROSCONSOLE_CONFIG_FILE','')=='')" 
+       name="ROSCONSOLE_CONFIG_FILE" value="$(find astrobee)/resources/logging.config"/>
+
+  <!-- Declare our global logging format -->
+  <env name="ROSCONSOLE_FORMAT" value="[${severity}] [${time}] : (${logger}) ${message}"/>
+
+  <!-- Start ground controller services -->
+  <group>
+    <machine name ="local" address="localhost" default="true"/>
+    <!-- Start ground controller services -->
+    <include if="$(arg visualeyez)" file="$(find astrobee)/launch/controller/visualeyez.launch"/>
+    <include if="$(arg vive)" file="$(find astrobee)/launch/controller/vive.launch"/>
+    <include if="$(arg gviz)" file="$(find astrobee)/launch/controller/gviz.launch"/>
+    <include if="$(arg rviz)" file="$(find astrobee)/launch/controller/rviz.launch"/>
+    <include if="$(arg gds)" file="$(find astrobee)/launch/controller/gds.launch"/>
+    <include if="$(arg rqt)" file="$(find astrobee)/launch/controller/rqt.launch"/>
+    <!-- Launch a recorder-->
+    <include unless="$(eval arg('rec')=='')"
+             file="$(find astrobee)/launch/controller/bagrecord.launch">
+      <arg name="bag" value="$(arg rec)"/>
+    </include>
+  </group>
+
+  <!-- Launch an astrobee! In future will be replaced by systemd call -->
+  <include file="$(find astrobee)/launch/astrobee.launch">
+    <arg name="robot" value="$(arg robot)" />                 <!-- Type of robot              -->
+    <arg name="world" value="$(arg world)" />                 <!-- Execution context          -->
+    <arg name="ns" value="$(arg ns)" />                       <!-- Robot namespace            -->
+    <arg name="drivers" value="true" />                       <!-- Always start drivers       -->
+    <arg name="nodes" value="$(arg nodes)" />                 <!-- Limit to specific nodes    -->
+    <arg name="llp" value="$(arg llp)" />                     <!-- LLP IP address             -->
+    <arg name="mlp" value="$(arg mlp)" />                     <!-- MLP IP address             -->
+    <arg name="dds" value="$(arg dds)" />                     <!-- Enable DDS                 -->
+  </include>
+
+</launch>

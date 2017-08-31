@@ -1,0 +1,29 @@
+@startuml
+
+title Astrobee Typical Fault Sequences
+
+boundary DDS_Bridge
+entity Executive
+control SystemMonitor
+entity Subsystem
+
+== Subsystem Fault ==
+Subsystem -> SystemMonitor : fault detected
+activate SystemMonitor
+SystemMonitor -> SystemMonitor : update state
+SystemMonitor ->  Executive : fault response
+SystemMonitor -> DDS_Bridge : fault notification
+deactivate SystemMonitor
+' Need to clear the fault!
+
+== Heartbeat Missing ==
+SystemMonitor x-> Subsystem : heartbeat
+activate SystemMonitor
+SystemMonitor -> SystemMonitor : update state
+SystemMonitor ->  Executive : fault response
+SystemMonitor -> DDS_Bridge : fault notification
+deactivate SystemMonitor
+
+' Need a system wide fault (limit?)
+
+@enduml

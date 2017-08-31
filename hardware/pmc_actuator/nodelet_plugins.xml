@@ -1,0 +1,5 @@
+<library path="lib/libpmc_actuator">
+  <class name="pmc_actuator/PmcActuatorNodelet" type="pmc_actuator::PmcActuatorNodelet" base_class_type="nodelet::Nodelet">
+    <description>Nodelet for the PMC actuator</description>
+  </class>
+</library>

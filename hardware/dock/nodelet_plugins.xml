@@ -1,0 +1,9 @@
+<library path="lib/libdock_nodelet">
+  <class name="dock/DockNodelet"
+	 type="dock::ros::DockNodelet"
+	 base_class_type="nodelet::Nodelet">
+    <description>
+		Nodelet to control low-level dock things.
+    </description>
+  </class>
+</library>

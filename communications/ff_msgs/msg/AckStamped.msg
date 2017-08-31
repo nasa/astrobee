@@ -1,0 +1,40 @@
+# Copyright (c) 2017, United States Government, as represented by the
+# Administrator of the National Aeronautics and Space Administration.
+# 
+# All rights reserved.
+# 
+# The Astrobee platform is licensed under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with the
+# License. You may obtain a copy of the License at
+# 
+#     http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+#
+# Message used to send an acknowledgement for commands received. Based off of
+# Ack in RAPID DDS
+
+# Header with timestamp
+std_msgs/Header header
+
+# Id of the command being acknowledged
+string cmd_id
+
+# Commands are sent from 4 places. The ground, the system monitor, guest
+# science, and another astrobee. Command origin will be used to route the ack
+# correctly.
+string cmd_origin
+
+# Status of the command
+ff_msgs/AckStatus status
+
+# Completed status of the command
+ff_msgs/AckCompletedStatus completed_status
+
+# If the command fails to execute, message will contain information on why it
+# failed.
+string message

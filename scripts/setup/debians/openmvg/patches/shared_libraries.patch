@@ -1,0 +1,17 @@
+Turn on shared libraries.
+Index: libopenmvg/src/CMakeLists.txt
+===================================================================
+--- libopenmvg.orig/src/CMakeLists.txt
++++ libopenmvg/src/CMakeLists.txt
+@@ -17,9 +17,9 @@ endif()
+ # ==============================================================================
+ # OpenMVG build options
+ # ==============================================================================
+-option(OpenMVG_BUILD_SHARED "Build OpenMVG shared libs" OFF)
++option(OpenMVG_BUILD_SHARED "Build OpenMVG shared libs" ON)
+ option(OpenMVG_BUILD_TESTS "Build OpenMVG tests" OFF)
+-option(OpenMVG_BUILD_DOC "Build OpenMVG documentation" ON)
++option(OpenMVG_BUILD_DOC "Build OpenMVG documentation" OFF)
+ option(OpenMVG_BUILD_EXAMPLES "Build OpenMVG samples applications." OFF)
+ option(OpenMVG_BUILD_OPENGL_EXAMPLES "Build OpenMVG openGL examples" OFF)
+ option(OpenMVG_BUILD_SOFTWARES "Build OpenMVG softwares" OFF)

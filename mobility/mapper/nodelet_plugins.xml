@@ -1,0 +1,5 @@
+<library path="lib/libmapper">
+  <class name="mapper/MapperNodelet" type="mapper::MapperNodelet" base_class_type="nodelet::Nodelet">
+    <description>Nodelet for mobility::mapper</description>
+  </class>
+</library>

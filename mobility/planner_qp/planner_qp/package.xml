@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>planner_qp</name>
+  <version>0.0.0</version>
+  <description>
+    Interface for the QP planner
+  </description>
+  <license>
+    Apache License, Version 2.0
+  </license>
+  <author email="astrobee-fsw@nx.arc.nasa.gov">
+    Astrobee Flight Software
+  </author>
+  <maintainer email="astrobee-fsw@nx.arc.nasa.gov">
+    Astrobee Flight Software
+  </maintainer>
+  <buildtool_depend>catkin</buildtool_depend>
+  <depend>roscpp</depend>
+  <depend>nodelet</depend>
+  <depend>pluginlib</depend>
+  <depend>actionlib</depend>
+  <depend>tf</depend>
+  <export>
+    <nodelet plugin="${prefix}/nodelet_plugins.xml" />
+  </export>
+</package>

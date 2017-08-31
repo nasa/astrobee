@@ -1,0 +1,3 @@
+compile_fixes.patch
+fix_tinyxml_cross_compile.patch
+better_export.patch

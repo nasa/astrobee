@@ -1,0 +1,9 @@
+<library path="lib/libepson_imu">
+  <class name="epson_imu/EpsonImuNodelet"
+    type="epson_imu::EpsonImuNodelet"
+    base_class_type="nodelet::Nodelet">
+    <description>
+      Nodelet to run the epson IMU driver.
+    </description>
+  </class>
+</library>

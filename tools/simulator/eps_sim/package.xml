@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<package>
+  <name>eps_sim</name>
+  <version>0.0.0</version>
+  <description>
+    The eps simulator simulates the astrobee eps.
+  </description>
+  <license>
+    Apache License, Version 2.0
+  </license>
+  <author email="astrobee-fsw@nx.arc.nasa.gov">
+    Astrobee Flight Software
+  </author>
+  <maintainer email="astrobee-fsw@nx.arc.nasa.gov">
+    Astrobee Flight Software
+  </maintainer>
+  <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>roscpp</build_depend>
+  <build_depend>ff_hw_msgs</build_depend>
+  <build_depend>ff_util</build_depend>
+  <build_depend>nodelet</build_depend>
+  <build_depend>message_generation</build_depend>
+  <run_depend>ff_hw_msgs</run_depend>
+  <run_depend>ff_util</run_depend>
+  <run_depend>roscpp</run_depend>
+  <run_depend>nodelet</run_depend>
+  <run_depend>message_generation</run_depend>
+  <run_depend>message_runtime</run_depend>
+  <export>
+    <nodelet plugin="${prefix}/nodelet_plugins.xml" />
+  </export>
+</package>

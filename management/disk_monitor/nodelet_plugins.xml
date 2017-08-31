@@ -1,0 +1,9 @@
+<library path="lib/libdisk_monitor">
+  <class name="disk_monitor/DiskMonitor"
+    type="disk_monitor::DiskMonitor"
+    base_class_type="nodelet::Nodelet">
+    <description>
+      Nodele1t to monitor disk loads."
+    </description>
+  </class>
+</library>

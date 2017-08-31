@@ -1,0 +1,244 @@
+Index: libdbow2/include/DBoW2/FBrief.h
+===================================================================
+--- libdbow2.orig/include/DBoW2/FBrief.h
++++ libdbow2/include/DBoW2/FBrief.h
+@@ -13,18 +13,60 @@
+ #include <opencv2/core.hpp>
+ #include <vector>
+ #include <string>
++#include <malloc.h>
+ 
+ #include "FClass.h"
+ #include <DVision/DVision.h>
+ 
+ namespace DBoW2 {
+ 
++class BriefDescriptor {
++public:
++  BriefDescriptor() {
++    desc = NULL;
++    size = 0;
++  }
++  
++  BriefDescriptor(const BriefDescriptor & other) {
++    desc = NULL;
++    size = 0;
++    if (other.size > 0) {
++      Initialize(other.size);
++      memcpy(desc, other.desc, size);
++    }
++  }
++
++  BriefDescriptor & operator=(const BriefDescriptor &rhs) {
++    Initialize(rhs.size);
++    memcpy(desc, rhs.desc, size);
++    return *this;
++  }
++
++  ~BriefDescriptor() {
++    if (desc != NULL)
++      free(desc);
++    desc = NULL;
++  }
++
++  void Initialize(int bytes) {
++    if (desc != NULL)
++      desc = (unsigned char*)realloc(desc, bytes);
++    else
++      desc = (unsigned char*)memalign(16, bytes);
++    memset(desc, 0, bytes);
++    size = bytes;
++  }
++
++  int size;
++  unsigned char* desc;
++};
++
+ /// Functions to manipulate BRIEF descriptors
+ class FBrief: protected FClass
+ {
+ public:
+ 
+-  typedef DVision::BRIEF::bitset TDescriptor;
++  typedef BriefDescriptor TDescriptor;
+   typedef const TDescriptor *pDescriptor;
+ 
+   /**
+@@ -58,6 +100,20 @@ public:
+   static void fromString(TDescriptor &a, const std::string &s);
+   
+   /**
++   * Returns a string version of the descriptor in a binary format. Added for astrobee.
++   * @param a descriptor
++   * @return string version
++   */
++  static std::string toBytes(const TDescriptor &a);
++  
++  /**
++   * Returns a descriptor from a byte string. Added for astrobee.
++   * @param a descriptor
++   * @param s string version
++   */
++  static void fromBytes(TDescriptor &a, const std::string &s);
++
++  /**
+    * Returns a mat with the descriptors in float format
+    * @param descriptors
+    * @param mat (out) NxL 32F matrix
+Index: libdbow2/src/FBrief.cpp
+===================================================================
+--- libdbow2.orig/src/FBrief.cpp
++++ libdbow2/src/FBrief.cpp
+@@ -14,22 +14,23 @@
+ #include <DVision/DVision.h>
+ #include "FBrief.h"
+ 
++#include <opencv2/core/hal/hal.hpp>
++
+ using namespace std;
+ 
+ namespace DBoW2 {
+ 
+ // --------------------------------------------------------------------------
+ 
+-void FBrief::meanValue(const std::vector<FBrief::pDescriptor> &descriptors, 
++void FBrief::meanValue(const std::vector<FBrief::pDescriptor> &descriptors,
+   FBrief::TDescriptor &mean)
+ {
+-  mean.reset();
+-  
+-  if(descriptors.empty()) return;
+-  
++
++  if (descriptors.empty()) return;
++
+   const int N2 = descriptors.size() / 2;
+-  const int L = descriptors[0]->size();
+-  
++  const int L = descriptors[0]->size * 8;
++
+   vector<int> counters(L, 0);
+ 
+   vector<FBrief::pDescriptor>::const_iterator it;
+@@ -38,47 +39,75 @@ void FBrief::meanValue(const std::vector
+     const FBrief::TDescriptor &desc = **it;
+     for(int i = 0; i < L; ++i)
+     {
+-      if(desc[i]) counters[i]++;
++      if (desc.desc[i / 8] & (1 << (7 - (i % 8))))
++        counters[i]++;
+     }
+   }
+-  
+-  for(int i = 0; i < L; ++i)
+-  {
+-    if(counters[i] > N2) mean.set(i);
++
++  if (mean.size != descriptors[0]->size)
++    mean.Initialize(descriptors[0]->size);
++  for(int i = 0; i < L; ++i) {
++    if (counters[i] > N2)
++      mean.desc[i / 8] |= (1 << (7 - (i % 8)));
+   }
+-  
+ }
+ 
+ // --------------------------------------------------------------------------
+-  
+-double FBrief::distance(const FBrief::TDescriptor &a, 
++
++double FBrief::distance(const FBrief::TDescriptor &a,
+   const FBrief::TDescriptor &b)
+ {
+-  return (double)DVision::BRIEF::distance(a, b);
++  return (double)cv::hal::normHamming(a.desc, b.desc, a.size);
+ }
+ 
+ // --------------------------------------------------------------------------
+-  
++
+ std::string FBrief::toString(const FBrief::TDescriptor &a)
+ {
+-  // from boost::bitset
+-  string s;
+-  to_string(a, s); // reversed
+-  return s;
++  stringstream ss;
++  for(int i = 0; i < a.size * 8; ++i) 
++  {
++    int val = 0;
++    if (a.desc[i / 8] & (1 << (7 - (i % 8))))
++      val = 1;
++    ss << val << " ";
++  }
++  return ss.str();
++
+ }
+ 
+ // --------------------------------------------------------------------------
+-  
++
+ void FBrief::fromString(FBrief::TDescriptor &a, const std::string &s)
+ {
+-  // from boost::bitset
+   stringstream ss(s);
+-  ss >> a;
++  std::vector<bool> temp;
++  int v;
++  while( ss >> v)
++    temp.push_back(v);
++  // assumes descriptor size is multiple of 8
++  if ((unsigned int)a.size != temp.size() / 8)
++    a.Initialize(temp.size() / 8);
++  for (int i = 0; i < a.size * 8; i++)
++    if (temp[i])
++      a.desc[i / 8] |= (1 << (7 - (i % 8)));
++}
++  
++std::string FBrief::toBytes(const FBrief::TDescriptor &a) {
++  std::ostringstream out(std::stringstream::out | std::stringstream::binary);
++  out.write((const char*)a.desc, a.size);
++  return out.str();
++}
++
++void FBrief::fromBytes(FBrief::TDescriptor &a, const std::string &s) {
++  if ((unsigned int)a.size != s.size())
++    a.Initialize(s.size());
++  memcpy(a.desc, s.c_str(), s.size());
+ }
+ 
+ // --------------------------------------------------------------------------
+ 
+-void FBrief::toMat32F(const std::vector<TDescriptor> &descriptors, 
++void FBrief::toMat32F(const std::vector<TDescriptor> &descriptors,
+   cv::Mat &mat)
+ {
+   if(descriptors.empty())
+@@ -86,21 +115,21 @@ void FBrief::toMat32F(const std::vector<
+     mat.release();
+     return;
+   }
+-  
++
+   const int N = descriptors.size();
+-  const int L = descriptors[0].size();
+-  
++  const int L = descriptors[0].size * 8;
++
+   mat.create(N, L, CV_32F);
+-  
++
+   for(int i = 0; i < N; ++i)
+   {
+     const TDescriptor& desc = descriptors[i];
+     float *p = mat.ptr<float>(i);
+     for(int j = 0; j < L; ++j, ++p)
+     {
+-      *p = (desc[j] ? 1 : 0);
++      *p = (desc.desc[j / 8] & (1 << (7 - (j % 8))) ? 1 : 0);
+     }
+-  } 
++  }
+ }
+ 
+ // --------------------------------------------------------------------------

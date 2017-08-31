@@ -1,0 +1,12 @@
+<launch>
+  <include file="$(find ff_frame_store)/launch/ff_frame_store.launch" />
+  <node name="fly_node" pkg="flycapture" type="fly_node" output="screen" />
+  <node name="$(anon marker_tracking)" pkg="marker_tracking" type="overhead_tracking_node" output="screen" />
+  <node name="overhead_msg_cnv"
+    pkg="msg_conversions"
+    type="odometry_msg_cnv"
+    respawn="false">
+    <param name="input_topic" value="/loc/ground_truth" type="string"/>
+    <param name="output_topic" value="/loc/ground_truth_rviz" type="string"/>
+  </node>
+</launch>

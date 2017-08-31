@@ -1,0 +1,5 @@
+<library path="lib/libtemp_monitor">
+  <class name="temp_monitor/TempMonitorNode" type="temp_monitor::TempMonitorNode" base_class_type="nodelet::Nodelet">
+    <description>Nodelet for the temperature monitor</description>
+  </class>
+</library>

@@ -1,0 +1,8 @@
+<launch>
+  <arg name="topic" default="/hw/depth_perch/depth_image"/>
+  <arg name="topic_type" default="depth_image"/>
+  <node name="pico_proxy" pkg="pico_driver" type="pico_proxy" output="screen">
+    <param name="topic" type="string" value="$(arg topic)"/>
+    <param name="topic_type" type="string" value="$(arg topic_type)"/>
+  </node>
+</launch>

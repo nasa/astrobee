@@ -1,0 +1,20 @@
+Source: libdbow2
+Priority: optional
+Maintainer: Brian Coltin <nospam@nospam.org>
+Build-Depends: debhelper (>=9), cmake (>=3.5), ros-kinetic-opencv3 (>=3.1.0), libboost-dev (>=1.58), libdbowdlib-dev (>=0.1)
+Standards-Version: 3.9.7
+Section: libs
+Homepage: https://github.com/dorian3d/DBoW2
+
+Package: libdbow2-dev
+Section: libdevel
+Architecture: any
+Depends: libdbow21 (= ${binary:Version}), libdbowdlib-dev ${misc:Depends}
+Description: Database of visual features.
+ Library with a database of visual features for finding similar images.
+
+Package: libdbow21
+Architecture: any
+Depends: libdbowdlib1 (>=0.1), ${shlibs:Depends}, ${misc:Depends}
+Description: Database of visual features.
+ Library with a database of visual features for finding similar images.

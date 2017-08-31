@@ -1,0 +1,3 @@
+<launch>
+  <test test-name="test_sys_monitor" pkg="sys_monitor" type="test_sys_monitor" />
+</launch>

@@ -1,0 +1,10 @@
+<library path="lib/libexecutive">
+  <class name="executive/Executive"
+    type="executive::Executive"
+    base_class_type="nodelet::Nodelet">
+    <description>
+      Nodelet to keep track of the state of the robot and decide which commands
+      to execute.
+    </description>
+  </class>
+</library>

@@ -1,0 +1,120 @@
+{
+  "type" : "FreeFlyerPlan",
+  "valid" : true,
+  "site" : {
+    "type" : "Site",
+    "name" : "Site",
+    "id" : "Site"
+  },
+  "visible" : true,
+  "defaultTolerance" : 1.0,
+  "defaultSpeed" : 0.05,
+  "creator" : "DW",
+  "schemaUrl" : "http://www.example.com/freeFlyerPlanSchema.json",
+  "planNumber" : 0,
+  "dateCreated" : "2015-04-29T17:42:38Z",
+  "dateModified" : "2015-05-20T17:38:56Z",
+  "libraryURLs" : [ ],
+  "sequence" : [ {
+    "type" : "Station",
+    "coordinate" : {
+      "type" : "Point6Dof",
+      "y" : 0.0,
+      "x" : 0.0,
+      "pitch" : 0.0,
+      "roll" : 0.0,
+      "yaw" : 0.0,
+      "z" : 0.0,
+      "name" : "Point6Dof",
+      "id" : "Point6Dof"
+    },
+    "stopOnArrival" : false,
+    "tolerance" : 0.1,
+    "name" : "0",
+    "id" : "Station",
+    "sequence" : [ {
+      "type" : "Undock",
+      "color" : "#555555",
+      "blocking" : true,
+      "scopeTerminate" : true,
+      "name" : "0.0 Undock",
+      "id" : "Undock"
+    } ]
+  }, {
+    "type" : "Segment",
+    "speed" : 0.05,
+    "tolerance" : 0.0,
+    "waypoints" : [ [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ], [ 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -0.045518, 0.020690, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ], [ 2.000000015, -0.022760, 0.010346, 0.0, -0.045518, 0.020690, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ], [ 49.332179715, -2.177241, 0.989655, 0.0, -0.045518, 0.020690, 0.0, 0.045518, -0.020690, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ], [ 50.332179715, -2.200000, 1.000000, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ]],
+    "waypointType" : "PoseVelAccel",
+    "stopAtEnd" : true,
+    "faceForward" : true,
+    "name" : "0-1",
+    "id" : "Segment",
+    "sequence" : [ ]
+  }, {
+    "type" : "Station",
+    "coordinate" : {
+      "type" : "Point6Dof",
+      "y" : 1.0,
+      "x" : -2.2,
+      "pitch" : 0.0,
+      "roll" : 0.0,
+      "yaw" : 0.0,
+      "z" : 0.0,
+      "name" : "Point6Dof",
+      "id" : "Point6Dof"
+    },
+    "stopOnArrival" : false,
+    "tolerance" : 0.1,
+    "name" : "1",
+    "id" : "Station",
+    "sequence" : [ {
+      "type" : "StationKeep",
+      "duration" : 10,
+      "color" : "#555555",
+      "blocking" : true,
+      "scopeTerminate" : true,
+      "name" : "1.0 StationKeep",
+      "id" : "StationKeep"
+    } ]
+  }, {
+    "type" : "Segment",
+    "speed" : 0.05,
+    "tolerance" : 0.0,
+    "waypoints" : [ [ 0.0, -2.200000, 1.000000, 0.0, 0.0, 0.0, 0.0, 0.0, 0.050000, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ], [ 1.000000015, -2.20000, 1.025001, 0.0, 0.0, 0.050000, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ], [ 39.999999404, -2.200000, 2.975001, 0.0, 0.0, 0.050000, 0.0, 0.0, -0.05000, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ], [ 40.999999419, -2.20000, 3.000001, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ], [ 50.0, -2.200000, 3.000001, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ]],
+    "waypointType" : "PoseVelAccel",
+    "stopAtEnd" : true,
+    "faceForward" : true,
+    "name" : "1-2",
+    "id" : "Segment",
+    "sequence" : [ ]
+  }, {
+    "type" : "Station",
+    "coordinate" : {
+      "type" : "Point6Dof",
+      "y" : -9.54,
+      "x" : 11.3,
+      "pitch" : 0.0,
+      "roll" : 0.0,
+      "yaw" : 0.0,
+      "z" : 0.0,
+      "name" : "Point6Dof",
+      "id" : "Point6Dof"
+    },
+    "stopOnArrival" : false,
+    "tolerance" : 0.1,
+    "name" : "2",
+    "id" : "Station",
+    "sequence" : [ {
+      "type" : "StationKeep",
+      "duration" : 10,
+      "color" : "#555555",
+      "blocking" : true,
+      "scopeTerminate" : true,
+      "name" : "2.0 StationKeep",
+      "id" : "StationKeep"
+    } ]
+  } ],
+  "name" : "SoundSurvey",
+  "id" : "SoundSurvey"
+}

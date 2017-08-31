@@ -1,0 +1,81 @@
+@startuml
+
+'skinparam dpi 300
+
+title Astrobee Mobility State (Executive)
+
+[*] --> Drifting
+
+Drifting --> Stopping : stop
+Stopping ----> Flying : move
+
+Stopping --> Docking : dock
+Stopping --> Perching : perch
+Stopping --> Drifting : idle propulsion
+Perching --> Stopping : unperch
+Perching --> Stopping: stop
+Docking --> Stopping : undock
+Docking --> Stopping : stop
+Flying --> Stopping : stop
+Flying --> Drifting : idle propulsion
+Perching --> Drifting : idle propulsion
+Docking --> Drifting : idle propulsion
+
+
+state Stopping {
+  STOPPING -> STOPPED
+  STOPPED -> STOPPING
+  STOPPED: value = 0
+  STOPPING: value = 1
+}
+
+state Docking {
+  DOCKING -> DOCKED
+  DOCKED -> UNDOCKING
+  DOCKED: value = 0
+  DOCKING: value > 0
+  DOCKING: step being \n performed
+  UNDOCKING: value < 0
+  UNDOCKING: step being \nperformed
+}
+
+state Perching {
+  PERCHING -> PERCHED
+  PERCHED -> RELEASING
+  PERCHED: value = 0
+  PERCHING: value > 0
+  PERCHING: step being \n performed
+  RELEASING: value < 0
+  RELEASING: step being \nperformed
+}
+
+note as GNC
+Correspondance with internal GNC
+States:
+  - <b>Drifting</b> <--> GNC <b>Idle</b>
+  - <b>Stopping::Stopping</b> <--> GNC <b>Stopping</b>
+  - <b>Stopping::Stopped</b> <--> GNC <b>Stopped</b>
+  - <b>Flying</b>, <b>Docking</b> or <b>Perching</b>
+    <--> GNC <b>Nominal</b>
+end note
+
+'Flying - N1
+'Perching - N1
+
+/'
+state Docking {
+  DOCK_APPROACH -left-> ENGAGE
+  ENGAGE --> DOCKED
+  DOCKED --> UNLATCH
+  UNLATCH -> DOCK_LEAVING
+}
+
+state Perching {
+  PERCH_APPROACH -right-> GRASPING
+  GRASPING --> PERCHED
+  PERCHED --> RELEASING
+  RELEASING -left-> PERCH_LEAVING
+}
+'/
+
+@enduml

@@ -1,0 +1,420 @@
+<?xml version="1.0"?>
+
+<!-- Copyright (c) 2017, United States Government, as represented by the     -->
+<!-- Administrator of the National Aeronautics and Space Administration.     -->
+<!--                                                                         -->
+<!-- All rights reserved.                                                    -->
+<!--                                                                         -->
+<!-- The Astrobee platform is licensed under the Apache License, Version 2.0 -->
+<!-- (the "License"); you may not use this file except in compliance with    -->
+<!-- the License. You may obtain a copy of the License at                    -->
+<!--                                                                         -->
+<!--     http://www.apache.org/licenses/LICENSE-2.0                          -->
+<!--                                                                         -->
+<!-- Unless required by applicable law or agreed to in writing, software     -->
+<!-- distributed under the License is distributed on an "AS IS" BASIS,       -->
+<!-- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or         -->
+<!-- implied. See the License for the specific language governing            -->
+<!-- permissions and limitations under the License.                          -->
+
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <link name="base_link">
+    <inertial>
+      <origin
+        xyz="0.0947476506757575 6.76698983474028E-05 0.0248434755569056"
+        rpy="0 0 0" />
+      <mass
+        value="0.21586707343496" />
+      <inertia
+        ixx="0.000317175219662115"
+        ixy="8.75581066335981E-07"
+        ixz="-4.91379698467344E-05"
+        iyy="0.000218211727368638"
+        iyz="1.35622250613146E-06"
+        izz="0.00039424038856022" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://astrobee_gazebo/media/meshes/perching_arm/base_link.stl" />
+      </geometry>
+      <material name="beige" />
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://astrobee_gazebo/media/meshes/perching_arm/base_link.stl" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="base_joint"
+    type="fixed">
+    <origin
+      xyz="0 0 -0.07"
+      rpy="0 3.14159 0" />
+    <parent
+      link="body" />
+    <child
+      link="base_link" />
+  </joint>
+  <link
+    name="arm_proximal_link">
+    <inertial>
+      <origin
+        xyz="-0.0556467057021807 3.97304106281027E-10 0.000141961713007593"
+        rpy="0 0 0" />
+      <mass
+        value="0.1331254552377" />
+      <inertia
+        ixx="4.91775698417612E-05"
+        ixy="4.74682524339467E-13"
+        ixz="6.5476448378996E-07"
+        iyy="0.000140832731093168"
+        iyz="-1.7414682347618E-12"
+        izz="0.000171426030386371" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://astrobee_gazebo/media/meshes/perching_arm/arm_proximal_link.stl" />
+      </geometry>
+      <material name="beige" />
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://astrobee_gazebo/media/meshes/perching_arm/arm_proximal_link.stl" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="arm_proximal_joint"
+    type="revolute">
+    <origin
+      xyz="0.11945 0 0.065"
+      rpy="0 0 0" />
+    <parent
+      link="base_link" />
+    <child
+      link="arm_proximal_link" />
+    <axis
+      xyz="0 1 0" />
+    <limit
+      effort="1000"
+      lower="-1.57079"
+      upper="1.57079"
+      velocity="0.5" />
+  </joint>
+  <link
+    name="arm_distal_link">
+    <inertial>
+      <origin
+        xyz="-0.0116555160892916 -0.00155059723061455 -0.0375664904733949"
+        rpy="0 0 0" />
+      <mass
+        value="0.144178578337734" />
+      <inertia
+        ixx="0.000104305106310229"
+        ixy="-7.70567054456397E-08"
+        ixz="9.05784870715579E-06"
+        iyy="0.000103953130873986"
+        iyz="-2.71258814188284E-06"
+        izz="7.62558944189149E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://astrobee_gazebo/media/meshes/perching_arm/arm_distal_link.stl" />
+      </geometry>
+      <material name="beige" />
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://astrobee_gazebo/media/meshes/perching_arm/arm_distal_link.stl" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="arm_distal_joint"
+    type="revolute">
+    <origin
+      xyz="-0.1 0 0"
+      rpy="0 0 0" />
+    <parent
+      link="arm_proximal_link" />
+    <child
+      link="arm_distal_link" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      effort="1000"
+      lower="-1.57079"
+      upper="1.57079"
+      velocity="0.5" />
+  </joint>
+  <link
+    name="gripper_left_proximal_link">
+    <inertial>
+      <origin
+        xyz="-0.0261936694414386 -0.000514537375336535 -3.03150787957507E-05"
+        rpy="0 0 0" />
+      <mass
+        value="0.021388383378803" />
+      <inertia
+        ixx="1.79154496239362E-06"
+        ixy="-3.44854701609064E-07"
+        ixz="-1.53014080588542E-08"
+        iyy="5.62924296685546E-06"
+        iyz="-1.65821369280412E-10"
+        izz="5.13193627983854E-06" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://astrobee_gazebo/media/meshes/perching_arm/gripper_left_proximal_link.stl" />
+      </geometry>
+      <material name="beige" />
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://astrobee_gazebo/media/meshes/perching_arm/gripper_left_proximal_link.stl" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="gripper_left_proximal_joint"
+    type="revolute">
+    <origin
+      xyz="-0.039 -0.010002 -0.0497"
+      rpy="0 0 0" />
+    <parent
+      link="arm_distal_link" />
+    <child
+      link="gripper_left_proximal_link" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      effort="1000"
+      lower="-1.57079"
+      upper="1.57079"
+      velocity="0.5" />
+  </joint>
+  <link
+    name="gripper_left_distal_link">
+    <inertial>
+      <origin
+        xyz="-0.0182100095367684 0.000219433726787156 -0.000180070547375455"
+        rpy="0 0 0" />
+      <mass
+        value="0.0116026396896178" />
+      <inertia
+        ixx="6.94454801671952E-07"
+        ixy="1.50577931958897E-07"
+        ixz="3.52744123494701E-08"
+        iyy="2.2893893613258E-06"
+        iyz="-1.74936550295626E-09"
+        izz="2.19370180890799E-06" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://astrobee_gazebo/media/meshes/perching_arm/gripper_left_distal_link.stl" />
+      </geometry>
+      <material name="beige" />
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://astrobee_gazebo/media/meshes/perching_arm/gripper_left_distal_link.stl" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="gripper_left_distal_joint"
+    type="revolute">
+    <origin
+      xyz="-0.05 0 0"
+      rpy="0 0 0" />
+    <parent
+      link="gripper_left_proximal_link" />
+    <child
+      link="gripper_left_distal_link" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      effort="1000"
+      lower="-1.57079"
+      upper="1.57079"
+      velocity="0.5" />
+  </joint>
+  <link
+    name="gripper_right_proximal_link">
+    <inertial>
+      <origin
+        xyz="-0.0261936691038381 0.000514537196111706 3.03150809602692E-05"
+        rpy="0 0 0" />
+      <mass
+        value="0.0213883828022072" />
+      <inertia
+        ixx="1.79154493542243E-06"
+        ixy="3.44854650420887E-07"
+        ixz="1.53014086740797E-08"
+        iyy="5.62924286966233E-06"
+        iyz="-1.65821704827435E-10"
+        izz="5.13193615561184E-06" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://astrobee_gazebo/media/meshes/perching_arm/gripper_right_proximal_link.stl" />
+      </geometry>
+      <material name="beige" />
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://astrobee_gazebo/media/meshes/perching_arm/gripper_right_proximal_link.stl" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="gripper_right_proximal_joint"
+    type="revolute">
+    <origin
+      xyz="-0.039 0.010002 -0.0497"
+      rpy="0 0 0" />
+    <parent
+      link="arm_distal_link" />
+    <child
+      link="gripper_right_proximal_link" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      effort="1000"
+      lower="-1.57079"
+      upper="1.57079"
+      velocity="0.5" />
+  </joint>
+  <link
+    name="gripper_right_distal_link">
+    <inertial>
+      <origin
+        xyz="-0.0219752635016434 -0.000576449749855656 0.00013579410709616"
+        rpy="0 0 0" />
+      <mass
+        value="0.0150060256301797" />
+      <inertia
+        ixx="1.33312164809411E-06"
+        ixy="-2.3370731850946E-07"
+        ixz="-4.29098247348656E-08"
+        iyy="3.71311080817246E-06"
+        iyz="-2.21205603730874E-09"
+        izz="3.14171300110573E-06" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://astrobee_gazebo/media/meshes/perching_arm/gripper_right_distal_link.stl" />
+      </geometry>
+      <material name="beige" />
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://astrobee_gazebo/media/meshes/perching_arm/gripper_right_distal_link.stl" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="gripper_right_distal_joint"
+    type="revolute">
+    <origin
+      xyz="-0.05 0 0"
+      rpy="0 0 0" />
+    <parent
+      link="gripper_right_proximal_link" />
+    <child
+      link="gripper_right_distal_link" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      effort="1000"
+      lower="-1.57079"
+      upper="1.57079"
+      velocity="0.5" />
+  </joint>
+  <material name="beige">
+    <texture filename="package://astrobee_gazebo/media/materials/textures/beige.png" />
+  </material>
+  <gazebo reference="base_link">
+    <material>Astrobee/Beige</material>
+  </gazebo>
+  <gazebo reference="arm_proximal_link">
+    <material>Astrobee/Beige</material>
+  </gazebo>
+  <gazebo reference="arm_distal_link">
+    <material>Astrobee/Beige</material>
+  </gazebo>
+  <gazebo reference="gripper_left_proximal_link">
+    <material>Astrobee/Beige</material>
+  </gazebo>
+  <gazebo reference="gripper_left_distal_link">
+    <material>Astrobee/Beige</material>
+  </gazebo>
+  <gazebo reference="gripper_right_proximal_link">
+    <material>Astrobee/Beige</material>
+  </gazebo>
+  <gazebo reference="gripper_right_distal_link">
+    <material>Astrobee/Beige</material>
+  </gazebo>
+  <gazebo>
+    <plugin name="perching_arm_ros" filename="libgazebo_model_plugin_perching_arm.so">
+      <rate>10.0</rate>
+    </plugin>
+  </gazebo>
+</robot>

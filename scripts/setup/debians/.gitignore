@@ -1,0 +1,12 @@
+*.build
+*.changes
+*.dsc
+*.tar.xz
+*.tar.gz
+*.deb
+libalvar
+libdbow2
+libdbowdlib
+libopenmvg
+libdecomputil
+libjps3d

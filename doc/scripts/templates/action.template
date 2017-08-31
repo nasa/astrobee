@@ -1,0 +1,25 @@
+\defgroup action ROS actions
+\ingroup comms
+\defgroup action_%(package)s %(package)s
+\ingroup action
+\defgroup %(package)s_%(message)s %(message)s
+\ingroup action_%(package)s
+%(description)s
+
+## Goal
+
+| Type          | Name (value)  | Description |
+| -------------:|:------------- |:------------|
+%(goal)s
+
+## Response
+
+| Type          | Name (value)  | Description |
+| -------------:|:------------- |:------------|
+%(response)s
+
+## Feedback
+
+| Type          | Name (value)  | Description |
+| -------------:|:------------- |:------------|
+%(feedback)s

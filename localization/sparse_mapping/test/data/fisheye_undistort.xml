@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<opencv_storage>
+<intrinsic_matrix type_id="opencv-matrix">
+  <rows>3</rows>
+  <cols>3</cols>
+  <dt>d</dt>
+  <data>
+    297.433 0. 1280.
+    0. 297.611 960.
+    0. 0. 1.</data></intrinsic_matrix>
+<width>2560</width>
+<height>1920</height>
+<undistorted_width>2560</undistorted_width>
+<undistorted_height>1920</undistorted_height>
+</opencv_storage>
+

@@ -1,0 +1,40 @@
+@startuml
+
+skinparam sameStateWidth true
+'skinparam dpi 300
+
+title Astrobee Operating State (Executive)
+
+[*] --> Ready
+
+Ready -l> Teleoperation : move
+Teleoperation -r> Ready : move_completed
+Teleoperation -> Ready : stop
+Teleoperation -> Ready : idle
+Teleoperation -> Teleoperation : move
+
+Ready -r-> PlanExecution : run_plan
+PlanExecution -l-> Ready : plan_completed
+PlanExecution -l-> Ready : stop
+PlanExecution -l-> Ready : pause_plan
+PlanExecution -l-> Ready : idle
+
+Ready ---> AutoReturn : dock_return
+AutoReturn --> Ready : return_complete
+AutoReturn --> Ready : stop
+AutoReturn --> Ready : idle
+
+
+state Fault
+note left of Fault
+Transition into Fault upon fault
+response. Can be transition to from any
+other state. Fault can transition to ready
+after response is complete or if triggered
+by a blocking fault, it requires "clearing"
+(by engineer) to return to Ready.
+end note
+
+Fault --> Ready
+
+@enduml

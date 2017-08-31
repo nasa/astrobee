@@ -1,0 +1,5 @@
+<library path="lib/libpico_driver">
+  <class name="pico_driver/PicoDriverNodelet" type="pico_driver::PicoDriverNodelet" base_class_type="nodelet::Nodelet">
+    <description>Nodelet for pico_driver::PicoDriverNodelet</description>
+  </class>
+</library>

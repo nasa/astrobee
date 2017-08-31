@@ -1,0 +1,19 @@
+\defgroup srv ROS services
+\ingroup comms
+\defgroup srv_%(package)s %(package)s
+\ingroup srv
+\defgroup %(package)s_%(message)s %(message)s
+\ingroup srv_%(package)s
+%(description)s
+
+## Request
+
+| Type          | Name (value)  | Description |
+| -------------:|:------------- |:------------|
+%(request)s
+
+## Response
+
+| Type          | Name (value)  | Description |
+| -------------:|:------------- |:------------|
+%(response)s

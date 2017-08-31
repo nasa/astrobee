@@ -1,0 +1,11 @@
+<library path="lib/libhandrail_detect">
+  <class name="handrail_detect/HandrailDetect"
+	 type="handrail_detect::HandrailDetect"
+	 base_class_type="nodelet::Nodelet">
+   <description>
+      This nodelet provides handrail detection
+   </description>
+  </class>
+</library>
+
+

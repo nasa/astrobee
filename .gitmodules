@@ -1,0 +1,12 @@
+[submodule "submodules/common"]
+	path = submodules/common
+	url = https://babelfish.arc.nasa.gov/git/astrobee_common
+[submodule "submodules/android"]
+	path = submodules/android
+	url = https://babelfish.arc.nasa.gov/git/freeflyer_android
+[submodule "submodules/avionics"]
+	path = submodules/avionics
+	url = https://babelfish.arc.nasa.gov/git/freeflyer_avionics
+[submodule "submodules/platform"]
+	path = submodules/platform
+	url = https://babelfish.arc.nasa.gov/git/freeflyer_platform

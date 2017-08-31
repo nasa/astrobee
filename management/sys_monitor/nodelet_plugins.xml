@@ -1,0 +1,9 @@
+<library path="lib/libsys_monitor">
+  <class name="sys_monitor/SysMonitor"
+    type="sys_monitor::SysMonitor"
+    base_class_type="nodelet::Nodelet">
+    <description>
+      Nodelet to monitor node heartbeats and faults.
+    </description>
+  </class>
+</library>

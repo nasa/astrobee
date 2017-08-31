@@ -1,0 +1,5 @@
+<library path="lib/libframestore">
+  <class name="framestore/FrameStore" type="framestore::FrameStore" base_class_type="nodelet::Nodelet">
+    <description>Nodelet for frameStore::FrameStorer</description>
+  </class>
+</library>

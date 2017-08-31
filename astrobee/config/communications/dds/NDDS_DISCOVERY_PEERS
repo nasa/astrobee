@@ -1,0 +1,19 @@
+;; NDDS_DISCOVERY_PEERS - Default Discovery Configuration File
+;;Multicast builtin.udpv4://239.255.0.1 ; default discovery multicast addr
+; EVERY LINE IN THIS FILE MUST END IN A COMMENT. Even blank lines.
+;
+;; Shared Memory
+;shmem://                ; All 'shmem' transport plugin(s)
+;builtin.shmem://        ; The builtin builtin 'shmem' transport plugin
+                         ;  at network address FCC0::0
+;
+;; Unicast
+;
+;; Localhost
+127.0.0.1              ; A comma can be used a separator
+;
+;; Granite Lab - P4
+10.11.160.88          ; MLP on ISS network
+10.11.0.6             ; ELC on ISS network
+;
+;; Custom entries below this line (Vagrant, etc)

@@ -1,0 +1,59 @@
+Don't build unneeded libraries. We don't use most of openMVG.
+Index: libopenmvg/src/CMakeLists.txt
+===================================================================
+--- libopenmvg.orig/src/CMakeLists.txt
++++ libopenmvg/src/CMakeLists.txt
+@@ -370,14 +370,9 @@ add_subdirectory(openMVG)
+ # openMVG libraries
+ # ==============================================================================
+ set(OpenMVG_LIBRARIES
+-  openMVG_image
+-  openMVG_features
+-  openMVG_matching_image_collection
+-  openMVG_kvld
+   openMVG_multiview
+   openMVG_lInftyComputerVision
+-  openMVG_system
+-  openMVG_sfm)
++  )
+ 
+ FOREACH(omvglib ${OpenMVG_LIBRARIES})
+   set_property(TARGET ${omvglib} PROPERTY FOLDER OpenMVG/OpenMVG)
+Index: libopenmvg/src/openMVG/CMakeLists.txt
+===================================================================
+--- libopenmvg.orig/src/openMVG/CMakeLists.txt
++++ libopenmvg/src/openMVG/CMakeLists.txt
+@@ -1,21 +1,21 @@
+-ADD_SUBDIRECTORY(cameras)
+-ADD_SUBDIRECTORY(exif)
+-ADD_SUBDIRECTORY(features)
+-ADD_SUBDIRECTORY(graph)
+-ADD_SUBDIRECTORY(image)
++#ADD_SUBDIRECTORY(cameras)
++#ADD_SUBDIRECTORY(exif)
++#ADD_SUBDIRECTORY(features)
++#ADD_SUBDIRECTORY(graph)
++#ADD_SUBDIRECTORY(image)
+ ADD_SUBDIRECTORY(linearProgramming)
+-ADD_SUBDIRECTORY(geodesy)
++#ADD_SUBDIRECTORY(geodesy)
+ ADD_SUBDIRECTORY(geometry)
+-ADD_SUBDIRECTORY(matching)
+-ADD_SUBDIRECTORY(matching_image_collection)
++#ADD_SUBDIRECTORY(matching)
++#ADD_SUBDIRECTORY(matching_image_collection)
+ ADD_SUBDIRECTORY(multiview)
+ ADD_SUBDIRECTORY(numeric)
+ ADD_SUBDIRECTORY(robust_estimation)
+ ADD_SUBDIRECTORY(tracks)
+-ADD_SUBDIRECTORY(color_harmonization)
+-ADD_SUBDIRECTORY(system)
+-ADD_SUBDIRECTORY(sfm)
+-ADD_SUBDIRECTORY(stl)
++#ADD_SUBDIRECTORY(color_harmonization)
++#ADD_SUBDIRECTORY(system)
++#ADD_SUBDIRECTORY(sfm)
++#ADD_SUBDIRECTORY(stl)
+ 
+ #INSTALL RULES
+ install(

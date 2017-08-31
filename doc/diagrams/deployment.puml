@@ -1,0 +1,88 @@
+@startuml
+
+skinparam componentStyle uml2
+'skinparam dpi 300
+
+title Astrobee Hardware Deployement Diagram
+
+frame Dock {
+  node DockBoard <<Wandboard>>
+  node DockControl <<PIC>>
+  DockControl -- [DockActuator]
+}
+
+frame Astrobee {
+  interface "Wired Ethernet Hub" as eth
+
+  node HLP <<Inforce>>
+  node MLP <<Inforce>>
+  node LLP <<Wandboard>>
+  node EPS <<PIC>>
+  node "PMC (2x)" <<PIC>> as PMC
+  node "SignalLight (2x)" <<PIC>> as SL
+  node Speedcam <<ARM Cortex>>
+
+  node PerchArm <<PIC>>
+
+  [Scicam] -- HLP : MIPI-CSI
+  [TouchScreen] -- HLP : MIPI-DSI
+  [Microphone] -- HLP : audio
+  [Speaker] -- HLP : audio
+
+  [IMU] -- LLP : SPI
+  [Laser] -- LLP : GPIO
+  [FrontLight] --o LLP : I2C (i2c-1)
+  [BackLight] --o LLP : I2C (i2c-1)
+
+  [Navcam] -- MLP : USB
+  [Dockcam] -- MLP : USB
+  [Hazcam] -- MLP : USB
+  [Perchcam] -- MLP : USB
+
+  EPS -- [StatusLights] : GPIO
+  EPS o-- [SmartBatteries] : I2C/SMbus
+}
+
+
+MLP --[hidden]-- LLP
+HLP --[hidden]-- MLP
+
+DockBoard -left- eth
+DockBoard o-- DockControl  : I2C
+EPS o- DockControl : I2C
+
+HLP -- eth
+MLP -- eth
+MLP .left. wifi
+
+MLP -- PerchArm : USB
+
+eth -l- LLP
+
+LLP "2" o-- PMC : I2C (i2c-2)
+LLP o-- EPS : I2C (i2c-1)
+LLP "2" o-- SL : I2C (i2c-1)
+LLP -- Speedcam : USB
+
+
+node ProcessorLegend
+ProcessorLegend o-- [DeviceLegend]
+
+note top of ProcessorLegend
+Microprocessor or
+System On Chip computer
+end note
+
+note bottom of [DeviceLegend]
+Hardware component (sensor
+or actuator
+end note
+interface "ISS Wifi" as wifi
+
+note left of ProcessorLegend
+Losange indicates
+Master device for
+an I2C bus
+end note
+
+@enduml

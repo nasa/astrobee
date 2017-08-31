@@ -1,0 +1,5 @@
+libjps3d (0.1-1) unstable; urgency=medium
+
+  * Initial release (Closes: #nnnn)  <nnnn is the bug number of your ITP>
+
+ -- Brian Coltin <nospam@nospam.org>  Mon, 12 Jun 2017 14:40:30 -0700

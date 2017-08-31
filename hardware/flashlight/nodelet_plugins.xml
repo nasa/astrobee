@@ -1,0 +1,9 @@
+<library path="lib/libflashlight_nodelet">
+  <class name="flashlight/FlashlightNodelet"
+	 type="flashlight::ros::FlashlightNodelet"
+	 base_class_type="nodelet::Nodelet">
+    <description>
+	  Nodelet to control an LED Flashlight
+    </description>
+  </class>
+</library>

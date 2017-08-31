@@ -1,0 +1,11 @@
+<library path="lib/liblk_optical_flow">
+  <class name="lk_optical_flow/LKOpticalFlowNodelet"
+	 type="lk_optical_flow::LKOpticalFlowNodelet"
+	 base_class_type="nodelet::Nodelet">
+    <description>
+      This nodelet wraps lk optical flow
+    </description>
+  </class>
+</library>
+
+

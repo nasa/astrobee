@@ -1,0 +1,39 @@
+<launch>
+  <!-- Arguments that can be passed in -->
+  <arg name="platform_name" default="ff" />  <!-- Platform name -->
+  <arg name="live" default="true" />        <!-- Use pico_driver -->
+  <arg name="bag" default="handrail.bag" /> <!-- If not live, which bag -->
+  <!-- Needed for FSW  -->
+  <env name="ASTROBEE_CONFIG_DIR" value="$(find astrobee)/config" />
+  <env name="ASTROBEE_ZONE_DIR" value="$(find astrobee)/zones" />
+  <!-- Set the platform name -->
+  <group ns="$(arg platform_name)">
+    <!-- Set the platform version -->
+    <env name="ASTROBEE_CONFIG_VERSION" value="p4" />
+    <!-- Bring up a manager for everyone to live in -->
+    <node pkg="nodelet" type="nodelet" name="handrail_nodelet_manager"
+          args=" manager" output="screen" required="true"/>
+    <!-- Bring up a perch camera (check UUID matches in cameras.config) -->
+    <node pkg="nodelet" type="nodelet" name="perch_cam"
+          args="load pico_driver/PicoDriverNodelet handrail_nodelet_manager" output="screen" required="true" if="$(arg live)"/>
+    <node pkg="rosbag" type="play" name="rosbag_record_diag"
+          args="$(arg bag)" unless="$(arg live)"/>
+    <!-- Bring up framestore for static sensor -> body -->
+    <include file="$(find framestore)/launch/framestore.launch">
+      <arg name="nodelet" default="true" />
+      <arg name="manager" value="handrail_nodelet_manager" />
+    </include>
+    <node pkg="tf2_ros" type="static_transform_publisher" name="body_broadcaster" args="1 0 0 0 0 0 1 world $(arg platform_name)/body" />
+    <!-- Bring up handrail detect -->
+    <include file="$(find handrail_detect)/launch/handrail_detect.launch">
+      <arg name="nodelet" default="true" />
+      <arg name="manager" value="handrail_nodelet_manager" />
+    </include>
+    <!-- Bring up the test script -->
+    <node pkg="handrail_detect" type="enable_handrail_detect"
+          name="enable_handrail_detect" output="screen"/>
+    <!-- Bring up the visualization -->
+    <node name="rviz_node" pkg="rviz" type="rviz" output="screen"
+        respawn="true" args="-d $(find handrail_detect)/config/handrail.rviz"/>
+  </group>
+</launch>

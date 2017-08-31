@@ -1,0 +1,9 @@
+<library path="lib/libeps_sim">
+  <class name="eps_sim/EpsSim"
+    type="eps_sim::EpsSim"
+    base_class_type="nodelet::Nodelet">
+    <description>
+      Nodelet to simulate the eps."
+    </description>
+  </class>
+</library>

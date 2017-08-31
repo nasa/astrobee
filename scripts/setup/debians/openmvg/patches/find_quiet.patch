@@ -1,0 +1,28 @@
+Quiet config script.
+Index: libopenmvg/src/cmakeFindModules/OpenMVGConfig.cmake.in
+===================================================================
+--- libopenmvg.orig/src/cmakeFindModules/OpenMVGConfig.cmake.in
++++ libopenmvg/src/cmakeFindModules/OpenMVGConfig.cmake.in
+@@ -97,13 +97,15 @@ INCLUDE(${CURRENT_CONFIG_INSTALL_DIR}/Op
+ 
+ # As we use OPENMVG_REPORT_NOT_FOUND() to abort, if we reach this point we have
+ # found OpenMVG and all required dependencies.
+-MESSAGE(STATUS "----")
+-MESSAGE(STATUS "OpenMVG Find_Package")
+-MESSAGE(STATUS "----")
+-MESSAGE(STATUS "Found OpenMVG version: ${OPENMVG_VERSION}")
+-MESSAGE(STATUS "Installed in: ${CURRENT_ROOT_INSTALL_DIR}")
+-MESSAGE(STATUS "Used OpenMVG libraries: ${OPENMVG_LIBRARIES}")
+-MESSAGE(STATUS "----")
++IF (NOT OpenMVG_FIND_QUIETLY)
++  MESSAGE(STATUS "----")
++  MESSAGE(STATUS "OpenMVG Find_Package")
++  MESSAGE(STATUS "----")
++  MESSAGE(STATUS "Found OpenMVG version: ${OPENMVG_VERSION}")
++  MESSAGE(STATUS "Installed in: ${CURRENT_ROOT_INSTALL_DIR}")
++  MESSAGE(STATUS "Used OpenMVG libraries: ${OPENMVG_LIBRARIES}")
++  MESSAGE(STATUS "----")
++ENDIF (NOT OpenMVG_FIND_QUIETLY)
+ 
+ SET(OPENMVG_FOUND TRUE)
+ 

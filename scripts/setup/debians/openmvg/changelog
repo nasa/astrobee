@@ -1,0 +1,7 @@
+libopenmvg (1.1-1) unstable; urgency=medium
+
+  * Initial release
+  * Remove internal dependencies, use external
+  * Fix eigen alignment issues in essential matrix computation
+
+ -- Brian Coltin <nospam@nospam.org>  Thu, 12 Jan 2017 11:45:13 -0800

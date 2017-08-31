@@ -1,0 +1,5 @@
+<library path="lib/libeps_driver">
+  <class name="eps_driver/EpsDriverNode" type="eps_driver::EpsDriverNode" base_class_type="nodelet::Nodelet">
+    <description>Nodelet for the EPS</description>
+  </class>
+</library>

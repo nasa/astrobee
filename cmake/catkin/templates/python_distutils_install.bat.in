@@ -1,0 +1,17 @@
+@echo off
+
+if DEFINED DESTDIR (
+  echo "Destdir.............%DESTDIR%"
+  set DESTDIR_ARG="--root=%DESTDIR%"
+)
+
+cd "@INSTALL_CMD_WORKING_DIRECTORY@"
+
+cmd /V:on /C set PYTHONPATH="@CMAKE_INSTALL_PREFIX@/@PYTHON_INSTALL_DIR@;@CMAKE_BINARY_DIR@/@PYTHON_INSTALL_DIR@" ^
+          && set CATKIN_BINARY_DIR="@CMAKE_BINARY_DIR@" ^
+          && "@PYTHON_EXECUTABLE@" ^
+             "@CMAKE_CURRENT_SOURCE_DIR@/setup.py" ^
+             build --build-base "@CMAKE_CURRENT_BINARY_DIR@" ^
+             install %DESTDIR_ARG% @SETUPTOOLS_ARG_EXTRA@ ^
+             --prefix="@SETUPTOOLS_INSTALL_PREFIX@" ^
+             --install-scripts="@SETUPTOOLS_INSTALL_PREFIX@\@CATKIN_GLOBAL_BIN_DESTINATION@"
