@@ -2,13 +2,8 @@
 
 ## About
 
-<!---
-<div style="float: right">
-![alt text](../images/astrobee.png "The Astrobee free flying robot")
-</div>
---->
-![alt text](doc/images/astrobee.png "The Astrobee free flying robot")
-
+<p>
+<img src="doc/images/astrobee.png" srcset="../images/astrobee.png 1x" title="Astrobee" align="right" style="display: inline"/>
 Astrobee is a free-flying robot that is designed to operate as a payload inside
 the International Space Station (ISS). The Astrobee Robot Software consists of
 embedded (on-board) software, supporting tools and a simulator. The Astrobee
@@ -22,11 +17,12 @@ operated in multiple modes: plan-based task execution (command sequencing),
 teleoperation, or autonomously through execution of hosted code uploaded by
 project partners (guest science). The software simulator enables Astrobee Robot
 Software to be evaluated without the need for robot hardware.
+</p>
 
 This repository provides flight software and a simulator, both primarily written
 in C++. The repository also provides several other utilities, including a tool
 for creating maps for localization. A separate repository,
-[`astrobee_android`](https://github.com/nasa/astrobee_andrdoid), contains the
+[`astrobee_android`](https://github.com/nasa/astrobee_android), contains the
 Java API, which uses the ROS messaging system to communicate with flight
 software.
 

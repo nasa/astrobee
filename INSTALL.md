@@ -1,7 +1,9 @@
 # Usage instructions for non-NASA users
 
 Install [Ubuntu 16.04](http://releases.ubuntu.com/16.04) on a host machine, and
-make sure that you can checkout and build code:
+make sure that you can checkout and build code. If you are using a virtual
+machine, please use VMware. Virtualbox doesn't support some of our Gazebo
+plugins.
 
     sudo apt-get install build-essential git
 
@@ -26,7 +28,7 @@ If you are planning to work on guest science stuff, you will also need the
 `astrobee_android` repository. You should checkout the repository in the same
 directory you checked out the source code in:
 ```
-    export ANDROID_PATH=$SOURCE_PATH"_android"
+    export ANDROID_PATH="${SOURCE_PATH}_android"
 ```
 
 Clone the android repository:

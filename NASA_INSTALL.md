@@ -1,7 +1,9 @@
 # Usage instructions for NASA users
 
 Install [Ubuntu 16.04](http://releases.ubuntu.com/16.04) on a host machine, and
-make sure that you can checkout and build code:
+make sure that you can checkout and build code. If you are using a virtual
+machine, please use VMware. Virtualbox doesn't support some of our Gazebo
+plugins.
 
     sudo apt-get install build-essential git
 
@@ -22,7 +24,8 @@ make sure that you can checkout and build code:
 
 ### Checkout the project source code
 
-At this point you need to decide where you'd like to put the source code (`SOURCE_PATH`) on your machine:
+At this point you need to decide where you'd like to put the source code
+(`SOURCE_PATH`) on your machine:
 
     export SOURCE_PATH=$HOME/freeflyer
 
@@ -181,7 +184,8 @@ rsync to copy the install directory to `~/armhf` on the two processors.
     ./scripts/install_to_astrobee.sh $INSTALL_PATH
     popd
 
-You are now ready to run the code. This code launches a visualization tool, which starts the flight software as a background process.
+You are now ready to run the code. This code launches a visualization tool,
+which starts the flight software as a background process.
 
     pushd $SOURCE_PATH
     python ./tools/gnc_visualizer/scripts/visualizer --proto4
