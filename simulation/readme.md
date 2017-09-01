@@ -1,5 +1,5 @@
 ----
-##Running the Simulator 
+## Running the Simulator 
 
 To run the simulator headless run: 
 
@@ -24,12 +24,12 @@ To launch the astrobee on a different namespace
     ns:=name
 
 ----
-##File Layout
+## File Layout
 
 The simulation directory holds all things related to running a simulation of Astrobee. There are two main subdirectories, astrobee description  and astrobee gazebo. 
 
 ----
-##Astrobee Desicription
+## Astrobee Desicription
 
 This folder includes everything used to describe astrobee as it is loaded in simulation. The config files are configs used for common astrobee namespaces in Rviz. They load an rviz view of most of the relevant information being published by the gazebo simulator. 
 
@@ -46,21 +46,21 @@ The urdf's are used to load everything connected to astrobee in simulation. Thes
     - sensor_imu - loads the IMU plugin and defines its update rate.
 
 ----
-##Astrobee Gazebo
+## Astrobee Gazebo
 
 Everything in this folder is directly related to the gazebo simulator. 
 
-#Launch
+### Launch
 
 Start_simulation is called when a new simulation is started, it loads the gazebo world and server. 
 
 Spawn_astrobee loads an astrobee into the gazebo world. This launch file can be used to spawn a second or third astrobee into the world on different name spaces once the simulator has been started. 
 
-#Media, Models, and Worlds
+### Media, Models, and Worlds
 
 These directories include all the meshes and models used in the simulator. From what the world looks like, to what the robot looks like. All of that can be found in one of these directories. 
 
-#Src
+### Src
 
 This is the directory with all the plugins for the gazebo simulator. 
 
