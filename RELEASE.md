@@ -1,4 +1,4 @@
-# Astrobee Robot Software v1, release 0.1.1
+# Astrobee Robot Software v1, release 0.1.2
 
 ## Simulator
   - Use the same flight software stack that is run on the platform (but the HW drivers)
