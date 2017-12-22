@@ -18,8 +18,9 @@
 <launch>
   <arg name="world" default="iss" />
   <arg name="sviz" default="false" />
+  <arg name="vmware" default="true" />
   <!-- Fix for running in vmware with DRI -->
-  <env name="SVGA_VGPU10" value="0" />
+  <env if="$(arg vmware)" name="SVGA_VGPU10" value="0" />
   <!-- Launch the requested world -->
   <include file="$(find astrobee_gazebo)/launch/start_simulation.launch">
     <arg name="world" value="$(find astrobee_gazebo)/worlds/$(arg world).world"/>

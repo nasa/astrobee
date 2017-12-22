@@ -3,9 +3,9 @@
 //
 // Code generated for Simulink model 'fam_force_allocation_module'.
 //
-// Model version                  : 1.1139
+// Model version                  : 1.1142
 // Simulink Coder version         : 8.11 (R2016b) 25-Aug-2016
-// C/C++ source code generated on : Thu Aug 31 10:21:33 2017
+// C/C++ source code generated on : Mon Dec 18 10:15:03 2017
 //
 // Target selection: ert.tlc
 // Embedded hardware selection: 32-bit Generic
@@ -24,10 +24,12 @@
 #endif                                 // fam_force_allocation_module_COMMON_INCLUDES_ 
 
 #include "fam_force_allocation_module_types.h"
+#include "rtGetNaN.h"
+#include "rt_nonfinite.h"
+#include "ekfccjmgknopmoph_svd.h"
 #include "look1_iflf_pbinlcapw.h"
 #include "plook_u32f_binckpan.h"
 #include "pphlopppohlnphdb_pinv.h"
-#include "rt_nonfinite.h"
 #include "rt_roundf_snf.h"
 #include "rtGetInf.h"
 
@@ -42,155 +44,166 @@
 
 // Block signals (auto storage)
 typedef struct {
-  real32_T OutportBufferForforce2thrust_B[36];// '<S9>/MATLAB Function'
-  real32_T OutportBufferForthrust2force_B[36];// '<S9>/MATLAB Function'
-  real32_T OutportBufferForthrust2torque_B[36];// '<S9>/MATLAB Function'
-  real32_T OutportBufferFortorque2thrust_B[36];// '<S9>/MATLAB Function'
+  real32_T OutportBufferForforcetorque2thr[72];// '<S12>/MATLAB Function'
+  real32_T OutportBufferForthrust2force_B[36];// '<S12>/MATLAB Function'
+  real32_T OutportBufferForthrust2torque_B[36];// '<S12>/MATLAB Function'
 } B_fam_force_allocation_module_T;
 
 // Block states (auto storage) for system '<Root>'
 typedef struct {
-  real_T UnitDelay_DSTATE;             // '<S3>/Unit Delay'
-  uint32_T m_bpIndex;                  // '<S11>/impeller_speed_lookup'
-  uint32_T m_bpIndex_e;                // '<S14>/impeller_speed_lookup'
-  uint32_T m_bpIndex_n;                // '<S13>/fam_Cdp_lookup_pm1'
-  uint32_T m_bpIndex_a;                // '<S16>/fam_Cdp_lookup_pm1'
+  real32_T DelayInput1_DSTATE[3];      // '<S11>/Delay Input1'
+  uint32_T m_bpIndex;                  // '<S21>/fam_Cdp_lookup_pm1'
+  uint32_T m_bpIndex_a;                // '<S25>/fam_Cdp_lookup_pm1'
+  uint32_T m_bpIndex_e;                // '<S23>/impeller_speed_lookup'
+  uint32_T m_bpIndex_b;                // '<S19>/impeller_speed_lookup'
 } DW_fam_force_allocation_modul_T;
 
 // Parameters (auto storage)
 struct P_fam_force_allocation_module_T_ {
   real32_T abp_PM1_discharge_coeff[6]; // Variable: abp_PM1_discharge_coeff
                                        //  Referenced by:
-                                       //    '<S12>/Constant5'
-                                       //    '<S13>/Constant5'
+                                       //    '<S20>/Constant5'
+                                       //    '<S21>/Constant5'
 
   real32_T abp_PM1_nozzle_widths[6];   // Variable: abp_PM1_nozzle_widths
-                                       //  Referenced by: '<S12>/Constant7'
+                                       //  Referenced by: '<S20>/Constant7'
 
   real32_T abp_PM2_discharge_coeff[6]; // Variable: abp_PM2_discharge_coeff
                                        //  Referenced by:
-                                       //    '<S15>/Constant5'
-                                       //    '<S16>/Constant5'
+                                       //    '<S24>/Constant5'
+                                       //    '<S25>/Constant5'
 
   real32_T abp_PM2_nozzle_widths[6];   // Variable: abp_PM2_nozzle_widths
-                                       //  Referenced by: '<S15>/Constant7'
+                                       //  Referenced by: '<S24>/Constant7'
 
   real32_T abp_impeller_diameter;      // Variable: abp_impeller_diameter
                                        //  Referenced by:
-                                       //    '<S13>/Constant1'
-                                       //    '<S16>/Constant1'
+                                       //    '<S21>/Constant1'
+                                       //    '<S25>/Constant1'
 
   real32_T abp_impeller_speed2pwm;     // Variable: abp_impeller_speed2pwm
                                        //  Referenced by:
-                                       //    '<S11>/Constant'
-                                       //    '<S14>/Constant'
+                                       //    '<S19>/Constant'
+                                       //    '<S23>/Constant'
 
   real32_T abp_nozzle_flap_count;      // Variable: abp_nozzle_flap_count
                                        //  Referenced by:
-                                       //    '<S12>/Constant3'
-                                       //    '<S15>/Constant3'
+                                       //    '<S20>/Constant3'
+                                       //    '<S24>/Constant3'
 
   real32_T abp_nozzle_flap_length;     // Variable: abp_nozzle_flap_length
                                        //  Referenced by:
-                                       //    '<S12>/Constant6'
-                                       //    '<S15>/Constant6'
+                                       //    '<S20>/Constant6'
+                                       //    '<S24>/Constant6'
 
   real32_T abp_nozzle_intake_height;   // Variable: abp_nozzle_intake_height
                                        //  Referenced by:
-                                       //    '<S12>/Constant9'
-                                       //    '<S15>/Constant9'
+                                       //    '<S20>/Constant9'
+                                       //    '<S24>/Constant9'
 
   real32_T abp_nozzle_max_open_angle;  // Variable: abp_nozzle_max_open_angle
                                        //  Referenced by:
-                                       //    '<S12>/Saturation'
-                                       //    '<S15>/Saturation'
+                                       //    '<S20>/Saturation'
+                                       //    '<S24>/Saturation'
 
   real32_T abp_nozzle_min_open_angle;  // Variable: abp_nozzle_min_open_angle
                                        //  Referenced by:
-                                       //    '<S12>/Constant8'
-                                       //    '<S12>/Saturation'
-                                       //    '<S15>/Constant8'
-                                       //    '<S15>/Saturation'
+                                       //    '<S20>/Constant8'
+                                       //    '<S20>/Saturation'
+                                       //    '<S24>/Constant8'
+                                       //    '<S24>/Saturation'
 
   real32_T abp_servo_min_PWM;          // Variable: abp_servo_min_PWM
                                        //  Referenced by:
-                                       //    '<S12>/Constant2'
-                                       //    '<S15>/Constant2'
+                                       //    '<S20>/Constant2'
+                                       //    '<S24>/Constant2'
 
   real32_T const_air_density;          // Variable: const_air_density
                                        //  Referenced by:
-                                       //    '<S13>/Constant2'
-                                       //    '<S16>/Constant2'
+                                       //    '<S21>/Constant2'
+                                       //    '<S25>/Constant2'
 
   real32_T fam_PM1_lookup_Cdp_data[316];// Variable: fam_PM1_lookup_Cdp_data
-                                        //  Referenced by: '<S13>/fam_Cdp_lookup_pm1'
+                                        //  Referenced by: '<S21>/fam_Cdp_lookup_pm1'
 
   real32_T fam_PM1_lookup_thrust_breakpoints[316];// Variable: fam_PM1_lookup_thrust_breakpoints
-                                                  //  Referenced by: '<S13>/fam_Cdp_lookup_pm1'
+                                                  //  Referenced by: '<S21>/fam_Cdp_lookup_pm1'
 
   real32_T fam_PM2_lookup_Cdp_data[316];// Variable: fam_PM2_lookup_Cdp_data
-                                        //  Referenced by: '<S16>/fam_Cdp_lookup_pm1'
+                                        //  Referenced by: '<S25>/fam_Cdp_lookup_pm1'
 
   real32_T fam_PM2_lookup_thrust_breakpoints[316];// Variable: fam_PM2_lookup_thrust_breakpoints
-                                                  //  Referenced by: '<S16>/fam_Cdp_lookup_pm1'
+                                                  //  Referenced by: '<S25>/fam_Cdp_lookup_pm1'
 
   real32_T fam_P_nozzle_B_B[36];       // Variable: fam_P_nozzle_B_B
-                                       //  Referenced by: '<S9>/Constant1'
+                                       //  Referenced by: '<S12>/Constant1'
 
   real32_T fam_impeller_speeds[3];     // Variable: fam_impeller_speeds
                                        //  Referenced by:
-                                       //    '<S11>/impeller_speed_lookup'
-                                       //    '<S14>/impeller_speed_lookup'
+                                       //    '<S19>/impeller_speed_lookup'
+                                       //    '<S23>/impeller_speed_lookup'
 
   real32_T fam_nozzle_angle2pwm;       // Variable: fam_nozzle_angle2pwm
                                        //  Referenced by:
-                                       //    '<S12>/Constant1'
-                                       //    '<S15>/Constant1'
+                                       //    '<S20>/Constant1'
+                                       //    '<S24>/Constant1'
 
   real32_T fam_nozzle_orientations[36];// Variable: fam_nozzle_orientations
-                                       //  Referenced by: '<S9>/Constant3'
+                                       //  Referenced by: '<S12>/Constant3'
 
-  real_T UnitDelay_InitialCondition;   // Expression: 1
-                                       //  Referenced by: '<S3>/Unit Delay'
+  real32_T DetectChange_vinit;         // Mask Parameter: DetectChange_vinit
+                                       //  Referenced by: '<S11>/Delay Input1'
 
-  real_T Constant_Value;               // Expression: 0
-                                       //  Referenced by: '<S3>/Constant'
+  uint8_T CompareToConstant_const;     // Mask Parameter: CompareToConstant_const
+                                       //  Referenced by: '<S22>/Constant'
+
+  uint8_T CompareToConstant_const_n;   // Mask Parameter: CompareToConstant_const_n
+                                       //  Referenced by: '<S26>/Constant'
 
   real32_T force2thrust_B_Y0;          // Computed Parameter: force2thrust_B_Y0
-                                       //  Referenced by: '<S9>/force2thrust_B'
+                                       //  Referenced by: '<S12>/force2thrust_B'
 
   real32_T torque2thrust_B_Y0;         // Computed Parameter: torque2thrust_B_Y0
-                                       //  Referenced by: '<S9>/torque2thrust_B'
+                                       //  Referenced by: '<S12>/torque2thrust_B'
 
   real32_T thrust2force_B_Y0;          // Computed Parameter: thrust2force_B_Y0
-                                       //  Referenced by: '<S9>/thrust2force_B'
+                                       //  Referenced by: '<S12>/thrust2force_B'
 
   real32_T thrust2torque_B_Y0;         // Computed Parameter: thrust2torque_B_Y0
-                                       //  Referenced by: '<S9>/thrust2torque_B'
+                                       //  Referenced by: '<S12>/thrust2torque_B'
+
+  real32_T forcetorque2thrust_B_Y0;    // Computed Parameter: forcetorque2thrust_B_Y0
+                                       //  Referenced by: '<S12>/forcetorque2thrust_B'
 
   real32_T impeller_speed_lookup_bp01Data[3];// Computed Parameter: impeller_speed_lookup_bp01Data
-                                             //  Referenced by: '<S11>/impeller_speed_lookup'
+                                             //  Referenced by: '<S19>/impeller_speed_lookup'
 
   real32_T impeller_speed_lookup_bp01Dat_l[3];// Computed Parameter: impeller_speed_lookup_bp01Dat_l
-                                              //  Referenced by: '<S14>/impeller_speed_lookup'
+                                              //  Referenced by: '<S23>/impeller_speed_lookup'
+
+  real32_T Constant1_Value;            // Expression: single(0)
+                                       //  Referenced by: '<S19>/Constant1'
+
+  real32_T Constant1_Value_h;          // Expression: single(0)
+                                       //  Referenced by: '<S23>/Constant1'
 
   real32_T Constant4_Value[12];        // Expression: zeros(12,1,'single')
                                        //  Referenced by: '<S3>/Constant4'
 
-  real32_T Constant_Value_k;           // Computed Parameter: Constant_Value_k
-                                       //  Referenced by: '<S6>/Constant'
-
-  real32_T Constant_Value_i;           // Computed Parameter: Constant_Value_i
-                                       //  Referenced by: '<S7>/Constant'
-
-  real32_T Constant_Value_ii;          // Computed Parameter: Constant_Value_ii
+  real32_T Constant_Value;             // Computed Parameter: Constant_Value
                                        //  Referenced by: '<S8>/Constant'
 
+  real32_T Constant_Value_k;           // Computed Parameter: Constant_Value_k
+                                       //  Referenced by: '<S9>/Constant'
+
+  real32_T Constant_Value_b;           // Computed Parameter: Constant_Value_b
+                                       //  Referenced by: '<S10>/Constant'
+
   real32_T Constant4_Value_o;          // Expression: single(2)
-                                       //  Referenced by: '<S12>/Constant4'
+                                       //  Referenced by: '<S20>/Constant4'
 
   real32_T Constant4_Value_m;          // Expression: single(2)
-                                       //  Referenced by: '<S15>/Constant4'
+                                       //  Referenced by: '<S24>/Constant4'
 
 };
 
@@ -292,19 +305,29 @@ extern "C" {
 //  '<S1>'   : 'astrobee/fsw_lib/fam_force_allocation_module'
 //  '<S2>'   : 'astrobee/fsw_lib/fam_force_allocation_module/back_predict_force_and_torque'
 //  '<S3>'   : 'astrobee/fsw_lib/fam_force_allocation_module/calc_nozzle_thrust'
-//  '<S4>'   : 'astrobee/fsw_lib/fam_force_allocation_module/calculate_PM1_servo_command'
-//  '<S5>'   : 'astrobee/fsw_lib/fam_force_allocation_module/calculate_PM2_servo_command'
-//  '<S6>'   : 'astrobee/fsw_lib/fam_force_allocation_module/calc_nozzle_thrust/Compare To Zero6'
-//  '<S7>'   : 'astrobee/fsw_lib/fam_force_allocation_module/calc_nozzle_thrust/Compare To Zero7'
-//  '<S8>'   : 'astrobee/fsw_lib/fam_force_allocation_module/calc_nozzle_thrust/Compare To Zero8'
-//  '<S9>'   : 'astrobee/fsw_lib/fam_force_allocation_module/calc_nozzle_thrust/latch_nozzle_thrust_matricies'
-//  '<S10>'  : 'astrobee/fsw_lib/fam_force_allocation_module/calc_nozzle_thrust/latch_nozzle_thrust_matricies/MATLAB Function'
-//  '<S11>'  : 'astrobee/fsw_lib/fam_force_allocation_module/calculate_PM1_servo_command/calc_impeller_speed'
-//  '<S12>'  : 'astrobee/fsw_lib/fam_force_allocation_module/calculate_PM1_servo_command/calc_servo_cmd'
-//  '<S13>'  : 'astrobee/fsw_lib/fam_force_allocation_module/calculate_PM1_servo_command/lookup_data_tables'
-//  '<S14>'  : 'astrobee/fsw_lib/fam_force_allocation_module/calculate_PM2_servo_command/calc_impeller_speed'
-//  '<S15>'  : 'astrobee/fsw_lib/fam_force_allocation_module/calculate_PM2_servo_command/calc_servo_cmd'
-//  '<S16>'  : 'astrobee/fsw_lib/fam_force_allocation_module/calculate_PM2_servo_command/lookup_data_tables'
+//  '<S4>'   : 'astrobee/fsw_lib/fam_force_allocation_module/calc_nozzle_thrust_nnlsq'
+//  '<S5>'   : 'astrobee/fsw_lib/fam_force_allocation_module/calc_nozzle_thrust_old'
+//  '<S6>'   : 'astrobee/fsw_lib/fam_force_allocation_module/calculate_PM1_servo_command'
+//  '<S7>'   : 'astrobee/fsw_lib/fam_force_allocation_module/calculate_PM2_servo_command'
+//  '<S8>'   : 'astrobee/fsw_lib/fam_force_allocation_module/calc_nozzle_thrust/Compare To Zero6'
+//  '<S9>'   : 'astrobee/fsw_lib/fam_force_allocation_module/calc_nozzle_thrust/Compare To Zero7'
+//  '<S10>'  : 'astrobee/fsw_lib/fam_force_allocation_module/calc_nozzle_thrust/Compare To Zero8'
+//  '<S11>'  : 'astrobee/fsw_lib/fam_force_allocation_module/calc_nozzle_thrust/Detect Change'
+//  '<S12>'  : 'astrobee/fsw_lib/fam_force_allocation_module/calc_nozzle_thrust/latch_nozzle_thrust_matricies'
+//  '<S13>'  : 'astrobee/fsw_lib/fam_force_allocation_module/calc_nozzle_thrust/latch_nozzle_thrust_matricies/MATLAB Function'
+//  '<S14>'  : 'astrobee/fsw_lib/fam_force_allocation_module/calc_nozzle_thrust_nnlsq/MATLAB Function'
+//  '<S15>'  : 'astrobee/fsw_lib/fam_force_allocation_module/calc_nozzle_thrust_nnlsq/latch_nozzle_thrust_matricies'
+//  '<S16>'  : 'astrobee/fsw_lib/fam_force_allocation_module/calc_nozzle_thrust_nnlsq/latch_nozzle_thrust_matricies/MATLAB Function'
+//  '<S17>'  : 'astrobee/fsw_lib/fam_force_allocation_module/calc_nozzle_thrust_old/latch_nozzle_thrust_matricies'
+//  '<S18>'  : 'astrobee/fsw_lib/fam_force_allocation_module/calc_nozzle_thrust_old/latch_nozzle_thrust_matricies/MATLAB Function'
+//  '<S19>'  : 'astrobee/fsw_lib/fam_force_allocation_module/calculate_PM1_servo_command/calc_impeller_speed'
+//  '<S20>'  : 'astrobee/fsw_lib/fam_force_allocation_module/calculate_PM1_servo_command/calc_servo_cmd'
+//  '<S21>'  : 'astrobee/fsw_lib/fam_force_allocation_module/calculate_PM1_servo_command/lookup_data_tables'
+//  '<S22>'  : 'astrobee/fsw_lib/fam_force_allocation_module/calculate_PM1_servo_command/calc_impeller_speed/Compare To Constant'
+//  '<S23>'  : 'astrobee/fsw_lib/fam_force_allocation_module/calculate_PM2_servo_command/calc_impeller_speed'
+//  '<S24>'  : 'astrobee/fsw_lib/fam_force_allocation_module/calculate_PM2_servo_command/calc_servo_cmd'
+//  '<S25>'  : 'astrobee/fsw_lib/fam_force_allocation_module/calculate_PM2_servo_command/lookup_data_tables'
+//  '<S26>'  : 'astrobee/fsw_lib/fam_force_allocation_module/calculate_PM2_servo_command/calc_impeller_speed/Compare To Constant'
 
 #endif                                 // RTW_HEADER_fam_force_allocation_module_h_ 
 

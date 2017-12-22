@@ -17,27 +17,26 @@
   
 <launch>
 
-  <!-- Context options (NB: THESE ARE OVERRIDDEN BY ENVIRONMENT VARIABLES, IF SET)    -->
-  <arg name="robot" default="sim" />            <!-- Robot name                       -->
-  <arg name="world" default="granite" />        <!-- World name                       -->
-  <arg name="ns" default="" />                  <!-- Robot namespace prefix           -->
-  <arg name="nodes" default=""/>                <!-- Launch specific nodes            -->
-  <arg name="sim" default="local" />            <!-- SIM IP address                   -->
-  <arg name="llp" default="local" />            <!-- LLP IP address                   -->
-  <arg name="mlp" default="local" />            <!-- MLP IP address                   -->
-  <arg name="dds" default="true" />             <!-- Enable DDS                       -->
+  <!-- Context options (NB: THESE ARE OVERRIDDEN BY ENVIRONMENT VARIABLES)   -->
+  <arg name="robot" default="sim" />            <!-- Robot name              -->
+  <arg name="world" default="granite" />        <!-- World name              -->
+  <arg name="ns" default="" />                  <!-- Robot namespace prefix  -->
+  <arg name="nodes" default=""/>                <!-- Launch specific nodes   -->
+  <arg name="sim" default="local" />            <!-- SIM IP address          -->
+  <arg name="llp" default="local" />            <!-- LLP IP address          -->
+  <arg name="mlp" default="local" />            <!-- MLP IP address          -->
+  <arg name="dds" default="true" />             <!-- Enable DDS              -->
 
   <!-- General options -->
-  <arg name="gviz" default="false" />           <!-- Start GNC visualizer             -->
-  <arg name="rviz" default="false" />           <!-- Start visualization              -->
-  <arg name="rqt" default="false" />            <!-- Start user interface             -->
-  <arg name="gds" default="false" />            <!-- Enable ground data system        -->
+  <arg name="gviz" default="false" />           <!-- Start GNC visualizer    -->
+  <arg name="rviz" default="false" />           <!-- Start visualization     -->
+  <arg name="rqt" default="false" />            <!-- Start user interface    -->
+  <arg name="gds" default="false" />            <!-- Enable GDS              -->
 
   <!-- Simulation-specific options -->
-  <arg name="insert" default="true" />          <!-- Should we auto-insert one robot? -->
-  <arg name="pose" default="0 0 0 0 0 0 1" />   <!-- Insert one robot at this pose    -->
+  <arg name="pose" default="0 0 0 0 0 0 1" />   <!-- Insert robot at pose    -->
 
- <!-- Make sure all environment variables are set for controller -->
+  <!-- Make sure all environment variables are set for controller -->
   <env if="$(eval optenv('ASTROBEE_ROBOT','')=='')" 
        name="ASTROBEE_ROBOT" value="$(arg robot)" />
   <env if="$(eval optenv('ASTROBEE_WORLD','')=='')" 
@@ -53,19 +52,17 @@
   <env name="ROSCONSOLE_FORMAT" value="[${severity}] [${time}] : (${logger}) ${message}"/>
 
   <!-- Insert platform at a desired initial location -->
-  <group if="$(arg insert)">
-    <include file="$(find astrobee)/launch/astrobee.launch">
-      <arg name="robot" value="$(arg robot)" />     <!-- Type of robot                  -->
-      <arg name="world" value="$(arg world)" />     <!-- Execution context              -->
-      <arg name="ns" value="$(arg ns)" />           <!-- Robot namespace                -->
-      <arg name="pose" value="$(arg pose)" />       <!-- Initial robot pose (sim only)  -->
-      <arg name="drivers" value="false" />          <!-- Start driver code              -->
-      <arg name="nodes" value="$(arg nodes)" />     <!-- Limit to specific nodes        -->
-      <arg name="sim" value="$(arg sim)" />         <!-- SIM IP address                 -->
-      <arg name="llp" value="$(arg llp)" />         <!-- LLP IP address                 -->
-      <arg name="mlp" value="$(arg mlp)" />         <!-- MLP IP address                 -->
-      <arg name="dds" value="$(arg dds)" />         <!-- Enable DDS                     -->
-    </include>
-  </group>
+  <include file="$(find astrobee)/launch/astrobee.launch">
+    <arg name="robot" value="$(arg robot)" />  <!-- Type of robot            -->
+    <arg name="world" value="$(arg world)" />  <!-- Execution context        -->
+    <arg name="ns" value="$(arg ns)" />        <!-- Robot namespace          -->
+    <arg name="pose" value="$(arg pose)" />    <!-- Initial robot pose (sim) -->
+    <arg name="drivers" value="false" />       <!-- Start driver code        -->
+    <arg name="nodes" value="$(arg nodes)" />  <!-- Limit to specific nodes  -->
+    <arg name="sim" value="$(arg sim)" />      <!-- SIM IP address           -->
+    <arg name="llp" value="$(arg llp)" />      <!-- LLP IP address           -->
+    <arg name="mlp" value="$(arg mlp)" />      <!-- MLP IP address           -->
+    <arg name="dds" value="$(arg dds)" />      <!-- Enable DDS               -->
+  </include>
 
 </launch>

@@ -31,22 +31,18 @@ namespace gnc_autocode {
 
 class GncCtlAutocode {
  public:
-  explicit GncCtlAutocode(cmc_msg * cmc);
+  GncCtlAutocode(void);
   ~GncCtlAutocode(void);
 
-  virtual void Initialize();
-  virtual void Step(kfl_msg* kfl);
+  virtual void Initialize(void);
+  virtual void Step(void);
   virtual void ReadParams(config_reader::ConfigReader* config);
 
   RT_MODEL_ctl_controller0_T* controller_;
 
   // see GN&C_ICD.xlsx in freeflyer_docs for documentation
   // inputs
-  ex_time_msg time_;
-  kfl_msg kfl_;  // we use the one passed from the EKF,
-  // but the matlab function needs one to initialize...
-  env_msg env_;
-  cmc_msg *cmc_;
+  ctl_input_msg ctl_input_;
 
   // outputs
   cmd_msg cmd_;

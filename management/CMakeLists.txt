@@ -18,6 +18,6 @@
 add_subdirectory(access_control)
 add_subdirectory(cpu_monitor)
 add_subdirectory(disk_monitor)
-add_subdirectory(executive)
 add_subdirectory(image_sampler)
 add_subdirectory(sys_monitor)
+add_subdirectory(executive)

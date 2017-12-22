@@ -3,9 +3,9 @@
 //
 // Code generated for Simulink model 'sim_model_lib0'.
 //
-// Model version                  : 1.1139
+// Model version                  : 1.1142
 // Simulink Coder version         : 8.11 (R2016b) 25-Aug-2016
-// C/C++ source code generated on : Thu Aug 31 10:22:10 2017
+// C/C++ source code generated on : Mon Dec 18 10:15:42 2017
 //
 // Target selection: ert.tlc
 // Embedded hardware selection: 32-bit Generic
@@ -135,11 +135,9 @@ P_sim_model_lib0_T sim_model_lib0_P = {
   { 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F },
   0.0F,
   1.0F,
-  1.0F,
-  1.0F,
-  0.001F,
-  0.4F,
-  0.015F,
+  0.05F,
+  0.1F,
+  0.2F,
   16.6F,
   8.00571161E-6F,
   1.2F,
@@ -15100,23 +15098,6 @@ P_sim_model_lib0_T sim_model_lib0_P = {
   224.0F,
   171.0F,
 
-  { 0.001F, 0.001F, 0.001F },
-
-  { 2.0F, 2.0F, 2.0F },
-
-  { 0.0F, 0.0F, 0.0F },
-
-  { 0.1083F, 0.0F, 0.0F, 0.0F, 0.1083F, 0.0F, 0.0F, 0.0F, 0.1083F },
-  7.0F,
-
-  { 1.6F, 1.6F, 1.6F },
-
-  { 0.0001F, 0.0001F, 0.0001F },
-
-  { 0.6F, 0.6F, 0.6F },
-
-  { 1.2F, 1.2F, 1.2F },
-
   { 1.0F, 1.0F, 1.0F },
 
   { 1.0F, 1.0F, 1.0F },
@@ -15133,6 +15114,8 @@ P_sim_model_lib0_T sim_model_lib0_P = {
 
   { -8.265E-7F, 3.0746E-8F, 7.2916E-5F },
   0.0F,
+
+  { 0.0F, 0.0F, 0.0F },
 
   { 1421300000U, 1421300030U, 1421300031U, 0U, 0U, 0U },
 
@@ -15640,6 +15623,8 @@ P_sim_model_lib0_T sim_model_lib0_P = {
     -16.6F,
     -1.0F,
     0.0F,
+    0.335103214F,
+    -0.335103214F,
     0.0F,
     0.016F,
     0.0F,
@@ -15711,6 +15696,8 @@ P_sim_model_lib0_T sim_model_lib0_P = {
     -16.6F,
     -1.0F,
     0.0F,
+    0.335103214F,
+    -0.335103214F,
     0.0F,
     0.016F,
     0.0F,

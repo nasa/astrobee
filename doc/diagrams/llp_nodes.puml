@@ -1,0 +1,14 @@
+@startuml
+
+skinparam componentStyle uml2
+'skinparam dpi 300
+
+title LLP Freeflyer Nodes Nodelet Managers
+
+!define SHOW_LLP true
+!define SHOW_ALL_TYPES true
+!define SHOW_MANAGERS true
+
+!include "nodes.puml"
+
+@enduml

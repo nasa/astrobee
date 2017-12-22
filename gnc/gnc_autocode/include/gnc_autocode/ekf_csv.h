@@ -28,7 +28,7 @@ namespace gnc_autocode {
 
 class GncEkfCSV : public GncEkfAutocode {
  public:
-  explicit GncEkfCSV(cmc_msg * cmc);
+  GncEkfCSV(void);
   ~GncEkfCSV(void);
 
   virtual void Initialize(std::string directory);

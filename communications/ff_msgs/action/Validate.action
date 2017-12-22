@@ -17,28 +17,32 @@
 #
 # This message describes the VALIDATE action offered by the PLANNER
 
-string flight_mode                                    # The flight mode
+ff_msgs/FlightMode flight_mode                        # Flight mode
+bool faceforward                                      # Faceforward
 ff_msgs/ControlState[] segment                        # Input segment
 duration max_time                                     # Max plan time
+
 ---
-uint8 response                                        # Response code
+
+int32 response                                        # Response code
 int32 CANCELLED                        =  2
 int32 SUCCESS                          =  1
 int32 PREEMPTED                        =  0
-int32 NO_FLIGHT_MODE_SPECIFIED         = -1
-int32 UNEXPECTED_EMPTY_SEGMENT         = -2
-int32 MINIMUM_FREQUENCY_NOT_MET        = -3
-int32 ENDPOINT_NOT_STATIONARY          = -4
-int32 NOT_ENOUGH_SETPOINTS             = -5
-int32 TIME_RUNS_BACKWARDS              = -6
-int32 EXCEEDS_LIMITS_VEL               = -7
-int32 EXCEEDS_LIMITS_ACCEL             = -8
-int32 EXCEEDS_LIMITS_OMEGA             = -9
-int32 EXCEEDS_LIMITS_ALPHA             = -10
-int32 INVALID_FLIGHT_MODE              = -11
-int32 INVALID_GENERAL_CONFIG           = -12
-string flight_mode                                    # Output flight mode
+int32 UNEXPECTED_EMPTY_SEGMENT         = -1
+int32 MINIMUM_FREQUENCY_NOT_MET        = -2
+int32 ENDPOINT_NOT_STATIONARY          = -3
+int32 NOT_ENOUGH_SETPOINTS             = -4
+int32 TIME_RUNS_BACKWARDS              = -5
+int32 EXCEEDS_LIMITS_VEL               = -6
+int32 EXCEEDS_LIMITS_ACCEL             = -7
+int32 EXCEEDS_LIMITS_OMEGA             = -8
+int32 EXCEEDS_LIMITS_ALPHA             = -9
+int32 INVALID_FLIGHT_MODE              = -10
+int32 INVALID_GENERAL_CONFIG           = -11
+
 ff_msgs/ControlState[] segment                        # Input segment
+
 ---
+
 float32 perc_complete                                 # Percentage complete
 float32 secs_remaining                                # Seconds remaining

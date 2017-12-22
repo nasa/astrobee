@@ -17,26 +17,34 @@
 #
 # This message describes the CONTROL action offered by GNC::WRAPPER
 
-uint8 mode                                  # STOP, IDLE, NOMINAL
-string flight_mode                          # Flight mode
-ff_msgs/ControlState[] segment              # Segment
+uint8 command                               # STOP, IDLE, NOMINAL
+uint8 STOP    = 0
+uint8 IDLE    = 1
+uint8 NOMINAL = 2
+
+ff_msgs/ControlState[] segment              # NOMINIAL ONLY: Segment
+
 ---
-int32 response
-int32 SUCCESS                          =  1
-int32 PREEMPTED                        =  0
-int32 CANCELLED                        = -1
-int32 TOLERANCE_VIOLATION_POSITION     = -2
-int32 TOLERANCE_VIOLATION_VELOCITY     = -3
-int32 TOLERANCE_VIOLATION_ATTITUDE     = -4
-int32 TOLERANCE_VIOLATION_OMEGA        = -5
-int32 PMC_NOT_RESPONDING               = -6
-int32 INVALID_FLIGHT_MODE              = -7
-int32 INVALID_CONTROL_MODE             = -8
-int32 CONTROL_DISABLED                 = -9
-int32 SEGMENT_INVALID                  = -10
-int32 POTENTIAL_TIME_SYNC_ISSUE        = -11
+
+int32 response                              
+int32 SUCCESS                          =  1 # Control succeeded
+int32 PREEMPTED                        =  0 # Control preempted
+int32 CANCELLED                        = -1 # Control cancelled
+int32 CONTROL_FAILED                   = -2 # Control aborted
+int32 EMPTY_SEGMENT                    = -3 # Empty segment in goal
+int32 INVALID_COMMAND                  = -4 # Invalid command in goal
+int32 TIMESYNC_ISSUE                   = -5 # Time begins < -1s in past
+
 ff_msgs/ControlState[] segment              # Final segment flown
-ff_msgs/ControlProgress progress            # Progress along segment
+uint32 index                                # Index being processed
+
 ---
-ff_msgs/ControlProgress progress            # Progress along segment
-############################################
+
+uint32 index                                # Index being processed
+
+ff_msgs/ControlState setpoint               # Current setpoint
+
+float32 error_position                      # Position error
+float32 error_attitude                      # Attitude error
+float32 error_velocity                      # Velocity error
+float32 error_omega                         # Omega error

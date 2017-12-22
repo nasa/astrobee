@@ -25,11 +25,11 @@
 
 namespace gnc_autocode {
 
-GncEkfAutocode::GncEkfAutocode(cmc_msg * cmc) : cmc_(cmc) {
+GncEkfAutocode::GncEkfAutocode(void) {
   int s = 15 + 6 + 6 * ASE_OF_NUM_AUG;
   P_ = static_cast<float*>(malloc(sizeof(float) * s * s));
   assert(P_);
-  est_ = est_estimator(&vis_, &reg_, &of_, &hand_, &imu_, cmc_, quat_, &kfl_, P_);
+  est_ = est_estimator(&vis_, &reg_, &of_, &hand_, &imu_, &cmc_, quat_, &kfl_, P_);
   assert(est_);
   assert(rtmGetErrorStatus(est_) == NULL);
   Initialize();
@@ -41,12 +41,12 @@ GncEkfAutocode::~GncEkfAutocode() {
 }
 
 void GncEkfAutocode::Step() {
-  est_estimator_step(est_, &vis_, &reg_, &of_, &hand_, &imu_, cmc_, quat_, &kfl_, P_);
+  est_estimator_step(est_, &vis_, &reg_, &of_, &hand_, &imu_, &cmc_, quat_, &kfl_, P_);
 }
 
 void GncEkfAutocode::Initialize() {
   // initialize model
-  est_estimator_initialize(est_, &vis_, &reg_, &of_, &hand_, &imu_, cmc_, quat_, &kfl_, P_);
+  est_estimator_initialize(est_, &vis_, &reg_, &of_, &hand_, &imu_, &cmc_, quat_, &kfl_, P_);
 }
 
 void GncEkfAutocode::ReadParams(config_reader::ConfigReader* config) {

@@ -156,10 +156,10 @@ void PmcMenu(PmcActuatorPair &pmc_pair) {
   for (size_t i = 0; i < pmc_actuator::kNumNozzles; i++)
     std::cout << (i + 1) << ". Set nozzle " << (i + 1) << " value (current: "
               << static_cast<int>(cmd.nozzle_positions[i]) << ")" << std::endl;
-  std::cout << pmc_actuator::kNumNozzles << ". Set value for all nozzles"
+  std::cout << (pmc_actuator::kNumNozzles + 1) << ". Set value for all nozzles"
             << std::endl;
-  std::cout << (pmc_actuator::kNumNozzles + 1)
-            << " . Set motor speed (current: "
+  std::cout << (pmc_actuator::kNumNozzles + 2)
+            << ". Set motor speed (current: "
             << static_cast<int>(cmd.motor_speed) << ")" << std::endl;
   std::cout << "*******************************************************"
             << std::endl;
@@ -178,7 +178,7 @@ void PmcMenu(PmcActuatorPair &pmc_pair) {
       std::cout << "Success" << std::endl;
       break;
     }
-    case pmc_actuator::kNumNozzles: {
+    case pmc_actuator::kNumNozzles + 1: {
       std::cerr << "Enter value for all nozzles:" << std::endl;
       uint32_t val = InputUnsignedInteger(25, 96);
       data_mutex_.lock();
@@ -188,7 +188,7 @@ void PmcMenu(PmcActuatorPair &pmc_pair) {
       std::cout << "Success" << std::endl;
       break;
     }
-    case pmc_actuator::kNumNozzles + 1: {
+    case pmc_actuator::kNumNozzles + 2: {
       std::cerr << "Enter motor speed:" << std::endl;
       uint32_t val = InputUnsignedInteger(0, 249);
       data_mutex_.lock();

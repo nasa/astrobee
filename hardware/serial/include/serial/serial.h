@@ -39,6 +39,7 @@
 // Serial read callback signature
 typedef std::function<void(const uint8_t*, size_t)> SerialReadCallback;
 typedef std::function<void(void)> SerialTimeoutCallback;
+typedef std::function<void(void)> SerialShutdownCallback;
 
 namespace serial {
 
@@ -51,7 +52,13 @@ enum SerialResetPinState{
 class Serial : private boost::noncopyable {
  public:
   // Constructor flags not ready
-  Serial(SerialReadCallback cb_read, SerialTimeoutCallback cb_timeout, uint32_t timeout_ms = READ_TIMEOUT_MS);
+  explicit Serial(SerialReadCallback cb_read);
+
+  // Set a callback when a read timeout occurs
+  void SetTimeoutCallback(SerialTimeoutCallback cb, uint32_t ms = 1000);
+
+  // Set a callback when a shutdown of the connection occurs (EOF)
+  void SetShutdownCallback(SerialShutdownCallback cb);
 
   // Destructor
   virtual ~Serial();
@@ -87,21 +94,22 @@ class Serial : private boost::noncopyable {
   void ReadStart();
 
   // Stop a read action
-  void ReadStop(const boost::system::error_code& error, size_t bytes_transferred);
+  void ReadStop(const boost::system::error_code& error, size_t bytes);
 
   // Timeout on read
   void TimeoutCallback(const boost::system::error_code& error);
 
  private:
-  boost::asio::io_service asio_;                             // ASIO service
-  boost::asio::serial_port port_;                            // Serial port
-  boost::asio::deadline_timer timer_;                        // Timeout
-  boost::thread thread_;                                     // Worker thread
-  SerialReadCallback cb_read_;                               // Read callback
-  SerialTimeoutCallback cb_timeout_;                         // Timeout callback
-  uint8_t buffer_[MAX_BUFFER_SIZE];                          // Data buffer
-  uint32_t timeout_ms_;                                      // Ms read timeout
-  bool timeout_;                                             // Was there a timeout?
+  boost::asio::io_service asio_;                       // ASIO service
+  boost::asio::serial_port port_;                      // Serial port
+  boost::asio::deadline_timer timer_;                  // Timeout
+  boost::thread thread_;                               // Worker thread
+  SerialReadCallback cb_read_;                         // Read callback
+  SerialTimeoutCallback cb_timeout_;                   // Timeout callback
+  SerialShutdownCallback cb_shutdown_;                 // Shutdown callback
+  uint8_t buffer_[MAX_BUFFER_SIZE];                    // Data buffer
+  uint32_t timeout_ms_;                                // Ms read timeout
+  bool timeout_;                                       // Was there a timeout?
 };
 
 }  // namespace serial

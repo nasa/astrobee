@@ -69,21 +69,11 @@ fi
 FREEFLYER_TARGETS=${FREEFLYER_TARGETS=llp mlp}
 FREEFLYER_MASTER=${FREEFLYER_MASTER:=http://${master_ip}:11311/}
 FREEFLYER_LLP_FIXES=${FREEFLYER_LLP_FIXES=rpath}
-
-if [ ! -e "$self_path/deploy/env_wrapper.sh.tmpl" ]; then
-  echo "No env_wrapper template found?" >&2
-  exit -1
-fi
-
-# Generate env_wrapper script (now mlp/llp and destination agnostic!)
-sed -e 's/{{master_uri}}/'${FREEFLYER_MASTER//\//\\\/}'/g' \
-    -e 's/{{config_ver}}/'${config_ver//\//\\\/}'/g' \
-  < $self_path/deploy/env_wrapper.sh.tmpl > $target/env_wrapper.sh
-chmod +x $target/env_wrapper.sh
+FREEFLYER_INSTALL_DIR=/opt/astrobee
 
 if [[ ${FREEFLYER_TARGETS,,} =~ 'dock' ]]; then
   echo "Copying files to Dock..."
-  if ! rsync -azh --delete --info=progress2 $target/ astrobee@${dock_ip}:armhf
+  if ! rsync -azh --delete --info=progress2 $target/ astrobee@${dock_ip}:${FREEFLYER_INSTALL_DIR}
   then
     exit 1
   fi
@@ -91,7 +81,7 @@ fi
 
 if [[ ${FREEFLYER_TARGETS,,} =~ 'mlp' ]]; then
   echo "Copying files to MLP..."
-  if ! rsync -azh --delete --info=progress2 $target/ astrobee@${mlp_ips[${robot_index}]}:armhf
+  if ! rsync -azh --delete --info=progress2 $target/ astrobee@${mlp_ips[${robot_index}]}:${FREEFLYER_INSTALL_DIR}
   then
     exit 1
   fi
@@ -100,7 +90,7 @@ fi
 if [[ ${FREEFLYER_TARGETS,,} =~ 'llp' ]]; then
   # Install to LLP
   echo "Copying files to LLP..."
-  if ! rsync -azh --delete --info=progress2 $target/ astrobee@${llp_ips[${robot_index}]}:armhf
+  if ! rsync -azh --delete --info=progress2 $target/ astrobee@${llp_ips[${robot_index}]}:${FREEFLYER_INSTALL_DIR}
   then
     exit 1
   fi

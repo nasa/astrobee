@@ -18,10 +18,10 @@
 <launch>
 
   <!-- Additional options -->
-  <arg name="drivers"/>
-  <arg name="nodes" default=""/>
-  <arg name="dds" default="true"/>
-  <arg name="output" default="log"/>
+  <arg name="drivers"/>                          <!-- Start platform drivers -->
+  <arg name="nodes" default=""/>                 <!-- Load certain nodes     -->
+  <arg name="dds" default="true"/>               <!-- Should DDS be started  -->
+  <arg name="output" default="log"/>             <!-- Where nodes should log -->
 
   <!-- Setup nodelet managers -->
   <group if="$(eval optenv('ASTROBEE_NODEGRAPH','')=='')">
@@ -41,6 +41,12 @@
           name="mlp_vision" output="$(arg output)"/>
     <node pkg="nodelet" type="nodelet" args="manager"
           name="mlp_depth_cam" output="$(arg output)"/>
+    <node pkg="nodelet" type="nodelet" args="manager"
+          name="mlp_arm" output="$(arg output)"/>
+    <node pkg="nodelet" type="nodelet" args="manager"
+          name="mlp_dock" output="$(arg output)"/>
+    <node pkg="nodelet" type="nodelet" args="manager"
+          name="mlp_perch" output="$(arg output)"/>
   </group>
 
   <!-- Vision / localization -->
@@ -56,7 +62,7 @@
   </include>
   <include file="$(find lk_optical_flow)/launch/lk_optical_flow.launch"
     if="$(eval arg('nodes') == '' or arg('nodes').find('lk_optical_flow') != -1)">
-    <arg name="name" value="lk_optical_flow" />
+    <arg name="name" value="optical_flow_nodelet" />
     <arg name="manager" value="mlp_vision" />
   </include>
   <include file="$(find marker_tracking)/launch/marker_tracking.launch"
@@ -104,15 +110,22 @@
 
   <!-- Procedures -->
   <!--
-  <include file="$(find docker)/launch/docker.launch"
-    if="$(eval arg('nodes') == '' or arg('nodes').find('docker') != -1)">
-    <arg name="name" value="docker" />
-    <arg name="manager" value="mlp_mobility" />
+  <include file="$(find dock)/launch/dock.launch"
+    if="$(eval arg('nodes') == '' or arg('nodes').find('dock') != -1)">
+    <arg name="name" value="dock" />
+    <arg name="manager" value="mlp_dock" />
   </include>
-  <include file="$(find percher)/launch/percher.launch"
-    if="$(eval arg('nodes') == '' or arg('nodes').find('percher') != -1)">
-    <arg name="name" value="percher" />
-    <arg name="manager" value="mlp_mobility" />
+  -->
+  <include file="$(find arm)/launch/arm.launch"
+    if="$(eval arg('nodes') == '' or arg('nodes').find('arm') != -1)">
+    <arg name="name" value="arm" />
+    <arg name="manager" value="mlp_arm" />
+  </include>
+  <!--
+  <include file="$(find perch)/launch/perch.launch"
+    if="$(eval arg('nodes') == '' or arg('nodes').find('perch') != -1)">
+    <arg name="name" value="perch" />
+    <arg name="manager" value="mlp_perch" />
   </include>
   -->
 
@@ -134,13 +147,11 @@
     <arg name="name" value="mlp_disk_monitor" />
     <arg name="manager" value="mlp_monitors" />
   </include>
-  <!-- 
   <include file="$(find sys_monitor)/launch/sys_monitor.launch"
     if="$(eval arg('nodes') == '' or arg('nodes').find('sys_monitor') != -1)">
     <arg name="name" value="sys_monitor" />
     <arg name="manager" value="mlp_monitors" />
   </include>
-  -->
 
   <!-- Communications -->
   <include file="$(find dds_ros_bridge)/launch/dds_ros_bridge.launch"
@@ -149,16 +160,8 @@
     <arg name="manager" value="mlp_communications" />
   </include>
 
-
   <!-- Drivers (optional) -->
   <group if="$(arg drivers)">
-    <!-- Perching arm
-    <include file="$(find perching_arm)/launch/perching_arm.launch"
-      if="$(eval arg('nodes') == '' or arg('nodes').find('perching_arm') != -1)">
-      <arg name="name" value="perching_arm" />
-      <arg name="manager" value="mlp_serial" />
-    </include>
-    -->
     <!-- Vision pipeline -->
     <include file="$(find is_camera)/launch/is_camera.launch"
       if="$(eval arg('nodes') == '' or arg('nodes').find('nav_cam') != -1)">
@@ -181,6 +184,14 @@
       <arg name="name" value="pico_driver" />
       <arg name="manager" value="mlp_depth_cam" />
     </include>
+    <!-- Perching arm -->
+    <!--
+    <include file="$(find perching_arm)/launch/perching_arm.launch"
+      if="$(eval arg('nodes') == '' or arg('nodes').find('perching_arm') != -1)">
+      <arg name="name" value="perching_arm" />
+      <arg name="manager" value="mlp_serial" />
+    </include>
+    -->
     <!-- Monitors -->
     <include file="$(find cpu_monitor)/launch/cpu_monitor.launch"
       if="$(eval arg('nodes') == '' or arg('nodes').find('mlp_cpu_monitor') != -1)">

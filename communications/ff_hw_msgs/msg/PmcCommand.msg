@@ -21,4 +21,4 @@
 std_msgs/Header header
 
 # Commands to the PMCs
-ff_hw_msgs/PmcState[] states
+ff_hw_msgs/PmcGoal[] goals

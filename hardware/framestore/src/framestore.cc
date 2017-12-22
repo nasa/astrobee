@@ -55,9 +55,14 @@ class FrameStore : public ff_util::FreeFlyerNodelet {
 
   void ReadParams() {
     if (!config_.ReadFiles()) {
-      ROS_FATAL("Error loading executive parameters.");
+      ROS_FATAL("Error loading framestore parameters.");
       return;
     }
+    // Get the world frame
+    std::string world;
+    if (!config_.GetStr("world_frame", &world))
+      return AssertFault("INITIALIZATION_FAULT", "Could not read world frame");
+    // Read all transforms
     geometry_msgs::TransformStamped tf;
     Eigen::Vector3d trans;
     Eigen::Quaterniond rot;
@@ -70,19 +75,35 @@ class FrameStore : public ff_util::FreeFlyerNodelet {
     if (config_.GetTable("transforms", &table)) {
       for (int i = 0; i < table.GetSize(); i++) {
         if (table.GetTable(i + 1, &group)) {
-          if ( group.GetStr("parent", &parent)                            // Parent is specified
-            && group.GetStr("child", &child)                              // Child frame is specified
-            && group.GetTable("transform", &t_tf)                         // Transform table is specified
-            && t_tf.GetTable("rot", &t_rot)                               // Rotation table is specified
-            && t_tf.GetTable("trans", &t_trans)                           // Translation table is specified
-            && msg_conversions::config_read_quat(&t_rot, &rot)            // Rotation
-            && msg_conversions::config_read_vector(&t_trans, &trans)) {   // Translation
+          if ( group.GetStr("parent", &parent)
+            && group.GetStr("child", &child)
+            && group.GetTable("transform", &t_tf)
+            && t_tf.GetTable("rot", &t_rot)
+            && t_tf.GetTable("trans", &t_trans)
+            && msg_conversions::config_read_quat(&t_rot, &rot)
+            && msg_conversions::config_read_vector(&t_trans, &trans)) {
             // Add the transform
             tf.header.stamp = ros::Time::now();
-            tf.header.frame_id = (platform.empty() ? parent : platform + "/" + parent);
-            tf.child_frame_id = (platform.empty() ? child : platform + "/" + child);
-            tf.transform.translation = msg_conversions::eigen_to_ros_vector(trans);
-            tf.transform.rotation = msg_conversions::eigen_to_ros_quat(rot.normalized());
+            // Set the parent id, taking care of a special case
+            if (parent == world) {
+              tf.header.frame_id = world;
+            } else {
+              if (platform.empty())
+                tf.header.frame_id =  parent;
+              else
+                tf.header.frame_id = platform + "/" + parent;
+            }
+            // Set the child id
+            if (platform.empty())
+              tf.child_frame_id = child;
+            else
+              tf.child_frame_id = platform + "/" + child;
+            // Transform conversion
+            tf.transform.translation =
+              msg_conversions::eigen_to_ros_vector(trans);
+            tf.transform.rotation =
+              msg_conversions::eigen_to_ros_quat(rot.normalized());
+            // Broadcast!
             tf_.sendTransform(tf);
           }
         }

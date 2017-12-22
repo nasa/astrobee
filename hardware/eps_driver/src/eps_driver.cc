@@ -158,6 +158,35 @@ bool EpsDriver::SetPayloadState(PayloadIndex payload, PowerState state) {
 }
 
 // Set specific power channel on (not a mask, but an integer channel!)
+bool EpsDriver::SetAdvancedState(AdvancedIndex advanced, PowerState state) {
+  ChannelIndex channel = CHANNEL_USB_PWR_EN;
+  switch (advanced) {
+  case ADVANCED_USB:          channel = CHANNEL_USB_PWR_EN;   break;
+  case ADVANCED_AUX:          channel = CHANNEL_AUX_PWR_EN;   break;
+  case ADVANCED_PMC1:         channel = CHANNEL_MOTOR_EN1;    break;
+  case ADVANCED_PMC2:         channel = CHANNEL_MOTOR_EN2;    break;
+  default:
+    return false;
+  }
+  switch (state) {
+  case PERSIST:  return true;
+  case ENABLED:
+    if (channel == CHANNEL_USB_PWR_EN || channel == CHANNEL_AUX_PWR_EN)
+      return SetPowerChannelState(channel - 1, ENABLED);
+    else if (channel == CHANNEL_MOTOR_EN1 || channel == CHANNEL_MOTOR_EN2)
+      return SetPowerChannelState(channel, ENABLED);
+  case DISABLED:
+    if (channel == CHANNEL_USB_PWR_EN || channel == CHANNEL_AUX_PWR_EN)
+      return SetPowerChannelState(channel - 1, DISABLED);
+    else if (channel == CHANNEL_MOTOR_EN1 || channel == CHANNEL_MOTOR_EN2)
+      return SetPowerChannelState(channel, DISABLED);
+  default:
+    break;
+  }
+  return false;
+}
+
+// Set specific power channel on (not a mask, but an integer channel!)
 bool EpsDriver::SetLedState(LedIndex led, PowerState state) {
   ChannelIndex channel = CHANNEL_STATUS_LED1;
   switch (led) {
@@ -213,6 +242,40 @@ bool EpsDriver::Undock(void) {
   return (Write(cmd, 4) == 4);
 }
 
+bool EpsDriver::GetConnectionState(ConnectionState &state) {
+  uint8_t cmd[4] = {I2C_CMD_GET_CONNECTION_STATE, 1, 0, 0};
+  if (Write(cmd, 4) != 4)
+    return false;
+  // Based on the size of the returned result, change the data size
+  uint8_t inbuf[16];
+  uint16_t size = Read(inbuf);
+
+  if (size != 1)
+    return false;
+
+  switch (inbuf[0]) {
+  case CONN_DISCONNECTED:
+    state = CONN_DISCONNECTED;
+    return true;
+  case CONN_CONNECTING:
+    state = CONN_CONNECTING;
+    return true;
+  case CONN_CONNECTED:
+    state = CONN_CONNECTED;
+    return true;
+  default:
+    std::cerr << "Undefined State" << std::endl;
+    return false;
+  }
+
+  return true;
+}
+
+bool EpsDriver::ClearTerminateEvent(void) {
+  uint8_t cmd[4] = { I2C_CMD_CLR_TERMINATE_EVT, 1, 0, 0 };
+  return (Write(cmd, 4) == 4);
+}
+
 // Read the analog temperature sensors
 bool EpsDriver::ReadTemperatureSensors(std::vector<double>& data) {
   uint8_t cmd[4] = {I2C_CMD_GET_DIGITAL_TEMPS, 1, 0, 0};
@@ -238,6 +301,14 @@ bool EpsDriver::ReadTemperatureSensors(std::vector<double>& data) {
 // Set all power switches on
 bool EpsDriver::SetAllPowerChannelState(PowerState state) {
   uint8_t cmd[8] = {state, 5, 0, 0xFF, 0xFF, 0xFF, 0xFF, 0x00};
+
+  if (state == ENABLED)
+    cmd[0] = I2C_CMD_SW_ON;
+  else if (state == DISABLED)
+    cmd[0] = I2C_CMD_SW_OFF;
+  else
+    return false;
+
   return (Write(cmd, 8) == 8);
 }
 
@@ -267,20 +338,32 @@ bool EpsDriver::GetAllPowerChannelState(std::vector<PowerState> &states) {
   return true;
 }
 
+
 // Set specific power channel on (not a mask, but an integer channel!)
 bool EpsDriver::SetPowerChannelState(uint8_t channel, PowerState state) {
   // Only accept valid channels
   if (channel >= NUM_CHANNELS)
     return false;
-  // Set the power channel
-  uint32_t mask = (0x1 << channel);
+
   uint8_t cmd[8] = {state, 5, 0,
-    (uint8_t)((mask)        & 0xFF),
-    (uint8_t)((mask >> 8)   & 0xFF),
-    (uint8_t)((mask >> 16)  & 0xFF),
-    (uint8_t)((mask >> 24)  & 0xFF),
+    0, 0, 0, 0,
     0
   };
+
+  if (state == ENABLED)
+    cmd[0] = I2C_CMD_SW_ON;
+  else if (state == DISABLED)
+    cmd[0] = I2C_CMD_SW_OFF;
+  else
+    return false;
+
+  // Set the power channel
+  uint32_t mask = (0x1 << channel);
+  cmd[3] = (mask)       & 0xFF;
+  cmd[4] = (mask >> 8)  & 0xFF;
+  cmd[5] = (mask >> 16) & 0xFF;
+  cmd[6] = (mask >> 24) & 0xFF;
+
   return (Write(cmd, 8) == 8);
 }
 

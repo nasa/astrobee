@@ -31,6 +31,7 @@ end
 astrobee_init;
 proto4_init;
 setup_p4_scn01;
+tun_debug_ctl_use_truth = uint8(1);
 
 astrobee_prep;
 

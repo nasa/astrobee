@@ -17,10 +17,64 @@
 #
 # This message describes the PERCH action offered by the PERCHER
 
-uint8 instruction                                     # The flight mode
+uint8 command
 uint8 PERCH   = 1
 uint8 UNPERCH = 2
+
 ---
-ff_msgs/MobilityResult result                         # Standardised result
+
+# Perch result
+int32 response
+int32 CANCELLED                          = 5
+int32 ALREADY_PERCHED                    = 4
+int32 ALREADY_UNPERCHED                  = 3
+int32 UNPERCHED                          = 2
+int32 PERCHED                            = 1
+int32 PREEMPTED                          = 0
+int32 INVALID_COMMAND                    = -1
+int32 SWITCH_TO_HR_LOC_FAILED            = -2
+int32 SWITCH_TO_PL_LOC_FAILED            = -3
+int32 SWITCH_TO_ML_LOC_FAILED            = -4
+int32 APPROACH_FAILED                    = -5
+int32 DEPLOY_FAILED                      = -6
+int32 CALIBRATE_FAILED                   = -7
+int32 OPEN_FAILED                        = -8
+int32 RESET_FAILED                       = -9
+int32 INGRESS_FAILED                     = -10
+int32 CLOSE_FAILED                       = -11
+int32 EGRESS_FAILED                      = -12
+int32 ATTACH_FAILED                      = -13
+int32 DETACH_FAILED                      = -14
+int32 NOT_ALLOWED                        = -15
+int32 TOGGLE_FAILED                      = -16
+int32 MOTION_FAILED                      = -17
+int32 SWITCH_FAILED                      = -18
+int32 ARM_FAILED                         = -19
+
 ---
-ff_msgs/MobilityProgress progress                     # Standardised progress
+
+# Feedback
+uint8 state
+uint8 INITIALIZING                       = 0
+uint8 UNKNOWN                            = 1
+uint8 TESTING_SWITCHING_TO_HR_LOC        = 2
+uint8 TESTING_SWITCHING_TO_PL_LOC        = 3
+uint8 UNPERCHED                          = 4
+uint8 PERCHING_SWITCHING_TO_HR_LOC       = 5
+uint8 PERCHING_MOVING_TO_APPROACH_POSE   = 6
+uint8 PERCHING_DEPLOYING_ARM             = 7
+uint8 PERCHING_OPENING_GRIPPER           = 8
+uint8 PERCHING_CALIBRATING_GRIPPER       = 9
+uint8 PERCHING_INGRESSING                = 10
+uint8 PERCHING_CLOSING_GRIPPER           = 11
+uint8 PERCHING_CHECKING_ATTACHED         = 12
+uint8 PERCHING_SWITCHING_TO_PL_LOC       = 13
+uint8 PERCHED                            = 14
+uint8 UNPERCHING_RESETTING_PAN_TILT      = 15
+uint8 UNPERCHING_SWITCHING_TO_HR_LOC     = 16
+uint8 UNPERCHING_OPENING_GRIPPER         = 17
+uint8 UNPERCHING_CALIBRATING_GRIPPER     = 18
+uint8 UNPERCHING_EGRESSING               = 19
+uint8 UNPERCHING_CLOSING_GRIPPER         = 20
+uint8 UNPERCHING_STOWING_ARM             = 21
+uint8 UNPERCHING_SWITCHING_TO_ML_LOC     = 22

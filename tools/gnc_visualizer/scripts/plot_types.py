@@ -390,6 +390,27 @@ class CtlRotPlot(VectorPlot):
                  pg.mkPen(colors[1]), pg.mkPen(colors[1], style=QtCore.Qt.DotLine, width=2), pg.mkPen(colors[1], style=QtCore.Qt.DotLine), pg.mkPen(colors[1], style=QtCore.Qt.DashLine),
                  pg.mkPen(colors[2]), pg.mkPen(colors[2], style=QtCore.Qt.DotLine, width=2), pg.mkPen(colors[2], style=QtCore.Qt.DotLine), pg.mkPen(colors[2], style=QtCore.Qt.DashLine)]
                )
+
+class Pmc1NozzlePlot(VectorPlot):
+    def __init__(self):
+        super(Pmc1NozzlePlot, self).__init__('PMC1 Nozzle Command', 'Ticks',
+            'pmc_time', ['pmc_1_nozzle_1', 'pmc_1_nozzle_2', 'pmc_1_nozzle_3', 'pmc_1_nozzle_4', 'pmc_1_nozzle_5', 'pmc_1_nozzle_6' ])
+
+class Pmc2NozzlePlot(VectorPlot):
+    def __init__(self):
+        super(Pmc2NozzlePlot, self).__init__('PMC2 Nozzle Command', 'Ticks', 
+            'pmc_time', ['pmc_2_nozzle_1', 'pmc_2_nozzle_2', 'pmc_2_nozzle_3', 'pmc_2_nozzle_4', 'pmc_2_nozzle_5', 'pmc_2_nozzle_6' ])
+
+class Pmc1BlowerPlot(VectorPlot):
+    def __init__(self):
+        super(Pmc1BlowerPlot, self).__init__('PMC1 Blower speed', 'Ticks',
+            'pmc_time', ['pmc_1_motor_speed'])
+
+class Pmc2BlowerPlot(VectorPlot):
+    def __init__(self):
+        super(Pmc2BlowerPlot, self).__init__('PMC2 Blower speed', 'Ticks',
+            'pmc_time', ['pmc_2_motor_speed'])
+
 plot_types = {
     'EKF' : {
         'Position'              : PositionPlot,
@@ -421,6 +442,12 @@ plot_types = {
         'Attitude Error Integ.' : CommandAttErrIntPlot,
         'Rotation'              : CtlRotPlot,
         'Status'                : CommandStatusPlot
+    },
+    'PMC' : {
+        'PMC1:Nozzle'           : Pmc1NozzlePlot,
+        'PMC1:Blower'           : Pmc1BlowerPlot,
+        'PMC2:Nozzle'           : Pmc2NozzlePlot,
+        'PMC2:Blower'           : Pmc2BlowerPlot
     }
 }
 

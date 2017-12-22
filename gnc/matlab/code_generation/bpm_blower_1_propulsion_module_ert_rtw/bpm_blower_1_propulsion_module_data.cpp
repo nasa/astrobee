@@ -3,9 +3,9 @@
 //
 // Code generated for Simulink model 'bpm_blower_1_propulsion_module'.
 //
-// Model version                  : 1.1139
+// Model version                  : 1.1142
 // Simulink Coder version         : 8.11 (R2016b) 25-Aug-2016
-// C/C++ source code generated on : Thu Aug 31 10:22:28 2017
+// C/C++ source code generated on : Mon Dec 18 10:15:59 2017
 //
 // Target selection: ert.tlc
 // Embedded hardware selection: 32-bit Generic
@@ -118,22 +118,16 @@ P_bpm_blower_1_propulsion_mod_T bpm_blower_1_propulsion_modul_P = {
   0.0F,                                // Variable: bpm_PM1_zero_thrust_area_error
                                        //  Referenced by: '<S1>/blower_aerodynamics'
 
-  1.0F,                                // Variable: bpm_imp_cmd_filt_den
-                                       //  Referenced by: '<S27>/Discrete Transfer Fcn'
-
-  1.0F,                                // Variable: bpm_imp_cmd_filt_num
-                                       //  Referenced by: '<S27>/Discrete Transfer Fcn'
-
   1.0F,                                // Variable: bpm_imp_ctl_filt_n
                                        //  Referenced by: '<S28>/Filter Coefficient'
 
-  0.001F,                              // Variable: bpm_imp_ctl_kd
+  0.05F,                               // Variable: bpm_imp_ctl_kd
                                        //  Referenced by: '<S28>/Derivative Gain'
 
-  0.4F,                                // Variable: bpm_imp_ctl_ki
+  0.1F,                                // Variable: bpm_imp_ctl_ki
                                        //  Referenced by: '<S28>/Integral Gain'
 
-  0.015F,                              // Variable: bpm_imp_ctl_kp
+  0.2F,                                // Variable: bpm_imp_ctl_kp
                                        //  Referenced by: '<S28>/Proportional Gain'
 
   16.6F,                               // Variable: bpm_imp_max_voltage
@@ -451,11 +445,17 @@ P_bpm_blower_1_propulsion_mod_T bpm_blower_1_propulsion_modul_P = {
   -1.0F,                               // Computed Parameter: Gain_Gain
                                        //  Referenced by: '<S27>/Gain'
 
-  0.0F,                                // Computed Parameter: DiscreteTransferFcn_InitialStat
-                                       //  Referenced by: '<S27>/Discrete Transfer Fcn'
-
   0.0F,                                // Computed Parameter: DiscreteTransferFcn1_InitialSta
                                        //  Referenced by: '<S27>/Discrete Transfer Fcn1'
+
+  0.335103214F,                        // Computed Parameter: RateLimiter_RisingLim
+                                       //  Referenced by: '<S27>/Rate Limiter'
+
+  -0.335103214F,                       // Computed Parameter: RateLimiter_FallingLim
+                                       //  Referenced by: '<S27>/Rate Limiter'
+
+  0.0F,                                // Computed Parameter: RateLimiter_IC
+                                       //  Referenced by: '<S27>/Rate Limiter'
 
   0.016F,                              // Computed Parameter: Integrator_gainval
                                        //  Referenced by: '<S28>/Integrator'

@@ -64,7 +64,7 @@ Vagrantfile.local
 install
 .vagrant
 
-build
+/build
 arm_build
 arm_build_release
 arm_build_debug

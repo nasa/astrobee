@@ -26,9 +26,13 @@
 #include <ff_msgs/PicoflexxIntermediateData.h>
 
 #include <string>
+#include <map>
 
 // Publishers
-ros::Publisher pub_d_, pub_a_, pub_i_, pub_c_;
+ros::Publisher pub_d_;
+ros::Publisher pub_a_;
+ros::Publisher pub_i_;
+ros::Publisher pub_c_;
 
 // Layer extraction
 std::vector < cv::Mat > layers(4);
@@ -42,19 +46,21 @@ struct null_deleter {
 
 // Called when extended data arrives
 void ExtendedCallback(const ff_msgs::PicoflexxIntermediateData::ConstPtr& msg) {
-  if (msg->samples.empty())
-    return;
-  // Extract the four channel image
   cv_bridge::CvImageConstPtr cv_ptr = cv_bridge::toCvShare(
-    sensor_msgs::ImageConstPtr(&msg->samples[0].raw, null_deleter()), sensor_msgs::image_encodings::TYPE_32FC4);
+    sensor_msgs::ImageConstPtr(&msg->raw, null_deleter()),
+    sensor_msgs::image_encodings::TYPE_32FC4);
   cv::split(cv_ptr->image, layers);
   std_msgs::Header header;
   header.stamp = ros::Time::now();
   header.frame_id = "/perch_cam";
-  cv_bridge::CvImage d(header, sensor_msgs::image_encodings::TYPE_32FC1, layers[0]);
-  cv_bridge::CvImage a(header, sensor_msgs::image_encodings::TYPE_32FC1, layers[1]);
-  cv_bridge::CvImage i(header, sensor_msgs::image_encodings::TYPE_32FC1, layers[2]);
-  cv_bridge::CvImage n(header, sensor_msgs::image_encodings::TYPE_32FC1, layers[3]);
+  cv_bridge::CvImage d(header,
+    sensor_msgs::image_encodings::TYPE_32FC1, layers[0]);
+  cv_bridge::CvImage a(header,
+    sensor_msgs::image_encodings::TYPE_32FC1, layers[1]);
+  cv_bridge::CvImage i(header,
+    sensor_msgs::image_encodings::TYPE_32FC1, layers[2]);
+  cv_bridge::CvImage n(header,
+    sensor_msgs::image_encodings::TYPE_32FC1, layers[3]);
   // Publish individual images
   pub_d_.publish(d.toImageMsg());
   pub_a_.publish(a.toImageMsg());
@@ -83,13 +89,15 @@ void DepthImageCallback(const sensor_msgs::ImageConstPtr& msg) {
   confidence_.step = confidence_.width * sizeof(uint8_t);
   confidence_.data.resize(confidence_.height * confidence_.step);
   // Set pointers to the data fields of the corresponding ROS images
-  uint16_t *msg_ptr = const_cast<uint16_t *>(reinterpret_cast<const uint16_t *>(&msg->data[0]));
+  uint16_t *msg_ptr = const_cast<uint16_t *>(
+    reinterpret_cast<const uint16_t *>(&msg->data[0]));
   uint16_t *dist_ptr = reinterpret_cast<uint16_t *>(&distance_.data[0]);
   uint8_t *conf_ptr = reinterpret_cast<uint8_t *>(&confidence_.data[0]);
   // Iterate through the image found in msg
-  for (size_t i = 0; i < (distance_.width * distance_.height); ++i, ++msg_ptr, ++dist_ptr, ++conf_ptr) {
-    *dist_ptr = *msg_ptr & 0x1fff;  // Grab the distance (least significant 13 bis)
-    *conf_ptr = (uint8_t)((*msg_ptr & 0xE000) >> 13);  // Grab the confidence (most significant 3 bits)
+  for (size_t i = 0; i < (distance_.width * distance_.height);
+    ++i, ++msg_ptr, ++dist_ptr, ++conf_ptr) {
+    *dist_ptr = *msg_ptr & 0x1fff;                     // Grab the distance
+    *conf_ptr = (uint8_t)((*msg_ptr & 0xE000) >> 13);  // Grab the confidence
   }
   pub_d_.publish(distance_);
   pub_c_.publish(confidence_);
@@ -103,24 +111,23 @@ int main(int argc, char **argv) {
     ROS_FATAL("You need to pass a topic to the pico proxy");
   if (!n.hasParam("topic_type"))
     ROS_FATAL("You need to pass a topic type to the pico proxy");
-  std::string topic;
+  std::string topic, topic_type;
   n.getParam("topic", topic);
-  std::string topic_type;
   n.getParam("topic_type", topic_type);
   ROS_INFO_STREAM("Listening on topic " << topic);
   ros::Subscriber sub;
   if (topic_type == "extended") {
-    pub_d_ = n.advertise < sensor_msgs::Image > (topic + "/distance", 1);
-    pub_a_ = n.advertise < sensor_msgs::Image > (topic + "/amplitude", 1);
-    pub_i_ = n.advertise < sensor_msgs::Image > (topic + "/intensity", 1);
-    pub_c_ = n.advertise < sensor_msgs::Image > (topic + "/noise", 1);
+    pub_d_ = n.advertise < sensor_msgs::Image > (topic + "/distance/", 1);
+    pub_a_ = n.advertise < sensor_msgs::Image > (topic + "/amplitude/", 1);
+    pub_i_ = n.advertise < sensor_msgs::Image > (topic + "/intensity/", 1);
+    pub_c_ = n.advertise < sensor_msgs::Image > (topic + "/noise/", 1);
     sub = n.subscribe(topic, 1, ExtendedCallback);
   } else if (topic_type == "depth_image") {
     pub_d_ = n.advertise < sensor_msgs::Image > (topic + "/distance", 1);
     pub_c_ = n.advertise < sensor_msgs::Image > (topic + "/confidence", 1);
     sub = n.subscribe(topic, 1, DepthImageCallback);
   } else {
-    ROS_FATAL("Unsupported topic type (must be \"extended\" or \"depth_image\")");
+    ROS_FATAL("Unsupported type (must be \"extended\" or \"depth_image\")");
   }
   ros::spin();
   return 0;

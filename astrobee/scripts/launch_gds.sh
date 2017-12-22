@@ -29,7 +29,7 @@ else
 fi
 
 # Should be set by launch script
-cd $ASTROBEE_GDS_PATH
+cd ~/gds/latest
 
 # Add libraries to our search path
 export LD_LIBRARY_PATH=$PWD/plugins/com.rti.dds.target_5.0.0/os/linux/${ld_arch}/:$LD_LIBRARY_PATH
@@ -38,9 +38,9 @@ unset arch
 unset ld_arch
 
 if [ "$ASTROBEE_WORLD" == "iss" ]; then
-	exec ./AstroBeeWB -engineering -agent1 FreeFlyerA -noZoomToClick -precision 3 > /dev/null 2>&1
+	exec ./AstroBeeWB -engineering -noZoomToClick -precision 3 > /dev/null 2>&1
 elif [ "$ASTROBEE_WORLD" == "granite" ]; then
-	exec ./AstroBeeWB -engineering -agent1 FreeFlyerA -noZoomToClick -precision 3 -graniteLab > /dev/null 2>&1
+	exec ./AstroBeeWB -engineering -agent1 P4D -noZoomToClick -precision 3 -graniteLab > /dev/null 2>&1
 elif [ "$ASTROBEE_WORLD" == "mgtf" ]; then
-	exec ./AstroBeeWB -engineering -agent1 FreeFlyerA -noZoomToClick -precision 3 -mgtfLab > /dev/null 2>&1
+	exec ./AstroBeeWB -engineering -agent1 P4C -noZoomToClick -precision 3 -mgtfLab > /dev/null 2>&1
 fi

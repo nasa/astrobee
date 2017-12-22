@@ -310,16 +310,19 @@ void SelectRandomObservations(const std::vector<Eigen::Vector3d> & all_landmarks
   }
 }
 
-void P3P(const std::vector<cv::Point3d> & landmarks, const std::vector<cv::Point2d> & observations,
+bool P3P(const std::vector<cv::Point3d> & landmarks, const std::vector<cv::Point2d> & observations,
          const camera::CameraParameters & params, Eigen::Vector3d * pos, Eigen::Matrix3d * rotation) {
     cv::Mat camera_matrix(3, 3, cv::DataType<double>::type);
     cv::eigen2cv(params.GetIntrinsicMatrix<camera::UNDISTORTED_C>(), camera_matrix);
-    cv::Mat rvec(3, 1, cv::DataType<double>::type);
-    cv::Mat tvec(3, 1, cv::DataType<double>::type);
+    cv::Mat rvec(3, 1, cv::DataType<double>::type, cv::Scalar(0));
+    cv::Mat tvec(3, 1, cv::DataType<double>::type, cv::Scalar(0));
     cv::Mat distortion(4, 1, cv::DataType<double>::type, cv::Scalar(0));
-    cv::solvePnP(landmarks, observations, camera_matrix, distortion, rvec, tvec, false, CV_P3P);
+    bool result = cv::solvePnP(landmarks, observations, camera_matrix, distortion, rvec, tvec, false, CV_P3P);
+    if (!result)
+      return false;
     cv::cv2eigen(tvec, *pos);
     camera::RodriguesToRotation(Eigen::Vector3d(rvec.at<double>(0), rvec.at<double>(1), rvec.at<double>(2)), rotation);
+    return true;
 }
 
 size_t CountInliers(const std::vector<Eigen::Vector3d> & landmarks, const std::vector<Eigen::Vector2d> & observations,
@@ -366,7 +369,9 @@ int RansacEstimateCamera(const std::vector<Eigen::Vector3d> & landmarks,
 
     Eigen::Vector3d pos;
     Eigen::Matrix3d rotation;
-    P3P(subset_landmarks, subset_observations, params, &pos, &rotation);
+    bool result = P3P(subset_landmarks, subset_observations, params, &pos, &rotation);
+    if (!result)
+      continue;
     Eigen::Affine3d cam_t_global;
     cam_t_global.setIdentity();
     cam_t_global.translate(pos);

@@ -25,7 +25,8 @@
 
 scriptdir=$(dirname "$(readlink -f "$0")")
 
-pkg_files=${1:-packages_base.lst packages_desktop.lst}
+pkg_files=${1:-$scriptdir/packages_base.lst $scriptdir/packages_desktop.lst}
+echo $pkg_files
 
 pkgs=''
 for i in $pkg_files; do

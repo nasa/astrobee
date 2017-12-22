@@ -1,0 +1,9 @@
+<library path="lib/libctl">
+  <class name="ctl/ctl"
+	 type="ctl::CtlNodelet"
+	 base_class_type="nodelet::Nodelet">
+    <description>
+      This nodelet wraps GNC's implementations of the control module.
+    </description>
+  </class>
+</library>

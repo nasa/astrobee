@@ -22,17 +22,17 @@
     <sensor name="dock_cam" type="wideanglecamera">
       <pose>0 0 0 0 0 0</pose>
       <always_on>0</always_on>
-      <update_rate>1</update_rate>
+      <update_rate>3</update_rate>
       <visualize>0</visualize>
       <camera>
-        <horizontal_fov>2.87507641955055</horizontal_fov> <!-- 130 degrees -->
+        <horizontal_fov>2.87507641955055</horizontal_fov>
         <image>
           <width>320</width>
           <height>240</height>
           <format>L8</format>
         </image>
         <clip>
-          <near>0.2</near>
+          <near>0.03</near>
           <far>10</far>
         </clip>
         <distortion>

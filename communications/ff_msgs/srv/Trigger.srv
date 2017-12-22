@@ -17,7 +17,7 @@
 #
 # This service changes the internal state of a FreeFlyerNodelet
 
-uint8 event                              # When these zones were created
+uint8 event
 uint8 UNKNOWN = 0
 uint8 RESTART = 1
 uint8 SLEEP   = 2

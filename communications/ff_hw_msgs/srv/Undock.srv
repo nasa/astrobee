@@ -17,21 +17,12 @@
 #
 # A service for undocking.
 
-# which bay to undock from
-uint8 bay
-
-uint8 BAY_ONE = 1
-uint8 BAY_TWO = 2
 ---
+
 int32 value
+int32 SUCCESS             =  1
+int32 I2C_FAILED          = -1
+int32 CANNOT_QUERY_STATE  = -2
+int32 NOT_DOCKED          = -3
+int32 UNDOCK_FAILED       = -4
 
-# success
-int32 OK = 1
-
-# logic errors
-int32 ERR_NOT_DOCKED  = -101
-int32 ERR_INVALID_BAY = -102
-
-# hardware errors
-int32 ERR_NO_DOCK = -201
-int32 ERR_I2C     = -202

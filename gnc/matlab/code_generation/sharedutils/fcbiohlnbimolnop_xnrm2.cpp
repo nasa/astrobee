@@ -3,15 +3,15 @@
 //
 // Code generated for Simulink model 'fam_force_allocation_module'.
 //
-// Model version                  : 1.1139
+// Model version                  : 1.1142
 // Simulink Coder version         : 8.11 (R2016b) 25-Aug-2016
-// C/C++ source code generated on : Wed May 17 14:43:17 2017
+// C/C++ source code generated on : Mon Dec  4 08:34:01 2017
 //
 #include "rtwtypes.h"
 #include <math.h>
 #include "fcbiohlnbimolnop_xnrm2.h"
 
-// Function for MATLAB Function: '<S9>/MATLAB Function'
+// Function for MATLAB Function: '<S12>/MATLAB Function'
 real32_T fcbiohlnbimolnop_xnrm2(int32_T n, const real32_T x[3], int32_T ix0)
 {
   real32_T y;

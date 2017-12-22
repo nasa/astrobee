@@ -1,0 +1,9 @@
+<library path="lib/libfam">
+  <class name="fam/fam"
+	 type="fam::FamNodelet"
+	 base_class_type="nodelet::Nodelet">
+    <description>
+      This nodelet wraps GNC's implementations of the force allocation module.
+    </description>
+  </class>
+</library>

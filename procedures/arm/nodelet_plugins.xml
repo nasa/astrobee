@@ -1,0 +1,5 @@
+<library path="lib/libarm">
+  <class name="arm/ArmNodelet" type="arm::ArmNodelet" base_class_type="nodelet::Nodelet">
+    <description>Nodelet for procedures::arm</description>
+  </class>
+</library>

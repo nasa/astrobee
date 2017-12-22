@@ -15,5 +15,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-add_subdirectory(docker)
-# add_subdirectory(percher)
+add_subdirectory(arm)
+#add_subdirectory(perch)
+#add_subdirectory(dock)
+

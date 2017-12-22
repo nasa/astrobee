@@ -136,8 +136,8 @@ void EpsonImuNodelet::ReadParams(void) {
   // override the rate if we are named "calibration_imu", this means
   // we are running the calibration launch file
   if (calibration_mode_) {
-    sampling_rate_ = static_cast<epson_imu::SamplingRate>(temp);
-    filter_ = static_cast<epson_imu::Filter>(temp);
+    sampling_rate_ = static_cast<epson_imu::SamplingRate>(calibration_sampling_rate);
+    filter_ = static_cast<epson_imu::Filter>(calibration_filter);
   }
 }
 

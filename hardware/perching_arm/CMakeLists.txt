@@ -25,7 +25,8 @@ catkin_package(
     nodelet
     pluginlib
     ff_util
-    ff_msgs
+    ff_hw_msgs
+    sensor_msgs
 )
 
 create_library(
@@ -36,8 +37,9 @@ create_library(
 )
 
 create_tool_targets(DIR tools
-  LIBS ${catkin_LIBRARIES} perching_arm
+  LIBS ${catkin_LIBRARIES} perching_arm common
   INC ${catkin_INCLUDE_DIRS}
+  DEPS common
 )
 
 install_launch_files()

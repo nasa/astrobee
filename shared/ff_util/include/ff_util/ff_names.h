@@ -19,16 +19,56 @@
 #ifndef FF_UTIL_FF_NAMES_H_
 #define FF_UTIL_FF_NAMES_H_
 
-// Global topics (shared between ALL platforms)
+// UNIVERSAL ///////////////////////////////////////////////////////////////////
+
+////////////
+// GLOBAL //
+////////////
 
 #define TOPIC_CLOCK                                 "/clock"
 #define TOPIC_DIAGNOSTICS                           "/diagnostics"
 #define TOPIC_TF_DYNAMIC                            "/tf"
 #define TOPIC_TF_STATIC                             "/tf_static"
 
+////////////
+// FRAMES //
+////////////
+
 #define FRAME_NAME_WORLD                            "world"
 #define FRAME_NAME_BODY                             "body"
 #define FRAME_NAME_TRUTH                            "truth"
+#define FRAME_NAME_HANDRAIL                         "handrail"
+#define FRAME_NAME_DOCK                             "dock"
+#define FRAME_NAME_DOCK_BERTH_LEFT                  "dock/berth/left"
+#define FRAME_NAME_DOCK_BERTH_RIGHT                 "dock/berth/right"
+#define FRAME_NAME_DOCK_MARKER                      "dock/marker"
+#define FRAME_NAME_PERCH_CAM                        "perch_cam"
+#define FRAME_NAME_HAZ_CAM                          "haz_cam"
+#define FRAME_NAME_DOCK_CAM                         "dock_cam"
+#define FRAME_NAME_NAV_CAM                          "nav_cam"
+#define FRAME_NAME_FLASHLIGHT_FRONT                 "flashlight_front"
+#define FRAME_NAME_FLASHLIGHT_AFT                   "flashlight_aft"
+#define FRAME_NAME_LASER                            "laser"
+#define FRAME_NAME_IMU                              "imu"
+
+//////////////////
+// LOCALIZATION //
+//////////////////
+
+#define LOCALIZATION_NONE                           "no"
+#define LOCALIZATION_MAPPED_LANDMARKS               "ml"
+#define LOCALIZATION_AR_TAGS                        "ar"
+#define LOCALIZATION_HANDRAIL                       "hr"
+#define LOCALIZATION_PERCH                          "pl"
+
+//////////////////
+// FLIGHT MODES //
+//////////////////
+
+#define FLIGHT_MODE_NOMINAL                         "nominal"
+#define FLIGHT_MODE_DOCKING                         "docking"
+#define FLIGHT_MODE_PERCHING                        "perching"
+
 
 ////////////
 // SHARED //
@@ -40,6 +80,10 @@
 #define TOPIC_HEARTBEAT                             "heartbeat"
 #define TOPIC_PERFORMANCE                           "performance"
 #define TOPIC_TRIGGER                               "trigger"
+#define TOPIC_JOINT_GOALS                           "joint_goals"
+#define TOPIC_JOINT_STATES                          "joint_states"
+
+// SUBSYSTEMS //////////////////////////////////////////////////////////////////
 
 ///////////
 // COMMS //
@@ -59,7 +103,9 @@
 
 #define SUBSYSTEM_GNC                               "gnc"
 
-#define NODE_GNC                                    "gnc"
+#define NODE_CTL                                    "ctl"
+#define NODE_EKF                                    "ekf"
+#define NODE_FAM                                    "fam"
 #define NODE_SIM_WRAPPER                            "sim_wrapper"
 
 #define ACTION_GNC_CTL_CONTROL                      "gnc/control"
@@ -76,7 +122,6 @@
 #define SERVICE_GNC_EKF_INIT_BIAS                   "gnc/ekf/init_bias"
 #define SERVICE_GNC_EKF_SET_INPUT                   "gnc/ekf/set_input"
 #define SERVICE_GNC_CTL_ENABLE                      "gnc/ctl/enable"
-#define SERVICE_GNC_SET_INERTIA                     "gnc/ctl/set_inertia"
 
 ///////////////////
 // GUEST SCIENCE //
@@ -119,11 +164,13 @@
 #define TOPIC_MANAGEMENT_IMG_SAMPLER_NAV_CAM_STREAM  "mgt/img_sampler/nav_cam/image_stream"
 #define TOPIC_MANAGEMENT_IMG_SAMPLER_DOCK_CAM_RECORD "mgt/img_sampler/dock_cam/image_record"
 #define TOPIC_MANAGEMENT_IMG_SAMPLER_DOCK_CAM_STREAM "mgt/img_sampler/dock_cam/image_stream"
+#define TOPIC_MANAGEMENT_INERTIA                     "gnc/inertia"
 
 #define SERVICE_MANAGEMENT_IMG_SAMPLER_CONFIG_NAV   "mgt/img_sampler/nav_cam/configure"
 #define SERVICE_MANAGEMENT_IMG_SAMPLER_CONFIG_DOCK  "mgt/img_sampler/dock_cam/configure"
 #define SERVICE_MANAGEMENT_IMG_SAMPLER_ENABLE_NAV   "mgt/img_sampler/nav_cam/enable"
 #define SERVICE_MANAGEMENT_IMG_SAMPLER_ENABLE_DOCK  "mgt/img_sampler/dock_cam/enable"
+#define SERVICE_MANAGEMENT_SYS_MONITOR_UNLOAD_LOAD_NODELET "mgt/sys_monitor/unload_load_nodelet"
 
 //////////////
 // MOBILITY //
@@ -134,25 +181,18 @@
 #define NODE_CHOREOGRAPHER                          "choreographer"
 #define NODE_MAPPER                                 "mapper"
 #define NODE_SENTINEL                               "sentinel"
-#define NODE_DOCKER                                 "docker"
-#define NODE_PERCHER                                "percher"
 
 // Exposed to peer nodes
 
-#define ACTION_MOBILITY_MOVE                        "mob/move"
-#define ACTION_MOBILITY_EXECUTE                     "mob/execute"
-#define ACTION_MOBILITY_STOP                        "mob/stop"
-#define ACTION_MOBILITY_IDLE                        "mob/idle"
-#define ACTION_MOBILITY_DOCK                        "mob/dock"
-#define ACTION_MOBILITY_UNDOCK                      "mob/undock"
-#define ACTION_MOBILITY_PERCH                       "mob/perch"
-#define ACTION_MOBILITY_UNPERCH                     "mob/unperch"
-
-#define ACTION_MOBILITY_PLAN                        "mob/plan"
+#define ACTION_MOBILITY_MOTION                      "mob/motion"
 #define ACTION_MOBILITY_VALIDATE                    "mob/validate"
 
 #define SERVICE_MOBILITY_SET_ZONES                  "mob/set_zones"
 #define SERVICE_MOBILITY_GET_ZONES                  "mob/get_zones"
+#define SERVICE_MOBILITY_SET_STATE                  "mob/set_state"
+
+#define TOPIC_MOBILITY_MOTION_STATE                 "mob/state"
+#define TOPIC_MOBILITY_FLIGHT_MODE                  "mob/flight_mode"
 
 // Used internally or for rviz plotting
 
@@ -165,8 +205,6 @@
 #define TOPIC_MOBILITY_SEGMENT                      "mob/choreographer/segment"
 #define TOPIC_MOBILITY_COLLISIONS                   "mob/sentinel/collisions"
 #define TOPIC_MOBILITY_ZONES                        "mob/mapper/zones"
-#define TOPIC_MOBILITY_DOCKING_STATE                "mob/dock/state"
-#define TOPIC_MOBILITY_PERCHING_STATE               "mob/perch/state"
 
 //////////////////
 // LOCALIZATION //
@@ -180,7 +218,10 @@
 #define NODE_AR_TAGS                                "ar_tags"
 #define NODE_MAPPED_LANDMARKS                       "ml"
 
-#define TOPIC_LOCALIZATION_TRUTH                    "loc/truth"
+#define TOPIC_LOCALIZATION_POSE                     "loc/pose"
+#define TOPIC_LOCALIZATION_TWIST                    "loc/twist"
+#define TOPIC_LOCALIZATION_TRUTH                    "loc/truth/pose"
+#define TOPIC_LOCALIZATION_TRUTH_TWIST              "loc/truth/twist"
 #define TOPIC_LOCALIZATION_OVERHEAD_IMAGE           "loc/overhead"
 
 #define TOPIC_LOCALIZATION_MANAGER_STATUS           "loc/manager/status"
@@ -192,6 +233,7 @@
 #define PREFIX_LOCALIZATION_MANAGER_AR              "loc/manager/ar"
 #define PREFIX_LOCALIZATION_MANAGER_OF              "loc/manager/of"
 #define PREFIX_LOCALIZATION_MANAGER_HR              "loc/manager/hr"
+#define PREFIX_LOCALIZATION_MANAGER_PL              "loc/manager/pl"
 
 #define TOPIC_LOCALIZATION_ML_FEATURES              "loc/ml/features"
 #define TOPIC_LOCALIZATION_ML_REGISTRATION          "loc/ml/registration"
@@ -211,6 +253,32 @@
 #define SERVICE_LOCALIZATION_AR_ENABLE              "loc/ar/enable"
 #define SERVICE_LOCALIZATION_ML_ENABLE              "loc/ml/enable"
 #define SERVICE_LOCALIZATION_HR_ENABLE              "loc/hr/enable"
+#define SERVICE_LOCALIZATION_PL_ENABLE              "loc/pl/enable"
+
+////////////////
+// PROCEDURES //
+////////////////
+
+#define SUBSYSTEM_PROCEDURES                        "pro"
+
+#define NODE_ARM                                    "arm"
+#define NODE_DOCK                                   "dock"
+#define NODE_PERCH                                  "perch"
+
+#define ACTION_PROCEDURES_ARM                       "pro/arm"
+#define ACTION_PROCEDURES_DOCK                      "pro/dock"
+#define ACTION_PROCEDURES_PERCH                     "pro/perch"
+
+#define TOPIC_PROCEDURES_DOCKING_STATE              "pro/dock/state"
+#define TOPIC_PROCEDURES_PERCHING_STATE             "pro/perch/state"
+
+#define TOPIC_PROCEDURES_ARM_STATE                  "pro/arm/state"
+#define TOPIC_PROCEDURES_ARM_ARM_STATE              "pro/arm/arm_state"
+#define TOPIC_PROCEDURES_ARM_JOINT_SAMPLE           "pro/arm/joint_sample"
+
+#define SERVICE_PROCEDURES_ARM_SET_STATE            "pro/arm/set_state"
+#define SERVICE_PROCEDURES_DOCK_SET_STATE           "pro/dock/set_state"
+#define SERVICE_PROCEDURES_PERCH_SET_STATE          "pro/perch/set_state"
 
 //////////////
 // HARDWARE //
@@ -234,6 +302,7 @@
 
 #define TOPIC_HARDWARE_PMC_COMMAND                  "hw/pmc/command"
 #define TOPIC_HARDWARE_PMC_TELEMETRY                "hw/pmc/telemetry"
+#define TOPIC_HARDWARE_PMC_STATE                    "hw/pmc/state"
 #define TOPIC_HARDWARE_IMU                          "hw/imu"
 #define TOPIC_HARDWARE_NAV_CAM                      "hw/cam_nav"
 #define TOPIC_HARDWARE_DOCK_CAM                     "hw/cam_dock"
@@ -252,8 +321,7 @@
 #define TOPIC_HARDWARE_EPS_BATTERY_TEMP_TR          "hw/eps/battery/top_right/temp"
 #define TOPIC_HARDWARE_EPS_BATTERY_TEMP_BL          "hw/eps/battery/bottom_left/temp"
 #define TOPIC_HARDWARE_EPS_BATTERY_TEMP_BR          "hw/eps/battery/bottom_right/temp"
-#define TOPIC_HARDWARE_PERCHING_ARM_STATE           "hw/arm/state"
-#define TOPIC_HARDWARE_PERCHING_ARM_JOINT_SAMPLE    "hw/arm/joints"
+#define TOPIC_HARDWARE_EPS_DOCK_STATE               "hw/eps/dock"
 #define TOPIC_HARDWARE_PICOFLEXX_PREFIX             "hw/depth_"
 #define TOPIC_HARDWARE_PICOFLEXX_SUFFIX             "/points"
 #define TOPIC_HARDWARE_PICOFLEXX_SUFFIX_EXTENDED    "/extended"
@@ -265,17 +333,23 @@
 #define TOPIC_HARDWARE_SPEED_CAM_IMU                "hw/speed_cam/imu"
 #define TOPIC_HARDWARE_SPEED_CAM_SPEED              "hw/speed_cam/speed"
 #define TOPIC_HARDWARE_TEMP_MONITOR_PREFIX          "hw/temp_monitor/"
-
-#define ACTION_HARDWARE_PERCHING_ARM                "hw/arm"
+#define TOPIC_HARDWARE_DOCK_STATE                   "hw/dock/state"
 
 #define SERVICE_HARDWARE_EPS_RESET                  "hw/eps/reset"
 #define SERVICE_HARDWARE_EPS_CONF_LED_STATE         "hw/eps/configure_led_state"
 #define SERVICE_HARDWARE_EPS_CONF_PAYLOAD_POWER     "hw/eps/configure_payload_power"
+#define SERVICE_HARDWARE_EPS_CONF_ADVANCED_POWER    "hw/eps/configure_advanced_power"
 #define SERVICE_HARDWARE_EPS_RING_BUZZER            "hw/eps/ring_buzzer"
 #define SERVICE_HARDWARE_EPS_ENABLE_PMCS            "hw/eps/enable_pmcs"
 #define SERVICE_HARDWARE_EPS_GET_BATTERY_STATUS     "hw/eps/get_battery_status"
 #define SERVICE_HARDWARE_EPS_GET_TEMPERATURES       "hw/eps/get_temperatures"
+#define SERVICE_HARDWARE_EPS_UNDOCK                 "hw/eps/undock"
+#define SERVICE_HARDWARE_EPS_GET_BOARD_INFO         "hw/eps/get_board_info"
+#define SERVICE_HARDWARE_EPS_CLEAR_TERMINATE        "hw/eps/clear_terminate"
 
+#define SERVICE_HARDWARE_PERCHING_ARM_DIST_VEL      "hw/arm/set_dist_vel"
+#define SERVICE_HARDWARE_PERCHING_ARM_PROX_VEL      "hw/arm/set_prox_vel"
+#define SERVICE_HARDWARE_PERCHING_ARM_CALIBRATE     "hw/arm/calibrate_gripper"
 #define SERVICE_HARDWARE_LIGHT_FRONT_CONTROL        "hw/light_front/control"
 #define SERVICE_HARDWARE_LIGHT_AFT_CONTROL          "hw/light_aft/control"
 #define SERVICE_HARDWARE_LASER_ENABLE               "hw/laser/enable"

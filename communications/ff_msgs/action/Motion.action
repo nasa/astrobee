@@ -1,0 +1,95 @@
+# Copyright (c) 2017, United States Government, as represented by the
+# Administrator of the National Aeronautics and Space Administration.
+# 
+# All rights reserved.
+# 
+# The Astrobee platform is licensed under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with the
+# License. You may obtain a copy of the License at
+# 
+#     http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+#
+# This message describes the MOTION action offered by the CHOREOGRAPHER
+
+# Desired command
+uint8 command
+uint8 STOP        = 0  # Stop immediately
+uint8 IDLE        = 1  # Idle immediately
+uint8 EXEC        = 2  # Execute a given segment
+uint8 MOVE        = 3  # Move through a given set of poses
+uint8 PREP        = 4  # Prepare the system for a given flight mode
+
+# ALL COMMANDS: flight mode. If left empty, the default will be used.
+string flight_mode
+string OFF        = "off"
+string NOMINAL    = "nominal"
+string DIFFICULT  = "difficult"
+string QUIET      = "quiet"
+string PERCHING   = "perching"
+string UNPERCHING = "unperching"
+string DOCKING    = "docking"
+string UNDOCKING  = "undocking"
+
+# EXECUTE ONLY : The segment
+ff_msgs/ControlState[] segment
+
+# MOVE ONLY: Desired state sequence
+geometry_msgs/PoseStamped[] states
+
+---
+
+# Motion result
+int32 response                        #
+int32 ALREADY_THERE                =   3  # MOVE: We are already at the location
+int32 SUCCESS                      =   2  # ALL: Motion succeeded
+int32 CANCELLED                    =   1  # ALL: Motion cancelled by callee
+int32 PREEMPTED                    =   0  # ALL: Motion preempted by thirdparty
+int32 PLAN_FAILED                  =  -1  # MOVE/EXEC: Plan/bootstrap failed
+int32 VALIDATE_FAILED              =  -2  # MOVE/EXEC: Validate failed
+int32 PMC_FAILED                   =  -3  # MOVE/EXEC: PMC failed
+int32 CONTROL_FAILED               =  -4  # ALL: Control failed
+int32 OBSTACLE_DETECTED            =  -5  # ALL: Obstacle / replan disabled
+int32 REPLAN_NOT_ENOUGH_TIME       =  -6  # MOVE/EXEC: Not enough time to replan
+int32 REPLAN_FAILED                =  -7  # MOVE/EXEC: Replanning failed
+int32 REVALIDATE_FAILED            =  -8  # MOVE/EXEC: Revalidating failed
+int32 NOT_IN_WAITING_MODE          =  -9  # ALL: Internal failure
+int32 INVALID_FLIGHT_MODE          =  -10  # ALL: No flight mode specified
+int32 UNEXPECTED_EMPTY_SEGMENT     =  -11 # EXEC: Segment empty
+int32 COULD_NOT_RESAMPLE           =  -12 # EXEC: Could not resample segment
+int32 UNEXPECTED_EMPTY_STATES      =  -13 # MOVE: State vector empty
+int32 INVALID_COMMAND              =  -14 # Command rejected
+int32 CANNOT_QUERY_ROBOT_POSE      =  -15 # TF2 failed to find the current pose
+int32 NOT_ON_FIRST_POSE            =  -16 # EXEC: Not on first pose of exec
+int32 BAD_DESIRED_VELOCITY         =  -17 # Requested vel too high
+int32 BAD_DESIRED_ACCELERATION     =  -18 # Requested accel too high
+int32 BAD_DESIRED_OMEGA            =  -19 # Requested omega too high
+int32 BAD_DESIRED_ALPHA            =  -20 # Requested alpha too high
+int32 BAD_DESIRED_RATE             =  -21 # Requested rate too low
+int32 TOLERANCE_VIOLATION_POSITION =  -22 # Position tolerance violated
+int32 TOLERANCE_VIOLATION_ATTITUDE =  -23 # Attitude tolerance violated
+int32 TOLERANCE_VIOLATION_VELOCITY =  -24 # Velocity tolerance violated
+int32 TOLERANCE_VIOLATION_OMEGA    =  -25 # Omega tolerance violated
+
+# The flight mode parameters used
+ff_msgs/FlightMode flight_mode
+
+# The final segment that was flown
+ff_msgs/ControlState[] segment
+
+---
+
+# The state of the teleop command
+ff_msgs/MotionState state
+
+# Control progress
+ff_msgs/ControlFeedback progress
+
+# Planner progress
+float32 perc_complete
+float32 secs_remaining

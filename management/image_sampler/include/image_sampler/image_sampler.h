@@ -10,8 +10,8 @@
 #include <ros/subscriber.h>
 
 #include <ff_util/ff_nodelet.h>
-#include <ff_msgs/ConfigureImageSampler.h>
-#include <ff_msgs/EnableImageSampler.h>
+#include <ff_msgs/ConfigureCamera.h>
+#include <ff_msgs/EnableCamera.h>
 #include <ff_msgs/CameraState.h>
 
 #include <string>
@@ -29,13 +29,13 @@ class ImageSampler : public ff_util::FreeFlyerNodelet {
 
  protected:
   virtual void Initialize(ros::NodeHandle *nh);
-  bool ConfigureService(ff_msgs::ConfigureImageSampler::Request& req, ff_msgs::ConfigureImageSampler::Response& res, int camera);  // NOLINT
-  bool ConfigureServiceNavCam(ff_msgs::ConfigureImageSampler::Request& req, ff_msgs::ConfigureImageSampler::Response& res);  // NOLINT
-  bool ConfigureServiceDockCam(ff_msgs::ConfigureImageSampler::Request& req, ff_msgs::ConfigureImageSampler::Response& res);  // NOLINT
-  bool EnableService(ff_msgs::EnableImageSampler::Request& req, ff_msgs::EnableImageSampler::Response& res,  // NOLINT
+  bool ConfigureService(ff_msgs::ConfigureCamera::Request& req, ff_msgs::ConfigureCamera::Response& res, int camera);  // NOLINT
+  bool ConfigureServiceNavCam(ff_msgs::ConfigureCamera::Request& req, ff_msgs::ConfigureCamera::Response& res);  // NOLINT
+  bool ConfigureServiceDockCam(ff_msgs::ConfigureCamera::Request& req, ff_msgs::ConfigureCamera::Response& res);  // NOLINT
+  bool EnableService(ff_msgs::EnableCamera::Request& req, ff_msgs::EnableCamera::Response& res,  // NOLINT
         int camera, std::string topic, void (ImageSampler::*callback)(const sensor_msgs::ImageConstPtr &));
-  bool EnableServiceNavCam(ff_msgs::EnableImageSampler::Request& req, ff_msgs::EnableImageSampler::Response& res);  // NOLINT
-  bool EnableServiceDockCam(ff_msgs::EnableImageSampler::Request& req, ff_msgs::EnableImageSampler::Response& res);  // NOLINT
+  bool EnableServiceNavCam(ff_msgs::EnableCamera::Request& req, ff_msgs::EnableCamera::Response& res);  // NOLINT
+  bool EnableServiceDockCam(ff_msgs::EnableCamera::Request& req, ff_msgs::EnableCamera::Response& res);  // NOLINT
   void NavCamCallback(const sensor_msgs::ImageConstPtr & msg);
   void DockCamCallback(const sensor_msgs::ImageConstPtr & msg);
   void ImageCallback(const sensor_msgs::ImageConstPtr & msg, int camera);

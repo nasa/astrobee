@@ -82,16 +82,16 @@ size_t parse_inputs(const char *filename) {
       ros::Time time(numbers.at(0));
       cmd.header.stamp = time;
       for (int p = 0; p < num_pmcs_; p++) {
-        ff_hw_msgs::PmcState state;
+        ff_hw_msgs::PmcGoal goal;
         uint8_t speed = (uint8_t)numbers.at(1+p*7);
-        state.motor_speed = (speed > blower_max_cmd_) ? blower_max_cmd_ : speed;
+        goal.motor_speed = (speed > blower_max_cmd_) ? blower_max_cmd_ : speed;
         for (int n = 0; n < 6; n++) {
           uint8_t pos = (uint8_t)numbers.at(2+n+p*7);
-          state.nozzle_positions[n] =
+          goal.nozzle_positions[n] =
             (pos < nozzle_min_cmd_) ? nozzle_min_cmd_ :
             (pos > nozzle_max_cmd_) ? nozzle_max_cmd_ : pos;
         }
-        cmd.states.push_back(state);
+        cmd.goals.push_back(goal);
       }
       pmc_commands_.push_back(cmd);
     }

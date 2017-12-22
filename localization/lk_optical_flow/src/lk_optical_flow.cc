@@ -117,7 +117,7 @@ void LKOpticalFlow::GetNewFeatures(std::vector<cv::Point2f>* new_corners) {
     return;
 
   // Get new corners from LK
-  cv::goodFeaturesToTrack(image_curr_, *new_corners, 100, 0.01, max_gap_, cv::Mat(), 3, 0, 0.04);
+  cv::goodFeaturesToTrack(image_curr_, *new_corners, 100, 0.01, max_gap_, cv::Mat(), 3, false, 0.04);
   // printf("Get new corners.\n");
 
   // printf("Found %lu new features, reduced to %lu.\n", raw_corners.size(), new_corners->size());
@@ -159,8 +159,6 @@ void LKOpticalFlow::RefineCorners() {
   for (size_t i = 0; i < curr_corners_.size(); ++i) {
     // ignore pixels that weren't tracked, were too far away, and are near the image border
     bool too_far = cv::norm(prev_corners_[i] - curr_corners_[i]) > max_flow_magnitude_;
-    // use 150 in positive x because sometimes the dock gets in the way
-    // TODO(bcoltin): once dock is fixed use right side again
     int x_border_dist = std::min(curr_corners_[i].x, image_curr_.cols - curr_corners_[i].x);
     int y_border_dist = std::min(curr_corners_[i].y, image_curr_.rows - curr_corners_[i].y);
     bool on_border = x_border_dist < 10 || y_border_dist < 10;

@@ -35,7 +35,8 @@ namespace localization_manager {
 class ARPipeline : public Pipeline {
  public:
   // Create the pipeline
-  ARPipeline(ros::NodeHandle *nh, ros::NodeHandle *nhp, uint8_t mode, PipelineCallbackType cb);
+  ARPipeline(ros::NodeHandle *nh, ros::NodeHandle *nhp,
+    uint8_t mode, PipelineCallbackType cb);
 
   // Enable the pipeline (turn it on and off)
   bool Enable(bool enable);

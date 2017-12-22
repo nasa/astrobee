@@ -28,4 +28,21 @@ create_library(TARGET sys_monitor
   DEPS ff_msgs config_reader
 )
 
+if(CATKIN_ENABLE_TESTING)
+  find_package(rostest REQUIRED)
+  add_rostest_gtest(test_sys_monitor
+    test/test_sys_monitor.test
+    test/test_sys_monitor.cc
+  )
+
+  target_link_libraries(test_sys_monitor
+    ${catkin_LIBRARIES} config_reader ff_nodelet
+  )
+endif()
+
+create_tool_targets(DIR tools
+  LIBS sys_monitor
+  DEPS sys_monitor
+)
+
 install_launch_files()

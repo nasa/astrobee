@@ -75,6 +75,13 @@ void LocalizationNodelet::Initialize(ros::NodeHandle* nh) {
   thread_.reset(new std::thread(&localization_node::LocalizationNodelet::Run, this));
 
   ReadParams();
+
+  // only do this once, will cause a crash if done in middle of thread execution
+  int num_threads;
+  if (!config_.GetInt("num_threads", &num_threads))
+    ROS_FATAL("num_threads not specified in localization.");
+  cv::setNumThreads(num_threads);
+
   config_timer_ = nh->createTimer(ros::Duration(1), [this](ros::TimerEvent e) {
       config_.CheckFilesUpdated(std::bind(&LocalizationNodelet::ReadParams, this));}, false, true);
 

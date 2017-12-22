@@ -199,10 +199,6 @@ class HandrailDetect : public ff_util::FreeFlyerNodelet {
     if (!config_.GetReal("RANSAC_plane_thres", &RANSAC_plane_thres_))
       ROS_FATAL("Unspecified RANSAC_plane_thres.");
 
-    // Frame name of the robot body
-    if (!config_.GetStr("body_frame", &body_frame_))
-      ROS_FATAL("Unspecified body_frame.");
-
     // Frame name of the perch cam
     if (!config_.GetStr("perch_image_frame", &perch_image_frame_))
       ROS_FATAL("Unspecified perch_image_frame.");
@@ -223,9 +219,11 @@ class HandrailDetect : public ff_util::FreeFlyerNodelet {
     //////////////////////////////////////////////////////////////////////////////
 
     // We need to make this code platform-aware, so we don't collide on namespaces
+    body_frame_ = FRAME_NAME_BODY;
+    handrail_frame_ = FRAME_NAME_HANDRAIL;
     if (!GetPlatform().empty()) {
-      body_frame_ = GetPlatform() + "/" + body_frame_;
-      perch_image_frame_ = GetPlatform() + "/" + perch_image_frame_;
+      body_frame_ = GetPlatform() + std::string("/") + body_frame_;
+      handrail_frame_ = GetPlatform() + std::string("/") + handrail_frame_;
     }
 
     // Minimum rate of the num of inliner points of the plane from the total num of points
@@ -385,7 +383,7 @@ class HandrailDetect : public ff_util::FreeFlyerNodelet {
     dl_.local_pose.orientation.w = rtoq.w();
 
     if (disp_pcd_and_tf_)
-      PublishTF(r2h_center_, body_frame_, "handrail_link");
+      PublishTF(r2h_center_, body_frame_,  handrail_frame_);
 
     if (disp_marker_)
       PublishMarker(target_pos_err, i2h, end_point);
@@ -1795,6 +1793,7 @@ class HandrailDetect : public ff_util::FreeFlyerNodelet {
 
   // Frame name
   std::string body_frame_;
+  std::string handrail_frame_;
   std::string perch_image_frame_;
 
   // robot to image frame

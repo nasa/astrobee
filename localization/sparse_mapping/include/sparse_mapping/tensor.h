@@ -159,8 +159,8 @@ namespace sparse_mapping {
   // than what is in sparse map as it uses multiple view information.
   void Triangulate(std::vector<Eigen::Affine3d> const& cid_to_cam_t_global,
                    std::vector<Eigen::Matrix2Xd> const& cid_to_keypoint_map,
-                   std::vector<std::map<int, int> > const& pid_to_cid_fid,
                    double focal_length,
+                   std::vector<std::map<int, int> > * pid_to_cid_fid,
                    std::vector<Eigen::Vector3d> * pid_to_xyz);
 
 }  // namespace sparse_mapping

@@ -43,6 +43,8 @@ Clone the android repository:
 
 Next, install all required dependencies:
 *Note: `root` access is necessary to install the compiled debian packages below*
+*Note: Before running this please ensure that your system is completely updated
+    by running 'sudo apt-get update' and then 'sudo apt-get upgrade'*
 
     pushd $SOURCE_PATH
     cd scripts/setup

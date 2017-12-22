@@ -15,7 +15,12 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 #
-# Commanded state for one PMC unit
+# High-level state of each PMC
 
-uint8 motor_speed			# Motor speed. Unitless. 0-255
-uint8[6] nozzle_positions 		# Nozzle positions. Unitless. 0-255
+Header header                    # Time, frame, etc.
+
+int32[] states                   # States of all PMCs
+int32 UNKNOWN      = 0           # Unknown
+int32 RAMPING_UP   = 1           # Ramping up
+int32 RAMPING_DOWN = 2           # Ramping down
+int32 READY        = 3           # On point

@@ -20,7 +20,7 @@
 
 namespace gnc_autocode {
 
-GncEkfCSV::GncEkfCSV(cmc_msg * cmc) : GncEkfAutocode(cmc) {}
+GncEkfCSV::GncEkfCSV(void) : GncEkfAutocode() {}
 
 void GncEkfCSV::Initialize(std::string directory) {
   kfl_file_ = fopen((directory + "/out_kfl_msg.csv").c_str(), "r");

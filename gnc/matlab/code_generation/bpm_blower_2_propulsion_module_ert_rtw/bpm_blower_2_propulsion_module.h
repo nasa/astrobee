@@ -3,9 +3,9 @@
 //
 // Code generated for Simulink model 'bpm_blower_2_propulsion_module'.
 //
-// Model version                  : 1.1139
+// Model version                  : 1.1142
 // Simulink Coder version         : 8.11 (R2016b) 25-Aug-2016
-// C/C++ source code generated on : Thu Aug 31 10:22:40 2017
+// C/C++ source code generated on : Mon Dec 18 10:16:12 2017
 //
 // Target selection: ert.tlc
 // Embedded hardware selection: 32-bit Generic
@@ -63,6 +63,7 @@ typedef struct {
   real32_T Integrator_DSTATE_c;        // '<S28>/Integrator'
   real32_T Filter_DSTATE_m;            // '<S28>/Filter'
   real32_T PrevY[6];                   // '<S31>/Backlash1'
+  real32_T PrevY_c;                    // '<S27>/Rate Limiter'
   uint32_T RandSeed;                   // '<S8>/random_noise1'
   uint32_T RandSeed_o;                 // '<S8>/random_noise'
   boolean_T UnitDelay_DSTATE;          // '<S3>/Unit Delay'
@@ -174,12 +175,6 @@ struct P_bpm_blower_2_propulsion_mod_T_ {
 
   real32_T bpm_PM2_zero_thrust_area_error;// Variable: bpm_PM2_zero_thrust_area_error
                                           //  Referenced by: '<S1>/blower_aerodynamics'
-
-  real32_T bpm_imp_cmd_filt_den;       // Variable: bpm_imp_cmd_filt_den
-                                       //  Referenced by: '<S27>/Discrete Transfer Fcn'
-
-  real32_T bpm_imp_cmd_filt_num;       // Variable: bpm_imp_cmd_filt_num
-                                       //  Referenced by: '<S27>/Discrete Transfer Fcn'
 
   real32_T bpm_imp_ctl_filt_n;         // Variable: bpm_imp_ctl_filt_n
                                        //  Referenced by: '<S28>/Filter Coefficient'
@@ -355,11 +350,17 @@ struct P_bpm_blower_2_propulsion_mod_T_ {
   real32_T Gain_Gain;                  // Computed Parameter: Gain_Gain
                                        //  Referenced by: '<S27>/Gain'
 
-  real32_T DiscreteTransferFcn_InitialStat;// Computed Parameter: DiscreteTransferFcn_InitialStat
-                                           //  Referenced by: '<S27>/Discrete Transfer Fcn'
-
   real32_T DiscreteTransferFcn1_InitialSta;// Computed Parameter: DiscreteTransferFcn1_InitialSta
                                            //  Referenced by: '<S27>/Discrete Transfer Fcn1'
+
+  real32_T RateLimiter_RisingLim;      // Computed Parameter: RateLimiter_RisingLim
+                                       //  Referenced by: '<S27>/Rate Limiter'
+
+  real32_T RateLimiter_FallingLim;     // Computed Parameter: RateLimiter_FallingLim
+                                       //  Referenced by: '<S27>/Rate Limiter'
+
+  real32_T RateLimiter_IC;             // Computed Parameter: RateLimiter_IC
+                                       //  Referenced by: '<S27>/Rate Limiter'
 
   real32_T Integrator_gainval;         // Computed Parameter: Integrator_gainval
                                        //  Referenced by: '<S28>/Integrator'
@@ -494,7 +495,7 @@ extern "C" {
      bpm_blower_2_propulsion_modul_U_omega_B_ECI_B[3], uint8_T
      *bpm_blower_2_propulsion_modul_U_impeller_cmd, real32_T
      bpm_blower_2_propulsion_modul_U_servo_cmd[6], real32_T
-     bpm_blower_2_propulsion_modul_U_center_of_mass[3], real32_T
+     bpm_blower_2_propulsion_modul_U_veh_cm[3], real32_T
      *bpm_blower_2_propulsion_modul_Y_impeller_current, real32_T
      bpm_blower_2_propulsion_modul_Y_servo_current[6], real32_T
      bpm_blower_2_propulsion_modul_Y_torque_B[3], real32_T
@@ -508,7 +509,7 @@ extern "C" {
      bpm_blower_2_propulsion_modul_U_omega_B_ECI_B[3], uint8_T
      *bpm_blower_2_propulsion_modul_U_impeller_cmd, real32_T
      bpm_blower_2_propulsion_modul_U_servo_cmd[6], real32_T
-     bpm_blower_2_propulsion_modul_U_center_of_mass[3], real32_T
+     bpm_blower_2_propulsion_modul_U_veh_cm[3], real32_T
      *bpm_blower_2_propulsion_modul_Y_impeller_current, real32_T
      bpm_blower_2_propulsion_modul_Y_servo_current[6], real32_T
      bpm_blower_2_propulsion_modul_Y_torque_B[3], real32_T
@@ -522,7 +523,7 @@ extern "C" {
      bpm_blower_2_propulsion_modul_U_omega_B_ECI_B[3], uint8_T
      bpm_blower_2_propulsion_modul_U_impeller_cmd, real32_T
      bpm_blower_2_propulsion_modul_U_servo_cmd[6], real32_T
-     bpm_blower_2_propulsion_modul_U_center_of_mass[3], real32_T
+     bpm_blower_2_propulsion_modul_U_veh_cm[3], real32_T
      *bpm_blower_2_propulsion_modul_Y_impeller_current, real32_T
      bpm_blower_2_propulsion_modul_Y_servo_current[6], real32_T
      bpm_blower_2_propulsion_modul_Y_torque_B[3], real32_T

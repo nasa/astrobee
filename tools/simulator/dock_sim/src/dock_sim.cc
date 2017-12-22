@@ -20,103 +20,75 @@
 #include <dock_sim/dock_sim.h>
 
 namespace dock_sim {
-DockSim::DockSim() {
-}
 
-DockSim::~DockSim() {
-}
+DockSim::DockSim() {}
+
+DockSim::~DockSim() {}
 
 // TODO(Someone) Create a simulated dock and add code here to actually dock
 void DockSim::DockGoalCallback(ff_msgs::DockGoalConstPtr const& goal) {
   ff_msgs::DockFeedback feedback;
   ff_msgs::DockResult result;
-
-  feedback.status = ff_msgs::DockFeedback::PREPARING;
-  sas_dock_->publishFeedback(feedback);
-  ros::Duration(1).sleep();
-
-  feedback.status = ff_msgs::DockFeedback::MOVE_TO_START;
-  sas_dock_->publishFeedback(feedback);
-  ros::Duration(5).sleep();
-
-  feedback.status = ff_msgs::DockFeedback::SWITCHING_CAMERA;
-  sas_dock_->publishFeedback(feedback);
-  ros::Duration(1).sleep();
-
-  feedback.status = ff_msgs::DockFeedback::SWITCHING_MODE;
-  sas_dock_->publishFeedback(feedback);
-  ros::Duration(1).sleep();
-
-  feedback.status = ff_msgs::DockFeedback::WAITING_FOR_LOC;
-  sas_dock_->publishFeedback(feedback);
-  ros::Duration(5).sleep();
-
-  feedback.status = ff_msgs::DockFeedback::INGRESSING;
-  sas_dock_->publishFeedback(feedback);
-  ros::Duration(1).sleep();
-
-  feedback.status = ff_msgs::DockFeedback::DEACTIVATING_PMC;
-  sas_dock_->publishFeedback(feedback);
-  ros::Duration(1).sleep();
-
-  result.status = ff_msgs::DockResult::DOCKED;
-  sas_dock_->setSucceeded(result);
-}
-
-// TODO(Someone) Create a simulated dock and add code here to actually undock
-void DockSim::UndockGoalCallback(ff_msgs::UndockGoalConstPtr const& goal) {
-  ff_msgs::UndockFeedback feedback;
-  ff_msgs::UndockResult result;
-
-  feedback.status = ff_msgs::UndockFeedback::SWITCHING_CAMERA;
-  sas_undock_->publishFeedback(feedback);
-  ros::Duration(1).sleep();
-
-  feedback.status = ff_msgs::UndockFeedback::SWITCHING_MODE;
-  sas_undock_->publishFeedback(feedback);
-  ros::Duration(1).sleep();
-
-  feedback.status = ff_msgs::UndockFeedback::WAITING_FOR_LOC;
-  sas_undock_->publishFeedback(feedback);
-  ros::Duration(5).sleep();
-
-  feedback.status = ff_msgs::UndockFeedback::RESETTING_BIAS;
-  sas_undock_->publishFeedback(feedback);
-  ros::Duration(1).sleep();
-
-  feedback.status = ff_msgs::UndockFeedback::ACTIVATING_PMC;
-  sas_undock_->publishFeedback(feedback);
-  ros::Duration(1).sleep();
-
-  feedback.status = ff_msgs::UndockFeedback::ACTUATING_DOCK;
-  sas_undock_->publishFeedback(feedback);
-  ros::Duration(1).sleep();
-
-  feedback.status = ff_msgs::UndockFeedback::EGRESSING;
-  sas_undock_->publishFeedback(feedback);
-  ros::Duration(5).sleep();
-
-  result.status = ff_msgs::UndockResult::UNDOCKED;
-  sas_undock_->setSucceeded(result);
+  switch (goal->command) {
+  // DOCK //
+  case ff_msgs::DockGoal::DOCK:
+    feedback.state.state =
+      ff_msgs::DockState::DOCKING_SWITCHING_TO_AR_LOC;
+    sas_dock_->publishFeedback(feedback);
+    ros::Duration(1).sleep();
+    feedback.state.state =
+      ff_msgs::DockState::DOCKING_MOVING_TO_APPROACH_POSE;
+    sas_dock_->publishFeedback(feedback);
+    ros::Duration(5).sleep();
+    feedback.state.state =
+      ff_msgs::DockState::DOCKING_MOVING_TO_COMPLETE_POSE;
+    sas_dock_->publishFeedback(feedback);
+    ros::Duration(5).sleep();
+    feedback.state.state =
+      ff_msgs::DockState::DOCKING_CHECKING_ATTACHED;
+    sas_dock_->publishFeedback(feedback);
+    ros::Duration(1).sleep();
+    feedback.state.state =
+      ff_msgs::DockState::DOCKING_WAITING_FOR_SPIN_DOWN;
+    sas_dock_->publishFeedback(feedback);
+    ros::Duration(1).sleep();
+    feedback.state.state =
+      ff_msgs::DockState::DOCKING_SWITCHING_TO_NO_LOC;
+    sas_dock_->publishFeedback(feedback);
+    ros::Duration(1).sleep();
+    result.response =
+      ff_msgs::DockResult::DOCKED;
+    sas_dock_->setSucceeded(result);
+    break;
+  // UNDOCK //
+  case  ff_msgs::DockGoal::UNDOCK:
+    feedback.state.state =
+      ff_msgs::DockState::UNDOCKING_SWITCHING_TO_ML_LOC;
+    sas_dock_->publishFeedback(feedback);
+    ros::Duration(1).sleep();
+    feedback.state.state =
+      ff_msgs::DockState::UNDOCKING_WAITING_FOR_SPIN_UP;
+    sas_dock_->publishFeedback(feedback);
+    ros::Duration(1).sleep();
+    feedback.state.state =
+      ff_msgs::DockState::UNDOCKING_MOVING_TO_APPROACH_POSE;
+    sas_dock_->publishFeedback(feedback);
+    ros::Duration(5).sleep();
+    result.response =
+      ff_msgs::DockResult::UNDOCKED;
+    sas_dock_->setSucceeded(result);
+    break;
+  }
 }
 
 void DockSim::onInit() {
   ros::NodeHandle nh = getNodeHandle();
-
   sas_dock_ =
-      std::make_shared<actionlib::SimpleActionServer<ff_msgs::DockAction>>
-                            (nh, ACTION_MOBILITY_DOCK,
-                             boost::bind(&DockSim::DockGoalCallback, this, _1),
-                             false);
-
-  sas_undock_ =
-      std::make_shared<actionlib::SimpleActionServer<ff_msgs::UndockAction>>
-                          (nh, ACTION_MOBILITY_UNDOCK,
-                           boost::bind(&DockSim::UndockGoalCallback, this, _1),
-                           false);
-
+    std::make_shared<actionlib::SimpleActionServer<ff_msgs::DockAction>>
+      (nh, ACTION_PROCEDURES_DOCK,
+       boost::bind(&DockSim::DockGoalCallback, this, _1),
+       false);
   sas_dock_->start();
-  sas_undock_->start();
 }
 }  // namespace dock_sim
 

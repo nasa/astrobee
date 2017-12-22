@@ -294,7 +294,7 @@ bool Sequencer::Feedback(ff_msgs::AckCompletedStatus const& ack) noexcept {
   return static_cast<std::size_t>(current_milestone_) < plan_.NumMilestones();
 }
 
-void Sequencer::Feedback(ff_msgs::ControlProgress const& progress) noexcept {
+void Sequencer::Feedback(ff_msgs::ControlFeedback const& progress) noexcept {
   current_index_ = progress.index;  // ain't no thang
 }
 

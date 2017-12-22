@@ -19,6 +19,8 @@
 #ifndef SYS_MONITOR_SYS_MONITOR_H_
 #define SYS_MONITOR_SYS_MONITOR_H_
 
+#include <nodelet/NodeletLoad.h>
+#include <nodelet/NodeletUnload.h>
 #include <pluginlib/class_list_macros.h>
 #include <ros/ros.h>
 #include <ros/package.h>
@@ -31,6 +33,7 @@
 #include <ff_msgs/FaultConfig.h>
 #include <ff_msgs/FaultInfo.h>
 #include <ff_msgs/FaultState.h>
+#include <ff_msgs/UnloadLoadNodelet.h>
 #include <ff_util/ff_names.h>
 #include <ff_util/ff_nodelet.h>
 
@@ -39,8 +42,6 @@
 #include <vector>
 
 using ff_msgs::CommandArg;
-
-#define DEBUG false
 
 namespace sys_monitor {
 class SysMonitor : public ff_util::FreeFlyerNodelet {
@@ -66,30 +67,46 @@ class SysMonitor : public ff_util::FreeFlyerNodelet {
    public:
     Watchdog(SysMonitor *const sys_monitor, ros::Duration const& timeout,
              uint const allowed_misses, uint const fault_id);
-    uint GetFaultId();
-    ff_msgs::HeartbeatConstPtr GetPreviousHeartbeat();
-    bool IsFaultOccurring();
-    void OutputHeartbeatFault(std::string node_name);
-    void ResetFaultOccurring();
+    uint fault_id();
+    uint misses_allowed();
+    ff_msgs::HeartbeatConstPtr previous_hb();
+    bool hb_fault_occurring();
+    bool heartbeat_started();
+    bool unloaded();
+    std::string nodelet_manager();
+    std::string nodelet_type();
+    void hb_fault_occurring(bool occurring);
+    void nodelet_manager(std::string manager_name);
+    void nodelet_type(std::string type);
+    void unloaded(bool is_unloaded);
     void ResetTimer();
-    void SetPreviousHeartbeat(ff_msgs::HeartbeatConstPtr hb);
+    void StopTimer();
+    void previous_hb(ff_msgs::HeartbeatConstPtr hb);
     void TimerCallBack(ros::TimerEvent const& te);
+
    private:
     ros::Timer timer_;
     SysMonitor *const monitor_;
     uint missed_count_;
-    uint const missed_allowed_;
+    uint const misses_allowed_;
     uint const fault_id_;
     bool hb_fault_occurring_;
+    bool heartbeat_started_;
+    bool unloaded_;
+    std::string nodelet_manager_;
+    std::string nodelet_type_;
     ff_msgs::HeartbeatConstPtr previous_hb_;
   };
   typedef std::shared_ptr<Watchdog> WatchdogPtr;
 
   struct Fault {
-    Fault(std::string const& node_name, bool const blocking,
-                                          ff_msgs::CommandStampedPtr response);
+    Fault(std::string const& node_name,
+          bool const blocking,
+          bool const warning,
+          ff_msgs::CommandStampedPtr response);
     std::string const node_name_;
     bool const blocking_;
+    bool const warning_;
     ff_msgs::CommandStampedConstPtr response_;
   };
 
@@ -123,6 +140,8 @@ class SysMonitor : public ff_util::FreeFlyerNodelet {
 
   void PublishFaultResponse(unsigned int fault_id);
 
+  void StartupTimerCallback(ros::TimerEvent const& te);
+
   /**
    * Read params will read in all the parameters from the lua config files.
    * When reloading parameters with this function, the watch dog will be cleared
@@ -137,13 +156,22 @@ class SysMonitor : public ff_util::FreeFlyerNodelet {
   bool ReadCommand(config_reader::ConfigReader::Table *entry,
                    ff_msgs::CommandStampedPtr cmd);
 
+  bool NodeletService(ff_msgs::UnloadLoadNodelet::Request &req,
+                      ff_msgs::UnloadLoadNodelet::Response &res);
+  int LoadNodelet(ff_msgs::UnloadLoadNodelet::Request &req);
+  int UnloadNodelet(std::string const& nodelet, std::string const& manager);
+
   ff_msgs::FaultState fault_state_;
   ff_msgs::FaultConfig fault_config_;
+
+  nodelet::NodeletLoad load_service_;
+  nodelet::NodeletUnload unload_service_;
 
   ros::NodeHandle nh_;
   ros::Publisher pub_cmd_;
   ros::Publisher pub_fault_config_, pub_fault_state_;
-  ros::Timer reload_params_timer_;
+  ros::Timer reload_params_timer_, startup_timer_;
+  ros::ServiceServer unload_load_nodelet_service_;
   ros::Subscriber sub_hb_;
 
   std::map<unsigned int, std::shared_ptr<Fault>> all_faults_;
@@ -157,6 +185,7 @@ class SysMonitor : public ff_util::FreeFlyerNodelet {
   int pub_queue_size_;
   int sub_queue_size_;
   int num_current_blocking_fault_;
+  unsigned int startup_time_;
 };
 }  // namespace sys_monitor
 

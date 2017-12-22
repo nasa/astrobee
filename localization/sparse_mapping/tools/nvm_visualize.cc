@@ -424,11 +424,11 @@ int main(int argc, char** argv) {
     // std::cout << cid << " " << ((float)filled_area / (area_check.rows * area_check.cols)) <<
     // " " << keypoint_map.cols() << "\n";
     // LOG(INFO) << "Showimg image " << map.GetFrameFilename(cid) << " with index " << cid;
-    int ret = cv::waitKey(0) & 0xFFFFF;  // on some machines has bits set in front...
-    if (ret == 'a' || ret == 65361 /*left arrow key*/) {
+    int ret = cv::waitKey(0) & 0xFF;  // on some machines has bits set in front...
+    if (ret == 'a' || ret == 0x51 /*left arrow key*/) {
       cid = (cid + num_images - 1) % num_images;
     }
-    if (ret == 'd' || ret == 65363 /*right arrow key*/) {
+    if (ret == 'd' || ret == 0x53 /*right arrow key*/) {
       cid = (cid + num_images + 1) % num_images;
     }
     if (ret == 'c') {

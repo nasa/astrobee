@@ -1,0 +1,82 @@
+@startuml
+
+'skinparam dpi 300
+
+title Astrobee EPS Firmware State
+
+[*] --> OFF
+
+OFF: No power to the EPS
+
+HIBERNATE: EPS powered, firmware UP
+HIBERNATE: All power channels OFF
+HIBERNATE: (including Processors)
+
+state AWAKE {
+
+AWAKE_NOMINAL: Processors ON
+AWAKE_NOMINAL: Flag to start FSW TRUE
+AWAKE_NOMINAL: Power to PMCs initially ON
+AWAKE_NOMINAL: Power to BAYs initially OFF
+
+AWAKE_DEBUG: Processors ON
+AWAKE_DEBUG: Flag to start FSW FALSE
+AWAKE_DEBUG: Power to PMCs initially OFF
+AWAKE_DEBUG: Power to BAYs initially OFF
+
+}
+
+CRITICAL_FAULT: Safeguarding for major power anomaly
+CRITICAL_FAULT: All power channels OFF
+
+TERMINATED: Power to the PMCs and BAYs OFF
+TERMINATED: Disabling PMCs and BAYs\nchannels until cleared
+TERMINATED: Processors ON
+
+note as legend
+)UI interaction(
+[internal firmware]
+/external command/
+endnote
+
+OFF -d-> HIBERNATE : )switch on(
+
+HIBERNATE --d--> AWAKE_NOMINAL : )wake short press(
+
+HIBERNATE --d--> AWAKE_NOMINAL : /dock wakeup/
+
+AWAKE --u--> HIBERNATE : )wake long press(
+
+AWAKE --u--> HIBERNATE : /hibernate cmd/
+
+HIBERNATE --d--> AWAKE_DEBUG : )terminate + wake short press(
+
+HIBERNATE -r-> CRITICAL_FAULT : [error code]
+
+AWAKE ----> OFF : )switch off(
+
+CRITICAL_FAULT --> OFF : )switch off(
+
+AWAKE ----> CRITICAL_FAULT : [error code]
+
+AWAKE --> TERMINATED : )terminate button(
+
+TERMINATED --> AWAKE : /clear terminate cmd/
+
+TERMINATED --> OFF : )switch off(
+
+OFF -up-> [*]
+
+note left of OFF
+OFF is not observable
+by the EPS firmware
+endnote
+
+note top of CRITICAL_FAULT
+The Astrobee needs to be turned
+off after a critical fault is
+encountered. Critical faults can
+be signaled with the status LEDs.
+endnote
+
+@enduml

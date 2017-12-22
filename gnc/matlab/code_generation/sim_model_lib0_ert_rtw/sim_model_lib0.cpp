@@ -3,9 +3,9 @@
 //
 // Code generated for Simulink model 'sim_model_lib0'.
 //
-// Model version                  : 1.1139
+// Model version                  : 1.1142
 // Simulink Coder version         : 8.11 (R2016b) 25-Aug-2016
-// C/C++ source code generated on : Thu Aug 31 10:22:10 2017
+// C/C++ source code generated on : Mon Dec 18 10:15:42 2017
 //
 // Target selection: ert.tlc
 // Embedded hardware selection: 32-bit Generic
@@ -1111,6 +1111,9 @@ void sim_mod_dc_motor_model_Term(void)
 void sim_m_speed_controller_Init(DW_speed_controller_sim_model_T *localDW,
   P_speed_controller_sim_model__T *localP)
 {
+  // InitializeConditions for RateLimiter: '<S212>/Rate Limiter'
+  localDW->PrevY = localP->RateLimiter_IC;
+
   // InitializeConditions for DiscreteIntegrator: '<S213>/Integrator'
   localDW->Integrator_DSTATE = localP->Integrator_IC;
 
@@ -1127,43 +1130,57 @@ void sim_model__speed_controller(real32_T rtu_battery_voltage, uint8_T
   rtu_speed_cmd, real32_T rtu_speed_curr, B_speed_controller_sim_model__T
   *localB, DW_speed_controller_sim_model_T *localDW,
   P_speed_controller_sim_model__T *localP, real32_T rtp_ctl_pwm2speed, real32_T
-  rtp_ctl_cmd_filt_num, real32_T rtp_ctl_cmd_filt_den, real32_T
   rtp_ctl_speed_filt_num, real32_T rtp_ctl_speed_cilt_den, real32_T rtp_ctl_kp,
   real32_T rtp_ctl_kd, real32_T rtp_ctl_filt_n, real32_T rtp_ctl_max_voltage,
   real32_T rtp_ctl_ki)
 {
-  real32_T rtb_Divide_i;
   real32_T rtb_IntegralGain;
   real32_T rtb_Sum_k;
   real32_T rtb_SignPreIntegrator;
+  real32_T rtb_FilterCoefficient;
   boolean_T rtb_NotEqual;
   real32_T rtb_Gain_pl;
   int8_T rtb_SignPreIntegrator_0;
 
-  // Sum: '<S212>/Sum' incorporates:
+  // Product: '<S212>/Divide' incorporates:
   //   Constant: '<S212>/Constant'
-  //   DiscreteTransferFcn: '<S212>/Discrete Transfer Fcn'
-  //   DiscreteTransferFcn: '<S212>/Discrete Transfer Fcn1'
-  //   Product: '<S212>/Divide'
 
-  rtb_IntegralGain = (real32_T)rtu_speed_cmd * rtp_ctl_pwm2speed *
-    rtp_ctl_cmd_filt_num / rtp_ctl_cmd_filt_den - rtu_speed_curr *
-    rtp_ctl_speed_filt_num / rtp_ctl_speed_cilt_den;
+  rtb_IntegralGain = (real32_T)rtu_speed_cmd * rtp_ctl_pwm2speed;
+
+  // RateLimiter: '<S212>/Rate Limiter'
+  rtb_FilterCoefficient = rtb_IntegralGain - localDW->PrevY;
+  if (rtb_FilterCoefficient > localP->RateLimiter_RisingLim) {
+    rtb_IntegralGain = localDW->PrevY + localP->RateLimiter_RisingLim;
+  } else {
+    if (rtb_FilterCoefficient < localP->RateLimiter_FallingLim) {
+      rtb_IntegralGain = localDW->PrevY + localP->RateLimiter_FallingLim;
+    }
+  }
+
+  localDW->PrevY = rtb_IntegralGain;
+
+  // End of RateLimiter: '<S212>/Rate Limiter'
+
+  // Sum: '<S212>/Sum' incorporates:
+  //   DiscreteTransferFcn: '<S212>/Discrete Transfer Fcn1'
+
+  rtb_IntegralGain -= rtu_speed_curr * rtp_ctl_speed_filt_num /
+    rtp_ctl_speed_cilt_den;
 
   // Gain: '<S213>/Filter Coefficient' incorporates:
   //   DiscreteIntegrator: '<S213>/Filter'
   //   Gain: '<S213>/Derivative Gain'
   //   Sum: '<S213>/SumD'
 
-  rtb_Divide_i = (rtp_ctl_kd * rtb_IntegralGain - localDW->Filter_DSTATE) *
-    rtp_ctl_filt_n;
+  rtb_FilterCoefficient = (rtp_ctl_kd * rtb_IntegralGain -
+    localDW->Filter_DSTATE) * rtp_ctl_filt_n;
 
   // Sum: '<S213>/Sum' incorporates:
   //   DiscreteIntegrator: '<S213>/Integrator'
   //   Gain: '<S213>/Proportional Gain'
 
   rtb_Sum_k = (rtp_ctl_kp * rtb_IntegralGain + localDW->Integrator_DSTATE) +
-    rtb_Divide_i;
+    rtb_FilterCoefficient;
 
   // DeadZone: '<S215>/DeadZone'
   if (rtb_Sum_k > rtp_ctl_max_voltage) {
@@ -1282,7 +1299,7 @@ void sim_model__speed_controller(real32_T rtu_battery_voltage, uint8_T
   localDW->Integrator_DSTATE += localP->Integrator_gainval * rtb_IntegralGain;
 
   // Update for DiscreteIntegrator: '<S213>/Filter'
-  localDW->Filter_DSTATE += localP->Filter_gainval * rtb_Divide_i;
+  localDW->Filter_DSTATE += localP->Filter_gainval * rtb_FilterCoefficient;
 }
 
 //
@@ -1348,7 +1365,7 @@ void sim_model_lib0_servo_model(const real32_T rtu_command_PWM[6],
   real32_T y;
   real32_T rtb_IntegralGain[6];
   real32_T rtb_SignDeltaU[6];
-  real32_T rtb_FilterCoefficient_o[6];
+  real32_T rtb_FilterCoefficient[6];
   boolean_T rtb_NotEqual[6];
   real32_T tmp;
   real32_T tmp_0;
@@ -1404,7 +1421,7 @@ void sim_model_lib0_servo_model(const real32_T rtu_command_PWM[6],
     rtb_SignDeltaU[i] = (rtp_servo_ctl_kp * rtb_IntegralGain_c +
                          localDW->Integrator_DSTATE[i]) + y;
     rtb_IntegralGain[i] = rtb_IntegralGain_c;
-    rtb_FilterCoefficient_o[i] = y;
+    rtb_FilterCoefficient[i] = y;
   }
 
   // End of Backlash: '<S216>/Backlash1'
@@ -1548,7 +1565,7 @@ void sim_model_lib0_servo_model(const real32_T rtu_command_PWM[6],
 
     // Update for DiscreteIntegrator: '<S218>/Filter'
     localDW->Filter_DSTATE[i] += localP->Filter_gainval *
-      rtb_FilterCoefficient_o[i];
+      rtb_FilterCoefficient[i];
 
     // Update for DiscreteIntegrator: '<S216>/Discrete-Time Integrator3' incorporates:
     //   DiscreteIntegrator: '<S216>/Discrete-Time Integrator3'
@@ -3199,6 +3216,7 @@ void sim_model_lib0_step0(RT_MODEL_sim_model_lib0_T *const sim_model_lib0_M,
   real32_T rtb_Switch_al[19];
   real32_T rtb_V_B_ISS_ISS[3];
   real32_T rtb_A_B_ISS_ISS[3];
+  real32_T rtb_omega_B_ISS_B[3];
   real32_T rtb_alpha_B_ECI_B[3];
   uint8_T rtb_Bias;
   real32_T rtb_imu_gyro_bias[3];
@@ -3231,8 +3249,6 @@ void sim_model_lib0_step0(RT_MODEL_sim_model_lib0_T *const sim_model_lib0_M,
   real_T rtb_random_noise[3];
   real_T rtb_linearaccelbias;
   real_T rtb_P_sensor_CG_B[3];
-  cmc_msg rtb_BusAssignment;
-  cmc_msg rtb_BusAssignment1;
   boolean_T rtb_LogicalOperator2[12];
   int32_T i;
   real32_T tmp[3];
@@ -3256,6 +3272,7 @@ void sim_model_lib0_step0(RT_MODEL_sim_model_lib0_T *const sim_model_lib0_M,
   real32_T tmp_b[3];
   real32_T rtb_bpm_torque_B_c;
   real32_T rtb_Merge_c;
+  real32_T rtb_V_B_ISS_ISS_h;
   real_T rtb_Product;
   real32_T rtb_bpm_motor_curr_idx_0;
   uint32_T rtb_Switch1_p_idx_0;
@@ -3326,29 +3343,29 @@ void sim_model_lib0_step0(RT_MODEL_sim_model_lib0_T *const sim_model_lib0_M,
 
   // End of RateTransition: '<S81>/Rate Transition3'
 
-  // SignalConversion: '<S74>/ConcatBufferAtVector Concatenate3In1' incorporates:
+  // SignalConversion: '<S74>/ConcatBufferAtVector Concatenate5In1' incorporates:
   //   Constant: '<S68>/Constant1'
   //   Selector: '<S74>/select_current_command'
   //   UnitDelay: '<S70>/Unit Delay'
 
-  rtb_A_B_ISS_ISS[0] = sim_model_lib0_P->mlp_command_list[(int32_T)((int32_T)
-    sim_model_lib0_DW->UnitDelay_DSTATE_i + 71)];
+  rtb_omega_B_ISS_B[0] = sim_model_lib0_P->mlp_command_list[(int32_T)((int32_T)
+    sim_model_lib0_DW->UnitDelay_DSTATE_i + 155)];
 
-  // SignalConversion: '<S74>/ConcatBufferAtVector Concatenate3In2' incorporates:
+  // SignalConversion: '<S74>/ConcatBufferAtVector Concatenate5In2' incorporates:
   //   Constant: '<S68>/Constant1'
   //   Selector: '<S74>/select_current_command'
   //   UnitDelay: '<S70>/Unit Delay'
 
-  rtb_A_B_ISS_ISS[1] = sim_model_lib0_P->mlp_command_list[(int32_T)((int32_T)
-    sim_model_lib0_DW->UnitDelay_DSTATE_i + 83)];
+  rtb_omega_B_ISS_B[1] = sim_model_lib0_P->mlp_command_list[(int32_T)((int32_T)
+    sim_model_lib0_DW->UnitDelay_DSTATE_i + 167)];
 
-  // SignalConversion: '<S74>/ConcatBufferAtVector Concatenate3In3' incorporates:
+  // SignalConversion: '<S74>/ConcatBufferAtVector Concatenate5In3' incorporates:
   //   Constant: '<S68>/Constant1'
   //   Selector: '<S74>/select_current_command'
   //   UnitDelay: '<S70>/Unit Delay'
 
-  rtb_A_B_ISS_ISS[2] = sim_model_lib0_P->mlp_command_list[(int32_T)((int32_T)
-    sim_model_lib0_DW->UnitDelay_DSTATE_i + 95)];
+  rtb_omega_B_ISS_B[2] = sim_model_lib0_P->mlp_command_list[(int32_T)((int32_T)
+    sim_model_lib0_DW->UnitDelay_DSTATE_i + 179)];
 
   // Bias: '<S70>/Bias' incorporates:
   //   UnitDelay: '<S70>/Unit Delay'
@@ -4013,20 +4030,45 @@ void sim_model_lib0_step0(RT_MODEL_sim_model_lib0_T *const sim_model_lib0_M,
 
   rtb_Sqrt_m = rtb_Merge_m[3] * rtb_Merge_m[3] * sim_model_lib0_P->Gain_Gain_m -
     (real32_T)sim_model_lib0_P->Constant1_Value_oo;
-
-  // Assignment: '<S62>/Assignment' incorporates:
-  //   Constant: '<S62>/Constant2'
-  //   DataTypeConversion: '<S63>/Conversion'
-
   for (i = 0; i < 9; i++) {
+    // Assignment: '<S62>/Assignment' incorporates:
+    //   Constant: '<S62>/Constant2'
+    //   DataTypeConversion: '<S63>/Conversion'
+
     rtb_Assignment_m[i] = (real32_T)sim_model_lib0_P->Constant2_Value_m1[i];
+
+    // Outport: '<Root>/cmc_msg' incorporates:
+    //   Inport: '<Root>/cmc_msg_in'
+    //   SignalConversion: '<S1>/Signal Conversion'
+
+    sim_model_lib0_Y_cmc_msg_c->inertia_matrix[i] =
+      sim_model_lib0_U_cmc_msg_in->inertia_matrix[i];
   }
 
+  // Assignment: '<S62>/Assignment'
   rtb_Assignment_m[0] = rtb_Sqrt_m;
 
   // Delay: '<S1>/Delay1'
   rtb_Delay1_bpm_torque_B[0] = sim_model_lib0_DW->Delay1_DSTATE.bpm_torque_B[0];
   rtb_TrigonometricFunction1_c = sim_model_lib0_DW->Delay1_DSTATE.bpm_force_B[0];
+
+  // Outport: '<Root>/cmc_msg' incorporates:
+  //   Constant: '<S68>/Constant1'
+  //   Selector: '<S74>/select_current_command'
+  //   SignalConversion: '<S74>/ConcatBufferAtVector Concatenate1In1'
+  //   SignalConversion: '<S74>/ConcatBufferAtVector Concatenate2In1'
+  //   SignalConversion: '<S74>/ConcatBufferAtVector Concatenate3In1'
+  //   UnitDelay: '<S70>/Unit Delay'
+
+  sim_model_lib0_Y_cmc_msg_c->cmc_state_cmd_a.P_B_ISS_ISS[0] =
+    sim_model_lib0_P->mlp_command_list[(int32_T)((int32_T)
+    sim_model_lib0_DW->UnitDelay_DSTATE_i - 1)];
+  sim_model_lib0_Y_cmc_msg_c->cmc_state_cmd_a.V_B_ISS_ISS[0] =
+    sim_model_lib0_P->mlp_command_list[(int32_T)((int32_T)
+    sim_model_lib0_DW->UnitDelay_DSTATE_i + 35)];
+  sim_model_lib0_Y_cmc_msg_c->cmc_state_cmd_a.A_B_ISS_ISS[0] =
+    sim_model_lib0_P->mlp_command_list[(int32_T)((int32_T)
+    sim_model_lib0_DW->UnitDelay_DSTATE_i + 71)];
 
   // Assignment: '<S62>/Assignment'
   rtb_Assignment_m[4] = rtb_Sqrt_m;
@@ -4035,6 +4077,24 @@ void sim_model_lib0_step0(RT_MODEL_sim_model_lib0_T *const sim_model_lib0_M,
   rtb_Delay1_bpm_torque_B[1] = sim_model_lib0_DW->Delay1_DSTATE.bpm_torque_B[1];
   rtb_Delay1_bpm_force_B_idx_1 = sim_model_lib0_DW->Delay1_DSTATE.bpm_force_B[1];
 
+  // Outport: '<Root>/cmc_msg' incorporates:
+  //   Constant: '<S68>/Constant1'
+  //   Selector: '<S74>/select_current_command'
+  //   SignalConversion: '<S74>/ConcatBufferAtVector Concatenate1In2'
+  //   SignalConversion: '<S74>/ConcatBufferAtVector Concatenate2In2'
+  //   SignalConversion: '<S74>/ConcatBufferAtVector Concatenate3In2'
+  //   UnitDelay: '<S70>/Unit Delay'
+
+  sim_model_lib0_Y_cmc_msg_c->cmc_state_cmd_a.P_B_ISS_ISS[1] =
+    sim_model_lib0_P->mlp_command_list[(int32_T)((int32_T)
+    sim_model_lib0_DW->UnitDelay_DSTATE_i + 11)];
+  sim_model_lib0_Y_cmc_msg_c->cmc_state_cmd_a.V_B_ISS_ISS[1] =
+    sim_model_lib0_P->mlp_command_list[(int32_T)((int32_T)
+    sim_model_lib0_DW->UnitDelay_DSTATE_i + 47)];
+  sim_model_lib0_Y_cmc_msg_c->cmc_state_cmd_a.A_B_ISS_ISS[1] =
+    sim_model_lib0_P->mlp_command_list[(int32_T)((int32_T)
+    sim_model_lib0_DW->UnitDelay_DSTATE_i + 83)];
+
   // Assignment: '<S62>/Assignment'
   rtb_Assignment_m[8] = rtb_Sqrt_m;
 
@@ -4042,54 +4102,28 @@ void sim_model_lib0_step0(RT_MODEL_sim_model_lib0_T *const sim_model_lib0_M,
   rtb_Delay1_bpm_torque_B[2] = sim_model_lib0_DW->Delay1_DSTATE.bpm_torque_B[2];
   rtb_Delay1_bpm_force_B_idx_2 = sim_model_lib0_DW->Delay1_DSTATE.bpm_force_B[2];
 
+  // Outport: '<Root>/cmc_msg' incorporates:
+  //   Constant: '<S68>/Constant1'
+  //   Selector: '<S74>/select_current_command'
+  //   SignalConversion: '<S74>/ConcatBufferAtVector Concatenate1In3'
+  //   SignalConversion: '<S74>/ConcatBufferAtVector Concatenate2In3'
+  //   SignalConversion: '<S74>/ConcatBufferAtVector Concatenate3In3'
+  //   UnitDelay: '<S70>/Unit Delay'
+
+  sim_model_lib0_Y_cmc_msg_c->cmc_state_cmd_a.P_B_ISS_ISS[2] =
+    sim_model_lib0_P->mlp_command_list[(int32_T)((int32_T)
+    sim_model_lib0_DW->UnitDelay_DSTATE_i + 23)];
+  sim_model_lib0_Y_cmc_msg_c->cmc_state_cmd_a.V_B_ISS_ISS[2] =
+    sim_model_lib0_P->mlp_command_list[(int32_T)((int32_T)
+    sim_model_lib0_DW->UnitDelay_DSTATE_i + 59)];
+  sim_model_lib0_Y_cmc_msg_c->cmc_state_cmd_a.A_B_ISS_ISS[2] =
+    sim_model_lib0_P->mlp_command_list[(int32_T)((int32_T)
+    sim_model_lib0_DW->UnitDelay_DSTATE_i + 95)];
+
   // Gain: '<S62>/Gain1'
   rtb_Sqrt_m = sim_model_lib0_P->Gain1_Gain_oi * rtb_Merge_m[3];
 
-  // BusAssignment: '<S1>/Bus Assignment1' incorporates:
-  //   Constant: '<S1>/Constant1'
-  //   Constant: '<S1>/Constant10'
-  //   Constant: '<S1>/Constant11'
-  //   Constant: '<S1>/Constant2'
-  //   Constant: '<S1>/Constant3'
-  //   Constant: '<S1>/Constant4'
-  //   Constant: '<S1>/Constant7'
-  //   Constant: '<S1>/Constant8'
-  //   Constant: '<S1>/Constant9'
-  //   Inport: '<Root>/cmc_msg_in'
-
-  rtb_BusAssignment1 = *sim_model_lib0_U_cmc_msg_in;
-  rtb_BusAssignment1.att_kp[0] = sim_model_lib0_P->tun_default_att_kp[0];
-  rtb_BusAssignment1.att_ki[0] = sim_model_lib0_P->tun_default_att_ki[0];
-  rtb_BusAssignment1.omega_kd[0] = sim_model_lib0_P->tun_default_omega_kd[0];
-  rtb_BusAssignment1.pos_kp[0] = sim_model_lib0_P->tun_default_pos_kp[0];
-  rtb_BusAssignment1.pos_ki[0] = sim_model_lib0_P->tun_default_pos_ki[0];
-  rtb_BusAssignment1.vel_kd[0] = sim_model_lib0_P->tun_default_vel_kd[0];
-  rtb_BusAssignment1.center_of_mass[0] =
-    sim_model_lib0_P->tun_default_center_of_mass[0];
-  rtb_BusAssignment1.att_kp[1] = sim_model_lib0_P->tun_default_att_kp[1];
-  rtb_BusAssignment1.att_ki[1] = sim_model_lib0_P->tun_default_att_ki[1];
-  rtb_BusAssignment1.omega_kd[1] = sim_model_lib0_P->tun_default_omega_kd[1];
-  rtb_BusAssignment1.pos_kp[1] = sim_model_lib0_P->tun_default_pos_kp[1];
-  rtb_BusAssignment1.pos_ki[1] = sim_model_lib0_P->tun_default_pos_ki[1];
-  rtb_BusAssignment1.vel_kd[1] = sim_model_lib0_P->tun_default_vel_kd[1];
-  rtb_BusAssignment1.center_of_mass[1] =
-    sim_model_lib0_P->tun_default_center_of_mass[1];
-  rtb_BusAssignment1.att_kp[2] = sim_model_lib0_P->tun_default_att_kp[2];
-  rtb_BusAssignment1.att_ki[2] = sim_model_lib0_P->tun_default_att_ki[2];
-  rtb_BusAssignment1.omega_kd[2] = sim_model_lib0_P->tun_default_omega_kd[2];
-  rtb_BusAssignment1.pos_kp[2] = sim_model_lib0_P->tun_default_pos_kp[2];
-  rtb_BusAssignment1.pos_ki[2] = sim_model_lib0_P->tun_default_pos_ki[2];
-  rtb_BusAssignment1.vel_kd[2] = sim_model_lib0_P->tun_default_vel_kd[2];
-  rtb_BusAssignment1.center_of_mass[2] =
-    sim_model_lib0_P->tun_default_center_of_mass[2];
-  for (i = 0; i < 9; i++) {
-    rtb_BusAssignment1.inertia_matrix[i] =
-      sim_model_lib0_P->tun_default_inertia_matrix[i];
-  }
-
-  rtb_BusAssignment1.mass = sim_model_lib0_P->tun_default_mass;
-
-  // BusAssignment: '<S3>/Bus Assignment' incorporates:
+  // Outport: '<Root>/cmc_msg' incorporates:
   //   BusCreator: '<S3>/BusConversion_InsertedFor_Bus Assignment_at_inport_1'
   //   BusCreator: '<S3>/BusConversion_InsertedFor_Bus Assignment_at_inport_2'
   //   Constant: '<S68>/Constant1'
@@ -4097,11 +4131,13 @@ void sim_model_lib0_step0(RT_MODEL_sim_model_lib0_T *const sim_model_lib0_M,
   //   Constant: '<S68>/Constant4'
   //   Constant: '<S68>/Constant6'
   //   Constant: '<S68>/Constant8'
+  //   Inport: '<Root>/cmc_msg_in'
   //   Selector: '<S68>/select_current_command'
   //   Selector: '<S68>/select_current_command1'
   //   Selector: '<S68>/select_current_command2'
   //   Selector: '<S74>/select_current_command'
   //   Selector: '<S74>/select_current_time'
+  //   SignalConversion: '<S1>/Signal Conversion'
   //   SignalConversion: '<S74>/ConcatBufferAtVector Concatenate10In1'
   //   SignalConversion: '<S74>/ConcatBufferAtVector Concatenate10In2'
   //   SignalConversion: '<S74>/ConcatBufferAtVector Concatenate10In3'
@@ -4112,15 +4148,6 @@ void sim_model_lib0_step0(RT_MODEL_sim_model_lib0_T *const sim_model_lib0_M,
   //   SignalConversion: '<S74>/ConcatBufferAtVector Concatenate12In1'
   //   SignalConversion: '<S74>/ConcatBufferAtVector Concatenate12In2'
   //   SignalConversion: '<S74>/ConcatBufferAtVector Concatenate12In3'
-  //   SignalConversion: '<S74>/ConcatBufferAtVector Concatenate1In1'
-  //   SignalConversion: '<S74>/ConcatBufferAtVector Concatenate1In2'
-  //   SignalConversion: '<S74>/ConcatBufferAtVector Concatenate1In3'
-  //   SignalConversion: '<S74>/ConcatBufferAtVector Concatenate2In1'
-  //   SignalConversion: '<S74>/ConcatBufferAtVector Concatenate2In2'
-  //   SignalConversion: '<S74>/ConcatBufferAtVector Concatenate2In3'
-  //   SignalConversion: '<S74>/ConcatBufferAtVector Concatenate3In1'
-  //   SignalConversion: '<S74>/ConcatBufferAtVector Concatenate3In2'
-  //   SignalConversion: '<S74>/ConcatBufferAtVector Concatenate3In3'
   //   SignalConversion: '<S74>/ConcatBufferAtVector Concatenate4In1'
   //   SignalConversion: '<S74>/ConcatBufferAtVector Concatenate4In2'
   //   SignalConversion: '<S74>/ConcatBufferAtVector Concatenate4In3'
@@ -4145,101 +4172,108 @@ void sim_model_lib0_step0(RT_MODEL_sim_model_lib0_T *const sim_model_lib0_M,
   //   UnitDelay: '<S72>/Unit Delay'
   //   UnitDelay: '<S73>/Unit Delay'
 
-  rtb_BusAssignment = rtb_BusAssignment1;
-  rtb_BusAssignment.cmc_state_cmd_a.timestamp_sec =
+  sim_model_lib0_Y_cmc_msg_c->cmc_state_cmd_a.timestamp_sec =
     sim_model_lib0_P->mlp_command_times[(int32_T)((int32_T)
     sim_model_lib0_DW->UnitDelay_DSTATE_i - 1)];
-  rtb_BusAssignment.cmc_state_cmd_a.timestamp_nsec =
+  sim_model_lib0_Y_cmc_msg_c->cmc_state_cmd_a.timestamp_nsec =
     sim_model_lib0_P->mlp_command_times[(int32_T)((int32_T)
     sim_model_lib0_DW->UnitDelay_DSTATE_i + 11)];
-  rtb_BusAssignment.cmc_state_cmd_a.P_B_ISS_ISS[0] =
-    sim_model_lib0_P->mlp_command_list[(int32_T)((int32_T)
-    sim_model_lib0_DW->UnitDelay_DSTATE_i - 1)];
-  rtb_BusAssignment.cmc_state_cmd_a.V_B_ISS_ISS[0] =
-    sim_model_lib0_P->mlp_command_list[(int32_T)((int32_T)
-    sim_model_lib0_DW->UnitDelay_DSTATE_i + 35)];
-  rtb_BusAssignment.cmc_state_cmd_a.A_B_ISS_ISS[0] =
-    sim_model_lib0_P->mlp_command_list[(int32_T)((int32_T)
-    sim_model_lib0_DW->UnitDelay_DSTATE_i + 71)];
-  rtb_BusAssignment.cmc_state_cmd_a.P_B_ISS_ISS[1] =
-    sim_model_lib0_P->mlp_command_list[(int32_T)((int32_T)
-    sim_model_lib0_DW->UnitDelay_DSTATE_i + 11)];
-  rtb_BusAssignment.cmc_state_cmd_a.V_B_ISS_ISS[1] =
-    sim_model_lib0_P->mlp_command_list[(int32_T)((int32_T)
-    sim_model_lib0_DW->UnitDelay_DSTATE_i + 47)];
-  rtb_BusAssignment.cmc_state_cmd_a.A_B_ISS_ISS[1] =
-    sim_model_lib0_P->mlp_command_list[(int32_T)((int32_T)
-    sim_model_lib0_DW->UnitDelay_DSTATE_i + 83)];
-  rtb_BusAssignment.cmc_state_cmd_a.P_B_ISS_ISS[2] =
-    sim_model_lib0_P->mlp_command_list[(int32_T)((int32_T)
-    sim_model_lib0_DW->UnitDelay_DSTATE_i + 23)];
-  rtb_BusAssignment.cmc_state_cmd_a.V_B_ISS_ISS[2] =
-    sim_model_lib0_P->mlp_command_list[(int32_T)((int32_T)
-    sim_model_lib0_DW->UnitDelay_DSTATE_i + 59)];
-  rtb_BusAssignment.cmc_state_cmd_a.A_B_ISS_ISS[2] =
-    sim_model_lib0_P->mlp_command_list[(int32_T)((int32_T)
-    sim_model_lib0_DW->UnitDelay_DSTATE_i + 95)];
-  rtb_BusAssignment.cmc_state_cmd_a.quat_ISS2B[0] =
+  sim_model_lib0_Y_cmc_msg_c->cmc_state_cmd_a.quat_ISS2B[0] =
     sim_model_lib0_P->mlp_command_list[(int32_T)((int32_T)
     sim_model_lib0_DW->UnitDelay_DSTATE_i + 107)];
-  rtb_BusAssignment.cmc_state_cmd_a.quat_ISS2B[1] =
+  sim_model_lib0_Y_cmc_msg_c->cmc_state_cmd_a.quat_ISS2B[1] =
     sim_model_lib0_P->mlp_command_list[(int32_T)((int32_T)
     sim_model_lib0_DW->UnitDelay_DSTATE_i + 119)];
-  rtb_BusAssignment.cmc_state_cmd_a.quat_ISS2B[2] =
+  sim_model_lib0_Y_cmc_msg_c->cmc_state_cmd_a.quat_ISS2B[2] =
     sim_model_lib0_P->mlp_command_list[(int32_T)((int32_T)
     sim_model_lib0_DW->UnitDelay_DSTATE_i + 131)];
-  rtb_BusAssignment.cmc_state_cmd_a.quat_ISS2B[3] =
+  sim_model_lib0_Y_cmc_msg_c->cmc_state_cmd_a.quat_ISS2B[3] =
     sim_model_lib0_P->mlp_command_list[(int32_T)((int32_T)
     sim_model_lib0_DW->UnitDelay_DSTATE_i + 143)];
-  rtb_BusAssignment.cmc_state_cmd_b.timestamp_sec = rtb_Switch1_p_idx_0;
-  rtb_BusAssignment.cmc_state_cmd_b.timestamp_nsec = rtb_Switch1_p_idx_1;
-  rtb_BusAssignment.cmc_state_cmd_a.omega_B_ISS_B[0] =
+  sim_model_lib0_Y_cmc_msg_c->cmc_state_cmd_b.timestamp_sec =
+    rtb_Switch1_p_idx_0;
+  sim_model_lib0_Y_cmc_msg_c->cmc_state_cmd_b.timestamp_nsec =
+    rtb_Switch1_p_idx_1;
+  sim_model_lib0_Y_cmc_msg_c->cmc_state_cmd_a.omega_B_ISS_B[0] =
     sim_model_lib0_P->mlp_command_list[(int32_T)((int32_T)
     sim_model_lib0_DW->UnitDelay_DSTATE_i + 155)];
-  rtb_BusAssignment.cmc_state_cmd_a.alpha_B_ISS_B[0] =
+  sim_model_lib0_Y_cmc_msg_c->cmc_state_cmd_a.alpha_B_ISS_B[0] =
     sim_model_lib0_P->mlp_command_list[(int32_T)((int32_T)
     sim_model_lib0_DW->UnitDelay_DSTATE_i + 191)];
-  rtb_BusAssignment.cmc_state_cmd_b.P_B_ISS_ISS[0] = rtb_Switch_al[0];
-  rtb_BusAssignment.cmc_state_cmd_b.V_B_ISS_ISS[0] = rtb_Switch_al[3];
-  rtb_BusAssignment.cmc_state_cmd_b.A_B_ISS_ISS[0] = rtb_Switch_al[6];
-  rtb_BusAssignment.cmc_state_cmd_a.omega_B_ISS_B[1] =
+  sim_model_lib0_Y_cmc_msg_c->cmc_state_cmd_b.P_B_ISS_ISS[0] = rtb_Switch_al[0];
+  sim_model_lib0_Y_cmc_msg_c->cmc_state_cmd_b.V_B_ISS_ISS[0] = rtb_Switch_al[3];
+  sim_model_lib0_Y_cmc_msg_c->cmc_state_cmd_b.A_B_ISS_ISS[0] = rtb_Switch_al[6];
+  sim_model_lib0_Y_cmc_msg_c->cmc_state_cmd_a.omega_B_ISS_B[1] =
     sim_model_lib0_P->mlp_command_list[(int32_T)((int32_T)
     sim_model_lib0_DW->UnitDelay_DSTATE_i + 167)];
-  rtb_BusAssignment.cmc_state_cmd_a.alpha_B_ISS_B[1] =
+  sim_model_lib0_Y_cmc_msg_c->cmc_state_cmd_a.alpha_B_ISS_B[1] =
     sim_model_lib0_P->mlp_command_list[(int32_T)((int32_T)
     sim_model_lib0_DW->UnitDelay_DSTATE_i + 203)];
-  rtb_BusAssignment.cmc_state_cmd_b.P_B_ISS_ISS[1] = rtb_Switch_al[1];
-  rtb_BusAssignment.cmc_state_cmd_b.V_B_ISS_ISS[1] = rtb_Switch_al[4];
-  rtb_BusAssignment.cmc_state_cmd_b.A_B_ISS_ISS[1] = rtb_Switch_al[7];
-  rtb_BusAssignment.cmc_state_cmd_a.omega_B_ISS_B[2] =
+  sim_model_lib0_Y_cmc_msg_c->cmc_state_cmd_b.P_B_ISS_ISS[1] = rtb_Switch_al[1];
+  sim_model_lib0_Y_cmc_msg_c->cmc_state_cmd_b.V_B_ISS_ISS[1] = rtb_Switch_al[4];
+  sim_model_lib0_Y_cmc_msg_c->cmc_state_cmd_b.A_B_ISS_ISS[1] = rtb_Switch_al[7];
+  sim_model_lib0_Y_cmc_msg_c->cmc_state_cmd_a.omega_B_ISS_B[2] =
     sim_model_lib0_P->mlp_command_list[(int32_T)((int32_T)
     sim_model_lib0_DW->UnitDelay_DSTATE_i + 179)];
-  rtb_BusAssignment.cmc_state_cmd_a.alpha_B_ISS_B[2] =
+  sim_model_lib0_Y_cmc_msg_c->cmc_state_cmd_a.alpha_B_ISS_B[2] =
     sim_model_lib0_P->mlp_command_list[(int32_T)((int32_T)
     sim_model_lib0_DW->UnitDelay_DSTATE_i + 215)];
-  rtb_BusAssignment.cmc_state_cmd_b.P_B_ISS_ISS[2] = rtb_Switch_al[2];
-  rtb_BusAssignment.cmc_state_cmd_b.V_B_ISS_ISS[2] = rtb_Switch_al[5];
-  rtb_BusAssignment.cmc_state_cmd_b.A_B_ISS_ISS[2] = rtb_Switch_al[8];
-  rtb_BusAssignment.cmc_state_cmd_b.quat_ISS2B[0] = rtb_Switch_al[9];
-  rtb_BusAssignment.cmc_state_cmd_b.quat_ISS2B[1] = rtb_Switch_al[10];
-  rtb_BusAssignment.cmc_state_cmd_b.quat_ISS2B[2] = rtb_Switch_al[11];
-  rtb_BusAssignment.cmc_state_cmd_b.quat_ISS2B[3] = rtb_Switch_al[12];
-  rtb_BusAssignment.cmc_state_cmd_b.omega_B_ISS_B[0] = rtb_Switch_al[13];
-  rtb_BusAssignment.cmc_state_cmd_b.alpha_B_ISS_B[0] = rtb_Switch_al[16];
-  rtb_BusAssignment.cmc_state_cmd_b.omega_B_ISS_B[1] = rtb_Switch_al[14];
-  rtb_BusAssignment.cmc_state_cmd_b.alpha_B_ISS_B[1] = rtb_Switch_al[17];
-  rtb_BusAssignment.cmc_state_cmd_b.omega_B_ISS_B[2] = rtb_Switch_al[15];
-  rtb_BusAssignment.cmc_state_cmd_b.alpha_B_ISS_B[2] = rtb_Switch_al[18];
-  rtb_BusAssignment.cmc_mode_cmd = sim_model_lib0_P->mlp_mode_cmd_list[(int32_T)
-    ((int32_T)sim_model_lib0_DW->UnitDelay_DSTATE_if - 1)];
-  rtb_BusAssignment.speed_gain_cmd = sim_model_lib0_P->mlp_speed_gain_cmd_list
-    [(int32_T)((int32_T)sim_model_lib0_DW->UnitDelay_DSTATE_h - 1)];
-  rtb_BusAssignment.localization_mode_cmd =
+  sim_model_lib0_Y_cmc_msg_c->cmc_state_cmd_b.P_B_ISS_ISS[2] = rtb_Switch_al[2];
+  sim_model_lib0_Y_cmc_msg_c->cmc_state_cmd_b.V_B_ISS_ISS[2] = rtb_Switch_al[5];
+  sim_model_lib0_Y_cmc_msg_c->cmc_state_cmd_b.A_B_ISS_ISS[2] = rtb_Switch_al[8];
+  sim_model_lib0_Y_cmc_msg_c->cmc_state_cmd_b.quat_ISS2B[0] = rtb_Switch_al[9];
+  sim_model_lib0_Y_cmc_msg_c->cmc_state_cmd_b.quat_ISS2B[1] = rtb_Switch_al[10];
+  sim_model_lib0_Y_cmc_msg_c->cmc_state_cmd_b.quat_ISS2B[2] = rtb_Switch_al[11];
+  sim_model_lib0_Y_cmc_msg_c->cmc_state_cmd_b.quat_ISS2B[3] = rtb_Switch_al[12];
+  sim_model_lib0_Y_cmc_msg_c->cmc_mode_cmd = sim_model_lib0_P->
+    mlp_mode_cmd_list[(int32_T)((int32_T)sim_model_lib0_DW->UnitDelay_DSTATE_if
+    - 1)];
+  sim_model_lib0_Y_cmc_msg_c->speed_gain_cmd =
+    sim_model_lib0_P->mlp_speed_gain_cmd_list[(int32_T)((int32_T)
+    sim_model_lib0_DW->UnitDelay_DSTATE_h - 1)];
+  sim_model_lib0_Y_cmc_msg_c->localization_mode_cmd =
     sim_model_lib0_P->mlp_loc_mode_cmd_list[(int32_T)((int32_T)
     sim_model_lib0_DW->UnitDelay_DSTATE_ht - 1)];
-
-  // Outport: '<Root>/cmc_msg'
-  *sim_model_lib0_Y_cmc_msg_c = rtb_BusAssignment;
+  sim_model_lib0_Y_cmc_msg_c->cmc_state_cmd_b.omega_B_ISS_B[0] = rtb_Switch_al
+    [13];
+  sim_model_lib0_Y_cmc_msg_c->cmc_state_cmd_b.alpha_B_ISS_B[0] = rtb_Switch_al
+    [16];
+  sim_model_lib0_Y_cmc_msg_c->att_kp[0] = sim_model_lib0_U_cmc_msg_in->att_kp[0];
+  sim_model_lib0_Y_cmc_msg_c->att_ki[0] = sim_model_lib0_U_cmc_msg_in->att_ki[0];
+  sim_model_lib0_Y_cmc_msg_c->omega_kd[0] =
+    sim_model_lib0_U_cmc_msg_in->omega_kd[0];
+  sim_model_lib0_Y_cmc_msg_c->pos_kp[0] = sim_model_lib0_U_cmc_msg_in->pos_kp[0];
+  sim_model_lib0_Y_cmc_msg_c->pos_ki[0] = sim_model_lib0_U_cmc_msg_in->pos_ki[0];
+  sim_model_lib0_Y_cmc_msg_c->vel_kd[0] = sim_model_lib0_U_cmc_msg_in->vel_kd[0];
+  sim_model_lib0_Y_cmc_msg_c->center_of_mass[0] =
+    sim_model_lib0_U_cmc_msg_in->center_of_mass[0];
+  sim_model_lib0_Y_cmc_msg_c->cmc_state_cmd_b.omega_B_ISS_B[1] = rtb_Switch_al
+    [14];
+  sim_model_lib0_Y_cmc_msg_c->cmc_state_cmd_b.alpha_B_ISS_B[1] = rtb_Switch_al
+    [17];
+  sim_model_lib0_Y_cmc_msg_c->att_kp[1] = sim_model_lib0_U_cmc_msg_in->att_kp[1];
+  sim_model_lib0_Y_cmc_msg_c->att_ki[1] = sim_model_lib0_U_cmc_msg_in->att_ki[1];
+  sim_model_lib0_Y_cmc_msg_c->omega_kd[1] =
+    sim_model_lib0_U_cmc_msg_in->omega_kd[1];
+  sim_model_lib0_Y_cmc_msg_c->pos_kp[1] = sim_model_lib0_U_cmc_msg_in->pos_kp[1];
+  sim_model_lib0_Y_cmc_msg_c->pos_ki[1] = sim_model_lib0_U_cmc_msg_in->pos_ki[1];
+  sim_model_lib0_Y_cmc_msg_c->vel_kd[1] = sim_model_lib0_U_cmc_msg_in->vel_kd[1];
+  sim_model_lib0_Y_cmc_msg_c->center_of_mass[1] =
+    sim_model_lib0_U_cmc_msg_in->center_of_mass[1];
+  sim_model_lib0_Y_cmc_msg_c->cmc_state_cmd_b.omega_B_ISS_B[2] = rtb_Switch_al
+    [15];
+  sim_model_lib0_Y_cmc_msg_c->cmc_state_cmd_b.alpha_B_ISS_B[2] = rtb_Switch_al
+    [18];
+  sim_model_lib0_Y_cmc_msg_c->att_kp[2] = sim_model_lib0_U_cmc_msg_in->att_kp[2];
+  sim_model_lib0_Y_cmc_msg_c->att_ki[2] = sim_model_lib0_U_cmc_msg_in->att_ki[2];
+  sim_model_lib0_Y_cmc_msg_c->omega_kd[2] =
+    sim_model_lib0_U_cmc_msg_in->omega_kd[2];
+  sim_model_lib0_Y_cmc_msg_c->pos_kp[2] = sim_model_lib0_U_cmc_msg_in->pos_kp[2];
+  sim_model_lib0_Y_cmc_msg_c->pos_ki[2] = sim_model_lib0_U_cmc_msg_in->pos_ki[2];
+  sim_model_lib0_Y_cmc_msg_c->vel_kd[2] = sim_model_lib0_U_cmc_msg_in->vel_kd[2];
+  sim_model_lib0_Y_cmc_msg_c->center_of_mass[2] =
+    sim_model_lib0_U_cmc_msg_in->center_of_mass[2];
+  sim_model_lib0_Y_cmc_msg_c->mass = sim_model_lib0_U_cmc_msg_in->mass;
 
   // Sqrt: '<S45>/Sqrt' incorporates:
   //   DiscreteIntegrator: '<S6>/Discrete-Time Integrator'
@@ -4394,12 +4428,12 @@ void sim_model_lib0_step0(RT_MODEL_sim_model_lib0_T *const sim_model_lib0_M,
   // End of Switch: '<S6>/Switch1'
 
   // Sum: '<S2>/Sum' incorporates:
-  //   BusAssignment: '<S1>/Bus Assignment1'
-  //   Constant: '<S1>/Constant11'
   //   Constant: '<S2>/Constant'
+  //   Inport: '<Root>/cmc_msg_in'
+  //   SignalConversion: '<S1>/Signal Conversion'
 
   rtb_Product_p = sim_model_lib0_P->tun_mass_error +
-    sim_model_lib0_P->tun_default_mass;
+    sim_model_lib0_U_cmc_msg_in->mass;
 
   // Product: '<S62>/Product' incorporates:
   //   Constant: '<S65>/Constant3'
@@ -4800,12 +4834,12 @@ void sim_model_lib0_step0(RT_MODEL_sim_model_lib0_T *const sim_model_lib0_M,
   // End of Sum: '<S5>/Sum1'
 
   // Sum: '<S2>/Sum1' incorporates:
-  //   BusAssignment: '<S1>/Bus Assignment1'
-  //   Constant: '<S1>/Constant10'
   //   Constant: '<S2>/Constant1'
+  //   Inport: '<Root>/cmc_msg_in'
+  //   SignalConversion: '<S1>/Signal Conversion'
 
   for (i = 0; i < 9; i++) {
-    rtb_Assignment_m[i] = sim_model_lib0_P->tun_default_inertia_matrix[i] +
+    rtb_Assignment_m[i] = sim_model_lib0_U_cmc_msg_in->inertia_matrix[i] +
       sim_model_lib0_P->tun_inertia_error_mat[i];
   }
 
@@ -4949,9 +4983,15 @@ void sim_model_lib0_step0(RT_MODEL_sim_model_lib0_T *const sim_model_lib0_M,
   // BusCreator: '<S2>/Bus Creator'
   rtb_Sum2_f[0] = rtb_bpm_force_B[0];
 
+  // Sum: '<S4>/Sum' incorporates:
+  //   Constant: '<S4>/Constant'
+  //   Inport: '<Root>/cmc_msg_in'
+  //   SignalConversion: '<S1>/Signal Conversion'
+
+  rtb_V_B_ISS_ISS_h = sim_model_lib0_U_cmc_msg_in->center_of_mass[0] +
+    sim_model_lib0_P->tun_sim_cg_error[0];
+
   // Sum: '<S257>/Subtract' incorporates:
-  //   BusAssignment: '<S1>/Bus Assignment1'
-  //   Constant: '<S1>/Constant9'
   //   Constant: '<S257>/ 1'
   //   Constant: '<S257>/ 2'
   //   DataTypeConversion: '<S186>/Data Type Conversion6'
@@ -4959,8 +4999,10 @@ void sim_model_lib0_step0(RT_MODEL_sim_model_lib0_T *const sim_model_lib0_M,
 
   rtb_P_sensor_CG_B[0] = ((real_T)sim_model_lib0_P->tun_epson_report_truth *
     sim_model_lib0_P->epson_P_sensor_B_B_error[0] + (real_T)
-    sim_model_lib0_P->tun_abp_p_imu_body_body[0]) - (real_T)
-    sim_model_lib0_P->tun_default_center_of_mass[0];
+    sim_model_lib0_P->tun_abp_p_imu_body_body[0]) - (real_T)rtb_V_B_ISS_ISS_h;
+
+  // Sum: '<S4>/Sum'
+  rtb_V_B_ISS_ISS[0] = rtb_V_B_ISS_ISS_h;
 
   // Gain: '<S5>/Gain'
   rtb_alpha_B_ECI_B[1] = sim_model_lib0_P->tun_env_alpha_dof_gain[1] * tmp[1];
@@ -4968,9 +5010,15 @@ void sim_model_lib0_step0(RT_MODEL_sim_model_lib0_T *const sim_model_lib0_M,
   // BusCreator: '<S2>/Bus Creator'
   rtb_Sum2_f[1] = rtb_bpm_force_B[1];
 
+  // Sum: '<S4>/Sum' incorporates:
+  //   Constant: '<S4>/Constant'
+  //   Inport: '<Root>/cmc_msg_in'
+  //   SignalConversion: '<S1>/Signal Conversion'
+
+  rtb_V_B_ISS_ISS_h = sim_model_lib0_U_cmc_msg_in->center_of_mass[1] +
+    sim_model_lib0_P->tun_sim_cg_error[1];
+
   // Sum: '<S257>/Subtract' incorporates:
-  //   BusAssignment: '<S1>/Bus Assignment1'
-  //   Constant: '<S1>/Constant9'
   //   Constant: '<S257>/ 1'
   //   Constant: '<S257>/ 2'
   //   DataTypeConversion: '<S186>/Data Type Conversion6'
@@ -4978,8 +5026,10 @@ void sim_model_lib0_step0(RT_MODEL_sim_model_lib0_T *const sim_model_lib0_M,
 
   rtb_P_sensor_CG_B[1] = ((real_T)sim_model_lib0_P->tun_epson_report_truth *
     sim_model_lib0_P->epson_P_sensor_B_B_error[1] + (real_T)
-    sim_model_lib0_P->tun_abp_p_imu_body_body[1]) - (real_T)
-    sim_model_lib0_P->tun_default_center_of_mass[1];
+    sim_model_lib0_P->tun_abp_p_imu_body_body[1]) - (real_T)rtb_V_B_ISS_ISS_h;
+
+  // Sum: '<S4>/Sum'
+  rtb_V_B_ISS_ISS[1] = rtb_V_B_ISS_ISS_h;
 
   // Gain: '<S5>/Gain'
   rtb_alpha_B_ECI_B[2] = sim_model_lib0_P->tun_env_alpha_dof_gain[2] * tmp[2];
@@ -4987,9 +5037,15 @@ void sim_model_lib0_step0(RT_MODEL_sim_model_lib0_T *const sim_model_lib0_M,
   // BusCreator: '<S2>/Bus Creator'
   rtb_Sum2_f[2] = rtb_bpm_force_B[2];
 
+  // Sum: '<S4>/Sum' incorporates:
+  //   Constant: '<S4>/Constant'
+  //   Inport: '<Root>/cmc_msg_in'
+  //   SignalConversion: '<S1>/Signal Conversion'
+
+  rtb_V_B_ISS_ISS_h = sim_model_lib0_U_cmc_msg_in->center_of_mass[2] +
+    sim_model_lib0_P->tun_sim_cg_error[2];
+
   // Sum: '<S257>/Subtract' incorporates:
-  //   BusAssignment: '<S1>/Bus Assignment1'
-  //   Constant: '<S1>/Constant9'
   //   Constant: '<S257>/ 1'
   //   Constant: '<S257>/ 2'
   //   DataTypeConversion: '<S186>/Data Type Conversion6'
@@ -4997,8 +5053,10 @@ void sim_model_lib0_step0(RT_MODEL_sim_model_lib0_T *const sim_model_lib0_M,
 
   rtb_P_sensor_CG_B[2] = ((real_T)sim_model_lib0_P->tun_epson_report_truth *
     sim_model_lib0_P->epson_P_sensor_B_B_error[2] + (real_T)
-    sim_model_lib0_P->tun_abp_p_imu_body_body[2]) - (real_T)
-    sim_model_lib0_P->tun_default_center_of_mass[2];
+    sim_model_lib0_P->tun_abp_p_imu_body_body[2]) - (real_T)rtb_V_B_ISS_ISS_h;
+
+  // Sum: '<S4>/Sum'
+  rtb_V_B_ISS_ISS[2] = rtb_V_B_ISS_ISS_h;
 
   // Switch: '<S257>/Switch1' incorporates:
   //   BusCreator: '<S2>/Bus Creator'
@@ -5801,8 +5859,6 @@ void sim_model_lib0_step0(RT_MODEL_sim_model_lib0_T *const sim_model_lib0_M,
     &sim_model_lib0_B->speed_controller, &sim_model_lib0_DW->speed_controller,
     (P_speed_controller_sim_model__T *)&sim_model_lib0_P->speed_controller,
     sim_model_lib0_P->bpm_blower_1_propulsion_module_,
-    sim_model_lib0_P->bpm_imp_cmd_filt_num,
-    sim_model_lib0_P->bpm_imp_cmd_filt_den,
     sim_model_lib0_P->bpm_imp_speed_filt_num,
     sim_model_lib0_P->bpm_imp_speed_filt_den, sim_model_lib0_P->bpm_imp_ctl_kp,
     sim_model_lib0_P->bpm_imp_ctl_kd, sim_model_lib0_P->bpm_imp_ctl_filt_n,
@@ -5837,8 +5893,6 @@ void sim_model_lib0_step0(RT_MODEL_sim_model_lib0_T *const sim_model_lib0_M,
     &sim_model_lib0_DW->speed_controller_c, (P_speed_controller_sim_model__T *)
     &sim_model_lib0_P->speed_controller_c,
     sim_model_lib0_P->bpm_blower_2_propulsion_module_,
-    sim_model_lib0_P->bpm_imp_cmd_filt_num,
-    sim_model_lib0_P->bpm_imp_cmd_filt_den,
     sim_model_lib0_P->bpm_imp_speed_filt_num,
     sim_model_lib0_P->bpm_imp_speed_filt_den, sim_model_lib0_P->bpm_imp_ctl_kp,
     sim_model_lib0_P->bpm_imp_ctl_kd, sim_model_lib0_P->bpm_imp_ctl_filt_n,
@@ -5972,16 +6026,16 @@ void sim_model_lib0_step0(RT_MODEL_sim_model_lib0_T *const sim_model_lib0_M,
     // Outputs for IfAction SubSystem: '<S197>/Normalize' incorporates:
     //   ActionPort: '<S209>/Action Port'
 
-    sim_model_lib0_Normalize_e(rtb_bpm_torque_B, rtb_Sqrt_m, rtb_A_B_ISS_ISS);
+    sim_model_lib0_Normalize_e(rtb_bpm_torque_B, rtb_Sqrt_m, rtb_omega_B_ISS_B);
 
     // End of Outputs for SubSystem: '<S197>/Normalize'
   } else {
     // Outputs for IfAction SubSystem: '<S197>/No-op' incorporates:
     //   ActionPort: '<S208>/Action Port'
 
-    rtb_A_B_ISS_ISS[0] = rtb_bpm_torque_B[0];
-    rtb_A_B_ISS_ISS[1] = rtb_bpm_torque_B[1];
-    rtb_A_B_ISS_ISS[2] = rtb_bpm_torque_B_c;
+    rtb_omega_B_ISS_B[0] = rtb_bpm_torque_B[0];
+    rtb_omega_B_ISS_B[1] = rtb_bpm_torque_B[1];
+    rtb_omega_B_ISS_B[2] = rtb_bpm_torque_B_c;
 
     // End of Outputs for SubSystem: '<S197>/No-op'
   }
@@ -5993,9 +6047,9 @@ void sim_model_lib0_step0(RT_MODEL_sim_model_lib0_T *const sim_model_lib0_M,
     sim_model_lib0_B->dc_motor_model.output_torque;
 
   // Product: '<S188>/Product'
-  rtb_bpm_torque_B[0] = rtb_A_B_ISS_ISS[0] * rtb_Product_p;
-  rtb_bpm_torque_B[1] = rtb_A_B_ISS_ISS[1] * rtb_Product_p;
-  rtb_bpm_torque_B[2] = rtb_A_B_ISS_ISS[2] * rtb_Product_p;
+  rtb_bpm_torque_B[0] = rtb_omega_B_ISS_B[0] * rtb_Product_p;
+  rtb_bpm_torque_B[1] = rtb_omega_B_ISS_B[1] * rtb_Product_p;
+  rtb_bpm_torque_B[2] = rtb_omega_B_ISS_B[2] * rtb_Product_p;
 
   // Product: '<S188>/Product1' incorporates:
   //   Constant: '<S188>/Constant2'
@@ -6013,8 +6067,7 @@ void sim_model_lib0_step0(RT_MODEL_sim_model_lib0_T *const sim_model_lib0_M,
 
   // UnitDelay: '<S188>/Unit Delay'
   latch_nozzle_thrust_matrici(sim_model_lib0_DW->UnitDelay_DSTATE_m,
-    rtb_BusAssignment1.center_of_mass,
-    &sim_model_lib0_B->latch_nozzle_thrust_matricies,
+    rtb_V_B_ISS_ISS, &sim_model_lib0_B->latch_nozzle_thrust_matricies,
     (P_latch_nozzle_thrust_matrici_T *)
     &sim_model_lib0_P->latch_nozzle_thrust_matricies,
     sim_model_lib0_P->bpm_PM1_Q_nozzle2misaligned,
@@ -6096,9 +6149,9 @@ void sim_model_lib0_step0(RT_MODEL_sim_model_lib0_T *const sim_model_lib0_M,
     //   Product: '<S188>/Product2'
     //   Product: '<S195>/Product'
 
-    rtb_V_B_ISS_ISS[i] = (((rtb_A_B_ISS_ISS[0] * rtb_Product_p * tmp_8[i] +
-      tmp_8[(int32_T)(i + 3)] * (rtb_A_B_ISS_ISS[1] * rtb_Product_p)) + tmp_8
-      [(int32_T)(i + 6)] * (rtb_A_B_ISS_ISS[2] * rtb_Product_p)) +
+    rtb_A_B_ISS_ISS[i] = (((rtb_omega_B_ISS_B[0] * rtb_Product_p * tmp_8[i] +
+      tmp_8[(int32_T)(i + 3)] * (rtb_omega_B_ISS_B[1] * rtb_Product_p)) + tmp_8
+      [(int32_T)(i + 6)] * (rtb_omega_B_ISS_B[2] * rtb_Product_p)) +
                           rtb_bpm_torque_B[i]) + tmp[i];
 
     // Sum: '<S221>/Add1' incorporates:
@@ -6130,16 +6183,16 @@ void sim_model_lib0_step0(RT_MODEL_sim_model_lib0_T *const sim_model_lib0_M,
     // Outputs for IfAction SubSystem: '<S230>/Normalize' incorporates:
     //   ActionPort: '<S242>/Action Port'
 
-    sim_model_lib0_Normalize_e(rtb_bpm_torque_B, rtb_Sqrt_m, rtb_A_B_ISS_ISS);
+    sim_model_lib0_Normalize_e(rtb_bpm_torque_B, rtb_Sqrt_m, rtb_omega_B_ISS_B);
 
     // End of Outputs for SubSystem: '<S230>/Normalize'
   } else {
     // Outputs for IfAction SubSystem: '<S230>/No-op' incorporates:
     //   ActionPort: '<S241>/Action Port'
 
-    rtb_A_B_ISS_ISS[0] = rtb_bpm_torque_B[0];
-    rtb_A_B_ISS_ISS[1] = rtb_bpm_torque_B[1];
-    rtb_A_B_ISS_ISS[2] = rtb_bpm_torque_B[2];
+    rtb_omega_B_ISS_B[0] = rtb_bpm_torque_B[0];
+    rtb_omega_B_ISS_B[1] = rtb_bpm_torque_B[1];
+    rtb_omega_B_ISS_B[2] = rtb_bpm_torque_B[2];
 
     // End of Outputs for SubSystem: '<S230>/No-op'
   }
@@ -6151,9 +6204,9 @@ void sim_model_lib0_step0(RT_MODEL_sim_model_lib0_T *const sim_model_lib0_M,
     sim_model_lib0_B->dc_motor_model_g.output_torque;
 
   // Product: '<S221>/Product'
-  rtb_bpm_torque_B[0] = rtb_A_B_ISS_ISS[0] * rtb_Product_p;
-  rtb_bpm_torque_B[1] = rtb_A_B_ISS_ISS[1] * rtb_Product_p;
-  rtb_bpm_torque_B[2] = rtb_A_B_ISS_ISS[2] * rtb_Product_p;
+  rtb_bpm_torque_B[0] = rtb_omega_B_ISS_B[0] * rtb_Product_p;
+  rtb_bpm_torque_B[1] = rtb_omega_B_ISS_B[1] * rtb_Product_p;
+  rtb_bpm_torque_B[2] = rtb_omega_B_ISS_B[2] * rtb_Product_p;
 
   // Product: '<S221>/Product1' incorporates:
   //   Constant: '<S221>/Constant2'
@@ -6171,8 +6224,7 @@ void sim_model_lib0_step0(RT_MODEL_sim_model_lib0_T *const sim_model_lib0_M,
 
   // UnitDelay: '<S221>/Unit Delay'
   latch_nozzle_thrust_matrici(sim_model_lib0_DW->UnitDelay_DSTATE_c,
-    rtb_BusAssignment1.center_of_mass,
-    &sim_model_lib0_B->latch_nozzle_thrust_matricies_p,
+    rtb_V_B_ISS_ISS, &sim_model_lib0_B->latch_nozzle_thrust_matricies_p,
     (P_latch_nozzle_thrust_matrici_T *)
     &sim_model_lib0_P->latch_nozzle_thrust_matricies_p,
     sim_model_lib0_P->bpm_PM2_Q_nozzle2misaligned,
@@ -6283,10 +6335,10 @@ void sim_model_lib0_step0(RT_MODEL_sim_model_lib0_T *const sim_model_lib0_M,
     //   Product: '<S228>/Product'
     //   Sum: '<S221>/Add2'
 
-    rtb_bpm_torque_B[i_0] = ((((rtb_A_B_ISS_ISS[0] * rtb_Product_p * tmp_9[i_0]
-      + tmp_9[(int32_T)(i_0 + 3)] * (rtb_A_B_ISS_ISS[1] * rtb_Product_p)) +
-      tmp_9[(int32_T)(i_0 + 6)] * (rtb_A_B_ISS_ISS[2] * rtb_Product_p)) +
-      rtb_bpm_torque_B[i_0]) + tmp[i_0]) + rtb_V_B_ISS_ISS[i_0];
+    rtb_bpm_torque_B[i_0] = ((((rtb_omega_B_ISS_B[0] * rtb_Product_p * tmp_9[i_0]
+      + tmp_9[(int32_T)(i_0 + 3)] * (rtb_omega_B_ISS_B[1] * rtb_Product_p)) +
+      tmp_9[(int32_T)(i_0 + 6)] * (rtb_omega_B_ISS_B[2] * rtb_Product_p)) +
+      rtb_bpm_torque_B[i_0]) + tmp[i_0]) + rtb_A_B_ISS_ISS[i_0];
   }
 
   for (i = 0; i < 6; i++) {
@@ -7375,34 +7427,24 @@ void sim_model_lib0_step0(RT_MODEL_sim_model_lib0_T *const sim_model_lib0_M,
     sim_model_lib0_P->DiscreteTimeIntegrator_gainva_o * rtb_Product_p;
 
   // Update for UnitDelay: '<S188>/Unit Delay' incorporates:
-  //   BusAssignment: '<S1>/Bus Assignment1'
-  //   Constant: '<S1>/Constant9'
   //   Logic: '<S188>/Logical Operator'
   //   RelationalOperator: '<S194>/FixPt Relational Operator'
   //   UnitDelay: '<S194>/Delay Input1'
 
-  sim_model_lib0_DW->UnitDelay_DSTATE_m =
-    ((sim_model_lib0_P->tun_default_center_of_mass[0] !=
-      sim_model_lib0_DW->DelayInput1_DSTATE[0]) ||
-     (sim_model_lib0_P->tun_default_center_of_mass[1] !=
-      sim_model_lib0_DW->DelayInput1_DSTATE[1]) ||
-     (sim_model_lib0_P->tun_default_center_of_mass[2] !=
-      sim_model_lib0_DW->DelayInput1_DSTATE[2]));
+  sim_model_lib0_DW->UnitDelay_DSTATE_m = ((rtb_V_B_ISS_ISS[0] !=
+    sim_model_lib0_DW->DelayInput1_DSTATE[0]) || (rtb_V_B_ISS_ISS[1] !=
+    sim_model_lib0_DW->DelayInput1_DSTATE[1]) || (rtb_V_B_ISS_ISS_h !=
+    sim_model_lib0_DW->DelayInput1_DSTATE[2]));
 
   // Update for UnitDelay: '<S221>/Unit Delay' incorporates:
-  //   BusAssignment: '<S1>/Bus Assignment1'
-  //   Constant: '<S1>/Constant9'
   //   Logic: '<S221>/Logical Operator'
   //   RelationalOperator: '<S227>/FixPt Relational Operator'
   //   UnitDelay: '<S227>/Delay Input1'
 
-  sim_model_lib0_DW->UnitDelay_DSTATE_c =
-    ((sim_model_lib0_P->tun_default_center_of_mass[0] !=
-      sim_model_lib0_DW->DelayInput1_DSTATE_m[0]) ||
-     (sim_model_lib0_P->tun_default_center_of_mass[1] !=
-      sim_model_lib0_DW->DelayInput1_DSTATE_m[1]) ||
-     (sim_model_lib0_P->tun_default_center_of_mass[2] !=
-      sim_model_lib0_DW->DelayInput1_DSTATE_m[2]));
+  sim_model_lib0_DW->UnitDelay_DSTATE_c = ((rtb_V_B_ISS_ISS[0] !=
+    sim_model_lib0_DW->DelayInput1_DSTATE_m[0]) || (rtb_V_B_ISS_ISS[1] !=
+    sim_model_lib0_DW->DelayInput1_DSTATE_m[1]) || (rtb_V_B_ISS_ISS_h !=
+    sim_model_lib0_DW->DelayInput1_DSTATE_m[2]));
 
   // Update for UnitDelay: '<S110>/Delay Input1'
   sim_model_lib0_DW->DelayInput1_DSTATE_p =
@@ -7484,19 +7526,11 @@ void sim_model_lib0_step0(RT_MODEL_sim_model_lib0_T *const sim_model_lib0_M,
     (sim_model_lib0_P->env_ext_air_omega_variance[0]) +
     sim_model_lib0_P->RandomNumber1_Mean;
 
-  // Update for UnitDelay: '<S194>/Delay Input1' incorporates:
-  //   BusAssignment: '<S1>/Bus Assignment1'
-  //   Constant: '<S1>/Constant9'
+  // Update for UnitDelay: '<S194>/Delay Input1'
+  sim_model_lib0_DW->DelayInput1_DSTATE[0] = rtb_V_B_ISS_ISS[0];
 
-  sim_model_lib0_DW->DelayInput1_DSTATE[0] =
-    sim_model_lib0_P->tun_default_center_of_mass[0];
-
-  // Update for UnitDelay: '<S227>/Delay Input1' incorporates:
-  //   BusAssignment: '<S1>/Bus Assignment1'
-  //   Constant: '<S1>/Constant9'
-
-  sim_model_lib0_DW->DelayInput1_DSTATE_m[0] =
-    sim_model_lib0_P->tun_default_center_of_mass[0];
+  // Update for UnitDelay: '<S227>/Delay Input1'
+  sim_model_lib0_DW->DelayInput1_DSTATE_m[0] = rtb_V_B_ISS_ISS[0];
 
   // Update for RandomNumber: '<S254>/random_noise1'
   sim_model_lib0_DW->NextOutput_i[0] = rt_nrand_Upu32_Yd_f_pw_snf
@@ -7593,19 +7627,11 @@ void sim_model_lib0_step0(RT_MODEL_sim_model_lib0_T *const sim_model_lib0_M,
     (sim_model_lib0_P->env_ext_air_omega_variance[1]) +
     sim_model_lib0_P->RandomNumber1_Mean;
 
-  // Update for UnitDelay: '<S194>/Delay Input1' incorporates:
-  //   BusAssignment: '<S1>/Bus Assignment1'
-  //   Constant: '<S1>/Constant9'
+  // Update for UnitDelay: '<S194>/Delay Input1'
+  sim_model_lib0_DW->DelayInput1_DSTATE[1] = rtb_V_B_ISS_ISS[1];
 
-  sim_model_lib0_DW->DelayInput1_DSTATE[1] =
-    sim_model_lib0_P->tun_default_center_of_mass[1];
-
-  // Update for UnitDelay: '<S227>/Delay Input1' incorporates:
-  //   BusAssignment: '<S1>/Bus Assignment1'
-  //   Constant: '<S1>/Constant9'
-
-  sim_model_lib0_DW->DelayInput1_DSTATE_m[1] =
-    sim_model_lib0_P->tun_default_center_of_mass[1];
+  // Update for UnitDelay: '<S227>/Delay Input1'
+  sim_model_lib0_DW->DelayInput1_DSTATE_m[1] = rtb_V_B_ISS_ISS[1];
 
   // Update for RandomNumber: '<S254>/random_noise1'
   sim_model_lib0_DW->NextOutput_i[1] = rt_nrand_Upu32_Yd_f_pw_snf
@@ -7702,19 +7728,11 @@ void sim_model_lib0_step0(RT_MODEL_sim_model_lib0_T *const sim_model_lib0_M,
     (sim_model_lib0_P->env_ext_air_omega_variance[2]) +
     sim_model_lib0_P->RandomNumber1_Mean;
 
-  // Update for UnitDelay: '<S194>/Delay Input1' incorporates:
-  //   BusAssignment: '<S1>/Bus Assignment1'
-  //   Constant: '<S1>/Constant9'
+  // Update for UnitDelay: '<S194>/Delay Input1'
+  sim_model_lib0_DW->DelayInput1_DSTATE[2] = rtb_V_B_ISS_ISS_h;
 
-  sim_model_lib0_DW->DelayInput1_DSTATE[2] =
-    sim_model_lib0_P->tun_default_center_of_mass[2];
-
-  // Update for UnitDelay: '<S227>/Delay Input1' incorporates:
-  //   BusAssignment: '<S1>/Bus Assignment1'
-  //   Constant: '<S1>/Constant9'
-
-  sim_model_lib0_DW->DelayInput1_DSTATE_m[2] =
-    sim_model_lib0_P->tun_default_center_of_mass[2];
+  // Update for UnitDelay: '<S227>/Delay Input1'
+  sim_model_lib0_DW->DelayInput1_DSTATE_m[2] = rtb_V_B_ISS_ISS_h;
 
   // Update for RandomNumber: '<S254>/random_noise1'
   sim_model_lib0_DW->NextOutput_i[2] = rt_nrand_Upu32_Yd_f_pw_snf

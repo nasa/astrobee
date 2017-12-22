@@ -1,0 +1,5 @@
+<library path="lib/libperch">
+  <class name="perch/PerchNodelet" type="perch::PerchNodelet" base_class_type="nodelet::Nodelet">
+    <description>Nodelet for the perch procedure</description>
+  </class>
+</library>

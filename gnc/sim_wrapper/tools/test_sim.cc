@@ -98,9 +98,8 @@ int main(int argc, char** argv) {
   gnc_autocode::GncSimCSV csv_sim;
   gnc_autocode::GncSimAutocode sim;
 
-  cmc_msg cmc;
-  gnc_autocode::GncEkfCSV csv_ekf(&cmc);
-  gnc_autocode::GncEkfAutocode ekf(&cmc);
+  gnc_autocode::GncEkfCSV csv_ekf;
+  gnc_autocode::GncEkfAutocode ekf;
 
   csv_sim.Initialize(std::string("."));
   csv_ekf.Initialize(std::string("."));

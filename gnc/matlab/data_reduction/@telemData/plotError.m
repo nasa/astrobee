@@ -31,6 +31,8 @@ legend([legend1 '_x'], [legend1 '_y'], [legend1 '_z'], [legend2 '_x'], [legend2 
 error_data = telemData1 - telemData2;
 subplot(2,1,2);
 plot(error_data.time - t0, error_data.data);
+hold on; magLine = plot(error_data.time - t0, rssrow(error_data.data), '--k');
+legend(magLine, '|error|');
 title([titleStr ' Error']); grid on;
 ylabel(units); xlabel('seconds')
 

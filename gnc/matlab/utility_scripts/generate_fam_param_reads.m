@@ -24,7 +24,7 @@ source_header = 'fam_force_allocation_module.h';
 % Boolean flags, will also find any variables tun_*_f + the list below
 boolean_exceptions = {'tun_ctl_bypass_cmd_shaper', 'tun_cvs_noise_on', ...
                     'tun_env_drag_disturb_on', 'tun_epson_report_truth', ...
-                    'tun_debug_ctl_use_truth'};
+                    'tun_debug_ctl_use_truth', 'tun_ase_gravity_removal'};
 output_fname = 'fam_tunable_funcs';
 function_name = 'fam_ReadParams';
 input_object_type = 'RT_MODEL_fam_force_allocation_T*';

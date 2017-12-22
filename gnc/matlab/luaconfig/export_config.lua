@@ -6,6 +6,8 @@ end
 package.path = package.path .. ";" .. script_path() .. "?.lua"
 -- add config directory to imports
 package.path = package.path .. ";" .. script_path() .. "../../../management/astrobee/config/?.config"
+package.path = package.path .. ";" .. script_path() .. "../../../management/astrobee/config/?.lua"
+package.path = package.path .. ";" .. script_path() .. "../../../astrobee/config/?.lua"
 
 -- import the config files we need
 require "common_lua"

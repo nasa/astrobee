@@ -58,7 +58,9 @@ ff::RosDiskStateToRapid::RosDiskStateToRapid(
   // Setup timer for checking and publishing the state but don't start it since
   // the rate is 0. The bridge will set this rate at the end of its
   // initialization
-  pub_timer_ = m_nh_.createTimer(ros::Rate(0),
+  // update: Andrew changed rate to 1.0 to avoid a runtime bounds error. Should
+  // not affect since autostart argument is set to false.
+  pub_timer_ = m_nh_.createTimer(ros::Rate(1.0),
                               &RosDiskStateToRapid::CheckAndPublish,
                               this,
                               false,

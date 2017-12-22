@@ -23,13 +23,23 @@
 namespace serial {
 
 // Default constructor
-Serial::Serial(SerialReadCallback cb_read, SerialTimeoutCallback cb_timeout,
-  uint32_t timeout_ms) : port_(asio_), timer_(asio_),
-  cb_read_(cb_read), cb_timeout_(cb_timeout), timeout_ms_(timeout_ms) {}
+Serial::Serial(SerialReadCallback cb_read)
+  : port_(asio_), timer_(asio_), cb_read_(cb_read), timeout_ms_(0) {}
 
 // Destructor closes port safely
 Serial::~Serial() {
   Close();
+}
+
+// Set a callback when a read timeout occurs
+void Serial::SetTimeoutCallback(SerialTimeoutCallback cb, uint32_t ms) {
+  timeout_ms_ = ms;
+  cb_timeout_ = cb;
+}
+
+// Set a callback when a shutdown of the connection occurs (EOF)
+void Serial::SetShutdownCallback(SerialShutdownCallback cb) {
+  cb_shutdown_ = cb;
 }
 
 // Open a serial port
@@ -39,7 +49,12 @@ bool Serial::Open(const std::string& port_name, unsigned int baud_rate,
   boost::asio::serial_port_base::flow_control option_flow,
   boost::asio::serial_port_base::stop_bits option_stop) {
   // Open the port with the given options
-  port_.open(port_name);
+  try {
+    port_.open(port_name);
+  } catch(const std::exception& e) {
+    return false;
+  }
+  // Double check things went ok
   if (!port_.is_open())
     return false;
   // Set the serial port options
@@ -66,6 +81,7 @@ void Serial::Close() {
   if (!IsOpen()) return;
   asio_.post(boost::bind(&boost::asio::serial_port::close, &port_));
   asio_.stop();
+  asio_.reset();
   thread_.join();
 }
 
@@ -77,20 +93,27 @@ void Serial::ReadStart() {
   // If we have specified a timeout
   if (timeout_ms_ > 0) {
     timer_.expires_from_now(boost::posix_time::milliseconds(timeout_ms_));
-    timer_.async_wait(boost::bind(&Serial::TimeoutCallback, this, boost::asio::placeholders::error));
+    timer_.async_wait(boost::bind(&Serial::TimeoutCallback, this,
+      boost::asio::placeholders::error));
   }
 }
 
 // Sotp a read action
-void Serial::ReadStop(const boost::system::error_code& error, size_t bytes_transferred) {
+void Serial::ReadStop(const boost::system::error_code& error, size_t bytes) {
+  // Timeout
   if (error == boost::asio::error::operation_aborted && timeout_) {
     if (cb_timeout_)
       cb_timeout_();
     timeout_ = false;
+  // EOF indicates
+  } else if (error == boost::asio::error::eof) {
+    Close();
+    if (cb_shutdown_)
+      cb_shutdown_();
   } else {
     timer_.cancel();
     if (!error && cb_read_)
-      cb_read_(buffer_, bytes_transferred);
+      cb_read_(buffer_, bytes);
   }
   // Start another read
   ReadStart();

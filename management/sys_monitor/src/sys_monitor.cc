@@ -99,7 +99,7 @@ void SysMonitor::AddWatchDog(ros::Duration const& timeout,
                                                     allowed_misses, fault_id));
     watch_dogs_.emplace(node_name, watchDog);
   } else {
-    ROS_INFO("SysMonitor::AddWatchDog() already exists for %s",
+    NODELET_INFO("AddWatchDog() already exists for %s",
                                                           node_name.c_str());
   }
 }
@@ -115,8 +115,7 @@ void SysMonitor::SetFaultState(unsigned int fault_id, bool adding_fault) {
       }
     }
   } else {
-    ROS_ERROR("SysMonitor: Fault %i wasn't found when setting fault state",
-                                                                      fault_id);
+    NODELET_ERROR("Fault %i wasn't found when setting fault state.", fault_id);
   }
 
   // Set the state appropriately
@@ -125,7 +124,7 @@ void SysMonitor::SetFaultState(unsigned int fault_id, bool adding_fault) {
       fault_state_.state = ff_msgs::FaultState::BLOCKED;
     } else if (num_current_blocking_fault_ < 0) {
       // This should never happen but add output just in case
-      ROS_ERROR("SysMonitor: number of blocking faults is negative!!");
+      NODELET_ERROR("Number of blocking faults is negative!!");
     } else {
       fault_state_.state = ff_msgs::FaultState::FAULT;
     }
@@ -147,25 +146,45 @@ void SysMonitor::HeartbeatCallback(ff_msgs::HeartbeatConstPtr const& hb) {
   if (watch_dogs_.count(hb->node) > 0) {
     WatchdogPtr wd = watch_dogs_.at(hb->node);
     wd->ResetTimer();
+    if (wd->nodelet_manager() == "") {
+      wd->nodelet_manager(hb->nodelet_manager);
+    }
 
     // Check to see if node restarted publishing its heartbeat
-    if (wd->IsFaultOccurring()) {
-      wd->ResetFaultOccurring();
-      RemoveFault(wd->GetFaultId());
+    if (wd->hb_fault_occurring()) {
+      wd->hb_fault_occurring(false);
+      RemoveFault(wd->fault_id());
     }
 
     // Get last heartbeat for fault comparison
-    ff_msgs::HeartbeatConstPtr previous_hb = wd->GetPreviousHeartbeat();
+    ff_msgs::HeartbeatConstPtr previous_hb = wd->previous_hb();
+
+    // Check if nodelet was unloaded and has restarted. Need to remove faults
+    // from previous heartbeat
+    if (wd->unloaded()) {
+      wd->unloaded(false);
+      for (i = 0; i < previous_hb->faults.size(); i++) {
+        RemoveFault(previous_hb->faults[i].id);
+      }
+      previous_hb = NULL;
+    }
+    // Set previous hb to null so that we don't compare the faults with the last
+    // time the nodelet was run
 
     // Check to see if this is the first heartbeat from the node
     if (!previous_hb) {
-      wd->SetPreviousHeartbeat(hb);
+      wd->previous_hb(hb);
+      // Add all the faults in the heartbeat
+      for (i = 0; i < hb->faults.size(); i++) {
+        AddFault(hb->faults[i]);
+        PublishFaultResponse(hb->faults[i].id);
+      }
       return;
     }
 
     // Check to see if there were and are no faults
     if (previous_hb->faults.size() == 0 && hb->faults.size() == 0) {
-      wd->SetPreviousHeartbeat(hb);
+      wd->previous_hb(hb);
       return;
     }
 
@@ -207,7 +226,7 @@ void SysMonitor::HeartbeatCallback(ff_msgs::HeartbeatConstPtr const& hb) {
     }
 
     // Set previous heartbeat for fault comparison on next heartbeat
-    wd->SetPreviousHeartbeat(hb);
+    wd->previous_hb(hb);
   } else {
     // TODO(Katie) possibly remove this
     bool found = false;
@@ -219,7 +238,7 @@ void SysMonitor::HeartbeatCallback(ff_msgs::HeartbeatConstPtr const& hb) {
     }
 
     if (!found) {
-      ROS_WARN("SysMonitor: heartbeat unrecognized from %s!", hb->node.c_str());
+      NODELET_WARN("Heartbeat unrecognized from %s!", hb->node.c_str());
       unwatched_heartbeats_.push_back(hb->node);
     }
   }
@@ -228,14 +247,11 @@ void SysMonitor::HeartbeatCallback(ff_msgs::HeartbeatConstPtr const& hb) {
 void SysMonitor::Initialize(ros::NodeHandle *nh) {
   nh_ = *nh;
 
-  // Since the fault table must include the sys_monitor config, we have to set
-  // the path to where the sys monitor config file lives
-  std::string path = common::GetConfigDir();
-  path += "/management/";
-  config_params_.SetPath(path.c_str());
+  // Add robot config before setting the path
+  config_params_.AddFile("context.config");
 
   // Add config files to config reader
-  config_params_.AddFile("fault_table.config");
+  config_params_.AddFile("management/fault_table.config");
 
   if (!ReadParams()) {
     exit(EXIT_FAILURE);
@@ -248,6 +264,14 @@ void SysMonitor::Initialize(ros::NodeHandle *nh) {
       [this](ros::TimerEvent e) {
       config_params_.CheckFilesUpdated(std::bind(&SysMonitor::ReadParams,
       this)); }, false, true);
+
+  // Create a startup timer. Timer will be used to check if all the heartbeats
+  // had started in the specified amount of time.
+  startup_timer_ = nh_.createTimer(ros::Duration(startup_time_),
+                                   &SysMonitor::StartupTimerCallback,
+                                   this,
+                                   true,
+                                   true);
 
   sub_hb_ = nh_.subscribe(TOPIC_HEARTBEAT, sub_queue_size_,
                                           &SysMonitor::HeartbeatCallback, this);
@@ -264,6 +288,12 @@ void SysMonitor::Initialize(ros::NodeHandle *nh) {
                     TOPIC_MANAGEMENT_SYS_MONITOR_STATE, pub_queue_size_, true);
 
   fault_state_.state = ff_msgs::FaultState::FUNCTIONAL;
+
+  // Set up service
+  unload_load_nodelet_service_ = nh_.advertiseService(
+                            SERVICE_MANAGEMENT_SYS_MONITOR_UNLOAD_LOAD_NODELET,
+                            &SysMonitor::NodeletService, this);
+
   // Publish fault state when first starting up
   PublishFaultState();
 
@@ -272,9 +302,7 @@ void SysMonitor::Initialize(ros::NodeHandle *nh) {
 
   num_current_blocking_fault_ = 0;
 
-  if (DEBUG) {
-    OutputFaultTables();
-  }
+  OutputFaultTables();
 }
 
 // Function used for debugging purposes only
@@ -284,7 +312,7 @@ void SysMonitor::OutputFaultTables() {
   bool blocking;
 
   // Output all faults first
-  ROS_INFO("SysMonitor: all faults: ");
+  NODELET_DEBUG("All faults: ");
   for (unsigned int i = 0; i < fault_config_.faults.size(); i++) {
     subsys = fault_config_.subsystems[fault_config_.faults[i].subsystem];
     node = fault_config_.nodes[fault_config_.faults[i].node];
@@ -306,7 +334,7 @@ void SysMonitor::OutputFaultTables() {
       blocking_str = "false";
     }
 
-    ROS_INFO_STREAM("fault: " <<
+    NODELET_DEBUG_STREAM("fault: " <<
                 "\nid: " << fault_config_.faults[i].id <<
                 "\nsubsys: " <<  subsys.c_str() <<
                 "\nnode: " << node.c_str() <<
@@ -317,10 +345,14 @@ void SysMonitor::OutputFaultTables() {
   }
 
   // Output heartbeat tables second
-  ROS_INFO("SysMonitor: heartbeat faults: ");
+  NODELET_DEBUG("Heartbeat faults: ");
   typedef std::map<std::string, WatchdogPtr>::iterator it_type;
   for (it_type it = watch_dogs_.begin(); it != watch_dogs_.end(); it++) {
-    it->second->OutputHeartbeatFault(it->first);
+    NODELET_DEBUG_STREAM("hb fault: " <<
+                  "\nid: " << it->second->fault_id() <<
+                  "\nnode name: " << it->first <<
+                  "\nnode type: " << it->second->nodelet_type() <<
+                  "\nmisses: " << it->second->misses_allowed());
   }
 }
 
@@ -340,13 +372,37 @@ void SysMonitor::PublishFaultState() {
 
 void SysMonitor::PublishFaultResponse(unsigned int fault_id) {
   if (all_faults_.count(fault_id)) {
-    // Don't publish command if it is a noop
-    if (all_faults_.at(fault_id)->response_->cmd_name !=
-                                    ff_msgs::CommandConstants::CMD_NAME_NO_OP) {
-      PublishCmd(all_faults_.at(fault_id)->response_);
+    // Don't publish command if it is a warning
+    if (!all_faults_.at(fault_id)->warning_) {
+      ff_msgs::CommandStampedConstPtr cmd = all_faults_.at(fault_id)->response_;
+      // Check for unload since it doesn't to send the command to the executive
+      // just to have the executive call the system monitor service
+      if (cmd->cmd_name == ff_msgs::CommandConstants::CMD_NAME_UNLOAD_NODELET) {
+        // Need to check the command is formatted correctly
+        if (cmd->args.size() != 2 ||
+            cmd->args[0].data_type != ff_msgs::CommandArg::DATA_TYPE_STRING ||
+            cmd->args[1].data_type != ff_msgs::CommandArg::DATA_TYPE_STRING) {
+          NODELET_ERROR("Malformed unload command for fault %i.", fault_id);
+        } else {
+          UnloadNodelet(cmd->args[0].s, cmd->args[1].s);
+        }
+      } else if (cmd->cmd_name != ff_msgs::CommandConstants::CMD_NAME_NO_OP) {
+        // Don't publish command if it is a noop
+        PublishCmd(all_faults_.at(fault_id)->response_);
+      }
     }
   } else {
-    ROS_FATAL("SysMonitor: Fault id %i unrecognized!", fault_id);
+    NODELET_FATAL("Fault id %i unrecognized!", fault_id);
+  }
+}
+
+void SysMonitor::StartupTimerCallback(ros::TimerEvent const& te) {
+  for (auto it = watch_dogs_.begin(); it != watch_dogs_.end(); ++it) {
+    if (!it->second->heartbeat_started()) {
+      AddFault(it->second->fault_id());
+      PublishFaultResponse(it->second->fault_id());
+      it->second->hb_fault_occurring(true);
+    }
   }
 }
 
@@ -358,18 +414,45 @@ bool SysMonitor::ReadParams() {
 
   // Read config files into lua
   if (!config_params_.ReadFiles()) {
-    ROS_FATAL("Error loading system monitor parameters.");
+    NODELET_FATAL("Error loading system monitor parameters.");
     return false;
   }
 
+  // Get startup time. Used to check if all the heartbeats have started within
+  // the specified startup time.
+  if (!config_params_.GetUInt("startup_time_secs", &startup_time_)) {
+    NODELET_FATAL("Unable to read startup time.");
+    return false;
+  }
+
+  // Get the list of nodes not running so that we don't monitor or trigger the
+  // faults associated with those nodes
+  std::vector<std::string> nodes_not_running;
+  if (config_params_.CheckValExists("nodes_not_running")) {
+    std::string temp_node;
+    config_reader::ConfigReader::Table nodes_not_running_tbl(&config_params_,
+                                                          "nodes_not_running");
+    int tbl_size = nodes_not_running_tbl.GetSize() + 1;
+    for (int i = 1; i < tbl_size; i++) {
+      nodes_not_running_tbl.GetStr(i, &temp_node);
+      nodes_not_running.push_back(temp_node);
+    }
+  }
+
   // Read in all faults
+  // Check fault table exists
+  if (!config_params_.CheckValExists("subsystems")) {
+    NODELET_FATAL("Unable to find/read the fault table.");
+    return false;
+  }
+
   config_reader::ConfigReader::Table subsystems_tbl(&config_params_,
                                                                   "subsystems");
   unsigned int fault_id, misses;
   double timeout;
   int i, j, k, nodes_tbl_size, faults_tbl_size;
   std::string subsys_name, node_name, fault_description;
-  bool warning, blocking;
+  bool blocking, warning, found;
 
   // Go through all the subsystems
   int subsystems_tbl_size = subsystems_tbl.GetSize() + 1;
@@ -377,12 +460,19 @@ bool SysMonitor::ReadParams() {
   for (i = 1; i < subsystems_tbl_size; i++) {
     config_reader::ConfigReader::Table subsystem_tbl(&subsystems_tbl, i);
     if (!subsystem_tbl.GetStr("name", &subsys_name)) {
-      ROS_FATAL("SysMonitor: Unable to read name at %i in subsys table.", i);
+      NODELET_FATAL("Unable to read name at %i in subsys table", i);
       return false;
     }
 
     // Add subsystem name to the config list of subsystem names
     fault_config_.subsystems.emplace_back(subsys_name);
+
+    // Check nodes table exists
+    if (!subsystem_tbl.CheckValExists("nodes")) {
+      NODELET_FATAL("Unable to find nodes table in %s's table.",
+                                                          subsys_name.c_str());
+      return false;
+    }
 
     config_reader::ConfigReader::Table nodes_tbl(&subsystem_tbl, "nodes");
     // Go through all the nodes
@@ -391,13 +481,32 @@ bool SysMonitor::ReadParams() {
     for (j = 1; j < nodes_tbl_size; j++) {
       config_reader::ConfigReader::Table node_tbl(&nodes_tbl, j);
       if (!node_tbl.GetStr("name", &node_name)) {
-        ROS_FATAL("SysMonitor: Unable to read name at %i in %s's node table.",
+        NODELET_FATAL("Unable to read name at %i in %s's node table.",
                                                         j, subsys_name.c_str());
         return false;
       }
 
+      found = false;
+      for (unsigned int m = 0; m < nodes_not_running.size(); m++) {
+        if (node_name == nodes_not_running[m]) {
+          found = true;
+          break;
+        }
+      }
+
+      if (found) {
+        continue;
+      }
+
       // Add node name to the config list of node names
       fault_config_.nodes.emplace_back(node_name);
+
+      // Check faults table exists
+      if (!node_tbl.CheckValExists("faults")) {
+        NODELET_FATAL("Unable to read the fault table for node %s.",
+                                                            node_name.c_str());
+        return false;
+      }
 
       config_reader::ConfigReader::Table faults_tbl(&node_tbl, "faults");
       // Go through all faults
@@ -409,8 +518,8 @@ bool SysMonitor::ReadParams() {
         ff_msgs::CommandStampedPtr response_cmd(new ff_msgs::CommandStamped());
 
         if (fault_entry.GetUInt("id", &fault_id) &&
-            fault_entry.GetBool("warning", &warning) &&
             fault_entry.GetBool("blocking", &blocking) &&
+            fault_entry.GetBool("warning", &warning) &&
             fault_entry.GetStr("description", &fault_description) &&
             ReadCommand(&fault_entry, response_cmd)) {
           ff_msgs::FaultInfo fault_info;
@@ -428,6 +537,7 @@ bool SysMonitor::ReadParams() {
 
           auto fault = std::make_shared<SysMonitor::Fault>(node_name,
                                                            blocking,
+                                                           warning,
                                                            response_cmd);
 
           all_faults_.emplace(fault_id, fault);
@@ -441,13 +551,13 @@ bool SysMonitor::ReadParams() {
                 heartbeat.GetUInt("misses", &misses)) {
               AddWatchDog(ros::Duration(timeout), node_name, misses, fault_id);
             } else {
-              ROS_FATAL("SysMonitor: Unable to add heartbeat for node %s.",
+              NODELET_FATAL("Unable to add heartbeat for node %s.",
                                                             node_name.c_str());
               return false;
             }
           }
         } else {
-          ROS_FATAL("SysMonitor: Unable to read fault at %i in %s's table.",
+          NODELET_FATAL("Unable to read fault at %i in %s's table.",
                                                           k, node_name.c_str());
           return false;
         }
@@ -455,6 +565,45 @@ bool SysMonitor::ReadParams() {
     }
   }
 
+  // Extract nodelet type and add to watchdog map
+  if (config_params_.CheckValExists("nodelet_types")) {
+    std::string type = "";
+    config_reader::ConfigReader::Table types_tbl(&config_params_,
+                                                              "nodelet_types");
+    int types_tbl_size = types_tbl.GetSize() + 1;
+    for (i = 1; i < types_tbl_size; i++) {
+      config_reader::ConfigReader::Table type_entry(&types_tbl, i);
+      if (!type_entry.GetStr("name", &node_name)) {
+        NODELET_WARN("Name not found at %i in types table.", i);
+        continue;
+      }
+
+      if (!type_entry.GetStr("type", &type)) {
+        NODELET_WARN("Type not found at %i in types table.", i);
+        continue;
+      }
+
+      found = false;
+      for (unsigned int m = 0; m < nodes_not_running.size(); m++) {
+        if (node_name == nodes_not_running[m]) {
+          found = true;
+          break;
+        }
+      }
+
+      if (found) {
+        continue;
+      }
+
+      // Check to make sure node got added to watchdog maps
+      if (watch_dogs_.count(node_name) > 0) {
+        watch_dogs_.at(node_name)->nodelet_type(type);
+      } else {
+        NODELET_WARN("Couldn't add type, %s wasn't in fault table.",
+                                                            node_name.c_str());
+      }
+    }
+  }
 
   return true;
 }
@@ -464,6 +613,7 @@ bool SysMonitor::ReadCommand(config_reader::ConfigReader::Table *entry,
   std::string cmd_name;
   config_reader::ConfigReader::Table command(entry, "response");
   if (!command.GetStr("name", &cmd_name)) {
+    NODELET_FATAL("Command name not specified.");
     return false;
   }
 
@@ -482,7 +632,7 @@ bool SysMonitor::ReadCommand(config_reader::ConfigReader::Table *entry,
       config_reader::ConfigReader::Table arg(&args, (i + 1));
       // First element in table is the type
       if (!arg.GetUInt(1, &type)) {
-        ROS_FATAL("SysMonitor: First command argument value is not a uint!");
+        NODELET_FATAL("First command argument value is not a uint");
         return false;
       }
 
@@ -492,7 +642,7 @@ bool SysMonitor::ReadCommand(config_reader::ConfigReader::Table *entry,
           {
             bool val;
             if (!arg.GetBool(2, &val)) {
-              ROS_FATAL("SysMonitor: Expected command argument to be a bool!");
+              NODELET_FATAL("Expected command argument to be a bool!");
               return false;
             }
             cmd->args[i].data_type = CommandArg::DATA_TYPE_BOOL;
@@ -503,7 +653,7 @@ bool SysMonitor::ReadCommand(config_reader::ConfigReader::Table *entry,
           {
             double val;
             if (!arg.GetReal(2, &val)) {
-              ROS_FATAL("SysMonitor: Expected command argument to be a double");
+              NODELET_FATAL("Expected command argument to be a double");
               return false;
             }
             cmd->args[i].data_type = CommandArg::DATA_TYPE_DOUBLE;
@@ -514,7 +664,7 @@ bool SysMonitor::ReadCommand(config_reader::ConfigReader::Table *entry,
           {
             float val;
             if (!arg.GetReal(2, &val)) {
-              ROS_FATAL("SysMonitor: Expected command argument to be a float.");
+              NODELET_FATAL("Expected command argument to be a float.");
               return false;
             }
             cmd->args[i].data_type = CommandArg::DATA_TYPE_FLOAT;
@@ -525,7 +675,7 @@ bool SysMonitor::ReadCommand(config_reader::ConfigReader::Table *entry,
           {
             int val;
             if (!arg.GetInt(2, &val)) {
-              ROS_FATAL("SysMonitor: Expected command argument to be an int.");
+              NODELET_FATAL("Expected command argument to be an int.");
               return false;
             }
             cmd->args[i].data_type = CommandArg::DATA_TYPE_INT;
@@ -536,7 +686,7 @@ bool SysMonitor::ReadCommand(config_reader::ConfigReader::Table *entry,
           {
             int64_t val;
             if (!arg.GetLongLong(2, &val)) {
-              ROS_FATAL("SysMonitor: Expected command argument to be an int.");
+              NODELET_FATAL("Expected command argument to be an int.");
               return false;
             }
             cmd->args[i].data_type = CommandArg::DATA_TYPE_LONGLONG;
@@ -547,7 +697,7 @@ bool SysMonitor::ReadCommand(config_reader::ConfigReader::Table *entry,
           {
             std::string val;
             if (!arg.GetStr(2, &val)) {
-              ROS_FATAL("SysMonitor: Expected command argument to be a string");
+              NODELET_FATAL("Expected command argument to be a string");
               return false;
             }
             cmd->args[i].data_type = CommandArg::DATA_TYPE_STRING;
@@ -562,7 +712,7 @@ bool SysMonitor::ReadCommand(config_reader::ConfigReader::Table *entry,
             for (j = 0; j < 3; ++j) {
               // Index to get vector values in table starts at 2
               if (!arg.GetReal((j + 2), &val)) {
-                ROS_FATAL("SysMonitor: Expected cmd argument to be a double.");
+                NODELET_FATAL("Expected command argument to be a double.");
                 return false;
               }
               cmd->args[i].vec3d[j] = val;
@@ -577,7 +727,7 @@ bool SysMonitor::ReadCommand(config_reader::ConfigReader::Table *entry,
             for (j = 0; j < 9; ++j) {
               // Index in get matrix values in table starts at 2
               if (!arg.GetReal((j + 2), &val)) {
-                ROS_FATAL("SysMonitor: Expected cmd argument to be a float.");
+                NODELET_FATAL("Expected command argument to be a float.");
                 return false;
               }
               cmd->args[i].mat33f[j] = val;
@@ -585,13 +735,121 @@ bool SysMonitor::ReadCommand(config_reader::ConfigReader::Table *entry,
           }
           break;
         default:
-          ROS_FATAL("SysMonitor: Type for command argument unrecognized!");
+          NODELET_FATAL("SysMonitor: Type for command argument unrecognized!");
           return false;
       }
     }
   }
 
   return true;
+}
+
+bool SysMonitor::NodeletService(ff_msgs::UnloadLoadNodelet::Request &req,
+                                ff_msgs::UnloadLoadNodelet::Response &res) {
+  bool successful = true;
+  if (req.load) {
+    res.result = LoadNodelet(req);
+  } else {
+    res.result = UnloadNodelet(req.name, req.manager_name);
+  }
+
+  if (res.result != ff_msgs::UnloadLoadNodelet::Response::SUCCESSFUL) {
+    successful = false;
+    NODELET_ERROR("Unload/load nodelet failed with result %i.", res.result);
+  }
+  return successful;
+}
+
+int SysMonitor::LoadNodelet(ff_msgs::UnloadLoadNodelet::Request &req) {
+  std::string platform = GetPlatform();
+  if (platform == "") {
+    load_service_.request.name = "/" + req.name;
+  } else {
+    load_service_.request.name = "/" + platform + "/" + req.name;
+  }
+
+  load_service_.request.remap_source_args = req.remap_source_args;
+  load_service_.request.remap_target_args = req.remap_target_args;
+  load_service_.request.my_argv = req.my_argv;
+  load_service_.request.bond_id = req.bond_id;
+
+  // Extract manager from watchdog map if not specified in service
+  std::string manager;
+  if (req.manager_name == "") {
+    // Check if node name was added to the heartbeat map
+    if (watch_dogs_.count(req.name) > 0) {
+      manager = watch_dogs_.at(req.name)->nodelet_manager();
+      if (manager == "") {
+        return ff_msgs::UnloadLoadNodelet::Response::MANAGER_NAME_MISSING;
+      }
+    } else {
+      return ff_msgs::UnloadLoadNodelet::Response::NODE_NOT_IN_MAP;
+    }
+  } else {
+    manager = req.manager_name;
+  }
+
+  // Extract type from watchdog map if not specified in service
+  if (req.type == "") {
+    // Check if node name was added to the heartbeat map
+    if (watch_dogs_.count(req.name) > 0) {
+      load_service_.request.type = watch_dogs_.at(req.name)->nodelet_type();
+      if (load_service_.request.type == "") {
+        return ff_msgs::UnloadLoadNodelet::Response::TYPE_MISSING;
+      }
+    } else {
+      return ff_msgs::UnloadLoadNodelet::Response::NODE_NOT_IN_MAP;
+    }
+  } else {
+    load_service_.request.type = req.type;
+  }
+
+  if (!ros::service::call(manager + "/load_nodelet", load_service_)) {
+    NODELET_FATAL("Unable to load nodelet %s in %s manager.",
+                                            req.name.c_str(), manager.c_str());
+    return ff_msgs::UnloadLoadNodelet::Response::ROS_SERVICE_FAILED;
+  }
+  return ff_msgs::UnloadLoadNodelet::Response::SUCCESSFUL;
+}
+
+int SysMonitor::UnloadNodelet(std::string const& nodelet,
+                              std::string const& manager) {
+  std::string platform = GetPlatform();
+  if (platform == "") {
+    unload_service_.request.name = "/" + nodelet;
+  } else {
+    unload_service_.request.name = "/" + platform + "/" + nodelet;
+  }
+
+  std::string manager_name = "";
+  // Check if node name was added to the heartbeat map
+  if (watch_dogs_.count(nodelet) > 0) {
+    // If manager wasn't specified, extract it from the watch dogs map
+    if (manager == "") {
+      manager_name = watch_dogs_.at(nodelet)->nodelet_manager();
+      if (manager_name == "") {
+        return ff_msgs::UnloadLoadNodelet::Response::MANAGER_NAME_MISSING;
+      }
+    } else {
+      manager_name = manager;
+    }
+  } else {
+    return ff_msgs::UnloadLoadNodelet::Response::NODE_NOT_IN_MAP;
+  }
+
+  if (!ros::service::call(manager_name + "/unload_nodelet", unload_service_)) {
+    NODELET_FATAL("Unable to unload nodet %s in %s manager.",
+                                              nodelet.c_str(), manager.c_str());
+    return ff_msgs::UnloadLoadNodelet::Response::ROS_SERVICE_FAILED;
+  }
+
+  // Stop timer so we don't get a heartbeat missing fault
+  watch_dogs_.at(nodelet)->StopTimer();
+  // Set unloaded to true so that if it gets restarted, we remove the previous
+  // faults
+  watch_dogs_.at(nodelet)->unloaded(true);
+
+  return ff_msgs::UnloadLoadNodelet::Response::SUCCESSFUL;
 }
 
 /**************************** Watchdog Functions *****************************/
@@ -601,49 +859,85 @@ SysMonitor::Watchdog::Watchdog(SysMonitor *const sys_monitor,
                                 uint const fault_id) :
   monitor_(sys_monitor),
   missed_count_(0),
-  missed_allowed_(allowed_misses),
+  misses_allowed_(allowed_misses),
   fault_id_(fault_id),
   hb_fault_occurring_(false),
+  heartbeat_started_(false),
+  unloaded_(false),
+  nodelet_manager_(""),
   previous_hb_() {
   timer_ = monitor_->nh_.createTimer(timeout,
-                      &SysMonitor::Watchdog::TimerCallBack, this, false, true);
+                      &SysMonitor::Watchdog::TimerCallBack, this, false, false);
 }
 
-uint SysMonitor::Watchdog::GetFaultId() {
+uint SysMonitor::Watchdog::fault_id() {
   return fault_id_;
 }
 
-ff_msgs::HeartbeatConstPtr SysMonitor::Watchdog::GetPreviousHeartbeat() {
+uint SysMonitor::Watchdog::misses_allowed() {
+  return misses_allowed_;
+}
+
+ff_msgs::HeartbeatConstPtr SysMonitor::Watchdog::previous_hb() {
   return previous_hb_;
 }
 
-bool SysMonitor::Watchdog::IsFaultOccurring() {
+bool SysMonitor::Watchdog::hb_fault_occurring() {
   return hb_fault_occurring_;
 }
 
-void SysMonitor::Watchdog::OutputHeartbeatFault(std::string node_name) {
-  ROS_INFO_STREAM("hb fault: " <<
-                  "\nid: " << fault_id_ <<
-                  "\nnode name: " << node_name <<
-                  "\nmisses: " << missed_allowed_);
+bool SysMonitor::Watchdog::heartbeat_started() {
+  return heartbeat_started_;
 }
 
-void SysMonitor::Watchdog::ResetFaultOccurring() {
-  hb_fault_occurring_ = false;
+bool SysMonitor::Watchdog::unloaded() {
+  return unloaded_;
+}
+
+std::string SysMonitor::Watchdog::nodelet_manager() {
+  return nodelet_manager_;
+}
+
+std::string SysMonitor::Watchdog::nodelet_type() {
+  return nodelet_type_;
+}
+
+void SysMonitor::Watchdog::hb_fault_occurring(bool occurring) {
+  hb_fault_occurring_ = occurring;
+}
+
+void SysMonitor::Watchdog::nodelet_manager(std::string manager_name) {
+  nodelet_manager_ = manager_name;
+}
+
+void SysMonitor::Watchdog::nodelet_type(std::string type) {
+  nodelet_type_ = type;
+}
+
+void SysMonitor::Watchdog::unloaded(bool is_unloaded) {
+  unloaded_ = is_unloaded;
 }
 
 void SysMonitor::Watchdog::ResetTimer() {
+  if (!heartbeat_started_) {
+    heartbeat_started_ = true;
+  }
+
   timer_.stop();
   timer_.start();
   missed_count_ = 0;
 }
 
-void SysMonitor::Watchdog::SetPreviousHeartbeat(ff_msgs::HeartbeatConstPtr hb) {
+void SysMonitor::Watchdog::StopTimer() {
+  timer_.stop();
+}
+
+void SysMonitor::Watchdog::previous_hb(ff_msgs::HeartbeatConstPtr hb) {
   previous_hb_ = hb;
 }
 
 void SysMonitor::Watchdog::TimerCallBack(ros::TimerEvent const& te) {
-  if (missed_count_++ >= missed_allowed_) {
+  if (missed_count_++ >= misses_allowed_) {
     monitor_->AddFault(fault_id_);
     monitor_->PublishFaultResponse(fault_id_);
     // Stop timer so the fault is only triggered once. Timer will be restarted
@@ -653,10 +947,13 @@ void SysMonitor::Watchdog::TimerCallBack(ros::TimerEvent const& te) {
   }
 }
 
-SysMonitor::Fault::Fault(std::string const& node_name, bool const blocking,
-                                          ff_msgs::CommandStampedPtr response) :
+SysMonitor::Fault::Fault(std::string const& node_name,
+                         bool const blocking,
+                         bool const warning,
+                         ff_msgs::CommandStampedPtr response) :
   node_name_(node_name),
   blocking_(blocking),
+  warning_(warning),
   response_(response) {
 }
 }  // namespace sys_monitor

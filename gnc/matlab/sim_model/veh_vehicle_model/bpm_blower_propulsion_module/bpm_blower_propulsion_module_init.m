@@ -25,9 +25,10 @@ bpm_use_bpm                         = single(0);                            %[fl
 %% impeller motor parameters
 %Maxon EC45flat-30W brushless motor with Hall sensors
 bpm_imp_ctl_ts                      = 0.016;                                 %[sec] Time step size for the impeller speed PID controller
-bpm_imp_ctl_kp                      = single(0.015);                        %[-] P gain for impeller speed PID controller
-bpm_imp_ctl_ki                      = single(0.40);                         %[-] I gain for impeller speed PID controller
-bpm_imp_ctl_kd                      = single(0.001);                        %[-] D gain for impeller speed PID controller
+bpm_imp_ctl_kp                      = single(0.2);                        %[-] P gain for impeller speed PID controller
+bpm_imp_ctl_ki                      = single(0.1);                         %[-] I gain for impeller speed PID controller
+bpm_imp_ctl_kd                      = single(0.05);                        %[-] D gain for impeller speed PID controller
+bpm_rate_limit                      = single(200*2*pi/60);                  % [rad/sec] Rate limit change of impeller speed command
 bpm_imp_ctl_filt_n                  = single(1.0);                          %[-] Filter Coefficient for impeller speed PID controller 
 bpm_imp_speed_filt_num              = single(1.0);                          %[-] Transfer function numerator for current impeller speed feedback
 bpm_imp_speed_filt_den              = single(1.0);                          %[-] Transfer function denominator for current impeller speed feedback

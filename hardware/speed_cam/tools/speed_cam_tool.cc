@@ -71,6 +71,9 @@ void SpeedCallback(mavlink_vision_speed_estimate_t const& message) {
   msg_speed_ = message;
 }
 
+void StatusCallback(mavlink_heartbeat_t const& message) {
+}
+
 // Print an error message and fail gracefully
 bool Error(std::string const& msg) {
   std::cerr << "Error: " << msg << std::endl;
@@ -142,9 +145,9 @@ bool MainMenu(speed_cam::SpeedCam &interface) {
       std::lock_guard < std::mutex > guard(mutex_imu_);
       std::cout << "Time : " << static_cast<double>(msg_imu_.time_usec) / 1e6 << std::endl;
       std::cout << "Acceleration (m/sec^2)" << std::endl;
-      std::cout << "- X : " << static_cast<double>(msg_imu_.xacc) * MILLIG_TO_MPSECSQ << std::endl;
-      std::cout << "- Y : " << static_cast<double>(msg_imu_.yacc) * MILLIG_TO_MPSECSQ << std::endl;
-      std::cout << "- Z : " << static_cast<double>(msg_imu_.zacc) * MILLIG_TO_MPSECSQ << std::endl;
+      std::cout << "- X : " << static_cast<double>(msg_imu_.xacc) * MILLIMSS_TO_MSS << std::endl;
+      std::cout << "- Y : " << static_cast<double>(msg_imu_.yacc) * MILLIMSS_TO_MSS << std::endl;
+      std::cout << "- Z : " << static_cast<double>(msg_imu_.zacc) * MILLIMSS_TO_MSS << std::endl;
       std::cout << "Angular velocity (rads/sec)" << std::endl;
       std::cout << "- X : " << static_cast<double>(msg_imu_.xgyro) * MILLIRADS_TO_RADS << std::endl;
       std::cout << "- Y : " << static_cast<double>(msg_imu_.ygyro) * MILLIRADS_TO_RADS << std::endl;
@@ -234,9 +237,11 @@ int main(int argc, char *argv[]) {
     std::bind(speed_cam::OpticalFlowCallback, std::placeholders::_1);
   speed_cam::SpeedCamSpeedCallback cb_speed =
     std::bind(speed_cam::SpeedCallback, std::placeholders::_1);
+  speed_cam::SpeedCamStatusCallback cb_status =
+    std::bind(speed_cam::StatusCallback, std::placeholders::_1);
 
   // Create the interface to the perching arm
-  speed_cam::SpeedCam interface(cb_imu, cb_camera_image, cb_optical_flow, cb_speed);
+  speed_cam::SpeedCam interface(cb_imu, cb_camera_image, cb_optical_flow, cb_speed, cb_status);
   if (interface.Initialize(port, baud) != speed_cam::RESULT_SUCCESS) {
     speed_cam::Error("Could not open serial port");
     return 1;

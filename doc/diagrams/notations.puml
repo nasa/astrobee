@@ -1,0 +1,65 @@
+@startuml
+
+skinparam componentStyle uml2
+
+title Notations and colors for Astrobee nodes
+
+!define SHOW_ALL_TYPES true
+!include "common.puml"
+
+skinparam nodeBackgroundColor COLOR_9PASTEL_1
+skinparam frameBackgroundColor COLOR_9PASTEL_9
+left to right direction
+
+folder "Component (ROS Nodes) color legend" as l1 {
+node "Processor (LLP,MLP,HLP)" {
+  frame NodeletManager {
+    com_node(Communication Node)
+    mgt_node(Management Node)
+    mob_node(Mobility Node)
+    loc_node(Localization Node)
+    gnc_node(GN&C Node)
+    drv_node(Drive Node)
+
+    message(MyMsg, Namespace::Type, /robot/subsystem/topic)
+    action(SomeAction, Namespace::Type, /robot/subsystem/topic)
+  }
+}
+}
+
+folder "Interfaces (Messages, Services, Actions) Legend" as l2 {
+
+  gnc_node(EKF)
+  gnc_node(CTL)
+  message(EkfState, ff_msgs::EkfState, /gnc/ekf)
+  EKF --> EkfState
+  EkfState --> CTL
+
+  action(DockAction, ff_msgs::DockAction, /proc/dock)
+  mgt_node(EXEC)
+  mob_node(DOCK)
+  ' Note the double << and >> to render the arrow plain
+  EXEC <<-->> DockAction
+  ' The node providing an action is linked to it without arrows
+  DockAction -- DOCK
+
+  service(SetInput, ff_msgs::Something, /loc/set_input)
+  mob_node(PERCH)
+  loc_node(LOC_MGR)
+  ' Note the |> sign to make an empty arrow
+  PERCH --|> SetInput
+  ' The node providing a service is linked to it without arrows
+  SetInput -- LOC_MGR
+
+  latching_msg(SpeedGain, ff_msgs::SpeedGain, /gnc/speed)
+  mob_node(CHORE)
+  gnc_node(FAM)
+  CHORE --> SpeedGain
+  SpeedGain --> FAM
+
+}
+
+' "Order" the two legend folders
+l1 --[hidden]left--> l2
+
+@enduml

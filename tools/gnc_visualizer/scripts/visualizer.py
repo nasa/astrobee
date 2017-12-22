@@ -21,6 +21,7 @@ import plot_types
 
 import rospy
 import rosgraph
+from ff_hw_msgs.msg import PmcCommand
 from ff_msgs.msg import EkfState, FamCommand, ControlState, CommandStamped
 from ff_msgs.srv import SetBool
 from geometry_msgs.msg import PoseStamped
@@ -163,6 +164,22 @@ shaper_data = {'shaper_time':        lambda x: time.time() - start_time,
                'shaper_rot_y':       lambda x: quat_to_eulers(x.pose.orientation)[1] * 180 / pi,
                'shaper_rot_z':       lambda x: quat_to_eulers(x.pose.orientation)[2] * 180 / pi}
 
+pmc_data = {'pmc_time':        lambda x: time.time() - start_time,
+            'pmc_1_motor_speed':  lambda x: x.goals[0].motor_speed,
+            'pmc_1_nozzle_1':  lambda x: ord(x.goals[0].nozzle_positions[0]),
+            'pmc_1_nozzle_2':  lambda x: ord(x.goals[0].nozzle_positions[1]),
+            'pmc_1_nozzle_3':  lambda x: ord(x.goals[0].nozzle_positions[2]),
+            'pmc_1_nozzle_4':  lambda x: ord(x.goals[0].nozzle_positions[3]),
+            'pmc_1_nozzle_5':  lambda x: ord(x.goals[0].nozzle_positions[4]),
+            'pmc_1_nozzle_6':  lambda x: ord(x.goals[0].nozzle_positions[5]),
+            'pmc_2_motor_speed':  lambda x: x.goals[1].motor_speed,
+            'pmc_2_nozzle_1':  lambda x: ord(x.goals[1].nozzle_positions[0]),
+            'pmc_2_nozzle_2':  lambda x: ord(x.goals[1].nozzle_positions[1]),
+            'pmc_2_nozzle_3':  lambda x: ord(x.goals[1].nozzle_positions[2]),
+            'pmc_2_nozzle_4':  lambda x: ord(x.goals[1].nozzle_positions[3]),
+            'pmc_2_nozzle_5':  lambda x: ord(x.goals[1].nozzle_positions[4]),
+            'pmc_2_nozzle_6':  lambda x: ord(x.goals[1].nozzle_positions[5]) }
+
 class TerminalView(QtGui.QGraphicsTextItem):
     def __init__(self, graphics_view):
         super(TerminalView, self).__init__("")
@@ -216,11 +233,13 @@ class Visualizer(QtGui.QMainWindow):
         self.log_text = ""
         self.data = dict()
         for d in ekf_data.keys() + truth_data.keys() + ml_data.keys() + of_data.keys() + \
-                 command_data.keys() + traj_data.keys() + shaper_data.keys():
+                 command_data.keys() + traj_data.keys() + shaper_data.keys() + pmc_data.keys():
             self.data[d] = np.full(ARRAY_SIZE, 1e-10)
 
         self.columns = [[plot_types.CtlPosPlot, plot_types.FeatureCountPlot, plot_types.ConfidencePlot, \
-                         plot_types.CommandStatusPlot], [plot_types.CtlRotPlot, plot_types.CovPlot]]
+                         plot_types.CommandStatusPlot], [plot_types.CtlRotPlot, plot_types.CovPlot], \
+                         [plot_types.Pmc1BlowerPlot, plot_types.Pmc2BlowerPlot, \
+                         plot_types.Pmc1NozzlePlot, plot_types.Pmc2NozzlePlot]]
         
         self.graphics_view = ParentGraphicsView()
         self.terminal_graphics_view = TerminalGraphicsView(self.graphics_view)
@@ -251,8 +270,10 @@ class Visualizer(QtGui.QMainWindow):
             self.layout.nextColumn()
 
         self.setWindowTitle('GNC Visualizer')
-        screen_resolution = QtCore.QCoreApplication.instance().desktop().screenGeometry()
-        self.resize(screen_resolution.width()/2,screen_resolution.height() - 100)
+
+        self.settings = QtCore.QSettings("NASA", "gnc_visualizer")
+        self.restoreGeometry(self.settings.value("geometry", "").toByteArray())
+        self.restoreState(self.settings.value("windowState", "").toByteArray())
 
         QtGui.qApp.installEventFilter(self)
         # make sure initial window size includes menubar
@@ -264,6 +285,11 @@ class Visualizer(QtGui.QMainWindow):
         self.timer = QtCore.QTimer()
         self.timer.timeout.connect(self.tick)
         self.timer.start(40)
+
+    def closeEvent(self, event):
+        self.settings.setValue("geometry", self.saveGeometry())
+        self.settings.setValue("windowState", self.saveState())
+        QtGui.QMainWindow.closeEvent(self, event)
 
     def startProcess(self):
         if self.launch_command != None:
@@ -387,7 +413,7 @@ class Visualizer(QtGui.QMainWindow):
                 colmenu.addAction("Delete Column", functools.partial(self.delete_column, i))
 
     def quit(self):
-        QtGui.QApplication.quit()
+        self.close()
 
     def toggle_paused(self):
         self.paused = not self.paused
@@ -542,6 +568,11 @@ class Visualizer(QtGui.QMainWindow):
             self.data[d] = np.roll(self.data[d], 1)
             self.data[d][0] = shaper_data[d](data)
 
+    def pmc_callback(self, data):
+        for d in pmc_data:
+            self.data[d] = np.roll(self.data[d], 1)
+            self.data[d][0] = pmc_data[d](data)
+
     def print_to_log(self, text, color):
         self.log_text += "<br /><font color='%s'>%s</font>" % (color, text)
         self.log_lines += 1
@@ -610,6 +641,7 @@ def main():
     rospy.Subscriber("/gnc/ctl/command", FamCommand, v.command_callback)
     rospy.Subscriber("/gnc/ctl/traj", ControlState, v.traj_callback)
     rospy.Subscriber("/gnc/ctl/shaper", ControlState, v.shaper_callback)
+    rospy.Subscriber("/hw/pmc/command", PmcCommand, v.pmc_callback)
     app.exec_()
     v.hide()
     v.stopProcess()

@@ -21,5 +21,6 @@
     <arg name="name" value="$(arg name)" />
     <arg name="manager" value="$(arg manager)" />
     <arg name="class" value="choreographer/ChoreographerNodelet" />
+    <arg name="debug" value="false" />
   </include>
 </launch>

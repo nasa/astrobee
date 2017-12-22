@@ -3,14 +3,14 @@
 //
 // Code generated for Simulink model 'est_estimator'.
 //
-// Model version                  : 1.1139
+// Model version                  : 1.1142
 // Simulink Coder version         : 8.11 (R2016b) 25-Aug-2016
-// C/C++ source code generated on : Wed May 17 14:42:31 2017
+// C/C++ source code generated on : Mon Dec  4 08:33:06 2017
 //
 #include "rtwtypes.h"
 #include "mglfbimobiechdbi_bitget.h"
 
-// Function for MATLAB Function: '<S78>/MATLAB Function2'
+// Function for MATLAB Function: '<S94>/MATLAB Function2'
 void mglfbimobiechdbi_bitget(uint32_T a, uint32_T c[17])
 {
   int32_T k;

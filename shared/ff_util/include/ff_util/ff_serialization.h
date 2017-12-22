@@ -28,33 +28,41 @@
 
 namespace ff_util {
 
-  // Write a SetZone request to a file
+class Serialization {
+ public:
+  // Write a ROS message to a file
   template < class RosMessage >
-  void WriteFile(std::string const& file_name, RosMessage const& msg) {
+  static bool WriteFile(std::string const& file_name, RosMessage const& msg) {
     std::ofstream ofs(file_name, std::ios::out | std::ios::binary);
+    if (!ofs.is_open())
+      return false;
     uint32_t serial_size = ros::serialization::serializationLength(msg);
     boost::shared_array < uint8_t > obuffer(new uint8_t[serial_size]);
     ros::serialization::OStream ostream(obuffer.get(), serial_size);
     ros::serialization::serialize(ostream, msg);
     ofs.write(reinterpret_cast < char* > (obuffer.get()), serial_size);
     ofs.close();
+    return true;
   }
-
-  // Read a SetZone request from a file
+  // Read a ROS message from a file
   template < class RosMessage >
-  void ReadFile(std::string const& file_name, RosMessage & msg) {
+  static bool ReadFile(std::string const& file_name, RosMessage & msg) {
     std::ifstream ifs(file_name, std::ios::in | std::ios::binary);
+    if (!ifs.is_open())
+      return false;
     ifs.seekg(0, std::ios::end);
     std::streampos end = ifs.tellg();
     ifs.seekg(0, std::ios::beg);
     std::streampos begin = ifs.tellg();
     uint32_t file_size = end - begin;
     boost::shared_array<uint8_t> ibuffer(new uint8_t[file_size]);
-    ifs.read(reinterpret_cast < char* > (ibuffer.get()), file_size);
+    ifs.read(reinterpret_cast<char*> (ibuffer.get()), file_size);
     ros::serialization::IStream istream(ibuffer.get(), file_size);
     ros::serialization::deserialize(istream, msg);
     ifs.close();
+    return true;
   }
+};
 
 }  // namespace ff_util
 

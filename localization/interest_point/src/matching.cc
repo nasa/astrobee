@@ -186,7 +186,8 @@ namespace interest_point {
     if (img1_descriptor_map.depth() == CV_8U) {
       // Binary descriptor
 
-      cv::BFMatcher matcher(cv::NORM_HAMMING, true  /* Forward & Backward matching */);
+      // cv::BFMatcher matcher(cv::NORM_HAMMING, true  /* Forward & Backward matching */);
+      cv::FlannBasedMatcher matcher(cv::makePtr<cv::flann::LshIndexParams>(3, 18, 2));
       matcher.match(img1_descriptor_map, img2_descriptor_map, *matches);
 
       // Select only inlier matches that meet a BRISK threshold of

@@ -1,0 +1,66 @@
+<launch>
+  <!-- ip addresses -->
+  <arg name="robot" default="p4d" />            <!-- Robot name              -->
+  <arg name="world" default="granite" />        <!-- World name              -->
+  <arg name="ns" default="" />                  <!-- Robot namespace prefix  -->
+  <arg name="nodes" default=""/>                <!-- Launch specific nodes   -->
+  <arg name="mlp" default="10.42.0.32" />       <!-- MLP IP address          -->
+  <arg name="llp" default="10.42.0.31" />       <!-- LLP IP address          -->
+  <arg name="rec" default="" />                 <!-- Enable recording        -->
+  <arg name="dds" default="true" />             <!-- Enable DDS              -->
+  
+  <env if="$(eval optenv('ASTROBEE_ROBOT','')=='')" 
+       name="ASTROBEE_ROBOT" value="$(arg robot)" />
+  <env if="$(eval optenv('ASTROBEE_WORLD','')=='')" 
+       name="ASTROBEE_WORLD" value="$(arg world)" />
+  <env if="$(eval optenv('ASTROBEE_CONFIG_DIR','')=='')" 
+       name="ASTROBEE_CONFIG_DIR" value="$(find astrobee)/config" />
+  <env if="$(eval optenv('ASTROBEE_RESOURCE_DIR','')=='')" 
+       name="ASTROBEE_RESOURCE_DIR" value="$(find astrobee)/resources" />
+  <env if="$(eval optenv('ROSCONSOLE_CONFIG_FILE','')=='')" 
+    name="ROSCONSOLE_CONFIG_FILE" value="$(find astrobee)/resources/logging.config"/>
+
+  <node pkg="rqt_image_view" type="rqt_image_view" name="rqt_image_view" args="/hw/cam_nav" />
+
+  <group>
+      <env unless="$(eval arg('llp')=='local')"
+           name="ASTROBEE_CONFIG_DIR" value="/opt/astrobee/config" />
+      <env unless="$(eval arg('llp')=='local')"
+           name="ASTROBEE_RESOURCE_DIR" value="/res" />
+      <env unless="$(eval arg('llp')=='local')"
+           name="ROSCONSOLE_CONFIG_FILE" value="/res/logging.config"/>
+    <!-- LLP node -->
+    <param name="config_dir" value="/opt/astrobee/config" />
+    <machine name="$(arg llp)" address="$(arg llp)"
+      env-loader="/opt/astrobee/env_wrapper.sh"
+      default="true" user="astrobee" password="astrobee" timeout="10" />
+     <node pkg="nodelet" type="nodelet" name="calibration_imu" args="standalone epson_imu/EpsonImuNodelet" />
+    
+  </group>
+
+  <group>
+      <env unless="$(eval arg('llp')=='local')"
+           name="ASTROBEE_CONFIG_DIR" value="/opt/astrobee/config" />
+      <env unless="$(eval arg('llp')=='local')"
+           name="ASTROBEE_RESOURCE_DIR" value="/res" />
+      <env unless="$(eval arg('llp')=='local')"
+           name="ROSCONSOLE_CONFIG_FILE" value="/res/logging.config"/>
+    <!-- MLP node -->
+    <machine name="$(arg mlp)" address="$(arg mlp)"  env-loader="/opt/astrobee/env_wrapper.sh"
+      default="true" user="astrobee" password="astrobee" timeout="10" />
+    <!-- Bring up a manager for everyone to live in -->
+    <node pkg="nodelet" type="nodelet" name="camera_manager" args="manager" output="screen" required="true"/>
+
+    <!-- Bring up cameras. Increase the gain as the images are too dark resulting in few features. -->
+    <node pkg="nodelet" type="nodelet" name="calibration_nav_cam"
+      args="load is_camera/camera camera_manager" output="screen" required="true" />
+    <node pkg="nodelet" type="nodelet" name="calibration_dock_cam"
+      args="load is_camera/camera camera_manager" output="screen" required="true" />
+    <node pkg="nodelet" type="nodelet" args="manager"
+          name="mlp_depth_cam" output="screen"/>
+    <include file="$(find pico_driver)/launch/pico_driver.launch">
+      <arg name="name" value="pico_driver" />
+      <arg name="manager" value="mlp_depth_cam" />
+    </include>
+  </group>
+</launch>

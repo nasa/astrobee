@@ -1,0 +1,10 @@
+\defgroup uml Astrobee UML Diagrams
+\ingroup doc
+\defgroup uml_%(package)s  %(package)s
+\ingroup uml
+\defgroup %(package)s_%(diagram_name)s %(diagram_name)s
+\ingroup uml_%(package)s
+
+##  %(diagram_name)s UML Diagram
+
+![%(diagram_name)s](%(diagram_path)s)

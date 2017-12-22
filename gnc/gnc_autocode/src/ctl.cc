@@ -25,8 +25,8 @@
 
 namespace gnc_autocode {
 
-GncCtlAutocode::GncCtlAutocode(cmc_msg * cmc) : cmc_(cmc) {
-  controller_ = ctl_controller0(&kfl_, cmc_, &time_, &env_, &cmd_, &ctl_);
+GncCtlAutocode::GncCtlAutocode(void) {
+  controller_ = ctl_controller0(&ctl_input_, &cmd_, &ctl_);
   assert(controller_);
   assert(rtmGetErrorStatus(controller_) == NULL);
 }
@@ -35,13 +35,13 @@ GncCtlAutocode::~GncCtlAutocode() {
   ctl_controller0_terminate(controller_);
 }
 
-void GncCtlAutocode::Step(kfl_msg* kfl) {
-  ctl_controller0_step(controller_, kfl, cmc_, &time_, &env_, &cmd_, &ctl_);
+void GncCtlAutocode::Step(void) {
+  ctl_controller0_step(controller_, &ctl_input_, &cmd_, &ctl_);
 }
 
-void GncCtlAutocode::Initialize() {
+void GncCtlAutocode::Initialize(void) {
   // initialize model
-  ctl_controller0_initialize(controller_, &kfl_, cmc_, &time_, &env_, &cmd_, &ctl_);
+  ctl_controller0_initialize(controller_, &ctl_input_, &cmd_, &ctl_);
 }
 
 void GncCtlAutocode::ReadParams(config_reader::ConfigReader* config) {

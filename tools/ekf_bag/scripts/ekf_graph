@@ -17,7 +17,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import rospkg
+import environment
+
 import sys
 import os
 import os.path
@@ -33,27 +34,7 @@ import numpy as np
 from numpy.linalg import norm
 
 def run_ekf(astrobee_map, astrobee_bag, output_file):
-  robot_config = os.path.dirname(os.path.abspath(astrobee_bag))
-  os.environ['ASTROBEE_RESOURCE_DIR'] = robot_config
-  robot_config += '/robot.config'
-  if not os.path.isfile(robot_config):
-    print >> sys.stderr, 'Please set the robot config file %s.' % (robot_config)
-    sys.exit(0)
-  os.environ['ASTROBEE_ROBOT'] = robot_config
-  os.environ['ASTROBEE_WORLD'] = 'granite'
-
-  rospack = rospkg.RosPack()
-  astrobee_path = ''
-  try:
-    astrobee_path = rospack.get_path('astrobee')
-  except:
-    print >> sys.stderr, 'Failed to find package astrobee.'
-    sys.exit(0)
-  
-  os.environ['ASTROBEE_CONFIG_DIR'] = astrobee_path + '/config'
-  os.environ['ASTROBEE_CONFIG_VERSION'] = 'p4'
-
-  os.system('rosrun ekf_bag ekf_bag %s %s --save_output %s' % (astrobee_map, astrobee_bag, output_file))
+  os.system('rosrun ekf_bag ekf_to_csv %s %s %s' % (astrobee_map, astrobee_bag, output_file))
 
 class EkfLog(object):
   def __init__(self, filename):
@@ -71,7 +52,7 @@ class EkfLog(object):
     self.of_heatmap = np.zeros((self.HEATMAP_SIZE[0] + 1, self.HEATMAP_SIZE[1] + 1))
     
     self.vl = {'t': [], 'count': [], 'x': [], 'y': [], 'z': [], 'angle1': [], 'angle2': [], 'angle3': []}
-    self.of = {'t': [], 'count': []}
+    self.of = {'t': [], 'count': [], 'oldest': [], 'youngest' : [], 'median' : []}
     self.gt = {'t': [], 'x': [], 'y': [], 'z': [], 'angle1': [], 'angle2': [], 'angle3': []}
     
     f = open(filename, 'r')
@@ -118,12 +99,18 @@ class EkfLog(object):
       elif l.startswith('OF '):
         self.of['t']     .append(float(p[1]))
         self.of['count'] .append(int(p[2]))
-        for i in range((len(p) - 3) / 3):
-          of_id = float(p[3 + 3 * i + 0])
-          u     = float(p[3 + 3 * i + 1])
-          v     = float(p[3 + 3 * i + 2])
+        times = []
+        for i in range((len(p) - 3) / 4):
+          of_id = float(p[3 + 4 * i + 0])
+          origt = float(p[3 + 4 * i + 1])
+          u     = float(p[3 + 4 * i + 2])
+          v     = float(p[3 + 4 * i + 3])
+          times.append(self.of['t'][-1] - origt)
           self.of_heatmap[int(round(u / self.CAMERA_RES[0] * self.HEATMAP_SIZE[0])) + self.HEATMAP_SIZE[0] / 2,
                           int(round(v / self.CAMERA_RES[1] * self.HEATMAP_SIZE[1])) + self.HEATMAP_SIZE[1] / 2] += 1
+        self.of['oldest'].append(np.max(times))
+        self.of['youngest'].append(np.min(times))
+        self.of['median'].append(np.median(times))
       elif l.startswith('VL '):
         self.vl['t']        .append(float(p[ 1]))
         self.vl['count']    .append(int(p[ 2]))
@@ -196,6 +183,8 @@ class EkfLog(object):
         pos_err += float(norm(np.array([self.gt['x'][gt_i], self.gt['y'][gt_i], self.gt['z'][gt_i]]) - x)) ** 2
         # again, not best metric, but good enough for this
         angle_err += float(norm(np.array([self.gt['angle1'][gt_i], self.gt['angle2'][gt_i], self.gt['angle3'][gt_i]]) - a)) ** 2
+    if err_count == 0:
+      return (0.0, 0.0)
     return (math.sqrt(pos_err / err_count), math.sqrt(angle_err / err_count))
 
   def plot(self, filename, output_text):
@@ -264,12 +253,13 @@ class EkfLog(object):
     
       # mahalnobis distance
       plt.figure()
-      boxes = plt.boxplot(self.mahal['boxes'], positions=self.mahal['times'], widths=0.2, manage_xticks=False, patch_artist=True)
-      plt.setp(boxes['whiskers'], color='Black', linewidth=0.25)
-      plt.setp(boxes['caps'], color='Black', linewidth=0.25)
-      plt.setp(boxes['medians'], color='Black', linewidth=0.25)
-      plt.setp(boxes['fliers'], color='r', marker='x', markersize=1)
-      plt.setp(boxes['boxes'], color='Black', facecolor='SkyBlue', linewidth=0.25)
+      if len(self.mahal['boxes']) > 0:
+        boxes = plt.boxplot(self.mahal['boxes'], positions=self.mahal['times'], widths=0.2, manage_xticks=False, patch_artist=True)
+        plt.setp(boxes['whiskers'], color='Black', linewidth=0.25)
+        plt.setp(boxes['caps'], color='Black', linewidth=0.25)
+        plt.setp(boxes['medians'], color='Black', linewidth=0.25)
+        plt.setp(boxes['fliers'], color='r', marker='x', markersize=1)
+        plt.setp(boxes['boxes'], color='Black', facecolor='SkyBlue', linewidth=0.25)
       plt.title('VL Features Mahalnobis Distances')
       plt.xlabel('Time (s)')
       plt.ylabel('Mahalnobis Distance')
@@ -359,6 +349,17 @@ class EkfLog(object):
       plt.title('Visual Landmarks Density')
       pdf.savefig()
       plt.close()
+
+      plt.figure()
+      plt.plot(of['t'], of['oldest'],   color=colors[0], linewidth=0.5, label='Oldest')
+      plt.plot(of['t'], of['median'],   color=colors[1], linewidth=0.5, label='Median')
+      plt.plot(of['t'], of['youngest'], color=colors[2], linewidth=0.5, label='Youngest')
+      plt.xlabel('Time (s)')
+      plt.ylabel('Optical Flow Feature Age (s)')
+      plt.title('Optical Flow Feature Age')
+      plt.legend(prop={'size':6})
+      pdf.savefig()
+      plt.close()
       
       plt.figure()
       plt.imshow(np.transpose(self.of_heatmap), cmap='hot', interpolation='nearest')
@@ -372,23 +373,15 @@ class EkfLog(object):
       pdf.savefig()
       plt.close()
 
-astrobee_map = ''
-astrobee_bag = ''
-if len(sys.argv) == 3:
+astrobee_map = None
+astrobee_bag = None
+if len(sys.argv) >= 2:
   astrobee_bag = sys.argv[1]
+if len(sys.argv) >= 3:
   astrobee_map = sys.argv[2]
-else:
-  if 'ASTROBEE_MAP' not in os.environ:
-    print >> sys.stderr, 'Either set ASTROBEE_MAP or pass map as first argument.'
-    sys.exit(0)
-  astrobee_map = os.environ['ASTROBEE_MAP']
-  if len(sys.argv) == 2:
-    astrobee_bag = sys.argv[1]
-  else:
-    if 'ASTROBEE_BAG' not in os.environ:
-      print >> sys.stderr, 'Either set ASTROBEE_BAG or pass bag as argument.'
-      sys.exit(0)
-    astrobee_bag = os.environ['ASTROBEE_BAG']
+
+(astrobee_map, astrobee_bag) = environment.initialize_environment(astrobee_map, astrobee_bag)
+
 name_prefix = astrobee_bag[:astrobee_bag.rfind('.')]
 
 start = time.time()

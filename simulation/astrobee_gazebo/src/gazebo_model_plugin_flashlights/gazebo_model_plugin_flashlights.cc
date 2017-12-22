@@ -49,7 +49,12 @@ class GazeboModelPluginFlashlights : public FreeFlyerModelPlugin {
 
  protected:
   // Called when the plugin is loaded into the simulator
-  void LoadCallback(ros::NodeHandle *nh, physics::ModelPtr model, sdf::ElementPtr sdf) {
+  void LoadCallback(ros::NodeHandle *nh,
+    physics::ModelPtr model, sdf::ElementPtr sdf) {
+    // Create a buffer and listener for TF2 transforms
+    static tf2_ros::TransformListener listener(buffer_);
+
+    // Get parameters
     if (sdf->HasElement("rate"))
       rate_ = sdf->Get<double>("rate");
     if (sdf->HasElement("width"))
@@ -66,10 +71,6 @@ class GazeboModelPluginFlashlights : public FreeFlyerModelPlugin {
     pub_factory_ = gz_->Advertise<msgs::Light>("~/factory/light");
     pub_light_ = gz_->Advertise<msgs::Light>("~/light/modify");
 
-    // Create the front flashlight
-    size_t id_f = Create("flashlight_front");
-    size_t id_a = Create("flashlight_aft");
-
     // For the RVIZ marker array
     pub_rviz_ = nh->advertise<visualization_msgs::MarkerArray>(
       TOPIC_HARDWARE_LIGHTS_RVIZ, 0, true);
@@ -77,28 +78,10 @@ class GazeboModelPluginFlashlights : public FreeFlyerModelPlugin {
     // Publish / create the markers
     pub_rviz_.publish(markers_);
 
-    // Called before each iteration of simulated world update
-    next_tick_ = GetWorld()->GetSimTime();
-    update_ = event::Events::ConnectWorldUpdateBegin(
-      std::bind(&GazeboModelPluginFlashlights::UpdateCallback, this,
-        id_f, id_a));
-
-    // Create the service for the front flashlight
-    srv_f_ = nh->advertiseService<ff_hw_msgs::SetFlashlight::Request,
-      ff_hw_msgs::SetFlashlight::Response>(SERVICE_HARDWARE_LIGHT_FRONT_CONTROL,
-        boost::bind(&GazeboModelPluginFlashlights::ToggleCallback, this,
-          _1, _2, "flashlight_front", id_f));
-
-    // Create the service for the aft flashlight
-    srv_a_ = nh->advertiseService<ff_hw_msgs::SetFlashlight::Request,
-      ff_hw_msgs::SetFlashlight::Response>(SERVICE_HARDWARE_LIGHT_AFT_CONTROL,
-        boost::bind(&GazeboModelPluginFlashlights::ToggleCallback, this, _1, _2,
-          "flashlight_aft", id_a));
-
     // Defer the extrinsics setup to allow plugins to load
     timer_ = nh->createTimer(ros::Duration(1.0), boost::bind(
-      &GazeboModelPluginFlashlights::ExtrinsicsCallback, this, _1,
-        id_f, id_a), true, true);
+      &GazeboModelPluginFlashlights::CreateCallback, this, _1,
+        nh), true, true);
   }
 
   // Create macro
@@ -127,9 +110,24 @@ class GazeboModelPluginFlashlights : public FreeFlyerModelPlugin {
     marker.color.b = 1.0;
     markers_.markers.push_back(marker);
 
-    // Rotate the light into the correct default position
-    // poses_[marker.id] = ignition::math::Pose3d(0, 0, 0, 0.70710678, 0, -0.70710678, 0);
-    poses_[marker.id] = ignition::math::Pose3d(0, 0, 0, 1, 0, 0, 0);
+    // Listen for the transform
+    try {
+      // Lookup the transform for this sensor
+      geometry_msgs::TransformStamped tf = buffer_.lookupTransform(
+        GetFrame("body"), GetFrame(name), ros::Time(0));
+      // Handle the transform for all sensor types
+      poses_[marker.id] = ignition::math::Pose3d(
+        tf.transform.translation.x,
+        tf.transform.translation.y,
+        tf.transform.translation.z,
+        tf.transform.rotation.w,
+        tf.transform.rotation.x,
+        tf.transform.rotation.y,
+        tf.transform.rotation.z);
+      gzmsg << "Extrinsics set for " << name << "\n";
+    } catch (tf2::TransformException &ex) {
+      gzmsg << "No extrinsics for " << name << "\n";
+    }
 
     // Create the Gazebo visual
     msgs::Visual msg_v;
@@ -152,17 +150,16 @@ class GazeboModelPluginFlashlights : public FreeFlyerModelPlugin {
     msgs::Light msg_l;
     msg_l.set_name(name + "_light");
     msg_l.set_type(msgs::Light::SPOT);
-    msg_l.set_attenuation_constant(0.2);
-    msg_l.set_attenuation_linear(0.04);
-    msg_l.set_attenuation_quadratic(0.000);
-    msg_l.set_range(20);
+    msg_l.set_attenuation_constant(1.0);
+    msg_l.set_attenuation_linear(0.02);
+    msg_l.set_attenuation_quadratic(0.0);
+    msg_l.set_range(10);
     msg_l.set_cast_shadows(false);
-    msg_l.set_spot_inner_angle(1.22173);
-    msg_l.set_spot_outer_angle(1.22173);
-    msg_l.set_spot_falloff(0.0);
-    msgs::Set(msg_l.mutable_direction(), ignition::math::Vector3d(0.0, 0.0, -1.0));
-    msgs::Set(msg_l.mutable_diffuse(), common::Color(0.0, 0.0, 0.0, 1));
-    msgs::Set(msg_l.mutable_specular(), common::Color(0.0, 0.0, 0.0, 1));
+    msg_l.set_spot_inner_angle(0.6);
+    msg_l.set_spot_outer_angle(2.2);
+    msg_l.set_spot_falloff(1.0);
+    msgs::Set(msg_l.mutable_diffuse(), common::Color(0.5, 0.5, 0.5, 1));
+    msgs::Set(msg_l.mutable_specular(), common::Color(0.1, 0.1, 0.1, 1));
     msgs::Set(msg_l.mutable_pose(),
       poses_[marker.id] + GetModel()->GetLink()->GetWorldPose().Ign());
     pub_factory_->Publish(msg_l);
@@ -189,57 +186,38 @@ class GazeboModelPluginFlashlights : public FreeFlyerModelPlugin {
     static msgs::Light msg_l;
     msg_l.set_name(name + "_light");
     msgs::Set(msg_l.mutable_pose(),
-      ignition::math::Pose3d(0.05, 0, 0, 0.70710678, 0, -0.70710678, 0)
+      ignition::math::Pose3d(0.0, 0, 0, 0.70710678, 0, -0.70710678, 0)
         + poses_[id] + GetModel()->GetLink()->GetWorldPose().Ign());
     pub_light_->Publish(msg_l);
   }
 
   // Manage the extrinsics based on the sensor type
-  void ExtrinsicsCallback(const ros::TimerEvent&, size_t id_f, size_t id_a) {
-    // Create a buffer and listener for TF2 transforms
-    tf2_ros::Buffer buffer;
-    tf2_ros::TransformListener listener(buffer);
-    // Get extrinsics from framestore
-    try {
-      // Lookup the transform for this sensor
-      geometry_msgs::TransformStamped tf = buffer.lookupTransform(
-        GetFrame("body"), GetFrame("flashlight_front"), ros::Time(0), ros::Duration(10.0));
-      // Handle the transform for all sensor types
-      poses_[id_f] = ignition::math::Pose3d(
-        tf.transform.translation.x,
-        tf.transform.translation.y,
-        tf.transform.translation.z,
-        tf.transform.rotation.w,
-        tf.transform.rotation.x,
-        tf.transform.rotation.y,
-        tf.transform.rotation.z) + poses_[id_f];
-      gzmsg << "Extrinsics set for front flashlight\n";
-    } catch (tf2::TransformException &ex) {
-      gzmsg << "No extrinsics for front flashlight\n";
-    }
-    // Get extrinsics from framestore
-    try {
-      // Lookup the transform for this sensor
-      geometry_msgs::TransformStamped tf = buffer.lookupTransform(
-        GetFrame("body"), GetFrame("flashlight_aft"), ros::Time(0), ros::Duration(10.0));
-      // Handle the transform for all sensor types
-      poses_[id_a] = ignition::math::Pose3d(
-        tf.transform.translation.x,
-        tf.transform.translation.y,
-        tf.transform.translation.z,
-        tf.transform.rotation.w,
-        tf.transform.rotation.x,
-        tf.transform.rotation.y,
-        tf.transform.rotation.z) + poses_[id_a];
-      gzmsg << "Extrinsics set for aft flashlight\n";
-    } catch (tf2::TransformException &ex) {
-      gzmsg << "No extrinsics for aft flashlight\n";
-    }
+  void CreateCallback(const ros::TimerEvent&, ros::NodeHandle* nh) {
+    // Create the lights
+    size_t id_f = Create("flashlight_front");
+    size_t id_a = Create("flashlight_aft");
+
+    // Create the service for the front flashlight
+    srv_f_ = nh->advertiseService<ff_hw_msgs::SetFlashlight::Request,
+      ff_hw_msgs::SetFlashlight::Response>(SERVICE_HARDWARE_LIGHT_FRONT_CONTROL,
+        boost::bind(&GazeboModelPluginFlashlights::ToggleCallback, this,
+          _1, _2, "flashlight_front", id_f));
+
+    // Create the service for the aft flashlight
+    srv_a_ = nh->advertiseService<ff_hw_msgs::SetFlashlight::Request,
+      ff_hw_msgs::SetFlashlight::Response>(SERVICE_HARDWARE_LIGHT_AFT_CONTROL,
+        boost::bind(&GazeboModelPluginFlashlights::ToggleCallback, this, _1, _2,
+          "flashlight_aft", id_a));
+
+    // Called before each iteration of simulated world update
+    next_tick_ = GetWorld()->GetSimTime();
+    update_ = event::Events::ConnectWorldUpdateBegin(std::bind(
+      &GazeboModelPluginFlashlights::UpdateCallback, this, id_f, id_a));
   }
 
   // Called when the laser needs to be toggled
   bool ToggleCallback(ff_hw_msgs::SetFlashlight::Request &req,
-    ff_hw_msgs::SetFlashlight::Response &res, std::string const& name, size_t id) {
+    ff_hw_msgs::SetFlashlight::Response &res, std::string const& n, size_t id) {
     // Update RVIZ
     markers_.markers[id].header.stamp = ros::Time();
     markers_.markers[id].color.a = static_cast<double>(req.brightness) / 200.0;
@@ -247,7 +225,7 @@ class GazeboModelPluginFlashlights : public FreeFlyerModelPlugin {
 
     // Update Gazebo visual
     static msgs::Visual msg_v;
-    msg_v.set_name(name);
+    msg_v.set_name(n);
     msg_v.set_parent_name(GetModel()->GetLink("body")->GetScopedName());
     msg_v.set_transparency(1.0 - markers_.markers[id].color.a);
     msgs::Set(msg_v.mutable_pose(),
@@ -256,13 +234,10 @@ class GazeboModelPluginFlashlights : public FreeFlyerModelPlugin {
 
     // Update the gazebo light
     static msgs::Light msg_l;
-    msg_l.set_name(name + "_light");
-    msgs::Set(msg_l.mutable_diffuse(), common::Color(
-      markers_.markers[id].color.a,
-      markers_.markers[id].color.a,
-      markers_.markers[id].color.a, 1));
+    msg_l.set_name(n + "_light");
+    msg_l.set_attenuation_constant(1.0 - markers_.markers[id].color.a);
     msgs::Set(msg_l.mutable_pose(),
-      ignition::math::Pose3d(0.05, 0, 0, 0.70710678, 0, -0.70710678, 0)
+      ignition::math::Pose3d(0.0, 0, 0, 0.70710678, 0, -0.70710678, 0)
         + poses_[id] + GetModel()->GetLink()->GetWorldPose().Ign());
     pub_light_->Publish(msg_l);
 
@@ -300,6 +275,7 @@ class GazeboModelPluginFlashlights : public FreeFlyerModelPlugin {
   ros::Publisher pub_rviz_;
   std::map<size_t, ignition::math::Pose3d> poses_;
   visualization_msgs::MarkerArray markers_;
+  tf2_ros::Buffer buffer_;
 };
 
 // Register this plugin with the simulator

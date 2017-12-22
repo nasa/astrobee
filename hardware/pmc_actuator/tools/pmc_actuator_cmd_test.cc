@@ -76,19 +76,19 @@ class CmdGenerator {
     static int counter = 0;
 
     for (int i = 0; i < num_pmcs_; i++) {
-      ff_hw_msgs::PmcState state;
-      state.motor_speed = blower_speeds_[i];
+      ff_hw_msgs::PmcGoal goal;
+      goal.motor_speed = blower_speeds_[i];
 
       for (int n = 0; n < 6; n++) {
         if (nozzle_id_ == -1 || n == nozzle_id_) {
-          state.nozzle_positions[n]
+          goal.nozzle_positions[n]
             = (uint8_t)round(nozzle_positions_[i]);
         } else {
-          state.nozzle_positions[n] = nozzle_min_cmd_;
+          goal.nozzle_positions[n] = nozzle_min_cmd_;
         }
       }
 
-      command.states.push_back(state);
+      command.goals.push_back(goal);
 
       if ( ros::Time::now().toSec() - start_time_ > time2start_ ) {
         if ((uint8_t)roundf(nozzle_positions_[i]) >= nozzle_max_cmd_) {
@@ -204,10 +204,10 @@ int main(int argc, char **argv) {
     ff_hw_msgs::PmcCommand command;
     gen.NextCommand(command);
     printf("bs: %d %d np: %d %d\n",
-           command.states[0].speed,
-           command.states[1].speed,
-           command.states[0].nozzle_positions[0],
-           command.states[1].nozzle_positions[1]);
+           command.goals[0].speed,
+           command.goals[1].speed,
+           command.goals[0].nozzle_positions[0],
+           command.goals[1].nozzle_positions[1]);
   }
   return 1;
 #endif

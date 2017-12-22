@@ -54,24 +54,6 @@ void sim_ReadParams(config_reader::ConfigReader* config,  RT_MODEL_sim_model_lib
     ROS_FATAL("Unspecified tun_cvs_perchcam_num_pixels_X.");
   if (!config->GetReal("tun_cvs_perchcam_num_pixels_Y", &p->tun_cvs_perchcam_num_pixels_Y))
     ROS_FATAL("Unspecified tun_cvs_perchcam_num_pixels_Y.");
-  if (!msg_conversions::config_read_array(config, "tun_default_att_ki", 3 , p->tun_default_att_ki))
-    ROS_FATAL("Unspecified tun_default_att_ki.");
-  if (!msg_conversions::config_read_array(config, "tun_default_att_kp", 3 , p->tun_default_att_kp))
-    ROS_FATAL("Unspecified tun_default_att_kp.");
-  if (!msg_conversions::config_read_array(config, "tun_default_center_of_mass", 3 , p->tun_default_center_of_mass))
-    ROS_FATAL("Unspecified tun_default_center_of_mass.");
-  if (!msg_conversions::config_read_matrix(config, "tun_default_inertia_matrix", 3, 3, p->tun_default_inertia_matrix))
-    ROS_FATAL("Unspecified tun_default_inertia_matrix.");
-  if (!config->GetReal("tun_default_mass", &p->tun_default_mass))
-    ROS_FATAL("Unspecified tun_default_mass.");
-  if (!msg_conversions::config_read_array(config, "tun_default_omega_kd", 3 , p->tun_default_omega_kd))
-    ROS_FATAL("Unspecified tun_default_omega_kd.");
-  if (!msg_conversions::config_read_array(config, "tun_default_pos_ki", 3 , p->tun_default_pos_ki))
-    ROS_FATAL("Unspecified tun_default_pos_ki.");
-  if (!msg_conversions::config_read_array(config, "tun_default_pos_kp", 3 , p->tun_default_pos_kp))
-    ROS_FATAL("Unspecified tun_default_pos_kp.");
-  if (!msg_conversions::config_read_array(config, "tun_default_vel_kd", 3 , p->tun_default_vel_kd))
-    ROS_FATAL("Unspecified tun_default_vel_kd.");
   if (!msg_conversions::config_read_array(config, "tun_env_accel_dof_gain", 3 , p->tun_env_accel_dof_gain))
     ROS_FATAL("Unspecified tun_env_accel_dof_gain.");
   if (!msg_conversions::config_read_array(config, "tun_env_alpha_dof_gain", 3 , p->tun_env_alpha_dof_gain))
@@ -90,6 +72,8 @@ void sim_ReadParams(config_reader::ConfigReader* config,  RT_MODEL_sim_model_lib
     ROS_FATAL("Unspecified tun_iss_omega_ISS_ECI_ISS.");
   if (!config->GetReal("tun_mass_error", &p->tun_mass_error))
     ROS_FATAL("Unspecified tun_mass_error.");
+  if (!msg_conversions::config_read_array(config, "tun_sim_cg_error", 3 , p->tun_sim_cg_error))
+    ROS_FATAL("Unspecified tun_sim_cg_error.");
   bool ase_gravity_removal;
   if (!config->GetBool("tun_ase_gravity_removal", &ase_gravity_removal))
   ROS_FATAL("Unspecified tun_ase_gravity_removal.");

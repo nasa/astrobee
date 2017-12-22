@@ -137,16 +137,16 @@ class GazeboModelPluginLaser : public FreeFlyerModelPlugin {
     try {
       // Lookup the transform for this sensor
       geometry_msgs::TransformStamped tf = buffer.lookupTransform(
-        GetFrame("body"), GetFrame("laser"), ros::Time(0), ros::Duration(10.0));
+        GetFrame("body"), GetFrame("laser"), ros::Time(0), ros::Duration(60.0));
       // Handle the transform for all sensor types
-      pose_ = ignition::math::Pose3d(
+      pose_ = pose_ + ignition::math::Pose3d(
         tf.transform.translation.x,
         tf.transform.translation.y,
         tf.transform.translation.z,
         tf.transform.rotation.w,
         tf.transform.rotation.x,
         tf.transform.rotation.y,
-        tf.transform.rotation.z) + pose_;
+        tf.transform.rotation.z);
       gzmsg << "Extrinsics set for laser\n";
     } catch (tf2::TransformException &ex) {
       gzmsg << "No extrinsics for laser\n";

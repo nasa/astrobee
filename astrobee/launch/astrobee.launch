@@ -16,7 +16,6 @@
 <!-- permissions and limitations under the License.                          -->
 
 <launch>
-
   <!-- Context options (NB: THESE ARE OVERRIDDEN BY ENVIRONMENT VARIABLES, IF SET)    -->
   <arg name="robot" default="p4d" />                   <!-- Robot description         -->
   <arg name="world" default="granite" />               <!-- World name                -->
@@ -33,6 +32,9 @@
 
   <!-- Simulation options only -->
   <arg name="pose" default="0 0 0 0 0 0 1" />          <!-- Initial pose (sim only)   -->
+
+  <!-- Path to the bag file -->
+  <arg name="bag" default="" />
 
   <!-- It doesn't matter that the calling launch file (granite, mtff, etc.) sets these
        environment variables in the same way. They will be compeletely overridden here. -->
@@ -53,34 +55,43 @@
     <!-- Set the TF prefix, create a robot description and joint state publisher -->
     <param name="tf_prefix" value="$(arg ns)" />
     <param name="robot_description"
-           command="$(find xacro)/xacro --inorder $(find astrobee_description)/urdf/astrobee.urdf.xacro" />
+           command="$(find xacro)/xacro --inorder $(find astrobee_description)/urdf/astrobee.urdf.xacro world:=$(arg world)" />
     <node pkg="robot_state_publisher" type="robot_state_publisher"
           name="robot_state_publisher" />  
 
     <!-- If we aren't loading drivers, we need to load a bag or simulation-->
     <group unless="$(arg drivers)">
+      <group if="$(eval arg('bag')=='')" >
 
-      <!-- Connect and update environment variables if required -->
-      <machine unless="$(eval arg('sim')=='local')" name="sim_server" default="true"
-               address="$(arg sim)" user="astrobee" password="astrobee" timeout="10"/>
+        <!-- Connect and update environment variables if required -->
+        <machine unless="$(eval arg('sim')=='local')" name="sim_server" default="true"
+                 address="$(arg sim)" user="astrobee" password="astrobee" timeout="10"/>
 
-      <!-- Update the environment variables relating to absolute paths -->
-      <env unless="$(eval arg('sim')=='local')"
-           name="ASTROBEE_CONFIG_DIR" value="/home/astrobee/native/config" />
-      <env unless="$(eval arg('sim')=='local')"
-           name="ASTROBEE_RESOURCE_DIR" value="home/astrobee/native/resources" />
-      <env unless="$(eval arg('sim')=='local')"
-           name="ROSCONSOLE_CONFIG_FILE" value="/home/astrobee/native/resources/logging.config"/>
-      <env unless="$(eval arg('sim')=='local')"
-           name="DISPLAY" value=":0"/>
-      <env unless="$(eval arg('sim')=='local')"
-           name="ROS_IP" value="$(arg sim)"/>
+        <!-- Update the environment variables relating to absolute paths -->
+        <env unless="$(eval arg('sim')=='local')"
+             name="ASTROBEE_CONFIG_DIR" value="/home/astrobee/native/config" />
+        <env unless="$(eval arg('sim')=='local')"
+             name="ASTROBEE_RESOURCE_DIR" value="home/astrobee/native/resources" />
+        <env unless="$(eval arg('sim')=='local')"
+             name="ROSCONSOLE_CONFIG_FILE" value="/home/astrobee/native/resources/logging.config"/>
+        <env unless="$(eval arg('sim')=='local')"
+             name="DISPLAY" value=":0"/>
+        <env unless="$(eval arg('sim')=='local')"
+             name="ROS_IP" value="$(arg sim)"/>
 
-      <!-- Launch simulated hardware -->
-      <include file="$(find astrobee)/launch/controller/sim_spawn.launch">
-        <arg name="ns" value="$(arg ns)"/>
-        <arg name="pose" value="$(arg pose)"/>
-      </include>
+        <!-- Launch simulated hardware -->
+        <include file="$(find astrobee)/launch/controller/sim_spawn.launch">
+          <arg name="ns" value="$(arg ns)"/>
+          <arg name="pose" value="$(arg pose)"/>
+        </include>
+      </group>
+
+      <!-- We only get here if we have a valid bag specificied, no simulator will load -->
+      <group unless="$(eval arg('bag')=='')" >
+        <include file="$(find astrobee)/launch/controller/bagreplay.launch">
+          <arg name="bag" value="$(arg bag)" />
+        </include>
+      </group>
 
     </group>
 
@@ -90,12 +101,14 @@
       <!-- Connect and update environment variables if required -->
       <machine unless="$(eval arg('llp')=='local')" timeout="10"
                name="llp" address="$(arg llp)" user="astrobee" password="astrobee"
-               env-loader="/home/astrobee/armhf/env_wrapper.sh" default="true">
+               env-loader="/opt/astrobee/env_wrapper.sh" default="true">
       </machine>
+      <env unless="$(eval arg('llp')=='local')"
+           name="ROS_HOSTNAME" value="$(arg llp)" />
 
       <!-- Update the environment variables relating to absolute paths -->
       <env unless="$(eval arg('llp')=='local')"
-           name="ASTROBEE_CONFIG_DIR" value="/home/astrobee/armhf/config" />
+           name="ASTROBEE_CONFIG_DIR" value="/opt/astrobee/config" />
       <env unless="$(eval arg('llp')=='local')"
            name="ASTROBEE_RESOURCE_DIR" value="/res" />
       <env unless="$(eval arg('llp')=='local')"
@@ -118,12 +131,14 @@
       <!-- Connect and update environment variables if required -->
       <machine unless="$(eval arg('mlp')=='local')" timeout="10"
                name="mlp" address="$(arg mlp)" user="astrobee" password="astrobee"
-               env-loader="/home/astrobee/armhf/env_wrapper.sh" default="true">
+               env-loader="/opt/astrobee/env_wrapper.sh" default="true">
       </machine>
+      <env unless="$(eval arg('mlp')=='local')"
+           name="ROS_HOSTNAME" value="$(arg mlp)" />
 
       <!-- Update the environment variables relating to absolute paths -->
       <env unless="$(eval arg('mlp')=='local')"
-           name="ASTROBEE_CONFIG_DIR" value="/home/astrobee/armhf/config" />
+           name="ASTROBEE_CONFIG_DIR" value="/opt/astrobee/config" />
       <env unless="$(eval arg('mlp')=='local')"
            name="ASTROBEE_RESOURCE_DIR" value="/res" />
       <env unless="$(eval arg('mlp')=='local')"

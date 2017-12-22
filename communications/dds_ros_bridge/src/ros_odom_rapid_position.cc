@@ -61,15 +61,18 @@ RosOdomRapidPosition::RosOdomRapidPosition(const std::string& subscribeTopic,
   s_supplier_->event().ml_mahal_dists.length(50);
 
   // Setup timers for publishing the position and ekf but don't start them since
-  // the rates are 0. The bridge will set this rate at the end of its
-  // initialization
-  ekf_timer_ = m_nh_.createTimer(ros::Rate(0.0),
+  // the rates are 0. The bridge will set this rate at the end of its init
+  // update: Andrew changed rate to 1.0 to avoid a runtime bounds error. Should
+  // not affect since autostart argument is set to false.
+  ekf_timer_ = m_nh_.createTimer(ros::Rate(1.0),
                                  &RosOdomRapidPosition::PubEkf,
                                  this,
                                  false,
                                  false);
 
-  position_timer_ = m_nh_.createTimer(ros::Rate(0.0),
+  // update: Andrew changed rate to 1.0 to avoid a runtime bounds error. Should
+  // not affect since autostart argument is set to false.
+  position_timer_ = m_nh_.createTimer(ros::Rate(1.0),
                                       &RosOdomRapidPosition::PubPosition,
                                       this,
                                       false,

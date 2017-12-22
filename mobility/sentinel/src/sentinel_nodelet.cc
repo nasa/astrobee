@@ -21,8 +21,8 @@
 #include <nodelet/nodelet.h>
 #include <pluginlib/class_list_macros.h>
 
-// ROS messages
-// #include <octomap_msgs/Octomap.h>
+// General messages
+#include <geometry_msgs/PointStamped.h>
 
 // FSW includes
 #include <ff_util/ff_nodelet.h>
@@ -32,8 +32,7 @@
 #include <ff_util/conversion.h>
 
 // FSW messages
-#include <ff_msgs/ControlAction.h>
-#include <ff_msgs/ControlCommand.h>
+#include <ff_msgs/Segment.h>
 
 /**
  * \ingroup mobility
@@ -43,13 +42,13 @@ namespace sentinel {
 class SentinelNodelet : public ff_util::FreeFlyerNodelet {
  public:
   enum State {
-    WAITING_FOR_INIT,
-    WAITING_FOR_SEGMENT,
+    WAITING,
     WATCHING
   };
 
   // Constructor
-  SentinelNodelet() : ff_util::FreeFlyerNodelet(NODE_SENTINEL, true), state_(WAITING_FOR_INIT) {}
+  SentinelNodelet() : ff_util::FreeFlyerNodelet(NODE_SENTINEL, true),
+    state_(WAITING) {}
 
   // Destructor
   ~SentinelNodelet() {}
@@ -59,23 +58,14 @@ class SentinelNodelet : public ff_util::FreeFlyerNodelet {
     // Read the node parameters
     cfg_.Initialize(GetPrivateHandle(), "mobility/sentinel.config");
     cfg_.Listen(boost::bind(&SentinelNodelet::ReconfigureCallback, this, _1));
-    // Setup a timer to forward diagnostics
-    timer_d_ = nh->createTimer(ros::Duration(ros::Rate(DEFAULT_DIAGNOSTICS_RATE)),
-      &SentinelNodelet::DiagnosticsCallback, this, false, true);
     // Listen to the point cloud messages, EKF and shaper trajectories
-    sub_s_ = nh->subscribe(TOPIC_GNC_CTL_SEGMENT, 1, &SentinelNodelet::SegmentCallback, this);
-    // sub_m_ = nh->subscribe(TOPIC_MOBILITY_COLLISIONS, 1, &SentinelNodelet::MapCallback, this);
+    sub_segment_ = nh->subscribe(TOPIC_GNC_CTL_SEGMENT, 1,
+      &SentinelNodelet::SegmentCallback, this);
     // Publish collisions on this topic
-    pub_c_ = nh->advertise < geometry_msgs::PointStamped > (TOPIC_MOBILITY_COLLISIONS, 5, true);
-    // Switch to waiting for a segment
-    state_ = WAITING_FOR_SEGMENT;
+    pub_collision_ = nh->advertise < geometry_msgs::PointStamped > (
+      TOPIC_MOBILITY_COLLISIONS, 5, true);
       // Notify initialization complete
     NODELET_DEBUG_STREAM("Initialization complete");
-  }
-
-  // Send diagnostics
-  void DiagnosticsCallback(const ros::TimerEvent &event) {
-    SendDiagnostics(cfg_.Dump());
   }
 
   // Callback for a reconfigure
@@ -84,14 +74,13 @@ class SentinelNodelet : public ff_util::FreeFlyerNodelet {
   }
 
   // Called when a new segment arrives for processing
-  void SegmentCallback(const ff_msgs::ControlGoal::ConstPtr& msg) {
-    if (state_ == WAITING_FOR_INIT) return;
-    if (msg->mode == ff_msgs::ControlCommand::MODE_NOMINAL) {
+  void SegmentCallback(const ff_msgs::Segment::ConstPtr& msg) {
+    if (msg->segment.empty()) {
       segment_ = msg->segment;
       state_ = WATCHING;
     } else {
       segment_.clear();
-      state_ = WAITING_FOR_SEGMENT;
+      state_ = WAITING;
     }
   }
 
@@ -100,13 +89,11 @@ class SentinelNodelet : public ff_util::FreeFlyerNodelet {
 
   // ROS
  private:
-  State state_;                 // State of the sentinel node
-  ff_util::ConfigServer cfg_;   // Dynamic reconfiguration
-  ros::Subscriber sub_s_;       // Segment subscription
-  ros::Subscriber sub_m_;       // Map update subscription
-  ros::Publisher pub_c_;        // Collision publisher
-  ros::Timer timer_d_;          // Diangostic timer
-  ff_util::Segment segment_;    // The segment in progress
+  State state_;                   // State of the sentinel node
+  ff_util::ConfigServer cfg_;     // Dynamic reconfiguration
+  ros::Subscriber sub_segment_;   // Segment subscription
+  ros::Publisher pub_collision_;  // Collision publisher
+  ff_util::Segment segment_;      // The segment in progress
 };
 
 PLUGINLIB_DECLARE_CLASS(sentinel, SentinelNodelet,

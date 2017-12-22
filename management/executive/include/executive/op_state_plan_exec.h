@@ -39,33 +39,21 @@ class OpStatePlanExec : public OpState {
                            std::string const& cmd_origin);
 
   // Docking action stuff
-  OpState* HandleDockActive();
+  OpState* HandleDockActive(Action const& action);
   OpState* HandleDockFeedback(ff_msgs::DockFeedbackConstPtr const& feedback);
   OpState* HandleDockResult(ff_util::FreeFlyerActionState::Enum const& state,
                             ff_msgs::DockResultConstPtr const& result,
                             std::string const& cmd_id,
-                            std::string const& cmd_origin);
+                            std::string const& cmd_origin,
+                            Action const& action);
 
-  // Execute action stuff
-  OpState* HandleExecuteActive();
-  OpState* HandleExecuteResult(ff_util::FreeFlyerActionState::Enum const& state,
-                               ff_msgs::ExecuteResultConstPtr const& result,
-                               std::string const& cmd_id,
-                               std::string const& cmd_origin);
-
-  // Idle action stuff
-  OpState* HandleIdleResult(ff_util::FreeFlyerActionState::Enum const& state,
-                            ff_msgs::IdleResultConstPtr const& result,
-                            std::string const& cmd_id,
-                            std::string const& cmd_origin);
-
-  // Undocking action stuff
-  OpState* HandleUndockFeedback(
-                              ff_msgs::UndockFeedbackConstPtr const& feedback);
-  OpState* HandleUndockResult(ff_util::FreeFlyerActionState::Enum const& state,
-                              ff_msgs::UndockResultConstPtr const& result,
+  // Teleop action stuff
+  OpState* HandleMotionActive(Action const& action);
+  OpState* HandleMotionResult(ff_util::FreeFlyerActionState::Enum const& state,
+                              ff_msgs::MotionResultConstPtr const& result,
                               std::string const& cmd_id,
-                              std::string const& cmd_origin);
+                              std::string const& cmd_origin,
+                              Action const& action);
 
   OpState* HandleWaitCallback();
 

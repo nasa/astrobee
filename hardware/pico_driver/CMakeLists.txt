@@ -26,13 +26,13 @@ catkin_package(
 link_directories(${royale_LIB_DIR})
 
 create_library(TARGET ${PROJECT_NAME}
-  LIBS ${catkin_LIBRARIES} ${royale_LIBS} config_reader ff_nodelet
+  LIBS ${catkin_LIBRARIES} ${royale_LIBRARIES} config_reader ff_nodelet
   INC  ${catkin_INCLUDE_DIRS} ${royale_INCLUDE_DIRS}
 )
 
 create_tool_targets(DIR tools
-  LIBS ${catkin_LIBRARIES}
-  INC ${catkin_INCLUDE_DIRS}
+  LIBS ${catkin_LIBRARIES} ${royale_LIBRARIES}
+  INC ${catkin_INCLUDE_DIRS} ${royale_INCLUDE_DIRS}
   DEPS ff_msgs opencv
 )
 

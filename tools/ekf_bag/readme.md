@@ -4,7 +4,7 @@
 This package provides scripts used to evaluate the EKF on
 recorded bag files. To record the bags, use the command
 
-    rosbag record /hw/nav_cam /hw/imu /ground_truth
+    rosbag record /hw/cam_nav /hw/imu /loc/truth
 
 The bag files should begin with at least 5 seconds of the robot
 remaining stationary so that we can estimate the imu bias.

@@ -3,9 +3,9 @@
 //
 // Code generated for Simulink model 'sim_model_lib0'.
 //
-// Model version                  : 1.1139
+// Model version                  : 1.1142
 // Simulink Coder version         : 8.11 (R2016b) 25-Aug-2016
-// C/C++ source code generated on : Thu Aug 31 10:22:10 2017
+// C/C++ source code generated on : Mon Dec 18 10:15:42 2017
 //
 // Target selection: ert.tlc
 // Embedded hardware selection: 32-bit Generic
@@ -101,6 +101,7 @@ typedef struct {
 typedef struct {
   real32_T Integrator_DSTATE;          // '<S213>/Integrator'
   real32_T Filter_DSTATE;              // '<S213>/Filter'
+  real32_T PrevY;                      // '<S212>/Rate Limiter'
 } DW_speed_controller_sim_model_T;
 
 // Block signals for system '<S184>/servo_model'
@@ -404,11 +405,17 @@ struct P_speed_controller_sim_model__T_ {
   real32_T Gain_Gain;                  // Computed Parameter: Gain_Gain
                                        //  Referenced by: '<S212>/Gain'
 
-  real32_T DiscreteTransferFcn_InitialStat;// Computed Parameter: DiscreteTransferFcn_InitialStat
-                                           //  Referenced by: '<S212>/Discrete Transfer Fcn'
-
   real32_T DiscreteTransferFcn1_InitialSta;// Computed Parameter: DiscreteTransferFcn1_InitialSta
                                            //  Referenced by: '<S212>/Discrete Transfer Fcn1'
+
+  real32_T RateLimiter_RisingLim;      // Computed Parameter: RateLimiter_RisingLim
+                                       //  Referenced by: '<S212>/Rate Limiter'
+
+  real32_T RateLimiter_FallingLim;     // Computed Parameter: RateLimiter_FallingLim
+                                       //  Referenced by: '<S212>/Rate Limiter'
+
+  real32_T RateLimiter_IC;             // Computed Parameter: RateLimiter_IC
+                                       //  Referenced by: '<S212>/Rate Limiter'
 
   real32_T Integrator_gainval;         // Computed Parameter: Integrator_gainval
                                        //  Referenced by: '<S213>/Integrator'
@@ -724,16 +731,6 @@ struct P_sim_model_lib0_T_ {
 
   real32_T bpm_PM2_zero_thrust_area_error;// Variable: bpm_PM2_zero_thrust_area_error
                                           //  Referenced by: '<S185>/blower_aerodynamics'
-
-  real32_T bpm_imp_cmd_filt_den;       // Variable: bpm_imp_cmd_filt_den
-                                       //  Referenced by:
-                                       //    '<S190>/speed_controller'
-                                       //    '<S223>/speed_controller'
-
-  real32_T bpm_imp_cmd_filt_num;       // Variable: bpm_imp_cmd_filt_num
-                                       //  Referenced by:
-                                       //    '<S190>/speed_controller'
-                                       //    '<S223>/speed_controller'
 
   real32_T bpm_imp_ctl_filt_n;         // Variable: bpm_imp_ctl_filt_n
                                        //  Referenced by:
@@ -1091,33 +1088,6 @@ struct P_sim_model_lib0_T_ {
   real32_T tun_cvs_perchcam_num_pixels_Y;// Variable: tun_cvs_perchcam_num_pixels_Y
                                          //  Referenced by: '<S113>/pinhole_projection_model'
 
-  real32_T tun_default_att_ki[3];      // Variable: tun_default_att_ki
-                                       //  Referenced by: '<S1>/Constant2'
-
-  real32_T tun_default_att_kp[3];      // Variable: tun_default_att_kp
-                                       //  Referenced by: '<S1>/Constant1'
-
-  real32_T tun_default_center_of_mass[3];// Variable: tun_default_center_of_mass
-                                         //  Referenced by: '<S1>/Constant9'
-
-  real32_T tun_default_inertia_matrix[9];// Variable: tun_default_inertia_matrix
-                                         //  Referenced by: '<S1>/Constant10'
-
-  real32_T tun_default_mass;           // Variable: tun_default_mass
-                                       //  Referenced by: '<S1>/Constant11'
-
-  real32_T tun_default_omega_kd[3];    // Variable: tun_default_omega_kd
-                                       //  Referenced by: '<S1>/Constant3'
-
-  real32_T tun_default_pos_ki[3];      // Variable: tun_default_pos_ki
-                                       //  Referenced by: '<S1>/Constant7'
-
-  real32_T tun_default_pos_kp[3];      // Variable: tun_default_pos_kp
-                                       //  Referenced by: '<S1>/Constant4'
-
-  real32_T tun_default_vel_kd[3];      // Variable: tun_default_vel_kd
-                                       //  Referenced by: '<S1>/Constant8'
-
   real32_T tun_env_accel_dof_gain[3];  // Variable: tun_env_accel_dof_gain
                                        //  Referenced by: '<S7>/Gain'
 
@@ -1146,6 +1116,9 @@ struct P_sim_model_lib0_T_ {
 
   real32_T tun_mass_error;             // Variable: tun_mass_error
                                        //  Referenced by: '<S2>/Constant'
+
+  real32_T tun_sim_cg_error[3];        // Variable: tun_sim_cg_error
+                                       //  Referenced by: '<S4>/Constant'
 
   uint32_T cvs_AR_valid_times[6];      // Variable: cvs_AR_valid_times
                                        //  Referenced by: '<S84>/Constant1'

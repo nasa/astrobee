@@ -95,15 +95,21 @@ class PicoDriver {
 
  protected:
   // Get the image plane width
-  uint32_t GetWidth() {
+  uint16_t GetWidth() {
     if (!Ready()) return 0;
-    return device_->getMaxSensorWidth();
+    uint16_t val = 0;
+    if (device_->getMaxSensorWidth(val) != royale::CameraStatus::SUCCESS)
+      ROS_ERROR_STREAM("Could not get the max sensor width");
+    return val;
   }
 
   // Get the image plan height
-  uint32_t GetHeight() {
+  uint16_t GetHeight() {
     if (!Ready()) return 0;
-    return device_->getMaxSensorHeight();
+    uint16_t val = 0;
+    if (device_->getMaxSensorHeight(val) != royale::CameraStatus::SUCCESS)
+      ROS_ERROR_STREAM("Could not get the max sensor height");
+    return val;
   }
 
   // Register or unregister an extended data listener
@@ -133,32 +139,44 @@ class PicoDriver {
   // Turn the capture on or off
   void Power(bool on) {
     if (!Ready()) return;
+    bool capturing;
+    if (device_->isCapturing(capturing) != royale::CameraStatus::SUCCESS) {
+      ROS_ERROR_STREAM("Could not query the capture status");
+      return;
+    }
     // If we have subscribers and we aren't capturing, then we should start!
-    if (on && !device_->isCapturing()) {
+    if (on && !capturing) {
       if (device_->startCapture() != royale::CameraStatus::SUCCESS) {
         ROS_ERROR_STREAM("Could not start capturing from the camera");
       } else {
         // Case 1: manual exposure
         if (exposure_ > 0) {
-          const royale::Pair<uint32_t, uint32_t> limits = device_->getExposureLimits();
+          royale::Pair<uint32_t, uint32_t> limits;
+          if (device_->getExposureLimits(limits) != royale::CameraStatus::SUCCESS) {
+            ROS_ERROR_STREAM("Could not query the exposure limits");
+            return;
+          }
           if (exposure_ < limits.first || exposure_ > limits.second) {
             ROS_ERROR_STREAM("Manual exposure outside of limits");
-          } else if (device_->setExposureMode(royale::ExposureMode::MANUAL) != royale::CameraStatus::SUCCESS
+            return;
+          }
+          if (device_->setExposureMode(royale::ExposureMode::MANUAL) != royale::CameraStatus::SUCCESS
               ||     device_->setExposureTime(exposure_) != royale::CameraStatus::SUCCESS) {
             ROS_ERROR_STREAM("Manual exposure cannot be set");
+            return;
           }
           ROS_INFO_STREAM("Client connected. Switching to manual exposure mode with value " << exposure_);
         // Case 2 : Automatic exposure
         } else if (device_->setExposureMode(
           royale::ExposureMode::AUTOMATIC) != royale::CameraStatus::SUCCESS) {
           ROS_ERROR_STREAM("Automatic exposure cannot be set");
-        } else {
-          ROS_INFO_STREAM("Client connected. Switching automatic exposure mode");
+          return;
         }
+        ROS_INFO_STREAM("Client connected. Switching automatic exposure mode");
       }
     }
     // If we don't have subscribers and we aren't capturing, then we should stop!
-    if (!on && device_->isCapturing()) {
+    if (!on && capturing) {
       if (device_->stopCapture() != royale::CameraStatus::SUCCESS) {
         ROS_ERROR_STREAM("Could not start capturing from the camera");
       }
@@ -187,28 +205,29 @@ class PicoDriverL1 : public PicoDriver, public royale::IDepthDataListener, publi
     // Change the point cloud based on the frame id and sensor size
     cloud_ = sensor_msgs::PointCloud2();  // To keep the data vector contiguous.
     cloud_.header.frame_id = (robot.empty() ? name : robot + "/" + name);
-    cloud_.width = this->GetWidth() * this->GetHeight();
-    cloud_.height = 1;
+    cloud_.width = this->GetWidth();
+    cloud_.height = this->GetHeight();
     cloud_.is_bigendian = false;
+    cloud_.is_dense = true;
     cloud_.point_step = sizeof(struct royale::DepthPoint);
     cloud_.row_step = cloud_.width * cloud_.point_step;
-    cloud_.data.resize(cloud_.row_step);
+    cloud_.data.resize(cloud_.row_step * cloud_.height);
     // X, Y and Z
     sensor_msgs::PointField field;
     field.name = "x";
     field.offset = offsetof(struct royale::DepthPoint, x);
     field.datatype = sensor_msgs::PointField::FLOAT32;
-    field.count = sizeof(float);
+    field.count = 1;  // Number of ELEMENTS, not bytes!
     cloud_.fields.push_back(field);
     field.name = "y";
     field.offset = offsetof(struct royale::DepthPoint, y);
     field.datatype = sensor_msgs::PointField::FLOAT32;
-    field.count = sizeof(float);
+    field.count = 1;  // Number of ELEMENTS, not bytes!
     cloud_.fields.push_back(field);
     field.name = "z";
     field.offset = offsetof(struct royale::DepthPoint, z);
     field.datatype = sensor_msgs::PointField::FLOAT32;
-    field.count = sizeof(float);
+    field.count = 1;  // Number of ELEMENTS, not bytes!
     cloud_.fields.push_back(field);
     // Generate a nice readable name for the camera
     std::string topic_name_c = (std::string) TOPIC_HARDWARE_PICOFLEXX_PREFIX
@@ -237,7 +256,7 @@ class PicoDriverL1 : public PicoDriver, public royale::IDepthDataListener, publi
       boost::bind(&PicoDriverL1::ToggleCamera, this));
     // Register the depth image listener
     if (!this->ListenerDepthImage(this))
-      ROS_WARN_STREAM("Could not register the depth image listener");
+     ROS_WARN_STREAM("Could not register the depth image listener");
   }
 
   // Destructor
@@ -262,9 +281,8 @@ class PicoDriverL1 : public PicoDriver, public royale::IDepthDataListener, publi
       ROS_WARN("data pointer = nullptr");
       return;
     }
-    // ROS_INFO("New L1 Data");
-    if (data->points.size() != cloud_.width) {
-      ROS_WARN("data null pointer size incorrect");
+    if (data->points.size() != cloud_.width * cloud_.height) {
+      ROS_WARN("data size incorrect");
       return;
     }
     // If we have depth data, use the same mechanism as L1 to push it
@@ -272,7 +290,7 @@ class PicoDriverL1 : public PicoDriver, public royale::IDepthDataListener, publi
       cloud_.header.stamp = ros::Time::now();
       std::copy(
         reinterpret_cast<const uint8_t*>(data->points.data()),
-        reinterpret_cast<const uint8_t*>(data->points.data()) + cloud_.row_step,
+        reinterpret_cast<const uint8_t*>(data->points.data()) + cloud_.row_step * cloud_.height,
         cloud_.data.begin());
       pub_cloud_.publish(cloud_);
     }
@@ -335,28 +353,29 @@ class PicoDriverL2 : public PicoDriver, public royale::IExtendedDataListener {
     // Change the point cloud based on the frame id and sensor size
     cloud_ = sensor_msgs::PointCloud2();  // To keep the data vector contiguous.
     cloud_.header.frame_id = (robot.empty() ? name : robot + "/" + name);
-    cloud_.width = this->GetWidth() * this->GetHeight();
-    cloud_.height = 1;
+    cloud_.width = this->GetWidth();
+    cloud_.height = this->GetHeight();
     cloud_.is_bigendian = false;
+    cloud_.is_dense = true;
     cloud_.point_step = sizeof(struct royale::DepthPoint);
     cloud_.row_step = cloud_.width * cloud_.point_step;
-    cloud_.data.resize(cloud_.row_step);
+    cloud_.data.resize(cloud_.row_step * cloud_.height);
     // X, Y and Z
     sensor_msgs::PointField field;
     field.name = "x";
     field.offset = offsetof(struct royale::DepthPoint, x);
     field.datatype = sensor_msgs::PointField::FLOAT32;
-    field.count = sizeof(float);
+    field.count = 1;  // Number of ELEMENTS, not bytes.
     cloud_.fields.push_back(field);
     field.name = "y";
     field.offset = offsetof(struct royale::DepthPoint, y);
     field.datatype = sensor_msgs::PointField::FLOAT32;
-    field.count = sizeof(float);
+    field.count = 1;  // Number of ELEMENTS, not bytes.
     cloud_.fields.push_back(field);
     field.name = "z";
     field.offset = offsetof(struct royale::DepthPoint, z);
     field.datatype = sensor_msgs::PointField::FLOAT32;
-    field.count = sizeof(float);
+    field.count = 1;  // Number of ELEMENTS, not bytes.
     cloud_.fields.push_back(field);
     // Generate a nice readable name for the camera
     std::string topic_name_c = (std::string) TOPIC_HARDWARE_PICOFLEXX_PREFIX
@@ -388,7 +407,6 @@ class PicoDriverL2 : public PicoDriver, public royale::IExtendedDataListener {
   // Callback for new data
   void onNewData(const royale::IExtendedData *data)  {
     if (!Ready()) return;
-    // ROS_INFO("New L2 Data");
     if (data == nullptr) {
       ROS_WARN("data pointer = nullptr");
       return;
@@ -399,7 +417,7 @@ class PicoDriverL2 : public PicoDriver, public royale::IExtendedDataListener {
       cloud_.header.stamp = ros::Time::now();
        std::copy(
           reinterpret_cast<const uint8_t*>(data->getDepthData()->points.data()),
-          reinterpret_cast<const uint8_t*>(data->getDepthData()->points.data()) + cloud_.row_step,
+          reinterpret_cast<const uint8_t*>(data->getDepthData()->points.data()) + cloud_.row_step * cloud_.height,
           cloud_.data.begin());
       pub_cloud_.publish(cloud_);
     }
@@ -407,22 +425,26 @@ class PicoDriverL2 : public PicoDriver, public royale::IExtendedDataListener {
     if (data->hasIntermediateData() && pub_extended_.getNumSubscribers() > 0
         && data->getIntermediateData() != nullptr) {
       extended_.header.stamp = ros::Time::now();
-      extended_.samples.resize(data->getIntermediateData()->numFrequencies);
-      for (size_t i = 0; i < data->getIntermediateData()->numFrequencies; i++) {
-        extended_.samples[i].frequency = data->getIntermediateData()->modulationFrequencies[i];
-        extended_.samples[i].exposure = data->getIntermediateData()->exposureTimes[i];
-        extended_.samples[i].raw.width = this->GetWidth();
-        extended_.samples[i].raw.height = this->GetHeight();
-        extended_.samples[i].raw.step = extended_.samples[i].raw.width * sizeof(struct royale::IntermediatePoint);
-        extended_.samples[i].raw.encoding = sensor_msgs::image_encodings::TYPE_32FC4;
-        extended_.samples[i].raw.is_bigendian = false;
-        extended_.samples[i].raw.data.resize(extended_.samples[i].raw.step * extended_.samples[i].raw.height);
-        std::copy(
-          reinterpret_cast<const uint8_t*>(data->getIntermediateData()->points[i].data()),
-          reinterpret_cast<const uint8_t*>(data->getIntermediateData()->points[i].data())
-            + extended_.samples[i].raw.step * extended_.samples[i].raw.height,
-          extended_.samples[i].raw.data.begin());
-      }
+      // Populate the modulation frequencies and exposures used to produce this data
+      extended_.frequency.resize(data->getIntermediateData()->modulationFrequencies.size());
+      for (size_t i = 0; i < data->getIntermediateData()->modulationFrequencies.size(); i++)
+        extended_.frequency[i] = data->getIntermediateData()->modulationFrequencies[i];
+      extended_.exposure.resize(data->getIntermediateData()->exposureTimes.size());
+      for (size_t i = 0; i < data->getIntermediateData()->exposureTimes.size(); i++)
+        extended_.exposure[i] = data->getIntermediateData()->exposureTimes[i];
+      // Copy the data itself
+      extended_.raw.width = this->GetWidth();
+      extended_.raw.height = this->GetHeight();
+      extended_.raw.step = extended_.raw.width
+        * sizeof(struct royale::IntermediatePoint);
+      extended_.raw.encoding = sensor_msgs::image_encodings::TYPE_32FC4;
+      extended_.raw.is_bigendian = false;
+      extended_.raw.data.resize(extended_.raw.step * extended_.raw.height);
+      std::copy(
+        reinterpret_cast<const uint8_t*>(data->getIntermediateData()->points.data()),
+        reinterpret_cast<const uint8_t*>(data->getIntermediateData()->points.data())
+          + extended_.raw.step * extended_.raw.height,
+        extended_.raw.data.begin());
       // Publish the extended data
       pub_extended_.publish(extended_);
     }

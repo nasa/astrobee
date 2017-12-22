@@ -28,22 +28,22 @@ cd ${DEBIAN_LOC}/alvar
 sudo mk-build-deps -i -r -t "apt-get --no-install-recommends -y" control
 cd ${DEBIAN_LOC}
 ./build_alvar.sh
-sudo dpkg -i libalvar2_2.0-2_amd64.deb
-sudo dpkg -i libalvar-dev_2.0-2_amd64.deb
+sudo dpkg -i libalvar2_2.0-3_amd64.deb
+sudo dpkg -i libalvar-dev_2.0-3_amd64.deb
 
 cd ${DEBIAN_LOC}/dlib
 sudo mk-build-deps -i -r -t "apt-get --no-install-recommends -y" control
 cd ${DEBIAN_LOC}
 ./build_dlib.sh
-sudo dpkg -i libdbowdlib1_0.1-1_amd64.deb
-sudo dpkg -i libdbowdlib-dev_0.1-1_amd64.deb
+sudo dpkg -i libdbowdlib1_0.1-2_amd64.deb
+sudo dpkg -i libdbowdlib-dev_0.1-2_amd64.deb
 
 cd ${DEBIAN_LOC}/dbow2
 sudo mk-build-deps -i -r -t "apt-get --no-install-recommends -y" control
 cd ${DEBIAN_LOC}
 ./build_dbow2.sh
-sudo dpkg -i libdbow21_0.1-3_amd64.deb
-sudo dpkg -i libdbow2-dev_0.1-3_amd64.deb
+sudo dpkg -i libdbow21_0.1-4_amd64.deb
+sudo dpkg -i libdbow2-dev_0.1-4_amd64.deb
 
 cd ${DEBIAN_LOC}/decomputil
 sudo mk-build-deps -i -r -t "apt-get --no-install-recommends -y" control

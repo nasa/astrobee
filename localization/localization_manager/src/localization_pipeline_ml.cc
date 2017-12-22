@@ -21,7 +21,7 @@
 namespace localization_manager {
 
 MLPipeline::MLPipeline(ros::NodeHandle *nh, ros::NodeHandle *nhp, uint8_t mode, PipelineCallbackType cb)
-  : Pipeline(mode, cb, "ml", "Mapped landmarks", true), nh_(nh) {
+  : Pipeline(mode, cb, "ml", "Mapped landmarks", true, true), nh_(nh) {
   // Create a private nodehandle
   ros::NodeHandle nh_pvt_(*nhp, GetName());
   // Initialize configuration manager

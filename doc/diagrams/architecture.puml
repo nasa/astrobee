@@ -1,0 +1,137 @@
+' java -jar plantuml/plantuml.jar -tsvg architecture.puml 
+
+@startuml
+
+skinparam componentStyle uml2
+
+left to right direction
+
+' Common colors scheme for the type of interfaces
+skinparam interface {
+  borderColor<<action>> #GoldenRod
+  backgroundColor<<action>> #Yellow
+  borderColor<<service>> #HotPink
+  backgroundColor<<service>> #Pink
+  borderColor<<msg>> #DarkGreen
+  backgroundColor<<msg>> #Green
+  borderColor<<latching_msg>> #Black
+  backgroundColor<<latching_msg>> #WhiteSmoke
+}
+
+skinparam component {
+    borderColor #Black
+    backgroundColor #LightBlue
+    arrowColor #MidnightBlue
+}
+
+' Nodes and Interfaces
+frame mgt {
+  component EXECUTIVE
+}
+  
+frame proc {
+  component DOCK
+  component PERCH
+  component ARM
+  interface "/proc/perch\nff_msgs::PerchAction" <<action>> as PerchAction
+  interface "/proc/dock\nff_msgs::DockAction" <<action>> as DockAction
+  interface "/proc/arm\nff_msgs::ArmAction" <<action>> as ArmAction
+  interface "/proc/perch/state\nff_msgs::PerchState" <<latching_msg>> as PerchState
+  interface "/proc/dock/state\nff_msgs::DockState" <<latching_msg>> as DockState
+  interface "/proc/arm/state\nff_msgs::ArmState" <<latching_msg>> as ArmState
+}
+
+' PUML abbreviated notation:
+' component X --> [X]
+' interface I --> () I
+
+frame mob {
+  [CHOREOGRAPHER]
+  () "/mob/motion\nff_msgs::MotionAction" <<action>> as MotionAction
+  () "/mob/motion/state\nff_msgs::MotionState" <<latching_msg>> as MotionState
+}
+
+frame loc {
+  [LOCALIZATION_MANAGER]
+  () "/loc/switch\nff_msgs::SwitchAction" <<action>> as SwitchAction
+}
+
+frame gnc {
+  [CTL]
+  [FAM]
+  [EKF]
+  () "/gnc/control\nff_msgs::ControlAction" <<action>> as ControlAction 
+  () "/gnc/ekf/set_input\nff_msgs::SetEkfInput" <<service>> as EkfSetInput 
+  () "/gnc/ekf\nff_msgs::EkfState" <<msg>> as EkfState 
+  () "/gnc/pose\ngeometry_msgs::PoseStamped" <<msg>> as PoseStamped 
+  () "/gnc/twist\ngeometry_msgs::TwistStamped" <<msg>> as TwistStamped 
+  () "/gnc/wrench\ngeometry_msgs::WrenchStamped" <<msg>> as WrenchStamped 
+  () "/gnc/inertia\ngeometry_msgs::InertiaStamped" <<latching_msg>> as InertiaStamped 
+  () "/gnc/speed\nff_msgs::SpeedGain" <<latching_msg>> as SpeedGain 
+}
+
+frame drv {
+  [PERCHING_ARM]
+  [PMC_ACTUATOR]
+  () "/hw/pmc/telemetry\nff_hw_msgs::PmcTelemetry" <<msg>> as PmcTelemetry
+  () "/hw/pmc/state\nff_hw_msgs::PmcState" <<latching_msg>> as PmcState
+  () "/hw/pmc/command\nff_hw_msgs::PmcCommand" <<msg>> as PmcCommand
+  () "/joint_states\nsensor_msgs::JointState" <<msg>> as JointStates
+  () "/joint_goals\nsensor_msgs::JointState" <<msg>> as JointGoals
+}
+
+  ' Relationships
+EXECUTIVE <<-->> MotionAction
+EXECUTIVE <<-->> DockAction
+EXECUTIVE <<-->> PerchAction
+EXECUTIVE <<-->> ArmAction
+EXECUTIVE --> InertiaStamped
+InertiaStamped --> FAM
+InertiaStamped --> CTL
+InertiaStamped --> EKF
+
+
+DockAction -- DOCK
+PerchAction -- PERCH
+DOCK <<-->> SwitchAction
+PERCH <<-->> SwitchAction
+SwitchAction -- LOCALIZATION_MANAGER
+LOCALIZATION_MANAGER --> EkfSetInput
+EkfSetInput --|> EKF
+DOCK <<-->> MotionAction
+PERCH <<-->> MotionAction
+PERCH <<-->> ArmAction
+MotionAction -- CHOREOGRAPHER
+CHOREOGRAPHER <<-->> ControlAction
+CHOREOGRAPHER --> SpeedGain
+SpeedGain --> EKF
+SpeedGain --> FAM
+ControlAction -- CTL
+CTL --> WrenchStamped
+PmcCommand --> PMC_ACTUATOR
+PMC_ACTUATOR --> PmcTelemetry
+PMC_ACTUATOR --> PmcState
+PmcTelemetry --> CTL
+PmcState --> CHOREOGRAPHER
+ArmAction -- ARM
+WrenchStamped --> FAM
+FAM --> PmcCommand
+ARM --> JointGoals
+EKF --> PoseStamped
+EKF --> TwistStamped
+EKF --> EkfState
+TwistStamped --> CTL
+PoseStamped --> CTL
+JointStates --> ARM
+JointGoals --> PERCHING_ARM
+PERCHING_ARM --> JointStates
+PERCH --> PerchState
+DOCK --> DockState
+ARM --> ArmState
+CHOREOGRAPHER --> MotionState
+PerchState --> EXECUTIVE
+DockState --> EXECUTIVE
+ArmState --> EXECUTIVE
+MotionState --> EXECUTIVE
+
+@enduml

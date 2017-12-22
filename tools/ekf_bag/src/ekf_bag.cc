@@ -1,0 +1,192 @@
+/* Copyright (c) 2017, United States Government, as represented by the
+ * Administrator of the National Aeronautics and Space Administration.
+ * 
+ * All rights reserved.
+ * 
+ * The Astrobee platform is licensed under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with the
+ * License. You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+
+#include <ekf_bag/ekf_bag.h>
+
+#include <image_transport/image_transport.h>
+#include <ff_util/ff_names.h>
+
+#include <camera/camera_params.h>
+#include <common/utils.h>
+#include <Eigen/Core>
+#include <rosbag/view.h>
+
+namespace ekf_bag {
+
+EkfBag::EkfBag(const char* bagfile, const char* mapfile) :
+          map_(mapfile, true), loc_(&map_) {
+  bag_.open(bagfile, rosbag::bagmode::Read);
+}
+
+EkfBag::~EkfBag(void) {
+  bag_.close();
+}
+
+void EkfBag::ReadParams(config_reader::ConfigReader* config) {
+  config->AddFile("tools/ekf_bag.config");
+  config->AddFile("gnc.config");
+  config->AddFile("cameras.config");
+  config->AddFile("geometry.config");
+  config->AddFile("localization.config");
+  config->AddFile("optical_flow.config");
+
+  if (!config->ReadFiles()) {
+    ROS_FATAL("Failed to read config files.");
+    return;
+  }
+
+  if (!config->GetReal("sparse_map_delay", &sparse_map_delay_))
+    ROS_FATAL("sparse_map_delay not specified.");
+  if (!config->GetReal("of_delay", &of_delay_))
+    ROS_FATAL("of_delay not specified.");
+
+  ekf_.ReadParams(config);
+  of_.ReadParams(config);
+  loc_.ReadParams(config);
+}
+
+void EkfBag::EstimateBias(void) {
+  std::vector<std::string> topics;
+  topics.push_back(std::string("/") + TOPIC_HARDWARE_IMU);
+
+  // get the start time
+  rosbag::View temp(bag_, rosbag::TopicQuery(topics));
+  ros::Time start = temp.getBeginTime();
+
+  // look in only the first few seconds
+  rosbag::View early_imu(bag_, rosbag::TopicQuery(topics), start, start + ros::Duration(5.0));
+
+  int count = 0;
+  Eigen::Vector3f gyro(0, 0, 0), accel(0, 0, 0);
+  for (rosbag::MessageInstance const m : early_imu) {
+    if (m.isType<sensor_msgs::Imu>()) {
+      sensor_msgs::ImuConstPtr imu = m.instantiate<sensor_msgs::Imu>();
+      accel.x() += imu->linear_acceleration.x;
+      accel.y() += imu->linear_acceleration.y;
+      accel.z() += imu->linear_acceleration.z;
+      gyro.x() += imu->angular_velocity.x;
+      gyro.y() += imu->angular_velocity.y;
+      gyro.z() += imu->angular_velocity.z;
+      count++;
+    }
+  }
+  accel = accel / count;
+  gyro = gyro / count;
+  ekf_.SetBias(gyro, accel);
+  ekf_.Reset();
+}
+
+void EkfBag::UpdateImu(const ros::Time & time, const sensor_msgs::Imu & imu) {
+  // send the visual messages when it's time
+  if (processing_of_ && time >= of_send_time_) {
+    ekf_.OpticalFlowUpdate(of_features_);
+    processing_of_ = false;
+  }
+  if (processing_sparse_map_ && time >= vl_send_time_) {
+    ekf_.SparseMapUpdate(vl_features_);
+    processing_sparse_map_ = false;
+  }
+
+  // Pass a quaternion in to do MGTF gravity correction if needed
+  ekf_.PrepareStep(imu, ground_truth_.orientation);
+  ff_msgs::EkfState state;
+  int ret = ekf_.Step(&state);
+  if (ret)
+    UpdateEKF(state);
+}
+
+void EkfBag::UpdateImage(const ros::Time & time, const sensor_msgs::ImageConstPtr & image_msg) {
+  if (!processing_of_) {
+    // send of registration
+    ff_msgs::CameraRegistration r;
+    r.header = std_msgs::Header();
+    r.header.stamp = time;
+    r.camera_id = ++of_id_;
+    ekf_.OpticalFlowRegister(r);
+    // do the processing now, but send it later
+    of_features_.feature_array.clear();
+    of_.OpticalFlow(image_msg, &of_features_);
+    of_features_.camera_id = of_id_;
+    processing_of_ = true;
+    of_send_time_ = time + ros::Duration(of_delay_);
+
+    UpdateOpticalFlow(of_features_);
+  }
+  // now do sparse map
+  if (!processing_sparse_map_) {
+    // send registration
+    ff_msgs::CameraRegistration r;
+    r.header = std_msgs::Header();
+    r.header.stamp = time;
+    r.camera_id = ++vl_id_;
+    ekf_.SparseMapRegister(r);
+    // do processing now, but send it later
+    cv_bridge::CvImageConstPtr image;
+    try {
+      image = cv_bridge::toCvShare(image_msg, sensor_msgs::image_encodings::MONO8);
+    } catch (cv_bridge::Exception& e) {
+      ROS_ERROR("cv_bridge exception: %s", e.what());
+      return;
+    }
+    vl_features_.landmarks.clear();
+    loc_.Localize(image, &vl_features_);
+    vl_features_.camera_id = vl_id_;
+    processing_sparse_map_ = true;
+    vl_send_time_ = time + ros::Duration(sparse_map_delay_);
+
+    UpdateSparseMap(vl_features_);
+  }
+}
+
+void EkfBag::UpdateGroundTruth(const geometry_msgs::PoseStamped & pose) {
+  ground_truth_ = pose.pose;  // Cache the pose for MGTF gravity correction
+}
+
+void EkfBag::Run(void) {
+  EstimateBias();
+
+  std::vector<std::string> topics;
+  topics.push_back(std::string("/") + TOPIC_HARDWARE_IMU);
+  topics.push_back(std::string("/") + TOPIC_HARDWARE_NAV_CAM);
+  topics.push_back(std::string("/") + TOPIC_LOCALIZATION_TRUTH);
+  rosbag::View view(bag_, rosbag::TopicQuery(topics));
+
+  processing_of_ = processing_sparse_map_ = false;
+  of_id_ = vl_id_ = 0;
+
+  int progress = 0;
+  for (rosbag::MessageInstance const m : view) {
+    progress++;
+
+    if (m.isType<sensor_msgs::Image>()) {
+      sensor_msgs::ImageConstPtr image_msg = m.instantiate<sensor_msgs::Image>();
+      UpdateImage(m.getTime(), image_msg);
+      common::PrintProgressBar(stdout, static_cast<float>(progress) / view.size());
+    } else if (m.isType<sensor_msgs::Imu>()) {
+      sensor_msgs::ImuConstPtr imu_msg = m.instantiate<sensor_msgs::Imu>();
+      UpdateImu(m.getTime(), *imu_msg.get());
+    } else if (m.isType<geometry_msgs::PoseStamped>()) {
+      geometry_msgs::PoseStampedConstPtr gt_msg = m.instantiate<geometry_msgs::PoseStamped>();
+      UpdateGroundTruth(*gt_msg.get());
+    }
+  }
+  printf("\n");
+}
+
+}  // namespace ekf_bag
+

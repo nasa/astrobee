@@ -57,5 +57,5 @@ rsync -avz ${username}volar.ndc.nasa.gov:/home/p-free-flyer/free-flyer/FSW/ars_d
 # Add these packages to the apt sources
 sudo /bin/bash -c "echo \"deb [arch=amd64] file://$debdir xenial main\" > $arssrc" || exit 1
 sudo /bin/bash -c "echo \"deb-src file://$debdir xenial main\" >> $arssrc" || exit 1
-sudo apt-key add $scriptdir/../rootfs/keys/astrobee.key || exit 1
+sudo apt-key add $scriptdir/../../submodules/platform/rootfs/keys/astrobee.key || exit 1
 sudo apt-get update || exit 1

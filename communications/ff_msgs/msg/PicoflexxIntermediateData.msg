@@ -18,4 +18,6 @@
 # Message for encoding Picoflexx imtermediate data 
 
 std_msgs/Header header
-ff_msgs/PicoflexxIntermediateDataSample[] samples
+uint32[] frequency
+uint32[] exposure
+sensor_msgs/Image raw

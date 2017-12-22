@@ -1,0 +1,87 @@
+!include "colors.puml"
+
+!define COLOR_COM COLOR_9PASTEL_8
+!define COLOR_MGT COLOR_9PASTEL_3
+!define COLOR_MOB COLOR_9PASTEL_2
+!define COLOR_LOC COLOR_9PASTEL_4
+!define COLOR_GNC COLOR_9PASTEL_5
+!define COLOR_DRV COLOR_9PASTEL_7
+
+!ifdef SHOW_ALL_TYPES
+!define SHOW_COM true
+!define SHOW_MGT true
+!define SHOW_MOB true
+!define SHOW_LOC true
+!define SHOW_GNC true
+!define SHOW_DRV true
+!endif
+
+'Common colors scheme for the type of interfaces
+skinparam interface {
+ borderColor<<action>> COLOR_9SETONE_4
+ backgroundColor<<action>> COLOR_9SETONE_5
+ borderColor<<service>> COLOR_9SETONE_4
+ backgroundColor<<service>> COLOR_9SETONE_8
+ borderColor<<msg>> COLOR_9SETONE_4
+ backgroundColor<<msg>> COLOR_9SETONE_6
+ borderColor<<latching_msg>> COLOR_9SETONE_4
+ backgroundColor<<latching_msg>> COLOR_9SETONE_7
+}
+
+skinparam component {
+    borderColor #Black
+    arrowColor #MidnightBlue
+}
+
+!define message(name, type, topic) interface "topic\n[type]" <<msg>> as name
+!define action(name, type, topic) interface "topic\n[type]" <<action>> as name
+!define service(name, type, topic) interface "topic\n[type]" <<service>> as name
+!define latching_msg(name, type, topic) interface "topic\n[type]" <<latching_msg>> as name
+
+!definelong com_node(name)
+!ifdef SHOW_COM
+    component "name" COLOR_COM
+!else
+    ' skip COM nodes
+!endif
+!enddefinelong
+
+!definelong mgt_node(name)
+!ifdef SHOW_MGT
+    component "name" COLOR_MGT
+!else
+    ' skip MGT nodes
+!endif
+!enddefinelong
+
+!definelong mob_node(name)
+!ifdef SHOW_MOB
+    component "name" COLOR_MOB
+!else
+    ' skip MOB nodes
+!endif
+!enddefinelong
+
+!definelong loc_node(name)
+!ifdef SHOW_LOC
+    component "name" COLOR_LOC
+!else
+    ' skip LOC nodes
+!endif
+!enddefinelong
+
+!definelong gnc_node(name)
+!ifdef SHOW_GNC
+    component "name" COLOR_GNC
+!else
+    ' skip GNC nodes
+!endif
+!enddefinelong
+
+!definelong drv_node(name)
+!ifdef SHOW_DRV
+    component "name" COLOR_DRV
+!else
+    ' skip DRV nodes
+!endif
+!enddefinelong

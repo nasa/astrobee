@@ -21,6 +21,8 @@ uint8 MODE_MAP_LANDMARKS = 0 # use mapped landmarks
 uint8 MODE_AR_TAGS       = 1 # use AR tags
 uint8 MODE_HANDRAIL      = 2 # use the handrail
 uint8 MODE_NONE          = 3 # no localization pipeline
+uint8 MODE_PERCH         = 4 # perch localization
+uint8 MODE_TRUTH         = 5 # ground truth localization
 
 uint8 mode # the mode to use in the EKF
 ---

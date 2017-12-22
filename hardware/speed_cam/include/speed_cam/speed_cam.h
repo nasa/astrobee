@@ -31,8 +31,8 @@
 #include <vector>
 
 // Conversions to SI units
-#define MILLIG_TO_MPSECSQ 0.0098
-#define MILLIRADS_TO_RADS 0.0010
+#define MILLIMSS_TO_MSS (0.0010)
+#define MILLIRADS_TO_RADS (0.0010)
 
 /**
  * \ingroup hw
@@ -44,6 +44,7 @@ typedef std::function<void(mavlink_raw_imu_t const&)> SpeedCamImuCallback;
 typedef std::function<void(std::vector<uint8_t> const&, int32_t, int32_t)> SpeedCamCameraImageCallback;
 typedef std::function<void(mavlink_optical_flow_t const&)> SpeedCamOpticalFlowCallback;
 typedef std::function<void(mavlink_vision_speed_estimate_t const&)> SpeedCamSpeedCallback;
+typedef std::function<void(mavlink_heartbeat_t const&)> SpeedCamStatusCallback;
 
 // Result for any speed camera action
 enum SpeedCamResult {
@@ -52,12 +53,20 @@ enum SpeedCamResult {
   RESULT_PORT_WRITE_FAILURE     // Couldn't write to the serial port
 };
 
+// Bitmask for speedcam status
+enum SpeedCamStatus {
+  STATUS_NORMAL = 0x00,
+  STATUS_LINEAR_SPEED_LIMIT_EXCEEDED = 0x01,
+  STATUS_ANGULAR_SPEED_LIMIT_EXCEEDED = 0x02,
+};
+
 // Class to manage the speed camera
 class SpeedCam {
  public:
   // Constructor
   SpeedCam(SpeedCamImuCallback cb_imu, SpeedCamCameraImageCallback cb_camera_image,
-    SpeedCamOpticalFlowCallback cb_optical_flow, SpeedCamSpeedCallback cb_speed);
+    SpeedCamOpticalFlowCallback cb_optical_flow, SpeedCamSpeedCallback cb_speed,
+    SpeedCamStatusCallback cb_status);
 
   // Initialize the serial port
   SpeedCamResult Initialize(std::string const& port, uint32_t baud);
@@ -78,6 +87,7 @@ class SpeedCam {
   SpeedCamCameraImageCallback cb_camera_image_;   // Camera image callback
   SpeedCamOpticalFlowCallback  cb_optical_flow_;  // Optical flow callback
   SpeedCamSpeedCallback cb_speed_;                // Twist callback
+  SpeedCamStatusCallback cb_status_;              // System status callback
   int32_t system_id_;                             // Source device
   int32_t comp_id_;                               // Sink device
   size_t image_size_;                             // Image size

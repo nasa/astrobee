@@ -23,7 +23,7 @@
     <sensor name="nav_cam" type="wideanglecamera">
       <pose>0 0 0 0 0 0</pose>
       <always_on>0</always_on>
-      <update_rate>1</update_rate>
+      <update_rate>3</update_rate>
       <visualize>0</visualize>
       <camera>
         <horizontal_fov>2.957216683909311</horizontal_fov>
@@ -33,7 +33,7 @@
           <format>L8</format>
         </image>
         <clip>
-          <near>0.2</near>
+          <near>0.03</near>
           <far>10</far>
         </clip>
         <distortion>
@@ -46,7 +46,7 @@
     <sensor name="sparse_map" type="depth">
       <pose>0 0 0 0 0 0</pose>
       <always_on>0</always_on>
-      <update_rate>2</update_rate>
+      <update_rate>5</update_rate>
       <visualize>0</visualize>
       <camera>
         <horizontal_fov>2.957216683909311</horizontal_fov> <!-- 130 degrees -->
@@ -56,7 +56,7 @@
           <format>L8</format>
         </image>
         <clip>
-          <near>0.2</near>
+          <near>0.03</near>
           <far>10</far>
         </clip>
         <distortion>

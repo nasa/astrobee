@@ -47,7 +47,8 @@ class SpeedCamNode : public ff_util::FreeFlyerNodelet {
     std::bind(&SpeedCamNode::CameraImageCallback, this, std::placeholders::_1,
       std::placeholders::_2,  std::placeholders::_3),
     std::bind(&SpeedCamNode::OpticalFlowCallback, this, std::placeholders::_1),
-    std::bind(&SpeedCamNode::SpeedCallback, this, std::placeholders::_1)) {}
+    std::bind(&SpeedCamNode::SpeedCallback, this, std::placeholders::_1),
+    std::bind(&SpeedCamNode::StatusCallback, this, std::placeholders::_1)) {}
   virtual ~SpeedCamNode() {}
 
  protected:
@@ -74,6 +75,7 @@ class SpeedCamNode : public ff_util::FreeFlyerNodelet {
       std::string name;
       if (!device_info.GetStr("name", &name))
         FF_FATAL("Could not find row 'name' in table");
+
       if (name == GetName()) {
         config_reader::ConfigReader::Table serial;
         if (!device_info.GetTable("serial", &serial))
@@ -87,7 +89,7 @@ class SpeedCamNode : public ff_util::FreeFlyerNodelet {
         if (speed_cam_.Initialize(port, baud) != RESULT_SUCCESS)
           FF_FATAL("Could not initialize the serial device");
 
-        // Get the name of the device and check it matches the name of this node
+        /*
         double timesync_secs = -1.0;
         if (!device_info.GetReal("timesync_secs", &timesync_secs))
           FF_FATAL("Could not find row 'timesync_secs' in table");
@@ -95,12 +97,13 @@ class SpeedCamNode : public ff_util::FreeFlyerNodelet {
           timer_ = nh->createTimer(ros::Duration(timesync_secs),
             &SpeedCamNode::TimesyncCallback, this, false);
         }
+        */
 
         // Setup message: Inertial measurement unit
         pub_imu_ = nh->advertise < sensor_msgs::Imu > (TOPIC_HARDWARE_SPEED_CAM_IMU, 1);
         pub_camera_image_ = nh->advertise < sensor_msgs::Image > (TOPIC_HARDWARE_SPEED_CAM_CAMERA_IMAGE, 1);
         pub_optical_flow_ = nh->advertise < ff_hw_msgs::OpticalFlow > (TOPIC_HARDWARE_SPEED_CAM_OPTICAL_FLOW, 1);
-        pub_speed_ = nh->advertise < geometry_msgs::Vector3Stamped  > (TOPIC_HARDWARE_SPEED_CAM_SPEED, 1);
+        pub_speed_ = nh->advertise < geometry_msgs::Vector3Stamped > (TOPIC_HARDWARE_SPEED_CAM_SPEED, 1);
 
         // Exit once found
         return;
@@ -113,7 +116,9 @@ class SpeedCamNode : public ff_util::FreeFlyerNodelet {
 
   // Perform a time sync event
   void TimesyncCallback(ros::TimerEvent const& event) {
+    /*
     speed_cam_.TimeSync();
+    */
   }
 
   // Callback from speedcam when new a new scaled IMU measurement is produced
@@ -121,10 +126,13 @@ class SpeedCamNode : public ff_util::FreeFlyerNodelet {
     if (pub_imu_.getNumSubscribers() == 0) return;
     // mavlink -> ros conversion
     static sensor_msgs::Imu imuMsg;
-    imuMsg.header.stamp = ros::Time(message.time_usec / 1000000, (message.time_usec % 1000000) * 1000);
-    imuMsg.linear_acceleration.x = static_cast<double>(message.xacc) * MILLIG_TO_MPSECSQ;
-    imuMsg.linear_acceleration.y = static_cast<double>(message.yacc) * MILLIG_TO_MPSECSQ;
-    imuMsg.linear_acceleration.z = static_cast<double>(message.zacc) * MILLIG_TO_MPSECSQ;
+    // imuMsg.header.stamp =
+    //     ros::Time(message.time_usec / 1000000, (message.time_usec % 1000000) * 1000);
+    imuMsg.header.stamp = ros::Time::now();
+    imuMsg.header.frame_id = GetName();
+    imuMsg.linear_acceleration.x = static_cast<double>(message.xacc) * MILLIMSS_TO_MSS;
+    imuMsg.linear_acceleration.y = static_cast<double>(message.yacc) * MILLIMSS_TO_MSS;
+    imuMsg.linear_acceleration.z = static_cast<double>(message.zacc) * MILLIMSS_TO_MSS;
     imuMsg.angular_velocity.x = static_cast<double>(message.xgyro) * MILLIRADS_TO_RADS;
     imuMsg.angular_velocity.y = static_cast<double>(message.ygyro) * MILLIRADS_TO_RADS;
     imuMsg.angular_velocity.z = static_cast<double>(message.zgyro) * MILLIRADS_TO_RADS;
@@ -153,7 +161,8 @@ class SpeedCamNode : public ff_util::FreeFlyerNodelet {
     if (pub_optical_flow_.getNumSubscribers() == 0) return;
     // mavlink -> ros conversion
     static ff_hw_msgs::OpticalFlow optFlowMsg;
-    optFlowMsg.header.stamp = ros::Time(message.time_usec / 1000000, (message.time_usec % 1000000) * 1000);
+//    optFlowMsg.header.stamp = ros::Time(message.time_usec / 1000000, (message.time_usec % 1000000) * 1000);
+    optFlowMsg.header.stamp = ros::Time::now();
     optFlowMsg.header.frame_id = GetName();
     optFlowMsg.ground_distance = message.ground_distance;
     optFlowMsg.flow_x = message.flow_x;
@@ -169,12 +178,22 @@ class SpeedCamNode : public ff_util::FreeFlyerNodelet {
     if (pub_speed_.getNumSubscribers() == 0)
       return;
     static geometry_msgs::Vector3Stamped speedMsg;
-    speedMsg.header.stamp = ros::Time(message.usec / 1000000, (message.usec % 1000000) * 1000);
+//    speedMsg.header.stamp = ros::Time(message.usec / 1000000, (message.usec % 1000000) * 1000);
+    speedMsg.header.stamp = ros::Time::now();
     speedMsg.header.frame_id = GetName();
     speedMsg.vector.x = message.x;
     speedMsg.vector.y = message.y;
     speedMsg.vector.z = message.z;
     pub_speed_.publish(speedMsg);
+  }
+
+  // Callback from speedcam when a new status message is produced.
+  // The status includes over-speed alerts.
+  void StatusCallback(mavlink_heartbeat_t const& message) {
+    if ((message.system_status & STATUS_LINEAR_SPEED_LIMIT_EXCEEDED) != 0x00)
+      AssertFault("VELOCITY_TOO_HIGH", "The linear speed exceeded the limit.");
+    if ((message.system_status & STATUS_ANGULAR_SPEED_LIMIT_EXCEEDED) != 0x00)
+      AssertFault("VELOCITY_TOO_HIGH", "The angular speed exceeded the limit.");
   }
 
  private:

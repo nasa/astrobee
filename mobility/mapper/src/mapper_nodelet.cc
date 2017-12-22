@@ -69,32 +69,40 @@ class MapperNodelet : public ff_util::FreeFlyerNodelet {
   };
 
   // Constructor
-  MapperNodelet() : ff_util::FreeFlyerNodelet(NODE_MAPPER, true), state_(IDLE) {}
+  MapperNodelet() :
+    ff_util::FreeFlyerNodelet(NODE_MAPPER, true), state_(IDLE) {}
 
   // Destructor
   virtual ~MapperNodelet() {}
 
  protected:
   virtual void Initialize(ros::NodeHandle *nh) {
-    // Grab some configuration parameters for this node from the LUA config reader
+    // Grab some configuration parameters for this node from the config reader
     cfg_.Initialize(GetPrivateHandle(), "mobility/mapper.config");
     cfg_.Listen(boost::bind(&MapperNodelet::ReconfigureCallback, this, _1));
 
     // Setup a timer to forward diagnostics
-    timer_d_ = nh->createTimer(ros::Duration(ros::Rate(DEFAULT_DIAGNOSTICS_RATE)),
-      &MapperNodelet::DiagnosticsCallback, this, false, true);
+    timer_d_ = nh->createTimer(
+      ros::Duration(ros::Rate(DEFAULT_DIAGNOSTICS_RATE)),
+        &MapperNodelet::DiagnosticsCallback, this, false, true);
 
     // For publishing the keep outs and keep ins to RVIZ (both persistent)
-    pub_m_ = nh->advertise < visualization_msgs::MarkerArray > (TOPIC_MOBILITY_ZONES, 10, true);
+    pub_m_ = nh->advertise<visualization_msgs::MarkerArray>(
+      TOPIC_MOBILITY_ZONES, 10, true);
 
     // Allow planners to register themselves
-    srv_s_ = nh->advertiseService(SERVICE_MOBILITY_SET_ZONES, &MapperNodelet::SetZonesCallback, this);
-    srv_g_ = nh->advertiseService(SERVICE_MOBILITY_GET_ZONES, &MapperNodelet::GetZonesCallback, this);
+    srv_s_ = nh->advertiseService(SERVICE_MOBILITY_SET_ZONES,
+      &MapperNodelet::SetZonesCallback, this);
+    srv_g_ = nh->advertiseService(SERVICE_MOBILITY_GET_ZONES,
+      &MapperNodelet::GetZonesCallback, this);
 
     // Setup the execute action
-    server_v_.SetGoalCallback(std::bind(&MapperNodelet::GoalCallback, this, std::placeholders::_1));
-    server_v_.SetPreemptCallback(std::bind(&MapperNodelet::PreemptCallback, this));
-    server_v_.SetCancelCallback(std::bind(&MapperNodelet::CancelCallback, this));
+    server_v_.SetGoalCallback(std::bind(&MapperNodelet::GoalCallback,
+      this, std::placeholders::_1));
+    server_v_.SetPreemptCallback(std::bind(&MapperNodelet::PreemptCallback,
+      this));
+    server_v_.SetCancelCallback(std::bind(&MapperNodelet::CancelCallback,
+      this));
     server_v_.Create(nh, ACTION_MOBILITY_VALIDATE);
 
     // Grab the zone directory value from the LUA config
@@ -112,15 +120,19 @@ class MapperNodelet : public ff_util::FreeFlyerNodelet {
     // Set the default time to 1 to check if this changed on read
     bool found = false;
     // Try and read the zone
-    auto files = boost::make_iterator_range(fs::directory_iterator(dir), fs::directory_iterator());
+    auto files = boost::make_iterator_range(fs::directory_iterator(dir),
+      fs::directory_iterator());
     for (fs::path const& e : files) {
       if (e.extension() != ".bin")
         continue;
       ff_msgs::SetZones::Request zones;
-      ff_util::ReadFile(e.native(), zones);
-      if (zones.timestamp >= zones_.timestamp) {
-        found = true;
-        zones_ = zones;
+      if (ff_util::Serialization::ReadFile(e.native(), zones)) {
+        if (zones.timestamp >= zones_.timestamp) {
+          found = true;
+          zones_ = zones;
+        }
+      } else {
+        NODELET_WARN_STREAM("Cannot open zone file " << e.native());
       }
     }
     // Special case: nothing was loaded.
@@ -146,18 +158,21 @@ class MapperNodelet : public ff_util::FreeFlyerNodelet {
   }
 
   // Callback to get the zones
-  bool GetZonesCallback(ff_msgs::GetZones::Request& req, ff_msgs::GetZones::Response& res) {
+  bool GetZonesCallback(ff_msgs::GetZones::Request& req,
+    ff_msgs::GetZones::Response& res) {
     res.timestamp = zones_.timestamp;
     res.zones = zones_.zones;
     return true;
   }
 
   // Callback to set the zones
-  bool SetZonesCallback(ff_msgs::SetZones::Request& req, ff_msgs::SetZones::Response& res) {  //NOLINT
+  bool SetZonesCallback(ff_msgs::SetZones::Request& req,
+  ff_msgs::SetZones::Response& res) {  //NOLINT
     if (req.timestamp >= zones_.timestamp) {
       zones_ = req;
       fs::path zone_file(std::to_string(zones_.timestamp.sec) + ".bin");
-      ff_util::WriteFile((zone_dir_ / zone_file).native(), zones_);
+      if (!ff_util::Serialization::WriteFile(
+        (zone_dir_ / zone_file).native(), zones_)) return false;
       UpdateMarkers();
       return true;
     }
@@ -224,14 +239,16 @@ class MapperNodelet : public ff_util::FreeFlyerNodelet {
     case VALIDATING: {
       ff_msgs::ValidateResult validate_result;
       validate_result.response = response;
-      validate_result.flight_mode = flight_mode_;
       validate_result.segment = segment_;
       if (response > 0)
-        server_v_.SendResult(ff_util::FreeFlyerActionState::SUCCESS, validate_result);
+        server_v_.SendResult(
+          ff_util::FreeFlyerActionState::SUCCESS, validate_result);
       else if (response < 0)
-        server_v_.SendResult(ff_util::FreeFlyerActionState::ABORTED, validate_result);
+        server_v_.SendResult(
+          ff_util::FreeFlyerActionState::ABORTED, validate_result);
       else
-        server_v_.SendResult(ff_util::FreeFlyerActionState::PREEMPTED, validate_result);
+        server_v_.SendResult(
+          ff_util::FreeFlyerActionState::PREEMPTED, validate_result);
       break;
     }
     case IDLE:
@@ -250,23 +267,22 @@ class MapperNodelet : public ff_util::FreeFlyerNodelet {
     switch (state_) {
     case IDLE: {
       // Cover a special case where not enough info
-      if (validate_goal->flight_mode.empty())
-        return Complete(RESPONSE::NO_FLIGHT_MODE_SPECIFIED);
       if (validate_goal->segment.empty())
         return Complete(RESPONSE::UNEXPECTED_EMPTY_SEGMENT);
       // Start the validation
-      flight_mode_ = validate_goal->flight_mode;
       segment_ = validate_goal->segment;
       state_ = VALIDATING;
       // For now, just do the usual validation tricks
-      ff_util::SegmentResult ret = ff_util::SegmentUtil::Check(ff_util::CHECK_ALL, segment_, flight_mode_);
+      ff_util::SegmentResult r = ff_util::FlightUtil::Check(ff_util::CHECK_ALL,
+        segment_, validate_goal->flight_mode, validate_goal->faceforward);
       // Print a nice readable error error
-      if (ret != ff_util::SUCCESS) {
+      if (r != ff_util::SUCCESS) {
         NODELET_DEBUG_STREAM(*validate_goal);
-        NODELET_WARN_STREAM("Validate failed: " <<  ff_util::SegmentUtil::GetDescription(ret));
+        NODELET_WARN_STREAM("Validate failed: "
+          << ff_util::FlightUtil::GetDescription(r));
       }
       // Do something based on the result
-      switch (ret) {
+      switch (r) {
       case ff_util::SUCCESS:
         return Complete(RESPONSE::SUCCESS);
       case ff_util::ERROR_MINIMUM_FREQUENCY:
@@ -285,10 +301,6 @@ class MapperNodelet : public ff_util::FreeFlyerNodelet {
         return Complete(RESPONSE::EXCEEDS_LIMITS_OMEGA);
       case ff_util::ERROR_LIMITS_ALPHA:
         return Complete(RESPONSE::EXCEEDS_LIMITS_ALPHA);
-      case ff_util::ERROR_INVALID_FLIGHT_MODE:
-        return Complete(RESPONSE::INVALID_FLIGHT_MODE);
-      case ff_util::ERROR_INVALID_GENERAL_CONFIG:
-        return Complete(RESPONSE::INVALID_GENERAL_CONFIG);
       }
       break;
     }
@@ -311,17 +323,16 @@ class MapperNodelet : public ff_util::FreeFlyerNodelet {
 
 
  protected:
-  State state_;                                                           // State of the mapper
-  std::string zone_dir_;                                                  // Zone file directory
-  ff_msgs::SetZones::Request zones_;                                      // Zone set request
-  ff_util::FreeFlyerActionServer < ff_msgs::ValidateAction > server_v_;   // Mappere::Validate
-  ff_util::Segment segment_;                                              // Segment
-  std::string flight_mode_;                                               // Flight mode
-  ros::Publisher pub_m_;                                                  // Visualization of map
-  ros::ServiceServer srv_g_;                                              // Get zone service
-  ros::ServiceServer srv_s_;                                              // Set zone service
-  ros::Timer timer_d_;                                                    // Diangostics
-  ff_util::ConfigServer cfg_;                                             // Config server
+  State state_;                            // State of the mapper
+  std::string zone_dir_;                   // Zone file directory
+  ff_msgs::SetZones::Request zones_;       // Zone set request
+  ff_util::FreeFlyerActionServer <ff_msgs::ValidateAction> server_v_;
+  ff_util::Segment segment_;               // Segment
+  ros::Publisher pub_m_;                   // Visualization of map
+  ros::ServiceServer srv_g_;               // Get zone service
+  ros::ServiceServer srv_s_;               // Set zone service
+  ros::Timer timer_d_;                     // Diagnostics
+  ff_util::ConfigServer cfg_;              // Config server
 };
 
 PLUGINLIB_DECLARE_CLASS(mapper, MapperNodelet,

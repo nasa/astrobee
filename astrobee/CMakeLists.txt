@@ -22,7 +22,8 @@ catkin_package(
 )
 
 install(DIRECTORY config/ DESTINATION config)
-install(DIRECTORY resources/ DESTINATION resources)
+# resources will be installed separately
+# install(DIRECTORY resources/ DESTINATION resources)
 
 install_launch_files()
 

@@ -39,9 +39,19 @@
   </group>
 
   <!-- Launch GNC nodes -->
-  <include file="$(find gnc_ros_wrapper)/launch/gnc_ros_wrapper.launch"
-    if="$(eval arg('nodes') == '' or arg('nodes').find('gnc_ros_wrapper') != -1)">
-    <arg name="name" value="gnc_node" />
+  <include file="$(find ekf)/launch/ekf.launch"
+    if="$(eval arg('nodes') == '' or arg('nodes').find('ekf') != -1)">
+    <arg name="name" value="ekf_node" />
+    <arg name="manager" value="llp_gnc" />
+  </include>
+  <include file="$(find ctl)/launch/ctl.launch"
+    if="$(eval arg('nodes') == '' or arg('nodes').find('ctl') != -1)">
+    <arg name="name" value="ctl_node" />
+    <arg name="manager" value="llp_gnc" />
+  </include>
+  <include file="$(find fam)/launch/fam.launch"
+    if="$(eval arg('nodes') == '' or arg('nodes').find('fam') != -1)">
+    <arg name="name" value="fam_node" />
     <arg name="manager" value="llp_gnc" />
   </include>
 
@@ -60,11 +70,6 @@
     <include file="$(find eps_driver)/launch/eps_driver.launch"
       if="$(eval arg('nodes') == '' or arg('nodes').find('eps_driver') != -1)">
       <arg name="name" value="eps_driver" />
-      <arg name="manager" value="llp_i2c" />
-    </include>
-    <include file="$(find dock)/launch/dock.launch"
-      if="$(eval arg('nodes') == '' or arg('nodes').find('dock') != -1)">
-      <arg name="name" value="dock" />
       <arg name="manager" value="llp_i2c" />
     </include>
     <include file="$(find laser)/launch/laser.launch"
@@ -94,11 +99,13 @@
       <arg name="name" value="speed_cam" />
       <arg name="manager" value="llp_serial" />
     </include>
+    <!--
     <include file="$(find cpu_monitor)/launch/cpu_monitor.launch"
       if="$(eval arg('nodes') == '' or arg('nodes').find('llp_cpu_monitor') != -1)">
       <arg name="name" value="llp_cpu_monitor" />
       <arg name="manager" value="llp_monitors" />
     </include>
+    -->
     <include file="$(find disk_monitor)/launch/disk_monitor.launch"
       if="$(eval arg('nodes') == '' or arg('nodes').find('llp_disk_monitor') != -1)">
       <arg name="name" value="llp_disk_monitor" />

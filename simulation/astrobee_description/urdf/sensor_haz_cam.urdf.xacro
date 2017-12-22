@@ -22,7 +22,7 @@
     <sensor name="haz_cam" type="depth">
       <pose>0 0 0 0 0 0</pose>
       <always_on>1</always_on>
-      <update_rate>1</update_rate>
+      <update_rate>5</update_rate>
       <visualize>0</visualize>
       <camera>
         <horizontal_fov>1.0821</horizontal_fov> <!-- 62 degrees -->

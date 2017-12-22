@@ -1,0 +1,9 @@
+<launch>
+  <env name="ASTROBEE_CONFIG_DIR" value="$(find astrobee)/config" />
+  <include file="$(find executive)/launch/executive.launch" />
+
+  <env name="ASTROBEE_CONFIG_DIR" value="$(find astrobee)/config" />
+  <include file="$(find sys_monitor)/launch/sys_monitor.launch" />
+
+  <test pkg="sys_monitor" type="test_init_sys_monitor" test-name="test_init_sys_monitor"/>
+</launch>

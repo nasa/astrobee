@@ -43,7 +43,7 @@ catkin_package(
 create_library(TARGET eps_sim
   LIBS ${catkin_LIBRARIES} ${GLOG_LIBRARIES} ff_nodelet
   INC ${catkin_INCLUDES} ${GLOG_INCLUDE_DIRS}
-  DEPS ff_msgs
+  DEPS ff_msgs eps_sim_generate_messages_cpp
 )
 
 install_launch_files()

@@ -3,9 +3,9 @@
 //
 // Code generated for Simulink model 'ctl_controller0'.
 //
-// Model version                  : 1.1139
+// Model version                  : 1.1142
 // Simulink Coder version         : 8.11 (R2016b) 25-Aug-2016
-// C/C++ source code generated on : Thu Aug 31 10:21:18 2017
+// C/C++ source code generated on : Mon Dec 18 10:14:45 2017
 //
 // Target selection: ert.tlc
 // Embedded hardware selection: 32-bit Generic
@@ -17,23 +17,14 @@
 #include "ctl_controller0.h"           // Model's header file
 #include "rtwtypes.h"
 
-// '<Root>/kfl_msg'
-static kfl_msg ctl_controller0_U_kfl_msg_l;
-
-// '<Root>/cmc_msg'
-static cmc_msg ctl_controller0_U_cmc_msg_f;
-
-// '<Root>/ex_time'
-static ex_time_msg ctl_controller0_U_ex_time;
-
-// '<Root>/env_msg'
-static env_msg ctl_controller0_U_env_msg_h;
+// '<Root>/ctl_input_msg'
+static ctl_input_msg ctl_controller0_U_ctl_input_msg_l;
 
 // '<Root>/cmd_msg'
-static cmd_msg ctl_controller0_Y_cmd_msg_c;
+static cmd_msg ctl_controller0_Y_cmd_msg_f;
 
 // '<Root>/ctl_msg'
-static ctl_msg ctl_controller0_Y_ctl_msg_o;
+static ctl_msg ctl_controller0_Y_ctl_msg_n;
 const char *RT_MEMORY_ALLOCATION_ERROR = "memory allocation error";
 
 //
@@ -67,11 +58,9 @@ void rt_OneStep(RT_MODEL_ctl_controller0_T *const ctl_controller0_M)
   // Set model inputs here
 
   // Step the model
-  ctl_controller0_step(ctl_controller0_M, &ctl_controller0_U_kfl_msg_l,
-                       &ctl_controller0_U_cmc_msg_f, &ctl_controller0_U_ex_time,
-                       &ctl_controller0_U_env_msg_h,
-                       &ctl_controller0_Y_cmd_msg_c,
-                       &ctl_controller0_Y_ctl_msg_o);
+  ctl_controller0_step(ctl_controller0_M, &ctl_controller0_U_ctl_input_msg_l,
+                       &ctl_controller0_Y_cmd_msg_f,
+                       &ctl_controller0_Y_ctl_msg_n);
 
   // Get model outputs here
 
@@ -98,10 +87,8 @@ int_T main(int_T argc, const char *argv[])
   (void)(argv);
 
   // Allocate model data
-  ctl_controller0_M = ctl_controller0(&ctl_controller0_U_kfl_msg_l,
-    &ctl_controller0_U_cmc_msg_f, &ctl_controller0_U_ex_time,
-    &ctl_controller0_U_env_msg_h, &ctl_controller0_Y_cmd_msg_c,
-    &ctl_controller0_Y_ctl_msg_o);
+  ctl_controller0_M = ctl_controller0(&ctl_controller0_U_ctl_input_msg_l,
+    &ctl_controller0_Y_cmd_msg_f, &ctl_controller0_Y_ctl_msg_n);
   if (ctl_controller0_M == NULL) {
     (void)fprintf(stderr,"Memory allocation error during model "
                   "registration");
@@ -120,10 +107,9 @@ int_T main(int_T argc, const char *argv[])
   }
 
   // Initialize model
-  ctl_controller0_initialize(ctl_controller0_M, &ctl_controller0_U_kfl_msg_l,
-    &ctl_controller0_U_cmc_msg_f, &ctl_controller0_U_ex_time,
-    &ctl_controller0_U_env_msg_h, &ctl_controller0_Y_cmd_msg_c,
-    &ctl_controller0_Y_ctl_msg_o);
+  ctl_controller0_initialize(ctl_controller0_M,
+    &ctl_controller0_U_ctl_input_msg_l, &ctl_controller0_Y_cmd_msg_f,
+    &ctl_controller0_Y_ctl_msg_n);
 
   // Attach rt_OneStep to a timer or interrupt service routine with
   //  period 0.016 seconds (the model's base sample time) here.  The

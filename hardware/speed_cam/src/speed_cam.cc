@@ -22,10 +22,24 @@ namespace speed_cam {
 
 // By default the arm is uninitialized
 SpeedCam::SpeedCam(SpeedCamImuCallback cb_imu, SpeedCamCameraImageCallback cb_camera_image,
-  SpeedCamOpticalFlowCallback cb_optical_flow, SpeedCamSpeedCallback cb_speed) :
-  serial_(std::bind(&SpeedCam::ReadCallback, this, std::placeholders::_1, std::placeholders::_2),
-    std::bind(&SpeedCam::TimeoutCallback, this)), cb_imu_(cb_imu), cb_camera_image_(cb_camera_image),
-  cb_optical_flow_(cb_optical_flow), cb_speed_(cb_speed), system_id_(-1), comp_id_(0) {}
+  SpeedCamOpticalFlowCallback cb_optical_flow, SpeedCamSpeedCallback cb_speed,
+  SpeedCamStatusCallback cb_status)
+  : serial_(std::bind(&SpeedCam::ReadCallback, this, std::placeholders::_1, std::placeholders::_2))
+  , cb_imu_(cb_imu)
+  , cb_camera_image_(cb_camera_image)
+  , cb_optical_flow_(cb_optical_flow)
+  , cb_speed_(cb_speed)
+  , cb_status_(cb_status)
+  , system_id_(-1)
+  , comp_id_(0)
+  , image_size_(0)
+  , image_packets_(0)
+  , image_payload_(0)
+  , image_width_(0)
+  , image_height_(0) {
+  serial_.SetTimeoutCallback(
+    std::bind(&SpeedCam::TimeoutCallback, this), 1000);
+}
 
 // Initialize the serial port
 SpeedCamResult SpeedCam::Initialize(std::string const& port, uint32_t baud) {
@@ -38,6 +52,7 @@ SpeedCamResult SpeedCam::Initialize(std::string const& port, uint32_t baud) {
 
 // Sync time with the device
 bool SpeedCam::TimeSync() {
+  /*
   // We cant sync with the device before the first message has arrived
   if (!serial_.IsOpen() || system_id_ < 0)
     return false;
@@ -51,6 +66,7 @@ bool SpeedCam::TimeSync() {
   size_t len = mavlink_msg_to_send_buffer(buffer, &msg);
   serial_.Write(buffer, len);
   // Success
+  */
   return true;
 }
 
@@ -58,8 +74,10 @@ bool SpeedCam::TimeSync() {
 void SpeedCam::ReadCallback(const uint8_t* buf, size_t len) {
   mavlink_message_t message;
   mavlink_status_t status;
+
   for (size_t i = 0; i < len; i++) {
     bool msgReceived = mavlink_parse_char(MAVLINK_COMM_1, buf[i], &message, &status);
+
     if (msgReceived) {
       system_id_ = message.sysid;
       switch (message.msgid) {
@@ -118,6 +136,14 @@ void SpeedCam::ReadCallback(const uint8_t* buf, size_t len) {
         mavlink_msg_vision_speed_estimate_decode(&message, &speed);
         if (cb_speed_)
           cb_speed_(speed);
+        break;
+        }
+      // System status
+      case MAVLINK_MSG_ID_HEARTBEAT: {
+        mavlink_heartbeat_t status;
+        mavlink_msg_heartbeat_decode(&message, &status);
+        if (cb_status_)
+          cb_status_(status);
         break;
         }
       }

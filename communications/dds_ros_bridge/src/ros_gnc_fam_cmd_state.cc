@@ -45,9 +45,10 @@ RosGncFamCmdStateToRapid::RosGncFamCmdStateToRapid(
   rapid::RapidHelper::initHeader(s_supplier_->event().hdr);
 
   // Setup time for publishing the gnc fam cmd state but don't start the timer
-  // since the rate is 0. The bridge will set this rate at the end of its
-  // initialization.
-  gnc_timer_ = m_nh_.createTimer(ros::Rate(0.0),
+  // since the rate is 0. The bridge will set this rate at the end of its init
+  // update: Andrew changed rate to 1.0 to avoid a runtime bounds error. Should
+  // not affect since autostart argument is set to false.
+  gnc_timer_ = m_nh_.createTimer(ros::Rate(1.0),
                                  &RosGncFamCmdStateToRapid::PubGncFamCmdState,
                                  this,
                                  false,

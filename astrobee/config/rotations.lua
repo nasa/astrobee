@@ -66,67 +66,96 @@ function matrix_equal(m1, m2)
   return true
 end
 
-function test_rotation_functions()
+--[[
+  Create a rotation matrix from ZYX Euler angles
+  ZYX Euler angles represent a rotation around the moving axes in this order:
+    - rotate around Z by the angle alpha
+    - rotate around Y' (rotated Y) by the angle beta
+    - rotate around X" (rotated X) by the angle gamma
+  Note that this is the exact same transform around the fixed axes (XYZ static):
+    - rotate around X by the angle gamma
+    - rotate around Y by the angle beta
+    - rotate around Z by the angle alpha
+    --> RXYZ(gamma, beta, alpha) = RZ(alpha)*RY(beta)*RX(gamma)
+--]]
+function rot_matrix_from_euler(alpha, beta, gamma)
+  ca = math.cos(alpha)
+  cb = math.cos(beta);
+  cg = math.cos(gamma);
+  sa = math.sin(alpha);
+  sb = math.sin(beta);
+  sg = math.sin(gamma);
+  return matrix{
+    {ca*cb, ca*sb*sg-sa*cg, ca*sb*cg+sa*sg},
+    {sa*cb, sa*sb*sg+ca*cg, sa*sb*cg-ca*sg},
+    {-sb, cb*sg, cb*cg}
+  }
+end
+euler2rmat = rot_matrix_from_euler
 
-  m1 = matrix{{0.0, 1.0}, {2.0, 3.0}}
-  m2 = matrix{{-1E-9, 1.0+1E-9}, {2.0, 3.0}}
-  if not matrix_equal(m1, m2) then return false end
-
-  m3 = matrix{{0.0, 1.0}, {2.1, 3.0}}
-  if matrix_equal(m1, m3) then return false end
-
-  m4 = matrix{{0.0, 1.0}, {2.0, 3.0}, {4.0, 5.0}}
-  if matrix_equal(m1, m4) then return false end
-  print "Test matrix_equal(): PASS"
-
-  c30 = math.cos(math.rad(30))
-  s30 = math.sin(math.rad(30))
-
-  rx90_ref = matrix{{1, 0, 0}, {0, 0, -1}, {0, 1, 0}}
-  rx90_test = rot_matrix(math.rad(90), 'x')
-  if not matrix_equal(rx90_ref, rx90_test) then
-    print("Test rx90 FAILED!")
-    return false
-  end
-
-  rx30_ref = matrix{{1, 0, 0}, {0, c30, -s30}, {0, s30, c30}}
-  rx30_test = rot_matrix(math.rad(30), 'x')
-  if not matrix_equal(rx30_ref, rx30_test) then
-    print("Test rx30 FAILED!")
-    return false
-  end
-
-  ry90_ref = matrix{{0, 0, 1}, {0, 1, 0}, {-1, 0, 0}}
-  ry90_test = rot_matrix(math.rad(90), 'y')
-  if not matrix_equal(ry90_ref, ry90_test) then
-    print("Test ry90 FAILED!")
-    return false
-  end
-
-  ry30_ref = matrix{{c30, 0, s30}, {0, 1, 0}, {-s30, 0, c30}}
-  ry30_test = rot_matrix(math.rad(30), 'y')
-  if not matrix_equal(ry30_ref, ry30_test) then
-    print("Test ry30 FAILED!")
-    return false
-  end
-
-  rz90_ref = matrix{{0, -1, 0}, {1, 0, 0}, {0, 0, 1}}
-  rz90_test = rot_matrix(math.rad(90), 'z')
-  if not matrix_equal(rz90_ref, rz90_test) then
-    print("Test rz90 FAILED!")
-    return false
-  end
-
-  rz30_ref = matrix{{c30, -s30, 0}, {s30, c30, 0}, {0, 0, 1}}
-  rz30_test = rot_matrix(math.rad(30), 'z')
-  if not matrix_equal(rz30_ref, rz30_test) then
-    print("Test rz30 FAILED!")
-    return false
-  end
-
-  print "Test rot_matrix(): PASS"
-
-  return true
+-- normalize a quaternion
+function quat4_normalize(q)
+  n = math.sqrt(q.x*q.x+q.y*q.y+q.z*q.z+q.w*q.w)
+  return quat4(q.x/n, q.y/n, q.z/n, q.w/n)
 end
 
--- print(test_rotation_functions())
+--[[
+  Create a rotation matrix from a quaternion
+--]]
+function rot_matrix_from_quat4(q)
+  qn = quat4_normalize(q)
+  x = qn.x
+  y = qn.y
+  z = qn.z
+  s = qn.w
+  qx2 = qn.x*qn.x
+  qy2 = qn.y*qn.y
+  qz2 = qn.z*qn.z
+  qw2 = qn.w*qn.w
+  return matrix {
+    {1-2*qy2-2*qz2, 2*x*y-2*s*z, 2*x*z+2*s*y},
+    {2*x*y+2*s*z, 1-2*qx2-2*qz2, 2*y*z-2*s*x},
+    {2*x*z-2*s*y, 2*y*z+2*s*x, 1-2*qx2-2*qy2}
+  }
+end
+quat2rmat = rot_matrix_from_quat4
+
+--[[
+  Create a rotation matrix from a quaternion
+  (computer graphics solution by Shoemake 1994)
+--]]
+function quat4_from_rot_matrix(m)
+  tr = m[1][1] + m[2][2] + m[3][3]
+  q = quat4(0,0,0,1)
+  if ( tr >= 0 ) then
+    s4 = 2.0 * math.sqrt( tr + 1.0 ) -- s4 = 4*qw
+    q.w = s4 / 4.0
+    q.x = ( m[3][2] - m[2][3] ) / s4
+    q.y = ( m[1][3] - m[3][1] ) / s4
+    q.z = ( m[2][1] - m[1][2] ) / s4
+  elseif ( m[1][1]>m[2][2] and m[1][1]>m[3][3]) then
+    s4 = 2.0* math.sqrt( 1.0 + m[1][1] - m[2][2] - m[3][3] ) -- s4 = 4*qx
+    q.w = ( m[3][2] - m[2][3] ) / s4
+    q.x = s4 / 4.0
+    q.y = ( m[1][2] + m[2][1] ) / s4
+    q.z = ( m[3][1] + m[1][3] ) / s4
+  elseif ( m[2][2] > m[3][3] ) then
+    s4 = 2.0 * math.sqrt( 1.0 + m[2][2] - m[1][1] - m[3][3] ) -- s4 = 4*qy
+    q.w = ( m[1][3] - m[3][1] ) / s4
+    q.x = ( m[1][2] + m[2][1] ) / s4
+    q.y = s4 / 4.0
+    q.z = ( m[2][3] + m[3][2] ) / s4
+  else
+    s4 = 2.0 * math.sqrt( 1.0 + m[3][3] - m[1][1] - m[2][2]) -- s4 = 4*qz
+    q.w = ( m[2][1] - m[1][2] ) / s4
+    q.x = ( m[3][1] + m[1][3] ) / s4
+    q.y = ( m[2][3] + m[3][2] ) / s4
+    q.z = s4 / 4.0
+  end
+  return q
+end
+rmat2quat= quat4_from_rot_matrix
+
+function printquat(q)
+  print("quat(x,y,z,w)=(" .. q.x .. "," .. q.y .. "," .. q.z .. "," ..  q.w ..")")
+end

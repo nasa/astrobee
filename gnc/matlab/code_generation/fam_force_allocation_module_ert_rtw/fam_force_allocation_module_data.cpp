@@ -3,9 +3,9 @@
 //
 // Code generated for Simulink model 'fam_force_allocation_module'.
 //
-// Model version                  : 1.1139
+// Model version                  : 1.1142
 // Simulink Coder version         : 8.11 (R2016b) 25-Aug-2016
-// C/C++ source code generated on : Thu Aug 31 10:21:33 2017
+// C/C++ source code generated on : Mon Dec 18 10:15:03 2017
 //
 // Target selection: ert.tlc
 // Embedded hardware selection: 32-bit Generic
@@ -337,8 +337,10 @@ P_fam_force_allocation_module_T fam_force_allocation_module_P = {
   { 1.0F, -1.0F, 0.0F, 0.0F, 0.0F, 0.0F, -1.0F, 1.0F, 0.0F, 0.0F, 0.0F, 0.0F,
     0.0F, 0.0F, 1.0F, 1.0F, 0.0F, 0.0F, 0.0F, 0.0F, -1.0F, -1.0F, 0.0F, 0.0F,
     0.0F, 0.0F, 0.0F, 0.0F, 1.0F, -1.0F, 0.0F, 0.0F, 0.0F, 0.0F, 1.0F, -1.0F },
-  1.0,
-  0.0,
+  0.0F,
+  0U,
+  0U,
+  0.0F,
   0.0F,
   0.0F,
   0.0F,
@@ -347,6 +349,8 @@ P_fam_force_allocation_module_T fam_force_allocation_module_P = {
   { 1.0F, 2.0F, 3.0F },
 
   { 1.0F, 2.0F, 3.0F },
+  0.0F,
+  0.0F,
 
   { 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F },
   0.0F,

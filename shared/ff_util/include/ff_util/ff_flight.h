@@ -22,9 +22,13 @@
 // ROS includes
 #include <ros/ros.h>
 
+// General information
+#include <geometry_msgs/Inertia.h>
+
 // Message includes
 #include <ff_msgs/EkfState.h>
 #include <ff_msgs/ControlState.h>
+#include <ff_msgs/FlightMode.h>
 
 // Eigen includes
 #include <Eigen/Dense>
@@ -80,65 +84,6 @@ class State {
   Eigen::Vector3d a;      // Acceleration
 };
 
-//////////////////////////////////////
-// CONFIG FILE FUNCTIONS FOR FLIGHT //
-//////////////////////////////////////
-
-// Flight mode
-struct FlightMode {
-  std::string name;
-  // GNC gains specific to the flight mode
-  Eigen::Vector3d att_kp;
-  Eigen::Vector3d att_ki;
-  Eigen::Vector3d omega_kd;
-  Eigen::Vector3d pos_kp;
-  Eigen::Vector3d pos_ki;
-  Eigen::Vector3d vel_kd;
-  // Kinematic limits
-  double hard_limit_omega;
-  double hard_limit_vel;
-  double hard_limit_alpha;
-  double hard_limit_accel;
-  // Tolerances
-  double tolerance_time;
-  double tolerance_att;
-  double tolerance_pos;
-  double tolerance_omega;
-  double tolerance_vel;
-};
-
-// Vector of flight modes
-typedef std::map < std::string, FlightMode > FlightModeMap;
-
-// Inertia configuration
-class InertiaConfig {
- public:
-  InertiaConfig() : mass(-1.0) {}
-  double mass;                       // Mass
-  Eigen::Matrix3d inertia_matrix;    // Inertia matrix
-  Eigen::Vector3d center_of_mass;    // Center of mass
-};
-
-// General configuration
-class GeneralConfig {
- public:
-  GeneralConfig() : default_flight_mode("") {}
-  std::string default_flight_mode;   // The current flight mode
-  double min_control_rate;           // Minimum acceptable control period
-  double time_sync_threshold;        // Threshold for detecting time sync issues
-};
-
-// Class to read flight mode information
-class ConfigUtil {
- public:
-  // Get all general configuration (LUA config file is queried only once)
-  static bool GetGeneralConfig(GeneralConfig & gc_out);
-  // Get all inertia configuration (LUA config file is queried only once)
-  static bool GetInertiaConfig(InertiaConfig & ic_out);
-  // Get data for a given flight mode
-  static bool GetFlightMode(std::string const& name, FlightMode &data);
-};
-
 ////////////////////////////////////////
 // SEGMENT CHECKING UTILITY FUNCTIONS //
 ////////////////////////////////////////
@@ -159,7 +104,6 @@ enum SegmentCheckMask : unsigned int {
   CHECK_ALL_CONSISTENCY           = 0x400,
   CHECK_ALL                       = 0x800
 };
-
 // Segment result bitmask
 enum SegmentResult : int {
   SUCCESS                         =  0,
@@ -170,30 +114,52 @@ enum SegmentResult : int {
   ERROR_LIMITS_VEL                = -5,
   ERROR_LIMITS_ACCEL              = -6,
   ERROR_LIMITS_OMEGA              = -7,
-  ERROR_LIMITS_ALPHA              = -8,
-  ERROR_INVALID_FLIGHT_MODE       = -9,
-  ERROR_INVALID_GENERAL_CONFIG    = -10
+  ERROR_LIMITS_ALPHA              = -8
 };
 
 // Class to read flight mode information
-class SegmentUtil {
+class FlightUtil {
  public:
+  // Vector of flight modes
+  typedef std::map<std::string, ff_msgs::FlightMode> FlightModeMap;
+
+  // Minimum acceptable control rate
+  static constexpr double MIN_CONTROL_RATE = 1.0;
+
+  // Get all inertia configuration (LUA config file is queried only once)
+  static bool GetInertiaConfig(geometry_msgs::Inertia & data);
+
+  // Get data for a given flight mode (leave empty for default value)
+  static bool GetFlightMode(
+    ff_msgs::FlightMode &data, std::string const& name = "");
+
+  // Get the intial flight mode
+  static bool GetInitialFlightMode(ff_msgs::FlightMode &data);
+
   // Validate if an upper limit has been breached
   static double ValidateUpperLimit(const double limit, double val);
+
   // Validate if a lower limit has been breached
   static double ValidateLowerLimit(const double limit, double val);
-  // Perform a given set of checks on a segment for validity, based on a flight mode
-  static SegmentResult Check(SegmentCheckMask mask, Segment const& segment, std::string const& fm);
+
+  // Perform checks on a segment for validity, based on a flight mode
+  static SegmentResult Check(SegmentCheckMask mask, Segment const& segment,
+    ff_msgs::FlightMode const& flight_mode, bool faceforward);
+
   // Resample a segment to the minimum control frequency
-  static SegmentResult Resample(Segment const& in, Segment & out, double rate = -1.0);
+  static SegmentResult Resample(Segment const& in, Segment & out,
+    double rate = -1.0);
+
   // Print a human-readable description of the error code
   static std::string GetDescription(SegmentResult result);
-  // Logical comparison of two setpoints to evaluate equality within defined EPSILON value
-  static bool Equal(Setpoint const& left, Setpoint const& right, size_t degree = 2);
-  // Load a flight mode and segment from a file
-  static bool Load(std::string const& fname, std::string & flight_mode, Segment & segment);
-  // Save a flight mode and segment from to file
-  static bool Save(std::string const& fname, std::string const& flight_mode, Segment const& segment);
+
+  // Logical comparison of two setpoints within defined EPSILON value
+  static bool Equal(Setpoint const& left, Setpoint const& right,
+    size_t degree = 2);
+
+  // Check that the first pose is consistent with the segment/flight mode
+  static bool WithinTolerance(ff_msgs::FlightMode const& fm,
+    geometry_msgs::Pose const& a, geometry_msgs::Pose const& b);
 };
 
 }  // end namespace ff_util

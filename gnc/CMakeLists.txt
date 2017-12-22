@@ -15,7 +15,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-add_subdirectory(gnc_ros_wrapper)
+add_subdirectory(ctl)
+add_subdirectory(ekf)
+add_subdirectory(fam)
 add_subdirectory(gnc_autocode)
 add_subdirectory(sim_wrapper)
-#add_subdirectory(gnc_standalone)

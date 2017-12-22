@@ -69,7 +69,6 @@ class Planner : public planner::PlannerImplementation {
   float desired_alpha_;   // Soft limit on alpha
   float control_rate_;    // Control frequency
   double max_time_;       // Max generation time
-  std::string flight_mode_;
   ros::Publisher cloud_pub_;
   ros::NodeHandle *nh_;
   ros::Subscriber pcl_sub_;
@@ -112,7 +111,7 @@ class Planner : public planner::PlannerImplementation {
     const std::vector<geometry_msgs::PoseStamped> &states = goal.states;
     if (!LoadActionParams(goal)) {
       ROS_ERROR_STREAM("Planner params are bad");
-      plan_result.response = RESPONSE::BAD_DESIRED_VELOCITY;
+      plan_result.response = RESPONSE::BAD_ARGUMENTS;
       return PlanResult(plan_result);
     }
 
@@ -158,7 +157,7 @@ class Planner : public planner::PlannerImplementation {
 
     // Check face forward
     if (!calculate_time_scale()) {
-      plan_result.response = RESPONSE::BAD_DESIRED_RATE;
+      plan_result.response = RESPONSE::BAD_ARGUMENTS;
       return PlanResult(plan_result);
     }
 
@@ -168,7 +167,6 @@ class Planner : public planner::PlannerImplementation {
       add_face_forward_trajectories(states, &plan_result.segment);
 
     plan_result.response = RESPONSE::SUCCESS;
-    plan_result.flight_mode = flight_mode_;
     return PlanResult(plan_result);
   }
 
@@ -204,7 +202,6 @@ class Planner : public planner::PlannerImplementation {
     traj_opt::MatD state_mat;
     trajectory_->getCommand(time, 3, state_mat);
     state.when = ros::Time(time);
-    // state.flight_mode = mode;
 
     tf::Vector3 axis_world_frame = tf::Transform(start_orientation_) * axis;
 
@@ -797,7 +794,6 @@ class Planner : public planner::PlannerImplementation {
     desired_alpha_ = goal.desired_alpha;
     control_rate_ = goal.desired_rate;
     max_time_ = goal.max_time.toSec();
-    flight_mode_ = goal.flight_mode;
     // control_rate_*=10;
     OUTPUT_DEBUG("PlannerQP: Control period " << control_rate_);
 

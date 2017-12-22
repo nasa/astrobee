@@ -1,0 +1,132 @@
+# dot -Tpdf architecture.dot -o architecture.pdf
+digraph G {
+  ratio="fill";
+  size="11.7,8.3!";
+  rankdir=LR;
+  node [shape=box, width=3, fontsize=12, fontname="helvetica"];
+  edge [arrowsize=2, weight=2., fontsize=12, fontname="helvetica"];
+  fontname = "helvetica";
+  fontsize = 14;
+  color = black;
+
+  subgraph cluster_0 {
+    label="mgt";
+    node [shape=box, style=filled, fillcolor=lightblue, color=black];
+    EXECUTIVE;
+  }
+  subgraph cluster_1 {
+    label="proc";
+    node [shape=box, style=filled, fillcolor=lightblue, color=black];
+    DOCK;
+    PERCH;
+    ARM;
+    node [shape=ellipse, style=filled, fillcolor=gold, color=black];
+    PerchAction [label="/proc/perch\nff_msgs::PerchAction"];
+    DockAction [label="/proc/dock\nff_msgs::DockAction"];
+    ArmAction [label="/proc/arm\nff_msgs::ArmAction"];
+    node [shape=ellipse, style=filled, fillcolor=aquamarine, color=black];
+    PerchState [label="/proc/perch/state\nff_msgs::PerchState", style=dashed];
+    DockState [label="/proc/dock/state\nff_msgs::DockState", style=dashed];
+    ArmState [label="/proc/arm/state\nff_msgs::ArmState", style=dashed];
+  }
+  subgraph cluster_2 {
+    label="mob";
+    node [shape=box, style=filled, fillcolor=lightblue, color=black];
+    CHOREOGRAPHER;
+    node [shape=ellipse, style=filled, fillcolor=gold, color=black];
+    MotionAction [label="/mob/motion\nff_msgs::MotionAction"];
+    node [shape=ellipse, style=filled, fillcolor=aquamarine, color=black];
+    MotionState [label="/mob/motion/state\nff_msgs::MotionState", style=dashed];
+  }
+  subgraph cluster_3 {
+    label="loc";
+    node [shape=box, style=filled, fillcolor=lightblue, color=black];
+    LOCALIZATION_MANAGER;
+    node [shape=ellipse, style=filled, fillcolor=gold, color=black];
+    SwitchAction [label="/loc/switch\nff_msgs::SwitchAction"];
+  }
+  subgraph cluster_4 {
+    label="gnc";
+    node [shape=box, style=filled, fillcolor=lightblue, color=black];
+    CTL;
+    FAM;
+    EKF;
+    node [shape=ellipse, style=filled, fillcolor=gold, color=black];
+    ControlAction [label="/gnc/control\nff_msgs::ControlAction"];
+    node [shape=ellipse, style=filled, fillcolor=lightpink, color=black];
+    EkfSetInput [label="/gnc/ekf/set_input\nff_msgs::SetEkfInput"];
+    node [shape=ellipse, style=filled, fillcolor=aquamarine, color=black];
+    EkfState [label="/gnc/ekf\nff_msgs::EkfState"];
+    PoseStamped [label="/gnc/pose\ngeometry_msgs::PoseStamped"];
+    TwistStamped [label="/gnc/twist\ngeometry_msgs::TwistStamped"];
+    WrenchStamped [label="/gnc/wrench\ngeometry_msgs::WrenchStamped"];
+    InertiaStamped [label="/gnc/inertia\ngeometry_msgs::InertiaStamped", style=dashed];
+    SpeedGain [label="/gnc/speed\nff_msgs::SpeedGain", style=dashed];
+  }
+  subgraph cluster_5 {
+    label="drv";
+    node [shape=box, style=filled, fillcolor=lightblue, color=black];
+    PERCHING_ARM;
+    PMC_ACTUATOR;
+    node [shape=ellipse, style=filled, fillcolor=aquamarine, color=black];
+    PmcTelemetry [label="/hw/pmc/telemetry\nff_hw_msgs::PmcTelemetry"];
+    PmcState [label="/hw/pmc/state\nff_hw_msgs::PmcState", style=dashed];
+    PmcCommand [label="/hw/pmc/command\nff_hw_msgs::PmcCommand"];
+    node [shape=ellipse, style=filled, fillcolor=aquamarine, color=black];
+    JointStates [label="/joint_states\nsensor_msgs::JointState"];
+    JointGoals [label="/joint_goals\nsensor_msgs::JointState"];
+  }
+
+  # Relationships
+  EXECUTIVE -> MotionAction  [dir="both"];
+  EXECUTIVE -> DockAction  [dir="both"];
+  EXECUTIVE -> PerchAction  [dir="both"];
+  EXECUTIVE -> ArmAction  [dir="both"];
+  EXECUTIVE -> InertiaStamped;
+  InertiaStamped -> FAM;
+  InertiaStamped -> CTL;
+  InertiaStamped -> EKF;
+
+  DockAction -> DOCK  [dir="both"];
+  PerchAction -> PERCH  [dir="both"];
+  DOCK -> SwitchAction  [dir="both"];
+  PERCH -> SwitchAction  [dir="both"];
+  SwitchAction -> LOCALIZATION_MANAGER  [dir="both"];
+  LOCALIZATION_MANAGER -> EkfSetInput;
+  EkfSetInput -> EKF;
+  DOCK -> MotionAction  [dir="both"];
+  PERCH -> MotionAction  [dir="both"];
+  PERCH -> ArmAction  [dir="both"];
+  MotionAction -> CHOREOGRAPHER  [dir="both"];
+  CHOREOGRAPHER -> ControlAction  [dir="both"];
+  CHOREOGRAPHER -> SpeedGain;
+  SpeedGain -> EKF;
+  SpeedGain -> FAM;
+  ControlAction -> CTL  [dir="both"];
+  CTL -> WrenchStamped;
+  PmcCommand -> PMC_ACTUATOR;
+  PMC_ACTUATOR -> PmcTelemetry;
+  PMC_ACTUATOR -> PmcState;
+  PmcTelemetry -> CTL;
+  PmcState -> CHOREOGRAPHER;
+  ArmAction -> ARM  [dir="both"];
+  WrenchStamped -> FAM;
+  FAM -> PmcCommand;
+  ARM -> JointGoals;
+  EKF -> PoseStamped;
+  EKF -> TwistStamped;
+  EKF -> EkfState;
+  TwistStamped -> CTL;
+  PoseStamped -> CTL;
+  JointStates -> ARM;
+  JointGoals -> PERCHING_ARM;
+  PERCHING_ARM -> JointStates;
+  PERCH -> PerchState;
+  DOCK -> DockState;
+  ARM -> ArmState;
+  CHOREOGRAPHER -> MotionState;
+  PerchState -> EXECUTIVE;
+  DockState -> EXECUTIVE;
+  ArmState -> EXECUTIVE;
+  MotionState -> EXECUTIVE;
+}

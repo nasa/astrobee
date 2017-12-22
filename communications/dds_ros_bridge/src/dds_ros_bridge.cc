@@ -90,7 +90,7 @@ namespace dds_ros_bridge {
 DdsRosBridge::DdsRosBridge() :
   ff_util::FreeFlyerNodelet(NODE_DDS_ROS_BRIDGE, true),
   components_(0),
-  robot_name_("Bumble") {
+  agent_name_("Bumble") {
 }
 
 DdsRosBridge::~DdsRosBridge() {
@@ -350,7 +350,6 @@ void DdsRosBridge::Initialize(ros::NodeHandle *nh) {
   // since these params are used to create the classes that use rapid dds. Need
   // to set up Miro/DDs before reading the parameters.
   config_params_.AddFile("commands.config");
-  config_params_.AddFile("context.config");
   config_params_.AddFile("communications/dds_ros_bridge.config");
 
   if (!config_params_.ReadFiles()) {
@@ -359,7 +358,7 @@ void DdsRosBridge::Initialize(ros::NodeHandle *nh) {
     return;
   }
 
-  if (!config_params_.GetStr("robot_name", &robot_name_)) {
+  if (!config_params_.GetStr("agent_name", &agent_name_)) {
     ROS_FATAL("DDS Bridge: Could not read robot name.");
     exit(EXIT_FAILURE);
     return;
@@ -367,20 +366,20 @@ void DdsRosBridge::Initialize(ros::NodeHandle *nh) {
 
   // In simulation, the namespace is usually set to the robot name so we need to
   // check if we are in simulation and get the right name
-  if (robot_name_ == "sim" || robot_name_ == "simulator") {
+  if (agent_name_ == "sim" || agent_name_ == "simulator") {
     // The platform name should be the simulated robot name
-    robot_name_ = GetPlatform();
+    agent_name_ = GetPlatform();
 
     // If there is not robot name, set it to a default name so that we can
     // connect to the bridge
-    if (robot_name_ == "") {
-      robot_name_ = "Bumble";
+    if (agent_name_ == "") {
+      agent_name_ = "Bumble";
+    } else {
+      // Make sure that first letter of robot name is capitialized. GDS only
+      // recognizes capitialized robot names.
+      agent_name_[0] = toupper(agent_name_[0]);
     }
   }
-
-  // Make sure that first letter of robot name is capitialized. GDS only
-  // recognizes capitialized robot names.
-  robot_name_[0] = toupper(robot_name_[0]);
 
   nh_ = *nh;
 
@@ -395,7 +394,7 @@ void DdsRosBridge::Initialize(ros::NodeHandle *nh) {
   // Create fake argv containing only the particaptant name
   // Participant name needs to uniue so combine robot name with timestamp
   ros::Time time = ros::Time::now();
-  participant_name_ = robot_name_ + std::to_string(time.sec);
+  participant_name_ = agent_name_ + std::to_string(time.sec);
   char **fakeArgv = new char*[1];
   fakeArgv[0] = new char[(participant_name_.size() + 1)];
   std::strcpy(fakeArgv[0], participant_name_.c_str());  // NOLINT
@@ -417,7 +416,7 @@ void DdsRosBridge::Initialize(ros::NodeHandle *nh) {
   config->getParameters("Miro::RobotParameters", *robotParams);
   config->getParameters("kn::DdsEntitiesFactorySvcParameters", *ddsParams);
 
-  robotParams->name = robot_name_;
+  robotParams->name = agent_name_;
   robotParams->namingContextName = robotParams->name;
 
   SubstituteROBOT_NAME(ddsParams);
@@ -626,7 +625,7 @@ bool DdsRosBridge::ReadParams() {
       return false;
     }
 
-    BuildArmJointSampleToRapid(TOPIC_HARDWARE_PERCHING_ARM_JOINT_SAMPLE,
+    BuildArmJointSampleToRapid(TOPIC_PROCEDURES_ARM_JOINT_SAMPLE,
                                                           pubTopic, "RAJSRAJS");
     components_++;
   }
@@ -643,7 +642,7 @@ bool DdsRosBridge::ReadParams() {
       return false;
     }
 
-    BuildArmStateToRapid(TOPIC_HARDWARE_PERCHING_ARM_STATE, pubTopic,
+    BuildArmStateToRapid(TOPIC_PROCEDURES_ARM_ARM_STATE, pubTopic,
                                                                     "RARMRARM");
     components_++;
   }

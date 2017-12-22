@@ -96,28 +96,28 @@ void ImageSampler::UpdateState(int camera, bool streaming, int width, int height
   camera_state_pub_.publish(state);
 }
 
-bool ImageSampler::ConfigureServiceNavCam(ff_msgs::ConfigureImageSampler::Request& req,
-                                          ff_msgs::ConfigureImageSampler::Response& res) {
+bool ImageSampler::ConfigureServiceNavCam(ff_msgs::ConfigureCamera::Request& req,
+                                          ff_msgs::ConfigureCamera::Response& res) {
   return ConfigureService(req, res, NAV_CAM_ID);
 }
 
-bool ImageSampler::ConfigureServiceDockCam(ff_msgs::ConfigureImageSampler::Request& req,
-                                           ff_msgs::ConfigureImageSampler::Response& res) {
+bool ImageSampler::ConfigureServiceDockCam(ff_msgs::ConfigureCamera::Request& req,
+                                           ff_msgs::ConfigureCamera::Response& res) {
   return ConfigureService(req, res, DOCK_CAM_ID);
 }
 
-bool ImageSampler::ConfigureService(ff_msgs::ConfigureImageSampler::Request& req,
-                                    ff_msgs::ConfigureImageSampler::Response& res,
+bool ImageSampler::ConfigureService(ff_msgs::ConfigureCamera::Request& req,
+                                    ff_msgs::ConfigureCamera::Response& res,
                                     int camera) {
   assert(camera >= 0 && camera < NUM_CAMERAS);
 
   if (req.width <= 0 || req.height <= 0 || req.rate <= 0.0)
     return false;
 
-  bool record = (req.mode == ff_msgs::EnableImageSampler::Request::RECORDING ||
-      req.mode == ff_msgs::EnableImageSampler::Request::BOTH);
-  bool stream = (req.mode == ff_msgs::EnableImageSampler::Request::STREAMING ||
-      req.mode == ff_msgs::EnableImageSampler::Request::BOTH);
+  bool record = (req.mode == ff_msgs::EnableCamera::Request::RECORDING ||
+      req.mode == ff_msgs::EnableCamera::Request::BOTH);
+  bool stream = (req.mode == ff_msgs::EnableCamera::Request::STREAMING ||
+      req.mode == ff_msgs::EnableCamera::Request::BOTH);
 
   if (stream)
     UpdateState(camera, true, req.width, req.height, req.rate);
@@ -137,13 +137,13 @@ bool ImageSampler::ConfigureService(ff_msgs::ConfigureImageSampler::Request& req
   return true;
 }
 
-bool ImageSampler::EnableService(ff_msgs::EnableImageSampler::Request& req,
-                                 ff_msgs::EnableImageSampler::Response& res, int camera, std::string topic,
+bool ImageSampler::EnableService(ff_msgs::EnableCamera::Request& req,
+                                 ff_msgs::EnableCamera::Response& res, int camera, std::string topic,
                                     void (ImageSampler::*callback)(const sensor_msgs::ImageConstPtr &)) {
-  bool record = (req.mode == ff_msgs::EnableImageSampler::Request::RECORDING ||
-      req.mode == ff_msgs::EnableImageSampler::Request::BOTH);
-  bool stream = (req.mode == ff_msgs::EnableImageSampler::Request::STREAMING ||
-      req.mode == ff_msgs::EnableImageSampler::Request::BOTH);
+  bool record = (req.mode == ff_msgs::EnableCamera::Request::RECORDING ||
+      req.mode == ff_msgs::EnableCamera::Request::BOTH);
+  bool stream = (req.mode == ff_msgs::EnableCamera::Request::STREAMING ||
+      req.mode == ff_msgs::EnableCamera::Request::BOTH);
 
   if (record)
     camera_states_[camera].recording = req.enable;
@@ -166,13 +166,13 @@ bool ImageSampler::EnableService(ff_msgs::EnableImageSampler::Request& req,
   return true;
 }
 
-bool ImageSampler::EnableServiceNavCam(ff_msgs::EnableImageSampler::Request& req,
-                                ff_msgs::EnableImageSampler::Response& res) {
+bool ImageSampler::EnableServiceNavCam(ff_msgs::EnableCamera::Request& req,
+                                ff_msgs::EnableCamera::Response& res) {
   return EnableService(req, res, NAV_CAM_ID, TOPIC_HARDWARE_NAV_CAM, &ImageSampler::NavCamCallback);
 }
 
-bool ImageSampler::EnableServiceDockCam(ff_msgs::EnableImageSampler::Request& req,
-                                 ff_msgs::EnableImageSampler::Response& res) {
+bool ImageSampler::EnableServiceDockCam(ff_msgs::EnableCamera::Request& req,
+                                 ff_msgs::EnableCamera::Response& res) {
   return EnableService(req, res, DOCK_CAM_ID, TOPIC_HARDWARE_DOCK_CAM, &ImageSampler::DockCamCallback);
 }
 

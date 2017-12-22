@@ -3,9 +3,9 @@
 //
 // Code generated for Simulink model 'ctl_controller0'.
 //
-// Model version                  : 1.1139
+// Model version                  : 1.1142
 // Simulink Coder version         : 8.11 (R2016b) 25-Aug-2016
-// C/C++ source code generated on : Thu Aug 31 10:21:18 2017
+// C/C++ source code generated on : Mon Dec 18 10:14:45 2017
 //
 // Target selection: ert.tlc
 // Embedded hardware selection: 32-bit Generic
@@ -87,15 +87,12 @@ const ctl_msg ctl_controller0_rtZctl_msg = {
   0.0F                                 // traj_error_omega
 } ;                                    // ctl_msg ground
 
-const cmc_msg ctl_controller0_rtZcmc_msg = { { 0U,// timestamp_sec
-    0U,                                // timestamp_nsec
-    { 0.0F, 0.0F, 0.0F },              // P_B_ISS_ISS
-    { 0.0F, 0.0F, 0.0F },              // V_B_ISS_ISS
-    { 0.0F, 0.0F, 0.0F },              // A_B_ISS_ISS
-    { 0.0F, 0.0F, 0.0F, 0.0F },        // quat_ISS2B
-    { 0.0F, 0.0F, 0.0F },              // omega_B_ISS_B
-    { 0.0F, 0.0F, 0.0F }               // alpha_B_ISS_B
-  },                                   // cmc_state_cmd_a
+const ctl_input_msg ctl_controller0_rtZctl_input_ms = { { 0.0F, 0.0F, 0.0F, 0.0F
+  },                                   // est_quat_ISS2B
+  { 0.0F, 0.0F, 0.0F },                // est_omega_B_ISS_B
+  { 0.0F, 0.0F, 0.0F },                // est_V_B_ISS_ISS
+  { 0.0F, 0.0F, 0.0F },                // est_P_B_ISS_ISS
+  0U,                                  // est_confidence
   { 0U,                                // timestamp_sec
     0U,                                // timestamp_nsec
     { 0.0F, 0.0F, 0.0F },              // P_B_ISS_ISS
@@ -104,96 +101,43 @@ const cmc_msg ctl_controller0_rtZcmc_msg = { { 0U,// timestamp_sec
     { 0.0F, 0.0F, 0.0F, 0.0F },        // quat_ISS2B
     { 0.0F, 0.0F, 0.0F },              // omega_B_ISS_B
     { 0.0F, 0.0F, 0.0F }               // alpha_B_ISS_B
-  },                                   // cmc_state_cmd_b
-  0U,                                  // cmc_mode_cmd
+  },                                   // cmd_state_a
+  { 0U,                                // timestamp_sec
+    0U,                                // timestamp_nsec
+    { 0.0F, 0.0F, 0.0F },              // P_B_ISS_ISS
+    { 0.0F, 0.0F, 0.0F },              // V_B_ISS_ISS
+    { 0.0F, 0.0F, 0.0F },              // A_B_ISS_ISS
+    { 0.0F, 0.0F, 0.0F, 0.0F },        // quat_ISS2B
+    { 0.0F, 0.0F, 0.0F },              // omega_B_ISS_B
+    { 0.0F, 0.0F, 0.0F }               // alpha_B_ISS_B
+  },                                   // cmd_state_b
+  0U,                                  // ctl_mode_cmd
+  0U,                                  // current_time_sec
+  0U,                                  // current_time_nsec
   0U,                                  // speed_gain_cmd
-  0U,                                  // localization_mode_cmd
   { 0.0F, 0.0F, 0.0F },                // att_kp
   { 0.0F, 0.0F, 0.0F },                // att_ki
   { 0.0F, 0.0F, 0.0F },                // omega_kd
   { 0.0F, 0.0F, 0.0F },                // pos_kp
   { 0.0F, 0.0F, 0.0F },                // pos_ki
   { 0.0F, 0.0F, 0.0F },                // vel_kd
-  { 0.0F, 0.0F, 0.0F },                // center_of_mass
   { 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F },// inertia_matrix
   0.0F                                 // mass
 };
 
-const env_msg ctl_controller0_rtZenv_msg = { { 0.0F, 0.0F, 0.0F },// P_B_ISS_ISS 
-  { 0.0F, 0.0F, 0.0F },                // V_B_ISS_ISS
-  { 0.0F, 0.0F, 0.0F },                // A_B_ISS_ISS
-  { 0.0F, 0.0F, 0.0F },                // A_B_ISS_B
-  { 0.0F, 0.0F, 0.0F },                // A_B_ECI_B
-  { 0.0F, 0.0F, 0.0F, 0.0F },          // Q_ISS2B
-  { 0.0F, 0.0F, 0.0F },                // omega_B_ISS_B
-  { 0.0F, 0.0F, 0.0F },                // omega_B_ECI_B
-  { 0.0F, 0.0F, 0.0F },                // alpha_B_ISS_B
-  { 0.0F, 0.0F, 0.0F },                // fan_torques_B
-  { 0.0F, 0.0F, 0.0F }                 // fan_forces_B
-};
-
-const ex_time_msg ctl_controller0_rtZex_time_msg = { 0U,// timestamp_sec
-  0U                                   // timestamp_nsec
-};
-
-const kfl_msg ctl_controller0_rtZkfl_msg = { { 0.0F, 0.0F, 0.0F, 0.0F },// quat_ISS2B 
-  { 0.0F, 0.0F, 0.0F },                // omega_B_ISS_B
-  { 0.0F, 0.0F, 0.0F },                // gyro_bias
-  { 0.0F, 0.0F, 0.0F },                // V_B_ISS_ISS
-  { 0.0F, 0.0F, 0.0F },                // A_B_ISS_ISS
-  { 0.0F, 0.0F, 0.0F },                // accel_bias
-  { 0.0F, 0.0F, 0.0F },                // P_B_ISS_ISS
-  0U,                                  // confidence
-  0U,                                  // aug_state_enum
-  { 0.0F, 0.0F, 0.0F, 0.0F },          // ml_quat_ISS2cam
-  { 0.0F, 0.0F, 0.0F },                // ml_P_cam_ISS_ISS
-  { 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F,
-    0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F,
-    0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F,
-    0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F,
-    0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F },// of_quat_ISS2cam 
-  { 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F,
-    0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F,
-    0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F,
-    0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F },// of_P_cam_ISS_ISS
-  { 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F,
-    0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F,
-    0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F,
-    0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F,
-    0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F,
-    0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F,
-    0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F,
-    0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F,
-    0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F
-  },                                   // cov_diag
-  0U,                                  // kfl_status
-  0U,                                  // update_OF_tracks_cnt
-  0U,                                  // update_ML_features_cnt
-  { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-    0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-    0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-    0.0, 0.0, 0.0, 0.0, 0.0 },         // of_mahal_distance
-  { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-    0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-    0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-    0.0, 0.0, 0.0, 0.0, 0.0 },         // ml_mahal_distance
-  { 0.0F, 0.0F, 0.0F },                // hr_P_hr_ISS_ISS
-  { 0.0F, 0.0F, 0.0F, 0.0F },          // hr_quat_ISS2hr
-  { 0.0F, 0.0F, 0.0F }                 // P_EST_ISS_ISS
-};
-
 //
 // Output and update for action system:
-//    '<S44>/Normalize'
-//    '<S63>/Normalize'
-//    '<S77>/Normalize'
+//    '<S18>/Normalize'
+//    '<S66>/Normalize'
+//    '<S85>/Normalize'
+//    '<S99>/Normalize'
 //
 void ctl_controller0_Normalize(const real32_T rtu_q_in[4], real32_T
   rty_positive_scalar_q[4], P_Normalize_ctl_controller0_T *localP)
 {
-  // Product: '<S50>/Product' incorporates:
-  //   Constant: '<S50>/Constant1'
-  //   DataTypeConversion: '<S52>/Conversion'
+  // Product: '<S24>/Product' incorporates:
+  //   Constant: '<S24>/Constant1'
+  //   DataTypeConversion: '<S26>/Conversion'
 
   rty_positive_scalar_q[0] = rtu_q_in[0] * (real32_T)localP->Constant1_Value;
   rty_positive_scalar_q[1] = rtu_q_in[1] * (real32_T)localP->Constant1_Value;
@@ -203,9 +147,10 @@ void ctl_controller0_Normalize(const real32_T rtu_q_in[4], real32_T
 
 //
 // Termination for action system:
-//    '<S44>/Normalize'
-//    '<S63>/Normalize'
-//    '<S77>/Normalize'
+//    '<S18>/Normalize'
+//    '<S66>/Normalize'
+//    '<S85>/Normalize'
+//    '<S99>/Normalize'
 //
 void ctl_controller0_Normalize_Term(void)
 {
@@ -213,14 +158,15 @@ void ctl_controller0_Normalize_Term(void)
 
 //
 // Output and update for action system:
-//    '<S51>/Normalize'
-//    '<S66>/Normalize'
-//    '<S84>/Normalize'
+//    '<S25>/Normalize'
+//    '<S73>/Normalize'
+//    '<S88>/Normalize'
+//    '<S106>/Normalize'
 //
 void ctl_controller0_Normalize_e(const real32_T rtu_Vec[4], real32_T
   rtu_Magnitude, real32_T rty_Normalized_Vec[4])
 {
-  // Product: '<S54>/Divide'
+  // Product: '<S28>/Divide'
   rty_Normalized_Vec[0] = rtu_Vec[0] / rtu_Magnitude;
   rty_Normalized_Vec[1] = rtu_Vec[1] / rtu_Magnitude;
   rty_Normalized_Vec[2] = rtu_Vec[2] / rtu_Magnitude;
@@ -229,11 +175,12 @@ void ctl_controller0_Normalize_e(const real32_T rtu_Vec[4], real32_T
 
 //
 // Termination for action system:
-//    '<S51>/Normalize'
-//    '<S66>/Normalize'
-//    '<S84>/Normalize'
+//    '<S25>/Normalize'
+//    '<S73>/Normalize'
+//    '<S88>/Normalize'
+//    '<S106>/Normalize'
 //
-void ctl_controller_Normalize_p_Term(void)
+void ctl_controller_Normalize_j_Term(void)
 {
 }
 
@@ -249,7 +196,7 @@ void ctl_contr_ForEachSubsystem_Init(int32_T NumIters,
   // local scratch DWork variables
   int32_T ForEach_itr;
   for (ForEach_itr = 0; ForEach_itr < NumIters; ForEach_itr++) {
-    // InitializeConditions for DiscreteTransferFcn: '<S91>/3 Hz Low Pass'
+    // InitializeConditions for DiscreteTransferFcn: '<S113>/3 Hz Low Pass'
     localDW[ForEach_itr].CoreSubsys.uHzLowPass_states =
       localP->CoreSubsys.uHzLowPass_InitialStates;
   }
@@ -285,11 +232,11 @@ void ctl_controller_ForEachSubsystem(int32_T NumIters, const real32_T rtu_X[3],
   real32_T uHzLowPass_tmp;
 
   // Outputs for Iterator SubSystem: '<S5>/For Each Subsystem' incorporates:
-  //   ForEach: '<S91>/For Each'
+  //   ForEach: '<S113>/For Each'
 
   for (ForEach_itr = 0; ForEach_itr < NumIters; ForEach_itr++) {
-    // DiscreteTransferFcn: '<S91>/3 Hz Low Pass' incorporates:
-    //   ForEachSliceSelector: '<S91>/ImpSel_InsertedFor_X_at_outport_0'
+    // DiscreteTransferFcn: '<S113>/3 Hz Low Pass' incorporates:
+    //   ForEachSliceSelector: '<S113>/ImpSel_InsertedFor_X_at_outport_0'
 
     uHzLowPass_tmp = (rtu_X[ForEach_itr] - localP->
                       CoreSubsys.uHzLowPass_DenCoef[1] * localDW[ForEach_itr].
@@ -299,23 +246,23 @@ void ctl_controller_ForEachSubsystem(int32_T NumIters, const real32_T rtu_X[3],
       localP->CoreSubsys.uHzLowPass_NumCoef[1] * localDW[ForEach_itr].
       CoreSubsys.uHzLowPass_states;
 
-    // Update for DiscreteTransferFcn: '<S91>/3 Hz Low Pass'
+    // Update for DiscreteTransferFcn: '<S113>/3 Hz Low Pass'
     localDW[ForEach_itr].CoreSubsys.uHzLowPass_states = uHzLowPass_tmp;
 
-    // Switch: '<S91>/Switch' incorporates:
-    //   Constant: '<S91>/Constant'
+    // Switch: '<S113>/Switch' incorporates:
+    //   Constant: '<S113>/Constant'
 
     if (rtp_filt_enable != 0.0F) {
-      // ForEachSliceAssignment: '<S91>/ImpAsg_InsertedFor_Y_at_inport_0'
+      // ForEachSliceAssignment: '<S113>/ImpAsg_InsertedFor_Y_at_inport_0'
       rty_Y[ForEach_itr] = rtb_uHzLowPass;
     } else {
-      // ForEachSliceAssignment: '<S91>/ImpAsg_InsertedFor_Y_at_inport_0' incorporates:
-      //   ForEachSliceSelector: '<S91>/ImpSel_InsertedFor_X_at_outport_0'
+      // ForEachSliceAssignment: '<S113>/ImpAsg_InsertedFor_Y_at_inport_0' incorporates:
+      //   ForEachSliceSelector: '<S113>/ImpSel_InsertedFor_X_at_outport_0'
 
       rty_Y[ForEach_itr] = rtu_X[ForEach_itr];
     }
 
-    // End of Switch: '<S91>/Switch'
+    // End of Switch: '<S113>/Switch'
   }
 
   // End of Outputs for SubSystem: '<S5>/For Each Subsystem'
@@ -332,9 +279,8 @@ void ctl_contr_ForEachSubsystem_Term(void)
 
 // Model step function
 void ctl_controller0_step(RT_MODEL_ctl_controller0_T *const ctl_controller0_M,
-  kfl_msg *ctl_controller0_U_kfl_msg_l, cmc_msg *ctl_controller0_U_cmc_msg_f,
-  ex_time_msg *ctl_controller0_U_ex_time, env_msg *ctl_controller0_U_env_msg_h,
-  cmd_msg *ctl_controller0_Y_cmd_msg_c, ctl_msg *ctl_controller0_Y_ctl_msg_o)
+  ctl_input_msg *ctl_controller0_U_ctl_input_msg_l, cmd_msg
+  *ctl_controller0_Y_cmd_msg_f, ctl_msg *ctl_controller0_Y_ctl_msg_n)
 {
   P_ctl_controller0_T *ctl_controller0_P = ((P_ctl_controller0_T *)
     ctl_controller0_M->defaultParam);
@@ -350,166 +296,188 @@ void ctl_controller0_step(RT_MODEL_ctl_controller0_T *const ctl_controller0_M,
   static const real32_T theta[3] = { 0.425873F, 1.8801527F, 3.92572474F };
 
   real32_T rtb_Assignment_h[9];
-  real32_T rtb_Sqrt_bt;
   real32_T rtb_TSamp[4];
   real32_T rtb_Product[3];
+  real32_T rtb_Product5[16];
+  real32_T rtb_Product_b[4];
+  real32_T rtb_Sqrt;
   real32_T rtb_SumofElements;
   real32_T rtb_SumofElements1;
   boolean_T rtb_LogicalOperator2_c;
-  uint8_T rtb_Switch2;
   real32_T rtb_VectorConcatenate[16];
   real32_T rtb_VectorConcatenate_m[16];
   real32_T rtb_Product1_m[4];
-  boolean_T rtb_LogicalOperator2;
-  real32_T rtb_Gain_ci[3];
-  real32_T rtb_Assignment_l[9];
+  real32_T rtb_Merge_pa[4];
   real32_T rtb_Divide_f[3];
+  uint8_T rtb_Switch12;
+  boolean_T rtb_LogicalOperator2;
+  real32_T rtb_Assignment_l[9];
   boolean_T rtb_Compare_j;
-  real32_T rtb_Product_f[4];
-  boolean_T rtb_Compare_a;
-  real32_T rtb_Product3_n[3];
-  uint32_T rtb_Switch_h_timestamp_sec;
-  uint32_T rtb_Switch_h_timestamp_nsec;
-  real32_T rtb_Switch_h_A_B_ISS_ISS[3];
+  real32_T rtb_Switch_b[3];
+  boolean_T rtb_Compare_fc;
   real32_T rtb_Merge[4];
-  real32_T rtb_Merge_k[4];
-  real32_T rtb_Merge_az[4];
+  real32_T rtb_Sum_f[3];
+  real32_T rtb_Merge_j[4];
   real32_T rtb_y[16];
   real32_T rtb_Diff[3];
-  real32_T rtb_Product3[16];
+  uint32_T rtb_Switch_cmd_state_a_timestam;
+  uint32_T rtb_Switch_cmd_state_a_timest_0;
+  uint32_T rtb_Switch_cmd_state_b_timestam;
+  uint32_T rtb_Switch_cmd_state_b_timest_0;
+  uint8_T rtb_Switch_ctl_mode_cmd;
+  uint32_T rtb_Switch_current_time_sec;
+  uint32_T rtb_Switch_current_time_nsec;
+  uint8_T rtb_Switch_speed_gain_cmd;
+  real32_T rtb_Switch_vel_kd[3];
+  real32_T rtb_Switch_inertia_matrix[9];
+  real32_T rtb_Switch_mass;
   int32_T i;
-  real32_T rtb_Product3_0[16];
+  real32_T rtb_Product5_0[16];
   real32_T rtb_Assignment_b[12];
   real32_T tmp[12];
   int32_T i_0;
   real32_T rtb_VectorConcatenate_p[16];
   real32_T tmp_0[9];
-  real32_T rtb_Merge_j[9];
+  real32_T rtb_Merge_j_0[9];
   real32_T rtb_Assignment_b_0[9];
   real32_T rtb_Assignment_b_1[3];
   real32_T tmp_1[9];
   real32_T tmp_2[9];
   real32_T tmp_3[9];
   real32_T tmp_4[9];
-  real32_T rtb_Product_md;
-  real32_T rtb_Diff_e;
+  real32_T rtb_Product_f;
+  real32_T rtb_Sum4_p;
   real32_T rtb_SumA21_f;
-  real32_T rtb_Switch_h_alpha_B_ISS_B_idx_;
-  real32_T rtb_Switch_h_alpha_B_ISS_B_id_0;
-  real32_T rtb_Switch_h_alpha_B_ISS_B_id_1;
   real32_T rtb_Sum4_o_idx_2;
   real32_T rtb_Sum4_o_idx_1;
   real32_T rtb_Sum4_o_idx_0;
-  real32_T rtb_Switch_omega_B_ISS_B_idx_0;
-  real32_T rtb_Switch_omega_B_ISS_B_idx_1;
-  real32_T rtb_Switch_omega_B_ISS_B_idx_2;
+  real32_T rtb_Switch_cmd_state_b_alpha_B_;
+  real32_T rtb_Switch_cmd_state_b_alpha__0;
+  real32_T rtb_Switch_cmd_state_b_alpha__1;
+  real32_T rtb_Switch_est_omega_B_ISS_B_id;
+  real32_T rtb_Switch_omega_kd_idx_0;
+  real32_T rtb_Switch_est_omega_B_ISS_B__0;
+  real32_T rtb_Switch_omega_kd_idx_1;
+  real32_T rtb_Switch_est_omega_B_ISS_B__1;
+  real32_T rtb_Switch_omega_kd_idx_2;
   real32_T rtb_Sum3_k_idx_0;
-  real32_T rtb_Switch_V_B_ISS_ISS_idx_0;
-  real32_T rtb_Switch_P_B_ISS_ISS_idx_0;
-  real32_T rtb_Switch_V_B_ISS_ISS_idx_1;
-  real32_T rtb_Switch_P_B_ISS_ISS_idx_1;
-  real32_T rtb_Switch_V_B_ISS_ISS_idx_2;
-  real32_T rtb_Switch_P_B_ISS_ISS_idx_2;
-  real32_T rtb_Sum3_k_idx_1;
-  real32_T rtb_Sum3_k_idx_2;
+  real32_T rtb_Switch_est_V_B_ISS_ISS_idx_;
+  real32_T rtb_Switch_est_P_B_ISS_ISS_idx_;
+  real32_T rtb_Switch_cmd_state_a_A_B_ISS_;
+  real32_T rtb_Switch_est_V_B_ISS_ISS_id_0;
+  real32_T rtb_Switch_est_P_B_ISS_ISS_id_0;
+  real32_T rtb_Switch_cmd_state_a_P_B_ISS_;
+  real32_T rtb_Switch_cmd_state_a_V_B_ISS_;
+  real32_T rtb_Switch_cmd_state_a_A_B_IS_0;
+  real32_T rtb_Switch_est_V_B_ISS_ISS_id_1;
+  real32_T rtb_Switch_est_P_B_ISS_ISS_id_1;
+  real32_T rtb_Switch_cmd_state_a_P_B_IS_0;
+  real32_T rtb_Switch_cmd_state_a_A_B_IS_1;
+  real32_T rtb_Switch8_idx_0;
+  real32_T rtb_Sum2_idx_0;
+  real32_T rtb_Gain1_j_idx_0;
+  real32_T rtb_Switch_c_idx_0;
+  real32_T rtb_Switch8_idx_1;
+  real32_T rtb_Sum2_idx_1;
+  real32_T rtb_Gain1_j_idx_1;
+  real32_T rtb_Switch_c_idx_1;
+  real32_T rtb_Switch8_idx_2;
+  real32_T rtb_Sum2_idx_2;
+  real32_T rtb_Gain1_j_idx_2;
+  real32_T rtb_Switch_c_idx_2;
+  real32_T rtb_Switch_att_ki_idx_0;
+  real32_T rtb_Switch_pos_ki_idx_0;
+  real32_T rtb_Switch_att_ki_idx_1;
+  real32_T rtb_Switch_pos_ki_idx_1;
+  real32_T rtb_Switch_att_ki_idx_2;
+  real32_T rtb_Switch_pos_ki_idx_2;
+  real32_T rtb_SumA21_idx_0;
+  real32_T rtb_SumA21_idx_1;
   real32_T rtb_SumA21_d_idx_0;
   real32_T rtb_SumA21_d_idx_1;
-  real32_T rtb_Gain1_j_idx_0;
-  real32_T rtb_Gain1_j_idx_1;
-  real32_T rtb_Gain1_j_idx_2;
-  real32_T rtb_BusCreator1_traj_omega_idx_;
-  real32_T rtb_Switch8_idx_0;
-  real32_T rtb_BusCreator1_traj_pos_idx_1;
-  real32_T rtb_BusCreator1_traj_vel_idx_1;
-  real32_T rtb_BusCreator1_traj_omega_id_0;
-  real32_T rtb_Switch8_idx_1;
-  real32_T rtb_Switch_c_idx_0;
-  real32_T rtb_Switch_c_idx_1;
-  real32_T rtb_Switch_c_idx_2;
-  real32_T rtb_Sum2_idx_0;
-  real32_T rtb_Sum2_idx_1;
-  real32_T rtb_Sum2_idx_2;
-  real32_T rtb_LogicalOperator2_idx_2;
-  real32_T rtb_LogicalOperator2_idx_3;
-  real32_T rtb_LogicalOperator2_0;
+  real32_T rtb_Sum3_k_idx_1;
+  real32_T rtb_Sum3_k_idx_2;
   boolean_T exitg1;
   boolean_T exitg2;
 
   // Outputs for Atomic SubSystem: '<Root>/ctl_controller'
-  // DataTypeConversion: '<S95>/Conversion' incorporates:
-  //   Constant: '<S94>/Constant2'
+  // DataTypeConversion: '<S117>/Conversion' incorporates:
+  //   Constant: '<S116>/Constant2'
 
   for (i = 0; i < 9; i++) {
     rtb_Assignment_h[i] = (real32_T)ctl_controller0_P->Constant2_Value[i];
   }
 
-  // End of DataTypeConversion: '<S95>/Conversion'
+  // End of DataTypeConversion: '<S117>/Conversion'
 
-  // Assignment: '<S94>/Assignment' incorporates:
-  //   Inport: '<Root>/env_msg'
+  // Assignment: '<S116>/Assignment' incorporates:
+  //   Inport: '<Root>/ctl_input_msg'
 
-  rtb_Assignment_h[0] = ctl_controller0_U_env_msg_h->Q_ISS2B[3];
-  rtb_Assignment_h[4] = ctl_controller0_U_env_msg_h->Q_ISS2B[3];
-  rtb_Assignment_h[8] = ctl_controller0_U_env_msg_h->Q_ISS2B[3];
+  rtb_Assignment_h[0] = ctl_controller0_U_ctl_input_msg_l->est_quat_ISS2B[3];
+  rtb_Assignment_h[4] = ctl_controller0_U_ctl_input_msg_l->est_quat_ISS2B[3];
+  rtb_Assignment_h[8] = ctl_controller0_U_ctl_input_msg_l->est_quat_ISS2B[3];
 
-  // SampleTimeMath: '<S93>/TSamp' incorporates:
-  //   Inport: '<Root>/env_msg'
+  // SampleTimeMath: '<S115>/TSamp' incorporates:
+  //   Inport: '<Root>/ctl_input_msg'
   //
-  //  About '<S93>/TSamp':
+  //  About '<S115>/TSamp':
   //   y = u * K where K = 1 / ( w * Ts )
 
-  rtb_TSamp[0] = ctl_controller0_U_env_msg_h->Q_ISS2B[0] *
+  rtb_TSamp[0] = ctl_controller0_U_ctl_input_msg_l->est_quat_ISS2B[0] *
     ctl_controller0_P->TSamp_WtEt;
-  rtb_TSamp[1] = ctl_controller0_U_env_msg_h->Q_ISS2B[1] *
+  rtb_TSamp[1] = ctl_controller0_U_ctl_input_msg_l->est_quat_ISS2B[1] *
     ctl_controller0_P->TSamp_WtEt;
-  rtb_TSamp[2] = ctl_controller0_U_env_msg_h->Q_ISS2B[2] *
+  rtb_TSamp[2] = ctl_controller0_U_ctl_input_msg_l->est_quat_ISS2B[2] *
     ctl_controller0_P->TSamp_WtEt;
-  rtb_TSamp[3] = ctl_controller0_U_env_msg_h->Q_ISS2B[3] *
+  rtb_TSamp[3] = ctl_controller0_U_ctl_input_msg_l->est_quat_ISS2B[3] *
     ctl_controller0_P->TSamp_WtEt;
 
-  // Sum: '<S94>/Sum2' incorporates:
-  //   Constant: '<S96>/Constant3'
-  //   DataTypeConversion: '<S97>/Conversion'
-  //   Gain: '<S96>/Gain'
-  //   Gain: '<S96>/Gain1'
-  //   Gain: '<S96>/Gain2'
-  //   Inport: '<Root>/env_msg'
+  // Sum: '<S116>/Sum2' incorporates:
+  //   Constant: '<S118>/Constant3'
+  //   DataTypeConversion: '<S119>/Conversion'
+  //   Gain: '<S118>/Gain'
+  //   Gain: '<S118>/Gain1'
+  //   Gain: '<S118>/Gain2'
+  //   Inport: '<Root>/ctl_input_msg'
 
-  rtb_Assignment_l[0] = (real32_T)ctl_controller0_P->Constant3_Value;
-  rtb_Assignment_l[1] = ctl_controller0_U_env_msg_h->Q_ISS2B[2];
-  rtb_Assignment_l[2] = ctl_controller0_P->Gain_Gain_p *
-    ctl_controller0_U_env_msg_h->Q_ISS2B[1];
-  rtb_Assignment_l[3] = ctl_controller0_P->Gain1_Gain_e *
-    ctl_controller0_U_env_msg_h->Q_ISS2B[2];
-  rtb_Assignment_l[4] = (real32_T)ctl_controller0_P->Constant3_Value;
-  rtb_Assignment_l[5] = ctl_controller0_U_env_msg_h->Q_ISS2B[0];
-  rtb_Assignment_l[6] = ctl_controller0_U_env_msg_h->Q_ISS2B[1];
-  rtb_Assignment_l[7] = ctl_controller0_P->Gain2_Gain_k *
-    ctl_controller0_U_env_msg_h->Q_ISS2B[0];
-  rtb_Assignment_l[8] = (real32_T)ctl_controller0_P->Constant3_Value;
+  rtb_Switch_inertia_matrix[0] = (real32_T)ctl_controller0_P->Constant3_Value;
+  rtb_Switch_inertia_matrix[1] =
+    ctl_controller0_U_ctl_input_msg_l->est_quat_ISS2B[2];
+  rtb_Switch_inertia_matrix[2] = ctl_controller0_P->Gain_Gain_p *
+    ctl_controller0_U_ctl_input_msg_l->est_quat_ISS2B[1];
+  rtb_Switch_inertia_matrix[3] = ctl_controller0_P->Gain1_Gain_e *
+    ctl_controller0_U_ctl_input_msg_l->est_quat_ISS2B[2];
+  rtb_Switch_inertia_matrix[4] = (real32_T)ctl_controller0_P->Constant3_Value;
+  rtb_Switch_inertia_matrix[5] =
+    ctl_controller0_U_ctl_input_msg_l->est_quat_ISS2B[0];
+  rtb_Switch_inertia_matrix[6] =
+    ctl_controller0_U_ctl_input_msg_l->est_quat_ISS2B[1];
+  rtb_Switch_inertia_matrix[7] = ctl_controller0_P->Gain2_Gain_k *
+    ctl_controller0_U_ctl_input_msg_l->est_quat_ISS2B[0];
+  rtb_Switch_inertia_matrix[8] = (real32_T)ctl_controller0_P->Constant3_Value;
 
-  // Math: '<S89>/Math Function' incorporates:
-  //   Concatenate: '<S94>/Matrix Concatenate'
-  //   Gain: '<S89>/Gain'
-  //   Gain: '<S94>/Gain1'
-  //   Inport: '<Root>/env_msg'
-  //   Sum: '<S94>/Sum2'
+  // Math: '<S111>/Math Function' incorporates:
+  //   Concatenate: '<S116>/Matrix Concatenate'
+  //   Gain: '<S111>/Gain'
+  //   Gain: '<S116>/Gain1'
+  //   Inport: '<Root>/ctl_input_msg'
+  //   Sum: '<S116>/Sum2'
 
   for (i = 0; i < 3; i++) {
     rtb_Assignment_b[(int32_T)(3 * i)] = rtb_Assignment_h[i] +
-      rtb_Assignment_l[i];
+      rtb_Switch_inertia_matrix[i];
     rtb_Assignment_b[(int32_T)(1 + (int32_T)(3 * i))] = rtb_Assignment_h
-      [(int32_T)(i + 3)] + rtb_Assignment_l[(int32_T)(i + 3)];
+      [(int32_T)(i + 3)] + rtb_Switch_inertia_matrix[(int32_T)(i + 3)];
     rtb_Assignment_b[(int32_T)(2 + (int32_T)(3 * i))] = rtb_Assignment_h
-      [(int32_T)(i + 6)] + rtb_Assignment_l[(int32_T)(i + 6)];
+      [(int32_T)(i + 6)] + rtb_Switch_inertia_matrix[(int32_T)(i + 6)];
     rtb_Assignment_b[(int32_T)(9 + i)] = ctl_controller0_P->Gain1_Gain_o *
-      ctl_controller0_U_env_msg_h->Q_ISS2B[i];
+      ctl_controller0_U_ctl_input_msg_l->est_quat_ISS2B[i];
   }
 
-  // End of Math: '<S89>/Math Function'
+  // End of Math: '<S111>/Math Function'
   for (i = 0; i < 4; i++) {
-    // Gain: '<S89>/Gain' incorporates:
-    //   Product: '<S89>/Product'
+    // Gain: '<S111>/Gain' incorporates:
+    //   Product: '<S111>/Product'
 
     tmp[(int32_T)(3 * i)] = rtb_Assignment_b[(int32_T)(3 * i)] *
       ctl_controller0_P->Gain_Gain_m;
@@ -518,19 +486,19 @@ void ctl_controller0_step(RT_MODEL_ctl_controller0_T *const ctl_controller0_M,
     tmp[(int32_T)(2 + (int32_T)(3 * i))] = rtb_Assignment_b[(int32_T)((int32_T)
       (3 * i) + 2)] * ctl_controller0_P->Gain_Gain_m;
 
-    // Sum: '<S93>/Diff' incorporates:
-    //   Product: '<S89>/Product'
-    //   UnitDelay: '<S93>/UD'
+    // Sum: '<S115>/Diff' incorporates:
+    //   Product: '<S111>/Product'
+    //   UnitDelay: '<S115>/UD'
 
-    rtb_Product1_m[i] = rtb_TSamp[i] - ctl_controller0_DW->UD_DSTATE[i];
+    rtb_Product_b[i] = rtb_TSamp[i] - ctl_controller0_DW->UD_DSTATE[i];
   }
 
-  // Product: '<S89>/Product'
+  // Product: '<S111>/Product'
   for (i = 0; i < 3; i++) {
-    rtb_Product_md = tmp[(int32_T)(i + 9)] * rtb_Product1_m[3] + (tmp[(int32_T)
-      (i + 6)] * rtb_Product1_m[2] + (tmp[(int32_T)(i + 3)] * rtb_Product1_m[1]
-      + tmp[i] * rtb_Product1_m[0]));
-    rtb_Product[i] = rtb_Product_md;
+    rtb_Product_f = tmp[(int32_T)(i + 9)] * rtb_Product_b[3] + (tmp[(int32_T)(i
+      + 6)] * rtb_Product_b[2] + (tmp[(int32_T)(i + 3)] * rtb_Product_b[1] +
+      tmp[i] * rtb_Product_b[0]));
+    rtb_Product[i] = rtb_Product_f;
   }
 
   // Outputs for Iterator SubSystem: '<S5>/For Each Subsystem'
@@ -541,49 +509,49 @@ void ctl_controller0_step(RT_MODEL_ctl_controller0_T *const ctl_controller0_M,
 
   // End of Outputs for SubSystem: '<S5>/For Each Subsystem'
 
-  // SampleTimeMath: '<S90>/TSamp' incorporates:
-  //   Inport: '<Root>/env_msg'
+  // SampleTimeMath: '<S112>/TSamp' incorporates:
+  //   Inport: '<Root>/ctl_input_msg'
   //
-  //  About '<S90>/TSamp':
+  //  About '<S112>/TSamp':
   //   y = u * K where K = 1 / ( w * Ts )
 
-  rtb_Product_md = ctl_controller0_U_env_msg_h->P_B_ISS_ISS[0] *
+  rtb_Product_f = ctl_controller0_U_ctl_input_msg_l->est_P_B_ISS_ISS[0] *
     ctl_controller0_P->TSamp_WtEt_k;
 
-  // Sum: '<S90>/Diff' incorporates:
-  //   UnitDelay: '<S90>/UD'
+  // Sum: '<S112>/Diff' incorporates:
+  //   UnitDelay: '<S112>/UD'
 
-  rtb_Diff[0] = rtb_Product_md - ctl_controller0_DW->UD_DSTATE_e[0];
+  rtb_Diff[0] = rtb_Product_f - ctl_controller0_DW->UD_DSTATE_e[0];
 
-  // SampleTimeMath: '<S90>/TSamp' incorporates:
-  //   Inport: '<Root>/env_msg'
+  // SampleTimeMath: '<S112>/TSamp' incorporates:
+  //   Inport: '<Root>/ctl_input_msg'
   //
-  //  About '<S90>/TSamp':
+  //  About '<S112>/TSamp':
   //   y = u * K where K = 1 / ( w * Ts )
 
-  rtb_Product[0] = rtb_Product_md;
-  rtb_Product_md = ctl_controller0_U_env_msg_h->P_B_ISS_ISS[1] *
+  rtb_Product[0] = rtb_Product_f;
+  rtb_Product_f = ctl_controller0_U_ctl_input_msg_l->est_P_B_ISS_ISS[1] *
     ctl_controller0_P->TSamp_WtEt_k;
 
-  // Sum: '<S90>/Diff' incorporates:
-  //   UnitDelay: '<S90>/UD'
+  // Sum: '<S112>/Diff' incorporates:
+  //   UnitDelay: '<S112>/UD'
 
-  rtb_Diff[1] = rtb_Product_md - ctl_controller0_DW->UD_DSTATE_e[1];
+  rtb_Diff[1] = rtb_Product_f - ctl_controller0_DW->UD_DSTATE_e[1];
 
-  // SampleTimeMath: '<S90>/TSamp' incorporates:
-  //   Inport: '<Root>/env_msg'
+  // SampleTimeMath: '<S112>/TSamp' incorporates:
+  //   Inport: '<Root>/ctl_input_msg'
   //
-  //  About '<S90>/TSamp':
+  //  About '<S112>/TSamp':
   //   y = u * K where K = 1 / ( w * Ts )
 
-  rtb_Product[1] = rtb_Product_md;
-  rtb_Product_md = ctl_controller0_U_env_msg_h->P_B_ISS_ISS[2] *
+  rtb_Product[1] = rtb_Product_f;
+  rtb_Product_f = ctl_controller0_U_ctl_input_msg_l->est_P_B_ISS_ISS[2] *
     ctl_controller0_P->TSamp_WtEt_k;
 
-  // Sum: '<S90>/Diff' incorporates:
-  //   UnitDelay: '<S90>/UD'
+  // Sum: '<S112>/Diff' incorporates:
+  //   UnitDelay: '<S112>/UD'
 
-  rtb_Diff[2] = rtb_Product_md - ctl_controller0_DW->UD_DSTATE_e[2];
+  rtb_Diff[2] = rtb_Product_f - ctl_controller0_DW->UD_DSTATE_e[2];
 
   // Outputs for Iterator SubSystem: '<S5>/For Each Subsystem1'
   ctl_controller_ForEachSubsystem(3, rtb_Diff, rtb_ImpAsg_InsertedFor_Y_at_inp,
@@ -594,478 +562,773 @@ void ctl_controller0_step(RT_MODEL_ctl_controller0_T *const ctl_controller0_M,
   // End of Outputs for SubSystem: '<S5>/For Each Subsystem1'
 
   // Switch: '<S1>/Switch' incorporates:
-  //   BusCreator: '<S5>/bus_creator1'
+  //   BusAssignment: '<S1>/Bus Assignment'
   //   Constant: '<S1>/Constant'
-  //   Constant: '<S5>/constant39'
-  //   Inport: '<Root>/env_msg'
-  //   Inport: '<Root>/kfl_msg'
+  //   Inport: '<Root>/ctl_input_msg'
 
   if ((int32_T)ctl_controller0_P->tun_debug_ctl_use_truth != 0) {
-    rtb_Merge_az[0] = ctl_controller0_U_env_msg_h->Q_ISS2B[0];
-    rtb_Merge_az[1] = ctl_controller0_U_env_msg_h->Q_ISS2B[1];
-    rtb_Merge_az[2] = ctl_controller0_U_env_msg_h->Q_ISS2B[2];
-    rtb_Merge_az[3] = ctl_controller0_U_env_msg_h->Q_ISS2B[3];
-    rtb_Switch_omega_B_ISS_B_idx_0 = rtb_ImpAsg_InsertedFor_Y_at_i_d[0];
-    rtb_Switch_V_B_ISS_ISS_idx_0 = rtb_ImpAsg_InsertedFor_Y_at_inp[0];
-    rtb_Switch_P_B_ISS_ISS_idx_0 = ctl_controller0_U_env_msg_h->P_B_ISS_ISS[0];
-    rtb_Switch_omega_B_ISS_B_idx_1 = rtb_ImpAsg_InsertedFor_Y_at_i_d[1];
-    rtb_Switch_V_B_ISS_ISS_idx_1 = rtb_ImpAsg_InsertedFor_Y_at_inp[1];
-    rtb_Switch_P_B_ISS_ISS_idx_1 = ctl_controller0_U_env_msg_h->P_B_ISS_ISS[1];
-    rtb_Switch_omega_B_ISS_B_idx_2 = rtb_ImpAsg_InsertedFor_Y_at_i_d[2];
-    rtb_Switch_V_B_ISS_ISS_idx_2 = rtb_ImpAsg_InsertedFor_Y_at_inp[2];
-    rtb_Switch_P_B_ISS_ISS_idx_2 = ctl_controller0_U_env_msg_h->P_B_ISS_ISS[2];
-    rtb_Switch2 = ctl_controller0_P->constant39_Value;
-  } else {
-    rtb_Merge_az[0] = ctl_controller0_U_kfl_msg_l->quat_ISS2B[0];
-    rtb_Merge_az[1] = ctl_controller0_U_kfl_msg_l->quat_ISS2B[1];
-    rtb_Merge_az[2] = ctl_controller0_U_kfl_msg_l->quat_ISS2B[2];
-    rtb_Merge_az[3] = ctl_controller0_U_kfl_msg_l->quat_ISS2B[3];
-    rtb_Switch_omega_B_ISS_B_idx_0 = ctl_controller0_U_kfl_msg_l->omega_B_ISS_B
+    rtb_Merge_j[0] = ctl_controller0_U_ctl_input_msg_l->est_quat_ISS2B[0];
+    rtb_Merge_j[1] = ctl_controller0_U_ctl_input_msg_l->est_quat_ISS2B[1];
+    rtb_Merge_j[2] = ctl_controller0_U_ctl_input_msg_l->est_quat_ISS2B[2];
+    rtb_Merge_j[3] = ctl_controller0_U_ctl_input_msg_l->est_quat_ISS2B[3];
+    rtb_Switch12 = ctl_controller0_U_ctl_input_msg_l->est_confidence;
+    rtb_Switch_cmd_state_a_timestam =
+      ctl_controller0_U_ctl_input_msg_l->cmd_state_a.timestamp_sec;
+    rtb_Switch_cmd_state_a_timest_0 =
+      ctl_controller0_U_ctl_input_msg_l->cmd_state_a.timestamp_nsec;
+    rtb_Switch_est_omega_B_ISS_B_id = rtb_ImpAsg_InsertedFor_Y_at_i_d[0];
+    rtb_Switch_est_V_B_ISS_ISS_idx_ = rtb_ImpAsg_InsertedFor_Y_at_inp[0];
+    rtb_Switch_est_P_B_ISS_ISS_idx_ =
+      ctl_controller0_U_ctl_input_msg_l->est_P_B_ISS_ISS[0];
+    normA = ctl_controller0_U_ctl_input_msg_l->cmd_state_a.P_B_ISS_ISS[0];
+    b_s = ctl_controller0_U_ctl_input_msg_l->cmd_state_a.V_B_ISS_ISS[0];
+    rtb_Switch_cmd_state_a_A_B_ISS_ =
+      ctl_controller0_U_ctl_input_msg_l->cmd_state_a.A_B_ISS_ISS[0];
+    rtb_Switch_est_omega_B_ISS_B__0 = rtb_ImpAsg_InsertedFor_Y_at_i_d[1];
+    rtb_Switch_est_V_B_ISS_ISS_id_0 = rtb_ImpAsg_InsertedFor_Y_at_inp[1];
+    rtb_Switch_est_P_B_ISS_ISS_id_0 =
+      ctl_controller0_U_ctl_input_msg_l->est_P_B_ISS_ISS[1];
+    rtb_Switch_cmd_state_a_P_B_ISS_ =
+      ctl_controller0_U_ctl_input_msg_l->cmd_state_a.P_B_ISS_ISS[1];
+    rtb_Switch_cmd_state_a_V_B_ISS_ =
+      ctl_controller0_U_ctl_input_msg_l->cmd_state_a.V_B_ISS_ISS[1];
+    rtb_Switch_cmd_state_a_A_B_IS_0 =
+      ctl_controller0_U_ctl_input_msg_l->cmd_state_a.A_B_ISS_ISS[1];
+    rtb_Switch_est_omega_B_ISS_B__1 = rtb_ImpAsg_InsertedFor_Y_at_i_d[2];
+    rtb_Switch_est_V_B_ISS_ISS_id_1 = rtb_ImpAsg_InsertedFor_Y_at_inp[2];
+    rtb_Switch_est_P_B_ISS_ISS_id_1 =
+      ctl_controller0_U_ctl_input_msg_l->est_P_B_ISS_ISS[2];
+    rtb_Switch_cmd_state_a_P_B_IS_0 =
+      ctl_controller0_U_ctl_input_msg_l->cmd_state_a.P_B_ISS_ISS[2];
+    rtb_Sum3_k_idx_2 =
+      ctl_controller0_U_ctl_input_msg_l->cmd_state_a.V_B_ISS_ISS[2];
+    rtb_Switch_cmd_state_a_A_B_IS_1 =
+      ctl_controller0_U_ctl_input_msg_l->cmd_state_a.A_B_ISS_ISS[2];
+    rtb_Product1_m[0] =
+      ctl_controller0_U_ctl_input_msg_l->cmd_state_a.quat_ISS2B[0];
+    rtb_Product1_m[1] =
+      ctl_controller0_U_ctl_input_msg_l->cmd_state_a.quat_ISS2B[1];
+    rtb_Product1_m[2] =
+      ctl_controller0_U_ctl_input_msg_l->cmd_state_a.quat_ISS2B[2];
+    rtb_Product1_m[3] =
+      ctl_controller0_U_ctl_input_msg_l->cmd_state_a.quat_ISS2B[3];
+    rtb_Switch_cmd_state_b_timestam =
+      ctl_controller0_U_ctl_input_msg_l->cmd_state_b.timestamp_sec;
+    rtb_Switch_cmd_state_b_timest_0 =
+      ctl_controller0_U_ctl_input_msg_l->cmd_state_b.timestamp_nsec;
+    rtb_Switch8_idx_0 =
+      ctl_controller0_U_ctl_input_msg_l->cmd_state_a.omega_B_ISS_B[0];
+    rtb_Sum2_idx_0 =
+      ctl_controller0_U_ctl_input_msg_l->cmd_state_a.alpha_B_ISS_B[0];
+    rtb_Gain1_j_idx_0 =
+      ctl_controller0_U_ctl_input_msg_l->cmd_state_b.P_B_ISS_ISS[0];
+    rtb_Switch_c_idx_0 =
+      ctl_controller0_U_ctl_input_msg_l->cmd_state_b.V_B_ISS_ISS[0];
+    rtb_Diff[0] = ctl_controller0_U_ctl_input_msg_l->cmd_state_b.A_B_ISS_ISS[0];
+    rtb_Switch8_idx_1 =
+      ctl_controller0_U_ctl_input_msg_l->cmd_state_a.omega_B_ISS_B[1];
+    rtb_Sum2_idx_1 =
+      ctl_controller0_U_ctl_input_msg_l->cmd_state_a.alpha_B_ISS_B[1];
+    rtb_Gain1_j_idx_1 =
+      ctl_controller0_U_ctl_input_msg_l->cmd_state_b.P_B_ISS_ISS[1];
+    rtb_Switch_c_idx_1 =
+      ctl_controller0_U_ctl_input_msg_l->cmd_state_b.V_B_ISS_ISS[1];
+    rtb_Diff[1] = ctl_controller0_U_ctl_input_msg_l->cmd_state_b.A_B_ISS_ISS[1];
+    rtb_Switch8_idx_2 =
+      ctl_controller0_U_ctl_input_msg_l->cmd_state_a.omega_B_ISS_B[2];
+    rtb_Sum2_idx_2 =
+      ctl_controller0_U_ctl_input_msg_l->cmd_state_a.alpha_B_ISS_B[2];
+    rtb_Gain1_j_idx_2 =
+      ctl_controller0_U_ctl_input_msg_l->cmd_state_b.P_B_ISS_ISS[2];
+    rtb_Switch_c_idx_2 =
+      ctl_controller0_U_ctl_input_msg_l->cmd_state_b.V_B_ISS_ISS[2];
+    rtb_Diff[2] = ctl_controller0_U_ctl_input_msg_l->cmd_state_b.A_B_ISS_ISS[2];
+    rtb_Merge_pa[0] = ctl_controller0_U_ctl_input_msg_l->cmd_state_b.quat_ISS2B
       [0];
-    rtb_Switch_V_B_ISS_ISS_idx_0 = ctl_controller0_U_kfl_msg_l->V_B_ISS_ISS[0];
-    rtb_Switch_P_B_ISS_ISS_idx_0 = ctl_controller0_U_kfl_msg_l->P_B_ISS_ISS[0];
-    rtb_Switch_omega_B_ISS_B_idx_1 = ctl_controller0_U_kfl_msg_l->omega_B_ISS_B
+    rtb_Merge_pa[1] = ctl_controller0_U_ctl_input_msg_l->cmd_state_b.quat_ISS2B
       [1];
-    rtb_Switch_V_B_ISS_ISS_idx_1 = ctl_controller0_U_kfl_msg_l->V_B_ISS_ISS[1];
-    rtb_Switch_P_B_ISS_ISS_idx_1 = ctl_controller0_U_kfl_msg_l->P_B_ISS_ISS[1];
-    rtb_Switch_omega_B_ISS_B_idx_2 = ctl_controller0_U_kfl_msg_l->omega_B_ISS_B
+    rtb_Merge_pa[2] = ctl_controller0_U_ctl_input_msg_l->cmd_state_b.quat_ISS2B
       [2];
-    rtb_Switch_V_B_ISS_ISS_idx_2 = ctl_controller0_U_kfl_msg_l->V_B_ISS_ISS[2];
-    rtb_Switch_P_B_ISS_ISS_idx_2 = ctl_controller0_U_kfl_msg_l->P_B_ISS_ISS[2];
-    rtb_Switch2 = ctl_controller0_U_kfl_msg_l->confidence;
+    rtb_Merge_pa[3] = ctl_controller0_U_ctl_input_msg_l->cmd_state_b.quat_ISS2B
+      [3];
+    rtb_Switch_ctl_mode_cmd = ctl_controller0_U_ctl_input_msg_l->ctl_mode_cmd;
+    rtb_Switch_current_time_sec =
+      ctl_controller0_U_ctl_input_msg_l->current_time_sec;
+    rtb_Switch_current_time_nsec =
+      ctl_controller0_U_ctl_input_msg_l->current_time_nsec;
+    rtb_Switch_speed_gain_cmd =
+      ctl_controller0_U_ctl_input_msg_l->speed_gain_cmd;
+    rtb_Divide_f[0] =
+      ctl_controller0_U_ctl_input_msg_l->cmd_state_b.omega_B_ISS_B[0];
+    rtb_Switch_cmd_state_b_alpha__1 =
+      ctl_controller0_U_ctl_input_msg_l->cmd_state_b.alpha_B_ISS_B[0];
+    rtb_Switch_b[0] = ctl_controller0_U_ctl_input_msg_l->att_kp[0];
+    rtb_Switch_att_ki_idx_0 = ctl_controller0_U_ctl_input_msg_l->att_ki[0];
+    rtb_Switch_omega_kd_idx_0 = ctl_controller0_U_ctl_input_msg_l->omega_kd[0];
+    rtb_Sum_f[0] = ctl_controller0_U_ctl_input_msg_l->pos_kp[0];
+    rtb_Switch_pos_ki_idx_0 = ctl_controller0_U_ctl_input_msg_l->pos_ki[0];
+    rtb_Switch_vel_kd[0] = ctl_controller0_U_ctl_input_msg_l->vel_kd[0];
+    rtb_Divide_f[1] =
+      ctl_controller0_U_ctl_input_msg_l->cmd_state_b.omega_B_ISS_B[1];
+    rtb_Switch_cmd_state_b_alpha__0 =
+      ctl_controller0_U_ctl_input_msg_l->cmd_state_b.alpha_B_ISS_B[1];
+    rtb_Switch_b[1] = ctl_controller0_U_ctl_input_msg_l->att_kp[1];
+    rtb_Switch_att_ki_idx_1 = ctl_controller0_U_ctl_input_msg_l->att_ki[1];
+    rtb_Switch_omega_kd_idx_1 = ctl_controller0_U_ctl_input_msg_l->omega_kd[1];
+    rtb_Sum_f[1] = ctl_controller0_U_ctl_input_msg_l->pos_kp[1];
+    rtb_Switch_pos_ki_idx_1 = ctl_controller0_U_ctl_input_msg_l->pos_ki[1];
+    rtb_Switch_vel_kd[1] = ctl_controller0_U_ctl_input_msg_l->vel_kd[1];
+    rtb_Divide_f[2] =
+      ctl_controller0_U_ctl_input_msg_l->cmd_state_b.omega_B_ISS_B[2];
+    rtb_Switch_cmd_state_b_alpha_B_ =
+      ctl_controller0_U_ctl_input_msg_l->cmd_state_b.alpha_B_ISS_B[2];
+    rtb_Switch_b[2] = ctl_controller0_U_ctl_input_msg_l->att_kp[2];
+    rtb_Switch_att_ki_idx_2 = ctl_controller0_U_ctl_input_msg_l->att_ki[2];
+    rtb_Switch_omega_kd_idx_2 = ctl_controller0_U_ctl_input_msg_l->omega_kd[2];
+    rtb_Sum_f[2] = ctl_controller0_U_ctl_input_msg_l->pos_kp[2];
+    rtb_Switch_pos_ki_idx_2 = ctl_controller0_U_ctl_input_msg_l->pos_ki[2];
+    rtb_Switch_vel_kd[2] = ctl_controller0_U_ctl_input_msg_l->vel_kd[2];
+    for (i = 0; i < 9; i++) {
+      rtb_Switch_inertia_matrix[i] =
+        ctl_controller0_U_ctl_input_msg_l->inertia_matrix[i];
+    }
+
+    rtb_Switch_mass = ctl_controller0_U_ctl_input_msg_l->mass;
+  } else {
+    rtb_Merge_j[0] = ctl_controller0_U_ctl_input_msg_l->est_quat_ISS2B[0];
+    rtb_Merge_j[1] = ctl_controller0_U_ctl_input_msg_l->est_quat_ISS2B[1];
+    rtb_Merge_j[2] = ctl_controller0_U_ctl_input_msg_l->est_quat_ISS2B[2];
+    rtb_Merge_j[3] = ctl_controller0_U_ctl_input_msg_l->est_quat_ISS2B[3];
+    rtb_Switch12 = ctl_controller0_U_ctl_input_msg_l->est_confidence;
+    rtb_Switch_cmd_state_a_timestam =
+      ctl_controller0_U_ctl_input_msg_l->cmd_state_a.timestamp_sec;
+    rtb_Switch_cmd_state_a_timest_0 =
+      ctl_controller0_U_ctl_input_msg_l->cmd_state_a.timestamp_nsec;
+    rtb_Switch_est_omega_B_ISS_B_id =
+      ctl_controller0_U_ctl_input_msg_l->est_omega_B_ISS_B[0];
+    rtb_Switch_est_V_B_ISS_ISS_idx_ =
+      ctl_controller0_U_ctl_input_msg_l->est_V_B_ISS_ISS[0];
+    rtb_Switch_est_P_B_ISS_ISS_idx_ =
+      ctl_controller0_U_ctl_input_msg_l->est_P_B_ISS_ISS[0];
+    normA = ctl_controller0_U_ctl_input_msg_l->cmd_state_a.P_B_ISS_ISS[0];
+    b_s = ctl_controller0_U_ctl_input_msg_l->cmd_state_a.V_B_ISS_ISS[0];
+    rtb_Switch_cmd_state_a_A_B_ISS_ =
+      ctl_controller0_U_ctl_input_msg_l->cmd_state_a.A_B_ISS_ISS[0];
+    rtb_Switch_est_omega_B_ISS_B__0 =
+      ctl_controller0_U_ctl_input_msg_l->est_omega_B_ISS_B[1];
+    rtb_Switch_est_V_B_ISS_ISS_id_0 =
+      ctl_controller0_U_ctl_input_msg_l->est_V_B_ISS_ISS[1];
+    rtb_Switch_est_P_B_ISS_ISS_id_0 =
+      ctl_controller0_U_ctl_input_msg_l->est_P_B_ISS_ISS[1];
+    rtb_Switch_cmd_state_a_P_B_ISS_ =
+      ctl_controller0_U_ctl_input_msg_l->cmd_state_a.P_B_ISS_ISS[1];
+    rtb_Switch_cmd_state_a_V_B_ISS_ =
+      ctl_controller0_U_ctl_input_msg_l->cmd_state_a.V_B_ISS_ISS[1];
+    rtb_Switch_cmd_state_a_A_B_IS_0 =
+      ctl_controller0_U_ctl_input_msg_l->cmd_state_a.A_B_ISS_ISS[1];
+    rtb_Switch_est_omega_B_ISS_B__1 =
+      ctl_controller0_U_ctl_input_msg_l->est_omega_B_ISS_B[2];
+    rtb_Switch_est_V_B_ISS_ISS_id_1 =
+      ctl_controller0_U_ctl_input_msg_l->est_V_B_ISS_ISS[2];
+    rtb_Switch_est_P_B_ISS_ISS_id_1 =
+      ctl_controller0_U_ctl_input_msg_l->est_P_B_ISS_ISS[2];
+    rtb_Switch_cmd_state_a_P_B_IS_0 =
+      ctl_controller0_U_ctl_input_msg_l->cmd_state_a.P_B_ISS_ISS[2];
+    rtb_Sum3_k_idx_2 =
+      ctl_controller0_U_ctl_input_msg_l->cmd_state_a.V_B_ISS_ISS[2];
+    rtb_Switch_cmd_state_a_A_B_IS_1 =
+      ctl_controller0_U_ctl_input_msg_l->cmd_state_a.A_B_ISS_ISS[2];
+    rtb_Product1_m[0] =
+      ctl_controller0_U_ctl_input_msg_l->cmd_state_a.quat_ISS2B[0];
+    rtb_Product1_m[1] =
+      ctl_controller0_U_ctl_input_msg_l->cmd_state_a.quat_ISS2B[1];
+    rtb_Product1_m[2] =
+      ctl_controller0_U_ctl_input_msg_l->cmd_state_a.quat_ISS2B[2];
+    rtb_Product1_m[3] =
+      ctl_controller0_U_ctl_input_msg_l->cmd_state_a.quat_ISS2B[3];
+    rtb_Switch_cmd_state_b_timestam =
+      ctl_controller0_U_ctl_input_msg_l->cmd_state_b.timestamp_sec;
+    rtb_Switch_cmd_state_b_timest_0 =
+      ctl_controller0_U_ctl_input_msg_l->cmd_state_b.timestamp_nsec;
+    rtb_Switch8_idx_0 =
+      ctl_controller0_U_ctl_input_msg_l->cmd_state_a.omega_B_ISS_B[0];
+    rtb_Sum2_idx_0 =
+      ctl_controller0_U_ctl_input_msg_l->cmd_state_a.alpha_B_ISS_B[0];
+    rtb_Gain1_j_idx_0 =
+      ctl_controller0_U_ctl_input_msg_l->cmd_state_b.P_B_ISS_ISS[0];
+    rtb_Switch_c_idx_0 =
+      ctl_controller0_U_ctl_input_msg_l->cmd_state_b.V_B_ISS_ISS[0];
+    rtb_Diff[0] = ctl_controller0_U_ctl_input_msg_l->cmd_state_b.A_B_ISS_ISS[0];
+    rtb_Switch8_idx_1 =
+      ctl_controller0_U_ctl_input_msg_l->cmd_state_a.omega_B_ISS_B[1];
+    rtb_Sum2_idx_1 =
+      ctl_controller0_U_ctl_input_msg_l->cmd_state_a.alpha_B_ISS_B[1];
+    rtb_Gain1_j_idx_1 =
+      ctl_controller0_U_ctl_input_msg_l->cmd_state_b.P_B_ISS_ISS[1];
+    rtb_Switch_c_idx_1 =
+      ctl_controller0_U_ctl_input_msg_l->cmd_state_b.V_B_ISS_ISS[1];
+    rtb_Diff[1] = ctl_controller0_U_ctl_input_msg_l->cmd_state_b.A_B_ISS_ISS[1];
+    rtb_Switch8_idx_2 =
+      ctl_controller0_U_ctl_input_msg_l->cmd_state_a.omega_B_ISS_B[2];
+    rtb_Sum2_idx_2 =
+      ctl_controller0_U_ctl_input_msg_l->cmd_state_a.alpha_B_ISS_B[2];
+    rtb_Gain1_j_idx_2 =
+      ctl_controller0_U_ctl_input_msg_l->cmd_state_b.P_B_ISS_ISS[2];
+    rtb_Switch_c_idx_2 =
+      ctl_controller0_U_ctl_input_msg_l->cmd_state_b.V_B_ISS_ISS[2];
+    rtb_Diff[2] = ctl_controller0_U_ctl_input_msg_l->cmd_state_b.A_B_ISS_ISS[2];
+    rtb_Merge_pa[0] = ctl_controller0_U_ctl_input_msg_l->cmd_state_b.quat_ISS2B
+      [0];
+    rtb_Merge_pa[1] = ctl_controller0_U_ctl_input_msg_l->cmd_state_b.quat_ISS2B
+      [1];
+    rtb_Merge_pa[2] = ctl_controller0_U_ctl_input_msg_l->cmd_state_b.quat_ISS2B
+      [2];
+    rtb_Merge_pa[3] = ctl_controller0_U_ctl_input_msg_l->cmd_state_b.quat_ISS2B
+      [3];
+    rtb_Switch_ctl_mode_cmd = ctl_controller0_U_ctl_input_msg_l->ctl_mode_cmd;
+    rtb_Switch_current_time_sec =
+      ctl_controller0_U_ctl_input_msg_l->current_time_sec;
+    rtb_Switch_current_time_nsec =
+      ctl_controller0_U_ctl_input_msg_l->current_time_nsec;
+    rtb_Switch_speed_gain_cmd =
+      ctl_controller0_U_ctl_input_msg_l->speed_gain_cmd;
+    rtb_Divide_f[0] =
+      ctl_controller0_U_ctl_input_msg_l->cmd_state_b.omega_B_ISS_B[0];
+    rtb_Switch_cmd_state_b_alpha__1 =
+      ctl_controller0_U_ctl_input_msg_l->cmd_state_b.alpha_B_ISS_B[0];
+    rtb_Switch_b[0] = ctl_controller0_U_ctl_input_msg_l->att_kp[0];
+    rtb_Switch_att_ki_idx_0 = ctl_controller0_U_ctl_input_msg_l->att_ki[0];
+    rtb_Switch_omega_kd_idx_0 = ctl_controller0_U_ctl_input_msg_l->omega_kd[0];
+    rtb_Sum_f[0] = ctl_controller0_U_ctl_input_msg_l->pos_kp[0];
+    rtb_Switch_pos_ki_idx_0 = ctl_controller0_U_ctl_input_msg_l->pos_ki[0];
+    rtb_Switch_vel_kd[0] = ctl_controller0_U_ctl_input_msg_l->vel_kd[0];
+    rtb_Divide_f[1] =
+      ctl_controller0_U_ctl_input_msg_l->cmd_state_b.omega_B_ISS_B[1];
+    rtb_Switch_cmd_state_b_alpha__0 =
+      ctl_controller0_U_ctl_input_msg_l->cmd_state_b.alpha_B_ISS_B[1];
+    rtb_Switch_b[1] = ctl_controller0_U_ctl_input_msg_l->att_kp[1];
+    rtb_Switch_att_ki_idx_1 = ctl_controller0_U_ctl_input_msg_l->att_ki[1];
+    rtb_Switch_omega_kd_idx_1 = ctl_controller0_U_ctl_input_msg_l->omega_kd[1];
+    rtb_Sum_f[1] = ctl_controller0_U_ctl_input_msg_l->pos_kp[1];
+    rtb_Switch_pos_ki_idx_1 = ctl_controller0_U_ctl_input_msg_l->pos_ki[1];
+    rtb_Switch_vel_kd[1] = ctl_controller0_U_ctl_input_msg_l->vel_kd[1];
+    rtb_Divide_f[2] =
+      ctl_controller0_U_ctl_input_msg_l->cmd_state_b.omega_B_ISS_B[2];
+    rtb_Switch_cmd_state_b_alpha_B_ =
+      ctl_controller0_U_ctl_input_msg_l->cmd_state_b.alpha_B_ISS_B[2];
+    rtb_Switch_b[2] = ctl_controller0_U_ctl_input_msg_l->att_kp[2];
+    rtb_Switch_att_ki_idx_2 = ctl_controller0_U_ctl_input_msg_l->att_ki[2];
+    rtb_Switch_omega_kd_idx_2 = ctl_controller0_U_ctl_input_msg_l->omega_kd[2];
+    rtb_Sum_f[2] = ctl_controller0_U_ctl_input_msg_l->pos_kp[2];
+    rtb_Switch_pos_ki_idx_2 = ctl_controller0_U_ctl_input_msg_l->pos_ki[2];
+    rtb_Switch_vel_kd[2] = ctl_controller0_U_ctl_input_msg_l->vel_kd[2];
+    for (i = 0; i < 9; i++) {
+      rtb_Switch_inertia_matrix[i] =
+        ctl_controller0_U_ctl_input_msg_l->inertia_matrix[i];
+    }
+
+    rtb_Switch_mass = ctl_controller0_U_ctl_input_msg_l->mass;
   }
 
   // End of Switch: '<S1>/Switch'
 
-  // Sum: '<S10>/SumA21' incorporates:
-  //   Delay: '<S10>/Delay11'
-  //   Gain: '<S10>/a(2)(1)'
-  //   Gain: '<S10>/s(1)'
+  // DataTypeConversion: '<S20>/Conversion' incorporates:
+  //   Constant: '<S19>/Constant2'
 
-  rtb_Diff_e = (real32_T)(ctl_controller0_P->s1_Gain * (real_T)
-    rtb_Switch_V_B_ISS_ISS_idx_0) - (real32_T)(ctl_controller0_P->a21_Gain *
+  for (i = 0; i < 9; i++) {
+    rtb_Assignment_h[i] = (real32_T)ctl_controller0_P->Constant2_Value_p[i];
+  }
+
+  // End of DataTypeConversion: '<S20>/Conversion'
+
+  // Assignment: '<S19>/Assignment' incorporates:
+  //   UnitDelay: '<S2>/Unit Delay2'
+
+  rtb_Assignment_h[0] = ctl_controller0_DW->UnitDelay2_DSTATE[3];
+
+  // Gain: '<S16>/Gain' incorporates:
+  //   UnitDelay: '<S2>/Unit Delay2'
+
+  rtb_Sum4_o_idx_0 = ctl_controller0_P->Gain_Gain_a *
+    ctl_controller0_DW->UnitDelay2_DSTATE[0];
+
+  // Assignment: '<S19>/Assignment' incorporates:
+  //   UnitDelay: '<S2>/Unit Delay2'
+
+  rtb_Assignment_h[4] = ctl_controller0_DW->UnitDelay2_DSTATE[3];
+
+  // Gain: '<S16>/Gain' incorporates:
+  //   UnitDelay: '<S2>/Unit Delay2'
+
+  rtb_Sum4_o_idx_1 = ctl_controller0_P->Gain_Gain_a *
+    ctl_controller0_DW->UnitDelay2_DSTATE[1];
+
+  // Assignment: '<S19>/Assignment' incorporates:
+  //   UnitDelay: '<S2>/Unit Delay2'
+
+  rtb_Assignment_h[8] = ctl_controller0_DW->UnitDelay2_DSTATE[3];
+
+  // Gain: '<S16>/Gain' incorporates:
+  //   UnitDelay: '<S2>/Unit Delay2'
+
+  rtb_Sum4_o_idx_2 = ctl_controller0_P->Gain_Gain_a *
+    ctl_controller0_DW->UnitDelay2_DSTATE[2];
+
+  // Sum: '<S19>/Sum2' incorporates:
+  //   Constant: '<S21>/Constant3'
+  //   DataTypeConversion: '<S22>/Conversion'
+  //   Gain: '<S21>/Gain'
+  //   Gain: '<S21>/Gain1'
+  //   Gain: '<S21>/Gain2'
+
+  rtb_Assignment_l[0] = (real32_T)ctl_controller0_P->Constant3_Value_a;
+  rtb_Assignment_l[1] = rtb_Sum4_o_idx_2;
+  rtb_Assignment_l[2] = ctl_controller0_P->Gain_Gain_i * rtb_Sum4_o_idx_1;
+  rtb_Assignment_l[3] = ctl_controller0_P->Gain1_Gain_n * rtb_Sum4_o_idx_2;
+  rtb_Assignment_l[4] = (real32_T)ctl_controller0_P->Constant3_Value_a;
+  rtb_Assignment_l[5] = rtb_Sum4_o_idx_0;
+  rtb_Assignment_l[6] = rtb_Sum4_o_idx_1;
+  rtb_Assignment_l[7] = ctl_controller0_P->Gain2_Gain_a * rtb_Sum4_o_idx_0;
+  rtb_Assignment_l[8] = (real32_T)ctl_controller0_P->Constant3_Value_a;
+
+  // Concatenate: '<S19>/Matrix Concatenate' incorporates:
+  //   Gain: '<S19>/Gain1'
+  //   Sum: '<S19>/Sum2'
+
+  for (i = 0; i < 3; i++) {
+    rtb_Product5[(int32_T)(i << 2)] = rtb_Assignment_h[(int32_T)(3 * i)] +
+      rtb_Assignment_l[(int32_T)(3 * i)];
+    rtb_Product5[(int32_T)(1 + (int32_T)(i << 2))] = rtb_Assignment_h[(int32_T)
+      ((int32_T)(3 * i) + 1)] + rtb_Assignment_l[(int32_T)((int32_T)(3 * i) + 1)];
+    rtb_Product5[(int32_T)(2 + (int32_T)(i << 2))] = rtb_Assignment_h[(int32_T)
+      ((int32_T)(3 * i) + 2)] + rtb_Assignment_l[(int32_T)((int32_T)(3 * i) + 2)];
+  }
+
+  rtb_Product5[3] = ctl_controller0_P->Gain1_Gain_j * rtb_Sum4_o_idx_0;
+  rtb_Product5[7] = ctl_controller0_P->Gain1_Gain_j * rtb_Sum4_o_idx_1;
+  rtb_Product5[11] = ctl_controller0_P->Gain1_Gain_j * rtb_Sum4_o_idx_2;
+
+  // End of Concatenate: '<S19>/Matrix Concatenate'
+
+  // Reshape: '<S17>/Reshape1' incorporates:
+  //   UnitDelay: '<S2>/Unit Delay2'
+
+  rtb_Product5[12] = rtb_Sum4_o_idx_0;
+  rtb_Product5[13] = rtb_Sum4_o_idx_1;
+  rtb_Product5[14] = rtb_Sum4_o_idx_2;
+  rtb_Product5[15] = ctl_controller0_DW->UnitDelay2_DSTATE[3];
+
+  // Product: '<S17>/Product'
+  for (i = 0; i < 4; i++) {
+    rtb_SumofElements = rtb_Product5[(int32_T)(i + 12)] * rtb_Merge_j[3] +
+      (rtb_Product5[(int32_T)(i + 8)] * rtb_Merge_j[2] + (rtb_Product5[(int32_T)
+        (i + 4)] * rtb_Merge_j[1] + rtb_Product5[i] * rtb_Merge_j[0]));
+    rtb_Product_b[i] = rtb_SumofElements;
+  }
+
+  // End of Product: '<S17>/Product'
+
+  // If: '<S18>/If' incorporates:
+  //   Inport: '<S23>/In1'
+
+  if (rtb_Product_b[3] < 0.0F) {
+    // Outputs for IfAction SubSystem: '<S18>/Normalize' incorporates:
+    //   ActionPort: '<S24>/Action Port'
+
+    ctl_controller0_Normalize(rtb_Product_b, rtb_Merge,
+      (P_Normalize_ctl_controller0_T *)&ctl_controller0_P->Normalize);
+
+    // End of Outputs for SubSystem: '<S18>/Normalize'
+  } else {
+    // Outputs for IfAction SubSystem: '<S18>/No-op' incorporates:
+    //   ActionPort: '<S23>/Action Port'
+
+    rtb_Merge[0] = rtb_Product_b[0];
+    rtb_Merge[1] = rtb_Product_b[1];
+    rtb_Merge[2] = rtb_Product_b[2];
+    rtb_Merge[3] = rtb_Product_b[3];
+
+    // End of Outputs for SubSystem: '<S18>/No-op'
+  }
+
+  // End of If: '<S18>/If'
+
+  // Sqrt: '<S29>/Sqrt' incorporates:
+  //   DotProduct: '<S29>/Dot Product'
+
+  rtb_Sqrt = (real32_T)sqrt((real_T)(((rtb_Merge[0] * rtb_Merge[0] + rtb_Merge[1]
+    * rtb_Merge[1]) + rtb_Merge[2] * rtb_Merge[2]) + rtb_Merge[3] * rtb_Merge[3]));
+
+  // If: '<S25>/If' incorporates:
+  //   DataTypeConversion: '<S25>/Data Type Conversion'
+  //   Inport: '<S27>/In1'
+
+  if ((real_T)rtb_Sqrt > 1.0E-7) {
+    // Outputs for IfAction SubSystem: '<S25>/Normalize' incorporates:
+    //   ActionPort: '<S28>/Action Port'
+
+    ctl_controller0_Normalize_e(rtb_Merge, rtb_Sqrt, rtb_Product_b);
+
+    // End of Outputs for SubSystem: '<S25>/Normalize'
+  } else {
+    // Outputs for IfAction SubSystem: '<S25>/No-op' incorporates:
+    //   ActionPort: '<S27>/Action Port'
+
+    rtb_Product_b[3] = rtb_Merge[3];
+
+    // End of Outputs for SubSystem: '<S25>/No-op'
+  }
+
+  // End of If: '<S25>/If'
+
+  // Sum: '<S13>/SumA21' incorporates:
+  //   Delay: '<S13>/Delay11'
+  //   Gain: '<S13>/a(2)(1)'
+  //   Gain: '<S13>/s(1)'
+
+  rtb_Sum4_o_idx_2 = (real32_T)(ctl_controller0_P->s1_Gain * (real_T)
+    rtb_Switch_est_V_B_ISS_ISS_idx_) - (real32_T)(ctl_controller0_P->a21_Gain *
     (real_T)ctl_controller0_DW->Delay11_DSTATE[0]);
 
-  // Sum: '<S10>/SumB21' incorporates:
-  //   Delay: '<S10>/Delay11'
+  // Sum: '<S13>/SumB21' incorporates:
+  //   Delay: '<S13>/Delay11'
 
-  rtb_Sum3_k_idx_2 = rtb_Diff_e + ctl_controller0_DW->Delay11_DSTATE[0];
+  rtb_Sum4_p = rtb_Sum4_o_idx_2 + ctl_controller0_DW->Delay11_DSTATE[0];
 
   // Math: '<S2>/Math Function'
-  rtb_Sum3_k_idx_2 *= rtb_Sum3_k_idx_2;
+  rtb_Sum4_p *= rtb_Sum4_p;
 
-  // Sum: '<S10>/SumA21'
-  rtb_Diff[0] = rtb_Diff_e;
+  // Sum: '<S13>/SumA21'
+  rtb_SumA21_idx_0 = rtb_Sum4_o_idx_2;
 
-  // Sum: '<S10>/SumB21'
-  rtb_Sum3_k_idx_0 = rtb_Sum3_k_idx_2;
+  // Sum: '<S13>/SumB21'
+  rtb_Sum4_o_idx_0 = rtb_Sum4_p;
 
-  // Sum: '<S10>/SumA21' incorporates:
-  //   Delay: '<S10>/Delay11'
-  //   Gain: '<S10>/a(2)(1)'
-  //   Gain: '<S10>/s(1)'
+  // Sum: '<S13>/SumA21' incorporates:
+  //   Delay: '<S13>/Delay11'
+  //   Gain: '<S13>/a(2)(1)'
+  //   Gain: '<S13>/s(1)'
 
-  rtb_Diff_e = (real32_T)(ctl_controller0_P->s1_Gain * (real_T)
-    rtb_Switch_V_B_ISS_ISS_idx_1) - (real32_T)(ctl_controller0_P->a21_Gain *
+  rtb_Sum4_o_idx_2 = (real32_T)(ctl_controller0_P->s1_Gain * (real_T)
+    rtb_Switch_est_V_B_ISS_ISS_id_0) - (real32_T)(ctl_controller0_P->a21_Gain *
     (real_T)ctl_controller0_DW->Delay11_DSTATE[1]);
 
-  // Sum: '<S10>/SumB21' incorporates:
-  //   Delay: '<S10>/Delay11'
+  // Sum: '<S13>/SumB21' incorporates:
+  //   Delay: '<S13>/Delay11'
 
-  rtb_Sum3_k_idx_2 = rtb_Diff_e + ctl_controller0_DW->Delay11_DSTATE[1];
+  rtb_Sum4_p = rtb_Sum4_o_idx_2 + ctl_controller0_DW->Delay11_DSTATE[1];
 
   // Math: '<S2>/Math Function'
-  rtb_Sum3_k_idx_2 *= rtb_Sum3_k_idx_2;
+  rtb_Sum4_p *= rtb_Sum4_p;
 
-  // Sum: '<S10>/SumA21'
-  rtb_Diff[1] = rtb_Diff_e;
+  // Sum: '<S13>/SumA21'
+  rtb_SumA21_idx_1 = rtb_Sum4_o_idx_2;
 
-  // Sum: '<S10>/SumB21'
-  rtb_Sum3_k_idx_1 = rtb_Sum3_k_idx_2;
+  // Sum: '<S13>/SumB21'
+  rtb_Sum4_o_idx_1 = rtb_Sum4_p;
 
-  // Sum: '<S10>/SumA21' incorporates:
-  //   Delay: '<S10>/Delay11'
-  //   Gain: '<S10>/a(2)(1)'
-  //   Gain: '<S10>/s(1)'
+  // Sum: '<S13>/SumA21' incorporates:
+  //   Delay: '<S13>/Delay11'
+  //   Gain: '<S13>/a(2)(1)'
+  //   Gain: '<S13>/s(1)'
 
-  rtb_Diff_e = (real32_T)(ctl_controller0_P->s1_Gain * (real_T)
-    rtb_Switch_V_B_ISS_ISS_idx_2) - (real32_T)(ctl_controller0_P->a21_Gain *
+  rtb_Sum4_o_idx_2 = (real32_T)(ctl_controller0_P->s1_Gain * (real_T)
+    rtb_Switch_est_V_B_ISS_ISS_id_1) - (real32_T)(ctl_controller0_P->a21_Gain *
     (real_T)ctl_controller0_DW->Delay11_DSTATE[2]);
 
-  // Sum: '<S10>/SumB21' incorporates:
-  //   Delay: '<S10>/Delay11'
+  // Sum: '<S13>/SumB21' incorporates:
+  //   Delay: '<S13>/Delay11'
 
-  rtb_Sum3_k_idx_2 = rtb_Diff_e + ctl_controller0_DW->Delay11_DSTATE[2];
+  rtb_Sum4_p = rtb_Sum4_o_idx_2 + ctl_controller0_DW->Delay11_DSTATE[2];
 
   // Math: '<S2>/Math Function'
-  rtb_Sum3_k_idx_2 *= rtb_Sum3_k_idx_2;
+  rtb_Sum4_p *= rtb_Sum4_p;
 
   // Sum: '<S2>/Sum of Elements'
-  rtb_SumofElements = (rtb_Sum3_k_idx_0 + rtb_Sum3_k_idx_1) + rtb_Sum3_k_idx_2;
+  rtb_SumofElements = (rtb_Sum4_o_idx_0 + rtb_Sum4_o_idx_1) + rtb_Sum4_p;
 
-  // Sum: '<S11>/SumA21' incorporates:
-  //   Delay: '<S11>/Delay11'
-  //   Gain: '<S11>/a(2)(1)'
-  //   Gain: '<S11>/s(1)'
+  // Sum: '<S14>/SumA21' incorporates:
+  //   Delay: '<S14>/Delay11'
+  //   Gain: '<S14>/a(2)(1)'
+  //   Gain: '<S14>/s(1)'
 
   rtb_SumA21_f = (real32_T)(ctl_controller0_P->s1_Gain_b * (real_T)
-    rtb_Switch_omega_B_ISS_B_idx_0) - (real32_T)(ctl_controller0_P->a21_Gain_l *
+    rtb_Switch_est_omega_B_ISS_B_id) - (real32_T)(ctl_controller0_P->a21_Gain_l *
     (real_T)ctl_controller0_DW->Delay11_DSTATE_i[0]);
 
-  // Sum: '<S11>/SumB21' incorporates:
-  //   Delay: '<S11>/Delay11'
+  // Sum: '<S14>/SumB21' incorporates:
+  //   Delay: '<S14>/Delay11'
 
-  rtb_Sum3_k_idx_2 = rtb_SumA21_f + ctl_controller0_DW->Delay11_DSTATE_i[0];
+  rtb_SumofElements1 = rtb_SumA21_f + ctl_controller0_DW->Delay11_DSTATE_i[0];
 
   // Math: '<S2>/Math Function1'
-  rtb_Sum3_k_idx_2 *= rtb_Sum3_k_idx_2;
+  rtb_SumofElements1 *= rtb_SumofElements1;
 
-  // Sum: '<S11>/SumA21'
+  // Sum: '<S14>/SumA21'
   rtb_SumA21_d_idx_0 = rtb_SumA21_f;
 
-  // Sum: '<S11>/SumB21'
-  rtb_Sum3_k_idx_0 = rtb_Sum3_k_idx_2;
+  // Sum: '<S14>/SumB21'
+  rtb_Sum3_k_idx_0 = rtb_SumofElements1;
 
-  // Sum: '<S11>/SumA21' incorporates:
-  //   Delay: '<S11>/Delay11'
-  //   Gain: '<S11>/a(2)(1)'
-  //   Gain: '<S11>/s(1)'
+  // Sum: '<S14>/SumA21' incorporates:
+  //   Delay: '<S14>/Delay11'
+  //   Gain: '<S14>/a(2)(1)'
+  //   Gain: '<S14>/s(1)'
 
   rtb_SumA21_f = (real32_T)(ctl_controller0_P->s1_Gain_b * (real_T)
-    rtb_Switch_omega_B_ISS_B_idx_1) - (real32_T)(ctl_controller0_P->a21_Gain_l *
+    rtb_Switch_est_omega_B_ISS_B__0) - (real32_T)(ctl_controller0_P->a21_Gain_l *
     (real_T)ctl_controller0_DW->Delay11_DSTATE_i[1]);
 
-  // Sum: '<S11>/SumB21' incorporates:
-  //   Delay: '<S11>/Delay11'
+  // Sum: '<S14>/SumB21' incorporates:
+  //   Delay: '<S14>/Delay11'
 
-  rtb_Sum3_k_idx_2 = rtb_SumA21_f + ctl_controller0_DW->Delay11_DSTATE_i[1];
+  rtb_SumofElements1 = rtb_SumA21_f + ctl_controller0_DW->Delay11_DSTATE_i[1];
 
   // Math: '<S2>/Math Function1'
-  rtb_Sum3_k_idx_2 *= rtb_Sum3_k_idx_2;
+  rtb_SumofElements1 *= rtb_SumofElements1;
 
-  // Sum: '<S11>/SumA21'
+  // Sum: '<S14>/SumA21'
   rtb_SumA21_d_idx_1 = rtb_SumA21_f;
 
-  // Sum: '<S11>/SumB21'
-  rtb_Sum3_k_idx_1 = rtb_Sum3_k_idx_2;
+  // Sum: '<S14>/SumB21'
+  rtb_Sum3_k_idx_1 = rtb_SumofElements1;
 
-  // Sum: '<S11>/SumA21' incorporates:
-  //   Delay: '<S11>/Delay11'
-  //   Gain: '<S11>/a(2)(1)'
-  //   Gain: '<S11>/s(1)'
+  // Sum: '<S14>/SumA21' incorporates:
+  //   Delay: '<S14>/Delay11'
+  //   Gain: '<S14>/a(2)(1)'
+  //   Gain: '<S14>/s(1)'
 
   rtb_SumA21_f = (real32_T)(ctl_controller0_P->s1_Gain_b * (real_T)
-    rtb_Switch_omega_B_ISS_B_idx_2) - (real32_T)(ctl_controller0_P->a21_Gain_l *
+    rtb_Switch_est_omega_B_ISS_B__1) - (real32_T)(ctl_controller0_P->a21_Gain_l *
     (real_T)ctl_controller0_DW->Delay11_DSTATE_i[2]);
 
-  // Sum: '<S11>/SumB21' incorporates:
-  //   Delay: '<S11>/Delay11'
+  // Sum: '<S14>/SumB21' incorporates:
+  //   Delay: '<S14>/Delay11'
 
-  rtb_Sum3_k_idx_2 = rtb_SumA21_f + ctl_controller0_DW->Delay11_DSTATE_i[2];
+  rtb_SumofElements1 = rtb_SumA21_f + ctl_controller0_DW->Delay11_DSTATE_i[2];
 
   // Math: '<S2>/Math Function1'
-  rtb_Sum3_k_idx_2 *= rtb_Sum3_k_idx_2;
+  rtb_SumofElements1 *= rtb_SumofElements1;
 
   // Sum: '<S2>/Sum of Elements1'
-  rtb_SumofElements1 = (rtb_Sum3_k_idx_0 + rtb_Sum3_k_idx_1) + rtb_Sum3_k_idx_2;
+  rtb_SumofElements1 += rtb_Sum3_k_idx_0 + rtb_Sum3_k_idx_1;
 
-  // Logic: '<S56>/Logical Operator1' incorporates:
-  //   Inport: '<Root>/cmc_msg'
-  //   Inport: '<Root>/ex_time'
-  //   Logic: '<S56>/Logical Operator'
-  //   RelationalOperator: '<S56>/Relational Operator'
-  //   RelationalOperator: '<S56>/Relational Operator1'
-  //   RelationalOperator: '<S56>/Relational Operator2'
-  //   SignalConversion: '<S1>/Signal Conversion'
+  // Logic: '<S78>/Logical Operator1' incorporates:
+  //   Logic: '<S78>/Logical Operator'
+  //   RelationalOperator: '<S78>/Relational Operator'
+  //   RelationalOperator: '<S78>/Relational Operator1'
+  //   RelationalOperator: '<S78>/Relational Operator2'
 
-  rtb_LogicalOperator2_c =
-    ((ctl_controller0_U_cmc_msg_f->cmc_state_cmd_b.timestamp_sec >
-      ctl_controller0_U_ex_time->timestamp_sec) ||
-     ((ctl_controller0_U_ex_time->timestamp_sec ==
-       ctl_controller0_U_cmc_msg_f->cmc_state_cmd_b.timestamp_sec) &&
-      (ctl_controller0_U_ex_time->timestamp_nsec <
-       ctl_controller0_U_cmc_msg_f->cmc_state_cmd_b.timestamp_nsec)));
+  rtb_LogicalOperator2_c = ((rtb_Switch_cmd_state_b_timestam >
+    rtb_Switch_current_time_sec) || ((rtb_Switch_current_time_sec ==
+    rtb_Switch_cmd_state_b_timestam) && (rtb_Switch_current_time_nsec <
+    rtb_Switch_cmd_state_b_timest_0)));
 
-  // Switch: '<S56>/Switch' incorporates:
-  //   Inport: '<Root>/cmc_msg'
-  //   SignalConversion: '<S1>/Signal Conversion'
-
+  // Switch: '<S78>/Switch'
   if (rtb_LogicalOperator2_c) {
-    rtb_Switch_h_timestamp_sec =
-      ctl_controller0_U_cmc_msg_f->cmc_state_cmd_a.timestamp_sec;
-    rtb_Switch_h_timestamp_nsec =
-      ctl_controller0_U_cmc_msg_f->cmc_state_cmd_a.timestamp_nsec;
-    rtb_Gain1_j_idx_0 = ctl_controller0_U_cmc_msg_f->
-      cmc_state_cmd_a.P_B_ISS_ISS[0];
-    rtb_Sum3_k_idx_0 = ctl_controller0_U_cmc_msg_f->cmc_state_cmd_a.V_B_ISS_ISS
-      [0];
-    rtb_Switch_h_A_B_ISS_ISS[0] =
-      ctl_controller0_U_cmc_msg_f->cmc_state_cmd_a.A_B_ISS_ISS[0];
-    rtb_Gain1_j_idx_1 = ctl_controller0_U_cmc_msg_f->
-      cmc_state_cmd_a.P_B_ISS_ISS[1];
-    rtb_Sum3_k_idx_1 = ctl_controller0_U_cmc_msg_f->cmc_state_cmd_a.V_B_ISS_ISS
-      [1];
-    rtb_Switch_h_A_B_ISS_ISS[1] =
-      ctl_controller0_U_cmc_msg_f->cmc_state_cmd_a.A_B_ISS_ISS[1];
-    rtb_Gain1_j_idx_2 = ctl_controller0_U_cmc_msg_f->
-      cmc_state_cmd_a.P_B_ISS_ISS[2];
-    rtb_Sum3_k_idx_2 = ctl_controller0_U_cmc_msg_f->cmc_state_cmd_a.V_B_ISS_ISS
-      [2];
-    rtb_Switch_h_A_B_ISS_ISS[2] =
-      ctl_controller0_U_cmc_msg_f->cmc_state_cmd_a.A_B_ISS_ISS[2];
-    rtb_Merge[0] = ctl_controller0_U_cmc_msg_f->cmc_state_cmd_a.quat_ISS2B[0];
-    rtb_Merge[1] = ctl_controller0_U_cmc_msg_f->cmc_state_cmd_a.quat_ISS2B[1];
-    rtb_Merge[2] = ctl_controller0_U_cmc_msg_f->cmc_state_cmd_a.quat_ISS2B[2];
-    rtb_Merge[3] = ctl_controller0_U_cmc_msg_f->cmc_state_cmd_a.quat_ISS2B[3];
-    rtb_Sum4_o_idx_0 =
-      ctl_controller0_U_cmc_msg_f->cmc_state_cmd_a.omega_B_ISS_B[0];
-    rtb_Switch_h_alpha_B_ISS_B_id_1 =
-      ctl_controller0_U_cmc_msg_f->cmc_state_cmd_a.alpha_B_ISS_B[0];
-    rtb_Sum4_o_idx_1 =
-      ctl_controller0_U_cmc_msg_f->cmc_state_cmd_a.omega_B_ISS_B[1];
-    rtb_Switch_h_alpha_B_ISS_B_id_0 =
-      ctl_controller0_U_cmc_msg_f->cmc_state_cmd_a.alpha_B_ISS_B[1];
-    rtb_Sum4_o_idx_2 =
-      ctl_controller0_U_cmc_msg_f->cmc_state_cmd_a.omega_B_ISS_B[2];
-    rtb_Switch_h_alpha_B_ISS_B_idx_ =
-      ctl_controller0_U_cmc_msg_f->cmc_state_cmd_a.alpha_B_ISS_B[2];
-  } else {
-    rtb_Switch_h_timestamp_sec =
-      ctl_controller0_U_cmc_msg_f->cmc_state_cmd_b.timestamp_sec;
-    rtb_Switch_h_timestamp_nsec =
-      ctl_controller0_U_cmc_msg_f->cmc_state_cmd_b.timestamp_nsec;
-    rtb_Gain1_j_idx_0 = ctl_controller0_U_cmc_msg_f->
-      cmc_state_cmd_b.P_B_ISS_ISS[0];
-    rtb_Sum3_k_idx_0 = ctl_controller0_U_cmc_msg_f->cmc_state_cmd_b.V_B_ISS_ISS
-      [0];
-    rtb_Switch_h_A_B_ISS_ISS[0] =
-      ctl_controller0_U_cmc_msg_f->cmc_state_cmd_b.A_B_ISS_ISS[0];
-    rtb_Gain1_j_idx_1 = ctl_controller0_U_cmc_msg_f->
-      cmc_state_cmd_b.P_B_ISS_ISS[1];
-    rtb_Sum3_k_idx_1 = ctl_controller0_U_cmc_msg_f->cmc_state_cmd_b.V_B_ISS_ISS
-      [1];
-    rtb_Switch_h_A_B_ISS_ISS[1] =
-      ctl_controller0_U_cmc_msg_f->cmc_state_cmd_b.A_B_ISS_ISS[1];
-    rtb_Gain1_j_idx_2 = ctl_controller0_U_cmc_msg_f->
-      cmc_state_cmd_b.P_B_ISS_ISS[2];
-    rtb_Sum3_k_idx_2 = ctl_controller0_U_cmc_msg_f->cmc_state_cmd_b.V_B_ISS_ISS
-      [2];
-    rtb_Switch_h_A_B_ISS_ISS[2] =
-      ctl_controller0_U_cmc_msg_f->cmc_state_cmd_b.A_B_ISS_ISS[2];
-    rtb_Merge[0] = ctl_controller0_U_cmc_msg_f->cmc_state_cmd_b.quat_ISS2B[0];
-    rtb_Merge[1] = ctl_controller0_U_cmc_msg_f->cmc_state_cmd_b.quat_ISS2B[1];
-    rtb_Merge[2] = ctl_controller0_U_cmc_msg_f->cmc_state_cmd_b.quat_ISS2B[2];
-    rtb_Merge[3] = ctl_controller0_U_cmc_msg_f->cmc_state_cmd_b.quat_ISS2B[3];
-    rtb_Sum4_o_idx_0 =
-      ctl_controller0_U_cmc_msg_f->cmc_state_cmd_b.omega_B_ISS_B[0];
-    rtb_Switch_h_alpha_B_ISS_B_id_1 =
-      ctl_controller0_U_cmc_msg_f->cmc_state_cmd_b.alpha_B_ISS_B[0];
-    rtb_Sum4_o_idx_1 =
-      ctl_controller0_U_cmc_msg_f->cmc_state_cmd_b.omega_B_ISS_B[1];
-    rtb_Switch_h_alpha_B_ISS_B_id_0 =
-      ctl_controller0_U_cmc_msg_f->cmc_state_cmd_b.alpha_B_ISS_B[1];
-    rtb_Sum4_o_idx_2 =
-      ctl_controller0_U_cmc_msg_f->cmc_state_cmd_b.omega_B_ISS_B[2];
-    rtb_Switch_h_alpha_B_ISS_B_idx_ =
-      ctl_controller0_U_cmc_msg_f->cmc_state_cmd_b.alpha_B_ISS_B[2];
+    rtb_Switch_cmd_state_b_timestam = rtb_Switch_cmd_state_a_timestam;
+    rtb_Switch_cmd_state_b_timest_0 = rtb_Switch_cmd_state_a_timest_0;
+    rtb_Gain1_j_idx_0 = normA;
+    rtb_Switch_c_idx_0 = b_s;
+    rtb_Diff[0] = rtb_Switch_cmd_state_a_A_B_ISS_;
+    rtb_Gain1_j_idx_1 = rtb_Switch_cmd_state_a_P_B_ISS_;
+    rtb_Switch_c_idx_1 = rtb_Switch_cmd_state_a_V_B_ISS_;
+    rtb_Diff[1] = rtb_Switch_cmd_state_a_A_B_IS_0;
+    rtb_Gain1_j_idx_2 = rtb_Switch_cmd_state_a_P_B_IS_0;
+    rtb_Switch_c_idx_2 = rtb_Sum3_k_idx_2;
+    rtb_Diff[2] = rtb_Switch_cmd_state_a_A_B_IS_1;
+    rtb_Merge_pa[0] = rtb_Product1_m[0];
+    rtb_Merge_pa[1] = rtb_Product1_m[1];
+    rtb_Merge_pa[2] = rtb_Product1_m[2];
+    rtb_Merge_pa[3] = rtb_Product1_m[3];
+    rtb_Divide_f[0] = rtb_Switch8_idx_0;
+    rtb_Switch_cmd_state_b_alpha__1 = rtb_Sum2_idx_0;
+    rtb_Divide_f[1] = rtb_Switch8_idx_1;
+    rtb_Switch_cmd_state_b_alpha__0 = rtb_Sum2_idx_1;
+    rtb_Divide_f[2] = rtb_Switch8_idx_2;
+    rtb_Switch_cmd_state_b_alpha_B_ = rtb_Sum2_idx_2;
   }
 
-  // End of Switch: '<S56>/Switch'
+  // End of Switch: '<S78>/Switch'
 
-  // Logic: '<S56>/Logical Operator2'
+  // Logic: '<S78>/Logical Operator2'
   rtb_LogicalOperator2_c = !rtb_LogicalOperator2_c;
 
-  // Sum: '<S56>/Sum' incorporates:
-  //   DataTypeConversion: '<S56>/Data Type Conversion4'
-  //   Gain: '<S56>/Gain'
-  //   Inport: '<Root>/ex_time'
-  //   Sum: '<S56>/Subtract3'
-  //   Sum: '<S56>/Subtract4'
+  // Sum: '<S78>/Sum' incorporates:
+  //   DataTypeConversion: '<S78>/Data Type Conversion4'
+  //   Gain: '<S78>/Gain'
+  //   Sum: '<S78>/Subtract3'
+  //   Sum: '<S78>/Subtract4'
 
-  rtb_Sqrt_bt = (real32_T)(int32_T)((int32_T)
-    ctl_controller0_U_ex_time->timestamp_nsec - (int32_T)
-    rtb_Switch_h_timestamp_nsec) * ctl_controller0_P->Gain_Gain_h + (real32_T)
-    (int32_T)((int32_T)ctl_controller0_U_ex_time->timestamp_sec - (int32_T)
-              rtb_Switch_h_timestamp_sec);
+  rtb_Sqrt = (real32_T)(int32_T)((int32_T)rtb_Switch_current_time_nsec -
+    (int32_T)rtb_Switch_cmd_state_b_timest_0) * ctl_controller0_P->Gain_Gain_h +
+    (real32_T)(int32_T)((int32_T)rtb_Switch_current_time_sec - (int32_T)
+                        rtb_Switch_cmd_state_b_timestam);
 
-  // Sum: '<S58>/Sum3' incorporates:
-  //   Constant: '<S58>/Constant'
-  //   Product: '<S58>/Product'
-  //   Product: '<S58>/Product2'
+  // Sum: '<S80>/Sum1' incorporates:
+  //   Product: '<S80>/Product1'
 
-  rtb_Gain1_j_idx_0 = (ctl_controller0_P->Constant_Value *
-                       rtb_Switch_h_A_B_ISS_ISS[0] * rtb_Sqrt_bt * rtb_Sqrt_bt +
-                       rtb_Gain1_j_idx_0) + rtb_Sum3_k_idx_0 * rtb_Sqrt_bt;
+  rtb_Sum3_k_idx_0 = rtb_Diff[0] * rtb_Sqrt + rtb_Switch_c_idx_0;
 
-  // Sum: '<S58>/Sum1' incorporates:
-  //   Product: '<S58>/Product1'
-  //   Sum: '<S58>/Sum3'
+  // Sum: '<S80>/Sum3' incorporates:
+  //   Constant: '<S80>/Constant'
+  //   Product: '<S80>/Product'
+  //   Product: '<S80>/Product2'
 
-  rtb_Sum3_k_idx_0 += rtb_Switch_h_A_B_ISS_ISS[0] * rtb_Sqrt_bt;
+  rtb_Gain1_j_idx_0 = (ctl_controller0_P->Constant_Value * rtb_Diff[0] *
+                       rtb_Sqrt * rtb_Sqrt + rtb_Gain1_j_idx_0) +
+    rtb_Switch_c_idx_0 * rtb_Sqrt;
 
-  // Sum: '<S58>/Sum3' incorporates:
-  //   Constant: '<S58>/Constant'
-  //   Product: '<S58>/Product'
-  //   Product: '<S58>/Product2'
+  // Sum: '<S80>/Sum1' incorporates:
+  //   Product: '<S80>/Product1'
 
-  rtb_Gain1_j_idx_1 = (ctl_controller0_P->Constant_Value *
-                       rtb_Switch_h_A_B_ISS_ISS[1] * rtb_Sqrt_bt * rtb_Sqrt_bt +
-                       rtb_Gain1_j_idx_1) + rtb_Sum3_k_idx_1 * rtb_Sqrt_bt;
+  rtb_Sum3_k_idx_1 = rtb_Diff[1] * rtb_Sqrt + rtb_Switch_c_idx_1;
 
-  // Sum: '<S58>/Sum1' incorporates:
-  //   Product: '<S58>/Product1'
-  //   Sum: '<S58>/Sum3'
+  // Sum: '<S80>/Sum3' incorporates:
+  //   Constant: '<S80>/Constant'
+  //   Product: '<S80>/Product'
+  //   Product: '<S80>/Product2'
 
-  rtb_Sum3_k_idx_1 += rtb_Switch_h_A_B_ISS_ISS[1] * rtb_Sqrt_bt;
+  rtb_Gain1_j_idx_1 = (ctl_controller0_P->Constant_Value * rtb_Diff[1] *
+                       rtb_Sqrt * rtb_Sqrt + rtb_Gain1_j_idx_1) +
+    rtb_Switch_c_idx_1 * rtb_Sqrt;
+  rtb_Switch_cmd_state_a_P_B_IS_0 = (ctl_controller0_P->Constant_Value *
+    rtb_Diff[2] * rtb_Sqrt * rtb_Sqrt + rtb_Gain1_j_idx_2) + rtb_Switch_c_idx_2 *
+    rtb_Sqrt;
 
-  // Sum: '<S58>/Sum3' incorporates:
-  //   Constant: '<S58>/Constant'
-  //   Product: '<S58>/Product'
-  //   Product: '<S58>/Product2'
+  // Sum: '<S80>/Sum1' incorporates:
+  //   Product: '<S80>/Product1'
 
-  rtb_Gain1_j_idx_2 = (ctl_controller0_P->Constant_Value *
-                       rtb_Switch_h_A_B_ISS_ISS[2] * rtb_Sqrt_bt * rtb_Sqrt_bt +
-                       rtb_Gain1_j_idx_2) + rtb_Sum3_k_idx_2 * rtb_Sqrt_bt;
+  rtb_Sum3_k_idx_2 = rtb_Diff[2] * rtb_Sqrt + rtb_Switch_c_idx_2;
 
-  // Sum: '<S58>/Sum1' incorporates:
-  //   Product: '<S58>/Product1'
-  //   Sum: '<S58>/Sum3'
-
-  rtb_Sum3_k_idx_2 += rtb_Switch_h_A_B_ISS_ISS[2] * rtb_Sqrt_bt;
-
-  // Constant: '<S62>/Constant3'
+  // Constant: '<S84>/Constant3'
   rtb_VectorConcatenate[0] = ctl_controller0_P->Constant3_Value_dz;
 
-  // Gain: '<S62>/Gain'
+  // Gain: '<S84>/Gain'
   rtb_VectorConcatenate[1] = ctl_controller0_P->Gain_Gain_n *
-    rtb_Switch_h_alpha_B_ISS_B_idx_;
+    rtb_Switch_cmd_state_b_alpha_B_;
 
-  // SignalConversion: '<S62>/ConcatBufferAtVector ConcatenateIn3'
-  rtb_VectorConcatenate[2] = rtb_Switch_h_alpha_B_ISS_B_id_0;
+  // SignalConversion: '<S84>/ConcatBufferAtVector ConcatenateIn3'
+  rtb_VectorConcatenate[2] = rtb_Switch_cmd_state_b_alpha__0;
 
-  // Gain: '<S62>/Gain1'
+  // Gain: '<S84>/Gain1'
   rtb_VectorConcatenate[3] = ctl_controller0_P->Gain1_Gain_b *
-    rtb_Switch_h_alpha_B_ISS_B_id_1;
+    rtb_Switch_cmd_state_b_alpha__1;
 
-  // SignalConversion: '<S62>/ConcatBufferAtVector ConcatenateIn5'
-  rtb_VectorConcatenate[4] = rtb_Switch_h_alpha_B_ISS_B_idx_;
+  // SignalConversion: '<S84>/ConcatBufferAtVector ConcatenateIn5'
+  rtb_VectorConcatenate[4] = rtb_Switch_cmd_state_b_alpha_B_;
 
-  // Constant: '<S62>/Constant2'
+  // Constant: '<S84>/Constant2'
   rtb_VectorConcatenate[5] = ctl_controller0_P->Constant2_Value_d;
 
-  // Gain: '<S62>/Gain2'
+  // Gain: '<S84>/Gain2'
   rtb_VectorConcatenate[6] = ctl_controller0_P->Gain2_Gain_kx *
-    rtb_Switch_h_alpha_B_ISS_B_id_1;
+    rtb_Switch_cmd_state_b_alpha__1;
 
-  // Gain: '<S62>/Gain3'
+  // Gain: '<S84>/Gain3'
   rtb_VectorConcatenate[7] = ctl_controller0_P->Gain3_Gain *
-    rtb_Switch_h_alpha_B_ISS_B_id_0;
+    rtb_Switch_cmd_state_b_alpha__0;
 
-  // Gain: '<S62>/Gain4'
+  // Gain: '<S84>/Gain4'
   rtb_VectorConcatenate[8] = ctl_controller0_P->Gain4_Gain *
-    rtb_Switch_h_alpha_B_ISS_B_id_0;
+    rtb_Switch_cmd_state_b_alpha__0;
 
-  // SignalConversion: '<S62>/ConcatBufferAtVector ConcatenateIn10'
-  rtb_VectorConcatenate[9] = rtb_Switch_h_alpha_B_ISS_B_id_1;
+  // SignalConversion: '<S84>/ConcatBufferAtVector ConcatenateIn10'
+  rtb_VectorConcatenate[9] = rtb_Switch_cmd_state_b_alpha__1;
 
-  // Constant: '<S62>/Constant1'
+  // Constant: '<S84>/Constant1'
   rtb_VectorConcatenate[10] = ctl_controller0_P->Constant1_Value_l;
 
-  // Gain: '<S62>/Gain5'
+  // Gain: '<S84>/Gain5'
   rtb_VectorConcatenate[11] = ctl_controller0_P->Gain5_Gain *
-    rtb_Switch_h_alpha_B_ISS_B_idx_;
+    rtb_Switch_cmd_state_b_alpha_B_;
 
-  // SignalConversion: '<S62>/ConcatBufferAtVector ConcatenateIn13'
-  rtb_VectorConcatenate[12] = rtb_Switch_h_alpha_B_ISS_B_id_1;
+  // SignalConversion: '<S84>/ConcatBufferAtVector ConcatenateIn13'
+  rtb_VectorConcatenate[12] = rtb_Switch_cmd_state_b_alpha__1;
 
-  // SignalConversion: '<S62>/ConcatBufferAtVector ConcatenateIn14'
-  rtb_VectorConcatenate[13] = rtb_Switch_h_alpha_B_ISS_B_id_0;
+  // SignalConversion: '<S84>/ConcatBufferAtVector ConcatenateIn14'
+  rtb_VectorConcatenate[13] = rtb_Switch_cmd_state_b_alpha__0;
 
-  // SignalConversion: '<S62>/ConcatBufferAtVector ConcatenateIn15'
-  rtb_VectorConcatenate[14] = rtb_Switch_h_alpha_B_ISS_B_idx_;
+  // SignalConversion: '<S84>/ConcatBufferAtVector ConcatenateIn15'
+  rtb_VectorConcatenate[14] = rtb_Switch_cmd_state_b_alpha_B_;
 
-  // Constant: '<S62>/Constant'
+  // Constant: '<S84>/Constant'
   rtb_VectorConcatenate[15] = ctl_controller0_P->Constant_Value_g;
 
-  // Constant: '<S61>/Constant3'
+  // Constant: '<S83>/Constant3'
   rtb_VectorConcatenate_m[0] = ctl_controller0_P->Constant3_Value_f;
 
-  // Gain: '<S61>/Gain'
-  rtb_VectorConcatenate_m[1] = ctl_controller0_P->Gain_Gain_g * rtb_Sum4_o_idx_2;
+  // Gain: '<S83>/Gain'
+  rtb_VectorConcatenate_m[1] = ctl_controller0_P->Gain_Gain_g * rtb_Divide_f[2];
 
-  // SignalConversion: '<S61>/ConcatBufferAtVector ConcatenateIn3'
-  rtb_VectorConcatenate_m[2] = rtb_Sum4_o_idx_1;
+  // SignalConversion: '<S83>/ConcatBufferAtVector ConcatenateIn3'
+  rtb_VectorConcatenate_m[2] = rtb_Divide_f[1];
 
-  // Gain: '<S61>/Gain1'
-  rtb_VectorConcatenate_m[3] = ctl_controller0_P->Gain1_Gain_j *
-    rtb_Sum4_o_idx_0;
+  // Gain: '<S83>/Gain1'
+  rtb_VectorConcatenate_m[3] = ctl_controller0_P->Gain1_Gain_ja * rtb_Divide_f[0];
 
-  // SignalConversion: '<S61>/ConcatBufferAtVector ConcatenateIn5'
-  rtb_VectorConcatenate_m[4] = rtb_Sum4_o_idx_2;
+  // SignalConversion: '<S83>/ConcatBufferAtVector ConcatenateIn5'
+  rtb_VectorConcatenate_m[4] = rtb_Divide_f[2];
 
-  // Constant: '<S61>/Constant2'
+  // Constant: '<S83>/Constant2'
   rtb_VectorConcatenate_m[5] = ctl_controller0_P->Constant2_Value_gq;
 
-  // Gain: '<S61>/Gain2'
-  rtb_VectorConcatenate_m[6] = ctl_controller0_P->Gain2_Gain_c *
-    rtb_Sum4_o_idx_0;
+  // Gain: '<S83>/Gain2'
+  rtb_VectorConcatenate_m[6] = ctl_controller0_P->Gain2_Gain_c * rtb_Divide_f[0];
 
-  // Gain: '<S61>/Gain3'
-  rtb_VectorConcatenate_m[7] = ctl_controller0_P->Gain3_Gain_o *
-    rtb_Sum4_o_idx_1;
+  // Gain: '<S83>/Gain3'
+  rtb_VectorConcatenate_m[7] = ctl_controller0_P->Gain3_Gain_o * rtb_Divide_f[1];
 
-  // Gain: '<S61>/Gain4'
-  rtb_VectorConcatenate_m[8] = ctl_controller0_P->Gain4_Gain_c *
-    rtb_Sum4_o_idx_1;
+  // Gain: '<S83>/Gain4'
+  rtb_VectorConcatenate_m[8] = ctl_controller0_P->Gain4_Gain_c * rtb_Divide_f[1];
 
-  // SignalConversion: '<S61>/ConcatBufferAtVector ConcatenateIn10'
-  rtb_VectorConcatenate_m[9] = rtb_Sum4_o_idx_0;
+  // SignalConversion: '<S83>/ConcatBufferAtVector ConcatenateIn10'
+  rtb_VectorConcatenate_m[9] = rtb_Divide_f[0];
 
-  // Constant: '<S61>/Constant1'
+  // Constant: '<S83>/Constant1'
   rtb_VectorConcatenate_m[10] = ctl_controller0_P->Constant1_Value_gk;
 
-  // Gain: '<S61>/Gain5'
-  rtb_VectorConcatenate_m[11] = ctl_controller0_P->Gain5_Gain_a *
-    rtb_Sum4_o_idx_2;
+  // Gain: '<S83>/Gain5'
+  rtb_VectorConcatenate_m[11] = ctl_controller0_P->Gain5_Gain_a * rtb_Divide_f[2];
 
-  // SignalConversion: '<S61>/ConcatBufferAtVector ConcatenateIn13'
-  rtb_VectorConcatenate_m[12] = rtb_Sum4_o_idx_0;
+  // SignalConversion: '<S83>/ConcatBufferAtVector ConcatenateIn13'
+  rtb_VectorConcatenate_m[12] = rtb_Divide_f[0];
 
-  // SignalConversion: '<S61>/ConcatBufferAtVector ConcatenateIn14'
-  rtb_VectorConcatenate_m[13] = rtb_Sum4_o_idx_1;
+  // SignalConversion: '<S83>/ConcatBufferAtVector ConcatenateIn14'
+  rtb_VectorConcatenate_m[13] = rtb_Divide_f[1];
 
-  // SignalConversion: '<S61>/ConcatBufferAtVector ConcatenateIn15'
-  rtb_VectorConcatenate_m[14] = rtb_Sum4_o_idx_2;
+  // SignalConversion: '<S83>/ConcatBufferAtVector ConcatenateIn15'
+  rtb_VectorConcatenate_m[14] = rtb_Divide_f[2];
 
-  // Constant: '<S61>/Constant'
+  // Constant: '<S83>/Constant'
   rtb_VectorConcatenate_m[15] = ctl_controller0_P->Constant_Value_m;
 
-  // Product: '<S57>/Product3' incorporates:
-  //   Constant: '<S57>/Constant1'
-  //   Constant: '<S57>/Constant3'
-  //   Product: '<S57>/Product'
-  //   Sum: '<S57>/Add'
+  // Product: '<S79>/Product3' incorporates:
+  //   Constant: '<S79>/Constant1'
+  //   Constant: '<S79>/Constant3'
+  //   Product: '<S79>/Product'
+  //   Sum: '<S79>/Add'
 
   for (i = 0; i < 16; i++) {
-    rtb_Product3[i] = (ctl_controller0_P->Constant3_Value_d *
-                       rtb_VectorConcatenate[i] * rtb_Sqrt_bt +
+    rtb_Product5[i] = (ctl_controller0_P->Constant3_Value_d *
+                       rtb_VectorConcatenate[i] * rtb_Sqrt +
                        rtb_VectorConcatenate_m[i]) *
-      ctl_controller0_P->Constant1_Value_g * rtb_Sqrt_bt;
+      ctl_controller0_P->Constant1_Value_g * rtb_Sqrt;
   }
 
-  // End of Product: '<S57>/Product3'
+  // End of Product: '<S79>/Product3'
 
-  // MATLAB Function: '<S57>/MATLAB Function'
-  // MATLAB Function 'cmd_command_shaper/generate_cmd_attitude/MATLAB Function': '<S60>:1' 
-  // '<S60>:1:4'
+  // MATLAB Function: '<S79>/MATLAB Function'
+  // MATLAB Function 'cmd_command_shaper/generate_cmd_attitude/MATLAB Function': '<S82>:1' 
+  // '<S82>:1:4'
   normA = 0.0F;
   i = 0;
   exitg2 = false;
   while ((!exitg2) && (i < 4)) {
-    b_s = (((real32_T)fabs((real_T)rtb_Product3[(int32_T)((int32_T)(i << 2) + 1)])
-            + (real32_T)fabs((real_T)rtb_Product3[(int32_T)(i << 2)])) +
-           (real32_T)fabs((real_T)rtb_Product3[(int32_T)((int32_T)(i << 2) + 2)]))
-      + (real32_T)fabs((real_T)rtb_Product3[(int32_T)((int32_T)(i << 2) + 3)]);
+    b_s = (((real32_T)fabs((real_T)rtb_Product5[(int32_T)((int32_T)(i << 2) + 1)])
+            + (real32_T)fabs((real_T)rtb_Product5[(int32_T)(i << 2)])) +
+           (real32_T)fabs((real_T)rtb_Product5[(int32_T)((int32_T)(i << 2) + 2)]))
+      + (real32_T)fabs((real_T)rtb_Product5[(int32_T)((int32_T)(i << 2) + 3)]);
     if (rtIsNaNF(b_s)) {
       normA = (rtNaNF);
       exitg2 = true;
@@ -1083,7 +1346,7 @@ void ctl_controller0_step(RT_MODEL_ctl_controller0_T *const ctl_controller0_M,
     exitg1 = false;
     while ((!exitg1) && (eint < 3)) {
       if (normA <= theta[eint]) {
-        mglnkfkfmglfjekn_PadeApproximantOfDegree(rtb_Product3, (uint8_T)(int32_T)
+        mglnkfkfmglfjekn_PadeApproximantOfDegree(rtb_Product5, (uint8_T)(int32_T)
           ((int32_T)(eint << 1) + 3), rtb_y);
         exitg1 = true;
       } else {
@@ -1105,102 +1368,102 @@ void ctl_controller0_step(RT_MODEL_ctl_controller0_T *const ctl_controller0_M,
 
     b_s = rt_powf_snf(2.0F, normA);
     for (i = 0; i < 16; i++) {
-      rtb_Product3_0[i] = rtb_Product3[i] / b_s;
+      rtb_Product5_0[i] = rtb_Product5[i] / b_s;
     }
 
-    mglnkfkfmglfjekn_PadeApproximantOfDegree(rtb_Product3_0, 7U, rtb_y);
+    mglnkfkfmglfjekn_PadeApproximantOfDegree(rtb_Product5_0, 7U, rtb_y);
     for (eint = 0; eint <= (int32_T)((int32_T)normA - 1); eint++) {
       for (i = 0; i < 4; i++) {
         for (i_0 = 0; i_0 < 4; i_0++) {
-          rtb_Product3[(int32_T)(i + (int32_T)(i_0 << 2))] = 0.0F;
-          rtb_Product3[(int32_T)(i + (int32_T)(i_0 << 2))] += rtb_y[(int32_T)
+          rtb_Product5[(int32_T)(i + (int32_T)(i_0 << 2))] = 0.0F;
+          rtb_Product5[(int32_T)(i + (int32_T)(i_0 << 2))] += rtb_y[(int32_T)
             (i_0 << 2)] * rtb_y[i];
-          rtb_Product3[(int32_T)(i + (int32_T)(i_0 << 2))] += rtb_y[(int32_T)
+          rtb_Product5[(int32_T)(i + (int32_T)(i_0 << 2))] += rtb_y[(int32_T)
             ((int32_T)(i_0 << 2) + 1)] * rtb_y[(int32_T)(i + 4)];
-          rtb_Product3[(int32_T)(i + (int32_T)(i_0 << 2))] += rtb_y[(int32_T)
+          rtb_Product5[(int32_T)(i + (int32_T)(i_0 << 2))] += rtb_y[(int32_T)
             ((int32_T)(i_0 << 2) + 2)] * rtb_y[(int32_T)(i + 8)];
-          rtb_Product3[(int32_T)(i + (int32_T)(i_0 << 2))] += rtb_y[(int32_T)
+          rtb_Product5[(int32_T)(i + (int32_T)(i_0 << 2))] += rtb_y[(int32_T)
             ((int32_T)(i_0 << 2) + 3)] * rtb_y[(int32_T)(i + 12)];
         }
       }
 
       for (i = 0; i < 4; i++) {
-        rtb_y[(int32_T)(i << 2)] = rtb_Product3[(int32_T)(i << 2)];
-        rtb_y[(int32_T)(1 + (int32_T)(i << 2))] = rtb_Product3[(int32_T)
+        rtb_y[(int32_T)(i << 2)] = rtb_Product5[(int32_T)(i << 2)];
+        rtb_y[(int32_T)(1 + (int32_T)(i << 2))] = rtb_Product5[(int32_T)
           ((int32_T)(i << 2) + 1)];
-        rtb_y[(int32_T)(2 + (int32_T)(i << 2))] = rtb_Product3[(int32_T)
+        rtb_y[(int32_T)(2 + (int32_T)(i << 2))] = rtb_Product5[(int32_T)
           ((int32_T)(i << 2) + 2)];
-        rtb_y[(int32_T)(3 + (int32_T)(i << 2))] = rtb_Product3[(int32_T)
+        rtb_y[(int32_T)(3 + (int32_T)(i << 2))] = rtb_Product5[(int32_T)
           ((int32_T)(i << 2) + 3)];
       }
     }
   }
 
-  // End of MATLAB Function: '<S57>/MATLAB Function'
+  // End of MATLAB Function: '<S79>/MATLAB Function'
 
-  // Product: '<S57>/Product6'
-  normA = rtb_Sqrt_bt * rtb_Sqrt_bt * rtb_Sqrt_bt;
+  // Product: '<S79>/Product6'
+  normA = rtb_Sqrt * rtb_Sqrt * rtb_Sqrt;
   for (i = 0; i < 4; i++) {
     for (i_0 = 0; i_0 < 4; i_0++) {
-      // Product: '<S57>/Product5' incorporates:
-      //   Sum: '<S57>/Add2'
+      // Product: '<S79>/Product5' incorporates:
+      //   Sum: '<S79>/Add2'
 
-      rtb_Product3_0[(int32_T)(i_0 + (int32_T)(i << 2))] = 0.0F;
+      rtb_Product5_0[(int32_T)(i_0 + (int32_T)(i << 2))] = 0.0F;
 
-      // Product: '<S57>/Product4' incorporates:
-      //   Sum: '<S57>/Add2'
+      // Product: '<S79>/Product4' incorporates:
+      //   Sum: '<S79>/Add2'
 
       rtb_VectorConcatenate_p[(int32_T)(i_0 + (int32_T)(i << 2))] = 0.0F;
 
-      // Product: '<S57>/Product5' incorporates:
-      //   Sum: '<S57>/Add2'
+      // Product: '<S79>/Product5' incorporates:
+      //   Sum: '<S79>/Add2'
 
-      rtb_Product3_0[(int32_T)(i_0 + (int32_T)(i << 2))] +=
+      rtb_Product5_0[(int32_T)(i_0 + (int32_T)(i << 2))] +=
         rtb_VectorConcatenate_m[(int32_T)(i << 2)] * rtb_VectorConcatenate[i_0];
 
-      // Product: '<S57>/Product4' incorporates:
-      //   Sum: '<S57>/Add2'
+      // Product: '<S79>/Product4' incorporates:
+      //   Sum: '<S79>/Add2'
 
       rtb_VectorConcatenate_p[(int32_T)(i_0 + (int32_T)(i << 2))] +=
         rtb_VectorConcatenate[(int32_T)(i << 2)] * rtb_VectorConcatenate_m[i_0];
 
-      // Product: '<S57>/Product5' incorporates:
-      //   Sum: '<S57>/Add2'
+      // Product: '<S79>/Product5' incorporates:
+      //   Sum: '<S79>/Add2'
 
-      rtb_Product3_0[(int32_T)(i_0 + (int32_T)(i << 2))] +=
+      rtb_Product5_0[(int32_T)(i_0 + (int32_T)(i << 2))] +=
         rtb_VectorConcatenate_m[(int32_T)((int32_T)(i << 2) + 1)] *
         rtb_VectorConcatenate[(int32_T)(i_0 + 4)];
 
-      // Product: '<S57>/Product4' incorporates:
-      //   Sum: '<S57>/Add2'
+      // Product: '<S79>/Product4' incorporates:
+      //   Sum: '<S79>/Add2'
 
       rtb_VectorConcatenate_p[(int32_T)(i_0 + (int32_T)(i << 2))] +=
         rtb_VectorConcatenate[(int32_T)((int32_T)(i << 2) + 1)] *
         rtb_VectorConcatenate_m[(int32_T)(i_0 + 4)];
 
-      // Product: '<S57>/Product5' incorporates:
-      //   Sum: '<S57>/Add2'
+      // Product: '<S79>/Product5' incorporates:
+      //   Sum: '<S79>/Add2'
 
-      rtb_Product3_0[(int32_T)(i_0 + (int32_T)(i << 2))] +=
+      rtb_Product5_0[(int32_T)(i_0 + (int32_T)(i << 2))] +=
         rtb_VectorConcatenate_m[(int32_T)((int32_T)(i << 2) + 2)] *
         rtb_VectorConcatenate[(int32_T)(i_0 + 8)];
 
-      // Product: '<S57>/Product4' incorporates:
-      //   Sum: '<S57>/Add2'
+      // Product: '<S79>/Product4' incorporates:
+      //   Sum: '<S79>/Add2'
 
       rtb_VectorConcatenate_p[(int32_T)(i_0 + (int32_T)(i << 2))] +=
         rtb_VectorConcatenate[(int32_T)((int32_T)(i << 2) + 2)] *
         rtb_VectorConcatenate_m[(int32_T)(i_0 + 8)];
 
-      // Product: '<S57>/Product5' incorporates:
-      //   Sum: '<S57>/Add2'
+      // Product: '<S79>/Product5' incorporates:
+      //   Sum: '<S79>/Add2'
 
-      rtb_Product3_0[(int32_T)(i_0 + (int32_T)(i << 2))] +=
+      rtb_Product5_0[(int32_T)(i_0 + (int32_T)(i << 2))] +=
         rtb_VectorConcatenate_m[(int32_T)((int32_T)(i << 2) + 3)] *
         rtb_VectorConcatenate[(int32_T)(i_0 + 12)];
 
-      // Product: '<S57>/Product4' incorporates:
-      //   Sum: '<S57>/Add2'
+      // Product: '<S79>/Product4' incorporates:
+      //   Sum: '<S79>/Add2'
 
       rtb_VectorConcatenate_p[(int32_T)(i_0 + (int32_T)(i << 2))] +=
         rtb_VectorConcatenate[(int32_T)((int32_T)(i << 2) + 3)] *
@@ -1208,110 +1471,169 @@ void ctl_controller0_step(RT_MODEL_ctl_controller0_T *const ctl_controller0_M,
     }
   }
 
-  // Sum: '<S57>/Add1' incorporates:
-  //   Constant: '<S57>/Constant2'
-  //   Product: '<S57>/Product1'
-  //   Product: '<S57>/Product6'
-  //   Sum: '<S57>/Add2'
+  // Sum: '<S79>/Add1' incorporates:
+  //   Constant: '<S79>/Constant2'
+  //   Product: '<S79>/Product1'
+  //   Product: '<S79>/Product6'
+  //   Sum: '<S79>/Add2'
 
   for (i = 0; i < 4; i++) {
-    rtb_Product3[(int32_T)(i << 2)] = (rtb_Product3_0[(int32_T)(i << 2)] -
+    rtb_Product5[(int32_T)(i << 2)] = (rtb_Product5_0[(int32_T)(i << 2)] -
       rtb_VectorConcatenate_p[(int32_T)(i << 2)]) * normA /
       ctl_controller0_P->Constant2_Value_it + rtb_y[(int32_T)(i << 2)];
-    rtb_Product3[(int32_T)(1 + (int32_T)(i << 2))] = (rtb_Product3_0[(int32_T)
+    rtb_Product5[(int32_T)(1 + (int32_T)(i << 2))] = (rtb_Product5_0[(int32_T)
       ((int32_T)(i << 2) + 1)] - rtb_VectorConcatenate_p[(int32_T)((int32_T)(i <<
       2) + 1)]) * normA / ctl_controller0_P->Constant2_Value_it + rtb_y[(int32_T)
       ((int32_T)(i << 2) + 1)];
-    rtb_Product3[(int32_T)(2 + (int32_T)(i << 2))] = (rtb_Product3_0[(int32_T)
+    rtb_Product5[(int32_T)(2 + (int32_T)(i << 2))] = (rtb_Product5_0[(int32_T)
       ((int32_T)(i << 2) + 2)] - rtb_VectorConcatenate_p[(int32_T)((int32_T)(i <<
       2) + 2)]) * normA / ctl_controller0_P->Constant2_Value_it + rtb_y[(int32_T)
       ((int32_T)(i << 2) + 2)];
-    rtb_Product3[(int32_T)(3 + (int32_T)(i << 2))] = (rtb_Product3_0[(int32_T)
+    rtb_Product5[(int32_T)(3 + (int32_T)(i << 2))] = (rtb_Product5_0[(int32_T)
       ((int32_T)(i << 2) + 3)] - rtb_VectorConcatenate_p[(int32_T)((int32_T)(i <<
       2) + 3)]) * normA / ctl_controller0_P->Constant2_Value_it + rtb_y[(int32_T)
       ((int32_T)(i << 2) + 3)];
   }
 
-  // End of Sum: '<S57>/Add1'
+  // End of Sum: '<S79>/Add1'
 
-  // Product: '<S57>/Product1'
+  // Product: '<S79>/Product1'
   for (i = 0; i < 4; i++) {
-    normA = rtb_Product3[(int32_T)(i + 12)] * rtb_Merge[3] + (rtb_Product3
-      [(int32_T)(i + 8)] * rtb_Merge[2] + (rtb_Product3[(int32_T)(i + 4)] *
-      rtb_Merge[1] + rtb_Product3[i] * rtb_Merge[0]));
-    rtb_Product1_m[i] = normA;
+    rtb_Switch_cmd_state_a_A_B_IS_1 = rtb_Product5[(int32_T)(i + 12)] *
+      rtb_Merge_pa[3] + (rtb_Product5[(int32_T)(i + 8)] * rtb_Merge_pa[2] +
+                         (rtb_Product5[(int32_T)(i + 4)] * rtb_Merge_pa[1] +
+                          rtb_Product5[i] * rtb_Merge_pa[0]));
+    rtb_Product1_m[i] = rtb_Switch_cmd_state_a_A_B_IS_1;
   }
 
-  // If: '<S63>/If' incorporates:
-  //   Inport: '<S64>/In1'
+  // If: '<S85>/If' incorporates:
+  //   Inport: '<S86>/In1'
 
   if (rtb_Product1_m[3] < 0.0F) {
-    // Outputs for IfAction SubSystem: '<S63>/Normalize' incorporates:
-    //   ActionPort: '<S65>/Action Port'
+    // Outputs for IfAction SubSystem: '<S85>/Normalize' incorporates:
+    //   ActionPort: '<S87>/Action Port'
 
     ctl_controller0_Normalize(rtb_Product1_m, rtb_Merge,
-      (P_Normalize_ctl_controller0_T *)&ctl_controller0_P->Normalize);
+      (P_Normalize_ctl_controller0_T *)&ctl_controller0_P->Normalize_eo);
 
-    // End of Outputs for SubSystem: '<S63>/Normalize'
+    // End of Outputs for SubSystem: '<S85>/Normalize'
   } else {
-    // Outputs for IfAction SubSystem: '<S63>/No-op' incorporates:
-    //   ActionPort: '<S64>/Action Port'
+    // Outputs for IfAction SubSystem: '<S85>/No-op' incorporates:
+    //   ActionPort: '<S86>/Action Port'
 
     rtb_Merge[0] = rtb_Product1_m[0];
     rtb_Merge[1] = rtb_Product1_m[1];
     rtb_Merge[2] = rtb_Product1_m[2];
     rtb_Merge[3] = rtb_Product1_m[3];
 
-    // End of Outputs for SubSystem: '<S63>/No-op'
+    // End of Outputs for SubSystem: '<S85>/No-op'
   }
 
-  // End of If: '<S63>/If'
+  // End of If: '<S85>/If'
 
-  // Sqrt: '<S70>/Sqrt' incorporates:
-  //   DotProduct: '<S70>/Dot Product'
+  // Sqrt: '<S92>/Sqrt' incorporates:
+  //   DotProduct: '<S92>/Dot Product'
 
   normA = (real32_T)sqrt((real_T)(((rtb_Merge[0] * rtb_Merge[0] + rtb_Merge[1] *
     rtb_Merge[1]) + rtb_Merge[2] * rtb_Merge[2]) + rtb_Merge[3] * rtb_Merge[3]));
 
-  // If: '<S66>/If' incorporates:
-  //   DataTypeConversion: '<S66>/Data Type Conversion'
-  //   Inport: '<S68>/In1'
+  // If: '<S88>/If' incorporates:
+  //   DataTypeConversion: '<S88>/Data Type Conversion'
+  //   Inport: '<S90>/In1'
 
   if ((real_T)normA > 1.0E-7) {
-    // Outputs for IfAction SubSystem: '<S66>/Normalize' incorporates:
-    //   ActionPort: '<S69>/Action Port'
+    // Outputs for IfAction SubSystem: '<S88>/Normalize' incorporates:
+    //   ActionPort: '<S91>/Action Port'
 
-    ctl_controller0_Normalize_e(rtb_Merge, normA, rtb_Product1_m);
+    ctl_controller0_Normalize_e(rtb_Merge, normA, rtb_Merge_pa);
 
-    // End of Outputs for SubSystem: '<S66>/Normalize'
+    // End of Outputs for SubSystem: '<S88>/Normalize'
   } else {
-    // Outputs for IfAction SubSystem: '<S66>/No-op' incorporates:
-    //   ActionPort: '<S68>/Action Port'
+    // Outputs for IfAction SubSystem: '<S88>/No-op' incorporates:
+    //   ActionPort: '<S90>/Action Port'
 
-    rtb_Product1_m[0] = rtb_Merge[0];
-    rtb_Product1_m[1] = rtb_Merge[1];
-    rtb_Product1_m[2] = rtb_Merge[2];
-    rtb_Product1_m[3] = rtb_Merge[3];
+    rtb_Merge_pa[0] = rtb_Merge[0];
+    rtb_Merge_pa[1] = rtb_Merge[1];
+    rtb_Merge_pa[2] = rtb_Merge[2];
+    rtb_Merge_pa[3] = rtb_Merge[3];
 
-    // End of Outputs for SubSystem: '<S66>/No-op'
+    // End of Outputs for SubSystem: '<S88>/No-op'
   }
 
-  // End of If: '<S66>/If'
+  // End of If: '<S88>/If'
 
   // Switch: '<S2>/Switch12' incorporates:
+  //   Constant: '<S10>/Constant'
   //   Constant: '<S2>/Constant4'
-  //   Constant: '<S9>/Constant'
-  //   Inport: '<Root>/cmc_msg'
-  //   RelationalOperator: '<S9>/Compare'
-  //   SignalConversion: '<S1>/Signal Conversion'
+  //   RelationalOperator: '<S10>/Compare'
 
-  if (rtb_Switch2 != ctl_controller0_P->ase_status_converged) {
-    rtb_Switch2 = ctl_controller0_P->ctl_idle_mode;
+  if (rtb_Switch12 != ctl_controller0_P->ase_status_converged) {
+    rtb_Switch12 = ctl_controller0_P->ctl_idle_mode;
   } else {
-    rtb_Switch2 = ctl_controller0_U_cmc_msg_f->cmc_mode_cmd;
+    rtb_Switch12 = rtb_Switch_ctl_mode_cmd;
   }
 
   // End of Switch: '<S2>/Switch12'
+
+  // Sum: '<S79>/Sum1' incorporates:
+  //   Product: '<S79>/Product2'
+
+  rtb_Sum4_p = rtb_Switch_cmd_state_b_alpha__1 * rtb_Sqrt + rtb_Divide_f[0];
+
+  // BusCreator: '<S4>/Bus Creator1'
+  normA = rtb_Gain1_j_idx_0;
+  b_s = rtb_Sum3_k_idx_0;
+  rtb_Switch_cmd_state_a_A_B_ISS_ = rtb_Sum4_p;
+
+  // Sum: '<S2>/Sum1' incorporates:
+  //   UnitDelay: '<S2>/Unit Delay1'
+
+  rtb_Switch8_idx_0 = ctl_controller0_DW->UnitDelay1_DSTATE[0] -
+    rtb_Switch_est_P_B_ISS_ISS_idx_;
+
+  // Math: '<S2>/Math Function2'
+  rtb_Switch8_idx_0 *= rtb_Switch8_idx_0;
+
+  // Sum: '<S2>/Sum1'
+  rtb_Divide_f[0] = rtb_Switch8_idx_0;
+
+  // Sum: '<S79>/Sum1' incorporates:
+  //   Product: '<S79>/Product2'
+
+  rtb_Sum4_o_idx_0 = rtb_Sum4_p;
+  rtb_Sum4_p = rtb_Switch_cmd_state_b_alpha__0 * rtb_Sqrt + rtb_Divide_f[1];
+
+  // BusCreator: '<S4>/Bus Creator1'
+  rtb_Switch_cmd_state_a_P_B_ISS_ = rtb_Gain1_j_idx_1;
+  rtb_Switch_cmd_state_a_V_B_ISS_ = rtb_Sum3_k_idx_1;
+  rtb_Switch_cmd_state_a_A_B_IS_0 = rtb_Sum4_p;
+
+  // Sum: '<S2>/Sum1' incorporates:
+  //   UnitDelay: '<S2>/Unit Delay1'
+
+  rtb_Switch8_idx_0 = ctl_controller0_DW->UnitDelay1_DSTATE[1] -
+    rtb_Switch_est_P_B_ISS_ISS_id_0;
+
+  // Math: '<S2>/Math Function2'
+  rtb_Switch8_idx_0 *= rtb_Switch8_idx_0;
+
+  // Sum: '<S2>/Sum1'
+  rtb_Divide_f[1] = rtb_Switch8_idx_0;
+
+  // Sum: '<S79>/Sum1' incorporates:
+  //   Product: '<S79>/Product2'
+
+  rtb_Sum4_o_idx_1 = rtb_Sum4_p;
+  rtb_Sum4_p = rtb_Switch_cmd_state_b_alpha_B_ * rtb_Sqrt + rtb_Divide_f[2];
+
+  // Sum: '<S2>/Sum1' incorporates:
+  //   UnitDelay: '<S2>/Unit Delay1'
+
+  rtb_Switch8_idx_0 = ctl_controller0_DW->UnitDelay1_DSTATE[2] -
+    rtb_Switch_est_P_B_ISS_ISS_id_1;
+
+  // Math: '<S2>/Math Function2'
+  rtb_Switch8_idx_0 *= rtb_Switch8_idx_0;
 
   // Logic: '<S2>/Logical Operator2' incorporates:
   //   Constant: '<S6>/Constant'
@@ -1322,53 +1644,52 @@ void ctl_controller0_step(RT_MODEL_ctl_controller0_T *const ctl_controller0_M,
   //   RelationalOperator: '<S7>/Compare'
   //   RelationalOperator: '<S8>/Compare'
 
-  rtb_LogicalOperator2 = ((rtb_Switch2 == ctl_controller0_P->ctl_stopping_mode) &&
-    ((rtb_SumofElements < ctl_controller0_P->ctl_stopping_vel_thresh) &&
-     (rtb_SumofElements1 < ctl_controller0_P->ctl_stopping_omega_thresh)));
+  rtb_LogicalOperator2 = ((rtb_Switch12 == ctl_controller0_P->ctl_stopping_mode)
+    && ((rtb_SumofElements < ctl_controller0_P->ctl_stopping_vel_thresh) &&
+        (rtb_SumofElements1 < ctl_controller0_P->ctl_stopping_omega_thresh)));
 
-  // Switch: '<S2>/Switch2' incorporates:
-  //   Constant: '<S2>/Constant'
-  //   Switch: '<S2>/Switch8'
-  //   UnitDelay: '<S2>/Unit Delay1'
-
-  if (rtb_LogicalOperator2) {
-    rtb_Switch2 = ctl_controller0_P->ctl_stopped_mode;
-    rtb_Switch8_idx_0 = ctl_controller0_DW->UnitDelay1_DSTATE[0];
+  // Trigonometry: '<S2>/Trigonometric Function'
+  if (rtb_Product_b[3] > 1.0F) {
+    rtb_SumofElements = 1.0F;
+  } else if (rtb_Product_b[3] < -1.0F) {
+    rtb_SumofElements = -1.0F;
   } else {
-    rtb_Switch8_idx_0 = rtb_Switch_P_B_ISS_ISS_idx_0;
+    rtb_SumofElements = rtb_Product_b[3];
   }
 
-  // End of Switch: '<S2>/Switch2'
+  // Switch: '<S2>/Switch3' incorporates:
+  //   Abs: '<S2>/Abs1'
+  //   Constant: '<S11>/Constant'
+  //   Constant: '<S12>/Constant'
+  //   Constant: '<S2>/Constant6'
+  //   Constant: '<S9>/Constant'
+  //   Gain: '<S2>/Gain2'
+  //   Logic: '<S2>/Logical Operator1'
+  //   Logic: '<S2>/Logical Operator3'
+  //   RelationalOperator: '<S11>/Compare'
+  //   RelationalOperator: '<S12>/Compare'
+  //   RelationalOperator: '<S9>/Compare'
+  //   Sum: '<S2>/Sum of Elements2'
+  //   Switch: '<S2>/Switch2'
+  //   Trigonometry: '<S2>/Trigonometric Function'
 
-  // Sum: '<S57>/Sum1' incorporates:
-  //   Product: '<S57>/Product2'
+  if ((rtb_Switch12 == ctl_controller0_P->ctl_stopped_mode) && (((rtb_Divide_f[0]
+         + rtb_Divide_f[1]) + rtb_Switch8_idx_0 >
+        ctl_controller0_P->tun_ctl_stopped_pos_thresh) || ((real32_T)fabs
+        ((real_T)(ctl_controller0_P->Gain2_Gain_h * (real32_T)acos((real_T)
+           rtb_SumofElements))) > ctl_controller0_P->tun_ctl_stopped_quat_thresh)))
+  {
+    rtb_Switch12 = ctl_controller0_P->ctl_stopping_mode;
+  } else {
+    if (rtb_LogicalOperator2) {
+      // Switch: '<S2>/Switch2' incorporates:
+      //   Constant: '<S2>/Constant'
 
-  rtb_SumofElements1 = rtb_Switch_h_alpha_B_ISS_B_id_1 * rtb_Sqrt_bt +
-    rtb_Sum4_o_idx_0;
+      rtb_Switch12 = ctl_controller0_P->ctl_stopped_mode;
+    }
+  }
 
-  // BusCreator: '<S4>/Bus Creator1'
-  normA = rtb_Gain1_j_idx_0;
-  b_s = rtb_Sum3_k_idx_0;
-  rtb_BusCreator1_traj_omega_idx_ = rtb_SumofElements1;
-
-  // Sum: '<S57>/Sum1' incorporates:
-  //   Product: '<S57>/Product2'
-
-  rtb_Sum4_o_idx_0 = rtb_SumofElements1;
-  rtb_SumofElements1 = rtb_Switch_h_alpha_B_ISS_B_id_0 * rtb_Sqrt_bt +
-    rtb_Sum4_o_idx_1;
-
-  // BusCreator: '<S4>/Bus Creator1'
-  rtb_BusCreator1_traj_pos_idx_1 = rtb_Gain1_j_idx_1;
-  rtb_BusCreator1_traj_vel_idx_1 = rtb_Sum3_k_idx_1;
-  rtb_BusCreator1_traj_omega_id_0 = rtb_SumofElements1;
-
-  // Sum: '<S57>/Sum1' incorporates:
-  //   Product: '<S57>/Product2'
-
-  rtb_Sum4_o_idx_1 = rtb_SumofElements1;
-  rtb_SumofElements1 = rtb_Switch_h_alpha_B_ISS_B_idx_ * rtb_Sqrt_bt +
-    rtb_Sum4_o_idx_2;
+  // End of Switch: '<S2>/Switch3'
 
   // Switch: '<S2>/Switch8' incorporates:
   //   Switch: '<S2>/Switch9'
@@ -1376,78 +1697,82 @@ void ctl_controller0_step(RT_MODEL_ctl_controller0_T *const ctl_controller0_M,
   //   UnitDelay: '<S2>/Unit Delay2'
 
   if (rtb_LogicalOperator2) {
+    rtb_Switch8_idx_0 = ctl_controller0_DW->UnitDelay1_DSTATE[0];
     rtb_Switch8_idx_1 = ctl_controller0_DW->UnitDelay1_DSTATE[1];
-    rtb_Sum4_o_idx_2 = ctl_controller0_DW->UnitDelay1_DSTATE[2];
-    rtb_Merge[0] = ctl_controller0_DW->UnitDelay2_DSTATE[0];
-    rtb_Merge[1] = ctl_controller0_DW->UnitDelay2_DSTATE[1];
-    rtb_Merge[2] = ctl_controller0_DW->UnitDelay2_DSTATE[2];
-    rtb_Merge[3] = ctl_controller0_DW->UnitDelay2_DSTATE[3];
+    rtb_Switch8_idx_2 = ctl_controller0_DW->UnitDelay1_DSTATE[2];
+    rtb_Product_b[0] = ctl_controller0_DW->UnitDelay2_DSTATE[0];
+    rtb_Product_b[1] = ctl_controller0_DW->UnitDelay2_DSTATE[1];
+    rtb_Product_b[2] = ctl_controller0_DW->UnitDelay2_DSTATE[2];
+    rtb_Product_b[3] = ctl_controller0_DW->UnitDelay2_DSTATE[3];
   } else {
-    rtb_Switch8_idx_1 = rtb_Switch_P_B_ISS_ISS_idx_1;
-    rtb_Sum4_o_idx_2 = rtb_Switch_P_B_ISS_ISS_idx_2;
-    rtb_Merge[0] = rtb_Merge_az[0];
-    rtb_Merge[1] = rtb_Merge_az[1];
-    rtb_Merge[2] = rtb_Merge_az[2];
-    rtb_Merge[3] = rtb_Merge_az[3];
+    rtb_Switch8_idx_0 = rtb_Switch_est_P_B_ISS_ISS_idx_;
+    rtb_Switch8_idx_1 = rtb_Switch_est_P_B_ISS_ISS_id_0;
+    rtb_Switch8_idx_2 = rtb_Switch_est_P_B_ISS_ISS_id_1;
+    rtb_Product_b[0] = rtb_Merge_j[0];
+    rtb_Product_b[1] = rtb_Merge_j[1];
+    rtb_Product_b[2] = rtb_Merge_j[2];
+    rtb_Product_b[3] = rtb_Merge_j[3];
   }
 
-  // Sum: '<S25>/Sum' incorporates:
-  //   Constant: '<S25>/Constant1'
-  //   DataTypeConversion: '<S27>/Conversion'
-  //   Gain: '<S25>/Gain'
-  //   Math: '<S25>/Math Function'
+  // End of Switch: '<S2>/Switch8'
 
-  rtb_Sqrt_bt = rtb_Merge_az[3] * rtb_Merge_az[3] *
+  // Sum: '<S45>/Sum' incorporates:
+  //   Constant: '<S45>/Constant1'
+  //   DataTypeConversion: '<S47>/Conversion'
+  //   Gain: '<S45>/Gain'
+  //   Math: '<S45>/Math Function'
+
+  rtb_SumofElements = rtb_Merge_j[3] * rtb_Merge_j[3] *
     ctl_controller0_P->Gain_Gain_l - (real32_T)
     ctl_controller0_P->Constant1_Value;
   for (i = 0; i < 9; i++) {
-    // Assignment: '<S25>/Assignment' incorporates:
-    //   Constant: '<S25>/Constant2'
-    //   DataTypeConversion: '<S26>/Conversion'
+    // Assignment: '<S45>/Assignment' incorporates:
+    //   Constant: '<S45>/Constant2'
+    //   DataTypeConversion: '<S46>/Conversion'
 
-    rtb_Assignment_h[i] = (real32_T)ctl_controller0_P->Constant2_Value_p[i];
+    rtb_Assignment_h[i] = (real32_T)ctl_controller0_P->Constant2_Value_pu[i];
 
-    // Assignment: '<S20>/Assignment' incorporates:
-    //   Constant: '<S20>/Constant2'
-    //   DataTypeConversion: '<S21>/Conversion'
+    // Assignment: '<S40>/Assignment' incorporates:
+    //   Constant: '<S40>/Constant2'
+    //   DataTypeConversion: '<S41>/Conversion'
 
     rtb_Assignment_l[i] = (real32_T)ctl_controller0_P->Constant2_Value_k[i];
   }
 
-  // Assignment: '<S25>/Assignment'
-  rtb_Assignment_h[0] = rtb_Sqrt_bt;
-  rtb_Assignment_h[4] = rtb_Sqrt_bt;
-  rtb_Assignment_h[8] = rtb_Sqrt_bt;
+  // Assignment: '<S45>/Assignment'
+  rtb_Assignment_h[0] = rtb_SumofElements;
+  rtb_Assignment_h[4] = rtb_SumofElements;
+  rtb_Assignment_h[8] = rtb_SumofElements;
 
-  // Gain: '<S25>/Gain1'
-  rtb_Sqrt_bt = ctl_controller0_P->Gain1_Gain_ej * rtb_Merge_az[3];
+  // Gain: '<S45>/Gain1'
+  rtb_SumofElements = ctl_controller0_P->Gain1_Gain_ej * rtb_Merge_j[3];
 
-  // Sum: '<S20>/Sum' incorporates:
-  //   Constant: '<S20>/Constant1'
-  //   DataTypeConversion: '<S22>/Conversion'
-  //   Gain: '<S20>/Gain'
-  //   Math: '<S20>/Math Function'
+  // Sum: '<S40>/Sum' incorporates:
+  //   Constant: '<S40>/Constant1'
+  //   DataTypeConversion: '<S42>/Conversion'
+  //   Gain: '<S40>/Gain'
+  //   Math: '<S40>/Math Function'
 
-  rtb_SumofElements = rtb_Merge_az[3] * rtb_Merge_az[3] *
+  rtb_SumofElements1 = rtb_Merge_j[3] * rtb_Merge_j[3] *
     ctl_controller0_P->Gain_Gain_b - (real32_T)
     ctl_controller0_P->Constant1_Value_f;
 
-  // Assignment: '<S20>/Assignment'
-  rtb_Assignment_l[0] = rtb_SumofElements;
-  rtb_Assignment_l[4] = rtb_SumofElements;
-  rtb_Assignment_l[8] = rtb_SumofElements;
+  // Assignment: '<S40>/Assignment'
+  rtb_Assignment_l[0] = rtb_SumofElements1;
+  rtb_Assignment_l[4] = rtb_SumofElements1;
+  rtb_Assignment_l[8] = rtb_SumofElements1;
 
-  // Gain: '<S20>/Gain1'
-  rtb_SumofElements = ctl_controller0_P->Gain1_Gain_g * rtb_Merge_az[3];
+  // Gain: '<S40>/Gain1'
+  rtb_SumofElements1 = ctl_controller0_P->Gain1_Gain_g * rtb_Merge_j[3];
 
-  // Switch: '<S12>/Switch2' incorporates:
+  // Switch: '<S30>/Switch2' incorporates:
   //   BusCreator: '<S4>/Bus Creator1'
-  //   Constant: '<S12>/Constant4'
-  //   Constant: '<S16>/Constant'
-  //   RelationalOperator: '<S16>/Compare'
+  //   Constant: '<S30>/Constant4'
+  //   Constant: '<S34>/Constant'
+  //   RelationalOperator: '<S34>/Compare'
   //   Switch: '<S2>/Switch10'
 
-  if (rtb_Switch2 <= ctl_controller0_P->CompareToConstant2_const) {
+  if (rtb_Switch12 <= ctl_controller0_P->CompareToConstant2_const) {
     rtb_Switch_c_idx_0 = ctl_controller0_P->Constant4_Value[0];
     rtb_Switch_c_idx_1 = ctl_controller0_P->Constant4_Value[1];
     rtb_Switch_c_idx_2 = ctl_controller0_P->Constant4_Value[2];
@@ -1464,48 +1789,51 @@ void ctl_controller0_step(RT_MODEL_ctl_controller0_T *const ctl_controller0_M,
     rtb_Switch_c_idx_2 = rtb_Sum3_k_idx_2;
   }
 
-  // End of Switch: '<S12>/Switch2'
+  // End of Switch: '<S30>/Switch2'
 
   // Switch: '<S2>/Switch6' incorporates:
   //   BusCreator: '<S4>/Bus Creator1'
 
   if (rtb_LogicalOperator2) {
-    rtb_LogicalOperator2_0 = rtb_Switch8_idx_0;
+    rtb_Switch_cmd_state_a_A_B_IS_1 = rtb_Switch8_idx_0;
   } else {
-    rtb_LogicalOperator2_0 = rtb_Gain1_j_idx_0;
+    rtb_Switch_cmd_state_a_A_B_IS_1 = rtb_Gain1_j_idx_0;
   }
 
-  // Sum: '<S12>/Sum2'
-  rtb_Sum2_idx_0 = rtb_LogicalOperator2_0 - rtb_Switch_P_B_ISS_ISS_idx_0;
+  // Sum: '<S30>/Sum2'
+  rtb_Sum2_idx_0 = rtb_Switch_cmd_state_a_A_B_IS_1 -
+    rtb_Switch_est_P_B_ISS_ISS_idx_;
 
   // Switch: '<S2>/Switch6' incorporates:
   //   BusCreator: '<S4>/Bus Creator1'
 
   if (rtb_LogicalOperator2) {
-    rtb_LogicalOperator2_0 = rtb_Switch8_idx_1;
+    rtb_Switch_cmd_state_a_A_B_IS_1 = rtb_Switch8_idx_1;
   } else {
-    rtb_LogicalOperator2_0 = rtb_Gain1_j_idx_1;
+    rtb_Switch_cmd_state_a_A_B_IS_1 = rtb_Gain1_j_idx_1;
   }
 
-  // Sum: '<S12>/Sum2'
-  rtb_Sum2_idx_1 = rtb_LogicalOperator2_0 - rtb_Switch_P_B_ISS_ISS_idx_1;
+  // Sum: '<S30>/Sum2'
+  rtb_Sum2_idx_1 = rtb_Switch_cmd_state_a_A_B_IS_1 -
+    rtb_Switch_est_P_B_ISS_ISS_id_0;
 
   // Switch: '<S2>/Switch6'
   if (rtb_LogicalOperator2) {
-    rtb_LogicalOperator2_0 = rtb_Sum4_o_idx_2;
+    rtb_Switch_cmd_state_a_A_B_IS_1 = rtb_Switch8_idx_2;
   } else {
-    rtb_LogicalOperator2_0 = rtb_Gain1_j_idx_2;
+    rtb_Switch_cmd_state_a_A_B_IS_1 = rtb_Switch_cmd_state_a_P_B_IS_0;
   }
 
-  // Sum: '<S12>/Sum2'
-  rtb_Sum2_idx_2 = rtb_LogicalOperator2_0 - rtb_Switch_P_B_ISS_ISS_idx_2;
+  // Sum: '<S30>/Sum2'
+  rtb_Sum2_idx_2 = rtb_Switch_cmd_state_a_A_B_IS_1 -
+    rtb_Switch_est_P_B_ISS_ISS_id_1;
 
-  // RelationalOperator: '<S14>/Compare' incorporates:
-  //   Constant: '<S14>/Constant'
+  // RelationalOperator: '<S32>/Compare' incorporates:
+  //   Constant: '<S32>/Constant'
 
-  rtb_Compare_j = (rtb_Switch2 <= ctl_controller0_P->CompareToConstant_const);
+  rtb_Compare_j = (rtb_Switch12 <= ctl_controller0_P->CompareToConstant_const);
 
-  // DiscreteIntegrator: '<S12>/Discrete-Time Integrator1'
+  // DiscreteIntegrator: '<S30>/Discrete-Time Integrator1'
   if (rtb_Compare_j || ((int32_T)
                         ctl_controller0_DW->DiscreteTimeIntegrator1_PrevRes != 0))
   {
@@ -1553,323 +1881,352 @@ void ctl_controller0_step(RT_MODEL_ctl_controller0_T *const ctl_controller0_M,
     }
   }
 
-  // Switch: '<S12>/Switch1' incorporates:
-  //   Constant: '<S12>/Constant1'
-  //   Constant: '<S15>/Constant'
-  //   DiscreteIntegrator: '<S12>/Discrete-Time Integrator1'
-  //   Inport: '<Root>/cmc_msg'
-  //   Product: '<S12>/Divide1'
-  //   Product: '<S12>/Product'
-  //   RelationalOperator: '<S15>/Compare'
-  //   SignalConversion: '<S1>/Signal Conversion'
-  //   Sum: '<S12>/Sum4'
+  // Switch: '<S30>/Switch1' incorporates:
+  //   Constant: '<S30>/Constant1'
+  //   Constant: '<S33>/Constant'
+  //   DiscreteIntegrator: '<S30>/Discrete-Time Integrator1'
+  //   Product: '<S30>/Product'
+  //   RelationalOperator: '<S33>/Compare'
+  //   Sum: '<S30>/Sum4'
+  //   Switch: '<S37>/Switch'
 
-  if (rtb_Switch2 <= ctl_controller0_P->CompareToConstant1_const) {
+  if (rtb_Switch12 <= ctl_controller0_P->CompareToConstant1_const) {
     rtb_Divide_f[0] = ctl_controller0_P->Constant1_Value_k[0];
     rtb_Divide_f[1] = ctl_controller0_P->Constant1_Value_k[1];
     rtb_Divide_f[2] = ctl_controller0_P->Constant1_Value_k[2];
   } else {
-    rtb_Divide_f[0] = ctl_controller0_U_cmc_msg_f->pos_kp[0] /
-      ctl_controller0_U_cmc_msg_f->vel_kd[0] * rtb_Sum2_idx_0 +
+    if (rtb_Switch_vel_kd[0] != 0.0F) {
+      // Switch: '<S37>/Switch' incorporates:
+      //   Product: '<S37>/Divide1'
+
+      rtb_Switch_cmd_state_a_A_B_IS_1 = rtb_Sum_f[0] / rtb_Switch_vel_kd[0];
+    } else {
+      // Switch: '<S37>/Switch'
+      rtb_Switch_cmd_state_a_A_B_IS_1 = 0.0F;
+    }
+
+    rtb_Divide_f[0] = rtb_Switch_cmd_state_a_A_B_IS_1 * rtb_Sum2_idx_0 +
       ctl_controller0_DW->DiscreteTimeIntegrator1_DSTATE[0];
-    rtb_Divide_f[1] = ctl_controller0_U_cmc_msg_f->pos_kp[1] /
-      ctl_controller0_U_cmc_msg_f->vel_kd[1] * rtb_Sum2_idx_1 +
+
+    // Switch: '<S37>/Switch' incorporates:
+    //   DiscreteIntegrator: '<S30>/Discrete-Time Integrator1'
+    //   Product: '<S30>/Product'
+    //   Product: '<S37>/Divide1'
+    //   Sum: '<S30>/Sum4'
+
+    if (rtb_Switch_vel_kd[1] != 0.0F) {
+      rtb_Switch_cmd_state_a_A_B_IS_1 = rtb_Sum_f[1] / rtb_Switch_vel_kd[1];
+    } else {
+      rtb_Switch_cmd_state_a_A_B_IS_1 = 0.0F;
+    }
+
+    rtb_Divide_f[1] = rtb_Switch_cmd_state_a_A_B_IS_1 * rtb_Sum2_idx_1 +
       ctl_controller0_DW->DiscreteTimeIntegrator1_DSTATE[1];
-    rtb_Divide_f[2] = ctl_controller0_U_cmc_msg_f->pos_kp[2] /
-      ctl_controller0_U_cmc_msg_f->vel_kd[2] * rtb_Sum2_idx_2 +
+
+    // Switch: '<S37>/Switch' incorporates:
+    //   DiscreteIntegrator: '<S30>/Discrete-Time Integrator1'
+    //   Product: '<S30>/Product'
+    //   Product: '<S37>/Divide1'
+    //   Sum: '<S30>/Sum4'
+
+    if (rtb_Switch_vel_kd[2] != 0.0F) {
+      rtb_Switch_cmd_state_a_A_B_IS_1 = rtb_Sum_f[2] / rtb_Switch_vel_kd[2];
+    } else {
+      rtb_Switch_cmd_state_a_A_B_IS_1 = 0.0F;
+    }
+
+    rtb_Divide_f[2] = rtb_Switch_cmd_state_a_A_B_IS_1 * rtb_Sum2_idx_2 +
       ctl_controller0_DW->DiscreteTimeIntegrator1_DSTATE[2];
   }
 
-  // End of Switch: '<S12>/Switch1'
+  // End of Switch: '<S30>/Switch1'
 
-  // Sum: '<S12>/Sum1'
+  // Sum: '<S30>/Sum1'
   rtb_Switch_c_idx_0 = (rtb_Switch_c_idx_0 + rtb_Divide_f[0]) -
-    rtb_Switch_V_B_ISS_ISS_idx_0;
+    rtb_Switch_est_V_B_ISS_ISS_idx_;
   rtb_Switch_c_idx_1 = (rtb_Switch_c_idx_1 + rtb_Divide_f[1]) -
-    rtb_Switch_V_B_ISS_ISS_idx_1;
+    rtb_Switch_est_V_B_ISS_ISS_id_0;
   rtb_Switch_c_idx_2 = (rtb_Switch_c_idx_2 + rtb_Divide_f[2]) -
-    rtb_Switch_V_B_ISS_ISS_idx_2;
+    rtb_Switch_est_V_B_ISS_ISS_id_1;
 
-  // Product: '<S25>/Product' incorporates:
-  //   Constant: '<S28>/Constant3'
-  //   DataTypeConversion: '<S29>/Conversion'
-  //   Gain: '<S28>/Gain'
-  //   Gain: '<S28>/Gain1'
-  //   Gain: '<S28>/Gain2'
+  // Product: '<S45>/Product' incorporates:
+  //   Constant: '<S48>/Constant3'
+  //   DataTypeConversion: '<S49>/Conversion'
+  //   Gain: '<S48>/Gain'
+  //   Gain: '<S48>/Gain1'
+  //   Gain: '<S48>/Gain2'
 
   tmp_0[0] = (real32_T)ctl_controller0_P->Constant3_Value_o;
-  tmp_0[1] = rtb_Merge_az[2];
-  tmp_0[2] = ctl_controller0_P->Gain_Gain_i * rtb_Merge_az[1];
-  tmp_0[3] = ctl_controller0_P->Gain1_Gain_k * rtb_Merge_az[2];
+  tmp_0[1] = rtb_Merge_j[2];
+  tmp_0[2] = ctl_controller0_P->Gain_Gain_ib * rtb_Merge_j[1];
+  tmp_0[3] = ctl_controller0_P->Gain1_Gain_k * rtb_Merge_j[2];
   tmp_0[4] = (real32_T)ctl_controller0_P->Constant3_Value_o;
-  tmp_0[5] = rtb_Merge_az[0];
-  tmp_0[6] = rtb_Merge_az[1];
-  tmp_0[7] = ctl_controller0_P->Gain2_Gain_b * rtb_Merge_az[0];
+  tmp_0[5] = rtb_Merge_j[0];
+  tmp_0[6] = rtb_Merge_j[1];
+  tmp_0[7] = ctl_controller0_P->Gain2_Gain_b * rtb_Merge_j[0];
   tmp_0[8] = (real32_T)ctl_controller0_P->Constant3_Value_o;
 
-  // Product: '<S25>/Product1' incorporates:
-  //   Gain: '<S25>/Gain2'
+  // Product: '<S45>/Product1' incorporates:
+  //   Gain: '<S45>/Gain2'
 
   for (i = 0; i < 3; i++) {
-    rtb_Merge_j[i] = rtb_Merge_az[i] * rtb_Merge_az[0];
-    rtb_Merge_j[(int32_T)(i + 3)] = rtb_Merge_az[i] * rtb_Merge_az[1];
-    rtb_Merge_j[(int32_T)(i + 6)] = rtb_Merge_az[i] * rtb_Merge_az[2];
+    rtb_Merge_j_0[i] = rtb_Merge_j[i] * rtb_Merge_j[0];
+    rtb_Merge_j_0[(int32_T)(i + 3)] = rtb_Merge_j[i] * rtb_Merge_j[1];
+    rtb_Merge_j_0[(int32_T)(i + 6)] = rtb_Merge_j[i] * rtb_Merge_j[2];
   }
 
-  // End of Product: '<S25>/Product1'
+  // End of Product: '<S45>/Product1'
   for (i = 0; i < 3; i++) {
-    // Sum: '<S25>/Sum1' incorporates:
-    //   Gain: '<S25>/Gain2'
-    //   Product: '<S18>/Product'
-    //   Product: '<S25>/Product'
+    // Sum: '<S45>/Sum1' incorporates:
+    //   Gain: '<S45>/Gain2'
+    //   Product: '<S36>/Product'
+    //   Product: '<S45>/Product'
 
     rtb_Assignment_b_0[(int32_T)(3 * i)] = (rtb_Assignment_h[(int32_T)(3 * i)] -
-      tmp_0[(int32_T)(3 * i)] * rtb_Sqrt_bt) + rtb_Merge_j[(int32_T)(3 * i)] *
-      ctl_controller0_P->Gain2_Gain_k1;
+      tmp_0[(int32_T)(3 * i)] * rtb_SumofElements) + rtb_Merge_j_0[(int32_T)(3 *
+      i)] * ctl_controller0_P->Gain2_Gain_k1;
     rtb_Assignment_b_0[(int32_T)(1 + (int32_T)(3 * i))] = (rtb_Assignment_h
       [(int32_T)((int32_T)(3 * i) + 1)] - tmp_0[(int32_T)((int32_T)(3 * i) + 1)]
-      * rtb_Sqrt_bt) + rtb_Merge_j[(int32_T)((int32_T)(3 * i) + 1)] *
+      * rtb_SumofElements) + rtb_Merge_j_0[(int32_T)((int32_T)(3 * i) + 1)] *
       ctl_controller0_P->Gain2_Gain_k1;
     rtb_Assignment_b_0[(int32_T)(2 + (int32_T)(3 * i))] = (rtb_Assignment_h
       [(int32_T)((int32_T)(3 * i) + 2)] - tmp_0[(int32_T)((int32_T)(3 * i) + 2)]
-      * rtb_Sqrt_bt) + rtb_Merge_j[(int32_T)((int32_T)(3 * i) + 2)] *
+      * rtb_SumofElements) + rtb_Merge_j_0[(int32_T)((int32_T)(3 * i) + 2)] *
       ctl_controller0_P->Gain2_Gain_k1;
 
-    // Gain: '<S12>/Gain' incorporates:
+    // Gain: '<S30>/Gain' incorporates:
     //   Constant: '<S2>/Constant5'
-    //   Product: '<S18>/Product'
+    //   Product: '<S36>/Product'
     //   Switch: '<S2>/Switch14'
 
     if (rtb_LogicalOperator2) {
-      rtb_LogicalOperator2_0 = ctl_controller0_P->Constant5_Value[i];
+      rtb_Switch_cmd_state_a_A_B_IS_1 = ctl_controller0_P->Constant5_Value[i];
     } else {
-      rtb_LogicalOperator2_0 = rtb_Switch_h_A_B_ISS_ISS[i];
+      rtb_Switch_cmd_state_a_A_B_IS_1 = rtb_Diff[i];
     }
 
-    rtb_Divide_f[i] = ctl_controller0_P->tun_accel_gain[i] *
-      rtb_LogicalOperator2_0;
+    rtb_Sum_f[i] = ctl_controller0_P->tun_accel_gain[i] *
+      rtb_Switch_cmd_state_a_A_B_IS_1;
 
-    // End of Gain: '<S12>/Gain'
+    // End of Gain: '<S30>/Gain'
   }
 
-  // Product: '<S20>/Product' incorporates:
-  //   Constant: '<S23>/Constant3'
-  //   DataTypeConversion: '<S24>/Conversion'
-  //   Gain: '<S23>/Gain'
-  //   Gain: '<S23>/Gain1'
-  //   Gain: '<S23>/Gain2'
+  // Product: '<S40>/Product' incorporates:
+  //   Constant: '<S43>/Constant3'
+  //   DataTypeConversion: '<S44>/Conversion'
+  //   Gain: '<S43>/Gain'
+  //   Gain: '<S43>/Gain1'
+  //   Gain: '<S43>/Gain2'
 
   tmp_1[0] = (real32_T)ctl_controller0_P->Constant3_Value_b;
-  tmp_1[1] = rtb_Merge_az[2];
-  tmp_1[2] = ctl_controller0_P->Gain_Gain_d * rtb_Merge_az[1];
-  tmp_1[3] = ctl_controller0_P->Gain1_Gain_ji * rtb_Merge_az[2];
+  tmp_1[1] = rtb_Merge_j[2];
+  tmp_1[2] = ctl_controller0_P->Gain_Gain_d * rtb_Merge_j[1];
+  tmp_1[3] = ctl_controller0_P->Gain1_Gain_ji * rtb_Merge_j[2];
   tmp_1[4] = (real32_T)ctl_controller0_P->Constant3_Value_b;
-  tmp_1[5] = rtb_Merge_az[0];
-  tmp_1[6] = rtb_Merge_az[1];
-  tmp_1[7] = ctl_controller0_P->Gain2_Gain_bs * rtb_Merge_az[0];
+  tmp_1[5] = rtb_Merge_j[0];
+  tmp_1[6] = rtb_Merge_j[1];
+  tmp_1[7] = ctl_controller0_P->Gain2_Gain_bs * rtb_Merge_j[0];
   tmp_1[8] = (real32_T)ctl_controller0_P->Constant3_Value_b;
   for (i = 0; i < 3; i++) {
-    // Product: '<S20>/Product1' incorporates:
-    //   Gain: '<S20>/Gain2'
+    // Product: '<S40>/Product1' incorporates:
+    //   Gain: '<S40>/Gain2'
 
-    rtb_Merge_j[i] = rtb_Merge_az[i] * rtb_Merge_az[0];
-    rtb_Merge_j[(int32_T)(i + 3)] = rtb_Merge_az[i] * rtb_Merge_az[1];
-    rtb_Merge_j[(int32_T)(i + 6)] = rtb_Merge_az[i] * rtb_Merge_az[2];
+    rtb_Merge_j_0[i] = rtb_Merge_j[i] * rtb_Merge_j[0];
+    rtb_Merge_j_0[(int32_T)(i + 3)] = rtb_Merge_j[i] * rtb_Merge_j[1];
+    rtb_Merge_j_0[(int32_T)(i + 6)] = rtb_Merge_j[i] * rtb_Merge_j[2];
 
-    // Product: '<S18>/Product' incorporates:
-    //   Product: '<S12>/Divide3'
+    // Product: '<S36>/Product' incorporates:
+    //   Product: '<S30>/Divide3'
 
-    rtb_Assignment_b_1[i] = rtb_Assignment_b_0[(int32_T)(i + 6)] * rtb_Divide_f
-      [2] + (rtb_Assignment_b_0[(int32_T)(i + 3)] * rtb_Divide_f[1] +
-             rtb_Assignment_b_0[i] * rtb_Divide_f[0]);
+    rtb_Assignment_b_1[i] = rtb_Assignment_b_0[(int32_T)(i + 6)] * rtb_Sum_f[2]
+      + (rtb_Assignment_b_0[(int32_T)(i + 3)] * rtb_Sum_f[1] +
+         rtb_Assignment_b_0[i] * rtb_Sum_f[0]);
   }
 
-  // Sum: '<S20>/Sum1' incorporates:
-  //   Gain: '<S20>/Gain2'
-  //   Product: '<S17>/Product'
-  //   Product: '<S20>/Product'
+  // Sum: '<S40>/Sum1' incorporates:
+  //   Gain: '<S40>/Gain2'
+  //   Product: '<S35>/Product'
+  //   Product: '<S40>/Product'
 
   for (i = 0; i < 3; i++) {
     rtb_Assignment_h[(int32_T)(3 * i)] = (rtb_Assignment_l[(int32_T)(3 * i)] -
-      tmp_1[(int32_T)(3 * i)] * rtb_SumofElements) + rtb_Merge_j[(int32_T)(3 * i)]
-      * ctl_controller0_P->Gain2_Gain_kh;
+      tmp_1[(int32_T)(3 * i)] * rtb_SumofElements1) + rtb_Merge_j_0[(int32_T)(3 *
+      i)] * ctl_controller0_P->Gain2_Gain_kh;
     rtb_Assignment_h[(int32_T)(1 + (int32_T)(3 * i))] = (rtb_Assignment_l
       [(int32_T)((int32_T)(3 * i) + 1)] - tmp_1[(int32_T)((int32_T)(3 * i) + 1)]
-      * rtb_SumofElements) + rtb_Merge_j[(int32_T)((int32_T)(3 * i) + 1)] *
+      * rtb_SumofElements1) + rtb_Merge_j_0[(int32_T)((int32_T)(3 * i) + 1)] *
       ctl_controller0_P->Gain2_Gain_kh;
     rtb_Assignment_h[(int32_T)(2 + (int32_T)(3 * i))] = (rtb_Assignment_l
       [(int32_T)((int32_T)(3 * i) + 2)] - tmp_1[(int32_T)((int32_T)(3 * i) + 2)]
-      * rtb_SumofElements) + rtb_Merge_j[(int32_T)((int32_T)(3 * i) + 2)] *
+      * rtb_SumofElements1) + rtb_Merge_j_0[(int32_T)((int32_T)(3 * i) + 2)] *
       ctl_controller0_P->Gain2_Gain_kh;
   }
 
-  // End of Sum: '<S20>/Sum1'
+  // End of Sum: '<S40>/Sum1'
 
-  // DotProduct: '<S34>/Dot Product'
-  rtb_Sqrt_bt = 0.0F;
+  // DotProduct: '<S54>/Dot Product'
+  rtb_SumofElements = 0.0F;
   for (i = 0; i < 3; i++) {
-    // Sum: '<S12>/Sum' incorporates:
-    //   Inport: '<Root>/cmc_msg'
-    //   Product: '<S12>/Divide3'
-    //   Product: '<S12>/Product2'
-    //   Product: '<S12>/Product3'
-    //   Product: '<S17>/Product'
-    //   SignalConversion: '<S1>/Signal Conversion'
+    // Sum: '<S30>/Sum' incorporates:
+    //   Product: '<S30>/Divide3'
+    //   Product: '<S30>/Product2'
+    //   Product: '<S30>/Product3'
+    //   Product: '<S35>/Product'
 
-    rtb_SumofElements = ctl_controller0_U_cmc_msg_f->vel_kd[i] *
-      ctl_controller0_U_cmc_msg_f->mass * (rtb_Assignment_h[(int32_T)(i + 6)] *
-      rtb_Switch_c_idx_2 + (rtb_Assignment_h[(int32_T)(i + 3)] *
-      rtb_Switch_c_idx_1 + rtb_Assignment_h[i] * rtb_Switch_c_idx_0)) +
-      ctl_controller0_U_cmc_msg_f->mass * rtb_Assignment_b_1[i];
+    rtb_SumofElements1 = rtb_Switch_vel_kd[i] * rtb_Switch_mass *
+      (rtb_Assignment_h[(int32_T)(i + 6)] * rtb_Switch_c_idx_2 +
+       (rtb_Assignment_h[(int32_T)(i + 3)] * rtb_Switch_c_idx_1 +
+        rtb_Assignment_h[i] * rtb_Switch_c_idx_0)) + rtb_Switch_mass *
+      rtb_Assignment_b_1[i];
 
-    // DotProduct: '<S34>/Dot Product'
-    rtb_Sqrt_bt += rtb_SumofElements * rtb_SumofElements;
+    // DotProduct: '<S54>/Dot Product'
+    rtb_SumofElements += rtb_SumofElements1 * rtb_SumofElements1;
 
-    // Sum: '<S12>/Sum' incorporates:
-    //   Product: '<S12>/Divide3'
+    // Sum: '<S30>/Sum' incorporates:
+    //   Product: '<S30>/Divide3'
 
-    rtb_Divide_f[i] = rtb_SumofElements;
+    rtb_Sum_f[i] = rtb_SumofElements1;
   }
 
-  // Sqrt: '<S34>/Sqrt' incorporates:
-  //   DotProduct: '<S34>/Dot Product'
+  // Sqrt: '<S54>/Sqrt' incorporates:
+  //   DotProduct: '<S54>/Dot Product'
 
-  rtb_Sqrt_bt = (real32_T)sqrt((real_T)rtb_Sqrt_bt);
+  rtb_SumofElements = (real32_T)sqrt((real_T)rtb_SumofElements);
 
-  // If: '<S31>/If' incorporates:
-  //   DataTypeConversion: '<S31>/Data Type Conversion'
-  //   Inport: '<S32>/In1'
+  // If: '<S51>/If' incorporates:
+  //   DataTypeConversion: '<S51>/Data Type Conversion'
+  //   Inport: '<S52>/In1'
 
-  if ((real_T)rtb_Sqrt_bt > 1.0E-7) {
-    // Outputs for IfAction SubSystem: '<S31>/Normalize' incorporates:
-    //   ActionPort: '<S33>/Action Port'
+  if ((real_T)rtb_SumofElements > 1.0E-7) {
+    // Outputs for IfAction SubSystem: '<S51>/Normalize' incorporates:
+    //   ActionPort: '<S53>/Action Port'
 
-    // Product: '<S33>/Divide'
-    rtb_Switch_c_idx_0 = rtb_Divide_f[0] / rtb_Sqrt_bt;
-    rtb_Switch_c_idx_1 = rtb_Divide_f[1] / rtb_Sqrt_bt;
-    rtb_Switch_c_idx_2 = rtb_Divide_f[2] / rtb_Sqrt_bt;
+    // Product: '<S53>/Divide'
+    rtb_Switch_c_idx_0 = rtb_Sum_f[0] / rtb_SumofElements;
+    rtb_Switch_c_idx_1 = rtb_Sum_f[1] / rtb_SumofElements;
+    rtb_Switch_c_idx_2 = rtb_Sum_f[2] / rtb_SumofElements;
 
-    // End of Outputs for SubSystem: '<S31>/Normalize'
+    // End of Outputs for SubSystem: '<S51>/Normalize'
   } else {
-    // Outputs for IfAction SubSystem: '<S31>/No-op' incorporates:
-    //   ActionPort: '<S32>/Action Port'
+    // Outputs for IfAction SubSystem: '<S51>/No-op' incorporates:
+    //   ActionPort: '<S52>/Action Port'
 
-    rtb_Switch_c_idx_0 = rtb_Divide_f[0];
-    rtb_Switch_c_idx_1 = rtb_Divide_f[1];
-    rtb_Switch_c_idx_2 = rtb_Divide_f[2];
+    rtb_Switch_c_idx_0 = rtb_Sum_f[0];
+    rtb_Switch_c_idx_1 = rtb_Sum_f[1];
+    rtb_Switch_c_idx_2 = rtb_Sum_f[2];
 
-    // End of Outputs for SubSystem: '<S31>/No-op'
+    // End of Outputs for SubSystem: '<S51>/No-op'
   }
 
-  // End of If: '<S31>/If'
+  // End of If: '<S51>/If'
 
-  // Switch: '<S12>/Switch' incorporates:
-  //   Constant: '<S12>/Constant3'
+  // Switch: '<S30>/Switch' incorporates:
+  //   Constant: '<S30>/Constant3'
 
-  if ((int32_T)rtb_Switch2 != 0) {
-    // Switch: '<S19>/Switch' incorporates:
-    //   Constant: '<S12>/Constant2'
-    //   DotProduct: '<S30>/Dot Product'
-    //   Product: '<S19>/Product'
-    //   RelationalOperator: '<S19>/Relational Operator'
-    //   Sqrt: '<S30>/Sqrt'
+  if ((int32_T)rtb_Switch12 != 0) {
+    // Switch: '<S39>/Switch' incorporates:
+    //   Constant: '<S30>/Constant2'
+    //   DotProduct: '<S50>/Dot Product'
+    //   Product: '<S39>/Product'
+    //   RelationalOperator: '<S39>/Relational Operator'
+    //   Sqrt: '<S50>/Sqrt'
 
-    if (!((real32_T)sqrt((real_T)((rtb_Divide_f[0] * rtb_Divide_f[0] +
-            rtb_Divide_f[1] * rtb_Divide_f[1]) + rtb_Divide_f[2] * rtb_Divide_f
-           [2])) < ctl_controller0_P->tun_ctl_linear_force_limit)) {
-      rtb_Divide_f[0] = ctl_controller0_P->tun_ctl_linear_force_limit *
+    if (!((real32_T)sqrt((real_T)((rtb_Sum_f[0] * rtb_Sum_f[0] + rtb_Sum_f[1] *
+            rtb_Sum_f[1]) + rtb_Sum_f[2] * rtb_Sum_f[2])) <
+          ctl_controller0_P->tun_ctl_linear_force_limit)) {
+      rtb_Sum_f[0] = ctl_controller0_P->tun_ctl_linear_force_limit *
         rtb_Switch_c_idx_0;
-      rtb_Divide_f[1] = ctl_controller0_P->tun_ctl_linear_force_limit *
+      rtb_Sum_f[1] = ctl_controller0_P->tun_ctl_linear_force_limit *
         rtb_Switch_c_idx_1;
-      rtb_Divide_f[2] = ctl_controller0_P->tun_ctl_linear_force_limit *
+      rtb_Sum_f[2] = ctl_controller0_P->tun_ctl_linear_force_limit *
         rtb_Switch_c_idx_2;
     }
 
-    // End of Switch: '<S19>/Switch'
-    rtb_Switch_c_idx_0 = rtb_Divide_f[0];
-    rtb_Switch_c_idx_1 = rtb_Divide_f[1];
-    rtb_Switch_c_idx_2 = rtb_Divide_f[2];
+    // End of Switch: '<S39>/Switch'
+    rtb_Switch_c_idx_0 = rtb_Sum_f[0];
+    rtb_Switch_c_idx_1 = rtb_Sum_f[1];
+    rtb_Switch_c_idx_2 = rtb_Sum_f[2];
   } else {
     rtb_Switch_c_idx_0 = ctl_controller0_P->Constant3_Value_e[0];
     rtb_Switch_c_idx_1 = ctl_controller0_P->Constant3_Value_e[1];
     rtb_Switch_c_idx_2 = ctl_controller0_P->Constant3_Value_e[2];
   }
 
-  // End of Switch: '<S12>/Switch'
+  // End of Switch: '<S30>/Switch'
 
-  // Switch: '<S13>/Switch3' incorporates:
+  // Switch: '<S31>/Switch3' incorporates:
   //   BusCreator: '<S4>/Bus Creator1'
-  //   Constant: '<S13>/Constant2'
-  //   Constant: '<S37>/Constant'
-  //   RelationalOperator: '<S37>/Compare'
+  //   Constant: '<S31>/Constant2'
+  //   Constant: '<S57>/Constant'
+  //   RelationalOperator: '<S57>/Compare'
   //   Switch: '<S2>/Switch11'
 
-  if (rtb_Switch2 <= ctl_controller0_P->CompareToConstant2_const_o) {
-    rtb_Gain_ci[0] = ctl_controller0_P->Constant2_Value_o[0];
-    rtb_Gain_ci[1] = ctl_controller0_P->Constant2_Value_o[1];
-    rtb_Gain_ci[2] = ctl_controller0_P->Constant2_Value_o[2];
+  if (rtb_Switch12 <= ctl_controller0_P->CompareToConstant2_const_o) {
+    rtb_Divide_f[0] = ctl_controller0_P->Constant2_Value_o[0];
+    rtb_Divide_f[1] = ctl_controller0_P->Constant2_Value_o[1];
+    rtb_Divide_f[2] = ctl_controller0_P->Constant2_Value_o[2];
   } else if (rtb_LogicalOperator2) {
     // Switch: '<S2>/Switch11' incorporates:
     //   Constant: '<S2>/Constant3'
 
-    rtb_Gain_ci[0] = ctl_controller0_P->Constant3_Value_j[0];
-    rtb_Gain_ci[1] = ctl_controller0_P->Constant3_Value_j[1];
-    rtb_Gain_ci[2] = ctl_controller0_P->Constant3_Value_j[2];
+    rtb_Divide_f[0] = ctl_controller0_P->Constant3_Value_j[0];
+    rtb_Divide_f[1] = ctl_controller0_P->Constant3_Value_j[1];
+    rtb_Divide_f[2] = ctl_controller0_P->Constant3_Value_j[2];
   } else {
-    rtb_Gain_ci[0] = rtb_Sum4_o_idx_0;
-    rtb_Gain_ci[1] = rtb_Sum4_o_idx_1;
-    rtb_Gain_ci[2] = rtb_SumofElements1;
+    rtb_Divide_f[0] = rtb_Sum4_o_idx_0;
+    rtb_Divide_f[1] = rtb_Sum4_o_idx_1;
+    rtb_Divide_f[2] = rtb_Sum4_p;
   }
 
-  // End of Switch: '<S13>/Switch3'
+  // End of Switch: '<S31>/Switch3'
 
-  // DataTypeConversion: '<S46>/Conversion' incorporates:
-  //   Constant: '<S45>/Constant2'
+  // DataTypeConversion: '<S68>/Conversion' incorporates:
+  //   Constant: '<S67>/Constant2'
 
   for (i = 0; i < 9; i++) {
     rtb_Assignment_h[i] = (real32_T)ctl_controller0_P->Constant2_Value_g[i];
   }
 
-  // End of DataTypeConversion: '<S46>/Conversion'
+  // End of DataTypeConversion: '<S68>/Conversion'
 
-  // Assignment: '<S45>/Assignment'
-  rtb_Assignment_h[0] = rtb_Merge_az[3];
+  // Assignment: '<S67>/Assignment'
+  rtb_Assignment_h[0] = rtb_Merge_j[3];
 
-  // Gain: '<S42>/Gain'
-  rtb_Divide_f[0] = ctl_controller0_P->Gain_Gain_pf * rtb_Merge_az[0];
+  // Gain: '<S64>/Gain'
+  rtb_Sum_f[0] = ctl_controller0_P->Gain_Gain_pf * rtb_Merge_j[0];
 
-  // Assignment: '<S45>/Assignment'
-  rtb_Assignment_h[4] = rtb_Merge_az[3];
+  // Assignment: '<S67>/Assignment'
+  rtb_Assignment_h[4] = rtb_Merge_j[3];
 
-  // Gain: '<S42>/Gain'
-  rtb_Divide_f[1] = ctl_controller0_P->Gain_Gain_pf * rtb_Merge_az[1];
+  // Gain: '<S64>/Gain'
+  rtb_Sum_f[1] = ctl_controller0_P->Gain_Gain_pf * rtb_Merge_j[1];
 
-  // Assignment: '<S45>/Assignment'
-  rtb_Assignment_h[8] = rtb_Merge_az[3];
+  // Assignment: '<S67>/Assignment'
+  rtb_Assignment_h[8] = rtb_Merge_j[3];
 
-  // Gain: '<S42>/Gain'
-  rtb_Divide_f[2] = ctl_controller0_P->Gain_Gain_pf * rtb_Merge_az[2];
+  // Gain: '<S64>/Gain'
+  rtb_Sum_f[2] = ctl_controller0_P->Gain_Gain_pf * rtb_Merge_j[2];
 
-  // Sum: '<S45>/Sum2' incorporates:
-  //   Constant: '<S47>/Constant3'
-  //   DataTypeConversion: '<S48>/Conversion'
-  //   Gain: '<S47>/Gain'
-  //   Gain: '<S47>/Gain1'
-  //   Gain: '<S47>/Gain2'
+  // Sum: '<S67>/Sum2' incorporates:
+  //   Constant: '<S69>/Constant3'
+  //   DataTypeConversion: '<S70>/Conversion'
+  //   Gain: '<S69>/Gain'
+  //   Gain: '<S69>/Gain1'
+  //   Gain: '<S69>/Gain2'
 
-  tmp_2[0] = (real32_T)ctl_controller0_P->Constant3_Value_a;
-  tmp_2[1] = rtb_Divide_f[2];
-  tmp_2[2] = ctl_controller0_P->Gain_Gain_k * rtb_Divide_f[1];
-  tmp_2[3] = ctl_controller0_P->Gain1_Gain_jz * rtb_Divide_f[2];
-  tmp_2[4] = (real32_T)ctl_controller0_P->Constant3_Value_a;
-  tmp_2[5] = rtb_Divide_f[0];
-  tmp_2[6] = rtb_Divide_f[1];
-  tmp_2[7] = ctl_controller0_P->Gain2_Gain_n * rtb_Divide_f[0];
-  tmp_2[8] = (real32_T)ctl_controller0_P->Constant3_Value_a;
+  tmp_2[0] = (real32_T)ctl_controller0_P->Constant3_Value_a5;
+  tmp_2[1] = rtb_Sum_f[2];
+  tmp_2[2] = ctl_controller0_P->Gain_Gain_k * rtb_Sum_f[1];
+  tmp_2[3] = ctl_controller0_P->Gain1_Gain_jz * rtb_Sum_f[2];
+  tmp_2[4] = (real32_T)ctl_controller0_P->Constant3_Value_a5;
+  tmp_2[5] = rtb_Sum_f[0];
+  tmp_2[6] = rtb_Sum_f[1];
+  tmp_2[7] = ctl_controller0_P->Gain2_Gain_n * rtb_Sum_f[0];
+  tmp_2[8] = (real32_T)ctl_controller0_P->Constant3_Value_a5;
 
-  // Concatenate: '<S45>/Matrix Concatenate' incorporates:
-  //   Gain: '<S45>/Gain1'
-  //   Sum: '<S45>/Sum2'
+  // Concatenate: '<S67>/Matrix Concatenate' incorporates:
+  //   Gain: '<S67>/Gain1'
+  //   Sum: '<S67>/Sum2'
 
   for (i = 0; i < 3; i++) {
     rtb_VectorConcatenate[(int32_T)(i << 2)] = rtb_Assignment_h[(int32_T)(3 * i)]
@@ -1880,110 +2237,110 @@ void ctl_controller0_step(RT_MODEL_ctl_controller0_T *const ctl_controller0_M,
       [(int32_T)((int32_T)(3 * i) + 2)] + tmp_2[(int32_T)((int32_T)(3 * i) + 2)];
   }
 
-  rtb_VectorConcatenate[3] = ctl_controller0_P->Gain1_Gain_od * rtb_Divide_f[0];
-  rtb_VectorConcatenate[7] = ctl_controller0_P->Gain1_Gain_od * rtb_Divide_f[1];
-  rtb_VectorConcatenate[11] = ctl_controller0_P->Gain1_Gain_od * rtb_Divide_f[2];
+  rtb_VectorConcatenate[3] = ctl_controller0_P->Gain1_Gain_od * rtb_Sum_f[0];
+  rtb_VectorConcatenate[7] = ctl_controller0_P->Gain1_Gain_od * rtb_Sum_f[1];
+  rtb_VectorConcatenate[11] = ctl_controller0_P->Gain1_Gain_od * rtb_Sum_f[2];
 
-  // End of Concatenate: '<S45>/Matrix Concatenate'
+  // End of Concatenate: '<S67>/Matrix Concatenate'
 
-  // Reshape: '<S43>/Reshape1'
-  rtb_VectorConcatenate[12] = rtb_Divide_f[0];
-  rtb_VectorConcatenate[13] = rtb_Divide_f[1];
-  rtb_VectorConcatenate[14] = rtb_Divide_f[2];
-  rtb_VectorConcatenate[15] = rtb_Merge_az[3];
+  // Reshape: '<S65>/Reshape1'
+  rtb_VectorConcatenate[12] = rtb_Sum_f[0];
+  rtb_VectorConcatenate[13] = rtb_Sum_f[1];
+  rtb_VectorConcatenate[14] = rtb_Sum_f[2];
+  rtb_VectorConcatenate[15] = rtb_Merge_j[3];
 
-  // Product: '<S43>/Product' incorporates:
+  // Product: '<S65>/Product' incorporates:
   //   BusCreator: '<S4>/Bus Creator1'
   //   Switch: '<S2>/Switch7'
 
   if (rtb_LogicalOperator2) {
-    rtb_SumofElements = rtb_Merge[0];
-    rtb_LogicalOperator2_0 = rtb_Merge[1];
-    rtb_LogicalOperator2_idx_2 = rtb_Merge[2];
-    rtb_LogicalOperator2_idx_3 = rtb_Merge[3];
+    rtb_SumofElements = rtb_Product_b[0];
+    rtb_SumofElements1 = rtb_Product_b[1];
+    rtb_Sqrt = rtb_Product_b[2];
+    rtb_Gain1_j_idx_2 = rtb_Product_b[3];
   } else {
-    rtb_SumofElements = rtb_Product1_m[0];
-    rtb_LogicalOperator2_0 = rtb_Product1_m[1];
-    rtb_LogicalOperator2_idx_2 = rtb_Product1_m[2];
-    rtb_LogicalOperator2_idx_3 = rtb_Product1_m[3];
+    rtb_SumofElements = rtb_Merge_pa[0];
+    rtb_SumofElements1 = rtb_Merge_pa[1];
+    rtb_Sqrt = rtb_Merge_pa[2];
+    rtb_Gain1_j_idx_2 = rtb_Merge_pa[3];
   }
 
   for (i = 0; i < 4; i++) {
-    rtb_Sqrt_bt = rtb_VectorConcatenate[(int32_T)(i + 12)] *
-      rtb_LogicalOperator2_idx_3 + (rtb_VectorConcatenate[(int32_T)(i + 8)] *
-      rtb_LogicalOperator2_idx_2 + (rtb_VectorConcatenate[(int32_T)(i + 4)] *
-      rtb_LogicalOperator2_0 + rtb_VectorConcatenate[i] * rtb_SumofElements));
-    rtb_Product_f[i] = rtb_Sqrt_bt;
+    rtb_Switch_cmd_state_a_A_B_IS_1 = rtb_VectorConcatenate[(int32_T)(i + 12)] *
+      rtb_Gain1_j_idx_2 + (rtb_VectorConcatenate[(int32_T)(i + 8)] * rtb_Sqrt +
+      (rtb_VectorConcatenate[(int32_T)(i + 4)] * rtb_SumofElements1 +
+       rtb_VectorConcatenate[i] * rtb_SumofElements));
+    rtb_Product1_m[i] = rtb_Switch_cmd_state_a_A_B_IS_1;
   }
 
-  // End of Product: '<S43>/Product'
+  // End of Product: '<S65>/Product'
 
-  // If: '<S44>/If' incorporates:
-  //   Inport: '<S49>/In1'
+  // If: '<S66>/If' incorporates:
+  //   Inport: '<S71>/In1'
 
-  if (rtb_Product_f[3] < 0.0F) {
-    // Outputs for IfAction SubSystem: '<S44>/Normalize' incorporates:
-    //   ActionPort: '<S50>/Action Port'
+  if (rtb_Product1_m[3] < 0.0F) {
+    // Outputs for IfAction SubSystem: '<S66>/Normalize' incorporates:
+    //   ActionPort: '<S72>/Action Port'
 
-    ctl_controller0_Normalize(rtb_Product_f, rtb_Merge_k,
+    ctl_controller0_Normalize(rtb_Product1_m, rtb_Merge,
       (P_Normalize_ctl_controller0_T *)&ctl_controller0_P->Normalize_l);
 
-    // End of Outputs for SubSystem: '<S44>/Normalize'
+    // End of Outputs for SubSystem: '<S66>/Normalize'
   } else {
-    // Outputs for IfAction SubSystem: '<S44>/No-op' incorporates:
-    //   ActionPort: '<S49>/Action Port'
+    // Outputs for IfAction SubSystem: '<S66>/No-op' incorporates:
+    //   ActionPort: '<S71>/Action Port'
 
-    rtb_Merge_k[0] = rtb_Product_f[0];
-    rtb_Merge_k[1] = rtb_Product_f[1];
-    rtb_Merge_k[2] = rtb_Product_f[2];
-    rtb_Merge_k[3] = rtb_Product_f[3];
+    rtb_Merge[0] = rtb_Product1_m[0];
+    rtb_Merge[1] = rtb_Product1_m[1];
+    rtb_Merge[2] = rtb_Product1_m[2];
+    rtb_Merge[3] = rtb_Product1_m[3];
 
-    // End of Outputs for SubSystem: '<S44>/No-op'
+    // End of Outputs for SubSystem: '<S66>/No-op'
   }
 
-  // End of If: '<S44>/If'
+  // End of If: '<S66>/If'
 
-  // Sqrt: '<S55>/Sqrt' incorporates:
-  //   DotProduct: '<S55>/Dot Product'
+  // Sqrt: '<S77>/Sqrt' incorporates:
+  //   DotProduct: '<S77>/Dot Product'
 
-  rtb_Sqrt_bt = (real32_T)sqrt((real_T)(((rtb_Merge_k[0] * rtb_Merge_k[0] +
-    rtb_Merge_k[1] * rtb_Merge_k[1]) + rtb_Merge_k[2] * rtb_Merge_k[2]) +
-    rtb_Merge_k[3] * rtb_Merge_k[3]));
+  rtb_SumofElements = (real32_T)sqrt((real_T)(((rtb_Merge[0] * rtb_Merge[0] +
+    rtb_Merge[1] * rtb_Merge[1]) + rtb_Merge[2] * rtb_Merge[2]) + rtb_Merge[3] *
+    rtb_Merge[3]));
 
-  // If: '<S51>/If' incorporates:
-  //   DataTypeConversion: '<S51>/Data Type Conversion'
-  //   Inport: '<S53>/In1'
+  // If: '<S73>/If' incorporates:
+  //   DataTypeConversion: '<S73>/Data Type Conversion'
+  //   Inport: '<S75>/In1'
 
-  if ((real_T)rtb_Sqrt_bt > 1.0E-7) {
-    // Outputs for IfAction SubSystem: '<S51>/Normalize' incorporates:
-    //   ActionPort: '<S54>/Action Port'
+  if ((real_T)rtb_SumofElements > 1.0E-7) {
+    // Outputs for IfAction SubSystem: '<S73>/Normalize' incorporates:
+    //   ActionPort: '<S76>/Action Port'
 
-    ctl_controller0_Normalize_e(rtb_Merge_k, rtb_Sqrt_bt, rtb_Product_f);
+    ctl_controller0_Normalize_e(rtb_Merge, rtb_SumofElements, rtb_Product1_m);
 
-    // End of Outputs for SubSystem: '<S51>/Normalize'
+    // End of Outputs for SubSystem: '<S73>/Normalize'
   } else {
-    // Outputs for IfAction SubSystem: '<S51>/No-op' incorporates:
-    //   ActionPort: '<S53>/Action Port'
+    // Outputs for IfAction SubSystem: '<S73>/No-op' incorporates:
+    //   ActionPort: '<S75>/Action Port'
 
-    rtb_Product_f[0] = rtb_Merge_k[0];
-    rtb_Product_f[1] = rtb_Merge_k[1];
-    rtb_Product_f[2] = rtb_Merge_k[2];
-    rtb_Product_f[3] = rtb_Merge_k[3];
+    rtb_Product1_m[0] = rtb_Merge[0];
+    rtb_Product1_m[1] = rtb_Merge[1];
+    rtb_Product1_m[2] = rtb_Merge[2];
+    rtb_Product1_m[3] = rtb_Merge[3];
 
-    // End of Outputs for SubSystem: '<S51>/No-op'
+    // End of Outputs for SubSystem: '<S73>/No-op'
   }
 
-  // End of If: '<S51>/If'
+  // End of If: '<S73>/If'
 
-  // RelationalOperator: '<S35>/Compare' incorporates:
-  //   Constant: '<S35>/Constant'
+  // RelationalOperator: '<S55>/Compare' incorporates:
+  //   Constant: '<S55>/Constant'
 
-  rtb_Compare_a = (rtb_Switch2 <= ctl_controller0_P->CompareToConstant_const_f);
+  rtb_Compare_fc = (rtb_Switch12 <= ctl_controller0_P->CompareToConstant_const_f);
 
-  // DiscreteIntegrator: '<S13>/Discrete-Time Integrator'
-  if (rtb_Compare_a || ((int32_T)
-                        ctl_controller0_DW->DiscreteTimeIntegrator_PrevRese != 0))
-  {
+  // DiscreteIntegrator: '<S31>/Discrete-Time Integrator'
+  if (rtb_Compare_fc || ((int32_T)
+                         ctl_controller0_DW->DiscreteTimeIntegrator_PrevRese !=
+                         0)) {
     ctl_controller0_DW->DiscreteTimeIntegrator_DSTATE[0] =
       ctl_controller0_P->DiscreteTimeIntegrator_IC[0];
     ctl_controller0_DW->DiscreteTimeIntegrator_DSTATE[1] =
@@ -2028,197 +2385,220 @@ void ctl_controller0_step(RT_MODEL_ctl_controller0_T *const ctl_controller0_M,
     }
   }
 
-  // Switch: '<S13>/Switch2' incorporates:
-  //   Constant: '<S13>/Constant1'
-  //   Constant: '<S36>/Constant'
-  //   DiscreteIntegrator: '<S13>/Discrete-Time Integrator'
-  //   Inport: '<Root>/cmc_msg'
-  //   Product: '<S13>/Divide1'
-  //   Product: '<S13>/Product'
-  //   RelationalOperator: '<S36>/Compare'
-  //   SignalConversion: '<S1>/Signal Conversion'
-  //   Sum: '<S13>/Sum3'
+  // Switch: '<S31>/Switch2' incorporates:
+  //   Constant: '<S31>/Constant1'
+  //   Constant: '<S56>/Constant'
+  //   DiscreteIntegrator: '<S31>/Discrete-Time Integrator'
+  //   Product: '<S31>/Product'
+  //   RelationalOperator: '<S56>/Compare'
+  //   Sum: '<S31>/Sum3'
+  //   Switch: '<S60>/Switch'
 
-  if (rtb_Switch2 <= ctl_controller0_P->CompareToConstant1_const_m) {
-    rtb_Divide_f[0] = ctl_controller0_P->Constant1_Value_o[0];
-    rtb_Divide_f[1] = ctl_controller0_P->Constant1_Value_o[1];
-    rtb_Divide_f[2] = ctl_controller0_P->Constant1_Value_o[2];
+  if (rtb_Switch12 <= ctl_controller0_P->CompareToConstant1_const_m) {
+    rtb_Switch_b[0] = ctl_controller0_P->Constant1_Value_o[0];
+    rtb_Switch_b[1] = ctl_controller0_P->Constant1_Value_o[1];
+    rtb_Switch_b[2] = ctl_controller0_P->Constant1_Value_o[2];
   } else {
-    rtb_Divide_f[0] = ctl_controller0_U_cmc_msg_f->att_kp[0] /
-      ctl_controller0_U_cmc_msg_f->omega_kd[0] * rtb_Product_f[0] +
+    if (rtb_Switch_omega_kd_idx_0 != 0.0F) {
+      // Sum: '<S31>/Sum3' incorporates:
+      //   Product: '<S31>/Product'
+      //   Product: '<S60>/Divide1'
+      //   Switch: '<S60>/Switch'
+
+      rtb_SumofElements = rtb_Switch_b[0] / rtb_Switch_omega_kd_idx_0;
+    } else {
+      // Sum: '<S31>/Sum3' incorporates:
+      //   Switch: '<S60>/Switch'
+
+      rtb_SumofElements = 0.0F;
+    }
+
+    rtb_Switch_b[0] = rtb_Product1_m[0] * rtb_SumofElements +
       ctl_controller0_DW->DiscreteTimeIntegrator_DSTATE[0];
-    rtb_Divide_f[1] = ctl_controller0_U_cmc_msg_f->att_kp[1] /
-      ctl_controller0_U_cmc_msg_f->omega_kd[1] * rtb_Product_f[1] +
+
+    // Sum: '<S31>/Sum3' incorporates:
+    //   DiscreteIntegrator: '<S31>/Discrete-Time Integrator'
+    //   Product: '<S31>/Product'
+    //   Product: '<S60>/Divide1'
+    //   Switch: '<S60>/Switch'
+
+    if (rtb_Switch_omega_kd_idx_1 != 0.0F) {
+      rtb_SumofElements = rtb_Switch_b[1] / rtb_Switch_omega_kd_idx_1;
+    } else {
+      rtb_SumofElements = 0.0F;
+    }
+
+    rtb_Switch_b[1] = rtb_Product1_m[1] * rtb_SumofElements +
       ctl_controller0_DW->DiscreteTimeIntegrator_DSTATE[1];
-    rtb_Divide_f[2] = ctl_controller0_U_cmc_msg_f->att_kp[2] /
-      ctl_controller0_U_cmc_msg_f->omega_kd[2] * rtb_Product_f[2] +
+
+    // Sum: '<S31>/Sum3' incorporates:
+    //   DiscreteIntegrator: '<S31>/Discrete-Time Integrator'
+    //   Product: '<S31>/Product'
+    //   Product: '<S60>/Divide1'
+    //   Switch: '<S60>/Switch'
+
+    if (rtb_Switch_omega_kd_idx_2 != 0.0F) {
+      rtb_SumofElements = rtb_Switch_b[2] / rtb_Switch_omega_kd_idx_2;
+    } else {
+      rtb_SumofElements = 0.0F;
+    }
+
+    rtb_Switch_b[2] = rtb_Product1_m[2] * rtb_SumofElements +
       ctl_controller0_DW->DiscreteTimeIntegrator_DSTATE[2];
   }
 
-  // End of Switch: '<S13>/Switch2'
+  // End of Switch: '<S31>/Switch2'
 
-  // Product: '<S13>/Product3' incorporates:
-  //   Inport: '<Root>/cmc_msg'
-  //   Product: '<S13>/Product4'
-  //   SignalConversion: '<S1>/Signal Conversion'
-  //   Sum: '<S13>/Sum'
+  // Product: '<S31>/Product3' incorporates:
+  //   Product: '<S31>/Product4'
+  //   Sum: '<S31>/Sum'
 
-  rtb_Product3_n[0] = ((rtb_Gain_ci[0] + rtb_Divide_f[0]) -
-                       rtb_Switch_omega_B_ISS_B_idx_0) *
-    (ctl_controller0_U_cmc_msg_f->omega_kd[0] *
-     ctl_controller0_U_cmc_msg_f->inertia_matrix[0]);
-  rtb_Product3_n[1] = ((rtb_Gain_ci[1] + rtb_Divide_f[1]) -
-                       rtb_Switch_omega_B_ISS_B_idx_1) *
-    (ctl_controller0_U_cmc_msg_f->omega_kd[1] *
-     ctl_controller0_U_cmc_msg_f->inertia_matrix[4]);
-  rtb_Product3_n[2] = ((rtb_Gain_ci[2] + rtb_Divide_f[2]) -
-                       rtb_Switch_omega_B_ISS_B_idx_2) *
-    (ctl_controller0_U_cmc_msg_f->omega_kd[2] *
-     ctl_controller0_U_cmc_msg_f->inertia_matrix[8]);
+  rtb_Sum_f[0] = ((rtb_Divide_f[0] + rtb_Switch_b[0]) -
+                  rtb_Switch_est_omega_B_ISS_B_id) * (rtb_Switch_omega_kd_idx_0 *
+    rtb_Switch_inertia_matrix[0]);
+  rtb_Sum_f[1] = ((rtb_Divide_f[1] + rtb_Switch_b[1]) -
+                  rtb_Switch_est_omega_B_ISS_B__0) * (rtb_Switch_omega_kd_idx_1 *
+    rtb_Switch_inertia_matrix[4]);
+  rtb_Sum_f[2] = ((rtb_Divide_f[2] + rtb_Switch_b[2]) -
+                  rtb_Switch_est_omega_B_ISS_B__1) * (rtb_Switch_omega_kd_idx_2 *
+    rtb_Switch_inertia_matrix[8]);
 
-  // Product: '<S13>/Product2' incorporates:
-  //   Inport: '<Root>/cmc_msg'
-  //   SignalConversion: '<S1>/Signal Conversion'
-
+  // Product: '<S31>/Product2'
   for (i = 0; i < 3; i++) {
-    rtb_Gain_ci[i] = ctl_controller0_U_cmc_msg_f->inertia_matrix[(int32_T)(i + 6)]
-      * rtb_Switch_omega_B_ISS_B_idx_2 +
-      (ctl_controller0_U_cmc_msg_f->inertia_matrix[(int32_T)(i + 3)] *
-       rtb_Switch_omega_B_ISS_B_idx_1 +
-       ctl_controller0_U_cmc_msg_f->inertia_matrix[i] *
-       rtb_Switch_omega_B_ISS_B_idx_0);
+    rtb_Divide_f[i] = rtb_Switch_inertia_matrix[(int32_T)(i + 6)] *
+      rtb_Switch_est_omega_B_ISS_B__1 + (rtb_Switch_inertia_matrix[(int32_T)(i +
+      3)] * rtb_Switch_est_omega_B_ISS_B__0 + rtb_Switch_inertia_matrix[i] *
+      rtb_Switch_est_omega_B_ISS_B_id);
   }
 
-  // End of Product: '<S13>/Product2'
+  // End of Product: '<S31>/Product2'
 
-  // Switch: '<S13>/Switch1' incorporates:
-  //   Constant: '<S13>/Constant4'
+  // Switch: '<S31>/Switch1' incorporates:
+  //   Constant: '<S31>/Constant4'
 
-  if ((int32_T)rtb_Switch2 != 0) {
-    // Product: '<S13>/Divide3' incorporates:
+  if ((int32_T)rtb_Switch12 != 0) {
+    // Product: '<S31>/Divide3' incorporates:
     //   Constant: '<S2>/Constant1'
-    //   Gain: '<S13>/Gain'
+    //   Gain: '<S31>/Gain'
     //   Switch: '<S2>/Switch1'
 
     if (rtb_LogicalOperator2) {
-      rtb_LogicalOperator2_0 = ctl_controller0_P->Constant1_Value_a[0];
+      rtb_Switch_cmd_state_a_A_B_IS_1 = ctl_controller0_P->Constant1_Value_a[0];
     } else {
-      rtb_LogicalOperator2_0 = rtb_Switch_h_alpha_B_ISS_B_id_1;
+      rtb_Switch_cmd_state_a_A_B_IS_1 = rtb_Switch_cmd_state_b_alpha__1;
     }
 
-    rtb_Sqrt_bt = ctl_controller0_P->tun_alpha_gain[0] * rtb_LogicalOperator2_0;
+    rtb_SumofElements = ctl_controller0_P->tun_alpha_gain[0] *
+      rtb_Switch_cmd_state_a_A_B_IS_1;
     if (rtb_LogicalOperator2) {
-      rtb_LogicalOperator2_0 = ctl_controller0_P->Constant1_Value_a[1];
+      rtb_Switch_cmd_state_a_A_B_IS_1 = ctl_controller0_P->Constant1_Value_a[1];
     } else {
-      rtb_LogicalOperator2_0 = rtb_Switch_h_alpha_B_ISS_B_id_0;
+      rtb_Switch_cmd_state_a_A_B_IS_1 = rtb_Switch_cmd_state_b_alpha__0;
     }
 
-    rtb_SumofElements = ctl_controller0_P->tun_alpha_gain[1] *
-      rtb_LogicalOperator2_0;
+    rtb_SumofElements1 = ctl_controller0_P->tun_alpha_gain[1] *
+      rtb_Switch_cmd_state_a_A_B_IS_1;
     if (rtb_LogicalOperator2) {
-      rtb_LogicalOperator2_0 = ctl_controller0_P->Constant1_Value_a[2];
+      rtb_Switch_cmd_state_a_A_B_IS_1 = ctl_controller0_P->Constant1_Value_a[2];
     } else {
-      rtb_LogicalOperator2_0 = rtb_Switch_h_alpha_B_ISS_B_idx_;
+      rtb_Switch_cmd_state_a_A_B_IS_1 = rtb_Switch_cmd_state_b_alpha_B_;
     }
 
-    rtb_LogicalOperator2_0 *= ctl_controller0_P->tun_alpha_gain[2];
+    rtb_Switch_cmd_state_a_A_B_IS_1 *= ctl_controller0_P->tun_alpha_gain[2];
 
-    // SignalConversion: '<S38>/TmpSignal ConversionAtProductInport1' incorporates:
-    //   Constant: '<S40>/Constant3'
-    //   DataTypeConversion: '<S41>/Conversion'
-    //   Gain: '<S40>/Gain'
-    //   Gain: '<S40>/Gain1'
-    //   Gain: '<S40>/Gain2'
-    //   Product: '<S38>/Product'
+    // SignalConversion: '<S58>/TmpSignal ConversionAtProductInport1' incorporates:
+    //   Constant: '<S62>/Constant3'
+    //   DataTypeConversion: '<S63>/Conversion'
+    //   Gain: '<S62>/Gain'
+    //   Gain: '<S62>/Gain1'
+    //   Gain: '<S62>/Gain2'
+    //   Product: '<S58>/Product'
 
     tmp_3[0] = (real32_T)ctl_controller0_P->Constant3_Value_c;
-    tmp_3[1] = rtb_Gain_ci[2];
-    tmp_3[2] = ctl_controller0_P->Gain_Gain * rtb_Gain_ci[1];
-    tmp_3[3] = ctl_controller0_P->Gain1_Gain * rtb_Gain_ci[2];
+    tmp_3[1] = rtb_Divide_f[2];
+    tmp_3[2] = ctl_controller0_P->Gain_Gain * rtb_Divide_f[1];
+    tmp_3[3] = ctl_controller0_P->Gain1_Gain * rtb_Divide_f[2];
     tmp_3[4] = (real32_T)ctl_controller0_P->Constant3_Value_c;
-    tmp_3[5] = rtb_Gain_ci[0];
-    tmp_3[6] = rtb_Gain_ci[1];
-    tmp_3[7] = ctl_controller0_P->Gain2_Gain * rtb_Gain_ci[0];
+    tmp_3[5] = rtb_Divide_f[0];
+    tmp_3[6] = rtb_Divide_f[1];
+    tmp_3[7] = ctl_controller0_P->Gain2_Gain * rtb_Divide_f[0];
     tmp_3[8] = (real32_T)ctl_controller0_P->Constant3_Value_c;
 
-    // Product: '<S38>/Product' incorporates:
-    //   Inport: '<Root>/cmc_msg'
-    //   Product: '<S13>/Divide3'
-    //   SignalConversion: '<S1>/Signal Conversion'
-    //   Sum: '<S13>/Sum1'
+    // Product: '<S58>/Product' incorporates:
+    //   Product: '<S31>/Divide3'
+    //   Sum: '<S31>/Sum1'
 
     for (i = 0; i < 3; i++) {
-      rtb_Divide_f[i] = (((ctl_controller0_U_cmc_msg_f->inertia_matrix[(int32_T)
-                           (i + 3)] * rtb_SumofElements +
-                           ctl_controller0_U_cmc_msg_f->inertia_matrix[i] *
-                           rtb_Sqrt_bt) +
-                          ctl_controller0_U_cmc_msg_f->inertia_matrix[(int32_T)
-                          (i + 6)] * rtb_LogicalOperator2_0) + rtb_Product3_n[i])
-        - (tmp_3[(int32_T)(i + 6)] * rtb_Switch_omega_B_ISS_B_idx_2 + (tmp_3
-            [(int32_T)(i + 3)] * rtb_Switch_omega_B_ISS_B_idx_1 + tmp_3[i] *
-            rtb_Switch_omega_B_ISS_B_idx_0));
+      rtb_Switch_b[i] = (((rtb_Switch_inertia_matrix[(int32_T)(i + 3)] *
+                           rtb_SumofElements1 + rtb_Switch_inertia_matrix[i] *
+                           rtb_SumofElements) + rtb_Switch_inertia_matrix
+                          [(int32_T)(i + 6)] * rtb_Switch_cmd_state_a_A_B_IS_1)
+                         + rtb_Sum_f[i]) - (tmp_3[(int32_T)(i + 6)] *
+        rtb_Switch_est_omega_B_ISS_B__1 + (tmp_3[(int32_T)(i + 3)] *
+        rtb_Switch_est_omega_B_ISS_B__0 + tmp_3[i] *
+        rtb_Switch_est_omega_B_ISS_B_id));
     }
   } else {
-    rtb_Divide_f[0] = ctl_controller0_P->Constant4_Value_f[0];
-    rtb_Divide_f[1] = ctl_controller0_P->Constant4_Value_f[1];
-    rtb_Divide_f[2] = ctl_controller0_P->Constant4_Value_f[2];
+    rtb_Switch_b[0] = ctl_controller0_P->Constant4_Value_f[0];
+    rtb_Switch_b[1] = ctl_controller0_P->Constant4_Value_f[1];
+    rtb_Switch_b[2] = ctl_controller0_P->Constant4_Value_f[2];
   }
 
-  // End of Switch: '<S13>/Switch1'
+  // End of Switch: '<S31>/Switch1'
 
-  // Sum: '<S59>/Sum1'
-  rtb_Gain1_j_idx_0 -= rtb_Switch_P_B_ISS_ISS_idx_0;
-  rtb_Gain1_j_idx_1 -= rtb_Switch_P_B_ISS_ISS_idx_1;
-  rtb_Switch_P_B_ISS_ISS_idx_0 = rtb_Gain1_j_idx_2 -
-    rtb_Switch_P_B_ISS_ISS_idx_2;
+  // Sum: '<S81>/Sum1'
+  rtb_Gain1_j_idx_0 -= rtb_Switch_est_P_B_ISS_ISS_idx_;
+  rtb_Gain1_j_idx_1 -= rtb_Switch_est_P_B_ISS_ISS_id_0;
+  rtb_Switch_est_P_B_ISS_ISS_idx_ = rtb_Switch_cmd_state_a_P_B_IS_0 -
+    rtb_Switch_est_P_B_ISS_ISS_id_1;
 
-  // DataTypeConversion: '<S79>/Conversion' incorporates:
-  //   Constant: '<S78>/Constant2'
+  // DataTypeConversion: '<S101>/Conversion' incorporates:
+  //   Constant: '<S100>/Constant2'
 
   for (i = 0; i < 9; i++) {
     rtb_Assignment_h[i] = (real32_T)ctl_controller0_P->Constant2_Value_i[i];
   }
 
-  // End of DataTypeConversion: '<S79>/Conversion'
+  // End of DataTypeConversion: '<S101>/Conversion'
 
-  // Assignment: '<S78>/Assignment'
-  rtb_Assignment_h[0] = rtb_Merge_az[3];
+  // Assignment: '<S100>/Assignment'
+  rtb_Assignment_h[0] = rtb_Merge_j[3];
 
-  // Gain: '<S75>/Gain'
-  rtb_Gain_ci[0] = ctl_controller0_P->Gain_Gain_is * rtb_Merge_az[0];
+  // Gain: '<S97>/Gain'
+  rtb_Divide_f[0] = ctl_controller0_P->Gain_Gain_is * rtb_Merge_j[0];
 
-  // Assignment: '<S78>/Assignment'
-  rtb_Assignment_h[4] = rtb_Merge_az[3];
+  // Assignment: '<S100>/Assignment'
+  rtb_Assignment_h[4] = rtb_Merge_j[3];
 
-  // Gain: '<S75>/Gain'
-  rtb_Gain_ci[1] = ctl_controller0_P->Gain_Gain_is * rtb_Merge_az[1];
+  // Gain: '<S97>/Gain'
+  rtb_Divide_f[1] = ctl_controller0_P->Gain_Gain_is * rtb_Merge_j[1];
 
-  // Assignment: '<S78>/Assignment'
-  rtb_Assignment_h[8] = rtb_Merge_az[3];
+  // Assignment: '<S100>/Assignment'
+  rtb_Assignment_h[8] = rtb_Merge_j[3];
 
-  // Gain: '<S75>/Gain'
-  rtb_Gain_ci[2] = ctl_controller0_P->Gain_Gain_is * rtb_Merge_az[2];
+  // Gain: '<S97>/Gain'
+  rtb_Divide_f[2] = ctl_controller0_P->Gain_Gain_is * rtb_Merge_j[2];
 
-  // Sum: '<S78>/Sum2' incorporates:
-  //   Constant: '<S80>/Constant3'
-  //   DataTypeConversion: '<S81>/Conversion'
-  //   Gain: '<S80>/Gain'
-  //   Gain: '<S80>/Gain1'
-  //   Gain: '<S80>/Gain2'
+  // Sum: '<S100>/Sum2' incorporates:
+  //   Constant: '<S102>/Constant3'
+  //   DataTypeConversion: '<S103>/Conversion'
+  //   Gain: '<S102>/Gain'
+  //   Gain: '<S102>/Gain1'
+  //   Gain: '<S102>/Gain2'
 
   tmp_4[0] = (real32_T)ctl_controller0_P->Constant3_Value_n;
-  tmp_4[1] = rtb_Gain_ci[2];
-  tmp_4[2] = ctl_controller0_P->Gain_Gain_m2 * rtb_Gain_ci[1];
-  tmp_4[3] = ctl_controller0_P->Gain1_Gain_bs * rtb_Gain_ci[2];
+  tmp_4[1] = rtb_Divide_f[2];
+  tmp_4[2] = ctl_controller0_P->Gain_Gain_m2 * rtb_Divide_f[1];
+  tmp_4[3] = ctl_controller0_P->Gain1_Gain_bs * rtb_Divide_f[2];
   tmp_4[4] = (real32_T)ctl_controller0_P->Constant3_Value_n;
-  tmp_4[5] = rtb_Gain_ci[0];
-  tmp_4[6] = rtb_Gain_ci[1];
-  tmp_4[7] = ctl_controller0_P->Gain2_Gain_o * rtb_Gain_ci[0];
+  tmp_4[5] = rtb_Divide_f[0];
+  tmp_4[6] = rtb_Divide_f[1];
+  tmp_4[7] = ctl_controller0_P->Gain2_Gain_o * rtb_Divide_f[0];
   tmp_4[8] = (real32_T)ctl_controller0_P->Constant3_Value_n;
 
-  // Concatenate: '<S78>/Matrix Concatenate' incorporates:
-  //   Gain: '<S78>/Gain1'
-  //   Sum: '<S78>/Sum2'
+  // Concatenate: '<S100>/Matrix Concatenate' incorporates:
+  //   Gain: '<S100>/Gain1'
+  //   Sum: '<S100>/Sum2'
 
   for (i = 0; i < 3; i++) {
     rtb_VectorConcatenate[(int32_T)(i << 2)] = rtb_Assignment_h[(int32_T)(3 * i)]
@@ -2229,207 +2609,187 @@ void ctl_controller0_step(RT_MODEL_ctl_controller0_T *const ctl_controller0_M,
       [(int32_T)((int32_T)(3 * i) + 2)] + tmp_4[(int32_T)((int32_T)(3 * i) + 2)];
   }
 
-  rtb_VectorConcatenate[3] = ctl_controller0_P->Gain1_Gain_ed * rtb_Gain_ci[0];
-  rtb_VectorConcatenate[7] = ctl_controller0_P->Gain1_Gain_ed * rtb_Gain_ci[1];
-  rtb_VectorConcatenate[11] = ctl_controller0_P->Gain1_Gain_ed * rtb_Gain_ci[2];
+  rtb_VectorConcatenate[3] = ctl_controller0_P->Gain1_Gain_ed * rtb_Divide_f[0];
+  rtb_VectorConcatenate[7] = ctl_controller0_P->Gain1_Gain_ed * rtb_Divide_f[1];
+  rtb_VectorConcatenate[11] = ctl_controller0_P->Gain1_Gain_ed * rtb_Divide_f[2];
 
-  // End of Concatenate: '<S78>/Matrix Concatenate'
+  // End of Concatenate: '<S100>/Matrix Concatenate'
 
-  // Reshape: '<S76>/Reshape1'
-  rtb_VectorConcatenate[12] = rtb_Gain_ci[0];
-  rtb_VectorConcatenate[13] = rtb_Gain_ci[1];
-  rtb_VectorConcatenate[14] = rtb_Gain_ci[2];
-  rtb_VectorConcatenate[15] = rtb_Merge_az[3];
+  // Reshape: '<S98>/Reshape1'
+  rtb_VectorConcatenate[12] = rtb_Divide_f[0];
+  rtb_VectorConcatenate[13] = rtb_Divide_f[1];
+  rtb_VectorConcatenate[14] = rtb_Divide_f[2];
+  rtb_VectorConcatenate[15] = rtb_Merge_j[3];
 
-  // Product: '<S76>/Product'
+  // Product: '<S98>/Product'
   for (i = 0; i < 4; i++) {
-    rtb_Switch_P_B_ISS_ISS_idx_1 = rtb_VectorConcatenate[(int32_T)(i + 12)] *
-      rtb_Product1_m[3] + (rtb_VectorConcatenate[(int32_T)(i + 8)] *
-      rtb_Product1_m[2] + (rtb_VectorConcatenate[(int32_T)(i + 4)] *
-      rtb_Product1_m[1] + rtb_VectorConcatenate[i] * rtb_Product1_m[0]));
-    rtb_Merge_k[i] = rtb_Switch_P_B_ISS_ISS_idx_1;
+    rtb_Switch_est_P_B_ISS_ISS_id_0 = rtb_VectorConcatenate[(int32_T)(i + 12)] *
+      rtb_Merge_pa[3] + (rtb_VectorConcatenate[(int32_T)(i + 8)] * rtb_Merge_pa
+                         [2] + (rtb_VectorConcatenate[(int32_T)(i + 4)] *
+      rtb_Merge_pa[1] + rtb_VectorConcatenate[i] * rtb_Merge_pa[0]));
+    rtb_Merge[i] = rtb_Switch_est_P_B_ISS_ISS_id_0;
   }
 
-  // End of Product: '<S76>/Product'
+  // End of Product: '<S98>/Product'
 
-  // If: '<S77>/If' incorporates:
-  //   Inport: '<S82>/In1'
+  // If: '<S99>/If' incorporates:
+  //   Inport: '<S104>/In1'
 
-  if (rtb_Merge_k[3] < 0.0F) {
-    // Outputs for IfAction SubSystem: '<S77>/Normalize' incorporates:
-    //   ActionPort: '<S83>/Action Port'
+  if (rtb_Merge[3] < 0.0F) {
+    // Outputs for IfAction SubSystem: '<S99>/Normalize' incorporates:
+    //   ActionPort: '<S105>/Action Port'
 
-    ctl_controller0_Normalize(rtb_Merge_k, rtb_Merge_az,
+    ctl_controller0_Normalize(rtb_Merge, rtb_Merge_j,
       (P_Normalize_ctl_controller0_T *)&ctl_controller0_P->Normalize_k);
 
-    // End of Outputs for SubSystem: '<S77>/Normalize'
+    // End of Outputs for SubSystem: '<S99>/Normalize'
   } else {
-    // Outputs for IfAction SubSystem: '<S77>/No-op' incorporates:
-    //   ActionPort: '<S82>/Action Port'
+    // Outputs for IfAction SubSystem: '<S99>/No-op' incorporates:
+    //   ActionPort: '<S104>/Action Port'
 
-    rtb_Merge_az[0] = rtb_Merge_k[0];
-    rtb_Merge_az[1] = rtb_Merge_k[1];
-    rtb_Merge_az[2] = rtb_Merge_k[2];
-    rtb_Merge_az[3] = rtb_Merge_k[3];
+    rtb_Merge_j[0] = rtb_Merge[0];
+    rtb_Merge_j[1] = rtb_Merge[1];
+    rtb_Merge_j[2] = rtb_Merge[2];
+    rtb_Merge_j[3] = rtb_Merge[3];
 
-    // End of Outputs for SubSystem: '<S77>/No-op'
+    // End of Outputs for SubSystem: '<S99>/No-op'
   }
 
-  // End of If: '<S77>/If'
+  // End of If: '<S99>/If'
 
-  // Sqrt: '<S88>/Sqrt' incorporates:
-  //   DotProduct: '<S88>/Dot Product'
+  // Sqrt: '<S110>/Sqrt' incorporates:
+  //   DotProduct: '<S110>/Dot Product'
 
-  rtb_Sqrt_bt = (real32_T)sqrt((real_T)(((rtb_Merge_az[0] * rtb_Merge_az[0] +
-    rtb_Merge_az[1] * rtb_Merge_az[1]) + rtb_Merge_az[2] * rtb_Merge_az[2]) +
-    rtb_Merge_az[3] * rtb_Merge_az[3]));
+  rtb_SumofElements = (real32_T)sqrt((real_T)(((rtb_Merge_j[0] * rtb_Merge_j[0]
+    + rtb_Merge_j[1] * rtb_Merge_j[1]) + rtb_Merge_j[2] * rtb_Merge_j[2]) +
+    rtb_Merge_j[3] * rtb_Merge_j[3]));
 
-  // If: '<S84>/If' incorporates:
-  //   DataTypeConversion: '<S84>/Data Type Conversion'
-  //   Inport: '<S86>/In1'
+  // If: '<S106>/If' incorporates:
+  //   DataTypeConversion: '<S106>/Data Type Conversion'
+  //   Inport: '<S108>/In1'
 
-  if ((real_T)rtb_Sqrt_bt > 1.0E-7) {
-    // Outputs for IfAction SubSystem: '<S84>/Normalize' incorporates:
-    //   ActionPort: '<S87>/Action Port'
+  if ((real_T)rtb_SumofElements > 1.0E-7) {
+    // Outputs for IfAction SubSystem: '<S106>/Normalize' incorporates:
+    //   ActionPort: '<S109>/Action Port'
 
-    ctl_controller0_Normalize_e(rtb_Merge_az, rtb_Sqrt_bt, rtb_Merge_k);
+    ctl_controller0_Normalize_e(rtb_Merge_j, rtb_SumofElements, rtb_Merge);
 
-    // End of Outputs for SubSystem: '<S84>/Normalize'
+    // End of Outputs for SubSystem: '<S106>/Normalize'
   } else {
-    // Outputs for IfAction SubSystem: '<S84>/No-op' incorporates:
-    //   ActionPort: '<S86>/Action Port'
+    // Outputs for IfAction SubSystem: '<S106>/No-op' incorporates:
+    //   ActionPort: '<S108>/Action Port'
 
-    rtb_Merge_k[3] = rtb_Merge_az[3];
+    rtb_Merge[3] = rtb_Merge_j[3];
 
-    // End of Outputs for SubSystem: '<S84>/No-op'
+    // End of Outputs for SubSystem: '<S106>/No-op'
   }
 
-  // End of If: '<S84>/If'
+  // End of If: '<S106>/If'
 
-  // Sum: '<S59>/Sum3'
-  rtb_Sum3_k_idx_0 -= rtb_Switch_V_B_ISS_ISS_idx_0;
+  // Sum: '<S81>/Sum3'
+  rtb_Sum3_k_idx_0 -= rtb_Switch_est_V_B_ISS_ISS_idx_;
 
-  // DiscreteIntegrator: '<S13>/Discrete-Time Integrator'
-  rtb_Switch_V_B_ISS_ISS_idx_0 =
+  // DiscreteIntegrator: '<S31>/Discrete-Time Integrator'
+  rtb_Switch_est_V_B_ISS_ISS_idx_ =
     ctl_controller0_DW->DiscreteTimeIntegrator_DSTATE[0];
 
-  // Sum: '<S59>/Sum4'
-  rtb_Sum4_o_idx_0 -= rtb_Switch_omega_B_ISS_B_idx_0;
+  // Sum: '<S81>/Sum4'
+  rtb_Sum4_o_idx_0 -= rtb_Switch_est_omega_B_ISS_B_id;
 
-  // DiscreteIntegrator: '<S12>/Discrete-Time Integrator1'
-  rtb_Switch_omega_B_ISS_B_idx_0 =
+  // DiscreteIntegrator: '<S30>/Discrete-Time Integrator1'
+  rtb_Switch_est_omega_B_ISS_B_id =
     ctl_controller0_DW->DiscreteTimeIntegrator1_DSTATE[0];
 
-  // Sum: '<S59>/Sum3'
-  rtb_Sum3_k_idx_1 -= rtb_Switch_V_B_ISS_ISS_idx_1;
+  // Sum: '<S81>/Sum3'
+  rtb_Sum3_k_idx_1 -= rtb_Switch_est_V_B_ISS_ISS_id_0;
 
-  // DiscreteIntegrator: '<S13>/Discrete-Time Integrator'
-  rtb_Switch_V_B_ISS_ISS_idx_1 =
+  // DiscreteIntegrator: '<S31>/Discrete-Time Integrator'
+  rtb_Switch_est_V_B_ISS_ISS_id_0 =
     ctl_controller0_DW->DiscreteTimeIntegrator_DSTATE[1];
 
-  // Sum: '<S59>/Sum4'
-  rtb_Sum4_o_idx_1 -= rtb_Switch_omega_B_ISS_B_idx_1;
+  // Sum: '<S81>/Sum4'
+  rtb_Sum4_o_idx_1 -= rtb_Switch_est_omega_B_ISS_B__0;
 
-  // DiscreteIntegrator: '<S12>/Discrete-Time Integrator1'
-  rtb_Switch_omega_B_ISS_B_idx_1 =
+  // DiscreteIntegrator: '<S30>/Discrete-Time Integrator1'
+  rtb_Switch_est_omega_B_ISS_B__0 =
     ctl_controller0_DW->DiscreteTimeIntegrator1_DSTATE[1];
 
-  // Sum: '<S59>/Sum3'
-  rtb_Switch_V_B_ISS_ISS_idx_2 = rtb_Sum3_k_idx_2 - rtb_Switch_V_B_ISS_ISS_idx_2;
+  // Sum: '<S81>/Sum3'
+  rtb_SumofElements1 = rtb_Sum3_k_idx_2 - rtb_Switch_est_V_B_ISS_ISS_id_1;
 
-  // Sum: '<S59>/Sum4'
-  rtb_Switch_omega_B_ISS_B_idx_2 = rtb_SumofElements1 -
-    rtb_Switch_omega_B_ISS_B_idx_2;
+  // Sum: '<S81>/Sum4'
+  rtb_Switch_est_omega_B_ISS_B__1 = rtb_Sum4_p - rtb_Switch_est_omega_B_ISS_B__1;
 
   // BusCreator: '<S3>/bus_creator' incorporates:
-  //   DiscreteIntegrator: '<S12>/Discrete-Time Integrator1'
-  //   DiscreteIntegrator: '<S13>/Discrete-Time Integrator'
+  //   DiscreteIntegrator: '<S30>/Discrete-Time Integrator1'
+  //   DiscreteIntegrator: '<S31>/Discrete-Time Integrator'
 
-  rtb_Switch_P_B_ISS_ISS_idx_1 =
+  rtb_Switch_est_V_B_ISS_ISS_id_1 =
     ctl_controller0_DW->DiscreteTimeIntegrator1_DSTATE[2];
-  rtb_Switch_P_B_ISS_ISS_idx_2 =
+  rtb_Switch_est_P_B_ISS_ISS_id_0 =
     ctl_controller0_DW->DiscreteTimeIntegrator_DSTATE[2];
 
-  // Update for UnitDelay: '<S93>/UD'
+  // Update for UnitDelay: '<S115>/UD'
   ctl_controller0_DW->UD_DSTATE[0] = rtb_TSamp[0];
   ctl_controller0_DW->UD_DSTATE[1] = rtb_TSamp[1];
   ctl_controller0_DW->UD_DSTATE[2] = rtb_TSamp[2];
   ctl_controller0_DW->UD_DSTATE[3] = rtb_TSamp[3];
 
-  // Update for UnitDelay: '<S90>/UD'
+  // Update for UnitDelay: '<S112>/UD'
   ctl_controller0_DW->UD_DSTATE_e[0] = rtb_Product[0];
+  ctl_controller0_DW->UD_DSTATE_e[1] = rtb_Product[1];
+  ctl_controller0_DW->UD_DSTATE_e[2] = rtb_Product_f;
 
-  // Update for Delay: '<S10>/Delay11'
-  ctl_controller0_DW->Delay11_DSTATE[0] = rtb_Diff[0];
+  // Update for UnitDelay: '<S2>/Unit Delay2'
+  ctl_controller0_DW->UnitDelay2_DSTATE[0] = rtb_Product_b[0];
+  ctl_controller0_DW->UnitDelay2_DSTATE[1] = rtb_Product_b[1];
+  ctl_controller0_DW->UnitDelay2_DSTATE[2] = rtb_Product_b[2];
+  ctl_controller0_DW->UnitDelay2_DSTATE[3] = rtb_Product_b[3];
 
-  // Update for Delay: '<S11>/Delay11'
+  // Update for DiscreteIntegrator: '<S30>/Discrete-Time Integrator1'
+  ctl_controller0_DW->DiscreteTimeIntegrator1_PrevRes = (int8_T)rtb_Compare_j;
+
+  // Update for DiscreteIntegrator: '<S31>/Discrete-Time Integrator'
+  ctl_controller0_DW->DiscreteTimeIntegrator_PrevRese = (int8_T)rtb_Compare_fc;
+
+  // End of Outputs for SubSystem: '<Root>/ctl_controller'
+
+  // Outport: '<Root>/cmd_msg' incorporates:
+  //   DataTypeConversion: '<S78>/Data Type Conversion'
+
+  ctl_controller0_Y_cmd_msg_f->cmd_timestamp_sec =
+    rtb_Switch_cmd_state_b_timestam;
+  ctl_controller0_Y_cmd_msg_f->cmd_timestamp_nsec =
+    rtb_Switch_cmd_state_b_timest_0;
+  ctl_controller0_Y_cmd_msg_f->cmd_mode = rtb_Switch_ctl_mode_cmd;
+  ctl_controller0_Y_cmd_msg_f->speed_gain_cmd = rtb_Switch_speed_gain_cmd;
+
+  // Outputs for Atomic SubSystem: '<Root>/ctl_controller'
+  ctl_controller0_Y_cmd_msg_f->cmd_B_inuse = (uint8_T)rtb_LogicalOperator2_c;
+
+  // Update for Delay: '<S13>/Delay11'
+  ctl_controller0_DW->Delay11_DSTATE[0] = rtb_SumA21_idx_0;
+
+  // Update for Delay: '<S14>/Delay11'
   ctl_controller0_DW->Delay11_DSTATE_i[0] = rtb_SumA21_d_idx_0;
 
   // Update for UnitDelay: '<S2>/Unit Delay1'
   ctl_controller0_DW->UnitDelay1_DSTATE[0] = rtb_Switch8_idx_0;
 
-  // Update for UnitDelay: '<S90>/UD'
-  ctl_controller0_DW->UD_DSTATE_e[1] = rtb_Product[1];
+  // Update for DiscreteIntegrator: '<S30>/Discrete-Time Integrator1' incorporates:
+  //   Product: '<S30>/Product1'
+  //   Product: '<S38>/Divide1'
+  //   Switch: '<S38>/Switch'
 
-  // Update for Delay: '<S10>/Delay11'
-  ctl_controller0_DW->Delay11_DSTATE[1] = rtb_Diff[1];
+  if (rtb_Switch_vel_kd[0] != 0.0F) {
+    rtb_Switch_cmd_state_a_A_B_IS_1 = rtb_Switch_pos_ki_idx_0 /
+      rtb_Switch_vel_kd[0];
+  } else {
+    rtb_Switch_cmd_state_a_A_B_IS_1 = 0.0F;
+  }
 
-  // Update for Delay: '<S11>/Delay11'
-  ctl_controller0_DW->Delay11_DSTATE_i[1] = rtb_SumA21_d_idx_1;
-
-  // Update for UnitDelay: '<S2>/Unit Delay1'
-  ctl_controller0_DW->UnitDelay1_DSTATE[1] = rtb_Switch8_idx_1;
-
-  // Update for UnitDelay: '<S90>/UD'
-  ctl_controller0_DW->UD_DSTATE_e[2] = rtb_Product_md;
-
-  // Update for Delay: '<S10>/Delay11'
-  ctl_controller0_DW->Delay11_DSTATE[2] = rtb_Diff_e;
-
-  // Update for Delay: '<S11>/Delay11'
-  ctl_controller0_DW->Delay11_DSTATE_i[2] = rtb_SumA21_f;
-
-  // Update for UnitDelay: '<S2>/Unit Delay1'
-  ctl_controller0_DW->UnitDelay1_DSTATE[2] = rtb_Sum4_o_idx_2;
-
-  // Update for UnitDelay: '<S2>/Unit Delay2'
-  ctl_controller0_DW->UnitDelay2_DSTATE[0] = rtb_Merge[0];
-  ctl_controller0_DW->UnitDelay2_DSTATE[1] = rtb_Merge[1];
-  ctl_controller0_DW->UnitDelay2_DSTATE[2] = rtb_Merge[2];
-  ctl_controller0_DW->UnitDelay2_DSTATE[3] = rtb_Merge[3];
-
-  // Update for DiscreteIntegrator: '<S12>/Discrete-Time Integrator1'
-  ctl_controller0_DW->DiscreteTimeIntegrator1_PrevRes = (int8_T)rtb_Compare_j;
-
-  // Update for DiscreteIntegrator: '<S13>/Discrete-Time Integrator'
-  ctl_controller0_DW->DiscreteTimeIntegrator_PrevRese = (int8_T)rtb_Compare_a;
-
-  // End of Outputs for SubSystem: '<Root>/ctl_controller'
-
-  // Outport: '<Root>/cmd_msg' incorporates:
-  //   DataTypeConversion: '<S56>/Data Type Conversion'
-  //   Inport: '<Root>/cmc_msg'
-  //   SignalConversion: '<S1>/Signal Conversion'
-
-  ctl_controller0_Y_cmd_msg_c->cmd_timestamp_sec = rtb_Switch_h_timestamp_sec;
-  ctl_controller0_Y_cmd_msg_c->cmd_timestamp_nsec = rtb_Switch_h_timestamp_nsec;
-
-  // Outputs for Atomic SubSystem: '<Root>/ctl_controller'
-  ctl_controller0_Y_cmd_msg_c->cmd_mode =
-    ctl_controller0_U_cmc_msg_f->cmc_mode_cmd;
-  ctl_controller0_Y_cmd_msg_c->speed_gain_cmd =
-    ctl_controller0_U_cmc_msg_f->speed_gain_cmd;
-  ctl_controller0_Y_cmd_msg_c->cmd_B_inuse = (uint8_T)rtb_LogicalOperator2_c;
-
-  // Update for DiscreteIntegrator: '<S12>/Discrete-Time Integrator1' incorporates:
-  //   Inport: '<Root>/cmc_msg'
-  //   Product: '<S12>/Divide2'
-  //   Product: '<S12>/Product1'
-  //   SignalConversion: '<S1>/Signal Conversion'
-
-  ctl_controller0_DW->DiscreteTimeIntegrator1_DSTATE[0] +=
-    ctl_controller0_U_cmc_msg_f->pos_ki[0] / ctl_controller0_U_cmc_msg_f->
-    vel_kd[0] * rtb_Sum2_idx_0 *
+  ctl_controller0_DW->DiscreteTimeIntegrator1_DSTATE[0] += rtb_Sum2_idx_0 *
+    rtb_Switch_cmd_state_a_A_B_IS_1 *
     ctl_controller0_P->DiscreteTimeIntegrator1_gainval;
   if (ctl_controller0_DW->DiscreteTimeIntegrator1_DSTATE[0] >=
       ctl_controller0_P->tun_ctl_pos_sat_upper) {
@@ -2443,16 +2803,19 @@ void ctl_controller0_step(RT_MODEL_ctl_controller0_T *const ctl_controller0_M,
     }
   }
 
-  // Update for DiscreteIntegrator: '<S13>/Discrete-Time Integrator' incorporates:
-  //   Inport: '<Root>/cmc_msg'
-  //   Product: '<S13>/Divide2'
-  //   Product: '<S13>/Product1'
-  //   SignalConversion: '<S1>/Signal Conversion'
+  // Update for DiscreteIntegrator: '<S31>/Discrete-Time Integrator' incorporates:
+  //   Product: '<S31>/Product1'
+  //   Product: '<S61>/Divide1'
+  //   Switch: '<S61>/Switch'
 
-  ctl_controller0_DW->DiscreteTimeIntegrator_DSTATE[0] +=
-    ctl_controller0_U_cmc_msg_f->att_ki[0] /
-    ctl_controller0_U_cmc_msg_f->omega_kd[0] * rtb_Product_f[0] *
-    ctl_controller0_P->DiscreteTimeIntegrator_gainval;
+  if (rtb_Switch_omega_kd_idx_0 != 0.0F) {
+    rtb_SumofElements = rtb_Switch_att_ki_idx_0 / rtb_Switch_omega_kd_idx_0;
+  } else {
+    rtb_SumofElements = 0.0F;
+  }
+
+  ctl_controller0_DW->DiscreteTimeIntegrator_DSTATE[0] += rtb_Product1_m[0] *
+    rtb_SumofElements * ctl_controller0_P->DiscreteTimeIntegrator_gainval;
   if (ctl_controller0_DW->DiscreteTimeIntegrator_DSTATE[0] >=
       ctl_controller0_P->tun_ctl_att_sat_upper) {
     ctl_controller0_DW->DiscreteTimeIntegrator_DSTATE[0] =
@@ -2468,20 +2831,34 @@ void ctl_controller0_step(RT_MODEL_ctl_controller0_T *const ctl_controller0_M,
   // End of Outputs for SubSystem: '<Root>/ctl_controller'
 
   // Outport: '<Root>/cmd_msg'
-  ctl_controller0_Y_cmd_msg_c->traj_pos[0] = normA;
-  ctl_controller0_Y_cmd_msg_c->traj_vel[0] = b_s;
-  ctl_controller0_Y_cmd_msg_c->traj_accel[0] = rtb_Switch_h_A_B_ISS_ISS[0];
+  ctl_controller0_Y_cmd_msg_f->traj_pos[0] = normA;
+  ctl_controller0_Y_cmd_msg_f->traj_vel[0] = b_s;
+  ctl_controller0_Y_cmd_msg_f->traj_accel[0] = rtb_Diff[0];
 
   // Outputs for Atomic SubSystem: '<Root>/ctl_controller'
-  // Update for DiscreteIntegrator: '<S12>/Discrete-Time Integrator1' incorporates:
-  //   Inport: '<Root>/cmc_msg'
-  //   Product: '<S12>/Divide2'
-  //   Product: '<S12>/Product1'
-  //   SignalConversion: '<S1>/Signal Conversion'
+  // Update for Delay: '<S13>/Delay11'
+  ctl_controller0_DW->Delay11_DSTATE[1] = rtb_SumA21_idx_1;
 
-  ctl_controller0_DW->DiscreteTimeIntegrator1_DSTATE[1] +=
-    ctl_controller0_U_cmc_msg_f->pos_ki[1] / ctl_controller0_U_cmc_msg_f->
-    vel_kd[1] * rtb_Sum2_idx_1 *
+  // Update for Delay: '<S14>/Delay11'
+  ctl_controller0_DW->Delay11_DSTATE_i[1] = rtb_SumA21_d_idx_1;
+
+  // Update for UnitDelay: '<S2>/Unit Delay1'
+  ctl_controller0_DW->UnitDelay1_DSTATE[1] = rtb_Switch8_idx_1;
+
+  // Update for DiscreteIntegrator: '<S30>/Discrete-Time Integrator1' incorporates:
+  //   Product: '<S30>/Product1'
+  //   Product: '<S38>/Divide1'
+  //   Switch: '<S38>/Switch'
+
+  if (rtb_Switch_vel_kd[1] != 0.0F) {
+    rtb_Switch_cmd_state_a_A_B_IS_1 = rtb_Switch_pos_ki_idx_1 /
+      rtb_Switch_vel_kd[1];
+  } else {
+    rtb_Switch_cmd_state_a_A_B_IS_1 = 0.0F;
+  }
+
+  ctl_controller0_DW->DiscreteTimeIntegrator1_DSTATE[1] += rtb_Sum2_idx_1 *
+    rtb_Switch_cmd_state_a_A_B_IS_1 *
     ctl_controller0_P->DiscreteTimeIntegrator1_gainval;
   if (ctl_controller0_DW->DiscreteTimeIntegrator1_DSTATE[1] >=
       ctl_controller0_P->tun_ctl_pos_sat_upper) {
@@ -2495,16 +2872,19 @@ void ctl_controller0_step(RT_MODEL_ctl_controller0_T *const ctl_controller0_M,
     }
   }
 
-  // Update for DiscreteIntegrator: '<S13>/Discrete-Time Integrator' incorporates:
-  //   Inport: '<Root>/cmc_msg'
-  //   Product: '<S13>/Divide2'
-  //   Product: '<S13>/Product1'
-  //   SignalConversion: '<S1>/Signal Conversion'
+  // Update for DiscreteIntegrator: '<S31>/Discrete-Time Integrator' incorporates:
+  //   Product: '<S31>/Product1'
+  //   Product: '<S61>/Divide1'
+  //   Switch: '<S61>/Switch'
 
-  ctl_controller0_DW->DiscreteTimeIntegrator_DSTATE[1] +=
-    ctl_controller0_U_cmc_msg_f->att_ki[1] /
-    ctl_controller0_U_cmc_msg_f->omega_kd[1] * rtb_Product_f[1] *
-    ctl_controller0_P->DiscreteTimeIntegrator_gainval;
+  if (rtb_Switch_omega_kd_idx_1 != 0.0F) {
+    rtb_SumofElements = rtb_Switch_att_ki_idx_1 / rtb_Switch_omega_kd_idx_1;
+  } else {
+    rtb_SumofElements = 0.0F;
+  }
+
+  ctl_controller0_DW->DiscreteTimeIntegrator_DSTATE[1] += rtb_Product1_m[1] *
+    rtb_SumofElements * ctl_controller0_P->DiscreteTimeIntegrator_gainval;
   if (ctl_controller0_DW->DiscreteTimeIntegrator_DSTATE[1] >=
       ctl_controller0_P->tun_ctl_att_sat_upper) {
     ctl_controller0_DW->DiscreteTimeIntegrator_DSTATE[1] =
@@ -2520,20 +2900,34 @@ void ctl_controller0_step(RT_MODEL_ctl_controller0_T *const ctl_controller0_M,
   // End of Outputs for SubSystem: '<Root>/ctl_controller'
 
   // Outport: '<Root>/cmd_msg'
-  ctl_controller0_Y_cmd_msg_c->traj_pos[1] = rtb_BusCreator1_traj_pos_idx_1;
-  ctl_controller0_Y_cmd_msg_c->traj_vel[1] = rtb_BusCreator1_traj_vel_idx_1;
-  ctl_controller0_Y_cmd_msg_c->traj_accel[1] = rtb_Switch_h_A_B_ISS_ISS[1];
+  ctl_controller0_Y_cmd_msg_f->traj_pos[1] = rtb_Switch_cmd_state_a_P_B_ISS_;
+  ctl_controller0_Y_cmd_msg_f->traj_vel[1] = rtb_Switch_cmd_state_a_V_B_ISS_;
+  ctl_controller0_Y_cmd_msg_f->traj_accel[1] = rtb_Diff[1];
 
   // Outputs for Atomic SubSystem: '<Root>/ctl_controller'
-  // Update for DiscreteIntegrator: '<S12>/Discrete-Time Integrator1' incorporates:
-  //   Inport: '<Root>/cmc_msg'
-  //   Product: '<S12>/Divide2'
-  //   Product: '<S12>/Product1'
-  //   SignalConversion: '<S1>/Signal Conversion'
+  // Update for Delay: '<S13>/Delay11'
+  ctl_controller0_DW->Delay11_DSTATE[2] = rtb_Sum4_o_idx_2;
 
-  ctl_controller0_DW->DiscreteTimeIntegrator1_DSTATE[2] +=
-    ctl_controller0_U_cmc_msg_f->pos_ki[2] / ctl_controller0_U_cmc_msg_f->
-    vel_kd[2] * rtb_Sum2_idx_2 *
+  // Update for Delay: '<S14>/Delay11'
+  ctl_controller0_DW->Delay11_DSTATE_i[2] = rtb_SumA21_f;
+
+  // Update for UnitDelay: '<S2>/Unit Delay1'
+  ctl_controller0_DW->UnitDelay1_DSTATE[2] = rtb_Switch8_idx_2;
+
+  // Update for DiscreteIntegrator: '<S30>/Discrete-Time Integrator1' incorporates:
+  //   Product: '<S30>/Product1'
+  //   Product: '<S38>/Divide1'
+  //   Switch: '<S38>/Switch'
+
+  if (rtb_Switch_vel_kd[2] != 0.0F) {
+    rtb_Switch_cmd_state_a_A_B_IS_1 = rtb_Switch_pos_ki_idx_2 /
+      rtb_Switch_vel_kd[2];
+  } else {
+    rtb_Switch_cmd_state_a_A_B_IS_1 = 0.0F;
+  }
+
+  ctl_controller0_DW->DiscreteTimeIntegrator1_DSTATE[2] += rtb_Sum2_idx_2 *
+    rtb_Switch_cmd_state_a_A_B_IS_1 *
     ctl_controller0_P->DiscreteTimeIntegrator1_gainval;
   if (ctl_controller0_DW->DiscreteTimeIntegrator1_DSTATE[2] >=
       ctl_controller0_P->tun_ctl_pos_sat_upper) {
@@ -2547,16 +2941,19 @@ void ctl_controller0_step(RT_MODEL_ctl_controller0_T *const ctl_controller0_M,
     }
   }
 
-  // Update for DiscreteIntegrator: '<S13>/Discrete-Time Integrator' incorporates:
-  //   Inport: '<Root>/cmc_msg'
-  //   Product: '<S13>/Divide2'
-  //   Product: '<S13>/Product1'
-  //   SignalConversion: '<S1>/Signal Conversion'
+  // Update for DiscreteIntegrator: '<S31>/Discrete-Time Integrator' incorporates:
+  //   Product: '<S31>/Product1'
+  //   Product: '<S61>/Divide1'
+  //   Switch: '<S61>/Switch'
 
-  ctl_controller0_DW->DiscreteTimeIntegrator_DSTATE[2] +=
-    ctl_controller0_U_cmc_msg_f->att_ki[2] /
-    ctl_controller0_U_cmc_msg_f->omega_kd[2] * rtb_Product_f[2] *
-    ctl_controller0_P->DiscreteTimeIntegrator_gainval;
+  if (rtb_Switch_omega_kd_idx_2 != 0.0F) {
+    rtb_SumofElements = rtb_Switch_att_ki_idx_2 / rtb_Switch_omega_kd_idx_2;
+  } else {
+    rtb_SumofElements = 0.0F;
+  }
+
+  ctl_controller0_DW->DiscreteTimeIntegrator_DSTATE[2] += rtb_Product1_m[2] *
+    rtb_SumofElements * ctl_controller0_P->DiscreteTimeIntegrator_gainval;
   if (ctl_controller0_DW->DiscreteTimeIntegrator_DSTATE[2] >=
       ctl_controller0_P->tun_ctl_att_sat_upper) {
     ctl_controller0_DW->DiscreteTimeIntegrator_DSTATE[2] =
@@ -2574,166 +2971,161 @@ void ctl_controller0_step(RT_MODEL_ctl_controller0_T *const ctl_controller0_M,
   // Outport: '<Root>/cmd_msg' incorporates:
   //   BusCreator: '<S4>/Bus Creator1'
 
-  ctl_controller0_Y_cmd_msg_c->traj_pos[2] = rtb_Gain1_j_idx_2;
-  ctl_controller0_Y_cmd_msg_c->traj_vel[2] = rtb_Sum3_k_idx_2;
-  ctl_controller0_Y_cmd_msg_c->traj_accel[2] = rtb_Switch_h_A_B_ISS_ISS[2];
+  ctl_controller0_Y_cmd_msg_f->traj_pos[2] = rtb_Switch_cmd_state_a_P_B_IS_0;
 
   // Outputs for Atomic SubSystem: '<Root>/ctl_controller'
-  ctl_controller0_Y_cmd_msg_c->traj_quat[0] = rtb_Product1_m[0];
-  ctl_controller0_Y_cmd_msg_c->traj_quat[1] = rtb_Product1_m[1];
-  ctl_controller0_Y_cmd_msg_c->traj_quat[2] = rtb_Product1_m[2];
-  ctl_controller0_Y_cmd_msg_c->traj_quat[3] = rtb_Product1_m[3];
+  ctl_controller0_Y_cmd_msg_f->traj_vel[2] = rtb_Sum3_k_idx_2;
 
-  // Product: '<S13>/Divide' incorporates:
-  //   Inport: '<Root>/cmc_msg'
+  // End of Outputs for SubSystem: '<Root>/ctl_controller'
+  ctl_controller0_Y_cmd_msg_f->traj_accel[2] = rtb_Diff[2];
+
+  // Outputs for Atomic SubSystem: '<Root>/ctl_controller'
+  ctl_controller0_Y_cmd_msg_f->traj_quat[0] = rtb_Merge_pa[0];
+  ctl_controller0_Y_cmd_msg_f->traj_quat[1] = rtb_Merge_pa[1];
+  ctl_controller0_Y_cmd_msg_f->traj_quat[2] = rtb_Merge_pa[2];
+  ctl_controller0_Y_cmd_msg_f->traj_quat[3] = rtb_Merge_pa[3];
+
+  // Product: '<S31>/Divide' incorporates:
   //   Outport: '<Root>/ctl_msg'
-  //   SignalConversion: '<S1>/Signal Conversion'
 
-  rt_mldivide_U1f3x3_U2f_XeZWzB4d(ctl_controller0_U_cmc_msg_f->inertia_matrix,
-    rtb_Product3_n, ctl_controller0_Y_ctl_msg_o->body_alpha_cmd);
+  rt_mldivide_U1f3x3_U2f_XeZWzB4d(rtb_Switch_inertia_matrix, rtb_Sum_f,
+    ctl_controller0_Y_ctl_msg_n->body_alpha_cmd);
 
-  // Trigonometry: '<S13>/Trigonometric Function'
-  if (rtb_Product_f[3] > 1.0F) {
-    rtb_Sqrt_bt = 1.0F;
-  } else if (rtb_Product_f[3] < -1.0F) {
-    rtb_Sqrt_bt = -1.0F;
+  // Trigonometry: '<S31>/Trigonometric Function'
+  if (rtb_Product1_m[3] > 1.0F) {
+    rtb_Switch_cmd_state_a_A_B_IS_1 = 1.0F;
+  } else if (rtb_Product1_m[3] < -1.0F) {
+    rtb_Switch_cmd_state_a_A_B_IS_1 = -1.0F;
   } else {
-    rtb_Sqrt_bt = rtb_Product_f[3];
+    rtb_Switch_cmd_state_a_A_B_IS_1 = rtb_Product1_m[3];
   }
 
   // Outport: '<Root>/ctl_msg' incorporates:
   //   BusCreator: '<S3>/bus_creator'
-  //   Gain: '<S13>/Gain2'
-  //   Trigonometry: '<S13>/Trigonometric Function'
+  //   Gain: '<S31>/Gain2'
+  //   Trigonometry: '<S31>/Trigonometric Function'
 
-  ctl_controller0_Y_ctl_msg_o->att_err_mag = ctl_controller0_P->Gain2_Gain_j *
-    (real32_T)acos((real_T)rtb_Sqrt_bt);
-  ctl_controller0_Y_ctl_msg_o->ctl_status = rtb_Switch2;
+  ctl_controller0_Y_ctl_msg_n->att_err_mag = ctl_controller0_P->Gain2_Gain_j *
+    (real32_T)acos((real_T)rtb_Switch_cmd_state_a_A_B_IS_1);
+  ctl_controller0_Y_ctl_msg_n->ctl_status = rtb_Switch12;
 
   // End of Outputs for SubSystem: '<Root>/ctl_controller'
 
   // Outport: '<Root>/cmd_msg'
-  ctl_controller0_Y_cmd_msg_c->traj_omega[0] = rtb_BusCreator1_traj_omega_idx_;
-  ctl_controller0_Y_cmd_msg_c->traj_alpha[0] = rtb_Switch_h_alpha_B_ISS_B_id_1;
+  ctl_controller0_Y_cmd_msg_f->traj_omega[0] = rtb_Switch_cmd_state_a_A_B_ISS_;
+  ctl_controller0_Y_cmd_msg_f->traj_alpha[0] = rtb_Switch_cmd_state_b_alpha__1;
 
   // Outputs for Atomic SubSystem: '<Root>/ctl_controller'
   // Outport: '<Root>/ctl_msg' incorporates:
   //   BusCreator: '<S3>/bus_creator'
-  //   Inport: '<Root>/cmc_msg'
-  //   Product: '<S12>/Divide'
-  //   SignalConversion: '<S1>/Signal Conversion'
+  //   Product: '<S30>/Divide'
 
-  ctl_controller0_Y_ctl_msg_o->body_force_cmd[0] = rtb_Switch_c_idx_0;
-  ctl_controller0_Y_ctl_msg_o->body_accel_cmd[0] = 1.0F /
-    ctl_controller0_U_cmc_msg_f->mass * rtb_Switch_c_idx_0;
-  ctl_controller0_Y_ctl_msg_o->pos_err[0] = rtb_Sum2_idx_0;
+  ctl_controller0_Y_ctl_msg_n->body_force_cmd[0] = rtb_Switch_c_idx_0;
+  ctl_controller0_Y_ctl_msg_n->body_accel_cmd[0] = 1.0F / rtb_Switch_mass *
+    rtb_Switch_c_idx_0;
+  ctl_controller0_Y_ctl_msg_n->pos_err[0] = rtb_Sum2_idx_0;
 
   // End of Outputs for SubSystem: '<Root>/ctl_controller'
-  ctl_controller0_Y_ctl_msg_o->pos_err_int[0] = rtb_Switch_omega_B_ISS_B_idx_0;
+  ctl_controller0_Y_ctl_msg_n->pos_err_int[0] = rtb_Switch_est_omega_B_ISS_B_id;
 
   // Outputs for Atomic SubSystem: '<Root>/ctl_controller'
-  ctl_controller0_Y_ctl_msg_o->body_torque_cmd[0] = rtb_Divide_f[0];
-  ctl_controller0_Y_ctl_msg_o->att_err[0] = rtb_Product_f[0];
+  ctl_controller0_Y_ctl_msg_n->body_torque_cmd[0] = rtb_Switch_b[0];
+  ctl_controller0_Y_ctl_msg_n->att_err[0] = rtb_Product1_m[0];
 
   // End of Outputs for SubSystem: '<Root>/ctl_controller'
-  ctl_controller0_Y_ctl_msg_o->att_err_int[0] = rtb_Switch_V_B_ISS_ISS_idx_0;
+  ctl_controller0_Y_ctl_msg_n->att_err_int[0] = rtb_Switch_est_V_B_ISS_ISS_idx_;
 
   // Outport: '<Root>/cmd_msg'
-  ctl_controller0_Y_cmd_msg_c->traj_omega[1] = rtb_BusCreator1_traj_omega_id_0;
-  ctl_controller0_Y_cmd_msg_c->traj_alpha[1] = rtb_Switch_h_alpha_B_ISS_B_id_0;
+  ctl_controller0_Y_cmd_msg_f->traj_omega[1] = rtb_Switch_cmd_state_a_A_B_IS_0;
+  ctl_controller0_Y_cmd_msg_f->traj_alpha[1] = rtb_Switch_cmd_state_b_alpha__0;
 
   // Outputs for Atomic SubSystem: '<Root>/ctl_controller'
   // Outport: '<Root>/ctl_msg' incorporates:
   //   BusCreator: '<S3>/bus_creator'
-  //   Inport: '<Root>/cmc_msg'
-  //   Product: '<S12>/Divide'
-  //   SignalConversion: '<S1>/Signal Conversion'
+  //   Product: '<S30>/Divide'
 
-  ctl_controller0_Y_ctl_msg_o->body_force_cmd[1] = rtb_Switch_c_idx_1;
-  ctl_controller0_Y_ctl_msg_o->body_accel_cmd[1] = 1.0F /
-    ctl_controller0_U_cmc_msg_f->mass * rtb_Switch_c_idx_1;
-  ctl_controller0_Y_ctl_msg_o->pos_err[1] = rtb_Sum2_idx_1;
+  ctl_controller0_Y_ctl_msg_n->body_force_cmd[1] = rtb_Switch_c_idx_1;
+  ctl_controller0_Y_ctl_msg_n->body_accel_cmd[1] = 1.0F / rtb_Switch_mass *
+    rtb_Switch_c_idx_1;
+  ctl_controller0_Y_ctl_msg_n->pos_err[1] = rtb_Sum2_idx_1;
 
   // End of Outputs for SubSystem: '<Root>/ctl_controller'
-  ctl_controller0_Y_ctl_msg_o->pos_err_int[1] = rtb_Switch_omega_B_ISS_B_idx_1;
+  ctl_controller0_Y_ctl_msg_n->pos_err_int[1] = rtb_Switch_est_omega_B_ISS_B__0;
 
   // Outputs for Atomic SubSystem: '<Root>/ctl_controller'
-  ctl_controller0_Y_ctl_msg_o->body_torque_cmd[1] = rtb_Divide_f[1];
-  ctl_controller0_Y_ctl_msg_o->att_err[1] = rtb_Product_f[1];
+  ctl_controller0_Y_ctl_msg_n->body_torque_cmd[1] = rtb_Switch_b[1];
+  ctl_controller0_Y_ctl_msg_n->att_err[1] = rtb_Product1_m[1];
 
   // End of Outputs for SubSystem: '<Root>/ctl_controller'
-  ctl_controller0_Y_ctl_msg_o->att_err_int[1] = rtb_Switch_V_B_ISS_ISS_idx_1;
+  ctl_controller0_Y_ctl_msg_n->att_err_int[1] = rtb_Switch_est_V_B_ISS_ISS_id_0;
 
   // Outport: '<Root>/cmd_msg'
-  ctl_controller0_Y_cmd_msg_c->traj_omega[2] = rtb_SumofElements1;
-  ctl_controller0_Y_cmd_msg_c->traj_alpha[2] = rtb_Switch_h_alpha_B_ISS_B_idx_;
+  ctl_controller0_Y_cmd_msg_f->traj_omega[2] = rtb_Sum4_p;
+  ctl_controller0_Y_cmd_msg_f->traj_alpha[2] = rtb_Switch_cmd_state_b_alpha_B_;
 
   // Outputs for Atomic SubSystem: '<Root>/ctl_controller'
   // Outport: '<Root>/ctl_msg' incorporates:
   //   BusCreator: '<S3>/bus_creator'
-  //   DotProduct: '<S73>/Dot Product'
-  //   Inport: '<Root>/cmc_msg'
-  //   Product: '<S12>/Divide'
-  //   SignalConversion: '<S1>/Signal Conversion'
-  //   Sqrt: '<S73>/Sqrt'
+  //   DotProduct: '<S95>/Dot Product'
+  //   Product: '<S30>/Divide'
+  //   Sqrt: '<S95>/Sqrt'
 
-  ctl_controller0_Y_ctl_msg_o->body_force_cmd[2] = rtb_Switch_c_idx_2;
-  ctl_controller0_Y_ctl_msg_o->body_accel_cmd[2] = 1.0F /
-    ctl_controller0_U_cmc_msg_f->mass * rtb_Switch_c_idx_2;
-  ctl_controller0_Y_ctl_msg_o->pos_err[2] = rtb_Sum2_idx_2;
+  ctl_controller0_Y_ctl_msg_n->body_force_cmd[2] = rtb_Switch_c_idx_2;
+  ctl_controller0_Y_ctl_msg_n->body_accel_cmd[2] = 1.0F / rtb_Switch_mass *
+    rtb_Switch_c_idx_2;
+  ctl_controller0_Y_ctl_msg_n->pos_err[2] = rtb_Sum2_idx_2;
 
   // End of Outputs for SubSystem: '<Root>/ctl_controller'
-  ctl_controller0_Y_ctl_msg_o->pos_err_int[2] = rtb_Switch_P_B_ISS_ISS_idx_1;
+  ctl_controller0_Y_ctl_msg_n->pos_err_int[2] = rtb_Switch_est_V_B_ISS_ISS_id_1;
 
   // Outputs for Atomic SubSystem: '<Root>/ctl_controller'
-  ctl_controller0_Y_ctl_msg_o->body_torque_cmd[2] = rtb_Divide_f[2];
-  ctl_controller0_Y_ctl_msg_o->att_err[2] = rtb_Product_f[2];
+  ctl_controller0_Y_ctl_msg_n->body_torque_cmd[2] = rtb_Switch_b[2];
+  ctl_controller0_Y_ctl_msg_n->att_err[2] = rtb_Product1_m[2];
 
   // End of Outputs for SubSystem: '<Root>/ctl_controller'
-  ctl_controller0_Y_ctl_msg_o->att_err_int[2] = rtb_Switch_P_B_ISS_ISS_idx_2;
+  ctl_controller0_Y_ctl_msg_n->att_err_int[2] = rtb_Switch_est_P_B_ISS_ISS_id_0;
 
   // Outputs for Atomic SubSystem: '<Root>/ctl_controller'
-  ctl_controller0_Y_ctl_msg_o->traj_error_pos = (real32_T)sqrt((real_T)
+  ctl_controller0_Y_ctl_msg_n->traj_error_pos = (real32_T)sqrt((real_T)
     ((rtb_Gain1_j_idx_0 * rtb_Gain1_j_idx_0 + rtb_Gain1_j_idx_1 *
-      rtb_Gain1_j_idx_1) + rtb_Switch_P_B_ISS_ISS_idx_0 *
-     rtb_Switch_P_B_ISS_ISS_idx_0));
+      rtb_Gain1_j_idx_1) + rtb_Switch_est_P_B_ISS_ISS_idx_ *
+     rtb_Switch_est_P_B_ISS_ISS_idx_));
 
-  // Trigonometry: '<S59>/Trigonometric Function'
-  if (rtb_Merge_k[3] > 1.0F) {
-    rtb_Switch_P_B_ISS_ISS_idx_1 = 1.0F;
-  } else if (rtb_Merge_k[3] < -1.0F) {
-    rtb_Switch_P_B_ISS_ISS_idx_1 = -1.0F;
+  // Trigonometry: '<S81>/Trigonometric Function'
+  if (rtb_Merge[3] > 1.0F) {
+    rtb_Switch_est_P_B_ISS_ISS_id_0 = 1.0F;
+  } else if (rtb_Merge[3] < -1.0F) {
+    rtb_Switch_est_P_B_ISS_ISS_id_0 = -1.0F;
   } else {
-    rtb_Switch_P_B_ISS_ISS_idx_1 = rtb_Merge_k[3];
+    rtb_Switch_est_P_B_ISS_ISS_id_0 = rtb_Merge[3];
   }
 
   // Outport: '<Root>/ctl_msg' incorporates:
-  //   Abs: '<S59>/Abs'
-  //   DotProduct: '<S72>/Dot Product'
-  //   DotProduct: '<S74>/Dot Product'
-  //   Gain: '<S59>/Gain'
-  //   Sqrt: '<S72>/Sqrt'
-  //   Sqrt: '<S74>/Sqrt'
-  //   Trigonometry: '<S59>/Trigonometric Function'
+  //   Abs: '<S81>/Abs'
+  //   DotProduct: '<S94>/Dot Product'
+  //   DotProduct: '<S96>/Dot Product'
+  //   Gain: '<S81>/Gain'
+  //   Sqrt: '<S94>/Sqrt'
+  //   Sqrt: '<S96>/Sqrt'
+  //   Trigonometry: '<S81>/Trigonometric Function'
 
-  ctl_controller0_Y_ctl_msg_o->traj_error_att = ctl_controller0_P->Gain_Gain_hg *
-    (real32_T)fabs((real_T)(real32_T)acos((real_T)rtb_Switch_P_B_ISS_ISS_idx_1));
-  ctl_controller0_Y_ctl_msg_o->traj_error_vel = (real32_T)sqrt((real_T)
+  ctl_controller0_Y_ctl_msg_n->traj_error_att = ctl_controller0_P->Gain_Gain_hg *
+    (real32_T)fabs((real_T)(real32_T)acos((real_T)
+    rtb_Switch_est_P_B_ISS_ISS_id_0));
+  ctl_controller0_Y_ctl_msg_n->traj_error_vel = (real32_T)sqrt((real_T)
     ((rtb_Sum3_k_idx_0 * rtb_Sum3_k_idx_0 + rtb_Sum3_k_idx_1 * rtb_Sum3_k_idx_1)
-     + rtb_Switch_V_B_ISS_ISS_idx_2 * rtb_Switch_V_B_ISS_ISS_idx_2));
-  ctl_controller0_Y_ctl_msg_o->traj_error_omega = (real32_T)sqrt((real_T)
+     + rtb_SumofElements1 * rtb_SumofElements1));
+  ctl_controller0_Y_ctl_msg_n->traj_error_omega = (real32_T)sqrt((real_T)
     ((rtb_Sum4_o_idx_0 * rtb_Sum4_o_idx_0 + rtb_Sum4_o_idx_1 * rtb_Sum4_o_idx_1)
-     + rtb_Switch_omega_B_ISS_B_idx_2 * rtb_Switch_omega_B_ISS_B_idx_2));
+     + rtb_Switch_est_omega_B_ISS_B__1 * rtb_Switch_est_omega_B_ISS_B__1));
 
   // End of Outputs for SubSystem: '<Root>/ctl_controller'
 }
 
 // Model initialize function
 void ctl_controller0_initialize(RT_MODEL_ctl_controller0_T *const
-  ctl_controller0_M, kfl_msg *ctl_controller0_U_kfl_msg_l, cmc_msg
-  *ctl_controller0_U_cmc_msg_f, ex_time_msg *ctl_controller0_U_ex_time, env_msg *
-  ctl_controller0_U_env_msg_h, cmd_msg *ctl_controller0_Y_cmd_msg_c, ctl_msg
-  *ctl_controller0_Y_ctl_msg_o)
+  ctl_controller0_M, ctl_input_msg *ctl_controller0_U_ctl_input_msg_l, cmd_msg
+  *ctl_controller0_Y_cmd_msg_f, ctl_msg *ctl_controller0_Y_ctl_msg_n)
 {
   P_ctl_controller0_T *ctl_controller0_P = ((P_ctl_controller0_T *)
     ctl_controller0_M->defaultParam);
@@ -2755,7 +3147,7 @@ void ctl_controller0_initialize(RT_MODEL_ctl_controller0_T *const
   // End of Start for SubSystem: '<Root>/ctl_controller'
 
   // SystemInitialize for Atomic SubSystem: '<Root>/ctl_controller'
-  // InitializeConditions for UnitDelay: '<S93>/UD'
+  // InitializeConditions for UnitDelay: '<S115>/UD'
   ctl_controller0_DW->UD_DSTATE[0] =
     ctl_controller0_P->DiscreteDerivative_ICPrevScaled;
   ctl_controller0_DW->UD_DSTATE[1] =
@@ -2765,53 +3157,13 @@ void ctl_controller0_initialize(RT_MODEL_ctl_controller0_T *const
   ctl_controller0_DW->UD_DSTATE[3] =
     ctl_controller0_P->DiscreteDerivative_ICPrevScaled;
 
-  // InitializeConditions for UnitDelay: '<S90>/UD'
+  // InitializeConditions for UnitDelay: '<S112>/UD'
   ctl_controller0_DW->UD_DSTATE_e[0] =
     ctl_controller0_P->DiscreteDerivative_ICPrevScal_k;
-
-  // InitializeConditions for Delay: '<S10>/Delay11'
-  ctl_controller0_DW->Delay11_DSTATE[0] =
-    ctl_controller0_P->Delay11_InitialCondition;
-
-  // InitializeConditions for Delay: '<S11>/Delay11'
-  ctl_controller0_DW->Delay11_DSTATE_i[0] =
-    ctl_controller0_P->Delay11_InitialCondition_k;
-
-  // InitializeConditions for UnitDelay: '<S2>/Unit Delay1'
-  ctl_controller0_DW->UnitDelay1_DSTATE[0] =
-    ctl_controller0_P->UnitDelay1_InitialCondition;
-
-  // InitializeConditions for UnitDelay: '<S90>/UD'
   ctl_controller0_DW->UD_DSTATE_e[1] =
     ctl_controller0_P->DiscreteDerivative_ICPrevScal_k;
-
-  // InitializeConditions for Delay: '<S10>/Delay11'
-  ctl_controller0_DW->Delay11_DSTATE[1] =
-    ctl_controller0_P->Delay11_InitialCondition;
-
-  // InitializeConditions for Delay: '<S11>/Delay11'
-  ctl_controller0_DW->Delay11_DSTATE_i[1] =
-    ctl_controller0_P->Delay11_InitialCondition_k;
-
-  // InitializeConditions for UnitDelay: '<S2>/Unit Delay1'
-  ctl_controller0_DW->UnitDelay1_DSTATE[1] =
-    ctl_controller0_P->UnitDelay1_InitialCondition;
-
-  // InitializeConditions for UnitDelay: '<S90>/UD'
   ctl_controller0_DW->UD_DSTATE_e[2] =
     ctl_controller0_P->DiscreteDerivative_ICPrevScal_k;
-
-  // InitializeConditions for Delay: '<S10>/Delay11'
-  ctl_controller0_DW->Delay11_DSTATE[2] =
-    ctl_controller0_P->Delay11_InitialCondition;
-
-  // InitializeConditions for Delay: '<S11>/Delay11'
-  ctl_controller0_DW->Delay11_DSTATE_i[2] =
-    ctl_controller0_P->Delay11_InitialCondition_k;
-
-  // InitializeConditions for UnitDelay: '<S2>/Unit Delay1'
-  ctl_controller0_DW->UnitDelay1_DSTATE[2] =
-    ctl_controller0_P->UnitDelay1_InitialCondition;
 
   // InitializeConditions for UnitDelay: '<S2>/Unit Delay2'
   ctl_controller0_DW->UnitDelay2_DSTATE[0] =
@@ -2823,28 +3175,66 @@ void ctl_controller0_initialize(RT_MODEL_ctl_controller0_T *const
   ctl_controller0_DW->UnitDelay2_DSTATE[3] =
     ctl_controller0_P->UnitDelay2_InitialCondition;
 
-  // InitializeConditions for DiscreteIntegrator: '<S12>/Discrete-Time Integrator1' 
+  // InitializeConditions for DiscreteIntegrator: '<S30>/Discrete-Time Integrator1' 
   ctl_controller0_DW->DiscreteTimeIntegrator1_PrevRes = 0;
+
+  // InitializeConditions for Delay: '<S13>/Delay11'
+  ctl_controller0_DW->Delay11_DSTATE[0] =
+    ctl_controller0_P->Delay11_InitialCondition;
+
+  // InitializeConditions for Delay: '<S14>/Delay11'
+  ctl_controller0_DW->Delay11_DSTATE_i[0] =
+    ctl_controller0_P->Delay11_InitialCondition_k;
+
+  // InitializeConditions for UnitDelay: '<S2>/Unit Delay1'
+  ctl_controller0_DW->UnitDelay1_DSTATE[0] =
+    ctl_controller0_P->UnitDelay1_InitialCondition;
+
+  // InitializeConditions for DiscreteIntegrator: '<S30>/Discrete-Time Integrator1' 
   ctl_controller0_DW->DiscreteTimeIntegrator1_DSTATE[0] =
     ctl_controller0_P->DiscreteTimeIntegrator1_IC[0];
 
-  // InitializeConditions for DiscreteIntegrator: '<S13>/Discrete-Time Integrator' 
+  // InitializeConditions for DiscreteIntegrator: '<S31>/Discrete-Time Integrator' 
   ctl_controller0_DW->DiscreteTimeIntegrator_DSTATE[0] =
     ctl_controller0_P->DiscreteTimeIntegrator_IC[0];
 
-  // InitializeConditions for DiscreteIntegrator: '<S12>/Discrete-Time Integrator1' 
+  // InitializeConditions for Delay: '<S13>/Delay11'
+  ctl_controller0_DW->Delay11_DSTATE[1] =
+    ctl_controller0_P->Delay11_InitialCondition;
+
+  // InitializeConditions for Delay: '<S14>/Delay11'
+  ctl_controller0_DW->Delay11_DSTATE_i[1] =
+    ctl_controller0_P->Delay11_InitialCondition_k;
+
+  // InitializeConditions for UnitDelay: '<S2>/Unit Delay1'
+  ctl_controller0_DW->UnitDelay1_DSTATE[1] =
+    ctl_controller0_P->UnitDelay1_InitialCondition;
+
+  // InitializeConditions for DiscreteIntegrator: '<S30>/Discrete-Time Integrator1' 
   ctl_controller0_DW->DiscreteTimeIntegrator1_DSTATE[1] =
     ctl_controller0_P->DiscreteTimeIntegrator1_IC[1];
 
-  // InitializeConditions for DiscreteIntegrator: '<S13>/Discrete-Time Integrator' 
+  // InitializeConditions for DiscreteIntegrator: '<S31>/Discrete-Time Integrator' 
   ctl_controller0_DW->DiscreteTimeIntegrator_DSTATE[1] =
     ctl_controller0_P->DiscreteTimeIntegrator_IC[1];
 
-  // InitializeConditions for DiscreteIntegrator: '<S12>/Discrete-Time Integrator1' 
+  // InitializeConditions for Delay: '<S13>/Delay11'
+  ctl_controller0_DW->Delay11_DSTATE[2] =
+    ctl_controller0_P->Delay11_InitialCondition;
+
+  // InitializeConditions for Delay: '<S14>/Delay11'
+  ctl_controller0_DW->Delay11_DSTATE_i[2] =
+    ctl_controller0_P->Delay11_InitialCondition_k;
+
+  // InitializeConditions for UnitDelay: '<S2>/Unit Delay1'
+  ctl_controller0_DW->UnitDelay1_DSTATE[2] =
+    ctl_controller0_P->UnitDelay1_InitialCondition;
+
+  // InitializeConditions for DiscreteIntegrator: '<S30>/Discrete-Time Integrator1' 
   ctl_controller0_DW->DiscreteTimeIntegrator1_DSTATE[2] =
     ctl_controller0_P->DiscreteTimeIntegrator1_IC[2];
 
-  // InitializeConditions for DiscreteIntegrator: '<S13>/Discrete-Time Integrator' 
+  // InitializeConditions for DiscreteIntegrator: '<S31>/Discrete-Time Integrator' 
   ctl_controller0_DW->DiscreteTimeIntegrator_DSTATE[2] =
     ctl_controller0_P->DiscreteTimeIntegrator_IC[2];
   ctl_controller0_DW->DiscreteTimeIntegrator_PrevRese = 0;
@@ -2877,10 +3267,9 @@ void ctl_controller0_terminate(RT_MODEL_ctl_controller0_T * ctl_controller0_M)
 }
 
 // Model data allocation function
-RT_MODEL_ctl_controller0_T *ctl_controller0(kfl_msg *ctl_controller0_U_kfl_msg_l,
-  cmc_msg *ctl_controller0_U_cmc_msg_f, ex_time_msg *ctl_controller0_U_ex_time,
-  env_msg *ctl_controller0_U_env_msg_h, cmd_msg *ctl_controller0_Y_cmd_msg_c,
-  ctl_msg *ctl_controller0_Y_ctl_msg_o)
+RT_MODEL_ctl_controller0_T *ctl_controller0(ctl_input_msg
+  *ctl_controller0_U_ctl_input_msg_l, cmd_msg *ctl_controller0_Y_cmd_msg_f,
+  ctl_msg *ctl_controller0_Y_ctl_msg_n)
 {
   RT_MODEL_ctl_controller0_T *ctl_controller0_M;
   ctl_controller0_M = (RT_MODEL_ctl_controller0_T *) malloc(sizeof
@@ -2935,14 +3324,11 @@ RT_MODEL_ctl_controller0_T *ctl_controller0(kfl_msg *ctl_controller0_U_kfl_msg_l
                   sizeof(DW_ctl_controller0_T));
 
     // external inputs
-    *ctl_controller0_U_kfl_msg_l = ctl_controller0_rtZkfl_msg;
-    *ctl_controller0_U_cmc_msg_f = ctl_controller0_rtZcmc_msg;
-    *ctl_controller0_U_ex_time = ctl_controller0_rtZex_time_msg;
-    *ctl_controller0_U_env_msg_h = ctl_controller0_rtZenv_msg;
+    *ctl_controller0_U_ctl_input_msg_l = ctl_controller0_rtZctl_input_ms;
 
     // external outputs
-    (*ctl_controller0_Y_cmd_msg_c) = ctl_controller0_rtZcmd_msg;
-    (*ctl_controller0_Y_ctl_msg_o) = ctl_controller0_rtZctl_msg;
+    (*ctl_controller0_Y_cmd_msg_f) = ctl_controller0_rtZcmd_msg;
+    (*ctl_controller0_Y_ctl_msg_n) = ctl_controller0_rtZctl_msg;
   }
 
   return ctl_controller0_M;

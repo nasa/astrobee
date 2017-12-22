@@ -21,7 +21,7 @@
 namespace localization_manager {
 
 ARPipeline::ARPipeline(ros::NodeHandle *nh, ros::NodeHandle *nhp, uint8_t mode, PipelineCallbackType cb)
-  : Pipeline(mode, cb, "ar", "AR tag localization", true), nh_(nh) {
+  : Pipeline(mode, cb, "ar", "AR tag localization", true, true), nh_(nh) {
   // Create a private nodehandle
   ros::NodeHandle nh_pvt_(*nhp, GetName());
   // Initialize configuration manager

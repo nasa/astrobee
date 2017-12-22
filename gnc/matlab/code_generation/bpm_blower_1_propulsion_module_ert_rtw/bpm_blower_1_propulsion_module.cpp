@@ -3,9 +3,9 @@
 //
 // Code generated for Simulink model 'bpm_blower_1_propulsion_module'.
 //
-// Model version                  : 1.1139
+// Model version                  : 1.1142
 // Simulink Coder version         : 8.11 (R2016b) 25-Aug-2016
-// C/C++ source code generated on : Thu Aug 31 10:22:28 2017
+// C/C++ source code generated on : Mon Dec 18 10:15:59 2017
 //
 // Target selection: ert.tlc
 // Embedded hardware selection: 32-bit Generic
@@ -22,7 +22,7 @@ void bpm_blower_1_propulsion_module_step(RT_MODEL_bpm_blower_1_propuls_T *const
   bpm_blower_1_propulsion_modul_U_omega_B_ECI_B[3], uint8_T
   bpm_blower_1_propulsion_modul_U_impeller_cmd, real32_T
   bpm_blower_1_propulsion_modul_U_servo_cmd[6], real32_T
-  bpm_blower_1_propulsion_modul_U_center_of_mass[3], real32_T
+  bpm_blower_1_propulsion_modul_U_veh_cm[3], real32_T
   *bpm_blower_1_propulsion_modul_Y_impeller_current, real32_T
   bpm_blower_1_propulsion_modul_Y_servo_current[6], real32_T
   bpm_blower_1_propulsion_modul_Y_torque_B[3], real32_T
@@ -47,10 +47,10 @@ void bpm_blower_1_propulsion_module_step(RT_MODEL_bpm_blower_1_propuls_T *const
   int32_T itilerow;
   real32_T c[18];
   real32_T rtb_current[6];
-  real32_T rtb_Divide;
   real32_T rtb_IntegralGain_p;
   real32_T rtb_Sum_j;
   real32_T rtb_SignPreIntegrator_j;
+  real32_T rtb_FilterCoefficient_h;
   boolean_T rtb_NotEqual_m;
   real32_T rtb_Gain1_ii[6];
   real32_T rtb_IntegralGain[6];
@@ -77,18 +77,37 @@ void bpm_blower_1_propulsion_module_step(RT_MODEL_bpm_blower_1_propuls_T *const
   const real32_T *rtb_Switch_d_1;
 
   // Outputs for Atomic SubSystem: '<S5>/speed_controller'
-  // Sum: '<S27>/Sum' incorporates:
+  // Product: '<S27>/Divide' incorporates:
   //   Constant: '<S27>/Constant'
-  //   DiscreteIntegrator: '<S6>/Discrete-Time Integrator'
-  //   DiscreteTransferFcn: '<S27>/Discrete Transfer Fcn'
-  //   DiscreteTransferFcn: '<S27>/Discrete Transfer Fcn1'
   //   Inport: '<Root>/impeller_cmd'
-  //   Product: '<S27>/Divide'
 
   rtb_IntegralGain_p = (real32_T)bpm_blower_1_propulsion_modul_U_impeller_cmd *
-    bpm_blower_1_propulsion_modul_P->bpm_blower_1_propulsion_module_ *
-    bpm_blower_1_propulsion_modul_P->bpm_imp_cmd_filt_num /
-    bpm_blower_1_propulsion_modul_P->bpm_imp_cmd_filt_den -
+    bpm_blower_1_propulsion_modul_P->bpm_blower_1_propulsion_module_;
+
+  // RateLimiter: '<S27>/Rate Limiter'
+  rtb_FilterCoefficient_h = rtb_IntegralGain_p -
+    bpm_blower_1_propulsion_modu_DW->PrevY_l;
+  if (rtb_FilterCoefficient_h >
+      bpm_blower_1_propulsion_modul_P->RateLimiter_RisingLim) {
+    rtb_IntegralGain_p = bpm_blower_1_propulsion_modu_DW->PrevY_l +
+      bpm_blower_1_propulsion_modul_P->RateLimiter_RisingLim;
+  } else {
+    if (rtb_FilterCoefficient_h <
+        bpm_blower_1_propulsion_modul_P->RateLimiter_FallingLim) {
+      rtb_IntegralGain_p = bpm_blower_1_propulsion_modu_DW->PrevY_l +
+        bpm_blower_1_propulsion_modul_P->RateLimiter_FallingLim;
+    }
+  }
+
+  bpm_blower_1_propulsion_modu_DW->PrevY_l = rtb_IntegralGain_p;
+
+  // End of RateLimiter: '<S27>/Rate Limiter'
+
+  // Sum: '<S27>/Sum' incorporates:
+  //   DiscreteIntegrator: '<S6>/Discrete-Time Integrator'
+  //   DiscreteTransferFcn: '<S27>/Discrete Transfer Fcn1'
+
+  rtb_IntegralGain_p -=
     bpm_blower_1_propulsion_modu_DW->DiscreteTimeIntegrator_DSTATE *
     bpm_blower_1_propulsion_modul_P->bpm_imp_speed_filt_num /
     bpm_blower_1_propulsion_modul_P->bpm_imp_speed_filt_den;
@@ -98,9 +117,8 @@ void bpm_blower_1_propulsion_module_step(RT_MODEL_bpm_blower_1_propuls_T *const
   //   Gain: '<S28>/Derivative Gain'
   //   Sum: '<S28>/SumD'
 
-  rtb_Divide = (bpm_blower_1_propulsion_modul_P->bpm_imp_ctl_kd *
-                rtb_IntegralGain_p -
-                bpm_blower_1_propulsion_modu_DW->Filter_DSTATE_o) *
+  rtb_FilterCoefficient_h = (bpm_blower_1_propulsion_modul_P->bpm_imp_ctl_kd *
+    rtb_IntegralGain_p - bpm_blower_1_propulsion_modu_DW->Filter_DSTATE_o) *
     bpm_blower_1_propulsion_modul_P->bpm_imp_ctl_filt_n;
 
   // Sum: '<S28>/Sum' incorporates:
@@ -110,7 +128,7 @@ void bpm_blower_1_propulsion_module_step(RT_MODEL_bpm_blower_1_propuls_T *const
   rtb_Sum_j = (bpm_blower_1_propulsion_modul_P->bpm_imp_ctl_kp *
                rtb_IntegralGain_p +
                bpm_blower_1_propulsion_modu_DW->Integrator_DSTATE_k) +
-    rtb_Divide;
+    rtb_FilterCoefficient_h;
 
   // DeadZone: '<S30>/DeadZone'
   if (rtb_Sum_j > bpm_blower_1_propulsion_modul_P->bpm_imp_max_voltage) {
@@ -236,7 +254,7 @@ void bpm_blower_1_propulsion_module_step(RT_MODEL_bpm_blower_1_propuls_T *const
 
   // Update for DiscreteIntegrator: '<S28>/Filter'
   bpm_blower_1_propulsion_modu_DW->Filter_DSTATE_o +=
-    bpm_blower_1_propulsion_modul_P->Filter_gainval * rtb_Divide;
+    bpm_blower_1_propulsion_modul_P->Filter_gainval * rtb_FilterCoefficient_h;
 
   // End of Outputs for SubSystem: '<S5>/speed_controller'
 
@@ -246,10 +264,10 @@ void bpm_blower_1_propulsion_module_step(RT_MODEL_bpm_blower_1_propuls_T *const
   //   Gain: '<S26>/Gain4'
   //   Sum: '<S26>/Add'
 
-  rtb_Divide = (rtb_Sum_j - 1.0F /
-                bpm_blower_1_propulsion_modul_P->bpm_imp_motor_speed_k *
-                bpm_blower_1_propulsion_modu_DW->DiscreteTimeIntegrator_DSTATE) *
-    (1.0F / bpm_blower_1_propulsion_modul_P->bpm_imp_motor_r);
+  rtb_FilterCoefficient_h = (rtb_Sum_j - 1.0F /
+    bpm_blower_1_propulsion_modul_P->bpm_imp_motor_speed_k *
+    bpm_blower_1_propulsion_modu_DW->DiscreteTimeIntegrator_DSTATE) * (1.0F /
+    bpm_blower_1_propulsion_modul_P->bpm_imp_motor_r);
 
   // Sum: '<S26>/Add1' incorporates:
   //   DiscreteIntegrator: '<S6>/Discrete-Time Integrator'
@@ -257,17 +275,18 @@ void bpm_blower_1_propulsion_module_step(RT_MODEL_bpm_blower_1_propuls_T *const
   //   Gain: '<S26>/Gain6'
 
   rtb_IntegralGain_p = bpm_blower_1_propulsion_modul_P->bpm_imp_motor_torque_k *
-    rtb_Divide - bpm_blower_1_propulsion_modul_P->bpm_imp_motor_friction_coeff *
+    rtb_FilterCoefficient_h -
+    bpm_blower_1_propulsion_modul_P->bpm_imp_motor_friction_coeff *
     bpm_blower_1_propulsion_modu_DW->DiscreteTimeIntegrator_DSTATE;
 
   // End of Outputs for SubSystem: '<S5>/dc_motor_model'
 
   // Outport: '<Root>/impeller_current'
-  *bpm_blower_1_propulsion_modul_Y_impeller_current = rtb_Divide;
+  *bpm_blower_1_propulsion_modul_Y_impeller_current = rtb_FilterCoefficient_h;
 
   // Outputs for Atomic SubSystem: '<S1>/servo_model'
   // Backlash: '<S31>/Backlash1'
-  rtb_Divide =
+  rtb_FilterCoefficient_h =
     bpm_blower_1_propulsion_modul_P->bpm_servo_motor_backlash_deadband / 2.0F;
 
   // Gain: '<S31>/Gain5'
@@ -278,17 +297,18 @@ void bpm_blower_1_propulsion_module_step(RT_MODEL_bpm_blower_1_propuls_T *const
     //   DiscreteIntegrator: '<S31>/Discrete-Time Integrator4'
 
     if (bpm_blower_1_propulsion_modu_DW->DiscreteTimeIntegrator4_DSTATE[i] <
-        bpm_blower_1_propulsion_modu_DW->PrevY[i] - rtb_Divide) {
+        bpm_blower_1_propulsion_modu_DW->PrevY[i] - rtb_FilterCoefficient_h) {
       rtb_Sum_j =
         bpm_blower_1_propulsion_modu_DW->DiscreteTimeIntegrator4_DSTATE[i] +
-        rtb_Divide;
+        rtb_FilterCoefficient_h;
     } else if (bpm_blower_1_propulsion_modu_DW->DiscreteTimeIntegrator4_DSTATE[i]
-               <= bpm_blower_1_propulsion_modu_DW->PrevY[i] + rtb_Divide) {
+               <= bpm_blower_1_propulsion_modu_DW->PrevY[i] +
+               rtb_FilterCoefficient_h) {
       rtb_Sum_j = bpm_blower_1_propulsion_modu_DW->PrevY[i];
     } else {
       rtb_Sum_j =
         bpm_blower_1_propulsion_modu_DW->DiscreteTimeIntegrator4_DSTATE[i] -
-        rtb_Divide;
+        rtb_FilterCoefficient_h;
     }
 
     // Gain: '<S31>/Gain1'
@@ -414,8 +434,8 @@ void bpm_blower_1_propulsion_module_step(RT_MODEL_bpm_blower_1_propuls_T *const
     bpm_blower_1_propulsion_modul_P->bpm_servo_motor_gear_box_inertia;
 
   // Update for DiscreteIntegrator: '<S31>/Discrete-Time Integrator4'
-  rtb_Divide = bpm_blower_1_propulsion_modul_P->bpm_servo_max_theta /
-    bpm_blower_1_propulsion_modul_P->bpm_servo_motor_gear_ratio;
+  rtb_FilterCoefficient_h = bpm_blower_1_propulsion_modul_P->bpm_servo_max_theta
+    / bpm_blower_1_propulsion_modul_P->bpm_servo_motor_gear_ratio;
   rtb_Sum_j = (real32_T)bpm_blower_1_propulsion_modul_P->bpm_servo_min_theta /
     bpm_blower_1_propulsion_modul_P->bpm_servo_motor_gear_ratio;
   rtb_Gain_n = bpm_blower_1_propulsion_modul_P->bpm_servo_max_theta /
@@ -424,7 +444,7 @@ void bpm_blower_1_propulsion_module_step(RT_MODEL_bpm_blower_1_propuls_T *const
     bpm_blower_1_propulsion_modul_P->bpm_servo_motor_gear_ratio;
   for (i = 0; i < 6; i++) {
     if (bpm_blower_1_propulsion_modu_DW->DiscreteTimeIntegrator4_DSTATE[i] >=
-        rtb_Divide) {
+        rtb_FilterCoefficient_h) {
       bpm_blower_1_propulsion_modu_DW->DiscreteTimeIntegrator4_DSTATE[i] =
         rtb_Gain_n;
     } else {
@@ -553,19 +573,19 @@ void bpm_blower_1_propulsion_module_step(RT_MODEL_bpm_blower_1_propuls_T *const
   // Sqrt: '<S25>/Sqrt' incorporates:
   //   DotProduct: '<S25>/Dot Product'
 
-  rtb_Divide = (real32_T)sqrt((real_T)rtb_IntegralGain_a);
+  rtb_FilterCoefficient_h = (real32_T)sqrt((real_T)rtb_IntegralGain_a);
 
   // If: '<S12>/If' incorporates:
   //   DataTypeConversion: '<S12>/Data Type Conversion'
   //   Product: '<S24>/Divide'
 
-  if ((real_T)rtb_Divide > 1.0E-7) {
+  if ((real_T)rtb_FilterCoefficient_h > 1.0E-7) {
     // Outputs for IfAction SubSystem: '<S12>/Normalize' incorporates:
     //   ActionPort: '<S24>/Action Port'
 
-    rtb_Add1[0] /= rtb_Divide;
-    rtb_Add1[1] /= rtb_Divide;
-    rtb_Add1[2] = rtb_SignPreIntegrator_j / rtb_Divide;
+    rtb_Add1[0] /= rtb_FilterCoefficient_h;
+    rtb_Add1[1] /= rtb_FilterCoefficient_h;
+    rtb_Add1[2] = rtb_SignPreIntegrator_j / rtb_FilterCoefficient_h;
 
     // End of Outputs for SubSystem: '<S12>/Normalize'
   }
@@ -582,9 +602,10 @@ void bpm_blower_1_propulsion_module_step(RT_MODEL_bpm_blower_1_propuls_T *const
   //   Gain: '<S3>/Gain1'
   //   Sum: '<S3>/Add3'
 
-  rtb_Divide = (bpm_blower_1_propulsion_modul_P->tun_bpm_noise_on_flag *
-                bpm_blower_1_propulsion_modul_P->bpm_impeller_inertia_error +
-                bpm_blower_1_propulsion_modul_P->bpm_impeller_inertia) *
+  rtb_FilterCoefficient_h =
+    (bpm_blower_1_propulsion_modul_P->tun_bpm_noise_on_flag *
+     bpm_blower_1_propulsion_modul_P->bpm_impeller_inertia_error +
+     bpm_blower_1_propulsion_modul_P->bpm_impeller_inertia) *
     bpm_blower_1_propulsion_modu_DW->DiscreteTimeIntegrator_DSTATE;
 
   // Outputs for Enabled SubSystem: '<S3>/latch_nozzle_thrust_matricies' incorporates:
@@ -732,7 +753,7 @@ void bpm_blower_1_propulsion_module_step(RT_MODEL_bpm_blower_1_propuls_T *const
       rtb_Sum2[i] = (real_T)
         bpm_blower_1_propulsion_modul_P->tun_bpm_noise_on_flag *
         bpm_blower_1_propulsion_modul_P->abp_P_CG_B_B_error[i] + (real_T)
-        bpm_blower_1_propulsion_modul_U_center_of_mass[i];
+        bpm_blower_1_propulsion_modul_U_veh_cm[i];
 
       // MATLAB Function: '<S11>/MATLAB Function'
       ibmat = (int32_T)(i * 6);
@@ -898,10 +919,10 @@ void bpm_blower_1_propulsion_module_step(RT_MODEL_bpm_blower_1_propuls_T *const
     //   Product: '<S3>/Product2'
     //   Sum: '<S3>/Add2'
 
-    bpm_blower_1_propulsion_modul_Y_torque_B[i] = (((rtb_Add1[0] * rtb_Divide *
-      tmp_0[i] + tmp_0[(int32_T)(i + 3)] * (rtb_Add1[1] * rtb_Divide)) + tmp_0
-      [(int32_T)(i + 6)] * (rtb_Add1[2] * rtb_Divide)) + rtb_Add1[i] * rtb_Sum_j)
-      + tmp_1[i];
+    bpm_blower_1_propulsion_modul_Y_torque_B[i] = (((rtb_Add1[0] *
+      rtb_FilterCoefficient_h * tmp_0[i] + tmp_0[(int32_T)(i + 3)] * (rtb_Add1[1]
+      * rtb_FilterCoefficient_h)) + tmp_0[(int32_T)(i + 6)] * (rtb_Add1[2] *
+      rtb_FilterCoefficient_h)) + rtb_Add1[i] * rtb_Sum_j) + tmp_1[i];
 
     // Outport: '<Root>/force_B' incorporates:
     //   Product: '<S3>/Product3'
@@ -947,7 +968,7 @@ void bpm_blower_1_propulsion_module_step(RT_MODEL_bpm_blower_1_propuls_T *const
   //   RandomNumber: '<S8>/random_noise'
   //   Sum: '<S8>/Sum1'
 
-  rtb_Divide = rt_roundf_snf((((real32_T)(1.0 / sqrt
+  rtb_FilterCoefficient_h = rt_roundf_snf((((real32_T)(1.0 / sqrt
     (bpm_blower_1_propulsion_modul_P->astrobee_time_step_size) *
     bpm_blower_1_propulsion_modu_DW->NextOutput_e) +
     bpm_blower_1_propulsion_modul_P->bpm_sensor_sf *
@@ -995,11 +1016,11 @@ void bpm_blower_1_propulsion_module_step(RT_MODEL_bpm_blower_1_propuls_T *const
   //   UnitDelay: '<S9>/Delay Input1'
 
   bpm_blower_1_propulsion_modu_DW->UnitDelay_DSTATE =
-    ((bpm_blower_1_propulsion_modul_U_center_of_mass[0] !=
+    ((bpm_blower_1_propulsion_modul_U_veh_cm[0] !=
       bpm_blower_1_propulsion_modu_DW->DelayInput1_DSTATE[0]) ||
-     (bpm_blower_1_propulsion_modul_U_center_of_mass[1] !=
+     (bpm_blower_1_propulsion_modul_U_veh_cm[1] !=
       bpm_blower_1_propulsion_modu_DW->DelayInput1_DSTATE[1]) ||
-     (bpm_blower_1_propulsion_modul_U_center_of_mass[2] !=
+     (bpm_blower_1_propulsion_modul_U_veh_cm[2] !=
       bpm_blower_1_propulsion_modu_DW->DelayInput1_DSTATE[2]));
 
   // Update for RandomNumber: '<S8>/random_noise1'
@@ -1015,17 +1036,19 @@ void bpm_blower_1_propulsion_module_step(RT_MODEL_bpm_blower_1_propuls_T *const
     bpm_blower_1_propulsion_modul_P->random_noise_Mean;
 
   // Saturate: '<S8>/Saturation'
-  if (rtb_Divide > bpm_blower_1_propulsion_modul_P->bpm_sensor_max) {
+  if (rtb_FilterCoefficient_h > bpm_blower_1_propulsion_modul_P->bpm_sensor_max)
+  {
     // Update for Delay: '<S8>/Delay2'
     bpm_blower_1_propulsion_modu_DW->Delay2_DSTATE =
       bpm_blower_1_propulsion_modul_P->bpm_sensor_max;
-  } else if (rtb_Divide < bpm_blower_1_propulsion_modul_P->bpm_sensor_min) {
+  } else if (rtb_FilterCoefficient_h <
+             bpm_blower_1_propulsion_modul_P->bpm_sensor_min) {
     // Update for Delay: '<S8>/Delay2'
     bpm_blower_1_propulsion_modu_DW->Delay2_DSTATE =
       bpm_blower_1_propulsion_modul_P->bpm_sensor_min;
   } else {
     // Update for Delay: '<S8>/Delay2'
-    bpm_blower_1_propulsion_modu_DW->Delay2_DSTATE = rtb_Divide;
+    bpm_blower_1_propulsion_modu_DW->Delay2_DSTATE = rtb_FilterCoefficient_h;
   }
 
   // End of Saturate: '<S8>/Saturation'
@@ -1039,11 +1062,11 @@ void bpm_blower_1_propulsion_module_step(RT_MODEL_bpm_blower_1_propuls_T *const
   //   Update for Inport: '<Root>/veh_cm'
 
   bpm_blower_1_propulsion_modu_DW->DelayInput1_DSTATE[0] =
-    bpm_blower_1_propulsion_modul_U_center_of_mass[0];
+    bpm_blower_1_propulsion_modul_U_veh_cm[0];
   bpm_blower_1_propulsion_modu_DW->DelayInput1_DSTATE[1] =
-    bpm_blower_1_propulsion_modul_U_center_of_mass[1];
+    bpm_blower_1_propulsion_modul_U_veh_cm[1];
   bpm_blower_1_propulsion_modu_DW->DelayInput1_DSTATE[2] =
-    bpm_blower_1_propulsion_modul_U_center_of_mass[2];
+    bpm_blower_1_propulsion_modul_U_veh_cm[2];
 }
 
 // Model initialize function
@@ -1053,7 +1076,7 @@ void bpm_blower_1_propulsion_module_initialize(RT_MODEL_bpm_blower_1_propuls_T *
   bpm_blower_1_propulsion_modul_U_omega_B_ECI_B[3], uint8_T
   *bpm_blower_1_propulsion_modul_U_impeller_cmd, real32_T
   bpm_blower_1_propulsion_modul_U_servo_cmd[6], real32_T
-  bpm_blower_1_propulsion_modul_U_center_of_mass[3], real32_T
+  bpm_blower_1_propulsion_modul_U_veh_cm[3], real32_T
   *bpm_blower_1_propulsion_modul_Y_impeller_current, real32_T
   bpm_blower_1_propulsion_modul_Y_servo_current[6], real32_T
   bpm_blower_1_propulsion_modul_Y_torque_B[3], real32_T
@@ -1164,6 +1187,10 @@ void bpm_blower_1_propulsion_module_initialize(RT_MODEL_bpm_blower_1_propuls_T *
       bpm_blower_1_propulsion_modul_P->DetectChange_vinit;
 
     // SystemInitialize for Atomic SubSystem: '<S5>/speed_controller'
+    // InitializeConditions for RateLimiter: '<S27>/Rate Limiter'
+    bpm_blower_1_propulsion_modu_DW->PrevY_l =
+      bpm_blower_1_propulsion_modul_P->RateLimiter_IC;
+
     // InitializeConditions for DiscreteIntegrator: '<S28>/Integrator'
     bpm_blower_1_propulsion_modu_DW->Integrator_DSTATE_k =
       bpm_blower_1_propulsion_modul_P->Integrator_IC;
@@ -1245,7 +1272,7 @@ RT_MODEL_bpm_blower_1_propuls_T *bpm_blower_1_propulsion_module(real32_T
   bpm_blower_1_propulsion_modul_U_omega_B_ECI_B[3], uint8_T
   *bpm_blower_1_propulsion_modul_U_impeller_cmd, real32_T
   bpm_blower_1_propulsion_modul_U_servo_cmd[6], real32_T
-  bpm_blower_1_propulsion_modul_U_center_of_mass[3], real32_T
+  bpm_blower_1_propulsion_modul_U_veh_cm[3], real32_T
   *bpm_blower_1_propulsion_modul_Y_impeller_current, real32_T
   bpm_blower_1_propulsion_modul_Y_servo_current[6], real32_T
   bpm_blower_1_propulsion_modul_Y_torque_B[3], real32_T
@@ -1328,8 +1355,8 @@ RT_MODEL_bpm_blower_1_propuls_T *bpm_blower_1_propulsion_module(real32_T
                  sizeof(real32_T));
     (void)memset(&bpm_blower_1_propulsion_modul_U_servo_cmd[0], 0, 6U * sizeof
                  (real32_T));
-    (void)memset(&bpm_blower_1_propulsion_modul_U_center_of_mass[0], 0, 3U *
-                 sizeof(real32_T));
+    (void)memset(&bpm_blower_1_propulsion_modul_U_veh_cm[0], 0, 3U * sizeof
+                 (real32_T));
     *bpm_blower_1_propulsion_modul_U_battery_voltage = 0.0F;
     *bpm_blower_1_propulsion_modul_U_impeller_cmd = 0U;
 

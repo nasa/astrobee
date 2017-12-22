@@ -1,5 +1,0 @@
-<library path="lib/libperching_arm">
-  <class name="perching_arm/PerchingArm" type="perching_arm::PerchingArm" base_class_type="nodelet::Nodelet">
-		<description>Nodelet to control the perching arm</description>
-  </class>
-</library>

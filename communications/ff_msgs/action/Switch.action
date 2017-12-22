@@ -18,7 +18,15 @@
 # This message is the SWITCH action offered by the LOCALIZATION_MANAGER
 
 string pipeline                              # The requested localization pipeline
+string NONE               = "no"
+string MAPPED_LANDMARKS   = "ml"
+string AR_TAGS            = "ar"
+string HANDRAIL           = "hr"
+string PERCH              = "pl"
+string TRUTH              = "gt"
+
 ---
+
 int32 response
 int32 PIPELINE_ALREADY_ACTIVE         =  2   # We are already on this mode
 int32 SUCCESS                         =  1   # The switch was successful
@@ -34,4 +42,5 @@ int32 HAD_TO_FALLBACK                 = -8   # Current pipeline was failing to h
 int32 PIPELINE_NOT_STABLE             = -9   # Measurement not received in T
 int32 EKF_NOT_STABLE                  = -10  # Measurement not received in T
 int32 BAD_STATE_TRANSITION            = -11  # Measurement not received in T
+
 ---

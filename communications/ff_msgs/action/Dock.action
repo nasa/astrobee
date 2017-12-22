@@ -17,50 +17,43 @@
 #
 # Dock action for the Docking node
 
-# Goal
-std_msgs/Header header
-uint8 bay
+# Do we want to dock or undock
+uint8 command
+uint8 DOCK    = 1
+uint8 UNDOCK  = 2
+
+# Which berth (values must match)
+uint8 berth
+uint8 BERTH_LEFT   = 1
+uint8 BERTH_RIGHT  = 2
+uint8 UNKNOWN      = 3 # When we undock, we don't know what berth we are in
+
 ---
+
 # Result
-std_msgs/Header header
-int32 status
-
-int32 UNKNOWN          = 0
-
-# success codes
-int32 DOCKED         = 1     # success!
-int32 ALREADY_DOCKED = 2     # technically success, the best kind of success
-int32 CANCELED       = 3     # i guess success?
-
-# error codes
-int32 ACTION_IN_PROGRESS = -101  # we are already trying to dock
-int32 DOCK_HW_ERROR      = -102  # i2c error or something with dock
-int32 NO_CAMERA_SVC      = -103  # unable to communicate with camera service
-int32 CANNOT_ENABLE_CAM  = -104
-int32 NO_EKF_SVC         = -105  # unable to communicate with the EKF service
-int32 CANNOT_SWITCH_EKF  = -106
-int32 NO_MOBILITY_SVC    = -107  # unable to communicate with the choreograhper
-int32 NO_PMC_SVC         = -108
-int32 CANNOT_DISABLE_PMC = -109  # can't turn ourselves off
-
-# localization error codes
-int32 NO_FEATURES      = -201  # could not get a location lock
-int32 HIGH_COVARIANCE  = -202  # covariance drifted too much
+int32 response
+int32 CANCELLED                          = 5
+int32 ALREADY_DOCKED                     = 4
+int32 ALREADY_UNDOCKED                   = 3
+int32 UNDOCKED                           = 2
+int32 DOCKED                             = 1
+int32 PREEMPTED                          = 0
+int32 INVALID_COMMAND                    = -1
+int32 INVALID_BERTH                      = -2
+int32 NOT_IN_UNDOCKED_STATE              = -3
+int32 NOT_IN_DOCKED_STATE                = -4
+int32 SWITCH_TO_ML_FAILED                = -5
+int32 SWITCH_TO_AR_FAILED                = -6
+int32 SWITCH_TO_NO_FAILED                = -7
+int32 PREP_DISABLE_FAILED                = -8
+int32 PREP_ENABLE_FAILED                 = -9
+int32 MOTION_APPROACH_FAILED             = -10
+int32 MOTION_COMPLETE_FAILED             = -11
+int32 MOTION_ATTACHED_FAILED             = -12
+int32 EPS_UNDOCK_FAILED                  = -13
+int32 EPS_DOCK_FAILED                    = -14
 
 ---
+
 # Feedback
-std_msgs/Header header
-float32 progress  # distance from dock? something?
-
-int32 status      # one of the status codes below, typically increases
-
-int32 UNKNOWN          = 0
-int32 PREPARING        = 1
-int32 MOVE_TO_START    = 2
-int32 SWITCHING_CAMERA = 3
-int32 SWITCHING_MODE   = 4
-int32 WAITING_FOR_LOC  = 5
-int32 INGRESSING       = 6
-int32 DEACTIVATING_PMC = 7
-int32 MAX_STATE        = 7
-
+ff_msgs/DockState state

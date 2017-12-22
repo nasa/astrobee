@@ -1,0 +1,13 @@
+opt/astrobee/env.sh
+opt/astrobee/env_wrapper.sh
+opt/astrobee/setup.sh
+opt/astrobee/setup.bash
+opt/astrobee/setup.zsh
+opt/astrobee/_setup_util.py
+opt/astrobee/version.txt
+opt/astrobee/.catkin
+opt/astrobee/bin/*
+opt/astrobee/lib/*.so
+opt/astrobee/lib/python2.7/*
+opt/astrobee/lib/astrobee/*
+opt/astrobee/share/*

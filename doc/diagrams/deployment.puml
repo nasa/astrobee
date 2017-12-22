@@ -3,26 +3,47 @@
 skinparam componentStyle uml2
 'skinparam dpi 300
 
+!include "colors.puml"
+
+!define COLOR_MPROC COLOR_6PASTEL_5
+!define COLOR_PSOM COLOR_6PASTEL_3
+
+skinparam component {
+  backgroundColor COLOR_6PASTEL_2
+  borderColor COLOR_6DARK_2
+  arrowColor #MidnightBlue
+}
+
+skinparam interface {
+ borderColor<<wired>> COLOR_6DARK_4
+ backgroundColor<<wired>> COLOR_6PASTEL_4
+ borderColor<<wifi>> COLOR_6DARK_6
+ backgroundColor<<wifi>> COLOR_6PASTEL_6
+}
+
 title Astrobee Hardware Deployement Diagram
 
 frame Dock {
-  node DockBoard <<Wandboard>>
-  node DockControl <<PIC>>
-  DockControl -- [DockActuator]
+  interface "Network Switch\n(to each berth)" <<wired>> as ethd
+  node DockBoard <<Wandboard>> COLOR_PSOM
+  node DockControl <<PIC>> COLOR_MPROC
+  node ["DockActuator (2x)"] as DA
+  DockControl -- DA
 }
 
 frame Astrobee {
-  interface "Wired Ethernet Hub" as eth
+  
+  interface "Network Switch" <<wired>> as etha
 
-  node HLP <<Inforce>>
-  node MLP <<Inforce>>
-  node LLP <<Wandboard>>
-  node EPS <<PIC>>
-  node "PMC (2x)" <<PIC>> as PMC
-  node "SignalLight (2x)" <<PIC>> as SL
-  node Speedcam <<ARM Cortex>>
+  node HLP <<Inforce>> COLOR_PSOM
+  node MLP <<Inforce>> COLOR_PSOM
+  node LLP <<Wandboard>> COLOR_PSOM
+  node "PMC (2x)" <<PIC>> as PMC COLOR_MPROC
+  node "SignalLight (2x)" <<PIC>> as SL COLOR_MPROC
+  node Speedcam <<ARM Cortex>> COLOR_6PASTEL_1
+  node EPS <<PIC>> COLOR_MPROC
 
-  node PerchArm <<PIC>>
+  node PerchArm <<PIC>> COLOR_MPROC
 
   [Scicam] -- HLP : MIPI-CSI
   [TouchScreen] -- HLP : MIPI-DSI
@@ -43,29 +64,38 @@ frame Astrobee {
   EPS o-- [SmartBatteries] : I2C/SMbus
 }
 
+interface "ISS Wifi" <<wifi>> as wifi
+interface "ISS Payload LAN" <<wired>> as wired
+
+etha -right- ethd
+DockBoard -left- ethd
+wired -down- ethd
+DockBoard o-- DockControl  : I2C
+EPS o-right- DockControl : "I2C (2x)"
+
+HLP -- etha
+MLP -- etha
+wifi .left. MLP
+
+MLP -- PerchArm : USB
+
+etha -l- LLP
+
+LLP "2" o-- PMC : I2C (i2c-2)
+LLP "2" o-- SL : I2C (i2c-1)
+LLP -- Speedcam : USB
+LLP o-- EPS : I2C (i2c-1)
+
+' To help get a nice layout:
+PMC -[hidden]- SL
+PMC -[hidden]> Speedcam
+Speedcam -[hidden]> EPS
 
 MLP --[hidden]-- LLP
 HLP --[hidden]-- MLP
 
-DockBoard -left- eth
-DockBoard o-- DockControl  : I2C
-EPS o- DockControl : I2C
-
-HLP -- eth
-MLP -- eth
-MLP .left. wifi
-
-MLP -- PerchArm : USB
-
-eth -l- LLP
-
-LLP "2" o-- PMC : I2C (i2c-2)
-LLP o-- EPS : I2C (i2c-1)
-LLP "2" o-- SL : I2C (i2c-1)
-LLP -- Speedcam : USB
-
-
-node ProcessorLegend
+' Notation used in the diagram:
+node ProcessorLegend COLOR_PSOM
 ProcessorLegend o-- [DeviceLegend]
 
 note top of ProcessorLegend
@@ -77,7 +107,6 @@ note bottom of [DeviceLegend]
 Hardware component (sensor
 or actuator
 end note
-interface "ISS Wifi" as wifi
 
 note left of ProcessorLegend
 Losange indicates

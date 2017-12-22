@@ -20,6 +20,10 @@ add_subdirectory(rviz_visualizer)
 add_subdirectory(visualeyez)
 add_subdirectory(simulator)
 
+if (FFMPEG_FOUND AND QT_QTGUI_FOUND)
+  add_subdirectory(ekf_video)
+endif (FFMPEG_FOUND AND QT_QTGUI_FOUND)
+
 # If the user enabled the HTC vive tracker
 if(ENABLE_VIVE)
   add_subdirectory(vive)

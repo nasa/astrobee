@@ -162,7 +162,7 @@ int main(int argc, char** argv) {
 
     // I have a frame!
     sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(),
-                                                   "mono8", frame).toImageMsg();
+                                                   "mono8", cv::cvarrToMat(frame)).toImageMsg();
     msg->header.stamp = ros::Time::now();
     msg->header.seq = seq++;
     pub.publish(msg);

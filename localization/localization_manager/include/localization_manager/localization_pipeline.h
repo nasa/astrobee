@@ -39,8 +39,10 @@ typedef std::function<void(std::string const&, bool)> PipelineCallbackType;
 class Pipeline {
  public:
   // Create a new pipeline
-  Pipeline(uint8_t mode, PipelineCallbackType cb, std::string const& name, std::string const& desc,
-    bool req_of = false) : mode_(mode), cb_(cb), name_(name), desc_(desc), req_of_(req_of) {
+  Pipeline(uint8_t mode, PipelineCallbackType cb, std::string const& name,
+    std::string const& desc, bool req_of, bool req_ekf) :
+      mode_(mode), cb_(cb), name_(name), desc_(desc),
+        req_of_(req_of), req_ekf_(req_ekf) {
   }
 
   // Get the pipeline name
@@ -54,6 +56,9 @@ class Pipeline {
 
   // Does this pipeline need optical flow>
   bool NeedsOpticalFlow() { return req_of_; }
+
+  // Does this pipeline need optical flow>
+  bool NeedsEKF() { return req_ekf_; }
 
   // Enable the pipeline -- this is implementation specific
   virtual bool Enable(bool enable) = 0;
@@ -83,6 +88,7 @@ class Pipeline {
   std::string name_;
   std::string desc_;
   bool req_of_;
+  bool req_ekf_;
 };
 
 }  // namespace localization_manager

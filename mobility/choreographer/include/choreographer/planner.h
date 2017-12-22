@@ -178,7 +178,7 @@ class PlannerImplementation : public ff_util::FreeFlyerNodelet {
 
   // Timeout on a trajectory generation request
   void TimeoutCallback(void) {
-    NODELET_ERROR_STREAM("Timeout connecting to required service. Planner will not work.");
+    NODELET_ERROR_STREAM("Timeout connecting to required service.");
     state_ = INITIALIZING;
   }
 
@@ -209,38 +209,8 @@ class PlannerImplementation : public ff_util::FreeFlyerNodelet {
     }
     // We are now planning
     state_ = PLANNING;
-    // Copy the plan goal and update the fields
-    ff_msgs::PlanGoal plan_goal = *old_goal;
-    // get flight mode
-    ff_util::FlightMode flight_config;
-    if (!ff_util::ConfigUtil::GetFlightMode(plan_goal.flight_mode, flight_config))
-      return Complete(RESPONSE::CANNOT_LOAD_FLIGHT_DATA);
-    // Get general configuration
-    ff_util::GeneralConfig general_config;
-    if (!ff_util::ConfigUtil::GetGeneralConfig(general_config))
-      return Complete(RESPONSE::CANNOT_LOAD_GENERAL_CONFIG);
-    // Check desired velocity
-    plan_goal.desired_vel = ff_util::SegmentUtil::ValidateUpperLimit(
-      flight_config.hard_limit_vel, plan_goal.desired_vel);
-    if (plan_goal.desired_vel < 0) return Complete(RESPONSE::BAD_DESIRED_VELOCITY);
-    // Check deesired acceleration
-    plan_goal.desired_accel = ff_util::SegmentUtil::ValidateUpperLimit(
-      flight_config.hard_limit_accel, plan_goal.desired_accel);
-    if (plan_goal.desired_accel < 0) return Complete(RESPONSE::BAD_DESIRED_ACCELERATION);
-    // Check desired omega
-    plan_goal.desired_omega = ff_util::SegmentUtil::ValidateUpperLimit(
-      flight_config.hard_limit_omega, plan_goal.desired_omega);
-    if (plan_goal.desired_omega < 0) return Complete(RESPONSE::BAD_DESIRED_OMEGA);
-    // Check  desired alpha
-    plan_goal.desired_alpha = ff_util::SegmentUtil::ValidateUpperLimit(
-      flight_config.hard_limit_alpha, plan_goal.desired_alpha);
-    if (plan_goal.desired_alpha < 0) return Complete(RESPONSE::BAD_DESIRED_ALPHA);
-    // Check control frequency
-    plan_goal.desired_rate = ff_util::SegmentUtil::ValidateLowerLimit(
-      general_config.min_control_rate, plan_goal.desired_rate);
-    if (plan_goal.desired_rate < 0) return Complete(RESPONSE::BAD_DESIRED_RATE);
     // Call the implementation with the plan goal
-    return PlanCallback(plan_goal);
+    return PlanCallback(*old_goal);
   }
 
   // Cancel the current operation
@@ -254,12 +224,12 @@ class PlannerImplementation : public ff_util::FreeFlyerNodelet {
   }
 
  private:
-  State state_;                                                             // Planner state
-  ff_util::FreeFlyerActionServer < ff_msgs::PlanAction > server_p_;         // Plan action sever
-  ff_util::FreeFlyerServiceClient < ff_msgs::GetZones > client_z_;          // Zone request client
-  ff_util::FreeFlyerServiceClient < ff_msgs::RegisterPlanner > client_r_;   // Registration client
-  ff_msgs::RegisterPlanner registration_;                                   // Registration info
-  config_reader::ConfigReader cfg_fm_;                                      // Configuration
+  State state_;                                          // Planner state
+  ff_util::FreeFlyerActionServer<ff_msgs::PlanAction> server_p_;
+  ff_util::FreeFlyerServiceClient<ff_msgs::GetZones> client_z_;
+  ff_util::FreeFlyerServiceClient<ff_msgs::RegisterPlanner> client_r_;
+  ff_msgs::RegisterPlanner registration_;                // Registration info
+  config_reader::ConfigReader cfg_fm_;                   // Configuration
 };
 
 }  // namespace planner

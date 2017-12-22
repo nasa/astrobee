@@ -37,32 +37,19 @@
 #include <localization_manager/localization_pipeline_ml.h>
 #include <localization_manager/localization_pipeline_ar.h>
 #include <localization_manager/localization_pipeline_hr.h>
+#include <localization_manager/localization_pipeline_pl.h>
+#include <localization_manager/localization_pipeline_gt.h>
+#include <localization_manager/localization_pipeline_no.h>
 
 // STL includes
 #include <functional>
 #include <string>
 #include <map>
 
-// If the EKF is disabled
-#define EKF_DISABLED_PIPELINE "none"
-
 /**
  * \ingroup localization
  */
 namespace localization_manager {
-
-// Create one artifical pipeline representing no localization.
-class NOPipeline : public Pipeline {
- public:
-  // Create the pipeline
-  NOPipeline(ros::NodeHandle *nh, ros::NodeHandle *nhp, uint8_t mode, PipelineCallbackType cb)
-    : Pipeline(mode, cb, EKF_DISABLED_PIPELINE, "Turn localization off", false) {
-  }
-  // Enable the pipeline (turn it on and off)
-  bool Enable(bool enable) {
-    return true;
-  }
-};
 
 // Convenience declarations
 typedef std::map<std::string, std::shared_ptr<Pipeline>> PipelineMap;
@@ -90,10 +77,11 @@ class LocalizationManagerNodelet : public ff_util::FreeFlyerNodelet {
 
   // Constructor
   LocalizationManagerNodelet() :
-    ff_util::FreeFlyerNodelet(NODE_LOCALIZATION_MANAGER, true), state_(STATE_INITIALIZING) {}
+    ff_util::FreeFlyerNodelet(NODE_LOCALIZATION_MANAGER, true),
+    state_(STATE_INITIALIZING) {}
 
   // Destructor
-  ~LocalizationManagerNodelet() {}
+  virtual ~LocalizationManagerNodelet() {}
 
  protected:
   void Initialize(ros::NodeHandle *nh) {
@@ -110,6 +98,10 @@ class LocalizationManagerNodelet : public ff_util::FreeFlyerNodelet {
       NODELET_ERROR("Could not create the ar_tags localization pipeline");
     if (!AddPipeline(nh, GetPrivateHandle(), cb, ff_msgs::SetEkfInput::Request::MODE_HANDRAIL))
       NODELET_ERROR("Could not create the handrail localization pipeline");
+    if (!AddPipeline(nh, GetPrivateHandle(), cb, ff_msgs::SetEkfInput::Request::MODE_PERCH))
+      NODELET_ERROR("Could not create the perch localization pipeline");
+    if (!AddPipeline(nh, GetPrivateHandle(), cb, ff_msgs::SetEkfInput::Request::MODE_TRUTH))
+      NODELET_ERROR("Could not create the ground truth localization pipeline");
 
     // Read the node parameters
     cfg_.Initialize(GetPrivateHandle(), "localization/localization_manager.config");
@@ -399,8 +391,8 @@ class LocalizationManagerNodelet : public ff_util::FreeFlyerNodelet {
       switch (state_) {
       case STATE_WAITING_FOR_SWITCH:
       case STATE_WAITING_FOR_STABLE:
-        if (curr_->first == EKF_DISABLED_PIPELINE) {
-          NODELET_DEBUG_STREAM("Ignoring unstable EKF in EKF_DISABLED_PIPELINE");
+        if (!curr_->second->NeedsEKF()) {
+          NODELET_DEBUG_STREAM("Ignoring unstable EKF");
         } else {
           NODELET_WARN_STREAM("Pipeline is unstable. Falling back to safe pipeline.");
           if (!Fallback())
@@ -429,7 +421,7 @@ class LocalizationManagerNodelet : public ff_util::FreeFlyerNodelet {
         // Change the state
         ChangeState(STATE_WAITING_FOR_CONFIDENCE);
         // Special case: immediatelty fake EKF confidence
-        if (goal_->first == EKF_DISABLED_PIPELINE)
+        if (!goal_->second->NeedsEKF())
           StateMachine(EVENT_EKF_STABLE);
         return;
       // Ignore stability updates during confidence check
@@ -547,7 +539,7 @@ class LocalizationManagerNodelet : public ff_util::FreeFlyerNodelet {
         // Change the state to waiting
         ChangeState(STATE_WAITING_FOR_STABLE);
         // Special case: If NONE is selected, fake stability
-        if (pipeline == EKF_DISABLED_PIPELINE)
+        if (!goal_->second->NeedsEKF())
           StateMachine(EVENT_GOAL_STABLE);
         // Always return at this point
         return;
@@ -681,6 +673,13 @@ class LocalizationManagerNodelet : public ff_util::FreeFlyerNodelet {
       break;
     case ff_msgs::SetEkfInput::Request::MODE_HANDRAIL:
       ptr = std::shared_ptr<Pipeline>(new HRPipeline(nh, nhp, mode, cb));
+      break;
+    case ff_msgs::SetEkfInput::Request::MODE_PERCH:
+      ptr = std::shared_ptr<Pipeline>(new PLPipeline(nh, nhp, mode, cb));
+      break;
+    case ff_msgs::SetEkfInput::Request::MODE_TRUTH:
+      ptr = std::shared_ptr<Pipeline>(new GTPipeline(nh, nhp, mode, cb));
+      break;
     default:
       break;
     }

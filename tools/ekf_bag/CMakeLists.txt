@@ -21,7 +21,12 @@ catkin_package(
   CATKIN_DEPENDS roscpp
 )
 
+create_library(TARGET ekf_bag 
+  LIBS ekf lk_optical_flow roslocalization sparse_mapping interest_point camera common config_reader ${OPENCV_LIBRARIES} ${catkin_LIBRARIES}
+  INC ${catkin_INCLUDE_DIRS}
+)
+
 create_tool_targets(DIR tools
-  LIBS gnc_ros_wrapper lk_optical_flow roslocalization sparse_mapping interest_point camera common config_reader ${OPENCV_LIBRARIES} ${catkin_LIBRARIES} 
+  LIBS ekf_bag
   INC ${catkin_INCLUDE_DIRS}
 )

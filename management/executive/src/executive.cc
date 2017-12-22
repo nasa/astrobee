@@ -29,12 +29,10 @@ Executive::Executive() :
   state_(OpStateRepo::Instance()->ready()),
   action_active_timeout_(1),
   arm_feedback_timeout_(4),
-  mobility_feedback_timeout_(1),
+  motion_feedback_timeout_(1),
   dock_result_timeout_(360),
   perch_result_timeout_(360),
   switch_result_timeout_(30),
-  undock_result_timeout_(360),
-  unperch_result_timeout_(360),
   pub_queue_size_(10),
   sub_queue_size_(10) {
 }
@@ -44,6 +42,35 @@ Executive::~Executive() {
 
 void Executive::CmdCallback(ff_msgs::CommandStampedPtr const& cmd) {
   SetOpState(state_->HandleCmd(cmd));
+}
+
+
+// TODO(Katie) Add more here. Stop using feedback and result to set mobility
+// state. Instead use Dock state, Choreographer state, and Perch state
+void Executive::DockStateCallback(ff_msgs::DockStatePtr const& state) {
+  // If the operating state is ready and the dock state changes, this probably
+  // means that an astronaut manually docked or undocked the Astrobee
+  if (state_->id() == ff_msgs::OpState::READY) {
+    if (state->state == ff_msgs::DockState::DOCKED) {
+      SetMobilityState(ff_msgs::MobilityState::DOCKING);
+    } else if (state->state == ff_msgs::DockState::UNDOCKED) {
+      // If we were docked, need to set mobility state to idle until we receive
+      // GN&C state. If we aren't docked, don't change the mobility state since
+      // an undocked mobility state can also mean flying, idle, ...
+      if (GetMobilityState().state == ff_msgs::MobilityState::DOCKING) {
+        SetMobilityState(ff_msgs::MobilityState::DRIFTING);
+      }
+    }
+    // Don't worry about any of the other dock states since we transition
+    // through them when we are autonomously docking and undocking using the
+    // action feedback to change the mobility state.
+  }
+  // If we aren't in operating state ready, we don't want to change the mobility
+  // state since again we use action feedback to set the it. We may need to
+  // re-visit this if an astronaut can manually dock in any operating state.
+  // The current thought is, if an astronaut tries to dock us in any operating
+  // state other than ready, we will fail what we are doing and go back into
+  // operating state ready before receiving a docked or undocked state.
 }
 
 void Executive::GuestScienceAckCallback(ff_msgs::AckStampedConstPtr const&
@@ -97,11 +124,11 @@ bool Executive::FillArmGoal(ff_msgs::CommandStampedPtr const& cmd,
       arm_goal_.pan = (cmd->args[0].f * M_PI/180);
       arm_goal_.tilt = (cmd->args[1].f * M_PI/180);
       if (cmd->args[2].s == "Pan" || cmd->args[2].s == "pan") {
-        arm_goal_.mode = ff_msgs::ArmGoal::PAN;
+        arm_goal_.command = ff_msgs::ArmGoal::ARM_PAN;
       } else if (cmd->args[2].s == "Tilt" || cmd->args[2].s == "tilt") {
-        arm_goal_.mode = ff_msgs::ArmGoal::TILT;
+        arm_goal_.command = ff_msgs::ArmGoal::ARM_TILT;
       } else if (cmd->args[2].s == "Both" || cmd->args[2].s == "both") {
-        arm_goal_.mode = ff_msgs::ArmGoal::PAN_TILT;
+        arm_goal_.command = ff_msgs::ArmGoal::ARM_MOVE;
       } else {
         successful = false;
         err_msg = "Unrecognized which parameter in pan and tilt command. Got: "
@@ -118,14 +145,14 @@ bool Executive::FillArmGoal(ff_msgs::CommandStampedPtr const& cmd,
     } else {
       // True means open
       if (cmd->args[0].b) {
-        arm_goal_.mode = ff_msgs::ArmGoal::OPEN;
+        arm_goal_.command = ff_msgs::ArmGoal::GRIPPER_OPEN;
       } else {
-        arm_goal_.mode = ff_msgs::ArmGoal::CLOSE;
+        arm_goal_.command = ff_msgs::ArmGoal::GRIPPER_CLOSE;
       }
     }
   } else {
     successful = false;
-    err_msg = "Arm command not recognized in fill arm goal command.";
+    err_msg = "Arm command not recognized in fill arm goal.";
   }
 
   if (!successful && !plan) {
@@ -142,17 +169,29 @@ bool Executive::FillDockGoal(ff_msgs::CommandStampedPtr const& cmd,
                              std::string& err_msg,
                              bool plan) {
   bool successful = true;
-  if (cmd->args.size() != 1 ||
-      cmd->args[0].data_type != ff_msgs::CommandArg::DATA_TYPE_INT) {
-    successful = false;
-    err_msg = "Malformed argument for dock command in plan.";
-  }
+  if (cmd->cmd_name == CommandConstants::CMD_NAME_DOCK) {
+    if (cmd->args.size() != 1 ||
+        cmd->args[0].data_type != ff_msgs::CommandArg::DATA_TYPE_INT) {
+      successful = false;
+      err_msg = "Malformed argument for dock command in plan.";
+    }
 
-  if (cmd->args[0].i != 1 && cmd->args[0].i != 2) {
-    successful = false;
-    err_msg = "Berth must be 1 or 2 not " +  std::to_string(cmd->args[0].i);
+    dock_goal_.command = ff_msgs::DockGoal::DOCK;
+    if (cmd->args[0].i == 1) {
+      dock_goal_.berth = ff_msgs::DockGoal::BERTH_LEFT;
+    } else if (cmd->args[0].i == 2) {
+      dock_goal_.berth = ff_msgs::DockGoal::BERTH_RIGHT;
+    } else {
+      successful = false;
+      err_msg = "Berth must be 1 or 2 not " +  std::to_string(cmd->args[0].i);
+    }
+  } else if (cmd->cmd_name == CommandConstants::CMD_NAME_UNDOCK) {
+    dock_goal_.command = ff_msgs::DockGoal::UNDOCK;
+    // We don't need a berth to undock
+    dock_goal_.berth = ff_msgs::DockGoal::UNKNOWN;
   } else {
-    dock_goal_.bay = cmd->args[0].i;
+    successful = false;
+    err_msg = "Dock command not recognized in fill dock goal.";
   }
 
   if (!successful && !plan) {
@@ -166,48 +205,80 @@ bool Executive::FillDockGoal(ff_msgs::CommandStampedPtr const& cmd,
   return successful;
 }
 
-void Executive::FillExecuteGoal() {
-  jsonloader::Segment segment = sequencer_.CurrentSegment();
+bool Executive::FillMotionGoal(Action action,
+                               ff_msgs::CommandStampedPtr const& cmd) {
+  jsonloader::Segment segment;
+  // Flight mode needs to be set for all motion actions
+  motion_goal_.flight_mode = agent_state_.flight_mode;
 
-  // Convert JSON to a segment type
-  execute_goal_.segment =
+  switch (action) {
+    case EXECUTE:
+      segment = sequencer_.CurrentSegment();
+
+      motion_goal_.command = ff_msgs::MotionGoal::EXEC;
+      // Convert JSON to a segment type
+      motion_goal_.segment =
                     sequencer::Segment2Trajectory(sequencer_.CurrentSegment());
-  execute_goal_.flight_mode = agent_state_.flight_mode;
-}
 
-bool Executive::FillMoveGoal(ff_msgs::CommandStampedPtr const& cmd) {
-  if (cmd->args.size() != 4 ||
-      cmd->args[0].data_type != ff_msgs::CommandArg::DATA_TYPE_STRING ||
-      cmd->args[1].data_type != ff_msgs::CommandArg::DATA_TYPE_VEC3d ||
-      cmd->args[2].data_type != ff_msgs::CommandArg::DATA_TYPE_VEC3d ||
-      cmd->args[3].data_type != ff_msgs::CommandArg::DATA_TYPE_MAT33f) {
-    ROS_ERROR("Executive: Malformed arguments for simple move 6dof command!");
-    PublishCmdAck(cmd->cmd_id,
-                  cmd->cmd_origin,
-                  ff_msgs::AckCompletedStatus::BAD_SYNTAX,
-                  "Malformed arguments for simple move 6dof commannd!");
-    return false;
+      motion_goal_.states.clear();
+
+      break;
+    case IDLE:
+      motion_goal_.command = ff_msgs::MotionGoal::IDLE;
+      break;
+    case STOP:
+      motion_goal_.command = ff_msgs::MotionGoal::STOP;
+      break;
+    case MOVE:
+      if (cmd == nullptr) {
+        ROS_ERROR("Executive: move cmd is null in fill motion goal.");
+        return false;
+      }
+
+      if (cmd->args.size() != 4 ||
+          cmd->args[0].data_type != ff_msgs::CommandArg::DATA_TYPE_STRING ||
+          cmd->args[1].data_type != ff_msgs::CommandArg::DATA_TYPE_VEC3d ||
+          cmd->args[2].data_type != ff_msgs::CommandArg::DATA_TYPE_VEC3d ||
+          cmd->args[3].data_type != ff_msgs::CommandArg::DATA_TYPE_MAT33f) {
+        ROS_ERROR("Executive: Malformed arguments for simple move 6dof cmd!");
+        PublishCmdAck(cmd->cmd_id,
+                      cmd->cmd_origin,
+                      ff_msgs::AckCompletedStatus::BAD_SYNTAX,
+                      "Malformed arguments for simple move 6dof command!");
+        return false;
+      }
+
+      motion_goal_.command = ff_msgs::MotionGoal::MOVE;
+      if (motion_goal_.states.size() != 1) {
+        motion_goal_.states.resize(1);
+      }
+
+      motion_goal_.states[0].header.stamp = ros::Time::now();
+      // Copying the target location to the goal
+      motion_goal_.states[0].pose.position.x = cmd->args[1].vec3d[0];
+      motion_goal_.states[0].pose.position.y = cmd->args[1].vec3d[1];
+      motion_goal_.states[0].pose.position.z = cmd->args[1].vec3d[2];
+
+      // Copying the target attitude to the goal
+      motion_goal_.states[0].pose.orientation.x = cmd->args[3].mat33f[0];
+      motion_goal_.states[0].pose.orientation.y = cmd->args[3].mat33f[1];
+      motion_goal_.states[0].pose.orientation.z = cmd->args[3].mat33f[2];
+      motion_goal_.states[0].pose.orientation.w = cmd->args[3].mat33f[3];
+
+      motion_goal_.segment.clear();
+      break;
+    default:
+      ROS_ERROR("Executive: Command isn't a mobility action in fill motion!");
+      if (cmd != nullptr) {
+        PublishCmdAck(cmd->cmd_id,
+                      cmd->cmd_origin,
+                      ff_msgs::AckCompletedStatus::EXEC_FAILED,
+                      "Command isn't a mobility action in fill motion goal!");
+      }
+      return false;
   }
-
-  move_goal_.flight_mode = agent_state_.flight_mode;
-  if (move_goal_.states.size() != 1) {
-    move_goal_.states.resize(1);
-  }
-
-  move_goal_.states[0].header.stamp = ros::Time::now();
-  // Copying the target location to the goal
-  move_goal_.states[0].pose.position.x = cmd->args[1].vec3d[0];
-  move_goal_.states[0].pose.position.y = cmd->args[1].vec3d[1];
-  move_goal_.states[0].pose.position.z = cmd->args[1].vec3d[2];
-
-  // Copying the target attitude to the goal
-  move_goal_.states[0].pose.orientation.x = cmd->args[3].mat33f[0];
-  move_goal_.states[0].pose.orientation.y = cmd->args[3].mat33f[1];
-  move_goal_.states[0].pose.orientation.z = cmd->args[3].mat33f[2];
-  move_goal_.states[0].pose.orientation.w = cmd->args[3].mat33f[3];
   return true;
 }
-
 
 bool Executive::StartAction(Action action,
                             std::string const& cmd_id,
@@ -218,9 +289,8 @@ bool Executive::StartAction(Action action,
   switch (action) {
     case ARM:
       if (arm_ac_.IsConnected()) {
-        arm_ac_.SetCmdInfo(cmd_id, cmd_origin);
+        arm_ac_.SetCmdInfo(action, cmd_id, cmd_origin);
         arm_ac_.SendGoal(arm_goal_);
-        running_actions_.push_back(ARM);
         NODELET_DEBUG("Arm action goal sent/started.");
       } else {
         successful = false;
@@ -228,11 +298,10 @@ bool Executive::StartAction(Action action,
       }
       break;
     case DOCK:
-      dock_goal_.header.stamp = ros::Time::now();
+    case UNDOCK:
       if (dock_ac_.IsConnected()) {
-        dock_ac_.SetCmdInfo(cmd_id, cmd_origin);
+        dock_ac_.SetCmdInfo(action, cmd_id, cmd_origin);
         dock_ac_.SendGoal(dock_goal_);
-        running_actions_.push_back(DOCK);
         NODELET_DEBUG("Dock action goal sent/started.");
       } else {
         successful = false;
@@ -240,77 +309,32 @@ bool Executive::StartAction(Action action,
       }
       break;
     case EXECUTE:
-      if (execute_ac_.IsConnected()) {
-        execute_ac_.SetCmdInfo(cmd_id, cmd_origin);
-        execute_ac_.SendGoal(execute_goal_);
-        running_actions_.push_back(EXECUTE);
-        NODELET_DEBUG("Execute action goal sent/started.");
-      } else {
-        successful = false;
-        err_msg = "Execute action server not connected! Node may have died!";
-      }
-      break;
     case IDLE:
-      if (idle_ac_.IsConnected()) {
-        idle_ac_.SetCmdInfo(cmd_id, cmd_origin);
-        idle_ac_.SendGoal(idle_goal_);
-        running_actions_.push_back(IDLE);
-        NODELET_DEBUG("Idle action goal sent/started.");
-      } else {
-        successful = false;
-        err_msg = "Idle action server not connected! Node may have died!";
-      }
-      break;
     case MOVE:
-      if (move_ac_.IsConnected()) {
-        move_ac_.SetCmdInfo(cmd_id, cmd_origin);
-        move_ac_.SendGoal(move_goal_);
-        running_actions_.push_back(MOVE);
-        NODELET_DEBUG("Move action goal sent/started.");
+    case STOP:
+      if (motion_ac_.IsConnected()) {
+        motion_ac_.SetCmdInfo(action, cmd_id, cmd_origin);
+        motion_ac_.SendGoal(motion_goal_);
+        NODELET_DEBUG("Motion action %i goal sent/started.",
+                                                          motion_goal_.command);
       } else {
         successful = false;
-        err_msg = "Move action server not connected! Node may have died!";
+        err_msg = "Motion action server not connected! Node may have died!";
       }
       break;
     case PERCH:
+    case UNPERCH:
       // TODO(Katie) Add Me
-      break;
-    case STOP:
-      if (stop_ac_.IsConnected()) {
-        stop_ac_.SetCmdInfo(cmd_id, cmd_origin);
-        stop_ac_.SendGoal(stop_goal_);
-        running_actions_.push_back(STOP);
-        NODELET_DEBUG("Stop action goal sent/started.");
-      } else {
-        successful = false;
-        err_msg = "Stop action server not connected! Node may have died!";
-      }
       break;
     case SWITCH:
       if (switch_ac_.IsConnected()) {
-        switch_ac_.SetCmdInfo(cmd_id, cmd_origin);
+        switch_ac_.SetCmdInfo(action, cmd_id, cmd_origin);
         switch_ac_.SendGoal(switch_goal_);
-        running_actions_.push_back(SWITCH);
         NODELET_DEBUG("Switch action goal sent/started.");
       } else {
          successful = false;
          err_msg = "Switch action server not connected! Node may have died!";
       }
-      break;
-    case UNDOCK:
-      undock_goal_.header.stamp = ros::Time::now();
-      if (undock_ac_.IsConnected()) {
-        undock_ac_.SetCmdInfo(cmd_id, cmd_origin);
-        undock_ac_.SendGoal(undock_goal_);
-        running_actions_.push_back(UNDOCK);
-        NODELET_DEBUG("Undock action goal sent/started.");
-      } else {
-        successful = false;
-        err_msg = "Undock action server not connected! Dock node may have died";
-      }
-      break;
-    case UNPERCH:
-      // TODO(Katie) Add Me
       break;
     default:
       successful = false;
@@ -325,6 +349,12 @@ bool Executive::StartAction(Action action,
     PublishCmdAck(cmd_id, cmd_origin, ff_msgs::AckCompletedStatus::NOT, "",
                   ff_msgs::AckStatus::EXECUTING);
   }
+
+  if (successful) {
+    // Add action to actions running so we know what actions are running
+    running_actions_.push_back(action);
+  }
+
   return successful;
 }
 
@@ -348,64 +378,36 @@ void Executive::CancelAction(Action action) {
   // We don't receive a result if we cancel an action so we need to ack the
   // command id that started the action as canceled and remove the action
   // from the running actions vector.
+  RemoveAction(action);
   switch (action) {
     case ARM:
       arm_ac_.CancelGoal();
-      RemoveAction(ARM);
       PublishCmdAck(arm_ac_.cmd_id(),
                     arm_ac_.cmd_origin(),
                     ff_msgs::AckCompletedStatus::CANCELED,
                     "Arm action was canceled.");
-      arm_ac_.SetCmdInfo("", "");
+      arm_ac_.SetCmdInfo(NONE, "", "");
       break;
     case DOCK:
+    case UNDOCK:
       dock_ac_.CancelGoal();
-      RemoveAction(DOCK);
       PublishCmdAck(dock_ac_.cmd_id(),
                     dock_ac_.cmd_origin(),
                     ff_msgs::AckCompletedStatus::CANCELED,
                     "Dock action was canceled.");
-      dock_ac_.SetCmdInfo("", "");
+      dock_ac_.SetCmdInfo(NONE, "", "");
       break;
     case EXECUTE:
-      execute_ac_.CancelGoal();
-      RemoveAction(EXECUTE);
-      PublishCmdAck(execute_ac_.cmd_id(),
-                    execute_ac_.cmd_origin(),
-                    ff_msgs::AckCompletedStatus::CANCELED,
-                    "Execute action was canceled.");
-      execute_ac_.SetCmdInfo("", "");
-      break;
     case MOVE:
-      move_ac_.CancelGoal();
-      RemoveAction(MOVE);
-      PublishCmdAck(move_ac_.cmd_id(),
-                    move_ac_.cmd_origin(),
+    case STOP:
+      motion_ac_.CancelGoal();
+      PublishCmdAck(motion_ac_.cmd_id(),
+                    motion_ac_.cmd_origin(),
                     ff_msgs::AckCompletedStatus::CANCELED,
-                    "Move action was canceled.");
-      move_ac_.SetCmdInfo("", "");
+                    "Motion action was canceled.");
+      motion_ac_.SetCmdInfo(NONE, "", "");
       break;
     case PERCH:
-      // TODO(Katie) Add Me
-      break;
-    case STOP:
-      stop_ac_.CancelGoal();
-      RemoveAction(STOP);
-      PublishCmdAck(stop_ac_.cmd_id(),
-                    stop_ac_.cmd_origin(),
-                    ff_msgs::AckCompletedStatus::CANCELED,
-                    "Stop action was canceled.");
-      stop_ac_.SetCmdInfo("", "");
-      break;
-    case UNDOCK:
-      undock_ac_.CancelGoal();
-      RemoveAction(UNDOCK);
-      PublishCmdAck(undock_ac_.cmd_id(),
-                    undock_ac_.cmd_origin(),
-                    ff_msgs::AckCompletedStatus::CANCELED,
-                    "Undock action was canceled.");
-      undock_ac_.SetCmdInfo("", "");
-      break;
     case UNPERCH:
       // TODO(Katie) Add Me
       break;
@@ -446,11 +448,11 @@ void Executive::ArmResultCallback(
                                      arm_ac_.cmd_id(),
                                      arm_ac_.cmd_origin()));
   // Reset command id so we don't try to ack the same id twice
-  arm_ac_.SetCmdInfo("", "");
+  arm_ac_.SetCmdInfo(NONE, "", "");
 }
 
 void Executive::DockActiveCallback() {
-  SetOpState(state_->HandleDockActive());
+  SetOpState(state_->HandleDockActive(dock_ac_.action()));
 }
 
 void Executive::DockFeedbackCallback(
@@ -462,99 +464,15 @@ void Executive::DockResultCallback(
                               ff_util::FreeFlyerActionState::Enum const& state,
                               ff_msgs::DockResultConstPtr const& result) {
   // Remove action from the running action vector
-  RemoveAction(DOCK);
+  RemoveAction(dock_ac_.action());
 
   SetOpState(state_->HandleDockResult(state,
                                       result,
                                       dock_ac_.cmd_id(),
-                                      dock_ac_.cmd_origin()));
+                                      dock_ac_.cmd_origin(),
+                                      dock_ac_.action()));
   // Reset command id so we don't try to ack the same id twice
-  dock_ac_.SetCmdInfo("", "");
-}
-
-void Executive::ExecuteActiveCallback() {
-  SetOpState(state_->HandleExecuteActive());
-}
-
-// TODO(Katie) Is this it?
-void Executive::ExecuteFeedbackCallback(ff_msgs::ExecuteFeedbackConstPtr
-                                                              const& feedback) {
-  // The execute doesn't check the feedback from the execute action. It simply
-  // forwards it to the sequencer
-  sequencer_.Feedback(feedback->progress.control);
-}
-
-void Executive::ExecuteResultCallback(
-                              ff_util::FreeFlyerActionState::Enum const& state,
-                              ff_msgs::ExecuteResultConstPtr const& result) {
-  // Remove action from the running action vector
-  RemoveAction(EXECUTE);
-
-  SetOpState(state_->HandleExecuteResult(state,
-                                         result,
-                                         execute_ac_.cmd_id(),
-                                         execute_ac_.cmd_origin()));
-  // Reset command id so we don't try to ack the same id twice
-  execute_ac_.SetCmdInfo("", "");
-}
-
-void Executive::IdleResultCallback(
-                              ff_util::FreeFlyerActionState::Enum const& state,
-                              ff_msgs::IdleResultConstPtr const& result) {
-  // Remove action from the running action vector
-  RemoveAction(IDLE);
-
-  SetOpState(state_->HandleIdleResult(state,
-                                      result,
-                                      idle_ac_.cmd_id(),
-                                      idle_ac_.cmd_origin()));
-
-  // Reset command id so we don't try to ack the same id twice
-  idle_ac_.SetCmdInfo("", "");
-}
-
-void Executive::MoveActiveCallback() {
-  SetOpState(state_->HandleMoveActive());
-}
-
-void Executive::MoveFeedbackCallback(
-                                ff_msgs::MoveFeedbackConstPtr const& feedback) {
-  SetOpState(state_->HandleMoveFeedback(feedback));
-}
-
-void Executive::MoveResultCallback(
-                              ff_util::FreeFlyerActionState::Enum const& state,
-                              ff_msgs::MoveResultConstPtr const& result) {
-  // Remove action from the running action vector
-  RemoveAction(MOVE);
-
-  SetOpState(state_->HandleMoveResult(state,
-                                      result,
-                                      move_ac_.cmd_id(),
-                                      move_ac_.cmd_origin()));
-  // Reset command id so we don't try to ack the same id twice
-  move_ac_.SetCmdInfo("", "");
-}
-
-void Executive::StopActiveCallback() {
-  SetOpState(state_->HandleStopActive());
-}
-
-void Executive::StopResultCallback(
-                              ff_util::FreeFlyerActionState::Enum const& state,
-                              ff_msgs::StopResultConstPtr const& result) {
-  // Remove action from the running action vector
-  RemoveAction(STOP);
-
-  NODELET_DEBUG("Received stop result.");
-
-  SetOpState(state_->HandleStopResult(state,
-                                      result,
-                                      stop_ac_.cmd_id(),
-                                      stop_ac_.cmd_origin()));
-
-  // Reset command id so we don't try to ack the same id twice
-  stop_ac_.SetCmdInfo("", "");
+  dock_ac_.SetCmdInfo(NONE, "", "");
 }
 
 void Executive::SwitchResultCallback(
@@ -568,29 +486,43 @@ void Executive::SwitchResultCallback(
                                         switch_ac_.cmd_id(),
                                         switch_ac_.cmd_origin()));
   // Reset command id so we don't try to ack the same id twice
-  switch_ac_.SetCmdInfo("", "");
+  switch_ac_.SetCmdInfo(NONE, "", "");
 }
 
-void Executive::UndockFeedbackCallback(
-                              ff_msgs::UndockFeedbackConstPtr const& feedback) {
-  SetOpState(state_->HandleUndockFeedback(feedback));
+void Executive::MotionActiveCallback() {
+  SetOpState(state_->HandleMotionActive(motion_ac_.action()));
 }
 
-void Executive::UndockResultCallback(
+void Executive::MotionFeedbackCallback(
+                              ff_msgs::MotionFeedbackConstPtr const& feedback) {
+  // The only feedback used from the motion action is the execute feedback and
+  // it goes to the sequencer. Otherwise there isn't much to with the feedback
+  if (motion_ac_.action() == EXECUTE) {
+    sequencer_.Feedback(feedback->progress);
+  }
+}
+
+void Executive::MotionResultCallback(
                               ff_util::FreeFlyerActionState::Enum const& state,
-                              ff_msgs::UndockResultConstPtr const& result) {
+                              ff_msgs::MotionResultConstPtr const& result) {
   // Remove action from the running action vector
-  RemoveAction(UNDOCK);
+  RemoveAction(motion_ac_.action());
 
-  SetOpState(state_->HandleUndockResult(state,
-                                        result,
-                                        undock_ac_.cmd_id(),
-                                        undock_ac_.cmd_origin()));
+  std::string cmd_id = motion_ac_.cmd_id();
+  std::string cmd_origin = motion_ac_.cmd_origin();
+  Action action = motion_ac_.action();
 
+  // Sometimes the handle motion result starts an action so we need to clear the
+  // action info before starting another action
   // Reset command id so we don't try to ack the same id twice
-  undock_ac_.SetCmdInfo("", "");
-}
+  motion_ac_.SetCmdInfo(NONE, "", "");
 
+  SetOpState(state_->HandleMotionResult(state,
+                                        result,
+                                        cmd_id,
+                                        cmd_origin,
+                                        action));
+}
 
 void Executive::PublishCmdAck(std::string const& cmd_id,
                               std::string const& cmd_origin,
@@ -811,8 +743,8 @@ bool Executive::SetOperatingLimits(std::vector<ff_msgs::CommandArg> const&
   }
 
   // Check to make sure the flight mode exists before setting everything
-  ff_util::FlightMode mode;
-  if (!ff_util::ConfigUtil::GetFlightMode(conditions[1].s, mode)) {
+  ff_msgs::FlightMode mode;
+  if (!ff_util::FlightUtil::GetFlightMode(mode, conditions[1].s)) {
     err_msg = "Flight mode doesn't exist!.";
     return false;
   }
@@ -856,8 +788,8 @@ bool Executive::ConfigureMobility(std::string const& cmd_id,
 
   // Set values for configuring, these values will persist until changed
   // Choreographer
-  choreographer_cfg_->Set<bool>("enable_control", true);
   choreographer_cfg_->Set<bool>("enable_immediate", true);
+  choreographer_cfg_->Set<bool>("enable_timesync", false);
 
   // This function is not used for the first segment of a plan so always disable
   // move to start
@@ -931,11 +863,12 @@ bool Executive::ConfigureMobility(bool move_to_start,
 
   // Set values for configuring, these values will persist until changed
   // Choreographer
-  choreographer_cfg_->Set<bool>("enable_control", true);
+
   // This function is not used for the first segment of a plan so always disable
   // move to start
   choreographer_cfg_->Set<bool>("enable_bootstrapping", move_to_start);
   choreographer_cfg_->Set<bool>("enable_immediate", true);
+  choreographer_cfg_->Set<bool>("enable_timesync", false);
 
   // TODO(Katie) What do I do with this
   // choreographer_cfg_->Set<bool>("enable_replanning", ?);
@@ -1065,9 +998,8 @@ bool Executive::StopAllMotion(bool &stop_started,
     } else if (running_actions_[i] == DOCK) {
       // Don't stop if we are deactivating PMC. Docker doesn't count down so
       // need to do some math to check this
-      if (agent_state_.mobility_state.sub_state ==
-                                  ((ff_msgs::DockFeedback::MAX_STATE + 1) -
-                                    ff_msgs::DockFeedback::DEACTIVATING_PMC)) {
+      if (agent_state_.mobility_state.sub_state <=
+                        ff_msgs::DockState::DOCKING_WAITING_FOR_SPIN_DOWN) {
         err_msg = "Already deactivating pmcs. Cannot stop.";
         start_stop = false;
         successful = false;
@@ -1099,8 +1031,8 @@ bool Executive::StopAllMotion(bool &stop_started,
       // we are in or have completed the egressing state
       // Invert sub state since that is what we do when we set the substate for
       // undocking
-      if ((agent_state_.mobility_state.sub_state * -1) <
-                                          ff_msgs::UndockFeedback::EGRESSING) {
+      if (agent_state_.mobility_state.sub_state >
+                    ff_msgs::DockState::UNDOCKING_MOVING_TO_APPROACH_POSE) {
         start_stop = false;
         // Set successful to true since it may have been set to false in the
        // if docked statement
@@ -1141,9 +1073,11 @@ bool Executive::StopAllMotion(bool &stop_started,
 
   stop_started = false;
   if (start_stop) {
-    successful = StartAction(STOP, cmd_id, cmd_origin, err_msg);
-    if (successful) {
-      stop_started = true;
+    if (FillMotionGoal(STOP)) {
+      successful = StartAction(STOP, cmd_id, cmd_origin, err_msg);
+      if (successful) {
+        stop_started = true;
+      }
     }
   }
 
@@ -1190,12 +1124,10 @@ bool Executive::Dock(ff_msgs::CommandStampedPtr const& cmd,
   } else {
     stopped = true;
     if (!FillDockGoal(cmd, err_msg, plan)) {
-      completed_status = ff_msgs::AckCompletedStatus::BAD_SYNTAX;
       return false;
     }
 
     if (!StartAction(DOCK, cmd->cmd_id, cmd->cmd_origin, err_msg, plan)) {
-      completed_status = ff_msgs::AckCompletedStatus::EXEC_FAILED;
       return false;
     }
   }
@@ -1209,8 +1141,7 @@ bool Executive::Dock(ff_msgs::CommandStampedPtr const& cmd,
   return stopped;
 }
 
-bool Executive::Undock(std::string const& cmd_id,
-                       std::string const& cmd_origin,
+bool Executive::Undock(ff_msgs::CommandStampedPtr const& cmd,
                        std::string& err_msg,
                        bool plan) {
   bool docked = false;
@@ -1227,7 +1158,11 @@ bool Executive::Undock(std::string const& cmd_id,
     err_msg = "Can't undock when not docked. Astrobee is currently stopped.";
   } else {
     docked = true;
-    if (!StartAction(UNDOCK, cmd_id, cmd_origin, err_msg, plan)) {
+    if (!FillDockGoal(cmd, err_msg, plan)) {
+      return false;
+    }
+
+    if (!StartAction(UNDOCK, cmd->cmd_id, cmd->cmd_origin, err_msg, plan)) {
       return false;
     }
   }
@@ -1236,8 +1171,8 @@ bool Executive::Undock(std::string const& cmd_id,
   // we aren't docked and thus cannot undock
   if (!docked && !plan) {
     ROS_ERROR("Executive: %s", err_msg.c_str());
-    PublishCmdAck(cmd_id,
-                  cmd_origin,
+    PublishCmdAck(cmd->cmd_id,
+                  cmd->cmd_origin,
                   ff_msgs::AckCompletedStatus::EXEC_FAILED,
                   err_msg);
   }
@@ -1688,10 +1623,9 @@ bool Executive::SetCamera(ff_msgs::CommandStampedPtr const& cmd,
           err_msg = "Dock cam config service not running! Node may have died";
           completed_status = ff_msgs::AckCompletedStatus::EXEC_FAILED;
         } else {
-          ff_msgs::ConfigureImageSampler config_img_srv;
+          ff_msgs::ConfigureCamera config_img_srv;
           // TODO(Katie) set camera parameters for both streaming and recording?
-          config_img_srv.request.mode =
-                                  ff_msgs::ConfigureImageSampler::Request::BOTH;
+          config_img_srv.request.mode = ff_msgs::ConfigureCamera::Request::BOTH;
           config_img_srv.request.rate = cmd->args[2].f;
           config_img_srv.request.width = std::stoi(width);
           config_img_srv.request.height = std::stoi(height);
@@ -1713,10 +1647,9 @@ bool Executive::SetCamera(ff_msgs::CommandStampedPtr const& cmd,
           err_msg = "Nav cam configure service not running! Node may have died";
           completed_status = ff_msgs::AckCompletedStatus::EXEC_FAILED;
         } else {
-          ff_msgs::ConfigureImageSampler config_img_srv;
+          ff_msgs::ConfigureCamera config_img_srv;
           // TODO(Katie) set camera parameters for both streaming and recording?
-          config_img_srv.request.mode =
-                                  ff_msgs::ConfigureImageSampler::Request::BOTH;
+          config_img_srv.request.mode = ff_msgs::ConfigureCamera::Request::BOTH;
           config_img_srv.request.rate = cmd->args[2].f;
           config_img_srv.request.width = std::stoi(width);
           config_img_srv.request.height = std::stoi(height);
@@ -1730,6 +1663,9 @@ bool Executive::SetCamera(ff_msgs::CommandStampedPtr const& cmd,
             completed_status = ff_msgs::AckCompletedStatus::EXEC_FAILED;
           }
         }
+      } else if (cmd->args[0].s ==
+                                CommandConstants::PARAM_NAME_CAMERA_NAME_SCI) {
+        // TODO(Katie) Don't forget to set the bitrate
       } else {
         successful = false;
         err_msg = "Camera " + cmd->args[0].s + "not recognized.";
@@ -1768,9 +1704,8 @@ bool Executive::SetCameraRecording(ff_msgs::CommandStampedPtr const& cmd,
         err_msg = "Dock cam enable service not running! Node may have died!";
         completed_status = ff_msgs::AckCompletedStatus::EXEC_FAILED;
       } else {
-        ff_msgs::EnableImageSampler enable_img_srv;
-        enable_img_srv.request.mode =
-                                ff_msgs::EnableImageSampler::Request::RECORDING;
+        ff_msgs::EnableCamera enable_img_srv;
+        enable_img_srv.request.mode = ff_msgs::EnableCamera::Request::RECORDING;
         enable_img_srv.request.enable = cmd->args[1].b;
 
         // Check to see if recording was set successfully
@@ -1788,9 +1723,8 @@ bool Executive::SetCameraRecording(ff_msgs::CommandStampedPtr const& cmd,
         err_msg = "Nav cam enable service not running! Node may have died!";
         completed_status = ff_msgs::AckCompletedStatus::EXEC_FAILED;
       } else {
-        ff_msgs::EnableImageSampler enable_img_srv;
-        enable_img_srv.request.mode =
-                                ff_msgs::EnableImageSampler::Request::RECORDING;
+        ff_msgs::EnableCamera enable_img_srv;
+        enable_img_srv.request.mode = ff_msgs::EnableCamera::Request::RECORDING;
         enable_img_srv.request.enable = cmd->args[1].b;
 
         // Check to see if recording was set successfully
@@ -1837,9 +1771,8 @@ bool Executive::SetCameraStreaming(ff_msgs::CommandStampedPtr const& cmd,
           err_msg = "Dock cam enable service not running! Node may have died!";
           completed_status = ff_msgs::AckCompletedStatus::EXEC_FAILED;
       } else {
-        ff_msgs::EnableImageSampler enable_img_srv;
-        enable_img_srv.request.mode =
-                                ff_msgs::EnableImageSampler::Request::STREAMING;
+        ff_msgs::EnableCamera enable_img_srv;
+        enable_img_srv.request.mode = ff_msgs::EnableCamera::Request::STREAMING;
         enable_img_srv.request.enable = cmd->args[1].b;
 
         // Check to see if streaming was successfully set
@@ -1857,9 +1790,8 @@ bool Executive::SetCameraStreaming(ff_msgs::CommandStampedPtr const& cmd,
         err_msg = "Nav cam enable service not running! Node may have died!";
         completed_status = ff_msgs::AckCompletedStatus::EXEC_FAILED;
       } else {
-        ff_msgs::EnableImageSampler enable_img_srv;
-        enable_img_srv.request.mode =
-                                ff_msgs::EnableImageSampler::Request::STREAMING;
+        ff_msgs::EnableCamera enable_img_srv;
+        enable_img_srv.request.mode = ff_msgs::EnableCamera::Request::STREAMING;
         enable_img_srv.request.enable = cmd->args[1].b;
 
         // Check to see if streaming was successfully set
@@ -1976,89 +1908,62 @@ void Executive::Initialize(ros::NodeHandle *nh) {
   // initialize actions
   arm_ac_.SetActiveTimeout(action_active_timeout_);
   arm_ac_.SetResponseTimeout(arm_feedback_timeout_);
-  arm_ac_.SetResultCallback(std::bind(&Executive::ArmResultCallback, this,
-                                      std::placeholders::_1,
-                                      std::placeholders::_2));
-  arm_ac_.Create(nh, ACTION_HARDWARE_PERCHING_ARM);
+  arm_ac_.SetResultCallback(std::bind(&Executive::ArmResultCallback,
+                            this,
+                            std::placeholders::_1,
+                            std::placeholders::_2));
+  arm_ac_.Create(nh, ACTION_PROCEDURES_ARM);
 
   dock_ac_.SetActiveTimeout(action_active_timeout_);
   dock_ac_.SetDeadlineTimeout(dock_result_timeout_);
   dock_ac_.SetActiveCallback(std::bind(&Executive::DockActiveCallback, this));
-  dock_ac_.SetFeedbackCallback(std::bind(&Executive::DockFeedbackCallback, this,
-                                         std::placeholders::_1));
-  dock_ac_.SetResultCallback(std::bind(&Executive::DockResultCallback, this,
-                                       std::placeholders::_1,
-                                       std::placeholders::_2));
-  dock_ac_.Create(nh, ACTION_MOBILITY_DOCK);
-
-  execute_ac_.SetActiveTimeout(action_active_timeout_);
-  execute_ac_.SetResponseTimeout(mobility_feedback_timeout_);
-  execute_ac_.SetActiveCallback(std::bind(&Executive::ExecuteActiveCallback,
-                                          this));
-  execute_ac_.SetFeedbackCallback(std::bind(&Executive::ExecuteFeedbackCallback,
-                                            this,
-                                            std::placeholders::_1));
-  execute_ac_.SetResultCallback(std::bind(&Executive::ExecuteResultCallback,
-                                          this,
-                                          std::placeholders::_1,
-                                          std::placeholders::_2));
-  execute_ac_.Create(nh, ACTION_MOBILITY_EXECUTE);
-
-  idle_ac_.SetActiveTimeout(action_active_timeout_);
-  idle_ac_.SetResponseTimeout(mobility_feedback_timeout_);
-  idle_ac_.SetResultCallback(std::bind(&Executive::IdleResultCallback, this,
-                                       std::placeholders::_1,
-                                       std::placeholders::_2));
-  idle_ac_.Create(nh, ACTION_MOBILITY_IDLE);
-
-  move_ac_.SetActiveTimeout(action_active_timeout_);
-  move_ac_.SetResponseTimeout(mobility_feedback_timeout_);
-  move_ac_.SetActiveCallback(std::bind(&Executive::MoveActiveCallback, this));
-  move_ac_.SetFeedbackCallback(std::bind(&Executive::MoveFeedbackCallback, this,
-                                         std::placeholders::_1));
-  move_ac_.SetResultCallback(std::bind(&Executive::MoveResultCallback, this,
-                                       std::placeholders::_1,
-                                       std::placeholders::_2));
-  move_ac_.Create(nh, ACTION_MOBILITY_MOVE);
-
-  stop_ac_.SetActiveTimeout(action_active_timeout_);
-  stop_ac_.SetResponseTimeout(mobility_feedback_timeout_);
-  stop_ac_.SetActiveCallback(std::bind(&Executive::StopActiveCallback, this));
-  stop_ac_.SetResultCallback(std::bind(&Executive::StopResultCallback, this,
-                                       std::placeholders::_1,
-                                       std::placeholders::_2));
-  stop_ac_.Create(nh, ACTION_MOBILITY_STOP);
+  dock_ac_.SetFeedbackCallback(std::bind(&Executive::DockFeedbackCallback,
+                               this,
+                               std::placeholders::_1));
+  dock_ac_.SetResultCallback(std::bind(&Executive::DockResultCallback,
+                             this,
+                             std::placeholders::_1,
+                             std::placeholders::_2));
+  dock_ac_.Create(nh, ACTION_PROCEDURES_DOCK);
 
   switch_ac_.SetActiveTimeout(action_active_timeout_);
   switch_ac_.SetDeadlineTimeout(switch_result_timeout_);
-  switch_ac_.SetResultCallback(std::bind(&Executive::SwitchResultCallback, this,
-                                         std::placeholders::_1,
-                                         std::placeholders::_2));
+  switch_ac_.SetResultCallback(std::bind(&Executive::SwitchResultCallback,
+                               this,
+                               std::placeholders::_1,
+                               std::placeholders::_2));
   switch_ac_.Create(nh, ACTION_LOCALIZATION_MANAGER_SWITCH);
 
-  undock_ac_.SetActiveTimeout(action_active_timeout_);
-  undock_ac_.SetDeadlineTimeout(undock_result_timeout_);
-  undock_ac_.SetFeedbackCallback(std::bind(&Executive::UndockFeedbackCallback,
-                                           this,
-                                           std::placeholders::_1));
-  undock_ac_.SetResultCallback(std::bind(&Executive::UndockResultCallback,
-                                         this,
-                                         std::placeholders::_1,
-                                         std::placeholders::_2));
-  undock_ac_.Create(nh, ACTION_MOBILITY_UNDOCK);
+  motion_ac_.SetActiveTimeout(action_active_timeout_);
+  motion_ac_.SetResponseTimeout(motion_feedback_timeout_);
+  motion_ac_.SetActiveCallback(std::bind(&Executive::MotionActiveCallback,
+                               this));
+  motion_ac_.SetFeedbackCallback(std::bind(&Executive::MotionFeedbackCallback,
+                                 this,
+                                 std::placeholders::_1));
+  motion_ac_.SetResultCallback(std::bind(&Executive::MotionResultCallback,
+                               this,
+                               std::placeholders::_1,
+                               std::placeholders::_2));
+  motion_ac_.Create(nh, ACTION_MOBILITY_MOTION);
 
   // initialize subs
   cmd_sub_ = nh_.subscribe(TOPIC_COMMAND, sub_queue_size_,
-                          &Executive::CmdCallback, this);
+                           &Executive::CmdCallback, this);
+
+  dock_state_sub_ = nh_.subscribe(TOPIC_PROCEDURES_DOCKING_STATE,
+                                  sub_queue_size_,
+                                  &Executive::DockStateCallback,
+                                  this);
 
   gs_ack_sub_ = nh_.subscribe(TOPIC_GUEST_SCIENCE_MANAGER_ACK, sub_queue_size_,
                               &Executive::GuestScienceAckCallback, this);
 
   plan_sub_ = nh_.subscribe(TOPIC_COMMUNICATIONS_DDS_PLAN, sub_queue_size_,
-                           &Executive::PlanCallback, this);
+                            &Executive::PlanCallback, this);
 
   zones_sub_ = nh_.subscribe(TOPIC_COMMUNICATIONS_DDS_ZONES, sub_queue_size_,
-                            &Executive::ZonesCallback, this);
+                             &Executive::ZonesCallback, this);
 
   // initialize pubs
   agent_state_pub_ = nh_.advertise<ff_msgs::AgentStateStamped>(
@@ -2096,16 +2001,16 @@ void Executive::Initialize(ros::NodeHandle *nh) {
   back_flashlight_client_ = nh_.serviceClient<ff_hw_msgs::SetFlashlight>(
                                           SERVICE_HARDWARE_LIGHT_AFT_CONTROL);
 
-  dock_cam_config_client_ = nh_.serviceClient<ff_msgs::ConfigureImageSampler>(
+  dock_cam_config_client_ = nh_.serviceClient<ff_msgs::ConfigureCamera>(
                                     SERVICE_MANAGEMENT_IMG_SAMPLER_CONFIG_DOCK);
 
-  dock_cam_enable_client_ = nh_.serviceClient<ff_msgs::EnableImageSampler>(
+  dock_cam_enable_client_ = nh_.serviceClient<ff_msgs::EnableCamera>(
                                     SERVICE_MANAGEMENT_IMG_SAMPLER_ENABLE_DOCK);
 
-  nav_cam_config_client_ = nh_.serviceClient<ff_msgs::ConfigureImageSampler>(
+  nav_cam_config_client_ = nh_.serviceClient<ff_msgs::ConfigureCamera>(
                                     SERVICE_MANAGEMENT_IMG_SAMPLER_CONFIG_NAV);
 
-  nav_cam_enable_client_ = nh_.serviceClient<ff_msgs::EnableImageSampler>(
+  nav_cam_enable_client_ = nh_.serviceClient<ff_msgs::EnableCamera>(
                                     SERVICE_MANAGEMENT_IMG_SAMPLER_ENABLE_NAV);
 
   // initialize configure clients later, when initialize here, the service is
@@ -2122,8 +2027,8 @@ void Executive::Initialize(ros::NodeHandle *nh) {
   agent_state_.profile_name = "";
   agent_state_.flight_mode = "nominal";
   // Get nominal limits
-  ff_util::FlightMode flight_mode;
-  if (!ff_util::ConfigUtil::GetFlightMode("nominal", flight_mode)) {
+  ff_msgs::FlightMode flight_mode;
+  if (!ff_util::FlightUtil::GetFlightMode(flight_mode, "nominal")) {
     ROS_ERROR("Executive: Couldn't get flight mode nominal.");
   } else {
     agent_state_.target_linear_velocity = flight_mode.hard_limit_vel;
@@ -2176,9 +2081,9 @@ void Executive::ReadParams() {
   }
 
   // get action feedback timeouts
-  if (!config_params_.GetPosReal("mobility_feedback_timeout",
-                                                &mobility_feedback_timeout_)) {
-    ROS_ERROR("Executive: Mobility feedback timeout not specified.");
+  if (!config_params_.GetPosReal("motion_feedback_timeout",
+                                                &motion_feedback_timeout_)) {
+    ROS_ERROR("Executive: Motion feedback timeout not specified.");
   }
 
   if (!config_params_.GetPosReal("arm_feedback_timeout",
@@ -2200,16 +2105,6 @@ void Executive::ReadParams() {
   if (!config_params_.GetPosReal("switch_result_timeout",
                                                     &switch_result_timeout_)) {
     ROS_ERROR("Executive: Switch result timeout not specified.");
-  }
-
-  if (!config_params_.GetPosReal("undock_result_timeout",
-                                                    &undock_result_timeout_)) {
-    ROS_ERROR("Executive: Undock result timeout not specified.");
-  }
-
-  if (!config_params_.GetPosReal("unperch_result_timeout",
-                                                    &unperch_result_timeout_)) {
-    ROS_ERROR("Executive: Unperch result timeout not specified.");
   }
 }
 

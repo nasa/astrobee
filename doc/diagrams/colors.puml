@@ -1,0 +1,81 @@
+' Definition of some nice color palettes
+
+' The 6 and 9 class Pastel palettes are matched in Hue with
+' 6 and 9 class darker palettes.
+
+' Palettes from: http://colorbrewer2.org
+' Color Names from:
+'  - http://www.color-blindness.com/color-name-hue/
+'  - http://chir.ag/projects/name-that-color
+
+' 6-class Pastel palette definition
+' http://colorbrewer2.org/#type=qualitative&scheme=Pastel2&n=6
+!define COLOR_6PASTEL_1 #b3e2cd
+!define COLOR_6PASTEL_2 #fdcdac
+!define COLOR_6PASTEL_3 #cbd5e8
+!define COLOR_6PASTEL_4 #f4cae4
+!define COLOR_6PASTEL_5 #e6f5c9
+!define COLOR_6PASTEL_6 #fff2ae
+' 1: Cruise (Green)
+' 2: Light Apricot (Orange)
+' 3: PeriWinkle (Blue)
+' 4: Classic Rose (Violet)
+' 5: Tusk (Green)
+' 6: Buttermilk (Yellow)
+
+' 6-class Dark palette definition
+'http://colorbrewer2.org/#type=qualitative&scheme=Dark2&n=6
+!define COLOR_6DARK_1 #1b9e77
+!define COLOR_6DARK_2 #d95f02
+!define COLOR_6DARK_3 #7570b3
+!define COLOR_6DARK_4 #e7298a
+!define COLOR_6DARK_5 #66a61e
+!define COLOR_6DARK_6 #e6ab02
+' 1: Elf Green (Green)
+' 2: Tawny (Orange)
+' 3: Chedwode Blue (Blue)
+' 4: Deep Cerise (Violet)
+' 5: Christi (Green)
+' 6: Corn (Orange)
+
+' 9-class Pastel palette definition
+' http://colorbrewer2.org/#type=qualitative&scheme=Pastel1&n=9
+!define COLOR_9PASTEL_1 #fbb4ae
+!define COLOR_9PASTEL_2 #b3cde3
+!define COLOR_9PASTEL_3 #ccebc5
+!define COLOR_9PASTEL_4 #decbe4
+!define COLOR_9PASTEL_5 #fed9a6
+!define COLOR_9PASTEL_6 #ffffcc
+!define COLOR_9PASTEL_7 #e5d8bd
+!define COLOR_9PASTEL_8 #fddaec
+!define COLOR_9PASTEL_9 #f2f2f2
+' 1: Rose Bud (Red)
+' 2: Light Steel Blue (Blue)
+' 3: Peppermint (Green)
+' 4: Blue Chakl (Violet)
+' 5: Cape Honey (Yellow)
+' 6: Cream (White)
+' 7: Pearl Lusta (Yellow)
+' 8: Pig Pink (Red)
+' 9: White Smoke (White)
+
+' 9-class Pastel palette definition
+' http://colorbrewer2.org/#type=qualitative&scheme=Set1&n=9
+!define COLOR_9SETONE_1 #e41a1c
+!define COLOR_9SETONE_2 #377eb8
+!define COLOR_9SETONE_3 #4daf4a
+!define COLOR_9SETONE_4 #984ea3
+!define COLOR_9SETONE_5 #ff7f00
+!define COLOR_9SETONE_6 #ffff33
+!define COLOR_9SETONE_7 #a65628
+!define COLOR_9SETONE_8 #f781bf
+!define COLOR_9SETONE_9 #999999
+' 1: Fire Engine Red (Red)
+' 2: Boston Blue Blue (Blue)
+' 3: Fruit Salad (Green)
+' 4: Deep Lilac (Violet)
+' 5: Dark Orange (Orange)
+' 6: Golden Fizz (Yellow)
+' 7: Rich Gold (Orange)
+' 8: Persian Pink (Red)
+' 9: Dusty Grey (Grey)

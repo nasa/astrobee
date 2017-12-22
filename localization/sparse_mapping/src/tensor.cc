@@ -154,7 +154,7 @@ void BuildMapPerformMatching(openMVG::matching::PairWiseMatches * match_map,
   // Do a check and verify that we meet our minimum before the
   // essential matrix fitting.
   if (static_cast<int32_t>(matches.size()) < FLAGS_min_valid) {
-    VLOG(2) << i << " " << j
+    LOG(INFO) << i << " " << j
             << " | Failed to find enough matches " << matches.size();
     return;
   }
@@ -167,8 +167,13 @@ void BuildMapPerformMatching(openMVG::matching::PairWiseMatches * match_map,
                                   compute_rays_angle, rays_angle);
 
   if (static_cast<int32_t>(inlier_matches.size()) < FLAGS_min_valid) {
+    LOG(INFO) << i << " " << j
+            << " | Failed to find enough inlier matches " << inlier_matches.size();
     return;
   }
+
+  LOG(INFO) << i << " " << j
+            << " success " << inlier_matches.size();
 
   std::vector<openMVG::matching::IndMatch> mvg_matches;
   for (std::vector<cv::DMatch>::value_type const& match : inlier_matches)
@@ -328,8 +333,8 @@ void BuildTracks(const std::string & matches_file,
   // later. This step is mostly for consistency.
   sparse_mapping::Triangulate(s->cid_to_cam_t_global_,
                               s->cid_to_keypoint_map_,
-                              s->pid_to_cid_fid_,
                               s->camera_params_.GetFocalLength(),
+                              &(s->pid_to_cid_fid_),
                               &(s->pid_to_xyz_));
 
   s->InitializeCidFidToPid();
@@ -442,8 +447,8 @@ void IncrementalBA(std::string const& essential_file,
     pid_to_xyz_local.clear();
     sparse_mapping::Triangulate(cid_to_cam_t_local,
                                 s->cid_to_keypoint_map_,
-                                pid_to_cid_fid_local,
                                 s->camera_params_.GetFocalLength(),
+                                &pid_to_cid_fid_local,
                                 &pid_to_xyz_local);
 
     ceres::Solver::Options options;
@@ -490,9 +495,10 @@ void IncrementalBA(std::string const& essential_file,
   // Triangulate all points
   sparse_mapping::Triangulate(s->cid_to_cam_t_global_,
                               s->cid_to_keypoint_map_,
-                              s->pid_to_cid_fid_,
                               s->camera_params_.GetFocalLength(),
+                              &(s->pid_to_cid_fid_),
                               &(s->pid_to_xyz_));
+  s->InitializeCidFidToPid();
 }
 
 // Close loop after incremental BA
@@ -595,9 +601,10 @@ void CloseLoop(sparse_mapping::SparseMap * s) {
 
   sparse_mapping::Triangulate(s->cid_to_cam_t_global_,
                               s->cid_to_keypoint_map_,
-                              s->pid_to_cid_fid_,
                               s->camera_params_.GetFocalLength(),
+                              &(s->pid_to_cid_fid_),
                               &(s->pid_to_xyz_));
+  s->InitializeCidFidToPid();
 }
 
 void BundleAdjust(bool fix_cameras,
@@ -1353,8 +1360,8 @@ void RegistrationOrVerification(std::vector<std::string> const& data_files,
   std::vector<Eigen::Vector3d> pid_to_xyz;
   sparse_mapping::Triangulate(map->cid_to_cam_t_global_,
                               map->user_cid_to_keypoint_map_,
-                              map->user_pid_to_cid_fid_,
                               map->camera_params_.GetFocalLength(),
+                              &(map->user_pid_to_cid_fid_),
                               &pid_to_xyz);
 
   double mean_err = 0;
@@ -1760,8 +1767,8 @@ void BuildMapFindEssentialAndInliers(Eigen::Matrix2Xd const& keypoints1,
 
 void Triangulate(std::vector<Eigen::Affine3d> const& cid_to_cam_t_global,
                  std::vector<Eigen::Matrix2Xd> const& cid_to_keypoint_map,
-                 std::vector<std::map<int, int> > const& pid_to_cid_fid,
                  double focal_length,
+                 std::vector<std::map<int, int> > * pid_to_cid_fid,
                  std::vector<Eigen::Vector3d> * pid_to_xyz) {
   Eigen::Matrix3d k;
   k << focal_length, 0, 0,
@@ -1776,15 +1783,18 @@ void Triangulate(std::vector<Eigen::Affine3d> const& cid_to_cam_t_global,
                         cid_to_cam_t_global[cid].translation(), &cid_to_p[cid]);
   }
 
-  pid_to_xyz->resize(pid_to_cid_fid.size());
-  for (size_t pid = 0; pid < pid_to_cid_fid.size(); pid++) {
+  pid_to_xyz->resize(pid_to_cid_fid->size());
+  for (int pid = pid_to_cid_fid->size() - 1; pid >= 0; pid--) {
     openMVG::Triangulation tri;
-    for (std::pair<int, int> const& cid_fid : pid_to_cid_fid[pid]) {
+    for (std::pair<int, int> const& cid_fid : pid_to_cid_fid->at(pid)) {
       tri.add(cid_to_p[cid_fid.first],  // they're holding a pointer to this
               cid_to_keypoint_map[cid_fid.first].col(cid_fid.second));
     }
     Eigen::Vector3d solution = tri.compute();
-    if (!std::isnan(solution[0])) {
+    if (std::isnan(solution[0]) || tri.minDepth() < 0) {
+      pid_to_xyz->erase(pid_to_xyz->begin() + pid);
+      pid_to_cid_fid->erase(pid_to_cid_fid->begin() + pid);
+    } else {
       pid_to_xyz->at(pid) = solution;
     }
   }

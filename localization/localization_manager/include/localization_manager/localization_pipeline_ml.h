@@ -35,7 +35,8 @@ namespace localization_manager {
 class MLPipeline : public Pipeline {
  public:
   // Create the pipeline
-  MLPipeline(ros::NodeHandle *nh, ros::NodeHandle *nhp, uint8_t mode, PipelineCallbackType cb);
+  MLPipeline(ros::NodeHandle *nh, ros::NodeHandle *nhp,
+    uint8_t mode, PipelineCallbackType cb);
 
   // Enable the pipeline (turn it on and off)
   bool Enable(bool enable);

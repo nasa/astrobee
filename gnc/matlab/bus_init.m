@@ -19,3 +19,4 @@
 
 % Bus definitions
 bus_cmc_msg_ic = Simulink.Bus.createMATLABStruct('cmc_msg');
+bus_ctl_input_msg_ic = Simulink.Bus.createMATLABStruct('ctl_input_msg');

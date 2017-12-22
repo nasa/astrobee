@@ -34,18 +34,14 @@
 #include <ff_msgs/CommandStamped.h>
 #include <ff_msgs/CompressedFile.h>
 #include <ff_msgs/CompressedFileAck.h>
-#include <ff_msgs/ConfigureImageSampler.h>
+#include <ff_msgs/ConfigureCamera.h>
 #include <ff_msgs/ControlCommand.h>
 #include <ff_msgs/DockAction.h>
-#include <ff_msgs/EnableImageSampler.h>
-#include <ff_msgs/ExecuteAction.h>
-#include <ff_msgs/IdleAction.h>
-#include <ff_msgs/MoveAction.h>
+#include <ff_msgs/EnableCamera.h>
+#include <ff_msgs/MotionAction.h>
 #include <ff_msgs/PlanStatusStamped.h>
 #include <ff_msgs/SetZones.h>
-#include <ff_msgs/StopAction.h>
 #include <ff_msgs/SwitchAction.h>
-#include <ff_msgs/UndockAction.h>
 #include <ff_msgs/Zone.h>
 #include <ff_util/config_client.h>
 #include <ff_util/ff_action.h>
@@ -71,21 +67,6 @@ using ff_msgs::CommandConstants;
 namespace executive {
 class OpState;
 
-enum Action {
-  NONE,
-  ARM,
-  DOCK,
-  EXECUTE,
-  IDLE,
-  MOVE,
-  PERCH,
-  STOP,
-  SWITCH,
-  UNDOCK,
-  UNPERCH
-};
-
-
 /**
  * Executive class is the mediator, responsible for
  * receiving broadcasted messages and forwarding to
@@ -103,6 +84,7 @@ class Executive : public ff_util::FreeFlyerNodelet {
 
   // callbacks, handled by states
   void CmdCallback(ff_msgs::CommandStampedPtr const& cmd);
+  void DockStateCallback(ff_msgs::DockStatePtr const& state);
   void GuestScienceAckCallback(ff_msgs::AckStampedConstPtr const& ack);
   void PlanCallback(ff_msgs::CompressedFileConstPtr const& plan);
   void ZonesCallback(ff_msgs::CompressedFileConstPtr const& zones);
@@ -114,8 +96,8 @@ class Executive : public ff_util::FreeFlyerNodelet {
   bool FillDockGoal(ff_msgs::CommandStampedPtr const& cmd,
                     std::string& err_msg,
                     bool plan = false);
-  void FillExecuteGoal();
-  bool FillMoveGoal(ff_msgs::CommandStampedPtr const& cmd);
+  bool FillMotionGoal(Action action,
+                      ff_msgs::CommandStampedPtr const& cmd = nullptr);
 
   bool StartAction(Action action,
                    std::string const& cmd_id,
@@ -136,31 +118,13 @@ class Executive : public ff_util::FreeFlyerNodelet {
   void DockResultCallback(ff_util::FreeFlyerActionState::Enum const& state,
                           ff_msgs::DockResultConstPtr const& result);
 
-  void ExecuteActiveCallback();
-  void ExecuteFeedbackCallback(
-                              ff_msgs::ExecuteFeedbackConstPtr const& feedback);
-  void ExecuteResultCallback(ff_util::FreeFlyerActionState::Enum const& state,
-                              ff_msgs::ExecuteResultConstPtr const& result);
-
-  void IdleActiveCallback();
-  void IdleResultCallback(ff_util::FreeFlyerActionState::Enum const& state,
-                          ff_msgs::IdleResultConstPtr const& result);
-
-  void MoveActiveCallback();
-  void MoveFeedbackCallback(ff_msgs::MoveFeedbackConstPtr const& feedback);
-  void MoveResultCallback(ff_util::FreeFlyerActionState::Enum const& state,
-                          ff_msgs::MoveResultConstPtr const& result);
-
-  void StopActiveCallback();
-  void StopResultCallback(ff_util::FreeFlyerActionState::Enum const& state,
-                          ff_msgs::StopResultConstPtr const& result);
+  void MotionActiveCallback();
+  void MotionFeedbackCallback(ff_msgs::MotionFeedbackConstPtr const& feedback);
+  void MotionResultCallback(ff_util::FreeFlyerActionState::Enum const& state,
+                            ff_msgs::MotionResultConstPtr const& result);
 
   void SwitchResultCallback(ff_util::FreeFlyerActionState::Enum const& state,
                             ff_msgs::SwitchResultConstPtr const& result);
-
-  void UndockFeedbackCallback(ff_msgs::UndockFeedbackConstPtr const& feedback);
-  void UndockResultCallback(ff_util::FreeFlyerActionState::Enum const& state,
-                            ff_msgs::UndockResultConstPtr const& result);
 
   void PublishCmdAck(std::string const& cmd_id,
                      std::string const& cmd_origin,
@@ -216,8 +180,7 @@ class Executive : public ff_util::FreeFlyerNodelet {
             uint8_t& completed_status,
             bool plan = false);
 
-  bool Undock(std::string const& cmd_id,
-              std::string const& cmd_origin,
+  bool Undock(ff_msgs::CommandStampedPtr const& cmd,
               std::string& err_msg,
               bool plan = false);
 
@@ -283,12 +246,8 @@ class Executive : public ff_util::FreeFlyerNodelet {
 
   ExecutiveActionClient<ff_msgs::ArmAction> arm_ac_;
   ExecutiveActionClient<ff_msgs::DockAction> dock_ac_;
-  ExecutiveActionClient<ff_msgs::ExecuteAction> execute_ac_;
-  ExecutiveActionClient<ff_msgs::IdleAction> idle_ac_;
-  ExecutiveActionClient<ff_msgs::MoveAction> move_ac_;
-  ExecutiveActionClient<ff_msgs::StopAction> stop_ac_;
+  ExecutiveActionClient<ff_msgs::MotionAction> motion_ac_;
   ExecutiveActionClient<ff_msgs::SwitchAction> switch_ac_;
-  ExecutiveActionClient<ff_msgs::UndockAction> undock_ac_;
 
   config_reader::ConfigReader config_params_;
 
@@ -301,12 +260,8 @@ class Executive : public ff_util::FreeFlyerNodelet {
 
   ff_msgs::ArmGoal arm_goal_;
   ff_msgs::DockGoal dock_goal_;
-  ff_msgs::ExecuteGoal execute_goal_;
-  ff_msgs::IdleGoal idle_goal_;
-  ff_msgs::MoveGoal move_goal_;
-  ff_msgs::StopGoal stop_goal_;
+  ff_msgs::MotionGoal motion_goal_;
   ff_msgs::SwitchGoal switch_goal_;
-  ff_msgs::UndockGoal undock_goal_;
 
   ros::NodeHandle nh_;
 
@@ -318,7 +273,7 @@ class Executive : public ff_util::FreeFlyerNodelet {
   ros::ServiceClient dock_cam_config_client_, dock_cam_enable_client_;
   ros::ServiceClient nav_cam_config_client_, nav_cam_enable_client_;
 
-  ros::Subscriber cmd_sub_, gs_ack_sub_, plan_sub_, zones_sub_;
+  ros::Subscriber cmd_sub_, dock_state_sub_, gs_ack_sub_, plan_sub_, zones_sub_;
 
   ros::Timer reload_params_timer_, wait_timer_;
 
@@ -331,9 +286,8 @@ class Executive : public ff_util::FreeFlyerNodelet {
 
   // Action timeouts
   double action_active_timeout_;
-  double arm_feedback_timeout_, mobility_feedback_timeout_;
+  double arm_feedback_timeout_, motion_feedback_timeout_;
   double dock_result_timeout_, perch_result_timeout_, switch_result_timeout_;
-  double undock_result_timeout_, unperch_result_timeout_;
 
   int pub_queue_size_;
   int sub_queue_size_;

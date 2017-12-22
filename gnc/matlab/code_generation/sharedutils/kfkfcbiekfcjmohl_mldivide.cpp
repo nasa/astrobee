@@ -1,18 +1,18 @@
 //
 // File: kfkfcbiekfcjmohl_mldivide.cpp
 //
-// Code generated for Simulink model 'ctl_controller0'.
+// Code generated for Simulink model 'est_estimator'.
 //
-// Model version                  : 1.1139
+// Model version                  : 1.1142
 // Simulink Coder version         : 8.11 (R2016b) 25-Aug-2016
-// C/C++ source code generated on : Wed May 17 14:42:59 2017
+// C/C++ source code generated on : Mon Dec  4 08:33:06 2017
 //
 #include "rtwtypes.h"
 #include <math.h>
 #include <string.h>
 #include "kfkfcbiekfcjmohl_mldivide.h"
 
-// Function for MATLAB Function: '<S41>/MATLAB Function'
+// Function for MATLAB Function: '<S112>/MATLAB Function'
 void kfkfcbiekfcjmohl_mldivide(const real32_T A[16], real32_T B[16])
 {
   real32_T temp;

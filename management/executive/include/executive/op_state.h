@@ -27,9 +27,8 @@
 #include <ff_msgs/CommandArg.h>
 #include <ff_msgs/CommandConstants.h>
 #include <ff_msgs/ControlState.h>
-#include <ff_msgs/ExecuteAction.h>
-#include <ff_msgs/MoveAction.h>
-#include <ff_msgs/StopAction.h>
+#include <ff_msgs/DockAction.h>
+#include <ff_msgs/MotionAction.h>
 #include <ff_util/ff_action.h>
 
 #include <string>
@@ -65,54 +64,22 @@ class OpState {
                               std::string const& cmd_origin);
 
   // Dock
-  virtual OpState* HandleDockActive();
+  virtual OpState* HandleDockActive(Action const& action);
   virtual OpState* HandleDockFeedback(
                                 ff_msgs::DockFeedbackConstPtr const& feedback);
   virtual OpState* HandleDockResult(
                               ff_util::FreeFlyerActionState::Enum const& state,
                               ff_msgs::DockResultConstPtr const& result,
                               std::string const& cmd_id,
-                              std::string const& cmd_origin);
-
-  // Execute
-  virtual OpState* HandleExecuteActive();
-  virtual OpState* HandleExecuteResult(
-                              ff_util::FreeFlyerActionState::Enum const& state,
-                              ff_msgs::ExecuteResultConstPtr const& result,
-                              std::string const& cmd_id,
-                              std::string const& cmd_origin);
-
-  // Idle
-  virtual OpState* HandleIdleResult(
-                              ff_util::FreeFlyerActionState::Enum const& state,
-                              ff_msgs::IdleResultConstPtr const& result,
-                              std::string const& cmd_id,
-                              std::string const& cmd_origin);
+                              std::string const& cmd_origin,
+                              Action const& action);
 
   // Perch
-  virtual OpState* HandlePerchActive();
+  virtual OpState* HandlePerchActive(Action const& action);
   virtual OpState* HandlePerchFeedback();
   virtual OpState* HandlePerchResult(std::string const& cmd_id,
-                                     std::string const& cmd_origin);
-
-
-  // Move
-  virtual OpState* HandleMoveActive();
-  virtual OpState* HandleMoveFeedback(
-                                ff_msgs::MoveFeedbackConstPtr const& feedback);
-  virtual OpState* HandleMoveResult(
-                              ff_util::FreeFlyerActionState::Enum const& state,
-                              ff_msgs::MoveResultConstPtr const& result,
-                              std::string const& cmd_id,
-                              std::string const& cmd_origin);
-
-  // Stop
-  virtual OpState* HandleStopActive();
-  virtual OpState* HandleStopResult(
-                              ff_util::FreeFlyerActionState::Enum const& state,
-                              ff_msgs::StopResultConstPtr const& result,
-                              std::string const& cmd_id,
-                              std::string const& cmd_origin);
+                                     std::string const& cmd_origin,
+                                     Action const& action);
 
   // Switch
   virtual OpState* HandleSwitchResult(
@@ -121,20 +88,14 @@ class OpState {
                               std::string const& cmd_id,
                               std::string const& cmd_origin);
 
-  // Undock
-  virtual OpState* HandleUndockFeedback(
-                              ff_msgs::UndockFeedbackConstPtr const& feedback);
-  virtual OpState* HandleUndockResult(
+  // Teleop
+  virtual OpState* HandleMotionActive(Action const& action);
+  virtual OpState* HandleMotionResult(
                               ff_util::FreeFlyerActionState::Enum const& state,
-                              ff_msgs::UndockResultConstPtr const& result,
+                              ff_msgs::MotionResultConstPtr const& result,
                               std::string const& cmd_id,
-                              std::string const& cmd_origin);
-
-  // Unperching
-  virtual OpState* HandleUnperchActive();
-  virtual OpState* HandleUnperchFeedback();
-  virtual OpState* HandleUnperchResult(std::string const& cmd_id,
-                                       std::string const& cmd_origin);
+                              std::string const& cmd_origin,
+                              Action const& action);
 
   virtual OpState* HandleWaitCallback();
 

@@ -1,0 +1,116 @@
+'
+' Definition of all Astrobee nodes running on the robot
+'
+
+' Common color scheme for node "roles"
+!define COLOR_MOB #YellowGreen
+!define COLOR_LOC #Thistle
+!define COLOR_MGT #GoldenRod
+!define COLOR_GNC #SandyBrown
+!define COLOR_COM #LightSalmon
+!define COLOR_DRV #PowderBlue
+
+' The visibility of processors, managers and nodes is defined with:
+'  - SHOW_MANAGER : show nodelet manager frames
+'  - SHOW_{LLP,MLP,HLP} : show nodes belonging to the processor name
+'  - SHOW_MGT : show "management" type nodes
+'  - SHOW_DRV : show "driver" type nodes
+'  - SHOW_COM : show "communication" type nodes
+'  - SHOW_GNC : show "GN&C" type nodes
+'  - SHOW_MOB : show "mobility" type nodes
+'  - SHOW_LOC : show "localization" type nodes
+' See macros in nodes_helper for more information
+!include "nodes_helper.puml"
+
+' HLP
+!ifdef SHOW_HLP
+node HLP {
+  add_mgt([hlp_cpu_monitor]<<cpu_monitor>>)
+  add_mgt([hlp_disk_monitor]<<disk_monitor>>)
+  add_mgt([guest_science_manager])
+  add_mgt([android_ros_bridge])
+  add_drv([sci_cam_streaming])
+  add_drv([audio_manager])
+}
+!endif
+
+' MLP
+!ifdef SHOW_MLP
+node MLP {
+  start_manager(mlp_communications)
+    add_com([dds_ros_bridge])
+  end_manager()
+  start_manager(mlp_management)
+    add_mgt([executive])
+    add_mgt([access_monitor])
+  end_manager()
+  start_manager(mlp_monitors)
+    add_mgt([sys_monitor])
+    add_mgt([mlp_cpu_monitor]<<cpu_monitor>>)
+    add_mgt([mlp_disk_monitor]<<disk_monitor>>)
+  end_manager()
+  start_manager(mlp_localization)
+    add_loc([localization_manager])
+  end_manager()
+  start_manager(mlp_dock_cam)
+    add_loc([dock_cam_sampler]<<image_sampler>>)
+    add_loc([marker_tracking])
+    add_drv([dock_cam]<<is_camera>>)
+  end_manager()
+  start_manager(mlp_nav_cam)
+    add_mgt([nav_cam_sampler]<<image_sampler>>)
+    add_loc([sparse_mapping])
+    add_loc([lk_optical_flow])
+    add_drv([nav_cam]<<is_camera>>)
+  end_manager()
+  start_manager(mlp_depth_cam)
+    add_mob([sentinel])
+    add_loc([handrail_detect])
+    add_drv([pico_driver])
+  end_manager
+  start_manager(mlp_mobility)
+    add_mob([choregrapher])
+    add_mob([dock])
+    add_mob([perch])
+    add_mob([planner_qp])
+    add_mob([planner_trapezoidal])
+    add_mob([mapper])
+    add_mob([planner])
+    add_mob([framestore])
+  end_manager()
+  start_manager(mlp_serial)
+    add_drv([perching_arm])
+  end_manager()
+}
+!endif
+
+' LLP
+!ifdef SHOW_LLP
+node LLP {
+  start_manager(llp_monitors)
+    add_mgt([llp_cpu_monitor]<<cpu_monitor>>)
+    add_mgt([llp_disk_monitor]<<disk_monitor>>)
+  end_manager()
+  start_manager("GN&C")
+    add_gnc([ekf])
+    add_gnc([ctl])
+    add_gnc([fam])
+  end_manager()
+  start_manager(llp_i2c)
+    add_drv([pmc_actuator])
+  end_manager()
+  start_manager(llp_i2c)
+    add_drv([eps_driver])
+    add_drv([laser])
+    add_drv([signal_lights])
+    add_drv([flashlight_front]<<flashlight>>)
+    add_drv([flashlight_aft]<<flashlight>>)
+  end_manager()
+  start_manager(llp_serial)
+    add_drv([speedcam])
+  end_manager()
+  start_manager(llp_spi)
+    add_drv([epson_imu])
+  end_manager()
+}
+!endif

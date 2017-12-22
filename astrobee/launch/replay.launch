@@ -20,16 +20,19 @@
   <!-- Path to the bag file -->
   <arg name="bag" />
 
-  <!-- Context options (NB: THESE ARE OVERRIDDEN BY ENVIRONMENT VARIABLES, IF SET)    -->
-  <arg name="robot" default="p4d" />            <!-- Robot name                       -->
-  <arg name="world" default="granite" />        <!-- World name                       -->
-  <arg name="ns" default="" />                  <!-- Robot namespace prefix           -->
-  
+  <!-- Context options (NB: THESE ARE OVERRIDDEN BY ENVIRONMENT VARIABLES    -->
+  <arg name="robot" default="p4d" />            <!-- Robot name              -->
+  <arg name="world" default="granite" />        <!-- World name              -->
+  <arg name="ns" default="" />                  <!-- Robot namespace prefix  -->
+  <arg name="nodes" default=""/>                <!-- Launch specific nodes   -->
+  <arg name="mlp" default="disabled" />         <!-- MLP IP address          -->
+  <arg name="llp" default="disabled" />         <!-- LLP IP address          -->
+ 
   <!-- General options -->
-  <arg name="gviz" default="false" />           <!-- Start GNC visualizer             -->
-  <arg name="rviz" default="false" />           <!-- Start visualization              -->
-  <arg name="rqt" default="false" />            <!-- Start user interface             -->
-  <arg name="gds" default="false" />            <!-- Enable ground data system        -->
+  <arg name="gviz" default="false" />           <!-- Start GNC visualizer    -->
+  <arg name="rviz" default="false" />           <!-- Start visualization     -->
+  <arg name="rqt" default="false" />            <!-- Start user interface    -->
+  <arg name="gds" default="false" />            <!-- Enable GDS              -->
 
   <!-- Make sure all environment variables are set for controller -->
   <env if="$(eval optenv('ASTROBEE_ROBOT','')=='')" 
@@ -56,14 +59,16 @@
     <include if="$(arg rqt)" file="$(find astrobee)/launch/controller/rqt.launch"/>
   </group>
 
-  <!-- Replay a data bag-->
-  <include file="$(find astrobee)/launch/controller/bagreplay.launch">
-    <arg name="bag" value="$(arg bag)" />
+  <!-- Auto-inert platform #1 at a desired initial location -->
+  <include file="$(find astrobee)/launch/astrobee.launch">
+    <arg name="robot" value="$(arg robot)" />     <!-- Type of robot         -->
+    <arg name="world" value="$(arg world)" />     <!-- Execution context     -->
+    <arg name="ns" value="$(arg ns)" />           <!-- Robot namespace       -->
+    <arg name="drivers" value="false" />          <!-- Never start drivers   -->
+    <arg name="llp" value="$(arg llp)" />         <!-- LLP IP address        -->
+    <arg name="mlp" value="$(arg mlp)" />         <!-- MLP IP address        -->
+    <arg name="nodes" value="$(arg nodes)"/>      <!-- Launch specific nodes -->
+    <arg name="bag" value="$(arg bag)" />         <!-- Load bag              -->
   </include>
-
-  <!-- Launch the platform on its own namespace -->
-  <group ns="/$(arg ns)">
-    <include file="$(find rviz_visualizer)/launch/astrobee_visualizer.launch" />
-  </group>
 
 </launch>

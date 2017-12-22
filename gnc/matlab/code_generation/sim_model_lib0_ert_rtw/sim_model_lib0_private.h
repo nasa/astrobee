@@ -3,9 +3,9 @@
 //
 // Code generated for Simulink model 'sim_model_lib0'.
 //
-// Model version                  : 1.1139
+// Model version                  : 1.1142
 // Simulink Coder version         : 8.11 (R2016b) 25-Aug-2016
-// C/C++ source code generated on : Thu Aug 31 10:22:10 2017
+// C/C++ source code generated on : Mon Dec 18 10:15:42 2017
 //
 // Target selection: ert.tlc
 // Embedded hardware selection: 32-bit Generic
@@ -86,7 +86,6 @@ void sim_model__speed_controller(real32_T rtu_battery_voltage, uint8_T
   rtu_speed_cmd, real32_T rtu_speed_curr, B_speed_controller_sim_model__T
   *localB, DW_speed_controller_sim_model_T *localDW,
   P_speed_controller_sim_model__T *localP, real32_T rtp_ctl_pwm2speed, real32_T
-  rtp_ctl_cmd_filt_num, real32_T rtp_ctl_cmd_filt_den, real32_T
   rtp_ctl_speed_filt_num, real32_T rtp_ctl_speed_cilt_den, real32_T rtp_ctl_kp,
   real32_T rtp_ctl_kd, real32_T rtp_ctl_filt_n, real32_T rtp_ctl_max_voltage,
   real32_T rtp_ctl_ki);

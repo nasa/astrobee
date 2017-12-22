@@ -52,6 +52,7 @@
 #define I2C_CMD_RING_BUZZER 0x41
 #define I2C_CMD_CLR_TERMINATE_EVT 0x42
 #define I2C_CMD_UNDOCK 0x43
+#define I2C_CMD_GET_CONNECTION_STATE 0x44
 
 // Dock-specific commands (0x70 - 0x9F)
 #define I2C_CMD_GET_DOCK_STATE 0x70
@@ -127,8 +128,10 @@ struct HousekeepingInfo {
 
 // String type
 enum StringType {
-  VERSION = I2C_CMD_GET_SW_VERSION,
-  BUILD   = I2C_CMD_GET_BUILD_TIME
+  HW_VERSION = I2C_CMD_GET_HW_VERSION,
+  SW_VERSION = I2C_CMD_GET_SW_VERSION,
+  BUILD      = I2C_CMD_GET_BUILD_TIME,
+  SERIAL     = I2C_CMD_GET_SERIAL_NUMBER
 };
 
 // Battery index
@@ -162,6 +165,14 @@ enum PayloadIndex {
   NUM_PAYLOADS         = 4
 };
 
+enum AdvancedIndex {
+  ADVANCED_USB         = 0,
+  ADVANCED_AUX         = 1,
+  ADVANCED_PMC1        = 2,
+  ADVANCED_PMC2        = 3,
+  NUM_ADVANCED         = 4
+};
+
 // Power state
 enum PowerState {
   PERSIST  = 0x00,
@@ -180,6 +191,12 @@ enum FirmwareFileState {
   OPEN     = 0x03,
   CLOSE    = 0x05,
   READY    = 0x07
+};
+
+enum ConnectionState {
+  CONN_DISCONNECTED = 0x00,
+  CONN_CONNECTING   = 0x01,
+  CONN_CONNECTED    = 0x02
 };
 
 class EpsDriver {
@@ -245,6 +262,9 @@ class EpsDriver {
   bool SetPayloadState(PayloadIndex payload, PowerState state);
 
   // Set specific power channel on (not a mask, but an integer channel!)
+  bool SetAdvancedState(AdvancedIndex advanced, PowerState state);
+
+  // Set specific power channel on (not a mask, but an integer channel!)
   bool SetLedState(LedIndex led, PowerState state);
 
   // Get the battery status for a particular channel
@@ -255,6 +275,12 @@ class EpsDriver {
 
   // Send UNDOCK command to the dock.
   bool Undock(void);
+
+  // Get Connection State
+  bool GetConnectionState(ConnectionState &state);
+
+  // Clear TERMINATE event.
+  bool ClearTerminateEvent(void);
 
   // Write new firmware to the EPS
   bool WriteFirmware(std::string const& hexfile);

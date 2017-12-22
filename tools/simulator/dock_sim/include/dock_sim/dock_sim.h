@@ -28,7 +28,6 @@
 #include <actionlib/server/simple_action_server.h>
 
 #include <ff_msgs/DockAction.h>
-#include <ff_msgs/UndockAction.h>
 #include <ff_util/ff_names.h>
 
 #include <nodelet/nodelet.h>
@@ -44,14 +43,10 @@ class DockSim : public nodelet::Nodelet {
 
   void DockGoalCallback(ff_msgs::DockGoalConstPtr const& goal);
 
-  void UndockGoalCallback(ff_msgs::UndockGoalConstPtr const& goal);
-
   virtual void onInit();
 
  private:
   std::shared_ptr<actionlib::SimpleActionServer<ff_msgs::DockAction>> sas_dock_;
-  std::shared_ptr<actionlib::SimpleActionServer<ff_msgs::UndockAction>>
-                                                                    sas_undock_;
 };
 
 }  // namespace dock_sim

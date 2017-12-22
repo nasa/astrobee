@@ -15,7 +15,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 #
-# This service rings the buzzer controlled by the EPS
+# Service to query battery status
 
 string location                     # Battery location (from ff_hw_msgs/EpsBatteryState)
 ---

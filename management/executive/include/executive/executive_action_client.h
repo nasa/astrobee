@@ -26,18 +26,47 @@
 
 namespace executive {
 
+enum Action {
+  NONE,
+  ARM,
+  DOCK,
+  EXECUTE,
+  IDLE,
+  MOVE,
+  PERCH,
+  STOP,
+  SWITCH,
+  UNDOCK,
+  UNPERCH
+};
+
 template <class T>
 class ExecutiveActionClient : public ff_util::FreeFlyerActionClient<T> {
  public:
+  Action action();
+  void action(Action const& action);
   std::string cmd_id();
   void cmd_id(std::string const& cmd_id);
   std::string cmd_origin();
   void cmd_origin(std::string const& cmd_origin);
-  void SetCmdInfo(std::string const& cmd_id, std::string const& cmd_origin);
+  void SetCmdInfo(Action const& action,
+                  std::string const& cmd_id,
+                  std::string const& cmd_origin);
  private:
   std::string cmd_id_;
   std::string cmd_origin_;
+  Action action_;
 };
+
+template <class T>
+Action ExecutiveActionClient<T>::action() {
+  return action_;
+}
+
+template <class T>
+void ExecutiveActionClient<T>::action(Action const& action) {
+  action_ = action;
+}
 
 template <class T>
 std::string ExecutiveActionClient<T>::cmd_id() {
@@ -60,8 +89,10 @@ void ExecutiveActionClient<T>::cmd_origin(std::string const& cmd_origin) {
 }
 
 template <class T>
-void ExecutiveActionClient<T>::SetCmdInfo(std::string const& cmd_id,
+void ExecutiveActionClient<T>::SetCmdInfo(Action const& action,
+                                          std::string const& cmd_id,
                                           std::string const& cmd_origin) {
+  action_ = action;
   cmd_id_ = cmd_id;
   cmd_origin_ = cmd_origin;
 }

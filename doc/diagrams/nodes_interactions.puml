@@ -1,0 +1,17 @@
+@startuml
+
+skinparam componentStyle uml2
+'skinparam dpi 300
+
+title Astrobee Node Grouping per Manager
+
+!define MLP_NODE
+!define LLP_NODE
+
+!include "nodes.puml"
+
+MLP --[hidden]-- LLP
+llp_i2c --[hidden]-- llp_serial
+llp_i2c --[hidden]-- llp_spi
+
+@enduml

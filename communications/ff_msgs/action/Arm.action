@@ -17,27 +17,43 @@
 #
 # This message describes the ARM action offered by the PERCHING ARM
 
-uint8 mode                                    # What to do
-uint8 DEPLOY              = 1                 # Deploy the arm
-uint8 STOW                = 2                 # Retract the arm
-uint8 OPEN                = 3                 # Open the gripper
-uint8 CLOSE               = 4                 # Close the gripper
-uint8 CALIBRATE           = 5                 # Calibrate the gripper
-uint8 PAN_TILT            = 6                 # Pan/tilt the arm
-uint8 PAN                 = 7                 # Pan the arm
-uint8 TILT                = 8                 # Tilt the arm
-float32 pan                                   # Pan value (radians)
-float32 tilt                                  # Tilt value (radians)
+uint8 command                                 # What to do
+uint8 ARM_STOP            = 0                 # Stop the arm (vel = 0)
+uint8 ARM_DEPLOY          = 1                 # Deploy the arm
+uint8 ARM_STOW            = 2                 # Retract the arm
+uint8 ARM_PAN             = 3                 # Pan the arm
+uint8 ARM_TILT            = 4                 # Tilt the arm
+uint8 ARM_MOVE            = 5                 # Pan and tilt the
+uint8 GRIPPER_CALIBRATE   = 6                 # Calibrate the gripper
+uint8 GRIPPER_SET         = 7                 # Set the gripper value
+uint8 GRIPPER_OPEN        = 8                 # Open the gripper
+uint8 GRIPPER_CLOSE       = 9                 # Open the gripper
+
+float32 pan                                   # PAN from -90 to +90
+float32 tilt                                  # TILT from -30 to +90
+float32 gripper                               # SET from 0 to 100
+
 ---
+
 int32 response
 int32 SUCCESS             =  1                # Successfully completed
 int32 PREEMPTED           =  0                # Action was preempted
-int32 CANCELLED           = -1                # Callee cancelled action
-int32 BACKDRIVE_DETECTED  = -2                # External force detected
-int32 RUNTIME_ERROR       = -3                # Could not complete action
-int32 SERIAL_COMM_ERROR   = -4                # I: Communication error
-int32 OUT_OF_BOUNDS       = -5                # I: Infeasible command
-int32 INVALID_COMMAND     = -6                # I: Invalid command
+int32 INVALID_COMMAND     = -1                # Invalid command
+int32 BAD_TILT_VALUE      = -2                # Invalid value for tilt
+int32 BAD_PAN_VALUE       = -3                # Invalid value for pan
+int32 BAD_GRIPPER_VALUE   = -4                # Invalid value for gripper
+int32 NOT_ALLOWED         = -5                # Not allowed
+int32 NEED_TO_CALIBRATE   = -6                # Cannot OPEN/CLOSE/SET gripper
+int32 TILT_FAILED         = -7                # Tilt command failed
+int32 PAN_FAILED          = -8                # Pan command failed
+int32 GRIPPER_FAILED      = -9                # Gripper command failed
+int32 CALIBRATE_FAILED    = -10               # Gripper calibrate failed
+int32 COMMUNICATION_ERROR = -11               # Cannot communicate with arm
+
 ---
-float32 percentage_complete                   # Percentage complete
-###################################################################
+
+ff_msgs/ArmState state                        # Complete state
+
+float32 pan                                   # Current PAN value
+float32 tilt                                  # Current TILT value
+float32 gripper                               # Current GRIPPER value

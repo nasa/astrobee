@@ -64,17 +64,17 @@ class GazeboSensorPluginHazCam : public FreeFlyerSensorPlugin {
     field.name = "x";
     field.offset = 0 * sizeof(float);
     field.datatype = sensor_msgs::PointField::FLOAT32;
-    field.count = sizeof(float);
+    field.count = 1;  // Number of ELEMENTS, not bytes
     point_cloud_msg_.fields.push_back(field);
     field.name = "y";
     field.offset = 1 * sizeof(float);
     field.datatype = sensor_msgs::PointField::FLOAT32;
-    field.count = sizeof(float);
+    field.count = 1;  // Number of ELEMENTS, not bytes
     point_cloud_msg_.fields.push_back(field);
     field.name = "z";
     field.offset = 2 * sizeof(float);
     field.datatype = sensor_msgs::PointField::FLOAT32;
-    field.count = sizeof(float);
+    field.count = 1;  // Number of ELEMENTS, not bytes
     point_cloud_msg_.fields.push_back(field);
     // Listen to the point cloud
     update_ = sensor_->DepthCamera()->ConnectNewRGBPointCloud(

@@ -54,11 +54,6 @@ uint8 of_count
 # ml features this frame (0 if no update)
 uint8 ml_count
 
-# State Augementation for Camera location
-geometry_msgs/Pose ml_aug_pose
-# state augmentation for optical flow
-geometry_msgs/Pose[16] of_aug_poses
-
 # Global Handrail Pose
 geometry_msgs/Pose hr_global_pose
 

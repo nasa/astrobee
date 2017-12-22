@@ -59,7 +59,7 @@ void FreeFlyerNodelet::Setup(ros::NodeHandle nh) {
   heartbeat_.nodelet_manager = ros::this_node::getName();
 
   // Immediately, setup a publisher for faults coming from this node
-  pub_heartbeat_ = nh_.advertise<ff_msgs::Heartbeat>(TOPIC_HEARTBEAT, 5);
+  pub_heartbeat_ = nh_.advertise<ff_msgs::Heartbeat>(TOPIC_HEARTBEAT, 5, true);
   pub_diagnostics_ = nh_.advertise<diagnostic_msgs::DiagnosticArray>(TOPIC_DIAGNOSTICS, 5);
 
   // Setup a heartbeat timer for this node if auto start was requested
@@ -165,6 +165,7 @@ void FreeFlyerNodelet::AssertFault(std::string const& key,
   } else {
     FF_ERROR(node_ << ": Asserting fault " << key << " failed! " <<
              "Fault doesn't exist for this node.");
+    FF_ERROR("Message: " << message);
     return;
   }
 

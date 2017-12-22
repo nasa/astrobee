@@ -1,0 +1,68 @@
+@startuml
+
+skinparam componentStyle uml2
+
+title GNC Overview
+
+!define SHOW_ALL_TYPES true
+!include "nodes_helper.puml"
+
+frame mob {
+  add_mob(choregrapher)
+  add_act(Move)
+}
+
+frame gnc {
+  add_gnc(EKF)
+  add_gnc(CTL)
+  add_gnc(FAM)
+  add_act(Control)
+}
+
+add_msg(Landmarks)
+Landmarks -> EKF : /gnc/{of,hr,ar,ml}/features
+
+'frame drv {
+  add_drv(pmc_actuator)
+  add_msg(PmcTelemetry)
+'}
+
+add_msg(Inertia, "latching_msg")
+add_msg(SpeedGain)
+
+SpeedGain --> FAM
+Inertia -up-> EKF
+Inertia -up-> CTL
+Inertia -up-> FAM
+
+
+EKF -r-> CTL : /gnc/ekf\n[EkfState]
+CTL -r-> FAM : /gnc/fam\n[Wrench]
+
+Move -- choregrapher : /mob/move
+choregrapher -->> Control : /gnc/control
+Control -- CTL : /gnc/control
+
+pmc_actuator --> PmcTelemetry : /hw/pmc/telemetry
+FAM -> pmc_actuator : /hw/pmc/command\n[PmcCommand]
+
+note left of Inertia
+Intertia is normally 
+set by the Executive
+endnote
+
+note right of SpeedGain
+Is Choregrapher defining the 
+SpeedGain if function of the 
+FlightMode ?
+Should this message be 
+latching?
+endnote
+
+note top of Landmarks
+This is a simplification
+Registrations signal is
+also coming in
+endnote
+
+@enduml

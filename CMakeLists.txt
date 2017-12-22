@@ -18,7 +18,7 @@
 cmake_minimum_required(VERSION 3.0)
 project(Astrobee)
 set(ASTROBEE_VERSION_MAJOR 0)
-set(ASTROBEE_VERSION_MINOR 3)
+set(ASTROBEE_VERSION_MINOR 2)
 
 if ( "${CMAKE_VERSION}" VERSION_GREATER 3.0.0 )
   cmake_policy(SET CMP0045 OLD)
@@ -178,14 +178,37 @@ find_package(Boost 1.54.0 QUIET REQUIRED COMPONENTS filesystem system iostreams 
 find_package(Eigen3 REQUIRED)
 find_package(ZLIB)
 find_package(Luajit20 REQUIRED)
-find_package(OpenCV REQUIRED)
+
+# Find OpenCV and fix a 3.3.1 bug
+find_package(OpenCV 3 REQUIRED)
+if (${OpenCV_VERSION} MATCHES "3.3.1")
+  foreach(__cvcomponent ${OpenCV_LIB_COMPONENTS})
+    set (__original_cvcomponent ${__cvcomponent})
+    if(NOT __cvcomponent MATCHES "^opencv_")
+      set(__cvcomponent opencv_${__cvcomponent})
+    endif()
+    if (TARGET ${__cvcomponent})
+      set_target_properties(${__cvcomponent} PROPERTIES
+          MAP_IMPORTED_CONFIG_DEBUG ""
+          MAP_IMPORTED_CONFIG_RELEASE ""
+          MAP_IMPORTED_CONFIG_RELWITHDEBINFO ""
+          MAP_IMPORTED_CONFIG_MINSIZEREL ""
+      )
+    endif()
+  endforeach(__cvcomponent)
+endif()
+set(OpenCV_LIBRARIES ${OpenCV_LIBS})
+
 find_package(dbow2 REQUIRED)
 find_package(Alvar REQUIRED)
 find_package(OpenMVG QUIET REQUIRED)
 find_package(JsonCpp REQUIRED)
+find_package(FFMPEG QUIET) # OPTIONAL
 if (ENABLE_PICOFLEXX)
   find_package(royale REQUIRED)
 endif (ENABLE_PICOFLEXX)
+
+
 
 #find_package(PkgConfig REQUIRED)
 #
@@ -287,17 +310,20 @@ add_custom_target(version DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/version.txt)
 install(CODE "execute_process(COMMAND \"${CMAKE_COMMAND}\" --build \"${CMAKE_CURRENT_BINARY_DIR}\" --target version)")
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/version.txt DESTINATION ${CMAKE_INSTALL_PREFIX} )
 
+# install the env_wrapper.sh for running on astrobee
+install(PROGRAMS scripts/deploy/env_wrapper.sh DESTINATION ${CMAKE_INSTALL_PREFIX} )
+
 if (USE_ROS)
   add_subdirectory(tools)
   add_subdirectory(astrobee)
   add_subdirectory(communications)
-  add_subdirectory(gnc)
-  add_subdirectory(management)
-  add_subdirectory(mobility)
-  add_subdirectory(procedures)
   if (NOT USE_CTC AND ENABLE_GAZEBO)
     add_subdirectory(simulation)
   endif (NOT USE_CTC AND ENABLE_GAZEBO)
+  add_subdirectory(gnc)
+  add_subdirectory(mobility)
+  add_subdirectory(procedures)
+  add_subdirectory(management)
 endif (USE_ROS)
 
 if (USE_DRIVERS)

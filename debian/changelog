@@ -1,0 +1,11 @@
+astrobee (0.2) unstable; urgency=medium
+
+  * Our second open source release. See RELEASE.md for details.
+
+ -- Astrobee Flight Software <astrobee-fsw@nx.arc.nasa.gov>  Thu, 21 Dec 2017 14:52:20 -0800
+
+astrobee (0.1) unstable; urgency=medium
+
+  * Initial Release.
+
+ -- Astrobee Flight Software <astrobee-fsw@nx.arc.nasa.gov>  Wed, 21 Jun 2017 15:53:24 -0700

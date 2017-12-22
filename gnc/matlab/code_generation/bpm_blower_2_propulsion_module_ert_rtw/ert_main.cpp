@@ -3,9 +3,9 @@
 //
 // Code generated for Simulink model 'bpm_blower_2_propulsion_module'.
 //
-// Model version                  : 1.1139
+// Model version                  : 1.1142
 // Simulink Coder version         : 8.11 (R2016b) 25-Aug-2016
-// C/C++ source code generated on : Thu Aug 31 10:22:40 2017
+// C/C++ source code generated on : Mon Dec 18 10:16:12 2017
 //
 // Target selection: ert.tlc
 // Embedded hardware selection: 32-bit Generic
@@ -30,7 +30,7 @@ static uint8_T bpm_blower_2_propulsion_modul_U_impeller_cmd;
 static real32_T bpm_blower_2_propulsion_modul_U_servo_cmd[6];
 
 // '<Root>/veh_cm'
-static real32_T bpm_blower_2_propulsion_modul_U_center_of_mass[3];
+static real32_T bpm_blower_2_propulsion_modul_U_veh_cm[3];
 
 // '<Root>/impeller_current'
 static real32_T bpm_blower_2_propulsion_modul_Y_impeller_current;
@@ -92,7 +92,7 @@ void rt_OneStep(RT_MODEL_bpm_blower_2_propuls_T *const
     bpm_blower_2_propulsion_modul_U_omega_B_ECI_B,
     bpm_blower_2_propulsion_modul_U_impeller_cmd,
     bpm_blower_2_propulsion_modul_U_servo_cmd,
-    bpm_blower_2_propulsion_modul_U_center_of_mass,
+    bpm_blower_2_propulsion_modul_U_veh_cm,
     &bpm_blower_2_propulsion_modul_Y_impeller_current,
     bpm_blower_2_propulsion_modul_Y_servo_current,
     bpm_blower_2_propulsion_modul_Y_torque_B,
@@ -131,7 +131,7 @@ int_T main(int_T argc, const char *argv[])
      bpm_blower_2_propulsion_modul_U_omega_B_ECI_B,
      &bpm_blower_2_propulsion_modul_U_impeller_cmd,
      bpm_blower_2_propulsion_modul_U_servo_cmd,
-     bpm_blower_2_propulsion_modul_U_center_of_mass,
+     bpm_blower_2_propulsion_modul_U_veh_cm,
      &bpm_blower_2_propulsion_modul_Y_impeller_current,
      bpm_blower_2_propulsion_modul_Y_servo_current,
      bpm_blower_2_propulsion_modul_Y_torque_B,
@@ -162,7 +162,7 @@ int_T main(int_T argc, const char *argv[])
     bpm_blower_2_propulsion_modul_U_omega_B_ECI_B,
     &bpm_blower_2_propulsion_modul_U_impeller_cmd,
     bpm_blower_2_propulsion_modul_U_servo_cmd,
-    bpm_blower_2_propulsion_modul_U_center_of_mass,
+    bpm_blower_2_propulsion_modul_U_veh_cm,
     &bpm_blower_2_propulsion_modul_Y_impeller_current,
     bpm_blower_2_propulsion_modul_Y_servo_current,
     bpm_blower_2_propulsion_modul_Y_torque_B,

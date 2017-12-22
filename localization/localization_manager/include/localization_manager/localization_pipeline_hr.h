@@ -35,7 +35,8 @@ namespace localization_manager {
 class HRPipeline : public Pipeline {
  public:
   // Create the pipeline
-  HRPipeline(ros::NodeHandle *nh, ros::NodeHandle *nhp, uint8_t mode, PipelineCallbackType cb);
+  HRPipeline(ros::NodeHandle *nh, ros::NodeHandle *nhp,
+    uint8_t mode, PipelineCallbackType cb);
 
   // Enable the pipeline (turn it on and off)
   bool Enable(bool enable);

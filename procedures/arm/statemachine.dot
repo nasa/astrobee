@@ -1,0 +1,94 @@
+# dot -Tpdf statemachine.dot -o statemachine.pdf
+digraph G {
+  graph [label="ARM\n", labelloc=t, fontsize=50];
+  ratio="fill";
+  size="11.7,8.3!";
+  node [shape=box, width=4, fontsize=12, fontname="helvetica"];
+  edge [arrowsize=2, weight=2., fontsize=12, fontname="helvetica"];
+
+  fontname = "helvetica";
+
+  subgraph cluster_0 {
+    style=invis;
+    node [shape=box, style=filled, fillcolor=aquamarine, color=black];
+    CALIBRATING;
+    SETTING;
+  }
+
+  node [shape=box, style=filled, fillcolor=aquamarine, color=black];
+  TILTING;
+  PANNING;
+
+  node [shape=diamond, style=filled, fillcolor=lightblue, color=black];
+  INITIALIZING;
+
+  node [shape=box, style=filled, fillcolor=lightblue, color=black];
+  UNKNOWN;
+  DEPLOYED;
+
+  node [shape=box, style=filled, fillcolor=gold, color=black];
+  DEPLOYING_TILTING;
+  DEPLOYING_PANNING;
+
+  node [shape=box, style=filled, fillcolor=lightblue, color=black];
+  STOWED;
+
+  node [shape=box, style=filled, fillcolor=lightpink, color=black];
+  STOWING_SETTING;
+  STOWING_PANNING;
+  STOWING_TILTING;
+
+  # Actions
+  INITIALIZING -> UNKNOWN
+    [label="[0]\nREADY", color=blue];
+  UNKNOWN -> STOWED
+    [label="[1]\nARM_STOWED", color=blue];
+  UNKNOWN -> DEPLOYED
+    [label="[2]\nARM_DEPLOYED", color=blue];
+  STOWED -> DEPLOYED
+    [label="[3]\nARM_DEPLOYED", color=blue];
+  DEPLOYED -> STOWED
+    [label="[4]\nARM_STOWED", color=blue];
+  STOWED -> DEPLOYING_PANNING
+    [label="[5]\nGOAL_DEPLOY\nPan(DEPLOY)"];
+  DEPLOYING_PANNING -> DEPLOYING_TILTING
+    [label="[6]\nPAN_COMPLETE\nTilt(DEPLOY)"];
+  DEPLOYING_TILTING -> DEPLOYED
+    [label="[7]\nTILT_COMPLETE\nResult(SUCCESS)", color=darkgreen];
+  DEPLOYED -> STOWING_SETTING
+    [label="[8]\nGOAL_STOW\nGripper(CLOSE)"];
+  STOWING_SETTING -> STOWING_PANNING
+    [label="[9]\nGRIPPER_COMPLETE\nPan(STOWED)", color=black];
+  STOWING_SETTING -> DEPLOYED
+    [label="[10]\nTIMEOUT\nResult(FAILED)", color=red];
+  STOWING_PANNING -> STOWING_TILTING
+    [label="[11]\nPAN_COMPLETE\nTilt(STOWED)", color=black];
+  STOWING_PANNING -> DEPLOYED
+    [label="[12]\nTIMEOUT\nResult(FAILED)", color=red];
+  STOWING_TILTING -> STOWED
+    [label="[13]\nTILT_COMPLETE\nResult(SUCCESS)", color=darkgreen];
+  STOWING_TILTING -> DEPLOYED
+    [label="[14]\nTIMEOUT\nResult(FAILED)", color=red];
+  DEPLOYED -> PANNING
+    [label="[15]\nGOAL_MOVE\nPan(angle)"];
+  PANNING -> TILTING
+    [label="[16]\nPAN_COMPLETE\nTilt(angle)"];
+  PANNING -> DEPLOYED
+    [label="[17]\nTIMEOUT\nResult(PAN_FAILED)", color=red];
+  TILTING -> DEPLOYED
+    [label="[18]\nTILT_COMPLETE\nResult(SUCCESS)", color=darkgreen];
+  TILTING -> DEPLOYED
+    [label="[19]\nTIMEOUT\nResult(TILT_FAILED)", color=red];
+  DEPLOYED -> SETTING
+    [label="[20]\nGOAL_SET\nGripper(percent)"];
+  SETTING -> DEPLOYED
+    [label="[21]\nGRIPPER_COMPLETE\nResult(SUCCESS)", color=darkgreen];
+  SETTING -> DEPLOYED
+    [label="[22]\nTIMEOUT\nResult(SET_FAILED)", color=red];
+  DEPLOYED -> CALIBRATING
+    [label="[23]\nGOAL_CALIBRATE\nCalibrate()"];
+  CALIBRATING -> DEPLOYED
+    [label="[24]\nCALIBRATE_COMPLETE\nResult(SUCCESS)", color=darkgreen];
+  CALIBRATING -> DEPLOYED
+    [label="[25]\nTIMEOUT\nResult(SET_FAILED)", color=red];
+}

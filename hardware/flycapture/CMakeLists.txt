@@ -19,7 +19,7 @@ project(flycapture)
 
 # Need to think of a better way to get flycapture
 find_path(FLYCAPTURE_INCLUDE_DIR flycapture/FlyCapture2Defs.h
-  HINTS ${FLYCAPTURE_ROOT_DIR} /usr)
+  HINTS ${FLYCAPTURE_ROOT_DIR}/include /usr)
 find_library(FLYCAPTURE_LIBRARY NAMES flycapture libflycapture
   HINTS /usr/lib ${FLYCAPTURE_ROOT_DIR}/lib)
 find_package_handle_standard_args(FLYCAPTURE DEFAULT_MSG

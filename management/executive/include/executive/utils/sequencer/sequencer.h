@@ -26,7 +26,7 @@
 #include <ff_msgs/ControlState.h>
 #include <ff_msgs/CommandStamped.h>
 #include <ff_msgs/CompressedFile.h>
-#include <ff_msgs/ControlProgress.h>
+#include <ff_msgs/ControlFeedback.h>
 #include <ff_msgs/PlanStatusStamped.h>
 
 #include <jsonloader/command.h>
@@ -59,7 +59,7 @@ class Sequencer {
   bool Feedback(ff_msgs::AckCompletedStatus const& ack) noexcept;
 
   // give feedback about an index in the current segment
-  void Feedback(ff_msgs::ControlProgress const& progress) noexcept;
+  void Feedback(ff_msgs::ControlFeedback const& progress) noexcept;
 
   // get the current plan status
   ff_msgs::PlanStatusStamped const& plan_status() noexcept;

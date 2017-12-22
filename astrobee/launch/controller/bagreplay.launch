@@ -19,5 +19,5 @@
   <arg name="bag" default="data.bag"/>
   <!-- If we have specified a bag, then play it back into flight software-->
   <node pkg="rosbag" type="play" name="player" output="log"
-        args="--clock $(arg bag)"/>
+        args="--clock --loop $(arg bag)"/>
 </launch>

@@ -31,16 +31,23 @@
 #include <sensor_msgs/BatteryState.h>
 #include <sensor_msgs/Temperature.h>
 
-// Our toolchain messages
+// Messages
 #include <ff_hw_msgs/EpsBatteryLocation.h>
 #include <ff_hw_msgs/EpsChannelState.h>
+#include <ff_hw_msgs/EpsDockStateStamped.h>
+
+// Services
 #include <ff_hw_msgs/Reset.h>
 #include <ff_hw_msgs/ConfigureSystemLeds.h>
 #include <ff_hw_msgs/ConfigurePayloadPower.h>
+#include <ff_hw_msgs/ConfigureAdvancedPower.h>
+#include <ff_hw_msgs/GetBoardInfo.h>
+#include <ff_hw_msgs/ClearTerminate.h>
 #include <ff_hw_msgs/RingBuzzer.h>
 #include <ff_hw_msgs/SetEnabled.h>
 #include <ff_hw_msgs/GetBatteryStatus.h>
 #include <ff_hw_msgs/GetTemperatures.h>
+#include <ff_hw_msgs/Undock.h>
 
 // PMC helper libraries
 #include <eps_driver/eps_driver.h>
@@ -81,33 +88,57 @@ class EpsDriverNode : public ff_util::FreeFlyerNodelet {
     }
     // Setup the ROS interfaces to handle callbacks
     if (en_eps_reset_) {
-      srv_eps_reset_ = nh->advertiseService(SERVICE_HARDWARE_EPS_RESET,
-        &EpsDriverNode::ResetCallback, this);
+      srv_eps_reset_ = nh->advertiseService(
+        SERVICE_HARDWARE_EPS_RESET, &EpsDriverNode::ResetCallback, this);
     }
     if (en_conf_payload_power_) {
-      srv_conf_payload_power_ = nh->advertiseService(SERVICE_HARDWARE_EPS_CONF_PAYLOAD_POWER,
+      srv_conf_payload_power_ = nh->advertiseService(
+        SERVICE_HARDWARE_EPS_CONF_PAYLOAD_POWER,
         &EpsDriverNode::PayloadConfigureCallback, this);
     }
+    if (en_conf_advanced_power_) {
+      srv_conf_advanced_power_ = nh->advertiseService(SERVICE_HARDWARE_EPS_CONF_ADVANCED_POWER,
+        &EpsDriverNode::AdvancedConfigureCallback, this);
+    }
     if (en_conf_led_state_) {
-      srv_conf_led_state_ = nh->advertiseService(SERVICE_HARDWARE_EPS_CONF_LED_STATE,
+      srv_conf_led_state_ = nh->advertiseService(
+        SERVICE_HARDWARE_EPS_CONF_LED_STATE,
         &EpsDriverNode::LedsConfigureCallback, this);
     }
     if (en_ring_buzzer_) {
-      srv_ring_buzzer_ = nh->advertiseService(SERVICE_HARDWARE_EPS_RING_BUZZER,
+      srv_ring_buzzer_ = nh->advertiseService(
+        SERVICE_HARDWARE_EPS_RING_BUZZER,
         &EpsDriverNode::RingBuzzerCallback, this);
     }
     if (en_enable_pmcs_) {
-      srv_enable_pmcs_ = nh->advertiseService(SERVICE_HARDWARE_EPS_ENABLE_PMCS,
+      srv_enable_pmcs_ = nh->advertiseService(
+        SERVICE_HARDWARE_EPS_ENABLE_PMCS,
         &EpsDriverNode::EnablePmcsCallback, this);
     }
     if (en_get_battery_status_) {
-      srv_get_battery_status_ = nh->advertiseService(SERVICE_HARDWARE_EPS_GET_BATTERY_STATUS,
+      srv_get_battery_status_ = nh->advertiseService(
+        SERVICE_HARDWARE_EPS_GET_BATTERY_STATUS,
         &EpsDriverNode::GetBatteryStatusCallback, this);
     }
     if (en_get_temperatures_) {
-      srv_get_temperatures_ = nh->advertiseService(SERVICE_HARDWARE_EPS_GET_TEMPERATURES,
+      srv_get_temperatures_ = nh->advertiseService(
+        SERVICE_HARDWARE_EPS_GET_TEMPERATURES,
         &EpsDriverNode::GetTemperaturesCallback, this);
     }
+    if (en_undock_) {
+      srv_get_temperatures_ = nh->advertiseService(
+        SERVICE_HARDWARE_EPS_UNDOCK,
+        &EpsDriverNode::UndockCallback, this);
+    }
+    if (en_get_board_info_) {
+      srv_get_board_info_ = nh->advertiseService(SERVICE_HARDWARE_EPS_GET_BOARD_INFO,
+        &EpsDriverNode::GetBoardInfoCallback, this);
+    }
+    if (en_clear_terminate_) {
+      srv_clear_terminate_ = nh->advertiseService(SERVICE_HARDWARE_EPS_CLEAR_TERMINATE,
+        &EpsDriverNode::ClearTerminateCallback, this);
+    }
+
     // Setup telemetry publishers
     pub_chan_ = nh->advertise < ff_hw_msgs::EpsChannelState > (
       TOPIC_HARDWARE_EPS_CHANNELS, telemetry_queue_size_);
@@ -127,9 +158,13 @@ class EpsDriverNode : public ff_util::FreeFlyerNodelet {
       TOPIC_HARDWARE_EPS_BATTERY_TEMP_BL, telemetry_queue_size_);
     pub_temp_br_ = nh->advertise < sensor_msgs::Temperature > (
       TOPIC_HARDWARE_EPS_BATTERY_TEMP_BR, telemetry_queue_size_);
+    pub_dock_state_ = nh->advertise < ff_hw_msgs::EpsDockStateStamped > (
+      TOPIC_HARDWARE_EPS_DOCK_STATE, telemetry_queue_size_);
     // Setup a ros timer to publish telemetry at a fixed rate
-    timer_ = nh->createTimer(ros::Rate(telemetry_pub_rate_),
+    timer_telemetry_ = nh->createTimer(ros::Rate(telemetry_pub_rate_),
       &EpsDriverNode::TelemetryCallback, this, false, true);
+    timer_dock_check_ = nh->createTimer(ros::Rate(dock_check_rate_),
+      &EpsDriverNode::DockCheckCallback, this, false, true);
   }
 
   // ROS aware sleep callback function to prevent
@@ -197,6 +232,10 @@ class EpsDriverNode : public ff_util::FreeFlyerNodelet {
       ROS_FATAL("EPS: couldn't get the enable power state flag");
       return false;
     }
+    if (!config_params.GetBool("en_srv_conf_advanced_power", &en_conf_advanced_power_)) {
+      ROS_FATAL("EPS: couldn't get the enable power channels flag");
+      return false;
+    }
     if (!config_params.GetBool("en_srv_ring_buzzer", &en_ring_buzzer_)) {
       ROS_FATAL("EPS: couldn't get the enable ring buzzer flag");
       return false;
@@ -213,12 +252,28 @@ class EpsDriverNode : public ff_util::FreeFlyerNodelet {
       ROS_FATAL("EPS: couldn't get the enable query temperatures flag");
       return false;
     }
+    if (!config_params.GetBool("en_srv_undock", &en_undock_)) {
+      ROS_FATAL("EPS: couldn't get the enable undock flag");
+      return false;
+    }
+    if (!config_params.GetBool("en_srv_get_board_info", &en_get_board_info_)) {
+      ROS_FATAL("EPS: couldn't get the enable query boardinfo flag");
+      return false;
+    }
+    if (!config_params.GetBool("en_srv_clear_terminate", &en_clear_terminate_)) {
+      ROS_FATAL("EPS: couldn't get the enable clear terminate flag");
+      return false;
+    }
     if (!config_params.GetBool("en_pub_housekeeping", &en_pub_housekeeping_)) {
       ROS_FATAL("EPS: couldn't get the enable publish houskeeping flag");
       return false;
     }
     if (!config_params.GetBool("en_pub_battery_status", &en_pub_battery_status_)) {
       ROS_FATAL("EPS: couldn't get the enable publish battery status flag");
+      return false;
+    }
+    if (!config_params.GetBool("en_pub_dock_state", &en_pub_dock_state_)) {
+      ROS_FATAL("EPS: couldn't get the enable publish dock state flag");
       return false;
     }
     if (!config_params.GetUInt("telemetry_queue_size", &telemetry_queue_size_)) {
@@ -229,7 +284,10 @@ class EpsDriverNode : public ff_util::FreeFlyerNodelet {
       ROS_FATAL("EPS: telemetry publish rate not specified!");
       return false;
     }
-
+    if (!config_params.GetPosReal("dock_check_rate", &dock_check_rate_)) {
+      ROS_FATAL("EPS: telemetry publish rate not specified!");
+      return false;
+    }
     return true;
   }
 
@@ -316,12 +374,16 @@ class EpsDriverNode : public ff_util::FreeFlyerNodelet {
     if (!eps_)
       return;
 
-    ff_hw_msgs::EpsChannelState msg;
-    msg.header.stamp = ros::Time::now();
-    msg.header.frame_id = GetPlatform();  // Robot name
+    // Header info
+    static std_msgs::Header header;
+    header.stamp = ros::Time::now();
+    header.frame_id = GetPlatform();  // Robot name
 
+    // If we should publish the housekeeping data
     if (en_pub_housekeeping_) {
       // Publish the channel information
+      static ff_hw_msgs::EpsChannelState msg;
+      msg.header = header;
       std::vector < eps_driver::HousekeepingInfo > data;
       if (eps_->ReadHousekeeping(data)) {
         for (std::vector < eps_driver::HousekeepingInfo >::iterator it = data.begin();
@@ -334,9 +396,8 @@ class EpsDriverNode : public ff_util::FreeFlyerNodelet {
       }
       pub_chan_.publish(msg);
     }
-
+    // If we should publish the battery stateus
     if (en_pub_battery_status_) {
-      // Publish the battery information
       for (int i = 0; i < NUM_BATTERIES; i++) {
         // Get the battery index
         BatteryIndex bid = static_cast < BatteryIndex > (i);
@@ -346,9 +407,9 @@ class EpsDriverNode : public ff_util::FreeFlyerNodelet {
           ROS_WARN_STREAM("Could not query the battery status for index " << i);
         } else {
           sensor_msgs::BatteryState battery
-              = BatteryStateConversion(status, msg.header);
+              = BatteryStateConversion(status, header);
           sensor_msgs::Temperature temperature
-              = BatteryTemperatureConversion(status, msg.header);
+              = BatteryTemperatureConversion(status, header);
           // Choose the temperature publisher based on the battery id
           switch (bid) {
           case eps_driver::BATTERY_TOP_LEFT:
@@ -377,6 +438,35 @@ class EpsDriverNode : public ff_util::FreeFlyerNodelet {
           }
         }
       }
+    }
+  }
+
+  // Callback for pulling telemetry
+  void DockCheckCallback(const ros::TimerEvent&) {
+    if (!eps_)
+      return;
+    // If we should publish the dock state
+    if (en_pub_dock_state_) {
+      static ff_hw_msgs::EpsDockStateStamped msg;
+      msg.header.frame_id = GetPlatform();
+      msg.header.stamp = ros::Time::now();
+      msg.state = ff_hw_msgs::EpsDockStateStamped::UNKNOWN;
+      // Try and query the state
+      eps_driver::ConnectionState state;
+      if (eps_->GetConnectionState(state)) {
+        switch (state) {
+        case eps_driver::CONN_DISCONNECTED:
+          msg.state = ff_hw_msgs::EpsDockStateStamped::UNDOCKED;     break;
+        case eps_driver::CONN_CONNECTING:
+          msg.state = ff_hw_msgs::EpsDockStateStamped::CONNECTING;   break;
+        case eps_driver::CONN_CONNECTED:
+          msg.state = ff_hw_msgs::EpsDockStateStamped::DOCKED;       break;
+        default:
+          msg.state = ff_hw_msgs::EpsDockStateStamped::UNKNOWN;      break;
+        }
+      }
+      // Only publish if the state differs
+      pub_dock_state_.publish(msg);
     }
   }
 
@@ -437,6 +527,26 @@ class EpsDriverNode : public ff_util::FreeFlyerNodelet {
       res.status = "Could not set the payload power";
     else
       res.status = "Payload power sent successfully";
+    return true;
+  }
+
+  // Callback for setting the power channels
+  bool AdvancedConfigureCallback(ff_hw_msgs::ConfigureAdvancedPower::Request &req,
+                                ff_hw_msgs::ConfigureAdvancedPower::Response &res) {
+    if (!eps_) return false;
+    res.success = true;
+    res.success = res.success && eps_->SetAdvancedState(ADVANCED_USB,
+      static_cast < PowerState > (req.usb));
+    res.success = res.success && eps_->SetAdvancedState(ADVANCED_AUX,
+      static_cast < PowerState > (req.aux));
+    res.success = res.success && eps_->SetAdvancedState(ADVANCED_PMC1,
+      static_cast < PowerState > (req.pmc1));
+    res.success = res.success && eps_->SetAdvancedState(ADVANCED_PMC2,
+      static_cast < PowerState > (req.pmc2));
+    if (!res.success)
+      res.status = "Could not set the advanced power";
+    else
+      res.status = "Advanced power channels sent successfully";
     return true;
   }
 
@@ -518,40 +628,113 @@ class EpsDriverNode : public ff_util::FreeFlyerNodelet {
     return true;
   }
 
+  // Callback for undocking
+  bool UndockCallback(ff_hw_msgs::Undock::Request &req,
+                      ff_hw_msgs::Undock::Response &res) {
+    // If we don't have a valid i2c device
+    if (!eps_) {
+      res.value = ff_hw_msgs::Undock::Response::I2C_FAILED;
+      return true;
+    }
+    // If we cant determine the dock state
+    eps_driver::ConnectionState state;
+    if (!eps_->GetConnectionState(state)) {
+      res.value = ff_hw_msgs::Undock::Response::CANNOT_QUERY_STATE;
+      return true;
+    }
+    // Do somethign based on the state
+    switch (state) {
+    case eps_driver::CONN_DISCONNECTED:
+    case eps_driver::CONN_CONNECTING:
+      res.value = ff_hw_msgs::Undock::Response::NOT_DOCKED;
+      return true;
+    case eps_driver::CONN_CONNECTED:
+      break;
+    }
+    // If we get here then we can try and undock
+    if (!eps_->Undock()) {
+      res.value = ff_hw_msgs::Undock::Response::UNDOCK_FAILED;
+      return true;
+    }
+    // If we get here, undocking succeeded
+    res.value = ff_hw_msgs::Undock::Response::SUCCESS;
+    return true;
+  }
+
+  // Callback for get board information
+  bool GetBoardInfoCallback(ff_hw_msgs::GetBoardInfo::Request &req,
+                          ff_hw_msgs::GetBoardInfo::Response &res) {
+    std::string v;
+    std::string s;
+    if (!eps_) return false;
+    res.success = eps_->GetString(eps_driver::SW_VERSION, v);
+    res.success = eps_->GetString(eps_driver::SERIAL, s);
+    if (!res.success) {
+      res.status_message = "Could get board information";
+    } else {
+      res.version = v;
+      res.serial  = s;
+    }
+    return true;
+  }
+
+  // Callback for clear terminate
+  bool ClearTerminateCallback(ff_hw_msgs::ClearTerminate::Request &req,
+                          ff_hw_msgs::ClearTerminate::Response &res) {
+    if (!eps_) return false;
+    res.success = eps_->ClearTerminateEvent();
+    if (!res.success)
+      res.status_message = "Could not clear terminate";
+    return true;
+  }
+
+
  private:
   config_reader::ConfigReader config_params;    // LUA configuration reader
-  std::string i2c_bus_file_;                    // i2c bus -- assumes all PMC are on this bus
-  uint32_t i2c_address_;                        // 7 bit device address (LSB is read/write)
+  std::string i2c_bus_file_;                    // i2c bus
+  uint32_t i2c_address_;                        // 7 bit device address
   uint32_t i2c_retries_;                        // number of slave retries
   bool en_eps_reset_;                           // Enable reset
   bool en_conf_led_state_;                      // Enable LEDs
   bool en_conf_payload_power_;                  // Enable set power state
+  bool en_conf_advanced_power_;                 // Enable set power channels
   bool en_ring_buzzer_;                         // Enable buzzer
   bool en_enable_pmcs_;                         // Enable PMCs
   bool en_get_battery_status_;                  // Enable get battery status
   bool en_get_temperatures_;                    // Enable get temperatures
+  bool en_undock_;                              // Enable undock
+  bool en_get_board_info_;                      // Enable get board information
+  bool en_clear_terminate_;                     // Enable clear terminate
   bool en_pub_housekeeping_;                    // Enable publish housekeeping
   bool en_pub_battery_status_;                  // Enable publish battery status
+  bool en_pub_dock_state_;                      // Enable publish dock state
   unsigned int telemetry_queue_size_;           // Telemetry queue size
   float telemetry_pub_rate_;                    // Telemetry publication rate
+  float dock_check_rate_;                       // Dock check rate
   eps_driver::EpsDriver *eps_;                  // Interface class to EPS
   ros::ServiceServer srv_eps_reset_;            // Reset the hardware
   ros::ServiceServer srv_conf_payload_power_;   // Configure LEDs
+  ros::ServiceServer srv_conf_advanced_power_;  // Set the power channels
   ros::ServiceServer srv_conf_led_state_;       // Set the power state for a channel
   ros::ServiceServer srv_ring_buzzer_;          // Ring buzzer
   ros::ServiceServer srv_enable_pmcs_;          // Enable PMCs
   ros::ServiceServer srv_get_battery_status_;   // Get battery status
   ros::ServiceServer srv_get_temperatures_;     // Get temperatures
-  ros::Timer timer_;                            // Status check
+  ros::ServiceServer srv_undock_;               // Undock service
+  ros::Timer timer_telemetry_;                  // Telemetry timer
+  ros::Timer timer_dock_check_;                 // Dock check timer
+  ros::ServiceServer srv_get_board_info_;       // Get board information
+  ros::ServiceServer srv_clear_terminate_;      // Clear terminate
   ros::Publisher pub_chan_;                     // Telemetry publishers
-  ros::Publisher pub_batt_tl_;
-  ros::Publisher pub_batt_tr_;
-  ros::Publisher pub_batt_bl_;
-  ros::Publisher pub_batt_br_;
-  ros::Publisher pub_temp_tl_;
-  ros::Publisher pub_temp_tr_;
-  ros::Publisher pub_temp_bl_;
-  ros::Publisher pub_temp_br_;
+  ros::Publisher pub_dock_state_;               // Dock state publisher
+  ros::Publisher pub_batt_tl_;                  // Battery: top left
+  ros::Publisher pub_batt_tr_;                  // Battery: top right
+  ros::Publisher pub_batt_bl_;                  // Battery: bottom left
+  ros::Publisher pub_batt_br_;                  // Battery: bottom right
+  ros::Publisher pub_temp_tl_;                  // Temperature: top left
+  ros::Publisher pub_temp_tr_;                  // Temperature: top right
+  ros::Publisher pub_temp_bl_;                  // Temperature: bottom left
+  ros::Publisher pub_temp_br_;                  // Temperature: bottom right
 };
 
 PLUGINLIB_DECLARE_CLASS(eps_driver, EpsDriverNode,

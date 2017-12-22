@@ -35,42 +35,25 @@ class OpStateTeleop : public OpState {
                            std::string const& cmd_id,
                            std::string const& cmd_origin);
 
-  OpState* HandleDockActive();
+  OpState* HandleDockActive(Action const& action);
   OpState* HandleDockFeedback(ff_msgs::DockFeedbackConstPtr const& feedback);
   OpState* HandleDockResult(ff_util::FreeFlyerActionState::Enum const& state,
                             ff_msgs::DockResultConstPtr const& result,
                             std::string const& cmd_id,
-                            std::string const& cmd_origin);
-
-  OpState* HandleIdleResult(ff_util::FreeFlyerActionState::Enum const& state,
-                            ff_msgs::IdleResultConstPtr const& result,
-                            std::string const& cmd_id,
-                            std::string const& cmd_origin);
-
-  OpState* HandleMoveActive();
-  OpState* HandleMoveFeedback(ff_msgs::MoveFeedbackConstPtr const& feedback);
-  OpState* HandleMoveResult(ff_util::FreeFlyerActionState::Enum const& state,
-                            ff_msgs::MoveResultConstPtr const& result,
-                            std::string const& cmd_id,
-                            std::string const& cmd_origin);
-
-  OpState* HandleStopActive();
-  OpState* HandleStopResult(ff_util::FreeFlyerActionState::Enum const& state,
-                            ff_msgs::StopResultConstPtr const& result,
-                            std::string const& cmd_id,
-                            std::string const& cmd_origin);
+                            std::string const& cmd_origin,
+                            Action const& action);
 
   OpState* HandleSwitchResult(ff_util::FreeFlyerActionState::Enum const& state,
                               ff_msgs::SwitchResultConstPtr const& result,
                               std::string const& cmd_id,
                               std::string const& cmd_origin);
 
-  OpState* HandleUndockFeedback(ff_msgs::UndockFeedbackConstPtr const&
-                                                                      feedback);
-  OpState* HandleUndockResult(ff_util::FreeFlyerActionState::Enum const& state,
-                              ff_msgs::UndockResultConstPtr const& result,
+  OpState* HandleMotionActive(Action const& action);
+  OpState* HandleMotionResult(ff_util::FreeFlyerActionState::Enum const& state,
+                              ff_msgs::MotionResultConstPtr const& result,
                               std::string const& cmd_id,
-                              std::string const& cmd_origin);
+                              std::string const& cmd_origin,
+                              Action const& action);
 
  protected:
   explicit OpStateTeleop(std::string const& name, unsigned char id) :

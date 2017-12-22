@@ -1,0 +1,43 @@
+#!/usr/bin/python
+#
+# Copyright (c) 2017, United States Government, as represented by the
+# Administrator of the National Aeronautics and Space Administration.
+# 
+# All rights reserved.
+# 
+# The Astrobee platform is licensed under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with the
+# License. You may obtain a copy of the License at
+# 
+#     http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+
+import environment
+
+import sys
+import os
+import time
+
+def run_sparse_map_bag(astrobee_map, astrobee_bag):
+  os.system('rosrun ekf_bag sparse_map_bag %s %s' % (astrobee_map, astrobee_bag))
+
+astrobee_map = None
+astrobee_bag = None
+if len(sys.argv) >= 2:
+  astrobee_bag = sys.argv[1]
+if len(sys.argv) >= 3:
+  astrobee_map = sys.argv[2]
+
+(astrobee_map, astrobee_bag) = environment.initialize_environment(astrobee_map, astrobee_bag)
+name_prefix = astrobee_bag[:astrobee_bag.rfind('.')]
+
+start = time.time()
+run_sparse_map_bag(astrobee_map, astrobee_bag)
+run_time = time.time() - start
+print 'Run time: %g' % (run_time)
+

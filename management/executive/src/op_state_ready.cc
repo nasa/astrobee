@@ -41,6 +41,7 @@ OpState* OpStateReady::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
     if (exec_->SetPlan()) {
       exec_->PublishCmdAck(cmd->cmd_id, cmd->cmd_origin);
     } else {
+      ROS_ERROR("No plan found or invalid syntax in plan uploaded");
       // If it isn't valid, send failed command ack
       exec_->PublishCmdAck(cmd->cmd_id,
                            cmd->cmd_origin,
@@ -116,7 +117,7 @@ OpState* OpStateReady::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
     // Make sure we are stopped, not docked or perched, before moving
     if (exec_->GetMobilityState().state == ff_msgs::MobilityState::STOPPING &&
         exec_->GetMobilityState().sub_state == 0) {
-      if (!exec_->FillMoveGoal(cmd)) {
+      if (!exec_->FillMotionGoal(MOVE, cmd)) {
         return this;
       }
 
@@ -136,6 +137,10 @@ OpState* OpStateReady::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
     }
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_IDLE_PROPULSION) {
     // TODO(Katie) Change to not idle if perched or docked
+    if (!exec_->FillMotionGoal(IDLE)) {
+      return this;
+    }
+
     if (exec_->StartAction(IDLE, cmd->cmd_id, cmd->cmd_origin, err_msg)) {
       return OpStateRepo::Instance()->teleop()->StartupState();
     }
@@ -168,7 +173,7 @@ OpState* OpStateReady::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
       return OpStateRepo::Instance()->teleop()->StartupState();
     }
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_UNDOCK) {
-    if (exec_->Undock(cmd->cmd_id, cmd->cmd_origin, err_msg)) {
+    if (exec_->Undock(cmd, err_msg)) {
       return OpStateRepo::Instance()->teleop()->StartupState();
     }
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_PERCH) {
@@ -299,5 +304,4 @@ OpState* OpStateReady::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
   }
   return this;
 }
-
 }  // namespace executive

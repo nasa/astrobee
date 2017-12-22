@@ -83,7 +83,7 @@ OpState* OpState::HandleArmResult(
   return this;
 }
 
-OpState* OpState::HandleDockActive() {
+OpState* OpState::HandleDockActive(Action const& action) {
   ROS_ERROR("Executive: Handle dock active not implemented yet!");
   return this;
 }
@@ -98,35 +98,13 @@ OpState* OpState::HandleDockResult(
                               ff_util::FreeFlyerActionState::Enum const& state,
                               ff_msgs::DockResultConstPtr const& result,
                               std::string const& cmd_id,
-                              std::string const& cmd_origin) {
+                              std::string const& cmd_origin,
+                              Action const& action) {
   ROS_ERROR("Executive: Handle dock result not implemented yet!");
   return this;
 }
 
-OpState* OpState::HandleExecuteActive() {
-  ROS_ERROR("Executive: Handle execute active not implemented yet!");
-  return this;
-}
-
-OpState* OpState::HandleExecuteResult(
-                              ff_util::FreeFlyerActionState::Enum const& state,
-                              ff_msgs::ExecuteResultConstPtr const& result,
-                              std::string const& cmd_id,
-                              std::string const& cmd_origin) {
-  ROS_ERROR("Executive: Handle execute result not implemented yet!");
-  return this;
-}
-
-OpState* OpState::HandleIdleResult(
-                              ff_util::FreeFlyerActionState::Enum const& state,
-                              ff_msgs::IdleResultConstPtr const& result,
-                              std::string const& cmd_id,
-                              std::string const& cmd_origin) {
-  ROS_ERROR("Executive: Handle idle result not implemented yet!");
-  return this;
-}
-
-OpState* OpState::HandlePerchActive() {
+OpState* OpState::HandlePerchActive(Action const& action) {
   ROS_ERROR("Executive: Handle perch active not implemented yet!");
   return this;
 }
@@ -137,42 +115,9 @@ OpState* OpState::HandlePerchFeedback() {
 }
 
 OpState* OpState::HandlePerchResult(std::string const& cmd_id,
-                                    std::string const& cmd_origin) {
+                                    std::string const& cmd_origin,
+                                    Action const& action) {
   ROS_ERROR("Executive: Handle perch result not implemented yet!");
-  return this;
-}
-
-OpState* OpState::HandleMoveActive() {
-  ROS_ERROR("Executive: Handle move active not implemented yet!");
-  return this;
-}
-
-OpState* OpState::HandleMoveFeedback(
-                                ff_msgs::MoveFeedbackConstPtr const& feedback) {
-  ROS_ERROR("Executive: Handle move feedback not implemented yet!");
-  return this;
-}
-
-OpState* OpState::HandleMoveResult(
-                              ff_util::FreeFlyerActionState::Enum const& state,
-                              ff_msgs::MoveResultConstPtr const& result,
-                              std::string const& cmd_id,
-                              std::string const& cmd_origin) {
-  ROS_ERROR("Executive: Handle move result not implemented yet!");
-  return this;
-}
-
-OpState* OpState::HandleStopActive() {
-  ROS_ERROR("Executive: Handle stop active not implemented yet!");
-  return this;
-}
-
-OpState* OpState::HandleStopResult(
-                              ff_util::FreeFlyerActionState::Enum const& state,
-                              ff_msgs::StopResultConstPtr const& result,
-                              std::string const& cmd_id,
-                              std::string const& cmd_origin) {
-  ROS_ERROR("Executive: Handle stop result not implemented yet!");
   return this;
 }
 
@@ -185,34 +130,18 @@ OpState* OpState::HandleSwitchResult(
   return this;
 }
 
-OpState* OpState::HandleUndockFeedback(
-                              ff_msgs::UndockFeedbackConstPtr const& feedback) {
-  ROS_ERROR("Executive: Handle undock feedback not implemented yet!");
+OpState* OpState::HandleMotionActive(Action const& action) {
+  ROS_ERROR("Executive: Handle motion active not implemented yet!");
   return this;
 }
 
-OpState* OpState::HandleUndockResult(
+OpState* OpState::HandleMotionResult(
                               ff_util::FreeFlyerActionState::Enum const& state,
-                              ff_msgs::UndockResultConstPtr const& result,
+                              ff_msgs::MotionResultConstPtr const& result,
                               std::string const& cmd_id,
-                              std::string const& cmd_origin) {
-  ROS_ERROR("Executive: Handle undock result not implemented yet!");
-  return this;
-}
-
-OpState* OpState::HandleUnperchActive() {
-  ROS_ERROR("Executive: Handle unperch active not implemented yet!");
-  return this;
-}
-
-OpState* OpState::HandleUnperchFeedback() {
-  ROS_ERROR("Executive: Handle unperch feedback not implemented yet!");
-  return this;
-}
-
-OpState* OpState::HandleUnperchResult(std::string const& cmd_id,
-                                      std::string const& cmd_origin) {
-  ROS_ERROR("Executive: Handle unperch result not implemented yet!");
+                              std::string const& cmd_origin,
+                              Action const& action) {
+  ROS_ERROR("Executive: Handle motion result not implemented yet!");
   return this;
 }
 
@@ -306,10 +235,10 @@ std::string OpState::GenerateActionFailedMsg(
     err_msg = goal_name + " goal was preempted by another node. This really " +
       "shouldn't happen.";
   } else if (state == ff_util::FreeFlyerActionState::Enum::ABORTED) {
-    if (action_result == "") {
+    if (action_result != "") {
       err_msg = goal_name + " goal failed with response: " + action_result;
     } else {
-      err_msg = goal_name + "goal failed!";
+      err_msg = goal_name + " goal failed!";
     }
   } else if (state == ff_util::FreeFlyerActionState::Enum::TIMEOUT_ON_ACTIVE) {
     err_msg = goal_name + " goal didn't go active in the time specified in " +

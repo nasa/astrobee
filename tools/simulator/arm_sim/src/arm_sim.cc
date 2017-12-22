@@ -48,7 +48,6 @@ bool ArmSim::Pan(float angle) {
     joint_sample_pub_.publish(joint_sample_);
     ros::Duration(0.1).sleep();
     // Don't have to publish fancy feedback since the executive doesn't use it
-    feedback.percentage_complete = 50;
     sas_arm_->publishFeedback(feedback);
   }
 
@@ -94,7 +93,6 @@ bool ArmSim::Tilt(float angle) {
     joint_sample_pub_.publish(joint_sample_);
     ros::Duration(0.05).sleep();
     // Don't have to publish fancy feedback since the executive doesn't use it
-    feedback.percentage_complete = 0;
     sas_arm_->publishFeedback(feedback);
   }
 
@@ -117,57 +115,48 @@ void ArmSim::GoalCallback(ff_msgs::ArmGoalConstPtr const& goal) {
   ff_msgs::ArmResult result;
 
   // Don't have to publish fancy feedback since the executive doesn't use it
-  feedback.percentage_complete = 0;
   sas_arm_->publishFeedback(feedback);
 
-  if (goal->mode == ff_msgs::ArmGoal::PAN_TILT) {
+  if (goal->command == ff_msgs::ArmGoal::ARM_MOVE) {
     // Do tilt first because right now we use tilt to unstow
     if (Tilt(goal->tilt)) {
-      feedback.percentage_complete = 50;
       sas_arm_->publishFeedback(feedback);
 
       Pan(goal->pan);
 
-      feedback.percentage_complete = 100;
       sas_arm_->publishFeedback(feedback);
     }
-  } else if (goal->mode == ff_msgs::ArmGoal::PAN) {
+  } else if (goal->command == ff_msgs::ArmGoal::ARM_PAN) {
     Pan(goal->pan);
 
-    feedback.percentage_complete = 100;
     sas_arm_->publishFeedback(feedback);
-  } else if (goal->mode == ff_msgs::ArmGoal::TILT) {
+  } else if (goal->command == ff_msgs::ArmGoal::ARM_TILT) {
     Tilt(goal->tilt);
 
-    feedback.percentage_complete = 100;
     sas_arm_->publishFeedback(feedback);
-  } else if (goal->mode == ff_msgs::ArmGoal::OPEN) {
-    feedback.percentage_complete = 0;
+  } else if (goal->command == ff_msgs::ArmGoal::GRIPPER_OPEN) {
     sas_arm_->publishFeedback(feedback);
 
     joint_sample_.samples[2].angle_pos = 45 * M_PI/180;
     joint_sample_pub_.publish(joint_sample_);
 
-    feedback.percentage_complete = 100;
     sas_arm_->publishFeedback(feedback);
 
     arm_state_.gripper_state.state = ff_msgs::ArmGripperState::OPEN;
     arm_state_pub_.publish(arm_state_);
-  } else if (goal->mode == ff_msgs::ArmGoal::CLOSE) {
-    feedback.percentage_complete = 0;
+  } else if (goal->command == ff_msgs::ArmGoal::GRIPPER_CLOSE) {
     sas_arm_->publishFeedback(feedback);
 
     joint_sample_.samples[2].angle_pos = 20 * M_PI/180;
     joint_sample_pub_.publish(joint_sample_);
 
-    feedback.percentage_complete = 100;
     sas_arm_->publishFeedback(feedback);
 
     arm_state_.gripper_state.state = ff_msgs::ArmGripperState::CLOSED;
     arm_state_pub_.publish(arm_state_);
   } else {
-    ROS_ERROR("Arm simulator node doesn't recognize mode %i!", goal->mode);
-    result.response = ff_msgs::ArmResult::RUNTIME_ERROR;
+    ROS_ERROR("Arm simulator node doesn't recognize mode %i!", goal->command);
+    result.response = ff_msgs::ArmResult::INVALID_COMMAND;
     sas_arm_->setAborted(result);
   }
   result.response = ff_msgs::ArmResult::SUCCESS;
@@ -178,9 +167,9 @@ void ArmSim::onInit() {
   nh_ = getNodeHandle();
 
   arm_state_pub_ = nh_.advertise<ff_msgs::ArmStateStamped>(
-                      TOPIC_HARDWARE_PERCHING_ARM_STATE, pub_queue_size_, true);
+                      TOPIC_PROCEDURES_ARM_ARM_STATE, pub_queue_size_, true);
   joint_sample_pub_ = nh_.advertise<ff_msgs::JointSampleStamped>(
-              TOPIC_HARDWARE_PERCHING_ARM_JOINT_SAMPLE, pub_queue_size_, true);
+              TOPIC_PROCEDURES_ARM_JOINT_SAMPLE, pub_queue_size_, true);
 
   arm_state_.joint_state.state = ff_msgs::ArmJointState::STOWED;
   arm_state_.gripper_state.state = ff_msgs::ArmGripperState::CLOSED;
@@ -210,7 +199,7 @@ void ArmSim::onInit() {
   joint_sample_pub_.publish(joint_sample_);
 
   sas_arm_ = std::make_shared<actionlib::SimpleActionServer<ff_msgs::ArmAction>>
-                                  (nh_, ACTION_HARDWARE_PERCHING_ARM,
+                                  (nh_, ACTION_PROCEDURES_ARM,
                                   boost::bind(&ArmSim::GoalCallback, this, _1),
                                   false);
   sas_arm_->start();

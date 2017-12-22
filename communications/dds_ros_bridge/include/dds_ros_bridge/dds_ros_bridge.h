@@ -156,7 +156,7 @@ class DdsRosBridge : public ff_util::FreeFlyerNodelet {
 
   std::map<std::string, ff::RosSubRapidPubPtr> m_rosSubRapidPubs_;
   std::shared_ptr<kn::DdsEntitiesFactorySvc> m_ddsEntitiesFactory_;
-  std::string robot_name_, participant_name_;
+  std::string agent_name_, participant_name_;
   std::vector<ff::RapidPubPtr> m_rapidPubs_;
   std::vector<ff::RapidSubRosPubPtr> m_rapidSubRosPubs_;
 };

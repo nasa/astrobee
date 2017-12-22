@@ -17,23 +17,23 @@
 
 <launch>
 
-  <!-- Context options (NB: SOME OVERRIDDEN BY /etc or ENVIRONMENT VARIABLES, IF SET)        -->
-  <arg name="robot" default="p4c" />                          <!-- Robot name                -->
-  <arg name="world" default="mgtf" />                         <!-- World name                -->
-  <arg name="ns" default="" />                                <!-- Robot namespace prefix    -->
-  <arg name="nodes" default=""/>                              <!-- Launch specific nodes     -->
-  <arg name="mlp" default="10.42.0.25" />                     <!-- MLP IP address            -->
-  <arg name="llp" default="10.42.0.26" />                     <!-- LLP IP address            -->
-  <arg name="rec" default="" />                               <!-- Enable recording of data  -->
-  <arg name="dds" default="true" />                           <!-- Enable DDS                -->
+  <!-- Context options (NB: SOME OVERRIDDEN BY /etc or ENVIRONMENT VARIABLES)-->
+  <arg name="robot" default="p4c" />          <!-- Robot name                -->
+  <arg name="world" default="mgtf" />         <!-- World name                -->
+  <arg name="ns" default="" />                <!-- Robot namespace prefix    -->
+  <arg name="nodes" default=""/>              <!-- Launch specific nodes     -->
+  <arg name="mlp" default="10.42.0.25" />     <!-- MLP IP address            -->
+  <arg name="llp" default="10.42.0.26" />     <!-- LLP IP address            -->
+  <arg name="rec" default="" />               <!-- Enable recording of data  -->
+  <arg name="dds" default="true" />           <!-- Enable DDS                -->
 
   <!-- General options -->
-  <arg name="visualeyez" default="false" />                   <!-- Overhead camera           -->
-  <arg name="vive" default="false" />                         <!-- Vive ground truth         -->
-  <arg name="gviz" default="false" />                         <!-- GNC visualizer            -->
-  <arg name="rviz" default="false" />                         <!-- Robot visualizater        -->
-  <arg name="rqt" default="false" />                          <!-- Start user interface      -->
-  <arg name="gds" default="false" />                          <!-- Enable ground data system -->
+  <arg name="visualeyez" default="false" />   <!-- Overhead camera           -->
+  <arg name="vive" default="false" />         <!-- Vive ground truth         -->
+  <arg name="gviz" default="false" />         <!-- GNC visualizer            -->
+  <arg name="rviz" default="false" />         <!-- Robot visualizater        -->
+  <arg name="rqt" default="false" />          <!-- Start user interface      -->
+  <arg name="gds" default="false" />          <!-- Enable ground data system -->
 
 <!-- Make sure all environment variables are set for controller -->
   <env if="$(eval optenv('ASTROBEE_ROBOT','')=='')" 
@@ -69,14 +69,14 @@
 
   <!-- Launch an astrobee! In future will be replaced by systemd call -->
   <include file="$(find astrobee)/launch/astrobee.launch">
-    <arg name="robot" value="$(arg robot)" />                 <!-- Type of robot              -->
-    <arg name="world" value="$(arg world)" />                 <!-- Execution context          -->
-    <arg name="ns" value="$(arg ns)" />                       <!-- Robot namespace            -->
-    <arg name="drivers" value="true" />                       <!-- Always start drivers       -->
-    <arg name="nodes" value="$(arg nodes)" />                 <!-- Limit to specific nodes    -->
-    <arg name="llp" value="$(arg llp)" />                     <!-- LLP IP address             -->
-    <arg name="mlp" value="$(arg mlp)" />                     <!-- MLP IP address             -->
-    <arg name="dds" value="$(arg dds)" />                     <!-- Enable DDS                 -->
+    <arg name="robot" value="$(arg robot)" />      <!-- Type of robot        -->
+    <arg name="world" value="$(arg world)" />      <!-- Execution context    -->
+    <arg name="ns" value="$(arg ns)" />            <!-- Robot namespace      -->
+    <arg name="drivers" value="true" />            <!-- Always start drivers -->
+    <arg name="nodes" value="$(arg nodes)" />      <!-- Limit to nodes       -->
+    <arg name="llp" value="$(arg llp)" />          <!-- LLP IP address       -->
+    <arg name="mlp" value="$(arg mlp)" />          <!-- MLP IP address       -->
+    <arg name="dds" value="$(arg dds)" />          <!-- Enable DDS           -->
   </include>
 
 </launch>

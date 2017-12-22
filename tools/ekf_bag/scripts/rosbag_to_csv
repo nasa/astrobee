@@ -17,44 +17,19 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import rospkg
-import sys
+import environment
+
 import os
+import sys
 
-astrobee_map = ''
-astrobee_bag = ''
-if len(sys.argv) == 3:
-  astrobee_map = sys.argv[2]
+astrobee_map = None
+astrobee_bag = None
+if len(sys.argv) >= 2:
   astrobee_bag = sys.argv[1]
-else:
-  if 'ASTROBEE_MAP' not in os.environ:
-    print >> sys.stderr, 'Either set ASTROBEE_MAP or pass map as first argument.'
-    sys.exit(0)
-  astrobee_map = os.environ['ASTROBEE_MAP']
-  if len(sys.argv) == 2:
-    astrobee_bag = sys.argv[1]
-  else:
-    if 'ASTROBEE_BAG' not in os.environ:
-      print >> sys.stderr, 'Either set ASTROBEE_BAG or pass bag as argument.'
-      sys.exit(0)
-    astrobee_bag = os.environ['ASTROBEE_BAG']
-robot_config = os.path.dirname(os.path.abspath(astrobee_bag))
-robot_config += '/robot.config'
-if not os.path.isfile(robot_config):
-  print >> sys.stderr, 'Please set the robot config file %s.' % (robot_config)
-  sys.exit(0)
-os.environ['ASTROBEE_CONFIG_ROBOT'] = robot_config
+if len(sys.argv) >= 3:
+  astrobee_map = sys.argv[2]
 
-rospack = rospkg.RosPack()
-astrobee_path = ''
-try:
-  astrobee_path = rospack.get_path('astrobee')
-except:
-  print >> sys.stderr, 'Failed to find package astrobee.'
-  sys.exit(0)
-
-os.environ['ASTROBEE_CONFIG_DIR'] = astrobee_path + '/config'
-os.environ['ASTROBEE_CONFIG_VERSION'] = 'p4'
+(astrobee_map, astrobee_bag) = environment.initialize_environment(astrobee_map, astrobee_bag)
 
 os.system('rosrun ekf_bag ekf_bag %s %s --save_inputs_file=true' % (astrobee_map, astrobee_bag))
 

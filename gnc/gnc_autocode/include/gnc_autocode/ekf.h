@@ -31,7 +31,7 @@ namespace gnc_autocode {
 
 class GncEkfAutocode {
  public:
-  explicit GncEkfAutocode(cmc_msg * cmc);
+  GncEkfAutocode(void);
   ~GncEkfAutocode(void);
 
   virtual void Initialize();
@@ -46,7 +46,7 @@ class GncEkfAutocode {
   imu_msg imu_;
   real32_T quat_[4];
   // TODO(bcoltin): this needs to be removed by GNC
-  cmc_msg* cmc_;
+  cmc_msg cmc_;
   kfl_msg kfl_;
   float* P_;
 };

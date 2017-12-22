@@ -109,11 +109,11 @@ class PlannerTrapezoidalNodelet : public planner::PlannerImplementation {
       // Extract affine transformations for the two poses
       Eigen::Affine3d tf_1 = msg_conversions::ros_pose_to_eigen_transform(goal.states[i-1].pose);
       Eigen::Affine3d tf_4 = msg_conversions::ros_pose_to_eigen_transform(goal.states[i].pose);
-      // Advanced case: generate a forward-only segment
-      if (goal.faceforward) {
+      Eigen::Vector3d delta = tf_4.translation() - tf_1.translation();
+      // Advanced case: generate a forward-only segment when translations are non-zero
+      if (goal.faceforward && delta.norm() > epsilon_) {
         // Get the current vector representing the forward direction
-        Eigen::Affine3d delta = tf_4 * tf_1.inverse();
-        Eigen::Vector3d vfwd = delta.translation().normalized();
+        Eigen::Vector3d vfwd = delta.normalized();
         Eigen::Vector3d vdown(0.0, 0.0, 1.0);
         Eigen::Vector3d vright = vdown.cross(vfwd);
         vdown = vfwd.cross(vright);
@@ -140,8 +140,6 @@ class PlannerTrapezoidalNodelet : public planner::PlannerImplementation {
         InsertTrapezoid(plan_result.segment, offset, dt, tf_1, tf_4);
       }
     }
-    // Make sure to set the flight mode!
-    plan_result.flight_mode = goal.flight_mode;
     // Special case: we might already be there
     if (plan_result.segment.size() < 2)
       plan_result.response = RESPONSE::ALREADY_THERE;

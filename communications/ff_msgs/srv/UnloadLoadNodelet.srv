@@ -1,0 +1,38 @@
+###########################################################################
+#           Copyright 2017 Intelligent Robotics Group, NASA ARC           #
+###########################################################################
+# This service is used by the system monitor to load and unload nodelets. #
+###########################################################################
+
+bool load             # If true load the nodelet. Else unload the nodelet.
+
+string name           # Name of nodelet. Needed for both unload and load.
+
+# Type of nodelet ("namespace/classname"). Needed for load. May not be needed
+# if the type is specified in the system monitor config.
+string type
+
+# Name of nodelet manager. Needed for load. May not be needed if the system
+# monitor had received a heartbeat before being unloaded.
+string manager_name
+
+string[] remap_source_args  # Leave blank if no source args. Needed for load.
+string[] remap_target_args  # Leave blank if no target args. Needed for load.
+string[] my_argv            # Leave blank if none. Needed for load
+string bond_id  # Not entirely sure what this is, leave blank. Needed for load.
+---
+int32 result
+
+int32 SUCCESSFUL            = 1   # Success :)
+# Un/load nodelet service offerred by the nodelet manager failed
+int32 ROS_SERVICE_FAILED    = 2
+# Node is not in the watchdog map i.e. the node doesn't have a heartbeat fault
+# listed in the fault table. Thus the system monitor wasn't able to retrive the
+# manager name.
+int32 NODE_NOT_IN_MAP       = 3
+# The operator didn't list the manager name in the command and the system
+# monitor was unable to figure out what it should be.
+int32 MANAGER_NAME_MISSING  = 4
+# The operator didn't list the nodelet type and it wasn't specified in the
+# system monitor config file
+int32 TYPE_MISSING          = 5

@@ -1,0 +1,225 @@
+Ant
+    filter remove_html_comments
+    filter call_regexp_common HTML
+    extension build.xml
+    3rd_gen_scale 1.90
+Ant/XML
+    filter remove_html_comments
+    filter call_regexp_common HTML
+    filename build.xml
+    3rd_gen_scale 1.90
+Assembly
+    filter remove_matches ^\s*//
+    filter remove_matches ^\s*;
+    filter call_regexp_common C
+    filter remove_inline //.*$
+    filter remove_inline ;.*$
+    extension S
+    extension asm
+    extension s
+    3rd_gen_scale 0.25
+    end_of_line_continuation \\$
+Bourne (Again) Shell
+    filter remove_matches ^\s*#
+    filter remove_inline #.*$
+    extension bash
+    extension sh
+    script_exe bash
+    3rd_gen_scale 3.81
+    end_of_line_continuation \\$
+C
+    filter remove_matches ^\s*//
+    filter call_regexp_common C
+    filter remove_inline //.*$
+    extension c
+    extension ec
+    extension pgc
+    3rd_gen_scale 0.77
+    end_of_line_continuation \\$
+C Shell
+    filter remove_matches ^\s*#
+    filter remove_inline #.*$
+    extension csh
+    extension tcsh
+    script_exe csh
+    script_exe tcsh
+    3rd_gen_scale 3.81
+    end_of_line_continuation \\$
+C++
+    filter remove_matches ^\s*//
+    filter remove_inline //.*$
+    filter call_regexp_common C
+    extension C
+    extension cc
+    extension cpp
+    extension cxx
+    extension pcc
+    3rd_gen_scale 1.51
+    end_of_line_continuation \\$
+C/C++ Header
+    filter remove_matches ^\s*//
+    filter call_regexp_common C
+    filter remove_inline //.*$
+    extension H
+    extension h
+    extension hh
+    extension hpp
+    3rd_gen_scale 1.00
+    end_of_line_continuation \\$
+CMake
+    filter remove_matches ^\s*#
+    filter remove_inline #.*$
+    extension CMakeLists.txt
+    extension cmake
+    filename CMakeLists.txt
+    3rd_gen_scale 1.00
+    end_of_line_continuation \\$
+IDL MSG SRV ACTION
+    filter remove_matches ^\s*;
+    extension idl
+    extension msg
+    extension action
+    extension srv
+    extension pro
+    script_exe idl
+    3rd_gen_scale 3.80
+Java
+    filter remove_matches ^\s*//
+    filter call_regexp_common C
+    filter remove_inline //.*$
+    extension java
+    3rd_gen_scale 1.36
+    end_of_line_continuation \\$
+LESS
+    filter remove_matches ^\s*//
+    filter call_regexp_common C
+    filter remove_inline //.*$
+    extension less
+    3rd_gen_scale 1.50
+    end_of_line_continuation \\$
+Lua and config
+    filter remove_matches ^\s*\-\-
+    extension lua
+    extension config
+    script_exe lua
+    3rd_gen_scale 4.00
+    end_of_line_continuation \\$
+MATLAB
+    filter remove_matches ^\s*%
+    filter remove_inline %.*$
+    3rd_gen_scale 4.00
+    end_of_line_continuation \.\.\.\s*$
+Maven
+    filter remove_html_comments
+    filter call_regexp_common HTML
+    extension pom
+    extension pom.xml
+    3rd_gen_scale 1.90
+Maven/XML
+    filter remove_html_comments
+    filter call_regexp_common HTML
+    filename pom.xml
+    3rd_gen_scale 2.50
+OpenCL
+    filter remove_matches ^\s*//
+    filter call_regexp_common C
+    filter remove_inline //.*$
+    3rd_gen_scale 1.50
+Python
+    filter remove_matches ^\s*#
+    filter docstring_to_C
+    filter call_regexp_common C
+    filter remove_inline #.*$
+    extension py
+    3rd_gen_scale 4.20
+    end_of_line_continuation \\$
+Ruby
+    filter remove_matches ^\s*#
+    filter remove_below_above ^=begin
+    filter remove_inline #.*$
+    extension rb
+    script_exe ruby
+    3rd_gen_scale 4.20
+    end_of_line_continuation \\$
+XML
+    filter remove_html_comments
+    filter call_regexp_common HTML
+    extension XML
+    extension xml
+    3rd_gen_scale 1.90
+XSD
+    filter remove_html_comments
+    filter call_regexp_common HTML
+    extension XSD
+    extension xsd
+    3rd_gen_scale 1.90
+XSLT
+    filter remove_html_comments
+    filter call_regexp_common HTML
+    extension XSL
+    extension XSLT
+    extension xsl
+    extension xslt
+    3rd_gen_scale 1.90
+YAML
+    filter remove_matches ^\s*#
+    filter remove_inline #.*$
+    extension yaml
+    extension yml
+    3rd_gen_scale 0.90
+awk
+    filter remove_matches ^\s*#
+    filter remove_inline #.*$
+    extension awk
+    script_exe awk
+    3rd_gen_scale 3.81
+    end_of_line_continuation \\$
+bc
+    filter remove_matches ^\s*#
+    filter remove_inline #.*$
+    script_exe bc
+    3rd_gen_scale 1.50
+    end_of_line_continuation \\$
+lex
+    filter call_regexp_common C
+    extension l
+    3rd_gen_scale 1.00
+    end_of_line_continuation \\$
+m4
+    filter remove_matches ^dnl 
+    extension ac
+    extension m4
+    3rd_gen_scale 1.00
+make
+    filter remove_matches ^\s*#
+    filter remove_inline #.*$
+    extension Gnumakefile
+    extension Makefile
+    extension am
+    extension gnumakefile
+    extension makefile
+    filename Gnumakefile
+    filename Makefile
+    filename gnumakefile
+    filename makefile
+    script_exe make
+    3rd_gen_scale 2.50
+    end_of_line_continuation \\$
+sed
+    filter remove_matches ^\s*#
+    filter remove_inline #.*$
+    extension sed
+    script_exe sed
+    3rd_gen_scale 4.00
+    end_of_line_continuation \\$
+vim script
+    filter remove_matches ^\s*"
+    filter remove_inline ".*$
+    extension vim
+    3rd_gen_scale 3.00
+yacc
+    filter call_regexp_common C
+    filter remove_matches ^\s*//
+    filter remove_inline //.*$
+    extension y
+    3rd_gen_scale 1.51

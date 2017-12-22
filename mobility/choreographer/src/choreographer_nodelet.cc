@@ -27,28 +27,29 @@
 #include <ff_util/ff_action.h>
 #include <ff_util/ff_service.h>
 #include <ff_util/ff_flight.h>
+#include <ff_util/ff_fsm.h>
 #include <ff_util/config_server.h>
 #include <ff_util/conversion.h>
 
 // Generic messages
 #include <nav_msgs/Path.h>
 #include <geometry_msgs/PointStamped.h>
+#include <geometry_msgs/Inertia.h>
 
-// FreeFlyer messages
+// Hardware messages
+#include <ff_hw_msgs/PmcState.h>
+
+// Messages
+#include <ff_msgs/MotionState.h>
+#include <ff_msgs/FlightMode.h>
 #include <ff_msgs/ControlCommand.h>
-#include <ff_msgs/MobilityProgress.h>
-#include <ff_msgs/MobilityResult.h>
-#include <ff_msgs/Fault.h>
-#include <ff_msgs/SetBool.h>
+
+// Services
 #include <ff_msgs/RegisterPlanner.h>
+#include <ff_msgs/SetState.h>
 
-// Action servers
-#include <ff_msgs/ExecuteAction.h>
-#include <ff_msgs/StopAction.h>
-#include <ff_msgs/MoveAction.h>
-#include <ff_msgs/IdleAction.h>
-
-// Action clients
+// Actions
+#include <ff_msgs/MotionAction.h>
 #include <ff_msgs/ControlAction.h>
 #include <ff_msgs/PlanAction.h>
 #include <ff_msgs/ValidateAction.h>
@@ -66,19 +67,398 @@
 namespace choreographer {
 
 // Convenience declarations
-using STATE = ff_msgs::MobilityProgress;
-using RESPONSE = ff_msgs::MobilityResult;
+using STATE = ff_msgs::MotionState;
+using RESPONSE = ff_msgs::MotionResult;
 
 // Data structure for managing planner registration
-typedef std::map < std::string, std::string > PlannerInfo;
-typedef std::map < std::string, ff_util::FreeFlyerActionClient < ff_msgs::PlanAction > > PlannerMap;
+typedef std::map<std::string, std::string > PlannerInfo;
+typedef std::map<std::string,
+  ff_util::FreeFlyerActionClient<ff_msgs::PlanAction>> PlannerMap;
 
 // The choreograph class manages core logic for mobility
 class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
  public:
+  enum ChoreographerEvent {
+    READY,                             // System is initialized
+    GOAL_EXEC,                         // New execute command
+    GOAL_MOVE,                         // New move command
+    GOAL_STOP,                         // New stop command
+    GOAL_IDLE,                         // New idle command
+    GOAL_PREP,                         // New prep command
+    GOAL_CANCEL,                       // Cancel existing goal
+    VALIDATE_SUCCESS,                  // Segment validation success
+    VALIDATE_FAILED,                   // Segment validation failed
+    PLAN_SUCCESS,                      // Segment plan success
+    PLAN_FAILED,                       // Segment plan failed
+    PMC_READY,                         // PMC is ramped and ready
+    PMC_TIMEOUT,                       // PMC has timed out
+    CONTROL_SUCCESS,                   // Control success
+    CONTROL_FAILED,                    // Control failure
+    TOLERANCE_POS,                     // Tolerance failure
+    TOLERANCE_ATT,                     // Tolerance failure
+    TOLERANCE_VEL,                     // Tolerance failure
+    TOLERANCE_OMEGA,                   // Tolerance failure
+    OBSTACLE_DETECTED                  // Obstacle detected
+  };
+
+  // The various types of control
+  enum ControlType { IDLE, STOP, NOMINAL };
+
   // Constructor
-  ChoreographerNodelet() :
-    ff_util::FreeFlyerNodelet(NODE_CHOREOGRAPHER, true), state_(STATE::INITIALIZING) {}
+  ChoreographerNodelet() : ff_util::FreeFlyerNodelet(NODE_CHOREOGRAPHER, true),
+    fsm_(STATE::INITIALIZING, std::bind(&ChoreographerNodelet::UpdateCallback,
+      this, std::placeholders::_1, std::placeholders::_2)) {
+    // Add the state transition lambda functions - refer to the FSM diagram
+    // [0]
+    fsm_.Add(READY,                               // These events move...
+      STATE::INITIALIZING,                        // The current state to...
+      [this](ChoreographerEvent const& event) -> int32_t {
+        if (!Control(STOP))
+          AssertFault("INITIALIZATION_FAULT", "Cannot call Stop() action");
+        return STATE::WAITING_FOR_STOP;            // The next state...
+      });
+    // [1]
+    fsm_.Add(CONTROL_SUCCESS, CONTROL_FAILED,     // These events move...
+      STATE::WAITING_FOR_STOP,                    // The current state to...
+      [this](ChoreographerEvent const& event) -> int32_t {
+        if (event == CONTROL_FAILED)
+          AssertFault("INITIALIZATION_FAULT", "Stop() goal failed on init");
+        return STATE::WAITING;
+      });
+    // [2]
+    fsm_.Add(GOAL_EXEC,                           // These events move...
+      STATE::WAITING,                             // The current state to...
+      [this](ChoreographerEvent const& event) -> int32_t {
+        // Assemble a simple planning request
+        geometry_msgs::PoseStamped pose;
+        if (!GetRobotPose(pose))
+          return Result(RESPONSE::CANNOT_QUERY_ROBOT_POSE);
+        // Get the robot pose
+        if (ff_util::FlightUtil::WithinTolerance(
+          flight_mode_, segment_.front().pose, pose.pose)) {
+          // If we need to validate
+          if (cfg_.Get<bool>("enable_validation")) {
+            if (!Validate(segment_))
+              return Result(RESPONSE::VALIDATE_FAILED);
+            return STATE::VALIDATING;
+          }
+          // If we send control directly
+          if (!Control(NOMINAL, segment_))
+            return Result(RESPONSE::CONTROL_FAILED);
+          return STATE::CONTROLLING;
+        }
+        // We are not on the first pose, we need to plan to get there
+        if (cfg_.Get<bool>("enable_bootstrapping")) {
+          // Assemble a simple plan
+          std::vector<geometry_msgs::PoseStamped> states;
+          geometry_msgs::PoseStamped pose;
+          // Get the robot pose and force timestamp alignment
+          if (!GetRobotPose(pose))
+            return Result(RESPONSE::CANNOT_QUERY_ROBOT_POSE);
+          pose.header.stamp = segment_.front().when;
+          states.push_back(pose);
+          // Get the first pose of the segment
+          pose.header.stamp = segment_.front().when;
+          pose.pose = segment_.front().pose;
+          states.push_back(pose);
+          // Now, query the planning subsystem to find a suitable segment
+          if (!Plan(states))
+            return Result(RESPONSE::PLAN_FAILED);
+          return STATE::BOOTSTRAPPING;
+        }
+        return Result(RESPONSE::NOT_ON_FIRST_POSE);
+      });
+    // [3a]
+    fsm_.Add(PLAN_SUCCESS,                        // These events move...
+      STATE::BOOTSTRAPPING,                       // The current state to...
+      [this](ChoreographerEvent const& event) -> int32_t {
+        // If we need to validate
+        if (cfg_.Get<bool>("enable_validation")) {
+          if (!Validate(segment_))
+            return Result(RESPONSE::VALIDATE_FAILED);
+          return STATE::VALIDATING;
+        }
+        // If we send control directly
+        if (!Control(NOMINAL, segment_))
+          return Result(RESPONSE::CONTROL_FAILED);
+        return STATE::CONTROLLING;
+      });
+    // [4]
+    fsm_.Add(PLAN_FAILED, GOAL_CANCEL,            // These events move...
+      STATE::BOOTSTRAPPING,                       // The current state to...
+      [this](ChoreographerEvent const& event) -> int32_t {
+        if (event == GOAL_CANCEL)
+          return Result(RESPONSE::CANCELLED);
+        return Result(RESPONSE::PLAN_FAILED);
+      });
+    // [5]
+    fsm_.Add(GOAL_MOVE,                           // These events move...
+      STATE::WAITING,                             // The current state to...
+      [this](ChoreographerEvent const& event) -> int32_t {
+        // Assemble a simple planning request
+        geometry_msgs::PoseStamped pose;
+        // Get the robot pose
+        if (!GetRobotPose(pose))
+          return Result(RESPONSE::CANNOT_QUERY_ROBOT_POSE);
+        // Cover a special case where we are already on ALL desired poses.
+        bool aligned = true;
+        std::vector<geometry_msgs::PoseStamped>::iterator it;
+        for (it = states_.begin(); it != states_.end() && aligned; ++it)
+          aligned &= ff_util::FlightUtil::WithinTolerance(
+            flight_mode_, pose.pose, it->pose);
+        if (aligned)
+          return Result(RESPONSE::ALREADY_THERE);
+        // Add the current pose to the front of the states
+        states_.insert(states_.begin(), pose);
+        // Now, query the planning subsystem to find a suitable segment
+        if (!Plan(states_))
+          return Result(RESPONSE::PLAN_FAILED);
+        return STATE::PLANNING;
+      });
+    // [6]
+    fsm_.Add(PLAN_SUCCESS,                        // These events move...
+      STATE::PLANNING,                            // The current state to...
+      [this](ChoreographerEvent const& event) -> int32_t {
+        // If we need to validate
+        if (cfg_.Get<bool>("enable_validation")) {
+          if (!Validate(segment_))
+            return Result(RESPONSE::VALIDATE_FAILED);
+          return STATE::VALIDATING;
+        }
+        // If this returns false then we are already on the correct speed gain
+        if (FlightMode())
+          return STATE::PREPARING;
+        // Move straight to control, as we don't need to wait for speed prep.
+        if (!Control(NOMINAL, segment_))
+          return Result(RESPONSE::CONTROL_FAILED);
+        return STATE::CONTROLLING;
+      });
+    // [7]
+    fsm_.Add(PLAN_FAILED, GOAL_CANCEL,            // These events move...
+      STATE::PLANNING,                            // The current state to...
+      [this](ChoreographerEvent const& event) -> int32_t {
+        if (event == GOAL_CANCEL)
+          return Result(RESPONSE::CANCELLED);
+        return Result(RESPONSE::PLAN_FAILED);
+      });
+    // [8]
+    fsm_.Add(VALIDATE_SUCCESS,                    // These events move...
+      STATE::VALIDATING,                          // The current state to...
+      [this](ChoreographerEvent const& event) -> int32_t {
+        // If this returns false then we are already on the correct speed gain
+        if (FlightMode())
+          return STATE::PREPARING;
+        // Move straight to control, as we don't need to wait for speed prep.
+        if (!Control(NOMINAL, segment_))
+          return Result(RESPONSE::CONTROL_FAILED);
+        return STATE::CONTROLLING;
+      });
+    // [9]
+    fsm_.Add(VALIDATE_FAILED, GOAL_CANCEL,        // These events move...
+      STATE::VALIDATING,                          // The current state to...
+      [this](ChoreographerEvent const& event) -> int32_t {
+        if (event == GOAL_CANCEL)
+          return Result(RESPONSE::CANCELLED);
+        return Result(RESPONSE::VALIDATE_FAILED);
+      });
+    // [10]
+    fsm_.Add(PLAN_SUCCESS,                        // These events move...
+      STATE::REPLANNING,                          // The current state to...
+      [this](ChoreographerEvent const& event) -> int32_t {
+        // If we need to validate the segment
+        if (cfg_.Get<bool>("enable_validation")) {
+          if (!Validate(segment_))
+            return Result(RESPONSE::VALIDATE_FAILED);
+          return STATE::REVALIDATING;
+        }
+        // If we send control directly
+        if (!Control(NOMINAL, segment_))
+          return Result(RESPONSE::CONTROL_FAILED);
+        return STATE::CONTROLLING;
+      });
+    // [11]
+    fsm_.Add(VALIDATE_SUCCESS,                    // These events move...
+      STATE::REVALIDATING,                        // The current state to...
+      [this](ChoreographerEvent const& event) -> int32_t {
+        // If we send control directly
+        if (!Control(NOMINAL, segment_))
+          return Result(RESPONSE::CONTROL_FAILED);
+        return STATE::CONTROLLING;
+      });
+    // [12]
+    fsm_.Add(VALIDATE_FAILED, GOAL_CANCEL,        // These events move...
+      STATE::REVALIDATING,                        // The current state to...
+      [this](ChoreographerEvent const& event) -> int32_t {
+        Control(STOP);
+        if (event == GOAL_CANCEL)
+          return Result(RESPONSE::CANCELLED);
+        return Result(RESPONSE::REVALIDATE_FAILED);
+      });
+    // [13]
+    fsm_.Add(CONTROL_SUCCESS,                     // These events move...
+      STATE::CONTROLLING,                         // The current state to...
+      [this](ChoreographerEvent const& event) -> int32_t {
+        return Result(RESPONSE::SUCCESS);         // The next state...
+      });
+    // [14]
+    fsm_.Add(PLAN_FAILED, GOAL_CANCEL,            // These events move...
+      STATE::REPLANNING,                          // The current state to...
+      [this](ChoreographerEvent const& event) -> int32_t {
+        Control(STOP);
+        if (event == GOAL_CANCEL)
+          return Result(RESPONSE::CANCELLED);
+        return Result(RESPONSE::REPLAN_FAILED);
+      });
+    // [15]
+    fsm_.Add(CONTROL_FAILED, GOAL_CANCEL,         // These events move...
+      STATE::CONTROLLING,                         // The current state to...
+      [this](ChoreographerEvent const& event) -> int32_t {
+        Control(STOP);
+        if (event == GOAL_CANCEL)
+          return Result(RESPONSE::CANCELLED);
+        return Result(RESPONSE::CONTROL_FAILED);
+      });
+    // [28]
+    fsm_.Add(TOLERANCE_POS, TOLERANCE_ATT, TOLERANCE_VEL, TOLERANCE_OMEGA,
+      STATE::CONTROLLING,
+      [this](ChoreographerEvent const& event) -> int32_t {
+        switch (event) {
+        case TOLERANCE_POS:
+          return Result(RESPONSE::TOLERANCE_VIOLATION_POSITION);
+        case TOLERANCE_ATT:
+          return Result(RESPONSE::TOLERANCE_VIOLATION_ATTITUDE);
+        case TOLERANCE_VEL:
+          return Result(RESPONSE::TOLERANCE_VIOLATION_VELOCITY);
+        case TOLERANCE_OMEGA:
+          return Result(RESPONSE::TOLERANCE_VIOLATION_OMEGA);
+        default:
+          break;
+        }
+        return Result(RESPONSE::CONTROL_FAILED);
+      });
+    // [16]
+    fsm_.Add(OBSTACLE_DETECTED,                   // These events move...
+      STATE::CONTROLLING,                         // The current state to...
+      [this](ChoreographerEvent const& event) -> int32_t {
+        // If we need to validate the segment
+        if (cfg_.Get<bool>("enable_replanning")) {
+          // Find a suitable handover point between now and the collision time
+          ros::Time handover = obstacle_.header.stamp
+                             - ros::Duration(cfg_.Get<double>("time_buffer"));
+          // Find the setpoint immediately before the handover time
+          ff_util::Segment::reverse_iterator it;
+          for (it = segment_.rbegin(); it != segment_.rend(); ++it)
+            if (it->when < handover) break;
+          // Check that the handover time is after the current time
+          if (it == segment_.rend() || it->when < ros::Time::now()) {
+            Control(STOP);
+            return Result(RESPONSE::REPLAN_NOT_ENOUGH_TIME);
+          }
+          // Assemble a simple planning request
+          std::vector<geometry_msgs::PoseStamped> states;
+          geometry_msgs::PoseStamped pose;
+          // Replan from the handover point to the end of the segment
+          pose.header.stamp = it->when;
+          pose.pose = it->pose;
+          states.push_back(pose);
+          pose.header.stamp = segment_.back().when;
+          pose.pose = segment_.back().pose;
+          states.push_back(pose);
+          // Now, generate a plan between the supplied states
+          if (!Plan(states, ros::Time::now() - it->when))
+            return Result(RESPONSE::PLAN_FAILED);
+          return STATE::REPLANNING;
+        }
+        // If replanning is disabled then this is just an obstacle detection
+        return Result(RESPONSE::OBSTACLE_DETECTED);
+      });
+    // [17]
+    fsm_.Add(GOAL_STOP,                           // These events move...
+      STATE::WAITING,                             // The current state to...
+      [this](ChoreographerEvent const& event) -> int32_t {
+        // Force the flight mode  change and immediately send control
+        FlightMode();
+        if (!Control(STOP))
+          return Result(RESPONSE::CONTROL_FAILED);
+        return STATE::STOPPING;                   // The next state...
+      });
+    // [18]
+    fsm_.Add(CONTROL_SUCCESS,                     // These events move...
+      STATE::STOPPING,                            // The current state to...
+      [this](ChoreographerEvent const& event) -> int32_t {
+        return Result(RESPONSE::SUCCESS);         // The next state...
+      });
+    // [19]
+    fsm_.Add(CONTROL_FAILED, GOAL_CANCEL,         // These events move...
+      STATE::STOPPING,                            // The current state to...
+      [this](ChoreographerEvent const& event) -> int32_t {
+        if (event == GOAL_CANCEL)
+          return Result(RESPONSE::CANCELLED);
+        return Result(RESPONSE::CONTROL_FAILED);
+      });
+    // [20]
+    fsm_.Add(GOAL_IDLE,                           // These events move...
+      STATE::WAITING,                             // The current state to...
+      [this](ChoreographerEvent const& event) -> int32_t {
+        // Force the flight mode  change and immediately send control
+        FlightMode();
+        if (!Control(IDLE))
+          return Result(RESPONSE::CONTROL_FAILED);
+        return STATE::IDLING;                     // The next state...
+      });
+    // [21]
+    fsm_.Add(CONTROL_SUCCESS,                     // These events move...
+      STATE::IDLING,                              // The current state to...
+      [this](ChoreographerEvent const& event) -> int32_t {
+        return Result(RESPONSE::SUCCESS);         // The next state...
+      });
+    // [22]
+    fsm_.Add(CONTROL_FAILED, GOAL_CANCEL,         // These events move...
+      STATE::IDLING,                              // The current state to...
+      [this](ChoreographerEvent const& event) -> int32_t {
+        if (event == GOAL_CANCEL)
+          return Result(RESPONSE::CANCELLED);
+        return Result(RESPONSE::CONTROL_FAILED);
+      });
+    // [23]
+    fsm_.Add(PMC_READY,                           // These events move...
+      STATE::PREPARING,                           // The current state to...
+      [this](ChoreographerEvent const& event) -> int32_t {
+        if (!Control(NOMINAL, segment_))
+          return Result(RESPONSE::CONTROL_FAILED);
+        return STATE::CONTROLLING;
+      });
+    // [24]
+    fsm_.Add(PMC_TIMEOUT, GOAL_CANCEL,            // These events move...
+      STATE::PREPARING,                           // The current state to...
+      [this](ChoreographerEvent const& event) -> int32_t {
+        if (event == GOAL_CANCEL)
+          return Result(RESPONSE::CANCELLED);
+        return Result(RESPONSE::PMC_FAILED);
+      });
+    // [25]
+    fsm_.Add(GOAL_PREP,                           // These events move...
+      STATE::WAITING,                             // The current state to...
+      [this](ChoreographerEvent const& event) -> int32_t {
+        if (FlightMode())
+          return STATE::PREPPING;
+        return Result(RESPONSE::SUCCESS);
+      });
+    // [26]
+    fsm_.Add(PMC_READY,                           // These events move...
+      STATE::PREPPING,                            // The current state to...
+      [this](ChoreographerEvent const& event) -> int32_t {
+        return Result(RESPONSE::SUCCESS);         // The next state...
+      });
+    // [27]
+    fsm_.Add(PMC_TIMEOUT, GOAL_CANCEL,            // These events move...
+      STATE::PREPPING,                            // The current state to...
+      [this](ChoreographerEvent const& event) -> int32_t {
+        if (event == GOAL_CANCEL)
+          return Result(RESPONSE::CANCELLED);
+        return Result(RESPONSE::PMC_FAILED);
+      });
+  }
 
   // Destructor
   ~ChoreographerNodelet() {}
@@ -88,150 +468,175 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
   void Initialize(ros::NodeHandle *nh) {
     // Configuration parameters
     cfg_.Initialize(GetPrivateHandle(), "mobility/choreographer.config");
-    cfg_.Listen(boost::bind(&ChoreographerNodelet::ReconfigureCallback, this, _1));
-
-    // Setup a timer to forward diagnostics
-    timer_d_ = nh->createTimer(ros::Duration(ros::Rate(DEFAULT_DIAGNOSTICS_RATE)),
-      &ChoreographerNodelet::DiagnosticsCallback, this, false, true);
+    cfg_.Listen(boost::bind(
+      &ChoreographerNodelet::ReconfigureCallback, this, _1));
 
     // Create a transform buffer ot listen for transforms
-    tf_listener_ = std::shared_ptr<tf2_ros::TransformListener>(new tf2_ros::TransformListener(tf_buffer_));
+    tf_listener_ = std::shared_ptr<tf2_ros::TransformListener>(
+      new tf2_ros::TransformListener(tf_buffer_));
 
-    // Segment and trajectory publisher
-    pub_s_ = nh->advertise < nav_msgs::Path > (TOPIC_MOBILITY_SEGMENT, 5, true);
+    // One shot timer to check if we undock with a timeout (no autostart)
+    timer_speed_ = nh->createTimer(
+      ros::Duration(cfg_.Get<double>("timeout_speed_gain")),
+        &ChoreographerNodelet::PmcTimeout, this, true, false);
+
+    // Periodic timer to send feedback to executive to avoid timeout
+    timer_feedback_ = nh->createTimer(ros::Rate(2.0),
+        &ChoreographerNodelet::FeedbackCallback, this, false, false);
+
+    // Publish segments to be picked up by rviz
+    pub_segment_ = nh->advertise<nav_msgs::Path>(
+      TOPIC_MOBILITY_SEGMENT, 5, true);
+
+    // Publish an internal state for executive to track
+    pub_state_ = nh->advertise<ff_msgs::MotionState>(
+      TOPIC_MOBILITY_MOTION_STATE, 5, true);
+
+    // Publish flight mode for the benefit of the whole system
+    // gnc::EKF : uses speed gain to peform virbation compensation
+    // gnc::FAM : uses speed gain to set impeller speeds
+    // gnc::CTL : uses controller gains to control platform
+    pub_flight_mode_ = nh->advertise<ff_msgs::FlightMode>(
+      TOPIC_MOBILITY_FLIGHT_MODE, 1, true);
+
+    // Publish inertia once on start to ensure GNC is bootstrapped
+    // correctly even if executive is not loaded.
+    pub_inertia_ = nh->advertise<geometry_msgs::Inertia>(
+      TOPIC_MANAGEMENT_INERTIA, 1, true);
 
     // Subscribe to collisions from the sentinel node
-    sub_c_ = nh->subscribe(TOPIC_MOBILITY_COLLISIONS, 5, &ChoreographerNodelet::CollisionCallback, this);
+    sub_collisions_ = nh->subscribe(TOPIC_MOBILITY_COLLISIONS, 5,
+      &ChoreographerNodelet::CollisionCallback, this);
+
+    // Subscribe to the latched PMC state to be notified of propulsion events
+    sub_pmc_state_= nh->subscribe(TOPIC_HARDWARE_PMC_STATE, 5,
+      &ChoreographerNodelet::PmcStateCallback, this);
 
     // Allow planners to register themselves
-    server_p_ = nh->advertiseService(SERVICE_MOBILITY_PLANNER_REGISTER,
+    server_register_ = nh->advertiseService(SERVICE_MOBILITY_PLANNER_REGISTER,
       &ChoreographerNodelet::PlannerRegisterCallback, this);
 
-    // Contact GNC service for enabling control of the platform
-    client_t_.SetConnectedTimeout(cfg_.Get<double>("timeout_toggle_connected"));
-    client_t_.SetConnectedCallback(std::bind(&ChoreographerNodelet::ConnectedCallback, this));
-    client_t_.SetTimeoutCallback(std::bind(&ChoreographerNodelet::ServiceTimeoutCallback, this));
-    client_t_.Create(nh, SERVICE_GNC_CTL_ENABLE);
+    // Allow the state to be manually set
+    server_set_state_ = nh->advertiseService(SERVICE_MOBILITY_SET_STATE,
+      &ChoreographerNodelet::SetStateCallback, this);
 
     // Setup control client action
-    client_c_.SetConnectedTimeout(cfg_.Get<double>("timeout_control_connected"));
-    client_c_.SetActiveTimeout(cfg_.Get<double>("timeout_control_active"));
-    client_c_.SetResponseTimeout(cfg_.Get<double>("timeout_control_response"));
-    client_c_.SetFeedbackCallback(
-      std::bind(&ChoreographerNodelet::CFeedbackCallback, this, std::placeholders::_1));
-    client_c_.SetResultCallback(
-      std::bind(&ChoreographerNodelet::CResultCallback, this, std::placeholders::_1, std::placeholders::_2));
-    client_c_.SetConnectedCallback(
-      std::bind(&ChoreographerNodelet::ConnectedCallback, this));
+    client_c_.SetConnectedTimeout(
+      cfg_.Get<double>("timeout_control_connected"));
+    client_c_.SetActiveTimeout(
+      cfg_.Get<double>("timeout_control_active"));
+    client_c_.SetResponseTimeout(
+      cfg_.Get<double>("timeout_control_response"));
+    client_c_.SetFeedbackCallback(std::bind(
+      &ChoreographerNodelet::CFeedbackCallback, this,
+        std::placeholders::_1));
+    client_c_.SetResultCallback(std::bind(
+      &ChoreographerNodelet::CResultCallback, this,
+        std::placeholders::_1, std::placeholders::_2));
+    client_c_.SetConnectedCallback(std::bind(
+      &ChoreographerNodelet::ConnectedCallback, this));
     client_c_.Create(nh, ACTION_GNC_CTL_CONTROL);
 
     // Setup validate client action
-    client_v_.SetConnectedTimeout(cfg_.Get<double>("timeout_validate_connected"));
-    client_v_.SetActiveTimeout(cfg_.Get<double>("timeout_validate_active"));
-    client_v_.SetResponseTimeout(cfg_.Get<double>("timeout_validate_response"));
-    client_v_.SetDeadlineTimeout(cfg_.Get<double>("timeout_validate_deadline"));
-    client_v_.SetFeedbackCallback(
-      std::bind(&ChoreographerNodelet::VFeedbackCallback, this, std::placeholders::_1));
-    client_v_.SetResultCallback(
-      std::bind(&ChoreographerNodelet::VResultCallback, this, std::placeholders::_1, std::placeholders::_2));
-    client_v_.SetConnectedCallback(
-      std::bind(&ChoreographerNodelet::ConnectedCallback, this));
+    client_v_.SetConnectedTimeout(
+      cfg_.Get<double>("timeout_validate_connected"));
+    client_v_.SetActiveTimeout(
+      cfg_.Get<double>("timeout_validate_active"));
+    client_v_.SetResponseTimeout(
+      cfg_.Get<double>("timeout_validate_response"));
+    client_v_.SetDeadlineTimeout(
+      cfg_.Get<double>("timeout_validate_deadline"));
+    client_v_.SetFeedbackCallback(std::bind(
+      &ChoreographerNodelet::VFeedbackCallback, this,
+        std::placeholders::_1));
+    client_v_.SetResultCallback(std::bind(
+      &ChoreographerNodelet::VResultCallback, this,
+        std::placeholders::_1, std::placeholders::_2));
+    client_v_.SetConnectedCallback(std::bind(
+      &ChoreographerNodelet::ConnectedCallback, this));
     client_v_.Create(nh, ACTION_MOBILITY_VALIDATE);
 
-    // Setup the execute action
-    server_e_.SetGoalCallback(std::bind(&ChoreographerNodelet::EGoalCallback, this, std::placeholders::_1));
-    server_e_.SetPreemptCallback(std::bind(&ChoreographerNodelet::PreemptCallback, this));
-    server_e_.SetCancelCallback(std::bind(&ChoreographerNodelet::CancelCallback, this));
-    server_e_.Create(nh, ACTION_MOBILITY_EXECUTE);
-
     // Setup the move action
-    server_m_.SetGoalCallback(std::bind(&ChoreographerNodelet::MGoalCallback, this, std::placeholders::_1));
-    server_m_.SetPreemptCallback(std::bind(&ChoreographerNodelet::PreemptCallback, this));
-    server_m_.SetCancelCallback(std::bind(&ChoreographerNodelet::CancelCallback, this));
-    server_m_.Create(nh, ACTION_MOBILITY_MOVE);
+    server_.SetGoalCallback(std::bind(
+      &ChoreographerNodelet::GoalCallback, this, std::placeholders::_1));
+    server_.SetPreemptCallback(std::bind(
+      &ChoreographerNodelet::PreemptCallback, this));
+    server_.SetCancelCallback(std::bind(
+      &ChoreographerNodelet::CancelCallback, this));
+    server_.Create(nh, ACTION_MOBILITY_MOTION);
 
-    // Setup the stop action
-    server_s_.SetGoalCallback(std::bind(&ChoreographerNodelet::SGoalCallback, this, std::placeholders::_1));
-    server_s_.SetPreemptCallback(std::bind(&ChoreographerNodelet::PreemptCallback, this));
-    server_s_.SetCancelCallback(std::bind(&ChoreographerNodelet::CancelCallback, this));
-    server_s_.Create(nh, ACTION_MOBILITY_STOP);
+    // Publish the default flight mode so the system boots predictably
+    if (!ff_util::FlightUtil::GetInitialFlightMode(flight_mode_))
+      AssertFault("INITIALIZATION_FAULT", "Problem with initial flight mode");
+    pub_flight_mode_.publish(flight_mode_);
 
-    // Setup the idle action
-    server_i_.SetGoalCallback(std::bind(&ChoreographerNodelet::IGoalCallback, this, std::placeholders::_1));
-    server_i_.SetPreemptCallback(std::bind(&ChoreographerNodelet::PreemptCallback, this));
-    server_i_.SetCancelCallback(std::bind(&ChoreographerNodelet::CancelCallback, this));
-    server_i_.Create(nh, ACTION_MOBILITY_IDLE);
-
-    // Notify initialization complete
-    NODELET_DEBUG_STREAM("Initialization complete");
-  }
-
-  // Send diagnostics
-  void DiagnosticsCallback(const ros::TimerEvent &event) {
-    SendDiagnostics(cfg_.Dump());
+    // Publish the default inertia parameters -- this will eventually be
+    // moved to executive.
+    geometry_msgs::Inertia msg;
+    if (!ff_util::FlightUtil::GetInertiaConfig(msg))
+      AssertFault("INITIALIZATION_FAULT", "Problem with default inertia");
+    pub_inertia_.publish(msg);
   }
 
   // Callback to handle reconfiguration requests
   bool ReconfigureCallback(dynamic_reconfigure::Config & config) {
-    NODELET_DEBUG_STREAM("ReconfigureCallback()");
-    // Only allow reconfiguration within certain states
-    switch (state_) {
-    case STATE::INITIALIZING:
-      NODELET_WARN_STREAM("Cannot reconfigure a node in INITIALIZING state");
-      return false;
+    switch (fsm_.GetState()) {
+    case STATE::WAITING:
+      return cfg_.Reconfigure(config);
     default:
-      NODELET_DEBUG_STREAM("Reconfiguring node");
       break;
     }
-    // Grab the new config parameters
-    if (!cfg_.Reconfigure(config))
-      return false;
-        // Send an empty reconfigure to enable control
-    return ToggleControl(cfg_.Get<bool>("enable_control"));
+    return false;
   }
 
-  // Enable control
-  bool ToggleControl(bool enable) {
-    ff_msgs::SetBool msg;
-    msg.request.enable = enable;
-    if (!client_t_.Call(msg)) {
-      Complete(RESPONSE::COULD_NOT_CALL_CONTROL_ENABLE_SERVICE);
-      return false;
-    }
-    // Success!
+  // Ensure all clients are connected
+  void ConnectedCallback() {
+    if (!client_v_.IsConnected()) return;       // Validate action
+    if (!client_c_.IsConnected()) return;       // Control action
+    fsm_.Update(READY);
+  }
+
+  // Called on registration of aplanner
+  bool SetStateCallback(ff_msgs::SetState::Request& req,
+                        ff_msgs::SetState::Response& res) {
+    fsm_.SetState(req.state);
+    res.success = true;
     return true;
   }
 
   // Called on registration of aplanner
-  bool PlannerRegisterCallback(ff_msgs::RegisterPlanner::Request& req, ff_msgs::RegisterPlanner::Response& res) {
+  bool PlannerRegisterCallback(ff_msgs::RegisterPlanner::Request& req,
+    ff_msgs::RegisterPlanner::Response& res) {
+    // See if the planner already exists
     bool found = planners_.find(req.name) != planners_.end();
     if (req.unregister) {
-      NODELET_DEBUG_STREAM("A planner called '" << req.name << "' unregister itself");
       if (found) {
         planners_.erase(req.name);
         info_.erase(req.name);
-        cfg_.Lim < std::string > ("planner", info_);
+        cfg_.Lim<std::string>("planner", info_);
         return true;
       }
       return false;
     }
     // See if the planner already exists
-    if (found) {
-      NODELET_WARN_STREAM_NAMED("choreographer",
-        "A planner called '" << req.name << "' tried to register itself multiple times.");
+    if (found)
       return false;
-    }
     // Register the planner
-    NODELET_DEBUG_STREAM("A planner called '" << req.name << "' just registered itself.");
     info_[req.name] = req.description;
-    planners_[req.name].SetConnectedTimeout(cfg_.Get<double>("timeout_plan_connected"));
-    planners_[req.name].SetActiveTimeout(cfg_.Get<double>("timeout_plan_active"));
-    planners_[req.name].SetResponseTimeout(cfg_.Get<double>("timeout_plan_response"));
-    planners_[req.name].SetDeadlineTimeout(cfg_.Get<double>("timeout_plan_deadline"));
-    planners_[req.name].SetFeedbackCallback(
-      std::bind(&ChoreographerNodelet::PFeedbackCallback, this, std::placeholders::_1));
-    planners_[req.name].SetResultCallback(
-      std::bind(&ChoreographerNodelet::PResultCallback, this, std::placeholders::_1, std::placeholders::_2));
+    planners_[req.name].SetConnectedTimeout(
+      cfg_.Get<double>("timeout_plan_connected"));
+    planners_[req.name].SetActiveTimeout(
+      cfg_.Get<double>("timeout_plan_active"));
+    planners_[req.name].SetResponseTimeout(
+      cfg_.Get<double>("timeout_plan_response"));
+    planners_[req.name].SetDeadlineTimeout(
+      cfg_.Get<double>("timeout_plan_deadline"));
+    planners_[req.name].SetFeedbackCallback(std::bind(
+      &ChoreographerNodelet::PFeedbackCallback, this,
+        std::placeholders::_1));
+    planners_[req.name].SetResultCallback(std::bind(
+      &ChoreographerNodelet::PResultCallback, this,
+        std::placeholders::_1, std::placeholders::_2));
     planners_[req.name].SetConnectedCallback(
       std::bind(&ChoreographerNodelet::ConnectedCallback, this));
     std::string topic = std::string(PREFIX_MOBILITY_PLANNER)
@@ -244,50 +649,66 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
     return true;
   }
 
-  // Start executing the segment, and return false if control is disabled
-  bool SendControl(uint8_t mode, std::string const& flight_mode, ff_util::Segment const& segment = ff_util::Segment()) {
-    NODELET_DEBUG_STREAM("Sending control");
-    // Cache the segment and flight mode
-    flight_mode_ = flight_mode;
-    segment_ = segment;
-    // Special case: modify the initial timestamp
-    if (cfg_.Get<bool>("enable_immediate") && !segment_.empty()) {
-      ros::Duration diff = ros::Time::now() - segment_.front().when;
-      for (ff_util::Segment::iterator it = segment_.begin(); it != segment_.end(); it++)
-        it->when += diff;
+  // Complete the current dock or undock action
+  int32_t Result(int32_t response) {
+    // Based on the design of this class only one child action is running
+    // at any point in time (planner, validation, control). If the action
+    // gets cancelled (through preemption or cancellation) we might need
+    // to clean up, based on the state of the system
+    if (response == RESPONSE::CANCELLED) {
+      switch (fsm_.GetState()) {
+      case STATE::BOOTSTRAPPING:
+      case STATE::PLANNING:
+      case STATE::REPLANNING: {
+        std::string planner = cfg_.Get<std::string>("planner");
+        if (planners_.find(planner) != planners_.end())
+          planners_[planner].CancelGoal();
+        break;
+      }
+      case STATE::VALIDATING:
+      case STATE::REVALIDATING:
+        client_v_.CancelGoal();
+        break;
+      case STATE::IDLING:
+      case STATE::STOPPING:
+      case STATE::CONTROLLING:
+        client_c_.CancelGoal();
+        break;
+      }
     }
-    // Special case: if we don't want to control the platform, just return immediately
-    if (!cfg_.Get<bool>("enable_control"))
-      return false;
-    // Send the control
-    ff_msgs::ControlGoal control_goal;
-    control_goal.mode = mode;
-    control_goal.segment = segment_;
-    control_goal.flight_mode = flight_mode_;
-    client_c_.SendGoal(control_goal);
-    // Publish the segment to RVIZ!
-    nav_msgs::Path path;
-    path.header.stamp = ros::Time::now();
-    path.header.frame_id = "world";
-    path.poses.reserve(segment_.size());
-    geometry_msgs::PoseStamped ps;
-    ps.header = path.header;
-    for (ff_util::Segment::iterator it = segment_.begin(); it != segment_.end(); it++) {
-      ps.header.stamp = it->when;
-      ps.pose = it->pose;
-      path.poses.push_back(ps);
+    // Prevent a spurious result from blocking initializtion
+    switch (fsm_.GetState()) {
+    case STATE::WAITING:
+    case STATE::INITIALIZING:
+    case STATE::WAITING_FOR_STOP:
+      return fsm_.GetState();
+    default:
+      break;
     }
-    pub_s_.publish(path);
-    // Success!
-    return true;
+    // If we get here then we are in a valid action state, so we will need
+    // to produce a meanngful result for the callee.
+    static ff_msgs::MotionResult result;
+    result.response = response;
+    result.segment = segment_;
+    result.flight_mode = flight_mode_;
+    if (response > 0)
+      server_.SendResult(ff_util::FreeFlyerActionState::SUCCESS, result);
+    else if (response < 0)
+      server_.SendResult(ff_util::FreeFlyerActionState::ABORTED, result);
+    else
+      server_.SendResult(ff_util::FreeFlyerActionState::PREEMPTED, result);
+    // Return to the waiting state
+    return STATE::WAITING;
   }
 
-  bool GetWorldPose(geometry_msgs::PoseStamped & pose) {
+  // Get the pose of the robot in the world frame
+  bool GetRobotPose(geometry_msgs::PoseStamped & pose) {
+    std::string child_frame = std::string(FRAME_NAME_BODY);
+    if (!GetPlatform().empty())
+      child_frame = GetPlatform() + "/" + child_frame;
     try {
       geometry_msgs::TransformStamped tf = tf_buffer_.lookupTransform(
-        std::string(FRAME_NAME_WORLD),
-        (GetPlatform().empty() ? "body" : GetPlatform() + "/" + std::string(FRAME_NAME_BODY)),
-        ros::Time(0));
+        std::string(FRAME_NAME_WORLD), child_frame, ros::Time(0));
       pose.header = tf.header;
       pose.pose.position.x = tf.transform.translation.x;
       pose.pose.position.y = tf.transform.translation.y;
@@ -301,692 +722,501 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
     return true;
   }
 
-  ///////////////////////// FINITE STATE MACHINE //////////////////////////////////////
-
-  // Control state change with nice debug output
-  void ChangeState(uint8_t state) {
+  // When the FSM state changes we get a callback here, so that we can send
+  // feedback to any active client, print debug info and publish our state
+  void UpdateCallback(int32_t state, ChoreographerEvent event) {
+    // Debug events
+    std::string str = "UNKNOWN";
+    switch (event) {
+    case READY:                   str = "READY";              break;
+    case GOAL_EXEC:               str = "GOAL_EXEC";          break;
+    case GOAL_MOVE:               str = "GOAL_MOVE";          break;
+    case GOAL_STOP:               str = "GOAL_STOP";          break;
+    case GOAL_IDLE:               str = "GOAL_IDLE";          break;
+    case GOAL_PREP:               str = "GOAL_PREP";          break;
+    case GOAL_CANCEL:             str = "GOAL_CANCEL";        break;
+    case VALIDATE_SUCCESS:        str = "VALIDATE_SUCCESS";   break;
+    case VALIDATE_FAILED:         str = "VALIDATE_FAILED";    break;
+    case PMC_READY:               str = "PMC_READY";          break;
+    case PMC_TIMEOUT:             str = "PMC_TIMEOUT";        break;
+    case PLAN_SUCCESS:            str = "PLAN_SUCCESS";       break;
+    case PLAN_FAILED:             str = "PLAN_FAILED";        break;
+    case CONTROL_SUCCESS:         str = "CONTROL_SUCCESS";    break;
+    case CONTROL_FAILED:          str = "CONTROL_FAILED";     break;
+    case TOLERANCE_POS:           str = "TOLERANCE_POS";      break;
+    case TOLERANCE_ATT:           str = "TOLERANCE_ATT";      break;
+    case TOLERANCE_VEL:           str = "TOLERANCE_VEL";      break;
+    case TOLERANCE_OMEGA:         str = "TOLERANCE_OMEGA";    break;
+    case OBSTACLE_DETECTED:       str = "OBSTACLE_DETECTED";  break;
+    }
+    NODELET_DEBUG_STREAM("Received event " << str);
+    // Debug state changes
     switch (state) {
-    case STATE::INITIALIZING:
-      NODELET_DEBUG_STREAM("Moving to STATE::INITIALIZING");              break;
-    case STATE::WAITING:
-      NODELET_DEBUG_STREAM("Moving to STATE::WAITING");                   break;
-    case STATE::EXEC_VALIDATING:
-      NODELET_DEBUG_STREAM("Moving to STATE::EXEC_VALIDATING");           break;
-    case STATE::EXEC_BOOTSTRAPPING:
-      NODELET_DEBUG_STREAM("Moving to STATE::EXEC_BOOTSTRAPPING");        break;
-    case STATE::EXEC_CONTROLLING:
-      NODELET_DEBUG_STREAM("Moving to STATE::EXEC_CONTROLLING");          break;
-    case STATE::EXEC_REPLANNING:
-      NODELET_DEBUG_STREAM("Moving to STATE::EXEC_REPLANNING");           break;
-    case STATE::MOVE_PLANNING:
-      NODELET_DEBUG_STREAM("Moving to STATE::MOVE_PLANNING");             break;
-    case STATE::MOVE_CONTROLLING:
-      NODELET_DEBUG_STREAM("Moving to STATE::MOVE_CONTROLLING");          break;
-    case STATE::MOVE_REPLANNING:
-      NODELET_DEBUG_STREAM("Moving to STATE::MOVE_REPLANNING");           break;
-    case STATE::STOP_CONTROLLING:
-      NODELET_DEBUG_STREAM("Moving to STATE::STOP_CONTROLLING");          break;
-    case STATE::IDLE_CONTROLLING:
-      NODELET_DEBUG_STREAM("Moving to STATE::IDLE_CONTROLLING");          break;
+    case STATE::INITIALIZING:     str = "INITIALIZING";       break;
+    case STATE::WAITING_FOR_STOP: str = "WAITING_FOR_STOP";   break;
+    case STATE::WAITING:          str = "WAITING";            break;
+    case STATE::IDLING:           str = "IDLING";             break;
+    case STATE::STOPPING:         str = "STOPPING";           break;
+    case STATE::PREPPING:         str = "PREPPING";           break;
+    case STATE::BOOTSTRAPPING:    str = "BOOTSTRAPPING";      break;
+    case STATE::PLANNING:         str = "PLANNING";           break;
+    case STATE::VALIDATING:       str = "VALIDATING";         break;
+    case STATE::PREPARING:        str = "PREPARING";          break;
+    case STATE::CONTROLLING:      str = "CONTROLLING";        break;
+    case STATE::REPLANNING:       str = "REPLANNING";         break;
+    case STATE::REVALIDATING:     str = "REVALIDATING";       break;
     }
-    state_ = state;
+    NODELET_DEBUG_STREAM("State changed to " << str);
+    // Broadcast the state
+    static ff_msgs::MotionState msg;
+    msg.header.frame_id = GetPlatform();
+    msg.header.stamp = ros::Time::now();
+    msg.state = state;
+    pub_state_.publish(msg);
+    // Send the feedback if needed
+    switch (state) {
+    case STATE::IDLING:
+    case STATE::STOPPING:
+    case STATE::BOOTSTRAPPING:
+    case STATE::PLANNING:
+    case STATE::VALIDATING:
+    case STATE::PREPARING:
+    case STATE::CONTROLLING:
+    case STATE::REPLANNING:
+    case STATE::REVALIDATING: {
+      feedback_.state = msg;
+      server_.SendFeedback(feedback_);
+      break;
+    }
+    default:
+      break;
+    }
   }
 
-  // Assert a fault - katie's fault code handling will eventually go in here
-  void Complete(int32_t response, ff_msgs::ControlProgress const& progress = ff_msgs::ControlProgress()) {
-    // Print some debug info for error events
-    switch (response) {
-    case RESPONSE::ALREADY_THERE:
-      NODELET_DEBUG_STREAM("Already in position");                        break;
-    case RESPONSE::CALCULATED:
-      NODELET_DEBUG_STREAM("Action completed without control");           break;
-    case RESPONSE::SUCCESS:
-      NODELET_DEBUG_STREAM("Action completed with control");              break;
-    case RESPONSE::PREEMPTED:
-      NODELET_DEBUG_STREAM("Preemption occurred");                        break;
-    case RESPONSE::CANCELLED:
-      NODELET_DEBUG_STREAM("Cancellation occurred");                        break;
-    case RESPONSE::COULD_NOT_FIND_CONTROL_ENABLE_SERVICE:
-      NODELET_ERROR_STREAM("Could not find  control enable service");     break;
-    case RESPONSE::COULD_NOT_CALL_CONTROL_ENABLE_SERVICE:
-      NODELET_ERROR_STREAM("Could not call  control enable service");     break;
-    case RESPONSE::ACTION_TIMEOUT_WAITING_FOR_ACTIVE:
-      NODELET_ERROR_STREAM("Timeout on action active");                   break;
-    case RESPONSE::ACTION_TIMEOUT_WAITING_FOR_RESPONSE:
-      NODELET_ERROR_STREAM("Timeout on action response");                 break;
-    case RESPONSE::ACTION_TIMEOUT_WAITING_FOR_DEADLINE:
-      NODELET_ERROR_STREAM("Timeout on action deadline");                 break;
-    case RESPONSE::BAD_STATE_TRANSITION:
-      NODELET_ERROR_STREAM("Bad state transition");                       break;
-    case RESPONSE::OBSTACLE_AND_REPLANNING_DISABLED:
-      NODELET_ERROR_STREAM("Obstacle detected but replanning disabled");  break;
-    case RESPONSE::OBSTACLE_AND_INSUFFICIENT_REPLAN_TIME:
-      NODELET_ERROR_STREAM("Obstacle detected but no time to replan");    break;
-    case RESPONSE::UNAVOIDABLE_COLLISION_DETECTED:
-      NODELET_ERROR_STREAM("Unavoidable obstacle detected");              break;
-    case RESPONSE::NOT_YET_INITIALIZED:
-      NODELET_ERROR_STREAM("Node not yet initialized");                   break;
-    case RESPONSE::WATCH_ACTION_DIED_UNEXPECTEDLY:
-      NODELET_ERROR_STREAM("Watch action died unexpectedly.");            break;
-    case RESPONSE::STOP_CALLED_WITHOUT_CONTROL_ENABLED:
-      NODELET_ERROR_STREAM("Stop called without control enabled");        break;
-    case RESPONSE::IDLE_CALLED_WITHOUT_CONTROL_ENABLED:
-      NODELET_ERROR_STREAM("Idle called without control enabled");        break;
-    case RESPONSE::CONTROL_ENABLE_SERVICE_LOST:
-      NODELET_ERROR_STREAM("The control enable service disappeared");     break;
-    case RESPONSE::NO_FLIGHT_MODE_SPECIFIED:
-      NODELET_ERROR_STREAM("Flight mode not specified");                  break;
-    case RESPONSE::UNEXPECTED_EMPTY_SEGMENT:
-      NODELET_ERROR_STREAM("Unexpected empty segment");                   break;
-    case RESPONSE::CONTROL_FAILED:
-      NODELET_ERROR_STREAM("Control failed");                             break;
-    case RESPONSE::SELECTED_PLANNER_DOES_NOT_EXIST:
-      NODELET_ERROR_STREAM("Planner does not exist");                     break;
-    case RESPONSE::PLANNER_FAILED:
-      NODELET_ERROR_STREAM("Planner failed");                             break;
-    default:
-      break;
-    }
-    // In the case where the current action was either preempted or cancelled, we need to
-    // perform a controlled cleanup of resources before accepting a new goal!
-    switch (response) {
-    case RESPONSE::CANCELLED:
-    case RESPONSE::PREEMPTED:
-      switch (state_) {
-      case STATE::INITIALIZING:
-      case STATE::WAITING:
-      default:
-        break;
-      case STATE::EXEC_VALIDATING:
-        client_v_.CancelGoal();
-        break;
-      case STATE::MOVE_PLANNING:
-      case STATE::EXEC_BOOTSTRAPPING: {
-        std::string planner = cfg_.Get < std::string > ("planner");
-        if (planners_.find(planner) != planners_.end())
-          planners_.at(planner).CancelGoal();
-        break;
-      }
-      case STATE::EXEC_REPLANNING:
-      case STATE::MOVE_REPLANNING: {
-        std::string planner = cfg_.Get < std::string > ("planner");
-        if (planners_.find(planner) != planners_.end())
-          planners_.at(planner).CancelGoal();
-        break;
-      }
-      case STATE::MOVE_CONTROLLING:
-      case STATE::EXEC_CONTROLLING:
-      case STATE::STOP_CONTROLLING:
-      case STATE::IDLE_CONTROLLING:
-        client_c_.CancelGoal();
-        break;
-      }
-    default:
-      break;
-    }
-    // Send a final result to the client
-    switch (state_) {
-    case STATE::INITIALIZING:
-    case STATE::WAITING:
-      break;
-    case STATE::EXEC_VALIDATING:
-    case STATE::EXEC_CONTROLLING:
-    case STATE::EXEC_BOOTSTRAPPING:
-    case STATE::EXEC_REPLANNING: {
-      ff_msgs::ExecuteResult exec_result;
-      exec_result.result.response = response;
-      exec_result.result.state = state_;
-      exec_result.result.progress = progress;
-      exec_result.result.segment = segment_;
-      exec_result.result.flight_mode = flight_mode_;
-      if (response > 0)
-        server_e_.SendResult(ff_util::FreeFlyerActionState::SUCCESS, exec_result);
-      else if (response < 0)
-        server_e_.SendResult(ff_util::FreeFlyerActionState::ABORTED, exec_result);
-      else
-        server_e_.SendResult(ff_util::FreeFlyerActionState::PREEMPTED, exec_result);
-      break;
-    }
-    case STATE::MOVE_PLANNING:
-    case STATE::MOVE_CONTROLLING:
-    case STATE::MOVE_REPLANNING: {
-      ff_msgs::MoveResult move_result;
-      move_result.result.response = response;
-      move_result.result.state = state_;
-      move_result.result.progress = progress;
-      move_result.result.segment = segment_;
-      move_result.result.flight_mode = flight_mode_;
-      if (response > 0)
-        server_m_.SendResult(ff_util::FreeFlyerActionState::SUCCESS, move_result);
-      else if (response < 0)
-        server_m_.SendResult(ff_util::FreeFlyerActionState::ABORTED, move_result);
-      else
-        server_m_.SendResult(ff_util::FreeFlyerActionState::PREEMPTED, move_result);
-      break;
-    }
-    case STATE::STOP_CONTROLLING: {
-      ff_msgs::StopResult stop_result;
-      stop_result.result.response = response;
-      stop_result.result.state = state_;
-      stop_result.result.progress = progress;
-      stop_result.result.flight_mode = flight_mode_;
-      if (response > 0)
-        server_s_.SendResult(ff_util::FreeFlyerActionState::SUCCESS, stop_result);
-      else if (response < 0)
-        server_s_.SendResult(ff_util::FreeFlyerActionState::ABORTED, stop_result);
-      else
-        server_s_.SendResult(ff_util::FreeFlyerActionState::PREEMPTED, stop_result);
-      break;
-    }
-    case STATE::IDLE_CONTROLLING: {
-      ff_msgs::IdleResult idle_result;
-      idle_result.result.response = response;
-      idle_result.result.state = state_;
-      idle_result.result.progress = progress;
-      idle_result.result.flight_mode = flight_mode_;
-      if (response > 0)
-        server_i_.SendResult(ff_util::FreeFlyerActionState::SUCCESS, idle_result);
-      else if (response < 0)
-        server_i_.SendResult(ff_util::FreeFlyerActionState::ABORTED, idle_result);
-      else
-        server_i_.SendResult(ff_util::FreeFlyerActionState::PREEMPTED, idle_result);
-      break;
-    }
-    default:
-      break;
-    }
-    // Safety mechanism: always send a stop event on completion to ensure the platform comes to a halt
-    // SendControl(ff_msgs::ControlCommand::MODE_STOP, "nominal");
-    // Move to a waiting state
-    ChangeState(STATE::WAITING);
-  }
-
-  ///////////////////////// COLLISION CALLBACKS ///////////////////////////////////////
+  // COLLISION
 
   // Called when the sentinel forecasts an upcoming collision
   void CollisionCallback(geometry_msgs::PointStamped::ConstPtr const& point) {
-    NODELET_DEBUG_STREAM("CollisionCallback()");
-    if (!cfg_.Get<double>("enable_collision_checking")) {
-      NODELET_DEBUG_STREAM("Collision checking disabled, so ignoring");
-      return;
-    }
-    switch (state_) {
-    // In a MOVE or EXECUTE state, we want to start replanning
-    case STATE::MOVE_CONTROLLING:
-      ChangeState(STATE::MOVE_REPLANNING);
-    case STATE::MOVE_REPLANNING:
-      break;
-    case STATE::EXEC_CONTROLLING:
-      ChangeState(STATE::EXEC_REPLANNING);
-    case STATE::EXEC_REPLANNING:
-      break;
-    // It's OK to receive watch feedback in wait, stopped and idle states. There's nothing we can do about it.
-    case STATE::STOP_CONTROLLING:
-    case STATE::IDLE_CONTROLLING:
-    case STATE::WAITING:
-      return;
-    // All other states are not valid
-    default:
-      return Complete(RESPONSE::BAD_STATE_TRANSITION);
-    }
-    // Check that we are actually allowing replanning to take place
-    if (!cfg_.Get<bool>("enable_replanning"))
-      return Complete(RESPONSE::OBSTACLE_AND_REPLANNING_DISABLED);
-    // If we get here here it's time to replan - to do so we'll need to pick an exchange point in the future. This
-    // will be the point at which we switch from the old to the new segment. It needs to be far enough away from the
-    // current time to allow planning to be carried out, but not so far that the exchange happens too close to the
-    // point of collision. The 'replan_time_threshold' is a period of time before collision that we consider a safe
-    // buffer for handover. The exchange_point is the index the closest setpoint BEFORE this buffer.
-    ros::Time replan_time_threshold = segment_.back().when - ros::Duration(cfg_.Get<double>("replan_time_buffer"));
-    ff_util::Segment::iterator exchange_point;  // This is the point we'll exchange segments
-    for (exchange_point = segment_.begin(); exchange_point != segment_.end(); exchange_point++)
-      if (exchange_point->when > replan_time_threshold) break;
-    if (exchange_point == segment_.end())
-      return Complete(RESPONSE::OBSTACLE_AND_INSUFFICIENT_REPLAN_TIME);
-    // We might already be replanning, but this new collision detection event happens at an earlier time in the
-    // segment. Perhaps this is because the hazcam picked a new obstacle up. Regardless, for safety we need to
-    // replace our old plan request with a new one.
-    if (exchange_point_ == segment_.end() || exchange_point->when < exchange_point_->when) {
-      // Update the exchange point
-      exchange_point_ = exchange_point;
-      // Create a new planning goal, which will quietly preempt our last goal
-      ff_msgs::PlanGoal plan_goal;
-      geometry_msgs::PoseStamped ps;
-      ps.header.frame_id = "world";
-      ps.header.stamp = exchange_point_->when;
-      ps.pose = exchange_point_->pose;
-      plan_goal.states.push_back(ps);
-      ps.header.frame_id = "world";
-      ps.header.stamp = segment_.back().when;
-      ps.pose = segment_.back().pose;
-      plan_goal.states.push_back(ps);
-      plan_goal.initial_twist = exchange_point->twist;
-      plan_goal.initial_accel = exchange_point->accel;
-      plan_goal.flight_mode = flight_mode_;
-      plan_goal.faceforward = cfg_.Get<bool>("enable_faceforward");
-      plan_goal.desired_vel = cfg_.Get<double>("desired_vel");
-      plan_goal.desired_accel = cfg_.Get<double>("desired_accel");
-      plan_goal.desired_omega = cfg_.Get<double>("desired_omega");
-      plan_goal.desired_alpha = cfg_.Get<double>("desired_alpha");
-      plan_goal.desired_rate = cfg_.Get<double>("desired_rate");
-      plan_goal.max_time = exchange_point->when - ros::Time::now();
-      if (ros::Duration(cfg_.Get<double>("min_plan_time")) > plan_goal.max_time) {
-        Complete(RESPONSE::OBSTACLE_AND_INSUFFICIENT_REPLAN_TIME);
-      }
-      // Send off the new replan goal
-      std::string planner = cfg_.Get < std::string > ("planner");
-      if (planners_.find(planner) != planners_.end()) {
-        planners_[planner].SetDeadlineTimeout(plan_goal.max_time.toSec());
-        planners_[planner].SendGoal(plan_goal);
-      } else {
-        Complete(RESPONSE::SELECTED_PLANNER_DOES_NOT_EXIST);
-      }
-    }
-  }
-
-  /////////////////////// ACTION CLIENT CALLBACKS /////////////////////////////////////
-
-  // Ensure all clients are connected
-  void ConnectedCallback() {
-    NODELET_DEBUG_STREAM("ConnectedCallback()");
-    if (!client_c_.IsConnected()) return;       // Control action
-    if (!client_v_.IsConnected()) return;       // Validate action
-    if (!client_t_.IsConnected()) return;       // Toggle service
-    if (state_ != STATE::INITIALIZING) return;  // Prevent multiple calls
-    // Only get here if all four clients are connected
-    ChangeState(STATE::WAITING);
-    // Send an empty reconfigure to enable control
-    ToggleControl(cfg_.Get<bool>("enable_control"));
-  }
-
-  // Timeout on a trajectory generation request
-  void ServiceTimeoutCallback(void) {
-    NODELET_DEBUG_STREAM("ServiceTimeoutCallback()");
-    // Complete any action underway and transition to the initializing state
-    Complete(RESPONSE::CONTROL_ENABLE_SERVICE_LOST);
-    // Only get here if all four clients are connected
-    ChangeState(STATE::INITIALIZING);
-  }
-
-  // PLAN
-
-  void PFeedbackCallback(ff_msgs::PlanFeedbackConstPtr const& feedback) {
-    NODELET_DEBUG_STREAM("PFeedbackCallback()");
-    switch (state_) {
-    case STATE::MOVE_REPLANNING:
-    case STATE::MOVE_PLANNING: {
-      ff_msgs::MoveFeedback move_feedback;
-      move_feedback.progress.state = state_;
-      move_feedback.progress.perc_complete = feedback->perc_complete;
-      move_feedback.progress.secs_remaining = feedback->secs_remaining;
-      server_m_.SendFeedback(move_feedback);
-      }
-      break;
-    case STATE::EXEC_BOOTSTRAPPING:
-    case STATE::EXEC_REPLANNING: {
-      ff_msgs::ExecuteFeedback exec_feedback;
-      exec_feedback.progress.state = state_;
-      exec_feedback.progress.perc_complete = feedback->perc_complete;
-      exec_feedback.progress.secs_remaining = feedback->secs_remaining;
-      server_e_.SendFeedback(exec_feedback);
-      }
-      break;
-    default:
-      return Complete(RESPONSE::BAD_STATE_TRANSITION);
-    }
-  }
-
-  void PResultCallback(ff_util::FreeFlyerActionState::Enum result_code, ff_msgs::PlanResultConstPtr const& result) {
-    NODELET_DEBUG_STREAM("PResultCallback(" << result_code << ")");
-    switch (result_code) {
-    default:
-    case ff_util::FreeFlyerActionState::ABORTED: {
-      std::string err;
-      switch (result->response) {
-      case ff_msgs::PlanResult::CANCELLED:                      err  = "CANCELLED";                       break;
-      case ff_msgs::PlanResult::SUCCESS:                        err  = "SUCCESS";                         break;
-      case ff_msgs::PlanResult::PREEMPTED:                      err  = "PREEMPTED";                       break;
-      case ff_msgs::PlanResult::NOT_ENOUGH_STATES:              err  = "NOT_ENOUGH_STATES";               break;
-      case ff_msgs::PlanResult::OBSTACLES_NOT_SUPPORTED:        err  = "OBSTACLES_NOT_SUPPORTED";         break;
-      case ff_msgs::PlanResult::BAD_STATE_TRANSITION:           err  = "BAD_STATE_TRANSITION";            break;
-      case ff_msgs::PlanResult::BAD_DESIRED_VELOCITY:           err  = "BAD_DESIRED_VELOCITY";            break;
-      case ff_msgs::PlanResult::BAD_DESIRED_ACCELERATION:       err  = "BAD_DESIRED_ACCELERATION";        break;
-      case ff_msgs::PlanResult::BAD_DESIRED_OMEGA:              err  = "BAD_DESIRED_OMEGA";               break;
-      case ff_msgs::PlanResult::BAD_DESIRED_ALPHA:              err  = "BAD_DESIRED_ALPHA";               break;
-      case ff_msgs::PlanResult::BAD_DESIRED_RATE:               err  = "BAD_DESIRED_RATE";                break;
-      case ff_msgs::PlanResult::CANNOT_LOAD_FLIGHT_DATA:        err  = "CANNOT_LOAD_FLIGHT_DATA";         break;
-      case ff_msgs::PlanResult::CANNOT_LOAD_GENERAL_CONFIG:     err  = "CANNOT_LOAD_GENERAL_CONFIG";      break;
-      case ff_msgs::PlanResult::NO_PATH_EXISTS:                 err  = "NO_PATH_EXISTS";                  break;
-      case ff_msgs::PlanResult::PROBLEM_CONNECTING_TO_SERVICES: err  = "PROBLEM_CONNECTING_TO_SERVICES";  break;
-      default: break;
-      }
-      NODELET_WARN_STREAM("Plan error: " << err);
-      return Complete(RESPONSE::PLANNER_FAILED);
-    }
-    case ff_util::FreeFlyerActionState::PREEMPTED:
-      return Complete(RESPONSE::PREEMPTED);
-    case ff_util::FreeFlyerActionState::SUCCESS:
-      break;
-    }
-    // We only get here if we successfully generated a segment. What we do with this segment is now up to the state
-    // we are currently in. For example, if we are replanning, we need to capture and merge segments.
-    switch (state_) {
-    case STATE::EXEC_PLANNING:
-    case STATE::EXEC_REPLANNING:
-    case STATE::MOVE_REPLANNING: {
-      ros::Duration shift = result->segment.back().when - segment_.front().when;
-      for (ff_util::Segment::iterator it = segment_.begin(); it != segment_.end(); it++)
-        it->when += shift;
-      segment_.insert(segment_.begin(), result->segment.begin(), result->segment.end());
-      switch (state_) {
-      case STATE::EXEC_REPLANNING: ChangeState(STATE::EXEC_CONTROLLING); break;
-      case STATE::MOVE_REPLANNING: ChangeState(STATE::MOVE_CONTROLLING); break;
-      }
-      if (!SendControl(ff_msgs::ControlCommand::MODE_NOMINAL, result->flight_mode, result->segment))
-        return Complete(RESPONSE::CALCULATED);
-      return;
-    }
-    case STATE::EXEC_BOOTSTRAPPING:
-    case STATE::MOVE_PLANNING:
-      ChangeState(STATE::MOVE_CONTROLLING);
-      if (!SendControl(ff_msgs::ControlCommand::MODE_NOMINAL, result->flight_mode, result->segment))
-        return Complete(RESPONSE::CALCULATED);
-      break;
-    default:
-      return Complete(RESPONSE::BAD_STATE_TRANSITION);
-    }
+    obstacle_ = *point;
+    return fsm_.Update(OBSTACLE_DETECTED);
   }
 
   // VALIDATE
 
+  // Validate the current working segment and flight mode
+  bool Validate(ff_util::Segment const& segment) {
+    static ff_msgs::ValidateGoal goal;
+    goal.flight_mode = flight_mode_;
+    goal.faceforward = cfg_.Get<bool>("enable_faceforward");
+    goal.segment = segment;
+    goal.max_time = ros::Duration(
+      cfg_.Get<double>("timeout_validate_deadline"));
+    client_v_.SetDeadlineTimeout(
+      cfg_.Get<double>("timeout_validate_deadline"));
+    return client_v_.SendGoal(goal);
+  }
+
+  // Validate feedback -- forward to the motion state
   void VFeedbackCallback(ff_msgs::ValidateFeedbackConstPtr const& feedback) {
-    NODELET_DEBUG_STREAM_THROTTLE(1.0, "VFeedbackCallback()");
-    switch (state_) {
-    case STATE::EXEC_VALIDATING: {
-      ff_msgs::MoveFeedback move_feedback;
-      move_feedback.progress.state = state_;
-      move_feedback.progress.perc_complete = feedback->perc_complete;
-      move_feedback.progress.secs_remaining = feedback->secs_remaining;
-      server_m_.SendFeedback(move_feedback);
-      }
-      break;
+    switch (fsm_.GetState()) {
+    case STATE::VALIDATING:
+    case STATE::REVALIDATING:
+      feedback_.perc_complete = feedback->perc_complete;
+      feedback_.secs_remaining = feedback->secs_remaining;
+      return server_.SendFeedback(feedback_);
     default:
-      return Complete(RESPONSE::BAD_STATE_TRANSITION);
+      break;
     }
   }
 
-  void VResultCallback(ff_util::FreeFlyerActionState::Enum result_code, ff_msgs::ValidateResultConstPtr const& result) {
-    NODELET_DEBUG_STREAM("VResultCallback(" << result_code << ")");
-    switch (state_) {
-    case STATE::EXEC_VALIDATING:
-      break;
-    default:
-      return Complete(RESPONSE::BAD_STATE_TRANSITION);
-    }
-    // We only get here if we are in a possition to accept this response
+  // Validate result  - trigger a FSM update
+  void VResultCallback(ff_util::FreeFlyerActionState::Enum result_code,
+    ff_msgs::ValidateResultConstPtr const& result) {
     switch (result_code) {
     case ff_util::FreeFlyerActionState::SUCCESS:
-      ChangeState(STATE::EXEC_CONTROLLING);
-      if (!SendControl(ff_msgs::ControlCommand::MODE_NOMINAL, result->flight_mode, result->segment))
-        return Complete(RESPONSE::CALCULATED);
-      break;
+      segment_ = result->segment;
+      return fsm_.Update(VALIDATE_SUCCESS);
     default:
-      return Complete(RESPONSE::VALIDATE_FAILED);
+      return fsm_.Update(VALIDATE_FAILED);
     }
+  }
+
+  // PLAN
+
+  // Initiate the planning of a segment
+  bool Plan(std::vector<geometry_msgs::PoseStamped> const& states,
+    ros::Duration duration = ros::Duration(0)) {
+    // Divide by a constant in holonomic mode to avoid saturation
+    double divider = 1;
+    if (!cfg_.Get<bool>("enable_faceforward") && flight_mode_.hard_divider > 0)
+      divider = flight_mode_.hard_divider;
+    // Package up a skeleton plan request
+    static ff_msgs::PlanGoal plan_goal;
+    plan_goal.states = states;
+    plan_goal.faceforward = cfg_.Get<bool>("enable_faceforward");
+    plan_goal.desired_vel = cfg_.Get<double>("desired_vel");
+    plan_goal.desired_accel = cfg_.Get<double>("desired_accel") / divider;
+    plan_goal.desired_omega = cfg_.Get<double>("desired_omega");
+    plan_goal.desired_alpha = cfg_.Get<double>("desired_alpha") / divider;
+    plan_goal.desired_rate = cfg_.Get<double>("desired_rate");
+    // Check desired velocity
+    if (plan_goal.desired_vel < 0)
+      plan_goal.desired_vel = flight_mode_.hard_limit_vel;
+    else if (plan_goal.desired_vel > flight_mode_.hard_limit_vel)
+      return false;
+    // Check deesired acceleration
+    if (plan_goal.desired_accel < 0)
+      plan_goal.desired_accel = flight_mode_.hard_limit_accel / divider;
+    else if (plan_goal.desired_accel > flight_mode_.hard_limit_accel / divider)
+      return false;
+    // Check desired omega
+    if (plan_goal.desired_omega < 0)
+      plan_goal.desired_omega = flight_mode_.hard_limit_omega;
+    else if (plan_goal.desired_omega > flight_mode_.hard_limit_omega)
+      return false;
+    // Check  desired alpha
+    if (plan_goal.desired_alpha < 0)
+      plan_goal.desired_alpha = flight_mode_.hard_limit_alpha / divider;
+    else if (plan_goal.desired_alpha > flight_mode_.hard_limit_alpha / divider)
+      return false;
+    // Check control frequency
+    if (plan_goal.desired_rate < 0)
+      plan_goal.desired_rate = ff_util::FlightUtil::MIN_CONTROL_RATE;
+    else if (plan_goal.desired_rate < ff_util::FlightUtil::MIN_CONTROL_RATE)
+      return false;
+    // Make sure we communicate the maximum allowed time to the planner
+    if (duration > ros::Duration(0))
+      plan_goal.max_time = duration;
+    else
+      plan_goal.max_time = ros::Duration(
+        cfg_.Get<double>("timeout_plan_deadline"));
+    // Find and send to the planner
+    std::string planner = cfg_.Get<std::string>("planner");
+    if (planners_.find(planner) != planners_.end()) {
+      planners_[planner].SetDeadlineTimeout(plan_goal.max_time.toSec());
+      return planners_[planner].SendGoal(plan_goal);
+    }
+    // Planner does not exist
+    NODELET_WARN_STREAM("Planner does not exist");
+    return false;
+  }
+
+  // Planner feedback - simply forward to motion feeedback
+  void PFeedbackCallback(ff_msgs::PlanFeedbackConstPtr const& feedback) {
+    switch (fsm_.GetState()) {
+    case STATE::BOOTSTRAPPING:
+    case STATE::PLANNING:
+    case STATE::REPLANNING:
+      feedback_.perc_complete = feedback->perc_complete;
+      feedback_.secs_remaining = feedback->secs_remaining;
+      return server_.SendFeedback(feedback_);
+    default:
+      break;
+    }
+  }
+
+  // Planner result -- trigger an update to the FSM
+  void PResultCallback(ff_util::FreeFlyerActionState::Enum result_code,
+    ff_msgs::PlanResultConstPtr const& result) {
+    if (result_code ==  ff_util::FreeFlyerActionState::SUCCESS) {
+      switch (fsm_.GetState()) {
+      // If the result from the boostrap is ALREADY_THERE, then we expect
+      // the segment to be empty / invalid. So, only in the case where we
+      // actually have a boostrapped move to prepend to the segment, do so.
+      case STATE::BOOTSTRAPPING:
+        if (result->response == ff_msgs::PlanResult::SUCCESS) {
+          ros::Duration tdiff = result->segment.back().when
+                              - segment_.front().when;
+          for (ff_util::Segment::iterator it = segment_.begin();
+            it != segment_.end(); it++) it->when += tdiff;
+          segment_.insert(segment_.begin(),
+            result->segment.begin(), result->segment.end());
+        }
+        break;
+      // For the case of planning or replanning, just copy over the segment.
+      case STATE::PLANNING:
+      case STATE::REPLANNING:
+        segment_ = result->segment;
+      default:
+        break;
+      }
+      return fsm_.Update(PLAN_SUCCESS);
+    }
+    return fsm_.Update(PLAN_FAILED);
+  }
+
+  // SPEED
+
+  // Send the flight mode out to subscribers
+  bool FlightMode() {
+    pub_flight_mode_.publish(flight_mode_);
+    if (prep_required_) {
+      timer_speed_.start();
+      timer_feedback_.start();
+      return true;
+    }
+    return false;
+  }
+
+  // Called when the sentinel forecasts an upcoming collision
+  void PmcStateCallback(ff_hw_msgs::PmcState::ConstPtr const& msg) {
+    bool ready = true;
+    for (size_t i = 0; i < msg->states.size() && ready; i++)
+      ready &= (msg->states[i] == ff_hw_msgs::PmcState::READY);
+    if (!ready)
+      return;
+    timer_speed_.stop();
+    timer_feedback_.stop();
+    return fsm_.Update(PMC_READY);
+  }
+
+  // Called if the prep fails
+  void PmcTimeout(const ros::TimerEvent&) {
+    return fsm_.Update(PMC_TIMEOUT);
+  }
+
+  // Called to fake feedback to executive during a prep
+  void FeedbackCallback(const ros::TimerEvent&) {
+    return server_.SendFeedback(feedback_);
   }
 
   // CONTROL
 
-  void CFeedbackCallback(ff_msgs::ControlFeedbackConstPtr const& feedback) {
-    NODELET_DEBUG_STREAM_THROTTLE(1.0, "CFeedbackCallback()");
-    switch (state_) {
-    case STATE::STOP_CONTROLLING: {
-      ff_msgs::StopFeedback stop_feedback;
-      stop_feedback.progress.state = state_;
-      stop_feedback.progress.control = feedback->progress;
-      server_s_.SendFeedback(stop_feedback);
-      break;
-    }
-    case STATE::IDLE_CONTROLLING: {
-      ff_msgs::IdleFeedback idle_feedback;
-      idle_feedback.progress.state = state_;
-      idle_feedback.progress.control = feedback->progress;
-      server_i_.SendFeedback(idle_feedback);
-      break;
-    }
-    case STATE::MOVE_CONTROLLING: {
-      ff_msgs::MoveFeedback move_feedback;
-      move_feedback.progress.state = state_;
-      move_feedback.progress.control = feedback->progress;
-      server_m_.SendFeedback(move_feedback);
-      break;
-    }
-    case STATE::EXEC_BOOTSTRAPPING:
-      ChangeState(STATE::EXEC_CONTROLLING);
-    case STATE::EXEC_CONTROLLING: {
-      ff_msgs::ExecuteFeedback exec_feedback;
-      exec_feedback.progress.state = state_;
-      exec_feedback.progress.control = feedback->progress;
-      server_e_.SendFeedback(exec_feedback);
-      break;
-    }
-    // Ignore the control feedback when replanning is underway
-    case STATE::MOVE_REPLANNING:
-    case STATE::EXEC_REPLANNING:
-      break;
-    // All other states are not valid
+  // Send specific control
+  bool Control(ControlType type,
+    ff_util::Segment const& segment = ff_util::Segment()) {
+    // Package and send the segment to control
+    ff_msgs::ControlGoal goal;
+    switch (type) {
     default:
-      return Complete(RESPONSE::BAD_STATE_TRANSITION);
+      return false;
+    case STOP: goal.command = ff_msgs::ControlGoal::STOP; break;
+    case IDLE: goal.command = ff_msgs::ControlGoal::IDLE; break;
+    case NOMINAL:
+      // No point in executing an empty segment
+      if (segment.empty())
+        return false;
+      // Populate the basics
+      goal.command = ff_msgs::ControlGoal::NOMINAL;
+      goal.segment = segment;
+      // If enable immediate is turned on, then shift the setpoint timestamps
+      //  so that the first setpoint conincides with the current time.
+      ros::Time reftime = goal.segment.front().when;
+      if (cfg_.Get<bool>("enable_immediate"))
+        reftime = ros::Time::now();
+      if (cfg_.Get<bool>("enable_timesync")) {
+        reftime.sec += cfg_.Get<int>("discrete_time_unit");
+        reftime.sec += reftime.sec % cfg_.Get<int>("discrete_time_unit");
+        reftime.nsec = 0;
+      }
+      // Calculate the difference
+      ros::Duration diff = reftime - goal.segment.front().when;
+      NODELET_DEBUG_STREAM("Time shift:" << diff);
+      // Now shift the timestamps are all setpoints accordingly
+      for (ff_util::Segment::iterator it = goal.segment.begin();
+        it != goal.segment.end(); it++) it->when += diff;
+      // We are now ready to execute the segment
+      break;
+    }
+    // Send the goal
+    if (!client_c_.SendGoal(goal))
+      return false;
+    // Publish the segment to rviz for user introspection
+    nav_msgs::Path path;
+    path.header.stamp = ros::Time::now();
+    path.header.frame_id = "world";
+    path.poses.reserve(goal.segment.size());
+    geometry_msgs::PoseStamped ps;
+    ps.header = path.header;
+    for (ff_util::Segment::iterator it = goal.segment.begin();
+      it != goal.segment.end(); it++) {
+      ps.header.stamp = it->when;
+      ps.pose = it->pose;
+      path.poses.push_back(ps);
+    }
+    pub_segment_.publish(path);
+    // Success!
+    return true;
+  }
+
+  // Control feedback - simple pass through for control -> feedback
+  void CFeedbackCallback(ff_msgs::ControlFeedbackConstPtr const& feedback) {
+    switch (fsm_.GetState()) {
+    // Perform tolerance checking while controling
+    case STATE::CONTROLLING:
+      if (flight_mode_.tolerance_pos > 0.0 &&
+          feedback->error_position > flight_mode_.tolerance_pos) {
+        NODELET_WARN_STREAM("Position tolerance violated");
+        NODELET_WARN_STREAM("- Value: " << feedback->error_position
+                                        << ", Thresh: "
+                                        << flight_mode_.tolerance_pos);
+        fsm_.Update(TOLERANCE_POS);
+        return;
+      }
+      // Check attitude tolerance
+      if (flight_mode_.tolerance_att > 0.0 &&
+          feedback->error_attitude > flight_mode_.tolerance_att) {
+        NODELET_WARN_STREAM("Attitude tolerance violated");
+        NODELET_WARN_STREAM("- Value: " << feedback->error_attitude
+                                        << ", Thresh: "
+                                        << flight_mode_.tolerance_att);
+        fsm_.Update(TOLERANCE_ATT);
+        return;
+      }
+      // Check velocity tolerance
+      if (flight_mode_.tolerance_vel > 0.0 &&
+          feedback->error_velocity > flight_mode_.tolerance_vel) {
+        NODELET_WARN_STREAM("Velocity tolerance violated");
+        NODELET_WARN_STREAM("- Value: " << feedback->error_velocity
+                                        << ", Thresh: "
+                                        << flight_mode_.tolerance_vel);
+        fsm_.Update(TOLERANCE_VEL);
+        return;
+      }
+      // Check angular velocity tolerance
+      if (flight_mode_.tolerance_omega > 0.0 &&
+          feedback->error_omega > flight_mode_.tolerance_omega) {
+        NODELET_WARN_STREAM("Angular velocity tolerance violated");
+        NODELET_WARN_STREAM("- Value: " << feedback->error_omega
+                                        << ", Thresh: "
+                                        << flight_mode_.tolerance_omega);
+        fsm_.Update(TOLERANCE_OMEGA);
+        return;
+      }
+    // Send progress in stopping/idling
+    case STATE::STOPPING:
+    case STATE::IDLING:
+      feedback_.progress = *feedback;
+      return server_.SendFeedback(feedback_);
+    default:
+      break;
     }
   }
 
-  void CResultCallback(ff_util::FreeFlyerActionState::Enum result_code, ff_msgs::ControlResultConstPtr const& result) {
-    NODELET_DEBUG_STREAM("CResultCallback(" << result_code << ")");
+  // Control result
+  void CResultCallback(ff_util::FreeFlyerActionState::Enum result_code,
+    ff_msgs::ControlResultConstPtr const& result) {
     switch (result_code) {
     case ff_util::FreeFlyerActionState::SUCCESS:
-      return Complete(RESPONSE::SUCCESS, result->progress);
-    case ff_util::FreeFlyerActionState::ABORTED:
-      switch (result->response) {
-      case ff_msgs::ControlResult::TOLERANCE_VIOLATION_POSITION:
-      case ff_msgs::ControlResult::TOLERANCE_VIOLATION_VELOCITY:
-      case ff_msgs::ControlResult::TOLERANCE_VIOLATION_ATTITUDE:
-      case ff_msgs::ControlResult::TOLERANCE_VIOLATION_OMEGA:
-        if (state_ == STATE::EXEC_BOOTSTRAPPING) {
-          if (!cfg_.Get<bool>("enable_bootstrapping"))
-            return Complete(RESPONSE::NOT_ON_FIRST_POSE);
-          // Check that we can query the current robot pose
-          geometry_msgs::PoseStamped current_pose;
-          if (!GetWorldPose(current_pose))
-            return Complete(RESPONSE::CANNOT_QUERY_ROBOT_POSE);
-          // Check that we can query the current robot pose
-          geometry_msgs::PoseStamped first_pose;
-          first_pose.header.stamp = segment_.front().when;
-          first_pose.pose = segment_.front().pose;
-          // Update the system state
-          ChangeState(STATE::EXEC_PLANNING);
-              // Send off a planning request
-          ff_msgs::PlanGoal plan_goal;
-          plan_goal.states.push_back(current_pose);
-          plan_goal.states.push_back(first_pose);
-          plan_goal.flight_mode = flight_mode_;
-          plan_goal.faceforward = cfg_.Get<bool>("enable_faceforward");
-          plan_goal.desired_vel = cfg_.Get<double>("desired_vel");
-          plan_goal.desired_accel = cfg_.Get<double>("desired_accel");
-          plan_goal.desired_omega = cfg_.Get<double>("desired_omega");
-          plan_goal.desired_alpha = cfg_.Get<double>("desired_alpha");
-          plan_goal.desired_rate = cfg_.Get<double>("desired_rate");
-          plan_goal.max_time = ros::Duration(cfg_.Get<double>("timeout_plan_deadline"));
-          // Pick a planner and go for it!
-          std::string planner = cfg_.Get < std::string > ("planner");
-          if (planners_.find(planner) != planners_.end()) {
-            planners_[planner].SetDeadlineTimeout(cfg_.Get<double>("timeout_plan_deadline"));
-            planners_[planner].SendGoal(plan_goal);
-          } else {
-            Complete(RESPONSE::SELECTED_PLANNER_DOES_NOT_EXIST);
-          }
-          return;
-        }
-      default:
-        break;
-      }
+      segment_ = result->segment;
+      return fsm_.Update(CONTROL_SUCCESS);
     default:
-      return Complete(RESPONSE::CONTROL_FAILED);
+      return fsm_.Update(CONTROL_FAILED);
     }
   }
 
-  /////////////////////// ACTION SERVICE CALLBACKS ////////////////////////////////////
+  // MOTION ACTION SERVER
 
-  // EXEC
-
-  // A new execute goal arrives asynchronously
-  void EGoalCallback(ff_msgs::ExecuteGoalConstPtr const& execute_goal) {
-    NODELET_DEBUG_STREAM("EGoalCallback()");
-    switch (state_) {
-    default:
-      Complete(RESPONSE::PREEMPTED);
-    case STATE::WAITING: {
-      // Cover special cases where not enough info has been provided by the user
-      if (execute_goal->flight_mode.empty())
-        return Complete(RESPONSE::NO_FLIGHT_MODE_SPECIFIED);
-      if (execute_goal->segment.empty())
-        return Complete(RESPONSE::UNEXPECTED_EMPTY_SEGMENT);
-      // Zach's planner in GDS (as well as other planners) do not respect the minimum
-      // control period required by GNC. This segment of code numerically resamples
-      // the input segment to ensure that it passes validation!
-      ff_util::Segment resampled;
-      ff_util::SegmentResult ret = ff_util::SegmentUtil::Resample(execute_goal->segment, resampled);
-      if (ret != ff_util::SUCCESS)
-        return Complete(RESPONSE::COULD_NOT_RESAMPLE);
-      // Switch to validation state
-      ChangeState(STATE::EXEC_VALIDATING);
-      // Now, send off a validation query to the mapper
-      ff_msgs::ValidateGoal validate_goal;
-      validate_goal.segment = resampled;
-      validate_goal.flight_mode = execute_goal->flight_mode;
-      validate_goal.max_time = ros::Duration(cfg_.Get<double>("timeout_validate_deadline"));
-      client_v_.SetDeadlineTimeout(cfg_.Get<double>("timeout_validate_deadline"));
-      client_v_.SendGoal(validate_goal);
+  // A new arm action has been called
+  void GoalCallback(ff_msgs::MotionGoalConstPtr const& goal) {
+    ff_msgs::MotionResult result;
+    // We can only accept new commands if we are currently in an idle state.
+    // This should be the case if Preempt() was called beforehand -- as it
+    // should be automatically -- in the case of preemption.
+    if (fsm_.GetState() != STATE::WAITING) {
+      result.response = RESPONSE::NOT_IN_WAITING_MODE;
+      server_.SendResult(ff_util::FreeFlyerActionState::ABORTED, result);
       return;
     }
-    case STATE::INITIALIZING:
-      return Complete(RESPONSE::NOT_YET_INITIALIZED);
-    }
-  }
-
-  // MOVE
-
-  // A new move  goal arrives asynchronously
-  void MGoalCallback(ff_msgs::MoveGoalConstPtr const& move_goal) {
-    NODELET_DEBUG_STREAM("MGoalCallback()");
-    switch (state_) {
-    default:
-      Complete(RESPONSE::PREEMPTED);
-    case STATE::WAITING: {
-      // Cover a special case where not enough info
-      if (move_goal->flight_mode.empty())
-        return Complete(RESPONSE::NO_FLIGHT_MODE_SPECIFIED);
-      if (move_goal->states.empty())
-        return Complete(RESPONSE::UNEXPECTED_EMPTY_SEGMENT);
-      // Check that we can query the current robot pose
-      geometry_msgs::PoseStamped current_pose;
-      if (!GetWorldPose(current_pose))
-        return Complete(RESPONSE::CANNOT_QUERY_ROBOT_POSE);
-      // Update the system state
-      ChangeState(STATE::MOVE_PLANNING);
-      // Send off a planning request
-      ff_msgs::PlanGoal plan_goal;
-      plan_goal.states = move_goal->states;
-      plan_goal.states.insert(plan_goal.states.begin(), current_pose);
-      plan_goal.flight_mode = move_goal->flight_mode;
-      plan_goal.faceforward = cfg_.Get<bool>("enable_faceforward");
-      plan_goal.desired_vel = cfg_.Get<double>("desired_vel");
-      plan_goal.desired_accel = cfg_.Get<double>("desired_accel");
-      plan_goal.desired_omega = cfg_.Get<double>("desired_omega");
-      plan_goal.desired_alpha = cfg_.Get<double>("desired_alpha");
-      plan_goal.desired_rate = cfg_.Get<double>("desired_rate");
-      plan_goal.max_time = ros::Duration(cfg_.Get<double>("timeout_plan_deadline"));
-      // Pick a planner and go for it!
-      std::string planner = cfg_.Get < std::string > ("planner");
-      if (planners_.find(planner) != planners_.end()) {
-        planners_[planner].SetDeadlineTimeout(cfg_.Get<double>("timeout_plan_deadline"));
-        planners_[planner].SendGoal(plan_goal);
-      } else {
-        Complete(RESPONSE::SELECTED_PLANNER_DOES_NOT_EXIST);
+    // If the specified flight mode string is empty then we wont try and
+    // change the flight mode from what it currently is.
+    prep_required_ = false;
+    if (!goal->flight_mode.empty()) {
+      uint8_t old_gain = flight_mode_.speed;
+      if (!ff_util::FlightUtil::GetFlightMode(
+        flight_mode_, goal->flight_mode)) {
+        result.response = RESPONSE::INVALID_FLIGHT_MODE;
+        server_.SendResult(ff_util::FreeFlyerActionState::ABORTED, result);
+        return;
       }
-      return;
+      prep_required_ = (old_gain != flight_mode_.speed);
     }
-    case STATE::INITIALIZING:
-      return Complete(RESPONSE::NOT_YET_INITIALIZED);
-    }
-  }
-
-  // STOP
-
-  // A new move  goal arrives asynchronously
-  void SGoalCallback(ff_msgs::StopGoalConstPtr const& stop_goal) {
-    NODELET_DEBUG_STREAM("SGoalCallback()");
-    switch (state_) {
+    // What we do now depends on the command that was sent
+    switch (goal->command) {
+    case ff_msgs::MotionGoal::STOP:
+      NODELET_DEBUG_STREAM("Received new STOP command");
+      return fsm_.Update(GOAL_STOP);
+    case ff_msgs::MotionGoal::IDLE:
+      NODELET_DEBUG_STREAM("Received new IDLE command");
+      return fsm_.Update(GOAL_IDLE);
+    case ff_msgs::MotionGoal::PREP:
+      NODELET_DEBUG_STREAM("Received new PREP command");
+      return fsm_.Update(GOAL_PREP);
+    case ff_msgs::MotionGoal::EXEC:
+      NODELET_DEBUG_STREAM("Received new EXEC command");
+      // We need a valid segment to execute
+      if (goal->segment.empty()) {
+        result.response = RESPONSE::UNEXPECTED_EMPTY_SEGMENT;
+        server_.SendResult(ff_util::FreeFlyerActionState::ABORTED, result);
+        return;
+      }
+      // Zach's planner in GDS (as well as other planners) do not respect
+      // the minimum control period required by GNC. This segment of code
+      // numerically resamples the input segment, so control accepts it.
+      if (ff_util::FlightUtil::Resample(goal->segment, segment_)
+        != ff_util::SUCCESS) {
+        result.response = RESPONSE::COULD_NOT_RESAMPLE;
+        server_.SendResult(ff_util::FreeFlyerActionState::ABORTED, result);
+        return;
+      }
+      // We can now start the execute process
+      return fsm_.Update(GOAL_EXEC);
+    case ff_msgs::MotionGoal::MOVE:
+      // We need valid states to move through
+      if (goal->states.empty()) {
+        result.response = RESPONSE::UNEXPECTED_EMPTY_STATES;
+        server_.SendResult(ff_util::FreeFlyerActionState::ABORTED, result);
+        return;
+      }
+      // Save the states
+      states_ = goal->states;
+      // Start the move
+      return fsm_.Update(GOAL_MOVE);
     default:
-      Complete(RESPONSE::PREEMPTED);
-    case STATE::WAITING: {
-      if (!SendControl(ff_msgs::ControlCommand::MODE_STOP, "nominal"))
-        return Complete(RESPONSE::STOP_CALLED_WITHOUT_CONTROL_ENABLED);
-      return ChangeState(STATE::STOP_CONTROLLING);
+      break;
     }
-    case STATE::INITIALIZING:
-      return Complete(RESPONSE::NOT_YET_INITIALIZED);
-    }
+    // A catch-all for any mistakenly unhandled commands
+    result.response = RESPONSE::INVALID_COMMAND;
+    server_.SendResult(ff_util::FreeFlyerActionState::ABORTED, result);
   }
 
-  // IDLE
-
-  // A new move  goal arrives asynchronously
-  void IGoalCallback(ff_msgs::IdleGoalConstPtr const& idle_goal) {
-    NODELET_DEBUG_STREAM("IGoalCallback()");
-    switch (state_) {
-    default:
-      Complete(RESPONSE::PREEMPTED);
-    case STATE::WAITING: {
-      if (!SendControl(ff_msgs::ControlCommand::MODE_IDLE, "nominal"))
-        return Complete(RESPONSE::IDLE_CALLED_WITHOUT_CONTROL_ENABLED);
-      return ChangeState(STATE::IDLE_CONTROLLING);
-    }
-    case STATE::INITIALIZING:
-      return Complete(RESPONSE::NOT_YET_INITIALIZED);
-    }
+  // Preempt the current action with a new action
+  void PreemptCallback() {
+    return fsm_.Update(GOAL_CANCEL);
   }
 
-  void PreemptCallback(void) {
-    NODELET_DEBUG_STREAM("PreemptCallback()");
-    return Complete(RESPONSE::PREEMPTED);
-  }
-
-  void CancelCallback(void) {
-    NODELET_DEBUG_STREAM("CancelCallback()");
-    return Complete(RESPONSE::CANCELLED);
+  // A Cancellation request arrives
+  void CancelCallback() {
+    return fsm_.Update(GOAL_CANCEL);
   }
 
  private:
-  int8_t state_;                                                          // State
-  tf2_ros::Buffer tf_buffer_;                                             // TF2 buffer
-  std::shared_ptr<tf2_ros::TransformListener> tf_listener_;               // TF2 listener
-  ff_util::FreeFlyerActionClient < ff_msgs::ControlAction > client_c_;    // gnc::control
-  ff_util::FreeFlyerActionClient < ff_msgs::ValidateAction > client_v_;   // mapper::validate
-  ff_util::FreeFlyerActionServer < ff_msgs::ExecuteAction > server_e_;    // mobility::execute
-  ff_util::FreeFlyerActionServer < ff_msgs::MoveAction > server_m_;       // mobility::move
-  ff_util::FreeFlyerActionServer < ff_msgs::StopAction > server_s_;       // mobility::stop
-  ff_util::FreeFlyerActionServer < ff_msgs::IdleAction > server_i_;       // mobility::idle
-  ff_util::FreeFlyerServiceClient < ff_msgs::SetBool > client_t_;         // Control enable service client
-  ff_util::ConfigServer cfg_;                                             // Configuration
-  std::string flight_mode_;                                               // Current flight mode
-  ff_util::Segment segment_;                                              // Current segment
-  ff_util::Segment::iterator exchange_point_;                             // Segment handover for replanning
-  ros::Publisher pub_s_;                                                  // Visualization publisher
-  ros::Subscriber sub_c_;                                                 // Collision detection
-  ros::ServiceServer server_p_;                                           // Planner registration server
-  ros::Timer timer_d_;                                                    // Diagnostics
-  PlannerMap planners_;                                                   // Available planners
-  PlannerInfo info_;                                                      // Available planner info
+  // Action managemement
+  ff_util::FiniteStateMachine<int32_t, ChoreographerEvent> fsm_;
+  ff_util::FreeFlyerActionClient<ff_msgs::ControlAction> client_c_;
+  ff_util::FreeFlyerActionClient<ff_msgs::ValidateAction> client_v_;
+  ff_util::FreeFlyerActionServer<ff_msgs::MotionAction> server_;
+  ff_msgs::MotionFeedback feedback_;
+  // Runtime configuration
+  ff_util::ConfigServer cfg_;
+  // Timeout on speed preps
+  ros::Timer timer_speed_, timer_feedback_;
+  // TF2
+  tf2_ros::Buffer tf_buffer_;
+  std::shared_ptr<tf2_ros::TransformListener> tf_listener_;
+  // Planner registration
+  PlannerMap planners_;
+  PlannerInfo info_;
+  // Publishers and subscribers
+  ros::Publisher pub_state_, pub_segment_, pub_flight_mode_, pub_inertia_;
+  ros::Subscriber sub_collisions_, sub_pmc_state_;
+  ros::ServiceServer server_register_, server_set_state_;
+  // Cached between callbacks
+  ff_msgs::FlightMode flight_mode_;                   // Desired flight mode
+  std::vector<geometry_msgs::PoseStamped> states_;    // Plan request
+  ff_util::Segment segment_;                          // Segment
+  geometry_msgs::PointStamped obstacle_;              // Obstacle
+  bool prep_required_;                                // Check if prep needed
 };
 
 // Declare the plugin
@@ -994,4 +1224,3 @@ PLUGINLIB_DECLARE_CLASS(choreographer, ChoreographerNodelet,
                         choreographer::ChoreographerNodelet, nodelet::Nodelet);
 
 }  // namespace choreographer
-

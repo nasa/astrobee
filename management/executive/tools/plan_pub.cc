@@ -60,21 +60,24 @@ DEFINE_string(compression, "none",
               "Type of compression [none, deflate, gzip]");
 
 constexpr uintmax_t kMaxSize = 128 * 1024;
+
+ros::Publisher command_pub;
 ros::Time plan_pub_time;
 
 void on_connect(ros::SingleSubscriberPublisher const& sub,
-                ff_msgs::CompressedFile &cf) {  // NOLINT
+                ff_msgs::CompressedFile &cf) {
   ROS_INFO("subscriber present: sending plan");
   cf.header.stamp = ros::Time::now();
   sub.publish(cf);
 }
 
-ros::Publisher command_pub;
 void on_cf_ack(ff_msgs::CompressedFileAckConstPtr const& cf_ack) {
+  ROS_INFO("Got compressed file ack!");
   // compressed file ack is latched so we need to check the timestamp to make
   // sure this plan is being acked
   // ROS_WARN_STREAM(plan_pub_time << " : " << cf_ack->header.stamp);
-  if (plan_pub_time < cf_ack->header.stamp) {
+  if (plan_pub_time <= cf_ack->header.stamp) {
+    ROS_INFO("Compressed file ack is valid! Sending set plan!");
     ff_msgs::CommandStamped cmd;
     cmd.cmd_name = ff_msgs::CommandConstants::CMD_NAME_SET_PLAN;
     cmd.subsys_name = "Astrobee";
@@ -84,10 +87,11 @@ void on_cf_ack(ff_msgs::CompressedFileAckConstPtr const& cf_ack) {
 
 // Plan status is published after the plan is set so send run plan to start plan
 void on_plan_status(ff_msgs::PlanStatusStamped::ConstPtr const& ps) {
+  ROS_INFO("Got plan status!");
   // plan status is latched so we need to check the timestamp to make sure this
   // plan is loaded
   // ROS_WARN_STREAM(plan_pub_time << " : " << ps->header.stamp);
-  if (plan_pub_time < ps->header.stamp) {
+  if (plan_pub_time <= ps->header.stamp) {
     ff_msgs::CommandStamped cmd;
     cmd.cmd_name = ff_msgs::CommandConstants::CMD_NAME_RUN_PLAN;
     cmd.subsys_name = "Astrobee";
@@ -100,7 +104,10 @@ void on_plan_status(ff_msgs::PlanStatusStamped::ConstPtr const& ps) {
 
 int main(int argc, char** argv) {
   common::InitFreeFlyerApplication(&argc, &argv);
-  ros::init(argc, argv, "plan_publisher");
+  ros::init(argc, argv, "plan_pub");
+  ros::NodeHandle n;
+
+  ros::Time::waitForValid();
 
   if (!flags::RegisterFlagValidator(&FLAGS_compression, &ValidateCompression)) {
     std::cerr << "Failed to register compression flag validator." << std::endl;
@@ -153,23 +160,29 @@ int main(int argc, char** argv) {
     cf.file.push_back(static_cast<unsigned char>(c));
   }
 
-  ros::NodeHandle n;
 
   plan_pub_time = ros::Time::now();
   std::string sub_topic_plan = TOPIC_COMMUNICATIONS_DDS_PLAN;
-  ros::Publisher plan_pub =
-    n.advertise<ff_msgs::CompressedFile>(sub_topic_plan, 10,
-      std::bind(&on_connect, std::placeholders::_1, cf));
 
   std::string sub_topic_command = TOPIC_COMMAND;
   command_pub = n.advertise<ff_msgs::CommandStamped>(
                                                     sub_topic_command, 5, true);
 
-  ros::Subscriber cf_acK_pub = n.subscribe(TOPIC_MANAGEMENT_EXEC_CF_ACK, 10,
+  ros::Subscriber cf_ack_sub = n.subscribe(TOPIC_MANAGEMENT_EXEC_CF_ACK, 10,
                                            &on_cf_ack);
 
   ros::Subscriber plan_status_sub =
     n.subscribe(TOPIC_MANAGEMENT_EXEC_PLAN_STATUS, 10, &on_plan_status);
+
+  while (cf_ack_sub.getNumPublishers() == 0 ||
+         plan_status_sub.getNumPublishers() == 0 ||
+         command_pub.getNumSubscribers() == 0) {
+    ros::Duration(0.5).sleep();
+  }
+
+  ros::Publisher plan_pub =
+    n.advertise<ff_msgs::CompressedFile>(sub_topic_plan, 10,
+      std::bind(&on_connect, std::placeholders::_1, cf));
 
   ROS_INFO("waiting for a subscriber...");
   ros::spin();

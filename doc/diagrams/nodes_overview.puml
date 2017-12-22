@@ -1,0 +1,17 @@
+@startuml
+
+skinparam componentStyle uml2
+'skinparam dpi 300
+
+title Astrobee Nodes
+
+!define HLP_NODE
+!define MLP_NODE
+!define LLP_NODE
+
+!include "nodes.puml"
+
+MLP --[hidden]down--> LLP
+MLP --[hidden]up--> HLP
+
+@enduml

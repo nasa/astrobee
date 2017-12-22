@@ -21,7 +21,7 @@
 namespace localization_manager {
 
 HRPipeline::HRPipeline(ros::NodeHandle *nh, ros::NodeHandle *nhp, uint8_t mode, PipelineCallbackType cb)
-  : Pipeline(mode, cb, "hr", "Handrail localization", true), nh_(nh) {
+  : Pipeline(mode, cb, "hr", "Handrail localization", false, true), nh_(nh) {
   // Create a private nodehandle
   ros::NodeHandle nh_pvt_(*nhp, GetName());
   // Initialize configuration manager

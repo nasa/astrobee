@@ -142,13 +142,16 @@ for current_file_num=1:length(csv_file_list)
         
         out_ctl_msg = ab_populate_ts_field(time_data, rawData.data(:,1:3), 'body_force_cmd', out_ctl_msg);
         out_ctl_msg = ab_populate_ts_field(time_data, rawData.data(:,4:6), 'body_torque_cmd', out_ctl_msg);
-        out_ctl_msg = ab_populate_ts_field(time_data, rawData.data(:,7), 'ctl_status', out_ctl_msg);
-        out_ctl_msg = ab_populate_ts_field(time_data, rawData.data(:,8:10), 'pos_err', out_ctl_msg);
-        out_ctl_msg = ab_populate_ts_field(time_data, rawData.data(:,11:13), 'pos_err_int', out_ctl_msg);
-        out_ctl_msg = ab_populate_ts_field(time_data, rawData.data(:,14:16), 'att_err', out_ctl_msg);
-        out_ctl_msg = ab_populate_ts_field(time_data, rawData.data(:,17:19), 'att_err_int', out_ctl_msg);
-        out_ctl_msg = ab_populate_ts_field(time_data, rawData.data(:,20), 'att_err_mag', out_ctl_msg);
+        out_ctl_msg = ab_populate_ts_field(time_data, rawData.data(:,7:9), 'body_accel_cmd', out_ctl_msg);
+        out_ctl_msg = ab_populate_ts_field(time_data, rawData.data(:,10:12), 'body_alpha_cmd', out_ctl_msg);
+        out_ctl_msg = ab_populate_ts_field(time_data, rawData.data(:,13), 'ctl_status', out_ctl_msg);         
+        out_ctl_msg = ab_populate_ts_field(time_data, rawData.data(:,14:16), 'pos_err', out_ctl_msg);
+        out_ctl_msg = ab_populate_ts_field(time_data, rawData.data(:,17:19), 'pos_err_int', out_ctl_msg);
+        out_ctl_msg = ab_populate_ts_field(time_data, rawData.data(:,20:22), 'att_err', out_ctl_msg);
+        out_ctl_msg = ab_populate_ts_field(time_data, rawData.data(:,23:25), 'att_err_int', out_ctl_msg);
+        out_ctl_msg = ab_populate_ts_field(time_data, rawData.data(:,26), 'att_err_mag', out_ctl_msg);
 
+        
         
         
     elseif ~isempty(regexp(current_file_name, 'truth.csv', 'ONCE')) % files that are not just numbers

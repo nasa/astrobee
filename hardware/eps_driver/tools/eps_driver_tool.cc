@@ -120,16 +120,6 @@ void PrintPowerChannelStates(const std::vector<std::string> &channels,
 
 // Print a main menu
 bool MainMenu(eps_driver::EpsDriver &eps) {
-  // Print title
-  std::cout << std::endl << "Astrobee EPS host test" << std::endl << std::endl;
-  // Print version and build info
-  std::string version, build;
-  if (!eps.GetString(eps_driver::VERSION, version))
-    return Error("Could not get the version string");
-  std::cout << " - FW Version " << version << std::endl;
-  if (!eps.GetString(eps_driver::BUILD, build))
-    return Error("Could not get the build string");
-  std::cout << " - FW Build: " << build << std::endl;
   // Print the menu
   std::cout << std::endl << "Main menu:" << std::endl;
   std::cout << "0. Quit" << std::endl;
@@ -145,7 +135,9 @@ bool MainMenu(eps_driver::EpsDriver &eps) {
   std::cout << "10. Get serial number" << std::endl;
   std::cout << "11. Get battery status" << std::endl;
   std::cout << "12. Ring buzzer." << std::endl;
-  std::cout << "13. Undock." << std::endl;
+  std::cout << "13. Undock" << std::endl;
+  std::cout << "14. Clear TERMINATE event" << std::endl;
+  std::cout << "15. Get connection state" << std::endl;
   // Keep looping until we have valid input
   uint8_t choice = InputUnsignedInteger(0, 15);
   // Do something based on the choice
@@ -156,7 +148,7 @@ bool MainMenu(eps_driver::EpsDriver &eps) {
     }
     case 1: {
       std::string v;
-      if (!eps.GetString(eps_driver::VERSION, v))
+      if (!eps.GetString(eps_driver::SW_VERSION, v))
         return Error("Could not get the version.");
       std::cout << " - Version " << v << std::endl;
       return true;
@@ -214,6 +206,13 @@ bool MainMenu(eps_driver::EpsDriver &eps) {
         return Error("Could not read the digital temperature sensors");
       for (size_t i = 0; i < data.size(); i++)
         std::cout << "- [Temp " << (i + 1) << "] " << data[i] << std::endl;
+      return true;
+    }
+    case 10: {
+      std::string s;
+      if (!eps.GetString(eps_driver::SERIAL, s))
+        return Error("Could not get the serial number.");
+      std::cout << " - Serial: " << s << std::endl;
       return true;
     }
     case 11: {
@@ -306,8 +305,35 @@ bool MainMenu(eps_driver::EpsDriver &eps) {
     case 13: {
       std::cout << "Sending UNDOCK command to the dock..." << std::endl;
       if (!eps.Undock())
-        return Error("Failed to send UNDOCK command to the dock");
+        return Error("Failed to send UNDOCK command to the dock.");
       std::cout << "Success!" << std::endl;
+      return true;
+    }
+    case 14: {
+      std::cout << "Clear TERMINATE event..." << std::endl;
+      if (!eps.ClearTerminateEvent())
+        return Error("Failed to clear the TERMINATE event.");
+      std::cout << "Success!" << std::endl;
+      return true;
+    }
+    case 15: {
+      std::cout << "Get connection state" << std::endl;
+      eps_driver::ConnectionState state;
+      if (!eps.GetConnectionState(state))
+        return Error("Failed to get connection state.");
+      switch (state) {
+      case eps_driver::CONN_DISCONNECTED:
+        std::cout << "Disconnected" << std::endl;
+        return true;
+      case eps_driver::CONN_CONNECTING:
+        std::cout << "Connecting" << std::endl;
+        return true;
+      case eps_driver::CONN_CONNECTED:
+        std::cout << "Connected" << std::endl;
+        return true;
+      default:
+        return Error("Undefined connection state.");
+      }
       return true;
     }
     default: {
@@ -350,6 +376,18 @@ int main(int argc, char *argv[]) {
   }
   // Set or replace the eps interface and
   eps_driver::EpsDriver eps(device, std::bind(&Sleep, std::placeholders::_1));
+
+  // Print title
+  std::cout << std::endl << "Astrobee EPS host test" << std::endl << std::endl;
+  // Print version and build info
+  std::string version, build;
+  if (!eps.GetString(eps_driver::SW_VERSION, version))
+    return Error("Could not get the version string");
+  std::cout << " - FW Version " << version << std::endl;
+  if (!eps.GetString(eps_driver::BUILD, build))
+    return Error("Could not get the build string");
+  std::cout << " - FW Build: " << build << std::endl;
+
   // Keep taking commands until
   while (MainMenu(eps)) {}
   // Success

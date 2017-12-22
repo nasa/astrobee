@@ -1,0 +1,8 @@
+tmp
+astrobee0
+astrobee-dev
+astrobee-config
+files
+debhelper-build-stamp
+*.substvars
+*.log

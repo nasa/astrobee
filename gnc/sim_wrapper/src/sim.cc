@@ -133,11 +133,11 @@ void Sim::PmcFamCallBack(ff_hw_msgs::PmcCommand::ConstPtr const& pmc) {
   gnc_.act_msg_.act_timestamp_sec  = cur_time_.sec;
   gnc_.act_msg_.act_timestamp_nsec = cur_time_.nsec;
 
-  gnc_.act_msg_.act_impeller_speed_cmd[0] = pmc->states[0].motor_speed;
-  gnc_.act_msg_.act_impeller_speed_cmd[1] = pmc->states[1].motor_speed;
+  gnc_.act_msg_.act_impeller_speed_cmd[0] = pmc->goals[0].motor_speed;
+  gnc_.act_msg_.act_impeller_speed_cmd[1] = pmc->goals[1].motor_speed;
   for (int i = 0; i < 6; i++) {
-    gnc_.act_msg_.act_servo_pwm_cmd[i] = pmc->states[0].nozzle_positions[i];
-    gnc_.act_msg_.act_servo_pwm_cmd[6 + i] = pmc->states[1].nozzle_positions[i];
+    gnc_.act_msg_.act_servo_pwm_cmd[i] = pmc->goals[0].nozzle_positions[i];
+    gnc_.act_msg_.act_servo_pwm_cmd[6 + i] = pmc->goals[1].nozzle_positions[i];
   }
 }
 

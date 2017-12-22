@@ -3,14 +3,14 @@
 //
 // Code generated for Simulink model 'sim_model_lib0'.
 //
-// Model version                  : 1.1139
+// Model version                  : 1.1142
 // Simulink Coder version         : 8.11 (R2016b) 25-Aug-2016
-// C/C++ source code generated on : Wed May 17 14:43:55 2017
+// C/C++ source code generated on : Mon Dec  4 08:34:45 2017
 //
 #include "rtwtypes.h"
 #include "mglncbaaiekflfcb_cat.h"
 
-// Function for MATLAB Function: '<S47>/generate_output'
+// Function for MATLAB Function: '<S83>/generate_output'
 void mglncbaaiekflfcb_cat(const real32_T varargin_1_data[], const int32_T
   varargin_1_sizes[2], const int32_T varargin_2_sizes[3], real32_T y_data[],
   int32_T y_sizes[3])

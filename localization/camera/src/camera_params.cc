@@ -122,10 +122,16 @@ camera::CameraParameters::CameraParameters(config_reader::ConfigReader* config, 
   optical_offset_ << cam_mat.at<double>(0, 2), cam_mat.at<double>(1, 2);
   focal_length_ << cam_mat.at<double>(0, 0), cam_mat.at<double>(1, 1);
 
-  // Read in the distortion coefficients
+  // Read in the distortion coefficients (if not a real number, may be a list)
   Eigen::VectorXd buffer(1);
-  if (!camera.GetReal("distortion_coeff", &buffer[0]))
-    fprintf(stderr, "Could not read camera distortion_coeff.");
+  if (!camera.GetReal("distortion_coeff", &buffer[0])) {
+    config_reader::ConfigReader::Table dist(&camera, "distortion_coeff");
+    buffer.resize(dist.GetSize());
+    for (int i = 0; i < dist.GetSize(); i++) {
+      if (!dist.GetReal(i + 1, &buffer[i]))
+        fprintf(stderr, "Could not read camera distortion_coeff.");
+    }
+  }
   SetDistortion(buffer);
 
   if (!camera.GetInt("undistorted_width", &size[0]))

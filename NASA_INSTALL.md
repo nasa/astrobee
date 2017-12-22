@@ -13,6 +13,7 @@ support running Astrobee Robot Software on 32-bit systems.*
 ## Machine setup
 
 #### General notes before running the scripts below
+
 - The custom debian packages are currently stored on the "volar" server. So you
   need to have credentials on `volar` to run these scripts.
 - If you are using a VM with a username that does not match your NDC username,
@@ -42,7 +43,7 @@ First, clone the flight software repository:
 Next, install all required dependencies:
 
     pushd $SOURCE_PATH
-    cd scripts/platform/desktop
+    cd scripts/setup
     ./add_local_repository.sh
     ./add_ros_repository.sh
     ./install_desktop_16_04_packages.sh
@@ -78,8 +79,8 @@ Next, download the cross toolchain and install the chroot:
 
     mkdir -p $ARMHF_TOOLCHAIN
     cd $HOME/arm_cross
-    $SOURCE_PATH/scripts/platform/fetch_toolchain.sh
-    $SOURCE_PATH/scripts/platform/rootfs/make_xenial.sh dev $ARMHF_CHROOT_DIR
+    $SOURCE_PATH/submodules/platform/fetch_toolchain.sh
+    $SOURCE_PATH/submodules/platform/rootfs/make_xenial.sh dev $ARMHF_CHROOT_DIR
 
 ## Configuring the build
 
@@ -159,9 +160,9 @@ After this command has completed, you should be able to run a simulator from any
 directory in your Linux filesystem. So, for example, to start a simulation of a
 single Astrobee in the Granite Lab, run the following:
 
-    roslaunch astrobee simulator.launch
+    roslaunch astrobee sim.launch
 
-This command tells ROS to look for the `simulation.launch` file provided by the
+This command tells ROS to look for the `sim.launch` file provided by the
 `astrobee` package, and use roslaunch to run it. Internally, ROS maintains a
 cache of information about package locations, libraries and executables. If you
 find that the above command doesn't work, try rebuilding the cache:

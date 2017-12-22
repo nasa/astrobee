@@ -16,7 +16,5 @@
 <!-- permissions and limitations under the License.                          -->
  
  <launch>
-  <node name="gds_node" pkg="astrobee" type="launch_gds.sh" respawn="false" output="log">
-  	<env name="ASTROBEE_GDS_PATH" value="$(optenv ASTROBEE_GDS_PATH /opt/gds)" />
-  </node>
+  <node name="gds_node" pkg="astrobee" type="launch_gds.sh" respawn="false" output="log"/>
  </launch>

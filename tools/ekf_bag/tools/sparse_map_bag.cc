@@ -19,7 +19,7 @@
 #include <common/init.h>
 #include <common/utils.h>
 #include <config_reader/config_reader.h>
-#include <gnc_ros_wrapper/ekf.h>
+#include <ekf/ekf.h>
 #include <sparse_mapping/sparse_map.h>
 #include <localization_node/localization.h>
 #include <lk_optical_flow/lk_optical_flow.h>

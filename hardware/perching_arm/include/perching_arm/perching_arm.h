@@ -31,30 +31,7 @@
  */
 namespace perching_arm {
 
-enum PerchingArmJointState {
-  JOINT_STATE_UNKNOWN,          // Unknown
-  JOINT_STATE_STOPPED,          // Awaiting command
-  JOINT_STATE_DEPLOYING,        // Deploying in progress
-  JOINT_STATE_MOVING_PANNING,   // Move: panning              [substate]
-  JOINT_STATE_MOVING_TILTING,   // Move: tilting              [substate]
-  JOINT_STATE_PANNING,          // Panning                    [substate]
-  JOINT_STATE_TILTING,          // Tilting                    [substate]
-  JOINT_STATE_STOWING_PANNING,  // Stowing: panning to 0      [substate]
-  JOINT_STATE_STOWING_CLOSING,  // Stowing: gripper closing   [substate]
-  JOINT_STATE_STOWING_TILTING,  // Stowing: tilting in place  [substate]
-  JOINT_STATE_STOWED            // Stowed
-};
-
-enum PerchingArmGripperState {
-  GRIPPER_STATE_UNKNOWN,        // Unknown
-  GRIPPER_STATE_CLOSED,         // Gripper closed
-  GRIPPER_STATE_OPENING,        // Gripper opening
-  GRIPPER_STATE_OPEN,           // Gripper open
-  GRIPPER_STATE_CLOSING,        // Gripper closing
-  GRIPPER_STATE_CALIBRATING,    // Gripper calibrating
-  GRIPPER_STATE_UNCALIBRATED    // Gripper uncalibrated
-};
-
+// Result of calling a perching arm action
 enum PerchingArmResult {
   RESULT_SUCCESS,               // Everything happened well
   RESULT_PORT_NOT_OPEN,         // Serial port could not be opened
@@ -63,111 +40,128 @@ enum PerchingArmResult {
   RESULT_PORT_WRITE_FAILURE,    // Port not writeable
   RESULT_PORT_INIT_FAILURE,     // Port cannot be initialized
   RESULT_FIRMWARE_ERROR,        // Firmware error
-  RESULT_RESPONSE_TIMEOUT       // Response timeout
+  RESULT_RESPONSE_TIMEOUT,      // Response timeout
+  RESULT_OUT_OF_BOUNDS,         // Cannot reach the specified angle
+  RESULT_NOT_CALIBRATED         // No gripper commands before calibration
 };
 
-enum PerchingArmEvent {
-  EVENT_NONE,                   // Progress update
-  EVENT_PROGRESS,               // Progress update
-  EVENT_BACK_DRIVE,             // Back drive detected
-  EVENT_STOW_COMPLETE,          // Arm is now stowed
-  EVENT_MOVE_COMPLETE,          // Arm has finished moving
-  EVENT_PAN_COMPLETE,           // Arm has finished panning
-  EVENT_TILT_COMPLETE,          // Arm has finished tilting
-  EVENT_DEPLOY_COMPLETE,        // Arm is now deployed
-  EVENT_OPEN_COMPLETE,          // Gripper is now open
-  EVENT_CLOSE_COMPLETE,         // Gripper is now closed
-  EVENT_CALIBRATE_COMPLETE,     // Gripper is now calibrated
-  EVENT_ERROR                   // Error encountered
-};
-
-struct PerchingArmMotor {
-  int16_t load;                   // S: 2.690 [mA]
-  int32_t velocity;               // S: 0.229 [RPM]
-  int32_t position;               // S: 0.088 [deg]
-};
-
-struct PerchingArmGripper {
-  int16_t load;                   // S: 3.3 / (1024 * 0.525)          [A]
-  int16_t position;               // CONFIRM
-};
-
-struct PerchingArmFeedback {
-  PerchingArmMotor tilt;
-  PerchingArmMotor pan;
-  PerchingArmGripper gripper;
-  int16_t current_11v;            // S: 3.3 / (1024 * 100 * 0.0075)   [A]
-  int16_t current_5v;             // S: 3.3 / (1024 * 100 * 0.0100)   [A]
-  int16_t board_temp;             // S: 1 / 100
-  int16_t loop_time;              // CONFIGM
+// Raw data struct, which contains more info than required
+struct PerchingArmRaw {
+  // Individual joint state
+  struct PerchingArmRawJoint {
+    int16_t load;               // S: 2.690 [mA]
+    int32_t velocity;           // S: 0.229 [RPM]
+    int32_t position;           // S: 0.088 [deg]
+  };
+  // Gripper state
+  struct PerchingArmRawGripper {
+    int16_t load;               // S: 3.3 / (1024 * 0.525)          [A]
+    int16_t position;           // CONFIRM
+    int16_t maximum;            // Maximum size (uncalibrated: <= 0)
+  };
+  PerchingArmRawJoint prox;
+  PerchingArmRawJoint dist;
+  PerchingArmRawGripper grip;
+  int16_t current_11v;          // S: 3.3 / (1024 * 100 * 0.0075)   [A]
+  int16_t current_5v;           // S: 3.3 / (1024 * 100 * 0.0100)   [A]
+  int16_t board_temp;           // S: 1 / 100
+  int16_t loop_time;            // CONFIGM
 };
 
 // Convenience declarations
 typedef std::function<void(uint32_t)> PerchingArmSleepMsCallback;
-typedef std::function<void(PerchingArmEvent, float)> PerchingArmEventCallback;
-typedef std::function<void(PerchingArmJointState joint_state, PerchingArmGripperState gripper_state,
-  PerchingArmFeedback const&)> PerchingArmFeedbackCallback;
+typedef std::function<void(PerchingArmRaw const&)> PerchingArmRawDataCallback;
 
 class PerchingArm {
  public:
-  // Static members
-  static const int16_t GRIPPER_OPEN_THRESHOLD;
-  static const int16_t GRIPPER_CLOSE_THRESHOLD;
-  static const int16_t STOW_PAN;
-  static const int16_t STOW_TILT;
-  static const int16_t DEPLOY_PAN;
-  static const int16_t DEPLOY_TILT;
-  static const int16_t MIN_PAN;
-  static const int16_t MAX_PAN;
-  static const int16_t MIN_TILT;
-  static const int16_t MAX_TILT;
-  static const float MOTOR_POSITION_SCALE;
-  static const float MOTOR_VELOCITY_SCALE;
-  static const float MOTOR_LOAD_SCALE;
-  static const float GRIPPER_POSITION_SCALE;
-  static const float GRIPPER_LOAD_SCALE;
-  static const float CURRENT_5V_SCALE;
-  static const float CURRENT_11V_SCALE;
-  static const float BOARD_TEMP_SCALE;
-  static const float LOOP_TIME_SCALE;
+  // Hard-coded limits for the various axes
+  static constexpr int16_t PROX_POS_MIN     = -120;
+  static constexpr int16_t PROX_POS_MAX     =  90;
+  static constexpr int16_t PROX_VEL_MIN     =  0;
+  static constexpr int16_t PROX_VEL_MAX     =  20;
+  static constexpr int16_t DIST_POS_MIN     = -90;
+  static constexpr int16_t DIST_POS_MAX     =  90;
+  static constexpr int16_t DIST_VEL_MIN     =  0;
+  static constexpr int16_t DIST_VEL_MAX     =  20;
+  static constexpr int16_t GRIP_POS_MIN     =  0;
+  static constexpr int16_t GRIP_POS_MAX     =  100;
+  static constexpr int16_t GRIP_CALIBRATE   = -100;
+
+  // Limits for the virtual gripper joints (in degrees)
+  // Min = closed, MAX = open, L = left, R = right, D = distal, P = proximal
+  static constexpr int16_t GRIP_L_P_MIN     =  20;
+  static constexpr int16_t GRIP_L_P_MAX     =  40;
+  static constexpr int16_t GRIP_L_D_MIN     = -70;
+  static constexpr int16_t GRIP_L_D_MAX     = -40;
+  static constexpr int16_t GRIP_R_P_MIN     = -20;
+  static constexpr int16_t GRIP_R_P_MAX     = -40;
+  static constexpr int16_t GRIP_R_D_MIN     =  70;
+  static constexpr int16_t GRIP_R_D_MAX     =  40;
+
+  // Useful constants for deploying, stowing, panning, tiltint, etc
+  static constexpr int16_t STOW_PROX        =  90;
+  static constexpr int16_t STOW_DIST        =  0;
+  static constexpr int16_t DEPLOY_PROX      = -90;
+  static constexpr int16_t DEPLOY_DIST      =  0;
+  static constexpr int16_t TILT_MIN         = -120;
+  static constexpr int16_t TILT_MAX         =  0;
+  static constexpr int16_t PAN_MIN          = -90;
+  static constexpr int16_t PAN_MAX          =  90;
+
+  // Scale factors used to convert raw bytes to firmware units (deg, rpm, perc)
+  static constexpr double K_POSITION_DEG    = 0.088;
+  static constexpr double K_VELOCITY_RPM    = 0.229;
+  static constexpr double K_LOAD_GRIPPER_MA = 3.3 / (1024.0 * 0.525);
+  static constexpr double K_LOAD_JOINT_MA   = 2.690;
+  static constexpr double K_CURRENT_5V      = 3.3 / (1024.0);
+  static constexpr double K_CURRENT_11V     = 3.3 / (1024.0 * 0.75);
+  static constexpr double K_TEMPERATURE_DEG = 1.0 / 100.0;
+  static constexpr double K_LOOP_TIME_MS    = 1.0;
+  static constexpr double K_MOTOR_VOLTAGE   = 11.0;
 
   // Constructor
   PerchingArm();
 
-  // Initialize the serial port
-  PerchingArmResult Initialize(std::string const& port, uint32_t baud, PerchingArmSleepMsCallback cb_sleep_ms,
-    PerchingArmEventCallback cb_event, PerchingArmFeedbackCallback cb_feedback);
+  // Connect to the arm
+  PerchingArmResult Connect(std::string const& port, uint32_t baud,
+    PerchingArmSleepMsCallback cb_sleep_ms,
+    PerchingArmRawDataCallback cb_raw_data);
 
-  // Asynchronous actions
+  // Disconnect from the arm
+  void Disconnect();
 
-  // Open the gripper
-  PerchingArmResult Open();
+  // Print a human-readable string from a result, and return success
+  bool ResultToString(PerchingArmResult result, std::string & msg);
 
-  // Close the gripper
-  PerchingArmResult Close();
+  // Calibrate the gripper (it will end up closed after completion)
+  PerchingArmResult CalibrateGripper();
 
-  // Close the gripper
-  PerchingArmResult Calibrate();
+  // Set the gripper position (in percentage from 0 to 100)
+  PerchingArmResult SetGripperPosition(int16_t perc);
 
-  // Stow the arm
-  PerchingArmResult Stow();
+  // Enable or disabled the proximal motor
+  PerchingArmResult SetProximalEnabled(bool enabled);
 
-  // Stow the arm
-  PerchingArmResult Deploy();
+  // Set the velocity of the proximal joint in rads / sec
+  PerchingArmResult SetProximalVelocity(int16_t rpm);
 
-  // Pan/tilt the arm and return whether the command was accepted
-  PerchingArmResult Move(int16_t pan, int16_t tilt);
+  // Set the position of the proximal joint in rads
+  PerchingArmResult SetProximalPosition(int16_t degrees);
 
-  // Pan the arm and return whether the command was accepted
-  PerchingArmResult Pan(int16_t pan);
+  // Enable or disabled the distal motor
+  PerchingArmResult SetDistalEnabled(bool enabled);
 
-  // Tilt the arm and return whether the command was accepted
-  PerchingArmResult Tilt(int16_t tilt);
+  // Set the velocity of the distal joint in rads / sec
+  PerchingArmResult SetDistalVelocity(int16_t rpm);
 
-  // Instantaneous actions
+  // Set the position of the distal joint in rads
+  PerchingArmResult SetDistalPosition(int16_t degrees);
 
-  // Stop the current action
-  PerchingArmResult Stop();
+  // Calibrate the gripper position
+  PerchingArmResult OpenGripper();
+
+  // Calibrate the gripper position
+  PerchingArmResult CloseGripper();
 
   // Reset the software
   PerchingArmResult SoftReset();
@@ -178,13 +172,39 @@ class PerchingArm {
   // Configure the arm
   PerchingArmResult SendCommand(uint8_t target, int16_t address, int16_t value);
 
-  // Print current joint and gripper states
-  void PrintStates();
-
  protected:
+  // Protocol header constants
+  static constexpr uint8_t PROTOCOL_HEADER_1          = 0xFF;
+  static constexpr uint8_t PROTOCOL_HEADER_2          = 0xFF;
+
+  // Protocol target constants
+  static constexpr int16_t TARGET_PROXIMAL            = 0;
+  static constexpr int16_t TARGET_DISTAL              = 1;
+  static constexpr int16_t TARGET_POWER               = 2;
+  static constexpr int16_t TARGET_TORQUE              = 3;
+  static constexpr int16_t TARGET_GRIPPER             = 4;
+  static constexpr int16_t TARGET_RESET               = 10;
+
+  // Protocol address constants
+  static constexpr int16_t ADDRESS_POSITION           = 1;
+  static constexpr int16_t ADDRESS_VELOCITY           = 2;
+  static constexpr int16_t ADDRESS_ENABLE             = 64;
+  static constexpr int16_t ADDRESS_RESET              = 10;
+  static constexpr int16_t ADDRESS_TORQUE_LIMIT       = 34;
+  static constexpr int16_t ADDRESS_GRIPPER_CALIBRATE  = 51;
+  static constexpr int16_t ADDRESS_GRIPPER_OPEN       = 52;
+  static constexpr int16_t ADDRESS_GRIPPER_CLOSE      = 53;
+  static constexpr int16_t ADDRESS_GRIPPER_SET        = 54;
+  static constexpr int16_t ADDRESS_GRIPPER_RESET      = 55;
+
+  // Protocol value constants
+  static constexpr int16_t VALUE_POWER_DISABLE        = 0;
+  static constexpr int16_t VALUE_POWER_ENABLE         = 1;
+
+  // Finite states of protocol
   enum Protocol {
-    PROTOCOL_WF_HEADER_1,   // 0xFF
-    PROTOCOL_WF_HEADER_2,   // OxFF
+    PROTOCOL_WF_HEADER_1,   // See constant above
+    PROTOCOL_WF_HEADER_2,   // See constant above
     PROTOCOL_WF_LENGTH,     // N
     PROTOCOL_WF_DATA,       // DATA
     PROTOCOL_WF_CHECKSUM    // CRC
@@ -196,6 +216,9 @@ class PerchingArm {
   // Asynchronous callback with serial data
   void Timeout(void);
 
+  // Asynchronous callback with serial data
+  void Shutdown(void);
+
   // Process a valid packet
   void Process(const uint8_t* buf, size_t len);
 
@@ -205,29 +228,15 @@ class PerchingArm {
   // Implementation-specific checksumming
   uint8_t Checksum(const uint8_t* buf, size_t len);
 
-  // Tick to position conversion with a tolerance
-  bool JointPositionSatisfied(int16_t goal, int16_t ticks, float tol = 1.0);
-
-  // Tick to position conversion with a tolerance
-  bool GripperPositionSatisfied(int16_t goal, int16_t ticks, float tol = 1.0);
-
  private:
   serial::Serial serial_;                     // Serial port
-  PerchingArmJointState joint_state_;         // Joint state
-  PerchingArmGripperState gripper_state_;     // Gripper state
-  PerchingArmEventCallback cb_event_;         // Event callback
-  PerchingArmFeedbackCallback cb_feedback_;   // Feedback callback
+  PerchingArmRawDataCallback cb_raw_data_;    // Feedback callback
   PerchingArmSleepMsCallback cb_sleep_ms_;    // Sleep callback
-  PerchingArmFeedback feedback_;              // Feedback data structure
+  PerchingArmRaw raw_;                        // Feedback data structure
+  Protocol rx_state_;                         // Receive state
   uint8_t rx_buf_[MAX_PACKET_SIZE];           // Buffer
   uint8_t rx_ptr_;                            // Buffer pointer
   uint8_t rx_datalen_;                        // Data length
-  Protocol rx_state_;                         // Receive state
-  int16_t goal_pan_;                          // Pan goal
-  int16_t goal_tilt_;                         // Tilt goal
-  int16_t initial_pan_;                       // Pan initial value
-  int16_t initial_tilt_;                      // Tilt initial value
-  int16_t initial_gripper_;                   // Gripper initial value
 };
 
 }  // namespace perching_arm

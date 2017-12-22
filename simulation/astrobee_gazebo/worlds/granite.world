@@ -1,9 +1,9 @@
 <sdf version='1.6'>
   <world name='granite'>
     <physics name='default_physics' default='0' type='ode'>
-      <max_step_size>0.005</max_step_size>
+      <max_step_size>0.001</max_step_size>
       <real_time_factor>1</real_time_factor>
-      <real_time_update_rate>200</real_time_update_rate>
+      <real_time_update_rate>1000</real_time_update_rate>
     </physics>
     <scene>
       <ambient>0.3 0.3 0.3 1</ambient>
@@ -21,7 +21,7 @@
         <projection_type>perspective</projection_type>
       </camera>
     </gui>
-    <gravity>0 0 0</gravity>
+    <gravity>0 0 9.80665</gravity>
     <magnetic_field>0 0 0</magnetic_field>
     <atmosphere type='adiabatic'/>
     <spherical_coordinates>

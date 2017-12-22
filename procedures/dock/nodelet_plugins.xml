@@ -1,0 +1,6 @@
+<library path="lib/libdock">
+  <class name="dock/DockNodelet" type="dock::DockNodelet"
+         base_class_type="nodelet::Nodelet">
+    <description>Nodelet for the dock procedure</description>
+  </class>
+</library>

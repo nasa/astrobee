@@ -24,7 +24,7 @@ source_header = 'ctl_controller0.h';
 % Boolean flags, will also find any variables tun_*_f + the list below
 boolean_exceptions = {'tun_ctl_bypass_cmd_shaper', 'tun_cvs_noise_on', ...
                     'tun_env_drag_disturb_on', 'tun_epson_report_truth', ...
-                    'tun_debug_ctl_use_truth'};
+                    'tun_debug_ctl_use_truth', 'tun_ase_gravity_removal'};
 output_fname = 'ctl_tunable_funcs';
 function_name = 'ctl_ReadParams';
 input_object_type = 'RT_MODEL_ctl_controller0_T*';
