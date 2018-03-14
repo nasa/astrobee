@@ -39,8 +39,8 @@
 #define FRAME_NAME_TRUTH                            "truth"
 #define FRAME_NAME_HANDRAIL                         "handrail"
 #define FRAME_NAME_DOCK                             "dock"
-#define FRAME_NAME_DOCK_BERTH_LEFT                  "dock/berth/left"
-#define FRAME_NAME_DOCK_BERTH_RIGHT                 "dock/berth/right"
+#define FRAME_NAME_DOCK_BERTH_1                     "dock/berth1"
+#define FRAME_NAME_DOCK_BERTH_2                     "dock/berth2"
 #define FRAME_NAME_DOCK_MARKER                      "dock/marker"
 #define FRAME_NAME_PERCH_CAM                        "perch_cam"
 #define FRAME_NAME_HAZ_CAM                          "haz_cam"
@@ -147,6 +147,7 @@
 #define NODE_EXECUTIVE                              "executive"
 #define NODE_SYS_MONITOR                            "sys_monitor"
 #define NODE_IMG_SAMPLER                            "image_sampler"
+#define NODE_DATA_BAGGER                            "data_bagger"
 
 #define TOPIC_MANAGEMENT_ACK                        "mgt/ack"
 #define TOPIC_MANAGEMENT_ACCESS_CONTROL_STATE       "mgt/access_control/state"
@@ -159,12 +160,13 @@
 #define TOPIC_MANAGEMENT_EXEC_PLAN_STATUS           "mgt/executive/plan_status"
 #define TOPIC_MANAGEMENT_SYS_MONITOR_CONFIG         "mgt/sys_monitor/config"
 #define TOPIC_MANAGEMENT_SYS_MONITOR_STATE          "mgt/sys_monitor/state"
+#define TOPIC_MANAGEMENT_DATA_BAGGER_STATE          "mgt/data_bagger/state"
+#define TOPIC_MANAGEMENT_DATA_BAGGER_TOPICS         "mgt/data_bagger/topics"
 #define TOPIC_MANAGEMENT_CAMERA_STATE               "mgt/camera_state"
 #define TOPIC_MANAGEMENT_IMG_SAMPLER_NAV_CAM_RECORD  "mgt/img_sampler/nav_cam/image_record"
 #define TOPIC_MANAGEMENT_IMG_SAMPLER_NAV_CAM_STREAM  "mgt/img_sampler/nav_cam/image_stream"
 #define TOPIC_MANAGEMENT_IMG_SAMPLER_DOCK_CAM_RECORD "mgt/img_sampler/dock_cam/image_record"
 #define TOPIC_MANAGEMENT_IMG_SAMPLER_DOCK_CAM_STREAM "mgt/img_sampler/dock_cam/image_stream"
-#define TOPIC_MANAGEMENT_INERTIA                     "gnc/inertia"
 
 #define SERVICE_MANAGEMENT_IMG_SAMPLER_CONFIG_NAV   "mgt/img_sampler/nav_cam/configure"
 #define SERVICE_MANAGEMENT_IMG_SAMPLER_CONFIG_DOCK  "mgt/img_sampler/dock_cam/configure"
@@ -180,19 +182,24 @@
 
 #define NODE_CHOREOGRAPHER                          "choreographer"
 #define NODE_MAPPER                                 "mapper"
-#define NODE_SENTINEL                               "sentinel"
 
 // Exposed to peer nodes
 
 #define ACTION_MOBILITY_MOTION                      "mob/motion"
-#define ACTION_MOBILITY_VALIDATE                    "mob/validate"
+#define ACTION_MOBILITY_VALIDATE                    "mob/validateTrajectory"
 
+#define SERVICE_MOBILITY_SET_INERTIA                "mob/set_inertia"
 #define SERVICE_MOBILITY_SET_ZONES                  "mob/set_zones"
 #define SERVICE_MOBILITY_GET_ZONES                  "mob/get_zones"
 #define SERVICE_MOBILITY_SET_STATE                  "mob/set_state"
+#define SERVICE_MOBILITY_UPDATE_MAP_RESOLUTION      "mob/mapper/update_resolution"
+#define SERVICE_MOBILITY_UPDATE_MEMORY_TIME         "mob/mapper/update_memory_time"
+#define SERVICE_MOBILITY_UPDATE_INFLATION           "mob/mapper/update_inflation_radius"
+#define SERVICE_MOBILITY_RESET_MAP                  "mob/mapper/reset_map"
 
 #define TOPIC_MOBILITY_MOTION_STATE                 "mob/state"
 #define TOPIC_MOBILITY_FLIGHT_MODE                  "mob/flight_mode"
+#define TOPIC_MOBILITY_INERTIA                      "mob/inertia"
 
 // Used internally or for rviz plotting
 
@@ -205,6 +212,12 @@
 #define TOPIC_MOBILITY_SEGMENT                      "mob/choreographer/segment"
 #define TOPIC_MOBILITY_COLLISIONS                   "mob/sentinel/collisions"
 #define TOPIC_MOBILITY_ZONES                        "mob/mapper/zones"
+#define TOPIC_MAPPER_OCTOMAP_MARKERS                "mob/mapper/obstacle_markers"
+#define TOPIC_MAPPER_OCTOMAP_FREE_MARKERS           "mob/mapper/free_space_markers"
+#define TOPIC_MAPPER_OCTOMAP_INFLATED_MARKERS       "mob/mapper/inflated_obstacle_markers"
+#define TOPIC_MAPPER_OCTOMAP_INFLATED_FREE_MARKERS  "mob/mapper/inflated_free_space_markers"
+#define TOPIC_MAPPER_FRUSTRUM_MARKERS               "mob/mapper/frustum_markers"
+#define TOPIC_MAPPER_DISCRETE_TRAJECTORY_MARKERS    "mob/mapper/discrete_trajectory_markers"
 
 //////////////////
 // LOCALIZATION //
@@ -255,30 +268,49 @@
 #define SERVICE_LOCALIZATION_HR_ENABLE              "loc/hr/enable"
 #define SERVICE_LOCALIZATION_PL_ENABLE              "loc/pl/enable"
 
-////////////////
-// PROCEDURES //
-////////////////
+// GROUND TRUTH SYSTEMS
 
-#define SUBSYSTEM_PROCEDURES                        "pro"
+#define NODE_VIVE_SERVER                            "vive_server"
+#define NODE_VIVE_BRIDGE                            "vive_bridge"
+
+#define TOPIC_LOCALIZATION_VIVE_LIGHT               "loc/vive/light"
+#define TOPIC_LOCALIZATION_VIVE_IMU                 "loc/vive/imu"
+#define TOPIC_LOCALIZATION_VIVE_TRACKERS            "loc/vive/trackers"
+#define TOPIC_LOCALIZATION_VIVE_LIGHTHOUSES         "loc/vive/lighthouses"
+#define TOPIC_LOCALIZATION_VIVE_GENERAL             "loc/vive/general"
+#define TOPIC_LOCALIZATION_VIVE_IMU_MARKERS         "loc/vive/imu_markers"
+#define TOPIC_LOCALIZATION_VIVE_LIGHT_MARKERS       "loc/vive/light_markers"
+#define TOPIC_LOCALIZATION_VIVE_TRACKER_MARKERS     "loc/vive/tracker_markers"
+
+#define SERVICE_LOCALIZATION_VIVE_CONFIG            "loc/vive/config"
+
+#define SERVICE_LOCALIZATION_VIZUALEYEZ_CONFIG      "loc/visualeyez/config"
+
+
+///////////////
+// BEHAVIORS //
+///////////////
+
+#define SUBSYSTEM_BEHAVIORS                         "beh"
 
 #define NODE_ARM                                    "arm"
 #define NODE_DOCK                                   "dock"
 #define NODE_PERCH                                  "perch"
 
-#define ACTION_PROCEDURES_ARM                       "pro/arm"
-#define ACTION_PROCEDURES_DOCK                      "pro/dock"
-#define ACTION_PROCEDURES_PERCH                     "pro/perch"
+#define ACTION_BEHAVIORS_ARM                        "beh/arm"
+#define ACTION_BEHAVIORS_DOCK                       "beh/dock"
+#define ACTION_BEHAVIORS_PERCH                      "beh/perch"
 
-#define TOPIC_PROCEDURES_DOCKING_STATE              "pro/dock/state"
-#define TOPIC_PROCEDURES_PERCHING_STATE             "pro/perch/state"
+#define TOPIC_BEHAVIORS_DOCKING_STATE               "beh/dock/state"
+#define TOPIC_BEHAVIORS_PERCHING_STATE              "beh/perch/state"
 
-#define TOPIC_PROCEDURES_ARM_STATE                  "pro/arm/state"
-#define TOPIC_PROCEDURES_ARM_ARM_STATE              "pro/arm/arm_state"
-#define TOPIC_PROCEDURES_ARM_JOINT_SAMPLE           "pro/arm/joint_sample"
+#define TOPIC_BEHAVIORS_ARM_STATE                   "beh/arm/state"
+#define TOPIC_BEHAVIORS_ARM_ARM_STATE               "beh/arm/arm_state"
+#define TOPIC_BEHAVIORS_ARM_JOINT_SAMPLE            "beh/arm/joint_sample"
 
-#define SERVICE_PROCEDURES_ARM_SET_STATE            "pro/arm/set_state"
-#define SERVICE_PROCEDURES_DOCK_SET_STATE           "pro/dock/set_state"
-#define SERVICE_PROCEDURES_PERCH_SET_STATE          "pro/perch/set_state"
+#define SERVICE_BEHAVIORS_ARM_SET_STATE             "beh/arm/set_state"
+#define SERVICE_BEHAVIORS_DOCK_SET_STATE            "beh/dock/set_state"
+#define SERVICE_BEHAVIORS_PERCH_SET_STATE           "beh/perch/set_state"
 
 //////////////
 // HARDWARE //

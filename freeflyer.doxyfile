@@ -775,7 +775,7 @@ WARN_LOGFILE           =
 # spaces. See also FILE_PATTERNS and EXTENSION_MAPPING
 # Note: If this tag is empty the current directory is searched.
 
-INPUT                  = 
+INPUT                  =
 
 # This tag can be used to specify the character encoding of the source files
 # that doxygen parses. Internally doxygen uses the UTF-8 encoding. Doxygen uses
@@ -831,7 +831,8 @@ EXCLUDE                = devel \
                          build \
                          armhf \
                          cmake \
-                         gnc/matlab
+                         gnc/matlab \
+                         submodules
 
 # The EXCLUDE_SYMLINKS tag can be used to select whether or not files or
 # directories that are symbolic links (a Unix file system feature) are excluded
@@ -2181,7 +2182,7 @@ HIDE_UNDOC_RELATIONS   = YES
 # set to NO
 # The default value is: YES.
 
-HAVE_DOT               = NO
+HAVE_DOT               = YES
 
 # The DOT_NUM_THREADS specifies the number of dot invocations doxygen is allowed
 # to run in parallel. When set to 0 doxygen will base this on the number of
@@ -2232,7 +2233,7 @@ CLASS_GRAPH            = YES
 # The default value is: YES.
 # This tag requires that the tag HAVE_DOT is set to YES.
 
-COLLABORATION_GRAPH    = YES
+COLLABORATION_GRAPH    = NO
 
 # If the GROUP_GRAPHS tag is set to YES then doxygen will generate a graph for
 # groups, showing the direct groups dependencies.
@@ -2368,7 +2369,7 @@ DOT_PATH               =
 # command).
 # This tag requires that the tag HAVE_DOT is set to YES.
 
-DOTFILE_DIRS           =
+DOTFILE_DIRS           = behaviors mobility
 
 # The MSCFILE_DIRS tag can be used to specify one or more directories that
 # contain msc files that are included in the documentation (see the \mscfile

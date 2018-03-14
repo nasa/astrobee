@@ -42,45 +42,51 @@ rapid::ext::astrobee::GuestScienceDataType ConvertType(uint8_t state) {
 }  // end namespace
 
 ff::RosGuestScienceToRapid::RosGuestScienceToRapid(
-                                        const std::string& stateSubscribeTopic,
-                                        const std::string& configSubscribeTopic,
-                                        const std::string& dataSubscribeTopic,
-                                        const std::string& pubTopic,
-                                        const ros::NodeHandle &nh,
-                                        const unsigned int queueSize) :
-    RosSubRapidPub(stateSubscribeTopic, pubTopic, nh, queueSize),
-    m_configSubscribeTopic_(configSubscribeTopic),
-    m_dataSubscribeTopic_(dataSubscribeTopic) {
-  c_supplier_.reset(new ff::RosGuestScienceToRapid::ConfigSupplier(
-        rapid::ext::astrobee::GUEST_SCIENCE_CONFIG_TOPIC + pubTopic, "",
+                                      const std::string& state_subscribe_topic,
+                                      const std::string& config_subscribe_topic,
+                                      const std::string& data_subscribe_topic,
+                                      const std::string& pub_topic,
+                                      const ros::NodeHandle &nh,
+                                      const unsigned int queue_size) :
+    RosSubRapidPub(state_subscribe_topic, pub_topic, nh, queue_size),
+    config_subscribe_topic_(config_subscribe_topic),
+    data_subscribe_topic_(data_subscribe_topic) {
+  config_supplier_.reset(new ff::RosGuestScienceToRapid::ConfigSupplier(
+        rapid::ext::astrobee::GUEST_SCIENCE_CONFIG_TOPIC + pub_topic, "",
         "AstrobeeGuestScienceConfigProfile", ""));
 
-  d_supplier_.reset(new ff::RosGuestScienceToRapid::DataSupplier(
-          rapid::ext::astrobee::GUEST_SCIENCE_DATA_TOPIC + pubTopic, "",
+  data_supplier_.reset(new ff::RosGuestScienceToRapid::DataSupplier(
+          rapid::ext::astrobee::GUEST_SCIENCE_DATA_TOPIC + pub_topic, "",
           "AstrobeeGuestScienceDataProfile", ""));
 
-  s_supplier_.reset(new ff::RosGuestScienceToRapid::StateSupplier(
-        rapid::ext::astrobee::GUEST_SCIENCE_STATE_TOPIC + pubTopic, "",
+  state_supplier_.reset(new ff::RosGuestScienceToRapid::StateSupplier(
+        rapid::ext::astrobee::GUEST_SCIENCE_STATE_TOPIC + pub_topic, "",
         "AstrobeeGuestScienceStateProfile", ""));
 
 
-  m_sub_ = m_nh_.subscribe(stateSubscribeTopic, queueSize,
-                           &RosGuestScienceToRapid::StateCallback, this);
+  sub_ = nh_.subscribe(state_subscribe_topic,
+                       queue_size,
+                       &RosGuestScienceToRapid::StateCallback,
+                       this);
 
-  m_configSub_ = m_nh_.subscribe(configSubscribeTopic, queueSize,
-                                 &RosGuestScienceToRapid::ConfigCallback, this);
+  config_sub_ = nh_.subscribe(config_subscribe_topic,
+                              queue_size,
+                              &RosGuestScienceToRapid::ConfigCallback,
+                              this);
 
-  m_dataSub_ = m_nh_.subscribe(dataSubscribeTopic, queueSize,
-                               &RosGuestScienceToRapid::DataCallback, this);
+  data_sub_ = nh_.subscribe(data_subscribe_topic,
+                            queue_size,
+                            &RosGuestScienceToRapid::DataCallback,
+                            this);
 
-  rapid::RapidHelper::initHeader(c_supplier_->event().hdr);
-  rapid::RapidHelper::initHeader(d_supplier_->event().hdr);
-  rapid::RapidHelper::initHeader(s_supplier_->event().hdr);
+  rapid::RapidHelper::initHeader(config_supplier_->event().hdr);
+  rapid::RapidHelper::initHeader(data_supplier_->event().hdr);
+  rapid::RapidHelper::initHeader(state_supplier_->event().hdr);
 }
 
 void ff::RosGuestScienceToRapid::ConfigCallback(
                             ff_msgs::GuestScienceConfigConstPtr const& config) {
-  rapid::ext::astrobee::GuestScienceConfig &msg = c_supplier_->event();
+  rapid::ext::astrobee::GuestScienceConfig &msg = config_supplier_->event();
   msg.hdr.timeStamp = util::RosTime2RapidTime(config->header.stamp);
   msg.hdr.serial = config->serial;
 
@@ -147,12 +153,12 @@ void ff::RosGuestScienceToRapid::ConfigCallback(
     }
   }
 
-  c_supplier_->sendEvent();
+  config_supplier_->sendEvent();
 }
 
 void ff::RosGuestScienceToRapid::DataCallback(
                                 ff_msgs::GuestScienceDataConstPtr const& data) {
-  rapid::ext::astrobee::GuestScienceData &msg = d_supplier_->event();
+  rapid::ext::astrobee::GuestScienceData &msg = data_supplier_->event();
   msg.hdr.timeStamp = util::RosTime2RapidTime(data->header.stamp);
 
   // Don't check size of apk name because it is reported as too long when
@@ -188,12 +194,12 @@ void ff::RosGuestScienceToRapid::DataCallback(
 
   std::memmove(buff, data->data.data(), size);
 
-  d_supplier_->sendEvent();
+  data_supplier_->sendEvent();
 }
 
 void ff::RosGuestScienceToRapid::StateCallback(
                               ff_msgs::GuestScienceStateConstPtr const& state) {
-  rapid::ext::astrobee::GuestScienceState &msg = s_supplier_->event();
+  rapid::ext::astrobee::GuestScienceState &msg = state_supplier_->event();
   msg.hdr.timeStamp = util::RosTime2RapidTime(state->header.stamp);
 
   int num_apks = state->runningApks.size();
@@ -212,8 +218,8 @@ void ff::RosGuestScienceToRapid::StateCallback(
   }
 
   // Make sure state size matches config size
-  if (msg.hdr.serial == c_supplier_->event().hdr.serial &&
-      num_apks != c_supplier_->event().apkStates.length()) {
+  if (msg.hdr.serial == config_supplier_->event().hdr.serial &&
+      num_apks != config_supplier_->event().apkStates.length()) {
     ROS_ERROR("DDS: Number of apks don't match between the config and state!");
     return;
   }
@@ -222,5 +228,5 @@ void ff::RosGuestScienceToRapid::StateCallback(
     msg.runningApks[i] = state->runningApks[i];
   }
 
-  s_supplier_->sendEvent();
+  state_supplier_->sendEvent();
 }

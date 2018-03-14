@@ -270,9 +270,6 @@ class PmcActuatorNodelet : public ff_util::FreeFlyerNodelet {
 
   // Send the commands to the PMCs
   void SendAndPublish() {
-    // Iterate over the number of PMCs
-    for (int i = 0; i < num_pmcs_; i++)
-      pmcs_.at(i)->SendCommand(*(commands_.at(i)));  // FIXME: lock required?
     // Send the telemetry
     telemetry_vector_.header.seq++;
     telemetry_vector_.header.frame_id = frame_id_;
@@ -303,6 +300,17 @@ class PmcActuatorNodelet : public ff_util::FreeFlyerNodelet {
       // One mismatch will trigger a state update
       duplicate &= (state_.states[i] == msg.states[i]);
     }
+    // If the PMC is ramping up, null the nozzles to avoid a brownout. This
+    // seems to work well, but is not a replacement for fixing the firmware.
+    for (int i = 0; i < num_pmcs_; i++) {
+      if (msg.states[i] == ff_hw_msgs::PmcState::RAMPING_UP) {
+        for (unsigned int n = 0; n < 6; n++) {
+          commands_.at(i)->nozzle_positions[n] = null_nozzle_positions_[n];
+        }
+      }
+      // FIXME: lock required?
+      pmcs_.at(i)->SendCommand(*(commands_.at(i)));
+    }
     // Publish a high-level state
     if (!duplicate) {
       state_.header = telemetry_vector_.header;
@@ -328,8 +336,8 @@ class PmcActuatorNodelet : public ff_util::FreeFlyerNodelet {
     for (size_t i = 0; i < kTemperatureSensorsCount; i++) {
       telemetry->temperatures.push_back(t.temperatures[i]);
     }
-    telemetry->status_1 = t.status_1;
-    telemetry->status_2 = t.status_2;
+    telemetry->status_1 = t.status_1.asUint8;
+    telemetry->status_2 = t.status_2.asUint8;
     telemetry->command_id = t.command_id;
 
     return true;

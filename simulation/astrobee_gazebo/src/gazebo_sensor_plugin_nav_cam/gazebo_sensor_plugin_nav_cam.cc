@@ -26,9 +26,6 @@
 #include <sensor_msgs/Image.h>
 #include <sensor_msgs/image_encodings.h>
 
-// FSW includes
-#include <config_reader/config_reader.h>
-
 // STL includes
 #include <string>
 
@@ -36,17 +33,19 @@ namespace gazebo {
 
 class GazeboSensorPluginNavCam : public FreeFlyerSensorPlugin {
  public:
-  GazeboSensorPluginNavCam() : FreeFlyerSensorPlugin(NODE_NAV_CAM) {}
+  GazeboSensorPluginNavCam() :
+    FreeFlyerSensorPlugin("nav_cam", "nav_cam", true) {}
 
-  ~GazeboSensorPluginNavCam() {}
+  virtual ~GazeboSensorPluginNavCam() {}
 
  protected:
   // Called when plugin is loaded into gazebo
-  void LoadCallback(ros::NodeHandle *nh, sensors::SensorPtr sensor, sdf::ElementPtr sdf) {
+  void LoadCallback(ros::NodeHandle *nh,
+    sensors::SensorPtr sensor, sdf::ElementPtr sdf) {
     // Get a link to the parent sensor
-    sensor_ = std::dynamic_pointer_cast < sensors::WideAngleCameraSensor > (sensor);
+    sensor_ = std::dynamic_pointer_cast<sensors::WideAngleCameraSensor>(sensor);
     if (!sensor_) {
-      gzerr << "GazeboSensorPluginNavCam requires a camera sensor as a parent.\n";
+      gzerr << "GazeboSensorPluginNavCam requires a parent camera sensor.\n";
       return;
     }
 
@@ -54,51 +53,40 @@ class GazeboSensorPluginNavCam : public FreeFlyerSensorPlugin {
     if (sensor_->Camera()->ImageFormat() != "L8")
       ROS_FATAL_STREAM("Camera format must be L8");
 
-    // Aspects of the message we don't expect to change...
-    msg_.is_bigendian = false;
-    msg_.header.frame_id = GetFrame();
-    msg_.encoding = sensor_msgs::image_encodings::MONO8;
-    msg_.height = sensor_->ImageHeight();
-    msg_.width = sensor_->ImageWidth();
-    msg_.step = msg_.width;
-    msg_.data.resize(msg_.step * msg_.height);
-
     // Create a publisher
-    pub_ = nh->advertise < sensor_msgs::Image > (TOPIC_HARDWARE_NAV_CAM, 1,
-      boost::bind(&GazeboSensorPluginNavCam::ToggleCallback, this),
-      boost::bind(&GazeboSensorPluginNavCam::ToggleCallback, this));
+    pub_img_ = nh->advertise<sensor_msgs::Image>(TOPIC_HARDWARE_NAV_CAM, 100);
 
     // Connect to the camera update event.
-    update_ = sensor_->ConnectUpdated(
+    connection_ = sensor_->ConnectUpdated(
       std::bind(&GazeboSensorPluginNavCam::UpdateCallback, this));
   }
 
-  // Turn camera on or off based on topic subscription
-  void ToggleCallback() {
-    if (pub_.getNumSubscribers() > 0)
-      sensor_->SetActive(true);
-    else
-      sensor_->SetActive(false);
-  }
-
-  // Called on each sensor update event
+  // Called when a new image must be rendered
   void UpdateCallback() {
-    if (!sensor_->IsActive())
-      return;
-    msg_.header.stamp.sec = sensor_->LastMeasurementTime().sec;
-    msg_.header.stamp.nsec = sensor_->LastMeasurementTime().nsec;
+    // Only publish the image if the extrnsics are set
+    if (!ExtrinsicsFound()) return;
+    // Construct and send the imahe
+    static sensor_msgs::Image msg;
+    msg.is_bigendian = false;
+    msg.header.frame_id = GetFrame();
+    msg.header.stamp.sec = sensor_->LastMeasurementTime().sec;
+    msg.header.stamp.nsec = sensor_->LastMeasurementTime().nsec;
+    msg.encoding = sensor_msgs::image_encodings::MONO8;
+    msg.height = sensor_->ImageHeight();
+    msg.width = sensor_->ImageWidth();
+    msg.step = msg.width;
+    msg.data.resize(msg.step * msg.height);
     std::copy(
       reinterpret_cast<const uint8_t*>(sensor_->ImageData()),
-      reinterpret_cast<const uint8_t*>(sensor_->ImageData()) + msg_.step * msg_.height,
-      msg_.data.begin());
-    pub_.publish(msg_);
+      reinterpret_cast<const uint8_t*>(sensor_->ImageData())
+        + msg.step * msg.height, msg.data.begin());
+    pub_img_.publish(msg);
   }
 
  private:
-  ros::Publisher pub_;
+  ros::Publisher pub_img_;
   sensors::WideAngleCameraSensorPtr sensor_;
-  sensor_msgs::Image msg_;
-  event::ConnectionPtr update_;
+  event::ConnectionPtr connection_;
 };
 
 GZ_REGISTER_SENSOR_PLUGIN(GazeboSensorPluginNavCam)

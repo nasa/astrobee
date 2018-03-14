@@ -44,18 +44,12 @@
 scriptdir=$(dirname "$(readlink -f "$0")")
 rootdir=`cd $scriptdir/../../..; pwd`
 
-debdir=${ARS_DEB_DIR:-$rootdir/.astrobee_repo}
-mkdir -p $debdir
 arssrc=/etc/apt/sources.list.d/astrobee-latest.list
 
 username=${NDC_USERNAME:+${NDC_USERNAME}@}
 
-# Get the debian packages from the server
-echo "Attempting to ssh to volar... did you set up your .ssh/config?"
-rsync -avz ${username}volar.ndc.nasa.gov:/home/p-free-flyer/free-flyer/FSW/ars_debs/ $debdir/ || exit 1
-
 # Add these packages to the apt sources
-sudo /bin/bash -c "echo \"deb [arch=amd64] file://$debdir xenial main\" > $arssrc" || exit 1
-sudo /bin/bash -c "echo \"deb-src file://$debdir xenial main\" >> $arssrc" || exit 1
+sudo touch $arssrc
+#sudo /bin/bash -c "echo \"deb [arch=amd64] http://127.0.0.1:8765/software xenial main\" > $arssrc" || exit 1
+#sudo /bin/bash -c "echo \"deb-src http://127.0.0.1:8765/software xenial main\" >> $arssrc" || exit 1
 sudo apt-key add $scriptdir/../../submodules/platform/rootfs/keys/astrobee.key || exit 1
-sudo apt-get update || exit 1

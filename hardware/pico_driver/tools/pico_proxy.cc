@@ -21,6 +21,7 @@
 #include <cv_bridge/cv_bridge.h>
 #include <sensor_msgs/image_encodings.h>
 #include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/highgui/highgui.hpp>
 
 #include <sensor_msgs/Image.h>
 #include <ff_msgs/PicoflexxIntermediateData.h>
@@ -52,15 +53,15 @@ void ExtendedCallback(const ff_msgs::PicoflexxIntermediateData::ConstPtr& msg) {
   cv::split(cv_ptr->image, layers);
   std_msgs::Header header;
   header.stamp = ros::Time::now();
-  header.frame_id = "/perch_cam";
-  cv_bridge::CvImage d(header,
-    sensor_msgs::image_encodings::TYPE_32FC1, layers[0]);
-  cv_bridge::CvImage a(header,
-    sensor_msgs::image_encodings::TYPE_32FC1, layers[1]);
-  cv_bridge::CvImage i(header,
-    sensor_msgs::image_encodings::TYPE_32FC1, layers[2]);
-  cv_bridge::CvImage n(header,
-    sensor_msgs::image_encodings::TYPE_32FC1, layers[3]);
+
+  // Change this for Haz Cam
+  header.frame_id = msg->header.frame_id;
+  cv_bridge::CvImage d(header, sensor_msgs::image_encodings::TYPE_32FC1, layers[0]);
+  // TYPE_8UC1 encoding for Kalibr's calibration data
+  cv_bridge::CvImage a(header, sensor_msgs::image_encodings::TYPE_8UC1, layers[1]);
+  cv_bridge::CvImage i(header, sensor_msgs::image_encodings::TYPE_32FC1, layers[2]);
+  cv_bridge::CvImage n(header, sensor_msgs::image_encodings::TYPE_32FC1, layers[3]);
+
   // Publish individual images
   pub_d_.publish(d.toImageMsg());
   pub_a_.publish(a.toImageMsg());

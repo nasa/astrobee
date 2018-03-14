@@ -31,7 +31,7 @@ create_library(TARGET ${PROJECT_NAME}
 )
 
 create_tool_targets(DIR tools
-  LIBS ${catkin_LIBRARIES} ${royale_LIBRARIES}
+  LIBS ${catkin_LIBRARIES} ${royale_LIBRARIES} uvc
   INC ${catkin_INCLUDE_DIRS} ${royale_INCLUDE_DIRS}
   DEPS ff_msgs opencv
 )

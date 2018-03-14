@@ -22,12 +22,13 @@
 #include <cstring>
 #include <iomanip>
 #include <iostream>
-
+#include <sstream>
 #include <fstream>
 
 namespace pmc_actuator {
 
-PmcActuator::PmcActuator(const i2c::Device &i2c_dev) : i2c_dev_(i2c_dev) {}
+PmcActuator::PmcActuator(const i2c::Device &i2c_dev) :
+  i2c_dev_(i2c_dev), metadata_received_(false), metadata_index_(0) {}
 
 PmcActuator::~PmcActuator(void) {}
 
@@ -70,22 +71,67 @@ bool PmcActuator::GetTelemetry(Telemetry *telemetry) {
     return false;
   }
 
-  // Copy the data.
+  // ACTUAL DATA PROCESSING
+
+  // Copy the data
   size_t pos = 0;
   telemetry->motor_speed = buf[pos++];
   telemetry->motor_current = buf[pos++];
   telemetry->v6_current = buf[pos++];
-  // PMC is little endian.
   telemetry->pressure = buf[pos + 1] << 8 | (buf[pos] & 0x00FF);
   pos += 2;
   for (size_t i = 0; i < kTemperatureSensorsCount; i++) {
     telemetry->temperatures[i] = buf[pos++];
   }
-  telemetry->status_1 = buf[pos++];
-  telemetry->status_2 = buf[pos++];
+  telemetry->status_1.asUint8 = buf[pos++];
+  telemetry->status_2.asUint8 = buf[pos++];
   telemetry->command_id = buf[pos++];
   telemetry->checksum = buf[pos++];
 
+  // When the control bit is 1 it means that this is the start of a new metadata
+  // packet, and equivalently, that the last packet completed transmission. In
+  // this case we need to inspect to see if the our buffer checksums correctly.
+  // If so, then we copy over the metadata and flag that we have received it.
+  if (telemetry->status_2.control) {
+    switch (metadata_buffer_[0]) {
+    case kMetadataVersionType:
+      if (!ComputeChecksum(metadata_buffer_, sizeof(MetadataVersion))) {
+        memcpy(&metadata_, metadata_buffer_, sizeof(MetadataVersion));
+        metadata_received_ = true;
+      } else {
+        std::cout << "metadata checksum failed" << std::endl;
+      }
+    default:
+      break;
+    }
+    metadata_index_ = 0;
+    memset(metadata_buffer_, 0, kMaxMetadataLength);
+  }
+  metadata_buffer_[metadata_index_ / 8]
+    |= (telemetry->status_2.metadata << (metadata_index_ % 8));
+  metadata_index_++;
+  return true;
+}
+
+// Get the firmware hash
+bool PmcActuator::GetFirmwareHash(std::string & hash) {
+  if (!metadata_received_)
+    return false;
+  char buf[128];
+  for (size_t i = 0; i < sizeof(metadata_.hash); i++)
+    snprintf(&buf[2*i], 128 - 2*i, "%02x", metadata_.hash[i]);
+  hash = buf;
+  return true;
+}
+
+// Get the firmware date
+bool PmcActuator::GetFirmwareTime(std::string & time) {
+  if (!metadata_received_)
+    return false;
+  time_t t = static_cast<time_t>(metadata_.time);
+  char str[128];
+  strftime(str, sizeof(str), "%Y-%m-%d %H:%M:%S %z", std::gmtime(&t));
+  time = str;
   return true;
 }
 
@@ -140,9 +186,22 @@ bool PmcActuatorStub::GetTelemetry(Telemetry *telemetry) {
   telemetry->v6_current = static_cast<uint8_t>(current / 8.0);
   telemetry->pressure = 2 * static_cast<uint16_t>(command_.motor_speed);
   telemetry->command_id = command_.command_id;
-  telemetry->status_1 = command_.mode;
+  telemetry->status_1.asUint8 = command_.mode;
   telemetry_ = *telemetry;
   PrintTelemetry(telem_output_, telemetry_);
+  return true;
+}
+
+
+// Get the firmware hash
+bool PmcActuatorStub::GetFirmwareHash(std::string & hash) {
+  hash = "SIMULATED";
+  return true;
+}
+
+// Get the firmware date
+bool PmcActuatorStub::GetFirmwareTime(std::string & time) {
+  time = "SIMULATED";
   return true;
 }
 
@@ -156,9 +215,9 @@ void PmcActuatorBase::PrintTelemetry(std::ostream &out,
   out.fill('0');
   out << " id=" << std::setw(3) << static_cast<unsigned int>(telem.command_id);
   out << " status_1=" << std::setw(1)
-      << static_cast<unsigned int>(telem.status_1);
+      << static_cast<unsigned int>(telem.status_1.asUint8);
   out << " status_2=" << std::setw(1)
-      << static_cast<unsigned int>(telem.status_2);
+      << static_cast<unsigned int>(telem.status_2.asUint8);
   out << " speed=" << std::setw(3)
       << static_cast<unsigned int>(telem.motor_speed);
   out << " motor_current=" << std::setw(3)

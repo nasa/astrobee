@@ -1,0 +1,8 @@
+#Accelerometers
+accelerometer_noise_density:  9.8066e-04 
+accelerometer_random_walk: 6.6667e-05
+#Gyroscopes 
+gyroscope_noise_density:   3.4907e-05 
+gyroscope_random_walk:     2.833e-05
+rostopic:  /hw/imu
+update_rate: 250

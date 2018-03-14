@@ -16,21 +16,7 @@
  * under the License.
  */
 
-#include <ros/assert.h>
-
-#include <string>
-#include <cstring>
-#include <memory>
-
 #include "dds_ros_bridge/ros_agent_state.h"
-#include "dds_ros_bridge/util.h"
-
-#include "rapidUtil/RapidHelper.h"
-
-#include "ff_msgs/AgentStateStamped.h"
-#include "ff_msgs/OpState.h"
-
-#include "AstrobeeAgentStateSupport.h"
 
 namespace rea = rapid::ext::astrobee;
 
@@ -41,8 +27,6 @@ using ff_msgs::MobilityState;
 using rea::AgentState;
 
 namespace {
-
-const char* kAgentStateTopic = "astrobee_agent_state";
 
 #define GENERATE_OP_CASE(NAME) \
   case OpState::NAME: return rea::OPERATING_STATE_##NAME
@@ -107,26 +91,29 @@ rea::MobilityState ConvertMobilityState(const uint8_t state) {
 }  // end namespace
 
 ff::RosAgentStateToRapid::RosAgentStateToRapid(
-    const std::string& subscribeTopic,
-    const std::string& pubTopic,
-    const ros::NodeHandle &nh,
-    const unsigned int queueSize)
-  : RosSubRapidPub(subscribeTopic, pubTopic, nh, queueSize) {
-  m_supplier_.reset(
-    new ff::RosAgentStateToRapid::StateSupplier(kAgentStateTopic + pubTopic,
-      "", "AstrobeeAgentState", ""));
+                                            const std::string& subscribe_topic,
+                                            const std::string& pub_topic,
+                                            const ros::NodeHandle &nh,
+                                            const unsigned int queue_size)
+  : RosSubRapidPub(subscribe_topic, pub_topic, nh, queue_size) {
+  state_supplier_.reset(
+    new ff::RosAgentStateToRapid::StateSupplier(
+      rapid::ext::astrobee::AGENT_STATE_TOPIC + pub_topic,
+      "", "AstrobeeAgentStateProfile", ""));
 
-  m_sub_ = m_nh_.subscribe(subscribeTopic, queueSize,
-    &RosAgentStateToRapid::Callback, this);
+  sub_ = nh_.subscribe(subscribe_topic,
+                       queue_size,
+                       &RosAgentStateToRapid::Callback,
+                       this);
 
-  rapid::RapidHelper::initHeader(m_supplier_->event().hdr);
+  rapid::RapidHelper::initHeader(state_supplier_->event().hdr);
 }
 
 // TODO(tfmorse): update for new agent state
 
 void ff::RosAgentStateToRapid::Callback(
-  const ff_msgs::AgentStateStamped::ConstPtr& status) {
-  rapid::ext::astrobee::AgentState &msg = m_supplier_->event();
+                          const ff_msgs::AgentStateStamped::ConstPtr& status) {
+  rapid::ext::astrobee::AgentState &msg = state_supplier_->event();
 
   msg.hdr.timeStamp = util::RosTime2RapidTime(status->header.stamp);
 
@@ -164,6 +151,6 @@ void ff::RosAgentStateToRapid::Callback(
   msg.enableAutoReturn = status->auto_return_enabled;
   msg.bootTime = status->boot_time;
 
-  m_supplier_->sendEvent();
+  state_supplier_->sendEvent();
 }
 

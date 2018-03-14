@@ -1,11 +1,9 @@
 \mainpage Astrobee Calibration
 
 This folder contains various scripts for calibration.
-
 # Setup
-
 - Build and install the Astrobee code on the robot.
-- Install [kalibr](https://github.com/ethz-asl/kalibr) on your computer.
+- Install [kalibr](https://github.com/teresaconc/Kalibr) on your computer.
 
 ## Installation from sources for Ubuntu 16.04 notes
 ```
@@ -21,35 +19,63 @@ catkin init
 catkin config --extend /opt/ros/kinetic
 catkin config --cmake-args -DCMAKE_BUILD_TYPE=Release
 cd $KALIBR_WS/src
-git clone https://github.com/ethz-asl/Kalibr.git
+git clone https://github.com/teresaconc/Kalibr.git
 catkin build -DCMAKE_BUILD_TYPE=Release -j4
-```
-# Intrinsic Camera Calibration
+
+
+#Setup to calibrate with the dock AR target. [Only run when configuration is changed]
+
+This scprit only needs to be executed whenever the configuration of the target is changed (number of tags, tag's position or id changed)
+
+- Run markers2kalibr: Usage './markers2kalibr.py --config config_filename'
+  
+config\_filename: config file where the specifications of AR tags of the target are defined. Default value is dock\_markers\_specs.config
+
+$BUILD_PATH should be defined. The script will run an executable installed with the freeflyer code 
+$KALIBR_WS should be defined since the script will also automatically add a header file to Kalibr's directory describing the family of AR tags (Kalibr uses AprilTag library and not the alvar library used in the freeflyer software). 
+
+
+# Intrinsics Camera Calibration
 
 ## Recording Calibration Data
 
 - Run
-      roslaunch calibration.launch
+	roslaunch astrobee calibration.launch
   to launch the IMU driver, camera drivers, and an image viewer.
-- Face the robot towards where you can hold the AR tag in front of the camera.
-  It should be under bright lighting conditions where the AR tag is clear.
+	Add api_key of pico\_flexx in cameras.config to launch in L2 mode.
+	roslaunch pico\_proxy with the correct camera topic
+
+- Face the robot towards where you can hold the AR tag in front of the
+  camera. It should be under bright lighting conditions where the AR tag is clear.
 - Begin recording the bag.
-      rosbag record /hw/cam_nav
+      Example to record nav\_cam and haz\_cam: rosbag record /hw/cam\_nav /hw/depth_haz/extended/amplitude
   In good networking conditions, it is fine to record on your own computer, not
   Astrobee. A high framework is not required.
-- Move the AR tag in front of the camera. You must get some frames where all 
-  squares are visible. If the AR tag is only partially visible in some frames
-  that is fine. Try to cover the entire area of the image.
+  Move the AR tag in front of the camera.
+  If the AR tag is only partially visible in some frames that is fine. Try to cover the entire Field of View of both cameras (be aware that it varies from depth to visual camera)
 - Stop recording.
+
 
 ## Processing the Data
 
-Run
-    ./intrinsics_calibrate.py robotname bagfile
-Where robotname is the config file to edit (e.g., p4d, honey) and bagfile is the
-bag with the recorded extrinsics. The "-dock\_cam" flag can be passed for the
-dock cam, and "-verbose" for additional information. The script will overwrite
-the intrinsics calibration in the specified config file.
+- Make sure the target configuration yaml file is in SCRIPT_DIR/data/. If there is no yaml file or the configuration is not the current one, follow #Setup to calibrate with the dock AR target
+- Run
+    ./intrinsics_calibrate.py robotname bagfile 
+
+Arguments: 
+	robotname is the robot's config file to edit (e.g., p4d, honey)
+	bagfile is the bag with the recorded data.
+Additional flags:
+	--dock\_cam: To calibrate dock cam and perch cam pair. If not set, the script calibrates nav cam and haz cam.
+	--depth\_cam: To calibrate both HD camera (nav or dock) and respective depth camera (haz or perch). If not set the script only calibrates the HD camera.
+ 	--verbose: To output additional information on the Kalibr's calibration.
+
+The script will overwrite the intrinsics calibration in the specified config file. 
+It will also generate in the bagfile directory the following files:
+	.txt file with the calibration results
+	.pdf report
+	.yaml file with the estimated intrinsics parameters that will be used as an input to the extrinsics calibration (see # Extrinsic Camera Calibration -> ## Processing Data)
+
 
 # Extrinsic Camera Calibration
 
@@ -58,15 +84,30 @@ the intrinsics calibration in the specified config file.
 - Detach the robot from its stand so it can be lifted freely.
 - Attach the april target to a wall under bright light.
 - Run
-      roslaunch calibration.launch
+      roslaunch astrobee calibration.launch
 - Lift the robot and face the target.
-- Begin recording the bag on the robot. The recording cannot have shocks from
-  picking up and placing the robot down.
-      rosbag record /hw/cam_nav /hw/imu
-- Accelerate the robot rapidly along all axes of motion. Be careful not to drop
-  the robot.
+- Begin recording the bag on the robot. The recording cannot have shocks from picking
+  up and placing the robot down.
+     Example: rosbag record /hw/cam\_nav /hw/depth\_haz/extended/amplitude /hw/imu
+- Accelerate the robot rapidly along all axes of motion. Try to excite all axis of the imu. Be careful not to drop the robot. 
 - Stop recording.
 - Put the robot down.
 - Copy the bag off of the robot.
 
 ## Processing the Data
+- Make sure the target configuration yaml file and the IMU yaml file are in SCRIPT_DIR/data/.
+- Run
+    ./extrinsics_calibrate.py robotname intrinsicsYaml bagfile 
+
+Arguments: 
+	robotname is the robot's config file to edit (e.g., p4d, honey)
+	intrinsicsYaml is an output YAML file generated by the previous intrinsics calibration
+	bagfile is the bag with the recorded data.
+Additional flags:
+	--dock\_cam: To calibrate dock cam and perch cam pair. If not set, the script calibrates nav cam and haz cam.
+ 	--verbose: To output additional information on Kalibr's calibration.
+
+If the previous intrinsics calibration was run for the visual-depth camera pair then the output will generate extrinsics for both cameras. If not, it will only generate for nav/dock cam.
+The script will overwrite the extrinsics calibration in the specified robot's config file. 
+It will also generate some results reports in the bagfile directory
+

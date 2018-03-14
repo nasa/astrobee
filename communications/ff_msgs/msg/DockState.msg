@@ -21,23 +21,24 @@
 std_msgs/Header header
 
 # Feedback
-int32 state
-int32 RECOVERY_SWITCH_TO_ML_LOC          = 15
-int32 RECOVERY_MOVING_TO_APPROACH_POSE   = 14
-int32 RECOVERY_WAITING_FOR_SPIN_DOWN     = 13
-int32 RECOVERY_SWITCH_TO_NO_LOC          = 12
-int32 INITIALIZING                       = 11
-int32 UNKNOWN                            = 10
-int32 DOCKING_MAX_STATE                  = 6
-int32 DOCKING_SWITCHING_TO_AR_LOC        = 6
-int32 DOCKING_MOVING_TO_APPROACH_POSE    = 5
-int32 DOCKING_MOVING_TO_COMPLETE_POSE    = 4
-int32 DOCKING_CHECKING_ATTACHED          = 3
-int32 DOCKING_WAITING_FOR_SPIN_DOWN      = 2
-int32 DOCKING_SWITCHING_TO_NO_LOC        = 1
-int32 DOCKED                             = 0
-int32 UNDOCKING_SWITCHING_TO_ML_LOC      = -1
-int32 UNDOCKING_WAITING_FOR_SPIN_UP      = -2
-int32 UNDOCKING_MOVING_TO_APPROACH_POSE  = -3
-int32 UNDOCKED                           = -4
-int32 UNDOCKING_MAX_STATE                = -4
+int8 state
+int8 RECOVERY_SWITCHING_TO_ML_LOC       = 15
+int8 RECOVERY_MOVING_TO_APPROACH_POSE   = 14
+int8 RECOVERY_WAITING_FOR_SPIN_DOWN     = 13
+int8 RECOVERY_SWITCHING_TO_NO_LOC       = 12
+int8 INITIALIZING                       = 11
+int8 UNKNOWN                            = 10
+int8 DOCKING_MAX_STATE                  = 7
+int8 DOCKING_SWITCHING_TO_ML_LOC        = 7
+int8 DOCKING_MOVING_TO_APPROACH_POSE    = 6
+int8 DOCKING_SWITCHING_TO_AR_LOC        = 5
+int8 DOCKING_MOVING_TO_COMPLETE_POSE    = 4
+int8 DOCKING_CHECKING_ATTACHED          = 3
+int8 DOCKING_WAITING_FOR_SPIN_DOWN      = 2
+int8 DOCKING_SWITCHING_TO_NO_LOC        = 1
+int8 DOCKED                             = 0
+int8 UNDOCKING_SWITCHING_TO_ML_LOC      = -1
+int8 UNDOCKING_WAITING_FOR_SPIN_UP      = -2
+int8 UNDOCKING_MOVING_TO_APPROACH_POSE  = -3
+int8 UNDOCKED                           = -4
+int8 UNDOCKING_MAX_STATE                = -4

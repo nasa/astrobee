@@ -1,7 +1,6 @@
 # Basic system
-add_subdirectory(mapper)
-add_subdirectory(sentinel)
 add_subdirectory(choreographer)
+add_subdirectory(mapper)
 
 # Planners
 add_subdirectory(planner_trapezoidal)

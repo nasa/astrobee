@@ -19,22 +19,39 @@
 #ifndef DDS_ROS_BRIDGE_RAPID_COMMAND_ROS_COMMAND_PLAN_H_
 #define DDS_ROS_BRIDGE_RAPID_COMMAND_ROS_COMMAND_PLAN_H_
 
+#include <stdint.h>
+
+#include <ros/assert.h>
+
 #include <string>
+#include <cstring>
+#include <vector>
 
 #include "dds_ros_bridge/rapid_sub_ros_pub.h"
+#include "dds_ros_bridge/util.h"
+
+#include "ff_msgs/CommandArg.h"
+#include "ff_msgs/CommandStamped.h"
+
+#include "AstrobeeCommandConstants.h"
 
 #include "knDds/DdsTypedSupplier.h"
-#include "rapidDds/Command.h"
+
 #include "rapidDds/AckSupport.h"
+#include "rapidDds/Command.h"
+#include "rapidDds/CommandSupport.h"
+#include "rapidDds/RapidConstants.h"
+
+#include "rapidUtil/RapidHelper.h"
 
 namespace ff {
 
 class RapidCommandRosCommand : public RapidSubRosPub {
  public:
-  RapidCommandRosCommand(const std::string& subscribeTopic,
-                         const std::string& pubTopic,
+  RapidCommandRosCommand(const std::string& subscribe_topic,
+                         const std::string& pub_topic,
                          const ros::NodeHandle &nh,
-                         const unsigned int queueSize = 10);
+                         const unsigned int queue_size = 10);
 
   /**
    * call back for ddsEventLoop

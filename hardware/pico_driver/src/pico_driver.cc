@@ -28,6 +28,8 @@
 
 // Royale SDK interface
 #include <royale/CameraManager.hpp>
+#include <royale/LensParameters.hpp>
+#include <royale/Status.hpp>
 
 // Messages
 #include <sensor_msgs/Image.h>
@@ -79,6 +81,23 @@ class PicoDriver {
       ROS_WARN_STREAM("Use case not supported. Switching to default use case.");
       device_->setUseCase(use_cases[0]);
       initialized_ = true;
+    }
+
+    // Print Factory Calibration
+    royale::LensParameters lens;
+    bool calibrated;
+    device_->isCalibrated(calibrated);
+
+    ROS_DEBUG_STREAM("Is Calibrated " << calibrated);
+
+    if (calibrated) {
+      device_->getLensParameters(lens);
+      ROS_DEBUG_STREAM("Center: " << lens.principalPoint.first << ", " << lens.principalPoint.second);
+      ROS_DEBUG_STREAM("Focal Length: " << lens.focalLength.first << ", " << lens.focalLength.second);
+      ROS_DEBUG_STREAM("Tanential Distortion: " << lens.distortionTangential.first << ", " <<
+                      lens.distortionTangential.second);
+      ROS_DEBUG_STREAM("Radial Distortion: " << lens.distortionRadial[0] << ", " << lens.distortionRadial[1] << ", "
+                    << lens.distortionRadial[2]);
     }
   }
 

@@ -24,10 +24,14 @@
   <arg name="robot" default="p4d" />            <!-- Robot name              -->
   <arg name="world" default="granite" />        <!-- World name              -->
   <arg name="ns" default="" />                  <!-- Robot namespace prefix  -->
-  <arg name="nodes" default=""/>                <!-- Launch specific nodes   -->
+
+  <arg name="output" default="log"/>            <!-- Where nodes should log  -->
   <arg name="mlp" default="disabled" />         <!-- MLP IP address          -->
   <arg name="llp" default="disabled" />         <!-- LLP IP address          -->
- 
+
+  <!-- Launch access control and the bridge so GDS works as expected         -->
+  <arg name="nodes" default="dds_ros_bridge,access_control"/>
+
   <!-- General options -->
   <arg name="gviz" default="false" />           <!-- Start GNC visualizer    -->
   <arg name="rviz" default="false" />           <!-- Start visualization     -->
@@ -52,6 +56,8 @@
   <!-- Start ground controller services -->
   <group>
     <machine name ="local" address="localhost" default="true"/>
+    <!-- Start the dock description for visualization purposes -->
+    <include file="$(find astrobee)/launch/controller/dock.launch"/>
     <!-- Start ground controller services -->
     <include if="$(arg gviz)" file="$(find astrobee)/launch/controller/gviz.launch"/>
     <include if="$(arg rviz)" file="$(find astrobee)/launch/controller/rviz.launch"/>
@@ -64,6 +70,7 @@
     <arg name="robot" value="$(arg robot)" />     <!-- Type of robot         -->
     <arg name="world" value="$(arg world)" />     <!-- Execution context     -->
     <arg name="ns" value="$(arg ns)" />           <!-- Robot namespace       -->
+    <arg name="output" value="$(arg output)" />    <!-- Output for logging   -->
     <arg name="drivers" value="false" />          <!-- Never start drivers   -->
     <arg name="llp" value="$(arg llp)" />         <!-- LLP IP address        -->
     <arg name="mlp" value="$(arg mlp)" />         <!-- MLP IP address        -->

@@ -51,7 +51,7 @@
 // Gflags
 DEFINE_string(ns, "", "Robot namespace");
 DEFINE_string(loc, "", "Localization pipeline (none, ml, ar, hr)");
-DEFINE_string(mode, "", "Flight mode");
+DEFINE_string(mode, "nominal", "Flight mode");
 DEFINE_string(planner, "trapezoidal", "Path planning algorithm");
 DEFINE_bool(ff, false, "Plan in face-forward mode");
 DEFINE_double(rate, 1.0, "Segment sampling rate");
@@ -187,8 +187,8 @@ void MFeedbackCallback(ff_msgs::MotionFeedbackConstPtr const& feedback) {
   std::string str = "UNKNOWN";
   switch (feedback->state.state) {
   case ff_msgs::MotionState::INITIALIZING:     str = "INITIALIZING";     break;
-  case ff_msgs::MotionState::WAITING_FOR_STOP: str = "WAITING_FOR_STOP"; break;
-  case ff_msgs::MotionState::WAITING:          str = "WAITING";          break;
+  case ff_msgs::MotionState::IDLE:             str = "IDLE";             break;
+  case ff_msgs::MotionState::STOPPED:          str = "STOPPED";          break;
   case ff_msgs::MotionState::IDLING:           str = "IDLING";           break;
   case ff_msgs::MotionState::STOPPING:         str = "STOPPING";         break;
   case ff_msgs::MotionState::PREPPING:         str = "PREPPING";         break;
@@ -401,6 +401,10 @@ int main(int argc, char *argv[]) {
   if (mode > 1) {
     std::cout << "You can only specify one of "
       << "-move, -stop, -idle, or -exec <segment>" << std::endl;
+    return 1;
+  }
+  if (FLAGS_move && FLAGS_pos.empty() && FLAGS_att.empty()) {
+    std::cout << "The move flag must also have a pos / att flag" << std::endl;
     return 1;
   }
   if (FLAGS_connect <= 0.0) {

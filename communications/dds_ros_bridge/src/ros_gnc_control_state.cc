@@ -19,47 +19,45 @@
 
 #include "dds_ros_bridge/ros_gnc_control_state.h"
 
-#include "rapidDds/RapidConstants.h"
-
 namespace ff {
 
 RosGncControlStateToRapid::RosGncControlStateToRapid(
-                                              const std::string& subscribeTopic,
-                                              const std::string& pubTopic,
-                                              const ros::NodeHandle& nh,
-                                              const unsigned int queueSize) :
-    RosSubRapidPub(subscribeTopic, pubTopic, nh, queueSize) {
-  s_supplier_.reset(new RosGncControlStateToRapid::StateSupplier(
-      rapid::ext::astrobee::GNC_CONTROL_STATE_TOPIC + pubTopic,
+                                            const std::string& subscribe_topic,
+                                            const std::string& pub_topic,
+                                            const ros::NodeHandle& nh,
+                                            const unsigned int queue_size)
+  : RosSubRapidPub(subscribe_topic, pub_topic, nh, queue_size) {
+  state_supplier_.reset(new RosGncControlStateToRapid::StateSupplier(
+      rapid::ext::astrobee::GNC_CONTROL_STATE_TOPIC + pub_topic,
       "",
       "AstrobeeGncControlStateProfile",
       ""));
 
   // start subscriber
-  m_sub_ = m_nh_.subscribe(subscribeTopic,
-                           queueSize,
-                           &RosGncControlStateToRapid::MsgCallback,
-                           this);
+  sub_ = nh_.subscribe(subscribe_topic,
+                       queue_size,
+                       &RosGncControlStateToRapid::MsgCallback,
+                       this);
 
   // Initialize the state message
-  rapid::RapidHelper::initHeader(s_supplier_->event().hdr);
+  rapid::RapidHelper::initHeader(state_supplier_->event().hdr);
 
   // Setup time for publishing the gnc control state but don't start the timer
   // since the rate is 0. The bridge will set this rate at the end of its init
   // update: Andrew changed rate to 1.0 to avoid a runtime bounds error. Should
   // not affect since autostart argument is set to false.
-  gnc_timer_ = m_nh_.createTimer(ros::Rate(1.0),
-                                 &RosGncControlStateToRapid::PubGncControlState,
-                                 this,
-                                 false,
-                                 false);
+  gnc_timer_ = nh_.createTimer(ros::Rate(1.0),
+                               &RosGncControlStateToRapid::PubGncControlState,
+                               this,
+                               false,
+                               false);
 }
 
-void RosGncControlStateToRapid::CopyVec3D(rapid::Vec3d& vecOut,
-                                          const geometry_msgs::Vector3& vecIn) {
-  vecOut[0] = vecIn.x;
-  vecOut[1] = vecIn.y;
-  vecOut[2] = vecIn.z;
+void RosGncControlStateToRapid::CopyVec3D(rapid::Vec3d& vec_out,
+                                        const geometry_msgs::Vector3& vec_in) {
+  vec_out[0] = vec_in.x;
+  vec_out[1] = vec_in.y;
+  vec_out[2] = vec_in.z;
 }
 
 void RosGncControlStateToRapid::MsgCallback(
@@ -69,7 +67,7 @@ void RosGncControlStateToRapid::MsgCallback(
 
 void RosGncControlStateToRapid::PubGncControlState(
                                                 const ros::TimerEvent& event) {
-  rapid::ext::astrobee::GncControlState &msg = s_supplier_->event();
+  rapid::ext::astrobee::GncControlState &msg = state_supplier_->event();
 
   // Copy time
   msg.hdr.timeStamp = util::RosTime2RapidTime(gnc_msg_->when);
@@ -92,7 +90,7 @@ void RosGncControlStateToRapid::PubGncControlState(
   CopyVec3D(msg.accel.angular, gnc_msg_->accel.angular);
 
   // Send message
-  s_supplier_->sendEvent();
+  state_supplier_->sendEvent();
 }
 
 void RosGncControlStateToRapid::SetGncPublishRate(float rate) {

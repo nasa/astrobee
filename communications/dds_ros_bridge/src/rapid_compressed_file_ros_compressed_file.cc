@@ -16,20 +16,7 @@
  * under the License.
  */
 
-#include <stdint.h>
-
-#include <ros/assert.h>
-
-#include <string>
-#include <vector>
-
 #include "dds_ros_bridge/rapid_compressed_file_ros_compressed_file.h"
-#include "dds_ros_bridge/util.h"
-
-#include "ff_msgs/CompressedFile.h"
-
-#include "CompressedFileSupport.h"
-
 
 namespace {
 
@@ -54,18 +41,21 @@ RapidCompression2Ros(rapid::ext::astrobee::FileCompressionType const& t) {
 }  // end namespace
 
 ff::RapidCompressedFileRosCompressedFile::RapidCompressedFileRosCompressedFile(
-    const std::string& subscribeTopic,
-    const std::string& pubTopic,
+    const std::string& subscribe_topic,
+    const std::string& pub_topic,
     const ros::NodeHandle &nh,
-    const unsigned int queueSize)
-  : ff::RapidSubRosPub(subscribeTopic, pubTopic, nh,
-                       "RapidCompressedFileRosCompresesdFile", queueSize) {
-  m_pub_ = m_nh_.advertise<ff_msgs::CompressedFile>(pubTopic, queueSize);
+    const unsigned int queue_size)
+  : ff::RapidSubRosPub(subscribe_topic,
+                       pub_topic,
+                       nh,
+                       "RapidCompressedFileRosCompresesdFile",
+                       queue_size) {
+  pub_ = nh_.advertise<ff_msgs::CompressedFile>(pub_topic, queue_size);
 
   try {
-    m_ddsEventLoop_.connect<rapid::ext::astrobee::CompressedFile>(this,
-      "astrobee_compressed_file" + subscribeTopic,
-      "", "AstrobeeCompressedFile", "");
+    dds_event_loop_.connect<rapid::ext::astrobee::CompressedFile>(this,
+      rapid::ext::astrobee::COMPRESSED_FILE_TOPIC + subscribe_topic,
+      "", "AstrobeeCompressedFileProfile", "");
   } catch (std::exception& e) {
     ROS_ERROR_STREAM("RapidCompressedFileRosCompressedFile exception: "
                      << e.what());
@@ -93,6 +83,6 @@ void ff::RapidCompressedFileRosCompressedFile::operator() (
   msg.file.resize(file->compressedFile.length());
   std::memmove(msg.file.data(), buf, file->compressedFile.length());
 
-  m_pub_.publish(msg);
+  pub_.publish(msg);
 }
 

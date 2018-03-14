@@ -56,6 +56,7 @@
 #include <std_srvs/Empty.h>
 
 #include <json/json.h>
+#include <json/value.h>
 
 #include <map>
 #include <string>

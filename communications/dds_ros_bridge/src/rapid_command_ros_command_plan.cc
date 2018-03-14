@@ -16,26 +16,7 @@
  * under the License.
  */
 
-#include <stdint.h>
-
-#include <ros/assert.h>
-
-#include <string>
-#include <cstring>
-#include <vector>
-
 #include "dds_ros_bridge/rapid_command_ros_command_plan.h"
-#include "dds_ros_bridge/util.h"
-
-#include "ff_msgs/CommandArg.h"
-#include "ff_msgs/CommandStamped.h"
-
-#include "AstrobeeCommandConstants.h"
-#include "rapidDds/RapidConstants.h"
-#include "rapidDds/AckSupport.h"
-#include "rapidDds/CommandSupport.h"
-
-#include "rapidUtil/RapidHelper.h"
 
 using ff_msgs::CommandStamped;
 using ff_msgs::CommandArg;
@@ -92,24 +73,27 @@ void TransferArgument(rapid::ParameterUnion const& u,
 namespace ff {
 
 RapidCommandRosCommand::RapidCommandRosCommand(
-    const std::string& subscribeTopic,
-    const std::string& pubTopic,
-    const ros::NodeHandle &nh,
-    const unsigned int queueSize)
-  : RapidSubRosPub(subscribeTopic, pubTopic, nh,
-                   "RapidCommandRosCommand", queueSize) {
+                                            const std::string& subscribe_topic,
+                                            const std::string& pub_topic,
+                                            const ros::NodeHandle &nh,
+                                            const unsigned int queue_size)
+  : RapidSubRosPub(subscribe_topic,
+                   pub_topic,
+                   nh,
+                   "RapidCommandRosCommand",
+                   queue_size) {
   // advertise ros topic
-  m_pub_ = m_nh_.advertise<ff_msgs::CommandStamped>(pubTopic, queueSize);
+  pub_ = nh_.advertise<ff_msgs::CommandStamped>(pub_topic, queue_size);
 
   // connect to ddsEventLoop
   // @todo confirm topic suffix has '-'
   try {
-    m_ddsEventLoop_.connect<rapid::Command>(this,
-                                           rapid::COMMAND_TOPIC +
-                                           subscribeTopic,         // topic
-                                           "",                     // name
+    dds_event_loop_.connect<rapid::Command>(this,
+                                            rapid::COMMAND_TOPIC +
+                                            subscribe_topic,        // topic
+                                            "",                     // name
                                             "RapidCommandProfile",  // profile
-                                           "");                    // library
+                                            "");                    // library
   } catch (std::exception& e) {
     ROS_ERROR_STREAM("RapidCommandRosCommand exception: " << e.what());
     throw;
@@ -139,7 +123,7 @@ void RapidCommandRosCommand::operator() (rapid::Command const* rapid_cmd) {
     TransferArgument(rapid_cmd->arguments[i], &cmd.args[i]);
   }
 
-  m_pub_.publish(cmd);
+  pub_.publish(cmd);
 }
 
 }  // end namespace ff

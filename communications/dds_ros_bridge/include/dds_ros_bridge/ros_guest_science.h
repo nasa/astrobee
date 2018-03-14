@@ -24,8 +24,6 @@
 #include <cstring>
 #include <memory>
 
-#include "knDds/DdsTypedSupplier.h"
-
 #include "dds_ros_bridge/enum_helper.h"
 #include "dds_ros_bridge/ros_sub_rapid_pub.h"
 #include "dds_ros_bridge/util.h"
@@ -36,23 +34,25 @@
 #include "ff_msgs/GuestScienceData.h"
 #include "ff_msgs/GuestScienceState.h"
 
+#include "knDds/DdsTypedSupplier.h"
+
+#include "rapidUtil/RapidHelper.h"
+
 #include "AstrobeeConstants.h"
 #include "GuestScienceConfigSupport.h"
 #include "GuestScienceDataSupport.h"
 #include "GuestScienceStateSupport.h"
 
-#include "rapidUtil/RapidHelper.h"
-
 namespace ff {
 
 class RosGuestScienceToRapid : public RosSubRapidPub {
  public:
-  RosGuestScienceToRapid(const std::string& stateSubscribeTopic,
-                         const std::string& configSubscribeTopic,
-                         const std::string& dataSubscribeTopic,
-                         const std::string& pubTopic,
+  RosGuestScienceToRapid(const std::string& state_subscribe_topic,
+                         const std::string& config_subscribe_topic,
+                         const std::string& data_subscribe_topic,
+                         const std::string& pub_topic,
                          const ros::NodeHandle &nh,
-                         const unsigned int queueSize = 10);
+                         const unsigned int queue_size = 10);
 
   void DataCallback(ff_msgs::GuestScienceDataConstPtr const& data);
   void ConfigCallback(ff_msgs::GuestScienceConfigConstPtr const& config);
@@ -63,23 +63,23 @@ class RosGuestScienceToRapid : public RosSubRapidPub {
       kn::DdsTypedSupplier<rapid::ext::astrobee::GuestScienceState>;
   using StateSupplierPtr = std::unique_ptr<StateSupplier>;
 
-  StateSupplierPtr s_supplier_;
+  StateSupplierPtr state_supplier_;
 
   using ConfigSupplier =
       kn::DdsTypedSupplier<rapid::ext::astrobee::GuestScienceConfig>;
   using ConfigSupplierPtr = std::unique_ptr<ConfigSupplier>;
 
-  ConfigSupplierPtr c_supplier_;
+  ConfigSupplierPtr config_supplier_;
 
   using DataSupplier =
       kn::DdsTypedSupplier<rapid::ext::astrobee::GuestScienceData>;
   using DataSupplierPtr = std::unique_ptr<DataSupplier>;
 
-  DataSupplierPtr d_supplier_;
+  DataSupplierPtr data_supplier_;
 
-  ros::Subscriber m_configSub_, m_dataSub_;
+  ros::Subscriber config_sub_, data_sub_;
 
-  std::string m_configSubscribeTopic_, m_dataSubscribeTopic_;
+  std::string config_subscribe_topic_, data_subscribe_topic_;
 };
 
 }  // end namespace ff

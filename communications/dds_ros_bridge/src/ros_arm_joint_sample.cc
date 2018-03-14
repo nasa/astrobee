@@ -21,23 +21,25 @@
 namespace ff {
 
 RosArmJointSampleToRapid::RosArmJointSampleToRapid(
-    const std::string& subscribeTopic,
-    const std::string& pubTopic,
-    const ros::NodeHandle &nh,
-    unsigned int queueSize)
-  : RosSubRapidPub(subscribeTopic, pubTopic, nh, queueSize) {
+                                            const std::string& subscribe_topic,
+                                            const std::string& pub_topic,
+                                            const ros::NodeHandle &nh,
+                                            unsigned int queue_size)
+  : RosSubRapidPub(subscribe_topic, pub_topic, nh, queue_size) {
   config_supplier_.reset(
       new ff::RosArmJointSampleToRapid::ConfigSupplier(
-          rapid::JOINT_CONFIG_TOPIC + m_publishTopic_, "",
+          rapid::JOINT_CONFIG_TOPIC + publish_topic_, "",
           "RapidJointConfigProfile", "", ""));
 
   sample_supplier_.reset(
       new ff::RosArmJointSampleToRapid::SampleSupplier(
-          rapid::JOINT_SAMPLE_TOPIC + m_publishTopic_, "",
+          rapid::JOINT_SAMPLE_TOPIC + publish_topic_, "",
           "RapidJointSampleProfile", "", ""));
 
-  m_sub_ = m_nh_.subscribe(subscribeTopic, queueSize,
-                        &RosArmJointSampleToRapid::Callback, this);
+  sub_ = nh_.subscribe(subscribe_topic,
+                       queue_size,
+                       &RosArmJointSampleToRapid::Callback,
+                       this);
 
   rapid::RapidHelper::initHeader(config_supplier_->event().hdr);
   rapid::RapidHelper::initHeader(sample_supplier_->event().hdr);
@@ -86,17 +88,26 @@ void RosArmJointSampleToRapid::Callback(
   for (unsigned int i = 0; i < sample->samples.size(); i++) {
     if (sample->samples[i].name == "tilt") {
       joint_index = 0;
+      msg.anglePos[joint_index] = sample->samples[i].angle_pos * M_PI/180;
     } else if (sample->samples[i].name == "pan") {
       joint_index = 1;
+      msg.anglePos[joint_index] = sample->samples[i].angle_pos * M_PI/180;
     } else if (sample->samples[i].name == "gripper") {
       joint_index = 2;
+      // Check to make sure that the gripper angle is valid
+      if (sample->samples[i].angle_pos < 20) {
+        msg.anglePos[joint_index] = 20 * M_PI/180;
+      } else if (sample->samples[i].angle_pos > 45) {
+        msg.anglePos[joint_index] = 45 * M_PI/180;
+      } else {
+        msg.anglePos[joint_index] = sample->samples[i].angle_pos * M_PI/180;
+      }
     } else {
       ROS_ERROR("DDS Bridge: Arm joint named %s isn't recognized.",
                                               sample->samples[i].name.c_str());
       continue;
     }
 
-    msg.anglePos[joint_index] = sample->samples[i].angle_pos;
     msg.angleVel[joint_index] = sample->samples[i].angle_vel;
     msg.angleAcc[joint_index] = sample->samples[i].angle_acc;
     msg.current[joint_index] = sample->samples[i].current;

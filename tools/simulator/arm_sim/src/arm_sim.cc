@@ -167,9 +167,9 @@ void ArmSim::onInit() {
   nh_ = getNodeHandle();
 
   arm_state_pub_ = nh_.advertise<ff_msgs::ArmStateStamped>(
-                      TOPIC_PROCEDURES_ARM_ARM_STATE, pub_queue_size_, true);
+                      TOPIC_BEHAVIORS_ARM_ARM_STATE, pub_queue_size_, true);
   joint_sample_pub_ = nh_.advertise<ff_msgs::JointSampleStamped>(
-              TOPIC_PROCEDURES_ARM_JOINT_SAMPLE, pub_queue_size_, true);
+              TOPIC_BEHAVIORS_ARM_JOINT_SAMPLE, pub_queue_size_, true);
 
   arm_state_.joint_state.state = ff_msgs::ArmJointState::STOWED;
   arm_state_.gripper_state.state = ff_msgs::ArmGripperState::CLOSED;
@@ -199,7 +199,7 @@ void ArmSim::onInit() {
   joint_sample_pub_.publish(joint_sample_);
 
   sas_arm_ = std::make_shared<actionlib::SimpleActionServer<ff_msgs::ArmAction>>
-                                  (nh_, ACTION_PROCEDURES_ARM,
+                                  (nh_, ACTION_BEHAVIORS_ARM,
                                   boost::bind(&ArmSim::GoalCallback, this, _1),
                                   false);
   sas_arm_->start();

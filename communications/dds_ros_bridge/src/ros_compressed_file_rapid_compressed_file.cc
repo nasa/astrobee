@@ -16,19 +16,7 @@
  * under the License.
  */
 
-#include <string>
-#include <cstring>
-#include <algorithm>
-#include <memory>
-
 #include "dds_ros_bridge/ros_compressed_file_rapid_compressed_file.h"
-#include "dds_ros_bridge/enum_helper.h"
-#include "dds_ros_bridge/util.h"
-
-#include "rapidUtil/RapidHelper.h"
-
-#include "ff_msgs/CompressedFile.h"
-#include "CompressedFileSupport.h"
 
 namespace {
 
@@ -58,26 +46,27 @@ rea::FileCompressionType ConvertCompression(const uint8_t type) {
 }  // namespace
 
 ff::RosCompressedFileToRapid::RosCompressedFileToRapid(
-    const std::string& subscribeTopic,
-    const std::string& pubTopic,
-    const ros::NodeHandle &nh,
-    const unsigned int queueSize)
-  : RosSubRapidPub(subscribeTopic, pubTopic, nh, queueSize) {
-  m_supplier_.reset(
+                                            const std::string& subscribe_topic,
+                                            const std::string& pub_topic,
+                                            const ros::NodeHandle &nh,
+                                            const unsigned int queue_size)
+  : RosSubRapidPub(subscribe_topic, pub_topic, nh, queue_size) {
+  state_supplier_.reset(
     new ff::RosCompressedFileToRapid::Supplier(
-      "astrobee_compressed_file" + pubTopic,
-      "", "RapidReliableDurableQos", ""));
+      rapid::ext::astrobee::COMPRESSED_FILE_TOPIC + pub_topic,
+      "", "AstrobeeCurrentCompressedPlanProfile", ""));
 
-  m_sub_ = m_nh_.subscribe(subscribeTopic, queueSize,
-    &RosCompressedFileToRapid::Callback, this);
+  sub_ = nh_.subscribe(subscribe_topic,
+                       queue_size,
+                       &RosCompressedFileToRapid::Callback,
+                       this);
 
-  rapid::RapidHelper::initHeader(m_supplier_->event().hdr);
+  rapid::RapidHelper::initHeader(state_supplier_->event().hdr);
 }
 
 void ff::RosCompressedFileToRapid::Callback(
-    const ff_msgs::CompressedFile::ConstPtr& file) {
-
-  rea::CompressedFile &msg = m_supplier_->event();
+                                const ff_msgs::CompressedFile::ConstPtr& file) {
+  rea::CompressedFile &msg = state_supplier_->event();
   msg.hdr.timeStamp = util::RosTime2RapidTime(file->header.stamp);
 
   msg.id = file->id;
@@ -96,6 +85,6 @@ void ff::RosCompressedFileToRapid::Callback(
   // actually copy data
   std::memmove(buf, file->file.data(), file->file.size());
 
-  m_supplier_->sendEvent();
+  state_supplier_->sendEvent();
 }
 

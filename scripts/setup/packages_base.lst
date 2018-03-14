@@ -26,6 +26,7 @@ libgl1-mesa-glx
 libgmp10
 libusb-1.0-0
 libtinyxml2.6.2v5
+libpcl-common1.7
 libboost-program-options1.58.0
 libboost-signals1.58.0
 libboost-system1.58.0
@@ -69,6 +70,7 @@ ros-kinetic-xmlrpcpp
 ros-kinetic-opencv3
 ros-kinetic-mavlink
 ros-kinetic-xacro
+ros-kinetic-octomap
 libalvar2
 libdbow21
 libopenmvg1
@@ -94,6 +96,7 @@ libjsoncpp-dev
 libtinyxml-dev
 libyaml-cpp-dev
 libusb-1.0-0-dev
+libpcl-dev
 libboost-program-options-dev
 libboost-signals-dev
 libboost-system-dev

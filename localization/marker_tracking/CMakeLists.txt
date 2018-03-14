@@ -38,7 +38,7 @@ create_library(TARGET marker_tracking
   INC ${INCLUDES}
   DEPS camera)
 create_tool_targets(DIR tools
-  LIBS marker_tracking
+  LIBS marker_tracking ${YAMLCPP_LIBRARIES}
   INC ${INCLUDES})
 create_test_targets(DIR test
   LIBS marker_tracking

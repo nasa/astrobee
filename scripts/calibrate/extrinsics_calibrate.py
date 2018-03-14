@@ -30,15 +30,14 @@ import numpy.linalg
 
 from tf import transformations
 
-import intrinsics_calibrate
-
-# returns (intrinsics, distortion) from yaml file
-def read_yaml_extrinsics(filename):
-  extrinsics = None
+# returns intrinsics and distortion from yaml file
+def read_yaml_extrinsics(filename,cameras):
+  extrinsics = []
   with open(filename, 'r') as f:
     try:
       d = yaml.load(f)
-      extrinsics = np.array(d['cam0']['T_cam_imu'])
+      for cam in cameras:
+        extrinsics.append(np.array(d[cam]['T_cam_imu']))
     except yaml.YAMLError as exc:
       print >> sys.stderr, exc
   return extrinsics
@@ -152,54 +151,86 @@ def trans_quat_to_transform((trans, quat)):
   m[2,3] = -trans[2]
   return m
 
+def has_depth_cam(filename):
+  try:
+    with open(filename, 'r') as f:
+      contents = f.read()
+  except IOError:
+    print >> sys.stderr, 'Failed to open intrinsics_yaml.'
+    return False
+  
+  prog = re.compile('cam1')
+  match = re.search(prog, contents)
+  if match:
+    return True
+  else:
+    return False
+
 def main():
-  parser = argparse.ArgumentParser(description='Calibrate intrinsic parameters.')
+  parser = argparse.ArgumentParser(description='Calibrate extrinsics parameters.')
   parser.add_argument('-d', '--dock_cam', dest='dock_cam', action='store_true', help='Calibrate dock camera.')
   parser.add_argument('-v', '--verbose',  dest='verbose', action='store_true', help='Verbose mode.')
   parser.add_argument('robot', help='The name of the robot to configure (i.e., put p4d to edit p4d.config).')
-  parser.add_argument('intrinsics_bag', help='The bag file with intrinsics calibration data.')
+  parser.add_argument('intrinsics_yaml', help='The bag file with intrinsics calibration data.')
   parser.add_argument('extrinsics_bag', help='The bag file with extrinsics calibration data.')
   args = parser.parse_args()
 
   SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
-  target_yaml = SCRIPT_DIR + '/data/granite_april_tag.yaml'
-  imu_yaml = SCRIPT_DIR + '/data/epson_g362p_imu.yaml'
-  config_file = SCRIPT_DIR + '/../../astrobee/config/robots/' + args.robot + '.config'
 
-  print 'Calibrating camera intrinsics...'
-  intrinsics_yaml = intrinsics_calibrate.calibrate_camera(args.intrinsics_bag, target_yaml,
-                          dock_cam=args.dock_cam, verbose=args.verbose, model='pinhole-equi')
-  if intrinsics_yaml == None:
-    print >> sys.stderr, 'Failed to calibrate intrinsics.'
-    return
+  target_yaml = SCRIPT_DIR + '/data/granite_april_tag.yaml'
+  imu_yaml = SCRIPT_DIR + '/data/imu.yaml'
+  config_file = SCRIPT_DIR + '/../../astrobee/config/robots/' + args.robot + '.config'
 
   print 'Calibrating camera extrinsics...'
   extrinsics_yaml = calibrate_extrinsics(args.extrinsics_bag, target_yaml,
                                          intrinsics_yaml, imu_yaml, verbose=args.verbose)
+  
   if extrinsics_yaml == None:
     print >> sys.stderr, 'Failed to calibrate extrinsics.'
     return
 
-  imu_to_camera = read_yaml_extrinsics(extrinsics_yaml)
-  if imu_to_camera is None:
+  depth = has_depth_cam(extrinsics_yaml)
+
+  if depth:
+    imu_to_camera = read_yaml_extrinsics(extrinsics_yaml, ['cam0', 'cam1'])
+  else:
+    imu_to_camera = read_yaml_extrinsics(extrinsics_yaml, ['cam0'])
+
+  if not imu_to_camera:
     print >> sys.stderr, 'Failed to read extrinsics from yaml file.'
     return
-  
+
+
   body_to_imu = trans_quat_to_transform(lua_read_transform(config_file, 'imu_transform'))
   if body_to_imu is None:
     print >> sys.stderr, 'Failed to read imu transform.'
     return
+
   imu_to_body = np.linalg.inv(body_to_imu)
-  body_to_camera = np.linalg.inv(imu_to_body.dot(np.linalg.inv(imu_to_camera)))
+  body_to_camera = np.linalg.inv(imu_to_body.dot(np.linalg.inv(imu_to_camera[0])))
+  
   q = transformations.quaternion_conjugate(transformations.quaternion_from_matrix(body_to_camera))
-  t = imu_to_body.dot(np.linalg.inv(imu_to_camera)[0:4,3])
+  t = imu_to_body.dot(np.linalg.inv(imu_to_camera[0])[0:4,3])
+  print 'Cam0:'
   print 'Translation: ', t
   print 'Rotation quaternion: ', q
 
+  #if args.depth_cam:
+  if depth:
+    body_to_depth_camera = np.linalg.inv(imu_to_body.dot(np.linalg.inv(imu_to_camera[1])))
+    q_depth = transformations.quaternion_conjugate(transformations.quaternion_from_matrix(body_to_depth_camera))
+    t_depth = imu_to_body.dot(np.linalg.inv(imu_to_camera[1])[0:4,3])
+    print 'Cam1:'
+    print 'Translation: ', t_depth
+    print 'Rotation quaternion: ', q_depth
+    if lua_replace_transform(config_file, 'perch_cam_transform' if args.dock_cam else 'haz_cam_transform', (t_depth, q_depth)):
+      print >> sys.stderr, 'Failed to update config file with depth camera parameters.'
+      return
+  
   if lua_replace_transform(config_file, 'dock_cam_transform' if args.dock_cam else 'nav_cam_transform', (t, q)):
-    print >> sys.stderr, 'Failed to update config file.'
+    print >> sys.stderr, 'Failed to update config file with cam0 parameters'
     return
+   
 
 if __name__ == '__main__':
   main()
-

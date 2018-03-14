@@ -28,7 +28,9 @@ catkin_package(
   INCLUDE_DIRS
     include
   LIBRARIES
+    gazebo_model_plugin_dock
     gazebo_model_plugin_truth
+    gazebo_model_plugin_eps
     gazebo_model_plugin_pmc
     gazebo_model_plugin_perching_arm
     gazebo_model_plugin_laser
@@ -38,7 +40,7 @@ catkin_package(
     gazebo_sensor_plugin_dock_cam
     gazebo_sensor_plugin_perch_cam
     gazebo_sensor_plugin_haz_cam
-    gazebo_sensor_plugin_sparse_map
+    gazebo_sensor_plugin_ar_tags
   CATKIN_DEPENDS
     visualization_msgs
     tf2
@@ -70,7 +72,44 @@ create_library(
     ff_util
 )
 
-# Create a model plugin for the ground truth
+# Create a model plugin for the dock
+create_library(
+  DIR 
+    src/gazebo_model_plugin_dock
+  TARGET
+    gazebo_model_plugin_dock
+  LIBS
+    ${GAZEBO_LIBRARIES}
+    ${catkin_LIBRARIES}
+    astrobee_gazebo
+  INC
+    ${GAZEBO_INCLUDE_DIRS}
+    ${EIGEN3_INCLUDE_DIRS}
+    ${catkin_INCLUDE_DIRS}
+  DEPS 
+    ff_util
+)
+
+# Create a model plugin for the EPS system
+create_library(
+  DIR 
+    src/gazebo_model_plugin_eps
+  TARGET
+    gazebo_model_plugin_eps
+  LIBS
+    ${GAZEBO_LIBRARIES}
+    ${catkin_LIBRARIES}
+    astrobee_gazebo
+  INC
+    ${GAZEBO_INCLUDE_DIRS}
+    ${EIGEN3_INCLUDE_DIRS}
+    ${catkin_INCLUDE_DIRS}
+  DEPS 
+    ff_util
+    ff_hw_msgs
+)
+
+# Create a model plugin for aerodynamic drag
 create_library(
   DIR 
     src/gazebo_model_plugin_drag
@@ -243,12 +282,14 @@ create_library(
     ${GAZEBO_LIBRARIES}
     ${catkin_LIBRARIES}
     astrobee_gazebo
+    camera
   INC
     ${GAZEBO_INCLUDE_DIRS}
     ${EIGEN3_INCLUDE_DIRS}
     ${catkin_INCLUDE_DIRS}
   DEPS 
     ff_util
+    ff_msgs
 )
 
 # Create a sensor plugin for the dock cam
@@ -289,12 +330,32 @@ create_library(
     ff_msgs
 )
 
+# Create a model plugin for AR localization
+create_library(
+  DIR 
+    src/gazebo_sensor_plugin_ar_tags
+  TARGET
+    gazebo_sensor_plugin_ar_tags
+  LIBS
+    ${GAZEBO_LIBRARIES}
+    ${catkin_LIBRARIES}
+    astrobee_gazebo
+    camera
+  INC
+    ${GAZEBO_INCLUDE_DIRS}
+    ${EIGEN3_INCLUDE_DIRS}
+    ${catkin_INCLUDE_DIRS}
+  DEPS 
+    ff_util
+    ff_msgs
+)
+
 # Install our launch files
 install_launch_files()
 
 # Also install some other resources
 install(DIRECTORY media  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
-install(DIRECTORY models DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
+#install(DIRECTORY models DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
 install(DIRECTORY worlds DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
 catkin_install_python(PROGRAMS scripts/spawn_model scripts/perf_wrapper
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})

@@ -18,7 +18,7 @@
 cmake_minimum_required(VERSION 3.0)
 project(Astrobee)
 set(ASTROBEE_VERSION_MAJOR 0)
-set(ASTROBEE_VERSION_MINOR 2)
+set(ASTROBEE_VERSION_MINOR 3)
 
 if ( "${CMAKE_VERSION}" VERSION_GREATER 3.0.0 )
   cmake_policy(SET CMP0045 OLD)
@@ -96,9 +96,6 @@ option(ENABLE_QP
 option(ENABLE_PICOFLEXX
   "Enable support for building the PicoFlexx driver"
   ON)
-option(ENABLE_VIVE
-  "Enable support for HTC Vive tracking system"
-  OFF)
 option(ENABLE_GAZEBO
   "Enable support for building the Gazebo simulator"
   ON)
@@ -203,12 +200,11 @@ find_package(dbow2 REQUIRED)
 find_package(Alvar REQUIRED)
 find_package(OpenMVG QUIET REQUIRED)
 find_package(JsonCpp REQUIRED)
-find_package(FFMPEG QUIET) # OPTIONAL
+find_package(FFMPEG QUIET)    # Optional
+find_package(Deepdive QUIET)  # Optional
 if (ENABLE_PICOFLEXX)
   find_package(royale REQUIRED)
 endif (ENABLE_PICOFLEXX)
-
-
 
 #find_package(PkgConfig REQUIRED)
 #
@@ -216,6 +212,11 @@ endif (ENABLE_PICOFLEXX)
 #if (YAMLCPP_FOUND)
 #  set (YAMLCPP_INCLUDE_DIRS ${YAMLCPP_INCLUDEDIR})
 #endif (YAMLCPP_FOUND)
+
+pkg_check_modules(YAMLCPP REQUIRED yaml-cpp)
+if (YAMLCPP_FOUND)
+  set (YAMLCPP_INCLUDE_DIRS ${YAMLCPP_INCLUDEDIR})
+endif (YAMLCPP_FOUND)
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wno-unused-local-typedefs -Werror")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-unused-local-typedefs -Werror")
@@ -252,7 +253,9 @@ if (USE_CTC)
 endif (USE_CTC)
 if (USE_ROS)
   set(ENV{ROS_LANG_DISABLE} "genlisp:gennodejs:geneus:$ENV{ROS_LANG_DISABLE}")
-  find_package(catkin2 COMPONENTS roscpp message_generation std_msgs geometry_msgs sensor_msgs cv_bridge image_transport tf2 tf2_ros rosbag nodelet)
+  find_package(catkin2 COMPONENTS roscpp message_generation std_msgs geometry_msgs sensor_msgs cv_bridge image_transport tf tf2 tf2_ros rosbag nodelet)
+  find_package(PCL REQUIRED COMPONENTS common)
+  find_package(Octomap MODULE REQUIRED)
   #pkg_check_modules(OROCOS_KDL REQUIRED orocos_kdl)
   if (USE_CTC)
     set(OROCOS_KDL_LIBRARIES ${ARM_CHROOT_DIR}/opt/ros/kinetic/lib/liborocos-kdl.so)
@@ -322,7 +325,7 @@ if (USE_ROS)
   endif (NOT USE_CTC AND ENABLE_GAZEBO)
   add_subdirectory(gnc)
   add_subdirectory(mobility)
-  add_subdirectory(procedures)
+  add_subdirectory(behaviors)
   add_subdirectory(management)
 endif (USE_ROS)
 

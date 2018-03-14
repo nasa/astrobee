@@ -281,7 +281,7 @@ class PerchingArmNode : public ff_util::FreeFlyerNodelet {
       // Handle the proximal joint
       } else if (msg.name[i] == prefix_ + "arm_proximal_joint") {
         if (msg.position.size() > i)
-          arm_.SetProximalVelocity(CnvTo(POSITION, msg.position[i]));
+          arm_.SetProximalPosition(CnvTo(POSITION, msg.position[i]));
         else
           NODELET_WARN("Proximal: only position control is supported");
       // Handle the distal joint

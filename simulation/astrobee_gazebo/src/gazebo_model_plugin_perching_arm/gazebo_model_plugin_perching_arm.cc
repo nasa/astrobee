@@ -58,8 +58,7 @@ class GazeboModelPluginPerchingArm : public FreeFlyerModelPlugin {
  public:
   enum Type { POSITION, VELOCITY, EFFORT };
   // Constructor
-  GazeboModelPluginPerchingArm()
-    : FreeFlyerModelPlugin(NODE_PERCHING_ARM, false),
+  GazeboModelPluginPerchingArm() : FreeFlyerModelPlugin("perching_arm", true),
     rate_(10.5), bay_(""),
     pid_prox_p_(6.25, 0.0, 0.0),
     pid_dist_p_(6.25, 0.0, 0.0),
@@ -70,7 +69,7 @@ class GazeboModelPluginPerchingArm : public FreeFlyerModelPlugin {
     calibrated_(false) {}
 
   // Destructor
-  ~GazeboModelPluginPerchingArm() {}
+  virtual ~GazeboModelPluginPerchingArm() {}
 
  protected:
   // Hard limits of the system
@@ -157,10 +156,10 @@ class GazeboModelPluginPerchingArm : public FreeFlyerModelPlugin {
     msg_.effort.resize(joints_.size() + 1);
 
     // Create a joint state publisher for the arm
-    pub_ = nh->advertise<sensor_msgs::JointState>("joint_states", 1, true);
+    pub_ = nh->advertise<sensor_msgs::JointState>("joint_states", 100, true);
 
     // Now register to be called back every time FAM has new wrench
-    sub_ = nh->subscribe("joint_goals", 1,
+    sub_ = nh->subscribe("joint_goals", 100,
       &GazeboModelPluginPerchingArm::GoalCallback, this);
 
     // Set the distal velocity
@@ -281,7 +280,7 @@ class GazeboModelPluginPerchingArm : public FreeFlyerModelPlugin {
       // abuse the sensor_msgs::JointState slightly by allowing the gripper
       // position to be specified alongside joint velocities. Apologies.
       if (msg.name[i] == bay_+"_gripper_joint") {
-        if (!calibrated_)
+        if (!calibrated_ && msg.position[i] >= 0.0)
           NODELET_WARN("Gripper: you must calibrate before using the gripper");
         if (msg.position.size() > i)
           SetGripperGoal(msg.position[i]);

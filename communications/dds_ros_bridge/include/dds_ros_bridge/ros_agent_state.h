@@ -19,34 +19,41 @@
 #ifndef DDS_ROS_BRIDGE_ROS_AGENT_STATE_H_
 #define DDS_ROS_BRIDGE_ROS_AGENT_STATE_H_
 
+#include <ros/assert.h>
+
+#include <cstring>
 #include <string>
 #include <memory>
 
-#include "knDds/DdsTypedSupplier.h"
-
 #include "dds_ros_bridge/ros_sub_rapid_pub.h"
+#include "dds_ros_bridge/util.h"
 
 #include "ff_msgs/AgentStateStamped.h"
+#include "ff_msgs/OpState.h"
+
+#include "knDds/DdsTypedSupplier.h"
+
+#include "rapidUtil/RapidHelper.h"
+
 #include "AstrobeeAgentStateSupport.h"
+#include "AstrobeeConstants.h"
 
 namespace ff {
 
 class RosAgentStateToRapid : public RosSubRapidPub {
  public:
-  RosAgentStateToRapid(const std::string& subscribeTopic,
-                       const std::string& pubTopic,
+  RosAgentStateToRapid(const std::string& subscribe_topic,
+                       const std::string& pub_topic,
                        const ros::NodeHandle &nh,
-                       const unsigned int queueSize = 10);
+                       const unsigned int queue_size = 10);
 
   void Callback(ff_msgs::AgentStateStamped::ConstPtr const& status);
 
  private:
-  using StateSupplier =
-    kn::DdsTypedSupplier<rapid::ext::astrobee::AgentState>;
-  using StateSupplierPtr =
-    std::unique_ptr<StateSupplier>;
+  using StateSupplier = kn::DdsTypedSupplier<rapid::ext::astrobee::AgentState>;
+  using StateSupplierPtr = std::unique_ptr<StateSupplier>;
 
-  StateSupplierPtr m_supplier_;
+  StateSupplierPtr state_supplier_;
 };
 
 }  // end namespace ff

@@ -16,19 +16,7 @@
  * under the License.
  */
 
-#include <ros/assert.h>
-
-#include <string>
-#include <cstring>
-#include <memory>
-
 #include "dds_ros_bridge/ros_arm_state.h"
-#include "dds_ros_bridge/util.h"
-
-#include "rapidUtil/RapidHelper.h"
-
-#include "ff_msgs/ArmStateStamped.h"
-#include "ArmStateSupport.h"
 
 namespace rea = rapid::ext::astrobee;
 
@@ -82,31 +70,32 @@ rea::ArmGripperState ConvertGripperState(const uint8_t state) {
 
 }  // end namespace
 
-ff::RosArmStateToRapid::RosArmStateToRapid(
-    const std::string& subscribeTopic,
-    const std::string& pubTopic,
-    const ros::NodeHandle &nh,
-    const unsigned int queueSize)
-  : RosSubRapidPub(subscribeTopic, pubTopic, nh, queueSize) {
-  m_supplier_.reset(
+ff::RosArmStateToRapid::RosArmStateToRapid(const std::string& subscribe_topic,
+                                           const std::string& pub_topic,
+                                           const ros::NodeHandle &nh,
+                                           const unsigned int queue_size)
+  : RosSubRapidPub(subscribe_topic, pub_topic, nh, queue_size) {
+  state_supplier_.reset(
     new ff::RosArmStateToRapid::StateSupplier(
-        rapid::ext::astrobee::ARM_STATE_TOPIC + pubTopic,
-      "", "AstrobeeArmState", ""));
+        rapid::ext::astrobee::ARM_STATE_TOPIC + pub_topic,
+        "", "AstrobeeArmStateProfile", ""));
 
-  m_sub_ = m_nh_.subscribe(subscribeTopic, queueSize,
-    &RosArmStateToRapid::Callback, this);
+  sub_ = nh_.subscribe(subscribe_topic,
+                       queue_size,
+                       &RosArmStateToRapid::Callback,
+                       this);
 
-  rapid::RapidHelper::initHeader(m_supplier_->event().hdr);
+  rapid::RapidHelper::initHeader(state_supplier_->event().hdr);
 }
 
 void ff::RosArmStateToRapid::Callback(
-  const ff_msgs::ArmStateStamped::ConstPtr& status) {
-  rea::ArmState &msg = m_supplier_->event();
+                            const ff_msgs::ArmStateStamped::ConstPtr& status) {
+  rea::ArmState &msg = state_supplier_->event();
 
   msg.hdr.timeStamp = util::RosTime2RapidTime(status->header.stamp);
 
   msg.jointState = ConvertJointState(status->joint_state.state);
   msg.gripperState = ConvertGripperState(status->gripper_state.state);
 
-  m_supplier_->sendEvent();
+  state_supplier_->sendEvent();
 }

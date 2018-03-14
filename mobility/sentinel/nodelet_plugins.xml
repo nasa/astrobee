@@ -1,5 +1,0 @@
-<library path="lib/libsentinel">
-  <class name="sentinel/SentinelNodelet" type="sentinel::SentinelNodelet" base_class_type="nodelet::Nodelet">
-    <description>Nodelet for mobility::sentinel</description>
-  </class>
-</library>

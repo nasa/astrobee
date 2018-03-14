@@ -23,7 +23,7 @@ import os.path
 import math
 import time
 
-sys.path.insert(0, '../ekf_bag/scripts')
+sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)) + '/../../ekf_bag/scripts')
 import environment
 
 def run_ekf(astrobee_map, astrobee_bag, output_file):

@@ -1,0 +1,112 @@
+@startuml
+
+skinparam componentStyle uml2
+'skinparam dpi 300
+
+!include "colors.puml"
+
+!define COLOR_NET COLOR_6PASTEL_5
+!define COLOR_CPU COLOR_6PASTEL_3
+
+skinparam component {
+  backgroundColor COLOR_6PASTEL_2
+  borderColor COLOR_6DARK_2
+  arrowColor #MidnightBlue
+}
+
+skinparam interface {
+ borderColor<<wired>> COLOR_6DARK_4
+ backgroundColor<<wired>> COLOR_6PASTEL_4
+ borderColor<<wireless>> COLOR_6DARK_6
+ backgroundColor<<wireless>> COLOR_6PASTEL_6
+}
+
+skinparam boundary {
+    borderColor<<eth>> COLOR_6DARK_1
+    backgroundColor<<eth>> COLOR_6PASTEL_1
+    borderColor<<wifi>> COLOR_6DARK_2
+    backgroundColor<<wifi>> COLOR_6PASTEL_2
+}
+
+title Astrobee Network Deployement Diagram
+
+frame Astrobee {
+
+  card "Network Switch" as abnet COLOR_NET
+
+  node HLP <<Inforce>> COLOR_CPU
+  interface "hlp:\nISS_IP" <<wireless>> as hlpwlan
+  interface "hlp:\nlocal_IP" <<wired>> as hlpeth
+  boundary "HLP <&wifi>" <<wifi>> as hlpwifi
+  HLP = hlpwlan
+  HLP = hlpeth
+
+  node MLP <<Inforce>> COLOR_CPU
+  interface "mlp:\nISS_IP" <<wireless>> as mlpwlan
+  interface "mlp:\nISS_IP\nlocal_IP" <<wired>> as mlpeth
+  boundary "MLP <&wifi>" <<wifi>> as mlpwifi
+  MLP = mlpwlan
+  MLP = mlpeth
+
+  node LLP <<Wandboard>> COLOR_CPU
+  interface "llp:\nlocal_IP" <<wired>> as llpeth
+  LLP = llpeth
+
+  boundary "Astrobee <&fork>" <<eth>> as abeth
+}
+
+frame Dock {
+  node DockBoard <<Wandboard>> COLOR_CPU
+  interface "dock:\nISS_IP\local_IP" <<wired>> as docketh
+  card "Network Switch" as docknet COLOR_NET
+  boundary "Dock LAN <&fork>" <<eth>> as dock2iss
+  boundary "Berth1 <&fork>" <<eth>> as berth1
+  boundary "Berth2 <&fork>" <<eth>> as berth2
+  DockBoard =left= docketh
+}
+
+frame ISS-Payload-Network as iss {
+    cloud "ISS Payload LAN" as issnet COLOR_NET
+    rectangle "ISS WAP" as isswap COLOR_NET
+    boundary "AB Port <&fork>" <<eth>> as iss2dock
+    boundary "ISS <&wifi>" <<wifi>> as isswifi
+    isswap --# issnet
+    isswifi - isswap
+    issnet #-- iss2dock
+
+    node ELC COLOR_CPU
+    issnet #- ELC
+
+    database NAS
+    issnet #-- NAS
+}
+
+' Astrobee internal connections
+llpeth -# abnet
+abnet #- abeth
+mlpeth --# abnet
+hlpeth --# abnet
+mlpwlan - mlpwifi
+hlpwlan - hlpwifi
+
+'Dock internal connections
+docknet #- docketh
+dock2iss -down-# docknet
+berth1 -right-# docknet
+berth2 -up-# docknet
+
+'ISS internal connections
+
+'System connections
+abeth -right- berth1
+iss2dock -- dock2iss
+hlpwifi . isswifi
+mlpwifi . isswifi
+
+' To help get a nice layout:
+Astrobee -[hidden]right- Dock
+Astrobee -[hidden]up- iss
+MLP --[hidden]down-- LLP
+HLP --[hidden]down-- MLP
+
+@enduml

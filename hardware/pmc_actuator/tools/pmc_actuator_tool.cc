@@ -128,21 +128,28 @@ void PmcMenu(PmcActuatorPair &pmc_pair) {
   std::cout << "********************* TELEMETRY ***********************"
             << std::endl;
   if (pmc_pair.first->GetTelemetry(&pmc_pair.second.telemetry)) {
-    std::cout << "Motor speed: " << static_cast<int>(pmc_pair.second.telemetry.motor_speed)
+    std::cout << "Motor speed: "
+              << static_cast<int>(pmc_pair.second.telemetry.motor_speed)
               << std::endl;
-    std::cout << "6V current: " << static_cast<int>(pmc_pair.second.telemetry.v6_current)
+    std::cout << "6V current: "
+              << static_cast<int>(pmc_pair.second.telemetry.v6_current)
               << std::endl;
-    std::cout << "Pressure: " << static_cast<int>(pmc_pair.second.telemetry.pressure)
+    std::cout << "Pressure: "
+              << static_cast<int>(pmc_pair.second.telemetry.pressure)
               << std::endl;
-    std::cout << "Status 1: " << static_cast<int>(pmc_pair.second.telemetry.status_1)
+    std::cout << "Status 1: "
+              << static_cast<int>(pmc_pair.second.telemetry.status_1.asUint8)
               << std::endl;
-    std::cout << "Status 2: " << static_cast<int>(pmc_pair.second.telemetry.status_2)
+    std::cout << "Status 2: "
+              << static_cast<int>(pmc_pair.second.telemetry.status_2.asUint8)
               << std::endl;
-    std::cout << "Command ID: " << static_cast<int>(pmc_pair.second.telemetry.command_id)
+    std::cout << "Command ID: "
+              << static_cast<int>(pmc_pair.second.telemetry.command_id)
               << std::endl;
     for (size_t i = 0; i < pmc_actuator::kTemperatureSensorsCount; i++)
-      std::cout << "Temperature " << (i + 1)
-                << static_cast<int>(pmc_pair.second.telemetry.temperatures[i]);
+      std::cout << "Temperature " << (i + 1) << ": "
+                << static_cast<int>(pmc_pair.second.telemetry.temperatures[i])
+                << std::endl;
   } else {
     std::cout << "Error: telemetry could not be obtained for this PMC"
               << std::endl;
@@ -161,17 +168,19 @@ void PmcMenu(PmcActuatorPair &pmc_pair) {
   std::cout << (pmc_actuator::kNumNozzles + 2)
             << ". Set motor speed (current: "
             << static_cast<int>(cmd.motor_speed) << ")" << std::endl;
+  std::cout << (pmc_actuator::kNumNozzles + 3)
+            << ". Get firmware version" << std::endl;
   std::cout << "*******************************************************"
             << std::endl;
   // Keep looping until we have valid input
-  uint8_t choice = InputUnsignedInteger(0, 8);
+  uint8_t choice = InputUnsignedInteger(0, pmc_actuator::kNumNozzles + 3);
   // Do something based on the choice
   switch (choice) {
     case 0:
       break;
     default: {
       std::cerr << "Enter nozzle value:" << std::endl;
-      uint32_t val = InputUnsignedInteger(25, 96);
+      uint32_t val = InputUnsignedInteger(0, 255);
       data_mutex_.lock();
       pmc_pair.second.command.nozzle_positions[choice - 1] = val;
       data_mutex_.unlock();
@@ -180,7 +189,7 @@ void PmcMenu(PmcActuatorPair &pmc_pair) {
     }
     case pmc_actuator::kNumNozzles + 1: {
       std::cerr << "Enter value for all nozzles:" << std::endl;
-      uint32_t val = InputUnsignedInteger(25, 96);
+      uint32_t val = InputUnsignedInteger(0, 255);
       data_mutex_.lock();
       for (size_t i = 0; i < pmc_actuator::kNumNozzles; i++)
         pmc_pair.second.command.nozzle_positions[i] = val;
@@ -195,6 +204,20 @@ void PmcMenu(PmcActuatorPair &pmc_pair) {
       pmc_pair.second.command.motor_speed = val;
       data_mutex_.unlock();
       std::cout << "Success" << std::endl;
+      break;
+    }
+    case pmc_actuator::kNumNozzles + 3: {
+      std::cout << "Firmware info:" << std::endl;
+      std::string hash;
+      if (pmc_pair.first->GetFirmwareHash(hash))
+        std::cout << "Compile hash:" << hash << std::endl;
+      else
+        std::cout << "Compile hash: <not yet received>" << std::endl;
+      std::string time;
+      if (pmc_pair.first->GetFirmwareTime(time))
+        std::cout << "Compile time:" << time << std::endl;
+      else
+        std::cout << "Compile time: <not yet received>" << std::endl;
       break;
     }
   }
@@ -298,8 +321,11 @@ bool MainMenu(PmcActuatorVec &pmcs, std::string &csv) {
   std::cout << "0. Quit" << std::endl;
   std::cout << "*******************************************************"
             << std::endl;
-  for (size_t p = 0; p < pmcs.size(); p++)
-    std::cout << (p + 1) << ". Command or view PMC" << (p + 1) << std::endl;
+  for (size_t p = 0; p < pmcs.size(); p++) {
+    std::string name = (p == 0 ? "right" : "left");
+    std::cout << (p + 1) << ". Command or view PMC"
+              << (p + 1) << " (" << name << ")" << std::endl;
+  }
   std::cout << (pmcs.size() + 1) << ". E-Stop       " << std::endl;
   std::cout << (pmcs.size() + 2) << ". Log ON/OFF   " << std::endl;
   std::cout << (pmcs.size() + 3) << ". Enter CSV file" << std::endl;

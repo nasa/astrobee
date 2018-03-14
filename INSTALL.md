@@ -116,7 +116,7 @@ After this command has completed, you should be able to run a simulator from any
 directory in your Linux filesystem. So, for example, to start a simulation of a
 single Astrobee in the ISS, run the following:
 
-    roslaunch astrobee sim.launch dds:=false rviz:=true
+    roslaunch astrobee sim.launch dds:=false robot:=sim_pub rviz:=true
 
 - Note 1: The very first time Gazebo starts, it could take a long time because
   it loads some large models

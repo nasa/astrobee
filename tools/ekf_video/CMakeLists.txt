@@ -32,7 +32,7 @@ if(rviz_QT_VERSION)
   )
 
   create_tool_targets(DIR tools
-    LIBS ekf_video
-    INC ${catkin_INCLUDE_DIRS}
+    LIBS ekf_video ${Qt5Gui_LIBRARIES}
+    INC ${catkin_INCLUDE_DIRS} ${Qt5Gui_INCLUDE_DIRS}
   )
 endif(rviz_QT_VERSION)

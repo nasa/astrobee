@@ -126,7 +126,7 @@ class EpsDriverNode : public ff_util::FreeFlyerNodelet {
         &EpsDriverNode::GetTemperaturesCallback, this);
     }
     if (en_undock_) {
-      srv_get_temperatures_ = nh->advertiseService(
+      srv_undock_ = nh->advertiseService(
         SERVICE_HARDWARE_EPS_UNDOCK,
         &EpsDriverNode::UndockCallback, this);
     }

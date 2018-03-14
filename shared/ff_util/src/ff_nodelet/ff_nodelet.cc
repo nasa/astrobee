@@ -33,11 +33,13 @@ namespace ff_util {
 
 namespace fs = boost::filesystem;
 
-FreeFlyerNodelet::FreeFlyerNodelet(std::string const& node, bool autostart_hb_timer) :
+FreeFlyerNodelet::FreeFlyerNodelet(
+  std::string const& node, bool autostart_hb_timer) :
   nodelet::Nodelet(),
   autostart_hb_timer_(autostart_hb_timer),
   initialized_(false),
   sleeping_(false),
+  heartbeat_queue_size_(5),
   node_(node) {
 }
 
@@ -51,33 +53,11 @@ FreeFlyerNodelet::FreeFlyerNodelet(bool autostart_hb_timer) :
 FreeFlyerNodelet::~FreeFlyerNodelet() {
 }
 
-void FreeFlyerNodelet::Setup(ros::NodeHandle nh) {
-  // Set node name in heartbeat message since it won't change
-  heartbeat_.node = node_;
-
-  // Set nodelet manager name since that won't change either
-  heartbeat_.nodelet_manager = ros::this_node::getName();
-
-  // Immediately, setup a publisher for faults coming from this node
-  pub_heartbeat_ = nh_.advertise<ff_msgs::Heartbeat>(TOPIC_HEARTBEAT, 5, true);
-  pub_diagnostics_ = nh_.advertise<diagnostic_msgs::DiagnosticArray>(TOPIC_DIAGNOSTICS, 5);
-
-  // Setup a heartbeat timer for this node if auto start was requested
-  if (autostart_hb_timer_) {
-    // Don't autostart until nodelet finishes initialization function
-    timer_heartbeat_ = nh_.createTimer(ros::Rate(1.0),
-      &FreeFlyerNodelet::HeartbeatCallback, this, false, false);
-  }
-
-  // Read in faults for this node
-  fault_config_.AddFile("faults.config");
-  ReadFaults();
-}
-
-void FreeFlyerNodelet::onInit() {
-  // This will create nodehandles with a robot and private prefix
-  nh_ = getNodeHandle();
-  nh_mt_ = getMTNodeHandle();
+// Called directly by Gazebo and indirectly through onInit() by nodelet
+void FreeFlyerNodelet::Setup(ros::NodeHandle & nh, ros::NodeHandle & nh_mt) {
+  // Copy the node handles
+  nh_ = nh;
+  nh_mt_ = nh_mt;
 
   // Get the platform name from the node handle (roslaunch group name attribute)
   if (nh_.getNamespace().length() > 1)
@@ -98,31 +78,65 @@ void FreeFlyerNodelet::onInit() {
     }
   }
 
-  // Now that we have a name, we can create private
-  nh_private_ = ros::NodeHandle(ros::NodeHandle(nh_, PRIVATE_PREFIX), node_);
-  nh_private_mt_ = ros::NodeHandle(ros::NodeHandle(nh_mt_, PRIVATE_PREFIX), node_);
+  // Read in faults for this node
+  param_config_.AddFile("faults.config");
+  param_config_.AddFile("context.config");
+  ReadConfig();
 
-  // Preload the node
-  Setup(nh_);
+  // Setup the private node handles
+  nh_private_ =
+    ros::NodeHandle(ros::NodeHandle(nh_, PRIVATE_PREFIX), node_);
+  nh_private_mt_ =
+    ros::NodeHandle(ros::NodeHandle(nh_mt_, PRIVATE_PREFIX), node_);
 
-  // Defer the initialization of the node to prevent a race condition with nodelet registration
-  // See this issue for more details: https://github.com/ros/nodelet_core/issues/46
+  // Set node name and manager in heartbeat message since it won't change
+  heartbeat_.node = node_;
+  heartbeat_.nodelet_manager = ros::this_node::getName();
+
+  // Immediately, setup a publisher for faults coming from this node
+  // Topic needs to be latched for initialization faults
+  pub_heartbeat_ = nh_.advertise<ff_msgs::Heartbeat>(
+    TOPIC_HEARTBEAT, heartbeat_queue_size_, true);
+  pub_diagnostics_ = nh_.advertise<diagnostic_msgs::DiagnosticArray>(
+    TOPIC_DIAGNOSTICS, 5);
+
+  // Setup a heartbeat timer for this node if auto start was requested
+  if (autostart_hb_timer_) {
+    // Don't autostart until nodelet finishes initialization function
+    timer_heartbeat_ = nh_.createTimer(ros::Rate(1.0),
+      &FreeFlyerNodelet::HeartbeatCallback, this, false, false);
+  }
+
+  // Defer the initialization of the node to prevent a race condition with
+  // nodelet registration. See this issue for more details:
+  // > https://github.com/ros/nodelet_core/issues/46
   timer_deferred_init_ = nh_.createTimer(ros::Duration(0.1),
     &FreeFlyerNodelet::InitCallback, this, true, true);
 }
 
-void FreeFlyerNodelet::ReadFaults() {
+// Called by the nodelet framework to initialize the nodelet. Note that this is
+// *NOT* called by the Gazebo plugins They enter directly via a Setup(...) call.
+void FreeFlyerNodelet::onInit() {
+  Setup(getNodeHandle(), getMTNodeHandle());
+}
+
+void FreeFlyerNodelet::ReadConfig() {
   // Read fault config file into lua
-  if (!fault_config_.ReadFiles()) {
+  if (!param_config_.ReadFiles()) {
     FF_ERROR(node_ << ": Couldn't open faults.config! Make sure it " <<
              "is in the astrobee/config folder!");
     return;
   }
 
+  // Read in the heartbeat topic queue size
+  if (!param_config_.GetUInt("heartbeat_queue_size", &heartbeat_queue_size_)) {
+    heartbeat_queue_size_ = 5;
+  }
+
   // Check if there is a fault table for this node, some nodes may not have
   // faults
-  if (fault_config_.CheckValExists(node_.c_str())) {
-      config_reader::ConfigReader::Table fault_table(&fault_config_,
+  if (param_config_.CheckValExists(node_.c_str())) {
+      config_reader::ConfigReader::Table fault_table(&param_config_,
                                                      node_.c_str());
       int fault_id;
       std::string fault_key;
@@ -231,6 +245,9 @@ void FreeFlyerNodelet::StopHeartbeat() {
 }
 
 void FreeFlyerNodelet::HeartbeatCallback(ros::TimerEvent const& ev) {
+  double s = (ev.last_real - ev.last_expected).toSec();
+  if (s > 1.0)
+    ROS_INFO_STREAM(node_ << ": " << s);
   PublishHeartbeat();
 }
 
@@ -259,7 +276,8 @@ void FreeFlyerNodelet::InitCallback(ros::TimerEvent const& ev) {
     &FreeFlyerNodelet::TriggerCallback, this);
 }
 
-bool FreeFlyerNodelet::TriggerCallback(ff_msgs::Trigger::Request &req, ff_msgs::Trigger::Response &res) {
+bool FreeFlyerNodelet::TriggerCallback(
+  ff_msgs::Trigger::Request &req, ff_msgs::Trigger::Response &res) {
   switch (req.event) {
   // Allow a reset from woken state only
   case ff_msgs::Trigger::Request::RESTART:
@@ -301,7 +319,8 @@ void FreeFlyerNodelet::PublishHeartbeat() {
   }
 }
 
-void FreeFlyerNodelet::SendDiagnostics(const std::vector<diagnostic_msgs::KeyValue> &keyval) {
+void FreeFlyerNodelet::SendDiagnostics(
+  const std::vector<diagnostic_msgs::KeyValue> &keyval) {
   // Setup the diagnostics skeleton
   diagnostic_msgs::DiagnosticStatus ds;
   if (heartbeat_.faults.size() == 0) {
@@ -355,5 +374,6 @@ std::string FreeFlyerNodelet::GetName() {
 std::string FreeFlyerNodelet::GetPlatform() {
   return platform_;
 }
+
 
 }  // namespace ff_util

@@ -55,17 +55,20 @@ struct trapezoid {
 
 class PlannerTrapezoidalNodelet : public planner::PlannerImplementation {
  public:
-  PlannerTrapezoidalNodelet() : planner::PlannerImplementation("trapezoidal", "Trapezoidal path planner") {}
+  PlannerTrapezoidalNodelet() :
+    planner::PlannerImplementation("trapezoidal", "Trapezoidal path planner") {}
   ~PlannerTrapezoidalNodelet() {}
 
  protected:
   bool InitializePlanner(ros::NodeHandle *nh) {
-    // Grab some configuration parameters for this node from the LUA config reader
+    // Grab some configuration parameters for this node
     cfg_.Initialize(GetPrivateHandle(), "mobility/planner_trapezoidal.config");
-    cfg_.Listen(boost::bind(&PlannerTrapezoidalNodelet::ReconfigureCallback, this, _1));
+    cfg_.Listen(boost::bind(
+      &PlannerTrapezoidalNodelet::ReconfigureCallback, this, _1));
     // Setup a timer to forward diagnostics
-    timer_d_ = nh->createTimer(ros::Duration(ros::Rate(DEFAULT_DIAGNOSTICS_RATE)),
-      &PlannerTrapezoidalNodelet::DiagnosticsCallback, this, false, true);
+    timer_d_ = nh->createTimer(
+      ros::Duration(ros::Rate(DEFAULT_DIAGNOSTICS_RATE)),
+        &PlannerTrapezoidalNodelet::DiagnosticsCallback, this, false, true);
     // Save the epsilon value
     epsilon_ = cfg_.Get<double>("epsilon");
       // Notify initialization complete
@@ -89,8 +92,10 @@ class PlannerTrapezoidalNodelet : public planner::PlannerImplementation {
     // Do some basic error checks
     ff_msgs::PlanResult plan_result;
     plan_result.response = RESPONSE::SUCCESS;
-    if (goal.states.size() < 2) plan_result.response = RESPONSE::NOT_ENOUGH_STATES;
-    if (goal.check_obstacles)   plan_result.response = RESPONSE::OBSTACLES_NOT_SUPPORTED;
+    if (goal.states.size() < 2)
+      plan_result.response = RESPONSE::NOT_ENOUGH_STATES;
+    if (goal.check_obstacles)
+      plan_result.response = RESPONSE::OBSTACLES_NOT_SUPPORTED;
     if (plan_result.response < 0)
       return PlanResult(plan_result);
     // Save the information
@@ -105,20 +110,44 @@ class PlannerTrapezoidalNodelet : public planner::PlannerImplementation {
     ros::Time offset = goal.states.front().header.stamp;
     for (size_t i = 1; i < goal.states.size(); i++) {
       // Get the requested duration and offset
-      double dt = (goal.states[i].header.stamp - goal.states[i-1].header.stamp).toSec();
+      double dt =
+        (goal.states[i].header.stamp - goal.states[i-1].header.stamp).toSec();
       // Extract affine transformations for the two poses
-      Eigen::Affine3d tf_1 = msg_conversions::ros_pose_to_eigen_transform(goal.states[i-1].pose);
-      Eigen::Affine3d tf_4 = msg_conversions::ros_pose_to_eigen_transform(goal.states[i].pose);
+      Eigen::Affine3d tf_1 =
+        msg_conversions::ros_pose_to_eigen_transform(goal.states[i-1].pose);
+      Eigen::Affine3d tf_4 =
+        msg_conversions::ros_pose_to_eigen_transform(goal.states[i].pose);
       Eigen::Vector3d delta = tf_4.translation() - tf_1.translation();
-      // Advanced case: generate a forward-only segment when translations are non-zero
-      if (goal.faceforward && delta.norm() > epsilon_) {
+      // Generate a forward-only segment when translations are non-zero
+      if (goal.faceforward &&
+        delta.norm() > cfg_.Get<double>("faceforward_shim")) {
         // Get the current vector representing the forward direction
         Eigen::Vector3d vfwd = delta.normalized();
         Eigen::Vector3d vdown(0.0, 0.0, 1.0);
-        Eigen::Vector3d vright = vdown.cross(vfwd);
-        vdown = vfwd.cross(vright);
-        if (vdown.z() < 0)
-          vdown = vfwd.cross(-vright);
+        Eigen::Vector3d vright(0.0, 1.0, 0.0);
+        // Check that the direction of motion is not along the Z axis. In this
+        // case the approach of taking the cross product with the world Z will
+        // fail and we need to choose a different axis
+        if (fabs(vdown.dot(vfwd)) < 1.0 - epsilon_) {
+          vright = vdown.cross(vfwd);
+          vdown = vfwd.cross(vright);
+          if (vdown.z() < 0) {
+            vright = -vright;
+            vdown = vfwd.cross(vright);
+          }
+        } else {
+          vdown = vfwd.cross(vright);
+          vright = vdown.cross(vfwd);
+          if (vright.y() < 0) {
+            vdown = -vdown;
+            vright = vdown.cross(vfwd);
+          }
+        }
+        // Make sure all vectors are nomalized
+        vfwd = vfwd.normalized();
+        vright = vright.normalized();
+        vdown = vdown.normalized();
+        // Construct a rotation matrix
         Eigen::Matrix3d dcm;
         dcm << vfwd.x(), vright.x(), vdown.x(),
                vfwd.y(), vright.y(), vdown.y(),
@@ -150,52 +179,55 @@ class PlannerTrapezoidalNodelet : public planner::PlannerImplementation {
   // Called to interrupt the process
   virtual void CancelCallback() {}
 
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  // Greedy ramp calculation - given some linear or angular displacement (d) and a maximum acceleration (a) and       //
-  //                           velocity (v), return the time taken (t) to achieve the motion as quickly as possible.  //
-  //                           Also return the time (r) needed to accelerate to / decelerate from the cruise          //
-  //                           phase, which lasts a given time (c) at a constant velocity (h).                        //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  double GreedyRamp(double d,             // Distance
-                    double v,             // Max velocity
-                    double a,             // Max acceleration
-                    double &r,            // Ramp time
-                    double &c,            // Time at constant velocity
-                    double &h) {          // Constant velocity
-    if (d < epsilon_)                     // This doesn't work for small / negative numbers
+  //////////////////////////////////////////////////////////////////////////////
+  // Given some linear or angular displacement (d) and a maximum acceleration //
+  // (a) and velocity (v), return the time taken (t) to achieve the motion as //
+  // quickly as possible. Also return the time (r) needed to accelerate to or //
+  // decelerate from the cruise phase, which lasts a given time (c) at a      //
+  // constant velocity (h).                                                   //
+  //////////////////////////////////////////////////////////////////////////////
+  double GreedyRamp(double d,     // Distance
+                    double v,     // Max velocity
+                    double a,     // Max acceleration
+                    double &r,    // Ramp time
+                    double &c,    // Time at constant velocity
+                    double &h) {  // Constant velocity
+    if (d < epsilon_)             // Doesn't work for small / negative numbers
       return 0.0;
-    h = sqrt(a * d);                      // The max velocity required if one had zero dwell time
-    if (h > v) {                          // If the required velocity is too high
-      h = v;                              // Clamp the velocity to maximum
-      r = h / a;                          // Time taken to ramp up and down to max velocity
-      c = (d - h * h / a) / h;            // Dwell time at maxmimum velocity
-    } else {                              // If we don't need to achieve max velocity
-      r = d / h;                          // Time taken to ramp up and down to sufficient velocity
-      c = 0.0;                            // Time at constant velocity
+    h = sqrt(a * d);              // The max vel required if one had zero dwell
+    if (h > v) {                  // If the required velocity is too high
+      h = v;                      // Clamp the velocity to maximum
+      r = h / a;                  // Time taken to ramp up and down to max vel
+      c = (d - h * h / a) / h;    // Dwell time at maxmimum velocity
+    } else {                      // If we don't need to achieve max velocity
+      r = d / h;                  // Time taken to ramp up/down to right vel
+      c = 0.0;                    // Time at constant velocity
     }
-    return (r * 2.0 + c);                 // Minimum time required to complete the action
+    return (r * 2.0 + c);         // Minimum time required to complete action
   }
 
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  // Fair ramp calculation -- smear a linear or angular displacement (d) over some time (t) taking into account       //
-  //                          a maximum acceleration (a) and velocity (v). Algorithm finds resultant time (r) needed  //
-  //                          to accelerate to / decelerate from cruise time (c) at a constant velocity (h).          //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  void FairRamp(double t,                 // Time
-                double d,                 // Distance
-                double v,                 // Max velocity
-                double a,                 // Max acceleration
-                double &r,                // Ramp time
-                double &c,                // Time at constant velocity
-                double &h) {              // Constant velocity
-    if (t < epsilon_ || d < epsilon_)     // This doesn't work for small / negative numbers
+  //////////////////////////////////////////////////////////////////////////////
+  // Smear a linear or angular displacement (d) over some time (t) taking     //
+  // into account a maximum acceleration (a) and velocity (v). The algorithm  //
+  // finds resultant time (r) needed  to accelerate to / decelerate from      //
+  // cruise time (c) at a constant velocity (h).                              //
+  //////////////////////////////////////////////////////////////////////////////
+  void FairRamp(double t,     // Time
+                double d,     // Distance
+                double v,     // Max velocity
+                double a,     // Max acceleration
+                double &r,    // Ramp time
+                double &c,    // Time at constant velocity
+                double &h) {  // Constant velocity
+    if (t < epsilon_ ||
+        d < epsilon_)         // This doesn't work for small / negative numbers
       return;
-    // If a triangle ramp-up results in the correct displacement, then its a triangle
+    // If a triangle ramp-up results in correct displacement, then pyramidal
     if (fabs(t * t * a / 4.0 - d) < epsilon_) {
       h = sqrt(a * d);
       r = t / 2.0;
       c = 0.0;
-    // In the case of a trapezoidal ramp up, things are a bit more complex to calculate
+    // In the case of a trapezoidal ramp, things are more complex to calculate
     } else {
       h = (a * t - sqrt(a * a * t * t - 4.0 * d * a)) / 2.0;
       r = h / a;
@@ -262,7 +294,8 @@ class PlannerTrapezoidalNodelet : public planner::PlannerImplementation {
     ts.push_back(tmin);
     // Sort and remove any duplicate timestamps within pc.min_control_period
     std::sort(ts.begin(), ts.end());
-    for (std::vector < double > :: iterator it = ts.begin(); it != ts.end(); it++) {
+    std::vector < double > :: iterator it;
+    for (it = ts.begin(); it != ts.end(); it++) {
       // Get the time and delta t
       ff_util::State state;
       state.t = *it;
@@ -278,28 +311,32 @@ class PlannerTrapezoidalNodelet : public planner::PlannerImplementation {
         if (state.t >= tmin) {
           state.a = Eigen::Vector3d(0.0, 0.0, 0.0);
           state.v = Eigen::Vector3d(0.0, 0.0, 0.0);
-          state.p = p0.translation() + lin_d * (lin_a * lin_r * lin_r + lin_h * lin_c);
+          state.p = p0.translation()
+                  + lin_d * (lin_a * lin_r * lin_r + lin_h * lin_c);
         // Ramp-down
         } else if (state.t >= lin_r + lin_c) {
           double t = state.t - lin_r - lin_c;
           state.a = -lin_a * lin_d;
           state.v = lin_h * lin_d - lin_a * lin_d * t;
-          state.p = p0.translation() + lin_d * (0.5 * lin_a * lin_r * lin_r   // Ramp up
-                  + lin_h * lin_c                                             // Cruise
-                  + lin_h * t - 0.5 * lin_a * t * t);                         // Ramp down
+          state.p = p0.translation()
+            + lin_d * (0.5 * lin_a * lin_r * lin_r            // Ramp up
+            + lin_h * lin_c                                   // Cruise phase
+            + lin_h * t - 0.5 * lin_a * t * t);               // Ramp down
         // Cruise-phase
         } else if (state.t >= lin_r && lin_c > epsilon_) {
           double t = state.t - lin_r;
           state.a = Eigen::Vector3d(0.0, 0.0, 0.0);
           state.v = lin_h * lin_d;
-          state.p = p0.translation() + lin_d * (0.5 * lin_a * lin_r * lin_r   // Ramp up
-                  + lin_h * t);                                               // Cruise
+          state.p = p0.translation()
+                  + lin_d * (0.5 * lin_a * lin_r * lin_r      // Ramp up
+                  + lin_h * t);                               // Cruise phase
         // Ramp-up
         } else if (state.t >= 0.0) {
           double t = state.t;
           state.a = lin_a * lin_d;
           state.v = lin_a * lin_d * t;
-          state.p = p0.translation() + lin_d * (0.5 * lin_a * t * t);         // Ramp up
+          state.p = p0.translation()
+                  + lin_d * (0.5 * lin_a * t * t);            // Ramp up
         }
       }
       // Deal with the angular component
@@ -316,24 +353,24 @@ class PlannerTrapezoidalNodelet : public planner::PlannerImplementation {
           state.b = -rot_a * rot_d;
           state.w = rot_h * rot_d - rot_a * rot_d * t;
           state.q = p0.rotation() * Eigen::Quaterniond(
-            Eigen::AngleAxisd(0.5 * rot_a * rot_r * rot_r                   // Ramp up
-                              + rot_h * rot_c                               // Cruise phase
-                              + rot_h * t - 0.5 * rot_a * t * t, rot_d));   // Ramp down
+            Eigen::AngleAxisd(0.5 * rot_a * rot_r * rot_r     // Ramp up
+              + rot_h * rot_c                                 // Cruise phase
+              + rot_h * t - 0.5 * rot_a * t * t, rot_d));     // Ramp down
         // Cruise phase
         } else if (state.t >= rot_r && rot_c > epsilon_) {
           double t = state.t - rot_r;
           state.b = Eigen::Vector3d(0.0, 0.0, 0.0);
           state.w = rot_h * rot_d;
           state.q = p0.rotation() * Eigen::Quaterniond(
-            Eigen::AngleAxisd(0.5 * rot_a * rot_r * rot_r                   // Ramp up
-                              + rot_h * t, rot_d));                         // Cruise phase
+            Eigen::AngleAxisd(0.5 * rot_a * rot_r * rot_r     // Ramp up
+                + rot_h * t, rot_d));                         // Cruise phase
         // Ramp-up
         } else if (state.t >= 0.0) {
           double t = state.t;
           state.b = rot_a * rot_d;
           state.w = rot_a * rot_d * t;
           state.q = p0.rotation() * Eigen::Quaterniond(
-            Eigen::AngleAxisd(0.5 * rot_a * t * t, rot_d));                 // Ramp up
+            Eigen::AngleAxisd(0.5 * rot_a * t * t, rot_d));   // Ramp up
         }
       }
       // Add the setpoint to the segment
@@ -363,6 +400,6 @@ class PlannerTrapezoidalNodelet : public planner::PlannerImplementation {
 };
 
 PLUGINLIB_DECLARE_CLASS(planner_trapezoidal, PlannerTrapezoidalNodelet,
-                        planner_trapezoidal::PlannerTrapezoidalNodelet, nodelet::Nodelet);
+  planner_trapezoidal::PlannerTrapezoidalNodelet, nodelet::Nodelet);
 
 }  // namespace planner_trapezoidal

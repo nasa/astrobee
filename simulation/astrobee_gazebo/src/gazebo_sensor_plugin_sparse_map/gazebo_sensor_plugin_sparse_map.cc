@@ -22,248 +22,251 @@
 // Sensor plugin interface
 #include <astrobee_gazebo/astrobee_gazebo.h>
 
-// Basic messahes
-#include <sensor_msgs/PointCloud2.h>
-#include <sensor_msgs/point_cloud2_iterator.h>
+// FSW includes
+#include <config_reader/config_reader.h>
 
 // FSW messages
 #include <ff_msgs/VisualLandmarks.h>
 #include <ff_msgs/CameraRegistration.h>
 #include <ff_msgs/SetBool.h>
 
-// Config reader access
-#include <config_reader/config_reader.h>
-
 // Camera model
 #include <camera/camera_model.h>
 #include <camera/camera_params.h>
-
-#include <tf2_eigen/tf2_eigen.h>
-#include <Eigen/Eigen>
-#include <Eigen/Geometry>
 
 // STL includes
 #include <string>
 
 namespace gazebo {
 
-// This class is a plugin that produces features and registration for EKF
-// to complete the control loop
 class GazeboSensorPluginSparseMap : public FreeFlyerSensorPlugin {
  public:
-  GazeboSensorPluginSparseMap() : FreeFlyerSensorPlugin(NODE_MAPPED_LANDMARKS) {}
+  GazeboSensorPluginSparseMap() :
+    FreeFlyerSensorPlugin("localization_node", "nav_cam", true),
+      active_(true), processing_(false) {}
 
   virtual ~GazeboSensorPluginSparseMap() {}
 
  protected:
-  // Called when the plugin is loaded into the simulator
-  void LoadCallback(ros::NodeHandle *nh, sensors::SensorPtr sensor, sdf::ElementPtr sdf) {
+  // Called when plugin is loaded into gazebo
+  void LoadCallback(ros::NodeHandle *nh,
+    sensors::SensorPtr sensor, sdf::ElementPtr sdf) {
     // Get a link to the parent sensor
-    sensor_ = std::dynamic_pointer_cast < sensors::DepthCameraSensor > (sensor);
+    sensor_ = std::dynamic_pointer_cast<sensors::WideAngleCameraSensor>(sensor);
     if (!sensor_) {
-      gzerr << "GazeboSensorPluginDepth requires a camera sensor as a parent.\n";
+      gzerr << "GazeboSensorPluginSparseMap requires a parent camera sensor.\n";
       return;
     }
 
-     // Connect to the camera update event.
-    update_ = sensor_->ConnectUpdated(
-      std::bind(&GazeboSensorPluginSparseMap::UpdateCallback, this));
-
-    // Create a publisher for the registration messages
-    reg_pub_ = nh->advertise < ff_msgs::CameraRegistration > (TOPIC_LOCALIZATION_ML_REGISTRATION, 1,
-      boost::bind(&GazeboSensorPluginSparseMap::ToggleCallback, this),
-      boost::bind(&GazeboSensorPluginSparseMap::ToggleCallback, this));
-
-    // Create a publisher for the feature messages
-    feat_pub_ = nh->advertise < ff_msgs::VisualLandmarks > (TOPIC_LOCALIZATION_ML_FEATURES, 1,
-      boost::bind(&GazeboSensorPluginSparseMap::ToggleCallback, this),
-      boost::bind(&GazeboSensorPluginSparseMap::ToggleCallback, this));
-
-    // Enable mapped landmarks
-    enable_srv_ = nh->advertiseService(SERVICE_LOCALIZATION_ML_ENABLE,
-      &GazeboSensorPluginSparseMap::EnableService, this);
+    // Check that we have a mono camera
+    if (sensor_->Camera()->ImageFormat() != "L8")
+      ROS_FATAL_STREAM("Camera format must be L8");
 
     // Build the nav cam Camera Model
-    config_cam_.AddFile("cameras.config");
-    if (!config_cam_.ReadFiles()) {
+    config_.AddFile("cameras.config");
+    config_.AddFile("simulation/sparse_map.config");
+    if (!config_.ReadFiles()) {
         ROS_ERROR("Failed to read config files.");
         return;
     }
 
-    // Initialize lua config reader for sparse map
-    config_reader::ConfigReader config_;
-    config_.AddFile("simulation/sparse_map.config");
-    ReadParams(&config_);
+    if (!config_.GetReal("rate", &rate_))
+      ROS_FATAL("Could not read the rate parameter.");
 
-    // Initialize a timer to be used for the delay in sending feature messages
-    processing_timer_ = nh->createTimer(ros::Duration(delay_),
+    if (!config_.GetReal("delay_camera", &delay_camera_))
+      ROS_FATAL("Could not read the delay_camera parameter.");
+
+    if (!config_.GetReal("delay_features", &delay_features_))
+      ROS_FATAL("Could not read the delay_features parameter.");
+
+    if (!config_.GetReal("near_clip", &near_clip_))
+      ROS_FATAL("Could not read the near_clip parameter.");
+
+    if (!config_.GetReal("far_clip", &far_clip_))
+      ROS_FATAL("Could not read the far_clip parameter.");
+
+    if (!config_.GetUInt("num_samp", &num_samp_))
+      NODELET_ERROR("Could not read the num_samp parameter.");
+
+    if (!config_.GetUInt("num_features", &num_features_))
+      ROS_FATAL("Could not read the num_features parameter.");
+
+    // Create a publisher for the registration messages
+    pub_reg_ = nh->advertise<ff_msgs::CameraRegistration>(
+      TOPIC_LOCALIZATION_ML_REGISTRATION, 100);
+
+    // Create a publisher for the feature messages
+    pub_feat_ = nh->advertise<ff_msgs::VisualLandmarks>(
+      TOPIC_LOCALIZATION_ML_FEATURES, 100);
+
+    // Enable mapped landmarks
+    srv_enable_ = nh->advertiseService(SERVICE_LOCALIZATION_ML_ENABLE,
+      &GazeboSensorPluginSparseMap::EnableService, this);
+
+    // Timer triggers features
+    timer_registration_ = nh->createTimer(ros::Duration(ros::Rate(rate_)),
+      &GazeboSensorPluginSparseMap::SendRegistration, this, false, true);
+
+    // Timer triggers features
+    timer_delay_ = nh->createTimer(ros::Duration(delay_features_),
       &GazeboSensorPluginSparseMap::SendFeatures, this, true, false);
 
-    // variables needed for sending both feat and reg messages
-    cam_id_ = 1;
+    // Create a shape for collision testing
+    GetWorld()->GetPhysicsEngine()->InitForThread();
+    shape_ = boost::dynamic_pointer_cast<physics::RayShape>(GetWorld()
+        ->GetPhysicsEngine()->CreateShape("ray", physics::CollisionPtr()));
+  }
+
+  // Enable or disable the feature timer
+  bool EnableService(ff_msgs::SetBool::Request & req,
+                     ff_msgs::SetBool::Response & res) {
+    active_ = req.enable;
     processing_ = false;
-  }
-
-  void ReadParams(config_reader::ConfigReader *config_) {
-    // Read config files into lua
-    if (!config_->ReadFiles()) {
-      ROS_ERROR("Error loading sparse map configuration file.");
-      return;
-    }
-
-    if (!config_->GetReal("delay", &delay_))
-      ROS_FATAL("Could not read the delay parameter.");
-
-    if (!config_->GetUInt("num_features", &num_features_))
-      ROS_FATAL("Could not read the num_features parameter.");
-  }
-
-  // Called on simulation reset
-  virtual void Reset() {
-  }
-
-  // Turn sensor on or off if either reg or features are subscribed to
-  void ToggleCallback() {
-    if ((reg_pub_.getNumSubscribers() > 0) || (feat_pub_.getNumSubscribers() > 0))
-      sensor_->SetActive(true);
-    else
-      sensor_->SetActive(false);
-  }
-
-  bool EnableService(ff_msgs::SetBool::Request & req, ff_msgs::SetBool::Response & res) {
-    sensor_->SetActive(false);
+    res.success = true;
     return true;
   }
 
-  // Helper function for filling depth clouds
-  Eigen::Vector3d ProjectPoint(double depth, double hfov,
-    size_t u, size_t rows, size_t v, size_t cols) {
-    double fl = (static_cast<double>(cols) / (2.0 *tan(hfov/2.0)));
-    double pAngle = 0.0, yAngle = 0.0;
-    if (rows > 1)
-      pAngle = atan2(static_cast<double>(u) - 0.5*static_cast<double>(rows-1), fl);
-    if (cols > 1)
-      yAngle = atan2(static_cast<double>(v) - 0.5*static_cast<double>(cols-1), fl);
-    return Eigen::Vector3d(
-     depth * tan(yAngle),
-     depth * tan(pAngle),
-     depth);
-  }
+  // Send a registration pulse
+  void SendRegistration(ros::TimerEvent const& event) {
+    if (processing_ || !active_ || !ExtrinsicsFound()) return;
+    // Initialize and lock the physics engine
+    GetWorld()->GetPhysicsEngine()->InitForThread();
+    boost::unique_lock<boost::recursive_mutex> lock(*(
+      GetWorld()->GetPhysicsEngine()->GetPhysicsUpdateMutex()));
 
-  // called whenever there is a new depth image
-  void UpdateCallback() {
-    if (!sensor_->IsActive()) return;
-    if (!processing_) {
-      processing_ = true;
-      // Immediately send a registration pulse
-      SendRegistration();
+    // We are now processing an image
+    processing_ = true;
 
-      // Get a transform from the world to sensor frame
-      math::Pose tf_wb = GetModel()->GetWorldPose();
-      math::Pose tf_bs = sensor_->Pose();
-      math::Pose tf_ws = tf_bs + tf_wb;
-      Eigen::Affine3d t = (Eigen::Translation3d(tf_ws.pos.x, tf_ws.pos.y, tf_ws.pos.z)
-       * Eigen::Quaterniond(tf_ws.rot.w, tf_ws.rot.x, tf_ws.rot.y, tf_ws.rot.z));
+    // Send a registration pulse
+    static ff_msgs::CameraRegistration msg_reg;
+    msg_reg.header.stamp = ros::Time::now() + ros::Duration(delay_camera_);
+    msg_reg.header.frame_id = std::string(FRAME_NAME_WORLD);
+    msg_reg.camera_id++;
+    pub_reg_.publish(msg_reg);
+    ros::spinOnce();
 
-      // Get the camera parameters for a perfect undistorted camera
-      camera::CameraParameters cam_params(&config_cam_, "nav_cam");
-      camera::CameraModel camera(Eigen::Vector3d(0, 0, 0), Eigen::Matrix3d::Identity(), cam_params);
+    // Handle the transform for all sensor types
+    Eigen::Affine3d wTb = (
+        Eigen::Translation3d(
+          GetModel()->GetWorldPose().pos.x,
+          GetModel()->GetWorldPose().pos.y,
+          GetModel()->GetWorldPose().pos.z) *
+        Eigen::Quaterniond(
+          GetModel()->GetWorldPose().rot.w,
+          GetModel()->GetWorldPose().rot.x,
+          GetModel()->GetWorldPose().rot.y,
+          GetModel()->GetWorldPose().rot.z));
+    Eigen::Affine3d bTs = (
+        Eigen::Translation3d(
+          sensor_->Pose().Pos().X(),
+          sensor_->Pose().Pos().Y(),
+          sensor_->Pose().Pos().Z()) *
+        Eigen::Quaterniond(
+          sensor_->Pose().Rot().W(),
+          sensor_->Pose().Rot().X(),
+          sensor_->Pose().Rot().Y(),
+          sensor_->Pose().Rot().Z()));
+    Eigen::Affine3d wTs = wTb * bTs;
 
-      // set the pose of the camera in the world frame in the feature message
-      feat_msg_.pose.position.x    = tf_ws.pos.x;
-      feat_msg_.pose.position.y    = tf_ws.pos.y;
-      feat_msg_.pose.position.z    = tf_ws.pos.z;
-      feat_msg_.pose.orientation.x = tf_ws.rot.x;
-      feat_msg_.pose.orientation.y = tf_ws.rot.y;
-      feat_msg_.pose.orientation.z = tf_ws.rot.z;
-      feat_msg_.pose.orientation.w = tf_ws.rot.w;
+    // Initialize the camera paremeters
+    camera::CameraParameters cam_params(&config_, "nav_cam");
+    camera::CameraModel camera(Eigen::Vector3d(0, 0, 0),
+      Eigen::Matrix3d::Identity(), cam_params);
 
-      // Preallocate landmarks and message
-      feat_msg_.landmarks.reserve(num_features_);
-      feat_msg_.landmarks.clear();
+    // Assemble the feature message
+    msg_feat_.camera_id = msg_reg.camera_id;
+    msg_feat_.pose.position.x = wTs.translation().x();
+    msg_feat_.pose.position.y = wTs.translation().y();
+    msg_feat_.pose.position.z = wTs.translation().z();
+    Eigen::Quaterniond q(wTs.rotation());
+    msg_feat_.pose.orientation.w = q.w();
+    msg_feat_.pose.orientation.x = q.x();
+    msg_feat_.pose.orientation.y = q.y();
+    msg_feat_.pose.orientation.z = q.z();
+    msg_feat_.landmarks.clear();
 
-      // Keep going until we have enough features
+    // Create a new ray in the world
+    size_t i = 0;
+    for (; i < num_samp_ && msg_feat_.landmarks.size() < num_features_; i++) {
+      // Get a ray through a random image coordinate
+      Eigen::Vector3d ray = camera.Ray(
+        (static_cast<double>(rand() % 1000) / 1000 - 0.5)  // NOLINT
+          * camera.GetParameters().GetDistortedSize()[0],
+        (static_cast<double>(rand() % 1000) / 1000 - 0.5)  // NOLINT
+          * camera.GetParameters().GetDistortedSize()[1]);
+
+      // Get the camera coordinate of the ray near and far clips
+      Eigen::Vector3d n_c = near_clip_ * ray;
+      Eigen::Vector3d f_c = far_clip_ * ray;
+
+      // Get the world coordinate of the ray near and far clips
+      Eigen::Vector3d n_w = wTs * n_c;
+      Eigen::Vector3d f_w = wTs * f_c;
+
+      // Collision detection
+      double dist;
+      std::string entity;
+
+      // Set the start anf end points of the ray
+      shape_->SetPoints(
+        ignition::math::Vector3d(n_w.x(), n_w.y(), n_w.z()),
+        ignition::math::Vector3d(f_w.x(), f_w.y(), f_w.z()));
+      shape_->GetIntersection(dist, entity);
+
+      // If we don't have an entity then we didnt collide
+      if (entity.empty())
+        continue;
+
+      // Get the landmark coordinate
+      Eigen::Vector3d p_w = n_w + dist * (f_w - n_w).normalized();
+
+      // Create the landmark message
       static ff_msgs::VisualLandmark landmark;
-      static Eigen::Vector3d pt_c, pt_w;
-
-      size_t N = sensor_->DepthCamera()->ImageHeight() * sensor_->DepthCamera()->ImageWidth();
-      for (size_t i = 0; feat_msg_.landmarks.size() < num_features_; i++) {
-        // Get a random point and it's (u,v) coordinate
-        size_t rnd = std::rand() % N;
-        size_t u = rnd / sensor_->DepthCamera()->ImageWidth();
-        size_t v = rnd % sensor_->DepthCamera()->ImageWidth();
-
-        // Project the random point
-        pt_c = ProjectPoint(
-          reinterpret_cast< const float*>(sensor_->DepthCamera()->DepthData())[rnd],
-          sensor_->DepthCamera()->HFOV().Radian(),
-          u, sensor_->DepthCamera()->ImageHeight(),
-          v, sensor_->DepthCamera()->ImageWidth());
-
-        // Check the point is not nan
-        if (std::isnan(pt_c.x() * pt_c.y() * pt_c.z())) {
-          continue;
-        }
-
-        // Check the point is in the camera FOV
-        if (!camera.IsInFov(pt_c.x(), pt_c.y(), pt_c.z())) {
-          continue;
-        }
-
-        // Project the point into the world frame
-        pt_w = t * pt_c;
-
-        // Create the landmark message
-        landmark.x = pt_w.x();
-        landmark.y = pt_w.y();
-        landmark.z = pt_w.z();
-        landmark.u = camera.ImageCoordinates(pt_c.x(), pt_c.y(), pt_c.z())[0];
-        landmark.v = camera.ImageCoordinates(pt_c.x(), pt_c.y(), pt_c.z())[1];
-
-        // Push the landmark message on to the feature
-        feat_msg_.landmarks.push_back(landmark);
-      }
-      // start the timer to send the feature messages
-      processing_timer_.start();
+      landmark.x = p_w.x();
+      landmark.y = p_w.y();
+      landmark.z = p_w.z();
+      landmark.u = camera.ImageCoordinates(f_c)[0];
+      landmark.v = camera.ImageCoordinates(f_c)[1];
+      msg_feat_.landmarks.push_back(landmark);
     }
+
+    // Start a delay for the message
+    timer_delay_.stop();
+    timer_delay_.start();
   }
 
-  // sends a registration message and starts the feature timer
-  void SendRegistration(void) {
-    static ff_msgs::CameraRegistration reg_msg;
-    reg_msg.header.stamp = ros::Time::now();
-    reg_msg.header.frame_id = std::string(FRAME_NAME_WORLD);
-    reg_msg.camera_id = cam_id_;
-    reg_pub_.publish(reg_msg);
-  }
+  // Called when featured must be sent
+  void SendFeatures(ros::TimerEvent const& event) {
+    if (!processing_ || !active_ || !ExtrinsicsFound()) return;
 
-  // sends the features when the timer runs out
-  void SendFeatures(const ros::TimerEvent& event) {
+    // Send off the features
+    msg_feat_.header.stamp = ros::Time::now();
+    msg_feat_.header.frame_id = std::string(FRAME_NAME_WORLD);
+    pub_feat_.publish(msg_feat_);
+    ros::spinOnce();
+
+    // Go back to an idel state
     processing_ = false;
-    processing_timer_.stop();
-    // ROS_INFO("delay %f", ros::Time::now().toSec() - time_test_);
-    feat_msg_.header.stamp = ros::Time::now();
-    feat_msg_.header.frame_id = std::string(FRAME_NAME_WORLD);
-    feat_msg_.camera_id = cam_id_++;
-    feat_pub_.publish(feat_msg_);
   }
 
  private:
-  ros::Publisher feat_pub_;
-  ros::Publisher reg_pub_;
-  ff_msgs::VisualLandmarks feat_msg_;
-  event::ConnectionPtr update_;
-  ros::Timer processing_timer_;
-  double delay_;
+  config_reader::ConfigReader config_;
+  ros::Publisher pub_reg_, pub_feat_;
+  ros::ServiceServer srv_enable_;
+  ros::Timer timer_delay_, timer_registration_;
+  sensors::WideAngleCameraSensorPtr sensor_;
+  gazebo::physics::RayShapePtr shape_;
+  bool active_, processing_;
+  ff_msgs::VisualLandmarks msg_feat_;
+  double rate_;
+  double delay_camera_;
+  double delay_features_;
+  double near_clip_;
+  double far_clip_;
   unsigned int num_features_;
-  uint32_t cam_id_;
-  bool processing_;
-  sensors::DepthCameraSensorPtr sensor_;
-  config_reader::ConfigReader config_cam_;
-  ros::ServiceServer enable_srv_;
+  unsigned int num_samp_;
 };
 
-// Register this plugin with the simulator
 GZ_REGISTER_SENSOR_PLUGIN(GazeboSensorPluginSparseMap)
 
 }   // namespace gazebo

@@ -19,33 +19,41 @@
 #ifndef DDS_ROS_BRIDGE_ROS_PLAN_STATUS_RAPID_PLAN_STATUS_H_
 #define DDS_ROS_BRIDGE_ROS_PLAN_STATUS_RAPID_PLAN_STATUS_H_
 
-#include <string>
+#include <algorithm>
+#include <cstring>
 #include <memory>
+#include <string>
+
+#include "dds_ros_bridge/enum_helper.h"
+#include "dds_ros_bridge/ros_sub_rapid_pub.h"
+#include "dds_ros_bridge/util.h"
+
+#include "ff_msgs/AckStatus.h"
+#include "ff_msgs/PlanStatusStamped.h"
 
 #include "knDds/DdsTypedSupplier.h"
 
-#include "dds_ros_bridge/ros_sub_rapid_pub.h"
+#include "rapidUtil/RapidHelper.h"
 
-#include "ff_msgs/PlanStatusStamped.h"
+#include "AstrobeeConstants.h"
 #include "PlanStatusSupport.h"
 
 namespace ff {
 
 class RosPlanStatusRapidPlanStatus : public RosSubRapidPub {
-  using StatusSupplier =
-    kn::DdsTypedSupplier<rapid::ext::astrobee::PlanStatus>;
-  using StatusSupplierPtr = std::unique_ptr<StatusSupplier>;
-
  public:
-  RosPlanStatusRapidPlanStatus(const std::string& subscribeTopic,
-                               const std::string& pubTopic,
+  RosPlanStatusRapidPlanStatus(const std::string& subscribe_topic,
+                               const std::string& pub_topic,
                                const ros::NodeHandle &nh,
-                               const unsigned int queueSize = 10);
+                               const unsigned int queue_size = 10);
 
   void Callback(ff_msgs::PlanStatusStamped::ConstPtr const& status);
 
  private:
-  StatusSupplierPtr m_supplier_;
+  using StatusSupplier = kn::DdsTypedSupplier<rapid::ext::astrobee::PlanStatus>;
+  using StatusSupplierPtr = std::unique_ptr<StatusSupplier>;
+
+  StatusSupplierPtr status_supplier_;
 };
 
 }  // end namespace ff

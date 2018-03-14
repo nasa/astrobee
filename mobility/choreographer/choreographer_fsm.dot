@@ -1,0 +1,136 @@
+# dot -Tpdf statemachine.dot -o statemachine.pdf
+digraph G {
+  graph [label="CHOREOGRAPHER\n", labelloc=t, fontsize=50];
+  size="11.7,8.3!";
+  node [shape=box, width=2.5, fontsize=12, fontname="helvetica"];
+  edge [arrowsize=2, weight=2., fontsize=12, fontname="helvetica"];
+  fontname = "helvetica";
+
+  subgraph cluster {
+  style=invis;
+  node [shape=box, style=filled, fillcolor=orange, color=black];
+  IDLING;
+  node [shape=box, style=filled, fillcolor=lightpink, color=black];
+  STOPPING;
+  node [shape=box, style=filled, fillcolor=aquamarine, color=black];
+  PREPPING;
+  }
+
+  node [shape=diamond, style=filled, fillcolor=lightblue, color=black];
+  INITIALIZING;
+
+  node [shape=box, style=filled, fillcolor=lightblue, color=black];
+  STOPPED [label="STOPPED | IDLE"];
+
+  node [shape=box, style=filled, fillcolor=gold, color=black];
+  BOOTSTRAPPING;
+  PLANNING;
+  VALIDATING;
+  PREPARING;
+  CONTROLLING;
+  REPLANNING;
+  REVALIDATING;
+
+  node [shape=ellipse, style=filled, fontcolor=white, fillcolor=black, color=white];
+  aligned_with_all [label="Are we tolerant to all poses?"];
+  within_tolerance [label="Are we at the first pose?"];
+  enable_bootstrapping [label="enable_bootstrapping"];
+  enable_replanning [label="enable_replanning"];
+  enough_time [label="Is there enough time?"];
+  enable_validation [label="enable_validation"];
+  enable_revalidation [label="enable_validation"];
+
+  # Actions
+  INITIALIZING -> IDLING
+    [label="[0]\nREADY\nControl(IDLE)", color=blue];
+  IDLING -> STOPPED
+    [label="[1]\nCONTROL_SUCCESS\n-\nCONTROL_FAILED\nFault(CANNOT_STOP)", color=blue];
+  STOPPED -> within_tolerance
+    [label="[2]\nGOAL_EXEC", color=black];
+  within_tolerance -> enable_validation;
+  within_tolerance -> enable_bootstrapping [style=dashed];
+  enable_bootstrapping -> BOOTSTRAPPING
+    [label="Plan(pose1 ... poseN)", color=black];
+  enable_bootstrapping -> STOPPED
+    [label="Result(BOOTSTRAPPING_NOT_ALLOWED)", color=red, style=dashed];
+
+  BOOTSTRAPPING -> enable_validation
+    [label="[3]\nPLAN_SUCCESS"];
+  BOOTSTRAPPING -> STOPPED
+    [label="[4]\nPLAN_FAILED\nReturn(PLAN_FAILED)\n-\nGOAL_CANCEL\nResult(CANCELLED)", color=red];
+
+  STOPPED -> aligned_with_all
+    [label="[5]\nGOAL_MOVE", color=black];
+  aligned_with_all -> PLANNING
+    [label="Plan(segment[0])", color=black, style=dashed];
+  aligned_with_all -> STOPPED
+    [label="Result(ALEADY_THERE)", color=darkgreen];
+  PLANNING -> enable_validation
+    [label="[6]\nPLAN_SUCCESS", color=black];
+  PLANNING -> STOPPED
+    [label="[7]\nPLAN_FAILED\nReturn(PLAN_FAILED)\n-\nGOAL_CANCEL\nResult(CANCELLED)", color=red];
+  VALIDATING -> PREPARING
+    [label="[8]\nVALIDATE_SUCCESS\nSpeed(flight_mode)", color=black];
+  PREPARING -> CONTROLLING
+    [label="[23]\nPMC_READY\nControl(segment)", color=black];
+  PREPARING -> STOPPED
+    [label="[24]\nPMC_TIMEOUT\nResult(PMC_FAILED)\n-\nGOAL_CANCEL\nResult(CANCELLED)\n***\nControl(STOP)", color=red];
+
+  VALIDATING -> STOPPED
+    [label="[9]\nVALIDATE_FAILED\nReturn(VALIDATE_FAILED)\n-\nGOAL_CANCEL\nResult(CANCELLED)", color=red];
+  REPLANNING -> enable_revalidation
+    [label="[10]\nPLAN_SUCCESS", color=black];
+  REVALIDATING -> CONTROLLING
+    [label="[11]\nVALIDATE_SUCCESS\nControl(segment)", color=black];
+  REVALIDATING -> STOPPED
+    [label="[12]\nVALIDATE_FAILED\nResult(REVALIDATE_FAILED)\n-\nGOAL_CANCEL\nResult(CANCELLED)\n***\n\nControl(STOP)", color=red];
+  CONTROLLING -> STOPPED
+    [label="[13]\nCONTROL_SUCCESS\nResult(SUCCESS)", color=darkgreen];
+  REPLANNING -> STOPPED
+    [label="[14]\nPLAN_FAILED\nResult(REPLAN_FAILED)\n-\nGOAL_CANCEL\nResult(CANCELLED)\n***\n\nControl(STOP)", color=red];
+  CONTROLLING -> STOPPED
+    [label="[15]\nCONTROL_FAILED\nResult(CONTROL_FAILED)\n-\nGOAL_CANCEL\nResult(CANCELLED)\n***\nControl(STOP)", color=red];
+  
+  enable_validation -> VALIDATING
+    [label="Validate(Segment)"];
+  enable_validation -> PREPARING
+    [label="Speed(flight_mode)", style=dashed];
+
+  CONTROLLING -> enable_replanning
+    [label="[16]\nOBSTACLE_DETECTED", color=black];
+  enable_replanning -> enough_time
+    [color=black];
+  enable_replanning -> STOPPED
+    [label="Result(OBSTACLE_DETECTED)\nControl(STOP)", color=red];
+
+  enough_time -> REPLANNING
+    [label="Plan(poseI ... poseN)", color=black];
+  enough_time -> STOPPED
+    [label="Result(REPLAN_NOT_ENOUGH_TIME)\nControl(STOP)", color=red];
+
+  enable_revalidation -> REVALIDATING
+    [label="Validate(segment)"];
+  enable_revalidation -> CONTROLLING
+    [label="\nControl(segment)",style=dashed];
+
+  STOPPED -> STOPPING
+    [label="[17]\nGOAL_STOP\nSpeed(flight_mode)\nControl(STOP)", color=black];
+  STOPPING -> STOPPED
+    [label="[18]\nCONTROL_SUCCESS\nResult(SUCCESS)", color=darkgreen];
+  STOPPING -> STOPPED
+    [label="[19]\nCONTROL_FAILED\nResult(CONTROL_FAILED)\n-\nGOAL_CANCEL\nResult(CANCELLED)", color=red];
+
+  STOPPED -> IDLING
+    [label="[20]\nGOAL_IDLE\nSpeed(flight_mode)\nControl(IDLE)", color=black];
+  IDLING -> STOPPED
+    [label="[21]\nCONTROL_SUCCESS\nResult(SUCCESS)", color=darkgreen];
+  IDLING -> STOPPED
+    [label="[22]\nCONTROL_FAILED\nResult(CONTROL_FAILED)\n-\nGOAL_CANCEL\nResult(CANCELLED)", color=red];
+
+  STOPPED -> PREPPING
+    [label="[25]\nGOAL_PREP\nSpeed(flight_mode)", color=black];
+  PREPPING -> STOPPED
+    [label="[26]\nPMC_READY\nResult(SUCCESS)", color=darkgreen];
+  PREPPING -> STOPPED
+    [label="[27]\nPMC_TIMEOUT\nResult(PMC_TIMEOUT)\n-\nGOAL_CANCEL\nResult(CANCELLED)", color=red];
+}

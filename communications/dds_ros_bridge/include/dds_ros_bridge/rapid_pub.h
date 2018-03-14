@@ -15,10 +15,10 @@ namespace ff {
  */
 class RapidPub {
  protected:
-  explicit RapidPub(const std::string& pubTopic):
-    m_publishTopic_(pubTopic) {}
+  explicit RapidPub(const std::string& pub_topic):
+    publish_topic_(pub_topic) {}
 
-  std::string m_publishTopic_;
+  std::string publish_topic_;
 };
 
 typedef std::shared_ptr<ff::RapidPub> RapidPubPtr;

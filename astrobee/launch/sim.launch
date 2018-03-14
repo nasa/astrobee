@@ -21,6 +21,7 @@
   <arg name="robot" default="sim" />            <!-- Robot name              -->
   <arg name="world" default="iss" />            <!-- World name              -->
   <arg name="ns" default="" />                  <!-- Robot namespace prefix  -->
+  <arg name="output" default="log"/>            <!-- Where nodes should log  -->
   <arg name="nodes" default=""/>                <!-- Launch specific nodes   -->
   <arg name="sim" default="local" />            <!-- SIM IP address          -->
   <arg name="llp" default="local" />            <!-- LLP IP address          -->
@@ -38,7 +39,7 @@
 
   <!-- Simulation-specific options -->
   <arg name="insert" default="true" />          <!-- Auto-insert one robot?  -->
-  <arg name="pose" default="0 0 0 0 0 0 1" /><!-- Insert robot at pose    -->
+  <arg name="pose" default="" />                <!-- Insert robot at pose    -->
 
   <!-- Make sure all environment variables are set for controller -->
   <env if="$(eval optenv('ASTROBEE_ROBOT','')=='')" 
@@ -58,6 +59,9 @@
   <!-- Always launch on the local machine -->
   <group>
     <machine name ="local" address="localhost" default="true"/>
+    <!-- Start the dock description (disabled for REALM)
+    <include file="$(find astrobee)/launch/controller/dock.launch"/>
+      -->
     <!-- Start ground controller services -->
     <include if="$(arg gviz)" file="$(find astrobee)/launch/controller/gviz.launch"/>
     <include if="$(arg rviz)" file="$(find astrobee)/launch/controller/rviz.launch"/>
@@ -100,12 +104,14 @@
       <arg name="robot" value="$(arg robot)" />      <!-- Type of robot      -->
       <arg name="world" value="$(arg world)" />      <!-- Execution context  -->
       <arg name="ns" value="$(arg ns)" />            <!-- Robot namespace    -->
+      <arg name="output" value="$(arg output)" />    <!-- Output for logging   -->
       <arg name="pose" value="$(arg pose)" />        <!-- Initial robot pose -->
       <arg name="nodes" value="$(arg nodes)" />      <!-- Limit to  nodes    -->
       <arg name="sim" value="$(arg sim)" />          <!-- SIM IP address     -->
       <arg name="llp" value="$(arg llp)" />          <!-- LLP IP address     -->
       <arg name="mlp" value="$(arg mlp)" />          <!-- MLP IP address     -->
       <arg name="dds" value="$(arg dds)" />          <!-- Enable DDS         -->
+      <arg name="vmware" value="$(arg vmware)" />    <!-- Enable vmware      -->
     </include>
   </group>
 

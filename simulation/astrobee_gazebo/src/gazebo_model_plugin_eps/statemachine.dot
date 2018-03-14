@@ -1,0 +1,33 @@
+# dot -Tpdf statemachine.dot -o statemachine.pdf
+digraph G {
+  graph [label="EPS_SIM\n", labelloc=t, fontsize=50];
+  size="11.7,8.3!";
+  node [shape=box, width=2.5, fontsize=12, fontname="helvetica"];
+  edge [arrowsize=2, weight=2., fontsize=12, fontname="helvetica"];
+  fontname = "helvetica";
+
+  node [shape=diamond, style=filled, fillcolor=lightblue, color=black];
+  UNKNOWN
+
+  node [shape=box, style=filled, fillcolor=gold, color=black];
+  UNDOCKED
+  DOCKING
+  DOCKED
+  UNDOCKING
+
+  # Actions
+  UNKNOWN -> UNDOCKED
+    [label="[0]\nSENSE_FAR", color=blue];
+  UNKNOWN -> DOCKED
+    [label="[1]\nSENSE_NEAR", color=blue];
+  UNDOCKED -> DOCKING
+    [label="[2]\nSENSE_NEAR", color=blue];
+  DOCKING -> DOCKED
+    [label="[3]\nTIMEOUT", color=blue];
+  DOCKED -> UNDOCKING
+    [label="[4]\nUNDOCK", color=blue];
+  UNDOCKING -> UNDOCKED
+    [label="[5]\nSENSE_FAR", color=blue];
+  UNDOCKING -> DOCKING
+    [label="[6]\nTIMEOUT", color=blue];
+}

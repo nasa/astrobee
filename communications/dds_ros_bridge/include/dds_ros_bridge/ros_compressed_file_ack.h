@@ -20,33 +20,39 @@
 #ifndef DDS_ROS_BRIDGE_ROS_COMPRESSED_FILE_ACK_H_
 #define DDS_ROS_BRIDGE_ROS_COMPRESSED_FILE_ACK_H_
 
-#include <string>
+#include <cstring>
 #include <memory>
+#include <string>
+
+#include "dds_ros_bridge/ros_sub_rapid_pub.h"
+#include "dds_ros_bridge/util.h"
+
+#include "ff_msgs/CompressedFileAck.h"
 
 #include "knDds/DdsTypedSupplier.h"
 
-#include "dds_ros_bridge/ros_sub_rapid_pub.h"
+#include "rapidUtil/RapidHelper.h"
 
-#include "ff_msgs/CompressedFileAck.h"
+#include "AstrobeeConstants.h"
 #include "CompressedFileAckSupport.h"
 
 namespace ff {
 
 class RosCompressedFileAckToRapid : public RosSubRapidPub {
  public:
-  RosCompressedFileAckToRapid(const std::string& subscribeTopic,
-                              const std::string& pubTopic,
+  RosCompressedFileAckToRapid(const std::string& subscribe_topic,
+                              const std::string& pub_topic,
                               const ros::NodeHandle &nh,
-                              const unsigned int queueSize = 10);
+                              const unsigned int queue_size = 10);
 
   void Callback(ff_msgs::CompressedFileAck::ConstPtr const& ack);
 
  private:
   using Supplier =
-    kn::DdsTypedSupplier<rapid::ext::astrobee::CompressedFileAck>;
+                kn::DdsTypedSupplier<rapid::ext::astrobee::CompressedFileAck>;
   using SupplierPtr = std::unique_ptr<Supplier>;
 
-  SupplierPtr m_supplier_;
+  SupplierPtr state_supplier_;
 };
 
 }  // end namespace ff

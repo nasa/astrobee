@@ -34,6 +34,9 @@ namespace ekf {
 class EkfNodelet : public ff_util::FreeFlyerNodelet {
  public:
   EkfNodelet() : ff_util::FreeFlyerNodelet(NODE_EKF, true) {}
+  virtual ~EkfNodelet() {
+    thread_->join();
+  }
   // This is called when the nodelet is loaded into the nodelet manager
   virtual void Initialize(ros::NodeHandle *nh) {
     // Bootstrap our environment

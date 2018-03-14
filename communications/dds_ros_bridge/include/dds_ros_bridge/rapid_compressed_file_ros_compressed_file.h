@@ -19,19 +19,30 @@
 #ifndef DDS_ROS_BRIDGE_RAPID_COMPRESSED_FILE_ROS_COMPRESSED_FILE_H_
 #define DDS_ROS_BRIDGE_RAPID_COMPRESSED_FILE_ROS_COMPRESSED_FILE_H_
 
+#include <stdint.h>
+
+#include <ros/assert.h>
+
 #include <string>
+#include <vector>
 
 #include "dds_ros_bridge/rapid_sub_ros_pub.h"
+#include "dds_ros_bridge/util.h"
+
+#include "ff_msgs/CompressedFile.h"
+
+#include "AstrobeeConstants.h"
 #include "CompressedFile.h"
+#include "CompressedFileSupport.h"
 
 namespace ff {
 
 class RapidCompressedFileRosCompressedFile : public RapidSubRosPub {
  public:
-  RapidCompressedFileRosCompressedFile(const std::string& subscribeTopic,
-                                       const std::string& pubTopic,
+  RapidCompressedFileRosCompressedFile(const std::string& subscribe_topic,
+                                       const std::string& pub_topic,
                                        const ros::NodeHandle &nh,
-                                       const unsigned int queueSize = 10);
+                                       const unsigned int queue_size = 10);
 
   // Callback for ddsEventLoop
   void operator() (rapid::ext::astrobee::CompressedFile const* file);

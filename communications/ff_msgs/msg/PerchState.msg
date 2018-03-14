@@ -21,27 +21,27 @@
 std_msgs/Header header
 
 # Feedback
-int32 state
-uint8 INITIALIZING                       = 0
-uint8 UNKNOWN                            = 1
-uint8 TESTING_SWITCHING_TO_HR_LOC        = 2
-uint8 TESTING_SWITCHING_TO_PL_LOC        = 3
-uint8 UNPERCHED                          = 4
-uint8 PERCHING_SWITCHING_TO_HR_LOC       = 5
-uint8 PERCHING_MOVING_TO_APPROACH_POSE   = 6
-uint8 PERCHING_DEPLOYING_ARM             = 7
-uint8 PERCHING_OPENING_GRIPPER           = 8
-uint8 PERCHING_CALIBRATING_GRIPPER       = 9
-uint8 PERCHING_INGRESSING                = 10
-uint8 PERCHING_CLOSING_GRIPPER           = 11
-uint8 PERCHING_CHECKING_ATTACHED         = 12
-uint8 PERCHING_SWITCHING_TO_PL_LOC       = 13
-uint8 PERCHED                            = 14
-uint8 UNPERCHING_RESETTING_PAN_TILT      = 15
-uint8 UNPERCHING_SWITCHING_TO_HR_LOC     = 16
-uint8 UNPERCHING_OPENING_GRIPPER         = 17
-uint8 UNPERCHING_CALIBRATING_GRIPPER     = 18
-uint8 UNPERCHING_EGRESSING               = 19
-uint8 UNPERCHING_CLOSING_GRIPPER         = 20
-uint8 UNPERCHING_STOWING_ARM             = 21
-uint8 UNPERCHING_SWITCHING_TO_ML_LOC     = 22
+int8 state
+int8 INITIALIZING                       = 0
+int8 UNKNOWN                            = 1
+int8 TESTING_SWITCHING_TO_HR_LOC        = 2
+int8 TESTING_SWITCHING_TO_PL_LOC        = 3
+int8 UNPERCHED                          = 4
+int8 PERCHING_SWITCHING_TO_HR_LOC       = 5
+int8 PERCHING_MOVING_TO_APPROACH_POSE   = 6
+int8 PERCHING_DEPLOYING_ARM             = 7
+int8 PERCHING_OPENING_GRIPPER           = 8
+int8 PERCHING_CALIBRATING_GRIPPER       = 9
+int8 PERCHING_INGRESSING                = 10
+int8 PERCHING_CLOSING_GRIPPER           = 11
+int8 PERCHING_CHECKING_ATTACHED         = 12
+int8 PERCHING_SWITCHING_TO_PL_LOC       = 13
+int8 PERCHED                            = 14
+int8 UNPERCHING_RESETTING_PAN_TILT      = 15
+int8 UNPERCHING_SWITCHING_TO_HR_LOC     = 16
+int8 UNPERCHING_OPENING_GRIPPER         = 17
+int8 UNPERCHING_CALIBRATING_GRIPPER     = 18
+int8 UNPERCHING_EGRESSING               = 19
+int8 UNPERCHING_CLOSING_GRIPPER         = 20
+int8 UNPERCHING_STOWING_ARM             = 21
+int8 UNPERCHING_SWITCHING_TO_ML_LOC     = 22

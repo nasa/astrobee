@@ -22,28 +22,28 @@
 
 #include <string>
 
-#include "knDds/DdsTypedSupplier.h"
-
 #include "dds_ros_bridge/ros_sub_rapid_pub.h"
 #include "dds_ros_bridge/util.h"
 
 #include "ff_msgs/CpuState.h"
 #include "ff_msgs/CpuStateStamped.h"
 
+#include "knDds/DdsTypedSupplier.h"
+
+#include "rapidUtil/RapidHelper.h"
+
 #include "AstrobeeConstants.h"
 #include "CpuConfigSupport.h"
 #include "CpuStateSupport.h"
-
-#include "rapidUtil/RapidHelper.h"
 
 namespace ff {
 
 class RosCpuStateToRapid : public RosSubRapidPub {
  public:
-  RosCpuStateToRapid(const std::string& subTopic,
-                     const std::string& pubTopic,
+  RosCpuStateToRapid(const std::string& sub_topic,
+                     const std::string& pub_topic,
                      const ros::NodeHandle &nh,
-                     const unsigned int queueSize = 10);
+                     const unsigned int queue_size = 10);
 
   void Callback(ff_msgs::CpuStateStampedConstPtr const& state);
   void CheckAndPublish(ros::TimerEvent const& event);
@@ -53,12 +53,12 @@ class RosCpuStateToRapid : public RosSubRapidPub {
   using ConfigSupplier = kn::DdsTypedSupplier<rapid::ext::astrobee::CpuConfig>;
   using ConfigSupplierPtr = std::unique_ptr<ConfigSupplier>;
 
-  ConfigSupplierPtr c_supplier_;
+  ConfigSupplierPtr config_supplier_;
 
   using StateSupplier = kn::DdsTypedSupplier<rapid::ext::astrobee::CpuState>;
   using StateSupplierPtr = std::unique_ptr<StateSupplier>;
 
-  StateSupplierPtr s_supplier_;
+  StateSupplierPtr state_supplier_;
 
   bool updated_;
 

@@ -22,29 +22,32 @@
 
 #include <string>
 
-#include "knDds/DdsTypedSupplier.h"
-
 #include "dds_ros_bridge/ros_sub_rapid_pub.h"
 #include "dds_ros_bridge/util.h"
 
 #include "ff_msgs/FamCommand.h"
 
-#include "AstrobeeConstants.h"
-#include "GncFamCmdStateSupport.h"
+#include "knDds/DdsTypedSupplier.h"
+
+#include "rapidDds/RapidConstants.h"
 
 #include "rapidIo/RapidIoParameters.h"
+
 #include "rapidUtil/RapidHelper.h"
+
+#include "AstrobeeConstants.h"
+#include "GncFamCmdStateSupport.h"
 
 namespace ff {
 
 class RosGncFamCmdStateToRapid : public RosSubRapidPub {
  public:
-  RosGncFamCmdStateToRapid(const std::string& subscribeTopic,
-                           const std::string& pubTopic,
+  RosGncFamCmdStateToRapid(const std::string& subscribe_topic,
+                           const std::string& pub_topic,
                            const ros::NodeHandle& nh,
-                           const unsigned int queueSize = 10);
+                           const unsigned int queue_size = 10);
 
-  void CopyVec3D(rapid::Vec3d& vecOut, const geometry_msgs::Vector3& vecIn);
+  void CopyVec3D(rapid::Vec3d& vec_out, const geometry_msgs::Vector3& vec_in);
   void MsgCallback(const ff_msgs::FamCommandConstPtr& msg);
   void PubGncFamCmdState(const ros::TimerEvent& event);
   void SetGncPublishRate(float rate);
@@ -56,7 +59,7 @@ class RosGncFamCmdStateToRapid : public RosSubRapidPub {
       kn::DdsTypedSupplier<rapid::ext::astrobee::GncFamCmdState>;
   using StateSupplierPtr = std::unique_ptr<StateSupplier>;
 
-  StateSupplierPtr s_supplier_;
+  StateSupplierPtr state_supplier_;
 
   ros::Timer gnc_timer_;
 };

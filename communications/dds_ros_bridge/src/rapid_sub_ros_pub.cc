@@ -16,35 +16,32 @@
  * under the License.
  */
 
-#include <string>
-
 #include "dds_ros_bridge/rapid_sub_ros_pub.h"
-#include "knShare/Time.h"
 
 namespace ff {
 
-RapidSubRosPub::RapidSubRosPub(const std::string& subscribeTopic,
-                               const std::string& pubTopic,
+RapidSubRosPub::RapidSubRosPub(const std::string& subscribe_topic,
+                               const std::string& pub_topic,
                                const ros::NodeHandle &nh,
-                               const std::string& entityName,
-                               const unsigned int queueSize)
-  : m_nh_(nh), m_subscribeTopic_(subscribeTopic), m_publishTopic_(pubTopic),
-    m_queueSize_(queueSize), m_thread_(), m_ddsEventLoop_(entityName) {
+                               const std::string& entity_name,
+                               const unsigned int queue_size)
+  : nh_(nh), subscribe_topic_(subscribe_topic), publish_topic_(pub_topic),
+    queue_size_(queue_size), thread_(), dds_event_loop_(entity_name) {
 }
 
 RapidSubRosPub::~RapidSubRosPub() {
-  m_thread_.join();
+  thread_.join();
 }
 
 void RapidSubRosPub::StartThread() {
   // start joinable thread
-  m_thread_ = std::thread(&RapidSubRosPub::ThreadExec, this);
+  thread_ = std::thread(&RapidSubRosPub::ThreadExec, this);
 }
 
 void RapidSubRosPub::ThreadExec() {
   while (ros::ok()) {
     // process events at 10hz
-    m_ddsEventLoop_.processEvents(kn::milliseconds(100));
+    dds_event_loop_.processEvents(kn::milliseconds(100));
   }
 }
 

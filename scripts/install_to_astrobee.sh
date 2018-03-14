@@ -22,8 +22,9 @@
 shopt -s extglob
 
 # Check to see if there are arguments
-if [ $# -eq 0 ]; then
-  echo "Please supply the armhf folder as an argument."
+if [ $# -ne 2 ]; then
+  echo "Please supply the armhf folder and target robot as arguments."
+  echo "  e.g ./install_to_astrobee.sh ~/freeflyer_armhf_install p4d"
   exit 1
 fi
 
@@ -56,6 +57,17 @@ target=${1%/}
 dirname=$(basename ${target})
 master_ip=${llp_ips[${robot_index}]}
 config_ver=${2:-p4}
+
+# Some sanity check for the keyboard impaired...
+libfile=$target/lib/libexecutive.so
+if [ ! -f "$libfile" ]; then
+    echo "Specified directory does not contain ARS software ready to install!"
+    exit 1
+fi
+if ! readelf -A "$libfile" | grep -q "v7"; then
+    echo "Specified directory built for wrong target architecture (not armhf)!"
+    exit 1
+fi
 
 if [ -z ${FREEFLYER_MASTER} ]; then
   # See if we have an IP on the Astrobee network

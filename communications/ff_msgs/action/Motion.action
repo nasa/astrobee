@@ -27,14 +27,14 @@ uint8 PREP        = 4  # Prepare the system for a given flight mode
 
 # ALL COMMANDS: flight mode. If left empty, the default will be used.
 string flight_mode
-string OFF        = "off"
-string NOMINAL    = "nominal"
-string DIFFICULT  = "difficult"
-string QUIET      = "quiet"
-string PERCHING   = "perching"
-string UNPERCHING = "unperching"
-string DOCKING    = "docking"
-string UNDOCKING  = "undocking"
+string OFF        = off
+string NOMINAL    = nominal
+string DIFFICULT  = difficult
+string QUIET      = quiet
+string PERCHING   = perching
+string UNPERCHING = unperching
+string DOCKING    = docking
+string UNDOCKING  = undocking
 
 # EXECUTE ONLY : The segment
 ff_msgs/ControlState[] segment
@@ -46,9 +46,8 @@ geometry_msgs/PoseStamped[] states
 
 # Motion result
 int32 response                        #
-int32 ALREADY_THERE                =   3  # MOVE: We are already at the location
-int32 SUCCESS                      =   2  # ALL: Motion succeeded
-int32 CANCELLED                    =   1  # ALL: Motion cancelled by callee
+int32 ALREADY_THERE                =   2  # MOVE: We are already at the location
+int32 SUCCESS                      =   1  # ALL: Motion succeeded
 int32 PREEMPTED                    =   0  # ALL: Motion preempted by thirdparty
 int32 PLAN_FAILED                  =  -1  # MOVE/EXEC: Plan/bootstrap failed
 int32 VALIDATE_FAILED              =  -2  # MOVE/EXEC: Validate failed
@@ -75,6 +74,7 @@ int32 TOLERANCE_VIOLATION_POSITION =  -22 # Position tolerance violated
 int32 TOLERANCE_VIOLATION_ATTITUDE =  -23 # Attitude tolerance violated
 int32 TOLERANCE_VIOLATION_VELOCITY =  -24 # Velocity tolerance violated
 int32 TOLERANCE_VIOLATION_OMEGA    =  -25 # Omega tolerance violated
+int32 CANCELLED                    =  -26  # ALL: Motion cancelled by callee
 
 # The flight mode parameters used
 ff_msgs/FlightMode flight_mode

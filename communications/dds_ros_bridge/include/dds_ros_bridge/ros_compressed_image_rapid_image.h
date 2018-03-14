@@ -22,10 +22,14 @@
 #include <string>
 
 #include "dds_ros_bridge/ros_sub_rapid_pub.h"
-#include "sensor_msgs/CompressedImage.h"
 
-#include "rapidIo/RapidIoParameters.h"
+#include "rapidDds/MIMETypesConstants.h"
+#include "rapidDds/RapidConstants.h"
+
 #include "rapidIo/ImageSensorProvider.h"
+#include "rapidIo/RapidIoParameters.h"
+
+#include "sensor_msgs/CompressedImage.h"
 
 namespace ff {
 
@@ -35,17 +39,17 @@ namespace ff {
  */
 class RosCompressedImageRapidImage : public RosSubRapidPub {
  public:
-  RosCompressedImageRapidImage(const std::string& subscribeTopic,
-                               const std::string& pubTopic,
+  RosCompressedImageRapidImage(const std::string& subscribe_topic,
+                               const std::string& pub_topic,
                                const ros::NodeHandle &nh,
-                               const unsigned int queueSize = 10);
+                               const unsigned int queue_size = 10);
 
   void CallBack(const sensor_msgs::CompressedImage::ConstPtr& msg);
 
  private:
-  std::string GetRapidMimeType(const std::string& rosFormat);
-  rapid::ImageSensorProviderParameters m_params_;
-  std::shared_ptr<rapid::ImageSensorProvider> m_provider_;
+  std::string GetRapidMimeType(const std::string& ros_format);
+  rapid::ImageSensorProviderParameters params_;
+  std::shared_ptr<rapid::ImageSensorProvider> provider_;
   const unsigned int MB_;
 };
 

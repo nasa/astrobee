@@ -17,13 +17,22 @@
 
 <launch>
   <arg name="ns" default="" />
-  <arg name="pose" default="0 0 0 0 0 0 1" />
+  <arg name="pose" default="" />
+  <arg name="world" default="iss" />
+  <!-- The initial default pose depends on the evnironment -->
+  <arg unless="$(eval arg('pose')=='')" name="gpose" value="0 0 0 0 0 0 1"/>
+  <arg if="$(eval arg('pose')=='' and arg('world')=='granite')"
+       name="gpose" value="0 0 -0.7 0 0 0 1"/>
+  <arg if="$(eval arg('pose')=='' and arg('world')=='iss')"
+       name="gpose" value="2 0 4.8 0 0 0 1"/>
+  <arg if="$(eval arg('pose')=='' and arg('world')=='mgtf')"
+       name="gpose" value="0 0 0 0 0 0 1"/>
   <!-- Use the namespace forward-slash to signify that this model has no name -->
   <node if="$(eval arg('ns')=='')"
-        name="spawn_model" pkg="astrobee_gazebo" type="spawn_model"
-        args="-param robot_description -model / -urdf -pose  $(arg pose)" />
+        name="spawn_astrobee" pkg="astrobee_gazebo" type="spawn_model"
+        args="-param robot_description -model / -urdf -pose  $(arg gpose)" />
   <!-- Spawn with an actual string namespace -->
   <node unless="$(eval arg('ns')=='')"
-        name="spawn_model" pkg="astrobee_gazebo" type="spawn_model"
-        args="-param robot_description -urdf -model $(arg ns) -pose  $(arg pose)" />
+        name="spawn_astrobee" pkg="astrobee_gazebo" type="spawn_model"
+        args="-param $(arg ns)/robot_description -urdf -model $(arg ns) -pose  $(arg gpose)" />
 </launch>

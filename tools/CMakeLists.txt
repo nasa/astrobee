@@ -24,8 +24,6 @@ if (FFMPEG_FOUND AND QT_QTGUI_FOUND)
   add_subdirectory(ekf_video)
 endif (FFMPEG_FOUND AND QT_QTGUI_FOUND)
 
-# If the user enabled the HTC vive tracker
-if(ENABLE_VIVE)
+if (DEEPDIVE_FOUND)
   add_subdirectory(vive)
-endif(ENABLE_VIVE)
-
+endif (DEEPDIVE_FOUND)

@@ -1,3 +1,9 @@
+astrobee (0.3.0) unstable; urgency=medium
+
+  * This release addresses several bugs identified by Guest Scientists, simulator improvements as well as many internal changes. The only API change is in the EkfState (removed augmented state).
+
+ -- Astrobee Flight Software <astrobee-fsw@nx.arc.nasa.gov>  Wed, 14 Mar 2018 11:59:51 -0700
+
 astrobee (0.2) unstable; urgency=medium
 
   * Our second open source release. See RELEASE.md for details.

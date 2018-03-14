@@ -56,7 +56,9 @@ OpState* OpState::HandleCmd(ff_msgs::CommandStampedPtr const& cmd,
                             bool plan) {
   completed = true;
   successful = true;
-  if (cmd->cmd_name == CommandConstants::CMD_NAME_SET_CAMERA) {
+  if (cmd->cmd_name == CommandConstants::CMD_NAME_NO_OP) {
+    exec_->PublishCmdAck(cmd->cmd_id, cmd->cmd_origin);
+  } else if (cmd->cmd_name == CommandConstants::CMD_NAME_SET_CAMERA) {
     successful = exec_->SetCamera(cmd, err_msg, status, plan);
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_SET_CAMERA_STREAMING) {
     successful = exec_->SetCameraStreaming(cmd, err_msg, status, plan);

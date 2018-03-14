@@ -18,20 +18,27 @@
 project(mapper)
 
 catkin_package(
+  DEPENDS Eigen
   LIBRARIES
     mapper
   CATKIN_DEPENDS
     roscpp
     nodelet
     pluginlib
-    actionlib
     ff_msgs
-    visualization_msgs
+    message_runtime
+    cmake_modules
+)
+
+set(INCLUDES
+  ${EIGEN3_INCLUDE_DIRS}
+  ${PCL_INCLUDE_DIRS}
+  src
 )
 
 create_library(TARGET mapper
-  LIBS ${catkin_LIBRARIES} ff_nodelet ff_flight config_server
-  INC  ${catkin_INCLUDE_DIRS}
+  LIBS ${catkin_LIBRARIES} ff_nodelet ff_flight config_server  ${PCL_LIBRARIES} ${OCTOMAP_LIBRARIES}
+  INC  ${catkin_INCLUDE_DIRS} ${INCLUDES} ${OCTOMAP_INCLUDE_DIRS}
 )
 
 install_launch_files()

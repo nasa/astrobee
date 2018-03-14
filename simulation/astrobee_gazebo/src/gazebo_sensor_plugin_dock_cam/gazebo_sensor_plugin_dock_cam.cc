@@ -36,17 +36,19 @@ namespace gazebo {
 
 class GazeboSensorPluginDockCam : public FreeFlyerSensorPlugin {
  public:
-  GazeboSensorPluginDockCam() : FreeFlyerSensorPlugin(NODE_DOCK_CAM) {}
+  GazeboSensorPluginDockCam() :
+    FreeFlyerSensorPlugin("dock_cam", "dock_cam", true) {}
 
-  ~GazeboSensorPluginDockCam() {}
+  virtual ~GazeboSensorPluginDockCam() {}
 
  protected:
   // Called when plugin is loaded into gazebo
-  void LoadCallback(ros::NodeHandle *nh, sensors::SensorPtr sensor, sdf::ElementPtr sdf) {
+  void LoadCallback(ros::NodeHandle *nh,
+    sensors::SensorPtr sensor, sdf::ElementPtr sdf) {
     // Get a link to the parent sensor
-    sensor_ = std::dynamic_pointer_cast < sensors::WideAngleCameraSensor > (sensor);
+    sensor_ = std::dynamic_pointer_cast<sensors::WideAngleCameraSensor>(sensor);
     if (!sensor_) {
-      gzerr << "GazeboSensorPluginDockCam requires a camera sensor as a parent.\n";
+      gzerr << "GazeboSensorPluginDockCam requires a parent camera sensor.\n";
       return;
     }
     // set buffer size
@@ -70,7 +72,7 @@ class GazeboSensorPluginDockCam : public FreeFlyerSensorPlugin {
     msg_.data.resize(msg_.step * msg_.height);
 
     // Create a publisher
-    pub_ = nh->advertise < sensor_msgs::Image > (TOPIC_HARDWARE_DOCK_CAM, 1,
+    pub_ = nh->advertise < sensor_msgs::Image > (TOPIC_HARDWARE_DOCK_CAM, 100,
       boost::bind(&GazeboSensorPluginDockCam::ToggleCallback, this),
       boost::bind(&GazeboSensorPluginDockCam::ToggleCallback, this));
 
@@ -89,7 +91,8 @@ class GazeboSensorPluginDockCam : public FreeFlyerSensorPlugin {
 
   // Called on each sensor update event
   void UpdateCallback() {
-    if (!sensor_->IsActive()) return;
+    if (!sensor_->IsActive() || !ExtrinsicsFound())
+      return;
     msg_.header.stamp.sec = sensor_->LastMeasurementTime().sec;
     msg_.header.stamp.nsec = sensor_->LastMeasurementTime().nsec;
     memmove(msg_.data.data(), sensor_->ImageData(), msg_.step * msg_.height);

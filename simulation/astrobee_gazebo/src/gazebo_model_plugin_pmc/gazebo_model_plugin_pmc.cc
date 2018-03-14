@@ -51,7 +51,7 @@ class GazeboModelPluginPmc : public FreeFlyerModelPlugin {
   static constexpr double RADS_PER_SEC_TO_RPM = 9.549296585514;
 
   // Constructor
-  GazeboModelPluginPmc() : FreeFlyerModelPlugin(NODE_PMC_ACTUATOR),
+  GazeboModelPluginPmc() : FreeFlyerModelPlugin("pmc_actuator", true),
     pmc_enabled_(true) {}
 
   // Destructor
@@ -59,7 +59,8 @@ class GazeboModelPluginPmc : public FreeFlyerModelPlugin {
 
  protected:
   // Called when the plugin is loaded into the simulator
-  void LoadCallback(ros::NodeHandle *nh, physics::ModelPtr model, sdf::ElementPtr sdf) {
+  void LoadCallback(ros::NodeHandle *nh,
+    physics::ModelPtr model, sdf::ElementPtr sdf) {
     config_params.AddFile("hw/pmc_actuator.config");
     if (!GetParams()) {
       ROS_ERROR("PMC Actuator: Failed to get parameters.");
@@ -69,21 +70,21 @@ class GazeboModelPluginPmc : public FreeFlyerModelPlugin {
     // Create a null command to be used later
     ff_hw_msgs::PmcGoal null_goal;
     null_goal.motor_speed = 0;
-    null_goal.nozzle_positions = {25, 25, 25, 25, 25, 25};
+    null_goal.nozzle_positions = {0, 0, 0, 0, 0, 0};
     null_command_.header.frame_id = GetFrame();
     null_command_.goals.push_back(null_goal);
     null_command_.goals.push_back(null_goal);
 
     // Telemetry publisher
     pub_telemetry_ = nh->advertise<ff_hw_msgs::PmcTelemetry>(
-      TOPIC_HARDWARE_PMC_TELEMETRY, 1);
+      TOPIC_HARDWARE_PMC_TELEMETRY, 100);
 
     // State publisher as a latched topic
     pub_state_ = nh->advertise<ff_hw_msgs::PmcState>(
-      TOPIC_HARDWARE_PMC_STATE, 1, true);
+      TOPIC_HARDWARE_PMC_STATE, 100, true);
 
     // Now register to be called back every time FAM has new wrench
-    sub_command_ = nh->subscribe(TOPIC_HARDWARE_PMC_COMMAND, 1,
+    sub_command_ = nh->subscribe(TOPIC_HARDWARE_PMC_COMMAND, 100,
       &GazeboModelPluginPmc::CommandCallback, this);
 
     // Create a watchdog timer to ensure the PMC commands are set
@@ -159,9 +160,9 @@ class GazeboModelPluginPmc : public FreeFlyerModelPlugin {
       SendCommand(null_command_);
   }
 
-  // If this is *ever* called, it means a FAM command was not received - note that we
-  // are using a single-threaded spinner so at most one callback is processed at any time
-  // which means that we wont have race conditions on commands_
+  // If this is *ever* called, it means a FAM command was not received - note
+  // that we are using a single-threaded spinner so at most one callback is
+  // processed at any time which means that we wont have race conditions
   void WatchdogCallback(ros::TimerEvent const& event) {
     // Immediately reset the watchdog timer
     timer_.stop();
@@ -251,8 +252,10 @@ class GazeboModelPluginPmc : public FreeFlyerModelPlugin {
     if (GetWorld()->GetSimTime() >= next_tick_) {
       next_tick_ += 1.0 / control_rate_hz_;
       // Set the angular velocity
-      blowers_.SetAngularVelocity(GetLink()->GetRelativeAngularVel().x,
-        GetLink()->GetRelativeAngularVel().y, GetLink()->GetRelativeAngularVel().z);
+      blowers_.SetAngularVelocity(
+        GetLink()->GetRelativeAngularVel().x,
+        GetLink()->GetRelativeAngularVel().y,
+        GetLink()->GetRelativeAngularVel().z);
       // Set the battery voltage
       blowers_.SetBatteryVoltage(14.0);
       // Step the system

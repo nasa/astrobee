@@ -348,7 +348,7 @@ int EkfWrapper::Step() {
   cv_imu_.notify_all();
 
   pt_ekf_.Tick();
-  int ret = ekf_.Step(&state_);
+  int ret = (input_mode_ != ff_msgs::SetEkfInputRequest::MODE_NONE ? ekf_.Step(&state_) : 1);
   pt_ekf_.Tock();
   if (ret)
     PublishState(state_);
@@ -356,24 +356,26 @@ int EkfWrapper::Step() {
 }
 
 void EkfWrapper::PublishState(const ff_msgs::EkfState & state) {
+  // Publish the full EKF state
   state_pub_.publish<ff_msgs::EkfState>(state);
-
-  // publish transform for body frame
-  geometry_msgs::TransformStamped transform;
-  transform.header = state.header;
-  transform.child_frame_id = platform_name_ + "body";
-  transform.transform.translation.x = state.pose.position.x;
-  transform.transform.translation.y = state.pose.position.y;
-  transform.transform.translation.z = state.pose.position.z;
-  transform.transform.rotation = state.pose.orientation;
-  transform_pub_.sendTransform(transform);
-
+  // Only publish a transform if the confidence is good enough and we have
+  // actually populated the state (examine the header to check)
+  if (state.confidence == 0 && !state.header.frame_id.empty()) {
+    geometry_msgs::TransformStamped transform;
+    transform.header = state.header;
+    transform.child_frame_id = platform_name_ + "body";
+    transform.transform.translation.x = state.pose.position.x;
+    transform.transform.translation.y = state.pose.position.y;
+    transform.transform.translation.z = state.pose.position.z;
+    transform.transform.rotation = state.pose.orientation;
+    transform_pub_.sendTransform(transform);
+  }
+  // Publish a truthful
   if (input_mode_ != ff_msgs::SetEkfInputRequest::MODE_TRUTH) {
     geometry_msgs::PoseStamped pose;
     pose.header.stamp = state.header.stamp;
     pose.pose = state.pose;
     pose_pub_.publish(pose);
-
     geometry_msgs::TwistStamped twist;
     twist.header.stamp = state.header.stamp;
     twist.twist.linear = state.velocity;

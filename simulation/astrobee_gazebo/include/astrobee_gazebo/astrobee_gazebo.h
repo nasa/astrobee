@@ -43,20 +43,28 @@
 #include <gazebo/math/gzmath.hh>
 #include <gazebo/rendering/rendering.hh>
 
+// Transformation helper code
+#include <Eigen/Eigen>
+#include <Eigen/Geometry>
+
 // STL includes
 #include <string>
 #include <limits>
+#include <thread>
 
 namespace gazebo {
 
 // Convenience wrapper around a model plugin
-class FreeFlyerModelPlugin : public ModelPlugin, public ff_util::FreeFlyerNodelet {
+class FreeFlyerModelPlugin : public ff_util::FreeFlyerNodelet, public ModelPlugin {
  public:
-  explicit FreeFlyerModelPlugin(std::string const& name, bool heartbeats = true);
+  explicit FreeFlyerModelPlugin(std::string const& name, bool hb = false);
 
   virtual ~FreeFlyerModelPlugin();
 
   virtual void Load(physics::ModelPtr model, sdf::ElementPtr sdf);
+
+  // Put laser data to the interface
+  void WorkerThread(const double timeout);
 
   // Get the model link
   physics::LinkPtr GetLink();
@@ -74,31 +82,31 @@ class FreeFlyerModelPlugin : public ModelPlugin, public ff_util::FreeFlyerNodele
   virtual void LoadCallback(ros::NodeHandle *nh,
     physics::ModelPtr model, sdf::ElementPtr sdf) = 0;
 
- protected:
-  // Put laser data to the interface
-  void QueueThread();
-
  private:
   std::string name_;
+  ros::NodeHandle nh_;
   sdf::ElementPtr sdf_;
   physics::LinkPtr link_;
   physics::WorldPtr world_;
   physics::ModelPtr model_;
-  ros::NodeHandle nh_;
   ros::CallbackQueue queue_;
-  boost::thread thread_;
+  std::thread thread_;
 };
 
 
 // Convenience wrapper around a sensor plugin
-class FreeFlyerSensorPlugin : public SensorPlugin, public ff_util::FreeFlyerNodelet {
+class FreeFlyerSensorPlugin : public ff_util::FreeFlyerNodelet, public SensorPlugin {
  public:
-  explicit FreeFlyerSensorPlugin(std::string const& name, bool heartbeats = true);
+  explicit FreeFlyerSensorPlugin(std::string const& name,
+    std::string const& frame = "", bool hb = true);
 
   virtual ~FreeFlyerSensorPlugin();
 
  protected:
   void Load(sensors::SensorPtr sensor, sdf::ElementPtr sdf);
+
+  // Put laser data to the interface
+  void WorkerThread(const double timeout);
 
   // Get the sensor world
   physics::WorldPtr GetWorld();
@@ -112,29 +120,29 @@ class FreeFlyerSensorPlugin : public SensorPlugin, public ff_util::FreeFlyerNode
   // Get the type of the sensor
   std::string GetRotationType();
 
+  // Were extrinsics found
+  bool ExtrinsicsFound();
+
   // Callback when the sensor has loaded
   virtual void LoadCallback(ros::NodeHandle *nh,
     sensors::SensorPtr sensor, sdf::ElementPtr sdf) = 0;
 
- protected:
-  // Put laser data to the interface
-  void QueueThread();
-
   // Manage the extrinsics based on the sensor type
-  void SetupExtrinsics(const ros::TimerEvent&);
+ private:
+  void SetupExtrinsics(const common::UpdateInfo &info);
 
  private:
-  std::string name_;
-  std::string frame_;
+  std::string name_, frame_;
+  bool extrinsics_found_;
+  ros::NodeHandle nh_;
   std::string rotation_type_;
   sensors::SensorPtr sensor_;
   sdf::ElementPtr sdf_;
   physics::WorldPtr world_;
   physics::ModelPtr model_;
-  ros::NodeHandle nh_;
+  event::ConnectionPtr connection_;
   ros::CallbackQueue queue_;
-  ros::Timer timer_;
-  boost::thread thread_;
+  std::thread thread_;
 };
 
 }  // namespace gazebo

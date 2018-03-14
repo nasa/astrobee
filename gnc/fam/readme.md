@@ -10,5 +10,5 @@ PMC speeds and nozzle positions.
 
 ## Outputs
 
-* `pmc_actuator/command`: The commands for the PMC to execute to obtain the desired force and torque.
+* `hw/pmc/command`: The commands for the PMC to execute to obtain the desired force and torque.
 

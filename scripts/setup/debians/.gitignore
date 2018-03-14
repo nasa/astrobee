@@ -5,6 +5,7 @@
 *.tar.gz
 *.deb
 libalvar
+libdeepdive
 libdbow2
 libdbowdlib
 libopenmvg

@@ -16,39 +16,30 @@
  * under the License.
  */
 
-#include <string>
-#include <cstring>
-#include <memory>
-
 #include "dds_ros_bridge/ros_fault_state.h"
-#include "dds_ros_bridge/enum_helper.h"
-#include "dds_ros_bridge/util.h"
-
-#include "rapidUtil/RapidHelper.h"
-
-#include "ff_msgs/FaultState.h"
-#include "FaultStateSupport.h"
 
 ff::RosFaultStateToRapid::RosFaultStateToRapid(
-    const std::string& subscribeTopic,
-    const std::string& pubTopic,
-    const ros::NodeHandle &nh,
-    const unsigned int queueSize)
-  : RosSubRapidPub(subscribeTopic, pubTopic, nh, queueSize) {
-  m_supplier_.reset(
+                                            const std::string& subscribe_topic,
+                                            const std::string& pub_topic,
+                                            const ros::NodeHandle &nh,
+                                            const unsigned int queue_size)
+  : RosSubRapidPub(subscribe_topic, pub_topic, nh, queue_size) {
+  state_supplier_.reset(
     new ff::RosFaultStateToRapid::StateSupplier(
-        rapid::ext::astrobee::FAULT_STATE_TOPIC + pubTopic,
+        rapid::ext::astrobee::FAULT_STATE_TOPIC + pub_topic,
         "", "AstrobeeFaultStateProfile", ""));
 
-  m_sub_ = m_nh_.subscribe(subscribeTopic, queueSize,
-    &RosFaultStateToRapid::Callback, this);
+  sub_ = nh_.subscribe(subscribe_topic,
+                       queue_size,
+                       &RosFaultStateToRapid::Callback,
+                       this);
 
-  rapid::RapidHelper::initHeader(m_supplier_->event().hdr);
+  rapid::RapidHelper::initHeader(state_supplier_->event().hdr);
 }
 
 void ff::RosFaultStateToRapid::Callback(const ff_msgs::FaultStateConstPtr&
                                                                         state) {
-  rapid::ext::astrobee::FaultState &msg = m_supplier_->event();
+  rapid::ext::astrobee::FaultState &msg = state_supplier_->event();
   msg.hdr.timeStamp = util::RosTime2RapidTime(state->header.stamp);
 
   unsigned int i, j, data_size, fault_size;
@@ -57,7 +48,7 @@ void ff::RosFaultStateToRapid::Callback(const ff_msgs::FaultStateConstPtr&
   fault_size = state->faults.size();
   if (fault_size > 32) {
     ROS_ERROR("DDS: There are %i faults but can only send 32 to the ground",
-                                                                    fault_size);
+              fault_size);
     fault_size = 32;
   }
   msg.faults.length(fault_size);
@@ -73,13 +64,14 @@ void ff::RosFaultStateToRapid::Callback(const ff_msgs::FaultStateConstPtr&
     data_size = state->faults[i].data.size();
     if (data_size > 8) {
       ROS_ERROR("DDS: There are %i key type values but only 8 sent to ground",
-                                                                    data_size);
+                data_size);
       data_size = 8;
     }
     msg.faults[i].data.length(data_size);
     for (j = 0; j < data_size; j++) {
       std::strncpy(msg.faults[i].data[j].key,
-                                      state->faults[i].data[j].key.data(), 32);
+                   state->faults[i].data[j].key.data(),
+                   32);
       msg.faults[i].data[j].key[31] = '\0';
 
       switch (state->faults[i].data[j].data_type) {
@@ -99,11 +91,11 @@ void ff::RosFaultStateToRapid::Callback(const ff_msgs::FaultStateConstPtr&
           break;
         default:
           ROS_FATAL("DDS-ROS-Bridge: unknown fault data type: %i",
-                                            state->faults[i].data[j].data_type);
+                    state->faults[i].data[j].data_type);
       }
     }
   }
 
-  m_supplier_->sendEvent();
+  state_supplier_->sendEvent();
 }
 

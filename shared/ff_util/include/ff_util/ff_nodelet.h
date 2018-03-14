@@ -21,6 +21,7 @@
 
 // ROS includes
 #include <ros/ros.h>
+#include <ros/callback_queue.h>
 #include <nodelet/nodelet.h>
 #include <pluginlib/class_list_macros.h>
 #include <diagnostic_msgs/KeyValue.h>
@@ -36,6 +37,7 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <thread>
 
 // Constants
 #define DEFAULT_ACTION_WAIT_TIME    30.0
@@ -99,7 +101,7 @@ class FreeFlyerNodelet : public nodelet::Nodelet {
   // The set function does all of the internal work. We have moved this out
   // of the onInit() call, so that it can be invoked when a nodelet is not used
   // for example, in simulation, where the dynamic loading is within gazebo...
-  void Setup(ros::NodeHandle nh);
+  void Setup(ros::NodeHandle & nh, ros::NodeHandle & nh_mt);
 
  private:
   // Called on a heartbeat event
@@ -117,15 +119,17 @@ class FreeFlyerNodelet : public nodelet::Nodelet {
   // We capture the init function and start up heartbeats, etc, then call Initialize()
   void onInit();
 
-  // Called in onInit to read in the faults associated with the node
-  void ReadFaults();
+  // Called in onInit to read in the config values associated with the node
+  void ReadConfig();
 
   // Heartbeat autostart
   bool autostart_hb_timer_;
   bool initialized_;
   bool sleeping_;
 
-  config_reader::ConfigReader fault_config_;
+  unsigned int heartbeat_queue_size_;
+
+  config_reader::ConfigReader param_config_;
 
   // Heartbeat message, also used to report faults
   ff_msgs::Heartbeat heartbeat_;

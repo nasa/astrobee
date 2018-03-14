@@ -45,9 +45,9 @@ Ctl::Ctl(ros::NodeHandle* nh, std::string const& name) :
       name_(name), inertia_received_(false), control_enabled_(false) {
   // Add the state transition lambda functions - refer to the FSM diagram
   // [0]
-  fsm_.Add(GOAL_NOMINAL,                          // These events move...
-    WAITING,                                      // The current state to...
-    [this](CtlEvent const& event) -> CtlState {
+  fsm_.Add(WAITING,
+    GOAL_NOMINAL,
+    [this](FSM::Event const& event) -> FSM::State {
       // If the timestamp is in the past, then we need to check its not too
       // stale. If it is stale, it might be indicative of timesync issues
       // between the MLP and LLP so we should reject the command
@@ -55,7 +55,7 @@ Ctl::Ctl(ros::NodeHandle* nh, std::string const& name) :
       ros::Duration delta = segment_.front().when - ros::Time::now();
       if (delta.toSec() < -MAX_LATENCY) {
         mutex_segment_.unlock();
-        return Result(RESPONSE::TIMESYNC_ISSUE);  // The next state...
+        return Result(RESPONSE::TIMESYNC_ISSUE);
       }
       // For deferred executions
       timer_.stop();
@@ -65,23 +65,23 @@ Ctl::Ctl(ros::NodeHandle* nh, std::string const& name) :
       // Set to stopping mode until we start the segment
       Control(ff_msgs::ControlCommand::MODE_STOP);
       // Update state
-      return NOMINAL;                           // The next state...
+      return NOMINAL;
     });
   // [1]
-  fsm_.Add(GOAL_COMPLETE,                       // These events move...
-    NOMINAL,                                    // The current state to...
-    [this](CtlEvent const& event) -> CtlState {
+  fsm_.Add(NOMINAL,
+    GOAL_COMPLETE,
+    [this](FSM::Event const& event) -> FSM::State {
       if (!Control(ff_msgs::ControlCommand::MODE_STOP))
-        return Result(RESPONSE::CONTROL_FAILED);  // The next state...
-      return Result(RESPONSE::SUCCESS);           // The next state...
+        return Result(RESPONSE::CONTROL_FAILED);
+      return Result(RESPONSE::SUCCESS);
     });
   // [2]
-  fsm_.Add(GOAL_CANCEL,                         // These events move...
-    NOMINAL,                                    // The current state to...
-    [this](CtlEvent const& event) -> CtlState {
+  fsm_.Add(NOMINAL,
+    GOAL_CANCEL,
+    [this](FSM::Event const& event) -> FSM::State {
       if (!Control(ff_msgs::ControlCommand::MODE_STOP))
-        return Result(RESPONSE::CONTROL_FAILED);  // The next state...
-      return Result(RESPONSE::CANCELLED);         // The next state...
+        return Result(RESPONSE::CONTROL_FAILED);
+      return Result(RESPONSE::CANCELLED);
     });
 
   // Set the operating mode to STOP by default, so that when the speed ramps
@@ -108,7 +108,7 @@ Ctl::Ctl(ros::NodeHandle* nh, std::string const& name) :
   twist_sub_ = nh->subscribe(
     TOPIC_LOCALIZATION_TWIST, 1, &Ctl::TwistCallback, this);
   inertia_sub_ = nh->subscribe(
-    TOPIC_MANAGEMENT_INERTIA, 1, &Ctl::InertiaCallback, this);
+    TOPIC_MOBILITY_INERTIA, 1, &Ctl::InertiaCallback, this);
   flight_mode_sub_ = nh->subscribe(
     TOPIC_MOBILITY_FLIGHT_MODE, 1, &Ctl::FlightModeCallback, this);
 
@@ -137,7 +137,7 @@ Ctl::Ctl(ros::NodeHandle* nh, std::string const& name) :
 Ctl::~Ctl() {}
 
 // Complete the current dock or undock action
-CtlState Ctl::Result(int32_t response) {
+FSM::State Ctl::Result(int32_t response) {
   NODELET_DEBUG_STREAM("Control action completed with code " << response);
   // Stop the platform and
   if (!Control(ff_msgs::ControlCommand::MODE_STOP))
@@ -168,7 +168,7 @@ CtlState Ctl::Result(int32_t response) {
   return WAITING;
 }
 
-void Ctl::UpdateCallback(CtlState state, CtlEvent event) {
+void Ctl::UpdateCallback(FSM::State const& state, FSM::Event const& event) {
   // Debug events
   std::string str = "UNKNOWN";
   switch (event) {
@@ -265,7 +265,8 @@ void Ctl::FlightModeCallback(const ff_msgs::FlightMode::ConstPtr& mode) {
   mc::ros_to_array_vector(mode->pos_ki, input.pos_ki);
   mc::ros_to_array_vector(mode->vel_kd, input.vel_kd);
   input.speed_gain_cmd = mode->speed;
-  control_enabled_ = mode->control_enabled;
+  control_enabled_ =
+    (input.speed_gain_cmd > 0 ? mode->control_enabled : false);
 }
 
 // When the previous setpoint is sent a timer is created, which fires on the

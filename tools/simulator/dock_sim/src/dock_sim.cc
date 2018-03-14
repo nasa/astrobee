@@ -85,7 +85,7 @@ void DockSim::onInit() {
   ros::NodeHandle nh = getNodeHandle();
   sas_dock_ =
     std::make_shared<actionlib::SimpleActionServer<ff_msgs::DockAction>>
-      (nh, ACTION_PROCEDURES_DOCK,
+      (nh, ACTION_BEHAVIORS_DOCK,
        boost::bind(&DockSim::DockGoalCallback, this, _1),
        false);
   sas_dock_->start();

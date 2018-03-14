@@ -32,7 +32,8 @@ namespace gazebo {
 
 class GazeboSensorPluginImu : public FreeFlyerSensorPlugin {
  public:
-  GazeboSensorPluginImu() : FreeFlyerSensorPlugin(NODE_EPSON_IMU) {
+  GazeboSensorPluginImu() :
+    FreeFlyerSensorPlugin("epson_imu", "imu", true) {
     msg_.orientation.x = 0;
     msg_.orientation.y = 0;
     msg_.orientation.z = 0;
@@ -49,7 +50,8 @@ class GazeboSensorPluginImu : public FreeFlyerSensorPlugin {
 
  protected:
   // Called when plugin is loaded into gazebo
-  void LoadCallback(ros::NodeHandle* nh, sensors::SensorPtr sensor, sdf::ElementPtr sdf) {
+  void LoadCallback(ros::NodeHandle* nh,
+    sensors::SensorPtr sensor, sdf::ElementPtr sdf) {
     // Get a link to the parent sensor
     sensor_ = std::dynamic_pointer_cast < sensors::ImuSensor > (sensor);
     if (!sensor_) {
@@ -60,7 +62,7 @@ class GazeboSensorPluginImu : public FreeFlyerSensorPlugin {
     msg_.header.frame_id = GetFrame();
 
     // Offer IMU messages to those which need them
-    pub_ = nh->advertise < sensor_msgs::Imu > (TOPIC_HARDWARE_IMU, 1,
+    pub_ = nh->advertise < sensor_msgs::Imu > (TOPIC_HARDWARE_IMU, 100,
       boost::bind(&GazeboSensorPluginImu::ToggleCallback, this),
       boost::bind(&GazeboSensorPluginImu::ToggleCallback, this));
 
@@ -79,7 +81,8 @@ class GazeboSensorPluginImu : public FreeFlyerSensorPlugin {
 
   // Called on each sensor update event
   virtual void UpdateCallback() {
-    if (!sensor_->IsActive()) return;
+    if (!sensor_->IsActive() || !ExtrinsicsFound())
+      return;
     msg_.header.stamp.sec = sensor_->LastMeasurementTime().sec;
     msg_.header.stamp.nsec = sensor_->LastMeasurementTime().nsec;
     msg_.orientation.x = sensor_->Orientation().X();

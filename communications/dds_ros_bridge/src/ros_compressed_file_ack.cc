@@ -16,42 +16,34 @@
  * under the License.
  */
 
-
-#include <string>
-#include <cstring>
-
 #include "dds_ros_bridge/ros_compressed_file_ack.h"
-#include "dds_ros_bridge/util.h"
-
-#include "rapidUtil/RapidHelper.h"
-
-#include "ff_msgs/CompressedFileAck.h"
-#include "CompressedFileAckSupport.h"
 
 namespace rea = rapid::ext::astrobee;
 
 ff::RosCompressedFileAckToRapid::RosCompressedFileAckToRapid(
-    const std::string& subscribeTopic,
-    const std::string& pubTopic,
-    const ros::NodeHandle &nh,
-    const unsigned int queueSize)
-  : RosSubRapidPub(subscribeTopic, pubTopic, nh, queueSize) {
-  m_supplier_.reset(
+                                            const std::string& subscribe_topic,
+                                            const std::string& pub_topic,
+                                            const ros::NodeHandle &nh,
+                                            const unsigned int queue_size)
+  : RosSubRapidPub(subscribe_topic, pub_topic, nh, queue_size) {
+  state_supplier_.reset(
     new ff::RosCompressedFileAckToRapid::Supplier(
-      "astrobee_compressed_file_ack" + pubTopic,
-      "", "AstrobeeCompressedFileAck", ""));
+      rapid::ext::astrobee::COMPRESSED_FILE_ACK_TOPIC + pub_topic,
+      "", "AstrobeeCompressedFileAckProfile", ""));
 
-  m_sub_ = m_nh_.subscribe(subscribeTopic, queueSize,
-    &RosCompressedFileAckToRapid::Callback, this);
+  sub_ = nh_.subscribe(subscribe_topic,
+                       queue_size,
+                       &RosCompressedFileAckToRapid::Callback,
+                       this);
 
-  rapid::RapidHelper::initHeader(m_supplier_->event().hdr);
+  rapid::RapidHelper::initHeader(state_supplier_->event().hdr);
 }
 
 void ff::RosCompressedFileAckToRapid::Callback(
-  const ff_msgs::CompressedFileAck::ConstPtr& ack) {
-  rea::CompressedFileAck &msg = m_supplier_->event();
+                              const ff_msgs::CompressedFileAck::ConstPtr& ack) {
+  rea::CompressedFileAck &msg = state_supplier_->event();
   msg.hdr.timeStamp = util::RosTime2RapidTime(ack->header.stamp);
   msg.id = ack->id;
 
-  m_supplier_->sendEvent();
+  state_supplier_->sendEvent();
 }

@@ -24,12 +24,13 @@
   <param name="/use_sim_time" value="true" />
 
   <!-- set command arguments -->
-  <node name="gazebo" pkg="gazebo_ros" type="gzserver" respawn="false" output="screen"
-        args="-e ode $(arg world)" />
+  <node name="gazebo" pkg="astrobee_gazebo" type="start_server"
+        respawn="false" output="screen" args="$(arg world)" />
 
   <!-- start gazebo client -->
   <group if="$(arg gui)">
-    <node name="gazebo_gui" pkg="gazebo_ros" type="gzclient" respawn="true" output="screen"/>
+    <node name="gazebo_gui" pkg="astrobee_gazebo" type="start_client"
+          respawn="true" output="screen"/>
   </group>
 
 </launch>

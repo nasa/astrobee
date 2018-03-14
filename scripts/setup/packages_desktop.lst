@@ -5,5 +5,6 @@ ros-kinetic-gazebo-ros-pkgs
 libgazebo7-dev
 python-pyqtgraph
 doxygen
-
-
+zlib1g-dev
+libjson0-dev
+libusb-1.0-0-dev

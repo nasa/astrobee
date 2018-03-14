@@ -24,18 +24,18 @@ Description: Astrobee flight software development files.
 Package: astrobee-config
 Section: misc
 Architecture: any
-Depends: astrobee0 (= ${binary:Version}), ${misc:Depends}
-  libluajit-5.1-2
+Depends: ${misc:Depends}
 Description: Astrobee flight software configuration.
  The Astrobee flight software configuration files.
 
 Package: astrobee0
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
-  astrobee-config (= ${binary:Version}),
+  astrobee-config (>= ${binary:Version}),
   libalvar2 (>=2.0), libdbow21 (>=0.1), libopenmvg1 (>=1.0), libroyale1 (>=1.0),
   libceres1 (>=1.0), rti (>=1.0), libmiro0 (>=0.1), libsoracore1 (>=1.0),
   libdecomputil0 (>=0.1), libjps3d0 (>=0.1),
+  libluajit-5.1-2,
   ros-kinetic-ros-base, ros-kinetic-cpp-common, ros-kinetic-rosbag,
   ros-kinetic-common-msgs, ros-kinetic-nodelet, ros-kinetic-pluginlib,
   ros-kinetic-actionlib, ros-kinetic-image-transport,

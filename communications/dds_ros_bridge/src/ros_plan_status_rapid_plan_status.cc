@@ -16,45 +16,31 @@
  * under the License.
  */
 
-#include <string>
-#include <cstring>
-#include <algorithm>
-#include <memory>
-
 #include "dds_ros_bridge/ros_plan_status_rapid_plan_status.h"
-#include "dds_ros_bridge/enum_helper.h"
-#include "dds_ros_bridge/util.h"
-
-#include "rapidUtil/RapidHelper.h"
-
-#include "ff_msgs/AckStatus.h"
-#include "ff_msgs/PlanStatusStamped.h"
-#include "PlanStatusSupport.h"
 
 ff::RosPlanStatusRapidPlanStatus::RosPlanStatusRapidPlanStatus(
-    const std::string& subscribeTopic,
-    const std::string& pubTopic,
+    const std::string& subscribe_topic,
+    const std::string& pub_topic,
     const ros::NodeHandle &nh,
-    const unsigned int queueSize)
-  : RosSubRapidPub(subscribeTopic, pubTopic, nh, queueSize) {
-  m_supplier_.reset(
+    const unsigned int queue_size)
+  : RosSubRapidPub(subscribe_topic, pub_topic, nh, queue_size) {
+  status_supplier_.reset(
     new RosPlanStatusRapidPlanStatus::StatusSupplier(
-      "astrobee_plan_status" + pubTopic,
-      "", "RapidReliableDurableQos", ""));
+      rapid::ext::astrobee::PLAN_STATUS_TOPIC + pub_topic,
+      "", "AstrobeePlanStatusProfile", ""));
 
-  m_sub_ = m_nh_.subscribe(subscribeTopic, queueSize,
-    &RosPlanStatusRapidPlanStatus::Callback, this);
+  sub_ = nh_.subscribe(subscribe_topic,
+                       queue_size,
+                       &RosPlanStatusRapidPlanStatus::Callback,
+                       this);
 
-  rapid::RapidHelper::initHeader(m_supplier_->event().hdr);
-
-//  m_supplier_->event().
-//  msg.currentCommand = -1;
+  rapid::RapidHelper::initHeader(status_supplier_->event().hdr);
 }
 
 void
 ff::RosPlanStatusRapidPlanStatus::Callback(
-  const ff_msgs::PlanStatusStamped::ConstPtr& status) {
-  rapid::ext::astrobee::PlanStatus &msg = m_supplier_->event();
+                          const ff_msgs::PlanStatusStamped::ConstPtr& status) {
+  rapid::ext::astrobee::PlanStatus &msg = status_supplier_->event();
 
   msg.hdr.timeStamp = util::RosTime2RapidTime(status->header.stamp);
 
@@ -74,6 +60,6 @@ ff::RosPlanStatusRapidPlanStatus::Callback(
                 util::ConvertAckCompletedStatus(status->history[i].status);
   }
 
-  m_supplier_->sendEvent();
+  status_supplier_->sendEvent();
 }
 

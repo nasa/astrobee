@@ -41,6 +41,7 @@ LocalizationNodelet::LocalizationNodelet() : ff_util::FreeFlyerNodelet(NODE_MAPP
 }
 
 LocalizationNodelet::~LocalizationNodelet(void) {
+  thread_->join();
   pthread_mutex_destroy(&mutex_features_);
   pthread_cond_destroy(&cond_features_);
 }

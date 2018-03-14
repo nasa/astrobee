@@ -121,8 +121,8 @@ bool Executive::FillArmGoal(ff_msgs::CommandStampedPtr const& cmd,
       // Don't check pan and tilt values since limits may change. The arm node
       // is responsible for checking these values.
       // Convert to radians
-      arm_goal_.pan = (cmd->args[0].f * M_PI/180);
-      arm_goal_.tilt = (cmd->args[1].f * M_PI/180);
+      arm_goal_.pan = cmd->args[0].f;
+      arm_goal_.tilt = cmd->args[1].f;
       if (cmd->args[2].s == "Pan" || cmd->args[2].s == "pan") {
         arm_goal_.command = ff_msgs::ArmGoal::ARM_PAN;
       } else if (cmd->args[2].s == "Tilt" || cmd->args[2].s == "tilt") {
@@ -178,9 +178,9 @@ bool Executive::FillDockGoal(ff_msgs::CommandStampedPtr const& cmd,
 
     dock_goal_.command = ff_msgs::DockGoal::DOCK;
     if (cmd->args[0].i == 1) {
-      dock_goal_.berth = ff_msgs::DockGoal::BERTH_LEFT;
+      dock_goal_.berth = ff_msgs::DockGoal::BERTH_1;
     } else if (cmd->args[0].i == 2) {
-      dock_goal_.berth = ff_msgs::DockGoal::BERTH_RIGHT;
+      dock_goal_.berth = ff_msgs::DockGoal::BERTH_2;
     } else {
       successful = false;
       err_msg = "Berth must be 1 or 2 not " +  std::to_string(cmd->args[0].i);
@@ -188,7 +188,7 @@ bool Executive::FillDockGoal(ff_msgs::CommandStampedPtr const& cmd,
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_UNDOCK) {
     dock_goal_.command = ff_msgs::DockGoal::UNDOCK;
     // We don't need a berth to undock
-    dock_goal_.berth = ff_msgs::DockGoal::UNKNOWN;
+    dock_goal_.berth = ff_msgs::DockGoal::BERTH_UNKNOWN;
   } else {
     successful = false;
     err_msg = "Dock command not recognized in fill dock goal.";
@@ -811,7 +811,7 @@ bool Executive::ConfigureMobility(std::string const& cmd_id,
   choreographer_cfg_->Set<double>("desired_alpha",
                                           agent_state_.target_angular_accel);
 
-  // TODO(Katie) Configure the sentinel with enable collision checking and
+  // TODO(Katie) Configure the mapper with enable collision checking and
   // collision distance
 
   // TODO(Katie) Change to mapper
@@ -820,7 +820,7 @@ bool Executive::ConfigureMobility(std::string const& cmd_id,
   // Clear err_msg
   err_msg = "";
 
-  // Reconfigure choreographer, planner, sentinel
+  // Reconfigure choreographer, planner, mapper
   if (!choreographer_cfg_->Reconfigure()) {
     successful = false;
     err_msg = "Couldn't configure the mobilty::choreographer node! ";
@@ -856,9 +856,9 @@ bool Executive::ConfigureMobility(bool move_to_start,
               std::make_shared<ff_util::ConfigClient>(&nh_, NODE_CHOREOGRAPHER);
   }
 
-  /*if (!sentinel_cfg_) {
-    sentinel_cfg_ =
-                  std::make_shared<ff_util::ConfigClient>(&nh_, NODE_SENTINEL);
+  /*if (!mapper_cfg_) {
+    mapper_cfg_ =
+                  std::make_shared<ff_util::ConfigClient>(&nh_, NODE_MAPPER);
   }*/
 
   // Set values for configuring, these values will persist until changed
@@ -885,21 +885,21 @@ bool Executive::ConfigureMobility(bool move_to_start,
   // choreographer_cfg_->Set<bool>("enable_obstacles", false);  // TODO(Katie) Change
   // choreographer_cfg_->Set<bool>("enable_keepouts", false);  // TODO(Katie) Change
 
-  // Sentinel
-  // cfg_sentinel->Set<bool>("enable_collision_checking", )
+  // Mapper
+  // cfg_mapper->Set<bool>("enable_collision_checking", )
 
   // Clear err_msg
   err_msg = "";
 
-  // Reconfigure choreographer, planner, sentinel
+  // Reconfigure choreographer, planner, mapper
   if (!choreographer_cfg_->Reconfigure()) {
     successful = false;
     err_msg = "Couldn't configure the mobilty::choreographer node! ";
   }
 
-  /* if (!sentinel_cfg_->Reconfigure()) {
+  /* if (!mapper_cfg_->Reconfigure()) {
     successful = false;
-    err_msg += "Couldn't configure the mobility::sentinel node!";
+    err_msg += "Couldn't configure the mobility::mapper node!";
   } */
 
   return successful;
@@ -1912,7 +1912,7 @@ void Executive::Initialize(ros::NodeHandle *nh) {
                             this,
                             std::placeholders::_1,
                             std::placeholders::_2));
-  arm_ac_.Create(nh, ACTION_PROCEDURES_ARM);
+  arm_ac_.Create(nh, ACTION_BEHAVIORS_ARM);
 
   dock_ac_.SetActiveTimeout(action_active_timeout_);
   dock_ac_.SetDeadlineTimeout(dock_result_timeout_);
@@ -1924,7 +1924,7 @@ void Executive::Initialize(ros::NodeHandle *nh) {
                              this,
                              std::placeholders::_1,
                              std::placeholders::_2));
-  dock_ac_.Create(nh, ACTION_PROCEDURES_DOCK);
+  dock_ac_.Create(nh, ACTION_BEHAVIORS_DOCK);
 
   switch_ac_.SetActiveTimeout(action_active_timeout_);
   switch_ac_.SetDeadlineTimeout(switch_result_timeout_);
@@ -1951,7 +1951,7 @@ void Executive::Initialize(ros::NodeHandle *nh) {
   cmd_sub_ = nh_.subscribe(TOPIC_COMMAND, sub_queue_size_,
                            &Executive::CmdCallback, this);
 
-  dock_state_sub_ = nh_.subscribe(TOPIC_PROCEDURES_DOCKING_STATE,
+  dock_state_sub_ = nh_.subscribe(TOPIC_BEHAVIORS_DOCKING_STATE,
                                   sub_queue_size_,
                                   &Executive::DockStateCallback,
                                   this);
@@ -2015,7 +2015,7 @@ void Executive::Initialize(ros::NodeHandle *nh) {
 
   // initialize configure clients later, when initialize here, the service is
   // invalid when we try to use it. Must have something to do with startup order
-  // of executive, choreographer, planner, or sentinel
+  // of executive, choreographer, planner, or mapper
 
   // initialize agent state
   agent_state_.operating_state.state = ff_msgs::OpState::READY;

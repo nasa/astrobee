@@ -269,6 +269,7 @@ class HandrailDetect : public ff_util::FreeFlyerNodelet {
     } else {
       depth_sub_.shutdown();
     }
+    res.success = true;
     return true;
   }
 

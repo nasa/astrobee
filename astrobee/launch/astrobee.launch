@@ -16,22 +16,23 @@
 <!-- permissions and limitations under the License.                          -->
 
 <launch>
-  <!-- Context options (NB: THESE ARE OVERRIDDEN BY ENVIRONMENT VARIABLES, IF SET)    -->
-  <arg name="robot" default="p4d" />                   <!-- Robot description         -->
-  <arg name="world" default="granite" />               <!-- World name                -->
-  <arg name="ns" default="" />                         <!-- Robot namespace           -->
-  <arg name="nodes" default=""/>                       <!-- Launch specific nodes     -->
-  <arg name="dds" default="true" />                    <!-- Enable DDS                -->
+  <!-- Context options (NB: THESE ARE OVERRIDDEN BY ENVIRONMENT VARIABLES)   -->
+  <arg name="robot" default="p4d" />          <!-- Robot description         -->
+  <arg name="world" default="granite" />      <!-- World name                -->
+  <arg name="ns" default="" />                <!-- Robot namespace           -->
+  <arg name="nodes" default=""/>              <!-- Launch specific nodes     -->
+  <arg name="dds" default="true" />           <!-- Enable DDS                -->
 
   <!-- Remaining options -->
-  <arg name="drivers" default="true" />                <!-- Should we launch drivers? -->
-  <arg name="sim" default="local" />                   <!-- SIM IP address            -->
-  <arg name="llp" default="local" />                   <!-- LLP IP address            -->
-  <arg name="mlp" default="local" />                   <!-- MLP IP address            -->
-  
+  <arg name="output" default="log" />         <!-- Output to screen or log   -->
+  <arg name="drivers" default="true" />       <!-- Should we launch drivers? -->
+  <arg name="sim" default="local" />          <!-- SIM IP address            -->
+  <arg name="llp" default="local" />          <!-- LLP IP address            -->
+  <arg name="mlp" default="local" />          <!-- MLP IP address            -->
 
   <!-- Simulation options only -->
-  <arg name="pose" default="0 0 0 0 0 0 1" />          <!-- Initial pose (sim only)   -->
+  <arg name="pose" default="" />              <!-- Initial pose (sim only)   -->
+  <arg name="vmware" default="true" />        <!-- Using vmware (sim only)   -->
 
   <!-- Path to the bag file -->
   <arg name="bag" default="" />
@@ -55,9 +56,9 @@
     <!-- Set the TF prefix, create a robot description and joint state publisher -->
     <param name="tf_prefix" value="$(arg ns)" />
     <param name="robot_description"
-           command="$(find xacro)/xacro --inorder $(find astrobee_description)/urdf/astrobee.urdf.xacro world:=$(arg world)" />
+           command="$(find xacro)/xacro --inorder $(find astrobee_description)/urdf/astrobee.urdf.xacro world:=$(arg world) vmware:=$(arg vmware)" />
     <node pkg="robot_state_publisher" type="robot_state_publisher"
-          name="robot_state_publisher" />  
+          name="astrobee_state_publisher" />
 
     <!-- If we aren't loading drivers, we need to load a bag or simulation-->
     <group unless="$(arg drivers)">
@@ -80,9 +81,10 @@
              name="ROS_IP" value="$(arg sim)"/>
 
         <!-- Launch simulated hardware -->
-        <include file="$(find astrobee)/launch/controller/sim_spawn.launch">
+        <include file="$(find astrobee_gazebo)/launch/spawn_astrobee.launch">
           <arg name="ns" value="$(arg ns)"/>
           <arg name="pose" value="$(arg pose)"/>
+          <arg name="world" value="$(arg world)"/>
         </include>
       </group>
 
@@ -118,6 +120,7 @@
       <include file="$(find astrobee)/launch/robot/LLP.launch" >
         <arg name="drivers" value="$(arg drivers)"/>
         <arg name="nodes" value="$(arg nodes)" />
+        <arg name="output" value="$(arg output)" />
       </include> 
 
       <!-- If we have specified a bag, then play it back into flight software-->
@@ -149,6 +152,7 @@
         <arg name="drivers" value="$(arg drivers)"/>
         <arg name="dds" value="$(arg dds)"/>
         <arg name="nodes" value="$(arg nodes)" />
+        <arg name="output" value="$(arg output)" />
       </include>
 
       <!-- If we have specified a bag, then play it back into flight software-->

@@ -1,0 +1,9 @@
+<library path="lib/libdata_bagger">
+  <class name="data_bagger/DataBagger"
+    type="data_bagger::DataBagger"
+    base_class_type="nodelet::Nodelet">
+    <description>
+      Nodelet to record and download data.
+    </description>
+  </class>
+</library>

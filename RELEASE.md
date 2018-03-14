@@ -1,5 +1,25 @@
 # Astrobee Robot Software v1
 
+## Release 0.3.0
+
+This release addresses several bugs identified by Guest Scientists, simulator improvements as well as many internal changes.
+The only API change is in the EkfState (removed augmented state).
+
+### Simulator
+  - Stability improvements
+  - Better performance by optimized collision checking and new method for feature simulation
+  - More detailed CAD models and textures
+
+### Mobility
+  - New mapper node builds an Octomap from the HazCam data
+  - Collision checking performed at runtime agains the Octomap
+  - Docking and undocking complete
+
+### Limitations
+  - Angular velocities/acceleration in GDS not consistent with FSW (will be fixed in GDS)
+  - Keep in and keep out zones are not checked (during validation or execution)
+  - Simulated docking in a beta stage and should not be used
+
 ## Release 0.2.0
 
 ### Simulator

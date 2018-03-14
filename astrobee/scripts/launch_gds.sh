@@ -32,7 +32,7 @@ fi
 cd ~/gds/latest
 
 # Add libraries to our search path
-export LD_LIBRARY_PATH=$PWD/plugins/com.rti.dds.target_5.0.0/os/linux/${ld_arch}/:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=$PWD/plugins/com.rti.dds.target_5.2.3/os/linux/${ld_arch}/:$LD_LIBRARY_PATH
 
 unset arch
 unset ld_arch

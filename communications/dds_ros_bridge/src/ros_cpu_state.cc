@@ -19,43 +19,45 @@
 
 #include "dds_ros_bridge/ros_cpu_state.h"
 
-ff::RosCpuStateToRapid::RosCpuStateToRapid(const std::string& subTopic,
-                                           const std::string& pubTopic,
+ff::RosCpuStateToRapid::RosCpuStateToRapid(const std::string& sub_topic,
+                                           const std::string& pub_topic,
                                            const ros::NodeHandle &nh,
-                                           const unsigned int queueSize) :
-    RosSubRapidPub(subTopic, pubTopic, nh, queueSize) {
-  c_supplier_.reset(new ff::RosCpuStateToRapid::ConfigSupplier(
-          rapid::ext::astrobee::CPU_CONFIG_TOPIC + pubTopic, "",
+                                           const unsigned int queue_size)
+  : RosSubRapidPub(sub_topic, pub_topic, nh, queue_size) {
+  config_supplier_.reset(new ff::RosCpuStateToRapid::ConfigSupplier(
+          rapid::ext::astrobee::CPU_CONFIG_TOPIC + pub_topic, "",
           "AstrobeeCpuConfigProfile", ""));
 
-  s_supplier_.reset(new ff::RosCpuStateToRapid::StateSupplier(
-          rapid::ext::astrobee::CPU_STATE_TOPIC + pubTopic, "",
+  state_supplier_.reset(new ff::RosCpuStateToRapid::StateSupplier(
+          rapid::ext::astrobee::CPU_STATE_TOPIC + pub_topic, "",
           "AstrobeeCpuStateProfile", ""));
 
-  m_sub_ = m_nh_.subscribe(subTopic, queueSize, &RosCpuStateToRapid::Callback,
-                           this);
+  sub_ = nh_.subscribe(sub_topic,
+                       queue_size,
+                       &RosCpuStateToRapid::Callback,
+                       this);
 
-  rapid::RapidHelper::initHeader(c_supplier_->event().hdr);
-  rapid::RapidHelper::initHeader(s_supplier_->event().hdr);
+  rapid::RapidHelper::initHeader(config_supplier_->event().hdr);
+  rapid::RapidHelper::initHeader(state_supplier_->event().hdr);
 
   // Initialize the serial number to be 0, it will obe incremented upon
   // receiving unseen cpu state messages and when the max frequency changes for
   // a cpu
   // Technically this could have been set in the initHeader function but it is
   // the last argument and I didn't care to specify any of the other arguments
-  c_supplier_->event().hdr.serial = 0;
-  s_supplier_->event().hdr.serial = 0;
+  config_supplier_->event().hdr.serial = 0;
+  state_supplier_->event().hdr.serial = 0;
 
   // Setup timer for checking and publishing the state but don't start it since
   // rate is 0. The bridge will set this rate at the end of its initialization
   // update: Andrew changed rate to 1.0 to avoid a runtime bounds error. Should
   // not affect since autostart argument is set to false.
-  pub_timer_ = m_nh_.createTimer(ros::Rate(1.0),
-                                 &RosCpuStateToRapid::CheckAndPublish,
-                                 this,
-                                 false,
-                                 false);
-  c_supplier_->sendEvent();
+  pub_timer_ = nh_.createTimer(ros::Rate(1.0),
+                               &RosCpuStateToRapid::CheckAndPublish,
+                               this,
+                               false,
+                               false);
+  config_supplier_->sendEvent();
 }
 
 void ff::RosCpuStateToRapid::Callback(ff_msgs::CpuStateStampedConstPtr const&
@@ -64,12 +66,12 @@ void ff::RosCpuStateToRapid::Callback(ff_msgs::CpuStateStampedConstPtr const&
   int index = 0, i = 0;
   unsigned int total_index = 0;
 
-  rapid::ext::astrobee::CpuConfig &c_msg = c_supplier_->event();
-  rapid::ext::astrobee::CpuState &s_msg = s_supplier_->event();
+  rapid::ext::astrobee::CpuConfig &config_msg = config_supplier_->event();
+  rapid::ext::astrobee::CpuState &state_msg = state_supplier_->event();
 
   // Find where machine state goes in cpu state message
-  for (index = 0; index < c_msg.machines.length(); index++) {
-    if (c_msg.machines[index].name == state->name) {
+  for (index = 0; index < config_msg.machines.length(); index++) {
+    if (config_msg.machines[index].name == state->name) {
       found = true;
       break;
     }
@@ -85,14 +87,14 @@ void ff::RosCpuStateToRapid::Callback(ff_msgs::CpuStateStampedConstPtr const&
     }
 
     // Increment serial number since we are changing the config
-    c_msg.hdr.serial++;
-    s_msg.hdr.serial++;
+    config_msg.hdr.serial++;
+    state_msg.hdr.serial++;
 
-    c_msg.machines.length((index + 1));
-    s_msg.machines.length((index + 1));
+    config_msg.machines.length((index + 1));
+    state_msg.machines.length((index + 1));
 
-    std::strncpy(c_msg.machines[index].name, state->name.data(), 16);
-    c_msg.machines[index].name[15] = '\0';
+    std::strncpy(config_msg.machines[index].name, state->name.data(), 16);
+    config_msg.machines[index].name[15] = '\0';
 
     if (num_cpus >= 8) {
       ROS_ERROR("DDS Bridge: Can only have 8 cpu per machine but got %i for %s",
@@ -100,18 +102,19 @@ void ff::RosCpuStateToRapid::Callback(ff_msgs::CpuStateStampedConstPtr const&
       num_cpus = 8;
     }
 
-    c_msg.machines[index].num_cpus = num_cpus;
-    c_msg.machines[index].max_frequencies.length(num_cpus);
+    config_msg.machines[index].num_cpus = num_cpus;
+    config_msg.machines[index].max_frequencies.length(num_cpus);
     for (i = 0; i < num_cpus; i++) {
-      c_msg.machines[index].max_frequencies[i] = state->cpus[i].max_frequency;
+      config_msg.machines[index].max_frequencies[i] =
+                                                  state->cpus[i].max_frequency;
     }
 
-    s_msg.machines[index].cpus.length(num_cpus);
+    state_msg.machines[index].cpus.length(num_cpus);
 
     updated_ = true;
 
-    c_msg.hdr.timeStamp = util::RosTime2RapidTime(state->header.stamp);
-    c_supplier_->sendEvent();
+    config_msg.hdr.timeStamp = util::RosTime2RapidTime(state->header.stamp);
+    config_supplier_->sendEvent();
   }
 
   // Need to find where the total is in the array of loads
@@ -129,14 +132,14 @@ void ff::RosCpuStateToRapid::Callback(ff_msgs::CpuStateStampedConstPtr const&
     load = state->ave_loads[total_index];
   }
 
-  if (s_msg.machines[index].ave_total_load != load) {
+  if (state_msg.machines[index].ave_total_load != load) {
     updated_ = true;
-    s_msg.machines[index].ave_total_load = load;
+    state_msg.machines[index].ave_total_load = load;
   }
 
-  if (s_msg.machines[index].temperature != state->temp) {
+  if (state_msg.machines[index].temperature != state->temp) {
     updated_ = true;
-    s_msg.machines[index].temperature = state->temp;
+    state_msg.machines[index].temperature = state->temp;
   }
 
   for (i = 0; i < num_cpus; i++) {
@@ -147,23 +150,24 @@ void ff::RosCpuStateToRapid::Callback(ff_msgs::CpuStateStampedConstPtr const&
       load = 0;
     }
 
-    if (s_msg.machines[index].cpus[i].total_load != load) {
+    if (state_msg.machines[index].cpus[i].total_load != load) {
       updated_ = true;
-      s_msg.machines[index].cpus[i].total_load = load;
+      state_msg.machines[index].cpus[i].total_load = load;
     }
 
-    if (s_msg.machines[index].cpus[i].frequency != state->cpus[i].frequency) {
+    if (state_msg.machines[index].cpus[i].frequency !=
+                                                    state->cpus[i].frequency) {
       updated_ = true;
-      s_msg.machines[index].cpus[i].frequency = state->cpus[i].frequency;
+      state_msg.machines[index].cpus[i].frequency = state->cpus[i].frequency;
     }
   }
 }
 
 void ff::RosCpuStateToRapid::CheckAndPublish(ros::TimerEvent const& event) {
   if (updated_) {
-    s_supplier_->event().hdr.timeStamp =
+    state_supplier_->event().hdr.timeStamp =
                                       util::RosTime2RapidTime(ros::Time::now());
-    s_supplier_->sendEvent();
+    state_supplier_->sendEvent();
     updated_ = false;
   }
 }

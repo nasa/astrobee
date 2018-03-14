@@ -19,24 +19,32 @@
 #ifndef DDS_ROS_BRIDGE_ROS_COMPRESSED_FILE_RAPID_COMPRESSED_FILE_H_
 #define DDS_ROS_BRIDGE_ROS_COMPRESSED_FILE_RAPID_COMPRESSED_FILE_H_
 
+#include <algorithm>
+#include <cstring>
 #include <string>
 #include <memory>
 
-#include "knDds/DdsTypedSupplier.h"
-
+#include "dds_ros_bridge/enum_helper.h"
 #include "dds_ros_bridge/ros_sub_rapid_pub.h"
+#include "dds_ros_bridge/util.h"
 
 #include "ff_msgs/CompressedFile.h"
+
+#include "knDds/DdsTypedSupplier.h"
+
+#include "rapidUtil/RapidHelper.h"
+
+#include "AstrobeeConstants.h"
 #include "CompressedFileSupport.h"
 
 namespace ff {
 
 class RosCompressedFileToRapid : public RosSubRapidPub {
  public:
-  RosCompressedFileToRapid(const std::string& subscribeTopic,
-                           const std::string& pubTopic,
+  RosCompressedFileToRapid(const std::string& subscribe_topic,
+                           const std::string& pub_topic,
                            const ros::NodeHandle &nh,
-                           const unsigned int queueSize = 10);
+                           const unsigned int queue_size = 10);
 
   void Callback(ff_msgs::CompressedFile::ConstPtr const& file);
 
@@ -44,7 +52,7 @@ class RosCompressedFileToRapid : public RosSubRapidPub {
   using Supplier = kn::DdsTypedSupplier<rapid::ext::astrobee::CompressedFile>;
   using SupplierPtr = std::unique_ptr<Supplier>;
 
-  SupplierPtr m_supplier_;
+  SupplierPtr state_supplier_;
 };
 
 }  // end namespace ff

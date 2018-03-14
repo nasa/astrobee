@@ -1,21 +1,6 @@
-# Copyright (c) 2017, United States Government, as represented by the
+# Copyright (c) 2015 United States Government as represented by the
 # Administrator of the National Aeronautics and Space Administration.
-# 
-# All rights reserved.
-# 
-# The Astrobee platform is licensed under the Apache License, Version 2.0
-# (the "License"); you may not use this file except in compliance with the
-# License. You may obtain a copy of the License at
-# 
-#     http://www.apache.org/licenses/LICENSE-2.0
-# 
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
-# License for the specific language governing permissions and limitations
-# under the License.
-#
-# List of command constants.
+# All Rights Reserved.
 
 string PARAM_NAME_ACTION_TYPE_PAN = Pan
 string PARAM_NAME_ACTION_TYPE_TILT = Tilt
@@ -26,6 +11,7 @@ string PARAM_NAME_POWERED_COMPONENT_LASER_POINTER = Laser Pointer
 string PARAM_NAME_POWERED_COMPONENT_PAYLOAD_TOP_AFT = Payload Top Aft
 string PARAM_NAME_POWERED_COMPONENT_PAYLOAD_BOTTOM_AFT = Payload Bottom Aft
 string PARAM_NAME_POWERED_COMPONENT_PAYLOAD_BOTTOM_FRONT = Payload Bottom Front
+string PARAM_NAME_POWERED_COMPONENT_PMCS_AND_SIGNAL_LIGHTS = PMC
 string PARAM_NAME_CAMERA_NAME_SCI = Science
 string PARAM_NAME_CAMERA_NAME_NAV = Navigation
 string PARAM_NAME_CAMERA_NAME_HAZ = Hazard
@@ -43,14 +29,15 @@ string PARAM_NAME_CAMERA_RESOLUTION_1920X1080 = 1920x1080
 string PARAM_NAME_FLASHLIGHT_LOCATION_BACK = Back
 string PARAM_NAME_FLASHLIGHT_LOCATION_FRONT = Front
 string PARAM_NAME_FLIGHT_MODE_NOMINAL = Nominal
-string PARAM_NAME_FLIGHT_MODE_CONSERVATIVE = Conservative
-string PARAM_NAME_FLIGHT_MODE_SPEEDY = Speedy
-string PARAM_NAME_FLIGHT_MODE_IGNORE_OBSTACLES = IgnoreObstacles
+string PARAM_NAME_FLIGHT_MODE_DIFFICULT = Difficult
+string PARAM_NAME_FLIGHT_MODE_QUIET = Quiet
+string PARAM_NAME_FLIGHT_MODE_DOCKING = Docking
+string PARAM_NAME_FLIGHT_MODE_PERCHING = Perching
 string PARAM_NAME_TELEMETRY_TYPE_COMM_STATUS = CommStatus
 string PARAM_NAME_TELEMETRY_TYPE_CPU_STATE = CpuState
 string PARAM_NAME_TELEMETRY_TYPE_DISK_STATE = DiskState
 string PARAM_NAME_TELEMETRY_TYPE_EKF_STATE = EkfState
-string PARAM_NAME_TELEMETRY_TYPE_GNCC_STATE = GncState
+string PARAM_NAME_TELEMETRY_TYPE_GNC_STATE = GncState
 string PARAM_NAME_TELEMETRY_TYPE_POSITION = Position
 
 string CMD_NAME_GRAB_CONTROL = grabControl
@@ -78,6 +65,7 @@ string CMD_NAME_AUTO_RETURN = autoReturn
 string CMD_NAME_DOCK = dock
 string CMD_NAME_IDLE_PROPULSION = idlePropulsion
 string CMD_NAME_PERCH = perch
+string CMD_NAME_PREPARE = prepare
 string CMD_NAME_SIMPLE_MOVE6DOF = simpleMove6DOF
 string CMD_NAME_STOP_ALL_MOTION = stopAllMotion
 string CMD_NAME_UNDOCK = undock
@@ -96,11 +84,13 @@ string CMD_NAME_SET_CAMERA_STREAMING = setCameraStreaming
 string CMD_NAME_SET_CHECK_OBSTACLES = setCheckObstacles
 string CMD_NAME_SET_CHECK_ZONES = setCheckZones
 string CMD_NAME_SET_ENABLE_AUTO_RETURN = setEnableAutoReturn
+string CMD_NAME_SET_ENABLE_IMMEDIATE = setEnableImmediate
 string CMD_NAME_SET_FLASHLIGHT_BRIGHTNESS = setFlashlightBrightness
 string CMD_NAME_SET_HOLONOMIC_MODE = setHolonomicMode
 string CMD_NAME_SET_INERTIA = setInertia
 string CMD_NAME_SET_OPERATING_LIMITS = setOperatingLimits
 string CMD_NAME_SET_TELEMETRY_RATE = setTelemetryRate
+string CMD_NAME_SET_TIME_SYNC = setTimeSync
 string CMD_NAME_SET_ZONES = setZones
 
 string CMD_SUBSYS_ACCESS_CONTROL = AccessControl

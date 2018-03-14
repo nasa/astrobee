@@ -22,32 +22,35 @@
 #include <string>
 #include <memory>
 
-#include "knDds/DdsTypedSupplier.h"
-
 #include "dds_ros_bridge/ros_sub_rapid_pub.h"
 #include "dds_ros_bridge/rapid_position_provider_ros_helper.h"
 #include "dds_ros_bridge/util.h"
 
 #include "ff_msgs/EkfState.h"
 
-#include "AstrobeeConstants.h"
-#include "EkfStateSupport.h"
+#include "knDds/DdsTypedSupplier.h"
+
+#include "rapidDds/RapidConstants.h"
 
 #include "rapidIo/RapidIoParameters.h"
+
 #include "rapidUtil/RapidHelper.h"
+
+#include "AstrobeeConstants.h"
+#include "EkfStateSupport.h"
 
 namespace ff {
 
 class RosOdomRapidPosition : public RosSubRapidPub {
  public:
-  RosOdomRapidPosition(const std::string& subscribeTopic,
-                       const std::string& pubTopic,
+  RosOdomRapidPosition(const std::string& subscribe_topic,
+                       const std::string& pub_topic,
                        const ros::NodeHandle& nh,
-                       const unsigned int queueSize = 10);
+                       const unsigned int queue_size = 10);
 
   void CopyTransform3D(rapid::Transform3D& transform,
                        const geometry_msgs::Pose& pose);
-  void CopyVec3D(rapid::Vec3d& vecOut, const geometry_msgs::Vector3& vecIn);
+  void CopyVec3D(rapid::Vec3d& vec_out, const geometry_msgs::Vector3& vec_in);
   void MsgCallback(const ff_msgs::EkfStateConstPtr& msg);
   void PubEkf(const ros::TimerEvent& event);
   void PubPosition(const ros::TimerEvent& event);
@@ -55,8 +58,8 @@ class RosOdomRapidPosition : public RosSubRapidPub {
   void SetPositionPublishRate(float rate);
 
  private:
-  rapid::PositionTopicPairParameters m_params_;
-  std::shared_ptr<rapid::PositionProviderRosHelper> m_provider_;
+  rapid::PositionTopicPairParameters params_;
+  std::shared_ptr<rapid::PositionProviderRosHelper> provider_;
 
   ff_msgs::EkfStateConstPtr ekf_msg_;
 
@@ -64,7 +67,7 @@ class RosOdomRapidPosition : public RosSubRapidPub {
       kn::DdsTypedSupplier<rapid::ext::astrobee::EkfState>;
   using StateSupplierPtr = std::unique_ptr<StateSupplier>;
 
-  StateSupplierPtr s_supplier_;
+  StateSupplierPtr state_supplier_;
 
   bool ekf_sent_, pub_ekf_;
 

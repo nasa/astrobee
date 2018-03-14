@@ -16,40 +16,30 @@
  * under the License.
  */
 
-#include <string>
-#include <cstring>
-#include <memory>
-
 #include "dds_ros_bridge/ros_access_control.h"
-#include "dds_ros_bridge/util.h"
-
-#include "rapidUtil/RapidHelper.h"
-
-#include "ff_msgs/AccessControlStateStamped.h"
-#include "RapidConstants.h"
-#include "AccessControlStateSupport.h"
 
 ff::RosAccessControlStateToRapid::RosAccessControlStateToRapid(
-    const std::string& subscribeTopic,
-    const std::string& pubTopic,
-    const ros::NodeHandle &nh,
-    const unsigned int queueSize)
-  : RosSubRapidPub(subscribeTopic, pubTopic, nh, queueSize) {
-  m_supplier_.reset(
-    new ff::RosAccessControlStateToRapid::StateSupplier(
-        rapid::ACCESSCONTROL_STATE_TOPIC + pubTopic,
-        "", "RapidAccessControlStateProfile", ""));
+                                            const std::string& subscribe_topic,
+                                            const std::string& pub_topic,
+                                            const ros::NodeHandle &nh,
+                                            const unsigned int queue_size)
+  : RosSubRapidPub(subscribe_topic, pub_topic, nh, queue_size) {
+  state_supplier_.reset(new ff::RosAccessControlStateToRapid::StateSupplier(
+                                  rapid::ACCESSCONTROL_STATE_TOPIC + pub_topic,
+                                  "", "RapidAccessControlStateProfile", ""));
 
-  m_sub_ = m_nh_.subscribe(subscribeTopic, queueSize,
-    &RosAccessControlStateToRapid::Callback, this);
+  sub_ = nh_.subscribe(subscribe_topic,
+                       queue_size,
+                       &RosAccessControlStateToRapid::Callback,
+                       this);
 
-  rapid::RapidHelper::initHeader(m_supplier_->event().hdr);
+  rapid::RapidHelper::initHeader(state_supplier_->event().hdr);
 }
 
 void ff::RosAccessControlStateToRapid::Callback(
     const ff_msgs::AccessControlStateStamped::ConstPtr& acs) {
 
-  rapid::AccessControlState &msg = m_supplier_->event();
+  rapid::AccessControlState &msg = state_supplier_->event();
   msg.hdr.timeStamp = util::RosTime2RapidTime(acs->header.stamp);
 
   std::strncpy(msg.controller, acs->controller.data(), 32);
@@ -57,6 +47,6 @@ void ff::RosAccessControlStateToRapid::Callback(
   msg.requestors.length(1);
   std::strncpy(msg.requestors[0], acs->cookie.data(), 32);
 
-  m_supplier_->sendEvent();
+  state_supplier_->sendEvent();
 }
 

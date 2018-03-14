@@ -16,52 +16,54 @@
  * under the License.
  */
 
-#include <string>
-
 #include "dds_ros_bridge/ros_compressed_image_rapid_image.h"
-#include "rapidDds/RapidConstants.h"
-#include "rapidDds/MIMETypesConstants.h"
 
 namespace ff {
 
 RosCompressedImageRapidImage::RosCompressedImageRapidImage(
-  const std::string& subscribeTopic, const std::string& pubTopic,
-  const ros::NodeHandle &nh, const unsigned int queueSize)
-  : RosSubRapidPub(subscribeTopic, pubTopic, nh, queueSize), MB_(1048576) {
-  std::string subscribeCompresedTopic = subscribeTopic + "/compressed";
+                                            const std::string& subscribe_topic,
+                                            const std::string& pub_topic,
+                                            const ros::NodeHandle &nh,
+                                            const unsigned int queue_size)
+  : RosSubRapidPub(subscribe_topic, pub_topic, nh, queue_size), MB_(1048576) {
+  std::string subscribe_compresed_topic = subscribe_topic + "/compressed";
   // TODO(all): confirm topic suffix has '-'
-  m_params_.topicSuffix += pubTopic;
+  params_.topicSuffix += pub_topic;
 
   ROS_DEBUG("RosImageRapidImage publishing %s%s",
-                rapid::IMAGESENSOR_SAMPLE_TOPIC, m_params_.topicSuffix.c_str());
+            rapid::IMAGESENSOR_SAMPLE_TOPIC,
+            params_.topicSuffix.c_str());
 
   // instantiate provider
-  m_provider_.reset(new rapid::ImageSensorProvider(m_params_,
-    "RosCompressedImageRapidImage"));
+  provider_.reset(new rapid::ImageSensorProvider(params_,
+                                              "RosCompressedImageRapidImage"));
 
   // start subscriber
-  m_sub_ = m_nh_.subscribe(subscribeCompresedTopic, queueSize,
-    &RosCompressedImageRapidImage::CallBack, this);
+  sub_ = nh_.subscribe(subscribe_compresed_topic,
+                       queue_size,
+                       &RosCompressedImageRapidImage::CallBack,
+                       this);
 }
 
 void RosCompressedImageRapidImage::CallBack(
                             const sensor_msgs::CompressedImage::ConstPtr& msg) {
-  m_provider_->setMimeType(GetRapidMimeType(msg->format).c_str());
+  provider_->setMimeType(GetRapidMimeType(msg->format).c_str());
   if (msg->data.size() > 0 && msg->data.size() < MB_) {
-    m_provider_->publishData(&msg->data.front(), msg->data.size());
+    provider_->publishData(&msg->data.front(), msg->data.size());
   } else {
     int size = msg->data.size();
     ROS_ERROR("DDS ROS BRIDGE: Couldn't publish image! image size: %i > %i",
-                                                                    size, MB_);
+              size,
+              MB_);
   }
 }
 
 std::string RosCompressedImageRapidImage::GetRapidMimeType(
-    const std::string& rosFormat) {
+                                                const std::string& ros_format) {
   // only two accepted values jpeg or png
-  if (rosFormat.compare("jpeg") == 0)
+  if (ros_format.compare("jpeg") == 0)
     return rapid::MIME_IMAGE_JPEG;
-  if (rosFormat.compare("png") == 0)
+  if (ros_format.compare("png") == 0)
     return rapid::MIME_IMAGE_PNG;
   return "";
 }

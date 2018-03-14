@@ -121,10 +121,9 @@ class FreeFlyerActionServer {
   // A new action has been called. We have to care of a special case where the goal is
   // cancelled / preempted between arrival and the time this callback is called.
   void GoalCallback() {
-    boost::shared_ptr < const Goal > goal = sas_->acceptNewGoal();
-    if (!sas_->isPreemptRequested())
-      if (cb_goal_)
-        cb_goal_(goal);
+    boost::shared_ptr<const Goal> goal = sas_->acceptNewGoal();
+    if (cb_goal_)
+      cb_goal_(goal);
   }
 
  protected:

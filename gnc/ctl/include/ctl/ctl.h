@@ -55,16 +55,7 @@
 
 namespace ctl {
 
-enum CtlState : int32_t {
-  WAITING,
-  NOMINAL
-};
-
-enum CtlEvent : int32_t {
-  GOAL_COMPLETE,
-  GOAL_NOMINAL,
-  GOAL_CANCEL
-};
+using FSM = ff_util::FSM;
 
 /**
  * @brief Controller implementation using GNC module
@@ -72,6 +63,19 @@ enum CtlEvent : int32_t {
  */
 class Ctl {
  public:
+  // Declaration of all possible states
+  enum : ff_util::FSM::State {
+    WAITING        = 1,
+    NOMINAL        = 2
+  };
+
+  // Declaration of all possible events
+  enum : ff_util::FSM::Event {
+    GOAL_COMPLETE  = (1<<0),
+    GOAL_NOMINAL   = (1<<1),
+    GOAL_CANCEL    = (1<<2)
+  };
+
   // Maximum acceptable latency
   static constexpr double MAX_LATENCY = 0.5;
 
@@ -85,12 +89,12 @@ class Ctl {
   ~Ctl();
 
   // Terminate execution in either IDLE or STOP mode
-  CtlState Result(int32_t response);
+  FSM::State Result(int32_t response);
 
   // GENERAL MESSAGE CALLBACKS
 
   // Called when the internal state changes
-  void UpdateCallback(CtlState state, CtlEvent event);
+  void UpdateCallback(FSM::State const& state, FSM::Event const& event);
 
   // Called when a pose estimate is available
   void EkfCallback(const ff_msgs::EkfState::ConstPtr& state);
@@ -154,7 +158,7 @@ class Ctl {
   ros::Timer timer_;
 
   ff_util::FreeFlyerActionServer<ff_msgs::ControlAction> action_;
-  ff_util::FiniteStateMachine<CtlState, CtlEvent> fsm_;
+  ff_util::FSM fsm_;
   ff_util::Segment segment_;
   ff_util::Segment::iterator setpoint_;
   ff_msgs::ControlFeedback feedback_;

@@ -19,24 +19,32 @@
 #ifndef DDS_ROS_BRIDGE_ROS_ACK_H_
 #define DDS_ROS_BRIDGE_ROS_ACK_H_
 
+#include <cstring>
 #include <string>
 #include <memory>
 
-#include "knDds/DdsTypedSupplier.h"
-
+#include "dds_ros_bridge/enum_helper.h"
 #include "dds_ros_bridge/ros_sub_rapid_pub.h"
+#include "dds_ros_bridge/util.h"
 
 #include "ff_msgs/AckStamped.h"
+#include "ff_msgs/AgentStateStamped.h"
+
+#include "knDds/DdsTypedSupplier.h"
+
+#include "rapidUtil/RapidHelper.h"
+
 #include "AckSupport.h"
+#include "RapidConstants.h"
 
 namespace ff {
 
 class RosAckToRapid : public RosSubRapidPub {
  public:
-  RosAckToRapid(const std::string& subscribeTopic,
-                const std::string& pubTopic,
+  RosAckToRapid(const std::string& subscribe_topic,
+                const std::string& pub_topic,
                 const ros::NodeHandle &nh,
-                const unsigned int queueSize = 10);
+                const unsigned int queue_size = 10);
 
   void Callback(ff_msgs::AckStamped::ConstPtr const& status);
 
@@ -44,7 +52,7 @@ class RosAckToRapid : public RosSubRapidPub {
   using StateSupplier = kn::DdsTypedSupplier<rapid::Ack>;
   using StateSupplierPtr = std::unique_ptr<StateSupplier>;
 
-  StateSupplierPtr m_supplier_;
+  StateSupplierPtr state_supplier_;
 };
 
 }  // end namespace ff

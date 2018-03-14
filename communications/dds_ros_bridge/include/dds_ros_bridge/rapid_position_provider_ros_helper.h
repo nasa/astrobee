@@ -19,7 +19,11 @@
 #ifndef DDS_ROS_BRIDGE_RAPID_POSITION_PROVIDER_ROS_HELPER_H_
 #define DDS_ROS_BRIDGE_RAPID_POSITION_PROVIDER_ROS_HELPER_H_
 
+#include <ndds/ndds_cpp.h>
+
 #include <string>
+
+#include "dds_ros_bridge/util.h"
 
 #include "ff_msgs/EkfState.h"
 
@@ -35,8 +39,8 @@ namespace rapid {
 class PositionProviderRosHelper : public PositionProvider {
  public:
   PositionProviderRosHelper(PositionTopicPairParameters const& params,
-                            const std::string& entityName);
-  void Publish(const ff_msgs::EkfState::ConstPtr& poseVelCov);
+                            const std::string& entity_name);
+  void Publish(const ff_msgs::EkfState::ConstPtr& pose_vel_cov);
 };
 
 }  // end namespace rapid

@@ -17,10 +17,7 @@
 
 project(vive)
 
-# Find OpenVR installed in the prescribed directory
-set(OPENVR "$ENV{HOME}/libraries/openvr")
-find_library(OPENVR_LIBRARIES openvr_api "${OPENVR}/lib/linux64" NO_DEFAULT_PATH)
-find_path(OPENVR_INCLUDE_DIRS openvr.h "${OPENVR}/headers" NO_DEFAULT_PATH)
+# This declares what ROS components our package needs
 
 catkin_package(
   CATKIN_DEPENDS
@@ -28,13 +25,42 @@ catkin_package(
     tf2
     tf2_ros
     tf2_geometry_msgs
+    sensor_msgs
     geometry_msgs
+    ff_msgs
+    ff_util
+)
+
+# Compile all c++ libraries and link into libvive.so
+
+create_library(TARGET vive
+  LIBS
+    ${DEEPDIVE_LIBRARIES}
+    ${CERES_LIBRARIES}
+    ${EIGEN3_LIBRARIES}
+    ff_nodelet
+    config_server
+    msg_conversions
+  INC
+    ${DEEPDIVE_INCLUDE_DIRS}
+    ${CERES_INCLUDE_DIRS}
+    ${EIGEN3_INCLUDE_DIRS}
+  DEPS
     ff_msgs
 )
 
+# Build a small tool to interact with the nodelets
+
 create_tool_targets(DIR tools
-  LIBS ${catkin_LIBRARIES} ${EIGEN3_LIBRARIES} ${OPENVR_LIBRARIES} common config_reader msg_conversions
-  INC ${catkin_INCLUDE_DIRS} ${EIGEN3_INCLUDE_DIRS} ${OPENVR_INCLUDE_DIRS} 
+  LIBS
+    ${catkin_LIBRARIES}
+    ff_nodelet
+  INC
+    ${catkin_INCLUDE_DIRS}
+  DEPS
+    ff_msgs
 )
+
+# Install our launch files
 
 install_launch_files()

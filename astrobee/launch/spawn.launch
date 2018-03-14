@@ -21,6 +21,7 @@
   <arg name="robot" default="sim" />            <!-- Robot name              -->
   <arg name="world" default="granite" />        <!-- World name              -->
   <arg name="ns" default="" />                  <!-- Robot namespace prefix  -->
+  <arg name="output" default="log"/>            <!-- Where nodes should log  -->
   <arg name="nodes" default=""/>                <!-- Launch specific nodes   -->
   <arg name="sim" default="local" />            <!-- SIM IP address          -->
   <arg name="llp" default="local" />            <!-- LLP IP address          -->
@@ -32,9 +33,10 @@
   <arg name="rviz" default="false" />           <!-- Start visualization     -->
   <arg name="rqt" default="false" />            <!-- Start user interface    -->
   <arg name="gds" default="false" />            <!-- Enable GDS              -->
+  <arg name="vmware" default="true" />          <!-- Enable vmware           -->
 
   <!-- Simulation-specific options -->
-  <arg name="pose" default="0 0 0 0 0 0 1" />   <!-- Insert robot at pose    -->
+  <arg name="pose" default="" />                <!-- Insert robot at pose    -->
 
   <!-- Make sure all environment variables are set for controller -->
   <env if="$(eval optenv('ASTROBEE_ROBOT','')=='')" 
@@ -56,6 +58,7 @@
     <arg name="robot" value="$(arg robot)" />  <!-- Type of robot            -->
     <arg name="world" value="$(arg world)" />  <!-- Execution context        -->
     <arg name="ns" value="$(arg ns)" />        <!-- Robot namespace          -->
+    <arg name="output" value="$(arg output)" /><!-- Output for logging   -->    
     <arg name="pose" value="$(arg pose)" />    <!-- Initial robot pose (sim) -->
     <arg name="drivers" value="false" />       <!-- Start driver code        -->
     <arg name="nodes" value="$(arg nodes)" />  <!-- Limit to specific nodes  -->
@@ -63,6 +66,7 @@
     <arg name="llp" value="$(arg llp)" />      <!-- LLP IP address           -->
     <arg name="mlp" value="$(arg mlp)" />      <!-- MLP IP address           -->
     <arg name="dds" value="$(arg dds)" />      <!-- Enable DDS               -->
+    <arg name="vmware" value="$(arg vmware)" /><!-- Enable vmware            -->
   </include>
 
 </launch>

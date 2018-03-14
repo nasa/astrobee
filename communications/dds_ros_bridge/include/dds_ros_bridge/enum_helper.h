@@ -19,6 +19,8 @@
 #ifndef DDS_ROS_BRIDGE_ENUM_HELPER_H_
 #define DDS_ROS_BRIDGE_ENUM_HELPER_H_
 
+#include <ros/assert.h>
+
 #include <ff_msgs/AckStatus.h>
 #include <ff_msgs/AckCompletedStatus.h>
 

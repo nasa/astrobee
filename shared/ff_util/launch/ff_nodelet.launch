@@ -16,10 +16,6 @@
 <!-- permissions and limitations under the License.                          -->
 <launch>
 
-  <!-- Context options (NB: THESE ARE OVERRIDDEN BY ENVIRONMENT VARIABLES, IF SET)           -->
-  <arg name="robot" default="p4d" />
-  <arg name="world" default="granite" />
-
   <!-- Mandatory arguments -->
   <arg name="class"/>                                         <!-- Nodelet class        -->
   <arg name="name"/>                                          <!-- Nodelet name         -->
@@ -31,12 +27,6 @@
   <arg name="output" default="screen" />
   <arg name="disable" default="false" />                      <!-- Disable this nodelet -->
   <arg name="respawn" default="false" />                      <!-- Respawn on failure   -->
-
-  <!-- Setup the context -->
-  <env if="$(eval optenv('ASTROBEE_ROBOT','')=='')" 
-       name="ASTROBEE_ROBOT" value="$(arg robot)" />
-  <env if="$(eval optenv('ASTROBEE_WORLD','')=='')" 
-       name="ASTROBEE_WORLD" value="$(arg world)" />
 
   <!-- Don't do anything if the node is disabled -->
   <group unless="$(arg disable)">

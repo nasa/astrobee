@@ -18,13 +18,6 @@
 
 #include <dds_ros_bridge/enum_helper.h>
 
-#include <ros/assert.h>
-
-#include <ff_msgs/AckStatus.h>
-#include <ff_msgs/AckCompletedStatus.h>
-
-#include <rapidDds/Ack.h>
-
 #define GENERATE_ACK_CASE(NAME) \
   case ff_msgs::AckStatus::NAME: return rapid::ACK_##NAME
 

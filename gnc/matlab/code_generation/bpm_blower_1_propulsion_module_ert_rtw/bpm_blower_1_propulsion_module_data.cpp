@@ -5,7 +5,7 @@
 //
 // Model version                  : 1.1142
 // Simulink Coder version         : 8.11 (R2016b) 25-Aug-2016
-// C/C++ source code generated on : Mon Dec 18 10:15:59 2017
+// C/C++ source code generated on : Wed Jan 31 12:34:43 2018
 //
 // Target selection: ert.tlc
 // Embedded hardware selection: 32-bit Generic
@@ -347,7 +347,7 @@ P_bpm_blower_1_propulsion_mod_T bpm_blower_1_propulsion_modul_P = {
   5.0F,                                // Variable: bpm_servo_ctl_kp
                                        //  Referenced by: '<S33>/Proportional Gain'
 
-  0.508065343F,                        // Variable: bpm_servo_max_theta
+  0.560512543F,                        // Variable: bpm_servo_max_theta
                                        //  Referenced by: '<S31>/Discrete-Time Integrator4'
 
   6.0F,                                // Variable: bpm_servo_max_voltage
@@ -377,10 +377,10 @@ P_bpm_blower_1_propulsion_mod_T bpm_blower_1_propulsion_modul_P = {
   4.0F,                                // Variable: bpm_servo_motor_r
                                        //  Referenced by: '<S31>/Gain5'
 
-  0.0112903407F,                       // Variable: bpm_servo_pwm2angle
+  0.00219808845F,                      // Variable: bpm_servo_pwm2angle
                                        //  Referenced by: '<S32>/Gain'
 
-  -25.0F,                              // Variable: bpm_servo_pwm2angle_bias
+  0.0F,                                // Variable: bpm_servo_pwm2angle_bias
                                        //  Referenced by: '<S32>/Constant'
 
   1.2F,                                // Variable: const_air_density

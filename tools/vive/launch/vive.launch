@@ -15,11 +15,17 @@
 <!-- implied. See the License for the specific language governing            -->
 <!-- permissions and limitations under the License.                          -->
 <launch>
-  <env name="ASTROBEE_CONFIG_DIR" value="$(find astrobee)/config"/>
-  <env name="OPENVR" value="$(env HOME)/libraries/openvr"/>
-  <env name="STEAM" value="$(env HOME)/.local/share/Steam"/>
-  <env name="STEAMVR" value="$(env HOME)/.local/share/Steam/steamapps/common/SteamVR"/>
-  <env name="LD_LIBRARY_PATH" value="$(env LD_LIBRARY_PATH):$(env HOME)/libraries/openvr/lib/linux64:$(env HOME)/.local/share/Steam/ubuntu12_32/steam-runtime/amd64/lib/x86_64-linux-gnu:$(env HOME)/.local/share/Steam/steamapps/common/SteamVR/bin/linux64:$(env HOME)/.local/share/Steam/steamapps/common/SteamVR/drivers/lighthouse/bin/linux64"/>
-  <node name="vive_server" pkg="vive" type="server.sh" output="screen" required="true"/>
-  <node name="vive_node" pkg="vive" type="vive_node" output="screen" required="true"/>
+  <arg name="name" default="vive" />
+  <arg name="manager" default="" />
+  <!-- Start the bridge -->
+  <include file="$(find ff_util)/launch/ff_nodelet.launch">
+    <arg name="name" value="$(arg name)_bridge" />
+    <arg name="manager" value="$(arg manager)" />
+    <arg name="class" value="vive/BridgeNodelet" />
+  </include>
+  <include file="$(find ff_util)/launch/ff_nodelet.launch">
+    <arg name="name" value="$(arg name)_server" />
+    <arg name="manager" value="$(arg manager)" />
+    <arg name="class" value="vive/ServerNodelet" />
+  </include>
 </launch>

@@ -24,7 +24,10 @@
 #include <thread>
 
 #include "ros/ros.h"
+
 #include "knDds/DdsEventLoop.h"
+
+#include "knShare/Time.h"
 
 namespace ff {
 
@@ -37,9 +40,11 @@ namespace ff {
  */
 class RapidSubRosPub {
  protected:
-  RapidSubRosPub(const std::string& subscribeTopic, const std::string& pubTopic,
-                 const ros::NodeHandle &nh, const std::string& entityName,
-                 const unsigned int queueSize);
+  RapidSubRosPub(const std::string& subscribe_topic,
+                 const std::string& pub_topic,
+                 const ros::NodeHandle &nh,
+                 const std::string& entity_name,
+                 const unsigned int queue_size);
   ~RapidSubRosPub();
 
   /**
@@ -47,14 +52,14 @@ class RapidSubRosPub {
    */
   virtual void StartThread();
 
-  ros::NodeHandle m_nh_;
-  ros::Publisher m_pub_;
-  std::string m_subscribeTopic_;
-  std::string m_publishTopic_;
-  unsigned int m_queueSize_;
+  ros::NodeHandle nh_;
+  ros::Publisher pub_;
+  std::string subscribe_topic_;
+  std::string publish_topic_;
+  unsigned int queue_size_;
 
-  std::thread m_thread_;
-  kn::DdsEventLoop m_ddsEventLoop_;
+  std::thread thread_;
+  kn::DdsEventLoop dds_event_loop_;
 
  private:
   /**

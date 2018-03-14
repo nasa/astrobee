@@ -28,14 +28,15 @@ namespace gazebo {
 // the forced to be applied to the rigid body
 class GazeboModelPluginDrag : public FreeFlyerModelPlugin {
  public:
-  GazeboModelPluginDrag() : FreeFlyerModelPlugin("drag", false),
+  GazeboModelPluginDrag() : FreeFlyerModelPlugin("gazebo_drag"),
     coefficient_(1.05), area_(0.092903), density_(1.225) {}
 
   virtual ~GazeboModelPluginDrag() {}
 
  protected:
   // Called when the plugin is loaded into the simulator
-  void LoadCallback(ros::NodeHandle *nh, physics::ModelPtr model, sdf::ElementPtr sdf) {
+  void LoadCallback(
+    ros::NodeHandle *nh, physics::ModelPtr model, sdf::ElementPtr sdf) {
     // Drag coefficient
     if (sdf->HasElement("coefficient"))
       coefficient_ = sdf->Get<double>("coefficient");

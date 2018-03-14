@@ -1,0 +1,13 @@
+target_type: assymetric_aprilgrid
+tags:
+  - {pos: [152.85, 19.5], size: 88}
+  - {pos: [5, 79.5], size: 22}
+  - {pos: [5, 25.5], size: 22}
+  - {pos: [27, 52.5], size: 22}
+  - {pos: [80.00001, 73], size: 44}
+  - {pos: [80.00001, 10], size: 44}
+  - {pos: [366.7, 79.5], size: 22}
+  - {pos: [366.7, 25.5], size: 22}
+  - {pos: [344.7, 52.5], size: 22}
+  - {pos: [269.7, 73], size: 44}
+  - {pos: [269.7, 10], size: 44}

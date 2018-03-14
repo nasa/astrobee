@@ -25,14 +25,15 @@
 
 #include <ff_msgs/EkfState.h>
 #include <geometry_msgs/Pose.h>
-#include <list>
 
-#define MAHAL_NUM_BINS 20
-#define MAHAL_BIN_SIZE 0.5
-#define MAHAL_BIN_MAX  10
+#include <list>
+#include <string>
 
 class QPainter;
 class QRect;
+
+#define MAHAL_NUM_BINS 20
+#define MAHAL_BIN_SIZE 0.5
 
 namespace ekf_video {
 
@@ -53,7 +54,26 @@ class EkfBagVideo : public ekf_bag::EkfBag {
  private:
   void DrawImage(QPainter & p, const sensor_msgs::ImageConstPtr & ros_image, const QRect & rect);
   void DrawTable(QPainter & p, const QRect & rect);
+
+  void DrawVelocity(QPainter & p, const QRect & rect);
+  void DrawOmega(QPainter & p, const QRect & rect);
+  void DrawAccelBias(QPainter & p, const QRect & rect);
+  void DrawGyroBias(QPainter & p, const QRect & rect);
+  void DrawPositionCov(QPainter & p, const QRect & rect);
+  void DrawVelocityCov(QPainter & p, const QRect & rect);
+  void DrawAngleCov(QPainter & p, const QRect & rect);
+
+  void DrawStatus(QPainter & p, const QRect & rect);
+  void DrawSMFeatureCount(QPainter & p, const QRect & rect);
+  void DrawOFFeatureCount(QPainter & p, const QRect & rect);
+
   void DrawMahalanobis(QPainter & p, const QRect & rect);
+
+  void DrawBarGraph(QPainter & p, const QRect & rect,
+                    int data_count, const float* data,
+                    float y_min, float y_max,
+                    const char* title, const char* xlabel, const char* ylabel,
+                    const std::string* data_labels, bool data_labels_on_bars);
 
   VideoWriter video_;
 
@@ -67,6 +87,8 @@ class EkfBagVideo : public ekf_bag::EkfBag {
   ros::Time start_time_;
 
   ff_msgs::EkfState state_;
+  int of_count_;
+  int ml_count_;
 
   int mahal_bins_[MAHAL_NUM_BINS];
 };

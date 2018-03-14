@@ -16,43 +16,7 @@
  * under the License.
  */
 
-#include <string>
-#include <vector>
-
 #include "dds_ros_bridge/dds_ros_bridge.h"
-#include "dds_ros_bridge/rapid_command_ros_command_plan.h"
-#include "dds_ros_bridge/rapid_compressed_file_ros_compressed_file.h"
-#include "dds_ros_bridge/ros_access_control.h"
-#include "dds_ros_bridge/ros_ack.h"
-#include "dds_ros_bridge/ros_agent_state.h"
-#include "dds_ros_bridge/ros_arm_joint_sample.h"
-#include "dds_ros_bridge/ros_arm_state.h"
-#include "dds_ros_bridge/ros_battery_state.h"
-#include "dds_ros_bridge/ros_command_config_rapid_command_config.h"
-#include "dds_ros_bridge/ros_compressed_file_rapid_compressed_file.h"
-#include "dds_ros_bridge/ros_compressed_file_ack.h"
-#include "dds_ros_bridge/ros_compressed_image_rapid_image.h"
-#include "dds_ros_bridge/ros_cpu_state.h"
-#include "dds_ros_bridge/ros_disk_state.h"
-#include "dds_ros_bridge/ros_fault_state.h"
-#include "dds_ros_bridge/ros_fault_config.h"
-#include "dds_ros_bridge/ros_gnc_fam_cmd_state.h"
-#include "dds_ros_bridge/ros_gnc_control_state.h"
-#include "dds_ros_bridge/ros_guest_science.h"
-#include "dds_ros_bridge/ros_odom_rapid_position.h"
-#include "dds_ros_bridge/ros_plan_status_rapid_plan_status.h"
-#include "dds_ros_bridge/ros_string_rapid_text_message.h"
-#include "dds_ros_bridge/ros_telemetry_rapid_telemetry.h"
-
-/*miro includes*/
-#include "miro/Configuration.h"
-#include "miro/Robot.h"
-#include "miro/Log.h"
-
-/*SoraCore Includes*/
-#include "knDds/DdsSupport.h"
-#include "knDds/DdsEntitiesFactory.h"
-#include "knDds/DdsEntitiesFactorySvc.h"
 
 namespace {
 
@@ -96,252 +60,284 @@ DdsRosBridge::DdsRosBridge() :
 DdsRosBridge::~DdsRosBridge() {
 }
 
-int DdsRosBridge::BuildAccessControlStateToRapid(const std::string& subTopic,
-                                                 const std::string& pubTopic,
+int DdsRosBridge::BuildAccessControlStateToRapid(const std::string& sub_topic,
+                                                 const std::string& pub_topic,
                                                  const std::string& name) {
-  ff::RosSubRapidPubPtr acsToAcs(new ff::RosAccessControlStateToRapid(subTopic,
-                                                                      pubTopic,
-                                                                      nh_));
-  m_rosSubRapidPubs_[name] = acsToAcs;
-  return m_rosSubRapidPubs_.size();
+  ff::RosSubRapidPubPtr acs_to_acs(
+                                new ff::RosAccessControlStateToRapid(sub_topic,
+                                                                     pub_topic,
+                                                                     nh_));
+  ros_sub_rapid_pubs_[name] = acs_to_acs;
+  return ros_sub_rapid_pubs_.size();
 }
 
-int DdsRosBridge::BuildAckToRapid(const std::string& subTopic,
-                                  const std::string& pubTopic,
+int DdsRosBridge::BuildAckToRapid(const std::string& sub_topic,
+                                  const std::string& pub_topic,
                                   const std::string& name) {
-  ff::RosSubRapidPubPtr ackToAck(new ff::RosAckToRapid(subTopic,
-                                                       pubTopic,
-                                                       nh_));
-  m_rosSubRapidPubs_[name] = ackToAck;
-  return m_rosSubRapidPubs_.size();
+  ff::RosSubRapidPubPtr ack_to_ack(new ff::RosAckToRapid(sub_topic,
+                                                         pub_topic,
+                                                         nh_));
+  ros_sub_rapid_pubs_[name] = ack_to_ack;
+  return ros_sub_rapid_pubs_.size();
 }
 
-int DdsRosBridge::BuildAgentStateToRapid(const std::string& subTopic,
-                                         const std::string& pubTopic,
+int DdsRosBridge::BuildAgentStateToRapid(const std::string& sub_topic,
+                                         const std::string& pub_topic,
                                          const std::string& name) {
-  ff::RosSubRapidPubPtr agentToAgent(new ff::RosAgentStateToRapid(subTopic,
-                                                                  pubTopic,
-                                                                  nh_));
-  m_rosSubRapidPubs_[name] = agentToAgent;
-  return m_rosSubRapidPubs_.size();
+  ff::RosSubRapidPubPtr agent_to_agent(new ff::RosAgentStateToRapid(sub_topic,
+                                                                    pub_topic,
+                                                                    nh_));
+  ros_sub_rapid_pubs_[name] = agent_to_agent;
+  return ros_sub_rapid_pubs_.size();
 }
 
-int DdsRosBridge::BuildArmJointSampleToRapid(const std::string& subTopic,
-                                             const std::string& pubTopic,
+int DdsRosBridge::BuildArmJointSampleToRapid(const std::string& sub_topic,
+                                             const std::string& pub_topic,
                                              const std::string& name) {
-  ff::RosSubRapidPubPtr jointToJoint(new ff::RosArmJointSampleToRapid(subTopic,
-                                                                      pubTopic,
-                                                                      nh_));
-  m_rosSubRapidPubs_[name] = jointToJoint;
-  return m_rosSubRapidPubs_.size();
+  ff::RosSubRapidPubPtr joint_to_joint(
+                                    new ff::RosArmJointSampleToRapid(sub_topic,
+                                                                     pub_topic,
+                                                                     nh_));
+  ros_sub_rapid_pubs_[name] = joint_to_joint;
+  return ros_sub_rapid_pubs_.size();
 }
 
-int DdsRosBridge::BuildArmStateToRapid(const std::string& subTopic,
-                                       const std::string& pubTopic,
+int DdsRosBridge::BuildArmStateToRapid(const std::string& sub_topic,
+                                       const std::string& pub_topic,
                                        const std::string& name) {
-  ff::RosSubRapidPubPtr armToArm(new ff::RosArmStateToRapid(subTopic,
-                                                            pubTopic,
-                                                            nh_));
-  m_rosSubRapidPubs_[name] = armToArm;
-  return m_rosSubRapidPubs_.size();
+  ff::RosSubRapidPubPtr arm_to_arm(new ff::RosArmStateToRapid(sub_topic,
+                                                              pub_topic,
+                                                              nh_));
+  ros_sub_rapid_pubs_[name] = arm_to_arm;
+  return ros_sub_rapid_pubs_.size();
 }
 
 int DdsRosBridge::BuildBatteryStateToRapid(
-                                      const std::string& subTopicBatteryStateTL,
-                                      const std::string& subTopicBatteryStateTR,
-                                      const std::string& subTopicBatteryStateBL,
-                                      const std::string& subTopicBatteryStateBR,
-                                      const std::string& subTopicBatteryTempTL,
-                                      const std::string& subTopicBatteryTempTR,
-                                      const std::string& subTopicBatteryTempBL,
-                                      const std::string& subTopicBatteryTempBR,
-                                      const std::string& pubTopic,
-                                      const std::string& name) {
-  ff::RosSubRapidPubPtr batteryToBattery(
-                          new ff::RosBatteryStateToRapid(subTopicBatteryStateTL,
-                                                         subTopicBatteryStateTR,
-                                                         subTopicBatteryStateBL,
-                                                         subTopicBatteryStateBR,
-                                                         subTopicBatteryTempTL,
-                                                         subTopicBatteryTempTR,
-                                                         subTopicBatteryTempBL,
-                                                         subTopicBatteryTempBR,
-                                                         pubTopic, nh_));
-  m_rosSubRapidPubs_[name] = batteryToBattery;
-  return m_rosSubRapidPubs_.size();
+                                  const std::string& sub_topic_battery_state_TL,
+                                  const std::string& sub_topic_battery_state_TR,
+                                  const std::string& sub_topic_battery_state_BL,
+                                  const std::string& sub_topic_battery_state_BR,
+                                  const std::string& sub_topic_battery_temp_TL,
+                                  const std::string& sub_topic_battery_temp_TR,
+                                  const std::string& sub_topic_battery_temp_BL,
+                                  const std::string& sub_topic_battery_temp_BR,
+                                  const std::string& pub_topic,
+                                  const std::string& name) {
+  ff::RosSubRapidPubPtr battery_to_battery(
+                      new ff::RosBatteryStateToRapid(sub_topic_battery_state_TL,
+                                                     sub_topic_battery_state_TR,
+                                                     sub_topic_battery_state_BL,
+                                                     sub_topic_battery_state_BR,
+                                                     sub_topic_battery_temp_TL,
+                                                     sub_topic_battery_temp_TR,
+                                                     sub_topic_battery_temp_BL,
+                                                     sub_topic_battery_temp_BR,
+                                                     pub_topic,
+                                                     nh_));
+  ros_sub_rapid_pubs_[name] = battery_to_battery;
+  return ros_sub_rapid_pubs_.size();
 }
 
-int DdsRosBridge::BuildCompressedImageToImage(const std::string& subTopic,
-                                              const std::string& pubTopic,
+int DdsRosBridge::BuildCompressedImageToImage(const std::string& sub_topic,
+                                              const std::string& pub_topic,
                                               const std::string& name) {
-  ff::RosSubRapidPubPtr compressedImageToImage(
-                new ff::RosCompressedImageRapidImage(subTopic, pubTopic, nh_));
-  m_rosSubRapidPubs_[name] = compressedImageToImage;
-  return m_rosSubRapidPubs_.size();
+  ff::RosSubRapidPubPtr compressed_image_to_image(
+                                new ff::RosCompressedImageRapidImage(sub_topic,
+                                                                     pub_topic,
+                                                                     nh_));
+  ros_sub_rapid_pubs_[name] = compressed_image_to_image;
+  return ros_sub_rapid_pubs_.size();
 }
 
-int DdsRosBridge::BuildCpuStateToRapid(const std::string& subTopic,
-                                       const std::string& pubTopic,
+int DdsRosBridge::BuildCpuStateToRapid(const std::string& sub_topic,
+                                       const std::string& pub_topic,
                                        const std::string& name) {
-  ff::RosSubRapidPubPtr cpuToCpu(new ff::RosCpuStateToRapid(subTopic,
-                                                            pubTopic,
-                                                            nh_));
-  m_rosSubRapidPubs_[name] = cpuToCpu;
-  return m_rosSubRapidPubs_.size();
+  ff::RosSubRapidPubPtr cpu_to_cpu(new ff::RosCpuStateToRapid(sub_topic,
+                                                              pub_topic,
+                                                              nh_));
+  ros_sub_rapid_pubs_[name] = cpu_to_cpu;
+  return ros_sub_rapid_pubs_.size();
 }
 
-int DdsRosBridge::BuildDiskStateToRapid(const std::string& subTopic,
-                                        const std::string& pubTopic,
-                                        const std::string& name) {
-  ff::RosSubRapidPubPtr diskToDisk(new ff::RosDiskStateToRapid(subTopic,
-                                                               pubTopic,
+int DdsRosBridge::BuildDataToDiskStateToRapid(
+                                            const std::string& state_sub_topic,
+                                            const std::string& topics_sub_topic,
+                                            const std::string& pub_topic,
+                                            const std::string& name) {
+  ff::RosSubRapidPubPtr data_to_disk_to_data_to_disk(
+                                  new ff::RosDataToDiskToRapid(state_sub_topic,
+                                                               topics_sub_topic,
+                                                               pub_topic,
                                                                nh_));
-  m_rosSubRapidPubs_[name] = diskToDisk;
-  return m_rosSubRapidPubs_.size();
+  ros_sub_rapid_pubs_[name] = data_to_disk_to_data_to_disk;
+  return ros_sub_rapid_pubs_.size();
 }
 
-int DdsRosBridge::BuildFaultConfigToRapid(const std::string& subTopic,
-                                          const std::string& pubTopic,
+int DdsRosBridge::BuildDiskStateToRapid(const std::string& sub_topic,
+                                        const std::string& pub_topic,
+                                        const std::string& name) {
+  ff::RosSubRapidPubPtr disk_to_disk(new ff::RosDiskStateToRapid(sub_topic,
+                                                                 pub_topic,
+                                                                 nh_));
+  ros_sub_rapid_pubs_[name] = disk_to_disk;
+  return ros_sub_rapid_pubs_.size();
+}
+
+int DdsRosBridge::BuildFaultConfigToRapid(const std::string& sub_topic,
+                                          const std::string& pub_topic,
                                           const std::string& name) {
-  ff::RosSubRapidPubPtr faultToFault(new ff::RosFaultConfigToRapid(subTopic,
-                                                                   pubTopic,
-                                                                   nh_));
-  m_rosSubRapidPubs_[name] = faultToFault;
-  return m_rosSubRapidPubs_.size();
+  ff::RosSubRapidPubPtr fault_to_fault(new ff::RosFaultConfigToRapid(sub_topic,
+                                                                     pub_topic,
+                                                                     nh_));
+  ros_sub_rapid_pubs_[name] = fault_to_fault;
+  return ros_sub_rapid_pubs_.size();
 }
 
-int DdsRosBridge::BuildFaultStateToRapid(const std::string& subTopic,
-                                         const std::string& pubTopic,
+int DdsRosBridge::BuildFaultStateToRapid(const std::string& sub_topic,
+                                         const std::string& pub_topic,
                                          const std::string& name) {
-  ff::RosSubRapidPubPtr faultToFault(new ff::RosFaultStateToRapid(subTopic,
-                                                                  pubTopic,
-                                                                  nh_));
-  m_rosSubRapidPubs_[name] = faultToFault;
-  return m_rosSubRapidPubs_.size();
+  ff::RosSubRapidPubPtr fault_to_fault(new ff::RosFaultStateToRapid(sub_topic,
+                                                                    pub_topic,
+                                                                    nh_));
+  ros_sub_rapid_pubs_[name] = fault_to_fault;
+  return ros_sub_rapid_pubs_.size();
 }
 
-int DdsRosBridge::BuildGncFamCmdStateToRapid(const std::string& subTopic,
-                                             const std::string& pubTopic,
+int DdsRosBridge::BuildGncFamCmdStateToRapid(const std::string& sub_topic,
+                                             const std::string& pub_topic,
                                              const std::string& name) {
-  ff::RosSubRapidPubPtr gncFamCmdToGncFamCmd(new ff::RosGncFamCmdStateToRapid(
-                                                                      subTopic,
-                                                                      pubTopic,
-                                                                      nh_));
-  m_rosSubRapidPubs_[name] = gncFamCmdToGncFamCmd;
-  return m_rosSubRapidPubs_.size();
+  ff::RosSubRapidPubPtr gnc_fam_cmd_to_gnc_fam_cmd(
+                                    new ff::RosGncFamCmdStateToRapid(sub_topic,
+                                                                     pub_topic,
+                                                                     nh_));
+  ros_sub_rapid_pubs_[name] = gnc_fam_cmd_to_gnc_fam_cmd;
+  return ros_sub_rapid_pubs_.size();
 }
 
-int DdsRosBridge::BuildGncControlStateToRapid(const std::string& subTopic,
-                                              const std::string& pubTopic,
+int DdsRosBridge::BuildGncControlStateToRapid(const std::string& sub_topic,
+                                              const std::string& pub_topic,
                                               const std::string& name) {
-  ff::RosSubRapidPubPtr gncControlToGncControl(
-                                    new ff::RosGncControlStateToRapid(subTopic,
-                                                                      pubTopic,
+  ff::RosSubRapidPubPtr gnc_control_to_gnc_control(
+                                    new ff::RosGncControlStateToRapid(sub_topic,
+                                                                      pub_topic,
                                                                       nh_));
-  m_rosSubRapidPubs_[name] = gncControlToGncControl;
-  return m_rosSubRapidPubs_.size();
+  ros_sub_rapid_pubs_[name] = gnc_control_to_gnc_control;
+  return ros_sub_rapid_pubs_.size();
 }
 
-int DdsRosBridge::BuildGuestScienceToRapid(const std::string& stateSubTopic,
-                                           const std::string& configSubTopic,
-                                           const std::string& dataSubTopic,
-                                           const std::string& pubTopic,
+int DdsRosBridge::BuildGuestScienceToRapid(const std::string& state_sub_topic,
+                                           const std::string& config_sub_topic,
+                                           const std::string& data_sub_topic,
+                                           const std::string& pub_topic,
                                            const std::string& name) {
-  ff::RosSubRapidPubPtr guestScienceToGuestScience(
-                            new ff::RosGuestScienceToRapid(stateSubTopic,
-                                                           configSubTopic,
-                                                           dataSubTopic,
-                                                           pubTopic,
-                                                           nh_));
-  m_rosSubRapidPubs_[name] = guestScienceToGuestScience;
-  return m_rosSubRapidPubs_.size();
+  ff::RosSubRapidPubPtr guest_science_to_guest_science(
+                                new ff::RosGuestScienceToRapid(state_sub_topic,
+                                                               config_sub_topic,
+                                                               data_sub_topic,
+                                                               pub_topic,
+                                                               nh_));
+  ros_sub_rapid_pubs_[name] = guest_science_to_guest_science;
+  return ros_sub_rapid_pubs_.size();
 }
 
-int DdsRosBridge::BuildOdomToPosition(const std::string& subTopic,
-                                      const std::string& pubTopic,
+int DdsRosBridge::BuildOdomToPosition(const std::string& sub_topic,
+                                      const std::string& pub_topic,
                                       const std::string& name) {
-  ff::RosSubRapidPubPtr odomToPosition(new ff::RosOdomRapidPosition(subTopic,
-                                                                    pubTopic,
-                                                                    nh_));
-  m_rosSubRapidPubs_[name] = odomToPosition;
-  return m_rosSubRapidPubs_.size();
+  ff::RosSubRapidPubPtr odom_to_position(new ff::RosOdomRapidPosition(sub_topic,
+                                                                      pub_topic,
+                                                                      nh_));
+  ros_sub_rapid_pubs_[name] = odom_to_position;
+  return ros_sub_rapid_pubs_.size();
 }
 
-int DdsRosBridge::BuildPlanStatusToPlanStatus(const std::string& subTopic,
-                                              const std::string& pubTopic,
+int DdsRosBridge::BuildPlanStatusToPlanStatus(const std::string& sub_topic,
+                                              const std::string& pub_topic,
                                               const std::string& name) {
-  ff::RosSubRapidPubPtr planStatusToPlanStatus(
-                new ff::RosPlanStatusRapidPlanStatus(subTopic, pubTopic, nh_));
-  m_rosSubRapidPubs_[name] = planStatusToPlanStatus;
-  return m_rosSubRapidPubs_.size();
+  ff::RosSubRapidPubPtr plan_status_to_plan_status(
+                                new ff::RosPlanStatusRapidPlanStatus(sub_topic,
+                                                                     pub_topic,
+                                                                     nh_));
+  ros_sub_rapid_pubs_[name] = plan_status_to_plan_status;
+  return ros_sub_rapid_pubs_.size();
 }
 
-int DdsRosBridge::BuildStringToTextMessage(const std::string& subTopic,
-                                           const std::string& pubTopic,
+int DdsRosBridge::BuildStringToTextMessage(const std::string& sub_topic,
+                                           const std::string& pub_topic,
                                            const std::string& name) {
-  ff::RosSubRapidPubPtr strToText(new ff::RosStringRapidTextMessage(subTopic,
-                                                                    pubTopic,
-                                                                    nh_));
-  m_rosSubRapidPubs_[name] = strToText;
-  return m_rosSubRapidPubs_.size();
+  ff::RosSubRapidPubPtr str_to_text(new ff::RosStringRapidTextMessage(sub_topic,
+                                                                      pub_topic,
+                                                                      nh_));
+  ros_sub_rapid_pubs_[name] = str_to_text;
+  return ros_sub_rapid_pubs_.size();
 }
 
-int DdsRosBridge::BuildTelemetryToRapid(const std::string& subTopic,
-                                        const std::string& pubTopic,
+int DdsRosBridge::BuildTelemetryToRapid(const std::string& sub_topic,
+                                        const std::string& pub_topic,
                                         const std::string& name) {
-  ff::RosSubRapidPubPtr telemetryToTelemetry(
-    new ff::RosTelemetryRapidTelemetry(subTopic,
-                                       pubTopic,
-                                       nh_,
-                                       config_params_));
-  m_rosSubRapidPubs_[name] = telemetryToTelemetry;
-  return m_rosSubRapidPubs_.size();
+  ff::RosSubRapidPubPtr telemetry_to_telemetry(
+                            new ff::RosTelemetryRapidTelemetry(sub_topic,
+                                                               pub_topic,
+                                                               nh_,
+                                                               config_params_));
+  ros_sub_rapid_pubs_[name] = telemetry_to_telemetry;
+  return ros_sub_rapid_pubs_.size();
 }
 
-int DdsRosBridge::BuildCommandToCommand(const std::string& subTopic,
-                                        const std::string& pubTopic,
+int DdsRosBridge::BuildCommandToCommand(const std::string& sub_topic,
+                                        const std::string& pub_topic,
                                         const std::string& name) {
-  ff::RapidSubRosPubPtr commandToCommand(
-                       new ff::RapidCommandRosCommand(subTopic, pubTopic, nh_));
-  m_rapidSubRosPubs_.push_back(commandToCommand);
-  return m_rapidSubRosPubs_.size();
+  ff::RapidSubRosPubPtr command_to_command(
+                                      new ff::RapidCommandRosCommand(sub_topic,
+                                                                     pub_topic,
+                                                                     nh_));
+  rapid_sub_ros_pubs_.push_back(command_to_command);
+  return rapid_sub_ros_pubs_.size();
 }
 
 int DdsRosBridge::BuildCompressedFileToCompressedFile(
-                                                    const std::string& subTopic,
-                                                    const std::string& pubTopic,
-                                                    const std::string& name) {
-  ff::RapidSubRosPubPtr compressedFileToCompressedFile(
-        new ff::RapidCompressedFileRosCompressedFile(subTopic, pubTopic, nh_));
-  m_rapidSubRosPubs_.push_back(compressedFileToCompressedFile);
-  return m_rapidSubRosPubs_.size();
+                                                  const std::string& sub_topic,
+                                                  const std::string& pub_topic,
+                                                  const std::string& name) {
+  ff::RapidSubRosPubPtr compressed_file_to_compressed_file(
+                        new ff::RapidCompressedFileRosCompressedFile(sub_topic,
+                                                                     pub_topic,
+                                                                     nh_));
+  rapid_sub_ros_pubs_.push_back(compressed_file_to_compressed_file);
+  return rapid_sub_ros_pubs_.size();
 }
 
-int DdsRosBridge::BuildCompressedFileToRapid(const std::string& subTopic,
-                                             const std::string& pubTopic,
+int DdsRosBridge::BuildCompressedFileToRapid(const std::string& sub_topic,
+                                             const std::string& pub_topic,
                                              const std::string& name) {
-  ff::RosSubRapidPubPtr compressedFileToRapid(
-          new ff::RosCompressedFileToRapid(subTopic, pubTopic, nh_));
-  m_rosSubRapidPubs_[name] = compressedFileToRapid;
-  return m_rosSubRapidPubs_.size();
+  ff::RosSubRapidPubPtr compressed_file_to_rapid(
+                                    new ff::RosCompressedFileToRapid(sub_topic,
+                                                                     pub_topic,
+                                                                     nh_));
+  ros_sub_rapid_pubs_[name] = compressed_file_to_rapid;
+  return ros_sub_rapid_pubs_.size();
 }
 
-int DdsRosBridge::BuildCompressedFileAckToRapid(const std::string& subTopic,
-                                                const std::string& pubTopic,
+int DdsRosBridge::BuildCompressedFileAckToRapid(const std::string& sub_topic,
+                                                const std::string& pub_topic,
                                                 const std::string& name) {
-  ff::RosSubRapidPubPtr compressedFileAckToRapid(
-          new ff::RosCompressedFileAckToRapid(subTopic, pubTopic, nh_));
-  m_rosSubRapidPubs_[name] = compressedFileAckToRapid;
-  return m_rosSubRapidPubs_.size();
+  ff::RosSubRapidPubPtr compressed_file_ack_to_rapid(
+                                  new ff::RosCompressedFileAckToRapid(sub_topic,
+                                                                      pub_topic,
+                                                                      nh_));
+  ros_sub_rapid_pubs_[name] = compressed_file_ack_to_rapid;
+  return ros_sub_rapid_pubs_.size();
 }
 
-int DdsRosBridge::BuildCommandConfigToCommandConfig(const std::string& pubTopic,
-                                                    const std::string& name) {
+int DdsRosBridge::BuildCommandConfigToCommandConfig(
+                                                  const std::string& pub_topic,
+                                                  const std::string& name) {
   // keep in scope to retain reliable durable
-  ff::RapidPubPtr commandConfigToCommandConfig(
-    new ff::RosCommandConfigRapidCommandConfig(pubTopic, nh_, config_params_));
-  m_rapidPubs_.push_back(commandConfigToCommandConfig);
-  return m_rapidPubs_.size();
+  ff::RapidPubPtr command_config_to_command_config(
+                    new ff::RosCommandConfigRapidCommandConfig(pub_topic,
+                                                               nh_,
+                                                               config_params_));
+  rapid_pubs_.push_back(command_config_to_command_config);
+  return rapid_pubs_.size();
 }
 
 void DdsRosBridge::Initialize(ros::NodeHandle *nh) {
@@ -383,7 +379,7 @@ void DdsRosBridge::Initialize(ros::NodeHandle *nh) {
 
   nh_ = *nh;
 
-  int fakeArgc = 1;
+  int fake_argc = 1;
 
   // TODO(tfmorse): make hardcoded values configurable
 
@@ -395,41 +391,41 @@ void DdsRosBridge::Initialize(ros::NodeHandle *nh) {
   // Participant name needs to uniue so combine robot name with timestamp
   ros::Time time = ros::Time::now();
   participant_name_ = agent_name_ + std::to_string(time.sec);
-  char **fakeArgv = new char*[1];
-  fakeArgv[0] = new char[(participant_name_.size() + 1)];
-  std::strcpy(fakeArgv[0], participant_name_.c_str());  // NOLINT
+  char **fake_argv = new char*[1];
+  fake_argv[0] = new char[(participant_name_.size() + 1)];
+  std::strcpy(fake_argv[0], participant_name_.c_str());  // NOLINT
 
   /* fake miro log into thinking we have no arguments */
-  Miro::Log::init(fakeArgc, fakeArgv);
+  Miro::Log::init(fake_argc, fake_argv);
   Miro::Log::level(9);
 
   /* fake miro configuration into thinking we have no arguments */
-  Miro::Configuration::init(fakeArgc, fakeArgv);
+  Miro::Configuration::init(fake_argc, fake_argv);
 
-  Miro::RobotParameters *robotParams = Miro::RobotParameters::instance();
-  kn::DdsEntitiesFactorySvcParameters *ddsParams =
+  Miro::RobotParameters *robot_params = Miro::RobotParameters::instance();
+  kn::DdsEntitiesFactorySvcParameters *dds_params =
       kn::DdsEntitiesFactorySvcParameters::instance();
 
   /* get the defaults for *all the things!* */
   Miro::ConfigDocument *config = Miro::Configuration::document();
   config->setSection("Robot");
-  config->getParameters("Miro::RobotParameters", *robotParams);
-  config->getParameters("kn::DdsEntitiesFactorySvcParameters", *ddsParams);
+  config->getParameters("Miro::RobotParameters", *robot_params);
+  config->getParameters("kn::DdsEntitiesFactorySvcParameters", *dds_params);
 
-  robotParams->name = agent_name_;
-  robotParams->namingContextName = robotParams->name;
+  robot_params->name = agent_name_;
+  robot_params->namingContextName = robot_params->name;
 
-  SubstituteROBOT_NAME(ddsParams);
+  SubstituteROBOT_NAME(dds_params);
 
   // Clear config files so that dds only looks for the files we add
-  ddsParams->participants[0].discoveryPeersFiles.clear();
-  ddsParams->configFiles.clear();
+  dds_params->participants[0].discoveryPeersFiles.clear();
+  dds_params->configFiles.clear();
 
-  ddsParams->participants[0].participantName = participant_name_;
-  ddsParams->participants[0].domainId = 37;
-  ddsParams->participants[0].discoveryPeersFiles.push_back(
+  dds_params->participants[0].participantName = participant_name_;
+  dds_params->participants[0].domainId = 37;
+  dds_params->participants[0].discoveryPeersFiles.push_back(
       (config_path + "NDDS_DISCOVERY_PEERS"));
-  ddsParams->configFiles.push_back((config_path + "RAPID_QOS_PROFILES.xml"));
+  dds_params->configFiles.push_back((config_path + "RAPID_QOS_PROFILES.xml"));
 
   /**
    * Facade to initialize basic system
@@ -492,8 +488,8 @@ void DdsRosBridge::Initialize(ros::NodeHandle *nh) {
    * and store in relevant repository
    * based on DdsEntitesFactoryParameters
    */
-  m_ddsEntitiesFactory_.reset(new kn::DdsEntitiesFactorySvc());
-  m_ddsEntitiesFactory_->init(ddsParams);
+  dds_entities_factory_.reset(new kn::DdsEntitiesFactorySvc());
+  dds_entities_factory_->init(dds_params);
 
   if (!ReadParams()) {
     exit(EXIT_FAILURE);
@@ -502,8 +498,8 @@ void DdsRosBridge::Initialize(ros::NodeHandle *nh) {
 }
 
 bool DdsRosBridge::ReadParams() {
-  std::string subTopic, subTopic2;
-  std::string pubTopic;
+  std::string sub_topic, sub_topic2;
+  std::string pub_topic;
   bool use;
 
   components_ = 0;
@@ -515,12 +511,12 @@ bool DdsRosBridge::ReadParams() {
   }
 
   if (use) {
-    if (!config_params_.GetStr("sub_topic_RCRC", &subTopic)) {
+    if (!config_params_.GetStr("sub_topic_RCRC", &sub_topic)) {
       ROS_FATAL("DDS Bridge: sub topic RCRC not specified!");
       return false;
     }
 
-    BuildCommandToCommand(subTopic, TOPIC_COMMUNICATIONS_DDS_COMMAND, "RCRC");
+    BuildCommandToCommand(sub_topic, TOPIC_COMMUNICATIONS_DDS_COMMAND, "RCRC");
     components_++;
   }
 
@@ -531,12 +527,13 @@ bool DdsRosBridge::ReadParams() {
   }
 
   if (use) {
-    if (!config_params_.GetStr("sub_topic_RCFPRCFP", &subTopic)) {
+    if (!config_params_.GetStr("sub_topic_RCFPRCFP", &sub_topic)) {
       ROS_FATAL("DDS Bridge: sub topic RCFPRCFP not specified!");
       return false;
     }
 
-    BuildCompressedFileToCompressedFile(subTopic, TOPIC_COMMUNICATIONS_DDS_PLAN,
+    BuildCompressedFileToCompressedFile(sub_topic,
+                                        TOPIC_COMMUNICATIONS_DDS_PLAN,
                                         "RCFPRCFP");
     components_++;
   } else {
@@ -550,12 +547,12 @@ bool DdsRosBridge::ReadParams() {
   }
 
   if (use) {
-    if (!config_params_.GetStr("sub_topic_RCFZRCFZ", &subTopic)) {
+    if (!config_params_.GetStr("sub_topic_RCFZRCFZ", &sub_topic)) {
       ROS_FATAL("DDS Bridge: sub topic RCFZRCFZ not specified!");
       return false;
     }
 
-    BuildCompressedFileToCompressedFile(subTopic,
+    BuildCompressedFileToCompressedFile(sub_topic,
                                         TOPIC_COMMUNICATIONS_DDS_ZONES,
                                         "RCFZRCFZ");
     components_++;
@@ -570,13 +567,14 @@ bool DdsRosBridge::ReadParams() {
   }
 
   if (use) {
-    if (!config_params_.GetStr("pub_topic_RACS", &pubTopic)) {
+    if (!config_params_.GetStr("pub_topic_RACS", &pub_topic)) {
       ROS_FATAL("DDS Bridge: pub topic RACS not specified!");
       return false;
     }
 
     BuildAccessControlStateToRapid(TOPIC_MANAGEMENT_ACCESS_CONTROL_STATE,
-                                   pubTopic, "RACS");
+                                   pub_topic,
+                                   "RACS");
     components_++;
   }
 
@@ -587,12 +585,12 @@ bool DdsRosBridge::ReadParams() {
   }
 
   if (use) {
-    if (!config_params_.GetStr("pub_topic_RARA", &pubTopic)) {
+    if (!config_params_.GetStr("pub_topic_RARA", &pub_topic)) {
       ROS_FATAL("DDS Bridge: pub topic RARA not specified!");
       return false;
     }
 
-    BuildAckToRapid(TOPIC_MANAGEMENT_ACK, pubTopic, "RARA");
+    BuildAckToRapid(TOPIC_MANAGEMENT_ACK, pub_topic, "RARA");
     components_++;
   }
 
@@ -603,12 +601,13 @@ bool DdsRosBridge::ReadParams() {
   }
 
   if (use) {
-    if (!config_params_.GetStr("pub_topic_RASRAS", &pubTopic)) {
+    if (!config_params_.GetStr("pub_topic_RASRAS", &pub_topic)) {
       ROS_FATAL("DDS Bridge: pub topic RASRAS not specified!");
       return false;
     }
 
-    BuildAgentStateToRapid(TOPIC_MANAGEMENT_EXEC_AGENT_STATE, pubTopic,
+    BuildAgentStateToRapid(TOPIC_MANAGEMENT_EXEC_AGENT_STATE,
+                           pub_topic,
                            "RASRAS");
     components_++;
   }
@@ -620,13 +619,14 @@ bool DdsRosBridge::ReadParams() {
   }
 
   if (use) {
-    if (!config_params_.GetStr("pub_topic_RAJSRAJS", &pubTopic)) {
+    if (!config_params_.GetStr("pub_topic_RAJSRAJS", &pub_topic)) {
       ROS_FATAL("DDS Bridge: pub topic RAJSRAJS not specified!");
       return false;
     }
 
-    BuildArmJointSampleToRapid(TOPIC_PROCEDURES_ARM_JOINT_SAMPLE,
-                                                          pubTopic, "RAJSRAJS");
+    BuildArmJointSampleToRapid(TOPIC_BEHAVIORS_ARM_JOINT_SAMPLE,
+                               pub_topic,
+                               "RAJSRAJS");
     components_++;
   }
 
@@ -637,13 +637,14 @@ bool DdsRosBridge::ReadParams() {
   }
 
   if (use) {
-    if (!config_params_.GetStr("pub_topic_RARMRARM", &pubTopic)) {
+    if (!config_params_.GetStr("pub_topic_RARMRARM", &pub_topic)) {
       ROS_FATAL("DDS_Bridge: pub topic RARMRARM not specified!");
       return false;
     }
 
-    BuildArmStateToRapid(TOPIC_PROCEDURES_ARM_ARM_STATE, pubTopic,
-                                                                    "RARMRARM");
+    BuildArmStateToRapid(TOPIC_BEHAVIORS_ARM_ARM_STATE,
+                         pub_topic,
+                         "RARMRARM");
     components_++;
   }
 
@@ -654,7 +655,7 @@ bool DdsRosBridge::ReadParams() {
   }
 
   if (use) {
-    if (!config_params_.GetStr("pub_topic_RBSRBS", &pubTopic)) {
+    if (!config_params_.GetStr("pub_topic_RBSRBS", &pub_topic)) {
       ROS_FATAL("DDS Bridge: pub topic RBSRBS not specified!");
       return false;
     }
@@ -667,7 +668,7 @@ bool DdsRosBridge::ReadParams() {
                              TOPIC_HARDWARE_EPS_BATTERY_TEMP_TR,
                              TOPIC_HARDWARE_EPS_BATTERY_TEMP_BL,
                              TOPIC_HARDWARE_EPS_BATTERY_TEMP_BR,
-                             pubTopic,
+                             pub_topic,
                              "RBSRBS");
     components_++;
   }
@@ -679,12 +680,12 @@ bool DdsRosBridge::ReadParams() {
   }
 
   if (use) {
-    if (!config_params_.GetStr("pub_topic_RCCRCC", &pubTopic)) {
+    if (!config_params_.GetStr("pub_topic_RCCRCC", &pub_topic)) {
       ROS_FATAL("DDS Bridge: pub topic RCCRCC not specified!");
       return false;
     }
 
-    BuildCommandConfigToCommandConfig(pubTopic, "RCCRCC");
+    BuildCommandConfigToCommandConfig(pub_topic, "RCCRCC");
     components_++;
   }
 
@@ -695,12 +696,13 @@ bool DdsRosBridge::ReadParams() {
   }
 
   if (use) {
-    if (!config_params_.GetStr("pub_topic_ROSCFRAPCF", &pubTopic)) {
+    if (!config_params_.GetStr("pub_topic_ROSCFRAPCF", &pub_topic)) {
       ROS_FATAL("DDS Bridge: pub topic ROSCFRAPCF not specified!");
       return false;
     }
 
-    BuildCompressedFileToRapid(TOPIC_MANAGEMENT_EXEC_PLAN, pubTopic,
+    BuildCompressedFileToRapid(TOPIC_MANAGEMENT_EXEC_PLAN,
+                               pub_topic,
                                "ROSCFRAPCF");
     components_++;
   }
@@ -712,12 +714,13 @@ bool DdsRosBridge::ReadParams() {
   }
 
   if (use) {
-    if (!config_params_.GetStr("pub_topic_RCFARCFA", &pubTopic)) {
+    if (!config_params_.GetStr("pub_topic_RCFARCFA", &pub_topic)) {
       ROS_FATAL("DDS Bridge: pub topic RCFARCFA not specified!");
       return false;
     }
 
-    BuildCompressedFileAckToRapid(TOPIC_MANAGEMENT_EXEC_CF_ACK, pubTopic,
+    BuildCompressedFileAckToRapid(TOPIC_MANAGEMENT_EXEC_CF_ACK,
+                                  pub_topic,
                                   "RCFARCFA");
     components_++;
   }
@@ -729,13 +732,14 @@ bool DdsRosBridge::ReadParams() {
   }
 
   if (use) {
-    if (!config_params_.GetStr("pub_topic_RCDCIRI", &pubTopic)) {
+    if (!config_params_.GetStr("pub_topic_RCDCIRI", &pub_topic)) {
       ROS_FATAL("DDS Bridge: pub topic RCDCIRI not specified!");
       return false;
     }
 
     BuildCompressedImageToImage(TOPIC_MANAGEMENT_IMG_SAMPLER_DOCK_CAM_STREAM,
-                                pubTopic, "RCDCIRI");
+                                pub_topic,
+                                "RCDCIRI");
     components_++;
   }
 
@@ -746,13 +750,14 @@ bool DdsRosBridge::ReadParams() {
   }
 
   if (use) {
-    if (!config_params_.GetStr("pub_topic_RCNCIRI", &pubTopic)) {
+    if (!config_params_.GetStr("pub_topic_RCNCIRI", &pub_topic)) {
       ROS_FATAL("DDS Bridge: pub topic RCNCIRI not specified!");
       return false;
     }
 
     BuildCompressedImageToImage(TOPIC_MANAGEMENT_IMG_SAMPLER_NAV_CAM_STREAM,
-                                pubTopic, "RCNCIRI");
+                                pub_topic,
+                                "RCNCIRI");
     components_++;
   }
 
@@ -763,13 +768,34 @@ bool DdsRosBridge::ReadParams() {
   }
 
   if (use) {
-    if (!config_params_.GetStr("pub_topic_RCSRCS", &pubTopic)) {
+    if (!config_params_.GetStr("pub_topic_RCSRCS", &pub_topic)) {
       ROS_FATAL("DDS Bridge: pub topic RCSRCS not specified!");
       return false;
     }
 
-    BuildCpuStateToRapid(TOPIC_MANAGEMENT_CPU_MONITOR_STATE, pubTopic,
-                                                                      "RCSRCS");
+    BuildCpuStateToRapid(TOPIC_MANAGEMENT_CPU_MONITOR_STATE,
+                         pub_topic,
+                         "RCSRCS");
+    components_++;
+  }
+
+  // ros_data_to_disk_rapid_data_to_disk => RDTDRDTD
+  if (!config_params_.GetBool("use_RDTDRDTD", &use)) {
+    ROS_FATAL("DDS Bridge: use RDTDRDTD not specified!");
+    return false;
+  }
+
+  if (use) {
+    if (!config_params_.GetStr("pub_topic_RDTDRDTD", &pub_topic)) {
+      ROS_FATAL("DDS Bridge: pub topic RDTDRDTD not specified!");
+      return false;
+    }
+
+    BuildDataToDiskStateToRapid(TOPIC_MANAGEMENT_DATA_BAGGER_STATE,
+                                TOPIC_MANAGEMENT_DATA_BAGGER_TOPICS,
+                                pub_topic,
+                                "RDTDRDTD");
+
     components_++;
   }
 
@@ -780,12 +806,13 @@ bool DdsRosBridge::ReadParams() {
   }
 
   if (use) {
-    if (!config_params_.GetStr("pub_topic_RDSRDS", &pubTopic)) {
+    if (!config_params_.GetStr("pub_topic_RDSRDS", &pub_topic)) {
       ROS_FATAL("DDS Bridge: pub topic RDSRDS not specified!");
       return false;
     }
 
-    BuildDiskStateToRapid(TOPIC_MANAGEMENT_DISK_MONITOR_STATE, pubTopic,
+    BuildDiskStateToRapid(TOPIC_MANAGEMENT_DISK_MONITOR_STATE,
+                          pub_topic,
                           "RDSRDS");
     components_++;
   }
@@ -797,12 +824,13 @@ bool DdsRosBridge::ReadParams() {
   }
 
   if (use) {
-    if (!config_params_.GetStr("pub_topic_RFCRFC", &pubTopic)) {
+    if (!config_params_.GetStr("pub_topic_RFCRFC", &pub_topic)) {
       ROS_FATAL("DDS Bridge: pub topic RFCRFC not specified!");
       return false;
     }
 
-    BuildFaultConfigToRapid(TOPIC_MANAGEMENT_SYS_MONITOR_CONFIG, pubTopic,
+    BuildFaultConfigToRapid(TOPIC_MANAGEMENT_SYS_MONITOR_CONFIG,
+                            pub_topic,
                             "RFCRFC");
     components_++;
   }
@@ -814,12 +842,13 @@ bool DdsRosBridge::ReadParams() {
   }
 
   if (use) {
-    if (!config_params_.GetStr("pub_topic_RFSRFS", &pubTopic)) {
+    if (!config_params_.GetStr("pub_topic_RFSRFS", &pub_topic)) {
       ROS_FATAL("DDS Bridge: pub topic RFSRFS not specified!");
       return false;
     }
 
-    BuildFaultStateToRapid(TOPIC_MANAGEMENT_SYS_MONITOR_STATE, pubTopic,
+    BuildFaultStateToRapid(TOPIC_MANAGEMENT_SYS_MONITOR_STATE,
+                           pub_topic,
                            "RFSRFS");
     components_++;
   }
@@ -831,12 +860,12 @@ bool DdsRosBridge::ReadParams() {
   }
 
   if (use) {
-    if (!config_params_.GetStr("pub_topic_RGCCRGCC", &pubTopic)) {
+    if (!config_params_.GetStr("pub_topic_RGCCRGCC", &pub_topic)) {
       ROS_FATAL("DDS Bridge: pub topic RGCCRGCC not specified!");
       return false;
     }
 
-    BuildGncFamCmdStateToRapid(TOPIC_GNC_CTL_COMMAND, pubTopic, "RGCCRGCC");
+    BuildGncFamCmdStateToRapid(TOPIC_GNC_CTL_COMMAND, pub_topic, "RGCCRGCC");
     components_++;
   }
 
@@ -847,12 +876,12 @@ bool DdsRosBridge::ReadParams() {
   }
 
   if (use) {
-    if (!config_params_.GetStr("pub_topic_RGCSRGCS", &pubTopic)) {
+    if (!config_params_.GetStr("pub_topic_RGCSRGCS", &pub_topic)) {
       ROS_FATAL("DDS Bridge: pub topic RGCSRGCS not specified!");
       return false;
     }
 
-    BuildGncControlStateToRapid(TOPIC_GNC_CTL_SHAPER, pubTopic, "RGCSRGCS");
+    BuildGncControlStateToRapid(TOPIC_GNC_CTL_SHAPER, pub_topic, "RGCSRGCS");
     components_++;
   }
 
@@ -863,12 +892,12 @@ bool DdsRosBridge::ReadParams() {
   }
 
   if (use) {
-    if (!config_params_.GetStr("pub_topic_RGCTRGCT", &pubTopic)) {
+    if (!config_params_.GetStr("pub_topic_RGCTRGCT", &pub_topic)) {
       ROS_FATAL("DDS Bridge: pub topic RGCTRGCT not specified!");
       return false;
     }
 
-    BuildGncControlStateToRapid(TOPIC_GNC_CTL_TRAJ, pubTopic, "RGCTRGCT");
+    BuildGncControlStateToRapid(TOPIC_GNC_CTL_TRAJ, pub_topic, "RGCTRGCT");
     components_++;
   }
 
@@ -879,7 +908,7 @@ bool DdsRosBridge::ReadParams() {
   }
 
   if (use) {
-    if (!config_params_.GetStr("pub_topic_RGSRGS", &pubTopic)) {
+    if (!config_params_.GetStr("pub_topic_RGSRGS", &pub_topic)) {
       ROS_FATAL("DDS Bridge: pub topic RGSRGS not specified!");
       return false;
     }
@@ -887,7 +916,7 @@ bool DdsRosBridge::ReadParams() {
     BuildGuestScienceToRapid(TOPIC_GUEST_SCIENCE_MANAGER_STATE,
                              TOPIC_GUEST_SCIENCE_MANAGER_CONFIG,
                              TOPIC_GUEST_SCIENCE_DATA,
-                             pubTopic,
+                             pub_topic,
                              "RGSRGS");
     components_++;
   }
@@ -899,12 +928,12 @@ bool DdsRosBridge::ReadParams() {
   }
 
   if (use) {
-    if (!config_params_.GetStr("pub_topic_RORP", &pubTopic)) {
+    if (!config_params_.GetStr("pub_topic_RORP", &pub_topic)) {
       ROS_FATAL("DDS Bridge: pub topic RORP not specified!");
       return false;
     }
 
-    BuildOdomToPosition(TOPIC_GNC_EKF, pubTopic, "RORP");
+    BuildOdomToPosition(TOPIC_GNC_EKF, pub_topic, "RORP");
     components_++;
   }
 
@@ -915,12 +944,13 @@ bool DdsRosBridge::ReadParams() {
   }
 
   if (use) {
-    if (!config_params_.GetStr("pub_topic_RPSRPS", &pubTopic)) {
+    if (!config_params_.GetStr("pub_topic_RPSRPS", &pub_topic)) {
       ROS_FATAL("DDS Bridge: pub topic RPSRPS not specified!");
       return false;
     }
 
-    BuildPlanStatusToPlanStatus(TOPIC_MANAGEMENT_EXEC_PLAN_STATUS, pubTopic,
+    BuildPlanStatusToPlanStatus(TOPIC_MANAGEMENT_EXEC_PLAN_STATUS,
+                                pub_topic,
                                 "RPSRPS");
     components_++;
   }
@@ -932,17 +962,17 @@ bool DdsRosBridge::ReadParams() {
   }
 
   if (use) {
-    if (!config_params_.GetStr("sub_topic_RSRTM", &subTopic)) {
+    if (!config_params_.GetStr("sub_topic_RSRTM", &sub_topic)) {
       ROS_FATAL("DDS Bridge: sub topic RSRTM not specified!");
       return false;
     }
 
-    if (!config_params_.GetStr("pub_topic_RSRTM", &pubTopic)) {
+    if (!config_params_.GetStr("pub_topic_RSRTM", &pub_topic)) {
       ROS_FATAL("DDS Bridge: pub topic RSRTM not specified!");
       return false;
     }
 
-    BuildStringToTextMessage(subTopic, pubTopic, "RSRTM");
+    BuildStringToTextMessage(sub_topic, pub_topic, "RSRTM");
     components_++;
   }
 
@@ -953,70 +983,70 @@ bool DdsRosBridge::ReadParams() {
   }
 
   if (use) {
-    if (!config_params_.GetStr("pub_topic_RTRT", &pubTopic)) {
+    if (!config_params_.GetStr("pub_topic_RTRT", &pub_topic)) {
       ROS_FATAL("DDS Bridge: pub topic RTRT not specified!");
       return false;
     }
 
-    BuildTelemetryToRapid(TOPIC_MANAGEMENT_CAMERA_STATE, pubTopic, "RTRT");
+    BuildTelemetryToRapid(TOPIC_MANAGEMENT_CAMERA_STATE, pub_topic, "RTRT");
     components_++;
   }
 
   // Read in the telemetery rates so the bridge knows how often to publish
   // the telemmetry messages
   float temp_rate;
-  if (m_rosSubRapidPubs_.count("RTRT") == 0) {
+  if (ros_sub_rapid_pubs_.count("RTRT") == 0) {
     ROS_ERROR("DDS Bridge: Telemetry msg stuff not added and it is needed!");
     return false;
   }
   ff::RosTelemetryRapidTelemetry *RTRT =
                                   static_cast<ff::RosTelemetryRapidTelemetry *>
-                                  (m_rosSubRapidPubs_["RTRT"].get());
+                                  (ros_sub_rapid_pubs_["RTRT"].get());
 
-  if (m_rosSubRapidPubs_.count("RCSRCS") == 0) {
+  if (ros_sub_rapid_pubs_.count("RCSRCS") == 0) {
     ROS_ERROR("DDS Bridge: Cpu state stuff not added and it is needed!");
     return false;
   }
   ff::RosCpuStateToRapid *RCSR = static_cast<ff::RosCpuStateToRapid *>
-                                          (m_rosSubRapidPubs_["RCSRCS"].get());
+                                          (ros_sub_rapid_pubs_["RCSRCS"].get());
 
-  if (m_rosSubRapidPubs_.count("RDSRDS") == 0) {
+  if (ros_sub_rapid_pubs_.count("RDSRDS") == 0) {
     ROS_ERROR("DDS Bridge: Disk state stuff not added and it is needed!");
     return false;
   }
   ff::RosDiskStateToRapid *RDSR = static_cast<ff::RosDiskStateToRapid *>
-                                          (m_rosSubRapidPubs_["RDSRDS"].get());
+                                          (ros_sub_rapid_pubs_["RDSRDS"].get());
 
-  if (m_rosSubRapidPubs_.count("RGCCRGCC") == 0) {
+  if (ros_sub_rapid_pubs_.count("RGCCRGCC") == 0) {
     ROS_ERROR("DDS Bridge: GNC control command stuff not added and is needed!");
     return false;
   }
   ff::RosGncFamCmdStateToRapid *RGCC =
                                     static_cast<ff::RosGncFamCmdStateToRapid *>
-                                    (m_rosSubRapidPubs_["RGCCRGCC"].get());
+                                    (ros_sub_rapid_pubs_["RGCCRGCC"].get());
 
-  if (m_rosSubRapidPubs_.count("RGCSRGCS") == 0) {
+  if (ros_sub_rapid_pubs_.count("RGCSRGCS") == 0) {
     ROS_ERROR("DDS Bridge: GNC control shaper stuff not added and is needed!");
     return false;
   }
   ff::RosGncControlStateToRapid *RGCS =
                                     static_cast<ff::RosGncControlStateToRapid *>
-                                    (m_rosSubRapidPubs_["RGCSRGCS"].get());
+                                    (ros_sub_rapid_pubs_["RGCSRGCS"].get());
 
-  if (m_rosSubRapidPubs_.count("RGCTRGCT") == 0) {
+  if (ros_sub_rapid_pubs_.count("RGCTRGCT") == 0) {
     ROS_ERROR("DDS Bridge: GNC control trajectory not added and it is needed!");
     return false;
   }
   ff::RosGncControlStateToRapid *RGCT =
                                     static_cast<ff::RosGncControlStateToRapid *>
-                                    (m_rosSubRapidPubs_["RGCTRGCT"].get());
+                                    (ros_sub_rapid_pubs_["RGCTRGCT"].get());
 
-  if (m_rosSubRapidPubs_.count("RORP") == 0) {
+  if (ros_sub_rapid_pubs_.count("RORP") == 0) {
     ROS_ERROR("DDS Bridge: Odometry stuff not added and it is needed!");
     return false;
   }
   ff::RosOdomRapidPosition *RORP = static_cast<ff::RosOdomRapidPosition *>
-                                            (m_rosSubRapidPubs_["RORP"].get());
+                                            (ros_sub_rapid_pubs_["RORP"].get());
 
   if (!config_params_.GetReal("comm_status_rate", &temp_rate)) {
     ROS_FATAL("DDS Bridge: comm state rate not specified!");
@@ -1069,13 +1099,13 @@ bool DdsRosBridge::ReadParams() {
     return false;
   }
 
-  if (m_rosSubRapidPubs_.count("RBSRBS") == 0) {
+  if (ros_sub_rapid_pubs_.count("RBSRBS") == 0) {
     ROS_ERROR("DDS Bridge: Battery msg stuff not added and it is needed!");
     return false;
   }
 
   ff::RosBatteryStateToRapid *RBSRBS = static_cast<ff::RosBatteryStateToRapid *>
-                                          (m_rosSubRapidPubs_["RBSRBS"].get());
+                                          (ros_sub_rapid_pubs_["RBSRBS"].get());
 
   RBSRBS->SetBatteryTimeMultiple(multiple);
 

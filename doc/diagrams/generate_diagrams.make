@@ -9,7 +9,7 @@ gen_dir = ./exported
 
 #uml_src = $(wildcard *.puml)
 uml_src = OperatingState.puml MobilityState.puml PlanExecutionState.puml \
-					EpsState.puml deployment.puml architecture.puml notations.puml
+		EpsState.puml deployment.puml network.puml architecture.puml notations.puml
 
 uml_svg = $(uml_src:%.puml=$(gen_dir)/%.svg)
 

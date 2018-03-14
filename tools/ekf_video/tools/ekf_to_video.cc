@@ -19,16 +19,20 @@
 #include <common/init.h>
 #include <ekf_video/ekf_bag_video.h>
 
-int main(int argc, char ** argv) {
-  common::InitFreeFlyerApplication(&argc, &argv);
+#include <QtCore>
+#include <QtGui>
 
-  if (argc < 3) {
+int main(int argc, char *argv[]) {
+  QGuiApplication a(argc, argv);
+  if (argc < 4) {
     LOG(INFO) << "Usage: " << argv[0] << " map.map bag.bag output.mp4";
     exit(0);
   }
 
-  ekf_video::EkfBagVideo bag(argv[2], argv[1], argv[3]);
+  // have to run in this strange way because Qt requires a QApplication
+  // This will run the task from the application event loop.
+  QTimer::singleShot(0, [argv]() {ekf_video::EkfBagVideo bag(argv[2], argv[1], argv[3]); bag.Run(); exit(0);});
 
-  bag.Run();
+  return a.exec();
 }
 

@@ -29,7 +29,6 @@
 #include <geometry_msgs/TransformStamped.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/TwistStamped.h>
-#include <geometry_msgs/AccelStamped.h>
 
 // STL includes
 #include <string>
@@ -40,13 +39,15 @@ namespace gazebo {
 // the forced to be applied to the rigid body
 class GazeboModelPluginTruth : public FreeFlyerModelPlugin {
  public:
-  GazeboModelPluginTruth() : FreeFlyerModelPlugin("truth", false), rate_(62.5) {}
+  GazeboModelPluginTruth() :
+    FreeFlyerModelPlugin("gazebo_truth"), rate_(62.5) {}
 
   virtual ~GazeboModelPluginTruth() {}
 
  protected:
   // Called when the plugin is loaded into the simulator
-  void LoadCallback(ros::NodeHandle *nh, physics::ModelPtr model, sdf::ElementPtr sdf) {
+  void LoadCallback(ros::NodeHandle *nh,
+    physics::ModelPtr model, sdf::ElementPtr sdf) {
     // If we specify a frame name different to our sensor tag name
     if (sdf->HasElement("rate"))
       rate_ = sdf->Get<double>("rate");
@@ -57,7 +58,9 @@ class GazeboModelPluginTruth : public FreeFlyerModelPlugin {
 
     // Ground truth
     pub_truth_pose_ = nh->advertise<geometry_msgs::PoseStamped>(
-      TOPIC_LOCALIZATION_TRUTH, 1);
+      TOPIC_LOCALIZATION_TRUTH, 100);
+    pub_truth_twist_ = nh->advertise<geometry_msgs::TwistStamped>(
+      TOPIC_LOCALIZATION_TRUTH_TWIST, 100);
 
     // Called before each iteration of simulated world update
     next_tick_ = GetWorld()->GetSimTime();
@@ -94,6 +97,15 @@ class GazeboModelPluginTruth : public FreeFlyerModelPlugin {
       ros_truth_pose_.pose.orientation.z = GetModel()->GetWorldPose().rot.z;
       ros_truth_pose_.pose.orientation.w = GetModel()->GetWorldPose().rot.w;
       pub_truth_pose_.publish(ros_truth_pose_);
+      // Twist
+      ros_truth_twist_.header = msg_.header;
+      ros_truth_twist_.twist.linear.x = GetModel()->GetWorldLinearVel().x;
+      ros_truth_twist_.twist.linear.y = GetModel()->GetWorldLinearVel().y;
+      ros_truth_twist_.twist.linear.z = GetModel()->GetWorldLinearVel().z;
+      ros_truth_twist_.twist.angular.x = GetModel()->GetWorldAngularVel().x;
+      ros_truth_twist_.twist.angular.y = GetModel()->GetWorldAngularVel().y;
+      ros_truth_twist_.twist.angular.z = GetModel()->GetWorldAngularVel().z;
+      pub_truth_twist_.publish(ros_truth_twist_);
     }
   }
 
@@ -104,8 +116,8 @@ class GazeboModelPluginTruth : public FreeFlyerModelPlugin {
   event::ConnectionPtr update_;
   geometry_msgs::PoseStamped ros_truth_pose_;
   geometry_msgs::TwistStamped ros_truth_twist_;
-  geometry_msgs::AccelStamped ros_truth_accel_;
   ros::Publisher pub_truth_pose_;
+  ros::Publisher pub_truth_twist_;
 };
 
 // Register this plugin with the simulator

@@ -40,7 +40,7 @@ Fam::Fam(ros::NodeHandle* nh) : inertia_received_(false) {
   flight_mode_sub_ = nh->subscribe(
     TOPIC_MOBILITY_FLIGHT_MODE, 1, &Fam::FlightModeCallback, this);
   inertia_sub_ = nh->subscribe(
-    TOPIC_MANAGEMENT_INERTIA, 1, &Fam::InertiaCallback, this);
+    TOPIC_MOBILITY_INERTIA, 1, &Fam::InertiaCallback, this);
 
   ctl_sub_ = nh->subscribe(TOPIC_GNC_CTL_COMMAND, 5, &Fam::CtlCallBack, this, ros::TransportHints().tcpNoDelay());
 }

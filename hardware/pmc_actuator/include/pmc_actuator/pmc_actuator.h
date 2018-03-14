@@ -21,6 +21,7 @@
 
 #include <i2c/i2c_new.h>
 
+#include <string>
 #include <atomic>
 #include <mutex>
 #include <thread>
@@ -29,59 +30,72 @@ namespace pmc_actuator {
 
 enum CmdMode { SHUTDOWN = 0, NORMAL = 1, RESTART = 2 };
 
-// Number of nozzles in each PMC.
-constexpr int kNumNozzles = 6;
+////////////////////////////////////////////////////////////////////////////////
+// This must be kept in sync with the protocol declared in the PMC firmware   //
+////////////////////////////////////////////////////////////////////////////////
 
-/**
- * Data structure represents the command packet - LLP to PMC.
- */
-typedef struct _Command {
-  uint8_t motor_speed;                    // Speed of the motor
-  uint8_t nozzle_positions[kNumNozzles];  // Nozzle positions (0 - 255)
-  uint8_t mode;                           // Mode
-  uint8_t command_id;                     // Command ID
-  uint8_t checksum;                       // Checksum
+constexpr int kNumNozzles = 6;
+constexpr size_t kCommandMsgLength = 10;
+constexpr size_t kTemperatureSensorsCount = 7;
+constexpr size_t kTelemetryMsgLength = 16;
+constexpr size_t kGitHashLength = 40;
+constexpr size_t kDateLength = 17;
+constexpr size_t kMaxMetadataLength = 64;
+constexpr uint8_t kMetadataVersionType = 0x1;
+
+typedef struct __attribute__((packed)) {
+  uint8_t motor_speed;
+  uint8_t nozzle_positions[kNumNozzles];
+  uint8_t mode;
+  uint8_t command_id;
+  uint8_t checksum;
 } Command;
 
-constexpr size_t kCommandMsgLength = 10;
+typedef union {
+  uint8_t asUint8;
+  struct {
+    uint8_t mode          :2;
+    uint8_t stateStatus   :3;
+    uint8_t mcDisabled    :1;
+    uint8_t errBadCRC     :1;
+    uint8_t errNozCmdOOR  :1;
+  };
+} Status1;
 
-constexpr size_t kTemperatureSensorsCount = 7;
+typedef union {
+  uint8_t asUint8;
+  struct {
+    uint8_t errOvrCurrent :1;
+    uint8_t speedCamState :1;
+    uint8_t control       :1;
+    uint8_t metadata      :1;
+    uint8_t reserved      :4;
+  };
+} Status2;
 
-/**
- * Data structure represents the telemetry packet - PMC to LLP.
- */
-typedef struct _Telemetry {
-  // Speed of the motor.
-  // Unitless. 0-255
+typedef struct __attribute__((packed)) {
   uint8_t motor_speed;
-
-  // Current consumption.
   uint8_t motor_current;
-
-  // V6 ? current
   uint8_t v6_current;
-
-  // Pressure
-  // Unitless?
   uint16_t pressure;
-
-  // Temperatures
   uint8_t temperatures[kTemperatureSensorsCount];
-
-  // Status 1
-  uint8_t status_1;
-
-  // Status 2
-  uint8_t status_2;
-
-  // Command ID
+  Status1 status_1;
+  Status2 status_2;
   uint8_t command_id;
-
-  // Checksum_
   uint8_t checksum;
 } Telemetry;
 
-constexpr size_t kTelemetryMsgLength = 16;
+// A metadata frame containing the git hash and time of compilation
+typedef struct  __attribute__((packed)) {
+    uint8_t type;        // 0x1 for METADATA_FIRMWARE
+    uint8_t hash[20];    // 20 byte hash
+    uint32_t time;       // Unix timestamp
+    uint8_t checksum;
+} MetadataVersion;
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 
 /**
  * Base class for the PMC module
@@ -96,6 +110,13 @@ class PmcActuatorBase {
 
   virtual i2c::Address GetAddress() = 0;
 
+  // Get the firmware version
+  virtual bool GetFirmwareHash(std::string & hash) = 0;
+
+  // Get the firmware date
+  virtual bool GetFirmwareTime(std::string & date) = 0;
+
+  // Print out telemetry
   void PrintTelemetry(std::ostream &out, const Telemetry &telem);
 };
 
@@ -105,6 +126,10 @@ class PmcActuatorBase {
 class PmcActuator : public PmcActuatorBase {
  private:
   i2c::Device i2c_dev_;
+  bool metadata_received_;                        // Do we have valid metadata?
+  uint16_t metadata_index_;                       // Current metadata bit
+  uint8_t metadata_buffer_[kMaxMetadataLength];   // Buffer for metadata
+  MetadataVersion metadata_;                      // Last complete metadata
 
  public:
   explicit PmcActuator(const i2c::Device &i2c_dev);
@@ -116,6 +141,13 @@ class PmcActuator : public PmcActuatorBase {
   // Gets the telemetry packet from the PMC over I2C.
   bool GetTelemetry(Telemetry *telemetry);
 
+  // Get the firmware version
+  bool GetFirmwareHash(std::string & hash);
+
+  // Get the firmware date
+  bool GetFirmwareTime(std::string & date);
+
+  // Get the i2c address
   i2c::Address GetAddress();
 
  private:
@@ -135,8 +167,19 @@ class PmcActuatorStub : public PmcActuatorBase {
                            std::fstream &telem_out);
   virtual ~PmcActuatorStub();
 
+  // Sends the command packet to the PMC over I2C.
   bool SendCommand(const Command &command);
+
+  // Gets the telemetry packet from the PMC over I2C.
   bool GetTelemetry(Telemetry *telemetry);
+
+  // Get the firmware version
+  bool GetFirmwareHash(std::string & hash);
+
+  // Get the firmware date
+  bool GetFirmwareTime(std::string & date);
+
+
   i2c::Address GetAddress();
 };
 

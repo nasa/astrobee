@@ -33,13 +33,15 @@
 
 // STL includes
 #include <string>
+#include <thread>
 
 namespace gazebo {
 
 class GazeboModelPluginLaser : public FreeFlyerModelPlugin {
  public:
-  GazeboModelPluginLaser() : FreeFlyerModelPlugin(NODE_LASER),
+  GazeboModelPluginLaser() : FreeFlyerModelPlugin("laser"),
     rate_(10.0), range_(50.0), width_(0.0025) {}
+
   virtual ~GazeboModelPluginLaser() {}
 
  protected:
@@ -114,30 +116,25 @@ class GazeboModelPluginLaser : public FreeFlyerModelPlugin {
     msg_.set_parent_name(GetModel()->GetLink()->GetScopedName());
     msg_.set_visible(false);
 
-    // Called before each iteration of simulated world update
-    next_tick_ = GetWorld()->GetSimTime();
-    update_ = event::Events::ConnectWorldUpdateBegin(
-      std::bind(&GazeboModelPluginLaser::UpdateCallback, this));
-
     // Advertise the presence of the laser
     srv_ = nh->advertiseService(SERVICE_HARDWARE_LASER_ENABLE,
       &GazeboModelPluginLaser::ToggleCallback, this);
 
     // Defer the extrinsics setup to allow plugins to load
-    timer_ = nh->createTimer(ros::Duration(1.0),
-      &GazeboModelPluginLaser::ExtrinsicsCallback, this, true, true);
+    connection_ = event::Events::ConnectWorldUpdateEnd(std::bind(
+      &GazeboModelPluginLaser::ExtrinsicsCallback, this));
   }
 
   // Manage the extrinsics based on the sensor type
-  void ExtrinsicsCallback(const ros::TimerEvent&) {
+  void ExtrinsicsCallback() {
     // Create a buffer and listener for TF2 transforms
-    tf2_ros::Buffer buffer;
-    tf2_ros::TransformListener listener(buffer);
+    static tf2_ros::Buffer buffer;
+    static tf2_ros::TransformListener listener(buffer);
     // Get extrinsics from framestore
     try {
       // Lookup the transform for this sensor
       geometry_msgs::TransformStamped tf = buffer.lookupTransform(
-        GetFrame("body"), GetFrame("laser"), ros::Time(0), ros::Duration(60.0));
+        GetFrame("body"), GetFrame("laser"), ros::Time(0));
       // Handle the transform for all sensor types
       pose_ = pose_ + ignition::math::Pose3d(
         tf.transform.translation.x,
@@ -147,6 +144,12 @@ class GazeboModelPluginLaser : public FreeFlyerModelPlugin {
         tf.transform.rotation.x,
         tf.transform.rotation.y,
         tf.transform.rotation.z);
+      // Kill the connection
+      event::Events::DisconnectWorldUpdateEnd(connection_);
+      // Update the connection
+      next_tick_ = GetWorld()->GetSimTime();
+      connection_ = event::Events::ConnectWorldUpdateBegin(
+        std::bind(&GazeboModelPluginLaser::UpdateCallback, this));
       gzmsg << "Extrinsics set for laser\n";
     } catch (tf2::TransformException &ex) {
       gzmsg << "No extrinsics for laser\n";
@@ -196,7 +199,7 @@ class GazeboModelPluginLaser : public FreeFlyerModelPlugin {
   transport::NodePtr gz_;
   transport::PublisherPtr pub_;
   msgs::Visual msg_;
-  event::ConnectionPtr update_;
+  event::ConnectionPtr connection_;
   ros::Timer timer_;
   ros::NodeHandle nh_;
   ros::ServiceServer srv_;

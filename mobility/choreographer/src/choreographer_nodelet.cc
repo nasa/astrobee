@@ -47,6 +47,7 @@
 // Services
 #include <ff_msgs/RegisterPlanner.h>
 #include <ff_msgs/SetState.h>
+#include <ff_msgs/SetInertia.h>
 
 // Actions
 #include <ff_msgs/MotionAction.h>
@@ -69,6 +70,7 @@ namespace choreographer {
 // Convenience declarations
 using STATE = ff_msgs::MotionState;
 using RESPONSE = ff_msgs::MotionResult;
+using FSM = ff_util::FSM;
 
 // Data structure for managing planner registration
 typedef std::map<std::string, std::string > PlannerInfo;
@@ -78,27 +80,28 @@ typedef std::map<std::string,
 // The choreograph class manages core logic for mobility
 class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
  public:
-  enum ChoreographerEvent {
-    READY,                             // System is initialized
-    GOAL_EXEC,                         // New execute command
-    GOAL_MOVE,                         // New move command
-    GOAL_STOP,                         // New stop command
-    GOAL_IDLE,                         // New idle command
-    GOAL_PREP,                         // New prep command
-    GOAL_CANCEL,                       // Cancel existing goal
-    VALIDATE_SUCCESS,                  // Segment validation success
-    VALIDATE_FAILED,                   // Segment validation failed
-    PLAN_SUCCESS,                      // Segment plan success
-    PLAN_FAILED,                       // Segment plan failed
-    PMC_READY,                         // PMC is ramped and ready
-    PMC_TIMEOUT,                       // PMC has timed out
-    CONTROL_SUCCESS,                   // Control success
-    CONTROL_FAILED,                    // Control failure
-    TOLERANCE_POS,                     // Tolerance failure
-    TOLERANCE_ATT,                     // Tolerance failure
-    TOLERANCE_VEL,                     // Tolerance failure
-    TOLERANCE_OMEGA,                   // Tolerance failure
-    OBSTACLE_DETECTED                  // Obstacle detected
+  // Bitmask of all events
+  enum : FSM::Event {
+    READY             = (1<<0),               // System is initialized
+    GOAL_EXEC         = (1<<1),               // New execute command
+    GOAL_MOVE         = (1<<2),               // New move command
+    GOAL_STOP         = (1<<3),               // New stop command
+    GOAL_IDLE         = (1<<4),               // New idle command
+    GOAL_PREP         = (1<<5),               // New prep command
+    GOAL_CANCEL       = (1<<6),               // Cancel existing goal
+    VALIDATE_SUCCESS  = (1<<7),               // Segment validation success
+    VALIDATE_FAILED   = (1<<8),               // Segment validation failed
+    PLAN_SUCCESS      = (1<<9),               // Segment plan success
+    PLAN_FAILED       = (1<<10),              // Segment plan failed
+    PMC_READY         = (1<<11),              // PMC is ramped and ready
+    PMC_TIMEOUT       = (1<<12),              // PMC has timed out
+    CONTROL_SUCCESS   = (1<<13),              // Control success
+    CONTROL_FAILED    = (1<<14),              // Control failure
+    TOLERANCE_POS     = (1<<15),              // Tolerance failure
+    TOLERANCE_ATT     = (1<<16),              // Tolerance failure
+    TOLERANCE_VEL     = (1<<17),              // Tolerance failure
+    TOLERANCE_OMEGA   = (1<<18),              // Tolerance failure
+    OBSTACLE_DETECTED = (1<<19)               // Obstacle detected
   };
 
   // The various types of control
@@ -108,34 +111,25 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
   ChoreographerNodelet() : ff_util::FreeFlyerNodelet(NODE_CHOREOGRAPHER, true),
     fsm_(STATE::INITIALIZING, std::bind(&ChoreographerNodelet::UpdateCallback,
       this, std::placeholders::_1, std::placeholders::_2)) {
-    // Add the state transition lambda functions - refer to the FSM diagram
     // [0]
-    fsm_.Add(READY,                               // These events move...
-      STATE::INITIALIZING,                        // The current state to...
-      [this](ChoreographerEvent const& event) -> int32_t {
-        if (!Control(STOP))
-          AssertFault("INITIALIZATION_FAULT", "Cannot call Stop() action");
-        return STATE::WAITING_FOR_STOP;            // The next state...
-      });
-    // [1]
-    fsm_.Add(CONTROL_SUCCESS, CONTROL_FAILED,     // These events move...
-      STATE::WAITING_FOR_STOP,                    // The current state to...
-      [this](ChoreographerEvent const& event) -> int32_t {
-        if (event == CONTROL_FAILED)
-          AssertFault("INITIALIZATION_FAULT", "Stop() goal failed on init");
-        return STATE::WAITING;
+    fsm_.Add(STATE::INITIALIZING,
+      READY,
+      [this](FSM::Event const& event) -> FSM::State {
+        if (!Control(IDLE))
+          AssertFault("INITIALIZATION_FAULT", "Cannot call Idle() action");
+        return STATE::IDLE;
       });
     // [2]
-    fsm_.Add(GOAL_EXEC,                           // These events move...
-      STATE::WAITING,                             // The current state to...
-      [this](ChoreographerEvent const& event) -> int32_t {
+    fsm_.Add(STATE::STOPPED, STATE::IDLE,
+      GOAL_EXEC,
+      [this](FSM::Event const& event) -> FSM::State {
         // Assemble a simple planning request
         geometry_msgs::PoseStamped pose;
         if (!GetRobotPose(pose))
           return Result(RESPONSE::CANNOT_QUERY_ROBOT_POSE);
         // Get the robot pose
         if (ff_util::FlightUtil::WithinTolerance(
-          flight_mode_, segment_.front().pose, pose.pose)) {
+          goal_flight_mode_, segment_.front().pose, pose.pose)) {
           // If we need to validate
           if (cfg_.Get<bool>("enable_validation")) {
             if (!Validate(segment_))
@@ -169,9 +163,9 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
         return Result(RESPONSE::NOT_ON_FIRST_POSE);
       });
     // [3a]
-    fsm_.Add(PLAN_SUCCESS,                        // These events move...
-      STATE::BOOTSTRAPPING,                       // The current state to...
-      [this](ChoreographerEvent const& event) -> int32_t {
+    fsm_.Add(STATE::BOOTSTRAPPING,
+      PLAN_SUCCESS,
+      [this](FSM::Event const& event) -> FSM::State {
         // If we need to validate
         if (cfg_.Get<bool>("enable_validation")) {
           if (!Validate(segment_))
@@ -184,17 +178,17 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
         return STATE::CONTROLLING;
       });
     // [4]
-    fsm_.Add(PLAN_FAILED, GOAL_CANCEL,            // These events move...
-      STATE::BOOTSTRAPPING,                       // The current state to...
-      [this](ChoreographerEvent const& event) -> int32_t {
+    fsm_.Add(STATE::BOOTSTRAPPING,
+      PLAN_FAILED | GOAL_CANCEL,
+      [this](FSM::Event const& event) -> FSM::State {
         if (event == GOAL_CANCEL)
           return Result(RESPONSE::CANCELLED);
         return Result(RESPONSE::PLAN_FAILED);
       });
     // [5]
-    fsm_.Add(GOAL_MOVE,                           // These events move...
-      STATE::WAITING,                             // The current state to...
-      [this](ChoreographerEvent const& event) -> int32_t {
+    fsm_.Add(STATE::STOPPED, STATE::IDLE,
+      GOAL_MOVE,
+      [this](FSM::Event const& event) -> FSM::State {
         // Assemble a simple planning request
         geometry_msgs::PoseStamped pose;
         // Get the robot pose
@@ -205,7 +199,7 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
         std::vector<geometry_msgs::PoseStamped>::iterator it;
         for (it = states_.begin(); it != states_.end() && aligned; ++it)
           aligned &= ff_util::FlightUtil::WithinTolerance(
-            flight_mode_, pose.pose, it->pose);
+            goal_flight_mode_, pose.pose, it->pose);
         if (aligned)
           return Result(RESPONSE::ALREADY_THERE);
         // Add the current pose to the front of the states
@@ -216,9 +210,9 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
         return STATE::PLANNING;
       });
     // [6]
-    fsm_.Add(PLAN_SUCCESS,                        // These events move...
-      STATE::PLANNING,                            // The current state to...
-      [this](ChoreographerEvent const& event) -> int32_t {
+    fsm_.Add(STATE::PLANNING,
+      PLAN_SUCCESS,
+      [this](FSM::Event const& event) -> FSM::State {
         // If we need to validate
         if (cfg_.Get<bool>("enable_validation")) {
           if (!Validate(segment_))
@@ -234,17 +228,17 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
         return STATE::CONTROLLING;
       });
     // [7]
-    fsm_.Add(PLAN_FAILED, GOAL_CANCEL,            // These events move...
-      STATE::PLANNING,                            // The current state to...
-      [this](ChoreographerEvent const& event) -> int32_t {
+    fsm_.Add(STATE::PLANNING,
+      PLAN_FAILED | GOAL_CANCEL,
+      [this](FSM::Event const& event) -> FSM::State {
         if (event == GOAL_CANCEL)
           return Result(RESPONSE::CANCELLED);
         return Result(RESPONSE::PLAN_FAILED);
       });
     // [8]
-    fsm_.Add(VALIDATE_SUCCESS,                    // These events move...
-      STATE::VALIDATING,                          // The current state to...
-      [this](ChoreographerEvent const& event) -> int32_t {
+    fsm_.Add(STATE::VALIDATING,
+      VALIDATE_SUCCESS,
+      [this](FSM::Event const& event) -> FSM::State {
         // If this returns false then we are already on the correct speed gain
         if (FlightMode())
           return STATE::PREPARING;
@@ -254,17 +248,17 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
         return STATE::CONTROLLING;
       });
     // [9]
-    fsm_.Add(VALIDATE_FAILED, GOAL_CANCEL,        // These events move...
-      STATE::VALIDATING,                          // The current state to...
-      [this](ChoreographerEvent const& event) -> int32_t {
+    fsm_.Add(STATE::VALIDATING,
+      VALIDATE_FAILED | GOAL_CANCEL,
+      [this](FSM::Event const& event) -> FSM::State {
         if (event == GOAL_CANCEL)
           return Result(RESPONSE::CANCELLED);
         return Result(RESPONSE::VALIDATE_FAILED);
       });
     // [10]
-    fsm_.Add(PLAN_SUCCESS,                        // These events move...
-      STATE::REPLANNING,                          // The current state to...
-      [this](ChoreographerEvent const& event) -> int32_t {
+    fsm_.Add(STATE::REPLANNING,
+      PLAN_SUCCESS,
+      [this](FSM::Event const& event) -> FSM::State {
         // If we need to validate the segment
         if (cfg_.Get<bool>("enable_validation")) {
           if (!Validate(segment_))
@@ -277,51 +271,51 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
         return STATE::CONTROLLING;
       });
     // [11]
-    fsm_.Add(VALIDATE_SUCCESS,                    // These events move...
-      STATE::REVALIDATING,                        // The current state to...
-      [this](ChoreographerEvent const& event) -> int32_t {
+    fsm_.Add(STATE::REVALIDATING,
+      VALIDATE_SUCCESS,
+      [this](FSM::Event const& event) -> FSM::State {
         // If we send control directly
         if (!Control(NOMINAL, segment_))
           return Result(RESPONSE::CONTROL_FAILED);
         return STATE::CONTROLLING;
       });
     // [12]
-    fsm_.Add(VALIDATE_FAILED, GOAL_CANCEL,        // These events move...
-      STATE::REVALIDATING,                        // The current state to...
-      [this](ChoreographerEvent const& event) -> int32_t {
+    fsm_.Add(STATE::REVALIDATING,
+      VALIDATE_FAILED | GOAL_CANCEL,
+      [this](FSM::Event const& event) -> FSM::State {
         Control(STOP);
         if (event == GOAL_CANCEL)
           return Result(RESPONSE::CANCELLED);
         return Result(RESPONSE::REVALIDATE_FAILED);
       });
     // [13]
-    fsm_.Add(CONTROL_SUCCESS,                     // These events move...
-      STATE::CONTROLLING,                         // The current state to...
-      [this](ChoreographerEvent const& event) -> int32_t {
-        return Result(RESPONSE::SUCCESS);         // The next state...
+    fsm_.Add(STATE::CONTROLLING,
+      CONTROL_SUCCESS,
+      [this](FSM::Event const& event) -> FSM::State {
+        return Result(RESPONSE::SUCCESS);
       });
     // [14]
-    fsm_.Add(PLAN_FAILED, GOAL_CANCEL,            // These events move...
-      STATE::REPLANNING,                          // The current state to...
-      [this](ChoreographerEvent const& event) -> int32_t {
+    fsm_.Add(STATE::REPLANNING,
+      PLAN_FAILED | GOAL_CANCEL,
+      [this](FSM::Event const& event) -> FSM::State {
         Control(STOP);
         if (event == GOAL_CANCEL)
           return Result(RESPONSE::CANCELLED);
         return Result(RESPONSE::REPLAN_FAILED);
       });
     // [15]
-    fsm_.Add(CONTROL_FAILED, GOAL_CANCEL,         // These events move...
-      STATE::CONTROLLING,                         // The current state to...
-      [this](ChoreographerEvent const& event) -> int32_t {
+    fsm_.Add(STATE::CONTROLLING,
+      CONTROL_FAILED | GOAL_CANCEL,
+      [this](FSM::Event const& event) -> FSM::State {
         Control(STOP);
         if (event == GOAL_CANCEL)
           return Result(RESPONSE::CANCELLED);
         return Result(RESPONSE::CONTROL_FAILED);
       });
     // [28]
-    fsm_.Add(TOLERANCE_POS, TOLERANCE_ATT, TOLERANCE_VEL, TOLERANCE_OMEGA,
-      STATE::CONTROLLING,
-      [this](ChoreographerEvent const& event) -> int32_t {
+    fsm_.Add(STATE::CONTROLLING,
+      TOLERANCE_POS | TOLERANCE_ATT | TOLERANCE_VEL | TOLERANCE_OMEGA,
+      [this](FSM::Event const& event) -> FSM::State {
         switch (event) {
         case TOLERANCE_POS:
           return Result(RESPONSE::TOLERANCE_VIOLATION_POSITION);
@@ -337,9 +331,9 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
         return Result(RESPONSE::CONTROL_FAILED);
       });
     // [16]
-    fsm_.Add(OBSTACLE_DETECTED,                   // These events move...
-      STATE::CONTROLLING,                         // The current state to...
-      [this](ChoreographerEvent const& event) -> int32_t {
+    fsm_.Add(STATE::CONTROLLING,
+      OBSTACLE_DETECTED,
+      [this](FSM::Event const& event) -> FSM::State {
         // If we need to validate the segment
         if (cfg_.Get<bool>("enable_replanning")) {
           // Find a suitable handover point between now and the collision time
@@ -369,91 +363,94 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
             return Result(RESPONSE::PLAN_FAILED);
           return STATE::REPLANNING;
         }
+        // Always stop for safety
+        if (!Control(STOP))
+          return Result(RESPONSE::CONTROL_FAILED);
         // If replanning is disabled then this is just an obstacle detection
         return Result(RESPONSE::OBSTACLE_DETECTED);
       });
     // [17]
-    fsm_.Add(GOAL_STOP,                           // These events move...
-      STATE::WAITING,                             // The current state to...
-      [this](ChoreographerEvent const& event) -> int32_t {
+    fsm_.Add(STATE::STOPPED, STATE::IDLE,
+      GOAL_STOP,
+      [this](FSM::Event const& event) -> FSM::State {
         // Force the flight mode  change and immediately send control
         FlightMode();
         if (!Control(STOP))
           return Result(RESPONSE::CONTROL_FAILED);
-        return STATE::STOPPING;                   // The next state...
+        return STATE::STOPPING;
       });
     // [18]
-    fsm_.Add(CONTROL_SUCCESS,                     // These events move...
-      STATE::STOPPING,                            // The current state to...
-      [this](ChoreographerEvent const& event) -> int32_t {
-        return Result(RESPONSE::SUCCESS);         // The next state...
+    fsm_.Add(STATE::STOPPING,
+      CONTROL_SUCCESS,
+      [this](FSM::Event const& event) -> FSM::State {
+        return Result(RESPONSE::SUCCESS);
       });
     // [19]
-    fsm_.Add(CONTROL_FAILED, GOAL_CANCEL,         // These events move...
-      STATE::STOPPING,                            // The current state to...
-      [this](ChoreographerEvent const& event) -> int32_t {
+    fsm_.Add(STATE::STOPPING,
+      CONTROL_FAILED | GOAL_CANCEL,
+      [this](FSM::Event const& event) -> FSM::State {
         if (event == GOAL_CANCEL)
           return Result(RESPONSE::CANCELLED);
         return Result(RESPONSE::CONTROL_FAILED);
       });
     // [20]
-    fsm_.Add(GOAL_IDLE,                           // These events move...
-      STATE::WAITING,                             // The current state to...
-      [this](ChoreographerEvent const& event) -> int32_t {
+    fsm_.Add(STATE::STOPPED, STATE::IDLE,
+      GOAL_IDLE,
+      [this](FSM::Event const& event) -> FSM::State {
         // Force the flight mode  change and immediately send control
         FlightMode();
         if (!Control(IDLE))
           return Result(RESPONSE::CONTROL_FAILED);
-        return STATE::IDLING;                     // The next state...
+        return STATE::IDLING;
       });
     // [21]
-    fsm_.Add(CONTROL_SUCCESS,                     // These events move...
-      STATE::IDLING,                              // The current state to...
-      [this](ChoreographerEvent const& event) -> int32_t {
-        return Result(RESPONSE::SUCCESS);         // The next state...
+    fsm_.Add(STATE::IDLING,
+      CONTROL_SUCCESS,
+      [this](FSM::Event const& event) -> FSM::State {
+        return Result(RESPONSE::SUCCESS);
       });
     // [22]
-    fsm_.Add(CONTROL_FAILED, GOAL_CANCEL,         // These events move...
-      STATE::IDLING,                              // The current state to...
-      [this](ChoreographerEvent const& event) -> int32_t {
+    fsm_.Add(STATE::IDLING,
+      CONTROL_FAILED | GOAL_CANCEL,
+      [this](FSM::Event const& event) -> FSM::State {
         if (event == GOAL_CANCEL)
           return Result(RESPONSE::CANCELLED);
         return Result(RESPONSE::CONTROL_FAILED);
       });
     // [23]
-    fsm_.Add(PMC_READY,                           // These events move...
-      STATE::PREPARING,                           // The current state to...
-      [this](ChoreographerEvent const& event) -> int32_t {
+    fsm_.Add(STATE::PREPARING,
+      PMC_READY,
+      [this](FSM::Event const& event) -> FSM::State {
         if (!Control(NOMINAL, segment_))
           return Result(RESPONSE::CONTROL_FAILED);
         return STATE::CONTROLLING;
       });
     // [24]
-    fsm_.Add(PMC_TIMEOUT, GOAL_CANCEL,            // These events move...
-      STATE::PREPARING,                           // The current state to...
-      [this](ChoreographerEvent const& event) -> int32_t {
+    fsm_.Add(STATE::PREPARING,
+      PMC_TIMEOUT | GOAL_CANCEL,
+      [this](FSM::Event const& event) -> FSM::State {
         if (event == GOAL_CANCEL)
           return Result(RESPONSE::CANCELLED);
         return Result(RESPONSE::PMC_FAILED);
       });
     // [25]
-    fsm_.Add(GOAL_PREP,                           // These events move...
-      STATE::WAITING,                             // The current state to...
-      [this](ChoreographerEvent const& event) -> int32_t {
+    fsm_.Add(STATE::STOPPED, STATE::IDLE,
+      GOAL_PREP,
+      [this](FSM::Event const& event) -> FSM::State {
         if (FlightMode())
           return STATE::PREPPING;
         return Result(RESPONSE::SUCCESS);
       });
     // [26]
-    fsm_.Add(PMC_READY,                           // These events move...
-      STATE::PREPPING,                            // The current state to...
-      [this](ChoreographerEvent const& event) -> int32_t {
-        return Result(RESPONSE::SUCCESS);         // The next state...
+    fsm_.Add(STATE::PREPPING,
+      PMC_READY,
+      [this](FSM::Event const& event) -> FSM::State {
+        return Result(RESPONSE::SUCCESS);
       });
     // [27]
-    fsm_.Add(PMC_TIMEOUT, GOAL_CANCEL,            // These events move...
-      STATE::PREPPING,                            // The current state to...
-      [this](ChoreographerEvent const& event) -> int32_t {
+    fsm_.Add(STATE::PREPPING,
+      PMC_TIMEOUT |  GOAL_CANCEL,
+      [this](FSM::Event const& event) -> FSM::State {
         if (event == GOAL_CANCEL)
           return Result(RESPONSE::CANCELLED);
         return Result(RESPONSE::PMC_FAILED);
@@ -502,7 +499,7 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
     // Publish inertia once on start to ensure GNC is bootstrapped
     // correctly even if executive is not loaded.
     pub_inertia_ = nh->advertise<geometry_msgs::Inertia>(
-      TOPIC_MANAGEMENT_INERTIA, 1, true);
+      TOPIC_MOBILITY_INERTIA, 1, true);
 
     // Subscribe to collisions from the sentinel node
     sub_collisions_ = nh->subscribe(TOPIC_MOBILITY_COLLISIONS, 5,
@@ -519,6 +516,10 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
     // Allow the state to be manually set
     server_set_state_ = nh->advertiseService(SERVICE_MOBILITY_SET_STATE,
       &ChoreographerNodelet::SetStateCallback, this);
+
+    // Allow the state to be manually set
+    server_set_inertia_ = nh->advertiseService(SERVICE_MOBILITY_SET_INERTIA,
+      &ChoreographerNodelet::SetInertiaCallback, this);
 
     // Setup control client action
     client_c_.SetConnectedTimeout(
@@ -580,13 +581,7 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
 
   // Callback to handle reconfiguration requests
   bool ReconfigureCallback(dynamic_reconfigure::Config & config) {
-    switch (fsm_.GetState()) {
-    case STATE::WAITING:
-      return cfg_.Reconfigure(config);
-    default:
-      break;
-    }
-    return false;
+    return cfg_.Reconfigure(config);
   }
 
   // Ensure all clients are connected
@@ -600,6 +595,15 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
   bool SetStateCallback(ff_msgs::SetState::Request& req,
                         ff_msgs::SetState::Response& res) {
     fsm_.SetState(req.state);
+    res.success = true;
+    return true;
+  }
+
+  // Called on registration of aplanner
+  bool SetInertiaCallback(ff_msgs::SetInertia::Request& req,
+                          ff_msgs::SetInertia::Response& res) {
+    // TODO(Andrew) Potentially sanity check inertia?
+    pub_inertia_.publish(req.inertia);
     res.success = true;
     return true;
   }
@@ -655,7 +659,7 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
     // at any point in time (planner, validation, control). If the action
     // gets cancelled (through preemption or cancellation) we might need
     // to clean up, based on the state of the system
-    if (response == RESPONSE::CANCELLED) {
+    if (response <= 0) {
       switch (fsm_.GetState()) {
       case STATE::BOOTSTRAPPING:
       case STATE::PLANNING:
@@ -676,15 +680,6 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
         break;
       }
     }
-    // Prevent a spurious result from blocking initializtion
-    switch (fsm_.GetState()) {
-    case STATE::WAITING:
-    case STATE::INITIALIZING:
-    case STATE::WAITING_FOR_STOP:
-      return fsm_.GetState();
-    default:
-      break;
-    }
     // If we get here then we are in a valid action state, so we will need
     // to produce a meanngful result for the callee.
     static ff_msgs::MotionResult result;
@@ -697,8 +692,11 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
       server_.SendResult(ff_util::FreeFlyerActionState::ABORTED, result);
     else
       server_.SendResult(ff_util::FreeFlyerActionState::PREEMPTED, result);
-    // Return to the waiting state
-    return STATE::WAITING;
+    // Special case: IDLING needs to move to an IDLE state
+    if (fsm_.GetState() == STATE::IDLING && response == RESPONSE::SUCCESS)
+      return STATE::IDLE;
+    // General case: move back to a stopped state
+    return STATE::STOPPED;
   }
 
   // Get the pose of the robot in the world frame
@@ -724,7 +722,7 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
 
   // When the FSM state changes we get a callback here, so that we can send
   // feedback to any active client, print debug info and publish our state
-  void UpdateCallback(int32_t state, ChoreographerEvent event) {
+  void UpdateCallback(FSM::State const& state, FSM::Event const& event) {
     // Debug events
     std::string str = "UNKNOWN";
     switch (event) {
@@ -753,8 +751,8 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
     // Debug state changes
     switch (state) {
     case STATE::INITIALIZING:     str = "INITIALIZING";       break;
-    case STATE::WAITING_FOR_STOP: str = "WAITING_FOR_STOP";   break;
-    case STATE::WAITING:          str = "WAITING";            break;
+    case STATE::IDLE:             str = "IDLE";               break;
+    case STATE::STOPPED:          str = "STOPPED";            break;
     case STATE::IDLING:           str = "IDLING";             break;
     case STATE::STOPPING:         str = "STOPPING";           break;
     case STATE::PREPPING:         str = "PREPPING";           break;
@@ -806,7 +804,7 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
   // Validate the current working segment and flight mode
   bool Validate(ff_util::Segment const& segment) {
     static ff_msgs::ValidateGoal goal;
-    goal.flight_mode = flight_mode_;
+    goal.flight_mode = goal_flight_mode_;
     goal.faceforward = cfg_.Get<bool>("enable_faceforward");
     goal.segment = segment;
     goal.max_time = ros::Duration(
@@ -848,8 +846,8 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
     ros::Duration duration = ros::Duration(0)) {
     // Divide by a constant in holonomic mode to avoid saturation
     double divider = 1;
-    if (!cfg_.Get<bool>("enable_faceforward") && flight_mode_.hard_divider > 0)
-      divider = flight_mode_.hard_divider;
+    if (!cfg_.Get<bool>("enable_faceforward") && goal_flight_mode_.hard_divider > 0)
+      divider = goal_flight_mode_.hard_divider;
     // Package up a skeleton plan request
     static ff_msgs::PlanGoal plan_goal;
     plan_goal.states = states;
@@ -860,30 +858,40 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
     plan_goal.desired_alpha = cfg_.Get<double>("desired_alpha") / divider;
     plan_goal.desired_rate = cfg_.Get<double>("desired_rate");
     // Check desired velocity
-    if (plan_goal.desired_vel < 0)
-      plan_goal.desired_vel = flight_mode_.hard_limit_vel;
-    else if (plan_goal.desired_vel > flight_mode_.hard_limit_vel)
+    if (plan_goal.desired_vel < 0) {
+      plan_goal.desired_vel = goal_flight_mode_.hard_limit_vel;
+    } else if (plan_goal.desired_vel > goal_flight_mode_.hard_limit_vel) {
+      NODELET_WARN_STREAM("Velocity violated " << goal_flight_mode_.name);
       return false;
+    }
     // Check deesired acceleration
-    if (plan_goal.desired_accel < 0)
-      plan_goal.desired_accel = flight_mode_.hard_limit_accel / divider;
-    else if (plan_goal.desired_accel > flight_mode_.hard_limit_accel / divider)
+    if (plan_goal.desired_accel < 0) {
+      plan_goal.desired_accel = goal_flight_mode_.hard_limit_accel / divider;
+    } else if (plan_goal.desired_accel > goal_flight_mode_.hard_limit_accel / divider) {
+      NODELET_WARN_STREAM("Accel violated " << goal_flight_mode_.name);
       return false;
+    }
     // Check desired omega
-    if (plan_goal.desired_omega < 0)
-      plan_goal.desired_omega = flight_mode_.hard_limit_omega;
-    else if (plan_goal.desired_omega > flight_mode_.hard_limit_omega)
+    if (plan_goal.desired_omega < 0) {
+      plan_goal.desired_omega = goal_flight_mode_.hard_limit_omega;
+    } else if (plan_goal.desired_omega > goal_flight_mode_.hard_limit_omega) {
+      NODELET_WARN_STREAM("Omega violated " << goal_flight_mode_.name);
       return false;
+    }
     // Check  desired alpha
-    if (plan_goal.desired_alpha < 0)
-      plan_goal.desired_alpha = flight_mode_.hard_limit_alpha / divider;
-    else if (plan_goal.desired_alpha > flight_mode_.hard_limit_alpha / divider)
+    if (plan_goal.desired_alpha < 0) {
+      plan_goal.desired_alpha = goal_flight_mode_.hard_limit_alpha / divider;
+    } else if (plan_goal.desired_alpha > goal_flight_mode_.hard_limit_alpha / divider) {
+      NODELET_WARN_STREAM("Alpha violated " << goal_flight_mode_.name);
       return false;
+    }
     // Check control frequency
-    if (plan_goal.desired_rate < 0)
+    if (plan_goal.desired_rate < 0) {
       plan_goal.desired_rate = ff_util::FlightUtil::MIN_CONTROL_RATE;
-    else if (plan_goal.desired_rate < ff_util::FlightUtil::MIN_CONTROL_RATE)
+    } else if (plan_goal.desired_rate < ff_util::FlightUtil::MIN_CONTROL_RATE) {
+      NODELET_WARN_STREAM("Rate violated " << goal_flight_mode_.name);
       return false;
+    }
     // Make sure we communicate the maximum allowed time to the planner
     if (duration > ros::Duration(0))
       plan_goal.max_time = duration;
@@ -894,7 +902,11 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
     std::string planner = cfg_.Get<std::string>("planner");
     if (planners_.find(planner) != planners_.end()) {
       planners_[planner].SetDeadlineTimeout(plan_goal.max_time.toSec());
-      return planners_[planner].SendGoal(plan_goal);
+      if (!planners_[planner].SendGoal(plan_goal)) {
+        NODELET_WARN_STREAM("Planner rejected goal");
+        return false;
+      }
+      return true;
     }
     // Planner does not exist
     NODELET_WARN_STREAM("Planner does not exist");
@@ -949,12 +961,17 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
 
   // Send the flight mode out to subscribers
   bool FlightMode() {
-    pub_flight_mode_.publish(flight_mode_);
-    if (prep_required_) {
+    // Always publish the new flight mode
+    pub_flight_mode_.publish(goal_flight_mode_);
+    // In the case of a speed mismatch we need to wait for prep
+    if (goal_flight_mode_.speed != flight_mode_.speed) {
+      // Start timers
       timer_speed_.start();
       timer_feedback_.start();
       return true;
     }
+    // Prep not required, so set new flight mode immediately
+    flight_mode_ = goal_flight_mode_;
     return false;
   }
 
@@ -965,8 +982,12 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
       ready &= (msg->states[i] == ff_hw_msgs::PmcState::READY);
     if (!ready)
       return;
+    // Stop the timers
     timer_speed_.stop();
     timer_feedback_.stop();
+    // Set the new flight mode to indicate prep is complete
+    flight_mode_ = goal_flight_mode_;
+    // We are now prepped and ready to fly
     return fsm_.Update(PMC_READY);
   }
 
@@ -1046,8 +1067,8 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
     case STATE::CONTROLLING:
       if (flight_mode_.tolerance_pos > 0.0 &&
           feedback->error_position > flight_mode_.tolerance_pos) {
-        NODELET_WARN_STREAM("Position tolerance violated");
-        NODELET_WARN_STREAM("- Value: " << feedback->error_position
+        NODELET_DEBUG_STREAM("Position tolerance violated");
+        NODELET_DEBUG_STREAM("- Value: " << feedback->error_position
                                         << ", Thresh: "
                                         << flight_mode_.tolerance_pos);
         fsm_.Update(TOLERANCE_POS);
@@ -1056,8 +1077,8 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
       // Check attitude tolerance
       if (flight_mode_.tolerance_att > 0.0 &&
           feedback->error_attitude > flight_mode_.tolerance_att) {
-        NODELET_WARN_STREAM("Attitude tolerance violated");
-        NODELET_WARN_STREAM("- Value: " << feedback->error_attitude
+        NODELET_DEBUG_STREAM("Attitude tolerance violated");
+        NODELET_DEBUG_STREAM("- Value: " << feedback->error_attitude
                                         << ", Thresh: "
                                         << flight_mode_.tolerance_att);
         fsm_.Update(TOLERANCE_ATT);
@@ -1066,8 +1087,8 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
       // Check velocity tolerance
       if (flight_mode_.tolerance_vel > 0.0 &&
           feedback->error_velocity > flight_mode_.tolerance_vel) {
-        NODELET_WARN_STREAM("Velocity tolerance violated");
-        NODELET_WARN_STREAM("- Value: " << feedback->error_velocity
+        NODELET_DEBUG_STREAM("Velocity tolerance violated");
+        NODELET_DEBUG_STREAM("- Value: " << feedback->error_velocity
                                         << ", Thresh: "
                                         << flight_mode_.tolerance_vel);
         fsm_.Update(TOLERANCE_VEL);
@@ -1076,8 +1097,8 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
       // Check angular velocity tolerance
       if (flight_mode_.tolerance_omega > 0.0 &&
           feedback->error_omega > flight_mode_.tolerance_omega) {
-        NODELET_WARN_STREAM("Angular velocity tolerance violated");
-        NODELET_WARN_STREAM("- Value: " << feedback->error_omega
+        NODELET_DEBUG_STREAM("Angular velocity tolerance violated");
+        NODELET_DEBUG_STREAM("- Value: " << feedback->error_omega
                                         << ", Thresh: "
                                         << flight_mode_.tolerance_omega);
         fsm_.Update(TOLERANCE_OMEGA);
@@ -1113,23 +1134,22 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
     // We can only accept new commands if we are currently in an idle state.
     // This should be the case if Preempt() was called beforehand -- as it
     // should be automatically -- in the case of preemption.
-    if (fsm_.GetState() != STATE::WAITING) {
+    if (fsm_.GetState() != STATE::IDLE &&
+        fsm_.GetState() != STATE::STOPPED) {
       result.response = RESPONSE::NOT_IN_WAITING_MODE;
       server_.SendResult(ff_util::FreeFlyerActionState::ABORTED, result);
       return;
     }
     // If the specified flight mode string is empty then we wont try and
     // change the flight mode from what it currently is.
-    prep_required_ = false;
+    goal_flight_mode_ = flight_mode_;
     if (!goal->flight_mode.empty()) {
-      uint8_t old_gain = flight_mode_.speed;
       if (!ff_util::FlightUtil::GetFlightMode(
-        flight_mode_, goal->flight_mode)) {
+        goal_flight_mode_, goal->flight_mode)) {
         result.response = RESPONSE::INVALID_FLIGHT_MODE;
         server_.SendResult(ff_util::FreeFlyerActionState::ABORTED, result);
         return;
       }
-      prep_required_ = (old_gain != flight_mode_.speed);
     }
     // What we do now depends on the command that was sent
     switch (goal->command) {
@@ -1192,7 +1212,7 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
 
  private:
   // Action managemement
-  ff_util::FiniteStateMachine<int32_t, ChoreographerEvent> fsm_;
+  ff_util::FSM fsm_;
   ff_util::FreeFlyerActionClient<ff_msgs::ControlAction> client_c_;
   ff_util::FreeFlyerActionClient<ff_msgs::ValidateAction> client_v_;
   ff_util::FreeFlyerActionServer<ff_msgs::MotionAction> server_;
@@ -1210,13 +1230,12 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
   // Publishers and subscribers
   ros::Publisher pub_state_, pub_segment_, pub_flight_mode_, pub_inertia_;
   ros::Subscriber sub_collisions_, sub_pmc_state_;
-  ros::ServiceServer server_register_, server_set_state_;
+  ros::ServiceServer server_register_, server_set_state_, server_set_inertia_;
   // Cached between callbacks
-  ff_msgs::FlightMode flight_mode_;                   // Desired flight mode
-  std::vector<geometry_msgs::PoseStamped> states_;    // Plan request
-  ff_util::Segment segment_;                          // Segment
-  geometry_msgs::PointStamped obstacle_;              // Obstacle
-  bool prep_required_;                                // Check if prep needed
+  ff_msgs::FlightMode flight_mode_, goal_flight_mode_;  // Flight mode
+  std::vector<geometry_msgs::PoseStamped> states_;      // Plan request
+  ff_util::Segment segment_;                            // Segment
+  geometry_msgs::PointStamped obstacle_;                // Obstacle
 };
 
 // Declare the plugin

@@ -19,14 +19,24 @@
 #ifndef DDS_ROS_BRIDGE_ROS_COMMAND_CONFIG_RAPID_COMMAND_CONFIG_H_
 #define DDS_ROS_BRIDGE_ROS_COMMAND_CONFIG_RAPID_COMMAND_CONFIG_H_
 
+#include <ros/ros.h>
+
+#include <sstream>
 #include <string>
 
 #include "config_reader/config_reader.h"
+
 #include "dds_ros_bridge/rapid_pub.h"
 
 #include "knDds/DdsTypedSupplier.h"
+
 #include "rapidDds/CommandConfig.h"
 #include "rapidDds/CommandConfigSupport.h"
+#include "rapidDds/RapidConstants.h"
+
+#include "rapidUtil/RapidHelper.h"
+
+#include "AstrobeeCommandConstants.h"
 
 namespace ff {
 
@@ -39,9 +49,9 @@ namespace ff {
  */
 class RosCommandConfigRapidCommandConfig : public RapidPub {
  public:
-  explicit RosCommandConfigRapidCommandConfig(const std::string& pubTopic,
-                                    const ros::NodeHandle &nh,
-                                    config_reader::ConfigReader& config_params);
+  explicit RosCommandConfigRapidCommandConfig(const std::string& pub_topic,
+                                  const ros::NodeHandle &nh,
+                                  config_reader::ConfigReader& config_params);
 
  protected:
   /**
@@ -54,7 +64,7 @@ class RosCommandConfigRapidCommandConfig : public RapidPub {
   bool AssembleConfig(rapid::CommandConfig& config,
                      config_reader::ConfigReader& config_params);
 
-  kn::DdsTypedSupplier<rapid::CommandConfig> m_commandConfigSupplier_;
+  kn::DdsTypedSupplier<rapid::CommandConfig> command_config_supplier_;
 };
 
 }  // end namespace ff

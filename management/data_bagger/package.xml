@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<package>
+  <name>data_bagger</name>
+  <version>0.0.0</version>
+  <description> The data bagger is responsible for bagging data that the ground
+                wants to see. It is also responsible for downloading the bagged
+                data to the ground.
+  </description>
+  <license>
+    Apache License, Version 2.0
+  </license>
+  <author email="astrobee-fsw@nx.arc.nasa.gov">
+    Astrobee Flight Software
+  </author>
+  <maintainer email="astrobee-fsw@nx.arc.nasa.gov">
+    Astrobee Flight Software
+  </maintainer>
+  <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>roscpp</build_depend>
+  <build_depend>ff_msgs</build_depend>
+  <build_depend>nodelet</build_depend>
+  <run_depend>roscpp</run_depend>
+  <run_depend>ff_msgs</run_depend>
+  <run_depend>nodelet</run_depend>
+  <export>
+    <nodelet plugin="${prefix}/nodelet_plugins.xml" />
+  </export>
+</package>

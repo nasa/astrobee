@@ -17,17 +17,17 @@
 #
 # The state of the arm system
 
-int32 state                         # Current state
-int32 INITIALIZING        = 0       # Waiting on child services, actions, etc.
-int32 UNKNOWN             = 1       # Waiting on feedback from driver
-int32 STOWED              = 2       # The arm is stowed
-int32 DEPLOYED            = 3       # The arm is deployed
-int32 SETTING             = 4       # The gripper is being set to a value
-int32 CALIBRATING         = 5       # The gripper is calibrating
-int32 PANNING             = 6       # We are panning as part of a move
-int32 TILTING             = 7       # We are tilting as part of a move
-int32 STOWING_SETTING     = 8       # We are closing the gripper for stowing
-int32 STOWING_PANNING     = 9       # We are panning to zero for stowing
-int32 STOWING_TILTING     = 10      # We are tilting to zero for stowing
-int32 DEPLOYING_PANNING   = 11      # We are panning to zero for stowing
-int32 DEPLOYING_TILTING   = 12      # We are tilting to zero for stowing
+int8 state                         # Current state
+int8 INITIALIZING        = 0       # Waiting on child services, actions, etc.
+int8 UNKNOWN             = 1       # Waiting on feedback from driver
+int8 STOWED              = 2       # The arm is stowed
+int8 DEPLOYED            = 3       # The arm is deployed
+int8 SETTING             = 4       # The gripper is being set to a value
+int8 CALIBRATING         = 5       # The gripper is calibrating
+int8 PANNING             = 6       # We are panning as part of a move
+int8 TILTING             = 7       # We are tilting as part of a move
+int8 STOWING_SETTING     = 8       # We are closing the gripper for stowing
+int8 STOWING_PANNING     = 9       # We are panning to zero for stowing
+int8 STOWING_TILTING     = 10      # We are tilting to zero for stowing
+int8 DEPLOYING_PANNING   = 11      # We are panning to zero for stowing
+int8 DEPLOYING_TILTING   = 12      # We are tilting to zero for stowing

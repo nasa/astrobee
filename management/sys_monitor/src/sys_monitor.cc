@@ -44,6 +44,8 @@ void SysMonitor::AddFault(unsigned int fault_id,
 
   // If fault isn't in fault state, add it and publish fault state
   if (!found) {
+    ROS_ERROR("Fault with id %i occurred. Fault error message: %s", fault_id,
+                                                            fault_msg.c_str());
     ff_msgs::Fault fault;
     fault.id = fault_id;
     fault.time_of_fault = time_occurred;
@@ -70,6 +72,8 @@ void SysMonitor::AddFault(ff_msgs::Fault const& fault, bool check_added) {
   }
 
   if (!found) {
+    ROS_ERROR("Fault with id %i occurred. Fault error message: %s", fault_id,
+                                                            fault.msg.c_str());
     fault_state_.faults.push_back(fault);
     SetFaultState(fault_id, true);
 
@@ -95,8 +99,11 @@ void SysMonitor::AddWatchDog(ros::Duration const& timeout,
                              uint const allowed_misses,
                              uint const fault_id) {
   if (!watch_dogs_.count(node_name)) {
-    SysMonitor::WatchdogPtr watchDog(new SysMonitor::Watchdog(this, timeout,
-                                                    allowed_misses, fault_id));
+    SysMonitor::WatchdogPtr watchDog(new SysMonitor::Watchdog(this,
+                                                              node_name,
+                                                              timeout,
+                                                              allowed_misses,
+                                                              fault_id));
     watch_dogs_.emplace(node_name, watchDog);
   } else {
     NODELET_INFO("AddWatchDog() already exists for %s",
@@ -247,9 +254,6 @@ void SysMonitor::HeartbeatCallback(ff_msgs::HeartbeatConstPtr const& hb) {
 void SysMonitor::Initialize(ros::NodeHandle *nh) {
   nh_ = *nh;
 
-  // Add robot config before setting the path
-  config_params_.AddFile("context.config");
-
   // Add config files to config reader
   config_params_.AddFile("management/fault_table.config");
 
@@ -399,7 +403,8 @@ void SysMonitor::PublishFaultResponse(unsigned int fault_id) {
 void SysMonitor::StartupTimerCallback(ros::TimerEvent const& te) {
   for (auto it = watch_dogs_.begin(); it != watch_dogs_.end(); ++it) {
     if (!it->second->heartbeat_started()) {
-      AddFault(it->second->fault_id());
+      std::string err_msg = "Never received heartbeat from " + it->first;
+      AddFault(it->second->fault_id(), err_msg);
       PublishFaultResponse(it->second->fault_id());
       it->second->hb_fault_occurring(true);
     }
@@ -854,9 +859,10 @@ int SysMonitor::UnloadNodelet(std::string const& nodelet,
 
 /**************************** Watchdog Functions *****************************/
 SysMonitor::Watchdog::Watchdog(SysMonitor *const sys_monitor,
-                                ros::Duration const& timeout,
-                                uint const allowed_misses,
-                                uint const fault_id) :
+                               std::string const& nodelet_name,
+                               ros::Duration const& timeout,
+                               uint const allowed_misses,
+                               uint const fault_id) :
   monitor_(sys_monitor),
   missed_count_(0),
   misses_allowed_(allowed_misses),
@@ -865,6 +871,8 @@ SysMonitor::Watchdog::Watchdog(SysMonitor *const sys_monitor,
   heartbeat_started_(false),
   unloaded_(false),
   nodelet_manager_(""),
+  nodelet_name_(nodelet_name),
+  nodelet_type_(""),
   previous_hb_() {
   timer_ = monitor_->nh_.createTimer(timeout,
                       &SysMonitor::Watchdog::TimerCallBack, this, false, false);
@@ -898,6 +906,10 @@ std::string SysMonitor::Watchdog::nodelet_manager() {
   return nodelet_manager_;
 }
 
+std::string SysMonitor::Watchdog::nodelet_name() {
+  return nodelet_name_;
+}
+
 std::string SysMonitor::Watchdog::nodelet_type() {
   return nodelet_type_;
 }
@@ -908,6 +920,10 @@ void SysMonitor::Watchdog::hb_fault_occurring(bool occurring) {
 
 void SysMonitor::Watchdog::nodelet_manager(std::string manager_name) {
   nodelet_manager_ = manager_name;
+}
+
+void SysMonitor::Watchdog::nodelet_name(std::string name) {
+  nodelet_name_ = name;
 }
 
 void SysMonitor::Watchdog::nodelet_type(std::string type) {
@@ -938,7 +954,8 @@ void SysMonitor::Watchdog::previous_hb(ff_msgs::HeartbeatConstPtr hb) {
 
 void SysMonitor::Watchdog::TimerCallBack(ros::TimerEvent const& te) {
   if (missed_count_++ >= misses_allowed_) {
-    monitor_->AddFault(fault_id_);
+    std::string err_msg = "Didn't receive a heartbeat from " + nodelet_name_;
+    monitor_->AddFault(fault_id_, err_msg);
     monitor_->PublishFaultResponse(fault_id_);
     // Stop timer so the fault is only triggered once. Timer will be restarted
     // once a heartbeart from the node is received

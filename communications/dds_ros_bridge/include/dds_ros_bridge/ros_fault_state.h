@@ -19,14 +19,19 @@
 #ifndef DDS_ROS_BRIDGE_ROS_FAULT_STATE_H_
 #define DDS_ROS_BRIDGE_ROS_FAULT_STATE_H_
 
-#include <string>
+#include <cstring>
 #include <memory>
+#include <string>
+
+#include "dds_ros_bridge/enum_helper.h"
+#include "dds_ros_bridge/ros_sub_rapid_pub.h"
+#include "dds_ros_bridge/util.h"
+
+#include "ff_msgs/FaultState.h"
 
 #include "knDds/DdsTypedSupplier.h"
 
-#include "dds_ros_bridge/ros_sub_rapid_pub.h"
-
-#include "ff_msgs/FaultState.h"
+#include "rapidUtil/RapidHelper.h"
 
 #include "AstrobeeConstants.h"
 #include "FaultStateSupport.h"
@@ -35,19 +40,18 @@ namespace ff {
 
 class RosFaultStateToRapid : public RosSubRapidPub {
  public:
-  RosFaultStateToRapid(const std::string& subscribeTopic,
-                  const std::string& pubTopic,
+  RosFaultStateToRapid(const std::string& subscribe_topic,
+                  const std::string& pub_topic,
                   const ros::NodeHandle &nh,
-                  const unsigned int queueSize = 10);
+                  const unsigned int queue_size = 10);
 
   void Callback(ff_msgs::FaultStateConstPtr const& state);
 
  private:
-  using StateSupplier =
-    kn::DdsTypedSupplier<rapid::ext::astrobee::FaultState>;
+  using StateSupplier = kn::DdsTypedSupplier<rapid::ext::astrobee::FaultState>;
   using StateSupplierPtr = std::unique_ptr<StateSupplier>;
 
-  StateSupplierPtr m_supplier_;
+  StateSupplierPtr state_supplier_;
 };
 
 }  // end namespace ff

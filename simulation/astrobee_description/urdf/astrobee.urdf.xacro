@@ -19,37 +19,64 @@
 
 <robot name="astrobee" xmlns:xacro="http://www.ros.org/wiki/xacro">
 
-  <!-- Base platform -->
-  <xacro:include filename="$(find astrobee_description)/urdf/astrobee_body.urdf.xacro" />
+  <!-- GEOMETRY -->
 
-  <!-- Modify the platform based on the world --> 
+  <xacro:include filename="$(find astrobee_description)/urdf/astrobee_base_link.urdf.xacro" />
+
+  <!-- MODEL -->
+  <xacro:include filename="$(find astrobee_description)/urdf/astrobee_model_drag.urdf.xacro" />
+  <xacro:include filename="$(find astrobee_description)/urdf/astrobee_model_pmc.urdf.xacro" />
+  <xacro:include filename="$(find astrobee_description)/urdf/astrobee_model_eps.urdf.xacro" />
+  <xacro:include filename="$(find astrobee_description)/urdf/astrobee_model_truth.urdf.xacro" />
+  <xacro:include filename="$(find astrobee_description)/urdf/astrobee_model_laser.urdf.xacro" />
+  <xacro:include filename="$(find astrobee_description)/urdf/astrobee_model_flashlights.urdf.xacro" />
+
+  <!-- SENSORS -->
+
+  <xacro:include filename="$(find astrobee_description)/urdf/astrobee_sensor_imu.urdf.xacro" />
+  <xacro:include filename="$(find astrobee_description)/urdf/astrobee_sensor_nav_cam.urdf.xacro" />
+  <xacro:include filename="$(find astrobee_description)/urdf/astrobee_sensor_dock_cam.urdf.xacro" />
+  <xacro:include filename="$(find astrobee_description)/urdf/astrobee_sensor_haz_cam.urdf.xacro" />
+  <xacro:include filename="$(find astrobee_description)/urdf/astrobee_sensor_perch_cam.urdf.xacro" />
+
+  <!-- WORLD SPECIFIC OPTIONS -->
+
+  <xacro:include filename="$(find astrobee_description)/urdf/astrobee_macro_perching_arm.urdf.xacro" />
+  <xacro:include filename="$(find astrobee_description)/urdf/astrobee_macro_tracker.urdf.xacro" />
   <xacro:property name="ace" value="$(arg world)"/>
+
+  <!-- GRANITE -->
+
   <xacro:if value="${ace == 'granite'}">
     <xacro:include filename="$(find astrobee_description)/urdf/astrobee_carriage.urdf.xacro" />
-    <xacro:include filename="$(find astrobee_description)/urdf/macro_perching_arm.urdf.xacro" />
-    <xacro:perching_arm bay="top_aft" xyz="-0.01 0.0 -0.065" rpy="0.0 3.1415 0.0" />
+    <xacro:perching_arm bay="top_aft"
+                        xyz="-0.01 0.0 -0.065"
+                        rpy="0.0 3.1415 0.0" />
+    <xacro:tracker serial="LHR-08DE340B"
+                   xyz="0.000843832446026 0.146634271310568 0.157241624336630"
+                   rpy="0 0 0" />
+    <xacro:tracker serial="LHR-08DDBC05"
+                   xyz="-0.003818695342796 0.141998121661166 0.161397648714532"
+                   rpy="0 0 0" />
   </xacro:if>
+
+  <!-- MGTF -->
+
+  <xacro:if value="${ace == 'mgtf'}">
+    <xacro:tracker serial="LHR-1FC0DEF4"
+                   xyz="0.000843832446026 0.146634271310568 0.157241624336630"
+                   rpy="0 0 0" />
+    <xacro:tracker serial="LHR-09DF88FD"
+                   xyz="-0.003818695342796 0.141998121661166 0.161397648714532"
+                   rpy="0 0 0" />
+  </xacro:if>
+
+  <!-- ISS -->
+
   <xacro:if value="${ace == 'iss'}">
-    <xacro:include filename="$(find astrobee_description)/urdf/macro_perching_arm.urdf.xacro" />
-    <xacro:perching_arm bay="top_aft" xyz="-0.01 0.0 -0.065" rpy="0.0 3.1415 0.0" />
+    <xacro:perching_arm bay="top_aft" 
+                        xyz="-0.01 0.0 -0.065" 
+                        rpy="0.0 3.1415 0.0" />
   </xacro:if>
-
-  <!-- Base model plugins -->
-  <xacro:include filename="$(find astrobee_description)/urdf/model_pmc.urdf.xacro" />
-  <xacro:include filename="$(find astrobee_description)/urdf/model_truth.urdf.xacro" />
-  <xacro:include filename="$(find astrobee_description)/urdf/model_laser.urdf.xacro" />
-  <xacro:include filename="$(find astrobee_description)/urdf/model_flashlights.urdf.xacro" />
-
-  <!-- Aerodynamics -->
-  <!--
-  <xacro:include filename="$(find astrobee_description)/urdf/model_drag.urdf.xacro" />
-  -->
-
-  <!-- Base Sensor plugins -->
-  <xacro:include filename="$(find astrobee_description)/urdf/sensor_imu.urdf.xacro" />
-  <xacro:include filename="$(find astrobee_description)/urdf/sensor_nav_cam.urdf.xacro" />
-  <xacro:include filename="$(find astrobee_description)/urdf/sensor_dock_cam.urdf.xacro" />
-  <xacro:include filename="$(find astrobee_description)/urdf/sensor_haz_cam.urdf.xacro" />
-  <xacro:include filename="$(find astrobee_description)/urdf/sensor_perch_cam.urdf.xacro" />
 
 </robot>

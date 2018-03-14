@@ -29,18 +29,21 @@ namespace ff {
 
 class RosSubRapidPub {
  protected:
-  RosSubRapidPub(const std::string& subscribeTopic,
-      const std::string& pubTopic, const ros::NodeHandle &nh,
-      const unsigned int queueSize)
-    : m_nh_(nh), m_subscribeTopic_(subscribeTopic), m_publishTopic_(pubTopic),
-      m_queueSize_(queueSize) {
+  RosSubRapidPub(const std::string& subscribe_topic,
+                 const std::string& pub_topic,
+                 const ros::NodeHandle &nh,
+                 const unsigned int queue_size)
+    : nh_(nh),
+      subscribe_topic_(subscribe_topic),
+      publish_topic_(pub_topic),
+      queue_size_(queue_size) {
   }
 
-  ros::NodeHandle m_nh_;
-  ros::Subscriber m_sub_;
-  std::string m_subscribeTopic_;
-  std::string m_publishTopic_;
-  unsigned int m_queueSize_;
+  ros::NodeHandle nh_;
+  ros::Subscriber sub_;
+  std::string subscribe_topic_;
+  std::string publish_topic_;
+  unsigned int queue_size_;
 };
 
 typedef std::shared_ptr<ff::RosSubRapidPub> RosSubRapidPubPtr;

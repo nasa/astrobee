@@ -24,6 +24,8 @@
 
 #include "rapidIo/AgentProvider.h"
 
+#include "rapidUtil/RapidHelper.h"
+
 namespace rapid {
 
 /**
@@ -32,7 +34,7 @@ namespace rapid {
 class AgentProviderRosHelper : public AgentProvider {
  public:
   AgentProviderRosHelper(AgentTopicPairParameters const& params,
-    const std::string& entityName);
+                         const std::string& entity_name);
 
   /**
    * Publish values with current time

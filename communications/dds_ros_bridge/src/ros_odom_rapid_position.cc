@@ -16,55 +16,52 @@
  * under the License.
  */
 
-#include <string>
-
 #include "dds_ros_bridge/ros_odom_rapid_position.h"
-
-#include "rapidDds/RapidConstants.h"
 
 namespace ff {
 
-RosOdomRapidPosition::RosOdomRapidPosition(const std::string& subscribeTopic,
-                                           const std::string& pubTopic,
+RosOdomRapidPosition::RosOdomRapidPosition(const std::string& subscribe_topic,
+                                           const std::string& pub_topic,
                                            const ros::NodeHandle& nh,
-                                           const unsigned int queueSize) :
-    RosSubRapidPub(subscribeTopic, pubTopic, nh, queueSize),
+                                           const unsigned int queue_size) :
+    RosSubRapidPub(subscribe_topic, pub_topic, nh, queue_size),
     ekf_sent_(false),
     pub_ekf_(false) {
-  m_params_.config.poseEncoding = rapid::RAPID_ROT_QUAT;
-  m_params_.config.velocityEncoding = rapid::RAPID_ROT_XYZ;
+  params_.config.poseEncoding = rapid::RAPID_ROT_QUAT;
+  params_.config.velocityEncoding = rapid::RAPID_ROT_XYZ;
 
   // Add confidence to value keys
   rapid::KeyTypeValue ktv("confidence", "INT", "0");
-  m_params_.config.valueKeys.push_back(ktv);
+  params_.config.valueKeys.push_back(ktv);
 
   // TODO(all): confirm topic suffix has '-'
-  m_params_.topicSuffix += pubTopic;
+  params_.topicSuffix += pub_topic;
 
   // instantiate provider
-  m_provider_.reset(
-    new rapid::PositionProviderRosHelper(m_params_, "RosOdomRapidPosition"));
+  provider_.reset(
+    new rapid::PositionProviderRosHelper(params_, "RosOdomRapidPosition"));
 
-  s_supplier_.reset(
+  state_supplier_.reset(
       new RosOdomRapidPosition::StateSupplier(
-          rapid::ext::astrobee::EKF_STATE_TOPIC + pubTopic, "",
+          rapid::ext::astrobee::EKF_STATE_TOPIC + pub_topic, "",
           "AstrobeeEkfStateProfile", ""));
 
   // start subscriber
-  m_sub_ = m_nh_.subscribe(subscribeTopic, queueSize,
-                           &RosOdomRapidPosition::MsgCallback, this);
+  sub_ = nh_.subscribe(subscribe_topic,
+                       queue_size,
+                       &RosOdomRapidPosition::MsgCallback, this);
 
   // Initialize the state message
-  rapid::RapidHelper::initHeader(s_supplier_->event().hdr);
+  rapid::RapidHelper::initHeader(state_supplier_->event().hdr);
 
-  s_supplier_->event().cov_diag.length(15);
-  s_supplier_->event().ml_mahal_dists.length(50);
+  state_supplier_->event().cov_diag.length(15);
+  state_supplier_->event().ml_mahal_dists.length(50);
 
   // Setup timers for publishing the position and ekf but don't start them since
   // the rates are 0. The bridge will set this rate at the end of its init
   // update: Andrew changed rate to 1.0 to avoid a runtime bounds error. Should
   // not affect since autostart argument is set to false.
-  ekf_timer_ = m_nh_.createTimer(ros::Rate(1.0),
+  ekf_timer_ = nh_.createTimer(ros::Rate(1.0),
                                  &RosOdomRapidPosition::PubEkf,
                                  this,
                                  false,
@@ -72,7 +69,7 @@ RosOdomRapidPosition::RosOdomRapidPosition(const std::string& subscribeTopic,
 
   // update: Andrew changed rate to 1.0 to avoid a runtime bounds error. Should
   // not affect since autostart argument is set to false.
-  position_timer_ = m_nh_.createTimer(ros::Rate(1.0),
+  position_timer_ = nh_.createTimer(ros::Rate(1.0),
                                       &RosOdomRapidPosition::PubPosition,
                                       this,
                                       false,
@@ -88,16 +85,16 @@ void RosOdomRapidPosition::MsgCallback(const ff_msgs::EkfStateConstPtr& msg) {
     if (ekf_sent_) {
       // If we just sent the ekf messages to the ground, restart the search for
       // the max values
-      s_supplier_->event().of_count = msg->of_count;
-      s_supplier_->event().ml_count = msg->ml_count;
+      state_supplier_->event().of_count = msg->of_count;
+      state_supplier_->event().ml_count = msg->ml_count;
       ekf_sent_ = false;
     } else {
       // Brian wants the max values sent to the ground, not the most recent
-      if (s_supplier_->event().of_count < msg->of_count) {
-        s_supplier_->event().of_count = msg->of_count;
+      if (state_supplier_->event().of_count < msg->of_count) {
+        state_supplier_->event().of_count = msg->of_count;
       }
-      if (s_supplier_->event().ml_count < msg->ml_count) {
-        s_supplier_->event().ml_count = msg->ml_count;
+      if (state_supplier_->event().ml_count < msg->ml_count) {
+        state_supplier_->event().ml_count = msg->ml_count;
       }
     }
 
@@ -105,7 +102,7 @@ void RosOdomRapidPosition::MsgCallback(const ff_msgs::EkfStateConstPtr& msg) {
     // number
     if (!std::isnan(msg->ml_mahal_dists[0])) {
       for (int i = 0; i < 50; i++) {
-        s_supplier_->event().ml_mahal_dists[i] = msg->ml_mahal_dists[i];
+        state_supplier_->event().ml_mahal_dists[i] = msg->ml_mahal_dists[i];
       }
     }
   }
@@ -123,11 +120,11 @@ void RosOdomRapidPosition::CopyTransform3D(rapid::Transform3D &transform,
   transform.rot[3] = pose.orientation.w;
 }
 
-void RosOdomRapidPosition::CopyVec3D(rapid::Vec3d& vecOut,
-                                     const geometry_msgs::Vector3& vecIn) {
-  vecOut[0] = vecIn.x;
-  vecOut[1] = vecIn.y;
-  vecOut[2] = vecIn.z;
+void RosOdomRapidPosition::CopyVec3D(rapid::Vec3d& vec_out,
+                                     const geometry_msgs::Vector3& vec_in) {
+  vec_out[0] = vec_in.x;
+  vec_out[1] = vec_in.y;
+  vec_out[2] = vec_in.z;
 }
 
 void RosOdomRapidPosition::PubEkf(const ros::TimerEvent& event) {
@@ -138,7 +135,7 @@ void RosOdomRapidPosition::PubEkf(const ros::TimerEvent& event) {
     return;
   }
 
-  rapid::ext::astrobee::EkfState &msg = s_supplier_->event();
+  rapid::ext::astrobee::EkfState &msg = state_supplier_->event();
 
   // Copy time
   msg.hdr.timeStamp = util::RosTime2RapidTime(ekf_msg_->header.stamp);
@@ -171,13 +168,13 @@ void RosOdomRapidPosition::PubEkf(const ros::TimerEvent& event) {
   // the message
 
   // Send message
-  s_supplier_->sendEvent();
+  state_supplier_->sendEvent();
 }
 
 void RosOdomRapidPosition::PubPosition(const ros::TimerEvent& event) {
   // Make sure we have received an ekf message before trying to send it
   if (ekf_msg_ != NULL) {
-    m_provider_->Publish(ekf_msg_);
+    provider_->Publish(ekf_msg_);
   }
 }
 

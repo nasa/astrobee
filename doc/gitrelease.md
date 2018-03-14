@@ -14,7 +14,7 @@ git checkout -b hotfix-0.1.x
 ```
 git commit -m"meaningful message"
 ```
-  1. Change the RELEASE.md file to reflect the new version
+  1. Update the version number and release notes: ./scripts/setup/debians/update\_release.sh VERSION\_NUMBER
 ```
 git commit -m"bumped version number to 0.1.x"
 ```

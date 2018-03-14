@@ -41,10 +41,10 @@ namespace ff {
 
 class RosArmJointSampleToRapid : public RosSubRapidPub {
  public:
-  RosArmJointSampleToRapid(const std::string& subscribeTopic,
-                           const std::string& pubTopic,
+  RosArmJointSampleToRapid(const std::string& subscribe_topic,
+                           const std::string& pub_topic,
                            const ros::NodeHandle &nh,
-                           unsigned int queueSize = 10);
+                           unsigned int queue_size = 10);
 
   void Callback(ff_msgs::JointSampleStampedConstPtr const& sample);
 

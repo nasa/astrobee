@@ -16,33 +16,28 @@
  * under the License.
  */
 
-#include <vector>
-#include <string>
-
 #include "dds_ros_bridge/rapid_agent_provider_ros_helper.h"
-
-#include "rapidUtil/RapidHelper.h"
 
 namespace rapid {
 AgentProviderRosHelper::AgentProviderRosHelper(
-    AgentTopicPairParameters const& params, const std::string& entityName)
-  : AgentProvider(params, entityName) {}
+    AgentTopicPairParameters const& params, const std::string& entity_name)
+  : AgentProvider(params, entity_name) {}
 
 void AgentProviderRosHelper::Publish(
                           std::vector<rapid::ParameterUnion> const& values) {
-  rapid::AgentState& agentState = m_dataSupplier.event();
+  rapid::AgentState& agent_state = m_dataSupplier.event();
 
   // update header with current time
-  rapid::RapidHelper::updateHeader(agentState.hdr);
+  rapid::RapidHelper::updateHeader(agent_state.hdr);
 
   // set status code
-  agentState.hdr.statusCode = 0;
-  agentState.hdr.serial = 0;
+  agent_state.hdr.statusCode = 0;
+  agent_state.hdr.serial = 0;
 
   // set values
-  agentState.values.ensure_length(values.size(), 64);
-  for (int i = 0; i < agentState.values.length(); ++i) {
-    agentState.values[i] = values[i];
+  agent_state.values.ensure_length(values.size(), 64);
+  for (int i = 0; i < agent_state.values.length(); ++i) {
+    agent_state.values[i] = values[i];
   }
 
   m_dataSupplier.sendEvent();

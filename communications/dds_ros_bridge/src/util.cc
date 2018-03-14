@@ -18,17 +18,6 @@
 
 #include <dds_ros_bridge/util.h>
 
-#include <ros/time.h>
-
-#include <std_msgs/Header.h>
-#include <rapidDds/HeaderSupport.h>
-
-#include <rapidUtil/RapidHelper.h>
-
-#include <stdint.h>
-
-#include <string>
-
 ros::Time util::RapidTime2RosTime(const int64_t dds_time) {
   ros::Time t;
 
@@ -44,7 +33,8 @@ int64_t util::RosTime2RapidTime(ros::Time const& ros_time) {
 
 void util::RosHeader2Rapid(std_msgs::Header const& ros_hdr,
                            rapid::Header* rapid_hdr,
-                           int status, int serial) {
+                           int status,
+                           int serial) {
   rapid::RapidHelper::initHeader(*rapid_hdr);
   if (serial >= 0) {
     rapid_hdr->serial = serial;

@@ -21,17 +21,17 @@
 std_msgs/Header header
 
 # The state of the mobility subsystem
-int32 state
-int32 INITIALIZING        = 0
-int32 WAITING_FOR_STOP    = 1
-int32 WAITING             = 2
-int32 IDLING              = 3
-int32 STOPPING            = 4
-int32 PREPPING            = 5
-int32 BOOTSTRAPPING       = 6
-int32 PLANNING            = 7
-int32 VALIDATING          = 8
-int32 PREPARING           = 9
-int32 CONTROLLING         = 10
-int32 REPLANNING          = 11
-int32 REVALIDATING        = 12
+int8 state
+int8 INITIALIZING        = 0
+int8 IDLE                = 1
+int8 STOPPED             = 2
+int8 IDLING              = 3
+int8 STOPPING            = 4
+int8 PREPPING            = 5
+int8 BOOTSTRAPPING       = 6
+int8 PLANNING            = 7
+int8 VALIDATING          = 8
+int8 PREPARING           = 9
+int8 CONTROLLING         = 10
+int8 REPLANNING          = 11
+int8 REVALIDATING        = 12

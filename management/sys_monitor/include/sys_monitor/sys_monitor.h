@@ -65,8 +65,11 @@ class SysMonitor : public ff_util::FreeFlyerNodelet {
  protected:
   class Watchdog {
    public:
-    Watchdog(SysMonitor *const sys_monitor, ros::Duration const& timeout,
-             uint const allowed_misses, uint const fault_id);
+    Watchdog(SysMonitor *const sys_monitor,
+             std::string const& node_name,
+             ros::Duration const& timeout,
+             uint const allowed_misses,
+               uint const fault_id);
     uint fault_id();
     uint misses_allowed();
     ff_msgs::HeartbeatConstPtr previous_hb();
@@ -74,9 +77,11 @@ class SysMonitor : public ff_util::FreeFlyerNodelet {
     bool heartbeat_started();
     bool unloaded();
     std::string nodelet_manager();
+    std::string nodelet_name();
     std::string nodelet_type();
     void hb_fault_occurring(bool occurring);
     void nodelet_manager(std::string manager_name);
+    void nodelet_name(std::string name);
     void nodelet_type(std::string type);
     void unloaded(bool is_unloaded);
     void ResetTimer();
@@ -94,6 +99,7 @@ class SysMonitor : public ff_util::FreeFlyerNodelet {
     bool heartbeat_started_;
     bool unloaded_;
     std::string nodelet_manager_;
+    std::string nodelet_name_;
     std::string nodelet_type_;
     ff_msgs::HeartbeatConstPtr previous_hb_;
   };

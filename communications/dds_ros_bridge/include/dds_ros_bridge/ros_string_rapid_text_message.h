@@ -22,26 +22,27 @@
 #include <string>
 
 #include "dds_ros_bridge/ros_sub_rapid_pub.h"
-#include "std_msgs/String.h"
 
 #include "rapidIo/TextMessager.h"
+
+#include "std_msgs/String.h"
 
 namespace ff {
 
 class RosStringRapidTextMessage : public RosSubRapidPub {
  public:
-  RosStringRapidTextMessage(const std::string& subscribeTopic,
-                            const std::string& pubTopic,
+  RosStringRapidTextMessage(const std::string& subscribe_topic,
+                            const std::string& pub_topic,
                             const ros::NodeHandle &nh,
-                            const unsigned int queueSize = 10,
+                            const unsigned int queue_size = 10,
                             const std::string& category = "ff");
 
   void CallBack(const std_msgs::String::ConstPtr& msg);
 
  private:
-  std::string m_category_;
-  rapid::TextMessagerParameters m_params_;
-  std::shared_ptr<rapid::TextMessager> m_provider_;
+  std::string category_;
+  rapid::TextMessagerParameters params_;
+  std::shared_ptr<rapid::TextMessager> provider_;
 };
 
 }  // end namespace ff

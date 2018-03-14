@@ -9,38 +9,38 @@
  * 
  *     http://www.apache.org/licenses/LICENSE-2.0
  * 
- * Unless required by applicable law or agreed to in writing, software
+ * Unless requie by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
  * License for the specific language governing permissions and limitations
  * under the License.
  */
 
-#include <string>
-
 #include "dds_ros_bridge/ros_telemetry_rapid_telemetry.h"
 
 namespace ff {
 
 RosTelemetryRapidTelemetry::RosTelemetryRapidTelemetry(
-    const std::string& subscribeTopic,
-    const std::string& pubTopic,
-    const ros::NodeHandle &nh,
-    config_reader::ConfigReader& config_params,
-    unsigned int queueSize)
-  : RosSubRapidPub(subscribeTopic, pubTopic, nh, queueSize) {
+                                    const std::string& subscribe_topic,
+                                    const std::string& pub_topic,
+                                    const ros::NodeHandle &nh,
+                                    config_reader::ConfigReader& config_params,
+                                    unsigned int queue_size)
+  : RosSubRapidPub(subscribe_topic, pub_topic, nh, queue_size) {
   config_supplier_.reset(
       new ff::RosTelemetryRapidTelemetry::ConfigSupplier(
-          rapid::ext::astrobee::TELEMETRY_CONFIG_TOPIC + m_publishTopic_, "",
+          rapid::ext::astrobee::TELEMETRY_CONFIG_TOPIC + publish_topic_, "",
           "AstrobeeTelemetryConfigProfile", "", ""));
 
   state_supplier_.reset(
       new ff::RosTelemetryRapidTelemetry::StateSupplier(
-          rapid::ext::astrobee::TELEMETRY_STATE_TOPIC + m_publishTopic_, "",
+          rapid::ext::astrobee::TELEMETRY_STATE_TOPIC + publish_topic_, "",
           "AstrobeeTelemetryStateProfile", "", ""));
 
-  m_sub_ = m_nh_.subscribe(subscribeTopic, queueSize,
-                        &RosTelemetryRapidTelemetry::CameraStateCallback, this);
+  sub_ = nh_.subscribe(subscribe_topic,
+                       queue_size,
+                       &RosTelemetryRapidTelemetry::CameraStateCallback,
+                       this);
 
   rapid::RapidHelper::initHeader(config_supplier_->event().hdr);
   rapid::RapidHelper::initHeader(state_supplier_->event().hdr);
@@ -68,14 +68,14 @@ RosTelemetryRapidTelemetry::RosTelemetryRapidTelemetry(
 void RosTelemetryRapidTelemetry::CameraStateCallback(
                             ff_msgs::CameraStatesStampedConstPtr const& state) {
   // Get config message so we know where to but the camera in the array
-  rapid::ext::astrobee::TelemetryConfig &c_msg = config_supplier_->event();
-  rapid::ext::astrobee::TelemetryState &s_msg = state_supplier_->event();
+  rapid::ext::astrobee::TelemetryConfig &config_msg = config_supplier_->event();
+  rapid::ext::astrobee::TelemetryState &state_msg = state_supplier_->event();
 
   int camera_index;
   for (unsigned int i = 0; i < state->states.size(); i++) {
     camera_index = -1;
-    for (int j = 0; j < c_msg.cameras.length(); j++) {
-      if (state->states[i].camera_name == c_msg.cameras[j].name) {
+    for (int j = 0; j < config_msg.cameras.length(); j++) {
+      if (state->states[i].camera_name == config_msg.cameras[j].name) {
         camera_index = j;
         break;
       }
@@ -88,11 +88,11 @@ void RosTelemetryRapidTelemetry::CameraStateCallback(
       std::string temp_res = std::to_string(state->states[i].stream_width) + "_"
                               + std::to_string(state->states[i].stream_height);
       // State vector size was initialized in assemble config function
-      s_msg.cameras[camera_index].streaming = state->states[i].streaming;
-      s_msg.cameras[camera_index].recording = state->states[i].recording;
-      s_msg.cameras[camera_index].resolution = ConvertResolution(temp_res);
-      s_msg.cameras[camera_index].frameRate = state->states[i].stream_rate;
-      s_msg.cameras[camera_index].bandwidth = state->states[i].bandwidth;
+      state_msg.cameras[camera_index].streaming = state->states[i].streaming;
+      state_msg.cameras[camera_index].recording = state->states[i].recording;
+      state_msg.cameras[camera_index].resolution = ConvertResolution(temp_res);
+      state_msg.cameras[camera_index].frameRate = state->states[i].stream_rate;
+      state_msg.cameras[camera_index].bandwidth = state->states[i].bandwidth;
     } else {
       ROS_ERROR("DDS Bridge: Camera %s not added to telem state, not in config",
                 state->states[i].camera_name.c_str());
@@ -160,7 +160,7 @@ bool RosTelemetryRapidTelemetry::AssembleConfig(
                                   config_reader::ConfigReader& config_params) {
   std::string temp_name, temp_resolution, temp_mode;
 
-  rapid::ext::astrobee::TelemetryConfig &c_msg = config_supplier_->event();
+  rapid::ext::astrobee::TelemetryConfig &config_msg = config_supplier_->event();
 
   config_reader::ConfigReader::Table cameras(&config_params, "cameras");
 
@@ -170,7 +170,7 @@ bool RosTelemetryRapidTelemetry::AssembleConfig(
     num_cameras = 8;
   }
 
-  c_msg.cameras.length(num_cameras);
+  config_msg.cameras.length(num_cameras);
 
   // Make state message have the same number of cameras
   state_supplier_->event().cameras.length(num_cameras);
@@ -185,8 +185,8 @@ bool RosTelemetryRapidTelemetry::AssembleConfig(
       return false;
     }
 
-    strncpy(c_msg.cameras[i].name, temp_name.data(), 32);
-    c_msg.cameras[i].name[31] = '\0';
+    strncpy(config_msg.cameras[i].name, temp_name.data(), 32);
+    config_msg.cameras[i].name[31] = '\0';
 
     config_reader::ConfigReader::Table resolutions(&camera,
                                                           "valid_resolutions");
@@ -198,7 +198,7 @@ bool RosTelemetryRapidTelemetry::AssembleConfig(
       num_resolutions = 8;
     }
 
-    c_msg.cameras[i].availResolutions.length(num_resolutions);
+    config_msg.cameras[i].availResolutions.length(num_resolutions);
 
     // Extract valid resolutions
     for (int j = 0; j < num_resolutions; j++) {
@@ -208,7 +208,8 @@ bool RosTelemetryRapidTelemetry::AssembleConfig(
         return false;
       }
 
-      c_msg.cameras[i].availResolutions[j] = ConvertResolution(temp_resolution);
+      config_msg.cameras[i].availResolutions[j] =
+                                            ConvertResolution(temp_resolution);
     }
 
     // Get mode
@@ -218,9 +219,9 @@ bool RosTelemetryRapidTelemetry::AssembleConfig(
     }
 
     if (temp_mode == "FRAMES") {
-      c_msg.cameras[i].mode = rapid::ext::astrobee::MODE_FRAMES;
+      config_msg.cameras[i].mode = rapid::ext::astrobee::MODE_FRAMES;
     } else if (temp_mode == "VIDEO") {
-      c_msg.cameras[i].mode = rapid::ext::astrobee::MODE_VIDEO;
+      config_msg.cameras[i].mode = rapid::ext::astrobee::MODE_VIDEO;
     } else {
       ROS_ERROR("DDS Bridge: Camera mode %s not recognized", temp_mode.c_str());
       return false;
@@ -233,7 +234,7 @@ bool RosTelemetryRapidTelemetry::AssembleConfig(
                                                             temp_name.c_str());
       return false;
     }
-    c_msg.cameras[i].maxFrameRate = max_frame_rate;
+    config_msg.cameras[i].maxFrameRate = max_frame_rate;
   }
 
   return true;

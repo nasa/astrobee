@@ -16,33 +16,34 @@
  * under the License.
  */
 
-#include <string>
-
 #include "dds_ros_bridge/ros_string_rapid_text_message.h"
 
 namespace ff {
 
 RosStringRapidTextMessage::RosStringRapidTextMessage(
-    const std::string& subscribeTopic, const std::string& pubTopic,
-    const ros::NodeHandle &nh, const unsigned int queueSize,
+    const std::string& subscribe_topic,
+    const std::string& pub_topic,
+    const ros::NodeHandle &nh,
+    const unsigned int queue_size,
     const std::string& category)
-  : RosSubRapidPub(subscribeTopic, pubTopic, nh, queueSize),
-    m_category_(category) {
+  : RosSubRapidPub(subscribe_topic, pub_topic, nh, queue_size),
+    category_(category) {
   // setup parameters
-  m_params_.topic += pubTopic;
+  params_.topic += pub_topic;
 
   // instantiate provider
-  m_provider_.reset(new rapid::TextMessager(m_params_));
+  provider_.reset(new rapid::TextMessager(params_));
 
   // start subscriber
-  m_sub_ = m_nh_.subscribe(subscribeTopic, queueSize,
-    &RosStringRapidTextMessage::CallBack, this);
+  sub_ = nh_.subscribe(subscribe_topic,
+                       queue_size,
+                       &RosStringRapidTextMessage::CallBack,
+                       this);
 }
 
 void RosStringRapidTextMessage::CallBack(
-  const std_msgs::String::ConstPtr& msg) {
-  m_provider_->sendText(m_category_.c_str(),
-    rapid::MSG_DEBUG, msg->data.c_str());
+                                        const std_msgs::String::ConstPtr& msg) {
+  provider_->sendText(category_.c_str(), rapid::MSG_DEBUG, msg->data.c_str());
 }
 
 }  // end namespace ff

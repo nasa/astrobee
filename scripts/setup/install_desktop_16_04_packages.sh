@@ -24,6 +24,7 @@
 # packages to install.
 
 scriptdir=$(dirname "$(readlink -f "$0")")
+arssrc=/etc/apt/sources.list.d/astrobee-latest.list
 
 pkg_files=${1:-$scriptdir/packages_base.lst $scriptdir/packages_desktop.lst}
 echo $pkg_files
@@ -36,12 +37,27 @@ for i in $pkg_files; do
   pkgs="$pkgs $(<"$i")"
 done
 
+# if this file exists, we are using the astrobee repository
+# need to set up tunnel through m (NASA users only)
+if [ -e $arssrc ];
+then
+  username=${NDC_USERNAME:+${NDC_USERNAME}@}
+
+  # Add these packages to the apt sources (we remove them later, so apt update succeeds)
+  sudo /bin/bash -c "echo \"deb [arch=amd64] http://127.0.0.1:8765/software xenial main\" > $arssrc" || exit 1
+  sudo /bin/bash -c "echo \"deb-src http://127.0.0.1:8765/software xenial main\" >> $arssrc" || exit 1
+  ssh -N -L 8765:astrobee.ndc.nasa.gov:80 m.ndc.nasa.gov &
+  trap "kill $! 2> /dev/null; sudo truncate -s 0 $arssrc; wait $!" 0 HUP QUIT ILL ABRT FPE SEGV PIPE TERM INT
+  sleep 1
+fi
+
+sudo apt-get update || exit 1
+
 if ! sudo apt-get install -m -y $pkgs; then
   filter_pkgs="libroyale-dev rti-dev libsoracore-dev libmiro-dev libroyale1 rti libmiro0 libsoracore1"
   for p in $filter_pkgs; do
     pkgs=${pkgs//$p/}
   done
-  echo "$pkgs"
   sudo apt-get install -m -y $pkgs || {
     echo "Couldn't install a necessary package."
     exit 1

@@ -44,17 +44,17 @@ namespace ff {
 
 class RosBatteryStateToRapid : public RosSubRapidPub {
  public:
-  RosBatteryStateToRapid(std::string const& subTopicBatteryStateTL,
-                         std::string const& subTopicBatteryStateTR,
-                         std::string const& subTopicBatteryStateBL,
-                         std::string const& subTopicBatteryStateBR,
-                         std::string const& subTopicBatteryTempTL,
-                         std::string const& subTopicBatteryTempTR,
-                         std::string const& subTopicBatteryTempBL,
-                         std::string const& subTopicBatteryTempBR,
-                         std::string const& pubTopic,
+  RosBatteryStateToRapid(std::string const& sub_topic_battery_state_TL,
+                         std::string const& sub_topic_battery_state_TR,
+                         std::string const& sub_topic_battery_state_BL,
+                         std::string const& sub_topic_battery_state_BR,
+                         std::string const& sub_topic_battery_temp_TL,
+                         std::string const& sub_topic_battery_temp_TR,
+                         std::string const& sub_topic_battery_temp_BL,
+                         std::string const& sub_topic_battery_temp_BR,
+                         std::string const& pub_topic,
                          ros::NodeHandle const& nh,
-                         const unsigned int queueSize = 10);
+                         const unsigned int queue_size = 10);
 
   void AddTempToState(rapid::ext::astrobee::BatterySlot slot, float temp);
   rapid::ext::astrobee::BatterySlot ConvertBatteryLoc(std::string const& slot);
@@ -66,22 +66,20 @@ class RosBatteryStateToRapid : public RosSubRapidPub {
   void TempBRCallback(sensor_msgs::TemperatureConstPtr const& temp);
 
  private:
-  using ConfigSupplier =
-    kn::DdsTypedSupplier<rapid::ext::astrobee::EpsConfig>;
+  using ConfigSupplier = kn::DdsTypedSupplier<rapid::ext::astrobee::EpsConfig>;
   using ConfigSupplierPtr = std::unique_ptr<ConfigSupplier>;
 
-  ConfigSupplierPtr c_supplier_;
+  ConfigSupplierPtr config_supplier_;
 
-  using StateSupplier =
-    kn::DdsTypedSupplier<rapid::ext::astrobee::EpsState>;
+  using StateSupplier = kn::DdsTypedSupplier<rapid::ext::astrobee::EpsState>;
   using StateSupplierPtr = std::unique_ptr<StateSupplier>;
 
-  StateSupplierPtr s_supplier_;
+  StateSupplierPtr state_supplier_;
 
-  ros::Subscriber sub_battery_state_tl, sub_battery_state_tr;
-  ros::Subscriber sub_battery_state_bl, sub_battery_state_br;
-  ros::Subscriber sub_battery_temp_tl, sub_battery_temp_tr;
-  ros::Subscriber sub_battery_temp_bl, sub_battery_temp_br;
+  ros::Subscriber sub_battery_state_tl_, sub_battery_state_tr_;
+  ros::Subscriber sub_battery_state_bl_, sub_battery_state_br_;
+  ros::Subscriber sub_battery_temp_tl_, sub_battery_temp_tr_;
+  ros::Subscriber sub_battery_temp_bl_, sub_battery_temp_br_;
 
   int battery_time_multiple_;
 };

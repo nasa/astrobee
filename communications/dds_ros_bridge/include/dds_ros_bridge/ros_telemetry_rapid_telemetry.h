@@ -22,29 +22,31 @@
 #include <string>
 
 #include "config_reader/config_reader.h"
+
 #include "dds_ros_bridge/ros_sub_rapid_pub.h"
+
 #include "ff_msgs/CameraState.h"
 #include "ff_msgs/CameraStatesStamped.h"
 
 #include "knDds/DdsTypedSupplier.h"
 
-#include "AstrobeeConstants.h"
-#include "TelemetryConfigSupport.h"
-#include "TelemetryStateSupport.h"
-
 #include "rapidUtil/RapidHelper.h"
 
 #include "ros/ros.h"
+
+#include "AstrobeeConstants.h"
+#include "TelemetryConfigSupport.h"
+#include "TelemetryStateSupport.h"
 
 namespace ff {
 
 class RosTelemetryRapidTelemetry : public RosSubRapidPub {
  public:
-  RosTelemetryRapidTelemetry(const std::string& subscribeTopic,
-                             const std::string& pubTopic,
+  RosTelemetryRapidTelemetry(const std::string& subscribe_topic,
+                             const std::string& pub_topic,
                              const ros::NodeHandle &nh,
                              config_reader::ConfigReader& config_params,
-                             unsigned int queueSize = 10);
+                             unsigned int queue_size = 10);
 
   void CameraStateCallback(ff_msgs::CameraStatesStampedConstPtr const& state);
   void SetCommStatusRate(float rate);

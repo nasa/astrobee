@@ -38,10 +38,10 @@ elif [ "$nodelet_name" = choreographer ]
 then
   manager_name="mlp_mobility"
   nodelet_type="choreographer/ChoreographerNodelet"
-elif [ "$nodelet_name" = sentinel ]
+elif [ "$nodelet_name" = mapper ]
 then
-  manager_name="mlp_depth_cam"
-  nodelet_type="sentinel/SentinelNodelet"
+  manager_name="mlp_mobility"
+  nodelet_type="mapper/MapperNodelet"
 fi
 
 rosservice call /"$manager_name"/load_nodelet /"$nodelet_name" "$nodelet_type" [] [] [] ""

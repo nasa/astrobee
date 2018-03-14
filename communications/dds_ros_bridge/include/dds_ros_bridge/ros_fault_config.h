@@ -19,26 +19,32 @@
 #ifndef DDS_ROS_BRIDGE_ROS_FAULT_CONFIG_H_
 #define DDS_ROS_BRIDGE_ROS_FAULT_CONFIG_H_
 
-#include <string>
+#include <cstring>
 #include <memory>
+#include <string>
 
-#include "knDds/DdsTypedSupplier.h"
-
+#include "dds_ros_bridge/enum_helper.h"
 #include "dds_ros_bridge/ros_sub_rapid_pub.h"
+#include "dds_ros_bridge/util.h"
 
 #include "ff_msgs/FaultConfig.h"
 
+#include "knDds/DdsTypedSupplier.h"
+
+#include "rapidUtil/RapidHelper.h"
+
 #include "AstrobeeConstants.h"
 #include "FaultConfigSupport.h"
+#include "FaultStateSupport.h"
 
 namespace ff {
 
 class RosFaultConfigToRapid : public RosSubRapidPub {
  public:
-  RosFaultConfigToRapid(const std::string& subscribeTopic,
-                  const std::string& pubTopic,
-                  const ros::NodeHandle &nh,
-                  const unsigned int queueSize = 10);
+  RosFaultConfigToRapid(const std::string& subscribe_topic,
+                        const std::string& pub_topic,
+                        const ros::NodeHandle &nh,
+                        const unsigned int queue_size = 10);
 
   void Callback(ff_msgs::FaultConfigConstPtr const& config);
 
@@ -47,7 +53,7 @@ class RosFaultConfigToRapid : public RosSubRapidPub {
     kn::DdsTypedSupplier<rapid::ext::astrobee::FaultConfig>;
   using ConfigSupplierPtr = std::unique_ptr<ConfigSupplier>;
 
-  ConfigSupplierPtr m_supplier_;
+  ConfigSupplierPtr config_supplier_;
 };
 
 }  // end namespace ff

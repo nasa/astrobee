@@ -4,7 +4,7 @@
 numPmcs = 2
 
 -- duration of the generated sequence (seconds)
-duration = 4
+duration = 12
 
 -- frame rate at wich commands are generated
 rate = 62.5
@@ -16,8 +16,8 @@ speed = 200
 numNozzles = 6
 
 -- min and max opening of the nozzles
-minPosition = 25
-maxPosition = 90
+minPosition = 0
+maxPosition = 255
 
 -- range of servo position
 positionRange = maxPosition-minPosition

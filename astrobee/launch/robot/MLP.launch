@@ -65,11 +65,6 @@
     <arg name="name" value="optical_flow_nodelet" />
     <arg name="manager" value="mlp_vision" />
   </include>
-  <include file="$(find marker_tracking)/launch/marker_tracking.launch"
-    if="$(eval arg('nodes') == '' or arg('nodes').find('marker_tracking') != -1)">
-    <arg name="name" value="marker_tracking" />
-    <arg name="manager" value="mlp_vision" />
-  </include>
   <include file="$(find handrail_detect)/launch/handrail_detect.launch"
     if="$(eval arg('nodes') == '' or arg('nodes').find('handrail_detect') != -1)">
     <arg name="name" value="handrail_detect" />
@@ -77,11 +72,6 @@
   </include>
 
   <!-- Mobility -->
-  <include file="$(find sentinel)/launch/sentinel.launch"
-    if="$(eval arg('nodes') == '' or arg('nodes').find('sentinel') != -1)">
-    <arg name="name" value="sentinel" />
-    <arg name="manager" value="mlp_depth_cam" />
-  </include>
   <include file="$(find mapper)/launch/mapper.launch"
     if="$(eval arg('nodes') == '' or arg('nodes').find('mapper') != -1)">
     <arg name="name" value="mapper" />
@@ -108,14 +98,12 @@
     <arg name="manager" value="mlp_mobility" />
   </include>
 
-  <!-- Procedures -->
-  <!--
+  <!-- Behaviors -->
   <include file="$(find dock)/launch/dock.launch"
     if="$(eval arg('nodes') == '' or arg('nodes').find('dock') != -1)">
     <arg name="name" value="dock" />
     <arg name="manager" value="mlp_dock" />
   </include>
-  -->
   <include file="$(find arm)/launch/arm.launch"
     if="$(eval arg('nodes') == '' or arg('nodes').find('arm') != -1)">
     <arg name="name" value="arm" />
@@ -140,6 +128,11 @@
     <arg name="name" value="access_control" />
     <arg name="manager" value="mlp_management" />
   </include>
+  <include file="$(find data_bagger)/launch/data_bagger.launch"
+    if="$(eval arg('nodes') == '' or arg('nodes').find('data_bagger') != -1)">
+    <arg name="name" value="data_bagger" />
+    <arg name="manager" value="mlp_management" />
+  </include>
 
   <!-- Monitors -->
   <include file="$(find disk_monitor)/launch/disk_monitor.launch"
@@ -162,7 +155,7 @@
 
   <!-- Drivers (optional) -->
   <group if="$(arg drivers)">
-    <!-- Vision pipeline -->
+    <!-- Mapped landmark pipeline -->
     <include file="$(find is_camera)/launch/is_camera.launch"
       if="$(eval arg('nodes') == '' or arg('nodes').find('nav_cam') != -1)">
       <arg name="name" value="nav_cam" />
@@ -173,9 +166,15 @@
       <arg name="name" value="localization_node" />
       <arg name="manager" value="mlp_vision" />
     </include>
+    <!-- Marker tracking pipeline -->
     <include file="$(find is_camera)/launch/is_camera.launch"
       if="$(eval arg('nodes') == '' or arg('nodes').find('dock_cam') != -1)">
       <arg name="name" value="dock_cam" />
+      <arg name="manager" value="mlp_vision" />
+    </include>
+    <include file="$(find marker_tracking)/launch/marker_tracking.launch"
+      if="$(eval arg('nodes') == '' or arg('nodes').find('marker_tracking') != -1)">
+      <arg name="name" value="marker_tracking" />
       <arg name="manager" value="mlp_vision" />
     </include>
     <!-- Depth camera pipeline -->
@@ -185,13 +184,11 @@
       <arg name="manager" value="mlp_depth_cam" />
     </include>
     <!-- Perching arm -->
-    <!--
     <include file="$(find perching_arm)/launch/perching_arm.launch"
       if="$(eval arg('nodes') == '' or arg('nodes').find('perching_arm') != -1)">
       <arg name="name" value="perching_arm" />
       <arg name="manager" value="mlp_serial" />
     </include>
-    -->
     <!-- Monitors -->
     <include file="$(find cpu_monitor)/launch/cpu_monitor.launch"
       if="$(eval arg('nodes') == '' or arg('nodes').find('mlp_cpu_monitor') != -1)">

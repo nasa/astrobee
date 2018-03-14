@@ -3,7 +3,7 @@
     type="disk_monitor::DiskMonitor"
     base_class_type="nodelet::Nodelet">
     <description>
-      Nodele1t to monitor disk loads."
+      Nodelet to monitor disk loads.
     </description>
   </class>
 </library>

@@ -25,6 +25,9 @@
 #include <QtGui/QImage>
 #include <QtGui/QPainter>
 
+#include <iomanip>
+#include <sstream>
+
 namespace ekf_video {
 
 EkfBagVideo::EkfBagVideo(const char* bagfile, const char* mapfile, const char* videofile) :
@@ -120,23 +123,210 @@ void EkfBagVideo::DrawTable(QPainter & p, const QRect & rect) {
   p.resetTransform();
 }
 
-void EkfBagVideo::DrawMahalanobis(QPainter & p, const QRect & rect) {
-  p.translate(rect.x(), rect.y());
+void EkfBagVideo::DrawBarGraph(QPainter & p, const QRect & rect,
+                    int data_count, const float* data,
+                    float y_min, float y_max,
+                    const char* title, const char* xlabel, const char* ylabel,
+                    const std::string* data_labels, bool data_labels_on_bars) {
+  int TITLE_HEIGHT = title == NULL ? 0 : 25;
+  int LABELS_HEIGHT = data_labels == NULL ? 0 : 20;
+  int YLABEL_WIDTH = ylabel == NULL ? 0 : 20;
+  int XLABEL_HEIGHT = xlabel == NULL ? 0 : 30;
+  int TICKS_WIDTH = 25;
+  int GRAPH_HEIGHT = rect.height() - LABELS_HEIGHT - TITLE_HEIGHT - XLABEL_HEIGHT - 5;
+  int GRAPH_WIDTH  = rect.width() - TICKS_WIDTH - YLABEL_WIDTH - 10;
+  float BIN_WIDTH = GRAPH_WIDTH / static_cast<float>(data_count);
 
-  for (int i = 0; i < MAHAL_NUM_BINS; i++)
-    if (mahal_bins_[i] > 0) {
-      float height = std::min(mahal_bins_[i], MAHAL_BIN_MAX) / static_cast<float>(MAHAL_BIN_MAX) * rect.height();
-      p.fillRect(QRectF(i * rect.width() / MAHAL_NUM_BINS, rect.height() - height,
-            rect.width() / static_cast<float>(MAHAL_NUM_BINS), height),
+  QPen white(QColor::fromRgb(0xFF, 0xFF, 0xFF));
+  p.setPen(white);
+  QFont font("Arial");
+
+  p.translate(rect.x(), rect.y() + 5);
+
+  // draw title
+  font.setPointSize(8);
+  p.setFont(font);
+  p.drawText(QRectF(0, 0, rect.width(), TITLE_HEIGHT), Qt::AlignCenter, title);
+  p.translate(0, TITLE_HEIGHT);
+
+  float ZERO_HEIGHT = (std::max(std::min(0.0f, y_max), y_min) - y_min) / (y_max - y_min) * GRAPH_HEIGHT;
+
+  // draw left side
+  // ylabel
+  if (ylabel != NULL) {
+    p.save();
+    p.translate(YLABEL_WIDTH / 2, GRAPH_HEIGHT / 2);
+    p.rotate(-90);
+    font.setPointSize(6);
+    p.setFont(font);
+    p.drawText(QRectF(-GRAPH_HEIGHT / 2, -YLABEL_WIDTH / 2, GRAPH_HEIGHT, YLABEL_WIDTH), Qt::AlignCenter, ylabel);
+    p.restore();
+  }
+
+  p.translate(YLABEL_WIDTH, 0);
+  font.setPointSize(4);
+  int font_height = p.fontMetrics().height() / 2;
+  p.setFont(font);
+  // axis labels
+  {
+    std::stringstream stream;
+    stream << std::fixed << std::setprecision(1) << y_max;
+    p.drawText(QRectF(0,                -font_height / 2, TICKS_WIDTH - 6, font_height),
+               Qt::AlignRight, stream.str().c_str());
+  }
+  p.drawLine(QLineF(TICKS_WIDTH - 5, 0, TICKS_WIDTH, 0));
+  {
+    std::stringstream stream;
+    stream << std::fixed << std::setprecision(1) << y_min;
+    p.drawText(QRectF(0, GRAPH_HEIGHT  - font_height / 2, TICKS_WIDTH - 6, font_height),
+               Qt::AlignRight, stream.str().c_str());
+  }
+  p.drawLine(QLineF(TICKS_WIDTH - 5, GRAPH_HEIGHT, TICKS_WIDTH, GRAPH_HEIGHT));
+  if (y_max > 0.0 && y_min < 0.0) {
+    p.drawText(QRectF(0, ZERO_HEIGHT - font_height / 2, TICKS_WIDTH - 6, font_height), Qt::AlignRight, "0");
+    p.drawLine(QLineF(TICKS_WIDTH - 5, ZERO_HEIGHT, TICKS_WIDTH, ZERO_HEIGHT));
+  }
+
+  // draw content of graph
+  p.translate(TICKS_WIDTH, 0);
+  for (int i = 0; i < data_count; i++) {
+    float height = (std::max(std::min(data[i], y_max), y_min) - y_min) / (y_max - y_min) * GRAPH_HEIGHT;
+      p.fillRect(QRectF(i * BIN_WIDTH, GRAPH_HEIGHT - height, BIN_WIDTH, height - ZERO_HEIGHT),
             QBrush(QColor::fromRgb(0x00, 0xFF, 0x00)));
-    }
+  }
+  // draw bounding box
+  white.setWidth(1.0);
+  p.setPen(white);
+  p.setBrush(Qt::NoBrush);
+  p.drawRect(QRectF(0, 0, GRAPH_WIDTH, GRAPH_HEIGHT));
 
-  QPen pen(QColor::fromRgb(0xFF, 0xFF, 0xFF));
-  pen.setWidth(1.0);
-  p.setPen(pen);
-  p.drawRect(rect);
+  // draw bottom tick marks
+  if (data_labels != NULL) {
+    font.setPointSize(4);
+    p.setFont(font);
+    for (int i = 0; i < data_count + (data_labels_on_bars ? 0 : 1); i++) {
+      p.drawText(QRectF(i * BIN_WIDTH - (data_labels_on_bars ? 0 : BIN_WIDTH / 2),
+                        GRAPH_HEIGHT, BIN_WIDTH, LABELS_HEIGHT), Qt::AlignCenter, data_labels[i].c_str());
+    }
+    for (int i = 0; i < data_count + 1; i++)
+      p.drawLine(QLineF(i * BIN_WIDTH, 0, i * BIN_WIDTH, GRAPH_HEIGHT + 5));
+  }
+
+  font.setPointSize(6);
+  p.setFont(font);
+  p.translate(0, GRAPH_HEIGHT + LABELS_HEIGHT);
+  if (xlabel != NULL)
+    p.drawText(QRectF(0, 0, GRAPH_WIDTH, LABELS_HEIGHT), Qt::AlignCenter, xlabel);
 
   p.resetTransform();
+}
+
+void EkfBagVideo::DrawMahalanobis(QPainter & p, const QRect & rect) {
+  float data[MAHAL_NUM_BINS];
+  std::string data_labels[MAHAL_NUM_BINS + 1];
+  for (int i = 0; i < MAHAL_NUM_BINS; i++) {
+    data[i] = static_cast<float>(mahal_bins_[i]);
+    std::stringstream stream;
+    stream << std::fixed << std::setprecision(1) << (i * MAHAL_BIN_SIZE);
+    data_labels[i] = stream.str();
+  }
+  data_labels[MAHAL_NUM_BINS] = std::string("\u221E");
+  DrawBarGraph(p, rect, MAHAL_NUM_BINS, data, 0.0, 10.0, "Visual Landmarks Mahalanobis Distance Histogram",
+      NULL, NULL, data_labels, false);
+}
+
+void EkfBagVideo::DrawSMFeatureCount(QPainter & p, const QRect & rect) {
+  float count = static_cast<float>(ml_count_);
+  std::string data_label("Map Features");
+  DrawBarGraph(p, rect, 1, &count, 0.0, 50.0, NULL, NULL, NULL, &data_label, true);
+}
+
+void EkfBagVideo::DrawOFFeatureCount(QPainter & p, const QRect & rect) {
+  float count = static_cast<float>(of_count_);
+  std::string data_label("VO Features");
+  DrawBarGraph(p, rect, 1, &count, 0.0, 50.0, NULL, NULL, NULL, &data_label, true);
+}
+
+void EkfBagVideo::DrawStatus(QPainter & p, const QRect & rect) {
+  QColor color = QColor::fromRgb(0xFF, 0x00, 0x00);
+  std::string text("Lost");
+  if (state_.confidence == ff_msgs::EkfState::CONFIDENCE_GOOD) {
+    color = QColor::fromRgb(0x00, 0xFF, 0x00);
+    text = std::string("Good");
+  } else if (state_.confidence == ff_msgs::EkfState::CONFIDENCE_POOR) {
+    color = QColor::fromRgb(0xFF, 0xFF, 0x00);
+    text = std::string("Poor");
+  }
+
+  QPen white(QColor::fromRgb(0xFF, 0xFF, 0xFF));
+  QPen black(QColor::fromRgb(0xFF, 0xFF, 0xFF));
+  white.setWidth(1.0);
+  p.setPen(white);
+  p.setBrush(QBrush(color));
+  QFont font("Arial");
+  font.setPointSize(10);
+  p.setFont(font);
+
+  p.drawRect(rect);
+
+  p.setPen(black);
+  p.drawText(rect, Qt::AlignCenter, text.c_str());
+}
+
+void EkfBagVideo::DrawVelocity(QPainter & p, const QRect & rect) {
+  std::string data_labels[] = {std::string("x"), std::string("y"), std::string("z")};
+  float data[] = {static_cast<float>(state_.velocity.x),
+                  static_cast<float>(state_.velocity.y),
+                  static_cast<float>(state_.velocity.z)};
+  DrawBarGraph(p, rect, 3, data, -0.25, 0.25, "Velocity", NULL, "m/s", data_labels, true);
+}
+
+void EkfBagVideo::DrawAccelBias(QPainter & p, const QRect & rect) {
+  std::string data_labels[] = {std::string("x"), std::string("y"), std::string("z")};
+  float data[] = {static_cast<float>(state_.accel_bias.x),
+                  static_cast<float>(state_.accel_bias.y),
+                  static_cast<float>(state_.accel_bias.z)};
+  DrawBarGraph(p, rect, 3, data, -0.01, 0.01, "Accel Bias", NULL, "m/s^2", data_labels, true);
+}
+
+void EkfBagVideo::DrawOmega(QPainter & p, const QRect & rect) {
+  std::string data_labels[] = {std::string("\u03D1"), std::string("\u03C6"), std::string("\u03C8")};
+  float data[] = {static_cast<float>(state_.omega.x * 180.0 / M_PI),
+                  static_cast<float>(state_.omega.y * 180.0 / M_PI),
+                  static_cast<float>(state_.omega.z * 180.0 / M_PI)};
+  DrawBarGraph(p, rect, 3, data, -45.0, 45.0, "Angular Velocity", NULL, "\u00B0/s", data_labels, true);
+}
+
+void EkfBagVideo::DrawGyroBias(QPainter & p, const QRect & rect) {
+  std::string data_labels[] = {std::string("\u03D1"), std::string("\u03C6"), std::string("\u03C8")};
+  float data[] = {static_cast<float>(state_.gyro_bias.x * 180.0 / M_PI),
+                  static_cast<float>(state_.gyro_bias.y * 180.0 / M_PI),
+                  static_cast<float>(state_.gyro_bias.z * 180.0 / M_PI)};
+  DrawBarGraph(p, rect, 3, data, -0.1, 0.1, "Gyro Bias", NULL, "\u00B0/s", data_labels, true);
+}
+
+void EkfBagVideo::DrawPositionCov(QPainter & p, const QRect & rect) {
+  std::string data_labels[] = {std::string("x"), std::string("y"), std::string("z")};
+  float data[] = {static_cast<float>(sqrt(state_.cov_diag[12]) * 100.0),
+                  static_cast<float>(sqrt(state_.cov_diag[13]) * 100.0),
+                  static_cast<float>(sqrt(state_.cov_diag[14]) * 100.0)};
+  DrawBarGraph(p, rect, 3, data, 0.0, 2.0, "Position Std. Dev.", NULL, "cm", data_labels, true);
+}
+
+void EkfBagVideo::DrawVelocityCov(QPainter & p, const QRect & rect) {
+  std::string data_labels[] = {std::string("x"), std::string("y"), std::string("z")};
+  float data[] = {static_cast<float>(sqrt(state_.cov_diag[7]) * 100.0),
+                  static_cast<float>(sqrt(state_.cov_diag[8]) * 100.0),
+                  static_cast<float>(sqrt(state_.cov_diag[9]) * 100.0)};
+  DrawBarGraph(p, rect, 3, data, 0.0, 0.2, "Velocity Std. Dev.", NULL, "cm/s", data_labels, true);
+}
+
+void EkfBagVideo::DrawAngleCov(QPainter & p, const QRect & rect) {
+  std::string data_labels[] = {std::string("\u03D1"), std::string("\u03C6"), std::string("\u03C8")};
+  float data[] = {static_cast<float>(sqrt(state_.cov_diag[0]) * 180.0 / M_PI),
+                  static_cast<float>(sqrt(state_.cov_diag[1]) * 180.0 / M_PI),
+                  static_cast<float>(sqrt(state_.cov_diag[2]) * 180.0 / M_PI)};
+  DrawBarGraph(p, rect, 3, data, 0.0, 0.1, "Orientation Std. Dev.", NULL, "\u00B0", data_labels, true);
 }
 
 void EkfBagVideo::UpdateImage(const ros::Time & time, const sensor_msgs::ImageConstPtr & ros_image) {
@@ -156,7 +346,24 @@ void EkfBagVideo::UpdateImage(const ros::Time & time, const sensor_msgs::ImageCo
   // draw side widgets
   // starts at pixel 1280, width is 640
   DrawTable(p, QRect(1280, 0, 640, 640));
-  DrawMahalanobis(p, QRect(1280, 640, 640, 60));
+
+  DrawVelocity(p, QRect(1280, 640, 320, 110));
+  DrawAccelBias(p, QRect(1280, 750, 320, 110));
+  DrawPositionCov(p, QRect(1280, 860, 320, 110));
+  DrawVelocityCov(p, QRect(1280, 970, 320, 110));
+
+  DrawOmega(p, QRect(1600, 640, 320, 110));
+  DrawGyroBias(p, QRect(1600, 750, 320, 110));
+  DrawAngleCov(p, QRect(1600, 860, 320, 110));
+  // gyro_bias
+  // accel
+  // accel_bias
+
+  // bottom
+  DrawStatus(p, QRect(0, 960, 120, 120));
+  DrawSMFeatureCount(p, QRect(120, 960, 120, 120));
+  DrawOFFeatureCount(p, QRect(240, 960, 120, 120));
+  DrawMahalanobis(p, QRect(360, 960, 920, 120));
 
   p.end();
   video_.AddFrame(image);
@@ -185,7 +392,11 @@ void EkfBagVideo::UpdateEKF(const ff_msgs::EkfState & s) {
         continue;
       mahal_bins_[std::min(MAHAL_NUM_BINS - 1, static_cast<int>(m / MAHAL_BIN_SIZE))]++;
     }
+    ml_count_ = state_.ml_count;
   }
+
+  if (state_.of_count > 0)
+    of_count_ = state_.of_count;
 }
 
 void EkfBagVideo::UpdateOpticalFlow(const ff_msgs::Feature2dArray & of) {

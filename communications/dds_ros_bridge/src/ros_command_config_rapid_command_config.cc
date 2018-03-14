@@ -16,28 +16,20 @@
  * under the License.
  */
 
-#include <ros/ros.h>
-
-#include <string>
-#include <sstream>
-
 #include "dds_ros_bridge/ros_command_config_rapid_command_config.h"
-
-#include "rapidDds/RapidConstants.h"
-#include "rapidDds/CommandConfigSupport.h"
-#include "rapidUtil/RapidHelper.h"
-#include "knDds/DdsTypedSupplier.h"
-#include "AstrobeeCommandConstants.h"
 
 namespace ff {
 
 RosCommandConfigRapidCommandConfig::RosCommandConfigRapidCommandConfig(
-    const std::string& pubTopic, const ros::NodeHandle &nh,
-    config_reader::ConfigReader& config_params)
-  : RapidPub(pubTopic),
-    m_commandConfigSupplier_(
-      rapid::COMMAND_CONFIG_TOPIC + m_publishTopic_, "",
-      "RapidCommandConfigProfile", "", "") {
+                                    const std::string& pub_topic,
+                                    const ros::NodeHandle &nh,
+                                    config_reader::ConfigReader& config_params)
+  : RapidPub(pub_topic),
+    command_config_supplier_(rapid::COMMAND_CONFIG_TOPIC + publish_topic_,
+                             "",
+                             "RapidCommandConfigProfile",
+                             "",
+                             "") {
   // TODO(all): confirm topic suffix has "-"
   // may need to set profile to RapidCommandConfigProfile
 
@@ -50,17 +42,17 @@ RosCommandConfigRapidCommandConfig::RosCommandConfigRapidCommandConfig(
   //   ""  /*entity_name*/);
 
 
-  if (AssembleConfig(m_commandConfigSupplier_.event(), config_params)) {
-    m_commandConfigSupplier_.sendEvent();
+  if (AssembleConfig(command_config_supplier_.event(), config_params)) {
+    command_config_supplier_.sendEvent();
   }
 }
 
 bool RosCommandConfigRapidCommandConfig::AssembleConfig(
-                            rapid::CommandConfig& config,
-                            config_reader::ConfigReader& config_params) {
-  std::string tempName;
-  std::string tempKey;
-  std::string tempType;
+                                  rapid::CommandConfig& config,
+                                  config_reader::ConfigReader& config_params) {
+  std::string temp_name;
+  std::string temp_key;
+  std::string temp_type;
 
   config_reader::ConfigReader::Table cmd_config(&config_params,
                                                 "commandConfig");
@@ -77,22 +69,23 @@ bool RosCommandConfigRapidCommandConfig::AssembleConfig(
     config_reader::ConfigReader::Table subsys(&avail_subsys, (i + 1));
 
     // Get subsystem name
-    if (!subsys.GetStr("name", &tempName)) {
+    if (!subsys.GetStr("name", &temp_name)) {
       ROS_FATAL("DDS Bridge: name not listed for avail subsys %i!", i);
       return false;
     }
 
-    strncpy(config.availableSubsystems[i].name, tempName.data(), 32);
+    strncpy(config.availableSubsystems[i].name, temp_name.data(), 32);
     config.availableSubsystems[i].name[31] = '\0';
 
     // Get subsystem type name
-    if (!subsys.GetStr("subsystemTypeName", &tempType)) {
+    if (!subsys.GetStr("subsystemTypeName", &temp_type)) {
       ROS_FATAL("DDS Bridge: type name not listed for avail subsys %i!", i);
       return false;
     }
 
-    strncpy(config.availableSubsystems[i].subsystemTypeName, tempType.data(),
-                                                                            32);
+    strncpy(config.availableSubsystems[i].subsystemTypeName,
+            temp_type.data(),
+            32);
     config.availableSubsystems[i].subsystemTypeName[31] = '\0';
   }
 
@@ -107,12 +100,12 @@ bool RosCommandConfigRapidCommandConfig::AssembleConfig(
     config_reader::ConfigReader::Table subsys_type(&avail_subsys_types, (i +1));
 
     // Get subsystem type name
-    if (!subsys_type.GetStr("name", &tempName)) {
+    if (!subsys_type.GetStr("name", &temp_name)) {
       ROS_FATAL("DDS Bridge: name not listed for avail subsys type %i!", i);
       return false;
     }
 
-    strncpy(config.availableSubsystemTypes[i].name, tempName.data(),  32);
+    strncpy(config.availableSubsystemTypes[i].name, temp_name.data(),  32);
     config.availableSubsystemTypes[i].name[31] = '\0';
 
     // Get commands
@@ -127,13 +120,14 @@ bool RosCommandConfigRapidCommandConfig::AssembleConfig(
                                   config.availableSubsystemTypes[i].commands[j];
 
       // Get command name
-      if (!command.GetStr("name", &tempName)) {
+      if (!command.GetStr("name", &temp_name)) {
         ROS_FATAL("DDS Bridge: name not listed for cmd %i in subsys type %s",
-                                    j, config.availableSubsystemTypes[i].name);
+                  j,
+                  config.availableSubsystemTypes[i].name);
         return false;
       }
 
-      strncpy(cmd_def.name, tempName.data(), 64);
+      strncpy(cmd_def.name, temp_name.data(), 64);
       cmd_def.name[63] = '\0';
 
       // Get parameters
@@ -142,7 +136,7 @@ bool RosCommandConfigRapidCommandConfig::AssembleConfig(
       // There can only be 16 parameters at most
       if (num_params > 16) {
         ROS_FATAL("DDS Bridge: too many parameters listed for cmd %s!",
-                                                              tempName.c_str());
+                  temp_name.c_str());
         return false;
       }
       cmd_def.parameters.length(num_params);
@@ -151,37 +145,39 @@ bool RosCommandConfigRapidCommandConfig::AssembleConfig(
         config_reader::ConfigReader::Table param(&params, (k + 1));
 
         // Get key
-        if (!param.GetStr("key", &tempKey)) {
+        if (!param.GetStr("key", &temp_key)) {
           ROS_FATAL("DDS Bridge: key not listed for param %i for command %s!",
-                                                          k, tempName.c_str());
+                    k,
+                    temp_name.c_str());
           return false;
         }
 
-        strncpy(cmd_def.parameters[k].key, tempKey.data(), 32);
+        strncpy(cmd_def.parameters[k].key, temp_key.data(), 32);
         cmd_def.parameters[k].key[31] = '\0';
 
         // Get type
-        if (!param.GetStr("type", &tempType)) {
+        if (!param.GetStr("type", &temp_type)) {
           ROS_FATAL("DDS Bridge: type not listed for param %i for command %s!",
-                                                          k, tempName.c_str());
+                    k,
+                    temp_name.c_str());
           return false;
         }
 
         // check RAPID type
-        if (tempType == "RAPID_STRING") {
+        if (temp_type == "RAPID_STRING") {
           cmd_def.parameters[k].type = rapid::RAPID_STRING;
-        } else if (tempType == "RAPID_INT") {
+        } else if (temp_type == "RAPID_INT") {
           cmd_def.parameters[k].type = rapid::RAPID_INT;
-        } else if (tempType == "RAPID_BOOL") {
+        } else if (temp_type == "RAPID_BOOL") {
           cmd_def.parameters[k].type = rapid::RAPID_BOOL;
-        } else if (tempType == "RAPID_FLOAT") {
+        } else if (temp_type == "RAPID_FLOAT") {
           cmd_def.parameters[k].type = rapid::RAPID_FLOAT;
-        } else if (tempType == "RAPID_VEC3d") {
+        } else if (temp_type == "RAPID_VEC3d") {
           cmd_def.parameters[k].type = rapid::RAPID_VEC3d;
-        } else if (tempType == "RAPID_MAT33f") {
+        } else if (temp_type == "RAPID_MAT33f") {
           cmd_def.parameters[k].type = rapid::RAPID_MAT33f;
         } else {
-          ROS_FATAL("DDS Bridge: %s is invalid param type.", tempType.c_str());
+          ROS_FATAL("DDS Bridge: %s is invalid param type.", temp_type.c_str());
           return false;
         }
       }

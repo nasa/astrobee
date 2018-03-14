@@ -21,8 +21,12 @@
 
 #include <ros/time.h>
 
-#include <std_msgs/Header.h>
 #include <rapidDds/Header.h>
+#include <rapidDds/HeaderSupport.h>
+
+#include <rapidUtil/RapidHelper.h>
+
+#include <std_msgs/Header.h>
 
 #include <stdint.h>
 
@@ -38,7 +42,8 @@ namespace util {
   // Header-related helpers
   void RosHeader2Rapid(::std_msgs::Header const& ros_hdr,
                        ::rapid::Header* rapid_hdr,
-                       int status = 0, int serial = -1);
+                       int status = 0,
+                       int serial = -1);
 
   void RapidHeader2Ros(::rapid::Header const& rapid_hdr,
                        ::std_msgs::Header* ros_hdr,

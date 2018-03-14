@@ -20,11 +20,9 @@
 #ifndef DDS_ROS_BRIDGE_ROS_DISK_STATE_H_
 #define DDS_ROS_BRIDGE_ROS_DISK_STATE_H_
 
-#include <string>
 #include <cstring>
+#include <string>
 #include <memory>
-
-#include "knDds/DdsTypedSupplier.h"
 
 #include "dds_ros_bridge/enum_helper.h"
 #include "dds_ros_bridge/ros_sub_rapid_pub.h"
@@ -33,20 +31,22 @@
 #include "ff_msgs/DiskState.h"
 #include "ff_msgs/DiskStateStamped.h"
 
+#include "knDds/DdsTypedSupplier.h"
+
+#include "rapidUtil/RapidHelper.h"
+
 #include "AstrobeeConstants.h"
 #include "DiskStateSupport.h"
 #include "DiskConfigSupport.h"
-
-#include "rapidUtil/RapidHelper.h"
 
 namespace ff {
 
 class RosDiskStateToRapid : public RosSubRapidPub {
  public:
-  RosDiskStateToRapid(const std::string& subscribeTopic,
-                      const std::string& pubTopic,
+  RosDiskStateToRapid(const std::string& subscribe_topic,
+                      const std::string& pub_topic,
                       const ros::NodeHandle &nh,
-                      const unsigned int queueSize = 10);
+                      const unsigned int queue_size = 10);
 
   void Callback(ff_msgs::DiskStateStampedConstPtr const& state);
   void CheckAndPublish(ros::TimerEvent const& event);
@@ -57,13 +57,13 @@ class RosDiskStateToRapid : public RosSubRapidPub {
     kn::DdsTypedSupplier<rapid::ext::astrobee::DiskState>;
   using StateSupplierPtr = std::unique_ptr<StateSupplier>;
 
-  StateSupplierPtr s_supplier_;
+  StateSupplierPtr state_supplier_;
 
   using ConfigSupplier =
     kn::DdsTypedSupplier<rapid::ext::astrobee::DiskConfig>;
   using ConfigSupplierPtr = std::unique_ptr<ConfigSupplier>;
 
-  ConfigSupplierPtr c_supplier_;
+  ConfigSupplierPtr config_supplier_;
 
   bool updated_;
   int num_disks_, llp_start_index_, mlp_start_index_, hlp_start_index_;

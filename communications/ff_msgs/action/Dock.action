@@ -24,9 +24,9 @@ uint8 UNDOCK  = 2
 
 # Which berth (values must match)
 uint8 berth
-uint8 BERTH_LEFT   = 1
-uint8 BERTH_RIGHT  = 2
-uint8 UNKNOWN      = 3 # When we undock, we don't know what berth we are in
+uint8 BERTH_UNKNOWN = 0 # When we undock, we don't know what berth we are in
+uint8 BERTH_1       = 1
+uint8 BERTH_2       = 2
 
 ---
 
@@ -52,6 +52,7 @@ int32 MOTION_COMPLETE_FAILED             = -11
 int32 MOTION_ATTACHED_FAILED             = -12
 int32 EPS_UNDOCK_FAILED                  = -13
 int32 EPS_DOCK_FAILED                    = -14
+int32 TOO_FAR_AWAY_FROM_APPROACH         = -15
 
 ---
 

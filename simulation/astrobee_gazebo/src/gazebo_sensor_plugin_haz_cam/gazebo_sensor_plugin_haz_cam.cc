@@ -34,24 +34,26 @@
 namespace gazebo {
 class GazeboSensorPluginHazCam : public FreeFlyerSensorPlugin {
  public:
-  GazeboSensorPluginHazCam() : FreeFlyerSensorPlugin(NODE_HAZ_CAM) {}
+  GazeboSensorPluginHazCam() :
+    FreeFlyerSensorPlugin("pico_driver", "haz_cam", true) {}
 
-  ~GazeboSensorPluginHazCam() {}
+  virtual ~GazeboSensorPluginHazCam() {}
 
  protected:
   // Called when plugin is loaded into gazebo
-  void LoadCallback(ros::NodeHandle *nh, sensors::SensorPtr sensor, sdf::ElementPtr sdf) {
+  void LoadCallback(ros::NodeHandle *nh,
+    sensors::SensorPtr sensor, sdf::ElementPtr sdf) {
     // Get a link to the parent sensor
     sensor_ = std::dynamic_pointer_cast < sensors::DepthCameraSensor > (sensor);
     if (!sensor_) {
-      gzerr << "GazeboSensorPluginHazCam requires a camera sensor as a parent.\n";
+      gzerr << "GazeboSensorPluginHazCam requires a parent camera sensor.\n";
       return;
     }
     // Create a publisher for the point cloud
     std::string point_topic = TOPIC_HARDWARE_PICOFLEXX_PREFIX
                             + (std::string) TOPIC_HARDWARE_NAME_HAZ_CAM
                             + (std::string) TOPIC_HARDWARE_PICOFLEXX_SUFFIX;
-    point_cloud_pub_ = nh->advertise<sensor_msgs::PointCloud2>(point_topic, 1,
+    point_cloud_pub_ = nh->advertise<sensor_msgs::PointCloud2>(point_topic, 100,
       boost::bind(&GazeboSensorPluginHazCam::ToggleCallback, this),
       boost::bind(&GazeboSensorPluginHazCam::ToggleCallback, this));
     // Basic header information
@@ -77,30 +79,35 @@ class GazeboSensorPluginHazCam : public FreeFlyerSensorPlugin {
     field.count = 1;  // Number of ELEMENTS, not bytes
     point_cloud_msg_.fields.push_back(field);
     // Listen to the point cloud
-    update_ = sensor_->DepthCamera()->ConnectNewRGBPointCloud(
-      boost::bind(&GazeboSensorPluginHazCam::Callback, this, _1, _2, _3, _4, _5));
+    update_ = sensor_->DepthCamera()->ConnectNewRGBPointCloud(boost::bind(
+      &GazeboSensorPluginHazCam::Callback, this, _1, _2, _3, _4, _5));
   }
 
   // Turn camera on or off based on topic subscription
   void ToggleCallback() {
-    if (point_cloud_pub_.getNumSubscribers() > 0 || image_pub_.getNumSubscribers() > 0)
+    if (point_cloud_pub_.getNumSubscribers() > 0 ||
+      image_pub_.getNumSubscribers() > 0)
       sensor_->SetActive(true);
     else
       sensor_->SetActive(false);
   }
 
   // this->dataPtr->depthBuffer, width, height, 1, "FLOAT32"
-  void Callback(const float *data, unsigned int width, unsigned height, unsigned int len, const std::string & type) {
-    if (!sensor_->IsActive()) return;
+  void Callback(const float *data, unsigned int width, unsigned height,
+    unsigned int len, const std::string & type) {
+    if (!sensor_->IsActive() || !ExtrinsicsFound())
+      return;
     point_cloud_msg_.header.stamp = ros::Time::now();
     point_cloud_msg_.width = width;
     point_cloud_msg_.height = height;
-    point_cloud_msg_.row_step = point_cloud_msg_.width * point_cloud_msg_.point_step;
-    point_cloud_msg_.data.resize(point_cloud_msg_.row_step * point_cloud_msg_.height);
+    point_cloud_msg_.row_step = point_cloud_msg_.width
+                              * point_cloud_msg_.point_step;
+    point_cloud_msg_.data.resize(
+      point_cloud_msg_.row_step * point_cloud_msg_.height);
     std::copy(
       reinterpret_cast<const uint8_t*>(data),
-      reinterpret_cast<const uint8_t*>(data) + point_cloud_msg_.row_step * point_cloud_msg_.height,
-      point_cloud_msg_.data.begin());
+      reinterpret_cast<const uint8_t*>(data) + point_cloud_msg_.row_step
+        * point_cloud_msg_.height, point_cloud_msg_.data.begin());
     point_cloud_pub_.publish(point_cloud_msg_);
   }
 

@@ -49,8 +49,8 @@ abp_pm2_zero_thrust_area        = single([0.0042273]);                          
 abp_impeller_speed2pwm          = single(.792095);                              %[CNT/(rad/sec)] Converts impeller speeds into PWM values
 
 %% Servo Parameters
-abp_servo_max_PWM               = single(70);                                  %[PWM]      Maximum Servo command to avoid hardstops
-abp_servo_min_PWM               = single(25);                                   %[PWM]      Minimum Servo command to avoid hardstops
+abp_servo_max_PWM               = single(255);                                  %[PWM]      Maximum Servo command to avoid hardstops
+abp_servo_min_PWM               = single(0);                                   %[PWM]      Minimum Servo command to avoid hardstops
 
 %% Nozzle Properties
 abp_nozzle_count                = single(6);                                    %[-]        Number of Nozzles per PM
@@ -59,8 +59,8 @@ abp_nozzle_intake_height        = single(0.5154)*units_in_2_m;                  
 abp_nozzle_out_height           = single(0.4216)*units_in_2_m;                  %[m]        Height of the output of the nozzle
 abp_nozzle_flap_count           = single(2);                                    %[-]        Number of flaps per nozzle
 abp_nozzle_gear_ratio           = single(1/2);                                  %[-]        Gear Ratio between servo and nozzle.  theta_s = R*theta_n
-% abp_nozzle_max_open_angle     = single(79.91)*units_deg_2_rad;                %[rad]      THEORETICAL max angle that a nozzle can open to
-abp_nozzle_max_open_angle       = single(73.90)*units_deg_2_rad;                %[rad]      Measured max angle that a nozzle can open to
+abp_nozzle_max_open_angle     = single(79.91)*units_deg_2_rad;                %[rad]      THEORETICAL max angle that a nozzle can open to
+% abp_nozzle_max_open_angle       = single(73.90)*units_deg_2_rad;                %[rad]      Measured max angle that a nozzle can open to on P4E
 abp_nozzle_min_open_angle       = single(15.68)*units_deg_2_rad;                %[rad]      Min angle that the nozzle can close to
 
 

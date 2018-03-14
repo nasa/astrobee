@@ -31,7 +31,7 @@ uint8 GRIPPER_CLOSE       = 9                 # Open the gripper
 
 float32 pan                                   # PAN from -90 to +90
 float32 tilt                                  # TILT from -30 to +90
-float32 gripper                               # SET from 0 to 100
+float32 gripper                               # SET from 20 to 45
 
 ---
 
@@ -49,6 +49,7 @@ int32 PAN_FAILED          = -8                # Pan command failed
 int32 GRIPPER_FAILED      = -9                # Gripper command failed
 int32 CALIBRATE_FAILED    = -10               # Gripper calibrate failed
 int32 COMMUNICATION_ERROR = -11               # Cannot communicate with arm
+int32 COLLISION_AVOIDED   = -12               # No panning when tilt < 90
 
 ---
 
