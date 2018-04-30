@@ -26,7 +26,7 @@
     <arg name="world" value="$(find astrobee_gazebo)/worlds/$(arg world).world"/>
     <arg name="gui" value="$(arg sviz)"/>
   </include>
-  <!-- Spawn a single dock (disabled for REALM)
+  <!-- Spawn a single dock (disabled for REALM)     -->
   <include file="$(find astrobee_gazebo)/launch/spawn_dock.launch"/>
-    -->
+
 </launch>

@@ -40,7 +40,7 @@
     <node pkg="nodelet" type="nodelet" args="manager"
           name="mlp_vision" output="$(arg output)"/>
     <node pkg="nodelet" type="nodelet" args="manager"
-          name="mlp_depth_cam" output="$(arg output)"/>
+          name="mlp_depth_cam" output="screen"/> <!-- modded -->
     <node pkg="nodelet" type="nodelet" args="manager"
           name="mlp_arm" output="$(arg output)"/>
     <node pkg="nodelet" type="nodelet" args="manager"

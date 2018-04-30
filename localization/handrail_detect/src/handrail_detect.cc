@@ -327,7 +327,7 @@ class HandrailDetect : public ff_util::FreeFlyerNodelet {
       return false;
     }
     PublishCloud(downsample_points, cloud_, &cloud_pub_[0]);
-
+    ROS_WARN("[Handrail] 1. Downsampled cloud published!");
     std::vector<int> plane_inliers, plane_outliers;
     Eigen::Vector3f plane_vector;
     Eigen::Vector4f plane_parameter;
@@ -341,6 +341,7 @@ class HandrailDetect : public ff_util::FreeFlyerNodelet {
       PublishCloud(plane_outliers, cloud_, &cloud_pub_[2]);
       return false;
     }
+    ROS_WARN("[Handrail] 2. Found plane!");
 
     GetXYScale(plane_inliers);
     PublishCloud(plane_inliers, cloud_, &cloud_pub_[1]);
@@ -360,6 +361,8 @@ class HandrailDetect : public ff_util::FreeFlyerNodelet {
       }
       return false;
     }
+
+    ROS_WARN("[Handrail] 3. Found line!");
 
     // Find end point(s) of the handrail
     std::vector<geometry_msgs::Point> end_point;
@@ -388,7 +391,7 @@ class HandrailDetect : public ff_util::FreeFlyerNodelet {
 
     if (disp_marker_)
       PublishMarker(target_pos_err, i2h, end_point);
-
+    ROS_WARN("[Handrail] 4. Sent marker!");
     return true;
   }
 
