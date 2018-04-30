@@ -23,8 +23,8 @@ catkin_package(
 )
 
 create_library(TARGET image_sampler
-  LIBS ${catkin_LIBRARIES} config_reader ff_nodelet ${OPENCV_LIBRARIES}
-  INC ${catkin_INCLUDE_DIRS} ${OPENCV_INCLUDE_DIRS}
+  LIBS ${catkin_LIBRARIES} config_reader ff_nodelet ${OpenCV_LIBRARIES}
+  INC ${catkin_INCLUDE_DIRS} ${OpenCV_INCLUDE_DIRS}
   DEPS ff_msgs config_reader opencv
 )
 

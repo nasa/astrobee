@@ -6,7 +6,7 @@ Index: libdbowdlib/CMakeLists.txt
  option(BUILD_DUtilsCV "Build DUtilsCV (OpenCV functions, requires DUtils)." ON)
  option(BUILD_DVision  "Build DVision (computer vision functions, requires DUtilsCV)." ON)
  
-+list(APPEND CMAKE_INSTALL_RPATH "/opt/ros/kinetic/lib") # find opencv3
++list(APPEND CMAKE_INSTALL_RPATH "/opt/ros/kinetic/lib" "/opt/ros/kinetic/lib/x86_64-linux-gnu" "/opt/ros/kinetic/lib/arm-linux-gnueabihf") # find opencv3
 +find_path(OpenCV_DIR OpenCVConfig.cmake PATHS /opt/ros/kinetic/share/
 +  PATH_SUFFIXES OpenCV-3.1.0 OpenCV-3.1.0-dev OpenCV-3.2.0 OpenCV-3.2.0-dev OpenCV-3.3.1 OpenCV-3.3.1-dev)
 +

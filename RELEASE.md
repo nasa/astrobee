@@ -1,5 +1,10 @@
 # Astrobee Robot Software v1
 
+## Release 0.3.1
+
+This hotifx fixes the build with ROS' new opencv release, which moved the opencv libraries
+from /opt/ros/kinetic/lib to /opt/ros/kinetic/lib/PLATFORM, breaking our RPATHs.
+
 ## Release 0.3.0
 
 This release addresses several bugs identified by Guest Scientists, simulator improvements as well as many internal changes.
