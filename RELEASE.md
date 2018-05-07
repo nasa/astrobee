@@ -1,5 +1,10 @@
 # Astrobee Robot Software v1
 
+## Release 0.3.2
+
+The previous hotfix updated the debians, but did not update the version numbers of which
+debians to install. This corrects that.
+
 ## Release 0.3.1
 
 This hotifx fixes the build with ROS' new opencv release, which moved the opencv libraries

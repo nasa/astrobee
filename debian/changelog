@@ -1,3 +1,9 @@
+astrobee (0.3.2) unstable; urgency=medium
+
+  * Fixed bug in install with new debian version numbers.
+
+ -- Astrobee Flight Software <astrobee-fsw@nx.arc.nasa.gov>  Mon, 07 May 2018 12:50:04 -0700
+
 astrobee (0.3.1) unstable; urgency=medium
 
   * Fix to build with ROS' new opencv version.
