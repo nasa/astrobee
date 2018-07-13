@@ -20,7 +20,7 @@
 
 namespace sys_monitor {
 SysMonitor::SysMonitor() :
-  ff_util::FreeFlyerNodelet(NODE_SYS_MONITOR, true),
+  ff_util::FreeFlyerNodelet(NODE_SYS_MONITOR, false),
   pub_queue_size_(10),
   sub_queue_size_(10) {
 }
@@ -81,6 +81,15 @@ void SysMonitor::AddFault(ff_msgs::Fault const& fault, bool check_added) {
   }
 }
 
+void SysMonitor::ChangeFaultErrMsg(unsigned int fault_id, std::string err_msg) {
+  for (unsigned int i = 0; i < fault_state_.faults.size(); i++) {
+    if (fault_id == fault_state_.faults[i].id) {
+      fault_state_.faults[i].msg = err_msg;
+    }
+  }
+  PublishFaultState();
+}
+
 void SysMonitor::RemoveFault(unsigned int fault_id) {
   for (unsigned int i = 0; i < fault_state_.faults.size(); i++) {
     if (fault_id == fault_state_.faults[i].id) {
@@ -114,7 +123,7 @@ void SysMonitor::AddWatchDog(ros::Duration const& timeout,
 void SysMonitor::SetFaultState(unsigned int fault_id, bool adding_fault) {
   // If adding or removing a blocking fault, increment the counter appropriately
   if (all_faults_.count(fault_id) > 0) {
-    if (all_faults_.at(fault_id)->blocking_) {
+    if (all_faults_.at(fault_id)->blocking) {
       if (adding_fault) {
         num_current_blocking_fault_++;
       } else {
@@ -143,11 +152,6 @@ void SysMonitor::SetFaultState(unsigned int fault_id, bool adding_fault) {
 void SysMonitor::HeartbeatCallback(ff_msgs::HeartbeatConstPtr const& hb) {
   uint i = 0, j = 0, tmp_id;
   bool fault_found = true;
-
-  // Don't need to check our own heartbeat
-  if (hb->node.compare("sys_monitor") == 0) {
-    return;
-  }
 
   // Check to see if node heartbeat is set up in watchdogs
   if (watch_dogs_.count(hb->node) > 0) {
@@ -202,6 +206,9 @@ void SysMonitor::HeartbeatCallback(ff_msgs::HeartbeatConstPtr const& hb) {
       for (j = 0; j < previous_hb->faults.size(); j++) {
         if (tmp_id == previous_hb->faults[j].id) {
           fault_found = true;
+          if (previous_hb->faults[j].msg != hb->faults[i].msg) {
+            ChangeFaultErrMsg(tmp_id, hb->faults[i].msg);
+          }
           break;
         }
       }
@@ -254,11 +261,23 @@ void SysMonitor::HeartbeatCallback(ff_msgs::HeartbeatConstPtr const& hb) {
 void SysMonitor::Initialize(ros::NodeHandle *nh) {
   nh_ = *nh;
 
+  // Set node name in heartbeat message
+  heartbeat_.node = NODE_SYS_MONITOR;
+
+  // Set nodelet manager name
+  heartbeat_.nodelet_manager = ros::this_node::getName();
+
+  // Heartbeat must be latching
+  pub_heartbeat_ = nh_.advertise<ff_msgs::Heartbeat>(
+                                        TOPIC_MANAGEMENT_SYS_MONITOR_HEARTBEAT,
+                                        pub_queue_size_,
+                                        true);
+
   // Add config files to config reader
+  config_params_.AddFile("management/sys_monitor.config");
   config_params_.AddFile("management/fault_table.config");
 
   if (!ReadParams()) {
-    exit(EXIT_FAILURE);
     return;
   }
 
@@ -277,26 +296,42 @@ void SysMonitor::Initialize(ros::NodeHandle *nh) {
                                    true,
                                    true);
 
-  sub_hb_ = nh_.subscribe(TOPIC_HEARTBEAT, sub_queue_size_,
-                                          &SysMonitor::HeartbeatCallback, this);
+  // Create a timer to publish the heartbeat for the system monitor.
+  heartbeat_timer_ = nh_.createTimer(ros::Duration(heartbeat_pub_rate_),
+                                     &SysMonitor::PublishHeartbeatCallback,
+                                     this,
+                                     false,
+                                     true);
+
+  sub_hb_ = nh_.subscribe(TOPIC_HEARTBEAT,
+                          sub_queue_size_,
+                          &SysMonitor::HeartbeatCallback,
+                          this);
 
   pub_cmd_ = nh_.advertise<ff_msgs::CommandStamped>(TOPIC_COMMAND,
-                                                        pub_queue_size_, false);
+                                                    pub_queue_size_,
+                                                    false);
 
   // All configs should be latching
   pub_fault_config_ = nh_.advertise<ff_msgs::FaultConfig>(
-                    TOPIC_MANAGEMENT_SYS_MONITOR_CONFIG, pub_queue_size_, true);
+                                            TOPIC_MANAGEMENT_SYS_MONITOR_CONFIG,
+                                            pub_queue_size_,
+                                            true);
 
   // All states should be latching
   pub_fault_state_ = nh_.advertise<ff_msgs::FaultState>(
-                    TOPIC_MANAGEMENT_SYS_MONITOR_STATE, pub_queue_size_, true);
+                                            TOPIC_MANAGEMENT_SYS_MONITOR_STATE,
+                                            pub_queue_size_,
+                                            true);
 
   fault_state_.state = ff_msgs::FaultState::FUNCTIONAL;
+
 
   // Set up service
   unload_load_nodelet_service_ = nh_.advertiseService(
                             SERVICE_MANAGEMENT_SYS_MONITOR_UNLOAD_LOAD_NODELET,
-                            &SysMonitor::NodeletService, this);
+                            &SysMonitor::NodeletService,
+                            this);
 
   // Publish fault state when first starting up
   PublishFaultState();
@@ -328,10 +363,10 @@ void SysMonitor::OutputFaultTables() {
     }
 
     // Get command out of the all faults map
-    tmp_cmd = all_faults_.at(fault_config_.faults[i].id)->response_;
+    tmp_cmd = all_faults_.at(fault_config_.faults[i].id)->response;
 
     // Get blocking flag out of the all faults map
-    blocking = all_faults_.at(fault_config_.faults[i].id)->blocking_;
+    blocking = all_faults_.at(fault_config_.faults[i].id)->blocking;
     if (blocking) {
       blocking_str = "true";
     } else {
@@ -377,8 +412,8 @@ void SysMonitor::PublishFaultState() {
 void SysMonitor::PublishFaultResponse(unsigned int fault_id) {
   if (all_faults_.count(fault_id)) {
     // Don't publish command if it is a warning
-    if (!all_faults_.at(fault_id)->warning_) {
-      ff_msgs::CommandStampedConstPtr cmd = all_faults_.at(fault_id)->response_;
+    if (!all_faults_.at(fault_id)->warning) {
+      ff_msgs::CommandStampedConstPtr cmd = all_faults_.at(fault_id)->response;
       // Check for unload since it doesn't to send the command to the executive
       // just to have the executive call the system monitor service
       if (cmd->cmd_name == ff_msgs::CommandConstants::CMD_NAME_UNLOAD_NODELET) {
@@ -392,12 +427,41 @@ void SysMonitor::PublishFaultResponse(unsigned int fault_id) {
         }
       } else if (cmd->cmd_name != ff_msgs::CommandConstants::CMD_NAME_NO_OP) {
         // Don't publish command if it is a noop
-        PublishCmd(all_faults_.at(fault_id)->response_);
+        PublishCmd(all_faults_.at(fault_id)->response);
       }
     }
   } else {
     NODELET_FATAL("Fault id %i unrecognized!", fault_id);
   }
+}
+
+void SysMonitor::PublishHeartbeatCallback(ros::TimerEvent const& te) {
+  PublishHeartbeat();
+}
+
+void SysMonitor::PublishHeartbeat(bool initialization_fault) {
+  // If there was an initialization fault, add it to the heartbeat
+  if (initialization_fault) {
+    // The system monitor only has one fault it asserts and this fault usually
+    // occurs before the fault ids are read in from the config files. Also the
+    // fault id is not being sent to the ground. Thus we are just going to set
+    // the initialization fault id to zero.
+
+    // Check to make sure the fault wasn't already added
+    if (heartbeat_.faults.size() == 0) {
+      ff_msgs::Fault fault;
+      fault.id = 0;
+      fault.time_of_fault = ros::Time::now();
+      heartbeat_.faults.push_back(fault);
+    }
+
+    // Stop heartbeat timer if initialization failed since initialization can
+    // fail when the config file changes and the parameters are reloaded
+    heartbeat_timer_.stop();
+  }
+
+  heartbeat_.header.stamp = ros::Time::now();
+  pub_heartbeat_.publish(heartbeat_);
 }
 
 void SysMonitor::StartupTimerCallback(ros::TimerEvent const& te) {
@@ -419,15 +483,21 @@ bool SysMonitor::ReadParams() {
 
   // Read config files into lua
   if (!config_params_.ReadFiles()) {
-    NODELET_FATAL("Error loading system monitor parameters.");
+    NODELET_ERROR("Error loading system monitor parameters.");
+    PublishHeartbeat(true);
     return false;
   }
 
   // Get startup time. Used to check if all the heartbeats have started within
   // the specified startup time.
-  if (!config_params_.GetUInt("startup_time_secs", &startup_time_)) {
-    NODELET_FATAL("Unable to read startup time.");
-    return false;
+  if (!config_params_.GetUInt("startup_time_sec", &startup_time_)) {
+    NODELET_WARN("Unable to read startup time.");
+    startup_time_ = 90;
+  }
+
+  if (!config_params_.GetUInt("heartbeat_pub_rate_sec", &heartbeat_pub_rate_)) {
+    NODELET_WARN("Unable to read heartbeat pub ratte.");
+    heartbeat_pub_rate_ = 5;
   }
 
   // Get the list of nodes not running so that we don't monitor or trigger the
@@ -447,7 +517,8 @@ bool SysMonitor::ReadParams() {
   // Read in all faults
   // Check fault table exists
   if (!config_params_.CheckValExists("subsystems")) {
-    NODELET_FATAL("Unable to find/read the fault table.");
+    NODELET_ERROR("Unable to find/read the fault table.");
+    PublishHeartbeat(true);
     return false;
   }
 
@@ -465,7 +536,8 @@ bool SysMonitor::ReadParams() {
   for (i = 1; i < subsystems_tbl_size; i++) {
     config_reader::ConfigReader::Table subsystem_tbl(&subsystems_tbl, i);
     if (!subsystem_tbl.GetStr("name", &subsys_name)) {
-      NODELET_FATAL("Unable to read name at %i in subsys table", i);
+      NODELET_ERROR("Unable to read name at %i in subsys table", i);
+      PublishHeartbeat(true);
       return false;
     }
 
@@ -474,8 +546,9 @@ bool SysMonitor::ReadParams() {
 
     // Check nodes table exists
     if (!subsystem_tbl.CheckValExists("nodes")) {
-      NODELET_FATAL("Unable to find nodes table in %s's table.",
+      NODELET_ERROR("Unable to find nodes table in %s's table.",
                                                           subsys_name.c_str());
+      PublishHeartbeat(true);
       return false;
     }
 
@@ -486,8 +559,9 @@ bool SysMonitor::ReadParams() {
     for (j = 1; j < nodes_tbl_size; j++) {
       config_reader::ConfigReader::Table node_tbl(&nodes_tbl, j);
       if (!node_tbl.GetStr("name", &node_name)) {
-        NODELET_FATAL("Unable to read name at %i in %s's node table.",
+        NODELET_ERROR("Unable to read name at %i in %s's node table.",
                                                         j, subsys_name.c_str());
+        PublishHeartbeat(true);
         return false;
       }
 
@@ -508,8 +582,9 @@ bool SysMonitor::ReadParams() {
 
       // Check faults table exists
       if (!node_tbl.CheckValExists("faults")) {
-        NODELET_FATAL("Unable to read the fault table for node %s.",
+        NODELET_ERROR("Unable to read the fault table for node %s.",
                                                             node_name.c_str());
+        PublishHeartbeat(true);
         return false;
       }
 
@@ -556,14 +631,16 @@ bool SysMonitor::ReadParams() {
                 heartbeat.GetUInt("misses", &misses)) {
               AddWatchDog(ros::Duration(timeout), node_name, misses, fault_id);
             } else {
-              NODELET_FATAL("Unable to add heartbeat for node %s.",
+              NODELET_ERROR("Unable to add heartbeat for node %s.",
                                                             node_name.c_str());
+              PublishHeartbeat(true);
               return false;
             }
           }
         } else {
-          NODELET_FATAL("Unable to read fault at %i in %s's table.",
+          NODELET_ERROR("Unable to read fault at %i in %s's table.",
                                                           k, node_name.c_str());
+          PublishHeartbeat(true);
           return false;
         }
       }
@@ -964,14 +1041,14 @@ void SysMonitor::Watchdog::TimerCallBack(ros::TimerEvent const& te) {
   }
 }
 
-SysMonitor::Fault::Fault(std::string const& node_name,
-                         bool const blocking,
-                         bool const warning,
-                         ff_msgs::CommandStampedPtr response) :
-  node_name_(node_name),
-  blocking_(blocking),
-  warning_(warning),
-  response_(response) {
+SysMonitor::Fault::Fault(std::string const& node_name_in,
+                         bool const blocking_in,
+                         bool const warning_in,
+                         ff_msgs::CommandStampedPtr response_in) :
+  node_name(node_name_in),
+  blocking(blocking_in),
+  warning(warning_in),
+  response(response_in) {
 }
 }  // namespace sys_monitor
 

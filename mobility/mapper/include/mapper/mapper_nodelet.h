@@ -51,6 +51,7 @@
 #include <ff_msgs/ValidateAction.h>
 
 // Service definition for zone registration
+#include <ff_msgs/Hazard.h>
 #include <ff_msgs/Zone.h>
 #include <ff_msgs/SetZones.h>
 #include <ff_msgs/GetZones.h>
@@ -58,12 +59,16 @@
 // Service messages
 #include <ff_msgs/SetFloat.h>
 
+// General messages
+#include <std_msgs/Empty.h>
+
 // C++ libraries
 #include <fstream>
 #include <vector>
 #include <string>
 #include <exception>
 #include <thread>         // std::thread
+#include <mutex>
 
 // Astrobee message types
 #include "ff_msgs/Segment.h"
@@ -108,6 +113,9 @@ class MapperNodelet : public ff_util::FreeFlyerNodelet {
 
   // Configure callback for updating config file
   bool ReconfigureCallback(dynamic_reconfigure::Config &config);
+
+  // Called when the EKF resets
+  void ResetCallback(std_msgs::EmptyConstPtr const& msg);
 
   // Assert a fault - katie's fault code handling will eventually go in here
   void Complete(int32_t response);
@@ -159,25 +167,36 @@ class MapperNodelet : public ff_util::FreeFlyerNodelet {
   // Thread for getting pcl data and populating the octomap
   void OctomappingTask();
 
-  // Class methods (see mapper_nodelet.cc for implementation) ----------
+  // Class methods (see zones.cc for implementation) ----------
   // Load keep in / keep out zones from file
   void LoadKeepInOutZones();
+
+  void InitFault(std::string const& msg);
 
   // Markers for keep in / keep out zones
   void UpdateKeepInOutMarkers();
 
+  // Check if a point is inside a cuboid
+  bool PointInsideCuboid(geometry_msgs::Point const& x,
+                         geometry_msgs::Vector3 const& cubemin,
+                         geometry_msgs::Vector3 const& cubemax);
+
+  // If the check fails, then the info block is populated
+  bool CheckZones(ff_util::Segment const& msg,
+    bool check_keepins, bool check_keepouts, ff_msgs::Hazard &info);
+
  private:
   // Declare global variables (structures defined in structs.h)
-  globalVariables globals_;  // These variables are all mutex-protected
-  mutexStruct mutexes_;
-  semaphoreStruct semaphores_;
+  GlobalVariables globals_;
+  MutexStruct mutexes_;
+  SemaphoreStruct semaphores_;
 
   // Thread variables
   std::thread h_haz_tf_thread_, h_perch_tf_thread_, h_body_tf_thread_;
   std::thread h_octo_thread_, h_fade_thread_, h_collision_check_thread_;
 
   // Subscriber variables
-  ros::Subscriber haz_sub_, perch_sub_, segment_sub_;
+  ros::Subscriber haz_sub_, perch_sub_, segment_sub_, reset_sub_;
 
   // Octomap services
   ros::ServiceServer resolution_srv_, memory_time_srv_;
@@ -202,7 +221,7 @@ class MapperNodelet : public ff_util::FreeFlyerNodelet {
   ff_util::ConfigServer cfg_;              // Config server
 
   // Marker publishers
-  ros::Publisher sentinel_pub_;
+  ros::Publisher hazard_pub_;
   ros::Publisher obstacle_marker_pub_;
   ros::Publisher free_space_marker_pub_;
   ros::Publisher inflated_obstacle_marker_pub_;

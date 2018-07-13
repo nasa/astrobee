@@ -65,13 +65,15 @@ namespace interest_point {
 
   class BriskDynamicDetector : public DynamicDetector {
    public:
-    BriskDynamicDetector(unsigned int min_features, unsigned int max_features, unsigned int max_retries, int threshold)
+    BriskDynamicDetector(unsigned int min_features, unsigned int max_features,
+                         unsigned int max_retries, int threshold)
          : DynamicDetector(min_features, max_features, max_retries), threshold_(threshold) {
       Reset();
     }
 
     void Reset(void) {
-      brisk_ = cv::BRISK::create(threshold_, FLAGS_orgbrisk_octaves, FLAGS_orgbrisk_pattern_scale);
+      brisk_ = cv::BRISK::create(threshold_, FLAGS_orgbrisk_octaves,
+                                 FLAGS_orgbrisk_pattern_scale);
     }
 
     virtual void DetectImpl(const cv::Mat& image, std::vector<cv::KeyPoint>* keypoints) {
@@ -137,31 +139,40 @@ namespace interest_point {
   }
 
   FeatureDetector::~FeatureDetector(void) {
-    if (detector_)
+    if (detector_ != NULL) {
       delete detector_;
+      detector_ = NULL;
+    }
   }
 
   void FeatureDetector::Reset(std::string const& detector_name,
                               int min_features, int max_features,
                               int brisk_threshold, int retries) {
-    detector_name_ = detector_name;
+    detector_name_   = detector_name;
 
-    if (detector_)
+    if (detector_ != NULL) {
       delete detector_;
+      detector_ = NULL;
+    }
+
     // Loading the detector
     if (detector_name == "ORGBRISK") {
-      detector_ = new BriskDynamicDetector(min_features, max_features, retries, brisk_threshold);
+      detector_ = new BriskDynamicDetector(min_features, max_features,
+                                           retries, brisk_threshold);
     } else if (detector_name == "SURF") {
+      // Note that we use a fixed threshold of 10, rather than brisk_threshold.
       detector_ = new SurfDynamicDetector(min_features, max_features, retries, 10.0);
     } else {
-      LOG(ERROR) << "Unimplemented feature detector " << detector_name;
-      assert(false);
+      LOG(FATAL) << "Unimplemented feature detector " << detector_name;
     }
   }
 
   void FeatureDetector::Detect(const cv::Mat& image,
-                                   std::vector<cv::KeyPoint>* keypoints,
-                                   cv::Mat* keypoints_description) {
+                               std::vector<cv::KeyPoint>* keypoints,
+                               cv::Mat* keypoints_description) {
+    if (detector_ == NULL)
+      LOG(FATAL) << "The detector was not initialized.";
+
     detector_->Detect(image, keypoints, keypoints_description);
 
     // Normalize the image points relative to the center of the image

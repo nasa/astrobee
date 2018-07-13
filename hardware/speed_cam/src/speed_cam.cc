@@ -23,20 +23,22 @@ namespace speed_cam {
 // By default the arm is uninitialized
 SpeedCam::SpeedCam(SpeedCamImuCallback cb_imu, SpeedCamCameraImageCallback cb_camera_image,
   SpeedCamOpticalFlowCallback cb_optical_flow, SpeedCamSpeedCallback cb_speed,
-  SpeedCamStatusCallback cb_status)
+  SpeedCamStatusCallback cb_status, SpeedCamVersionCallback cb_version)
   : serial_(std::bind(&SpeedCam::ReadCallback, this, std::placeholders::_1, std::placeholders::_2))
   , cb_imu_(cb_imu)
   , cb_camera_image_(cb_camera_image)
   , cb_optical_flow_(cb_optical_flow)
   , cb_speed_(cb_speed)
   , cb_status_(cb_status)
+  , cb_version_(cb_version)
   , system_id_(-1)
   , comp_id_(0)
   , image_size_(0)
   , image_packets_(0)
   , image_payload_(0)
   , image_width_(0)
-  , image_height_(0) {
+  , image_height_(0)
+  , sw_version_(0) {
   serial_.SetTimeoutCallback(
     std::bind(&SpeedCam::TimeoutCallback, this), 1000);
 }
@@ -144,6 +146,16 @@ void SpeedCam::ReadCallback(const uint8_t* buf, size_t len) {
         mavlink_msg_heartbeat_decode(&message, &status);
         if (cb_status_)
           cb_status_(status);
+        break;
+        }
+      case MAVLINK_MSG_ID_NAMED_VALUE_INT: {
+        mavlink_named_value_int_t named_value;
+        mavlink_msg_named_value_int_decode(&message, &named_value);
+        std::string name{ named_value.name };
+        if (!name.compare(0, 10, "SW_VERSION"))
+          sw_version_ = static_cast<uint32_t>(named_value.value);
+        if (cb_version_)
+          cb_version_(sw_version_);
         break;
         }
       }

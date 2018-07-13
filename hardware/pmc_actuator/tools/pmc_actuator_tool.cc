@@ -46,8 +46,10 @@
 #define DEFAULT_CONTROL_RATE_HZ 62.5
 #define MIN_BLOWER_SPEED 0
 #define MAX_BLOWER_SPEED 232
-#define MIN_NOZZLE_POSITION 25
-#define MAX_NOZZLE_POSITION 90
+// #define MIN_NOZZLE_POSITION 25
+// #define MAX_NOZZLE_POSITION 90
+#define MIN_NOZZLE_POSITION 0
+#define MAX_NOZZLE_POSITION 255
 
 #define STUB_CMDS_FILENAME "/tmp/hw/pmc/commands"
 #define STUB_TELEM_FILENAME "/tmp/hw/pmc/telemetry"
@@ -439,12 +441,13 @@ int main(int argc, char *argv[]) {
   std::string csv = DEFAULT_CSV_FILE;
   double rate = DEFAULT_CONTROL_RATE_HZ;
   bool fake_pmcs = false;
+  std::string statefile("");
   std::fstream output_cmds;
   std::fstream output_telem;
 
   // Manipulate from stdin
   int c;
-  while ((c = getopt(argc, argv, "hd:r:sgla:c:f:")) != -1) {
+  while ((c = getopt(argc, argv, "hd:r:sgla:c:f:w:")) != -1) {
     switch (c) {
       case 'd':
         i2c_dev = std::string(optarg);
@@ -512,6 +515,10 @@ int main(int argc, char *argv[]) {
         }
         break;
       }
+      case 'w': {
+        statefile = std::string(optarg);
+        break;
+      }
       default: {
         std::cout << std::endl;
         std::cout << "Usage: pmc_actuator_tool [OPTIONS]..." << std::endl;
@@ -524,6 +531,7 @@ int main(int argc, char *argv[]) {
                   << std::endl;
         std::cout << "  -c rate               control rate" << std::endl;
         std::cout << "  -f file               CSV file with data" << std::endl;
+        std::cout << "  -w file               Write state to file" << std::endl;
         std::cout << "  -l                    Loop over the plan" << std::endl;
         std::cout << "  -s                    Use PMC stubs" << std::endl;
         std::cout
@@ -574,6 +582,21 @@ int main(int argc, char *argv[]) {
     pmcs[i].second.index = pmcs[i].second.plan.begin();  // set indexes
   }
   data_mutex_.unlock();
+
+  // Special case: "state mode" (flag -w /some/file) is used to write a zero
+  // length file if the PMCs are found, and a non-zero length file with an
+  // error if the PMCs are not found
+  if (!statefile.empty()) {
+    std::ofstream ofs(statefile, std::ofstream::trunc);
+    for (size_t i = 0; i < i2c_addrs.size(); i++) {
+      pmc_actuator::Telemetry telemetry;
+      if (!pmcs[i].first || !pmcs[i].first->GetTelemetry(&telemetry))
+        ofs << "PMC " << i << " not detected" << std::endl;
+    }
+    ofs.close();
+    return 0;
+  }
+
   // This flag is passed by reference to the thread, so the thread knows when
   // to end
   bool finished = false;

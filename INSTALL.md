@@ -7,7 +7,7 @@ support some of our Gazebo plugins.
 
     sudo apt-get install build-essential git
 
-*Note: You will need 3 GBs of RAM to compile the software. If you don't have
+*Note: You will need 4 GBs of RAM to compile the software. If you don't have
 that much RAM available, please use swap space.*
 
 *Note: Please ensure you install the 64-bit version of Ubuntu. We do not
@@ -67,7 +67,10 @@ By default, the configure script uses the following paths:
 If you are satisfied with these paths, you can invoke the `configure.sh` without
 the `-p` and `-b` options. For the simplicity of the instructions below,
 we assume that `$BUILD_PATH` and `$INSTALL_PATH` contain the location of the
-build and install path.
+build and install path. For example:
+
+    export BUILD_PATH=$HOME/freeflyer_build/native
+    export INSTALL_PATH=$HOME/freeflyer_install/native
 
 ### Native build
 
@@ -100,8 +103,11 @@ time round. Future builds will be faster, as only changes to the code are
 rebuilt, and not the entire code base.
 
     pushd $BUILD_PATH
-    make -j6
+    make -j2
     popd
+
+If you configured your virtual machine with more than the baseline resources,
+you can adjust the number of threads (eg. -j4) to speed up the build.
 
 ## Running a simulation
 

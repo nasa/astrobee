@@ -83,14 +83,6 @@ FREEFLYER_MASTER=${FREEFLYER_MASTER:=http://${master_ip}:11311/}
 FREEFLYER_LLP_FIXES=${FREEFLYER_LLP_FIXES=rpath}
 FREEFLYER_INSTALL_DIR=/opt/astrobee
 
-if [[ ${FREEFLYER_TARGETS,,} =~ 'dock' ]]; then
-  echo "Copying files to Dock..."
-  if ! rsync -azh --delete --info=progress2 $target/ astrobee@${dock_ip}:${FREEFLYER_INSTALL_DIR}
-  then
-    exit 1
-  fi
-fi
-
 if [[ ${FREEFLYER_TARGETS,,} =~ 'mlp' ]]; then
   echo "Copying files to MLP..."
   if ! rsync -azh --delete --info=progress2 $target/ astrobee@${mlp_ips[${robot_index}]}:${FREEFLYER_INSTALL_DIR}
@@ -101,19 +93,13 @@ fi
 
 if [[ ${FREEFLYER_TARGETS,,} =~ 'llp' ]]; then
   # Install to LLP
-  echo "Copying files to LLP..."
-  if ! rsync -azh --delete --info=progress2 $target/ astrobee@${llp_ips[${robot_index}]}:${FREEFLYER_INSTALL_DIR}
-  then
-    exit 1
+  if [[ "${llp_ips[${robot_index}]}" != "0.0.0.0" ]]; then # for dock, skip this step
+    echo "Copying files to LLP..."
+    if ! rsync -azh --delete --info=progress2 $target/ astrobee@${llp_ips[${robot_index}]}:${FREEFLYER_INSTALL_DIR}
+    then
+      exit 1
+    fi
   fi
-
-  # fixes=''
-
-  # fixes=${fixes//+([[:space:]])/ }
-
-  # if [ -n "${fixes}" ]; then
-  #   ssh -t ubuntu@${subnet}.${llp} "${fixes}"
-  # fi
 fi
 
 if [ -n "$ip_addr" ]; then

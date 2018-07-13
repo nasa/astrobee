@@ -24,11 +24,6 @@ std_msgs/Header header
 # Id of the command being acknowledged
 string cmd_id
 
-# Commands are sent from 4 places. The ground, the system monitor, guest
-# science, and another astrobee. Command origin will be used to route the ack
-# correctly.
-string cmd_origin
-
 # Status of the command
 ff_msgs/AckStatus status
 

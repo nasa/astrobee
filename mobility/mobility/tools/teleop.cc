@@ -113,68 +113,8 @@ void MResultCallback(ff_util::FreeFlyerActionState::Enum result_code,
     }
   case ff_util::FreeFlyerActionState::Enum::PREEMPTED:
   case ff_util::FreeFlyerActionState::Enum::ABORTED: {
-    // Print a meningful response
-    std::cout << std::endl << "Result: ";
-    switch (result->response) {
-    case ff_msgs::MotionResult::ALREADY_THERE:
-      std::cout << "We are already at the location" << std::endl;       break;
-    case ff_msgs::MotionResult::SUCCESS:
-      std::cout << "Motion succeeded" << std::endl;                     break;
-    case ff_msgs::MotionResult::CANCELLED:
-      std::cout << "Motion cancelled by callee" << std::endl;           break;
-    case ff_msgs::MotionResult::PREEMPTED:
-      std::cout << "Motion preempted by thirdparty" << std::endl;       break;
-    case ff_msgs::MotionResult::PLAN_FAILED:
-      std::cout << "Plan/bootstrap failed" << std::endl;                break;
-    case ff_msgs::MotionResult::VALIDATE_FAILED:
-      std::cout << "Validate failed" << std::endl;                      break;
-    case ff_msgs::MotionResult::CONTROL_FAILED:
-      std::cout << "Control failed" << std::endl;                       break;
-    case ff_msgs::MotionResult::OBSTACLE_DETECTED:
-      std::cout << "Obstacle detected / replan disabled" << std::endl;  break;
-    case ff_msgs::MotionResult::REPLAN_NOT_ENOUGH_TIME:
-      std::cout << "Obstacle and no time to replan" << std::endl;       break;
-    case ff_msgs::MotionResult::REPLAN_FAILED:
-      std::cout << "Obstacle and replanning failed" << std::endl;       break;
-    case ff_msgs::MotionResult::REVALIDATE_FAILED:
-      std::cout << "Obstacle and revalidating failed" << std::endl;     break;
-    case ff_msgs::MotionResult::NOT_IN_WAITING_MODE:
-      std::cout << "Internal failure" << std::endl;                     break;
-    case ff_msgs::MotionResult::INVALID_FLIGHT_MODE:
-      std::cout << "Invalid flight mode specified" << std::endl;        break;
-    case ff_msgs::MotionResult::UNEXPECTED_EMPTY_SEGMENT:
-      std::cout << "Segment empty" << std::endl;                        break;
-    case ff_msgs::MotionResult::COULD_NOT_RESAMPLE:
-      std::cout << "Could not resample segment" << std::endl;           break;
-    case ff_msgs::MotionResult::UNEXPECTED_EMPTY_STATES:
-      std::cout << "State vector empty" << std::endl;                   break;
-    case ff_msgs::MotionResult::INVALID_COMMAND:
-      std::cout << "Command rejected" << std::endl;                     break;
-    case ff_msgs::MotionResult::CANNOT_QUERY_ROBOT_POSE:
-      std::cout << "Failed to find the current pose" << std::endl;      break;
-    case ff_msgs::MotionResult::NOT_ON_FIRST_POSE:
-      std::cout << "Not on first pose / no bootstrapping" << std::endl; break;
-    case ff_msgs::MotionResult::BAD_DESIRED_VELOCITY:
-      std::cout << "Requested vel too high" << std::endl;               break;
-    case ff_msgs::MotionResult::BAD_DESIRED_ACCELERATION:
-      std::cout << "Requested accel too high" << std::endl;             break;
-    case ff_msgs::MotionResult::BAD_DESIRED_OMEGA:
-      std::cout << "Requested omega too high" << std::endl;             break;
-    case ff_msgs::MotionResult::BAD_DESIRED_ALPHA:
-      std::cout << "Requested alpha too high" << std::endl;             break;
-    case ff_msgs::MotionResult::BAD_DESIRED_RATE:
-      std::cout << "Requested rate too low" << std::endl;               break;
-    case ff_msgs::MotionResult::TOLERANCE_VIOLATION_POSITION:
-      std::cout << "Position tolerance violated" << std::endl;          break;
-    case ff_msgs::MotionResult::TOLERANCE_VIOLATION_ATTITUDE:
-      std::cout << "Attitude tolerance violated" << std::endl;          break;
-    case ff_msgs::MotionResult::TOLERANCE_VIOLATION_VELOCITY:
-      std::cout << "Velocity tolerance violated" << std::endl;          break;
-    case ff_msgs::MotionResult::TOLERANCE_VIOLATION_OMEGA:
-      std::cout << "Omega tolerance violated" << std::endl;             break;
-    default:
-      std::cout << "Error: unknown" << std::endl;                       break;
-    }
+    std::cout << std::endl << "Result: " << result->fsm_result
+              << " (response: " << result->response << ")" << std::endl;
   }
   default:
     break;
@@ -184,29 +124,13 @@ void MResultCallback(ff_util::FreeFlyerActionState::Enum result_code,
 
 // Mobility feedback
 void MFeedbackCallback(ff_msgs::MotionFeedbackConstPtr const& feedback) {
-  std::string str = "UNKNOWN";
-  switch (feedback->state.state) {
-  case ff_msgs::MotionState::INITIALIZING:     str = "INITIALIZING";     break;
-  case ff_msgs::MotionState::IDLE:             str = "IDLE";             break;
-  case ff_msgs::MotionState::STOPPED:          str = "STOPPED";          break;
-  case ff_msgs::MotionState::IDLING:           str = "IDLING";           break;
-  case ff_msgs::MotionState::STOPPING:         str = "STOPPING";         break;
-  case ff_msgs::MotionState::PREPPING:         str = "PREPPING";         break;
-  case ff_msgs::MotionState::BOOTSTRAPPING:    str = "BOOTSTRAPPING";    break;
-  case ff_msgs::MotionState::PLANNING:         str = "PLANNING";         break;
-  case ff_msgs::MotionState::VALIDATING:       str = "VALIDATING";       break;
-  case ff_msgs::MotionState::PREPARING:        str = "PREPARING";        break;
-  case ff_msgs::MotionState::CONTROLLING:      str = "CONTROLLING";      break;
-  case ff_msgs::MotionState::REPLANNING:       str = "REPLANNING";       break;
-  case ff_msgs::MotionState::REVALIDATING:     str = "REVALIDATING";     break;
-  }
   std::cout << '\r' << std::flush;
   std::cout << std::fixed << std::setprecision(2)
     << "POS: " << 1000.00 * feedback->progress.error_position << " mm "
     << "ATT: " << 57.2958 * feedback->progress.error_attitude << " deg "
     << "VEL: " << 1000.00 * feedback->progress.error_velocity << " mm/s "
     << "OMEGA: " << 57.2958 * feedback->progress.error_omega << " deg/s "
-    << "[" << str << "]           ";
+    << "[" << feedback->state.fsm_state << "]   ";
 }
 
 // Switch feedback

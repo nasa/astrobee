@@ -51,7 +51,7 @@ DEFINE_int32(ransac_inlier_tolerance, 3,
              "Use in localization this many images which "
              "are most similar to the image to localize.");
 DEFINE_int32(early_break_landmarks, 100,
-             "Breka early when we have this many landmarks.");
+             "Break early when we have this many landmarks.");
 DEFINE_int32(num_extra_localization_db_images, 0,
              "Match this many extra images from the Vocab DB, only keep num_similar.");
 DEFINE_bool(verbose_localization, false,
@@ -207,11 +207,14 @@ SparseMap::SparseMap(bool bundler_format, std::string const& filename,
 // Detect features in given images
 void SparseMap::DetectFeatures() {
   common::ThreadPool pool;
-  for (size_t cid = 0; cid < cid_to_filename_.size(); cid++) {
-    common::PrintProgressBar(stdout, static_cast<float>(cid) / static_cast<float>(cid_to_filename_.size() - 1));
+  bool multithreaded = true;
+  size_t num_files = cid_to_filename_.size();
+  for (size_t cid = 0; cid < num_files; cid++) {
+    common::PrintProgressBar(stdout, static_cast<float>(cid) / static_cast<float>(num_files - 1));
 
     pool.AddTask(&SparseMap::DetectFeaturesFromFile, this,
                  std::ref(cid_to_filename_[cid]),
+                 multithreaded,
                  &cid_to_descriptor_map_[cid],
                  &cid_to_keypoint_map_[cid]);
   }
@@ -376,7 +379,7 @@ void SparseMap::Load(const std::string & protobuf_file, bool localization) {
   close(input_fd);
 }
 
-void SparseMap::SetBriskParams(int min_features, int max_features, int threshold, int retries) {
+void SparseMap::SetDetectorParams(int min_features, int max_features, int threshold, int retries) {
   detector_.Reset(detector_.GetDetectorName(), min_features, max_features, threshold, retries);
 }
 
@@ -463,6 +466,13 @@ void SparseMap::Save(const std::string & protobuf_file) const {
     }
   }
 
+  if (pid_to_xyz_.size() != pid_to_cid_fid_.size()) {
+    LOG(FATAL) << "Book-keeping failure, expecting the following "
+               << "arrays to have the same size:\n"
+               << "pid_to_xyz_.size() = " << pid_to_xyz_.size() << "\n"
+               << "pid_to_cid_fid_.size() = " << pid_to_cid_fid_.size();
+  }
+
   for (size_t i = 0; i < pid_to_xyz_.size(); i++) {
     sparse_mapping_protobuf::Landmark l;
     l.mutable_loc()->set_x(pid_to_xyz_[i].x());
@@ -510,16 +520,29 @@ void SparseMap::InitializeCidFidToPid() {
 }
 
 void SparseMap::DetectFeaturesFromFile(std::string const& filename,
+                                       bool multithreaded,
                                        cv::Mat* descriptors,
                                        Eigen::Matrix2Xd* keypoints) {
   cv::Mat image = cv::imread(filename, CV_LOAD_IMAGE_GRAYSCALE);
-  DetectFeatures(image, descriptors, keypoints);
+  DetectFeatures(image, multithreaded, descriptors, keypoints);
 }
 
-void SparseMap::DetectFeatures(const cv::Mat & image, cv::Mat* descriptors,
+void SparseMap::DetectFeatures(const cv::Mat & image,
+                               bool multithreaded,
+                               cv::Mat* descriptors,
                                Eigen::Matrix2Xd* keypoints) {
   std::vector<cv::KeyPoint> storage;
-  detector_.Detect(image, &storage, descriptors);
+  if (!multithreaded) {
+    detector_.Detect(image, &storage, descriptors);
+  } else {
+    // When using multiple threads, need an individual detector
+    // instance, to avoid a crash. This is being used only in
+    // map-building, rather than in localization which is more
+    // performance-sensitive.
+    interest_point::FeatureDetector local_detector(detector_.GetDetectorName());
+    local_detector.Detect(image, &storage, descriptors);
+  }
+
   keypoints->resize(2, storage.size());
   Eigen::Vector2d output;
 
@@ -644,7 +667,8 @@ bool SparseMap::Localize(std::string const& img_file,
   cv::Mat test_descriptors;
   Eigen::Matrix2Xd test_keypoints;
   int max_cid_to_use = -1;
-  DetectFeaturesFromFile(img_file, &test_descriptors, &test_keypoints);
+  bool multithreaded = false;
+  DetectFeaturesFromFile(img_file, multithreaded, &test_descriptors, &test_keypoints);
   return sparse_mapping::Localize(test_descriptors, test_keypoints, pose,
                                   inlier_landmarks, inlier_observations,
                                   cid_to_filename_.size(),
@@ -662,6 +686,22 @@ bool SparseMap::Localize(std::string const& img_file,
 
 // delete all the features that do not match to a landmark but are still around!
 void SparseMap::PruneMap(void) {
+#if 0
+  // This is a good sanity check, print things before we start pruning
+  for (unsigned int cid = 0; cid < cid_fid_to_pid_.size(); cid++) {
+    for (int fid = 0; fid < cid_to_descriptor_map_[cid].rows; fid++) {
+      if (cid_fid_to_pid_[cid].count(fid) == 0)
+        continue;
+      int pid = cid_fid_to_pid_[cid][fid];
+      int rows = cid_to_keypoint_map_[cid].rows();  // must be equal to 2
+      std::cout << "Value before: "
+                << cid << ' ' << fid << ' ' << cid_to_descriptor_map_[cid].row(fid) << ' '
+                << pid  << ' '
+                <<  cid_to_keypoint_map_[cid].block(0, fid, rows, 1).transpose() << std::endl;
+    }
+  }
+#endif
+
   for (unsigned int cid = 0; cid < cid_fid_to_pid_.size(); cid++) {
     std::vector<int> deleted_features;
     for (int fid = 0; fid < cid_to_descriptor_map_[cid].rows; fid++) {
@@ -676,47 +716,72 @@ void SparseMap::PruneMap(void) {
     cv::Mat next_descriptor_map;
     next_descriptor_map.create(cid_to_descriptor_map_[cid].rows - deleted_features.size(),
                                cid_to_descriptor_map_[cid].cols, cid_to_descriptor_map_[cid].depth());
-    int cur_row = 0;
+    int new_fid = 0;
     for (int fid = 0; fid < cid_to_descriptor_map_[cid].rows; fid++) {
       // delete if no matching landmark!
       if (cid_fid_to_pid_[cid].count(fid) == 0) {
         continue;
       } else {
-        cid_to_descriptor_map_[cid].row(fid).copyTo(next_descriptor_map.row(cur_row));
+        cid_to_descriptor_map_[cid].row(fid).copyTo(next_descriptor_map.row(new_fid));
         // fix indexing
-        cid_fid_to_pid_[cid][cur_row] = cid_fid_to_pid_[cid][fid];
-        // in localization mode this is empty
-        if (pid_to_cid_fid_.size() > 0)
-          pid_to_cid_fid_[cid_fid_to_pid_[cid][fid]][cid] = cur_row;
-        cid_fid_to_pid_[cid].erase(fid);
-        cur_row++;
+        if (new_fid < fid) {
+          int pid = cid_fid_to_pid_[cid][fid];
+          // in localization mode this is empty
+          if (pid_to_cid_fid_.size() > 0)
+            pid_to_cid_fid_[pid][cid] = new_fid;
+          cid_fid_to_pid_[cid][new_fid] = pid;
+          cid_fid_to_pid_[cid].erase(fid);
+        }
+        new_fid++;
       }
     }
     cid_to_descriptor_map_[cid] = next_descriptor_map;
 
     // clean up other stuff
-    cur_row = 0;
     for (int i = static_cast<int>(deleted_features.size() - 1); i >= 0; i--) {
       int fid = deleted_features[i];
       // these may not always exist if localizing
       if (cid_to_keypoint_map_.size() > 0) {
-        int rows = cid_to_keypoint_map_[cid].rows();
+        int rows = cid_to_keypoint_map_[cid].rows();  // must be equal to 2
         int cols = cid_to_keypoint_map_[cid].cols();
-        if (fid < rows - 1)
+        // TODO(oalexan1): Copying blocks like this repeatedly is
+        // expensive.  It is simpler to just shift columns left one by
+        // one, as done above.
+        if (fid < cols - 1)
           cid_to_keypoint_map_[cid].block(0, fid, rows, cols - 1 - fid) =
             cid_to_keypoint_map_[cid].block(0, fid + 1, rows, cols - 1 - fid);
         cid_to_keypoint_map_[cid].conservativeResize(rows, cols - 1);
       }
     }
   }
+
+  // This is not strictly necessary as all book-keeping was already done
+  InitializeCidFidToPid();
+
+#if 0
+  // We must get everything same as before, except fid
+  for (unsigned int cid = 0; cid < cid_fid_to_pid_.size(); cid++) {
+    for (int fid = 0; fid < cid_to_descriptor_map_[cid].rows; fid++) {
+      if (cid_fid_to_pid_[cid].count(fid) == 0)
+        continue;
+      int pid = cid_fid_to_pid_[cid][fid];
+      int rows = cid_to_keypoint_map_[cid].rows();  // must be equal to 2
+      std::cout << "Value after: "
+                << cid << ' ' << fid << ' ' << cid_to_descriptor_map_[cid].row(fid) << ' '
+                << pid  << ' '
+                <<  cid_to_keypoint_map_[cid].block(0, fid, rows, 1).transpose() << std::endl;
+    }
+  }
+#endif
 }
 
 bool SparseMap::Localize(const cv::Mat & image, camera::CameraModel* pose,
                          std::vector<Eigen::Vector3d>* inlier_landmarks,
                          std::vector<Eigen::Vector2d>* inlier_observations) {
+  bool multithreaded = false;
   cv::Mat test_descriptors;
   Eigen::Matrix2Xd test_keypoints;
-  DetectFeatures(image, &test_descriptors, &test_keypoints);
+  DetectFeatures(image, multithreaded, &test_descriptors, &test_keypoints);
   int max_cid_to_use = -1;
   return sparse_mapping::Localize(test_descriptors, test_keypoints, pose,
                                   inlier_landmarks, inlier_observations,

@@ -51,11 +51,27 @@ class DiskMonitor : public ff_util::FreeFlyerNodelet {
 
  protected:
   virtual void Initialize(ros::NodeHandle *nh);
-  bool ReadParams();
+  bool ReadParams(ff_util::FaultKeys fault_key);
+
+  struct PathInfo {
+    PathInfo();
+    PathInfo(std::string const& path_name_in,
+             bool const check_load_high_fault_in,
+             float const high_thres_percent_in,
+             float const too_high_thres_percent_in);
+    std::string path_name;
+    bool check_load_high_fault;
+    float high_thres_percent;
+    float critical_thres_percent;
+  };
 
  private:
+  void ReloadParams();
+  bool LoadParams(ff_util::FaultKeys fault_key);
   void OnCheckTimer(ros::TimerEvent const& event);
   bool CheckAndPublish();
+
+  bool usage_high_fault_triggered_, usage_too_high_fault_triggered_;
 
   config_reader::ConfigReader config_params_;
 
@@ -64,10 +80,11 @@ class DiskMonitor : public ff_util::FreeFlyerNodelet {
   int pub_queue_size_, update_freq_;
 
   ros::Publisher pub_disk_stats_;
-  ros::Timer stats_timer_;
+  ros::Timer reload_params_timer_, stats_timer_;
 
+  std::shared_ptr<std::vector<PathInfo>> paths_info_;
   std::string pub_topic_disk_stats_, processor_name_;
-  std::vector<std::string> paths_;
+  std::string disks_high_, disks_too_high_;
 };
 
 }  // namespace disk_monitor

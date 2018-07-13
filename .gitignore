@@ -76,14 +76,14 @@ doc/latex
 
 # dds config files, they are maintained in the astrobee common submodule
 astrobee/config/dds
- 
+
 #zones bin
 astrobee/zones/*.bin
 astrobee/freeflyer/*.bin
 /freeflyer.sublime-project
 /freeflyer.sublime-workspace
-/simulation/iss-description
-/simulation/granite-description
+/description/*.tar.gz
+/description/media
 
 # catkin
 /.catkin_tools

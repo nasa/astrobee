@@ -21,13 +21,11 @@
 #include "executive/op_state_repo.h"
 
 namespace executive {
-OpState* OpStatePlanExec::StartupState(std::string const& cmd_id,
-                                       std::string const& cmd_origin) {
+OpState* OpStatePlanExec::StartupState(std::string const& cmd_id) {
   std::string err_msg;
 
   first_segment_ = true;
   run_plan_cmd_id_ = cmd_id;
-  run_plan_cmd_origin_ = cmd_origin;
 
   // Change operating state and plan state stuff since the first thing in the
   // plan may not be an action meaning the op state would be ready while
@@ -55,7 +53,7 @@ OpState* OpStatePlanExec::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
   uint8_t status;
 
   // TODO(Katie) Add more commands
-  if (cmd->cmd_src == "plan" && cmd->cmd_origin == "plan") {
+  if (cmd->cmd_id == "plan" && cmd->cmd_src == "plan") {
     OpState::HandleCmd(cmd, completed, successful, err_msg, status, true);
     if (completed) {
       return HandleCommandComplete(successful, err_msg, status);
@@ -72,7 +70,7 @@ OpState* OpStatePlanExec::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
                                      ff_msgs::AckCompletedStatus::BAD_SYNTAX);
       }
 
-      if (!exec_->StartAction(ARM, cmd->cmd_id, cmd->cmd_origin, err_msg)) {
+      if (!exec_->StartAction(ARM, cmd->cmd_id, err_msg)) {
         return HandleCommandComplete(false,
                                      err_msg,
                                      ff_msgs::AckCompletedStatus::EXEC_FAILED);
@@ -98,16 +96,15 @@ OpState* OpStatePlanExec::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
                                     ff_msgs::AckCompletedStatus::EXEC_FAILED);
       }
 
-      if (!exec_->StartAction(IDLE, cmd->cmd_id, cmd->cmd_origin, err_msg)) {
+      if (!exec_->StartAction(IDLE, cmd->cmd_id, err_msg)) {
         return HandleCommandComplete(false,
                                      err_msg,
                                      ff_msgs::AckCompletedStatus::EXEC_FAILED);
       }
     } else if (cmd->cmd_name == CommandConstants::CMD_NAME_PAUSE_PLAN) {
-      exec_->PublishCmdAck(run_plan_cmd_id_, run_plan_cmd_origin_);
+      exec_->PublishCmdAck(run_plan_cmd_id_);
       // Clear command id since we acked it and we don't want to ack it again
       run_plan_cmd_id_ = "";
-      run_plan_cmd_origin_ = "";
 
       // Ack the pause as completed in the plan
       exec_->AckCurrentPlanItem();
@@ -230,15 +227,11 @@ OpState* OpStatePlanExec::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
     // Pause and stop commands do the same thing in plan execution mode
     if (cmd->cmd_name == CommandConstants::CMD_NAME_PAUSE_PLAN ||
         cmd->cmd_name == CommandConstants::CMD_NAME_STOP_ALL_MOTION) {
-      // TODO(Katie) Need to check source, don't want to ack stop command if it
-      // came from the fault manager
       // Assumes run plan command isn't a fault response
       exec_->PublishCmdAck(run_plan_cmd_id_,
-                           run_plan_cmd_origin_,
                            ff_msgs::AckCompletedStatus::CANCELED);
       // Clear command id since we acked it and don't want to ack it again
       run_plan_cmd_id_ = "";
-      run_plan_cmd_origin_ = "";
 
       exec_->SetPlanExecState(ff_msgs::ExecState::PAUSED);
       if (exec_->AreActionsRunning()) {
@@ -251,7 +244,9 @@ OpState* OpStatePlanExec::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
         }
         bool stop_started = false;
         if (exec_->StopAllMotion(stop_started,
-                                          cmd->cmd_id, cmd->cmd_origin, true)) {
+                                 cmd->cmd_id,
+                                 cmd->cmd_src,
+                                 true)) {
           // If stop was successful and a stop was started, we need to go into
           // teleop op state
           if (stop_started) {
@@ -275,15 +270,44 @@ OpState* OpStatePlanExec::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
         waiting_ = false;
         exec_->AckCurrentPlanItem();
         exec_->PublishPlanStatus(ff_msgs::AckStatus::QUEUED);
-        exec_->PublishCmdAck(cmd->cmd_id, cmd->cmd_origin);
+        exec_->PublishCmdAck(cmd->cmd_id);
         return OpStateRepo::Instance()->ready()->StartupState();
       } else {
         ROS_ERROR("Executive: Don't know how to pause command being executed!");
         return OpStateRepo::Instance()->ready()->StartupState();
       }
+    } else if (cmd->cmd_name == CommandConstants::CMD_NAME_FAULT) {
+      // Need to pass the run plan command id and origin to fault state so that
+      // when the current step completes, the fault state can ack the run plan
+      // command as canceled
+      std::string cmd_id = run_plan_cmd_id_;
+
+      // Check if we are executing a wait command. If we are, the wait is
+      // stopped and marked as complete.
+      if (waiting_) {
+        exec_->StopWaitTimer();
+        waiting_ = false;
+        exec_->AckCurrentPlanItem();
+        exec_->PublishPlanStatus(ff_msgs::AckStatus::QUEUED);
+        // Ack run plan command here since the current step has completed
+        exec_->PublishCmdAck(run_plan_cmd_id_,
+                             ff_msgs::AckCompletedStatus::CANCELED,
+                             "Executive had to execute the fault command.");
+
+        // Clear out the cmd_id since we just acked the run plan
+        // command and will not need to ack it in the fault state
+        cmd_id = "";
+      }
+
+      // Clear out the run plan command id and origin
+      run_plan_cmd_id_ = "";
+
+      // Ack fault command
+      exec_->PublishCmdAck(cmd->cmd_id);
+      return OpStateRepo::Instance()->fault()->StartupState(cmd_id);
     } else if (cmd->cmd_name == CommandConstants::CMD_NAME_STOP_ARM) {
       // TODO(Katie) Stub, add actual code later
-      exec_->StopArm(cmd->cmd_id, cmd->cmd_origin);
+      exec_->StopArm(cmd->cmd_id);
     } else if (cmd->cmd_name ==
                               CommandConstants::CMD_NAME_CUSTOM_GUEST_SCIENCE) {
       // TODO(Katie) May need to add code to track command to make sure it gets
@@ -294,149 +318,20 @@ OpState* OpStatePlanExec::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
           + " plan execution.";
       // Don't stop plan, just send a failed ack
       exec_->PublishCmdAck(cmd->cmd_id,
-                           cmd->cmd_origin,
                            ff_msgs::AckCompletedStatus::EXEC_FAILED,
                            err_msg);
-      ROS_WARN("SysMonitor: %s", err_msg.c_str());
+      ROS_WARN("Executive: %s", err_msg.c_str());
     }
   }
   return this;
 }
 
-OpState* OpStatePlanExec::HandleArmResult(
+OpState* OpStatePlanExec::HandleResult(
                               ff_util::FreeFlyerActionState::Enum const& state,
-                              ff_msgs::ArmResultConstPtr const& result,
+                              std::string const& result_response,
                               std::string const& cmd_id,
-                              std::string const& cmd_origin) {
-  std::string result_str = "";
-  if (state != ff_util::FreeFlyerActionState::Enum::SUCCESS) {
-    if (result != nullptr) {
-      result_str = std::to_string(result->response);
-    }
-  }
-
-  return HandleActionComplete(state, "Arm", result_str);
-}
-OpState* OpStatePlanExec::HandleDockActive(Action const& action) {
-  // We only need to set the mobility state when we start docking since the
-  // mobility state is already set to the first undocking state when we are
-  // docked.
-  if (action == DOCK) {
-    exec_->SetMobilityState(ff_msgs::MobilityState::DOCKING,
-                            ff_msgs::DockState::DOCKING_MAX_STATE);
-  }
-  return this;
-}
-
-OpState* OpStatePlanExec::HandleDockFeedback(
-                                ff_msgs::DockFeedbackConstPtr const& feedback) {
-  // If we are recovering because un/docking failed or the docker doesn't know
-  // what state it is in, don't change the mobility state since there isn't a
-  // mobility state to reflect that
-  if (feedback->state.state < ff_msgs::DockState::UNKNOWN) {
-    exec_->SetMobilityState(ff_msgs::MobilityState::DOCKING,
-      feedback->state.state);
-  }
-
-  // TODO(Katie) Do we need/care about progress
-  // Progress is only set when the robot is ingressing
-  /*if (feedback->status == ff_msgs::DockFeedback::INGRESSING) {
-    exec_->SetProximity(feedback->progress);
-  }*/
-  return this;
-}
-
-OpState* OpStatePlanExec::HandleDockResult(
-                              ff_util::FreeFlyerActionState::Enum const& state,
-                              ff_msgs::DockResultConstPtr const& result,
-                              std::string const& cmd_id,
-                              std::string const& cmd_origin,
                               Action const& action) {
-  // TODO(Katie) Do we need/care about proximity ?
-  // exec_->SetProximity(0);
-  std::string result_str = "", action_str = "";
-  if (action == DOCK) {
-    action_str = "Dock";
-  } else if (action == UNDOCK) {
-    action_str = "Undock";
-  } else {
-    action_str = "?";
-  }
-
-  if (state == ff_util::FreeFlyerActionState::Enum::SUCCESS &&
-     (result->response == ff_msgs::DockResult::DOCKED ||
-      result->response == ff_msgs::DockResult::ALREADY_DOCKED) &&
-      action == DOCK) {
-    exec_->SetMobilityState(ff_msgs::MobilityState::DOCKING);
-  } else if (state == ff_util::FreeFlyerActionState::Enum::SUCCESS &&
-            (result->response == ff_msgs::DockResult::UNDOCKED ||
-             result->response == ff_msgs::DockResult::ALREADY_UNDOCKED) &&
-             action == UNDOCK) {
-    exec_->SetMobilityState(ff_msgs::MobilityState::STOPPING);
-  } else {
-    if (action == DOCK) {
-      exec_->SetMobilityState(ff_msgs::MobilityState::STOPPING);
-    } else if (action == UNDOCK) {
-      exec_->SetMobilityState(ff_msgs::MobilityState::DOCKING);
-    }
-    if (result != nullptr)  {
-      result_str = std::to_string(result->response);
-    }
-  }
-  return HandleActionComplete(state, action_str, result_str);
-}
-
-OpState* OpStatePlanExec::HandleMotionActive(Action const& action) {
-  if (action == EXECUTE) {
-    exec_->SetMobilityState(ff_msgs::MobilityState::FLYING);
-  }
-  return this;
-}
-
-OpState* OpStatePlanExec::HandleMotionResult(
-                              ff_util::FreeFlyerActionState::Enum const& state,
-                              ff_msgs::MotionResultConstPtr const& result,
-                              std::string const& cmd_id,
-                              std::string const& cmd_origin,
-                              Action const& action) {
-  std::string action_str = "", result_str = "";
-  // Don't need case for move or stop since they aren't plan commands
-  switch (action) {
-    case IDLE:
-      action_str = "Idle";
-      break;
-    case EXECUTE:
-      action_str = "Execute";
-      break;
-    default:
-      ROS_ERROR("Executive: Action unknown or wrong in plan motion result!");
-      action_str = "?";
-  }
-
-  if (state == ff_util::FreeFlyerActionState::Enum::SUCCESS &&
-      (result->response == ff_msgs::MotionResult::SUCCESS ||
-       result->response == ff_msgs::MotionResult::ALREADY_THERE)) {
-    if (action == IDLE) {
-      exec_->SetMobilityState(ff_msgs::MobilityState::DRIFTING);
-    } else {
-      exec_->SetMobilityState(ff_msgs::MobilityState::STOPPING);
-    }
-  } else {
-    // If an action failed, Astrobee should be stopped so set the mobility state
-    // to stopped
-    exec_->SetMobilityState(ff_msgs::MobilityState::STOPPING);
-    if (result != nullptr) {
-      result_str = std::to_string(result->response);
-    }
-    // Pass a state of aborted so that handle action complete knows the action
-    // failed. Some of the successful mobility result aren't successful exeutive
-    // results.
-    return HandleActionComplete(ff_util::FreeFlyerActionState::Enum::ABORTED,
-                                action_str,
-                                result_str);
-  }
-
-  return HandleActionComplete(state, action_str, result_str);
+  return HandleActionComplete(state, action, result_response);
 }
 
 OpState* OpStatePlanExec::HandleWaitCallback() {
@@ -455,12 +350,11 @@ OpState* OpStatePlanExec::HandleGuestScienceAck(
   } else if (ack->completed_status.status != ff_msgs::AckCompletedStatus::OK) {
     ROS_ERROR("Executive: %s", ack->message.c_str());
     exec_->PublishCmdAck(run_plan_cmd_id_,
-                         run_plan_cmd_origin_,
                          ack->completed_status.status,
                          ack->message, ack->status.status);
     run_plan_cmd_id_ = "";
-    run_plan_cmd_origin_ = "";
     exec_->SetPlanExecState(ff_msgs::ExecState::PAUSED);
+    exec_->PublishPlanStatus(ff_msgs::AckStatus::REQUEUED);
     return OpStateRepo::Instance()->ready()->StartupState();
   } else {
     return AckStartPlanItem();
@@ -477,12 +371,11 @@ OpState* OpStatePlanExec::HandleCommandComplete(bool successful,
   } else {
     ROS_ERROR("Executive: %s", err_msg.c_str());
     exec_->PublishCmdAck(run_plan_cmd_id_,
-                         run_plan_cmd_origin_,
                          status,
                          err_msg);
     run_plan_cmd_id_ = "";
-    run_plan_cmd_origin_ = "";
     exec_->SetPlanExecState(ff_msgs::ExecState::PAUSED);
+    exec_->PublishPlanStatus(ff_msgs::AckStatus::REQUEUED);
     return OpStateRepo::Instance()->ready()->StartupState();
   }
   return this;
@@ -490,29 +383,27 @@ OpState* OpStatePlanExec::HandleCommandComplete(bool successful,
 
 OpState* OpStatePlanExec::HandleActionComplete(
                               ff_util::FreeFlyerActionState::Enum const& state,
-                              std::string const& name,
+                              Action const& action,
                               std::string const& result) {
   if (state == ff_util::FreeFlyerActionState::Enum::SUCCESS) {
     return AckStartPlanItem();
   }
 
-  std::string err_msg = GenerateActionFailedMsg(state, name, result);
+  std::string err_msg = GenerateActionFailedMsg(state, action, result);
   ROS_ERROR("Executive: %s", err_msg.c_str());
 
   exec_->PublishCmdAck(run_plan_cmd_id_,
-                       run_plan_cmd_origin_,
                        ff_msgs::AckCompletedStatus::EXEC_FAILED,
                        err_msg);
 
   // Start a stop action since we don't know what the mobility state
   // TODO(Katie) Possibly store gnc state and only start a stop when flying
   exec_->FillMotionGoal(STOP);
-  exec_->StartAction(STOP, "", "plan", err_msg, true);
+  exec_->StartAction(STOP, "plan", err_msg, true);
 
   run_plan_cmd_id_ = "";
-  run_plan_cmd_origin_ = "";
   exec_->SetPlanExecState(ff_msgs::ExecState::PAUSED);
-  exec_->SetMobilityState(ff_msgs::MobilityState::STOPPING);
+  exec_->PublishPlanStatus(ff_msgs::AckStatus::REQUEUED);
   return OpStateRepo::Instance()->teleop()->StartupState();
 }
 
@@ -524,9 +415,8 @@ OpState* OpStatePlanExec::AckStartPlanItem() {
     return StartNextPlanItem();
   } else {
     ROS_DEBUG("Plan complete!");
-    exec_->PublishCmdAck(run_plan_cmd_id_, run_plan_cmd_origin_);
+    exec_->PublishCmdAck(run_plan_cmd_id_);
     run_plan_cmd_id_ = "";
-    run_plan_cmd_origin_ = "";
     exec_->PublishPlanStatus(ff_msgs::AckStatus::COMPLETED);
     exec_->SetPlanExecState(ff_msgs::ExecState::IDLE);
     return OpStateRepo::Instance()->ready()->StartupState();
@@ -546,12 +436,12 @@ OpState* OpStatePlanExec::StartNextPlanItem() {
     // the granite table doesn't permit a faceforward move to start because
     // there are no visual features near spheresgoat
     // TODO(Katie) Change this to extract facefoward out of plan
-    if (!exec_->ConfigureMobility(first_segment_, !first_segment_, err_msg)) {
+    if (!exec_->ConfigureMobility(first_segment_, true, err_msg)) {
       return HandleCommandComplete(false, err_msg,
                                    ff_msgs::AckCompletedStatus::EXEC_FAILED);
     }
 
-    if (!exec_->StartAction(EXECUTE, "", "plan", err_msg, true)) {
+    if (!exec_->StartAction(EXECUTE, "plan", err_msg, true)) {
       return HandleCommandComplete(false, err_msg,
                                    ff_msgs::AckCompletedStatus::EXEC_FAILED);
     }
@@ -567,9 +457,8 @@ OpState* OpStatePlanExec::StartNextPlanItem() {
     // the part of the plan that got paused and it was the last item in the
     // plan.
     ROS_INFO("Plan complete!!!");
-    exec_->PublishCmdAck(run_plan_cmd_id_, run_plan_cmd_origin_);
+    exec_->PublishCmdAck(run_plan_cmd_id_);
     run_plan_cmd_id_ = "";
-    run_plan_cmd_origin_ = "";
     exec_->SetPlanExecState(ff_msgs::ExecState::IDLE);
     return OpStateRepo::Instance()->ready()->StartupState();
   }

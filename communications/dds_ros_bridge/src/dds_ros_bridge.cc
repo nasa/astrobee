@@ -138,6 +138,20 @@ int DdsRosBridge::BuildBatteryStateToRapid(
   return ros_sub_rapid_pubs_.size();
 }
 
+int DdsRosBridge::BuildCommandToRapid(const std::string& sub_topic,
+                                      const std::string& ac_sub_topic,
+                                      const std::string& pub_topic,
+                                      const std::string& name) {
+  ff::RosSubRapidPubPtr command_to_command(new ff::RosCommandToRapid(
+                                                                  sub_topic,
+                                                                  ac_sub_topic,
+                                                                  pub_topic,
+                                                                  nh_,
+                                                                  agent_name_));
+  ros_sub_rapid_pubs_[name] = command_to_command;
+  return ros_sub_rapid_pubs_.size();
+}
+
 int DdsRosBridge::BuildCompressedImageToImage(const std::string& sub_topic,
                                               const std::string& pub_topic,
                                               const std::string& name) {
@@ -673,6 +687,25 @@ bool DdsRosBridge::ReadParams() {
     components_++;
   }
 
+  // ros_command_rapid_command => RosCRapC
+  if (!config_params_.GetBool("use_ROSCRAPC", &use)) {
+    ROS_FATAL("DDS Bridge: use ROSCRAPC not specified!");
+    return false;
+  }
+
+  if (use) {
+    if (!config_params_.GetStr("pub_topic_ROSCRAPC", &pub_topic)) {
+      ROS_FATAL("DDS Bridge: pub topic ROSCRAPC not specified!");
+      return false;
+    }
+
+    BuildCommandToRapid(TOPIC_COMMAND,
+                        TOPIC_COMMUNICATIONS_DDS_COMMAND,
+                        pub_topic,
+                        "ROSCRAPC");
+    components_++;
+  }
+
   // ros_command_config_rapid_command_config => RCCRCC
   if (!config_params_.GetBool("use_RCCRCC", &use)) {
     ROS_FATAL("DDS Bridge: use RCCRCC not specified!");
@@ -689,7 +722,7 @@ bool DdsRosBridge::ReadParams() {
     components_++;
   }
 
-  // ros_compressed_file_rapid_compressed_file => RoCFRaCF
+  // ros_compressed_file_rapid_compressed_file => RosCFRapCF
   if (!config_params_.GetBool("use_ROSCFRAPCF", &use)) {
     ROS_FATAL("DDS Bridge: use ROSCFRAPCF not specified!");
     return false;

@@ -525,11 +525,13 @@ class PicoFactory {
     case royale::CameraAccessLevel::L4:
     case royale::CameraAccessLevel::L3:
     case royale::CameraAccessLevel::L2:
-      ptr = std::make_shared < PicoDriverL2 > (manager_, uuid, use_case, exposure, nh_, robot_, name, topic);
+      ptr = std::make_shared < PicoDriverL2 > (
+        manager_, uuid, use_case, exposure, nh_, robot_, name, topic);
       break;
     case royale::CameraAccessLevel::L1:
     default:
-      ptr = std::make_shared < PicoDriverL1 > (manager_, uuid, use_case, exposure, nh_, robot_, name, topic);
+      ptr = std::make_shared < PicoDriverL1 > (
+        manager_, uuid, use_case, exposure, nh_, robot_, name, topic);
       break;
     }
     // If the device was allocated, save it
@@ -558,51 +560,57 @@ class PicoDriverNodelet : public ff_util::FreeFlyerNodelet  {
     config_reader::ConfigReader config_params;
     config_params.AddFile("cameras.config");
     if (!config_params.ReadFiles())
-      FF_FATAL("Could get read the config file");
+      return InitFault("Lua: Could get read the config file");
     // Try and open the config file
     config_reader::ConfigReader::Table pconfig;
     if (!config_params.GetTable("picoflexx", &pconfig))
-      FF_FATAL("Could not find the picoflexx table");
+      return InitFault("Lua:Could not find the picoflexx table");
     // Initialize the pico factory class with an API key
     std::string api_key;
     if (!pconfig.GetStr("api_key", &api_key))
-      FF_FATAL("Could get devices item in config file");
+      return InitFault("Lua:Could get devices item in config file");
     PicoFactory factory(nh, GetPlatform(), api_key);
     // Read the device information from the config table
     config_reader::ConfigReader::Table devices;
     if (!pconfig.GetTable("devices", &devices))
-      FF_FATAL("Could get devices item in config file");
+      return InitFault("Lua:Could get devices item in config file");
     for (int i = 0; i < devices.GetSize(); i++) {
       // Get the device info
       config_reader::ConfigReader::Table device_info;
       if (!devices.GetTable(i + 1, &device_info))
-        FF_FATAL("Could get row in table table");
+        return InitFault("Lua:Could get row in table table");
       // Get the parameters
       std::string device_name, mode, name, topic;
       uint32_t exposure;
       if (!device_info.GetStr("name", &name))
-        FF_FATAL("Could not find row 'name' in table");
+        return InitFault("Lua:Could not find row 'name' in table");
       // Query all information about the camer
       if (!device_info.GetStr("device", &device_name))
-        FF_FATAL("Could not find row 'device' in table");
+        return InitFault("Lua:Could not find row 'device' in table");
       // Query all information about the camer
       if (!device_info.GetStr("topic", &topic))
-        FF_FATAL("Could not find row 'topic' in table");
+        return InitFault("Lua:Could not find row 'topic' in table");
       // Get the use case
       if (!device_info.GetStr("mode", &mode))
-        FF_FATAL("Could not find row 'mode' in table");
+        return InitFault("Lua:Could not find row 'mode' in table");
       // Get the exposure
       if (!device_info.GetUInt("exposure", &exposure))
-        FF_FATAL("Could not find row 'exposure' in table");
+        return InitFault("Lua:Could not find row 'exposure' in table");
       // Try and create the pico device
-      std::shared_ptr < PicoDriver > ptr = factory.AddCamera(device_name, mode, exposure, name, topic);
-      if (ptr == nullptr) {
-        FF_INFO("Could not initialize camera " << name << " with UUID '" << device_name << "'");
-        continue;
-      }
+      std::shared_ptr < PicoDriver > ptr = factory.AddCamera(
+        device_name, mode, exposure, name, topic);
+      if (ptr == nullptr)
+        return InitFault("Lua:Could not start camera with UUID " + device_name);
       // Add the pointer to the device list
       devices_[device_name] = ptr;
     }
+  }
+
+  // Deal with a fault in a responsible manner
+  void InitFault(std::string const& msg ) {
+    NODELET_ERROR_STREAM(msg);
+    AssertFault(ff_util::INITIALIZATION_FAILED, msg);
+    return;
   }
 
  private:

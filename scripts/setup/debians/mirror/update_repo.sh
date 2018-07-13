@@ -25,10 +25,7 @@ contains_element () {
 
 DEBLOC=${ASTROBEE_DEBIAN_DIR:-/home/p-free-flyer/free-flyer/FSW/ars_debs/dists/xenial/main}
 
-# add our debians
-$APTLY repo add astrobee $DEBLOC/binary-armhf/*.deb
-$APTLY repo add astrobee $DEBLOC/binary-amd64/*.deb
-$APTLY repo add astrobee $DEBLOC/source/*.dsc
+./update_astrobee_debians.sh
 
 # needs latest conf files from repo
 packages=$(parse_packages $DIR/astrobee_conf/*.conf)

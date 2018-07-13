@@ -84,10 +84,6 @@ int main(int argc, char** argv) {
   // the command didn't come from the ground
   move_cmd.cmd_src = "guest_science";
 
-  // Origin of the command, set to guest_science if this command stays in the
-  // system. Set it to Astrobee if command is being sent to another astrobee.
-  move_cmd.cmd_origin = "guest_science";
-
   // Subsystem name, not used as of yet so I just set it to Astrobee
   move_cmd.subsys_name = "Astrobee";
 

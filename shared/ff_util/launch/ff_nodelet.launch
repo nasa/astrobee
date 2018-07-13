@@ -17,16 +17,17 @@
 <launch>
 
   <!-- Mandatory arguments -->
-  <arg name="class"/>                                         <!-- Nodelet class        -->
-  <arg name="name"/>                                          <!-- Nodelet name         -->
+  <arg name="class"/>                              <!-- Nodelet class        -->
+  <arg name="name"/>                               <!-- Nodelet name         -->
 
   <!-- Optional arguments -->
-  <arg name="manager" default="" />                           <!-- Nodelet manager name -->
-  <arg name="debug" default="false" />                        <!-- Run in debug mode    -->
-  <arg name="arguments" default="" />                         <!-- Arguments to nodelet -->
+  <arg name="manager" default="" />                <!-- Nodelet manager name -->
+  <arg name="debug" default="false" />             <!-- Run in debug mode    -->
+  <arg name="arguments" default="" />              <!-- Arguments to nodelet -->
   <arg name="output" default="screen" />
-  <arg name="disable" default="false" />                      <!-- Disable this nodelet -->
-  <arg name="respawn" default="false" />                      <!-- Respawn on failure   -->
+  <arg name="disable" default="false" />           <!-- Disable this nodelet -->
+  <arg name="respawn" default="false" />           <!-- Respawn on failure   -->
+  <arg name="required" default="true" />           <!-- Respawn on failure   -->
 
   <!-- Don't do anything if the node is disabled -->
   <group unless="$(arg disable)">
@@ -49,7 +50,7 @@
       <!-- Start a nodelet manager, if needed -->
       <node if="$(arg standalone)" name="$(arg nodelet_manager)"
             pkg="nodelet" type="nodelet" args="manager"
-            output="$(arg output)" required="true"
+            output="$(arg output)" required="$(arg required)"
             launch-prefix="$(arg prefix)"/>
 
       <!-- Now inject the nodelet into the nodelet manager -->

@@ -1,0 +1,5 @@
+submodules/platform/initrd/busybox_1.26.2.config
+submodules/platform/inforce/kernel-v3.10.40.config
+submodules/platform/wandboard/kernel-v4.2.8.config
+submodules/platform/wandboard/uboot.config
+submodules/platform/wandboard/kernel-v4.13.10.config

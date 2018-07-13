@@ -14,7 +14,7 @@
 <!-- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or         -->
 <!-- implied. See the License for the specific language governing            -->
 <!-- permissions and limitations under the License.                          -->
-  
+
 <launch>
 
   <!-- Context options (NB: THESE ARE OVERRIDDEN BY ENVIRONMENT VARIABLES)   -->
@@ -27,6 +27,7 @@
   <arg name="llp" default="10.42.0.31" />       <!-- LLP IP address          -->
   <arg name="rec" default="" />                 <!-- Enable recording        -->
   <arg name="dds" default="true" />             <!-- Enable DDS              -->
+  <arg name="fsw" default="true" />             <!-- Enable FSW launch       -->
 
   <!-- General options -->
   <arg name="ocam" default="false" />           <!-- Overhead camera         -->
@@ -37,15 +38,15 @@
   <arg name="gds" default="false" />            <!-- Enable GDS              -->
 
   <!-- Make sure all environment variables are set for controller -->
-  <env if="$(eval optenv('ASTROBEE_ROBOT','')=='')" 
+  <env if="$(eval optenv('ASTROBEE_ROBOT','')=='')"
        name="ASTROBEE_ROBOT" value="$(arg robot)" />
-  <env if="$(eval optenv('ASTROBEE_WORLD','')=='')" 
+  <env if="$(eval optenv('ASTROBEE_WORLD','')=='')"
        name="ASTROBEE_WORLD" value="$(arg world)" />
-  <env if="$(eval optenv('ASTROBEE_CONFIG_DIR','')=='')" 
+  <env if="$(eval optenv('ASTROBEE_CONFIG_DIR','')=='')"
        name="ASTROBEE_CONFIG_DIR" value="$(find astrobee)/config" />
-  <env if="$(eval optenv('ASTROBEE_RESOURCE_DIR','')=='')" 
+  <env if="$(eval optenv('ASTROBEE_RESOURCE_DIR','')=='')"
        name="ASTROBEE_RESOURCE_DIR" value="$(find astrobee)/resources" />
-  <env if="$(eval optenv('ROSCONSOLE_CONFIG_FILE','')=='')" 
+  <env if="$(eval optenv('ROSCONSOLE_CONFIG_FILE','')=='')"
        name="ROSCONSOLE_CONFIG_FILE" value="$(find astrobee)/resources/logging.config"/>
 
   <!-- Declare our global logging format -->
@@ -54,15 +55,17 @@
   <!-- Start ground controller services -->
   <group>
     <machine name ="local" address="localhost" default="true"/>
-    <!-- Start the dock description for visualization purposes -->
-    <include file="$(find astrobee)/launch/controller/dock.launch"/>
+    <!-- Start the descriptions (ISS, dock, granite) for visualization purposes -->
+    <include file="$(find description)/launch/description.launch"/>
     <!-- Start ground controller services -->
     <include if="$(arg ocam)" file="$(find astrobee)/launch/controller/ocam.launch"/>
     <include if="$(arg vive)" file="$(find astrobee)/launch/controller/vive.launch"/>
     <include if="$(arg gviz)" file="$(find astrobee)/launch/controller/gviz.launch"/>
-    <include if="$(arg rviz)" file="$(find astrobee)/launch/controller/rviz.launch"/>
     <include if="$(arg gds)" file="$(find astrobee)/launch/controller/gds.launch"/>
     <include if="$(arg rqt)" file="$(find astrobee)/launch/controller/rqt.launch"/>
+    <include if="$(arg rviz)" file="$(find astrobee)/launch/controller/rviz.launch">
+      <arg name="world" value="$(arg world)"/>
+    </include>
     <!-- Launch a recorder for this robot-->
     <include unless="$(eval arg('rec')=='')"
              file="$(find astrobee)/launch/controller/bagrecord.launch">
@@ -71,7 +74,7 @@
   </group>
 
   <!-- Launch an astrobee! In future will be replaced by systemd call -->
-  <include file="$(find astrobee)/launch/astrobee.launch">
+  <include if="$(arg fsw)" file="$(find astrobee)/launch/astrobee.launch">
     <arg name="robot" value="$(arg robot)" />      <!-- Type of robot        -->
     <arg name="world" value="$(arg world)" />      <!-- Execution context    -->
     <arg name="ns" value="$(arg ns)" />            <!-- Robot namespace      -->

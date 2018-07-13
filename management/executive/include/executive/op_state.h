@@ -45,8 +45,7 @@ class OpStateRepo;
 class OpState {
  public:
   virtual ~OpState() {}
-  virtual OpState* StartupState(std::string const& cmd_id = "",
-                                std::string const& cmd_origin = "");
+  virtual OpState* StartupState(std::string const& cmd_id = "");
   virtual OpState* HandleCmd(ff_msgs::CommandStampedPtr const& cmd);
   OpState* HandleCmd(ff_msgs::CommandStampedPtr const& cmd,
                      bool& completed,
@@ -55,68 +54,32 @@ class OpState {
                      uint8_t& status,
                      bool plan = false);
 
-  // Functions for system actions
-  // Arm
-  virtual OpState* HandleArmResult(
+  virtual OpState* HandleResult(
                               ff_util::FreeFlyerActionState::Enum const& state,
-                              ff_msgs::ArmResultConstPtr const& result,
+                              std::string const& result_response,
                               std::string const& cmd_id,
-                              std::string const& cmd_origin);
-
-  // Dock
-  virtual OpState* HandleDockActive(Action const& action);
-  virtual OpState* HandleDockFeedback(
-                                ff_msgs::DockFeedbackConstPtr const& feedback);
-  virtual OpState* HandleDockResult(
-                              ff_util::FreeFlyerActionState::Enum const& state,
-                              ff_msgs::DockResultConstPtr const& result,
-                              std::string const& cmd_id,
-                              std::string const& cmd_origin,
-                              Action const& action);
-
-  // Perch
-  virtual OpState* HandlePerchActive(Action const& action);
-  virtual OpState* HandlePerchFeedback();
-  virtual OpState* HandlePerchResult(std::string const& cmd_id,
-                                     std::string const& cmd_origin,
-                                     Action const& action);
-
-  // Switch
-  virtual OpState* HandleSwitchResult(
-                              ff_util::FreeFlyerActionState::Enum const& state,
-                              ff_msgs::SwitchResultConstPtr const& result,
-                              std::string const& cmd_id,
-                              std::string const& cmd_origin);
-
-  // Teleop
-  virtual OpState* HandleMotionActive(Action const& action);
-  virtual OpState* HandleMotionResult(
-                              ff_util::FreeFlyerActionState::Enum const& state,
-                              ff_msgs::MotionResultConstPtr const& result,
-                              std::string const& cmd_id,
-                              std::string const& cmd_origin,
                               Action const& action);
 
   virtual OpState* HandleWaitCallback();
 
   // TODO(Katie) Remove if you end up changing the start, custom, and stop
   // commands to actions.
-  virtual OpState* HandleGuestScienceAck(ff_msgs::AckStampedConstPtr const&
-                                                                          ack);
+  virtual OpState* HandleGuestScienceAck(
+                                        ff_msgs::AckStampedConstPtr const& ack);
 
   void AckMobilityStateIssue(std::string cmd_id,
-                             std::string cmd_origin,
                              std::string cmd_name,
                              std::string current_mobility_state,
                              std::string accepted_mobility_state = "");
   bool CheckNotMoving(std::string cmd_id,
-                      std::string cmd_origin,
                       std::string cmd_name);
 
   std::string GenerateActionFailedMsg(
                               ff_util::FreeFlyerActionState::Enum const& state,
-                              std::string const& goal_name,
+                              Action const& action,
                               std::string const& action_result = "");
+
+  std::string GetActionString(Action const& action);
 
   std::string const& name() const {return name_;}
   unsigned char const& id() const {return id_;}

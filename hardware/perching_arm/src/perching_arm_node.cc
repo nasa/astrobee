@@ -48,7 +48,8 @@ class PerchingArmNode : public ff_util::FreeFlyerNodelet {
   }
 
  protected:
-  // Called on flight software stack initialization
+  // Called on flight software stack initialization - every NODELET_FATAIL
+  // call below should be converted to an initialization fault...
   virtual void Initialize(ros::NodeHandle *nh) {
     // Read the configuration
     config_reader::ConfigReader config_params;
@@ -96,8 +97,10 @@ class PerchingArmNode : public ff_util::FreeFlyerNodelet {
 
         // Initialize the arm
         PerchingArmResult ret = arm_.Connect(port, baud, cb_sleep, cb_data);
-        if (ret != RESULT_SUCCESS)
-          NODELET_FATAL("Could not initialize the arm driver: ");
+        if (ret != RESULT_SUCCESS) {
+          NODELET_WARN("Could not initialize the arm. It is attached?");
+          return;
+        }
 
         // Grab config parameters for the matched device
         config_reader::ConfigReader::Table config_list;

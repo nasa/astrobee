@@ -39,6 +39,7 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <functional>
 
 namespace ekf {
 
@@ -85,6 +86,8 @@ class Ekf {
 
   void SetSpeedGain(const uint8_t gain);
 
+  void SetResetCallback(std::function<void()> callback);
+
   Eigen::Affine3d GetNavCamToBody(void) const {return nav_cam_to_body_;}
 
  protected:
@@ -128,6 +131,9 @@ class Ekf {
   geometry_msgs::Pose reset_pose_;
   bool reset_ready_;
 
+  // optional: called when a reset occurs
+  std::function<void()> reset_callback_;
+
   // vector of feature ids and observations, observations are features ids and positions
   // this list is sorted by feature id
   std::map<int, OFFeature> optical_flow_features_;
@@ -143,6 +149,7 @@ class Ekf {
 
   // only save this for writing to a file later
   geometry_msgs::Pose last_estimate_pose_;
+
 
   /** Configuration Constants **/
 

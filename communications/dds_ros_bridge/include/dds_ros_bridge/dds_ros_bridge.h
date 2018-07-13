@@ -38,6 +38,7 @@
 #include "dds_ros_bridge/ros_arm_joint_sample.h"
 #include "dds_ros_bridge/ros_arm_state.h"
 #include "dds_ros_bridge/ros_battery_state.h"
+#include "dds_ros_bridge/ros_command.h"
 #include "dds_ros_bridge/ros_command_config_rapid_command_config.h"
 #include "dds_ros_bridge/ros_compressed_file_ack.h"
 #include "dds_ros_bridge/ros_compressed_file_rapid_compressed_file.h"
@@ -113,6 +114,10 @@ class DdsRosBridge : public ff_util::FreeFlyerNodelet {
                                const std::string& sub_topic_battery_temp_BR,
                                const std::string& pub_topic,
                                const std::string& name);
+  int BuildCommandToRapid(const std::string& sub_topic,
+                          const std::string& ac_sub_topic,
+                          const std::string& pub_topic,
+                          const std::string& name);
   int BuildCompressedImageToImage(const std::string& sub_topic,
                                   const std::string& pub_topic,
                                   const std::string& name);

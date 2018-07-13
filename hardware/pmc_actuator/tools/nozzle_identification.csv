@@ -1,3 +1,10 @@
+#
+# Sequence to verify the nozzle IDs
+#
+# Each nozzle is opened sequentially, allowing the operator to visually
+# verify that the correct nozzle is commanded.
+#
+
 # File format:
 #   - 1 line per command
 #   - lines starting with # or space are ignored
@@ -9,24 +16,28 @@
 #     - side 2 blower speed
 #     - side 2 nozzle position x 6
 
-# Start all closed
-0 30 0 0 0 0 0 0 30 0 0 0 0 0 0
+# Start all closed, spin up first side
+0 200 0 0 0 0 0 0 0 0 0 0 0 0 0
 
-# After 10 seconds, test side 1
-10 100 255 0 0 0 0 0 30 0 0 0 0 0 0
-15 100 0 255 0 0 0 0 30 0 0 0 0 0 0
-20 100 0 0 255 0 0 0 30 0 0 0 0 0 0
-25 100 0 0 0 255 0 0 30 0 0 0 0 0 0
-30 100 0 0 0 0 255 0 30 0 0 0 0 0 0
-35 100 0 0 0 0 0 255 30 0 0 0 0 0 0
+# After 20 seconds, test side 1
+20 200 255 0 0 0 0 0 0 0 0 0 0 0 0
+30 200 0 255 0 0 0 0 0 0 0 0 0 0 0
+40 200 0 0 255 0 0 0 0 0 0 0 0 0 0
+50 200 0 0 0 255 0 0 0 0 0 0 0 0 0
+60 200 0 0 0 0 255 0 0 0 0 0 0 0 0
+70 200 0 0 0 0 0 255 0 0 0 0 0 0 0
+80 200 0 0 0 0 0 255 0 0 0 0 0 0 0
 
-# After 40 seconds, test side 2
-40 30 0 0 0 0 0 0 100 255 0 0 0 0 0
-45 30 0 0 0 0 0 0 100 0 255 0 0 0 0
-50 30 0 0 0 0 0 0 100 0 0 255 0 0 0
-55 30 0 0 0 0 0 0 100 0 0 0 255 0 0
-60 30 0 0 0 0 0 0 100 0 0 0 0 255 0
-65 30 0 0 0 0 0 0 100 0 0 0 0 0 255
+# spin up second side
+90 0 0 0 0 0 0 0 200 0 0 0 0 0 0
+
+# After 110 seconds, test side 2
+110 30 0 0 0 0 0 0 200 255 0 0 0 0 0
+120 30 0 0 0 0 0 0 200 0 255 0 0 0 0
+130 30 0 0 0 0 0 0 200 0 0 255 0 0 0
+140 30 0 0 0 0 0 0 200 0 0 0 255 0 0
+150 30 0 0 0 0 0 0 200 0 0 0 0 255 0
+160 30 0 0 0 0 0 0 200 0 0 0 0 0 255
 
 # Spin down
-70 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+170 0 0 0 0 0 0 0 0 0 0 0 0 0 0

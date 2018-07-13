@@ -82,6 +82,7 @@
 #define TOPIC_TRIGGER                               "trigger"
 #define TOPIC_JOINT_GOALS                           "joint_goals"
 #define TOPIC_JOINT_STATES                          "joint_states"
+#define TOPIC_SIGNALS                               "signals"
 
 // SUBSYSTEMS //////////////////////////////////////////////////////////////////
 
@@ -116,7 +117,9 @@
 #define TOPIC_GNC_CTL_TRAJ                          "gnc/ctl/traj"
 #define TOPIC_GNC_CTL_SEGMENT                       "gnc/ctl/segment"
 #define TOPIC_GNC_CTL_PROGRESS                      "gnc/ctl/progress"
+#define TOPIC_GNC_CTL_SETPOINT                      "gnc/ctl/setpoint"
 #define TOPIC_GNC_CTL_COMMAND                       "gnc/ctl/command"
+#define TOPIC_GNC_EKF_RESET                         "gnc/ekf/reset"
 
 #define SERVICE_GNC_EKF_RESET                       "gnc/ekf/reset"
 #define SERVICE_GNC_EKF_INIT_BIAS                   "gnc/ekf/init_bias"
@@ -160,6 +163,7 @@
 #define TOPIC_MANAGEMENT_EXEC_PLAN_STATUS           "mgt/executive/plan_status"
 #define TOPIC_MANAGEMENT_SYS_MONITOR_CONFIG         "mgt/sys_monitor/config"
 #define TOPIC_MANAGEMENT_SYS_MONITOR_STATE          "mgt/sys_monitor/state"
+#define TOPIC_MANAGEMENT_SYS_MONITOR_HEARTBEAT      "mgt/sys_monitor/heartbeat"
 #define TOPIC_MANAGEMENT_DATA_BAGGER_STATE          "mgt/data_bagger/state"
 #define TOPIC_MANAGEMENT_DATA_BAGGER_TOPICS         "mgt/data_bagger/topics"
 #define TOPIC_MANAGEMENT_CAMERA_STATE               "mgt/camera_state"
@@ -186,7 +190,7 @@
 // Exposed to peer nodes
 
 #define ACTION_MOBILITY_MOTION                      "mob/motion"
-#define ACTION_MOBILITY_VALIDATE                    "mob/validateTrajectory"
+#define ACTION_MOBILITY_VALIDATE                    "mob/validate"
 
 #define SERVICE_MOBILITY_SET_INERTIA                "mob/set_inertia"
 #define SERVICE_MOBILITY_SET_ZONES                  "mob/set_zones"
@@ -210,7 +214,7 @@
 #define SUFFIX_MOBILITY_PLANNER                     "/plan"
 
 #define TOPIC_MOBILITY_SEGMENT                      "mob/choreographer/segment"
-#define TOPIC_MOBILITY_COLLISIONS                   "mob/sentinel/collisions"
+#define TOPIC_MOBILITY_HAZARD                       "mob/mapper/hazard"
 #define TOPIC_MOBILITY_ZONES                        "mob/mapper/zones"
 #define TOPIC_MAPPER_OCTOMAP_MARKERS                "mob/mapper/obstacle_markers"
 #define TOPIC_MAPPER_OCTOMAP_FREE_MARKERS           "mob/mapper/free_space_markers"

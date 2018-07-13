@@ -21,16 +21,19 @@
 uint8 streaming                 # STREAMING LED
 uint8 camera                    # CAMERA LED
 uint8 microphone                # MICROHPONE LED
-uint8 status1                   # STATUS LED 1
-uint8 status2                   # STATUS LED 2
-uint8 status3                   # STATUS LED 3
-uint8 status4                   # STATUS LED 4
-uint8 status5                   # STATUS LED 5
-uint8 status6                   # STATUS LED 6
+uint8 status1a                  # STATUS LED 1A
+uint8 status1b                  # STATUS LED 2B
+uint8 status1c                  # STATUS LED 1C
+uint8 status2a                  # STATUS LED 2A
+uint8 status2b                  # STATUS LED 2B
+uint8 status2c                  # STATUS LED 2C
 
 uint8 PERSIST =  0              # Leave unchanged
-uint8 ON      =  1              # Turn LED off
-uint8 OFF     =  2              # Turn LED on
+uint8 ON      =  1              # Turn LED on
+uint8 OFF     =  2              # Turn LED off
+uint8 SLOW    =  3              # Configure LED to flash at 0.5Hz
+uint8 MEDIUM  =  4              # Configure LED to flash at 1Hz
+uint8 FAST    =  5              # Configure LED to flash at 2Hz
 
 ---
 

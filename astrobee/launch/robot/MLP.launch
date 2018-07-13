@@ -60,11 +60,6 @@
     <arg name="name" value="image_sampler" />
     <arg name="manager" value="mlp_vision" />
   </include>
-  <include file="$(find lk_optical_flow)/launch/lk_optical_flow.launch"
-    if="$(eval arg('nodes') == '' or arg('nodes').find('lk_optical_flow') != -1)">
-    <arg name="name" value="optical_flow_nodelet" />
-    <arg name="manager" value="mlp_vision" />
-  </include>
   <include file="$(find handrail_detect)/launch/handrail_detect.launch"
     if="$(eval arg('nodes') == '' or arg('nodes').find('handrail_detect') != -1)">
     <arg name="name" value="handrail_detect" />
@@ -92,7 +87,7 @@
     <arg name="name" value="planner_trapezoidal" />
     <arg name="manager" value="mlp_mobility" />
   </include>
-  <include file="$(find framestore)/launch/framestore.launch"
+  <include file="$(find description)/launch/framestore.launch"
     if="$(eval arg('nodes') == '' or arg('nodes').find('framestore') != -1)">
     <arg name="name" value="framestore" />
     <arg name="manager" value="mlp_mobility" />
@@ -155,7 +150,7 @@
 
   <!-- Drivers (optional) -->
   <group if="$(arg drivers)">
-    <!-- Mapped landmark pipeline -->
+    <!-- NavCam pipeline -->
     <include file="$(find is_camera)/launch/is_camera.launch"
       if="$(eval arg('nodes') == '' or arg('nodes').find('nav_cam') != -1)">
       <arg name="name" value="nav_cam" />
@@ -166,7 +161,12 @@
       <arg name="name" value="localization_node" />
       <arg name="manager" value="mlp_vision" />
     </include>
-    <!-- Marker tracking pipeline -->
+    <include file="$(find lk_optical_flow)/launch/lk_optical_flow.launch"
+      if="$(eval arg('nodes') == '' or arg('nodes').find('lk_optical_flow') != -1)">
+      <arg name="name" value="optical_flow_nodelet" />
+      <arg name="manager" value="mlp_vision" />
+    </include>
+    <!-- DockCam pipeline -->
     <include file="$(find is_camera)/launch/is_camera.launch"
       if="$(eval arg('nodes') == '' or arg('nodes').find('dock_cam') != -1)">
       <arg name="name" value="dock_cam" />

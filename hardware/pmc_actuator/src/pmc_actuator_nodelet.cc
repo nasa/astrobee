@@ -281,9 +281,8 @@ class PmcActuatorNodelet : public ff_util::FreeFlyerNodelet {
     bool duplicate = true;
     for (int i = 0; i < num_pmcs_; i++) {
       ff_hw_msgs::PmcStatus t;
-      if (!GetStatus(i, &t)) {
-        ROS_WARN("Unable to get telemetry from PMC[%d]", i);
-      }
+      if (!GetStatus(i, &t))
+        ROS_WARN_THROTTLE(5, "Unable to get telemetry from PMCs");
       telemetry_vector_.statuses.push_back(t);
       // Determine the current state based on the different between the
       // commanded and telemetry motor speeds, scaled appropriately
@@ -309,7 +308,8 @@ class PmcActuatorNodelet : public ff_util::FreeFlyerNodelet {
         }
       }
       // FIXME: lock required?
-      pmcs_.at(i)->SendCommand(*(commands_.at(i)));
+      if (!pmcs_.at(i)->SendCommand(*(commands_.at(i))))
+        ROS_WARN_THROTTLE(5, "Unable to send command to PMCs");
     }
     // Publish a high-level state
     if (!duplicate) {

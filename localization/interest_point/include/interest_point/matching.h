@@ -52,6 +52,10 @@ namespace interest_point {
     DynamicDetector* detector_;
     std::string detector_name_;
 
+    // A feature detector cannot be copied, since it has a pointer
+    FeatureDetector(FeatureDetector &);
+    FeatureDetector& operator=(const FeatureDetector&);
+
    public:
     FeatureDetector(std::string const& detector_name = "SURF",
                     int min_features = 400, int max_features = 1000,
@@ -63,8 +67,8 @@ namespace interest_point {
                int brisk_threshold = 15, int retries = 5);
 
     void Detect(const cv::Mat& image,
-                    std::vector<cv::KeyPoint>* keypoints,
-                    cv::Mat* keypoints_description);
+                std::vector<cv::KeyPoint>* keypoints,
+                cv::Mat* keypoints_description);
 
     std::string GetDetectorName() const {return detector_name_;}
 

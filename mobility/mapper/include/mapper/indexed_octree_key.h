@@ -30,56 +30,56 @@ typedef uint16_t key_type;
 // This class is used in graphs for finding the index for a given key in the octomap
 class IndexedOcTreeKey {
  public:
-    IndexedOcTreeKey() {}
-    IndexedOcTreeKey(key_type a, key_type b, key_type c, uint index_in) {
-      k_[0] = a;
-      k_[1] = b;
-      k_[2] = c;
-      index_ = index_in;
+  IndexedOcTreeKey() {}
+  IndexedOcTreeKey(key_type a, key_type b, key_type c, uint index_in) {
+    k_[0] = a;
+    k_[1] = b;
+    k_[2] = c;
+    index_ = index_in;
+  }
+
+  IndexedOcTreeKey(const octomap::OcTreeKey& other, uint index_in) {
+    k_[0] = other.k[0];
+    k_[1] = other.k[1];
+    k_[2] = other.k[2];
+    index_ = index_in;
+  }
+
+  bool operator==(const IndexedOcTreeKey &other) const {
+    return ((k_[0] == other[0]) && (k_[1] == other[1]) && (k_[2] == other[2]));
+  }
+
+  bool operator!=(const IndexedOcTreeKey& other) const {
+    return( (k_[0] != other[0]) || (k_[1] != other[1]) || (k_[2] != other[2]) );
+  }
+
+  IndexedOcTreeKey& operator=(const IndexedOcTreeKey& other) {
+    k_[0] = other.k_[0]; k_[1] = other.k_[1]; k_[2] = other.k_[2]; index_ = other.index_;
+    return *this;
+  }
+
+  const key_type& operator[] (unsigned int i) const {
+    return k_[i];
+  }
+
+  key_type& operator[] (unsigned int i) {
+    return k_[i];
+  }
+
+  key_type k_[3];
+  uint index_;
+
+  /// Provides a hash function on Keys
+  struct KeyHash{
+    size_t operator()(const IndexedOcTreeKey& key) const {
+      // a simple hashing function
+      // explicit casts to size_t to operate on the complete range
+      // constanst will be promoted according to C++ standard
+      return static_cast<size_t>(key.k_[0])
+        + 1447*static_cast<size_t>(key.k_[1])
+        + 345637*static_cast<size_t>(key.k_[2]);
     }
-
-    IndexedOcTreeKey(const octomap::OcTreeKey& other, uint index_in) {
-      k_[0] = other.k[0];
-      k_[1] = other.k[1];
-      k_[2] = other.k[2];
-      index_ = index_in;
-    }
-
-    bool operator==(const IndexedOcTreeKey &other) const {
-      return ((k_[0] == other[0]) && (k_[1] == other[1]) && (k_[2] == other[2]));
-    }
-
-    bool operator!=(const IndexedOcTreeKey& other) const {
-      return( (k_[0] != other[0]) || (k_[1] != other[1]) || (k_[2] != other[2]) );
-    }
-
-    IndexedOcTreeKey& operator=(const IndexedOcTreeKey& other) {
-      k_[0] = other.k_[0]; k_[1] = other.k_[1]; k_[2] = other.k_[2]; index_ = other.index_;
-      return *this;
-    }
-
-    const key_type& operator[] (unsigned int i) const {
-      return k_[i];
-    }
-
-    key_type& operator[] (unsigned int i) {
-      return k_[i];
-    }
-
-    key_type k_[3];
-    uint index_;
-
-    /// Provides a hash function on Keys
-    struct KeyHash{
-      size_t operator()(const IndexedOcTreeKey& key) const {
-        // a simple hashing function
-    // explicit casts to size_t to operate on the complete range
-    // constanst will be promoted according to C++ standard
-        return static_cast<size_t>(key.k_[0])
-          + 1447*static_cast<size_t>(key.k_[1])
-          + 345637*static_cast<size_t>(key.k_[2]);
-      }
-    };
+  };
 };
 
 typedef std::tr1::unordered_set<IndexedOcTreeKey, IndexedOcTreeKey::KeyHash> KeySet;
@@ -88,26 +88,25 @@ typedef std::tr1::unordered_set<IndexedOcTreeKey, IndexedOcTreeKey::KeyHash> Key
 // Class for saving pairs of keys/indexes
 class IndexedKeySet{
  public:
-    KeySet set_;
+  KeySet set_;
 
-    // Methods
-    void Insert(const octomap::OcTreeKey &key, uint &index) {
-        set_.insert(IndexedOcTreeKey(key, index));
+  // Methods
+  void Insert(const octomap::OcTreeKey &key, uint &index) {
+    set_.insert(IndexedOcTreeKey(key, index));
+  }
+
+  bool Key2Index(const octomap::OcTreeKey &key, uint *index_out) {
+    std::tr1::unordered_set<IndexedOcTreeKey, IndexedOcTreeKey::KeyHash>::const_iterator key2index;
+    key2index = set_.find(IndexedOcTreeKey(key, 0));
+    if (key2index == set_.end()) {
+      return false;
+    } else {
+      *index_out = key2index->index_;
+      return true;
     }
+  }
 
-    bool Key2Index(const octomap::OcTreeKey &key,
-                   uint *index_out) {
-        std::tr1::unordered_set<IndexedOcTreeKey, IndexedOcTreeKey::KeyHash>::const_iterator key2index;
-        key2index = set_.find(IndexedOcTreeKey(key, 0));
-        if (key2index == set_.end()) {
-            return false;
-        } else {
-            *index_out = key2index->index_;
-            return true;
-        }
-    }
-
-    size_t Size() { return set_.size(); }
+  size_t Size() { return set_.size(); }
 };
 
 }  // namespace octoclass

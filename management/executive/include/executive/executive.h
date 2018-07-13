@@ -85,9 +85,13 @@ class Executive : public ff_util::FreeFlyerNodelet {
 
   // callbacks, handled by states
   void CmdCallback(ff_msgs::CommandStampedPtr const& cmd);
-  void DockStateCallback(ff_msgs::DockStatePtr const& state);
+  void DockStateCallback(ff_msgs::DockStateConstPtr const& state);
   void GuestScienceAckCallback(ff_msgs::AckStampedConstPtr const& ack);
+  void MotionStateCallback(ff_msgs::MotionStatePtr const& state);
   void PlanCallback(ff_msgs::CompressedFileConstPtr const& plan);
+  void SysMonitorHeartbeatCallback(ff_msgs::HeartbeatConstPtr const& heartbeat);
+  void SysMonitorHeartbeatTimeoutCallback(ros::TimerEvent const& te);
+  void SysMonitorStartupTimeoutCallback(ros::TimerEvent const& te);
   void ZonesCallback(ff_msgs::CompressedFileConstPtr const& zones);
 
   // Action based commands
@@ -102,7 +106,6 @@ class Executive : public ff_util::FreeFlyerNodelet {
 
   bool StartAction(Action action,
                    std::string const& cmd_id,
-                   std::string const& cmd_origin,
                    std::string& err_msg,
                    bool plan = false);
   bool IsActionRunning(Action action);
@@ -114,21 +117,17 @@ class Executive : public ff_util::FreeFlyerNodelet {
   void ArmResultCallback(ff_util::FreeFlyerActionState::Enum const& state,
                          ff_msgs::ArmResultConstPtr const& result);
 
-  void DockActiveCallback();
-  void DockFeedbackCallback(ff_msgs::DockFeedbackConstPtr const& feedback);
   void DockResultCallback(ff_util::FreeFlyerActionState::Enum const& state,
                           ff_msgs::DockResultConstPtr const& result);
 
-  void MotionActiveCallback();
   void MotionFeedbackCallback(ff_msgs::MotionFeedbackConstPtr const& feedback);
   void MotionResultCallback(ff_util::FreeFlyerActionState::Enum const& state,
-                            ff_msgs::MotionResultConstPtr const& result);
+                           ff_msgs::MotionResultConstPtr const& result);
 
   void SwitchResultCallback(ff_util::FreeFlyerActionState::Enum const& state,
                             ff_msgs::SwitchResultConstPtr const& result);
 
   void PublishCmdAck(std::string const& cmd_id,
-                     std::string const& cmd_origin,
                      uint8_t completed_status = ff_msgs::AckCompletedStatus::OK,
                      std::string const& message = "",
                      uint8_t status = ff_msgs::AckStatus::COMPLETED);
@@ -138,10 +137,10 @@ class Executive : public ff_util::FreeFlyerNodelet {
 
   ff_msgs::MobilityState GetMobilityState();
 
+  void SetMobilityState();
   void SetMobilityState(uint8_t state, uint32_t sub_state = 0);
   bool SetPlan();
   void SetPlanExecState(uint8_t state);
-  void SetProximity(float proximity);
   std::string SetZones();
 
   ros::Time MsToSec(std::string timestamp);
@@ -151,19 +150,25 @@ class Executive : public ff_util::FreeFlyerNodelet {
   bool AckCurrentPlanItem();
   uint8_t GetPlanExecState();
 
-  bool SetOperatingLimits(std::vector<ff_msgs::CommandArg> const& conditions,
-                          std::string& err_msg);
-
+  // Functions used to set variables that are used to configure mobility before
+  // a move or execute
   bool ConfigureMobility(std::string const& cmd_id,
-                         std::string const& cmd_origin,
                          std::string& err_msg,
                          bool plan = false);
   bool ConfigureMobility(bool move_to_start,
                          bool enable_holonomic,
                          std::string& err_msg);
+  bool SetCheckObstacles(ff_msgs::CommandStampedPtr const& cmd);
+  bool SetCheckZones(ff_msgs::CommandStampedPtr const& cmd);
+  bool SetEnableAutoReturn(ff_msgs::CommandStampedPtr const& cmd);
+  bool SetEnableImmediate(ff_msgs::CommandStampedPtr const& cmd);
+  bool SetHolonomicMode(ff_msgs::CommandStampedPtr const& cmd);
+  bool SetOperatingLimits(std::vector<ff_msgs::CommandArg> const& conditions,
+                          std::string& err_msg);
+  bool SetPlanner(ff_msgs::CommandStampedPtr const& cmd);
+  bool SetTimeSync(ff_msgs::CommandStampedPtr const& cmd);
 
-  bool ResetEkf(std::string const& cmd_id,
-                std::string const& cmd_origin);
+  void ResetEkf(std::string const& cmd_id);
 
   void StartWaitTimer(float duration);
   void StopWaitTimer();
@@ -171,10 +176,8 @@ class Executive : public ff_util::FreeFlyerNodelet {
 
   bool StopAllMotion(bool &stop_started,
                      std::string const& cmd_id,
-                     std::string const& cmd_origin,
+                     std::string const& cmd_src,
                      bool plan = false);
-
-  bool EnableAutoReturn(ff_msgs::CommandStampedPtr const& cmd);
 
   bool Dock(ff_msgs::CommandStampedPtr const& cmd,
             std::string& err_msg,
@@ -185,38 +188,43 @@ class Executive : public ff_util::FreeFlyerNodelet {
               std::string& err_msg,
               bool plan = false);
 
-  bool SetCheckObstacles(ff_msgs::CommandStampedPtr const& cmd);
+  void StopArm(std::string const& cmd_id);
 
-  bool SetCheckZones(ff_msgs::CommandStampedPtr const& cmd);
+  void StowArm(std::string const& cmd_id);
 
-  bool SetHolonomicMode(ff_msgs::CommandStampedPtr const& cmd);
+  void SkipPlanStep(std::string const& cmd_id);
 
-  void StopArm(std::string const& cmd_id, std::string const& cmd_origin);
-
-  void StowArm(std::string const& cmd_id, std::string const& cmd_origin);
-
-  void SkipPlanStep(std::string const& cmd_id, std::string const& cmd_origin);
-
-  bool DownloadData(ff_msgs::CommandStampedPtr const& cmd, std::string& err_msg,
-                    uint8_t& completed_status, bool plan = false);
+  bool DownloadData(ff_msgs::CommandStampedPtr const& cmd,
+                    std::string& err_msg,
+                    uint8_t& completed_status,
+                    bool plan = false);
 
   void StopDownload(ff_msgs::CommandStampedPtr const& cmd);
 
-  bool ClearData(ff_msgs::CommandStampedPtr const& cmd, std::string& err_msg,
-                 uint8_t& completed_status, bool plan = false);
+  bool ClearData(ff_msgs::CommandStampedPtr const& cmd,
+                 std::string& err_msg,
+                 uint8_t& completed_status,
+                 bool plan = false);
 
-  bool PowerOnItem(ff_msgs::CommandStampedPtr const& cmd, std::string& err_msg,
-                   uint8_t& completed_status, bool plan = false);
-  bool PowerOffItem(ff_msgs::CommandStampedPtr const& cmd, std::string& err_msg,
-                    uint8_t& completed_status, bool plan = false);
+  bool PowerOnItem(ff_msgs::CommandStampedPtr const& cmd,
+                   std::string& err_msg,
+                   uint8_t& completed_status,
+                   bool plan = false);
+
+  bool PowerOffItem(ff_msgs::CommandStampedPtr const& cmd,
+                    std::string& err_msg,
+                    uint8_t& completed_status,
+                    bool plan = false);
 
   bool SetFlashlightBrightness(ff_msgs::CommandStampedPtr const& cmd,
                                std::string& err_msg,
                                uint8_t& completed_status,
                                bool plan = false);
 
-  bool SetCamera(ff_msgs::CommandStampedPtr const& cmd, std::string& err_msg,
-                 uint8_t& completed_status, bool plan = false);
+  bool SetCamera(ff_msgs::CommandStampedPtr const& cmd,
+                 std::string& err_msg,
+                 uint8_t& completed_status,
+                 bool plan = false);
 
   bool SetCameraRecording(ff_msgs::CommandStampedPtr const& cmd,
                              std::string& err_msg,
@@ -233,15 +241,15 @@ class Executive : public ff_util::FreeFlyerNodelet {
                                uint8_t& completed_status,
                                bool plan = false);
 
-  void DetermineStartupMobilityState();
-
-  void Shutdown(std::string const& cmd_id, std::string const& cmd_origin);
+  void Shutdown(std::string const& cmd_id);
 
   void SetOpState(OpState* state);
 
  protected:
   virtual void Initialize(ros::NodeHandle *nh);
-  void ReadParams();
+  bool ReadParams();
+  bool ReadCommand(config_reader::ConfigReader::Table *response,
+                   ff_msgs::CommandStampedPtr cmd);
   void PublishAgentState();
   OpState* state_;
 
@@ -256,8 +264,14 @@ class Executive : public ff_util::FreeFlyerNodelet {
 
   ff_msgs::AckStamped ack_;
 
+  ff_msgs::CommandStampedPtr sys_monitor_init_fault_response_;
+  ff_msgs::CommandStampedPtr sys_monitor_heartbeat_fault_response_;
+
   ff_msgs::CompressedFileAck cf_ack_;
   ff_msgs::CompressedFileConstPtr plan_, zones_;
+
+  ff_msgs::DockStateConstPtr dock_state_;
+  ff_msgs::MotionStatePtr motion_state_;
 
   ff_msgs::ArmGoal arm_goal_;
   ff_msgs::DockGoal dock_goal_;
@@ -274,9 +288,11 @@ class Executive : public ff_util::FreeFlyerNodelet {
   ros::ServiceClient dock_cam_config_client_, dock_cam_enable_client_;
   ros::ServiceClient nav_cam_config_client_, nav_cam_enable_client_;
 
-  ros::Subscriber cmd_sub_, dock_state_sub_, gs_ack_sub_, plan_sub_, zones_sub_;
+  ros::Subscriber cmd_sub_, dock_state_sub_, gs_ack_sub_, heartbeat_sub_;
+  ros::Subscriber motion_sub_, plan_sub_, zones_sub_;
 
-  ros::Timer reload_params_timer_, wait_timer_;
+  ros::Timer reload_params_timer_, wait_timer_, sys_monitor_heartbeat_timer_;
+  ros::Timer sys_monitor_startup_timer_;
 
   sequencer::Sequencer sequencer_;
 
@@ -289,6 +305,7 @@ class Executive : public ff_util::FreeFlyerNodelet {
   double action_active_timeout_;
   double arm_feedback_timeout_, motion_feedback_timeout_;
   double dock_result_timeout_, perch_result_timeout_, switch_result_timeout_;
+  double sys_monitor_heartbeat_timeout_, sys_monitor_startup_time_secs_;
 
   int pub_queue_size_;
   int sub_queue_size_;

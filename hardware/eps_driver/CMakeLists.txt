@@ -37,7 +37,7 @@ create_library(
 
 create_tool_targets(
   DIR tools
-  LIBS eps_driver
+  LIBS eps_driver common
 )
 
 install_launch_files()

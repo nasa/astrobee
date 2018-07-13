@@ -1,5 +1,58 @@
 # Astrobee Robot Software v1
 
+## Release 0.4.0
+
+This release includes improvements of map building and camera calibration,
+simulator performance and multi-robot support, new features for guest science,
+and many internal changes.
+
+### Map Building
+  - Map building fixes.
+  - Multiple maps assembly pipeline optimized.
+
+### Sensor Calibration
+  - Streamlined image cameras and depth cameras extrinsics relative to IMU
+
+### Simulator
+  - Completed support for docking / un-docking.
+  - Default robot starts on-dock in the JEM.
+  - Synthetic generation of optical flow features.
+  - Support for launching a simulation without a robot.
+  - Support for controlling simulation speed.
+  - Substantially better runtime performance through simplified collision meshes.
+  - More complete ISS mesh; improved dock and freeflyer meshes.
+
+### Management
+  - The system monitor now triggers heartbeat faults for all nodes in the system.
+  - Management of operational limits.
+  - Improved "mode" management including support for IDLE.
+
+### Guest Science
+  - A GS Manager stub was added so GS donâ€™t have to use Android to test their
+  applications.
+  - Guest Science Manager changed to create and pass the base data path to a GS
+    APK.
+  - A new method was added to the guest science library that will provide the
+    base data path to a GS APK.
+  - Better GS examples added.
+
+### Internal (support for non-open source platform and avionics repos)
+  - Mechanisms for local (robot) launch at startup.
+  - Support for freeflyer_avionics (firmware) improvements.
+  - Smarter management of propulsion modules.
+  - Support for Software/Firmware Upgrade, EMI and Network tests.
+
+### Fixed from previous release
+  - Fixed linear / angular acceleration limits in holonomic mode.
+  - Fixed keep in and keep out zone checking.
+  - DDS hanging on exit.
+
+### Limitations
+  - Granite simulation not functional.
+  - The GS Manager Stub does not support yet all Android functionalities
+  - Some performance limitations with multiple robots.
+  - Some performance trouble with mobility on one computer.
+
 ## Release 0.3.2
 
 The previous hotfix updated the debians, but did not update the version numbers of which

@@ -19,14 +19,18 @@
   <arg name="world" default="iss" />
   <arg name="sviz" default="false" />
   <arg name="vmware" default="true" />
+  <arg name="speed" default="1" />
+  <arg name="debug" default="false" />
   <!-- Fix for running in vmware with DRI -->
   <env if="$(arg vmware)" name="SVGA_VGPU10" value="0" />
   <!-- Launch the requested world -->
   <include file="$(find astrobee_gazebo)/launch/start_simulation.launch">
     <arg name="world" value="$(find astrobee_gazebo)/worlds/$(arg world).world"/>
     <arg name="gui" value="$(arg sviz)"/>
+    <arg name="speed" value="$(arg speed)" />
+    <arg name="debug" value="$(arg debug)" />
   </include>
-  <!-- Spawn a single dock (disabled for REALM)
+  <!-- Spawn a single iss -->
+  <include file="$(find astrobee_gazebo)/launch/spawn_iss.launch"/>
   <include file="$(find astrobee_gazebo)/launch/spawn_dock.launch"/>
-    -->
 </launch>

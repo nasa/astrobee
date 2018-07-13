@@ -337,16 +337,19 @@ class ArmNodelet : public ff_util::FreeFlyerNodelet {
     cfg_.Initialize(GetPrivateHandle(), "behaviors/arm.config");
     if (!cfg_.Listen(boost::bind(
       &ArmNodelet::ReconfigureCallback, this, _1)))
-      return AssertFault("INITIALIZATION_FAULT", "Could not load config");
+      return AssertFault(ff_util::INITIALIZATION_FAILED,
+                         "Could not load config");
 
     // Read the confgiuration for this specific node
     config_reader::ConfigReader *cfg = cfg_.GetConfigReader();
     config_reader::ConfigReader::Table joints;
     if (!cfg->GetTable(GetName().c_str(), &joints))
-      return AssertFault("INITIALIZATION_FAULT", "Cannot read LUA file");
+      return AssertFault(ff_util::INITIALIZATION_FAILED,
+                         "Cannot read LUA file");
     std::string name;
     if (!joints.GetStr("pan", &name))
-      return AssertFault("INITIALIZATION_FAULT", "Cannot read PAN joint");
+      return AssertFault(ff_util::INITIALIZATION_FAILED,
+                         "Cannot read PAN joint");
     joints_[PAN].name = name;
     joints_[PAN].generic = "pan";
     joints_[PAN].tol = cfg_.Get<double>("tol_pan");
@@ -354,7 +357,8 @@ class ArmNodelet : public ff_util::FreeFlyerNodelet {
     joints_[PAN].offset = K_PAN_OFFSET;
     dictionary_[name] = PAN;
     if (!joints.GetStr("tilt", &name))
-      return AssertFault("INITIALIZATION_FAULT", "Cannot read TILT joint");
+      return AssertFault(ff_util::INITIALIZATION_FAILED,
+                         "Cannot read TILT joint");
     joints_[TILT].name = name;
     joints_[TILT].generic = "tilt";
     joints_[TILT].tol = cfg_.Get<double>("tol_tilt");
@@ -362,7 +366,8 @@ class ArmNodelet : public ff_util::FreeFlyerNodelet {
     joints_[TILT].offset = K_TILT_OFFSET;
     dictionary_[name] = TILT;
     if (!joints.GetStr("gripper", &name))
-      return AssertFault("INITIALIZATION_FAULT", "Cannot read GRIPPER joint");
+      return AssertFault(ff_util::INITIALIZATION_FAILED,
+                         "Cannot read GRIPPER joint");
     joints_[GRIPPER].name = name;
     joints_[GRIPPER].generic = "gripper";
     joints_[GRIPPER].tol = cfg_.Get<double>("tol_gripper");

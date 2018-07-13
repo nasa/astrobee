@@ -71,6 +71,7 @@ ros-kinetic-opencv3
 ros-kinetic-mavlink
 ros-kinetic-xacro
 ros-kinetic-octomap
+astrobee-repo-version
 libalvar2
 libdbow21
 libopenmvg1

@@ -23,5 +23,6 @@
 bool success                      # Was the command accepted
 string status_message             # Error message, if needed
 
-string version                    # The firmware version
-string serial                     # The serial number
+string sw_version                 # Software version
+string build                      # Build information
+string serial                     # Serial number

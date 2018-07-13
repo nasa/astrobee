@@ -47,14 +47,10 @@ class ExecutiveActionClient : public ff_util::FreeFlyerActionClient<T> {
   void action(Action const& action);
   std::string cmd_id();
   void cmd_id(std::string const& cmd_id);
-  std::string cmd_origin();
-  void cmd_origin(std::string const& cmd_origin);
   void SetCmdInfo(Action const& action,
-                  std::string const& cmd_id,
-                  std::string const& cmd_origin);
+                  std::string const& cmd_id);
  private:
   std::string cmd_id_;
-  std::string cmd_origin_;
   Action action_;
 };
 
@@ -79,22 +75,10 @@ void ExecutiveActionClient<T>::cmd_id(std::string const& cmd_id) {
 }
 
 template <class T>
-std::string ExecutiveActionClient<T>::cmd_origin() {
-  return cmd_origin_;
-}
-
-template <class T>
-void ExecutiveActionClient<T>::cmd_origin(std::string const& cmd_origin) {
-  cmd_origin_ = cmd_origin;
-}
-
-template <class T>
 void ExecutiveActionClient<T>::SetCmdInfo(Action const& action,
-                                          std::string const& cmd_id,
-                                          std::string const& cmd_origin) {
+                                          std::string const& cmd_id) {
   action_ = action;
   cmd_id_ = cmd_id;
-  cmd_origin_ = cmd_origin;
 }
 
 }  // namespace executive

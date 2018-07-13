@@ -1,14 +1,14 @@
 /* Copyright (c) 2017, United States Government, as represented by the
  * Administrator of the National Aeronautics and Space Administration.
- * 
+ *
  * All rights reserved.
- * 
+ *
  * The Astrobee platform is licensed under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -27,6 +27,10 @@ namespace executive {
 Executive::Executive() :
   ff_util::FreeFlyerNodelet(NODE_EXECUTIVE, true),
   state_(OpStateRepo::Instance()->ready()),
+  sys_monitor_init_fault_response_(new ff_msgs::CommandStamped()),
+  sys_monitor_heartbeat_fault_response_(new ff_msgs::CommandStamped()),
+  dock_state_(NULL),
+  motion_state_(NULL),
   action_active_timeout_(1),
   arm_feedback_timeout_(4),
   motion_feedback_timeout_(1),
@@ -45,32 +49,24 @@ void Executive::CmdCallback(ff_msgs::CommandStampedPtr const& cmd) {
 }
 
 
-// TODO(Katie) Add more here. Stop using feedback and result to set mobility
-// state. Instead use Dock state, Choreographer state, and Perch state
-void Executive::DockStateCallback(ff_msgs::DockStatePtr const& state) {
-  // If the operating state is ready and the dock state changes, this probably
-  // means that an astronaut manually docked or undocked the Astrobee
-  if (state_->id() == ff_msgs::OpState::READY) {
-    if (state->state == ff_msgs::DockState::DOCKED) {
-      SetMobilityState(ff_msgs::MobilityState::DOCKING);
-    } else if (state->state == ff_msgs::DockState::UNDOCKED) {
-      // If we were docked, need to set mobility state to idle until we receive
-      // GN&C state. If we aren't docked, don't change the mobility state since
-      // an undocked mobility state can also mean flying, idle, ...
-      if (GetMobilityState().state == ff_msgs::MobilityState::DOCKING) {
-        SetMobilityState(ff_msgs::MobilityState::DRIFTING);
-      }
-    }
-    // Don't worry about any of the other dock states since we transition
-    // through them when we are autonomously docking and undocking using the
-    // action feedback to change the mobility state.
+void Executive::DockStateCallback(ff_msgs::DockStateConstPtr const& state) {
+  dock_state_ = state;
+
+  // Check to see if the dock state is docking/docked/undocking. If it is, we
+  // can change the mobility state to docking/docked.
+  // Docking max state signifies that we are docking
+  if (dock_state_->state <= ff_msgs::DockState::DOCKING_MAX_STATE &&
+      dock_state_->state > ff_msgs::DockState::UNDOCKED) {
+    SetMobilityState(ff_msgs::MobilityState::DOCKING, dock_state_->state);
+    // TODO(Katie) Possible check the perching state to make sure it doesn't say
+    // perched.
   }
-  // If we aren't in operating state ready, we don't want to change the mobility
-  // state since again we use action feedback to set the it. We may need to
-  // re-visit this if an astronaut can manually dock in any operating state.
-  // The current thought is, if an astronaut tries to dock us in any operating
-  // state other than ready, we will fail what we are doing and go back into
-  // operating state ready before receiving a docked or undocked state.
+
+  // If the dock state is undocked, the mobility state needs to be set to
+  // whatever the motion state is.
+  if (dock_state_->state == ff_msgs::DockState::UNDOCKED) {
+    SetMobilityState();
+  }
 }
 
 void Executive::GuestScienceAckCallback(ff_msgs::AckStampedConstPtr const&
@@ -79,11 +75,48 @@ void Executive::GuestScienceAckCallback(ff_msgs::AckStampedConstPtr const&
   // a primary guest apk. Probably need to subscribe to the guest science
   // config. Possibly remove this since it will probably be replaced by an
   // action
-  if (ack->cmd_origin == "plan") {
+  if (ack->cmd_id == "plan") {
     SetOpState(state_->HandleGuestScienceAck(ack));
   } else {
     cmd_ack_pub_.publish(ack);
   }
+}
+
+void Executive::MotionStateCallback(ff_msgs::MotionStatePtr const& state) {
+  if (motion_state_ == NULL) {
+    motion_state_ = state;
+  }
+
+  // Check the current motion state to see if it maps to our mobility state. If
+  // it does, set the mobility state and our stored motion state.
+  if (state->state == ff_msgs::MotionState::INITIALIZING) {
+    // Set motion state to idle a.k.a mobility state to drifting when the
+    // mobility subsystem is initializing
+    motion_state_->state = ff_msgs::MotionState::IDLE;
+  } else if (state->state == ff_msgs::MotionState::IDLE ||
+             state->state == ff_msgs::MotionState::IDLING ||
+             state->state == ff_msgs::MotionState::STOPPED ||
+             state->state == ff_msgs::MotionState::STOPPING ||
+             state->state == ff_msgs::MotionState::CONTROLLING ||
+             state->state == ff_msgs::MotionState::BOOTSTRAPPING) {
+    motion_state_->state = state->state;
+  }
+
+  // Check to see if we are docking or undocking. If we are, don't use the
+  // motion state as our mobility state.
+  if (dock_state_ != NULL) {
+    if (dock_state_->state > ff_msgs::DockState::UNDOCKED) {
+      // If dock state is unknown or initializing, use motion state to set
+      // mobility state
+      if (dock_state_->state != ff_msgs::DockState::UNKNOWN &&
+          dock_state_->state != ff_msgs::DockState::INITIALIZING) {
+        return;
+      }
+    }
+  }
+
+  // Set mobility state
+  SetMobilityState();
 }
 
 void Executive::PlanCallback(ff_msgs::CompressedFileConstPtr const& plan) {
@@ -92,6 +125,36 @@ void Executive::PlanCallback(ff_msgs::CompressedFileConstPtr const& plan) {
   cf_ack_.header.stamp = ros::Time::now();
   cf_ack_.id = plan_->id;
   cf_ack_pub_.publish(cf_ack_);
+}
+
+void Executive::SysMonitorHeartbeatCallback(
+                                  ff_msgs::HeartbeatConstPtr const& heartbeat) {
+  sys_monitor_heartbeat_timer_.stop();
+
+  // Stop the startup timer everytime since it isn't an expensive operation
+  sys_monitor_startup_timer_.stop();
+
+  // System monitor has only one fault and it is an initialization fault. Thus
+  // if there is a fault in the fault array, the executive needs to trigger the
+  // system monitor initialization fault.
+  if (heartbeat->faults.size() > 0) {
+    CmdCallback(sys_monitor_init_fault_response_);
+    return;
+  }
+  sys_monitor_heartbeat_timer_.start();
+}
+
+void Executive::SysMonitorHeartbeatTimeoutCallback(ros::TimerEvent const& te) {
+  // If the executive doesn't receive a heartbeat from the system monitor, it
+  // needs to trigger the system monitor heartbeat missed fault.
+  CmdCallback(sys_monitor_heartbeat_fault_response_);
+  sys_monitor_heartbeat_timer_.stop();
+}
+
+void Executive::SysMonitorStartupTimeoutCallback(ros::TimerEvent const& te) {
+  // If the system monitor didn't startup in a reasonable amount of time,
+  // trigger the system monitor heartbeat missed fault response.
+  CmdCallback(sys_monitor_heartbeat_fault_response_);
 }
 
 void Executive::ZonesCallback(ff_msgs::CompressedFileConstPtr const& zones) {
@@ -156,9 +219,8 @@ bool Executive::FillArmGoal(ff_msgs::CommandStampedPtr const& cmd,
   }
 
   if (!successful && !plan) {
-    ROS_ERROR("Executive: %s", err_msg.c_str());
+    NODELET_ERROR("%s", err_msg.c_str());
     PublishCmdAck(cmd->cmd_id,
-                  cmd->cmd_origin,
                   ff_msgs::AckCompletedStatus::BAD_SYNTAX,
                   err_msg);
   }
@@ -195,9 +257,8 @@ bool Executive::FillDockGoal(ff_msgs::CommandStampedPtr const& cmd,
   }
 
   if (!successful && !plan) {
-    ROS_ERROR("Executive: %s", err_msg.c_str());
+    NODELET_ERROR("%s", err_msg.c_str());
     PublishCmdAck(cmd->cmd_id,
-                  cmd->cmd_origin,
                   ff_msgs::AckCompletedStatus::BAD_SYNTAX,
                   err_msg);
   }
@@ -221,9 +282,10 @@ bool Executive::FillMotionGoal(Action action,
                     sequencer::Segment2Trajectory(sequencer_.CurrentSegment());
 
       motion_goal_.states.clear();
-
       break;
     case IDLE:
+      // Need to set flight mode to off so the PMCs shutdown
+      motion_goal_.flight_mode = ff_msgs::MotionGoal::OFF;
       motion_goal_.command = ff_msgs::MotionGoal::IDLE;
       break;
     case STOP:
@@ -242,7 +304,6 @@ bool Executive::FillMotionGoal(Action action,
           cmd->args[3].data_type != ff_msgs::CommandArg::DATA_TYPE_MAT33f) {
         ROS_ERROR("Executive: Malformed arguments for simple move 6dof cmd!");
         PublishCmdAck(cmd->cmd_id,
-                      cmd->cmd_origin,
                       ff_msgs::AckCompletedStatus::BAD_SYNTAX,
                       "Malformed arguments for simple move 6dof command!");
         return false;
@@ -271,7 +332,6 @@ bool Executive::FillMotionGoal(Action action,
       ROS_ERROR("Executive: Command isn't a mobility action in fill motion!");
       if (cmd != nullptr) {
         PublishCmdAck(cmd->cmd_id,
-                      cmd->cmd_origin,
                       ff_msgs::AckCompletedStatus::EXEC_FAILED,
                       "Command isn't a mobility action in fill motion goal!");
       }
@@ -282,14 +342,13 @@ bool Executive::FillMotionGoal(Action action,
 
 bool Executive::StartAction(Action action,
                             std::string const& cmd_id,
-                            std::string const& cmd_origin,
                             std::string& err_msg,
                             bool plan) {
   bool successful = true;
   switch (action) {
     case ARM:
       if (arm_ac_.IsConnected()) {
-        arm_ac_.SetCmdInfo(action, cmd_id, cmd_origin);
+        arm_ac_.SetCmdInfo(action, cmd_id);
         arm_ac_.SendGoal(arm_goal_);
         NODELET_DEBUG("Arm action goal sent/started.");
       } else {
@@ -300,7 +359,7 @@ bool Executive::StartAction(Action action,
     case DOCK:
     case UNDOCK:
       if (dock_ac_.IsConnected()) {
-        dock_ac_.SetCmdInfo(action, cmd_id, cmd_origin);
+        dock_ac_.SetCmdInfo(action, cmd_id);
         dock_ac_.SendGoal(dock_goal_);
         NODELET_DEBUG("Dock action goal sent/started.");
       } else {
@@ -313,7 +372,7 @@ bool Executive::StartAction(Action action,
     case MOVE:
     case STOP:
       if (motion_ac_.IsConnected()) {
-        motion_ac_.SetCmdInfo(action, cmd_id, cmd_origin);
+        motion_ac_.SetCmdInfo(action, cmd_id);
         motion_ac_.SendGoal(motion_goal_);
         NODELET_DEBUG("Motion action %i goal sent/started.",
                                                           motion_goal_.command);
@@ -328,7 +387,7 @@ bool Executive::StartAction(Action action,
       break;
     case SWITCH:
       if (switch_ac_.IsConnected()) {
-        switch_ac_.SetCmdInfo(action, cmd_id, cmd_origin);
+        switch_ac_.SetCmdInfo(action, cmd_id);
         switch_ac_.SendGoal(switch_goal_);
         NODELET_DEBUG("Switch action goal sent/started.");
       } else {
@@ -342,11 +401,11 @@ bool Executive::StartAction(Action action,
   }
 
   if (!successful && !plan) {
-    ROS_ERROR("Executive: %s", err_msg.c_str());
-    PublishCmdAck(cmd_id, cmd_origin, ff_msgs::AckCompletedStatus::EXEC_FAILED,
+    NODELET_ERROR("%s", err_msg.c_str());
+    PublishCmdAck(cmd_id, ff_msgs::AckCompletedStatus::EXEC_FAILED,
                   err_msg);
   } else if (successful && !plan) {
-    PublishCmdAck(cmd_id, cmd_origin, ff_msgs::AckCompletedStatus::NOT, "",
+    PublishCmdAck(cmd_id, ff_msgs::AckCompletedStatus::NOT, "",
                   ff_msgs::AckStatus::EXECUTING);
   }
 
@@ -383,36 +442,33 @@ void Executive::CancelAction(Action action) {
     case ARM:
       arm_ac_.CancelGoal();
       PublishCmdAck(arm_ac_.cmd_id(),
-                    arm_ac_.cmd_origin(),
                     ff_msgs::AckCompletedStatus::CANCELED,
                     "Arm action was canceled.");
-      arm_ac_.SetCmdInfo(NONE, "", "");
+      arm_ac_.SetCmdInfo(NONE, "");
       break;
     case DOCK:
     case UNDOCK:
       dock_ac_.CancelGoal();
       PublishCmdAck(dock_ac_.cmd_id(),
-                    dock_ac_.cmd_origin(),
                     ff_msgs::AckCompletedStatus::CANCELED,
                     "Dock action was canceled.");
-      dock_ac_.SetCmdInfo(NONE, "", "");
+      dock_ac_.SetCmdInfo(NONE, "");
       break;
     case EXECUTE:
     case MOVE:
     case STOP:
       motion_ac_.CancelGoal();
       PublishCmdAck(motion_ac_.cmd_id(),
-                    motion_ac_.cmd_origin(),
                     ff_msgs::AckCompletedStatus::CANCELED,
                     "Motion action was canceled.");
-      motion_ac_.SetCmdInfo(NONE, "", "");
+      motion_ac_.SetCmdInfo(NONE, "");
       break;
     case PERCH:
     case UNPERCH:
       // TODO(Katie) Add Me
       break;
     default:
-      ROS_ERROR("Executive: Action to cancel not recognized!");
+      NODELET_ERROR("Action to cancel not recognized!");
       return;
   }
 }
@@ -431,7 +487,7 @@ bool Executive::RemoveAction(Action action) {
   if (found) {
     running_actions_.erase(running_actions_.begin() + i);
   } else {
-    ROS_ERROR_STREAM("Executive: Action " << action <<
+    NODELET_ERROR_STREAM("Action " << action <<
                                             " not in running actions vector!");
   }
   return found;
@@ -440,57 +496,41 @@ bool Executive::RemoveAction(Action action) {
 void Executive::ArmResultCallback(
                               ff_util::FreeFlyerActionState::Enum const& state,
                               ff_msgs::ArmResultConstPtr const& result) {
+  std::string response = "";
   // Remove action from the running action vector
   RemoveAction(ARM);
 
-  SetOpState(state_->HandleArmResult(state,
-                                     result,
-                                     arm_ac_.cmd_id(),
-                                     arm_ac_.cmd_origin()));
+  // Get response for op state functions
+  if (result != nullptr) {
+    response = std::to_string(result->response);
+  }
+
+  SetOpState(state_->HandleResult(state,
+                                  response,
+                                  arm_ac_.cmd_id(),
+                                  ARM));
   // Reset command id so we don't try to ack the same id twice
-  arm_ac_.SetCmdInfo(NONE, "", "");
-}
-
-void Executive::DockActiveCallback() {
-  SetOpState(state_->HandleDockActive(dock_ac_.action()));
-}
-
-void Executive::DockFeedbackCallback(
-                                ff_msgs::DockFeedbackConstPtr const& feedback) {
-  SetOpState(state_->HandleDockFeedback(feedback));
+  arm_ac_.SetCmdInfo(NONE, "");
 }
 
 void Executive::DockResultCallback(
                               ff_util::FreeFlyerActionState::Enum const& state,
                               ff_msgs::DockResultConstPtr const& result) {
+  std::string response = "";
   // Remove action from the running action vector
   RemoveAction(dock_ac_.action());
 
-  SetOpState(state_->HandleDockResult(state,
-                                      result,
-                                      dock_ac_.cmd_id(),
-                                      dock_ac_.cmd_origin(),
-                                      dock_ac_.action()));
+  // Get response for op state functions
+  if (result != nullptr) {
+    response = std::to_string(result->response);
+  }
+
+  SetOpState(state_->HandleResult(state,
+                                  response,
+                                  dock_ac_.cmd_id(),
+                                  dock_ac_.action()));
   // Reset command id so we don't try to ack the same id twice
-  dock_ac_.SetCmdInfo(NONE, "", "");
-}
-
-void Executive::SwitchResultCallback(
-                              ff_util::FreeFlyerActionState::Enum const& state,
-                              ff_msgs::SwitchResultConstPtr const& result) {
-  // Remove action from the running action vector
-  RemoveAction(SWITCH);
-
-  SetOpState(state_->HandleSwitchResult(state,
-                                        result,
-                                        switch_ac_.cmd_id(),
-                                        switch_ac_.cmd_origin()));
-  // Reset command id so we don't try to ack the same id twice
-  switch_ac_.SetCmdInfo(NONE, "", "");
-}
-
-void Executive::MotionActiveCallback() {
-  SetOpState(state_->HandleMotionActive(motion_ac_.action()));
+  dock_ac_.SetCmdInfo(NONE, "");
 }
 
 void Executive::MotionFeedbackCallback(
@@ -505,33 +545,55 @@ void Executive::MotionFeedbackCallback(
 void Executive::MotionResultCallback(
                               ff_util::FreeFlyerActionState::Enum const& state,
                               ff_msgs::MotionResultConstPtr const& result) {
+  std::string response = "";
   // Remove action from the running action vector
   RemoveAction(motion_ac_.action());
 
+  // Get response for op state functions
+  if (result != nullptr) {
+    response = std::to_string(result->response);
+  }
+
   std::string cmd_id = motion_ac_.cmd_id();
-  std::string cmd_origin = motion_ac_.cmd_origin();
   Action action = motion_ac_.action();
 
   // Sometimes the handle motion result starts an action so we need to clear the
   // action info before starting another action
   // Reset command id so we don't try to ack the same id twice
-  motion_ac_.SetCmdInfo(NONE, "", "");
+  motion_ac_.SetCmdInfo(NONE, "");
 
-  SetOpState(state_->HandleMotionResult(state,
-                                        result,
-                                        cmd_id,
-                                        cmd_origin,
-                                        action));
+  SetOpState(state_->HandleResult(state,
+                                  response,
+                                  cmd_id,
+                                  action));
+}
+
+void Executive::SwitchResultCallback(
+                              ff_util::FreeFlyerActionState::Enum const& state,
+                              ff_msgs::SwitchResultConstPtr const& result) {
+  std::string response = "";
+  // Remove action from the running action vector
+  RemoveAction(SWITCH);
+
+  // Get response for op state functions
+  if (result != nullptr) {
+    response = std::to_string(result->response);
+  }
+
+  SetOpState(state_->HandleResult(state,
+                                  response,
+                                  switch_ac_.cmd_id(),
+                                  SWITCH));
+  // Reset command id so we don't try to ack the same id twice
+  switch_ac_.SetCmdInfo(NONE, "");
 }
 
 void Executive::PublishCmdAck(std::string const& cmd_id,
-                              std::string const& cmd_origin,
                               uint8_t completed_status,
                               std::string const& message,
                               uint8_t status) {
   ack_.header.stamp = ros::Time::now();
   ack_.cmd_id = cmd_id;
-  ack_.cmd_origin = cmd_origin;
   ack_.status.status = status;
   ack_.completed_status.status = completed_status;
   ack_.message = message;
@@ -554,6 +616,33 @@ void Executive::PublishPlanStatus(uint8_t status) {
 
 ff_msgs::MobilityState Executive::GetMobilityState() {
   return agent_state_.mobility_state;
+}
+
+// Set the mobility state based on the stored motion state
+void Executive::SetMobilityState() {
+  if (motion_state_ == NULL) {
+    return;
+  }
+
+  if (motion_state_->state == ff_msgs::MotionState::IDLE) {
+    agent_state_.mobility_state.state = ff_msgs::MobilityState::DRIFTING;
+    agent_state_.mobility_state.sub_state = 0;
+  } else if (motion_state_->state == ff_msgs::MotionState::IDLING) {
+    agent_state_.mobility_state.state = ff_msgs::MobilityState::DRIFTING;
+    agent_state_.mobility_state.sub_state = 1;
+  } else if (motion_state_->state == ff_msgs::MotionState::STOPPED) {
+    agent_state_.mobility_state.state = ff_msgs::MobilityState::STOPPING;
+    agent_state_.mobility_state.sub_state = 0;
+  } else if (motion_state_->state == ff_msgs::MotionState::STOPPING) {
+    agent_state_.mobility_state.state = ff_msgs::MobilityState::STOPPING;
+    agent_state_.mobility_state.sub_state = 1;
+  } else if (motion_state_->state == ff_msgs::MotionState::CONTROLLING ||
+             motion_state_->state == ff_msgs::MotionState::BOOTSTRAPPING) {
+    agent_state_.mobility_state.state = ff_msgs::MobilityState::FLYING;
+    agent_state_.mobility_state.sub_state = 0;
+  }
+
+  PublishAgentState();
 }
 
 void Executive::SetMobilityState(uint8_t state, uint32_t sub_state) {
@@ -585,10 +674,6 @@ bool Executive::SetPlan() {
 void Executive::SetPlanExecState(uint8_t state) {
   agent_state_.plan_execution_state.state = state;
   PublishAgentState();
-}
-
-void Executive::SetProximity(float proximity) {
-  agent_state_.proximity = proximity;
 }
 
 // Return a string with an error message, if string blank, zones were set.
@@ -727,7 +812,216 @@ uint8_t Executive::GetPlanExecState() {
   return agent_state_.plan_execution_state.state;
 }
 
-// TODO(Katie) finish me and maybe check values
+// Functions used to set variables that are used to configure mobility before a
+// move or execute
+bool Executive::ConfigureMobility(std::string const& cmd_id,
+                                  std::string& err_msg,
+                                  bool plan) {
+  bool successful = true;
+
+  // Initialize config clients if they haven't been initialized
+  if (!choreographer_cfg_) {
+    choreographer_cfg_ =
+              std::make_shared<ff_util::ConfigClient>(&nh_, NODE_CHOREOGRAPHER);
+  }
+
+  if (!mapper_cfg_) {
+    mapper_cfg_ = std::make_shared<ff_util::ConfigClient>(&nh_, NODE_MAPPER);
+  }
+
+  // Set values for configuring, these values will persist until changed
+  // Choreographer
+  choreographer_cfg_->Set<double>("desired_vel",
+                                          agent_state_.target_linear_velocity);
+  choreographer_cfg_->Set<double>("desired_accel",
+                                          agent_state_.target_linear_accel);
+  choreographer_cfg_->Set<double>("desired_omega",
+                                          agent_state_.target_angular_velocity);
+  choreographer_cfg_->Set<double>("desired_alpha",
+                                          agent_state_.target_angular_accel);
+  choreographer_cfg_->Set<bool>("enable_faceforward",
+                                              !agent_state_.holonomic_enabled);
+  choreographer_cfg_->Set<bool>("enable_collision_checking",
+                                                  agent_state_.check_obstacles);
+  choreographer_cfg_->Set<bool>("enable_validation", agent_state_.check_zones);
+  choreographer_cfg_->Set<bool>("enable_timesync",
+                                                agent_state_.time_sync_enabled);
+  choreographer_cfg_->Set<bool>("enable_immediate",
+                                                agent_state_.immediate_enabled);
+  choreographer_cfg_->Set<std::string>("planner", agent_state_.planner);
+  // This function is not used for the first segment of a plan so always disable
+  // move to start
+  choreographer_cfg_->Set<bool>("enable_bootstrapping", false);
+  choreographer_cfg_->Set<bool>("enable_replanning", false);
+
+  // Mapper
+  mapper_cfg_->Set<double>("inflate_radius", agent_state_.collision_distance);
+
+  // Clear err_msg
+  err_msg = "";
+
+  // Reconfigure choreographer, mapper
+  if (!choreographer_cfg_->Reconfigure()) {
+    successful = false;
+    err_msg = "Couldn't configure the mobilty::choreographer node! ";
+  }
+
+  if (!mapper_cfg_->Reconfigure()) {
+    successful = false;
+    err_msg += "Couldn't configure the mobility::mapper node!";
+  }
+
+  // Ack error
+  if (!successful && !plan) {
+    NODELET_ERROR("%s", err_msg.c_str());
+    PublishCmdAck(cmd_id,
+                  ff_msgs::AckCompletedStatus::EXEC_FAILED,
+                  err_msg);
+  }
+
+  return successful;
+}
+
+bool Executive::ConfigureMobility(bool move_to_start,
+                                  bool enable_holonomic,
+                                  std::string& err_msg) {
+  bool successful = true;
+
+  // TODO(Katie) Change when Ted changes the sequencer
+
+  // Initialize config clients if they haven't been initialized
+  if (!choreographer_cfg_) {
+    choreographer_cfg_ =
+              std::make_shared<ff_util::ConfigClient>(&nh_, NODE_CHOREOGRAPHER);
+  }
+
+  if (!mapper_cfg_) {
+    mapper_cfg_ =
+                  std::make_shared<ff_util::ConfigClient>(&nh_, NODE_MAPPER);
+  }
+
+  // Set values for configuring, these values will persist until changed
+  // Choreographer
+  choreographer_cfg_->Set<double>("desired_vel",
+                                          agent_state_.target_linear_velocity);
+  choreographer_cfg_->Set<double>("desired_accel",
+                                          agent_state_.target_linear_accel);
+  choreographer_cfg_->Set<double>("desired_omega",
+                                          agent_state_.target_angular_velocity);
+  choreographer_cfg_->Set<double>("desired_alpha",
+                                          agent_state_.target_angular_accel);
+  choreographer_cfg_->Set<bool>("enable_faceforward", enable_holonomic);
+  choreographer_cfg_->Set<bool>("enable_collision_checking",
+                                                  agent_state_.check_obstacles);
+  choreographer_cfg_->Set<bool>("enable_validation", agent_state_.check_zones);
+  choreographer_cfg_->Set<bool>("enable_timesync",
+                                                agent_state_.time_sync_enabled);
+  choreographer_cfg_->Set<bool>("enable_immediate",
+                                                agent_state_.immediate_enabled);
+  choreographer_cfg_->Set<std::string>("planner", agent_state_.planner);
+  choreographer_cfg_->Set<bool>("enable_bootstrapping", move_to_start);
+  choreographer_cfg_->Set<bool>("enable_replanning", false);
+
+  // Mapper
+  mapper_cfg_->Set<double>("inflate_radius", agent_state_.collision_distance);
+
+  // Clear err_msg
+  err_msg = "";
+
+  // Reconfigure choreographer, planner, mapper
+  if (!choreographer_cfg_->Reconfigure()) {
+    successful = false;
+    err_msg = "Couldn't configure the mobilty::choreographer node! ";
+  }
+
+  if (!mapper_cfg_->Reconfigure()) {
+    successful = false;
+    err_msg += "Couldn't configure the mobility::mapper node!";
+  }
+
+  return successful;
+}
+
+bool Executive::SetCheckObstacles(ff_msgs::CommandStampedPtr const& cmd) {
+  if (cmd->args.size() != 1 ||
+      cmd->args[0].data_type != ff_msgs::CommandArg::DATA_TYPE_BOOL) {
+    NODELET_ERROR("Malformed arguments for set check obstacles!");
+    PublishCmdAck(cmd->cmd_id,
+                  ff_msgs::AckCompletedStatus::BAD_SYNTAX,
+                  "Malformed arguments for set check obstacles!");
+    return false;
+  }
+
+  agent_state_.check_obstacles = cmd->args[0].b;
+  PublishAgentState();
+  PublishCmdAck(cmd->cmd_id);
+  return true;
+}
+
+bool Executive::SetCheckZones(ff_msgs::CommandStampedPtr const& cmd) {
+  if (cmd->args.size() != 1 ||
+      cmd->args[0].data_type != ff_msgs::CommandArg::DATA_TYPE_BOOL) {
+    NODELET_ERROR("Malformed arguments for set check zones!");
+    PublishCmdAck(cmd->cmd_id,
+                  ff_msgs::AckCompletedStatus::BAD_SYNTAX,
+                  "Malformed arguments for set check zones!");
+    return false;
+  }
+
+  agent_state_.check_zones = cmd->args[0].b;
+  PublishAgentState();
+  PublishCmdAck(cmd->cmd_id);
+  return true;
+}
+
+bool Executive::SetEnableAutoReturn(ff_msgs::CommandStampedPtr const& cmd) {
+  if (cmd->args.size() != 1 ||
+      cmd->args[0].data_type != ff_msgs::CommandArg::DATA_TYPE_BOOL) {
+    NODELET_ERROR("Malformed arguments for enable auto return command!");
+    PublishCmdAck(cmd->cmd_id,
+                  ff_msgs::AckCompletedStatus::BAD_SYNTAX,
+                  "Malformed arguments for enable auto return command!");
+    return false;
+  }
+
+  agent_state_.auto_return_enabled = cmd->args[0].b;
+  PublishAgentState();
+  PublishCmdAck(cmd->cmd_id);
+  return true;
+}
+
+bool Executive::SetEnableImmediate(ff_msgs::CommandStampedPtr const& cmd) {
+  if (cmd->args.size() != 1 ||
+      cmd->args[0].data_type != ff_msgs::CommandArg::DATA_TYPE_BOOL) {
+    NODELET_ERROR("Malformed arguments for enable immediate command!");
+    PublishCmdAck(cmd->cmd_id,
+                  ff_msgs::AckCompletedStatus::BAD_SYNTAX,
+                  "Malformed arguments for enable immediate command!");
+    return false;
+  }
+
+  agent_state_.immediate_enabled = cmd->args[0].b;
+  PublishAgentState();
+  PublishCmdAck(cmd->cmd_id);
+  return true;
+}
+
+bool Executive::SetHolonomicMode(ff_msgs::CommandStampedPtr const& cmd) {
+  if (cmd->args.size() != 1 ||
+      cmd->args[0].data_type != ff_msgs::CommandArg::DATA_TYPE_BOOL) {
+    NODELET_ERROR("Malformed arguments for set holonomic mode command!");
+    PublishCmdAck(cmd->cmd_id,
+                  ff_msgs::AckCompletedStatus::BAD_SYNTAX,
+                  "Malformed arguments for set holonomic mode command!");
+    return false;
+  }
+
+  agent_state_.holonomic_enabled = cmd->args[0].b;
+  PublishAgentState();
+  PublishCmdAck(cmd->cmd_id);
+  return true;
+}
+
 bool Executive::SetOperatingLimits(std::vector<ff_msgs::CommandArg> const&
                                                                 conditions,
                                    std::string& err_msg) {
@@ -745,7 +1039,7 @@ bool Executive::SetOperatingLimits(std::vector<ff_msgs::CommandArg> const&
   // Check to make sure the flight mode exists before setting everything
   ff_msgs::FlightMode mode;
   if (!ff_util::FlightUtil::GetFlightMode(mode, conditions[1].s)) {
-    err_msg = "Flight mode doesn't exist!.";
+    err_msg = "Flight mode " + conditions[1].s +" doesn't exist!.";
     return false;
   }
 
@@ -769,149 +1063,56 @@ bool Executive::SetOperatingLimits(std::vector<ff_msgs::CommandArg> const&
   return true;
 }
 
-bool Executive::ConfigureMobility(std::string const& cmd_id,
-                                  std::string const& cmd_origin,
-                                  std::string& err_msg,
-                                  bool plan) {
-  bool successful = true;
-
-  // Initialize config clients if they haven't been initialized
-  if (!choreographer_cfg_) {
-    choreographer_cfg_ =
-              std::make_shared<ff_util::ConfigClient>(&nh_, NODE_CHOREOGRAPHER);
+bool Executive::SetPlanner(ff_msgs::CommandStampedPtr const& cmd) {
+  if (cmd->args.size() != 1 ||
+      cmd->args[0].data_type != ff_msgs::CommandArg::DATA_TYPE_STRING) {
+    NODELET_ERROR("Malformed arguments for set planner command!");
+    PublishCmdAck(cmd->cmd_id,
+                  ff_msgs::AckCompletedStatus::BAD_SYNTAX,
+                  "Malformed arguments for set planner command!");
+    return false;
   }
 
-  /*if (!mapper_cfg_) {
-    mapper_cfg_ =
-                  std::make_shared<ff_util::ConfigClient>(&nh_, NODE_MAPPER);
-  }*/
-
-  // Set values for configuring, these values will persist until changed
-  // Choreographer
-  choreographer_cfg_->Set<bool>("enable_immediate", true);
-  choreographer_cfg_->Set<bool>("enable_timesync", false);
-
-  // This function is not used for the first segment of a plan so always disable
-  // move to start
-  choreographer_cfg_->Set<bool>("enable_bootstrapping", false);
-
-  choreographer_cfg_->Set<bool>("enable_replanning", false);
-  choreographer_cfg_->Set<bool>("enable_validation", true);
-  choreographer_cfg_->Set<bool>("enable_faceforward",
-                                              !agent_state_.holonomic_enabled);
-  choreographer_cfg_->Set<bool>("enable_collision_checking",
-                                                  agent_state_.check_obstacles);
-
-  choreographer_cfg_->Set<double>("desired_vel",
-                                          agent_state_.target_linear_velocity);
-  choreographer_cfg_->Set<double>("desired_accel",
-                                          agent_state_.target_linear_accel);
-  choreographer_cfg_->Set<double>("desired_omega",
-                                          agent_state_.target_angular_velocity);
-  choreographer_cfg_->Set<double>("desired_alpha",
-                                          agent_state_.target_angular_accel);
-
-  // TODO(Katie) Configure the mapper with enable collision checking and
-  // collision distance
-
-  // TODO(Katie) Change to mapper
-  // mapper_cfg_->Set<bool>("enable_keepouts", agent_state_.check_zones);
-
-  // Clear err_msg
-  err_msg = "";
-
-  // Reconfigure choreographer, planner, mapper
-  if (!choreographer_cfg_->Reconfigure()) {
-    successful = false;
-    err_msg = "Couldn't configure the mobilty::choreographer node! ";
+  // Check that the planner string is valid
+  if (cmd->args[0].s != CommandConstants::PARAM_NAME_PLANNER_TYPE_TRAPEZOIDAL &&
+      cmd->args[0].s !=
+                CommandConstants::PARAM_NAME_PLANNER_TYPE_QUARTIC_POLYNOMIAL) {
+    NODELET_ERROR("Planner must be either Trapezoidal or QuarticPolynomial");
+    PublishCmdAck(cmd->cmd_id,
+                  ff_msgs::AckCompletedStatus::BAD_SYNTAX,
+                  "Planner must be either Trapezoidal or QuarticPolynomial");
+    return false;
   }
 
-/*  if (!mapper_cfg_->Reconfigure()) {
-    successful = false;
-    err_msg += "Couldn't configure the mobility::mapper node!";
-  }*/
-
-  // Ack error
-  if (!successful && !plan) {
-    ROS_ERROR("Executive: %s", err_msg.c_str());
-    PublishCmdAck(cmd_id,
-                  cmd_origin,
-                  ff_msgs::AckCompletedStatus::EXEC_FAILED,
-                  err_msg);
-  }
-
-  return successful;
+  agent_state_.planner = cmd->args[0].s;
+  PublishAgentState();
+  PublishCmdAck(cmd->cmd_id);
+  return true;
 }
 
-bool Executive::ConfigureMobility(bool move_to_start,
-                                  bool enable_holonomic,
-                                  std::string& err_msg) {
-  bool successful = true;
-
-  // TODO(Katie) Change when Ted changes the sequencer
-
-  // Initialize config clients if they haven't been initialized
-  if (!choreographer_cfg_) {
-    choreographer_cfg_ =
-              std::make_shared<ff_util::ConfigClient>(&nh_, NODE_CHOREOGRAPHER);
+bool Executive::SetTimeSync(ff_msgs::CommandStampedPtr const& cmd) {
+  if (cmd->args.size() != 1 ||
+      cmd->args[0].data_type != ff_msgs::CommandArg::DATA_TYPE_BOOL) {
+    NODELET_ERROR("Malformed arguments for enable time sync command!");
+    PublishCmdAck(cmd->cmd_id,
+                  ff_msgs::AckCompletedStatus::BAD_SYNTAX,
+                  "Malformed arguments for enable time sync command!");
+    return false;
   }
 
-  /*if (!mapper_cfg_) {
-    mapper_cfg_ =
-                  std::make_shared<ff_util::ConfigClient>(&nh_, NODE_MAPPER);
-  }*/
-
-  // Set values for configuring, these values will persist until changed
-  // Choreographer
-
-  // This function is not used for the first segment of a plan so always disable
-  // move to start
-  choreographer_cfg_->Set<bool>("enable_bootstrapping", move_to_start);
-  choreographer_cfg_->Set<bool>("enable_immediate", true);
-  choreographer_cfg_->Set<bool>("enable_timesync", false);
-
-  // TODO(Katie) What do I do with this
-  // choreographer_cfg_->Set<bool>("enable_replanning", ?);
-
-  // Planner
-  // TODO(Katie) Fix once Andrew figures out what he is doing
-  /*planner_cfg_->Set<double>("limits_lin_vel", linear_vel_limit_);
-  planner_cfg_->Set<double>("limits_lin_acc", linear_acc_limit_);
-  planner_cfg_->Set<double>("limits_ang_vel", angular_vel_limit_);
-  planner_cfg_->Set<double>("limits_ang_acc", angular_acc_limit_);*/
-  choreographer_cfg_->Set<bool>("enable_replanning", false);
-  choreographer_cfg_->Set<bool>("enable_validation", true);
-  choreographer_cfg_->Set<bool>("enable_faceforward", enable_holonomic);
-  // choreographer_cfg_->Set<bool>("enable_obstacles", false);  // TODO(Katie) Change
-  // choreographer_cfg_->Set<bool>("enable_keepouts", false);  // TODO(Katie) Change
-
-  // Mapper
-  // cfg_mapper->Set<bool>("enable_collision_checking", )
-
-  // Clear err_msg
-  err_msg = "";
-
-  // Reconfigure choreographer, planner, mapper
-  if (!choreographer_cfg_->Reconfigure()) {
-    successful = false;
-    err_msg = "Couldn't configure the mobilty::choreographer node! ";
-  }
-
-  /* if (!mapper_cfg_->Reconfigure()) {
-    successful = false;
-    err_msg += "Couldn't configure the mobility::mapper node!";
-  } */
-
-  return successful;
+  agent_state_.time_sync_enabled = cmd->args[0].b;
+  PublishAgentState();
+  PublishCmdAck(cmd->cmd_id);
+  return true;
 }
 
-bool Executive::ResetEkf(std::string const& cmd_id,
-                         std::string const& cmd_origin) {
+void Executive::ResetEkf(std::string const& cmd_id) {
   // Check to make sure the service is valid and running
   if (!reset_ekf_client_.exists()) {
-    PublishCmdAck(cmd_id, cmd_origin, ff_msgs::AckCompletedStatus::EXEC_FAILED,
+    PublishCmdAck(cmd_id,
+                  ff_msgs::AckCompletedStatus::EXEC_FAILED,
                   "Reset ekf service isn't running! Ekf node may have died.");
-    return false;
+    return;
   }
 
   std_srvs::Empty::Request req;
@@ -919,12 +1120,14 @@ bool Executive::ResetEkf(std::string const& cmd_id,
 
   // Check to see if the reset succeeded
   if (!reset_ekf_client_.call(req, res)) {
-    PublishCmdAck(cmd_id, cmd_origin, ff_msgs::AckCompletedStatus::EXEC_FAILED,
+    PublishCmdAck(cmd_id,
+                  ff_msgs::AckCompletedStatus::EXEC_FAILED,
                   "Resetting the ekf failed.");
-    return false;
+    return;
   }
 
-  return true;
+  // Reset ekf succeeded so ack the reaquire position command as successful
+  PublishCmdAck(cmd_id);
 }
 
 void Executive::StartWaitTimer(float duration) {
@@ -951,12 +1154,25 @@ void Executive::WaitCallback(ros::TimerEvent const& te) {
 // need to check if we are downloading data and if so, stop it.
 bool Executive::StopAllMotion(bool &stop_started,
                               std::string const& cmd_id,
-                              std::string const& cmd_origin,
+                              std::string const& cmd_src,
                               bool plan) {
   // We pretty much always start stop action even if stopped. See cases below
   // for situations we don't want to stop in
   bool successful = true, start_stop = true;
   std::string err_msg;
+
+  // The first thing we need to check is if the stop was a fault response and if
+  // it is, we need to check if mobility is idle. If mobility is idle, we don't
+  // want to spin up the pmcs by excuting a stop
+  if (cmd_src == "sys_monitor") {
+    if (agent_state_.mobility_state.state == ff_msgs::MobilityState::DRIFTING) {
+      // Ack command as failed and don't stop
+      PublishCmdAck(cmd_id,
+                    ff_msgs::AckCompletedStatus::EXEC_FAILED,
+                    "PMCs are idle so don't want spin them up due to a fault.");
+      return false;
+    }
+  }
 
   // If an action is executing, we want to cancel it. We will not wait for a
   // result as not waiting simplifies the code so start a stop after canceling
@@ -1061,20 +1277,19 @@ bool Executive::StopAllMotion(bool &stop_started,
 
   // Ack before start action since start action will ack for us if it fails
   if (!successful) {
-    ROS_ERROR("Executive: %s", err_msg.c_str());
+    NODELET_ERROR("%s", err_msg.c_str());
     PublishCmdAck(cmd_id,
-                  cmd_origin,
                   ff_msgs::AckCompletedStatus::EXEC_FAILED,
                   err_msg);
   } else if (successful && !start_stop) {
     // Ack successful since we cancelled an action that hadn't moved the robot
-    PublishCmdAck(cmd_id, cmd_origin);
+    PublishCmdAck(cmd_id);
   }
 
   stop_started = false;
   if (start_stop) {
     if (FillMotionGoal(STOP)) {
-      successful = StartAction(STOP, cmd_id, cmd_origin, err_msg);
+      successful = StartAction(STOP, cmd_id, err_msg);
       if (successful) {
         stop_started = true;
       }
@@ -1082,23 +1297,6 @@ bool Executive::StopAllMotion(bool &stop_started,
   }
 
   return successful;
-}
-
-bool Executive::EnableAutoReturn(ff_msgs::CommandStampedPtr const& cmd) {
-  if (cmd->args.size() != 1 ||
-      cmd->args[0].data_type != ff_msgs::CommandArg::DATA_TYPE_BOOL) {
-    ROS_ERROR("Executive: Malformed arguments for enable auto return command!");
-    PublishCmdAck(cmd->cmd_id,
-                  cmd->cmd_origin,
-                  ff_msgs::AckCompletedStatus::BAD_SYNTAX,
-                  "Malformed arguments for enable auto return command!");
-    return false;
-  }
-
-  agent_state_.auto_return_enabled = cmd->args[0].b;
-  PublishAgentState();
-  PublishCmdAck(cmd->cmd_id, cmd->cmd_origin);
-  return true;
 }
 
 bool Executive::Dock(ff_msgs::CommandStampedPtr const& cmd,
@@ -1114,10 +1312,6 @@ bool Executive::Dock(ff_msgs::CommandStampedPtr const& cmd,
     err_msg = "Already docked.";
     completed_status = ff_msgs::AckCompletedStatus::EXEC_FAILED;
   } else if (agent_state_.mobility_state.state ==
-                                            ff_msgs::MobilityState::DRIFTING) {
-    err_msg = "Astrobee is drifting. Please stop before trying to dock.";
-    completed_status = ff_msgs::AckCompletedStatus::EXEC_FAILED;
-  } else if (agent_state_.mobility_state.state ==
                                             ff_msgs::MobilityState::PERCHING) {
     err_msg = "Astrobee cannot attempt to dock while it is perched.";
     completed_status = ff_msgs::AckCompletedStatus::EXEC_FAILED;
@@ -1127,7 +1321,7 @@ bool Executive::Dock(ff_msgs::CommandStampedPtr const& cmd,
       return false;
     }
 
-    if (!StartAction(DOCK, cmd->cmd_id, cmd->cmd_origin, err_msg, plan)) {
+    if (!StartAction(DOCK, cmd->cmd_id, err_msg, plan)) {
       return false;
     }
   }
@@ -1135,8 +1329,8 @@ bool Executive::Dock(ff_msgs::CommandStampedPtr const& cmd,
   // Fill dock goal and start action publish failed command acks so we only
   // need to fail an ack if we aren't stopped and thus cannot dock
   if (!stopped && !plan) {
-    ROS_ERROR("Executive: %s", err_msg.c_str());
-    PublishCmdAck(cmd->cmd_id, cmd->cmd_origin, completed_status, err_msg);
+    NODELET_ERROR("%s", err_msg.c_str());
+    PublishCmdAck(cmd->cmd_id, completed_status, err_msg);
   }
   return stopped;
 }
@@ -1162,7 +1356,7 @@ bool Executive::Undock(ff_msgs::CommandStampedPtr const& cmd,
       return false;
     }
 
-    if (!StartAction(UNDOCK, cmd->cmd_id, cmd->cmd_origin, err_msg, plan)) {
+    if (!StartAction(UNDOCK, cmd->cmd_id, err_msg, plan)) {
       return false;
     }
   }
@@ -1170,93 +1364,35 @@ bool Executive::Undock(ff_msgs::CommandStampedPtr const& cmd,
   // Start action publish failed command acks so we only need to fail an ack if
   // we aren't docked and thus cannot undock
   if (!docked && !plan) {
-    ROS_ERROR("Executive: %s", err_msg.c_str());
+    NODELET_ERROR("%s", err_msg.c_str());
     PublishCmdAck(cmd->cmd_id,
-                  cmd->cmd_origin,
                   ff_msgs::AckCompletedStatus::EXEC_FAILED,
                   err_msg);
   }
   return docked;
 }
 
-bool Executive::SetCheckObstacles(ff_msgs::CommandStampedPtr const& cmd) {
-  if (cmd->args.size() != 1 ||
-      cmd->args[0].data_type != ff_msgs::CommandArg::DATA_TYPE_BOOL) {
-    ROS_ERROR("Executive: Malformed arguments for set check obstacles!");
-    PublishCmdAck(cmd->cmd_id,
-                  cmd->cmd_origin,
-                  ff_msgs::AckCompletedStatus::BAD_SYNTAX,
-                  "Malformed arguments for set check obstacles!");
-    return false;
-  }
-
-  agent_state_.check_obstacles = cmd->args[0].b;
-  PublishAgentState();
-  PublishCmdAck(cmd->cmd_id, cmd->cmd_origin);
-  return true;
-}
-
-bool Executive::SetCheckZones(ff_msgs::CommandStampedPtr const& cmd) {
-  if (cmd->args.size() != 1 ||
-      cmd->args[0].data_type != ff_msgs::CommandArg::DATA_TYPE_BOOL) {
-    ROS_ERROR("Executive: Malformed arguments for set check zones!");
-    PublishCmdAck(cmd->cmd_id,
-                  cmd->cmd_origin,
-                  ff_msgs::AckCompletedStatus::BAD_SYNTAX,
-                  "Malformed arguments for set check zones!");
-    return false;
-  }
-
-  agent_state_.check_zones = cmd->args[0].b;
-  PublishAgentState();
-  PublishCmdAck(cmd->cmd_id, cmd->cmd_origin);
-  return true;
-}
-
-bool Executive::SetHolonomicMode(ff_msgs::CommandStampedPtr const& cmd) {
-  if (cmd->args.size() != 1 ||
-      cmd->args[0].data_type != ff_msgs::CommandArg::DATA_TYPE_BOOL) {
-    ROS_ERROR("Executive: Malformed arguments for set holonomic mode command!");
-    PublishCmdAck(cmd->cmd_id,
-                  cmd->cmd_origin,
-                  ff_msgs::AckCompletedStatus::BAD_SYNTAX,
-                  "Malformed arguments for set holonomic mode command!");
-    return false;
-  }
-
-  agent_state_.holonomic_enabled = cmd->args[0].b;
-  PublishAgentState();
-  PublishCmdAck(cmd->cmd_id, cmd->cmd_origin);
-  return true;
-}
-
-void Executive::StopArm(std::string const& cmd_id,
-                        std::string const& cmd_origin) {
+void Executive::StopArm(std::string const& cmd_id) {
   // TODO(Katie) stub, add actual code
-  ROS_WARN("Executive: Stop arm not implemented yet! Stay tuned!");
+  NODELET_WARN("Stop arm not implemented yet! Stay tuned!");
   PublishCmdAck(cmd_id,
-                cmd_origin,
                 ff_msgs::AckCompletedStatus::EXEC_FAILED,
                 "Stop arm not implemented yet! Stay tuned!");
 }
 
-void Executive::StowArm(std::string const& cmd_id,
-                        std::string const& cmd_origin) {
+void Executive::StowArm(std::string const& cmd_id) {
   // TODO(Katie) stub, add actual code
-  ROS_WARN("Executive: Stow arm not implemented yet! Stay tuned!");
+  NODELET_WARN("Stow arm not implemented yet! Stay tuned!");
   PublishCmdAck(cmd_id,
-                cmd_origin,
                 ff_msgs::AckCompletedStatus::EXEC_FAILED,
                 "Stow arm not implemented yet!");
 }
 
-void Executive::SkipPlanStep(std::string const& cmd_id,
-                             std::string const& cmd_origin) {
+void Executive::SkipPlanStep(std::string const& cmd_id) {
   // Make sure plan execution state is paused
   if (GetPlanExecState() != ff_msgs::ExecState::PAUSED) {
-    ROS_ERROR("Executive: Got command to skip plan step but plan not paused.");
+    NODELET_ERROR("Got command to skip plan step but plan not paused.");
     PublishCmdAck(cmd_id,
-                  cmd_origin,
                   ff_msgs::AckCompletedStatus::EXEC_FAILED,
                   "Got command to skip a plan step but plan isn't paused.");
     return;
@@ -1271,7 +1407,7 @@ void Executive::SkipPlanStep(std::string const& cmd_id,
     PublishPlanStatus(ff_msgs::AckStatus::COMPLETED);
     SetPlanExecState(ff_msgs::ExecState::IDLE);
   }
-  PublishCmdAck(cmd_id, cmd_origin);
+  PublishCmdAck(cmd_id);
 }
 
 bool Executive::DownloadData(ff_msgs::CommandStampedPtr const& cmd,
@@ -1305,15 +1441,15 @@ bool Executive::DownloadData(ff_msgs::CommandStampedPtr const& cmd,
     // TODO(Katie) Stub, change to be actual code, including setting a class
     // variable to tell if we are downloading data and what kind of data
     successful = true;
-    ROS_ERROR("Download data not implemented yet!");
+    NODELET_ERROR("Download data not implemented yet!");
     completed_status = ff_msgs::AckCompletedStatus::OK;
   }
 
   if (!successful && !plan) {
-    ROS_ERROR("Executive: %s", err_msg.c_str());
-    PublishCmdAck(cmd->cmd_id, cmd->cmd_origin, completed_status, err_msg);
+    NODELET_ERROR("%s", err_msg.c_str());
+    PublishCmdAck(cmd->cmd_id, completed_status, err_msg);
   } else if (successful && !plan) {
-    PublishCmdAck(cmd->cmd_id, cmd->cmd_origin);
+    PublishCmdAck(cmd->cmd_id);
   }
   return successful;
 }
@@ -1324,9 +1460,8 @@ void Executive::StopDownload(ff_msgs::CommandStampedPtr const& cmd) {
   if (cmd->args.size() != 1 ||
       cmd->args[0].data_type != ff_msgs::CommandArg::DATA_TYPE_STRING) {
     err_msg = "Malformed arguments for stop download command!";
-    ROS_ERROR("Executive: %s", err_msg.c_str());
+    NODELET_ERROR("%s", err_msg.c_str());
     PublishCmdAck(cmd->cmd_id,
-                  cmd->cmd_origin,
                   ff_msgs::AckCompletedStatus::BAD_SYNTAX,
                   err_msg);
   }
@@ -1335,9 +1470,8 @@ void Executive::StopDownload(ff_msgs::CommandStampedPtr const& cmd) {
       && cmd->args[0].s !=
                         CommandConstants::PARAM_NAME_DOWNLOAD_METHOD_DELAYED) {
     err_msg = "Download method not recognized. Needs to be immediate or delay.";
-    ROS_ERROR("Executive: %s", err_msg.c_str());
+    NODELET_ERROR("%s", err_msg.c_str());
     PublishCmdAck(cmd->cmd_id,
-                  cmd->cmd_origin,
                   ff_msgs::AckCompletedStatus::BAD_SYNTAX,
                   err_msg);
   }
@@ -1346,9 +1480,8 @@ void Executive::StopDownload(ff_msgs::CommandStampedPtr const& cmd) {
   // variables to see if a download is in progress and what kind of data
   // TODO(Katie) Stub, change to be actual code
   err_msg = "Stop download not implemented yet!";
-  ROS_ERROR("Executive: %s", err_msg.c_str());
+  NODELET_ERROR("%s", err_msg.c_str());
   PublishCmdAck(cmd->cmd_id,
-                cmd->cmd_origin,
                 ff_msgs::AckCompletedStatus::EXEC_FAILED,
                 err_msg);
   // err_msg = "Not downloading data! No download to stop.";
@@ -1377,15 +1510,15 @@ bool Executive::ClearData(ff_msgs::CommandStampedPtr const& cmd,
     // variable to tell if we are downloading data, cannot clear data if
     // downloading data
     successful = true;
-    ROS_ERROR("Clear data not implemented yet!");
+    NODELET_ERROR("Clear data not implemented yet!");
     completed_status = ff_msgs::AckCompletedStatus::OK;
   }
 
   if (!successful && !plan) {
-    ROS_ERROR("Executive: %s", err_msg.c_str());
-    PublishCmdAck(cmd->cmd_id, cmd->cmd_origin, completed_status, err_msg);
+    NODELET_ERROR("%s", err_msg.c_str());
+    PublishCmdAck(cmd->cmd_id, completed_status, err_msg);
   } else if (successful && !plan) {
-    PublishCmdAck(cmd->cmd_id, cmd->cmd_origin);
+    PublishCmdAck(cmd->cmd_id);
   }
   return successful;
 }
@@ -1400,14 +1533,14 @@ bool Executive::PowerOnItem(ff_msgs::CommandStampedPtr const& cmd,
       cmd->args[0].data_type != ff_msgs::CommandArg::DATA_TYPE_STRING) {
     err_msg = "Malformed arguments for power on item command!";
     completed_status = ff_msgs::AckCompletedStatus::BAD_SYNTAX;
-    ROS_ERROR("%s", err_msg.c_str());
+    NODELET_ERROR("%s", err_msg.c_str());
     if (!plan) {
-      PublishCmdAck(cmd->cmd_id, cmd->cmd_origin, completed_status, err_msg);
+      PublishCmdAck(cmd->cmd_id, completed_status, err_msg);
     }
     return false;
   }
 
-  ROS_WARN("Item %s is being powered on!", cmd->args[0].s.c_str());
+  NODELET_WARN("Item %s is being powered on!", cmd->args[0].s.c_str());
 
   if (cmd->args[0].s ==
                 CommandConstants::PARAM_NAME_POWERED_COMPONENT_LASER_POINTER) {
@@ -1415,9 +1548,9 @@ bool Executive::PowerOnItem(ff_msgs::CommandStampedPtr const& cmd,
     if (!laser_enable_client_.exists()) {
       err_msg = "Laser enable service isn't running! Laser node may have died";
       completed_status = ff_msgs::AckCompletedStatus::EXEC_FAILED;
-      ROS_ERROR("%s", err_msg.c_str());
+      NODELET_ERROR("%s", err_msg.c_str());
       if (!plan) {
-        PublishCmdAck(cmd->cmd_id, cmd->cmd_origin, completed_status, err_msg);
+        PublishCmdAck(cmd->cmd_id, completed_status, err_msg);
       }
       return false;
     }
@@ -1429,24 +1562,24 @@ bool Executive::PowerOnItem(ff_msgs::CommandStampedPtr const& cmd,
     if (!enable_srv.response.success) {
       err_msg = enable_srv.response.status_message;
       completed_status = ff_msgs::AckCompletedStatus::EXEC_FAILED;
-      ROS_ERROR("%s", err_msg.c_str());
+      NODELET_ERROR("%s", err_msg.c_str());
       if (!plan) {
-        PublishCmdAck(cmd->cmd_id, cmd->cmd_origin, completed_status, err_msg);
+        PublishCmdAck(cmd->cmd_id, completed_status, err_msg);
       }
       return false;
     }
   } else {
     err_msg = "Item " + cmd->args[0].s + "not recognized.";
     completed_status = ff_msgs::AckCompletedStatus::EXEC_FAILED;
-    ROS_ERROR("%s", err_msg.c_str());
+    NODELET_ERROR("%s", err_msg.c_str());
     if (!plan) {
-      PublishCmdAck(cmd->cmd_id, cmd->cmd_origin, completed_status, err_msg);
+      PublishCmdAck(cmd->cmd_id, completed_status, err_msg);
     }
     return false;
   }
 
   if (!plan) {
-    PublishCmdAck(cmd->cmd_id, cmd->cmd_origin);
+    PublishCmdAck(cmd->cmd_id);
   }
   return true;
 }
@@ -1461,14 +1594,14 @@ bool Executive::PowerOffItem(ff_msgs::CommandStampedPtr const& cmd,
       cmd->args[0].data_type != ff_msgs::CommandArg::DATA_TYPE_STRING) {
     err_msg = "Malformed arguments for power off item command!";
     completed_status = ff_msgs::AckCompletedStatus::BAD_SYNTAX;
-    ROS_ERROR("%s", err_msg.c_str());
+    NODELET_ERROR("%s", err_msg.c_str());
     if (!plan) {
-      PublishCmdAck(cmd->cmd_id, cmd->cmd_origin, completed_status, err_msg);
+      PublishCmdAck(cmd->cmd_id, completed_status, err_msg);
     }
     return false;
   }
 
-  ROS_WARN("Item %s is being powered off!", cmd->args[0].s.c_str());
+  NODELET_WARN("Item %s is being powered off!", cmd->args[0].s.c_str());
 
   if (cmd->args[0].s ==
                 CommandConstants::PARAM_NAME_POWERED_COMPONENT_LASER_POINTER) {
@@ -1476,9 +1609,9 @@ bool Executive::PowerOffItem(ff_msgs::CommandStampedPtr const& cmd,
     if (!laser_enable_client_.exists()) {
       err_msg = "Laser enable service isn't running! Laser node may have died!";
       completed_status = ff_msgs::AckCompletedStatus::EXEC_FAILED;
-      ROS_ERROR("%s", err_msg.c_str());
+      NODELET_ERROR("%s", err_msg.c_str());
       if (!plan) {
-        PublishCmdAck(cmd->cmd_id, cmd->cmd_origin, completed_status, err_msg);
+        PublishCmdAck(cmd->cmd_id, completed_status, err_msg);
       }
       return false;
     }
@@ -1489,24 +1622,24 @@ bool Executive::PowerOffItem(ff_msgs::CommandStampedPtr const& cmd,
     if (!disable_srv.response.success) {
       err_msg = disable_srv.response.status_message;
       completed_status = ff_msgs::AckCompletedStatus::EXEC_FAILED;
-      ROS_ERROR("%s", err_msg.c_str());
+      NODELET_ERROR("%s", err_msg.c_str());
       if (!plan) {
-        PublishCmdAck(cmd->cmd_id, cmd->cmd_origin, completed_status, err_msg);
+        PublishCmdAck(cmd->cmd_id, completed_status, err_msg);
       }
       return false;
     }
   } else {
     err_msg = "Item " + cmd->args[0].s + "not recognized.";
     completed_status = ff_msgs::AckCompletedStatus::EXEC_FAILED;
-    ROS_ERROR("%s", err_msg.c_str());
+    NODELET_ERROR("%s", err_msg.c_str());
     if (!plan) {
-      PublishCmdAck(cmd->cmd_id, cmd->cmd_origin, completed_status, err_msg);
+      PublishCmdAck(cmd->cmd_id, completed_status, err_msg);
     }
     return false;
   }
 
   if (!plan) {
-    PublishCmdAck(cmd->cmd_id, cmd->cmd_origin);
+    PublishCmdAck(cmd->cmd_id);
   }
   return true;
 }
@@ -1572,10 +1705,10 @@ bool Executive::SetFlashlightBrightness(ff_msgs::CommandStampedPtr const& cmd,
   }
 
   if (!successful && !plan) {
-    ROS_ERROR("Executive: %s", err_msg.c_str());
-    PublishCmdAck(cmd->cmd_id, cmd->cmd_origin, completed_status, err_msg);
+    NODELET_ERROR("Executive: %s", err_msg.c_str());
+    PublishCmdAck(cmd->cmd_id, completed_status, err_msg);
   } else if (successful && !plan) {
-    PublishCmdAck(cmd->cmd_id, cmd->cmd_origin);
+    PublishCmdAck(cmd->cmd_id);
   }
   return successful;
 }
@@ -1675,10 +1808,10 @@ bool Executive::SetCamera(ff_msgs::CommandStampedPtr const& cmd,
   }
 
   if (!successful && !plan) {
-    ROS_WARN("Executive: %s", err_msg.c_str());
-    PublishCmdAck(cmd->cmd_id, cmd->cmd_origin, completed_status, err_msg);
+    NODELET_WARN("%s", err_msg.c_str());
+    PublishCmdAck(cmd->cmd_id, completed_status, err_msg);
   } else if (successful && !plan) {
-    PublishCmdAck(cmd->cmd_id, cmd->cmd_origin);
+    PublishCmdAck(cmd->cmd_id);
   }
   return successful;
 }
@@ -1742,10 +1875,10 @@ bool Executive::SetCameraRecording(ff_msgs::CommandStampedPtr const& cmd,
   // to be recorded
 
   if (!successful && !plan) {
-    ROS_WARN("Executive: %s", err_msg.c_str());
-    PublishCmdAck(cmd->cmd_id, cmd->cmd_origin, completed_status, err_msg);
+    NODELET_WARN("%s", err_msg.c_str());
+    PublishCmdAck(cmd->cmd_id, completed_status, err_msg);
   } else if (successful && !plan) {
-    PublishCmdAck(cmd->cmd_id, cmd->cmd_origin);
+    PublishCmdAck(cmd->cmd_id);
   }
   return successful;
 }
@@ -1810,10 +1943,10 @@ bool Executive::SetCameraStreaming(ff_msgs::CommandStampedPtr const& cmd,
   }
 
   if (!successful && !plan) {
-    ROS_WARN("Executive: %s", err_msg.c_str());
-    PublishCmdAck(cmd->cmd_id, cmd->cmd_origin, completed_status, err_msg);
+    NODELET_WARN("%s", err_msg.c_str());
+    PublishCmdAck(cmd->cmd_id, completed_status, err_msg);
   } else if (successful && !plan) {
-    PublishCmdAck(cmd->cmd_id, cmd->cmd_origin);
+    PublishCmdAck(cmd->cmd_id);
   }
   return successful;
 }
@@ -1856,21 +1989,15 @@ bool Executive::SendGuestScienceCommand(ff_msgs::CommandStampedPtr const& cmd,
   // Ack if command had a bad syntax, otherwise the guest science manager will
   // ack the command
   if (!successful && !plan) {
-    ROS_ERROR("Executive: %s", err_msg.c_str());
-    PublishCmdAck(cmd->cmd_id, cmd->cmd_origin, completed_status, err_msg);
+    NODELET_ERROR("%s", err_msg.c_str());
+    PublishCmdAck(cmd->cmd_id, completed_status, err_msg);
   }
   return successful;
 }
 
-void Executive::DetermineStartupMobilityState() {
-  // TODO(Katie) Lots!!!!!! For now, set mobility state to stopped so GDS works
-  agent_state_.mobility_state.state = ff_msgs::MobilityState::STOPPING;
-  PublishAgentState();
-}
-
 void Executive::SetOpState(OpState* state) {
   if (state_->id() != state->id()) {
-    ROS_INFO("Executive state changing from [%s(%i)] to [%s(%i)].",
+    NODELET_INFO("Executive state changing from [%s(%i)] to [%s(%i)].",
              state_->name().c_str(), state_->id(),
              state->name().c_str(), state->id());
     agent_state_.operating_state.state = state->id();
@@ -1879,15 +2006,15 @@ void Executive::SetOpState(OpState* state) {
   }
 }
 
-void Executive::Shutdown(std::string const& cmd_id,
-                         std::string const& cmd_origin) {
+void Executive::Shutdown(std::string const& cmd_id) {
   // TODO(Katie) Stub, change to be actual code, ack complete immediately
   // TODO(Katie) Add code to shutdown the robot
-  PublishCmdAck(cmd_id, cmd_origin);
+  PublishCmdAck(cmd_id);
   ros::shutdown();
 }
 
 void Executive::Initialize(ros::NodeHandle *nh) {
+  std::string err_msg;
   // Set executive in op state repo so the op_states can call this executive
   OpStateRepo::Instance()->SetExec(this);
 
@@ -1896,7 +2023,10 @@ void Executive::Initialize(ros::NodeHandle *nh) {
   // Read in all the action timeouts. They are in config files so that they can
   // be changed on the fly.
   config_params_.AddFile("management/executive.config");
-  ReadParams();
+  config_params_.AddFile("management/sys_monitor_fault_info.config");
+  if (!ReadParams()) {
+    return;
+  }
 
   // Set up a timer to check and reload timeouts if they are changed.
   reload_params_timer_ = nh_.createTimer(ros::Duration(1),
@@ -1916,10 +2046,6 @@ void Executive::Initialize(ros::NodeHandle *nh) {
 
   dock_ac_.SetActiveTimeout(action_active_timeout_);
   dock_ac_.SetDeadlineTimeout(dock_result_timeout_);
-  dock_ac_.SetActiveCallback(std::bind(&Executive::DockActiveCallback, this));
-  dock_ac_.SetFeedbackCallback(std::bind(&Executive::DockFeedbackCallback,
-                               this,
-                               std::placeholders::_1));
   dock_ac_.SetResultCallback(std::bind(&Executive::DockResultCallback,
                              this,
                              std::placeholders::_1,
@@ -1936,8 +2062,6 @@ void Executive::Initialize(ros::NodeHandle *nh) {
 
   motion_ac_.SetActiveTimeout(action_active_timeout_);
   motion_ac_.SetResponseTimeout(motion_feedback_timeout_);
-  motion_ac_.SetActiveCallback(std::bind(&Executive::MotionActiveCallback,
-                               this));
   motion_ac_.SetFeedbackCallback(std::bind(&Executive::MotionFeedbackCallback,
                                  this,
                                  std::placeholders::_1));
@@ -1948,47 +2072,73 @@ void Executive::Initialize(ros::NodeHandle *nh) {
   motion_ac_.Create(nh, ACTION_MOBILITY_MOTION);
 
   // initialize subs
-  cmd_sub_ = nh_.subscribe(TOPIC_COMMAND, sub_queue_size_,
-                           &Executive::CmdCallback, this);
+  cmd_sub_ = nh_.subscribe(TOPIC_COMMAND,
+                           sub_queue_size_,
+                           &Executive::CmdCallback,
+                           this);
 
   dock_state_sub_ = nh_.subscribe(TOPIC_BEHAVIORS_DOCKING_STATE,
                                   sub_queue_size_,
                                   &Executive::DockStateCallback,
                                   this);
 
-  gs_ack_sub_ = nh_.subscribe(TOPIC_GUEST_SCIENCE_MANAGER_ACK, sub_queue_size_,
-                              &Executive::GuestScienceAckCallback, this);
+  gs_ack_sub_ = nh_.subscribe(TOPIC_GUEST_SCIENCE_MANAGER_ACK,
+                              sub_queue_size_,
+                              &Executive::GuestScienceAckCallback,
+                              this);
 
-  plan_sub_ = nh_.subscribe(TOPIC_COMMUNICATIONS_DDS_PLAN, sub_queue_size_,
-                            &Executive::PlanCallback, this);
+  heartbeat_sub_ = nh_.subscribe(TOPIC_MANAGEMENT_SYS_MONITOR_HEARTBEAT,
+                                 sub_queue_size_,
+                                 &Executive::SysMonitorHeartbeatCallback,
+                                 this);
 
-  zones_sub_ = nh_.subscribe(TOPIC_COMMUNICATIONS_DDS_ZONES, sub_queue_size_,
-                             &Executive::ZonesCallback, this);
+  motion_sub_ = nh_.subscribe(TOPIC_MOBILITY_MOTION_STATE,
+                              sub_queue_size_,
+                              &Executive::MotionStateCallback,
+                              this);
+
+  plan_sub_ = nh_.subscribe(TOPIC_COMMUNICATIONS_DDS_PLAN,
+                            sub_queue_size_,
+                            &Executive::PlanCallback,
+                            this);
+
+  zones_sub_ = nh_.subscribe(TOPIC_COMMUNICATIONS_DDS_ZONES,
+                             sub_queue_size_,
+                             &Executive::ZonesCallback,
+                             this);
 
   // initialize pubs
   agent_state_pub_ = nh_.advertise<ff_msgs::AgentStateStamped>(
-                      TOPIC_MANAGEMENT_EXEC_AGENT_STATE, pub_queue_size_, true);
+                                              TOPIC_MANAGEMENT_EXEC_AGENT_STATE,
+                                              pub_queue_size_,
+                                              true);
 
   cf_ack_pub_ = nh_.advertise<ff_msgs::CompressedFileAck>(
                                                   TOPIC_MANAGEMENT_EXEC_CF_ACK,
-                                                  pub_queue_size_, false);
+                                                  pub_queue_size_,
+                                                  false);
 
   cmd_ack_pub_ = nh_.advertise<ff_msgs::AckStamped>(TOPIC_MANAGEMENT_ACK,
-                                           pub_queue_size_, false);
+                                                    pub_queue_size_,
+                                                    false);
 
   gs_cmd_pub_ = nh_.advertise<ff_msgs::CommandStamped>(
                                                   TOPIC_MANAGEMENT_EXEC_COMMAND,
-                                                  pub_queue_size_, false);
+                                                  pub_queue_size_,
+                                                  false);
 
   plan_pub_ = nh_.advertise<ff_msgs::CompressedFile>(TOPIC_MANAGEMENT_EXEC_PLAN,
-                                                     pub_queue_size_, false);
+                                                     pub_queue_size_,
+                                                     false);
 
   plan_status_pub_ = nh_.advertise<ff_msgs::PlanStatusStamped>(
-                      TOPIC_MANAGEMENT_EXEC_PLAN_STATUS, pub_queue_size_, true);
+                                              TOPIC_MANAGEMENT_EXEC_PLAN_STATUS,
+                                              pub_queue_size_,
+                                              true);
 
   // initialize services
-  zones_client_ =
-            nh_.serviceClient<ff_msgs::SetZones>(SERVICE_MOBILITY_SET_ZONES);
+  zones_client_ = nh_.serviceClient<ff_msgs::SetZones>(
+                                                    SERVICE_MOBILITY_SET_ZONES);
 
   laser_enable_client_ = nh_.serviceClient<ff_hw_msgs::SetEnabled>(
                                                 SERVICE_HARDWARE_LASER_ENABLE);
@@ -2026,10 +2176,14 @@ void Executive::Initialize(ros::NodeHandle *nh) {
   agent_state_.proximity = 0;
   agent_state_.profile_name = "";
   agent_state_.flight_mode = "nominal";
+
   // Get nominal limits
   ff_msgs::FlightMode flight_mode;
   if (!ff_util::FlightUtil::GetFlightMode(flight_mode, "nominal")) {
-    ROS_ERROR("Executive: Couldn't get flight mode nominal.");
+    err_msg = "Couldn't get flight mode nominal.";
+    NODELET_ERROR("%s", err_msg.c_str());
+    this->AssertFault(ff_util::INITIALIZATION_FAILED, err_msg);
+    return;
   } else {
     agent_state_.target_linear_velocity = flight_mode.hard_limit_vel;
     agent_state_.target_linear_accel = flight_mode.hard_limit_accel;
@@ -2043,6 +2197,8 @@ void Executive::Initialize(ros::NodeHandle *nh) {
   agent_state_.check_obstacles = true;
   agent_state_.check_zones = true;
   agent_state_.auto_return_enabled = true;
+  agent_state_.immediate_enabled = true;
+  agent_state_.time_sync_enabled = false;
   agent_state_.boot_time = ros::Time::now().sec;
 
   PublishAgentState();
@@ -2057,55 +2213,273 @@ void Executive::Initialize(ros::NodeHandle *nh) {
   // Create timer for wait command with a dummy duration since it will be
   // changed everytime it is started. Make it one shot and don't start until
   // wait command received
-  wait_timer_ = nh_.createTimer(ros::Duration(1), &Executive::WaitCallback,
-                                                            this, true, false);
+  wait_timer_ = nh_.createTimer(ros::Duration(1),
+                                &Executive::WaitCallback,
+                                this,
+                                true,
+                                false);
+
+
+  // Create timer for monitoring the system monitor heartbeat. Don't start it
+  // until we receive the first heartbeat from the system monitor
+  sys_monitor_heartbeat_timer_ = nh_.createTimer(
+                                ros::Duration(sys_monitor_heartbeat_timeout_),
+                                &Executive::SysMonitorHeartbeatTimeoutCallback,
+                                this,
+                                false,
+                                false);
+
+  // Create timer to make sure the system monitor was started
+  sys_monitor_startup_timer_ = nh_.createTimer(
+                                  ros::Duration(sys_monitor_startup_time_secs_),
+                                  &Executive::SysMonitorStartupTimeoutCallback,
+                                  this,
+                                  true,
+                                  true);
 
   // Initialize switch goal because the executive is only ever going to switch
   // to the mapped landmarks ("ml") pipeline...
   switch_goal_.pipeline = "ml";
-
-  DetermineStartupMobilityState();
 }
 
-void Executive::ReadParams() {
+bool Executive::ReadParams() {
+  std::string err_msg;
   // Read config files into lua
   if (!config_params_.ReadFiles()) {
-    ROS_ERROR("Executive: Error loading executive parameters.");
-    return;
+    err_msg = "Error loading executive parameters. Couldn't read config files.";
+    NODELET_ERROR("%s", err_msg.c_str());
+    this->AssertFault(ff_util::INITIALIZATION_FAILED, err_msg);
+    return false;
   }
 
   // get action active timeout
   if (!config_params_.GetPosReal("action_active_timeout",
                                                     &action_active_timeout_)) {
-    ROS_ERROR("Executive: Action active timeout not specified.");
+    NODELET_WARN("Action active timeout not specified.");
+    action_active_timeout_ = 1;
   }
 
   // get action feedback timeouts
   if (!config_params_.GetPosReal("motion_feedback_timeout",
                                                 &motion_feedback_timeout_)) {
-    ROS_ERROR("Executive: Motion feedback timeout not specified.");
+    NODELET_WARN("Motion feedback timeout not specified.");
+    motion_feedback_timeout_ = 1;
   }
 
   if (!config_params_.GetPosReal("arm_feedback_timeout",
                                                       &arm_feedback_timeout_)) {
-    ROS_ERROR("Executive: Arm feedback timeout not specified.");
+    NODELET_WARN("Arm feedback timeout not specified.");
+    arm_feedback_timeout_ = 4;
   }
 
   // get action results timeouts
   if (!config_params_.GetPosReal("dock_result_timeout",
                                                       &dock_result_timeout_)) {
-    ROS_ERROR("Executive: Dock result timeout not specified.");
+    NODELET_WARN("Dock result timeout not specified.");
+    dock_result_timeout_ = 360;
   }
 
   if (!config_params_.GetPosReal("perch_result_timeout",
                                                       &perch_result_timeout_)) {
-    ROS_ERROR("Executive: Perch result timeout not specified.");
+    NODELET_WARN("Perch result timeout not specified.");
+    perch_result_timeout_ = 360;
   }
 
   if (!config_params_.GetPosReal("switch_result_timeout",
                                                     &switch_result_timeout_)) {
-    ROS_ERROR("Executive: Switch result timeout not specified.");
+    NODELET_WARN("Switch result timeout not specified.");
+    switch_result_timeout_ = 10;
   }
+
+  if (!config_params_.GetPosReal("sys_monitor_startup_time_secs",
+                                            &sys_monitor_startup_time_secs_)) {
+    NODELET_WARN("System monitor startup time not specified.");
+    sys_monitor_startup_time_secs_ = 30;
+  }
+
+  // get planner
+  if (!config_params_.GetStr("planner", &agent_state_.planner)) {
+    NODELET_WARN("System monitor planner not specified.");
+    agent_state_.planner = "QuarticPolynomial";
+  }
+
+  if (!config_params_.GetPosReal("sys_monitor_heartbeat_timeout",
+                                            &sys_monitor_heartbeat_timeout_)) {
+    err_msg = "System monitor heartbeat timeout not specified.";
+    NODELET_ERROR("%s", err_msg.c_str());
+    this->AssertFault(ff_util::INITIALIZATION_FAILED, err_msg);
+    return false;
+  }
+
+  if (!config_params_.CheckValExists("sys_monitor_heartbeat_fault_response")) {
+    err_msg = "Sys monitor heartbeat fault response not specified.";
+    NODELET_ERROR("%s", err_msg.c_str());
+    this->AssertFault(ff_util::INITIALIZATION_FAILED, err_msg);
+    return false;
+  }
+
+  config_reader::ConfigReader::Table hb_response(&config_params_,
+                                        "sys_monitor_heartbeat_fault_response");
+
+  if (!ReadCommand(&hb_response, sys_monitor_heartbeat_fault_response_)) {
+    err_msg = "Unable to read sys monitor heartbeat fault response.";
+    NODELET_ERROR("%s", err_msg.c_str());
+    this->AssertFault(ff_util::INITIALIZATION_FAILED, err_msg);
+    return false;
+  }
+
+  if (!config_params_.CheckValExists("sys_monitor_init_fault_response")) {
+    err_msg = "System monitor init fault response not specified.";
+    NODELET_ERROR("%s", err_msg.c_str());
+    this->AssertFault(ff_util::INITIALIZATION_FAILED, err_msg);
+    return false;
+  }
+
+  config_reader::ConfigReader::Table init_response(&config_params_,
+                                            "sys_monitor_init_fault_response");
+
+  if (!ReadCommand(&init_response, sys_monitor_init_fault_response_)) {
+    err_msg = "Unable to read sys monitor init fault response.";
+    NODELET_ERROR("%s", err_msg.c_str());
+    this->AssertFault(ff_util::INITIALIZATION_FAILED, err_msg);
+    return false;
+  }
+
+  return true;
+}
+
+bool Executive::ReadCommand(config_reader::ConfigReader::Table *response,
+                            ff_msgs::CommandStampedPtr cmd) {
+  std::string cmd_name;
+  if (!response->GetStr("name", &cmd_name)) {
+    NODELET_ERROR("Fault response command name not specified.");
+    return false;
+  }
+
+  cmd->cmd_name = cmd_name;
+  cmd->cmd_src = "executive";
+  cmd->subsys_name = "Astrobee";
+
+  if (response->CheckValExists("args")) {
+    config_reader::ConfigReader::Table args(response, "args");
+    int num_args = args.GetSize(), i;
+    unsigned int type;
+    cmd->args.resize(num_args);
+    for (i = 0; i < num_args; ++i) {
+      // Lua indices start at 1
+      config_reader::ConfigReader::Table arg(&args, (i + 1));
+      // First element in table is the type
+      if (!arg.GetUInt(1, &type)) {
+        NODELET_ERROR("First command argument value is not a uint");
+        return false;
+      }
+
+      // Remaining elements are the parameter values
+      switch (type) {
+        case ff_msgs::CommandArg::DATA_TYPE_BOOL:
+          {
+            bool val;
+            if (!arg.GetBool(2, &val)) {
+              NODELET_ERROR("Expected command argument to be a bool!");
+              return false;
+            }
+            cmd->args[i].data_type = ff_msgs::CommandArg::DATA_TYPE_BOOL;
+            cmd->args[i].b = val;
+          }
+          break;
+        case ff_msgs::CommandArg::DATA_TYPE_DOUBLE:
+          {
+            double val;
+            if (!arg.GetReal(2, &val)) {
+              NODELET_ERROR("Expected command argument to be a double");
+              return false;
+            }
+            cmd->args[i].data_type = ff_msgs::CommandArg::DATA_TYPE_DOUBLE;
+            cmd->args[i].d = val;
+          }
+          break;
+        case ff_msgs::CommandArg::DATA_TYPE_FLOAT:
+          {
+            float val;
+            if (!arg.GetReal(2, &val)) {
+              NODELET_ERROR("Expected command argument to be a float.");
+              return false;
+            }
+            cmd->args[i].data_type = ff_msgs::CommandArg::DATA_TYPE_FLOAT;
+            cmd->args[i].f = val;
+          }
+          break;
+        case ff_msgs::CommandArg::DATA_TYPE_INT:
+          {
+            int val;
+            if (!arg.GetInt(2, &val)) {
+              NODELET_ERROR("Expected command argument to be an int.");
+              return false;
+            }
+            cmd->args[i].data_type = ff_msgs::CommandArg::DATA_TYPE_INT;
+            cmd->args[i].i = val;
+          }
+          break;
+        case ff_msgs::CommandArg::DATA_TYPE_LONGLONG:
+          {
+            int64_t val;
+            if (!arg.GetLongLong(2, &val)) {
+              NODELET_ERROR("Expected command argument to be an int.");
+              return false;
+            }
+            cmd->args[i].data_type = ff_msgs::CommandArg::DATA_TYPE_LONGLONG;
+            cmd->args[i].ll = val;
+          }
+          break;
+        case ff_msgs::CommandArg::DATA_TYPE_STRING:
+          {
+            std::string val;
+            if (!arg.GetStr(2, &val)) {
+              NODELET_ERROR("Expected command argument to be a string");
+              return false;
+            }
+            cmd->args[i].data_type = ff_msgs::CommandArg::DATA_TYPE_STRING;
+            cmd->args[i].s = val;
+          }
+          break;
+        case ff_msgs::CommandArg::DATA_TYPE_VEC3d:
+          {
+            int j;
+            double val;
+            cmd->args[i].data_type = ff_msgs::CommandArg::DATA_TYPE_VEC3d;
+            for (j = 0; j < 3; ++j) {
+              // Index to get vector values in table starts at 2
+              if (!arg.GetReal((j + 2), &val)) {
+                NODELET_ERROR("Expected command argument to be double.");
+                return false;
+              }
+              cmd->args[i].vec3d[j] = val;
+            }
+          }
+          break;
+        case ff_msgs::CommandArg::DATA_TYPE_MAT33f:
+          {
+            int j;
+            float val;
+            cmd->args[i].data_type = ff_msgs::CommandArg::DATA_TYPE_MAT33f;
+            for (j = 0; j < 9; ++j) {
+              // Index in get matrix values in table starts at 2
+              if (!arg.GetReal((j + 2), &val)) {
+              NODELET_ERROR("Expected command argument to be a float.");
+                return false;
+              }
+              cmd->args[i].mat33f[j] = val;
+            }
+          }
+          break;
+        default:
+          NODELET_ERROR("Type for command argument unrecognized!");
+          return false;
+      }
+    }
+  }
+
+  return true;
 }
 
 void Executive::PublishAgentState() {

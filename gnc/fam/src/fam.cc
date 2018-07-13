@@ -42,7 +42,8 @@ Fam::Fam(ros::NodeHandle* nh) : inertia_received_(false) {
   inertia_sub_ = nh->subscribe(
     TOPIC_MOBILITY_INERTIA, 1, &Fam::InertiaCallback, this);
 
-  ctl_sub_ = nh->subscribe(TOPIC_GNC_CTL_COMMAND, 5, &Fam::CtlCallBack, this, ros::TransportHints().tcpNoDelay());
+  ctl_sub_ = nh->subscribe(TOPIC_GNC_CTL_COMMAND, 5,
+    &Fam::CtlCallBack, this, ros::TransportHints().tcpNoDelay());
 }
 
 Fam::~Fam() {}

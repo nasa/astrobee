@@ -17,10 +17,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-robot_names=(p4c p4d)
-mlp_ips=(10.42.0.25 10.42.0.32)
-llp_ips=(10.42.0.26 10.42.0.31)
-
-dock_ip=10.42.0.1
+robot_names=(p4c p4d dock)
+mlp_ips=(10.42.0.25 10.42.0.32 10.42.0.1 )
+llp_ips=(10.42.0.26 10.42.0.31 0.0.0.0   )
 
 subnet=10.42.0

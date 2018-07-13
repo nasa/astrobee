@@ -317,6 +317,7 @@ class FreeFlyerActionClient {
 
   // Called when the goal does not go active
   void ActiveTimeoutCallback(ros::TimerEvent const& event) {
+    ROS_WARN("Freeflyer action timed out on going active.");
     CancelGoal();
     Complete(FreeFlyerActionState::TIMEOUT_ON_ACTIVE, nullptr);
   }

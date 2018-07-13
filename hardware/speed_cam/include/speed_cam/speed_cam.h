@@ -45,6 +45,7 @@ typedef std::function<void(std::vector<uint8_t> const&, int32_t, int32_t)> Speed
 typedef std::function<void(mavlink_optical_flow_t const&)> SpeedCamOpticalFlowCallback;
 typedef std::function<void(mavlink_vision_speed_estimate_t const&)> SpeedCamSpeedCallback;
 typedef std::function<void(mavlink_heartbeat_t const&)> SpeedCamStatusCallback;
+typedef std::function<void(uint32_t)> SpeedCamVersionCallback;
 
 // Result for any speed camera action
 enum SpeedCamResult {
@@ -66,7 +67,7 @@ class SpeedCam {
   // Constructor
   SpeedCam(SpeedCamImuCallback cb_imu, SpeedCamCameraImageCallback cb_camera_image,
     SpeedCamOpticalFlowCallback cb_optical_flow, SpeedCamSpeedCallback cb_speed,
-    SpeedCamStatusCallback cb_status);
+    SpeedCamStatusCallback cb_status, SpeedCamVersionCallback cb_version);
 
   // Initialize the serial port
   SpeedCamResult Initialize(std::string const& port, uint32_t baud);
@@ -88,6 +89,7 @@ class SpeedCam {
   SpeedCamOpticalFlowCallback  cb_optical_flow_;  // Optical flow callback
   SpeedCamSpeedCallback cb_speed_;                // Twist callback
   SpeedCamStatusCallback cb_status_;              // System status callback
+  SpeedCamVersionCallback cb_version_;            // Firmware version and build time callback
   int32_t system_id_;                             // Source device
   int32_t comp_id_;                               // Sink device
   size_t image_size_;                             // Image size
@@ -96,6 +98,7 @@ class SpeedCam {
   int32_t image_width_;                           // Image width
   int32_t image_height_;                          // Image height
   std::vector<uint8_t> image_buffer_;             // Image buffer
+  uint32_t sw_version_;                           // Firmware version
 };
 
 }  // namespace speed_cam

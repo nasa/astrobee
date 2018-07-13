@@ -60,6 +60,8 @@ class SysMonitor : public ff_util::FreeFlyerNodelet {
 
   void AddFault(ff_msgs::Fault const& fault, bool check_added = false);
 
+  void ChangeFaultErrMsg(unsigned int fault_id, std::string err_msg);
+
   void RemoveFault(unsigned int fault_id);
 
  protected:
@@ -106,14 +108,14 @@ class SysMonitor : public ff_util::FreeFlyerNodelet {
   typedef std::shared_ptr<Watchdog> WatchdogPtr;
 
   struct Fault {
-    Fault(std::string const& node_name,
-          bool const blocking,
-          bool const warning,
-          ff_msgs::CommandStampedPtr response);
-    std::string const node_name_;
-    bool const blocking_;
-    bool const warning_;
-    ff_msgs::CommandStampedConstPtr response_;
+    Fault(std::string const& node_name_in,
+          bool const blocking_in,
+          bool const warning_in,
+          ff_msgs::CommandStampedPtr response_in);
+    std::string const node_name;
+    bool const blocking;
+    bool const warning;
+    ff_msgs::CommandStampedConstPtr response;
   };
 
   /**
@@ -146,6 +148,10 @@ class SysMonitor : public ff_util::FreeFlyerNodelet {
 
   void PublishFaultResponse(unsigned int fault_id);
 
+  void PublishHeartbeatCallback(ros::TimerEvent const& te);
+
+  void PublishHeartbeat(bool initialization_fault = false);
+
   void StartupTimerCallback(ros::TimerEvent const& te);
 
   /**
@@ -169,14 +175,15 @@ class SysMonitor : public ff_util::FreeFlyerNodelet {
 
   ff_msgs::FaultState fault_state_;
   ff_msgs::FaultConfig fault_config_;
+  ff_msgs::Heartbeat heartbeat_;
 
   nodelet::NodeletLoad load_service_;
   nodelet::NodeletUnload unload_service_;
 
   ros::NodeHandle nh_;
-  ros::Publisher pub_cmd_;
+  ros::Publisher pub_cmd_, pub_heartbeat_;
   ros::Publisher pub_fault_config_, pub_fault_state_;
-  ros::Timer reload_params_timer_, startup_timer_;
+  ros::Timer reload_params_timer_, startup_timer_, heartbeat_timer_;
   ros::ServiceServer unload_load_nodelet_service_;
   ros::Subscriber sub_hb_;
 
@@ -188,10 +195,9 @@ class SysMonitor : public ff_util::FreeFlyerNodelet {
 
   config_reader::ConfigReader config_params_;
 
-  int pub_queue_size_;
-  int sub_queue_size_;
+  int pub_queue_size_, sub_queue_size_;
   int num_current_blocking_fault_;
-  unsigned int startup_time_;
+  unsigned int startup_time_, heartbeat_pub_rate_;
 };
 }  // namespace sys_monitor
 

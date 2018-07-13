@@ -1,5 +1,3 @@
-' java -jar plantuml/plantuml.jar -tsvg architecture.puml 
-
 @startuml
 
 skinparam componentStyle uml2
@@ -25,11 +23,18 @@ skinparam component {
 }
 
 ' Nodes and Interfaces
-frame mgt {
+frame management {
   component EXECUTIVE
+  note top of management
+  Other management components not shown:
+  sys_monitor, access_control, etc.
+  end note
+''  component SYS_MONITOR
+''  component ACCESS_CONTROL
+''  component DDS_ROS_BRIDGE
 }
-  
-frame proc {
+
+frame behaviors {
   component DOCK
   component PERCH
   component ARM
@@ -45,32 +50,35 @@ frame proc {
 ' component X --> [X]
 ' interface I --> () I
 
-frame mob {
+frame mobility {
   [CHOREOGRAPHER]
   () "/mob/motion\nff_msgs::MotionAction" <<action>> as MotionAction
   () "/mob/motion/state\nff_msgs::MotionState" <<latching_msg>> as MotionState
 }
 
-frame loc {
+frame localization {
   [LOCALIZATION_MANAGER]
   () "/loc/switch\nff_msgs::SwitchAction" <<action>> as SwitchAction
+  note top of localization
+  Vision nodes not shown
+  end note
 }
 
 frame gnc {
   [CTL]
   [FAM]
   [EKF]
-  () "/gnc/control\nff_msgs::ControlAction" <<action>> as ControlAction 
-  () "/gnc/ekf/set_input\nff_msgs::SetEkfInput" <<service>> as EkfSetInput 
-  () "/gnc/ekf\nff_msgs::EkfState" <<msg>> as EkfState 
-  () "/gnc/pose\ngeometry_msgs::PoseStamped" <<msg>> as PoseStamped 
-  () "/gnc/twist\ngeometry_msgs::TwistStamped" <<msg>> as TwistStamped 
-  () "/gnc/wrench\ngeometry_msgs::WrenchStamped" <<msg>> as WrenchStamped 
-  () "/gnc/inertia\ngeometry_msgs::InertiaStamped" <<latching_msg>> as InertiaStamped 
-  () "/gnc/speed\nff_msgs::SpeedGain" <<latching_msg>> as SpeedGain 
+  () "/gnc/control\nff_msgs::ControlAction" <<action>> as ControlAction
+  () "/gnc/ekf/set_input\nff_msgs::SetEkfInput" <<service>> as EkfSetInput
+  () "/gnc/ekf\nff_msgs::EkfState" <<msg>> as EkfState
+  () "/gnc/pose\ngeometry_msgs::PoseStamped" <<msg>> as PoseStamped
+  () "/gnc/twist\ngeometry_msgs::TwistStamped" <<msg>> as TwistStamped
+  () "/gnc/wrench\ngeometry_msgs::WrenchStamped" <<msg>> as WrenchStamped
+  () "/gnc/inertia\ngeometry_msgs::InertiaStamped" <<latching_msg>> as InertiaStamped
+  () "/gnc/speed\nff_msgs::SpeedGain" <<latching_msg>> as SpeedGain
 }
 
-frame drv {
+frame drivers {
   [PERCHING_ARM]
   [PMC_ACTUATOR]
   () "/hw/pmc/telemetry\nff_hw_msgs::PmcTelemetry" <<msg>> as PmcTelemetry

@@ -1,14 +1,14 @@
 /* Copyright (c) 2017, United States Government, as represented by the
  * Administrator of the National Aeronautics and Space Administration.
- * 
+ *
  * All rights reserved.
- * 
+ *
  * The Astrobee platform is licensed under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -33,13 +33,13 @@
 
 // Generic messages
 #include <nav_msgs/Path.h>
-#include <geometry_msgs/PointStamped.h>
 #include <geometry_msgs/Inertia.h>
 
 // Hardware messages
 #include <ff_hw_msgs/PmcState.h>
 
 // Messages
+#include <ff_msgs/Hazard.h>
 #include <ff_msgs/MotionState.h>
 #include <ff_msgs/FlightMode.h>
 #include <ff_msgs/ControlCommand.h>
@@ -82,26 +82,26 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
  public:
   // Bitmask of all events
   enum : FSM::Event {
-    READY             = (1<<0),               // System is initialized
-    GOAL_EXEC         = (1<<1),               // New execute command
-    GOAL_MOVE         = (1<<2),               // New move command
-    GOAL_STOP         = (1<<3),               // New stop command
-    GOAL_IDLE         = (1<<4),               // New idle command
-    GOAL_PREP         = (1<<5),               // New prep command
-    GOAL_CANCEL       = (1<<6),               // Cancel existing goal
-    VALIDATE_SUCCESS  = (1<<7),               // Segment validation success
-    VALIDATE_FAILED   = (1<<8),               // Segment validation failed
-    PLAN_SUCCESS      = (1<<9),               // Segment plan success
-    PLAN_FAILED       = (1<<10),              // Segment plan failed
-    PMC_READY         = (1<<11),              // PMC is ramped and ready
-    PMC_TIMEOUT       = (1<<12),              // PMC has timed out
-    CONTROL_SUCCESS   = (1<<13),              // Control success
-    CONTROL_FAILED    = (1<<14),              // Control failure
-    TOLERANCE_POS     = (1<<15),              // Tolerance failure
-    TOLERANCE_ATT     = (1<<16),              // Tolerance failure
-    TOLERANCE_VEL     = (1<<17),              // Tolerance failure
-    TOLERANCE_OMEGA   = (1<<18),              // Tolerance failure
-    OBSTACLE_DETECTED = (1<<19)               // Obstacle detected
+    READY                          = (1<<0),      // System is initialized
+    GOAL_EXEC                      = (1<<1),      // New execute command
+    GOAL_MOVE                      = (1<<2),      // New move command
+    GOAL_STOP                      = (1<<3),      // New stop command
+    GOAL_IDLE                      = (1<<4),      // New idle command
+    GOAL_PREP                      = (1<<5),      // New prep command
+    GOAL_CANCEL                    = (1<<6),      // Cancel existing goal
+    VALIDATE_SUCCESS               = (1<<7),      // Segment validation success
+    VALIDATE_FAILED                = (1<<8),      // Timeout or other failure
+    PLAN_SUCCESS                   = (1<<9),      // Segment plan success
+    PLAN_FAILED                    = (1<<10),     // Segment plan failed
+    PMC_READY                      = (1<<11),     // PMC is ramped and ready
+    PMC_TIMEOUT                    = (1<<12),     // PMC has timed out
+    CONTROL_SUCCESS                = (1<<13),     // Control success
+    CONTROL_FAILED                 = (1<<14),     // Control failure
+    TOLERANCE_POS                  = (1<<16),     // Position olerance failure
+    TOLERANCE_ATT                  = (1<<17),     // Attitude tolerance failure
+    TOLERANCE_VEL                  = (1<<18),     // Velocity tolerance failure
+    TOLERANCE_OMEGA                = (1<<19),     // Omega tolerance failure
+    OBSTACLE_DETECTED              = (1<<20)      // Hazard: obstacle
   };
 
   // The various types of control
@@ -116,7 +116,8 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
       READY,
       [this](FSM::Event const& event) -> FSM::State {
         if (!Control(IDLE))
-          AssertFault("INITIALIZATION_FAULT", "Cannot call Idle() action");
+          AssertFault(ff_util::INITIALIZATION_FAILED,
+                      "Cannot call Idle() action");
         return STATE::IDLE;
       });
     // [2]
@@ -248,12 +249,13 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
         return STATE::CONTROLLING;
       });
     // [9]
-    fsm_.Add(STATE::VALIDATING,
-      VALIDATE_FAILED | GOAL_CANCEL,
+    fsm_.Add(STATE::VALIDATING, VALIDATE_FAILED | GOAL_CANCEL,
       [this](FSM::Event const& event) -> FSM::State {
-        if (event == GOAL_CANCEL)
-          return Result(RESPONSE::CANCELLED);
-        return Result(RESPONSE::VALIDATE_FAILED);
+        switch (event) {
+        case VALIDATE_FAILED:
+          return Result(RESPONSE::VALIDATE_FAILED);
+        }
+        return Result(RESPONSE::CANCELLED);
       });
     // [10]
     fsm_.Add(STATE::REPLANNING,
@@ -280,8 +282,7 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
         return STATE::CONTROLLING;
       });
     // [12]
-    fsm_.Add(STATE::REVALIDATING,
-      VALIDATE_FAILED | GOAL_CANCEL,
+    fsm_.Add(STATE::REVALIDATING, VALIDATE_FAILED | GOAL_CANCEL,
       [this](FSM::Event const& event) -> FSM::State {
         Control(STOP);
         if (event == GOAL_CANCEL)
@@ -331,8 +332,7 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
         return Result(RESPONSE::CONTROL_FAILED);
       });
     // [16]
-    fsm_.Add(STATE::CONTROLLING,
-      OBSTACLE_DETECTED,
+    fsm_.Add(STATE::CONTROLLING, OBSTACLE_DETECTED,
       [this](FSM::Event const& event) -> FSM::State {
         // If we need to validate the segment
         if (cfg_.Get<bool>("enable_replanning")) {
@@ -366,7 +366,7 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
         // Always stop for safety
         if (!Control(STOP))
           return Result(RESPONSE::CONTROL_FAILED);
-        // If replanning is disabled then this is just an obstacle detection
+        // There's a hazard
         return Result(RESPONSE::OBSTACLE_DETECTED);
       });
     // [17]
@@ -465,8 +465,28 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
   void Initialize(ros::NodeHandle *nh) {
     // Configuration parameters
     cfg_.Initialize(GetPrivateHandle(), "mobility/choreographer.config");
-    cfg_.Listen(boost::bind(
-      &ChoreographerNodelet::ReconfigureCallback, this, _1));
+
+    if (!cfg_.Listen(boost::bind(
+        &ChoreographerNodelet::ReconfigureCallback, this, _1))) {
+      AssertFault(ff_util::INITIALIZATION_FAILED,
+                  "Could not start config server");
+      return;
+    }
+
+    // Get the default flight mode, it will be published later
+    if (!ff_util::FlightUtil::GetInitialFlightMode(flight_mode_)) {
+      AssertFault(ff_util::INITIALIZATION_FAILED,
+                  "Problem with initial flight mode");
+      return;
+    }
+
+    // Get the default inertia parameters, it will be published later
+    geometry_msgs::Inertia msg;
+    if (!ff_util::FlightUtil::GetInertiaConfig(msg)) {
+      AssertFault(ff_util::INITIALIZATION_FAILED,
+                  "Problem with default inertia");
+      return;
+    }
 
     // Create a transform buffer ot listen for transforms
     tf_listener_ = std::shared_ptr<tf2_ros::TransformListener>(
@@ -502,8 +522,8 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
       TOPIC_MOBILITY_INERTIA, 1, true);
 
     // Subscribe to collisions from the sentinel node
-    sub_collisions_ = nh->subscribe(TOPIC_MOBILITY_COLLISIONS, 5,
-      &ChoreographerNodelet::CollisionCallback, this);
+    sub_hazard_ = nh->subscribe(TOPIC_MOBILITY_HAZARD, 5,
+      &ChoreographerNodelet::HazardCallback, this);
 
     // Subscribe to the latched PMC state to be notified of propulsion events
     sub_pmc_state_= nh->subscribe(TOPIC_HARDWARE_PMC_STATE, 5,
@@ -567,15 +587,9 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
     server_.Create(nh, ACTION_MOBILITY_MOTION);
 
     // Publish the default flight mode so the system boots predictably
-    if (!ff_util::FlightUtil::GetInitialFlightMode(flight_mode_))
-      AssertFault("INITIALIZATION_FAULT", "Problem with initial flight mode");
     pub_flight_mode_.publish(flight_mode_);
 
-    // Publish the default inertia parameters -- this will eventually be
-    // moved to executive.
-    geometry_msgs::Inertia msg;
-    if (!ff_util::FlightUtil::GetInertiaConfig(msg))
-      AssertFault("INITIALIZATION_FAULT", "Problem with default inertia");
+    // Publish the default inertia parameters
     pub_inertia_.publish(msg);
   }
 
@@ -655,34 +669,115 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
 
   // Complete the current dock or undock action
   int32_t Result(int32_t response) {
-    // Based on the design of this class only one child action is running
-    // at any point in time (planner, validation, control). If the action
-    // gets cancelled (through preemption or cancellation) we might need
-    // to clean up, based on the state of the system
-    if (response <= 0) {
+    ff_msgs::MotionResult result;
+    // Teardown any child services correctly
+    switch (response) {
+    // Do nothing for these states
+    default:
+    case RESPONSE::ALREADY_THERE:
+      result.fsm_result = "Already on the requested setpoint";          break;
+    case RESPONSE::SUCCESS:
+      result.fsm_result = "Motion completed successfully";              break;
+    case RESPONSE::PLAN_FAILED:
+      result.fsm_result = "Unable to plan a segment";                   break;
+    case RESPONSE::VALIDATE_FAILED:
+      result.fsm_result = "Validation failed. Check limits and zones."; break;
+    case RESPONSE::CONTROL_FAILED:
+      result.fsm_result = "The control action failed";                  break;
+    case RESPONSE::NOT_IN_WAITING_MODE:
+      result.fsm_result = "Choreographer not in WAITING mode";          break;
+    case RESPONSE::INVALID_FLIGHT_MODE:
+      result.fsm_result = "Unknown flight mode";                        break;
+    case RESPONSE::UNEXPECTED_EMPTY_SEGMENT:
+      result.fsm_result = "Unexpected empty segment";                   break;
+    case RESPONSE::COULD_NOT_RESAMPLE:
+      result.fsm_result = "Could not resample segment";                 break;
+    case RESPONSE::UNEXPECTED_EMPTY_STATES:
+      result.fsm_result = "Unexpected empty set of setpoints";          break;
+    case RESPONSE::INVALID_COMMAND:
+      result.fsm_result = "Unknown command";                            break;
+    case RESPONSE::CANNOT_QUERY_ROBOT_POSE:
+      result.fsm_result = "Cannot query the robot pose";                break;
+    case RESPONSE::NOT_ON_FIRST_POSE:
+      result.fsm_result = "Not on first setpoint. No bootstrapping";    break;
+    case RESPONSE::BAD_DESIRED_VELOCITY:
+      result.fsm_result = "Velocity exceeds hard limit";                break;
+    case RESPONSE::BAD_DESIRED_ACCELERATION:
+      result.fsm_result = "Acceleration exceeds hard limit";            break;
+    case RESPONSE::BAD_DESIRED_OMEGA:
+      result.fsm_result = "Angular velocity exceeds hard limit";        break;
+    case RESPONSE::BAD_DESIRED_ALPHA:
+      result.fsm_result = "Angular acceleration exceeds hard limit";    break;
+    case RESPONSE::BAD_DESIRED_RATE:
+      result.fsm_result = "Sample rate below hard minimum";             break;
+    // Called in parallel to an active controller
+    case RESPONSE::REVALIDATE_FAILED:
+      result.fsm_result = "Replanned segment is not valid";
+      client_c_.CancelGoal();
+      break;
+    case RESPONSE::OBSTACLE_DETECTED:
+      result.fsm_result = "Segment collides with a mapped obstacle";
+      client_c_.CancelGoal();
+      break;
+    case RESPONSE::REPLAN_NOT_ENOUGH_TIME:
+      result.fsm_result = "Not enough time available to replan";
+      client_c_.CancelGoal();
+      break;
+    case RESPONSE::REPLAN_FAILED:
+      result.fsm_result = "Replanning failed";
+      client_c_.CancelGoal();
+      break;
+    case RESPONSE::TOLERANCE_VIOLATION_POSITION:
+      result.fsm_result = "Position tolerance violated";
+      client_c_.CancelGoal();
+      break;
+    case RESPONSE::TOLERANCE_VIOLATION_ATTITUDE:
+      result.fsm_result = "Attitude tolerance violated";
+      client_c_.CancelGoal();
+      break;
+    case RESPONSE::TOLERANCE_VIOLATION_VELOCITY:
+      result.fsm_result = "Velocity tolerance violated";
+      client_c_.CancelGoal();
+      break;
+    case RESPONSE::TOLERANCE_VIOLATION_OMEGA:
+      result.fsm_result = "Angular velocity tolerance violated";
+      client_c_.CancelGoal();
+      break;
+    // Preemptions or cancellations
+    case RESPONSE::CANCELLED:
+    case RESPONSE::PREEMPTED:
+      result.fsm_result = "Operation interrupted either by callee or third party";
       switch (fsm_.GetState()) {
+      // Planning
+      case STATE::REPLANNING:
+        client_c_.CancelGoal();
       case STATE::BOOTSTRAPPING:
       case STATE::PLANNING:
-      case STATE::REPLANNING: {
-        std::string planner = cfg_.Get<std::string>("planner");
-        if (planners_.find(planner) != planners_.end())
-          planners_[planner].CancelGoal();
+        {
+          std::string planner = cfg_.Get<std::string>("planner");
+          if (planners_.find(planner) != planners_.end())
+            planners_[planner].CancelGoal();
+        }
         break;
-      }
-      case STATE::VALIDATING:
+      // Validation
       case STATE::REVALIDATING:
+        client_c_.CancelGoal();
+      case STATE::VALIDATING:
         client_v_.CancelGoal();
         break;
-      case STATE::IDLING:
-      case STATE::STOPPING:
+      // Controlling
       case STATE::CONTROLLING:
         client_c_.CancelGoal();
         break;
+      // Do nothing
+      case STATE::IDLING:
+      case STATE::STOPPING:
+        break;
       }
+      break;
     }
     // If we get here then we are in a valid action state, so we will need
     // to produce a meanngful result for the callee.
-    static ff_msgs::MotionResult result;
     result.response = response;
     result.segment = segment_;
     result.flight_mode = flight_mode_;
@@ -724,53 +819,53 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
   // feedback to any active client, print debug info and publish our state
   void UpdateCallback(FSM::State const& state, FSM::Event const& event) {
     // Debug events
-    std::string str = "UNKNOWN";
-    switch (event) {
-    case READY:                   str = "READY";              break;
-    case GOAL_EXEC:               str = "GOAL_EXEC";          break;
-    case GOAL_MOVE:               str = "GOAL_MOVE";          break;
-    case GOAL_STOP:               str = "GOAL_STOP";          break;
-    case GOAL_IDLE:               str = "GOAL_IDLE";          break;
-    case GOAL_PREP:               str = "GOAL_PREP";          break;
-    case GOAL_CANCEL:             str = "GOAL_CANCEL";        break;
-    case VALIDATE_SUCCESS:        str = "VALIDATE_SUCCESS";   break;
-    case VALIDATE_FAILED:         str = "VALIDATE_FAILED";    break;
-    case PMC_READY:               str = "PMC_READY";          break;
-    case PMC_TIMEOUT:             str = "PMC_TIMEOUT";        break;
-    case PLAN_SUCCESS:            str = "PLAN_SUCCESS";       break;
-    case PLAN_FAILED:             str = "PLAN_FAILED";        break;
-    case CONTROL_SUCCESS:         str = "CONTROL_SUCCESS";    break;
-    case CONTROL_FAILED:          str = "CONTROL_FAILED";     break;
-    case TOLERANCE_POS:           str = "TOLERANCE_POS";      break;
-    case TOLERANCE_ATT:           str = "TOLERANCE_ATT";      break;
-    case TOLERANCE_VEL:           str = "TOLERANCE_VEL";      break;
-    case TOLERANCE_OMEGA:         str = "TOLERANCE_OMEGA";    break;
-    case OBSTACLE_DETECTED:       str = "OBSTACLE_DETECTED";  break;
-    }
-    NODELET_DEBUG_STREAM("Received event " << str);
-    // Debug state changes
-    switch (state) {
-    case STATE::INITIALIZING:     str = "INITIALIZING";       break;
-    case STATE::IDLE:             str = "IDLE";               break;
-    case STATE::STOPPED:          str = "STOPPED";            break;
-    case STATE::IDLING:           str = "IDLING";             break;
-    case STATE::STOPPING:         str = "STOPPING";           break;
-    case STATE::PREPPING:         str = "PREPPING";           break;
-    case STATE::BOOTSTRAPPING:    str = "BOOTSTRAPPING";      break;
-    case STATE::PLANNING:         str = "PLANNING";           break;
-    case STATE::VALIDATING:       str = "VALIDATING";         break;
-    case STATE::PREPARING:        str = "PREPARING";          break;
-    case STATE::CONTROLLING:      str = "CONTROLLING";        break;
-    case STATE::REPLANNING:       str = "REPLANNING";         break;
-    case STATE::REVALIDATING:     str = "REVALIDATING";       break;
-    }
-    NODELET_DEBUG_STREAM("State changed to " << str);
-    // Broadcast the state
-    static ff_msgs::MotionState msg;
+    ff_msgs::MotionState msg;
     msg.header.frame_id = GetPlatform();
     msg.header.stamp = ros::Time::now();
     msg.state = state;
+    switch (event) {
+    case READY:                   msg.fsm_event = "READY";              break;
+    case GOAL_EXEC:               msg.fsm_event = "GOAL_EXEC";          break;
+    case GOAL_MOVE:               msg.fsm_event = "GOAL_MOVE";          break;
+    case GOAL_STOP:               msg.fsm_event = "GOAL_STOP";          break;
+    case GOAL_IDLE:               msg.fsm_event = "GOAL_IDLE";          break;
+    case GOAL_PREP:               msg.fsm_event = "GOAL_PREP";          break;
+    case GOAL_CANCEL:             msg.fsm_event = "GOAL_CANCEL";        break;
+    case VALIDATE_SUCCESS:        msg.fsm_event = "VALIDATE_SUCCESS";   break;
+    case VALIDATE_FAILED:         msg.fsm_event = "VALIDATE_FAILED";    break;
+    case PMC_READY:               msg.fsm_event = "PMC_READY";          break;
+    case PMC_TIMEOUT:             msg.fsm_event = "PMC_TIMEOUT";        break;
+    case PLAN_SUCCESS:            msg.fsm_event = "PLAN_SUCCESS";       break;
+    case PLAN_FAILED:             msg.fsm_event = "PLAN_FAILED";        break;
+    case CONTROL_SUCCESS:         msg.fsm_event = "CONTROL_SUCCESS";    break;
+    case CONTROL_FAILED:          msg.fsm_event = "CONTROL_FAILED";     break;
+    case TOLERANCE_POS:           msg.fsm_event = "TOLERANCE_POS";      break;
+    case TOLERANCE_ATT:           msg.fsm_event = "TOLERANCE_ATT";      break;
+    case TOLERANCE_VEL:           msg.fsm_event = "TOLERANCE_VEL";      break;
+    case TOLERANCE_OMEGA:         msg.fsm_event = "TOLERANCE_OMEGA";    break;
+    case OBSTACLE_DETECTED:       msg.fsm_event = "OBSTACLE_DETECTED";  break;
+    }
+    // Debug state changes
+    switch (state) {
+    case STATE::INITIALIZING:     msg.fsm_state = "INITIALIZING";       break;
+    case STATE::IDLE:             msg.fsm_state = "IDLE";               break;
+    case STATE::STOPPED:          msg.fsm_state = "STOPPED";            break;
+    case STATE::IDLING:           msg.fsm_state = "IDLING";             break;
+    case STATE::STOPPING:         msg.fsm_state = "STOPPING";           break;
+    case STATE::PREPPING:         msg.fsm_state = "PREPPING";           break;
+    case STATE::BOOTSTRAPPING:    msg.fsm_state = "BOOTSTRAPPING";      break;
+    case STATE::PLANNING:         msg.fsm_state = "PLANNING";           break;
+    case STATE::VALIDATING:       msg.fsm_state = "VALIDATING";         break;
+    case STATE::PREPARING:        msg.fsm_state = "PREPARING";          break;
+    case STATE::CONTROLLING:      msg.fsm_state = "CONTROLLING";        break;
+    case STATE::REPLANNING:       msg.fsm_state = "REPLANNING";         break;
+    case STATE::REVALIDATING:     msg.fsm_state = "REVALIDATING";       break;
+    }
+    // Publish the state
     pub_state_.publish(msg);
+    // Debug information for the nodelet
+    NODELET_DEBUG_STREAM("Received event " << msg.fsm_event);
+    NODELET_DEBUG_STREAM("State changed to " << msg.fsm_state);
     // Send the feedback if needed
     switch (state) {
     case STATE::IDLING:
@@ -794,8 +889,9 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
   // COLLISION
 
   // Called when the sentinel forecasts an upcoming collision
-  void CollisionCallback(geometry_msgs::PointStamped::ConstPtr const& point) {
-    obstacle_ = *point;
+  void HazardCallback(ff_msgs::Hazard::ConstPtr const& msg) {
+    if (!cfg_.Get<bool>("enable_collision_checking"))
+      return;
     return fsm_.Update(OBSTACLE_DETECTED);
   }
 
@@ -845,9 +941,9 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
   bool Plan(std::vector<geometry_msgs::PoseStamped> const& states,
     ros::Duration duration = ros::Duration(0)) {
     // Divide by a constant in holonomic mode to avoid saturation
-    double divider = 1;
-    if (!cfg_.Get<bool>("enable_faceforward") && goal_flight_mode_.hard_divider > 0)
-      divider = goal_flight_mode_.hard_divider;
+    double divider = 1.0;
+    if (!cfg_.Get<bool>("enable_faceforward"))
+      divider = 2.0;
     // Package up a skeleton plan request
     static ff_msgs::PlanGoal plan_goal;
     plan_goal.states = states;
@@ -936,7 +1032,7 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
       // the segment to be empty / invalid. So, only in the case where we
       // actually have a boostrapped move to prepend to the segment, do so.
       case STATE::BOOTSTRAPPING:
-        if (result->response == ff_msgs::PlanResult::SUCCESS) {
+        if (result->response == RESPONSE::SUCCESS) {
           ros::Duration tdiff = result->segment.back().when
                               - segment_.front().when;
           for (ff_util::Segment::iterator it = segment_.begin();
@@ -1229,7 +1325,7 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
   PlannerInfo info_;
   // Publishers and subscribers
   ros::Publisher pub_state_, pub_segment_, pub_flight_mode_, pub_inertia_;
-  ros::Subscriber sub_collisions_, sub_pmc_state_;
+  ros::Subscriber sub_hazard_, sub_pmc_state_;
   ros::ServiceServer server_register_, server_set_state_, server_set_inertia_;
   // Cached between callbacks
   ff_msgs::FlightMode flight_mode_, goal_flight_mode_;  // Flight mode

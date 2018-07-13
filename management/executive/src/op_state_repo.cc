@@ -27,7 +27,6 @@ void OpStateRepo::SetExec(Executive *const exec) {
   plan_exec_->SetExec(exec);
   teleop_->SetExec(exec);
   auto_return_->SetExec(exec);
-  guest_science_->SetExec(exec);
   fault_->SetExec(exec);
 }
 
@@ -39,7 +38,6 @@ OpStateRepo::OpStateRepo() {
         ff_msgs::OpState::TELEOPERATION));
   auto_return_.reset(new OpStateAutoReturn("auto return",
         ff_msgs::OpState::AUTO_RETURN));
-  guest_science_.reset(new OpStateGuestSci("guest science", 100));
   fault_.reset(new OpStateFault("fault", ff_msgs::OpState::FAULT));
 }
 }  // namespace executive

@@ -1,3 +1,6 @@
+\defgroup vive HTC Vive Localization
+\ingroup tools
+
 ## Overview
 
 The Vive tracking system was developed using ROS to allow real-time tracking of HTC's trackers/controllers with base stations (lighthouses). Vive uses infrared (IR) LEDs and lasers to estimate full 6D poses with mm accuracy. This system was designed for Astrobee.

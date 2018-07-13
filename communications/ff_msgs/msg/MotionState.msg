@@ -35,3 +35,7 @@ int8 PREPARING           = 9
 int8 CONTROLLING         = 10
 int8 REPLANNING          = 11
 int8 REVALIDATING        = 12
+
+# A human readble version of the (event) -> [state] transition
+string fsm_event
+string fsm_state

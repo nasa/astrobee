@@ -89,19 +89,19 @@ class LocalizationManagerNodelet : public ff_util::FreeFlyerNodelet {
     PipelineCallbackType cb = std::bind(&LocalizationManagerNodelet::PipelineCallback, this,
       std::placeholders::_1, std::placeholders::_2);
 
-    // Set up the individual localization pipelines
+    // Set up the individual pipelines
     if (!AddPipeline(nh, GetPrivateHandle(), cb, ff_msgs::SetEkfInput::Request::MODE_NONE))
-      NODELET_ERROR("Could not create the none localization pipeline");
+      InitFault("Could not create the none localization pipeline");
     if (!AddPipeline(nh, GetPrivateHandle(), cb, ff_msgs::SetEkfInput::Request::MODE_MAP_LANDMARKS))
-      NODELET_ERROR("Could not create the map_landmarks localization pipeline");
+      InitFault("Could not create the map_landmarks localization pipeline");
     if (!AddPipeline(nh, GetPrivateHandle(), cb, ff_msgs::SetEkfInput::Request::MODE_AR_TAGS))
-      NODELET_ERROR("Could not create the ar_tags localization pipeline");
+      InitFault("Could not create the ar_tags localization pipeline");
     if (!AddPipeline(nh, GetPrivateHandle(), cb, ff_msgs::SetEkfInput::Request::MODE_HANDRAIL))
-      NODELET_ERROR("Could not create the handrail localization pipeline");
+      InitFault("Could not create the handrail localization pipeline");
     if (!AddPipeline(nh, GetPrivateHandle(), cb, ff_msgs::SetEkfInput::Request::MODE_PERCH))
-      NODELET_ERROR("Could not create the perch localization pipeline");
+      InitFault("Could not create the perch localization pipeline");
     if (!AddPipeline(nh, GetPrivateHandle(), cb, ff_msgs::SetEkfInput::Request::MODE_TRUTH))
-      NODELET_ERROR("Could not create the ground truth localization pipeline");
+      InitFault("Could not create the ground truth localization pipeline");
 
     // Read the node parameters
     cfg_.Initialize(GetPrivateHandle(), "localization/localization_manager.config");
@@ -112,13 +112,13 @@ class LocalizationManagerNodelet : public ff_util::FreeFlyerNodelet {
     // Set EKF input service
     service_i_.SetConnectedTimeout(cfg_.Get<double>("timeout_service_set_input"));
     service_i_.SetConnectedCallback(std::bind(&LocalizationManagerNodelet::ConnectedCallback, this));
-    service_i_.SetTimeoutCallback(std::bind(&LocalizationManagerNodelet::TimeoutCallback, this));
+    service_i_.SetTimeoutCallback(std::bind(&LocalizationManagerNodelet::InputTimeoutCallback, this));
     service_i_.Create(nh, SERVICE_GNC_EKF_SET_INPUT);
 
     // Enable optical flow service
     service_o_.SetConnectedTimeout(cfg_.Get<double>("timeout_service_enable_of"));
     service_o_.SetConnectedCallback(std::bind(&LocalizationManagerNodelet::ConnectedCallback, this));
-    service_o_.SetTimeoutCallback(std::bind(&LocalizationManagerNodelet::TimeoutCallback, this));
+    service_o_.SetTimeoutCallback(std::bind(&LocalizationManagerNodelet::OpticalTimeoutCallback, this));
     service_o_.Create(nh, SERVICE_LOCALIZATION_OF_ENABLE);
 
     // Timers to check for EKF stability / instability
@@ -129,6 +129,13 @@ class LocalizationManagerNodelet : public ff_util::FreeFlyerNodelet {
 
     // Backup the NodeHandle for use in the ConnectedCallback
     nh_ = nh;
+  }
+
+  // Deal with a fault in a responsible manner
+  void InitFault(std::string const& msg ) {
+    NODELET_ERROR_STREAM(msg);
+    AssertFault(ff_util::INITIALIZATION_FAILED, msg);
+    return;
   }
 
   // Ensure all clients are connected
@@ -198,8 +205,13 @@ class LocalizationManagerNodelet : public ff_util::FreeFlyerNodelet {
   }
 
   // Timeout on a trajectory generation request
-  void TimeoutCallback(void) {
-    NODELET_ERROR("ServiceTimeoutCallback()");
+  void InputTimeoutCallback(void) {
+    InitFault("Cannot connect to EKF set_input service");
+  }
+
+  // Timeout on a trajectory generation request
+  void OpticalTimeoutCallback(void) {
+    InitFault("Cannot connect to EKF enable optical flow service");
   }
 
   ////////////////////////////////////////////////////////////////////////////////////////
@@ -370,11 +382,15 @@ class LocalizationManagerNodelet : public ff_util::FreeFlyerNodelet {
     ///////////////////////////////////////////////////////////////////
 
     case EVENT_CURRENT_STABLE: {
+      // We are required to report stability changes to the fallback pipeline
+      // as faults to executive, as there is no clear intervention.
+      if (curr_ == fall_)
+        ClearFault(ff_util::LOCALIZATION_PIPELINE_UNSTABLE);
       switch (state_) {
       case STATE_WAITING_FOR_SWITCH:
       case STATE_WAITING_FOR_STABLE:
       case STATE_WAITING_FOR_CONFIDENCE:
-        NODELET_DEBUG_STREAM("Pipline is stable");
+        NODELET_DEBUG_STREAM("Pipeline is stable");
         return;
       // We should never get here
       default:
@@ -388,6 +404,11 @@ class LocalizationManagerNodelet : public ff_util::FreeFlyerNodelet {
     /////////////////////////////////////////////////////////////////////
 
     case EVENT_CURRENT_UNSTABLE: {
+      // We are required to report stability changes to the fallback pipeline
+      // as faults to executive, as there is no clear intervention.
+      if (curr_ == fall_)
+        AssertFault(ff_util::LOCALIZATION_PIPELINE_UNSTABLE,
+                    "Fallback pipeline unstable");
       switch (state_) {
       case STATE_WAITING_FOR_SWITCH:
       case STATE_WAITING_FOR_STABLE:
@@ -460,6 +481,10 @@ class LocalizationManagerNodelet : public ff_util::FreeFlyerNodelet {
     //////////////////////////////////////////////////////
 
     case EVENT_EKF_STABLE: {
+      // In all cases where the EKF goes unsable we are required to report
+      // a fault, so that executive can respond accordingly...
+      if (curr_ == fall_)
+        ClearFault(ff_util::ESTIMATE_CONFIDENCE_TOO_LOW);
       switch (state_) {
       // Nominal case: we expect stability pre and during switch
       case STATE_WAITING_FOR_SWITCH:
@@ -485,6 +510,12 @@ class LocalizationManagerNodelet : public ff_util::FreeFlyerNodelet {
     ////////////////////////////////////////////////////////
 
     case EVENT_EKF_UNSTABLE: {
+      // In all cases where the EKF goes unsable we are required to report
+      // a fault, so that executive can respond accordingly...
+      if (curr_ == fall_)
+        AssertFault(ff_util::ESTIMATE_CONFIDENCE_TOO_LOW,
+                    "EKF unstable for too long");
+      // Now, take some remedial action...
       switch (state_) {
       // If in idle mode and EKF goes unstable, try to automatically revert to fallback pipeline
       case STATE_WAITING_FOR_SWITCH:
@@ -494,7 +525,7 @@ class LocalizationManagerNodelet : public ff_util::FreeFlyerNodelet {
         return;
       // If current pipeline goes unstable prior ro switching, force the switch to keep stability.
       case STATE_WAITING_FOR_STABLE:
-        NODELET_WARN_STREAM("Premature switch to goal pipeline to avoid unstable current pipleine");
+        NODELET_WARN_STREAM("Premature switch to goal pipeline to avoid unstable current pipeline");
         if (!SetEKFInput())
           return Complete(ff_msgs::SwitchResult::COULD_NOT_SWITCH_EKF);
         // Nominal behaviour

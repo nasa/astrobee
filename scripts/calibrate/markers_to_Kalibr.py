@@ -23,10 +23,11 @@ def main():
 	args = parser.parse_args()
 
 	#Setup Files
-	target_file = SCRIPT_DIR + '/data/granite_april_tag.yaml'
+	target_file = SCRIPT_DIR + '/config/granite_april_tag.yaml'
 
-	ret = subprocess.call(('./markers2Kalibr %s %s' % (args.config, target_file)).split(),
-	cwd=path +'/bin', stdout=None, stderr=None)
+	cmd = ( (path + '/bin/markers_to_Kalibr %s %s') % (args.config, target_file))
+	print(cmd)
+	ret = subprocess.call(cmd.split())
 
 if __name__ == '__main__':
   main()

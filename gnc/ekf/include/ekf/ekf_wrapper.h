@@ -43,6 +43,7 @@
 #include <ff_msgs/FlightMode.h>
 #include <ff_util/perf_timer.h>
 #include <std_srvs/Empty.h>
+#include <std_msgs/Empty.h>
 
 #include <atomic>
 #include <condition_variable> // NOLINT
@@ -51,6 +52,7 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <functional>
 
 namespace ekf {
 
@@ -128,6 +130,11 @@ class EkfWrapper {
   void PublishFeatures(ff_msgs::VisualLandmarks::ConstPtr const& l);
   void PublishFeatures(ff_msgs::DepthLandmarks::ConstPtr const& l);
 
+  /**
+   * Callback when the EKF resets
+   **/
+  void ResetCallback();
+
   /** Variables **/
   // the actual EKF
   Ekf ekf_;
@@ -163,6 +170,7 @@ class EkfWrapper {
   ros::Publisher state_pub_;
   ros::Publisher feature_pub_;
   ros::Publisher pose_pub_, twist_pub_;
+  ros::Publisher reset_pub_;
   tf2_ros::TransformBroadcaster transform_pub_;
   ros::ServiceServer reset_srv_, bias_srv_, input_mode_srv_;
 

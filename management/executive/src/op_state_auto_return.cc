@@ -38,12 +38,11 @@ OpState* OpStateAutoReturn::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
     exec_->SetFlashlightBrightness(cmd, err_msg, status);
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_STOP_ARM) {
     // TODO(Katie) Stub, add actual code later
-    exec_->StopArm(cmd->cmd_id, cmd->cmd_origin);
+    exec_->StopArm(cmd->cmd_id);
   } else {
     err_msg = "Command " + cmd->cmd_name + " not accepted in op state" +
                                                                 " auto return.";
     exec_->PublishCmdAck(cmd->cmd_id,
-                         cmd->cmd_origin,
                          ff_msgs::AckCompletedStatus::EXEC_FAILED,
                          err_msg);
     ROS_ERROR("Executive: %s", err_msg.c_str());

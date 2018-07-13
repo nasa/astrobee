@@ -27,7 +27,17 @@ class OpStateFault : public OpState {
  public:
   ~OpStateFault() {}
 
+  OpState* StartupState(std::string const& cmd_id = "");
+
   OpState* HandleCmd(ff_msgs::CommandStampedPtr const& cmd);
+
+  OpState* HandleResult(ff_util::FreeFlyerActionState::Enum const& state,
+                        std::string const& result_response,
+                        std::string const& cmd_id,
+                        Action const& action);
+
+  // Guest Science Ack
+  OpState* HandleGuestScienceAck(ff_msgs::AckStampedConstPtr const& ack);
 
  protected:
   explicit OpStateFault(std::string const& name, unsigned char id) :
@@ -36,6 +46,10 @@ class OpStateFault : public OpState {
  private:
   // allow creation only by repo
   friend class OpStateRepo;
+
+  void SetPlanStatus(bool successful, std::string err_msg = "");
+
+  std::string run_plan_cmd_id_;
 };
 
 }  // namespace executive

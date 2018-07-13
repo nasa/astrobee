@@ -1,0 +1,21 @@
+[Unit]
+Description=Start flight software
+Wants=sshd.service
+Wants=ros.service
+Wants=eps.service
+Wants=pmc.service
+Wants=mlp.service
+ConditionFileNotEmpty=!/res/eps_state
+ConditionFileNotEmpty=!/res/pmc_state
+ConditionFileNotEmpty=!/res/fsw_state
+
+[Service]
+Type=simple
+User=astrobee
+Group=astrobee
+EnvironmentFile=/res/astrobee.env
+ExecStart=/opt/astrobee/env_wrapper.sh roslaunch astrobee astrobee.launch llp:=${ASTROBEE_LLP} mlp:=${ASTROBEE_MLP}
+Restart=on-abort
+
+[Install]
+WantedBy=multi-user.target

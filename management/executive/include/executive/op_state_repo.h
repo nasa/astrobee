@@ -24,7 +24,6 @@
 #include "executive/op_state.h"
 #include "executive/op_state_auto_return.h"
 #include "executive/op_state_fault.h"
-#include "executive/op_state_guest_sci.h"
 #include "executive/op_state_plan_exec.h"
 #include "executive/op_state_ready.h"
 #include "executive/op_state_teleop.h"
@@ -52,14 +51,13 @@ class OpStateRepo {
   OpState* plan_exec() {return plan_exec_.get();}
   OpState* teleop() {return teleop_.get();}
   OpState* auto_return() {return auto_return_.get();}
-  OpState* guest_science() {return guest_science_.get();}
   OpState* fault() {return fault_.get();}
 
  private:
   OpStateRepo();
   static OpStateRepoPtr instance_;
   // all avail states
-  OpStatePtr ready_, plan_exec_, teleop_, auto_return_, guest_science_, fault_;
+  OpStatePtr ready_, plan_exec_, teleop_, auto_return_, fault_;
 
   OpStateRepo (const OpStateRepo&) = delete;
   OpStateRepo& operator= (const OpStateRepo&) = delete;

@@ -5,23 +5,69 @@ Here we describe how to build a map.
 
 # Summary {#buildmap}
 
-1. Record a bag file. Record offboard from the robot to limit the frame rate.
-   Move the robot slowly to make sure neighboring images are connected and
-   reduce motion blur.
-       rosbag record /nav_cam/image
-2. Extract images from the bag file.
-       rosrun sparse_mapping extract_image_bag bag.bag
-3. Reduce the number of images, deleting images that overlap highly.
-       select_images bag_images/*
-4. Build the map.
-       build_map bag_images/*
-7. Find control points in hugin, and create a list of their coordinates.
-8. Register the map.
+1. Reduce the number of images.
+
+2. Set up the environment.
+
+3. Build the map.
+       build_map bag_images/*.jpg
+
+4. Find control points in hugin, and create a list of their coordinates.
+
+5. Register the map.
        build_map -registration hugin.pto xyz.txt -output_map output_brisk.map
 
 # Map Building
 
 We go through how a map is made.
+
+## Reduce the number of images.
+
+Here, we delete the images that overlap highly.
+
+       select_images -density_factor 1 bag_images/*.jpg
+
+The higher the value of the density factor, the more images will
+be kept. Some experimentation with this number is necessary (the
+default likely removes too many images). Ideally the images should
+have perhaps on the order of 2/3 to 3/4 of overlap.
+
+Alternatively, one can simply first pick every 10th or 20th image, such as:
+
+  ls bag_images/*0.jpg
+
+then copy these to a new directory, open them with an image viewer
+like eog, and delete redundant ones in this viewer.
+
+## Setup the Environment
+
+In the first step, one needs to set some environmental variables, as
+follows:
+
+export ASTROBEE_RESOURCE_DIR=/path/to/freeflyer/astrobee/resources
+export ASTROBEE_CONFIG_DIR=/path/to/freeflyer/astrobee/config
+export ASTROBEE_ROBOT=p4d
+export ASTROBEE_WORLD=granite
+
+Here, p4d is the robot being used to take pictures, and the world is
+the granite table. These may need to change, depending on your
+goals. Under the hood, the following configuration files will be read:
+
+  $ASTROBEE_CONFIG_DIR/cameras.config
+
+which contains the image width and height (the camera we use is
+the nav cam) and
+
+  $ASTROBEE_CONFIG_DIR/robots/$ASTROBEE_ROBOT.config
+
+having nav cam's intrinsics. If your camera is not the nav cam on p4d,
+and none of the other available config files apply, you can just
+temporarily modify the above files to reflect your camera's parameters
+(without checking in your changes).
+
+More details on these and other environmental variables can be found in
+
+  freeflyer/astrobee/readme.md
 
 ## Building a Map
 
@@ -39,7 +85,7 @@ subsequent image in the sequence. To use only a limited number of
 subsequent images, set the value passed to the `-num_subsequent_images` flag.
 Later, we will also see how to match only similar images using a vocabulary tree.
 
-The runtime of the algoirthm is directly proportional to the number of input images
+The runtime of the algorithm is directly proportional to the number of input images
 times the number input to `-num_subsequent_images`. Making the latter small will result
 in more drift. If you know that a region will be revisited after say 100 images, use this
 number for this parameter. Making this too big will result in very slow map building. 
@@ -91,9 +137,22 @@ individually for further control.
 
     build_map -rebuild
 
-  Rebuilds the map with a different feature set (by default, BRISK features). The initial
-  map can be built with high quality features, such as SURF, and then rebuilt with
-  faster features for localization, such as BRISK.
+  Rebuilds the map with a different feature set (by default, BRISK
+  features). The initial map can be built with high quality features,
+  such as SURF, and then rebuilt with faster features for
+  localization, such as BRISK. During rebuilding the cameras are kept
+  fixed by default, since BRISK features, while faster, may be fewer
+  and less accurate.
+
+  Rebuilding is much faster than building from scratch, since it
+  borrows from the original map the information about which images can
+  be matched to which, and also reuses the camera positions.
+
+  To replace the camera intrinsics during rebuilding, one can use
+  -rebuild_replace_camera, when the camera is set via ASTROBEE_ROBOT.
+  Camera positions and orientations can be re-optimized with
+  -rebuild_refloat_cameras. To rebuild with a desired feature
+  detector, use the option -rebuild_detector.
 
 7. **Vocabulary Database**
 
@@ -163,7 +222,8 @@ The locations of the control points can be found in
 
 Then register the map with the command:
 
-    build_map -registration <hugin files> <xyz files> -num_ba_passes 1 -skip_filtering -output_map <mapfile.map>
+    build_map -registration <hugin files> <xyz files> -num_ba_passes 1 \
+      -skip_filtering -output_map <mapfile.map>
 
 There can be multiple such files passed as input. Control point files
 are expected to end in .pto, while xyz files in .txt.
@@ -173,6 +233,11 @@ points and xyz measurements as additional information. The xyz
 measurements are kept fixed during this optimization (unlike the xyz
 points obtained purely through interest point matching and
 triangulation) because the measurements are known fixed quantities.
+
+A good sanity check for the quality of xyz points is to register
+without doing bundle adjustment, hence to invoke registration with
+-registration_skip_bundle_adjustment. This will show how close the
+measured xyz points are to their computed and registered counterparts.
 
 ## Map Verification
 

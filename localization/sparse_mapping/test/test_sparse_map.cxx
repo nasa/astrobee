@@ -1,14 +1,14 @@
 /* Copyright (c) 2017, United States Government, as represented by the
  * Administrator of the National Aeronautics and Space Administration.
- * 
+ *
  * All rights reserved.
- * 
+ *
  * The Astrobee platform is licensed under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -27,6 +27,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <iostream>
 
 #define EXPECT_VECTOR3D_NEAR(p1, p2, t) EXPECT_NEAR(p1[0], p2[0], t); EXPECT_NEAR(p1[1], p2[1], t); \
   EXPECT_NEAR(p1[2], p2[2], t);
@@ -88,15 +89,29 @@ class SparseMapTest : public ::testing::TestWithParam<Parameters> {
   std::shared_ptr<camera::CameraParameters> params;
 };
 
+// A little function to be able to use the same map in two tests
+void mapFiles(std::string const& detector,
+              bool close_loop, std::string * map1, std::string *map2) {
+  std::string val = detector;
+  if (close_loop) val += "_close_loop1";
+  else            val += "_close_loop0";
+
+  *map1 = "map1_" + val + ".map";
+  *map2 = "map2_" + val + ".map";
+}
+
 TEST_P(SparseMapTest, MapBuilding) {
   sparse_mapping::SparseMap map(image_filenames, GetParam().detector, *params);
 
+  std::string mapfile1, mapfile2;
+  mapFiles(GetParam().detector, GetParam().close_loop, &mapfile1, &mapfile2);
+
   // Detect features
   map.DetectFeatures();
-  map.Save("temp.map");
+  map.Save(mapfile1);
 
   // Loop back
-  sparse_mapping::SparseMap map_loopback("temp.map");
+  sparse_mapping::SparseMap map_loopback(mapfile1);
   CompareFeatures(map, map_loopback);
 
   // Verify we have the same camera model when we load back up into
@@ -119,14 +134,16 @@ TEST_P(SparseMapTest, MapBuilding) {
   ASSERT_EQ(map_loopback.GetCameraParameters().GetDistortion().size(), 0);
 
   // Feature matching
-  sparse_mapping::MatchFeatures(sparse_mapping::EssentialFile("temp.map"),
-                                sparse_mapping::MatchesFile("temp.map"), &map_loopback);
+  sparse_mapping::MatchFeatures(sparse_mapping::EssentialFile(mapfile1),
+                                sparse_mapping::MatchesFile(mapfile1), &map_loopback);
 
   // Building tracks
-  sparse_mapping::BuildTracks(sparse_mapping::MatchesFile("temp.map"), &map_loopback);
+  bool rm_invalid_xyz = true;
+  sparse_mapping::BuildTracks(rm_invalid_xyz,
+                              sparse_mapping::MatchesFile(mapfile1), &map_loopback);
 
   // Initialize camera positions
-  sparse_mapping::IncrementalBA(sparse_mapping::EssentialFile("temp.map"), &map_loopback);
+  sparse_mapping::IncrementalBA(sparse_mapping::EssentialFile(mapfile1), &map_loopback);
   if (GetParam().close_loop)
     sparse_mapping::CloseLoop(&map_loopback);
 
@@ -189,8 +206,8 @@ TEST_P(SparseMapTest, MapBuilding) {
   EXPECT_VECTOR3D_NEAR(guess.GetPosition(), estimated, accuracy);
 
   // Test Saving again with more information
-  map_loopback.Save("temp2.map");
-  sparse_mapping::SparseMap map_loopback2("temp2.map");
+  map_loopback.Save(mapfile2);
+  sparse_mapping::SparseMap map_loopback2(mapfile2);
   CompareFeatures(map_loopback, map_loopback2);
   for (size_t frame = 0; frame < map_loopback.GetNumFrames();
       frame++) {
@@ -224,9 +241,61 @@ TEST_P(SparseMapTest, MapBuilding) {
   }
 }
 
+// Test submap extraction and merging on two maps
+TEST_P(SparseMapTest, MapExtractMerge) {
+  sparse_mapping::SparseMap map(image_filenames, GetParam().detector, *params);
+
+  // This test won't work with maps where we close the loop, as that one has
+  // repeated images, which confuses the map extractor
+  if (GetParam().close_loop)
+    return;
+
+  std::string mapfile1, mapfile2;
+  mapFiles(GetParam().detector, GetParam().close_loop, &mapfile1, &mapfile2);
+
+  std::string submap1_file = "map_" + GetParam().detector + "_submap1.map";
+  std::string submap2_file = "map_" + GetParam().detector + "_submap2.map";
+
+  // Extract submap1
+  LOG(INFO) << "Reading: " << mapfile2 << std::endl;
+  sparse_mapping::SparseMap submap1(mapfile2);
+  LOG(INFO) << "Extracting submap1." << std::endl;
+  std::vector<std::string> images_to_keep1;
+  images_to_keep1.push_back(submap1.cid_to_filename_[0]);
+  images_to_keep1.push_back(submap1.cid_to_filename_[1]);
+  sparse_mapping::ExtractSubmap(&images_to_keep1, &submap1);
+  LOG(INFO) << "Writing: " << submap1_file << std::endl;
+  submap1.Save(submap1_file);
+
+  // Extract submap2
+  LOG(INFO) << "Reading: " << mapfile2 << std::endl;
+  sparse_mapping::SparseMap submap2(mapfile2);
+  LOG(INFO) << "Extracting submap2." << std::endl;
+  std::vector<std::string> images_to_keep2;
+  images_to_keep2.push_back(submap2.cid_to_filename_[1]);
+  images_to_keep2.push_back(submap2.cid_to_filename_[2]);
+  sparse_mapping::ExtractSubmap(&images_to_keep2, &submap2);
+  LOG(INFO) << "Writing: " << submap2_file << std::endl;
+  submap2.Save(submap2_file);
+
+  // Append submap2 to submap1 and write the merged map
+  bool prune_map = true, skip_bundle_adjustment = false;
+  int num_image_overlaps_at_endpoints = 10;
+  double outlier_factor = 3;
+  sparse_mapping::AppendMapFile(submap1_file, submap2_file,
+                                num_image_overlaps_at_endpoints, outlier_factor,
+                                !skip_bundle_adjustment, prune_map);
+
+  // Read the merged map, and check if we have 3 frames as expected
+  LOG(INFO) << "Reading: " << submap1_file << std::endl;
+  sparse_mapping::SparseMap merged_map(submap1_file);
+  EXPECT_EQ(merged_map.GetNumFrames(), 3);
+}
+
 const Parameters test_parameters[] = {
-  {"SURF", "ORGBRISK", false},
-  {"SURF", "ORGBRISK", true},
+  // Detector,  not used,       closeLoop
+  {"SURF",     "ORGBRISK",      false},
+  {"SURF",     "ORGBRISK",      true},
 };
 
 INSTANTIATE_TEST_CASE_P(SparseMapTest, SparseMapTest,

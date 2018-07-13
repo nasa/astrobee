@@ -39,7 +39,23 @@ void fault_assert(unsigned char* key, unsigned char* t) {
   if (global_gnc_nodelet == NULL) {
     ROS_FATAL("Cannot trigger fault, global_gnc_nodelet not set.");
   } else {
-    global_gnc_nodelet->AssertFault(std::string(k), std::string(s));
+    std::string key = std::string(k);
+    bool found = false;
+    int enum_val;
+    for (int i = 0; i < ff_util::kFaultKeysSize && !found; i++) {
+      if (key == ff_util::fault_keys[i]) {
+        found = true;
+        enum_val = i;
+      }
+    }
+    if (found) {
+      global_gnc_nodelet->AssertFault(static_cast<ff_util::FaultKeys>(enum_val),
+                                      std::string(s));
+    } else {
+      std::string err_msg = "GNC: Fault key " + key +
+                            " wasn't recognized. " + std::string(s);
+      global_gnc_nodelet->AssertFault(ff_util::UNKNOWN_FAULT_KEY, err_msg);
+    }
   }
 #endif
 }

@@ -14,7 +14,7 @@
 <!-- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or         -->
 <!-- implied. See the License for the specific language governing            -->
 <!-- permissions and limitations under the License.                          -->
-  
+
 <launch>
 
   <!-- Path to the bag file -->
@@ -39,15 +39,15 @@
   <arg name="gds" default="false" />            <!-- Enable GDS              -->
 
   <!-- Make sure all environment variables are set for controller -->
-  <env if="$(eval optenv('ASTROBEE_ROBOT','')=='')" 
+  <env if="$(eval optenv('ASTROBEE_ROBOT','')=='')"
        name="ASTROBEE_ROBOT" value="$(arg robot)" />
-  <env if="$(eval optenv('ASTROBEE_WORLD','')=='')" 
+  <env if="$(eval optenv('ASTROBEE_WORLD','')=='')"
        name="ASTROBEE_WORLD" value="$(arg world)" />
-  <env if="$(eval optenv('ASTROBEE_CONFIG_DIR','')=='')" 
+  <env if="$(eval optenv('ASTROBEE_CONFIG_DIR','')=='')"
        name="ASTROBEE_CONFIG_DIR" value="$(find astrobee)/config" />
-  <env if="$(eval optenv('ASTROBEE_RESOURCE_DIR','')=='')" 
+  <env if="$(eval optenv('ASTROBEE_RESOURCE_DIR','')=='')"
        name="ASTROBEE_RESOURCE_DIR" value="$(find astrobee)/resources" />
-  <env if="$(eval optenv('ROSCONSOLE_CONFIG_FILE','')=='')" 
+  <env if="$(eval optenv('ROSCONSOLE_CONFIG_FILE','')=='')"
        name="ROSCONSOLE_CONFIG_FILE" value="$(find astrobee)/resources/logging.config"/>
 
   <!-- Declare our global logging format -->
@@ -56,13 +56,15 @@
   <!-- Start ground controller services -->
   <group>
     <machine name ="local" address="localhost" default="true"/>
-    <!-- Start the dock description for visualization purposes -->
-    <include file="$(find astrobee)/launch/controller/dock.launch"/>
+    <!-- Start the descriptions (ISS, dock, granite) for visualization purposes -->
+    <include file="$(find description)/launch/description.launch"/>
     <!-- Start ground controller services -->
     <include if="$(arg gviz)" file="$(find astrobee)/launch/controller/gviz.launch"/>
-    <include if="$(arg rviz)" file="$(find astrobee)/launch/controller/rviz.launch"/>
     <include if="$(arg gds)" file="$(find astrobee)/launch/controller/gds.launch"/>
     <include if="$(arg rqt)" file="$(find astrobee)/launch/controller/rqt.launch"/>
+    <include if="$(arg rviz)" file="$(find astrobee)/launch/controller/rviz.launch">
+      <arg name="world" value="$(arg world)"/>
+    </include>
   </group>
 
   <!-- Auto-inert platform #1 at a desired initial location -->

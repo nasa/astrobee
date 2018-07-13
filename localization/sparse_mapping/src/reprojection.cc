@@ -433,7 +433,9 @@ int RansacEstimateCamera(const std::vector<Eigen::Vector3d> & landmarks,
 // which best maps the first set to the second.
 // Source: http://en.wikipedia.org/wiki/Kabsch_algorithm
 
-void Find3DAffineTransform(Eigen::Matrix3Xd & in, Eigen::Matrix3Xd & out, Eigen::Affine3d* result) {
+  void Find3DAffineTransform(Eigen::Matrix3Xd const & in,
+                             Eigen::Matrix3Xd const & out,
+                             Eigen::Affine3d* result) {
   // Default output
   result->linear() = Eigen::Matrix3d::Identity(3, 3);
   result->translation() = Eigen::Vector3d::Zero();
@@ -441,34 +443,37 @@ void Find3DAffineTransform(Eigen::Matrix3Xd & in, Eigen::Matrix3Xd & out, Eigen:
   if (in.cols() != out.cols())
     throw "Find3DAffineTransform(): input data mis-match";
 
+  // Local copies we can modify
+  Eigen::Matrix3Xd local_in = in, local_out = out;
+
   // First find the scale, by finding the ratio of sums of some distances,
   // then bring the datasets to the same scale.
   double dist_in = 0, dist_out = 0;
-  for (int col = 0; col < in.cols()-1; col++) {
-    dist_in  += (in.col(col+1) - in.col(col)).norm();
-    dist_out += (out.col(col+1) - out.col(col)).norm();
+  for (int col = 0; col < local_in.cols()-1; col++) {
+    dist_in  += (local_in.col(col+1) - local_in.col(col)).norm();
+    dist_out += (local_out.col(col+1) - local_out.col(col)).norm();
   }
   if (dist_in <= 0 || dist_out <= 0)
     return;
   double scale = dist_out/dist_in;
-  out /= scale;
+  local_out /= scale;
 
   // Find the centroids then shift to the origin
   Eigen::Vector3d in_ctr = Eigen::Vector3d::Zero();
   Eigen::Vector3d out_ctr = Eigen::Vector3d::Zero();
-  for (int col = 0; col < in.cols(); col++) {
-    in_ctr  += in.col(col);
-    out_ctr += out.col(col);
+  for (int col = 0; col < local_in.cols(); col++) {
+    in_ctr  += local_in.col(col);
+    out_ctr += local_out.col(col);
   }
-  in_ctr /= in.cols();
-  out_ctr /= out.cols();
-  for (int col = 0; col < in.cols(); col++) {
-    in.col(col)  -= in_ctr;
-    out.col(col) -= out_ctr;
+  in_ctr /= local_in.cols();
+  out_ctr /= local_out.cols();
+  for (int col = 0; col < local_in.cols(); col++) {
+    local_in.col(col)  -= in_ctr;
+    local_out.col(col) -= out_ctr;
   }
 
   // SVD
-  Eigen::Matrix3d Cov = in * out.transpose();
+  Eigen::Matrix3d Cov = local_in * local_out.transpose();
   Eigen::JacobiSVD<Eigen::Matrix3d> svd(Cov, Eigen::ComputeFullU | Eigen::ComputeFullV);
 
   // Find the rotation

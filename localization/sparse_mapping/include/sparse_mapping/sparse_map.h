@@ -108,7 +108,7 @@ struct SparseMap {
 
   SparseMap(bool bundler_format, std::string const& filename, std::vector<std::string> const& files);
 
-  void SetBriskParams(int min_features, int max_features, int threshold, int retries);
+  void SetDetectorParams(int min_features, int max_features, int threshold, int retries);
 
   /**
    * Detect features in given images
@@ -232,9 +232,11 @@ struct SparseMap {
 
   // detect features with opencv
   void DetectFeaturesFromFile(std::string const& filename,
+                              bool multithreaded,
                               cv::Mat* descriptors,
                               Eigen::Matrix2Xd* keypoints);
   void DetectFeatures(cv::Mat const& image,
+                      bool multithreaded,
                       cv::Mat* descriptors,
                       Eigen::Matrix2Xd* keypoints);
   // delete feature descriptors with no matching landmark
@@ -279,6 +281,14 @@ struct SparseMap {
   std::vector<Eigen::Matrix2Xd> user_cid_to_keypoint_map_;
   std::vector<std::map<int, int> > user_pid_to_cid_fid_;
   std::vector<Eigen::Vector3d> user_pid_to_xyz_;
+
+ private:
+  // I found out the hard way that sparse maps cannot be copied
+  // correctly, hence prohibit this. The only good way seems to be to
+  // load a copy from disk. (oalexan1)
+  SparseMap();
+  SparseMap(SparseMap &);
+  SparseMap& operator=(const SparseMap&);
 };
 }  // namespace sparse_mapping
 

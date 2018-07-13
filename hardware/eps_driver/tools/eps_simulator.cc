@@ -86,36 +86,35 @@ void TelemetryCallback(const ros::TimerEvent & event) {
   header.stamp = ros::Time::now();
   header.frame_id = name;
   // Publish the battery information
-  for (int i = 0; i < eps_driver::NUM_BATTERIES; i++) {
+  for (uint8_t i = 0; i < eps_driver::EPS::NUM_BATTERIES; i++) {
     // Get the battery index
-    eps_driver::BatteryIndex bid = static_cast < eps_driver::BatteryIndex > (i);
     sensor_msgs::Temperature temperature = RandomBatteryTemperature(header);
     sensor_msgs::BatteryState state;
     bool present = false;
     std::string location = "UNKNOWN";
-    switch (bid) {
-    case eps_driver::BATTERY_TOP_LEFT:
+    switch (i) {
+    case eps_driver::EPS::BATTERY_TOP_LEFT:
       location = ff_hw_msgs::EpsBatteryLocation::TOP_LEFT;
       present = tl_;
       state = RandomBatteryState(location, header, present);
       pub_batt_tl_.publish(state);
       pub_temp_tl_.publish(temperature);
       break;
-    case eps_driver::BATTERY_BOTTOM_LEFT:
+    case eps_driver::EPS::BATTERY_BOTTOM_LEFT:
       location = ff_hw_msgs::EpsBatteryLocation::BOTTOM_LEFT;
       present = bl_;
       state = RandomBatteryState(location, header, present);
       pub_batt_bl_.publish(state);
       pub_temp_bl_.publish(temperature);
       break;
-    case eps_driver::BATTERY_TOP_RIGHT:
+    case eps_driver::EPS::BATTERY_TOP_RIGHT:
       location = ff_hw_msgs::EpsBatteryLocation::TOP_RIGHT;
       present = tr_;
       state = RandomBatteryState(location, header, present);
       pub_batt_tr_.publish(state);
       pub_temp_tr_.publish(temperature);
       break;
-    case eps_driver::BATTERY_BOTTOM_RIGHT:
+    case eps_driver::EPS::BATTERY_BOTTOM_RIGHT:
       location = ff_hw_msgs::EpsBatteryLocation::BOTTOM_RIGHT;
       present = br_;
       state = RandomBatteryState(location, header, present);

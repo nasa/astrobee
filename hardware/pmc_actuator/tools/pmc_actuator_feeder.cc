@@ -1,14 +1,14 @@
 /* Copyright (c) 2017, United States Government, as represented by the
  * Administrator of the National Aeronautics and Space Administration.
- * 
+ *
  * All rights reserved.
- * 
+ *
  * The Astrobee platform is licensed under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -18,16 +18,16 @@
 
 #include <ros/ros.h>
 
-#include <ff_util/ff_names.h>
 #include <ff_hw_msgs/PmcCommand.h>
+#include <ff_util/ff_names.h>
 
 #include <stdlib.h>
 
-#include <cstring>
 #include <cstdint>
+#include <cstring>
 
-#include <iostream>
 #include <fstream>
+#include <iostream>
 #include <sstream>
 #include <vector>
 
@@ -43,15 +43,15 @@ std::string topic_command_ = TOPIC_HARDWARE_PMC_COMMAND;
 double control_rate_hz_ = 62.5;
 
 // nozzle fully closed cmd
-uint8_t nozzle_min_cmd_ = 25;
+uint8_t nozzle_min_cmd_ = 0;
 
 // nozzle fully open cmd
-uint8_t nozzle_max_cmd_ = 96;
+uint8_t nozzle_max_cmd_ = 255;
 
 // blower max speed
 uint8_t blower_max_cmd_ = 232;
 
-std::vector< ff_hw_msgs::PmcCommand > pmc_commands_;
+std::vector<ff_hw_msgs::PmcCommand> pmc_commands_;
 
 void usage() {
   std::cerr << "Usage:" << std::endl;
@@ -63,19 +63,19 @@ size_t parse_inputs(const char *filename) {
   std::string line;
   int counter = 0;
 
-  while ( std::getline(input, line) ) {
+  while (std::getline(input, line)) {
     counter++;
-    if ( line[0] == '#' || line[0] == ' ' ) {
+    if (line[0] == '#' || line[0] == '\n' || line[0] == '\0') {
       // skip comments
       continue;
     }
     std::stringstream str(line);
     float value;
     std::vector<double> numbers;
-    while ( str >> value ) {
+    while (str >> value) {
       numbers.push_back(value);
     }
-    if ( numbers.size() != 15 ) {
+    if (numbers.size() != 15) {
       std::cerr << "Malformatted input at line " << counter << std::endl;
     } else {
       ff_hw_msgs::PmcCommand cmd;
@@ -83,13 +83,14 @@ size_t parse_inputs(const char *filename) {
       cmd.header.stamp = time;
       for (int p = 0; p < num_pmcs_; p++) {
         ff_hw_msgs::PmcGoal goal;
-        uint8_t speed = (uint8_t)numbers.at(1+p*7);
+        uint8_t speed = (uint8_t)numbers.at(1 + p * 7);
         goal.motor_speed = (speed > blower_max_cmd_) ? blower_max_cmd_ : speed;
         for (int n = 0; n < 6; n++) {
-          uint8_t pos = (uint8_t)numbers.at(2+n+p*7);
+          uint8_t pos = (uint8_t)numbers.at(2 + n + p * 7);
           goal.nozzle_positions[n] =
-            (pos < nozzle_min_cmd_) ? nozzle_min_cmd_ :
-            (pos > nozzle_max_cmd_) ? nozzle_max_cmd_ : pos;
+              (pos < nozzle_min_cmd_)
+                  ? nozzle_min_cmd_
+                  : (pos > nozzle_max_cmd_) ? nozzle_max_cmd_ : pos;
         }
         cmd.goals.push_back(goal);
       }
@@ -104,11 +105,11 @@ ros::Publisher cmd_pub_;
 int main(int argc, char **argv) {
   ros::init(argc, argv, ROS_NODE_NAME);
 
-  if ( argc < 2 ) {
+  if (argc < 2) {
     usage();
     return -1;
   }
-  if ( argc > 2 ) {
+  if (argc > 2) {
     control_rate_hz_ = atof(argv[2]);
   }
 
@@ -124,8 +125,7 @@ int main(int argc, char **argv) {
     topic_cmd_name = nh.getNamespace().substr(1) + topic_command_;
   }
 
-  cmd_pub_ = nh.advertise<ff_hw_msgs::PmcCommand>(
-               topic_cmd_name, 4);
+  cmd_pub_ = nh.advertise<ff_hw_msgs::PmcCommand>(topic_cmd_name, 4);
 
   ros::Rate rate(control_rate_hz_);
 
@@ -138,18 +138,19 @@ int main(int argc, char **argv) {
     cmd_pub_.publish(pmc_commands_.at(index));
 
     double current_time = ros::Time::now().toSec();
-    if ( !last_command ) {
-      double next_time = pmc_commands_.at(index+1).header.stamp.toSec();
+    if (!last_command) {
+      double next_time = pmc_commands_.at(index + 1).header.stamp.toSec();
       double elapsed_time = current_time - start_time;
       // std::cout << "next_time=" << next_time
       //           << " / elapsed_time=" << elapsed_time << std::endl;
-      if ( elapsed_time > next_time ) {
+      if (elapsed_time > next_time) {
         index++;
         std::cout << pmc_commands_.at(index);
-        if ( index >= pmc_commands_.size()-1 ) {
+        if (index >= pmc_commands_.size() - 1) {
           last_command = true;
         }
       }
+      pmc_commands_.at(index).header.seq++;
     }
 
     rate.sleep();

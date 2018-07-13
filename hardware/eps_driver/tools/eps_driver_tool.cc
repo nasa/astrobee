@@ -16,22 +16,221 @@
  * under the License.
  */
 
+// Common freeflyer code
+#include <common/init.h>
+
+// Gflag code
+#include <gflags/gflags.h>
+#include <gflags/gflags_completions.h>
+
+// Proxy library
 #include <eps_driver/eps_driver.h>
 
+// C++ includes
+#include <algorithm>
 #include <iostream>
+#include <iomanip>
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <map>
 #include <ctime>
 #include <cerrno>
 #include <cstring>
 
-#define DEFAULT_I2C_DEV     "/dev/i2c-1"
-#define DEFAULT_I2C_ADDRESS 0x40
-#define DEFAULT_I2C_RETRIES 3
+// Gflag defaults
+DEFINE_string(device, "/dev/i2c-1", "i2c bus of EPS");
+DEFINE_int32(address, 0x40, "i2c address of EPS");
+DEFINE_int32(retries, 3, "i2c retries");
+DEFINE_string(w, "", "Write power state to given file");
 
-// Sleep function --  since this application doesn't use ROS, we don't
-// have to use ROS timer to sleep. Let's use high resolution timers
+// Single-switch options
+DEFINE_bool(reboot, false, "Reboot");
+DEFINE_bool(bootloader, false, "Jump to bootloader");
+DEFINE_bool(undock, false, "Send an undock command");
+DEFINE_bool(unterminate, false, "Clear a terminate event");
+DEFINE_bool(buzz, false, "Ring the buzzer");
+DEFINE_bool(hk, false, "View housekeeping information");
+DEFINE_bool(string, false, "View string information");
+DEFINE_bool(battery, false, "View battery information");
+DEFINE_bool(temp, false, "View temperatures");
+DEFINE_bool(fault, false, "View and clear faults");
+DEFINE_bool(power, false, "View and toggle power channels");
+DEFINE_bool(charge, false, "View and toggle charge state");
+DEFINE_bool(led, false, "View and configure LEDs");
+DEFINE_bool(state, false, "View state information");
+
+// Second-level options for VIEW [read-only multiple options]
+DEFINE_int32(freq, 1000, "Buzzer frequency in Hz (1000 - 2000)");
+DEFINE_string(set, "", "Set a new value for all specified indexes");
+DEFINE_bool(get, false, "Get the current value for all specified indexes");
+DEFINE_bool(list, false, "List all indexes and keys for the given command");
+DEFINE_bool(clear, false, "Send a clear command (only for -fault)");
+
+// What we'll use to index various channels, payloads, batteries, etc.
+typedef std::vector<std::string> Keywords;
+typedef std::pair<std::string, Keywords> Value;
+typedef std::map<uint32_t, Value> ValueMap;
+
+// Avoid long constants
+using EPS = eps_driver::EPS;
+
+// Helper function for displaying an error
+int Error(std::string const& msg,               // Message
+          int code = -1) {                      // Error code
+  std::cerr << msg << std::endl;
+  return code;
+}
+
+// Helper function for displaying metadata
+int Print(std::string const& msg) {
+  std::cout << msg << std::endl;
+  return 0;
+}
+
+// Helper function to print a channel list
+int Print(std::string const& title, ValueMap const& values, bool ro = false) {
+  if (!title.empty()) {
+    std::cout << title;
+    if (ro)
+      std::cout << " (READ ONLY)";
+    std::cout << std::endl;
+  }
+  // Print out the indexes
+  if (!values.empty()) {
+    ValueMap::const_iterator it;
+    for (it = values.begin(); it != values.end(); it++) {
+      std::cout << "- " << it->second.first << " (";
+      Keywords::const_iterator jt = it->second.second.begin();
+      for (; jt != it->second.second.end(); jt++) {
+        if (jt != it->second.second.begin())
+          std::cout << ", ";
+        std::cout << *jt;
+      }
+      std::cout << ")" << std::endl;
+    }
+  }
+  return 0;
+}
+
+// View operation
+int HelpView(std::string const& flag, std::string const& desc, bool i = true) {
+  std::string extra = (i ? "<index>" : "");
+  std::cout << "DESCRIPTION" << std::endl << " " << desc
+  << std::endl << std::endl << "USAGE OVERVIEW"
+  << std::endl << " The -" << flag << " flag requires either -list or -get to"
+  << std::endl << " also be specified. You can use  -list to see all available"
+  << std::endl << " indexes and values, and -get to query the current values."
+  << std::endl << std::endl << "USAGE PATTERN"
+  << std::endl << " eps_driver_tool -" << flag
+               <<" [ -list | -get ] " << extra << std::endl;
+  return 0;
+}
+
+// Configure operation
+int HelpConf(std::string const& flag, std::string const& desc, bool i = true) {
+  std::string extra = (i ? "<index>" : "");
+  std::cout << "DESCRIPTION" << std::endl << " " << desc
+  << std::endl << std::endl << "USAGE OVERVIEW"
+  << std::endl << " The -" << flag << " flag is a requires one of -list, -get"
+  << std::endl << " or -set to also be specified. You can use -list to see all"
+  << std::endl << " available indexes and values, -get to query the current"
+  << std::endl << " value and -set to set the value."
+  << std::endl << std::endl << "USAGE PATTERN"
+  << std::endl << " eps_driver_tool -" << flag
+               << " [ -list | -get | -set <val> ]" << extra << std::endl;
+  return 0;
+}
+
+// Help buzzer
+int HelpBuzz(std::string const& flag, std::string const& desc) {
+  std::cout << "DESCRIPTION" << std::endl << " " << desc
+  << std::endl << std::endl << "USAGE OVERVIEW"
+  << std::endl << " The -" << flag << " flag can also optionally be paired with"
+  << std::endl << " the -freq flag to set the desired frequency in the range"
+  << std::endl << " 1000 - 2000 Hertz."
+  << std::endl << std::endl << "USAGE PATTERN"
+  << std::endl << " eps_driver_tool -" << flag
+               << " [ -freq <freq> ] <duration>" << std::endl;
+  return 0;
+}
+
+// Help buzzer
+int Help() {
+  std::cout << "DESCRIPTION"
+  << std::endl << " Command-line tool for interacting with the EPS subsystem"
+  << std::endl
+  << std::endl << "SUBSYSTEM CONTROL"
+  << std::endl << " The tool supports the following subsystem flags"
+  << std::endl << "  -power    : Turn on an off power to channels"
+  << std::endl << "  -led      : Configure LEDs to be on, off or flash"
+  << std::endl << "  -battery  : View battery information"
+  << std::endl << "  -charge   : View charger information"
+  << std::endl << "  -hk       : View housekeeping information"
+  << std::endl << "  -fault    : View and clear fault information"
+  << std::endl << "  -state    : View docking and power states"
+  << std::endl << "  -string   : View build info, software version and serial"
+  << std::endl << "  -buzz     : Ring the buzzer"
+  << std::endl << " For more help about a specific subsystem, add the flag"
+  << std::endl << "  eg. eps_driver_tool -power"
+  << std::endl
+  << std::endl << "ONE-SHOT COMMANDS"
+  << std::endl << " The tool supports the following oneshot commands"
+  << std::endl << "  -unterminate  : Clear a TERMINATE state"
+  << std::endl << "  -reboot       : Reboot the EPS"
+  << std::endl << "  -bootloader   : Enter the EPS bootloader"
+  << std::endl << " To use the command, just add the flag"
+  << std::endl << "  eg. eps_driver_tool -reboot";
+  std::cout << std::endl;
+  return 0;
+}
+
+// Get a mask from an index of strings
+bool Mask(ValueMap const& values, std::vector<std::string> const& idxs,
+  uint32_t & mask, bool allow_all_to_be_selected = true) {
+  bool clean = true;
+  mask = 0x0;
+  if (idxs.empty()) {
+    if (allow_all_to_be_selected) {
+      ValueMap::const_iterator jt;
+      for (jt = values.begin(); jt != values.end(); jt++)
+        mask |= (1 << jt->first);
+    } else {
+      clean = false;
+    }
+  } else {
+    std::vector<std::string>::const_iterator it;
+    for (it = idxs.begin(); it != idxs.end(); it++) {
+      bool found = false;
+      ValueMap::const_iterator jt;
+      for (jt = values.begin(); jt != values.end(); jt++) {
+        if (std::find(jt->second.second.begin(), jt->second.second.end(),
+          *it) == jt->second.second.end()) continue;
+        mask |= (1 << jt->first);
+        found = true;
+      }
+      if (!found) {
+        std::cerr << "Warning: index '" << *it << "' not found" << std::endl;
+        clean = false;
+      }
+    }
+  }
+  return clean;
+}
+
+// Get a value from a value map
+bool Valid(ValueMap const& values, std::string const& input, uint32_t & val) {
+  ValueMap::const_iterator jt;
+  for (jt = values.begin(); jt != values.end(); jt++) {
+    if (std::find(jt->second.second.begin(), jt->second.second.end(),
+      input) == jt->second.second.end()) continue;
+    val = jt->first;
+    return true;
+  }
+  return false;
+}
+
+// Sleep function required by EPS driver
 void Sleep(uint32_t microseconds) {
   struct timespec req, rem;
   req.tv_sec = microseconds / 1000000;
@@ -44,352 +243,521 @@ void Sleep(uint32_t microseconds) {
       req.tv_nsec = rem.tv_nsec;
       continue;
     }
-    std::cerr << "Nanosleep terminated prematurely" << std::endl;
+    std::cout << "Warning: nanosleep terminated prematurely" << std::endl;
     break;
   }
 }
 
-// Print an error message and fail gracefully
-bool Error(std::string const& msg) {
-  std::cerr << "Error: " << msg << std::endl;
-  return false;
-}
-
-// Grab an unsigned integer from user input with type and value checking
-uint32_t InputUnsignedInteger(uint32_t min, uint32_t max) {
-  uint32_t choice;
-  while (true) {
-    std::cout << std::endl << "Input choice > ";
-    std::string input;
-    getline(std::cin, input);
-    std::stringstream ss(input);
-    if (ss >> choice &&  choice >= min && choice <= max)
-      return choice;
-    std::cerr << "Number not in range [" << min << ":" << max << "], please try again" << std::endl;
-  }
-  std::cerr << "Got to an unreachable section of code" << std::endl;
-  return 0;
-}
-
-// Grab a string
-std::string InputFile() {
-  std::string choice;
-  while (true) {
-    std::cout << std::endl << "Input choice > ";
-    getline(std::cin, choice);
-    std::ifstream f(choice.c_str());
-    if (f.good())
-      return choice;
-    std::cerr << "Could not open the specified file " << choice << std::endl;
-  }
-  std::cerr << "Got to an unreachable section of code" << std::endl;
-  return "";
-}
-
-void PrintPowerChannels(const std::vector<std::string> &channels) {
-  for (size_t i = 0; i < channels.size(); i++) {
-    if ((i % 8) == 0)
-      std::cout << "==================================" << std::endl;
-
-    std::cout << "channel[" << i + 1 << "]:\t" << channels[i] << std::endl;
-  }
-  std::cout << "==================================" << std::endl;
-}
-
-void PrintPowerChannelStates(const std::vector<std::string> &channels,
-    const std::vector<eps_driver::PowerState> &states) {
-  if ((states.size() != EPS_NUM_PWR_CHANS) ||
-    (channels.size() != EPS_NUM_PWR_CHANS)) {
-    std::cerr << "Vector size mismatch" << std::endl;
-    return;
-  }
-
-  std::cout << std::endl;
-  for (size_t i = 0; i < states.size(); i++) {
-    if (i % 8 == 0)
-      std::cout << "----------------------------" << std::endl;
-
-    std::cout << channels[i] << ": ";
-    std::cout << (states[i] == eps_driver::ENABLED ? "On" : "Off");
-    std::cout << std::endl;
-  }
-  std::cout << "----------------------------" << std::endl;
-  std::cout << std::endl;
-}
-
-
-// Print a main menu
-bool MainMenu(eps_driver::EpsDriver &eps) {
-  // Print the menu
-  std::cout << std::endl << "Main menu:" << std::endl;
-  std::cout << "0. Quit" << std::endl;
-  std::cout << "1. Get version" << std::endl;
-  std::cout << "2. Get build time" << std::endl;
-  std::cout << "3. Get switch states" << std::endl;
-  std::cout << "4. Get housekeeping" << std::endl;
-  std::cout << "5. Power channel ON" << std::endl;
-  std::cout << "6. Power channel OFF" << std::endl;
-  std::cout << "7. Read digital (I2C) temperature sensors" << std::endl;
-  std::cout << "8. Reboot" << std::endl;
-  std::cout << "9. Jump to bootloader" << std::endl;
-  std::cout << "10. Get serial number" << std::endl;
-  std::cout << "11. Get battery status" << std::endl;
-  std::cout << "12. Ring buzzer." << std::endl;
-  std::cout << "13. Undock" << std::endl;
-  std::cout << "14. Clear TERMINATE event" << std::endl;
-  std::cout << "15. Get connection state" << std::endl;
-  // Keep looping until we have valid input
-  uint8_t choice = InputUnsignedInteger(0, 15);
-  // Do something based on the choice
-  switch (choice) {
-    case 0: {
-      std::cout << "Goodbye." << std::endl;
-      return false;
-    }
-    case 1: {
-      std::string v;
-      if (!eps.GetString(eps_driver::SW_VERSION, v))
-        return Error("Could not get the version.");
-      std::cout << " - Version " << v << std::endl;
-      return true;
-    }
-    case 2: {
-      std::string b;
-      if (!eps.GetString(eps_driver::BUILD, b))
-        return Error("Could not get the build time.");
-      std::cout << " - Build: " << b << std::endl;
-      return true;
-    }
-    case 3: {
-      std::vector<eps_driver::PowerState> states;
-      if (!eps.GetAllPowerChannelState(states))
-        return Error("Could not get power channel states.");
-      PrintPowerChannelStates(eps.GetPowerChannelNames(), states);
-      return true;
-    }
-    case 4: {
-      std::vector < eps_driver::HousekeepingInfo > data;
-      if (!eps.ReadHousekeeping(data))
-        return Error("Could not read the housekeeping data");
-      for (size_t i = 0; i < data.size(); i++) {
-        std::cout << "- [CH" << (i + 1) << "] ";
-        std::cout << data[i].description << " : ";
-        std::cout << data[i].value << std::endl;
-      }
-      return true;
-    }
-    case 5: {
-      PrintPowerChannels(eps.GetPowerChannelNames());
-      std::cout << std::endl;
-      std::cout << "Input channel number from 1 - " << eps_driver::EpsDriver::NUM_CHANNELS << std::endl;
-      uint8_t channel = static_cast<uint8_t>(InputUnsignedInteger(1, eps_driver::EpsDriver::NUM_CHANNELS));
-      if (!eps.SetPowerChannelState(channel - 1, eps_driver::ENABLED))
-        return Error("Could not change the power state to enabled");
-      std::cout << "Success!" << std::endl;
-      std::cout << std::endl;
-      return true;
-    }
-    case 6: {
-      PrintPowerChannels(eps.GetPowerChannelNames());
-      std::cout << std::endl;
-      std::cout << "Input channel number from 1 - " << eps_driver::EpsDriver::NUM_CHANNELS << std::endl;
-      uint8_t channel = static_cast<uint8_t>(InputUnsignedInteger(1, eps_driver::EpsDriver::NUM_CHANNELS));
-      if (!eps.SetPowerChannelState(channel - 1, eps_driver::DISABLED))
-        return Error("Could not change the power state to disabled");
-      std::cout << "Success!" << std::endl;
-      std::cout << std::endl;
-      return true;
-    }
-    case 7: {
-      std::vector<double> data;
-      if (!eps.ReadTemperatureSensors(data))
-        return Error("Could not read the digital temperature sensors");
-      for (size_t i = 0; i < data.size(); i++)
-        std::cout << "- [Temp " << (i + 1) << "] " << data[i] << std::endl;
-      return true;
-    }
-    case 10: {
-      std::string s;
-      if (!eps.GetString(eps_driver::SERIAL, s))
-        return Error("Could not get the serial number.");
-      std::cout << " - Serial: " << s << std::endl;
-      return true;
-    }
-    case 11: {
-      std::cout << "Which battery" << std::endl;
-      std::cout << "- [0] TOP_LEFT" << std::endl;
-      std::cout << "- [1] BOTTOM_LEFT" << std::endl;
-      std::cout << "- [2] TOP_RIGHT" << std::endl;
-      std::cout << "- [3] BOTTOM_RIGHT" << std::endl;
-      std::cout << "Input battery index" << std::endl;
-      eps_driver::BatteryIndex battery = static_cast < eps_driver::BatteryIndex > (
-        InputUnsignedInteger(0, eps_driver::NUM_BATTERIES - 1));
-      eps_driver::BatteryStatus data;
-      if (!eps.GetBatteryStatus(battery, data))
-        return Error("Could not query the battery status");
-      std::cout << "- Channel: " << static_cast<int>(data.chan) << std::endl;
-      std::cout << "- Present: " << data.present << std::endl;
-      std::cout << "- Voltage: " << data.voltage << " mV" << std::endl;
-      std::cout << "- Current: " << data.current << " mA" << std::endl;
-      std::cout << "- Remaining capacity: " << data.charge << " mAh" << std::endl;
-      std::cout << "- Full capacity: " << data.capacity << " mAh" << std::endl;
-      std::cout << "- Design capacity: " << data.design_capacity << " mAh" << std::endl;
-      std::cout << "- Percentage: "  << data.percentage << " %" << std::endl;
-      std::cout << "- Cell voltage: " << std::endl;
-      for (int i = 0; i < 4; i++) {
-        std::cout << "--- Cell[" << i << "]: " << data.cell_voltage[i]  << " mV" << std::endl;
-      }
-      std::cout << "- Status bits: 0x" << std::hex << std::uppercase << data.status
-        << std::dec << std::nouppercase << std::endl;
-      std::cout << "- Temperature: " << static_cast<float>(data.temperature) / 10.0f - 273.15 << " deg C" << std::endl;
-      std::cout << "- Serial number: " << static_cast<unsigned int>(data.serial_number) << std::endl;
-      return true;
-    }
-    /*
-    case 11: {
-      std::cout << "Which LED" << std::endl;
-      std::cout << "- [0] STATUS 1" << std::endl;
-      std::cout << "- [1] STATUS 2" << std::endl;
-      std::cout << "- [2] STATUS 3" << std::endl;
-      std::cout << "- [3] STATUS 4" << std::endl;
-      std::cout << "- [4] STATUS 5" << std::endl;
-      std::cout << "- [5] STATUS 6" << std::endl;
-      std::cout << "- [6] STREAMING" << std::endl;
-      std::cout << "- [7] CAMERA" << std::endl;
-      std::cout << "- [8] MICROPHONE" << std::endl;
-      eps_driver::LedIndex led = static_cast < eps_driver::LedIndex > (
-        InputUnsignedInteger(0, eps_driver::NUM_LEDS - 1));
-      std::cout << "Input LED state (0: persist, 1: enabled, 2: disabled)" << std::endl;
-      int32_t state = InputUnsignedInteger(0, 2);
-      switch (state) {
-      case 1  : eps.SetLedState(led, eps_driver::ENABLED);  break;
-      case 2  : eps.SetLedState(led, eps_driver::DISABLED); break;
-      default : break;
-      }
-      std::cout << "Success!" << std::endl;
-      return true;
-    }
-    case 12: {
-      std::cout << "Which payload" << std::endl;
-      std::cout << "- [0] TOP_FRONT" << std::endl;
-      std::cout << "- [1] BOTTOM_FRONT" << std::endl;
-      std::cout << "- [2] TOP_AFT" << std::endl;
-      std::cout << "- [3] BOTTOM_AFT" << std::endl;
-      eps_driver::PayloadIndex payload = static_cast < eps_driver::PayloadIndex > (
-        InputUnsignedInteger(0, eps_driver::NUM_PAYLOADS - 1));
-      std::cout << "Input payload power state (0: persist, 1: enabled, 2: disabled)" << std::endl;
-      int32_t state = InputUnsignedInteger(0, 2);
-      switch (state) {
-      case 1  : eps.SetPayloadState(payload, eps_driver::ENABLED);  break;
-      case 2  : eps.SetPayloadState(payload, eps_driver::DISABLED); break;
-      default : break;
-      }
-      std::cout << "Success!" << std::endl;
-      return true;
-    }
-    */
-    case 12: {
-      std::cout << "Input buzzer frequency from "
-        << EPS_MIN_BUZZER_FREQUENCY << " - " << EPS_MAX_BUZZER_FREQUENCY << std::endl;
-      uint16_t freq = static_cast<uint16_t>(
-        InputUnsignedInteger(EPS_MIN_BUZZER_FREQUENCY, EPS_MAX_BUZZER_FREQUENCY));
-      std::cout << "Input buzzer duration in seconds from "
-        << EPS_MIN_BUZZER_DURATION << " - " << EPS_MAX_BUZZER_DURATION << std::endl;
-      uint8_t secs = static_cast<uint8_t>(
-        InputUnsignedInteger(EPS_MIN_BUZZER_DURATION, EPS_MAX_BUZZER_DURATION));
-      if (!eps.RingBuzzer(freq, secs))
-        return Error("Could not ring the buzzer");
-      std::cout << "Success!" << std::endl;
-      return true;
-    }
-    case 13: {
-      std::cout << "Sending UNDOCK command to the dock..." << std::endl;
-      if (!eps.Undock())
-        return Error("Failed to send UNDOCK command to the dock.");
-      std::cout << "Success!" << std::endl;
-      return true;
-    }
-    case 14: {
-      std::cout << "Clear TERMINATE event..." << std::endl;
-      if (!eps.ClearTerminateEvent())
-        return Error("Failed to clear the TERMINATE event.");
-      std::cout << "Success!" << std::endl;
-      return true;
-    }
-    case 15: {
-      std::cout << "Get connection state" << std::endl;
-      eps_driver::ConnectionState state;
-      if (!eps.GetConnectionState(state))
-        return Error("Failed to get connection state.");
-      switch (state) {
-      case eps_driver::CONN_DISCONNECTED:
-        std::cout << "Disconnected" << std::endl;
-        return true;
-      case eps_driver::CONN_CONNECTING:
-        std::cout << "Connecting" << std::endl;
-        return true;
-      case eps_driver::CONN_CONNECTED:
-        std::cout << "Connected" << std::endl;
-        return true;
-      default:
-        return Error("Undefined connection state.");
-      }
-      return true;
-    }
-    default: {
-      std::cerr << "Invalid selection" << std::endl;
-      return true;
-    }
-  }
-  return true;
-}
-
 // Main entry point for application
-int main(int argc, char *argv[]) {
-  // Set default parameter values
-  std::string devfile = DEFAULT_I2C_DEV;
-  uint8_t address = DEFAULT_I2C_ADDRESS;
-  uint16_t retries = DEFAULT_I2C_RETRIES;
-  // Get command line parameters
-  switch (argc) {
-    case 4: retries = atoi(argv[3]);        // Retries
-    case 3: address = atoi(argv[2]);        // Address
-    case 2: devfile = argv[1];               // Device name
-    case 1: break;
-    default:
-      std::cout << "Usage: [device] [address] [retries]" << std::endl;
-      return 0;
-  }
-  // Try open the bus
+int main(int argc, char **argv) {
+  // Set up gflags
+  google::SetUsageMessage("Usage: eps_driver_tool <options> [value]\n");
+  google::SetVersionString("0.3.0");
+  common::InitFreeFlyerApplication(&argc, &argv);
+
+  // Get the channel list, if exists
+  std::vector<std::string> input;
+  for (int i = 1; i < argc; i++)
+    input.push_back(argv[i]);
+
+  // Try open the i2c device
   i2c::Error err;
-  auto bus = i2c::Open(devfile, &err);
-  if (!bus) {
-    std::cerr << "Unable to open i2c bus ('" << devfile << "'): " << std::strerror(err) << std::endl;
-    return 1;
-  }
-  bus->SetRetries(retries);
-  // Try and contact the slave device
-  auto device = bus->DeviceAt(address);
-  if (!device) {
-    std::cerr << "Unable to contact i2c slave ('" << address << "') on bus " << devfile << std::endl;
-    return 1;
-  }
-  // Set or replace the eps interface and
-  eps_driver::EpsDriver eps(device, std::bind(&Sleep, std::placeholders::_1));
+  auto bus = i2c::Open(FLAGS_device, &err);
+  if (!bus)
+    return Error("Unable to open i2c bus", -1);
+  bus->SetRetries(FLAGS_retries);
+  auto device = bus->DeviceAt(FLAGS_address);
+  if (!device)
+    return Error("Unable to open i2c slave", -2);
 
-  // Print title
-  std::cout << std::endl << "Astrobee EPS host test" << std::endl << std::endl;
-  // Print version and build info
-  std::string version, build;
-  if (!eps.GetString(eps_driver::SW_VERSION, version))
-    return Error("Could not get the version string");
-  std::cout << " - FW Version " << version << std::endl;
-  if (!eps.GetString(eps_driver::BUILD, build))
-    return Error("Could not get the build string");
-  std::cout << " - FW Build: " << build << std::endl;
+  // Attach an EPS driver to the device on the bus
+  EPS eps(device, std::bind(&Sleep, std::placeholders::_1));
 
-  // Keep taking commands until
-  while (MainMenu(eps)) {}
-  // Success
-  return 0;
+  // WRITE CURRENT STATE TO FILE
+  if (!FLAGS_w.empty()) {
+    // Open a file to write content
+    std::ofstream ofs(FLAGS_w, std::ofstream::trunc);
+    if (!ofs.is_open()) {
+      std::cerr << "Unable to open power mode file"
+                << std::endl;
+      return 3;
+    }
+    // Get the power state
+    std::map<EPS::State, uint8_t> states;
+    if (eps.GetStates((1 << EPS::STATE_POWER), states)) {
+      switch (states[EPS::STATE_POWER]) {
+      default:
+      case EPS::POWER_STATE_UNKNOWN:             ofs << "unknown";     break;
+      case EPS::POWER_STATE_HIBERNATE:           ofs << "hibernate";   break;
+      case EPS::POWER_STATE_AWAKE_SAFE:          ofs << "safe";        break;
+      case EPS::POWER_STATE_CRITICAL_FAULT:      ofs << "fault";       break;
+      case EPS::POWER_STATE_AWAKE_NOMINAL:                             break;
+      }
+    } else {
+      ofs << "cannot_query";
+    }
+    // Close the file and exit gracefully
+    ofs.close();
+    return 0;
+  }
+
+  // REBOOT
+  if (FLAGS_reboot) {
+    if (!eps.Reboot())
+      return Error("Failed to send a REBOOT command");
+    return Print("Sent a REBOOT command successfully");
+  }
+
+  // JUMP TO BOOTLOADER
+  if (FLAGS_bootloader) {
+    if (!eps.EnterBootloader())
+      return Error("Failed to send an ENTER_BOOTLOADER command");
+    return Print("Sent an ENTER_BOOTLOADER command successfully");
+  }
+
+  // SEND UNDOCK COMMAND
+  if (FLAGS_undock) {
+    if (!eps.Undock())
+      return Error("Failed to send an UNDOCK command.");
+    return Print("Sent an UNDOCK command successfully");
+  }
+
+  // REVERT A TERMINATE STATE
+  if (FLAGS_unterminate) {
+    if (!eps.Unterminate())
+      return Error("Failed to clear the TERMINATE event");
+    return Print("Cleared the TERMINATE event successfully");
+  }
+
+  // RING THE BUZZER
+  if (FLAGS_buzz) {
+    if (input.empty())
+      return Error("Buzzer expects a single argument <duration>");
+    if (input.size() == 1) {
+      uint8_t duration = static_cast<uint8_t>(std::stoi(input[0]));
+      if (!eps.RingBuzzer(FLAGS_freq, duration))
+        return Error("Could not ring the buzzer");
+      return Print("Buzzer rung");
+    }
+    return HelpBuzz("buzzer", "Ring the buzzer for a given duration");
+  }
+
+  // VIEW STRING INFORMATION
+  if (FLAGS_string) {
+    ValueMap idxs;
+    idxs[EPS::STRING_SW_VERSION] = Value("Software version", {"sw"});
+    idxs[EPS::STRING_BUILD] = Value("Build", {"build"});
+    idxs[EPS::STRING_SERIAL] = Value("Serial", {"serial"});
+    if (FLAGS_list)
+      return Print("Indexes", idxs, true);
+    if (FLAGS_get) {
+      uint32_t mask;
+      if (!Mask(idxs, input, mask, true))
+        return Error("There was a problem parsing the request. Aborting.");
+      std::map<EPS::String, std::string> data;
+      if (!eps.GetStrings(mask, data))
+        return Error("There was a problem querying the strings. Aborting.");
+      std::map<EPS::String, std::string>::iterator it;
+      std::cout << "Current string values: " << std::endl;
+      for (it = data.begin(); it != data.end(); it++) {
+        std::cout << " -" << idxs[it->first].first << ": "
+                  << it->second << std::endl;
+      }
+      return 0;
+    }
+    if (!FLAGS_set.empty())
+      return Error("The -string argument does not support -set");
+    return HelpView("string", "View string information");
+  }
+
+  // VIEW BATTERY INFORMATION
+  if (FLAGS_battery) {
+    ValueMap idxs;
+    idxs[EPS::BATTERY_TOP_LEFT] = Value("Battery top left/port", {"tl"});
+    idxs[EPS::BATTERY_TOP_RIGHT] = Value("Battery top right/stbd", {"tr"});
+    idxs[EPS::BATTERY_BOTTOM_LEFT] = Value("Battery bot left/port", {"bl"});
+    idxs[EPS::BATTERY_BOTTOM_RIGHT] = Value("Battery bot right/stbd", {"br"});
+    if (FLAGS_list)
+      return Print("Indexes", idxs, true);
+    if (FLAGS_get) {
+      uint32_t mask;
+      if (!Mask(idxs, input, mask, true))
+        return Error("There was a problem parsing the indexes. Aborted.");
+      std::map<EPS::Battery, EPS::BatteryInfo> data;
+      if (!eps.GetBatteries(mask, data))
+        return Error("There was a problem querying the indexes. Aborted.");
+      std::map<EPS::Battery, EPS::BatteryInfo>::iterator it;
+      for (it = data.begin(); it != data.end(); it++) {
+        EPS::BatteryInfo & b = it->second;
+        std::cout << idxs[it->first].first << std::endl;
+        std::cout << "- Channel: " << static_cast<int>(b.chan) << std::endl;
+        std::cout << "- Present: "
+                  << (b.present ? "TRUE" : "FALSE") << std::endl;
+        if (b.present) {
+          std::cout << "- Voltage: " << b.voltage << " mV" << std::endl;
+          std::cout << "- Current: " << b.current << " mA" << std::endl;
+          std::cout << "- Design cap.: " << b.design << " mAh" << std::endl;
+          std::cout << "- Full cap.: " << b.full << " mAh" << std::endl;
+          std::cout << "- Rem. cap.: " << b.remaining << " mAh" << std::endl;
+          std::cout << "- Percentage: "  << b.percentage << " %" << std::endl;
+          std::cout << "- Cell voltage: " << std::endl;
+          for (int i = 0; i < 4; i++)
+            std::cout << "- [" << i << "] " << b.cell[i]  << " mV" << std::endl;
+          std::cout << "- Status bits: 0x"
+                    << std::hex << std::uppercase << b.status
+                    << std::dec << std::nouppercase << std::endl;
+          std::cout << "- Temperature: "
+                    << static_cast<float>(b.temperature) / 10.0f - 273.15
+                    << " deg C" << std::endl;
+          std::cout << "- Serial number: "
+                    << static_cast<unsigned int>(b.serial) << std::endl;
+        }
+      }
+      return 0;
+    }
+    if (!FLAGS_set.empty())
+      return Error("The -battery argument does not support -set");
+    return HelpView("battery", "View battery information");
+  }
+
+  // VIEW TEMPERATURE INFORMATION
+  if (FLAGS_temp) {
+    ValueMap idxs;
+    idxs[EPS::TEMP_BOTTOM] = Value("Bottom side of board", {"bot" });
+    idxs[EPS::TEMP_TOP] = Value("Top side of board", {"top"});
+    idxs[EPS::TEMP_CONNECTOR] = Value("Connector", {"con" });
+    if (FLAGS_list)
+      return Print("Indexes", idxs, true);
+    if (FLAGS_get) {
+      uint32_t mask;
+      if (!Mask(idxs, input, mask, true))
+        return Error("There was a problem parsing the indexes. Aborted.");
+      std::map<EPS::Temp, EPS::TempInfo> data;
+      if (!eps.GetTemps(mask, data))
+        return Error("There was a problem querying the indexes. Aborted.");
+      std::map<EPS::Temp, EPS::TempInfo>::iterator it;
+      std::cout << "Current temperatures:" << std::endl;
+      for (it = data.begin(); it != data.end(); it++)
+        std::cout << "- " << idxs[it->first].first << ": " << it->second.temp
+                  << " celcius" << std::endl;
+      return 0;
+    }
+    if (!FLAGS_set.empty())
+      return Error("The -temp argument does not support -set");
+    return HelpView("temp", "View temperature information");
+  }
+
+  // VIEW CONNECTION INFORMATION
+  if (FLAGS_state) {
+    ValueMap idxs;
+    idxs[EPS::STATE_POWER] = Value("Power state", {"power"});
+    idxs[EPS::STATE_DOCK] = Value("Dock State", {"dock"});
+    ValueMap pvals;
+    pvals[EPS::POWER_STATE_UNKNOWN] = Value("Unknown", {"unknown"});
+    pvals[EPS::POWER_STATE_HIBERNATE] = Value("Hibernating", {"hibernate"});
+    pvals[EPS::POWER_STATE_AWAKE_NOMINAL] = Value("Nominal", {"nominal"});
+    pvals[EPS::POWER_STATE_AWAKE_SAFE] = Value("Safe", {"safe"});
+    pvals[EPS::POWER_STATE_CRITICAL_FAULT] = Value("Critical fault", {"fault"});
+    ValueMap dvals;
+    dvals[EPS::DOCK_DISCONNECTED] = Value("Disconnected", { "disconnected"});
+    dvals[EPS::DOCK_CONNECTING] = Value("Connecting", {"connecting"});
+    dvals[EPS::DOCK_CONNECTED] = Value("Connected", {"connected"});
+    if (FLAGS_list) {
+      Print("Indexes", idxs);
+      Print("Power state values", pvals, true);
+      Print("Dock state values", dvals, true);
+      return 0;
+    }
+    if (FLAGS_get) {
+      uint32_t mask;
+      if (!Mask(idxs, input, mask, true))
+        return Error("There was a problem parsing the indexes. Aborted.");
+      std::map<EPS::State, uint8_t> data;
+      if (!eps.GetStates(mask, data))
+        return Error("There was a problem querying the indexes. Aborted.");
+      std::map<EPS::State, uint8_t>::iterator it;
+      std::cout << "Current states:" << std::endl;
+      for (it = data.begin(); it != data.end(); it++) {
+        std::cout << "- " << idxs[it->first].first << ": ";
+        switch (it->first) {
+        case EPS::STATE_POWER:  std::cout << pvals[it->second].first;  break;
+        case EPS::STATE_DOCK:   std::cout << dvals[it->second].first;  break;
+        default:                std::cout << "unknown";               break;
+        }
+        std::cout << std::endl;
+      }
+      return 0;
+    }
+    // Only allow the power state to be set. The dock state is immutable.
+    if (!FLAGS_set.empty()) {
+      ValueMap tmp;
+      tmp[EPS::STATE_POWER] = Value("Power state", {"power"});
+      uint32_t mask;
+      if (!Mask(tmp, input, mask, false))
+        return Error("There was a problem parsing the indexes you supplied.");
+      // Now get the value to set
+      uint32_t value;
+      if (!Valid(pvals, FLAGS_set, value))
+        return Error("The supplied value for -set is not supported");
+      // Set the power state
+      if (!eps.SetPowerState(static_cast<EPS::PowerStateValue>(value)))
+        return Error("There was a problem setting the power state. Aborted.");
+      return Print("Power state set successfully");
+    }
+    return HelpView("state", "View and set certain state information");
+  }
+
+  // VIEW HOUESEKEEPING INFORMATION
+  if (FLAGS_hk) {
+    ValueMap idxs;
+    idxs[EPS::HK_AGND1_V] = Value("Analog GND 1 voltage", {"v_agnd1"});
+    idxs[EPS::HK_SUPPLY_IN_V] = Value("Supply voltage", {"v_supin"});
+    idxs[EPS::HK_PAYLOAD_PWR3_I] = Value("Payload 3 current", {"c_pay3"});
+    idxs[EPS::HK_SUBSYS1_1_PWR_V] = Value("Subsystem 1,1 voltage", {"v_ss12"});
+    idxs[EPS::HK_SUBSYS1_2_PWR_V] = Value("Subsystem 1,2 voltage", {"v_ss11"});
+    idxs[EPS::HK_UNREG_V] = Value("Unregulated voltage", {"v_unreg"});
+    idxs[EPS::HK_SYSTEM_I] = Value("System current", {"c_sys"});
+    idxs[EPS::HK_BAT4V_V] = Value("Battery 4 voltage", {"v_bat4"});
+    idxs[EPS::HK_BAT3V_V] = Value("Battery 3 voltage", {"v_bat3"});
+    idxs[EPS::HK_BAT2V_V] = Value("Battery 2 voltage", {"v_bat2"});
+    idxs[EPS::HK_BAT1V_V] = Value("Battery 1 voltage", {"v_bat1"});
+    idxs[EPS::HK_SUPPLY_I] = Value("Supply current", {"v_supp"});
+    idxs[EPS::HK_5VLIVE_V] = Value("5V live voltage", {"v_live"});
+    idxs[EPS::HK_AGND2_V] = Value("Analog GND 2 voltage", {"v_agnd2"});
+    idxs[EPS::HK_FAN_PWR_I] = Value("Fan current", {"c_fan"});
+    idxs[EPS::HK_AUX_PWR_I] = Value("Auxiliary current", {"c_aux"});
+    idxs[EPS::HK_PAYLOAD_PWR4_I] = Value("Payload 4 current", {"c_pay4"});
+    idxs[EPS::HK_PAYLOAD_PWR2_I] = Value("Payload 2 current", {"c_pay2"});
+    idxs[EPS::HK_PAYLOAD_PWR1_I] = Value("Payload 1 current", {"c_pay1"});
+    idxs[EPS::HK_5A_REG1_PWR_I] = Value("5A regulator 1 current", {"c_reg1"});
+    idxs[EPS::HK_MOTOR1_I] = Value("PMC 1 (right) current", {"c_pmc1"});
+    idxs[EPS::HK_SUBSYS2_PWR_V] = Value("Subsystem 2 voltage", {"v_ss2"});
+    idxs[EPS::HK_MOTOR2_I] = Value("PMC 2 (left) current", {"c_pmc2"});
+    idxs[EPS::HK_5A_REG2_PWR_I] = Value("5A regulator 2 current", {"c_reg2"});
+    idxs[EPS::HK_5A_REG3_PWR_I] = Value("5A regulator 3 current", {"c_reg3"});
+    idxs[EPS::HK_MAIN5_PWR_I] = Value("Main 5 current", {"c_main"});
+    idxs[EPS::HK_AUO_PWR_I] = Value("AUO current", {"c_auo"});
+    idxs[EPS::HK_HLP_I] = Value("HLP current", {"c_hlp"});
+    idxs[EPS::HK_USB_PWR_I] = Value("Universal serial bus current", {"c_usb"});
+    idxs[EPS::HK_LLP_I] = Value("LLP current", {"c_llp"});
+    idxs[EPS::HK_MLP_I] = Value("MLP current", {"c_mlp"});
+    idxs[EPS::HK_ENET_PWR_I] = Value("Ethernet current", {"c_eth"});
+    if (FLAGS_list)
+      return Print("Indexes", idxs, true);
+    if (FLAGS_get) {
+      uint32_t mask;
+      if (!Mask(idxs, input, mask, true))
+        return Error("There was a problem parsing the indexes. Aborted.");
+      std::map<EPS::Housekeeping, double> data;
+      if (!eps.GetHousekeeping(mask, data))
+        return Error("There was a problem querying the indexes. Aborted.");
+      std::map<EPS::Housekeeping, double>::iterator it;
+      std::cout << "Current housekeeping values: " << std::endl;
+      for (it = data.begin(); it != data.end(); it++)
+        std::cout << "- " << idxs[it->first].first << ": "
+          << std::fixed << std::setprecision(4) << it->second << std::endl;
+      return 0;
+    }
+    if (!FLAGS_set.empty())
+      return Error("The -housekeeping argument does not support -set");
+    return HelpView("housekeeping", "View housekeeping information");
+  }
+
+  // MANAGE FAULT INFORMATION
+  if (FLAGS_fault) {
+    ValueMap idxs;
+    idxs[EPS::FAULT_OC_ENET] = Value("Ethernet o/current", {"c_eth"});
+    idxs[EPS::FAULT_OT_FLASHLIGHT_1] = Value("Light 1 o/temp", {"t_light1"});
+    idxs[EPS::FAULT_OT_FLASHLIGHT_2] = Value("Light 2 o/temp", {"t_light2"});
+    idxs[EPS::FAULT_OC_FAN] = Value("Fan o/current", {"t_fan"});
+    idxs[EPS::FAULT_OT_MLP] = Value("MLP o/temp", {"t_mlp"});
+    idxs[EPS::FAULT_OT_LLP] = Value("LLP o/temp", {"t_llp"});
+    idxs[EPS::FAULT_OT_HLP] = Value("HLP o/temp", {"t_hlp"});
+    idxs[EPS::FAULT_OC_USB] = Value("USB o/current", {"c_usb"});
+    idxs[EPS::FAULT_OC_LLP] = Value("LLP o/current", {"c_llp"});
+    idxs[EPS::FAULT_OC_MLP] = Value("MLP o/current", {"c_mlp"});
+    idxs[EPS::FAULT_OC_HLP] = Value("HLP o/current", {"c_hlp"});
+    idxs[EPS::FAULT_OC_AUX] = Value("Auxiliary o/current", {"c_aux"});
+    idxs[EPS::FAULT_ST_5A_REG_3] = Value("5A reg 3 state", {"s_reg3"});
+    idxs[EPS::FAULT_OC_5A_REG_3] = Value("5A reg 3 o/current", {"c_reg3"});
+    idxs[EPS::FAULT_OC_5A_REG_2] = Value("5A reg 2 o/current", {"c_reg2"});
+    idxs[EPS::FAULT_ST_5A_REG_2] = Value("5A reg 2 state", {"s_reg2"});
+    idxs[EPS::FAULT_OC_5A_REG_1] = Value("5A reg 1 o/current", {"c_reg1"});
+    idxs[EPS::FAULT_ST_5A_REG_1] = Value("5A reg 1 state", {"s_reg1"});
+    idxs[EPS::FAULT_OC_PAYLOAD_1] = Value("Payload 1 o/current", {"c_pay1"});
+    idxs[EPS::FAULT_OC_PAYLOAD_2] = Value("Payload 2 o/current", {"c_pay2"});
+    idxs[EPS::FAULT_OC_PAYLOAD_3] = Value("Payload 3 o/current", {"c_pay3"});
+    idxs[EPS::FAULT_OC_PAYLOAD_4] = Value("Payload 4 o/current", {"c_pay4"});
+    if (FLAGS_list)
+      return Print("Indexes", idxs, true);
+    if (FLAGS_clear) {
+      if (!eps.ClearFaults())
+        return Error("Could not clear the faults.");
+      return Print("Faults cleared successfully");
+    }
+    if (FLAGS_get) {
+      uint32_t mask;
+      if (!Mask(idxs, input, mask, true))
+        return Error("There was a problem parsing the indexes. Aborted.");
+      std::map<EPS::Fault, bool> data;
+      if (!eps.GetFaults(mask, data))
+        return Error("There was a problem querying the indexes. Aborted.");
+      std::map<EPS::Fault, bool>::iterator it;
+      std::cout << "Current fault values: " << std::endl;
+      for (it = data.begin(); it != data.end(); it++)
+        std::cout << "- " << idxs[it->first].first << ": "
+                  << (it->second ? "FAULT" : "NOMINAL") << std::endl;
+      return 0;
+    }
+    if (!FLAGS_set.empty())
+      return Error("The -fault argument does not support -set");
+    return HelpView("fault", "View fault information");
+  }
+
+  // TOGGLE POWER
+  if (FLAGS_power) {
+    ValueMap idxs;
+    idxs[EPS::CHANNEL_LLP_EN] = Value("Low-level processor", {"llp"});
+    idxs[EPS::CHANNEL_MLP_EN] = Value("Mid-level processor", {"mlp"});
+    idxs[EPS::CHANNEL_HLP_EN] = Value("High-level processor", {"hlp"});
+    idxs[EPS::CHANNEL_USB_PWR_EN] = Value("Universal serial bus", {"usb"});
+    idxs[EPS::CHANNEL_AUX_PWR_EN] = Value("Auxiliary", {"aux"});
+    idxs[EPS::CHANNEL_ENET_PWR_EN] = Value("Ethernet", {"eth"});
+    idxs[EPS::CHANNEL_FAN_EN] = Value("Fan", {"fan"});
+    idxs[EPS::CHANNEL_SPEAKER_EN] = Value("Speaker", {"spk"});
+    idxs[EPS::CHANNEL_PAYLOAD_EN1] = Value("Payload 1 top-front", {"pay1"});
+    idxs[EPS::CHANNEL_PAYLOAD_EN2] = Value("Payload 2 bottom-front", {"pay2"});
+    idxs[EPS::CHANNEL_PAYLOAD_EN3] = Value("Payload 3 top-aft", {"pay3"});
+    idxs[EPS::CHANNEL_PAYLOAD_EN4] = Value("Payload 4 bottom-aft", {"pay4"});
+    idxs[EPS::CHANNEL_MOTOR_EN1] = Value("PMC 1 right/stbd", {"pmc1"});
+    idxs[EPS::CHANNEL_MOTOR_EN2] = Value("PMC 2 left/port", {"pmc2"});
+    idxs[EPS::CHANNEL_FWD_LED_4] = Value("LED Status 1A", {"s1a"});
+    idxs[EPS::CHANNEL_FWD_LED_5] = Value("LED Status 1B", {"s1b"});
+    idxs[EPS::CHANNEL_FWD_LED_6] = Value("LED Status 1C", {"s1c"});
+    idxs[EPS::CHANNEL_FWD_LED_7] = Value("LED Status 2A", {"s2a"});
+    idxs[EPS::CHANNEL_FWD_LED_8] = Value("LED Status 2B", {"s2b"});
+    idxs[EPS::CHANNEL_FWD_LED_9] = Value("LED Status 2C", {"s2c"});
+    idxs[EPS::CHANNEL_FWD_LED_1] = Value("LED Microphone", {"mic"});
+    idxs[EPS::CHANNEL_FWD_LED_2] = Value("LED Camera", {"cam"});
+    idxs[EPS::CHANNEL_FWD_LED_3] = Value("LED Streaming", {"str"});
+    ValueMap vals;
+    vals[EPS::OFF] = Value("Turn off", {"disable", "off", "false", "0"});
+    vals[EPS::ON] = Value("Turn on", {"enable", "on", "true", "1"});
+    if (FLAGS_list) {
+      Print("Indexes", idxs);
+      Print("Values", vals);
+      return 0;
+    }
+    if (FLAGS_get) {
+      uint32_t mask;
+      if (!Mask(idxs, input, mask, true))
+        return Error("There was a problem parsing the indexes. Aborted.");
+      std::map<EPS::Channel, bool> data;
+      if (!eps.GetChannels(mask, data))
+        return Error("There was a problem querying the indexes. Aborted.");
+      std::map<EPS::Channel, bool>::iterator it;
+      std::cout << "Current power states:" << std::endl;
+      for (it = data.begin(); it != data.end(); it++)
+        std::cout << "- " << idxs[it->first].first << ": "
+                  << (it->second ? "TRUE" : "FALSE") << std::endl;
+      return 0;
+    }
+    if (!FLAGS_set.empty()) {
+      uint32_t mask;
+      if (!Mask(idxs, input, mask, false))
+        return Error("There was a problem parsing the indexes you supplied.");
+      uint32_t value;
+      if (!Valid(vals, FLAGS_set, value))
+        return Error("The supplied value for -set is not supported");
+      if (!eps.SetChannels(mask, value))
+        return Error("There was a problem setting the channel values. Aborted.");
+      return Print("Power channels set successfully");
+    }
+    return HelpConf("power", "Configure power channels");
+  }
+
+  // TOGGLE CHARGE STATE
+  if (FLAGS_charge) {
+    ValueMap idxs;
+    idxs[EPS::CHARGER_TOP_LEFT] = Value("Charger top left/port", {"tl"});
+    idxs[EPS::CHARGER_TOP_RIGHT] = Value("Charger top right/stbd", {"tr"});
+    idxs[EPS::CHARGER_BOTTOM_LEFT] = Value("Charger bot left/port", {"bl"});
+    idxs[EPS::CHARGER_BOTTOM_RIGHT] = Value("Charger bot right/stbd", {"br"});
+    ValueMap vals;
+    vals[EPS::OFF] = Value("Turn off", {"disable", "off", "false", "0"});
+    vals[EPS::ON] = Value("Turn on", {"enable", "on", "true", "1"});
+    if (FLAGS_list) {
+      Print("Indexes", idxs);
+      Print("Values", vals);
+      return 0;
+    }
+    if (FLAGS_get) {
+      uint32_t mask;
+      if (!Mask(idxs, input, mask, true))
+        return Error("There was a problem parsing the indexes. Aborted.");
+      std::map<EPS::Charger, bool> data;
+      if (!eps.GetChargers(mask, data))
+        return Error("There was a problem querying the indexes. Aborted.");
+      std::map<EPS::Charger, bool>::iterator it;
+      std::cout << "Current charge states:" << std::endl;
+      for (it = data.begin(); it != data.end(); it++)
+        std::cout << "- " << idxs[it->first].first << ": "
+                  << (it->second ? "ENABLED" : "DISABLED") << std::endl;
+      return 0;
+    }
+    if (!FLAGS_set.empty()) {
+      uint32_t mask;
+      if (!Mask(idxs, input, mask, true))
+        return Error("There was a problem parsing the indexes you supplied.");
+      uint32_t value;
+      if (!Valid(vals, FLAGS_set, value))
+        return Error("The supplied value for -set is not supported");
+      if (!eps.SetChargers(mask, value))
+        return Error("There was a problem setting the charge values. Aborted.");
+      return Print("Charge state set successfully");
+    }
+    return HelpConf("charge", "Configure charging systems");
+  }
+
+  // CONFIGURE LED
+  if (FLAGS_led) {
+    ValueMap idxs;
+    idxs[EPS::LED_S1A] = Value("Status LED 1A (green)", {"s1a"});
+    idxs[EPS::LED_S1B] = Value("Status LED 1B (green)", {"s1b"});
+    idxs[EPS::LED_S1C] = Value("Status LED 1C (green)", {"s1c"});
+    idxs[EPS::LED_S2A] = Value("Status LED 2A (amber)", {"s2a"});
+    idxs[EPS::LED_S2B] = Value("Status LED 2B (amber)", {"s2b"});
+    idxs[EPS::LED_S2C] = Value("Status LED 2C (amber)", {"s2c"});
+    idxs[EPS::LED_STR] = Value("Streaming LED", {"str"});
+    idxs[EPS::LED_CAM] = Value("Camera LED", {"cam"});
+    idxs[EPS::LED_MIC] = Value("Microphone LED", {"mic"});
+    ValueMap vals;
+    vals[EPS::LED_MODE_OFF] = Value("Off", {"0", "off", "disabled", "false"});
+    vals[EPS::LED_MODE_ON] = Value("On", {"1", "on", "enabled", "true"});
+    vals[EPS::LED_MODE_BLINK_2HZ] = Value("Fast", {"fast" });
+    vals[EPS::LED_MODE_BLINK_1HZ] = Value("Medium", {"medium"});
+    vals[EPS::LED_MODE_BLINK_0_5HZ] = Value("Slow", {"slow"});
+    if (FLAGS_list) {
+      Print("Indexes", idxs);
+      Print("Values", vals);
+      return 0;
+    }
+    if (FLAGS_get)
+      return Error("The -led argument does not support -get");
+    if (!FLAGS_set.empty()) {
+      uint32_t mask;
+      if (!Mask(idxs, input, mask, true))
+        return Error("There was a problem parsing the indexes you supplied.");
+      uint32_t value;
+      if (!Valid(vals, FLAGS_set, value))
+        return Error("The supplied value for -set is not supported");
+      if (!eps.SetLeds(mask, static_cast<EPS::LedMode>(value)))
+        return Error("There was a problem setting the charge values. Aborted.");
+      return Print("LEDs channels set successfully");
+    }
+    return HelpConf("led", "Configure LEDs");
+  }
+
+  // If we get here there was no valid command, so print useage info and exit
+  return Help();
 }

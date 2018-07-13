@@ -43,3 +43,4 @@ create_tool_targets(DIR tools
 )
 
 install_launch_files()
+install(FILES tools/nozzle_identification.csv DESTINATION share/${PROJECT_NAME})

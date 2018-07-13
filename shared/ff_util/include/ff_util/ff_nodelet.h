@@ -32,6 +32,7 @@
 #include <ff_msgs/Heartbeat.h>
 #include <ff_msgs/Trigger.h>
 
+#include <ff_util/ff_faults.h>
 #include <ff_util/ff_names.h>
 
 #include <map>
@@ -67,14 +68,21 @@ class FreeFlyerNodelet : public nodelet::Nodelet {
   explicit FreeFlyerNodelet(std::string const& name, bool autostart_hb_timer = true);
   virtual ~FreeFlyerNodelet();
 
-  // these are public because they are used by GNC
-  // which is outside the class
-  // Fault management
-  void AssertFault(std::string const& key, std::string const& message,
-                    ros::Time time_fault_occurred = ros::Time::now());
+  void AssertFault(FaultKeys enum_key,
+                   std::string const& message,
+                   ros::Time time_fault_occurred = ros::Time::now());
   void ClearAllFaults();
-  void ClearFault(std::string const& key);
+  void ClearFault(FaultKeys enum_key);
   void PrintFaults();
+
+  // NodeHandle management
+  ros::NodeHandle* GetPlatformHandle(bool multithreaded = false);
+  ros::NodeHandle* GetPrivateHandle(bool multithreaded = false);
+
+  // Get the name of this node (mainly useful for drivers)
+  std::string GetName();
+  std::string GetPlatform();
+  std::string GetTransform(std::string const& child);
 
  protected:
   // Virtual methods that *can* be implemented by FF nodes. We don't make
@@ -89,14 +97,6 @@ class FreeFlyerNodelet : public nodelet::Nodelet {
 
   // Diagnostic management
   void SendDiagnostics(const std::vector<diagnostic_msgs::KeyValue> &keyval);
-
-  // NodeHandle management
-  ros::NodeHandle* GetPlatformHandle(bool multithreaded = false);
-  ros::NodeHandle* GetPrivateHandle(bool multithreaded = false);
-
-  // Get the name of this node (mainly useful for drivers)
-  std::string GetName();
-  std::string GetPlatform();
 
   // The set function does all of the internal work. We have moved this out
   // of the onInit() call, so that it can be invoked when a nodelet is not used

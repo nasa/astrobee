@@ -51,7 +51,7 @@ Next, install all required dependencies:
 
 #### Extra options to install the dependencies
 
-- If you do not want to configure you `.ssh/config` to just get the
+- If you do not want to configure your `.ssh/config` to just get the
 dependencies, you can use the `NDC_USERNAME` variable.
 - By default, the custom debians are installed in `$SOURCE_PATH/.astrobee_deb`.
 If you prefer to install them at a different location, you can use the

@@ -43,6 +43,8 @@ EkfWrapper::EkfWrapper(ros::NodeHandle* nh, std::string const& platform_name) :
       config_.CheckFilesUpdated(std::bind(&EkfWrapper::ReadParams, this));}, false, true);
   pt_ekf_.Initialize("ekf");
 
+  // Register to receive a callback when the EKF resets
+  ekf_.SetResetCallback(std::bind(&EkfWrapper::ResetCallback, this));
   // subscribe to IMU first, then rest once IMU is ready
   // this is so localization manager doesn't timeout
   imu_sub_    = nh_->subscribe(TOPIC_HARDWARE_IMU, 5, &EkfWrapper::ImuCallBack, this,
@@ -60,6 +62,7 @@ void EkfWrapper::InitializeEkf(void) {
   feature_pub_ = nh_->advertise<sensor_msgs::PointCloud2>(TOPIC_GNC_EKF_FEATURES, 1,
       boost::bind(&EkfWrapper::SubscriberCallback, this),
       boost::bind(&EkfWrapper::SubscriberCallback, this));
+  reset_pub_   = nh_->advertise<std_msgs::Empty>(TOPIC_GNC_EKF_RESET, 1);
 
   vl_sub_     = nh_->subscribe(TOPIC_LOCALIZATION_ML_FEATURES, 1, &EkfWrapper::VLVisualLandmarksCallBack, this,
                               ros::TransportHints().tcpNoDelay());
@@ -176,6 +179,11 @@ void EkfWrapper::PublishFeatures(ff_msgs::DepthLandmarks::ConstPtr const& l) {
     memcpy(&features_.data[features_.point_step * i + 8], &l->landmarks[i].w, 4);
   }
   feature_pub_.publish(features_);
+}
+
+void EkfWrapper::ResetCallback() {
+  static std_msgs::Empty msg;
+  reset_pub_.publish(msg);
 }
 
 void EkfWrapper::ImuCallBack(sensor_msgs::Imu::ConstPtr const& imu) {

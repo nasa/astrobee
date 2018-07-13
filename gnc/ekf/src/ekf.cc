@@ -34,7 +34,7 @@ DEFINE_bool(save_inputs_file, false, "Save the inputs to a file.");
 namespace ekf {
 
 Ekf::Ekf(void) :
-  reset_ekf_(true), reset_ready_(false),
+  reset_ekf_(true), reset_ready_(false), reset_callback_(nullptr),
   processing_of_reg_(false), of_inputs_delayed_(false), output_file_(NULL),
   vl_camera_id_(0), of_camera_id_(0), dl_camera_id_(0) {
   gnc_.cmc_.speed_gain_cmd = 1;  // prevent from being invalid when running bags
@@ -421,6 +421,10 @@ void Ekf::SetSpeedGain(const uint8_t gain) {
   gnc_.cmc_.speed_gain_cmd = gain;
 }
 
+void Ekf::SetResetCallback(std::function<void(void)> callback) {
+  reset_callback_ = callback;
+}
+
 // this saves all the inputs to a file if an output file is specified,
 // can be debugged later in matlab
 void Ekf::WriteToFile(void) {
@@ -645,6 +649,10 @@ void Ekf::ApplyReset(void) {
 
   reset_ready_ = false;
   reset_ekf_ = false;
+
+  // If we have set the reset callback, call it now.
+  if (reset_callback_)
+    reset_callback_();
 }
 
 }  // end namespace ekf

@@ -1,3 +1,12 @@
+astrobee (0.4.0) testing; urgency=medium
+
+  * Improvements of map building and camera calibration.
+  * Improvements on simulator performance and multi-robot support.
+  * New features for guest science.
+  * Many internal changes.
+
+ -- Astrobee Flight Software <astrobee-fsw@nx.arc.nasa.gov> Fri, 13 Jul 2018 15:31:30 -0700
+
 astrobee (0.3.2) unstable; urgency=medium
 
   * Fixed bug in install with new debian version numbers.

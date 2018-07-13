@@ -54,13 +54,14 @@ void Localizer::ReadParams(config_reader::ConfigReader* config) {
   map_->SetNumSimilar(num_similar);
   map_->SetRansacInlierTolerance(ransac_inlier_tolerance);
   map_->SetRansacIterations(ransac_iterations);
-  map_->SetBriskParams(min_features, max_features, brisk_threshold, detection_retries);
+  map_->SetDetectorParams(min_features, max_features, brisk_threshold, detection_retries);
 }
 
 bool Localizer::Localize(cv_bridge::CvImageConstPtr image_ptr, ff_msgs::VisualLandmarks* vl) {
+  bool multithreaded = false;
   cv::Mat image_descriptors;
   Eigen::Matrix2Xd image_keypoints;
-  map_->DetectFeatures(image_ptr->image, &image_descriptors, &image_keypoints);
+  map_->DetectFeatures(image_ptr->image, multithreaded, &image_descriptors, &image_keypoints);
   camera::CameraModel camera(Eigen::Vector3d(),
                              Eigen::Matrix3d::Identity(),
                              map_->GetCameraParameters());

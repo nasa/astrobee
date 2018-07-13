@@ -129,12 +129,12 @@ void ff::RosCpuStateToRapid::Callback(ff_msgs::CpuStateStampedConstPtr const&
 
   float load = 0;
   if (found) {
-    load = state->ave_loads[total_index];
+    load = state->avg_loads[total_index];
   }
 
-  if (state_msg.machines[index].ave_total_load != load) {
+  if (state_msg.machines[index].avg_total_load != load) {
     updated_ = true;
-    state_msg.machines[index].ave_total_load = load;
+    state_msg.machines[index].avg_total_load = load;
   }
 
   if (state_msg.machines[index].temperature != state->temp) {

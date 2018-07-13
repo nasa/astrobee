@@ -17,13 +17,11 @@
 #
 # Service to query temperature sensors managed by the EPS board
 
-uint8 type                        # Type of temperature sensor
-uint8 ANALOG  = 1                 # Analog 
-uint8 DIGITAL = 2                 # Digital
-
 ---
 
 bool success                      # Was the command accepted
 string status_message             # Error message, if needed
 
-uint16[] data                     # The temperature data
+float32 top                       # Board top temperature
+float32 bottom                    # Board bottom temperature
+float32 connector                 # Board connector temperature

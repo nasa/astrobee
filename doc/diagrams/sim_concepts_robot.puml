@@ -1,0 +1,77 @@
+@startuml
+
+skinparam componentStyle uml2
+
+'left to right direction
+
+!define SHOW_ALL_TYPES true
+!include "common.puml"
+
+
+!define COLOR_DEV COLOR_9PASTEL_1
+!define COLOR_CPU COLOR_9PASTEL_9
+
+title Astrobee Robot Software deployed on Physical Robot
+
+folder "Astrobee Robot" {
+
+  [Camera] <<hw device>> COLOR_DEV
+  [IMU] <<hw device>> COLOR_DEV
+  [PMC] <<hw device>>COLOR_DEV
+
+  node MLP <<CPU>> COLOR_CPU {
+    loc_node(sparse_mapping)
+    mgt_node(image_sampler)
+    'mob_node(mobility)
+    drv_node(navcam)
+    message(NavImage, sensor_msgs::Image, /hw/cam_nav)
+  }
+
+  node LLP <<CPU>> COLOR_CPU {
+    'frame GNC {
+      gnc_node(EKF)
+      gnc_node(CTL)
+      gnc_node(FAM)
+    '}
+    drv_node(epson_imu)
+    drv_node(pmc_actuator)
+    EKF -> CTL
+    CTL -> FAM
+    message(PmcCommand, ff_hw_msgs::PmcCommand, /hw/pmc/command)
+    message(ImuTelem, sensor_msgs::Imu, /hw/imu)
+  }
+
+  Camera -o navcam : USB
+  IMU -o epson_imu : SPI
+  PMC -o pmc_actuator : I2C
+
+  message(ImgSample, sensor_msgs::Image, /mgt/img_sampler)
+  message(Features, ff_msgs::VisualLandmarks, /loc/ml/features)
+  'message(PmcTelem, , /hw/pmc/telemetry)
+
+  navcam -> NavImage
+  NavImage --> sparse_mapping
+  NavImage --> image_sampler
+
+  sparse_mapping --> Features
+  Features ---> EKF
+
+  image_sampler --> ImgSample
+
+  epson_imu --> ImuTelem
+  ImuTelem -> EKF
+
+  FAM -> PmcCommand
+  PmcCommand --> pmc_actuator
+
+  'pmc_actuator --> PmcTelem
+  'PmcTelem --> mobility
+}
+
+legend bottom
+PMC: Propulsion Module Controller
+CTL: GN&C Control
+FAM: GN&C Force Allocation Module
+endlegend
+
+@enduml

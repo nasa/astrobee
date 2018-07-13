@@ -39,6 +39,7 @@ int32 EXCEEDS_LIMITS_OMEGA             = -8
 int32 EXCEEDS_LIMITS_ALPHA             = -9
 int32 INVALID_FLIGHT_MODE              = -10
 int32 INVALID_GENERAL_CONFIG           = -11
+int32 FAILS_ZONE_CHECK                 = -12
 
 ff_msgs/ControlState[] segment                        # Input segment
 

@@ -48,7 +48,8 @@ class SpeedCamNode : public ff_util::FreeFlyerNodelet {
       std::placeholders::_2,  std::placeholders::_3),
     std::bind(&SpeedCamNode::OpticalFlowCallback, this, std::placeholders::_1),
     std::bind(&SpeedCamNode::SpeedCallback, this, std::placeholders::_1),
-    std::bind(&SpeedCamNode::StatusCallback, this, std::placeholders::_1)) {}
+    std::bind(&SpeedCamNode::StatusCallback, this, std::placeholders::_1),
+    std::bind(&SpeedCamNode::VersionCallback, this, std::placeholders::_1)) {}
   virtual ~SpeedCamNode() {}
 
  protected:
@@ -58,36 +59,36 @@ class SpeedCamNode : public ff_util::FreeFlyerNodelet {
     config_reader::ConfigReader config_params;
     config_params.AddFile("hw/speed_cam.config");
     if (!config_params.ReadFiles())
-      FF_FATAL("Could get read the config file");
+      return InitFault("Could get read the config file");
 
     // Read the device information from the config table
     config_reader::ConfigReader::Table devices;
     if (!config_params.GetTable("speed_cam", &devices))
-      FF_FATAL("Could get speed_cam item in config file");
+      return InitFault("Could get speed_cam item in config file");
 
     // Iterate over all devices
     for (int i = 0; i < devices.GetSize(); i++) {
       config_reader::ConfigReader::Table device_info;
       if (!devices.GetTable(i + 1, &device_info))
-        FF_FATAL("Could get row in table table");
+        return InitFault("Could get row in table table");
 
       // Get the name of the device and check it matches the name of this node
       std::string name;
       if (!device_info.GetStr("name", &name))
-        FF_FATAL("Could not find row 'name' in table");
+        return InitFault("Could not find row 'name' in table");
 
       if (name == GetName()) {
         config_reader::ConfigReader::Table serial;
         if (!device_info.GetTable("serial", &serial))
-          FF_FATAL("Could not find table 'serial' in table");
+          return InitFault("Could not find table 'serial' in table");
         std::string port;
         if (!serial.GetStr("port", &port))
-          FF_FATAL("Could not read the serial port from the config");
+          return InitFault("Could not read the serial port from the config");
         uint32_t baud;
         if (!serial.GetUInt("baud", &baud))
-          FF_FATAL("Could not read the serial baud from the config");
+          return InitFault("Could not read the serial baud from the config");
         if (speed_cam_.Initialize(port, baud) != RESULT_SUCCESS)
-          FF_FATAL("Could not initialize the serial device");
+          return InitFault("Could not initialize the serial device");
 
         /*
         double timesync_secs = -1.0;
@@ -111,7 +112,14 @@ class SpeedCamNode : public ff_util::FreeFlyerNodelet {
     }
 
     // If we get here, we didn't find a configuration block in the LUA, which is a problem...
-    FF_FATAL("Could not find the speed_cam device '" << GetName() << "' in the LUA config");
+    InitFault("Could not find the speed_cam: " + GetName());
+  }
+
+  // Deal with a fault in a responsible manner
+  void InitFault(std::string const& msg ) {
+    NODELET_ERROR_STREAM(msg);
+    AssertFault(ff_util::INITIALIZATION_FAILED, msg);
+    return;
   }
 
   // Perform a time sync event
@@ -191,9 +199,15 @@ class SpeedCamNode : public ff_util::FreeFlyerNodelet {
   // The status includes over-speed alerts.
   void StatusCallback(mavlink_heartbeat_t const& message) {
     if ((message.system_status & STATUS_LINEAR_SPEED_LIMIT_EXCEEDED) != 0x00)
-      AssertFault("VELOCITY_TOO_HIGH", "The linear speed exceeded the limit.");
+      AssertFault(ff_util::VELOCITY_TOO_HIGH,
+                  "The linear speed exceeded the limit.");
     if ((message.system_status & STATUS_ANGULAR_SPEED_LIMIT_EXCEEDED) != 0x00)
-      AssertFault("VELOCITY_TOO_HIGH", "The angular speed exceeded the limit.");
+      AssertFault(ff_util::VELOCITY_TOO_HIGH,
+                  "The angular speed exceeded the limit.");
+  }
+
+  void VersionCallback(uint32_t sw_version) {
+    // FIXME: Should it publish the version?
   }
 
  private:

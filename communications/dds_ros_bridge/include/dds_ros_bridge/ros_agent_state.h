@@ -37,6 +37,7 @@
 
 #include "AstrobeeAgentStateSupport.h"
 #include "AstrobeeConstants.h"
+#include "MobilitySettingsStateSupport.h"
 
 namespace ff {
 
@@ -54,6 +55,12 @@ class RosAgentStateToRapid : public RosSubRapidPub {
   using StateSupplierPtr = std::unique_ptr<StateSupplier>;
 
   StateSupplierPtr state_supplier_;
+
+  using MobilitySettingsSupplier =
+              kn::DdsTypedSupplier<rapid::ext::astrobee::MobilitySettingsState>;
+  using MobilitySettingsSupplierPtr = std::unique_ptr<MobilitySettingsSupplier>;
+
+  MobilitySettingsSupplierPtr mobility_settings_supplier_;
 };
 
 }  // end namespace ff

@@ -93,7 +93,7 @@ class BridgeNodelet : public ff_util::FreeFlyerNodelet {
     // Try to initialize vive
     driver_ = deepdive_init();
     if (!driver_) {
-      AssertFault("INITIALIZATION_FAULT", "Vive context init failed");
+      AssertFault(ff_util::INITIALIZATION_FAILED, "Vive context init failed");
       return;
     }
     // Set active to true on initialization

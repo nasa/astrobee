@@ -373,7 +373,8 @@ class DockNodelet : public ff_util::FreeFlyerNodelet {
     cfg_.Initialize(GetPrivateHandle(), "behaviors/dock.config");
     if (!cfg_.Listen(boost::bind(
       &DockNodelet::ReconfigureCallback, this, _1)))
-      return AssertFault("INITIALIZATION_FAULT", "Could not load config");
+      return AssertFault(ff_util::INITIALIZATION_FAILED,
+                         "Could not load config");
     // One shot timer to check if we undock with a timeout
     timer_eps_ = nh->createTimer(
       ros::Duration(cfg_.Get<double>("timeout_eps_response")),
@@ -440,12 +441,14 @@ class DockNodelet : public ff_util::FreeFlyerNodelet {
 
   // Timeout on a trajectory generation request
   void EnableTimeoutCallback(void) {
-    return AssertFault("INITIALIZATION_FAULT", "Could not find enable service");
+    return AssertFault(ff_util::INITIALIZATION_FAILED,
+                       "Could not find enable service");
   }
 
   // Timeout on a trajectory generation request
   void UndockTimeoutCallback(void) {
-    return AssertFault("INITIALIZATION_FAULT", "Could not find undock service");
+    return AssertFault(ff_util::INITIALIZATION_FAILED,
+                       "Could not find undock service");
   }
 
   // Ensure all clients are connected
@@ -572,7 +575,8 @@ class DockNodelet : public ff_util::FreeFlyerNodelet {
     try {
       // Look up the body frame in the berth frame
       geometry_msgs::TransformStamped tf = tf_buffer_.lookupTransform(
-        berths_[berth] + "/approach", FRAME_NAME_BODY, ros::Time(0));
+        berths_[berth] + "/approach", GetTransform(FRAME_NAME_BODY),
+          ros::Time(0));
       // Copy the transform
       double d = tf.transform.translation.x * tf.transform.translation.x
                + tf.transform.translation.y * tf.transform.translation.y
@@ -598,7 +602,7 @@ class DockNodelet : public ff_util::FreeFlyerNodelet {
       try {
         // Look up the body frame in the berth frame
         geometry_msgs::TransformStamped tf = tf_buffer_.lookupTransform(
-          it->second, FRAME_NAME_BODY, ros::Time(0));
+          it->second, GetTransform(FRAME_NAME_BODY), ros::Time(0));
         // Copy the transform
         double d = tf.transform.translation.x * tf.transform.translation.x
                  + tf.transform.translation.y * tf.transform.translation.y
@@ -767,8 +771,6 @@ class DockNodelet : public ff_util::FreeFlyerNodelet {
         }
         // If we do know about it, add a frame id prefix
         frame_ = berths_[goal->berth];
-        if (!GetPlatform().empty())
-          frame_ = GetPlatform() + std::string("/") + frame_;
         // Start docking
         return fsm_.Update(GOAL_DOCK);
       // We are already docked

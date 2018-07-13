@@ -99,13 +99,11 @@
       <arg name="name" value="speed_cam" />
       <arg name="manager" value="llp_serial" />
     </include>
-    <!--
     <include file="$(find cpu_monitor)/launch/cpu_monitor.launch"
       if="$(eval arg('nodes') == '' or arg('nodes').find('llp_cpu_monitor') != -1)">
       <arg name="name" value="llp_cpu_monitor" />
       <arg name="manager" value="llp_monitors" />
     </include>
-    -->
     <include file="$(find disk_monitor)/launch/disk_monitor.launch"
       if="$(eval arg('nodes') == '' or arg('nodes').find('llp_disk_monitor') != -1)">
       <arg name="name" value="llp_disk_monitor" />

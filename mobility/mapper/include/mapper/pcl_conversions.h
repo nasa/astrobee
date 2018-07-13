@@ -40,65 +40,65 @@
 #include <pcl/point_cloud.h>
 #include <vector>
 
-//   This class is extracted from https://github.com/ros-perception/pcl_conversions
-//   In our project we use it to convert from PointCloud2 to pcl
-//   The reason we copied this library here was to avoid adding all
+// This class is extracted from:
+//   https://github.com/ros-perception/pcl_conversions
+// In our project we use it to convert from PointCloud2 to pcl
+// The reason we copied this library here was to avoid adding all
 // dependencies in the original pcl_conversions
 namespace pcl_conversions {
 
 inline
 void ToPCL(const ros::Time &stamp, pcl::uint64_t *pcl_stamp) {
-    *pcl_stamp = stamp.toNSec() / 1000ull;  // Convert from ns to us
+  *pcl_stamp = stamp.toNSec() / 1000ull;  // Convert from ns to us
 }
 
 inline
 void ToPCL(const std_msgs::Header &header, pcl::PCLHeader *pcl_header) {
-    ToPCL(header.stamp, &pcl_header->stamp);
-    pcl_header->seq = header.seq;
-    pcl_header->frame_id = header.frame_id;
+  ToPCL(header.stamp, &pcl_header->stamp);
+  pcl_header->seq = header.seq;
+  pcl_header->frame_id = header.frame_id;
 }
 
 inline
 void ToPCL(const sensor_msgs::PointField &pf, pcl::PCLPointField *pcl_pf) {
-    pcl_pf->name = pf.name;
-    pcl_pf->offset = pf.offset;
-    pcl_pf->datatype = pf.datatype;
-    pcl_pf->count = pf.count;
+  pcl_pf->name = pf.name;
+  pcl_pf->offset = pf.offset;
+  pcl_pf->datatype = pf.datatype;
+  pcl_pf->count = pf.count;
 }
 
 inline
 void ToPCL(const std::vector<sensor_msgs::PointField> &pfs, std::vector<pcl::PCLPointField> *pcl_pfs) {
-    pcl_pfs->resize(pfs.size());
-    std::vector<sensor_msgs::PointField>::const_iterator it = pfs.begin();
-    int i = 0;
-    for (; it != pfs.end(); ++it, ++i) {
-        ToPCL(*(it), &(*pcl_pfs)[i]);
-    }
+  pcl_pfs->resize(pfs.size());
+  std::vector<sensor_msgs::PointField>::const_iterator it = pfs.begin();
+  int i = 0;
+  for (; it != pfs.end(); ++it, ++i)
+    ToPCL(*(it), &(*pcl_pfs)[i]);
 }
 
 inline
 void CopyPointCloud2MetaData(const sensor_msgs::PointCloud2 &pc2, pcl::PCLPointCloud2 *pcl_pc2) {
-    ToPCL(pc2.header, &pcl_pc2->header);
-    pcl_pc2->height = pc2.height;
-    pcl_pc2->width = pc2.width;
-    ToPCL(pc2.fields, &pcl_pc2->fields);
-    pcl_pc2->is_bigendian = pc2.is_bigendian;
-    pcl_pc2->point_step = pc2.point_step;
-    pcl_pc2->row_step = pc2.row_step;
-    pcl_pc2->is_dense = pc2.is_dense;
+  ToPCL(pc2.header, &pcl_pc2->header);
+  pcl_pc2->height = pc2.height;
+  pcl_pc2->width = pc2.width;
+  ToPCL(pc2.fields, &pcl_pc2->fields);
+  pcl_pc2->is_bigendian = pc2.is_bigendian;
+  pcl_pc2->point_step = pc2.point_step;
+  pcl_pc2->row_step = pc2.row_step;
+  pcl_pc2->is_dense = pc2.is_dense;
 }
 
 inline
 void ToPCL(const sensor_msgs::PointCloud2 &pc2, pcl::PCLPointCloud2 *pcl_pc2) {
-    CopyPointCloud2MetaData(pc2, pcl_pc2);
-    pcl_pc2->data = pc2.data;
+  CopyPointCloud2MetaData(pc2, pcl_pc2);
+  pcl_pc2->data = pc2.data;
 }
 
 template<typename T>
 void FromROSMsg(const sensor_msgs::PointCloud2 &cloud, pcl::PointCloud<T> *pcl_cloud) {
-    pcl::PCLPointCloud2 pcl_pc2;
-    pcl_conversions::ToPCL(cloud, &pcl_pc2);
-    pcl::fromPCLPointCloud2(pcl_pc2, *pcl_cloud);
+  pcl::PCLPointCloud2 pcl_pc2;
+  pcl_conversions::ToPCL(cloud, &pcl_pc2);
+  pcl::fromPCLPointCloud2(pcl_pc2, *pcl_cloud);
 }
 
 }  // namespace pcl_conversions

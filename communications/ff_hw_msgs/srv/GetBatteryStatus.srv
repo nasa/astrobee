@@ -20,5 +20,6 @@
 string location                     # Battery location (from ff_hw_msgs/EpsBatteryState)
 ---
 bool success                        # Does the location exist?
+string status_message               # Status message
 sensor_msgs/BatteryState state      # Battery info
 sensor_msgs/Temperature temperature # Battery temperature

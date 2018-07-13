@@ -1,14 +1,14 @@
 /* Copyright (c) 2017, United States Government, as represented by the
  * Administrator of the National Aeronautics and Space Administration.
- * 
+ *
  * All rights reserved.
- * 
+ *
  * The Astrobee platform is licensed under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -73,7 +73,7 @@ class PlannerImplementation : public ff_util::FreeFlyerNodelet {
   }
 
   // Destructor deregisters with choreographer
-  ~PlannerImplementation() {
+  virtual ~PlannerImplementation() {
     registration_.request.unregister = true;
     client_r_.Call(registration_);
   }
@@ -133,14 +133,23 @@ class PlannerImplementation : public ff_util::FreeFlyerNodelet {
     server_p_.Create(nh, topic);
     // Initialize the get zone call
     client_z_.SetConnectedCallback(std::bind(&PlannerImplementation::ConnectedCallback, this));
-    client_z_.SetTimeoutCallback(std::bind(&PlannerImplementation::TimeoutCallback, this));
+    client_z_.SetTimeoutCallback(std::bind(&PlannerImplementation::GetZoneTimeoutCallback, this));
     client_z_.Create(nh, SERVICE_MOBILITY_GET_ZONES);
     // Initialize the register planner call
     client_r_.SetConnectedCallback(std::bind(&PlannerImplementation::ConnectedCallback, this));
-    client_r_.SetTimeoutCallback(std::bind(&PlannerImplementation::TimeoutCallback, this));
+    client_r_.SetTimeoutCallback(std::bind(&PlannerImplementation::RegisterTimeoutCallback, this));
     client_r_.Create(nh, SERVICE_MOBILITY_PLANNER_REGISTER);
     // Initialize the planner itself
-    InitializePlanner(nh);
+    if (!InitializePlanner(nh))
+      InitFault("Planner could not be initialized");
+  }
+
+  // Deal with a fault in a responsible manner - note that this may also be
+  // called if action and service servers timeout on conenction.
+  void InitFault(std::string const& msg ) {
+    NODELET_ERROR_STREAM(msg);
+    AssertFault(ff_util::INITIALIZATION_FAILED, msg);
+    return;
   }
 
   // Finish this action
@@ -177,9 +186,13 @@ class PlannerImplementation : public ff_util::FreeFlyerNodelet {
   }
 
   // Timeout on a trajectory generation request
-  void TimeoutCallback(void) {
-    NODELET_ERROR_STREAM("Timeout connecting to required service.");
-    state_ = INITIALIZING;
+  void RegisterTimeoutCallback(void) {
+    return InitFault("Timeout connecting to register service");
+  }
+
+  // Timeout on a trajectory generation request
+  void GetZoneTimeoutCallback(void) {
+    return InitFault("Timeout connecting to the get zone service");
   }
 
   // Check that the value is less than the given bound

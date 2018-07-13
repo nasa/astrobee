@@ -154,7 +154,10 @@ connection to the LLP (in case it is absent from the test rig):
 
     `roslaunch astrobee replay  bag:=~/.ros/some.bag`
 
-10. Test a single camera connected to a local machine
+10. Test a single camera connected to a local machine. For this to work, the file
+    astrobee/config/cameras.config may need to be modified, with the nav_cam device
+	be set from /dev/nav_cam to /dev/video0. Also note that this is known not to 
+	work reliably with VirtualBox. Run:
 ```
     roslaunch astrobee granite.launch mlp:=local llp:=disabled nodes:=nav_cam,framestore
 ```

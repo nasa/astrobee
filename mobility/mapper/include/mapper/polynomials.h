@@ -37,78 +37,78 @@ namespace polynomials {
 //  e.g.: (t-t0)^2 + 2(t-t0) + 3 ==> coeff = [1 2 3]
 class Polynomial{
  public:
-    double t0_;              // Initial time for definition of polynomial
-    double tf_;              // Ginal time for definition of polynomial
-    int order_;              // Polynomial order
-    Eigen::VectorXd coeff_;  // Coefficients
+  double t0_;              // Initial time for definition of polynomial
+  double tf_;              // Ginal time for definition of polynomial
+  int order_;              // Polynomial order
+  Eigen::VectorXd coeff_;  // Coefficients
 
-    // Constructor
-    Polynomial(const double t0,
-               const double tf,
-               const int coeff_size);
-    Polynomial();
+  // Constructor
+  Polynomial(const double t0,
+         const double tf,
+         const int coeff_size);
+  Polynomial();
 
-    // Methods
-    Polynomial& operator=(const Polynomial& other) {
-        t0_ = other.t0_;
-        tf_ = other.tf_;
-        order_ = other.order_;
-        coeff_ = other.coeff_;
-        return *this;
-    }
-    void PrintPolyCoeff();                       // Print all coefficients
-    void PolyConv(const Polynomial *poly2,
-                        Polynomial *poly_out);   // Convolute with another polynomial
-    void PolySquare(Polynomial *poly_out);       // Square a polynomial
-    void PolyDiff(Polynomial *poly_out);         // Get the derivative of a polynomial
-    void PolyAtTime(const double time,
-                    double *result) const;       // Return polynomial value at given time
-    std::vector<std::complex<double>> Roots2ndOrderPoly();
-    std::vector<std::complex<double>> Roots3rdOrderPoly();
+  // Methods
+  Polynomial& operator=(const Polynomial& other) {
+    t0_ = other.t0_;
+    tf_ = other.tf_;
+    order_ = other.order_;
+    coeff_ = other.coeff_;
+    return *this;
+  }
+  void PrintPolyCoeff();                       // Print all coefficients
+  void PolyConv(const Polynomial *poly2,
+            Polynomial *poly_out);   // Convolute with another polynomial
+  void PolySquare(Polynomial *poly_out);       // Square a polynomial
+  void PolyDiff(Polynomial *poly_out);         // Get the derivative of a polynomial
+  void PolyAtTime(const double time,
+          double *result) const;       // Return polynomial value at given time
+  std::vector<std::complex<double>> Roots2ndOrderPoly();
+  std::vector<std::complex<double>> Roots3rdOrderPoly();
 };
 
 
 // 3D trajectories characterized by three polynomials
 class Poly3D{
  public:
-    Polynomial poly_x_;
-    Polynomial poly_y_;
-    Polynomial poly_z_;
-    double t0_;              // Initial time for definition of polynomials
-    double tf_;              // Final time for definition of polynomials
-    int order_;              // Polynomial order
+  Polynomial poly_x_;
+  Polynomial poly_y_;
+  Polynomial poly_z_;
+  double t0_;              // Initial time for definition of polynomials
+  double tf_;              // Final time for definition of polynomials
+  int order_;              // Polynomial order
 
-    // Constructor: define a polynomial from a "ControlState" msg type (2nd order polynomials only)
-    Poly3D(const double t0_in,
-            const double tf_in,
-            const ff_msgs::ControlState segment);
-    Poly3D();
+  // Constructor: define a polynomial from a "ControlState" msg type (2nd order polynomials only)
+  Poly3D(const double t0_in,
+      const double tf_in,
+      const ff_msgs::ControlState segment);
+  Poly3D();
 
-    // Methods
-    void PrintSegmentCoeff();                           // Print all coefficients
-    void SegmentAtTime(const double time,
-                       Eigen::Vector3d *result) const;  // Return 3d value for polynomials at a given time
-    void SegmentAtTime(const double time,
-                       pcl::PointXYZ *result) const;
+  // Methods
+  void PrintSegmentCoeff();                           // Print all coefficients
+  void SegmentAtTime(const double time,
+             Eigen::Vector3d *result) const;  // Return 3d value for polynomials at a given time
+  void SegmentAtTime(const double time,
+             pcl::PointXYZ *result) const;
 };
 
 // 3D trajectories characterized by a set of 3D polynomials
 class Trajectory3D{
  public:
-    std::vector<Poly3D> segments_poly_;
-    double t0_;  // Initial time for the first segment
-    double tf_;  // Final time for the last segment
-    int n_segments_;
+  std::vector<Poly3D> segments_poly_;
+  double t0_;  // Initial time for the first segment
+  double tf_;  // Final time for the last segment
+  int n_segments_;
 
-    // Constructor
-    explicit Trajectory3D(const ff_msgs::Segment segments);
+  // Constructor
+  explicit Trajectory3D(const ff_msgs::Segment segments);
 
-    // Methods
-    void PrintTrajCoeff();                                  // Print coefficients from all segments
-    void TrajectoryAtTime(const double time,
-                          Eigen::Vector3d *result) const;  // Return 3d value for polynomials at a given time
-    void TrajectoryAtTime(const double time,
-                          pcl::PointXYZ *result) const;    // Return 3d value for polynomials at a given time
+  // Methods
+  void PrintTrajCoeff();                                  // Print coefficients from all segments
+  void TrajectoryAtTime(const double time,
+              Eigen::Vector3d *result) const;  // Return 3d value for polynomials at a given time
+  void TrajectoryAtTime(const double time,
+              pcl::PointXYZ *result) const;    // Return 3d value for polynomials at a given time
 };
 
 }  // namespace polynomials
