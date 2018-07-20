@@ -1,5 +1,14 @@
 # Astrobee Robot Software v1
 
+## Release 0.4.2
+
+This release fixes a bug where we attempted to build the smart dock even
+if DDS is not installed.
+
+## Release 0.4.1
+
+This release fixes a bug in the smart dock interacting with GDS.
+
 ## Release 0.4.0
 
 This release includes improvements of map building and camera calibration,

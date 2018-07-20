@@ -1,3 +1,15 @@
+astrobee (0.4.2) testing; urgency=medium
+
+  * Only build smart dock when we have DDS.
+
+ -- Astrobee Flight Software <astrobee-fsw@nx.arc.nasa.gov>  Fri, 20 Jul 2018 13:46:45 -0700
+
+astrobee (0.4.1) testing; urgency=medium
+
+  * Fix bug where smart dock reported "Unknown" instead of blank.
+
+ -- Astrobee Flight Software <astrobee-fsw@nx.arc.nasa.gov>  Mon, 16 Jul 2018 14:31:12 -0700
+
 astrobee (0.4.0) testing; urgency=medium
 
   * Improvements of map building and camera calibration.
@@ -5,7 +17,7 @@ astrobee (0.4.0) testing; urgency=medium
   * New features for guest science.
   * Many internal changes.
 
- -- Astrobee Flight Software <astrobee-fsw@nx.arc.nasa.gov> Fri, 13 Jul 2018 15:31:30 -0700
+ -- Astrobee Flight Software <astrobee-fsw@nx.arc.nasa.gov>  Fri, 13 Jul 2018 15:31:30 -0700
 
 astrobee (0.3.2) unstable; urgency=medium
 

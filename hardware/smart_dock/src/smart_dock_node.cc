@@ -204,7 +204,7 @@ void SmartDockNode::ProcessTelem() {
     rapid::ext::astrobee::BerthState tmp;
     tmp.occupied = (it->second.dock_state == EPS::DOCK_CONNECTED);
     tmp.awake = (it->second.power_state == EPS::POWER_STATE_AWAKE_NOMINAL);
-    tmp.astrobeeName = static_cast<char*>("Unknown");
+    tmp.astrobeeName = static_cast<char*>("");
     tmp.numBatteries = 0;
     tmp.maxCapacity = 0;
     tmp.currentCapacity = 0;
