@@ -1,3 +1,9 @@
+astrobee (0.4.3) testing; urgency=medium
+
+  * Fix decomputil debian.
+
+ -- Astrobee Flight Software <astrobee-fsw@nx.arc.nasa.gov>  Wed, 01 Aug 2018 10:53:24 -0700
+
 astrobee (0.4.2) testing; urgency=medium
 
   * Only build smart dock when we have DDS.

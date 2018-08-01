@@ -1,5 +1,9 @@
 # Astrobee Robot Software v1
 
+## Release 0.4.3
+
+Fix decomputil debian, revert to older version.
+
 ## Release 0.4.2
 
 This release fixes a bug where we attempted to build the smart dock even
