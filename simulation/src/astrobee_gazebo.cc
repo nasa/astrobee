@@ -121,12 +121,13 @@ void FreeFlyerSensorPlugin::Load(sensors::SensorPtr sensor, sdf::ElementPtr sdf)
   sensor_ = sensor;
   sdf_ = sdf;
   world_ = gazebo::physics::get_world(sensor->WorldName());
-  // Gazebo 7.x -> 9.x migration
-  // model_ = boost::static_pointer_cast < physics::Link > (
-  //   world_->GetEntity(sensor->ParentName()))->GetModel();
+#if GAZEBO_MAJOR_VERSION > 7
   model_ = boost::static_pointer_cast < physics::Link > (
     world_->EntityByName(sensor->ParentName()))->GetModel();
-  // end Gazebo 7.x -> 9.x migration
+#else
+  model_ = boost::static_pointer_cast < physics::Link > (
+    world_->GetEntity(sensor->ParentName()))->GetModel();
+#endif
 
   // Make sure the ROS node for Gazebo has already been initialized
   if (!ros::isInitialized())
@@ -217,16 +218,17 @@ void FreeFlyerSensorPlugin::SetupExtrinsics(const ros::TimerEvent& event) {
         tf.transform.translation.y,
         tf.transform.translation.z,
         pose_temp.w(), pose_temp.x(), pose_temp.y(), pose_temp.z());
-    // Gazebo 7.x -> 9.x migration
-    // math::Pose tf_bs = pose;
-    // math::Pose tf_wb = model_->GetWorldPose();
-    // math::Pose tf_ws = tf_bs + tf_wb;
-    // ignition::math::Pose3d world_pose(tf_ws.pos.x, tf_ws.pos.y,
-    //   tf_ws.pos.z, tf_ws.rot.w, tf_ws.rot.x, tf_ws.rot.y, tf_ws.rot.z);
+  #if GAZEBO_MAJOR_VERSION > 7
     ignition::math::Pose3d tf_bs(pose);
     ignition::math::Pose3d tf_wb(model_->WorldPose());
     ignition::math::Pose3d world_pose(tf_bs + tf_wb);
-    // end Gazebo 7.x -> 9.x migration
+  #else
+    math::Pose tf_bs = pose;
+    math::Pose tf_wb = model_->GetWorldPose();
+    math::Pose tf_ws = tf_bs + tf_wb;
+    ignition::math::Pose3d world_pose(tf_ws.pos.x, tf_ws.pos.y,
+      tf_ws.pos.z, tf_ws.rot.w, tf_ws.rot.x, tf_ws.rot.y, tf_ws.rot.z);
+  #endif
 
     // In the case of a camera update the camera world pose
     if (sensor_->Type() == "camera") {

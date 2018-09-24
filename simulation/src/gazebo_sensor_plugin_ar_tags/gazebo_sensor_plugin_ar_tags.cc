@@ -178,16 +178,7 @@ class GazeboSensorPluginARTags : public FreeFlyerSensorPlugin {
 
     // Handle the transform for all sensor types
     Eigen::Affine3d wTb = (
-        // Gazebo 7.x -> 9.x migration
-        // Eigen::Translation3d(
-        //   GetModel()->GetWorldPose().pos.x,
-        //   GetModel()->GetWorldPose().pos.y,
-        //   GetModel()->GetWorldPose().pos.z) *
-        // Eigen::Quaterniond(
-        //   GetModel()->GetWorldPose().rot.w,
-        //   GetModel()->GetWorldPose().rot.x,
-        //   GetModel()->GetWorldPose().rot.y,
-        //   GetModel()->GetWorldPose().rot.z));
+      #if GAZEBO_MAJOR_VERSION > 7
         Eigen::Translation3d(
           GetModel()->WorldPose().Pos().X(),
           GetModel()->WorldPose().Pos().Y(),
@@ -197,7 +188,17 @@ class GazeboSensorPluginARTags : public FreeFlyerSensorPlugin {
           GetModel()->WorldPose().Rot().X(),
           GetModel()->WorldPose().Rot().Y(),
           GetModel()->WorldPose().Rot().Z()));
-        // end Gazebo 7.x -> 9.x migration
+      #else
+        Eigen::Translation3d(
+          GetModel()->GetWorldPose().pos.x,
+          GetModel()->GetWorldPose().pos.y,
+          GetModel()->GetWorldPose().pos.z) *
+        Eigen::Quaterniond(
+          GetModel()->GetWorldPose().rot.w,
+          GetModel()->GetWorldPose().rot.x,
+          GetModel()->GetWorldPose().rot.y,
+          GetModel()->GetWorldPose().rot.z));
+      #endif
     Eigen::Affine3d bTs = (
         Eigen::Translation3d(
           sensor_->Pose().Pos().X(),

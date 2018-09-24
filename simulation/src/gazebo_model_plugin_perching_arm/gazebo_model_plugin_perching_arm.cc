@@ -176,20 +176,22 @@ class GazeboModelPluginPerchingArm : public FreeFlyerModelPlugin {
       &GazeboModelPluginPerchingArm::CalibrateGripperCallback, this);
 
     // Called before each iteration of simulated world update
-    // Gazebo 7.x -> 9.x migration
-    // next_tick_ = GetWorld()->GetSimTime();
-    next_tick_ = GetWorld()->SimTime();
-    // end Gazebo 7.x -> 9.x migration
+    #if GAZEBO_MAJOR_VERSION > 7
+      next_tick_ = GetWorld()->SimTime();
+    #else
+      next_tick_ = GetWorld()->GetSimTime();
+    #endif
     update_ = event::Events::ConnectWorldUpdateBegin(
       std::bind(&GazeboModelPluginPerchingArm::UpdateCallback, this));
   }
 
   // Called on simulation reset
   void Reset() {
-    // Gazebo 7.x -> 9.x migration
-    // next_tick_ = GetWorld()->GetSimTime();
-    next_tick_ = GetWorld()->SimTime();
-    // end Gazebo 7.x -> 9.x migration
+    #if GAZEBO_MAJOR_VERSION > 7
+      next_tick_ = GetWorld()->SimTime();
+    #else
+      next_tick_ = GetWorld()->GetSimTime();
+    #endif
   }
 
   // GET THE VIRTUAL GRIPPER JOINT STATE
@@ -203,14 +205,15 @@ class GazeboModelPluginPerchingArm : public FreeFlyerModelPlugin {
     double value = 0.0;
     switch (type) {
     case POSITION: {
-      // Gazebo 7.x -> 9.x migration
-      // double lower = joint->GetLowerLimit(0).Radian();
-      // double upper = joint->GetUpperLimit(0).Radian();
-      // value = (joint->GetAngle(0).Radian() - lower) / (upper - lower);
-      double lower = joint->LowerLimit();
-      double upper = joint->UpperLimit();
-      value = (joint->Position() - lower) / (upper - lower);
-      // end Gazebo 7.x -> 9.x migration
+      #if GAZEBO_MAJOR_VERSION > 7
+        double lower = joint->LowerLimit();
+        double upper = joint->UpperLimit();
+        value = (joint->Position() - lower) / (upper - lower);
+      #else
+        double lower = joint->GetLowerLimit(0).Radian();
+        double upper = joint->GetUpperLimit(0).Radian();
+        value = (joint->GetAngle(0).Radian() - lower) / (upper - lower);
+      #endif
 
       break;
     }
@@ -231,12 +234,13 @@ class GazeboModelPluginPerchingArm : public FreeFlyerModelPlugin {
   void SetGripperJointGoal(std::string const& name, double position) {
     physics::JointPtr joint = GetModel()->GetJoint(name);
     // Get the joint limits
-    // Gazebo 7.x -> 9.x migration
-    // double lower = joint->GetLowerLimit(0).Radian();
-    // double upper = joint->GetUpperLimit(0).Radian();
-    double lower = joint->LowerLimit();
-    double upper = joint->UpperLimit();
-    // end Gazebo 7.x -> 9.x migration
+    #if GAZEBO_MAJOR_VERSION > 7
+      double lower = joint->LowerLimit();
+      double upper = joint->UpperLimit();
+    #else
+      double lower = joint->GetLowerLimit(0).Radian();
+      double upper = joint->GetUpperLimit(0).Radian();
+    #endif
     double value = lower + position * (upper - lower);
     // Calculate the correct joint angle based on the position (0 - 100)
     GetModel()->GetJointController()->SetPositionTarget(
@@ -272,12 +276,13 @@ class GazeboModelPluginPerchingArm : public FreeFlyerModelPlugin {
   // Set the joint angle based on a gripper position from 0 to 100
   void SetGripperJointPosition(std::string const& name, double position) {
     physics::JointPtr joint = GetModel()->GetJoint(name);
-    // Gazebo 7.x -> 9.x migration
-    // double lower = joint->GetLowerLimit(0).Radian();
-    // double upper = joint->GetUpperLimit(0).Radian();
-    double lower = joint->LowerLimit();
-    double upper = joint->UpperLimit();
-    // end Gazebo 7.x -> 9.x migration
+    #if GAZEBO_MAJOR_VERSION > 7
+      double lower = joint->LowerLimit();
+      double upper = joint->UpperLimit();
+    #else
+      double lower = joint->GetLowerLimit(0).Radian();
+      double upper = joint->GetUpperLimit(0).Radian();
+    #endif
     double value = lower + position * (upper - lower);
     joint->SetPosition(0, value);
   }
@@ -324,12 +329,13 @@ class GazeboModelPluginPerchingArm : public FreeFlyerModelPlugin {
   // Called on every discrete time tick in the simulated world
   void UpdateCallback() {
     // Throttle callback rate
-    // Gazebo 7.x -> 9.x migration
-    // if (GetWorld()->GetSimTime() < next_tick_)
-    //   return;
-    if (GetWorld()->SimTime() < next_tick_)
-      return;
-    // end Gazebo 7.x -> 9.x migration
+    #if GAZEBO_MAJOR_VERSION > 7
+      if (GetWorld()->SimTime() < next_tick_)
+        return;
+    #else
+      if (GetWorld()->GetSimTime() < next_tick_)
+        return;
+    #endif
     next_tick_ += 1.0 / rate_;
     // Package all joint states, inclusind the left and right proximal
     // and distal joints of the gripper (for visualization reasons)
@@ -337,10 +343,11 @@ class GazeboModelPluginPerchingArm : public FreeFlyerModelPlugin {
     size_t i = 0;
     for (; i < joints_.size(); i++) {
       msg_.name[i] = joints_[i]->GetName();
-      // Gazebo 7.x -> 9.x migration
-      // msg_.position[i] = joints_[i]->GetAngle(0).Radian();
-      msg_.position[i] = joints_[i]->Position();
-      // end Gazebo 7.x -> 9.x migration
+      #if GAZEBO_MAJOR_VERSION > 7
+        msg_.position[i] = joints_[i]->Position();
+      #else
+        msg_.position[i] = joints_[i]->GetAngle(0).Radian();
+      #endif
       msg_.velocity[i] = joints_[i]->GetVelocity(0);
       msg_.effort[i] = joints_[i]->GetForce(0);
     }

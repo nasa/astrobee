@@ -72,10 +72,11 @@ class GazeboModelPluginLaser : public FreeFlyerModelPlugin {
     geometry->mutable_cylinder()->set_radius(width_);
     geometry->mutable_cylinder()->set_length(range_);
     msg.mutable_material()->mutable_script()->set_name("Astrobee/Laser");
-    // Gazebo 7.x -> 9.x migration
-    // msgs::Set(msg.mutable_pose(), pose_ + GetModel()->GetLink()->GetWorldPose().Ign());
-    msgs::Set(msg.mutable_pose(), pose_ + GetModel()->GetLink()->WorldPose());
-    // end Gazebo 7.x -> 9.x migration
+    #if GAZEBO_MAJOR_VERSION > 7
+      msgs::Set(msg.mutable_pose(), pose_ + GetModel()->GetLink()->WorldPose());
+    #else
+      msgs::Set(msg.mutable_pose(), pose_ + GetModel()->GetLink()->GetWorldPose().Ign());
+    #endif
     msg.set_is_static(false);
     msg.set_visible(false);
     msg.set_cast_shadows(false);
@@ -148,14 +149,15 @@ class GazeboModelPluginLaser : public FreeFlyerModelPlugin {
         tf.transform.rotation.y,
         tf.transform.rotation.z);
       // Kill the connection
-      // Gazebo 7.x -> 9.x migration
-      // event::Events::DisconnectWorldUpdateEnd(connection_);
-      // // Update the connection
-      // next_tick_ = GetWorld()->GetSimTime();
-      connection_.reset();
-      // Update the connection
-      next_tick_ = GetWorld()->SimTime();
-      // end Gazebo 7.x -> 9.x migration
+      #if GAZEBO_MAJOR_VERSION > 7
+        connection_.reset();
+        // Update the connection
+        next_tick_ = GetWorld()->SimTime();
+      #else
+        event::Events::DisconnectWorldUpdateEnd(connection_);
+        // Update the connection
+        next_tick_ = GetWorld()->GetSimTime();
+      #endif
 
       connection_ = event::Events::ConnectWorldUpdateBegin(
         std::bind(&GazeboModelPluginLaser::UpdateCallback, this));
@@ -170,12 +172,13 @@ class GazeboModelPluginLaser : public FreeFlyerModelPlugin {
                       ff_hw_msgs::SetEnabled::Response &res) {
     // Update Gazebo
     msg_.set_visible(req.enabled);
-    // Gazebo 7.x -> 9.x migration
-    // msgs::Set(msg_.mutable_pose(),
-    //   pose_ + GetModel()->GetLink()->GetWorldPose().Ign());
-    msgs::Set(msg_.mutable_pose(),
-      pose_ + GetModel()->GetLink()->WorldPose());
-    // end Gazebo 7.x -> 9.x migration
+    #if GAZEBO_MAJOR_VERSION > 7
+      msgs::Set(msg_.mutable_pose(),
+        pose_ + GetModel()->GetLink()->WorldPose());
+    #else
+      msgs::Set(msg_.mutable_pose(),
+        pose_ + GetModel()->GetLink()->GetWorldPose().Ign());
+    #endif
     pub_->Publish(msg_);
 
     // Update RVIZ
@@ -192,21 +195,23 @@ class GazeboModelPluginLaser : public FreeFlyerModelPlugin {
   // Called on every discrete time tick in the simulated world
   void UpdateCallback() {
     // Throttle callback rate
-    // Gazebo 7.x -> 9.x migration
-    // if (GetWorld()->GetSimTime() < next_tick_)
-    //   return;
-    if (GetWorld()->SimTime() < next_tick_)
-      return;
-    // end Gazebo 7.x -> 9.x migration
+    #if GAZEBO_MAJOR_VERSION > 7
+      if (GetWorld()->SimTime() < next_tick_)
+        return;
+    #else
+      if (GetWorld()->GetSimTime() < next_tick_)
+        return;
+    #endif
     next_tick_ += 1.0 / rate_;
 
     // Update gazebo
-    // Gazebo 7.x -> 9.x migration
-    // msgs::Set(msg_.mutable_pose(),
-    //   pose_ + GetModel()->GetLink()->GetWorldPose().Ign());
-    msgs::Set(msg_.mutable_pose(),
-      pose_ + GetModel()->GetLink()->WorldPose());
-    // Gazebo 7.x -> 9.x migration
+    #if GAZEBO_MAJOR_VERSION > 7
+      msgs::Set(msg_.mutable_pose(),
+        pose_ + GetModel()->GetLink()->WorldPose());
+    #else
+      msgs::Set(msg_.mutable_pose(),
+        pose_ + GetModel()->GetLink()->GetWorldPose().Ign());
+    #endif
     pub_->Publish(msg_);
 
     // Update RVIZ

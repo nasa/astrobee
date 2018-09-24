@@ -175,10 +175,11 @@ class GazeboModelPluginEps : public FreeFlyerModelPlugin {
 
   // Destructor
   ~GazeboModelPluginEps() {
-    // Gazebo 7.x -> 9.x migration
-    // event::Events::DisconnectWorldUpdateEnd(connection_);
+    #if GAZEBO_MAJOR_VERSION > 7
       connection_.reset();
-    // end Gazebo 7.x -> 9.x migration
+    #else
+      event::Events::DisconnectWorldUpdateEnd(connection_);
+    #endif
   }
 
  protected:
@@ -265,10 +266,11 @@ class GazeboModelPluginEps : public FreeFlyerModelPlugin {
         tf.transform.rotation.y,
         tf.transform.rotation.z);
       // Kill the connection when we have a dock pose
-      // Gazebo 7.x -> 9.x migration
-      // event::Events::DisconnectWorldUpdateEnd(connection_);
-      connection_.reset();
-      // end Gazebo 7.x -> 9.x migration
+      #if GAZEBO_MAJOR_VERSION > 7
+        connection_.reset();
+      #else
+        event::Events::DisconnectWorldUpdateEnd(connection_);
+      #endif
       // Once we have berth locations start timer for checking dock status
       timer_update_.start();
     // If we have an exception we need to quietly wait for transform(s)
@@ -281,17 +283,19 @@ class GazeboModelPluginEps : public FreeFlyerModelPlugin {
       // We are not guaranteed to have a dock yet, so we need to check to see
       // that the model pointer is valid. If it is valid, then we to quietly
       // ignore locking for the time being.
-      // Gazebo 7.x -> 9.x migration
-      // physics::ModelPtr dock = GetWorld()->GetModel("dock");
-      physics::ModelPtr dock = GetWorld()->ModelByName("dock");
-      // end Gazebo 7.x -> 9.x migration
+      #if GAZEBO_MAJOR_VERSION > 7
+        physics::ModelPtr dock = GetWorld()->ModelByName("dock");
+      #else
+        physics::ModelPtr dock = GetWorld()->GetModel("dock");
+      #endif
       if (dock == nullptr)
         return;
       // By this point we are guaranteed to have a dock
-      // Gazebo 7.x -> 9.x migration
-      // joint_ = GetWorld()->GetPhysicsEngine()->CreateJoint("fixed", GetModel());
-      joint_ = GetWorld()->Physics()->CreateJoint("fixed", GetModel());
-      // end Gazebo 7.x -> 9.x migration
+      #if GAZEBO_MAJOR_VERSION > 7
+        joint_ = GetWorld()->Physics()->CreateJoint("fixed", GetModel());
+      #else
+        joint_ = GetWorld()->GetPhysicsEngine()->CreateJoint("fixed", GetModel());
+      #endif
       joint_->Attach(GetModel()->GetLink(), dock->GetLink());
     } else if (joint_) {
       joint_->Detach();
@@ -305,12 +309,13 @@ class GazeboModelPluginEps : public FreeFlyerModelPlugin {
     // There are smarter ways to do this sort of search (kNN) but this we are
     // only expecting fewer than 6 berths, it seems like needless optimization.
     for (nearest_ = berths_.begin(); nearest_ != berths_.end(); nearest_++) {
-      // Gazebo 7.x -> 9.x migration
-      // if (GetModel()->GetWorldPose().Ign().Pos().Distance(
-      //   nearest_->second.Pos()) > distance_) continue;
-      if (GetModel()->WorldPose().Pos().Distance(
-        nearest_->second.Pos()) > distance_) continue;
-      // end Gazebo 7.x -> 9.x migration
+      #if GAZEBO_MAJOR_VERSION > 7
+        if (GetModel()->WorldPose().Pos().Distance(
+          nearest_->second.Pos()) > distance_) continue;
+      #else
+        if (GetModel()->GetWorldPose().Ign().Pos().Distance(
+          nearest_->second.Pos()) > distance_) continue;
+      #endif
       // Now, send an event to the FSM to signal that we are close!
       fsm_.Update(SENSE_NEAR);
       // There should always only be one dock that we are close to
