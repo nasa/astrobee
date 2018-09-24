@@ -182,7 +182,10 @@ class GazeboModelPluginPmc : public FreeFlyerModelPlugin {
       &GazeboModelPluginPmc::WatchdogCallback, this, false, true);
 
     // Called before each iteration of simulated world update
-    next_tick_ = GetWorld()->GetSimTime();
+    // Gazebo 7.x -> 9.x migration
+    // next_tick_ = GetWorld()->GetSimTime();
+    next_tick_ = GetWorld()->SimTime();
+    // end Gazebo 7.x -> 9.x migration
     update_ = event::Events::ConnectWorldUpdateBegin(
       std::bind(&GazeboModelPluginPmc::WorldUpdateCallback, this));
   }
@@ -223,7 +226,10 @@ class GazeboModelPluginPmc : public FreeFlyerModelPlugin {
 
   // Called on simulation reset
   virtual void Reset() {
-    next_tick_ = GetWorld()->GetSimTime();
+    // Gazebo 7.x -> 9.x migration
+    // next_tick_ = GetWorld()->GetSimTime();
+    next_tick_ = GetWorld()->SimTime();
+    // end Gazebo 7.x -> 9.x migration
   }
 
   // This is called whenever the controller has new force/torque to apply
@@ -324,26 +330,45 @@ class GazeboModelPluginPmc : public FreeFlyerModelPlugin {
   // Called on each sensor update event
   void WorldUpdateCallback() {
     // Throttle callback rate
-    if (GetWorld()->GetSimTime() >= next_tick_) {
+    // Gazebo 7.x -> 9.x migration
+    // if (GetWorld()->GetSimTime() >= next_tick_) {
+    if (GetWorld()->SimTime() >= next_tick_) {
+    // end Gazebo 7.x -> 9.x migration
       next_tick_ += 1.0 / control_rate_hz_;
       // Set the angular velocity
+      // Gazebo 7.x -> 9.x migration
+      // blowers_.SetAngularVelocity(
+      //   GetLink()->GetRelativeAngularVel().x,
+      //   GetLink()->GetRelativeAngularVel().y,
+      //   GetLink()->GetRelativeAngularVel().z);
       blowers_.SetAngularVelocity(
-        GetLink()->GetRelativeAngularVel().x,
-        GetLink()->GetRelativeAngularVel().y,
-        GetLink()->GetRelativeAngularVel().z);
+        GetLink()->RelativeAngularVel().X(),
+        GetLink()->RelativeAngularVel().Y(),
+        GetLink()->RelativeAngularVel().Z());
+      // end Gazebo 7.x -> 9.x migration
       // Set the battery voltage
       blowers_.SetBatteryVoltage(14.0);
       // Step the system
       blowers_.Step();
       // Extract and apply the force and torque for the blowers
-      force_ = math::Vector3(0, 0, 0);
-      torque_ = math::Vector3(0, 0, 0);
+      // Gazebo 7.x -> 9.x migration
+      // force_ = math::Vector3(0, 0, 0);
+      // torque_ = math::Vector3(0, 0, 0);
+      // for (size_t i = 0; i < NUMBER_OF_PMCS; i++) {
+      //   force_ += math::Vector3(blowers_.states_[i].force_B[0],
+      //     blowers_.states_[i].force_B[1], blowers_.states_[i].force_B[2]);
+      //   torque_ += math::Vector3(blowers_.states_[i].torque_B[0],
+      //     blowers_.states_[i].torque_B[1], blowers_.states_[i].torque_B[2]);
+      // }
+      force_ = ignition::math::Vector3d(0, 0, 0);
+      torque_ = ignition::math::Vector3d(0, 0, 0);
       for (size_t i = 0; i < NUMBER_OF_PMCS; i++) {
-        force_ += math::Vector3(blowers_.states_[i].force_B[0],
+        force_ += ignition::math::Vector3d(blowers_.states_[i].force_B[0],
           blowers_.states_[i].force_B[1], blowers_.states_[i].force_B[2]);
-        torque_ += math::Vector3(blowers_.states_[i].torque_B[0],
+        torque_ += ignition::math::Vector3d(blowers_.states_[i].torque_B[0],
           blowers_.states_[i].torque_B[1], blowers_.states_[i].torque_B[2]);
       }
+      // end Gazebo 7.x -> 9.x migration
     }
     // Apply the force and torque to the model
     GetLink()->AddRelativeForce(force_);
@@ -358,8 +383,12 @@ class GazeboModelPluginPmc : public FreeFlyerModelPlugin {
   ros::Publisher pub_telemetry_, pub_state_;        // State/telemetry pubs
   ros::Subscriber sub_command_;                     // Command subscriber
   ros::Timer timer_;                                // Watchdog timer
-  math::Vector3 force_;                             // Current body-frame force
-  math::Vector3 torque_;                            // Current body-frame torque
+  // Gazebo 7.x -> 9.x migration
+  // math::Vector3 force_;                             // Current body-frame force
+  // math::Vector3 torque_;                            // Current body-frame torque
+  ignition::math::Vector3d force_;                  // Current body-frame force
+  ignition::math::Vector3d torque_;                 // Current body-frame torque
+  // end Gazebo 7.x -> 9.x migration
   gnc_autocode::GncBlowersAutocode blowers_;        // Autocode blower iface
   ff_hw_msgs::PmcCommand null_command_;             // PMC null command
   event::ConnectionPtr update_;                     // Update event from gazeo

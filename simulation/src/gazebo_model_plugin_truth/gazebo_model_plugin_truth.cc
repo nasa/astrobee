@@ -75,13 +75,22 @@ class GazeboModelPluginTruth : public FreeFlyerModelPlugin {
     if (static_) {
       static tf2_ros::StaticTransformBroadcaster br;
       msg_.header.stamp = ros::Time::now();
-      msg_.transform.translation.x = GetModel()->GetWorldPose().pos.x;
-      msg_.transform.translation.y = GetModel()->GetWorldPose().pos.y;
-      msg_.transform.translation.z = GetModel()->GetWorldPose().pos.z;
-      msg_.transform.rotation.x = GetModel()->GetWorldPose().rot.x;
-      msg_.transform.rotation.y = GetModel()->GetWorldPose().rot.y;
-      msg_.transform.rotation.z = GetModel()->GetWorldPose().rot.z;
-      msg_.transform.rotation.w = GetModel()->GetWorldPose().rot.w;
+      // Gazebo 7.x -> 9.x migration
+      // msg_.transform.translation.x = GetModel()->GetWorldPose().pos.x;
+      // msg_.transform.translation.y = GetModel()->GetWorldPose().pos.y;
+      // msg_.transform.translation.z = GetModel()->GetWorldPose().pos.z;
+      // msg_.transform.rotation.x = GetModel()->GetWorldPose().rot.x;
+      // msg_.transform.rotation.y = GetModel()->GetWorldPose().rot.y;
+      // msg_.transform.rotation.z = GetModel()->GetWorldPose().rot.z;
+      // msg_.transform.rotation.w = GetModel()->GetWorldPose().rot.w;
+      msg_.transform.translation.x = GetModel()->WorldPose().Pos().X();
+      msg_.transform.translation.y = GetModel()->WorldPose().Pos().Y();
+      msg_.transform.translation.z = GetModel()->WorldPose().Pos().Z();
+      msg_.transform.rotation.x = GetModel()->WorldPose().Rot().X();
+      msg_.transform.rotation.y = GetModel()->WorldPose().Rot().Y();
+      msg_.transform.rotation.z = GetModel()->WorldPose().Rot().Z();
+      msg_.transform.rotation.w = GetModel()->WorldPose().Rot().W();
+      // end Gazebo 7.x -> 9.x migration
       br.sendTransform(msg_);
       return;
     }
@@ -93,53 +102,87 @@ class GazeboModelPluginTruth : public FreeFlyerModelPlugin {
       TOPIC_LOCALIZATION_TRUTH_TWIST, 1);
 
     // Called before each iteration of simulated world update
-    next_tick_ = GetWorld()->GetSimTime();
+    // Gazebo 7.x -> 9.x migration
+    // next_tick_ = GetWorld()->GetSimTime();
+    next_tick_ = GetWorld()->SimTime();
+    // end Gazebo 7.x -> 9.x migration
     update_ = event::Events::ConnectWorldUpdateBegin(
       std::bind(&GazeboModelPluginTruth::Update, this));
   }
 
   // Called on simulation reset
   virtual void Reset() {
-    next_tick_ = GetWorld()->GetSimTime();
+    // Gazebo 7.x -> 9.x migration
+    // next_tick_ = GetWorld()->GetSimTime();
+    next_tick_ = GetWorld()->SimTime();
+    // end Gazebo 7.x -> 9.x migration
   }
 
   // Called on every discrete time tick in the simulated world
   virtual void Update() {
-    if (GetWorld()->GetSimTime() >= next_tick_) {
+    // Gazebo 7.x -> 9.x migration
+    // if (GetWorld()->GetSimTime() >= next_tick_) {
+    if (GetWorld()->SimTime() >= next_tick_) {
+    // end Gazebo 7.x -> 9.x migration
       next_tick_ += 1.0 / rate_;
       if (tf_) {
         static tf2_ros::TransformBroadcaster br;
-        msg_.header.stamp = ros::Time::now();
-        msg_.transform.translation.x = GetModel()->GetWorldPose().pos.x;
-        msg_.transform.translation.y = GetModel()->GetWorldPose().pos.y;
-        msg_.transform.translation.z = GetModel()->GetWorldPose().pos.z;
-        msg_.transform.rotation.x = GetModel()->GetWorldPose().rot.x;
-        msg_.transform.rotation.y = GetModel()->GetWorldPose().rot.y;
-        msg_.transform.rotation.z = GetModel()->GetWorldPose().rot.z;
-        msg_.transform.rotation.w = GetModel()->GetWorldPose().rot.w;
+        // Gazebo 7.x -> 9.x migration
+        // msg_.transform.translation.x = GetModel()->GetWorldPose().pos.x;
+        // msg_.transform.translation.y = GetModel()->GetWorldPose().pos.y;
+        // msg_.transform.translation.z = GetModel()->GetWorldPose().pos.z;
+        // msg_.transform.rotation.x = GetModel()->GetWorldPose().rot.x;
+        // msg_.transform.rotation.y = GetModel()->GetWorldPose().rot.y;
+        // msg_.transform.rotation.z = GetModel()->GetWorldPose().rot.z;
+        // msg_.transform.rotation.w = GetModel()->GetWorldPose().rot.w;
+        msg_.transform.translation.x = GetModel()->WorldPose().Pos().X();
+        msg_.transform.translation.y = GetModel()->WorldPose().Pos().Y();
+        msg_.transform.translation.z = GetModel()->WorldPose().Pos().Z();
+        msg_.transform.rotation.x = GetModel()->WorldPose().Rot().X();
+        msg_.transform.rotation.y = GetModel()->WorldPose().Rot().Y();
+        msg_.transform.rotation.z = GetModel()->WorldPose().Rot().Z();
+        msg_.transform.rotation.w = GetModel()->WorldPose().Rot().W();
+        // end Gazebo 7.x -> 9.x migration
         br.sendTransform(msg_);
       }
       // Pose
       if (pose_) {
         ros_truth_pose_.header = msg_.header;
-        ros_truth_pose_.pose.position.x = GetModel()->GetWorldPose().pos.x;
-        ros_truth_pose_.pose.position.y = GetModel()->GetWorldPose().pos.y;
-        ros_truth_pose_.pose.position.z = GetModel()->GetWorldPose().pos.z;
-        ros_truth_pose_.pose.orientation.x = GetModel()->GetWorldPose().rot.x;
-        ros_truth_pose_.pose.orientation.y = GetModel()->GetWorldPose().rot.y;
-        ros_truth_pose_.pose.orientation.z = GetModel()->GetWorldPose().rot.z;
-        ros_truth_pose_.pose.orientation.w = GetModel()->GetWorldPose().rot.w;
+        // Gazebo 7.x -> 9.x migration
+        // ros_truth_pose_.pose.position.x = GetModel()->GetWorldPose().pos.x;
+        // ros_truth_pose_.pose.position.y = GetModel()->GetWorldPose().pos.y;
+        // ros_truth_pose_.pose.position.z = GetModel()->GetWorldPose().pos.z;
+        // ros_truth_pose_.pose.orientation.x = GetModel()->GetWorldPose().rot.x;
+        // ros_truth_pose_.pose.orientation.y = GetModel()->GetWorldPose().rot.y;
+        // ros_truth_pose_.pose.orientation.z = GetModel()->GetWorldPose().rot.z;
+        // ros_truth_pose_.pose.orientation.w = GetModel()->GetWorldPose().rot.w;
+        ros_truth_pose_.pose.position.x = GetModel()->WorldPose().Pos().X();
+        ros_truth_pose_.pose.position.y = GetModel()->WorldPose().Pos().Y();
+        ros_truth_pose_.pose.position.z = GetModel()->WorldPose().Pos().Z();
+        ros_truth_pose_.pose.orientation.x = GetModel()->WorldPose().Rot().X();
+        ros_truth_pose_.pose.orientation.y = GetModel()->WorldPose().Rot().Y();
+        ros_truth_pose_.pose.orientation.z = GetModel()->WorldPose().Rot().Z();
+        ros_truth_pose_.pose.orientation.w = GetModel()->WorldPose().Rot().W();
+        // end Gazebo 7.x -> 9.x migration
         pub_truth_pose_.publish(ros_truth_pose_);
       }
       // Twist
       if (twist_) {
         ros_truth_twist_.header = msg_.header;
-        ros_truth_twist_.twist.linear.x = GetModel()->GetWorldLinearVel().x;
-        ros_truth_twist_.twist.linear.y = GetModel()->GetWorldLinearVel().y;
-        ros_truth_twist_.twist.linear.z = GetModel()->GetWorldLinearVel().z;
-        ros_truth_twist_.twist.angular.x = GetModel()->GetWorldAngularVel().x;
-        ros_truth_twist_.twist.angular.y = GetModel()->GetWorldAngularVel().y;
-        ros_truth_twist_.twist.angular.z = GetModel()->GetWorldAngularVel().z;
+        // Gazebo 7.x -> 9.x migration
+        // ros_truth_twist_.twist.linear.x = GetModel()->GetWorldLinearVel().x;
+        // ros_truth_twist_.twist.linear.y = GetModel()->GetWorldLinearVel().y;
+        // ros_truth_twist_.twist.linear.z = GetModel()->GetWorldLinearVel().z;
+        // ros_truth_twist_.twist.angular.x = GetModel()->GetWorldAngularVel().x;
+        // ros_truth_twist_.twist.angular.y = GetModel()->GetWorldAngularVel().y;
+        // ros_truth_twist_.twist.angular.z = GetModel()->GetWorldAngularVel().z;
+        ros_truth_twist_.twist.linear.x = GetModel()->WorldLinearVel().X();
+        ros_truth_twist_.twist.linear.y = GetModel()->WorldLinearVel().Y();
+        ros_truth_twist_.twist.linear.z = GetModel()->WorldLinearVel().Z();
+        ros_truth_twist_.twist.angular.x = GetModel()->WorldAngularVel().X();
+        ros_truth_twist_.twist.angular.y = GetModel()->WorldAngularVel().Y();
+        ros_truth_twist_.twist.angular.z = GetModel()->WorldAngularVel().Z();
+        // end Gazebo 7.x -> 9.x migration
         pub_truth_twist_.publish(ros_truth_twist_);
       }
     }

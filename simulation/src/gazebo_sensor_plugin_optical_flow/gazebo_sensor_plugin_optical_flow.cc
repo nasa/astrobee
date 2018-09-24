@@ -113,9 +113,14 @@ class GazeboSensorPluginOpticalFlow : public FreeFlyerSensorPlugin {
       &GazeboSensorPluginOpticalFlow::SendFeatures, this, true, false);
 
     // Create a shape for collision testing
-    GetWorld()->GetPhysicsEngine()->InitForThread();
+    // Gazebo 7.x -> 9.x migration
+    // GetWorld()->GetPhysicsEngine()->InitForThread();
+    // shape_ = boost::dynamic_pointer_cast<physics::RayShape>(GetWorld()
+    //     ->GetPhysicsEngine()->CreateShape("ray", physics::CollisionPtr()));
+    GetWorld()->Physics()->InitForThread();
     shape_ = boost::dynamic_pointer_cast<physics::RayShape>(GetWorld()
-        ->GetPhysicsEngine()->CreateShape("ray", physics::CollisionPtr()));
+        ->Physics()->CreateShape("ray", physics::CollisionPtr()));
+    // end Gazebo 7.x -> 9.x migration
 
     // Only do this once
     msg_feat_.header.frame_id = std::string(FRAME_NAME_WORLD);
@@ -148,16 +153,28 @@ class GazeboSensorPluginOpticalFlow : public FreeFlyerSensorPlugin {
     msg_feat_.camera_id = msg_reg_.camera_id;
 
     // Handle the transform for all sensor types
+    // Gazebo 7.x -> 9.x migration
+    // Eigen::Affine3d wTb = (
+    //     Eigen::Translation3d(
+    //       GetModel()->GetWorldPose().pos.x,
+    //       GetModel()->GetWorldPose().pos.y,
+    //       GetModel()->GetWorldPose().pos.z) *
+    //     Eigen::Quaterniond(
+    //       GetModel()->GetWorldPose().rot.w,
+    //       GetModel()->GetWorldPose().rot.x,
+    //       GetModel()->GetWorldPose().rot.y,
+    //       GetModel()->GetWorldPose().rot.z));
     Eigen::Affine3d wTb = (
         Eigen::Translation3d(
-          GetModel()->GetWorldPose().pos.x,
-          GetModel()->GetWorldPose().pos.y,
-          GetModel()->GetWorldPose().pos.z) *
+          GetModel()->WorldPose().Pos().X(),
+          GetModel()->WorldPose().Pos().Y(),
+          GetModel()->WorldPose().Pos().Z()) *
         Eigen::Quaterniond(
-          GetModel()->GetWorldPose().rot.w,
-          GetModel()->GetWorldPose().rot.x,
-          GetModel()->GetWorldPose().rot.y,
-          GetModel()->GetWorldPose().rot.z));
+          GetModel()->WorldPose().Rot().W(),
+          GetModel()->WorldPose().Rot().X(),
+          GetModel()->WorldPose().Rot().Y(),
+          GetModel()->WorldPose().Rot().Z()));
+    // end Gazebo 7.x -> 9.x migration
     Eigen::Affine3d bTs = (
         Eigen::Translation3d(
           sensor_->Pose().Pos().X(),
@@ -201,9 +218,14 @@ class GazeboSensorPluginOpticalFlow : public FreeFlyerSensorPlugin {
 
     {
       // Initialize and lock the physics engine
-      GetWorld()->GetPhysicsEngine()->InitForThread();
+      // Gazebo 7.x -> 9.x migration
+      // GetWorld()->GetPhysicsEngine()->InitForThread();
+      // boost::unique_lock<boost::recursive_mutex> lock(*(
+      //   GetWorld()->GetPhysicsEngine()->GetPhysicsUpdateMutex()));
+      GetWorld()->Physics()->InitForThread();
       boost::unique_lock<boost::recursive_mutex> lock(*(
-        GetWorld()->GetPhysicsEngine()->GetPhysicsUpdateMutex()));
+        GetWorld()->Physics()->GetPhysicsUpdateMutex()));
+      // end Gazebo 7.x -> 9.x migration
 
       // Iterate over the map in an attempt to find features in the frustrum
       for (size_t i = 0; i < num_features_; i++) {

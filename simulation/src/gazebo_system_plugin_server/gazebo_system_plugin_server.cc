@@ -52,9 +52,15 @@ class SystemPluginServer : public SystemPlugin {
     simulation_speed *= 62.5;
     gzmsg << "Setting target update rate to " << simulation_speed << std::endl;
     physics::WorldPtr world = physics::get_world();
-    physics::PhysicsEnginePtr engine = world->GetPhysicsEngine();
+    // Gazebo 7.x -> 9.x migration
+    // physics::PhysicsEnginePtr engine = world->GetPhysicsEngine();
+    physics::PhysicsEnginePtr engine = world->Physics();
+    // end Gazebo 7.x -> 9.x migration
     engine->SetRealTimeUpdateRate(simulation_speed);
-    event::Events::DisconnectWorldUpdateBegin(subscriber_);
+    // Gazebo 7.x -> 9.x migration
+    // event::Events::DisconnectWorldUpdateBegin(subscriber_);
+    subscriber_.reset();
+    // end Gazebo 7.x -> 9.x migration
   }
 
  private:

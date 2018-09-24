@@ -40,7 +40,9 @@
 #include <gazebo/common/common.hh>
 #include <gazebo/physics/physics.hh>
 #include <gazebo/sensors/sensors.hh>
-#include <gazebo/math/gzmath.hh>
+// Gazebo 7.x -> 9.x migration
+// #include <gazebo/math/gzmath.hh>
+// end Gazebo 7.x -> 9.x migration
 #include <gazebo/rendering/rendering.hh>
 
 // Transformation helper code
