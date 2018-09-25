@@ -47,33 +47,36 @@ class GazeboModelPluginDrag : public FreeFlyerModelPlugin {
     if (sdf->HasElement("density"))
       density_ = sdf->Get<double>("density");
     // Called before each iteration of simulated world update
-    // Gazebo 7.x -> 9.x migration
-    // next_tick_ = GetWorld()->GetSimTime();
+  #if GAZEBO_MAJOR_VERSION > 7
     next_tick_ = GetWorld()->SimTime();
-    // end Gazebo 7.x -> 9.x migration
+  #else
+    next_tick_ = GetWorld()->GetSimTime();
+  #endif
     update_ = event::Events::ConnectWorldUpdateBegin(
       std::bind(&GazeboModelPluginDrag::WorldUpdateCallback, this));
   }
 
   // Called on simulation reset
   virtual void Reset() {
-    // Gazebo 7.x -> 9.x migration
-    // next_tick_ = GetWorld()->GetSimTime();
+  #if GAZEBO_MAJOR_VERSION > 7
     next_tick_ = GetWorld()->SimTime();
-    // end Gazebo 7.x -> 9.x migration
+  #else
+    next_tick_ = GetWorld()->GetSimTime();
+  #endif
   }
 
   // Called on each sensor update event
   void WorldUpdateCallback() {
     // Calculate drag
-    // Gazebo 7.x -> 9.x migration
-    // drag_ = GetLink()->GetRelativeLinearVel();
-    // drag_ = -0.5 * coefficient_ * area_ * density_
-    //         * drag_.GetLength() * drag_.GetLength() * drag_.Normalize();
+  #if GAZEBO_MAJOR_VERSION > 7
     drag_ = GetLink()->RelativeLinearVel();
     drag_ = -0.5 * coefficient_ * area_ * density_
           * drag_.Length() * drag_.Length() * drag_.Normalize();
-    // end Gazebo 7.x -> 9.x migration
+  #else
+    drag_ = GetLink()->GetRelativeLinearVel();
+    drag_ = -0.5 * coefficient_ * area_ * density_
+            * drag_.GetLength() * drag_.GetLength() * drag_.Normalize();
+  #endif
     // Apply the force and torque to the model
     GetLink()->AddRelativeForce(drag_);
   }
@@ -81,10 +84,11 @@ class GazeboModelPluginDrag : public FreeFlyerModelPlugin {
  private:
   double coefficient_, area_, density_;              // Drag parameters
   common::Time next_tick_;
-  // Gazebo 7.x -> 9.x migration
-  // math::Vector3 drag_;
+#if GAZEBO_MAJOR_VERSION > 7
   ignition::math::Vector3d drag_;
-  // end Gazebo 7.x -> 9.x migration
+#else
+  math::Vector3 drag_;
+#endif
   event::ConnectionPtr update_;
 };
 

@@ -200,9 +200,14 @@ class GazeboModelPluginFlashlights : public FreeFlyerModelPlugin {
         msg_l.set_spot_inner_angle(0.6);
         msg_l.set_spot_outer_angle(2.2);
         msg_l.set_spot_falloff(1.0);
-      #if GAZEBO_MAJOR_VERSION > 7
+      #if GAZEBO_MAJOR_VERSION > 8
         msgs::Set(msg_l.mutable_diffuse(), ignition::math::Color(0.5, 0.5, 0.5, 1));
         msgs::Set(msg_l.mutable_specular(), ignition::math::Color(0.1, 0.1, 0.1, 1));
+        msgs::Set(msg_l.mutable_pose(),
+          lights_[name] + GetModel()->GetLink()->WorldPose());
+      #elif GAZEBO_MAJOR_VERSION == 8
+        msgs::Set(msg_l.mutable_diffuse(), common::Color(0.5, 0.5, 0.5, 1));
+        msgs::Set(msg_l.mutable_specular(), common::Color(0.1, 0.1, 0.1, 1));
         msgs::Set(msg_l.mutable_pose(),
           lights_[name] + GetModel()->GetLink()->WorldPose());
       #else
