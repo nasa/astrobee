@@ -1,5 +1,9 @@
 # Astrobee Robot Software v1
 
+## Release 0.4.5
+
+Updated external user install instructions.
+
 ## Release 0.4.4
 
 Remove astrobee-repo-version from publicly required packages list.

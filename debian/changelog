@@ -1,3 +1,9 @@
+astrobee (0.4.5) UNRELEASED; urgency=medium
+
+  * Updated external user install instructions.
+
+ -- Astrobee Flight Software <astrobee-fsw@nx.arc.nasa.gov>  Thu, 27 Sep 2018 13:26:44 -0700
+
 astrobee (0.4.4) testing; urgency=medium
 
   * Remove astrobee-repo-version from required packages.

@@ -49,6 +49,7 @@ Next, install all required dependencies:
     pushd $SOURCE_PATH
     cd scripts/setup
     ./add_ros_repository.sh
+    sudo apt-get update
     cd debians
     ./build_install_debians.sh
     cd ../
