@@ -1,14 +1,14 @@
 /* Copyright (c) 2017, United States Government, as represented by the
  * Administrator of the National Aeronautics and Space Administration.
- * 
+ *
  * All rights reserved.
- * 
+ *
  * The Astrobee platform is licensed under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -29,9 +29,8 @@
 #include <rviz/properties/int_property.h>
 #include <rviz/visualization_manager.h>
 
-#include "trajectory_visual.h"  // NOLINT()
 #include "trajectory_display.h"  // NOLINT()
-
+#include "trajectory_visual.h"   // NOLINT()
 
 namespace traj_opt {
 
@@ -245,5 +244,5 @@ void TrajectoryDisplay::randomizeColor() {}
 
 // Tell pluginlib about this class.  It is important to do this in
 // global scope, outside our package's namespace.
-#include <pluginlib/class_list_macros.h> // NOLINT()
+#include <pluginlib/class_list_macros.h>  // NOLINT()
 PLUGINLIB_EXPORT_CLASS(traj_opt::TrajectoryDisplay, rviz::Display)

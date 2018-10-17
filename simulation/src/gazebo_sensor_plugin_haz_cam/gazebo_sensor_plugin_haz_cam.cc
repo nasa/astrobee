@@ -19,6 +19,9 @@
 // ROS includes
 #include <ros/ros.h>
 
+// FSW includes
+#include <config_reader/config_reader.h>
+
 // Sensor plugin interface
 #include <astrobee_gazebo/astrobee_gazebo.h>
 
@@ -35,18 +38,27 @@ namespace gazebo {
 class GazeboSensorPluginHazCam : public FreeFlyerSensorPlugin {
  public:
   GazeboSensorPluginHazCam() :
-    FreeFlyerSensorPlugin("pico_driver", "haz_cam", true) {}
+    FreeFlyerSensorPlugin("pico_driver", "haz_cam", true), rate_(0.0) {}
 
-  ~GazeboSensorPluginHazCam() {}
+  ~GazeboSensorPluginHazCam() {
+    if (update_)
+      camera_->DisconnectNewRGBPointCloud(update_);
+  }
 
  protected:
   // Called when plugin is loaded into gazebo
   void LoadCallback(ros::NodeHandle *nh,
     sensors::SensorPtr sensor, sdf::ElementPtr sdf) {
     // Get a link to the parent sensor
-    sensor_ = std::dynamic_pointer_cast < sensors::DepthCameraSensor > (sensor);
+    sensor_ = std::dynamic_pointer_cast<sensors::DepthCameraSensor>(sensor);
     if (!sensor_) {
-      gzerr << "GazeboSensorPluginHazCam requires a parent camera sensor.\n";
+      gzerr << "GazeboSensorPluginHazCam requires a depth camera sensor.\n";
+      return;
+    }
+    // Get a link to the depth camera
+    camera_ = sensor_->DepthCamera();
+    if (!camera_) {
+      gzerr << "GazeboSensorPluginHazCam cant get rendering object.\n";
       return;
     }
     // Create a publisher for the point cloud
@@ -78,25 +90,51 @@ class GazeboSensorPluginHazCam : public FreeFlyerSensorPlugin {
     field.datatype = sensor_msgs::PointField::FLOAT32;
     field.count = 1;  // Number of ELEMENTS, not bytes
     point_cloud_msg_.fields.push_back(field);
+
+    // Read configuration
+    config_reader::ConfigReader config;
+    config.AddFile("simulation/simulation.config");
+    if (!config.ReadFiles()) {
+      ROS_FATAL("Failed to read simulation config file.");
+      return;
+    }
+    bool dos = true;
+    if (!config.GetBool("disable_cameras_on_speedup", &dos))
+      ROS_FATAL("Could not read the drawing_width parameter.");
+    if (!config.GetReal("haz_cam_rate", &rate_))
+      ROS_FATAL("Could not read the drawing_width parameter.");
+    config.Close();
+
+    // If we have a sped up simulation and we need to disable the camera
+    double simulation_speed = 1.0;
+    if (nh->getParam("/simulation_speed", simulation_speed))
+      if (simulation_speed > 1.0 && dos) rate_ = 0.0;
+  }
+
+  // Only send measurements when estrinsics are available
+  void OnExtrinsicsReceived(ros::NodeHandle *nh) {
+    // Toggle if the camera is active or not
+    ToggleCallback();
+
     // Listen to the point cloud
-    update_ = sensor_->DepthCamera()->ConnectNewRGBPointCloud(boost::bind(
+    update_ = camera_->ConnectNewRGBPointCloud(boost::bind(
       &GazeboSensorPluginHazCam::Callback, this, _1, _2, _3, _4, _5));
   }
 
   // Turn camera on or off based on topic subscription
   void ToggleCallback() {
-    if (point_cloud_pub_.getNumSubscribers() > 0 ||
-      image_pub_.getNumSubscribers() > 0)
+    if (point_cloud_pub_.getNumSubscribers() > 0 && rate_ > 0) {
+      sensor_->SetUpdateRate(rate_);
       sensor_->SetActive(true);
-    else
+    } else {
+      sensor_->SetUpdateRate(0.0001);
       sensor_->SetActive(false);
+    }
   }
 
   // this->dataPtr->depthBuffer, width, height, 1, "FLOAT32"
   void Callback(const float *data, unsigned int width, unsigned height,
     unsigned int len, const std::string & type) {
-    if (!sensor_->IsActive() || !ExtrinsicsFound())
-      return;
     point_cloud_msg_.header.stamp = ros::Time::now();
     point_cloud_msg_.width = width;
     point_cloud_msg_.height = height;
@@ -113,10 +151,10 @@ class GazeboSensorPluginHazCam : public FreeFlyerSensorPlugin {
 
  private:
   // ROS variables
-  ros::Publisher image_pub_;
   ros::Publisher point_cloud_pub_;
   // Sensor pointer
   sensors::DepthCameraSensorPtr sensor_;
+  rendering::DepthCameraPtr camera_;
   // Camera and Point Cloud messages
   sensor_msgs::Image image_msg_;
   sensor_msgs::PointCloud2 point_cloud_msg_;
@@ -125,6 +163,7 @@ class GazeboSensorPluginHazCam : public FreeFlyerSensorPlugin {
   physics::ModelPtr model_;
   event::ConnectionPtr update_;
   std::string frame_id_;
+  double rate_;
 };
 
 GZ_REGISTER_SENSOR_PLUGIN(GazeboSensorPluginHazCam)

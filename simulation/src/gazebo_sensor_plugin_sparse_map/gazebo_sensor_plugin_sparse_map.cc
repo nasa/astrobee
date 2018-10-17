@@ -99,7 +99,19 @@ class GazeboSensorPluginSparseMap : public FreeFlyerSensorPlugin {
     pub_feat_ = nh->advertise<ff_msgs::VisualLandmarks>(
       TOPIC_LOCALIZATION_ML_FEATURES, 1);
 
-    // Enable mapped landmarks
+    // Create a shape for collision testing
+    GetWorld()->GetPhysicsEngine()->InitForThread();
+    shape_ = boost::dynamic_pointer_cast<physics::RayShape>(GetWorld()
+        ->GetPhysicsEngine()->CreateShape("ray", physics::CollisionPtr()));
+
+    // Only do this once
+    msg_feat_.header.frame_id = std::string(FRAME_NAME_WORLD);
+    msg_reg_.header.frame_id = std::string(FRAME_NAME_WORLD);
+  }
+
+  // Only send measurements when estrinsics are available
+  void OnExtrinsicsReceived(ros::NodeHandle *nh) {
+    // Sercide for enabling mapped landmarks
     srv_enable_ = nh->advertiseService(SERVICE_LOCALIZATION_ML_ENABLE,
       &GazeboSensorPluginSparseMap::EnableService, this);
 
@@ -110,15 +122,6 @@ class GazeboSensorPluginSparseMap : public FreeFlyerSensorPlugin {
     // Timer triggers features
     timer_features_ = nh->createTimer(ros::Duration(0.8 / rate_),
       &GazeboSensorPluginSparseMap::SendFeatures, this, true, false);
-
-    // Create a shape for collision testing
-    GetWorld()->GetPhysicsEngine()->InitForThread();
-    shape_ = boost::dynamic_pointer_cast<physics::RayShape>(GetWorld()
-        ->GetPhysicsEngine()->CreateShape("ray", physics::CollisionPtr()));
-
-    // Only do this once
-    msg_feat_.header.frame_id = std::string(FRAME_NAME_WORLD);
-    msg_reg_.header.frame_id = std::string(FRAME_NAME_WORLD);
   }
 
   // Enable or disable the feature timer
@@ -132,7 +135,7 @@ class GazeboSensorPluginSparseMap : public FreeFlyerSensorPlugin {
 
   // Send a registration pulse
   void SendRegistration(ros::TimerEvent const& event) {
-    if (!active_ || !ExtrinsicsFound()) return;
+    if (!active_) return;
 
     // Add a short delay between the features and new registration pulse
     timer_features_.stop();
@@ -241,7 +244,7 @@ class GazeboSensorPluginSparseMap : public FreeFlyerSensorPlugin {
 
   // Send off the features
   void SendFeatures(ros::TimerEvent const& event) {
-    if (!active_ || !ExtrinsicsFound()) return;
+    if (!active_) return;
     msg_feat_.header.stamp = ros::Time::now();
     pub_feat_.publish(msg_feat_);
   }

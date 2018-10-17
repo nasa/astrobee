@@ -34,7 +34,8 @@ catkin_package(
     gazebo_model_plugin_pmc
     gazebo_model_plugin_perching_arm
     gazebo_model_plugin_laser
-    gazebo_model_plugin_flashlights
+    gazebo_model_plugin_flashlight_front
+    gazebo_model_plugin_flashlight_aft
     gazebo_sensor_plugin_imu
     gazebo_sensor_plugin_nav_cam
     gazebo_sensor_plugin_dock_cam
@@ -43,7 +44,7 @@ catkin_package(
     gazebo_sensor_plugin_sparse_map
     gazebo_sensor_plugin_ar_tags
     gazebo_sensor_plugin_optical_flow
-    gazebo_system_plugin_server
+    gazebo_world_plugin_speed
     gazebo_system_plugin_client
   CATKIN_DEPENDS
     visualization_msgs
@@ -186,12 +187,12 @@ create_library(
     ff_util
 )
 
-# Create a model plugin for the flashlights
+# Create a model plugin for the front flashlight
 create_library(
   DIR
-    src/gazebo_model_plugin_flashlights
+    src/gazebo_model_plugin_flashlight_front
   TARGET
-    gazebo_model_plugin_flashlights
+    gazebo_model_plugin_flashlight_front
   LIBS
     ${GAZEBO_LIBRARIES}
     ${catkin_LIBRARIES}
@@ -202,7 +203,28 @@ create_library(
     ${catkin_INCLUDE_DIRS}
   DEPS
     ff_util
+    ff_hw_msgs
 )
+
+# Create a model plugin for the aft flashlight
+create_library(
+  DIR
+    src/gazebo_model_plugin_flashlight_aft
+  TARGET
+    gazebo_model_plugin_flashlight_aft
+  LIBS
+    ${GAZEBO_LIBRARIES}
+    ${catkin_LIBRARIES}
+    astrobee_gazebo
+  INC
+    ${GAZEBO_INCLUDE_DIRS}
+    ${EIGEN3_INCLUDE_DIRS}
+    ${catkin_INCLUDE_DIRS}
+  DEPS
+    ff_util
+    ff_hw_msgs
+)
+
 
 # Create a model plugin for the laser
 create_library(
@@ -220,6 +242,7 @@ create_library(
     ${catkin_INCLUDE_DIRS}
   DEPS
     ff_util
+    ff_hw_msgs
 )
 
 # Create a sensor plugin for the IMU
@@ -377,9 +400,9 @@ create_library(
 # Create a model plugin for sparse mapping
 create_library(
   DIR
-    src/gazebo_system_plugin_server
+    src/gazebo_world_plugin_speed
   TARGET
-    gazebo_system_plugin_server
+    gazebo_world_plugin_speed
   LIBS
     ${GAZEBO_LIBRARIES}
     ${catkin_LIBRARIES}
@@ -409,7 +432,7 @@ install_launch_files()
 
 # Also install some other resources
 install(DIRECTORY media  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
-#install(DIRECTORY models DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
+install(DIRECTORY models DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
 install(DIRECTORY worlds DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
 catkin_install_python(PROGRAMS scripts/spawn_model scripts/perf_wrapper
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})

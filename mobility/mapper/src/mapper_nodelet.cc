@@ -1,14 +1,14 @@
 /* Copyright (c) 2017, United States Government, as represented by the
  * Administrator of the National Aeronautics and Space Administration.
- * 
+ *
  * All rights reserved.
- * 
+ *
  * The Astrobee platform is licensed under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -25,23 +25,18 @@
 namespace mapper {
 
 MapperNodelet::MapperNodelet() :
-    ff_util::FreeFlyerNodelet(NODE_MAPPER), state_(IDLE) {
+    ff_util::FreeFlyerNodelet(NODE_MAPPER), state_(IDLE), killed_(false) {
 }
 
 MapperNodelet::~MapperNodelet() {
-  // Join all threads if they are still active
-  if (h_haz_tf_thread_.joinable())
-    h_haz_tf_thread_.join();
-  if (h_perch_tf_thread_.joinable())
-    h_perch_tf_thread_.join();
-  if (h_body_tf_thread_.joinable())
-    h_body_tf_thread_.join();
-  if (h_octo_thread_.joinable())
-    h_octo_thread_.join();
-  if (h_fade_thread_.joinable())
-    h_fade_thread_.join();
-  if (h_collision_check_thread_.joinable())
-    h_collision_check_thread_.join();
+  // Mark as thread as killed
+  killed_ = true;
+  // Notify all threads to ensure shutdown starts
+  semaphores_.collision_check.notify_one();
+  semaphores_.pcl.notify_one();
+  // Join threads once shutdown
+  h_octo_thread_.join();
+  h_collision_check_thread_.join();
 }
 
 void MapperNodelet::Initialize(ros::NodeHandle *nh) {
@@ -102,15 +97,60 @@ void MapperNodelet::Initialize(ros::NodeHandle *nh) {
   globals_.sampled_traj.SetResolution(traj_resolution);
 
   // threads --------------------------------------------------
-  h_haz_tf_thread_ = std::thread(&MapperNodelet::HazTfTask, this);
-  h_perch_tf_thread_ = std::thread(&MapperNodelet::PerchTfTask, this);
-  h_body_tf_thread_ = std::thread(&MapperNodelet::BodyTfTask, this);
+  ros::NodeHandle *nh_mt = GetPlatformHandle(true);
+
+  // Multi-threaded timers
+  timer_f_ = nh_mt->createTimer(
+    ros::Duration(ros::Rate(fading_memory_update_rate_)),
+      &MapperNodelet::FadeTask, this, false, true);
+  timer_h_ = nh_mt->createTimer(
+    ros::Duration(ros::Rate(tf_update_rate_)),
+      &MapperNodelet::HazTfTask, this, false, true);
+  timer_p_ = nh_mt->createTimer(
+    ros::Duration(ros::Rate(tf_update_rate_)),
+      &MapperNodelet::PerchTfTask, this, false, true);
+  timer_b_ = nh_mt->createTimer(
+    ros::Duration(ros::Rate(tf_update_rate_)),
+      &MapperNodelet::BodyTfTask, this, false, true);
+
+  // Create two threads to work in conjunction with the multithreaded nodehandle
   h_octo_thread_ = std::thread(&MapperNodelet::OctomappingTask, this);
-  h_fade_thread_ = std::thread(&MapperNodelet::FadeTask, this);
   h_collision_check_thread_ = std::thread(
     &MapperNodelet::CollisionCheckTask, this);
 
-  // Create services ------------------------------------------
+  // Multi-threaded publishers
+  obstacle_marker_pub_ = nh_mt->advertise<visualization_msgs::MarkerArray>(
+    TOPIC_MAPPER_OCTOMAP_MARKERS, 1);
+  free_space_marker_pub_ = nh_mt->advertise<visualization_msgs::MarkerArray>(
+    TOPIC_MAPPER_OCTOMAP_FREE_MARKERS, 1);
+  inflated_obstacle_marker_pub_ = nh_mt->advertise<visualization_msgs::MarkerArray>(
+    TOPIC_MAPPER_OCTOMAP_INFLATED_MARKERS, 1);
+  inflated_free_space_marker_pub_ = nh_mt->advertise<visualization_msgs::MarkerArray>(
+    TOPIC_MAPPER_OCTOMAP_INFLATED_FREE_MARKERS, 1);
+  path_marker_pub_ = nh_mt->advertise<visualization_msgs::MarkerArray>(
+    TOPIC_MAPPER_DISCRETE_TRAJECTORY_MARKERS, 1);
+  cam_frustum_pub_ = nh_mt->advertise<visualization_msgs::Marker>(
+    TOPIC_MAPPER_FRUSTRUM_MARKERS, 1);
+  free_space_cloud_pub_ = nh_mt->advertise<sensor_msgs::PointCloud2>(
+    TOPIC_MAPPER_OCTOMAP_FREE_CLOUD, 1, true);
+  obstacle_cloud_pub_ = nh_mt->advertise<sensor_msgs::PointCloud2>(
+    TOPIC_MAPPER_OCTOMAP_CLOUD, 1, true);
+
+  // Multi-threaded subscribers
+  std::string cam_prefix = TOPIC_HARDWARE_PICOFLEXX_PREFIX;
+  std::string cam_suffix = TOPIC_HARDWARE_PICOFLEXX_SUFFIX;
+  if (use_haz_cam) {
+      std::string cam = TOPIC_HARDWARE_NAME_HAZ_CAM;
+      haz_sub_ = nh_mt->subscribe(cam_prefix + cam + cam_suffix, 1,
+        &MapperNodelet::PclCallback, this);
+  }
+  if (use_perch_cam) {
+      std::string cam = TOPIC_HARDWARE_NAME_PERCH_CAM;
+      perch_sub_ = nh_mt->subscribe(cam_prefix + cam + cam_suffix, 1,
+        &MapperNodelet::PclCallback, this);
+  }
+
+  // Single-threaded services
   resolution_srv_ = nh->advertiseService(SERVICE_MOBILITY_UPDATE_MAP_RESOLUTION,
     &MapperNodelet::UpdateResolution, this);
   memory_time_srv_ = nh->advertiseService(SERVICE_MOBILITY_UPDATE_MEMORY_TIME,
@@ -119,58 +159,20 @@ void MapperNodelet::Initialize(ros::NodeHandle *nh) {
     &MapperNodelet::MapInflation, this);
   reset_map_srv_ = nh->advertiseService(SERVICE_MOBILITY_RESET_MAP,
     &MapperNodelet::ResetMap, this);
-  set_zones_srv_ = nh->advertiseService(SERVICE_MOBILITY_SET_ZONES,
-    &MapperNodelet::SetZonesCallback, this);
-  get_zones_srv_ = nh->advertiseService(SERVICE_MOBILITY_GET_ZONES,
-    &MapperNodelet::GetZonesCallback, this);
+  get_free_map_srv_ = nh->advertiseService(SERVICE_MOBILITY_GET_FREE_MAP,
+    &MapperNodelet::GetFreeMapCallback, this);
+  get_obstacle_map_srv_ = nh->advertiseService(SERVICE_MOBILITY_GET_OBSTACLE_MAP,
+    &MapperNodelet::GetObstacleMapCallback, this);
 
-  // Setup the trajectory validation action
-  server_v_.SetGoalCallback(
-    std::bind(&MapperNodelet::GoalCallback, this, std::placeholders::_1));
-  server_v_.SetPreemptCallback(
-    std::bind(&MapperNodelet::PreemptCallback, this));
-  server_v_.SetCancelCallback(
-    std::bind(&MapperNodelet::CancelCallback, this));
-  server_v_.Create(nh, ACTION_MOBILITY_VALIDATE);
+  // Single-threaded publishers
+  hazard_pub_ = nh_mt->advertise<ff_msgs::Hazard>(
+    TOPIC_MOBILITY_HAZARD, 1);
 
-  // Subscribers ----------------------------------------------
-  std::string cam_prefix = TOPIC_HARDWARE_PICOFLEXX_PREFIX;
-  std::string cam_suffix = TOPIC_HARDWARE_PICOFLEXX_SUFFIX;
-  if (use_haz_cam) {
-      std::string cam = TOPIC_HARDWARE_NAME_HAZ_CAM;
-      haz_sub_ = nh->subscribe(cam_prefix + cam + cam_suffix, 10,
-        &MapperNodelet::PclCallback, this);
-  }
-  if (use_perch_cam) {
-      std::string cam = TOPIC_HARDWARE_NAME_PERCH_CAM;
-      perch_sub_ = nh->subscribe(cam_prefix + cam + cam_suffix, 10,
-        &MapperNodelet::PclCallback, this);
-  }
-  segment_sub_ = nh->subscribe(TOPIC_GNC_CTL_SEGMENT, 10,
+  // Single-threaded subscribers
+  segment_sub_ = nh->subscribe(TOPIC_GNC_CTL_SEGMENT, 1,
     &MapperNodelet::SegmentCallback, this);
-  reset_sub_ = nh->subscribe(TOPIC_GNC_EKF_RESET, 10,
+  reset_sub_ = nh->subscribe(TOPIC_GNC_EKF_RESET, 1,
     &MapperNodelet::ResetCallback, this);
-
-  // Publishers -----------------------------------------------
-  hazard_pub_ = nh->advertise<ff_msgs::Hazard>(
-    TOPIC_MOBILITY_HAZARD, 10);
-  obstacle_marker_pub_ = nh->advertise<visualization_msgs::MarkerArray>(
-    TOPIC_MAPPER_OCTOMAP_MARKERS, 10);
-  free_space_marker_pub_ = nh->advertise<visualization_msgs::MarkerArray>(
-    TOPIC_MAPPER_OCTOMAP_FREE_MARKERS, 10);
-  inflated_obstacle_marker_pub_ = nh->advertise<visualization_msgs::MarkerArray>(
-    TOPIC_MAPPER_OCTOMAP_INFLATED_MARKERS, 10);
-  inflated_free_space_marker_pub_ = nh->advertise<visualization_msgs::MarkerArray>(
-    TOPIC_MAPPER_OCTOMAP_INFLATED_FREE_MARKERS, 10);
-  path_marker_pub_ = nh->advertise<visualization_msgs::MarkerArray>(
-    TOPIC_MAPPER_DISCRETE_TRAJECTORY_MARKERS, 10);
-  cam_frustum_pub_ = nh->advertise<visualization_msgs::Marker>(
-    TOPIC_MAPPER_FRUSTRUM_MARKERS, 10);
-  map_keep_in_out_pub_ = nh->advertise<visualization_msgs::MarkerArray>(
-    TOPIC_MOBILITY_ZONES, 10, true);
-
-  // Loading keep-in and keep-out zones
-  LoadKeepInOutZones();
 
   // Notify initialization complete
   NODELET_DEBUG_STREAM("Initialization complete");

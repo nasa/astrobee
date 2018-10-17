@@ -1,8 +1,9 @@
-astrobee (0.4.5) UNRELEASED; urgency=medium
+astrobee (0.5.0) testing; urgency=medium
 
-  * Updated external user install instructions.
+  * Build ready for CERT testing.
+  * Improved simulator.
 
- -- Astrobee Flight Software <astrobee-fsw@nx.arc.nasa.gov>  Thu, 27 Sep 2018 13:26:44 -0700
+ -- Astrobee Flight Software <astrobee-fsw@nx.arc.nasa.gov>  Wed, 17 Oct 2018 11:47:05 -0700
 
 astrobee (0.4.4) testing; urgency=medium
 

@@ -15,48 +15,31 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-project(description)
-
-# Call catkin
-catkin_package(
-  CATKIN_DEPENDS
-    roscpp roscpp tf2 tf2_ros geometry_msgs
-)
-
-# Create global_transforms
-create_tool_targets(DIR tools
-  LIBS ${catkin_LIBRARIES} common msg_conversions config_reader
-  INC ${catkin_INCLUDE_DIRS}
-  DEPS common msg_conversions config_reader tf2 tf2_ros geometry_msgs
-)
-
-# Create framestore
-create_library(TARGET framestore
-  LIBS ${catkin_LIBRARIES} common ff_nodelet msg_conversions
-  INC  ${catkin_INCLUDE_DIRS}
-  DEPS common msg_conversions roscpp nodelet pluginlib tf2 tf2_ros geometry_msgs
-)
-
-# Install our launch file
-install_launch_files()
-
-# Also install some other resources
-install(DIRECTORY urdf DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
-
 # Check to see if correct version of media has been downloaded into tree. We
 # dont do this if we are cross-compiling, as there is no need for it. We must
 # also make sure the media is copied in a native install to a simulator.
+
+# Add the things that need to be on both the robot and the simulation
+add_subdirectory(description)
+
+# Optional: install only for simulated context
 if ((NOT USE_CTC) AND (NOT IS_BAMBOO_BUILD))
-  ExternalProject_Add(media
-    URL https://github.com/nasa/astrobee_media/archive/v0.0.1.tar.gz
-    URL_HASH SHA1=5e6e35368273b4172110dfb3c651a04b4343e83c
+  set(FETCHCONTENT_QUIET OFF)
+  FetchContent_Declare(media
+    URL https://github.com/nasa/astrobee_media/archive/v0.0.3.tar.gz
+    URL_HASH SHA1=837a686c9bf68a647f04499681a70416cce4db61
     SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/media
-    UPDATE_COMMAND ""
-    PATCH_COMMAND ""
-    CONFIGURE_COMMAND ""
-    BUILD_COMMAND ""
-    INSTALL_COMMAND ""
-    TEST_COMMAND "")
-  add_dependencies(framestore media)
-  install(DIRECTORY media DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
+  )
+  FetchContent_GetProperties(media)
+  if(NOT media_POPULATED)
+    FetchContent_Populate(media)
+    add_subdirectory(${media_SOURCE_DIR}/astrobee_granite)
+    add_subdirectory(${media_SOURCE_DIR}/astrobee_dock)
+    add_subdirectory(${media_SOURCE_DIR}/astrobee_iss)
+    add_subdirectory(${media_SOURCE_DIR}/astrobee_handrail_8_5)
+    add_subdirectory(${media_SOURCE_DIR}/astrobee_handrail_21_5)
+    add_subdirectory(${media_SOURCE_DIR}/astrobee_handrail_30)
+    add_subdirectory(${media_SOURCE_DIR}/astrobee_handrail_41_5)
+    add_subdirectory(${media_SOURCE_DIR}/astrobee_freeflyer)
+  endif()
 endif ((NOT USE_CTC) AND (NOT IS_BAMBOO_BUILD))

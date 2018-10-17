@@ -1,14 +1,14 @@
 /* Copyright (c) 2017, United States Government, as represented by the
  * Administrator of the National Aeronautics and Space Administration.
- * 
+ *
  * All rights reserved.
- * 
+ *
  * The Astrobee platform is licensed under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -43,14 +43,14 @@ namespace perching_arm {
 class PerchingArmNode : public ff_util::FreeFlyerNodelet {
  public:
   PerchingArmNode() : ff_util::FreeFlyerNodelet(NODE_PERCHING_ARM) {}
-  virtual ~PerchingArmNode() {
+  ~PerchingArmNode() {
     arm_.Disconnect();
   }
 
  protected:
   // Called on flight software stack initialization - every NODELET_FATAIL
   // call below should be converted to an initialization fault...
-  virtual void Initialize(ros::NodeHandle *nh) {
+  void Initialize(ros::NodeHandle *nh) {
     // Read the configuration
     config_reader::ConfigReader config_params;
     config_params.AddFile("hw/perching_arm.config");
@@ -334,7 +334,6 @@ class PerchingArmNode : public ff_util::FreeFlyerNodelet {
   std::string prefix_;                  // Joint prefix
 };
 
-PLUGINLIB_DECLARE_CLASS(perching_arm, PerchingArmNode,
-                        perching_arm::PerchingArmNode, nodelet::Nodelet);
+PLUGINLIB_EXPORT_CLASS(perching_arm::PerchingArmNode, nodelet::Nodelet);
 
 }  // namespace perching_arm

@@ -15,12 +15,13 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+#include "mapper/octoclass.h"
+#include <mapper/pcl_conversions.h>
 
 #include <utility>
 #include <algorithm>
 #include <vector>
 #include <limits>
-#include "mapper/octoclass.h"
 
 namespace octoclass {
 
@@ -141,38 +142,21 @@ void OctoClass::SetClampingThresholds(const double clamping_threshold_min,
 
 // Function obtained from https://github.com/OctoMap/octomap_ros
 void OctoClass::PointsOctomapToPointCloud2(const octomap::point3d_list& points,
-                                           sensor_msgs::PointCloud2& cloud) {
-  // make sure the channel is valid
-  std::vector<sensor_msgs::PointField>::const_iterator field_iter = cloud.fields.begin(), field_end =
-      cloud.fields.end();
-  bool has_x, has_y, has_z;
-  has_x = has_y = has_z = false;
-  while (field_iter != field_end) {
-    if ((field_iter->name == "x") || (field_iter->name == "X"))
-      has_x = true;
-    if ((field_iter->name == "y") || (field_iter->name == "Y"))
-      has_y = true;
-    if ((field_iter->name == "z") || (field_iter->name == "Z"))
-      has_z = true;
-    ++field_iter;
-  }
+                                           sensor_msgs::PointCloud2* cloud) {
+  // create pcl version
+  pcl::PointCloud<pcl::PointXYZ> out_cloud;
+  out_cloud.reserve(points.size());
 
-  if ((!has_x) || (!has_y) || (!has_z))
-    throw std::runtime_error("One of the fields xyz does not exist");
+  // copy points
+  for (auto &p : points)
+    out_cloud.push_back(pcl::PointXYZ(p.x(), p.y(), p.z()));
 
-  sensor_msgs::PointCloud2Modifier pcd_modifier(cloud);
-  pcd_modifier.resize(points.size());
+  // convert msg
+  pcl::toROSMsg(out_cloud, *cloud);
 
-  sensor_msgs::PointCloud2Iterator<float> iter_x(cloud, "x");
-  sensor_msgs::PointCloud2Iterator<float> iter_y(cloud, "y");
-  sensor_msgs::PointCloud2Iterator<float> iter_z(cloud, "z");
-
-  for (octomap::point3d_list::const_iterator it = points.begin(); it != points.end();
-          ++it, ++iter_x, ++iter_y, ++iter_z) {
-    *iter_x = it->x();
-    *iter_y = it->y();
-    *iter_z = it->z();
-  }
+  // add stamps
+  cloud->header.stamp = ros::Time::now();
+  cloud->header.frame_id = "world";
 }
 
 void OctoClass::PclToRayOctomap(const pcl::PointCloud< pcl::PointXYZ > &cloud,
@@ -434,13 +418,40 @@ void OctoClass::FindCollidingNodesInflated(const pcl::PointCloud< pcl::PointXYZ 
   }
 }
 
+// turns into voxelized representation
+octomap::point3d_list OctoClass::Voxelize(const octomap::OcTree::leaf_iterator &leaf) {
+  double res = tree_.getResolution();
+  double size = leaf.getSize();
+
+  double low = -size*0.5 +  res/2.0;
+  double high = -low;
+
+  octomap::point3d_list list;
+
+  for (double dx = low; dx <= high; dx+=res) {
+    for (double dy = low; dy <= high; dy+=res) {
+      for (double dz = low; dz <= high; dz+=res) {
+        octomap::point3d d(dx, dy, dz);
+        list.push_back(d+leaf.getCoordinate());
+      }
+    }
+  }
+
+  return list;
+}
+
 // adapted from https:// ithub.com/OctoMap/octomap_mapping
 void OctoClass::TreeVisMarkers(visualization_msgs::MarkerArray* obstacles,
-                               visualization_msgs::MarkerArray* free) {
+                               visualization_msgs::MarkerArray* free,
+                               sensor_msgs::PointCloud2* obstacles_cloud,
+                               sensor_msgs::PointCloud2* free_cloud) {
   // Markers: each marker array stores a set of nodes with similar size
   obstacles->markers.resize(tree_depth_+1);
   free->markers.resize(tree_depth_+1);
   const ros::Time rostime = ros::Time::now();
+
+  // get pointcloud holder
+  octomap::point3d_list free_points, obstacles_points;
 
   // set tree min and max
   static double min_x, min_y, min_z, max_x, max_y, max_z;
@@ -459,13 +470,17 @@ void OctoClass::TreeVisMarkers(visualization_msgs::MarkerArray* obstacles,
     point_center.y = it.getY();
     point_center.z = it.getZ();
     const double h = (1.0 - std::min(std::max((point_center.z-min_z)/ (max_z - min_z), 0.0), 1.0))*colorFactor;
+    octomap::point3d_list voxels = Voxelize(it);
+
     if (tree_.isNodeOccupied(*it)) {
       // Add point and set color based on height
       obstacles->markers[idx].points.push_back(point_center);
       obstacles->markers[idx].colors.push_back(HeightMapColor(h, 1.0));
+      obstacles_points.insert(obstacles_points.end(), voxels.begin(), voxels.end());
     } else {
       free->markers[idx].points.push_back(point_center);
       free->markers[idx].colors.push_back(HeightMapColor(h, 0.05));
+      free_points.insert(free_points.end(), voxels.begin(), voxels.end());
     }
   }
 
@@ -499,6 +514,9 @@ void OctoClass::TreeVisMarkers(visualization_msgs::MarkerArray* obstacles,
     else
         free->markers[i].action = visualization_msgs::Marker::DELETE;
   }
+
+  PointsOctomapToPointCloud2(free_points, free_cloud);
+  PointsOctomapToPointCloud2(obstacles_points, obstacles_cloud);
 }
 
 // adapted from https:// ithub.com/OctoMap/octomap_mapping

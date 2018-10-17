@@ -1,14 +1,14 @@
 /* Copyright (c) 2017, United States Government, as represented by the
  * Administrator of the National Aeronautics and Space Administration.
- * 
+ *
  * All rights reserved.
- * 
+ *
  * The Astrobee platform is licensed under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -50,7 +50,7 @@ class SpeedCamNode : public ff_util::FreeFlyerNodelet {
     std::bind(&SpeedCamNode::SpeedCallback, this, std::placeholders::_1),
     std::bind(&SpeedCamNode::StatusCallback, this, std::placeholders::_1),
     std::bind(&SpeedCamNode::VersionCallback, this, std::placeholders::_1)) {}
-  virtual ~SpeedCamNode() {}
+  ~SpeedCamNode() {}
 
  protected:
   // Called on flight software stack initialization
@@ -219,7 +219,6 @@ class SpeedCamNode : public ff_util::FreeFlyerNodelet {
   ros::Timer timer_;                              // For time sync
 };
 
-PLUGINLIB_DECLARE_CLASS(speed_cam, SpeedCamNode,
-                        speed_cam::SpeedCamNode, nodelet::Nodelet);
+PLUGINLIB_EXPORT_CLASS(speed_cam::SpeedCamNode, nodelet::Nodelet);
 
 }  // namespace speed_cam

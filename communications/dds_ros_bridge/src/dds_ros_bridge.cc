@@ -254,6 +254,16 @@ int DdsRosBridge::BuildGuestScienceToRapid(const std::string& state_sub_topic,
   return ros_sub_rapid_pubs_.size();
 }
 
+int DdsRosBridge::BuildLogSampleToRapid(const std::string& sub_topic,
+                                         const std::string& pub_topic,
+                                         const std::string& name) {
+  ff::RosSubRapidPubPtr log_to_log(new ff::RosLogSampleToRapid(sub_topic,
+                                                                    pub_topic,
+                                                                    nh_));
+  ros_sub_rapid_pubs_[name] = log_to_log;
+  return ros_sub_rapid_pubs_.size();
+}
+
 int DdsRosBridge::BuildOdomToPosition(const std::string& sub_topic,
                                       const std::string& pub_topic,
                                       const std::string& name) {
@@ -272,6 +282,17 @@ int DdsRosBridge::BuildPlanStatusToPlanStatus(const std::string& sub_topic,
                                                                      pub_topic,
                                                                      nh_));
   ros_sub_rapid_pubs_[name] = plan_status_to_plan_status;
+  return ros_sub_rapid_pubs_.size();
+}
+
+int DdsRosBridge::BuildPmcCmdStateToRapid(const std::string& sub_topic,
+                                              const std::string& pub_topic,
+                                              const std::string& name) {
+  ff::RosSubRapidPubPtr pmc_command_to_pmc_command(
+                                    new ff::RosPmcCmdStateToRapid(sub_topic,
+                                                                      pub_topic,
+                                                                      nh_));
+  ros_sub_rapid_pubs_[name] = pmc_command_to_pmc_command;
   return ros_sub_rapid_pubs_.size();
 }
 
@@ -374,6 +395,8 @@ void DdsRosBridge::Initialize(ros::NodeHandle *nh) {
     return;
   }
 
+  nh_ = *nh;
+
   // In simulation, the namespace is usually set to the robot name so we need to
   // check if we are in simulation and get the right name
   if (agent_name_ == "sim" || agent_name_ == "simulator") {
@@ -391,7 +414,14 @@ void DdsRosBridge::Initialize(ros::NodeHandle *nh) {
     }
   }
 
-  nh_ = *nh;
+  // Publish agent name so that the android apks have an easy way to get the
+  // robot name. Topic is latched.
+  robot_name_pub_ = nh_.advertise<std_msgs::String>(TOPIC_ROBOT_NAME,
+                                                    10,
+                                                    true);
+  std_msgs::String robot_name_msg;
+  robot_name_msg.data = agent_name_;
+  robot_name_pub_.publish(robot_name_msg);
 
   int fake_argc = 1;
 
@@ -515,7 +545,6 @@ bool DdsRosBridge::ReadParams() {
   std::string sub_topic, sub_topic2;
   std::string pub_topic;
   bool use;
-
   components_ = 0;
 
   // rapid_command_ros_command => RCRC
@@ -954,6 +983,25 @@ bool DdsRosBridge::ReadParams() {
     components_++;
   }
 
+  // ros_log_rapid_log_sample => RLRLS
+  if (!config_params_.GetBool("use_RLRLS", &use)) {
+    ROS_FATAL("DDS Bridge: use RLRLS not specified!");
+    return false;
+  }
+
+  if (use) {
+    if (!config_params_.GetStr("pub_topic_RLRLS", &pub_topic)) {
+      ROS_FATAL("DDS Bridge: pub topic RLSLS not specified!");
+      return false;
+    }
+
+    // TODO(rgarciar): Change topic name for a constant
+    BuildLogSampleToRapid("/rosout",
+                           pub_topic,
+                           "RLRLS");
+    components_++;
+  }
+
   // ros_odom_rapid_position => RORP
   if (!config_params_.GetBool("use_RORP", &use)) {
     ROS_FATAL("DDS Bridge: use RORP not specified!");
@@ -985,6 +1033,22 @@ bool DdsRosBridge::ReadParams() {
     BuildPlanStatusToPlanStatus(TOPIC_MANAGEMENT_EXEC_PLAN_STATUS,
                                 pub_topic,
                                 "RPSRPS");
+    components_++;
+  }
+
+  // ros_pmc_cmd_state_rapid_pmc_cmd_state => RPCSRPCS
+  if (!config_params_.GetBool("use_RPCSRPCS", &use)) {
+    ROS_FATAL("DDS Bridge: use RPCSRPCS not specified!");
+    return false;
+  }
+
+  if (use) {
+    if (!config_params_.GetStr("pub_topic_RPCSRPCS", &pub_topic)) {
+      ROS_FATAL("DDS Bridge: pub topic RPCSRPCS not specified!");
+      return false;
+    }
+
+    BuildPmcCmdStateToRapid(TOPIC_HARDWARE_PMC_COMMAND, pub_topic, "RPCSRPCS");
     components_++;
   }
 
@@ -1025,6 +1089,34 @@ bool DdsRosBridge::ReadParams() {
     components_++;
   }
 
+  // Read and set the publishing rates
+  if (!ReadRateParams()) {
+    exit(EXIT_FAILURE);
+    return false;
+  }
+
+  // Read in the multiple that the battery estimated time remaining needs to be
+  // rounded to.
+  int multiple;
+  if (!config_params_.GetInt("battery_time_round_to_multiple", &multiple)) {
+    ROS_FATAL("DDS Bridge: Battery time round to multiple not specified!");
+    return false;
+  }
+
+  if (ros_sub_rapid_pubs_.count("RBSRBS") == 0) {
+    ROS_ERROR("DDS Bridge: Battery msg stuff not added and it is needed!");
+    return false;
+  }
+
+  ff::RosBatteryStateToRapid *RBSRBS = static_cast<ff::RosBatteryStateToRapid *>
+                                          (ros_sub_rapid_pubs_["RBSRBS"].get());
+
+  RBSRBS->SetBatteryTimeMultiple(multiple);
+
+  return true;
+}
+
+bool DdsRosBridge::ReadRateParams() {
   // Read in the telemetery rates so the bridge knows how often to publish
   // the telemmetry messages
   float temp_rate;
@@ -1081,6 +1173,14 @@ bool DdsRosBridge::ReadParams() {
   ff::RosOdomRapidPosition *RORP = static_cast<ff::RosOdomRapidPosition *>
                                             (ros_sub_rapid_pubs_["RORP"].get());
 
+  if (ros_sub_rapid_pubs_.count("RPCSRPCS") == 0) {
+    ROS_ERROR("DDS Bridge: PMC command state stuff not added and is needed!");
+    return false;
+  }
+  ff::RosPmcCmdStateToRapid *RPCS =
+                                    static_cast<ff::RosPmcCmdStateToRapid *>
+                                    (ros_sub_rapid_pubs_["RPCSRPCS"].get());
+
   if (!config_params_.GetReal("comm_status_rate", &temp_rate)) {
     ROS_FATAL("DDS Bridge: comm state rate not specified!");
     return false;
@@ -1124,23 +1224,11 @@ bool DdsRosBridge::ReadParams() {
   RTRT->SetPositionRate(temp_rate);
   RORP->SetPositionPublishRate(temp_rate);
 
-  // Read in the multiple that the battery estimated time remaining needs to be
-  // rounded to.
-  int multiple;
-  if (!config_params_.GetInt("battery_time_round_to_multiple", &multiple)) {
-    ROS_FATAL("DDS Bridge: Battery time round to multiple not specified!");
+  if (!config_params_.GetReal("pmc_command_rate", &temp_rate)) {
+    ROS_FATAL("DDS Bridge: pmc command rate not specified!");
     return false;
   }
-
-  if (ros_sub_rapid_pubs_.count("RBSRBS") == 0) {
-    ROS_ERROR("DDS Bridge: Battery msg stuff not added and it is needed!");
-    return false;
-  }
-
-  ff::RosBatteryStateToRapid *RBSRBS = static_cast<ff::RosBatteryStateToRapid *>
-                                          (ros_sub_rapid_pubs_["RBSRBS"].get());
-
-  RBSRBS->SetBatteryTimeMultiple(multiple);
+  RPCS->SetPmcPublishRate(temp_rate);
 
   return true;
 }

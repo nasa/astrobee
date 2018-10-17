@@ -81,7 +81,7 @@ class LocalizationManagerNodelet : public ff_util::FreeFlyerNodelet {
     state_(STATE_INITIALIZING) {}
 
   // Destructor
-  virtual ~LocalizationManagerNodelet() {}
+  ~LocalizationManagerNodelet() {}
 
  protected:
   void Initialize(ros::NodeHandle *nh) {

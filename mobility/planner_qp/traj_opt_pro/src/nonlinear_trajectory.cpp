@@ -1,14 +1,14 @@
 /* Copyright (c) 2017, United States Government, as represented by the
  * Administrator of the National Aeronautics and Space Administration.
- * 
+ *
  * All rights reserved.
- * 
+ *
  * The Astrobee platform is licensed under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -62,7 +62,7 @@ NonlinearTrajectory::NonlinearTrajectory(
     const std::vector<Waypoint> &waypoints,
     const std::vector<std::pair<MatD, VecD>> &cons, int deg, int min_dim,
     boost::shared_ptr<std::vector<decimal_t>> ds,
-    boost::shared_ptr<VecDVec> path)
+    boost::shared_ptr<VecDVec> path, bool time_opt, decimal_t gap, int max_its)
     : seg_(cons.size()), deg_(deg), basis(PolyType::ENDPOINT, deg_, min_dim) {
   dim_ = waypoints.front().pos.rows();
   assert(dim_ == cons.front().first.cols());
@@ -93,7 +93,10 @@ NonlinearTrajectory::NonlinearTrajectory(
   solver.setCost(cost);
   // call solver
   // solved_ = solver.solve(true);
-  solved_ = solver.solve(false);
+  if (time_opt)
+    solved_ = solver.solve(true, gap, times, max_its);
+  else
+    solved_ = solver.solve(true, gap, std::vector<Variable *>(), max_its);
 }
 NonlinearTrajectory::NonlinearTrajectory(const std::vector<Waypoint> &waypoints,
                                          const Vec3Vec &points, int segs,
@@ -527,4 +530,35 @@ void NonlinearTrajectory::scaleTime(decimal_t ratio) {
     }
   }
 }
+
+SolverInfo NonlinearTrajectory::getInfo(std::vector<TrajData> *history) {
+  // populate this vector
+  if (history != NULL) {
+    history->clear();
+    std::vector<decimal_t> end_vars;
+    std::vector<decimal_t> end_times;
+    // save state
+    uint num_z = solver.solver_info.var_history.front().size();
+    for (uint i = 0; i < num_z; i++) end_vars.push_back(solver.vars.at(i).val);
+    for (auto &t : times) end_times.push_back(t->val);
+
+    // serialize
+    for (uint j = 0; j < solver.solver_info.var_history.size(); j++) {
+      for (uint i = 0; i < num_z; i++)
+        solver.vars.at(i).val = solver.solver_info.var_history.at(j).at(i);
+
+      for (uint i = 0; i < solver.solver_info.time_history.at(j).size(); i++)
+        times.at(i)->val = solver.solver_info.time_history.at(j).at(i);
+
+      history->push_back(serialize());
+    }
+
+    // restore state
+    for (uint i = 0; i < num_z; i++) solver.vars.at(i).val = end_vars.at(i);
+
+    for (uint i = 0; i < times.size(); i++) times.at(i)->val = end_times.at(i);
+  }
+  return solver.solver_info;
+}
+
 }  // namespace traj_opt

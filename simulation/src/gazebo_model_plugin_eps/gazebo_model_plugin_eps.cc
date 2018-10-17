@@ -31,7 +31,8 @@
 
 // Messages
 #include <ff_hw_msgs/EpsBatteryLocation.h>
-#include <ff_hw_msgs/EpsChannelState.h>
+#include <ff_hw_msgs/EpsHousekeeping.h>
+#include <ff_hw_msgs/EpsPowerState.h>
 #include <ff_hw_msgs/EpsDockStateStamped.h>
 
 // Services
@@ -89,7 +90,9 @@ class GazeboModelPluginEps : public FreeFlyerModelPlugin {
   GazeboModelPluginEps() : FreeFlyerModelPlugin("eps_driver", "", true),
     fsm_(UNKNOWN, std::bind(&GazeboModelPluginEps::StateCallback,
       this, std::placeholders::_1, std::placeholders::_2)),
-    rate_(10.0), distance_(0.05), delay_(5.0), lock_(false) {
+    rate_(10.0), distance_(0.05), delay_(5.0), lock_(false),
+    battery_capacity_(3.4), battery_charge_(3.0),
+    battery_discharge_rate_(0.005) {
       // In an unknown state, if we are sensed to be near or far from a berth
       // then update to either a docked or undocked state.
       fsm_.Add(UNKNOWN, SENSE_NEAR | SENSE_FAR,
@@ -111,6 +114,7 @@ class GazeboModelPluginEps : public FreeFlyerModelPlugin {
       fsm_.Add(UNDOCKED, SENSE_NEAR,
         [this](FSM::Event const& event) -> FSM::State {
           // Setup a timer to expire after a givent delay
+          timer_delay_.stop();
           timer_delay_.start();
           // Create a virtual link
           Lock(true);
@@ -126,7 +130,7 @@ class GazeboModelPluginEps : public FreeFlyerModelPlugin {
         });
       // In a DOCKED state if we receive a FAR message then we have undocked,
       // in an uncontrolled way. That is, we have pushed off dock. The key here
-      // is that we don't release the magnets, so we might redock :)
+      // is that we don't release the magnets, so we might redock.
       fsm_.Add(DOCKED, SENSE_FAR,
         [this](FSM::Event const& event) -> FSM::State {
           // Destroy a virtual link
@@ -144,6 +148,7 @@ class GazeboModelPluginEps : public FreeFlyerModelPlugin {
           // Destroy a virtual link
           Lock(false);
           // Start a timer to prevent magnets from kicking back in
+          timer_delay_.stop();
           timer_delay_.start();
           // We are now undocking
           return UNDOCKING;
@@ -167,6 +172,7 @@ class GazeboModelPluginEps : public FreeFlyerModelPlugin {
       fsm_.Add(UNDOCKING, TIMEOUT,
         [this](FSM::Event const& event) -> FSM::State {
           // Setup a timer to expire after a given delay
+          timer_delay_.stop();
           timer_delay_.start();
           // We are now docking
           return DOCKING;
@@ -175,7 +181,7 @@ class GazeboModelPluginEps : public FreeFlyerModelPlugin {
 
   // Destructor
   ~GazeboModelPluginEps() {
-    event::Events::DisconnectWorldUpdateEnd(connection_);
+    event::Events::DisconnectWorldUpdateEnd(update_);
   }
 
  protected:
@@ -190,20 +196,139 @@ class GazeboModelPluginEps : public FreeFlyerModelPlugin {
     if (sdf->HasElement("delay"))
       delay_ = sdf->Get<double>("delay");
     // Setup telemetry publishers
-    pub_ = nh->advertise<ff_hw_msgs::EpsDockStateStamped>(
+    pub_dock_state_ = nh->advertise<ff_hw_msgs::EpsDockStateStamped>(
       TOPIC_HARDWARE_EPS_DOCK_STATE, 1);
+    pub_housekeeping_ = nh->advertise<ff_hw_msgs::EpsHousekeeping>(
+      TOPIC_HARDWARE_EPS_HOUSEKEEPING, 1);
+    pub_power_ = nh->advertise<ff_hw_msgs::EpsPowerState>(
+      TOPIC_HARDWARE_EPS_POWER_STATE, 1);
+    battery_state_pub_tl_ = nh->advertise<sensor_msgs::BatteryState>(
+      TOPIC_HARDWARE_EPS_BATTERY_STATE_TL, 5);
+    battery_state_pub_tr_ = nh->advertise<sensor_msgs::BatteryState>(
+      TOPIC_HARDWARE_EPS_BATTERY_STATE_TR, 5);
+    battery_state_pub_bl_ = nh->advertise<sensor_msgs::BatteryState>(
+      TOPIC_HARDWARE_EPS_BATTERY_STATE_BL, 5);
+    battery_state_pub_br_ = nh->advertise<sensor_msgs::BatteryState>(
+      TOPIC_HARDWARE_EPS_BATTERY_STATE_BR, 5);
     // Provide an undock service to call to release the robot from the dock
-    srv_ = nh->advertiseService(SERVICE_HARDWARE_EPS_UNDOCK,
-      &GazeboModelPluginEps::UndockCallback, this);
+    srv_undock_ = nh->advertiseService(
+      SERVICE_HARDWARE_EPS_UNDOCK,
+        &GazeboModelPluginEps::UndockCallback, this);
+    // Enable payload power toggling
+    srv_payload_ = nh->advertiseService(
+      SERVICE_HARDWARE_EPS_CONF_PAYLOAD_POWER,
+        &GazeboModelPluginEps::PayloadConfigureCallback, this);
+    // Enable advanced power toggling
+    srv_power_ = nh->advertiseService(
+      SERVICE_HARDWARE_EPS_CONF_ADVANCED_POWER,
+        &GazeboModelPluginEps::PowerConfigureCallback, this);
     // Once we have berth locations start timer for checking dock status
     timer_delay_ = nh->createTimer(ros::Duration(delay_),
       &GazeboModelPluginEps::DelayCallback, this, true, false);
       // Once we have berth locations start timer for checking dock status
     timer_update_ = nh->createTimer(ros::Rate(rate_),
       &GazeboModelPluginEps::UpdateCallback, this, false, false);
-    // Defer the extrinsics setup to allow plugins to load
-    connection_ = event::Events::ConnectWorldUpdateEnd(
+    // Create timer to publish battery states
+    telem_timer_= nh->createTimer(ros::Duration(5),
+      &GazeboModelPluginEps::TelemetryCallback, this, false, true);
+     // Defer the extrinsics setup to allow plugins to load
+    update_ = event::Events::ConnectWorldUpdateEnd(
       std::bind(&GazeboModelPluginEps::BerthCallback, this));
+    // Initialize battery states
+    state_tl_.header.stamp = ros::Time::now();
+    state_tl_.location = ff_hw_msgs::EpsBatteryLocation::TOP_LEFT;
+    state_tl_.present = sdf->Get<bool>("battery_top_left");
+    state_tl_.capacity = battery_capacity_;
+    state_tl_.charge = battery_charge_;
+    state_tl_.percentage = state_tl_.charge / state_tl_.capacity * 100.0;
+    battery_state_pub_tl_.publish(state_tl_);
+    state_tr_.header.stamp = ros::Time::now();
+    state_tr_.location = ff_hw_msgs::EpsBatteryLocation::TOP_RIGHT;
+    state_tr_.present = sdf->Get<bool>("battery_top_right");
+    state_tr_.capacity = battery_capacity_;
+    state_tr_.charge = battery_charge_;
+    state_tr_.percentage = state_tr_.charge / state_tl_.capacity * 100.0;
+    battery_state_pub_tr_.publish(state_tr_);
+    state_bl_.header.stamp = ros::Time::now();
+    state_bl_.location = ff_hw_msgs::EpsBatteryLocation::BOTTOM_LEFT;
+    state_bl_.present = sdf->Get<bool>("battery_bottom_left");
+    state_bl_.capacity = battery_capacity_;
+    state_bl_.charge = battery_charge_;
+    state_bl_.percentage = state_bl_.charge / state_bl_.capacity * 100.0;
+    battery_state_pub_bl_.publish(state_bl_);
+    state_br_.header.stamp = ros::Time::now();
+    state_br_.location = ff_hw_msgs::EpsBatteryLocation::BOTTOM_RIGHT;
+    state_br_.present = sdf->Get<bool>("battery_bottom_right");
+    state_br_.capacity = battery_capacity_;
+    state_br_.charge = battery_charge_;
+    state_br_.percentage = state_br_.charge /state_br_.capacity * 100.0;
+    battery_state_pub_br_.publish(state_br_);
+    // Set default values for housekeeping
+    housekeeping_["AGND1_V"] = 0.0000;
+    housekeeping_["SUPPLY_IN_V"] = 0.4640;
+    housekeeping_["PAYLOAD_PWR3_I"] = 0.0030;
+    housekeeping_["SUBSYS1_1_PWR_V"] = 14.9820;
+    housekeeping_["SUBSYS1_2_PWR_V"] = 14.9660;
+    housekeeping_["UNREG_V"] = 15.0150;
+    housekeeping_["SYSTEM_I"] = 1.0960;
+    housekeeping_["BAT4V_V"] = 0.0;
+    housekeeping_["BAT3V_V"] = 0.0;
+    housekeeping_["BAT2V_V"] = 0.0;
+    housekeeping_["BAT1V_V"] = 0.0;
+    housekeeping_["SUPPLY_I"] = 0.1790;
+    housekeeping_["5VLIVE_V"] = 4.9740;
+    housekeeping_["AGND2_V"] =  4.9800;
+    housekeeping_["FAN_PWR_I"] = 0.3150;
+    housekeeping_["AUX_PWR_I"] = 0.0120;
+    housekeeping_["PAYLOAD_PWR4_I"] = 0.0;
+    housekeeping_["PAYLOAD_PWR2_I"] = 0.0;
+    housekeeping_["PAYLOAD_PWR1_I"] = 0.0;
+    housekeeping_["5A_REG1_PWR_I"] = 0.4410;
+    housekeeping_["MOTOR1_I"] = 0.0770;
+    housekeeping_["SUBSYS2_PWR_V"] = 14.9820;
+    housekeeping_["MOTOR2_I"] = 0.0740;
+    housekeeping_["5A_REG2_PWR_I"] = 0.3750;
+    housekeeping_["5A_REG3_PWR_I"] = 0.0100;
+    housekeeping_["MAIN5_PWR_I"] = 0.5720;
+    housekeeping_["AUO_PWR_I"] = 0.0050;
+    housekeeping_["HLP_I"] = 0.1930;
+    housekeeping_["USB_PWR_I"] = 0.7830;
+    housekeeping_["LLP_I"] = 0.4000;
+    housekeeping_["MLP_I"] = 0.1900;
+    housekeeping_["ENET_PWR_I"] = 0.1290;
+    // Set sdefault power channel states
+    power_states_["LLP_EN"] = true;
+    power_states_["MLP_EN"] = true;
+    power_states_["HLP_EN"] = true;
+    power_states_["USB_PWR_EN"] = true;
+    power_states_["AUX_PWR_EN"] = true;
+    power_states_["ENET_PWR_EN"] = true;
+    power_states_["FAN_EN"] = true;
+    power_states_["SPEAKER_EN"] = true;
+    power_states_["PAYLOAD_EN_TOP_AFT"] = false;
+    power_states_["PAYLOAD_EN_BOT_AFT"] = false;
+    power_states_["PAYLOAD_EN_BOT_FRONT"] = false;
+    power_states_["PAYLOAD_EN_TOP_FRONT"] = true;
+    power_states_["MOTOR_EN1"] = true;
+    power_states_["MOTOR_EN2"] = true;
+    power_states_["RESERVED0"] = false;
+    power_states_["RESERVED1"] = false;
+    power_states_["STATUSA2_LED"] = true;
+    power_states_["STATUSA1_LED"] = true;
+    power_states_["STATUSB2_LED"] = true;
+    power_states_["STATUSB1_LED"] = true;
+    power_states_["STATUSC2_LED"] = true;
+    power_states_["STATUSC1_LED"] = true;
+    power_states_["RESERVED2"] = false;
+    power_states_["RESERVED3"] = false;
+    power_states_["VIDEO_LED"] = true;
+    power_states_["AUDIO_LED"] = true;
+    power_states_["LIVE_LED"] = true;
+    power_states_["RESERVED4"] = false;
+    power_states_["RESERVED5"] = false;
+    power_states_["RESERVED6"] = false;
+    power_states_["RESERVED7"] = false;
+    power_states_["RESERVED8"] = false;
   }
 
   // When the FSM state changes we get a callback here, so that we can send
@@ -262,7 +387,7 @@ class GazeboModelPluginEps : public FreeFlyerModelPlugin {
         tf.transform.rotation.y,
         tf.transform.rotation.z);
       // Kill the connection when we have a dock pose
-      event::Events::DisconnectWorldUpdateEnd(connection_);
+      event::Events::DisconnectWorldUpdateEnd(update_);
       // Once we have berth locations start timer for checking dock status
       timer_update_.start();
     // If we have an exception we need to quietly wait for transform(s)
@@ -281,9 +406,17 @@ class GazeboModelPluginEps : public FreeFlyerModelPlugin {
       // By this point we are guaranteed to have a dock
       joint_ = GetWorld()->GetPhysicsEngine()->CreateJoint("fixed", GetModel());
       joint_->Attach(GetModel()->GetLink(), dock->GetLink());
+      // If we have an air carriage, stop colliding with anything
+      physics::LinkPtr link = GetModel()->GetLink("body");
+      if (link)
+        link->SetCollideMode("none");
     } else if (joint_) {
       joint_->Detach();
       joint_->Fini();
+      // If we have an air carriage, start colliding with everything
+      physics::LinkPtr link = GetModel()->GetLink("body");
+      if (link)
+        link->SetCollideMode("all");
     }
   }
 
@@ -319,7 +452,7 @@ class GazeboModelPluginEps : public FreeFlyerModelPlugin {
     default:
       msg.state = ff_hw_msgs::EpsDockStateStamped::UNKNOWN;     break;
     }
-    pub_.publish(msg);
+    pub_dock_state_.publish(msg);
   }
 
   // Called when we have berth transforms populated
@@ -350,18 +483,172 @@ class GazeboModelPluginEps : public FreeFlyerModelPlugin {
     return true;
   }
 
+  // Callback for setting the power state
+  bool PayloadConfigureCallback(
+      ff_hw_msgs::ConfigurePayloadPower::Request &req,
+      ff_hw_msgs::ConfigurePayloadPower::Response &res) {
+    // Batch the request
+    uint8_t const &on = ff_hw_msgs::ConfigurePayloadPower::Request::ON;
+    uint8_t const &off = ff_hw_msgs::ConfigurePayloadPower::Request::OFF;
+    // Top front
+    if (req.top_front == on)
+      power_states_["PAYLOAD_EN_TOP_FRONT"] = true;
+    if (req.top_front == off)
+      power_states_["PAYLOAD_EN_TOP_FRONT"] = false;
+    // Top aft
+    if (req.top_aft == on)
+      power_states_["PAYLOAD_EN_TOP_AFT"] = true;
+    if (req.top_aft == off)
+      power_states_["PAYLOAD_EN_TOP_AFT"] = false;
+    // Bottom aft
+    if (req.bottom_aft == on)
+      power_states_["PAYLOAD_EN_BOT_AFT"] = true;
+    if (req.bottom_aft == off)
+      power_states_["PAYLOAD_EN_BOT_AFT"] = false;
+    // Bottom front
+    if (req.bottom_front == on)
+      power_states_["PAYLOAD_EN_BOT_FRONT"] = true;
+    if (req.bottom_front == off)
+      power_states_["PAYLOAD_EN_BOT_FRONT"] = false;
+    // Success!
+    res.success = true;
+    res.status = "All payload power set sucessfully";
+    return true;
+  }
+
+  // Callback for setting the power channels
+  bool PowerConfigureCallback(
+      ff_hw_msgs::ConfigureAdvancedPower::Request &req,
+      ff_hw_msgs::ConfigureAdvancedPower::Response &res) {
+    // Batch the request
+    uint8_t const &on = ff_hw_msgs::ConfigureAdvancedPower::Request::ON;
+    uint8_t const &off = ff_hw_msgs::ConfigureAdvancedPower::Request::OFF;
+    // Set the states
+    if (req.usb == on)
+      power_states_["USB_PWR_EN"] = true;
+    if (req.usb == off)
+      power_states_["USB_PWR_EN"] = false;
+    if (req.aux == on)
+      power_states_["AUX_PWR_EN"] = true;
+    if (req.aux == off)
+      power_states_["AUX_PWR_EN"] = false;
+    if (req.pmc1 == on)
+      power_states_["MOTOR_EN1"] = true;
+    if (req.pmc1 == off)
+      power_states_["MOTOR_EN1"] = false;
+    if (req.pmc2 == on)
+      power_states_["MOTOR_EN2"] = true;
+    if (req.pmc2 == off)
+      power_states_["MOTOR_EN2"] = false;
+    // Success!
+    res.success = true;
+    res.status = "All advanced power set sucessfully";
+    return true;
+  }
+
+  // Callback for telemetry broadcast
+  void TelemetryCallback(const ros::TimerEvent &event) {
+    // Set a header for all telemetry items
+    static std_msgs::Header header;
+    header.frame_id = GetPlatform();
+    header.stamp = ros::Time::now();
+
+    // Send battery
+    if (state_tl_.present) {
+      state_tl_.charge -= battery_discharge_rate_;
+      if (state_tl_.charge < 0) {
+        state_tl_.charge = battery_charge_;
+      }
+      state_tl_.percentage = state_tl_.charge / state_tl_.capacity * 100.0;
+    }
+    // Always publish every battery state regardless if it is present or not
+    // since the actual eps driver does this
+    state_tl_.header = header;
+    battery_state_pub_tl_.publish(state_tl_);
+
+    if (state_tr_.present) {
+      state_tr_.charge -= battery_discharge_rate_;
+      if (state_tr_.charge < 0) {
+        state_tr_.charge = battery_charge_;
+      }
+      state_tr_.percentage = state_tr_.charge / state_tr_.capacity * 100.0;
+    }
+    state_tr_.header = header;
+    battery_state_pub_tr_.publish(state_tr_);
+
+    if (state_bl_.present) {
+      state_bl_.charge -= battery_discharge_rate_;
+      if (state_bl_.charge < 0) {
+        state_bl_.charge = battery_charge_;
+      }
+      state_bl_.percentage = state_bl_.charge / state_bl_.capacity * 100.0;
+    }
+    state_bl_.header = header;
+    battery_state_pub_bl_.publish(state_bl_);
+
+    if (state_br_.present) {
+      state_br_.charge -= battery_discharge_rate_;
+      if (state_br_.charge < 0) {
+        state_br_.charge = battery_charge_;
+      }
+      state_br_.percentage = state_br_.charge / state_br_.capacity * 100.0;
+    }
+    state_br_.header.stamp = ros::Time::now();
+    battery_state_pub_br_.publish(state_br_);
+
+    // Send housekeeping
+    static ff_hw_msgs::EpsHousekeeping msg_housekeeping;
+    msg_housekeeping.header = header;
+    housekeeping_["BAT4V_V"] = state_tr_.present ? 14.9 : 0.0;  // CHECK!!!
+    housekeeping_["BAT3V_V"] = state_tr_.present ? 14.9 : 0.0;  // CHECK!!!
+    housekeeping_["BAT2V_V"] = state_bl_.present ? 14.9 : 0.0;  // CHECK!!!
+    housekeeping_["BAT1V_V"] = state_br_.present ? 14.9 : 0.0;  // CHECK!!!
+    housekeeping_["PAYLOAD_PWR4_I"] =
+      power_states_["PAYLOAD_EN_TOP_AFT"] ? 1.0 : 0.0;  // CHECK!!!
+    housekeeping_["PAYLOAD_PWR2_I"] =
+      power_states_["PAYLOAD_EN_BOT_AFT"] ? 1.0 : 0.0;  // CHECK!!!
+    housekeeping_["PAYLOAD_PWR1_I"] =
+      power_states_["PAYLOAD_EN_BOT_FRONT"] ? 1.0 : 0.0;  // CHECK!!!
+    msg_housekeeping.values.clear();
+    for (auto it = housekeeping_.begin(); it != housekeeping_.end(); it++) {
+      static ff_hw_msgs::EpsHousekeepingValue kv;
+      kv.name = it->first;
+      kv.value = it->second;
+      msg_housekeeping.values.push_back(kv);
+    }
+    pub_housekeeping_.publish(msg_housekeeping);
+
+    // Send power
+    static ff_hw_msgs::EpsPowerState msg_power;
+    msg_power.header = header;
+    msg_power.values.clear();
+    for (auto it = power_states_.begin(); it != power_states_.end(); it++) {
+      static ff_hw_msgs::EpsPowerStateValue kv;
+      kv.name = it->first;
+      kv.value = it->second;
+      msg_power.values.push_back(kv);
+    }
+    pub_power_.publish(msg_power);
+  }
+
  private:
   ff_util::FSM fsm_;
   double rate_, distance_, delay_;
-  event::ConnectionPtr connection_;
+  bool lock_;
+  double battery_capacity_, battery_charge_, battery_discharge_rate_;
+  event::ConnectionPtr update_;
   std::map<std::string, ignition::math::Pose3d> berths_;
   std::map<std::string, ignition::math::Pose3d>::iterator nearest_;
   ignition::math::Vector3d force_;
   physics::JointPtr joint_;
-  ros::Timer timer_update_, timer_delay_;
-  ros::Publisher pub_;
-  ros::ServiceServer srv_;
-  bool lock_;
+  ros::Timer timer_update_, timer_delay_, telem_timer_;
+  ros::Publisher pub_dock_state_, pub_housekeeping_, pub_power_;
+  ros::Publisher battery_state_pub_tl_, battery_state_pub_tr_;
+  ros::Publisher battery_state_pub_bl_, battery_state_pub_br_;
+  ros::ServiceServer srv_undock_, srv_power_, srv_payload_;
+  sensor_msgs::BatteryState state_tl_, state_tr_, state_bl_, state_br_;
+  std::map<std::string, bool> power_states_;
+  std::map<std::string, double> housekeeping_;
 };
 
 // Register this plugin with the simulator

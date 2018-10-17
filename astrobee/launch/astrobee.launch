@@ -60,7 +60,7 @@
     <!-- Set the TF prefix, create a robot description and joint state publisher -->
     <param name="tf_prefix" value="$(arg ns)" />
     <param name="robot_description"
-           command='$(find xacro)/xacro --inorder $(find description)/urdf/astrobee.urdf.xacro world:="$(arg world)" top_aft:="$(arg top_aft)" bot_aft:="$(arg bot_aft)" bot_front:="$(arg bot_front)" ns:="_$(arg ns)"' />
+           command='$(find xacro)/xacro --inorder $(find description)/urdf/model.urdf.xacro world:="$(arg world)" top_aft:="$(arg top_aft)" bot_aft:="$(arg bot_aft)" bot_front:="$(arg bot_front)" ns:="_$(arg ns)"' />
     <node pkg="robot_state_publisher" type="robot_state_publisher"
           name="astrobee_state_publisher" />
 

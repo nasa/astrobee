@@ -1,14 +1,14 @@
 /* Copyright (c) 2017, United States Government, as represented by the
  * Administrator of the National Aeronautics and Space Administration.
- * 
+ *
  * All rights reserved.
- * 
+ *
  * The Astrobee platform is licensed under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -29,22 +29,24 @@
 #include <csignal>
 
 // STL includes
+#include <atomic>
+#include <chrono>
+#include <condition_variable>  // NOLINT
+#include <fstream>
 #include <iostream>
 #include <sstream>
-#include <fstream>
 #include <string>
-#include <chrono>
-#include <atomic>
 #include <thread>
-#include <condition_variable>   // NOLINT
 
 // Gflag options
 DEFINE_string(port, "/dev/ttyUSB0", "Serial device");
 DEFINE_uint64(baud, 115200, "Serial baud rate");
 DEFINE_string(log, "", "Start logging to file");
 DEFINE_double(timeout, 30.0, "Timeout for any action");
-DEFINE_double(deg, 1.0, "Degree tolerance for joint completion");
+DEFINE_double(deg, 2.0, "Degree tolerance for joint completion");
 DEFINE_double(perc, 1.0, "Percentage tolerance for gripper completion");
+DEFINE_bool(debug, true, "Print debug information");
+
 
 namespace perching_arm {
 
@@ -103,7 +105,7 @@ void SignalHandler(int sig) {
 }
 
 // Grab an unsigned short from user input with type and value checking
-bool InputUnsignedShort(uint16_t & choice, uint16_t min, uint16_t max) {
+bool InputUnsignedShort(uint16_t &choice, uint16_t min, uint16_t max) {
   void (*old)(int) = std::signal(SIGINT, SignalHandler);
   bool success = true;
   while (true) {
@@ -111,13 +113,12 @@ bool InputUnsignedShort(uint16_t & choice, uint16_t min, uint16_t max) {
     std::string input;
     getline(std::cin, input);
     if (return_) {
-      if (std::cin.fail() || std::cin.eof())
-        std::cin.clear();
+      if (std::cin.fail() || std::cin.eof()) std::cin.clear();
       success = false;
       break;
     }
     std::stringstream ss(input);
-    if (ss >> choice &&  choice >= min && choice <= max) break;
+    if (ss >> choice && choice >= min && choice <= max) break;
     std::cerr << "Number not in range [" << min << ":" << max
               << "], please try again" << std::endl;
   }
@@ -126,7 +127,7 @@ bool InputUnsignedShort(uint16_t & choice, uint16_t min, uint16_t max) {
 }
 
 // Grab an unsigned integer from user input with type and value checking
-bool InputSignedShort(int16_t & choice, int16_t min, int16_t max) {
+bool InputSignedShort(int16_t &choice, int16_t min, int16_t max) {
   void (*old)(int) = std::signal(SIGINT, SignalHandler);
   bool success = true;
   while (true) {
@@ -134,13 +135,12 @@ bool InputSignedShort(int16_t & choice, int16_t min, int16_t max) {
     std::string input;
     getline(std::cin, input);
     if (return_) {
-      if (std::cin.fail() || std::cin.eof())
-        std::cin.clear();
+      if (std::cin.fail() || std::cin.eof()) std::cin.clear();
       success = false;
       break;
     }
     std::stringstream ss(input);
-    if (ss >> choice &&  choice >= min && choice <= max) break;
+    if (ss >> choice && choice >= min && choice <= max) break;
     std::cerr << "Number not in range [" << min << ":" << max
               << "], please try again" << std::endl;
   }
@@ -149,7 +149,7 @@ bool InputSignedShort(int16_t & choice, int16_t min, int16_t max) {
 }
 
 // Grab a floating point number from user input with type and value checking
-bool InputFloat(float & choice, float min, float max) {
+bool InputFloat(float &choice, float min, float max) {
   void (*old)(int) = std::signal(SIGINT, SignalHandler);
   bool success = true;
   while (true) {
@@ -157,30 +157,28 @@ bool InputFloat(float & choice, float min, float max) {
     std::string input;
     getline(std::cin, input);
     if (return_) {
-      if (std::cin.fail() || std::cin.eof())
-        std::cin.clear();
+      if (std::cin.fail() || std::cin.eof()) std::cin.clear();
       success = false;
       break;
     }
     std::stringstream ss(input);
     if (ss >> choice && choice >= min && choice <= max) break;
-    std::cerr << "Number not in range [" << min << ":"
-              << max << "], please try again" << std::endl;
+    std::cerr << "Number not in range [" << min << ":" << max
+              << "], please try again" << std::endl;
   }
   std::signal(SIGINT, old);
   return success;
 }
 
 // Grab a valid
-bool InputFile(std::string & choice) {
+bool InputFile(std::string &choice) {
   void (*old)(int) = std::signal(SIGINT, SignalHandler);
   bool success = true;
   while (true) {
     std::cout << "Input value > ";
     getline(std::cin, choice);
     if (return_) {
-      if (std::cin.fail() || std::cin.eof())
-        std::cin.clear();
+      if (std::cin.fail() || std::cin.eof()) std::cin.clear();
       success = false;
       break;
     }
@@ -199,9 +197,10 @@ void WaitForResultWithTimeout(ToolState state, int16_t value) {
   state_ = state;
   // Now clock this thread while we wait for a result or timeout
   std::cout << "Waiting on result" << std::endl;
-  std::unique_lock < std::mutex > lk(mutex_);
-  if (cv_.wait_for(lk, std::chrono::duration<double>(FLAGS_timeout))
-    == std::cv_status::no_timeout) return;
+  std::unique_lock<std::mutex> lk(mutex_);
+  if (cv_.wait_for(lk, std::chrono::duration<double>(FLAGS_timeout)) ==
+      std::cv_status::no_timeout)
+    return;
   // If we get there then we have timed out
   state_ = WAITING_ON_COMMAND;
   // Print out the error that occurred
@@ -209,51 +208,56 @@ void WaitForResultWithTimeout(ToolState state, int16_t value) {
 }
 
 // Asynchronous callback to copy feedback
-void DataCallback(PerchingArmRaw const& raw) {
+void DataCallback(PerchingArmRaw const &raw) {
   // Cache the raw data
   raw_ = raw;
   // log data only if the logfile is open
   if (logfile_.is_open()) {
     logfile_ << std::setw(11) << std::setprecision(2);
-    logfile_ << raw.prox.position << '\t'
-             << raw.prox.position << '\t'
-             << raw.prox.velocity << '\t'
-             << raw.prox.load     << '\t'
-             << raw.dist.position << '\t'
-             << raw.dist.velocity << '\t'
-             << raw.dist.load     << '\t'
-             << raw.grip.position << '\t'
-             << raw.grip.maximum  << '\t'
-             << raw.grip.load     << '\t'
-             << raw.current_11v   << '\t'
-             << raw.current_5v    << '\t'
-             << raw.board_temp    << '\t'
-             << raw.loop_time     << std::endl;
+    logfile_ << raw.prox.position << '\t' << raw.prox.position << '\t'
+             << raw.prox.velocity << '\t' << raw.prox.load << '\t'
+             << raw.dist.position << '\t' << raw.dist.velocity << '\t'
+             << raw.dist.load << '\t' << raw.grip.position << '\t'
+             << raw.grip.maximum << '\t' << raw.grip.load << '\t'
+             << raw.current_11v << '\t' << raw.current_5v << '\t'
+             << raw.board_temp << '\t' << raw.loop_time << std::endl;
     logfile_.flush();
   }
   // This will store our current value
   double curr = 0, tolv = 0;
   // Decide what we are waiting for
   switch (state_) {
-  case WAITING_ON_PROX_POS:
-    curr = PerchingArm::K_POSITION_DEG * static_cast<double>(raw.prox.position);
-    tolv = FLAGS_deg;
-    break;
-  case WAITING_ON_DIST_POS:
-    curr = PerchingArm::K_POSITION_DEG * static_cast<double>(raw.dist.position);
-    tolv = FLAGS_deg;
-    break;
-  case WAITING_ON_GRIP_POS:
-    curr = static_cast<double>(raw.grip.position) * 100.0
-         / static_cast<double>(raw.grip.maximum);
-    tolv = FLAGS_perc;
-    break;
-  case WAITING_ON_COMMAND: default:
-    return;
+    case WAITING_ON_PROX_POS:
+      curr =
+          PerchingArm::K_POSITION_DEG * static_cast<double>(raw.prox.position);
+      tolv = FLAGS_deg;
+      if (FLAGS_debug)
+        std::cout << "[prox] ";
+      break;
+    case WAITING_ON_DIST_POS:
+      curr =
+          PerchingArm::K_POSITION_DEG * static_cast<double>(raw.dist.position);
+      tolv = FLAGS_deg;
+      if (FLAGS_debug)
+        std::cout << "[dist] ";
+      break;
+    case WAITING_ON_GRIP_POS:
+      curr = static_cast<double>(raw.grip.position) * 100.0 /
+             static_cast<double>(raw.grip.maximum);
+      tolv = FLAGS_perc;
+      if (FLAGS_debug)
+        std::cout << "[grip] ";
+      break;
+    case WAITING_ON_COMMAND:
+    default:
+      return;
   }
   // If we are not on tolerance yet, then do nothing
-  if (std::fabs(curr - value_) > tolv)
-    return;
+  if (FLAGS_debug)
+    std::cout << " curr: " << curr
+              << " goal: " << value_
+              << " tol: " << tolv << std::endl;
+  if (std::fabs(curr - value_) > tolv) return;
   // Reset the state of the system
   state_ = WAITING_ON_COMMAND;
   // If we get here then we need to unblock and notify
@@ -271,7 +275,7 @@ double Scale(double scale, int32_t value) {
 }
 
 // Print out success or error
-void PrintResult(PerchingArm  &arm, PerchingArmResult ret) {
+void PrintResult(PerchingArm &arm, PerchingArmResult ret) {
   // Get the message
   std::string msg;
   if (arm.ResultToString(ret, msg))
@@ -323,7 +327,7 @@ void PrintMenu() {
 }
 
 // Print a main menu
-bool GetCommand(PerchingArm  &arm) {
+bool GetCommand(PerchingArm &arm) {
   // Reset the return state
   return_ = false;
   // Keep looping until we have valid input
@@ -335,8 +339,7 @@ bool GetCommand(PerchingArm  &arm) {
     // Exit
     case 'x': {
       // Close the logfile if one is open
-      if (logfile_.is_open())
-        logfile_.close();
+      if (logfile_.is_open()) logfile_.close();
       // Print goodby message and return
       std::cout << "Goodbye." << std::endl;
       return false;
@@ -351,11 +354,9 @@ bool GetCommand(PerchingArm  &arm) {
       // Grab a log file
       std::cout << "Input a path to log file " << std::endl;
       std::string file;
-      if (!InputFile(file))
-        return true;
+      if (!InputFile(file)) return true;
       // Close the logfile if its already opened
-      if (logfile_)
-        logfile_.close();
+      if (logfile_) logfile_.close();
       // Open the new file
       logfile_.open(file, std::ofstream::out | std::ofstream::app);
       return true;
@@ -416,7 +417,8 @@ bool GetCommand(PerchingArm  &arm) {
       std::cout << "Input proximal (tilt) position in degrees:" << std::endl;
       int16_t val;
       if (!InputSignedShort(val, PerchingArm::PROX_POS_MIN,
-        PerchingArm::PROX_POS_MAX)) return true;
+                            PerchingArm::PROX_POS_MAX))
+        return true;
       ret = arm.SetProximalPosition(val);
       PrintResult(arm, ret);
       WaitForResultWithTimeout(WAITING_ON_PROX_POS, val);
@@ -427,7 +429,8 @@ bool GetCommand(PerchingArm  &arm) {
       std::cout << "Input proximal (tilt) velocity in RPM:" << std::endl;
       int16_t val;
       if (!InputSignedShort(val, PerchingArm::PROX_VEL_MIN,
-        PerchingArm::PROX_VEL_MAX)) return true;
+                            PerchingArm::PROX_VEL_MAX))
+        return true;
       ret = arm.SetProximalVelocity(val);
       PrintResult(arm, ret);
       return true;
@@ -444,7 +447,8 @@ bool GetCommand(PerchingArm  &arm) {
       std::cout << "Input distal (pan) position in degrees:" << std::endl;
       int16_t val;
       if (!InputSignedShort(val, PerchingArm::DIST_POS_MIN,
-        PerchingArm::DIST_POS_MAX)) return true;
+                            PerchingArm::DIST_POS_MAX))
+        return true;
       ret = arm.SetDistalPosition(val);
       PrintResult(arm, ret);
       WaitForResultWithTimeout(WAITING_ON_DIST_POS, val);
@@ -455,7 +459,8 @@ bool GetCommand(PerchingArm  &arm) {
       std::cout << "Input distal (pan) velocity in RPM:" << std::endl;
       int16_t val;
       if (!InputSignedShort(val, PerchingArm::DIST_VEL_MIN,
-        PerchingArm::DIST_VEL_MAX)) return true;
+                            PerchingArm::DIST_VEL_MAX))
+        return true;
       ret = arm.SetDistalVelocity(val);
       PrintResult(arm, ret);
       return true;
@@ -472,7 +477,8 @@ bool GetCommand(PerchingArm  &arm) {
       std::cout << "Input the gripper position as a percentage:" << std::endl;
       int16_t val;
       if (!InputSignedShort(val, PerchingArm::GRIP_POS_MIN,
-        PerchingArm::GRIP_POS_MAX)) return true;
+                            PerchingArm::GRIP_POS_MAX))
+        return true;
       ret = arm.SetGripperPosition(val);
       PrintResult(arm, ret);
       WaitForResultWithTimeout(WAITING_ON_GRIP_POS, val);
@@ -496,35 +502,53 @@ bool GetCommand(PerchingArm  &arm) {
     case 'k': {
       ret = arm.CalibrateGripper();
       PrintResult(arm, ret);
-      WaitForResultWithTimeout(WAITING_ON_GRIP_POS, PerchingArm::GRIP_POS_MIN);
+      WaitForResultWithTimeout(WAITING_ON_GRIP_POS, PerchingArm::GRIP_POS_MAX);
       return true;
     }
     // Run the EMI test
     case 'e': {
-      ret = arm.SetProximalPosition(PerchingArm::DEPLOY_PROX);
+      std::cout << "PAN(0)" << std::endl;
+      ret = arm.SetDistalPosition(0);
       PrintResult(arm, ret);
-      WaitForResultWithTimeout(WAITING_ON_PROX_POS, PerchingArm::DEPLOY_PROX);
-      ret = arm.SetProximalPosition(PerchingArm::DEPLOY_DIST);
+      WaitForResultWithTimeout(WAITING_ON_DIST_POS, 0);
+      std::cout << "TILT(-90)" << std::endl;
+      ret = arm.SetProximalPosition(-90);
       PrintResult(arm, ret);
-      WaitForResultWithTimeout(WAITING_ON_DIST_POS, PerchingArm::DEPLOY_DIST);
-      ret = arm.OpenGripper();
+      WaitForResultWithTimeout(WAITING_ON_PROX_POS, -90);
+      std::cout << "CALIBRATE()" << std::endl;
+      ret = arm.CalibrateGripper();
       PrintResult(arm, ret);
       WaitForResultWithTimeout(WAITING_ON_GRIP_POS, PerchingArm::GRIP_POS_MAX);
-      ret = arm.CloseGripper();
-      PrintResult(arm, ret);
-      WaitForResultWithTimeout(WAITING_ON_GRIP_POS, PerchingArm::GRIP_POS_MIN);
-      ret = arm.SetDistalPosition(-45);
-      PrintResult(arm, ret);
-      WaitForResultWithTimeout(WAITING_ON_DIST_POS, -45);
-      ret = arm.SetDistalPosition(45);
-      PrintResult(arm, ret);
-      WaitForResultWithTimeout(WAITING_ON_DIST_POS, 45);
-      ret = arm.SetProximalPosition(PerchingArm::STOW_DIST);
-      PrintResult(arm, ret);
-      WaitForResultWithTimeout(WAITING_ON_DIST_POS, PerchingArm::STOW_DIST);
-      ret = arm.SetProximalPosition(PerchingArm::STOW_PROX);
-      PrintResult(arm, ret);
-      WaitForResultWithTimeout(WAITING_ON_PROX_POS, PerchingArm::STOW_PROX);
+      while (true) {
+        std::cout << "CLOSE()" << std::endl;
+        ret = arm.CloseGripper();
+        PrintResult(arm, ret);
+        WaitForResultWithTimeout(WAITING_ON_GRIP_POS, PerchingArm::GRIP_POS_MIN);
+        std::cout << "PAN(-45)" << std::endl;
+        ret = arm.SetDistalPosition(-45);
+        PrintResult(arm, ret);
+        WaitForResultWithTimeout(WAITING_ON_DIST_POS, -45);
+        std::cout << "PAN(45)" << std::endl;
+        ret = arm.SetDistalPosition(45);
+        PrintResult(arm, ret);
+        WaitForResultWithTimeout(WAITING_ON_DIST_POS, 45);
+        std::cout << "PAN(0)" << std::endl;
+        ret = arm.SetDistalPosition(0);
+        PrintResult(arm, ret);
+        WaitForResultWithTimeout(WAITING_ON_DIST_POS, 0);
+        std::cout << "OPEN()" << std::endl;
+        ret = arm.OpenGripper();
+        PrintResult(arm, ret);
+        WaitForResultWithTimeout(WAITING_ON_GRIP_POS, PerchingArm::GRIP_POS_MAX);
+        std::cout << "TILT(0)" << std::endl;
+        ret = arm.SetProximalPosition(0);
+        PrintResult(arm, ret);
+        WaitForResultWithTimeout(WAITING_ON_PROX_POS, 0);
+        std::cout << "TILT(-90)" << std::endl;
+        ret = arm.SetProximalPosition(-90);
+        PrintResult(arm, ret);
+        WaitForResultWithTimeout(WAITING_ON_PROX_POS, -90);
+      }
       return true;
     }
     // Perform a hard reset
@@ -544,14 +568,11 @@ bool GetCommand(PerchingArm  &arm) {
       uint16_t target, address;
       int16_t value;
       std::cout << "> Input target: " << std::endl;
-      if (!InputUnsignedShort(target, 0, 10))
-        return true;
+      if (!InputUnsignedShort(target, 0, 10)) return true;
       std::cout << "> Input address: " << std::endl;
-      if (!InputUnsignedShort(address, 0, 255))
-        return true;
+      if (!InputUnsignedShort(address, 0, 255)) return true;
       std::cout << "> Input signed integer value: " << std::endl;
-      if (!InputSignedShort(value, SHRT_MIN, SHRT_MAX))
-        return true;
+      if (!InputSignedShort(value, SHRT_MIN, SHRT_MAX)) return true;
       ret = arm.SendCommand(target, address, value);
       PrintResult(arm, ret);
       return true;
@@ -575,7 +596,7 @@ int main(int argc, char *argv[]) {
   // If we specified a log file we should open it
   if (!FLAGS_log.empty()) {
     perching_arm::logfile_.open(FLAGS_log,
-      std::ofstream::out | std::ofstream::app);
+                                std::ofstream::out | std::ofstream::app);
     if (!perching_arm::logfile_.is_open()) {
       std::cerr << "Could not open the log file: " << FLAGS_log << std::endl;
       return 1;
@@ -583,13 +604,13 @@ int main(int argc, char *argv[]) {
   }
   // Create the callback
   perching_arm::PerchingArmSleepMsCallback cb_sleep_ms =
-    std::bind(perching_arm::SleepCallback, std::placeholders::_1);
+      std::bind(perching_arm::SleepCallback, std::placeholders::_1);
   perching_arm::PerchingArmRawDataCallback cb_raw_data =
-    std::bind(perching_arm::DataCallback, std::placeholders::_1);
+      std::bind(perching_arm::DataCallback, std::placeholders::_1);
   // Create the interface to the perching arm
   perching_arm::PerchingArm arm;
-  perching_arm::PerchingArmResult ret = arm.Connect(
-    FLAGS_port, FLAGS_baud, cb_sleep_ms, cb_raw_data);
+  perching_arm::PerchingArmResult ret =
+      arm.Connect(FLAGS_port, FLAGS_baud, cb_sleep_ms, cb_raw_data);
   if (ret != perching_arm::RESULT_SUCCESS) {
     std::cerr << "Could not open the serial port: " << FLAGS_port << std::endl;
     return 1;
@@ -597,7 +618,8 @@ int main(int argc, char *argv[]) {
   // Print a menu to start with
   perching_arm::PrintMenu();
   // Keep taking commands until termination request
-  while (perching_arm::GetCommand(arm)) {}
+  while (perching_arm::GetCommand(arm)) {
+  }
   // Disconnect before shutdown
   arm.Disconnect();
   // Success

@@ -100,6 +100,13 @@ class GazeboSensorPluginARTags : public FreeFlyerSensorPlugin {
     pub_feat_ = nh->advertise<ff_msgs::VisualLandmarks>(
       TOPIC_LOCALIZATION_AR_FEATURES, 1);
 
+    // Only do this once
+    msg_feat_.header.frame_id = std::string(FRAME_NAME_DOCK);
+    msg_reg_.header.frame_id = std::string(FRAME_NAME_DOCK);
+  }
+
+  // Only send measurements when estrinsics are available
+  void OnExtrinsicsReceived(ros::NodeHandle *nh) {
     // Enable mapped landmarks
     srv_enable_ = nh->advertiseService(SERVICE_LOCALIZATION_AR_ENABLE,
       &GazeboSensorPluginARTags::EnableService, this);
@@ -111,10 +118,6 @@ class GazeboSensorPluginARTags : public FreeFlyerSensorPlugin {
     // Timer triggers features
     timer_features_ = nh->createTimer(ros::Duration(0.8 / rate_),
       &GazeboSensorPluginARTags::SendFeatures, this, true, false);
-
-    // Only do this once
-    msg_feat_.header.frame_id = std::string(FRAME_NAME_WORLD);
-    msg_reg_.header.frame_id = std::string(FRAME_NAME_WORLD);
   }
 
   // Enable or disable the feature timer
@@ -154,7 +157,7 @@ class GazeboSensorPluginARTags : public FreeFlyerSensorPlugin {
 
   // Called when featured must be sent
   void SendRegistration(ros::TimerEvent const& event) {
-    if (!active_ || !ExtrinsicsFound()) return;
+    if (!active_) return;
 
     // Add a short delay between the features and new registration pulse
     timer_features_.stop();
@@ -197,7 +200,7 @@ class GazeboSensorPluginARTags : public FreeFlyerSensorPlugin {
           sensor_->Pose().Rot().X(),
           sensor_->Pose().Rot().Y(),
           sensor_->Pose().Rot().Z()));
-    Eigen::Affine3d wTs = wTb * bTs;
+    Eigen::Affine3d dTs = wTd.inverse() * wTb * bTs;
 
     // Initialize the camera paremeters
     static camera::CameraParameters cam_params(&config_, "dock_cam");
@@ -205,10 +208,10 @@ class GazeboSensorPluginARTags : public FreeFlyerSensorPlugin {
       Eigen::Matrix3d::Identity(), cam_params);
 
     // Assemble the feature message
-    msg_feat_.pose.position.x = wTs.translation().x();
-    msg_feat_.pose.position.y = wTs.translation().y();
-    msg_feat_.pose.position.z = wTs.translation().z();
-    Eigen::Quaterniond q(wTs.rotation());
+    msg_feat_.pose.position.x = dTs.translation().x();
+    msg_feat_.pose.position.y = dTs.translation().y();
+    msg_feat_.pose.position.z = dTs.translation().z();
+    Eigen::Quaterniond q(dTs.rotation());
     msg_feat_.pose.orientation.w = q.w();
     msg_feat_.pose.orientation.x = q.x();
     msg_feat_.pose.orientation.y = q.y();
@@ -218,14 +221,15 @@ class GazeboSensorPluginARTags : public FreeFlyerSensorPlugin {
     // Create a new ray in the world
     size_t i = 0;
     for (; i < num_samp_ && msg_feat_.landmarks.size() < num_features_; i++) {
-      // Draw a random image coordinate
+      // Draw a random image coordinate in the dock frame
       Eigen::Vector3d pt_d(0,
-        (static_cast<double>(rand() % 1000) / 1000 - 0.5) * width_ / 2000,    // NOLINT
-        (static_cast<double>(rand() % 1000) / 1000 - 0.5) * height_ / 2000);  // NOLINT
+        (static_cast<double>(rand() % 1000) / 1000.0 - 0.5) * width_ / 1000,    // NOLINT
+        (static_cast<double>(rand() % 1000) / 1000.0 - 0.5) * height_ / 1000);  // NOLINT
 
-      // Get the camera coordinate of this fake feature
-      Eigen::Vector3d pt_w = wTd * pt_d;
-      Eigen::Vector3d pt_c = wTs.inverse() * pt_w;
+      // Point in the current camera frame -- this should normally be calculated
+      // using PnP on the points themselves. However, it's easier to just pull
+      // this information from the simulation ground truth.
+      Eigen::Vector3d pt_c = dTs.inverse() * pt_d;
 
       // Check if the feature is in the field of view
       if (!camera.IsInFov(pt_c))
@@ -236,9 +240,9 @@ class GazeboSensorPluginARTags : public FreeFlyerSensorPlugin {
 
       // Create the landmark message
       ff_msgs::VisualLandmark landmark;
-      landmark.x = pt_w.x();
-      landmark.y = pt_w.y();
-      landmark.z = pt_w.z();
+      landmark.x = pt_d.x();
+      landmark.y = pt_d.y();
+      landmark.z = pt_d.z();
       landmark.u = uv[0];
       landmark.v = uv[1];
       msg_feat_.landmarks.push_back(landmark);
@@ -247,7 +251,7 @@ class GazeboSensorPluginARTags : public FreeFlyerSensorPlugin {
 
   // Send features
   void SendFeatures(ros::TimerEvent const& event) {
-    if (!active_ || !ExtrinsicsFound()) return;
+    if (!active_) return;
     msg_feat_.header.stamp = ros::Time::now();
     pub_feat_.publish(msg_feat_);
   }

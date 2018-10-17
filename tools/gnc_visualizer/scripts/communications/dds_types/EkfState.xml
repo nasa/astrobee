@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<types xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://community.rti.com/schema/5.1.0/rti_dds_profiles.xsd">
+<include file="Message.xml"/>
+<module name="rapid">
+<module name="ext">
+<module name="astrobee">
+<typedef name="FloatSequence15" sequenceMaxLength="15" type="float"/>
+<typedef name="FloatSequence50" sequenceMaxLength="50" type="float"/>
+<directive kind="copyCDeclaration">class EkfStateTypeSupport;</directive>
+<directive kind="copyCDeclaration">class EkfStateDataWriter;</directive>
+<directive kind="copyCDeclaration">class EkfStateDataReader;</directive>
+<directive kind="copyCDeclaration">struct EkfStateSeq;</directive>
+<directive kind="copyDeclaration">/**</directive>
+<directive kind="copyDeclaration">  * The state of the ekf.</directive>
+<directive kind="copyDeclaration">  */</directive>
+<valuetype name="EkfState" baseClass="rapid::Message" typeModifier="none">
+<directive kind="copyCDeclaration">#if RTI_DDS_VERSION_MAJOR &lt; 4 || (RTI_DDS_VERSION_MAJOR == 4  &amp;&amp; RTI_DDS_VERSION_MINOR &lt; 5) || (RTI_DDS_VERSION_MAJOR == 4  &amp;&amp; RTI_DDS_VERSION_MINOR  == 5 &amp;&amp; RTI_DDS_VERSION_RELEASE != 'f' )</directive>
+<directive kind="copyCDeclaration">typedef EkfStateTypeSupport TypeSupport;</directive>
+<directive kind="copyCDeclaration">typedef EkfStateDataWriter DataWriter;</directive>
+<directive kind="copyCDeclaration">typedef EkfStateDataReader DataReader;</directive>
+<directive kind="copyCDeclaration">typedef EkfStateSeq Seq;</directive>
+<directive kind="copyCDeclaration">#endif</directive>
+<directive kind="copyCDeclaration">typedef EkfState Type;</directive>
+<directive kind="copyDeclaration">/** robot body pose */</directive>
+<member name="pose" type="nonBasic" nonBasicTypeName="rapid::Transform3D" visibility="public"/>
+<directive kind="copyDeclaration">/** the body velocity (m/s) */</directive>
+<member name="velocity" type="nonBasic" nonBasicTypeName="rapid::Vec3d" visibility="public"/>
+<directive kind="copyDeclaration">/** body rotational velocity (rad/s) */</directive>
+<member name="omega" type="nonBasic" nonBasicTypeName="rapid::Vec3d" visibility="public"/>
+<directive kind="copyDeclaration">/** estimated gyro bias (rad/s) */</directive>
+<member name="gyro_bias" type="nonBasic" nonBasicTypeName="rapid::Vec3d" visibility="public"/>
+<directive kind="copyDeclaration">/** acceleration in body frame (m/s/s) */</directive>
+<member name="accel" type="nonBasic" nonBasicTypeName="rapid::Vec3d" visibility="public"/>
+<directive kind="copyDeclaration">/** estimated accel bias (m/s/s) */</directive>
+<member name="accel_bias" type="nonBasic" nonBasicTypeName="rapid::Vec3d" visibility="public"/>
+<directive kind="copyDeclaration">/** Filter Health - covariance diagonal.</directive>
+<directive kind="copyDeclaration">  * 1-3 orientation, 4-6 gyro bias, 7-9 velocity,</directive>
+<directive kind="copyDeclaration">  * 10-12 accel bias, 13-15 position</directive>
+<directive kind="copyDeclaration">  */</directive>
+<member name="cov_diag" type="nonBasic" nonBasicTypeName="rapid::ext::astrobee::FloatSequence15" visibility="public"/>
+<directive kind="copyDeclaration">/** confidence in EKF, 0 is good, 1 is a bit</directive>
+<directive kind="copyDeclaration">  * confused, 2 is lost</directive>
+<directive kind="copyDeclaration">  */</directive>
+<member name="confidence" type="short" visibility="public"/>
+<directive kind="copyDeclaration">/** Status byte sent by GNC */</directive>
+<member name="status" type="short" visibility="public"/>
+<directive kind="copyDeclaration">/** optical flow features this frame</directive>
+<directive kind="copyDeclaration">  * (0 if no update)</directive>
+<directive kind="copyDeclaration">  */</directive>
+<member name="of_count" type="short" visibility="public"/>
+<directive kind="copyDeclaration">/** ml features this frame (0 if no update) */</directive>
+<member name="ml_count" type="short" visibility="public"/>
+<directive kind="copyDeclaration">/** Global handrail pose */</directive>
+<member name="hr_global_pose" type="nonBasic" nonBasicTypeName="rapid::Transform3D" visibility="public"/>
+<directive kind="copyDeclaration">/** Mahalanobis distances for features */</directive>
+<member name="ml_mahal_dists" type="nonBasic" nonBasicTypeName="rapid::ext::astrobee::FloatSequence50" visibility="public"/>
+</valuetype>
+</module>
+</module>
+</module>
+</types>

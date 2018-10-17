@@ -43,25 +43,61 @@
 #include <gazebo/math/gzmath.hh>
 #include <gazebo/rendering/rendering.hh>
 
-// Transformation helper code
-#include <Eigen/Eigen>
-#include <Eigen/Geometry>
-
 // STL includes
 #include <string>
-#include <limits>
-#include <thread>
 
 namespace gazebo {
 
 // Convenience wrapper around a model plugin
-class FreeFlyerModelPlugin : public ff_util::FreeFlyerNodelet, public ModelPlugin {
+class FreeFlyerPlugin : public ff_util::FreeFlyerNodelet {
  public:
-  explicit FreeFlyerModelPlugin(std::string const& name,
-    std::string const& frame, bool hb = false);
+  // Constructor
+  explicit FreeFlyerPlugin(std::string const& plugin_name,
+    std::string const& plugin_frame, bool send_heartbeats = false);
 
+  // Destructor
+  virtual ~FreeFlyerPlugin();
+
+ protected:
+  // Initialize the plugin
+  void InitializePlugin(std::string const& robot_name);
+
+  // Some plugins might want the world as the parent frame
+  void SetParentFrame(std::string const& parent);
+
+  // Get the robot-prefixed frame name for the given traget frame
+  std::string GetFrame(std::string target = "", std::string delim = "/");
+
+  // Called when extrinsics become available
+  virtual bool ExtrinsicsCallback(
+    geometry_msgs::TransformStamped const* tf) = 0;
+
+  // Optional callback for nodes to know when extrinsics were received
+  virtual void OnExtrinsicsReceived(ros::NodeHandle *nh) {}
+
+ private:
+  // Manage the extrinsics based on the sensor type
+  void SetupExtrinsics(const ros::TimerEvent& event);
+
+ private:
+  std::string robot_name_, plugin_name_, plugin_frame_, parent_frame_;
+  ros::NodeHandle nh_, nh_mt_;
+  ros::Timer timer_;
+  static tf2_ros::Buffer buffer_;
+};
+
+// Convenience wrapper around a model plugin
+class FreeFlyerModelPlugin : public FreeFlyerPlugin, public ModelPlugin {
+ public:
+  // Constructor
+  explicit FreeFlyerModelPlugin(std::string const& plugin_name,
+    std::string const& plugin_frame, bool send_heartbeats = false);
+
+  // Destructor
   virtual ~FreeFlyerModelPlugin();
 
+ protected:
+  // Called when the model is loaded
   virtual void Load(physics::ModelPtr model, sdf::ElementPtr sdf);
 
   // Get the model link
@@ -73,37 +109,33 @@ class FreeFlyerModelPlugin : public ff_util::FreeFlyerNodelet, public ModelPlugi
   // Get the model
   physics::ModelPtr GetModel();
 
-  // Get the extrinsics frame
-  std::string GetFrame(std::string target = "");
-
   // Callback when the model has loaded
   virtual void LoadCallback(ros::NodeHandle *nh,
     physics::ModelPtr model, sdf::ElementPtr sdf) = 0;
 
- private:
   // Manage the extrinsics based on the sensor type
-  void SetupExtrinsics(const ros::TimerEvent& event);
+  virtual bool ExtrinsicsCallback(geometry_msgs::TransformStamped const* tf);
 
  private:
-  std::string name_, frame_;
-  ros::NodeHandle nh_;
   sdf::ElementPtr sdf_;
   physics::LinkPtr link_;
   physics::WorldPtr world_;
   physics::ModelPtr model_;
-  ros::Timer timer_;
 };
 
 
 // Convenience wrapper around a sensor plugin
-class FreeFlyerSensorPlugin : public ff_util::FreeFlyerNodelet, public SensorPlugin {
+class FreeFlyerSensorPlugin : public FreeFlyerPlugin, public SensorPlugin {
  public:
-  explicit FreeFlyerSensorPlugin(std::string const& name,
-    std::string const& frame = "", bool hb = true);
+  // Constructor
+  explicit FreeFlyerSensorPlugin(std::string const& plugin_name,
+    std::string const& plugin_frame, bool send_heartbeats = false);
 
+  // Destructor
   virtual ~FreeFlyerSensorPlugin();
 
  protected:
+  // Called when the sensor is loaded
   void Load(sensors::SensorPtr sensor, sdf::ElementPtr sdf);
 
   // Get the sensor world
@@ -112,33 +144,21 @@ class FreeFlyerSensorPlugin : public ff_util::FreeFlyerNodelet, public SensorPlu
   // Get the sensor model
   physics::ModelPtr GetModel();
 
-  // Get the extrinsics frame
-  std::string GetFrame(std::string target = "");
-
   // Get the type of the sensor
   std::string GetRotationType();
-
-  // Were extrinsics found
-  bool ExtrinsicsFound();
 
   // Callback when the sensor has loaded
   virtual void LoadCallback(ros::NodeHandle *nh,
     sensors::SensorPtr sensor, sdf::ElementPtr sdf) = 0;
 
- private:
   // Manage the extrinsics based on the sensor type
-  void SetupExtrinsics(const ros::TimerEvent& event);
+  virtual bool ExtrinsicsCallback(geometry_msgs::TransformStamped const* tf);
 
  private:
-  std::string name_, frame_;
-  bool extrinsics_found_;
-  ros::NodeHandle nh_;
-  std::string rotation_type_;
   sensors::SensorPtr sensor_;
-  sdf::ElementPtr sdf_;
   physics::WorldPtr world_;
   physics::ModelPtr model_;
-  ros::Timer timer_;
+  sdf::ElementPtr sdf_;
 };
 
 }  // namespace gazebo

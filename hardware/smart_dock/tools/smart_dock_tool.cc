@@ -154,10 +154,7 @@ int Help() {
             << std::endl
             << "SUBSYSTEM CONTROL" << std::endl
             << " The tool supports the following subsystem flags" << std::endl
-            << "  -power    : Turn on an off power to dock channels"
-            << std::endl
-            << "  -led      : Configure dock LEDs to be on, off or flash"
-            << std::endl
+            << "  -power    : Turn on an off power to dock channels" << std::endl
             << "  -berth    : View information about a given berth" << std::endl
             << "  -command  : Send a command to a given berth" << std::endl
             << "  -hk       : View dock housekeeping information" << std::endl
@@ -542,17 +539,17 @@ int main(int argc, char** argv) {
             case EPS::CHANNEL_SPEAKER_EN:
               std::cout << "  SPEAKER_EN" << std::endl;
               break;
-            case EPS::CHANNEL_PAYLOAD_EN1:
-              std::cout << "  PAYLOAD_EN1" << std::endl;
+            case EPS::CHANNEL_PAYLOAD_EN_TOP_AFT:
+              std::cout << "  PAYLOAD_EN_TOP_AFT" << std::endl;
               break;
-            case EPS::CHANNEL_PAYLOAD_EN2:
-              std::cout << "  PAYLOAD_EN2" << std::endl;
+            case EPS::CHANNEL_PAYLOAD_EN_BOT_AFT:
+              std::cout << "  PAYLOAD_EN_BOT_AFT" << std::endl;
               break;
-            case EPS::CHANNEL_PAYLOAD_EN3:
-              std::cout << "  PAYLOAD_EN3" << std::endl;
+            case EPS::CHANNEL_PAYLOAD_EN_BOT_FRONT:
+              std::cout << "  PAYLOAD_EN_BOT_FRONT" << std::endl;
               break;
-            case EPS::CHANNEL_PAYLOAD_EN4:
-              std::cout << "  PAYLOAD_EN4" << std::endl;
+            case EPS::CHANNEL_PAYLOAD_EN_TOP_FRONT:
+              std::cout << "  PAYLOAD_EN_TOP_FRONT" << std::endl;
               break;
             case EPS::CHANNEL_MOTOR_EN1:
               std::cout << "  MOTOR_EN1" << std::endl;
@@ -560,32 +557,32 @@ int main(int argc, char** argv) {
             case EPS::CHANNEL_MOTOR_EN2:
               std::cout << "  MOTOR_EN2" << std::endl;
               break;
-            case EPS::CHANNEL_FWD_LED_4:
-              std::cout << "  FWD_LED_4" << std::endl;
+            case EPS::CHANNEL_STATUSA2_LED:
+              std::cout << "  STATUSA2_LED" << std::endl;
               break;
-            case EPS::CHANNEL_FWD_LED_5:
-              std::cout << "  FWD_LED_5" << std::endl;
+            case EPS::CHANNEL_STATUSA1_LED:
+              std::cout << "  STATUSA1_LED" << std::endl;
               break;
-            case EPS::CHANNEL_FWD_LED_6:
-              std::cout << "  FWD_LED_6" << std::endl;
+            case EPS::CHANNEL_STATUSB2_LED:
+              std::cout << "  STATUSB2_LED" << std::endl;
               break;
-            case EPS::CHANNEL_FWD_LED_7:
-              std::cout << "  FWD_LED_7" << std::endl;
+            case EPS::CHANNEL_STATUSB1_LED:
+              std::cout << "  STATUSB1_LED" << std::endl;
               break;
-            case EPS::CHANNEL_FWD_LED_8:
-              std::cout << "  FWD_LED_8" << std::endl;
+            case EPS::CHANNEL_STATUSC2_LED:
+              std::cout << "  STATUSC2_LED" << std::endl;
               break;
-            case EPS::CHANNEL_FWD_LED_9:
-              std::cout << "  FWD_LED_9" << std::endl;
+            case EPS::CHANNEL_STATUSC1_LED:
+              std::cout << "  STATUSC1_LED" << std::endl;
               break;
-            case EPS::CHANNEL_FWD_LED_1:
-              std::cout << "  FWD_LED_1" << std::endl;
+            case EPS::CHANNEL_VIDEO_LED:
+              std::cout << "  VIDEO_LED" << std::endl;
               break;
-            case EPS::CHANNEL_FWD_LED_2:
-              std::cout << "  FWD_LED_2" << std::endl;
+            case EPS::CHANNEL_AUDIO_LED:
+              std::cout << "  AUDIO_LED" << std::endl;
               break;
-            case EPS::CHANNEL_FWD_LED_3:
-              std::cout << "  FWD_LED_3" << std::endl;
+            case EPS::CHANNEL_LIVE_LED:
+              std::cout << "  LIVE_LED" << std::endl;
               break;
             default:
               std::cout << "UNKNOWN[" << i << "]" << std::endl;
@@ -839,41 +836,6 @@ int main(int argc, char** argv) {
     if (!FLAGS_set.empty())
       return Error("The -fault argument does not support -set");
     return HelpView("fault", "View fault information");
-  }
-
-  // CONFIGURE LED
-  if (FLAGS_led) {
-    ValueMap idxs;
-    idxs[SD::LED_1] = Value("LED 1", {"1"});
-    idxs[SD::LED_2] = Value("LED 2", {"2"});
-    idxs[SD::LED_3] = Value("LED 3", {"3"});
-    idxs[SD::LED_4] = Value("LED 4", {"4"});
-    idxs[SD::LED_5] = Value("LED 5", {"5"});
-    idxs[SD::LED_6] = Value("LED 6", {"6"});
-    ValueMap vals;
-    vals[SD::LED_MODE_OFF] = Value("Off", {"0", "off", "disabled", "false"});
-    vals[SD::LED_MODE_ON] = Value("On", {"1", "on", "enabled", "true"});
-    vals[SD::LED_MODE_BLINK_2HZ] = Value("Fast", {"fast"});
-    vals[SD::LED_MODE_BLINK_1HZ] = Value("Medium", {"medium"});
-    vals[SD::LED_MODE_BLINK_0_5HZ] = Value("Slow", {"slow"});
-    if (FLAGS_list) {
-      Print("Indexes", idxs);
-      Print("Values", vals);
-      return 0;
-    }
-    if (FLAGS_get) return Error("The -led argument does not support -get");
-    if (!FLAGS_set.empty()) {
-      uint32_t mask;
-      if (!Mask(idxs, input, mask, true))
-        return Error("There was a problem parsing the indexes you supplied.");
-      uint32_t value;
-      if (!Valid(vals, FLAGS_set, value))
-        return Error("The supplied value for -set is not supported");
-      if (!sd.SetLeds(mask, static_cast<SD::LedMode>(value)))
-        return Error("There was a problem setting the charge values. Aborted.");
-      return Print("LEDs channels set successfully");
-    }
-    return HelpConf("led", "Configure LEDs");
   }
 
   // If we get here there was no valid command, so print useage info and exit

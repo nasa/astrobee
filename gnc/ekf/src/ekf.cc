@@ -1,14 +1,14 @@
 /* Copyright (c) 2017, United States Government, as represented by the
  * Administrator of the National Aeronautics and Space Administration.
- * 
+ *
  * All rights reserved.
- * 
+ *
  * The Astrobee platform is licensed under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -36,7 +36,7 @@ namespace ekf {
 Ekf::Ekf(void) :
   reset_ekf_(true), reset_ready_(false), reset_callback_(nullptr),
   processing_of_reg_(false), of_inputs_delayed_(false), output_file_(NULL),
-  vl_camera_id_(0), of_camera_id_(0), dl_camera_id_(0) {
+  vl_camera_id_(0), of_camera_id_(0), dl_camera_id_(0), reset_dock_pose_(true) {
   gnc_.cmc_.speed_gain_cmd = 1;  // prevent from being invalid when running bags
   of_history_size_ = ASE_OF_NUM_AUG;
   of_max_features_ = ASE_OF_NUM_FEATURES;
@@ -273,17 +273,46 @@ void Ekf::OpticalFlowUpdate(const ff_msgs::Feature2dArray & of) {
 void Ekf::SparseMapUpdate(const ff_msgs::VisualLandmarks & vl) {
   VisualLandmarksUpdate(vl);
 
-  if (!output_file_ && reset_ekf_)
+  if (!output_file_ && reset_ekf_ && vl.landmarks.size() >= 5)
     ResetPose(nav_cam_to_body_, vl.pose);
   cmc_mode_ = ff_msgs::SetEkfInputRequest::MODE_MAP_LANDMARKS;
 }
 
-void Ekf::ARTagUpdate(const ff_msgs::VisualLandmarks & vl) {
-  VisualLandmarksUpdate(vl);
+void Ekf::ResetAR(void) {
+  reset_dock_pose_ = true;
+}
 
-  if (!output_file_ && reset_ekf_)
-    ResetPose(dock_cam_to_body_, vl.pose);
+bool Ekf::ARTagUpdate(const ff_msgs::VisualLandmarks & vl) {
+  bool updated = false;
+  if (reset_dock_pose_) {
+    if (vl.landmarks.size() < 4)
+      return false;
+    geometry_msgs::Pose p;
+    p.position = msg_conversions::array_to_ros_point(gnc_.kfl_.P_B_ISS_ISS);
+    p.orientation = msg_conversions::array_to_ros_quat(gnc_.kfl_.quat_ISS2B);
+    Eigen::Affine3d wTb = msg_conversions::ros_pose_to_eigen_transform(p);
+    Eigen::Affine3d dTc = msg_conversions::ros_pose_to_eigen_transform(vl.pose);
+    Eigen::Affine3d bTc = dock_cam_to_body_;
+    dock_to_world_ = wTb * bTc * dTc.inverse();
+    reset_dock_pose_ = false;
+    updated = true;
+  }
+
+  ff_msgs::VisualLandmarks vl_mod = vl;
+  for (unsigned int i = 0; i < vl.landmarks.size(); i++) {
+    Eigen::Vector3d l(vl.landmarks[i].x, vl.landmarks[i].y, vl.landmarks[i].z);
+    l = dock_to_world_ * l;
+    vl_mod.landmarks[i].x = l.x();
+    vl_mod.landmarks[i].y = l.y();
+    vl_mod.landmarks[i].z = l.z();
+  }
+  VisualLandmarksUpdate(vl_mod);
+
+  if (!output_file_ && reset_ekf_ && vl_mod.landmarks.size() >= 4)
+    ResetPose(dock_cam_to_body_, vl_mod.pose);
   cmc_mode_ = ff_msgs::SetEkfInputRequest::MODE_AR_TAGS;
+
+  return updated;
 }
 
 void Ekf::VisualLandmarksUpdate(const ff_msgs::VisualLandmarks & vl) {
@@ -587,7 +616,6 @@ void Ekf::UpdateState(ff_msgs::EkfState* state) {
             state->ml_mahal_dists.c_array());
   else
     memset(state->ml_mahal_dists.c_array(), 0, ml_max_features_ * sizeof(float));
-  assert(of_history_size_ == state->of_aug_poses.size());
 }
 
 void Ekf::Reset(void) {

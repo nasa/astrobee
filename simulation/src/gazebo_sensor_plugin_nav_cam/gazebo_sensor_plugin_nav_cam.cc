@@ -19,6 +19,9 @@
 // ROS includes
 #include <ros/ros.h>
 
+// FSW includes
+#include <config_reader/config_reader.h>
+
 // Sensor plugin interface
 #include <astrobee_gazebo/astrobee_gazebo.h>
 
@@ -34,9 +37,12 @@ namespace gazebo {
 class GazeboSensorPluginNavCam : public FreeFlyerSensorPlugin {
  public:
   GazeboSensorPluginNavCam() :
-    FreeFlyerSensorPlugin("nav_cam", "nav_cam", true) {}
+    FreeFlyerSensorPlugin("nav_cam", "nav_cam", true), rate_(0.0) {}
 
-  ~GazeboSensorPluginNavCam() {}
+  ~GazeboSensorPluginNavCam() {
+    if (update_)
+      sensor_->DisconnectUpdated(update_);
+  }
 
  protected:
   // Called when plugin is loaded into gazebo
@@ -48,16 +54,6 @@ class GazeboSensorPluginNavCam : public FreeFlyerSensorPlugin {
       gzerr << "GazeboSensorPluginNavCam requires a parent camera sensor.\n";
       return;
     }
-
-    /*
-    // If we are running a fast simulation, then turn down the rate
-    double simulation_speed = 1.0;
-    if (!nh->getParam("/simulation_speed", simulation_speed)) {
-      gzwarn << "Sim speed not specified. Trying real-time." << std::endl;
-    } else if (simulation_speed > 1.0) {
-      sensor_->SetUpdateRate(0.0001);
-    }
-    */
 
     // Check that we have a mono camera
     if (sensor_->Camera()->ImageFormat() != "L8")
@@ -73,24 +69,49 @@ class GazeboSensorPluginNavCam : public FreeFlyerSensorPlugin {
       boost::bind(&GazeboSensorPluginNavCam::ToggleCallback, this),
       boost::bind(&GazeboSensorPluginNavCam::ToggleCallback, this));
 
+    // Read configuration
+    config_reader::ConfigReader config;
+    config.AddFile("simulation/simulation.config");
+    if (!config.ReadFiles()) {
+      ROS_FATAL("Failed to read simulation config file.");
+      return;
+    }
+    bool dos = true;
+    if (!config.GetBool("disable_cameras_on_speedup", &dos))
+      ROS_FATAL("Could not read the drawing_width parameter.");
+    if (!config.GetReal("nav_cam_rate", &rate_))
+      ROS_FATAL("Could not read the drawing_width parameter.");
+    config.Close();
+
+    // If we have a sped up simulation and we need to disable the camera
+    double simulation_speed = 1.0;
+    if (nh->getParam("/simulation_speed", simulation_speed))
+      if (simulation_speed > 1.0 && dos) rate_ = 0.0;
+
+    // Toggle if the camera is active or not
+    ToggleCallback();
+  }
+
+  // Only send measurements when estrinsics are available
+  void OnExtrinsicsReceived(ros::NodeHandle *nh) {
     // Connect to the camera update event.
-    connection_ = sensor_->ConnectUpdated(
+    update_ = sensor_->ConnectUpdated(
       std::bind(&GazeboSensorPluginNavCam::UpdateCallback, this));
   }
 
   // Turn camera on or off based on topic subscription
   void ToggleCallback() {
-    if (pub_img_.getNumSubscribers() > 0)
+    if (pub_img_.getNumSubscribers() > 0 && rate_ > 0) {
+      sensor_->SetUpdateRate(rate_);
       sensor_->SetActive(true);
-    else
+    } else {
+      sensor_->SetUpdateRate(0.0001);
       sensor_->SetActive(false);
+    }
   }
 
   // Called when a new image must be rendered
   void UpdateCallback() {
-    if (!sensor_->IsActive() || !ExtrinsicsFound())
-      return;
-    // Construct and send image
     msg_.header.stamp.sec = sensor_->LastMeasurementTime().sec;
     msg_.header.stamp.nsec = sensor_->LastMeasurementTime().nsec;
     msg_.height = sensor_->ImageHeight();
@@ -108,7 +129,8 @@ class GazeboSensorPluginNavCam : public FreeFlyerSensorPlugin {
   sensor_msgs::Image msg_;
   ros::Publisher pub_img_;
   std::shared_ptr<sensors::WideAngleCameraSensor> sensor_;
-  event::ConnectionPtr connection_;
+  event::ConnectionPtr update_;
+  double rate_;
 };
 
 GZ_REGISTER_SENSOR_PLUGIN(GazeboSensorPluginNavCam)

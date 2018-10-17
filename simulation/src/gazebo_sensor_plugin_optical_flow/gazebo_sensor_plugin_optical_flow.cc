@@ -100,7 +100,19 @@ class GazeboSensorPluginOpticalFlow : public FreeFlyerSensorPlugin {
     pub_feat_ = nh->advertise<ff_msgs::Feature2dArray>(
       TOPIC_LOCALIZATION_OF_FEATURES, 1);
 
-    // Enable mapped landmarks
+    // Create a shape for collision testing
+    GetWorld()->GetPhysicsEngine()->InitForThread();
+    shape_ = boost::dynamic_pointer_cast<physics::RayShape>(GetWorld()
+        ->GetPhysicsEngine()->CreateShape("ray", physics::CollisionPtr()));
+
+    // Only do this once
+    msg_feat_.header.frame_id = std::string(FRAME_NAME_WORLD);
+    msg_reg_.header.frame_id = std::string(FRAME_NAME_WORLD);
+  }
+
+  // Only send measurements when estrinsics are available
+  void OnExtrinsicsReceived(ros::NodeHandle *nh) {
+    // Servide for enabling optical flow
     srv_enable_ = nh->advertiseService(SERVICE_LOCALIZATION_OF_ENABLE,
       &GazeboSensorPluginOpticalFlow::EnableService, this);
 
@@ -111,15 +123,6 @@ class GazeboSensorPluginOpticalFlow : public FreeFlyerSensorPlugin {
     // Timer triggers features
     timer_features_ = nh->createTimer(ros::Duration(0.8 / rate_),
       &GazeboSensorPluginOpticalFlow::SendFeatures, this, true, false);
-
-    // Create a shape for collision testing
-    GetWorld()->GetPhysicsEngine()->InitForThread();
-    shape_ = boost::dynamic_pointer_cast<physics::RayShape>(GetWorld()
-        ->GetPhysicsEngine()->CreateShape("ray", physics::CollisionPtr()));
-
-    // Only do this once
-    msg_feat_.header.frame_id = std::string(FRAME_NAME_WORLD);
-    msg_reg_.header.frame_id = std::string(FRAME_NAME_WORLD);
   }
 
   // Enable or disable the feature timer
@@ -132,7 +135,7 @@ class GazeboSensorPluginOpticalFlow : public FreeFlyerSensorPlugin {
 
   // Send a registration pulse
   void SendRegistration(ros::TimerEvent const& event) {
-    if (!active_ || !ExtrinsicsFound()) return;
+    if (!active_) return;
 
     // Add a short delay between the features and new registration pulse
     timer_features_.stop();
@@ -183,7 +186,7 @@ class GazeboSensorPluginOpticalFlow : public FreeFlyerSensorPlugin {
 
   // Send a registration pulse
   void SendFeatures(ros::TimerEvent const& event) {
-    if (!active_ || !ExtrinsicsFound()) return;
+    if (!active_) return;
     msg_feat_.header.stamp = ros::Time::now();
     pub_feat_.publish(msg_feat_);
   }

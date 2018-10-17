@@ -1,14 +1,14 @@
 /* Copyright (c) 2017, United States Government, as represented by the
  * Administrator of the National Aeronautics and Space Administration.
- * 
+ *
  * All rights reserved.
- * 
+ *
  * The Astrobee platform is licensed under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -19,6 +19,7 @@
 #ifndef TRAJ_OPT_PRO_NONLINEAR_SOLVER_H_
 #define TRAJ_OPT_PRO_NONLINEAR_SOLVER_H_
 
+#include <traj_opt_basic/traj_data.h>
 #include <traj_opt_basic/types.h>
 #include <traj_opt_pro/timers.h>
 #include <Eigen/Sparse>
@@ -62,8 +63,8 @@ class Variable {
  public:
   friend class NonlinearSolver;
   friend class EqConstraint;
-  friend class IneqConstraint;
   friend class SymbolicPoly;
+  friend class IneqConstraint;
   friend class NonlinearTrajectory;
   const decimal_t getVal() const { return val; }
   const int getId() const { return id; }
@@ -129,14 +130,17 @@ class NonlinearSolver {
   boost::shared_ptr<CostFunction> cost;
   const uint max_vars_;
   bool iterate();
+  bool iterate_time(std::vector<Variable *> times);
   bool presolve();              // initializes equality constraints
   bool specialized_presolve();  // hacky presolve for endpoint basis
   decimal_t duality();          // measure duality gap
   decimal_t cost_linesearch(const VecD &delta);
+  void updateInfo(std::vector<Variable *> times = std::vector<Variable *>());
 
   void draw_matrix(const SpMat &mat);
   bool presolved_{false};
   decimal_t epsilon_;
+  decimal_t centering_;
 
  public:
   static ETV transpose(const ETV &vec);
@@ -147,8 +151,8 @@ class NonlinearSolver {
   Variable *addVar(decimal_t val = 10.0) {
     if (vars.size() == max_vars_) {
       throw std::runtime_error(
-          "Requesting more variables than allocated.  This will fuck up a lot "
-          "of pointers!");
+          "Requesting more variables than allocated. There be mem leaks "
+          "here!");
     }
     vars.push_back(
         Variable(static_cast<int>(vars.size()), val));  // increment var id
@@ -160,8 +164,11 @@ class NonlinearSolver {
 
   void setCost(boost::shared_ptr<CostFunction> func) { cost = func; }
 
-  bool solve(bool verbose = false,
-             decimal_t epsilon = 1e-8);  // returns sucess / failure
+  bool solve(bool verbose = false, decimal_t epsilon = 1e-8,
+             std::vector<Variable *> times = std::vector<Variable *>(),
+             int max_iterations = 200);
+  SolverInfo solver_info;
+  friend class NonlinearTrajectory;
 };
 
 }  // namespace traj_opt

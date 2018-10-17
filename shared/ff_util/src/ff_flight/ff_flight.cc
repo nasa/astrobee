@@ -102,7 +102,12 @@ namespace ff_util {
 
   // Return the magnitude of the rotation
   double State::QuaternionMagnitude(Eigen::Quaterniond const& iq) {
-    return fabs(Eigen::AngleAxisd(iq).angle());
+    double x = Eigen::AngleAxisd(iq.normalized()).angle();
+    x = fmod(x + M_PI, 2.0 * M_PI);
+    if (x < 0)
+      x += 2.0 * M_PI;
+    x -= M_PI;
+    return fabs(x);
   }
 
   // Return the magnitude of the rotation
@@ -495,8 +500,8 @@ namespace ff_util {
   }
 
   // Check that the first pose is consistent with the segment/flight mode
-  bool FlightUtil::WithinTolerance(ff_msgs::FlightMode const& flight_mode,
-    geometry_msgs::Pose const& a, geometry_msgs::Pose const& b) {
+  bool FlightUtil::WithinTolerance(geometry_msgs::Pose const& a,
+    geometry_msgs::Pose const& b, double tolerance_pos, double tolerance_att) {
     // Get the desired and actual positions / attitudes
     static Eigen::Quaterniond qd, qa;
     static Eigen::Vector3d vd, va;
@@ -504,14 +509,26 @@ namespace ff_util {
     va = msg_conversions::ros_point_to_eigen_vector(a.position);
     qd = msg_conversions::ros_to_eigen_quat(b.orientation);
     vd = msg_conversions::ros_point_to_eigen_vector(b.position);
-    // We are not tolerant with respecr to our intital attitude
-    if (State::QuaternionMagnitude(
-      qd * qa.inverse()) > flight_mode.tolerance_att)
+    // We are not tolerant with respect to our intital attitude
+    double att_err = State::QuaternionMagnitude(qd * qa.inverse());
+    if (att_err > tolerance_att) {
+      ROS_DEBUG_STREAM("Attitude violation: " << att_err);
       return false;
+    }
     // We are not tolerant with respect to our initial position
-    if (State::VectorMagnitude(va - vd) > flight_mode.tolerance_pos)
+    double pos_err = State::VectorMagnitude(va - vd);
+    if (pos_err > tolerance_pos) {
+      ROS_DEBUG_STREAM("Position violation: " << pos_err);
       return false;
+    }
     // Yes, we are consistent
     return true;
+  }
+
+  // Tolerance check using default flight mode values
+  bool FlightUtil::WithinTolerance(ff_msgs::FlightMode const& flight_mode,
+    geometry_msgs::Pose const& a, geometry_msgs::Pose const& b) {
+    return WithinTolerance(a, b,
+      flight_mode.tolerance_pos, flight_mode.tolerance_att);
   }
 }  // namespace ff_util

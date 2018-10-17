@@ -31,7 +31,9 @@ class GazeboModelPluginDrag : public FreeFlyerModelPlugin {
   GazeboModelPluginDrag() : FreeFlyerModelPlugin("gazebo_drag", ""),
     coefficient_(1.05), area_(0.092903), density_(1.225) {}
 
-  ~GazeboModelPluginDrag() {}
+  ~GazeboModelPluginDrag() {
+    event::Events::DisconnectWorldUpdateBegin(update_);
+  }
 
  protected:
   // Called when the plugin is loaded into the simulator
@@ -53,7 +55,7 @@ class GazeboModelPluginDrag : public FreeFlyerModelPlugin {
   }
 
   // Called on simulation reset
-  virtual void Reset() {
+  void Reset() {
     next_tick_ = GetWorld()->GetSimTime();
   }
 

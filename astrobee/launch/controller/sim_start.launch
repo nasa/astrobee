@@ -30,7 +30,4 @@
     <arg name="speed" value="$(arg speed)" />
     <arg name="debug" value="$(arg debug)" />
   </include>
-  <!-- Spawn a single iss -->
-  <include file="$(find astrobee_gazebo)/launch/spawn_iss.launch"/>
-  <include file="$(find astrobee_gazebo)/launch/spawn_dock.launch"/>
 </launch>

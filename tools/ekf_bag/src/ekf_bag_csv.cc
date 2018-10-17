@@ -50,7 +50,7 @@ EkfBagCsv::EkfBagCsv(const char* bagfile, const char* mapfile, const char* csvfi
   config_reader::ConfigReader config;
   ReadParams(&config);
 
-  f_ = fopen(csvfile, "r");
+  f_ = fopen(csvfile, "w");
   if (f_ == NULL) {
     fprintf(stderr, "Failed to open file %s.", csvfile);
     exit(0);

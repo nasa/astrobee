@@ -1,14 +1,14 @@
 /* Copyright (c) 2017, United States Government, as represented by the
  * Administrator of the National Aeronautics and Space Administration.
- * 
+ *
  * All rights reserved.
- * 
+ *
  * The Astrobee platform is licensed under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -124,20 +124,20 @@ ETV SymbolicPoly::hessian() {
     Variable *coeff = std::get<0>(p.first);
     Variable *time = std::get<1>(p.first);
     int n = std::get<2>(p.first);
-    if (n > 1) {
-      decimal_t dt = decimal_t(n * (n - 1)) * std::pow(time->getVal(), n - 2) *
-                     coeff->getVal() * p.second;
-      if (time_hess.find(time) == time_hess.end())
-        time_hess[time] = dt;
-      else
-        time_hess[time] += dt;
-    }
-    if (n > 0) {
-      decimal_t c = decimal_t(n) * std::pow(time->getVal(), n - 1) *
-                    coeff->getVal() * p.second;
-      hess.push_back(ET(coeff->getId(), time->getId(), c));
-      hess.push_back(ET(time->getId(), coeff->getId(), c));
-    }
+    // if (n > 1) {
+    decimal_t dt = decimal_t(n * (n - 1)) * std::pow(time->getVal(), n - 2) *
+                   coeff->getVal() * p.second;
+    if (time_hess.find(time) == time_hess.end())
+      time_hess[time] = dt;
+    else
+      time_hess[time] += dt;
+    // }
+    // if (n > 0) {
+    decimal_t c = decimal_t(n) * std::pow(time->getVal(), n - 1) *
+                  coeff->getVal() * p.second;
+    hess.push_back(ET(coeff->getId(), time->getId(), c));
+    hess.push_back(ET(time->getId(), coeff->getId(), c));
+    // }
   }
   // d^2g/dtdt
   for (auto &v : time_hess) {

@@ -1,14 +1,14 @@
 /* Copyright (c) 2017, United States Government, as represented by the
  * Administrator of the National Aeronautics and Space Administration.
- * 
+ *
  * All rights reserved.
- * 
+ *
  * The Astrobee platform is licensed under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -206,6 +206,7 @@ void MarkerTracker::VideoCallback(const sensor_msgs::ImageConstPtr& image_msg) {
   ff_msgs::VisualLandmarks msg;
   msg.header = std_msgs::Header();
   msg.header.stamp = ros::Time::now();
+  msg.header.frame_id = "dock/body";
   msg.camera_id = 0;
   msg.landmarks.resize(4 * valid_marker_count);
   size_t write_idx = 0;

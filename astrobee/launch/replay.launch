@@ -57,7 +57,9 @@
   <group>
     <machine name ="local" address="localhost" default="true"/>
     <!-- Start the descriptions (ISS, dock, granite) for visualization purposes -->
-    <include file="$(find description)/launch/description.launch"/>
+    <include file="$(find astrobee)/launch/controller/descriptions.launch">
+      <arg name="world" value="$(arg world)"/>
+    </include>
     <!-- Start ground controller services -->
     <include if="$(arg gviz)" file="$(find astrobee)/launch/controller/gviz.launch"/>
     <include if="$(arg gds)" file="$(find astrobee)/launch/controller/gds.launch"/>

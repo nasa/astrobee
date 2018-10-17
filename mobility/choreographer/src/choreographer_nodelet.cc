@@ -53,7 +53,9 @@
 #include <ff_msgs/MotionAction.h>
 #include <ff_msgs/ControlAction.h>
 #include <ff_msgs/PlanAction.h>
-#include <ff_msgs/ValidateAction.h>
+
+// Segment validation code
+#include <choreographer/validator.h>
 
 // STL includes
 #include <string>
@@ -73,7 +75,7 @@ using RESPONSE = ff_msgs::MotionResult;
 using FSM = ff_util::FSM;
 
 // Data structure for managing planner registration
-typedef std::map<std::string, std::string > PlannerInfo;
+typedef std::map<std::string, std::string> PlannerInfo;
 typedef std::map<std::string,
   ff_util::FreeFlyerActionClient<ff_msgs::PlanAction>> PlannerMap;
 
@@ -89,19 +91,17 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
     GOAL_IDLE                      = (1<<4),      // New idle command
     GOAL_PREP                      = (1<<5),      // New prep command
     GOAL_CANCEL                    = (1<<6),      // Cancel existing goal
-    VALIDATE_SUCCESS               = (1<<7),      // Segment validation success
-    VALIDATE_FAILED                = (1<<8),      // Timeout or other failure
-    PLAN_SUCCESS                   = (1<<9),      // Segment plan success
-    PLAN_FAILED                    = (1<<10),     // Segment plan failed
-    PMC_READY                      = (1<<11),     // PMC is ramped and ready
-    PMC_TIMEOUT                    = (1<<12),     // PMC has timed out
-    CONTROL_SUCCESS                = (1<<13),     // Control success
-    CONTROL_FAILED                 = (1<<14),     // Control failure
-    TOLERANCE_POS                  = (1<<16),     // Position olerance failure
-    TOLERANCE_ATT                  = (1<<17),     // Attitude tolerance failure
-    TOLERANCE_VEL                  = (1<<18),     // Velocity tolerance failure
-    TOLERANCE_OMEGA                = (1<<19),     // Omega tolerance failure
-    OBSTACLE_DETECTED              = (1<<20)      // Hazard: obstacle
+    PLAN_SUCCESS                   = (1<<7),      // Segment plan success
+    PLAN_FAILED                    = (1<<8),      // Segment plan failed
+    PMC_READY                      = (1<<9),      // PMC is ramped and ready
+    PMC_TIMEOUT                    = (1<<10),     // PMC has timed out
+    CONTROL_SUCCESS                = (1<<11),     // Control success
+    CONTROL_FAILED                 = (1<<12),     // Control failure
+    TOLERANCE_POS                  = (1<<13),     // Position olerance failure
+    TOLERANCE_ATT                  = (1<<14),     // Attitude tolerance failure
+    TOLERANCE_VEL                  = (1<<15),     // Velocity tolerance failure
+    TOLERANCE_OMEGA                = (1<<16),     // Omega tolerance failure
+    OBSTACLE_DETECTED              = (1<<17)      // Hazard: obstacle
   };
 
   // The various types of control
@@ -128,14 +128,16 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
         geometry_msgs::PoseStamped pose;
         if (!GetRobotPose(pose))
           return Result(RESPONSE::CANNOT_QUERY_ROBOT_POSE);
-        // Get the robot pose
-        if (ff_util::FlightUtil::WithinTolerance(
-          goal_flight_mode_, segment_.front().pose, pose.pose)) {
+        // If the robot with already on the target pose then no bootstrap needed
+        if (ff_util::FlightUtil::WithinTolerance(segment_.front().pose,
+          pose.pose, cfg_.Get<double>("tolerance_pos"),
+            cfg_.Get<double>("tolerance_att"))) {
           // If we need to validate
           if (cfg_.Get<bool>("enable_validation")) {
-            if (!Validate(segment_))
-              return Result(RESPONSE::VALIDATE_FAILED);
-            return STATE::VALIDATING;
+            Validator::Response result = validator_.CheckSegment(segment_,
+              flight_mode_, cfg_.Get<bool>("enable_faceforward"));
+            if (result != Validator::SUCCESS)
+              return ValidateResult(result);
           }
           // If we send control directly
           if (!Control(NOMINAL, segment_))
@@ -169,9 +171,10 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
       [this](FSM::Event const& event) -> FSM::State {
         // If we need to validate
         if (cfg_.Get<bool>("enable_validation")) {
-          if (!Validate(segment_))
-            return Result(RESPONSE::VALIDATE_FAILED);
-          return STATE::VALIDATING;
+          Validator::Response result = validator_.CheckSegment(segment_,
+            flight_mode_, cfg_.Get<bool>("enable_faceforward"));
+          if (result != Validator::SUCCESS)
+            return ValidateResult(result);
         }
         // If we send control directly
         if (!Control(NOMINAL, segment_))
@@ -199,8 +202,8 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
         bool aligned = true;
         std::vector<geometry_msgs::PoseStamped>::iterator it;
         for (it = states_.begin(); it != states_.end() && aligned; ++it)
-          aligned &= ff_util::FlightUtil::WithinTolerance(
-            goal_flight_mode_, pose.pose, it->pose);
+          aligned &= ff_util::FlightUtil::WithinTolerance(pose.pose, it->pose,
+            cfg_.Get<double>("tolerance_pos"), cfg_.Get<double>("tolerance_att"));
         if (aligned)
           return Result(RESPONSE::ALREADY_THERE);
         // Add the current pose to the front of the states
@@ -216,9 +219,10 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
       [this](FSM::Event const& event) -> FSM::State {
         // If we need to validate
         if (cfg_.Get<bool>("enable_validation")) {
-          if (!Validate(segment_))
-            return Result(RESPONSE::VALIDATE_FAILED);
-          return STATE::VALIDATING;
+          Validator::Response result = validator_.CheckSegment(segment_,
+            flight_mode_, cfg_.Get<bool>("enable_faceforward"));
+          if (result != Validator::SUCCESS)
+            return ValidateResult(result);
         }
         // If this returns false then we are already on the correct speed gain
         if (FlightMode())
@@ -236,58 +240,21 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
           return Result(RESPONSE::CANCELLED);
         return Result(RESPONSE::PLAN_FAILED);
       });
-    // [8]
-    fsm_.Add(STATE::VALIDATING,
-      VALIDATE_SUCCESS,
-      [this](FSM::Event const& event) -> FSM::State {
-        // If this returns false then we are already on the correct speed gain
-        if (FlightMode())
-          return STATE::PREPARING;
-        // Move straight to control, as we don't need to wait for speed prep.
-        if (!Control(NOMINAL, segment_))
-          return Result(RESPONSE::CONTROL_FAILED);
-        return STATE::CONTROLLING;
-      });
-    // [9]
-    fsm_.Add(STATE::VALIDATING, VALIDATE_FAILED | GOAL_CANCEL,
-      [this](FSM::Event const& event) -> FSM::State {
-        switch (event) {
-        case VALIDATE_FAILED:
-          return Result(RESPONSE::VALIDATE_FAILED);
-        }
-        return Result(RESPONSE::CANCELLED);
-      });
     // [10]
     fsm_.Add(STATE::REPLANNING,
       PLAN_SUCCESS,
       [this](FSM::Event const& event) -> FSM::State {
         // If we need to validate the segment
         if (cfg_.Get<bool>("enable_validation")) {
-          if (!Validate(segment_))
-            return Result(RESPONSE::VALIDATE_FAILED);
-          return STATE::REVALIDATING;
+          Validator::Response result = validator_.CheckSegment(segment_,
+            flight_mode_, cfg_.Get<bool>("enable_faceforward"));
+          if (result != Validator::SUCCESS)
+            return ValidateResult(result);
         }
         // If we send control directly
         if (!Control(NOMINAL, segment_))
           return Result(RESPONSE::CONTROL_FAILED);
         return STATE::CONTROLLING;
-      });
-    // [11]
-    fsm_.Add(STATE::REVALIDATING,
-      VALIDATE_SUCCESS,
-      [this](FSM::Event const& event) -> FSM::State {
-        // If we send control directly
-        if (!Control(NOMINAL, segment_))
-          return Result(RESPONSE::CONTROL_FAILED);
-        return STATE::CONTROLLING;
-      });
-    // [12]
-    fsm_.Add(STATE::REVALIDATING, VALIDATE_FAILED | GOAL_CANCEL,
-      [this](FSM::Event const& event) -> FSM::State {
-        Control(STOP);
-        if (event == GOAL_CANCEL)
-          return Result(RESPONSE::CANCELLED);
-        return Result(RESPONSE::REVALIDATE_FAILED);
       });
     // [13]
     fsm_.Add(STATE::CONTROLLING,
@@ -466,12 +433,16 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
     // Configuration parameters
     cfg_.Initialize(GetPrivateHandle(), "mobility/choreographer.config");
 
+    // Listen for parameter changes
     if (!cfg_.Listen(boost::bind(
         &ChoreographerNodelet::ReconfigureCallback, this, _1))) {
       AssertFault(ff_util::INITIALIZATION_FAILED,
                   "Could not start config server");
       return;
     }
+
+    // Initialize the zone manager
+    validator_.Init(nh, cfg_);
 
     // Get the default flight mode, it will be published later
     if (!ff_util::FlightUtil::GetInitialFlightMode(flight_mode_)) {
@@ -558,25 +529,6 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
       &ChoreographerNodelet::ConnectedCallback, this));
     client_c_.Create(nh, ACTION_GNC_CTL_CONTROL);
 
-    // Setup validate client action
-    client_v_.SetConnectedTimeout(
-      cfg_.Get<double>("timeout_validate_connected"));
-    client_v_.SetActiveTimeout(
-      cfg_.Get<double>("timeout_validate_active"));
-    client_v_.SetResponseTimeout(
-      cfg_.Get<double>("timeout_validate_response"));
-    client_v_.SetDeadlineTimeout(
-      cfg_.Get<double>("timeout_validate_deadline"));
-    client_v_.SetFeedbackCallback(std::bind(
-      &ChoreographerNodelet::VFeedbackCallback, this,
-        std::placeholders::_1));
-    client_v_.SetResultCallback(std::bind(
-      &ChoreographerNodelet::VResultCallback, this,
-        std::placeholders::_1, std::placeholders::_2));
-    client_v_.SetConnectedCallback(std::bind(
-      &ChoreographerNodelet::ConnectedCallback, this));
-    client_v_.Create(nh, ACTION_MOBILITY_VALIDATE);
-
     // Setup the move action
     server_.SetGoalCallback(std::bind(
       &ChoreographerNodelet::GoalCallback, this, std::placeholders::_1));
@@ -600,7 +552,6 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
 
   // Ensure all clients are connected
   void ConnectedCallback() {
-    if (!client_v_.IsConnected()) return;       // Validate action
     if (!client_c_.IsConnected()) return;       // Control action
     fsm_.Update(READY);
   }
@@ -667,6 +618,38 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
     return true;
   }
 
+  // Proxy for validation responses
+  int32_t ValidateResult(int validator_response) {
+    int32_t result = 0;
+    switch (validator_response) {
+    case Validator::VIOLATES_RESAMPLING:
+      result = RESPONSE::VIOLATES_RESAMPLING; break;
+    case Validator::VIOLATES_KEEP_OUT:
+      result = RESPONSE::VIOLATES_KEEP_OUT; break;
+    case Validator::VIOLATES_KEEP_IN:
+      result = RESPONSE::VIOLATES_KEEP_IN; break;
+    case Validator::VIOLATES_MINIMUM_FREQUENCY:
+      result = RESPONSE::VIOLATES_MINIMUM_FREQUENCY; break;
+    case Validator::VIOLATES_STATIONARY_ENDPOINT:
+      result = RESPONSE::VIOLATES_STATIONARY_ENDPOINT; break;
+    case Validator::VIOLATES_FIRST_IN_PAST:
+      result = RESPONSE::VIOLATES_FIRST_IN_PAST; break;
+    case Validator::VIOLATES_MINIMUM_SETPOINTS:
+      result = RESPONSE::VIOLATES_MINIMUM_SETPOINTS; break;
+    case Validator::VIOLATES_HARD_LIMIT_VEL:
+      result = RESPONSE::VIOLATES_HARD_LIMIT_VEL; break;
+    case Validator::VIOLATES_HARD_LIMIT_ACCEL:
+      result = RESPONSE::VIOLATES_HARD_LIMIT_ACCEL; break;
+    case Validator::VIOLATES_HARD_LIMIT_OMEGA:
+      result = RESPONSE::VIOLATES_HARD_LIMIT_OMEGA; break;
+    case Validator::VIOLATES_HARD_LIMIT_ALPHA:
+      result = RESPONSE::VIOLATES_HARD_LIMIT_ALPHA; break;
+    default:
+      result = RESPONSE::SUCCESS; break;
+    }
+    return Result(result);
+  }
+
   // Complete the current dock or undock action
   int32_t Result(int32_t response) {
     ff_msgs::MotionResult result;
@@ -680,8 +663,6 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
       result.fsm_result = "Motion completed successfully";              break;
     case RESPONSE::PLAN_FAILED:
       result.fsm_result = "Unable to plan a segment";                   break;
-    case RESPONSE::VALIDATE_FAILED:
-      result.fsm_result = "Validation failed. Check limits and zones."; break;
     case RESPONSE::CONTROL_FAILED:
       result.fsm_result = "The control action failed";                  break;
     case RESPONSE::NOT_IN_WAITING_MODE:
@@ -743,6 +724,36 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
       result.fsm_result = "Angular velocity tolerance violated";
       client_c_.CancelGoal();
       break;
+    case RESPONSE::VIOLATES_MINIMUM_FREQUENCY:
+      result.fsm_result = "Could not resample at 10Hz to do zone checking";
+      break;
+    case RESPONSE::VIOLATES_KEEP_OUT:
+      result.fsm_result = "Keep out zone violation";
+      break;
+    case RESPONSE::VIOLATES_KEEP_IN:
+      result.fsm_result = "Keep in zone violation";
+      break;
+    case RESPONSE::VIOLATES_STATIONARY_ENDPOINT:
+      result.fsm_result = "Last setpoint in segment must be stationery";
+      break;
+    case RESPONSE::VIOLATES_FIRST_IN_PAST:
+      result.fsm_result = "Your first setpoint cannot be in the past";
+      break;
+    case RESPONSE::VIOLATES_MINIMUM_SETPOINTS:
+      result.fsm_result = "You need at least two setpoints in a segment";
+      break;
+    case RESPONSE::VIOLATES_HARD_LIMIT_VEL:
+      result.fsm_result = "Velocity hard limit violated";
+      break;
+    case RESPONSE::VIOLATES_HARD_LIMIT_ACCEL:
+      result.fsm_result = "Acceleration hard limit violated";
+      break;
+    case RESPONSE::VIOLATES_HARD_LIMIT_OMEGA:
+      result.fsm_result = "Omega hard limit violated";
+      break;
+    case RESPONSE::VIOLATES_HARD_LIMIT_ALPHA:
+      result.fsm_result = "Alpha hard limit violated";
+      break;
     // Preemptions or cancellations
     case RESPONSE::CANCELLED:
     case RESPONSE::PREEMPTED:
@@ -758,12 +769,6 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
           if (planners_.find(planner) != planners_.end())
             planners_[planner].CancelGoal();
         }
-        break;
-      // Validation
-      case STATE::REVALIDATING:
-        client_c_.CancelGoal();
-      case STATE::VALIDATING:
-        client_v_.CancelGoal();
         break;
       // Controlling
       case STATE::CONTROLLING:
@@ -831,8 +836,6 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
     case GOAL_IDLE:               msg.fsm_event = "GOAL_IDLE";          break;
     case GOAL_PREP:               msg.fsm_event = "GOAL_PREP";          break;
     case GOAL_CANCEL:             msg.fsm_event = "GOAL_CANCEL";        break;
-    case VALIDATE_SUCCESS:        msg.fsm_event = "VALIDATE_SUCCESS";   break;
-    case VALIDATE_FAILED:         msg.fsm_event = "VALIDATE_FAILED";    break;
     case PMC_READY:               msg.fsm_event = "PMC_READY";          break;
     case PMC_TIMEOUT:             msg.fsm_event = "PMC_TIMEOUT";        break;
     case PLAN_SUCCESS:            msg.fsm_event = "PLAN_SUCCESS";       break;
@@ -855,11 +858,9 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
     case STATE::PREPPING:         msg.fsm_state = "PREPPING";           break;
     case STATE::BOOTSTRAPPING:    msg.fsm_state = "BOOTSTRAPPING";      break;
     case STATE::PLANNING:         msg.fsm_state = "PLANNING";           break;
-    case STATE::VALIDATING:       msg.fsm_state = "VALIDATING";         break;
     case STATE::PREPARING:        msg.fsm_state = "PREPARING";          break;
     case STATE::CONTROLLING:      msg.fsm_state = "CONTROLLING";        break;
     case STATE::REPLANNING:       msg.fsm_state = "REPLANNING";         break;
-    case STATE::REVALIDATING:     msg.fsm_state = "REVALIDATING";       break;
     }
     // Publish the state
     pub_state_.publish(msg);
@@ -872,11 +873,9 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
     case STATE::STOPPING:
     case STATE::BOOTSTRAPPING:
     case STATE::PLANNING:
-    case STATE::VALIDATING:
     case STATE::PREPARING:
     case STATE::CONTROLLING:
-    case STATE::REPLANNING:
-    case STATE::REVALIDATING: {
+    case STATE::REPLANNING: {
       feedback_.state = msg;
       server_.SendFeedback(feedback_);
       break;
@@ -893,46 +892,6 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
     if (!cfg_.Get<bool>("enable_collision_checking"))
       return;
     return fsm_.Update(OBSTACLE_DETECTED);
-  }
-
-  // VALIDATE
-
-  // Validate the current working segment and flight mode
-  bool Validate(ff_util::Segment const& segment) {
-    static ff_msgs::ValidateGoal goal;
-    goal.flight_mode = goal_flight_mode_;
-    goal.faceforward = cfg_.Get<bool>("enable_faceforward");
-    goal.segment = segment;
-    goal.max_time = ros::Duration(
-      cfg_.Get<double>("timeout_validate_deadline"));
-    client_v_.SetDeadlineTimeout(
-      cfg_.Get<double>("timeout_validate_deadline"));
-    return client_v_.SendGoal(goal);
-  }
-
-  // Validate feedback -- forward to the motion state
-  void VFeedbackCallback(ff_msgs::ValidateFeedbackConstPtr const& feedback) {
-    switch (fsm_.GetState()) {
-    case STATE::VALIDATING:
-    case STATE::REVALIDATING:
-      feedback_.perc_complete = feedback->perc_complete;
-      feedback_.secs_remaining = feedback->secs_remaining;
-      return server_.SendFeedback(feedback_);
-    default:
-      break;
-    }
-  }
-
-  // Validate result  - trigger a FSM update
-  void VResultCallback(ff_util::FreeFlyerActionState::Enum result_code,
-    ff_msgs::ValidateResultConstPtr const& result) {
-    switch (result_code) {
-    case ff_util::FreeFlyerActionState::SUCCESS:
-      segment_ = result->segment;
-      return fsm_.Update(VALIDATE_SUCCESS);
-    default:
-      return fsm_.Update(VALIDATE_FAILED);
-    }
   }
 
   // PLAN
@@ -1310,11 +1269,12 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
   // Action managemement
   ff_util::FSM fsm_;
   ff_util::FreeFlyerActionClient<ff_msgs::ControlAction> client_c_;
-  ff_util::FreeFlyerActionClient<ff_msgs::ValidateAction> client_v_;
   ff_util::FreeFlyerActionServer<ff_msgs::MotionAction> server_;
   ff_msgs::MotionFeedback feedback_;
   // Runtime configuration
   ff_util::ConfigServer cfg_;
+  // Zone management`
+  Validator validator_;
   // Timeout on speed preps
   ros::Timer timer_speed_, timer_feedback_;
   // TF2
@@ -1335,7 +1295,6 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
 };
 
 // Declare the plugin
-PLUGINLIB_DECLARE_CLASS(choreographer, ChoreographerNodelet,
-                        choreographer::ChoreographerNodelet, nodelet::Nodelet);
+PLUGINLIB_EXPORT_CLASS(choreographer::ChoreographerNodelet, nodelet::Nodelet);
 
 }  // namespace choreographer

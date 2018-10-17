@@ -1,14 +1,14 @@
 # Copyright (c) 2017, United States Government, as represented by the
 # Administrator of the National Aeronautics and Space Administration.
-# 
+#
 # All rights reserved.
-# 
+#
 # The Astrobee platform is licensed under the Apache License, Version 2.0
 # (the "License"); you may not use this file except in compliance with the
 # License. You may obtain a copy of the License at
-# 
+#
 #     http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -18,15 +18,15 @@
 # This service sets the system LEDs controlled by the EPS #
 
 
-uint8 streaming                 # STREAMING LED
-uint8 camera                    # CAMERA LED
-uint8 microphone                # MICROHPONE LED
-uint8 status1a                  # STATUS LED 1A
-uint8 status1b                  # STATUS LED 2B
-uint8 status1c                  # STATUS LED 1C
-uint8 status2a                  # STATUS LED 2A
-uint8 status2b                  # STATUS LED 2B
-uint8 status2c                  # STATUS LED 2C
+uint8 video                     # VIDEO LED
+uint8 audio                     # AUDIO LED
+uint8 live                      # LIVE LED
+uint8 status_a1                 # STATUS LED A1
+uint8 status_a2                 # STATUS LED A2
+uint8 status_b1                 # STATUS LED B1
+uint8 status_b2                 # STATUS LED B2
+uint8 status_c1                 # STATUS LED C1
+uint8 status_c2                 # STATUS LED C2
 
 uint8 PERSIST =  0              # Leave unchanged
 uint8 ON      =  1              # Turn LED on

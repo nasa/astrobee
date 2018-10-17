@@ -102,7 +102,7 @@ def update_intrinsics(filename, camera, intrinsics, distortion):
     return True
   return False
 
-def calibrate_camera(bag, target_file, from_time, to_time, approx_sync,
+def calibrate_camera(bag, calibration_target, from_time, to_time, approx_sync,
                      dock_cam=False, depth_cam=False, only_depth_cam=False,
                      verbose=False, model='pinhole-fov',
                      model_depth='pinhole-radtan'):
@@ -125,8 +125,8 @@ def calibrate_camera(bag, target_file, from_time, to_time, approx_sync,
   if not os.path.isfile(bag):
     print >> sys.stderr, 'Bag file %s does not exist.' % (bag)
     return None
-  if not os.path.isfile(target_file):
-    print >> sys.stderr, 'Target file %s does not exist.' % (target_file)
+  if not os.path.isfile(calibration_target):
+    print >> sys.stderr, 'Target file %s does not exist.' % (calibration_target)
     return None
 
   bag_dir = os.path.dirname(os.path.abspath(bag))
@@ -136,15 +136,15 @@ def calibrate_camera(bag, target_file, from_time, to_time, approx_sync,
   if only_depth_cam:
     cmd = ('rosrun kalibr kalibr_calibrate_cameras --topics %s --models %s ' + 
            '--target %s --bag %s%s') % \
-    (CAMERA_TOPIC_DEPTH, model_depth, target_file, bag_file, extra_flags)
+    (CAMERA_TOPIC_DEPTH, model_depth, calibration_target, bag_file, extra_flags)
   elif depth_cam:
     cmd = ('rosrun kalibr kalibr_calibrate_cameras --topics %s %s --models %s %s ' + 
            '--target %s --bag %s%s') % \
-    (CAMERA_TOPIC, CAMERA_TOPIC_DEPTH, model, model_depth, target_file, bag_file, extra_flags)
+    (CAMERA_TOPIC, CAMERA_TOPIC_DEPTH, model, model_depth, calibration_target, bag_file, extra_flags)
   else:
     cmd = ('rosrun kalibr kalibr_calibrate_cameras --topics %s ' +
            '--models %s --target %s --bag %s%s') % \
-          (CAMERA_TOPIC, model, target_file, bag_file, extra_flags)
+          (CAMERA_TOPIC, model, calibration_target, bag_file, extra_flags)
   
   print("Running in: " + bag_dir)
   print(cmd)
@@ -158,6 +158,9 @@ def calibrate_camera(bag, target_file, from_time, to_time, approx_sync,
   return bag_dir + '/camchain-' + bag_name + '.yaml' # The file where kalibr writes its output
 
 def main():
+  SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
+  default_calibration_target = SCRIPT_DIR + '/config/granite_april_tag.yaml'
+
   parser = argparse.ArgumentParser(description='Calibrate intrinsic parameters.')
   parser.add_argument('robot', help='The name of the robot to configure (i.e., put p4d to edit p4d.config).')
   parser.add_argument('bag', help='The bag file with calibration data.')
@@ -166,14 +169,16 @@ def main():
   parser.add_argument('--only_depth_cam', dest='only_depth_cam', action='store_true', help='Calibrate only the depth camera (haz or perch).')
   parser.add_argument('-f', '--from', dest='from_time', help='Use the bag data starting at this time, in seconds.')
   parser.add_argument('-t', '--to', dest='to_time', help='Use the bag data until this time, in seconds.')
+  parser.add_argument('--calibration_target', dest='calibration_target', help='Use this yaml file to desribe the calibration target, overriding the default: ' + default_calibration_target)
   parser.add_argument('--approx_sync', dest='approx_sync', help='Time tolerance for approximate image synchronization [s] (default: 0.02).')
   parser.add_argument('-v', '--verbose',  dest='verbose', action='store_true', help='Verbose mode.')
   args = parser.parse_args()
-  
+
+  if args.calibration_target is None:
+    args.calibration_target = default_calibration_target
+
   # Setup files
-  SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
-  target_file = SCRIPT_DIR + '/config/granite_april_tag.yaml'
-  yaml_file = calibrate_camera(args.bag, target_file,
+  yaml_file = calibrate_camera(args.bag, args.calibration_target,
                                args.from_time, args.to_time, args.approx_sync,
                                dock_cam=args.dock_cam,
                                depth_cam=args.depth_cam,

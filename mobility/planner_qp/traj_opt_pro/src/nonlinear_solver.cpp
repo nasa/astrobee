@@ -1,14 +1,14 @@
 /* Copyright (c) 2017, United States Government, as represented by the
  * Administrator of the National Aeronautics and Space Administration.
- * 
+ *
  * All rights reserved.
- * 
+ *
  * The Astrobee platform is licensed under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -19,11 +19,31 @@
 #include <traj_opt_pro/nonlinear_solver.h>
 // move to cpp
 #include <algorithm>
+#include <map>
 #include <utility>
 #include <vector>
 
 namespace traj_opt {
 
+void NonlinearSolver::updateInfo(std::vector<Variable *> times) {
+  solver_info.gap = duality();
+  solver_info.cost = cost->evaluate();
+  solver_info.iterations++;
+  solver_info.slack.clear();
+  for (auto in : ineq_con) solver_info.slack.push_back(in->evaluate());
+  solver_info.gap_history.push_back(solver_info.gap);
+  solver_info.cost_history.push_back(solver_info.cost);
+
+  int num_v = eq_con.size();
+  int num_u = ineq_con.size();
+  int total_v = vars.size();
+  int num_z = total_v - 2 * num_u - num_v;
+  solver_info.var_history.push_back(std::vector<float>());
+  solver_info.time_history.push_back(std::vector<float>());
+  for (int i = 0; i < num_z; i++)
+    solver_info.var_history.back().push_back(vars.at(i).val);
+  for (auto &vi : times) solver_info.time_history.back().push_back(vi->val);
+}
 // outstreams
 std::ostream &operator<<(std::ostream &os, const Variable &var) {
   os << "V" << var.id << " : " << var.val << " ";
@@ -281,6 +301,7 @@ bool NonlinearSolver::iterate() {
   //    std::cout << "mu: " << mu << std::endl;
   // centering param
   decimal_t sigma = std::pow(mu_aff / mu, 3);
+  centering_ = sigma;  // save this fime optimization
 
   //    std::cout << "Sigma " << sigma << std::endl;
 
@@ -353,11 +374,92 @@ bool NonlinearSolver::iterate() {
   //     std::cout << "max_h: " << max_h << std::endl;
   //     std::cout << "mu: " << mu << std::endl;
 
+  updateInfo();
   return (mu > epsilon_) && (max_h > 1e-15);
 }
-bool NonlinearSolver::solve(bool verbose, decimal_t epsilon) {
+
+inline bool contains(const std::map<int, int> &map, int key) {
+  auto val = map.find(key);
+  return val != map.end();
+}
+bool NonlinearSolver::iterate_time(std::vector<Variable *> times) {
+  decimal_t alpha = 10;  // richer, roy magic parameter maybe pass in
+
+  // check input
+  if (times.size() == 0) return true;
+  uint num_t = times.size();
+  // get gradient + hession
+  ETV hess = cost->hessian();
+  ETV grad = cost->gradient();
+
+  ETV hess_time;
+  hess_time.reserve(hess.size());
+  ETV grad_time;
+  grad_time.reserve(grad.size());
+
+  // get dimension reduced version
+  std::map<int, int> time_inds;
+  int i = 0;
+  for (auto &v : times) time_inds[v->id] = i++;
+
+  for (auto &triple : hess)
+    if (contains(time_inds, triple.row()) && contains(time_inds, triple.col()))
+      hess_time.push_back(
+          ET(time_inds[triple.row()], time_inds[triple.col()], triple.value()));
+
+  for (auto &triple : grad)
+    if (contains(time_inds, triple.row()))
+      grad_time.push_back(
+          ET(time_inds[triple.row()], triple.col(), triple.value()));
+
+  for (uint c = 0; c < num_t; c++) grad_time.push_back(ET(c, 0, alpha));
+
+  SpMat AE(num_t, num_t);
+  SpMat bE(num_t, 1);
+  AE.setFromTriplets(hess_time.begin(), hess_time.end());
+  bE.setFromTriplets(grad_time.begin(), grad_time.end());
+
+  // solver and iterate
+  Eigen::SparseLU<SpMat> solver;
+  solver.compute(AE);
+  if (solver.info() != Eigen::Success) {
+    std::cout << "Time opt back end failed" << std::endl;
+    std::cout << "AE " << AE << std::endl;
+    std::cout << "bE " << bE << std::endl;
+    for (auto &t : times) std::cout << "time id " << t->id << std::endl;
+
+    return false;
+  }
+  VecD delta_x = solver.solve(bE);
+
+  decimal_t h = 1.0;
+  // do line search
+  for (int r = 0; r < delta_x.rows(); r++)
+    if (delta_x(r) > 0) h = std::min(h, 1.0 / delta_x(r));
+
+  // gamma
+  h *= 0.99;
+
+  for (int r = 0; r < delta_x.rows(); r++) times.at(r)->val -= h * delta_x(r);
+
+  // find and adjust equality constraints
+
+  for (auto &eq : eq_con) {
+    for (auto &v : eq->coeff) {
+      if (contains(time_inds, v.first->id)) {
+        ET diff = eq->bi();
+        eq->rhs += diff.value();
+      }
+    }
+  }
+
+  return true;
+}
+
+bool NonlinearSolver::solve(bool verbose, decimal_t epsilon,
+                            std::vector<Variable *> times, int max_iterations) {
   epsilon_ = epsilon;
-  int max_iterations = 50;
+
   decimal_t nu = 0.5;
 
   int num_v = eq_con.size();
@@ -367,6 +469,7 @@ bool NonlinearSolver::solve(bool verbose, decimal_t epsilon) {
   Timer tm;
   Timer tm_t;
   tm_t.tic();
+
   if (verbose) {
     std::cout << "Solving model with " << total_v << " variables" << std::endl;
     std::cout << "Primary: " << num_z << std::endl;
@@ -408,6 +511,8 @@ bool NonlinearSolver::solve(bool verbose, decimal_t epsilon) {
       //            tm.tic();
     }
     if (!iterate()) break;
+    if (centering_ < 0.1)  // watterson parameter, this is new and novel!
+      iterate_time(times);
 
     // check cost regression
     //        decimal_t new_cost = cost->evaluate();
@@ -432,26 +537,7 @@ bool NonlinearSolver::solve(bool verbose, decimal_t epsilon) {
   decimal_t mu = duality();
   if (verbose) {
     std::cout << "Solver terminated." << std::endl;
-    //        if(costreg)
-    //            std::cout << "Due to cost regression" << std::endl;
-    //        else
-    //            std::cout << "Due to lack of slack" << std::endl;
-    //        std::cout << "x: ";
-    //        for(int i=0;i<num_z;i++)
-    //            std::cout << vars.at(i).val << " ";
-    //        std::cout << std::endl;
-    //        std::cout << "v: ";
-    //        for(auto &v:eq_con)
-    //            std::cout << v->var_v->val << " ";
-    //        std::cout << std::endl;
-    //        std::cout << "u: ";
-    //        for(auto &v:ineq_con)
-    //            std::cout << v->var_u->val << " ";
-    //        std::cout << std::endl;
-    //        std::cout << "s: ";
-    //        for(auto &v:ineq_con)
-    //            std::cout << v->var_s->val << " ";
-    //        std::cout << std::endl;
+
     std::cout << "Cost: " << cost->evaluate() << std::endl;
     std::cout << "Gap: " << mu << std::endl;
     std::cout << "Iterations: " << its << std::endl;

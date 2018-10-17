@@ -1076,11 +1076,11 @@ bool Executive::SetPlanner(ff_msgs::CommandStampedPtr const& cmd) {
   // Check that the planner string is valid
   if (cmd->args[0].s != CommandConstants::PARAM_NAME_PLANNER_TYPE_TRAPEZOIDAL &&
       cmd->args[0].s !=
-                CommandConstants::PARAM_NAME_PLANNER_TYPE_QUARTIC_POLYNOMIAL) {
-    NODELET_ERROR("Planner must be either Trapezoidal or QuarticPolynomial");
+                CommandConstants::PARAM_NAME_PLANNER_TYPE_QUADRATIC_PROGRAM) {
+    NODELET_ERROR("Planner must be either Trapezoidal or QuadraticProgram");
     PublishCmdAck(cmd->cmd_id,
                   ff_msgs::AckCompletedStatus::BAD_SYNTAX,
-                  "Planner must be either Trapezoidal or QuarticPolynomial");
+                  "Planner must be either Trapezoidal or QuadraticProgram");
     return false;
   }
 
@@ -1170,6 +1170,7 @@ bool Executive::StopAllMotion(bool &stop_started,
       PublishCmdAck(cmd_id,
                     ff_msgs::AckCompletedStatus::EXEC_FAILED,
                     "PMCs are idle so don't want spin them up due to a fault.");
+      stop_started = false;
       return false;
     }
   }
@@ -1523,15 +1524,15 @@ bool Executive::ClearData(ff_msgs::CommandStampedPtr const& cmd,
   return successful;
 }
 
-// TODO(Katie) Need to add all the other items we can power on
-bool Executive::PowerOnItem(ff_msgs::CommandStampedPtr const& cmd,
-                            std::string& err_msg,
-                            uint8_t& completed_status,
-                            bool plan) {
+bool Executive::PowerItem(ff_msgs::CommandStampedPtr const& cmd,
+                          std::string& err_msg,
+                          uint8_t& completed_status,
+                          bool on,
+                          bool plan) {
   // Check to make sure command is formatted as expected
   if (cmd->args.size() != 1 ||
       cmd->args[0].data_type != ff_msgs::CommandArg::DATA_TYPE_STRING) {
-    err_msg = "Malformed arguments for power on item command!";
+    err_msg = "Malformed arguments for power item command!";
     completed_status = ff_msgs::AckCompletedStatus::BAD_SYNTAX;
     NODELET_ERROR("%s", err_msg.c_str());
     if (!plan) {
@@ -1540,25 +1541,40 @@ bool Executive::PowerOnItem(ff_msgs::CommandStampedPtr const& cmd,
     return false;
   }
 
-  NODELET_WARN("Item %s is being powered on!", cmd->args[0].s.c_str());
+  NODELET_INFO("Item %s is being powered on/off!", cmd->args[0].s.c_str());
 
+  // Handle pmcs and laser the same ince they use the same service message
   if (cmd->args[0].s ==
+        CommandConstants::PARAM_NAME_POWERED_COMPONENT_LASER_POINTER ||
+      cmd->args[0].s ==
+        CommandConstants::PARAM_NAME_POWERED_COMPONENT_PMCS_AND_SIGNAL_LIGHTS) {
+    ff_hw_msgs::SetEnabled enable_srv;
+    enable_srv.request.enabled = on;
+
+    if (cmd->args[0].s ==
                 CommandConstants::PARAM_NAME_POWERED_COMPONENT_LASER_POINTER) {
-    // Check to make sure service is valid and running
-    if (!laser_enable_client_.exists()) {
-      err_msg = "Laser enable service isn't running! Laser node may have died";
-      completed_status = ff_msgs::AckCompletedStatus::EXEC_FAILED;
-      NODELET_ERROR("%s", err_msg.c_str());
-      if (!plan) {
-        PublishCmdAck(cmd->cmd_id, completed_status, err_msg);
+      // Check to make sure the laser service is valid and running
+      if (!CheckServiceExists(laser_enable_client_,
+                              "Laser",
+                              cmd->cmd_id,
+                              err_msg,
+                              completed_status)) {
+        return false;
       }
-      return false;
+      laser_enable_client_.call(enable_srv);
+    } else {  // PMCS
+      // Check to make sure the pmc service is valid and running
+      if (!CheckServiceExists(pmc_enable_client_,
+                              "PMC",
+                              cmd->cmd_id,
+                              err_msg,
+                              completed_status)) {
+        return false;
+      }
+      pmc_enable_client_.call(enable_srv);
     }
 
-    ff_hw_msgs::SetEnabled enable_srv;
-    enable_srv.request.enabled = true;
-    laser_enable_client_.call(enable_srv);
-    // Check to see if the laser was succesfully enabled
+    // Check to see if the service was successfully enabled/disabled
     if (!enable_srv.response.success) {
       err_msg = enable_srv.response.status_message;
       completed_status = ff_msgs::AckCompletedStatus::EXEC_FAILED;
@@ -1566,16 +1582,59 @@ bool Executive::PowerOnItem(ff_msgs::CommandStampedPtr const& cmd,
       if (!plan) {
         PublishCmdAck(cmd->cmd_id, completed_status, err_msg);
       }
+    }
+  } else {  // Item is probably a payload
+    ff_hw_msgs::ConfigurePayloadPower config_srv;
+    config_srv.request.top_front = config_srv.request.PERSIST;
+    config_srv.request.bottom_front = config_srv.request.PERSIST;
+    config_srv.request.top_aft = config_srv.request.PERSIST;
+    config_srv.request.bottom_aft = config_srv.request.PERSIST;
+
+    uint8_t power;
+    if (on) {
+      power = config_srv.request.ON;
+    } else {
+      power = config_srv.request.OFF;
+    }
+
+    if (cmd->args[0].s ==
+              CommandConstants::PARAM_NAME_POWERED_COMPONENT_PAYLOAD_TOP_AFT) {
+      config_srv.request.top_aft = power;
+    } else if (cmd->args[0].s ==
+            CommandConstants::PARAM_NAME_POWERED_COMPONENT_PAYLOAD_BOTTOM_AFT) {
+      config_srv.request.bottom_aft = power;
+    } else if (cmd->args[0].s ==
+          CommandConstants::PARAM_NAME_POWERED_COMPONENT_PAYLOAD_BOTTOM_FRONT) {
+      config_srv.request.bottom_front = power;
+    } else {  // Item wasn't recognized
+      err_msg = "Item " + cmd->args[0].s + " not recognized in power item.";
+      completed_status = ff_msgs::AckCompletedStatus::EXEC_FAILED;
+      NODELET_ERROR("%s", err_msg.c_str());
+      if (!plan) {
+        PublishCmdAck(cmd->cmd_id, completed_status, err_msg);
+      }
       return false;
     }
-  } else {
-    err_msg = "Item " + cmd->args[0].s + "not recognized.";
-    completed_status = ff_msgs::AckCompletedStatus::EXEC_FAILED;
-    NODELET_ERROR("%s", err_msg.c_str());
-    if (!plan) {
-      PublishCmdAck(cmd->cmd_id, completed_status, err_msg);
+
+    if (!CheckServiceExists(payload_power_client_,
+                            "Power payload",
+                            cmd->cmd_id,
+                            err_msg,
+                            completed_status)) {
+      return false;
     }
-    return false;
+
+    payload_power_client_.call(config_srv);
+    // Check to see if the payload was successfully enabled/disabled
+    if (!config_srv.response.success) {
+      err_msg = config_srv.response.status;
+      completed_status = ff_msgs::AckCompletedStatus::EXEC_FAILED;
+      NODELET_ERROR("%s", err_msg.c_str());
+      if (!plan) {
+        PublishCmdAck(cmd->cmd_id, completed_status, err_msg);
+      }
+      return false;
+    }
   }
 
   if (!plan) {
@@ -1584,62 +1643,20 @@ bool Executive::PowerOnItem(ff_msgs::CommandStampedPtr const& cmd,
   return true;
 }
 
-// TODO(Katie) Need to add all the other items we can power off
-bool Executive::PowerOffItem(ff_msgs::CommandStampedPtr const& cmd,
-                             std::string& err_msg,
-                             uint8_t& completed_status,
-                             bool plan) {
-  // Check to make sure command is formatted as expected
-  if (cmd->args.size() != 1 ||
-      cmd->args[0].data_type != ff_msgs::CommandArg::DATA_TYPE_STRING) {
-    err_msg = "Malformed arguments for power off item command!";
-    completed_status = ff_msgs::AckCompletedStatus::BAD_SYNTAX;
-    NODELET_ERROR("%s", err_msg.c_str());
-    if (!plan) {
-      PublishCmdAck(cmd->cmd_id, completed_status, err_msg);
-    }
-    return false;
-  }
-
-  NODELET_WARN("Item %s is being powered off!", cmd->args[0].s.c_str());
-
-  if (cmd->args[0].s ==
-                CommandConstants::PARAM_NAME_POWERED_COMPONENT_LASER_POINTER) {
-    // Check to make sure the laser enable service is valid
-    if (!laser_enable_client_.exists()) {
-      err_msg = "Laser enable service isn't running! Laser node may have died!";
-      completed_status = ff_msgs::AckCompletedStatus::EXEC_FAILED;
-      NODELET_ERROR("%s", err_msg.c_str());
-      if (!plan) {
-        PublishCmdAck(cmd->cmd_id, completed_status, err_msg);
-      }
-      return false;
-    }
-    ff_hw_msgs::SetEnabled disable_srv;
-    disable_srv.request.enabled = false;
-    laser_enable_client_.call(disable_srv);
-    // Check to see if the laser was succesfully disabled
-    if (!disable_srv.response.success) {
-      err_msg = disable_srv.response.status_message;
-      completed_status = ff_msgs::AckCompletedStatus::EXEC_FAILED;
-      NODELET_ERROR("%s", err_msg.c_str());
-      if (!plan) {
-        PublishCmdAck(cmd->cmd_id, completed_status, err_msg);
-      }
-      return false;
-    }
-  } else {
-    err_msg = "Item " + cmd->args[0].s + "not recognized.";
+bool Executive::CheckServiceExists(ros::ServiceClient& serviceIn,
+                                   std::string const& serviceName,
+                                   std::string const& cmd_id,
+                                   std::string& err_msg,
+                                   uint8_t& completed_status,
+                                   bool plan) {
+  if (!serviceIn.exists()) {
+    err_msg = serviceName + " enable service isn't running! Node may have died";
     completed_status = ff_msgs::AckCompletedStatus::EXEC_FAILED;
     NODELET_ERROR("%s", err_msg.c_str());
     if (!plan) {
-      PublishCmdAck(cmd->cmd_id, completed_status, err_msg);
+      PublishCmdAck(cmd_id, completed_status, err_msg);
     }
     return false;
-  }
-
-  if (!plan) {
-    PublishCmdAck(cmd->cmd_id);
   }
   return true;
 }
@@ -2143,6 +2160,12 @@ void Executive::Initialize(ros::NodeHandle *nh) {
   laser_enable_client_ = nh_.serviceClient<ff_hw_msgs::SetEnabled>(
                                                 SERVICE_HARDWARE_LASER_ENABLE);
 
+  payload_power_client_ = nh_.serviceClient<ff_hw_msgs::ConfigurePayloadPower>(
+                                      SERVICE_HARDWARE_EPS_CONF_PAYLOAD_POWER);
+
+  pmc_enable_client_ = nh_.serviceClient<ff_hw_msgs::SetEnabled>(
+                                              SERVICE_HARDWARE_EPS_ENABLE_PMCS);
+
   reset_ekf_client_ = nh_.serviceClient<std_srvs::Empty>(SERVICE_GNC_EKF_RESET);
 
   front_flashlight_client_ = nh_.serviceClient<ff_hw_msgs::SetFlashlight>(
@@ -2300,7 +2323,7 @@ bool Executive::ReadParams() {
   // get planner
   if (!config_params_.GetStr("planner", &agent_state_.planner)) {
     NODELET_WARN("System monitor planner not specified.");
-    agent_state_.planner = "QuarticPolynomial";
+    agent_state_.planner = "QuadraticProgram";
   }
 
   if (!config_params_.GetPosReal("sys_monitor_heartbeat_timeout",

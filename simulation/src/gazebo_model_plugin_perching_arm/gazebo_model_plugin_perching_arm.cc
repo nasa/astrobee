@@ -27,7 +27,6 @@
 
 // Specific arm services
 #include <ff_hw_msgs/SetJointMaxVelocity.h>
-#include <ff_hw_msgs/CalibrateGripper.h>
 
 // STL includes
 #include <string>
@@ -60,14 +59,13 @@ class GazeboModelPluginPerchingArm : public FreeFlyerModelPlugin {
   // Constructor
   GazeboModelPluginPerchingArm() :
     FreeFlyerModelPlugin("perching_arm", "", true),
-    rate_(10.5), bay_(""),
+    rate_(10.0), bay_(""),
     pid_prox_p_(6.25, 0.0, 0.0),
     pid_dist_p_(6.25, 0.0, 0.0),
     pid_gl_prox_p_(6.25, 0.0, 0.0),
     pid_gl_dist_p_(6.25, 0.0, 0.0),
     pid_gr_prox_p_(6.25, 0.0, 0.0),
-    pid_gr_dist_p_(6.25, 0.0, 0.0),
-    calibrated_(false) {}
+    pid_gr_dist_p_(6.25, 0.0, 0.0) {}
 
   // Destructor
   ~GazeboModelPluginPerchingArm() {}
@@ -84,7 +82,6 @@ class GazeboModelPluginPerchingArm : public FreeFlyerModelPlugin {
   static constexpr double DISTAL_MAX_PAN        = 1.57079;
   static constexpr double GRIPPER_OPEN          = 100.0;
   static constexpr double GRIPPER_CLOSED        = 0.0;
-  static constexpr double GRIPPER_UNCALIBRATED  = -100.0;
   static constexpr double RPM_TO_RADS_PER_S     = 0.1047198;
 
   // Called when the plugin is loaded into the simulator
@@ -171,20 +168,13 @@ class GazeboModelPluginPerchingArm : public FreeFlyerModelPlugin {
     srv_t_ = nh->advertiseService(SERVICE_HARDWARE_PERCHING_ARM_PROX_VEL,
       &GazeboModelPluginPerchingArm::SetProxVelCallback, this);
 
-    // Calibrate the arm
-    srv_c_ = nh->advertiseService(SERVICE_HARDWARE_PERCHING_ARM_CALIBRATE,
-      &GazeboModelPluginPerchingArm::CalibrateGripperCallback, this);
-
-    // Called before each iteration of simulated world update
-    next_tick_ = GetWorld()->GetSimTime();
-    update_ = event::Events::ConnectWorldUpdateBegin(
-      std::bind(&GazeboModelPluginPerchingArm::UpdateCallback, this));
+    // Periodic timer to send feedback to executive to avoid timeout
+    timer_ = nh->createTimer(ros::Rate(rate_),
+      &GazeboModelPluginPerchingArm::TimerCallback, this, false, true);
   }
 
   // Called on simulation reset
-  void Reset() {
-    next_tick_ = GetWorld()->GetSimTime();
-  }
+  void Reset() {}
 
   // GET THE VIRTUAL GRIPPER JOINT STATE
 
@@ -229,15 +219,6 @@ class GazeboModelPluginPerchingArm : public FreeFlyerModelPlugin {
 
   // Control 4 PIDs on the gripper proximal and distal joints.
   void SetGripperGoal(double position) {
-    // Special case: a negative goal is the equivalent of a gripper
-    // calibrate action, which allows the generic arm HL driver to
-    // operate above any instance of a LL driver node.
-    if (position < 0) {
-      ff_hw_msgs::CalibrateGripper:: Request req;
-      ff_hw_msgs::CalibrateGripper:: Response res;
-      CalibrateGripperCallback(req, res);
-      return;
-    }
     // Throw out junk values not in range
     if (position < GRIPPER_CLOSED || position > GRIPPER_OPEN)
       return;
@@ -281,8 +262,6 @@ class GazeboModelPluginPerchingArm : public FreeFlyerModelPlugin {
       // abuse the sensor_msgs::JointState slightly by allowing the gripper
       // position to be specified alongside joint velocities. Apologies.
       if (msg.name[i] == bay_+"_gripper_joint") {
-        if (!calibrated_ && msg.position[i] >= 0.0)
-          NODELET_WARN("Gripper: you must calibrate before using the gripper");
         if (msg.position.size() > i)
           SetGripperGoal(msg.position[i]);
         else
@@ -302,11 +281,7 @@ class GazeboModelPluginPerchingArm : public FreeFlyerModelPlugin {
   }
 
   // Called on every discrete time tick in the simulated world
-  void UpdateCallback() {
-    // Throttle callback rate
-    if (GetWorld()->GetSimTime() < next_tick_)
-      return;
-    next_tick_ += 1.0 / rate_;
+  void TimerCallback(ros::TimerEvent const& event) {
     // Package all joint states, inclusind the left and right proximal
     // and distal joints of the gripper (for visualization reasons)
     msg_.header.stamp = ros::Time::now();
@@ -319,10 +294,7 @@ class GazeboModelPluginPerchingArm : public FreeFlyerModelPlugin {
     }
     // Set the virtual gripper state manually as the last element
     msg_.name[i] = bay_+"_gripper_joint";
-    if (!calibrated_)
-      msg_.position[i] = GRIPPER_UNCALIBRATED;
-    else
-      msg_.position[i] = gripper_;
+    msg_.position[i] = gripper_;
     msg_.velocity[i] = 0;
     msg_.effort[i] = 0;
     // Publish the joint state
@@ -353,30 +325,14 @@ class GazeboModelPluginPerchingArm : public FreeFlyerModelPlugin {
     return true;
   }
 
-  // Calibrate the gripper
-  bool CalibrateGripperCallback(ff_hw_msgs::CalibrateGripper::Request  &req,
-                                ff_hw_msgs::CalibrateGripper::Response &res) {
-    // Set the gripper to closed
-    SetGripperGoal(0.0);
-    // We wil now accept gripper joint messages
-    calibrated_ = true;
-    gripper_ = 0.0;
-    // Success
-    res.success = true;
-    res.status_message = "Success";
-    return true;
-  }
-
  private:
   double rate_;                   // Rate of joint state update
   std::string bay_;               // Prefix to avoid name collisions
-  common::Time next_tick_;        // Next update tick
+  ros::Timer timer_;              // Timer for sending updates
   ros::Publisher pub_;            // Joint state publisher
   ros::Subscriber sub_;           // Joint goal subscriber
   ros::ServiceServer srv_p_;      // Set max pan velocity
   ros::ServiceServer srv_t_;      // Set max tilt velcoity
-  ros::ServiceServer srv_c_;      // Calibrate gripper
-  event::ConnectionPtr update_;   // Callback for world updates
   physics::Joint_V joints_;       // List of joints in system
   sensor_msgs::JointState msg_;   // Joint state message
   common::PID pid_prox_p_;        // PID : arm proximal position
@@ -385,7 +341,6 @@ class GazeboModelPluginPerchingArm : public FreeFlyerModelPlugin {
   common::PID pid_gl_dist_p_;     // PID : gripper left distal position
   common::PID pid_gr_prox_p_;     // PID : gripper right proximal position
   common::PID pid_gr_dist_p_;     // PID : gripper right distal position
-  bool calibrated_;               // Is the gripper calibrated?
   double gripper_;                // Gripper value
 };
 

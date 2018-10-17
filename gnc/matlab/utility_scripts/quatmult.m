@@ -26,6 +26,8 @@
 function qOut = quatmult(p, q)
 
 qOut = [q(:,4) .* p(:,1:3) + p(:,4).*q(:,1:3) + cross(p(:,1:3), q(:,1:3), 2), ...
-            p(:,4).*q(:,4) - dot(p(:,1:3), q(:,1:3),2)];
+    p(:,4).*q(:,4) - dot(p(:,1:3), q(:,1:3),2)];
+
+qOut = qOut ./ repmat(rssrow(qOut), 1, 4); % Normalize
 
 end

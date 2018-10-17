@@ -31,6 +31,12 @@ from std_srvs.srv import Empty
 from geometry_msgs.msg import Point, Pose, Quaternion, Twist, Wrench
 import tf.transformations as tft
 
+def excepthook(*args):
+    print >> STDERR, 'caught'
+    print >> STDERR, args
+
+sys.excepthook = excepthook
+
 model_database_template = """<sdf version="1.4">
   <world name="default">
     <include>
@@ -251,7 +257,7 @@ class SpawnModel():
         initial_pose.orientation.x = self.initial_q[0]
         initial_pose.orientation.y = self.initial_q[1]
         initial_pose.orientation.z = self.initial_q[2]
-        initial_pose.orientation.w = self.initial_q[2]
+        initial_pose.orientation.w = self.initial_q[3]
 
         # spawn model
         if self.urdf_format:

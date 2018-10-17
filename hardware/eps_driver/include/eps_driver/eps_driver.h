@@ -1,14 +1,14 @@
 /* Copyright (c) 2017, United States Government, as represented by the
  * Administrator of the National Aeronautics and Space Administration.
- * 
+ *
  * All rights reserved.
- * 
+ *
  * The Astrobee platform is licensed under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -54,25 +54,25 @@ class EPS {
     CHANNEL_ENET_PWR_EN,
     CHANNEL_FAN_EN,
     CHANNEL_SPEAKER_EN,
-    CHANNEL_PAYLOAD_EN1,
-    CHANNEL_PAYLOAD_EN2,
-    CHANNEL_PAYLOAD_EN3,
-    CHANNEL_PAYLOAD_EN4,
+    CHANNEL_PAYLOAD_EN_TOP_AFT,
+    CHANNEL_PAYLOAD_EN_BOT_AFT,
+    CHANNEL_PAYLOAD_EN_BOT_FRONT,
+    CHANNEL_PAYLOAD_EN_TOP_FRONT,
     CHANNEL_MOTOR_EN1,
     CHANNEL_MOTOR_EN2,
     CHANNEL_RESERVED0,
     CHANNEL_RESERVED1,
-    CHANNEL_FWD_LED_4,
-    CHANNEL_FWD_LED_5,
-    CHANNEL_FWD_LED_6,
-    CHANNEL_FWD_LED_7,
-    CHANNEL_FWD_LED_8,
-    CHANNEL_FWD_LED_9,
+    CHANNEL_STATUSA2_LED,
+    CHANNEL_STATUSA1_LED,
+    CHANNEL_STATUSB2_LED,
+    CHANNEL_STATUSB1_LED,
+    CHANNEL_STATUSC2_LED,
+    CHANNEL_STATUSC1_LED,
     CHANNEL_RESERVED2,
     CHANNEL_RESERVED3,
-    CHANNEL_FWD_LED_1,
-    CHANNEL_FWD_LED_2,
-    CHANNEL_FWD_LED_3,
+    CHANNEL_VIDEO_LED,
+    CHANNEL_AUDIO_LED,
+    CHANNEL_LIVE_LED,
     CHANNEL_RESERVED4,
     CHANNEL_RESERVED5,
     CHANNEL_RESERVED6,
@@ -208,15 +208,15 @@ class EPS {
 
   // LEDs
   enum Led : uint32_t {
-    LED_S1A,
-    LED_S1B,
-    LED_S1C,
-    LED_S2A,
-    LED_S2B,
-    LED_S2C,
-    LED_STR,
-    LED_CAM,
-    LED_MIC,
+    LED_SA1,
+    LED_SA2,
+    LED_SB1,
+    LED_SB2,
+    LED_SC1,
+    LED_SC2,
+    LED_VIDEO,
+    LED_AUDIO,
+    LED_LIVE,
     NUM_LEDS
   };
 

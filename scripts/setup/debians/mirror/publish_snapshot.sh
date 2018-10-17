@@ -28,7 +28,7 @@ $APTLY publish snapshot -distribution="xenial" $1
 
 PUBLISH_DIR=`$APTLY config show | grep "rootDir" | sed -r 's|^[^:]+: "([^"]+)",$|\1|'`/public
 
-chmod g+w -R $PUBLISH_DIR
+chmod g+w -R --silent $PUBLISH_DIR
 
 rsync -ah --no-t --delete $PUBLISH_DIR/dists/ astrobee.ndc.nasa.gov:/home/irg/software/dists
 rsync -ah --no-t --delete $PUBLISH_DIR/pool/ astrobee.ndc.nasa.gov:/home/irg/software/pool

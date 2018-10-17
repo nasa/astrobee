@@ -1,0 +1,230 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<types xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="/opt/rti/ndds.5.1.0/scripts/../resource/rtiddsgen/schema/rti_dds_topic_types.xsd">
+<module name="rapid">
+<typedef name="OctetSequence1K" sequenceMaxLength="1024" type="octet"/>
+<typedef name="OctetSequence2K" sequenceMaxLength="2048" type="octet"/>
+<typedef name="OctetSequence4K" sequenceMaxLength="4096" type="octet"/>
+<typedef name="OctetSequence16K" sequenceMaxLength="16384" type="octet"/>
+<typedef name="OctetSequence32K" sequenceMaxLength="32768" type="octet"/>
+<typedef name="OctetSequence64K" sequenceMaxLength="65536" type="octet"/>
+<typedef name="OctetSequence128K" sequenceMaxLength="131072" type="octet"/>
+<typedef name="ShortSequence32" sequenceMaxLength="32" type="short"/>
+<typedef name="ShortSequence64" sequenceMaxLength="64" type="short"/>
+<typedef name="ShortSequence128" sequenceMaxLength="128" type="short"/>
+<typedef name="ShortSequence1K" sequenceMaxLength="1024" type="short"/>
+<typedef name="ShortSequence2K" sequenceMaxLength="2048" type="short"/>
+<typedef name="ShortSequence4K" sequenceMaxLength="4096" type="short"/>
+<typedef name="ShortSequence32K" sequenceMaxLength="32768" type="short"/>
+<typedef name="ShortSequence64K" sequenceMaxLength="65536" type="short"/>
+<typedef name="ShortSequence96K" sequenceMaxLength="98304" type="short"/>
+<typedef name="ShortSequence128K" sequenceMaxLength="131072" type="short"/>
+<typedef name="LongSequence32" sequenceMaxLength="32" type="long"/>
+<typedef name="LongSequence64" sequenceMaxLength="64" type="long"/>
+<typedef name="LongSequence128" sequenceMaxLength="128" type="long"/>
+<typedef name="LongSequence256" sequenceMaxLength="256" type="long"/>
+<typedef name="LongSequence512" sequenceMaxLength="512" type="long"/>
+<typedef name="LongSequence1K" sequenceMaxLength="1024" type="long"/>
+<typedef name="LongSequence2K" sequenceMaxLength="2048" type="long"/>
+<typedef name="LongLongSequence32" sequenceMaxLength="32" type="longLong"/>
+<typedef name="LongLongSequence64" sequenceMaxLength="64" type="longLong"/>
+<typedef name="LongLongSequence128" sequenceMaxLength="128" type="longLong"/>
+<typedef name="FloatSequence32" sequenceMaxLength="32" type="float"/>
+<typedef name="FloatSequence64" sequenceMaxLength="64" type="float"/>
+<typedef name="FloatSequence128" sequenceMaxLength="128" type="float"/>
+<typedef name="FloatSequence256" sequenceMaxLength="256" type="float"/>
+<typedef name="FloatSequence512" sequenceMaxLength="512" type="float"/>
+<typedef name="FloatSequence1K" sequenceMaxLength="1024" type="float"/>
+<typedef name="DoubleSequence32" sequenceMaxLength="32" type="double"/>
+<typedef name="DoubleSequence64" sequenceMaxLength="64" type="double"/>
+<typedef name="DoubleSequence128" sequenceMaxLength="128" type="double"/>
+<typedef name="DoubleSequence256" sequenceMaxLength="256" type="double"/>
+<typedef name="DoubleSequence512" sequenceMaxLength="512" type="double"/>
+<typedef name="DoubleSequence1K" sequenceMaxLength="1024" type="double"/>
+<typedef name="String16" stringMaxLength="16" type="string"/>
+<typedef name="String32" stringMaxLength="32" type="string"/>
+<typedef name="String64" stringMaxLength="64" type="string"/>
+<typedef name="String128" stringMaxLength="128" type="string"/>
+<typedef name="String256" stringMaxLength="256" type="string"/>
+<typedef name="String1K" stringMaxLength="1024" type="string"/>
+<typedef name="String2K" stringMaxLength="2048" type="string"/>
+<typedef name="String16Sequence16" sequenceMaxLength="16" type="nonBasic" nonBasicTypeName="rapid::String16"/>
+<typedef name="String32Sequence16" sequenceMaxLength="16" type="nonBasic" nonBasicTypeName="rapid::String32"/>
+<typedef name="String128Sequence16" sequenceMaxLength="16" type="nonBasic" nonBasicTypeName="rapid::String128"/>
+<typedef name="String16Sequence32" sequenceMaxLength="32" type="nonBasic" nonBasicTypeName="rapid::String16"/>
+<typedef name="String32Sequence32" sequenceMaxLength="32" type="nonBasic" nonBasicTypeName="rapid::String32"/>
+<typedef name="String128Sequence32" sequenceMaxLength="32" type="nonBasic" nonBasicTypeName="rapid::String128"/>
+<typedef name="String128Sequence64" sequenceMaxLength="64" type="nonBasic" nonBasicTypeName="rapid::String128"/>
+<typedef name="String256Sequence64" sequenceMaxLength="64" type="nonBasic" nonBasicTypeName="rapid::String256"/>
+<typedef name="String32Sequence128" sequenceMaxLength="128" type="nonBasic" nonBasicTypeName="rapid::String32"/>
+<typedef name="Vec2d" type="double" arrayDimensions="2"/>
+<typedef name="Vec3d" type="double" arrayDimensions="3"/>
+<typedef name="Vec2f" type="float" arrayDimensions="2"/>
+<typedef name="Vec3f" type="float" arrayDimensions="3"/>
+<directive kind="copyDeclaration">/** A 3x3 rotation matrix in order: R11, R12, R13, R21, R22, R23, R31, R32, R33. */</directive>
+<typedef name="Mat33f" type="float" arrayDimensions="9"/>
+<directive kind="copyDeclaration">/** RGBA color */</directive>
+<typedef name="Color4f" type="float" arrayDimensions="4"/>
+<directive kind="copyDeclaration">/** RGB color */</directive>
+<typedef name="Color3f" type="float" arrayDimensions="3"/>
+<directive kind="copyDeclaration">/**</directive>
+<directive kind="copyDeclaration"> * RotationEncoding specifies alternate rotation encodings for a Mat33f.</directive>
+<directive kind="copyDeclaration"> * The default interpretation of Mat33f is a 3x3 rotation matrix, and that is</directive>
+<directive kind="copyDeclaration"> * the preferred representation for rotations in RAPID. However, alternate</directive>
+<directive kind="copyDeclaration"> * encodings are available for simplicity, compactness, or to indicate</directive>
+<directive kind="copyDeclaration"> * whether the rotation matrix is invalid (i.e. RAPID_ROT_NONE).</directive>
+<directive kind="copyDeclaration"> * &lt;ul&gt;</directive>
+<directive kind="copyDeclaration"> *   &lt;li&gt;RAPID_ROT_NONE: matrix is invalid or uninitialized</directive>
+<directive kind="copyDeclaration"> *   &lt;li&gt;RAPID_ROT_M33: A 3x3 rotation matrix in order: R11, R12, R13, R21, R22, R23, R31, R32, R33</directive>
+<directive kind="copyDeclaration"> *   &lt;li&gt;RAPID_ROT_QUAT: quaternion, first 4 elements of Mat33 are X, Y, Z, W</directive>
+<directive kind="copyDeclaration"> *   &lt;li&gt;RAPID_ROT_XYZ: euler angles, first 3 elements of Mat33 are a rotation around X in radians, followed by rotation around Y, followed by rotation around Z</directive>
+<directive kind="copyDeclaration"> *   &lt;li&gt;RAPID_ROT_ZYX: euler angles, first 3 elements of Mat33 are a rotation around Z in radians, followed by rotation around Y, followed by rotation around X</directive>
+<directive kind="copyDeclaration"> *   &lt;li&gt;RAPID_ROT_ZYZ: euler angles, first 3 elements of Mat33 are a rotation around Z in radians, followed by rotation around Y, followed by rotation around Z</directive>
+<directive kind="copyDeclaration"> *   &lt;li&gt;RAPID_ROT_VEL: angular velocity, first 3 elements of Mat33 is the instantaneous axis of rotation</directive>
+<directive kind="copyDeclaration"> * &lt;/ul&gt;</directive>
+<directive kind="copyDeclaration"> */</directive>
+<enum name="RotationEncoding">
+<enumerator name="RAPID_ROT_NONE"/>
+<enumerator name="RAPID_ROT_M33"/>
+<enumerator name="RAPID_ROT_QUAT"/>
+<enumerator name="RAPID_ROT_XYZ"/>
+<enumerator name="RAPID_ROT_ZYX"/>
+<enumerator name="RAPID_ROT_ZYZ"/>
+<enumerator name="RAPID_ROT_VEL"/>
+</enum>
+<directive kind="copyDeclaration">/**</directive>
+<directive kind="copyDeclaration"> * DataType is used in KeyTypeValue triples to describe the type of data contained in the string value.</directive>
+<directive kind="copyDeclaration"> * &lt;ul&gt;</directive>
+<directive kind="copyDeclaration"> *   &lt;li&gt;RAPID_BOOL:</directive>
+<directive kind="copyDeclaration"> *   &lt;li&gt;RAPID_DOUBLE:</directive>
+<directive kind="copyDeclaration"> *   &lt;li&gt;RAPID_FLOAT:</directive>
+<directive kind="copyDeclaration"> *   &lt;li&gt;RAPID_INT:</directive>
+<directive kind="copyDeclaration"> *   &lt;li&gt;RAPID_LONGLONG:</directive>
+<directive kind="copyDeclaration"> *   &lt;li&gt;RAPID_STRING:</directive>
+<directive kind="copyDeclaration"> *   &lt;li&gt;RAPID_VEC3d:</directive>
+<directive kind="copyDeclaration"> *   &lt;li&gt;RAPID_MAT33f:</directive>
+<directive kind="copyDeclaration"> * &lt;/ul&gt;</directive>
+<directive kind="copyDeclaration"> */</directive>
+<enum name="DataType">
+<enumerator name="RAPID_BOOL"/>
+<enumerator name="RAPID_DOUBLE"/>
+<enumerator name="RAPID_FLOAT"/>
+<enumerator name="RAPID_INT"/>
+<enumerator name="RAPID_LONGLONG"/>
+<enumerator name="RAPID_STRING"/>
+<enumerator name="RAPID_VEC3d"/>
+<enumerator name="RAPID_MAT33f"/>
+</enum>
+<directive kind="copyDeclaration">/** Arguments for commands will be specified with these types. */</directive>
+<union name="ParameterUnion">
+<discriminator type="nonBasic" nonBasicTypeName="rapid::DataType"/>
+<case>
+<caseDiscriminator value="(rapid::RAPID_BOOL)"/>
+<member name="b" type="boolean"/>
+</case>
+<case>
+<caseDiscriminator value="(rapid::RAPID_DOUBLE)"/>
+<member name="d" type="double"/>
+</case>
+<case>
+<caseDiscriminator value="(rapid::RAPID_FLOAT)"/>
+<member name="f" type="float"/>
+</case>
+<case>
+<caseDiscriminator value="(rapid::RAPID_INT)"/>
+<member name="i" type="long"/>
+</case>
+<case>
+<caseDiscriminator value="(rapid::RAPID_LONGLONG)"/>
+<member name="ll" type="longLong"/>
+</case>
+<case>
+<caseDiscriminator value="(rapid::RAPID_STRING)"/>
+<member name="s" type="nonBasic" nonBasicTypeName="rapid::String128"/>
+</case>
+<case>
+<caseDiscriminator value="(rapid::RAPID_VEC3d)"/>
+<member name="vec3d" type="nonBasic" nonBasicTypeName="rapid::Vec3d"/>
+</case>
+<case>
+<caseDiscriminator value="(rapid::RAPID_MAT33f)"/>
+<member name="mat33f" type="nonBasic" nonBasicTypeName="rapid::Mat33f"/>
+</case>
+</union>
+<typedef name="ParameterSequence16" sequenceMaxLength="16" type="nonBasic" nonBasicTypeName="rapid::ParameterUnion"/>
+<typedef name="ParameterSequence64" sequenceMaxLength="64" type="nonBasic" nonBasicTypeName="rapid::ParameterUnion"/>
+<directive kind="copyDeclaration">/** KeyTypePair defines a key with data type only. */</directive>
+<struct name="KeyTypePair">
+<member name="key" type="nonBasic" nonBasicTypeName="rapid::String32"/>
+<member name="type" type="nonBasic" nonBasicTypeName="rapid::DataType"/>
+</struct>
+<typedef name="KeyTypeSequence4" sequenceMaxLength="4" type="nonBasic" nonBasicTypeName="rapid::KeyTypePair"/>
+<typedef name="KeyTypeSequence16" sequenceMaxLength="16" type="nonBasic" nonBasicTypeName="rapid::KeyTypePair"/>
+<typedef name="KeyTypeSequence64" sequenceMaxLength="64" type="nonBasic" nonBasicTypeName="rapid::KeyTypePair"/>
+<directive kind="copyDeclaration">/** KeyTypeValueTriple defines a key, its data type and its value. */</directive>
+<struct name="KeyTypeValueTriple">
+<member name="key" type="nonBasic" nonBasicTypeName="rapid::String32"/>
+<directive kind="copy">/** Place-holder to keep binary layout of the struct backward compatible. Data type should be set in ParameterUnion */</directive>
+<member name="padding" type="long"/>
+<member name="value" type="nonBasic" nonBasicTypeName="rapid::ParameterUnion"/>
+</struct>
+<directive kind="copyDeclaration">/** Hash table interchange data structure with type information. */</directive>
+<typedef name="KeyTypeValueSequence8" sequenceMaxLength="8" type="nonBasic" nonBasicTypeName="rapid::KeyTypeValueTriple"/>
+<typedef name="KeyTypeValueSequence16" sequenceMaxLength="16" type="nonBasic" nonBasicTypeName="rapid::KeyTypeValueTriple"/>
+<typedef name="KeyTypeValueSequence32" sequenceMaxLength="32" type="nonBasic" nonBasicTypeName="rapid::KeyTypeValueTriple"/>
+<typedef name="KeyTypeValueSequence64" sequenceMaxLength="64" type="nonBasic" nonBasicTypeName="rapid::KeyTypeValueTriple"/>
+<typedef name="KeyTypeValueSequence128" sequenceMaxLength="128" type="nonBasic" nonBasicTypeName="rapid::KeyTypeValueTriple"/>
+<typedef name="ValueSequence8" sequenceMaxLength="8" type="nonBasic" nonBasicTypeName="rapid::ParameterUnion"/>
+<typedef name="ValueSequence16" sequenceMaxLength="16" type="nonBasic" nonBasicTypeName="rapid::ParameterUnion"/>
+<typedef name="ValueSequence32" sequenceMaxLength="32" type="nonBasic" nonBasicTypeName="rapid::ParameterUnion"/>
+<typedef name="ValueSequence64" sequenceMaxLength="64" type="nonBasic" nonBasicTypeName="rapid::ParameterUnion"/>
+<typedef name="ValueSequence128" sequenceMaxLength="128" type="nonBasic" nonBasicTypeName="rapid::ParameterUnion"/>
+<directive kind="copyDeclaration">/** Transform3D defines an x,y,z cartesian location with a rotation. */</directive>
+<struct name="Transform3D">
+<member name="xyz" type="nonBasic" nonBasicTypeName="rapid::Vec3d"/>
+<directive kind="copyDeclaration">/** By default, a 3x3 rotation matrix in order: R11, R12, R13, R21, R22, R23, R31, R32, R33.</directive>
+<directive kind="copyDeclaration"> * However, some messages may supply a RotationEncoding to specify alternate rotation representations.</directive>
+<directive kind="copyDeclaration"> * @see RotationEncoding</directive>
+<directive kind="copyDeclaration"> */</directive>
+<member name="rot" type="nonBasic" nonBasicTypeName="rapid::Mat33f"/>
+</struct>
+<directive kind="copyDeclaration">/** Sequence of floats with an identifier. */</directive>
+<struct name="NamedFloatSequence">
+<member name="name" type="nonBasic" nonBasicTypeName="rapid::String16"/>
+<member name="values" type="nonBasic" nonBasicTypeName="rapid::FloatSequence64"/>
+</struct>
+<typedef name="NFSeqSequence16" sequenceMaxLength="16" type="nonBasic" nonBasicTypeName="rapid::NamedFloatSequence"/>
+<typedef name="NFSeqSequence32" sequenceMaxLength="32" type="nonBasic" nonBasicTypeName="rapid::NamedFloatSequence"/>
+<directive kind="copyDeclaration">/** Two foating point numbers defining a range with minimum and maximum values. */</directive>
+<struct name="FloatRange">
+<directive kind="copyDeclaration">/** Lower bound of the range. */</directive>
+<member name="min" type="float"/>
+<directive kind="copyDeclaration">/** Upper bound of the range. */</directive>
+<member name="max" type="float"/>
+</struct>
+<directive kind="copyDeclaration">/** A min, max range plus current value. */</directive>
+<struct name="FloatRangeValue">
+<member name="min" type="float"/>
+<member name="max" type="float"/>
+<member name="value" type="float"/>
+</struct>
+<directive kind="copyDeclaration">/** A set of options plus the index of the current value. */</directive>
+<struct name="OptionSetValue">
+<member name="index" type="long"/>
+<member name="options" type="nonBasic" nonBasicTypeName="rapid::String32Sequence16"/>
+</struct>
+<directive kind="copyDeclaration">/** A named range value (min,max and current value). */</directive>
+<struct name="NamedFloatRangeValue">
+<member name="name" type="nonBasic" nonBasicTypeName="rapid::String16"/>
+<member name="range" type="nonBasic" nonBasicTypeName="rapid::FloatRangeValue"/>
+</struct>
+<typedef name="NamedFloatRangeValueSequence16" sequenceMaxLength="16" type="nonBasic" nonBasicTypeName="rapid::NamedFloatRangeValue"/>
+<typedef name="NamedFloatRangeValueSequence32" sequenceMaxLength="32" type="nonBasic" nonBasicTypeName="rapid::NamedFloatRangeValue"/>
+<directive kind="copyDeclaration">/** A named option set (sequence of options and current option). */</directive>
+<struct name="NamedOptionSetValue">
+<member name="name" type="nonBasic" nonBasicTypeName="rapid::String16"/>
+<member name="option" type="nonBasic" nonBasicTypeName="rapid::OptionSetValue"/>
+</struct>
+<typedef name="NamedOptionSetValueSequence16" sequenceMaxLength="16" type="nonBasic" nonBasicTypeName="rapid::NamedOptionSetValue"/>
+<typedef name="NamedOptionSetValueSequence32" sequenceMaxLength="32" type="nonBasic" nonBasicTypeName="rapid::NamedOptionSetValue"/>
+</module>
+</types>

@@ -1,12 +1,14 @@
 <sdf version='1.6'>
-  <world name='granite'>
+  <world name='default'>
+
     <physics name='default_physics' default='0' type='ode'>
       <max_step_size>0.016</max_step_size>
       <real_time_factor>1</real_time_factor>
       <real_time_update_rate>62.5</real_time_update_rate>
     </physics>
+
     <scene>
-      <ambient>0.3 0.3 0.3 1</ambient>
+      <ambient>1 1 1 1</ambient>
       <background>0 0 0 1</background>
       <fog>
         <density>0</density>
@@ -14,13 +16,15 @@
       <grid>0</grid>
       <shadows>0</shadows>
     </scene>
+
     <gui fullscreen='0'>
       <camera name='user_camera'>
-        <pose frame=''>0 4.0 -1.0 3.14 0 -1.57</pose>
-        <view_controller>orbit</view_controller>
+        <pose frame=''>-0.726028 4.24051 -1.26602 3.14002 -0.139036 -1.34701</pose>
+        <view_controller>fps</view_controller>
         <projection_type>perspective</projection_type>
       </camera>
     </gui>
+
     <gravity>0 0 9.80665</gravity>
     <magnetic_field>0 0 0</magnetic_field>
     <atmosphere type='adiabatic'/>
@@ -31,235 +35,134 @@
       <elevation>0</elevation>
       <heading_deg>0</heading_deg>
     </spherical_coordinates>
-    <light name='user_point_light_0' type='point'>
-      <pose frame=''>0 1 -1.5 0 -0 0</pose>
+
+    <include>
+      <uri>model://astrobee_granite</uri>
+    </include>
+
+    <include>
+      <uri>model://astrobee_dock</uri>
+      <pose>-0.825 0.288 -0.675 0 0 0</pose>
+    </include>
+
+    <light name='user_point_light_px' type='point'>
+      <pose frame=''>30 0 0 0 -0 0</pose>
       <diffuse>0.5 0.5 0.5 1</diffuse>
       <specular>0.1 0.1 0.1 1</specular>
       <attenuation>
-        <range>20</range>
-        <constant>0.5</constant>
-        <linear>0.05</linear>
+        <range>100</range>
+        <constant>0.1</constant>
+        <linear>0.001</linear>
         <quadratic>0.001</quadratic>
       </attenuation>
       <cast_shadows>0</cast_shadows>
       <direction>0 0 -1</direction>
     </light>
-    <model name='granite_model'>
+    <light name='user_point_light_nx' type='point'>
+      <pose frame=''>-30 0 0 0 -0 0</pose>
+      <diffuse>0.5 0.5 0.5 1</diffuse>
+      <specular>0.1 0.1 0.1 1</specular>
+      <attenuation>
+        <range>100</range>
+        <constant>0.1</constant>
+        <linear>0.001</linear>
+        <quadratic>0.001</quadratic>
+      </attenuation>
+      <cast_shadows>0</cast_shadows>
+      <direction>0 0 -1</direction>
+    </light>
+    <light name='user_point_light_py' type='point'>
+      <pose frame=''>0 30 0 0 -0 0</pose>
+      <diffuse>0.5 0.5 0.5 1</diffuse>
+      <specular>0.1 0.1 0.1 1</specular>
+      <attenuation>
+        <range>100</range>
+        <constant>0.1</constant>
+        <linear>0.001</linear>
+        <quadratic>0.001</quadratic>
+      </attenuation>
+      <cast_shadows>0</cast_shadows>
+      <direction>0 0 -1</direction>
+    </light>
+    <light name='user_point_light_ny' type='point'>
+      <pose frame=''>0 -30 0 0 -0 0</pose>
+      <diffuse>0.5 0.5 0.5 1</diffuse>
+      <specular>0.1 0.1 0.1 1</specular>
+      <attenuation>
+        <range>100</range>
+        <constant>0.1</constant>
+        <linear>0.001</linear>
+        <quadratic>0.001</quadratic>
+      </attenuation>
+      <cast_shadows>0</cast_shadows>
+      <direction>0 0 -1</direction>
+    </light>
+    <light name='user_point_light_pz' type='point'>
+      <pose frame=''>0 0 30 0 -0 0</pose>
+      <diffuse>0.5 0.5 0.5 1</diffuse>
+      <specular>0.1 0.1 0.1 1</specular>
+      <attenuation>
+        <range>100</range>
+        <constant>0.1</constant>
+        <linear>0.001</linear>
+        <quadratic>0.001</quadratic>
+      </attenuation>
+      <cast_shadows>0</cast_shadows>
+      <direction>0 0 -1</direction>
+    </light>
+    <light name='user_point_light_nz' type='point'>
+      <pose frame=''>0 0 -30 0 -0 0</pose>
+      <diffuse>0.5 0.5 0.5 1</diffuse>
+      <specular>0.1 0.1 0.1 1</specular>
+      <attenuation>
+        <range>100</range>
+        <constant>0.1</constant>
+        <linear>0.001</linear>
+        <quadratic>0.001</quadratic>
+      </attenuation>
+      <cast_shadows>0</cast_shadows>
+      <direction>0 0 -1</direction>
+    </light>
+    <model name='walls'>
       <static>1</static>
       <pose frame=''>0 0 0 0 0 0</pose>
-      <link name='body'>
-        <inertial>
-          <mass>0.1</mass>
-          <inertia>
-            <ixx>1</ixx>
-            <ixy>0</ixy>
-            <ixz>0</ixz>
-            <iyy>1</iyy>
-            <iyz>0</iyz>
-            <izz>1</izz>
-          </inertia>
-        </inertial>
-        <visual name='visual_granite_bottom'>
-          <pose>0 0 0.75 0 0 0</pose>
-          <geometry>
+      <link name='walls'>
+        <collision name='collision_east'>
+         <pose frame=''>0 6 -1.5 0 0 0</pose>
+         <geometry>
             <box>
-              <size>1.5 1.5 0.5</size>
+              <size>6 0.2 5</size>
             </box>
-          </geometry>
-          <material>
-            <script>
-              <uri>file://media/materials/scripts/astrobee.material</uri>
-              <name>Astrobee/GraniteTable</name>
-            </script>
-          </material>
-        </visual>
-        <collision name='collision_granite_bottom'>
-          <pose>0 0 0.75 0 0 0</pose>
-          <geometry>
-            <box>
-              <size>1.5 1.5 0.5</size>
-            </box>
-          </geometry>
+            </geometry>
         </collision>
-        <visual name='visual_granite_top'>
-          <pose>0 0 0.25 0 0 0</pose>
-          <geometry>
+        <collision name='collision_west'>
+         <pose frame=''>0 -6 -1.5 0 0 0</pose>
+         <geometry>
             <box>
-              <size>2.0 2.0 0.5</size>
+              <size>6 0.2 5</size>
             </box>
-          </geometry>
-          <material>
-            <script>
-              <uri>file://media/materials/scripts/astrobee.material</uri>
-              <name>Astrobee/GraniteTable</name>
-            </script>
-          </material>
-        </visual>
-        <collision name='collision_granite_top'>
-          <pose>0 0 0.25 0 0 0</pose>
-          <geometry>
-            <box>
-              <size>2.0 2.0 0.5</size>
-            </box>
-          </geometry>
+            </geometry>
         </collision>
-        <visual name='visual_floor'>
-          <pose>0 0 1.0 0 0 0</pose>
-          <geometry>
+        <collision name='collision_north'>
+         <pose frame=''>3 0 -1.5 0 0 0</pose>
+         <geometry>
             <box>
-              <size>20.0 20.0 0.1</size>
+              <size>0.2 12 5</size>
             </box>
-          </geometry>
-          <material>
-            <script>
-              <uri>file://media/materials/scripts/astrobee.material</uri>
-              <name>Astrobee/GraniteFloor</name>
-            </script>
-          </material>
-        </visual>
-        <collision name='collision_floor'>
-          <pose>0 0 1.0 0 0 0</pose>
-          <geometry>
-            <box>
-              <size>20.0 20.0 0.1</size>
-            </box>
-          </geometry>
+            </geometry>
         </collision>
-        <visual name='visual_wallx_pn'>
-          <pose>1.0 -0.5 -1.0 0 0 0</pose>
-          <geometry>
+        <collision name='collision_south'>
+         <pose frame=''>-3 0 -1.5 0 0 0</pose>
+         <geometry>
             <box>
-              <size>0.01 0.9 2.0</size>
+              <size>0.2 12 5</size>
             </box>
-          </geometry>
-          <material>
-            <script>
-              <uri>file://media/materials/scripts/astrobee.material</uri>
-              <name>Astrobee/GraniteWall1</name>
-            </script>
-          </material>
-        </visual>
-        <collision name='collision_wallx_pn'>
-          <pose>1.0 -0.5 -1.0 0 0 0</pose>
-          <geometry>
-            <box>
-              <size>0.01 0.9 2.0</size>
-            </box>
-          </geometry>
-        </collision>
-        <visual name='visual_wallx_pp'>
-          <pose>1.0 0.5 -1.0 0 0 0</pose>
-          <geometry>
-            <box>
-              <size>0.01 0.9 2.0</size>
-            </box>
-          </geometry>
-          <material>
-            <script>
-              <uri>file://media/materials/scripts/astrobee.material</uri>
-              <name>Astrobee/GraniteWall2</name>
-            </script>
-          </material>
-        </visual>
-        <collision name='collision_wallx_pp'>
-          <pose>1.0 0.5 -1.0 0 0 0</pose>
-          <geometry>
-            <box>
-              <size>0.01 0.9 2.0</size>
-            </box>
-          </geometry>
-        </collision>
-        <visual name='visual_wallx_nn'>
-          <pose>-1.0 -0.5 -1.0 0 0 0</pose>
-          <geometry>
-            <box>
-              <size>0.01 0.9 2.0</size>
-            </box>
-          </geometry>
-          <material>
-            <script>
-              <uri>file://media/materials/scripts/astrobee.material</uri>
-              <name>Astrobee/GraniteWall3</name>
-            </script>
-          </material>
-        </visual>
-        <collision name='collision_wallx_nn'>
-          <pose>-1.0 -0.5 -1.0 0 0 0</pose>
-          <geometry>
-            <box>
-              <size>0.01 0.9 2.0</size>
-            </box>
-          </geometry>
-        </collision>
-        <visual name='visual_wallx_np'>
-          <pose>-1.0 0.5 -1.0 0 0 0</pose>
-          <geometry>
-            <box>
-              <size>0.01 0.9 2.0</size>
-            </box>
-          </geometry>
-          <material>
-            <script>
-              <uri>file://media/materials/scripts/astrobee.material</uri>
-              <name>Astrobee/GraniteWall4</name>
-            </script>
-          </material>
-        </visual>
-        <collision name='collision_wallx_np'>
-          <pose>-1.0 0.5 -1.0 0 0 0</pose>
-          <geometry>
-            <box>
-              <size>0.01 0.9 2.0</size>
-            </box>
-          </geometry>
-        </collision>
-        <visual name='visual_wally_p'>
-          <pose>0.5 -1.0 -1.0 0 0 0</pose>
-          <geometry>
-            <box>
-              <size>0.9 0.01 2.0</size>
-            </box>
-          </geometry>
-          <material>
-            <script>
-              <uri>file://media/materials/scripts/astrobee.material</uri>
-              <name>Astrobee/GraniteWall5</name>
-            </script>
-          </material>
-        </visual>
-        <collision name='collision_wally_p'>
-          <pose>0.5 -1.0 -1.0 0 0 0</pose>
-          <geometry>
-            <box>
-              <size>0.9 0.01 2.0</size>
-            </box>
-          </geometry>
-        </collision>
-        <visual name='visual_wally_n'>
-          <pose>-0.5 -1.0 -1.0 0 0 0</pose>
-          <geometry>
-            <box>
-              <size>0.9 0.01 2.0</size>
-            </box>
-          </geometry>
-          <material>
-            <script>
-              <uri>file://media/materials/scripts/astrobee.material</uri>
-              <name>Astrobee/GraniteWall6</name>
-            </script>
-          </material>
-        </visual>
-        <collision name='collision_wally_n'>
-          <pose>-0.5 -1.0 -1.0 0 0 0</pose>
-          <geometry>
-            <box>
-              <size>0.9 0.01 2.0</size>
-            </box>
-          </geometry>
+            </geometry>
         </collision>
         <self_collide>0</self_collide>
         <kinematic>0</kinematic>
       </link>
     </model>
+    <plugin name="plugin_speed" filename="libgazebo_world_plugin_speed.so"/>
   </world>
 </sdf>

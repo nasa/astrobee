@@ -47,6 +47,8 @@
           name="mlp_dock" output="$(arg output)"/>
     <node pkg="nodelet" type="nodelet" args="manager"
           name="mlp_perch" output="$(arg output)"/>
+    <node pkg="nodelet" type="nodelet" args="manager"
+          name="mlp_mapper" output="$(arg output)"/>
   </group>
 
   <!-- Vision / localization -->
@@ -70,6 +72,11 @@
   <include file="$(find mapper)/launch/mapper.launch"
     if="$(eval arg('nodes') == '' or arg('nodes').find('mapper') != -1)">
     <arg name="name" value="mapper" />
+    <arg name="manager" value="mlp_mapper" />
+  </include>
+  <include file="$(find planner_qp)/launch/planner_qp.launch"
+    if="$(eval arg('nodes') == '' or arg('nodes').find('planner_qp') != -1)">
+    <arg name="name" value="planner_qp" />
     <arg name="manager" value="mlp_mobility" />
   </include>
   <include file="$(find choreographer)/launch/choreographer.launch"
@@ -77,17 +84,12 @@
     <arg name="name" value="choreographer" />
     <arg name="manager" value="mlp_mobility" />
   </include>
-  <include file="$(find planner_qp)/launch/planner_qp.launch"
-    if="$(eval arg('nodes') == '' or arg('nodes').find('planner_qp') != -1)">
-    <arg name="name" value="planner_qp" />
-    <arg name="manager" value="mlp_mobility" />
-  </include>
   <include file="$(find planner_trapezoidal)/launch/planner_trapezoidal.launch"
     if="$(eval arg('nodes') == '' or arg('nodes').find('planner_trapezoidal') != -1)">
     <arg name="name" value="planner_trapezoidal" />
     <arg name="manager" value="mlp_mobility" />
   </include>
-  <include file="$(find description)/launch/framestore.launch"
+  <include file="$(find framestore)/launch/framestore.launch"
     if="$(eval arg('nodes') == '' or arg('nodes').find('framestore') != -1)">
     <arg name="name" value="framestore" />
     <arg name="manager" value="mlp_mobility" />

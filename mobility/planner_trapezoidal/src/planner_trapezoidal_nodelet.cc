@@ -1,14 +1,14 @@
 /* Copyright (c) 2017, United States Government, as represented by the
  * Administrator of the National Aeronautics and Space Administration.
- * 
+ *
  * All rights reserved.
- * 
+ *
  * The Astrobee platform is licensed under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -177,7 +177,7 @@ class PlannerTrapezoidalNodelet : public planner::PlannerImplementation {
   }
 
   // Called to interrupt the process
-  virtual void CancelCallback() {}
+  void CancelCallback() {}
 
   //////////////////////////////////////////////////////////////////////////////
   // Given some linear or angular displacement (d) and a maximum acceleration //
@@ -399,7 +399,7 @@ class PlannerTrapezoidalNodelet : public planner::PlannerImplementation {
   double epsilon_;
 };
 
-PLUGINLIB_DECLARE_CLASS(planner_trapezoidal, PlannerTrapezoidalNodelet,
-  planner_trapezoidal::PlannerTrapezoidalNodelet, nodelet::Nodelet);
+PLUGINLIB_EXPORT_CLASS(planner_trapezoidal::PlannerTrapezoidalNodelet,
+  nodelet::Nodelet);
 
 }  // namespace planner_trapezoidal

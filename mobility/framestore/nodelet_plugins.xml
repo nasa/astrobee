@@ -1,0 +1,5 @@
+<library path="lib/libframestore">
+  <class name="mobility/FrameStore" type="mobility::FrameStore" base_class_type="nodelet::Nodelet">
+    <description>Nodelet for mobility::FrameStore</description>
+  </class>
+</library>

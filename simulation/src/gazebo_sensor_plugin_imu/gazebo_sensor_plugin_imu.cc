@@ -46,21 +46,32 @@ class GazeboSensorPluginImu : public FreeFlyerSensorPlugin {
       = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };
   }
 
-  ~GazeboSensorPluginImu() {}
+  ~GazeboSensorPluginImu() {
+    if (update_)
+      sensor_->DisconnectUpdated(update_);
+  }
 
  protected:
   // Called when plugin is loaded into gazebo
   void LoadCallback(ros::NodeHandle* nh,
     sensors::SensorPtr sensor, sdf::ElementPtr sdf) {
     // Get a link to the parent sensor
-    sensor_ = std::dynamic_pointer_cast < sensors::ImuSensor > (sensor);
+    sensor_ = sensor;
     if (!sensor_) {
-      gzerr << "GazeboSensorPluginImu requires an imu sensor as a parent.\n";
+      gzerr << "GazeboSensorPluginImu requires a valid sensor.\n";
+      return;
+    }
+    imu_ = std::dynamic_pointer_cast<sensors::ImuSensor>(sensor_);
+    if (!imu_) {
+      gzerr << "GazeboSensorPluginImu requires an imu sensor.\n";
       return;
     }
     // Get the name of the link to which this node is attached
     msg_.header.frame_id = GetFrame();
+  }
 
+  // Only send IMU when we have the correct extrinsics
+  void OnExtrinsicsReceived(ros::NodeHandle *nh) {
     // Offer IMU messages to those which need them
     pub_ = nh->advertise < sensor_msgs::Imu > (TOPIC_HARDWARE_IMU, 1,
       boost::bind(&GazeboSensorPluginImu::ToggleCallback, this),
@@ -80,21 +91,21 @@ class GazeboSensorPluginImu : public FreeFlyerSensorPlugin {
   }
 
   // Called on each sensor update event
-  virtual void UpdateCallback() {
-    if (!sensor_->IsActive() || !ExtrinsicsFound())
+  void UpdateCallback() {
+    if (!sensor_->IsActive())
       return;
-    msg_.header.stamp.sec = sensor_->LastMeasurementTime().sec;
-    msg_.header.stamp.nsec = sensor_->LastMeasurementTime().nsec;
-    msg_.orientation.x = sensor_->Orientation().X();
-    msg_.orientation.y = sensor_->Orientation().Y();
-    msg_.orientation.z = sensor_->Orientation().Z();
-    msg_.orientation.w = sensor_->Orientation().W();
-    msg_.angular_velocity.x = sensor_->AngularVelocity().X();
-    msg_.angular_velocity.y = sensor_->AngularVelocity().Y();
-    msg_.angular_velocity.z = sensor_->AngularVelocity().Z();
-    msg_.linear_acceleration.x = sensor_->LinearAcceleration().X();
-    msg_.linear_acceleration.y = sensor_->LinearAcceleration().Y();
-    msg_.linear_acceleration.z = sensor_->LinearAcceleration().Z();
+    msg_.header.stamp.sec = imu_->LastMeasurementTime().sec;
+    msg_.header.stamp.nsec = imu_->LastMeasurementTime().nsec;
+    msg_.orientation.x = imu_->Orientation().X();
+    msg_.orientation.y = imu_->Orientation().Y();
+    msg_.orientation.z = imu_->Orientation().Z();
+    msg_.orientation.w = imu_->Orientation().W();
+    msg_.angular_velocity.x = imu_->AngularVelocity().X();
+    msg_.angular_velocity.y = imu_->AngularVelocity().Y();
+    msg_.angular_velocity.z = imu_->AngularVelocity().Z();
+    msg_.linear_acceleration.x = imu_->LinearAcceleration().X();
+    msg_.linear_acceleration.y = imu_->LinearAcceleration().Y();
+    msg_.linear_acceleration.z = imu_->LinearAcceleration().Z();
     pub_.publish(msg_);
   }
 
@@ -102,7 +113,8 @@ class GazeboSensorPluginImu : public FreeFlyerSensorPlugin {
   // ROS variables
   ros::Publisher pub_;
   // Gazebo variables
-  sensors::ImuSensorPtr sensor_;
+  sensors::SensorPtr sensor_;
+  sensors::ImuSensorPtr imu_;
   event::ConnectionPtr update_;
   // Intermediary data
   sensor_msgs::Imu msg_;
