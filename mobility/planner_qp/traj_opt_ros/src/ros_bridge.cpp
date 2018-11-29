@@ -1,14 +1,14 @@
 /* Copyright (c) 2017, United States Government, as represented by the
  * Administrator of the National Aeronautics and Space Administration.
- * 
+ *
  * All rights reserved.
- * 
+ *
  * The Astrobee platform is licensed under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -31,6 +31,19 @@ ros::Publisher TrajRosBridge::getPub(std::string topic) {
   }
   return instance().pubs_[topic];
 }
+ros::Publisher TrajRosBridge::getInfoPub(std::string topic) {
+  if (instance().pubs_.find(topic) == instance().pubs_.end()) {
+    instance().pubs_[topic] =
+        instance().nh_.advertise<traj_opt_msgs::SolverInfo>(topic, 1, true);
+  }
+  return instance().pubs_[topic];
+}
+
+bool TrajRosBridge::are_subscribers(std::string topic) {
+  ros::Publisher pub = getPub(topic);
+  return pub.getNumSubscribers() > 0;
+}
+
 void TrajRosBridge::publish_msg(const traj_opt_msgs::Trajectory &msg,
                                 std::string frame_id, std::string topic) {
   traj_opt_msgs::Trajectory msgc = msg;
@@ -89,4 +102,26 @@ traj_opt::TrajData TrajRosBridge::convert(
     data.data.push_back(s);
   }
   return data;
+}
+traj_opt_msgs::SolverInfo TrajRosBridge::convert(
+    const traj_opt::SolverInfo &data) {
+  traj_opt_msgs::SolverInfo info;
+  for (auto &g : data.gap_history) info.gap_history.push_back(g);
+  for (auto &g : data.cost_history) info.cost_history.push_back(g);
+  for (auto &g : data.slack) info.slack.push_back(g);
+
+  info.iterations = data.iterations;
+  info.cost = data.cost;
+  info.gap = data.gap;
+
+  return info;
+}
+
+void TrajRosBridge::publish_msg(const traj_opt_msgs::SolverInfo &msg,
+                                std::string topic) {
+  getInfoPub(topic).publish(msg);
+}
+void TrajRosBridge::publish_msg(const traj_opt::SolverInfo &data,
+                                std::string topic) {
+  publish_msg(convert(data), topic);
 }

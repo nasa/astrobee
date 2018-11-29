@@ -1,5 +1,20 @@
 # Astrobee Robot Software v1
 
+## Release 0.5.0
+
+Build 3 - CERT Release
+
+  - Everything ready for CERT testing
+  - Improved simulator
+
+## Release 0.4.5
+
+Updated external user install instructions.
+
+## Release 0.4.4
+
+Remove astrobee-repo-version from publicly required packages list.
+
 ## Release 0.4.3
 
 Fix decomputil debian, revert to older version.

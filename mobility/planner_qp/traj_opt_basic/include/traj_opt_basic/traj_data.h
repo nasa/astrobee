@@ -71,5 +71,16 @@ struct TrajData {
   TrajData(int dim, int segs, int deg)
       : dimensions(dim), data(dimensions, SplineData(deg, segs)) {}
 };
+struct SolverInfo {
+  std::vector<float> gap_history;
+  std::vector<float> cost_history;
+  int iterations{0};
+  std::vector<float> slack;
+  float cost;
+  float gap;
+  std::vector<std::vector<float> > var_history;
+  std::vector<std::vector<float> > time_history;
+};
+
 }  // namespace traj_opt
 #endif  // TRAJ_OPT_BASIC_TRAJ_DATA_H_

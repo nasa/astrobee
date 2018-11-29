@@ -18,13 +18,13 @@
 <launch>
 
   <!-- Context options (NB: THESE ARE OVERRIDDEN BY ENVIRONMENT VARIABLES)   -->
-  <arg name="robot" default="p4d" />            <!-- Robot name              -->
+  <arg name="robot" default="bsharp" />         <!-- Robot name              -->
   <arg name="world" default="granite" />        <!-- World name              -->
   <arg name="ns" default="" />                  <!-- Robot namespace prefix  -->
   <arg name="output" default="log"/>            <!-- Where nodes should log  -->
   <arg name="nodes" default=""/>                <!-- Launch specific nodes   -->
-  <arg name="mlp" default="10.42.0.32" />       <!-- MLP IP address          -->
-  <arg name="llp" default="10.42.0.31" />       <!-- LLP IP address          -->
+  <arg name="mlp" default="10.42.0.38" />       <!-- MLP IP address          -->
+  <arg name="llp" default="10.42.0.37" />       <!-- LLP IP address          -->
   <arg name="rec" default="" />                 <!-- Enable recording        -->
   <arg name="dds" default="true" />             <!-- Enable DDS              -->
   <arg name="fsw" default="true" />             <!-- Enable FSW launch       -->
@@ -56,7 +56,9 @@
   <group>
     <machine name ="local" address="localhost" default="true"/>
     <!-- Start the descriptions (ISS, dock, granite) for visualization purposes -->
-    <include file="$(find description)/launch/description.launch"/>
+    <include file="$(find astrobee)/launch/controller/descriptions.launch">
+      <arg name="world" value="$(arg world)"/>
+    </include>
     <!-- Start ground controller services -->
     <include if="$(arg ocam)" file="$(find astrobee)/launch/controller/ocam.launch"/>
     <include if="$(arg vive)" file="$(find astrobee)/launch/controller/vive.launch"/>

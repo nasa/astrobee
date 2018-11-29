@@ -19,13 +19,15 @@
 %                                                                        %
 % Inputs: two quaternions                                                %
 %                                                                        %
-% Ouptus: angular error, in millirads                                    %
+% Outpus: angular error, in millirads       
+% Source: https://math.stackexchange.com/questions/90081/quaternion-distance
 function total_angle_millirad = quat_error( q1, q2 )
 
 q1 = quat_norm_and_sign_check(q1);
 q2 = quat_norm_and_sign_check(q2);
 
-total_angle_millirad = 2*acos(dot(q1, q2, 2))*1000;
+total_angle_millirad = acos((2*dot(q1, q2, 2).^2) - 1)*1000;
 
 % Wrap to pi
+% Should be bounded by the stackexchange equation
 total_angle_millirad(total_angle_millirad > pi*1000) = total_angle_millirad(total_angle_millirad > pi*1000) - 2000*pi;

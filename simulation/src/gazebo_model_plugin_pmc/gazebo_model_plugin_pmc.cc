@@ -144,7 +144,9 @@ class GazeboModelPluginPmc : public FreeFlyerModelPlugin {
   }
 
   // Destructor
-  ~GazeboModelPluginPmc() {}
+  ~GazeboModelPluginPmc() {
+    event::Events::DisconnectWorldUpdateBegin(update_);
+  }
 
  protected:
   // Called when the plugin is loaded into the simulator
@@ -178,15 +180,14 @@ class GazeboModelPluginPmc : public FreeFlyerModelPlugin {
       &GazeboModelPluginPmc::CommandCallback, this);
 
     // Create a watchdog timer to ensure the PMC commands are set
-    timer_ = nh->createTimer(ros::Duration(20.0/control_rate_hz_),
+    timer_watchdog_ = nh->createTimer(ros::Duration(20.0/control_rate_hz_),
       &GazeboModelPluginPmc::WatchdogCallback, this, false, true);
 
+    // Create a watchdog timer to ensure the PMC commands are set
+    timer_command_ = nh->createTimer(ros::Duration(1.0/control_rate_hz_),
+      &GazeboModelPluginPmc::CommandTimerCallback, this, false, true);
+
     // Called before each iteration of simulated world update
-    #if GAZEBO_MAJOR_VERSION > 7
-      next_tick_ = GetWorld()->SimTime();
-    #else
-      next_tick_ = GetWorld()->GetSimTime();
-    #endif
     update_ = event::Events::ConnectWorldUpdateBegin(
       std::bind(&GazeboModelPluginPmc::WorldUpdateCallback, this));
   }
@@ -226,20 +227,14 @@ class GazeboModelPluginPmc : public FreeFlyerModelPlugin {
   }
 
   // Called on simulation reset
-  virtual void Reset() {
-    #if GAZEBO_MAJOR_VERSION > 7
-      next_tick_ = GetWorld()->SimTime();
-    #else
-      next_tick_ = GetWorld()->GetSimTime();
-    #endif
-  }
+  void Reset() {}
 
   // This is called whenever the controller has new force/torque to apply
   void CommandCallback(ff_hw_msgs::PmcCommand const& msg) {
     // Immediately reset the watchdog timer
-    timer_.stop();
+    timer_watchdog_.stop();
     // ros::getGlobalCallbackQueue()->clear();
-    timer_.start();
+    timer_watchdog_.start();
     // Send the command only of he PMCs are enabled
     if (pmc_enabled_)
       SendCommand(msg);
@@ -252,9 +247,9 @@ class GazeboModelPluginPmc : public FreeFlyerModelPlugin {
   // processed at any time which means that we wont have race conditions
   void WatchdogCallback(ros::TimerEvent const& event) {
     // Immediately reset the watchdog timer
-    timer_.stop();
+    timer_watchdog_.stop();
     // ros::getGlobalCallbackQueue()->clear();
-    timer_.start();
+    timer_watchdog_.start();
     // Update the null command time
     null_command_.header.stamp = ros::Time::now();
     // set the blower speed to zero in case we do not receive messages from FAM
@@ -280,6 +275,45 @@ class GazeboModelPluginPmc : public FreeFlyerModelPlugin {
         blowers_.states_[i].servo_cmd[j]
           = static_cast <float> (msg.goals[i].nozzle_positions[j]);
     }
+  }
+
+  // Must be called at 62.5Hz to satisfy the needs of GNC
+  void CommandTimerCallback(ros::TimerEvent const& event) {
+  #if GAZEBO_MAJOR_VERSION > 7
+    // Step the blower model
+    blowers_.SetAngularVelocity(
+      GetLink()->RelativeAngularVel().X(),
+      GetLink()->RelativeAngularVel().Y(),
+      GetLink()->RelativeAngularVel().Z());
+    blowers_.SetBatteryVoltage(14.0);
+    blowers_.Step();
+    // Calculate the force and torque on the platform
+    force_ = ignition::math::Vector3d(0, 0, 0);
+    torque_ = ignition::math::Vector3d(0, 0, 0);
+    for (size_t i = 0; i < NUMBER_OF_PMCS; i++) {
+      force_ += ignition::math::Vector3d(blowers_.states_[i].force_B[0],
+        blowers_.states_[i].force_B[1], blowers_.states_[i].force_B[2]);
+      torque_ += ignition::math::Vector3d(blowers_.states_[i].torque_B[0],
+        blowers_.states_[i].torque_B[1], blowers_.states_[i].torque_B[2]);
+    }
+  #else
+    // Step the blower model
+    blowers_.SetAngularVelocity(
+        GetLink()->GetRelativeAngularVel().x,
+        GetLink()->GetRelativeAngularVel().y,
+        GetLink()->GetRelativeAngularVel().z);
+    blowers_.SetBatteryVoltage(14.0);
+    blowers_.Step();
+    // Calculate the force and torque on the platform
+    force_ = math::Vector3(0, 0, 0);
+    torque_ = math::Vector3(0, 0, 0);
+    for (size_t i = 0; i < NUMBER_OF_PMCS; i++) {
+      force_ += math::Vector3(blowers_.states_[i].force_B[0],
+        blowers_.states_[i].force_B[1], blowers_.states_[i].force_B[2]);
+      torque_ += math::Vector3(blowers_.states_[i].torque_B[0],
+        blowers_.states_[i].torque_B[1], blowers_.states_[i].torque_B[2]);
+    }
+  #endif
     // Publish telemetry
     PublishTelemetry();
   }
@@ -291,10 +325,13 @@ class GazeboModelPluginPmc : public FreeFlyerModelPlugin {
     telemetry_vector_.statuses.clear();
     // Check if we need to change state based on the motor speed
     for (size_t i = 0; i < NUMBER_OF_PMCS; i++) {
+      // Convert and check range
+      double rpm = round(blowers_.states_[i].motor_speed * RADS_PER_SEC_TO_RPM);
+      if (rpm < 0 || rpm > 255)
+        rpm = 0;
       // Populate as much telemetry as possible from the blower model
       ff_hw_msgs::PmcStatus t;
-      t.motor_speed = static_cast<uint8_t>((blowers_.states_[i].motor_speed
-        * RADS_PER_SEC_TO_RPM) / state_telemetry_scale_);
+      t.motor_speed = static_cast<uint8_t>(rpm);
       // Send the telemetry
       telemetry_vector_.statuses.push_back(t);
       // Determine the current state based on the different between the
@@ -313,7 +350,6 @@ class GazeboModelPluginPmc : public FreeFlyerModelPlugin {
     }
     // Publish telemetry
     pub_telemetry_.publish(telemetry_vector_);
-    ros::spinOnce();
   }
 
   // Enable or disable the PMC
@@ -331,53 +367,6 @@ class GazeboModelPluginPmc : public FreeFlyerModelPlugin {
 
   // Called on each sensor update event
   void WorldUpdateCallback() {
-    // Throttle callback rate
-    #if GAZEBO_MAJOR_VERSION > 7
-      if (GetWorld()->SimTime() >= next_tick_) {
-        next_tick_ += 1.0 / control_rate_hz_;
-        // Set the angular velocity
-        blowers_.SetAngularVelocity(
-          GetLink()->RelativeAngularVel().X(),
-          GetLink()->RelativeAngularVel().Y(),
-          GetLink()->RelativeAngularVel().Z());
-        // Set the battery voltage
-        blowers_.SetBatteryVoltage(14.0);
-        // Step the system
-        blowers_.Step();
-        // Extract and apply the force and torque for the blowers
-        force_ = ignition::math::Vector3d(0, 0, 0);
-        torque_ = ignition::math::Vector3d(0, 0, 0);
-        for (size_t i = 0; i < NUMBER_OF_PMCS; i++) {
-          force_ += ignition::math::Vector3d(blowers_.states_[i].force_B[0],
-            blowers_.states_[i].force_B[1], blowers_.states_[i].force_B[2]);
-          torque_ += ignition::math::Vector3d(blowers_.states_[i].torque_B[0],
-            blowers_.states_[i].torque_B[1], blowers_.states_[i].torque_B[2]);
-        }
-      }
-    #else
-      if (GetWorld()->GetSimTime() >= next_tick_) {
-        next_tick_ += 1.0 / control_rate_hz_;
-        // Set the angular velocity
-        blowers_.SetAngularVelocity(
-          GetLink()->GetRelativeAngularVel().x,
-          GetLink()->GetRelativeAngularVel().y,
-          GetLink()->GetRelativeAngularVel().z);
-        // Set the battery voltage
-        blowers_.SetBatteryVoltage(14.0);
-        // Step the system
-        blowers_.Step();
-        // Extract and apply the force and torque for the blowers
-        force_ = math::Vector3(0, 0, 0);
-        torque_ = math::Vector3(0, 0, 0);
-        for (size_t i = 0; i < NUMBER_OF_PMCS; i++) {
-          force_ += math::Vector3(blowers_.states_[i].force_B[0],
-            blowers_.states_[i].force_B[1], blowers_.states_[i].force_B[2]);
-          torque_ += math::Vector3(blowers_.states_[i].torque_B[0],
-            blowers_.states_[i].torque_B[1], blowers_.states_[i].torque_B[2]);
-        }
-      }
-    #endif
-    // Apply the force and torque to the model
     GetLink()->AddRelativeForce(force_);
     GetLink()->AddRelativeTorque(torque_);
   }
@@ -386,17 +375,16 @@ class GazeboModelPluginPmc : public FreeFlyerModelPlugin {
   ff_util::FSM fsm_;                                // Finite state machine
   bool ready_[NUMBER_OF_PMCS];                      // Ready flags
   config_reader::ConfigReader config_params;        // LUA configuration reader
-  common::Time next_tick_;                          // Delta timer for gazebo
   ros::Publisher pub_telemetry_, pub_state_;        // State/telemetry pubs
   ros::Subscriber sub_command_;                     // Command subscriber
-  ros::Timer timer_;                                // Watchdog timer
-  #if GAZEBO_MAJOR_VERSION > 7
-    ignition::math::Vector3d force_;                // Current body-frame force
-    ignition::math::Vector3d torque_;               // Current body-frame torque
-  #else
-    math::Vector3 force_;                           // Current body-frame force
-    math::Vector3 torque_;                          // Current body-frame torque
-  #endif
+  ros::Timer timer_command_, timer_watchdog_;       // Timers
+#if GAZEBO_MAJOR_VERSION > 7
+  ignition::math::Vector3d force_;                // Current body-frame force
+  ignition::math::Vector3d torque_;               // Current body-frame torque
+#else
+  math::Vector3 force_;                           // Current body-frame force
+  math::Vector3 torque_;                          // Current body-frame torque
+#endif
   gnc_autocode::GncBlowersAutocode blowers_;        // Autocode blower iface
   ff_hw_msgs::PmcCommand null_command_;             // PMC null command
   event::ConnectionPtr update_;                     // Update event from gazeo

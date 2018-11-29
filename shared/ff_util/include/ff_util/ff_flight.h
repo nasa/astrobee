@@ -159,7 +159,11 @@ class FlightUtil {
   static bool Equal(Setpoint const& left, Setpoint const& right,
     size_t degree = 2);
 
-  // Check that the first pose is consistent with the segment/flight mode
+  // Check if two poses are within position and attitude tolerance
+  static bool WithinTolerance(geometry_msgs::Pose const& a,
+    geometry_msgs::Pose const& b, double tolerance_pos, double tolerance_att);
+
+  // Check if two poses are within tolerance of a flight mode
   static bool WithinTolerance(ff_msgs::FlightMode const& fm,
     geometry_msgs::Pose const& a, geometry_msgs::Pose const& b);
 };

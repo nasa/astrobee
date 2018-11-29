@@ -1,11 +1,11 @@
 <launch>
   <!-- ip addresses -->
-  <arg name="robot" default="p4d" />            <!-- Robot name              -->
+  <arg name="robot" default="bsharp" />            <!-- Robot name              -->
   <arg name="world" default="granite" />        <!-- World name              -->
   <arg name="ns" default="" />                  <!-- Robot namespace prefix  -->
   <arg name="nodes" default=""/>                <!-- Launch specific nodes   -->
-  <arg name="mlp" default="10.42.0.32" />       <!-- MLP IP address          -->
-  <arg name="llp" default="10.42.0.31" />       <!-- LLP IP address          -->
+  <arg name="mlp" default="10.42.0.38" />       <!-- MLP IP address          -->
+  <arg name="llp" default="10.42.0.37" />       <!-- LLP IP address          -->
   <arg name="rec" default="" />                 <!-- Enable recording        -->
   <arg name="dds" default="true" />             <!-- Enable DDS              -->
   

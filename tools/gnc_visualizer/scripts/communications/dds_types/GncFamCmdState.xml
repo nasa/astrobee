@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<types xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="/opt/rti/ndds/scripts/../resource/rtiddsgen/schema/rti_dds_topic_types.xsd">
+<include file="Message.xml"/>
+<module name="rapid">
+<module name="ext">
+<module name="astrobee">
+<directive kind="copyDeclaration">/**</directive>
+<directive kind="copyDeclaration">  * Represents force in free space.</directive>
+<directive kind="copyDeclaration">  */</directive>
+<struct name="Wrench">
+<member name="force" type="nonBasic" nonBasicTypeName="rapid::Vec3d"/>
+<member name="torque" type="nonBasic" nonBasicTypeName="rapid::Vec3d"/>
+</struct>
+<directive kind="copyCDeclaration">class GncFamCmdStateTypeSupport;</directive>
+<directive kind="copyCDeclaration">class GncFamCmdStateDataWriter;</directive>
+<directive kind="copyCDeclaration">class GncFamCmdStateDataReader;</directive>
+<directive kind="copyCDeclaration">struct GncFamCmdStateSeq;</directive>
+<directive kind="copyDeclaration">/**</directive>
+<directive kind="copyDeclaration">  * Command sent from control to FAM.</directive>
+<directive kind="copyDeclaration">  */</directive>
+<valuetype name="GncFamCmdState" baseClass="rapid::Message" typeModifier="none">
+<directive kind="copyCDeclaration">#if RTI_DDS_VERSION_MAJOR &lt; 4 || (RTI_DDS_VERSION_MAJOR == 4 &amp;&amp; RTI_DDS_VERSION_MINOR &lt; 5) || (RTI_DDS_VERSION_MAJOR == 4 &amp;&amp; RTI_DDS_VERSION_MINOR == 5 &amp;&amp; RTI_DDS_VERSION_RELEASE != 'f')</directive>
+<directive kind="copyCDeclaration">typedef GncFamCmdStateTypeSupport TypeSupport;</directive>
+<directive kind="copyCDeclaration">typedef GncFamCmdStateDataWriter DataWriter;</directive>
+<directive kind="copyCDeclaration">typedef GncFamCmdStateDataReader DataReader;</directive>
+<directive kind="copyCDeclaration">typedef GncFamCmdStateSeq seq;</directive>
+<directive kind="copyCDeclaration">#endif</directive>
+<directive kind="copyCDeclaration">typedef GncFamCmdState Type;</directive>
+<directive kind="copyDeclaration">/** Force and torque */</directive>
+<member name="wrench" type="nonBasic" nonBasicTypeName="rapid::ext::astrobee::Wrench" visibility="public"/>
+<directive kind="copyDeclaration">/** Linear acceleration (wrench without estimated</directive>
+<directive kind="copyDeclaration">  * mass)</directive>
+<directive kind="copyDeclaration">  */</directive>
+<member name="accel" type="nonBasic" nonBasicTypeName="rapid::Vec3d" visibility="public"/>
+<directive kind="copyDeclaration">/** Angular acceleration (wrench without estimated</directive>
+<directive kind="copyDeclaration">  * mass)</directive>
+<directive kind="copyDeclaration">  */</directive>
+<member name="alpha" type="nonBasic" nonBasicTypeName="rapid::Vec3d" visibility="public"/>
+<directive kind="copyDeclaration">/** Status byte from GNC ICD */</directive>
+<member name="status" type="short" visibility="public"/>
+<directive kind="copyDeclaration">/** Position error */</directive>
+<member name="position_error" type="nonBasic" nonBasicTypeName="rapid::Vec3d" visibility="public"/>
+<directive kind="copyDeclaration">/** Integrated position error */</directive>
+<member name="position_error_integrated" type="nonBasic" nonBasicTypeName="rapid::Vec3d" visibility="public"/>
+<directive kind="copyDeclaration">/** Attitude error */</directive>
+<member name="attitude_error" type="nonBasic" nonBasicTypeName="rapid::Vec3d" visibility="public"/>
+<directive kind="copyDeclaration">/** Integrated attitude error */</directive>
+<member name="attitude_error_integrated" type="nonBasic" nonBasicTypeName="rapid::Vec3d" visibility="public"/>
+<directive kind="copyDeclaration">/** Magnitude of attitude error */</directive>
+<member name="attitude_error_mag" type="float" visibility="public"/>
+<directive kind="copyDeclaration">/** Control mode from GNC ICD */</directive>
+<member name="control_mode" type="short" visibility="public"/>
+</valuetype>
+</module>
+</module>
+</module>
+</types>

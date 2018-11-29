@@ -37,8 +37,7 @@
   <run_depend>ff_hw_msgs</run_depend>
   <run_depend>ff_util</run_depend>
   <export>
-    <gazebo_ros
-      gazebo_media_path="${prefix}../astrobee/resources"
-      plugin_path="${prefix}/lib"/>
+    <gazebo_ros plugin_path="${prefix}/lib"/>
+    <gazebo_ros gazebo_model_path="${prefix}/../description/media"/>
   </export>
 </package>

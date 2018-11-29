@@ -51,8 +51,10 @@
 #include "dds_ros_bridge/ros_gnc_fam_cmd_state.h"
 #include "dds_ros_bridge/ros_gnc_control_state.h"
 #include "dds_ros_bridge/ros_guest_science.h"
+#include "dds_ros_bridge/ros_log_sample.h"
 #include "dds_ros_bridge/ros_odom_rapid_position.h"
 #include "dds_ros_bridge/ros_plan_status_rapid_plan_status.h"
+#include "dds_ros_bridge/ros_pmc_cmd_state.h"
 #include "dds_ros_bridge/ros_string_rapid_text_message.h"
 #include "dds_ros_bridge/ros_sub_rapid_pub.h"
 #include "dds_ros_bridge/ros_telemetry_rapid_telemetry.h"
@@ -69,6 +71,9 @@
 #include "miro/Configuration.h"
 #include "miro/Robot.h"
 #include "miro/Log.h"
+
+// ros includes
+#include "std_msgs/String.h"
 
 namespace kn {
   class DdsEntitiesFactorySvc;
@@ -154,10 +159,16 @@ class DdsRosBridge : public ff_util::FreeFlyerNodelet {
                                const std::string& data_sub_topic,
                                const std::string& pub_topic,
                                const std::string& name);
+  int BuildLogSampleToRapid(const std::string& sub_topic,
+                             const std::string& pub_topic,
+                             const std::string& name);
   int BuildOdomToPosition(const std::string& sub_topic,
                           const std::string& pub_topic,
                           const std::string& name);
   int BuildPlanStatusToPlanStatus(const std::string& sub_topic,
+                                  const std::string& pub_topic,
+                                  const std::string& name);
+  int BuildPmcCmdStateToRapid(const std::string& sub_topic,
                                   const std::string& pub_topic,
                                   const std::string& name);
   int BuildStringToTextMessage(const std::string& sub_topic,
@@ -191,6 +202,7 @@ class DdsRosBridge : public ff_util::FreeFlyerNodelet {
  protected:
   virtual void Initialize(ros::NodeHandle *nh);
   bool ReadParams();
+  bool ReadRateParams();
 
  private:
   config_reader::ConfigReader config_params_;
@@ -198,6 +210,8 @@ class DdsRosBridge : public ff_util::FreeFlyerNodelet {
   int components_;
 
   ros::NodeHandle nh_;
+
+  ros::Publisher robot_name_pub_;
 
   std::map<std::string, ff::RosSubRapidPubPtr> ros_sub_rapid_pubs_;
   std::shared_ptr<kn::DdsEntitiesFactorySvc> dds_entities_factory_;

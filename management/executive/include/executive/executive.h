@@ -23,6 +23,7 @@
 #include <executive/executive_action_client.h>
 #include <executive/utils/sequencer/plan_io.h>
 #include <executive/utils/sequencer/sequencer.h>
+#include <ff_hw_msgs/ConfigurePayloadPower.h>
 #include <ff_hw_msgs/SetEnabled.h>
 #include <ff_hw_msgs/SetFlashlight.h>
 #include <ff_msgs/AckCompletedStatus.h>
@@ -206,15 +207,18 @@ class Executive : public ff_util::FreeFlyerNodelet {
                  uint8_t& completed_status,
                  bool plan = false);
 
-  bool PowerOnItem(ff_msgs::CommandStampedPtr const& cmd,
-                   std::string& err_msg,
-                   uint8_t& completed_status,
-                   bool plan = false);
+  bool PowerItem(ff_msgs::CommandStampedPtr const& cmd,
+                 std::string& err_msg,
+                 uint8_t& completed_status,
+                 bool on,
+                 bool plan = false);
 
-  bool PowerOffItem(ff_msgs::CommandStampedPtr const& cmd,
-                    std::string& err_msg,
-                    uint8_t& completed_status,
-                    bool plan = false);
+  bool CheckServiceExists(ros::ServiceClient& serviceIn,
+                          std::string const& serviceName,
+                          std::string const& cmd_id,
+                          std::string& err_msg,
+                          uint8_t& completed_status,
+                          bool plan = false);
 
   bool SetFlashlightBrightness(ff_msgs::CommandStampedPtr const& cmd,
                                std::string& err_msg,
@@ -287,6 +291,7 @@ class Executive : public ff_util::FreeFlyerNodelet {
   ros::ServiceClient front_flashlight_client_, back_flashlight_client_;
   ros::ServiceClient dock_cam_config_client_, dock_cam_enable_client_;
   ros::ServiceClient nav_cam_config_client_, nav_cam_enable_client_;
+  ros::ServiceClient payload_power_client_, pmc_enable_client_;
 
   ros::Subscriber cmd_sub_, dock_state_sub_, gs_ack_sub_, heartbeat_sub_;
   ros::Subscriber motion_sub_, plan_sub_, zones_sub_;

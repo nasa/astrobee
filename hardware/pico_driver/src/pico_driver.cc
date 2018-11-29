@@ -1,14 +1,14 @@
 /* Copyright (c) 2017, United States Government, as represented by the
  * Administrator of the National Aeronautics and Space Administration.
- * 
+ *
  * All rights reserved.
- * 
+ *
  * The Astrobee platform is licensed under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -54,18 +54,18 @@ class PicoDriver {
     : device_(manager.createCamera(uuid.c_str())), exposure_(exposure), initialized_(false) {
     // Try and create the camera
     if (device_ == nullptr) {
-      ROS_ERROR_STREAM("Could not create the camera device");
+      ROS_DEBUG_STREAM("Could not create the camera device");
       return;
     }
     // Initialize the camera
     if (device_->initialize() != royale::CameraStatus::SUCCESS) {
-      ROS_ERROR_STREAM("Could not initialize the camera device");
+      ROS_DEBUG_STREAM("Could not initialize the camera device");
       return;
     }
     // Get the use cases supported by the camera and select the desired one
     royale::Vector<royale::String> use_cases;
     if (device_->getUseCases(use_cases) != royale::CameraStatus::SUCCESS) {
-      ROS_ERROR_STREAM("Could not find a list of use cases for the given camera");
+      ROS_DEBUG_STREAM("Could not find a list of use cases for the given camera");
       return;
     }
     // Try and select the use case
@@ -118,7 +118,7 @@ class PicoDriver {
     if (!Ready()) return 0;
     uint16_t val = 0;
     if (device_->getMaxSensorWidth(val) != royale::CameraStatus::SUCCESS)
-      ROS_ERROR_STREAM("Could not get the max sensor width");
+      ROS_DEBUG_STREAM("Could not get the max sensor width");
     return val;
   }
 
@@ -127,7 +127,7 @@ class PicoDriver {
     if (!Ready()) return 0;
     uint16_t val = 0;
     if (device_->getMaxSensorHeight(val) != royale::CameraStatus::SUCCESS)
-      ROS_ERROR_STREAM("Could not get the max sensor height");
+      ROS_DEBUG_STREAM("Could not get the max sensor height");
     return val;
   }
 
@@ -160,35 +160,35 @@ class PicoDriver {
     if (!Ready()) return;
     bool capturing;
     if (device_->isCapturing(capturing) != royale::CameraStatus::SUCCESS) {
-      ROS_ERROR_STREAM("Could not query the capture status");
+      ROS_DEBUG_STREAM("Could not query the capture status");
       return;
     }
     // If we have subscribers and we aren't capturing, then we should start!
     if (on && !capturing) {
       if (device_->startCapture() != royale::CameraStatus::SUCCESS) {
-        ROS_ERROR_STREAM("Could not start capturing from the camera");
+        ROS_DEBUG_STREAM("Could not start capturing from the camera");
       } else {
         // Case 1: manual exposure
         if (exposure_ > 0) {
           royale::Pair<uint32_t, uint32_t> limits;
           if (device_->getExposureLimits(limits) != royale::CameraStatus::SUCCESS) {
-            ROS_ERROR_STREAM("Could not query the exposure limits");
+            ROS_DEBUG_STREAM("Could not query the exposure limits");
             return;
           }
           if (exposure_ < limits.first || exposure_ > limits.second) {
-            ROS_ERROR_STREAM("Manual exposure outside of limits");
+            ROS_DEBUG_STREAM("Manual exposure outside of limits");
             return;
           }
           if (device_->setExposureMode(royale::ExposureMode::MANUAL) != royale::CameraStatus::SUCCESS
               ||     device_->setExposureTime(exposure_) != royale::CameraStatus::SUCCESS) {
-            ROS_ERROR_STREAM("Manual exposure cannot be set");
+            ROS_DEBUG_STREAM("Manual exposure cannot be set");
             return;
           }
           ROS_INFO_STREAM("Client connected. Switching to manual exposure mode with value " << exposure_);
         // Case 2 : Automatic exposure
         } else if (device_->setExposureMode(
           royale::ExposureMode::AUTOMATIC) != royale::CameraStatus::SUCCESS) {
-          ROS_ERROR_STREAM("Automatic exposure cannot be set");
+          ROS_DEBUG_STREAM("Automatic exposure cannot be set");
           return;
         }
         ROS_INFO_STREAM("Client connected. Switching automatic exposure mode");
@@ -197,7 +197,7 @@ class PicoDriver {
     // If we don't have subscribers and we aren't capturing, then we should stop!
     if (!on && capturing) {
       if (device_->stopCapture() != royale::CameraStatus::SUCCESS) {
-        ROS_ERROR_STREAM("Could not start capturing from the camera");
+        ROS_DEBUG_STREAM("Could not start capturing from the camera");
       }
     }
   }
@@ -218,7 +218,7 @@ class PicoDriverL1 : public PicoDriver, public royale::IDepthDataListener, publi
     ros::NodeHandle *nh, std::string const& robot, std::string const& name, std::string const& topic)
       : PicoDriver(manager, uuid, use_case, exposure) {
     if (!Ready()) {
-      ROS_ERROR_STREAM("Device failed to initialize");
+      ROS_DEBUG_STREAM("Device failed to initialize");
       return;
     }
     // Change the point cloud based on the frame id and sensor size
@@ -279,7 +279,7 @@ class PicoDriverL1 : public PicoDriver, public royale::IDepthDataListener, publi
   }
 
   // Destructor
-  virtual ~PicoDriverL1() {
+  ~PicoDriverL1() {
     this->Listener(nullptr);
   }
 
@@ -357,7 +357,7 @@ class PicoDriverL2 : public PicoDriver, public royale::IExtendedDataListener {
     ros::NodeHandle *nh, std::string const& robot, std::string const& name, std::string const& topic)
       : PicoDriver(manager, uuid, use_case, exposure) {
     if (!Ready()) {
-      ROS_ERROR_STREAM("Device failed to initialize");
+      ROS_DEBUG_STREAM("Device failed to initialize");
       return;
     }
     // Setup the extended
@@ -409,7 +409,7 @@ class PicoDriverL2 : public PicoDriver, public royale::IExtendedDataListener {
   }
 
   // Destructor
-  virtual ~PicoDriverL2() {
+  ~PicoDriverL2() {
     this->ListenerExtended(nullptr);
   }
 
@@ -489,10 +489,10 @@ class PicoFactory {
     // Get the camera level
     level_ = manager_.getAccessLevel(api_key.c_str());
     switch (level_) {
-    case royale::CameraAccessLevel::L4: ROS_INFO("Using API level L4"); break;
-    case royale::CameraAccessLevel::L3: ROS_INFO("Using API level L3"); break;
-    case royale::CameraAccessLevel::L2: ROS_INFO("Using API level L2"); break;
-    case royale::CameraAccessLevel::L1: ROS_INFO("Using API level L1"); break;
+    case royale::CameraAccessLevel::L4: ROS_DEBUG("Using API level L4"); break;
+    case royale::CameraAccessLevel::L3: ROS_DEBUG("Using API level L3"); break;
+    case royale::CameraAccessLevel::L2: ROS_DEBUG("Using API level L2"); break;
+    case royale::CameraAccessLevel::L1: ROS_DEBUG("Using API level L1"); break;
     default:
       break;
     }
@@ -500,15 +500,15 @@ class PicoFactory {
     royale::Vector<royale::String> cam_list = manager_.getConnectedCameraList();
     if (cam_list.empty())
       ROS_ERROR_STREAM("Could not find any cameras. Is the udev rule? In the plugdev group? Is the camera connected?");
-    ROS_INFO_STREAM("Probed USB bus and found " << cam_list.size() << " cameras:");
+    ROS_DEBUG_STREAM("Probed USB bus and found " << cam_list.size() << " cameras:");
     for (size_t i = 0; i < cam_list.size(); ++i)
-      ROS_INFO_STREAM("- " << cam_list[i]);
+      ROS_DEBUG_STREAM("- " << cam_list[i]);
     // We can now initialize
     initialized_ =  true;
   }
 
   // Destructor - make sure we clear up all pico devices
-  virtual ~PicoFactory() {}
+  ~PicoFactory() {}
 
   // Add a new device
   std::shared_ptr < PicoDriver > AddCamera(std::string const& uuid,       // Camera identifier
@@ -552,7 +552,7 @@ class PicoFactory {
 class PicoDriverNodelet : public ff_util::FreeFlyerNodelet  {
  public:
   PicoDriverNodelet() : ff_util::FreeFlyerNodelet() {}
-  virtual ~PicoDriverNodelet() {}
+  ~PicoDriverNodelet() {}
 
  protected:
   void Initialize(ros::NodeHandle *nh) {
@@ -582,6 +582,7 @@ class PicoDriverNodelet : public ff_util::FreeFlyerNodelet  {
       // Get the parameters
       std::string device_name, mode, name, topic;
       uint32_t exposure;
+      bool required = true;
       if (!device_info.GetStr("name", &name))
         return InitFault("Lua:Could not find row 'name' in table");
       // Query all information about the camer
@@ -596,13 +597,16 @@ class PicoDriverNodelet : public ff_util::FreeFlyerNodelet  {
       // Get the exposure
       if (!device_info.GetUInt("exposure", &exposure))
         return InitFault("Lua:Could not find row 'exposure' in table");
-      // Try and create the pico device
+      // Is the camera required (assume true for backward compatibility)
+      if (!device_info.GetBool("required", &required))
+        return InitFault("Lua:Could not find row 'required' in table");
+      // Try and create the pico device, and optionally reqport an error
       std::shared_ptr < PicoDriver > ptr = factory.AddCamera(
         device_name, mode, exposure, name, topic);
-      if (ptr == nullptr)
-        return InitFault("Lua:Could not start camera with UUID " + device_name);
-      // Add the pointer to the device list
-      devices_[device_name] = ptr;
+      if (ptr != nullptr)
+        devices_[device_name] = ptr;
+      else if (required)
+        return InitFault("Lua:Could not start camera " + device_name);
     }
   }
 
@@ -617,7 +621,6 @@ class PicoDriverNodelet : public ff_util::FreeFlyerNodelet  {
   PicoDeviceList devices_;             // Devices
 };
 
-PLUGINLIB_DECLARE_CLASS(pico_driver, PicoDriverNodelet,
-                        pico_driver::PicoDriverNodelet, nodelet::Nodelet);
+PLUGINLIB_EXPORT_CLASS(pico_driver::PicoDriverNodelet, nodelet::Nodelet);
 
 }  // namespace pico_driver

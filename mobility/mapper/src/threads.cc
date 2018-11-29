@@ -1,14 +1,14 @@
 /* Copyright (c) 2017, United States Government, as represented by the
  * Administrator of the National Aeronautics and Space Administration.
- * 
+ *
  * All rights reserved.
- * 
+ *
  * The Astrobee platform is licensed under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -24,74 +24,41 @@
 namespace mapper {
 
 // Thread for fading memory of the octomap
-void MapperNodelet::FadeTask() {
-  ROS_DEBUG("Fading Memory Thread started with rate %f: ", fading_memory_update_rate_);
-  // Rate at which this thread will run
-  ros::Rate loop_rate(fading_memory_update_rate_);
-  while (ros::ok()) {
-    // Get time for when this task started
-    const ros::Time t0 = ros::Time::now();
-    mutexes_.octomap.lock();
-    if (globals_.octomap.memory_time_ > 0)
-        globals_.octomap.FadeMemory(fading_memory_update_rate_);
-    mutexes_.octomap.unlock();
-    ros::Duration fade_time = ros::Time::now() - t0;
-    ROS_DEBUG("Fading memory execution time: %f", fade_time.toSec());
-    loop_rate.sleep();
-  }
-  ROS_DEBUG("Exiting Fading Memory Thread...");
+void MapperNodelet::FadeTask(ros::TimerEvent const& event) {
+  mutexes_.octomap.lock();
+  if (globals_.octomap.memory_time_ > 0)
+      globals_.octomap.FadeMemory(fading_memory_update_rate_);
+  mutexes_.octomap.unlock();
 }
 
 // Thread for constantly updating the tfTree values
-void MapperNodelet::HazTfTask() {
-  ROS_DEBUG("haz_cam tf Thread started with rate %f: ", tf_update_rate_);
-  tf_listener::TfClass obj_cam2world;
-  // TfClass obj_haz2body;
-  ros::Rate loop_rate(tf_update_rate_);
-  while (ros::ok()) {
-    // Get the transforms
-    obj_cam2world.GetTransform(
-      GetTransform(FRAME_NAME_HAZ_CAM), FRAME_NAME_WORLD);
-    mutexes_.tf.lock();
-        globals_.tf_cam2world = obj_cam2world.transform_;
-    mutexes_.tf.unlock();
-    loop_rate.sleep();
-  }
-  ROS_DEBUG("Exiting haz_cam tf Thread...");
+void MapperNodelet::HazTfTask(ros::TimerEvent const& event) {
+  static tf_listener::TfClass obj_cam2world;
+  obj_cam2world.GetTransform(
+    GetTransform(FRAME_NAME_HAZ_CAM), FRAME_NAME_WORLD);
+  mutexes_.tf.lock();
+      globals_.tf_cam2world = obj_cam2world.transform_;
+  mutexes_.tf.unlock();
 }
 
 // Thread for constantly updating the tfTree values
-void MapperNodelet::PerchTfTask() {
-  ROS_DEBUG("perch_cam tf Thread started with rate %f: ", tf_update_rate_);
-  tf_listener::TfClass obj_perch2world;
-  ros::Rate loop_rate(tf_update_rate_);
-  while (ros::ok()) {
-    // Get the transform
-    obj_perch2world.GetTransform(
-      GetTransform(FRAME_NAME_PERCH_CAM), FRAME_NAME_WORLD);
-    mutexes_.tf.lock();
-    globals_.tf_perch2world = obj_perch2world.transform_;
-    mutexes_.tf.unlock();
-    loop_rate.sleep();
-  }
-  ROS_DEBUG("Exiting  perch_cam tf Thread...");
+void MapperNodelet::PerchTfTask(ros::TimerEvent const& event) {
+  static tf_listener::TfClass obj_perch2world;
+  obj_perch2world.GetTransform(
+    GetTransform(FRAME_NAME_PERCH_CAM), FRAME_NAME_WORLD);
+  mutexes_.tf.lock();
+  globals_.tf_perch2world = obj_perch2world.transform_;
+  mutexes_.tf.unlock();
 }
 
 // Thread for updating the tfTree values
-void MapperNodelet::BodyTfTask() {
-  ROS_DEBUG("body tf Thread started with rate %f: ", tf_update_rate_);
-  tf_listener::TfClass obj_body2world;
-  ros::Rate loop_rate(tf_update_rate_);
-while (ros::ok()) {
-    // Get the transform
-    obj_body2world.GetTransform(
-      GetTransform(FRAME_NAME_BODY), FRAME_NAME_WORLD);
-    mutexes_.tf.lock();
-    globals_.tf_body2world = obj_body2world.transform_;
-    mutexes_.tf.unlock();
-    loop_rate.sleep();
-  }
-  ROS_DEBUG("Exiting body tf Thread...");
+void MapperNodelet::BodyTfTask(ros::TimerEvent const& evenr) {
+  static tf_listener::TfClass obj_body2world;
+  obj_body2world.GetTransform(
+    GetTransform(FRAME_NAME_BODY), FRAME_NAME_WORLD);
+  mutexes_.tf.lock();
+  globals_.tf_body2world = obj_body2world.transform_;
+  mutexes_.tf.unlock();
 }
 
 void MapperNodelet::CollisionCheckTask() {
@@ -109,9 +76,12 @@ void MapperNodelet::CollisionCheckTask() {
 
   std::mutex mtx;
   std::unique_lock<std::mutex> lck(mtx);
-  while (ros::ok()) {
+  while (!killed_) {
     // Wait until there is a new trajectory or a new update on the map
     semaphores_.collision_check.wait(lck);
+    if (killed_)
+      return;
+
 
     // Get time for when this task started
     ros::Time time_now = ros::Time::now();
@@ -206,9 +176,11 @@ void MapperNodelet::OctomappingTask() {
 
   std::mutex mtx;
   std::unique_lock<std::mutex> lck(mtx);
-  while (ros::ok()) {
+  while (!killed_) {
     // Wait until there is a new PCL data
     semaphores_.pcl.wait(lck);
+    if (killed_)
+      return;
 
     // Get time for when this task started
     const ros::Time t0 = ros::Time::now();
@@ -246,21 +218,26 @@ void MapperNodelet::OctomappingTask() {
 
     // Publish visualization markers iff at least one node is subscribed to it
     bool pub_obstacles, pub_free, pub_obstacles_inflated, pub_free_inflated;
-    pub_obstacles = (obstacle_marker_pub_.getNumSubscribers() > 0);
-    pub_free = (free_space_marker_pub_.getNumSubscribers() > 0);
+    pub_obstacles = (obstacle_marker_pub_.getNumSubscribers() > 0) || (obstacle_cloud_pub_.getNumSubscribers() > 0);
+    pub_free = (free_space_marker_pub_.getNumSubscribers() > 0) || (free_space_cloud_pub_.getNumSubscribers() > 0);
     pub_obstacles_inflated = (inflated_obstacle_marker_pub_.getNumSubscribers() > 0);
     pub_free_inflated = (inflated_free_space_marker_pub_.getNumSubscribers() > 0);
 
     if (pub_obstacles || pub_free) {
-      visualization_msgs::MarkerArray obstacle_markers;
-      visualization_msgs::MarkerArray free_markers;
+      visualization_msgs::MarkerArray obstacle_markers, free_markers;
+      sensor_msgs::PointCloud2 obstacle_cloud, free_cloud;
       mutexes_.octomap.lock();
-      globals_.octomap.TreeVisMarkers(&obstacle_markers, &free_markers);
+      globals_.octomap.TreeVisMarkers(&obstacle_markers, &free_markers,
+                                      &obstacle_cloud,   &free_cloud);
       mutexes_.octomap.unlock();
-      if (pub_obstacles)
+      if (pub_obstacles) {
         obstacle_marker_pub_.publish(obstacle_markers);
-      if (pub_free)
+        obstacle_cloud_pub_.publish(obstacle_cloud);
+      }
+      if (pub_free) {
         free_space_marker_pub_.publish(free_markers);
+        free_space_cloud_pub_.publish(free_cloud);
+      }
     }
 
     if (pub_obstacles_inflated || pub_free_inflated) {

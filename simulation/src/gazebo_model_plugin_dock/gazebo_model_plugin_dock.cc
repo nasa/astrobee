@@ -28,7 +28,9 @@ namespace gazebo {
 // the forced to be applied to the rigid body
 class GazeboModelPluginDock : public FreeFlyerModelPlugin {
  public:
-  GazeboModelPluginDock() : FreeFlyerModelPlugin("gazebo_dock", "body") {}
+  GazeboModelPluginDock() : FreeFlyerModelPlugin("gazebo_dock", "body") {
+    SetParentFrame(FRAME_NAME_WORLD);
+  }
 
   ~GazeboModelPluginDock() {}
 
@@ -38,10 +40,7 @@ class GazeboModelPluginDock : public FreeFlyerModelPlugin {
     ros::NodeHandle *nh, physics::ModelPtr model, sdf::ElementPtr sdf) {}
 
   // Called on simulation reset
-  virtual void Reset() {}
-
-  // Called on each sensor update event
-  void WorldUpdateCallback() {}
+  void Reset() {}
 };
 
 // Register this plugin with the simulator

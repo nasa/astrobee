@@ -103,116 +103,99 @@ class GazeboModelPluginTruth : public FreeFlyerModelPlugin {
       TOPIC_LOCALIZATION_TRUTH_TWIST, 1);
 
     // Called before each iteration of simulated world update
-    #if GAZEBO_MAJOR_VERSION > 7
-      next_tick_ = GetWorld()->SimTime();
-    #else
-      next_tick_ = GetWorld()->GetSimTime();
-    #endif
-    update_ = event::Events::ConnectWorldUpdateBegin(
-      std::bind(&GazeboModelPluginTruth::Update, this));
+    timer_ = nh->createTimer(ros::Rate(rate_),
+      &GazeboModelPluginTruth::TimerCallback, this, false, true);
   }
 
   // Called on simulation reset
-  virtual void Reset() {
-    #if GAZEBO_MAJOR_VERSION > 7
-      next_tick_ = GetWorld()->SimTime();
-    #else
-      next_tick_ = GetWorld()->GetSimTime();
-    #endif
-  }
+  void Reset() {}
 
   // Called on every discrete time tick in the simulated world
-  virtual void Update() {
-    #if GAZEBO_MAJOR_VERSION > 7
-      if (GetWorld()->SimTime() >= next_tick_) {
-        next_tick_ += 1.0 / rate_;
-        if (tf_) {
-          static tf2_ros::TransformBroadcaster br;
-          msg_.transform.translation.x = GetModel()->WorldPose().Pos().X();
-          msg_.transform.translation.y = GetModel()->WorldPose().Pos().Y();
-          msg_.transform.translation.z = GetModel()->WorldPose().Pos().Z();
-          msg_.transform.rotation.x = GetModel()->WorldPose().Rot().X();
-          msg_.transform.rotation.y = GetModel()->WorldPose().Rot().Y();
-          msg_.transform.rotation.z = GetModel()->WorldPose().Rot().Z();
-          msg_.transform.rotation.w = GetModel()->WorldPose().Rot().W();
-          br.sendTransform(msg_);
-        }
-        // Pose
-        if (pose_) {
-          ros_truth_pose_.header = msg_.header;
-          ros_truth_pose_.pose.position.x = GetModel()->WorldPose().Pos().X();
-          ros_truth_pose_.pose.position.y = GetModel()->WorldPose().Pos().Y();
-          ros_truth_pose_.pose.position.z = GetModel()->WorldPose().Pos().Z();
-          ros_truth_pose_.pose.orientation.x = GetModel()->WorldPose().Rot().X();
-          ros_truth_pose_.pose.orientation.y = GetModel()->WorldPose().Rot().Y();
-          ros_truth_pose_.pose.orientation.z = GetModel()->WorldPose().Rot().Z();
-          ros_truth_pose_.pose.orientation.w = GetModel()->WorldPose().Rot().W();
-          pub_truth_pose_.publish(ros_truth_pose_);
-        }
-        // Twist
-        if (twist_) {
-          ros_truth_twist_.header = msg_.header;
-          ros_truth_twist_.twist.linear.x = GetModel()->WorldLinearVel().X();
-          ros_truth_twist_.twist.linear.y = GetModel()->WorldLinearVel().Y();
-          ros_truth_twist_.twist.linear.z = GetModel()->WorldLinearVel().Z();
-          ros_truth_twist_.twist.angular.x = GetModel()->WorldAngularVel().X();
-          ros_truth_twist_.twist.angular.y = GetModel()->WorldAngularVel().Y();
-          ros_truth_twist_.twist.angular.z = GetModel()->WorldAngularVel().Z();
-          pub_truth_twist_.publish(ros_truth_twist_);
-        }
-      }
-    #else
-      if (GetWorld()->GetSimTime() >= next_tick_) {
-        next_tick_ += 1.0 / rate_;
-        if (tf_) {
-          static tf2_ros::TransformBroadcaster br;
-          msg_.transform.translation.x = GetModel()->GetWorldPose().pos.x;
-          msg_.transform.translation.y = GetModel()->GetWorldPose().pos.y;
-          msg_.transform.translation.z = GetModel()->GetWorldPose().pos.z;
-          msg_.transform.rotation.x = GetModel()->GetWorldPose().rot.x;
-          msg_.transform.rotation.y = GetModel()->GetWorldPose().rot.y;
-          msg_.transform.rotation.z = GetModel()->GetWorldPose().rot.z;
-          msg_.transform.rotation.w = GetModel()->GetWorldPose().rot.w;
-          br.sendTransform(msg_);
-        }
-        // Pose
-        if (pose_) {
-          ros_truth_pose_.header = msg_.header;
-          ros_truth_pose_.pose.position.x = GetModel()->GetWorldPose().pos.x;
-          ros_truth_pose_.pose.position.y = GetModel()->GetWorldPose().pos.y;
-          ros_truth_pose_.pose.position.z = GetModel()->GetWorldPose().pos.z;
-          ros_truth_pose_.pose.orientation.x = GetModel()->GetWorldPose().rot.x;
-          ros_truth_pose_.pose.orientation.y = GetModel()->GetWorldPose().rot.y;
-          ros_truth_pose_.pose.orientation.z = GetModel()->GetWorldPose().rot.z;
-          ros_truth_pose_.pose.orientation.w = GetModel()->GetWorldPose().rot.w;
-          pub_truth_pose_.publish(ros_truth_pose_);
-        }
-        // Twist
-        if (twist_) {
-          ros_truth_twist_.header = msg_.header;
-          ros_truth_twist_.twist.linear.x = GetModel()->GetWorldLinearVel().x;
-          ros_truth_twist_.twist.linear.y = GetModel()->GetWorldLinearVel().y;
-          ros_truth_twist_.twist.linear.z = GetModel()->GetWorldLinearVel().z;
-          ros_truth_twist_.twist.angular.x = GetModel()->GetWorldAngularVel().x;
-          ros_truth_twist_.twist.angular.y = GetModel()->GetWorldAngularVel().y;
-          ros_truth_twist_.twist.angular.z = GetModel()->GetWorldAngularVel().z;
-          pub_truth_twist_.publish(ros_truth_twist_);
-        }
-      }
-    #endif
+  void TimerCallback(ros::TimerEvent const& event) {
+  #if GAZEBO_MAJOR_VERSION > 7
+    if (tf_) {
+      static tf2_ros::TransformBroadcaster br;
+      msg_.transform.translation.x = GetModel()->WorldPose().Pos().X();
+      msg_.transform.translation.y = GetModel()->WorldPose().Pos().Y();
+      msg_.transform.translation.z = GetModel()->WorldPose().Pos().Z();
+      msg_.transform.rotation.x = GetModel()->WorldPose().Rot().X();
+      msg_.transform.rotation.y = GetModel()->WorldPose().Rot().Y();
+      msg_.transform.rotation.z = GetModel()->WorldPose().Rot().Z();
+      msg_.transform.rotation.w = GetModel()->WorldPose().Rot().W();
+      br.sendTransform(msg_);
+    }
+    // Pose
+    if (pose_) {
+      ros_truth_pose_.header = msg_.header;
+      ros_truth_pose_.pose.position.x = GetModel()->WorldPose().Pos().X();
+      ros_truth_pose_.pose.position.y = GetModel()->WorldPose().Pos().Y();
+      ros_truth_pose_.pose.position.z = GetModel()->WorldPose().Pos().Z();
+      ros_truth_pose_.pose.orientation.x = GetModel()->WorldPose().Rot().X();
+      ros_truth_pose_.pose.orientation.y = GetModel()->WorldPose().Rot().Y();
+      ros_truth_pose_.pose.orientation.z = GetModel()->WorldPose().Rot().Z();
+      ros_truth_pose_.pose.orientation.w = GetModel()->WorldPose().Rot().W();
+      pub_truth_pose_.publish(ros_truth_pose_);
+    }
+    // Twist
+    if (twist_) {
+      ros_truth_twist_.header = msg_.header;
+      ros_truth_twist_.twist.linear.x = GetModel()->WorldLinearVel().X();
+      ros_truth_twist_.twist.linear.y = GetModel()->WorldLinearVel().Y();
+      ros_truth_twist_.twist.linear.z = GetModel()->WorldLinearVel().Z();
+      ros_truth_twist_.twist.angular.x = GetModel()->WorldAngularVel().X();
+      ros_truth_twist_.twist.angular.y = GetModel()->WorldAngularVel().Y();
+      ros_truth_twist_.twist.angular.z = GetModel()->WorldAngularVel().Z();
+      pub_truth_twist_.publish(ros_truth_twist_);
+    }
+  #else
+    if (tf_) {
+      static tf2_ros::TransformBroadcaster br;
+      msg_.header.stamp = ros::Time::now();
+      msg_.transform.translation.x = GetModel()->GetWorldPose().pos.x;
+      msg_.transform.translation.y = GetModel()->GetWorldPose().pos.y;
+      msg_.transform.translation.z = GetModel()->GetWorldPose().pos.z;
+      msg_.transform.rotation.x = GetModel()->GetWorldPose().rot.x;
+      msg_.transform.rotation.y = GetModel()->GetWorldPose().rot.y;
+      msg_.transform.rotation.z = GetModel()->GetWorldPose().rot.z;
+      msg_.transform.rotation.w = GetModel()->GetWorldPose().rot.w;
+      br.sendTransform(msg_);
+    }
+    // Pose
+    if (pose_) {
+      ros_truth_pose_.header = msg_.header;
+      ros_truth_pose_.pose.position.x = GetModel()->GetWorldPose().pos.x;
+      ros_truth_pose_.pose.position.y = GetModel()->GetWorldPose().pos.y;
+      ros_truth_pose_.pose.position.z = GetModel()->GetWorldPose().pos.z;
+      ros_truth_pose_.pose.orientation.x = GetModel()->GetWorldPose().rot.x;
+      ros_truth_pose_.pose.orientation.y = GetModel()->GetWorldPose().rot.y;
+      ros_truth_pose_.pose.orientation.z = GetModel()->GetWorldPose().rot.z;
+      ros_truth_pose_.pose.orientation.w = GetModel()->GetWorldPose().rot.w;
+      pub_truth_pose_.publish(ros_truth_pose_);
+    }
+    // Twist
+    if (twist_) {
+      ros_truth_twist_.header = msg_.header;
+      ros_truth_twist_.twist.linear.x = GetModel()->GetWorldLinearVel().x;
+      ros_truth_twist_.twist.linear.y = GetModel()->GetWorldLinearVel().y;
+      ros_truth_twist_.twist.linear.z = GetModel()->GetWorldLinearVel().z;
+      ros_truth_twist_.twist.angular.x = GetModel()->GetWorldAngularVel().x;
+      ros_truth_twist_.twist.angular.y = GetModel()->GetWorldAngularVel().y;
+      ros_truth_twist_.twist.angular.z = GetModel()->GetWorldAngularVel().z;
+      pub_truth_twist_.publish(ros_truth_twist_);
+    }
+  #endif
   }
 
  private:
   double rate_;
   bool tf_, pose_, twist_, static_;
   std::string parent_, child_;
-  common::Time next_tick_;
   geometry_msgs::TransformStamped msg_;
-  event::ConnectionPtr update_;
   geometry_msgs::PoseStamped ros_truth_pose_;
   geometry_msgs::TwistStamped ros_truth_twist_;
   ros::Publisher pub_truth_pose_;
   ros::Publisher pub_truth_twist_;
+  ros::Timer timer_;
 };
 
 // Register this plugin with the simulator

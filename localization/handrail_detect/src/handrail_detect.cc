@@ -1,14 +1,14 @@
 /* Copyright (c) 2017, United States Government, as represented by the
  * Administrator of the National Aeronautics and Space Administration.
- * 
+ *
  * All rights reserved.
- * 
+ *
  * The Astrobee platform is licensed under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -84,10 +84,10 @@ class HandrailDetect : public ff_util::FreeFlyerNodelet {
     std::cout << std::fixed;
     std::cout.precision(6);
   }
-  virtual ~HandrailDetect() {}
+  ~HandrailDetect() {}
 
  protected:
-  virtual void Initialize(ros::NodeHandle *nh) {
+  void Initialize(ros::NodeHandle *nh) {
     // Store the node handle for future use
     nh_ = nh;
     // Read the configuration and setup timers
@@ -1842,7 +1842,6 @@ class HandrailDetect : public ff_util::FreeFlyerNodelet {
   Eigen::Affine3f r2h_center_;
 };
 
-PLUGINLIB_DECLARE_CLASS(handrail_detect, HandrailDetect,
-                        handrail_detect::HandrailDetect, nodelet::Nodelet);
+PLUGINLIB_EXPORT_CLASS(handrail_detect::HandrailDetect, nodelet::Nodelet);
 
 }  // namespace handrail_detect

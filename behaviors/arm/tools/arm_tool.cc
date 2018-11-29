@@ -1,14 +1,14 @@
 /* Copyright (c) 2017, United States Government, as represented by the
  * Administrator of the National Aeronautics and Space Administration.
- * 
+ *
  * All rights reserved.
- * 
+ *
  * The Astrobee platform is licensed under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -55,7 +55,6 @@ DEFINE_bool(open, false, "Open the gripper");
 DEFINE_bool(close, false, "Close the gripper");
 DEFINE_bool(stow, false, "Stow the arm");
 DEFINE_bool(deploy, false, "Deploy the arm");
-DEFINE_bool(cal, false, "Calibrate the gripper");
 DEFINE_bool(stop, false, "Stop the arm");
 
 // Action timeout values
@@ -65,11 +64,9 @@ DEFINE_double(response, 60.0, "Action response timeout");
 DEFINE_double(deadline, -1.0, "Action deadline timeout");
 
 // Arm action result
-void ResultCallback(ff_util::FreeFlyerActionState::Enum code,
+void ResultCallback(ff_util::FreeFlyerActionState::Enum result_code,
   ff_msgs::ArmResultConstPtr const& result) {
-  // Print general response code
-  std::cout << std::endl << "Response: ";
-  switch (code) {
+  switch (result_code) {
   // Result will be a null pointer
   case ff_util::FreeFlyerActionState::Enum::TIMEOUT_ON_CONNECT:
     std::cout << "Timeout on connecting to action" << std::endl;
@@ -87,37 +84,9 @@ void ResultCallback(ff_util::FreeFlyerActionState::Enum code,
   case ff_util::FreeFlyerActionState::Enum::SUCCESS:
   case ff_util::FreeFlyerActionState::Enum::PREEMPTED:
   case ff_util::FreeFlyerActionState::Enum::ABORTED: {
-    // Print a meningful response
-    switch (result->response) {
-      case ff_msgs::ArmResult::SUCCESS:
-        std::cout << "Successfully completed";             break;
-      case ff_msgs::ArmResult::PREEMPTED:
-        std::cout << "Action was preempted";               break;
-      case ff_msgs::ArmResult::INVALID_COMMAND:
-        std::cout << "Invalid command";                    break;
-      case ff_msgs::ArmResult::BAD_TILT_VALUE:
-        std::cout << "Invalid value for tilt";             break;
-      case ff_msgs::ArmResult::BAD_PAN_VALUE:
-        std::cout << "Invalid value for pan";              break;
-      case ff_msgs::ArmResult::BAD_GRIPPER_VALUE:
-        std::cout << "Invalid value for gripper";          break;
-      case ff_msgs::ArmResult::NOT_ALLOWED:
-        std::cout << "Not allowed";                        break;
-      case ff_msgs::ArmResult::NEED_TO_CALIBRATE:
-        std::cout << "Cannot OPEN/CLOSE/SET gripper";      break;
-      case ff_msgs::ArmResult::TILT_FAILED:
-        std::cout << "Tilt command failed";                break;
-      case ff_msgs::ArmResult::PAN_FAILED:
-        std::cout << "Pan command failed";                 break;
-      case ff_msgs::ArmResult::GRIPPER_FAILED:
-        std::cout << "Gripper command failed";             break;
-      case ff_msgs::ArmResult::COMMUNICATION_ERROR:
-        std::cout << "Cannot communicate with arm";        break;
-      case ff_msgs::ArmResult::COLLISION_AVOIDED:
-        std::cout << "Panning disabled when tilt > 90";    break;
-      }
-    }
-    std::cout << std::endl;
+    std::cout << std::endl << "Result: " << result->fsm_result
+              << " (response: " << result->response << ")" << std::endl;
+  }
   default:
     break;
   }
@@ -138,7 +107,6 @@ void FeedbackCallback(ff_msgs::ArmFeedbackConstPtr const& feedback) {
   case ff_msgs::ArmState::PANNING:           str = "PANNING";           break;
   case ff_msgs::ArmState::TILTING:           str = "TILTING";           break;
   case ff_msgs::ArmState::SETTING:           str = "SETTING";           break;
-  case ff_msgs::ArmState::CALIBRATING:       str = "CALIBRATING";       break;
   case ff_msgs::ArmState::STOWING_SETTING:   str = "STOWING_SETTING";   break;
   case ff_msgs::ArmState::STOWING_PANNING:   str = "STOWING_PANNING";   break;
   case ff_msgs::ArmState::STOWING_TILTING:   str = "STOWING_TILTING";   break;
@@ -147,19 +115,11 @@ void FeedbackCallback(ff_msgs::ArmFeedbackConstPtr const& feedback) {
   }
   // Print out a summary
   std::cout << '\r' << std::flush;
-  if (feedback->gripper < 0) {
-    std::cout << std::fixed << std::setprecision(2)
-      << "PAN: " << feedback->pan << " deg "
-      << "TILT: " << feedback->tilt << " deg "
-      << "GRIPPER: uncalibrated "
-      << "[" << str << "]           ";
-  } else {
-    std::cout << std::fixed << std::setprecision(2)
-      << "PAN: " << feedback->pan << " deg "
-      << "TILT: " << feedback->tilt << " deg "
-      << "GRIPPER: " << feedback->gripper << " deg "
-      << "[" << str << "]           ";
-  }
+  std::cout << std::fixed << std::setprecision(2)
+    << "PAN: " << feedback->pan << " deg "
+    << "TILT: " << feedback->tilt << " deg "
+    << "GRIPPER: " << feedback->gripper << " deg "
+    << "[" << str << "]           ";
 }
 
 // Ensure all clients are connected
@@ -175,7 +135,6 @@ void ConnectedCallback(
   ff_msgs::ArmGoal goal;
   if (FLAGS_open)        goal.command = ff_msgs::ArmGoal::GRIPPER_OPEN;
   else if (FLAGS_close)  goal.command = ff_msgs::ArmGoal::GRIPPER_CLOSE;
-  else if (FLAGS_cal)    goal.command = ff_msgs::ArmGoal::GRIPPER_CALIBRATE;
   else if (FLAGS_stow)   goal.command = ff_msgs::ArmGoal::ARM_STOW;
   else if (FLAGS_deploy) goal.command = ff_msgs::ArmGoal::ARM_DEPLOY;
   else if (FLAGS_stop)   goal.command = ff_msgs::ArmGoal::ARM_STOP;
@@ -213,13 +172,12 @@ int main(int argc, char *argv[]) {
   if (FLAGS_close) cmd++;
   if (FLAGS_stow) cmd++;
   if (FLAGS_deploy) cmd++;
-  if (FLAGS_cal) cmd++;
   if (FLAGS_stop) cmd++;
   // Check we have specified one of the required switches
   if (cmd != 1) {
     std::cerr << "You must specify one of: " << std::endl;
     std::cerr << "> -pan and/or -tilt" << std::endl;
-    std::cerr << "> -grip, -open, -close -stow, -deploy, -stop or -cal"
+    std::cerr << "> -grip, -open, -close -stow, -deploy or -stop"
               << std::endl;
     return 1;
   }

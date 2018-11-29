@@ -41,8 +41,12 @@
 
   <!-- Debug-specific options -->
   <arg name="default" default="true" />         <!-- Insert default robot /  -->
-  <arg name="pose"
-       default="9.92 -9.54 4.50 0 0 0 1" />     <!-- Default: defalt docked  -->
+  <arg if="$(eval arg('world')=='iss')"
+       name="pose"
+       default="9.92 -9.54 4.50 0 0 0 1" />     <!-- iss: docked in JPM      -->
+  <arg if="$(eval arg('world')=='granite')"
+       name="pose"
+       default="0 0 -0.7 0 0 0 1" /> <!-- granite: docked         -->
 
   <!-- Multi-robot simulation -->
   <arg name="honey" default="false" />          <!-- Insert a honey robot    -->
@@ -68,7 +72,9 @@
   <group>
     <machine name ="local" address="localhost" default="true"/>
     <!-- Start the descriptions (ISS, dock, granite) for visualization purposes -->
-    <include file="$(find description)/launch/description.launch"/>
+    <include file="$(find astrobee)/launch/controller/descriptions.launch">
+      <arg name="world" value="$(arg world)"/>
+    </include>
     <!-- Start ground controller services -->
     <include if="$(arg gviz)" file="$(find astrobee)/launch/controller/gviz.launch"/>
     <include if="$(arg gds)" file="$(find astrobee)/launch/controller/gds.launch"/>

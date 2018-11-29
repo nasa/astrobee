@@ -42,3 +42,7 @@ int8 UNDOCKING_WAITING_FOR_SPIN_UP      = -2
 int8 UNDOCKING_MOVING_TO_APPROACH_POSE  = -3
 int8 UNDOCKED                           = -4
 int8 UNDOCKING_MAX_STATE                = -4
+
+# A human readble version of the (event) -> [state] transition
+string fsm_event
+string fsm_state

@@ -6,8 +6,9 @@ Panels:
       Expanded:
         - /Debug1
         - /Debug1/Sensors1
+        - /Debug1/Mobility1/Mapper1
       Splitter Ratio: 0.579250693
-    Tree Height: 160
+    Tree Height: 196
   - Class: rviz/Selection
     Name: Selection
   - Class: rviz/Tool Properties
@@ -30,13 +31,6 @@ Panels:
 Visualization Manager:
   Class: ""
   Displays:
-    - Class: rviz/Axes
-      Enabled: true
-      Length: 3
-      Name: Axes
-      Radius: 0.00999999978
-      Reference Frame: world
-      Value: true
     - Class: rviz/TF
       Enabled: true
       Frame Timeout: 15
@@ -65,6 +59,8 @@ Visualization Manager:
         flashlight_aft:
           Value: true
         flashlight_front:
+          Value: true
+        granite/body:
           Value: true
         handrail:
           Value: true
@@ -170,6 +166,8 @@ Visualization Manager:
                 {}
               dock/berth2/complete:
                 {}
+          granite/body:
+            {}
           iss/body:
             {}
           rviz:
@@ -178,24 +176,71 @@ Visualization Manager:
             {}
       Update Interval: 0
       Value: true
-    - Alpha: 0.100000001
-      Cell Size: 1
-      Class: rviz/Grid
-      Color: 255; 255; 127
+    - Class: rviz/Group
+      Displays:
+        - Class: rviz/Axes
+          Enabled: true
+          Length: 3
+          Name: Axes
+          Radius: 0.00999999978
+          Reference Frame: world
+          Value: true
+        - Alpha: 0.100000001
+          Cell Size: 1
+          Class: rviz/Grid
+          Color: 255; 255; 127
+          Enabled: true
+          Line Style:
+            Line Width: 0.0299999993
+            Value: Billboards
+          Name: Grid 1m
+          Normal Cell Count: 0
+          Offset:
+            X: 0
+            Y: 0
+            Z: 4.8499999
+          Plane: XY
+          Plane Cell Count: 100
+          Reference Frame: world
+          Value: true
+        - Alpha: 0.100000001
+          Cell Size: 0.100000001
+          Class: rviz/Grid
+          Color: 160; 160; 164
+          Enabled: true
+          Line Style:
+            Line Width: 0.0299999993
+            Value: Lines
+          Name: Grid 0.1m
+          Normal Cell Count: 0
+          Offset:
+            X: 0
+            Y: 0
+            Z: 4.8499999
+          Plane: XY
+          Plane Cell Count: 1000
+          Reference Frame: world
+          Value: true
+        - Alpha: 0.5
+          Cell Size: 10
+          Class: rviz/Grid
+          Color: 160; 160; 164
+          Enabled: true
+          Line Style:
+            Line Width: 0.0299999993
+            Value: Lines
+          Name: Grid 10m
+          Normal Cell Count: 0
+          Offset:
+            X: 0
+            Y: 0
+            Z: 4.8499999
+          Plane: XY
+          Plane Cell Count: 10
+          Reference Frame: world
+          Value: true
       Enabled: true
-      Line Style:
-        Line Width: 0.0299999993
-        Value: Billboards
-      Name: Grid
-      Normal Cell Count: 0
-      Offset:
-        X: 0
-        Y: 0
-        Z: 4.8499999
-      Plane: XY
-      Plane Cell Count: 100
-      Reference Frame: world
-      Value: true
+      Name: Grids
     - Alpha: 1
       Class: rviz/RobotModel
       Collision Enabled: false
@@ -355,7 +400,7 @@ Visualization Manager:
               Marker Topic: /hw/laser/rviz
               Name: Laser
               Namespaces:
-                laser_visual: true
+                {}
               Queue Size: 100
               Value: true
             - Class: rviz/MarkerArray
@@ -363,8 +408,7 @@ Visualization Manager:
               Marker Topic: /hw/lights/rviz
               Name: Flashlights
               Namespaces:
-                flashlight_aft: true
-                flashlight_front: true
+                {}
               Queue Size: 100
               Value: true
           Enabled: true
@@ -539,49 +583,140 @@ Visualization Manager:
               Topic: /mob/choreographer/segment
               Unreliable: false
               Value: true
-            - Acceleration Color: 241; 21; 24
-              Alpha: 1
-              Class: traj_opt_ros/Trajectory
-              Color: 204; 51; 204
-              Enabled: true
-              History Length: 1
-              Line Thickness: 0.100000001
-              Name: Trajectory
-              Plot Acceleration: false
-              Plot Velocity: true
-              Style: Mike
-              Tangent Samples: 25
-              Topic: /planner_qp_manager/trajectory
-              Trajectory Samples: 50
-              Unreliable: false
-              Value: true
-              Velocity Color: 20; 251; 204
-            - Class: rviz/MarkerArray
-              Enabled: true
-              Marker Topic: /mob/mapper/zones
-              Name: Zones
-              Namespaces:
-                zone_visualization: true
-              Queue Size: 100
-              Value: true
-            - Class: rviz/MarkerArray
-              Enabled: true
-              Marker Topic: /mob/mapper/obstacle_markers
-              Name: Map
-              Namespaces:
-                obstacleMap: true
-              Queue Size: 100
-              Value: true
             - Class: rviz/MarkerArray
               Enabled: true
               Marker Topic: /mob/mapper/discrete_trajectory_markers
               Name: Segment
               Namespaces:
-                SampledTraj: true
-                compressedTraj: true
-                thick_traj: true
+                {}
               Queue Size: 100
               Value: true
+            - Class: rviz/Group
+              Displays:
+                - Acceleration Color: 241; 21; 24
+                  Alpha: 1
+                  Class: traj_opt_ros/Trajectory
+                  Color: 204; 51; 204
+                  Enabled: true
+                  History Length: 1
+                  Line Thickness: 0.100000001
+                  Name: Trajectory
+                  Plot Acceleration: false
+                  Plot Velocity: false
+                  Style: Mike
+                  Tangent Samples: 25
+                  Topic: /mob/planner_qp/trajectory
+                  Trajectory Samples: 50
+                  Unreliable: false
+                  Value: true
+                  Velocity Color: 20; 251; 204
+                - Acceleration Color: 241; 21; 24
+                  Alpha: 1
+                  Class: traj_opt_ros/Trajectory
+                  Color: 255; 0; 0
+                  Enabled: true
+                  History Length: 1
+                  Line Thickness: 0.100000001
+                  Name: TrajectoryDebug
+                  Plot Acceleration: false
+                  Plot Velocity: false
+                  Style: Mike
+                  Tangent Samples: 10
+                  Topic: /mob/planner_qp/trajectory_debug
+                  Trajectory Samples: 200
+                  Unreliable: false
+                  Value: true
+                  Velocity Color: 255; 255; 0
+              Enabled: true
+              Name: Planner QP
+            - Class: rviz/Group
+              Displays:
+                - Class: rviz/MarkerArray
+                  Enabled: true
+                  Marker Topic: /mob/mapper/zones
+                  Name: Zones
+                  Namespaces:
+                    zone_visualization: true
+                  Queue Size: 100
+                  Value: true
+                - Class: rviz/MarkerArray
+                  Enabled: false
+                  Marker Topic: /mob/mapper/obstacle_markers
+                  Name: Map
+                  Namespaces:
+                    {}
+                  Queue Size: 100
+                  Value: false
+                - Class: rviz/MarkerArray
+                  Enabled: false
+                  Marker Topic: /mob/mapper/free_space_markers
+                  Name: FreeSpace
+                  Namespaces:
+                    {}
+                  Queue Size: 100
+                  Value: false
+                - Alpha: 0.100000001
+                  Autocompute Intensity Bounds: true
+                  Autocompute Value Bounds:
+                    Max Value: 10
+                    Min Value: -10
+                    Value: true
+                  Axis: Z
+                  Channel Name: intensity
+                  Class: rviz/PointCloud2
+                  Color: 255; 255; 255
+                  Color Transformer: Intensity
+                  Decay Time: 0
+                  Enabled: false
+                  Invert Rainbow: false
+                  Max Color: 255; 255; 255
+                  Max Intensity: 4096
+                  Min Color: 0; 0; 0
+                  Min Intensity: 0
+                  Name: FreeSpace
+                  Position Transformer: XYZ
+                  Queue Size: 10
+                  Selectable: true
+                  Size (Pixels): 3
+                  Size (m): 0.100000001
+                  Style: Boxes
+                  Topic: /mob/mapper/free_space_cloud
+                  Unreliable: false
+                  Use Fixed Frame: true
+                  Use rainbow: true
+                  Value: false
+                - Alpha: 1
+                  Autocompute Intensity Bounds: true
+                  Autocompute Value Bounds:
+                    Max Value: -3.6500001
+                    Min Value: -5.3499999
+                    Value: true
+                  Axis: Z
+                  Channel Name: intensity
+                  Class: rviz/PointCloud2
+                  Color: 255; 255; 255
+                  Color Transformer: AxisColor
+                  Decay Time: 0
+                  Enabled: true
+                  Invert Rainbow: false
+                  Max Color: 255; 255; 255
+                  Max Intensity: 4096
+                  Min Color: 0; 0; 0
+                  Min Intensity: 0
+                  Name: Map
+                  Position Transformer: XYZ
+                  Queue Size: 10
+                  Selectable: true
+                  Size (Pixels): 3
+                  Size (m): 0.100000001
+                  Style: Boxes
+                  Topic: /mob/mapper/obstacle_cloud
+                  Unreliable: false
+                  Use Fixed Frame: true
+                  Use rainbow: true
+                  Value: true
+              Enabled: true
+              Name: Mapper
           Enabled: true
           Name: Mobility
       Enabled: true
@@ -610,26 +745,23 @@ Visualization Manager:
   Value: true
   Views:
     Current:
-      Class: rviz/Orbit
-      Distance: 5.66057682
+      Class: rviz/FPS
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.0599999987
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
-      Focal Point:
-        X: 11.1272001
-        Y: 10.1034327
-        Z: -3.82412767
-      Focal Shape Fixed Size: true
-      Focal Shape Size: 0.0500000007
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.00999999978
-      Pitch: 0.394798875
-      Target Frame: world
-      Value: Orbit (rviz)
-      Yaw: 1.05685401
+      Pitch: 0.91479671
+      Position:
+        X: 7.50046253
+        Y: 8.45267487
+        Z: -0.702929854
+      Target Frame: rviz
+      Value: FPS (rviz)
+      Yaw: 0.235244527
     Saved: ~
 Window Geometry:
   "DEBUG: DockCam":
@@ -638,10 +770,10 @@ Window Geometry:
     collapsed: false
   Displays:
     collapsed: false
-  Height: 920
+  Height: 848
   Hide Left Dock: false
   Hide Right Dock: false
-  QMainWindow State: 000000ff00000000fd00000004000000000000016a0000034ffc0200000011fb0000001a00440045004200550047003a0020004e0061007600430061006d0100000028000001300000001800fffffffb0000001c00440045004200550047003a00200044006f0063006b00430061006d010000015e0000012d0000001800fffffffb000000100044006900730070006c0061007900730100000291000000e6000000dc00fffffffb0000001200530065006c0065006300740069006f006e00000001e10000009b0000006300fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000002b3000002e100000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261fb0000000a0049006d00610067006500000002af000000f40000000000000000fb0000000a0049006d00610067006502000000c60000001d0000052f000003f4fb0000000a0049006d006100670065020000016600000075000004ab00000373fb0000000a0049006d00610067006501000004680000014d0000000000000000fb0000000a0049006d0061006700650000000028000003dd0000000000000000fb000000100044006f0063006b002000430061006d0100000143000001090000000000000000fb0000000e004e00610076002000430061006d010000019d000000af0000000000000000000000010000016a00000455fc0200000004fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a0049006d00610067006500000000330000029b0000000000000000fb0000000a00560069006500770073000000002800000396000000b500fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b20000000000000000000000020000078000000115fc0100000001fb0000000a00560069006500770073030000004e00000080000002e1000001970000000300000780000000fffc0100000002fc00000000000004380000000000fffffffa000000000200000002fb0000001e004d006f00740069006f006e00200050006c0061006e006e0069006e00670100000000ffffffff0000000000000000fb0000000800540069006d00650000000000ffffffff0000004000fffffffb0000000800540069006d00650100000000000004500000000000000000000002c80000034f00000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  QMainWindow State: 000000ff00000000fd00000004000000000000016a0000030dfc0200000012fb0000001a00440045004200550047003a0020004e0061007600430061006d0100000028000001010000001600fffffffb0000001c00440045004200550047003a00200044006f0063006b00430061006d010000012f000000fb0000001600fffffffb000000100044006900730070006c006100790073010000023000000105000000d700fffffffb0000000a0056006900650077007300000002c2000000b5000000ad00fffffffb0000001200530065006c0065006300740069006f006e00000001e10000009b0000006100fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000002b3000002e100000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261fb0000000a0049006d00610067006500000002af000000f40000000000000000fb0000000a0049006d00610067006502000000c60000001d0000052f000003f4fb0000000a0049006d006100670065020000016600000075000004ab00000373fb0000000a0049006d00610067006501000004680000014d0000000000000000fb0000000a0049006d0061006700650000000028000003dd0000000000000000fb000000100044006f0063006b002000430061006d0100000143000001090000000000000000fb0000000e004e00610076002000430061006d010000019d000000af0000000000000000000000010000016a0000044ffc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a0049006d00610067006500000000330000029b0000000000000000fb0000001200530065006c0065006300740069006f006e010000025a000000b20000000000000000000000020000078000000115fc0100000001fb0000000a00560069006500770073030000004e00000080000002e1000001970000000300000780000000fffc0100000002fc00000000000004380000000000fffffffa000000000200000002fb0000001e004d006f00740069006f006e00200050006c0061006e006e0069006e00670100000000ffffffff0000000000000000fb0000000800540069006d00650000000000ffffffff0000003800fffffffb0000000800540069006d00650100000000000004500000000000000000000002c80000030d00000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
   Selection:
     collapsed: false
   Time:
@@ -651,5 +783,5 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 1080
-  X: 3760
-  Y: 972
+  X: 49
+  Y: 24

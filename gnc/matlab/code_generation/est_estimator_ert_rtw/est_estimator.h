@@ -5,7 +5,7 @@
 //
 // Model version                  : 1.1142
 // Simulink Coder version         : 8.11 (R2016b) 25-Aug-2016
-// C/C++ source code generated on : Wed Jan 31 12:31:58 2018
+// C/C++ source code generated on : Wed Aug 22 07:24:56 2018
 //
 // Target selection: ert.tlc
 // Embedded hardware selection: 32-bit Generic
@@ -36,32 +36,31 @@
 #include "baieimopcbaiaaai_eulers_to_quat.h"
 #include "biecdbieglngohlf_pinv.h"
 #include "biekcjmgdbaadbim_eye.h"
-#include "cbiemoppekfknopp_quatmult.h"
 #include "div_nzp_s32_floor.h"
 #include "djmgjecbcbiengln_power.h"
 #include "ecjedbaiaiekohln_quaternion_to_rotation.h"
 #include "fkfcbaiengdjgdje_quaternion_to_rotation.h"
 #include "fkngdjekgdjepphl_sum.h"
-#include "gdjecbiecbaapppp_quat_rotation_vec.h"
+#include "gdjmmglnmgdjlfkf_quat_rotation_vec.h"
 #include "glfcngdjgdjmmglf_pinv.h"
 #include "hdbaohdbkngdbimo_PadeApproximantOfDegree.h"
 #include "hdbihlngknopkfcj_repmat.h"
 #include "iecjbieccbailfcb_abs.h"
+#include "iecjopppiecjmgln_quatmult.h"
 #include "iekfiecjknopophd_pinv.h"
 #include "imohcjmoimopimoh_nullAssignment.h"
 #include "imohknglphlfpphd_repmat.h"
 #include "jekfopppngdbhlng_diag.h"
 #include "jmglopphppphkfkf_qr.h"
 #include "jmohiecblfcjnohl_qr.h"
+#include "kngldbimhdbaimgd_quat_propagate_step.h"
 #include "mgdbbiekfknonglf_nullAssignment.h"
 #include "mglfbimobiechdbi_bitget.h"
 #include "mglnkfkfmglfjekn_PadeApproximantOfDegree.h"
 #include "moppbaaafkfkimgd_diag.h"
 #include "ngdjjecbgdbaglfc_eye.h"
 #include "nohdcbaibiecnohl_power.h"
-#include "nohlbaimmophdbim_quat_propagate_step.h"
 #include "nohlcjekmohddjmg_abs.h"
-#include "ophdbaimngdjphln_quat_rotation_vec.h"
 #include "ophlcjmgkfcbmohl_nullAssignment.h"
 #include "rt_powf_snf.h"
 #include "rt_roundd_snf.h"
@@ -502,6 +501,9 @@ struct P_est_estimator_T_ {
                                        //  Referenced by:
                                        //    '<S5>/Constant'
                                        //    '<S80>/Constant'
+
+  uint8_T fam_impeller_speeds_cnt;     // Variable: fam_impeller_speeds_cnt
+                                       //  Referenced by: '<S40>/Saturation'
 
   uint8_T tun_ase_enable_of;           // Variable: tun_ase_enable_of
                                        //  Referenced by:
@@ -1260,6 +1262,9 @@ struct P_est_estimator_T_ {
 
   uint8_T Constant_Value_oq;           // Expression: const
                                        //  Referenced by: '<S33>/Constant'
+
+  uint8_T Saturation_LowerSat_n;       // Computed Parameter: Saturation_LowerSat_n
+                                       //  Referenced by: '<S40>/Saturation'
 
   uint8_T Switch_Threshold;            // Computed Parameter: Switch_Threshold
                                        //  Referenced by: '<S40>/Switch'

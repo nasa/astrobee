@@ -5,7 +5,7 @@
 //
 // Model version                  : 1.1142
 // Simulink Coder version         : 8.11 (R2016b) 25-Aug-2016
-// C/C++ source code generated on : Wed Jan 31 12:31:58 2018
+// C/C++ source code generated on : Wed Aug 22 07:24:56 2018
 //
 // Target selection: ert.tlc
 // Embedded hardware selection: 32-bit Generic
@@ -75,7 +75,7 @@ P_est_estimator_T est_estimator_P = {
 
   { 0.0279227F, -0.712277F, 0.0139585F, 0.701204F },
 
-  { 0.00436011F, -0.00666179F, 0.70078F, 0.660505F },
+  { 0.00436011F, -0.00666179F, 0.75078F, 0.660505F },
 
   { 1.3539E-8F, 1.3539E-8F, 1.3539E-8F, 3.432E-13F, 3.432E-13F, 3.432E-13F,
     9.1022E-8F, 9.1022E-8F, 9.1022E-8F, 1.3678E-10F, 1.3678E-10F, 1.3678E-10F },
@@ -126,6 +126,7 @@ P_est_estimator_T est_estimator_P = {
   1U,
   0U,
   2U,
+  3U,
   1U,
   0U,
   0U,
@@ -1879,6 +1880,7 @@ P_est_estimator_T est_estimator_P = {
   0U,
   0U,
   10U,
+  1U,
   0U,
   3U,
   10U,

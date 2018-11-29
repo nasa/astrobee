@@ -68,7 +68,7 @@ saveFigs = 0;
 writeStats = 0;
 
 % Determine which data sets exist in the workspace
-ds_on.cmd = exist('out_cmd_msg', 'var')  && ~isempty(out_cmd_msg);
+ds_on.cmd = exist('out_cmd_msg', 'var')  && ~isempty(out_cmd_msg) && isfield(out_cmd_msg, 'traj_quat');
 ds_on.env = exist('out_env_msg', 'var') && ~isempty(out_env_msg);
 ds_on.kfl = exist('out_kfl_msg', 'var') && ~isempty(out_kfl_msg);
 ds_on.act = exist('out_act_msg', 'var') && ~isempty(out_act_msg);
@@ -96,6 +96,7 @@ t0 = calcData.t0;
 
 try; out_env_msg = evalin('base', 'out_env_msg'); end;
 assignin('base', 'calcData', calcData);
+assignin('base', 't0', t0);
 
 %% Save Monte Carlo Data if desired
 if any(strcmpi(varargin, 'saveMCdata'))
@@ -106,12 +107,21 @@ end
 if ds_on.cmd && isfield(plotConfig, 'overview')
     
     plotError(out_env_msg.P_B_ISS_ISS, out_cmd_msg.traj_pos, 'Meters', 'Position', 'true', 'traj', '--', t0)
+    lims = get(gca, 'XLim');
+    hold on; plot(lims, [.2 .2], 'r--', 'LineWidth', 2); plot(lims, [-.2 -.2], 'r--', 'LineWidth', 2);
+    
     plotError(out_kfl_msg.P_B_ISS_ISS, out_cmd_msg.traj_pos, 'Meters', 'Commanded Position', 'est', 'traj', '--', t0)
+    lims = get(gca, 'XLim');
+    hold on; plot(lims, [.1 .1], 'r--', 'LineWidth', 2); plot(lims, [-.1 -.1], 'r--', 'LineWidth', 2);
+    
     
     % Plot attitude error
     %plotQuatsError(out_env_msg.veh_quat_eci2body.Time,out_env_msg.veh_quat_eci2body.Data, out_cmd_msg.cmd_curr_quat.Time, out_cmd_msg.cmd_curr_quat.Data, '', 'Commanded Attitude', 'true', 'cmd','--')
     %plotQuatsError3(out_env_msg.Q_ISS2B, out_cmd_msg.traj_quat, out_cmd_msg.cmd_quat, 'Commanded Attitude', 'true', 'traj','cmd', '--', ':', t0)
     plotQuatsError(out_env_msg.Q_ISS2B, out_cmd_msg.traj_quat, 'Commanded Attitude', 'true', 'traj', '--', t0);
+    lims = get(gca, 'XLim');
+    hold on; plot(lims, [20 20], 'r--', 'LineWidth', 2); plot(lims, [-20 -20], 'r--', 'LineWidth', 2);
+    
     
     figure; plot(calcData.error.att.total_euler.convert_rad2deg, 't0', t0, 'Title', 'Attitude Error off commanded trajectory');
     grid on; %title('Attitude Error off commanded trajectory');

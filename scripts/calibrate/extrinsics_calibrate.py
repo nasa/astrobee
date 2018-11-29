@@ -120,7 +120,7 @@ def lua_replace_transform(filename, transform_name, transform):
     return True
   return False
 
-def calibrate_extrinsics(bag, target_file, intrinsics_yaml, imu_yaml,
+def calibrate_extrinsics(bag, calibration_target, intrinsics_yaml, imu_yaml,
                          from_time, to_time, padding,
                          verbose=False):
 
@@ -135,8 +135,8 @@ def calibrate_extrinsics(bag, target_file, intrinsics_yaml, imu_yaml,
   if not os.path.isfile(bag):
     print >> sys.stderr, 'Bag file %s does not exist.' % (bag)
     return None
-  if not os.path.isfile(target_file):
-    print >> sys.stderr, 'Target file %s does not exist.' % (target_file)
+  if not os.path.isfile(calibration_target):
+    print >> sys.stderr, 'Target file %s does not exist.' % (calibration_target)
     return None
   if not os.path.isfile(intrinsics_yaml):
     print >> sys.stderr, 'Intrinsics file %s does not exist.' % (intrinsics_yaml)
@@ -154,7 +154,7 @@ def calibrate_extrinsics(bag, target_file, intrinsics_yaml, imu_yaml,
 
   cmd = ('rosrun kalibr kalibr_calibrate_imu_camera --bag %s --cam %s --imu %s ' +
          '--target %s --time-calibration%s') % \
-         (bag_file, intrinsics_yaml, imu_yaml, target_file, extra_flags)
+         (bag_file, intrinsics_yaml, imu_yaml, calibration_target, extra_flags)
 
   print("Running in: " + bag_dir)
   print(cmd)
@@ -191,6 +191,10 @@ def has_two_cameras(filename):
     return False
 
 def main():
+
+  SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
+  default_calibration_target = SCRIPT_DIR + '/config/granite_april_tag.yaml'
+  
   parser = argparse.ArgumentParser(description='Calibrate extrinsics parameters.')
   parser.add_argument('robot', help='The name of the robot to configure (i.e., put p4d to edit p4d.config).')
   parser.add_argument('intrinsics_yaml', help='The yaml file with intrinsics calibration data.')
@@ -199,17 +203,18 @@ def main():
   parser.add_argument('-f', '--from', dest='from_time', help='Use the bag data starting at this time, in seconds.')
   parser.add_argument('-t', '--to', dest='to_time', help='Use the bag data until this time, in seconds.')
   parser.add_argument('--timeoffset-padding', dest='padding', help='Maximum range in which the timeoffset may change during estimation, in seconds. See readme.md for more info. (default: 0.01)')
+  parser.add_argument('--calibration_target', dest='calibration_target', help='Use this yaml file to desribe the calibration target, overriding the default: ' + default_calibration_target)
   parser.add_argument('-v', '--verbose',  dest='verbose', action='store_true', help='Verbose mode.')
   args = parser.parse_args()
 
-  SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
+  if args.calibration_target is None:
+    args.calibration_target = default_calibration_target
 
-  target_yaml = SCRIPT_DIR + '/config/granite_april_tag.yaml'
   imu_yaml = SCRIPT_DIR + '/config/imu.yaml'
   config_file = SCRIPT_DIR + '/../../astrobee/config/robots/' + args.robot + '.config'
 
   print 'Calibrating camera extrinsics...'
-  extrinsics_yaml = calibrate_extrinsics(args.extrinsics_bag, target_yaml,
+  extrinsics_yaml = calibrate_extrinsics(args.extrinsics_bag, args.calibration_target,
                                          args.intrinsics_yaml, imu_yaml,
                                          args.from_time, args.to_time, args.padding,
                                          verbose=args.verbose)

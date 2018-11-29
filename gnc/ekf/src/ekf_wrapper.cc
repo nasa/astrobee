@@ -1,14 +1,14 @@
 /* Copyright (c) 2017, United States Government, as represented by the
  * Administrator of the National Aeronautics and Space Administration.
- * 
+ *
  * All rights reserved.
- * 
+ *
  * The Astrobee platform is licensed under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -32,7 +32,7 @@ namespace ekf {
 EkfWrapper::EkfWrapper(ros::NodeHandle* nh, std::string const& platform_name) :
           ekf_initialized_(false), imus_dropped_(0), have_imu_(false),
           input_mode_(ff_msgs::SetEkfInputRequest::MODE_NONE), nh_(nh),
-          estimating_bias_(false), disp_features_(false) {
+          estimating_bias_(false), disp_features_(false), killed_(false) {
   platform_name_ = (platform_name.empty() ? "" : platform_name + "/");
 
   config_.AddFile("gnc.config");
@@ -52,6 +52,7 @@ EkfWrapper::EkfWrapper(ros::NodeHandle* nh, std::string const& platform_name) :
 }
 
 EkfWrapper::~EkfWrapper() {
+  killed_ = true;
 }
 
 // wait to start up until the IMU is ready
@@ -117,9 +118,7 @@ void EkfWrapper::SubscriberCallback() {
 
 void EkfWrapper::PublishFeatures(ff_msgs::VisualLandmarks::ConstPtr const& l) {
   if (!disp_features_) return;
-  features_.header = std_msgs::Header();
-  features_.header.stamp = ros::Time::now();
-  features_.header.frame_id = "world";
+  features_.header = l->header;
   features_.height = 1;
   features_.width = l->landmarks.size();
   features_.fields.resize(3);
@@ -189,7 +188,7 @@ void EkfWrapper::ResetCallback() {
 void EkfWrapper::ImuCallBack(sensor_msgs::Imu::ConstPtr const& imu) {
   // concurrency protection
   std::unique_lock<std::mutex> lock(mutex_imu_msg_);
-  while (have_imu_ && ros::ok())
+  while (have_imu_ && !killed_)
     cv_imu_.wait_for(lock, std::chrono::milliseconds(8));
 
   // copy IMU data
@@ -251,7 +250,18 @@ void EkfWrapper::VLVisualLandmarksCallBack(ff_msgs::VisualLandmarks::ConstPtr co
 void EkfWrapper::ARVisualLandmarksCallBack(ff_msgs::VisualLandmarks::ConstPtr const& vl) {
   if (input_mode_ == ff_msgs::SetEkfInputRequest::MODE_AR_TAGS) {
     std::lock_guard<std::mutex> lock(mutex_vl_msg_);
-    ekf_.ARTagUpdate(*vl.get());
+    bool updated = ekf_.ARTagUpdate(*vl.get());
+    if (updated) {
+      Eigen::Affine3d t = ekf_.GetDockToWorldTransform();
+      geometry_msgs::TransformStamped transform;
+      transform.header = std_msgs::Header();
+      transform.header.stamp = ros::Time::now();
+      transform.header.frame_id = "world";
+      transform.child_frame_id = "dock/body";
+      transform.transform.translation = msg_conversions::eigen_to_ros_vector(t.translation());
+      transform.transform.rotation = msg_conversions::eigen_to_ros_quat(Eigen::Quaterniond(t.linear()));
+      transform_pub_.sendTransform(transform);
+    }
     PublishFeatures(vl);
   }
 }
@@ -311,11 +321,14 @@ void EkfWrapper::FlightModeCallback(ff_msgs::FlightMode::ConstPtr const& mode) {
   ekf_.SetSpeedGain(mode->speed);
 }
 
-void EkfWrapper::Run() {
-  while (ros::ok()) {
+void EkfWrapper::Run(std::atomic<bool> const& killed) {
+  // Kill the step thread
+  while (!killed) {
     ros::spinOnce();
     Step();
   }
+  // Make sure the IMU thread also gets killed
+  killed_ = true;
 }
 
 int EkfWrapper::Step() {

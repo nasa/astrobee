@@ -49,6 +49,7 @@ class OctoClass{
   void SetMemory(const double memory);  // Fading memory time
   void SetMaxRange(const double max_range);  // Max range for mapping
   void SetMinRange(const double min_range);  // Min range for mapping
+  inline double GetResolution() const {return resolution_;}  // Returns resolution
   void SetResolution(const double resolution_in);  // Resolution of the octomap
   void ResetMap();  // Reset the octomap structure
   void SetMapInflation(const double inflate_radius);  // Set the inflation radius
@@ -59,8 +60,9 @@ class OctoClass{
                                const double probability_miss);
   void SetClampingThresholds(const double clamping_threshold_min,
                              const double clamping_threshold_max);
+  octomap::point3d_list Voxelize(const octomap::OcTree::leaf_iterator &leaf);  // turns leaf into voxel representation
   void PointsOctomapToPointCloud2(const octomap::point3d_list& points,
-                                  sensor_msgs::PointCloud2& cloud);  // Convert from octomap to pointcloud2
+                                  sensor_msgs::PointCloud2* cloud);  // Convert from octomap to pointcloud2
   void PclToRayOctomap(const pcl::PointCloud< pcl::PointXYZ > &cloud,
                         const tf::StampedTransform &tf_cam2world,
                         const algebra_3d::FrustumPlanes &frustum);    // Map obstacles and free area
@@ -82,7 +84,9 @@ class OctoClass{
 
   // Visualization methods
   void TreeVisMarkers(visualization_msgs::MarkerArray *obstacles,
-                      visualization_msgs::MarkerArray *free);
+                      visualization_msgs::MarkerArray *free,
+                      sensor_msgs::PointCloud2* obstacles_cloud,
+                      sensor_msgs::PointCloud2* free_cloud);
   void InflatedVisMarkers(visualization_msgs::MarkerArray *obstacles,
                           visualization_msgs::MarkerArray *free);
   // void freeVisMarkers(visualization_msgs::MarkerArray* marker_array);

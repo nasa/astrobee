@@ -26,7 +26,11 @@ hold_on;
 plot(telemData2.time - t0, telemData2.data, style2)
 title(titleStr); grid on;
 ylabel(units); xlabel('seconds')
-legend([legend1 '_x'], [legend1 '_y'], [legend1 '_z'], [legend2 '_x'], [legend2 '_y'], [legend2 '_z']);
+if size(telemData1.data, 2)==1 && size(telemData2.data, 2)==1
+    legend(legend1, legend2);
+else
+    legend([legend1 '_x'], [legend1 '_y'], [legend1 '_z'], [legend2 '_x'], [legend2 '_y'], [legend2 '_z']);
+end
 
 error_data = telemData1 - telemData2;
 subplot(2,1,2);

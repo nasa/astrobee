@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<types xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="/opt/rti/ndds/scripts/../resource/rtiddsgen/schema/rti_dds_topic_types.xsd">
+<include file="Message.xml"/>
+<module name="rapid">
+<module name="ext">
+<module name="astrobee">
+<typedef name="ShortSequence6" sequenceMaxLength="6" type="short"/>
+<directive kind="copyDeclaration">/** Command state for one PMC unit</directive>
+<directive kind="copyDeclaration">  * - motorSpeed: Motor speed. Unitless. 0-255</directive>
+<directive kind="copyDeclaration">  * - nozzlePositions: Nozzle positions. Unitless. 0-255</directive>
+<directive kind="copyDeclaration">  */</directive>
+<struct name="PmcGoal">
+<member name="motorSpeed" type="short"/>
+<member name="nozzlePositions" type="nonBasic" nonBasicTypeName="rapid::ext::astrobee::ShortSequence6"/>
+</struct>
+<typedef name="PmcGoalSequence8" sequenceMaxLength="8" type="nonBasic" nonBasicTypeName="rapid::ext::astrobee::PmcGoal"/>
+<directive kind="copyCDeclaration">class PmcCmdStateTypeSupport;</directive>
+<directive kind="copyCDeclaration">class PmcCmdStateDataWriter;</directive>
+<directive kind="copyCDeclaration">class PmcCmdStateDataReader;</directive>
+<directive kind="copyCDeclaration">struct PmcCmdStateSeq;</directive>
+<directive kind="copyDeclaration">/**</directive>
+<directive kind="copyDeclaration">  * Command from the Force Allocation Module to the PMCs</directive>
+<directive kind="copyDeclaration">  */</directive>
+<valuetype name="PmcCmdState" baseClass="rapid::Message" typeModifier="none">
+<directive kind="copyCDeclaration">#if RTI_DDS_VERSION_MAJOR &lt; 4 || (RTI_DDS_VERSION_MAJOR == 4  &amp;&amp; RTI_DDS_VERSION_MINOR &lt; 5) || (RTI_DDS_VERSION_MAJOR == 4  &amp;&amp; RTI_DDS_VERSION_MINOR  == 5 &amp;&amp; RTI_DDS_VERSION_RELEASE != 'f' )</directive>
+<directive kind="copyCDeclaration">typedef PmcCmdStateTypeSupport TypeSupport;</directive>
+<directive kind="copyCDeclaration">typedef PmcCmdStateDataWriter DataWriter;</directive>
+<directive kind="copyCDeclaration">typedef PmcCmdStateDataReader DataReader;</directive>
+<directive kind="copyCDeclaration">typedef PmcCmdStateSeq Seq;</directive>
+<directive kind="copyCDeclaration">#endif</directive>
+<directive kind="copyCDeclaration">typedef PmcCmdState Type;</directive>
+<directive kind="copyDeclaration">/** Commands to the pmcs */</directive>
+<member name="goals" type="nonBasic" nonBasicTypeName="rapid::ext::astrobee::PmcGoalSequence8" visibility="public"/>
+</valuetype>
+</module>
+</module>
+</module>
+</types>

@@ -30,12 +30,12 @@
   <group if="$(arg debug)">
     <node name="gazebo" pkg="gazebo_ros" type="debug"
           respawn="false" output="screen"
-          args="$(arg world) -s libgazebo_system_plugin_server.so" />
+          args="$(arg world)" />
   </group>
   <group unless="$(arg debug)">
     <node name="gazebo" pkg="astrobee_gazebo" type="start_server"
           respawn="false" output="screen"
-          args="$(arg world) -s libgazebo_system_plugin_server.so" />
+          args="$(arg world)" />
   </group>
 
   <!-- start gazebo client -->

@@ -49,6 +49,7 @@ Next, install all required dependencies:
     pushd $SOURCE_PATH
     cd scripts/setup
     ./add_ros_repository.sh
+    sudo apt-get update
     cd debians
     ./build_install_debians.sh
     cd ../
@@ -56,6 +57,9 @@ Next, install all required dependencies:
     sudo rosdep init
     rosdep update
     popd
+
+### Have System Monitor Ignore DDS ROS Bridge
+Since external users do not have access to our internal dds repository, they will not be running or compiling our DDS ROS Bridge. The system monitor needs to be told that the bridge isn't running so that it doesn't assert bridge heartbeat missed faults. In order to do this, please open $SOURCE_PATH/astrobee/config/robots/sim.config and add "dds_ros_bridge" to the nodes_not_running list the end of the file. If an external user doesn't do this, they will see a "Never received heartbeat from dds_ros_bridge" error which will not cause any issues but can be slightly annoying.
 
 ## Configuring the build
 

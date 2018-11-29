@@ -112,22 +112,35 @@ bool SmartDock::SendBerthCommand(uint32_t mask, BerthCommand const value) {
       }
       // Set select channel states
       case COMMAND_ENABLE_ALL_PAYLOADS:
-      case COMMAND_DISABLE_ALL_PAYLOADS:
+      case COMMAND_DISABLE_ALL_PAYLOADS: {
+        uint8_t command = (value == COMMAND_ENABLE_ALL_PMCS
+          ? I2C_CMD_SW_ON : I2C_CMD_SW_OFF);
+        uint32_t mask = (1 << EPS::CHANNEL_MOTOR_EN1) |
+                        (1 << EPS::CHANNEL_MOTOR_EN2);
+        uint8_t cmd[10] = {
+            I2C_CMD_SET_EPS_CMD,                        // SET
+            7,
+            0,                                          // Size
+            i,                                          // Berth
+            command,                                    // Command
+            static_cast<uint8_t>((mask)&0xff),          // Mask LSB
+            static_cast<uint8_t>((mask >> 8) & 0xff),   // Mask
+            static_cast<uint8_t>((mask >> 16) & 0xff),  // Mask
+            static_cast<uint8_t>((mask >> 24) & 0xff),  // Mask MSB
+            0};                                         // CRC
+        success &= (Write(cmd, 10) == 10);
+        break;
+      }
+      // Enable or disable all PMCs
       case COMMAND_ENABLE_ALL_PMCS:
       case COMMAND_DISABLE_ALL_PMCS: {
-        // Work out if this is a turn on or turn off command
-        uint8_t command = I2C_CMD_SW_ON;
-        if (value == COMMAND_DISABLE_ALL_PMCS ||
-            value == COMMAND_DISABLE_ALL_PAYLOADS)
-          command = I2C_CMD_SW_OFF;
-        // Work out if this is a payload or PMC command
-        uint32_t mask =
-            (1 << EPS::CHANNEL_PAYLOAD_EN1) | (1 << EPS::CHANNEL_PAYLOAD_EN2) |
-            (1 << EPS::CHANNEL_PAYLOAD_EN3) | (1 << EPS::CHANNEL_PAYLOAD_EN4);
-        if (value == COMMAND_ENABLE_ALL_PMCS ||
-            value == COMMAND_DISABLE_ALL_PMCS)
-          mask = (1 << EPS::CHANNEL_MOTOR_EN1) | (1 << EPS::CHANNEL_MOTOR_EN2);
-        // Creat the irc command
+        uint8_t command = (value == COMMAND_DISABLE_ALL_PAYLOADS
+          ? I2C_CMD_SW_ON : I2C_CMD_SW_OFF);
+        uint32_t mask = (1 << EPS::CHANNEL_PAYLOAD_EN_TOP_AFT)   |
+                        (1 << EPS::CHANNEL_PAYLOAD_EN_BOT_AFT)   |
+                        (1 << EPS::CHANNEL_PAYLOAD_EN_BOT_FRONT) |
+                        (1 << EPS::CHANNEL_PAYLOAD_EN_TOP_FRONT);
+        // Create the i2c command
         uint8_t cmd[10] = {
             I2C_CMD_SET_EPS_CMD,  // SET
             7,

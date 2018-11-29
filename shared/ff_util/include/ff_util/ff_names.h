@@ -1,14 +1,14 @@
 /* Copyright (c) 2017, United States Government, as represented by the
  * Administrator of the National Aeronautics and Space Administration.
- * 
+ *
  * All rights reserved.
- * 
+ *
  * The Astrobee platform is licensed under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -38,7 +38,7 @@
 #define FRAME_NAME_BODY                             "body"
 #define FRAME_NAME_TRUTH                            "truth"
 #define FRAME_NAME_HANDRAIL                         "handrail"
-#define FRAME_NAME_DOCK                             "dock"
+#define FRAME_NAME_DOCK                             "dock/body"
 #define FRAME_NAME_DOCK_BERTH_1                     "dock/berth1"
 #define FRAME_NAME_DOCK_BERTH_2                     "dock/berth2"
 #define FRAME_NAME_DOCK_MARKER                      "dock/marker"
@@ -78,11 +78,12 @@
 
 #define TOPIC_COMMAND                               "command"
 #define TOPIC_HEARTBEAT                             "heartbeat"
-#define TOPIC_PERFORMANCE                           "performance"
-#define TOPIC_TRIGGER                               "trigger"
 #define TOPIC_JOINT_GOALS                           "joint_goals"
 #define TOPIC_JOINT_STATES                          "joint_states"
+#define TOPIC_PERFORMANCE                           "performance"
+#define TOPIC_ROBOT_NAME                            "robot_name"
 #define TOPIC_SIGNALS                               "signals"
+#define TOPIC_TRIGGER                               "trigger"
 
 // SUBSYSTEMS //////////////////////////////////////////////////////////////////
 
@@ -97,6 +98,7 @@
 #define TOPIC_COMMUNICATIONS_DDS_COMMAND            "comm/dds/command"
 #define TOPIC_COMMUNICATIONS_DDS_PLAN               "comm/dds/plan"
 #define TOPIC_COMMUNICATIONS_DDS_ZONES              "comm/dds/zones"
+#define TOPIC_COMMUNICATIONS_ROBOTS_AVAILABLE       "comm/robots_available"
 
 /////////
 // GNC //
@@ -200,6 +202,8 @@
 #define SERVICE_MOBILITY_UPDATE_MEMORY_TIME         "mob/mapper/update_memory_time"
 #define SERVICE_MOBILITY_UPDATE_INFLATION           "mob/mapper/update_inflation_radius"
 #define SERVICE_MOBILITY_RESET_MAP                  "mob/mapper/reset_map"
+#define SERVICE_MOBILITY_GET_FREE_MAP               "mob/mapper/get_free_map"
+#define SERVICE_MOBILITY_GET_OBSTACLE_MAP           "mob/mapper/get_obstacle_map"
 
 #define TOPIC_MOBILITY_MOTION_STATE                 "mob/state"
 #define TOPIC_MOBILITY_FLIGHT_MODE                  "mob/flight_mode"
@@ -218,6 +222,8 @@
 #define TOPIC_MOBILITY_ZONES                        "mob/mapper/zones"
 #define TOPIC_MAPPER_OCTOMAP_MARKERS                "mob/mapper/obstacle_markers"
 #define TOPIC_MAPPER_OCTOMAP_FREE_MARKERS           "mob/mapper/free_space_markers"
+#define TOPIC_MAPPER_OCTOMAP_CLOUD                  "mob/mapper/obstacle_cloud"
+#define TOPIC_MAPPER_OCTOMAP_FREE_CLOUD             "mob/mapper/free_space_cloud"
 #define TOPIC_MAPPER_OCTOMAP_INFLATED_MARKERS       "mob/mapper/inflated_obstacle_markers"
 #define TOPIC_MAPPER_OCTOMAP_INFLATED_FREE_MARKERS  "mob/mapper/inflated_free_space_markers"
 #define TOPIC_MAPPER_FRUSTRUM_MARKERS               "mob/mapper/frustum_markers"
@@ -348,7 +354,8 @@
 #define TOPIC_HARDWARE_LASER                        "hw/laser"
 #define TOPIC_HARDWARE_LASER_RVIZ                   "hw/laser/rviz"
 #define TOPIC_HARDWARE_LIGHTS_RVIZ                  "hw/lights/rviz"
-#define TOPIC_HARDWARE_EPS_CHANNELS                 "hw/eps/channels"
+#define TOPIC_HARDWARE_EPS_HOUSEKEEPING             "hw/eps/housekeeping"
+#define TOPIC_HARDWARE_EPS_POWER_STATE              "hw/eps/power_state"
 #define TOPIC_HARDWARE_EPS_BATTERY_STATE_TL         "hw/eps/battery/top_left/state"
 #define TOPIC_HARDWARE_EPS_BATTERY_STATE_TR         "hw/eps/battery/top_right/state"
 #define TOPIC_HARDWARE_EPS_BATTERY_STATE_BL         "hw/eps/battery/bottom_left/state"

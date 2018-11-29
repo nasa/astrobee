@@ -17,6 +17,7 @@
  */
 
 #include <gazebo/common/common.hh>
+#include <gazebo/rendering/rendering.hh>
 #include <gazebo/gazebo.hh>
 
 #include <functional>
@@ -25,13 +26,43 @@ namespace gazebo {
 
 class SystemPluginClient : public SystemPlugin {
  public:
-  ~SystemPluginClient() {}
+  ~SystemPluginClient() {
+    event::Events::DisconnectPreRender(update_);
+  }
 
+  // Called before initializing
   void Load(int /*_argc*/, char ** /*_argv*/) {}
 
+  // Called when client is finished initializing
   void Init() {
-    gzmsg << "SystemPluginClient loaded..." << std::endl;
+    update_ = event::Events::ConnectPreRender(std::bind(
+      &SystemPluginClient::CreateCallback, this));
   }
+
+  // Called when a new entity is created
+  void CreateCallback() {
+    // Update the lights to disable frustums
+    rendering::ScenePtr scene = rendering::get_scene();
+    if (!scene || !scene->Initialized())
+      return;
+    for (uint32_t l = 0; l < scene->LightCount(); l++) {
+      rendering::LightPtr light = scene->GetLight(l);
+      if (!light)
+        continue;
+      rendering::VisualPtr visual = scene->GetVisual(light->Name());
+      if (!visual)
+        continue;
+      Ogre::SceneNode *node = visual->GetSceneNode();
+      for (auto i = 0; i < node->numAttachedObjects(); i++) {
+        Ogre::MovableObject *obj = node->getAttachedObject(i);
+        if (obj->getMovableType() != "Light")
+          obj->setVisible(false);
+      }
+    }
+  }
+
+ private:
+  event::ConnectionPtr update_;
 };
 
 // Register this plugin with the simulator

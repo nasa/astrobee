@@ -88,9 +88,9 @@ OpState* OpStateFault::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
       exec_->SetTimeSync(cmd);
     }
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_POWER_ON_ITEM) {
-    exec_->PowerOnItem(cmd, err_msg, status);
+    exec_->PowerItem(cmd, err_msg, status, true);
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_POWER_OFF_ITEM) {
-    exec_->PowerOffItem(cmd, err_msg, status);
+    exec_->PowerItem(cmd, err_msg, status, false);
   } else if (cmd->cmd_name ==
                         CommandConstants::CMD_NAME_SET_FLASHLIGHT_BRIGHTNESS) {
     exec_->SetFlashlightBrightness(cmd, err_msg, status);

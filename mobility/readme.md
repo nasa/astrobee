@@ -30,7 +30,7 @@ The mobility subsystem is comprised of four different nodes, each havin
 
 * `Trapezoidal planner` - The trapezoidal planner is a simple "straight line" planner that assumes the acceleration and velocity on each of the supplied poses is zero. It is unaware of clutter, and is therefore typically used for short movesm, notably in docking and perching.
 
-* `Quartic Polynominal (QP) planner` -  The QP planner is more complex planner that generates curved segments that avoid obstacles. Internally it represents the segment by a set of polynomial functions, which can be sampled at any desired rate to generate setpoints.
+* `Quadratic Program (QP) planner` -  The QP planner is more complex planner that generates curved segments that avoid obstacles. Internally it represents the segment by a set of polynomial functions, which can be sampled at any desired rate to generate setpoints.
 
 The diagram below illustrates how the various ndoes in the system interact with each other. ROS ctions are drawn in red, while ROS services are drawn in blue. Nodes that are part of the mobility subsystem are drawn as black boxes, while external nodes are drawn as white boxes.
 
@@ -50,19 +50,19 @@ To switch to AR tag localization:
 
 To move to coordinate X=0.3 Y=0.4, keeping the Z and rotation the same:
 
-    rosrun mobility -move -pos "0.3 0.4"
+    rosrun mobility teleop -move -pos "0.3 0.4"
 
 To rotate around Z (axis X=0 Y=0 Z=1) by -1.5 radians:
 
-    rosrun mobility -move -att "-1.5 0 0 1"
+    rosrun mobility teleop -move -att "-1.5 0 0 1"
 
 To switch to AR target localization, use the docking flight mode and move:
 
-    rosrun mobility -loc ar -mode docking -move -pos "0 0"
+    rosrun mobility teleop -loc ar -mode docking -move -pos "0 0"
 
 To use the QP planner to move to X=0.6 Y=0.6:
 
-    rosrun mobility -move -pos "0.6 0.6" -planner qp
+    rosrun mobility teleop -move -pos "0.6 0.6" -planner qp
 
 At any point one can inspect the internal state of the mobility subsystem using the following command. The command will return a sequence of numbers, which represent a time ordered sequence of states. Please refer to ```ff_msgs::MotionState``` for a mapping from numbers to states.
 

@@ -34,8 +34,15 @@
   <arg name="rqt" default="false" />            <!-- Start user interface    -->
   <arg name="gds" default="false" />            <!-- Enable GDS              -->
 
-  <!-- Simulation-specific options -->
-  <arg name="pose" default="" />                <!-- Insert robot at pose    -->
+  <!-- Debug-specific options -->
+  <!-- Debug-specific options -->
+  <arg name="default" default="true" />         <!-- Insert default robot /  -->
+  <arg if="$(eval arg('world')=='iss')"
+       name="pose"
+       default="9.92 -9.54 4.50 0 0 0 1" />     <!-- iss: docked in JPM      -->
+  <arg if="$(eval arg('world')=='granite')"
+       name="pose"
+       default="0 0 -0.7 0 0 0 1" /> <!-- granite: docked         -->
 
   <!-- Make sure all environment variables are set for controller -->
   <env if="$(eval optenv('ASTROBEE_ROBOT','')=='')"

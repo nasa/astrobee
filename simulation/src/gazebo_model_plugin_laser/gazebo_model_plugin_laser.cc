@@ -39,10 +39,13 @@ namespace gazebo {
 
 class GazeboModelPluginLaser : public FreeFlyerModelPlugin {
  public:
-  GazeboModelPluginLaser() : FreeFlyerModelPlugin("laser", ""),
-    rate_(10.0), range_(50.0), width_(0.0025) {}
+  GazeboModelPluginLaser() : FreeFlyerModelPlugin("laser", "laser"),
+    rate_(10.0), range_(50.0), width_(0.0025), ready_(false) {}
 
-  ~GazeboModelPluginLaser() {}
+  ~GazeboModelPluginLaser() {
+    if (update_)
+      event::Events::DisconnectWorldUpdateBegin(update_);
+  }
 
  protected:
   // Called when the plugin is loaded into the simulator
@@ -54,45 +57,64 @@ class GazeboModelPluginLaser : public FreeFlyerModelPlugin {
     if (sdf->HasElement("width"))
       width_ = sdf->Get<double>("width");
 
-    // Rotate from the cylinder frame Z fwd to X fwd
-    pose_ = ignition::math::Pose3d(
-      range_ / 2, 0, 0, 0.7071067811, 0, 0.7071067811, 0);
-
     // Use the message system to toggle visibility of visual elements
     gz_ = transport::NodePtr(new transport::Node());
     gz_->Init();
-    pub_ = gz_->Advertise<msgs::Visual>("~/visual");
-
-    // Create the visual
-    msgs::Visual msg;
-    msg.set_name("laser_visual");
-    msg.set_parent_name(GetModel()->GetLink()->GetScopedName());
-    msgs::Geometry *geometry = msg.mutable_geometry();
-    geometry->set_type(msgs::Geometry::CYLINDER);
-    geometry->mutable_cylinder()->set_radius(width_);
-    geometry->mutable_cylinder()->set_length(range_);
-    msg.mutable_material()->mutable_script()->set_name("Astrobee/Laser");
-    #if GAZEBO_MAJOR_VERSION > 7
-      msgs::Set(msg.mutable_pose(), pose_ + GetModel()->GetLink()->WorldPose());
-    #else
-      msgs::Set(msg.mutable_pose(), pose_ + GetModel()->GetLink()->GetWorldPose().Ign());
-    #endif
-    msg.set_is_static(false);
-    msg.set_visible(false);
-    msg.set_cast_shadows(false);
-    msg.set_transparency(0.1);
-
-    // Publish the message
-    pub_->Publish(msg);
+    pub_gazebo_ = gz_->Advertise<msgs::Visual>("~/visual");
 
     // For the RVIZ marker array
     pub_rviz_ = nh->advertise<visualization_msgs::Marker>(
       TOPIC_HARDWARE_LASER_RVIZ, 0, true);
+  }
+
+  // Only send measurements when estrinsics are available
+  void OnExtrinsicsReceived(ros::NodeHandle *nh) {
+    // Advertise the presence of the laser
+    srv_ = nh->advertiseService(SERVICE_HARDWARE_LASER_ENABLE,
+      &GazeboModelPluginLaser::ToggleCallback, this);
+  }
+
+  // Manage the extrinsics based on the sensor type
+  bool ExtrinsicsCallback(geometry_msgs::TransformStamped const* tf) {
+    if (!tf) {
+      ROS_WARN("Laser extrinsics are null");
+      return false;
+    }
+
+    // Rotate from the cylinder frame Z fwd to X fwd
+    ignition::math::Pose3d pose(
+      range_ / 2, 0, 0, 0.7071067811, 0, 0.7071067811, 0);
+
+    // Aggregate pose
+    pose = pose + ignition::math::Pose3d(
+      tf->transform.translation.x,
+      tf->transform.translation.y,
+      tf->transform.translation.z,
+      tf->transform.rotation.w,
+      tf->transform.rotation.x,
+      tf->transform.rotation.y,
+      tf->transform.rotation.z);
+
+    // Create a visual
+    visual_.set_name(GetFrame("laser_visual", "_"));
+    visual_.set_parent_name(GetModel()->GetLink()->GetScopedName());
+    msgs::Geometry *geometry = visual_.mutable_geometry();
+    geometry->set_type(msgs::Geometry::CYLINDER);
+    geometry->mutable_cylinder()->set_radius(width_);
+    geometry->mutable_cylinder()->set_length(range_);
+    visual_.mutable_material()->mutable_script()->set_name("Astrobee/Laser");
+    msgs::Set(visual_.mutable_pose(), pose);
+    visual_.set_is_static(false);
+    visual_.set_visible(false);
+    visual_.set_cast_shadows(false);
+    visual_.set_transparency(0.1);
+    visual_.set_laser_retro(false);
+    pub_gazebo_->Publish(visual_);
 
     // Setup boilerplate marke code for rviz
-    marker_.header.stamp = ros::Time();
+    marker_.header.stamp = ros::Time::now();
     marker_.header.frame_id = GetFrame("laser");
-    marker_.ns = "laser_visual";
+    marker_.ns = GetFrame("laser_visual", "_");
     marker_.id = 0;
     marker_.type = visualization_msgs::Marker::CYLINDER;
     marker_.action = visualization_msgs::Marker::ADD;
@@ -112,77 +134,25 @@ class GazeboModelPluginLaser : public FreeFlyerModelPlugin {
     marker_.color.b = 0.0;
     pub_rviz_.publish(marker_);
 
-    // Now switch to mofidy mode
-    marker_.action = visualization_msgs::Marker::MODIFY;
+    // Modify the new entity to be only visible in the GUI
+    update_ = event::Events::ConnectWorldUpdateBegin(std::bind(
+      &GazeboModelPluginLaser::WorldUpdateBegin, this));
 
-    // Setup boilerplate code for gazebo
-    msg_.set_name("laser_visual");
-    msg_.set_parent_name(GetModel()->GetLink()->GetScopedName());
-    msg_.set_visible(false);
-
-    // Advertise the presence of the laser
-    srv_ = nh->advertiseService(SERVICE_HARDWARE_LASER_ENABLE,
-      &GazeboModelPluginLaser::ToggleCallback, this);
-
-    // Defer the extrinsics setup to allow plugins to load
-    connection_ = event::Events::ConnectWorldUpdateEnd(std::bind(
-      &GazeboModelPluginLaser::ExtrinsicsCallback, this));
-  }
-
-  // Manage the extrinsics based on the sensor type
-  void ExtrinsicsCallback() {
-    // Create a buffer and listener for TF2 transforms
-    static tf2_ros::Buffer buffer;
-    static tf2_ros::TransformListener listener(buffer);
-    // Get extrinsics from framestore
-    try {
-      // Lookup the transform for this sensor
-      geometry_msgs::TransformStamped tf = buffer.lookupTransform(
-        GetFrame("body"), GetFrame("laser"), ros::Time(0));
-      // Handle the transform for all sensor types
-      pose_ = pose_ + ignition::math::Pose3d(
-        tf.transform.translation.x,
-        tf.transform.translation.y,
-        tf.transform.translation.z,
-        tf.transform.rotation.w,
-        tf.transform.rotation.x,
-        tf.transform.rotation.y,
-        tf.transform.rotation.z);
-      // Kill the connection
-      #if GAZEBO_MAJOR_VERSION > 7
-        connection_.reset();
-        // Update the connection
-        next_tick_ = GetWorld()->SimTime();
-      #else
-        event::Events::DisconnectWorldUpdateEnd(connection_);
-        // Update the connection
-        next_tick_ = GetWorld()->GetSimTime();
-      #endif
-
-      connection_ = event::Events::ConnectWorldUpdateBegin(
-        std::bind(&GazeboModelPluginLaser::UpdateCallback, this));
-      gzmsg << "Extrinsics set for laser\n";
-    } catch (tf2::TransformException &ex) {
-      gzmsg << "No extrinsics for laser\n";
-    }
+    // Success
+    return true;
   }
 
   // Called when the laser needs to be toggled
   bool ToggleCallback(ff_hw_msgs::SetEnabled::Request &req,
                       ff_hw_msgs::SetEnabled::Response &res) {
-    // Update Gazebo
-    msg_.set_visible(req.enabled);
-    #if GAZEBO_MAJOR_VERSION > 7
-      msgs::Set(msg_.mutable_pose(),
-        pose_ + GetModel()->GetLink()->WorldPose());
-    #else
-      msgs::Set(msg_.mutable_pose(),
-        pose_ + GetModel()->GetLink()->GetWorldPose().Ign());
-    #endif
-    pub_->Publish(msg_);
+    // Update the visual marker
+    visual_.set_name(GetFrame("laser_visual", "_"));
+    visual_.set_visible(req.enabled);
+    pub_gazebo_->Publish(visual_);
 
-    // Update RVIZ
-    marker_.header.stamp = ros::Time();
+    // Update RVIZ marker
+    marker_.action = visualization_msgs::Marker::MODIFY;
+    marker_.header.stamp = ros::Time::now();
     marker_.color.a = (req.enabled ? 0.9 : 0.0);
     pub_rviz_.publish(marker_);
 
@@ -192,46 +162,32 @@ class GazeboModelPluginLaser : public FreeFlyerModelPlugin {
     return true;
   }
 
-  // Called on every discrete time tick in the simulated world
-  void UpdateCallback() {
-    // Throttle callback rate
-    #if GAZEBO_MAJOR_VERSION > 7
-      if (GetWorld()->SimTime() < next_tick_)
-        return;
-    #else
-      if (GetWorld()->GetSimTime() < next_tick_)
-        return;
-    #endif
-    next_tick_ += 1.0 / rate_;
-
-    // Update gazebo
-    #if GAZEBO_MAJOR_VERSION > 7
-      msgs::Set(msg_.mutable_pose(),
-        pose_ + GetModel()->GetLink()->WorldPose());
-    #else
-      msgs::Set(msg_.mutable_pose(),
-        pose_ + GetModel()->GetLink()->GetWorldPose().Ign());
-    #endif
-    pub_->Publish(msg_);
-
-    // Update RVIZ
-    marker_.header.stamp = ros::Time();
-    pub_rviz_.publish(marker_);
+  // Called when a new entity is created
+  void WorldUpdateBegin() {
+    rendering::ScenePtr scene = rendering::get_scene();
+    if (!scene || !scene->Initialized())
+      return;
+    rendering::VisualPtr visual =
+      scene->GetVisual(GetFrame("laser_visual", "_"));
+    if (!visual)
+      return;
+    visual->SetVisibilityFlags(GZ_VISIBILITY_GUI);
+    if (update_)
+      event::Events::DisconnectWorldUpdateBegin(update_);
   }
 
  private:
   double rate_, range_, width_;
   common::Time next_tick_;
   transport::NodePtr gz_;
-  transport::PublisherPtr pub_;
-  msgs::Visual msg_;
-  event::ConnectionPtr connection_;
+  transport::PublisherPtr pub_gazebo_;
+  event::ConnectionPtr update_;
   ros::Timer timer_;
-  ros::NodeHandle nh_;
   ros::ServiceServer srv_;
   ros::Publisher pub_rviz_;
-  ignition::math::Pose3d pose_;
   visualization_msgs::Marker marker_;
+  msgs::Visual visual_;
+  bool ready_;
 };
 
 // Register this plugin with the simulator

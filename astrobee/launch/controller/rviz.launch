@@ -17,9 +17,6 @@
 
 <launch>
   <arg name="world"/>
-  <!-- Astrobee and granite table -->
-  <include file="$(find rviz_visualizer)/launch/granite_table_visualizer.launch" />
-  <!-- Rviz -->
   <node name="rviz_node" pkg="rviz" type="rviz" 
         respawn="true"  output="log"
         args="-d $(find astrobee)/resources/rviz/$(arg world).rviz"/>

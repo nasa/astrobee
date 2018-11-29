@@ -61,35 +61,34 @@ bool MapperNodelet::ResetMap(std_srvs::Trigger::Request &req,
   return true;
 }
 
-// Callback to get the keep in/out zones
-bool MapperNodelet::GetZonesCallback(ff_msgs::GetZones::Request &req,
-                                     ff_msgs::GetZones::Response &res) {
-  res.timestamp = zones_.timestamp;
-  res.zones = zones_.zones;
+bool MapperNodelet::GetFreeMapCallback(ff_msgs::GetMap::Request &req,
+                                       ff_msgs::GetMap::Response &res) {
+  visualization_msgs::MarkerArray om, fm;
+  sensor_msgs::PointCloud2 oc, fc;
+
+  mutexes_.octomap.lock();
+  globals_.octomap.TreeVisMarkers(&om, &fm, &oc, &fc);
+  mutexes_.octomap.unlock();
+
+  res.points = fc;
+  res.resolution = globals_.octomap.GetResolution();
+  res.free = true;
+
   return true;
 }
+bool MapperNodelet::GetObstacleMapCallback(ff_msgs::GetMap::Request &req,
+                                       ff_msgs::GetMap::Response &res) {
+  visualization_msgs::MarkerArray om, fm;
+  sensor_msgs::PointCloud2 oc, fc;
 
-// Callback to set the keep in/out zones
-bool MapperNodelet::SetZonesCallback(ff_msgs::SetZones::Request &req,
-                                     ff_msgs::SetZones::Response &res) {
-  // Update the zones
-  zones_ = req;
-  /*
-  // Grab the zone directory value from the LUA config
-  config_reader::ConfigReader *handle = cfg_.GetConfigReader();
-  if (handle == nullptr)
-    NODELET_FATAL_STREAM("Cannot read LUA config");
-  std::string zonefile;
-  if (!handle->GetStr("zone_file", &zonefile))
-    NODELET_FATAL_STREAM("Cannot read zone directory from LUA config");
-  // Try and open the zone file
-  if (!ff_util::Serialization::WriteFile(zonefile, zones_))
-    NODELET_WARN_STREAM("Cannot write zone file " << zonefile);
-  */
-  // Update visualization
-  UpdateKeepInOutMarkers();
-  // Send result
-  res.success = false;
+  mutexes_.octomap.lock();
+  globals_.octomap.TreeVisMarkers(&om, &fm, &oc, &fc);
+  mutexes_.octomap.unlock();
+
+  res.points = oc;
+  res.resolution = globals_.octomap.GetResolution();
+  res.free = false;
+
   return true;
 }
 

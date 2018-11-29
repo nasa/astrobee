@@ -44,6 +44,7 @@ static int32_t msg_camera_image_height_;
 static int32_t msg_camera_image_width_;
 static mavlink_optical_flow_t msg_optical_flow_;
 static mavlink_vision_speed_estimate_t msg_speed_;
+static bool has_version_;
 static uint32_t sw_version_;
 
 // Called when a new IMU measurement is available
@@ -78,6 +79,7 @@ void StatusCallback(mavlink_heartbeat_t const& message) {
 void VersionCallback(uint32_t sw_version) {
   std::lock_guard<std::mutex> guard(mutex_version_);
   sw_version_ = sw_version;
+  has_version_ = true;
 }
 
 // Print an error message and fail gracefully
@@ -211,7 +213,7 @@ bool MainMenu(speed_cam::SpeedCam &interface) {
     }
     case 6: {
       std::lock_guard<std::mutex> guard(mutex_version_);
-      if (sw_version_ == 0) {
+      if (!has_version_) {
         std::cerr << "No version information was received." << std::endl;
         return false;
       }

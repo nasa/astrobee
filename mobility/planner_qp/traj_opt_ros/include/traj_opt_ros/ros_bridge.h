@@ -24,6 +24,7 @@
 #include <traj_opt_msgs/Polynomial.h>
 #include <traj_opt_msgs/Spline.h>
 #include <traj_opt_msgs/Trajectory.h>
+#include <traj_opt_msgs/SolverInfo.h>
 #include <string>
 #include <map>
 
@@ -32,14 +33,21 @@ class TrajRosBridge {
   // No need to instantiate pesky variables!
   static traj_opt_msgs::Trajectory convert(const traj_opt::TrajData &data);
   static traj_opt::TrajData convert(const traj_opt_msgs::Trajectory &msg);
+  static traj_opt_msgs::SolverInfo convert(const traj_opt::SolverInfo &data);
 
-  // make sure to run ros::init() before calling this function or it won't work
+  // make sure to run ros::init() before calling these functions or they won't work
   static void publish_msg(const traj_opt_msgs::Trajectory &msg,
                           std::string frame_id = "map",
                           std::string topic = "trajectory");
   static void publish_msg(const traj_opt::TrajData &data,
                           std::string frame_id = "map",
                           std::string topic = "trajectory");
+  static void publish_msg(const traj_opt::SolverInfo &data,
+                          std::string topic = "solver_info");
+  static void publish_msg(const traj_opt_msgs::SolverInfo &msg,
+                          std::string topic = "solver_info");
+
+  static bool are_subscribers(std::string topic);
 
   // Use global singleton paradignm.  All these things are private!
   // Keep your government out of my contructors!
@@ -47,6 +55,7 @@ class TrajRosBridge {
   TrajRosBridge();
   static TrajRosBridge &instance();
   static ros::Publisher getPub(std::string topic);
+  static ros::Publisher getInfoPub(std::string topic);
   ros::NodeHandle nh_;
   std::map<std::string, ros::Publisher> pubs_;
 };

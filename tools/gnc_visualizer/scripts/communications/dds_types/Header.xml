@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<types xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="/opt/rti/ndds.5.1.0/scripts/../resource/rtiddsgen/schema/rti_dds_topic_types.xsd">
+<include file="BaseTypes.xml"/>
+<module name="rapid">
+<directive kind="copyDeclaration">/** Header of all messages. */</directive>
+<struct name="Header">
+<directive kind="copyDeclaration">/** Source name of the message. This is a key for filtering in DDS. */</directive>
+<member name="srcName" type="nonBasic" nonBasicTypeName="rapid::String32" key="true"/>
+<directive kind="copyDeclaration">/**</directive>
+<directive kind="copyDeclaration"> * Agent to which this message is being sent or from which this message was sent. This is also a key</directive>
+<directive kind="copyDeclaration"> * for filtering in DDS.</directive>
+<directive kind="copyDeclaration"> */</directive>
+<member name="assetName" type="nonBasic" nonBasicTypeName="rapid::String32" key="true"/>
+<directive kind="copyDeclaration">/**</directive>
+<directive kind="copyDeclaration"> * Timestamp is the number of microseconds elapsed since midnight proleptic</directive>
+<directive kind="copyDeclaration"> * Coordinated Universal Time (UTC) of January 1, 1970, not counting leap seconds</directive>
+<directive kind="copyDeclaration"> */</directive>
+<member name="timeStamp" type="longLong"/>
+<directive kind="copyDeclaration">/**</directive>
+<directive kind="copyDeclaration"> * If statusCode &gt;= 0, then all is well. If statusCode &lt; 0, there is some sort of error.</directive>
+<directive kind="copyDeclaration"> * Each status shall have its own convention for error codes.</directive>
+<directive kind="copyDeclaration"> */</directive>
+<member name="statusCode" type="long"/>
+<directive kind="copyDeclaration">/**</directive>
+<directive kind="copyDeclaration"> * Serial denotes a config/state pair (i.e. the code in a config header should match the code in the</directive>
+<directive kind="copyDeclaration"> * corresponding state header).</directive>
+<directive kind="copyDeclaration"> */</directive>
+<member name="serial" type="long"/>
+</struct>
+</module>
+</types>

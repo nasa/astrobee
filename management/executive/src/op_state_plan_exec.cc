@@ -138,11 +138,11 @@ OpState* OpStatePlanExec::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
       }
     } else if (cmd->cmd_name == CommandConstants::CMD_NAME_POWER_OFF_ITEM) {
       ROS_INFO("Executing power off command.");
-      successful = exec_->PowerOffItem(cmd, err_msg, status, true);
+      successful = exec_->PowerItem(cmd, err_msg, status, false, true);
       return HandleCommandComplete(successful, err_msg, status);
     } else if (cmd->cmd_name == CommandConstants::CMD_NAME_POWER_ON_ITEM) {
       ROS_INFO("Execute power on command.");
-      successful = exec_->PowerOnItem(cmd, err_msg, status, true);
+      successful = exec_->PowerItem(cmd, err_msg, status, true, true);
       return HandleCommandComplete(successful, err_msg, status);
     } else if (cmd->cmd_name ==
                         CommandConstants::CMD_NAME_SET_FLASHLIGHT_BRIGHTNESS) {

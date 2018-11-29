@@ -100,3 +100,7 @@ astrobee/freeflyer/*.bin
 # Tags & config
 tags
 .ctags
+
+# Other
+.idea
+cmake-build-debug
