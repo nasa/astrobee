@@ -41,7 +41,7 @@ namespace interest_point {
                             cv::Mat* keypoints_description) = 0;
     virtual void TooFew(void) = 0;
     virtual void TooMany(void) = 0;
-   private:
+   protected:
     unsigned int min_features_;
     unsigned int max_features_;
     unsigned int max_retries_;
@@ -59,12 +59,12 @@ namespace interest_point {
    public:
     FeatureDetector(std::string const& detector_name = "SURF",
                     int min_features = 400, int max_features = 1000,
-                    int brisk_threshold = 15, int retries = 5);
+                    int retries = 5);
     ~FeatureDetector(void);
 
     void Reset(std::string const& detector_name,
                int min_features = 400, int max_features = 1000,
-               int brisk_threshold = 15, int retries = 5);
+               int retries = 5);
 
     void Detect(const cv::Mat& image,
                 std::vector<cv::KeyPoint>* keypoints,

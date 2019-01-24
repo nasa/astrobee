@@ -94,7 +94,7 @@ class PicoDriver {
       device_->getLensParameters(lens);
       ROS_DEBUG_STREAM("Center: " << lens.principalPoint.first << ", " << lens.principalPoint.second);
       ROS_DEBUG_STREAM("Focal Length: " << lens.focalLength.first << ", " << lens.focalLength.second);
-      ROS_DEBUG_STREAM("Tanential Distortion: " << lens.distortionTangential.first << ", " <<
+      ROS_DEBUG_STREAM("Tangential Distortion: " << lens.distortionTangential.first << ", " <<
                       lens.distortionTangential.second);
       ROS_DEBUG_STREAM("Radial Distortion: " << lens.distortionRadial[0] << ", " << lens.distortionRadial[1] << ", "
                     << lens.distortionRadial[2]);
@@ -606,7 +606,7 @@ class PicoDriverNodelet : public ff_util::FreeFlyerNodelet  {
       if (ptr != nullptr)
         devices_[device_name] = ptr;
       else if (required)
-        return InitFault("Lua:Could not start camera " + device_name);
+        InitFault("Lua:Could not start camera " + device_name);
     }
   }
 

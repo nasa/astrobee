@@ -49,10 +49,7 @@ class OpState {
   virtual OpState* HandleCmd(ff_msgs::CommandStampedPtr const& cmd);
   OpState* HandleCmd(ff_msgs::CommandStampedPtr const& cmd,
                      bool& completed,
-                     bool& successful,
-                     std::string& err_msg,
-                     uint8_t& status,
-                     bool plan = false);
+                     bool& successful);
 
   virtual OpState* HandleResult(
                               ff_util::FreeFlyerActionState::Enum const& state,
@@ -67,12 +64,10 @@ class OpState {
   virtual OpState* HandleGuestScienceAck(
                                         ff_msgs::AckStampedConstPtr const& ack);
 
-  void AckMobilityStateIssue(std::string cmd_id,
-                             std::string cmd_name,
-                             std::string current_mobility_state,
-                             std::string accepted_mobility_state = "");
-  bool CheckNotMoving(std::string cmd_id,
-                      std::string cmd_name);
+  virtual void AckCmd(std::string const& cmd_id,
+                    uint8_t completed_status = ff_msgs::AckCompletedStatus::OK,
+                    std::string const& message = "",
+                    uint8_t status = ff_msgs::AckStatus::COMPLETED);
 
   std::string GenerateActionFailedMsg(
                               ff_util::FreeFlyerActionState::Enum const& state,
@@ -80,6 +75,10 @@ class OpState {
                               std::string const& action_result = "");
 
   std::string GetActionString(Action const& action);
+
+  virtual bool PausePlan(ff_msgs::CommandStampedPtr const& cmd);
+
+  OpState* TransitionToState(unsigned char id);
 
   std::string const& name() const {return name_;}
   unsigned char const& id() const {return id_;}

@@ -23,7 +23,7 @@
 #include <ros/ros.h>
 
 // General information
-#include <geometry_msgs/Inertia.h>
+#include <geometry_msgs/InertiaStamped.h>
 
 // Message includes
 #include <ff_msgs/EkfState.h>
@@ -129,7 +129,7 @@ class FlightUtil {
   static constexpr double MIN_CONTROL_RATE = 1.0;
 
   // Get all inertia configuration (LUA config file is queried only once)
-  static bool GetInertiaConfig(geometry_msgs::Inertia & data);
+  static bool GetInertiaConfig(geometry_msgs::InertiaStamped & data);
 
   // Get data for a given flight mode (leave empty for default value)
   static bool GetFlightMode(

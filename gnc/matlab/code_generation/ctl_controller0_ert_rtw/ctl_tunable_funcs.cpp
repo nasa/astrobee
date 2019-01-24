@@ -28,6 +28,10 @@ void ctl_ReadParams(config_reader::ConfigReader* config,  RT_MODEL_ctl_controlle
     ROS_FATAL("Unspecified tun_ctl_stopped_pos_thresh.");
   if (!config->GetReal("tun_ctl_stopped_quat_thresh", &p->tun_ctl_stopped_quat_thresh))
     ROS_FATAL("Unspecified tun_ctl_stopped_quat_thresh.");
+  if (!config->GetReal("tun_ctl_stopping_omega_thresh", &p->tun_ctl_stopping_omega_thresh))
+    ROS_FATAL("Unspecified tun_ctl_stopping_omega_thresh.");
+  if (!config->GetReal("tun_ctl_stopping_vel_thresh", &p->tun_ctl_stopping_vel_thresh))
+    ROS_FATAL("Unspecified tun_ctl_stopping_vel_thresh.");
   if (!config->GetReal("tun_truth_q_omega_filt_enable", &p->tun_truth_q_omega_filt_enable))
     ROS_FATAL("Unspecified tun_truth_q_omega_filt_enable.");
   if (!config->GetReal("tun_truth_velocity_filt_enable", &p->tun_truth_velocity_filt_enable))

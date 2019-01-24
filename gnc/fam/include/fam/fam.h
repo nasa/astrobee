@@ -31,7 +31,7 @@
 #include <ff_util/ff_names.h>
 #include <ff_util/perf_timer.h>
 
-#include <geometry_msgs/Inertia.h>
+#include <geometry_msgs/InertiaStamped.h>
 
 #include <config_reader/config_reader.h>
 
@@ -51,7 +51,7 @@ class Fam {
   void ReadParams(void);
   void CtlCallBack(const ff_msgs::FamCommand & c);
   void FlightModeCallback(const ff_msgs::FlightMode::ConstPtr& mode);
-  void InertiaCallback(const geometry_msgs::Inertia::ConstPtr& inertia);
+  void InertiaCallback(const geometry_msgs::InertiaStamped::ConstPtr& inertia);
 
   gnc_autocode::GncFamAutocode gnc_;
 

@@ -1,0 +1,55 @@
+<!-- Copyright (c) 2017, United States Government, as represented by the     -->
+<!-- Administrator of the National Aeronautics and Space Administration.     -->
+<!--                                                                         -->
+<!-- All rights reserved.                                                    -->
+<!--                                                                         -->
+<!-- The Astrobee platform is licensed under the Apache License, Version 2.0 -->
+<!-- (the "License"); you may not use this file except in compliance with    -->
+<!-- the License. You may obtain a copy of the License at                    -->
+<!--                                                                         -->
+<!--     http://www.apache.org/licenses/LICENSE-2.0                          -->
+<!--                                                                         -->
+<!-- Unless required by applicable law or agreed to in writing, software     -->
+<!-- distributed under the License is distributed on an "AS IS" BASIS,       -->
+<!-- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or         -->
+<!-- implied. See the License for the specific language governing            -->
+<!-- permissions and limitations under the License.                          -->
+<launch>
+  <!-- Use filter or solver, and the bag of data -->
+  <arg name="bag"/>
+  <arg name="out" default="performance.csv"/>
+  <arg name="filter" default="false"/>
+  <arg name="debug" default="false"/>
+  <arg name="output" default="screen"/>
+  <arg name="robot" default="bsharp" />
+  <arg name="world" default="granite" />
+  <arg name="rviz" default="false" />
+  <!-- Make sure all environment variables are set -->
+  <env if="$(eval optenv('ASTROBEE_ROBOT','')=='')"
+       name="ASTROBEE_ROBOT" value="$(arg robot)" />
+  <env if="$(eval optenv('ASTROBEE_WORLD','')=='')"
+       name="ASTROBEE_WORLD" value="$(arg world)" />
+  <env if="$(eval optenv('ASTROBEE_CONFIG_DIR','')=='')"
+       name="ASTROBEE_CONFIG_DIR" value="$(find astrobee)/config" />
+  <env if="$(eval optenv('ASTROBEE_RESOURCE_DIR','')=='')"
+       name="ASTROBEE_RESOURCE_DIR" value="$(find astrobee)/resources" />
+  <!-- Debug mode -->
+  <arg name="prefix" value="$(eval 'xterm -e gdb -ex run --args' if arg('debug') else '')" />
+  <env if="$(arg debug)" name="ROSCONSOLE_CONFIG_FILE" value="$(find astrobee)/resources/debug.config"/>
+  <!-- Exec mode -->
+  <arg     if="$(arg filter)" name="exec" value="vive_offline_filter" />
+  <arg unless="$(arg filter)" name="exec" value="vive_offline"/>
+  <!-- Now add the node -->
+  <node name="vive_localization"
+        pkg="vive_localization" type="$(arg exec)"
+        required="true" respawn="false" args="-bag $(arg bag)"
+        launch-prefix="$(arg prefix)" output="$(arg output)">
+    <param name="bagfile" type="string" value="$(arg bag)" />
+    <param name="perfile" type="string" value="$(arg out)" />
+  </node>
+  <!-- Visualization -->
+  <group if="$(arg rviz)">
+    <node pkg="rviz" type="rviz" respawn="true"
+          name="rviz" args="-d $(find vive_localization)/config/vive_localization.rviz"/>
+  </group>
+</launch>

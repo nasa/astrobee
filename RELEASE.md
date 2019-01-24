@@ -1,5 +1,65 @@
 # Astrobee Robot Software v1
 
+## Release 0.7.6
+
+ * Fixes to sparse mapping and localization manager.
+
+## Release 0.7.5
+
+ * Various fixes for flight units.
+ * Improvements to debians.
+
+## Release 0.7.4
+
+ * Fixed compile for vive again.
+
+## Release 0.7.3
+
+ * Fixed compile for vive.
+
+## Release 0.7.2
+
+ * Fix cmake bug.
+
+## Release 0.7.1
+
+ * Minor vive updates
+ * Bumps to submodules.
+
+## Release 0.7.0
+
+ * Infrastructure to build the flight images completed, including HLP
+    (Android) configuration methods not requiring touchscreen access
+  * Inertia and masses reflecting the Flight Units characteristics
+  * New values for flight modes optimized for the new propulsion units
+  * Support for all functional tests (including Speedcam modes)
+  * Support for all mobility tests (including plans)
+  * Improved marker tracking simulation plugin allowing to analyze marker
+    placement
+  * Fixed a jerk motion while docking (real robot) due to camera occlusion
+  * Executive:
+    - Refactored for easier maintenance
+    - Support data to disk configuration
+    - Support telemetry rate command
+    - Support localization mode switch and EKF commands
+    - Manage guest science state
+  * Real time analysis tool (gviz) ported to support DDS telemetry:
+    allows the same capabilities of inspection for flight than on the ground.
+  * New launch file feature to support backlisting / adding extra nodes
+  * Bug fixes
+
+## Release 0.6.1
+
+Added config files for new robots.
+
+## Release 0.6.0
+
+Flight packaging candidate release
+
+  - Indicator LEDs management.
+  - All DDS commands to support remote tests implemented.
+  - Adjustments and tools to support test procedures in place.
+
 ## Release 0.5.0
 
 Build 3 - CERT Release

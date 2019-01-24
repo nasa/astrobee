@@ -18,9 +18,12 @@
 <launch>
 
   <!-- Additional options -->
-  <arg name="drivers"/>
-  <arg name="nodes" default=""/>
-  <arg name="output" default="log"/>
+  <arg name="drivers"/>                       <!-- Should we launch drivers? -->
+  <arg name="spurn" default=""/>              <!-- PRevent a specific node   -->
+  <arg name="nodes" default=""/>              <!-- Launch specific nodes     -->
+  <arg name="extra" default=""/>              <!-- Inject an additional node -->
+  <arg name="debug" default=""/>                 <!-- Debug a node set          -->
+  <arg name="output" default="log"/>          <!-- Where to log              -->
 
   <!-- Launch all nodelet managers -->
   <group if="$(eval optenv('ASTROBEE_NODEGRAPH','')=='')">
@@ -39,75 +42,148 @@
   </group>
 
   <!-- Launch GNC nodes -->
-  <include file="$(find ekf)/launch/ekf.launch"
-    if="$(eval arg('nodes') == '' or arg('nodes').find('ekf') != -1)">
+  <include file="$(find ff_util)/launch/ff_nodelet.launch">
+    <arg name="class" value="ekf/ekf" />
     <arg name="name" value="ekf_node" />
     <arg name="manager" value="llp_gnc" />
+    <arg name="spurn" value="$(arg spurn)" />
+    <arg name="nodes" value="$(arg nodes)" />
+    <arg name="extra" value="$(arg extra)" />
+    <arg name="debug" value="$(arg debug)" />
+    <arg name="default" value="true" />
   </include>
-  <include file="$(find ctl)/launch/ctl.launch"
-    if="$(eval arg('nodes') == '' or arg('nodes').find('ctl') != -1)">
+  <include file="$(find ff_util)/launch/ff_nodelet.launch">
+    <arg name="class" value="ctl/ctl" />
     <arg name="name" value="ctl_node" />
     <arg name="manager" value="llp_gnc" />
+    <arg name="spurn" value="$(arg spurn)" />
+    <arg name="nodes" value="$(arg nodes)" />
+    <arg name="extra" value="$(arg extra)" />
+    <arg name="debug" value="$(arg debug)" />
+    <arg name="default" value="true" />
   </include>
-  <include file="$(find fam)/launch/fam.launch"
-    if="$(eval arg('nodes') == '' or arg('nodes').find('fam') != -1)">
+  <include file="$(find ff_util)/launch/ff_nodelet.launch">
+    <arg name="class" value="fam/fam" />
     <arg name="name" value="fam_node" />
     <arg name="manager" value="llp_gnc" />
+    <arg name="spurn" value="$(arg spurn)" />
+    <arg name="nodes" value="$(arg nodes)" />
+    <arg name="extra" value="$(arg extra)" />
+    <arg name="debug" value="$(arg debug)" />
+    <arg name="default" value="true" />
   </include>
 
   <!-- Launch driver nodes, if required -->
   <group if="$(arg drivers)">
-    <include file="$(find epson_imu)/launch/epson_imu.launch"
-      if="$(eval arg('nodes') == '' or arg('nodes').find('epson_imu') != -1)">
+    <include file="$(find ff_util)/launch/ff_nodelet.launch">
+      <arg name="class" value="epson_imu/EpsonImuNodelet" />
       <arg name="name" value="epson_imu" />
       <arg name="manager" value="llp_imu" />
+      <arg name="spurn" value="$(arg spurn)" />
+      <arg name="nodes" value="$(arg nodes)" />
+      <arg name="extra" value="$(arg extra)" />
+      <arg name="debug" value="$(arg debug)" />
+      <arg name="default" value="true" />
     </include>
-    <include file="$(find pmc_actuator)/launch/pmc_actuator.launch"
-      if="$(eval arg('nodes') == '' or arg('nodes').find('pmc_actuator') != -1)">
+    <include file="$(find ff_util)/launch/ff_nodelet.launch">
+      <arg name="class" value="epson_imu/EpsonImuNodelet" />
+      <arg name="name" value="calibration_imu" />
+      <arg name="manager" value="llp_imu" />
+      <arg name="spurn" value="$(arg spurn)" />
+      <arg name="nodes" value="$(arg nodes)" />
+      <arg name="extra" value="$(arg extra)" />
+      <arg name="debug" value="$(arg debug)" />
+      <arg name="default" value="false" />
+    </include>
+    <include file="$(find ff_util)/launch/ff_nodelet.launch">
+      <arg name="class" value="pmc_actuator/PmcActuatorNodelet" />
       <arg name="name" value="pmc_actuator" />
       <arg name="manager" value="llp_pmc" />
+      <arg name="spurn" value="$(arg spurn)" />
+      <arg name="nodes" value="$(arg nodes)" />
+      <arg name="extra" value="$(arg extra)" />
+      <arg name="debug" value="$(arg debug)" />
+      <arg name="default" value="true" />
     </include>
-    <include file="$(find eps_driver)/launch/eps_driver.launch"
-      if="$(eval arg('nodes') == '' or arg('nodes').find('eps_driver') != -1)">
+    <include file="$(find ff_util)/launch/ff_nodelet.launch">
+      <arg name="class" value="eps_driver/EpsDriverNode" />
       <arg name="name" value="eps_driver" />
       <arg name="manager" value="llp_i2c" />
+      <arg name="spurn" value="$(arg spurn)" />
+      <arg name="nodes" value="$(arg nodes)" />
+      <arg name="extra" value="$(arg extra)" />
+      <arg name="debug" value="$(arg debug)" />
+      <arg name="default" value="true" />
     </include>
-    <include file="$(find laser)/launch/laser.launch"
-      if="$(eval arg('nodes') == '' or arg('nodes').find('laser') != -1)">
+    <include file="$(find ff_util)/launch/ff_nodelet.launch">
+      <arg name="class" value="laser/LaserNodelet" />
       <arg name="name" value="laser" />
       <arg name="manager" value="llp_i2c" />
+      <arg name="spurn" value="$(arg spurn)" />
+      <arg name="nodes" value="$(arg nodes)" />
+      <arg name="extra" value="$(arg extra)" />
+      <arg name="debug" value="$(arg debug)" />
+      <arg name="default" value="true" />
     </include>
-    <include file="$(find flashlight)/launch/flashlight.launch"
-      if="$(eval arg('nodes') == '' or arg('nodes').find('flashlight_front') != -1)">
+    <include file="$(find ff_util)/launch/ff_nodelet.launch">
+      <arg name="class" value="flashlight/FlashlightNodelet" />
       <arg name="name" value="flashlight_front" />
       <arg name="manager" value="llp_i2c" />
+      <arg name="spurn" value="$(arg spurn)" />
+      <arg name="nodes" value="$(arg nodes)" />
+      <arg name="extra" value="$(arg extra)" />
+      <arg name="debug" value="$(arg debug)" />
+      <arg name="default" value="true" />
     </include>
-    <include file="$(find flashlight)/launch/flashlight.launch"
-      if="$(eval arg('nodes') == '' or arg('nodes').find('flashlight_aft') != -1)">
+    <include file="$(find ff_util)/launch/ff_nodelet.launch">
+      <arg name="class" value="flashlight/FlashlightNodelet" />
       <arg name="name" value="flashlight_aft" />
       <arg name="manager" value="llp_i2c" />
+      <arg name="spurn" value="$(arg spurn)" />
+      <arg name="nodes" value="$(arg nodes)" />
+      <arg name="extra" value="$(arg extra)" />
+      <arg name="debug" value="$(arg debug)" />
+      <arg name="default" value="true" />
     </include>
-    <!--
-    <include file="$(find signal_light)/launch/signal_light.launch"
-      if="$(eval arg('nodes') == '' or arg('nodes').find('signal_light') != -1)">
-      <arg name="name" value="signal_light" />
+    <include file="$(find ff_util)/launch/ff_nodelet.launch">
+      <arg name="class" value="signal_lights/SignalLightNodelet" />
+      <arg name="name" value="signal_lights" />
       <arg name="manager" value="llp_i2c" />
+      <arg name="spurn" value="$(arg spurn)" />
+      <arg name="nodes" value="$(arg nodes)" />
+      <arg name="extra" value="$(arg extra)" />
+      <arg name="debug" value="$(arg debug)" />
+      <arg name="default" value="false" />
     </include>
-    -->
-    <include file="$(find speed_cam)/launch/speed_cam.launch"
-      if="$(eval arg('nodes') == '' or arg('nodes').find('speed_cam') != -1)">
+    <include file="$(find ff_util)/launch/ff_nodelet.launch">
+      <arg name="class" value="speed_cam/SpeedCamNode" />
       <arg name="name" value="speed_cam" />
       <arg name="manager" value="llp_serial" />
+      <arg name="spurn" value="$(arg spurn)" />
+      <arg name="nodes" value="$(arg nodes)" />
+      <arg name="extra" value="$(arg extra)" />
+      <arg name="debug" value="$(arg debug)" />
+      <arg name="default" value="true" />
     </include>
-    <include file="$(find cpu_monitor)/launch/cpu_monitor.launch"
-      if="$(eval arg('nodes') == '' or arg('nodes').find('llp_cpu_monitor') != -1)">
+    <include file="$(find ff_util)/launch/ff_nodelet.launch">
+      <arg name="class" value="cpu_monitor/CpuMonitor" />
       <arg name="name" value="llp_cpu_monitor" />
       <arg name="manager" value="llp_monitors" />
+      <arg name="spurn" value="$(arg spurn)" />
+      <arg name="nodes" value="$(arg nodes)" />
+      <arg name="extra" value="$(arg extra)" />
+      <arg name="debug" value="$(arg debug)" />
+      <arg name="default" value="true" />
     </include>
-    <include file="$(find disk_monitor)/launch/disk_monitor.launch"
-      if="$(eval arg('nodes') == '' or arg('nodes').find('llp_disk_monitor') != -1)">
+    <include file="$(find ff_util)/launch/ff_nodelet.launch">
+      <arg name="class" value="disk_monitor/DiskMonitor" />
       <arg name="name" value="llp_disk_monitor" />
       <arg name="manager" value="llp_monitors" />
+      <arg name="spurn" value="$(arg spurn)" />
+      <arg name="nodes" value="$(arg nodes)" />
+      <arg name="extra" value="$(arg extra)" />
+      <arg name="debug" value="$(arg debug)" />
+      <arg name="default" value="true" />
     </include>
 
   </group>

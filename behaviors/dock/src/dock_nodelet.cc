@@ -46,7 +46,7 @@
 
 // Actions
 #include <ff_msgs/MotionAction.h>
-#include <ff_msgs/SwitchAction.h>
+#include <ff_msgs/LocalizationAction.h>
 #include <ff_msgs/DockAction.h>
 
 /**
@@ -436,7 +436,7 @@ class DockNodelet : public ff_util::FreeFlyerNodelet {
       this, std::placeholders::_1, std::placeholders::_2));
     client_s_.SetConnectedCallback(std::bind(&DockNodelet::ConnectedCallback,
       this));
-    client_s_.Create(nh, ACTION_LOCALIZATION_MANAGER_SWITCH);
+    client_s_.Create(nh, ACTION_LOCALIZATION_MANAGER_LOCALIZATION);
 
     // Setup the execute action
     server_.SetGoalCallback(std::bind(
@@ -674,17 +674,19 @@ class DockNodelet : public ff_util::FreeFlyerNodelet {
   // Helper function for localization switching
   bool Switch(std::string const& pipeline) {
     // Send the switch goal
-    ff_msgs::SwitchGoal goal;
+    ff_msgs::LocalizationGoal goal;
+    goal.command = ff_msgs::LocalizationGoal::COMMAND_SWITCH_PIPELINE;
     goal.pipeline = pipeline;
     return client_s_.SendGoal(goal);
   }
 
   // Ignore the switch feedback for now
-  void SFeedbackCallback(ff_msgs::SwitchFeedbackConstPtr const& feedback) {}
+  void SFeedbackCallback(
+    ff_msgs::LocalizationFeedbackConstPtr const& feedback) {}
 
   // Do something with the switch result
   void SResultCallback(ff_util::FreeFlyerActionState::Enum result_code,
-    ff_msgs::SwitchResultConstPtr const& result) {
+    ff_msgs::LocalizationResultConstPtr const& result) {
     switch (result_code) {
     case ff_util::FreeFlyerActionState::SUCCESS:
       return fsm_.Update(SWITCH_SUCCESS);
@@ -705,29 +707,44 @@ class DockNodelet : public ff_util::FreeFlyerNodelet {
 
   // Send a move command
   bool Move(DockPose type, std::string const& mode) {
+    // Create a new motion foal
+    ff_msgs::MotionGoal goal;
+    goal.command = ff_msgs::MotionGoal::MOVE;
+    goal.flight_mode = mode;
+
     // Package up the desired end pose
-    static geometry_msgs::PoseStamped msg;
+    geometry_msgs::PoseStamped msg;
     msg.header.stamp = ros::Time::now();
     switch (type) {
-    case BERTHING_POSE: msg.header.frame_id = frame_;               break;
-    case APPROACH_POSE: msg.header.frame_id = frame_ + "/approach"; break;
+    case BERTHING_POSE:
+      msg.header.frame_id = frame_ + "/approach";
+      goal.states.push_back(msg);
+      msg.header.frame_id = frame_;
+      goal.states.push_back(msg);
+      break;
+    case APPROACH_POSE:
+      msg.header.frame_id = frame_ + "/approach";
+      goal.states.push_back(msg);
+      break;
     default:
       return false;
     }
 
-    // Get the dock -> world transform
-    try {
-      // Look up the world -> berth transform
-      geometry_msgs::TransformStamped tf = tf_buffer_.lookupTransform(
-        "world", msg.header.frame_id, ros::Time(0));
-      // Copy the transform
-      msg.pose.position.x = tf.transform.translation.x;
-      msg.pose.position.y = tf.transform.translation.y;
-      msg.pose.position.z = tf.transform.translation.z;
-      msg.pose.orientation = tf.transform.rotation;
-    } catch (tf2::TransformException &ex) {
-      NODELET_WARN_STREAM("Transform failed" << ex.what());
-      return false;
+    // Iterate over all poses in action, finding the location of each
+    for (auto & pose : goal.states) {
+      try {
+        // Look up the world -> berth transform
+        geometry_msgs::TransformStamped tf = tf_buffer_.lookupTransform(
+          "world", pose.header.frame_id, ros::Time(0));
+        // Copy the transform
+        pose.pose.position.x = tf.transform.translation.x;
+        pose.pose.position.y = tf.transform.translation.y;
+        pose.pose.position.z = tf.transform.translation.z;
+        pose.pose.orientation = tf.transform.rotation;
+      } catch (tf2::TransformException &ex) {
+        NODELET_WARN_STREAM("Transform failed" << ex.what());
+        return false;
+      }
     }
 
     // Reconfigure the choreographer
@@ -747,10 +764,6 @@ class DockNodelet : public ff_util::FreeFlyerNodelet {
       return false;
 
     // Send the goal to the mobility subsystem
-    ff_msgs::MotionGoal goal;
-    goal.command = ff_msgs::MotionGoal::MOVE;
-    goal.flight_mode = mode;
-    goal.states.push_back(msg);
     return client_m_.SendGoal(goal);
   }
 
@@ -859,7 +872,7 @@ class DockNodelet : public ff_util::FreeFlyerNodelet {
   std::map<uint8_t, std::string> berths_;
   ff_util::FSM fsm_;
   ff_util::FreeFlyerActionClient<ff_msgs::MotionAction> client_m_;
-  ff_util::FreeFlyerActionClient<ff_msgs::SwitchAction> client_s_;
+  ff_util::FreeFlyerActionClient<ff_msgs::LocalizationAction> client_s_;
   ff_util::FreeFlyerServiceClient<ff_hw_msgs::Undock> client_u_;
   ff_util::FreeFlyerActionServer<ff_msgs::DockAction> server_;
   ff_util::ConfigServer cfg_;

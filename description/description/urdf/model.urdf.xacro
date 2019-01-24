@@ -97,9 +97,9 @@
   <link name="inertial_link">
     <self_collide>false</self_collide>
     <inertial>
-      <mass value="7.0"/>
+      <mass value="9.176"/>
       <origin xyz="0 0 0"/>
-      <inertia ixx="0.1083" ixy="0.0" ixz="0.0" iyy="0.1083" iyz="0.0" izz="0.1083"/>
+      <inertia ixx="0.1873" ixy="0.0" ixz="0.0" iyy="0.1873" iyz="0.0" izz="0.1873"/>
     </inertial>
   </link>
   <joint name="inertial_joint" type="fixed">
@@ -115,6 +115,11 @@
   <xacro:include filename="$(find description)/urdf/model_truth.urdf.xacro" />
   <xacro:include filename="$(find description)/urdf/model_laser.urdf.xacro" />
   <xacro:include filename="$(find description)/urdf/model_flashlights.urdf.xacro" />
+  <xacro:include filename="$(find description)/urdf/model_speed_cam.urdf.xacro" />
+  <xacro:include filename="$(find description)/urdf/model_signal_lights.urdf.xacro" />
+
+  <!-- Monitors -->
+  <xacro:include filename="$(find description)/urdf/model_monitors.urdf.xacro" />
 
   <!-- SENSORS -->
   <xacro:include filename="$(find description)/urdf/sensor_imu.urdf.xacro" />

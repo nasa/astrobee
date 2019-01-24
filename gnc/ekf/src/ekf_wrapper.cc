@@ -103,11 +103,9 @@ void EkfWrapper::ReadParams(void) {
   if (!config_.GetInt("bias_required_observations", &bias_required_observations_))
     ROS_FATAL("Unspecified bias_required_observations.");
 
-  std::string imu_filename;
-  if (!config_.GetStr("imu_bias_file", &imu_filename)) {
+  if (!config_.GetStr("imu_bias_file", &bias_file_)) {
     ROS_FATAL("IMU bias file not specified.");
   }
-  bias_file_ = std::string(common::GetConfigDir()) + std::string("/") + imu_filename;
 
   ekf_.ReadParams(&config_);
 }
@@ -300,20 +298,24 @@ void EkfWrapper::RegisterDepthCamera(ff_msgs::CameraRegistration::ConstPtr const
   }
 }
 
-void EkfWrapper::GroundTruthCallback(geometry_msgs::PoseStamped::ConstPtr const& truth) {
+void EkfWrapper::GroundTruthCallback(geometry_msgs::PoseStamped::ConstPtr const& pose) {
   // For certain contexts (like MGTF) we want to extract the correct orientation, and pass it to
   // GNC, so that Earth's gravity can be extracted out of the linear acceleration.
   std::unique_lock<std::mutex> lk(mutex_truth_msg_);
-  assert(truth->header.frame_id == "world");
-  quat_ = truth->pose.orientation;
+  assert(pose->header.frame_id == "world");
+  quat_ = pose->pose.orientation;
   if (input_mode_ == ff_msgs::SetEkfInputRequest::MODE_TRUTH) {
-    pose_pub_.publish(truth);
+    truth_pose_= *pose;
+    pose_pub_.publish(pose);
   }
 }
 
-void EkfWrapper::GroundTruthTwistCallback(geometry_msgs::TwistStamped::ConstPtr const& truth) {
+void EkfWrapper::GroundTruthTwistCallback(geometry_msgs::TwistStamped::ConstPtr const& twist) {
+  std::unique_lock<std::mutex> lk(mutex_truth_msg_);
+  assert(twist->header.frame_id == "world");
   if (input_mode_ == ff_msgs::SetEkfInputRequest::MODE_TRUTH) {
-    twist_pub_.publish(truth);
+    truth_twist_= *twist;
+    twist_pub_.publish(twist);
   }
 }
 
@@ -368,9 +370,37 @@ int EkfWrapper::Step() {
   }
   cv_imu_.notify_all();
 
-  pt_ekf_.Tick();
-  int ret = (input_mode_ != ff_msgs::SetEkfInputRequest::MODE_NONE ? ekf_.Step(&state_) : 1);
-  pt_ekf_.Tock();
+  int ret = 1;
+  switch (input_mode_) {
+  // Don't do anything when localization in turned off
+  case ff_msgs::SetEkfInputRequest::MODE_NONE:
+    break;
+  // In truth mode we don't step the filter forward, but we do copy the pose
+  // and twist into the EKF message.
+  case ff_msgs::SetEkfInputRequest::MODE_TRUTH: {
+      std::lock_guard<std::mutex> lk(mutex_truth_msg_, std::adopt_lock);
+      ros::Time t = ros::Time::now();
+      if (fabs((truth_pose_.header.stamp - t).toSec()) < 1 &&
+          fabs((truth_twist_.header.stamp - t).toSec()) < 1) {
+        state_.header.stamp = t;
+        state_.pose = truth_pose_.pose;
+        state_.velocity = truth_twist_.twist.linear;
+        state_.omega = truth_twist_.twist.angular;
+        break;
+      }
+      ret = 0;
+      break;
+    }
+  // All other pipelines get stepped forward normally
+  default:
+    pt_ekf_.Tick();
+    ret = ekf_.Step(&state_);
+    pt_ekf_.Tock();
+    break;
+  }
+  // Let other elements in the system know that the bias is being estimated
+  state_.estimating_bias = estimating_bias_;
+  // Only send the state if the Step() function was successful
   if (ret)
     PublishState(state_);
   return ret;
@@ -423,6 +453,7 @@ bool EkfWrapper::SetInputService(ff_msgs::SetEkfInput::Request& req, ff_msgs::Se
   input_mode_ = req.mode;
   switch (input_mode_) {
   case ff_msgs::SetEkfInputRequest::MODE_AR_TAGS:
+    ekf_.ResetAR();
     ROS_INFO("EKF input switched to AR tags.");
     break;
   case ff_msgs::SetEkfInputRequest::MODE_HANDRAIL:

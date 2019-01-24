@@ -21,6 +21,7 @@
   <gazebo>
     <plugin name="pmc_ros" filename="libgazebo_model_plugin_pmc.so">
       <rate>62.5</rate>
+      <bypass_blower_model>true</bypass_blower_model>
     </plugin>
   </gazebo>
 </robot>

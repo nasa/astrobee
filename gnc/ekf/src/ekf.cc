@@ -103,8 +103,7 @@ void Ekf::ReadParams(config_reader::ConfigReader* config) {
   Eigen::Map<Eigen::Vector3f> gyro_fixed_bias(p->ase_gyro_fixed_bias),
                              accel_fixed_bias(p->ase_accel_fixed_bias);
   std::vector<real32_T> new_bias(3);
-  std::string bias_file = std::string(common::GetConfigDir()) + std::string("/") + imu_filename;
-  FILE* f = fopen(bias_file.c_str(), "r");
+  FILE* f = fopen(imu_filename.c_str(), "r");
   if (f) {
     int ret = fscanf(f, "%g %g %g\n", &new_bias[0], &new_bias[1], &new_bias[2]);
     if (ret == 3)
@@ -115,7 +114,7 @@ void Ekf::ReadParams(config_reader::ConfigReader* config) {
     }
     fclose(f);
   } else {
-    ROS_WARN("No bias file found at %s.", bias_file.c_str());
+    ROS_WARN("No bias file found at %s.", imu_filename.c_str());
   }
 }
 

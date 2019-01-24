@@ -2,32 +2,36 @@
 #
 # Copyright (c) 2017, United States Government, as represented by the
 # Administrator of the National Aeronautics and Space Administration.
-# 
+#
 # All rights reserved.
-# 
+#
 # The Astrobee platform is licensed under the Apache License, Version 2.0
 # (the "License"); you may not use this file except in compliance with the
 # License. You may obtain a copy of the License at
-# 
+#
 #     http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import configuration_support as configuration
+import sys
+
 DDS_COM = 'dds'
 ROS_COM = 'ros'
 
 class ComManager:
-    default_com_method = DDS_COM
+    default_com_method = ROS_COM
     current_com_method = None
     viz = None
     subs_manager = None
     started = False
     com = None
     executor = None
+    config = configuration.Preferences()
 
     reset_ekf = lambda self : self.executor.reset_ekf()
     initialize_bias = lambda self : self.executor.initialize_bias()
@@ -62,17 +66,37 @@ class ComManager:
     def was_shutdown(self):
         if self.subs_manager == None:
             return False
-        
+
         return com.is_shutdown()
 
-    def set_com_method(self, com_method):
-        if com_method == DDS_COM or com_method == ROS_COM:
+    def set_com_method(self, com_method, args = None):
+        if com_method == DDS_COM:
+            self.current_com_method = com_method
+            partition_name = None
+            given_peer = None
+
+            if args != None and isinstance(args, dict):
+                if "partition_name" in args:
+                    partition_name = args["partition_name"]
+                if "given_peer" in args:
+                    given_peer = args["given_peer"]
+
+            if self.config.set_preferences(partition_name, given_peer):
+                # Print result
+                print >> sys.stderr, (self.config.get_all_warnings() + self.config.get_all_info())
+            else:
+                # Print result and exit
+                print >> sys.stderr, (self.config.get_all_errors() + self.config.get_all_warnings() + self.config.get_all_info())
+                return False
+
+        elif com_method == ROS_COM:
             self.current_com_method = com_method
         else:
             self.current_com_method = self.default_com_method
 
         global com
         com = __import__(self.current_com_method + '_support', globals(), locals())
+        return True
 
     def __start_ros_com(self):
         self.subs_manager = com.RosSubscriberManager('gnc_visualizer', self.viz.print_to_log)
@@ -109,4 +133,3 @@ class ComManager:
                     "LogSubscriber::LogReader", self.viz.log_callback, com.Log), True)
 
         self.executor = com.DdsCommandExecutor()
-    

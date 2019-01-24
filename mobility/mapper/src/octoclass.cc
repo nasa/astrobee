@@ -1,14 +1,14 @@
 /* Copyright (c) 2017, United States Government, as represented by the
  * Administrator of the National Aeronautics and Space Administration.
- * 
+ *
  * All rights reserved.
- * 
+ *
  * The Astrobee platform is licensed under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -160,11 +160,13 @@ void OctoClass::PointsOctomapToPointCloud2(const octomap::point3d_list& points,
 }
 
 void OctoClass::PclToRayOctomap(const pcl::PointCloud< pcl::PointXYZ > &cloud,
-                                const tf::StampedTransform &tf_cam2world,
+                                const geometry_msgs::TransformStamped &tf_cam2world,
                                 const algebra_3d::FrustumPlanes &frustum) {
   // set camera origin
-  const tf::Vector3 v = tf_cam2world.getOrigin();
-  const octomap::point3d cam_origin = octomap::point3d(v.getX(), v.getY(), v.getZ());
+  const octomap::point3d cam_origin = octomap::point3d(
+    tf_cam2world.transform.translation.x,
+    tf_cam2world.transform.translation.y,
+    tf_cam2world.transform.translation.z);
   const double min_threshold_sqr = min_range_*min_range_;
   const uint32_t width = cloud.width;
   const uint32_t height = cloud.height;
@@ -190,9 +192,10 @@ void OctoClass::PclToRayOctomap(const pcl::PointCloud< pcl::PointXYZ > &cloud,
         continue;
 
       // points too close to origin of camera are not added
-      range_sqr = this->VectorNormSquared(v.getX()-point.x,
-                                          v.getY()-point.y,
-                                          v.getZ()-point.z);
+      range_sqr = this->VectorNormSquared(
+        tf_cam2world.transform.translation.x - point.x,
+        tf_cam2world.transform.translation.y - point.y,
+        tf_cam2world.transform.translation.z - point.z);
       if ((range_sqr < min_threshold_sqr))
         continue;
 

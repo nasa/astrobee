@@ -58,6 +58,10 @@ SET(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
 SET(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 SET(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)
 
+# fix pkg-config to only look in the chroot as well
+SET(ENV{PKG_CONFIG_SYSROOT_DIR} ${ARM_CHROOT_DIR})
+SET(ENV{PKG_CONFIG_LIBDIR} "${ARM_CHROOT_DIR}/usr/local/lib/arm-linux-gnueabihf/pkgconfig:${ARM_CHROOT_DIR}/usr/local/lib/pkgconfig:${ARM_CHROOT_DIR}/usr/local/share/pkgconfig:${ARM_CHROOT_DIR}/usr/lib/arm-linux-gnueabihf/pkgconfig:${ARM_CHROOT_DIR}/usr/lib/pkgconfig:${ARM_CHROOT_DIR}/usr/share/pkgconfig")
+
 # extra places to look, for example.. RTI DDS
 IF( DEFINED EXTRA_ROOT_PATH )
   SET(CMAKE_FIND_ROOT_PATH ${EXTRA_ROOT_PATH} ${CMAKE_FIND_ROOT_PATH})

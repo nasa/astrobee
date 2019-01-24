@@ -19,6 +19,7 @@
 
 import environment
 
+import argparse
 import sys
 import os
 import os.path
@@ -33,8 +34,9 @@ from matplotlib.backends.backend_pdf import PdfPages
 import numpy as np
 from numpy.linalg import norm
 
-def run_ekf(astrobee_map, astrobee_bag, output_file):
-  os.system('rosrun ekf_bag ekf_to_csv %s %s %s' % (astrobee_map, astrobee_bag, output_file))
+def run_ekf(astrobee_map, astrobee_bag, output_file, ekf_in_bag = False):
+  cmd = 'bag_to_csv' if ekf_in_bag else 'ekf_to_csv'
+  os.system('rosrun ekf_bag %s %s %s %s' % (cmd, astrobee_map, astrobee_bag, output_file))
 
 class EkfLog(object):
   def __init__(self, filename):
@@ -112,22 +114,23 @@ class EkfLog(object):
         self.of['youngest'].append(np.min(times))
         self.of['median'].append(np.median(times))
       elif l.startswith('VL '):
-        self.vl['t']        .append(float(p[ 1]))
-        self.vl['count']    .append(int(p[ 2]))
-        self.vl['x']        .append(float(p[ 3]))
-        self.vl['y']        .append(float(p[ 4]))
-        self.vl['z']        .append(float(p[ 5]))
-        self.vl['angle1']   .append(float(p[ 6]) * 180 / math.pi)
-        self.vl['angle2']   .append(float(p[ 7]) * 180 / math.pi)
-        self.vl['angle3']   .append(float(p[ 8]) * 180 / math.pi)
-        for i in range((len(p) - 9) / 5):
-          u = float(p[9 + 5 * i + 0])
-          v = float(p[9 + 5 * i + 1])
-          x = float(p[9 + 5 * i + 2])
-          y = float(p[9 + 5 * i + 3])
-          z = float(p[9 + 5 * i + 4])
-          self.vl_heatmap[int(round(u / self.CAMERA_RES[0] * self.HEATMAP_SIZE[0])) + self.HEATMAP_SIZE[0] / 2,
-                          int(round(v / self.CAMERA_RES[1] * self.HEATMAP_SIZE[1])) + self.HEATMAP_SIZE[1] / 2] += 1
+        if float(p[1]) > -1.0:
+          self.vl['t']        .append(float(p[ 1]))
+          self.vl['count']    .append(int(p[ 2]))
+          self.vl['x']        .append(float(p[ 3]))
+          self.vl['y']        .append(float(p[ 4]))
+          self.vl['z']        .append(float(p[ 5]))
+          self.vl['angle1']   .append(float(p[ 6]) * 180 / math.pi)
+          self.vl['angle2']   .append(float(p[ 7]) * 180 / math.pi)
+          self.vl['angle3']   .append(float(p[ 8]) * 180 / math.pi)
+          for i in range((len(p) - 9) / 5):
+            u = float(p[9 + 5 * i + 0])
+            v = float(p[9 + 5 * i + 1])
+            x = float(p[9 + 5 * i + 2])
+            y = float(p[9 + 5 * i + 3])
+            z = float(p[9 + 5 * i + 4])
+            self.vl_heatmap[int(round(u / self.CAMERA_RES[0] * self.HEATMAP_SIZE[0])) + self.HEATMAP_SIZE[0] / 2,
+                            int(round(v / self.CAMERA_RES[1] * self.HEATMAP_SIZE[1])) + self.HEATMAP_SIZE[1] / 2] += 1
       elif l.startswith('GT '):
         self.gt['t']        .append(float(p[ 1]))
         self.gt['x']        .append(float(p[ 2]))
@@ -186,6 +189,14 @@ class EkfLog(object):
     if err_count == 0:
       return (0.0, 0.0)
     return (math.sqrt(pos_err / err_count), math.sqrt(angle_err / err_count))
+
+  def evaluate_features(self):
+    total_time = self.ekf['t'][len(self.ekf['t']) - 1] - self.ekf['t'][0]
+    total_count = sum(self.vl['count'])
+    max_gap = 0
+    for i in range(1, len(self.vl['t'])):
+      max_gap = max(max_gap, self.vl['t'][i] - self.vl['t'][i-1])
+    return (total_count / total_time, max_gap)
 
   def plot(self, filename, output_text):
     colors = ['r', 'b', 'g']
@@ -373,19 +384,25 @@ class EkfLog(object):
       pdf.savefig()
       plt.close()
 
+parser = argparse.ArgumentParser(description='Graph the EKF from a ros bag file.')
+parser.add_argument('-b', '--bag_has_ekf', dest='ekf_in_bag', action='store_true',
+                    help='Use messages from bag instead of running EKF on images.')
+
+args, args_unknown = parser.parse_known_args()
+
 astrobee_map = None
 astrobee_bag = None
-if len(sys.argv) >= 2:
-  astrobee_bag = sys.argv[1]
-if len(sys.argv) >= 3:
-  astrobee_map = sys.argv[2]
+if len(args_unknown) >= 1:
+  astrobee_bag = args_unknown[0]
+if len(args_unknown) >= 2:
+  astrobee_map = args_unknown[1]
 
 (astrobee_map, astrobee_bag) = environment.initialize_environment(astrobee_map, astrobee_bag)
 
 name_prefix = astrobee_bag[:astrobee_bag.rfind('.')]
 
 start = time.time()
-run_ekf(astrobee_map, astrobee_bag, name_prefix + '.txt')
+run_ekf(astrobee_map, astrobee_bag, name_prefix + '.txt', args.ekf_in_bag)
 run_time = time.time() - start
 output_text = 'Run time: %g\n' % (run_time)
 
@@ -393,8 +410,10 @@ log = EkfLog(name_prefix + '.txt')
 
 offset = log.correct_ground_truth()
 (pos_err, angle_err) = log.evaluate_error()
+(fps, max_gap) = log.evaluate_features()
 output_text += 'Ground Truth Time Shift: %g\n' % (offset)
-output_text += 'RMSE Position Error: %g Angular Error: %g' % (pos_err, angle_err)
+output_text += 'RMSE Position Error: %g Angular Error: %g\n' % (pos_err, angle_err)
+output_text += 'VL Feature Throughput: %g VLs / s Max Gap: %g s' % (fps, max_gap)
 print output_text
 log.plot(name_prefix + '.pdf', output_text)
 print 'Saved results to %s.pdf' % (name_prefix)

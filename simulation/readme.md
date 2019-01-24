@@ -41,7 +41,17 @@ To view the GDS GUI:
 
     gds:=true
 
-Note that all GUIs have a substantial effect on performance and care should be taken when speeding up the simulation with GUIs enabled.
+If the launch fails because of DDS-related errors, that functionality can be turned off with:
+
+   dds:=false
+
+Note that all GUIs have a substantial effect on performance and care should be taken when speeding up the simulation with GUIs enabled. Under certain high-load conditions (many robots and/or a high speed factor) the outgoing heartbeat queue in simulation ends up being too small for the number of messages that must be delivered. The outcome is this error message in your console:
+
+    [ERROR] [<timestamp>] : (ros.Astrobee) Fault with id 11 occurred. Fault error message: Didn't receive a heartbeat from <node>
+
+You can fix this error by increasing the value of variable "heartbeat_queue_size" in the robot config. For example, if you are simulating the robot *bsharp*, you must open the LUA config file *astrobee/config/robots/bsharp.config*, ind increase the value of this line:
+
+    heartbeat_queue_size = <x>
 
 ## Spawning robots in the simulator
 
@@ -51,9 +61,9 @@ To spawn a robot on the default "/" namespace at a given pose:
 
 You can also supply a namespace to the simulation. Note that we currently only support the empty namespace, "bumble", "queen" and "honey".
 
-    roslaunch astrobee spawn.launch ns=honey pose:="2 0 4.8 0 0 0 1"
-    roslaunch astrobee spawn.launch ns=bumble pose:="3 0 4.8 0 0 0 1"
-    roslaunch astrobee spawn.launch ns=queen pose:="4 0 4.8 0 0 0 1"
+    roslaunch astrobee spawn.launch ns:=honey pose:="2 0 4.8 0 0 0 1"
+    roslaunch astrobee spawn.launch ns:=bumble pose:="3 0 4.8 0 0 0 1"
+    roslaunch astrobee spawn.launch ns:=queen pose:="4 0 4.8 0 0 0 1"
 
 Each robot's ROS topics, services and actions are now prefixed with the supplied namespace, which allows you to interact with them individually. So, for example, to move bumble to a new position you would do the following:
 

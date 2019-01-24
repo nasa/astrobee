@@ -22,7 +22,10 @@
   <arg name="world" default="granite" />        <!-- World name              -->
   <arg name="ns" default="" />                  <!-- Robot namespace prefix  -->
   <arg name="output" default="log"/>            <!-- Where nodes should log  -->
+  <arg name="spurn" default=""/>                <!-- Prevent a specific node -->
   <arg name="nodes" default=""/>                <!-- Launch specific nodes   -->
+  <arg name="extra" default=""/>                <!-- Inject additional node  -->
+  <arg name="debug" default=""/>              <!-- Debug node group          -->
   <arg name="mlp" default="10.42.0.38" />       <!-- MLP IP address          -->
   <arg name="llp" default="10.42.0.37" />       <!-- LLP IP address          -->
   <arg name="rec" default="" />                 <!-- Enable recording        -->
@@ -36,7 +39,11 @@
   <arg name="rviz" default="false" />           <!-- Robot visualizater      -->
   <arg name="rqt" default="false" />            <!-- Start user interface    -->
   <arg name="gds" default="false" />            <!-- Enable GDS              -->
-
+  <arg name="agent1" default="Bsharp"/>         <!-- GDS Agent1              -->
+  <arg name="agent2" default="Bumble"/>         <!-- GDS Agent2              -->
+  <arg name="agent3" default="Honey"/>          <!-- GDS Agent3              -->
+  <arg name="stats" default="false" />          <!-- Message statistics      -->
+  
   <!-- Make sure all environment variables are set for controller -->
   <env if="$(eval optenv('ASTROBEE_ROBOT','')=='')"
        name="ASTROBEE_ROBOT" value="$(arg robot)" />
@@ -60,10 +67,16 @@
       <arg name="world" value="$(arg world)"/>
     </include>
     <!-- Start ground controller services -->
+    <include if="$(arg stats)" file="$(find astrobee)/launch/controller/stats.launch"/>
     <include if="$(arg ocam)" file="$(find astrobee)/launch/controller/ocam.launch"/>
     <include if="$(arg vive)" file="$(find astrobee)/launch/controller/vive.launch"/>
     <include if="$(arg gviz)" file="$(find astrobee)/launch/controller/gviz.launch"/>
-    <include if="$(arg gds)" file="$(find astrobee)/launch/controller/gds.launch"/>
+    <include if="$(arg gds)" file="$(find astrobee)/launch/controller/gds.launch">
+      <arg name="world" value="$(arg world)"/>
+      <arg name="agent1" value="$(arg agent1)"/>
+      <arg name="agent2" value="$(arg agent2)"/>
+      <arg name="agent3" value="$(arg agent3)"/>
+    </include>
     <include if="$(arg rqt)" file="$(find astrobee)/launch/controller/rqt.launch"/>
     <include if="$(arg rviz)" file="$(find astrobee)/launch/controller/rviz.launch">
       <arg name="world" value="$(arg world)"/>
@@ -82,7 +95,9 @@
     <arg name="ns" value="$(arg ns)" />            <!-- Robot namespace      -->
     <arg name="output" value="$(arg output)" />    <!-- Output for logging   -->
     <arg name="drivers" value="true" />            <!-- Start drivers?       -->
-    <arg name="nodes" value="$(arg nodes)" />      <!-- Limit to nodes       -->
+    <arg name="spurn" value="$(arg spurn)" />      <!-- Prevent node         -->
+    <arg name="nodes" value="$(arg nodes)" />      <!-- Launch node group    -->
+    <arg name="extra" value="$(arg extra)" />      <!-- Inject extra nodse   -->
     <arg name="llp" value="$(arg llp)" />          <!-- LLP IP address       -->
     <arg name="mlp" value="$(arg mlp)" />          <!-- MLP IP address       -->
     <arg name="dds" value="$(arg dds)" />          <!-- Enable DDS           -->

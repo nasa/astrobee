@@ -48,6 +48,14 @@ namespace pmc_actuator {
 
 class PmcActuatorNodelet : public ff_util::FreeFlyerNodelet {
  public:
+  // As per FFFTEST003
+  static constexpr  int32_t MAX_TRIM   = 64;
+  static constexpr uint32_t NUM_NOZZLE = 6;
+  enum PmcType  : uint32_t { PMC_STBD, PMC_PORT,  NUM_PMC  };
+  enum TrimType : uint32_t { TRIM_LOW, TRIM_HIGH, NUM_TRIM };
+  enum StbdType : uint32_t { RXP, RXN, FYP, AYP, RZP, RZN  };
+  enum PortType : uint32_t { LXN, LXP, AYN, FYN, LZP, LZN  };
+
   // Constructor
   PmcActuatorNodelet() : ff_util::FreeFlyerNodelet(NODE_PMC_ACTUATOR),
     pmc_enabled_(true), cur_command_id_(0) {}
@@ -106,7 +114,7 @@ class PmcActuatorNodelet : public ff_util::FreeFlyerNodelet {
     state_.header.frame_id = frame_id_;
     state_.header.stamp = ros::Time::now();
     state_.states.resize(num_pmcs_);
-    for (int i = 0; i < num_pmcs_; i++)
+    for (uint32_t i = 0; i < num_pmcs_; i++)
       state_.states[i] = ff_hw_msgs::PmcState::UNKNOWN;
     pub_state_.publish(state_);
   }
@@ -123,10 +131,16 @@ class PmcActuatorNodelet : public ff_util::FreeFlyerNodelet {
     // it seems like it would disturb the main loop which may be undesirable
 
     // get number of pmcs
-    if (!config_params.GetInt("num_pmcs", &num_pmcs_)) {
+    int num_pmcs = 0;
+    if (!config_params.GetInt("num_pmcs", &num_pmcs)) {
       ROS_FATAL("PMC Actuator: number of pmcs not specified!");
       return false;
     }
+    if (num_pmcs != NUM_PMC) {
+      ROS_FATAL("PMC Actuator: wrong number of PMCs found!");
+      return false;
+    }
+    num_pmcs_ = static_cast<uint32_t>(num_pmcs);
 
     // get frame id
     if (!config_params.GetStr("frame_id", &frame_id_)) {
@@ -192,10 +206,57 @@ class PmcActuatorNodelet : public ff_util::FreeFlyerNodelet {
       ROS_FATAL("PMC Actuator: state_telemetry_scale not specified!");
       return false;
     }
-    if (!config_params.GetReal("state_tol_rads_per_sec",
-      &state_tol_rads_per_sec_)) {
-      ROS_FATAL("PMC Actuator: state_tol_rads_per_sec not specified!");
+    if (!config_params.GetReal("arrive_tol_rads_per_sec",
+      &arrive_tol_rads_per_sec_)) {
+      ROS_FATAL("PMC Actuator: arrive_tol_rads_per_sec not specified!");
       return false;
+    }
+    if (!config_params.GetReal("depart_tol_rads_per_sec",
+      &depart_tol_rads_per_sec_)) {
+      ROS_FATAL("PMC Actuator: depart_tol_rads_per_sec not specified!");
+      return false;
+    }
+
+    // Get stbd nozzle trims
+    config_reader::ConfigReader::Table stbd_trims(&config_params,
+      "stbd_nozzle_trims");
+     for (uint32_t i = 0; i < NUM_TRIM; i++) {
+       config_reader::ConfigReader::Table nozzles;
+       if (!stbd_trims.GetTable(i + 1, &nozzles)) {
+         ROS_FATAL("PMC Actuator: cannot get stbd nozzle trims");
+         return false;
+       }
+       int trim = 0;
+       for (uint32_t j = 0; j < NUM_NOZZLE; j++) {
+         if (!nozzles.GetInt(j + 1, &trim)) {
+           ROS_FATAL("PMC Actuator: null nozzle position not an integer!");
+           return false;
+         }
+         if (trim < 0 || trim > MAX_TRIM)
+           ROS_FATAL("PMC Actuator: Trim values must be in range 0 - 32");
+         trims_[PMC_STBD][i][j] = static_cast<uint8_t>(trim);
+       }
+    }
+
+    // Get port nozzle trims
+    config_reader::ConfigReader::Table port_trims(&config_params,
+      "port_nozzle_trims");
+     for (uint32_t i = 0; i < NUM_TRIM; i++) {
+       config_reader::ConfigReader::Table nozzles;
+       if (!port_trims.GetTable(i + 1, &nozzles)) {
+         ROS_FATAL("PMC Actuator: cannot get port nozzle trims");
+         return false;
+       }
+       int trim = 0;
+       for (uint32_t j = 0; j < NUM_NOZZLE; j++) {
+         if (!nozzles.GetInt(j + 1, &trim)) {
+           ROS_FATAL("PMC Actuator: null nozzle position not an integer!");
+           return false;
+         }
+         if (trim < 0 || trim > MAX_TRIM)
+           ROS_FATAL("PMC Actuator: Trim values must be in range 0 - 32");
+         trims_[PMC_PORT][i][j] = static_cast<uint8_t>(trim);
+       }
     }
 
     // get intial nozzle positions
@@ -211,7 +272,7 @@ class PmcActuatorNodelet : public ff_util::FreeFlyerNodelet {
       null_nozzle_positions_.push_back(temp_pos);
     }
 
-    if (num_pmcs_ < 0 || i2c_addrs_.size() != (unsigned int)num_pmcs_) {
+    if (i2c_addrs_.size() != num_pmcs_) {
       ROS_ERROR("Invalid parameters. Check num_pmcs and i2c_addrs to fix.");
       return false;
     }
@@ -234,29 +295,18 @@ class PmcActuatorNodelet : public ff_util::FreeFlyerNodelet {
 
     bus->SetRetries(i2c_retries_);
 
-    for (int i = 0; i < num_pmcs_; i++) {
+    for (uint32_t i = 0; i < num_pmcs_; i++) {
       pmcs_.push_back(new PmcActuator(bus->DeviceAt(i2c_addrs_.at(i))));
     }
 
-    // Set initial commands.
-    for (int i = 0; i < num_pmcs_; i++) {
+    // Set initial commands
+    for (uint32_t i = 0; i < num_pmcs_; i++) {
       commands_.push_back(new Command);
-
       commands_.at(i)->motor_speed = null_fan_speed_;
-
-      commands_.at(i)->nozzle_positions[0] = null_nozzle_positions_[0];
-      commands_.at(i)->nozzle_positions[1] = null_nozzle_positions_[1];
-      commands_.at(i)->nozzle_positions[2] = null_nozzle_positions_[2];
-      commands_.at(i)->nozzle_positions[3] = null_nozzle_positions_[3];
-      commands_.at(i)->nozzle_positions[4] = null_nozzle_positions_[4];
-      commands_.at(i)->nozzle_positions[5] = null_nozzle_positions_[5];
-
+      for (uint32_t n = 0; n < null_nozzle_positions_.size(); n++)
+        commands_.at(i)->nozzle_positions[n] = null_nozzle_positions_[n];
       commands_.at(i)->mode = CmdMode::SHUTDOWN;
-
-      // FIXME: How to set command_id?
       commands_.at(i)->command_id = cur_command_id_++;
-
-      // Send a restart to the PMCs
       pmcs_.at(i)->SendCommand(*(commands_.at(i)));
     }
 
@@ -266,6 +316,12 @@ class PmcActuatorNodelet : public ff_util::FreeFlyerNodelet {
   // Safely exit
   void Exit(int status) {
     exit(status);
+  }
+
+  // Remap a command to lie in the correct range, taking into account trims
+  uint8_t Trim(uint32_t p, uint32_t n, uint8_t x) {
+    return static_cast<uint8_t>(x * (255 - trims_[p][TRIM_HIGH][n]
+      - trims_[p][TRIM_LOW][n]) / 255 + trims_[p][TRIM_LOW][n]);
   }
 
   // Send the commands to the PMCs
@@ -279,35 +335,40 @@ class PmcActuatorNodelet : public ff_util::FreeFlyerNodelet {
     static ff_hw_msgs::PmcState msg;
     msg.states.resize(num_pmcs_);
     bool duplicate = true;
-    for (int i = 0; i < num_pmcs_; i++) {
+    for (uint32_t i = 0; i < num_pmcs_; i++) {
       ff_hw_msgs::PmcStatus t;
       if (!GetStatus(i, &t))
         ROS_WARN_THROTTLE(5, "Unable to get telemetry from PMCs");
       telemetry_vector_.statuses.push_back(t);
       // Determine the current state based on the different between the
       // commanded and telemetry motor speeds, scaled appropriately
-      static double crps, trps;
-      crps = state_command_scale_ * commands_.at(i)->motor_speed;
-      trps = state_telemetry_scale_ * t.motor_speed;
-      if (fabs(crps - trps) < state_tol_rads_per_sec_) {
+      double crps = state_command_scale_ * commands_.at(i)->motor_speed;
+      double trps = state_telemetry_scale_ * t.motor_speed;
+      // Decide what to do based on the current state
+      switch (msg.states[i]) {
+      case ff_hw_msgs::PmcState::READY:
+        if (crps - trps >  depart_tol_rads_per_sec_)        // +ve towards goal
+          msg.states[i] = ff_hw_msgs::PmcState::RAMPING_UP;
+        else if (crps - trps < -depart_tol_rads_per_sec_)   // -ve towards goal
+          msg.states[i] = ff_hw_msgs::PmcState::RAMPING_DOWN;
+        break;
+      case ff_hw_msgs::PmcState::RAMPING_UP:
+        if (crps - trps < arrive_tol_rads_per_sec_)         // +ve towards goal
           msg.states[i] = ff_hw_msgs::PmcState::READY;
-      } else if (crps < trps) {
-        msg.states[i] = ff_hw_msgs::PmcState::RAMPING_DOWN;
-      } else {
-        msg.states[i] = ff_hw_msgs::PmcState::RAMPING_UP;
+        break;
+      case ff_hw_msgs::PmcState::RAMPING_DOWN:
+        if (crps - trps > -arrive_tol_rads_per_sec_)        // -ve towards goal
+          msg.states[i] = ff_hw_msgs::PmcState::READY;
+        break;
+      default:  // Unknown
+        msg.states[i] = ff_hw_msgs::PmcState::READY;
+        break;
       }
       // One mismatch will trigger a state update
       duplicate &= (state_.states[i] == msg.states[i]);
     }
-    // If the PMC is ramping up, null the nozzles to avoid a brownout. This
-    // seems to work well, but is not a replacement for fixing the firmware.
-    for (int i = 0; i < num_pmcs_; i++) {
-      if (msg.states[i] == ff_hw_msgs::PmcState::RAMPING_UP) {
-        for (unsigned int n = 0; n < 6; n++) {
-          commands_.at(i)->nozzle_positions[n] = null_nozzle_positions_[n];
-        }
-      }
-      // FIXME: lock required?
+    // Send the PMC command
+    for (uint32_t i = 0; i < num_pmcs_; i++) {
       if (!pmcs_.at(i)->SendCommand(*(commands_.at(i))))
         ROS_WARN_THROTTLE(5, "Unable to send command to PMCs");
     }
@@ -333,7 +394,7 @@ class PmcActuatorNodelet : public ff_util::FreeFlyerNodelet {
     telemetry->motor_current = t.motor_current;
     telemetry->v6_current = t.v6_current;
     telemetry->pressure = t.pressure;
-    for (size_t i = 0; i < kTemperatureSensorsCount; i++) {
+    for (uint32_t i = 0; i < kTemperatureSensorsCount; i++) {
       telemetry->temperatures.push_back(t.temperatures[i]);
     }
     telemetry->status_1 = t.status_1.asUint8;
@@ -349,40 +410,29 @@ class PmcActuatorNodelet : public ff_util::FreeFlyerNodelet {
     timer_.stop();
     timer_.start();
     // Do a sanity check on the message
-    unsigned int msg_goals_size = msg->goals.size();
-    if (msg_goals_size < (unsigned int)num_pmcs_) {
-      ROS_ERROR(
-          "Received a command with insufficient number of goals (%u vs. %d)",
-          msg_goals_size, num_pmcs_);
+    uint32_t msg_goals_size = msg->goals.size();
+    if (msg_goals_size < num_pmcs_) {
+      ROS_ERROR_STREAM("Received a command with insufficient number of goals ("
+        << msg_goals_size << ") vs. (" << num_pmcs_ << ")");
       return;
     }
     // Construct the command
     unsigned int num_nozzles = (unsigned int)null_nozzle_positions_.size();
-    for (int i = 0; i < num_pmcs_; i++) {
+    for (uint32_t i = 0; i < num_pmcs_; i++) {
       Command *cmd = commands_[i];
       // increment the command id since we received a new message
       cmd->command_id = cur_command_id_++;
       if (msg->goals[i].nozzle_positions.size() != num_nozzles) {
-        ROS_ERROR(
-            "Received a command with the wrong number of nozzles for PMC #%d",
-            i);
+        ROS_ERROR_STREAM("Received a command with the wrong number of nozzles for PMC #" << i);
         return;
       }
-      if (pmc_enabled_ && msg->goals[i].motor_speed > 0) {
-        cmd->motor_speed = msg->goals[i].motor_speed;
-        cmd->mode = CmdMode::NORMAL;
-        for (unsigned int n = 0; n < num_nozzles; n++)
-          cmd->nozzle_positions[n] = msg->goals[i].nozzle_positions[n];
-      } else {
-        cmd->motor_speed = null_fan_speed_;
-        cmd->mode = CmdMode::SHUTDOWN;
-        cmd->nozzle_positions[0] = null_nozzle_positions_[0];
-        cmd->nozzle_positions[1] = null_nozzle_positions_[1];
-        cmd->nozzle_positions[2] = null_nozzle_positions_[2];
-        cmd->nozzle_positions[3] = null_nozzle_positions_[3];
-        cmd->nozzle_positions[4] = null_nozzle_positions_[4];
-        cmd->nozzle_positions[5] = null_nozzle_positions_[5];
-      }
+      // General rule -- we are always in NOMINAL mode unless explicitly shut
+      // down. If the motor speed is zeros then we automatically close nozzles.
+      cmd->motor_speed = msg->goals[i].motor_speed;
+      cmd->mode = (pmc_enabled_ ? CmdMode::NORMAL : CmdMode::SHUTDOWN);
+      for (uint32_t n = 0; n < num_nozzles; n++)
+        cmd->nozzle_positions[n] =
+          Trim(i, n, (pmc_enabled_ ? msg->goals[i].nozzle_positions[n] : 0));
     }
     // Send the commands and publish telemetry
     SendAndPublish();
@@ -392,21 +442,14 @@ class PmcActuatorNodelet : public ff_util::FreeFlyerNodelet {
   // that we are using a single-threaded spinner so at most one callback is
   // processed at any time which means that we wont have race conditions.
   void TimerCallback(const ros::TimerEvent&) {
-    // Immediately reset the watchdog timer
-    // timer_.stop();
-    // timer_.start();
     // set the blower speed to zero in case we do not receive messages from FAM
-    for (int i = 0; i < num_pmcs_; i++) {
+    for (uint32_t i = 0; i < num_pmcs_; i++) {
       Command *cmd = commands_.at(i);    // Get the command to send to the PMC
       cmd->motor_speed = null_fan_speed_;  // set initial fan speed
       cmd->mode = CmdMode::SHUTDOWN;          // set mode to shutdown
       // close all nozzles (should be done at the firmware level!
-      commands_.at(i)->nozzle_positions[0] = null_nozzle_positions_[0];
-      commands_.at(i)->nozzle_positions[1] = null_nozzle_positions_[1];
-      commands_.at(i)->nozzle_positions[2] = null_nozzle_positions_[2];
-      commands_.at(i)->nozzle_positions[3] = null_nozzle_positions_[3];
-      commands_.at(i)->nozzle_positions[4] = null_nozzle_positions_[4];
-      commands_.at(i)->nozzle_positions[5] = null_nozzle_positions_[5];
+      for (uint32_t n = 0; n < null_nozzle_positions_.size(); n++)
+        cmd->nozzle_positions[n] = null_nozzle_positions_[n];
     }
     // Send the commands to the PMCs
     SendAndPublish();
@@ -433,7 +476,7 @@ class PmcActuatorNodelet : public ff_util::FreeFlyerNodelet {
   ros::Timer timer_;                               // Watchdog timer
   ros::Duration watchdog_period_;                  // Watchdog period
   ff_hw_msgs::PmcTelemetry telemetry_vector_;      // Telemetry message
-  int num_pmcs_;                                   // Number of PMCs to control
+  uint32_t num_pmcs_;                                // Number of PMCs to control
   int sub_queue_size_;                             // Subscriber queue size
   int pub_queue_size_;                             // Publisher queue size
   std::string frame_id_;                           // Frame ID
@@ -441,13 +484,15 @@ class PmcActuatorNodelet : public ff_util::FreeFlyerNodelet {
   std::vector<int> i2c_addrs_;                     // 7-bit I2C addresses
   int i2c_retries_;                                // Number of I2C bus retries
   double control_rate_hz_;                         // Control rate in Hz.
-  int null_fan_speed_;                          // Initial fan speed.
-  std::vector<int> null_nozzle_positions_;      // Initial nozzle positions
+  int null_fan_speed_;                             // Initial fan speed.
+  std::vector<int> null_nozzle_positions_;         // Initial nozzle positions
+  uint8_t trims_[NUM_PMC][NUM_TRIM][NUM_NOZZLE];   // Trims for each nozzle
   std::vector<PmcActuator *> pmcs_;                // List of PMCs
   std::vector<Command *> commands_;                // List of commands
   double state_command_scale_;                     // Command scale
   double state_telemetry_scale_;                   // Telemetry scale
-  double state_tol_rads_per_sec_;                  // Detection tolerance
+  double arrive_tol_rads_per_sec_;                 // Goal arrival threshold
+  double depart_tol_rads_per_sec_;                 // Goal departure threshold
   ff_hw_msgs::PmcState state_;                     // State of the PMCs
   bool pmc_enabled_;                               // Is the PMC enabled?
   int cur_command_id_;                             // Current command ID

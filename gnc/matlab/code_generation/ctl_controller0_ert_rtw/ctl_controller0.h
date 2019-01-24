@@ -5,7 +5,7 @@
 //
 // Model version                  : 1.1142
 // Simulink Coder version         : 8.11 (R2016b) 25-Aug-2016
-// C/C++ source code generated on : Wed Aug 22 07:25:33 2018
+// C/C++ source code generated on : Thu Dec  6 14:19:51 2018
 //
 // Target selection: ert.tlc
 // Embedded hardware selection: 32-bit Generic
@@ -93,12 +93,6 @@ struct P_ForEachSubsystem_ctl_contro_T_ {
 
 // Parameters (auto storage)
 struct P_ctl_controller0_T_ {
-  real32_T ctl_stopping_omega_thresh;  // Variable: ctl_stopping_omega_thresh
-                                       //  Referenced by: '<S7>/Constant'
-
-  real32_T ctl_stopping_vel_thresh;    // Variable: ctl_stopping_vel_thresh
-                                       //  Referenced by: '<S6>/Constant'
-
   real32_T tun_accel_gain[3];          // Variable: tun_accel_gain
                                        //  Referenced by: '<S30>/Gain'
 
@@ -125,6 +119,12 @@ struct P_ctl_controller0_T_ {
 
   real32_T tun_ctl_stopped_quat_thresh;// Variable: tun_ctl_stopped_quat_thresh
                                        //  Referenced by: '<S12>/Constant'
+
+  real32_T tun_ctl_stopping_omega_thresh;// Variable: tun_ctl_stopping_omega_thresh
+                                         //  Referenced by: '<S7>/Constant'
+
+  real32_T tun_ctl_stopping_vel_thresh;// Variable: tun_ctl_stopping_vel_thresh
+                                       //  Referenced by: '<S6>/Constant'
 
   real32_T tun_truth_q_omega_filt_enable;// Variable: tun_truth_q_omega_filt_enable
                                          //  Referenced by: '<S5>/For Each Subsystem'

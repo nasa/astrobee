@@ -8,6 +8,11 @@ if [ -n "$(git status --porcelain)" ]; then
   exit -1
 fi
 
+EXTRA_FLAGS="-b -a armhf"
+if [[ $* == *--config* ]]; then
+  EXTRA_FLAGS="-A"
+fi
+
 pushd $DIR/../..
-debuild -e ARMHF_CHROOT_DIR -e ARMHF_TOOLCHAIN -us -uc -b -a armhf -j`nproc`
+debuild -e ARMHF_CHROOT_DIR -e ARMHF_TOOLCHAIN -us -uc $EXTRA_FLAGS -j`nproc`
 popd > /dev/null

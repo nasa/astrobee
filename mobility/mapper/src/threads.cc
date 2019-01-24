@@ -33,31 +33,31 @@ void MapperNodelet::FadeTask(ros::TimerEvent const& event) {
 
 // Thread for constantly updating the tfTree values
 void MapperNodelet::HazTfTask(ros::TimerEvent const& event) {
-  static tf_listener::TfClass obj_cam2world;
-  obj_cam2world.GetTransform(
-    GetTransform(FRAME_NAME_HAZ_CAM), FRAME_NAME_WORLD);
   mutexes_.tf.lock();
-      globals_.tf_cam2world = obj_cam2world.transform_;
+  try {
+    globals_.tf_cam2world = buffer_.lookupTransform(FRAME_NAME_WORLD,
+      GetTransform(FRAME_NAME_HAZ_CAM), ros::Time(0));
+  } catch (tf2::TransformException &ex) {}
   mutexes_.tf.unlock();
 }
 
 // Thread for constantly updating the tfTree values
 void MapperNodelet::PerchTfTask(ros::TimerEvent const& event) {
-  static tf_listener::TfClass obj_perch2world;
-  obj_perch2world.GetTransform(
-    GetTransform(FRAME_NAME_PERCH_CAM), FRAME_NAME_WORLD);
   mutexes_.tf.lock();
-  globals_.tf_perch2world = obj_perch2world.transform_;
+  try {
+    globals_.tf_perch2world = buffer_.lookupTransform(FRAME_NAME_WORLD,
+      GetTransform(FRAME_NAME_PERCH_CAM), ros::Time(0));
+  } catch (tf2::TransformException &ex) {}
   mutexes_.tf.unlock();
 }
 
 // Thread for updating the tfTree values
-void MapperNodelet::BodyTfTask(ros::TimerEvent const& evenr) {
-  static tf_listener::TfClass obj_body2world;
-  obj_body2world.GetTransform(
-    GetTransform(FRAME_NAME_BODY), FRAME_NAME_WORLD);
+void MapperNodelet::BodyTfTask(ros::TimerEvent const& event) {
   mutexes_.tf.lock();
-  globals_.tf_body2world = obj_body2world.transform_;
+  try {
+    globals_.tf_body2world = buffer_.lookupTransform(FRAME_NAME_WORLD,
+      GetTransform(FRAME_NAME_BODY), ros::Time(0));
+  } catch (tf2::TransformException &ex) {}
   mutexes_.tf.unlock();
 }
 
@@ -81,7 +81,6 @@ void MapperNodelet::CollisionCheckTask() {
     semaphores_.collision_check.wait(lck);
     if (killed_)
       return;
-
 
     // Get time for when this task started
     ros::Time time_now = ros::Time::now();
@@ -171,40 +170,48 @@ void MapperNodelet::CollisionCheckTask() {
 
 void MapperNodelet::OctomappingTask() {
   ROS_DEBUG("OctomappingTask Thread started!");
-  tf::StampedTransform tf_cam2world;
+  geometry_msgs::TransformStamped tf_cam2world;
   pcl::PointCloud< pcl::PointXYZ > pcl_world;
 
   std::mutex mtx;
   std::unique_lock<std::mutex> lck(mtx);
   while (!killed_) {
-    // Wait until there is a new PCL data
-    semaphores_.pcl.wait(lck);
+    // Take care of the special case where the notify_one was sent during the
+    // processing of the previous point cloud. The signal that this happened
+    // is a non-empty point cloud queue. In this case we pass straight through.
+    if (globals_.pcl_queue.empty())
+      semaphores_.pcl.wait(lck);
     if (killed_)
       return;
+    mutexes_.point_cloud.lock();
 
     // Get time for when this task started
     const ros::Time t0 = ros::Time::now();
 
     // Get Point Cloud
-    mutexes_.point_cloud.lock();
-    // Get data from queue
-    pcl::PointCloud<pcl::PointXYZ> point_cloud = globals_.pcl_queue.front().cloud;
-    const tf::StampedTransform tf_cam2world = globals_.pcl_queue.front().tf_cam2world;
+    pcl::PointCloud<pcl::PointXYZ> point_cloud =
+      globals_.pcl_queue.front().cloud;
+    const geometry_msgs::TransformStamped tf_cam2world =
+      globals_.pcl_queue.front().tf_cam2world;
 
     // Remove data from queue
     globals_.pcl_queue.pop();
     mutexes_.point_cloud.unlock();
 
     // Check if a tf message has been received already. If not, return
-    if (tf_cam2world.stamp_.toSec() == 0)
+    if (tf_cam2world.header.stamp.toSec() == 0)
       continue;
 
     // Transform pcl into world frame
-    tf::Quaternion q = tf_cam2world.getRotation();
-    tf::Vector3 v = tf_cam2world.getOrigin();
     Eigen::Affine3d transform = Eigen::Affine3d::Identity();
-    transform.translation() << v.getX(), v.getY(), v.getZ();
-    transform.rotate(Eigen::Quaterniond(q.getW(), q.getX(), q.getY(), q.getZ()));
+    transform.translation() <<  tf_cam2world.transform.translation.x,
+                                tf_cam2world.transform.translation.y,
+                                tf_cam2world.transform.translation.z;
+    transform.rotate(Eigen::Quaterniond(
+      tf_cam2world.transform.rotation.w,
+      tf_cam2world.transform.rotation.x,
+      tf_cam2world.transform.rotation.y,
+      tf_cam2world.transform.rotation.z));
     pcl::transformPointCloud(point_cloud, pcl_world, transform);
 
     // Save into octomap

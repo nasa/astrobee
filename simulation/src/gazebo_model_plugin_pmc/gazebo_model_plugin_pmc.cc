@@ -33,6 +33,7 @@
 
 // FSW messahes
 #include <ff_msgs/SetBool.h>
+#include <ff_msgs/FamCommand.h>
 
 // Autocode inclide
 #include <gnc_autocode/blowers.h>
@@ -75,7 +76,8 @@ class GazeboModelPluginPmc : public FreeFlyerModelPlugin {
   // Constructor
   GazeboModelPluginPmc() : FreeFlyerModelPlugin("pmc_actuator", "", true),
     fsm_(UNKNOWN, std::bind(&GazeboModelPluginPmc::StateCallback, this,
-      std::placeholders::_1, std::placeholders::_2)), pmc_enabled_(true) {
+      std::placeholders::_1, std::placeholders::_2)), pmc_enabled_(true),
+        bypass_blower_model_(true) {
     // Mark as not ready
     ready_[0] = false;
     ready_[1] = false;
@@ -159,6 +161,10 @@ class GazeboModelPluginPmc : public FreeFlyerModelPlugin {
                   "Could not get PMC parameters");
     }
 
+    // If we specify a frame name different to our sensor tag name
+    if (sdf->HasElement("bypass_blower_model"))
+      bypass_blower_model_ = sdf->Get<bool>("bypass_blower_model");
+
     // Create a null command to be used later
     ff_hw_msgs::PmcGoal null_goal;
     null_goal.motor_speed = 0;
@@ -175,9 +181,14 @@ class GazeboModelPluginPmc : public FreeFlyerModelPlugin {
     pub_state_ = nh->advertise<ff_hw_msgs::PmcState>(
       TOPIC_HARDWARE_PMC_STATE, 1, true);
 
-    // Now register to be called back every time FAM has new wrench
-    sub_command_ = nh->subscribe(TOPIC_HARDWARE_PMC_COMMAND, 1,
+    // Subscibe to PMC commands
+    sub_command_ = nh->subscribe(TOPIC_HARDWARE_PMC_COMMAND, 5,
       &GazeboModelPluginPmc::CommandCallback, this);
+
+    // Now register to be called back every time FAM has new wrench
+    if (bypass_blower_model_)
+      sub_fam_ = nh->subscribe(TOPIC_GNC_CTL_COMMAND, 5,
+        &GazeboModelPluginPmc::FamCallback, this);
 
     // Create a watchdog timer to ensure the PMC commands are set
     timer_watchdog_ = nh->createTimer(ros::Duration(20.0/control_rate_hz_),
@@ -230,6 +241,19 @@ class GazeboModelPluginPmc : public FreeFlyerModelPlugin {
   void Reset() {}
 
   // This is called whenever the controller has new force/torque to apply
+  void FamCallback(ff_msgs::FamCommand const& msg) {
+    // Immediately reset the watchdog timer
+    timer_watchdog_.stop();
+    // ros::getGlobalCallbackQueue()->clear();
+    timer_watchdog_.start();
+    // Send the command only of he PMCs are enabled
+    if (pmc_enabled_)
+      SendFamCommand(msg);
+    else
+      SendCommand(null_command_);
+  }
+
+  // This is called whenever the controller has new force/torque to apply
   void CommandCallback(ff_hw_msgs::PmcCommand const& msg) {
     // Immediately reset the watchdog timer
     timer_watchdog_.stop();
@@ -256,7 +280,12 @@ class GazeboModelPluginPmc : public FreeFlyerModelPlugin {
     SendCommand(null_command_);
   }
 
-  // Send a command to the PMCs to those specifi
+  // Send a FAM command to the PMCs to those specifi
+  void SendFamCommand(ff_msgs::FamCommand const& msg) {
+    wrench_ = msg.wrench;
+  }
+
+  // Send a PMC command to the PMCs to those specifi
   void SendCommand(ff_hw_msgs::PmcCommand const& msg) {
     // Sanity check
     if (msg.goals.size() != NUMBER_OF_PMCS)
@@ -348,8 +377,15 @@ class GazeboModelPluginPmc : public FreeFlyerModelPlugin {
 
   // Called on each sensor update event
   void WorldUpdateCallback() {
-    GetLink()->AddRelativeForce(force_);
-    GetLink()->AddRelativeTorque(torque_);
+    if (bypass_blower_model_) {
+      GetLink()->AddRelativeForce(math::Vector3(
+        wrench_.force.x, wrench_.force.y, wrench_.force.z));
+      GetLink()->AddRelativeTorque(math::Vector3(
+        wrench_.torque.x, wrench_.torque.y, wrench_.torque.z));
+    } else {
+      GetLink()->AddRelativeForce(force_);
+      GetLink()->AddRelativeTorque(torque_);
+    }
   }
 
  private:
@@ -358,14 +394,17 @@ class GazeboModelPluginPmc : public FreeFlyerModelPlugin {
   config_reader::ConfigReader config_params;        // LUA configuration reader
   ros::Publisher pub_telemetry_, pub_state_;        // State/telemetry pubs
   ros::Subscriber sub_command_;                     // Command subscriber
+  ros::Subscriber sub_fam_;                         // Fam command subscriber
   ros::Timer timer_command_, timer_watchdog_;       // Timers
   math::Vector3 force_;                             // Current body-frame force
   math::Vector3 torque_;                            // Current body-frame torque
+  geometry_msgs::Wrench wrench_;                    // Used when bypassing PMC
   gnc_autocode::GncBlowersAutocode blowers_;        // Autocode blower iface
   ff_hw_msgs::PmcCommand null_command_;             // PMC null command
   event::ConnectionPtr update_;                     // Update event from gazeo
   ff_hw_msgs::PmcTelemetry telemetry_vector_;       // Telemetry
   bool pmc_enabled_;                                // Is the PMC enabled?
+  bool bypass_blower_model_;                        // Bypass the blower model
   double state_command_scale_;                      // Command scale
   double state_telemetry_scale_;                    // Telemetry scale
   double state_tol_rads_per_sec_;                   // RPM tolerance

@@ -43,6 +43,7 @@ class RosCommandToRapid : public RosSubRapidPub {
  public:
   RosCommandToRapid(const std::string& subscribe_topic,
                     const std::string& ac_cmd_sub_topic,
+                    const std::string& fail_cmd_sub_topic,
                     const std::string& pub_topic,
                     const ros::NodeHandle &nh,
                     const std::string& agent_name_,
@@ -51,14 +52,15 @@ class RosCommandToRapid : public RosSubRapidPub {
   void ACCmdCallback(ff_msgs::CommandStampedConstPtr const& cmd);
   void CmdCallback(ff_msgs::CommandStampedConstPtr const& cmd);
   void EchoCmd(ff_msgs::CommandStampedConstPtr const& cmd);
+  void FailedCmdCallback(ff_msgs::CommandStampedConstPtr const& cmd);
  private:
   using CommandSupplier = kn::DdsTypedSupplier<rapid::Command>;
   using CommandSupplierPtr = std::unique_ptr<CommandSupplier>;
 
   CommandSupplierPtr command_supplier_;
 
-  ros::Subscriber ac_cmd_sub_;
-  std::string ac_subscribe_topic_;
+  ros::Subscriber ac_cmd_sub_, failed_cmd_sub_;
+  std::string ac_subscribe_topic_, failed_cmd_subscribe_topic_;
   std::string agent_name_;
 };
 

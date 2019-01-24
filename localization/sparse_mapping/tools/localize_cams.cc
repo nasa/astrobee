@@ -66,8 +66,6 @@ DEFINE_int32(min_features, 200,
              "Minimum number of features to be computed by the feature detector.");
 DEFINE_int32(max_features, 800,
              "Maximum number of features to be computed by the feature detector.");
-DEFINE_int32(brisk_threshold, 100,
-             "The threshold for the BRISK feature detector.");
 DEFINE_int32(detection_retries, 2,
              "The number of attempts to acquire the desired number of features with the detector.");
 
@@ -78,7 +76,7 @@ int main(int argc, char** argv) {
   sparse_mapping::SparseMap reference(FLAGS_reference_map);
   reference.SetRansacIterations(FLAGS_ransac_iterations);
   reference.SetDetectorParams(FLAGS_min_features, FLAGS_max_features,
-                              FLAGS_brisk_threshold, FLAGS_detection_retries);
+                              FLAGS_detection_retries);
 
   Eigen::IOFormat CSVFormat(3, 0, ", ", ",   ");
 

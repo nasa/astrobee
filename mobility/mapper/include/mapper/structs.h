@@ -1,14 +1,14 @@
 /* Copyright (c) 2017, United States Government, as represented by the
  * Administrator of the National Aeronautics and Space Administration.
- * 
+ *
  * All rights reserved.
- * 
+ *
  * The Astrobee platform is licensed under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -20,6 +20,7 @@
 #define MAPPER_STRUCTS_H_
 
 // PCL specific includes
+#include <geometry_msgs/TransformStamped.h>
 #include <sensor_msgs/PointCloud2.h>
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
@@ -41,7 +42,7 @@ namespace mapper {
 
 struct StampedPcl {
   pcl::PointCloud<pcl::PointXYZ> cloud;
-  tf::StampedTransform tf_cam2world;
+  geometry_msgs::TransformStamped tf_cam2world;
 };
 
 enum State {
@@ -50,9 +51,9 @@ enum State {
 };
 
 struct GlobalVariables {
-  tf::StampedTransform tf_cam2world;
-  tf::StampedTransform tf_perch2world;
-  tf::StampedTransform tf_body2world;
+  geometry_msgs::TransformStamped tf_cam2world;
+  geometry_msgs::TransformStamped tf_perch2world;
+  geometry_msgs::TransformStamped tf_body2world;
   octoclass::OctoClass octomap = octoclass::OctoClass(0.05);
   sampled_traj::SampledTrajectory3D sampled_traj;
   std::queue<StampedPcl> pcl_queue;

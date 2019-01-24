@@ -55,7 +55,7 @@ int main(int argc, char** argv) {
   cv::Mat image1, image2, image_last, descriptors1, descriptors2, descriptors_last;
   std::vector<cv::KeyPoint> storage;
 
-  detector.Reset("ORGBRISK", 100, 20000, 20, 3);
+  detector.Reset("ORGBRISK", 100, 20000, 3);
 
   printf("Removing duplicate images...\n");
   common::PrintProgressBar(stdout, 0.0);

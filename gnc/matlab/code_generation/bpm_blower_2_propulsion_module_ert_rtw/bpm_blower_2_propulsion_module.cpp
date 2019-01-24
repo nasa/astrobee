@@ -5,7 +5,7 @@
 //
 // Model version                  : 1.1142
 // Simulink Coder version         : 8.11 (R2016b) 25-Aug-2016
-// C/C++ source code generated on : Wed Aug 22 07:27:50 2018
+// C/C++ source code generated on : Thu Dec  6 14:21:36 2018
 //
 // Target selection: ert.tlc
 // Embedded hardware selection: 32-bit Generic
@@ -867,6 +867,7 @@ void bpm_blower_2_propulsion_module_step(RT_MODEL_bpm_blower_2_propuls_T *const
      bpm_blower_2_propulsion_modul_P->bpm_lookup_totalarea_breakpoints,
      bpm_blower_2_propulsion_modul_P->abp_impeller_diameter,
      bpm_blower_2_propulsion_modul_P->const_air_density,
+     bpm_blower_2_propulsion_modul_P->tun_bpm_PM2_thrust_error_sf,
      bpm_blower_2_propulsion_modul_P->bpm_PM2_nozzle_noise_feedback_gain);
 
   // End of Outputs for SubSystem: '<S1>/blower_aerodynamics'

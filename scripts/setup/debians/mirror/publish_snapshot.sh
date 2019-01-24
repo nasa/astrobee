@@ -19,7 +19,7 @@ $APTLY snapshot create security_$1 from mirror xenial-security || exit
 $APTLY snapshot create updates_$1 from mirror xenial-updates || exit
 $APTLY snapshot create ros_$1 from mirror ros || exit
 
-$APTLY snapshot merge -no-remove $1 astrobee_$1 main_$1 security_$1 updates_$1 ros_$1 || exit
+$APTLY snapshot merge -latest $1 astrobee_$1 main_$1 security_$1 updates_$1 ros_$1 || exit
 
 # need to delete old version first
 $APTLY publish drop xenial

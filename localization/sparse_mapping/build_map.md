@@ -10,12 +10,10 @@ Here we describe how to build a map.
 2. Set up the environment.
 
 3. Build the map.
-       build_map bag_images/*.jpg
 
 4. Find control points in hugin, and create a list of their coordinates.
 
 5. Register the map.
-       build_map -registration hugin.pto xyz.txt -output_map output_brisk.map
 
 # Map Building
 
@@ -25,14 +23,18 @@ We go through how a map is made.
 
 Here, we delete the images that overlap highly.
 
-       select_images -density_factor 1 bag_images/*.jpg
+  select_images -density_factor 1 bag_images/*.jpg
 
-The higher the value of the density factor, the more images will
-be kept. Some experimentation with this number is necessary (the
-default likely removes too many images). Ideally the images should
-have perhaps on the order of 2/3 to 3/4 of overlap.
+This is a non-reversible operation, so it should be invoked on a copy
+of the images.
 
-Alternatively, one can simply first pick every 10th or 20th image, such as:
+The higher the value of the density factor, the more images will be
+kept. Some experimentation with this number is necessary (the default
+likely removes too many images). Ideally the images should have
+perhaps on the order of 2/3 to 3/4 of overlap.
+
+Alternatively, one can simply first pick every 10th or 20th image,
+such as:
 
   ls bag_images/*0.jpg
 
@@ -73,22 +75,20 @@ More details on these and other environmental variables can be found in
 
 Execute this command to construct a complete map:
 
-    build_map <image files> [ -undistorted_images ] [ -num_subsequent_images <val> ]
-
-The `-undistorted_images` flag should be specified only if `parse_tango`
-was called to create the images with the same flag.
-Otherwise, `build_map` internally undistorts the interest points before matching them.
-The map distortion parameters are taken from the `nav\_cam` in `cameras.config`.
+  build_map <image files> [ -num_subsequent_images <val> ] -output_map <output.map>
 
 During map building, every image will be matched against every
 subsequent image in the sequence. To use only a limited number of
-subsequent images, set the value passed to the `-num_subsequent_images` flag.
-Later, we will also see how to match only similar images using a vocabulary tree.
+subsequent images, set the value passed to the
+`-num_subsequent_images` flag. Later, we will also see how to match
+only similar images using a vocabulary tree.
 
-The runtime of the algorithm is directly proportional to the number of input images
-times the number input to `-num_subsequent_images`. Making the latter small will result
-in more drift. If you know that a region will be revisited after say 100 images, use this
-number for this parameter. Making this too big will result in very slow map building. 
+The runtime of the algorithm is directly proportional to the number of
+input images times the number input to
+`-num_subsequent_images`. Making the latter small will result in more
+drift. If you know that a region will be revisited after say 100
+images, use this number for this parameter. Making this too big will
+result in very slow map building.
 
 ### Map Building Pipeline
 
@@ -100,26 +100,26 @@ individually for further control.
     build_map <image files> -feature_detection [ -sample_rate <N> ]
                             [ -detector <detector> ] [ -descriptor <descriptor> ]
 
-  Detects features in all of the input images and save them to a map file. The
-  `-sample_rate <N>` flag, if specified, builds the map from only one out of N input images.
-  If desired, the feature detector and feature descriptor can be specified. The default
-  is ORGBRISK.
+Detects features in all of the input images and save them to a map
+file. The `-sample_rate <N>` flag, if specified, builds the map from
+only one out of N input images. If desired, the feature detector and
+feature descriptor can be specified. The default is ORGBRISK.
 
 2. **Match Images**
 
     build_map -feature_matching [ -num_subsequent_images <val> ]
 
-  Match the detected features between images, detecting similar
-  features that appear in multiple images. The number of
-  subsequent images to match against can be specified, otherwise all pairwise
-  matches are evaluated.
+Match the detected features between images, detecting similar features
+that appear in multiple images. The number of subsequent images to
+match against can be specified, otherwise all pairwise matches are
+evaluated.
 
 3. **Build Tracks**
 
     build_map -track_building
 
-  Take the feature matchings and form "tracks" of features seen
-  consistently across multiple frames.
+Take the feature matchings and form "tracks" of features seen
+consistently across multiple frames.
 
 4. **Incremental Bundle Adjustment**
 
@@ -137,30 +137,31 @@ individually for further control.
 
     build_map -rebuild
 
-  Rebuilds the map with a different feature set (by default, BRISK
-  features). The initial map can be built with high quality features,
-  such as SURF, and then rebuilt with faster features for
-  localization, such as BRISK. During rebuilding the cameras are kept
-  fixed by default, since BRISK features, while faster, may be fewer
-  and less accurate.
+Rebuilds the map with a different feature set (by default, BRISK
+features). The initial map can be built with high quality features,
+such as SURF, and then rebuilt with faster features for localization,
+such as BRISK. During rebuilding the cameras are kept fixed by
+default, since BRISK features, while faster, may be fewer and less
+accurate.
 
-  Rebuilding is much faster than building from scratch, since it
-  borrows from the original map the information about which images can
-  be matched to which, and also reuses the camera positions.
+Rebuilding is much faster than building from scratch, since it borrows
+from the original map the information about which images can be
+matched to which, and also reuses the camera positions.
 
-  To replace the camera intrinsics during rebuilding, one can use
-  -rebuild_replace_camera, when the camera is set via ASTROBEE_ROBOT.
-  Camera positions and orientations can be re-optimized with
-  -rebuild_refloat_cameras. To rebuild with a desired feature
-  detector, use the option -rebuild_detector.
+To replace the camera intrinsics during rebuilding, one can use
+-rebuild_replace_camera, when the camera is set via ASTROBEE_ROBOT.
+Camera positions and orientations can be re-optimized with
+-rebuild_refloat_cameras. To rebuild with a desired feature detector,
+use the option -rebuild_detector.
 
 7. **Vocabulary Database**
 
     build_map -vocab_db
 
-  Builds a vocabulary database for fast lookup of matching image pairs.
-  Without this, we have to compare to every image in the map for localization.
-  The vocabulary database makes the runtime logarithmic instead of linear.
+Builds a vocabulary database for fast lookup of matching image pairs.
+Without this, we have to compare to every image in the map for
+localization.  The vocabulary database makes the runtime logarithmic
+instead of linear.
 
 The above options can also be chained. For example, to
 run the pipeline without tensor initialization, you could do:
@@ -185,16 +186,6 @@ building process. These include:
 `
 The `build_map` command uses the file `output.map` as both input and output
 unless the flag `-output_map` is specified.
-
-### Reducing the Map Size
-
-We can reduce the number of images in the map by removing highly
-similar images. It is usually both faster and more accurate to build a
-map from such a subset.
-
-    select_images image1 image2 ...
-
-The similar images that are highly repetitive will be deleted.
 
 ## Map Registration
 

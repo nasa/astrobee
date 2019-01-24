@@ -93,16 +93,11 @@ bool PmcActuator::GetTelemetry(Telemetry *telemetry) {
   // this case we need to inspect to see if the our buffer checksums correctly.
   // If so, then we copy over the metadata and flag that we have received it.
   if (telemetry->status_2.control) {
-    switch (metadata_buffer_[0]) {
-    case kMetadataVersionType:
-      if (!ComputeChecksum(metadata_buffer_, sizeof(MetadataVersion))) {
-        memcpy(&metadata_, metadata_buffer_, sizeof(MetadataVersion));
-        metadata_received_ = true;
-      } else {
-        std::cout << "metadata checksum failed" << std::endl;
-      }
-    default:
-      break;
+    if (!ComputeChecksum(metadata_buffer_, sizeof(MetadataVersion))) {
+      memcpy(&metadata_, metadata_buffer_, sizeof(MetadataVersion));
+      metadata_received_ = true;
+    } else {
+      std::cout << "metadata checksum failed" << std::endl;
     }
     metadata_index_ = 0;
     memset(metadata_buffer_, 0, kMaxMetadataLength);
@@ -135,6 +130,15 @@ bool PmcActuator::GetFirmwareTime(std::string & time) {
   return true;
 }
 
+// Get the firmware type
+bool PmcActuator::GetFirmwareType(uint8_t & type) {
+  if (!metadata_received_)
+    return false;
+  type = metadata_.type;
+  return true;
+}
+
+// Compute the checksum of a received metadata packet
 uint8_t PmcActuator::ComputeChecksum(const uint8_t *buf, size_t size) {
   uint8_t checksum = 0xFF;
   for (size_t i = 0; i < size; i++) checksum ^= buf[i];
@@ -202,6 +206,12 @@ bool PmcActuatorStub::GetFirmwareHash(std::string & hash) {
 // Get the firmware date
 bool PmcActuatorStub::GetFirmwareTime(std::string & time) {
   time = "SIMULATED";
+  return true;
+}
+
+// Get the firmware type
+bool PmcActuatorStub::GetFirmwareType(uint8_t & type) {
+  type = 0;
   return true;
 }
 

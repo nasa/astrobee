@@ -51,6 +51,7 @@
 #include "dds_ros_bridge/ros_gnc_fam_cmd_state.h"
 #include "dds_ros_bridge/ros_gnc_control_state.h"
 #include "dds_ros_bridge/ros_guest_science.h"
+#include "dds_ros_bridge/ros_inertia.h"
 #include "dds_ros_bridge/ros_log_sample.h"
 #include "dds_ros_bridge/ros_odom_rapid_position.h"
 #include "dds_ros_bridge/ros_plan_status_rapid_plan_status.h"
@@ -58,6 +59,8 @@
 #include "dds_ros_bridge/ros_string_rapid_text_message.h"
 #include "dds_ros_bridge/ros_sub_rapid_pub.h"
 #include "dds_ros_bridge/ros_telemetry_rapid_telemetry.h"
+
+#include "ff_msgs/SetRate.h"
 
 #include "ff_util/ff_names.h"
 #include "ff_util/ff_nodelet.h"
@@ -80,6 +83,16 @@ namespace kn {
 }  // end namespace kn
 
 namespace dds_ros_bridge {
+
+enum RateType {
+  COMM_STATUS,
+  CPU_STATE,
+  DISK_STATE,
+  EKF_STATE,
+  GNC_STATE,
+  PMC_CMD_STATE,
+  POSITION
+};
 
 class RosSubRapidPub;
 
@@ -121,6 +134,7 @@ class DdsRosBridge : public ff_util::FreeFlyerNodelet {
                                const std::string& name);
   int BuildCommandToRapid(const std::string& sub_topic,
                           const std::string& ac_sub_topic,
+                          const std::string& failed_cmd_sub_topic,
                           const std::string& pub_topic,
                           const std::string& name);
   int BuildCompressedImageToImage(const std::string& sub_topic,
@@ -159,6 +173,9 @@ class DdsRosBridge : public ff_util::FreeFlyerNodelet {
                                const std::string& data_sub_topic,
                                const std::string& pub_topic,
                                const std::string& name);
+  int BuildInertiaDataToRapid(const std::string& sub_topic,
+                              const std::string& pub_topic,
+                              const std::string& name);
   int BuildLogSampleToRapid(const std::string& sub_topic,
                              const std::string& pub_topic,
                              const std::string& name);
@@ -199,6 +216,18 @@ class DdsRosBridge : public ff_util::FreeFlyerNodelet {
   int BuildCommandConfigToCommandConfig(const std::string& pub_topic,
                                         const std::string& name);
 
+  bool SetTelem(float rate, std::string &err_msg, RateType type);
+
+  bool SetCommStatusRate(float rate, std::string &err_msg);
+  bool SetCpuStateRate(float rate, std::string &err_msg);
+  bool SetDiskStateRate(float rate, std::string &err_msg);
+  bool SetEkfPositionRate(float rate, std::string &err_msg, RateType type);
+  bool SetGncStateRate(float rate, std::string &err_msg);
+  bool SetPmcStateRate(float rate, std::string &err_msg);
+
+  bool SetTelemRateCallback(ff_msgs::SetRate::Request &req,
+                            ff_msgs::SetRate::Response &res);
+
  protected:
   virtual void Initialize(ros::NodeHandle *nh);
   bool ReadParams();
@@ -212,6 +241,7 @@ class DdsRosBridge : public ff_util::FreeFlyerNodelet {
   ros::NodeHandle nh_;
 
   ros::Publisher robot_name_pub_;
+  ros::ServiceServer srv_set_telem_rate_;
 
   std::map<std::string, ff::RosSubRapidPubPtr> ros_sub_rapid_pubs_;
   std::shared_ptr<kn::DdsEntitiesFactorySvc> dds_entities_factory_;

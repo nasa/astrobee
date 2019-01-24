@@ -147,6 +147,10 @@ class EkfWrapper {
   geometry_msgs::Quaternion quat_;
   int imus_dropped_;
 
+  // Truth messages
+  geometry_msgs::PoseStamped truth_pose_;
+  geometry_msgs::TwistStamped truth_twist_;
+
   // EKF wrapper needs to capture the first landmark message to do PnP before
   // it can initialize the EKF autocode and let it run. This variable holds
   // that state and is atomic so that it doesn't require a mutex.

@@ -26,7 +26,7 @@ namespace ekf_bag {
 
 class EkfBagCsv : public EkfBag {
  public:
-  EkfBagCsv(const char* bagfile, const char* mapfile, const char* csvfile);
+  EkfBagCsv(const char* bagfile, const char* mapfile, const char* csvfile, bool run_ekf = true);
   virtual ~EkfBagCsv(void);
 
  protected:

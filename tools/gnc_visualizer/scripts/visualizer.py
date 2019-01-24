@@ -2,15 +2,15 @@
 #
 # Copyright (c) 2017, United States Government, as represented by the
 # Administrator of the National Aeronautics and Space Administration.
-# 
+#
 # All rights reserved.
-# 
+#
 # The Astrobee platform is licensed under the Apache License, Version 2.0
 # (the "License"); you may not use this file except in compliance with the
 # License. You may obtain a copy of the License at
-# 
+#
 #     http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -240,11 +240,11 @@ class Visualizer(QtGui.QMainWindow):
                          plot_types.CommandStatusPlot], [plot_types.CtlRotPlot, plot_types.CovPlot], \
                          [plot_types.Pmc1BlowerPlot, plot_types.Pmc2BlowerPlot, \
                          plot_types.Pmc1NozzlePlot, plot_types.Pmc2NozzlePlot]]
-        
+
         self.graphics_view = ParentGraphicsView()
         self.terminal_graphics_view = TerminalGraphicsView(self.graphics_view)
         self.terminal_view = TerminalView(self.terminal_graphics_view)
-        
+
         self.layout = pg.GraphicsLayout(border=(100,100,100))
         self.layout.setBorder(None)
         self.layout.setZValue(-1)
@@ -254,7 +254,7 @@ class Visualizer(QtGui.QMainWindow):
         self.pmc_enabled = True
         self.setCentralWidget(self.graphics_view)
         self.create_menu()
-        
+
         row = 0
         for c in range(len(self.columns)):
             l = self.layout.addLayout(0, c)
@@ -329,7 +329,7 @@ class Visualizer(QtGui.QMainWindow):
     def delete_plot(self, col, row):
         del self.columns[col][row]
         l = self.layout.getItem(0, col)
-        
+
         self.layout.removeItem(l)
         new_layout = pg.GraphicsLayout()
         new_layout.setBorder(pg.mkColor(150, 150, 150))
@@ -355,7 +355,7 @@ class Visualizer(QtGui.QMainWindow):
         if len(self.columns[col]) == 0:
             self.delete_column(col)
         self.create_menu()
-    
+
     def delete_column(self, col):
         del self.columns[col]
         self.create_menu()
@@ -412,7 +412,7 @@ class Visualizer(QtGui.QMainWindow):
             if i < len(self.columns):
                 colmenu.addAction("Delete Column", functools.partial(self.delete_column, i))
 
-        if self.com_method == com.DDS_COM: 
+        if self.com_method == com.DDS_COM:
             # Disable menu actions for commands
             for action in self.menuBar().actions():
                 if (action.menu() and action.text() == 'Commands'):
@@ -453,7 +453,7 @@ class Visualizer(QtGui.QMainWindow):
             ret = os.system(ASTROBEE_ROOT + '/scripts/teleop/run_plan.sh ' + self.plan + ' > /dev/null &')
         else:
             self.print_to_log('No plan file specified.', '#FF0000')
-    
+
     def undock(self):
         ret = os.system('bash ' + ASTROBEE_ROOT + '/scripts/teleop/run_undock.sh > /dev/null &')
 
@@ -541,7 +541,7 @@ class Visualizer(QtGui.QMainWindow):
                 self.data[d] = np.roll(self.data[d], 1)
                 self.data[d][0] = of_data[d](data)
         self.started = True
-    
+
     def ground_truth_callback(self, data):
         for d in truth_data:
             self.data[d] = np.roll(self.data[d], 1)
@@ -551,12 +551,12 @@ class Visualizer(QtGui.QMainWindow):
         for d in command_data:
             self.data[d] = np.roll(self.data[d], 1)
             self.data[d][0] = command_data[d](data)
-    
+
     def traj_callback(self, data):
         for d in traj_data:
             self.data[d] = np.roll(self.data[d], 1)
             self.data[d][0] = traj_data[d](data)
-    
+
     def shaper_callback(self, data):
         for d in shaper_data:
             self.data[d] = np.roll(self.data[d], 1)
@@ -588,6 +588,8 @@ def main():
     com_method = com.DDS_COM
 
     parser = argparse.ArgumentParser(description='Gnc visualization.')
+
+    # ROS arguments only
     parser.add_argument('--gantry', dest='launch_command', action='append_const',
                                const='roslaunch astrobee proto4c.launch disable_fans:=true',
                                help='Launch proto4.')
@@ -603,12 +605,20 @@ def main():
     parser.add_argument('--plan', dest='plan', action='store', help='The plan to execute.')
     parser.add_argument('--disable_pmcs', dest='disable_pmcs', action='store_true', help='Disable the pmcs.')
 
+    # General argument
     parser.add_argument('--comm', dest='com_method', action='store',
             help='Communication method to the robot: dds or ros')
+
+    # DDS arguments only
+    parser.add_argument('--use_ip', dest='use_ip', action='store',
+            help='Type an IP to be treated as initial peer for DDS.')
+    parser.add_argument('--robot_name', dest='robot_name', action='store',
+            help='Type the name of the robot you want to hear telemetry of over DDS.')
 
     args, unknown = parser.parse_known_args()
 
     com_method = com.ROS_COM
+
     if args.com_method != None:
         if args.com_method in (com.DDS_COM, com.ROS_COM):
             com_method = args.com_method
@@ -617,12 +627,20 @@ def main():
             return
 
     launch_command = None
+
+    # Exclude ROS arguments when using DDS communication
     if com_method == com.DDS_COM and ( args.launch_command != None or args.disable_pmcs or args.plan != None):
-        print >> sys.stderr, ( '\n###\n' + 
-                '\nAdditional arguments (--gantry --granite --bag --sim --plan --disable-pmcs) ' +
-                'will not be processed when using dds mode. You may want to use --comm ros in order to ' +
-                'use additional arguments.\n\nPlease note if you do not specify a value for the --comm ' +
-                'argument, DDS will be the default method\n\n###\n')
+        print >> sys.stderr, ( '\n###\n' +
+                '\nAdditional arguments (--gantry --granite --bag --sim --plan --disable_pmcs) ' +
+                'will not be processed when using DDS mode. You may use "--comm ros" or do not include this ' +
+                'argument at all in order to use additional arguments.\n\n###\n')
+        return
+    # Exclude DDS commands when using ROS communication
+    elif com_method == com.ROS_COM and ( args.use_ip != None or args.robot_name != None):
+        print >> sys.stderr, ( '\n###\n' +
+                '\nAdditional arguments (--use_ip --robot_name) ' +
+                'will not be processed when using ROS mode. You may include "--comm dds" ' +
+                'argument in order to use these additional arguments.\n\n###\n')
         return
     else:
         if args.launch_command == None:
@@ -638,7 +656,9 @@ def main():
 
 
     # Setting communication method
-    com_manager.set_com_method(com_method)
+    dds_args = dict(partition_name=args.robot_name, given_peer=args.use_ip)
+    if not com_manager.set_com_method(com_method, dds_args):
+        return
 
     app = QtGui.QApplication([])
     signal.signal(signal.SIGINT, sigint_handler)
@@ -652,17 +672,16 @@ def main():
         v.show()
         v.startProcess()
         app.exec_()
+    except (KeyboardInterrupt, SystemExit):
+        pass
+        print("GVIZ will exit")
     except Exception as e:
         print(e)
     finally:
         v.hide()
         v.stopProcess()
         com_manager.stop_communications()
+        com_manager.config.destroy_dom()
 
 if __name__ == '__main__':
     main()
-    """try:
-        main()
-    except Exception as e:
-        print(e)
-        com_manager.stop_communications()"""

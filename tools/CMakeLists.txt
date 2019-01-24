@@ -23,7 +23,3 @@ add_subdirectory(simulator)
 if (FFMPEG_FOUND AND QT_QTGUI_FOUND)
   add_subdirectory(ekf_video)
 endif (FFMPEG_FOUND AND QT_QTGUI_FOUND)
-
-if (DEEPDIVE_FOUND)
-#  add_subdirectory(vive)
-endif (DEEPDIVE_FOUND)

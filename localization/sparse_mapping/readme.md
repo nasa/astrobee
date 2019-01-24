@@ -47,6 +47,11 @@ enough overlap, and to reduce motion blur. Run:
 
   rosbag record /hw/cam_nav
 
+The name of the topic containing the images may differ from /hw/cam_nav.
+To see what topics a bag file contains one can use the command
+
+  rosbag info bagfile.bag
+
 ### Filter the bag
 
 Usually the bags are acquired at a very high frame rate, and they are
@@ -61,7 +66,7 @@ selection of the images can be done.
 
 ### Copy the bag from the robot:
 
-From the host machine, fetch the bag:
+From the local machine, fetch the bag:
 
   rsync -avzP astrobee@10.42.0.32:/data/bagfile.bag .
 
@@ -71,7 +76,8 @@ Here, the IP address of P4D was used, which may differ from your robot's IP addr
 
 To extract images from a bag file:
 
-    freeflyer_build/native/devel/lib/localization_node/extract_image_bag <bagfile.bag>
+    freeflyer_build/native/devel/lib/localization_node/extract_image_bag <bagfile.bag> \
+      -image_topic /hw/cam_nav -output_directory <output dir>
 
 (the above assumes that the software was built with ROS on).
 
@@ -136,7 +142,7 @@ This functionality is implemented in the localize_cams tool. Usage:
 
     localize_cams -num_similar 20 -ransac_inlier_tolerance 20     \
       -ransac_iterations 100 -min_features 200 -max_features 800  \
-      -brisk_threshold 100 -detection_retries 2 -num_threads 2    \
+      -detection_retries 2 -num_threads 2    \
       -reference_map ref.map -source_map source.map
 
 Here we have used the settings from 
@@ -195,6 +201,9 @@ the images at the beginning and end of the maps to merge be close
 to points used in registration. The implication here is that the
 more geometrically correct the input maps are, and the more similar
 to each other, the more likely merging will succeed.
+
+After a merged map is created and registered, it can be rebuilt with
+the BRISK detector to be used on the robot. 
 
 ###Working with Robot Data
 

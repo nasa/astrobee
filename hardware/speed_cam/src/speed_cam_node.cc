@@ -49,7 +49,8 @@ class SpeedCamNode : public ff_util::FreeFlyerNodelet {
     std::bind(&SpeedCamNode::OpticalFlowCallback, this, std::placeholders::_1),
     std::bind(&SpeedCamNode::SpeedCallback, this, std::placeholders::_1),
     std::bind(&SpeedCamNode::StatusCallback, this, std::placeholders::_1),
-    std::bind(&SpeedCamNode::VersionCallback, this, std::placeholders::_1)) {}
+    std::bind(&SpeedCamNode::VersionCallback, this, std::placeholders::_1),
+    std::bind(&SpeedCamNode::StateCallback, this, std::placeholders::_1)) {}
   ~SpeedCamNode() {}
 
  protected:
@@ -90,16 +91,6 @@ class SpeedCamNode : public ff_util::FreeFlyerNodelet {
         if (speed_cam_.Initialize(port, baud) != RESULT_SUCCESS)
           return InitFault("Could not initialize the serial device");
 
-        /*
-        double timesync_secs = -1.0;
-        if (!device_info.GetReal("timesync_secs", &timesync_secs))
-          FF_FATAL("Could not find row 'timesync_secs' in table");
-        if (timesync_secs > 0) {
-          timer_ = nh->createTimer(ros::Duration(timesync_secs),
-            &SpeedCamNode::TimesyncCallback, this, false);
-        }
-        */
-
         // Setup message: Inertial measurement unit
         pub_imu_ = nh->advertise < sensor_msgs::Imu > (TOPIC_HARDWARE_SPEED_CAM_IMU, 1);
         pub_camera_image_ = nh->advertise < sensor_msgs::Image > (TOPIC_HARDWARE_SPEED_CAM_CAMERA_IMAGE, 1);
@@ -120,13 +111,6 @@ class SpeedCamNode : public ff_util::FreeFlyerNodelet {
     NODELET_ERROR_STREAM(msg);
     AssertFault(ff_util::INITIALIZATION_FAILED, msg);
     return;
-  }
-
-  // Perform a time sync event
-  void TimesyncCallback(ros::TimerEvent const& event) {
-    /*
-    speed_cam_.TimeSync();
-    */
   }
 
   // Callback from speedcam when new a new scaled IMU measurement is produced
@@ -210,13 +194,16 @@ class SpeedCamNode : public ff_util::FreeFlyerNodelet {
     // FIXME: Should it publish the version?
   }
 
+  void StateCallback(int32_t state) {
+    // FIXME: Should it publish the state?
+  }
+
  private:
   SpeedCam speed_cam_;                            // Speedcam driver interface
   ros::Publisher pub_imu_;                        // Imu publisher
   ros::Publisher pub_camera_image_;               // Camera image publisher
   ros::Publisher pub_optical_flow_;               // Optical flow publisher
   ros::Publisher pub_speed_;                      // Twist publisher
-  ros::Timer timer_;                              // For time sync
 };
 
 PLUGINLIB_EXPORT_CLASS(speed_cam::SpeedCamNode, nodelet::Nodelet);

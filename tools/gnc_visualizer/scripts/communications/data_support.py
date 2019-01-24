@@ -17,7 +17,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-
+import numpy as np
 
 def todict(obj):
     if hasattr(obj, "__iter__"):
@@ -84,14 +84,16 @@ class EkfState(Common):
         self.gyro_bias = Vector3()
         self.accel = Vector3()
         self.accel_bias = Vector3()
-        self.cov_diag = [0.0] * 15
+        #self.cov_diag = [0.0] * 15
+        self.cov_diag = np.zeros(15)
         self.confidence = 0
         self.aug_state_enum = 0
         self.status = 0
         self.of_count = 0
         self.ml_count = 0
         self.hr_global_pose = Pose()
-        self.ml_mahal_dists = [0.0] * 50
+        #self.ml_mahal_dists = [0.0] * 50
+        self.ml_mahal_dists = np.zeros(50)
 
 class PmcCommand(Common):
     def __init__(self, header = Header()):

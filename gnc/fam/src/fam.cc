@@ -75,9 +75,9 @@ void Fam::FlightModeCallback(const ff_msgs::FlightMode::ConstPtr& mode) {
   speed_ = mode->speed;
 }
 
-void Fam::InertiaCallback(const geometry_msgs::Inertia::ConstPtr& inertia) {
+void Fam::InertiaCallback(const geometry_msgs::InertiaStamped::ConstPtr& inertia) {
   std::lock_guard<std::mutex> lock(mutex_mass_);
-  center_of_mass_ = inertia->com;
+  center_of_mass_ = inertia->inertia.com;
   inertia_received_ = true;
 }
 

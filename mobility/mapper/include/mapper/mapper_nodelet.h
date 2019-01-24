@@ -71,7 +71,6 @@
 #include "ff_msgs/ControlState.h"
 
 // Classes
-#include "mapper/tf_class.h"
 #include "mapper/octoclass.h"
 #include "mapper/polynomials.h"
 #include "mapper/sampled_trajectory.h"
@@ -193,6 +192,10 @@ class MapperNodelet : public ff_util::FreeFlyerNodelet {
   ros::Timer timer_d_, timer_f_, timer_h_, timer_p_, timer_b_;  // Diagnostics
   std::atomic<bool> killed_;
   ff_util::ConfigServer cfg_;                         // Config server
+
+  // TF2
+  std::shared_ptr<tf2_ros::TransformListener> listener_;
+  tf2_ros::Buffer buffer_;
 
   // Marker publishers
   ros::Publisher hazard_pub_;

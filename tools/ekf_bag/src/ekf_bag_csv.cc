@@ -43,8 +43,8 @@ Eigen::Vector3f QuatToEuler(const Eigen::Quaternionf & q) {
   return euler;
 }
 
-EkfBagCsv::EkfBagCsv(const char* bagfile, const char* mapfile, const char* csvfile) :
-          EkfBag(bagfile, mapfile),
+EkfBagCsv::EkfBagCsv(const char* bagfile, const char* mapfile, const char* csvfile, bool run_ekf) :
+          EkfBag(bagfile, mapfile, run_ekf),
           start_time_set_(false) {
   // virtual function has to be called in subclass since not initialized in superclass
   config_reader::ConfigReader config;

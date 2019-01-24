@@ -17,8 +17,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-robot_names=(p4c p4d killer bsharp dock)
-mlp_ips=(10.42.0.25 10.42.0.32 10.42.0.35 10.42.0.38 10.42.0.1 )
-llp_ips=(10.42.0.26 10.42.0.31 10.42.0.34 10.42.0.37 0.0.0.0   )
+robot_names=(p4c p4d killer bsharp honey dock queen)
+mlp_ips=(10.42.0.25 10.42.0.32 10.42.0.35 10.42.0.38 10.42.0.5 10.42.0.1 10.42.0.13)
+llp_ips=(10.42.0.26 10.42.0.31 10.42.0.34 10.42.0.37 10.42.0.4 0.0.0.0   10.42.0.12)
 
 subnet=10.42.0

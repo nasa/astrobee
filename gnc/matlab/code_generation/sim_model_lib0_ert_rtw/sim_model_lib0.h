@@ -5,7 +5,7 @@
 //
 // Model version                  : 1.1142
 // Simulink Coder version         : 8.11 (R2016b) 25-Aug-2016
-// C/C++ source code generated on : Wed Aug 22 07:27:02 2018
+// C/C++ source code generated on : Thu Dec  6 14:20:59 2018
 //
 // Target selection: ert.tlc
 // Embedded hardware selection: 32-bit Generic
@@ -1030,6 +1030,12 @@ struct P_sim_model_lib0_T_ {
 
   real32_T tun_ase_gravity_accel[3];   // Variable: tun_ase_gravity_accel
                                        //  Referenced by: '<S186>/Constant4'
+
+  real32_T tun_bpm_PM1_thrust_error_sf;// Variable: tun_bpm_PM1_thrust_error_sf
+                                       //  Referenced by: '<S184>/blower_aerodynamics'
+
+  real32_T tun_bpm_PM2_thrust_error_sf;// Variable: tun_bpm_PM2_thrust_error_sf
+                                       //  Referenced by: '<S185>/blower_aerodynamics'
 
   real32_T tun_bpm_noise_on_flag;      // Variable: tun_bpm_noise_on_flag
                                        //  Referenced by:

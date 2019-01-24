@@ -20,12 +20,14 @@
 
 ff::RosCommandToRapid::RosCommandToRapid(const std::string& subscribe_topic,
                                          const std::string& ac_cmd_sub_topic,
+                                         const std::string& fail_cmd_sub_topic,
                                          const std::string& pub_topic,
                                          const ros::NodeHandle &nh,
                                          const std::string& agent_name,
                                          const unsigned int queue_size)
   : RosSubRapidPub(subscribe_topic, pub_topic, nh, queue_size),
     ac_subscribe_topic_(ac_cmd_sub_topic),
+    failed_cmd_subscribe_topic_(fail_cmd_sub_topic),
     agent_name_(agent_name) {
   command_supplier_.reset(
     new ff::RosCommandToRapid::CommandSupplier(
@@ -40,6 +42,10 @@ ff::RosCommandToRapid::RosCommandToRapid(const std::string& subscribe_topic,
                               &RosCommandToRapid::ACCmdCallback,
                               this);
 
+  failed_cmd_sub_ = nh_.subscribe(failed_cmd_subscribe_topic_,
+                                  queue_size,
+                                  &RosCommandToRapid::FailedCmdCallback,
+                                  this);
   sub_ = nh_.subscribe(subscribe_topic,
                        queue_size,
                        &RosCommandToRapid::CmdCallback,
@@ -137,4 +143,9 @@ void ff::RosCommandToRapid::EchoCmd(
   }
 
   command_supplier_->sendEvent();
+}
+
+void ff::RosCommandToRapid::FailedCmdCallback(
+                                  ff_msgs::CommandStampedConstPtr const& cmd) {
+  EchoCmd(cmd);
 }

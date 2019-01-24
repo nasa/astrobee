@@ -1,14 +1,14 @@
 /* Copyright (c) 2017, United States Government, as represented by the
  * Administrator of the National Aeronautics and Space Administration.
- * 
+ *
  * All rights reserved.
- * 
+ *
  * The Astrobee platform is licensed under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -82,7 +82,7 @@ void ExtendedCallback(const ff_msgs::PicoflexxIntermediateData::ConstPtr& msg) {
   // a deeper study. If the amplitude image looks too saturated or too
   // dark, a different amplitude factor can be set when launching this.
   layers[1].convertTo(img_int, CV_16UC1, amplitude_factor, 0);
-  cv_bridge::CvImage a_int(header, sensor_msgs::image_encodings::TYPE_16UC1, img_int);
+  cv_bridge::CvImage a_int(header, sensor_msgs::image_encodings::MONO16, img_int);
 
   // Publish individual images
   pub_d_.publish(d.toImageMsg());
@@ -104,7 +104,7 @@ void DepthImageCallback(const sensor_msgs::ImageConstPtr& msg) {
   distance_.encoding = sensor_msgs::image_encodings::TYPE_16UC1;
   distance_.step = distance_.width * sizeof(uint16_t);
   distance_.data.resize(distance_.height * distance_.step);
-  // Prepare confidenc imahe
+  // Prepare confidence imahe
   confidence_.header.stamp = ros::Time::now();
   confidence_.header.frame_id = msg->header.frame_id;
   confidence_.height = msg->height;

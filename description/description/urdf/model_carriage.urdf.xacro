@@ -20,9 +20,9 @@
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
   <link name="carriage">
     <inertial>
-      <mass value="4.0"/>
+      <mass value="9.724"/>
       <origin xyz="0 0 -0.02"/>
-      <inertia ixx="0.1083" ixy="0.0" ixz="0.0" iyy="0.1083" iyz="0.0" izz="0.1083"/>
+      <inertia ixx="0.694860833" ixy="0.0" ixz="0.0" iyy="0.694860833" iyz="0.0" izz="0.595595"/>
     </inertial>
     <visual name="carriage_visual">
       <origin xyz="0 0 -0.02" rpy="0 0 0" />

@@ -40,6 +40,8 @@ MapperNodelet::~MapperNodelet() {
 }
 
 void MapperNodelet::Initialize(ros::NodeHandle *nh) {
+  listener_.reset(new tf2_ros::TransformListener(buffer_));
+
   // Grab some configuration parameters for this node from the config reader
   cfg_.Initialize(GetPrivateHandle(), "mobility/mapper.config");
   if (!cfg_.Listen(boost::bind(
@@ -96,61 +98,64 @@ void MapperNodelet::Initialize(ros::NodeHandle *nh) {
   globals_.sampled_traj.SetMaxDev(compression_max_dev);
   globals_.sampled_traj.SetResolution(traj_resolution);
 
-  // threads --------------------------------------------------
-  ros::NodeHandle *nh_mt = GetPlatformHandle(true);
+  // Publishers
+  obstacle_marker_pub_ = nh->advertise<visualization_msgs::MarkerArray>(
+    TOPIC_MAPPER_OCTOMAP_MARKERS, 1);
+  free_space_marker_pub_ = nh->advertise<visualization_msgs::MarkerArray>(
+    TOPIC_MAPPER_OCTOMAP_FREE_MARKERS, 1);
+  inflated_obstacle_marker_pub_ = nh->advertise<visualization_msgs::MarkerArray>(
+    TOPIC_MAPPER_OCTOMAP_INFLATED_MARKERS, 1);
+  inflated_free_space_marker_pub_ = nh->advertise<visualization_msgs::MarkerArray>(
+    TOPIC_MAPPER_OCTOMAP_INFLATED_FREE_MARKERS, 1);
+  path_marker_pub_ = nh->advertise<visualization_msgs::MarkerArray>(
+    TOPIC_MAPPER_DISCRETE_TRAJECTORY_MARKERS, 1);
+  cam_frustum_pub_ = nh->advertise<visualization_msgs::Marker>(
+    TOPIC_MAPPER_FRUSTRUM_MARKERS, 1);
+  free_space_cloud_pub_ = nh->advertise<sensor_msgs::PointCloud2>(
+    TOPIC_MAPPER_OCTOMAP_FREE_CLOUD, 1, true);
+  obstacle_cloud_pub_ = nh->advertise<sensor_msgs::PointCloud2>(
+    TOPIC_MAPPER_OCTOMAP_CLOUD, 1, true);
+  hazard_pub_ = nh->advertise<ff_msgs::Hazard>(
+    TOPIC_MOBILITY_HAZARD, 1);
 
-  // Multi-threaded timers
-  timer_f_ = nh_mt->createTimer(
-    ros::Duration(ros::Rate(fading_memory_update_rate_)),
-      &MapperNodelet::FadeTask, this, false, true);
-  timer_h_ = nh_mt->createTimer(
-    ros::Duration(ros::Rate(tf_update_rate_)),
-      &MapperNodelet::HazTfTask, this, false, true);
-  timer_p_ = nh_mt->createTimer(
-    ros::Duration(ros::Rate(tf_update_rate_)),
-      &MapperNodelet::PerchTfTask, this, false, true);
-  timer_b_ = nh_mt->createTimer(
-    ros::Duration(ros::Rate(tf_update_rate_)),
-      &MapperNodelet::BodyTfTask, this, false, true);
-
-  // Create two threads to work in conjunction with the multithreaded nodehandle
+  // Threads
   h_octo_thread_ = std::thread(&MapperNodelet::OctomappingTask, this);
   h_collision_check_thread_ = std::thread(
     &MapperNodelet::CollisionCheckTask, this);
 
-  // Multi-threaded publishers
-  obstacle_marker_pub_ = nh_mt->advertise<visualization_msgs::MarkerArray>(
-    TOPIC_MAPPER_OCTOMAP_MARKERS, 1);
-  free_space_marker_pub_ = nh_mt->advertise<visualization_msgs::MarkerArray>(
-    TOPIC_MAPPER_OCTOMAP_FREE_MARKERS, 1);
-  inflated_obstacle_marker_pub_ = nh_mt->advertise<visualization_msgs::MarkerArray>(
-    TOPIC_MAPPER_OCTOMAP_INFLATED_MARKERS, 1);
-  inflated_free_space_marker_pub_ = nh_mt->advertise<visualization_msgs::MarkerArray>(
-    TOPIC_MAPPER_OCTOMAP_INFLATED_FREE_MARKERS, 1);
-  path_marker_pub_ = nh_mt->advertise<visualization_msgs::MarkerArray>(
-    TOPIC_MAPPER_DISCRETE_TRAJECTORY_MARKERS, 1);
-  cam_frustum_pub_ = nh_mt->advertise<visualization_msgs::Marker>(
-    TOPIC_MAPPER_FRUSTRUM_MARKERS, 1);
-  free_space_cloud_pub_ = nh_mt->advertise<sensor_msgs::PointCloud2>(
-    TOPIC_MAPPER_OCTOMAP_FREE_CLOUD, 1, true);
-  obstacle_cloud_pub_ = nh_mt->advertise<sensor_msgs::PointCloud2>(
-    TOPIC_MAPPER_OCTOMAP_CLOUD, 1, true);
+  // Timers
+  timer_f_ = nh->createTimer(
+    ros::Duration(ros::Rate(fading_memory_update_rate_)),
+      &MapperNodelet::FadeTask, this, false, true);
+  timer_h_ = nh->createTimer(
+    ros::Duration(ros::Rate(tf_update_rate_)),
+      &MapperNodelet::HazTfTask, this, false, true);
+  timer_p_ = nh->createTimer(
+    ros::Duration(ros::Rate(tf_update_rate_)),
+      &MapperNodelet::PerchTfTask, this, false, true);
+  timer_b_ = nh->createTimer(
+    ros::Duration(ros::Rate(tf_update_rate_)),
+      &MapperNodelet::BodyTfTask, this, false, true);
 
-  // Multi-threaded subscribers
+  // Aubscribers
   std::string cam_prefix = TOPIC_HARDWARE_PICOFLEXX_PREFIX;
   std::string cam_suffix = TOPIC_HARDWARE_PICOFLEXX_SUFFIX;
   if (use_haz_cam) {
       std::string cam = TOPIC_HARDWARE_NAME_HAZ_CAM;
-      haz_sub_ = nh_mt->subscribe(cam_prefix + cam + cam_suffix, 1,
+      haz_sub_ = nh->subscribe(cam_prefix + cam + cam_suffix, 1,
         &MapperNodelet::PclCallback, this);
   }
   if (use_perch_cam) {
       std::string cam = TOPIC_HARDWARE_NAME_PERCH_CAM;
-      perch_sub_ = nh_mt->subscribe(cam_prefix + cam + cam_suffix, 1,
+      perch_sub_ = nh->subscribe(cam_prefix + cam + cam_suffix, 1,
         &MapperNodelet::PclCallback, this);
   }
+  segment_sub_ = nh->subscribe(TOPIC_GNC_CTL_SEGMENT, 1,
+    &MapperNodelet::SegmentCallback, this);
+  reset_sub_ = nh->subscribe(TOPIC_GNC_EKF_RESET, 1,
+    &MapperNodelet::ResetCallback, this);
 
-  // Single-threaded services
+  // Services
   resolution_srv_ = nh->advertiseService(SERVICE_MOBILITY_UPDATE_MAP_RESOLUTION,
     &MapperNodelet::UpdateResolution, this);
   memory_time_srv_ = nh->advertiseService(SERVICE_MOBILITY_UPDATE_MEMORY_TIME,
@@ -163,16 +168,6 @@ void MapperNodelet::Initialize(ros::NodeHandle *nh) {
     &MapperNodelet::GetFreeMapCallback, this);
   get_obstacle_map_srv_ = nh->advertiseService(SERVICE_MOBILITY_GET_OBSTACLE_MAP,
     &MapperNodelet::GetObstacleMapCallback, this);
-
-  // Single-threaded publishers
-  hazard_pub_ = nh_mt->advertise<ff_msgs::Hazard>(
-    TOPIC_MOBILITY_HAZARD, 1);
-
-  // Single-threaded subscribers
-  segment_sub_ = nh->subscribe(TOPIC_GNC_CTL_SEGMENT, 1,
-    &MapperNodelet::SegmentCallback, this);
-  reset_sub_ = nh->subscribe(TOPIC_GNC_EKF_RESET, 1,
-    &MapperNodelet::ResetCallback, this);
 
   // Notify initialization complete
   NODELET_DEBUG_STREAM("Initialization complete");

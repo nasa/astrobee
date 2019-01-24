@@ -120,26 +120,27 @@ namespace ff_util {
   /////////////////////////////////////////////////////////////////////
 
   // Get and cache default inertia configuration
-  bool FlightUtil::GetInertiaConfig(geometry_msgs::Inertia &data) {
-    static geometry_msgs::Inertia inertia;
-    if (inertia.m == 0) {
+  bool FlightUtil::GetInertiaConfig(geometry_msgs::InertiaStamped &data) {
+    static geometry_msgs::InertiaStamped inertia;
+    if (inertia.inertia.m == 0) {
       config_reader::ConfigReader cfg;
       config_reader::ConfigReader::Table com;
       float inertia_matrix[9];
       cfg.AddFile("flight.config");
       cfg.ReadFiles();
-      if (   !cfg.GetReal("inertia_mass", &inertia.m)
+      if (   !cfg.GetReal("inertia_mass", &inertia.inertia.m)
+          || !cfg.GetStr("inertia_name", &inertia.header.frame_id)
           || !msg_conversions::config_read_matrix(&cfg, "inertia_matrix", 3, 3,
                 inertia_matrix)
           || !cfg.GetTable("inertia_com", &com)
-          || !msg_conversions::config_read_vector(&com, &inertia.com))
+          || !msg_conversions::config_read_vector(&com, &inertia.inertia.com))
         return false;
-      inertia.ixx = inertia_matrix[0];
-      inertia.ixy = inertia_matrix[1];
-      inertia.ixz = inertia_matrix[2];
-      inertia.iyy = inertia_matrix[4];
-      inertia.iyz = inertia_matrix[5];
-      inertia.izz = inertia_matrix[8];
+      inertia.inertia.ixx = inertia_matrix[0];
+      inertia.inertia.ixy = inertia_matrix[1];
+      inertia.inertia.ixz = inertia_matrix[2];
+      inertia.inertia.iyy = inertia_matrix[4];
+      inertia.inertia.iyz = inertia_matrix[5];
+      inertia.inertia.izz = inertia_matrix[8];
     }
     // Copy the data and return successful
     data = inertia;

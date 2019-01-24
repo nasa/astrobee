@@ -222,6 +222,8 @@ class GazeboModelPluginEps : public FreeFlyerModelPlugin {
     srv_power_ = nh->advertiseService(
       SERVICE_HARDWARE_EPS_CONF_ADVANCED_POWER,
         &GazeboModelPluginEps::PowerConfigureCallback, this);
+    srv_led_ = nh->advertiseService(SERVICE_HARDWARE_EPS_CONF_LED_STATE,
+      &GazeboModelPluginEps::LedsConfigureCallback, this);
     // Once we have berth locations start timer for checking dock status
     timer_delay_ = nh->createTimer(ros::Duration(delay_),
       &GazeboModelPluginEps::DelayCallback, this, true, false);
@@ -546,6 +548,14 @@ class GazeboModelPluginEps : public FreeFlyerModelPlugin {
     return true;
   }
 
+  bool LedsConfigureCallback(ff_hw_msgs::ConfigureSystemLeds::Request &req,
+                             ff_hw_msgs::ConfigureSystemLeds::Response &res) {
+    // TODO(?) Maybe have actual leds on the simulated robot that turn on
+    res.success = true;
+    res.status = "All LED set successfully";
+    return true;
+  }
+
   // Callback for telemetry broadcast
   void TelemetryCallback(const ros::TimerEvent &event) {
     // Set a header for all telemetry items
@@ -645,7 +655,7 @@ class GazeboModelPluginEps : public FreeFlyerModelPlugin {
   ros::Publisher pub_dock_state_, pub_housekeeping_, pub_power_;
   ros::Publisher battery_state_pub_tl_, battery_state_pub_tr_;
   ros::Publisher battery_state_pub_bl_, battery_state_pub_br_;
-  ros::ServiceServer srv_undock_, srv_power_, srv_payload_;
+  ros::ServiceServer srv_undock_, srv_power_, srv_payload_, srv_led_;
   sensor_msgs::BatteryState state_tl_, state_tr_, state_bl_, state_br_;
   std::map<std::string, bool> power_states_;
   std::map<std::string, double> housekeeping_;

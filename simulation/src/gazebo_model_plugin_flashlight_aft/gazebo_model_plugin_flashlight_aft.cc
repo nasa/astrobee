@@ -31,10 +31,6 @@
 // Freeflyer messages
 #include <ff_hw_msgs/SetFlashlight.h>
 
-// Eigen includes
-#include <Eigen/Eigen>
-#include <Eigen/Geometry>
-
 // STL includes
 #include <string>
 #include <map>
@@ -44,7 +40,7 @@ namespace gazebo {
 class GazeboModelPluginFlashlightAft : public FreeFlyerModelPlugin {
  public:
   GazeboModelPluginFlashlightAft() : FreeFlyerModelPlugin("flashlight_aft",
-    "flashlight_aft", false), rate_(10.0),
+    "flashlight_aft", true), rate_(10.0),
       width_(0.03), height_(0.02), depth_(0.005) {}
 
   ~GazeboModelPluginFlashlightAft() {

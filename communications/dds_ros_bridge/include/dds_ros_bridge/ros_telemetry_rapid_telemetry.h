@@ -54,6 +54,7 @@ class RosTelemetryRapidTelemetry : public RosSubRapidPub {
   void SetDiskStateRate(float rate);
   void SetEkfStateRate(float rate);
   void SetGncStateRate(float rate);
+  void SetPmcCmdStateRate(float rate);
   void SetPositionRate(float rate);
 
  protected:

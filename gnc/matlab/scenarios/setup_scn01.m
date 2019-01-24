@@ -17,7 +17,9 @@
 %
 %[mlp_command_list, mlp_command_times] = gen_cmd_list([ASTROBEE_ROOT filesep 'scenarios' filesep 'scn05.fplan']);
 %[pos_x,     pos_y,     pos_z,     vel_x,     vel_y,    vel_z,     acc_x,     acc_y,     acc_z,   quat_x,   quat_y,   quat_z,    quat_w,   angv_x,   angv_y,   angv_z,    anga_x,    anga_y,    anga_z]
-lin_accel = .05;
+
+tun_default_mass = single(14.4);
+lin_accel = .0325;
 [setpoints1, cmd_times1] = calc_trapazoidal_waypoints_with_att_end_point([0 0 -.7], [1 0 -.7], lin_accel, .2, [0 0 0 1],[0 0 0 1], 0, 0, 60);
 [setpoints2, cmd_times2] = calc_trapazoidal_waypoints_with_att_end_point([1 0 -.7], [1 0 -.7], lin_accel, .2, [0 0 0 1],[0 0 1 0], 10*pi/180, 10*pi/180, 100);
 [setpoints3, cmd_times3] = calc_trapazoidal_waypoints_with_att_end_point([0 0 -.7], [1.0 0 -.7], lin_accel, .2, [0 0 1 0],[0 0 1 0], 10*pi/180, 10*pi/180, 130);

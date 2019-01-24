@@ -1,3 +1,80 @@
+astrobee (0.7.6) testing; urgency=medium
+
+  * Localization and localization manager fixes.
+
+ -- Astrobee Flight Software <astrobee-fsw@nx.arc.nasa.gov>  Thu, 17 Jan 2019 12:29:21 -0800
+
+astrobee (0.7.5) testing; urgency=medium
+
+  * Various fixes for flight units.
+  * Improvements to debians.
+
+ -- Astrobee Flight Software <astrobee-fsw@nx.arc.nasa.gov>  Thu, 20 Dec 2018 14:28:15 -0800
+
+astrobee (0.7.4) testing; urgency=medium
+
+  * Fixed compile for vive again.
+
+ -- Astrobee Flight Software <astrobee-fsw@nx.arc.nasa.gov>  Mon, 17 Dec 2018 14:13:29 -0800
+
+astrobee (0.7.3) testing; urgency=medium
+
+  * Fixed compile for vive.
+
+ -- Astrobee Flight Software <astrobee-fsw@nx.arc.nasa.gov>  Mon, 17 Dec 2018 10:22:57 -0800
+
+astrobee (0.7.2) testing; urgency=medium
+
+  * Fix cmake bug.
+
+ -- Astrobee Flight Software <astrobee-fsw@nx.arc.nasa.gov>  Fri, 14 Dec 2018 15:10:27 -0800
+
+astrobee (0.7.1) testing; urgency=medium
+
+  * Vive updates.
+  * Submodule bumps.
+
+ -- Astrobee Flight Software <astrobee-fsw@nx.arc.nasa.gov>  Thu, 13 Dec 2018 16:38:26 -0800
+
+astrobee (0.7.0) testing; urgency=medium
+
+  * Infrastructure to build the flight images completed, including HLP
+    (Android) configuration methods not requiring touchscreen access
+  * Inertia and masses reflecting the Flight Units characteristics
+  * New values for flight modes optimized for the new propulsion units
+  * Support for all functional tests (including Speedcam modes)
+  * Support for all mobility tests (including plans)
+  * Improved marker tracking simulation plugin allowing to analyze marker
+    placement
+  * Fixed a jerk motion while docking (real robot) due to camera occlusion
+  * Executive:
+    - Refactored for easier maintenance
+    - Support data to disk configuration
+    - Support telemetry rate command
+    - Support localization mode switch and EKF commands
+    - Manage guest science state
+  * Real time analysis tool (gviz) ported to support DDS telemetry:
+    allows the same capabilities of inspection for flight than on the ground.
+  * New launch file feature to support backlisting / adding extra nodes
+  * Bug fixes
+
+ -- Astrobee Flight Software <astrobee-fsw@nx.arc.nasa.gov>  Wed, 12 Dec 2018 21:09:43 -0800
+
+astrobee (0.6.1) stable; urgency=medium
+
+  * Config files for new robots.
+
+ -- Astrobee Flight Software <astrobee-fsw@nx.arc.nasa.gov>  Wed, 28 Nov 2018 10:06:39 -0800
+
+astrobee (0.6.0) stable; urgency=medium
+
+  Flight packaging candidate release
+  * Indicator LEDs management.
+  * All DDS commands to support remote tests implemented.
+  * Adjustments and tools to support test procedures in place.
+
+ -- Astrobee Flight Software <astrobee-fsw@nx.arc.nasa.gov>  Fri, 16 Nov 2018 15:49:42 -0800
+
 astrobee (0.5.0) testing; urgency=medium
 
   * Build ready for CERT testing.

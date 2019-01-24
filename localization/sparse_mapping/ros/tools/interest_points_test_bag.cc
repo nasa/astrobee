@@ -62,16 +62,14 @@ void ReadParams(interest_point::FeatureDetector* detector) {
     return;
   }
 
-  int min_features, max_features, brisk_threshold, detection_retries;
+  int min_features, max_features, detection_retries;
   if (!config.GetInt("min_features", &min_features))
     ROS_FATAL("min_features not specified in localization.");
   if (!config.GetInt("max_features", &max_features))
     ROS_FATAL("max_features not specified in localization.");
-  if (!config.GetInt("brisk_threshold", &brisk_threshold))
-    ROS_FATAL("brisk_threshold not specified in localization.");
   if (!config.GetInt("detection_retries", &detection_retries))
     ROS_FATAL("detection_retries not specified in localization.");
-  detector->Reset("ORGBRISK", min_features, max_features, brisk_threshold, detection_retries);
+  detector->Reset("ORGBRISK", min_features, max_features, detection_retries);
 }
 
 void DetectImageFeatures(interest_point::FeatureDetector & detector, sensor_msgs::ImageConstPtr & image_msg,

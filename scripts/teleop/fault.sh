@@ -17,6 +17,6 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-rostopic pub --once /command ff_msgs/CommandStamped '{cmd_name: "fault", subsys_name: "Astrobee"}'
+rostopic pub --once /command ff_msgs/CommandStamped '{cmd_name: "fault", cmd_src: "sys_monitor", subsys_name: "Astrobee"}'
 
 echo "All done"

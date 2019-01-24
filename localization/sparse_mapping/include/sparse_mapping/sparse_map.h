@@ -108,7 +108,7 @@ struct SparseMap {
 
   SparseMap(bool bundler_format, std::string const& filename, std::vector<std::string> const& files);
 
-  void SetDetectorParams(int min_features, int max_features, int threshold, int retries);
+  void SetDetectorParams(int min_features, int max_features, int retries);
 
   /**
    * Detect features in given images

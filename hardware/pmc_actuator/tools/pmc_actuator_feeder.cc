@@ -40,7 +40,9 @@ int num_pmcs_ = 2;
 std::string topic_command_ = TOPIC_HARDWARE_PMC_COMMAND;
 
 // Control rate in Hz.
-double control_rate_hz_ = 62.5;
+double kControlRateHz = 62.5;
+
+bool kLooping = false;
 
 // nozzle fully closed cmd
 uint8_t nozzle_min_cmd_ = 0;
@@ -56,6 +58,7 @@ std::vector<ff_hw_msgs::PmcCommand> pmc_commands_;
 void usage() {
   std::cerr << "Usage:" << std::endl;
   std::cerr << "       pmc_actuator_feeder input_file [frequency]" << std::endl;
+  std::cerr << "           frequency=0 --> loop the sequence" << std::endl;
 }
 
 size_t parse_inputs(const char *filename) {
@@ -110,7 +113,11 @@ int main(int argc, char **argv) {
     return -1;
   }
   if (argc > 2) {
-    control_rate_hz_ = atof(argv[2]);
+    if (atoi(argv[2]) == 0) {
+      kLooping = true;
+    } else {
+      kControlRateHz = atof(argv[2]);
+    }
   }
 
   int lines = parse_inputs(argv[1]);
@@ -127,7 +134,7 @@ int main(int argc, char **argv) {
 
   cmd_pub_ = nh.advertise<ff_hw_msgs::PmcCommand>(topic_cmd_name, 4);
 
-  ros::Rate rate(control_rate_hz_);
+  ros::Rate rate(kControlRateHz);
 
   size_t index = 0;
   bool last_command = false;
@@ -147,7 +154,12 @@ int main(int argc, char **argv) {
         index++;
         std::cout << pmc_commands_.at(index);
         if (index >= pmc_commands_.size() - 1) {
-          last_command = true;
+          if (kLooping) {
+            index = 0;
+            start_time = ros::Time::now().toSec();
+          } else {
+            last_command = true;
+          }
         }
       }
       pmc_commands_.at(index).header.seq++;

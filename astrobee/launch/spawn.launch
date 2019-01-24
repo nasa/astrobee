@@ -22,7 +22,10 @@
   <arg name="ns" default="" />                  <!-- Robot namespace prefix  -->
   <arg name="world" default="iss" />            <!-- World name              -->
   <arg name="output" default="log"/>            <!-- Where nodes should log  -->
+  <arg name="spurn" default=""/>                <!-- Prevent a specific node -->
   <arg name="nodes" default=""/>                <!-- Launch specific nodes   -->
+  <arg name="extra" default=""/>                <!-- Inject additional node  -->
+  <arg name="debug" default=""/>                <!-- Debug node group          -->
   <arg name="sim" default="local" />            <!-- SIM IP address          -->
   <arg name="llp" default="local" />            <!-- LLP IP address          -->
   <arg name="mlp" default="local" />            <!-- MLP IP address          -->
@@ -67,7 +70,10 @@
     <arg name="output" value="$(arg output)" /><!-- Output for logging   -->
     <arg name="pose" value="$(arg pose)" />    <!-- Initial robot pose (sim) -->
     <arg name="drivers" value="false" />       <!-- Start driver code        -->
-    <arg name="nodes" value="$(arg nodes)" />  <!-- Limit to specific nodes  -->
+    <arg name="spurn" value="$(arg spurn)" />  <!-- Prevent node         -->
+    <arg name="nodes" value="$(arg nodes)" />  <!-- Launch node group    -->
+    <arg name="extra" value="$(arg extra)" />  <!-- Inject extra nodse   -->
+    <arg name="debug" value="$(arg debug)" />  <!-- Inject extra nodse   -->
     <arg name="sim" value="$(arg sim)" />      <!-- SIM IP address           -->
     <arg name="llp" value="$(arg llp)" />      <!-- LLP IP address           -->
     <arg name="mlp" value="$(arg mlp)" />      <!-- MLP IP address           -->

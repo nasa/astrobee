@@ -2,6 +2,12 @@
 # Administrator of the National Aeronautics and Space Administration.
 # All Rights Reserved.
 
+string PARAM_NAME_LOCALIZATION_MODE_NONE = None
+string PARAM_NAME_LOCALIZATION_MODE_MAPPED_LANDMARKS = MappedLandmarks
+string PARAM_NAME_LOCALIZATION_MODE_ARTAGS = ARTags
+string PARAM_NAME_LOCALIZATION_MODE_HANDRAIL = Handrail
+string PARAM_NAME_LOCALIZATION_MODE_PERCH = Perch
+string PARAM_NAME_LOCALIZATION_MODE_TRUTH = Truth
 string PARAM_NAME_ACTION_TYPE_PAN = Pan
 string PARAM_NAME_ACTION_TYPE_TILT = Tilt
 string PARAM_NAME_ACTION_TYPE_BOTH = Both
@@ -46,11 +52,15 @@ string PARAM_NAME_TELEMETRY_TYPE_POSITION = Position
 string CMD_NAME_GRAB_CONTROL = grabControl
 string CMD_NAME_REQUEST_CONTROL = requestControl
 string CMD_NAME_FAULT = fault
+string CMD_NAME_INITIALIZE_BIAS = initializeBias
 string CMD_NAME_LOAD_NODELET = loadNodelet
 string CMD_NAME_NO_OP = noOp
 string CMD_NAME_REACQUIRE_POSITION = reacquirePosition
+string CMD_NAME_RESET_EKF = resetEkf
 string CMD_NAME_SHUTDOWN = shutdown
+string CMD_NAME_SWITCH_LOCALIZATION = switchLocalization
 string CMD_NAME_UNLOAD_NODELET = unloadNodelet
+string CMD_NAME_UNTERMINATE = unterminate
 string CMD_NAME_WAKE = wake
 string CMD_NAME_WAKE_SAFE = wakeSafe
 string CMD_NAME_WIPE_HLP = wipeHlp

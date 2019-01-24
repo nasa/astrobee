@@ -23,7 +23,7 @@ Description: Astrobee flight software development files.
 
 Package: astrobee-config
 Section: misc
-Architecture: any
+Architecture: all
 Depends: ${misc:Depends}
 Description: Astrobee flight software configuration.
  The Astrobee flight software configuration files.

@@ -26,7 +26,6 @@
 
 #include "knDds/DdsTypedSupplier.h"
 
-#include "dds_ros_bridge/enum_helper.h"
 #include "dds_ros_bridge/ros_sub_rapid_pub.h"
 #include "dds_ros_bridge/util.h"
 

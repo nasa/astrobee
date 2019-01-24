@@ -45,6 +45,8 @@
 
 // STL includes
 #include <string>
+#include <thread>
+#include <memory>
 
 namespace gazebo {
 
@@ -75,15 +77,21 @@ class FreeFlyerPlugin : public ff_util::FreeFlyerNodelet {
   // Optional callback for nodes to know when extrinsics were received
   virtual void OnExtrinsicsReceived(ros::NodeHandle *nh) {}
 
- private:
   // Manage the extrinsics based on the sensor type
   void SetupExtrinsics(const ros::TimerEvent& event);
 
- private:
+  // Custom callback queue to avoid contention between the global callback
+  // queue and gazebo update work.
+  void CallbackThread();
+
+  // Child classes need access
   std::string robot_name_, plugin_name_, plugin_frame_, parent_frame_;
-  ros::NodeHandle nh_, nh_mt_;
+  ros::NodeHandle nh_, nh_ff_, nh_ff_mt_;
+  std::shared_ptr<tf2_ros::TransformListener> listener_;
+  ros::CallbackQueue callback_queue_;
+  std::thread thread_;
   ros::Timer timer_;
-  static tf2_ros::Buffer buffer_;
+  tf2_ros::Buffer buffer_;
 };
 
 // Convenience wrapper around a model plugin

@@ -20,7 +20,10 @@
   <arg name="robot" default="p4d" />          <!-- Robot description         -->
   <arg name="world" default="granite" />      <!-- World name                -->
   <arg name="ns" default="" />                <!-- Robot namespace           -->
+  <arg name="spurn" default=""/>              <!-- PRevent a specific node   -->
   <arg name="nodes" default=""/>              <!-- Launch specific nodes     -->
+  <arg name="extra" default=""/>              <!-- Inject an additional node -->
+  <arg name="debug" default=""/>              <!-- Debug node group          -->
   <arg name="dds" default="true" />           <!-- Enable DDS                -->
 
   <!-- Remaining options -->
@@ -65,6 +68,7 @@
           name="astrobee_state_publisher" />
 
     <!-- If we need to load synthetic drivers (we are not running on a real robot) -->
+    <!-- TODO(asymingt) - pass nodes, spurn and extra into gazebo                  -->
     <include unless="$(arg drivers)"
              file="$(find astrobee)/launch/controller/synthetic.launch">
       <arg name="world" value="$(arg world)" />   <!-- World name                -->
@@ -100,7 +104,10 @@
       <!-- If we have specified a bag, then play it back into flight software-->
       <include file="$(find astrobee)/launch/robot/LLP.launch" >
         <arg name="drivers" value="$(arg drivers)"/>
-        <arg name="nodes" value="$(arg nodes)" />
+        <arg name="spurn" value="$(arg spurn)" />      <!-- Prevent node         -->
+        <arg name="nodes" value="$(arg nodes)" />      <!-- Launch node group    -->
+        <arg name="extra" value="$(arg extra)" />      <!-- Inject extra nodse   -->
+        <arg name="debug" value="$(arg debug)" />      <!-- Debug node group     -->
         <arg name="output" value="$(arg output)" />
       </include>
 
@@ -136,7 +143,10 @@
       <include file="$(find astrobee)/launch/robot/MLP.launch" >
         <arg name="drivers" value="$(arg drivers)"/>
         <arg name="dds" value="$(arg dds)"/>
-        <arg name="nodes" value="$(arg nodes)" />
+        <arg name="spurn" value="$(arg spurn)" />      <!-- Prevent node         -->
+        <arg name="nodes" value="$(arg nodes)" />      <!-- Launch node group    -->
+        <arg name="extra" value="$(arg extra)" />      <!-- Inject extra nodse   -->
+        <arg name="debug" value="$(arg debug)" />      <!-- Debug node group     -->
         <arg name="output" value="$(arg output)" />
       </include>
 

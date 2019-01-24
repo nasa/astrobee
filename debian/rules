@@ -25,9 +25,12 @@ ifeq ($(DEB_HOST_ARCH),armhf)
 	export DEB_MAINT_CXX_SET = $(ARMHF_TOOLCHAIN)/bin/arm-linux-gnueabihf-g++
 endif
 
+# skip build for config files
+build-indep: ;
+	mkdir -p build
+
 %:
 	dh $@ --buildsystem=cmake --parallel --builddirectory=build/
-
 
 # we always need release, otherwise it is too slow
 override_dh_auto_configure:

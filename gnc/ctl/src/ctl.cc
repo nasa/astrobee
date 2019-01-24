@@ -239,20 +239,20 @@ void Ctl::TwistCallback(const geometry_msgs::TwistStamped::ConstPtr& truth) {
 }
 
 // Called when management updates inertial info
-void Ctl::InertiaCallback(const geometry_msgs::Inertia::ConstPtr& inertia) {
+void Ctl::InertiaCallback(const geometry_msgs::InertiaStamped::ConstPtr& inertia) {
   std::lock_guard<std::mutex> lock(mutex_cmd_msg_);
   auto& input = gnc_.ctl_input_;
-  input.mass = inertia->m;
+  input.mass = inertia->inertia.m;
   // mc::ros_to_array_vector(inertia->com, input.center_of_mass);  // no longer exists
-  input.inertia_matrix[0] = inertia->ixx;
-  input.inertia_matrix[1] = inertia->ixy;
-  input.inertia_matrix[2] = inertia->ixz;
-  input.inertia_matrix[3] = inertia->ixy;
-  input.inertia_matrix[4] = inertia->iyy;
-  input.inertia_matrix[5] = inertia->iyz;
-  input.inertia_matrix[6] = inertia->ixz;
-  input.inertia_matrix[7] = inertia->iyz;
-  input.inertia_matrix[8] = inertia->izz;
+  input.inertia_matrix[0] = inertia->inertia.ixx;
+  input.inertia_matrix[1] = inertia->inertia.ixy;
+  input.inertia_matrix[2] = inertia->inertia.ixz;
+  input.inertia_matrix[3] = inertia->inertia.ixy;
+  input.inertia_matrix[4] = inertia->inertia.iyy;
+  input.inertia_matrix[5] = inertia->inertia.iyz;
+  input.inertia_matrix[6] = inertia->inertia.ixz;
+  input.inertia_matrix[7] = inertia->inertia.iyz;
+  input.inertia_matrix[8] = inertia->inertia.izz;
   inertia_received_ = true;
 }
 

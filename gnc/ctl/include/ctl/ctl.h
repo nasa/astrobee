@@ -26,7 +26,7 @@
 #include <ros/ros.h>
 
 // Standard messages
-#include <geometry_msgs/Inertia.h>
+#include <geometry_msgs/InertiaStamped.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/TwistStamped.h>
 
@@ -106,7 +106,7 @@ class Ctl {
   void TwistCallback(const geometry_msgs::TwistStamped::ConstPtr& truth);
 
   // Called when management updates inertial info
-  void InertiaCallback(const geometry_msgs::Inertia::ConstPtr& inertia);
+  void InertiaCallback(const geometry_msgs::InertiaStamped::ConstPtr& inertia);
 
   // Called when a timer has called back to progress control to next setpoint
   void ControlTimerCallback(const ros::TimerEvent & event);

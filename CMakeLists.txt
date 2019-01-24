@@ -17,8 +17,8 @@
 
 cmake_minimum_required(VERSION 3.0)
 project(Astrobee)
-set(ASTROBEE_VERSION_MAJOR 0)
-set(ASTROBEE_VERSION_MINOR 5)
+
+set(ASTROBEE_VERSION 0.7.6)
 
 if ( "${CMAKE_VERSION}" VERSION_GREATER 3.0.0 )
   cmake_policy(SET CMP0045 OLD)
@@ -98,6 +98,12 @@ option(ENABLE_PICOFLEXX
   ON)
 option(ENABLE_GAZEBO
   "Enable support for building the Gazebo simulator"
+  ON)
+option(ENABLE_VIVE
+  "Enable support for building the Vive drivers"
+  ON)
+option(ENABLE_VIVE_SOLVER
+  "Enable support for building the Vive offline solver"
   ON)
 
 # If the user selected static libs .. set BUILD_SHARED_LIBS accordingly
@@ -201,10 +207,17 @@ find_package(Alvar REQUIRED)
 find_package(OpenMVG QUIET REQUIRED)
 find_package(JsonCpp REQUIRED)
 find_package(FFMPEG QUIET)    # Optional
-find_package(Deepdive QUIET)  # Optional
 if (ENABLE_PICOFLEXX)
   find_package(royale REQUIRED)
 endif (ENABLE_PICOFLEXX)
+# Find pkg-config supported libraries
+if (ENABLE_VIVE)
+  find_package(USB REQUIRED)
+  find_package(JSONC REQUIRED)
+  find_package(ARGTABLE2 REQUIRED)
+  find_package(ZLIB REQUIRED)
+endif (ENABLE_VIVE)
+
 
 if (NOT USE_CTC)  # pkg-config needs extra work to be used for cross compile
   pkg_check_modules(YAMLCPP yaml-cpp)
@@ -306,8 +319,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/version.txt
   COMMAND ${CMAKE_COMMAND}
   -D OUTPUT_FILE=${CMAKE_CURRENT_BINARY_DIR}/version.txt
-  -D ASTROBEE_VERSION_MAJOR=${ASTROBEE_VERSION_MAJOR}
-  -D ASTROBEE_VERSION_MINOR=${ASTROBEE_VERSION_MINOR}
+  -D ASTROBEE_VERSION=${ASTROBEE_VERSION}
   -D GIT_MODULE_FILE="${CMAKE_SOURCE_DIR}/cmake/GetGitRevisionDescription.cmake"
   -P ${CMAKE_SOURCE_DIR}/cmake/SetVersion.cmake)
 add_custom_target(version DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/version.txt)

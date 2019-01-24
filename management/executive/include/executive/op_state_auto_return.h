@@ -20,6 +20,7 @@
 #define EXECUTIVE_OP_STATE_AUTO_RETURN_H_
 
 #include "executive/op_state.h"
+#include "executive/op_state_repo.h"
 #include <string>
 
 namespace executive {

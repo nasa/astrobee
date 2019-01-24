@@ -220,6 +220,17 @@ void PmcMenu(PmcActuatorPair &pmc_pair) {
         std::cout << "Compile time:" << time << std::endl;
       else
         std::cout << "Compile time: <not yet received>" << std::endl;
+      uint8_t type = 0x0;
+      if (pmc_pair.first->GetFirmwareType(type)) {
+        std::cout << "Hardware type: ";
+        switch (type) {
+        case 1:   std::cout << "PROTOTYPE" << std::endl;  break;
+        case 2:   std::cout << "FLIGHT"    << std::endl;  break;
+        default:  std::cout << "UNKNOWN"    << std::endl; break;
+        }
+      } else {
+        std::cout << "Compile type: <not yet received>" << std::endl;
+      }
       break;
     }
   }

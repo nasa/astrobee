@@ -34,7 +34,7 @@ Localizer::~Localizer(void) {
 
 void Localizer::ReadParams(config_reader::ConfigReader* config) {
   int num_similar, ransac_inlier_tolerance, ransac_iterations;
-  int min_features, max_features, brisk_threshold, detection_retries;
+  int min_features, max_features, detection_retries;
   camera::CameraParameters cam_params(config, "nav_cam");
   if (!config->GetInt("num_similar", &num_similar))
     ROS_FATAL("num_similar not specified in localization.");
@@ -46,21 +46,24 @@ void Localizer::ReadParams(config_reader::ConfigReader* config) {
     ROS_FATAL("min_features not specified in localization.");
   if (!config->GetInt("max_features", &max_features))
     ROS_FATAL("max_features not specified in localization.");
-  if (!config->GetInt("brisk_threshold", &brisk_threshold))
-    ROS_FATAL("brisk_threshold not specified in localization.");
   if (!config->GetInt("detection_retries", &detection_retries))
     ROS_FATAL("detection_retries not specified in localization.");
   map_->SetCameraParameters(cam_params);
   map_->SetNumSimilar(num_similar);
   map_->SetRansacInlierTolerance(ransac_inlier_tolerance);
   map_->SetRansacIterations(ransac_iterations);
-  map_->SetDetectorParams(min_features, max_features, brisk_threshold, detection_retries);
+  map_->SetDetectorParams(min_features, max_features, detection_retries);
 }
 
 bool Localizer::Localize(cv_bridge::CvImageConstPtr image_ptr, ff_msgs::VisualLandmarks* vl) {
   bool multithreaded = false;
   cv::Mat image_descriptors;
   Eigen::Matrix2Xd image_keypoints;
+
+  vl->header = std_msgs::Header();
+  vl->header.stamp = image_ptr->header.stamp;
+  vl->header.frame_id = "world";
+
   map_->DetectFeatures(image_ptr->image, multithreaded, &image_descriptors, &image_keypoints);
   camera::CameraModel camera(Eigen::Vector3d(),
                              Eigen::Matrix3d::Identity(),
@@ -76,9 +79,6 @@ bool Localizer::Localize(cv_bridge::CvImageConstPtr image_ptr, ff_msgs::VisualLa
   Eigen::Affine3d global_pose = camera.GetTransform().inverse();
   Eigen::Quaterniond quat(global_pose.rotation());
 
-  vl->header = std_msgs::Header();
-  vl->header.stamp = image_ptr->header.stamp;
-  vl->header.frame_id = "world";
   vl->pose.position = msg_conversions::eigen_to_ros_point(global_pose.translation());
   vl->pose.orientation = msg_conversions::eigen_to_ros_quat(quat);
   assert(landmarks.size() == observations.size());

@@ -88,25 +88,26 @@ class DdsSubscriber(threading.Thread):
     translator = None
 
     def __init__(self, dds_sub, callback, ros_type):
-	threading.Thread.__init__(self)
-	self.inputDDS = connector.getInput(dds_sub)
-	self.stopper = threading.Event()
-	self.callback = callback
-	self.translator = Dict2RosMsgTranslator(ros_type)
+        threading.Thread.__init__(self)
+        self.inputDDS = connector.getInput(dds_sub)
+        self.stopper = threading.Event()
+        self.callback = callback
+        self.translator = Dict2RosMsgTranslator(ros_type)
+        self.daemon = True
 
     def run(self):
         while not self.stopper.is_set():
-	    self.sem.acquire(True)
+            self.sem.acquire(True)
             connector.wait(self.timeout)
             self.inputDDS.take()
             numOfSamples = self.inputDDS.samples.getLength()
 
             for j in range(1, numOfSamples + 1):
                 if self.inputDDS.infos.isValid(j):
-	            dictionary = self.inputDDS.samples.getDictionary(j)
-		    data = self.translator.translate(dictionary)
-		    self.callback(data)
-	    self.sem.release()
+                    dictionary = self.inputDDS.samples.getDictionary(j)
+                    data = self.translator.translate(dictionary)
+                    self.callback(data)
+            self.sem.release()
 
     def start_sync(self, sem):
         self.sem = sem

@@ -214,13 +214,13 @@ void DataCallback(PerchingArmRaw const &raw) {
   // log data only if the logfile is open
   if (logfile_.is_open()) {
     logfile_ << std::setw(11) << std::setprecision(2);
-    logfile_ << raw.prox.position << '\t' << raw.prox.position << '\t'
-             << raw.prox.velocity << '\t' << raw.prox.load << '\t'
-             << raw.dist.position << '\t' << raw.dist.velocity << '\t'
-             << raw.dist.load << '\t' << raw.grip.position << '\t'
-             << raw.grip.maximum << '\t' << raw.grip.load << '\t'
+    logfile_ << raw.prox.load << '\t' << raw.prox.velocity << '\t'
+             << (raw.prox.position - 2048) * 0.088 + 180 << '\t'
+             << raw.dist.load << '\t' << raw.dist.velocity << '\t'
+             << (raw.dist.position - 2048) * 0.088 + 180 << '\t'
+             << raw.grip.position << '\t' << raw.grip.load << '\t'
              << raw.current_11v << '\t' << raw.current_5v << '\t'
-             << raw.board_temp << '\t' << raw.loop_time << std::endl;
+             << raw.loop_time << '\t' << raw.board_temp << std::endl;
     logfile_.flush();
   }
   // This will store our current value

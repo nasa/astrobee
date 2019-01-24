@@ -24,9 +24,6 @@
 
 namespace gazebo {
 
-// Memory allocation for static buffer
-tf2_ros::Buffer FreeFlyerPlugin::buffer_;
-
 // Constructor
 FreeFlyerPlugin::FreeFlyerPlugin(std::string const& plugin_name,
   std::string const& plugin_frame, bool send_heartbeats) :
@@ -35,7 +32,10 @@ FreeFlyerPlugin::FreeFlyerPlugin(std::string const& plugin_name,
         plugin_frame_(plugin_frame), parent_frame_() {}
 
 // Destructor
-FreeFlyerPlugin::~FreeFlyerPlugin() {}
+FreeFlyerPlugin::~FreeFlyerPlugin() {
+  nh_ff_.shutdown();
+  thread_.join();
+}
 
 // Some plugins might want the world as the parent frame
 void FreeFlyerPlugin::SetParentFrame(std::string const& parent) {
@@ -50,20 +50,26 @@ void FreeFlyerPlugin::InitializePlugin(std::string const& robot_name) {
     ROS_FATAL_STREAM("A ROS node for Gazebo has not been initialized");
   ROS_DEBUG_STREAM("Loading " << plugin_name_ << " on robot " << robot_name_);
 
-  // Intiialize the transform listener
-  static tf2_ros::TransformListener listener(buffer_);
-
   // Get nodehandle based on the model name.
   nh_ = ros::NodeHandle(robot_name_);
-  nh_mt_ = ros::NodeHandle(robot_name_);
+  nh_.setCallbackQueue(&callback_queue_);
+  thread_ = std::thread(&FreeFlyerPlugin::CallbackThread, this);
+  listener_.reset(new tf2_ros::TransformListener(buffer_, nh_));
 
-  // Init freeflyer nodelet to start heartbeat and faults, using the
-  // nodehandles that have the correct namespace
-  Setup(nh_, nh_mt_);
+  // Assign special node handles that use custom callback queues to avoid
+  // Gazebo locking up heartbeats from being sent to the system monitor.
+  nh_ff_ = ros::NodeHandle(robot_name_);
+  Setup(nh_ff_, nh_ff_);
 
   // If we have a frame then defer chainloading until we receive them
   timer_ = nh_.createTimer(ros::Duration(1.0),
     &FreeFlyerSensorPlugin::SetupExtrinsics, this);
+}
+
+// Service the callback thread
+void FreeFlyerPlugin::CallbackThread() {
+  while (nh_.ok())
+    callback_queue_.callAvailable(ros::WallDuration(0.01));
 }
 
 // Poll for extrinsics until found
@@ -114,7 +120,7 @@ void FreeFlyerModelPlugin::Load(physics::ModelPtr model, sdf::ElementPtr sdf) {
   // Initialize the FreeFlyerPlugin
   InitializePlugin(model_->GetName());
   // Now load the rest of the plugin
-  LoadCallback(GetPlatformHandle(), model_, sdf_);
+  LoadCallback(&nh_, model_, sdf_);
 }
 
 // Get the model link
@@ -174,7 +180,7 @@ void FreeFlyerSensorPlugin::Load(sensors::SensorPtr sensor, sdf::ElementPtr sdf)
   // Initialize the FreeFlyerPlugin
   InitializePlugin(model_->GetName());
   // Now load the rest of the plugin
-  LoadCallback(GetPlatformHandle(), sensor_, sdf_);
+  LoadCallback(&nh_, sensor_, sdf_);
 }
 
 // Get the sensor world

@@ -45,6 +45,7 @@ MarkerTracker::MarkerTracker(ros::NodeHandle* nh, ros::NodeHandle* private_nh,
                     Eigen::Vector2d::Ones(),  // default constructor
                     Eigen::Vector2d::Zero()) {
   config_.AddFile("cameras.config");
+  config_.AddFile("localization/marker_tracker.config");
   ReadParams();
 
   // Resolve the full path to the AR tag file specified for the current world
@@ -105,6 +106,11 @@ void MarkerTracker::ReadParams(void) {
 
   camera_param_ = camera::CameraParameters(&config_, "dock_cam");
   detector_.reset(new marker_tracking::MarkerCornerDetector(camera_param_));
+
+  if (!config_.GetInt("marker_tracker_valid_x_min", &x_min_))
+    ROS_FATAL("Unspecified marker_tracker_valid_x_min.");
+  if (!config_.GetInt("marker_tracker_valid_x_max", &x_max_))
+    ROS_FATAL("Unspecified marker_tracker_valid_x_max.");
 }
 
 bool MarkerTracker::EnableService(ff_msgs::SetBool::Request& req,
@@ -169,6 +175,20 @@ int MarkerTracker::EstimatePose(ff_msgs::VisualLandmarks* msg) {
   return 0;
 }
 
+bool MarkerTracker::IsMarkerValid(const alvar::MarkerData & marker) {
+  marker_tracking::ARTagMap::const_iterator xyz_iter =
+      ar_tags_.find(marker.GetId());
+  if (xyz_iter == ar_tags_.end())
+    return false;
+  for (size_t j = 0; j < 4; j++) {
+    Eigen::Vector2d p(marker.marker_corners_img[j].x,
+                      marker.marker_corners_img[j].y);
+    if (p.x() < x_min_ || p.x() > x_max_)
+      return false;
+  }
+  return true;
+}
+
 /*
   This callback is called when an image is received.
   It tries to detect the markers and pass that information to process marker.
@@ -197,8 +217,8 @@ void MarkerTracker::VideoCallback(const sensor_msgs::ImageConstPtr& image_msg) {
   size_t valid_marker_count = 0;
   // std::cout << "AR makers detected: ";
   for (size_t i = 0; i < detector_->NumMarkers(); i++) {
-    valid_marker_count += ar_tags_.count(detector_->GetMarker(i).GetId());
-    // std::cout << detector_->GetMarker(i).GetId() << " ";
+    if (IsMarkerValid(detector_->GetMarker(i)))
+      valid_marker_count++;
   }
   // std::cout << "(n=" << valid_marker_count << ")" << std::endl;
 
@@ -212,6 +232,8 @@ void MarkerTracker::VideoCallback(const sensor_msgs::ImageConstPtr& image_msg) {
   size_t write_idx = 0;
   for (size_t i = 0; i < detector_->NumMarkers(); i++) {
     auto const& marker = detector_->GetMarker(i);
+    if (!IsMarkerValid(marker))
+      continue;
     marker_tracking::ARTagMap::const_iterator xyz_iter =
         ar_tags_.find(marker.GetId());
     if (xyz_iter != ar_tags_.end()) {

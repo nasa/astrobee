@@ -155,7 +155,7 @@ void DetectAllFeatures(int argc, char** argv) {
 
   // This will invoke a detection process
   sparse_mapping::SparseMap map(files, FLAGS_detector, cam_params);
-  map.SetDetectorParams(1000, 20000, 10, 3);
+  map.SetDetectorParams(1000, 20000, 3);
   map.DetectFeatures();
 
   map.Save(FLAGS_output_map);
@@ -248,7 +248,7 @@ void Rebuild() {
 
   LOG(INFO) << "Detecting features.";
   sparse_mapping::SparseMap map(files, FLAGS_rebuild_detector, params);
-  map.SetDetectorParams(100, 20000, 20, 3);
+  map.SetDetectorParams(100, 20000, 3);
   map.DetectFeatures();
 
   LOG(INFO) << "Matching features.";

@@ -83,6 +83,10 @@ To launch the nodes needed for calibration, do:
    cd $SCRIPT_DIR
    roslaunch calibration.launch
 
+On the flight unit, do:
+
+   roslaunch astrobee astrobee.launch llp:=??? mlp:=??? nodes:=calibration_nav_cam,calibration_dock_cam,calibration_imu,pico_driver,framestore
+
 This will start the IMU driver, camera drivers, and an image
 viewer. 
 

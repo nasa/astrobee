@@ -65,6 +65,7 @@ class GazeboSensorPluginARTags : public FreeFlyerSensorPlugin {
     // Build the nav cam Camera Model
     config_.AddFile("cameras.config");
     config_.AddFile("dock_markers_specs.config");
+    config_.AddFile("dock_markers_world.config");
     config_.AddFile("simulation/ar_tags.config");
     if (!config_.ReadFiles()) {
         ROS_ERROR("Failed to read config files.");
@@ -91,6 +92,24 @@ class GazeboSensorPluginARTags : public FreeFlyerSensorPlugin {
 
     if (!config_.GetUInt("num_features", &num_features_))
       NODELET_ERROR("Could not read the num_features parameter.");
+
+    if (!config_.GetTable("markers_world", &markers_))
+      NODELET_ERROR("Could not read the markers_world parameter.");
+
+    for (int marker_i = 0; marker_i < markers_.GetSize(); marker_i++) {
+      config_reader::ConfigReader::Table current_marker;
+      markers_.GetTable(marker_i + 1, &current_marker);
+      static const char* const corner_keys[] = {"top_left", "top_right", "bottom_left", "bottom_right"};
+      for (size_t corner_keys_i = 0; corner_keys_i < 4; corner_keys_i++) {
+        config_reader::ConfigReader::Table current_position;
+        current_marker.GetTable(corner_keys[corner_keys_i], &current_position);
+        double position_x, position_y, position_z;
+        current_position.GetReal(1, &position_x);
+        current_position.GetReal(2, &position_y);
+        current_position.GetReal(3, &position_z);
+        marker_positions_.push_back(Eigen::Vector3d(position_x, position_y, position_z));
+      }
+    }
 
     // Create a publisher for the registration messages
     pub_reg_ = nh->advertise<ff_msgs::CameraRegistration>(
@@ -220,15 +239,11 @@ class GazeboSensorPluginARTags : public FreeFlyerSensorPlugin {
 
     // Create a new ray in the world
     size_t i = 0;
-    for (; i < num_samp_ && msg_feat_.landmarks.size() < num_features_; i++) {
-      // Draw a random image coordinate in the dock frame
-      Eigen::Vector3d pt_d(0,
-        (static_cast<double>(rand() % 1000) / 1000.0 - 0.5) * width_ / 1000,    // NOLINT
-        (static_cast<double>(rand() % 1000) / 1000.0 - 0.5) * height_ / 1000);  // NOLINT
-
+    for (; i < marker_positions_.size(); i++) {
       // Point in the current camera frame -- this should normally be calculated
       // using PnP on the points themselves. However, it's easier to just pull
       // this information from the simulation ground truth.
+      Eigen::Vector3d pt_d = marker_positions_[i];
       Eigen::Vector3d pt_c = dTs.inverse() * pt_d;
 
       // Check if the feature is in the field of view
@@ -272,6 +287,8 @@ class GazeboSensorPluginARTags : public FreeFlyerSensorPlugin {
   double height_;
   unsigned int num_features_;
   unsigned int num_samp_;
+  config_reader::ConfigReader::Table markers_;
+  std::vector<Eigen::Vector3d> marker_positions_;
 };
 
 GZ_REGISTER_SENSOR_PLUGIN(GazeboSensorPluginARTags)

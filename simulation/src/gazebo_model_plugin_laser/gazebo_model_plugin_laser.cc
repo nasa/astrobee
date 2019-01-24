@@ -39,7 +39,7 @@ namespace gazebo {
 
 class GazeboModelPluginLaser : public FreeFlyerModelPlugin {
  public:
-  GazeboModelPluginLaser() : FreeFlyerModelPlugin("laser", "laser"),
+  GazeboModelPluginLaser() : FreeFlyerModelPlugin("laser", "laser", true),
     rate_(10.0), range_(50.0), width_(0.0025), ready_(false) {}
 
   ~GazeboModelPluginLaser() {

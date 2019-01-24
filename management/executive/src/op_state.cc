@@ -17,6 +17,7 @@
  */
 
 #include "executive/op_state.h"
+#include "executive/op_state_repo.h"
 
 // TODO(Katie) Get rid of error output. Output mainly for debug purposes
 namespace executive {
@@ -44,30 +45,30 @@ OpState* OpState::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
   return this;
 }
 
-// TODO(Katie) Add guest science, no op, set data to disk, set enable auto
-// return, and set telemetry rate
 // Handles commands that are excepted in every op state
 OpState* OpState::HandleCmd(ff_msgs::CommandStampedPtr const& cmd,
                             bool& completed,
-                            bool& successful,
-                            std::string& err_msg,
-                            uint8_t& status,
-                            bool plan) {
+                            bool& successful) {
   completed = true;
   successful = true;
-  if (cmd->cmd_name == CommandConstants::CMD_NAME_NO_OP) {
-    exec_->PublishCmdAck(cmd->cmd_id);
+  if (cmd->cmd_name == CommandConstants::CMD_NAME_CUSTOM_GUEST_SCIENCE) {
+    successful = exec_->CustomGuestScience(cmd);
+  } else if (cmd->cmd_name == CommandConstants::CMD_NAME_NO_OP) {
+    successful = exec_->NoOp(cmd);
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_SET_CAMERA) {
-    successful = exec_->SetCamera(cmd, err_msg, status, plan);
-  } else if (cmd->cmd_name == CommandConstants::CMD_NAME_SET_CAMERA_STREAMING) {
-    successful = exec_->SetCameraStreaming(cmd, err_msg, status, plan);
+    successful = exec_->SetCamera(cmd);
   } else if (cmd->cmd_name ==
                           CommandConstants::CMD_NAME_SET_CAMERA_RECORDING) {
-    successful = exec_->SetCameraRecording(cmd, err_msg, status, plan);
+    successful = exec_->SetCameraRecording(cmd);
+  } else if (cmd->cmd_name == CommandConstants::CMD_NAME_SET_CAMERA_STREAMING) {
+    successful = exec_->SetCameraStreaming(cmd);
+  } else if (cmd->cmd_name == CommandConstants::CMD_NAME_SET_DATA_TO_DISK) {
+    successful = exec_->SetDataToDisk(cmd);
   } else if (cmd->cmd_name ==
                             CommandConstants::CMD_NAME_SET_ENABLE_AUTO_RETURN) {
-    // Never part of a plan so we can ack it after finishing
     successful = exec_->SetEnableAutoReturn(cmd);
+  } else if (cmd->cmd_name == CommandConstants::CMD_NAME_SET_TELEMETRY_RATE) {
+    successful = exec_->SetTelemetryRate(cmd);
   } else {
     completed = false;
     successful = false;
@@ -96,66 +97,14 @@ OpState* OpState::HandleGuestScienceAck(ff_msgs::AckStampedConstPtr const&
   return this;
 }
 
-// Used as a helper function to send a failed ack when the command is not
-// accepted in the current mobility state
-void OpState::AckMobilityStateIssue(std::string cmd_id,
-                                    std::string cmd_name,
-                                    std::string current_mobility_state,
-                                    std::string accepted_mobility_state) {
-  std::string err_msg = cmd_name + " not accepted while " +
-                                                  current_mobility_state + "!";
-
-  if (accepted_mobility_state != "") {
-    err_msg += " Resend command when " + accepted_mobility_state + ".";
+void OpState::AckCmd(std::string const& cmd_id,
+                     uint8_t completed_status,
+                     std::string const& message,
+                     uint8_t status) {
+  // Don't ack internal stop commands
+  if (cmd_id != "internal") {
+    exec_->PublishCmdAck(cmd_id, completed_status, message, status);
   }
-
-  exec_->PublishCmdAck(cmd_id,
-                       ff_msgs::AckCompletedStatus::EXEC_FAILED,
-                       err_msg);
-  ROS_WARN("Executive: %s", err_msg.c_str());
-}
-
-
-// Used to check the mobility state for commands that can only be executed when
-// the astrobee is in some sort of stopped state. Send a failed execution ack
-// and return false if mobility state is flying, docking, perching, or stopping.
-bool OpState::CheckNotMoving(std::string cmd_id,
-                             std::string cmd_name) {
-  ff_msgs::MobilityState state = exec_->GetMobilityState();
-  if (state.state == ff_msgs::MobilityState::FLYING) {
-    AckMobilityStateIssue(cmd_id, cmd_name, "flying");
-  } else if (state.state == ff_msgs::MobilityState::DOCKING &&
-             state.sub_state != 0) {
-    // Check if astrobee is docking vs. undocking
-    if (state.sub_state > 0) {
-      AckMobilityStateIssue(cmd_id, cmd_name, "docking", "docked");
-    } else {
-      AckMobilityStateIssue(cmd_id,
-                            cmd_name,
-                            "undocking",
-                            "stopped");
-    }
-  } else if (state.state == ff_msgs::MobilityState::PERCHING &&
-             state.sub_state != 0) {
-    // Check if astrobee is perching vs. unperching
-    if (state.sub_state > 0) {
-      AckMobilityStateIssue(cmd_id,
-                            cmd_name,
-                            "perching",
-                            "perched");
-    } else {
-      AckMobilityStateIssue(cmd_id,
-                            cmd_name,
-                            "unperching",
-                            "stopped");
-    }
-  } else if (state.state == ff_msgs::MobilityState::STOPPING &&
-             state.sub_state == 1) {
-    AckMobilityStateIssue(cmd_id, cmd_name, "stopping", "stopped");
-  } else {
-    return true;
-  }
-  return false;
 }
 
 std::string OpState::GenerateActionFailedMsg(
@@ -211,6 +160,10 @@ std::string OpState::GetActionString(Action const& action) {
     case IDLE:
       action_str = "Idle";
       break;
+    case LOCALIZATION:
+    case REACQUIRE:
+      action_str = "Localization";
+      break;
     case MOVE:
       action_str = "Move";
       break;
@@ -219,9 +172,6 @@ std::string OpState::GetActionString(Action const& action) {
       break;
     case STOP:
       action_str = "Stop";
-      break;
-    case SWITCH:
-      action_str = "Switch";
       break;
     case UNDOCK:
       action_str = "Undock";
@@ -235,4 +185,29 @@ std::string OpState::GetActionString(Action const& action) {
 
   return action_str;
 }
+
+bool OpState::PausePlan(ff_msgs::CommandStampedPtr const& cmd) {
+  AckCmd(cmd->cmd_id,
+         ff_msgs::AckCompletedStatus::EXEC_FAILED,
+         ("Pause plan not accepted in opstate " + name() + "!"));
+  return false;
+}
+
+OpState* OpState::TransitionToState(unsigned char id) {
+  if (id == ff_msgs::OpState::READY) {
+    return OpStateRepo::Instance()->ready()->StartupState();
+  } else if (id == ff_msgs::OpState::PLAN_EXECUTION) {
+    return OpStateRepo::Instance()->plan_exec()->StartupState();
+  } else if (id == ff_msgs::OpState::TELEOPERATION) {
+    return OpStateRepo::Instance()->teleop()->StartupState();
+  } else if (id == ff_msgs::OpState::AUTO_RETURN) {
+    return OpStateRepo::Instance()->auto_return()->StartupState();
+  } else if (id == ff_msgs::OpState::FAULT) {
+    return OpStateRepo::Instance()->fault()->StartupState();
+  }
+
+  ROS_WARN("Executive: unknown state id in transition to state.");
+  return this;
+}
+
 }  // namespace executive

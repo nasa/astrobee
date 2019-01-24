@@ -58,4 +58,16 @@ create_tool_targets(DIR tools
 )
 
 install_launch_files()
-install(FILES tools/nozzle_identification.csv DESTINATION share/${PROJECT_NAME})
+install(FILES 
+  tools/emi_smooth_lowfreq.csv
+  tools/emi_smooth_profile.csv
+  tools/nozzle_identification.csv
+  tools/nozzles_closed.csv
+  tools/nozzles_medium.csv
+  tools/nozzles_open.csv
+  tools/nozzle_calibration.csv
+  tools/impeller_left.csv
+  tools/impeller_right.csv
+  tools/prop_nominal.csv
+  tools/prop_stress.csv
+  DESTINATION share/${PROJECT_NAME})

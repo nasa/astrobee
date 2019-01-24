@@ -36,6 +36,12 @@ catkin_package(
     gazebo_model_plugin_laser
     gazebo_model_plugin_flashlight_front
     gazebo_model_plugin_flashlight_aft
+    gazebo_model_plugin_llp_disk_monitor
+    gazebo_model_plugin_llp_cpu_monitor
+    gazebo_model_plugin mlp_disk_monitor
+    gazebo_model_plugin mlp_cpu_monitor
+    gazebo_model_plugin_speed_cam
+    gazebo_model_plugin_signal_lights
     gazebo_sensor_plugin_imu
     gazebo_sensor_plugin_nav_cam
     gazebo_sensor_plugin_dock_cam
@@ -59,7 +65,7 @@ catkin_package(
     ff_util
 )
 
-# Create a model plugin for the ground truth
+# Create reusable classes for models and plugins
 create_library(
   DIR
     src
@@ -89,14 +95,13 @@ create_library(
     astrobee_gazebo
   INC
     ${GAZEBO_INCLUDE_DIRS}
-    ${EIGEN3_INCLUDE_DIRS}
     ${catkin_INCLUDE_DIRS}
   DEPS
     ff_util
     ff_hw_msgs
 )
 
-# Create a model plugin for aerodynamic drag
+# Create a model plugin for the dock
 create_library(
   DIR
     src/gazebo_model_plugin_dock
@@ -108,7 +113,6 @@ create_library(
     astrobee_gazebo
   INC
     ${GAZEBO_INCLUDE_DIRS}
-    ${EIGEN3_INCLUDE_DIRS}
     ${catkin_INCLUDE_DIRS}
   DEPS
     ff_util
@@ -126,7 +130,6 @@ create_library(
     astrobee_gazebo
   INC
     ${GAZEBO_INCLUDE_DIRS}
-    ${EIGEN3_INCLUDE_DIRS}
     ${catkin_INCLUDE_DIRS}
   DEPS
     ff_util
@@ -144,13 +147,12 @@ create_library(
     astrobee_gazebo
   INC
     ${GAZEBO_INCLUDE_DIRS}
-    ${EIGEN3_INCLUDE_DIRS}
     ${catkin_INCLUDE_DIRS}
   DEPS
     ff_util
 )
 
-# Create a model plugin for the PMC
+# Create a model plugin for the propulsion system
 create_library(
   DIR
     src/gazebo_model_plugin_pmc
@@ -163,7 +165,6 @@ create_library(
     gnc_autocode
   INC
     ${GAZEBO_INCLUDE_DIRS}
-    ${EIGEN3_INCLUDE_DIRS}
     ${catkin_INCLUDE_DIRS}
   DEPS
     ff_util
@@ -181,7 +182,6 @@ create_library(
     astrobee_gazebo
   INC
     ${GAZEBO_INCLUDE_DIRS}
-    ${EIGEN3_INCLUDE_DIRS}
     ${catkin_INCLUDE_DIRS}
   DEPS
     ff_util
@@ -199,7 +199,6 @@ create_library(
     astrobee_gazebo
   INC
     ${GAZEBO_INCLUDE_DIRS}
-    ${EIGEN3_INCLUDE_DIRS}
     ${catkin_INCLUDE_DIRS}
   DEPS
     ff_util
@@ -218,7 +217,6 @@ create_library(
     astrobee_gazebo
   INC
     ${GAZEBO_INCLUDE_DIRS}
-    ${EIGEN3_INCLUDE_DIRS}
     ${catkin_INCLUDE_DIRS}
   DEPS
     ff_util
@@ -238,7 +236,114 @@ create_library(
     astrobee_gazebo
   INC
     ${GAZEBO_INCLUDE_DIRS}
-    ${EIGEN3_INCLUDE_DIRS}
+    ${catkin_INCLUDE_DIRS}
+  DEPS
+    ff_util
+    ff_hw_msgs
+)
+
+# Create a model plugin for the LLP CPU monitor
+create_library(
+  DIR
+    src/gazebo_model_plugin_llp_cpu_monitor
+  TARGET
+    gazebo_model_plugin_llp_cpu_monitor
+  LIBS
+    ${GAZEBO_LIBRARIES}
+    ${catkin_LIBRARIES}
+    astrobee_gazebo
+  INC
+    ${GAZEBO_INCLUDE_DIRS}
+    ${catkin_INCLUDE_DIRS}
+  DEPS
+    ff_util
+    ff_hw_msgs
+)
+
+# Create a model plugin for the LLP disk monitor
+create_library(
+  DIR
+    src/gazebo_model_plugin_llp_disk_monitor
+  TARGET
+    gazebo_model_plugin_llp_disk_monitor
+  LIBS
+    ${GAZEBO_LIBRARIES}
+    ${catkin_LIBRARIES}
+    astrobee_gazebo
+  INC
+    ${GAZEBO_INCLUDE_DIRS}
+    ${catkin_INCLUDE_DIRS}
+  DEPS
+    ff_util
+    ff_hw_msgs
+)
+
+# Create a model plugin for the MLP CPU monitor
+create_library(
+  DIR
+    src/gazebo_model_plugin_mlp_cpu_monitor
+  TARGET
+    gazebo_model_plugin_mlp_cpu_monitor
+  LIBS
+    ${GAZEBO_LIBRARIES}
+    ${catkin_LIBRARIES}
+    astrobee_gazebo
+  INC
+    ${GAZEBO_INCLUDE_DIRS}
+    ${catkin_INCLUDE_DIRS}
+  DEPS
+    ff_util
+    ff_hw_msgs
+)
+
+# Create a model plugin for the MMLP disk monitor
+create_library(
+  DIR
+    src/gazebo_model_plugin_mlp_disk_monitor
+  TARGET
+    gazebo_model_plugin_mlp_disk_monitor
+  LIBS
+    ${GAZEBO_LIBRARIES}
+    ${catkin_LIBRARIES}
+    astrobee_gazebo
+  INC
+    ${GAZEBO_INCLUDE_DIRS}
+    ${catkin_INCLUDE_DIRS}
+  DEPS
+    ff_util
+    ff_hw_msgs
+)
+
+# Create a model plugin for the speed camera
+create_library(
+  DIR
+    src/gazebo_model_plugin_speed_cam
+  TARGET
+    gazebo_model_plugin_speed_cam
+  LIBS
+    ${GAZEBO_LIBRARIES}
+    ${catkin_LIBRARIES}
+    astrobee_gazebo
+  INC
+    ${GAZEBO_INCLUDE_DIRS}
+    ${catkin_INCLUDE_DIRS}
+  DEPS
+    ff_util
+    ff_hw_msgs
+)
+
+# Create a model plugin for the signal lights
+create_library(
+  DIR
+    src/gazebo_model_plugin_signal_lights
+  TARGET
+    gazebo_model_plugin_signal_lights
+  LIBS
+    ${GAZEBO_LIBRARIES}
+    ${catkin_LIBRARIES}
+    astrobee_gazebo
+  INC
+    ${GAZEBO_INCLUDE_DIRS}
     ${catkin_INCLUDE_DIRS}
   DEPS
     ff_util
@@ -257,13 +362,12 @@ create_library(
     astrobee_gazebo
   INC
     ${GAZEBO_INCLUDE_DIRS}
-    ${EIGEN3_INCLUDE_DIRS}
     ${catkin_INCLUDE_DIRS}
   DEPS
     ff_util
 )
 
-# Create a sensor plugin for depth cameras
+# Create a sensor plugin for the perch camera
 create_library(
   DIR
     src/gazebo_sensor_plugin_perch_cam
@@ -275,13 +379,12 @@ create_library(
     astrobee_gazebo
   INC
     ${GAZEBO_INCLUDE_DIRS}
-    ${EIGEN3_INCLUDE_DIRS}
     ${catkin_INCLUDE_DIRS}
   DEPS
     ff_util
 )
 
-# Create a sensor plugin for depth cameras
+# Create a sensor plugin for the hazard camera
 create_library(
   DIR
     src/gazebo_sensor_plugin_haz_cam
@@ -293,7 +396,6 @@ create_library(
     astrobee_gazebo
   INC
     ${GAZEBO_INCLUDE_DIRS}
-    ${EIGEN3_INCLUDE_DIRS}
     ${catkin_INCLUDE_DIRS}
   DEPS
     ff_util
@@ -312,7 +414,6 @@ create_library(
     camera
   INC
     ${GAZEBO_INCLUDE_DIRS}
-    ${EIGEN3_INCLUDE_DIRS}
     ${catkin_INCLUDE_DIRS}
   DEPS
     ff_util
@@ -331,7 +432,6 @@ create_library(
     astrobee_gazebo
   INC
     ${GAZEBO_INCLUDE_DIRS}
-    ${EIGEN3_INCLUDE_DIRS}
     ${catkin_INCLUDE_DIRS}
   DEPS
     ff_util
@@ -377,7 +477,7 @@ create_library(
     ff_msgs
 )
 
-# Create a model plugin for AR localization
+# Create a model plugin for optical flow
 create_library(
   DIR
     src/gazebo_sensor_plugin_optical_flow
@@ -412,7 +512,7 @@ create_library(
 )
 
 
-# Create a model plugin for sparse mapping
+# Create a model plugin for the client gui
 create_library(
   DIR
     src/gazebo_system_plugin_client

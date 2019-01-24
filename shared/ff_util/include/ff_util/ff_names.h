@@ -37,6 +37,7 @@
 #define FRAME_NAME_WORLD                            "world"
 #define FRAME_NAME_BODY                             "body"
 #define FRAME_NAME_TRUTH                            "truth"
+#define FRAME_NAME_VIVE                             "vive"
 #define FRAME_NAME_HANDRAIL                         "handrail"
 #define FRAME_NAME_DOCK                             "dock/body"
 #define FRAME_NAME_DOCK_BERTH_1                     "dock/berth1"
@@ -94,6 +95,8 @@
 #define SUBSYSTEM_COMMUNICATIONS                    "comm"
 
 #define NODE_DDS_ROS_BRIDGE                         "dds_ros_bridge"
+
+#define SERVICE_COMMUNICATIONS_DDS_SET_TELEM_RATES  "comm/dds/set_telem_rate"
 
 #define TOPIC_COMMUNICATIONS_DDS_COMMAND            "comm/dds/command"
 #define TOPIC_COMMUNICATIONS_DDS_PLAN               "comm/dds/plan"
@@ -155,6 +158,7 @@
 #define NODE_DATA_BAGGER                            "data_bagger"
 
 #define TOPIC_MANAGEMENT_ACK                        "mgt/ack"
+#define TOPIC_MANAGEMENT_ACCESS_CONTROL_CMD         "mgt/access_control/cmd"
 #define TOPIC_MANAGEMENT_ACCESS_CONTROL_STATE       "mgt/access_control/state"
 #define TOPIC_MANAGEMENT_CPU_MONITOR_STATE          "mgt/cpu_monitor/state"
 #define TOPIC_MANAGEMENT_DISK_MONITOR_STATE         "mgt/disk_monitor/state"
@@ -240,23 +244,13 @@
 #define NODE_LOCALIZATION_MANAGER                   "localization_manager"
 #define NODE_AR_TAGS                                "ar_tags"
 #define NODE_MAPPED_LANDMARKS                       "ml"
+#define NODE_VIVE_LOCALIZATION                      "vive_localization"
 
 #define TOPIC_LOCALIZATION_POSE                     "loc/pose"
 #define TOPIC_LOCALIZATION_TWIST                    "loc/twist"
 #define TOPIC_LOCALIZATION_TRUTH                    "loc/truth/pose"
 #define TOPIC_LOCALIZATION_TRUTH_TWIST              "loc/truth/twist"
 #define TOPIC_LOCALIZATION_OVERHEAD_IMAGE           "loc/overhead"
-
-#define TOPIC_LOCALIZATION_MANAGER_STATUS           "loc/manager/status"
-
-#define ACTION_LOCALIZATION_MANAGER_SWITCH          "loc/manager/switch"
-#define ACTION_LOCALIZATION_MANAGER_RESET           "loc/manager/reset"
-
-#define PREFIX_LOCALIZATION_MANAGER_ML              "loc/manager/ml"
-#define PREFIX_LOCALIZATION_MANAGER_AR              "loc/manager/ar"
-#define PREFIX_LOCALIZATION_MANAGER_OF              "loc/manager/of"
-#define PREFIX_LOCALIZATION_MANAGER_HR              "loc/manager/hr"
-#define PREFIX_LOCALIZATION_MANAGER_PL              "loc/manager/pl"
 
 #define TOPIC_LOCALIZATION_ML_FEATURES              "loc/ml/features"
 #define TOPIC_LOCALIZATION_ML_REGISTRATION          "loc/ml/registration"
@@ -278,23 +272,12 @@
 #define SERVICE_LOCALIZATION_HR_ENABLE              "loc/hr/enable"
 #define SERVICE_LOCALIZATION_PL_ENABLE              "loc/pl/enable"
 
-// GROUND TRUTH SYSTEMS
+// Localization manager
 
-#define NODE_VIVE_SERVER                            "vive_server"
-#define NODE_VIVE_BRIDGE                            "vive_bridge"
-
-#define TOPIC_LOCALIZATION_VIVE_LIGHT               "loc/vive/light"
-#define TOPIC_LOCALIZATION_VIVE_IMU                 "loc/vive/imu"
-#define TOPIC_LOCALIZATION_VIVE_TRACKERS            "loc/vive/trackers"
-#define TOPIC_LOCALIZATION_VIVE_LIGHTHOUSES         "loc/vive/lighthouses"
-#define TOPIC_LOCALIZATION_VIVE_GENERAL             "loc/vive/general"
-#define TOPIC_LOCALIZATION_VIVE_IMU_MARKERS         "loc/vive/imu_markers"
-#define TOPIC_LOCALIZATION_VIVE_LIGHT_MARKERS       "loc/vive/light_markers"
-#define TOPIC_LOCALIZATION_VIVE_TRACKER_MARKERS     "loc/vive/tracker_markers"
-
-#define SERVICE_LOCALIZATION_VIVE_CONFIG            "loc/vive/config"
-
-#define SERVICE_LOCALIZATION_VIZUALEYEZ_CONFIG      "loc/visualeyez/config"
+#define TOPIC_LOCALIZATION_MANAGER_STATE            "loc/manager/state"
+#define ACTION_LOCALIZATION_MANAGER_LOCALIZATION    "loc/manager/localization"
+#define SERVICE_LOCALIZATION_MANAGER_SET_STATE      "loc/manager/set_state"
+#define SERVICE_LOCALIZATION_MANAGER_GET_PIPELINES  "loc/manager/get_pipelines"
 
 
 ///////////////
@@ -341,6 +324,7 @@
 #define NODE_DOCK_CAM                               "dock_cam"
 #define NODE_PERCH_CAM                              "perch_cam"
 #define NODE_HAZ_CAM                                "haz_cam"
+#define NODE_VIVE                                   "vive"
 
 #define TOPIC_HARDWARE_PMC_COMMAND                  "hw/pmc/command"
 #define TOPIC_HARDWARE_PMC_TELEMETRY                "hw/pmc/telemetry"
@@ -377,6 +361,11 @@
 #define TOPIC_HARDWARE_SPEED_CAM_SPEED              "hw/speed_cam/speed"
 #define TOPIC_HARDWARE_TEMP_MONITOR_PREFIX          "hw/temp_monitor/"
 #define TOPIC_HARDWARE_DOCK_STATE                   "hw/dock/state"
+#define TOPIC_HARDWARE_VIVE_BUTTON                  "hw/vive/buttons"
+#define TOPIC_HARDWARE_VIVE_IMU                     "hw/vive/imu"
+#define TOPIC_HARDWARE_VIVE_LIGHT                   "hw/vive/light"
+#define TOPIC_HARDWARE_VIVE_TRACKERS                "hw/vive/trackers"
+#define TOPIC_HARDWARE_VIVE_LIGHTHOUSES             "hw/vive/lighthouses"
 
 #define SERVICE_HARDWARE_EPS_RESET                  "hw/eps/reset"
 #define SERVICE_HARDWARE_EPS_CONF_LED_STATE         "hw/eps/configure_led_state"

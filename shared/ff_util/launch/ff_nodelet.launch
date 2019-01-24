@@ -20,55 +20,56 @@
   <arg name="class"/>                              <!-- Nodelet class        -->
   <arg name="name"/>                               <!-- Nodelet name         -->
 
+  <!-- Node filtering arguments -->
+  <arg name="default" default="true" />            <!-- Node runs by default -->
+  <arg name="spurn" default="" />                  <!-- Prevent node         -->
+  <arg name="nodes" default="" />                  <!-- Launch node group    -->
+  <arg name="extra" default="" />                  <!-- Inject extra nodse   -->
+  <arg name="debug" default="" />                  <!-- Debug select nodes   -->
+
   <!-- Optional arguments -->
   <arg name="manager" default="" />                <!-- Nodelet manager name -->
-  <arg name="debug" default="false" />             <!-- Run in debug mode    -->
   <arg name="arguments" default="" />              <!-- Arguments to nodelet -->
   <arg name="output" default="screen" />
-  <arg name="disable" default="false" />           <!-- Disable this nodelet -->
   <arg name="respawn" default="false" />           <!-- Respawn on failure   -->
   <arg name="required" default="true" />           <!-- Respawn on failure   -->
 
+  <!-- String search -->
+  <arg name="b_limited" value="$(eval arg('nodes') != '')" />
+  <arg name="b_spurn" value="$(eval arg('name') in arg('spurn').split(','))" />
+  <arg name="b_nodes" value="$(eval arg('name') in arg('nodes').split(','))" />
+  <arg name="b_extra" value="$(eval arg('name') in arg('extra').split(','))" />
+  <arg name="b_debug" value="$(eval arg('name') in arg('debug').split(','))" />
+  <arg name="enable" value="$(eval (not arg('b_spurn')) and (arg('b_extra')
+      or arg('b_nodes') or (not arg('b_limited') and arg('default'))))" />
+
   <!-- Don't do anything if the node is disabled -->
-  <group unless="$(arg disable)">
+  <group if="$(arg enable)">
 
-    <!-- Determine our launch prefix for debug mode -->
+    <!-- Debug mode only works on native, for now -->
     <arg name="prefix"
-         value="$(eval 'xterm -e gdb -ex run --args' if arg('debug') else '')" />
+      value="$(eval 'xterm -e gdb -ex run --args' if arg('b_debug') else '')" />
+    <env if="$(arg b_debug)" name="ROSCONSOLE_CONFIG_FILE"
+      value="$(find astrobee)/resources/debug.config"/>
 
-    <!-- Determine whether we are running in standalone mode -->
-    <arg name="standalone"
-         value="$(eval arg('manager')=='' or arg('debug'))" />
+    <!-- If we want a new manager draw a nodegraph, or want to debug the node -->
+    <arg name="standalone" value="$(eval optenv('ASTROBEE_NODEGRAPH','') != ''
+      or arg('manager')=='' or arg('b_debug'))" />
 
     <!-- Determine the nodelet manager name -->
     <arg name="nodelet_manager" value="$(anon manager)" if="$(arg standalone)"/>
     <arg name="nodelet_manager" value="$(arg manager)" unless="$(arg standalone)"/>
 
-    <!-- Regular mode -->
-    <group if="$(eval optenv('ASTROBEE_NODEGRAPH','')=='')">
+    <!-- Start a nodelet manager, if needed -->
+    <node if="$(arg standalone)"
+          pkg="nodelet" type="nodelet" name="$(arg nodelet_manager)"
+          args="manager" output="$(arg output)"/>
 
-      <!-- Start a nodelet manager, if needed -->
-      <node if="$(arg standalone)" name="$(arg nodelet_manager)"
-            pkg="nodelet" type="nodelet" args="manager"
-            output="$(arg output)" required="$(arg required)"
-            launch-prefix="$(arg prefix)"/>
-
-      <!-- Now inject the nodelet into the nodelet manager -->
-      <node pkg="nodelet" type="nodelet" name="$(arg name)"
-            args="load $(arg class) $(arg nodelet_manager) $(arg arguments)"
-            output="$(arg output)" unless="$(arg disable)" respawn="$(arg respawn)"/>
-
-    </group>
-
-    <!-- Allow a special standalone mode to print out legible node graph -->
-    <group unless="$(eval optenv('ASTROBEE_NODEGRAPH','')=='')">
-
-      <!-- Now inject the nodelet into the nodelet manager -->
-      <node pkg="nodelet" type="nodelet" name="$(arg name)"
-            args="standalone $(arg class) $(arg arguments)"
-            output="$(arg output)" unless="$(arg disable)" respawn="$(arg respawn)"/>
-
-    </group>
+    <!-- Now inject the nodelet into the nodelet manager -->
+    <node pkg="nodelet" type="nodelet" name="$(arg name)"
+          required="$(arg required)" respawn="$(arg respawn)"
+          args="load $(arg class) $(arg nodelet_manager) $(arg arguments)"
+          launch-prefix="$(arg prefix)" output="$(arg output)"/>
 
   </group>
 

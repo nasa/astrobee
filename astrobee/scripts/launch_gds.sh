@@ -28,14 +28,23 @@ else
   ld_arch="x86"
 fi
 
+# Default agent names
+AGENT1="Bsharp"
+AGENT2="Bumble"
+AGENT3="Honey"
+
 # We are not running in a known context, so look for script arguments
-if [ -z ${ASTROBEE_WORLD+x} ] ; then
-  if [ $# -ge 1 ] ; then
-    ASTROBEE_WORLD="$1"
-  else
-    echo "Error: set ASTROBEE_WORLD or provide an 'world' argument"
-    exit -1
-  fi
+if [ $# -ge 1 ] ; then
+  ASTROBEE_WORLD="$1"
+fi
+if [ $# -ge 2 ] ; then
+  AGENT1="$2"
+fi
+if [ $# -ge 3 ] ; then
+  AGENT2="$3"
+fi
+if [ $# -ge 4 ] ; then
+  AGENT3="$4"
 fi
 
 # Should be set by launch script
@@ -48,9 +57,9 @@ unset arch
 unset ld_arch
 
 if [ "$ASTROBEE_WORLD" == "iss" ]; then
-	exec ./AstroBeeWB -engineering -noZoomToClick -precision 3 > /dev/null 2>&1
+	exec ./AstroBeeWB -engineering -agent1 ${AGENT1} -agent2 ${AGENT2} -agent3 ${AGENT3} -noZoomToClick -precision 3 > /dev/null 2>&1
 elif [ "$ASTROBEE_WORLD" == "granite" ]; then
-  exec ./AstroBeeWB -engineering -agent1 Bsharp -agent2 Bumble -agent3 killer -noZoomToClick -precision 3 -world GraniteLab
+  exec ./AstroBeeWB -engineering -agent1 ${AGENT1} -agent2 ${AGENT2} -agent3 ${AGENT3} -noZoomToClick -precision 3 -world GraniteLab
 elif [ "$ASTROBEE_WORLD" == "mgtf" ]; then
-	exec ./AstroBeeWB -engineering -agent1 P4C -noZoomToClick -precision 3 -mgtfLab > /dev/null 2>&1
+	exec ./AstroBeeWB -engineering -agent1 ${AGENT1} -agent2 ${AGENT2} -agent3 ${AGENT3} -noZoomToClick -precision 3 -mgtfLab > /dev/null 2>&1
 fi

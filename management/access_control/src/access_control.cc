@@ -58,6 +58,11 @@ void AccessControl::Initialize(ros::NodeHandle *nh) {
   cmd_pub_ = nh->advertise<ff_msgs::CommandStamped>(TOPIC_COMMAND,
                                                     pub_queue_size_, false);
 
+  failed_cmd_pub_ = nh->advertise<ff_msgs::CommandStamped>(
+                                            TOPIC_MANAGEMENT_ACCESS_CONTROL_CMD,
+                                            pub_queue_size_,
+                                            true);
+
   state_.controller = "No Controller";
 
   // Publish initial state
@@ -102,6 +107,8 @@ void AccessControl::HandleCommand(ff_msgs::CommandStampedConstPtr const& cmd) {
     PublishAck(cmd->cmd_id,
                "Operator doesn't have control.",
                ff_msgs::AckCompletedStatus::BAD_SYNTAX);
+    // Need to publish the command so that it gets echoed to the ground
+    failed_cmd_pub_.publish(cmd);
   }
 }
 

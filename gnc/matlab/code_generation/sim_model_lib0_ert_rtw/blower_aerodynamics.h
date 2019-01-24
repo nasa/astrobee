@@ -5,7 +5,7 @@
 //
 // Model version                  : 1.1142
 // Simulink Coder version         : 8.11 (R2016b) 25-Aug-2016
-// C/C++ source code generated on : Wed Aug 22 07:27:02 2018
+// C/C++ source code generated on : Thu Dec  6 14:20:59 2018
 //
 // Target selection: ert.tlc
 // Embedded hardware selection: 32-bit Generic
@@ -105,8 +105,8 @@ void sim_mod_blower_aerodynamics(real32_T rtu_rotor_speed, const real32_T
   rtp_imp_zero_thrust_area_error, real32_T rtp_noise_on_flag, const real32_T
   rtp_noz_cd[6], const real32_T rtp_noz_cd_error[6], const real32_T
   rtp_imp_cdp_lookup[334], const real32_T rtp_imp_area_lookup[334], real32_T
-  rtp_imp_diameter, real32_T rtp_const_air_den, const real_T
-  rtp_noz_thrust_noise_feedback[6]);
+  rtp_imp_diameter, real32_T rtp_const_air_den, real32_T rtp_noz_thrust_sf,
+  const real_T rtp_noz_thrust_noise_feedback[6]);
 void blower_aerodynamics_d_Init(DW_blower_aerodynamics_sim__c_T *localDW,
   P_blower_aerodynamics_sim_m_m_T *localP, real_T rtp_noz_randn_seed);
 void sim_m_blower_aerodynamics_j(real32_T rtu_rotor_speed, const real32_T
@@ -116,8 +116,8 @@ void sim_m_blower_aerodynamics_j(real32_T rtu_rotor_speed, const real32_T
   rtp_imp_zero_thrust_area_error, real32_T rtp_noise_on_flag, const real32_T
   rtp_noz_cd[6], const real32_T rtp_noz_cd_error[6], const real32_T
   rtp_imp_cdp_lookup[334], const real32_T rtp_imp_area_lookup[334], real32_T
-  rtp_imp_diameter, real32_T rtp_const_air_den, const real_T
-  rtp_noz_thrust_noise_feedback[6]);
+  rtp_imp_diameter, real32_T rtp_const_air_den, real32_T rtp_noz_thrust_sf,
+  const real_T rtp_noz_thrust_noise_feedback[6]);
 
 #endif                                 // RTW_HEADER_blower_aerodynamics_h_
 

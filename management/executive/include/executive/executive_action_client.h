@@ -32,10 +32,11 @@ enum Action {
   DOCK,
   EXECUTE,
   IDLE,
+  LOCALIZATION,
   MOVE,
   PERCH,
+  REACQUIRE,
   STOP,
-  SWITCH,
   UNDOCK,
   UNPERCH
 };

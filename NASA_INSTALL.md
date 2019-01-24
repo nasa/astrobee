@@ -182,10 +182,11 @@ will copy all products into this directory.
 
 Once the installation has completed, copy the install directory to the robot.
 This script assumes that you are connected to the Astrobee network, as it uses
-rsync to copy the install directory to `~/armhf` on the two processors.
+rsync to copy the install directory to `~/armhf` on the two processors. It 
+takes the robot name as an argument. Here we use `p4d'.
 
     pushd $SOURCE_PATH
-    ./scripts/install_to_astrobee.sh $INSTALL_PATH
+    ./scripts/install_to_astrobee.sh $INSTALL_PATH p4d
     popd
 
 You are now ready to run the code. This code launches a visualization tool,

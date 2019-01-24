@@ -43,6 +43,15 @@ class OpStatePlanExec : public OpState {
   // commands to actions.
   OpState* HandleGuestScienceAck(ff_msgs::AckStampedConstPtr const& ack);
 
+  void AckCmd(std::string const& cmd_id,
+              uint8_t completed_status = ff_msgs::AckCompletedStatus::OK,
+              std::string const& message = "",
+              uint8_t status = ff_msgs::AckStatus::COMPLETED);
+
+  void AckPlanCmdFailed(uint8_t completed_status, std::string const& message);
+
+  bool PausePlan(ff_msgs::CommandStampedPtr const& cmd);
+
  protected:
   explicit OpStatePlanExec(std::string const& name, unsigned char id) :
     OpState(name, id), waiting_(false), run_plan_cmd_id_("") {}
@@ -51,8 +60,6 @@ class OpStatePlanExec : public OpState {
   // allow creation only by repo
   friend class OpStateRepo;
 
-  OpState* HandleCommandComplete(bool successful, std::string const& err_msg,
-                                 uint8_t status);
   OpState* HandleActionComplete(
                               ff_util::FreeFlyerActionState::Enum const& state,
                               Action const& action,

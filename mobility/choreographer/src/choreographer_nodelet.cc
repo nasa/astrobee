@@ -33,7 +33,7 @@
 
 // Generic messages
 #include <nav_msgs/Path.h>
-#include <geometry_msgs/Inertia.h>
+#include <geometry_msgs/InertiaStamped.h>
 
 // Hardware messages
 #include <ff_hw_msgs/PmcState.h>
@@ -128,7 +128,7 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
         geometry_msgs::PoseStamped pose;
         if (!GetRobotPose(pose))
           return Result(RESPONSE::CANNOT_QUERY_ROBOT_POSE);
-        // If the robot with already on the target pose then no bootstrap needed
+        // If the robot is already on the target pose then no bootstrap needed
         if (ff_util::FlightUtil::WithinTolerance(segment_.front().pose,
           pose.pose, cfg_.Get<double>("tolerance_pos"),
             cfg_.Get<double>("tolerance_att"))) {
@@ -139,6 +139,9 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
             if (result != Validator::SUCCESS)
               return ValidateResult(result);
           }
+          // Take care of the special case where we have to prep!
+          if (FlightMode())
+            return STATE::PREPARING;
           // If we send control directly
           if (!Control(NOMINAL, segment_))
             return Result(RESPONSE::CONTROL_FAILED);
@@ -176,6 +179,9 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
           if (result != Validator::SUCCESS)
             return ValidateResult(result);
         }
+        // Take care of the case where we have to prep!
+        if (FlightMode())
+          return STATE::PREPARING;
         // If we send control directly
         if (!Control(NOMINAL, segment_))
           return Result(RESPONSE::CONTROL_FAILED);
@@ -266,7 +272,6 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
     fsm_.Add(STATE::REPLANNING,
       PLAN_FAILED | GOAL_CANCEL,
       [this](FSM::Event const& event) -> FSM::State {
-        Control(STOP);
         if (event == GOAL_CANCEL)
           return Result(RESPONSE::CANCELLED);
         return Result(RESPONSE::REPLAN_FAILED);
@@ -275,7 +280,6 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
     fsm_.Add(STATE::CONTROLLING,
       CONTROL_FAILED | GOAL_CANCEL,
       [this](FSM::Event const& event) -> FSM::State {
-        Control(STOP);
         if (event == GOAL_CANCEL)
           return Result(RESPONSE::CANCELLED);
         return Result(RESPONSE::CONTROL_FAILED);
@@ -311,10 +315,8 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
           for (it = segment_.rbegin(); it != segment_.rend(); ++it)
             if (it->when < handover) break;
           // Check that the handover time is after the current time
-          if (it == segment_.rend() || it->when < ros::Time::now()) {
-            Control(STOP);
+          if (it == segment_.rend() || it->when < ros::Time::now())
             return Result(RESPONSE::REPLAN_NOT_ENOUGH_TIME);
-          }
           // Assemble a simple planning request
           std::vector<geometry_msgs::PoseStamped> states;
           geometry_msgs::PoseStamped pose;
@@ -330,9 +332,6 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
             return Result(RESPONSE::PLAN_FAILED);
           return STATE::REPLANNING;
         }
-        // Always stop for safety
-        if (!Control(STOP))
-          return Result(RESPONSE::CONTROL_FAILED);
         // There's a hazard
         return Result(RESPONSE::OBSTACLE_DETECTED);
       });
@@ -452,7 +451,7 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
     }
 
     // Get the default inertia parameters, it will be published later
-    geometry_msgs::Inertia msg;
+    geometry_msgs::InertiaStamped msg;
     if (!ff_util::FlightUtil::GetInertiaConfig(msg)) {
       AssertFault(ff_util::INITIALIZATION_FAILED,
                   "Problem with default inertia");
@@ -489,7 +488,7 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
 
     // Publish inertia once on start to ensure GNC is bootstrapped
     // correctly even if executive is not loaded.
-    pub_inertia_ = nh->advertise<geometry_msgs::Inertia>(
+    pub_inertia_ = nh->advertise<geometry_msgs::InertiaStamped>(
       TOPIC_MOBILITY_INERTIA, 1, true);
 
     // Subscribe to collisions from the sentinel node
@@ -724,6 +723,7 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
       result.fsm_result = "Angular velocity tolerance violated";
       client_c_.CancelGoal();
       break;
+    // Failures before control has been started
     case RESPONSE::VIOLATES_MINIMUM_FREQUENCY:
       result.fsm_result = "Could not resample at 10Hz to do zone checking";
       break;
@@ -782,7 +782,7 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
       break;
     }
     // If we get here then we are in a valid action state, so we will need
-    // to produce a meanngful result for the callee.
+    // to produce a meaningful result for the callee.
     result.response = response;
     result.segment = segment_;
     result.flight_mode = flight_mode_;
@@ -1032,6 +1032,12 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
 
   // Called when the sentinel forecasts an upcoming collision
   void PmcStateCallback(ff_hw_msgs::PmcState::ConstPtr const& msg) {
+    // If prepping, send a state update to prevent execute and move
+    // actions from timing out on the client side
+    if (fsm_.GetState() == STATE::PREPPING ||
+        fsm_.GetState() == STATE::PREPARING)
+      server_.SendFeedback(feedback_);
+    // Check if the PMCs are ready
     bool ready = true;
     for (size_t i = 0; i < msg->states.size() && ready; i++)
       ready &= (msg->states[i] == ff_hw_msgs::PmcState::READY);
@@ -1076,7 +1082,7 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
       goal.command = ff_msgs::ControlGoal::NOMINAL;
       goal.segment = segment;
       // If enable immediate is turned on, then shift the setpoint timestamps
-      //  so that the first setpoint conincides with the current time.
+      //  so that the first setpoint coincides with the current time.
       ros::Time reftime = goal.segment.front().when;
       if (cfg_.Get<bool>("enable_immediate"))
         reftime = ros::Time::now();

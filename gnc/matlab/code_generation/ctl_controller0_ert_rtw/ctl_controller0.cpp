@@ -5,7 +5,7 @@
 //
 // Model version                  : 1.1142
 // Simulink Coder version         : 8.11 (R2016b) 25-Aug-2016
-// C/C++ source code generated on : Wed Aug 22 07:25:33 2018
+// C/C++ source code generated on : Thu Dec  6 14:19:51 2018
 //
 // Target selection: ert.tlc
 // Embedded hardware selection: 32-bit Generic
@@ -1645,8 +1645,8 @@ void ctl_controller0_step(RT_MODEL_ctl_controller0_T *const ctl_controller0_M,
   //   RelationalOperator: '<S8>/Compare'
 
   rtb_LogicalOperator2 = ((rtb_Switch12 == ctl_controller0_P->ctl_stopping_mode)
-    && ((rtb_SumofElements < ctl_controller0_P->ctl_stopping_vel_thresh) &&
-        (rtb_SumofElements1 < ctl_controller0_P->ctl_stopping_omega_thresh)));
+    && ((rtb_SumofElements < ctl_controller0_P->tun_ctl_stopping_vel_thresh) &&
+        (rtb_SumofElements1 < ctl_controller0_P->tun_ctl_stopping_omega_thresh)));
 
   // Trigonometry: '<S2>/Trigonometric Function'
   if (rtb_Product_b[3] > 1.0F) {

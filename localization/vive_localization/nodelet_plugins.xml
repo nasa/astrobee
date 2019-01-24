@@ -1,0 +1,7 @@
+<library path="lib/libvive_localization">
+  <class name="vive_localization/ViveLocalizationNodelet"
+         type="vive_localization::ViveLocalizationNodelet"
+         base_class_type="nodelet::Nodelet">
+		<description>Nodelet for vive_localization::ViveLocalizationNodelet</description>
+  </class>
+</library>

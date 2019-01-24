@@ -379,8 +379,8 @@ void SparseMap::Load(const std::string & protobuf_file, bool localization) {
   close(input_fd);
 }
 
-void SparseMap::SetDetectorParams(int min_features, int max_features, int threshold, int retries) {
-  detector_.Reset(detector_.GetDetectorName(), min_features, max_features, threshold, retries);
+void SparseMap::SetDetectorParams(int min_features, int max_features, int retries) {
+  detector_.Reset(detector_.GetDetectorName(), min_features, max_features, retries);
 }
 
 void SparseMap::Save(const std::string & protobuf_file) const {
