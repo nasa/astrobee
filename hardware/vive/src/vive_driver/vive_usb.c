@@ -399,13 +399,19 @@ uint8_t vive_usb_init(driver_t * drv) {
   // Initialize libusb
   int ret = libusb_init(&drv->usb);
   if (ret)
+  {
+    printf("Error: the libusb_init function returned %d which is not zero \n", ret);
     return 0;
+  }
 
   // Get a list of devices
   libusb_device** devs;
   ret = libusb_get_device_list(drv->usb, &devs);
   if (ret < 0)
+  {
+    printf("Error: the libusb_get_device_list function returned %d which is not zero \n", ret);
     return 0;
+  }
 
   // Iterate over the devices looking for vive products
   struct libusb_device_descriptor desc;
@@ -438,7 +444,14 @@ uint8_t vive_usb_init(driver_t * drv) {
     // Try and open the device
     ret = libusb_open(dev, &tracker->udev);
     if (ret || !tracker->udev)
+    {
+      if (ret == -3)
+        printf("Error: the libusb_open function does not have correct permissions; check your rules.d folder \n");
+      else
+        printf("Error: the libusb_open function failed due to an error unrelated to permissions; return code %d \n", ret);
       goto fail;
+    }
+
 
     // Set to auto-detatch
     libusb_set_auto_detach_kernel_driver(tracker->udev, 1);

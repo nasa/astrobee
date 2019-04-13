@@ -31,8 +31,6 @@
   <arg name="manager" default="" />                <!-- Nodelet manager name -->
   <arg name="arguments" default="" />              <!-- Arguments to nodelet -->
   <arg name="output" default="screen" />
-  <arg name="respawn" default="false" />           <!-- Respawn on failure   -->
-  <arg name="required" default="true" />           <!-- Respawn on failure   -->
 
   <!-- String search -->
   <arg name="b_limited" value="$(eval arg('nodes') != '')" />
@@ -48,7 +46,7 @@
 
     <!-- Debug mode only works on native, for now -->
     <arg name="prefix"
-      value="$(eval 'xterm -e gdb -ex run --args' if arg('b_debug') else '')" />
+      value="$(eval 'x-terminal-emulator -e gdb -ex run --args' if arg('b_debug') else '')" />
     <env if="$(arg b_debug)" name="ROSCONSOLE_CONFIG_FILE"
       value="$(find astrobee)/resources/debug.config"/>
 
@@ -57,19 +55,20 @@
       or arg('manager')=='' or arg('b_debug'))" />
 
     <!-- Determine the nodelet manager name -->
-    <arg name="nodelet_manager" value="$(anon manager)" if="$(arg standalone)"/>
+    <arg name="nodelet_manager" value="$(arg name)_$(anon manager)"
+      if="$(arg standalone)"/>
     <arg name="nodelet_manager" value="$(arg manager)" unless="$(arg standalone)"/>
 
     <!-- Start a nodelet manager, if needed -->
     <node if="$(arg standalone)"
           pkg="nodelet" type="nodelet" name="$(arg nodelet_manager)"
-          args="manager" output="$(arg output)"/>
+          args="manager" launch-prefix="$(arg prefix)" output="$(arg output)"/>
 
     <!-- Now inject the nodelet into the nodelet manager -->
     <node pkg="nodelet" type="nodelet" name="$(arg name)"
-          required="$(arg required)" respawn="$(arg respawn)"
+          required="false" respawn="false"
           args="load $(arg class) $(arg nodelet_manager) $(arg arguments)"
-          launch-prefix="$(arg prefix)" output="$(arg output)"/>
+          output="$(arg output)"/>
 
   </group>
 

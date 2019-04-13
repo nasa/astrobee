@@ -125,7 +125,15 @@ void SendTransforms(
 // Convert a ceres to an Eigen transform
 Eigen::Affine3d CeresToEigen(double ceres[6], bool invert = false);
 
+// Convert a Euler angle to a Quaternion
+Eigen::Quaterniond toQuaternion(double roll, double pitch, double yaw);
+
 // CONFIG RELATED CALLS
+
+// Read Vive trajectory modification parameter
+bool ReadModificationVector(config_reader::ConfigReader *config,
+  Eigen::Vector3d & modification_vector,
+  Eigen::Quaterniond & modification_quaternion);
 
 // Read lighthouse data
 bool ReadLighthouseConfig(config_reader::ConfigReader *config,

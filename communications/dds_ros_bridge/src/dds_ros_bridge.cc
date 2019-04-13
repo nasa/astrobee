@@ -779,6 +779,26 @@ bool DdsRosBridge::ReadParams() {
     components_++;
   }
 
+  // rapid_compressed_file_data_ros_compressed_file_data => RCFDRCFD
+  if (!config_params_.GetBool("use_RCFDRCFD", &use)) {
+    ROS_FATAL("DDS Bridge: use RCFDRCFD not specified!");
+    return false;
+  }
+
+  if (use) {
+    if (!config_params_.GetStr("sub_topic_RCFDRCFD", &sub_topic)) {
+      ROS_FATAL("DDS Bridge: sub topic RCFDRCFD not specified!");
+      return false;
+    }
+
+    BuildCompressedFileToCompressedFile(sub_topic,
+                                        TOPIC_COMMUNICATIONS_DDS_DATA,
+                                        "RCFDRCFD");
+    components_++;
+  } else {
+    ROS_WARN("Not bridging data to disk compressed files!");
+  }
+
   // rapid_compressed_file_plan_ros_compressed_file_plan => RCFPRCFP
   if (!config_params_.GetBool("use_RCFPRCFP", &use)) {
     ROS_FATAL("DDS Bridge: use RCFPRCFP not specified!");
@@ -796,7 +816,7 @@ bool DdsRosBridge::ReadParams() {
                                         "RCFPRCFP");
     components_++;
   } else {
-    ROS_INFO("Not bridging plan compressed files");
+    ROS_WARN("Not bridging plan compressed files!");
   }
 
   // rapid_compressed_file_zones_ros_compressed_file_zones => RCFZRCFZ
@@ -816,7 +836,7 @@ bool DdsRosBridge::ReadParams() {
                                         "RCFZRCFZ");
     components_++;
   } else {
-    ROS_INFO("Not bridging zone compressed files!");
+    ROS_WARN("Not bridging zone compressed files!");
   }
 
   // ros_access_control_rapid_state => RACS

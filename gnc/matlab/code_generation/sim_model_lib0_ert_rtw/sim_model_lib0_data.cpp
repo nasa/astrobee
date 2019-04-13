@@ -5,7 +5,7 @@
 //
 // Model version                  : 1.1142
 // Simulink Coder version         : 8.11 (R2016b) 25-Aug-2016
-// C/C++ source code generated on : Thu Dec  6 14:20:59 2018
+// C/C++ source code generated on : Thu Mar  7 13:23:50 2019
 //
 // Target selection: ert.tlc
 // Embedded hardware selection: 32-bit Generic
@@ -15086,7 +15086,7 @@ P_sim_model_lib0_T sim_model_lib0_P = {
   { 0.0F, 0.0F, 9.80665F },
   1.25F,
   1.25F,
-  1.0F,
+  0.0F,
   830.007F,
   829.326F,
   3000.0F,

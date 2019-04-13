@@ -5,7 +5,7 @@
 //
 // Model version                  : 1.1142
 // Simulink Coder version         : 8.11 (R2016b) 25-Aug-2016
-// C/C++ source code generated on : Thu Dec  6 14:19:51 2018
+// C/C++ source code generated on : Thu Mar  7 13:22:34 2019
 //
 // Target selection: ert.tlc
 // Embedded hardware selection: 32-bit Generic
@@ -101,6 +101,9 @@ P_ctl_controller0_T ctl_controller0_P = {
 
   1U,                                  // Mask Parameter: CompareToConstant_const_f
                                        //  Referenced by: '<S55>/Constant'
+
+  0U,                                  // Mask Parameter: TappedDelay_vinit
+                                       //  Referenced by: '<S2>/Tapped Delay'
 
 
   //  Expression: zeros(9,1)

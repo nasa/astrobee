@@ -78,9 +78,9 @@ class GazeboSensorPluginNavCam : public FreeFlyerSensorPlugin {
     }
     bool dos = true;
     if (!config.GetBool("disable_cameras_on_speedup", &dos))
-      ROS_FATAL("Could not read the drawing_width parameter.");
+      ROS_FATAL("Could not read the disable_cameras_on_speedup parameter.");
     if (!config.GetReal("nav_cam_rate", &rate_))
-      ROS_FATAL("Could not read the drawing_width parameter.");
+      ROS_FATAL("Could not read the nav_cam_rate parameter.");
     config.Close();
 
     // If we have a sped up simulation and we need to disable the camera
@@ -118,10 +118,9 @@ class GazeboSensorPluginNavCam : public FreeFlyerSensorPlugin {
     msg_.width = sensor_->ImageWidth();
     msg_.step = msg_.width;
     msg_.data.resize(msg_.step * msg_.height);
-    std::copy(
-      reinterpret_cast<const uint8_t*>(sensor_->ImageData()),
-      reinterpret_cast<const uint8_t*>(sensor_->ImageData())
-        + msg_.step * msg_.height, msg_.data.begin());
+    const uint8_t* data_start = reinterpret_cast<const uint8_t*>(sensor_->ImageData());
+    std::copy(data_start, data_start + msg_.step * msg_.height,
+              msg_.data.begin());
     pub_img_.publish(msg_);
   }
 

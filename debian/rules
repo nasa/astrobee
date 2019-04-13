@@ -5,7 +5,7 @@
 
 
 # see FEATURE AREAS in dpkg-buildflags(1)
-export DEB_BUILD_OPTIONS = parallel=`nproc`
+#export DEB_BUILD_OPTIONS = parallel=`nproc`
 #export DEB_BUILD_MAINT_OPTIONS = hardening=+all
 
 # see ENVIRONMENT in dpkg-buildflags(1)
@@ -30,7 +30,7 @@ build-indep: ;
 	mkdir -p build
 
 %:
-	dh $@ --buildsystem=cmake --parallel --builddirectory=build/
+	dh $@ --buildsystem=cmake --builddirectory=build/ --parallel
 
 # we always need release, otherwise it is too slow
 override_dh_auto_configure:

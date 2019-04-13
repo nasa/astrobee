@@ -18,8 +18,11 @@
     board_model: Model of the target Processor
     subsystem: FF Subsystem Responsible for delivering the code
     source: Creator of the software
+    affects: List of components affected by a modification
+            (should match a JIRA FSW components list)
+    tests: List of tests to run to validate an update
     note: Some additional information
-- Impeller firmware:
+- Impeller motor firmware:
     type: COTS firmware
     board_name: Impeller Motor Controller
     board_model: Maxon ESCON
@@ -30,8 +33,9 @@
     safety_critical: yes
     CM: target git Avionics submodule
     form: binary (updated before assembly?)
+    affects: Propulsion
     note: configured by Astrobee Propulsion?
-- PerchArm Servo firmware:
+- PerchArm servo firmware:
     type: COTS firmware
     board_name: PerchArm Servo Motor
     board_model: unkwown
@@ -41,8 +45,9 @@
     upgrade_path: ground harness
     safety_critical: yes
     CM: target git Avionics submodule
-    form: binary (updated before assembly?)
-    note: configured by Astrobee PerchArm?
+    form: binary (has to be updated before final assembly)
+    affects: Perching
+    note: currently not configurable from the firmware, but should be possible
 - Dock retractable magnet firmware:
     type: COTS firmware
     board_name: Dock Linear Actuator
@@ -54,6 +59,7 @@
     safety_critical: yes
     CM: none, come with hardware
     form: binary (do not deliver)
+    affects: Docking
     note: none
 - USB Cameras firmware (TIS):
     type: COTS firmware
@@ -61,13 +67,14 @@
     board_model: proprietary
     count: 2
     subsystem: Avionics
-    source: Localozation
+    source: Localization
     upgrade_path: USB from MLP
     safety_critical: no
     CM: git from TheImagingSource
     form: binary (updated before assembly)
+    affects: Localization
     note: none
-- Nozzle Servo firmware:
+- Nozzle servo firmware:
     type: COTS firmware
     board_name: Nozzles Servo Motor
     board_model: unknown
@@ -75,10 +82,11 @@
     count: 12
     configuration: none
     source: vendor
-    upgrade_path: unknown
+    upgrade_path: none
     safety_critical: no
-    CM: target git Avionics submodule
+    CM: none, come with hardware
     form: binary (do not deliver)
+    affects: Propulsion
     note: none
 - Dock control firmware:
     type: FF firmware
@@ -86,83 +94,81 @@
     board_model: PIC32MX795F512H
     count: 1
     subsystem: Avionics
-    source: Astrobee Avionics
+    source: Astrobee FSW
     upgrade_path: Dock Processor via I2C
     safety_critical: no
-    CM: FSW git repo (Avionics submodule)
-    form: FSW firmware build
-    note: does not exist yet
+    CM: freeflyer_avionics git repo
+    form: freeflyer-avionics Debian package
+    affects: Docking
+    note: none
 - EPS firmware:
     type: FF firmware
     board_name: EPS
     board_model: PIC32MX795F512H
     count: 1
     subsystem: Avionics
-    source: Astrobee Avionics
+    source: Astrobee FSW
     upgrade_path: LLP via I2C
     safety_critical: no
-    CM: FSW git repo (Avionics submodule)
-    form: FSW firmware build
-    note: none
+    CM: freeflyer_avionics git repo
+    form: freeflyer-avionics Debian package
 - PMC firmware:
     type: FF firmware
     board_name: PMC
     board_model: PIC32MX795F512H
     count: 2
     subsystem: Propulsion
-    source: Astrobee Propulsion
+    source: Astrobee FSW
     upgrade_path: LLP via I2C
     safety_critical: no
-    CM: FSW git repo (Avionics submodule)
-    form: FSW firmware build
-    note: need to merge svn into git
+    CM: freeflyer_avionics git repo
+    form: freeflyer-avionics Debian package
 - TerraRanger firmware:
     type: FF firmware
     board_name: TerraRanger Duo
     board_model: proprietary
     count: 1
     subsystem: Avionics
-    source: Astrobee Avionics
+    source: Astrobee FSW
     upgrade_path: ground harness only
     safety_critical: no
-    CM: to be defined
+    CM: vendor
     form: unknown
-    note: verify if under CM yet
+    note: need to create a cache on volar?
 - Speedcam PX4flow firmware:
     type: FF firmware
     board_name: Pixhawk PX4flow
     board_model: ARM Cortex M4
     count: 1
     subsystem: Avionics
-    source: Astrobee Avionics
+    source: Astrobee FSW
     upgrade_path: LLP via USB
     safety_critical: no
-    CM: to be defined
-    form: unknown
-    note: verify if under CM yet
+    CM: freeflyer_avionics git repo
+    form: freeflyer-avionics Debian package
 - Signal lights firmware:
     type: FF firmware
     board_name: Signal Lights
     board_model: PIC32MX795F512H
     count: 2
     subsystem: Propulsion
-    source: Astrobee Propulsion
+    source: Astrobee FSW
     upgrade_path: LLP via I2C
     safety_critical: no
-    CM: FSW git repo (Avionis submodule)
-    form: FSW firmware build
-    note: does not exist yet
-- PerchArm firmware:
+    CM: freeflyer_avionics git repo
+    form: freeflyer-avionics Debian package
+    note: none
+- PerchingArm firmware:
     type: FF firmware
     board_name: PerchArm
     board_model: dsPIC33EP512MC806
     count: 1
     subsystem: PerchArm
-    source: Astrobee PerchArm
+    source: Astrobee FSW
     upgrade_path: MLP via Serial over USB
     safety_critical: no
-    CM: FSW git repo
-    form: FSW firmware build
+    CM: freeflyer_avionics git repo
+    form: freeflyer-avionics Debian package
 - Wandboard Kernel:
     type: Linux Kernel
     board_name:
@@ -203,7 +209,7 @@
     source: Ubuntu
     upgrade_path: fastboot (Inforce) or recovery (Wandboard)
     safety_critical: no
-    CM: FSW git repo
+    CM: astrobee.ndc PPA server
     form: instructions and script
 - Android Base OS:
     type: Android OS
@@ -211,10 +217,10 @@
     board_model: Inforce
     count: 1
     subsystem: FSW
-    source: Google
+    source: Inforce
     upgrade_path: fastboot using USB from LLP
     safety_critical: no
-    CM: FSW git repo
+    CM: volar images repository
     form: build instructions
 - FSW Linux Dependencies:
     type: Debian packages
@@ -230,7 +236,7 @@
     source: open source + Astrobee patches
     upgrade_path: apt using Ethernet from Dock
     safety_critical: no
-    CM: FSW git repo
+    CM: freeflyer git repo (patches) and astrobee.ndc PPA server (build)
     form: instructions and script
 - FSW for Linux:
     type: FSW
@@ -247,7 +253,7 @@
     upgrade_path: apt using Ethernet from Dock
     safety_critical: no
     CM: FSW git repo
-    form: FSW build
+    form: freeflyer-dev and freeflyer-config Debian packages
 - FSW for Android:
     type: FSW
     board_name: HLP Processor
@@ -257,9 +263,9 @@
     source: Astrobee FSW
     upgrade_path: adb over Ethernet from MLP
     safety_critical: no
-    CM: FSW git repo
-    form: Android Studio build or binary?
-- dock software repository:
+    CM: freeflyer_android git repo
+    form: build scripts and archive on volar
+- dock software update repository:
     type: Debian packages
     board_name: Dock Processor
     board_model: Wandboard
@@ -268,5 +274,5 @@
     source: various
     upgrade_path: rsync over Ethernet from ground
     safety_critical: no
-    CM: only build products
+    CM: astrobee.ndc PPA server
     form: rsync with scripts from ground

@@ -106,7 +106,7 @@
         <arg name="drivers" value="$(arg drivers)"/>
         <arg name="spurn" value="$(arg spurn)" />      <!-- Prevent node         -->
         <arg name="nodes" value="$(arg nodes)" />      <!-- Launch node group    -->
-        <arg name="extra" value="$(arg extra)" />      <!-- Inject extra nodse   -->
+        <arg name="extra" value="$(arg extra)" />      <!-- Inject extra nodes   -->
         <arg name="debug" value="$(arg debug)" />      <!-- Debug node group     -->
         <arg name="output" value="$(arg output)" />
       </include>
@@ -145,7 +145,7 @@
         <arg name="dds" value="$(arg dds)"/>
         <arg name="spurn" value="$(arg spurn)" />      <!-- Prevent node         -->
         <arg name="nodes" value="$(arg nodes)" />      <!-- Launch node group    -->
-        <arg name="extra" value="$(arg extra)" />      <!-- Inject extra nodse   -->
+        <arg name="extra" value="$(arg extra)" />      <!-- Inject extra nodes   -->
         <arg name="debug" value="$(arg debug)" />      <!-- Debug node group     -->
         <arg name="output" value="$(arg output)" />
       </include>

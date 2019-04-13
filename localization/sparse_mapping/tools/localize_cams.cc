@@ -1,14 +1,14 @@
 /* Copyright (c) 2017, United States Government, as represented by the
  * Administrator of the National Aeronautics and Space Administration.
- * 
+ *
  * All rights reserved.
- * 
+ *
  * The Astrobee platform is licensed under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -58,25 +58,15 @@ DEFINE_string(source_map, "",
               "and compare with locations from this map.");
 
 // These are synched up with localization.config. Note that
-// -num_similar and -ransac_inlier_tolerance need not be defined as
-// flags here, since they already exist in sparse_map.cc.
-DEFINE_int32(ransac_iterations, 100,
-             "Number of iterations of RANSAC.");
-DEFINE_int32(min_features, 200,
-             "Minimum number of features to be computed by the feature detector.");
-DEFINE_int32(max_features, 800,
-             "Maximum number of features to be computed by the feature detector.");
-DEFINE_int32(detection_retries, 2,
-             "The number of attempts to acquire the desired number of features with the detector.");
-
+// -num_similar and -ransac_inlier_tolerance and
+// -num_ransac_iterations need not be defined as flags here, since
+// they already exist in sparse_map.cc.
 int main(int argc, char** argv) {
   common::InitFreeFlyerApplication(&argc, &argv);
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
   sparse_mapping::SparseMap reference(FLAGS_reference_map);
-  reference.SetRansacIterations(FLAGS_ransac_iterations);
-  reference.SetDetectorParams(FLAGS_min_features, FLAGS_max_features,
-                              FLAGS_detection_retries);
+  std::string detector = reference.GetDetectorName();
 
   Eigen::IOFormat CSVFormat(3, 0, ", ", ",   ");
 

@@ -1,0 +1,11 @@
+{
+  "type" : "DataConfigurationFile",
+  "name" : "navcam_intrinsics",
+  "topicSettings": [ 
+    {
+      "topicName" : "/hw/cam_nav",
+      "downlinkOption" : "immediate",
+      "frequency" : -1
+    }
+  ]
+}

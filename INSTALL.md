@@ -22,25 +22,25 @@ support running Astrobee Robot Software on 32-bit systems.*
 
 At this point you need to decide where you'd like to put the source code
 (`SOURCE_PATH`) on your machine:
-```
+
     export SOURCE_PATH=$HOME/freeflyer
-```
+
 First, clone the flight software repository:
-```
+
     git clone https://github.com/nasa/astrobee.git $SOURCE_PATH
-```
+
 
 If you are planning to work on guest science stuff, you will also need the
 `astrobee_android` repository. You should checkout the repository in the same
 directory you checked out the source code in:
-```
+
     export ANDROID_PATH="${SOURCE_PATH}_android"
-```
+
 
 Clone the android repository:
-```
+
     git clone https://github.com/nasa/astrobee_android.git $ANDROID_PATH
-```
+
 
 ### Dependencies
 
@@ -71,9 +71,6 @@ Next, install all required dependencies:
     E: Unable to locate package rti-dev
     E: Unable to locate package libsoracore-dev
     E: Unable to locate package libmiro-dev
-
-### Have System Monitor Ignore DDS ROS Bridge
-Since external users do not have access to our internal dds repository, they will not be running or compiling our DDS ROS Bridge. The system monitor needs to be told that the bridge isn't running so that it doesn't assert bridge heartbeat missed faults. In order to do this, please open $SOURCE_PATH/astrobee/config/robots/sim.config and add "dds_ros_bridge" to the nodes_not_running list the end of the file. If an external user doesn't do this, they will see a "Never received heartbeat from dds_ros_bridge" error which will not cause any issues but can be slightly annoying.
 
 ## Configuring the build
 
@@ -127,30 +124,5 @@ rebuilt, and not the entire code base.
 If you configured your virtual machine with more than the baseline resources,
 you can adjust the number of threads (eg. -j4) to speed up the build.
 
-## Running a simulation
-
-You will need to first setup your environment, so that ROS knows about the new
-packages provided by Astrobee flight software:
-
-    pushd $BUILD_PATH
-    source devel/setup.bash
-    popd
-
-After this command has completed, you should be able to run a simulator from any
-directory in your Linux filesystem. So, for example, to start a simulation of a
-single Astrobee in the ISS, run the following:
-
-    roslaunch astrobee sim.launch dds:=false robot:=sim_pub rviz:=true
-
-- Note 1: The very first time Gazebo starts, it could take a long time because
-  it loads some large models
-- Note 2: To run the simulation with the Gazebo rendering, you can add the flag
-  `sviz:=true`. This allow to see the ISS module used for the simulation,
-  however this is demanding more resources on your computer.
-
-This command tells ROS to look for the `sim.launch` file provided by the
-`astrobee` package, and use roslaunch to run it. Internally, ROS maintains a
-cache of information about package locations, libraries and executables. If you
-find that the above command doesn't work, try rebuilding the cache:
-
-    rospack profile
+For more information on running the simulator and moving the robot, please see
+the [simulation instructions](sim_overview.md).

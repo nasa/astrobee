@@ -47,7 +47,6 @@ DEFINE_double(deg, 2.0, "Degree tolerance for joint completion");
 DEFINE_double(perc, 1.0, "Percentage tolerance for gripper completion");
 DEFINE_bool(debug, true, "Print debug information");
 
-
 namespace perching_arm {
 
 // Possible tool states
@@ -231,22 +230,19 @@ void DataCallback(PerchingArmRaw const &raw) {
       curr =
           PerchingArm::K_POSITION_DEG * static_cast<double>(raw.prox.position);
       tolv = FLAGS_deg;
-      if (FLAGS_debug)
-        std::cout << "[prox] ";
+      if (FLAGS_debug) std::cout << "[prox] ";
       break;
     case WAITING_ON_DIST_POS:
       curr =
           PerchingArm::K_POSITION_DEG * static_cast<double>(raw.dist.position);
       tolv = FLAGS_deg;
-      if (FLAGS_debug)
-        std::cout << "[dist] ";
+      if (FLAGS_debug) std::cout << "[dist] ";
       break;
     case WAITING_ON_GRIP_POS:
       curr = static_cast<double>(raw.grip.position) * 100.0 /
              static_cast<double>(raw.grip.maximum);
       tolv = FLAGS_perc;
-      if (FLAGS_debug)
-        std::cout << "[grip] ";
+      if (FLAGS_debug) std::cout << "[grip] ";
       break;
     case WAITING_ON_COMMAND:
     default:
@@ -254,9 +250,8 @@ void DataCallback(PerchingArmRaw const &raw) {
   }
   // If we are not on tolerance yet, then do nothing
   if (FLAGS_debug)
-    std::cout << " curr: " << curr
-              << " goal: " << value_
-              << " tol: " << tolv << std::endl;
+    std::cout << " curr: " << curr << " goal: " << value_ << " tol: " << tolv
+              << std::endl;
   if (std::fabs(curr - value_) > tolv) return;
   // Reset the state of the system
   state_ = WAITING_ON_COMMAND;
@@ -317,6 +312,7 @@ void PrintMenu() {
   std::cout << "[k] Calibrate gripper                       *" << std::endl;
   std::cout << "*********************************************" << std::endl;
   std::cout << "[e] Run EMI test                            *" << std::endl;
+  std::cout << "[G] Run gripper test                        *" << std::endl;
   std::cout << "*********************************************" << std::endl;
   std::cout << "[h] Hard reset of controller Board (FTDI)   *" << std::endl;
   std::cout << "[s] Soft reset of controller Board (SW)     *" << std::endl;
@@ -507,49 +503,117 @@ bool GetCommand(PerchingArm &arm) {
     }
     // Run the EMI test
     case 'e': {
+      const unsigned int DEFAULT_DELAY_MS = 3000;
       std::cout << "PAN(0)" << std::endl;
       ret = arm.SetDistalPosition(0);
       PrintResult(arm, ret);
       WaitForResultWithTimeout(WAITING_ON_DIST_POS, 0);
+      std::this_thread::sleep_for(std::chrono::milliseconds(DEFAULT_DELAY_MS));
       std::cout << "TILT(-90)" << std::endl;
       ret = arm.SetProximalPosition(-90);
       PrintResult(arm, ret);
       WaitForResultWithTimeout(WAITING_ON_PROX_POS, -90);
+      std::this_thread::sleep_for(std::chrono::milliseconds(DEFAULT_DELAY_MS));
       std::cout << "CALIBRATE()" << std::endl;
       ret = arm.CalibrateGripper();
       PrintResult(arm, ret);
       WaitForResultWithTimeout(WAITING_ON_GRIP_POS, PerchingArm::GRIP_POS_MAX);
+      std::this_thread::sleep_for(
+          std::chrono::milliseconds(2 * DEFAULT_DELAY_MS));
       while (true) {
         std::cout << "CLOSE()" << std::endl;
         ret = arm.CloseGripper();
         PrintResult(arm, ret);
-        WaitForResultWithTimeout(WAITING_ON_GRIP_POS, PerchingArm::GRIP_POS_MIN);
+        WaitForResultWithTimeout(WAITING_ON_GRIP_POS,
+                                 PerchingArm::GRIP_POS_MIN);
+        std::this_thread::sleep_for(
+            std::chrono::milliseconds(DEFAULT_DELAY_MS));
         std::cout << "PAN(-45)" << std::endl;
         ret = arm.SetDistalPosition(-45);
         PrintResult(arm, ret);
         WaitForResultWithTimeout(WAITING_ON_DIST_POS, -45);
+        std::this_thread::sleep_for(
+            std::chrono::milliseconds(DEFAULT_DELAY_MS));
         std::cout << "PAN(45)" << std::endl;
         ret = arm.SetDistalPosition(45);
         PrintResult(arm, ret);
         WaitForResultWithTimeout(WAITING_ON_DIST_POS, 45);
+        std::this_thread::sleep_for(
+            std::chrono::milliseconds(DEFAULT_DELAY_MS));
         std::cout << "PAN(0)" << std::endl;
         ret = arm.SetDistalPosition(0);
         PrintResult(arm, ret);
         WaitForResultWithTimeout(WAITING_ON_DIST_POS, 0);
+        std::this_thread::sleep_for(
+            std::chrono::milliseconds(DEFAULT_DELAY_MS));
         std::cout << "OPEN()" << std::endl;
         ret = arm.OpenGripper();
         PrintResult(arm, ret);
-        WaitForResultWithTimeout(WAITING_ON_GRIP_POS, PerchingArm::GRIP_POS_MAX);
+        WaitForResultWithTimeout(WAITING_ON_GRIP_POS,
+                                 PerchingArm::GRIP_POS_MAX);
+        std::this_thread::sleep_for(
+            std::chrono::milliseconds(DEFAULT_DELAY_MS));
         std::cout << "TILT(0)" << std::endl;
         ret = arm.SetProximalPosition(0);
         PrintResult(arm, ret);
         WaitForResultWithTimeout(WAITING_ON_PROX_POS, 0);
+        std::this_thread::sleep_for(
+            std::chrono::milliseconds(DEFAULT_DELAY_MS));
         std::cout << "TILT(-90)" << std::endl;
         ret = arm.SetProximalPosition(-90);
         PrintResult(arm, ret);
         WaitForResultWithTimeout(WAITING_ON_PROX_POS, -90);
+        std::this_thread::sleep_for(
+            std::chrono::milliseconds(DEFAULT_DELAY_MS));
       }
       return true;
+    }
+    case 'G': {
+      const int OPEN_CLOSE_PER_CYCLE = 10;
+      const unsigned int DEFAULT_DELAY_MS = 3000;
+      uint16_t nb_cycles = 0;
+      std::cout << "> Number of full cycles (" << OPEN_CLOSE_PER_CYCLE
+                << " open/close per calibrate-[open-close] cycle): "
+                << std::endl;
+      if (!InputUnsignedShort(nb_cycles, 0, 100)) return true;
+      int close_count = 0;
+      int calibrate_count = 0;
+      for (int c = 0; c < nb_cycles; c++) {
+        std::cout << "Calibrate Gripper" << std::endl;
+        ret = arm.CalibrateGripper();
+        calibrate_count++;
+        PrintResult(arm, ret);
+        WaitForResultWithTimeout(WAITING_ON_GRIP_POS,
+                                 PerchingArm::GRIP_POS_MAX);
+        std::this_thread::sleep_for(
+            std::chrono::milliseconds(2 * DEFAULT_DELAY_MS));
+        std::cout << "Close Gripper" << std::endl;
+        ret = arm.CloseGripper();
+        PrintResult(arm, ret);
+        WaitForResultWithTimeout(WAITING_ON_GRIP_POS,
+                                 PerchingArm::GRIP_POS_MIN);
+        std::this_thread::sleep_for(
+            std::chrono::milliseconds(DEFAULT_DELAY_MS));
+        std::cout << "Executing " << OPEN_CLOSE_PER_CYCLE
+                  << " close/open cycles..." << std::endl;
+        for (int n = 0; n < OPEN_CLOSE_PER_CYCLE; n++) {
+          ret = arm.OpenGripper();
+          PrintResult(arm, ret);
+          WaitForResultWithTimeout(WAITING_ON_GRIP_POS,
+                                   PerchingArm::GRIP_POS_MAX);
+          std::this_thread::sleep_for(
+              std::chrono::milliseconds(DEFAULT_DELAY_MS));
+          ret = arm.CloseGripper();
+          PrintResult(arm, ret);
+          WaitForResultWithTimeout(WAITING_ON_GRIP_POS,
+                                   PerchingArm::GRIP_POS_MIN);
+          std::this_thread::sleep_for(
+              std::chrono::milliseconds(DEFAULT_DELAY_MS));
+          close_count++;
+        }
+        std::cout << "#calibrate = " << calibrate_count
+                  << " / #open-close = " << close_count << std::endl;
+      }
     }
     // Perform a hard reset
     case 'h': {

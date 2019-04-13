@@ -101,3 +101,5 @@ astrobee/freeflyer/*.bin
 # Tags & config
 tags
 .ctags
+
+.vscode

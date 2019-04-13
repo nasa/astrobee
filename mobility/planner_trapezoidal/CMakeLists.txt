@@ -18,6 +18,8 @@
 project(planner_trapezoidal)
 
 catkin_package(
+  INCLUDE_DIRS 
+    include
   LIBRARIES
     planner_trapezoidal
   CATKIN_DEPENDS

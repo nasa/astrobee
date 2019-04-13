@@ -53,6 +53,15 @@ void Executive::CmdCallback(ff_msgs::CommandStampedPtr const& cmd) {
   SetOpState(state_->HandleCmd(cmd));
 }
 
+void Executive::DataToDiskCallback(ff_msgs::CompressedFileConstPtr const&
+                                                                        data) {
+  data_to_disk_ = data;
+
+  cf_ack_.header.stamp = ros::Time::now();
+  cf_ack_.id = data_to_disk_->id;
+  cf_ack_pub_.publish(cf_ack_);
+}
+
 void Executive::DockStateCallback(ff_msgs::DockStateConstPtr const& state) {
   dock_state_ = state;
 
@@ -1048,6 +1057,7 @@ ros::Time Executive::MsToSec(std::string timestamp) {
 bool Executive::PowerItem(ff_msgs::CommandStampedPtr const& cmd, bool on) {
   uint8_t completed_status = ff_msgs::AckCompletedStatus::OK;
   std::string err_msg = "";
+  bool success;
 
   // Check to make sure command is formatted as expected
   if (cmd->args.size() != 1 ||
@@ -1076,17 +1086,20 @@ bool Executive::PowerItem(ff_msgs::CommandStampedPtr const& cmd, bool on) {
                               cmd->cmd_id)) {
         return false;
       }
-      laser_enable_client_.call(enable_srv);
+      success = laser_enable_client_.call(enable_srv);
     } else {  // PMCS
       // Check to make sure the pmc service is valid and running
       if (!CheckServiceExists(pmc_enable_client_, "Enable PMC", cmd->cmd_id)) {
         return false;
       }
-      pmc_enable_client_.call(enable_srv);
+      success = pmc_enable_client_.call(enable_srv);
     }
 
     // Check to see if the service was successfully enabled/disabled
-    if (!enable_srv.response.success) {
+    if (!success) {
+      err_msg = "Service returned false.";
+      completed_status = ff_msgs::AckCompletedStatus::EXEC_FAILED;
+    } else if (!enable_srv.response.success) {
       err_msg = enable_srv.response.status_message;
       completed_status = ff_msgs::AckCompletedStatus::EXEC_FAILED;
     }
@@ -1127,9 +1140,13 @@ bool Executive::PowerItem(ff_msgs::CommandStampedPtr const& cmd, bool on) {
       return false;
     }
 
-    payload_power_client_.call(config_srv);
+    success = payload_power_client_.call(config_srv);
+
     // Check to see if the payload was successfully enabled/disabled
-    if (!config_srv.response.success) {
+    if (!success) {
+      err_msg = "Power payload service returned false.";
+      completed_status = ff_msgs::AckCompletedStatus::EXEC_FAILED;
+    } else if (!config_srv.response.success) {
       err_msg = config_srv.response.status;
       completed_status = ff_msgs::AckCompletedStatus::EXEC_FAILED;
     }
@@ -1536,7 +1553,7 @@ bool Executive::RunPlan(ff_msgs::CommandStampedPtr const& cmd) {
   return true;
 }
 
-// TODO(Katie) Need to add sci, perch, and haz cams
+// TODO(Katie) Need to add perch, and haz cams
 bool Executive::SetCamera(ff_msgs::CommandStampedPtr const& cmd) {
   NODELET_INFO("Executive executing set camera command!");
   std::string err_msg = "";
@@ -1575,6 +1592,7 @@ bool Executive::SetCamera(ff_msgs::CommandStampedPtr const& cmd) {
       if (cmd->args[0].s == CommandConstants::PARAM_NAME_CAMERA_NAME_DOCK) {
         // Check to make sure the dock cam service is valid
         if (!dock_cam_config_client_.exists()) {
+          successful = false;
           err_msg = "Dock cam config service not running! Node may have died";
           completed_status = ff_msgs::AckCompletedStatus::EXEC_FAILED;
         } else {
@@ -1589,6 +1607,7 @@ bool Executive::SetCamera(ff_msgs::CommandStampedPtr const& cmd) {
           if (!dock_cam_config_client_.call(config_img_srv)) {
             // Service only fails if height, width or rate are less than or
             // equal to 0
+            successful = false;
             err_msg = "Height, width, and/or rate was invalid for dock camera.";
             completed_status = ff_msgs::AckCompletedStatus::EXEC_FAILED;
           }
@@ -1597,6 +1616,7 @@ bool Executive::SetCamera(ff_msgs::CommandStampedPtr const& cmd) {
                                 CommandConstants::PARAM_NAME_CAMERA_NAME_NAV) {
         // Check to make sure the nav cam service is valid
         if (!nav_cam_config_client_.exists()) {
+          successful = false;
           err_msg = "Nav cam configure service not running! Node may have died";
           completed_status = ff_msgs::AckCompletedStatus::EXEC_FAILED;
         } else {
@@ -1611,15 +1631,40 @@ bool Executive::SetCamera(ff_msgs::CommandStampedPtr const& cmd) {
           if (!nav_cam_config_client_.call(config_img_srv)) {
             // Service only fails if height, width or rate are less than or
             // equal to 0
+            successful = false;
             err_msg = "Height, width, and/or rate was invalid for nav camera.";
             completed_status = ff_msgs::AckCompletedStatus::EXEC_FAILED;
           }
         }
       } else if (cmd->args[0].s ==
                                 CommandConstants::PARAM_NAME_CAMERA_NAME_SCI) {
-        // TODO(Katie) Don't forget to set the bitrate
+        // Check to make sure the sci cam service is valid
+        if (!sci_cam_config_client_.exists()) {
+          successful = false;
+          err_msg = "Sci cam configure service not running! Node may have died";
+          completed_status = ff_msgs::AckCompletedStatus::EXEC_FAILED;
+        } else {
+          ff_msgs::ConfigureCamera config_img_srv;
+          // TODO(Katie) set camera parameters for both streaming and recording?
+          config_img_srv.request.mode = ff_msgs::ConfigureCamera::Request::BOTH;
+          config_img_srv.request.rate = cmd->args[2].f;
+          config_img_srv.request.width = std::stoi(width);
+          config_img_srv.request.height = std::stoi(height);
+          config_img_srv.request.bitrate = cmd->args[3].f;
+
+          // Check to see if the sci cam was successfully configured
+          if (!sci_cam_config_client_.call(config_img_srv)) {
+            // Service only fails if height, width, rate or bitrate are less
+            // than or equal to 0
+            successful = false;
+            err_msg = "Height, width, rate, and/or bitrate was invalid for sci";
+            err_msg += " camera.";
+            completed_status = ff_msgs::AckCompletedStatus::EXEC_FAILED;
+          }
+        }
       } else {
-        err_msg = "Camera " + cmd->args[0].s + "not recognized.";
+        successful = false;
+        err_msg = "Camera " + cmd->args[0].s + " not recognized.";
         completed_status = ff_msgs::AckCompletedStatus::EXEC_FAILED;
       }
     }
@@ -1629,7 +1674,7 @@ bool Executive::SetCamera(ff_msgs::CommandStampedPtr const& cmd) {
   return successful;
 }
 
-// TODO(Katie) Need to add sci, perch, and haz cams
+// TODO(Katie) Need to add perch, and haz cams
 bool Executive::SetCameraRecording(ff_msgs::CommandStampedPtr const& cmd) {
   NODELET_INFO("Executive executing set camera recording command!");
   bool successful = true;
@@ -1681,6 +1726,29 @@ bool Executive::SetCameraRecording(ff_msgs::CommandStampedPtr const& cmd) {
           completed_status = ff_msgs::AckCompletedStatus::EXEC_FAILED;
         }
       }
+    } else if (cmd->args[0].s == CommandConstants::PARAM_NAME_CAMERA_NAME_SCI) {
+      // Check to make sure the sci enable service exists
+      if (!sci_cam_enable_client_.exists()) {
+        successful = false;
+        err_msg = "Sci cam enable service not running! Node may have died!";
+        completed_status = ff_msgs::AckCompletedStatus::EXEC_FAILED;
+      } else {
+        ff_msgs::EnableCamera enable_img_srv;
+        enable_img_srv.request.mode = ff_msgs::EnableCamera::Request::RECORDING;
+        enable_img_srv.request.enable = cmd->args[1].b;
+
+        // Check to see if recording was set successfully
+        if (!sci_cam_enable_client_.call(enable_img_srv)) {
+          successful = false;
+          // Service call should never fail but check just for kicks and giggles
+          err_msg = "Enable recording failed for sci cam.";
+          completed_status = ff_msgs::AckCompletedStatus::EXEC_FAILED;
+        }
+      }
+    } else {
+      successful = false;
+      err_msg = "Camera " + cmd->args[0].s + " not recognized.";
+      completed_status = ff_msgs::AckCompletedStatus::EXEC_FAILED;
     }
   }
 
@@ -1743,6 +1811,25 @@ bool Executive::SetCameraStreaming(ff_msgs::CommandStampedPtr const& cmd) {
           completed_status = ff_msgs::AckCompletedStatus::EXEC_FAILED;
         }
       }
+    } else if (cmd->args[0].s == CommandConstants::PARAM_NAME_CAMERA_NAME_SCI) {
+      // Check to make sure the sci cam service is valid
+      if (!sci_cam_enable_client_.exists()) {
+        successful = false;
+        err_msg = "Sci cam enable service not running! Node may have died!";
+        completed_status = ff_msgs::AckCompletedStatus::EXEC_FAILED;
+      } else {
+        ff_msgs::EnableCamera enable_img_srv;
+        enable_img_srv.request.mode = ff_msgs::EnableCamera::Request::STREAMING;
+        enable_img_srv.request.enable = cmd->args[1].b;
+
+        // Check to see if streaming was successfully set
+        if (!sci_cam_enable_client_.call(enable_img_srv)) {
+          successful = false;
+          // Service call should never fail but check just for kicks and giggles
+          err_msg = "Enable streaming failed for sci cam.";
+          completed_status = ff_msgs::AckCompletedStatus::EXEC_FAILED;
+        }
+      }
     } else {
       successful = false;
       err_msg = "Camera " + cmd->args[0].s + " not recognized.";
@@ -1798,10 +1885,131 @@ bool Executive::SetCheckZones(ff_msgs::CommandStampedPtr const& cmd) {
 
 bool Executive::SetDataToDisk(ff_msgs::CommandStampedPtr const& cmd) {
   NODELET_INFO("Executive executing set data to disk command!");
-  // TODO(Katie) Stub, add actual code here
+  if (data_to_disk_) {
+    ff_msgs::SetDataToDisk data_srv;
+    std::string file_contents;
+
+    // Decompress file into a string
+    if (!sequencer::DecompressData(
+                      reinterpret_cast<const char*>(data_to_disk_->file.data()),
+                      data_to_disk_->file.size(),
+                      data_to_disk_->type,
+                      &file_contents)) {
+      // Reset data to disk so that the same file isn't reloaded
+      data_to_disk_.reset();
+      state_->AckCmd(cmd->cmd_id,
+                     ff_msgs::AckCompletedStatus::EXEC_FAILED,
+                     "Unable to decompress data to disk file.");
+      return false;
+    }
+
+    // Reset data to disk so that the same file isn't reloaded
+    data_to_disk_.reset();
+
+    // Convert string into a json object
+    Json::Value file_obj;
+    if (!jsonloader::LoadData(file_contents, &file_obj)) {
+      state_->AckCmd(cmd->cmd_id,
+                     ff_msgs::AckCompletedStatus::BAD_SYNTAX,
+                     "Error parsing json.");
+      return false;
+    }
+
+    // Check to make sure the name exists in the file
+    if (!file_obj.isMember("name") || !file_obj["name"].isString()) {
+      state_->AckCmd(cmd->cmd_id,
+                     ff_msgs::AckCompletedStatus::BAD_SYNTAX,
+                     "Name of data profile doesn't exist or isn't a string.");
+      return false;
+    }
+
+    // Get name
+    data_srv.request.state.name = file_obj["name"].asString();
+
+    // Check to make sure topic settings exists
+    if (!file_obj.isMember("topicSettings") ||
+        !file_obj["topicSettings"].isArray()) {
+      state_->AckCmd(cmd->cmd_id,
+                    ff_msgs::AckCompletedStatus::BAD_SYNTAX,
+                    "Topic settings doesn't exist in file or is not an array!");
+      return false;
+    }
+
+    ff_msgs::SaveSettings save_settings;
+    for (Json::Value const& data_obj : file_obj["topicSettings"]) {
+      // Check to make sure topic name exists
+      if (!data_obj.isMember("topicName") ||
+          !data_obj["topicName"].isString()) {
+        state_->AckCmd(cmd->cmd_id,
+                       ff_msgs::AckCompletedStatus::BAD_SYNTAX,
+                       "Topic name for entry doesn't exist or isn't a string.");
+        return false;
+      }
+      save_settings.topic_name = data_obj["topicName"].asString();
+
+      // Check to make sure downlink option exists
+      if (!data_obj.isMember("downlinkOption") ||
+          !data_obj["downlinkOption"].isString()) {
+        state_->AckCmd(cmd->cmd_id,
+                       ff_msgs::AckCompletedStatus::BAD_SYNTAX,
+                       "Downlink option doesn't exist or isn't a string.");
+        return false;
+      }
+
+      if (data_obj["downlinkOption"].asString() == "immediate") {
+        save_settings.downlinkOption = ff_msgs::SaveSettings::IMMEDIATE;
+      } else if (data_obj["downlinkOption"].asString() == "delayed") {
+        save_settings.downlinkOption = ff_msgs::SaveSettings::DELAYED;
+      } else {
+        state_->AckCmd(cmd->cmd_id,
+                       ff_msgs::AckCompletedStatus::BAD_SYNTAX,
+                       "Downlink option must be either delayed or immediate.");
+        return false;
+      }
+
+      // Check to make sure the frequency exists
+      if (!data_obj.isMember("frequency") ||
+          !data_obj["frequency"].isNumeric()) {
+        state_->AckCmd(cmd->cmd_id,
+                       ff_msgs::AckCompletedStatus::BAD_SYNTAX,
+                       "Frequency for entry doesn't exist or isn't a float.");
+        return false;
+      }
+      save_settings.frequency = data_obj["frequency"].asFloat();
+
+      data_srv.request.state.topic_save_settings.push_back(save_settings);
+    }
+
+    // Check to make sure the service is valid and running
+    if (!CheckServiceExists(set_data_client_,
+                            "Set data to disk",
+                            cmd->cmd_id)) {
+      return false;
+    }
+
+    if (!set_data_client_.call(data_srv)) {
+      state_->AckCmd(cmd->cmd_id,
+                     ff_msgs::AckCompletedStatus::EXEC_FAILED,
+                     "Set data to disk service returned false.");
+      return false;
+    }
+
+    if (!data_srv.response.success) {
+      state_->AckCmd(cmd->cmd_id,
+                     ff_msgs::AckCompletedStatus::EXEC_FAILED,
+                     data_srv.response.status);
+      return false;
+    }
+
+    // Everything was successful
+    state_->AckCmd(cmd->cmd_id);
+    return true;
+  }
+
+  // Data to disk pointer is null
   state_->AckCmd(cmd->cmd_id,
                  ff_msgs::AckCompletedStatus::EXEC_FAILED,
-                 "Set data to disk not implemented yet! Stay tune!");
+                 "Data to disk file not found.");
   return false;
 }
 
@@ -1877,9 +2085,14 @@ bool Executive::SetFlashlightBrightness(ff_msgs::CommandStampedPtr const& cmd) {
         err_msg = "Back flashlight control service isn't running.";
         completed_status = ff_msgs::AckCompletedStatus::EXEC_FAILED;
       } else {
-        back_flashlight_client_.call(flashlight_srv);
+        if (!back_flashlight_client_.call(flashlight_srv)) {
+          successful = false;
+          err_msg = "Back flashlight service returned false.";
+          completed_status = ff_msgs::AckCompletedStatus::EXEC_FAILED;
+        }
+
         // Check to see if flashlight brightness was successfully set
-        if (!flashlight_srv.response.success) {
+        if (successful && !flashlight_srv.response.success) {
           successful = false;
           err_msg = flashlight_srv.response.status_message;
           completed_status = ff_msgs::AckCompletedStatus::EXEC_FAILED;
@@ -1891,9 +2104,14 @@ bool Executive::SetFlashlightBrightness(ff_msgs::CommandStampedPtr const& cmd) {
         err_msg = "Front flashlight control service isn't running.";
         completed_status = ff_msgs::AckCompletedStatus::EXEC_FAILED;
       } else {
-        front_flashlight_client_.call(flashlight_srv);
+        if (!front_flashlight_client_.call(flashlight_srv)) {
+          successful = false;
+          err_msg = "Front flashlight service returned false.";
+          completed_status = ff_msgs::AckCompletedStatus::EXEC_FAILED;
+        }
+
         // Check to see if flashlight brightness was successfully set
-        if (!flashlight_srv.response.success) {
+        if (successful && !flashlight_srv.response.success) {
           successful = false;
           err_msg = flashlight_srv.response.status_message;
           completed_status = ff_msgs::AckCompletedStatus::EXEC_FAILED;
@@ -1964,13 +2182,21 @@ bool Executive::SetInertia(ff_msgs::CommandStampedPtr const& cmd) {
       return false;
     }
 
-    set_inertia_client_.call(inertia_srv);
+    if (!set_inertia_client_.call(inertia_srv)) {
+      state_->AckCmd(cmd->cmd_id,
+                     ff_msgs::AckCompletedStatus::EXEC_FAILED,
+                     "Set inertia service returned false!");
+      return false;
+    }
 
     if (!inertia_srv.response.success) {
       state_->AckCmd(cmd->cmd_id,
                      ff_msgs::AckCompletedStatus::EXEC_FAILED,
                     "Set inertia service returned unsuccessful.");
+      return false;
     }
+
+    // Inertia call was successful
     return true;
   }
   return false;
@@ -2133,7 +2359,13 @@ bool Executive::SetTelemetryRate(ff_msgs::CommandStampedPtr const& cmd) {
     return false;
   }
 
-  set_rate_client_.call(set_rate_srv);
+  if (!set_rate_client_.call(set_rate_srv)) {
+    state_->AckCmd(cmd->cmd_id,
+                   ff_msgs::AckCompletedStatus::EXEC_FAILED,
+                   "Set rate service returned false.");
+    return false;
+  }
+
   // Check to see if the rate was set successfully
   if (!set_rate_srv.response.success) {
     state_->AckCmd(cmd->cmd_id,
@@ -2298,6 +2530,13 @@ bool Executive::SetZones(ff_msgs::CommandStampedPtr const& cmd) {
         state_->AckCmd(cmd->cmd_id,
                        ff_msgs::AckCompletedStatus::EXEC_FAILED,
                        "Set zones service returned false.");
+        return false;
+      }
+
+      if (!zones_srv.response.success) {
+        state_->AckCmd(cmd->cmd_id,
+                       ff_msgs::AckCompletedStatus::EXEC_FAILED,
+                       "Set zones was not successful.");
         return false;
       }
 
@@ -2754,6 +2993,11 @@ void Executive::Initialize(ros::NodeHandle *nh) {
                            &Executive::CmdCallback,
                            this);
 
+  data_sub_ = nh_.subscribe(TOPIC_COMMUNICATIONS_DDS_DATA,
+                            sub_queue_size_,
+                            &Executive::DataToDiskCallback,
+                            this);
+
   dock_state_sub_ = nh_.subscribe(TOPIC_BEHAVIORS_DOCKING_STATE,
                                   sub_queue_size_,
                                   &Executive::DockStateCallback,
@@ -2831,8 +3075,6 @@ void Executive::Initialize(ros::NodeHandle *nh) {
   pmc_enable_client_ = nh_.serviceClient<ff_hw_msgs::SetEnabled>(
                                               SERVICE_HARDWARE_EPS_ENABLE_PMCS);
 
-  reset_ekf_client_ = nh_.serviceClient<std_srvs::Empty>(SERVICE_GNC_EKF_RESET);
-
   front_flashlight_client_ = nh_.serviceClient<ff_hw_msgs::SetFlashlight>(
                                           SERVICE_HARDWARE_LIGHT_FRONT_CONTROL);
 
@@ -2851,11 +3093,20 @@ void Executive::Initialize(ros::NodeHandle *nh) {
   nav_cam_enable_client_ = nh_.serviceClient<ff_msgs::EnableCamera>(
                                     SERVICE_MANAGEMENT_IMG_SAMPLER_ENABLE_NAV);
 
+  sci_cam_config_client_ = nh_.serviceClient<ff_msgs::ConfigureCamera>(
+                                            SERVICE_MANAGEMENT_SCI_CAM_CONFIG);
+
+  sci_cam_enable_client_ = nh_.serviceClient<ff_msgs::EnableCamera>(
+                                            SERVICE_MANAGEMENT_SCI_CAM_ENABLE);
+
   set_inertia_client_ = nh_.serviceClient<ff_msgs::SetInertia>(
                                                   SERVICE_MOBILITY_SET_INERTIA);
 
   set_rate_client_ = nh_.serviceClient<ff_msgs::SetRate>(
                                     SERVICE_COMMUNICATIONS_DDS_SET_TELEM_RATES);
+
+  set_data_client_ = nh_.serviceClient<ff_msgs::SetDataToDisk>(
+                              SERVICE_MANAGEMENT_DATA_BAGGER_SET_DATA_TO_DISK);
 
   // initialize configure clients later, when initialized here, the service is
   // invalid when we try to use it. Must have something to do with startup order
@@ -2883,9 +3134,8 @@ void Executive::Initialize(ros::NodeHandle *nh) {
     agent_state_.target_linear_accel = flight_mode.hard_limit_accel;
     agent_state_.target_angular_velocity = flight_mode.hard_limit_omega;
     agent_state_.target_angular_accel = flight_mode.hard_limit_alpha;
+    agent_state_.collision_distance = flight_mode.collision_radius;
   }
-
-  // TODO(Katie) Figure out what to set the collision distance to
 
   agent_state_.holonomic_enabled = false;
   agent_state_.check_obstacles = true;

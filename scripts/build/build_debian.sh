@@ -14,5 +14,5 @@ if [[ $* == *--config* ]]; then
 fi
 
 pushd $DIR/../..
-debuild -e ARMHF_CHROOT_DIR -e ARMHF_TOOLCHAIN -us -uc $EXTRA_FLAGS -j`nproc`
+DEB_BUILD_OPTIONS="parallel=20" debuild -e ARMHF_CHROOT_DIR -e ARMHF_TOOLCHAIN -us -uc $EXTRA_FLAGS
 popd > /dev/null

@@ -44,6 +44,7 @@
 #include <ff_msgs/LocalizationAction.h>
 #include <ff_msgs/MotionAction.h>
 #include <ff_msgs/PlanStatusStamped.h>
+#include <ff_msgs/SetDataToDisk.h>
 #include <ff_msgs/SetInertia.h>
 #include <ff_msgs/SetRate.h>
 #include <ff_msgs/SetZones.h>
@@ -91,6 +92,7 @@ class Executive : public ff_util::FreeFlyerNodelet {
 
   // Message and timeout callbacks
   void CmdCallback(ff_msgs::CommandStampedPtr const& cmd);
+  void DataToDiskCallback(ff_msgs::CompressedFileConstPtr const& data);
   void DockStateCallback(ff_msgs::DockStateConstPtr const& state);
   void FaultStateCallback(ff_msgs::FaultStateConstPtr const& state);
   void GuestScienceAckCallback(ff_msgs::AckStampedConstPtr const& ack);
@@ -245,7 +247,7 @@ class Executive : public ff_util::FreeFlyerNodelet {
   ff_msgs::CommandStampedPtr sys_monitor_heartbeat_fault_response_;
 
   ff_msgs::CompressedFileAck cf_ack_;
-  ff_msgs::CompressedFileConstPtr plan_, zones_;
+  ff_msgs::CompressedFileConstPtr plan_, zones_, data_to_disk_;
 
   ff_msgs::DockStateConstPtr dock_state_;
   ff_msgs::FaultStateConstPtr fault_state_;
@@ -263,15 +265,16 @@ class Executive : public ff_util::FreeFlyerNodelet {
   ros::Publisher agent_state_pub_, cmd_ack_pub_, plan_pub_, plan_status_pub_;
   ros::Publisher cf_ack_pub_, gs_cmd_pub_;
 
-  ros::ServiceClient zones_client_, laser_enable_client_, reset_ekf_client_;
+  ros::ServiceClient zones_client_, laser_enable_client_;
   ros::ServiceClient front_flashlight_client_, back_flashlight_client_;
   ros::ServiceClient dock_cam_config_client_, dock_cam_enable_client_;
   ros::ServiceClient nav_cam_config_client_, nav_cam_enable_client_;
+  ros::ServiceClient sci_cam_config_client_, sci_cam_enable_client_;
   ros::ServiceClient payload_power_client_, pmc_enable_client_;
-  ros::ServiceClient set_inertia_client_, set_rate_client_;
+  ros::ServiceClient set_inertia_client_, set_rate_client_, set_data_client_;
 
   ros::Subscriber cmd_sub_, dock_state_sub_, fault_state_sub_, gs_ack_sub_;
-  ros::Subscriber heartbeat_sub_, motion_sub_, plan_sub_, zones_sub_;
+  ros::Subscriber heartbeat_sub_, motion_sub_, plan_sub_, zones_sub_, data_sub_;
 
   ros::Timer reload_params_timer_, wait_timer_, sys_monitor_heartbeat_timer_;
   ros::Timer sys_monitor_startup_timer_;

@@ -93,6 +93,11 @@ Solver::Solver(ros::NodeHandle nh) {
     ROS_FATAL("Failed to get the solver_threads parameter.");
   if (!cfg.GetBool("solver_debug", &options_.minimizer_progress_to_stdout))
     ROS_FATAL("Failed to get the solver_debug parameter.");
+
+  // Read in a modification parameter, later converted
+  // to a vector and quaternion pair
+  if (!ReadModificationVector(&cfg, modification_vector, modification_quaternion))
+    ROS_FATAL("Failed to get the modification parameter.");
 }
 
 // Add trackers
@@ -617,13 +622,13 @@ void Solver::GetVive(nav_msgs::Path & path) {
     // Add the pose to the navigation path
     ps.header.stamp = it->first;
     ps.header.frame_id = FRAME_NAME_WORLD;
-    ps.pose.position.x = wTb.translation()[0];
-    ps.pose.position.y = wTb.translation()[1];
-    ps.pose.position.z = wTb.translation()[2];
-    ps.pose.orientation.w = q.w();
-    ps.pose.orientation.x = q.x();
-    ps.pose.orientation.y = q.y();
-    ps.pose.orientation.z = q.z();
+    ps.pose.position.x = wTb.translation()[0] + modification_vector.x();
+    ps.pose.position.y = wTb.translation()[1] + modification_vector.y();
+    ps.pose.position.z = wTb.translation()[2] + modification_vector.z();
+    ps.pose.orientation.w = q.w() + modification_quaternion.w();
+    ps.pose.orientation.x = q.x() + modification_quaternion.x();
+    ps.pose.orientation.y = q.y() + modification_quaternion.y();
+    ps.pose.orientation.z = q.z() + modification_quaternion.z();
     path.poses.push_back(ps);
   }
 }

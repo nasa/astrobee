@@ -1,3 +1,17 @@
+astrobee (0.8.0) testing; urgency=medium
+
+  * Fixed simulator jump under some conditions on motion start
+  * Data bagger system implemented
+  * Command line teleoperation tools implemented
+  * SciCam commanding implemented
+  * Adjusted inertia parameters from flight unit measurements
+  * Pre-configured ISS flight parameters
+  * Signal lights communication implemented
+  * Heroic documentation effort
+  * As usual, many bug fixes
+
+ -- Astrobee Flight Software <astrobee-fsw@nx.arc.nasa.gov>  Fri, 12 Apr 2019 17:06:46 -0700
+
 astrobee (0.7.6) testing; urgency=medium
 
   * Localization and localization manager fixes.

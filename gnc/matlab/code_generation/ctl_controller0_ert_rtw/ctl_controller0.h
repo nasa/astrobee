@@ -5,7 +5,7 @@
 //
 // Model version                  : 1.1142
 // Simulink Coder version         : 8.11 (R2016b) 25-Aug-2016
-// C/C++ source code generated on : Thu Dec  6 14:19:51 2018
+// C/C++ source code generated on : Thu Mar  7 13:22:34 2019
 //
 // Target selection: ert.tlc
 // Embedded hardware selection: 32-bit Generic
@@ -60,6 +60,7 @@ typedef struct {
   real32_T UnitDelay1_DSTATE[3];       // '<S2>/Unit Delay1'
   real32_T DiscreteTimeIntegrator1_DSTATE[3];// '<S30>/Discrete-Time Integrator1' 
   real32_T DiscreteTimeIntegrator_DSTATE[3];// '<S31>/Discrete-Time Integrator'
+  boolean_T TappedDelay_X[4];          // '<S2>/Tapped Delay'
   int8_T DiscreteTimeIntegrator1_PrevRes;// '<S30>/Discrete-Time Integrator1'
   int8_T DiscreteTimeIntegrator_PrevRese;// '<S31>/Discrete-Time Integrator'
   DW_ForEachSubsystem_ctl_contr_T ForEachSubsystem1[3];// '<S5>/For Each Subsystem1' 
@@ -174,6 +175,9 @@ struct P_ctl_controller0_T_ {
 
   uint8_T CompareToConstant_const_f;   // Mask Parameter: CompareToConstant_const_f
                                        //  Referenced by: '<S55>/Constant'
+
+  uint8_T TappedDelay_vinit;           // Mask Parameter: TappedDelay_vinit
+                                       //  Referenced by: '<S2>/Tapped Delay'
 
   real_T Constant2_Value[9];           // Expression: zeros(9,1)
                                        //  Referenced by: '<S116>/Constant2'

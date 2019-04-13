@@ -97,9 +97,9 @@
   <link name="inertial_link">
     <self_collide>false</self_collide>
     <inertial>
-      <mass value="9.176"/>
+      <mass value="9.0877"/>
       <origin xyz="0 0 0"/>
-      <inertia ixx="0.1873" ixy="0.0" ixz="0.0" iyy="0.1873" iyz="0.0" izz="0.1873"/>
+      <inertia ixx="0.1454" ixy="0.0" ixz="0.0" iyy="0.1366" iyz="0.0" izz="0.1594"/>
     </inertial>
   </link>
   <joint name="inertial_joint" type="fixed">

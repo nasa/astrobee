@@ -79,7 +79,7 @@ determination hierarchy.
 Assuming no environment variables are set or `/etc` files are created, the
 default contexts defined by the launch files are the following:
 
-* `atrobee.launch`: robot = {argument}, world = iss, drivers = true
+* `astrobee.launch`: robot = {argument}, world = iss, drivers = true
 * `sim.launch`: robot = sim, world = granite, drivers = false
 * `mgtf.launch`: robot = p4c, world = mgtf, drivers = true
 * `granite.launch`: robot = p4d, world = granite, drivers = true
@@ -107,7 +107,7 @@ using the `nodes:=<comma_separated_list_of_nodes>` argument.
 In this case, only the provided nodes will be launched on their destination
 processors (llp or mlp). In addition, it is possible to avoid roslaunch to
 perform any connection to a particular processor with the declaration
-`{llp,mlp}:=disabled`. This is particularly usefull if you need to test some
+`{llp,mlp}:=disabled`. This is particularly useful if you need to test some
 nodes on one processor and do not have access to the other processor.
 
 For example, to test only the picoflexx cameras on the MLP, not attempting
@@ -155,12 +155,35 @@ connection to the LLP (in case it is absent from the test rig):
     `roslaunch astrobee replay  bag:=~/.ros/some.bag`
 
 10. Test a single camera connected to a local machine. For this to work, the file
-    astrobee/config/cameras.config may need to be modified, with the nav_cam device
-	be set from /dev/nav_cam to /dev/video0. Also note that this is known not to 
-	work reliably with VirtualBox. Run:
+astrobee/config/cameras.config may need to be modified, with the nav_cam device
+be set from /dev/nav_cam to /dev/video0. Also note that this is known not to
+work reliably with VirtualBox. Run:
 ```
     roslaunch astrobee granite.launch mlp:=local llp:=disabled nodes:=nav_cam,framestore
 ```
+
+11. To be able to interact with the robot in its environment using a
+GUI program, either via teleoperation, or by writing and running a
+plan, one can use the Astrobee Ground Control Station (GDS). See
+https://babelfish.arc.nasa.gov/trac/freeflyerworkbench/wiki/HowToRunWorkbench
+for detailed instructions for how to install and run GDS.
+
+Once GDS is downloaded and extracted, its directory should be renamed
+to $HOME/gds/latest (hence that directory must have the executable
+`AstroBeeWB').
+
+One should edit the file NDDS_DISCOVERY_PEERS in the GDS directory
+(see the wiki for its location) to specify the bot's mlp ip
+address. If running in simulation, one should use 127.0.0.1. (After
+this GDS needs to be restarted.)
+
+Here's how to launch the robot in simulation using GDS:
+
+ roslaunch astrobee sim.launch output:=screen world:=iss gds:=true
+
+It is also possible to launch the robot software without GDS, and
+start GDS separately. That way more options can be passed to it from
+the command line that are not supported by the roslaunch interface.
 
 # Roslaunch, [machine] tags, env scripts and environment variables
 

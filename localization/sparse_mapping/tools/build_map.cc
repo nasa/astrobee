@@ -50,19 +50,17 @@ DEFINE_bool(save_individual_maps, false,
 
 // output map parameters
 DEFINE_string(detector, "SURF",
-              "Feature detector to use. Options are [FAST, STAR, SIFT, SURF, ORB, "
-              "BRISK, ORGBRISK, MSER, GFTT, HARRIS, Dense].");
+              "Feature detector to use. Options are: SURF, ORGBRISK.");
 DEFINE_string(rebuild_detector, "ORGBRISK",
-              "Feature detector to use. Options are [FAST, STAR, SIFT, SURF, ORB, "
-              "BRISK, ORGBRISK, MSER, GFTT, HARRIS, Dense].");
+              "Feature detector to use. Options are: SURF, ORGBRISK.");
 
 // control options
 DEFINE_bool(feature_detection, false,
-              "If true, perform compute features for input NVMs.");
+              "If true, compute features for input images.");
 DEFINE_bool(feature_matching, false,
-              "If true, perform generate map from feature matching step.");
+              "If true, perform feature matching.");
 DEFINE_bool(track_building, false,
-              "If true, perform generate map from feature matching step.");
+              "If true, perform track building.");
 DEFINE_bool(incremental_ba, false,
               "If true, perform incremental bundle adjustment.");
 DEFINE_bool(loop_closure, false,
@@ -155,7 +153,6 @@ void DetectAllFeatures(int argc, char** argv) {
 
   // This will invoke a detection process
   sparse_mapping::SparseMap map(files, FLAGS_detector, cam_params);
-  map.SetDetectorParams(1000, 20000, 3);
   map.DetectFeatures();
 
   map.Save(FLAGS_output_map);
@@ -246,9 +243,9 @@ void Rebuild() {
     files[i] = original.GetFrameFilename(i);
   }
 
-  LOG(INFO) << "Detecting features.";
   sparse_mapping::SparseMap map(files, FLAGS_rebuild_detector, params);
-  map.SetDetectorParams(100, 20000, 3);
+
+  LOG(INFO) << "Detecting features.";
   map.DetectFeatures();
 
   LOG(INFO) << "Matching features.";

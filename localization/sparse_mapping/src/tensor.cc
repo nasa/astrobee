@@ -20,6 +20,7 @@
 #include <common/thread.h>
 #include <common/utils.h>
 #include <sparse_mapping/tensor.h>
+#include <sparse_mapping/ransac.h>
 #include <sparse_mapping/reprojection.h>
 #include <sparse_mapping/sparse_mapping.h>
 #include <sparse_mapping/sparse_map.h>
@@ -69,6 +70,8 @@ DEFINE_int32(match_all_rate, -1,  // avoid overflow
              "If nonnegative, match one of every match_all_rate images to every other image.");
 DEFINE_bool(skip_filtering, false,
             "Skip filtering of outliers after bundle adjustment.");
+DEFINE_bool(skip_adding_new_matches_on_merging, false,
+            "When merging maps, do not take advantage of performed matching to add new tracks.");
 DEFINE_double(reproj_thresh, 5.0,
               "Filter points with re-projection error higher than this.");
 
@@ -87,10 +90,21 @@ DEFINE_int32(last_ba_index, std::numeric_limits<int>::max(),
              "Vary only cameras ending with this index during bundle adjustment.");
 
 namespace sparse_mapping {
+// Two minor and local utility functions
+std::string print_vec(double a) {
+  char st[256];
+  snprintf(st, sizeof(st), "%7.4f", a);
+  return std::string(st);
+}
+std::string print_vec(Eigen::Vector3d a) {
+  char st[256];
+  snprintf(st, sizeof(st), "%7.4f %7.4f %7.4f", a[0], a[1], a[2]);
+  return std::string(st);
+}
 
+  // Read matches from disk into OpenMVG's format
 int ReadMatches(std::string const& matches_file,
                  openMVG::matching::PairWiseMatches * match_map) {
-  // Read matches from disk into OpenMVG's format
   (*match_map).clear();
   std::ifstream imfile(matches_file.c_str());
   LOG(INFO) << "Reading: " << matches_file;
@@ -199,7 +213,8 @@ void MatchFeatures(const std::string & essential_file,
   openMVG::matching::PairWiseMatches match_map;
   for (size_t cid = 0; cid < s->cid_to_keypoint_map_.size(); cid++) {
     // Query the db for similar images
-    common::PrintProgressBar(stdout, static_cast<float>(cid) / static_cast<float>(s->cid_to_keypoint_map_.size() - 1));
+    common::PrintProgressBar(stdout, static_cast<float>(cid)
+                             / static_cast <float>(s->cid_to_keypoint_map_.size() - 1));
     std::vector<int> indices, queried_indices;
     sparse_mapping::QueryDB(s->detector_.GetDetectorName(),
                             &s->vocab_db_, s->num_similar_,
@@ -438,7 +453,7 @@ void IncrementalBA(std::string const& essential_file,
           track[it->first] = it->second;
       }
 
-      // This is absolutely essential, using tracks of length >=3
+      // This is absolutely essential, using tracks of length >= 3
       // only greatly increases the reliability.
       if ( (cid == 1 && track.size() > 1) || track.size() > 2 )
         pid_to_cid_fid_local.push_back(track);
@@ -698,9 +713,192 @@ void AppendMapFile(std::string const& mapOut, std::string const& mapIn,
   C.Save(mapOut);
 }
 
+// This fitting functor attempts to find a rotation + translation + scale transformation
+// between two vectors of points.
+struct TranslationRotationScaleFittingFunctor {
+  typedef Eigen::Affine3d result_type;
+
+  /// A transformation requires 3 inputs and 3 outputs to make a fit.
+  size_t min_elements_needed_for_fit() const { return 3; }
+
+  result_type operator() (std::vector<Eigen::Vector3d> const& in_vec,
+                          std::vector<Eigen::Vector3d> const& out_vec) const {
+    // check consistency
+    if (in_vec.size() != out_vec.size())
+      LOG(FATAL) << "There must be as many inputs as outputs to be "
+                 << "able to compute a transform between them.\n";
+    if (in_vec.size() < min_elements_needed_for_fit())
+      LOG(FATAL) << "Cannot compute a transformation. Insufficient data.\n";
+
+    Eigen::Matrix3Xd in_mat  = Eigen::MatrixXd(3, in_vec.size());
+    Eigen::Matrix3Xd out_mat = Eigen::MatrixXd(3, in_vec.size());
+    for (size_t it = 0; it < in_vec.size(); it++) {
+      in_mat.col(it)  = in_vec[it];
+      out_mat.col(it) = out_vec[it];
+    }
+    result_type out_trans;
+    Find3DAffineTransform(in_mat, out_mat, &out_trans);
+    return out_trans;
+  }
+};
+
+// How well does the given transform do to map p1 to p2.
+struct TransformError {
+  double operator() (Eigen::Affine3d const& T, Eigen::Vector3d const& p1,
+                     Eigen::Vector3d const& p2) const {
+    return (T*p1 - p2).norm();
+  }
+};
+
+// Given a set of points in 3D, heuristically estimate what it means
+// for two points to be "not far" from each other. The logic is to
+// find a bounding box of an inner cluster and multiply that by 0.2.
+double estimateCloseDistance(std::vector<Eigen::Vector3d> const& vec) {
+  Eigen::Vector3d range;
+  int num_pts = vec.size();
+  if (num_pts <= 0)
+    LOG(FATAL) << "Empty set of points.\n";  // to avoid a segfault
+
+  std::vector<double> vals(num_pts);
+  for (int it = 0; it < range.size(); it++) {  // iterate in each coordinate
+    // Sort all values in given coordinate
+    for (int p = 0; p < num_pts; p++)
+      vals[p] = vec[p][it];
+    std::sort(vals.begin(), vals.end());
+
+    // Find some percentiles
+    int min_p = round(num_pts*0.25);
+    int max_p = round(num_pts*0.75);
+    if (min_p >= num_pts) min_p = num_pts - 1;
+    if (max_p >= num_pts) max_p = num_pts - 1;
+    double min_val = vals[min_p], max_val = vals[max_p];
+    range[it] = 0.2*(max_val - min_val);
+  }
+
+  // Find the average of all ranges
+  double range_val = 0.0;
+  for (int it = 0; it < range.size(); it++)
+    range_val += range[it];
+  range_val /= range.size();
+
+  return range_val;
+}
+
+// Given a transform from cid2cid from some cid values to some others,
+// apply the same transform to the tracks. This may make the tracks
+// shorter if cid2cid maps different inputs to the same output.
+// New tracks of length 1 can be excluded if desired.
+void TransformTracks(std::map<int, int> const& cid2cid,
+                     bool rm_tracks_of_len_one,
+                     std::vector<std::map<int, int> > * pid_to_cid_fid) {
+  std::vector<std::map<int, int> > pid_to_cid_fid2;
+  for (size_t pid = 0; pid < (*pid_to_cid_fid).size(); pid++) {
+    auto & cid_fid = (*pid_to_cid_fid)[pid];  // alias
+    std::map<int, int> cid_fid2;
+    for (auto it = cid_fid.begin(); it != cid_fid.end(); it++) {
+      int cid = it->first;
+      int fid = it->second;
+      auto cid_it = cid2cid.find(cid);
+      if (cid_it == cid2cid.end()) continue;
+      int out_cid = cid_it->second;
+      cid_fid2[out_cid] = fid;
+    }
+
+    bool will_skip = rm_tracks_of_len_one && (cid_fid2.size() <= 1);
+    if (!will_skip)
+      pid_to_cid_fid2.push_back(cid_fid2);
+  }
+  *pid_to_cid_fid = pid_to_cid_fid2;
+}
+
+// As result of matching some images in A to some images in B, we must
+// now merge some tracks in A with some tracks in B, as those tracks
+// correspond physically to the same point in space. A track in
+// C.pid_to_cid_fid_ tells us which track in A.pid_to_cid_fid_ is tied
+// with which track in B.pid_to_cid_fid_. If it turns out one track in
+// A should be merged with multiple tracks in B or vice-versa, select
+// just one candidate from each map, based on who got most votes. Note
+// that here it is easier to work with A.cid_fid_to_pid_ rather than
+// A.pid_to_cid_fid_.
+void FindPidCorrespondences(std::vector<std::map<int, int> > const& A_cid_fid_to_pid,
+                            std::vector<std::map<int, int> > const& B_cid_fid_to_pid,
+                            std::vector<std::map<int, int> > const& C_pid_to_cid_fid,
+                            int num_acid,  // How many images are in A
+                            std::map<int, int> * A2B, std::map<int, int> * B2A) {
+  A2B->clear();
+  B2A->clear();
+
+  std::map<int, std::map<int, int> > VoteMap;
+  for (int pid = 0; pid < static_cast<int>(C_pid_to_cid_fid.size()); pid++) {
+    // This track has some cid indices from A (those < num_acid)
+    // and some from B (those >= num_acid). Ignore all other combinations.
+    auto const& cid_fid_c = C_pid_to_cid_fid[pid];  // alias
+    for (auto it_a = cid_fid_c.begin(); it_a != cid_fid_c.end(); it_a++) {
+      for (auto it_b = it_a; it_b != cid_fid_c.end(); it_b++) {
+        int cid_a = it_a->first, fid_a = it_a->second;
+        int cid_b = it_b->first, fid_b = it_b->second;
+        if (cid_a >= num_acid) continue;
+        if (cid_b <  num_acid) continue;
+
+        // Subtract num_acid from cid_b so it becomes a cid in B.
+        cid_b -= num_acid;
+
+        auto it_fida = A_cid_fid_to_pid[cid_a].find(fid_a);
+        if (it_fida == A_cid_fid_to_pid[cid_a].end()) continue;
+
+        auto it_fidb = B_cid_fid_to_pid[cid_b].find(fid_b);
+        if (it_fidb == B_cid_fid_to_pid[cid_b].end()) continue;
+
+        int pid_a = it_fida->second;
+        int pid_b = it_fidb->second;
+
+        VoteMap[pid_a][pid_b]++;
+      }
+    }
+  }
+
+  // For each pid in A, keep the pid in B with most votes
+  std::map<int, std::map<int, int> > B2A_Version0;  // still not fully one-to-one
+  for (auto it_a = VoteMap.begin(); it_a != VoteMap.end(); it_a++) {
+    auto & M = it_a->second;  // all pid_b corresp to given pid_a with their votes
+    int pid_a = it_a->first;
+    int best_pid_b = -1;
+    int max_vote = -1;
+    for (auto it_b = M.begin(); it_b != M.end(); it_b++) {
+      int pid_b = it_b->first;
+      int vote = it_b->second;
+      if (vote > max_vote) {
+        best_pid_b = pid_b;
+        max_vote = vote;
+      }
+    }
+    B2A_Version0[best_pid_b][pid_a] = max_vote;
+  }
+
+  // And vice-versa
+  for (auto it_b = B2A_Version0.begin(); it_b != B2A_Version0.end(); it_b++) {
+    int pid_b = it_b->first;
+    auto & M = it_b->second;
+    int best_pid_a = -1;
+    int max_vote = -1;
+    for (auto it_a = M.begin(); it_a != M.end(); it_a++) {
+      int pid_a = it_a->first;
+      int vote = it_a->second;
+      if (vote > max_vote) {
+        best_pid_a = pid_a;
+        max_vote = vote;
+      }
+    }
+
+    (*A2B)[best_pid_a] = pid_b;  // track from A and track from B
+    (*B2A)[pid_b] = best_pid_a;  // track from B and track from A
+  }
+}
+
 // Merge two maps. See merge_maps.cc. The merged map needs to be
 // bundle-adjusted. We need to have write-access to A and B to be able
 // to initialize some auxiliary structures in these maps.
+// TODO(oalexan1): Modularize this code (some was done already).
 void MergeMaps(sparse_mapping::SparseMap * A_in,
                sparse_mapping::SparseMap * B_in,
                int num_image_overlaps_at_endpoints,
@@ -738,6 +936,7 @@ void MergeMaps(sparse_mapping::SparseMap * A_in,
   C.cid_to_cam_t_global_  .resize(num_ccid);
   C.cid_to_descriptor_map_.resize(num_ccid);
   for (int cid = 0; cid < num_bcid; cid++) {
+    // C.cid_to_filename_ already contains A.cid_to_filename_, etc.
     int c = num_acid + cid;
     C.cid_to_filename_[c]       = B.cid_to_filename_[cid];
     C.cid_to_keypoint_map_[c]   = B.cid_to_keypoint_map_[cid];
@@ -775,10 +974,9 @@ void MergeMaps(sparse_mapping::SparseMap * A_in,
     }
   }
 
-  // Must set this to 0, to not try to match images in same map,
-  // that was done when each map was built.
+  // Match features. Must set num_subsequent_images to not try to
+  // match images in same map, that was done when each map was built.
   FREEFLYER_GFLAGS_NAMESPACE::SetCommandLineOption("num_subsequent_images", "0");
-
   sparse_mapping::MatchFeatures(sparse_mapping::EssentialFile(output_map),
                                 sparse_mapping::MatchesFile(output_map), &C);
 
@@ -794,159 +992,73 @@ void MergeMaps(sparse_mapping::SparseMap * A_in,
   A.InitializeCidFidToPid();
   B.InitializeCidFidToPid();
 
-  // We arrived to the most important part. As result of matching some
-  // images in A to some images in B, we must now merge some tracks in
-  // A with some tracks in B, as those tracks correspond physically to
-  // the same point in space. A track in C.pid_to_cid_fid_ tells us
-  // which track in A.pid_to_cid_fid_ is tied with which track in
-  // B.pid_to_cid_fid_. If it turns out one track in A should be
-  // merged with multiple tracks in B or vice-versa, select just one
-  // candidate from each map, based on who got most votes.
-  std::map<int, std::map<int, int> > VoteMap;
-  for (int pid = 0; pid < static_cast<int>(C.pid_to_cid_fid_.size()); pid++) {
-    // This track has some cid indices from A (those < num_acid)
-    // and some from B (those >= num_acid). Ignore all other combinations.
-    auto const& cid_fid_c = C.pid_to_cid_fid_[pid];  // alias
-    for (auto it_a = cid_fid_c.begin(); it_a != cid_fid_c.end(); it_a++) {
-      for (auto it_b = it_a; it_b != cid_fid_c.end(); it_b++) {
-        int cid_a = it_a->first, fid_a = it_a->second;
-        int cid_b = it_b->first, fid_b = it_b->second;
-        if (cid_a >= num_acid) continue;
-        if (cid_b <  num_acid) continue;
+  // For each track in A, find the map to its corresponding track in B
+  // using the information in C.pid_to_cid_fid_.
+  std::map<int, int> A2B, B2A;
+  FindPidCorrespondences(A.cid_fid_to_pid_, B.cid_fid_to_pid_,  C.pid_to_cid_fid_,
+                         num_acid, &A2B, &B2A);
 
-        // Subtract num_acid from cid_b so it becomes a cid in B.
-        cid_b -= num_acid;
+  // Put the xyz points corresponding to the tracks to merge in vectors.
+  // TODO(oalexan1): May want to add xyz points for the tracks in
+  // C.pid_to_cid_fid_ that have at least two features in each
+  // of the maps A and B and that are not pre-existing tracks in A
+  // and B.
+  std::vector<Eigen::Vector3d> A_vec(A2B.size()), B_vec(A2B.size());
+  int point_count = 0;
+  for (auto it = A2B.begin(); it != A2B.end(); it++) {
+    int pid_a = it->first;
+    int pid_b = it->second;
+    A_vec[point_count] = A.pid_to_xyz_[pid_a];
+    B_vec[point_count] = B.pid_to_xyz_[pid_b];
+    point_count++;
+  }
+  double inlier_threshold = estimateCloseDistance(A_vec);
 
-        int pid_a = A.cid_fid_to_pid_[cid_a][fid_a];
-        int pid_b = B.cid_fid_to_pid_[cid_b][fid_b];
-
-        VoteMap[pid_a][pid_b]++;
-      }
-    }
+  // Estimate the transform from B_vec to A_vec using RANSAC.
+  // A lot of outliers are possible.
+  int  num_iterations = 1000;
+  int  min_num_output_inliers = A_vec.size()/2;
+  bool reduce_min_num_output_inliers_if_no_fit = true;  // If too many outliers
+  bool increase_threshold_if_no_fit = true;  // Coz our threshold was done by a heuristic
+  RandomSampleConsensus < TranslationRotationScaleFittingFunctor, TransformError>
+    ransac(TranslationRotationScaleFittingFunctor(), TransformError(), num_iterations,
+           inlier_threshold, min_num_output_inliers,
+           reduce_min_num_output_inliers_if_no_fit, increase_threshold_if_no_fit);
+  Eigen::Affine3d B2A_trans = ransac(B_vec, A_vec);
+  std::vector<size_t> inlier_indices = ransac.inlier_indices(B2A_trans, B_vec, A_vec);
+  std::set<int> inlier_set;
+  for (size_t it = 0; it < inlier_indices.size(); it++) {
+    inlier_set.insert(inlier_indices[it]);
   }
 
-  // TODO(oalexan1): C.pid_to_cid_fid_ may not only tell us which tracks in A
-  // to tie with which tracks in B, it may be allowing us to create
-  // completely new tracks in the overlap area. Their xyz positions could be
-  // triangulated after the cameras are merged.
+  // Remove from A2B and B2A the outliers
+  std::map<int, int> A2B_orig = A2B;
+  point_count = 0;
+  for (auto it = A2B_orig.begin(); it != A2B_orig.end(); it++) {
+    int pid_a = it->first;
+    int pid_b = it->second;
+    if (inlier_set.find(point_count) == inlier_set.end()) {
+      auto iter_a = A2B.find(pid_a);
+      if (iter_a == A2B.end())
+        LOG(FATAL) << "Bookkeeping error in merging maps.";
+      A2B.erase(iter_a);
 
-  // For each pid in A, keep the pid in B with most votes
-  std::map<int, std::map<int, int> > B2A_Version0;  // still not fully one-to-one
-  for (auto it_a = VoteMap.begin(); it_a != VoteMap.end(); it_a++) {
-    auto & M = it_a->second;  // all pid_b corresp to given pid_a with their votes
-    int pid_a = it_a->first;
-    int best_pid_b = -1;
-    int max_vote = -1;
-    for (auto it_b = M.begin(); it_b != M.end(); it_b++) {
-      int pid_b = it_b->first;
-      int vote = it_b->second;
-      if (vote > max_vote) {
-        best_pid_b = pid_b;
-        max_vote = vote;
-      }
+      auto iter_b = B2A.find(pid_b);
+      if (iter_b == B2A.end())
+        LOG(FATAL) << "Bookkeeping error in merging maps.";
+      B2A.erase(iter_b);
     }
-    B2A_Version0[best_pid_b][pid_a] = max_vote;
+    point_count++;
   }
 
-  // And vice-versa
-  std::map<int, int> A2B, B2A;  // Corresponding pids to merge
-  for (auto it_b = B2A_Version0.begin(); it_b != B2A_Version0.end(); it_b++) {
-    int pid_b = it_b->first;
-    auto & M = it_b->second;
-    int best_pid_a = -1;
-    int max_vote = -1;
-    for (auto it_a = M.begin(); it_a != M.end(); it_a++) {
-      int pid_a = it_a->first;
-      int vote = it_a->second;
-      if (vote > max_vote) {
-        best_pid_a = pid_a;
-        max_vote = vote;
-      }
-    }
-
-    A2B[best_pid_a] = pid_b;  // track from A and track from B
-    B2A[pid_b] = best_pid_a;  // track from B and track from A
-  }
-
-  // The transform to move B to the coordinate system of A.
-  Eigen::Affine3d B2A_trans;
-  std::set<int> bad_points;
-
-  // Do multiple passes, throwing out each time points which cannot be aligned
-  // well by the transform
-  for (int pass = 0; pass < 5; pass++) {
-    // Find the corresponding xyz points and the transforms that best registeres them
-    Eigen::Matrix3Xd xyz_a = Eigen::MatrixXd(3, A2B.size());
-    Eigen::Matrix3Xd xyz_b = Eigen::MatrixXd(3, A2B.size());
-
-    int all_count = -1, good_count = -1;
-    // double good_err = 0.0;  // for debugging
-    for (auto it = A2B.begin(); it != A2B.end(); it++) {
-      all_count++;
-      if (bad_points.find(all_count) != bad_points.end()) continue;  // skip this
-      int pid_a = it->first;
-      int pid_b = it->second;
-      good_count++;
-      xyz_a.col(good_count) = A.pid_to_xyz_[pid_a].transpose();
-      xyz_b.col(good_count) = B.pid_to_xyz_[pid_b].transpose();
-
-      // if (pass > 0){
-      // double err = (B2A_trans*B.pid_to_xyz_[pid_b] - A.pid_to_xyz_[pid_a]).norm();
-      // good_err += err;
-      // }
-    }
-
-    // Move one position past the last
-    good_count++; all_count++;
-
-    xyz_a.conservativeResize(Eigen::NoChange_t(), good_count);
-    xyz_b.conservativeResize(Eigen::NoChange_t(), good_count);
-
-    // std::cout << "Kept points: " << good_count << "/" << all_count << " ("
-    //          << round((100.0*good_count)/all_count) << "%)" << std::endl;
-
-    // if (pass > 0) {
-    //  good_err /= good_count;
-    //  std::cout << "Good error at pass: " << pass << ": " << good_err << std::endl;
-    // }
-
-    sparse_mapping::Find3DAffineTransform(xyz_b, xyz_a, &B2A_trans);
-
-    // std::cout << "Transform from second to first map:\n"
-    //           << B2A_trans.linear() << "\n"
-    //           << B2A_trans.translation() << std::endl;
-
-
-    // Find the errors after registration for all points.
-    std::vector<double> all_errors;
-    double mean_err = 0;
-    for (auto it = A2B.begin(); it != A2B.end(); it++) {
-      int pid_a = it->first;
-      int pid_b = it->second;
-      double err = (B2A_trans*B.pid_to_xyz_[pid_b] - A.pid_to_xyz_[pid_a]).norm();
-      all_errors.push_back(err);
-      mean_err += err;
-    }
-    mean_err /= all_errors.size();
-    // std::cout << "Mean error of all points at pass: "
-    // << pass << ": " << mean_err << std::endl;
-
-    // Find the points with big error based on a multiple of a percentile
-    std::vector<double> sorted_errors = all_errors;
-    std::sort(sorted_errors.begin(), sorted_errors.end());
-    if (sorted_errors.empty()) continue;  // nothing to do if no errors
-    double thresh = outlier_factor*sorted_errors[ 0.50*sorted_errors.size() ];
-    // std::cout << "max err and thresh " << sorted_errors.back()
-    // << ' ' << thresh << std::endl;
-    bad_points.clear();
-    for (size_t p = 0; p < all_errors.size(); p++) {
-      if (all_errors[p] >= thresh)
-        bad_points.insert(p);
-    }
-  }
-
-  // Bring the B map into coordinate system of the A map
+  // Bring the B map into the coordinate system of the A map
   B.ApplyTransform(B2A_trans);
+
+  // We will use this to add new tracks taking advantage
+  // of all the matching between the two image sets.
+  std::vector<std::map<int, int> > merged_pid_to_cid_fid;
+  if (!FLAGS_skip_adding_new_matches_on_merging)
+    merged_pid_to_cid_fid = C.pid_to_cid_fid_;  // save it before wiping it below
 
   // Start creating the merged tracks
   C.pid_to_cid_fid_.clear();
@@ -971,7 +1083,7 @@ void MergeMaps(sparse_mapping::SparseMap * A_in,
       for (auto it = cid_fid_b.begin(); it != cid_fid_b.end(); it++)
         cid_fid_c[it->first + num_acid] = it->second;
 
-      // New new xyz will be the average of xyz's from both maps
+      // Merged map xyz will be the average of xyz's from both maps
       C.pid_to_xyz_[pid_a] = (A.pid_to_xyz_[pid_a] + B.pid_to_xyz_[pid_b])/2.0;
 
       num_tracks_in_A_and_B++;
@@ -1001,9 +1113,6 @@ void MergeMaps(sparse_mapping::SparseMap * A_in,
     C.pid_to_xyz_.push_back(B.pid_to_xyz_[pid_b]);
   }
 
-  // TODO(oalexan1): The original C.pid_to_cid_fid_ can be used
-  // to add new tracks that have no counterpart in A or B.
-
   // Append the cameras from B. By now A and B are in same coordinate system.
   C.cid_to_cam_t_global_ = A.cid_to_cam_t_global_;
   for (int cid = 0; cid < num_bcid; cid++)
@@ -1014,7 +1123,6 @@ void MergeMaps(sparse_mapping::SparseMap * A_in,
   LOG(INFO) << "Number of tracks merged from both maps:    " << num_tracks_in_A_and_B;
   LOG(INFO) << "Number of tracks from the first map only:  " << num_tracks_in_A_only;
   LOG(INFO) << "Number of tracks from the second map only: " << num_tracks_in_B_only;
-  LOG(INFO) << "Total number of tracks:                    " << C.pid_to_xyz_.size();
 
   // If a few images show up in both and in B, so far they show up in C twice,
   // with different cid value. Fix that.
@@ -1042,6 +1150,7 @@ void MergeMaps(sparse_mapping::SparseMap * A_in,
   }
 
   // To merge cid_to_cam_t_global_, find the average rotation and translation
+  // from the two maps.
   std::vector<Eigen::Affine3d > cid_to_cam_t_global2(num_merged_cams);
   for (size_t c = 0; c < blobs.size(); c++) {
     if (blobs[c].size() == 1) {
@@ -1089,10 +1198,7 @@ void MergeMaps(sparse_mapping::SparseMap * A_in,
   }
 
   // Further removal of repetitions.
-
-  // The final list of unique images
   std::vector<std::string> cid_to_filename2(num_merged_cams);
-
   std::vector<Eigen::Matrix2Xd > cid_to_keypoint_map2(num_merged_cams);
   std::vector<cv::Mat> cid_to_descriptor_map2(num_merged_cams);
   for (size_t cid = 0; cid < C.cid_to_filename_.size(); cid++) {
@@ -1103,16 +1209,16 @@ void MergeMaps(sparse_mapping::SparseMap * A_in,
   }
 
   // Modify the tracks after identifying identical images
-  std::vector<std::map<int, int> > pid_to_cid_fid2;
-  for (size_t pid = 0; pid < C.pid_to_cid_fid_.size(); pid++) {
-    auto & cid_fid = C.pid_to_cid_fid_[pid];  // alias
-    std::map<int, int> cid_fid2;
-    for (auto it = cid_fid.begin(); it != cid_fid.end(); it++) {
-      cid_fid2[ cid2cid[ it->first ] ] = it->second;
-    }
-    pid_to_cid_fid2.push_back(cid_fid2);
+  // We would rather keep tracks of length one (which we will filter out
+  // some time later) than ruin the bookkeeping.
+  bool rm_tracks_of_len_one = false;
+  TransformTracks(cid2cid, rm_tracks_of_len_one, &C.pid_to_cid_fid_);
+
+  if (!FLAGS_skip_adding_new_matches_on_merging) {
+    // Modify merged_pid_to_cid_fid as well after identifying identical images
+    bool rm_tracks_of_len_one = true;
+    TransformTracks(cid2cid, rm_tracks_of_len_one, &merged_pid_to_cid_fid);
   }
-  C.pid_to_cid_fid_ = pid_to_cid_fid2;
 
   if (C.pid_to_xyz_.size() != C.pid_to_cid_fid_.size()) {
     LOG(FATAL) << "Book-keeping failure in merging maps, "
@@ -1120,21 +1226,77 @@ void MergeMaps(sparse_mapping::SparseMap * A_in,
   }
 
   // The new lists for the unique images
-  C.cid_to_filename_             = cid_to_filename2;
-  C.cid_to_keypoint_map_         = cid_to_keypoint_map2;
-  C.cid_to_cam_t_global_         = cid_to_cam_t_global2;
-  C.cid_to_descriptor_map_       = cid_to_descriptor_map2;
+  C.cid_to_filename_       = cid_to_filename2;
+  C.cid_to_keypoint_map_   = cid_to_keypoint_map2;
+  C.cid_to_cam_t_global_   = cid_to_cam_t_global2;
+  C.cid_to_descriptor_map_ = cid_to_descriptor_map2;
 
   // Note: after this step, it is possible some tracks are now
   // duplicate.  We don't bother removing them, it would be a pain,
   // since sometimes two tracks may differ in one or more values and
   // those are tricky to reconcile.
 
-  // recreate cid_fid_to_pid_ from pid_to_cid_fid_. This must happen
+  // Recreate cid_fid_to_pid_ from pid_to_cid_fid_. This must happen
   // after the merging is complete but before using the new map.
   C.InitializeCidFidToPid();
 
   // C.Save(output_map + ".reduced.map");
+
+  // Add the new tracks that were identified during matching of images of A to B.
+  if (!FLAGS_skip_adding_new_matches_on_merging) {
+    // Form merged_cid_fid_to_pid
+    int num_cid = C.cid_to_filename_.size();
+    std::vector<std::map<int, int> > merged_cid_fid_to_pid;
+    InitializeCidFidToPid(num_cid, merged_pid_to_cid_fid, &merged_cid_fid_to_pid);
+
+    LOG(INFO) << "Number of tracks found as result of matching images between the maps: "
+              << merged_pid_to_cid_fid.size();
+
+    std::vector<std::map<int, int> > new_pid_to_cid_fid;
+    std::set<int> new_pid_set;
+    // See which tracks obtained during merging are new
+    for (size_t cid = 0; cid < merged_cid_fid_to_pid.size(); cid++) {
+      for (auto it = merged_cid_fid_to_pid[cid].begin();
+           it != merged_cid_fid_to_pid[cid].end(); it++) {
+        if (cid >= C.cid_fid_to_pid_.size()) continue;  // out of range
+        int fid = it->first;
+        if (C.cid_fid_to_pid_[cid].find(fid) != C.cid_fid_to_pid_[cid].end())
+          continue;  // not new
+        int new_pid = it->second;
+        if (new_pid_set.find(new_pid) != new_pid_set.end()) continue;  // inserted already
+
+        // Add this new track
+        new_pid_to_cid_fid.push_back(merged_pid_to_cid_fid[new_pid]);
+        new_pid_set.insert(new_pid);  // mark it as inserted
+      }
+    }
+
+    // Triangulate to find the xyz coordinates of the new tracks
+    std::vector<Eigen::Vector3d> new_pid_to_xyz;
+    std::vector<std::map<int, int> > new_cid_fid_to_pid;
+    bool rm_invalid_xyz = true;  // don't remove anything, as cameras are pretty unreliable now
+    sparse_mapping::Triangulate(rm_invalid_xyz,
+                                C.camera_params_.GetFocalLength(),
+                                C.cid_to_cam_t_global_,
+                                C.cid_to_keypoint_map_,
+                                &new_pid_to_cid_fid,
+                                &new_pid_to_xyz,
+                                &new_cid_fid_to_pid);
+
+    LOG(INFO) << "Of those, number of tracks that are new and will be added to the merged map: "
+              << new_pid_to_cid_fid.size();
+
+    // Append the new tracks to the merged map
+    for (size_t pid = 0; pid < new_pid_to_cid_fid.size(); pid++) {
+      C.pid_to_cid_fid_.push_back(new_pid_to_cid_fid[pid]);
+      C.pid_to_xyz_.push_back(new_pid_to_xyz[pid]);
+    }
+
+    // Recreate cid_fid_to_pid_ from pid_to_cid_fid_.
+    C.InitializeCidFidToPid();
+  }
+
+  LOG(INFO) << "Total number of tracks in the merged map: " << C.pid_to_xyz_.size();
 
   return;
 }
@@ -1431,19 +1593,19 @@ void RegistrationOrVerification(std::vector<std::string> const& data_files,
 
   if (verification) {
     std::cout << "Mean absolute error on verification: " << mean_err << " meters" << std::endl;
-    std::cout << "computed xyz -- measured xyz -- error norm" << std::endl;
+    std::cout << "computed xyz -- measured xyz -- error norm (meters)" << std::endl;
   } else {
     std::cout << "Mean absolute error before registration: " << mean_err << " meters" << std::endl;
-    std::cout << "un-transformed computed xyz -- measured xyz -- error norm" << std::endl;
+    std::cout << "un-transformed computed xyz -- measured xyz -- error norm (meters)" << std::endl;
   }
 
   for (int i = 0; i < user_xyz.cols(); i++) {
     Eigen::Vector3d a = pid_to_xyz[i];
     Eigen::Vector3d b = user_xyz.col(i);
-    std::cout << a.transpose()     << " -- "
-              << b.transpose()     << " -- "
-      //      << (a-b).transpose() << " -- "
-              << (a - b).norm()    << std::endl << std::endl;
+    std::cout << print_vec(a) << " -- "
+              << print_vec(b) << " -- "
+              << print_vec((a - b).norm())
+              << std::endl;
   }
 
   if (verification)
@@ -1479,18 +1641,18 @@ void RegistrationOrVerification(std::vector<std::string> const& data_files,
   std::cout << "Mean absolute error after registration and before final bundle adjustment: "
             << mean_err << " meters" << std::endl;
 
-  std::cout << "transformed computed xyz -- measured xyz -- error norm" << std::endl;
+  std::cout << "transformed computed xyz -- measured xyz -- error norm (meters)" << std::endl;
   for (int i = 0; i < user_xyz.cols(); i++) {
     Eigen::Vector3d a = map->world_transform_*in.col(i);
     Eigen::Vector3d b = user_xyz.col(i);
     int id1 = user_ip(0, i);
     int id2 = user_ip(1, i);
 
-    std::cout << a.transpose()     << " -- "
-              << b.transpose()     << " -- "
-      //      << (a-b).transpose() << " -- "
-              << (a - b).norm()    << " " << images[id1] << ' '
-              << images[id2]       << std::endl << std::endl;
+    std::cout << print_vec(a) << " -- "
+              << print_vec(b) << " -- "
+              << print_vec((a - b).norm()) << " "
+              << images[id1] << ' '
+              << images[id2] << std::endl;
   }
 }
 

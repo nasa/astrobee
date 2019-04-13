@@ -99,6 +99,7 @@
 #define SERVICE_COMMUNICATIONS_DDS_SET_TELEM_RATES  "comm/dds/set_telem_rate"
 
 #define TOPIC_COMMUNICATIONS_DDS_COMMAND            "comm/dds/command"
+#define TOPIC_COMMUNICATIONS_DDS_DATA               "comm/dds/data"
 #define TOPIC_COMMUNICATIONS_DDS_PLAN               "comm/dds/plan"
 #define TOPIC_COMMUNICATIONS_DDS_ZONES              "comm/dds/zones"
 #define TOPIC_COMMUNICATIONS_ROBOTS_AVAILABLE       "comm/robots_available"
@@ -178,11 +179,14 @@
 #define TOPIC_MANAGEMENT_IMG_SAMPLER_DOCK_CAM_RECORD "mgt/img_sampler/dock_cam/image_record"
 #define TOPIC_MANAGEMENT_IMG_SAMPLER_DOCK_CAM_STREAM "mgt/img_sampler/dock_cam/image_stream"
 
+#define SERVICE_MANAGEMENT_DATA_BAGGER_SET_DATA_TO_DISK "mgt/data_bagger/set_data_to_disk"
 #define SERVICE_MANAGEMENT_IMG_SAMPLER_CONFIG_NAV   "mgt/img_sampler/nav_cam/configure"
 #define SERVICE_MANAGEMENT_IMG_SAMPLER_CONFIG_DOCK  "mgt/img_sampler/dock_cam/configure"
 #define SERVICE_MANAGEMENT_IMG_SAMPLER_ENABLE_NAV   "mgt/img_sampler/nav_cam/enable"
 #define SERVICE_MANAGEMENT_IMG_SAMPLER_ENABLE_DOCK  "mgt/img_sampler/dock_cam/enable"
 #define SERVICE_MANAGEMENT_SYS_MONITOR_UNLOAD_LOAD_NODELET "mgt/sys_monitor/unload_load_nodelet"
+#define SERVICE_MANAGEMENT_SCI_CAM_CONFIG           "configure_sci_cam"
+#define SERVICE_MANAGEMENT_SCI_CAM_ENABLE           "enable_sci_cam"
 
 //////////////
 // MOBILITY //

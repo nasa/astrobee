@@ -23,23 +23,25 @@ We go through how a map is made.
 
 Here, we delete the images that overlap highly.
 
-  select_images -density_factor 1 bag_images/*.jpg
+  select_images -density_factor 1.4 bag_images/*.jpg
 
 This is a non-reversible operation, so it should be invoked on a copy
 of the images.
 
 The higher the value of the density factor, the more images will be
-kept. Some experimentation with this number is necessary (the default
-likely removes too many images). Ideally the images should have
-perhaps on the order of 2/3 to 3/4 of overlap.
+kept. Some experimentation with this number is necessary. A value of 1.4
+seems to work well. Ideally the images should have perhaps on the order of 
+2/3 to 3/4 of overlap.
 
 Alternatively, one can simply first pick every 10th or 20th image,
 such as:
 
   ls bag_images/*0.jpg
 
-then copy these to a new directory, open them with an image viewer
-like eog, and delete redundant ones in this viewer.
+then copy these to a new directory.
+
+In either case, one should inspect the images in the 'eog' viewer, 
+and delete redundant ones from it. 
 
 ## Setup the Environment
 
@@ -184,6 +186,14 @@ building process. These include:
 * `-assume_nonsequential`: If true, assume during incremental SfM that an 
    image need not be similar to the one before it. Slows down the process a lot.
 `
+
+The following options can be used to create more interest point features:
+
+  -min_surf_features, -max_surf_features, -min_surf_threshold,
+  -default_surf_threshold, -max_surf_threshold, -min_brisk_features,
+  -max_brisk_features, -min_brisk_threshold, -default_brisk_threshold,
+  -max_brisk_threshold
+
 The `build_map` command uses the file `output.map` as both input and output
 unless the flag `-output_map` is specified.
 
@@ -194,41 +204,80 @@ aligned into a real-world coordinate system using manually defined
 control points.
 
 To transform a map to real-world coordinates using control points,
-first open a subset of the images used to build the map in Hugin.  Go
-to the "Expert" interface, then select matching control points across
-a pair of images (make sure the left and right image are not the
-same). Then repeat this process for several more pairs.
+first open a subset of the images used to build the map in Hugin, such
+as:
+
+  hugin <image files>
+
+It will ask to enter a value for the FOV (field of view). That value
+is not important since we won't use it. One can input 10 degrees,
+for example. 
+
+Go to the "Expert" interface, then select matching control points
+across a pair of images (make sure the left and right image are not
+the same). Then repeat this process for several more pairs.
 
 Save the Hugin project to disk. Create a separate text file which
 contains the world coordinates of the control points picked earlier,
 with each line in the "x y z" format, and in the same order as the
 Hugin project file.  That is to say, if a control point was picked in
-several image pairs in Hugin, it must show up also several times in
-the text file. In the xyz text file all lines starting with the pound
-sign (#) are ignored, as well as all entries on any line beyond three
-numerical values.
+several image pairs in Hugin, it must show up also the same number of
+times in the text file. In the xyz text file all lines starting with
+the pound sign (#) are ignored, as well as all entries on any line
+beyond three numerical values.
 
-The locations of the control points can be found in 
-`localization/marker_tracking/ros/launch/granite_lab_tags.xml`
+The locations of the control points for the granite lab can be found
+in `localization/marker_tracking/ros/launch/granite_lab_tags.xml` If a
+new set of world coordinates needs to be acquired, one can use the
+Total Station, as described in total_station.md, which is in the same
+directory as this file.
 
-Then register the map with the command:
-
-    build_map -registration <hugin files> <xyz files> -num_ba_passes 1 \
-      -skip_filtering -output_map <mapfile.map>
+Register the map with the command:
+    
+    /bin/cp -fv mapfile.map mapfile.registered.map
+    build_map -registration <hugin files> <xyz files> -num_ba_passes 0 \
+     -registration_skip_bundle_adjustment -skip_filtering              \
+     -output_map mapfile.registered.map
 
 There can be multiple such files passed as input. Control point files
 are expected to end in .pto, while xyz files in .txt.
 
-At the end of this, bundle adjustment is redone using the control
-points and xyz measurements as additional information. The xyz
-measurements are kept fixed during this optimization (unlike the xyz
-points obtained purely through interest point matching and
-triangulation) because the measurements are known fixed quantities.
+In practice, to not make mistakes, it is far easier to have both hugin
+and the text file with the xyz points opened at the same time. Each
+time a point is added in hugin and the project is saved, its xyz
+coordinates can be saved to the text file, and the above command can
+be run.
 
-A good sanity check for the quality of xyz points is to register
-without doing bundle adjustment, hence to invoke registration with
--registration_skip_bundle_adjustment. This will show how close the
-measured xyz points are to their computed and registered counterparts.
+After registration is done, it will print each transformed coordinate
+point from the map and its corresponding measured point, as well as the 
+error among the two. That will look as follows:
+
+transformed computed xyz -- measured xyz -- error norm (meters)
+-0.0149 -0.0539  0.0120 --  0.0000  0.0000  0.0000 --  0.0472 img1.jpg img2.jpg
+ 1.8587  0.9533  0.1531 --  1.8710  0.9330  0.1620 --  0.0254 img3.jpg img4.jpg
+
+The error norm should be no more than 3-5 cm. If for a point the error
+is too large, perhaps something went wrong in picking the points. That
+point can be deleted and reacquired, perhaps with a different image
+pair.
+
+If all errors are large, that may mean the camera calibration is wrong
+and needs to be redone, and the map rebuilt, using
+
+  build_map -rebuild -rebuild_refloat_cameras -rebuild_replace_camera
+
+or one should create images that are closer to the points used in
+registration.
+
+Note that we did registration without bundle adjustment, which would
+further refine the cameras using the xyz world coordinates as a
+constraint. The latter should not be necessary if the map is 
+geometrically correct. 
+
+If such bundle adjustment is desired, it will keep the xyz
+measurements fixed during this optimization (unlike the xyz points
+obtained purely through interest point matching and triangulation)
+because the measurements are assumed already accurate.
 
 ## Map Verification
 

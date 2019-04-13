@@ -18,7 +18,7 @@
 cmake_minimum_required(VERSION 3.0)
 project(Astrobee)
 
-set(ASTROBEE_VERSION 0.7.6)
+set(ASTROBEE_VERSION 0.8.0)
 
 if ( "${CMAKE_VERSION}" VERSION_GREATER 3.0.0 )
   cmake_policy(SET CMP0045 OLD)
@@ -287,7 +287,7 @@ if (USE_DDS)
 
   set(MIRO_ROOT_DIR ${SORACORE_ROOT_DIR})
 
-  find_package(Qt4 4.6.0 REQUIRED QtXml)
+  find_package(QtXml REQUIRED)
   find_package(Miro REQUIRED)
   find_package(RtiDds REQUIRED)
   find_package(Soracore REQUIRED)

@@ -1,14 +1,14 @@
 /* Copyright (c) 2017, United States Government, as represented by the
  * Administrator of the National Aeronautics and Space Administration.
- * 
+ *
  * All rights reserved.
- * 
+ *
  * The Astrobee platform is licensed under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -45,17 +45,15 @@ DEFINE_int32(num_similar, 20,
              "Use in localization this many images which "
              "are most similar to the image to localize.");
 DEFINE_int32(num_ransac_iterations, 1000,
-             "Use in localization this many images which "
-             "are most similar to the image to localize.");
+             "Use in localization this many ransac iterations.");
 DEFINE_int32(ransac_inlier_tolerance, 3,
-             "Use in localization this many images which "
-             "are most similar to the image to localize.");
+             "Use in localization this inlier tolerance.");
 DEFINE_int32(early_break_landmarks, 100,
              "Break early when we have this many landmarks.");
 DEFINE_int32(num_extra_localization_db_images, 0,
              "Match this many extra images from the Vocab DB, only keep num_similar.");
 DEFINE_bool(verbose_localization, false,
-            "If true, print more details on localization.");
+            "If true, list the images most similar to the one being localized.");
 
 namespace sparse_mapping {
 
@@ -379,8 +377,10 @@ void SparseMap::Load(const std::string & protobuf_file, bool localization) {
   close(input_fd);
 }
 
-void SparseMap::SetDetectorParams(int min_features, int max_features, int retries) {
-  detector_.Reset(detector_.GetDetectorName(), min_features, max_features, retries);
+void SparseMap::SetDetectorParams(int min_features, int max_features, int retries,
+                                  double min_thresh, double default_thresh, double max_thresh) {
+  detector_.Reset(detector_.GetDetectorName(), min_features, max_features, retries,
+                  min_thresh, default_thresh, max_thresh);
 }
 
 void SparseMap::Save(const std::string & protobuf_file) const {
@@ -489,7 +489,8 @@ void SparseMap::Save(const std::string & protobuf_file) const {
       LOG(FATAL) << "Failed to write landmark to file.";
   }
 
-  vocab_db_.SaveProtobuf(output);
+  if (vocab_db_.binary_db != NULL)
+    vocab_db_.SaveProtobuf(output);
 
   delete output;
   close(output_fd);
@@ -498,11 +499,10 @@ void SparseMap::Save(const std::string & protobuf_file) const {
 
 // Non-member InitializeCidFidToPid() function, useful
 // without a fully-formed map.
+// From pid_to_cid_fid, create cid_fid_to_pid for lookup.
 void InitializeCidFidToPid(int num_cid,
                            std::vector<std::map<int, int> > const& pid_to_cid_fid,
                            std::vector<std::map<int, int> > * cid_fid_to_pid) {
-  // from pid_to_cid_fid, create cid_fid_to_pid for lookup
-  // maybe we should store it this way in the first place?
   cid_fid_to_pid->clear();
   cid_fid_to_pid->resize(num_cid, std::map<int, int>());
 
@@ -539,7 +539,13 @@ void SparseMap::DetectFeatures(const cv::Mat & image,
     // instance, to avoid a crash. This is being used only in
     // map-building, rather than in localization which is more
     // performance-sensitive.
-    interest_point::FeatureDetector local_detector(detector_.GetDetectorName());
+    int min_features, max_features, max_retries;
+    double min_thresh, default_thresh, max_thresh;
+    detector_.GetDetectorParams(min_features, max_features, max_retries,
+                                min_thresh, default_thresh, max_thresh);
+    interest_point::FeatureDetector local_detector(detector_.GetDetectorName(),
+                                                   min_features, max_features, max_retries,
+                                                   min_thresh, default_thresh, max_thresh);
     local_detector.Detect(image, &storage, descriptors);
   }
 
@@ -637,10 +643,12 @@ bool Localize(cv::Mat const& test_descriptors,
   std::vector<Eigen::Vector3d> landmarks;
   std::vector<int> highly_ranked = common::rv_order(similarity_rank);
   int end = std::min(static_cast<int>(highly_ranked.size()), num_similar);
+  if (FLAGS_verbose_localization)
+    std::cout << "Similar images: ";
   for (int i = 0; i < end; i++) {
     int cid = indices[highly_ranked[i]];
-    if (FLAGS_verbose_localization) std::cout << " " << cid_to_filename[cid];
     std::vector<cv::DMatch>* matches = &all_matches[highly_ranked[i]];
+    int num_matches = 0;
     for (size_t j = 0; j < matches->size(); j++) {
       if (cid_fid_to_pid[cid].count(matches->at(j).trainIdx) == 0)
         continue;
@@ -649,7 +657,10 @@ bool Localize(cv::Mat const& test_descriptors,
       observations.push_back(obs);
       const int landmark_id = cid_fid_to_pid.at(cid).at(matches->at(j).trainIdx);
       landmarks.push_back(pid_to_xyz[landmark_id]);
+      num_matches++;
     }
+    if (FLAGS_verbose_localization && num_matches > 0)
+      std::cout << " " << cid_to_filename[cid];
   }
   if (FLAGS_verbose_localization) std::cout << std::endl;
 

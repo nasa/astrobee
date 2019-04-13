@@ -61,6 +61,7 @@ DEFINE_double(vel, -1.0, "Desired velocity");
 DEFINE_double(accel, -1.0, "Desired acceleration");
 DEFINE_double(omega, -1.0, "Desired angular velocity");
 DEFINE_double(alpha, -1.0, "Desired angular acceleration");
+DEFINE_double(tolerance_pos, -1.0, "Tolerance for position accuracy");
 DEFINE_bool(move, false, "Send move command");
 DEFINE_bool(stop, false, "Send stop command");
 DEFINE_bool(idle, false, "Send idle command");
@@ -347,6 +348,11 @@ int main(int argc, char *argv[]) {
       << "-loc -bias or -reset" << std::endl;
     return 1;
   }
+
+  if (FLAGS_planner != "trapezoidal" && FLAGS_planner != "qp") {
+    std::cout << "The planner must be either trapezoidal or qp." << std::endl;
+    return 1;
+  }
   if (FLAGS_move && FLAGS_pos.empty() && FLAGS_att.empty()) {
     std::cout << "The move flag must also have a pos / att flag" << std::endl;
     return 1;
@@ -406,6 +412,7 @@ int main(int argc, char *argv[]) {
     if (FLAGS_omega > 0) cfg.Set<double>("desired_omega", FLAGS_omega);
     if (FLAGS_alpha > 0) cfg.Set<double>("desired_alpha", FLAGS_alpha);
     if (FLAGS_rate  > 0) cfg.Set<double>("desired_rate", FLAGS_rate);
+    if (FLAGS_tolerance_pos > 0) cfg.Set<double>("tolerance_pos", FLAGS_tolerance_pos);
     cfg.Set<bool>("enable_collision_checking", !FLAGS_nocollision);
     cfg.Set<bool>("enable_validation", !FLAGS_novalidate);
     cfg.Set<bool>("enable_bootstrapping", !FLAGS_nobootstrap);

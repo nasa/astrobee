@@ -1,9 +1,20 @@
 #!/bin/bash
 
-if [[ $# -lt 2 ]] 
+#
+# Script to help record different data sets with consistent filenames
+#
+
+if [[ $# -lt 3 ]] 
 then
   echo "Usage:"
-  echo "  recorder.sh procedure step [run [info]]"
+  echo "  recorder.sh what procedure step [run [info]]"
+  echo "    what:       type of data to record"
+  echo "         pmc    record pmc related data"
+  echo "         img    record data for the on orbit functional checkout"
+  echo "         clf    record data for calibration of nav and haz cams (+imu)"
+  echo "         cla    record data for calibration of dock and perch cams (+imu)"
+  echo "         map    record data for map building"
+  echo "         mob    record data for the mobility procedure"
   echo "    procedure:  procedure nickname"
   echo "    step:       step or section to record"
   echo "    run:        run number (default = 1)"
@@ -11,19 +22,20 @@ then
   exit -1
 fi
 
-proc=$1
-step=$2
+what=$1
+proc=$2
+step=$3
 
-if [[ $# -gt 2 ]]
+if [[ $# -gt 3 ]]
 then
-  run=$3
+  run=$4
 else
   run="1"
 fi
 
-if [[ $# -gt 3 ]]
+if [[ $# -gt 4 ]]
 then
-  info=$4
+  info=$5
 else
   info="n/a"
 fi
@@ -53,10 +65,38 @@ bagfile=$dest/$name.bag
 echo $info > $dest/$name.txt
 
 # ROS Core is running on the LLP
-export ROS_MASTER_URI=http://llp:11311
+export ROS_MASTER_URI=http://${MASTER_IP:-llp}:11311
+
+topics=""
+include=""
+exclude=""
+
+case $what in
+  pmc)
+    topics="/hw/eps/housekeeping /hw/pmc/telemetry /hw/pmc/command"
+    ;;
+  img)
+    topics="/hw/cam_nav /hw/cam_dock /hw/imu"
+    include="-e /hw/eps/(.*)|/hw/speed_cam/(.*)|/hw/(.*)/points"
+    ;;
+  clf)
+    topics="/hw/cam_nav /hw/depth_haz/extended/amplitude_int /hw/imu"
+    ;;
+  cla)
+    topics="/hw/cam_dock /hw/depth_perch/extended/amplitude_int /hw/imu"
+    ;;
+  map)
+    topics="/hw/cam_nav /hw/imu"
+    ;;
+  mob)
+    include="-e /gnc/(.*)|/loc/(.*)|/mob/(.*)|/hw/imu|/hw/vive/(.*)"
+    exclude="-x /mob/mapper/(.*)"
+    ;;
+  *)
+    echo "invalid 'what' argument!"
+    exit 1
+  ;;
+esac
 
 echo "Starting to record $bagfile"
-rosbag record \
-  -e "/gnc/(.*)|/loc/(.*)|/mob/(.*)|/hw/imu|/hw/vive/(.*)" \
-  -x "/mob/mapper/(.*)" \
-  -O $bagfile
+rosbag record $topics $include $exclude -O $bagfile

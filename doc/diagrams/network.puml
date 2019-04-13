@@ -1,7 +1,7 @@
 @startuml
 
 skinparam componentStyle uml2
-'skinparam dpi 300
+skinparam dpi 600
 
 !include "colors.puml"
 
@@ -11,6 +11,9 @@ skinparam componentStyle uml2
 !define COLOR_GDS COLOR_6PASTEL_6
 
 'left to right direction
+
+skinparam defaultFontName "Trebuchet MS"
+skinparam defaultFontSize 9
 
 !define SHOW_GROUND 1
 '!define SHOW_LEGEND 1

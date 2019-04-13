@@ -1,14 +1,14 @@
 /* Copyright (c) 2017, United States Government, as represented by the
  * Administrator of the National Aeronautics and Space Administration.
- * 
+ *
  * All rights reserved.
- * 
+ *
  * The Astrobee platform is licensed under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -35,22 +35,60 @@ DEFINE_int32(hamming_distance, 90,
              "A smaller value keeps fewer but more reliable binary descriptor matches.");
 DEFINE_double(goodness_ratio, 0.8,
               "A smaller value keeps fewer but more reliable float descriptor matches.");
-DEFINE_int32(surf_mode, 1,
-             "0: Use default SURF, 1: use dynamic adaptive SURF, 2: Use grid adaptive SURF.");
-
 DEFINE_int32(orgbrisk_octaves, 4,
              "Number of octaves, or scale spaces, that BRISK will evaluate.");
 DEFINE_double(orgbrisk_pattern_scale, 1.0,
              "The pattern scale to use for BRISK.");
 
+// Customize the feature detectors.
+DEFINE_int32(detection_retries, 5,
+             "Number of attempts to acquire the desired number of features with the detector.");
+// SURF detector
+DEFINE_int32(min_surf_features, 1000,
+             "Minimum number of features to be computed using SURF.");
+DEFINE_int32(max_surf_features, 5000,
+             "Maximum number of features to be computed using SURF.");
+DEFINE_double(min_surf_threshold, 1.1,
+              "Minimum threshold for feature detection using SURF.");
+DEFINE_double(default_surf_threshold, 10,
+              "Default threshold for feature detection using SURF.");
+DEFINE_double(max_surf_threshold, 1000,
+              "Maximum threshold for feature detection using SURF.");
+// ORGBRISK detector
+DEFINE_int32(min_brisk_features, 400,
+             "Minimum number of features to be computed using ORGBRISK.");
+DEFINE_int32(max_brisk_features, 800,
+             "Maximum number of features to be computed using ORGBRISK.");
+DEFINE_double(min_brisk_threshold, 10,
+              "Minimum threshold for feature detection using ORGBRISK.");
+DEFINE_double(default_brisk_threshold, 100,
+              "Default threshold for feature detection using ORGBRISK.");
+DEFINE_double(max_brisk_threshold, 200,
+              "Maximum threshold for feature detection using ORGBRISK.");
+
 namespace interest_point {
 
-  DynamicDetector::DynamicDetector(unsigned int min_features, unsigned int max_features, unsigned int max_retries) :
-         min_features_(min_features), max_features_(max_features), max_retries_(max_retries) {}
+  DynamicDetector::DynamicDetector(int min_features, int max_features, int max_retries,
+                                   double min_thresh, double default_thresh, double max_thresh):
+    min_features_(min_features), max_features_(max_features), max_retries_(max_retries),
+    min_thresh_(min_thresh), default_thresh_(default_thresh), max_thresh_(max_thresh),
+    dynamic_thresh_(default_thresh) {}
+
+  void DynamicDetector::GetDetectorParams(int & min_features, int & max_features, int & max_retries,
+                                          double & min_thresh, double & default_thresh,
+                                          double & max_thresh) {
+    min_features = min_features_; max_features = max_features_; max_retries = max_retries_;
+    min_thresh = min_thresh_; default_thresh = default_thresh_; max_thresh = max_thresh_;
+  }
 
   void DynamicDetector::Detect(const cv::Mat& image,
                                std::vector<cv::KeyPoint>* keypoints,
                                cv::Mat* keypoints_description) {
+    // Sometimes we want a placeholder detector for initialization. Yet
+    // that one cannot be used until it is configured.
+    if (default_thresh_ <= 0)
+      LOG(FATAL) << "The detector parameters have not been set.";
+
     for (unsigned int i = 0; i < max_retries_; i++) {
       keypoints->clear();
       DetectImpl(image, keypoints);
@@ -66,14 +104,15 @@ namespace interest_point {
 
   class BriskDynamicDetector : public DynamicDetector {
    public:
-    BriskDynamicDetector(unsigned int min_features, unsigned int max_features,
-                         unsigned int max_retries)
-         : DynamicDetector(min_features, max_features, max_retries), threshold_(100) {
+    BriskDynamicDetector(int min_features, int max_features, int max_retries,
+                         double min_thresh, double default_thresh, double max_thresh)
+      : DynamicDetector(min_features, max_features, max_retries,
+                        min_thresh, default_thresh, max_thresh) {
       Reset();
     }
 
     void Reset(void) {
-      brisk_ = interest_point::BRISK::create(threshold_, FLAGS_orgbrisk_octaves,
+      brisk_ = interest_point::BRISK::create(dynamic_thresh_, FLAGS_orgbrisk_octaves,
                                  FLAGS_orgbrisk_pattern_scale);
     }
 
@@ -85,28 +124,31 @@ namespace interest_point {
       brisk_->compute(image, *keypoints, *keypoints_description);
     }
     virtual void TooMany(void) {
-      threshold_ *= 1.25;
-      if (threshold_ > 200)
-        threshold_ = 200;
-      brisk_->setThreshold(threshold_);
+      dynamic_thresh_ *= 1.25;
+      dynamic_thresh_ = static_cast<int>(dynamic_thresh_);  // for backwards compatibility
+      if (dynamic_thresh_ > max_thresh_)
+        dynamic_thresh_ = max_thresh_;
+      brisk_->setThreshold(dynamic_thresh_);
     }
     virtual void TooFew(void) {
-      threshold_ *= 0.8;
-      if (threshold_ < 80)
-        threshold_ = 80;
-      brisk_->setThreshold(threshold_);
+      dynamic_thresh_ *= 0.8;
+      dynamic_thresh_ = static_cast<int>(dynamic_thresh_);  // for backwards compatibility
+      if (dynamic_thresh_ < min_thresh_)
+        dynamic_thresh_ = min_thresh_;
+      brisk_->setThreshold(dynamic_thresh_);
     }
 
    private:
     cv::Ptr<interest_point::BRISK> brisk_;
-    unsigned int threshold_;
   };
 
   class SurfDynamicDetector : public DynamicDetector {
    public:
-    SurfDynamicDetector(unsigned int min_features, unsigned int max_features, unsigned int max_retries, float threshold)
-         : DynamicDetector(min_features, max_features, max_retries), threshold_(threshold) {
-      surf_ = cv::xfeatures2d::SURF::create(threshold);
+    SurfDynamicDetector(int min_features, int max_features, int max_retries,
+                        double min_thresh, double default_thresh, double max_thresh)
+      : DynamicDetector(min_features, max_features, max_retries,
+                        min_thresh, default_thresh, max_thresh) {
+      surf_ = cv::xfeatures2d::SURF::create(dynamic_thresh_);
     }
 
     virtual void DetectImpl(const cv::Mat& image, std::vector<cv::KeyPoint>* keypoints) {
@@ -117,26 +159,37 @@ namespace interest_point {
       surf_->compute(image, *keypoints, *keypoints_description);
     }
     virtual void TooMany(void) {
-      threshold_ *= 1.1;
-      surf_->setHessianThreshold(threshold_);
+      dynamic_thresh_ *= 1.1;
+      if (dynamic_thresh_ > max_thresh_)
+        dynamic_thresh_ = max_thresh_;
+      surf_->setHessianThreshold(static_cast<float>(dynamic_thresh_));
     }
     virtual void TooFew(void) {
-      threshold_ *= 0.9;
-      if (threshold_ < 1.1)
-        threshold_ = 1.1;
-      surf_->setHessianThreshold(threshold_);
+      dynamic_thresh_ *= 0.9;
+      if (dynamic_thresh_ < min_thresh_)
+        dynamic_thresh_ = min_thresh_;
+      surf_->setHessianThreshold(static_cast<float>(dynamic_thresh_));
     }
 
    private:
     cv::Ptr<cv::xfeatures2d::SURF> surf_;
-    float threshold_;
   };
 
   FeatureDetector::FeatureDetector(std::string const& detector_name,
-                                   int min_features, int max_features,
-                                   int retries) {
+                                   int min_features, int max_features, int retries,
+                                   double min_thresh, double default_thresh, double max_thresh) {
     detector_ = NULL;
-    Reset(detector_name, min_features, max_features, retries);
+    Reset(detector_name, min_features, max_features, retries,
+          min_thresh, default_thresh, max_thresh);
+  }
+
+  void FeatureDetector::GetDetectorParams(int & min_features, int & max_features, int & max_retries,
+                                          double & min_thresh, double & default_thresh,
+                                          double & max_thresh) {
+    if (detector_ == NULL)
+      LOG(FATAL) << "The detector was not set.";
+    detector_->GetDetectorParams(min_features, max_features, max_retries,
+                                 min_thresh, default_thresh, max_thresh);
   }
 
   FeatureDetector::~FeatureDetector(void) {
@@ -147,24 +200,45 @@ namespace interest_point {
   }
 
   void FeatureDetector::Reset(std::string const& detector_name,
-                              int min_features, int max_features,
-                              int retries) {
-    detector_name_   = detector_name;
+                              int min_features, int max_features, int retries,
+                              double min_thresh, double default_thresh, double max_thresh) {
+    detector_name_ = detector_name;
 
     if (detector_ != NULL) {
       delete detector_;
       detector_ = NULL;
     }
 
-    // Loading the detector
-    if (detector_name == "ORGBRISK") {
-      detector_ = new BriskDynamicDetector(min_features, max_features,
-                                           retries);
-    } else if (detector_name == "SURF") {
-      detector_ = new SurfDynamicDetector(min_features, max_features, retries, 10.0);
-    } else {
-      LOG(FATAL) << "Unimplemented feature detector " << detector_name;
+    // Populate the defaults
+    if (max_features <= 0) {
+      if (detector_name == "SURF") {
+        min_features   = FLAGS_min_surf_features;
+        max_features   = FLAGS_max_surf_features;
+        retries        = FLAGS_detection_retries;
+        min_thresh     = FLAGS_min_surf_threshold;
+        default_thresh = FLAGS_default_surf_threshold;
+        max_thresh     = FLAGS_max_surf_threshold;
+      } else if (detector_name == "ORGBRISK") {
+        min_features   = FLAGS_min_brisk_features;
+        max_features   = FLAGS_max_brisk_features;
+        retries        = FLAGS_detection_retries;
+        min_thresh     = FLAGS_min_brisk_threshold;
+        default_thresh = FLAGS_default_brisk_threshold;
+        max_thresh     = FLAGS_max_brisk_threshold;
+      } else {
+        LOG(FATAL) << "Unimplemented feature detector: " << detector_name;
+      }
     }
+
+    // Loading the detector
+    if (detector_name == "ORGBRISK")
+      detector_ = new BriskDynamicDetector(min_features, max_features, retries,
+                                           min_thresh, default_thresh, max_thresh);
+    else if (detector_name == "SURF")
+      detector_ = new SurfDynamicDetector(min_features, max_features, retries,
+                                          min_thresh, default_thresh, max_thresh);
+    else
+      LOG(FATAL) << "Unimplemented feature detector: " << detector_name;
   }
 
   void FeatureDetector::Detect(const cv::Mat& image,

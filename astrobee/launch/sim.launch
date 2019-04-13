@@ -47,13 +47,14 @@
   <arg name="stats" default="false" />          <!-- Message statistics      -->
 
   <!-- Debug-specific options -->
-  <arg name="default" default="true" />         <!-- Insert default robot /  -->
+  <arg name="default" default="true" />         <!-- Insert default robot    -->
   <arg if="$(eval arg('world')=='iss')"
        name="pose"
        default="9.92 -9.54 4.50 0 0 0 1" />     <!-- iss: docked in JPM      -->
   <arg if="$(eval arg('world')=='granite')"
        name="pose"
        default="0 0 -0.7 0 0 0 1" /> <!-- granite: docked         -->
+  <arg name="bumble_pose" default="" />         <!-- Use to overide bumble's pose -->
 
   <!-- Multi-robot simulation -->
   <arg name="honey" default="false" />          <!-- Insert a honey robot    -->
@@ -138,7 +139,7 @@
       <arg name="pose" value="$(arg pose)" />        <!-- Initial robot pose -->
       <arg name="spurn" value="$(arg spurn)" />      <!-- Prevent node       -->
       <arg name="nodes" value="$(arg nodes)" />      <!-- Launch node group  -->
-      <arg name="extra" value="$(arg extra)" />      <!-- Inject extra nodse -->
+      <arg name="extra" value="$(arg extra)" />      <!-- Inject extra nodes -->
       <arg name="debug" value="$(arg debug)" />      <!-- Debug a node set   -->
       <arg name="sim" value="$(arg sim)" />          <!-- SIM IP address     -->
       <arg name="llp" value="$(arg llp)" />          <!-- LLP IP address     -->
@@ -157,7 +158,7 @@
       <arg name="pose" value="0 0 4.8 0 0 0 1" />    <!-- Initial robot pose -->
       <arg name="spurn" value="$(arg spurn)" />      <!-- Prevent node       -->
       <arg name="nodes" value="$(arg nodes)" />      <!-- Launch node group  -->
-      <arg name="extra" value="$(arg extra)" />      <!-- Inject extra nodse -->
+      <arg name="extra" value="$(arg extra)" />      <!-- Inject extra nodes -->
       <arg name="debug" value="$(arg debug)" />      <!-- Debug a node set   -->
       <arg name="sim" value="$(arg sim)" />          <!-- SIM IP address     -->
       <arg name="llp" value="$(arg llp)" />          <!-- LLP IP address     -->
@@ -166,17 +167,20 @@
     </include>
   </group>
 
-  <!-- Auto-insert honey at a canned location -->
+  <!-- Auto-insert bumble at a canned location -->
   <group if="$(arg bumble)">
     <include file="$(find astrobee)/launch/spawn.launch">
       <arg name="robot" value="$(arg robot)" />      <!-- Type of robot      -->
       <arg name="world" value="$(arg world)" />      <!-- Execution context  -->
       <arg name="ns" value="bumble" />               <!-- Robot namespace    -->
       <arg name="output" value="$(arg output)" />    <!-- Output for logging -->
-      <arg name="pose" value="2 0 4.8 0 0 0 1" />    <!-- Initial robot pose -->
+      <arg if="$(eval arg('bumble_pose') == '')" 
+           name="pose"  value="2 0 4.8 0 0 0 1" />   <!-- Initial robot pose -->
+      <arg unless="$(eval arg('bumble_pose') == '')" 
+           name="pose"  value="$(arg bumble_pose)" /> 
       <arg name="spurn" value="$(arg spurn)" />      <!-- Prevent node       -->
       <arg name="nodes" value="$(arg nodes)" />      <!-- Launch node group  -->
-      <arg name="extra" value="$(arg extra)" />      <!-- Inject extra nodse -->
+      <arg name="extra" value="$(arg extra)" />      <!-- Inject extra nodes -->
       <arg name="debug" value="$(arg debug)" />      <!-- Debug a node set   -->
       <arg name="sim" value="$(arg sim)" />          <!-- SIM IP address     -->
       <arg name="llp" value="$(arg llp)" />          <!-- LLP IP address     -->
@@ -185,7 +189,7 @@
     </include>
   </group>
 
-  <!-- Auto-insert honey at a canned location -->
+  <!-- Auto-insert queen at a canned location -->
   <group if="$(arg queen)">
     <include file="$(find astrobee)/launch/spawn.launch">
       <arg name="robot" value="$(arg robot)" />      <!-- Type of robot      -->
@@ -195,7 +199,7 @@
       <arg name="pose" value="4 0 4.8 0 0 0 1" />    <!-- Initial robot pose -->
       <arg name="spurn" value="$(arg spurn)" />      <!-- Prevent node       -->
       <arg name="nodes" value="$(arg nodes)" />      <!-- Launch node group  -->
-      <arg name="extra" value="$(arg extra)" />      <!-- Inject extra nodse -->
+      <arg name="extra" value="$(arg extra)" />      <!-- Inject extra nodes -->
       <arg name="debug" value="$(arg debug)" />      <!-- Debug a node set   -->
       <arg name="sim" value="$(arg sim)" />          <!-- SIM IP address     -->
       <arg name="llp" value="$(arg llp)" />          <!-- LLP IP address     -->

@@ -1,0 +1,11 @@
+{
+  "type" : "DataConfigurationFile",
+  "name" : "imu_only",
+  "topicSettings": [ 
+    {
+      "topicName" : "/hw/imu",
+      "downlinkOption" : "immediate",
+      "frequency" : -1
+    }
+  ]
+}

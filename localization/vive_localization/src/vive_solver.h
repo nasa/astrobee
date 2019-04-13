@@ -225,6 +225,8 @@ class Solver {
   size_t  count_;
   bool correct_, calibrate_, refine_, register_,
     refine_extrinsics_, refine_sensors_, refine_head_, refine_params_;
+  Eigen::Vector3d modification_vector;
+  Eigen::Quaterniond modification_quaternion;
   ceres::Solver::Options options_;          // Solver options
   double wTv_[6];                           // Registation
   std::map<std::string, Eigen::Affine3d> calibration_;

@@ -17,4 +17,4 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-rosrun executive teleop_pub $1 $2 $3
+rosrun executive simple_move $1 $2 $3

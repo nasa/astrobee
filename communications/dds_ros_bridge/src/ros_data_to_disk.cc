@@ -30,10 +30,9 @@ namespace {
 
 rapid::ext::astrobee::DownlinkOption ConvertOption(uint8_t state) {
   switch (state) {
-    GENERATE_DATA_TO_DISK_CASE(NONE);
     GENERATE_DATA_TO_DISK_CASE(IMMEDIATE);
     GENERATE_DATA_TO_DISK_CASE(DELAYED);
-    GENERATE_DATA_TO_DISK_DEFAULT(NONE);
+    GENERATE_DATA_TO_DISK_DEFAULT(IMMEDIATE);
   }
 }
 

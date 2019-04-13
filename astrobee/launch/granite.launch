@@ -97,7 +97,7 @@
     <arg name="drivers" value="true" />            <!-- Start drivers?       -->
     <arg name="spurn" value="$(arg spurn)" />      <!-- Prevent node         -->
     <arg name="nodes" value="$(arg nodes)" />      <!-- Launch node group    -->
-    <arg name="extra" value="$(arg extra)" />      <!-- Inject extra nodse   -->
+    <arg name="extra" value="$(arg extra)" />      <!-- Inject extra nodes   -->
     <arg name="llp" value="$(arg llp)" />          <!-- LLP IP address       -->
     <arg name="mlp" value="$(arg mlp)" />          <!-- MLP IP address       -->
     <arg name="dds" value="$(arg dds)" />          <!-- Enable DDS           -->

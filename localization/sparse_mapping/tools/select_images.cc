@@ -39,7 +39,7 @@
 // From a given set of images, eliminate images such that the sequence
 // is still contiguous, but has fewer images.
 
-DEFINE_double(density_factor, 1,
+DEFINE_double(density_factor, 1.4,
               "Increasing this value will allow more images to be kept.");
 
 int main(int argc, char** argv) {
@@ -55,7 +55,7 @@ int main(int argc, char** argv) {
   cv::Mat image1, image2, image_last, descriptors1, descriptors2, descriptors_last;
   std::vector<cv::KeyPoint> storage;
 
-  detector.Reset("ORGBRISK", 100, 20000, 3);
+  detector.Reset("ORGBRISK");
 
   printf("Removing duplicate images...\n");
   common::PrintProgressBar(stdout, 0.0);

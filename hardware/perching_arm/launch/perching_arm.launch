@@ -21,6 +21,5 @@
     <arg name="name" value="$(arg name)" />
     <arg name="manager" value="$(arg manager)" />
     <arg name="class" value="perching_arm/PerchingArmNode" />
-    <arg name="required" value="false" />
   </include>
 </launch>

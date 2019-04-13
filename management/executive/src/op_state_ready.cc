@@ -133,7 +133,7 @@ OpState* OpStateReady::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
     } else {
       AckCmd(cmd->cmd_id,
              ff_msgs::AckCompletedStatus::EXEC_FAILED,
-             "Cannot moved when in ready and not stopped.");
+             "Cannot move when in ready and not stopped.");
       return this;
     }
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_SKIP_PLAN_STEP) {

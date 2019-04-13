@@ -1,14 +1,14 @@
 /* Copyright (c) 2017, United States Government, as represented by the
  * Administrator of the National Aeronautics and Space Administration.
- * 
+ *
  * All rights reserved.
- * 
+ *
  * The Astrobee platform is licensed under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -63,13 +63,24 @@ void ReadParams(interest_point::FeatureDetector* detector) {
   }
 
   int min_features, max_features, detection_retries;
+  double min_brisk_threshold, default_brisk_threshold, max_brisk_threshold;
   if (!config.GetInt("min_features", &min_features))
     ROS_FATAL("min_features not specified in localization.");
   if (!config.GetInt("max_features", &max_features))
     ROS_FATAL("max_features not specified in localization.");
   if (!config.GetInt("detection_retries", &detection_retries))
     ROS_FATAL("detection_retries not specified in localization.");
-  detector->Reset("ORGBRISK", min_features, max_features, detection_retries);
+
+  // For the brisk thresholds, quietly assume some defaults
+  if (!config.GetReal("min_brisk_threshold", &min_brisk_threshold))
+    min_brisk_threshold = 80.0;
+  if (!config.GetReal("default_brisk_threshold", &default_brisk_threshold))
+    max_brisk_threshold = 100.0;
+  if (!config.GetReal("max_brisk_threshold", &max_brisk_threshold))
+    max_brisk_threshold = 200.0;
+
+  detector->Reset("ORGBRISK", min_features, max_features, detection_retries,
+                  min_brisk_threshold, default_brisk_threshold, max_brisk_threshold);
 }
 
 void DetectImageFeatures(interest_point::FeatureDetector & detector, sensor_msgs::ImageConstPtr & image_msg,

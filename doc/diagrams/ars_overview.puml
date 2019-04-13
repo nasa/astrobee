@@ -1,7 +1,7 @@
 @startuml
 
 skinparam componentStyle uml2
-skinparam dpi 300
+skinparam dpi 600
 
 !include "colors.puml"
 
@@ -13,6 +13,9 @@ skinparam dpi 300
 !define COLOR_DRV COLOR_9PASTEL_7
 
 !define COLOR_PSOM COLOR_9PASTEL_9
+
+skinparam defaultFontName "Trebuchet MS"
+skinparam defaultFontSize 9
 
 skinparam component {
   backgroundColor COLOR_6PASTEL_2
@@ -35,7 +38,7 @@ title Astrobee Robot Software Overview
 
 frame Astrobee {
 
-  node "** HLP**\n //Android 7.1//" as HLP COLOR_PSOM {
+  node "** HLP**" as HLP COLOR_PSOM {
     [Guest Science\nManager] as gs_mgr COLOR_MGT
     [Guest Sience\nAPKs] as apks
     component ui_drivers COLOR_DRV [
@@ -52,7 +55,7 @@ frame Astrobee {
     'apks -[hidden]up- streamer
   }
 
-  node "**  MLP**\n //Ubuntu 16.04//" as MLP COLOR_PSOM {
+  node "**  MLP**" as MLP COLOR_PSOM {
     component executive COLOR_MGT [
     \nexecutive\n
     ]
@@ -89,14 +92,21 @@ frame Astrobee {
 
   }
 
-  node "**  LLP**\n //Ubuntu 16.04//" as LLP COLOR_PSOM {
+  node "**  LLP**" as LLP COLOR_PSOM {
     component gnc COLOR_GNC [
     GN&C
     **EKF <&arrow-thick-right> CTL <&arrow-thick-right> FAM**
     ]
     [propulsion] COLOR_DRV
     [IMU] COLOR_DRV
-    [other_drivers] COLOR_DRV
+    component other_drivers COLOR_DRV [
+    other_drivers
+    |_ power_system
+    |_ status_lights
+    |_ signal_lights
+    |_ flashlights
+    |_ laser
+    ]
 
     gnc --> IMU
     gnc --> propulsion

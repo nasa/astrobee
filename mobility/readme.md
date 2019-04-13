@@ -22,7 +22,7 @@ The mobility subsystem provides the callee with a single action-based entry poin
 
 The action supports only one goal at a time, which is fully-preemptible. This means that a new goal always preempts the current goal (the previous goal's callee will be notified of preemption). Consequently, you must be careful not to interact with the otion action while active.
 
-The mobility subsystem is comprised of four different nodes, each havin
+The mobility subsystem is comprised of four different nodes.
 
 * `Choreographer` - The choreographer is the central point of entry to the mobility subsystem. In addition to offering the motion action, it also provides the ability to set keep-in and keep-out zones and inertial properties.
 
@@ -34,7 +34,7 @@ The mobility subsystem is comprised of four different nodes, each havin
 
 The diagram below illustrates how the various ndoes in the system interact with each other. ROS ctions are drawn in red, while ROS services are drawn in blue. Nodes that are part of the mobility subsystem are drawn as black boxes, while external nodes are drawn as white boxes.
 
-![alt text](../images/mobility/overview.png "Interaction between mobility modules")
+![alt text](../images/mobility/mob_overview.png "Interaction between mobility modules")
 
 # Using the mobility subsystem
 
@@ -72,37 +72,78 @@ If you ever need to manually set the motion state to a specific value, you can c
 
     rosservice call /mob/motion/set_state 1
 
-# Generating acceleration profiles
+#  Generating a plan from a sequence of poses.
 
-The plangen tool can be used to query a planner directly, obtain a segment as a response, and write the time-ordered acceleration profile to file. This is useful for the MGTF facility, which requires an acceleration profile as input for controlling the gantry and gimbal.
+Given a list of poses (positions in meters, and angles in degrees) the
+plangen tool can use the trapezoidal planner to create planned
+trajectory that goes between these poses.
 
-First, create an input file (eg. input.txt) with timestamped poses. If you put zeros for timestamps the planner will try and do the action as quickly as possible, given the kinematic constraints (the linear and angular velocity and acceleration limits for the current flight mode). For example, the pose sequence below is 60 seconds long, starts at x = 1.0, y = -1.0, z = 1.0 with identity rotation, then does a yaw of 90 degrees and move to x = -1.0, y = 1.0, z = 1.0. Each row is of the form [t x y z q_x q_y q_z q_w], where q = [q_x q_y q_z q_w] is an attitude quaternion.
+This tool does not enforce the robot following this plan to always
+face forward. If that is desired, the input poses should be created
+accordingly.
 
-Here is an example of a suitable input file:
+Since the planner will take the shortest path among two poses, to
+avoid ambiguity it is suggested that the angles do not change by more
+than 90 degrees between poses.
 
-    0.0   1.0  -1.0  1.0  0.0  0.0     0.0  1.0
-    20.0 -1.0  1.0  1.0  0.0  0.7071  0.0  0.7071
-    40.0 -1.0 -1.0  1.0  0.0  0.0     0.0  1.0
-    60.0  1.0 -1.0  1.0  0.0  0.7071  0.0  0.7071
+Here is an example list of poses in the Kibo module, written as a file
+named input.txt.
 
-Then, run an ISS simulation and wait a couple of seconds for the system to start:
+# x    y      z  roll pitch yaw (degrees)
+10.93 -9.2  4.85  0    0    90
+10.93 -6.2  4.85  0    0     0
 
-    roslaunch astrobee sim.launch
+Here the robot will start looking down the length of the module (the
+largest dimension, which is the Y axis), and move by 3 meters. During
+that time, the robot's orientation will change from forward to
+sideways.
 
-Now query the planner using my tool and the input pose sequence you created:
+Here is another example:
 
-    rosrun mobility plangen -input /path/to/input.txt -output /path/to/output.csv
+# 360 degree yaw rotation at a 45 degree pitch.
+# x    y      z  roll pitch   yaw (degrees)
+10.93 -9.2  4.85   0     0     90 # face forward
+10.93 -9.2  4.85   0    45     90 # pitch up at 45 degrees
+10.93 -9.2  4.85   0    45    180 # yaw rotation
+10.93 -9.2  4.85   0    45    270 # more yaw rotation
+10.93 -9.2  4.85   0    45    360 # more yaw rotation
+10.93 -9.2  4.85   0    45     90 # back to the original yaw
 
-If everything works correctly you should see an output.csv created, which can be fed directly into the MGTF. The output file is really just a time-indexed sequence of accelerations that yield velocity trapezoids that move between the poses you supplied. To control the velocity and acceleration of the gantry you can use the following switches to plangen:
+The planner tool can be invoked as follows:
 
-    vel  : desired linear velocity in m/s
-    accel : desired linear acceleration in m/s^2
-    omega : desired angular velocity in rads/s
-    alpha : desired angular acceleration in rads/s^2
-    ff : force the robot to always face in the direction of motion
+freeflyer_build/native/devel/lib/mobility/plangen -input input.txt \
+ -output output.fplan -vel 0.2 -accel 0.017 -omega 0.17 -alpha 0.2
 
-For example this limits the net angular velocity to 10mm per second:
+It will write the file output.fplan that can be loaded and tested in GDS.
 
-    rosrun mobility plangen -input /path/to/input.txt -output /path/to/output.csv -vel 0.01
+The input options are:
 
-There are other options, which might be useful. To see them use -helpshort.
+    -vel   : maximum desired linear velocity in m/s
+    -accel : maximum desired linear acceleration in m/s^2
+    -omega : maximum desired angular velocity in rads/s
+    -alpha : maximum desired angular acceleration in rads/s^2
+
+It is very important to note that the order in which the the roll,
+pitch, and yaw rotations are multiplied gives rise to different
+rotation matrices. This tool supports the option
+
+  -rotations_multiplication_order
+
+The default value is 'yaw-pitch-roll', hence the rotations matrices
+with these angles are multiplied as
+
+  rotation(yaw) * rotation(pitch) * rotation(roll)
+
+As such, the roll rotation happens first, followed by the pitch
+rotation, and followed by the yaw rotation. This option also supports
+the value 'roll-pitch-yaw' when the order above is reversed. In total,
+there are six ways of multiplying these rotation matrices.
+
+Other options can be seen by invoking the -help option.
+
+# Creating acceleration profiles.
+
+If plangen is invoked with --output-type csv, it will create
+acceleration profiles that could be used to control the gantry in
+MGTF.
+

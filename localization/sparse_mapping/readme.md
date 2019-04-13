@@ -92,9 +92,10 @@ To visualize a map, use the command:
 
     nvm_visualize <output.map> [ <image1.jpg> <image2.jpg> ... ]
 
-In the viewer, press `a` and `d` (or the left and right arrow
-keys) to navigate through the images. Press `c` to show the cameras
-and triangulated points in 3D. Press `q` to exit the viewer.
+In the viewer, press `a` and `d` (or the left and right arrow keys, or
+the Ins and Del keys on the num pad) to navigate through the
+images. Press `c` to show the cameras and triangulated points in
+3D. Press `q` to exit the viewer.
 
 In `c` mode, press left and right to visualize the localization
 results for the input image `imageN.jpg`. If no images are
@@ -109,16 +110,27 @@ same perspective.
 The viewer can display just a subset of the cameras, using the `-first`
 and `-last` options, and the size of cameras can be set with `-scale`.
 
-Only the camera positions can be displayed if the viewer is invoked with
-`-skip_3d_points` and `-jump_to_3d_view`. The cameras can be made to rotate
-around the center of mass of the cameras, rather than the origin, using
-the `d` key.
+Only the camera positions can be displayed, without the 3D points, if
+the viewer is invoked with `-skip_3d_points`. The cameras can be made
+to rotate around the center of mass of the cameras, rather than the
+origin, using the `d` key. When in 3D view, rendering of thumbnails of
+the images can be skipped, as that makes the viewer slow, with
+'-skip_3d_images'.
+
+Clicking on an interest point with the middle mouse will display all
+images in which that interest point was detected, with the interest
+point in each of them shown as a red dot. Clicking back on the
+original window with the middle mouse will make these images go away.
 
 ### Localize a Single Frame
 
 To test localization of a single frame, use the command:
 
     localize <map.map> <image.jpg>
+
+If invoked with the option -verbose_localization, it will list the
+images most similar to the one being localized. To increase the 
+number of similar images, use the -num_similar option.
 
 ### Testing Localization 
 
@@ -140,14 +152,19 @@ well-registered.
 
 This functionality is implemented in the localize_cams tool. Usage:
 
-    localize_cams -num_similar 20 -ransac_inlier_tolerance 20     \
-      -ransac_iterations 100 -min_features 200 -max_features 800  \
-      -detection_retries 2 -num_threads 2    \
-      -reference_map ref.map -source_map source.map
+  localize_cams -num_similar 20 -ransac_inlier_tolerance 20     \
+    -num_ransac_iterations 200 -min_brisk_features 400          \
+    -max_brisk_features 800 -min_brisk_threshold 10             \
+    -default_brisk_threshold 100 -max_brisk_threshold 200       \
+    -detection_retries 5 -num_threads 2                         \
+    -reference_map ref.map -source_map source.map
 
-Here we have used the settings from 
-astrobee/config/localization.config as when localization happens on
-the robot.
+Here we use values that are different from 
+
+  astrobee/config/localization.config 
+
+which are used for localization on the robot, since those are optimized
+for speed and here we want more accuracy.
 
 ### Extract sub-maps
 
@@ -162,7 +179,8 @@ then all maps can be merged together with `merge_maps`.
 
 or
 
-    extract_submap -input_map <input map> -output_map <output map> -xyz_box "xmin xmax ymin ymax zmin zmax"
+    extract_submap -input_map <input map> -output_map <output map> \
+      -xyz_box "xmin xmax ymin ymax zmin zmax"
 
 If it is desired to not re-adjust the cameras after the submap is
 extracted (for example, if the map is already registered), use the

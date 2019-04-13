@@ -53,7 +53,7 @@ then
   else
       sudo /bin/bash -c "echo \"deb [arch=amd64] http://127.0.0.1:8765/software xenial main\" > $arssrc" || exit 1
       sudo /bin/bash -c "echo \"deb-src http://127.0.0.1:8765/software xenial main\" >> $arssrc" || exit 1
-      ssh -N -L 8765:astrobee.ndc.nasa.gov:80 m.ndc.nasa.gov &
+      ssh -N -L 8765:astrobee.ndc.nasa.gov:80 ${username}m.ndc.nasa.gov &
   fi
   
   trap "kill $! 2> /dev/null; sudo truncate -s 0 $arssrc; wait $!" 0 HUP QUIT ILL ABRT FPE SEGV PIPE TERM INT

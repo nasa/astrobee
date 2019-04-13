@@ -301,7 +301,7 @@ void EkfWrapper::RegisterDepthCamera(ff_msgs::CameraRegistration::ConstPtr const
 void EkfWrapper::GroundTruthCallback(geometry_msgs::PoseStamped::ConstPtr const& pose) {
   // For certain contexts (like MGTF) we want to extract the correct orientation, and pass it to
   // GNC, so that Earth's gravity can be extracted out of the linear acceleration.
-  std::unique_lock<std::mutex> lk(mutex_truth_msg_);
+  std::lock_guard<std::mutex> lk(mutex_truth_msg_);
   assert(pose->header.frame_id == "world");
   quat_ = pose->pose.orientation;
   if (input_mode_ == ff_msgs::SetEkfInputRequest::MODE_TRUTH) {
@@ -311,7 +311,7 @@ void EkfWrapper::GroundTruthCallback(geometry_msgs::PoseStamped::ConstPtr const&
 }
 
 void EkfWrapper::GroundTruthTwistCallback(geometry_msgs::TwistStamped::ConstPtr const& twist) {
-  std::unique_lock<std::mutex> lk(mutex_truth_msg_);
+  std::lock_guard<std::mutex> lk(mutex_truth_msg_);
   assert(twist->header.frame_id == "world");
   if (input_mode_ == ff_msgs::SetEkfInputRequest::MODE_TRUTH) {
     truth_twist_= *twist;
@@ -378,7 +378,7 @@ int EkfWrapper::Step() {
   // In truth mode we don't step the filter forward, but we do copy the pose
   // and twist into the EKF message.
   case ff_msgs::SetEkfInputRequest::MODE_TRUTH: {
-      std::lock_guard<std::mutex> lk(mutex_truth_msg_, std::adopt_lock);
+      std::lock_guard<std::mutex> lk(mutex_truth_msg_);
       ros::Time t = ros::Time::now();
       if (fabs((truth_pose_.header.stamp - t).toSec()) < 1 &&
           fabs((truth_twist_.header.stamp - t).toSec()) < 1) {

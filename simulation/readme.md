@@ -25,7 +25,7 @@ To increase the simulation speed to 4x:
 
     speed:=4
 
-To open an Gviz GUI:
+To open an Rviz GUI:
 
     rviz:=true
 
@@ -49,7 +49,7 @@ Note that all GUIs have a substantial effect on performance and care should be t
 
     [ERROR] [<timestamp>] : (ros.Astrobee) Fault with id 11 occurred. Fault error message: Didn't receive a heartbeat from <node>
 
-You can fix this error by increasing the value of variable "heartbeat_queue_size" in the robot config. For example, if you are simulating the robot *bsharp*, you must open the LUA config file *astrobee/config/robots/bsharp.config*, ind increase the value of this line:
+You can fix this error by increasing the value of variable "heartbeat_queue_size" in the robot config. For example, if you are simulating the robot *bsharp*, you must open the LUA config file *astrobee/config/robots/bsharp.config*, and increase the value of this line:
 
     heartbeat_queue_size = <x>
 
@@ -87,14 +87,14 @@ One of the great sources of computational complexity in simulation is the calcul
 
 Every sensor on the Free Flyer has a pose with respect to the body frame, which we generally call the *extrinsics* of the sensor. Having a good estimate of the true extrinsics is required for localization, control, etc. On a real robot we would run a calibration procedure to estimate for these extrinsics. In simulation we control the extrinsics, which is both advantageous and disadvantageous: we can test the effect of extrinsic estimation error, but we have to ensure that there is consistency between the simulation and perception.
 
-Achieving this consistency is difficult because of technical limitations with. There are several options, each having its own challenges:
+Achieving this consistency is difficult because of technical limitations. There are several options, each having its own challenges:
 
 1. Inject the correct transforms into the URDF so that the robot is spawned with the extrinsics set correctly -- auto-generation of the URDF is done using xacro. It is difficult to parse LUA variables from within xacro, especially because the robot might only be known at run-time through an environment variable, and not at parse time.
 2. Have the plugins read the LUA to extract the transforms -- unfortunately the plugins are loaded into the gazebo server centrally. Since multiple heterogeneous robots might be loaded, the plugin does not know the robot config; it knows the namespace, but not the robot type.
 3. Have the plugins listen to TF2 -- since framestore publishes namespace-prefixed transforms for a given Free Flyer, the plugin only needs to know its local frame and parent frame.
 4. Just hard-code the transforms into the plugins, or as arguments to the plugins declared in the URDF -- leads to consistency problems.
 
-We opted for (3) above, because it's relatively easy to implement, maintains consistency between simulation and perception, and integrates well with our existing frame transform engine. However, special care had to be taken with the regular, wide andgle and depth cameras. The complexity is handled by the FreeflyerModelPlugin and FreeflyerSensorPlugin abstract classes, provided the correct frame is used as the name for the plugin.
+We opted for (3) above, because it's relatively easy to implement, maintains consistency between simulation and perception, and integrates well with our existing frame transform engine. However, special care had to be taken with the regular, wide angle and depth cameras. The complexity is handled by the FreeflyerModelPlugin and FreeflyerSensorPlugin abstract classes, provided the correct frame is used as the name for the plugin.
 
 ## Development and debugging
 
@@ -121,7 +121,7 @@ Every robot in the system is comprised of links and joints. The description of t
 
 This is the class used for common traits all gazebo plugins have. Each plugin inherits either a *FreeflyerSensorPlugin* or a *FreeflyerModelPlugin*. Those both inherit from freeflyer nodelet so they produce heartbeats like all other freeflyer nodes. Each plugin also has its own queue thread for callbacks, allowing the plugins to subscribe and publish to multiple topics if necessary without any callback issues between plugins all running on the gzserver.
 
-The extrinsics for each sensor is also setup based on the tf2 transform being published for the frame attached to the sensor in it's URDF. If a frame isn't specified, the sensor name will be used to attempt to find a proper transform. For most sensors the pose from tf2 is directly transfered as the sensor pose. However there is a discrepancy between the pose used for the flight software cameras and the pose used by gazebo for cameras. In the flight software a camera frame is defined by z pointing into the camera frame and x pointing the the right. In gazebo a camera is defined with z pointing up and x pointing into the camera frame. To transform from flight software to gazebo a rotation about x is needed followed by a rotation about z.
+The extrinsics for each sensor is also setup based on the tf2 transform being published for the frame attached to the sensor in it's URDF. If a frame isn't specified, the sensor name will be used to attempt to find a proper transform. For most sensors the pose from tf2 is directly transferred as the sensor pose. However there is a discrepancy between the pose used for the flight software cameras and the pose used by gazebo for cameras. In the flight software a camera frame is defined by z pointing into the camera frame and x pointing the the right. In gazebo a camera is defined with z pointing up and x pointing into the camera frame. To transform from flight software to gazebo a rotation about x is needed followed by a rotation about z.
 
 **Dock plugin**
 
@@ -129,7 +129,7 @@ This plugin does nothing beyond repositioning the dock dynamically in simulation
 
 **EPS plugin**
 
-This simulates the dock state produced by the actual EPS. It continually checks how close the Free Flyer is to the dock. When the Free FLyer moves within a threshold distance, a virtual joint is created to lock the Free Flyer to the dock. The EPS then updates the state from DOCKING to DOCKED similar to the hardware driver. This provides sufficient information for the \ref dock behavior to dock and undock a real or simulated Free Flyer. To test
+This simulates the dock state produced by the actual EPS. It continually checks how close the Free Flyer is to the dock. When the Free Flier moves within a threshold distance, a virtual joint is created to lock the Free Flyer to the dock. The EPS then updates the state from DOCKING to DOCKED similar to the hardware driver. This provides sufficient information for the \ref dock behavior to dock and undock a real or simulated Free Flyer. To test
 
     rosrun dock dock_tool -ns %ns% -dock
     rosrun dock dock_tool -ns %ns% -undock
@@ -163,14 +163,24 @@ This plugin subscribes to the PMC command topic, which includes an impeller spee
     rostopic echo /%ns$/hw/pmc/state
     rostopic echo /%ns$/hw/pmc/telemetry
 
-**NavCam and DockCam plugin**
+**NavCam and DockCam plugins**
 
-These are forward and aft-facing greyscale cameras The plugin copies the image data from the gazebo camera sensor into a sensor_msgs::Image message and publishes is to the to the appropriate ROS topic. To test:
+These are forward and aft-facing grayscale cameras. The plugin copies the image data from the gazebo camera sensor into a sensor_msgs::Image message and publishes is to the to the appropriate ROS topic. To test:
 
     rostopic hz /%ns$/hw/cam_nav
     rostopic hz /%ns$/hw/cam_dock
 
-**HazCam and PerchCam plugin**
+By default, the cameras are disabled, for performance reasons. To enable one of both them, one can edit
+
+  astrobee/config/simulation/simulation.config
+
+If the camera images are incorrect, it can be because the simulator cannot keep up. Then the speed of simulation can be decreased, for example, with:
+
+    speed:=0.5
+
+The resolution of these cameras is 320 by 240 pixels, as set in sensor_nav_cam.urdf.xacro and sensor_dock_cam.urdf.xacro. The resolution can be increased to 1280 x 960 to agree with the real-world cameras.
+
+**HazCam and PerchCam plugins**
 
 These are forward and aft facing depth cameras. The plugin copies the point cloud data from the gazebo depth camera sensor into a sensor_msgs::PointCloud2 message and publishes it to the appropriate ROS topic. To test:
 

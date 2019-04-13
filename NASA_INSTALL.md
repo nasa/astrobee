@@ -1,4 +1,4 @@
-# Usage instructions for NASA users
+s# Usage instructions for NASA users
 
 Install the 64-bit version of [Ubuntu 16.04](http://releases.ubuntu.com/16.04)
 on a host machine, and make sure that you can checkout and build code.
@@ -18,11 +18,18 @@ support running Astrobee Robot Software on 32-bit systems.*
   need to have credentials on `volar` to run these scripts.
 - If you are using a VM with a username that does not match your NDC username,
   you have two options:
-  - Set correctly the environment variable `NDC_USERNAME`
-  - Or set a ssh config that specify the right username for volar.
-- If you are outside the NASA ARC private network, you need to:
-  - Either use VPN to act like if you were inside the ARC TI private network
-  - Or setup your `.ssh/config` to do ssh forwarding. A tutorial on this method
+  1. Set correctly the environment variable `NDC_USERNAME` with your NASA NDC
+     username.
+  2. Or set a ssh config that specify the right username for volar.
+- If you are outside the NASA ARC private network, there are two options to get
+  to volar:
+  1. Use VPN to act like if you were inside the ARC TI private network and 
+     obtain the correct kerberos credentials inside the VM with the following
+     command (note the capitalization):
+```
+kinit $NDC_USERNAME@NDC.NASA.GOV`
+```
+  2. setup your `.ssh/config` to do ssh forwarding. A tutorial on this method
   is available at: https://babelfish.arc.nasa.gov/trac/freeflyer/wiki/SSHSetup
 - These notes apply to `add_local_repository.sh` and `make_xenial.sh`
 
@@ -168,6 +175,10 @@ cache of information about package locations, libraries and executables. If you
 find that the above command doesn't work, try rebuilding the cache:
 
     rospack profile
+
+A simulator readme was created for guest science users. However this readme may
+be beneficial to interns and/or new members. If you fall into one of these
+categories, please see the [simulation instructions](sim_overview.md).
 
 ## Running the code on a real robot
 

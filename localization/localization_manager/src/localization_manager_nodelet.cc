@@ -387,65 +387,110 @@ class LocalizationManagerNodelet : public ff_util::FreeFlyerNodelet {
       int mode;
       if (!pipeline.GetInt("ekf_input", &mode))
         AssertFault(ff_util::INITIALIZATION_FAILED, "Could not get ekf_input");
+
       // Allocate the pipeline
       Pipeline & p = pipelines_.emplace(id,
         Pipeline(static_cast<uint8_t>(mode), name)).first->second;
+
       // Filter requirement
-      bool needs_filter = false;
-      if (pipeline.GetBool("needs_filter", &needs_filter)) {
-        int max_confidence = 0;
-        if (!pipeline.GetInt("max_confidence", &max_confidence))
-          AssertFault(ff_util::INITIALIZATION_FAILED, "Could not get max confidence");
-        bool optical_flow = false;
-        if (!pipeline.GetBool("optical_flow", &optical_flow))
-          AssertFault(ff_util::INITIALIZATION_FAILED, "Could not get optical flow");
-        double timeout = 1.0;
-        if (!pipeline.GetReal("timeout", &timeout))
-          AssertFault(ff_util::INITIALIZATION_FAILED, "Could not get timeout");
-        // Set a filter need
-        p.NeedsFilter(max_confidence, optical_flow, timeout);
+      if (pipeline.CheckValExists("needs_filter")) {
+        bool needs_filter = false;
+        if (pipeline.GetBool("needs_filter", &needs_filter)) {
+          if (needs_filter) {
+            int max_confidence = 0;
+            if (!pipeline.GetInt("max_confidence", &max_confidence)) {
+              AssertFault(ff_util::INITIALIZATION_FAILED,
+                            "Could not get max confidence");
+            }
+
+            bool optical_flow = false;
+            if (!pipeline.GetBool("optical_flow", &optical_flow)) {
+              AssertFault(ff_util::INITIALIZATION_FAILED,
+                          "Could not get optical flow");
+            }
+
+            double timeout = 1.0;
+            if (!pipeline.GetReal("timeout", &timeout)) {
+              AssertFault(ff_util::INITIALIZATION_FAILED,
+                          "Could not get timeout");
+            }
+
+            // Set a filter need
+            p.NeedsFilter(max_confidence, optical_flow, timeout);
+          }
+        }
       }
+
       // Enable requirement
-      std::string enable_topic;
-      if (pipeline.GetStr("enable_topic", &enable_topic)) {
-        double enable_timeout = 1.0;
-        if (!pipeline.GetReal("enable_timeout", &enable_timeout))
-          AssertFault(ff_util::INITIALIZATION_FAILED, "Could not get enable_timeout");
-        // Set an enable need
-        p.NeedsEnable(enable_topic, enable_timeout);
+      if (pipeline.CheckValExists("enable_topic")) {
+        std::string enable_topic;
+        if (pipeline.GetStr("enable_topic", &enable_topic)) {
+          double enable_timeout = 1.0;
+          if (!pipeline.GetReal("enable_timeout", &enable_timeout)) {
+            AssertFault(ff_util::INITIALIZATION_FAILED,
+                        "Could not get enable_timeout");
+          }
+
+          // Set an enable need
+          p.NeedsEnable(enable_topic, enable_timeout);
+        }
       }
+
       // Registration requirement
-      std::string reg_topic;
-      if (pipeline.GetStr("reg_topic", &reg_topic)) {
-        double reg_timeout = 1.0;
-        if (!pipeline.GetReal("reg_timeout", &reg_timeout))
-          AssertFault(ff_util::INITIALIZATION_FAILED, "Could not get reg_timeout");
-        // Set an enable need
-        p.NeedsRegistrations(reg_topic, reg_timeout);
+      if (pipeline.CheckValExists("reg_topic")) {
+        std::string reg_topic;
+        if (pipeline.GetStr("reg_topic", &reg_topic)) {
+          double reg_timeout = 1.0;
+          if (!pipeline.GetReal("reg_timeout", &reg_timeout)) {
+            AssertFault(ff_util::INITIALIZATION_FAILED,
+                        "Could not get reg_timeout");
+          }
+
+          // Set an enable need
+          p.NeedsRegistrations(reg_topic, reg_timeout);
+        }
       }
+
       // Visual feature requirement
-      std::string feat_topic;
-      if (pipeline.GetStr("feat_topic", &feat_topic)) {
-        double feat_timeout = 1.0;
-        if (!pipeline.GetReal("feat_timeout", &feat_timeout))
-          AssertFault(ff_util::INITIALIZATION_FAILED, "Could not get feat_timeout");
-        int feat_threshold = 0;
-        if (!pipeline.GetInt("feat_threshold", &feat_threshold))
-          AssertFault(ff_util::INITIALIZATION_FAILED, "Could not get feat_threshold");
-        // Set a feature need
-        p.NeedsVisualFeatures(feat_topic, feat_timeout, feat_threshold);
+      if (pipeline.CheckValExists("feat_topic")) {
+        std::string feat_topic;
+        if (pipeline.GetStr("feat_topic", &feat_topic)) {
+          double feat_timeout = 1.0;
+          if (!pipeline.GetReal("feat_timeout", &feat_timeout)) {
+            AssertFault(ff_util::INITIALIZATION_FAILED,
+                        "Could not get feat_timeout");
+          }
+
+          int feat_threshold = 0;
+          if (!pipeline.GetInt("feat_threshold", &feat_threshold)) {
+            AssertFault(ff_util::INITIALIZATION_FAILED,
+                        "Could not get feat_threshold");
+          }
+
+          // Set a feature need
+          p.NeedsVisualFeatures(feat_topic, feat_timeout, feat_threshold);
+        }
       }
+
       // Depth feature requirement
-      std::string depth_topic;
-      if (pipeline.GetStr("depth_topic", &depth_topic)) {
-        double depth_timeout = 1.0;
-        if (!pipeline.GetReal("depth_timeout", &depth_timeout))
-          AssertFault(ff_util::INITIALIZATION_FAILED, "Could not get depth_timeout");
-        int depth_threshold = 0;
-        if (!pipeline.GetInt("depth_threshold", &depth_threshold))
-          AssertFault(ff_util::INITIALIZATION_FAILED, "Could not get depth_threshold");
-        // Set a feature need
-        p.NeedsDepthFeatures(depth_topic, depth_timeout, depth_threshold);
+      if (pipeline.CheckValExists("depth_topic")) {
+        std::string depth_topic;
+        if (pipeline.GetStr("depth_topic", &depth_topic)) {
+          double depth_timeout = 1.0;
+          if (!pipeline.GetReal("depth_timeout", &depth_timeout)) {
+            AssertFault(ff_util::INITIALIZATION_FAILED,
+                        "Could not get depth_timeout");
+          }
+
+          int depth_threshold = 0;
+          if (!pipeline.GetInt("depth_threshold", &depth_threshold)) {
+            AssertFault(ff_util::INITIALIZATION_FAILED,
+                        "Could not get depth_threshold");
+          }
+
+          // Set a feature need
+          p.NeedsDepthFeatures(depth_topic, depth_timeout, depth_threshold);
+        }
       }
     }
 

@@ -139,7 +139,40 @@ Eigen::Affine3d CeresToEigen(double ceres[6], bool invert) {
   return A;
 }
 
+// Convert a Euler angle to a Quaternion
+Eigen::Quaterniond toQuaternion(double roll, double pitch, double yaw) {
+    double cy = cos(yaw * 0.5);
+    double sy = sin(yaw * 0.5);
+    double cp = cos(pitch * 0.5);
+    double sp = sin(pitch * 0.5);
+    double cr = cos(roll * 0.5);
+    double sr = sin(roll * 0.5);
+    Eigen::Quaterniond q;
+    q.w() = cy * cp * cr + sy * sp * sr;
+    q.x() = cy * cp * sr - sy * sp * cr;
+    q.y() = sy * cp * sr + cy * sp * cr;
+    q.z() = sy * cp * cr - cy * sp * sr;
+    return q;
+}
+
 // CONFIG CALLS
+
+// Read in a modification vector to be added to the Vive trajectory
+// (useful for when testing the Astrobee in a different orientation)
+bool ReadModificationVector(config_reader::ConfigReader *config,
+  Eigen::Vector3d & modification_vector,
+  Eigen::Quaterniond & modification_quaternion) {
+    config_reader::ConfigReader::Table mv(config, "modification");
+    double j;
+    double modifications[6];
+    for (int i = 0; i < mv.GetSize(); i++) {
+      if (!mv.GetReal(i + 1, &j)) return false;
+      modifications[i] = j;
+    }
+    modification_vector     = Eigen::Vector3d(modifications[0], modifications[1], modifications[2]);
+    modification_quaternion = toQuaternion(modifications[3], modifications[4], modifications[5]);
+    return true;
+  }
 
 // Read lighthouse data
 bool ReadLighthouseConfig(config_reader::ConfigReader *config,

@@ -31,6 +31,9 @@
 #include <thread>
 #include <unordered_map>
 
+DEFINE_uint64(num_min_localization_inliers, 10,
+              "If fewer than this many number of inliers, localization has failed.");
+
 namespace sparse_mapping {
 
 ceres::LossFunction* GetLossFunction(std::string cost_fun, double th) {
@@ -295,8 +298,8 @@ void SelectRandomObservations(const std::vector<Eigen::Vector3d> & all_landmarks
   // not enough observations
   if (all_observations.size() < num_selected)
     return;
-  // Reserve space in the output so we don't have to keep reallocing on
-  // push_back.
+  // Reserve space in the output so we don't have to keep reallocating on
+  // push_back().
   landmarks->reserve(num_selected);
   observations->reserve(num_selected);
   while (observations->size() < num_selected) {
@@ -387,8 +390,8 @@ int RansacEstimateCamera(const std::vector<Eigen::Vector3d> & landmarks,
 
   VLOG(2) << observations.size() << " Ransac observations " << best_inliers << " inliers\n";
 
-  // TODO(bcoltin): make adjustable constant? or return some sort of confidence?
-  if (best_inliers < 10)
+  // TODO(bcoltin): Return some sort of confidence?
+  if (best_inliers < FLAGS_num_min_localization_inliers)
     return 2;
 
   // TODO(bcoltin): take three best number of inliers, multiply by image coverage to pick best
@@ -433,9 +436,9 @@ int RansacEstimateCamera(const std::vector<Eigen::Vector3d> & landmarks,
 // which best maps the first set to the second.
 // Source: http://en.wikipedia.org/wiki/Kabsch_algorithm
 
-  void Find3DAffineTransform(Eigen::Matrix3Xd const & in,
-                             Eigen::Matrix3Xd const & out,
-                             Eigen::Affine3d* result) {
+void Find3DAffineTransform(Eigen::Matrix3Xd const & in,
+                           Eigen::Matrix3Xd const & out,
+                           Eigen::Affine3d* result) {
   // Default output
   result->linear() = Eigen::Matrix3d::Identity(3, 3);
   result->translation() = Eigen::Vector3d::Zero();

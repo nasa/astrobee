@@ -247,7 +247,6 @@ bool FreeFlyerSensorPlugin::ExtrinsicsCallback(
 
     // In the case of a wide angle camera update the camera world pose
     if (sensor_->Type() == "wideanglecamera") {
-      // TODO(oalexan1): Figure out why the line below fails on spheresgoat
       sensors::WideAngleCameraSensorPtr sensor =
         std::dynamic_pointer_cast<sensors::WideAngleCameraSensor>(sensor_);
       if (sensor && sensor->Camera())

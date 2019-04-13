@@ -72,8 +72,8 @@
     <arg name="drivers" value="false" />       <!-- Start driver code        -->
     <arg name="spurn" value="$(arg spurn)" />  <!-- Prevent node         -->
     <arg name="nodes" value="$(arg nodes)" />  <!-- Launch node group    -->
-    <arg name="extra" value="$(arg extra)" />  <!-- Inject extra nodse   -->
-    <arg name="debug" value="$(arg debug)" />  <!-- Inject extra nodse   -->
+    <arg name="extra" value="$(arg extra)" />  <!-- Inject extra nodes   -->
+    <arg name="debug" value="$(arg debug)" />  <!-- Inject extra nodes   -->
     <arg name="sim" value="$(arg sim)" />      <!-- SIM IP address           -->
     <arg name="llp" value="$(arg llp)" />      <!-- LLP IP address           -->
     <arg name="mlp" value="$(arg mlp)" />      <!-- MLP IP address           -->

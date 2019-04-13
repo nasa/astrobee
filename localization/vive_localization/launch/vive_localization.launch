@@ -34,7 +34,7 @@
   <env if="$(eval optenv('ASTROBEE_RESOURCE_DIR','')=='')"
        name="ASTROBEE_RESOURCE_DIR" value="$(find astrobee)/resources" />
   <!-- Debug mode -->
-  <arg name="prefix" value="$(eval 'xterm -e gdb -ex run --args' if arg('debug') else '')" />
+  <arg name="prefix" value="$(eval 'x-terminal-emulator -e gdb -ex run --args' if arg('debug') else '')" />
   <env if="$(arg debug)" name="ROSCONSOLE_CONFIG_FILE" value="$(find astrobee)/resources/debug.config"/>
   <!-- Exec mode -->
   <arg     if="$(arg filter)" name="exec" value="vive_offline_filter" />

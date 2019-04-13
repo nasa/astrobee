@@ -1,5 +1,17 @@
 # Astrobee Robot Software v1
 
+## Release 0.8.0
+
+ * Fixed simulator jump under some conditions on motion start
+ * Data bagger system implemented
+ * Command line teleoperation tools implemented
+ * SciCam commanding implemented
+ * Adjusted inertia parameters from flight unit measurements
+ * Pre-configured ISS flight parameters
+ * Signal lights communication implemented
+ * Heroic documentation effort
+ * As usual, many bug fixes
+
 ## Release 0.7.6
 
  * Fixes to sparse mapping and localization manager.
