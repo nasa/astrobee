@@ -1,14 +1,14 @@
 /* Copyright (c) 2017, United States Government, as represented by the
  * Administrator of the National Aeronautics and Space Administration.
- * 
+ *
  * All rights reserved.
- * 
+ *
  * The Astrobee platform is licensed under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -50,19 +50,17 @@ DEFINE_bool(save_individual_maps, false,
 
 // output map parameters
 DEFINE_string(detector, "SURF",
-              "Feature detector to use. Options are [FAST, STAR, SIFT, SURF, ORB, "
-              "BRISK, ORGBRISK, MSER, GFTT, HARRIS, Dense].");
+              "Feature detector to use. Options are: SURF, ORGBRISK.");
 DEFINE_string(rebuild_detector, "ORGBRISK",
-              "Feature detector to use. Options are [FAST, STAR, SIFT, SURF, ORB, "
-              "BRISK, ORGBRISK, MSER, GFTT, HARRIS, Dense].");
+              "Feature detector to use. Options are: SURF, ORGBRISK.");
 
 // control options
 DEFINE_bool(feature_detection, false,
-              "If true, perform compute features for input NVMs.");
+              "If true, compute features for input images.");
 DEFINE_bool(feature_matching, false,
-              "If true, perform generate map from feature matching step.");
+              "If true, perform feature matching.");
 DEFINE_bool(track_building, false,
-              "If true, perform generate map from feature matching step.");
+              "If true, perform track building.");
 DEFINE_bool(incremental_ba, false,
               "If true, perform incremental bundle adjustment.");
 DEFINE_bool(loop_closure, false,
@@ -71,8 +69,12 @@ DEFINE_bool(tensor_initialization, false,
               "If true, perform update output_nvm with tensor initialization.");
 DEFINE_bool(bundle_adjustment, false,
               "If true, perform update output_nvm with bundle adjustment.");
+DEFINE_bool(skip_pruning, false,
+              "If true, do not prune maps, as pruned maps cannot be merged.");
 DEFINE_bool(rebuild, false,
               "If true, rebuild the map with BRISK features.");
+DEFINE_bool(rebuild_replace_camera, false,
+              "If true, during rebuilding replace the camera with the one from ASTROBEE_ROBOT.");
 DEFINE_bool(vocab_db, false,
               "If true, build the map with a vocabulary database.");
 DEFINE_bool(registration, false,
@@ -81,7 +83,7 @@ DEFINE_bool(registration, false,
 DEFINE_bool(verification, false,
             "Verify how an already registered map performs on an independently "
             "acquired set of control points and 3D measurements.");
-DEFINE_bool(skip_bundle_adjustment, false,
+DEFINE_bool(registration_skip_bundle_adjustment, false,
             "Skip bundle adjustment during the registration step.");
 DEFINE_bool(info, false,
               "If true, just print some information on the existing map.");
@@ -122,6 +124,11 @@ void DetectAllFeatures(int argc, char** argv) {
   }
   camera::CameraParameters cam_params(&config, "nav_cam");
 
+  // Useful for over-riding any config files when debugging
+  // camera::CameraParameters cam_params(Eigen::Vector2i(776, 517),
+  //                                    Eigen::Vector2d::Constant(610.502),
+  //                                    Eigen::Vector2d(776/2.0, 517/2.0));
+
   // Remove some images from list based on sample rate
   int count = 0;
   int index = 1;
@@ -146,7 +153,6 @@ void DetectAllFeatures(int argc, char** argv) {
 
   // This will invoke a detection process
   sparse_mapping::SparseMap map(files, FLAGS_detector, cam_params);
-  map.SetBriskParams(1000, 20000, 10, 3);
   map.DetectFeatures();
 
   map.Save(FLAGS_output_map);
@@ -167,7 +173,10 @@ void BuildTracks() {
   LOG(INFO) << "Building tracks.";
 
   sparse_mapping::SparseMap map(FLAGS_output_map);
-  sparse_mapping::BuildTracks(sparse_mapping::MatchesFile(FLAGS_output_map), &map);
+  bool rm_invalid_xyz = false;  // we don't have valid cameras, so can't rm xyz
+  sparse_mapping::BuildTracks(rm_invalid_xyz,
+                              sparse_mapping::MatchesFile(FLAGS_output_map),
+                              &map);
   map.Save(FLAGS_output_map);
   if (FLAGS_save_individual_maps) map.Save(FLAGS_output_map + ".track.map");
 }
@@ -199,7 +208,10 @@ void BundleAdjust() {
 
   bool fix_cameras = FLAGS_fix_cameras;
   sparse_mapping::BundleAdjust(fix_cameras, &map);
-  map.PruneMap();
+  if (!FLAGS_skip_pruning) {
+    LOG(INFO) << "Pruning map.\n";
+    map.PruneMap();
+  }
 
   map.Save(FLAGS_output_map);
   if (FLAGS_save_individual_maps) map.Save(FLAGS_output_map + ".bundle.map");
@@ -211,15 +223,29 @@ void Rebuild() {
   sparse_mapping::SparseMap original(FLAGS_output_map);
 
   camera::CameraParameters params = original.GetCameraParameters();
+  if (FLAGS_rebuild_replace_camera) {
+    char * bot_ptr = getenv("ASTROBEE_ROBOT");
+    if (bot_ptr == NULL)
+      LOG(FATAL) << "Must set ASTROBEE_ROBOT.";
+    LOG(INFO) << "Using camera for robot: " << bot_ptr << ".";
+    config_reader::ConfigReader config;
+    config.AddFile("cameras.config");
+    if (!config.ReadFiles()) {
+      LOG(ERROR) << "Failed to read config files.";
+      exit(1);
+      return;
+    }
+    params = camera::CameraParameters(&config, "nav_cam");
+  }
 
   std::vector<std::string> files(original.GetNumFrames());
   for (size_t i = 0; i < original.GetNumFrames(); i++) {
     files[i] = original.GetFrameFilename(i);
   }
 
-  LOG(INFO) << "Detecting features.";
   sparse_mapping::SparseMap map(files, FLAGS_rebuild_detector, params);
-  map.SetBriskParams(100, 20000, 20, 3);
+
+  LOG(INFO) << "Detecting features.";
   map.DetectFeatures();
 
   LOG(INFO) << "Matching features.";
@@ -245,19 +271,31 @@ void Rebuild() {
     map.SetFrameGlobalTransform(i, original.GetFrameGlobalTransform(i));
 
   LOG(INFO) << "Building tracks.";
-  sparse_mapping::BuildTracks(sparse_mapping::MatchesFile(FLAGS_output_map), &map);
+  bool rm_invalid_xyz = true;  // by now cameras are good, so filter out bad stuff
+  sparse_mapping::BuildTracks(rm_invalid_xyz,
+                              sparse_mapping::MatchesFile(FLAGS_output_map),
+                              &map);
 
-  LOG(INFO) << "Performing bundle adjustment.";
   // It is essential that during re-building we do not vary the
   // cameras. Those were usually computed with a lot of SURF features,
   // while rebuilding is usually done with many fewer ORGBRISK
-  // features.  If cameras really have to be varied, use build_map -bundle_adjust.
+  // features.
   bool fix_cameras = !FLAGS_rebuild_refloat_cameras;
+  if (fix_cameras)
+    LOG(INFO) << "Performing bundle adjustment with fixed cameras.";
+  else
+    LOG(INFO) << "Performing bundle adjustment while floating cameras.";
+
   sparse_mapping::BundleAdjust(fix_cameras, &map);
-  map.PruneMap();
+
+  if (!FLAGS_skip_pruning) {
+    LOG(INFO) << "Pruning map.\n";
+    map.PruneMap();
+  }
 
   map.Save(FLAGS_output_map);
-  if (FLAGS_save_individual_maps) map.Save(FLAGS_output_map + ".brisk.map");
+  if (FLAGS_save_individual_maps) map.Save(FLAGS_output_map + "." +
+                                           FLAGS_rebuild_detector + ".map");
 }
 
 void VocabDB() {
@@ -299,12 +337,11 @@ void RegistrationOrVerification(std::vector<std::string> const& data_files) {
   if (FLAGS_verification)
     return;
 
-  if (FLAGS_skip_bundle_adjustment)
-    return;
-
-  LOG(INFO) << "Redoing bundle adjustment incorporating the user control points.";
-  bool fix_cameras = false;
-  BundleAdjust(fix_cameras, &map);
+  if (!FLAGS_registration_skip_bundle_adjustment) {
+    LOG(INFO) << "Redoing bundle adjustment incorporating the user control points.";
+    bool fix_cameras = false;
+    BundleAdjust(fix_cameras, &map);
+  }
 
   map.Save(FLAGS_output_map);
   if (FLAGS_save_individual_maps) map.Save(FLAGS_output_map + ".registered.map");

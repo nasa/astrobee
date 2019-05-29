@@ -216,7 +216,7 @@ class FreeFlyerActionClient {
         &FreeFlyerActionClient::ConnectPollCallback, this, false, false);
     // Initialize the action client
     sac_ = std::shared_ptr < actionlib::SimpleActionClient < ActionSpec > > (
-      new actionlib::SimpleActionClient < ActionSpec > (*nh, topic, true));
+      new actionlib::SimpleActionClient < ActionSpec > (*nh, topic, false));
     // Set the state
     state_ = WAITING_FOR_GOAL;
     // If we have a non-zero connect timeout, this means that we'd like to have the system poll
@@ -317,6 +317,7 @@ class FreeFlyerActionClient {
 
   // Called when the goal does not go active
   void ActiveTimeoutCallback(ros::TimerEvent const& event) {
+    ROS_WARN("Freeflyer action timed out on going active.");
     CancelGoal();
     Complete(FreeFlyerActionState::TIMEOUT_ON_ACTIVE, nullptr);
   }

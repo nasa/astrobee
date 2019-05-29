@@ -1,14 +1,14 @@
 /* Copyright (c) 2017, United States Government, as represented by the
  * Administrator of the National Aeronautics and Space Administration.
- * 
+ *
  * All rights reserved.
- * 
+ *
  * The Astrobee platform is licensed under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -108,7 +108,8 @@ struct SparseMap {
 
   SparseMap(bool bundler_format, std::string const& filename, std::vector<std::string> const& files);
 
-  void SetBriskParams(int min_features, int max_features, int threshold, int retries);
+  void SetDetectorParams(int min_features, int max_features, int retries,
+                         double min_thresh, double default_thresh, double max_thresh);
 
   /**
    * Detect features in given images
@@ -232,9 +233,11 @@ struct SparseMap {
 
   // detect features with opencv
   void DetectFeaturesFromFile(std::string const& filename,
+                              bool multithreaded,
                               cv::Mat* descriptors,
                               Eigen::Matrix2Xd* keypoints);
   void DetectFeatures(cv::Mat const& image,
+                      bool multithreaded,
                       cv::Mat* descriptors,
                       Eigen::Matrix2Xd* keypoints);
   // delete feature descriptors with no matching landmark
@@ -244,6 +247,8 @@ struct SparseMap {
    * Set the number of similar images queried by the VocabDB.
    **/
   void SetNumSimilar(int num_similar) {num_similar_ = num_similar;}
+
+  std::string GetDetectorName() { return detector_.GetDetectorName(); }
 
   // stored in map file
   std::vector<std::string> cid_to_filename_;
@@ -279,6 +284,14 @@ struct SparseMap {
   std::vector<Eigen::Matrix2Xd> user_cid_to_keypoint_map_;
   std::vector<std::map<int, int> > user_pid_to_cid_fid_;
   std::vector<Eigen::Vector3d> user_pid_to_xyz_;
+
+ private:
+  // I found out the hard way that sparse maps cannot be copied
+  // correctly, hence prohibit this. The only good way seems to be to
+  // load a copy from disk. (oalexan1)
+  SparseMap();
+  SparseMap(SparseMap &);
+  SparseMap& operator=(const SparseMap&);
 };
 }  // namespace sparse_mapping
 

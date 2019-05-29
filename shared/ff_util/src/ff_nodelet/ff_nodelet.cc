@@ -1,14 +1,14 @@
 /* Copyright (c) 2017, United States Government, as represented by the
  * Administrator of the National Aeronautics and Space Administration.
- * 
+ *
  * All rights reserved.
- * 
+ *
  * The Astrobee platform is licensed under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -136,67 +136,110 @@ void FreeFlyerNodelet::ReadConfig() {
   // Check if there is a fault table for this node, some nodes may not have
   // faults
   if (param_config_.CheckValExists(node_.c_str())) {
-      config_reader::ConfigReader::Table fault_table(&param_config_,
-                                                     node_.c_str());
-      int fault_id;
-      std::string fault_key;
-      for (int i = 1; i < (fault_table.GetSize() + 1); i++) {
-        config_reader::ConfigReader::Table fault_entry(&fault_table, i);
+    config_reader::ConfigReader::Table fault_table(&param_config_,
+                                                   node_.c_str());
+    int fault_id;
+    std::string fault_key;
+    // Lua indices start at one
+    for (int i = 1; i < (fault_table.GetSize() + 1); i++) {
+      config_reader::ConfigReader::Table fault_entry(&fault_table, i);
 
-        // Get the fault id
-        if (!fault_entry.GetInt("id", &fault_id)) {
-          FF_ERROR(node_ << ": Fault id at index " << i <<
-                   " not specified in the node's fault table.");
-          return;
-        }
-
-        // Get fault key
-        if (!fault_entry.GetStr("key", &fault_key)) {
-          FF_ERROR(node_ << ": Fault key at index " << i <<
-                   " not specified in the node's fault table.");
-          return;
-        }
-
-        // don't need description, only specified so developers know what the
-        // fault refers to
-        faults_[fault_key] = fault_id;
+      // Get the fault id
+      if (!fault_entry.GetInt("id", &fault_id)) {
+        FF_ERROR(node_ << ": Fault id at index " << i <<
+                 " not specified in the node's fault table.");
+        return;
       }
+
+      // Get fault key
+      if (!fault_entry.GetStr("key", &fault_key)) {
+        FF_ERROR(node_ << ": Fault key at index " << i <<
+                 " not specified in the node's fault table.");
+        return;
+      }
+
+      // don't need description, only specified so developers know what the
+      // fault refers to
+      faults_[fault_key] = fault_id;
+    }
+  }
+
+  // Check if there is a fault table for all nodes, this table contains faults
+  // for all nodes
+  if (param_config_.CheckValExists("all")) {
+    config_reader::ConfigReader::Table all_fault_table(&param_config_, "all");
+    int fault_id;
+    std::string fault_key;
+    // Lua indices start at one
+    for (int i = 1; i < (all_fault_table.GetSize() + 1); i++) {
+      config_reader::ConfigReader::Table all_fault_entry(&all_fault_table, i);
+
+      // Get fault id
+      if (!all_fault_entry.GetInt("id", &fault_id)) {
+        FF_ERROR(node_ << ": Fault id at index " << i <<
+                 " not specified in the all fault table.");
+        return;
+      }
+
+      // Get fault key
+      if (!all_fault_entry.GetStr("key", &fault_key)) {
+        FF_ERROR(node_ <<": Fault key at index " << i <<
+                 " not specified in the all fault table.");
+        return;
+      }
+
+      // don't need description, only specified so developers know what the
+      // fault refers to
+      faults_[fault_key] = fault_id;
+    }
   }
 
   return;
 }
 
-void FreeFlyerNodelet::AssertFault(std::string const& key,
+void FreeFlyerNodelet::AssertFault(FaultKeys enum_key,
                                    std::string const& message,
                                    ros::Time time_fault_occurred) {
-  FF_WARN(node_ << ": Fault (" << key << ") :: " << message);
+  std::string key = fault_keys[enum_key];
+  std::string err_msg;
   bool found = false;
   unsigned int id;
 
   // Check to make sure the fault key is valid for this nodelet
   if (faults_.count(key) > 0) {
     id = faults_[key];
+    err_msg = message;
   } else {
     FF_ERROR(node_ << ": Asserting fault " << key << " failed! " <<
-             "Fault doesn't exist for this node.");
-    FF_ERROR("Message: " << message);
-    return;
+             "Fault doesn't exist for this node. Trying to assert unknown " <<
+             "key fault ...");
+    // Check to make sure the fault key is valid
+    if (faults_.count("UNKNOWN_FAULT_KEY") > 0) {
+      id = faults_["UNKNOWN_FAULT_KEY"];
+      err_msg = node_ + ": Fault key " + key + " wasn't recognized. " + message;
+    } else {
+      FF_ERROR(node_ << ": Unable to assert unknown key fault!");
+      return;
+    }
   }
 
   // Check to see if the fault is already being reported
   for (unsigned int i = 0; i < heartbeat_.faults.size() && !found; i++) {
     if (id == heartbeat_.faults[i].id) {
-      // TODO(Katie) Maybe update message and re-publish faults
+      if (message != heartbeat_.faults[i].msg) {
+        heartbeat_.faults[i].msg.assign(message, 0, 128);
+      }
       found = true;
     }
   }
 
   // If fault not found, add it
   if (!found) {
+    NODELET_WARN_STREAM(node_ << ": Fault (" << key << ") :: " << message);
     ff_msgs::Fault fault;
     fault.id = id;
     fault.time_of_fault = time_fault_occurred;
-    fault.msg.assign(message, 0, 128);
+    fault.msg.assign(err_msg, 0, 128);
     heartbeat_.faults.push_back(fault);
     PublishHeartbeat();
   }
@@ -208,15 +251,23 @@ void FreeFlyerNodelet::ClearAllFaults() {
   PublishHeartbeat();
 }
 
-void FreeFlyerNodelet::ClearFault(std::string const& key) {
+void FreeFlyerNodelet::ClearFault(FaultKeys enum_key) {
+  std::string key = fault_keys[enum_key];
   unsigned int id;
   // Check to make sure the fault key is valid for this nodelet
   if (faults_.count(key) > 0) {
     id = faults_[key];
   } else {
     FF_ERROR(node_ << ": Clearing fault " << key << " failed! " <<
-             "Fault doesn't exist for this node.");
-    return;
+             "Fault doesn't exist for this node. Trying to clear unknown " <<
+             "key fault ...");
+    // Check to make sure the fault key is valid
+    if (faults_.count("UNKNOWN_FAULT_KEY") > 0) {
+      id = faults_["UNKNOWN_FAULT_KEY"];
+    } else {
+      FF_ERROR(node_ << ": Unable to clear unknown key fault!");
+      return;
+    }
   }
 
   // Find fault and remove from list, It's okay if the fault wasn't in the list
@@ -228,6 +279,7 @@ void FreeFlyerNodelet::ClearFault(std::string const& key) {
       break;
     }
   }
+  NODELET_WARN_STREAM(node_ << ": Fault (" << key << ") has been cleared!");
 }
 
 void FreeFlyerNodelet::PrintFaults() {
@@ -375,5 +427,12 @@ std::string FreeFlyerNodelet::GetPlatform() {
   return platform_;
 }
 
+// Get a platform prefixed frame name
+std::string FreeFlyerNodelet::GetTransform(std::string const& child) {
+  std::string frame = child;
+  if (!platform_.empty())
+    frame = platform_ + "/" + child;
+  return frame;
+}
 
 }  // namespace ff_util

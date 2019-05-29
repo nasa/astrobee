@@ -1,14 +1,14 @@
 # Copyright (c) 2017, United States Government, as represented by the
 # Administrator of the National Aeronautics and Space Administration.
-# 
+#
 # All rights reserved.
-# 
+#
 # The Astrobee platform is licensed under the Apache License, Version 2.0
 # (the "License"); you may not use this file except in compliance with the
 # License. You may obtain a copy of the License at
-# 
+#
 #     http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -25,7 +25,9 @@ function(create_tool_targets)
     )
 
   # Search for all the executables in tool dir
-  file(GLOB TOOL_SRC_FILES ${tool_DIR}/*.cc)
+  file(GLOB TOOL_SRC_FILES_C  "${tool_DIR}/*.c")
+  file(GLOB TOOL_SRC_FILES_CC "${tool_DIR}/*.cc")
+  set(TOOL_SRC_FILES ${TOOL_SRC_FILES_C} ${TOOL_SRC_FILES_CC})
 
   # Sift through SRC_FILES and remove EXCLUDE
   foreach(SRC ${TOOL_SRC_FILES})
@@ -55,7 +57,7 @@ function(create_tool_targets)
 
   # Link the executables!
   foreach(filename ${TOOL_SRC_FILES})
-    string(REPLACE ".cc" "" execname ${filename})
+    string(REGEX REPLACE ".(cc|c)$" "" execname ${filename})
     string(REGEX REPLACE "^[^ ]*/" "" execname ${execname})
     add_executable(${execname} ${filename})
     target_link_libraries(${execname}
@@ -77,4 +79,3 @@ function(create_tool_targets)
       )")
   endforeach()
 endfunction()
-

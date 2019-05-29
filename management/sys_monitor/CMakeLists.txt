@@ -30,12 +30,103 @@ create_library(TARGET sys_monitor
 
 if(CATKIN_ENABLE_TESTING)
   find_package(rostest REQUIRED)
-  add_rostest_gtest(test_sys_monitor
-    test/test_sys_monitor.test
-    test/test_sys_monitor.cc
+  # System monitor initialization fault tester
+  add_rostest_gtest(test_init_sys_monitor
+    test/test_init_sys_monitor.test
+    test/test_init_sys_monitor.cc
   )
 
-  target_link_libraries(test_sys_monitor
+  target_link_libraries(test_init_sys_monitor
+    ${catkin_LIBRARIES} config_reader ff_nodelet
+  )
+
+  # Executive initialization fault tester
+  add_rostest_gtest(test_init_executive
+    test/test_init_executive.test
+    test/test_init_executive.cc
+  )
+
+  target_link_libraries(test_init_executive
+    ${catkin_LIBRARIES} config_reader ff_nodelet
+  )
+
+  # LLP CPU monitor initialization fault tester
+  add_rostest_gtest(test_init_llp_cpu_monitor
+    test/test_init_llp_cpu_monitor.test
+    test/test_init_llp_cpu_monitor.cc
+  )
+
+  target_link_libraries(test_init_llp_cpu_monitor
+    ${catkin_LIBRARIES} config_reader ff_nodelet
+  )
+
+  # MLP CPU monitor initialization fault tester
+  add_rostest_gtest(test_init_mlp_cpu_monitor
+    test/test_init_mlp_cpu_monitor.test
+    test/test_init_mlp_cpu_monitor.cc
+  )
+
+  target_link_libraries(test_init_mlp_cpu_monitor
+    ${catkin_LIBRARIES} config_reader ff_nodelet
+  )
+
+  # LLP disk monitor initialization fault tester
+  add_rostest_gtest(test_init_llp_disk_monitor
+    test/test_init_llp_disk_monitor.test
+    test/test_init_llp_disk_monitor.cc
+  )
+
+  target_link_libraries(test_init_llp_disk_monitor
+    ${catkin_LIBRARIES} config_reader ff_nodelet
+  )
+
+  # MLP disk monitor initialization fault tester
+  add_rostest_gtest(test_init_mlp_disk_monitor
+    test/test_init_mlp_disk_monitor.test
+    test/test_init_mlp_disk_monitor.cc
+  )
+
+  target_link_libraries(test_init_mlp_disk_monitor
+    ${catkin_LIBRARIES} config_reader ff_nodelet
+  )
+
+  # Speed cam initialization fault tester
+  add_rostest_gtest(test_init_speed_cam
+    test/test_init_speed_cam.test
+    test/test_init_speed_cam.cc
+  )
+
+  target_link_libraries(test_init_speed_cam
+    ${catkin_LIBRARIES} config_reader ff_nodelet
+  )
+
+  # Pico flexx initialization fault tester
+  add_rostest_gtest(test_init_pico_flexx
+    test/test_init_pico_flexx.test
+    test/test_init_pico_flexx.cc
+  )
+
+  target_link_libraries(test_init_pico_flexx
+    ${catkin_LIBRARIES} config_reader ff_nodelet
+  )
+
+  # Choreographer initialization fault tester
+  add_rostest_gtest(test_init_choreographer
+    test/test_init_choreographer.test
+    test/test_init_choreographer.cc
+  )
+
+  target_link_libraries(test_init_choreographer
+    ${catkin_LIBRARIES} config_reader ff_nodelet
+  )
+
+  # Mapper initialization fault tester
+  add_rostest_gtest(test_init_mapper
+    test/test_init_mapper.test
+    test/test_init_mapper.cc
+  )
+
+  target_link_libraries(test_init_mapper
     ${catkin_LIBRARIES} config_reader ff_nodelet
   )
 endif()

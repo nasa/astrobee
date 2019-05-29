@@ -101,21 +101,28 @@ ff::RosAgentStateToRapid::RosAgentStateToRapid(
       rapid::ext::astrobee::AGENT_STATE_TOPIC + pub_topic,
       "", "AstrobeeAgentStateProfile", ""));
 
+  mobility_settings_supplier_.reset(
+    new ff::RosAgentStateToRapid::MobilitySettingsSupplier(
+      rapid::ext::astrobee::MOBILITY_SETTINGS_STATE_TOPIC + pub_topic,
+      "", "AstrobeeMobilitySettingsStateProfile", ""));
+
   sub_ = nh_.subscribe(subscribe_topic,
                        queue_size,
                        &RosAgentStateToRapid::Callback,
                        this);
 
   rapid::RapidHelper::initHeader(state_supplier_->event().hdr);
+  rapid::RapidHelper::initHeader(mobility_settings_supplier_->event().hdr);
 }
-
-// TODO(tfmorse): update for new agent state
 
 void ff::RosAgentStateToRapid::Callback(
                           const ff_msgs::AgentStateStamped::ConstPtr& status) {
   rapid::ext::astrobee::AgentState &msg = state_supplier_->event();
+  rapid::ext::astrobee::MobilitySettingsState &mob_msg =
+                                          mobility_settings_supplier_->event();
 
   msg.hdr.timeStamp = util::RosTime2RapidTime(status->header.stamp);
+  mob_msg.hdr.timeStamp = util::RosTime2RapidTime(status->header.stamp);
 
   msg.operatingState = ConvertOperatingState(status->operating_state.state);
   msg.executionState = ConvertExecutionState(status->plan_execution_state.state);
@@ -140,6 +147,10 @@ void ff::RosAgentStateToRapid::Callback(
   std::strncpy(msg.flightMode, status->flight_mode.data(), 32);
   msg.flightMode[31] = '\0';
 
+  // Flight mode is also sent down in the mobility settings state
+  std::strncpy(mob_msg.flightMode, status->flight_mode.data(), 32);
+  mob_msg.flightMode[31] = '\0';
+
   msg.targetLinearVelocity = status->target_linear_velocity;
   msg.targetLinearAccel = status->target_linear_accel;
   msg.targetAngularVelocity = status->target_angular_velocity;
@@ -151,6 +162,27 @@ void ff::RosAgentStateToRapid::Callback(
   msg.enableAutoReturn = status->auto_return_enabled;
   msg.bootTime = status->boot_time;
 
-  state_supplier_->sendEvent();
-}
+  // Fill mobility status message
+  mob_msg.targetLinearVelocity = status->target_linear_velocity;
+  mob_msg.targetLinearAccel = status->target_linear_accel;
+  mob_msg.targetAngularVelocity = status->target_angular_velocity;
+  mob_msg.targetAngularAccel = status->target_angular_accel;
+  mob_msg.collisionDistance = status->collision_distance;
+  mob_msg.enableHolonomic = status->holonomic_enabled;
+  mob_msg.checkObstacles = status->check_obstacles;
+  mob_msg.checkKeepouts = status->check_zones;
+  mob_msg.enableAutoReturn = status->auto_return_enabled;
+  mob_msg.timeSyncEnabled = status->time_sync_enabled;
+  mob_msg.immediateEnabled = status->immediate_enabled;
 
+  // Currently the code only supports planners 32 characters long
+  if (status->planner.size() > 32) {
+    ROS_WARN("DDS: Planner %s is longer than 32 characters!",
+                                                      status->planner.c_str());
+  }
+  std::strncpy(mob_msg.planner, status->planner.data(), 32);
+  mob_msg.planner[31] = '\0';
+
+  state_supplier_->sendEvent();
+  mobility_settings_supplier_->sendEvent();
+}

@@ -46,58 +46,58 @@ namespace sampled_traj {
 // waypoints
 class SampledTrajectory3D{
  public:
-    // Sampled trajectory variables
-    pcl::PointCloud<pcl::PointXYZ> pos_;
-    pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_ptr_ =
-            pcl::PointCloud<pcl::PointXYZ>::Ptr(new pcl::PointCloud<pcl::PointXYZ>);
-    pcl::KdTreeFLANN<pcl::PointXYZ> kdtree_pos_;
-    std::vector<double> time_;
-    int n_points_;
+  // Sampled trajectory variables
+  pcl::PointCloud<pcl::PointXYZ> pos_;
+  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_ptr_ =
+      pcl::PointCloud<pcl::PointXYZ>::Ptr(new pcl::PointCloud<pcl::PointXYZ>);
+  pcl::KdTreeFLANN<pcl::PointXYZ> kdtree_pos_;
+  std::vector<double> time_;
+  int n_points_;
 
-    // Compressed samples (std::vector can delete entries, pcl::PointCloud isn't that easy)
-    std::vector<Eigen::Vector3d> compressed_pos_;
-    std::vector<double> compressed_time_;
-    int n_compressed_points_;   // Number of points after compression
-    double max_dev_;          // Max deviation for compression
+  // Compressed samples (std::vector can delete entries, pcl::PointCloud isn't that easy)
+  std::vector<Eigen::Vector3d> compressed_pos_;
+  std::vector<double> compressed_time_;
+  int n_compressed_points_;   // Number of points after compression
+  double max_dev_;          // Max deviation for compression
 
-    // Thick trajectory variables
-    octomap::OcTree thick_traj_ = octomap::OcTree(0.1);  // Create empty tree with resolution 0.1
-    pcl::PointCloud< pcl::PointXYZ > point_cloud_traj_;
-    double resolution_;
-    double thickness_;
+  // Thick trajectory variables
+  octomap::OcTree thick_traj_ = octomap::OcTree(0.1);  // Create empty tree with resolution 0.1
+  pcl::PointCloud< pcl::PointXYZ > point_cloud_traj_;
+  double resolution_;
+  double thickness_;
 
 
-    // Constructor
-    SampledTrajectory3D(const double &dt,
-                        const polynomials::Trajectory3D &poly_trajectories);
-    SampledTrajectory3D(const std::vector<double> &time_vec,
-                        const pcl::PointCloud<pcl::PointXYZ> &pos_vec);
-    SampledTrajectory3D();
+  // Constructor
+  SampledTrajectory3D(const double &dt,
+            const polynomials::Trajectory3D &poly_trajectories);
+  SampledTrajectory3D(const std::vector<double> &time_vec,
+            const pcl::PointCloud<pcl::PointXYZ> &pos_vec);
+  SampledTrajectory3D();
 
-    // Methods
-    void PrintSamples();
-    void SetMaxDev(const double &max_dev);
-    void SetResolution(const double &resolution);
-    void DeleteSample(const int &index);
-    void CompressSamples();
-    void Bresenham(const Eigen::Vector3d &p0,
-                   const Eigen::Vector3d &pf,
-                   std::vector<octomap::point3d> *points);  // Bresenham line algorithm por printing a line
-    void ThickBresenham(const Eigen::Vector3d &p0,
-                        const Eigen::Vector3d &pf);          // Thick bresenham line algorithm por printing a line
-    void ThickTrajToPcl();
-    void CreateKdTree();
-    void SortCollisions(const std::vector<octomap::point3d> &colliding_nodes,
-                        std::vector<geometry_msgs::PointStamped> *samples);
-    void TrajVisMarkers(visualization_msgs::MarkerArray* marker_array);
-    void SamplesVisMarkers(visualization_msgs::MarkerArray* marker_array);
-    void CompressedVisMarkers(visualization_msgs::MarkerArray* marker_array);
-    void ClearObject();  // Clear all the data within this object
+  // Methods
+  void PrintSamples();
+  void SetMaxDev(const double &max_dev);
+  void SetResolution(const double &resolution);
+  void DeleteSample(const int &index);
+  void CompressSamples();
+  void Bresenham(const Eigen::Vector3d &p0,
+           const Eigen::Vector3d &pf,
+           std::vector<octomap::point3d> *points);  // Bresenham line algorithm por printing a line
+  void ThickBresenham(const Eigen::Vector3d &p0,
+            const Eigen::Vector3d &pf);          // Thick bresenham line algorithm por printing a line
+  void ThickTrajToPcl();
+  void CreateKdTree();
+  void SortCollisions(const std::vector<octomap::point3d> &colliding_nodes,
+            std::vector<geometry_msgs::PointStamped> *samples);
+  void TrajVisMarkers(visualization_msgs::MarkerArray* marker_array);
+  void SamplesVisMarkers(visualization_msgs::MarkerArray* marker_array);
+  void CompressedVisMarkers(visualization_msgs::MarkerArray* marker_array);
+  void ClearObject();  // Clear all the data within this object
 };
 
 // Comparison funcion used in sort algorithm
 bool ComparePointStamped(const geometry_msgs::PointStamped &sample1,
-                         const geometry_msgs::PointStamped &sample2);
+             const geometry_msgs::PointStamped &sample2);
 
 
 }  // namespace sampled_traj

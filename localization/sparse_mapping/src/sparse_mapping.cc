@@ -721,8 +721,10 @@ void sparse_mapping::ParseHuginControlPoints(std::string const& hugin_file,
     // Parse control points
     if (line.find("c ") == 0) {
       // First wipe all letters
+      std::string orig_line = line;
       char * ptr = const_cast<char*>(line.c_str());
       for (size_t i = 0; i < line.size(); i++) {
+        // Wipe some extra chars
         if ( (ptr[i] >= 'a' && ptr[i] <= 'z') ||
              (ptr[i] >= 'A' && ptr[i] <= 'Z') )
           ptr[i] = ' ';
@@ -737,6 +739,12 @@ void sparse_mapping::ParseHuginControlPoints(std::string const& hugin_file,
       double a, b, c, d, e, f;
       if (sscanf(ptr, "%lf %lf %lf %lf %lf %lf", &a, &b, &c, &d, &e, &f) != 6)
         LOG(FATAL) << "ParseHuginControlPoints(): Could not scan line: " << line;
+
+      // The left and right images must be different
+      if (a == b)
+        LOG(FATAL) << "The left and right images must be distinct. "
+                   << "Offending line in " << hugin_file << " is:\n"
+                   << orig_line << "\n";
 
       num_points++;
       (*points).conservativeResize(Eigen::NoChange_t(), num_points);

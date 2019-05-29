@@ -1,5 +1,21 @@
 # Generate releases and synching with Github
 
+## Create a release branch
+
+1. Test that all new features are functional in all environments
+
+2. Create a branch release
+```
+git checkout develop
+git pull
+git checkout -b release-0.x.0
+```
+
+3. Push the branch to the server
+```
+git push -u origin release-0.x.0
+```
+
 ## Generate Hotfix with GitFlow
 
 1. Create hotfix branch from master
@@ -42,7 +58,7 @@ git push origin develop
 
 ### Add remote (only if first time)
 ```
-git remove add github git@github.co:nasa/astrobee.git
+git remote add github git@github.com:nasa/astrobee.git
 ```
 (keys need to be setup correctly)
 

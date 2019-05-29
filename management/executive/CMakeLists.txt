@@ -43,7 +43,8 @@ create_library(TARGET executive
 )
 
 create_tool_targets(DIR tools
-  LIBS executive ${Boost_IOSTREAMS_LIBRARY}
+  LIBS executive ${catkin_LIBRARIES} ${Boost_IOSTREAMS_LIBRARY}
+  INC ${catkin_INCLUDE_DIRS}
   DEPS executive
 )
 

@@ -2,6 +2,12 @@
 # Administrator of the National Aeronautics and Space Administration.
 # All Rights Reserved.
 
+string PARAM_NAME_LOCALIZATION_MODE_NONE = None
+string PARAM_NAME_LOCALIZATION_MODE_MAPPED_LANDMARKS = MappedLandmarks
+string PARAM_NAME_LOCALIZATION_MODE_ARTAGS = ARTags
+string PARAM_NAME_LOCALIZATION_MODE_HANDRAIL = Handrail
+string PARAM_NAME_LOCALIZATION_MODE_PERCH = Perch
+string PARAM_NAME_LOCALIZATION_MODE_TRUTH = Truth
 string PARAM_NAME_ACTION_TYPE_PAN = Pan
 string PARAM_NAME_ACTION_TYPE_TILT = Tilt
 string PARAM_NAME_ACTION_TYPE_BOTH = Both
@@ -33,22 +39,30 @@ string PARAM_NAME_FLIGHT_MODE_DIFFICULT = Difficult
 string PARAM_NAME_FLIGHT_MODE_QUIET = Quiet
 string PARAM_NAME_FLIGHT_MODE_DOCKING = Docking
 string PARAM_NAME_FLIGHT_MODE_PERCHING = Perching
+string PARAM_NAME_PLANNER_TYPE_TRAPEZOIDAL = trapezoidal
+string PARAM_NAME_PLANNER_TYPE_QUADRATIC_PROGRAM = qp
 string PARAM_NAME_TELEMETRY_TYPE_COMM_STATUS = CommStatus
 string PARAM_NAME_TELEMETRY_TYPE_CPU_STATE = CpuState
 string PARAM_NAME_TELEMETRY_TYPE_DISK_STATE = DiskState
 string PARAM_NAME_TELEMETRY_TYPE_EKF_STATE = EkfState
 string PARAM_NAME_TELEMETRY_TYPE_GNC_STATE = GncState
+string PARAM_NAME_TELEMETRY_TYPE_PMC_CMD_STATE = PmcCmdState
 string PARAM_NAME_TELEMETRY_TYPE_POSITION = Position
 
 string CMD_NAME_GRAB_CONTROL = grabControl
 string CMD_NAME_REQUEST_CONTROL = requestControl
 string CMD_NAME_FAULT = fault
+string CMD_NAME_INITIALIZE_BIAS = initializeBias
 string CMD_NAME_LOAD_NODELET = loadNodelet
 string CMD_NAME_NO_OP = noOp
 string CMD_NAME_REACQUIRE_POSITION = reacquirePosition
+string CMD_NAME_RESET_EKF = resetEkf
 string CMD_NAME_SHUTDOWN = shutdown
+string CMD_NAME_SWITCH_LOCALIZATION = switchLocalization
 string CMD_NAME_UNLOAD_NODELET = unloadNodelet
+string CMD_NAME_UNTERMINATE = unterminate
 string CMD_NAME_WAKE = wake
+string CMD_NAME_WAKE_SAFE = wakeSafe
 string CMD_NAME_WIPE_HLP = wipeHlp
 string CMD_NAME_ARM_PAN_AND_TILT = armPanAndTilt
 string CMD_NAME_GRIPPER_CONTROL = gripperControl
@@ -89,6 +103,7 @@ string CMD_NAME_SET_FLASHLIGHT_BRIGHTNESS = setFlashlightBrightness
 string CMD_NAME_SET_HOLONOMIC_MODE = setHolonomicMode
 string CMD_NAME_SET_INERTIA = setInertia
 string CMD_NAME_SET_OPERATING_LIMITS = setOperatingLimits
+string CMD_NAME_SET_PLANNER = setPlanner
 string CMD_NAME_SET_TELEMETRY_RATE = setTelemetryRate
 string CMD_NAME_SET_TIME_SYNC = setTimeSync
 string CMD_NAME_SET_ZONES = setZones

@@ -1,0 +1,148 @@
+@startuml
+
+skinparam componentStyle uml2
+skinparam dpi 600
+
+!include "colors.puml"
+
+!define COLOR_COM COLOR_9PASTEL_8
+!define COLOR_MGT COLOR_9PASTEL_3
+!define COLOR_MOB COLOR_9PASTEL_2
+!define COLOR_LOC COLOR_9PASTEL_4
+!define COLOR_GNC COLOR_9PASTEL_5
+!define COLOR_DRV COLOR_9PASTEL_7
+
+!define COLOR_PSOM COLOR_9PASTEL_9
+
+skinparam defaultFontName "Trebuchet MS"
+skinparam defaultFontSize 9
+
+skinparam component {
+  backgroundColor COLOR_6PASTEL_2
+  borderColor COLOR_6DARK_3
+  arrowColor #MidnightBlue
+}
+
+skinparam interface {
+ borderColor<<wired>> COLOR_6DARK_4
+ backgroundColor<<wired>> COLOR_6PASTEL_4
+ borderColor<<wifi>> COLOR_6DARK_6
+ backgroundColor<<wifi>> COLOR_6PASTEL_6
+}
+
+skinparam note {
+  backgroundColor white
+}
+
+title Astrobee Robot Software Overview
+
+frame Astrobee {
+
+  node "** HLP**" as HLP COLOR_PSOM {
+    [Guest Science\nManager] as gs_mgr COLOR_MGT
+    [Guest Sience\nAPKs] as apks
+    component ui_drivers COLOR_DRV [
+    Drivers
+    |_ USB
+    |_ HD Camera
+    |_ Touchscreen
+    |_ Speaker/Mic
+    ]
+    ''[HD Camera\nStreaming] as streamer COLOR_COM
+
+    apks -left-> gs_mgr
+    apks .right.> ui_drivers
+    'apks -[hidden]up- streamer
+  }
+
+  node "**  MLP**" as MLP COLOR_PSOM {
+    component executive COLOR_MGT [
+    \nexecutive\n
+    ]
+    [dds_bridge] COLOR_COM
+    [sys_monitor] COLOR_MGT
+    component loc COLOR_LOC [
+    localization
+    <&compass> sparse_map
+    <&compass> ar_targets
+    <&compass> handrail
+    ]
+    component mobility COLOR_MOB [
+    mobility
+    |_ choregrapher
+    |_ validator
+    |_ obstacle_detection
+    ]
+    [planners] COLOR_MOB
+    component color_cams COLOR_DRV [
+    nav_cam
+    dock_cam
+    ]
+    [perch_cam] COLOR_DRV
+    [haz_cam] COLOR_DRV
+
+    dds_bridge --> executive
+    sys_monitor --> executive
+    loc -[hidden]down- sys_monitor
+    executive -> mobility
+    mobility -> planners
+    mobility -up-> haz_cam
+    loc -left-> color_cams
+    loc -right-> perch_cam
+
+  }
+
+  node "**  LLP**" as LLP COLOR_PSOM {
+    component gnc COLOR_GNC [
+    GN&C
+    **EKF <&arrow-thick-right> CTL <&arrow-thick-right> FAM**
+    ]
+    [propulsion] COLOR_DRV
+    [IMU] COLOR_DRV
+    component other_drivers COLOR_DRV [
+    other_drivers
+    |_ power_system
+    |_ status_lights
+    |_ signal_lights
+    |_ flashlights
+    |_ laser
+    ]
+
+    gnc --> IMU
+    gnc --> propulsion
+
+  }
+
+  ' Inter-nodes dependencies
+  mobility --> gnc
+  executive --> other_drivers
+  gnc --> loc
+  gs_mgr --> executive
+
+!ifdef SHOW_NETWORK
+  interface eth <<wired>>
+  eth --up- HLP
+  eth - MLP
+  eth -down- LLP
+  note right of eth
+  When mated to the dock, Astrobee can access the
+  ISS wired payload LAN through the dock ethernet switch
+  end note
+!endif
+
+}
+
+!ifdef SHOW_NETWORK
+interface "ISS Wifi" <<wifi>> as wifi
+dds_bridge . wifi
+streamer . wifi
+!endif
+
+HLP -[hidden]- MLP
+MLP -[hidden]- LLP
+
+legend bottom
+Arrows are representing dependencies, not flow of information
+endlegend
+
+@enduml

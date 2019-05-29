@@ -17,34 +17,6 @@
 #
 # Fault message is used to provide all the information about an occurring fault
 
-uint8 NO_HB_GNC_WRAPPER                               = 14
-uint8 NO_HB_LOCALIZATION_MANAGER                      = 21
-uint8 NO_HB_CHOREOGRAPHER                             = 26
-uint8 NO_HB_EXECUTIVE                                 = 27
-uint8 NO_HB_ACCESS_CONTROL                            = 29
-uint8 NO_HB_DDS_ROS_BRIDGE                            = 30
-uint8 NO_HB_LLP_CPU_MONITOR                           = 31
-uint8 NO_HB_MLP_CPU_MONITOR                           = 32
-uint8 NO_HB_HLP_CPU_MONITOR                           = 33
-uint8 NO_HB_LLP_DISK_MONITOR                          = 34
-uint8 NO_HB_MLP_DISK_MONITOR                          = 35
-uint8 NO_HB_HLP_DISK_MONITOR                          = 36
-uint8 NO_HB_PLANNER                                   = 37
-uint8 NO_HB_PLANNER_QP                                = 38
-uint8 NO_HB_PLANNER_TRAPEZOIDAL                       = 39
-uint8 NO_HB_MAPPER                                    = 40
-uint8 NO_HB_SENTINEL                                  = 41
-uint8 NO_HB_NAV_CAM_IMG_SAMPLER                       = 42
-uint8 NO_HB_DOCK_CAM_IMG_SAMPLER                      = 43
-uint8 NO_HB_FRAME_STORE                               = 44
-uint8 LLP_CPU_LOAD_TOO_HIGH                           = 46
-uint8 MLP_CPU_LOAD_TOO_HIGH                           = 47
-uint8 HLP_CPU_LOAD_TOO_HIGH                           = 48
-uint8 LLP_TEMP_TOO_HIGH                               = 52
-uint8 MLP_TEMP_TOO_HIGH                               = 53
-uint8 HLP_TEMP_TOO_HIGH                               = 54
-uint8 OFF_TRAJECTORY                                  = 59
-
 time time_of_fault        # Time when fault occurred
 
 uint32 id                 # id specifying fault

@@ -297,7 +297,7 @@ class FeatureCountPlot(GraphPlot):
                 add_ml = False
             t = data['ml_time'][cur_ml] if add_ml else data['of_time'][cur_of]
             v = data['ml_landmarks'][cur_ml] if add_ml else data['of_landmarks'][cur_of]
-            r = QtGui.QGraphicsEllipseItem(-5, -5, 10, 10)
+            r = QtGui.QGraphicsEllipseItem(-5, -5, 10, 10) if add_ml else QtGui.QGraphicsEllipseItem(-3, -3, 6, 6)
             r.setPos(t, v)
             r.setBrush(colors[1] if add_ml else colors[0])
             r.setFlag(QtGui.QGraphicsItem.ItemIgnoresTransformations)

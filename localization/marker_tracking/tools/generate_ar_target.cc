@@ -72,6 +72,7 @@ int main(int argc, char** argv) {
   int32_t translate_y = -(PAGE_SIZE_Y_PTS - bounding_y) / 2 - bounding_y;  // inverted
 
   // Write out in EPS format.
+  printf("Writing AR target: %s\n", filename);
   FILE* file = fopen(filename, "w");
   fprintf(file,
           "%%!PS-Adobe EPSF-3.0\n"

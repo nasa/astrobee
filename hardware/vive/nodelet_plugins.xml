@@ -1,0 +1,5 @@
+<library path="lib/libvive_nodelet">
+  <class name="vive/ViveNodelet" type="vive::ViveNodelet" base_class_type="nodelet::Nodelet">
+    <description>Nodelet for the Vive System</description>
+  </class>
+</library>

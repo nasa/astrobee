@@ -5,7 +5,7 @@
 //
 // Model version                  : 1.1142
 // Simulink Coder version         : 8.11 (R2016b) 25-Aug-2016
-// C/C++ source code generated on : Wed Jan 31 12:32:36 2018
+// C/C++ source code generated on : Thu Mar  7 13:22:34 2019
 //
 // Target selection: ert.tlc
 // Embedded hardware selection: 32-bit Generic
@@ -17,13 +17,6 @@
 
 // Block parameters (auto storage)
 P_ctl_controller0_T ctl_controller0_P = {
-  0.0001F,                             // Variable: ctl_stopping_omega_thresh
-                                       //  Referenced by: '<S7>/Constant'
-
-  0.0001F,                             // Variable: ctl_stopping_vel_thresh
-                                       //  Referenced by: '<S6>/Constant'
-
-
   //  Variable: tun_accel_gain
   //  Referenced by: '<S30>/Gain'
 
@@ -53,6 +46,12 @@ P_ctl_controller0_T ctl_controller0_P = {
 
   0.174533F,                           // Variable: tun_ctl_stopped_quat_thresh
                                        //  Referenced by: '<S12>/Constant'
+
+  0.0004F,                             // Variable: tun_ctl_stopping_omega_thresh
+                                       //  Referenced by: '<S7>/Constant'
+
+  0.0004F,                             // Variable: tun_ctl_stopping_vel_thresh
+                                       //  Referenced by: '<S6>/Constant'
 
   0.0F,                                // Variable: tun_truth_q_omega_filt_enable
                                        //  Referenced by: '<S5>/For Each Subsystem'
@@ -102,6 +101,9 @@ P_ctl_controller0_T ctl_controller0_P = {
 
   1U,                                  // Mask Parameter: CompareToConstant_const_f
                                        //  Referenced by: '<S55>/Constant'
+
+  0U,                                  // Mask Parameter: TappedDelay_vinit
+                                       //  Referenced by: '<S2>/Tapped Delay'
 
 
   //  Expression: zeros(9,1)

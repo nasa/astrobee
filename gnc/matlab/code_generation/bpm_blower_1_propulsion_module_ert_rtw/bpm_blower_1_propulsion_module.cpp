@@ -5,7 +5,7 @@
 //
 // Model version                  : 1.1142
 // Simulink Coder version         : 8.11 (R2016b) 25-Aug-2016
-// C/C++ source code generated on : Wed Jan 31 12:34:43 2018
+// C/C++ source code generated on : Thu Mar  7 13:24:12 2019
 //
 // Target selection: ert.tlc
 // Embedded hardware selection: 32-bit Generic
@@ -867,6 +867,7 @@ void bpm_blower_1_propulsion_module_step(RT_MODEL_bpm_blower_1_propuls_T *const
      bpm_blower_1_propulsion_modul_P->bpm_lookup_totalarea_breakpoints,
      bpm_blower_1_propulsion_modul_P->abp_impeller_diameter,
      bpm_blower_1_propulsion_modul_P->const_air_density,
+     bpm_blower_1_propulsion_modul_P->tun_bpm_PM1_thrust_error_sf,
      bpm_blower_1_propulsion_modul_P->bpm_PM1_nozzle_noise_feedback_gain);
 
   // End of Outputs for SubSystem: '<S1>/blower_aerodynamics'
@@ -1353,9 +1354,9 @@ RT_MODEL_bpm_blower_1_propuls_T *bpm_blower_1_propulsion_module(real32_T
     // external inputs
     (void)memset(&bpm_blower_1_propulsion_modul_U_omega_B_ECI_B[0], 0, 3U *
                  sizeof(real32_T));
-    (void)memset(&bpm_blower_1_propulsion_modul_U_veh_cm[0], 0, 3U * sizeof
-                 (real32_T));
     (void)memset(&bpm_blower_1_propulsion_modul_U_servo_cmd[0], 0, 6U * sizeof
+                 (real32_T));
+    (void)memset(&bpm_blower_1_propulsion_modul_U_veh_cm[0], 0, 3U * sizeof
                  (real32_T));
     *bpm_blower_1_propulsion_modul_U_battery_voltage = 0.0F;
     *bpm_blower_1_propulsion_modul_U_impeller_cmd = 0U;

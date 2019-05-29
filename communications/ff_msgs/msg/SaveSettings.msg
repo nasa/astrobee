@@ -21,15 +21,12 @@
 # Name of topic
 string topic_name
 
-# Topic is not saved to disk
-uint8 NONE        = 0
-
 # Topic saved to disk; upon docking it is downlinked
-uint8 IMMEDIATE   = 1
+uint8 IMMEDIATE   = 0
 
 # Topic saved to disk; upon docking it is transferred to ISS server for later
 # downlink
-uint8 DELAYED     = 2
+uint8 DELAYED     = 1
 
 # Downlink option indicates if and when the data in the rostopic is downlinked
 uint8 downlinkOption

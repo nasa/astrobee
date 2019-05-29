@@ -1,14 +1,14 @@
 /* Copyright (c) 2017, United States Government, as represented by the
  * Administrator of the National Aeronautics and Space Administration.
- * 
+ *
  * All rights reserved.
- * 
+ *
  * The Astrobee platform is licensed under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -24,281 +24,301 @@
 #include <functional>
 #include <vector>
 #include <string>
-
-// Ack/Nack
-#define I2C_RESP_ACK 0xEE
-#define I2C_RESP_NACK 0xFF
-
-// Common commands for EPS and Dock (0x01 - 0x3F)
-#define I2C_CMD_NONE 0x00
-#define I2C_CMD_GET_HW_VERSION 0x01
-#define I2C_CMD_GET_SW_VERSION 0x02
-#define I2C_CMD_GET_BUILD_TIME 0x03
-#define I2C_CMD_SW_ON 0x04
-#define I2C_CMD_SW_OFF 0x05
-#define I2C_CMD_GET_SW_STATES 0x06
-// 0x07 RESERVED
-// 0x08 RESERVED
-#define I2C_CMD_GET_HK 0x09
-#define I2C_CMD_GET_HW_EXCEPTIONS 0x0A
-#define I2C_CMD_CLEAR_HW_EXCEPTIONS 0x0B
-#define I2C_CMD_GET_DIGITAL_TEMPS 0x0C
-#define I2C_CMD_GET_SERIAL_NUMBER 0x0D
-#define I2C_CMD_REBOOT 0x0F
-#define I2C_CMD_ENTER_BOOTLOADER 0x0E
-
-// EPS-specific commands (0x40 - 0x6F)
-#define I2C_CMD_GET_BATTERY_STATUS 0x40
-#define I2C_CMD_RING_BUZZER 0x41
-#define I2C_CMD_CLR_TERMINATE_EVT 0x42
-#define I2C_CMD_UNDOCK 0x43
-#define I2C_CMD_GET_CONNECTION_STATE 0x44
-
-// Dock-specific commands (0x70 - 0x9F)
-#define I2C_CMD_GET_DOCK_STATE 0x70
-#define I2C_CMD_GET_CONNECTED_EPS_STATE 0x71
-#define I2C_CMD_GET_CONN_STATE 0x72
-#define I2C_CMD_GET_EPS_CMD 0x75
-#define I2C_CMD_SET_EPS_CMD 0x76
-
-// EPS-to-Dock I2C commands (0xA0 - 0xCF)
-#define I2C_CMD_SEND_EPS_STATE_TO_DOCK 0xD0
-
-/*
-#define I2C_ACK 0xAA
-#define I2C_NACK 0xBB
-#define I2C_CMD_SW_ON 0x01
-#define I2C_CMD_SW_OFF 0x02
-#define I2C_CMD_GET_SERIAL_NUMBER 0x08
-#define I2C_CMD_REBOOT 0x0E
-#define I2C_CMD_ENTER_BOOTLOADER 0x0F
-#define I2C_CMD_GET_HK 0x11
-#define I2C_CMD_GET_SW_STATES 0x13
-#define I2C_CMD_GET_VERSION 0x90
-#define I2C_CMD_GET_BUILD_TIME 0x91
-#define I2C_CMD_GET_BATTERY_STATUS 0x92
-#define I2C_CMD_GET_DIGITAL_TEMPS 0x93
-#define I2C_CMD_RING_BUZZER 0x95
-*/
-
-#define EPS_NUM_PWR_CHANS               32
-#define EPS_NUM_HOUSEKEEPING            32
-#define EPS_FIRMWARE_NUM_FILE_RETRIES   10
-#define EPS_FIRMWARE_BLOCK_SIZE_BYTES   128
-#define EPS_MIN_BUZZER_FREQUENCY        1000
-#define EPS_MAX_BUZZER_FREQUENCY        2000
-#define EPS_MIN_BUZZER_DURATION         1
-#define EPS_MAX_BUZZER_DURATION         10
+#include <map>
 
 namespace eps_driver {
 
-// Structure for holding battery information
-/*
-struct BatteryStatus {
-  uint16_t chan;
-  int16_t percentage;
-  int16_t voltage;
-  int16_t current;
-  float temperature;
-};
-*/
-struct BatteryStatus {
-  uint8_t chan;
-  bool present;
-  uint16_t voltage;             // mV
-  int16_t current;              // mA
-  uint16_t charge;              // mAh
-  uint16_t capacity;            // mAh
-  uint16_t design_capacity;     // mAh
-  uint16_t percentage;          // [0..100] %
-  uint16_t cell_voltage[4];     // mV
-  uint16_t status;              // bit mask
-  uint16_t temperature;         // 0.1 K
-  uint16_t serial_number;
-};
-
-// Structure for holding channel information
-struct HousekeepingInfo {
-  int channel;
-  const char *description;
-  double scale;
-  double offset;
-  double value;
-};
-
-// String type
-enum StringType {
-  HW_VERSION = I2C_CMD_GET_HW_VERSION,
-  SW_VERSION = I2C_CMD_GET_SW_VERSION,
-  BUILD      = I2C_CMD_GET_BUILD_TIME,
-  SERIAL     = I2C_CMD_GET_SERIAL_NUMBER
-};
-
-// Battery index
-enum BatteryIndex {
-  BATTERY_TOP_LEFT     = 0,
-  BATTERY_BOTTOM_LEFT  = 1,
-  BATTERY_TOP_RIGHT    = 2,
-  BATTERY_BOTTOM_RIGHT = 3,
-  NUM_BATTERIES        = 4
-};
-
-// LED index
-enum LedIndex {
-  LED_STATUS_1 = 0,
-  LED_STATUS_2 = 1,
-  LED_STATUS_3 = 2,
-  LED_STATUS_4 = 3,
-  LED_STATUS_5 = 4,
-  LED_STATUS_6 = 5,
-  LED_STREAM   = 6,
-  LED_CAMERA   = 7,
-  LED_MIC      = 8,
-  NUM_LEDS     = 9
-};
-
-enum PayloadIndex {
-  PAYLOAD_TOP_FRONT    = 0,
-  PAYLOAD_BOTTOM_FRONT = 1,
-  PAYLOAD_TOP_AFT      = 2,
-  PAYLOAD_BOTTOM_AFT   = 3,
-  NUM_PAYLOADS         = 4
-};
-
-enum AdvancedIndex {
-  ADVANCED_USB         = 0,
-  ADVANCED_AUX         = 1,
-  ADVANCED_PMC1        = 2,
-  ADVANCED_PMC2        = 3,
-  NUM_ADVANCED         = 4
-};
-
-// Power state
-enum PowerState {
-  PERSIST  = 0x00,
-  ENABLED  = 0x01,
-  DISABLED = 0x02
-};
-
-// Digital and analog enumerations
-enum TemperatureSensorType {
-  DIGITAL  = 0x93,
-  ANALOG   = 0x12
-};
-
-// Firmware file actions
-enum FirmwareFileState {
-  OPEN     = 0x03,
-  CLOSE    = 0x05,
-  READY    = 0x07
-};
-
-enum ConnectionState {
-  CONN_DISCONNECTED = 0x00,
-  CONN_CONNECTING   = 0x01,
-  CONN_CONNECTED    = 0x02
-};
-
-class EpsDriver {
+// Class to arbitrate access to the Electrical Power System
+class EPS {
  public:
-  enum ChannelIndex {
-    CHANNEL_LLP_EN      = 0,
-    CHANNEL_MLP_EN      = 1,
-    CHANNEL_HLP_EN      = 2,
-    CHANNEL_ENET_PWR_EN = 3,
-    CHANNEL_USB_PWR_EN  = 4,
-    CHANNEL_AUX_PWR_EN  = 5,
-    CHANNEL_RESERVED1   = 6,
-    CHANNEL_RESERVED2   = 7,
-    CHANNEL_PAYLOAD_EN1 = 8,
-    CHANNEL_PAYLOAD_EN2 = 9,
-    CHANNEL_PAYLOAD_EN3 = 10,
-    CHANNEL_PAYLOAD_EN4 = 11,
-    CHANNEL_MOTOR_EN1   = 12,
-    CHANNEL_MOTOR_EN2   = 13,
-    CHANNEL_RESERVED3   = 14,
-    CHANNEL_RESERVED4   = 15,
-    CHANNEL_STATUS_LED1 = 16,
-    CHANNEL_STATUS_LED2 = 17,
-    CHANNEL_STATUS_LED3 = 18,
-    CHANNEL_STATUS_LED4 = 19,
-    CHANNEL_STATUS_LED5 = 20,
-    CHANNEL_STATUS_LED6 = 21,
-    CHANNEL_RESERVED5   = 22,
-    CHANNEL_RESERVED6   = 23,
-    CHANNEL_STREAM_LED  = 24,
-    CHANNEL_CAMERA_LED  = 25,
-    CHANNEL_MIC_LED     = 26,
-    CHANNEL_RESERVED7   = 27,
-    CHANNEL_RESERVED8   = 28,
-    CHANNEL_RESERVED9   = 29,
-    CHANNEL_RESERVED10  = 30,
-    CHANNEL_RESERVED11  = 31,
-    NUM_CHANNELS        = 32
+  // Toggle values
+  static constexpr uint32_t EVERYTHING = 0xFFFFFF;
+  static constexpr uint8_t OFF = 0;
+  static constexpr uint8_t ON  = 1;
+
+  // String type
+  enum String : uint32_t {
+    STRING_SW_VERSION,
+    STRING_BUILD,
+    STRING_SERIAL,
+    NUM_STRINGS
   };
 
-  // Constructor
-  explicit EpsDriver(const i2c::Device &i2c_dev, std::function<void(uint32_t)> usleep_cb);
+  // Channel indexes
+  enum Channel : uint32_t {
+    CHANNEL_LLP_EN,
+    CHANNEL_MLP_EN,
+    CHANNEL_HLP_EN,
+    CHANNEL_USB_PWR_EN,
+    CHANNEL_AUX_PWR_EN,
+    CHANNEL_ENET_PWR_EN,
+    CHANNEL_FAN_EN,
+    CHANNEL_SPEAKER_EN,
+    CHANNEL_PAYLOAD_EN_TOP_AFT,
+    CHANNEL_PAYLOAD_EN_BOT_AFT,
+    CHANNEL_PAYLOAD_EN_BOT_FRONT,
+    CHANNEL_PAYLOAD_EN_TOP_FRONT,
+    CHANNEL_MOTOR_EN1,
+    CHANNEL_MOTOR_EN2,
+    CHANNEL_RESERVED0,
+    CHANNEL_RESERVED1,
+    CHANNEL_STATUSA2_LED,
+    CHANNEL_STATUSA1_LED,
+    CHANNEL_STATUSB2_LED,
+    CHANNEL_STATUSB1_LED,
+    CHANNEL_STATUSC2_LED,
+    CHANNEL_STATUSC1_LED,
+    CHANNEL_RESERVED2,
+    CHANNEL_RESERVED3,
+    CHANNEL_VIDEO_LED,
+    CHANNEL_AUDIO_LED,
+    CHANNEL_LIVE_LED,
+    CHANNEL_RESERVED4,
+    CHANNEL_RESERVED5,
+    CHANNEL_RESERVED6,
+    CHANNEL_RESERVED7,
+    CHANNEL_RESERVED8,
+    NUM_CHANNELS
+  };
+
+  // States
+  enum State : uint32_t {
+    STATE_POWER,
+    STATE_DOCK,
+    NUM_STATES
+  };
+
+  // Powe state values
+  enum PowerStateValue : uint8_t {
+    POWER_STATE_UNKNOWN,
+    POWER_STATE_HIBERNATE,
+    POWER_STATE_AWAKE_NOMINAL,
+    POWER_STATE_AWAKE_SAFE,
+    POWER_STATE_CRITICAL_FAULT,
+    NUM_POWER_STATES
+  };
+
+  // Dock state values
+  enum DockStateValue : uint8_t {
+    DOCK_DISCONNECTED,
+    DOCK_CONNECTING,
+    DOCK_CONNECTED,
+    NUM_DOCK_STATES
+  };
+
+  // Faults
+  enum Fault : uint32_t {
+    FAULT_OC_ENET,
+    FAULT_OT_FLASHLIGHT_1,
+    FAULT_OT_FLASHLIGHT_2,
+    FAULT_OC_FAN,
+    FAULT_RESERVED0,
+    FAULT_RESERVED1,
+    FAULT_RESERVED2,
+    FAULT_RESERVED3,
+    FAULT_RESERVED4,
+    FAULT_OT_MLP,
+    FAULT_OT_LLP,
+    FAULT_OT_HLP,
+    FAULT_RESERVED5,
+    FAULT_RESERVED6,
+    FAULT_RESERVED7,
+    FAULT_RESERVED8,
+    FAULT_OC_USB,
+    FAULT_OC_LLP,
+    FAULT_OC_MLP,
+    FAULT_OC_HLP,
+    FAULT_OC_AUX,
+    FAULT_ST_5A_REG_3,
+    FAULT_OC_5A_REG_2,
+    FAULT_OC_5A_REG_1,
+    FAULT_ST_5A_REG_2,
+    FAULT_OC_PAYLOAD_4,
+    FAULT_RESERVED9,
+    FAULT_ST_5A_REG_1,
+    FAULT_OC_PAYLOAD_1,
+    FAULT_OC_5A_REG_3,
+    FAULT_OC_PAYLOAD_2,
+    FAULT_OC_PAYLOAD_3,
+    NUM_FAULTS
+  };
+
+  // Housekeeping
+  enum Housekeeping : uint32_t {
+    HK_AGND1_V,
+    HK_SUPPLY_IN_V,
+    HK_PAYLOAD_PWR3_I,
+    HK_SUBSYS1_1_PWR_V,
+    HK_SUBSYS1_2_PWR_V,
+    HK_UNREG_V,
+    HK_SYSTEM_I,
+    HK_BAT4V_V,
+    HK_BAT3V_V,
+    HK_BAT2V_V,
+    HK_BAT1V_V,
+    HK_SUPPLY_I,
+    HK_5VLIVE_V,
+    HK_AGND2_V,
+    HK_FAN_PWR_I,
+    HK_AUX_PWR_I,
+    HK_PAYLOAD_PWR4_I,
+    HK_PAYLOAD_PWR2_I,
+    HK_PAYLOAD_PWR1_I,
+    HK_5A_REG1_PWR_I,
+    HK_MOTOR1_I,
+    HK_SUBSYS2_PWR_V,
+    HK_MOTOR2_I,
+    HK_5A_REG2_PWR_I,
+    HK_5A_REG3_PWR_I,
+    HK_MAIN5_PWR_I,
+    HK_AUO_PWR_I,
+    HK_HLP_I,
+    HK_USB_PWR_I,
+    HK_LLP_I,
+    HK_MLP_I,
+    HK_ENET_PWR_I,
+    NUM_HOUSEKEEPING
+  };
+
+  // Temperatures
+  enum Temp : uint32_t {
+    TEMP_BOTTOM,
+    TEMP_TOP,
+    TEMP_CONNECTOR,
+    NUM_TEMPERATURES
+  };
+
+  // Battery
+  enum Battery : uint32_t {
+    BATTERY_TOP_RIGHT,
+    BATTERY_BOTTOM_RIGHT,
+    BATTERY_TOP_LEFT,
+    BATTERY_BOTTOM_LEFT,
+    NUM_BATTERIES
+  };
+
+  // Charge state
+  enum Charger : uint8_t {
+    CHARGER_TOP_RIGHT,
+    CHARGER_BOTTOM_RIGHT,
+    CHARGER_TOP_LEFT,
+    CHARGER_BOTTOM_LEFT,
+    NUM_CHARGERS
+  };
+
+  // LEDs
+  enum Led : uint32_t {
+    LED_SA1,
+    LED_SA2,
+    LED_SB1,
+    LED_SB2,
+    LED_SC1,
+    LED_SC2,
+    LED_VIDEO,
+    LED_AUDIO,
+    LED_LIVE,
+    NUM_LEDS
+  };
+
+  // LED mode
+  enum LedMode : uint8_t {
+    LED_MODE_OFF,
+    LED_MODE_ON,
+    LED_MODE_BLINK_2HZ,
+    LED_MODE_BLINK_1HZ,
+    LED_MODE_BLINK_0_5HZ,
+    NUM_LED_MODES
+  };
+
+  // Structure for holding battery information
+  struct BatteryInfo {
+    uint8_t chan;                 // Channel
+    bool present;                 // Is it plegged in?
+    uint16_t voltage;             // Voltage in mV
+    int16_t current;              // Current draw mA
+    uint16_t full;                // Full mAh
+    uint16_t remaining;           // Remaining mAh
+    uint16_t design;              // Design mAh
+    uint16_t percentage;          // [0..100] %
+    uint16_t cell[4];             // Cell voltage mV
+    uint16_t status;              // bit mask
+    uint16_t temperature;         // Cell temp 0.1 K
+    uint16_t serial;              // Serial number
+  };
+
+  // Temnperature information struct
+  struct TempInfo {
+    uint8_t addr;                 // i2c address
+    double temp;                  // current value
+  };
+
+  // Constructor requires a vaid i2c device and sleep() callback function
+  explicit EPS(
+    const i2c::Device &i2c_dev, std::function<void(uint32_t)> usleep_cb);
 
   // Destructor
-  ~EpsDriver(void);
+  ~EPS(void);
 
-  // Set the version string
-  bool GetString(StringType type, std::string & data);
-
-  // Reset the EPS
-  bool Reset();
-
-  // Ring the buzzer
+  // Commands
   bool RingBuzzer(uint16_t freq, uint8_t secs);
-
-  // Enable the PMCs
-  bool EnablePMCs(bool enable);
-
-  // Read the analog temperature sensors
-  bool ReadTemperatureSensors(std::vector<double>& data);
-
-  // Set specific power channel on (not a mask, but an integer channel!)
-  bool SetPayloadState(PayloadIndex payload, PowerState state);
-
-  // Set specific power channel on (not a mask, but an integer channel!)
-  bool SetAdvancedState(AdvancedIndex advanced, PowerState state);
-
-  // Set specific power channel on (not a mask, but an integer channel!)
-  bool SetLedState(LedIndex led, PowerState state);
-
-  // Get the battery status for a particular channel
-  bool GetBatteryStatus(BatteryIndex battery, BatteryStatus &data);
-
-  // Read housekeeping data for each power channel
-  bool ReadHousekeeping(std::vector<HousekeepingInfo> &data);
-
-  // Send UNDOCK command to the dock.
+  bool EnterBootloader(void);
+  bool ClearFaults(void);
+  bool Unterminate(void);
   bool Undock(void);
+  bool Reboot(void);
 
-  // Get Connection State
-  bool GetConnectionState(ConnectionState &state);
+  // Getters
+  bool GetStrings(uint32_t mask, std::map<String, std::string> & data);
+  bool GetStates(uint32_t mask, std::map<State, uint8_t> & data);
+  bool GetChannels(uint32_t mask, std::map<Channel, bool> & data);
+  bool GetChargers(uint32_t mask, std::map<Charger, bool> & data);
+  bool GetFaults(uint32_t mask, std::map<Fault, bool> & data);
+  bool GetBatteries(uint32_t mask, std::map<Battery, BatteryInfo> & data);
+  bool GetHousekeeping(uint32_t mask, std::map<Housekeeping, double> & data);
+  bool GetTemps(uint32_t mask, std::map<Temp, TempInfo> & data);
 
-  // Clear TERMINATE event.
-  bool ClearTerminateEvent(void);
+  // Setters
+  bool SetLeds(uint32_t mask, LedMode const value);
+  bool SetChargers(uint32_t mask, bool const value);
+  bool SetChannels(uint32_t mask, bool const value);
+  bool SetPowerState(PowerStateValue const value);
 
-  // Write new firmware to the EPS
-  bool WriteFirmware(std::string const& hexfile);
-
-  // Set all power switch states
-  bool SetAllPowerChannelState(PowerState state);
-
-  // Get all power switch states
-  bool GetAllPowerChannelState(std::vector<PowerState> &states);
-
-  // Low level power channel state
-  bool SetPowerChannelState(uint8_t channel, PowerState state);
-
-  std::vector<std::string>& GetPowerChannelNames();
+  // Helpers
+  static std::string SerialToString(uint8_t serial[6]);
 
  protected:
-  // Close the firware file
-  bool ChangeFirmwareFileState(FirmwareFileState state);
+  static constexpr size_t  I2C_BUF_MAX_LEN                  = 256;
+  static constexpr uint8_t I2C_RESP_ACK                     = 0xEE;
+  static constexpr uint8_t I2C_RESP_NACK                    = 0xFF;
+  static constexpr uint8_t I2C_CMD_NONE                     = 0x00;
+  static constexpr uint8_t I2C_CMD_GET_SW_VERSION           = 0x02;
+  static constexpr uint8_t I2C_CMD_GET_BUILD_TIME           = 0x03;
+  static constexpr uint8_t I2C_CMD_SW_ON                    = 0x04;
+  static constexpr uint8_t I2C_CMD_SW_OFF                   = 0x05;
+  static constexpr uint8_t I2C_CMD_GET_SW_STATES            = 0x06;
+  static constexpr uint8_t I2C_CMD_GET_SYSTEM_STATE         = 0x07;
+  static constexpr uint8_t I2C_CMD_SET_LED_MODES            = 0x08;
+  static constexpr uint8_t I2C_CMD_GET_HK                   = 0x09;
+  static constexpr uint8_t I2C_CMD_GET_HW_EXCEPTIONS        = 0x0A;
+  static constexpr uint8_t I2C_CMD_CLR_HW_EXCEPTIONS        = 0x0B;
+  static constexpr uint8_t I2C_CMD_GET_DIGITAL_TEMPS        = 0x0C;
+  static constexpr uint8_t I2C_CMD_GET_SERIAL_NUMBER        = 0x0D;
+  static constexpr uint8_t I2C_CMD_REBOOT                   = 0x0F;
+  static constexpr uint8_t I2C_CMD_ENTER_BOOTLOADER         = 0x0E;
+  static constexpr uint8_t I2C_CMD_GET_BATTERY_STATUS       = 0x40;
+  static constexpr uint8_t I2C_CMD_RING_BUZZER              = 0x41;
+  static constexpr uint8_t I2C_CMD_CLR_TERMINATE_EVT        = 0x42;
+  static constexpr uint8_t I2C_CMD_UNDOCK                   = 0x43;
+  static constexpr uint8_t I2C_CMD_GET_CONNECTION_STATE     = 0x44;
+  static constexpr uint8_t I2C_CMD_SET_CHARGE_STATE         = 0x45;
+  static constexpr uint8_t I2C_CMD_GET_CHARGE_STATE         = 0x46;
+  static constexpr uint8_t I2C_CMD_SET_EPS_POWER_MODE       = 0x47;
+  static constexpr uint8_t I2C_CMD_GET_EPS_POWER_MODE       = 0x48;
+  static constexpr uint8_t I2C_CMD_GET_CONNECTED_EPS_STATE  = 0x71;
+  static constexpr uint8_t I2C_CMD_GET_CONN_STATE           = 0x72;
+  static constexpr uint8_t I2C_CMD_GET_EPS_CMD              = 0x75;
+  static constexpr uint8_t I2C_CMD_SET_EPS_CMD              = 0x76;
+  static constexpr uint8_t I2C_CMD_SEND_EPS_STATE_TO_DOCK   = 0xD0;
 
   // Read an i2c frame + 1 byte checksum
   uint16_t Read(uint8_t *buff);
@@ -313,10 +333,8 @@ class EpsDriver {
   uint8_t ComputeChecksum(uint8_t *buf, size_t size);
 
  private:
-  i2c::Device i2c_dev_;                                      // Device
-  std::function<void(uint32_t)> usleep_cb_;                  // Fake usleep callback
-  HousekeepingInfo hk_info_[EPS_NUM_HOUSEKEEPING];  // Housekeeping info
-  std::vector<std::string> power_chan_names_;
+  i2c::Device i2c_dev_;                             // Device
+  std::function<void(uint32_t)> usleep_cb_;         // Fake usleep callback
 };
 
 }  // namespace eps_driver

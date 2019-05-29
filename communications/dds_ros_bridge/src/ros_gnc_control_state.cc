@@ -67,6 +67,10 @@ void RosGncControlStateToRapid::MsgCallback(
 
 void RosGncControlStateToRapid::PubGncControlState(
                                                 const ros::TimerEvent& event) {
+  if (gnc_msg_ == NULL) {
+    return;
+  }
+
   rapid::ext::astrobee::GncControlState &msg = state_supplier_->event();
 
   // Copy time

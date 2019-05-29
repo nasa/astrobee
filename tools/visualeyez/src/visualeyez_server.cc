@@ -1,14 +1,14 @@
 /* Copyright (c) 2017, United States Government, as represented by the
  * Administrator of the National Aeronautics and Space Administration.
- * 
+ *
  * All rights reserved.
- * 
+ *
  * The Astrobee platform is licensed under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -78,7 +78,7 @@ class Marker {
     pos[1] = y;
     pos[2] = z;
   }
-  virtual ~Marker() {}
+  ~Marker() {}
   double pos[3];
 };
 typedef std::map < VZIndex, Marker > MarkerMap;
@@ -172,7 +172,7 @@ class VisualeyezServer : public nodelet::Nodelet {
     if (!VisualeyezUtils::ReadConfig(cfgfile, targets_))
       ROS_INFO("No calibration file");
   }
-  virtual ~VisualeyezServer() {}
+  ~VisualeyezServer() {}
 
  protected:
   // Called when nodelet boots
@@ -619,10 +619,8 @@ class VisualeyezServer : public nodelet::Nodelet {
 };
 
 // Register the nodelet witht he system
-PLUGINLIB_DECLARE_CLASS(visualeyez, VisualeyezServer,
-                        visualeyez::VisualeyezServer, nodelet::Nodelet);
+PLUGINLIB_EXPORT_CLASS(visualeyez::VisualeyezServer, nodelet::Nodelet);
 
 }  // namespace visualeyez
 
 #endif  // VISUALEYEZ_VISUALEYEZ_SERVER_H_
-

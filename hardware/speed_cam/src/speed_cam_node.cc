@@ -1,14 +1,14 @@
 /* Copyright (c) 2017, United States Government, as represented by the
  * Administrator of the National Aeronautics and Space Administration.
- * 
+ *
  * All rights reserved.
- * 
+ *
  * The Astrobee platform is licensed under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -48,8 +48,10 @@ class SpeedCamNode : public ff_util::FreeFlyerNodelet {
       std::placeholders::_2,  std::placeholders::_3),
     std::bind(&SpeedCamNode::OpticalFlowCallback, this, std::placeholders::_1),
     std::bind(&SpeedCamNode::SpeedCallback, this, std::placeholders::_1),
-    std::bind(&SpeedCamNode::StatusCallback, this, std::placeholders::_1)) {}
-  virtual ~SpeedCamNode() {}
+    std::bind(&SpeedCamNode::StatusCallback, this, std::placeholders::_1),
+    std::bind(&SpeedCamNode::VersionCallback, this, std::placeholders::_1),
+    std::bind(&SpeedCamNode::StateCallback, this, std::placeholders::_1)) {}
+  ~SpeedCamNode() {}
 
  protected:
   // Called on flight software stack initialization
@@ -58,46 +60,36 @@ class SpeedCamNode : public ff_util::FreeFlyerNodelet {
     config_reader::ConfigReader config_params;
     config_params.AddFile("hw/speed_cam.config");
     if (!config_params.ReadFiles())
-      FF_FATAL("Could get read the config file");
+      return InitFault("Could get read the config file");
 
     // Read the device information from the config table
     config_reader::ConfigReader::Table devices;
     if (!config_params.GetTable("speed_cam", &devices))
-      FF_FATAL("Could get speed_cam item in config file");
+      return InitFault("Could get speed_cam item in config file");
 
     // Iterate over all devices
     for (int i = 0; i < devices.GetSize(); i++) {
       config_reader::ConfigReader::Table device_info;
       if (!devices.GetTable(i + 1, &device_info))
-        FF_FATAL("Could get row in table table");
+        return InitFault("Could get row in table table");
 
       // Get the name of the device and check it matches the name of this node
       std::string name;
       if (!device_info.GetStr("name", &name))
-        FF_FATAL("Could not find row 'name' in table");
+        return InitFault("Could not find row 'name' in table");
 
       if (name == GetName()) {
         config_reader::ConfigReader::Table serial;
         if (!device_info.GetTable("serial", &serial))
-          FF_FATAL("Could not find table 'serial' in table");
+          return InitFault("Could not find table 'serial' in table");
         std::string port;
         if (!serial.GetStr("port", &port))
-          FF_FATAL("Could not read the serial port from the config");
+          return InitFault("Could not read the serial port from the config");
         uint32_t baud;
         if (!serial.GetUInt("baud", &baud))
-          FF_FATAL("Could not read the serial baud from the config");
+          return InitFault("Could not read the serial baud from the config");
         if (speed_cam_.Initialize(port, baud) != RESULT_SUCCESS)
-          FF_FATAL("Could not initialize the serial device");
-
-        /*
-        double timesync_secs = -1.0;
-        if (!device_info.GetReal("timesync_secs", &timesync_secs))
-          FF_FATAL("Could not find row 'timesync_secs' in table");
-        if (timesync_secs > 0) {
-          timer_ = nh->createTimer(ros::Duration(timesync_secs),
-            &SpeedCamNode::TimesyncCallback, this, false);
-        }
-        */
+          return InitFault("Could not initialize the serial device");
 
         // Setup message: Inertial measurement unit
         pub_imu_ = nh->advertise < sensor_msgs::Imu > (TOPIC_HARDWARE_SPEED_CAM_IMU, 1);
@@ -111,14 +103,14 @@ class SpeedCamNode : public ff_util::FreeFlyerNodelet {
     }
 
     // If we get here, we didn't find a configuration block in the LUA, which is a problem...
-    FF_FATAL("Could not find the speed_cam device '" << GetName() << "' in the LUA config");
+    InitFault("Could not find the speed_cam: " + GetName());
   }
 
-  // Perform a time sync event
-  void TimesyncCallback(ros::TimerEvent const& event) {
-    /*
-    speed_cam_.TimeSync();
-    */
+  // Deal with a fault in a responsible manner
+  void InitFault(std::string const& msg ) {
+    NODELET_ERROR_STREAM(msg);
+    AssertFault(ff_util::INITIALIZATION_FAILED, msg);
+    return;
   }
 
   // Callback from speedcam when new a new scaled IMU measurement is produced
@@ -191,9 +183,19 @@ class SpeedCamNode : public ff_util::FreeFlyerNodelet {
   // The status includes over-speed alerts.
   void StatusCallback(mavlink_heartbeat_t const& message) {
     if ((message.system_status & STATUS_LINEAR_SPEED_LIMIT_EXCEEDED) != 0x00)
-      AssertFault("VELOCITY_TOO_HIGH", "The linear speed exceeded the limit.");
+      AssertFault(ff_util::VELOCITY_TOO_HIGH,
+                  "The linear speed exceeded the limit.");
     if ((message.system_status & STATUS_ANGULAR_SPEED_LIMIT_EXCEEDED) != 0x00)
-      AssertFault("VELOCITY_TOO_HIGH", "The angular speed exceeded the limit.");
+      AssertFault(ff_util::VELOCITY_TOO_HIGH,
+                  "The angular speed exceeded the limit.");
+  }
+
+  void VersionCallback(uint32_t sw_version) {
+    // FIXME: Should it publish the version?
+  }
+
+  void StateCallback(int32_t state) {
+    // FIXME: Should it publish the state?
   }
 
  private:
@@ -202,10 +204,8 @@ class SpeedCamNode : public ff_util::FreeFlyerNodelet {
   ros::Publisher pub_camera_image_;               // Camera image publisher
   ros::Publisher pub_optical_flow_;               // Optical flow publisher
   ros::Publisher pub_speed_;                      // Twist publisher
-  ros::Timer timer_;                              // For time sync
 };
 
-PLUGINLIB_DECLARE_CLASS(speed_cam, SpeedCamNode,
-                        speed_cam::SpeedCamNode, nodelet::Nodelet);
+PLUGINLIB_EXPORT_CLASS(speed_cam::SpeedCamNode, nodelet::Nodelet);
 
 }  // namespace speed_cam

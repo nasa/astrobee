@@ -66,6 +66,10 @@ void RosGncFamCmdStateToRapid::MsgCallback(
 }
 
 void RosGncFamCmdStateToRapid::PubGncFamCmdState(const ros::TimerEvent& event) {
+  if (fam_msg_ == NULL) {
+    return;
+  }
+
   rapid::ext::astrobee::GncFamCmdState &msg = state_supplier_->event();
 
   // Copy time

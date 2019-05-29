@@ -5,7 +5,7 @@
 //
 // Model version                  : 1.1142
 // Simulink Coder version         : 8.11 (R2016b) 25-Aug-2016
-// C/C++ source code generated on : Wed Jan 31 12:32:36 2018
+// C/C++ source code generated on : Thu Mar  7 13:22:34 2019
 //
 // Target selection: ert.tlc
 // Embedded hardware selection: 32-bit Generic
@@ -304,6 +304,7 @@ void ctl_controller0_step(RT_MODEL_ctl_controller0_T *const ctl_controller0_M,
   real32_T rtb_SumofElements;
   real32_T rtb_SumofElements1;
   boolean_T rtb_LogicalOperator2_c;
+  uint8_T rtb_Switch3;
   real32_T rtb_VectorConcatenate[16];
   real32_T rtb_VectorConcatenate_m[16];
   real32_T rtb_Product1_m[4];
@@ -1638,15 +1639,17 @@ void ctl_controller0_step(RT_MODEL_ctl_controller0_T *const ctl_controller0_M,
   // Logic: '<S2>/Logical Operator2' incorporates:
   //   Constant: '<S6>/Constant'
   //   Constant: '<S7>/Constant'
-  //   Constant: '<S8>/Constant'
   //   Logic: '<S2>/Logical Operator'
+  //   Logic: '<S2>/Logical Operator4'
   //   RelationalOperator: '<S6>/Compare'
   //   RelationalOperator: '<S7>/Compare'
-  //   RelationalOperator: '<S8>/Compare'
+  //   S-Function (sfix_udelay): '<S2>/Tapped Delay'
 
-  rtb_LogicalOperator2 = ((rtb_Switch12 == ctl_controller0_P->ctl_stopping_mode)
-    && ((rtb_SumofElements < ctl_controller0_P->ctl_stopping_vel_thresh) &&
-        (rtb_SumofElements1 < ctl_controller0_P->ctl_stopping_omega_thresh)));
+  rtb_LogicalOperator2 = (ctl_controller0_DW->TappedDelay_X[0] &&
+    ctl_controller0_DW->TappedDelay_X[1] && ctl_controller0_DW->TappedDelay_X[2]
+    && ctl_controller0_DW->TappedDelay_X[3] && ((rtb_SumofElements <
+    ctl_controller0_P->tun_ctl_stopping_vel_thresh) && (rtb_SumofElements1 <
+    ctl_controller0_P->tun_ctl_stopping_omega_thresh)));
 
   // Trigonometry: '<S2>/Trigonometric Function'
   if (rtb_Product_b[3] > 1.0F) {
@@ -1679,14 +1682,14 @@ void ctl_controller0_step(RT_MODEL_ctl_controller0_T *const ctl_controller0_M,
         ((real_T)(ctl_controller0_P->Gain2_Gain_h * (real32_T)acos((real_T)
            rtb_SumofElements))) > ctl_controller0_P->tun_ctl_stopped_quat_thresh)))
   {
-    rtb_Switch12 = ctl_controller0_P->ctl_stopping_mode;
-  } else {
-    if (rtb_LogicalOperator2) {
-      // Switch: '<S2>/Switch2' incorporates:
-      //   Constant: '<S2>/Constant'
+    rtb_Switch3 = ctl_controller0_P->ctl_stopping_mode;
+  } else if (rtb_LogicalOperator2) {
+    // Switch: '<S2>/Switch2' incorporates:
+    //   Constant: '<S2>/Constant'
 
-      rtb_Switch12 = ctl_controller0_P->ctl_stopped_mode;
-    }
+    rtb_Switch3 = ctl_controller0_P->ctl_stopped_mode;
+  } else {
+    rtb_Switch3 = rtb_Switch12;
   }
 
   // End of Switch: '<S2>/Switch3'
@@ -1772,7 +1775,7 @@ void ctl_controller0_step(RT_MODEL_ctl_controller0_T *const ctl_controller0_M,
   //   RelationalOperator: '<S34>/Compare'
   //   Switch: '<S2>/Switch10'
 
-  if (rtb_Switch12 <= ctl_controller0_P->CompareToConstant2_const) {
+  if (rtb_Switch3 <= ctl_controller0_P->CompareToConstant2_const) {
     rtb_Switch_c_idx_0 = ctl_controller0_P->Constant4_Value[0];
     rtb_Switch_c_idx_1 = ctl_controller0_P->Constant4_Value[1];
     rtb_Switch_c_idx_2 = ctl_controller0_P->Constant4_Value[2];
@@ -1831,7 +1834,7 @@ void ctl_controller0_step(RT_MODEL_ctl_controller0_T *const ctl_controller0_M,
   // RelationalOperator: '<S32>/Compare' incorporates:
   //   Constant: '<S32>/Constant'
 
-  rtb_Compare_j = (rtb_Switch12 <= ctl_controller0_P->CompareToConstant_const);
+  rtb_Compare_j = (rtb_Switch3 <= ctl_controller0_P->CompareToConstant_const);
 
   // DiscreteIntegrator: '<S30>/Discrete-Time Integrator1'
   if (rtb_Compare_j || ((int32_T)
@@ -1890,7 +1893,7 @@ void ctl_controller0_step(RT_MODEL_ctl_controller0_T *const ctl_controller0_M,
   //   Sum: '<S30>/Sum4'
   //   Switch: '<S37>/Switch'
 
-  if (rtb_Switch12 <= ctl_controller0_P->CompareToConstant1_const) {
+  if (rtb_Switch3 <= ctl_controller0_P->CompareToConstant1_const) {
     rtb_Divide_f[0] = ctl_controller0_P->Constant1_Value_k[0];
     rtb_Divide_f[1] = ctl_controller0_P->Constant1_Value_k[1];
     rtb_Divide_f[2] = ctl_controller0_P->Constant1_Value_k[2];
@@ -2123,7 +2126,7 @@ void ctl_controller0_step(RT_MODEL_ctl_controller0_T *const ctl_controller0_M,
   // Switch: '<S30>/Switch' incorporates:
   //   Constant: '<S30>/Constant3'
 
-  if ((int32_T)rtb_Switch12 != 0) {
+  if ((int32_T)rtb_Switch3 != 0) {
     // Switch: '<S39>/Switch' incorporates:
     //   Constant: '<S30>/Constant2'
     //   DotProduct: '<S50>/Dot Product'
@@ -2161,7 +2164,7 @@ void ctl_controller0_step(RT_MODEL_ctl_controller0_T *const ctl_controller0_M,
   //   RelationalOperator: '<S57>/Compare'
   //   Switch: '<S2>/Switch11'
 
-  if (rtb_Switch12 <= ctl_controller0_P->CompareToConstant2_const_o) {
+  if (rtb_Switch3 <= ctl_controller0_P->CompareToConstant2_const_o) {
     rtb_Divide_f[0] = ctl_controller0_P->Constant2_Value_o[0];
     rtb_Divide_f[1] = ctl_controller0_P->Constant2_Value_o[1];
     rtb_Divide_f[2] = ctl_controller0_P->Constant2_Value_o[2];
@@ -2335,7 +2338,7 @@ void ctl_controller0_step(RT_MODEL_ctl_controller0_T *const ctl_controller0_M,
   // RelationalOperator: '<S55>/Compare' incorporates:
   //   Constant: '<S55>/Constant'
 
-  rtb_Compare_fc = (rtb_Switch12 <= ctl_controller0_P->CompareToConstant_const_f);
+  rtb_Compare_fc = (rtb_Switch3 <= ctl_controller0_P->CompareToConstant_const_f);
 
   // DiscreteIntegrator: '<S31>/Discrete-Time Integrator'
   if (rtb_Compare_fc || ((int32_T)
@@ -2394,7 +2397,7 @@ void ctl_controller0_step(RT_MODEL_ctl_controller0_T *const ctl_controller0_M,
   //   Sum: '<S31>/Sum3'
   //   Switch: '<S60>/Switch'
 
-  if (rtb_Switch12 <= ctl_controller0_P->CompareToConstant1_const_m) {
+  if (rtb_Switch3 <= ctl_controller0_P->CompareToConstant1_const_m) {
     rtb_Switch_b[0] = ctl_controller0_P->Constant1_Value_o[0];
     rtb_Switch_b[1] = ctl_controller0_P->Constant1_Value_o[1];
     rtb_Switch_b[2] = ctl_controller0_P->Constant1_Value_o[2];
@@ -2476,7 +2479,7 @@ void ctl_controller0_step(RT_MODEL_ctl_controller0_T *const ctl_controller0_M,
   // Switch: '<S31>/Switch1' incorporates:
   //   Constant: '<S31>/Constant4'
 
-  if ((int32_T)rtb_Switch12 != 0) {
+  if ((int32_T)rtb_Switch3 != 0) {
     // Product: '<S31>/Divide3' incorporates:
     //   Constant: '<S2>/Constant1'
     //   Gain: '<S31>/Gain'
@@ -2746,27 +2749,6 @@ void ctl_controller0_step(RT_MODEL_ctl_controller0_T *const ctl_controller0_M,
   ctl_controller0_DW->UnitDelay2_DSTATE[2] = rtb_Product_b[2];
   ctl_controller0_DW->UnitDelay2_DSTATE[3] = rtb_Product_b[3];
 
-  // Update for DiscreteIntegrator: '<S30>/Discrete-Time Integrator1'
-  ctl_controller0_DW->DiscreteTimeIntegrator1_PrevRes = (int8_T)rtb_Compare_j;
-
-  // Update for DiscreteIntegrator: '<S31>/Discrete-Time Integrator'
-  ctl_controller0_DW->DiscreteTimeIntegrator_PrevRese = (int8_T)rtb_Compare_fc;
-
-  // End of Outputs for SubSystem: '<Root>/ctl_controller'
-
-  // Outport: '<Root>/cmd_msg' incorporates:
-  //   DataTypeConversion: '<S78>/Data Type Conversion'
-
-  ctl_controller0_Y_cmd_msg_f->cmd_timestamp_sec =
-    rtb_Switch_cmd_state_b_timestam;
-  ctl_controller0_Y_cmd_msg_f->cmd_timestamp_nsec =
-    rtb_Switch_cmd_state_b_timest_0;
-  ctl_controller0_Y_cmd_msg_f->cmd_mode = rtb_Switch_ctl_mode_cmd;
-  ctl_controller0_Y_cmd_msg_f->speed_gain_cmd = rtb_Switch_speed_gain_cmd;
-
-  // Outputs for Atomic SubSystem: '<Root>/ctl_controller'
-  ctl_controller0_Y_cmd_msg_f->cmd_B_inuse = (uint8_T)rtb_LogicalOperator2_c;
-
   // Update for Delay: '<S13>/Delay11'
   ctl_controller0_DW->Delay11_DSTATE[0] = rtb_SumA21_idx_0;
 
@@ -2775,6 +2757,9 @@ void ctl_controller0_step(RT_MODEL_ctl_controller0_T *const ctl_controller0_M,
 
   // Update for UnitDelay: '<S2>/Unit Delay1'
   ctl_controller0_DW->UnitDelay1_DSTATE[0] = rtb_Switch8_idx_0;
+
+  // Update for S-Function (sfix_udelay): '<S2>/Tapped Delay'
+  ctl_controller0_DW->TappedDelay_X[0] = ctl_controller0_DW->TappedDelay_X[1];
 
   // Update for DiscreteIntegrator: '<S30>/Discrete-Time Integrator1' incorporates:
   //   Product: '<S30>/Product1'
@@ -2845,6 +2830,9 @@ void ctl_controller0_step(RT_MODEL_ctl_controller0_T *const ctl_controller0_M,
   // Update for UnitDelay: '<S2>/Unit Delay1'
   ctl_controller0_DW->UnitDelay1_DSTATE[1] = rtb_Switch8_idx_1;
 
+  // Update for S-Function (sfix_udelay): '<S2>/Tapped Delay'
+  ctl_controller0_DW->TappedDelay_X[1] = ctl_controller0_DW->TappedDelay_X[2];
+
   // Update for DiscreteIntegrator: '<S30>/Discrete-Time Integrator1' incorporates:
   //   Product: '<S30>/Product1'
   //   Product: '<S38>/Divide1'
@@ -2914,6 +2902,9 @@ void ctl_controller0_step(RT_MODEL_ctl_controller0_T *const ctl_controller0_M,
   // Update for UnitDelay: '<S2>/Unit Delay1'
   ctl_controller0_DW->UnitDelay1_DSTATE[2] = rtb_Switch8_idx_2;
 
+  // Update for S-Function (sfix_udelay): '<S2>/Tapped Delay'
+  ctl_controller0_DW->TappedDelay_X[2] = ctl_controller0_DW->TappedDelay_X[3];
+
   // Update for DiscreteIntegrator: '<S30>/Discrete-Time Integrator1' incorporates:
   //   Product: '<S30>/Product1'
   //   Product: '<S38>/Divide1'
@@ -2980,6 +2971,34 @@ void ctl_controller0_step(RT_MODEL_ctl_controller0_T *const ctl_controller0_M,
   ctl_controller0_Y_cmd_msg_f->traj_accel[2] = rtb_Diff[2];
 
   // Outputs for Atomic SubSystem: '<Root>/ctl_controller'
+  // Update for S-Function (sfix_udelay): '<S2>/Tapped Delay' incorporates:
+  //   Constant: '<S8>/Constant'
+  //   RelationalOperator: '<S8>/Compare'
+
+  ctl_controller0_DW->TappedDelay_X[3] = (rtb_Switch12 ==
+    ctl_controller0_P->ctl_stopping_mode);
+
+  // Update for DiscreteIntegrator: '<S30>/Discrete-Time Integrator1'
+  ctl_controller0_DW->DiscreteTimeIntegrator1_PrevRes = (int8_T)rtb_Compare_j;
+
+  // Update for DiscreteIntegrator: '<S31>/Discrete-Time Integrator'
+  ctl_controller0_DW->DiscreteTimeIntegrator_PrevRese = (int8_T)rtb_Compare_fc;
+
+  // End of Outputs for SubSystem: '<Root>/ctl_controller'
+
+  // Outport: '<Root>/cmd_msg' incorporates:
+  //   BusCreator: '<S4>/Bus Creator1'
+  //   DataTypeConversion: '<S78>/Data Type Conversion'
+
+  ctl_controller0_Y_cmd_msg_f->cmd_timestamp_sec =
+    rtb_Switch_cmd_state_b_timestam;
+  ctl_controller0_Y_cmd_msg_f->cmd_timestamp_nsec =
+    rtb_Switch_cmd_state_b_timest_0;
+  ctl_controller0_Y_cmd_msg_f->cmd_mode = rtb_Switch_ctl_mode_cmd;
+  ctl_controller0_Y_cmd_msg_f->speed_gain_cmd = rtb_Switch_speed_gain_cmd;
+
+  // Outputs for Atomic SubSystem: '<Root>/ctl_controller'
+  ctl_controller0_Y_cmd_msg_f->cmd_B_inuse = (uint8_T)rtb_LogicalOperator2_c;
   ctl_controller0_Y_cmd_msg_f->traj_quat[0] = rtb_Merge_pa[0];
   ctl_controller0_Y_cmd_msg_f->traj_quat[1] = rtb_Merge_pa[1];
   ctl_controller0_Y_cmd_msg_f->traj_quat[2] = rtb_Merge_pa[2];
@@ -3007,7 +3026,7 @@ void ctl_controller0_step(RT_MODEL_ctl_controller0_T *const ctl_controller0_M,
 
   ctl_controller0_Y_ctl_msg_n->att_err_mag = ctl_controller0_P->Gain2_Gain_j *
     (real32_T)acos((real_T)rtb_Switch_cmd_state_a_A_B_IS_1);
-  ctl_controller0_Y_ctl_msg_n->ctl_status = rtb_Switch12;
+  ctl_controller0_Y_ctl_msg_n->ctl_status = rtb_Switch3;
 
   // End of Outputs for SubSystem: '<Root>/ctl_controller'
 
@@ -3175,9 +3194,6 @@ void ctl_controller0_initialize(RT_MODEL_ctl_controller0_T *const
   ctl_controller0_DW->UnitDelay2_DSTATE[3] =
     ctl_controller0_P->UnitDelay2_InitialCondition;
 
-  // InitializeConditions for DiscreteIntegrator: '<S30>/Discrete-Time Integrator1' 
-  ctl_controller0_DW->DiscreteTimeIntegrator1_PrevRes = 0;
-
   // InitializeConditions for Delay: '<S13>/Delay11'
   ctl_controller0_DW->Delay11_DSTATE[0] =
     ctl_controller0_P->Delay11_InitialCondition;
@@ -3189,14 +3205,6 @@ void ctl_controller0_initialize(RT_MODEL_ctl_controller0_T *const
   // InitializeConditions for UnitDelay: '<S2>/Unit Delay1'
   ctl_controller0_DW->UnitDelay1_DSTATE[0] =
     ctl_controller0_P->UnitDelay1_InitialCondition;
-
-  // InitializeConditions for DiscreteIntegrator: '<S30>/Discrete-Time Integrator1' 
-  ctl_controller0_DW->DiscreteTimeIntegrator1_DSTATE[0] =
-    ctl_controller0_P->DiscreteTimeIntegrator1_IC[0];
-
-  // InitializeConditions for DiscreteIntegrator: '<S31>/Discrete-Time Integrator' 
-  ctl_controller0_DW->DiscreteTimeIntegrator_DSTATE[0] =
-    ctl_controller0_P->DiscreteTimeIntegrator_IC[0];
 
   // InitializeConditions for Delay: '<S13>/Delay11'
   ctl_controller0_DW->Delay11_DSTATE[1] =
@@ -3210,14 +3218,6 @@ void ctl_controller0_initialize(RT_MODEL_ctl_controller0_T *const
   ctl_controller0_DW->UnitDelay1_DSTATE[1] =
     ctl_controller0_P->UnitDelay1_InitialCondition;
 
-  // InitializeConditions for DiscreteIntegrator: '<S30>/Discrete-Time Integrator1' 
-  ctl_controller0_DW->DiscreteTimeIntegrator1_DSTATE[1] =
-    ctl_controller0_P->DiscreteTimeIntegrator1_IC[1];
-
-  // InitializeConditions for DiscreteIntegrator: '<S31>/Discrete-Time Integrator' 
-  ctl_controller0_DW->DiscreteTimeIntegrator_DSTATE[1] =
-    ctl_controller0_P->DiscreteTimeIntegrator_IC[1];
-
   // InitializeConditions for Delay: '<S13>/Delay11'
   ctl_controller0_DW->Delay11_DSTATE[2] =
     ctl_controller0_P->Delay11_InitialCondition;
@@ -3229,6 +3229,33 @@ void ctl_controller0_initialize(RT_MODEL_ctl_controller0_T *const
   // InitializeConditions for UnitDelay: '<S2>/Unit Delay1'
   ctl_controller0_DW->UnitDelay1_DSTATE[2] =
     ctl_controller0_P->UnitDelay1_InitialCondition;
+
+  // InitializeConditions for S-Function (sfix_udelay): '<S2>/Tapped Delay'
+  ctl_controller0_DW->TappedDelay_X[0] = ((int32_T)
+    ctl_controller0_P->TappedDelay_vinit != 0);
+  ctl_controller0_DW->TappedDelay_X[1] = ((int32_T)
+    ctl_controller0_P->TappedDelay_vinit != 0);
+  ctl_controller0_DW->TappedDelay_X[2] = ((int32_T)
+    ctl_controller0_P->TappedDelay_vinit != 0);
+  ctl_controller0_DW->TappedDelay_X[3] = ((int32_T)
+    ctl_controller0_P->TappedDelay_vinit != 0);
+
+  // InitializeConditions for DiscreteIntegrator: '<S30>/Discrete-Time Integrator1' 
+  ctl_controller0_DW->DiscreteTimeIntegrator1_PrevRes = 0;
+  ctl_controller0_DW->DiscreteTimeIntegrator1_DSTATE[0] =
+    ctl_controller0_P->DiscreteTimeIntegrator1_IC[0];
+
+  // InitializeConditions for DiscreteIntegrator: '<S31>/Discrete-Time Integrator' 
+  ctl_controller0_DW->DiscreteTimeIntegrator_DSTATE[0] =
+    ctl_controller0_P->DiscreteTimeIntegrator_IC[0];
+
+  // InitializeConditions for DiscreteIntegrator: '<S30>/Discrete-Time Integrator1' 
+  ctl_controller0_DW->DiscreteTimeIntegrator1_DSTATE[1] =
+    ctl_controller0_P->DiscreteTimeIntegrator1_IC[1];
+
+  // InitializeConditions for DiscreteIntegrator: '<S31>/Discrete-Time Integrator' 
+  ctl_controller0_DW->DiscreteTimeIntegrator_DSTATE[1] =
+    ctl_controller0_P->DiscreteTimeIntegrator_IC[1];
 
   // InitializeConditions for DiscreteIntegrator: '<S30>/Discrete-Time Integrator1' 
   ctl_controller0_DW->DiscreteTimeIntegrator1_DSTATE[2] =

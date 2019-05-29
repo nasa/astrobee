@@ -1,14 +1,14 @@
 /* Copyright (c) 2017, United States Government, as represented by the
  * Administrator of the National Aeronautics and Space Administration.
- * 
+ *
  * All rights reserved.
- * 
+ *
  * The Astrobee platform is licensed under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -40,12 +40,18 @@
 #include <decomp_util/ellipse_decomp.h>
 #include <jps3d/planner/jps_3d_util.h>
 
-//  TF
+#include <mapper/point_cloud.h>
+#include <pcl/point_types.h>
+
 #include <tf/tf.h>
-// #include "pcl_ros/point_cloud.h"  //  NO_LINT()
+#include <visualization_msgs/MarkerArray.h>
+
+#include <algorithm>
+#include <functional>
 
 #define DEBUG false
 #define OUTPUT_DEBUG NODELET_DEBUG_STREAM
+// #define OUTPUT_DEBUG ROS_ERROR_STREAM
 /**
  * \ingroup planner
  */
@@ -57,24 +63,35 @@ using RESPONSE = ff_msgs::PlanResult;
 class Planner : public planner::PlannerImplementation {
  public:
   Planner() : planner::PlannerImplementation("qp", "QP planner") {}
-  virtual ~Planner() {}
+  ~Planner() {}
+
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
  private:
   // planner configuration params
   bool faceforward_;      // Face-forward trajectory?
   bool check_obstacles_;  // Perform obstacle checking
-  float desired_vel_;     // Soft limit on velocity
-  float desired_accel_;   // Soft limit on accel
-  float desired_omega_;   // Soft limit on omega
-  float desired_alpha_;   // Soft limit on alpha
-  float control_rate_;    // Control frequency
-  double max_time_;       // Max generation time
-  ros::Publisher cloud_pub_;
+  bool uniform_time_;
+  bool time_optiization_;
+
+  float desired_vel_;    // Soft limit on velocity
+  float desired_accel_;  // Soft limit on accel
+  float desired_omega_;  // Soft limit on omega
+  float desired_alpha_;  // Soft limit on alpha
+  float control_rate_;   // Control frequency
+  double max_time_;      // Max generation time
+  double traj_it_{1.0};
+  double gap_threshold_;
+  int max_iterations_;
+
+  ros::Publisher cloud_pub_, viz_pub_;
   ros::NodeHandle *nh_;
   ros::Subscriber pcl_sub_;
 
+  std::vector<traj_opt_msgs::Trajectory> traj_history_;
+
  protected:
-  virtual bool InitializePlanner(ros::NodeHandle *nh) {
+  bool InitializePlanner(ros::NodeHandle *nh) {
     // Grab some configuration parameters for this node from the LUA config
     cfg_.Initialize(GetPrivateHandle(), "mobility/planner_qp.config");
     cfg_.Listen(boost::bind(&Planner::ReconfigureCallback, this, _1));
@@ -85,10 +102,17 @@ class Planner : public planner::PlannerImplementation {
                         &Planner::DiagnosticsCallback, this, false, true);
     nh_ = nh;
 
-    /*
-    pcl_sub_ = nh->subscribe("mob/planner_qp/world_frame_haz_cloud", 1,
-                             &Planner::haz_cam_callback, this);
-    */
+    viz_pub_ = nh->advertise<visualization_msgs::MarkerArray>(
+        "/mob/planner_qp/safe_flight_cooridor", 5, true);
+
+    // Setup a timer to animate
+    timer_a_ =
+        nh->createTimer(ros::Duration(ros::Rate(10.0)),
+                        &Planner::AnimateTimer, this, false, true);
+
+    pcl_sub_ = nh->subscribe(TOPIC_MAPPER_OCTOMAP_CLOUD, 5,
+                             &Planner::map_callback, this);
+
     // cloud_pub_ = nh->advertise<pcl::PointCloud<pcl::PointXYZ> >
     // ("obs_points", 5, true);
     // Success
@@ -97,7 +121,160 @@ class Planner : public planner::PlannerImplementation {
 
   bool ReconfigureCallback(dynamic_reconfigure::Config &config) {
     cfg_.Reconfigure(config);
+
+    if (!cfg_.Get<double>("iteration_replay", traj_it_)) traj_it_ = 1.0;
     return true;
+  }
+
+  void AnimateTimer(ros::TimerEvent const& event) {
+    static uint num_it = 0;
+    if (traj_history_.size() > 0 &&
+        TrajRosBridge::are_subscribers("/mob/planner_qp/trajectory_debug")) {
+      uint curr = num_it++ % traj_history_.size();
+      TrajRosBridge::publish_msg(traj_history_.at(curr), "world",
+        nh_->getNamespace() + std::string("/mob/planner_qp/trajectory_debug"));
+    }
+  }
+
+  // sorts vertices's to produce triangularization
+  traj_opt::Vec3Vec sort_verticies(const traj_opt::Vec3Vec &in) {
+    using traj_opt::Vec3Vec;
+    using traj_opt::Vec3;
+
+    Vec3 cen = Vec3::Zero();
+    for (auto &v : in) cen += v;
+
+    cen /= static_cast<decimal_t>(in.size());
+
+    Vec3 v0 = (in.front() - cen).normalized();
+    Vec3 normal = Vec3::UnitZ();
+    for (uint i = 0; i < in.size(); i++) {
+      Vec3 vf = (in.back() - cen).normalized();
+      if (std::abs(v0.dot(vf) > 1e-3)) {
+        normal = v0.cross(vf).normalized();
+        break;
+      }
+    }
+
+    Vec3Vec out = in;
+
+    // this is horrendous to read
+    auto angle = [](const Vec3 &v, const Vec3 &v0_, const Vec3 &cen_,
+                    const Vec3 &normal_) {
+      return std::atan2((v - cen_).normalized().cross(v0_).dot(normal_),
+                        (v - cen_).normalized().dot(v0_));
+    };
+    auto cost = [&cen, &v0, &normal, &angle](const Vec3 &a, const Vec3 &b) {
+      return angle(a, v0, cen, normal) < angle(b, v0, cen, normal);
+    };
+
+    std::sort(out.begin(), out.end(), cost);
+
+    return out;
+  }
+
+  void viz_cooridor(
+      const std::vector<std::pair<traj_opt::MatD, traj_opt::VecD> > &cons_3d) {
+    visualization_msgs::MarkerArray viz;
+    visualization_msgs::Marker clear;
+    clear.action = visualization_msgs::Marker::DELETEALL;
+    clear.ns = "sfc_viz";
+
+    decimal_t d_col = 1.0 / cons_3d.size();
+    int c = 0;
+    for (auto &con : cons_3d) {
+      visualization_msgs::Marker poly;
+      poly.header.frame_id = "world";
+      poly.ns = "sfc_viz";
+      poly.color.r = d_col * static_cast<decimal_t>(c);
+      poly.id = c++;
+      poly.color.a = 0.5;
+      poly.color.g = 1.0;
+      poly.color.b = 0.5;
+      poly.type = visualization_msgs::Marker::TRIANGLE_LIST;
+      poly.scale.x = 1.0;
+      poly.scale.y = 1.0;
+      poly.scale.z = 1.0;
+      poly.pose.orientation.w = 1.0;
+
+      auto &A = con.first;
+      auto &b = con.second;
+
+      // ROS_ERROR_STREAM("A " << con.first);
+      // ROS_ERROR_STREAM("b " << b);
+
+      // traj_opt::MatD A = traj_opt::MatD::Zero(6,3);
+      // A.block<3,3>(0,0)= traj_opt::Mat3::Identity();
+      // A.block<3,3>(3,0)= -traj_opt::Mat3::Identity();
+      // traj_opt::VecD b = traj_opt::VecD::Ones(6,1)*static_cast<decimal_t>(c);
+
+      // ROS_ERROR_STREAM("A true " << A);
+
+      for (int i = 0; i < A.rows(); i++) {
+        traj_opt::Vec3Vec face_points;
+
+        traj_opt::Mat3 subA = traj_opt::Mat3::Zero();
+        traj_opt::Vec3 subb = traj_opt::Vec3::Zero();
+        for (int k = 0; k < A.rows(); k++) {
+          for (int j = 0; j < A.rows(); j++) {
+            if (j != i && k != i && j < k) {
+              // silly combinatorial algo
+              subA.block<1, 3>(0, 0) = A.block<1, 3>(i, 0);
+              subA.block<1, 3>(1, 0) = A.block<1, 3>(j, 0);
+              subA.block<1, 3>(2, 0) = A.block<1, 3>(k, 0);
+              subb(0) = b(i);
+              subb(1) = b(j);
+              subb(2) = b(k);
+              // traj_opt::Vec3 x = subA.inverse()*subb;
+              // traj_opt::Vec3 x = subA.ldlt().solve(subb);
+              traj_opt::Vec3 x = subA.colPivHouseholderQr().solve(subb);
+              // ROS_ERROR_STREAM("A sub " << subA);
+              // ROS_ERROR_STREAM("b sub " << subb.transpose());
+
+              if (!std::isnan(x.sum())) {  //} && subA.determinant() > 1e-7)  {
+                traj_opt::VecD err = A.block(0, 0, A.rows(), 3) * x - b;
+                traj_opt::VecD err2 = subA * x - subb;
+                if (err.maxCoeff() <= 1e-3 && err2.norm() < 1e-3) {
+                  // if(err2.norm() < 1e-3) {
+                  // ROS_ERROR_STREAM("sub error mains " << err.maxCoeff() );
+                  face_points.push_back(x);
+                } else {
+                  // ROS_ERROR_STREAM("err t " << err.transpose());
+                }
+              }
+            }
+          }
+        }
+        // ROS_ERROR_STREAM("face points " << face_points.size());
+        traj_opt::Vec3 centroid = traj_opt::Vec3::Zero();
+        for (auto &v : face_points) centroid += v;
+        centroid /= static_cast<decimal_t>(face_points.size());
+        traj_opt::VecD err = A.block(0, 0, A.rows(), 3) * centroid - b;
+
+        // add to triangle, reject interior polyies
+        // ROS_ERROR_STREAM("max coeff " << err.maxCoeff());
+        if (face_points.size() >= 3) {  //&& err.maxCoeff() < -0.1) {
+          traj_opt::Vec3Vec sorted_points = sort_verticies(face_points);
+          for (uint f = 0; f < face_points.size() - 2; f++) {
+            geometry_msgs::Point pt;
+            pt.x = sorted_points.front()(0);
+            pt.y = sorted_points.front()(1);
+            pt.z = sorted_points.front()(2);
+            poly.points.push_back(pt);
+            for (int l = 1; l < 3; l++) {
+              // geometry_msgs::Point pt;
+              pt.x = sorted_points.at(l + f)(0);
+              pt.y = sorted_points.at(l + f)(1);
+              pt.z = sorted_points.at(l + f)(2);
+              poly.points.push_back(pt);
+            }
+          }
+        }
+      }
+      viz.markers.push_back(poly);
+    }
+
+    viz_pub_.publish(viz);
   }
 
   void DiagnosticsCallback(const ros::TimerEvent &event) {
@@ -171,11 +348,11 @@ class Planner : public planner::PlannerImplementation {
   }
 
   // Called to interrupt the process
-  virtual void CancelCallback() {}
+  void CancelCallback() {}
 
  protected:
   ff_util::ConfigServer cfg_;
-  ros::Timer timer_d_;
+  ros::Timer timer_d_, timer_a_;
   boost::shared_ptr<traj_opt::NonlinearTrajectory> trajectory_;
   tf::Quaternion start_orientation_;
   tf::Vector3 axis_;
@@ -326,6 +503,16 @@ class Planner : public planner::PlannerImplementation {
     // clear trajectory
     trajectory_ = boost::shared_ptr<traj_opt::NonlinearTrajectory>();
 
+    if (!cfg_.Get<bool>("time_optimization", time_optiization_))
+      time_optiization_ = false;
+    if (!cfg_.Get<bool>("uniform_time_allocation", uniform_time_))
+      uniform_time_ = false;
+
+    if (!cfg_.Get<double>("duality_gap_threshold", gap_threshold_))
+      gap_threshold_ = 1e-8;
+    if (!cfg_.Get<int>("maximum_iterations", max_iterations_))
+      max_iterations_ = 200;
+
     // try to get zones
     std::vector<ff_msgs::Zone> zones;
     if (!load_map()) {
@@ -407,7 +594,7 @@ class Planner : public planner::PlannerImplementation {
         boost::make_shared<std::vector<double> >(cons.size(), 1.0);
 
     for (uint i = 1; i < path.size(); i++) {
-      // ds->at(i-1) = (path.at(i)- path.at(i-1)).norm();
+      if (!uniform_time_) ds->at(i - 1) = (path.at(i) - path.at(i - 1)).norm();
       traj_opt::VecD p1(traj_opt::VecD::Zero(4, 1));
       traj_opt::VecD p2(traj_opt::VecD::Zero(4, 1));
       p1.block<3, 1>(0, 0) = path.at(i - 1);
@@ -421,7 +608,9 @@ class Planner : public planner::PlannerImplementation {
     }
 
     try {
-      trajectory_.reset(new traj_opt::NonlinearTrajectory(con, cons, 7, 3, ds));
+      trajectory_.reset(new traj_opt::NonlinearTrajectory(
+          con, cons, 7, 3, ds, boost::shared_ptr<traj_opt::VecDVec>(),
+          time_optiization_, gap_threshold_, max_iterations_));
     } catch (std::runtime_error &e) {
       ROS_ERROR_STREAM("QP::Planner failed with error: " << e.what());
       return false;
@@ -429,6 +618,22 @@ class Planner : public planner::PlannerImplementation {
       ROS_ERROR_STREAM("QP::Planner failed with unknown error");
       return false;
     }
+
+    if (time_optiization_ && !trajectory_->isSolved()) {
+      ROS_WARN_STREAM("Time optimization diverged, re running with out it");
+      try {
+        trajectory_.reset(new traj_opt::NonlinearTrajectory(
+            con, cons, 7, 3, ds, boost::shared_ptr<traj_opt::VecDVec>(),
+            false, gap_threshold_, max_iterations_));
+      } catch (std::runtime_error &e) {
+        ROS_ERROR_STREAM("QP::Planner failed with error: " << e.what());
+        return false;
+      } catch (...) {
+        ROS_ERROR_STREAM("QP::Planner failed with unknown error");
+        return false;
+      }
+    }
+
     std::string pass = trajectory_->isSolved() ? "solved" : "failed";
     // viz topics
     // VisualizeRectangularPolytopes::fromGraph(graph.get(),
@@ -439,12 +644,21 @@ class Planner : public planner::PlannerImplementation {
         "PlannerQP: Planner::QP: Finished solving with status: " << pass);
 
     // publish visualization
-    bool pub_traj;
-    if (!cfg_.Get<bool>("publish_trajectory", pub_traj)) pub_traj = true;
-    if (pub_traj)
+    {
+      viz_cooridor(cons);
       TrajRosBridge::publish_msg(
           trajectory_->serialize(), "world",
           nh_->getNamespace() + std::string("/mob/planner_qp/trajectory"));
+      std::vector<traj_opt::TrajData> history;
+      TrajRosBridge::publish_msg(
+          trajectory_->getInfo(&history),
+          nh_->getNamespace() + std::string("/mob/planner_qp/solver_info"));
+
+      traj_history_.clear();
+      for (auto &traji : history)
+        traj_history_.push_back(TrajRosBridge::convert(traji));
+    }
+
     // ROS_ERROR_STREAM("name resolution " << nh_->getNamespace() );
     return trajectory_->isSolved();
   }
@@ -636,8 +850,23 @@ class Planner : public planner::PlannerImplementation {
     }
   }
   bool load_map() {
-    if (!cfg_.Get<double>("map_resolution", map_res_)) map_res_ = 0.5;
+    // get points from mapper
+    float resf;
+    pcl::PointCloud<pcl::PointXYZ> points;
+    if (!GetObstacleMap(&points, &resf)) {
+      ROS_ERROR_STREAM("PlannerQP: Failed to get points from mapper service");
+      return false;
+    }
+    mapper_points_.clear();
+    mapper_points_.reserve(points.size());
 
+    for (auto &p : points) {
+      mapper_points_.push_back(Vec3f(p.x, p.y, p.z));
+    }
+
+    map_res_ = static_cast<double>(resf);
+
+    // get zones
     std::vector<ff_msgs::Zone> zones;
     bool got = GetZones(zones);
     if (!got) return false;
@@ -676,7 +905,7 @@ class Planner : public planner::PlannerImplementation {
     jps_map_util_.reset(new JPS::VoxelMapUtil());
     jps_map_util_->setMap(origin, dim, map, map_res_);
 
-    vec_Vec3f keepout_points = haz_cam_points_;
+    vec_Vec3f keepout_points = mapper_points_;
 
     // add contour
     for (auto &zone : zones) {
@@ -806,26 +1035,19 @@ class Planner : public planner::PlannerImplementation {
   }
 
  private:
-  vec_Vec3f haz_cam_points_;
+  vec_Vec3f mapper_points_;
 
-  // Andrew: uncomment this out when you want to use the haz cam point cloud
-  /*
-  void haz_cam_callback(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr &msg) {
+  void map_callback(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr &msg) {
     // clear old points
-    haz_cam_points_.clear();
-    haz_cam_points_.reserve(msg->size());
+    mapper_points_.clear();
+    mapper_points_.reserve(msg->size());
 
-    // Insert some tf stuff here if point cloud is not in world frame
-
-    // convert to std::vector<Eigen::Matrix<3,1>, eigen_allocator>;
     for (auto &p : *msg) {
-      haz_cam_points_.push_back(Vec3f(p.x, p.y, p.z));
+      mapper_points_.push_back(Vec3f(p.x, p.y, p.z));
     }
   }
-  */
 };
 
-PLUGINLIB_DECLARE_CLASS(planner_qp, Planner, planner_qp::Planner,
-                        nodelet::Nodelet);
+PLUGINLIB_EXPORT_CLASS(planner_qp::Planner, nodelet::Nodelet);
 
 }  // namespace planner_qp

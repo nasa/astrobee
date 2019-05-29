@@ -19,20 +19,32 @@
 #ifndef DATA_BAGGER_DATA_BAGGER_H_
 #define DATA_BAGGER_DATA_BAGGER_H_
 
+#include <boost/date_time/posix_time/posix_time.hpp>
+
+#include <config_reader/config_reader.h>
+
+#include <data_bagger/astrobee_recorder.h>
+
+#include <errno.h>
+
+#include <ff_msgs/DataToDiskState.h>
+#include <ff_msgs/DataTopicsList.h>
+#include <ff_msgs/SetDataToDisk.h>
+
+#include <ff_util/ff_names.h>
+#include <ff_util/ff_nodelet.h>
+
 #include <pluginlib/class_list_macros.h>
 
 #include <ros/ros.h>
 #include <ros/package.h>
 
-#include <config_reader/config_reader.h>
-
-#include <ff_msgs/DataToDiskState.h>
-#include <ff_msgs/DataTopicsList.h>
-
-#include <ff_util/ff_names.h>
-#include <ff_util/ff_nodelet.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 
 #include <string>
+#include <vector>
+
 
 namespace data_bagger {
 
@@ -41,23 +53,49 @@ class DataBagger : public ff_util::FreeFlyerNodelet {
   DataBagger();
   ~DataBagger();
 
+  bool SetDataToDiskService(ff_msgs::SetDataToDisk::Request &req,
+                            ff_msgs::SetDataToDisk::Response &res);
+
  protected:
   virtual void Initialize(ros::NodeHandle *nh);
   bool ReadParams();
 
  private:
-  void OnStartupTimer(ros::TimerEvent const& event);
   void GetTopicNames();
+
+  bool MakeDataDirs();
+  bool MakeDir(std::string dir, bool assert_init_fault, std::string &err_msg);
+
+  void OnStartupTimer(ros::TimerEvent const& event);
+
+  bool SetDataToDisk(ff_msgs::DataToDiskState &state,
+                     std::string &err_msg);
+  void StartDelayedRecording();
+  void StartImmediateRecording();
+
+  void ResetRecorders();
+
+  astrobee_rosbag::Recorder *delayed_recorder_, *immediate_recorder_;
+
+  bool recording_delayed_bag_, recording_immediate_bag_;
 
   config_reader::ConfigReader config_params_;
 
-  ff_msgs::DataToDiskState data_state_msg_;
+  ff_msgs::DataToDiskState default_data_state_;
 
   int pub_queue_size_;
   unsigned int startup_time_secs_;
 
   ros::Publisher pub_data_state_, pub_data_topics_;
   ros::Timer startup_timer_;
+
+  ros::ServiceServer service_;
+
+  rosbag::RecorderOptions recorder_options_delayed_;
+  rosbag::RecorderOptions recorder_options_immediate_;
+
+  std::thread delayed_thread_, immediate_thread_;
+  std::string save_dir_;
 };
 
 }  //  namespace data_bagger

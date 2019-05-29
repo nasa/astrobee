@@ -52,7 +52,7 @@ macro( get_pkg_library PKG_PREFIX LIBRARY_DIR DEBUG_POSTFIX LIBRARY_NAME GET_DEB
   ##--------------------
   set( RELEASE_VAR_NAME ${PKG_PREFIX}_${LIBRARY_NAME}_LIBRARY_RELEASE )
   if( NOT ${RELEASE_VAR_NAME} ) ## only search for it if it hasn't been found already
-    find_library( ${RELEASE_VAR_NAME} ${ACTUAL_NAME} ${LIBRARY_DIR} NO_DEFAULT_PATH )
+    find_library( ${RELEASE_VAR_NAME} ${ACTUAL_NAME} ${LIBRARY_DIR} NO_DEFAULT_PATH NO_CMAKE_FIND_ROOT_PATH)
   endif( NOT ${RELEASE_VAR_NAME} )
 
   if(${RELEASE_VAR_NAME})

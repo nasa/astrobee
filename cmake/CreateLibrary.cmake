@@ -1,14 +1,14 @@
 # Copyright (c) 2017, United States Government, as represented by the
 # Administrator of the National Aeronautics and Space Administration.
-# 
+#
 # All rights reserved.
-# 
+#
 # The Astrobee platform is licensed under the Apache License, Version 2.0
 # (the "License"); you may not use this file except in compliance with the
 # License. You may obtain a copy of the License at
-# 
+#
 #     http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -29,7 +29,10 @@ function(create_library)
     SET(library_DIR src)
   endif(NOT library_DIR)
 
-  file(GLOB SRC_FILES ${library_DIR}/*.cc)
+  # Search for all the executables in tool dir
+  file(GLOB SRC_FILES_C  "${library_DIR}/*.c")
+  file(GLOB SRC_FILES_CC "${library_DIR}/*.cc")
+  set(SRC_FILES ${SRC_FILES_C} ${SRC_FILES_CC})
 
   # Sift through SRC_FILES and remove EXCLUDE
   foreach(SRC ${SRC_FILES})

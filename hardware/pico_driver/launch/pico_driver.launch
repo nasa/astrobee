@@ -15,7 +15,7 @@
 <!-- implied. See the License for the specific language governing            -->
 <!-- permissions and limitations under the License.                          -->
 <launch>
-  <arg name="name" default="pico_flexx" />
+  <arg name="name" default="pico_driver" />
   <arg name="manager" default="" />
   <include file="$(find ff_util)/launch/ff_nodelet.launch">
     <arg name="name" value="$(arg name)" />

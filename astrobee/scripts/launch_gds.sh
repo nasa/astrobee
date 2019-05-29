@@ -2,15 +2,15 @@
 #
 # Copyright (c) 2017, United States Government, as represented by the
 # Administrator of the National Aeronautics and Space Administration.
-# 
+#
 # All rights reserved.
-# 
+#
 # The Astrobee platform is licensed under the Apache License, Version 2.0
 # (the "License"); you may not use this file except in compliance with the
 # License. You may obtain a copy of the License at
-# 
+#
 #     http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -28,6 +28,25 @@ else
   ld_arch="x86"
 fi
 
+# Default agent names
+AGENT1="Bsharp"
+AGENT2="Bumble"
+AGENT3="Honey"
+
+# We are not running in a known context, so look for script arguments
+if [ $# -ge 1 ] ; then
+  ASTROBEE_WORLD="$1"
+fi
+if [ $# -ge 2 ] ; then
+  AGENT1="$2"
+fi
+if [ $# -ge 3 ] ; then
+  AGENT2="$3"
+fi
+if [ $# -ge 4 ] ; then
+  AGENT3="$4"
+fi
+
 # Should be set by launch script
 cd ~/gds/latest
 
@@ -38,9 +57,9 @@ unset arch
 unset ld_arch
 
 if [ "$ASTROBEE_WORLD" == "iss" ]; then
-	exec ./AstroBeeWB -engineering -noZoomToClick -precision 3 > /dev/null 2>&1
+	exec ./AstroBeeWB -engineering -agent1 ${AGENT1} -agent2 ${AGENT2} -agent3 ${AGENT3} -noZoomToClick -precision 3 > /dev/null 2>&1
 elif [ "$ASTROBEE_WORLD" == "granite" ]; then
-	exec ./AstroBeeWB -engineering -agent1 P4D -noZoomToClick -precision 3 -graniteLab > /dev/null 2>&1
+  exec ./AstroBeeWB -engineering -agent1 ${AGENT1} -agent2 ${AGENT2} -agent3 ${AGENT3} -noZoomToClick -precision 3 -world GraniteLab
 elif [ "$ASTROBEE_WORLD" == "mgtf" ]; then
-	exec ./AstroBeeWB -engineering -agent1 P4C -noZoomToClick -precision 3 -mgtfLab > /dev/null 2>&1
+	exec ./AstroBeeWB -engineering -agent1 ${AGENT1} -agent2 ${AGENT2} -agent3 ${AGENT3} -noZoomToClick -precision 3 -mgtfLab > /dev/null 2>&1
 fi

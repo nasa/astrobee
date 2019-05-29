@@ -5,7 +5,7 @@
 //
 // Model version                  : 1.1142
 // Simulink Coder version         : 8.11 (R2016b) 25-Aug-2016
-// C/C++ source code generated on : Wed Jan 31 12:31:58 2018
+// C/C++ source code generated on : Thu Mar  7 13:22:05 2019
 //
 // Target selection: ert.tlc
 // Embedded hardware selection: 32-bit Generic
@@ -915,6 +915,7 @@ void est_estimator_step(RT_MODEL_est_estimator_T *const est_estimator_M,
   real32_T rtb_VectorConcatenate_hq[16];
   real32_T rtb_Assignment[9];
   real32_T rtb_Sum_k1;
+  uint8_T rtb_Saturation_n;
   real32_T rtb_ImpAsg_InsertedFor_Out1_a_d[3];
   real32_T rtb_Product1[4];
   real32_T rtb_Assignment_hk[9];
@@ -944,7 +945,6 @@ void est_estimator_step(RT_MODEL_est_estimator_T *const est_estimator_M,
   real32_T rtb_Sum_l;
   uint8_T rtb_numFeatures_f;
   uint8_T rtb_BusCreator2_update_ML_featu;
-  uint8_T rtb_SignalConversion_speed_gain;
   uint32_T rtb_BusAssignment_aug_state_enu;
   real32_T rtb_Product2[16];
   boolean_T rtb_Compare_ic[50];
@@ -984,44 +984,45 @@ void est_estimator_step(RT_MODEL_est_estimator_T *const est_estimator_M,
   int32_T rtb_valid_out_0[16];
   real_T rtb_ml_vel_aug_0[3];
   real32_T rtb_Compare_2[4];
+  real_T tmp[3];
   real32_T rtb_Sqrt_d_0[2];
-  real32_T tmp[2];
+  real32_T tmp_0[2];
   real32_T rtb_uHzLowPass_0[2];
-  uint32_T tmp_0[17];
+  uint32_T tmp_1[17];
   real32_T rtb_VectorConcatenate_l[16];
   real32_T rtb_Product1_0[9];
   real32_T rtb_Assignment_o[9];
-  real32_T tmp_1[9];
+  real32_T tmp_2[9];
   real32_T rtb_Assignment_l[9];
   real32_T rtb_Product1_1[12];
   real32_T rtb_Product1_2[12];
   int32_T br;
-  real32_T tmp_2[9];
   real32_T tmp_3[9];
-  int32_T i_0;
   real32_T tmp_4[9];
-  real_T tmp_5;
+  int32_T i_0;
+  real32_T tmp_5[9];
+  real_T tmp_6;
   real32_T h[6];
-  real32_T tmp_6[9];
+  real32_T tmp_7[9];
   real32_T temp_0[6];
   real32_T temp_1[6];
   real32_T temp_2[6];
-  real32_T tmp_7[12];
-  real32_T tmp_8[9];
+  real32_T tmp_8[12];
   real32_T tmp_9[9];
-  ase_cov_datatype rtb_P_out_m_0[90];
   real32_T tmp_a[9];
+  ase_cov_datatype rtb_P_out_m_0[90];
   real32_T tmp_b[9];
+  real32_T tmp_c[9];
   real32_T rtb_Merge2_0[60];
   real_T rtb_VectorConcatenate_o[4];
-  real32_T tmp_c[9];
+  real32_T tmp_d[9];
   real32_T rtb_BusAssignment_h[48];
   real32_T M_0[126];
   real32_T M_1[126];
   real32_T M_2[540];
-  real32_T tmp_d[9];
+  real32_T tmp_e[9];
   real32_T rtb_Merge2_1[9];
-  int8_T tmp_e[6];
+  int8_T tmp_f[6];
   real32_T v_0[18];
   real32_T S_0[18];
   int8_T b_data[12];
@@ -1062,7 +1063,7 @@ void est_estimator_step(RT_MODEL_est_estimator_T *const est_estimator_M,
   real32_T varargin_1_data[150];
   real32_T y_data_0[100];
   boolean_T g_result_data[100];
-  real32_T b_a_data_0[600];
+  real32_T a_data_0[600];
   int32_T of_measured_in_sizes[3];
   real32_T A_data[96];
   int32_T A_sizes[2];
@@ -1072,7 +1073,7 @@ void est_estimator_step(RT_MODEL_est_estimator_T *const est_estimator_M,
   int32_T rot_indices_sizes_idx_1;
   int32_T C_sizes_idx_1;
   int32_T O_sizes_idx_0;
-  int16_T tmp_f;
+  int16_T tmp_g;
   int8_T c_sz_idx_0;
   real32_T UnitDelay_DSTATE_P_B_ISS_ISS_id;
   real32_T UnitDelay_DSTATE_A_B_ISS_ISS_id;
@@ -1139,11 +1140,6 @@ void est_estimator_step(RT_MODEL_est_estimator_T *const est_estimator_M,
 
   numFeatures = est_estimator_DW->UnitDelay16_DSTATE;
   rtb_BusCreator2_update_ML_featu = est_estimator_DW->UnitDelay17_DSTATE;
-
-  // SignalConversion: '<S1>/Signal Conversion' incorporates:
-  //   Inport: '<Root>/cmc_msg'
-
-  rtb_SignalConversion_speed_gain = est_estimator_U_cmc_msg_o->speed_gain_cmd;
 
   // Sum: '<S11>/Sum of Elements2' incorporates:
   //   Inport: '<Root>/handrail_msg'
@@ -1402,6 +1398,22 @@ void est_estimator_step(RT_MODEL_est_estimator_T *const est_estimator_M,
        rtb_Assignment_hk[i] * rtb_P_B_ISS_ISS[0]);
   }
 
+  // Saturate: '<S40>/Saturation' incorporates:
+  //   Inport: '<Root>/cmc_msg'
+  //   SignalConversion: '<S1>/Signal Conversion'
+
+  if (est_estimator_U_cmc_msg_o->speed_gain_cmd >
+      est_estimator_P->fam_impeller_speeds_cnt) {
+    rtb_Saturation_n = est_estimator_P->fam_impeller_speeds_cnt;
+  } else if (est_estimator_U_cmc_msg_o->speed_gain_cmd <
+             est_estimator_P->Saturation_LowerSat_n) {
+    rtb_Saturation_n = est_estimator_P->Saturation_LowerSat_n;
+  } else {
+    rtb_Saturation_n = est_estimator_U_cmc_msg_o->speed_gain_cmd;
+  }
+
+  // End of Saturate: '<S40>/Saturation'
+
   // Outputs for Iterator SubSystem: '<S40>/filter' incorporates:
   //   ForEach: '<S45>/For Each'
 
@@ -1412,9 +1424,8 @@ void est_estimator_step(RT_MODEL_est_estimator_T *const est_estimator_M,
     //   Selector: '<S45>/Selector'
 
     est_estimator_MATLABFunction1(est_estimator_P->astrobee_fsw_step_size,
-      est_estimator_P->fam_impeller_speeds[(int32_T)((int32_T)
-      rtb_SignalConversion_speed_gain - 1)], &est_estimator_B->
-      CoreSubsys[ForEach_itr_g].sf_MATLABFunction1,
+      est_estimator_P->fam_impeller_speeds[(int32_T)((int32_T)rtb_Saturation_n -
+      1)], &est_estimator_B->CoreSubsys[ForEach_itr_g].sf_MATLABFunction1,
       &est_estimator_DW->CoreSubsys[ForEach_itr_g].sf_MATLABFunction1);
 
     // DiscreteTransferFcn: '<S45>/Discrete Transfer Fcn' incorporates:
@@ -1925,18 +1936,18 @@ void est_estimator_step(RT_MODEL_est_estimator_T *const est_estimator_M,
   //   Gain: '<S65>/Gain1'
   //   Gain: '<S65>/Gain2'
 
-  tmp_1[0] = (real32_T)est_estimator_P->Constant3_Value_o;
-  tmp_1[1] = est_estimator_P->tun_abp_quat_body2imu[2];
-  tmp_1[2] = est_estimator_P->Gain_Gain_az *
+  tmp_2[0] = (real32_T)est_estimator_P->Constant3_Value_o;
+  tmp_2[1] = est_estimator_P->tun_abp_quat_body2imu[2];
+  tmp_2[2] = est_estimator_P->Gain_Gain_az *
     est_estimator_P->tun_abp_quat_body2imu[1];
-  tmp_1[3] = est_estimator_P->Gain1_Gain_ln *
+  tmp_2[3] = est_estimator_P->Gain1_Gain_ln *
     est_estimator_P->tun_abp_quat_body2imu[2];
-  tmp_1[4] = (real32_T)est_estimator_P->Constant3_Value_o;
-  tmp_1[5] = est_estimator_P->tun_abp_quat_body2imu[0];
-  tmp_1[6] = est_estimator_P->tun_abp_quat_body2imu[1];
-  tmp_1[7] = est_estimator_P->Gain2_Gain_c *
+  tmp_2[4] = (real32_T)est_estimator_P->Constant3_Value_o;
+  tmp_2[5] = est_estimator_P->tun_abp_quat_body2imu[0];
+  tmp_2[6] = est_estimator_P->tun_abp_quat_body2imu[1];
+  tmp_2[7] = est_estimator_P->Gain2_Gain_c *
     est_estimator_P->tun_abp_quat_body2imu[0];
-  tmp_1[8] = (real32_T)est_estimator_P->Constant3_Value_o;
+  tmp_2[8] = (real32_T)est_estimator_P->Constant3_Value_o;
 
   // Math: '<S49>/Math Function' incorporates:
   //   Constant: '<S40>/Constant2'
@@ -1961,14 +1972,14 @@ void est_estimator_step(RT_MODEL_est_estimator_T *const est_estimator_M,
     //   Product: '<S62>/Product'
 
     rtb_Assignment_l[(int32_T)(3 * i)] = (rtb_Assignment_hk[i] - rtb_Sum_k1 *
-      tmp_1[i]) + rtb_Product1_0[(int32_T)(3 * i)] *
+      tmp_2[i]) + rtb_Product1_0[(int32_T)(3 * i)] *
       est_estimator_P->Gain2_Gain_i5;
     rtb_Assignment_l[(int32_T)(1 + (int32_T)(3 * i))] = (rtb_Assignment_hk
-      [(int32_T)(i + 3)] - tmp_1[(int32_T)(i + 3)] * rtb_Sum_k1) +
+      [(int32_T)(i + 3)] - tmp_2[(int32_T)(i + 3)] * rtb_Sum_k1) +
       rtb_Product1_0[(int32_T)((int32_T)(3 * i) + 1)] *
       est_estimator_P->Gain2_Gain_i5;
     rtb_Assignment_l[(int32_T)(2 + (int32_T)(3 * i))] = (rtb_Assignment_hk
-      [(int32_T)(i + 6)] - tmp_1[(int32_T)(i + 6)] * rtb_Sum_k1) +
+      [(int32_T)(i + 6)] - tmp_2[(int32_T)(i + 6)] * rtb_Sum_k1) +
       rtb_Product1_0[(int32_T)((int32_T)(3 * i) + 2)] *
       est_estimator_P->Gain2_Gain_i5;
 
@@ -2003,9 +2014,8 @@ void est_estimator_step(RT_MODEL_est_estimator_T *const est_estimator_M,
     //   Selector: '<S46>/Selector'
 
     est_estimator_MATLABFunction1(est_estimator_P->astrobee_fsw_step_size,
-      est_estimator_P->fam_impeller_speeds[(int32_T)((int32_T)
-      rtb_SignalConversion_speed_gain - 1)], &est_estimator_B->
-      CoreSubsys_l[ForEach_itr].sf_MATLABFunction1,
+      est_estimator_P->fam_impeller_speeds[(int32_T)((int32_T)rtb_Saturation_n -
+      1)], &est_estimator_B->CoreSubsys_l[ForEach_itr].sf_MATLABFunction1,
       &est_estimator_DW->CoreSubsys_l[ForEach_itr].sf_MATLABFunction1);
 
     // DiscreteTransferFcn: '<S46>/Discrete Transfer Fcn' incorporates:
@@ -2258,15 +2268,15 @@ void est_estimator_step(RT_MODEL_est_estimator_T *const est_estimator_M,
   // '<S98>:1:23'
   // state_trans_1 = single(eye(15) + F_E*0.01); % Consider using expm
   // '<S98>:1:32'
-  tmp_2[0] = 0.0F;
-  tmp_2[3] = -hr_quat_ISS2hr_idx_0;
-  tmp_2[6] = rtb_ImpAsg_InsertedFor_Out1_a_d[1];
-  tmp_2[1] = hr_quat_ISS2hr_idx_0;
-  tmp_2[4] = 0.0F;
-  tmp_2[7] = -rtb_ImpAsg_InsertedFor_Out1_a_d[0];
-  tmp_2[2] = -rtb_ImpAsg_InsertedFor_Out1_a_d[1];
-  tmp_2[5] = rtb_ImpAsg_InsertedFor_Out1_a_d[0];
-  tmp_2[8] = 0.0F;
+  tmp_3[0] = 0.0F;
+  tmp_3[3] = -hr_quat_ISS2hr_idx_0;
+  tmp_3[6] = rtb_ImpAsg_InsertedFor_Out1_a_d[1];
+  tmp_3[1] = hr_quat_ISS2hr_idx_0;
+  tmp_3[4] = 0.0F;
+  tmp_3[7] = -rtb_ImpAsg_InsertedFor_Out1_a_d[0];
+  tmp_3[2] = -rtb_ImpAsg_InsertedFor_Out1_a_d[1];
+  tmp_3[5] = rtb_ImpAsg_InsertedFor_Out1_a_d[0];
+  tmp_3[8] = 0.0F;
   for (br = 0; br < 3; br++) {
     accel[br] = (real32_T)fabs((real_T)rtb_ImpAsg_InsertedFor_Out1_at_[br]);
     for (i = 0; i < 3; i++) {
@@ -2284,25 +2294,25 @@ void est_estimator_step(RT_MODEL_est_estimator_T *const est_estimator_M,
     }
   }
 
-  tmp_3[0] = 0.0F;
-  tmp_3[3] = -accel[2];
-  tmp_3[6] = accel[1];
-  tmp_3[1] = accel[2];
-  tmp_3[4] = 0.0F;
-  tmp_3[7] = -accel[0];
-  tmp_3[2] = -accel[1];
-  tmp_3[5] = accel[0];
-  tmp_3[8] = 0.0F;
+  tmp_4[0] = 0.0F;
+  tmp_4[3] = -accel[2];
+  tmp_4[6] = accel[1];
+  tmp_4[1] = accel[2];
+  tmp_4[4] = 0.0F;
+  tmp_4[7] = -accel[0];
+  tmp_4[2] = -accel[1];
+  tmp_4[5] = accel[0];
+  tmp_4[8] = 0.0F;
   for (i = 0; i < 3; i++) {
     for (b_m = 0; b_m < 3; b_m++) {
       rtb_Product1_0[(int32_T)(i + (int32_T)(3 * b_m))] = 0.0F;
-      rtb_Product1_0[(int32_T)(i + (int32_T)(3 * b_m))] += tmp_3[(int32_T)(3 *
+      rtb_Product1_0[(int32_T)(i + (int32_T)(3 * b_m))] += tmp_4[(int32_T)(3 *
         b_m)] * rtb_Assignment[i];
-      rtb_Product1_0[(int32_T)(i + (int32_T)(3 * b_m))] += tmp_3[(int32_T)
+      rtb_Product1_0[(int32_T)(i + (int32_T)(3 * b_m))] += tmp_4[(int32_T)
         ((int32_T)(3 * b_m) + 1)] * rtb_Assignment[(int32_T)(i + 3)];
-      rtb_Product1_0[(int32_T)(i + (int32_T)(3 * b_m))] += tmp_3[(int32_T)
+      rtb_Product1_0[(int32_T)(i + (int32_T)(3 * b_m))] += tmp_4[(int32_T)
         ((int32_T)(3 * b_m) + 2)] * rtb_Assignment[(int32_T)(i + 6)];
-      rtb_state_trans[(int32_T)(b_m + (int32_T)(15 * i))] = -tmp_2[(int32_T)
+      rtb_state_trans[(int32_T)(b_m + (int32_T)(15 * i))] = -tmp_3[(int32_T)
         ((int32_T)(3 * i) + b_m)];
       rtb_state_trans[(int32_T)(b_m + (int32_T)(15 * (int32_T)(i + 3)))] =
         (real32_T)b[(int32_T)((int32_T)(3 * i) + b_m)];
@@ -2475,15 +2485,15 @@ void est_estimator_step(RT_MODEL_est_estimator_T *const est_estimator_M,
   //   Gain: '<S104>/Gain1'
   //   Gain: '<S104>/Gain2'
 
-  tmp_4[0] = (real32_T)est_estimator_P->Constant3_Value_kc;
-  tmp_4[1] = rtb_Product1[2];
-  tmp_4[2] = est_estimator_P->Gain_Gain_k * rtb_Product1[1];
-  tmp_4[3] = est_estimator_P->Gain1_Gain_j5 * rtb_Product1[2];
-  tmp_4[4] = (real32_T)est_estimator_P->Constant3_Value_kc;
-  tmp_4[5] = rtb_Product1[0];
-  tmp_4[6] = rtb_Product1[1];
-  tmp_4[7] = est_estimator_P->Gain2_Gain_i5w * rtb_Product1[0];
-  tmp_4[8] = (real32_T)est_estimator_P->Constant3_Value_kc;
+  tmp_5[0] = (real32_T)est_estimator_P->Constant3_Value_kc;
+  tmp_5[1] = rtb_Product1[2];
+  tmp_5[2] = est_estimator_P->Gain_Gain_k * rtb_Product1[1];
+  tmp_5[3] = est_estimator_P->Gain1_Gain_j5 * rtb_Product1[2];
+  tmp_5[4] = (real32_T)est_estimator_P->Constant3_Value_kc;
+  tmp_5[5] = rtb_Product1[0];
+  tmp_5[6] = rtb_Product1[1];
+  tmp_5[7] = est_estimator_P->Gain2_Gain_i5w * rtb_Product1[0];
+  tmp_5[8] = (real32_T)est_estimator_P->Constant3_Value_kc;
 
   // Math: '<S94>/Math Function1' incorporates:
   //   Gain: '<S101>/Gain2'
@@ -2506,14 +2516,14 @@ void est_estimator_step(RT_MODEL_est_estimator_T *const est_estimator_M,
 
   for (i = 0; i < 3; i++) {
     rtb_Assignment1[(int32_T)(6 + (int32_T)(15 * (int32_T)(6 + i)))] =
-      ((rtb_Assignment[i] - rtb_Sum_k1 * tmp_4[i]) + rtb_Product1_0[(int32_T)(3 *
+      ((rtb_Assignment[i] - rtb_Sum_k1 * tmp_5[i]) + rtb_Product1_0[(int32_T)(3 *
         i)] * est_estimator_P->Gain2_Gain_kj) * est_estimator_P->Gain2_Gain_cx;
     rtb_Assignment1[(int32_T)(7 + (int32_T)(15 * (int32_T)(6 + i)))] =
-      ((rtb_Assignment[(int32_T)(i + 3)] - tmp_4[(int32_T)(i + 3)] * rtb_Sum_k1)
+      ((rtb_Assignment[(int32_T)(i + 3)] - tmp_5[(int32_T)(i + 3)] * rtb_Sum_k1)
        + rtb_Product1_0[(int32_T)((int32_T)(3 * i) + 1)] *
        est_estimator_P->Gain2_Gain_kj) * est_estimator_P->Gain2_Gain_cx;
     rtb_Assignment1[(int32_T)(8 + (int32_T)(15 * (int32_T)(6 + i)))] =
-      ((rtb_Assignment[(int32_T)(i + 6)] - tmp_4[(int32_T)(i + 6)] * rtb_Sum_k1)
+      ((rtb_Assignment[(int32_T)(i + 6)] - tmp_5[(int32_T)(i + 6)] * rtb_Sum_k1)
        + rtb_Product1_0[(int32_T)((int32_T)(3 * i) + 2)] *
        est_estimator_P->Gain2_Gain_kj) * est_estimator_P->Gain2_Gain_cx;
   }
@@ -2788,10 +2798,10 @@ void est_estimator_step(RT_MODEL_est_estimator_T *const est_estimator_M,
   //  Form a vector with the valid indices corresponding to the current
   //  number of augmentations
   // '<S99>:1:12'
-  mglfbimobiechdbi_bitget(rtb_BusAssignment_aug_state_enu, tmp_0);
+  mglfbimobiechdbi_bitget(rtb_BusAssignment_aug_state_enu, tmp_1);
   br = 0;
   for (num_original = 0; num_original < 17; num_original++) {
-    rtb_FixPtRelationalOperator_n = (tmp_0[num_original] != 0U);
+    rtb_FixPtRelationalOperator_n = (tmp_1[num_original] != 0U);
     if (rtb_FixPtRelationalOperator_n) {
       br++;
     }
@@ -3045,8 +3055,7 @@ void est_estimator_step(RT_MODEL_est_estimator_T *const est_estimator_M,
       est_estimator_P->UnitDelay_InitialCondition.accel_bias[2];
     UnitDelay_DSTATE_P_B_ISS_ISS__0 =
       est_estimator_P->UnitDelay_InitialCondition.P_B_ISS_ISS[2];
-    rtb_SignalConversion_speed_gain =
-      est_estimator_P->UnitDelay_InitialCondition.confidence;
+    rtb_Saturation_n = est_estimator_P->UnitDelay_InitialCondition.confidence;
     rtb_BitwiseOperator =
       est_estimator_P->UnitDelay_InitialCondition.aug_state_enum;
     UnitDelay_DSTATE_ml_quat_ISS2ca[0] =
@@ -3151,7 +3160,7 @@ void est_estimator_step(RT_MODEL_est_estimator_T *const est_estimator_M,
       UnitDelay_DSTATE_A_B_ISS_ISS_id = rtb_Sum1_k3[2];
       UnitDelay_DSTATE_accel_bias[2] = est_estimator_DW->UnitDelay6_DSTATE[2];
       UnitDelay_DSTATE_P_B_ISS_ISS__0 = est_estimator_DW->UnitDelay7_DSTATE[2];
-      rtb_SignalConversion_speed_gain = est_estimator_DW->UnitDelay8_DSTATE;
+      rtb_Saturation_n = est_estimator_DW->UnitDelay8_DSTATE;
       rtb_BitwiseOperator = rtb_BusAssignment_aug_state_enu;
       UnitDelay_DSTATE_ml_quat_ISS2ca[0] = est_estimator_DW->UnitDelay10_DSTATE
         [0];
@@ -3314,7 +3323,7 @@ void est_estimator_step(RT_MODEL_est_estimator_T *const est_estimator_M,
       }
 
       if (!est_estimator_DW->hr_quat_ISS2hr_pers_not_empty) {
-        cbiemoppekfknopp_quatmult(UnitDelay_DSTATE_ml_quat_ISS2ca,
+        iecjopppiecjmgln_quatmult(UnitDelay_DSTATE_ml_quat_ISS2ca,
           est_estimator_U_handrail_msg->cvs_handrail_local_quat,
           est_estimator_DW->hr_quat_ISS2hr_pers);
         est_estimator_DW->hr_quat_ISS2hr_pers_not_empty = true;
@@ -3411,7 +3420,7 @@ void est_estimator_step(RT_MODEL_est_estimator_T *const est_estimator_M,
             UnitDelay_DSTATE_ml_P_cam_ISS_I[i] + hr_quat_ISS2hr_idx_1;
         }
 
-        cbiemoppekfknopp_quatmult(UnitDelay_DSTATE_ml_quat_ISS2ca,
+        iecjopppiecjmgln_quatmult(UnitDelay_DSTATE_ml_quat_ISS2ca,
           est_estimator_U_handrail_msg->cvs_handrail_local_quat,
           est_estimator_DW->hr_quat_ISS2hr_pers);
       }
@@ -3523,14 +3532,14 @@ void est_estimator_step(RT_MODEL_est_estimator_T *const est_estimator_M,
           est_estimator_U_handrail_msg->cvs_handrail_local_quat[3];
         for (i = 0; i < 3; i++) {
           x[(int32_T)(3 * i)] = hr_quat_ISS2hr_idx_1 * (real32_T)b_2[i] + C[i];
-          tmp_7[(int32_T)(i << 2)] = (real32_T)b_2[(int32_T)(3 * i)] *
+          tmp_8[(int32_T)(i << 2)] = (real32_T)b_2[(int32_T)(3 * i)] *
             hr_quat_ISS2hr_idx_0 - C[(int32_T)(3 * i)];
           rtb_Product1_1[(int32_T)(3 * i)] = rtb_Divide * (real32_T)b_2[i] + S[i];
           rtb_Product1_2[(int32_T)(i << 2)] = (real32_T)b_2[(int32_T)(3 * i)] *
             hr_quat_ISS2hr_idx_2 - S[(int32_T)(3 * i)];
           x[(int32_T)(1 + (int32_T)(3 * i))] = (real32_T)b_2[(int32_T)(i + 3)] *
             hr_quat_ISS2hr_idx_1 + C[(int32_T)(i + 3)];
-          tmp_7[(int32_T)(1 + (int32_T)(i << 2))] = (real32_T)b_2[(int32_T)
+          tmp_8[(int32_T)(1 + (int32_T)(i << 2))] = (real32_T)b_2[(int32_T)
             ((int32_T)(3 * i) + 1)] * hr_quat_ISS2hr_idx_0 - C[(int32_T)
             ((int32_T)(3 * i) + 1)];
           rtb_Product1_1[(int32_T)(1 + (int32_T)(3 * i))] = (real32_T)b_2
@@ -3540,7 +3549,7 @@ void est_estimator_step(RT_MODEL_est_estimator_T *const est_estimator_M,
             [(int32_T)((int32_T)(3 * i) + 1)];
           x[(int32_T)(2 + (int32_T)(3 * i))] = (real32_T)b_2[(int32_T)(i + 6)] *
             hr_quat_ISS2hr_idx_1 + C[(int32_T)(i + 6)];
-          tmp_7[(int32_T)(2 + (int32_T)(i << 2))] = (real32_T)b_2[(int32_T)
+          tmp_8[(int32_T)(2 + (int32_T)(i << 2))] = (real32_T)b_2[(int32_T)
             ((int32_T)(3 * i) + 2)] * hr_quat_ISS2hr_idx_0 - C[(int32_T)
             ((int32_T)(3 * i) + 2)];
           rtb_Product1_1[(int32_T)(2 + (int32_T)(3 * i))] = (real32_T)b_2
@@ -3549,7 +3558,7 @@ void est_estimator_step(RT_MODEL_est_estimator_T *const est_estimator_M,
             [(int32_T)((int32_T)(3 * i) + 2)] * hr_quat_ISS2hr_idx_2 - S
             [(int32_T)((int32_T)(3 * i) + 2)];
           x[(int32_T)(9 + i)] = -est_estimator_DW->hr_quat_ISS2hr_pers[i];
-          tmp_7[(int32_T)(3 + (int32_T)(i << 2))] =
+          tmp_8[(int32_T)(3 + (int32_T)(i << 2))] =
             -est_estimator_DW->hr_quat_ISS2hr_pers[i];
           rtb_Product1_1[(int32_T)(9 + i)] =
             -est_estimator_U_handrail_msg->cvs_handrail_local_quat[i];
@@ -3566,22 +3575,22 @@ void est_estimator_step(RT_MODEL_est_estimator_T *const est_estimator_M,
             rtb_Assignment_o[(int32_T)(i + (int32_T)(3 * b_m))] = 0.0F;
             rtb_Product1_0[(int32_T)(i + (int32_T)(3 * b_m))] += rtb_Product1_2
               [(int32_T)(b_m << 2)] * rtb_Product1_1[i];
-            rtb_Assignment_o[(int32_T)(i + (int32_T)(3 * b_m))] += tmp_7
+            rtb_Assignment_o[(int32_T)(i + (int32_T)(3 * b_m))] += tmp_8
               [(int32_T)(i << 2)] * x[b_m];
             rtb_Product1_0[(int32_T)(i + (int32_T)(3 * b_m))] += rtb_Product1_2
               [(int32_T)((int32_T)(b_m << 2) + 1)] * rtb_Product1_1[(int32_T)(i
               + 3)];
-            rtb_Assignment_o[(int32_T)(i + (int32_T)(3 * b_m))] += tmp_7
+            rtb_Assignment_o[(int32_T)(i + (int32_T)(3 * b_m))] += tmp_8
               [(int32_T)((int32_T)(i << 2) + 1)] * x[(int32_T)(b_m + 3)];
             rtb_Product1_0[(int32_T)(i + (int32_T)(3 * b_m))] += rtb_Product1_2
               [(int32_T)((int32_T)(b_m << 2) + 2)] * rtb_Product1_1[(int32_T)(i
               + 6)];
-            rtb_Assignment_o[(int32_T)(i + (int32_T)(3 * b_m))] += tmp_7
+            rtb_Assignment_o[(int32_T)(i + (int32_T)(3 * b_m))] += tmp_8
               [(int32_T)((int32_T)(i << 2) + 2)] * x[(int32_T)(b_m + 6)];
             rtb_Product1_0[(int32_T)(i + (int32_T)(3 * b_m))] += rtb_Product1_2
               [(int32_T)((int32_T)(b_m << 2) + 3)] * rtb_Product1_1[(int32_T)(i
               + 9)];
-            rtb_Assignment_o[(int32_T)(i + (int32_T)(3 * b_m))] += tmp_7
+            rtb_Assignment_o[(int32_T)(i + (int32_T)(3 * b_m))] += tmp_8
               [(int32_T)((int32_T)(i << 2) + 3)] * x[(int32_T)(b_m + 9)];
           }
         }
@@ -3923,10 +3932,10 @@ void est_estimator_step(RT_MODEL_est_estimator_T *const est_estimator_M,
       rtb_ml_vel_aug_0[0] = rtb_ml_vel_aug[0];
       rtb_ml_vel_aug_0[1] = rtb_ml_vel_aug[1];
       rtb_ml_vel_aug_0[2] = rtb_ml_vel_aug[2];
-      ophdbaimngdjphln_quat_rotation_vec(rtb_ml_vel_aug_0,
-        est_estimator_P->tun_abp_q_body2perchcam, rtb_P_B_ISS_ISS);
-      nohlbaimmophdbim_quat_propagate_step(UnitDelay_DSTATE_ml_quat_ISS2ca,
-        rtb_P_B_ISS_ISS, est_estimator_P->tun_ase_ml_forward_projection_time,
+      gdjmmglnmgdjlfkf_quat_rotation_vec(rtb_ml_vel_aug_0,
+        est_estimator_P->tun_abp_q_body2perchcam, tmp);
+      kngldbimhdbaimgd_quat_propagate_step(UnitDelay_DSTATE_ml_quat_ISS2ca, tmp,
+        est_estimator_P->tun_ase_ml_forward_projection_time,
         rtb_VectorConcatenate_o);
       ecjedbaiaiekohln_quaternion_to_rotation(rtb_VectorConcatenate_o, (real_T *)
         &next_ml_tf_global[0]);
@@ -4165,27 +4174,27 @@ void est_estimator_step(RT_MODEL_est_estimator_T *const est_estimator_M,
           nx = 0;
         }
 
-        tmp_6[0] = 0.0F;
-        tmp_6[3] = -camera_landmarks_data[(int32_T)((int32_T)(3 * num_original)
+        tmp_7[0] = 0.0F;
+        tmp_7[3] = -camera_landmarks_data[(int32_T)((int32_T)(3 * num_original)
           + 2)];
-        tmp_6[6] = camera_landmarks_data[(int32_T)((int32_T)(3 * num_original) +
+        tmp_7[6] = camera_landmarks_data[(int32_T)((int32_T)(3 * num_original) +
           1)];
-        tmp_6[1] = camera_landmarks_data[(int32_T)((int32_T)(3 * num_original) +
+        tmp_7[1] = camera_landmarks_data[(int32_T)((int32_T)(3 * num_original) +
           2)];
-        tmp_6[4] = 0.0F;
-        tmp_6[7] = -camera_landmarks_data[(int32_T)(3 * num_original)];
-        tmp_6[2] = -camera_landmarks_data[(int32_T)((int32_T)(3 * num_original)
+        tmp_7[4] = 0.0F;
+        tmp_7[7] = -camera_landmarks_data[(int32_T)(3 * num_original)];
+        tmp_7[2] = -camera_landmarks_data[(int32_T)((int32_T)(3 * num_original)
           + 1)];
-        tmp_6[5] = camera_landmarks_data[(int32_T)(3 * num_original)];
-        tmp_6[8] = 0.0F;
+        tmp_7[5] = camera_landmarks_data[(int32_T)(3 * num_original)];
+        tmp_7[8] = 0.0F;
         for (i = 0; i < 3; i++) {
           for (b_m = 0; b_m < 3; b_m++) {
             C[(int32_T)(i + (int32_T)(3 * b_m))] = 0.0F;
-            C[(int32_T)(i + (int32_T)(3 * b_m))] += tmp_6[(int32_T)(3 * b_m)] *
+            C[(int32_T)(i + (int32_T)(3 * b_m))] += tmp_7[(int32_T)(3 * b_m)] *
               (real32_T)v[i];
-            C[(int32_T)(i + (int32_T)(3 * b_m))] += tmp_6[(int32_T)((int32_T)(3 *
+            C[(int32_T)(i + (int32_T)(3 * b_m))] += tmp_7[(int32_T)((int32_T)(3 *
               b_m) + 1)] * (real32_T)v[(int32_T)(i + 3)];
-            C[(int32_T)(i + (int32_T)(3 * b_m))] += tmp_6[(int32_T)((int32_T)(3 *
+            C[(int32_T)(i + (int32_T)(3 * b_m))] += tmp_7[(int32_T)((int32_T)(3 *
               b_m) + 2)] * (real32_T)v[(int32_T)(i + 6)];
             rtb_Assignment[(int32_T)(i + (int32_T)(3 * b_m))] = (real32_T)
               ((camera_ml_tf_global[(int32_T)((int32_T)(3 * b_m) + 1)] * (real_T)
@@ -4699,14 +4708,13 @@ void est_estimator_step(RT_MODEL_est_estimator_T *const est_estimator_M,
       //   Inport: '<Root>/landmark_msg'
       //   RelationalOperator: '<S21>/Compare'
 
-      gdjecbiecbaapppp_quat_rotation_vec(rtb_ml_vel_aug_0, rtb_Compare_2,
-        rtb_P_B_ISS_ISS);
+      gdjmmglnmgdjlfkf_quat_rotation_vec(rtb_ml_vel_aug_0, rtb_Compare_2, tmp);
       baieimopcbaiaaai_eulers_to_quat
-        (est_estimator_P->tun_ase_ml_forward_projection_time * rtb_P_B_ISS_ISS[0],
-         est_estimator_P->tun_ase_ml_forward_projection_time * rtb_P_B_ISS_ISS[1],
-         est_estimator_P->tun_ase_ml_forward_projection_time * rtb_P_B_ISS_ISS[2],
+        (est_estimator_P->tun_ase_ml_forward_projection_time * (real32_T)tmp[0],
+         est_estimator_P->tun_ase_ml_forward_projection_time * (real32_T)tmp[1],
+         est_estimator_P->tun_ase_ml_forward_projection_time * (real32_T)tmp[2],
          rtb_Product1);
-      cbiemoppekfknopp_quatmult(rtb_Product1, UnitDelay_DSTATE_ml_quat_ISS2ca,
+      iecjopppiecjmgln_quatmult(rtb_Product1, UnitDelay_DSTATE_ml_quat_ISS2ca,
         rtb_Compare_2);
       fkfcbaiengdjgdje_quaternion_to_rotation(rtb_Compare_2, rtb_Product1_0);
       for (i = 0; i < 3; i++) {
@@ -4879,19 +4887,19 @@ void est_estimator_step(RT_MODEL_est_estimator_T *const est_estimator_M,
         //  construct swew matrix from a vector
         //  From Zack and Brian's ekf.m  Used as a nested function in the optical 
         //  flow update
-        tmp_6[0] = 0.0F;
-        tmp_6[3] = -camera_landmarks_data[(int32_T)((int32_T)(3 * num_original)
+        tmp_7[0] = 0.0F;
+        tmp_7[3] = -camera_landmarks_data[(int32_T)((int32_T)(3 * num_original)
           + 2)];
-        tmp_6[6] = camera_landmarks_data[(int32_T)((int32_T)(3 * num_original) +
+        tmp_7[6] = camera_landmarks_data[(int32_T)((int32_T)(3 * num_original) +
           1)];
-        tmp_6[1] = camera_landmarks_data[(int32_T)((int32_T)(3 * num_original) +
+        tmp_7[1] = camera_landmarks_data[(int32_T)((int32_T)(3 * num_original) +
           2)];
-        tmp_6[4] = 0.0F;
-        tmp_6[7] = -camera_landmarks_data[(int32_T)(3 * num_original)];
-        tmp_6[2] = -camera_landmarks_data[(int32_T)((int32_T)(3 * num_original)
+        tmp_7[4] = 0.0F;
+        tmp_7[7] = -camera_landmarks_data[(int32_T)(3 * num_original)];
+        tmp_7[2] = -camera_landmarks_data[(int32_T)((int32_T)(3 * num_original)
           + 1)];
-        tmp_6[5] = camera_landmarks_data[(int32_T)(3 * num_original)];
-        tmp_6[8] = 0.0F;
+        tmp_7[5] = camera_landmarks_data[(int32_T)(3 * num_original)];
+        tmp_7[8] = 0.0F;
         for (i = 0; i < 3; i++) {
           hr_quat_ISS2hr_idx_1 = h[(int32_T)(i << 1)] * hr_quat_ISS2hr_idx_0;
           temp_0[(int32_T)(i << 1)] = -hr_quat_ISS2hr_idx_1;
@@ -4906,16 +4914,16 @@ void est_estimator_step(RT_MODEL_est_estimator_T *const est_estimator_M,
           for (b_m = 0; b_m < 3; b_m++) {
             temp_1[(int32_T)(i + (int32_T)(b_m << 1))] = 0.0F;
             temp_2[(int32_T)(i + (int32_T)(b_m << 1))] = 0.0F;
-            temp_1[(int32_T)(i + (int32_T)(b_m << 1))] += tmp_6[(int32_T)(3 *
+            temp_1[(int32_T)(i + (int32_T)(b_m << 1))] += tmp_7[(int32_T)(3 *
               b_m)] * temp[i];
             temp_2[(int32_T)(i + (int32_T)(b_m << 1))] += (real32_T)
               camera_ml_tf_global[(int32_T)(3 * b_m)] * temp_0[i];
-            temp_1[(int32_T)(i + (int32_T)(b_m << 1))] += tmp_6[(int32_T)
+            temp_1[(int32_T)(i + (int32_T)(b_m << 1))] += tmp_7[(int32_T)
               ((int32_T)(3 * b_m) + 1)] * temp[(int32_T)(i + 2)];
             temp_2[(int32_T)(i + (int32_T)(b_m << 1))] += (real32_T)
               camera_ml_tf_global[(int32_T)((int32_T)(3 * b_m) + 1)] * temp_0
               [(int32_T)(i + 2)];
-            temp_1[(int32_T)(i + (int32_T)(b_m << 1))] += tmp_6[(int32_T)
+            temp_1[(int32_T)(i + (int32_T)(b_m << 1))] += tmp_7[(int32_T)
               ((int32_T)(3 * b_m) + 2)] * temp[(int32_T)(i + 4)];
             temp_2[(int32_T)(i + (int32_T)(b_m << 1))] += (real32_T)
               camera_ml_tf_global[(int32_T)((int32_T)(3 * b_m) + 2)] * temp_0
@@ -4957,10 +4965,10 @@ void est_estimator_step(RT_MODEL_est_estimator_T *const est_estimator_M,
             + hr_quat_ISS2hr_idx_0) + omega_error_data[i];
           rtb_uHzLowPass_0[1] = (rtb_Divide * est_estimator_P->tun_ase_vis_r_mag
             + hr_quat_ISS2hr_idx_0) + omega_error_data[(int32_T)(1 + i)];
-          nohdcbaibiecnohl_power(rtb_uHzLowPass_0, tmp);
+          nohdcbaibiecnohl_power(rtb_uHzLowPass_0, tmp_0);
           i = (int32_T)((int32_T)((int32_T)(1 + num_original) << 1) - 2);
-          r_vec_data_0[i] = (real_T)tmp[0];
-          r_vec_data_0[(int32_T)(1 + i)] = (real_T)tmp[1];
+          r_vec_data_0[i] = (real_T)tmp_0[0];
+          r_vec_data_0[(int32_T)(1 + i)] = (real_T)tmp_0[1];
         } else {
           //  AR update
           i = (int32_T)((int32_T)((int32_T)(1 + num_original) << 1) - 2);
@@ -4968,10 +4976,10 @@ void est_estimator_step(RT_MODEL_est_estimator_T *const est_estimator_M,
             omega_error_data[i];
           rtb_Sqrt_d_0[1] = rtb_Divide * est_estimator_P->tun_ase_dock_r_mag +
             omega_error_data[(int32_T)(1 + i)];
-          nohdcbaibiecnohl_power(rtb_Sqrt_d_0, tmp);
+          nohdcbaibiecnohl_power(rtb_Sqrt_d_0, tmp_0);
           i = (int32_T)((int32_T)((int32_T)(1 + num_original) << 1) - 2);
-          r_vec_data_0[i] = (real_T)tmp[0];
-          r_vec_data_0[(int32_T)(1 + i)] = (real_T)tmp[1];
+          r_vec_data_0[i] = (real_T)tmp_0[0];
+          r_vec_data_0[(int32_T)(1 + i)] = (real_T)tmp_0[1];
         }
       }
 
@@ -4981,8 +4989,8 @@ void est_estimator_step(RT_MODEL_est_estimator_T *const est_estimator_M,
       }
 
       //  only ignore observations that don't match if we are converged
-      if ((rtb_SignalConversion_speed_gain ==
-           est_estimator_P->ase_status_converged) && rtb_Compare) {
+      if ((rtb_Saturation_n == est_estimator_P->ase_status_converged) &&
+          rtb_Compare) {
         //      S = H*P_in(16:21, 16:21)*H';
         //      for i=1:size(S, 1)
         //        S(i, i) = S(i, i) + r_vec(i);
@@ -5137,7 +5145,7 @@ void est_estimator_step(RT_MODEL_est_estimator_T *const est_estimator_M,
         br = A_sizes[0];
         for (i = 0; i <= (int32_T)(br - 1); i++) {
           for (b_m = 0; b_m < 6; b_m++) {
-            b_a_data_0[(int32_T)(b_m + (int32_T)(6 * i))] = H_data_0[(int32_T)
+            a_data_0[(int32_T)(b_m + (int32_T)(6 * i))] = H_data_0[(int32_T)
               ((int32_T)(C_sizes_idx_1 * b_m) + i)];
           }
         }
@@ -5146,7 +5154,7 @@ void est_estimator_step(RT_MODEL_est_estimator_T *const est_estimator_M,
           for (i = 0; i < 6; i++) {
             rtb_Product_j[i] = 0.0F;
             for (b_m = 0; b_m <= (int32_T)(num_original - 1); b_m++) {
-              rtb_Product_j[i] += b_a_data_0[(int32_T)((int32_T)(6 * b_m) + i)] *
+              rtb_Product_j[i] += a_data_0[(int32_T)((int32_T)(6 * b_m) + i)] *
                 r_data_0[b_m];
             }
           }
@@ -5161,8 +5169,8 @@ void est_estimator_step(RT_MODEL_est_estimator_T *const est_estimator_M,
               s24_iter = ar;
               for (O_sizes_idx_0 = 0; O_sizes_idx_0 < 6; O_sizes_idx_0++) {
                 s24_iter++;
-                rtb_Product_j[O_sizes_idx_0] += b_a_data_0[(int32_T)(s24_iter -
-                  1)] * r_data_0[i];
+                rtb_Product_j[O_sizes_idx_0] += a_data_0[(int32_T)(s24_iter - 1)]
+                  * r_data_0[i];
               }
             }
 
@@ -5176,9 +5184,9 @@ void est_estimator_step(RT_MODEL_est_estimator_T *const est_estimator_M,
         for (i = 0; i < 6; i++) {
           br = H_sizes[1];
           for (b_m = 0; b_m <= (int32_T)(br - 1); b_m++) {
-            b_a_data_0[(int32_T)(i + (int32_T)(6 * b_m))] = 0.0F;
+            a_data_0[(int32_T)(i + (int32_T)(6 * b_m))] = 0.0F;
             for (i_0 = 0; i_0 <= (int32_T)(C_sizes_idx_1 - 1); i_0++) {
-              b_a_data_0[(int32_T)(i + (int32_T)(6 * b_m))] += H_data_0[(int32_T)
+              a_data_0[(int32_T)(i + (int32_T)(6 * b_m))] += H_data_0[(int32_T)
                 ((int32_T)(C_sizes_idx_1 * i) + i_0)] * (real32_T)
                 est_estimator_B->tmp_data_m[(int32_T)((int32_T)(H_sizes[0] * b_m)
                 + i_0)];
@@ -5191,7 +5199,7 @@ void est_estimator_step(RT_MODEL_est_estimator_T *const est_estimator_M,
             for (b_m = 0; b_m < 6; b_m++) {
               rtb_R_mat[(int32_T)(i + (int32_T)(6 * b_m))] = 0.0F;
               for (i_0 = 0; i_0 <= (int32_T)(num_original - 1); i_0++) {
-                rtb_R_mat[(int32_T)(i + (int32_T)(6 * b_m))] += b_a_data_0
+                rtb_R_mat[(int32_T)(i + (int32_T)(6 * b_m))] += a_data_0
                   [(int32_T)((int32_T)(6 * i_0) + i)] * H_data_0[(int32_T)
                   ((int32_T)(C_sizes_idx_1 * b_m) + i_0)];
               }
@@ -5218,7 +5226,7 @@ void est_estimator_step(RT_MODEL_est_estimator_T *const est_estimator_M,
                   s24_iter++;
                   rtb_R_mat[O_sizes_idx_0] += est_estimator_B->q1_data_c
                     [(int32_T)(i % A_sizes[0] + (int32_T)(A_sizes[0] *
-                    div_nzp_s32_floor(i, A_sizes[0])))] * b_a_data_0[(int32_T)
+                    div_nzp_s32_floor(i, A_sizes[0])))] * a_data_0[(int32_T)
                     (s24_iter - 1)];
                 }
               }
@@ -5437,7 +5445,7 @@ void est_estimator_step(RT_MODEL_est_estimator_T *const est_estimator_M,
     rtb_Merge2.A_B_ISS_ISS[2] = UnitDelay_DSTATE_A_B_ISS_ISS_id;
     rtb_Merge2.accel_bias[2] = UnitDelay_DSTATE_accel_bias[2];
     rtb_Merge2.P_B_ISS_ISS[2] = UnitDelay_DSTATE_P_B_ISS_ISS__0;
-    rtb_Merge2.confidence = rtb_SignalConversion_speed_gain;
+    rtb_Merge2.confidence = rtb_Saturation_n;
     rtb_Merge2.aug_state_enum = rtb_BitwiseOperator;
     rtb_Merge2.ml_quat_ISS2cam[0] = UnitDelay_DSTATE_ml_quat_ISS2ca[0];
     rtb_Merge2.ml_quat_ISS2cam[1] = UnitDelay_DSTATE_ml_quat_ISS2ca[1];
@@ -5549,7 +5557,7 @@ void est_estimator_step(RT_MODEL_est_estimator_T *const est_estimator_M,
       est_estimator_P->UnitDelay_InitialCondition_p.kfl_status;
     rtb_numFeatures_f =
       est_estimator_P->UnitDelay_InitialCondition_p.update_OF_tracks_cnt;
-    rtb_SignalConversion_speed_gain =
+    rtb_Saturation_n =
       est_estimator_P->UnitDelay_InitialCondition_p.update_ML_features_cnt;
     memcpy(&UnitDelay_DSTATE_of_mahal_dista[0],
            &est_estimator_P->UnitDelay_InitialCondition_p.of_mahal_distance[0],
@@ -5653,7 +5661,7 @@ void est_estimator_step(RT_MODEL_est_estimator_T *const est_estimator_M,
               (ase_cov_datatype)));
       UnitDelay_DSTATE_kfl_status = est_estimator_DW->UnitDelay15_DSTATE;
       rtb_numFeatures_f = numFeatures;
-      rtb_SignalConversion_speed_gain = rtb_BusCreator2_update_ML_featu;
+      rtb_Saturation_n = rtb_BusCreator2_update_ML_featu;
       memcpy(&UnitDelay_DSTATE_of_mahal_dista[0], &rtb_UnitDelay18[0], (uint32_T)
              (50U * sizeof(real_T)));
       memcpy(&UnitDelay_DSTATE_ml_mahal_dista[0], &rtb_UnitDelay19[0], (uint32_T)
@@ -5798,7 +5806,7 @@ void est_estimator_step(RT_MODEL_est_estimator_T *const est_estimator_M,
     aaiepphlecjelnoh_permute(est_estimator_B->of_measured_in_data,
       of_measured_in_sizes, est_estimator_B->of_measured_in, x_sizes);
     nx = (int32_T)(x_sizes[1] << 5);
-    tmp_f = (int16_T)(int32_T)(rtb_num_of_tracks_g << 4);
+    tmp_g = (int16_T)(int32_T)(rtb_num_of_tracks_g << 4);
     ar = (int32_T)(int16_T)(int32_T)(rtb_num_of_tracks_g << 4);
     for (br = 0; (int32_T)(br + 1) <= nx; br++) {
       est_estimator_B->of_measured_in_data[br] = est_estimator_B->
@@ -5809,10 +5817,10 @@ void est_estimator_step(RT_MODEL_est_estimator_T *const est_estimator_M,
       est_estimator_B->b_x_data[(int32_T)(i << 1)] =
         est_estimator_B->of_measured_in_data[i];
       est_estimator_B->b_x_data[(int32_T)(1 + (int32_T)(i << 1))] =
-        est_estimator_B->of_measured_in_data[(int32_T)(i + (int32_T)tmp_f)];
+        est_estimator_B->of_measured_in_data[(int32_T)(i + (int32_T)tmp_g)];
     }
 
-    nx = (int32_T)((int32_T)tmp_f << 1);
+    nx = (int32_T)((int32_T)tmp_g << 1);
     for (br = 0; (int32_T)(br + 1) <= nx; br++) {
       est_estimator_B->of_measured_in_data[br] = est_estimator_B->b_x_data[br];
     }
@@ -5821,9 +5829,9 @@ void est_estimator_step(RT_MODEL_est_estimator_T *const est_estimator_M,
       num_original = 0;
     }
 
-    tmp_f = (int16_T)(int32_T)((int32_T)(int16_T)num_original - 1);
-    br = (int32_T)((int32_T)tmp_f + 1);
-    C_sizes_idx_1 = (int32_T)tmp_f;
+    tmp_g = (int16_T)(int32_T)((int32_T)(int16_T)num_original - 1);
+    br = (int32_T)((int32_T)tmp_g + 1);
+    C_sizes_idx_1 = (int32_T)tmp_g;
     for (i = 0; i <= C_sizes_idx_1; i++) {
       h_data[i] = (int16_T)i;
     }
@@ -5997,11 +6005,11 @@ void est_estimator_step(RT_MODEL_est_estimator_T *const est_estimator_M,
         }
 
         ind0 = 4.0 * aug_ind - 4.0;
-        tmp_5 = rt_roundd_snf(((real_T)(int32_T)(num_original + 1) - 1.0) * 2.0 *
+        tmp_6 = rt_roundd_snf(((real_T)(int32_T)(num_original + 1) - 1.0) * 2.0 *
                               16.0 + 2.0 * aug_ind);
-        if (tmp_5 < 2.147483648E+9) {
-          if (tmp_5 >= -2.147483648E+9) {
-            i = (int32_T)tmp_5;
+        if (tmp_6 < 2.147483648E+9) {
+          if (tmp_6 >= -2.147483648E+9) {
+            i = (int32_T)tmp_6;
           } else {
             i = MIN_int32_T;
           }
@@ -6010,37 +6018,37 @@ void est_estimator_step(RT_MODEL_est_estimator_T *const est_estimator_M,
         }
 
         br = (int32_T)(i - 2);
-        tmp_5 = (1.0 + (real_T)nx) * 2.0;
-        A[(int32_T)((int32_T)(tmp_5 + -1.0) - 1)] = (real32_T)camera_tf_camera1
+        tmp_6 = (1.0 + (real_T)nx) * 2.0;
+        A[(int32_T)((int32_T)(tmp_6 + -1.0) - 1)] = (real32_T)camera_tf_camera1
           [(int32_T)((int32_T)(ind0 + 1.0) - 1)] - (real32_T)camera_tf_camera1
           [(int32_T)((int32_T)(ind0 + 3.0) - 1)] * est_estimator_B->
           of_measured[br];
-        A[(int32_T)((int32_T)(tmp_5 + -1.0) + 31)] = (real32_T)
+        A[(int32_T)((int32_T)(tmp_6 + -1.0) + 31)] = (real32_T)
           camera_tf_camera1[(int32_T)((int32_T)(ind0 + 1.0) + 63)] - (real32_T)
           camera_tf_camera1[(int32_T)((int32_T)(ind0 + 3.0) + 63)] *
           est_estimator_B->of_measured[br];
-        A[(int32_T)((int32_T)(tmp_5 + -1.0) + 63)] = (real32_T)
+        A[(int32_T)((int32_T)(tmp_6 + -1.0) + 63)] = (real32_T)
           camera_tf_camera1[(int32_T)((int32_T)(ind0 + 1.0) + 191)] - (real32_T)
           camera_tf_camera1[(int32_T)((int32_T)(ind0 + 3.0) + 191)] *
           est_estimator_B->of_measured[br];
-        A[(int32_T)((int32_T)tmp_5 - 1)] = (real32_T)camera_tf_camera1[(int32_T)
+        A[(int32_T)((int32_T)tmp_6 - 1)] = (real32_T)camera_tf_camera1[(int32_T)
           ((int32_T)(ind0 + 2.0) - 1)] - (real32_T)camera_tf_camera1[(int32_T)
           ((int32_T)(ind0 + 3.0) - 1)] * est_estimator_B->of_measured[(int32_T)
           (1 + br)];
-        A[(int32_T)((int32_T)tmp_5 + 31)] = (real32_T)camera_tf_camera1[(int32_T)
+        A[(int32_T)((int32_T)tmp_6 + 31)] = (real32_T)camera_tf_camera1[(int32_T)
           ((int32_T)(ind0 + 2.0) + 63)] - (real32_T)camera_tf_camera1[(int32_T)
           ((int32_T)(ind0 + 3.0) + 63)] * est_estimator_B->of_measured[(int32_T)
           (1 + br)];
-        A[(int32_T)((int32_T)tmp_5 + 63)] = (real32_T)camera_tf_camera1[(int32_T)
+        A[(int32_T)((int32_T)tmp_6 + 63)] = (real32_T)camera_tf_camera1[(int32_T)
           ((int32_T)(ind0 + 2.0) + 191)] - (real32_T)camera_tf_camera1[(int32_T)
           ((int32_T)(ind0 + 3.0) + 191)] * est_estimator_B->of_measured[(int32_T)
           (1 + br)];
-        tmp_5 = (1.0 + (real_T)nx) * 2.0;
-        b_1[(int32_T)((int32_T)(tmp_5 + -1.0) - 1)] = (real32_T)
+        tmp_6 = (1.0 + (real_T)nx) * 2.0;
+        b_1[(int32_T)((int32_T)(tmp_6 + -1.0) - 1)] = (real32_T)
           camera_tf_camera1[(int32_T)((int32_T)(ind0 + 3.0) + 127)] *
           est_estimator_B->of_measured[br] - (real32_T)camera_tf_camera1
           [(int32_T)((int32_T)(ind0 + 1.0) + 127)];
-        b_1[(int32_T)((int32_T)tmp_5 - 1)] = (real32_T)camera_tf_camera1
+        b_1[(int32_T)((int32_T)tmp_6 - 1)] = (real32_T)camera_tf_camera1
           [(int32_T)((int32_T)(ind0 + 3.0) + 127)] *
           est_estimator_B->of_measured[(int32_T)(1 + br)] - (real32_T)
           camera_tf_camera1[(int32_T)((int32_T)(ind0 + 2.0) + 127)];
@@ -6048,13 +6056,13 @@ void est_estimator_step(RT_MODEL_est_estimator_T *const est_estimator_M,
       }
 
       //  let's weight the oldest augmentation more heavily
-      tmp_5 = 2.0 * num_augs;
+      tmp_6 = 2.0 * num_augs;
       aug_ind = 2.0 * num_augs;
       for (i = 0; i < 3; i++) {
-        rtb_Product_j[(int32_T)(i << 1)] = A[(int32_T)((int32_T)((int32_T)(tmp_5
+        rtb_Product_j[(int32_T)(i << 1)] = A[(int32_T)((int32_T)((int32_T)(tmp_6
           + -1.0) + (int32_T)(i << 5)) - 1)] * 5.0F;
         rtb_Product_j[(int32_T)(1 + (int32_T)(i << 1))] = A[(int32_T)((int32_T)
-          ((int32_T)(i << 5) + (int32_T)tmp_5) - 1)] * 5.0F;
+          ((int32_T)(i << 5) + (int32_T)tmp_6) - 1)] * 5.0F;
       }
 
       for (i = 0; i < 3; i++) {
@@ -6064,11 +6072,11 @@ void est_estimator_step(RT_MODEL_est_estimator_T *const est_estimator_M,
           rtb_Product_j[(int32_T)((int32_T)(i << 1) + 1)];
       }
 
-      tmp_5 = 2.0 * num_augs;
+      tmp_6 = 2.0 * num_augs;
       aug_ind = 2.0 * num_augs;
-      hr_quat_ISS2hr_idx_0 = b_1[(int32_T)((int32_T)tmp_5 - 1)] * 5.0F;
+      hr_quat_ISS2hr_idx_0 = b_1[(int32_T)((int32_T)tmp_6 - 1)] * 5.0F;
       b_1[(int32_T)((int32_T)(aug_ind + -1.0) - 1)] = b_1[(int32_T)((int32_T)
-        (tmp_5 + -1.0) - 1)] * 5.0F;
+        (tmp_6 + -1.0) - 1)] * 5.0F;
       b_1[(int32_T)((int32_T)aug_ind - 1)] = hr_quat_ISS2hr_idx_0;
       aug_ind = num_augs * 2.0;
       num_augs *= 2.0;
@@ -6281,7 +6289,7 @@ void est_estimator_step(RT_MODEL_est_estimator_T *const est_estimator_M,
              [0], (uint32_T)(48U * sizeof(real32_T)));
       UnitDelay_DSTATE_kfl_status = rtb_ex_apply_delta_state_o8;
       rtb_numFeatures_f = rtb_ex_of_residual_and_h_o5;
-      rtb_SignalConversion_speed_gain = est_estimator_P->Constant_Value_dd;
+      rtb_Saturation_n = est_estimator_P->Constant_Value_dd;
       for (i = 0; i < 50; i++) {
         UnitDelay_DSTATE_of_mahal_dista[i] = (real_T)
           rtb_ex_of_residual_and_h_o6[i];
@@ -6350,7 +6358,7 @@ void est_estimator_step(RT_MODEL_est_estimator_T *const est_estimator_M,
            (117U * sizeof(ase_cov_datatype)));
     rtb_Merge2.kfl_status = UnitDelay_DSTATE_kfl_status;
     rtb_Merge2.update_OF_tracks_cnt = rtb_numFeatures_f;
-    rtb_Merge2.update_ML_features_cnt = rtb_SignalConversion_speed_gain;
+    rtb_Merge2.update_ML_features_cnt = rtb_Saturation_n;
     memcpy(&rtb_Merge2.of_mahal_distance[0], &UnitDelay_DSTATE_of_mahal_dista[0],
            (uint32_T)(50U * sizeof(real_T)));
     memcpy(&rtb_Merge2.ml_mahal_distance[0], &UnitDelay_DSTATE_ml_mahal_dista[0],
@@ -6843,15 +6851,15 @@ void est_estimator_step(RT_MODEL_est_estimator_T *const est_estimator_M,
     //   Gain: '<S189>/Gain1'
     //   Gain: '<S189>/Gain2'
 
-    tmp_8[0] = (real32_T)est_estimator_P->Constant3_Value_m;
-    tmp_8[1] = rtb_Product1[2];
-    tmp_8[2] = est_estimator_P->Gain_Gain_fr * rtb_Product1[1];
-    tmp_8[3] = est_estimator_P->Gain1_Gain_c * rtb_Product1[2];
-    tmp_8[4] = (real32_T)est_estimator_P->Constant3_Value_m;
-    tmp_8[5] = rtb_Product1[0];
-    tmp_8[6] = rtb_Product1[1];
-    tmp_8[7] = est_estimator_P->Gain2_Gain_hc * rtb_Product1[0];
-    tmp_8[8] = (real32_T)est_estimator_P->Constant3_Value_m;
+    tmp_9[0] = (real32_T)est_estimator_P->Constant3_Value_m;
+    tmp_9[1] = rtb_Product1[2];
+    tmp_9[2] = est_estimator_P->Gain_Gain_fr * rtb_Product1[1];
+    tmp_9[3] = est_estimator_P->Gain1_Gain_c * rtb_Product1[2];
+    tmp_9[4] = (real32_T)est_estimator_P->Constant3_Value_m;
+    tmp_9[5] = rtb_Product1[0];
+    tmp_9[6] = rtb_Product1[1];
+    tmp_9[7] = est_estimator_P->Gain2_Gain_hc * rtb_Product1[0];
+    tmp_9[8] = (real32_T)est_estimator_P->Constant3_Value_m;
 
     // Math: '<S165>/Math Function' incorporates:
     //   Gain: '<S186>/Gain2'
@@ -6873,14 +6881,14 @@ void est_estimator_step(RT_MODEL_est_estimator_T *const est_estimator_M,
 
     for (i = 0; i < 3; i++) {
       rtb_Assignment_hk[(int32_T)(3 * i)] = (rtb_Assignment[i] - rtb_Divide *
-        tmp_8[i]) + rtb_Product1_0[(int32_T)(3 * i)] *
+        tmp_9[i]) + rtb_Product1_0[(int32_T)(3 * i)] *
         est_estimator_P->Gain2_Gain_g;
       rtb_Assignment_hk[(int32_T)(1 + (int32_T)(3 * i))] = (rtb_Assignment
-        [(int32_T)(i + 3)] - tmp_8[(int32_T)(i + 3)] * rtb_Divide) +
+        [(int32_T)(i + 3)] - tmp_9[(int32_T)(i + 3)] * rtb_Divide) +
         rtb_Product1_0[(int32_T)((int32_T)(3 * i) + 1)] *
         est_estimator_P->Gain2_Gain_g;
       rtb_Assignment_hk[(int32_T)(2 + (int32_T)(3 * i))] = (rtb_Assignment
-        [(int32_T)(i + 6)] - tmp_8[(int32_T)(i + 6)] * rtb_Divide) +
+        [(int32_T)(i + 6)] - tmp_9[(int32_T)(i + 6)] * rtb_Divide) +
         rtb_Product1_0[(int32_T)((int32_T)(3 * i) + 2)] *
         est_estimator_P->Gain2_Gain_g;
     }
@@ -6994,16 +7002,16 @@ void est_estimator_step(RT_MODEL_est_estimator_T *const est_estimator_M,
     //   Gain: '<S166>/Gain1'
     //   Gain: '<S166>/Gain2'
 
-    tmp_9[0] = (real32_T)est_estimator_P->Constant3_Value_pv;
-    tmp_9[1] = rtb_ImpAsg_InsertedFor_Out1_a_d[2];
-    tmp_9[2] = est_estimator_P->Gain_Gain_fx * rtb_ImpAsg_InsertedFor_Out1_a_d[1];
-    tmp_9[3] = est_estimator_P->Gain1_Gain_ik * rtb_ImpAsg_InsertedFor_Out1_a_d
+    tmp_a[0] = (real32_T)est_estimator_P->Constant3_Value_pv;
+    tmp_a[1] = rtb_ImpAsg_InsertedFor_Out1_a_d[2];
+    tmp_a[2] = est_estimator_P->Gain_Gain_fx * rtb_ImpAsg_InsertedFor_Out1_a_d[1];
+    tmp_a[3] = est_estimator_P->Gain1_Gain_ik * rtb_ImpAsg_InsertedFor_Out1_a_d
       [2];
-    tmp_9[4] = (real32_T)est_estimator_P->Constant3_Value_pv;
-    tmp_9[5] = rtb_ImpAsg_InsertedFor_Out1_a_d[0];
-    tmp_9[6] = rtb_ImpAsg_InsertedFor_Out1_a_d[1];
-    tmp_9[7] = est_estimator_P->Gain2_Gain_m * rtb_ImpAsg_InsertedFor_Out1_a_d[0];
-    tmp_9[8] = (real32_T)est_estimator_P->Constant3_Value_pv;
+    tmp_a[4] = (real32_T)est_estimator_P->Constant3_Value_pv;
+    tmp_a[5] = rtb_ImpAsg_InsertedFor_Out1_a_d[0];
+    tmp_a[6] = rtb_ImpAsg_InsertedFor_Out1_a_d[1];
+    tmp_a[7] = est_estimator_P->Gain2_Gain_m * rtb_ImpAsg_InsertedFor_Out1_a_d[0];
+    tmp_a[8] = (real32_T)est_estimator_P->Constant3_Value_pv;
     for (i = 0; i < 3; i++) {
       // Assignment: '<S160>/Assignment' incorporates:
       //   Gain: '<S164>/Gain2'
@@ -7023,10 +7031,10 @@ void est_estimator_step(RT_MODEL_est_estimator_T *const est_estimator_M,
         est_estimator_P->Gain2_Gain_p0;
 
       // Assignment: '<S160>/Assignment6'
-      rtb_Assignment6[(int32_T)(3 + (int32_T)(6 * i))] = tmp_9[(int32_T)(3 * i)];
-      rtb_Assignment6[(int32_T)(4 + (int32_T)(6 * i))] = tmp_9[(int32_T)
+      rtb_Assignment6[(int32_T)(3 + (int32_T)(6 * i))] = tmp_a[(int32_T)(3 * i)];
+      rtb_Assignment6[(int32_T)(4 + (int32_T)(6 * i))] = tmp_a[(int32_T)
         ((int32_T)(3 * i) + 1)];
-      rtb_Assignment6[(int32_T)(5 + (int32_T)(6 * i))] = tmp_9[(int32_T)
+      rtb_Assignment6[(int32_T)(5 + (int32_T)(6 * i))] = tmp_a[(int32_T)
         ((int32_T)(3 * i) + 2)];
     }
 
@@ -7160,15 +7168,15 @@ void est_estimator_step(RT_MODEL_est_estimator_T *const est_estimator_M,
     //   Gain: '<S169>/Gain1'
     //   Gain: '<S169>/Gain2'
 
-    tmp_a[0] = (real32_T)est_estimator_P->Constant3_Value_pi;
-    tmp_a[1] = rtb_Product1[2];
-    tmp_a[2] = est_estimator_P->Gain_Gain_j * rtb_Product1[1];
-    tmp_a[3] = est_estimator_P->Gain1_Gain_g * rtb_Product1[2];
-    tmp_a[4] = (real32_T)est_estimator_P->Constant3_Value_pi;
-    tmp_a[5] = rtb_Product1[0];
-    tmp_a[6] = rtb_Product1[1];
-    tmp_a[7] = est_estimator_P->Gain2_Gain_eo * rtb_Product1[0];
-    tmp_a[8] = (real32_T)est_estimator_P->Constant3_Value_pi;
+    tmp_b[0] = (real32_T)est_estimator_P->Constant3_Value_pi;
+    tmp_b[1] = rtb_Product1[2];
+    tmp_b[2] = est_estimator_P->Gain_Gain_j * rtb_Product1[1];
+    tmp_b[3] = est_estimator_P->Gain1_Gain_g * rtb_Product1[2];
+    tmp_b[4] = (real32_T)est_estimator_P->Constant3_Value_pi;
+    tmp_b[5] = rtb_Product1[0];
+    tmp_b[6] = rtb_Product1[1];
+    tmp_b[7] = est_estimator_P->Gain2_Gain_eo * rtb_Product1[0];
+    tmp_b[8] = (real32_T)est_estimator_P->Constant3_Value_pi;
 
     // Concatenate: '<S167>/Matrix Concatenate' incorporates:
     //   Gain: '<S167>/Gain1'
@@ -7176,12 +7184,12 @@ void est_estimator_step(RT_MODEL_est_estimator_T *const est_estimator_M,
 
     for (i = 0; i < 3; i++) {
       rtb_VectorConcatenate_c[(int32_T)(i << 2)] = rtb_Assignment[(int32_T)(3 *
-        i)] + tmp_a[(int32_T)(3 * i)];
+        i)] + tmp_b[(int32_T)(3 * i)];
       rtb_VectorConcatenate_c[(int32_T)(1 + (int32_T)(i << 2))] =
-        rtb_Assignment[(int32_T)((int32_T)(3 * i) + 1)] + tmp_a[(int32_T)
+        rtb_Assignment[(int32_T)((int32_T)(3 * i) + 1)] + tmp_b[(int32_T)
         ((int32_T)(3 * i) + 1)];
       rtb_VectorConcatenate_c[(int32_T)(2 + (int32_T)(i << 2))] =
-        rtb_Assignment[(int32_T)((int32_T)(3 * i) + 2)] + tmp_a[(int32_T)
+        rtb_Assignment[(int32_T)((int32_T)(3 * i) + 2)] + tmp_b[(int32_T)
         ((int32_T)(3 * i) + 2)];
     }
 
@@ -7691,15 +7699,15 @@ void est_estimator_step(RT_MODEL_est_estimator_T *const est_estimator_M,
     //   Gain: '<S135>/Gain1'
     //   Gain: '<S135>/Gain2'
 
-    tmp_b[0] = (real32_T)est_estimator_P->Constant3_Value_p;
-    tmp_b[1] = rtb_Product1[2];
-    tmp_b[2] = est_estimator_P->Gain_Gain_g * rtb_Product1[1];
-    tmp_b[3] = est_estimator_P->Gain1_Gain_jc * rtb_Product1[2];
-    tmp_b[4] = (real32_T)est_estimator_P->Constant3_Value_p;
-    tmp_b[5] = rtb_Product1[0];
-    tmp_b[6] = rtb_Product1[1];
-    tmp_b[7] = est_estimator_P->Gain2_Gain_o * rtb_Product1[0];
-    tmp_b[8] = (real32_T)est_estimator_P->Constant3_Value_p;
+    tmp_c[0] = (real32_T)est_estimator_P->Constant3_Value_p;
+    tmp_c[1] = rtb_Product1[2];
+    tmp_c[2] = est_estimator_P->Gain_Gain_g * rtb_Product1[1];
+    tmp_c[3] = est_estimator_P->Gain1_Gain_jc * rtb_Product1[2];
+    tmp_c[4] = (real32_T)est_estimator_P->Constant3_Value_p;
+    tmp_c[5] = rtb_Product1[0];
+    tmp_c[6] = rtb_Product1[1];
+    tmp_c[7] = est_estimator_P->Gain2_Gain_o * rtb_Product1[0];
+    tmp_c[8] = (real32_T)est_estimator_P->Constant3_Value_p;
 
     // Concatenate: '<S133>/Matrix Concatenate' incorporates:
     //   Gain: '<S133>/Gain1'
@@ -7707,12 +7715,12 @@ void est_estimator_step(RT_MODEL_est_estimator_T *const est_estimator_M,
 
     for (i = 0; i < 3; i++) {
       rtb_VectorConcatenate_m[(int32_T)(i << 2)] = rtb_Assignment_hk[(int32_T)(3
-        * i)] + tmp_b[(int32_T)(3 * i)];
+        * i)] + tmp_c[(int32_T)(3 * i)];
       rtb_VectorConcatenate_m[(int32_T)(1 + (int32_T)(i << 2))] =
-        rtb_Assignment_hk[(int32_T)((int32_T)(3 * i) + 1)] + tmp_b[(int32_T)
+        rtb_Assignment_hk[(int32_T)((int32_T)(3 * i) + 1)] + tmp_c[(int32_T)
         ((int32_T)(3 * i) + 1)];
       rtb_VectorConcatenate_m[(int32_T)(2 + (int32_T)(i << 2))] =
-        rtb_Assignment_hk[(int32_T)((int32_T)(3 * i) + 2)] + tmp_b[(int32_T)
+        rtb_Assignment_hk[(int32_T)((int32_T)(3 * i) + 2)] + tmp_c[(int32_T)
         ((int32_T)(3 * i) + 2)];
     }
 
@@ -7824,13 +7832,13 @@ void est_estimator_step(RT_MODEL_est_estimator_T *const est_estimator_M,
         f_data[i] = (int8_T)(int32_T)((int32_T)(int8_T)(int32_T)(br + i) - 1);
       }
 
-      tmp_5 = (num_augs - 1.0) * 6.0 + 21.0;
+      tmp_6 = (num_augs - 1.0) * 6.0 + 21.0;
       for (i = 0; i < 6; i++) {
-        tmp_e[i] = (int8_T)(int32_T)(1 + i);
+        tmp_f[i] = (int8_T)(int32_T)(1 + i);
       }
 
       for (i = 0; i <= (int32_T)(rtb_num_of_tracks_g - 1); i++) {
-        of_in_prange[(int32_T)f_data[i]] = tmp_5 + (real_T)tmp_e[i];
+        of_in_prange[(int32_T)f_data[i]] = tmp_6 + (real_T)tmp_f[i];
       }
 
       num_augs++;
@@ -7871,15 +7879,15 @@ void est_estimator_step(RT_MODEL_est_estimator_T *const est_estimator_M,
     //   Gain: '<S140>/Gain1'
     //   Gain: '<S140>/Gain2'
 
-    tmp_c[0] = (real32_T)est_estimator_P->Constant3_Value_l;
-    tmp_c[1] = rtb_Product1[2];
-    tmp_c[2] = est_estimator_P->Gain_Gain_f * rtb_Product1[1];
-    tmp_c[3] = est_estimator_P->Gain1_Gain_k * rtb_Product1[2];
-    tmp_c[4] = (real32_T)est_estimator_P->Constant3_Value_l;
-    tmp_c[5] = rtb_Product1[0];
-    tmp_c[6] = rtb_Product1[1];
-    tmp_c[7] = est_estimator_P->Gain2_Gain_i * rtb_Product1[0];
-    tmp_c[8] = (real32_T)est_estimator_P->Constant3_Value_l;
+    tmp_d[0] = (real32_T)est_estimator_P->Constant3_Value_l;
+    tmp_d[1] = rtb_Product1[2];
+    tmp_d[2] = est_estimator_P->Gain_Gain_f * rtb_Product1[1];
+    tmp_d[3] = est_estimator_P->Gain1_Gain_k * rtb_Product1[2];
+    tmp_d[4] = (real32_T)est_estimator_P->Constant3_Value_l;
+    tmp_d[5] = rtb_Product1[0];
+    tmp_d[6] = rtb_Product1[1];
+    tmp_d[7] = est_estimator_P->Gain2_Gain_i * rtb_Product1[0];
+    tmp_d[8] = (real32_T)est_estimator_P->Constant3_Value_l;
 
     // Math: '<S131>/Math Function' incorporates:
     //   Gain: '<S137>/Gain2'
@@ -7901,14 +7909,14 @@ void est_estimator_step(RT_MODEL_est_estimator_T *const est_estimator_M,
 
     for (i = 0; i < 3; i++) {
       rtb_Assignment_hk[(int32_T)(3 * i)] = (rtb_Assignment[i] - rtb_Divide *
-        tmp_c[i]) + rtb_Product1_0[(int32_T)(3 * i)] *
+        tmp_d[i]) + rtb_Product1_0[(int32_T)(3 * i)] *
         est_estimator_P->Gain2_Gain_p;
       rtb_Assignment_hk[(int32_T)(1 + (int32_T)(3 * i))] = (rtb_Assignment
-        [(int32_T)(i + 3)] - tmp_c[(int32_T)(i + 3)] * rtb_Divide) +
+        [(int32_T)(i + 3)] - tmp_d[(int32_T)(i + 3)] * rtb_Divide) +
         rtb_Product1_0[(int32_T)((int32_T)(3 * i) + 1)] *
         est_estimator_P->Gain2_Gain_p;
       rtb_Assignment_hk[(int32_T)(2 + (int32_T)(3 * i))] = (rtb_Assignment
-        [(int32_T)(i + 6)] - tmp_c[(int32_T)(i + 6)] * rtb_Divide) +
+        [(int32_T)(i + 6)] - tmp_d[(int32_T)(i + 6)] * rtb_Divide) +
         rtb_Product1_0[(int32_T)((int32_T)(3 * i) + 2)] *
         est_estimator_P->Gain2_Gain_p;
     }
@@ -8514,15 +8522,15 @@ void est_estimator_step(RT_MODEL_est_estimator_T *const est_estimator_M,
   //   Gain: '<S92>/Gain1'
   //   Gain: '<S92>/Gain2'
 
-  tmp_d[0] = (real32_T)est_estimator_P->Constant3_Value_ol;
-  tmp_d[1] = rtb_Merge2.quat_ISS2B[2];
-  tmp_d[2] = est_estimator_P->Gain_Gain_j2 * rtb_Merge2.quat_ISS2B[1];
-  tmp_d[3] = est_estimator_P->Gain1_Gain_jp * rtb_Merge2.quat_ISS2B[2];
-  tmp_d[4] = (real32_T)est_estimator_P->Constant3_Value_ol;
-  tmp_d[5] = rtb_Merge2.quat_ISS2B[0];
-  tmp_d[6] = rtb_Merge2.quat_ISS2B[1];
-  tmp_d[7] = est_estimator_P->Gain2_Gain_ko * rtb_Merge2.quat_ISS2B[0];
-  tmp_d[8] = (real32_T)est_estimator_P->Constant3_Value_ol;
+  tmp_e[0] = (real32_T)est_estimator_P->Constant3_Value_ol;
+  tmp_e[1] = rtb_Merge2.quat_ISS2B[2];
+  tmp_e[2] = est_estimator_P->Gain_Gain_j2 * rtb_Merge2.quat_ISS2B[1];
+  tmp_e[3] = est_estimator_P->Gain1_Gain_jp * rtb_Merge2.quat_ISS2B[2];
+  tmp_e[4] = (real32_T)est_estimator_P->Constant3_Value_ol;
+  tmp_e[5] = rtb_Merge2.quat_ISS2B[0];
+  tmp_e[6] = rtb_Merge2.quat_ISS2B[1];
+  tmp_e[7] = est_estimator_P->Gain2_Gain_ko * rtb_Merge2.quat_ISS2B[0];
+  tmp_e[8] = (real32_T)est_estimator_P->Constant3_Value_ol;
 
   // Math: '<S88>/Math Function' incorporates:
   //   BusAssignment: '<S5>/Bus Assignment'
@@ -8546,13 +8554,13 @@ void est_estimator_step(RT_MODEL_est_estimator_T *const est_estimator_M,
 
   for (i = 0; i < 3; i++) {
     rtb_Assignment_hk[(int32_T)(3 * i)] = (rtb_Assignment[i] - rtb_Sum_k1 *
-      tmp_d[i]) + rtb_Merge2_1[(int32_T)(3 * i)] *
+      tmp_e[i]) + rtb_Merge2_1[(int32_T)(3 * i)] *
       est_estimator_P->Gain2_Gain_a2;
     rtb_Assignment_hk[(int32_T)(1 + (int32_T)(3 * i))] = (rtb_Assignment
-      [(int32_T)(i + 3)] - tmp_d[(int32_T)(i + 3)] * rtb_Sum_k1) + rtb_Merge2_1
+      [(int32_T)(i + 3)] - tmp_e[(int32_T)(i + 3)] * rtb_Sum_k1) + rtb_Merge2_1
       [(int32_T)((int32_T)(3 * i) + 1)] * est_estimator_P->Gain2_Gain_a2;
     rtb_Assignment_hk[(int32_T)(2 + (int32_T)(3 * i))] = (rtb_Assignment
-      [(int32_T)(i + 6)] - tmp_d[(int32_T)(i + 6)] * rtb_Sum_k1) + rtb_Merge2_1
+      [(int32_T)(i + 6)] - tmp_e[(int32_T)(i + 6)] * rtb_Sum_k1) + rtb_Merge2_1
       [(int32_T)((int32_T)(3 * i) + 2)] * est_estimator_P->Gain2_Gain_a2;
   }
 

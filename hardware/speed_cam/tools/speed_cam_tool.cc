@@ -37,13 +37,17 @@
 namespace speed_cam {
 
 // Global data structures for asynchornous data caching and resource locking
-static std::mutex mutex_imu_, mutex_camera_image_, mutex_optical_flow_, mutex_speed_;
+static std::mutex mutex_imu_, mutex_camera_image_, mutex_optical_flow_,
+  mutex_speed_, mutex_version_, mutex_state_;
 static mavlink_raw_imu_t msg_imu_;
 static std::vector < uint8_t > msg_camera_image_;
 static int32_t msg_camera_image_height_;
 static int32_t msg_camera_image_width_;
 static mavlink_optical_flow_t msg_optical_flow_;
 static mavlink_vision_speed_estimate_t msg_speed_;
+static bool has_version_;
+static uint32_t sw_version_;
+static int32_t state_;
 
 // Called when a new IMU measurement is available
 void ImuCallback(mavlink_raw_imu_t const& message) {
@@ -72,6 +76,17 @@ void SpeedCallback(mavlink_vision_speed_estimate_t const& message) {
 }
 
 void StatusCallback(mavlink_heartbeat_t const& message) {
+}
+
+void VersionCallback(uint32_t sw_version) {
+  std::lock_guard<std::mutex> guard(mutex_version_);
+  sw_version_ = sw_version;
+  has_version_ = true;
+}
+
+void StateCallback(int32_t state) {
+  std::lock_guard<std::mutex> guard(mutex_state_);
+  state_ = state;
 }
 
 // Print an error message and fail gracefully
@@ -129,11 +144,12 @@ bool MainMenu(speed_cam::SpeedCam &interface) {
   std::cout << "2. Print latest camera image" << std::endl;
   std::cout << "3. Print latest optical flow measurement" << std::endl;
   std::cout << "4. Print latest velocity estimate" << std::endl;
-  std::cout << "*******************************************************" << std::endl;
-  std::cout << "5. Send a time sync event" << std::endl;
+  std::cout << "5. Get the operating state" << std::endl;
+  std::cout << "6. Set the operating state" << std::endl;
+  std::cout << "7. Print firmware build time and version" << std::endl;
   std::cout << "*******************************************************" << std::endl;
   // Keep looping until we have valid input
-  uint8_t choice = InputUnsignedInteger(0, 5);
+  uint8_t choice = InputUnsignedInteger(0, 7);
   // Do something based on the choice
   switch (choice) {
     case 0: {
@@ -195,12 +211,32 @@ bool MainMenu(speed_cam::SpeedCam &interface) {
       std::cout << "- Z : " << msg_speed_.z << std::endl;;
       return true;
     }
-    // Tiem sync event
+    // Get the operating syste
     case 5: {
-      if (interface.TimeSync())
-        std::cout << "Time synchronization event sent" << std::endl;
-      else
-        std::cerr << "Time synchronization event did not send" << std::endl;
+      std::lock_guard<std::mutex> guard(mutex_state_);
+      std::cout << "Operating state: ";
+      switch (state_) {
+      case 0: std::cout << "Disabled"; break;
+      case 1: std::cout << "Enabled";  break;
+      case 2: std::cout << "Debug";    break;
+      }
+      std::cout << std::endl;
+      return true;
+    }
+    // Get the operating syste
+    case 6: {
+      std::cout << "Enter a new state (0: DISABLED, 1: NOMINAL, 2: DEBUG):";
+      int32_t state = InputUnsignedInteger(0, 2);
+      interface.SetState(static_cast<int32_t>(state));
+      return true;
+    }
+    case 7: {
+      std::lock_guard<std::mutex> guard(mutex_version_);
+      if (!has_version_) {
+        std::cerr << "No version information was received." << std::endl;
+        return false;
+      }
+      std::cout << "SW Version: " << std::hex << sw_version_ << std::dec << std::endl;
       return true;
     }
     default: {
@@ -239,9 +275,14 @@ int main(int argc, char *argv[]) {
     std::bind(speed_cam::SpeedCallback, std::placeholders::_1);
   speed_cam::SpeedCamStatusCallback cb_status =
     std::bind(speed_cam::StatusCallback, std::placeholders::_1);
+  speed_cam::SpeedCamVersionCallback cb_version =
+    std::bind(speed_cam::VersionCallback, std::placeholders::_1);
+  speed_cam::SpeedCamStateCallback cb_state =
+    std::bind(speed_cam::StateCallback, std::placeholders::_1);
 
   // Create the interface to the perching arm
-  speed_cam::SpeedCam interface(cb_imu, cb_camera_image, cb_optical_flow, cb_speed, cb_status);
+  speed_cam::SpeedCam interface(cb_imu, cb_camera_image,
+    cb_optical_flow, cb_speed, cb_status, cb_version, cb_state);
   if (interface.Initialize(port, baud) != speed_cam::RESULT_SUCCESS) {
     speed_cam::Error("Could not open serial port");
     return 1;

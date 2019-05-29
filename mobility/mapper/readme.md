@@ -1,4 +1,4 @@
-\defgroup mapper Mapper 
+\defgroup mapper Mapper
 \ingroup mobility
 
 The \ref mapper node is responsible for maintaining a representation of the environment, which is in turn used by the \ref planner node for planning segments. Internally, the \ref mapper stores a collection of keep-in and keep-out zones, as well as a map of the environment, which it builds by incrementally fusing measurements from \picoflexx sensor(s). Ultimately, both representations are reduced by the \ref mapper to a collection of free-space polygons, in which the \ref planner searches for a suitable path.

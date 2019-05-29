@@ -24,7 +24,6 @@
 #include <string>
 #include <memory>
 
-#include "dds_ros_bridge/enum_helper.h"
 #include "dds_ros_bridge/ros_sub_rapid_pub.h"
 #include "dds_ros_bridge/util.h"
 
@@ -49,6 +48,9 @@ class RosDiskStateToRapid : public RosSubRapidPub {
                       const unsigned int queue_size = 10);
 
   void Callback(ff_msgs::DiskStateStampedConstPtr const& state);
+  void FillConfigAndState(ff_msgs::DiskStateStampedConstPtr state,
+                          unsigned int index,
+                          unsigned int size);
   void CheckAndPublish(ros::TimerEvent const& event);
   void SetPublishRate(float rate);
 
@@ -66,7 +68,10 @@ class RosDiskStateToRapid : public RosSubRapidPub {
   ConfigSupplierPtr config_supplier_;
 
   bool updated_;
-  int num_disks_, llp_start_index_, mlp_start_index_, hlp_start_index_;
+
+  unsigned int llp_disk_size_, mlp_disk_size_, hlp_disk_size_;
+
+  ff_msgs::DiskStateStampedConstPtr llp_state_, mlp_state_, hlp_state_;
 
   ros::Timer pub_timer_;
 };

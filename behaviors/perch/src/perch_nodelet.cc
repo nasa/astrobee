@@ -1,14 +1,14 @@
 /* Copyright (c) 2017, United States Government, as represented by the
  * Administrator of the National Aeronautics and Space Administration.
- * 
+ *
  * All rights reserved.
- * 
+ *
  * The Astrobee platform is licensed under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -358,7 +358,7 @@ class PerchNodelet : public ff_util::FreeFlyerNodelet {
         return state;
       });
   }
-  virtual ~PerchNodelet() {}
+  ~PerchNodelet() {}
 
  protected:
   // Called to initialize this nodelet
@@ -367,7 +367,8 @@ class PerchNodelet : public ff_util::FreeFlyerNodelet {
     cfg_.Initialize(GetPrivateHandle(), "behaviors/perch.config");
     if (!cfg_.Listen(boost::bind(
       &PerchNodelet::ReconfigureCallback, this, _1)))
-      return AssertFault("INITIALIZATION_FAULT", "Could not load config");
+      return AssertFault(ff_util::INITIALIZATION_FAILED,
+                         "Could not load config");
     // One shot timer to check if we undock with a timeout
     timer_eps_ = nh->createTimer(
       ros::Duration(cfg_.Get<double>("timeout_eps_response")),
@@ -434,12 +435,14 @@ class PerchNodelet : public ff_util::FreeFlyerNodelet {
 
   // Timeout on a trajectory generation request
   void EnableTimeoutCallback(void) {
-    return AssertFault("INITIALIZATION_FAULT", "Could not find enable service");
+    return AssertFault(ff_util::INITIALIZATION_FAILED,
+                       "Could not find enable service");
   }
 
   // Timeout on a trajectory generation request
   void UndockTimeoutCallback(void) {
-    return AssertFault("INITIALIZATION_FAULT", "Could not find undock service");
+    return AssertFault(ff_util::INITIALIZATION_FAILED,
+                       "Could not find undock service");
   }
 
   // Ensure all clients are connected
@@ -802,7 +805,6 @@ class PerchNodelet : public ff_util::FreeFlyerNodelet {
   uint8_t err_;
 };
 
-PLUGINLIB_DECLARE_CLASS(dock, PerchNodelet,
-                        dock::PerchNodelet, nodelet::Nodelet);
+PLUGINLIB_EXPORT_CLASS(dock::PerchNodelet, nodelet::Nodelet);
 
 }  // namespace perch

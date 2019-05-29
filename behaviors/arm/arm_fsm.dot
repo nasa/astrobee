@@ -1,4 +1,4 @@
-# dot -Tpdf statemachine.dot -o statemachine.pdf
+# dot -Tpdf statemachine.dot -o arm_fsm.pdf
 digraph G {
   graph [label="ARM\n", labelloc=t, fontsize=50];
   ratio="fill";
@@ -11,7 +11,6 @@ digraph G {
   subgraph cluster_0 {
     style=invis;
     node [shape=box, style=filled, fillcolor=aquamarine, color=black];
-    CALIBRATING;
     SETTING;
   }
 
@@ -85,10 +84,4 @@ digraph G {
     [label="[21]\nGRIPPER_COMPLETE\nResult(SUCCESS)", color=darkgreen];
   SETTING -> DEPLOYED
     [label="[22]\nTIMEOUT\nResult(SET_FAILED)", color=red];
-  DEPLOYED -> CALIBRATING
-    [label="[23]\nGOAL_CALIBRATE\nCalibrate()"];
-  CALIBRATING -> DEPLOYED
-    [label="[24]\nCALIBRATE_COMPLETE\nResult(SUCCESS)", color=darkgreen];
-  CALIBRATING -> DEPLOYED
-    [label="[25]\nTIMEOUT\nResult(SET_FAILED)", color=red];
 }

@@ -42,7 +42,8 @@ Fam::Fam(ros::NodeHandle* nh) : inertia_received_(false) {
   inertia_sub_ = nh->subscribe(
     TOPIC_MOBILITY_INERTIA, 1, &Fam::InertiaCallback, this);
 
-  ctl_sub_ = nh->subscribe(TOPIC_GNC_CTL_COMMAND, 5, &Fam::CtlCallBack, this, ros::TransportHints().tcpNoDelay());
+  ctl_sub_ = nh->subscribe(TOPIC_GNC_CTL_COMMAND, 5,
+    &Fam::CtlCallBack, this, ros::TransportHints().tcpNoDelay());
 }
 
 Fam::~Fam() {}
@@ -74,9 +75,9 @@ void Fam::FlightModeCallback(const ff_msgs::FlightMode::ConstPtr& mode) {
   speed_ = mode->speed;
 }
 
-void Fam::InertiaCallback(const geometry_msgs::Inertia::ConstPtr& inertia) {
+void Fam::InertiaCallback(const geometry_msgs::InertiaStamped::ConstPtr& inertia) {
   std::lock_guard<std::mutex> lock(mutex_mass_);
-  center_of_mass_ = inertia->com;
+  center_of_mass_ = inertia->inertia.com;
   inertia_received_ = true;
 }
 

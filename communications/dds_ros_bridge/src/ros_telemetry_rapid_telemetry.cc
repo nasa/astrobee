@@ -67,7 +67,7 @@ RosTelemetryRapidTelemetry::RosTelemetryRapidTelemetry(
 
 void RosTelemetryRapidTelemetry::CameraStateCallback(
                             ff_msgs::CameraStatesStampedConstPtr const& state) {
-  // Get config message so we know where to but the camera in the array
+  // Get config message so we know where to put the camera in the array
   rapid::ext::astrobee::TelemetryConfig &config_msg = config_supplier_->event();
   rapid::ext::astrobee::TelemetryState &state_msg = state_supplier_->event();
 
@@ -143,6 +143,15 @@ void RosTelemetryRapidTelemetry::SetGncStateRate(float rate) {
     state_supplier_->event().gncStateRate = 0;
   } else {
     state_supplier_->event().gncStateRate = rate;
+  }
+  state_supplier_->sendEvent();
+}
+
+void RosTelemetryRapidTelemetry::SetPmcCmdStateRate(float rate) {
+  if (rate < 0) {
+    state_supplier_->event().pmcCmdStateRate = 0;
+  } else {
+    state_supplier_->event().pmcCmdStateRate = rate;
   }
   state_supplier_->sendEvent();
 }

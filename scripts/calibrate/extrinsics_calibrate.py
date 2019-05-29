@@ -30,7 +30,7 @@ import numpy.linalg
 
 from tf import transformations
 
-# returns intrinsics and distortion from yaml file
+# returns extrinsics (T_cam_imu) from the yaml file
 def read_yaml_extrinsics(filename,cameras):
   extrinsics = []
   with open(filename, 'r') as f:
@@ -41,6 +41,17 @@ def read_yaml_extrinsics(filename,cameras):
     except yaml.YAMLError as exc:
       print >> sys.stderr, exc
   return extrinsics
+
+def has_depth_topic(filename):
+  '''See if a depth topic is in the file.'''
+  with open(filename, 'r') as f:
+    for line in f:
+      prog = re.compile('^\s*rostopic:\s*/hw/depth')
+      m = re.match(prog, line)
+      if m:
+        return True
+
+  return False
 
 def find_close_parenthese(s):
   assert(s[0] == '(')
@@ -99,22 +110,33 @@ def lua_replace_transform(filename, transform_name, transform):
           (transform[0][0], transform[0][1], transform[0][2], \
            transform[1][0], transform[1][1], transform[1][2], transform[1][3])
   output_text = contents[:open_bracket] + new_transform_text + contents[close_bracket+1:]
+
+  print("Updating file: " + filename)
   try:
     with open(filename, 'w') as f:
       f.write(output_text)
   except IOError:
-    print >> sys.stderr, 'Failed to open lua file.'
+    print >> sys.stderr, 'Failed to open lua file ' + filename
     return True
   return False
 
-def calibrate_extrinsics(bag, target_file, intrinsics_yaml, imu_yaml, verbose=False):
+def calibrate_extrinsics(bag, calibration_target, intrinsics_yaml, imu_yaml,
+                         from_time, to_time, padding,
+                         verbose=False):
+
   extra_flags = ' --verbose' if verbose else ' --dont-show-report'
-  
+
+  if from_time is not None and to_time is not None:
+    extra_flags += ' --bag-from-to ' + from_time + ' ' + to_time
+
+  if padding is not None:
+    extra_flags += ' --timeoffset-padding ' + padding
+    
   if not os.path.isfile(bag):
     print >> sys.stderr, 'Bag file %s does not exist.' % (bag)
     return None
-  if not os.path.isfile(target_file):
-    print >> sys.stderr, 'Target file %s does not exist.' % (target_file)
+  if not os.path.isfile(calibration_target):
+    print >> sys.stderr, 'Target file %s does not exist.' % (calibration_target)
     return None
   if not os.path.isfile(intrinsics_yaml):
     print >> sys.stderr, 'Intrinsics file %s does not exist.' % (intrinsics_yaml)
@@ -127,14 +149,16 @@ def calibrate_extrinsics(bag, target_file, intrinsics_yaml, imu_yaml, verbose=Fa
   bag_file = os.path.basename(bag)
   bag_name = os.path.splitext(bag_file)[0]
 
-  try:
-    output_arg = None if verbose else open(os.devnull, 'w')
-  except IOError:
-    print >> sys.stderr, 'Failed to open devnull.'
-    return None
-  ret = subprocess.call(('rosrun kalibr kalibr_calibrate_imu_camera --bag %s --cam %s --imu %s --target %s --time-calibration%s' %
-           (bag_file, intrinsics_yaml, imu_yaml, target_file, extra_flags)).split(),
-           cwd=bag_dir, stdout=output_arg, stderr=output_arg)
+  # Display in the terminal what is going on
+  output_arg = None
+
+  cmd = ('rosrun kalibr kalibr_calibrate_imu_camera --bag %s --cam %s --imu %s ' +
+         '--target %s --time-calibration%s') % \
+         (bag_file, intrinsics_yaml, imu_yaml, calibration_target, extra_flags)
+
+  print("Running in: " + bag_dir)
+  print(cmd)
+  ret = subprocess.call(cmd.split(), cwd=bag_dir, stdout=output_arg, stderr=output_arg)
   if ret != 0:
     print >> sys.stderr, 'Failed to calibrate extrinsics from bag file.'
     return None
@@ -151,12 +175,12 @@ def trans_quat_to_transform((trans, quat)):
   m[2,3] = -trans[2]
   return m
 
-def has_depth_cam(filename):
+def has_two_cameras(filename):
   try:
     with open(filename, 'r') as f:
       contents = f.read()
   except IOError:
-    print >> sys.stderr, 'Failed to open intrinsics_yaml.'
+    print >> sys.stderr, 'Failed to open file: ' + filename
     return False
   
   prog = re.compile('cam1')
@@ -167,31 +191,40 @@ def has_depth_cam(filename):
     return False
 
 def main():
-  parser = argparse.ArgumentParser(description='Calibrate extrinsics parameters.')
-  parser.add_argument('-d', '--dock_cam', dest='dock_cam', action='store_true', help='Calibrate dock camera.')
-  parser.add_argument('-v', '--verbose',  dest='verbose', action='store_true', help='Verbose mode.')
-  parser.add_argument('robot', help='The name of the robot to configure (i.e., put p4d to edit p4d.config).')
-  parser.add_argument('intrinsics_yaml', help='The bag file with intrinsics calibration data.')
-  parser.add_argument('extrinsics_bag', help='The bag file with extrinsics calibration data.')
-  args = parser.parse_args()
 
   SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
+  default_calibration_target = SCRIPT_DIR + '/config/granite_april_tag.yaml'
+  
+  parser = argparse.ArgumentParser(description='Calibrate extrinsics parameters.')
+  parser.add_argument('robot', help='The name of the robot to configure (i.e., put p4d to edit p4d.config).')
+  parser.add_argument('intrinsics_yaml', help='The yaml file with intrinsics calibration data.')
+  parser.add_argument('extrinsics_bag', help='The bag file with extrinsics calibration data.')
+  parser.add_argument('-d', '--dock_cam', dest='dock_cam', action='store_true', help='Calibrate dock camera.')
+  parser.add_argument('-f', '--from', dest='from_time', help='Use the bag data starting at this time, in seconds.')
+  parser.add_argument('-t', '--to', dest='to_time', help='Use the bag data until this time, in seconds.')
+  parser.add_argument('--timeoffset-padding', dest='padding', help='Maximum range in which the timeoffset may change during estimation, in seconds. See readme.md for more info. (default: 0.01)')
+  parser.add_argument('--calibration_target', dest='calibration_target', help='Use this yaml file to desribe the calibration target, overriding the default: ' + default_calibration_target)
+  parser.add_argument('-v', '--verbose',  dest='verbose', action='store_true', help='Verbose mode.')
+  args = parser.parse_args()
 
-  target_yaml = SCRIPT_DIR + '/data/granite_april_tag.yaml'
-  imu_yaml = SCRIPT_DIR + '/data/imu.yaml'
+  if args.calibration_target is None:
+    args.calibration_target = default_calibration_target
+
+  imu_yaml = SCRIPT_DIR + '/config/imu.yaml'
   config_file = SCRIPT_DIR + '/../../astrobee/config/robots/' + args.robot + '.config'
 
   print 'Calibrating camera extrinsics...'
-  extrinsics_yaml = calibrate_extrinsics(args.extrinsics_bag, target_yaml,
-                                         intrinsics_yaml, imu_yaml, verbose=args.verbose)
+  extrinsics_yaml = calibrate_extrinsics(args.extrinsics_bag, args.calibration_target,
+                                         args.intrinsics_yaml, imu_yaml,
+                                         args.from_time, args.to_time, args.padding,
+                                         verbose=args.verbose)
   
   if extrinsics_yaml == None:
     print >> sys.stderr, 'Failed to calibrate extrinsics.'
     return
 
-  depth = has_depth_cam(extrinsics_yaml)
-
-  if depth:
+  two_cams = has_two_cameras(extrinsics_yaml)
+  if two_cams:
     imu_to_camera = read_yaml_extrinsics(extrinsics_yaml, ['cam0', 'cam1'])
   else:
     imu_to_camera = read_yaml_extrinsics(extrinsics_yaml, ['cam0'])
@@ -199,7 +232,6 @@ def main():
   if not imu_to_camera:
     print >> sys.stderr, 'Failed to read extrinsics from yaml file.'
     return
-
 
   body_to_imu = trans_quat_to_transform(lua_read_transform(config_file, 'imu_transform'))
   if body_to_imu is None:
@@ -215,8 +247,8 @@ def main():
   print 'Translation: ', t
   print 'Rotation quaternion: ', q
 
-  #if args.depth_cam:
-  if depth:
+  if two_cams:
+    # Modify the transform for the second camera, that is the depth one
     body_to_depth_camera = np.linalg.inv(imu_to_body.dot(np.linalg.inv(imu_to_camera[1])))
     q_depth = transformations.quaternion_conjugate(transformations.quaternion_from_matrix(body_to_depth_camera))
     t_depth = imu_to_body.dot(np.linalg.inv(imu_to_camera[1])[0:4,3])
@@ -226,11 +258,19 @@ def main():
     if lua_replace_transform(config_file, 'perch_cam_transform' if args.dock_cam else 'haz_cam_transform', (t_depth, q_depth)):
       print >> sys.stderr, 'Failed to update config file with depth camera parameters.'
       return
-  
-  if lua_replace_transform(config_file, 'dock_cam_transform' if args.dock_cam else 'nav_cam_transform', (t, q)):
-    print >> sys.stderr, 'Failed to update config file with cam0 parameters'
-    return
-   
+
+  has_depth = has_depth_topic(args.intrinsics_yaml)
+  if has_depth and (not two_cams):
+    # Only the depth camera is present, so the first transform corresponds to the depth camera
+    if lua_replace_transform(config_file, 'perch_cam_transform' if args.dock_cam else 'haz_cam_transform', (t, q)):
+      print >> sys.stderr, 'Failed to update config file with depth camera parameters'
+      return
+  else:
+    # Either both cameras are present, or only the HD cam, so the first transform
+    # corresponds to the HD camera
+    if lua_replace_transform(config_file, 'dock_cam_transform' if args.dock_cam else 'nav_cam_transform', (t, q)):
+      print >> sys.stderr, 'Failed to update config file with HD camera parameters'
+      return
 
 if __name__ == '__main__':
   main()

@@ -25,19 +25,19 @@ title Astrobee Hardware Deployement Diagram
 
 frame Dock {
   interface "Network Switch\n(to each berth)" <<wired>> as ethd
-  node DockBoard <<Wandboard>> COLOR_PSOM
-  node DockControl <<PIC>> COLOR_MPROC
+  node "Dock Computer\n // Ubuntu 16.04//" <<Wandboard>> as DockBoard COLOR_PSOM
+  node "Dock Controller" <<PIC>> as DockControl COLOR_MPROC
   node ["DockActuator (2x)"] as DA
   DockControl -- DA
 }
 
 frame Astrobee {
-  
+
   interface "Network Switch" <<wired>> as etha
 
-  node HLP <<Inforce>> COLOR_PSOM
-  node MLP <<Inforce>> COLOR_PSOM
-  node LLP <<Wandboard>> COLOR_PSOM
+  node "**      HLP**\n //Android 7.0//" <<Inforce>> as HLP COLOR_PSOM
+  node "**      MLP**\n //Ubuntu 16.04//" <<Inforce>> as MLP COLOR_PSOM
+  node "**       LLP**\n //Ubuntu 16.04//" <<Wandboard>> as LLP COLOR_PSOM
   node "PMC (2x)" <<PIC>> as PMC COLOR_MPROC
   node "SignalLight (2x)" <<PIC>> as SL COLOR_MPROC
   node Speedcam <<ARM Cortex>> COLOR_6PASTEL_1
@@ -96,11 +96,13 @@ HLP --[hidden]-- MLP
 
 ' Notation used in the diagram:
 node ProcessorLegend COLOR_PSOM
-ProcessorLegend o-- [DeviceLegend]
+node MicrocontrollerLegend COLOR_MPROC
+ProcessorLegend -- [DeviceLegend] : communication protocol\n indicated
 
+ProcessorLegend o-- MicrocontrollerLegend : losange indicates master\n if I2C device
 note top of ProcessorLegend
-Microprocessor or
-System On Chip computer
+Microprocessor
+(System On Chip computer)
 end note
 
 note bottom of [DeviceLegend]
@@ -108,10 +110,9 @@ Hardware component (sensor
 or actuator
 end note
 
-note left of ProcessorLegend
-Losange indicates
-Master device for
-an I2C bus
+note bottom of MicrocontrollerLegend
+Microntroller with custom
+firmware
 end note
 
 @enduml

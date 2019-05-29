@@ -28,8 +28,8 @@
 
 namespace ekf_bag {
 
-EkfBag::EkfBag(const char* bagfile, const char* mapfile) :
-          map_(mapfile, true), loc_(&map_) {
+EkfBag::EkfBag(const char* bagfile, const char* mapfile, bool run_ekf) :
+          map_(mapfile, true), loc_(&map_), run_ekf_(run_ekf) {
   bag_.open(bagfile, rosbag::bagmode::Read);
 }
 
@@ -92,6 +92,8 @@ void EkfBag::EstimateBias(void) {
 }
 
 void EkfBag::UpdateImu(const ros::Time & time, const sensor_msgs::Imu & imu) {
+  if (!run_ekf_)
+    return;
   // send the visual messages when it's time
   if (processing_of_ && time >= of_send_time_) {
     ekf_.OpticalFlowUpdate(of_features_);
@@ -111,6 +113,8 @@ void EkfBag::UpdateImu(const ros::Time & time, const sensor_msgs::Imu & imu) {
 }
 
 void EkfBag::UpdateImage(const ros::Time & time, const sensor_msgs::ImageConstPtr & image_msg) {
+  if (!run_ekf_)
+    return;
   if (!processing_of_) {
     // send of registration
     ff_msgs::CameraRegistration r;
@@ -158,12 +162,22 @@ void EkfBag::UpdateGroundTruth(const geometry_msgs::PoseStamped & pose) {
 }
 
 void EkfBag::Run(void) {
-  EstimateBias();
+  if (run_ekf_)
+    EstimateBias();
 
   std::vector<std::string> topics;
   topics.push_back(std::string("/") + TOPIC_HARDWARE_IMU);
   topics.push_back(std::string("/") + TOPIC_HARDWARE_NAV_CAM);
   topics.push_back(std::string("/") + TOPIC_LOCALIZATION_TRUTH);
+  if (!run_ekf_) {
+    topics.push_back(std::string("/") + TOPIC_LOCALIZATION_ML_REGISTRATION);
+    topics.push_back(std::string("/") + TOPIC_LOCALIZATION_ML_FEATURES);
+    topics.push_back(std::string("/") + TOPIC_LOCALIZATION_AR_REGISTRATION);
+    topics.push_back(std::string("/") + TOPIC_LOCALIZATION_AR_FEATURES);
+    topics.push_back(std::string("/") + TOPIC_LOCALIZATION_OF_REGISTRATION);
+    topics.push_back(std::string("/") + TOPIC_LOCALIZATION_OF_FEATURES);
+    topics.push_back(std::string("/") + TOPIC_GNC_EKF);
+  }
   rosbag::View view(bag_, rosbag::TopicQuery(topics));
 
   processing_of_ = processing_sparse_map_ = false;
@@ -183,6 +197,12 @@ void EkfBag::Run(void) {
     } else if (m.isType<geometry_msgs::PoseStamped>()) {
       geometry_msgs::PoseStampedConstPtr gt_msg = m.instantiate<geometry_msgs::PoseStamped>();
       UpdateGroundTruth(*gt_msg.get());
+    } else if (m.isType<ff_msgs::VisualLandmarks>()) {
+      ff_msgs::VisualLandmarksConstPtr vl_msg = m.instantiate<ff_msgs::VisualLandmarks>();
+      UpdateSparseMap(*vl_msg.get());
+    } else if (m.isType<ff_msgs::EkfState>()) {
+      ff_msgs::EkfStateConstPtr ekf_msg = m.instantiate<ff_msgs::EkfState>();
+      UpdateEKF(*ekf_msg.get());
     }
   }
   printf("\n");

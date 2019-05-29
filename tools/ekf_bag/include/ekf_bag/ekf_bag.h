@@ -32,7 +32,7 @@ namespace ekf_bag {
 
 class EkfBag {
  public:
-  EkfBag(const char* bagfile, const char* mapfile);
+  EkfBag(const char* bagfile, const char* mapfile, bool run_ekf = true);
   virtual ~EkfBag(void);
 
   void Run(void);
@@ -63,6 +63,7 @@ class EkfBag {
  private:
   void EstimateBias(void);
 
+  bool run_ekf_;
   // configuration parameters
   float sparse_map_delay_, of_delay_;
 

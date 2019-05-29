@@ -1,14 +1,14 @@
 /* Copyright (c) 2017, United States Government, as represented by the
  * Administrator of the National Aeronautics and Space Administration.
- * 
+ *
  * All rights reserved.
- * 
+ *
  * The Astrobee platform is licensed under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -59,6 +59,9 @@ DEFINE_double(outlier_factor, 3.0,
 DEFINE_bool(skip_bundle_adjustment, false,
             "If true, do not bundle adjust the merged map.");
 
+DEFINE_bool(skip_pruning, false,
+              "If true, do not prune maps, as pruned maps cannot be merged.");
+
 int main(int argc, char** argv) {
   common::InitFreeFlyerApplication(&argc, &argv);
   GOOGLE_PROTOBUF_VERIFY_VERSION;
@@ -84,28 +87,16 @@ int main(int argc, char** argv) {
     A.Save(FLAGS_output_map);
   }
 
-  for (int i = 2; i < argc; i++) {
-    LOG(INFO) << "Appending " << argv[i] << " to " << FLAGS_output_map << std::endl;
-    sparse_mapping::SparseMap A(FLAGS_output_map);
-    sparse_mapping::SparseMap B(argv[i]);
+  int last_index = argc - 1;
+  for (int i = 2; i <= last_index; i++) {
+    // If pruning, do it only at the last step
+    bool prune_map = (!FLAGS_skip_pruning && i == last_index);
 
-    // C starts as A, as SparseMap lacks an empty constructor
-    sparse_mapping::SparseMap C = A;
-
-    // Merge
-    sparse_mapping::MergeMaps(&A, &B,
-                              FLAGS_num_image_overlaps_at_endpoints,
-                              FLAGS_outlier_factor,
-                              FLAGS_output_map,
-                              &C);
-
-    // Bundle adjust the merged map.
-    if (!FLAGS_skip_bundle_adjustment) {
-      bool fix_cameras = false;
-      sparse_mapping::BundleAdjust(fix_cameras, &C);
-    }
-
-    C.Save(FLAGS_output_map);
+    sparse_mapping::AppendMapFile(FLAGS_output_map, argv[i],
+                                  FLAGS_num_image_overlaps_at_endpoints,
+                                  FLAGS_outlier_factor,
+                                  !FLAGS_skip_bundle_adjustment,
+                                  prune_map);
   }
 
   google::protobuf::ShutdownProtobufLibrary();

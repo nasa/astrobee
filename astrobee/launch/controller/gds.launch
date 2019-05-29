@@ -16,5 +16,10 @@
 <!-- permissions and limitations under the License.                          -->
  
  <launch>
-  <node name="gds_node" pkg="astrobee" type="launch_gds.sh" respawn="false" output="log"/>
+    <arg name="world" default="granite"/>
+    <arg name="agent1" default="Bsharp"/>
+    <arg name="agent2" default="Bumble"/>
+    <arg name="agent3" default="Honey"/>
+    <node name="gds_node" pkg="astrobee" type="launch_gds.sh" respawn="false" output="log"
+        args="$(arg world) $(arg agent1) $(arg agent2) $(arg agent3)"/>
  </launch>

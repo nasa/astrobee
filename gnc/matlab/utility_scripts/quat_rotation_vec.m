@@ -22,10 +22,7 @@
 %
 % rotates a row-vector of 3-vectors by a row-vector of quaternion Q2
 % 
-% From: Indirect Kalman Filter for 3D Attitude Estimation: A tutorial for Quaternion Algebra
-% Equation below is from Eq. 77, with the the quaternions inverted because
-% our quat multiplication convention has the reverse order from the
-% mulitplication used in the paper
+% We accomplish this rotation by using DCMs as an intermediate step
 %
 function vec_out = quat_rotation_vec(vector, Q)
 
@@ -36,15 +33,13 @@ end
 
 
 [nquat, ~] = size(Q);
+vec_out = zeros(nquat, 3, 'like', vector);
 
-V = zeros(nquat, 4, 'like', vector);
-V(:, 1:3) = vector;
+for ii = 1:nquat
+    vec_out(ii, :) = quaternion_to_dcm(Q(ii, :))*vector(ii,:)';
+end
 
-% Vec_out = Q * [V 0]' * Q^-1 
 
-Qnew = quatmult(quatmult(Q, V), quat_inv(Q));
-
-vec_out = Qnew(:,1:3);
 
 
 

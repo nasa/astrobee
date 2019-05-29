@@ -1,0 +1,11 @@
+{
+  "type" : "DataConfigurationFile",
+  "name" : "dockcam_intrinsics",
+  "topicSettings": [ 
+    {
+      "topicName" : "/hw/cam_dock",
+      "downlinkOption" : "immediate",
+      "frequency" : -1
+    }
+  ]
+}

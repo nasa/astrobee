@@ -16,7 +16,7 @@
 # under the License.
 
 project(planner_qp)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wno-deprecated-declarations  -Werror=return-type")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -Wall -Wno-deprecated-declarations  -Werror=return-type")
 find_package(JPS3D REQUIRED)
 find_package(DecompUtil REQUIRED)
 find_package(catkin2 REQUIRED COMPONENTS roscpp nodelet pluginlib actionlib tf)
@@ -50,7 +50,7 @@ catkin_package(
     tf
 )
 create_library(TARGET planner_qp
-  LIBS ${LIBS} ${catkin_LIBRARIES} ff_nodelet msg_conversions config_server config_client jsonloader ff_flight
+  LIBS ${LIBS} ${catkin_LIBRARIES} ff_nodelet msg_conversions config_server config_client jsonloader ff_flight mapper
   INC  ${catkin_INCLUDE_DIRS} ${INCLUDES}
   DEPS choreographer
 )

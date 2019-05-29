@@ -28,6 +28,7 @@ class Core {
  private:
   std::string sys_cpu_path_;
   int id_;
+  bool always_on_;
 
  public:
   explicit Core(const std::string sys_cpu_path, int id);

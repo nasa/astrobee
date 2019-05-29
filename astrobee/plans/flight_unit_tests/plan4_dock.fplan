@@ -1,0 +1,126 @@
+{
+  "type" : "ModuleBayPlan",
+  "inertiaConfiguration" : {
+    "matrix" : [ 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0 ],
+    "mass" : 5.0,
+    "name" : "UnloadedAstrobee"
+  },
+  "operatingLimits" : {
+    "targetLinearVelocity" : 0.2,
+    "targetLinearAccel" : 0.0175,
+    "targetAngularVelocity" : 0.1745,
+    "targetAngularAccel" : 0.2,
+    "flightMode" : "Nominal",
+    "collisionDistance" : 0.0,
+    "profileName" : "Nominal"
+  },
+  "notes" : "This plan tests docking and undocking from the origin, which should be close enough to the berthing point.",
+  "site" : {
+    "type" : "Site",
+    "bbox" : [ -0.7, -0.5, -0.65, 0.7, 0.5, 0.65 ],
+    "crs" : {
+      "properties" : {
+        "name" : "ISS Module"
+      }
+    },
+    "name" : "ISS Analysis Frame",
+    "id" : "iss"
+  },
+  "valid" : true,
+  "platform" : {
+    "type" : "Platform",
+    "name" : "FreeFlyer",
+    "id" : "FreeFlyer"
+  },
+  "visible" : true,
+  "xpjson" : "0.1",
+  "defaultSpeed" : 0.2,
+  "defaultTolerance" : 1.0,
+  "dateCreated" : "2018-11-13T23:37:39Z",
+  "dateModified" : "2018-12-12T00:53:37Z",
+  "creator" : "asymingt",
+  "schemaUrl" : "http://www.example.com/freeFlyerPlanSchema.json",
+  "planNumber" : 0,
+  "libraryURLs" : [ ],
+  "sequence" : [ {
+    "type" : "ModuleBayStation",
+    "coordinate" : {
+      "type" : "ModuleBayPoint",
+      "x" : 0.0,
+      "y" : 0.0,
+      "z" : -0.72,
+      "roll" : 0.0,
+      "pitch" : 0.0,
+      "yaw" : 0.0,
+      "ignoreOrientation" : false,
+      "moduleBayValid" : false,
+      "bookmark" : null,
+      "bookmarkValid" : false
+    },
+    "stopOnArrival" : false,
+    "tolerance" : 0.1,
+    "name" : "0",
+    "id" : "e673586f-1fe8-43ae-959f-b06767da8032",
+    "sequence" : [ {
+      "type" : "dock",
+      "berth" : 1,
+      "blocking" : true,
+      "color" : "#555555",
+      "scopeTerminate" : true,
+      "name" : "0.0 Dock",
+      "id" : "0f9db6ee-2992-4daa-9c75-5faae84e19ab"
+    }, {
+      "type" : "undock",
+      "blocking" : true,
+      "color" : "#555555",
+      "scopeTerminate" : true,
+      "name" : "0.1 Undock",
+      "id" : "f9e2ba32-4edf-41ba-8451-081b6d8bfa23"
+    }, {
+      "type" : "wait",
+      "duration" : 5,
+      "blocking" : true,
+      "color" : "#555555",
+      "scopeTerminate" : true,
+      "name" : "0.2 Wait",
+      "id" : "754172b3-0feb-4d6a-a408-67d40c6e22f5"
+    } ]
+  }, {
+    "type" : "Segment",
+    "waypointType" : "PoseVelAccel",
+    "tolerance" : 0.0,
+    "speed" : 0.2,
+    "useCustomSpeed" : false,
+    "maxAVel" : -1.0,
+    "maxAccel" : -1.0,
+    "maxAAccel" : -1.0,
+    "stopAtEnd" : true,
+    "faceForward" : true,
+    "waypoints" : [ [ 0.0, 0.0, 0.0, -0.7200000286102295, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ] ],
+    "name" : "0-1",
+    "id" : "4248e8cd-2985-4fd3-a003-aaadb22243ec",
+    "sequence" : [ ]
+  }, {
+    "type" : "ModuleBayStation",
+    "coordinate" : {
+      "type" : "ModuleBayPoint",
+      "x" : 0.0,
+      "y" : 0.0,
+      "z" : -0.72,
+      "roll" : 0.0,
+      "pitch" : 0.0,
+      "yaw" : 0.0,
+      "ignoreOrientation" : false,
+      "moduleBayValid" : false,
+      "bookmark" : null,
+      "bookmarkValid" : false
+    },
+    "stopOnArrival" : false,
+    "tolerance" : 0.1,
+    "name" : "1",
+    "id" : "9c6b6fb6-7772-4964-b05b-a6ef38919ee0",
+    "sequence" : [ ]
+  } ],
+  "name" : "plan4_dock",
+  "id" : "be321edc-6df8-4502-b36c-a388ffa06872"
+}

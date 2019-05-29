@@ -1,14 +1,14 @@
 /* Copyright (c) 2017, United States Government, as represented by the
  * Administrator of the National Aeronautics and Space Administration.
- * 
+ *
  * All rights reserved.
- * 
+ *
  * The Astrobee platform is licensed under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -28,7 +28,7 @@
 
 namespace pmc_actuator {
 
-enum CmdMode { SHUTDOWN = 0, NORMAL = 1, RESTART = 2 };
+enum CmdMode { SHUTDOWN = 0, NORMAL = 1, RESTART  = 2 };
 
 ////////////////////////////////////////////////////////////////////////////////
 // This must be kept in sync with the protocol declared in the PMC firmware   //
@@ -41,7 +41,8 @@ constexpr size_t kTelemetryMsgLength = 16;
 constexpr size_t kGitHashLength = 40;
 constexpr size_t kDateLength = 17;
 constexpr size_t kMaxMetadataLength = 64;
-constexpr uint8_t kMetadataVersionType = 0x1;
+constexpr uint8_t kMetadataTypePrototype = 0x1;
+constexpr uint8_t kMetadataTypeFlight = 0x2;
 
 typedef struct __attribute__((packed)) {
   uint8_t motor_speed;
@@ -116,6 +117,9 @@ class PmcActuatorBase {
   // Get the firmware date
   virtual bool GetFirmwareTime(std::string & date) = 0;
 
+  // Get the firmware type
+  virtual bool GetFirmwareType(uint8_t & type) = 0;
+
   // Print out telemetry
   void PrintTelemetry(std::ostream &out, const Telemetry &telem);
 };
@@ -146,6 +150,9 @@ class PmcActuator : public PmcActuatorBase {
 
   // Get the firmware date
   bool GetFirmwareTime(std::string & date);
+
+  // Get the firmware type
+  bool GetFirmwareType(uint8_t & type);
 
   // Get the i2c address
   i2c::Address GetAddress();
@@ -179,6 +186,8 @@ class PmcActuatorStub : public PmcActuatorBase {
   // Get the firmware date
   bool GetFirmwareTime(std::string & date);
 
+  // Get the firmware date
+  bool GetFirmwareType(uint8_t & type);
 
   i2c::Address GetAddress();
 };

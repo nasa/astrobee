@@ -43,7 +43,7 @@ else
     
     
     % Find the eigen search path
-    eigen_search_path = {'/usr/include/eigen3/', '/Users/jfusco1/local/eigen3/'}; % Modify this to add more eigen paths
+    eigen_search_path = {'/usr/include/eigen3/', '../../../../../local/eigen3/', '../../../local/eigen3/', [ASTROBEE_ROOT '/../../../../../local/eigen3/']}; % Modify this to add more eigen paths
     eigen_search_path_idx = find(cellfun(@(x) ~isempty(dir(x)), eigen_search_path), 1, 'first');
     eigen_path = eigen_search_path{eigen_search_path_idx};
     

@@ -1,0 +1,21 @@
+{
+  "type" : "DataConfigurationFile",
+  "name" : "propulsion",
+  "topicSettings": [ 
+    {
+      "topicName" : "/hw/eps/housekeeping",
+      "downlinkOption" : "immediate",
+      "frequency" : -1
+    },
+    {
+      "topicName" : "/hw/pmc/telemetry",
+      "downlinkOption" : "immediate",
+      "frequency" : -1
+    },
+    {
+      "topicName" : "/hw/pmc/command",
+      "downlinkOption" : "immediate",
+      "frequency" : -1
+    }
+  ]
+}

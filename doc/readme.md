@@ -25,14 +25,16 @@ Plantuml relies on [Graphviz](http://www.graphviz.org/) that should be already
 installed since ROS is also using this tool to render runtime node/topic graphs.
 There are many ways to write/generate plantuml diagrams:
 http://plantuml.com/running. Choose the integration that best suit you, but vim +
-command line java works perfectly. 
+command line java works perfectly.
 
 Note: some diagrams are not generated correctly when using graphviz 2.40 (layout
 stretched vertially). So for now please use graphviz 2.38.
 
 To generate the diagrams from the `doc\diagrams` directory:
 ```
-make -f generate_diagrams.make
+make
+# or to get PNG versions:
+make png
 ```
 
 ## ROS Messages, Services and Actions

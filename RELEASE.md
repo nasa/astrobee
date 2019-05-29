@@ -1,5 +1,158 @@
 # Astrobee Robot Software v1
 
+## Release 0.8.0
+
+ * Fixed simulator jump under some conditions on motion start
+ * Data bagger system implemented
+ * Command line teleoperation tools implemented
+ * SciCam commanding implemented
+ * Adjusted inertia parameters from flight unit measurements
+ * Pre-configured ISS flight parameters
+ * Signal lights communication implemented
+ * Heroic documentation effort
+ * As usual, many bug fixes
+
+## Release 0.7.6
+
+ * Fixes to sparse mapping and localization manager.
+
+## Release 0.7.5
+
+ * Various fixes for flight units.
+ * Improvements to debians.
+
+## Release 0.7.4
+
+ * Fixed compile for vive again.
+
+## Release 0.7.3
+
+ * Fixed compile for vive.
+
+## Release 0.7.2
+
+ * Fix cmake bug.
+
+## Release 0.7.1
+
+ * Minor vive updates
+ * Bumps to submodules.
+
+## Release 0.7.0
+
+ * Infrastructure to build the flight images completed, including HLP
+    (Android) configuration methods not requiring touchscreen access
+  * Inertia and masses reflecting the Flight Units characteristics
+  * New values for flight modes optimized for the new propulsion units
+  * Support for all functional tests (including Speedcam modes)
+  * Support for all mobility tests (including plans)
+  * Improved marker tracking simulation plugin allowing to analyze marker
+    placement
+  * Fixed a jerk motion while docking (real robot) due to camera occlusion
+  * Executive:
+    - Refactored for easier maintenance
+    - Support data to disk configuration
+    - Support telemetry rate command
+    - Support localization mode switch and EKF commands
+    - Manage guest science state
+  * Real time analysis tool (gviz) ported to support DDS telemetry:
+    allows the same capabilities of inspection for flight than on the ground.
+  * New launch file feature to support backlisting / adding extra nodes
+  * Bug fixes
+
+## Release 0.6.1
+
+Added config files for new robots.
+
+## Release 0.6.0
+
+Flight packaging candidate release
+
+  - Indicator LEDs management.
+  - All DDS commands to support remote tests implemented.
+  - Adjustments and tools to support test procedures in place.
+
+## Release 0.5.0
+
+Build 3 - CERT Release
+
+  - Everything ready for CERT testing
+  - Improved simulator
+
+## Release 0.4.5
+
+Updated external user install instructions.
+
+## Release 0.4.4
+
+Remove astrobee-repo-version from publicly required packages list.
+
+## Release 0.4.3
+
+Fix decomputil debian, revert to older version.
+
+## Release 0.4.2
+
+This release fixes a bug where we attempted to build the smart dock even
+if DDS is not installed.
+
+## Release 0.4.1
+
+This release fixes a bug in the smart dock interacting with GDS.
+
+## Release 0.4.0
+
+This release includes improvements of map building and camera calibration,
+simulator performance and multi-robot support, new features for guest science,
+and many internal changes.
+
+### Map Building
+  - Map building fixes.
+  - Multiple maps assembly pipeline optimized.
+
+### Sensor Calibration
+  - Streamlined image cameras and depth cameras extrinsics relative to IMU
+
+### Simulator
+  - Completed support for docking / un-docking.
+  - Default robot starts on-dock in the JEM.
+  - Synthetic generation of optical flow features.
+  - Support for launching a simulation without a robot.
+  - Support for controlling simulation speed.
+  - Substantially better runtime performance through simplified collision meshes.
+  - More complete ISS mesh; improved dock and freeflyer meshes.
+
+### Management
+  - The system monitor now triggers heartbeat faults for all nodes in the system.
+  - Management of operational limits.
+  - Improved "mode" management including support for IDLE.
+
+### Guest Science
+  - A GS Manager stub was added so GS donâ€™t have to use Android to test their
+  applications.
+  - Guest Science Manager changed to create and pass the base data path to a GS
+    APK.
+  - A new method was added to the guest science library that will provide the
+    base data path to a GS APK.
+  - Better GS examples added.
+
+### Internal (support for non-open source platform and avionics repos)
+  - Mechanisms for local (robot) launch at startup.
+  - Support for freeflyer_avionics (firmware) improvements.
+  - Smarter management of propulsion modules.
+  - Support for Software/Firmware Upgrade, EMI and Network tests.
+
+### Fixed from previous release
+  - Fixed linear / angular acceleration limits in holonomic mode.
+  - Fixed keep in and keep out zone checking.
+  - DDS hanging on exit.
+
+### Limitations
+  - Granite simulation not functional.
+  - The GS Manager Stub does not support yet all Android functionalities
+  - Some performance limitations with multiple robots.
+  - Some performance trouble with mobility on one computer.
+
 ## Release 0.3.2
 
 The previous hotfix updated the debians, but did not update the version numbers of which

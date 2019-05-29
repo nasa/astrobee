@@ -1,14 +1,14 @@
 /* Copyright (c) 2017, United States Government, as represented by the
  * Administrator of the National Aeronautics and Space Administration.
- * 
+ *
  * All rights reserved.
- * 
+ *
  * The Astrobee platform is licensed under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -77,14 +77,12 @@ class ArmNodelet : public ff_util::FreeFlyerNodelet {
     GOAL_DEPLOY        = (1<<3),     // Start a new deploy action
     GOAL_STOW          = (1<<4),     // Start a new deploy action
     GOAL_MOVE          = (1<<5),     // Start a new move (pan and tilt)
-    GOAL_CALIBRATE     = (1<<6),     // Start a new gripper action
-    GOAL_SET           = (1<<7),     // Start a new gripper action
-    GOAL_CANCEL        = (1<<8),     // Cancel the current goal
-    PAN_COMPLETE       = (1<<9),     // Pan complete
-    TILT_COMPLETE      = (1<<10),    // Tilt complete
-    GRIPPER_COMPLETE   = (1<<11),    // Gripper action complete
-    CALIBRATE_COMPLETE = (1<<12),    // Calibration complete
-    TIMEOUT            = (1<<13)     // Current action doesn't complete in time
+    GOAL_SET           = (1<<6),     // Start a new gripper action
+    GOAL_CANCEL        = (1<<7),     // Cancel the current goal
+    PAN_COMPLETE       = (1<<8),     // Pan complete
+    TILT_COMPLETE      = (1<<9),     // Tilt complete
+    GRIPPER_COMPLETE   = (1<<10),    // Gripper action complete
+    TIMEOUT            = (1<<11)     // Current action doesn't complete in time
   };
 
   // Constructor
@@ -164,7 +162,7 @@ class ArmNodelet : public ff_util::FreeFlyerNodelet {
     fsm_.Add(STATE::DEPLOYED,
       GOAL_STOW,
       [this](FSM::Event const& event) -> FSM::State {
-        // If the gripper is calibrated
+        // If the gripper requires closing
         if (RequiresClosing()) {
           if (!Arm(GRIPPER))
             return Result(RESPONSE::GRIPPER_FAILED);
@@ -299,36 +297,10 @@ class ArmNodelet : public ff_util::FreeFlyerNodelet {
       [this](FSM::Event const& event) -> FSM::State {
         return Result(RESPONSE::GRIPPER_FAILED);
       });
-
-    // DEPLOYED -> CALIBRATING
-    //   [label="[23]\nGOAL_CALIBRATE\nCalibrate()"];
-    fsm_.Add(STATE::DEPLOYED,
-      GOAL_CALIBRATE,
-      [this](FSM::Event const& event) -> FSM::State {
-        if (!Arm(GRIPPER))
-          return Result(RESPONSE::CALIBRATE_FAILED);
-        return STATE::CALIBRATING;
-      });
-
-    // CALIBRATING -> DEPLOYED
-    //   [label="[24]\nCALIBRATE_COMPLETE\nResult(SUCCESS)", color=darkgreen];
-    fsm_.Add(STATE::CALIBRATING,
-      CALIBRATE_COMPLETE,
-      [this](FSM::Event const& event) -> FSM::State {
-        return Result(RESPONSE::SUCCESS);
-      });
-
-    // CALIBRATING -> DEPLOYED
-    //   [label="[25]\nTIMEOUT\nResult(SET_FAILED)", color=red];
-    fsm_.Add(STATE::CALIBRATING,
-      TIMEOUT | GOAL_CANCEL,
-      [this](FSM::Event const& event) -> FSM::State {
-        return Result(RESPONSE::CALIBRATE_FAILED);
-      });
   }
 
   // Destructor
-  virtual ~ArmNodelet() {}
+  ~ArmNodelet() {}
 
  protected:
   // Called to initialize this nodelet
@@ -337,16 +309,19 @@ class ArmNodelet : public ff_util::FreeFlyerNodelet {
     cfg_.Initialize(GetPrivateHandle(), "behaviors/arm.config");
     if (!cfg_.Listen(boost::bind(
       &ArmNodelet::ReconfigureCallback, this, _1)))
-      return AssertFault("INITIALIZATION_FAULT", "Could not load config");
+      return AssertFault(ff_util::INITIALIZATION_FAILED,
+                         "Could not load config");
 
     // Read the confgiuration for this specific node
     config_reader::ConfigReader *cfg = cfg_.GetConfigReader();
     config_reader::ConfigReader::Table joints;
     if (!cfg->GetTable(GetName().c_str(), &joints))
-      return AssertFault("INITIALIZATION_FAULT", "Cannot read LUA file");
+      return AssertFault(ff_util::INITIALIZATION_FAILED,
+                         "Cannot read LUA file");
     std::string name;
     if (!joints.GetStr("pan", &name))
-      return AssertFault("INITIALIZATION_FAULT", "Cannot read PAN joint");
+      return AssertFault(ff_util::INITIALIZATION_FAILED,
+                         "Cannot read PAN joint");
     joints_[PAN].name = name;
     joints_[PAN].generic = "pan";
     joints_[PAN].tol = cfg_.Get<double>("tol_pan");
@@ -354,7 +329,8 @@ class ArmNodelet : public ff_util::FreeFlyerNodelet {
     joints_[PAN].offset = K_PAN_OFFSET;
     dictionary_[name] = PAN;
     if (!joints.GetStr("tilt", &name))
-      return AssertFault("INITIALIZATION_FAULT", "Cannot read TILT joint");
+      return AssertFault(ff_util::INITIALIZATION_FAILED,
+                         "Cannot read TILT joint");
     joints_[TILT].name = name;
     joints_[TILT].generic = "tilt";
     joints_[TILT].tol = cfg_.Get<double>("tol_tilt");
@@ -362,7 +338,8 @@ class ArmNodelet : public ff_util::FreeFlyerNodelet {
     joints_[TILT].offset = K_TILT_OFFSET;
     dictionary_[name] = TILT;
     if (!joints.GetStr("gripper", &name))
-      return AssertFault("INITIALIZATION_FAULT", "Cannot read GRIPPER joint");
+      return AssertFault(ff_util::INITIALIZATION_FAILED,
+                         "Cannot read GRIPPER joint");
     joints_[GRIPPER].name = name;
     joints_[GRIPPER].generic = "gripper";
     joints_[GRIPPER].tol = cfg_.Get<double>("tol_gripper");
@@ -429,91 +406,83 @@ class ArmNodelet : public ff_util::FreeFlyerNodelet {
   // can choose to do various things.
   void UpdateCallback(FSM::State const& state, FSM::Event const& event) {
     // Debug events
-    std::string str = "UNKNOWN";
+    ff_msgs::ArmState msg;
+    msg.header.frame_id = GetPlatform();
+    msg.header.stamp = ros::Time::now();
+    msg.state = state;
     switch (event) {
-    case READY:                    str = "READY";               break;
-    case DEPLOYED:                 str = "DEPLOYED";            break;
-    case STOWED:                   str = "STOWED";              break;
-    case GOAL_DEPLOY:              str = "GOAL_DEPLOY";         break;
-    case GOAL_STOW:                str = "GOAL_STOW";           break;
-    case GOAL_MOVE:                str = "GOAL_MOVE";           break;
-    case GOAL_SET:                 str = "GOAL_SET";            break;
-    case GOAL_CALIBRATE:           str = "GOAL_CALIBRATE";      break;
-    case GOAL_CANCEL:              str = "GOAL_CANCEL";         break;
-    case PAN_COMPLETE:             str = "PAN_COMPLETE";        break;
-    case TILT_COMPLETE:            str = "TILT_COMPLETE";       break;
-    case GRIPPER_COMPLETE:         str = "GRIPPER_COMPLETE";    break;
-    case CALIBRATE_COMPLETE:       str = "CALIBRATE_COMPLETE";  break;
-    case TIMEOUT:                  str = "TIMEOUT";             break;
+    case READY:                    msg.fsm_event = "READY";               break;
+    case DEPLOYED:                 msg.fsm_event = "DEPLOYED";            break;
+    case STOWED:                   msg.fsm_event = "STOWED";              break;
+    case GOAL_DEPLOY:              msg.fsm_event = "GOAL_DEPLOY";         break;
+    case GOAL_STOW:                msg.fsm_event = "GOAL_STOW";           break;
+    case GOAL_MOVE:                msg.fsm_event = "GOAL_MOVE";           break;
+    case GOAL_SET:                 msg.fsm_event = "GOAL_SET";            break;
+    case GOAL_CANCEL:              msg.fsm_event = "GOAL_CANCEL";         break;
+    case PAN_COMPLETE:             msg.fsm_event = "PAN_COMPLETE";        break;
+    case TILT_COMPLETE:            msg.fsm_event = "TILT_COMPLETE";       break;
+    case GRIPPER_COMPLETE:         msg.fsm_event = "GRIPPER_COMPLETE";    break;
+    case TIMEOUT:                  msg.fsm_event = "TIMEOUT";             break;
     }
-    NODELET_DEBUG_STREAM("Received event " << str);
     // Debug state changes
     switch (state) {
-    case STATE::INITIALIZING:      str = "INITIALIZING";        break;
-    case STATE::UNKNOWN:           str = "UNKNOWN";             break;
-    case STATE::STOWED:            str = "STOWED";              break;
-    case STATE::DEPLOYED:          str = "DEPLOYED";            break;
-    case STATE::PANNING:           str = "PANNING";             break;
-    case STATE::TILTING:           str = "TILTING";             break;
-    case STATE::SETTING:           str = "SETTING";             break;
-    case STATE::CALIBRATING:       str = "CALIBRATING";         break;
-    case STATE::STOWING_SETTING:   str = "STOWING_SETTING";     break;
-    case STATE::STOWING_PANNING:   str = "STOWING_PANNING";     break;
-    case STATE::STOWING_TILTING:   str = "STOWING_TILTING";     break;
-    case STATE::DEPLOYING_PANNING: str = "DEPLOYING_PANNING";   break;
-    case STATE::DEPLOYING_TILTING: str = "DEPLOYING_TILTING";   break;
+    case STATE::INITIALIZING:      msg.fsm_state = "INITIALIZING";        break;
+    case STATE::UNKNOWN:           msg.fsm_state = "UNKNOWN";             break;
+    case STATE::STOWED:            msg.fsm_state = "STOWED";              break;
+    case STATE::DEPLOYED:          msg.fsm_state = "DEPLOYED";            break;
+    case STATE::PANNING:           msg.fsm_state = "PANNING";             break;
+    case STATE::TILTING:           msg.fsm_state = "TILTING";             break;
+    case STATE::SETTING:           msg.fsm_state = "SETTING";             break;
+    case STATE::STOWING_SETTING:   msg.fsm_state = "STOWING_SETTING";     break;
+    case STATE::STOWING_PANNING:   msg.fsm_state = "STOWING_PANNING";     break;
+    case STATE::STOWING_TILTING:   msg.fsm_state = "STOWING_TILTING";     break;
+    case STATE::DEPLOYING_PANNING: msg.fsm_state = "DEPLOYING_PANNING";   break;
+    case STATE::DEPLOYING_TILTING: msg.fsm_state = "DEPLOYING_TILTING";   break;
     }
-    NODELET_DEBUG_STREAM("State changed to " << str);
-    // Send the procedure state out to the word
-    static ff_msgs::ArmState state_msg;
-    state_msg.state = state;
-    pub_state_.publish(state_msg);
+    // Publish the state
+    pub_state_.publish(msg);
+    NODELET_DEBUG_STREAM("Received event " << msg.fsm_event);
+    NODELET_DEBUG_STREAM("State changed to " << msg.fsm_state);
     // Convert to an executive-formatted state, which is a reduced-complexity
     // full state, designed for GDS visualization purposes. The gripper state
     // is updated in parallel through gripper feedback
-    static ff_msgs::ArmStateStamped msg;
-    msg.header.frame_id = GetPlatform();
-    msg.header.stamp = ros::Time::now();
+    ff_msgs::ArmStateStamped state_msg;
+    state_msg.header.frame_id = GetPlatform();
+    state_msg.header.stamp = ros::Time::now();
     // Convert our internal state to an ArmGripperState
     double tol = joints_[GRIPPER].tol;
-    if (joints_[GRIPPER].val  < 0)
-      msg.gripper_state.state = ff_msgs::ArmGripperState::UNCALIBRATED;
-    else if (fabs(joints_[GRIPPER].val - K_GRIPPER_CLOSE) < tol)
-      msg.gripper_state.state = ff_msgs::ArmGripperState::CLOSED;
+    if (fabs(joints_[GRIPPER].val - K_GRIPPER_CLOSE) < tol)
+      state_msg.gripper_state.state = ff_msgs::ArmGripperState::CLOSED;
     else
-      msg.gripper_state.state = ff_msgs::ArmGripperState::OPEN;
+      state_msg.gripper_state.state = ff_msgs::ArmGripperState::OPEN;
     // Convert the internal state to an ArmJointState
     switch (state) {
     default:
     case STATE::UNKNOWN:
-      msg.joint_state.state = ff_msgs::ArmJointState::UNKNOWN;
+      state_msg.joint_state.state = ff_msgs::ArmJointState::UNKNOWN;
       break;
     case STATE::DEPLOYING_PANNING:
     case STATE::DEPLOYING_TILTING:
-      msg.joint_state.state = ff_msgs::ArmJointState::DEPLOYING;
+      state_msg.joint_state.state = ff_msgs::ArmJointState::DEPLOYING;
       break;
-    case STATE::CALIBRATING:
-      msg.gripper_state.state = ff_msgs::ArmGripperState::CALIBRATING;
-      // Intentional lack of break keyword
     case STATE::DEPLOYED:
     case STATE::SETTING:
-      msg.joint_state.state = ff_msgs::ArmJointState::STOPPED;
+      state_msg.joint_state.state = ff_msgs::ArmJointState::STOPPED;
       break;
     case STATE::PANNING:
     case STATE::TILTING:
-      msg.joint_state.state = ff_msgs::ArmJointState::MOVING;
+      state_msg.joint_state.state = ff_msgs::ArmJointState::MOVING;
       break;
     case STATE::STOWING_SETTING:
     case STATE::STOWING_PANNING:
     case STATE::STOWING_TILTING:
-      msg.joint_state.state = ff_msgs::ArmJointState::STOWING;
+      state_msg.joint_state.state = ff_msgs::ArmJointState::STOWING;
       break;
     case STATE::STOWED:
-      msg.joint_state.state = ff_msgs::ArmJointState::STOWED;
+      state_msg.joint_state.state = ff_msgs::ArmJointState::STOWED;
       break;
     }
-    // Publish the state!
-    pub_arm_state_.publish(msg);
+    pub_arm_state_.publish(state_msg);
   }
 
   // Complete the current action
@@ -525,14 +494,10 @@ class ArmNodelet : public ff_util::FreeFlyerNodelet {
     for (JointMap::iterator it = joints_.begin(); it != joints_.end(); it++)
       it->second.goal = it->second.val;
     // Stop pan and tilt, but don't touch the gripper
-    // Arm(PAN);
-    // Arm(TILT);
-    // Send a re
     switch (fsm_.GetState()) {
     case STATE::PANNING:
     case STATE::TILTING:
     case STATE::SETTING:
-    case STATE::CALIBRATING:
     case STATE::STOWING_SETTING:
     case STATE::STOWING_PANNING:
     case STATE::STOWING_TILTING:
@@ -544,8 +509,34 @@ class ArmNodelet : public ff_util::FreeFlyerNodelet {
     }
     // If we need to physically send a response (we are tracking a goal)
     if (send) {
-      static ff_msgs::ArmResult result;
+      ff_msgs::ArmResult result;
       result.response = response;
+      switch (response) {
+        case ff_msgs::ArmResult::SUCCESS:
+          result.fsm_result = "Successfully completed";             break;
+        case ff_msgs::ArmResult::PREEMPTED:
+          result.fsm_result = "Action was preempted";               break;
+        case ff_msgs::ArmResult::INVALID_COMMAND:
+          result.fsm_result = "Invalid command";                    break;
+        case ff_msgs::ArmResult::BAD_TILT_VALUE:
+          result.fsm_result = "Invalid value for tilt";             break;
+        case ff_msgs::ArmResult::BAD_PAN_VALUE:
+          result.fsm_result = "Invalid value for pan";              break;
+        case ff_msgs::ArmResult::BAD_GRIPPER_VALUE:
+          result.fsm_result = "Invalid value for gripper";          break;
+        case ff_msgs::ArmResult::NOT_ALLOWED:
+          result.fsm_result = "Not allowed";                        break;
+        case ff_msgs::ArmResult::TILT_FAILED:
+          result.fsm_result = "Tilt command failed";                break;
+        case ff_msgs::ArmResult::PAN_FAILED:
+          result.fsm_result = "Pan command failed";                 break;
+        case ff_msgs::ArmResult::GRIPPER_FAILED:
+          result.fsm_result = "Gripper command failed";             break;
+        case ff_msgs::ArmResult::COMMUNICATION_ERROR:
+          result.fsm_result = "Cannot communicate with arm";        break;
+        case ff_msgs::ArmResult::COLLISION_AVOIDED:
+          result.fsm_result = "Panning disabled when tilt > 90";    break;
+        }
       if (response > 0)
         server_.SendResult(ff_util::FreeFlyerActionState::SUCCESS, result);
       else if (response < 0)
@@ -585,10 +576,8 @@ class ArmNodelet : public ff_util::FreeFlyerNodelet {
     return true;
   }
 
-  // Gripper only requires closing if it is calibrated
+  // Check if gripper requies closing
   bool RequiresClosing() {
-    if (Equal(GRIPPER, K_GRIPPER_CAL))
-      return false;
     return !Equal(GRIPPER, K_GRIPPER_STOW);
   }
 
@@ -625,11 +614,12 @@ class ArmNodelet : public ff_util::FreeFlyerNodelet {
   // Called whenever the low-level driver produces updated joint states.
   void JointStateCallback(sensor_msgs::JointState::ConstPtr const& msg) {
     // Add the joint sample stamped
-    static ff_msgs::JointSampleStamped jss;
+    ff_msgs::JointSampleStamped jss;
     jss.header.stamp = ros::Time::now();
     jss.header.frame_id = GetPlatform();
     jss.samples.clear();
     // Iterate over data
+    ff_msgs::JointSample js;
     static JointType generic;
     for (size_t i = 0; i < msg->name.size(); i++) {
       if (dictionary_.find(msg->name[i]) == dictionary_.end())
@@ -639,11 +629,7 @@ class ArmNodelet : public ff_util::FreeFlyerNodelet {
       // In nominal conditions, joints are scaled like this
       joints_[generic].val =
         msg->position[i] * joints_[generic].scale + joints_[generic].offset;
-      // Take care of a special case where the gripper is uncalibrated
-      if (joints_[generic].generic == "gripper" &&
-        msg->position[i] == K_GRIPPER_CAL) joints_[generic].val =  K_GRIPPER_CAL;
       //  Package up a joint sample
-      static ff_msgs::JointSample js;
       js.name = joints_[generic].generic;
       js.angle_pos = joints_[generic].val;   // Human-readable
       js.angle_vel = msg->velocity[i];       // SI
@@ -704,13 +690,6 @@ class ArmNodelet : public ff_util::FreeFlyerNodelet {
         fsm_.Update(GRIPPER_COMPLETE);
       }
       break;
-    // Check calibrating
-    case STATE::CALIBRATING:
-      if (!Equal(GRIPPER, K_GRIPPER_CAL)) {
-        timer_goal_.stop();
-        fsm_.Update(CALIBRATE_COMPLETE);
-      }
-      break;
     // Catch-all for other states
     default:
       return;
@@ -724,7 +703,6 @@ class ArmNodelet : public ff_util::FreeFlyerNodelet {
     case STATE::PANNING:
     case STATE::TILTING:
     case STATE::SETTING:
-    case STATE::CALIBRATING:
     case STATE::STOWING_SETTING:
     case STATE::STOWING_PANNING:
     case STATE::STOWING_TILTING:
@@ -799,8 +777,6 @@ class ArmNodelet : public ff_util::FreeFlyerNodelet {
         if (goal->command == ff_msgs::ArmGoal::ARM_MOVE ||
             goal->command == ff_msgs::ArmGoal::ARM_TILT)
           new_t = goal->tilt;
-        ROS_INFO_STREAM(new_p);
-        ROS_INFO_STREAM(new_t);
         // Simple bounds and self-collision checking
         if (new_t < K_TILT_MIN || new_t > K_TILT_MAX) {
           Result(RESPONSE::BAD_TILT_VALUE, true);
@@ -821,21 +797,9 @@ class ArmNodelet : public ff_util::FreeFlyerNodelet {
         return fsm_.Update(GOAL_MOVE);
       }
       break;
-    // Calibrate the gripper
-    case ff_msgs::ArmGoal::GRIPPER_CALIBRATE:
-      NODELET_DEBUG_STREAM("Received a new GRIPPER_CALIBRATE command");
-      if (fsm_.GetState() == STATE::DEPLOYED) {
-        joints_[TILT].goal = K_GRIPPER_CAL;
-        return fsm_.Update(GOAL_CALIBRATE);
-      }
-      break;
     // Set the gripper
     case ff_msgs::ArmGoal::GRIPPER_SET:
       NODELET_DEBUG_STREAM("Received a new GRIPPER_SET command");
-      if (joints_[GRIPPER].val < 0) {
-        Result(RESPONSE::NEED_TO_CALIBRATE, true);
-        return;
-      }
       if (fsm_.GetState() == STATE::DEPLOYED) {
         // Check that th gripper value is reasonable
         if (goal->gripper < K_GRIPPER_CLOSE || goal->gripper > K_GRIPPER_OPEN) {
@@ -851,10 +815,6 @@ class ArmNodelet : public ff_util::FreeFlyerNodelet {
     // Open the gripper
     case ff_msgs::ArmGoal::GRIPPER_OPEN:
       NODELET_DEBUG_STREAM("Received a new GRIPPER_OPEN command");
-      if (joints_[GRIPPER].val < 0) {
-        Result(RESPONSE::NEED_TO_CALIBRATE, true);
-        return;
-      }
       if (fsm_.GetState() == STATE::DEPLOYED) {
         joints_[GRIPPER].goal = K_GRIPPER_OPEN;
         return fsm_.Update(GOAL_SET);
@@ -863,10 +823,6 @@ class ArmNodelet : public ff_util::FreeFlyerNodelet {
     // Close the gripper
     case ff_msgs::ArmGoal::GRIPPER_CLOSE:
       NODELET_DEBUG_STREAM("Received a new GRIPPER_CLOSE command");
-      if (joints_[GRIPPER].val < 0) {
-        Result(RESPONSE::NEED_TO_CALIBRATE, true);
-        return;
-      }
       if (fsm_.GetState() == STATE::DEPLOYED) {
         joints_[GRIPPER].goal = K_GRIPPER_CLOSE;
         return fsm_.Update(GOAL_SET);
@@ -926,12 +882,10 @@ class ArmNodelet : public ff_util::FreeFlyerNodelet {
   static constexpr double K_GRIPPER_DEPLOY  =   20.0;
   static constexpr double K_GRIPPER_OPEN    =   45.0;
   static constexpr double K_GRIPPER_CLOSE   =   20.0;
-  static constexpr double K_GRIPPER_CAL     = -100.0;
   static constexpr double K_RADS_TO_DEGS    = 180.0 / M_PI;
   static constexpr double K_DEGS_TO_RADS    = M_PI / 180.0;
 };
 
-PLUGINLIB_DECLARE_CLASS(arm, ArmNodelet,
-                        arm::ArmNodelet, nodelet::Nodelet);
+PLUGINLIB_EXPORT_CLASS(arm::ArmNodelet, nodelet::Nodelet);
 
 }  // namespace arm

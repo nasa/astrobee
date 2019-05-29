@@ -1,14 +1,14 @@
 /* Copyright (c) 2017, United States Government, as represented by the
  * Administrator of the National Aeronautics and Space Administration.
- * 
+ *
  * All rights reserved.
- * 
+ *
  * The Astrobee platform is licensed under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -111,6 +111,8 @@ Ctl::Ctl(ros::NodeHandle* nh, std::string const& name) :
     TOPIC_MOBILITY_INERTIA, 1, &Ctl::InertiaCallback, this);
   flight_mode_sub_ = nh->subscribe(
     TOPIC_MOBILITY_FLIGHT_MODE, 1, &Ctl::FlightModeCallback, this);
+  command_sub_ = nh->subscribe(
+    TOPIC_GNC_CTL_SETPOINT, 1, &Ctl::SetpointCallback, this);
 
   // Advertised messages
   ctl_pub_ = nh->advertise<ff_msgs::FamCommand>(
@@ -237,20 +239,20 @@ void Ctl::TwistCallback(const geometry_msgs::TwistStamped::ConstPtr& truth) {
 }
 
 // Called when management updates inertial info
-void Ctl::InertiaCallback(const geometry_msgs::Inertia::ConstPtr& inertia) {
+void Ctl::InertiaCallback(const geometry_msgs::InertiaStamped::ConstPtr& inertia) {
   std::lock_guard<std::mutex> lock(mutex_cmd_msg_);
   auto& input = gnc_.ctl_input_;
-  input.mass = inertia->m;
+  input.mass = inertia->inertia.m;
   // mc::ros_to_array_vector(inertia->com, input.center_of_mass);  // no longer exists
-  input.inertia_matrix[0] = inertia->ixx;
-  input.inertia_matrix[1] = inertia->ixy;
-  input.inertia_matrix[2] = inertia->ixz;
-  input.inertia_matrix[3] = inertia->ixy;
-  input.inertia_matrix[4] = inertia->iyy;
-  input.inertia_matrix[5] = inertia->iyz;
-  input.inertia_matrix[6] = inertia->ixz;
-  input.inertia_matrix[7] = inertia->iyz;
-  input.inertia_matrix[8] = inertia->izz;
+  input.inertia_matrix[0] = inertia->inertia.ixx;
+  input.inertia_matrix[1] = inertia->inertia.ixy;
+  input.inertia_matrix[2] = inertia->inertia.ixz;
+  input.inertia_matrix[3] = inertia->inertia.ixy;
+  input.inertia_matrix[4] = inertia->inertia.iyy;
+  input.inertia_matrix[5] = inertia->inertia.iyz;
+  input.inertia_matrix[6] = inertia->inertia.ixz;
+  input.inertia_matrix[7] = inertia->inertia.iyz;
+  input.inertia_matrix[8] = inertia->inertia.izz;
   inertia_received_ = true;
 }
 
@@ -267,6 +269,21 @@ void Ctl::FlightModeCallback(const ff_msgs::FlightMode::ConstPtr& mode) {
   input.speed_gain_cmd = mode->speed;
   control_enabled_ =
     (input.speed_gain_cmd > 0 ? mode->control_enabled : false);
+}
+
+// Command GNC directly, bypassing the action-base dinterface
+void Ctl::SetpointCallback(const ff_msgs::ControlState::ConstPtr& command) {
+  // Package up a command using the curren timestamp
+  ff_msgs::ControlCommand msg;
+  msg.header.stamp = ros::Time::now();
+  msg.header.frame_id = "world";
+  msg.mode = ff_msgs::ControlCommand::MODE_NOMINAL;
+  msg.current = *command;
+  msg.current.when = ros::Time::now();
+  msg.next = msg.current;
+  // Send the command
+  if (!Control(msg.mode, msg))
+    ROS_WARN("Could not send direct control command");
 }
 
 // When the previous setpoint is sent a timer is created, which fires on the
@@ -380,7 +397,7 @@ void Ctl::PreemptCallback() {
 }
 
 // Update a control with a new command
-bool Ctl::Control(uint8_t mode, ff_msgs::ControlCommand const& poseVel) {
+bool Ctl::Control(uint8_t const mode, ff_msgs::ControlCommand const& poseVel) {
   // Set the operating mode
   std::lock_guard<std::mutex> lock(mutex_cmd_msg_);
   auto& input= gnc_.ctl_input_;
@@ -454,6 +471,17 @@ bool Ctl::Step(void) {
   cmd_msg_.status = ctl.ctl_status;
   cmd_msg_.control_mode = cmd.cmd_mode;
   ctl_pub_.publish(cmd_msg_);
+
+  // Publish the traj message
+  static ff_msgs::ControlState current;
+  current.when = cmd_msg_.header.stamp;
+  current.pose.position = msg_conversions::array_to_ros_point(cmd.traj_pos);
+  current.pose.orientation = msg_conversions::array_to_ros_quat(cmd.traj_quat);
+  current.twist.linear = msg_conversions::array_to_ros_vector(cmd.traj_vel);
+  current.twist.angular = msg_conversions::array_to_ros_vector(cmd.traj_omega);
+  current.accel.linear = msg_conversions::array_to_ros_vector(cmd.traj_accel);
+  current.accel.angular = msg_conversions::array_to_ros_vector(cmd.traj_alpha);
+  traj_pub_.publish(current);
 
   // Publish the current setpoint,
   if (fsm_.GetState() == NOMINAL) {

@@ -58,6 +58,11 @@ void AccessControl::Initialize(ros::NodeHandle *nh) {
   cmd_pub_ = nh->advertise<ff_msgs::CommandStamped>(TOPIC_COMMAND,
                                                     pub_queue_size_, false);
 
+  failed_cmd_pub_ = nh->advertise<ff_msgs::CommandStamped>(
+                                            TOPIC_MANAGEMENT_ACCESS_CONTROL_CMD,
+                                            pub_queue_size_,
+                                            true);
+
   state_.controller = "No Controller";
 
   // Publish initial state
@@ -99,8 +104,11 @@ void AccessControl::HandleCommand(ff_msgs::CommandStampedConstPtr const& cmd) {
     // letting commands other than stop and idle through.
     PublishCommand(cmd);
   } else {  // Operator isn't in control and cannot issue commands
-    PublishAck(cmd->cmd_id, cmd->cmd_origin, "Operator doesn't have control.",
+    PublishAck(cmd->cmd_id,
+               "Operator doesn't have control.",
                ff_msgs::AckCompletedStatus::BAD_SYNTAX);
+    // Need to publish the command so that it gets echoed to the ground
+    failed_cmd_pub_.publish(cmd);
   }
 }
 
@@ -111,7 +119,6 @@ void AccessControl::HandleGrabControl(ff_msgs::CommandStampedConstPtr const&
     msg = "Invalid number of arguments to grab control command.";
     ROS_WARN("%s", msg.c_str());
     PublishAck(cmd->cmd_id,
-               cmd->cmd_origin,
                msg,
                ff_msgs::AckCompletedStatus::BAD_SYNTAX);
     return;
@@ -121,7 +128,6 @@ void AccessControl::HandleGrabControl(ff_msgs::CommandStampedConstPtr const&
     msg = "Invalid argument type to grab control command.";
     ROS_WARN("%s", msg.c_str());
     PublishAck(cmd->cmd_id,
-               cmd->cmd_origin,
                msg,
                ff_msgs::AckCompletedStatus::BAD_SYNTAX);
     return;
@@ -133,7 +139,6 @@ void AccessControl::HandleGrabControl(ff_msgs::CommandStampedConstPtr const&
           + state_.cookie + ", got " + cookie;
     ROS_WARN("%s", msg.c_str());
     PublishAck(cmd->cmd_id,
-               cmd->cmd_origin,
                msg,
                ff_msgs::AckCompletedStatus::EXEC_FAILED);
     return;
@@ -148,7 +153,7 @@ void AccessControl::HandleGrabControl(ff_msgs::CommandStampedConstPtr const&
   state_.cookie = "";
 
   PublishState();
-  PublishAck(cmd->cmd_id, cmd->cmd_origin);
+  PublishAck(cmd->cmd_id);
   return;
 }
 
@@ -157,18 +162,16 @@ void AccessControl::HandleRequestControl(ff_msgs::CommandStampedConstPtr const&
   state_.cookie = GenerateCookie();
   requestor_ = cmd->cmd_src;
 
-  PublishAck(cmd->cmd_id, cmd->cmd_origin);
+  PublishAck(cmd->cmd_id);
   PublishState();
 }
 
 void AccessControl::PublishAck(std::string const& cmd_id,
-                               std::string const& cmd_origin,
                                std::string const& message,
                                uint8_t completed_status,
                                uint8_t status) {
   ack_.header.stamp = ros::Time::now();
   ack_.cmd_id = cmd_id;
-  ack_.cmd_origin = cmd_origin;
   ack_.status.status = status;
   ack_.completed_status.status = completed_status;
   ack_.message = message;

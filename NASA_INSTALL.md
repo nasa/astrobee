@@ -1,4 +1,4 @@
-# Usage instructions for NASA users
+s# Usage instructions for NASA users
 
 Install the 64-bit version of [Ubuntu 16.04](http://releases.ubuntu.com/16.04)
 on a host machine, and make sure that you can checkout and build code.
@@ -18,11 +18,18 @@ support running Astrobee Robot Software on 32-bit systems.*
   need to have credentials on `volar` to run these scripts.
 - If you are using a VM with a username that does not match your NDC username,
   you have two options:
-  - Set correctly the environment variable `NDC_USERNAME`
-  - Or set a ssh config that specify the right username for volar.
-- If you are outside the NASA ARC private network, you need to:
-  - Either use VPN to act like if you were inside the ARC TI private network
-  - Or setup your `.ssh/config` to do ssh forwarding. A tutorial on this method
+  1. Set correctly the environment variable `NDC_USERNAME` with your NASA NDC
+     username.
+  2. Or set a ssh config that specify the right username for volar.
+- If you are outside the NASA ARC private network, there are two options to get
+  to volar:
+  1. Use VPN to act like if you were inside the ARC TI private network and 
+     obtain the correct kerberos credentials inside the VM with the following
+     command (note the capitalization):
+```
+kinit $NDC_USERNAME@NDC.NASA.GOV`
+```
+  2. setup your `.ssh/config` to do ssh forwarding. A tutorial on this method
   is available at: https://babelfish.arc.nasa.gov/trac/freeflyer/wiki/SSHSetup
 - These notes apply to `add_local_repository.sh` and `make_xenial.sh`
 
@@ -51,7 +58,7 @@ Next, install all required dependencies:
 
 #### Extra options to install the dependencies
 
-- If you do not want to configure you `.ssh/config` to just get the
+- If you do not want to configure your `.ssh/config` to just get the
 dependencies, you can use the `NDC_USERNAME` variable.
 - By default, the custom debians are installed in `$SOURCE_PATH/.astrobee_deb`.
 If you prefer to install them at a different location, you can use the
@@ -169,6 +176,10 @@ find that the above command doesn't work, try rebuilding the cache:
 
     rospack profile
 
+A simulator readme was created for guest science users. However this readme may
+be beneficial to interns and/or new members. If you fall into one of these
+categories, please see the [simulation instructions](sim_overview.md).
+
 ## Running the code on a real robot
 
 In order to do this, you will need to have followed the cross-compile build
@@ -182,10 +193,11 @@ will copy all products into this directory.
 
 Once the installation has completed, copy the install directory to the robot.
 This script assumes that you are connected to the Astrobee network, as it uses
-rsync to copy the install directory to `~/armhf` on the two processors.
+rsync to copy the install directory to `~/armhf` on the two processors. It 
+takes the robot name as an argument. Here we use `p4d'.
 
     pushd $SOURCE_PATH
-    ./scripts/install_to_astrobee.sh $INSTALL_PATH
+    ./scripts/install_to_astrobee.sh $INSTALL_PATH p4d
     popd
 
 You are now ready to run the code. This code launches a visualization tool,

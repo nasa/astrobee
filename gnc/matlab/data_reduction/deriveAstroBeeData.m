@@ -24,8 +24,8 @@ simData = evalin('base', 'simData');
 
 
 firstTime = 0;
-if ds_on.cmd
-    out_cmd_msg = evalin('base', 'out_cmd_msg');
+out_cmd_msg = evalin('base', 'out_cmd_msg');
+if exist('out_cmd_msg', 'var') && isfield(out_cmd_msg, 'traj_quat')
     % If the cmd message is present, use the first command as t0
     firstTime = out_cmd_msg.traj_quat.time(find(rssrow(out_cmd_msg.traj_quat.data.value) ~= 0, 1, 'first'));
 end
@@ -43,9 +43,12 @@ end
 calcData.t0 = inf;
 %% Do all ENV only calcs now
 if ds_on.env
-    if ~simData % If it is vehicle data derive the velocities
-        out_env_msg.V_B_ISS_ISS = telemData(out_env_msg.P_B_ISS_ISS.time(2:end), diff(out_env_msg.P_B_ISS_ISS.data)./ repmat(diff(out_env_msg.P_B_ISS_ISS.time), 1,3));
+    if ~isfield(out_env_msg, 'V_B_ISS_ISS') || ~isfield(out_env_msg, 'V_B_ISS_ISS') % If it is vehicle data derive the velocities
+        out_env_msg.V_B_ISS_ISS = telemData(out_env_msg.P_B_ISS_ISS.time(2:end), diff(out_env_msg.P_B_ISS_ISS.data)./ mean(diff(out_env_msg.P_B_ISS_ISS.time)));
+        %out_env_msg.V_B_ISS_ISS = telemData(out_env_msg.P_B_ISS_ISS.time(2:end), diff(out_env_msg.P_B_ISS_ISS.data)./ repmat(diff(out_env_msg.P_B_ISS_ISS.time), 1,3));
+        
         out_env_msg.omega_B_ISS_B = telemData(out_env_msg.Q_ISS2B.time, rate_from_quat(out_env_msg.Q_ISS2B.time, out_env_msg.Q_ISS2B.data.value));
+        %TODO: Add filtering here
     end
     % Export this data back to the workspace
     assignin('base', 'out_env_msg', out_env_msg);
@@ -55,7 +58,8 @@ if ds_on.env
     
     calcData.truth_euler_deg = telemData(out_env_msg.Q_ISS2B.time, convert_to_eulers(out_env_msg.Q_ISS2B.data) *180/pi);
     
-    calcData.true_lin_vel_body = telemData(out_env_msg.Q_ISS2B.time, rotate_a2b(out_env_msg.Q_ISS2B.data, out_env_msg.V_B_ISS_ISS.data));
+    [Q_in_quat_time, V_in_quat_time] = sampleUniform(out_env_msg.Q_ISS2B, out_env_msg.V_B_ISS_ISS);
+    calcData.true_lin_vel_body = telemData(Q_in_quat_time.time, rotate_a2b(Q_in_quat_time.data, V_in_quat_time.data));
     
 end
 
@@ -191,3 +195,134 @@ if ds_on.kfl && ds_on.cmd
     calcData.error.pos.control = out_kfl_msg.P_B_ISS_ISS - out_cmd_msg.traj_pos;
 end
 
+
+%% Requirments
+if exist('out_env_msg', 'var') && exist('out_kfl_msg', 'var')
+    % FFREQ-622
+    % The GN&C Subsystem shall estimate pose, velocity & acceleration within tolerances specified in the IRG-FF006-01 L2 Mobility Accuracy table.
+    calcData.req.FFREQ_622.att.thresh_deg = 10; % Requirement states 10 degrees
+    calcData.req.FFREQ_622.pos_thresh = .1; % Requirement states 10 cm
+    % TODO: Is this definition of control and estimation the same as mine?
+    % Requirment is 10 degrees and 10 cm of estimation error
+    calcData.req.FFREQ_622.att.maxError = max(calcData.error.att.knowledge_mag.convert_rad2deg);
+    if calcData.req.FFREQ_622.att.maxError  < calcData.req.FFREQ_622.att.thresh_deg
+        calcData.req.FFREQ_622.att.pass = true;
+    else
+        calcData.req.FFREQ_622.att.pass = false;
+    end
+    
+    calcData.req.FFREQ_622.pos.maxError = max(calcData.error.pos.knowledge.mag);
+    if calcData.req.FFREQ_622.pos.maxError < calcData.req.FFREQ_622.pos_thresh
+        calcData.req.FFREQ_622.pos.pass = true;
+    else
+        calcData.req.FFREQ_622.pos.pass = false;
+    end
+    
+    if isempty(calcData.req.FFREQ_622.pos.pass) || isempty(calcData.req.FFREQ_622.att.pass) 
+        calcData.req.FFREQ_622.pass = [];
+    elseif calcData.req.FFREQ_622.pos.pass && calcData.req.FFREQ_622.att.pass
+        calcData.req.FFREQ_622.pass = true;
+    else
+        calcData.req.FFREQ_622.pass = false;
+    end
+        
+    % FFREQ-623
+    % The GN&C Subsystem shall estimate pose, velocity & acceleration within tolerances specified in the IRG-FF006-01 L2 Mobility Accuracy table.
+    calcData.req.control.att.thresh_deg = 20; % Requirement states 10 degrees
+    calcData.req.control.pos_thresh = .2; % Requirement states 10 cm
+    % TODO: Is this definition of control and estimation the same as mine?
+    % Requirment is 20 degrees and 20 cm of estimation error
+    if ds_on.env && ds_on.cmd
+        calcData.req.FFREQ_623.att.maxError = max(calcData.error.att.control_mag.convert_rad2deg);
+        % First test attitude error
+        if calcData.req.FFREQ_623.att.maxError < calcData.req.control.att.thresh_deg
+            calcData.req.FFREQ_623.att.pass = true;
+        else
+            calcData.req.FFREQ_623.att.pass = false;
+        end
+        
+        % Now test position error
+        calcData.req.FFREQ_623.pos.maxError = max(calcData.error.pos.control.mag);
+        if calcData.req.FFREQ_623.pos.maxError < calcData.req.control.pos_thresh
+            calcData.req.FFREQ_623.pos.pass = true;
+        else
+            calcData.req.FFREQ_623.pos.pass = false;
+        end
+        
+        % Report requirment as combination of the attitude and position
+        if isempty(calcData.req.FFREQ_623.pos.pass) || isempty(calcData.req.FFREQ_622.att.pass)
+            calcData.req.FFREQ_623.pass = [];
+        elseif calcData.req.FFREQ_623.pos.pass && calcData.req.FFREQ_622.att.pass
+            calcData.req.FFREQ_623.pass = true;
+        else
+            calcData.req.FFREQ_623.pass = false;
+        end
+    else
+        calcData.req.FFREQ_623.pass = [];
+    end
+    
+    
+    
+    
+    % FFREQ-620
+    % The GN&C Subsystem shall have a maximum linear velocity of 0.5 m/s.
+    
+    if ~exist('out_cmd_msg.traj_vel', 'var') || max(out_cmd_msg.traj_vel.mag) < req.max_velocity
+        calcData.req.FFREQ_620.pass = [];
+        %fprintf('FFREQ-620: Not Tested\n');
+    else
+        if max(out_env_msg.V_B_ISS_ISS.mag) >= req.max_velocity
+            calcData.req.FFREQ_620.pass = true;
+            %fprintf('FFREQ-620: Passed\n');
+        else
+            calcData.req.FFREQ_620.pass = false;
+            %fprintf(2, 'FFREQ-620: Failed\n');
+        end
+        calcData.req.FFREQ_620.max_speed_traj_t = [out_cmd_msg.traj_vel.time(1) out_cmd_msg.traj_vel.time(end)];
+        %fprintf('   Max Speed: %f m/s\n', max(out_env_msg.V_B_ISS_ISS.mag))
+        %plotError(mag(out_env_msg.V_B_ISS_ISS.timeRange(max_speed_traj_t(1), max_speed_traj_t(2))), mag(out_cmd_msg.traj_vel), 'm/s', '|Velocity|', 'true', 'traj', '--', max_speed_traj_t(1));
+        %subplot(2,1,1); plot(max_speed_traj_t-max_speed_traj_t(1), [req.max_velocity req.max_velocity], 'r--', 'LineWidth', 2)
+    end
+
+    
+    % Reqmn't FFREQ-616
+    % The GN&C Subsystem shall halt robot motion within 7 seconds.
+    % Tested by setting the vehicle into stop mode at Max Velocity
+    if exist('out_env_msg', 'var') && exist('out_ctl_msg', 'var')
+        [test_vel, test_mode] = sampleUniform(out_env_msg.V_B_ISS_ISS, out_ctl_msg.ctl_status);
+        test_vel_mag = test_vel.mag;
+        test_max_vel_t = test_vel_mag.time(test_vel_mag.data > req.max_velocity);
+        stop_mode_t = test_mode.time(test_mode.data == 1);
+        overlap_vel_stop_t = intersect(test_max_vel_t, stop_mode_t);
+        
+        
+        if isempty(overlap_vel_stop_t)
+            calcData.req.FFREQ_616.pass = [];
+            %fprintf('FFREQ-616: Not Tested\n');
+        else
+            start_stopping_t = min(overlap_vel_stop_t); % Find the first time we start to stop at max velocity
+            stopping_vel = timeRange(out_env_msg.V_B_ISS_ISS.mag, start_stopping_t, inf); % Extract just data during the stop
+            end_stopping_t = min(stopping_vel.time(stopping_vel.data < req.stop_threshold)); % Find the first time we are stopped
+            stop_time = end_stopping_t - start_stopping_t;
+            
+            if stop_time < req.stopping_time
+                calcData.req.FFREQ_616.pass = true;
+                %fprintf('FFREQ-616: Passed\n');
+            else
+                calcData.req.FFREQ_616.pass = false;
+                %fprintf(2, 'FFREQ-616: Failed\n');
+            end
+            %fprintf('   Stop Time: %f s\n', stop_time);
+            %     figure; plot(stopping_vel); title('Min Stopping Time')
+            %     lims = ylim; % Grab the ylimits of the plot
+            %     hold on; plot(repmat(stopping_vel.time(1)+req.stopping_time, 2, 1), lims, 'r--', 'linewidth', 2)
+            %     plot([stopping_vel.time(1) stopping_vel.time(end)], [req.stop_threshold req.stop_threshold], 'r--', 'linewidth', 2)
+            %     ylim(lims);
+            
+        end
+    else
+        calcData.req.FFREQ_616.pass = [];
+    end
+    
+    
+end

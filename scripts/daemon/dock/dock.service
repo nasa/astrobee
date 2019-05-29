@@ -1,0 +1,14 @@
+[Unit]
+Description=Start dock service
+After=network.target
+
+[Service]
+Type=simple
+User=astrobee
+Group=astrobee
+EnvironmentFile=/res/dock.env
+ExecStart=/opt/astrobee/bin/smart_dock_node
+Restart=on-abort
+
+[Install]
+WantedBy=multi-user.target

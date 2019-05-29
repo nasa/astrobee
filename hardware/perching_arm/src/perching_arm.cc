@@ -1,14 +1,14 @@
 /* Copyright (c) 2017, United States Government, as represented by the
  * Administrator of the National Aeronautics and Space Administration.
- * 
+ *
  * All rights reserved.
- * 
+ *
  * The Astrobee platform is licensed under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -25,8 +25,9 @@ namespace perching_arm {
 PerchingArm::PerchingArm() :
   serial_(std::bind(&PerchingArm::Read, this, std::placeholders::_1,
     std::placeholders::_2)), cb_raw_data_({}), cb_sleep_ms_({}),
-    rx_state_(PROTOCOL_WF_HEADER_1), rx_ptr_(0), rx_datalen_(0) {
-  serial_.SetTimeoutCallback(std::bind(&PerchingArm::Timeout, this), 5000);
+    rx_state_(PROTOCOL_WF_HEADER_1), rx_ptr_(0), rx_datalen_(0),
+      telemetry_rx_(false) {
+  serial_.SetTimeoutCallback(std::bind(&PerchingArm::Timeout, this), 100);
   serial_.SetShutdownCallback(std::bind(&PerchingArm::Shutdown, this));
 }
 
@@ -65,7 +66,6 @@ bool PerchingArm::ResultToString(PerchingArmResult result, std::string & msg) {
   case RESULT_FIRMWARE_ERROR:     msg = "Firmware error";           break;
   case RESULT_RESPONSE_TIMEOUT:   msg = "Response timeout";         break;
   case RESULT_OUT_OF_BOUNDS:      msg = "Out of bounds";            break;
-  case RESULT_NOT_CALIBRATED:     msg = "Calibrate arm first";      break;
   }
   return success;
 }
@@ -108,46 +108,40 @@ PerchingArmResult PerchingArm::SetDistalEnabled(bool enabled) {
   return SendCommand(TARGET_DISTAL, ADDRESS_ENABLE, (enabled ? 1 : 0));
 }
 
+// Set the gripper position
+PerchingArmResult PerchingArm::SetGripperPosition(int16_t perc) {
+  if (perc < GRIP_POS_MIN || perc > GRIP_POS_MAX)
+    return RESULT_OUT_OF_BOUNDS;
+  // Get the number of encoder ticks as a percentage of the max
+  double ticks = static_cast<double>(perc) / 100.0
+               * static_cast<double>(raw_.grip.maximum);
+  // Send the command to open to this encoder tick value
+  return SendCommand(TARGET_GRIPPER, ADDRESS_GRIPPER_SET,
+    static_cast<int16_t>(ticks));
+}
+
 // Set the gripper position (in percentage from 0 to 100)
 PerchingArmResult PerchingArm::CalibrateGripper() {
+  std::cout << "Calibrating gripper" << std::endl;
   return SendCommand(TARGET_GRIPPER, ADDRESS_GRIPPER_CALIBRATE, 0);
 }
 
-// Set the gripper position
-PerchingArmResult PerchingArm::SetGripperPosition(int16_t perc) {
-  // Special case: -100 is a goal for calibration. We do this so that
-  // a simple joint state publisher can use this value to forcefully
-  // recalibrate the gripper without a bespoke service.
-  if (perc == GRIP_CALIBRATE)
-    return CalibrateGripper();
-  // We can only accept commands if we are calibrated!
-  if (raw_.grip.maximum > 0) {
-    if (perc < GRIP_POS_MIN || perc > GRIP_POS_MAX)
-      return RESULT_OUT_OF_BOUNDS;
-    // Get the number of encoder ticks as a percentage of the max
-    double ticks = static_cast<double>(perc) / 100.0
-                 * static_cast<double>(raw_.grip.maximum);
-    // Send the command to open to this encoder tick value
-    return SendCommand(TARGET_GRIPPER, ADDRESS_GRIPPER_SET,
-      static_cast<int16_t>(ticks));
-  }
-  return RESULT_NOT_CALIBRATED;
-}
-
-// Calibrate the gripper position
+// Open the gripper
 PerchingArmResult PerchingArm::OpenGripper() {
-  // We can only accept commands if we are calibrated!
-  if (raw_.grip.maximum > 0)
-    return SendCommand(TARGET_GRIPPER, ADDRESS_GRIPPER_OPEN, 0);
-  return RESULT_NOT_CALIBRATED;
+  // If the gripper is uncalibrated, then calibrate it before allowing open
+  if (raw_.grip.maximum == 0)
+    return CalibrateGripper();
+  std::cout << "Opening gripper" << std::endl;
+  return SendCommand(TARGET_GRIPPER, ADDRESS_GRIPPER_OPEN, 0);
 }
 
-// Calibrate the gripper position
+// close the gripper
 PerchingArmResult PerchingArm::CloseGripper() {
-  // We can only accept commands if we are calibrated!
-  if (raw_.grip.maximum > 0)
-    return SendCommand(TARGET_GRIPPER, ADDRESS_GRIPPER_CLOSE, 0);
-  return RESULT_NOT_CALIBRATED;
+  // We cannot close the gripper if it is uncalibrated
+  if (raw_.grip.maximum == 0)
+    return RESULT_SUCCESS;
+  std::cout << "Closing gripper" << std::endl;
+  return SendCommand(TARGET_GRIPPER, ADDRESS_GRIPPER_CLOSE, 0);
 }
 
 // Reset the software
@@ -226,6 +220,8 @@ void PerchingArm::Process(const uint8_t* buf, size_t len) {
   // Sign adjustments
   raw_.prox.position -= 2048;
   raw_.dist.position -= 2048;
+  // Mark that we have received data from the arm
+  telemetry_rx_ = true;
   // Push the raw data
   if (cb_raw_data_)
     cb_raw_data_(raw_);
@@ -239,12 +235,12 @@ void PerchingArm::Read(const uint8_t* buf, size_t len) {
 
 // Called when we time out
 void PerchingArm::Timeout(void) {
-  std::cout << "Timeout" << std::endl;
+  // std::cout << "Timeout" << std::endl;
 }
 
 // Called when we time out
 void PerchingArm::Shutdown(void) {
-  std::cout << "Shutdown" << std::endl;
+  // std::cout << "Shutdown" << std::endl;
 }
 
 // Process a single character as part of the protocol state machine

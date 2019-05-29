@@ -47,6 +47,7 @@ class MarkerTracker {
                      ff_msgs::SetBool::Response& res);
   void ReadParams(void);
   int EstimatePose(ff_msgs::VisualLandmarks* msg);
+  bool IsMarkerValid(const alvar::MarkerData & marker);
 
   config_reader::ConfigReader config_;
   ros::Timer config_timer_;
@@ -60,6 +61,8 @@ class MarkerTracker {
   const std::string& nodelet_name_;
   camera::CameraParameters camera_param_;
   std::shared_ptr<marker_tracking::MarkerCornerDetector> detector_;
+
+  int x_min_, x_max_;
 };
 
 };  // namespace marker_tracking_node

@@ -32,7 +32,8 @@ catkin_package(
 
 create_tool_targets(
   DIR tools
-  LIBS ${catkin_LIBRARIES} ${EIGEN3_LIBRARIES} config_client common ff_flight
+  LIBS ${catkin_LIBRARIES} ${EIGEN3_LIBRARIES} config_client common ff_flight planner_trapezoidal
   INC  ${catkin_INCLUDE_DIRS} ${EIGEN3_INCLUDE_DIRS}
   DEPS ff_msgs common
 )
+

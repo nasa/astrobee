@@ -5,7 +5,7 @@
 //
 // Model version                  : 1.1142
 // Simulink Coder version         : 8.11 (R2016b) 25-Aug-2016
-// C/C++ source code generated on : Wed Jan 31 12:34:43 2018
+// C/C++ source code generated on : Thu Mar  7 13:24:12 2019
 //
 // Target selection: ert.tlc
 // Embedded hardware selection: 32-bit Generic
@@ -386,7 +386,10 @@ P_bpm_blower_1_propulsion_mod_T bpm_blower_1_propulsion_modul_P = {
   1.2F,                                // Variable: const_air_density
                                        //  Referenced by: '<S1>/blower_aerodynamics'
 
-  1.0F,                                // Variable: tun_bpm_noise_on_flag
+  1.25F,                               // Variable: tun_bpm_PM1_thrust_error_sf
+                                       //  Referenced by: '<S1>/blower_aerodynamics'
+
+  0.0F,                                // Variable: tun_bpm_noise_on_flag
                                        //  Referenced by:
                                        //    '<S1>/blower_aerodynamics'
                                        //    '<S3>/Gain'

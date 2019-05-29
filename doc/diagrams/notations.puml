@@ -19,7 +19,7 @@ node "Processor (LLP,MLP,HLP)" {
     mob_node(Mobility Node)
     loc_node(Localization Node)
     gnc_node(GN&C Node)
-    drv_node(Drive Node)
+    drv_node(Driver Node)
 
     message(MyMsg, Namespace::Type, /robot/subsystem/topic)
     action(SomeAction, Namespace::Type, /robot/subsystem/topic)

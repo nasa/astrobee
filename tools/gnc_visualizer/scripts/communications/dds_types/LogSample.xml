@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<types xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="/opt/rti/ndds/scripts/../resource/rtiddsgen/schema/rti_dds_topic_types.xsd">
+<include file="Message.xml"/>
+<module name="rapid">
+<module name="ext">
+<module name="astrobee">
+<directive kind="copyDeclaration">/**</directive>
+<directive kind="copyDeclaration"> * Severity level constants</directive>
+<directive kind="copyDeclaration"> * &lt;ul&gt;</directive>
+<directive kind="copyDeclaration"> *   &lt;li&gt;DEBUG: debug level</directive>
+<directive kind="copyDeclaration"> *   &lt;li&gt;INFO: general level</directive>
+<directive kind="copyDeclaration"> *   &lt;li&gt;WARN: warning level</directive>
+<directive kind="copyDeclaration"> *   &lt;li&gt;ERROR: error level</directive>
+<directive kind="copyDeclaration"> *   &lt;li&gt;FATAL: fatal/critical level</directive>
+<directive kind="copyDeclaration"> * &lt;/ul&gt;</directive>
+<directive kind="copyDeclaration"> */</directive>
+<enum name="SeverityLevel">
+<enumerator name="SEVERITY_LEVEL_DEBUG"/>
+<enumerator name="SEVERITY_LEVEL_INFO"/>
+<enumerator name="SEVERITY_LEVEL_WARN"/>
+<enumerator name="SEVERITY_LEVEL_ERROR"/>
+<enumerator name="SEVERITY_LEVEL_FATAL"/>
+</enum>
+<directive kind="copyCDeclaration">class LogSampleTypeSupport;</directive>
+<directive kind="copyCDeclaration">class LogSampleDataWriter;</directive>
+<directive kind="copyCDeclaration">class LogSampleDataReader;</directive>
+<directive kind="copyCDeclaration">struct LogSampleSeg;</directive>
+<directive kind="copyDeclaration">/**</directive>
+<directive kind="copyDeclaration">  * Message containing ros output.</directive>
+<directive kind="copyDeclaration">  */</directive>
+<valuetype name="LogSample" baseClass="rapid::Message" typeModifier="none">
+<directive kind="copyCDeclaration">#if RTI_DDS_VERSION_MAJOR &lt; 4 || (RTI_DDS_VERSION_MAJOR == 4  &amp;&amp; RTI_DDS_VERSION_MINOR &lt; 5) || (RTI_DDS_VERSION_MAJOR == 4  &amp;&amp; RTI_DDS_VERSION_MINOR  == 5 &amp;&amp; RTI_DDS_VERSION_RELEASE != 'f' )</directive>
+<directive kind="copyCDeclaration">typedef LogSampleTypeSupport TypeSupport;</directive>
+<directive kind="copyCDeclaration">typedef LogSampleDataWriter DataWriter;</directive>
+<directive kind="copyCDeclaration">typedef LogSampleDataReader DataReader;</directive>
+<directive kind="copyCDeclaration">typedef LogSampleSeq Seq;</directive>
+<directive kind="copyCDeclaration">#endif</directive>
+<directive kind="copyCDeclaration">typedef LogSample Type;</directive>
+<directive kind="copyDeclaration">/**  @see SeverityLevel */</directive>
+<member name="level" type="nonBasic" nonBasicTypeName="rapid::ext::astrobee::SeverityLevel" visibility="public"/>
+<directive kind="copyDeclaration">/**  Name of node publishing message */</directive>
+<member name="name" type="nonBasic" nonBasicTypeName="rapid::String64" visibility="public"/>
+<directive kind="copyDeclaration">/**  Message */</directive>
+<member name="msg" type="nonBasic" nonBasicTypeName="rapid::String1K" visibility="public"/>
+</valuetype>
+</module>
+</module>
+</module>
+</types>

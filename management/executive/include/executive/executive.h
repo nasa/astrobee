@@ -23,6 +23,8 @@
 #include <executive/executive_action_client.h>
 #include <executive/utils/sequencer/plan_io.h>
 #include <executive/utils/sequencer/sequencer.h>
+#include <ff_hw_msgs/ConfigurePayloadPower.h>
+#include <ff_hw_msgs/ConfigureSystemLeds.h>
 #include <ff_hw_msgs/SetEnabled.h>
 #include <ff_hw_msgs/SetFlashlight.h>
 #include <ff_msgs/AckCompletedStatus.h>
@@ -38,16 +40,21 @@
 #include <ff_msgs/ControlCommand.h>
 #include <ff_msgs/DockAction.h>
 #include <ff_msgs/EnableCamera.h>
+#include <ff_msgs/FaultState.h>
+#include <ff_msgs/LocalizationAction.h>
 #include <ff_msgs/MotionAction.h>
 #include <ff_msgs/PlanStatusStamped.h>
+#include <ff_msgs/SetDataToDisk.h>
+#include <ff_msgs/SetInertia.h>
+#include <ff_msgs/SetRate.h>
 #include <ff_msgs/SetZones.h>
-#include <ff_msgs/SwitchAction.h>
 #include <ff_msgs/Zone.h>
 #include <ff_util/config_client.h>
 #include <ff_util/ff_action.h>
 #include <ff_util/ff_flight.h>
 #include <ff_util/ff_names.h>
 #include <ff_util/ff_nodelet.h>
+#include <ff_util/ff_service.h>
 
 #include <pluginlib/class_list_macros.h>
 #include <ros/ros.h>
@@ -83,172 +90,152 @@ class Executive : public ff_util::FreeFlyerNodelet {
   Executive();
   ~Executive();
 
-  // callbacks, handled by states
+  // Message and timeout callbacks
   void CmdCallback(ff_msgs::CommandStampedPtr const& cmd);
-  void DockStateCallback(ff_msgs::DockStatePtr const& state);
+  void DataToDiskCallback(ff_msgs::CompressedFileConstPtr const& data);
+  void DockStateCallback(ff_msgs::DockStateConstPtr const& state);
+  void FaultStateCallback(ff_msgs::FaultStateConstPtr const& state);
   void GuestScienceAckCallback(ff_msgs::AckStampedConstPtr const& ack);
+  void LedConnectedCallback();
+  void MotionStateCallback(ff_msgs::MotionStatePtr const& state);
   void PlanCallback(ff_msgs::CompressedFileConstPtr const& plan);
+  void SysMonitorHeartbeatCallback(ff_msgs::HeartbeatConstPtr const& heartbeat);
+  void SysMonitorTimeoutCallback(ros::TimerEvent const& te);
+  void WaitCallback(ros::TimerEvent const& te);
   void ZonesCallback(ff_msgs::CompressedFileConstPtr const& zones);
 
   // Action based commands
-  bool FillArmGoal(ff_msgs::CommandStampedPtr const& cmd,
-                   std::string& err_msg,
-                   bool plan = false);
-  bool FillDockGoal(ff_msgs::CommandStampedPtr const& cmd,
-                    std::string& err_msg,
-                    bool plan = false);
+  bool AreActionsRunning();
+  void CancelAction(Action action, std::string cmd);
+  bool FillArmGoal(ff_msgs::CommandStampedPtr const& cmd);
+  bool FillDockGoal(ff_msgs::CommandStampedPtr const& cmd);
   bool FillMotionGoal(Action action,
                       ff_msgs::CommandStampedPtr const& cmd = nullptr);
-
-  bool StartAction(Action action,
-                   std::string const& cmd_id,
-                   std::string const& cmd_origin,
-                   std::string& err_msg,
-                   bool plan = false);
   bool IsActionRunning(Action action);
-  bool AreActionsRunning();
-  void CancelAction(Action action);
-
+  bool StartAction(Action action, std::string const& cmd_id);
   bool RemoveAction(Action action);
 
+  // Action callbacks
   void ArmResultCallback(ff_util::FreeFlyerActionState::Enum const& state,
                          ff_msgs::ArmResultConstPtr const& result);
 
-  void DockActiveCallback();
-  void DockFeedbackCallback(ff_msgs::DockFeedbackConstPtr const& feedback);
   void DockResultCallback(ff_util::FreeFlyerActionState::Enum const& state,
                           ff_msgs::DockResultConstPtr const& result);
 
-  void MotionActiveCallback();
+  void LocalizationResultCallback(
+                            ff_util::FreeFlyerActionState::Enum const& state,
+                            ff_msgs::LocalizationResultConstPtr const& result);
+
   void MotionFeedbackCallback(ff_msgs::MotionFeedbackConstPtr const& feedback);
   void MotionResultCallback(ff_util::FreeFlyerActionState::Enum const& state,
-                            ff_msgs::MotionResultConstPtr const& result);
+                           ff_msgs::MotionResultConstPtr const& result);
 
-  void SwitchResultCallback(ff_util::FreeFlyerActionState::Enum const& state,
-                            ff_msgs::SwitchResultConstPtr const& result);
-
+  // Publishers
   void PublishCmdAck(std::string const& cmd_id,
-                     std::string const& cmd_origin,
                      uint8_t completed_status = ff_msgs::AckCompletedStatus::OK,
                      std::string const& message = "",
                      uint8_t status = ff_msgs::AckStatus::COMPLETED);
-
   void PublishPlan();
   void PublishPlanStatus(uint8_t status);
 
+  // Getters
   ff_msgs::MobilityState GetMobilityState();
 
+  // Setters
+  void SetMobilityState();
   void SetMobilityState(uint8_t state, uint32_t sub_state = 0);
-  bool SetPlan();
+  void SetOpState(OpState* state);
   void SetPlanExecState(uint8_t state);
-  void SetProximity(float proximity);
-  std::string SetZones();
 
-  ros::Time MsToSec(std::string timestamp);
-
-  sequencer::ItemType GetCurrentPlanItemType();
-  ff_msgs::CommandStampedPtr GetPlanCommand();
-  bool AckCurrentPlanItem();
-  uint8_t GetPlanExecState();
-
-  bool SetOperatingLimits(std::vector<ff_msgs::CommandArg> const& conditions,
-                          std::string& err_msg);
-
-  bool ConfigureMobility(std::string const& cmd_id,
-                         std::string const& cmd_origin,
-                         std::string& err_msg,
-                         bool plan = false);
+  // Helper functions
+  void AckMobilityStateIssue(ff_msgs::CommandStampedPtr const& cmd,
+                             std::string const& current_mobility_state,
+                             std::string const& accepted_mobility_state = "");
+  bool ArmControl(ff_msgs::CommandStampedPtr const& cmd);
+  bool CheckNotMoving(ff_msgs::CommandStampedPtr const& cmd);
+  bool CheckServiceExists(ros::ServiceClient& serviceIn,
+                          std::string const& serviceName,
+                          std::string const& cmd_in);
+  bool CheckStoppedOrDrifting(std::string const& cmd_id,
+                              std::string const& cmd_name);
+  void ConfigureLed(bool blinking);
+  bool ConfigureMobility(std::string const& cmd_id);
   bool ConfigureMobility(bool move_to_start,
                          bool enable_holonomic,
                          std::string& err_msg);
-
-  bool ResetEkf(std::string const& cmd_id,
-                std::string const& cmd_origin);
-
+  ros::Time MsToSec(std::string timestamp);
+  bool PowerItem(ff_msgs::CommandStampedPtr const& cmd, bool on);
+  bool ResetEkf(std::string const& cmd_id);
+  bool SendGuestScienceCommand(ff_msgs::CommandStampedPtr const& cmd);
   void StartWaitTimer(float duration);
   void StopWaitTimer();
-  void WaitCallback(ros::TimerEvent const& te);
 
-  bool StopAllMotion(bool &stop_started,
-                     std::string const& cmd_id,
-                     std::string const& cmd_origin,
-                     bool plan = false);
+  // Plan related functions
+  bool AckCurrentPlanItem();
+  sequencer::ItemType GetCurrentPlanItemType();
+  ff_msgs::CommandStampedPtr GetPlanCommand();
 
-  bool EnableAutoReturn(ff_msgs::CommandStampedPtr const& cmd);
-
-  bool Dock(ff_msgs::CommandStampedPtr const& cmd,
-            std::string& err_msg,
-            uint8_t& completed_status,
-            bool plan = false);
-
-  bool Undock(ff_msgs::CommandStampedPtr const& cmd,
-              std::string& err_msg,
-              bool plan = false);
-
+  // Commands
+  bool ArmPanAndTilt(ff_msgs::CommandStampedPtr const& cmd);
+  bool AutoReturn(ff_msgs::CommandStampedPtr const& cmd);
+  bool ClearData(ff_msgs::CommandStampedPtr const& cmd);
+  bool CustomGuestScience(ff_msgs::CommandStampedPtr const& cmd);
+  bool Dock(ff_msgs::CommandStampedPtr const& cmd);
+  bool DownloadData(ff_msgs::CommandStampedPtr const& cmd);
+  bool Fault(ff_msgs::CommandStampedPtr const& cmd);
+  bool GripperControl(ff_msgs::CommandStampedPtr const& cmd);
+  bool IdlePropulsion(ff_msgs::CommandStampedPtr const& cmd);
+  bool InitializeBias(ff_msgs::CommandStampedPtr const& cmd);
+  bool NoOp(ff_msgs::CommandStampedPtr const& cmd);
+  bool PausePlan(ff_msgs::CommandStampedPtr const& cmd);
+  bool Perch(ff_msgs::CommandStampedPtr const& cmd);
+  bool PowerItemOff(ff_msgs::CommandStampedPtr const& cmd);
+  bool PowerItemOn(ff_msgs::CommandStampedPtr const& cmd);
+  bool Prepare(ff_msgs::CommandStampedPtr const& cmd);
+  bool ReacquirePosition(ff_msgs::CommandStampedPtr const& cmd);
+  bool ResetEkf(ff_msgs::CommandStampedPtr const& cmd);
+  bool RunPlan(ff_msgs::CommandStampedPtr const& cmd);
+  bool SetCamera(ff_msgs::CommandStampedPtr const& cmd);
+  bool SetCameraRecording(ff_msgs::CommandStampedPtr const& cmd);
+  bool SetCameraStreaming(ff_msgs::CommandStampedPtr const& cmd);
   bool SetCheckObstacles(ff_msgs::CommandStampedPtr const& cmd);
-
   bool SetCheckZones(ff_msgs::CommandStampedPtr const& cmd);
-
+  bool SetDataToDisk(ff_msgs::CommandStampedPtr const& cmd);
+  bool SetEnableAutoReturn(ff_msgs::CommandStampedPtr const& cmd);
+  bool SetEnableImmediate(ff_msgs::CommandStampedPtr const& cmd);
+  bool SetFlashlightBrightness(ff_msgs::CommandStampedPtr const& cmd);
   bool SetHolonomicMode(ff_msgs::CommandStampedPtr const& cmd);
-
-  void StopArm(std::string const& cmd_id, std::string const& cmd_origin);
-
-  void StowArm(std::string const& cmd_id, std::string const& cmd_origin);
-
-  void SkipPlanStep(std::string const& cmd_id, std::string const& cmd_origin);
-
-  bool DownloadData(ff_msgs::CommandStampedPtr const& cmd, std::string& err_msg,
-                    uint8_t& completed_status, bool plan = false);
-
-  void StopDownload(ff_msgs::CommandStampedPtr const& cmd);
-
-  bool ClearData(ff_msgs::CommandStampedPtr const& cmd, std::string& err_msg,
-                 uint8_t& completed_status, bool plan = false);
-
-  bool PowerOnItem(ff_msgs::CommandStampedPtr const& cmd, std::string& err_msg,
-                   uint8_t& completed_status, bool plan = false);
-  bool PowerOffItem(ff_msgs::CommandStampedPtr const& cmd, std::string& err_msg,
-                    uint8_t& completed_status, bool plan = false);
-
-  bool SetFlashlightBrightness(ff_msgs::CommandStampedPtr const& cmd,
-                               std::string& err_msg,
-                               uint8_t& completed_status,
-                               bool plan = false);
-
-  bool SetCamera(ff_msgs::CommandStampedPtr const& cmd, std::string& err_msg,
-                 uint8_t& completed_status, bool plan = false);
-
-  bool SetCameraRecording(ff_msgs::CommandStampedPtr const& cmd,
-                             std::string& err_msg,
-                             uint8_t& completed_status,
-                             bool plan = false);
-
-  bool SetCameraStreaming(ff_msgs::CommandStampedPtr const& cmd,
-                          std::string& err_msg,
-                          uint8_t& completed_status,
-                          bool plan = false);
-
-  bool SendGuestScienceCommand(ff_msgs::CommandStampedPtr const& cmd,
-                               std::string& err_msg,
-                               uint8_t& completed_status,
-                               bool plan = false);
-
-  void DetermineStartupMobilityState();
-
-  void Shutdown(std::string const& cmd_id, std::string const& cmd_origin);
-
-  void SetOpState(OpState* state);
+  bool SetInertia(ff_msgs::CommandStampedPtr const& cmd);
+  bool SetOperatingLimits(ff_msgs::CommandStampedPtr const& cmd);
+  bool SetPlan(ff_msgs::CommandStampedPtr const& cmd);
+  bool SetPlanner(ff_msgs::CommandStampedPtr const& cmd);
+  bool SetTelemetryRate(ff_msgs::CommandStampedPtr const& cmd);
+  bool SetTimeSync(ff_msgs::CommandStampedPtr const& cmd);
+  bool SetZones(ff_msgs::CommandStampedPtr const& cmd);
+  bool Shutdown(ff_msgs::CommandStampedPtr const& cmd);
+  bool SkipPlanStep(ff_msgs::CommandStampedPtr const& cmd);
+  bool StopAllMotion(ff_msgs::CommandStampedPtr const& cmd);
+  bool StopArm(ff_msgs::CommandStampedPtr const& cmd);
+  bool StopDownload(ff_msgs::CommandStampedPtr const& cmd);
+  bool StowArm(ff_msgs::CommandStampedPtr const& cmd);
+  bool SwitchLocalization(ff_msgs::CommandStampedPtr const& cmd);
+  bool Undock(ff_msgs::CommandStampedPtr const& cmd);
+  bool Unperch(ff_msgs::CommandStampedPtr const& cmd);
+  bool Wait(ff_msgs::CommandStampedPtr const& cmd);
+  bool WipeHlp(ff_msgs::CommandStampedPtr const& cmd);
 
  protected:
   virtual void Initialize(ros::NodeHandle *nh);
-  void ReadParams();
+  bool ReadParams();
+  bool ReadCommand(config_reader::ConfigReader::Table *response,
+                   ff_msgs::CommandStampedPtr cmd);
   void PublishAgentState();
   OpState* state_;
 
   ExecutiveActionClient<ff_msgs::ArmAction> arm_ac_;
   ExecutiveActionClient<ff_msgs::DockAction> dock_ac_;
   ExecutiveActionClient<ff_msgs::MotionAction> motion_ac_;
-  ExecutiveActionClient<ff_msgs::SwitchAction> switch_ac_;
+  ExecutiveActionClient<ff_msgs::LocalizationAction> localization_ac_;
 
   config_reader::ConfigReader config_params_;
 
@@ -256,27 +243,41 @@ class Executive : public ff_util::FreeFlyerNodelet {
 
   ff_msgs::AckStamped ack_;
 
+  ff_msgs::CommandStampedPtr sys_monitor_init_fault_response_;
+  ff_msgs::CommandStampedPtr sys_monitor_heartbeat_fault_response_;
+
   ff_msgs::CompressedFileAck cf_ack_;
-  ff_msgs::CompressedFileConstPtr plan_, zones_;
+  ff_msgs::CompressedFileConstPtr plan_, zones_, data_to_disk_;
+
+  ff_msgs::DockStateConstPtr dock_state_;
+  ff_msgs::FaultStateConstPtr fault_state_;
+  ff_msgs::MotionStatePtr motion_state_;
 
   ff_msgs::ArmGoal arm_goal_;
   ff_msgs::DockGoal dock_goal_;
   ff_msgs::MotionGoal motion_goal_;
-  ff_msgs::SwitchGoal switch_goal_;
+  ff_msgs::LocalizationGoal localization_goal_;
+
+  ff_util::FreeFlyerServiceClient<ff_hw_msgs::ConfigureSystemLeds> led_client_;
 
   ros::NodeHandle nh_;
 
   ros::Publisher agent_state_pub_, cmd_ack_pub_, plan_pub_, plan_status_pub_;
   ros::Publisher cf_ack_pub_, gs_cmd_pub_;
 
-  ros::ServiceClient zones_client_, laser_enable_client_, reset_ekf_client_;
+  ros::ServiceClient zones_client_, laser_enable_client_;
   ros::ServiceClient front_flashlight_client_, back_flashlight_client_;
   ros::ServiceClient dock_cam_config_client_, dock_cam_enable_client_;
   ros::ServiceClient nav_cam_config_client_, nav_cam_enable_client_;
+  ros::ServiceClient sci_cam_config_client_, sci_cam_enable_client_;
+  ros::ServiceClient payload_power_client_, pmc_enable_client_;
+  ros::ServiceClient set_inertia_client_, set_rate_client_, set_data_client_;
 
-  ros::Subscriber cmd_sub_, dock_state_sub_, gs_ack_sub_, plan_sub_, zones_sub_;
+  ros::Subscriber cmd_sub_, dock_state_sub_, fault_state_sub_, gs_ack_sub_;
+  ros::Subscriber heartbeat_sub_, motion_sub_, plan_sub_, zones_sub_, data_sub_;
 
-  ros::Timer reload_params_timer_, wait_timer_;
+  ros::Timer reload_params_timer_, wait_timer_, sys_monitor_heartbeat_timer_;
+  ros::Timer sys_monitor_startup_timer_;
 
   sequencer::Sequencer sequencer_;
 
@@ -288,13 +289,19 @@ class Executive : public ff_util::FreeFlyerNodelet {
   // Action timeouts
   double action_active_timeout_;
   double arm_feedback_timeout_, motion_feedback_timeout_;
-  double dock_result_timeout_, perch_result_timeout_, switch_result_timeout_;
+  double dock_result_timeout_, perch_result_timeout_;
+  double localization_result_timeout_, led_connected_timeout_;
+  double sys_monitor_heartbeat_timeout_, sys_monitor_startup_time_secs_;
 
   int pub_queue_size_;
   int sub_queue_size_;
 
   // TODO(Katie) Move to Agent state stamped
   bool allow_blind_flying_;
+  bool sys_monitor_heartbeat_fault_blocking_;
+  bool sys_monitor_init_fault_blocking_;
+  bool sys_monitor_heartbeat_fault_occurring_;
+  bool sys_monitor_init_fault_occurring_;
 };
 typedef std::unique_ptr<Executive> ExecutivePtr;
 }  // namespace executive

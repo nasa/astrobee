@@ -5,7 +5,7 @@
 //
 // Model version                  : 1.1142
 // Simulink Coder version         : 8.11 (R2016b) 25-Aug-2016
-// C/C++ source code generated on : Wed Jan 31 12:34:13 2018
+// C/C++ source code generated on : Thu Mar  7 13:23:50 2019
 //
 // Target selection: ert.tlc
 // Embedded hardware selection: 32-bit Generic
@@ -6106,6 +6106,7 @@ void sim_model_lib0_step0(RT_MODEL_sim_model_lib0_T *const sim_model_lib0_M,
     sim_model_lib0_P->bpm_lookup_Cdp_data,
     sim_model_lib0_P->bpm_lookup_totalarea_breakpoints,
     sim_model_lib0_P->abp_impeller_diameter, sim_model_lib0_P->const_air_density,
+    sim_model_lib0_P->tun_bpm_PM1_thrust_error_sf,
     sim_model_lib0_P->bpm_PM1_nozzle_noise_feedback_gain);
 
   // End of Outputs for SubSystem: '<S184>/blower_aerodynamics'
@@ -6264,6 +6265,7 @@ void sim_model_lib0_step0(RT_MODEL_sim_model_lib0_T *const sim_model_lib0_M,
     sim_model_lib0_P->bpm_lookup_Cdp_data,
     sim_model_lib0_P->bpm_lookup_totalarea_breakpoints,
     sim_model_lib0_P->abp_impeller_diameter, sim_model_lib0_P->const_air_density,
+    sim_model_lib0_P->tun_bpm_PM2_thrust_error_sf,
     sim_model_lib0_P->bpm_PM2_nozzle_noise_feedback_gain);
 
   // End of Outputs for SubSystem: '<S185>/blower_aerodynamics'

@@ -1,0 +1,14 @@
+[Unit]
+Description=Starts the ROS master without any logging
+After=network.target
+
+[Service]
+Type=simple
+User=astrobee
+Group=astrobee
+EnvironmentFile=/res/astrobee.env
+ExecStart=/opt/astrobee/env_wrapper.sh /opt/ros/kinetic/bin/rosmaster --core
+Restart=on-abort
+
+[Install]
+WantedBy=multi-user.target

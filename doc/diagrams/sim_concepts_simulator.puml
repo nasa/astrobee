@@ -1,0 +1,69 @@
+@startuml
+
+skinparam componentStyle uml2
+skinparam dpi 300
+
+'left to right direction
+
+!define SHOW_ALL_TYPES true
+!include "common.puml"
+
+
+!define COLOR_PLUGIN COLOR_9PASTEL_1
+!define COLOR_GROUP COLOR_9PASTEL_9
+
+title Astrobee Robot Software testing with Simulator
+
+folder "Development Computer" {
+
+  node "Gazebo Simulator" as gazebo COLOR_GROUP {
+    [sparse_mapping] <<plugin>> COLOR_PLUGIN
+    [navcam] <<plugin>> COLOR_PLUGIN
+    [IMU] <<plugin>> COLOR_PLUGIN
+    [PMC] <<plugin>>COLOR_PLUGIN
+    sparse_mapping -[hidden]right- navcam
+  }
+
+  node "Astrobee Robot Software ROS Nodes" COLOR_GROUP {
+    mgt_node(image_sampler)
+    loc_node("real robot\nsparse_mapping\nnode not running")
+    'frame GNC {
+      gnc_node(EKF)
+      gnc_node(CTL)
+      gnc_node(FAM)
+    '}
+    EKF -> CTL
+    CTL -> FAM
+  }
+
+  message(NavImage, sensor_msgs::Image, /hw/cam_nav)
+  message(PmcCommand, ff_hw_msgs::PmcCommand, /hw/pmc/command)
+  message(ImuTelem, sensor_msgs::Imu, /hw/imu)
+  message(ImgSample, sensor_msgs::Image, /mgt/img_sampler)
+  message(Features, ff_msgs::VisualLandmarks, /loc/ml/features)
+
+  navcam --> NavImage
+  NavImage --> image_sampler
+
+  sparse_mapping --> Features
+  Features ---> EKF
+
+  image_sampler --> ImgSample
+
+  IMU --> ImuTelem
+  ImuTelem --> EKF
+
+  FAM -up-> PmcCommand
+  PmcCommand -up-> PMC
+
+  'pmc_actuator --> PmcTelem
+  'PmcTelem --> mobility
+}
+
+legend bottom
+PMC: Propulsion Module Controller
+CTL: GN&C Control
+FAM: GN&C Force Allocation Module
+endlegend
+
+@enduml

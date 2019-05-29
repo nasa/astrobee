@@ -30,10 +30,9 @@ namespace {
 
 rapid::ext::astrobee::DownlinkOption ConvertOption(uint8_t state) {
   switch (state) {
-    GENERATE_DATA_TO_DISK_CASE(NONE);
     GENERATE_DATA_TO_DISK_CASE(IMMEDIATE);
     GENERATE_DATA_TO_DISK_CASE(DELAYED);
-    GENERATE_DATA_TO_DISK_DEFAULT(NONE);
+    GENERATE_DATA_TO_DISK_DEFAULT(IMMEDIATE);
   }
 }
 
@@ -91,7 +90,7 @@ void ff::RosDataToDiskToRapid::StateCallback(
   // Currently the code only supports 64 topics
   unsigned int size = state->topic_save_settings.size();
   if (size > 64) {
-    ROS_ERROR("DDS: There are %i topics but only 64 can be sent to the ground.",
+    ROS_WARN("DDS: There are %i topics but only 64 can be sent to the ground.",
               size);
     size = 64;
   }
@@ -126,7 +125,7 @@ void ff::RosDataToDiskToRapid::TopicsCallback(
   // Currently the code only supports sending 256 topics
   unsigned int size = topics->topic_names.size();
   if (size > 256) {
-    ROS_ERROR("DDS: There are %i topics but only 256 can be sent to the ground",
+    ROS_WARN("DDS: There are %i topics but only 256 can be sent to the ground",
               size);
     size = 256;
   }

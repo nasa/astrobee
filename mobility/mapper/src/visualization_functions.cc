@@ -50,9 +50,8 @@ void DeleteMarkersTemplate(const std::string &frame_id,
 }
 
 void SetMarkersForDeletion(visualization_msgs::MarkerArray* marker_array) {
-  for (uint i = 0; i < marker_array->markers.size(); i++) {
+  for (uint i = 0; i < marker_array->markers.size(); i++)
     marker_array->markers[i].action = visualization_msgs::Marker::DELETE;
-  }
 }
 
 void DrawObstacleNodes(const std::vector<Eigen::Vector3d> &points,
@@ -90,8 +89,6 @@ void DrawNodes(const std::vector<Eigen::Vector3d> &points,
                const std_msgs::ColorRGBA &color,
                const double &transparency,  // 0 -> transparent, 1 -> opaque
                visualization_msgs::MarkerArray *marker_array) {
-  // marker_array->markers.clear();
-
   visualization_msgs::Marker marker;
   marker.type = visualization_msgs::Marker::CUBE_LIST;
   marker.color = color;
@@ -109,11 +106,10 @@ void DrawNodes(const std::vector<Eigen::Vector3d> &points,
   // Get the number of requested waypoints
   uint n_w = points.size();
 
-  if (n_w == 0) {
+  if (n_w == 0)
     marker.action = visualization_msgs::Marker::DELETE;
-  } else {
+  else
     marker.action = visualization_msgs::Marker::ADD;
-  }
 
   for (size_t i = 0; i < n_w; ++i) {
     geometry_msgs::Point NewPoint;
@@ -121,9 +117,6 @@ void DrawNodes(const std::vector<Eigen::Vector3d> &points,
     NewPoint.y = points[i](1);
     NewPoint.z = points[i](2);
     marker.points.push_back(NewPoint);
-    // marker.pose.position = NewPoint;
-    // marker_array->markers.push_back(marker);
-    // i = i + 1;
   }
   marker_array->markers.push_back(marker);
 
@@ -140,8 +133,6 @@ void DrawNodes(const std::vector<octomap::point3d> &points,
                const std_msgs::ColorRGBA &color,
                const double &transparency,  // 0 -> transparent, 1 -> opaque
                visualization_msgs::MarkerArray *marker_array) {
-  // marker_array->markers.clear();
-
   visualization_msgs::Marker marker;
   marker.type = visualization_msgs::Marker::CUBE_LIST;
   marker.color = color;
@@ -159,11 +150,10 @@ void DrawNodes(const std::vector<octomap::point3d> &points,
   // Get the number of requested waypoints
   uint n_w = points.size();
 
-  if (n_w == 0) {
+  if (n_w == 0)
     marker.action = visualization_msgs::Marker::DELETE;
-  } else {
+  else
     marker.action = visualization_msgs::Marker::ADD;
-  }
 
   for (size_t i = 0; i < n_w; ++i) {
     geometry_msgs::Point NewPoint;
@@ -171,9 +161,6 @@ void DrawNodes(const std::vector<octomap::point3d> &points,
     NewPoint.y = points[i].y();
     NewPoint.z = points[i].z();
     marker.points.push_back(NewPoint);
-    // marker.pose.position = NewPoint;
-    // marker_array->markers.push_back(marker);
-    // i = i + 1;
   }
   marker_array->markers.push_back(marker);
 
@@ -214,7 +201,7 @@ void MarkerNode(const Eigen::Vector3d &point,
 void PathVisualization(const std::vector<Eigen::Vector3d> &total_path,
                        const std::vector<Eigen::Vector3d> &waypoints,
                        visualization_msgs::MarkerArray *markers) {
-    PathVisualization(total_path, waypoints, Color::Green(), "/Path", markers);
+  PathVisualization(total_path, waypoints, Color::Green(), "/Path", markers);
 }
 
 void PathVisualization(const std::vector<Eigen::Vector3d> &total_path,
@@ -222,53 +209,53 @@ void PathVisualization(const std::vector<Eigen::Vector3d> &total_path,
                        const std_msgs::ColorRGBA &color,
                        const std::string &ns,  // namespace
                        visualization_msgs::MarkerArray *markers) {
-    // Initialize edges marker
-    visualization_msgs::Marker line_list;
-    line_list.header.frame_id = "/world";
-    line_list.header.stamp = ros::Time::now();
-    line_list.ns = ns;
-    line_list.action = visualization_msgs::Marker::ADD;
-    line_list.type = visualization_msgs::Marker::LINE_LIST;
-    line_list.id = 0;
-    line_list.scale.x = 0.02;  // Line width
-    line_list.pose.orientation.w = 1.0;
-    line_list.color = color;
+  // Initialize edges marker
+  visualization_msgs::Marker line_list;
+  line_list.header.frame_id = "/world";
+  line_list.header.stamp = ros::Time::now();
+  line_list.ns = ns;
+  line_list.action = visualization_msgs::Marker::ADD;
+  line_list.type = visualization_msgs::Marker::LINE_LIST;
+  line_list.id = 0;
+  line_list.scale.x = 0.02;  // Line width
+  line_list.pose.orientation.w = 1.0;
+  line_list.color = color;
 
-    // Populate edges
-    uint path_n_points = total_path.size();
-    geometry_msgs::Point node;
-    if (path_n_points >= 2) {
-        node = msg_conversions::eigen_to_ros_point(total_path[0]);
-        line_list.points.push_back(node);
-        for (uint i = 1; i < total_path.size()-1; i++) {
-            node = msg_conversions::eigen_to_ros_point(total_path[i]);
-            line_list.points.push_back(node);
-            line_list.points.push_back(node);
-        }
-        node = msg_conversions::eigen_to_ros_point(total_path[total_path.size()-1]);
-        line_list.points.push_back(node);
-    }
+  // Populate edges
+  uint path_n_points = total_path.size();
+  geometry_msgs::Point node;
+  if (path_n_points >= 2) {
+      node = msg_conversions::eigen_to_ros_point(total_path[0]);
+      line_list.points.push_back(node);
+      for (uint i = 1; i < total_path.size()-1; i++) {
+          node = msg_conversions::eigen_to_ros_point(total_path[i]);
+          line_list.points.push_back(node);
+          line_list.points.push_back(node);
+      }
+      node = msg_conversions::eigen_to_ros_point(total_path[total_path.size()-1]);
+      line_list.points.push_back(node);
+  }
 
-    // Populate the waypoints
-    visualization_msgs::Marker endpoints;
-    endpoints.header.frame_id = "/world";
-    endpoints.header.stamp = ros::Time::now();
-    endpoints.ns = ns;
-    endpoints.action = visualization_msgs::Marker::ADD;
-    endpoints.type = visualization_msgs::Marker::SPHERE_LIST;
-    endpoints.id = 1;
-    endpoints.scale.x = 0.1;
-    endpoints.scale.y = 0.1;
-    endpoints.scale.z = 0.1;
-    endpoints.pose.orientation.w = 1.0;
-    endpoints.color = Color::Blue();
-    for (uint i = 0; i < waypoints.size(); i++) {
-        node = msg_conversions::eigen_to_ros_point(waypoints[i]);
-        endpoints.points.push_back(node);
-    }
+  // Populate the waypoints
+  visualization_msgs::Marker endpoints;
+  endpoints.header.frame_id = "/world";
+  endpoints.header.stamp = ros::Time::now();
+  endpoints.ns = ns;
+  endpoints.action = visualization_msgs::Marker::ADD;
+  endpoints.type = visualization_msgs::Marker::SPHERE_LIST;
+  endpoints.id = 1;
+  endpoints.scale.x = 0.1;
+  endpoints.scale.y = 0.1;
+  endpoints.scale.z = 0.1;
+  endpoints.pose.orientation.w = 1.0;
+  endpoints.color = Color::Blue();
+  for (uint i = 0; i < waypoints.size(); i++) {
+      node = msg_conversions::eigen_to_ros_point(waypoints[i]);
+      endpoints.points.push_back(node);
+  }
 
-    markers->markers.push_back(endpoints);
-    markers->markers.push_back(line_list);
+  markers->markers.push_back(endpoints);
+  markers->markers.push_back(line_list);
 }
 
 void DrawArrowPoints(const Eigen::Vector3d& p1,

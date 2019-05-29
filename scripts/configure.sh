@@ -71,11 +71,12 @@ usage_string="$scriptname [-h] [-l <linux build>] [-a <arm build>]\
  [-r <with QP planner>] [-R <without QP planner>]\
  [-f <with PicoFlexx driver>] [-F <without PicoFlexx driver>]\
  [-k <use ccache if available>] [-K <do not use ccache>]\
+ [-v <with VIVE>] [-V <without VIVE>]\
  [-g <print debug information only>]"
 #[-t make_target]
 
 # options to parse
-optstring="hlap:b:B:cCdDrRfFkKg"
+optstring="hlap:b:B:cCdDrRfFkKvVg"
 
 # Print the script usage
 print_usage()
@@ -107,6 +108,8 @@ print_help()
     echo -e "\t-R build without the QP planner"
     echo -e "\t-f build with the PicoFlexx driver (default)"
     echo -e "\t-F build without the PicoFlexx driver"
+    echo -e "\t-v build with the VIVE (default)"
+    echo -e "\t-V build without VIVE"
     #    echo -e "\t-t make_target  define the make build target"
     #    echo -e "\t   default (when ommited) is 'install'"
     echo -e "\t   when -t is specified, the configure processs is skipped!"
@@ -162,6 +165,10 @@ parse_args()
 	    "k") extra_opts+=" -DUSE_CCACHE=on"
 		 ;;
 	    "K") extra_opts+=" -DUSE_CCACHE=off"
+		 ;;
+	    "v") extra_opts+=" -DENABLE_VIVE=on"
+		 ;;
+	    "V") extra_opts+=" -DENABLE_VIVE=off"
 		 ;;
 	    "g") debug_mode=1
 		 ;;
@@ -277,7 +284,9 @@ configure()
             echo "Remove the CMake Cache for ${build_path}"
             rm -f CMakeCache.txt
 	fi
-	cmake -DCMAKE_BUILD_TYPE=${build_type} ${install_opt} ${cmake_opts} ${ff_path}
+	cmd="cmake -DCMAKE_BUILD_TYPE=${build_type} ${install_opt} ${cmake_opts} ${ff_path}"
+        echo $cmd # to se what we are geting
+        $cmd 
     fi
 }
 

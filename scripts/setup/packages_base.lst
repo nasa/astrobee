@@ -27,6 +27,8 @@ libgmp10
 libusb-1.0-0
 libtinyxml2.6.2v5
 libpcl-common1.7
+libjson-c2
+libargtable2-0
 libboost-program-options1.58.0
 libboost-signals1.58.0
 libboost-system1.58.0
@@ -105,6 +107,8 @@ libboost-thread-dev
 libboost-filesystem-dev
 libsuitesparse-dev
 libatlas-dev
+libjson-c-dev
+libargtable2-dev
 libalvar-dev
 libdbow2-dev
 libopenmvg-dev

@@ -19,6 +19,6 @@
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 pushd $DIR/../../gnc/matlab/Prototypes/Proto_4/ > /dev/null
-matlab -nosplash -nodisplay -r "build_Proto4; exit"
+matlab-2016b -nosplash -nodisplay -r "build_Proto4; exit"
 popd > /dev/null
 

@@ -46,6 +46,13 @@
 
 namespace cpu_monitor {
 
+enum LoadFaultState {
+  ASSERTING,
+  ASSERTED,
+  CLEARING,
+  CLEARED
+};
+
 class CpuMonitor : public ff_util::FreeFlyerNodelet {
  public:
   CpuMonitor();
@@ -81,21 +88,33 @@ class CpuMonitor : public ff_util::FreeFlyerNodelet {
 
   LoadVector load_cpus_;
 
+  bool temp_fault_triggered_;
+
+  LoadFaultState load_fault_state_;
+
   Cpu freq_cpus_;
 
   config_reader::ConfigReader config_params_;
 
   double temperature_scale_;
 
+  float avg_load_high_value_;
+
   ff_msgs::CpuStateStamped cpu_state_msg_;
 
-  int pub_queue_size_, update_freq_hz_, cpu_ave_load_limit_, cpu_temp_limit_;
+  int pub_queue_size_, update_freq_hz_, cpu_avg_load_limit_, cpu_temp_limit_;
+  int assert_load_high_fault_timeout_sec_, clear_load_high_fault_timeout_sec_;
   unsigned int ncpus_;
 
   ros::Publisher cpu_state_pub_;
   ros::Timer reload_params_timer_, stats_timer_;
+  ros::Timer assert_load_fault_timer_, clear_load_fault_timer_;
 
   std::string processor_name_;
+
+  void AssertLoadHighFaultCallback(ros::TimerEvent const& te);
+
+  void ClearLoadHighFaultCallback(ros::TimerEvent const& te);
 
   /** Collect usage stats about all the CPUs, calculate percentages
     * based on the last time this was called. You should call this in

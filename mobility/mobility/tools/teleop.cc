@@ -1,14 +1,14 @@
 /* Copyright (c) 2017, United States Government, as represented by the
  * Administrator of the National Aeronautics and Space Administration.
- * 
+ *
  * All rights reserved.
- * 
+ *
  * The Astrobee platform is licensed under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -34,7 +34,7 @@
 #include <ff_util/config_client.h>
 
 // Primitive actions
-#include <ff_msgs/SwitchAction.h>
+#include <ff_msgs/LocalizationAction.h>
 #include <ff_msgs/MotionAction.h>
 
 // Eigen C++ includes
@@ -50,6 +50,8 @@
 
 // Gflags
 DEFINE_string(ns, "", "Robot namespace");
+DEFINE_bool(reset, false, "Reset localization pipeline");
+DEFINE_bool(bias, false, "Estimate bias for the localization pipeline");
 DEFINE_string(loc, "", "Localization pipeline (none, ml, ar, hr)");
 DEFINE_string(mode, "nominal", "Flight mode");
 DEFINE_string(planner, "trapezoidal", "Path planning algorithm");
@@ -59,6 +61,7 @@ DEFINE_double(vel, -1.0, "Desired velocity");
 DEFINE_double(accel, -1.0, "Desired acceleration");
 DEFINE_double(omega, -1.0, "Desired angular velocity");
 DEFINE_double(alpha, -1.0, "Desired angular acceleration");
+DEFINE_double(tolerance_pos, -1.0, "Tolerance for position accuracy");
 DEFINE_bool(move, false, "Send move command");
 DEFINE_bool(stop, false, "Send stop command");
 DEFINE_bool(idle, false, "Send idle command");
@@ -113,68 +116,8 @@ void MResultCallback(ff_util::FreeFlyerActionState::Enum result_code,
     }
   case ff_util::FreeFlyerActionState::Enum::PREEMPTED:
   case ff_util::FreeFlyerActionState::Enum::ABORTED: {
-    // Print a meningful response
-    std::cout << std::endl << "Result: ";
-    switch (result->response) {
-    case ff_msgs::MotionResult::ALREADY_THERE:
-      std::cout << "We are already at the location" << std::endl;       break;
-    case ff_msgs::MotionResult::SUCCESS:
-      std::cout << "Motion succeeded" << std::endl;                     break;
-    case ff_msgs::MotionResult::CANCELLED:
-      std::cout << "Motion cancelled by callee" << std::endl;           break;
-    case ff_msgs::MotionResult::PREEMPTED:
-      std::cout << "Motion preempted by thirdparty" << std::endl;       break;
-    case ff_msgs::MotionResult::PLAN_FAILED:
-      std::cout << "Plan/bootstrap failed" << std::endl;                break;
-    case ff_msgs::MotionResult::VALIDATE_FAILED:
-      std::cout << "Validate failed" << std::endl;                      break;
-    case ff_msgs::MotionResult::CONTROL_FAILED:
-      std::cout << "Control failed" << std::endl;                       break;
-    case ff_msgs::MotionResult::OBSTACLE_DETECTED:
-      std::cout << "Obstacle detected / replan disabled" << std::endl;  break;
-    case ff_msgs::MotionResult::REPLAN_NOT_ENOUGH_TIME:
-      std::cout << "Obstacle and no time to replan" << std::endl;       break;
-    case ff_msgs::MotionResult::REPLAN_FAILED:
-      std::cout << "Obstacle and replanning failed" << std::endl;       break;
-    case ff_msgs::MotionResult::REVALIDATE_FAILED:
-      std::cout << "Obstacle and revalidating failed" << std::endl;     break;
-    case ff_msgs::MotionResult::NOT_IN_WAITING_MODE:
-      std::cout << "Internal failure" << std::endl;                     break;
-    case ff_msgs::MotionResult::INVALID_FLIGHT_MODE:
-      std::cout << "Invalid flight mode specified" << std::endl;        break;
-    case ff_msgs::MotionResult::UNEXPECTED_EMPTY_SEGMENT:
-      std::cout << "Segment empty" << std::endl;                        break;
-    case ff_msgs::MotionResult::COULD_NOT_RESAMPLE:
-      std::cout << "Could not resample segment" << std::endl;           break;
-    case ff_msgs::MotionResult::UNEXPECTED_EMPTY_STATES:
-      std::cout << "State vector empty" << std::endl;                   break;
-    case ff_msgs::MotionResult::INVALID_COMMAND:
-      std::cout << "Command rejected" << std::endl;                     break;
-    case ff_msgs::MotionResult::CANNOT_QUERY_ROBOT_POSE:
-      std::cout << "Failed to find the current pose" << std::endl;      break;
-    case ff_msgs::MotionResult::NOT_ON_FIRST_POSE:
-      std::cout << "Not on first pose / no bootstrapping" << std::endl; break;
-    case ff_msgs::MotionResult::BAD_DESIRED_VELOCITY:
-      std::cout << "Requested vel too high" << std::endl;               break;
-    case ff_msgs::MotionResult::BAD_DESIRED_ACCELERATION:
-      std::cout << "Requested accel too high" << std::endl;             break;
-    case ff_msgs::MotionResult::BAD_DESIRED_OMEGA:
-      std::cout << "Requested omega too high" << std::endl;             break;
-    case ff_msgs::MotionResult::BAD_DESIRED_ALPHA:
-      std::cout << "Requested alpha too high" << std::endl;             break;
-    case ff_msgs::MotionResult::BAD_DESIRED_RATE:
-      std::cout << "Requested rate too low" << std::endl;               break;
-    case ff_msgs::MotionResult::TOLERANCE_VIOLATION_POSITION:
-      std::cout << "Position tolerance violated" << std::endl;          break;
-    case ff_msgs::MotionResult::TOLERANCE_VIOLATION_ATTITUDE:
-      std::cout << "Attitude tolerance violated" << std::endl;          break;
-    case ff_msgs::MotionResult::TOLERANCE_VIOLATION_VELOCITY:
-      std::cout << "Velocity tolerance violated" << std::endl;          break;
-    case ff_msgs::MotionResult::TOLERANCE_VIOLATION_OMEGA:
-      std::cout << "Omega tolerance violated" << std::endl;             break;
-    default:
-      std::cout << "Error: unknown" << std::endl;                       break;
-    }
+    std::cout << std::endl << "Result: " << result->fsm_result
+              << " (response: " << result->response << ")" << std::endl;
   }
   default:
     break;
@@ -184,37 +127,21 @@ void MResultCallback(ff_util::FreeFlyerActionState::Enum result_code,
 
 // Mobility feedback
 void MFeedbackCallback(ff_msgs::MotionFeedbackConstPtr const& feedback) {
-  std::string str = "UNKNOWN";
-  switch (feedback->state.state) {
-  case ff_msgs::MotionState::INITIALIZING:     str = "INITIALIZING";     break;
-  case ff_msgs::MotionState::IDLE:             str = "IDLE";             break;
-  case ff_msgs::MotionState::STOPPED:          str = "STOPPED";          break;
-  case ff_msgs::MotionState::IDLING:           str = "IDLING";           break;
-  case ff_msgs::MotionState::STOPPING:         str = "STOPPING";         break;
-  case ff_msgs::MotionState::PREPPING:         str = "PREPPING";         break;
-  case ff_msgs::MotionState::BOOTSTRAPPING:    str = "BOOTSTRAPPING";    break;
-  case ff_msgs::MotionState::PLANNING:         str = "PLANNING";         break;
-  case ff_msgs::MotionState::VALIDATING:       str = "VALIDATING";       break;
-  case ff_msgs::MotionState::PREPARING:        str = "PREPARING";        break;
-  case ff_msgs::MotionState::CONTROLLING:      str = "CONTROLLING";      break;
-  case ff_msgs::MotionState::REPLANNING:       str = "REPLANNING";       break;
-  case ff_msgs::MotionState::REVALIDATING:     str = "REVALIDATING";     break;
-  }
   std::cout << '\r' << std::flush;
   std::cout << std::fixed << std::setprecision(2)
     << "POS: " << 1000.00 * feedback->progress.error_position << " mm "
     << "ATT: " << 57.2958 * feedback->progress.error_attitude << " deg "
     << "VEL: " << 1000.00 * feedback->progress.error_velocity << " mm/s "
     << "OMEGA: " << 57.2958 * feedback->progress.error_omega << " deg/s "
-    << "[" << str << "]           ";
+    << "[" << feedback->state.fsm_state << "]   ";
 }
 
 // Switch feedback
-void SFeedbackCallback(ff_msgs::SwitchFeedbackConstPtr const& feedback) {}
+void SFeedbackCallback(ff_msgs::LocalizationFeedbackConstPtr const& feedback) {}
 
 // Switch result
 void SResultCallback(ff_util::FreeFlyerActionState::Enum result_code,
-  ff_msgs::SwitchResultConstPtr const& result,
+  ff_msgs::LocalizationResultConstPtr const& result,
   tf2_ros::Buffer * tf_buffer_,
   ff_util::FreeFlyerActionClient<ff_msgs::MotionAction> * action) {
   // Setup a new mobility goal
@@ -224,16 +151,16 @@ void SResultCallback(ff_util::FreeFlyerActionState::Enum result_code,
   switch (result_code) {
   case ff_util::FreeFlyerActionState::SUCCESS: {
     // Idle command
-    if (FLAGS_idle)
+    if (FLAGS_idle) {
       goal.command = ff_msgs::MotionGoal::IDLE;
     // Stop command
-    if (FLAGS_stop)
+    } else if (FLAGS_stop) {
       goal.command = ff_msgs::MotionGoal::STOP;
     // Stop command
-    if (FLAGS_prep)
+    } else if (FLAGS_prep) {
       goal.command = ff_msgs::MotionGoal::PREP;
     // Obtain the current state
-    if (FLAGS_move) {
+    } else if (FLAGS_move) {
       goal.command = ff_msgs::MotionGoal::MOVE;
       geometry_msgs::PoseStamped state;
       try {
@@ -313,13 +240,17 @@ void SResultCallback(ff_util::FreeFlyerActionState::Enum result_code,
       }
       // Package up and send the move goal
       goal.states.push_back(state);
-    }
     // Execute command
-    if (!FLAGS_exec.empty()) {
+    } else if (!FLAGS_exec.empty()) {
       if (!ff_util::Serialization::ReadFile(FLAGS_exec, goal)) {
         std::cout << "Segment not loaded from file " << FLAGS_exec << std::endl;
         break;
       }
+    // We don't actually have a motion goal
+    } else {
+      std::cout << "Result: SUCCESS" << std::endl;
+      std::cout << "Message: " << result->fsm_result << std::endl;
+      break;
     }
     // Try and send the goal
     if (!action->SendGoal(goal))
@@ -332,6 +263,7 @@ void SResultCallback(ff_util::FreeFlyerActionState::Enum result_code,
     break;
   case ff_util::FreeFlyerActionState::ABORTED:
     std::cout << "Error: ABORTED" << std::endl;
+    std::cout << "Reason: " << result->fsm_result << std::endl;
     break;
   case ff_util::FreeFlyerActionState::TIMEOUT_ON_CONNECT:
     std::cout << "Error: TIMEOUT_ON_CONNECT" << std::endl;
@@ -354,7 +286,7 @@ void SResultCallback(ff_util::FreeFlyerActionState::Enum result_code,
 
 // Ensure all clients are connected
 void ConnectedCallback(tf2_ros::Buffer * tf_buffer_,
-  ff_util::FreeFlyerActionClient<ff_msgs::SwitchAction> * client_s_,
+  ff_util::FreeFlyerActionClient<ff_msgs::LocalizationAction> * client_s_,
   ff_util::FreeFlyerActionClient<ff_msgs::MotionAction> * client_t_) {
   // Check to see if connected
   if (!client_s_->IsConnected()) return;  // Switch
@@ -362,14 +294,19 @@ void ConnectedCallback(tf2_ros::Buffer * tf_buffer_,
   if (sent_)                     return;  // Avoid calling twice
   else
     sent_ = true;
-  // Debug
-  std::cout << "All actions connected. Sending command..." << std::endl;
   // Package up and send the move goal
-  if (!FLAGS_loc.empty()) {
-    ff_msgs::SwitchGoal switch_goal;
-    switch_goal.pipeline = FLAGS_loc;
-    if (!client_s_->SendGoal(switch_goal))
-      std::cout << "Switch client did not accept goal" << std::endl;
+  if (!FLAGS_loc.empty() || FLAGS_bias || FLAGS_reset) {
+    ff_msgs::LocalizationGoal goal;
+    if (!FLAGS_loc.empty()) {
+      goal.command = ff_msgs::LocalizationGoal::COMMAND_SWITCH_PIPELINE;
+      goal.pipeline = FLAGS_loc;
+    }
+    if (FLAGS_reset)
+      goal.command = ff_msgs::LocalizationGoal::COMMAND_RESET_FILTER;
+    if (FLAGS_bias)
+      goal.command = ff_msgs::LocalizationGoal::COMMAND_ESTIMATE_BIAS;
+    if (!client_s_->SendGoal(goal))
+      std::cout << "Localization client did not accept goal" << std::endl;
     return;
   }
   // Fake a switch result to trigger the releop action
@@ -386,21 +323,34 @@ int main(int argc, char *argv[]) {
   google::SetVersionString("1.0.0");
   google::ParseCommandLineFlags(&argc, &argv, true);
   // Some simple checks
-  uint8_t mode = 0;
-  if (!FLAGS_exec.empty()) mode++;
-  if (FLAGS_idle) mode++;
-  if (FLAGS_stop) mode++;
-  if (FLAGS_move) mode++;
-  if (FLAGS_prep) mode++;
+  uint8_t mode1 = 0, mode2 = 0;
+  if (!FLAGS_exec.empty()) mode1++;
+  if (FLAGS_idle) mode1++;
+  if (FLAGS_stop) mode1++;
+  if (FLAGS_move) mode1++;
+  if (FLAGS_prep) mode1++;
+  if (!FLAGS_loc.empty()) mode2++;
+  if (FLAGS_bias) mode2++;
+  if (FLAGS_reset) mode2++;
   // Check we have specified one of the required switches
-  if (FLAGS_loc.empty() && mode == 0) {
-    std::cout << "You must specify one of "
-      << "-loc, -move, -stop, -idle, -exec <segment>" << std::endl;
+  if (mode1 == 0 && mode2 == 0) {
+    std::cout << "You must specify at least one of "
+      << "-bias, -reset, -loc, -move, -stop, -idle, -exec <segment>" << std::endl;
     return 1;
   }
-  if (mode > 1) {
+  if (mode1 > 1) {
     std::cout << "You can only specify one of "
       << "-move, -stop, -idle, or -exec <segment>" << std::endl;
+    return 1;
+  }
+  if (mode2 > 1) {
+    std::cout << "You can only specify one of "
+      << "-loc -bias or -reset" << std::endl;
+    return 1;
+  }
+
+  if (FLAGS_planner != "trapezoidal" && FLAGS_planner != "qp") {
+    std::cout << "The planner must be either trapezoidal or qp." << std::endl;
     return 1;
   }
   if (FLAGS_move && FLAGS_pos.empty() && FLAGS_att.empty()) {
@@ -420,7 +370,7 @@ int main(int argc, char *argv[]) {
     return 1;
   }
   // Action clients
-  ff_util::FreeFlyerActionClient<ff_msgs::SwitchAction> client_s_;
+  ff_util::FreeFlyerActionClient<ff_msgs::LocalizationAction> client_s_;
   ff_util::FreeFlyerActionClient<ff_msgs::MotionAction> client_t_;
   // Create a node handle
   ros::NodeHandle nh(std::string("/") + FLAGS_ns);
@@ -440,7 +390,7 @@ int main(int argc, char *argv[]) {
     &tf_buffer_, &client_t_));
   client_s_.SetConnectedCallback(std::bind(ConnectedCallback,
     &tf_buffer_, &client_s_, &client_t_));
-  client_s_.Create(&nh, ACTION_LOCALIZATION_MANAGER_SWITCH);
+  client_s_.Create(&nh, ACTION_LOCALIZATION_MANAGER_LOCALIZATION);
   // Setup MOBILITY action
   client_t_.SetConnectedTimeout(FLAGS_connect);
   client_t_.SetActiveTimeout(FLAGS_active);
@@ -457,11 +407,12 @@ int main(int argc, char *argv[]) {
   // For moves and executes check that we are configured correctly
   if (FLAGS_move || !FLAGS_exec.empty()) {
     ff_util::ConfigClient cfg(&nh, NODE_CHOREOGRAPHER);
-    if (FLAGS_vel > 0) cfg.Set<double>("desired_vel", FLAGS_vel);
+    if (FLAGS_vel   > 0) cfg.Set<double>("desired_vel", FLAGS_vel);
     if (FLAGS_accel > 0) cfg.Set<double>("desired_accel", FLAGS_accel);
     if (FLAGS_omega > 0) cfg.Set<double>("desired_omega", FLAGS_omega);
     if (FLAGS_alpha > 0) cfg.Set<double>("desired_alpha", FLAGS_alpha);
-    if (FLAGS_rate > 0) cfg.Set<double>("desired_rate", FLAGS_rate);
+    if (FLAGS_rate  > 0) cfg.Set<double>("desired_rate", FLAGS_rate);
+    if (FLAGS_tolerance_pos > 0) cfg.Set<double>("tolerance_pos", FLAGS_tolerance_pos);
     cfg.Set<bool>("enable_collision_checking", !FLAGS_nocollision);
     cfg.Set<bool>("enable_validation", !FLAGS_novalidate);
     cfg.Set<bool>("enable_bootstrapping", !FLAGS_nobootstrap);

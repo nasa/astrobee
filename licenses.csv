@@ -25,10 +25,13 @@ Library (system),SuiteSparse: a suite of sparse matrix algorithms,http://faculty
 Library (system),SoraCore: interfaces and RAPID implementation for SORA,https://github.com/mallanmba/soraCore ,Apache 2.0,YES,None
 Library (system),Qt4: cross-platform application framework,http://qt-project.org/,LGPLv3,NO,None
 Library (system),Miro: Middleware for Robots,https://github.com/hhutz/Miro,GNU LGPLv2.1,YES,None
-Library (system),libusb: a C library that provides generic access to USB devices,http://www.libusb.org,GNU LGPLv2.1,NO,None
+Library (system),libusb-1.0: a C library that provides generic access to USB devices,http://www.libusb.info,GNU LGPLv2.1,NO,None
+Library (system),libjson-c: a C library for constructing JSON objects,https://github.com/json-c/json-c,MIT,NO,None
+Library (system),argtable2: an ANSI C library for commandline arguments,http://argtable.sourceforge.net,GNU LGPLv2,NO,None
 Library (system),Video4Linux2,http://www.linuxtv.org ,GNU LGPLv2.1,NO,None
 Library (system),gazebo: C++ robot simulator,http://gazebosim.org,Apache 2.0,NO,None
 Library (external),MAVLink: Micro Air Vehicle Message Marshalling Library, https://github.com/mavlink/mavlink, GNU LGPLv3, NO, None
+Library (external),libsurvive: An open source tool for working with Lighthouse data,https://github.com/cnlohr/libsurvive, MIT, YES, See hardware/vive
 Library (optional),RTI DDS SDK,http://www.rti.com/,Source license,NO,None
 Library (optional),PicoFlexx SDK,http://pmdtec.com/picoflexx/software,Closed source,YES,None
 Library (optional),Flycapture SDK,https://www.ptgrey.com/flycapture-sdk ,Closed source,NO,None

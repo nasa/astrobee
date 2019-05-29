@@ -23,7 +23,7 @@
 #include <serial/serial.h>
 
 // Mavlink protocol
-#include <mavlink/v2.0/common/mavlink.h>
+#include <mavlink/v1.0/common/mavlink.h>
 
 // C++ STL includes
 #include <functional>
@@ -45,6 +45,8 @@ typedef std::function<void(std::vector<uint8_t> const&, int32_t, int32_t)> Speed
 typedef std::function<void(mavlink_optical_flow_t const&)> SpeedCamOpticalFlowCallback;
 typedef std::function<void(mavlink_vision_speed_estimate_t const&)> SpeedCamSpeedCallback;
 typedef std::function<void(mavlink_heartbeat_t const&)> SpeedCamStatusCallback;
+typedef std::function<void(uint32_t)> SpeedCamVersionCallback;
+typedef std::function<void(int32_t)> SpeedCamStateCallback;
 
 // Result for any speed camera action
 enum SpeedCamResult {
@@ -66,13 +68,14 @@ class SpeedCam {
   // Constructor
   SpeedCam(SpeedCamImuCallback cb_imu, SpeedCamCameraImageCallback cb_camera_image,
     SpeedCamOpticalFlowCallback cb_optical_flow, SpeedCamSpeedCallback cb_speed,
-    SpeedCamStatusCallback cb_status);
+      SpeedCamStatusCallback cb_status, SpeedCamVersionCallback cb_version,
+        SpeedCamStateCallback);
 
   // Initialize the serial port
   SpeedCamResult Initialize(std::string const& port, uint32_t baud);
 
-  // Client-pushed time sync event
-  bool TimeSync();
+  // Get the operating state
+  void SetState(int32_t const& state);
 
  protected:
   // Asynchronous callback with serial data
@@ -88,14 +91,17 @@ class SpeedCam {
   SpeedCamOpticalFlowCallback  cb_optical_flow_;  // Optical flow callback
   SpeedCamSpeedCallback cb_speed_;                // Twist callback
   SpeedCamStatusCallback cb_status_;              // System status callback
-  int32_t system_id_;                             // Source device
-  int32_t comp_id_;                               // Sink device
+  SpeedCamVersionCallback cb_version_;            // Firmware version
+  SpeedCamStateCallback cb_state_;                // State
+  uint8_t system_id_;                             // Source device
+  uint8_t comp_id_;                               // Sink device
   size_t image_size_;                             // Image size
   size_t image_packets_;                          // Image packets
   int32_t image_payload_;                         // Payload size / transaction
   int32_t image_width_;                           // Image width
   int32_t image_height_;                          // Image height
   std::vector<uint8_t> image_buffer_;             // Image buffer
+  uint32_t sw_version_;                           // Firmware version
 };
 
 }  // namespace speed_cam

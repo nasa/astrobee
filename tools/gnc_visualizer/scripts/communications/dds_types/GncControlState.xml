@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<types xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="/opt/rti/ndds/scripts/../resource/rtiddsgen/schema/rti_dds_topic_types.xsd">
+<include file="Message.xml"/>
+<module name="rapid">
+<module name="ext">
+<module name="astrobee">
+<struct name="Twist">
+<member name="linear" type="nonBasic" nonBasicTypeName="rapid::Vec3d"/>
+<member name="angular" type="nonBasic" nonBasicTypeName="rapid::Vec3d"/>
+</struct>
+<directive kind="copyCDeclaration">class GncControlStateTypeSupport;</directive>
+<directive kind="copyCDeclaration">class GncControlStateDataWriter;</directive>
+<directive kind="copyCDeclaration">class GncControlStateDataReader;</directive>
+<directive kind="copyCDeclaration">struct GncControlSeq;</directive>
+<directive kind="copyDeclaration">/**</directive>
+<directive kind="copyDeclaration">  * The control state of the GNC.</directive>
+<directive kind="copyDeclaration">  */</directive>
+<valuetype name="GncControlState" baseClass="rapid::Message" typeModifier="none">
+<directive kind="copyCDeclaration">#if RTI_DDS_VERSION_MAJOR &lt; 4 || (RTI_DDS_VERSION_MAJOR == 4 &amp;&amp; RTI_DDS_VERSION_MINOR &lt; 5) || (RTI_DDS_VERSION_MAJOR == 4 &amp;&amp; RTI_DDS_VERSION_MINOR == 5 &amp;&amp; RTI_DDS_VERSION_RELEASE != 'f')</directive>
+<directive kind="copyCDeclaration">typedef GncControlStateTypeSupport TypeSupport;</directive>
+<directive kind="copyCDeclaration">typedef GncControlStateDataWriter DataWriter;</directive>
+<directive kind="copyCDeclaration">typedef GncControlStateDataReader DataReader;</directive>
+<directive kind="copyCDeclaration">typedef GncControlStateSeq Seq;</directive>
+<directive kind="copyCDeclaration">#endif</directive>
+<directive kind="copyCDeclaration">typedef GncControlState Type;</directive>
+<member name="pose" type="nonBasic" nonBasicTypeName="rapid::Transform3D" visibility="public"/>
+<member name="twist" type="nonBasic" nonBasicTypeName="rapid::ext::astrobee::Twist" visibility="public"/>
+<member name="accel" type="nonBasic" nonBasicTypeName="rapid::ext::astrobee::Twist" visibility="public"/>
+</valuetype>
+</module>
+</module>
+</module>
+</types>

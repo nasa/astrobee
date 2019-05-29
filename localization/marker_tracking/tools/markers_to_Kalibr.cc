@@ -170,6 +170,7 @@ int main(int argc, char* argv[]) {
 
   node["tags"] = markers;
 
+  std::cout << "Writing: " << output_file << std::endl;
   writeToYaml(node, output_file);
 
   printTagFamily(libraryFile, family, res, hamming, markers);
