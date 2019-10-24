@@ -52,6 +52,8 @@
           name="mlp_perch" output="$(arg output)"/>
     <node pkg="nodelet" type="nodelet" args="manager"
           name="mlp_vive" output="$(arg output)"/>
+    <node pkg="nodelet" type="nodelet" args="manager"
+          name="mlp_states" output="$(arg output)"/>
   </group>
 
   <!-- Vision / localization -->
@@ -167,8 +169,20 @@
     <arg name="nodes" value="$(arg nodes)" />
     <arg name="extra" value="$(arg extra)" />
     <arg name="debug" value="$(arg debug)" />
-    <arg name="default" value="false" />
+    <arg name="default" value="true" />
   </include>
+<!--
+  <include file="$(find ff_util)/launch/ff_nodelet.launch">
+    <arg name="class" value="states/StatesNodelet" />
+    <arg name="name" value="states" />
+    <arg name="manager" value="mlp_states" />
+    <arg name="spurn" value="$(arg spurn)" />
+    <arg name="nodes" value="$(arg nodes)" />
+    <arg name="extra" value="$(arg extra)" />
+    <arg name="debug" value="$(arg debug)" />
+    <arg name="default" value="true" />
+  </include>
+-->
 
   <!-- Management -->
   <include file="$(find ff_util)/launch/ff_nodelet.launch">
@@ -224,6 +238,18 @@
     <arg name="extra" value="$(arg extra)" />
     <arg name="debug" value="$(arg debug)" />
     <arg name="default" value="$(arg dds)" />
+  </include>
+
+  <!-- Perching arm -->
+  <include file="$(find ff_util)/launch/ff_nodelet.launch">
+    <arg name="class" value="perching_arm/PerchingArmNode" />
+    <arg name="name" value="perching_arm" />
+    <arg name="manager" value="mlp_serial" />
+    <arg name="spurn" value="$(arg spurn)" />
+    <arg name="nodes" value="$(arg nodes)" />
+    <arg name="extra" value="$(arg extra)" />
+    <arg name="debug" value="$(arg debug)" />
+    <arg name="default" value="true" />
   </include>
 
   <!-- Drivers (optional) -->
@@ -308,18 +334,6 @@
       <arg name="class" value="pico_driver/PicoDriverNodelet" />
       <arg name="name" value="pico_driver" />
       <arg name="manager" value="mlp_depth_cam" />
-      <arg name="spurn" value="$(arg spurn)" />
-      <arg name="nodes" value="$(arg nodes)" />
-      <arg name="extra" value="$(arg extra)" />
-      <arg name="debug" value="$(arg debug)" />
-      <arg name="default" value="true" />
-    </include>
-
-    <!-- Perching arm -->
-    <include file="$(find ff_util)/launch/ff_nodelet.launch">
-      <arg name="class" value="perching_arm/PerchingArmNode" />
-      <arg name="name" value="perching_arm" />
-      <arg name="manager" value="mlp_serial" />
       <arg name="spurn" value="$(arg spurn)" />
       <arg name="nodes" value="$(arg nodes)" />
       <arg name="extra" value="$(arg extra)" />

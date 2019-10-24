@@ -5,7 +5,7 @@
 //
 // Model version                  : 1.1142
 // Simulink Coder version         : 8.11 (R2016b) 25-Aug-2016
-// C/C++ source code generated on : Thu Mar  7 13:24:12 2019
+// C/C++ source code generated on : Mon Sep 23 17:46:28 2019
 //
 // Target selection: ert.tlc
 // Embedded hardware selection: 32-bit Generic
@@ -1354,9 +1354,9 @@ RT_MODEL_bpm_blower_1_propuls_T *bpm_blower_1_propulsion_module(real32_T
     // external inputs
     (void)memset(&bpm_blower_1_propulsion_modul_U_omega_B_ECI_B[0], 0, 3U *
                  sizeof(real32_T));
-    (void)memset(&bpm_blower_1_propulsion_modul_U_servo_cmd[0], 0, 6U * sizeof
-                 (real32_T));
     (void)memset(&bpm_blower_1_propulsion_modul_U_veh_cm[0], 0, 3U * sizeof
+                 (real32_T));
+    (void)memset(&bpm_blower_1_propulsion_modul_U_servo_cmd[0], 0, 6U * sizeof
                  (real32_T));
     *bpm_blower_1_propulsion_modul_U_battery_voltage = 0.0F;
     *bpm_blower_1_propulsion_modul_U_impeller_cmd = 0U;

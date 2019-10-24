@@ -43,9 +43,9 @@ DEFINE_string(output_map, "output.map",
 
 // parameters used in feature detection step only
 DEFINE_int32(sample_rate, 1,
-              "Add one of every n input frames to the map.");
+             "Add one of every n input frames to the map.");
 DEFINE_bool(save_individual_maps, false,
-            "If true, save separately the maps after detection, matching, track building, "
+            "Save separately the maps after detection, matching, track building, "
             "tensor initialization, and bundle adjustment.");
 
 // output map parameters
@@ -56,27 +56,27 @@ DEFINE_string(rebuild_detector, "ORGBRISK",
 
 // control options
 DEFINE_bool(feature_detection, false,
-              "If true, compute features for input images.");
+            "Compute features for input images.");
 DEFINE_bool(feature_matching, false,
-              "If true, perform feature matching.");
+            "Perform feature matching.");
 DEFINE_bool(track_building, false,
-              "If true, perform track building.");
+              "Perform track building.");
 DEFINE_bool(incremental_ba, false,
-              "If true, perform incremental bundle adjustment.");
+            "Perform incremental bundle adjustment.");
 DEFINE_bool(loop_closure, false,
-              "If true, take a map where images start repeating, and close the loop.");
+            "Take a map where images start repeating, and close the loop.");
 DEFINE_bool(tensor_initialization, false,
-              "If true, perform update output_nvm with tensor initialization.");
+              "Perform update output_nvm with tensor initialization.");
 DEFINE_bool(bundle_adjustment, false,
-              "If true, perform update output_nvm with bundle adjustment.");
+              "Perform update output_nvm with bundle adjustment.");
 DEFINE_bool(skip_pruning, false,
-              "If true, do not prune maps, as pruned maps cannot be merged.");
+              "Do not prune maps, as pruned maps cannot be merged.");
 DEFINE_bool(rebuild, false,
-              "If true, rebuild the map with BRISK features.");
+              "Rebuild the map with BRISK features.");
 DEFINE_bool(rebuild_replace_camera, false,
-              "If true, during rebuilding replace the camera with the one from ASTROBEE_ROBOT.");
+              "During rebuilding replace the camera with the one from ASTROBEE_ROBOT.");
 DEFINE_bool(vocab_db, false,
-              "If true, build the map with a vocabulary database.");
+              "Build the map with a vocabulary database.");
 DEFINE_bool(registration, false,
             "Register the map to world coordinates(requires control points and their xyz coordinates). "
             "This new data is used to redo the bundle adjustment");
@@ -85,8 +85,10 @@ DEFINE_bool(verification, false,
             "acquired set of control points and 3D measurements.");
 DEFINE_bool(registration_skip_bundle_adjustment, false,
             "Skip bundle adjustment during the registration step.");
+DEFINE_bool(prune, false,
+              "Prune the map (the vocab db is unchanged).");
 DEFINE_bool(info, false,
-              "If true, just print some information on the existing map.");
+              "Print some information on the existing map.");
 DEFINE_int32(num_repeat_images, 0,
              "How many images from the beginning of the sequence to repeat at the end "
              "of the sequence, to help with loop closure (assuming first and last images "
@@ -94,13 +96,15 @@ DEFINE_int32(num_repeat_images, 0,
 DEFINE_bool(fix_cameras, false,
             "Keep the cameras fixed during bundle adjustment.");
 DEFINE_bool(rebuild_refloat_cameras, false,
-            "If true, optimize the cameras as well as part of rebuilding. Usually that is "
+            "Optimize the cameras as well as part of rebuilding. Usually that is "
             "avoided when rebuilding with ORGBRISK, but could be useful with SURF.");
 
 DEFINE_int32(db_restarts, 1, "Number of restarts when building the tree.");
 DEFINE_int32(db_depth, 0, "Depth of the tree to build. Default: 4");
 DEFINE_int32(db_branching_factor, 0, "Branching factor of the tree to build. "
              "Default: 10");
+
+bool g_pruning_was_done = false;  // If we already pruned the map, don't prune it again
 
 void DetectAllFeatures(int argc, char** argv) {
   // Check for user mistakes
@@ -111,9 +115,6 @@ void DetectAllFeatures(int argc, char** argv) {
   }
 
   LOG(INFO) << "Detecting features.";
-
-  // load the first file to determine the resolution
-  cv::Mat image = cv::imread(std::string(argv[1]), CV_LOAD_IMAGE_GRAYSCALE);
 
   config_reader::ConfigReader config;
   config.AddFile("cameras.config");
@@ -208,10 +209,12 @@ void BundleAdjust() {
 
   bool fix_cameras = FLAGS_fix_cameras;
   sparse_mapping::BundleAdjust(fix_cameras, &map);
-  if (!FLAGS_skip_pruning) {
-    LOG(INFO) << "Pruning map.\n";
-    map.PruneMap();
-  }
+
+  // Pruning will be done after the vocab db is saved
+  // if (!FLAGS_skip_pruning) {
+  //  LOG(INFO) << "Pruning map.\n";
+  //  map.PruneMap();
+  // }
 
   map.Save(FLAGS_output_map);
   if (FLAGS_save_individual_maps) map.Save(FLAGS_output_map + ".bundle.map");
@@ -270,6 +273,11 @@ void Rebuild() {
   for (unsigned int i = 0; i < original.GetNumFrames(); i++)
     map.SetFrameGlobalTransform(i, original.GetFrameGlobalTransform(i));
 
+  // Wipe file that is no longer needed
+  try {
+    std::remove(sparse_mapping::EssentialFile(FLAGS_output_map).c_str());
+  }catch(...) {}
+
   LOG(INFO) << "Building tracks.";
   bool rm_invalid_xyz = true;  // by now cameras are good, so filter out bad stuff
   sparse_mapping::BuildTracks(rm_invalid_xyz,
@@ -288,14 +296,23 @@ void Rebuild() {
 
   sparse_mapping::BundleAdjust(fix_cameras, &map);
 
-  if (!FLAGS_skip_pruning) {
-    LOG(INFO) << "Pruning map.\n";
-    map.PruneMap();
-  }
-
   map.Save(FLAGS_output_map);
   if (FLAGS_save_individual_maps) map.Save(FLAGS_output_map + "." +
                                            FLAGS_rebuild_detector + ".map");
+}
+
+// Prune the map leaving the vocab db unchanged
+void PruneMap() {
+  if (g_pruning_was_done)
+    return;
+
+  sparse_mapping::SparseMap map(FLAGS_output_map);
+
+  LOG(INFO) << "Pruning map.\n";
+  map.PruneMap();
+  g_pruning_was_done = true;
+
+  map.Save(FLAGS_output_map);
 }
 
 void VocabDB() {
@@ -320,6 +337,13 @@ void VocabDB() {
   sparse_mapping::BuildDB(FLAGS_output_map,
                           detector, depth, branching_factor,
                           FLAGS_db_restarts);
+
+  // Pruning must always happen after the database is built, as the
+  // full set of features (so without pruning) is necessary to later
+  // effectively find similar images.
+  if (!FLAGS_skip_pruning) {
+    PruneMap();
+  }
 }
 
 // Do either registration or verification
@@ -370,7 +394,8 @@ int main(int argc, char** argv) {
       !FLAGS_loop_closure && !FLAGS_tensor_initialization &&
       !FLAGS_bundle_adjustment && !FLAGS_rebuild &&
       !FLAGS_vocab_db &&
-      !FLAGS_registration && !FLAGS_verification && !FLAGS_info) {
+      !FLAGS_registration && !FLAGS_verification &&
+      !FLAGS_info && !FLAGS_prune) {
     FLAGS_feature_detection = true;
     FLAGS_feature_matching = true;
     FLAGS_track_building = true;
@@ -411,6 +436,10 @@ int main(int argc, char** argv) {
       data_files.push_back(argv[arg]);
     }
     RegistrationOrVerification(data_files);
+  }
+
+  if (FLAGS_prune) {
+    PruneMap();
   }
 
   if (FLAGS_info) {

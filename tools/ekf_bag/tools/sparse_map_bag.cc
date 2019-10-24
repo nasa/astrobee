@@ -88,8 +88,12 @@ int main(int argc, char ** argv) {
   ReadParams(&loc);
 
   std::vector<std::string> topics;
+  topics.push_back(std::string("/") + std::string(TOPIC_MANAGEMENT_IMG_SAMPLER_NAV_CAM_RECORD));
+  topics.push_back(std::string(TOPIC_MANAGEMENT_IMG_SAMPLER_NAV_CAM_RECORD));
   topics.push_back(std::string("/") + std::string(TOPIC_HARDWARE_NAV_CAM));
+  topics.push_back(std::string(TOPIC_HARDWARE_NAV_CAM));
   topics.push_back(std::string("/") + std::string(TOPIC_LOCALIZATION_TRUTH));
+  topics.push_back(std::string(TOPIC_LOCALIZATION_TRUTH));
   rosbag::View view(bag, rosbag::TopicQuery(topics));
 
   int progress = 0;

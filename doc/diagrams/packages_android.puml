@@ -1,0 +1,83 @@
+@startuml
+
+!include "colors.puml"
+
+left to right direction
+
+skinparam component {
+    backgroundColor COLOR_9PASTEL_9
+    borderColor COLOR_9SETONE_9
+}
+
+' Color definitions:
+' BAC = Background / BOR = Border
+' DED = Default /  DIR = Direct / SEC = Secondary
+!define BAC_DEF COLOR_9PASTEL_7     
+!define BOR_DEF COLOR_9SETONE_7
+!define BAC_DIR COLOR_9PASTEL_5
+!define BOR_DIR COLOR_9SETONE_5
+!define BAC_SEC COLOR_9PASTEL_4
+!define BOR_SEC COLOR_9SETONE_4
+!define BAC_MET COLOR_9PASTEL_9
+
+skinparam frame {
+    backgroundColor BAC_DEF
+    borderColor BOR_DEF 
+    backgroundColor<<direct>> BAC_DIR
+    borderColor<<direct>> BOR_DIR
+    backgroundColor<<secondary>> BAC_SEC
+    borderColor<<secondary>> BOR_SEC
+}
+
+skinparam package {
+    backgroundColor COLOR_9PASTEL_7
+}
+
+package "ARS for Android" as ars_android BAC_MET {
+    frame "GuestScience \nManager" as gs_mgr
+    frame "GuestScience \nLibrary" as gs_lib
+    frame "GuestScientist \nApp with UI" <<direct>> as gs_app_pri
+    frame "GuestScientist \nApp without UI" as gs_app_sec
+    frame "Astrobee \nHelper \nLibrary" as ars_api
+    frame "ROS Java" as ros_java
+    frame "Touchscreen \nIntentions \nDisplay" <<direct>>
+    frame "SciCam \nStreamer" <<secondary>>
+    frame "Monitors \n(CPU/Disk)"
+}
+
+package "Android Nougat (7.1)" as android BAC_MET {
+    frame "Builtin Android Libraries"
+    frame "Builtin Android Apps"
+    frame "Network Settings" <<direct>>
+}
+
+frame "Linux Kernel" <<direct>> as kernel
+
+ars_android --> android
+android -left-> kernel
+' using right to left direction, so left is down!
+
+package legend #FFFFFF {
+    frame Library
+    note right of Library
+ Software or configuration without
+ any effect on ISS systems or Crew
+    end note
+    frame Direct <<direct>>
+    note right of Direct
+Software or configuration with direct
+interaction with ISS services or Crew
+    end note
+    frame Secondary <<secondary>>
+    note right of Secondary
+Software or tools with secondary effect only
+on ISS services or Crew. Example: command
+message can change, but transport layer remains
+the same.
+    end note
+}
+
+android -[hidden]- legend
+
+@enduml
+

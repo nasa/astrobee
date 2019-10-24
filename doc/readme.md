@@ -3,9 +3,11 @@
 # Tools used for FSW documentation
 
 ## Code documentation
+
 Code should be documened using doxygen.
 
-*Add here an explanation of the overall structure and how to create subsystem pages (or just provide a default template).*
+*Add here an explanation of the overall structure and how to create subsystem
+ pages (or just provide a default template).*
 
 ## UML diagraming
 
@@ -28,7 +30,11 @@ http://plantuml.com/running. Choose the integration that best suit you, but vim 
 command line java works perfectly.
 
 Note: some diagrams are not generated correctly when using graphviz 2.40 (layout
-stretched vertially). So for now please use graphviz 2.38.
+stretched vertically). So for now please use graphviz 2.38.
+
+Note: to re-active the 2.38 that keep being updated on Mac:
+
+    sudo port activate graphviz @2.38.0_3+pangocairo
 
 To generate the diagrams from the `doc\diagrams` directory:
 ```
@@ -79,13 +85,14 @@ To execute all ROS tests run the following:
 Note that by default all ROS console messages (ROS_INFO, ROS_WARN, etc.) called
 from within the test cases are suppressed. To print all messages, as well as a
 more comprehensive test result, add the `--text` argument:
-
-    rostest <package> <*.test> --text
-
+```
+rostest <package> <*.test> --text
+```
 
 Sometimes you want to debug your unit tests, but it's unclear on which port
 rostest started the ROS master. A simpler approach is to manually start the ROS
 master using `roscore` and then latch the rostest to this master with the
 `reuse-master` argument as follows:
-
-    rostest <package> <*.test> --reuse-master
+```
+rostest <package> <*.test> --reuse-master
+```

@@ -1,7 +1,5 @@
 @startuml
 
-skinparam componentStyle uml2
-
 left to right direction
 
 ' Common colors scheme for the type of interfaces

@@ -61,9 +61,9 @@ DEFINE_int32(max_brisk_features, 800,
              "Maximum number of features to be computed using ORGBRISK.");
 DEFINE_double(min_brisk_threshold, 10,
               "Minimum threshold for feature detection using ORGBRISK.");
-DEFINE_double(default_brisk_threshold, 100,
+DEFINE_double(default_brisk_threshold, 75,
               "Default threshold for feature detection using ORGBRISK.");
-DEFINE_double(max_brisk_threshold, 200,
+DEFINE_double(max_brisk_threshold, 75,
               "Maximum threshold for feature detection using ORGBRISK.");
 
 namespace interest_point {

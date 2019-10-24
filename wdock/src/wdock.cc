@@ -57,7 +57,8 @@ WDock::WDock(int argc, char** argv, std::string const& entity_name) :
     dds_event_loop_(entity_name),
     ack_pub_suffix_(""),
     dock_state_pub_suffix_(""),
-    sub_suffix_("") {
+    sub_suffix_(""),
+    echo_suffix_("-echo") {
   int fakeArgc = 1;
 
   // Make path to QOS and NDDS files
@@ -134,6 +135,15 @@ WDock::WDock(int argc, char** argv, std::string const& entity_name) :
 
   rapid::RapidHelper::initHeader(ack_state_supplier_->event().hdr);
 
+  // Set up the command-echo publisher
+  command_echo_supplier_.reset(new w_dock::WDock::CommandEchoSupplier(
+          rapid::COMMAND_TOPIC + echo_suffix_,  // topic
+          "",                                   // name
+          "RapidCommandProfile",                // profile
+          ""));                                 // library
+
+  rapid::RapidHelper::initHeader(command_echo_supplier_->event().hdr);
+
   // Set up the command subscriber
   try {
     dds_event_loop_.connect<rapid::Command>(this,
@@ -156,6 +166,10 @@ WDock::~WDock() {
 
 void WDock::operator() (rapid::Command const* rapid_cmd) {
   std::cout << "Received command from GDS." << std::endl;
+
+  command_echo_supplier_->event() = *rapid_cmd;
+  command_echo_supplier_->sendEvent();
+
   if (strcmp(rapid_cmd->cmdName, "wake") == 0) {
     std::cout << "Received command wake. Berth: " << rapid_cmd->arguments[0]._u.i << std::endl;
     // TODO(Someone) Add code to send wake command to astrobee over i2c

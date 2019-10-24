@@ -78,13 +78,16 @@ void ff::RosDataToDiskToRapid::StateCallback(
   rapid::ext::astrobee::DataToDiskState &msg = state_supplier_->event();
   msg.hdr.timeStamp = util::RosTime2RapidTime(state->header.stamp);
 
-  // Currently the data to disk name can only be 32 characters long
-  if (state->name.size() > 32) {
-    ROS_ERROR("DDS: Data to disk name %s is longer than 32 characters!",
+  // Currently the data to disk name can only be 128 characters long
+  if (state->name.size() > 128) {
+    ROS_ERROR("DDS: Data to disk name %s is longer than 128 characters!",
               state->name.c_str());
   }
-  std::strncpy(msg.name, state->name.data(), 32);
-  msg.name[31] = '\0';
+  std::strncpy(msg.name, state->name.data(), 128);
+  msg.name[127] = '\0';
+
+  // Copy over recording
+  msg.recording = state->recording;
 
   // Copy over the topic save settings
   // Currently the code only supports 64 topics

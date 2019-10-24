@@ -1,0 +1,39 @@
+{
+  "procedure": [
+    [
+      "Procedure",
+      "audio1",
+      [
+        "Define",
+        "$breath",
+        ["ListSequence", ["BasicSequence", "#fff", 0.0, 10, "#fff"]]
+      ],
+      ["Define", "$rptBreath", ["RepeatSequence", "$breath", 10.0]],
+      ["Define", "$pointLights", ["Domain", ["Interval", 27, 2]]],
+      ["Return", ["BasicAnimation", "$pointLights", "$rptBreath"]]
+    ],
+
+    [
+      "Procedure",
+      "audio2",
+      [
+        "Define",
+        "$breath",
+        ["ListSequence", ["BasicSequence", "#fff", 0.0, 10, "#fff"]]
+      ],
+      ["Define", "$rptBreath", ["RepeatSequence", "$breath", 10.0]],
+      ["Define", "$pointLights", ["Domain", ["Interval", 29, 2]]],
+      ["Return", ["BasicAnimation", "$pointLights", "$rptBreath"]]
+    ]
+  ],
+  "state": [
+    "ExecState",
+    1.0,
+    30.0,
+    true,
+    [
+      ["Call", "right", "audio1", "#fff", 1.0],
+      ["Call", "left", "audio2", "#fff", 1.0]
+    ]
+  ]
+}

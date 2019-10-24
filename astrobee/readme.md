@@ -4,8 +4,8 @@
 
 The `astrobee` folder is the primary entry point into flight software. For
 example, if you run `roslaunch astrobee <launch_file>` you are instructing ROS
-to examine the 'launch' directory in this folder for a XML file called <launch
-file>, which describes how to start a specific experiment.
+to examine the 'launch' directory in this folder for a XML file called
+`<launch_file>`, which describes how to start a specific experiment.
 
 1. `config` - This folder holds all of the configuration files for flight
    software.
@@ -130,11 +130,11 @@ connection to the LLP (in case it is absent from the test rig):
     `roslaunch astrobee spawn.launch world:=iss ns:=bumble`
 
 4. Do a processor-in-the-loop simulation
-    
+
     `roslaunch astrobee sim.launch llp:=10.42.0.10 mlp:=10.42.0.11`
 
 5. Launch a simulator remotely but run flight software locally:
-  
+
     `roslaunch astrobee sim.launch sim:=10.42.0.2`
 
 6. Launch the robot 'honey' from systemd with hardware drivers:
@@ -170,7 +170,7 @@ for detailed instructions for how to install and run GDS.
 
 Once GDS is downloaded and extracted, its directory should be renamed
 to $HOME/gds/latest (hence that directory must have the executable
-`AstroBeeWB').
+`AstroBeeWB`).
 
 One should edit the file NDDS_DISCOVERY_PEERS in the GDS directory
 (see the wiki for its location) to specify the bot's mlp ip
@@ -193,14 +193,14 @@ taken from some file called test.launch.
 
     <env name="ASTROBEE_CONFIG_DIR"
          value="$(optenv ASTROBEE_CONFIG_DIR /path/b)"/>              [1]
-        
+
     <machine name="mlp" timeout="10" default="true"
-             address="10.42.0.32" user="astrobee" password="astrobee" 
+             address="10.42.0.32" user="astrobee" password="astrobee"
              env-loader="/home/astrobee/armhf/env_wrapper.sh"/>       [2]
-        
+
     <env name="ASTROBEE_CONFIG_DIR"
          value="$(optenv ASTROBEE_CONFIG_DIR /path/d)" />             [3]
-         
+
     <!-- POINT X -->
     <node pkg="astrobee" type="check_env.sh" name="check_env"/>       [4]
 
@@ -220,8 +220,7 @@ sees `ASTROBEE_CONFIG_DIR=/path/a`.
 2. Parsing occurs on the on the host side, and so all calls to env() or optenv()
    obtain values on the host side!
 3. Environment variables override all previous values, and their state does not
-   persist across <env> calls. So, you cannot use <optenv> and <env> to preserve
-   the value of an environment variable within a launch file.
+   persist across `<env>` calls. So, you cannot use `<optenv>` and `<env>` to
+   preserve the value of an environment variable within a launch file.
 4. Environment variables declare in roslaunch propagate through machine calls,
    and override values specified in the env_wrapper.
-

@@ -1,0 +1,5 @@
+<library path="lib/libsignal_lights_nodelet">
+  <class name="signal_lights/SignalLightsNodelet" type="signal_lights::SignalLightsNodelet" base_class_type="nodelet::Nodelet">
+    <description>Nodelet for the signal lights</description>
+  </class>
+</library>

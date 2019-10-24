@@ -1,0 +1,84 @@
+{	
+  "type" : "OperatingLimitsConfigurationFile",
+  "operatingLimitsConfigs" : [ {
+    "profileName" : "iss_quiet",
+    "flightMode" : "quiet",
+    "targetLinearVelocity" : 0.0200,
+    "targetLinearAccel" : 0.0020,
+    "targetAngularVelocity" : 0.0174,
+    "targetAngularAccel" : 0.0174,
+    "collisionDistance" : 0.25
+  }, {
+    "profileName" : "iss_difficult",
+    "flightMode" : "difficult",
+    "targetLinearVelocity" : 0.4000,
+    "targetLinearAccel" : 0.0200,
+    "targetAngularVelocity" : 0.5236,
+    "targetAngularAccel" : 0.2500,
+    "collisionDistance" : 0.25
+  }, {
+    "profileName" : "iss_nominal",
+    "flightMode" : "nominal",
+    "targetLinearVelocity" : 0.2000,
+    "targetLinearAccel" : 0.0175,
+    "targetAngularVelocity" : 0.1745,
+    "targetAngularAccel" : 0.1745,
+    "collisionDistance" : 0.25
+  }, {
+    "profileName" : "iss_lomo",
+    "flightMode" : "nominal",
+    "targetLinearVelocity" : 0.1500,
+    "targetLinearAccel" : 0.0175,
+    "targetAngularVelocity" : 0.0873,
+    "targetAngularAccel" : 0.1745,
+    "collisionDistance" : 0.25
+  }, {
+    "profileName" : "granite_quiet",
+    "flightMode" : "quiet",
+    "targetLinearVelocity" : 0.0200,
+    "targetLinearAccel" : 0.0020,
+    "targetAngularVelocity" : 0.0174,
+    "targetAngularAccel" : 0.0174,
+    "collisionDistance" : 0.25
+  }, {
+    "profileName" : "granite_difficult",
+    "flightMode" : "difficult",
+    "targetLinearVelocity" : 0.4000,
+    "targetLinearAccel" : 0.0200,
+    "targetAngularVelocity" : 0.5236,
+    "targetAngularAccel" : 0.2500,
+    "collisionDistance" :  0.25
+  }, {
+    "profileName" : "granite_nominal",
+    "flightMode" : "nominal",
+    "targetLinearVelocity" : 0.2000,
+    "targetLinearAccel" : 0.0175,
+    "targetAngularVelocity" : 0.1745,
+    "targetAngularAccel" : 0.1745,
+    "collisionDistance" : 0.25
+  }, {
+    "profileName" : "mgtf_quiet",
+    "flightMode" : "quiet",
+    "targetLinearVelocity" : 0.0200,
+    "targetLinearAccel" : 0.0020,
+    "targetAngularVelocity" : 0.0174,
+    "targetAngularAccel" : 0.0174,
+    "collisionDistance" : 0.25
+  }, {
+    "profileName" : "mgtf_difficult",
+    "flightMode" : "difficult",
+    "targetLinearVelocity" : 0.4000,
+    "targetLinearAccel" : 0.0400,
+    "targetAngularVelocity" : 0.5236,
+    "targetAngularAccel" : 0.5236,
+    "collisionDistance" : 0.25
+  }, {
+    "profileName" : "mgtf_nominal",
+    "flightMode" : "nominal",
+    "targetLinearVelocity" : 0.2000,
+    "targetLinearAccel" : 0.0200,
+    "targetAngularVelocity" : 0.1745,
+    "targetAngularAccel" : 0.1745,
+    "collisionDistance" : 0.25
+  } ]
+}

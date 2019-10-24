@@ -108,6 +108,11 @@ struct Pipeline {
   }
 
   // Get the name of the pipeline
+  std::string const& GetTopic() {
+    return topic_enable_;
+  }
+
+  // Get the name of the pipeline
   std::string const& GetName() {
     return name_;
   }

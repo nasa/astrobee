@@ -1,8 +1,5 @@
 @startuml
 
-skinparam componentStyle uml2
-'skinparam dpi 300
-
 title MLP Freeflyer Nodes and Nodelet Managers
 
 !define SHOW_MLP true

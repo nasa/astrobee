@@ -1,14 +1,14 @@
 /* Copyright (c) 2017, United States Government, as represented by the
  * Administrator of the National Aeronautics and Space Administration.
- * 
+ *
  * All rights reserved.
- * 
+ *
  * The Astrobee platform is licensed under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -394,15 +394,36 @@ int RansacEstimateCamera(const std::vector<Eigen::Vector3d> & landmarks,
   if (best_inliers < FLAGS_num_min_localization_inliers)
     return 2;
 
-  // TODO(bcoltin): take three best number of inliers, multiply by image coverage to pick best
-  // get the inliers
-  // TODO(zmoratto): If we have an output inlier landmarks and observation
-  // vector, we could use those for doing the final camera estimate instead of
-  // making another copy.
   std::vector<size_t> inliers;
   CountInliers(landmarks, observations, *camera_estimate, inlier_tolerance, &inliers);
   std::vector<Eigen::Vector3d> inlier_landmarks;
   std::vector<Eigen::Vector2d> inlier_observations;
+  inlier_landmarks.reserve(inliers.size());
+  inlier_observations.reserve(inliers.size());
+  for (size_t idx : inliers) {
+    inlier_landmarks.push_back(landmarks[idx]);
+    inlier_observations.push_back(observations[idx]);
+  }
+
+  ceres::Solver::Options options;
+  options.linear_solver_type = ceres::ITERATIVE_SCHUR;
+  options.num_threads = 1;  // it is no slower with only one thread
+  options.max_num_iterations = 100;
+  options.minimizer_progress_to_stdout = false;
+  ceres::Solver::Summary summary;
+  // improve estimate with CERES solver
+  EstimateCamera(camera_estimate, &inlier_landmarks, inlier_observations, options, &summary);
+
+  // find inliers again with refined estimate
+  inliers.clear();
+  best_inliers = CountInliers(landmarks, observations, *camera_estimate, inlier_tolerance, &inliers);
+  VLOG(2) << "Number of inliers with refined camera: " << best_inliers << "\n";
+
+  if (best_inliers < FLAGS_num_min_localization_inliers)
+    return 2;
+
+  inlier_landmarks.clear();
+  inlier_observations.clear();
   inlier_landmarks.reserve(inliers.size());
   inlier_observations.reserve(inliers.size());
   for (size_t idx : inliers) {
@@ -419,15 +440,6 @@ int RansacEstimateCamera(const std::vector<Eigen::Vector3d> & landmarks,
     std::copy(inlier_observations.begin(), inlier_observations.end(),
         std::back_inserter(*inlier_observations_out));
   }
-
-  ceres::Solver::Options options;
-  options.linear_solver_type = ceres::ITERATIVE_SCHUR;
-  options.num_threads = 1;  // it is no slower with only one thread
-  options.max_num_iterations = 100;
-  options.minimizer_progress_to_stdout = false;
-  ceres::Solver::Summary summary;
-  // improve estimate with CERES solver
-  EstimateCamera(camera_estimate, &inlier_landmarks, inlier_observations, options, &summary);
 
   return 0;
 }

@@ -5,7 +5,7 @@
 //
 // Model version                  : 1.1142
 // Simulink Coder version         : 8.11 (R2016b) 25-Aug-2016
-// C/C++ source code generated on : Thu Mar  7 13:22:05 2019
+// C/C++ source code generated on : Mon Sep 23 17:43:06 2019
 //
 // Target selection: ert.tlc
 // Embedded hardware selection: 32-bit Generic
@@ -162,13 +162,13 @@ typedef struct {
 
 #endif
 
-// Parameters for system: '<S45>/CoreSubsys'
+// Parameters for system: '<S46>/CoreSubsys'
 typedef struct P_CoreSubsys_est_estimator_T_ P_CoreSubsys_est_estimator_T;
 
-// Parameters for system: '<S46>/CoreSubsys'
+// Parameters for system: '<S47>/CoreSubsys'
 typedef struct P_CoreSubsys_est_estimator_g_T_ P_CoreSubsys_est_estimator_g_T;
 
-// Parameters for system: '<S116>/Normalize'
+// Parameters for system: '<S117>/Normalize'
 typedef struct P_Normalize_est_estimator_T_ P_Normalize_est_estimator_T;
 
 // Parameters (auto storage)

@@ -24,5 +24,8 @@ std_msgs/Header header
 # Name of the latest data to disk file uploaded from the ground
 string name
 
+# Whether the data bagger is recording a bag or not
+bool recording
+
 # An array containing information about the topics being recorded
 ff_msgs/SaveSettings[] topic_save_settings

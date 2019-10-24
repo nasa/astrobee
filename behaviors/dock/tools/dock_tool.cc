@@ -1,14 +1,14 @@
 /* Copyright (c) 2017, United States Government, as represented by the
  * Administrator of the National Aeronautics and Space Administration.
- * 
+ *
  * All rights reserved.
- * 
+ *
  * The Astrobee platform is licensed under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -56,14 +56,14 @@ DEFINE_double(deadline, -1.0, "Action deadline timeout");
 // Match the internal states and responses with the message definition
 using STATE = ff_msgs::DockState;
 
-// Arm action feedback
+// Dock action feedback
 void FeedbackCallback(ff_msgs::DockFeedbackConstPtr const& feedback) {
   std::cout << "\r                                                   "
             << "\rFSM: " << feedback->state.fsm_event
             << " -> " << feedback->state.fsm_state << std::flush;
 }
 
-// Arm action result
+// Dock action result
 void ResultCallback(ff_util::FreeFlyerActionState::Enum code,
   ff_msgs::DockResultConstPtr const& result) {
   std::cout << std::endl << "Result: ";
@@ -122,7 +122,7 @@ void ConnectedCallback(
 // Main entry point for application
 int main(int argc, char *argv[]) {
   // Initialize a ros node
-  ros::init(argc, argv, "control", ros::init_options::AnonymousName);
+  ros::init(argc, argv, "dock_tool", ros::init_options::AnonymousName);
   // Gather some data from the command
   google::SetUsageMessage("Usage: rosrun dock dock_tool <opts>");
   google::SetVersionString("0.1.0");

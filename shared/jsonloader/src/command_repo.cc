@@ -59,6 +59,16 @@ extern const InsensitiveMap<CommandCreateFn> kCommandMap = {
   { kCmdStreamCamera, &CreateCommand<StreamCameraCommand> },
   { kCmdRecordCamera, &CreateCommand<RecordCameraCommand> },
   { kCmdIdleProp,    &CreateCommand<IdlePropulsionCommand> },
+
+  { kCmdInitBias,    &CreateCommand<InitializeBiasCommand> },
+  { kCmdChkObstacles, &CreateCommand<SetCheckObstaclesCommand> },
+  { kCmdChkZones,    &CreateCommand<SetCheckZonesCommand> },
+  { kCmdSetHolonomic, &CreateCommand<SetHolonomicModeCommand> },
+  { kCmdSetPlanner,  &CreateCommand<SetPlannerCommand> },
+  { kCmdTelemRate,   &CreateCommand<SetTelemetryRateCommand> },
+  { kCmdSwitchLocal, &CreateCommand<SwitchLocalizationCommand> },
+  { kCmdStartRecord, &CreateCommand<StartRecordingCommand> },
+  { kCmdStopRecord,  &CreateCommand<StopRecordingCommand> },
 };
 
 // Command names that need the normalized
@@ -129,6 +139,11 @@ const Fields cameraFields {
 };
 
 const Fields setCameraFields {
+  new EnumField("cameraMode", {
+    "Both",
+    "Streaming",
+    "Recording"
+  }),
   new Field("resolution", Json::stringValue),
   new Field("frameRate", Json::realValue),
   new Field("bandwidth", Json::realValue)
@@ -140,6 +155,52 @@ const Fields streamCameraFields {
 
 const Fields recordCameraFields {
   new Field("record", Json::booleanValue)
+};
+
+const Fields setCheckObstactlesFields {
+  new Field("checkObstacles", Json::booleanValue)
+};
+
+const Fields setCheckZonesFields {
+  new Field("checkZones", Json::booleanValue)
+};
+
+const Fields enableHolonomicFields {
+  new Field("enableHolonomic", Json::booleanValue)
+};
+
+const Fields plannerFields {
+  new EnumField("planner", {
+    "trapezoidal",
+    "qp"
+  })
+};
+
+const Fields telemetryRateFields {
+  new EnumField("telemetryName", {
+    "CommStatus",
+    "CpuState",
+    "DiskState",
+    "EkfState",
+    "GncState",
+    "PmcCmdState",
+    "Position"
+  }),
+  new Field("rate", Json::realValue)
+};
+
+const Fields switchLocalizationFields {
+  new EnumField("mode", {
+    "MappedLandmarks",
+    "ARTags",
+    "Handrail",
+    "Perch",
+    "Truth"
+  }),
+};
+
+const Fields recordingFields {
+  new Field("description", Json::stringValue)
 };
 
 }  // end namespace
@@ -372,17 +433,23 @@ std::string const& CameraCommand::camera() const noexcept {
 }
 
 SetCameraCommand::SetCameraCommand(Json::Value const& obj)
-  : CameraCommand(obj), frame_rate_(1.0f), bandwidth_(1.0f), resolution_("") {
+  : CameraCommand(obj), mode_(""), frame_rate_(1.0f),
+    bandwidth_(1.0f), resolution_("") {
   if (!Validate(obj, setCameraFields)) {
     LOG(ERROR) << "invalid SetCameraCommand.";
     return;
   }
 
+  mode_ = obj["cameraMode"].asString();
   frame_rate_ = obj["frameRate"].asFloat();
   bandwidth_ = obj["bandwidth"].asFloat();
   resolution_ = obj["resolution"].asString();
 
   set_valid(true);
+}
+
+std::string const& SetCameraCommand::mode() const noexcept {
+  return mode_;
 }
 
 float SetCameraCommand::frame_rate() const noexcept {
@@ -427,6 +494,133 @@ StreamCameraCommand::StreamCameraCommand(Json::Value const& obj)
 
 bool StreamCameraCommand::stream() const noexcept {
   return stream_;
+}
+
+InitializeBiasCommand::InitializeBiasCommand(Json::Value const& obj)
+  : Command(obj) {
+  set_valid(true);
+}
+
+SetCheckObstaclesCommand::SetCheckObstaclesCommand(Json::Value const& obj)
+  : Command(obj), checkObstacles_(false) {
+  if (!Validate(obj, setCheckObstactlesFields)) {
+    LOG(ERROR) << "invalid SetCheckObstaclesCommand.";
+    return;
+  }
+
+  checkObstacles_ = obj["checkObstacles"].asBool();
+
+  set_valid(true);
+}
+
+bool SetCheckObstaclesCommand::checkObstacles() const noexcept {
+  return checkObstacles_;
+}
+
+SetCheckZonesCommand::SetCheckZonesCommand(Json::Value const& obj)
+  : Command(obj), checkZones_(false) {
+  if (!Validate(obj, setCheckZonesFields)) {
+    LOG(ERROR) << "invalid SetCheckZonesCommand.";
+    return;
+  }
+
+  checkZones_ = obj["checkZones"].asBool();
+
+  set_valid(true);
+}
+
+bool SetCheckZonesCommand::checkZones() const noexcept {
+  return checkZones_;
+}
+
+SetHolonomicModeCommand::SetHolonomicModeCommand(Json::Value const& obj)
+  : Command(obj), enableHolonomic_(false) {
+  if (!Validate(obj, enableHolonomicFields)) {
+    LOG(ERROR) << "invalid SetEnableHolonomicCommand.";
+    return;
+  }
+
+  enableHolonomic_ = obj["enableHolonomic"].asBool();
+
+  set_valid(true);
+}
+
+bool SetHolonomicModeCommand::enableHolonomic() const noexcept {
+  return enableHolonomic_;
+}
+
+SetPlannerCommand::SetPlannerCommand(Json::Value const& obj)
+  : Command(obj), planner_("") {
+  if (!Validate(obj, plannerFields)) {
+    LOG(ERROR) << "invalid SetPlannerCommand.";
+    return;
+  }
+
+  planner_ = obj["planner"].asString();
+
+  set_valid(true);
+}
+
+std::string const& SetPlannerCommand::planner() const noexcept {
+  return planner_;
+}
+
+SetTelemetryRateCommand::SetTelemetryRateCommand(Json::Value const& obj)
+  : Command(obj), telemetryName_(""), rate_(0.0f) {
+  if (!Validate(obj, telemetryRateFields)) {
+    LOG(ERROR) << "invalid SetTelemetryRateCommand.";
+    return;
+  }
+
+  telemetryName_ = obj["telemetryName"].asString();
+  rate_ = obj["rate"].asFloat();
+
+  set_valid(true);
+}
+
+std::string const& SetTelemetryRateCommand::telemetryName() const noexcept {
+  return telemetryName_;
+}
+
+float SetTelemetryRateCommand::rate() const noexcept {
+  return rate_;
+}
+
+SwitchLocalizationCommand::SwitchLocalizationCommand(Json::Value const& obj)
+  : Command(obj), mode_("") {
+  if (!Validate(obj, switchLocalizationFields)) {
+    LOG(ERROR) << "invalid SwitchLocalizationCommand.";
+    return;
+  }
+
+  mode_ = obj["mode"].asString();
+
+  set_valid(true);
+}
+
+std::string const& SwitchLocalizationCommand::mode() const noexcept {
+  return mode_;
+}
+
+StartRecordingCommand::StartRecordingCommand(Json::Value const& obj)
+  : Command(obj), description_("") {
+  if (!Validate(obj, recordingFields)) {
+    LOG(ERROR) << "invalid StartRecordingCommand.";
+    return;
+  }
+
+  description_ = obj["description"].asString();
+
+  set_valid(true);
+}
+
+std::string const& StartRecordingCommand::description() const noexcept {
+  return description_;
+}
+
+StopRecordingCommand::StopRecordingCommand(Json::Value const& obj)
+  : Command(obj) {
+  set_valid(true);
 }
 
 }  // namespace jsonloader

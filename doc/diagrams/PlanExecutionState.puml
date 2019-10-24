@@ -1,7 +1,6 @@
 @startuml
 
 skinparam sameStateWidth true
-'skinparam dpi 300
 
 title Astrobee PlanExecution State (Executive)
 

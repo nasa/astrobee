@@ -300,6 +300,17 @@ class LocalizationManagerNodelet : public ff_util::FreeFlyerNodelet {
         return STATE::BIAS_WAITING_FOR_FILTER;
       });
 
+    // We don't need to localize normally to reset the bias and bias estimate
+    // command is called
+    fsm_.Add(STATE::UNSTABLE,
+      GOAL_ESTIMATE_BIAS, [this](FSM::Event const& event) -> FSM::State {
+        if (!EstimateBias())
+          return Result(RESPONSE::ESTIMATE_BIAS_FAILED, "Could not call bias estimation service");
+        ResetTimer(timer_stability_);
+        ResetTimer(timer_deadline_);
+        return STATE::BIAS_WAITING_FOR_FILTER;
+      });
+
     // Waiting for bias estimation to complete and we get stable notification
     fsm_.Add(STATE::BIAS_WAITING_FOR_FILTER,
       STABLE, [this](FSM::Event const& event) -> FSM::State {
@@ -774,13 +785,13 @@ class LocalizationManagerNodelet : public ff_util::FreeFlyerNodelet {
     // Debug output for the node
     switch (error) {
     case ERROR_REGISTRATION_TIMEOUT:
-      NODELET_DEBUG_STREAM(pipeline << ": ERROR_REGISTRATION_TIMEOUT");  break;
+      NODELET_DEBUG_STREAM(pipeline << ": ERROR_REGISTRATION_TIMEOUT"); break;
     case ERROR_VISUAL_TIMEOUT:
-      NODELET_DEBUG_STREAM(pipeline << ": ERROR_VISUAL_TIMEOUT");        break;
+      NODELET_DEBUG_STREAM(pipeline << ": ERROR_VISUAL_TIMEOUT");       break;
     case ERROR_DEPTH_TIMEOUT:
-      NODELET_DEBUG_STREAM(pipeline << ": ERROR_DEPTH_TIMEOUT");         break;
+      NODELET_DEBUG_STREAM(pipeline << ": ERROR_DEPTH_TIMEOUT");        break;
     case ERROR_FILTER_TIMEOUT:
-      NODELET_DEBUG_STREAM(pipeline << ": ERROR_FILTER_TIMEOUT");        break;
+      NODELET_DEBUG_STREAM(pipeline << ": ERROR_FILTER_TIMEOUT");       break;
     }
     // Advance the state machine
     return fsm_.Update(current ? CURRENT_UNSTABLE : GOAL_UNSTABLE);

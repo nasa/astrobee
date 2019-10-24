@@ -42,6 +42,8 @@ ff_msgs/ControlState[] segment
 # MOVE ONLY: Desired state sequence
 geometry_msgs/PoseStamped[] states
 
+string reference_frame
+
 ---
 
 # Motion result
@@ -86,6 +88,7 @@ int32 VIOLATES_HARD_LIMIT_ACCEL    =  -34 # Validation: Acceleration too high
 int32 VIOLATES_HARD_LIMIT_OMEGA    =  -35 # Validation: Omega too high
 int32 VIOLATES_HARD_LIMIT_ALPHA    =  -36 # Validation: Alpha too high
 int32 CANCELLED                    =  -37 # ALL: Motion cancelled by callee
+int32 INVALID_REFERENCE_FRAME      =  -38 # ALL: Unknown reference frame
 
 # Human readable FSM result for debugging
 string fsm_result

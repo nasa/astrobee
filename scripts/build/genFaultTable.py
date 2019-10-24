@@ -346,6 +346,7 @@ def main():
             ftc_file.write("  {name=\"" + subsys_key + "\", nodes={\n")
             for nodes_key in fault_table[subsys_key].keys():
                 if (nodes_key == "sys_monitor"):
+                    sm_entry_added = False
                     for fault in fault_table[subsys_key][nodes_key]:
                         if fault.key.find("HEARTBEAT") != -1:
                             smf_file.write("sys_monitor_heartbeat_timeout = " \
@@ -355,32 +356,59 @@ def main():
                             if (fault.args != ""): 
                                 smf_file.write("\", " + fault.args)
                             smf_file.write("\")\n\n")
+                            smf_file.write("sys_monitor_heartbeat_fault_" + \
+                                "blocking = ")
+                            if (fault.blocking):
+                                smf_file.write("true")
+                            else:
+                                smf_file.write("false")
+                            smf_file.write("\n\n")
                         elif fault.key.find("INITIALIZATION") != -1:
                             smf_file.write("sys_monitor_init_fault_response" \
                                 + " = command(\"" + fault.response) 
                             if (fault.args != ""):
                                 smf_file.write("\", " + fault.args)
                             smf_file.write("\")\n\n")
+                            smf_file.write("sys_monitor_init_fault_blocking = ")
+                            if (fault.blocking):
+                                smf_file.write("true")
+                            else:
+                                smf_file.write("false")
+                            smf_file.write("\n")
                         else:
-                            print "System monitor fault not recognized."
+                            if not sm_entry_added:
+                                fc_file.write(nodes_key + " = {\n")
+                                ftc_file.write("    {name=\"" + nodes_key + \
+                                    "\", faults={\n")
+                                sm_entry_added = True
+                            ftc_file.write("      {id=" + fault.fault_id + \
+                                ", warning=" + fault.warning + ", blocking=" + \
+                                fault.blocking + ", response=command(\"" + \
+                                fault.response + "\"")
+                            if (fault.args != ""):
+                                ftc_file.write(", " + fault.args)
+                            ftc_file.write("), key=\"" + fault.key + \
+                                "\", description=\"" + fault.description + \
+                                "\"},\n")
+                            fc_file.write("  {id=" + fault.fault_id + ", " + \
+                                "key=\"" + fault.key + "\", description=\"" + \
+                                fault.description + "\"},\n")
+                    if sm_entry_added:
+                        fc_file.write("}\n\n")
+                        ftc_file.write("    }},\n")    
                 else:
                     fc_file.write(nodes_key + " = {\n")
                     ftc_file.write("    {name=\"" + nodes_key + \
                         "\", faults={\n")
                     for fault in fault_table[subsys_key][nodes_key]:
+                        ftc_file.write("      {id=" + fault.fault_id + \
+                            ", warning=" + fault.warning + ", blocking=" + \
+                            fault.blocking + ", response=command(\"" + \
+                            fault.response + "\"")
                         if (fault.args != ""):
-                            ftc_file.write("      {id=" + fault.fault_id + \
-                                ", warning=" + fault.warning + ", blocking=" + \
-                                fault.blocking + ", response=command(\"" + \
-                                fault.response + "\", " + fault.args + \
-                                "), key=\"" + fault.key + \
-                                "\", description=\"" + fault.description + "\"")
-                        else:
-                            ftc_file.write("      {id=" + fault.fault_id + \
-                                ", warning=" + fault.warning + ", blocking=" + \
-                                fault.blocking + ", response=command(\"" + \
-                                fault.response + "\"), key=\"" + fault.key + \
-                                "\", description=\"" + fault.description + "\"")
+                            ftc_file.write(", " + fault.args)
+                        ftc_file.write("), key=\"" + fault.key + \
+                            "\", description=\"" + fault.description + "\"")
 
                         # Don't add heartbeat faults to the fault table since
                         # nodes don't trigger their own heartbeat missing fault

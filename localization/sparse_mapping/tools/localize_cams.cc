@@ -57,6 +57,9 @@ DEFINE_string(source_map, "",
               "Localize images in this map against the reference computed map, "
               "and compare with locations from this map.");
 
+DEFINE_double(error_thresh, 0.05,
+              "Count how many localization errors are no more than this threshold, in meters..");
+
 // These are synched up with localization.config. Note that
 // -num_similar and -ransac_inlier_tolerance and
 // -num_ransac_iterations need not be defined as flags here, since
@@ -75,12 +78,19 @@ int main(int argc, char** argv) {
   if ( !(source.GetCameraParameters() == reference.GetCameraParameters()) )
     LOG(FATAL) << "The source and reference maps don't have the same camera parameters.";
 
-  for (size_t cid = 0; cid < source.GetNumFrames(); cid++) {
+  int num_good_errors = 0;
+  size_t num_frames = source.GetNumFrames();
+  for (size_t cid = 0; cid < num_frames; cid++) {
     std::string img_file = source.GetFrameFilename(cid);
 
     // localize frame
     camera::CameraModel localized_cam(Eigen::Vector3d(), Eigen::Matrix3d::Identity(),
                                reference.GetCameraParameters());
+
+    camera::CameraModel source_cam(source.GetFrameGlobalTransform(cid),
+                                   source.GetCameraParameters());
+    std::cout << "Source map position:         " << source_cam.GetPosition().transpose() << "\n";
+
     if (!reference.Localize(img_file, &localized_cam)) {
       // Localization failed
       std::cout << "Errors for " << img_file << ": "
@@ -88,20 +98,22 @@ int main(int argc, char** argv) {
       continue;
     }
 
-    camera::CameraModel source_cam(source.GetFrameGlobalTransform(cid),
-                                   source.GetCameraParameters());
     Eigen::Vector3d expected_angle  = source_cam.GetRotation() * Eigen::Vector3d::UnitX();
     Eigen::Vector3d estimated_angle = localized_cam.GetRotation()   * Eigen::Vector3d::UnitX();
+    double pos_error = (localized_cam.GetPosition() - source_cam.GetPosition()).norm();
     double angle_err = acos(estimated_angle.dot(expected_angle)) * (180.0 / M_PI);
 
-    std::cout << "Source map position:         " << source_cam.GetPosition().transpose() << "\n";
     std::cout << "Localized position from ref: " << localized_cam.GetPosition().transpose() << "\n";
     std::cout << "Errors for " << img_file << ": "
-              << (localized_cam.GetPosition() - source_cam.GetPosition()).norm()
-              << " m " << angle_err << " degrees" << "\n";
+              << pos_error << " m " << angle_err << " degrees" << "\n";
+    if (pos_error <= FLAGS_error_thresh)
+      num_good_errors++;
   }
 
+  std::cout << "Number of localization errors no more than "
+            << FLAGS_error_thresh << " m is " << num_good_errors
+            << " (" << num_good_errors * 100.0/num_frames << " %)"
+            << " out of " << num_frames << " images.\n";
   google::protobuf::ShutdownProtobufLibrary();
-
   return 0;
 }

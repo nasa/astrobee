@@ -248,7 +248,11 @@ bool SendMobilityCommand() {
 
     // Set frame
     cmd.args[0].data_type = ff_msgs::CommandArg::DATA_TYPE_STRING;
-    cmd.args[0].s = "world";
+    if (FLAGS_relative) {
+      cmd.args[0].s = "body";
+    } else {
+      cmd.args[0].s = "world";
+    }
 
     // Set tolerance. Currently not used but needs to be in the command
     cmd.args[2].data_type = ff_msgs::CommandArg::DATA_TYPE_VEC3d;
@@ -256,11 +260,17 @@ bool SendMobilityCommand() {
     cmd.args[2].vec3d[1] = 0;
     cmd.args[2].vec3d[2] = 0;
 
-    // Initialize position to be the current position
+    // Initialize position to be the current position if not a relative move
     cmd.args[1].data_type = ff_msgs::CommandArg::DATA_TYPE_VEC3d;
-    cmd.args[1].vec3d[0] = tfs.transform.translation.x;
-    cmd.args[1].vec3d[1] = tfs.transform.translation.y;
-    cmd.args[1].vec3d[2] = tfs.transform.translation.z;
+    if (FLAGS_relative) {
+      cmd.args[1].vec3d[0] = 0;
+      cmd.args[1].vec3d[1] = 0;
+      cmd.args[1].vec3d[2] = 0;
+    } else {
+      cmd.args[1].vec3d[0] = tfs.transform.translation.x;
+      cmd.args[1].vec3d[1] = tfs.transform.translation.y;
+      cmd.args[1].vec3d[2] = tfs.transform.translation.z;
+    }
 
     // Parse position if it was specified
     std::string str_pos = FLAGS_pos;
@@ -273,33 +283,31 @@ bool SendMobilityCommand() {
 
       if (vec_pos.size() > 0) {
         cmd.args[1].vec3d[0] = vec_pos[0];
-        if (FLAGS_relative) {
-          cmd.args[1].vec3d[0] += tfs.transform.translation.x;
-        }
       }
 
       if (vec_pos.size() > 1) {
         cmd.args[1].vec3d[1] = vec_pos[1];
-        if (FLAGS_relative) {
-          cmd.args[1].vec3d[1] += tfs.transform.translation.y;
-        }
       }
 
       if (vec_pos.size() > 2) {
         cmd.args[1].vec3d[2] = vec_pos[2];
-        if (FLAGS_relative) {
-          cmd.args[1].vec3d[2] += tfs.transform.translation.z;
-        }
       }
     }
 
     // Parse and set the attitude - roll, pitch then yaw
     cmd.args[3].data_type = ff_msgs::CommandArg::DATA_TYPE_MAT33f;
     if (FLAGS_att.empty()) {
-      cmd.args[3].mat33f[0] = tfs.transform.rotation.x;
-      cmd.args[3].mat33f[1] = tfs.transform.rotation.y;
-      cmd.args[3].mat33f[2] = tfs.transform.rotation.z;
-      cmd.args[3].mat33f[3] = tfs.transform.rotation.w;
+      if (FLAGS_relative) {
+        cmd.args[3].mat33f[0] = 0;
+        cmd.args[3].mat33f[1] = 0;
+        cmd.args[3].mat33f[2] = 0;
+        cmd.args[3].mat33f[3] = 1;
+      } else {
+        cmd.args[3].mat33f[0] = tfs.transform.rotation.x;
+        cmd.args[3].mat33f[1] = tfs.transform.rotation.y;
+        cmd.args[3].mat33f[2] = tfs.transform.rotation.z;
+        cmd.args[3].mat33f[3] = tfs.transform.rotation.w;
+      }
     } else {
       std::string str_att = FLAGS_att;
       std::istringstream iss_att(str_att);

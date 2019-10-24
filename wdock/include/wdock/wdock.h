@@ -92,9 +92,16 @@ class WDock {
 
   DockStateSupplierPtr dock_state_supplier_;
 
+  using CommandEchoSupplier =
+                        kn::DdsTypedSupplier<rapid::Command>;
+  using CommandEchoSupplierPtr = std::unique_ptr<CommandEchoSupplier>;
+
+  CommandEchoSupplierPtr command_echo_supplier_;
+
   std::shared_ptr<kn::DdsEntitiesFactorySvc> dds_entities_factory_;
 
-  std::string ack_pub_suffix_, dock_state_pub_suffix_, sub_suffix_;
+  std::string ack_pub_suffix_, dock_state_pub_suffix_,
+      sub_suffix_, echo_suffix_;
 };
 
 }  // end namespace w_dock

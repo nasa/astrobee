@@ -17,28 +17,9 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 #
+
 #
-# Script to install the prepared debian packages to support the ARS build.
-#
-# This script works in two steps:
-#   1) Rsync debian packages from volar
-#   2) Add the local debian packages to the sources
-#
-# Step 1) will be removed when the debian packages can be hosted on a public
-# server not requiring authentification.
-#
-# The script use a default location for the rsynched packages:
-#   ars_repo_root/.astrobee_repo
-# This default location can be overridden by setting the following
-# environment variable before running the script:
-#   ARS_DEB_DIR
-# Note: if using ARS_DEB_DIR, make sure that it is consistent between
-# successive invocations of the script (unless you know what you are doing)
-#
-# If your username (when invoking the script) differs from your NDC username
-# (typical from a VM), the variable NDC_USERNAME cat be set and will be honored
-# Alternatively a correct ssh config can be setup so that the NDC username is
-# used for the rsync.
+# Script to setup the source repository for the astrobee custom debians
 #
 
 scriptdir=$(dirname "$(readlink -f "$0")")
@@ -46,10 +27,10 @@ rootdir=`cd $scriptdir/../../..; pwd`
 
 arssrc=/etc/apt/sources.list.d/astrobee-latest.list
 
-username=${NDC_USERNAME:+${NDC_USERNAME}@}
-
 # Add these packages to the apt sources
 sudo touch $arssrc
+# The correct source for the repo is now configure on the fly in install_desktop_16.04_package.sh
 #sudo /bin/bash -c "echo \"deb [arch=amd64] http://127.0.0.1:8765/software xenial main\" > $arssrc" || exit 1
 #sudo /bin/bash -c "echo \"deb-src http://127.0.0.1:8765/software xenial main\" >> $arssrc" || exit 1
+
 sudo apt-key add $scriptdir/../../submodules/platform/rootfs/keys/astrobee.key || exit 1

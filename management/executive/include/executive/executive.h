@@ -32,6 +32,7 @@
 #include <ff_msgs/AckStatus.h>
 #include <ff_msgs/AgentStateStamped.h>
 #include <ff_msgs/ArmAction.h>
+#include <ff_msgs/CameraStatesStamped.h>
 #include <ff_msgs/CommandConstants.h>
 #include <ff_msgs/CommandStamped.h>
 #include <ff_msgs/CompressedFile.h>
@@ -40,6 +41,7 @@
 #include <ff_msgs/ControlCommand.h>
 #include <ff_msgs/DockAction.h>
 #include <ff_msgs/EnableCamera.h>
+#include <ff_msgs/EnableRecording.h>
 #include <ff_msgs/FaultState.h>
 #include <ff_msgs/LocalizationAction.h>
 #include <ff_msgs/MotionAction.h>
@@ -91,6 +93,7 @@ class Executive : public ff_util::FreeFlyerNodelet {
   ~Executive();
 
   // Message and timeout callbacks
+  void CameraStatesCallback(ff_msgs::CameraStatesStampedConstPtr const& state);
   void CmdCallback(ff_msgs::CommandStampedPtr const& cmd);
   void DataToDiskCallback(ff_msgs::CompressedFileConstPtr const& data);
   void DockStateCallback(ff_msgs::DockStateConstPtr const& state);
@@ -140,6 +143,7 @@ class Executive : public ff_util::FreeFlyerNodelet {
 
   // Getters
   ff_msgs::MobilityState GetMobilityState();
+  uint8_t GetPlanExecState();
 
   // Setters
   void SetMobilityState();
@@ -158,7 +162,7 @@ class Executive : public ff_util::FreeFlyerNodelet {
                           std::string const& cmd_in);
   bool CheckStoppedOrDrifting(std::string const& cmd_id,
                               std::string const& cmd_name);
-  void ConfigureLed(bool blinking);
+  bool ConfigureLed(ff_hw_msgs::ConfigureSystemLeds& led_srv);
   bool ConfigureMobility(std::string const& cmd_id);
   bool ConfigureMobility(bool move_to_start,
                          bool enable_holonomic,
@@ -214,9 +218,11 @@ class Executive : public ff_util::FreeFlyerNodelet {
   bool SetZones(ff_msgs::CommandStampedPtr const& cmd);
   bool Shutdown(ff_msgs::CommandStampedPtr const& cmd);
   bool SkipPlanStep(ff_msgs::CommandStampedPtr const& cmd);
+  bool StartRecording(ff_msgs::CommandStampedPtr const& cmd);
   bool StopAllMotion(ff_msgs::CommandStampedPtr const& cmd);
   bool StopArm(ff_msgs::CommandStampedPtr const& cmd);
   bool StopDownload(ff_msgs::CommandStampedPtr const& cmd);
+  bool StopRecording(ff_msgs::CommandStampedPtr const& cmd);
   bool StowArm(ff_msgs::CommandStampedPtr const& cmd);
   bool SwitchLocalization(ff_msgs::CommandStampedPtr const& cmd);
   bool Undock(ff_msgs::CommandStampedPtr const& cmd);
@@ -249,6 +255,7 @@ class Executive : public ff_util::FreeFlyerNodelet {
   ff_msgs::CompressedFileAck cf_ack_;
   ff_msgs::CompressedFileConstPtr plan_, zones_, data_to_disk_;
 
+  ff_msgs::CameraStatesStamped camera_states_;
   ff_msgs::DockStateConstPtr dock_state_;
   ff_msgs::FaultStateConstPtr fault_state_;
   ff_msgs::MotionStatePtr motion_state_;
@@ -271,10 +278,12 @@ class Executive : public ff_util::FreeFlyerNodelet {
   ros::ServiceClient nav_cam_config_client_, nav_cam_enable_client_;
   ros::ServiceClient sci_cam_config_client_, sci_cam_enable_client_;
   ros::ServiceClient payload_power_client_, pmc_enable_client_;
-  ros::ServiceClient set_inertia_client_, set_rate_client_, set_data_client_;
+  ros::ServiceClient set_inertia_client_, set_rate_client_;
+  ros::ServiceClient set_data_client_, enable_recording_client_;
 
   ros::Subscriber cmd_sub_, dock_state_sub_, fault_state_sub_, gs_ack_sub_;
   ros::Subscriber heartbeat_sub_, motion_sub_, plan_sub_, zones_sub_, data_sub_;
+  ros::Subscriber camera_state_sub_;
 
   ros::Timer reload_params_timer_, wait_timer_, sys_monitor_heartbeat_timer_;
   ros::Timer sys_monitor_startup_timer_;
@@ -298,6 +307,7 @@ class Executive : public ff_util::FreeFlyerNodelet {
 
   // TODO(Katie) Move to Agent state stamped
   bool allow_blind_flying_;
+  bool live_led_on_;
   bool sys_monitor_heartbeat_fault_blocking_;
   bool sys_monitor_init_fault_blocking_;
   bool sys_monitor_heartbeat_fault_occurring_;

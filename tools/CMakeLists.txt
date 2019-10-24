@@ -20,6 +20,6 @@ add_subdirectory(rviz_visualizer)
 add_subdirectory(visualeyez)
 add_subdirectory(simulator)
 
-if (FFMPEG_FOUND AND QT_QTGUI_FOUND)
+if (FFMPEG_FOUND)
   add_subdirectory(ekf_video)
-endif (FFMPEG_FOUND AND QT_QTGUI_FOUND)
+endif (FFMPEG_FOUND)

@@ -22,11 +22,15 @@
 #include <ekf_bag/ekf_bag.h>
 #include <ekf_bag/tracked_features.h>
 
+#include <string>
+
 namespace ekf_bag {
 
 class EkfBagCsv : public EkfBag {
  public:
-  EkfBagCsv(const char* bagfile, const char* mapfile, const char* csvfile, bool run_ekf = true);
+  EkfBagCsv(const char* bagfile, const char* mapfile, const char* csvfile,
+      bool run_ekf = true, bool gen_features = true, const char* biasfile = NULL,
+      std::string image_topic = std::string(TOPIC_HARDWARE_NAV_CAM));
   virtual ~EkfBagCsv(void);
 
  protected:
@@ -35,6 +39,8 @@ class EkfBagCsv : public EkfBag {
   virtual void UpdateEKF(const ff_msgs::EkfState & state);
   virtual void UpdateOpticalFlow(const ff_msgs::Feature2dArray & of);
   virtual void UpdateSparseMap(const ff_msgs::VisualLandmarks & vl);
+  virtual void UpdateOpticalFlowReg(const ff_msgs::CameraRegistration & reg);
+  virtual void UpdateSparseMapReg(const ff_msgs::CameraRegistration & reg);
 
   virtual void ReadParams(config_reader::ConfigReader* config);
 
@@ -45,6 +51,8 @@ class EkfBagCsv : public EkfBag {
 
   bool start_time_set_;
   ros::Time start_time_;
+  ros::Time ml_reg_time_, of_reg_time_;
+  unsigned int ml_cam_id_, of_cam_id_;
 };
 
 }  // end namespace ekf_bag

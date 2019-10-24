@@ -85,3 +85,19 @@ skinparam component {
     ' skip DRV nodes
 !endif
 !enddefinelong
+
+!definelong start_manager(name)
+!ifdef SHOW_MANAGERS
+  frame "name" {
+!else
+  ' frame  [ name ] not sown
+!endif
+!enddefinelong
+
+!definelong end_manager()
+!ifdef SHOW_MANAGERS
+  }
+!else
+  ' end of hidden frame
+!endif
+!enddefinelong

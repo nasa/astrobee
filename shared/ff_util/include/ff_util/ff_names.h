@@ -38,7 +38,7 @@
 #define FRAME_NAME_BODY                             "body"
 #define FRAME_NAME_TRUTH                            "truth"
 #define FRAME_NAME_VIVE                             "vive"
-#define FRAME_NAME_HANDRAIL                         "handrail"
+#define FRAME_NAME_HANDRAIL                         "handrail/body"
 #define FRAME_NAME_DOCK                             "dock/body"
 #define FRAME_NAME_DOCK_BERTH_1                     "dock/berth1"
 #define FRAME_NAME_DOCK_BERTH_2                     "dock/berth2"
@@ -111,6 +111,7 @@
 #define SUBSYSTEM_GNC                               "gnc"
 
 #define NODE_CTL                                    "ctl"
+#define NODE_PERCH_CTL                              "perch_ctl"
 #define NODE_EKF                                    "ekf"
 #define NODE_FAM                                    "fam"
 #define NODE_SIM_WRAPPER                            "sim_wrapper"
@@ -128,6 +129,7 @@
 #define TOPIC_GNC_EKF_RESET                         "gnc/ekf/reset"
 
 #define SERVICE_GNC_EKF_RESET                       "gnc/ekf/reset"
+#define SERVICE_GNC_EKF_RESET_HR                    "gnc/ekf/reset_hr"
 #define SERVICE_GNC_EKF_INIT_BIAS                   "gnc/ekf/init_bias"
 #define SERVICE_GNC_EKF_SET_INPUT                   "gnc/ekf/set_input"
 #define SERVICE_GNC_CTL_ENABLE                      "gnc/ctl/enable"
@@ -171,6 +173,7 @@
 #define TOPIC_MANAGEMENT_SYS_MONITOR_CONFIG         "mgt/sys_monitor/config"
 #define TOPIC_MANAGEMENT_SYS_MONITOR_STATE          "mgt/sys_monitor/state"
 #define TOPIC_MANAGEMENT_SYS_MONITOR_HEARTBEAT      "mgt/sys_monitor/heartbeat"
+#define TOPIC_MANAGEMENT_SYS_MONITOR_TIME_DIFF      "mgt/sys_monitor/time_diff"
 #define TOPIC_MANAGEMENT_DATA_BAGGER_STATE          "mgt/data_bagger/state"
 #define TOPIC_MANAGEMENT_DATA_BAGGER_TOPICS         "mgt/data_bagger/topics"
 #define TOPIC_MANAGEMENT_CAMERA_STATE               "mgt/camera_state"
@@ -179,6 +182,7 @@
 #define TOPIC_MANAGEMENT_IMG_SAMPLER_DOCK_CAM_RECORD "mgt/img_sampler/dock_cam/image_record"
 #define TOPIC_MANAGEMENT_IMG_SAMPLER_DOCK_CAM_STREAM "mgt/img_sampler/dock_cam/image_stream"
 
+#define SERVICE_MANAGEMENT_DATA_BAGGER_ENABLE_RECORDING "mgt/data_bagger/enable_recording"
 #define SERVICE_MANAGEMENT_DATA_BAGGER_SET_DATA_TO_DISK "mgt/data_bagger/set_data_to_disk"
 #define SERVICE_MANAGEMENT_IMG_SAMPLER_CONFIG_NAV   "mgt/img_sampler/nav_cam/configure"
 #define SERVICE_MANAGEMENT_IMG_SAMPLER_CONFIG_DOCK  "mgt/img_sampler/dock_cam/configure"
@@ -216,6 +220,7 @@
 #define TOPIC_MOBILITY_MOTION_STATE                 "mob/state"
 #define TOPIC_MOBILITY_FLIGHT_MODE                  "mob/flight_mode"
 #define TOPIC_MOBILITY_INERTIA                      "mob/inertia"
+#define TOPIC_MOBILITY_MOTION_RESULT                "mob/motion/result"
 
 // Used internally or for rviz plotting
 
@@ -328,6 +333,7 @@
 #define NODE_DOCK_CAM                               "dock_cam"
 #define NODE_PERCH_CAM                              "perch_cam"
 #define NODE_HAZ_CAM                                "haz_cam"
+#define NODE_SIGNAL_LIGHTS                          "signal_lights"
 #define NODE_VIVE                                   "vive"
 
 #define TOPIC_HARDWARE_PMC_COMMAND                  "hw/pmc/command"
@@ -365,6 +371,9 @@
 #define TOPIC_HARDWARE_SPEED_CAM_SPEED              "hw/speed_cam/speed"
 #define TOPIC_HARDWARE_TEMP_MONITOR_PREFIX          "hw/temp_monitor/"
 #define TOPIC_HARDWARE_DOCK_STATE                   "hw/dock/state"
+#define TOPIC_HARDWARE_SIGNAL_LIGHTS_TELEMETRY      "hw/sig/telemetry"
+#define TOPIC_HARDWARE_SIGNAL_LIGHTS_CONFIG         "hw/sig/config"
+#define TOPIC_HARDWARE_SIGNAL_LIGHTS_STATE          "hw/sig/state"
 #define TOPIC_HARDWARE_VIVE_BUTTON                  "hw/vive/buttons"
 #define TOPIC_HARDWARE_VIVE_IMU                     "hw/vive/imu"
 #define TOPIC_HARDWARE_VIVE_LIGHT                   "hw/vive/light"
@@ -385,10 +394,15 @@
 
 #define SERVICE_HARDWARE_PERCHING_ARM_DIST_VEL      "hw/arm/set_dist_vel"
 #define SERVICE_HARDWARE_PERCHING_ARM_PROX_VEL      "hw/arm/set_prox_vel"
+#define SERVICE_HARDWARE_PERCHING_ARM_PROX_SERVO    "hw/arm/enable_proximal_servo"
+#define SERVICE_HARDWARE_PERCHING_ARM_DIST_SERVO    "hw/arm/enable_distal_servo"
+#define SERVICE_HARDWARE_PERCHING_ARM_GRIP_SERVO    "hw/arm/enable_gripper_servo"
 #define SERVICE_HARDWARE_PERCHING_ARM_CALIBRATE     "hw/arm/calibrate_gripper"
 #define SERVICE_HARDWARE_LIGHT_FRONT_CONTROL        "hw/light_front/control"
 #define SERVICE_HARDWARE_LIGHT_AFT_CONTROL          "hw/light_aft/control"
 #define SERVICE_HARDWARE_LASER_ENABLE               "hw/laser/enable"
 #define SERVICE_HARDWARE_PMC_ENABLE                 "hw/pmc/enable"
+
+#define SERVICE_STREAMING_LIGHTS                    "hw/signal_lights/streaming"
 
 #endif  // FF_UTIL_FF_NAMES_H_

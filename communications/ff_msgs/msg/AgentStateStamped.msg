@@ -87,5 +87,8 @@ bool immediate_enabled
 # Specifies the current planner being used
 string planner
 
+# Specifies the current world being used
+string world
+
 # Number of seconds since Unix Epoch
 uint32 boot_time

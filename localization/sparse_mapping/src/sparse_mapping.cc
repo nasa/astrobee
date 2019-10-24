@@ -1,14 +1,14 @@
 /* Copyright (c) 2017, United States Government, as represented by the
  * Administrator of the National Aeronautics and Space Administration.
- * 
+ *
  * All rights reserved.
- * 
+ *
  * The Astrobee platform is licensed under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -753,6 +753,13 @@ void sparse_mapping::ParseHuginControlPoints(std::string const& hugin_file,
   }
 }
 
+namespace {
+  // A little helper function
+  bool is_blank(std::string const& line) {
+    return (line.find_first_not_of(" \t\n\v\f\r") == std::string::npos);
+  }
+}
+
 // Parse a file having on each line xyz coordinates
 void sparse_mapping::ParseXYZ(std::string const& xyz_file,
                               Eigen::MatrixXd * xyz) {
@@ -767,7 +774,7 @@ void sparse_mapping::ParseXYZ(std::string const& xyz_file,
   std::string line;
   while (getline(hf, line)) {
     // Ignore lines starting with comments and empty lines
-    if (line.find("#") == 0 || line.empty()) continue;
+    if (line.find("#") == 0 || is_blank(line)) continue;
 
     // Apparently sometimes empty lines show up as if of length 1
     if (line.size() == 1)
@@ -816,7 +823,7 @@ void sparse_mapping::ParseCSV(std::string const& csv_file,
     }
 
     // Skip empty lines
-    if (line.empty()) continue;
+    if (is_blank(line)) continue;
 
     // Replace commas with spaces
     for (size_t c = 0; c < line.size(); c++)

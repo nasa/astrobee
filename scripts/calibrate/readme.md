@@ -6,20 +6,26 @@ This folder contains various scripts for calibration.
 - Build and install the Astrobee code on the robot.
 - Install Kalibr on your computer.
 
-## Installation instructions for Ubuntu 16.04
+## Installation instructions for Kalibr for Ubuntu 16.04
 
-sudo apt install python-rosinstall ipython python-software-properties python-git \
-        ipython python-catkin-tools
+sudo apt install python-rosinstall ipython python-software-properties \
+        python-git ipython python-catkin-tools
 sudo apt install libopencv-dev ros-kinetic-vision-opencv
 
 # Install pip and use it to install python packages
+
 curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
 sudo python get-pip.py
 sudo -H pip install testresources
 sudo -H pip install python-igraph --upgrade
 sudo -H pip install opencv-python
 
-If necessary, the pip packages can also be installed in user space.
+If necessary, pip and the other packages can be installed in user
+space. The PYTHONPATH may need to be set for such packages.
+The pip flags --user, --force, and --verbose may be useful.
+
+Kalibr uses Python 2, and many packages are transitioning to Python 3,
+so some effort may be needed to install the Python 2 dependencies.
 
 # Build using catkin
 export KALIBR_WS=$HOME/source/kalibr_workspace
@@ -45,7 +51,23 @@ Run, for example:
     export SCRIPT_DIR=$SOURCE_PATH/scripts/calibrate
     export ASTROBEE_CONFIG_DIR=$SOURCE_PATH/astrobee/config
 
-# Setup to calibrate with the dock AR target. Only run when configuration is changed.
+# The choice of calibration target
+
+Two calibration target are in use. In the granite lab the April tag
+target can be used. It is on the dock and is a combination of AR
+tags. Its definition is in:
+
+   $SOURCE_PATH/scripts/calibrate/config/granite_april_tag.yaml
+
+Calibration on the ISS uses a checkerboard pattern. That one is
+defined in:
+
+  $SOURCE_PATH/scripts/calibrate/config/iss_checkerboard.yaml
+
+and has 12 rows and 7 columns of black and white squares, each one
+being of size 1 inch (2.54 cm).
+
+# Regenerating the calibration target
 
 This script only needs to be executed whenever the configuration of
 the target is changed (number of tags, tag's position or id
@@ -66,8 +88,17 @@ dock_markers_specs.config. This will write the file:
 
 Note that $KALIBR_WS should be defined since the script will also
 automatically add a header file to Kalibr's directory describing the
-family of AR tags (Kalibr uses AprilTag library and not the alvar
+family of AR tags (Kalibr uses AprilTag library and not the Alvar
 library used in the freeflyer software).
+
+The checkerboard target can be regenerated using Kalibr directly,
+per 
+
+https://github.com/ethz-asl/kalibr/wiki/calibration-targets
+
+It is very important to remember that the yaml file storing this
+configuration counts the internal corners, so if there are 12 rows of
+squares, that corresponds to 11 internal corners.
 
 # Intrinsics camera calibration
 
@@ -85,7 +116,8 @@ To launch the nodes needed for calibration, do:
 
 On the flight unit, do:
 
-   roslaunch astrobee astrobee.launch llp:=??? mlp:=??? nodes:=calibration_nav_cam,calibration_dock_cam,calibration_imu,pico_driver,framestore
+   roslaunch astrobee astrobee.launch llp:=??? mlp:=??? \
+     nodes:=calibration_nav_cam,calibration_dock_cam,calibration_imu,pico_driver,framestore
 
 This will start the IMU driver, camera drivers, and an image
 viewer. 
@@ -171,11 +203,15 @@ Run
      export KALIBR_WS=$HOME/source/kalibr_workspace
      source $KALIBR_WS/devel/setup.bash
      cd $SCRIPT_DIR
-    ./intrinsics_calibrate.py robotname bagfile 
+     ./intrinsics_calibrate.py robotname bagfile \
+        --calibration_target targetname
 
 Arguments: 
-	robotname is the robot's config file to edit (e.g., p4d, cert_unit, honey)
-	bagfile is the bag with the recorded data.
+      - robotname is the robot's config file to edit (e.g., p4d, cert_unit, honey)
+      - bagfile is the bag with the recorded data.
+      - targetname is a yaml file describing the calibration target. Use either
+        the checkerboard pattern or the April tag (the latter is the default).
+
 Additional flags:
 
 	--dock_cam: To calibrate the dock cam and perch cam pair. If
@@ -188,9 +224,6 @@ Additional flags:
           in seconds.
         --approx_sync <value> Time tolerance for approximate image 
           synchronization [s] (default: 0.02).
-        --calibration_target <value> Use this yaml file to desribe the
-          calibration target, overriding the default april tag
-          mentioned above.
  	--verbose: To output additional information on the Kalibr's calibration. 
 
 The script will overwrite the intrinsics calibration in the specified
@@ -236,7 +269,7 @@ possible while still having all of it visible at most times.
 ## Recording calibration data
 
 - Detach the robot from its stand so it can be lifted freely.
-- Attach the april target to a wall under bright light.
+- Attach the calibration target to a wall under bright light.
 - Launch, as for intrinsics calibration, calibration.launch and pico_proxy.launch.
 
 - Lift the robot and face the target.
@@ -258,12 +291,15 @@ Run
      export KALIBR_WS=$HOME/source/kalibr_workspace
      source $KALIBR_WS/devel/setup.bash
      cd $SCRIPT_DIR
-     ./extrinsics_calibrate.py robotname intrinsicsYaml bagfile 
+     ./extrinsics_calibrate.py robotname intrinsicsYaml bagfile \
+        --calibration_target targetname
 
 Arguments: 
-	robotname is the robot's config file to edit (e.g., p4d, cert_unit, honey)
-	intrinsicsYaml is a YAML file generated by the previous intrinsics calibration
-	bagfile is the bag with the recorded data.
+      - robotname is the robot's config file to edit (e.g., p4d, cert_unit, honey)
+	intrinsicsYaml is a yaml file generated by the previous intrinsics calibration
+      - bagfile is the bag with the recorded data.
+      - targetname is a yaml file describing the calibration target. Use either
+        the checkerboard pattern or the April tag (the latter is the default).
 
 Additional flags:
  	--dock_cam: To calibrate dock cam and perch cam pair. If not
@@ -272,9 +308,6 @@ Additional flags:
         --timeoffset-padding <value>: Maximum range in which the
           timeoffset may change during estimation, in seconds. See below
           for more info. (default: 0.01)
-        --calibration_target <value> Use this yaml file to desribe the
-          calibration target, overriding the default april tag
-          mentioned above.
  	--verbose: To output additional information on Kalibr's
           calibration.
 
@@ -296,8 +329,12 @@ and perhaps running out of memory.
 As for intrinsics, it is suggested that each of the four cameras be
 individually calibrated with the IMU to make the process better
 behaved. Hence, one first calibrates the intrinsics of one camera (say
-nav or haz), then runs extrinsics calibration for it, before switching
-to a new camera. (A single bag can be used for both cameras facing the
-same direction, or separate bags can be acquired.) The tool will infer
-from its input .yaml file if to work with the HD or depth camera.
+nav or haz), then runs extrinsics calibration for it (so, with the
+IMU), before switching to a new camera. (A single bag can be used for
+both cameras facing the same direction, or separate bags can be
+acquired.) The tool will infer from its input .yaml file if to work
+with the HD or depth camera.
 
+Sometimes parts of the acquired bags could be causing problems to the
+calibrator. One can then experiment using just a portion of the data
+with the --from and --to flags.

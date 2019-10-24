@@ -2,11 +2,11 @@
 
 ## Create a new "custom" image for the robot
 
-Follow instructions in [Generating custom overlays](submodules/platform/readme.md)
+Follow instructions in [Generating custom overlays](../submodules/platform/readme.md)
 
 ## Calibrate the sensors
 
-Follow instructions in [calibrate readme](scripts/calibrate/readme.md).
+Follow instructions in [calibrate readme](../scripts/calibrate/readme.md).
 
 ## Create a new robot config
 
@@ -19,10 +19,3 @@ Adjust the following  parameters in the new config:
   - Agent name
 
 If the new robot will become the default robot on the granite table, its name can be configured to do so in the `astrobee\launch\granite.launch`.
-
-
-
-
-
-
-

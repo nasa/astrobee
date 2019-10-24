@@ -103,6 +103,8 @@ class FreeFlyerNodelet : public nodelet::Nodelet {
   // for example, in simulation, where the dynamic loading is within gazebo...
   void Setup(ros::NodeHandle & nh, ros::NodeHandle & nh_mt);
 
+  std::map<std::string, int> faults_;
+
  private:
   // Called on a heartbeat event
   void HeartbeatCallback(ros::TimerEvent const& ev);
@@ -150,8 +152,6 @@ class FreeFlyerNodelet : public nodelet::Nodelet {
 
   // Reset service
   ros::ServiceServer srv_trigger_;
-
-  std::map<std::string, int> faults_;
 
   // Name and subsystem
   std::string platform_;

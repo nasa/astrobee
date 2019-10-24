@@ -1,28 +1,55 @@
-s# Usage instructions for NASA users
+# Usage instructions for NASA users
 
-Install the 64-bit version of [Ubuntu 16.04](http://releases.ubuntu.com/16.04)
-on a host machine, and make sure that you can checkout and build code.
-If you are using a virtual machine, please use VMware. Virtualbox doesn't
-support some of our Gazebo plugins.
+Install the 64-bit version of
+[Ubuntu16.04](http://releases.ubuntu.com/16.04) on a host machine, and
+make sure that you can checkout and build code.  If you are using a
+virtual machine, please use VMware. Virtualbox doesn't support some of
+our Gazebo plugins.
 
     sudo apt-get install build-essential git
 
 *Note: Please ensure you install the 64-bit version of Ubuntu. We do not
 support running Astrobee Robot Software on 32-bit systems.*
 
-## Machine setup
+## Computer setup
 
-#### General notes before running the scripts below
+### Username
 
-- The custom debian packages are currently stored on the "volar" server. So you
-  need to have credentials on `volar` to run these scripts.
-- If you are using a VM with a username that does not match your NDC username,
-  you have two options:
-  1. Set correctly the environment variable `NDC_USERNAME` with your NASA NDC
-     username.
-  2. Or set a ssh config that specify the right username for volar.
-- If you are outside the NASA ARC private network, there are two options to get
-  to volar:
+If you are using a VM with a username that does not match your NDC username,
+please configure the following variable:
+
+    export NDC_USERNAME=your_ndc_username
+
+
+### Access to the Astrobee Debian server
+
+The custom debian packages are currently distributed by the
+`astrobee.ndc.nasa.gov server`. This server is currently on the ARC TI
+private network. It is *critical* to be able to reach this server to
+install the pre-built custom debian. If none of the solutions below
+allow you to reach `astrobee.ndc.nasa.gov`, you can use the
+instructions on how to build the Debian dependencies manually
+following the INSTALL.md instructions (Dependencies section).
+
+#### If on the ARC TI private network
+
+This is the typical case for all wired computers in ARC TI, and simplifies
+your life greatly.
+
+Verify that you are in this situation with the command below should succeed
+(remove the Release.gpg file after being fetched).
+
+    wget -v http://astrobee.ndc.nasa.gov/software/dists/xenial/Release.gpg
+
+Before running the scripts in `scripts/setup` below, set this variable:
+
+    export NO_TUNNEL=1
+
+#### If not on the ARC TI private network
+
+If you are outside the NASA ARC private network, there are two options to
+reach `astrobee.ndc.nasa.gov`:
+
   1. Use VPN to act like if you were inside the ARC TI private network and 
      obtain the correct kerberos credentials inside the VM with the following
      command (note the capitalization):
@@ -31,7 +58,17 @@ kinit $NDC_USERNAME@NDC.NASA.GOV`
 ```
   2. setup your `.ssh/config` to do ssh forwarding. A tutorial on this method
   is available at: https://babelfish.arc.nasa.gov/trac/freeflyer/wiki/SSHSetup
-- These notes apply to `add_local_repository.sh` and `make_xenial.sh`
+
+For either solution, please verify that you can SSH to `m.ndc.nasa.gov` without
+entering your password (`m` is used to tunnel to `astrobee.ndc.nasa.gov`):
+
+   ssh $NDC_USERNAME@m.ndc.nasa.gov
+   
+The command should succeed without entering your password. Once this is verified,
+exit this session on `m` with <ctrl>+D.
+
+- These notes apply to `install_desktop_16.04_packages.sh` and `make_xenial.sh`
+
 
 ### Checkout the project source code
 
@@ -42,8 +79,10 @@ At this point you need to decide where you'd like to put the source code
 
 First, clone the flight software repository:
 
-    git clone --recursive https://$USER@babelfish.arc.nasa.gov/git/freeflyer \
+    git clone --recursive https://$NDC_USERNAME@babelfish.arc.nasa.gov/git/freeflyer \
         --branch develop $SOURCE_PATH
+
+(Note: re-enter your username and password for every submodules that are cloned)
 
 ### Dependencies
 

@@ -1,0 +1,39 @@
+{
+  "procedure": [
+    [
+      "Procedure",
+      "hibernate",
+      [
+        "Define",
+        "$breath",
+        [
+          "ListSequence",
+          ["BasicSequence", "#000", 0.0, 5.0, "#fff"],
+          ["BasicSequence", "#fff", 5.0, 5.0, "#000"]
+        ]
+      ],
+      ["Define", "$rptBreath", ["RepeatSequence", "$breath", 10.0]],
+      [
+        "Define",
+        "$pointLights",
+        [
+          "Domain",
+          ["Interval", 2, 3],
+          ["Interval", 9, 3],
+          ["Interval", 19, 3],
+          ["Interval", 34, 3],
+          ["Interval", 49, 3],
+          ["Interval", 64, 3]
+        ]
+      ],
+      ["Return", ["BasicAnimation", "$pointLights", "$rptBreath"]]
+    ]
+  ],
+  "state": [
+    "ExecState",
+    1.0,
+    30.0,
+    true,
+    [["Call", "both", "hibernate", "#fff", 1.0]]
+  ]
+}

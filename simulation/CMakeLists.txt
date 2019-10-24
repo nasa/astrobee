@@ -44,12 +44,13 @@ catkin_package(
     gazebo_model_plugin_signal_lights
     gazebo_sensor_plugin_imu
     gazebo_sensor_plugin_nav_cam
-    gazebo_sensor_plugin_dock_cam
-    gazebo_sensor_plugin_perch_cam
-    gazebo_sensor_plugin_haz_cam
     gazebo_sensor_plugin_sparse_map
-    gazebo_sensor_plugin_ar_tags
     gazebo_sensor_plugin_optical_flow
+    gazebo_sensor_plugin_dock_cam
+    gazebo_sensor_plugin_ar_tags
+    gazebo_sensor_plugin_perch_cam
+    #gazebo_sensor_plugin_handrail_detect
+    gazebo_sensor_plugin_haz_cam
     gazebo_world_plugin_speed
     gazebo_system_plugin_client
   CATKIN_DEPENDS
@@ -384,6 +385,26 @@ create_library(
     ff_util
 )
 
+# Create a sensor plugin for the handrail detection algorithm
+#create_library(
+#  DIR
+#    src/gazebo_sensor_plugin_handrail_detect
+#  TARGET
+#    gazebo_sensor_plugin_handrail_detect
+#  LIBS
+#    ${GAZEBO_LIBRARIES}
+#    ${catkin_LIBRARIES}
+#    astrobee_gazebo
+#    camera
+#  INC
+#    ${GAZEBO_INCLUDE_DIRS}
+#    ${catkin_INCLUDE_DIRS}
+#    ${EIGEN3_INCLUDE_DIRS}
+#  DEPS
+#    ff_util
+#    ff_msgs
+#)
+
 # Create a sensor plugin for the hazard camera
 create_library(
   DIR
@@ -411,7 +432,6 @@ create_library(
     ${GAZEBO_LIBRARIES}
     ${catkin_LIBRARIES}
     astrobee_gazebo
-    camera
   INC
     ${GAZEBO_INCLUDE_DIRS}
     ${catkin_INCLUDE_DIRS}

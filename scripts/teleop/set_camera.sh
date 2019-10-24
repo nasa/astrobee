@@ -18,24 +18,64 @@
 # under the License.
 
 camera=$1
-stream=$2
+mode=$2
+res=$3
 
 if [ "$camera" = dock ]
 then
-  if [ "$stream" = true ]
-  then 
-    rostopic pub --once /command ff_msgs/CommandStamped '{cmd_name: "setCamera", subsys_name: "Astrobee", args: [{data_type: 5, s: DOCK}, {data_type: 0, b: true}, {data_type: 5, s: 1024x768}, {data_type: 2, f: 10}, {data_type: 2, f: 0}]}'
+  if [ "$mode" = record ]
+  then
+    if [ "$res" = low ]
+    then
+      rostopic pub --once /command ff_msgs/CommandStamped '{cmd_name: "setCamera", subsys_name: "Astrobee", args: [{data_type: 5, s: Dock}, {data_type: 5, s: Recording}, {data_type: 5, s: 640x480}, {data_type: 2, f: 2}, {data_type: 2, f: 0}]}'
+    else
+      rostopic pub --once /command ff_msgs/CommandStamped '{cmd_name: "setCamera", subsys_name: "Astrobee", args: [{data_type: 5, s: Dock}, {data_type: 5, s: Recording}, {data_type: 5, s: 1280x960}, {data_type: 2, f: 5}, {data_type: 2, f: 0}]}'
+    fi
+  elif [ "$mode" = stream ]
+  then
+    if [ "$res" = low ]
+    then
+      rostopic pub --once /command ff_msgs/CommandStamped '{cmd_name: "setCamera", subsys_name: "Astrobee", args: [{data_type: 5, s: Dock}, {data_type: 5, s: Streaming}, {data_type: 5, s: 640x480}, {data_type: 2, f: 2}, {data_type: 2, f: 0}]}'
+    else
+      rostopic pub --once /command ff_msgs/CommandStamped '{cmd_name: "setCamera", subsys_name: "Astrobee", args: [{data_type: 5, s: Dock}, {data_type: 5, s: Streaming}, {data_type: 5, s: 1280x960}, {data_type: 2, f: 5}, {data_type: 2, f: 0}]}'
+    fi
   else
-    rostopic pub --once /command ff_msgs/CommandStamped '{cmd_name: "setCamera", subsys_name: "Astrobee", args: [{data_type: 5, s: DOCK}, {data_type: 0, b: false}, {data_type: 5, s: 1024x768}, {data_type: 2, f: 10}, {data_type: 2, f: 0}]}'
+    if [ "$res" = low ]
+    then
+      rostopic pub --once /command ff_msgs/CommandStamped '{cmd_name: "setCamera", subsys_name: "Astrobee", args: [{data_type: 5, s: Dock}, {data_type: 5, s: Both}, {data_type: 5, s: 640x480}, {data_type: 2, f: 2}, {data_type: 2, f: 0}]}'
+    else
+      rostopic pub --once /command ff_msgs/CommandStamped '{cmd_name: "setCamera", subsys_name: "Astrobee", args: [{data_type: 5, s: Dock}, {data_type: 5, s: Both}, {data_type: 5, s: 1280x960}, {data_type: 2, f: 5}, {data_type: 2, f: 0}]}'
+    fi
   fi
 elif [ "$camera" = nav ]
 then
-  if [ "$stream" = true ]
-  then 
-    rostopic pub --once /command ff_msgs/CommandStamped '{cmd_name: "setCamera", subsys_name: "Astrobee", args: [{data_type: 5, s: NAV}, {data_type: 0, b: true}, {data_type: 5, s: 640x480}, {data_type: 2, f: 10}, {data_type: 2, f: 0}]}'
+  if [ "$mode" = record ]
+  then
+    if [ "$res" = low ]
+    then
+      rostopic pub --once /command ff_msgs/CommandStamped '{cmd_name: "setCamera", subsys_name: "Astrobee", args: [{data_type: 5, s: Navigation}, {data_type: 5, s: Recording}, {data_type: 5, s: 640x480}, {data_type: 2, f: 2}, {data_type: 2, f: 0}]}'
+    else
+      rostopic pub --once /command ff_msgs/CommandStamped '{cmd_name: "setCamera", subsys_name: "Astrobee", args: [{data_type: 5, s: Navigation}, {data_type: 5, s: Recording}, {data_type: 5, s: 1280x960}, {data_type: 2, f: 5}, {data_type: 2, f: 0}]}'
+    fi
+  elif [ "$mode" = stream ]
+  then
+    if [ "$res" = low ]
+    then
+      rostopic pub --once /command ff_msgs/CommandStamped '{cmd_name: "setCamera", subsys_name: "Astrobee", args: [{data_type: 5, s: Navigation}, {data_type: 5, s: Streaming}, {data_type: 5, s: 640x480}, {data_type: 2, f: 2}, {data_type: 2, f: 0}]}'
+    else
+      rostopic pub --once /command ff_msgs/CommandStamped '{cmd_name: "setCamera", subsys_name: "Astrobee", args: [{data_type: 5, s: Navigation}, {data_type: 5, s: Streaming}, {data_type: 5, s: 1280x960}, {data_type: 2, f: 5}, {data_type: 2, f: 0}]}'
+    fi
   else
-    rostopic pub --once /command ff_msgs/CommandStamped '{cmd_name: "setCamera", subsys_name: "Astrobee", args: [{data_type: 5, s: NAV}, {data_type: 0, b: false}, {data_type: 5, s: 640x480}, {data_type: 2, f: 10}, {data_type: 2, f: 0}]}'
+    if [ "$res" = low ]
+    then
+      rostopic pub --once /command ff_msgs/CommandStamped '{cmd_name: "setCamera", subsys_name: "Astrobee", args: [{data_type: 5, s: Navigation}, {data_type: 5, s: Both}, {data_type: 5, s: 640x480}, {data_type: 2, f: 2}, {data_type: 2, f: 0}]}'
+    else
+      rostopic pub --once /command ff_msgs/CommandStamped '{cmd_name: "setCamera", subsys_name: "Astrobee", args: [{data_type: 5, s: Navigation}, {data_type: 5, s: Both}, {data_type: 5, s: 1280x960}, {data_type: 2, f: 5}, {data_type: 2, f: 0}]}'
+    fi
   fi
+elif [ "$camera" = sci ]
+then
+  echo "Sci cam not added to script yet!!!"
 fi
 
 echo "All done"

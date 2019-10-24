@@ -60,8 +60,8 @@ class GazeboModelPluginPerchingArm : public FreeFlyerModelPlugin {
   GazeboModelPluginPerchingArm() :
     FreeFlyerModelPlugin("perching_arm", "", true),
     rate_(10.0), bay_(""),
-    pid_prox_p_(6.25, 0.0, 0.0),
-    pid_dist_p_(6.25, 0.0, 0.0),
+    pid_prox_p_(6.25, 0.0, 0.1),
+    pid_dist_p_(6.25, 0.0, 0.1),
     pid_gl_prox_p_(6.25, 0.0, 0.0),
     pid_gl_dist_p_(6.25, 0.0, 0.0),
     pid_gr_prox_p_(6.25, 0.0, 0.0),

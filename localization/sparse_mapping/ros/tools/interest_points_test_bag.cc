@@ -73,11 +73,11 @@ void ReadParams(interest_point::FeatureDetector* detector) {
 
   // For the brisk thresholds, quietly assume some defaults
   if (!config.GetReal("min_brisk_threshold", &min_brisk_threshold))
-    min_brisk_threshold = 80.0;
+    min_brisk_threshold = 50.0;
   if (!config.GetReal("default_brisk_threshold", &default_brisk_threshold))
-    max_brisk_threshold = 100.0;
+    default_brisk_threshold = 75.0;
   if (!config.GetReal("max_brisk_threshold", &max_brisk_threshold))
-    max_brisk_threshold = 200.0;
+    max_brisk_threshold = 75.0;
 
   detector->Reset("ORGBRISK", min_features, max_features, detection_retries,
                   min_brisk_threshold, default_brisk_threshold, max_brisk_threshold);

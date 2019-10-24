@@ -34,6 +34,7 @@ int8 STOWING_PANNING     = 8       # We are panning to zero for stowing
 int8 STOWING_TILTING     = 9       # We are tilting to zero for stowing
 int8 DEPLOYING_PANNING   = 10      # We are panning to zero for stowing
 int8 DEPLOYING_TILTING   = 11      # We are tilting to zero for stowing
+int8 CALIBRATING         = 12      # We are calibrating the gripper
 
 # A human readble version of the (event) -> [state] transition
 string fsm_event

@@ -78,6 +78,20 @@ for current_file_num=1:length(csv_file_list)
         out_kfl_msg = ab_populate_ts_field(time_data, mahal_dist, 'ml_mahal_distance', out_kfl_msg);
         fprintf('Loaded %s\n', current_file_name);
         
+    elseif ~isempty(strfind(current_file_name, 'loc_ml_features'))
+        try
+            [pos, att, num_features, t] = import_ml_features([filepath current_file_name]);
+            time_data = ab_processTimeData(t);   %capture time data (in textdata)
+            out_loc_ml_features = [];
+            out_loc_ml_features = ab_populate_ts_field(time_data, pos, 'raw_pose_pos', out_loc_ml_features);
+            out_loc_ml_features = ab_populate_ts_field(time_data, att, 'raw_pose_quat', out_loc_ml_features);
+            out_loc_ml_features = ab_populate_ts_field(time_data, num_features, 'num_valid', out_loc_ml_features);
+            fprintf('Loaded %s\n', current_file_name);
+            
+        catch
+            fprintf(2, 'Unable to import localization mapped landmark features\n');
+        end
+        
     elseif ~isempty(strfind(current_file_name, 'gnc_ctl_command'))
         
         out_ctl_msg = [];

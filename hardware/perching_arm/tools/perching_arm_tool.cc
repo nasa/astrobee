@@ -191,19 +191,19 @@ bool InputFile(std::string &choice) {
 
 // Wait for a timeout
 void WaitForResultWithTimeout(ToolState state, int16_t value) {
-  // Set the goal value and the state
-  value_ = static_cast<double>(value);
-  state_ = state;
-  // Now clock this thread while we wait for a result or timeout
-  std::cout << "Waiting on result" << std::endl;
-  std::unique_lock<std::mutex> lk(mutex_);
-  if (cv_.wait_for(lk, std::chrono::duration<double>(FLAGS_timeout)) ==
-      std::cv_status::no_timeout)
-    return;
-  // If we get there then we have timed out
-  state_ = WAITING_ON_COMMAND;
-  // Print out the error that occurred
-  std::cerr << "Error: timeout waiting on command to complete" << std::endl;
+  // // Set the goal value and the state
+  // value_ = static_cast<double>(value);
+  // state_ = state;
+  // // Now clock this thread while we wait for a result or timeout
+  // std::cout << "Waiting on result" << std::endl;
+  // std::unique_lock<std::mutex> lk(mutex_);
+  // if (cv_.wait_for(lk, std::chrono::duration<double>(FLAGS_timeout)) ==
+  //     std::cv_status::no_timeout)
+  //   return;
+  // // If we get there then we have timed out
+  // state_ = WAITING_ON_COMMAND;
+  // // Print out the error that occurred
+  // std::cerr << "Error: timeout waiting on command to complete" << std::endl;
 }
 
 // Asynchronous callback to copy feedback
@@ -261,6 +261,7 @@ void DataCallback(PerchingArmRaw const &raw) {
 
 // Asynchronous callback
 void SleepCallback(uint32_t ms) {
+  std::cout << "Sleeping for a few seconds" << std::endl;
   std::this_thread::sleep_for(std::chrono::duration<uint32_t, std::milli>(ms));
 }
 
@@ -281,6 +282,7 @@ void PrintResult(PerchingArm &arm, PerchingArmResult ret) {
 
 // Print a nice menu
 void PrintMenu() {
+  std::cout << "************ VERSION 07/08/2019 *************" << std::endl;
   std::cout << "******************** MENU *******************" << std::endl;
   std::cout << "*********************************************" << std::endl;
   std::cout << "[x] Exit                                    *" << std::endl;
@@ -294,25 +296,22 @@ void PrintMenu() {
   std::cout << "*********************************************" << std::endl;
   std::cout << "[t] Set tilt position                       *" << std::endl;
   std::cout << "[u] Set tilt velocity                       *" << std::endl;
-  if (en_prox_)
-    std::cout << "[T] Disable tilt motor                      *" << std::endl;
-  else
-    std::cout << "[T] Enable tilt motor                       *" << std::endl;
+  std::cout << "[B] Disable tilt motor                      *" << std::endl;
+  std::cout << "[A] Enable tilt motor                       *" << std::endl;
   std::cout << "*********************************************" << std::endl;
   std::cout << "[p] Set pan position                        *" << std::endl;
   std::cout << "[q] Set pan velocity                        *" << std::endl;
-  if (en_dist_)
-    std::cout << "[P] Disable pan motor                       *" << std::endl;
-  else
-    std::cout << "[P] Enable pan motor                        *" << std::endl;
+  std::cout << "[Y] Disable pan motor                       *" << std::endl;
+  std::cout << "[X] Enable pan motor                        *" << std::endl;
   std::cout << "*********************************************" << std::endl;
+  std::cout << "[G] Enable gripper                          *" << std::endl;
   std::cout << "[g] Set gripper position                    *" << std::endl;
   std::cout << "[o] Open gripper                            *" << std::endl;
   std::cout << "[c] Close gripper                           *" << std::endl;
   std::cout << "[k] Calibrate gripper                       *" << std::endl;
   std::cout << "*********************************************" << std::endl;
   std::cout << "[e] Run EMI test                            *" << std::endl;
-  std::cout << "[G] Run gripper test                        *" << std::endl;
+  std::cout << "[T] Run gripper test                        *" << std::endl;
   std::cout << "*********************************************" << std::endl;
   std::cout << "[h] Hard reset of controller Board (FTDI)   *" << std::endl;
   std::cout << "[s] Soft reset of controller Board (SW)     *" << std::endl;
@@ -380,7 +379,7 @@ bool GetCommand(PerchingArm &arm) {
                 << Scale(PerchingArm::K_LOAD_JOINT_MA, raw_.dist.load)
                 << " mA (raw: " << raw_.dist.load << ")" << std::endl;
       std::cout << "GRIPPER" << std::endl;
-      if (raw_.grip.maximum > 0) {
+      if (raw_.grip.maximum == -8000) {
         std::cout << "- Maximum: " << raw_.grip.maximum << std::endl;
         std::cout << "- Position: "
                   << (static_cast<double>(raw_.grip.position) /
@@ -431,13 +430,6 @@ bool GetCommand(PerchingArm &arm) {
       PrintResult(arm, ret);
       return true;
     }
-    // Toggle the tilt
-    case 'T': {
-      en_prox_ = !en_prox_;
-      ret = arm.SetProximalEnabled(en_prox_);
-      PrintResult(arm, ret);
-      return true;
-    }
     // Set the distal (pan) position
     case 'p': {
       std::cout << "Input distal (pan) position in degrees:" << std::endl;
@@ -464,8 +456,33 @@ bool GetCommand(PerchingArm &arm) {
     // Toggle the pan
     case 'P': {
       en_dist_ = !en_dist_;
-      ret = arm.SetDistalEnabled(en_dist_);
+      ret = arm.SetDistalEnabled();
       PrintResult(arm, ret);
+      return true;
+    }
+    // Enable the gripper
+    case 'G': {
+      arm.EnableGripper();
+      return true;
+    }
+    // Enable the pan motor
+    case 'X': {
+      arm.SetProximalEnabled();
+      return true;
+    }
+    // Disable the pan motor
+    case 'Y': {
+      arm.SetProximalDisabled();
+      return true;
+    }
+    // Enable the tilt motor
+    case 'A': {
+      arm.SetDistalEnabled();
+      return true;
+    }
+    // Disable the tilt motor
+    case 'B': {
+      arm.SetDistalDisabled();
       return true;
     }
     // Set the gripper position
@@ -568,7 +585,7 @@ bool GetCommand(PerchingArm &arm) {
       }
       return true;
     }
-    case 'G': {
+    case 'T': {
       const int OPEN_CLOSE_PER_CYCLE = 10;
       const unsigned int DEFAULT_DELAY_MS = 3000;
       uint16_t nb_cycles = 0;

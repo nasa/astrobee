@@ -1,12 +1,12 @@
 @startuml
 
-skinparam componentStyle uml2
-'skinparam dpi 300
-
 !include "colors.puml"
 
 !define COLOR_MPROC COLOR_6PASTEL_5
 !define COLOR_PSOM COLOR_6PASTEL_3
+
+'!define SHOW_NETWORK
+'!define SHOW_OS
 
 skinparam component {
   backgroundColor COLOR_6PASTEL_2
@@ -24,8 +24,13 @@ skinparam interface {
 title Astrobee Hardware Deployement Diagram
 
 frame Dock {
-  interface "Network Switch\n(to each berth)" <<wired>> as ethd
-  node "Dock Computer\n // Ubuntu 16.04//" <<Wandboard>> as DockBoard COLOR_PSOM
+  interface "Network \n Switch \n(to each \n dock berths)" <<wired>> as ethd
+  node DockBoard <<Wandboard Dual>> COLOR_PSOM [
+    **Dock** Processor
+!ifdef SHOW_OS
+    //Ubuntu//
+!endif
+  ]
   node "Dock Controller" <<PIC>> as DockControl COLOR_MPROC
   node ["DockActuator (2x)"] as DA
   DockControl -- DA
@@ -33,11 +38,29 @@ frame Dock {
 
 frame Astrobee {
 
-  interface "Network Switch" <<wired>> as etha
+  interface "Network \n Switch" <<wired>> as etha
 
-  node "**      HLP**\n //Android 7.0//" <<Inforce>> as HLP COLOR_PSOM
-  node "**      MLP**\n //Ubuntu 16.04//" <<Inforce>> as MLP COLOR_PSOM
-  node "**       LLP**\n //Ubuntu 16.04//" <<Wandboard>> as LLP COLOR_PSOM
+  node HLP <<Inforce 6601>> COLOR_PSOM [
+    **HLP**
+!ifdef SHOW_OS
+    //Android//
+!endif
+  ]
+
+  node MLP <<Inforce 6501>> COLOR_PSOM [
+    **MLP**
+!ifdef SHOW_OS
+    //Ubuntu//
+!endif
+  ]
+
+  node LLP <<Wandboard Dual>> COLOR_PSOM [
+    **LLP**
+!ifdef SHOW_OS
+    //Ubuntu//
+!endif
+  ]
+
   node "PMC (2x)" <<PIC>> as PMC COLOR_MPROC
   node "SignalLight (2x)" <<PIC>> as SL COLOR_MPROC
   node Speedcam <<ARM Cortex>> COLOR_6PASTEL_1
@@ -62,20 +85,30 @@ frame Astrobee {
 
   EPS -- [StatusLights] : GPIO
   EPS o-- [SmartBatteries] : I2C/SMbus
+
+  interface "MLP Wifi" <<wifi>> as mlp_wifi
+  interface "HLP Wifi" <<wifi>> as hlp_wifi
+  HLP -- etha
+  MLP -- etha
+  mlp_wifi -left- MLP
+  hlp_wifi -left- HLP
 }
 
-interface "ISS Wifi" <<wifi>> as wifi
-interface "ISS Payload LAN" <<wired>> as wired
+!ifdef SHOW_NETWORK
+frame "ISS Services" {
+  interface "ISS Wifi" <<wifi>> as iss_wifi
+  interface "ISS Payload LAN" <<wired>> as wired
+  iss_wifi -down- wired
+}
+wired -down- ethd
+mlp_wifi ..right.. iss_wifi
+hlp_wifi ..right.. iss_wifi
+!endif
 
 etha -right- ethd
 DockBoard -left- ethd
-wired -down- ethd
 DockBoard o-- DockControl  : I2C
 EPS o-right- DockControl : "I2C (2x)"
-
-HLP -- etha
-MLP -- etha
-wifi .left. MLP
 
 MLP -- PerchArm : USB
 

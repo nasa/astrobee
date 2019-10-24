@@ -1,3 +1,69 @@
+astrobee (0.10.2) testing; urgency=medium
+
+  * Perching behavior implemented
+  * Localization sparse mapping timeout increased to 10 minutes
+  * Already there tolerances decreased to allow for smaller moves
+  * Other minor bug fixes/software improvements
+
+ -- Astrobee Flight Software <astrobee-fsw@nx.arc.nasa.gov>  Thu, 24 Oct 2019 14:28:04 -0700
+
+astrobee (0.10.1) testing; urgency=medium
+
+  * Removed the new signal lights nodes from launch 
+
+ -- Astrobee Developer <lfluckig@astrobeast.ndc.nasa.gov>  Tue, 20 Aug 2019 17:40:26 -0700
+
+astrobee (0.10.0) testing; urgency=medium
+
+  * New control scheme for some commands
+    - Independant control of camera streaming/recording parameters
+    - Can start/stop recording data independantly of profile selection
+    - Required minor IDL changes
+  * Perching Arm driver functional with latest firmware
+  * Support for many more commands in plan to allow easy "scripting"
+  * Localization
+    - Separated tunable minimal feature count for ML versus AR
+    - Tuned EKF for better stability
+    - Fixes in localization_manager behavior
+  * Mapping
+    - Prune "less" the features in the map in order to improve the search
+      restults 
+
+ -- Astrobee Developer <lfluckig@astrobeast.ndc.nasa.gov>  Tue, 20 Aug 2019 13:05:54 -0700
+
+astrobee (0.9.3) testing; urgency=medium
+
+  * Many localization improvements making the EKF much more stable and resilient
+    to loss of mapped landmarks features.
+    - Improved tools to analyze localization bags
+    - Fixed bug in two places where the noise computation was not multiplied by
+      the focal length
+    - Changed the selection of optical flow features to pass a better subset
+      to the EKF
+    - Tuned lot of the EFK parameters
+  * Added nodes to check the time synchronization between processors (with
+    associated logging and fault generation)
+  * Re-positioned the dock location on ISS from the mapping activity.
+
+ -- Astrobee Developer <astrobee@avm>  Mon, 08 Jul 2019 18:33:16 -0700
+
+astrobee (0.9.2) testing; urgency=medium
+
+  * Drop bad images from camera.
+
+ -- Astrobee Flight Software <astrobee-fsw@nx.arc.nasa.gov>  Thu, 13 Jun 2019 10:30:33 -0700
+
+astrobee (0.9.1) testing; urgency=medium
+
+  * Honor "referenceFrame" for simpleMove6DOF commands (allows relative motion)
+  * Status video/streaming LEDs controlled by the Executive
+  * Default bagger profile tuned to include more core topics
+  * Agent state publish current world information
+  * Camera driver double buffer fix
+  * As usual, other bug fixes too
+
+ -- Astrobee Developer <astrobee@avm>  Wed, 29 May 2019 10:18:34 -0700
+
 astrobee (0.8.0) testing; urgency=medium
 
   * Fixed simulator jump under some conditions on motion start

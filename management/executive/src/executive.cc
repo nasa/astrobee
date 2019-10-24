@@ -41,6 +41,7 @@ Executive::Executive() :
   led_connected_timeout_(10),
   pub_queue_size_(10),
   sub_queue_size_(10),
+  live_led_on_(false),
   sys_monitor_heartbeat_fault_occurring_(false),
   sys_monitor_init_fault_occurring_(false) {
 }
@@ -49,6 +50,41 @@ Executive::~Executive() {
 }
 
 /************************ Message and timeout callbacks ***********************/
+void Executive::CameraStatesCallback(ff_msgs::CameraStatesStampedConstPtr const&
+                                                                        state) {
+  unsigned int i, j;
+  bool streaming = false;
+  ff_hw_msgs::ConfigureSystemLeds led_srv;
+
+  // State array is only one array and the camera states array is at most 5
+  // elements so this doesn't waste too much time
+  // Don't care about cameras not in the camera states array
+  for (i = 0; i < state->states.size(); i++) {
+    for (j = 0; j < camera_states_.states.size(); j++) {
+      if (state->states[i].camera_name ==
+                                        camera_states_.states[j].camera_name) {
+        camera_states_.states[j].streaming = state->states[i].streaming;
+      }
+    }
+  }
+
+  for (i = 0; i < camera_states_.states.size(); i++) {
+    streaming |= camera_states_.states[i].streaming;
+  }
+
+  if (streaming && !live_led_on_) {
+    led_srv.request.live = ff_hw_msgs::ConfigureSystemLeds::Request::ON;
+    if (ConfigureLed(led_srv)) {
+      live_led_on_ = true;
+    }
+  } else if (!streaming && live_led_on_) {
+    led_srv.request.live = ff_hw_msgs::ConfigureSystemLeds::Request::OFF;
+    if (ConfigureLed(led_srv)) {
+      live_led_on_ = false;
+    }
+  }
+}
+
 void Executive::CmdCallback(ff_msgs::CommandStampedPtr const& cmd) {
   SetOpState(state_->HandleCmd(cmd));
 }
@@ -83,14 +119,17 @@ void Executive::DockStateCallback(ff_msgs::DockStateConstPtr const& state) {
 }
 
 void Executive::FaultStateCallback(ff_msgs::FaultStateConstPtr const& state) {
+  ff_hw_msgs::ConfigureSystemLeds led_srv;
   fault_state_ = state;
 
   // Check if we are in the fault state
   if (state_->id() == ff_msgs::OpState::FAULT) {
     // Check if the blocked fault is cleared
     if (state->state != ff_msgs::FaultState::BLOCKED) {
-      // Turn led off so the astronauts can see there is no longer a fault
-      ConfigureLed(false);
+      // Turn a2 led off so the astronauts can see there is no longer a fault
+      led_srv.request.status_a2 = ff_hw_msgs::ConfigureSystemLeds::Request::OFF;
+      ConfigureLed(led_srv);
+
       // Check if an action is in progress, if so transition to teleop
       // Otherwise transition to ready
       if (AreActionsRunning()) {
@@ -102,8 +141,11 @@ void Executive::FaultStateCallback(ff_msgs::FaultStateConstPtr const& state) {
   } else {
     // Check if a blocking fault is occurring
     if (state->state == ff_msgs::FaultState::BLOCKED) {
-      // Turn led on and blinking so the astronauts can see there is a fault
-      ConfigureLed(true);
+      // Turn a2 led on and blinking so the astronauts can see there is a fault
+      led_srv.request.status_a2 =
+                                ff_hw_msgs::ConfigureSystemLeds::Request::FAST;
+      ConfigureLed(led_srv);
+
       // If so, transiton to fault state
       SetOpState(state_->TransitionToState(ff_msgs::OpState::FAULT));
     }
@@ -124,13 +166,20 @@ void Executive::GuestScienceAckCallback(ff_msgs::AckStampedConstPtr const&
 }
 
 void Executive::LedConnectedCallback() {
+  ff_hw_msgs::ConfigureSystemLeds led_srv;
+
+  // Set video light since this means the fsw starts
+  led_srv.request.video = ff_hw_msgs::ConfigureSystemLeds::Request::ON;
+
   // Check if we are in the fault state
   if (state_->id() == ff_msgs::OpState::FAULT) {
-    // If so, turn led on and blinking so astronauts can see there is a fault
-    ConfigureLed(true);
+    // If so, turn a2 led on and blinking so astronauts can see there is a fault
+    led_srv.request.status_a2 = ff_hw_msgs::ConfigureSystemLeds::Request::FAST;
+    ConfigureLed(led_srv);
   } else {
-    // Turn led off to signify that the executive is ready.
-    ConfigureLed(false);
+    // Turn a2 led off to signify that the executive is ready.
+    led_srv.request.status_a2 = ff_hw_msgs::ConfigureSystemLeds::Request::OFF;
+    ConfigureLed(led_srv);
   }
 }
 
@@ -217,20 +266,20 @@ void Executive::SysMonitorHeartbeatCallback(
       SetOpState(state_->TransitionToState(ff_msgs::OpState::FAULT));
     }
     return;
-  } else {
-    if (sys_monitor_init_fault_occurring_) {
-      sys_monitor_init_fault_occurring_ = false;
-      if (sys_monitor_init_fault_blocking_) {
-        // Check fault state before transitioning to ready because we need to
-        // make sure there aren't any other blocking faults occurring
-        if (fault_state_ != NULL) {
-          if (fault_state_->state != ff_msgs::FaultState::BLOCKED) {
-            if (AreActionsRunning()) {
-              SetOpState(state_->TransitionToState(
+  // Check initialiization fault went away
+  } else if (heartbeat->faults.size() == 0 &&
+                                            sys_monitor_init_fault_occurring_) {
+    sys_monitor_init_fault_occurring_ = false;
+    if (sys_monitor_init_fault_blocking_) {
+      // Check fault state before transitioning to ready because we need to
+      // make sure there aren't any other blocking faults occurring
+      if (fault_state_ != NULL) {
+        if (fault_state_->state != ff_msgs::FaultState::BLOCKED) {
+          if (AreActionsRunning()) {
+            SetOpState(state_->TransitionToState(
                                               ff_msgs::OpState::TELEOPERATION));
-            } else {
-              SetOpState(state_->TransitionToState(ff_msgs::OpState::READY));
-            }
+          } else {
+            SetOpState(state_->TransitionToState(ff_msgs::OpState::READY));
           }
         }
       }
@@ -467,6 +516,14 @@ bool Executive::FillMotionGoal(Action action,
       }
 
       motion_goal_.states[0].header.stamp = ros::Time::now();
+
+      // Copying the reference frame to the goal
+      if (cmd->args[0].s == "ISS") {
+        motion_goal_.reference_frame = FRAME_NAME_WORLD;
+      } else {
+        motion_goal_.reference_frame = cmd->args[0].s;
+      }
+
       // Copying the target location to the goal
       motion_goal_.states[0].pose.position.x = cmd->args[1].vec3d[0];
       motion_goal_.states[0].pose.position.y = cmd->args[1].vec3d[1];
@@ -602,47 +659,9 @@ void Executive::ArmResultCallback(
                               ff_util::FreeFlyerActionState::Enum const& state,
                               ff_msgs::ArmResultConstPtr const& result) {
   std::string response = "";
-  // Remove action from the running action vector
-  RemoveAction(ARM);
+  Action current_action = arm_ac_.action();
+  std::string cmd_id = arm_ac_.cmd_id();
 
-  // Get response for op state functions
-  if (result != nullptr) {
-    response = result->fsm_result;
-  }
-
-  SetOpState(state_->HandleResult(state,
-                                  response,
-                                  arm_ac_.cmd_id(),
-                                  ARM));
-  // Reset command id so we don't try to ack the same id twice
-  arm_ac_.SetCmdInfo(NONE, "");
-}
-
-void Executive::DockResultCallback(
-                              ff_util::FreeFlyerActionState::Enum const& state,
-                              ff_msgs::DockResultConstPtr const& result) {
-  std::string response = "";
-  // Remove action from the running action vector
-  RemoveAction(dock_ac_.action());
-
-  // Get response for op state functions
-  if (result != nullptr) {
-    response = result->fsm_result;
-  }
-
-  SetOpState(state_->HandleResult(state,
-                                  response,
-                                  dock_ac_.cmd_id(),
-                                  dock_ac_.action()));
-  // Reset command id so we don't try to ack the same id twice
-  dock_ac_.SetCmdInfo(NONE, "");
-}
-
-void Executive::LocalizationResultCallback(
-                            ff_util::FreeFlyerActionState::Enum const& state,
-                            ff_msgs::LocalizationResultConstPtr const& result) {
-  std::string response = "";
-  Action current_action = localization_ac_.action();
   // Remove action from the running action vector
   RemoveAction(current_action);
 
@@ -651,16 +670,71 @@ void Executive::LocalizationResultCallback(
     response = result->fsm_result;
   }
 
+  // In the case of a plan, handle result may start another arm action so we
+  // need to clear the action info before starting another action.
+  // Reset command id so we don't try to ack the same id twice
+  arm_ac_.SetCmdInfo(NONE, "");
+
   SetOpState(state_->HandleResult(state,
                                   response,
-                                  localization_ac_.cmd_id(),
+                                  cmd_id,
                                   current_action));
+}
+
+void Executive::DockResultCallback(
+                              ff_util::FreeFlyerActionState::Enum const& state,
+                              ff_msgs::DockResultConstPtr const& result) {
+  std::string response = "";
+  Action current_action = dock_ac_.action();
+  std::string cmd_id = dock_ac_.cmd_id();
+
+  // Remove action from the running action vector
+  RemoveAction(current_action);
+
+  // Get response for op state functions
+  if (result != nullptr) {
+    response = result->fsm_result;
+  }
+
+  // In the case of a plan, handle result may start another dock action so we
+  // need to clear the action info before starting another action.
+  // Reset command id so we don't try to ack the same id twice
+  dock_ac_.SetCmdInfo(NONE, "");
+
+  SetOpState(state_->HandleResult(state,
+                                  response,
+                                  cmd_id,
+                                  current_action));
+}
+
+void Executive::LocalizationResultCallback(
+                            ff_util::FreeFlyerActionState::Enum const& state,
+                            ff_msgs::LocalizationResultConstPtr const& result) {
+  std::string response = "";
+  Action current_action = localization_ac_.action();
+  std::string cmd_id = localization_ac_.cmd_id();
+
+  // Remove action from the running action vector
+  RemoveAction(current_action);
+
+  // Get response for op state functions
+  if (result != nullptr) {
+    response = result->fsm_result;
+  }
+
+  // In the case of a plan, handle result may start another localization action
+  // so we need to clear the action info before starting another action
   // Reset command id so we don't try to ack the same id twice
   // Only reset command id if we didn't just start reset ekf which only happens
   // if we are executing a reacquire position command
   if (current_action != REACQUIRE) {
     localization_ac_.SetCmdInfo(NONE, "");
   }
+
+  SetOpState(state_->HandleResult(state,
+                                  response,
+                                  cmd_id,
+                                  current_action));
 }
 
 void Executive::MotionFeedbackCallback(
@@ -676,16 +750,16 @@ void Executive::MotionResultCallback(
                               ff_util::FreeFlyerActionState::Enum const& state,
                               ff_msgs::MotionResultConstPtr const& result) {
   std::string response = "";
+  Action current_action = motion_ac_.action();
+  std::string cmd_id = motion_ac_.cmd_id();
+
   // Remove action from the running action vector
-  RemoveAction(motion_ac_.action());
+  RemoveAction(current_action);
 
   // Get response for op state functions
   if (result != nullptr) {
     response = result->fsm_result;
   }
-
-  std::string cmd_id = motion_ac_.cmd_id();
-  Action action = motion_ac_.action();
 
   // Sometimes the handle motion result starts an action so we need to clear the
   // action info before starting another action
@@ -695,7 +769,7 @@ void Executive::MotionResultCallback(
   SetOpState(state_->HandleResult(state,
                                   response,
                                   cmd_id,
-                                  action));
+                                  current_action));
 }
 
 /************************ Publishers ******************************************/
@@ -735,6 +809,11 @@ void Executive::PublishPlanStatus(uint8_t status) {
 /************************ Getters *********************************************/
 ff_msgs::MobilityState Executive::GetMobilityState() {
   return agent_state_.mobility_state;
+}
+
+
+uint8_t Executive::GetPlanExecState() {
+  return agent_state_.plan_execution_state.state;
 }
 
 /************************ Setters *********************************************/
@@ -899,25 +978,19 @@ bool Executive::CheckStoppedOrDrifting(std::string const& cmd_id,
   return false;
 }
 
-void Executive::ConfigureLed(bool blinking) {
-  ff_hw_msgs::ConfigureSystemLeds led_srv;
-
-  // If blinking is true, there is a fault and we need to blink the leds.
-  if (blinking) {
-    led_srv.request.status_a2 = ff_hw_msgs::ConfigureSystemLeds::Request::FAST;
-  } else {
-    led_srv.request.status_a2 = ff_hw_msgs::ConfigureSystemLeds::Request::OFF;
-  }
-
+bool Executive::ConfigureLed(ff_hw_msgs::ConfigureSystemLeds& led_srv) {
   if (!led_client_.Call(led_srv)) {
     NODELET_ERROR("Configure system leds service not running!");
-    return;
+    return false;
   }
 
   if (!led_srv.response.success) {
     NODELET_ERROR("Configure system leds failed with message %s.",
                   led_srv.response.status.c_str());
+    return false;
   }
+
+  return true;
 }
 
 // Functions used to set variables that are used to configure mobility before a
@@ -1241,16 +1314,33 @@ bool Executive::ArmPanAndTilt(ff_msgs::CommandStampedPtr const& cmd) {
 
 bool Executive::AutoReturn(ff_msgs::CommandStampedPtr const& cmd) {
   NODELET_INFO("Executive executing auto return command!");
-  // TODO(Katie) Stub, change to be actual code
   // Astrobee needs to be either stopped or drifting
-  if (CheckStoppedOrDrifting(cmd->cmd_id, "auto returning")) {
-    // TODO(Katie) Stub! Change to be actual code
+  if (agent_state_.mobility_state.state == ff_msgs::MobilityState::DOCKING) {
     state_->AckCmd(cmd->cmd_id,
-           ff_msgs::AckCompletedStatus::EXEC_FAILED,
-           "Auto return not implemented yet! Stay tuned!");
+                   ff_msgs::AckCompletedStatus::EXEC_FAILED,
+                   "Already docked!");
+    return false;
+  } else if (agent_state_.mobility_state.state ==
+                                            ff_msgs::MobilityState::PERCHING) {
+      state_->AckCmd(cmd->cmd_id,
+                     ff_msgs::AckCompletedStatus::EXEC_FAILED,
+                     "Astrobee cannot attempt to dock while it is perched.");
     return false;
   }
-  return false;
+
+  // TODO(Katie) Current this is just the dock 1 command! Change to be actual
+  // code
+
+  cmd->cmd_name = "dock";
+  cmd->args.resize(1);
+  cmd->args[0].data_type = ff_msgs::CommandArg::DATA_TYPE_INT;
+  cmd->args[0].i = 1;
+
+  if (!Dock(cmd)) {
+    return false;
+  }
+
+  return true;
 }
 
 bool Executive::ClearData(ff_msgs::CommandStampedPtr const& cmd) {
@@ -1378,7 +1468,9 @@ bool Executive::Fault(ff_msgs::CommandStampedPtr const& cmd) {
   // transition out of the fault state
   if (cmd->cmd_src == "sys_monitor" || cmd->cmd_src == "executive") {
     // Configure leds to be blinking since there is a fault
-    ConfigureLed(true);
+    ff_hw_msgs::ConfigureSystemLeds led_srv;
+    led_srv.request.status_a2 = ff_hw_msgs::ConfigureSystemLeds::Request::FAST;
+    ConfigureLed(led_srv);
     state_->AckCmd(cmd->cmd_id);
     return true;
   }
@@ -1553,18 +1645,19 @@ bool Executive::RunPlan(ff_msgs::CommandStampedPtr const& cmd) {
   return true;
 }
 
-// TODO(Katie) Need to add perch, and haz cams
+// TODO(Katie) Need to add perch and haz cams
 bool Executive::SetCamera(ff_msgs::CommandStampedPtr const& cmd) {
   NODELET_INFO("Executive executing set camera command!");
   std::string err_msg = "";
   uint8_t completed_status = ff_msgs::AckCompletedStatus::OK;
   bool successful = true;
   // Check to make sure command is formatted as expected
-  if (cmd->args.size() != 4 ||
+  if (cmd->args.size() != 5 ||
       cmd->args[0].data_type != ff_msgs::CommandArg::DATA_TYPE_STRING ||
       cmd->args[1].data_type != ff_msgs::CommandArg::DATA_TYPE_STRING ||
-      cmd->args[2].data_type != ff_msgs::CommandArg::DATA_TYPE_FLOAT ||
-      cmd->args[3].data_type != ff_msgs::CommandArg::DATA_TYPE_FLOAT) {
+      cmd->args[2].data_type != ff_msgs::CommandArg::DATA_TYPE_STRING ||
+      cmd->args[3].data_type != ff_msgs::CommandArg::DATA_TYPE_FLOAT ||
+      cmd->args[4].data_type != ff_msgs::CommandArg::DATA_TYPE_FLOAT) {
     successful = false;
     err_msg = "Malformed arguments for set camera command!";
     completed_status = ff_msgs::AckCompletedStatus::BAD_SYNTAX;
@@ -1573,21 +1666,44 @@ bool Executive::SetCamera(ff_msgs::CommandStampedPtr const& cmd) {
     // parse it
     std::string width, height;
     std::size_t pos;
-    if (cmd->args[1].s.find("_") != std::string::npos) {
-      pos = cmd->args[1].s.find("_");
-    } else if (cmd->args[1].s.find("X") != std::string::npos) {
-      pos = cmd->args[1].s.find("X");
-    } else if (cmd->args[1].s.find("x") != std::string::npos) {
-      pos = cmd->args[1].s.find("x");
+    if (cmd->args[2].s.find("_") != std::string::npos) {
+      pos = cmd->args[2].s.find("_");
+    } else if (cmd->args[2].s.find("X") != std::string::npos) {
+      pos = cmd->args[2].s.find("X");
+    } else if (cmd->args[2].s.find("x") != std::string::npos) {
+      pos = cmd->args[2].s.find("x");
     } else {
       successful = false;
       err_msg = "Camera resolution needs format w_h, wXh, or wxh!";
       completed_status = ff_msgs::AckCompletedStatus::BAD_SYNTAX;
     }
 
+    // Need to ensure mode is valid
+    int mode;
+    if (cmd->args[1].s == CommandConstants::PARAM_NAME_CAMERA_MODE_BOTH) {
+      mode = ff_msgs::ConfigureCamera::Request::BOTH;
+    } else if (cmd->args[1].s ==
+                          CommandConstants::PARAM_NAME_CAMERA_MODE_RECORDING) {
+      mode = ff_msgs::ConfigureCamera::Request::RECORDING;
+    } else if (cmd->args[1].s ==
+                          CommandConstants::PARAM_NAME_CAMERA_MODE_STREAMING) {
+      mode = ff_msgs::ConfigureCamera::Request::STREAMING;
+    } else {
+      successful = false;
+      err_msg = "Camera mode invalid. Options are Both, Streaming, Recording";
+      completed_status = ff_msgs::AckCompletedStatus::BAD_SYNTAX;
+    }
+
     if (successful) {
-      width = cmd->args[1].s.substr(0, pos);
-      height = cmd->args[1].s.substr((pos + 1));
+      width = cmd->args[2].s.substr(0, pos);
+      height = cmd->args[2].s.substr((pos + 1));
+
+      ff_msgs::ConfigureCamera config_img_srv;
+      config_img_srv.request.mode = mode;
+      config_img_srv.request.rate = cmd->args[3].f;
+      config_img_srv.request.width = std::stoi(width);
+      config_img_srv.request.height = std::stoi(height);
+      config_img_srv.request.bitrate = cmd->args[4].f;
 
       if (cmd->args[0].s == CommandConstants::PARAM_NAME_CAMERA_NAME_DOCK) {
         // Check to make sure the dock cam service is valid
@@ -1596,13 +1712,6 @@ bool Executive::SetCamera(ff_msgs::CommandStampedPtr const& cmd) {
           err_msg = "Dock cam config service not running! Node may have died";
           completed_status = ff_msgs::AckCompletedStatus::EXEC_FAILED;
         } else {
-          ff_msgs::ConfigureCamera config_img_srv;
-          // TODO(Katie) set camera parameters for both streaming and recording?
-          config_img_srv.request.mode = ff_msgs::ConfigureCamera::Request::BOTH;
-          config_img_srv.request.rate = cmd->args[2].f;
-          config_img_srv.request.width = std::stoi(width);
-          config_img_srv.request.height = std::stoi(height);
-
           // Check to see if the dock cam was successfully configured
           if (!dock_cam_config_client_.call(config_img_srv)) {
             // Service only fails if height, width or rate are less than or
@@ -1620,13 +1729,6 @@ bool Executive::SetCamera(ff_msgs::CommandStampedPtr const& cmd) {
           err_msg = "Nav cam configure service not running! Node may have died";
           completed_status = ff_msgs::AckCompletedStatus::EXEC_FAILED;
         } else {
-          ff_msgs::ConfigureCamera config_img_srv;
-          // TODO(Katie) set camera parameters for both streaming and recording?
-          config_img_srv.request.mode = ff_msgs::ConfigureCamera::Request::BOTH;
-          config_img_srv.request.rate = cmd->args[2].f;
-          config_img_srv.request.width = std::stoi(width);
-          config_img_srv.request.height = std::stoi(height);
-
           // Check to see if the nav cam was successfully configured
           if (!nav_cam_config_client_.call(config_img_srv)) {
             // Service only fails if height, width or rate are less than or
@@ -1644,14 +1746,6 @@ bool Executive::SetCamera(ff_msgs::CommandStampedPtr const& cmd) {
           err_msg = "Sci cam configure service not running! Node may have died";
           completed_status = ff_msgs::AckCompletedStatus::EXEC_FAILED;
         } else {
-          ff_msgs::ConfigureCamera config_img_srv;
-          // TODO(Katie) set camera parameters for both streaming and recording?
-          config_img_srv.request.mode = ff_msgs::ConfigureCamera::Request::BOTH;
-          config_img_srv.request.rate = cmd->args[2].f;
-          config_img_srv.request.width = std::stoi(width);
-          config_img_srv.request.height = std::stoi(height);
-          config_img_srv.request.bitrate = cmd->args[3].f;
-
           // Check to see if the sci cam was successfully configured
           if (!sci_cam_config_client_.call(config_img_srv)) {
             // Service only fails if height, width, rate or bitrate are less
@@ -1674,7 +1768,7 @@ bool Executive::SetCamera(ff_msgs::CommandStampedPtr const& cmd) {
   return successful;
 }
 
-// TODO(Katie) Need to add perch, and haz cams
+// TODO(Katie) Need to add perch and haz cams
 bool Executive::SetCameraRecording(ff_msgs::CommandStampedPtr const& cmd) {
   NODELET_INFO("Executive executing set camera recording command!");
   bool successful = true;
@@ -1688,6 +1782,10 @@ bool Executive::SetCameraRecording(ff_msgs::CommandStampedPtr const& cmd) {
     err_msg = "Malformed arguments for set camera recording command!";
     completed_status = ff_msgs::AckCompletedStatus::BAD_SYNTAX;
   } else {
+    ff_msgs::EnableCamera enable_img_srv;
+    enable_img_srv.request.mode = ff_msgs::EnableCamera::Request::RECORDING;
+    enable_img_srv.request.enable = cmd->args[1].b;
+
     if (cmd->args[0].s == CommandConstants::PARAM_NAME_CAMERA_NAME_DOCK) {
       // Check to make sure the dock cam enable service exists
       if (!dock_cam_enable_client_.exists()) {
@@ -1695,10 +1793,6 @@ bool Executive::SetCameraRecording(ff_msgs::CommandStampedPtr const& cmd) {
         err_msg = "Dock cam enable service not running! Node may have died!";
         completed_status = ff_msgs::AckCompletedStatus::EXEC_FAILED;
       } else {
-        ff_msgs::EnableCamera enable_img_srv;
-        enable_img_srv.request.mode = ff_msgs::EnableCamera::Request::RECORDING;
-        enable_img_srv.request.enable = cmd->args[1].b;
-
         // Check to see if recording was set successfully
         if (!dock_cam_enable_client_.call(enable_img_srv)) {
           successful = false;
@@ -1714,10 +1808,6 @@ bool Executive::SetCameraRecording(ff_msgs::CommandStampedPtr const& cmd) {
         err_msg = "Nav cam enable service not running! Node may have died!";
         completed_status = ff_msgs::AckCompletedStatus::EXEC_FAILED;
       } else {
-        ff_msgs::EnableCamera enable_img_srv;
-        enable_img_srv.request.mode = ff_msgs::EnableCamera::Request::RECORDING;
-        enable_img_srv.request.enable = cmd->args[1].b;
-
         // Check to see if recording was set successfully
         if (!nav_cam_enable_client_.call(enable_img_srv)) {
           successful = false;
@@ -1733,10 +1823,6 @@ bool Executive::SetCameraRecording(ff_msgs::CommandStampedPtr const& cmd) {
         err_msg = "Sci cam enable service not running! Node may have died!";
         completed_status = ff_msgs::AckCompletedStatus::EXEC_FAILED;
       } else {
-        ff_msgs::EnableCamera enable_img_srv;
-        enable_img_srv.request.mode = ff_msgs::EnableCamera::Request::RECORDING;
-        enable_img_srv.request.enable = cmd->args[1].b;
-
         // Check to see if recording was set successfully
         if (!sci_cam_enable_client_.call(enable_img_srv)) {
           successful = false;
@@ -1759,7 +1845,7 @@ bool Executive::SetCameraRecording(ff_msgs::CommandStampedPtr const& cmd) {
   return successful;
 }
 
-// TODO(Katie) Need to add sci, perch, and haz cams
+// TODO(Katie) Need to add perch and haz cams
 bool Executive::SetCameraStreaming(ff_msgs::CommandStampedPtr const& cmd) {
   NODELET_INFO("Executive executing set camera streaming command!");
   bool successful = true;
@@ -1773,6 +1859,10 @@ bool Executive::SetCameraStreaming(ff_msgs::CommandStampedPtr const& cmd) {
     err_msg = "Malformed arguments for set camera streaming!";
     completed_status = ff_msgs::AckCompletedStatus::BAD_SYNTAX;
   } else {
+    ff_msgs::EnableCamera enable_img_srv;
+    enable_img_srv.request.mode = ff_msgs::EnableCamera::Request::STREAMING;
+    enable_img_srv.request.enable = cmd->args[1].b;
+
     if (cmd->args[0].s == CommandConstants::PARAM_NAME_CAMERA_NAME_DOCK) {
       // Check to make sure the dock cam service is valid
       if (!dock_cam_enable_client_.exists()) {
@@ -1780,10 +1870,6 @@ bool Executive::SetCameraStreaming(ff_msgs::CommandStampedPtr const& cmd) {
           err_msg = "Dock cam enable service not running! Node may have died!";
           completed_status = ff_msgs::AckCompletedStatus::EXEC_FAILED;
       } else {
-        ff_msgs::EnableCamera enable_img_srv;
-        enable_img_srv.request.mode = ff_msgs::EnableCamera::Request::STREAMING;
-        enable_img_srv.request.enable = cmd->args[1].b;
-
         // Check to see if streaming was successfully set
         if (!dock_cam_enable_client_.call(enable_img_srv)) {
           successful = false;
@@ -1799,10 +1885,6 @@ bool Executive::SetCameraStreaming(ff_msgs::CommandStampedPtr const& cmd) {
         err_msg = "Nav cam enable service not running! Node may have died!";
         completed_status = ff_msgs::AckCompletedStatus::EXEC_FAILED;
       } else {
-        ff_msgs::EnableCamera enable_img_srv;
-        enable_img_srv.request.mode = ff_msgs::EnableCamera::Request::STREAMING;
-        enable_img_srv.request.enable = cmd->args[1].b;
-
         // Check to see if streaming was successfully set
         if (!nav_cam_enable_client_.call(enable_img_srv)) {
           successful = false;
@@ -1818,10 +1900,6 @@ bool Executive::SetCameraStreaming(ff_msgs::CommandStampedPtr const& cmd) {
         err_msg = "Sci cam enable service not running! Node may have died!";
         completed_status = ff_msgs::AckCompletedStatus::EXEC_FAILED;
       } else {
-        ff_msgs::EnableCamera enable_img_srv;
-        enable_img_srv.request.mode = ff_msgs::EnableCamera::Request::STREAMING;
-        enable_img_srv.request.enable = cmd->args[1].b;
-
         // Check to see if streaming was successfully set
         if (!sci_cam_enable_client_.call(enable_img_srv)) {
           successful = false;
@@ -2197,6 +2275,7 @@ bool Executive::SetInertia(ff_msgs::CommandStampedPtr const& cmd) {
     }
 
     // Inertia call was successful
+    state_->AckCmd(cmd->cmd_id);
     return true;
   }
   return false;
@@ -2589,6 +2668,44 @@ bool Executive::SkipPlanStep(ff_msgs::CommandStampedPtr const& cmd) {
   return true;
 }
 
+bool Executive::StartRecording(ff_msgs::CommandStampedPtr const& cmd) {
+  NODELET_INFO("Executive executing start recordiing command.");
+  bool successful = true;
+  std::string err_msg;
+  uint8_t completed_status = ff_msgs::AckCompletedStatus::OK;
+  if (cmd->args.size() != 1 ||
+      cmd->args[0].data_type != ff_msgs::CommandArg::DATA_TYPE_STRING) {
+    successful = false;
+    err_msg = "Malformed arguments for start recordinng command.";
+    completed_status = ff_msgs::AckCompletedStatus::BAD_SYNTAX;
+  } else {
+    ff_msgs::EnableRecording enable_rec_srv;
+    enable_rec_srv.request.enable = true;
+    enable_rec_srv.request.bag_description = cmd->args[0].s;
+
+    // Check to make sure the enable recording service exists
+    if (!enable_recording_client_.exists()) {
+      successful = false;
+      err_msg = "Enable recording service not running! Node may have died!";
+      completed_status = ff_msgs::AckCompletedStatus::EXEC_FAILED;
+    } else {
+      // Call enable service and make sure it worked
+      if (!enable_recording_client_.call(enable_rec_srv)) {
+        successful = false;
+        err_msg = "Enable recording service failed!";
+        completed_status = ff_msgs::AckCompletedStatus::EXEC_FAILED;
+      } else if (!enable_rec_srv.response.success) {
+        successful = false;
+        err_msg = enable_rec_srv.response.status;
+        completed_status = ff_msgs::AckCompletedStatus::EXEC_FAILED;
+      }
+    }
+  }
+
+  state_->AckCmd(cmd->cmd_id, completed_status, err_msg);
+  return successful;
+}
+
 // Stop all motion is a tricky command since we may have multiple actions
 // running at one time. We also use stop to transition from idle to stopped
 // so we will wanted to start a stop pretty much all the time. The only time
@@ -2789,6 +2906,37 @@ bool Executive::StopDownload(ff_msgs::CommandStampedPtr const& cmd) {
   return false;
 }
 
+bool Executive::StopRecording(ff_msgs::CommandStampedPtr const& cmd) {
+  NODELET_INFO("Executive executing stop recording command!");
+  bool successful = true;
+  std::string err_msg;
+  uint8_t completed_status = ff_msgs::AckCompletedStatus::OK;
+
+  ff_msgs::EnableRecording enable_rec_srv;
+  enable_rec_srv.request.enable = false;
+
+  // Check to make sure the enable recording service exists
+  if (!enable_recording_client_.exists()) {
+    successful = false;
+    err_msg = "Enable recording service not running! Node may have died!";
+    completed_status = ff_msgs::AckCompletedStatus::EXEC_FAILED;
+  } else {
+    // Call enable service and make sure it worked
+    if (!enable_recording_client_.call(enable_rec_srv)) {
+      successful = false;
+      err_msg = "Enable recording service failed!";
+      completed_status = ff_msgs::AckCompletedStatus::EXEC_FAILED;
+    } else if (!enable_rec_srv.response.success) {
+      successful = false;
+      err_msg = enable_rec_srv.response.status;
+      completed_status = ff_msgs::AckCompletedStatus::EXEC_FAILED;
+    }
+  }
+
+  state_->AckCmd(cmd->cmd_id, completed_status, err_msg);
+  return successful;
+}
+
 bool Executive::StowArm(ff_msgs::CommandStampedPtr const& cmd) {
   NODELET_INFO("Executive executing stow arm command!");
   // Check if Astrobee is perched. Arm control will check the rest.
@@ -2803,7 +2951,7 @@ bool Executive::StowArm(ff_msgs::CommandStampedPtr const& cmd) {
 }
 
 bool Executive::SwitchLocalization(ff_msgs::CommandStampedPtr const& cmd) {
-  NODELET_INFO("Executive executing switch localization command!");
+  NODELET_DEBUG("Executive executing switch localization command!");
   if (CheckNotMoving(cmd)) {
     if (cmd->args.size() != 1 ||
         cmd->args[0].data_type != ff_msgs::CommandArg::DATA_TYPE_STRING) {
@@ -2988,6 +3136,11 @@ void Executive::Initialize(ros::NodeHandle *nh) {
   motion_ac_.Create(nh, ACTION_MOBILITY_MOTION);
 
   // initialize subs
+  camera_state_sub_ = nh_.subscribe(TOPIC_MANAGEMENT_CAMERA_STATE,
+                                    sub_queue_size_,
+                                    &Executive::CameraStatesCallback,
+                                    this);
+
   cmd_sub_ = nh_.subscribe(TOPIC_COMMAND,
                            sub_queue_size_,
                            &Executive::CmdCallback,
@@ -3108,6 +3261,9 @@ void Executive::Initialize(ros::NodeHandle *nh) {
   set_data_client_ = nh_.serviceClient<ff_msgs::SetDataToDisk>(
                               SERVICE_MANAGEMENT_DATA_BAGGER_SET_DATA_TO_DISK);
 
+  enable_recording_client_ = nh_.serviceClient<ff_msgs::EnableRecording>(
+                              SERVICE_MANAGEMENT_DATA_BAGGER_ENABLE_RECORDING);
+
   // initialize configure clients later, when initialized here, the service is
   // invalid when we try to use it. Must have something to do with startup order
   // of executive, choreographer, planner, or mapper
@@ -3154,6 +3310,15 @@ void Executive::Initialize(ros::NodeHandle *nh) {
   plan_status.command = -1;
   plan_status_pub_.publish(plan_status);
 
+  // Initialize camera states vector. All we care about is if we are streaming
+  camera_states_.states.resize(3);
+  camera_states_.states[0].camera_name = "nav_cam";
+  camera_states_.states[0].streaming = false;
+  camera_states_.states[1].camera_name = "dock_cam";
+  camera_states_.states[1].streaming = false;
+  camera_states_.states[2].camera_name = "sci_cam";
+  camera_states_.states[2].streaming = false;
+
   // Create timer for wait command with a dummy duration since it will be
   // changed everytime it is started. Make it one shot and don't start until
   // wait command received
@@ -3198,6 +3363,12 @@ bool Executive::ReadParams() {
     NODELET_ERROR("%s", err_msg.c_str());
     this->AssertFault(ff_util::INITIALIZATION_FAILED, err_msg);
     return false;
+  }
+
+  // get world name
+  if (!config_params_.GetStr("world_name", &agent_state_.world)) {
+    NODELET_WARN("Unable to get world name.");
+    agent_state_.world = "none";
   }
 
   // get action active timeout

@@ -1,0 +1,23 @@
+{
+  "procedure": [
+    [
+      "Procedure",
+      "success",
+      [
+        "Define",
+        "$complete",
+        ["ListSequence", ["BasicSequence", "#000", 0.0, 0.5, "#000"]]
+      ],
+      ["Define", "$rptComplete", ["RepeatSequence", "$complete", 1.0]],
+      ["Define", "$allLights", ["Domain", ["Interval", 0, 74]]],
+      ["Return", ["BasicAnimation", "$allLights", "$rptComplete"]]
+    ]
+  ],
+  "state": [
+    "ExecState",
+    1.0,
+    0.5,
+    true,
+    [["Call", "both", "success", "#fff", 1.0]]
+  ]
+}

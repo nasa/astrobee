@@ -76,11 +76,15 @@ class Ekf {
 
   void SparseMapUpdate(const ff_msgs::VisualLandmarks & vl);
   bool ARTagUpdate(const ff_msgs::VisualLandmarks & vl);  // returns true if reset transform
+  bool HRTagUpdate(const ff_msgs::DepthLandmarks & dl);  // returns true if reset transform
   void OpticalFlowUpdate(const ff_msgs::Feature2dArray & of);
   void HandrailUpdate(const ff_msgs::DepthLandmarks & dl);
 
   // transform by from dock coordinates to world coordinates
   Eigen::Affine3d GetDockToWorldTransform(void) {return dock_to_world_;}
+
+  // transform by from perch coordinates to world coordinates
+  Eigen::Affine3d GetHandrailToWorldTransform(void) {return handrail_to_world_;}
 
   void SparseMapRegister(const ff_msgs::CameraRegistration & reg);
   void ARTagRegister(const ff_msgs::CameraRegistration & reg);
@@ -91,6 +95,7 @@ class Ekf {
 
   void SetResetCallback(std::function<void()> callback);
   void ResetAR(void);  // called when switching to AR mode
+  void ResetHR(void);  // called when switching to HR (HandRail) mode
 
   Eigen::Affine3d GetNavCamToBody(void) const {return nav_cam_to_body_;}
 
@@ -103,6 +108,7 @@ class Ekf {
   void ResetPose(const Eigen::Affine3d & camera_to_body, geometry_msgs::Pose const& pose);
   void ApplyReset(void);
 
+  void DepthLandmarksUpdate(const ff_msgs::DepthLandmarks & dl);
   void VisualLandmarksUpdate(const ff_msgs::VisualLandmarks & vl);
   void VisualLandmarksRegister(const ff_msgs::CameraRegistration & reg);
 
@@ -173,6 +179,10 @@ class Ekf {
   /** ar offset related **/
   bool reset_dock_pose_;
   Eigen::Affine3d dock_to_world_;
+
+  /** hr offset relatedd **/
+  bool reset_handrail_pose_;
+  Eigen::Affine3d handrail_to_world_;
 };
 }  // end namespace ekf
 

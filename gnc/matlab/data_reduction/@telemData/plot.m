@@ -21,7 +21,8 @@ function varargout = plot(h,varargin)
 % Additoinal properties include:
 % 't0' - specify a time to set as the zero time
 % 'title' - Specify a title for the plot and window
-% 
+% 'AbsTime' - Absolute Time 
+%
 % Examples:
 % plot(telemData) 
 % plot(telemData, 'property1Name', property1)
@@ -40,6 +41,13 @@ if ~isempty(title_indx)
    plot_title = varargin{title_indx+1};
     varargin(title_indx:title_indx+1) = [];
 end
+
+abs_plot_indx = find((strcmpi(varargin, 'AbsTime')), 1,'first');
+if ~isempty(abs_plot_indx)
+    varargin(abs_plot_indx) = [];
+    h.time = datetime(h.time, 'ConvertFrom', 'posixtime');
+end
+
 
 
 pHandle = plot(h.time, h.data, varargin{:});

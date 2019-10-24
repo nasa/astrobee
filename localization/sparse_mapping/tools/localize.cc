@@ -24,21 +24,33 @@
 #include <glog/logging.h>
 
 #include <thread>
+DEFINE_string(reference_map, "",
+              "Reference map to localize against.");
 
 int main(int argc, char** argv) {
-  common::InitFreeFlyerApplication(&argc, &argv);
   if (argc < 3) {
-    std::cerr << "Usage: localize map.nvm image.jpg\n";
+    std::cerr << "Usage: localize <map file> <image>\n";
     std::exit(0);
+  }
+  common::InitFreeFlyerApplication(&argc, &argv);
+
+  std::string map_file, img_file;
+  if (FLAGS_reference_map != "") {
+    // The use specified the map via -reference_map
+    map_file = FLAGS_reference_map;
+    img_file = argv[1];
+  } else {
+    // The -reference_map option was omitted
+    map_file = argv[1];
+    img_file = argv[2];
   }
 
   // initialize map
-  std::string map_file = argv[1];
-  std::string img_file = argv[2];
   sparse_mapping::SparseMap map(map_file);
 
   // localize frame
-  camera::CameraModel camera(Eigen::Vector3d(), Eigen::Matrix3d::Identity(), map.GetCameraParameters());
+  camera::CameraModel camera(Eigen::Vector3d(), Eigen::Matrix3d::Identity(),
+                             map.GetCameraParameters());
   if (!map.Localize(img_file, &camera)) {
     LOG(ERROR) << "Failed to localize image.";
     return 1;
@@ -50,14 +62,16 @@ int main(int argc, char** argv) {
   // camera::CameraModel m(map.GetFrameGlobalTransform(i), map.GetCameraParameters());
   // std::cout << map.GetFrameFilename(i);
   // Eigen::Vector3d camera_pos = m.GetPosition();
-  // printf(" map position: (%10.7f, %10.7f, %10.7f) ", camera_pos.x(), camera_pos.y(), camera_pos.z());
+  // printf(" map position: (%10.7f, %10.7f, %10.7f) ",
+  // camera_pos.x(), camera_pos.y(), camera_pos.z());
   // std::cout << "rotation: (" << m.GetRotation().matrix().format(CSVFormat) << ")\n";
   // }
   // std::cout << "-----------------------------------" << std::endl;
-  std::cout << "Localization" << std::endl;
-  std::cout << img_file;
+  // std::cout << "Localization" << std::endl;
+  // std::cout << img_file;
   Eigen::Vector3d camera_pos = camera.GetPosition();
-  printf(" localized position: (%10.7f, %10.7f, %10.7f) ", camera_pos.x(), camera_pos.y(), camera_pos.z());
+  printf(" localized position for %s: (%10.7f, %10.7f, %10.7f) ",
+         img_file.c_str(), camera_pos.x(), camera_pos.y(), camera_pos.z());
   std::cout << "rotation: (" << camera.GetRotation().matrix().format(CSVFormat) << ")\n";
 
   return 0;

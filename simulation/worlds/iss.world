@@ -2,9 +2,9 @@
   <world name='default'>
 
     <physics name='default_physics' default='0' type='ode'>
-      <max_step_size>0.016</max_step_size>
+      <max_step_size>0.008</max_step_size>
       <real_time_factor>1</real_time_factor>
-      <real_time_update_rate>62.5</real_time_update_rate>
+      <real_time_update_rate>125</real_time_update_rate>
     </physics>
 
     <scene>
@@ -43,6 +43,12 @@
     <include>
       <uri>model://astrobee_dock</uri>
       <pose>9.7 -9.79 4.5 0 0 0</pose>
+    </include>
+
+    <include>
+      <uri>model://astrobee_handrail_21_5</uri>
+      <name>handrail</name>
+      <pose>11.947 -9.252 5.045 0 0 3.1415</pose>
     </include>
 
     <light name='user_point_light_px' type='point'>

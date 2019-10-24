@@ -1,73 +1,31 @@
 {
   "type" : "TeleopCommandsConfigurationFile",
   "teleopCommandConfigs" : [ {
-    "type" : "StringBooleanTeleopCommand",
-    "label": "Camera to Stream",
-    "secondColumnLabel": "Streaming",
-    "command": "setCameraStreaming",
-    "stringParamName": "cameraName",
-    "stringOptions": ["Dock", "Navigation", "Science"],
-    "boolParamName": "stream",
-    "buttonText": "Send",
-    "subsystem": "Camera"
+    "type" : "NoParamsTeleopCommand",
+    "label": "Initialize Bias",
+	"buttonText": "Initialize Bias",
+    "command": "initializeBias",
+    "subsystem": "Mobility"
   },{
-    "type" : "CameraPresetTeleopCommand",
-    "label": "Camera to Configure",
-    "secondColumnLabel": "Configuration",
-    "buttonText": "Set",
-    "optionsForOneCamera": [ {
-      "cameraName": "Dock",
-      "preset": [ {
-        "presetName": "High Definition",
-        "resolution" : "1024_768",
-        "frameRate" : 5,
-        "bandwidth" : 640
-      },{
-        "presetName": "Low Definition",
-        "resolution" : "640_480",
-        "frameRate" : 4,
-        "bandwidth" : 92
-      } ]
-    },{
-      "cameraName": "Navigation",
-      "preset": [ {
-        "presetName": "High Definition",
-        "resolution" : "1920_1080",
-        "frameRate" : 5,
-        "bandwidth" : 100
-      },{
-        "presetName": "Low Definition",
-        "resolution" : "640_480",
-        "frameRate" : 25,
-        "bandwidth" : 300
-      } ]
-    },{
-      "cameraName": "Science",
-      "preset": [ {
-        "presetName": "High Definition",
-        "resolution" : "1280_720",
-        "frameRate" : 30,
-        "bandwidth" : 2336
-      },{
-        "presetName": "Low Definition",
-        "resolution" : "640_480",
-        "frameRate" : 15,
-        "bandwidth" : 1168
-      } ]
-    } ],
-    "subsystem": "Camera"
+    "type" : "NoParamsTeleopCommand",
+    "label": "Reset EKF",
+    "buttonText": "Reset EKF",
+    "command": "resetEkf",
+    "subsystem": "Mobility"
   },{
-    "type" : "StringBooleanTeleopCommand",
-    "label": "Camera Name",
-    "secondColumnLabel": "Recording",
-    "command": "setCameraRecording",
-    "stringParamName": "cameraName",
-    "stringOptions": ["Dock", "Navigation", "Science"],
-    "boolParamName": "record",
-    "buttonText": "Send",
-    "subsystem": "Camera"
+    "type" : "NoParamsTeleopCommand",
+    "label": "Idle Propulsion",
+    "buttonText": "Idle",
+    "command": "idlePropulsion",
+    "subsystem": "Mobility"
   },{
-    "type" : "HorizontalSeparatorTeleopCommand"
+    "type" : "NoParamsTeleopCommand",
+    "label": "Undock",
+    "buttonText": "Undock",
+    "command": "undock",
+    "subsystem": "Mobility"
+  },{
+     "type" : "HorizontalSeparatorTeleopCommand"
   },{
     "type" : "OperatingLimitsTeleopCommand",
     "label": "Operating Limits",
@@ -83,6 +41,74 @@
   },{
     "type" : "HorizontalSeparatorTeleopCommand"
   },{
+    "type" : "StringBooleanTeleopCommand",
+    "label": "Camera to Record",
+    "secondColumnLabel": "Recording",
+    "command": "setCameraRecording",
+    "stringParamName": "cameraName",
+    "stringOptions": ["Dock", "Navigation", "Science"],
+    "boolParamName": "record",
+    "buttonText": "Send",
+    "subsystem": "Camera"
+  },{
+    "type" : "StringBooleanTeleopCommand",
+    "label": "Camera to Stream",
+    "secondColumnLabel": "Streaming",
+    "command": "setCameraStreaming",
+    "stringParamName": "cameraName",
+    "stringOptions": ["Dock", "Navigation", "Science"],
+    "boolParamName": "stream",
+    "buttonText": "Send",
+    "subsystem": "Camera"
+  },{ 
+    "type" : "CameraPresetTeleopCommand",
+    "label": "Camera to Configure",
+    "secondColumnLabel": "Configuration",
+    "buttonText": "Set",
+    "optionsForOneCamera": [ {
+      "cameraName": "Dock",
+      "preset": [ {
+        "presetName": "ARS Default Recording",
+		"cameraMode" : "Recording",
+        "resolution" : "1280_960",
+        "frameRate" : 5,
+        "bandwidth" : 0
+      },{
+        "presetName": "ARS Default Streaming",
+		"cameraMode" : "Streaming",
+        "resolution" : "640_480",
+        "frameRate" : 2,
+        "bandwidth" : 0
+      } ]
+    },{
+      "cameraName": "Navigation",
+      "preset": [ {
+        "presetName": "ARS Default Recording",
+		"cameraMode" : "Recording",
+        "resolution" : "1280_960",
+        "frameRate" : 5,
+        "bandwidth" : 0
+      },{
+        "presetName": "ARS Default Streaming",
+		"cameraMode" : "Streaming",
+        "resolution" : "640_480",
+        "frameRate" : 2,
+        "bandwidth" : 0
+      } ]
+    },{
+      "cameraName": "Science",
+      "preset": [ {
+        "presetName": "ARS Default Streaming",
+		"cameraMode": "Streaming",
+        "resolution" : "1280_720",
+        "frameRate" : 30,
+        "bandwidth" : 2336
+      } ]
+    } ],
+    "subsystem": "Camera"
+  },{
+    "type" : "HorizontalSeparatorTeleopCommand"
+  },{
     "type" : "FlashlightTeleopCommand",
     "label": "Flashlight",
     "secondColumnLabel": "Brightness",
@@ -93,43 +119,7 @@
     "brightnessValues":[1.0, 0.6, 0.3, 0.0],
     "subsystem": "Settings"
   },{
-    "type" : "DataManagementTeleopCommand",
-    "label": "Data Type",
-    "secondColumnLabel": "Action",
-    "buttonText": "Send",
-    "paramName": "dataMethod",
-    "names":["Immediate", "Delayed"],
-    "actionNames":["Download", "Stop Download", "Clear"],
-    "actionCommands":["downloadData", "stopDownload", "clearData"],
-    "subsystem": "Data"
-  },{
     "type" : "HorizontalSeparatorTeleopCommand"
-  },{
-    "type" : "ToggleBooleanTeleopCommand",
-    "label": "Gripper",
-    "command": "gripperControl",
-    "paramName": "open",
-    "buttonText": "Open",
-    "buttonPushedText": "Close",
-    "subsystem": "Arm"
-  },{
-    "type" : "NoParamsTeleopCommand",
-    "label": "Idle Propulsion",
-    "buttonText": "Idle",
-    "command": "idlePropulsion",
-    "subsystem": "Mobility"
-  },{
-    "type" : "NoParamsTeleopCommand",
-    "label": "Stop Arm",
-    "buttonText": "Stop Arm",
-    "command": "stopArm",
-    "subsystem": "Arm"
-  },{
-    "type" : "NoParamsTeleopCommand",
-    "label": "Undock",
-    "buttonText": "Undock",
-    "command": "undock",
-    "subsystem": "Mobility"
   },{
     "type" : "OppositeCommandsTeleopCommand",
     "label": "Laser Pointer",

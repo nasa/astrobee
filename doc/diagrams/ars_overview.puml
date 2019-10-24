@@ -1,8 +1,5 @@
 @startuml
 
-skinparam componentStyle uml2
-skinparam dpi 600
-
 !include "colors.puml"
 
 !define COLOR_COM COLOR_9PASTEL_8
@@ -14,8 +11,8 @@ skinparam dpi 600
 
 !define COLOR_PSOM COLOR_9PASTEL_9
 
-skinparam defaultFontName "Trebuchet MS"
-skinparam defaultFontSize 9
+' Uncomment to reduce node descriptions
+'!define COMPACT
 
 skinparam component {
   backgroundColor COLOR_6PASTEL_2
@@ -37,8 +34,11 @@ skinparam note {
 title Astrobee Robot Software Overview
 
 frame Astrobee {
-
-  node "** HLP**" as HLP COLOR_PSOM {
+!ifdef COMPACT
+  node HLP COLOR_PSOM {
+!else
+  node "** HLP**\n(High Level Procesor)\n//HRI devices and Guest Science//" as HLP COLOR_PSOM {
+!endif
     [Guest Science\nManager] as gs_mgr COLOR_MGT
     [Guest Sience\nAPKs] as apks
     component ui_drivers COLOR_DRV [
@@ -55,7 +55,12 @@ frame Astrobee {
     'apks -[hidden]up- streamer
   }
 
-  node "**  MLP**" as MLP COLOR_PSOM {
+!ifdef COMPACT
+  node MLP COLOR_PSOM { 
+!endif
+!ifndef COMPACT
+  node "**  MLP**\n(Mid Level Processor)\n//Management, Vision based Navigation and Behaviors//"   as MLP COLOR_PSOM { 
+!endif  
     component executive COLOR_MGT [
     \nexecutive\n
     ]
@@ -92,7 +97,12 @@ frame Astrobee {
 
   }
 
-  node "**  LLP**" as LLP COLOR_PSOM {
+!ifdef COMPACT
+  node LLP COLOR_PSOM { 
+!endif
+!ifndef COMPACT
+  node "**  LLP**\n(Low Level Processor)\n//Pose Estimation and Control//" as LLP   COLOR_PSOM { 
+!endif 
     component gnc COLOR_GNC [
     GN&C
     **EKF <&arrow-thick-right> CTL <&arrow-thick-right> FAM**
@@ -142,7 +152,8 @@ HLP -[hidden]- MLP
 MLP -[hidden]- LLP
 
 legend bottom
-Arrows are representing dependencies, not flow of information
+Arrows are representing dependencies, not flow of information.
+Brown components are drivers (software interacting with hardware).
 endlegend
 
 @enduml

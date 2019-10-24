@@ -58,7 +58,9 @@ create_tool_targets(DIR tools
 )
 
 install_launch_files()
-install(FILES 
+install(FILES
+  tools/pmc_currents.py
+  tools/pmc_status.py
   tools/emi_smooth_lowfreq.csv
   tools/emi_smooth_profile.csv
   tools/nozzle_identification.csv

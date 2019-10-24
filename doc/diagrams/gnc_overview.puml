@@ -1,66 +1,64 @@
 @startuml
 
-skinparam componentStyle uml2
-
 title GNC Overview
 
 !define SHOW_ALL_TYPES true
-!include "nodes_helper.puml"
+!include "common.puml"
 
 frame mob {
-  add_mob(choregrapher)
-  add_act(Move)
+  mob_node(choregrapher)
+  action(Motion, ff_msgs::MotionAction, /mob/motion)
 }
 
 frame gnc {
-  add_gnc(EKF)
-  add_gnc(CTL)
-  add_gnc(FAM)
-  add_act(Control)
+  gnc_node(EKF)
+  gnc_node(CTL)
+  gnc_node(FAM)
+  action(Control, ff_msgs::ControlAction, /gnc/control)
+  'message(Wrench, geometry_msgs::WrenchStamped, /gnc/wrench)
+  'message(Pose, geometry_msgs::PoseStamped, /gnc/pose)
+  'message(Vels, gemoetry_msgs:TwistStamped, /gnc/twist)
 }
 
-add_msg(Landmarks)
-Landmarks -> EKF : /gnc/{of,hr,ar,ml}/features
+
+message(Landmarks, ff_msgs::VisualLandmarks, "/loc/{ml,ar,of}/features")
 
 'frame drv {
-  add_drv(pmc_actuator)
-  add_msg(PmcTelemetry)
+  drv_node(pmc_actuator)
+  message(PmcTelemetry, ff_hw_msgs::PmcTelemetry, /hw/pmc/telemetry)
 '}
 
-add_msg(Inertia, "latching_msg")
-add_msg(SpeedGain)
+latching_msg(Inertia, geometry_msgs::InertiaStamped, /mob/inertia)
+latching_msg(FlightMode, ff_msgs::FlightMode, /mob/flight_mode)
 
-SpeedGain --> FAM
+Landmarks -r-> EKF : "                "
+
+FlightMode --> FAM
+FlightMode --> choregrapher
 Inertia -up-> EKF
 Inertia -up-> CTL
 Inertia -up-> FAM
 
+'EKF -r-> Pose
+'EKF -r-> Vels
+'Pose -r-> CTL
+'Vels -r-> CTL
 
-EKF -r-> CTL : /gnc/ekf\n[EkfState]
-CTL -r-> FAM : /gnc/fam\n[Wrench]
+EKF -r-> CTL : "/loc/{pose,twist}\n[geometry_msgs::{Pose,Twist}Stamped]"
+CTL -r-> FAM : "/gnc/ctl/command\n[ff_msgs::FamCommand]"
+'CTL -r-> Wrench : "                "
+'Wrench -r-> FAM : "                "
 
-Move -- choregrapher : /mob/move
-choregrapher -->> Control : /gnc/control
-Control -- CTL : /gnc/control
+Motion -- choregrapher
+choregrapher <<-->> Control
+Control -- CTL
 
-pmc_actuator --> PmcTelemetry : /hw/pmc/telemetry
-FAM -> pmc_actuator : /hw/pmc/command\n[PmcCommand]
+pmc_actuator --> PmcTelemetry
+FAM -r-> pmc_actuator : "/hw/pmc/command\n[ff_msgs::PmcCommand]"
 
-note left of Inertia
-Intertia is normally 
-set by the Executive
-endnote
-
-note right of SpeedGain
-Is Choregrapher defining the 
-SpeedGain if function of the 
-FlightMode ?
-Should this message be 
-latching?
-endnote
 
 note top of Landmarks
-This is a simplification
+This is a simplification:
 Registrations signal is
 also coming in
 endnote

@@ -1,4 +1,4 @@
-exported/
+gen/
 plantuml/
 dds_ros_bridge.dot
 executive.dot

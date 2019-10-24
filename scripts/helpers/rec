@@ -16,6 +16,7 @@ then
   echo "         cla    record data for calibration of dock and perch cams (+imu)"
   echo "         map    record data for map building"
   echo "         mob    record data for the mobility procedure"
+  echo "         eps    record data pertaining the he power status"
   echo "    procedure:  procedure nickname"
   echo "    step:       step or section to record"
   echo "    run:        run number (default = 1)"
@@ -90,11 +91,15 @@ case $what in
     topics="/hw/cam_dock /hw/depth_perch/extended /hw/imu"
     ;;
   map)
-    topics="/hw/cam_nav /hw/imu"
+    topics="/mgt/img_sampler/nav_cam/image_record /hw/imu /mgt/sys_monitor/state"
+    include="-e /hw/eps/(.*)"
     ;;
   mob)
     include="-e /gnc/(.*)|/loc/(.*)|/mob/(.*)|/hw/imu|/hw/vive/(.*)"
     exclude="-x /mob/mapper/(.*)"
+    ;;
+  eps)
+    include="-e /hw/eps/(.*)"
     ;;
   *)
     echo "invalid 'what' argument!"
@@ -103,4 +108,4 @@ case $what in
 esac
 
 echo "Starting to record $bagfile"
-rosbag record $topics $include $exclude -O $bagfile
+rosbag record --split --size=96 $topics $include $exclude -O $bagfile
