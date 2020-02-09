@@ -36,3 +36,7 @@ create_tool_targets(DIR tools
 )
 
 install_launch_files()
+install(FILES
+  tools/features_counter.py
+  DESTINATION share/${PROJECT_NAME})
+

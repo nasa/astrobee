@@ -1,0 +1,21 @@
+{
+  "type" : "DataConfigurationFile",
+  "name" : "nav_dock_sampled",
+  "topicSettings": [ 
+    {
+      "topicName" : "hw/imu",
+      "downlinkOption" : "delayed",
+      "frequency" : -1
+    },
+    {
+      "topicName" : "mgt/img_sampler/nav_cam/image_record",
+      "downlinkOption" : "delayed",
+      "frequency" : -1
+    },
+    {
+      "topicName" : "mgt/img_sampler/dock_cam/image_record",
+      "downlinkOption" : "delayed",
+      "frequency" : -1
+    }
+  ]
+}

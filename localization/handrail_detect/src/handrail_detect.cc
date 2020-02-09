@@ -203,6 +203,10 @@ class HandrailDetect : public ff_util::FreeFlyerNodelet {
     if (!config_.GetStr("perch_image_frame", &perch_image_frame_))
       ROS_FATAL("Unspecified perch_image_frame.");
 
+    // Frame name of the perch cam
+    if (!config_.GetReal("outlier_tolerance", &outlier_tolerance_))
+      ROS_FATAL("Unspecified outlier_tolerance.");
+
     // Get transform from the robot body to the perch cam in config
     Eigen::Affine3d tmp_r2i;
     if (!msg_conversions::config_read_transform(&config_, "perch_cam_transform", &tmp_r2i)) {
@@ -299,6 +303,7 @@ class HandrailDetect : public ff_util::FreeFlyerNodelet {
     if (disp_pcd_and_tf_)
       PublishTF(r2i_, body_frame_, perch_image_frame_);
 
+
     if (!FindHandrail()) {
       curr_handrail_status_ = NOT_FOUND;
       if (disp_marker_)
@@ -351,9 +356,11 @@ class HandrailDetect : public ff_util::FreeFlyerNodelet {
 
     // Find a line from the plane outliers
     std::vector<int> line_inliers;
+
     if (!FindLine(plane_outliers, plane_parameter, plane_vector, plane_vector_length,
                   &line_vector, &line_center, &line_inliers)) {
       ROS_WARN("[Handrail] No handrail found");
+
       if (disp_marker_) {
         std::vector<int> no_pnt;
         PublishCloud(no_pnt, cloud_, &cloud_pub_[9]);
@@ -375,16 +382,90 @@ class HandrailDetect : public ff_util::FreeFlyerNodelet {
     GetFeaturePoints(plane_inliers, line_inliers);
 
     Eigen::Quaternionf rtoq(i2h.linear());
-    dl_.local_pose.position.x = i2h.translation()(0);
-    dl_.local_pose.position.y = i2h.translation()(1);
-    dl_.local_pose.position.z = i2h.translation()(2);
+
+    // Modulo 5 without risking to reach size limit
+    if (rolling_window_cnt_ >= 5) {
+      if (!start_)
+        start_ = true;
+      rolling_window_cnt_ = 0;
+    }
+
+    // Set up previous index since % operator is not modulo in C (uuuuuugh)
+    int previous_index = rolling_window_cnt_ - 1;
+    if (previous_index < 0)
+      previous_index = 4;
+
+    // If we have 5 previous positions saved
+    if (start_) {
+      // Mesure average of last 5 positions
+      double average_pos[3];
+      average_pos[0] = 0.0;
+      average_pos[1] = 0.0;
+      average_pos[2] = 0.0;
+      for (int i = 0; i < 5; i++) {
+        average_pos[0] += rolling_window_pos_(0, i);
+        average_pos[1] += rolling_window_pos_(1, i);
+        average_pos[2] += rolling_window_pos_(2, i);
+      }
+      average_pos[0] /= 5;
+      average_pos[1] /= 5;
+      average_pos[2] /= 5;
+
+      // Judge if point is outlying (if violation of average +/- tolerance
+      // on any axis, then copy previous point for all axes)
+      if ((i2h.translation()(0) > (average_pos[0] + outlier_tolerance_)
+            || i2h.translation()(0) < (average_pos[0] - outlier_tolerance_))
+          || (i2h.translation()(1) > (average_pos[1] + outlier_tolerance_)
+            || i2h.translation()(1) < (average_pos[1] - outlier_tolerance_))
+          || (i2h.translation()(2) > (average_pos[2] + outlier_tolerance_)
+            || i2h.translation()(2) < (average_pos[2] - outlier_tolerance_))) {
+        // Count the amount of rejected features in a row.
+        reject_cnt_++;
+
+        // Reject current position and save previous
+        // position: rolling_window_cnt_ - 1, modulo 5 to loop
+        ROS_WARN("[Handrail] Refusing handrail outlier");
+        rolling_window_pos_(0, rolling_window_cnt_) = rolling_window_pos_(0, previous_index);
+        rolling_window_pos_(1, rolling_window_cnt_) = rolling_window_pos_(1, previous_index);
+        rolling_window_pos_(2, rolling_window_cnt_) = rolling_window_pos_(2, previous_index);
+        dl_.local_pose.position.x = rolling_window_pos_(0, previous_index);
+        dl_.local_pose.position.y = rolling_window_pos_(1, previous_index);
+        dl_.local_pose.position.z = rolling_window_pos_(2, previous_index);
+
+        // Since we copy the previous point in the hope of rejecting 1 or two wrong samples
+        // We have to stop if we copy too many points in a row. This would imply we are lost
+        if (reject_cnt_ >= 5) {
+          ROS_ERROR("[Handrail] Rejected 5 or more handrail positions in a row");
+          return false;
+        }
+      } else {
+        // Reset the counter of rejected features.
+        reject_cnt_ = 0;
+
+        // Accept current position
+        rolling_window_pos_(0, rolling_window_cnt_) = i2h.translation()(0);
+        rolling_window_pos_(1, rolling_window_cnt_) = i2h.translation()(1);
+        rolling_window_pos_(2, rolling_window_cnt_) = i2h.translation()(2);
+        dl_.local_pose.position.x = i2h.translation()(0);
+        dl_.local_pose.position.y = i2h.translation()(1);
+        dl_.local_pose.position.z = i2h.translation()(2);
+      }
+    } else {
+      // If we don't have 5 positions saved, the outlier rejection averaging filter
+      // can't work so we just copy the points.
+      rolling_window_pos_(0, rolling_window_cnt_) = i2h.translation()(0);
+      rolling_window_pos_(1, rolling_window_cnt_) = i2h.translation()(1);
+      rolling_window_pos_(2, rolling_window_cnt_) = i2h.translation()(2);
+      dl_.local_pose.position.x = i2h.translation()(0);
+      dl_.local_pose.position.y = i2h.translation()(1);
+      dl_.local_pose.position.z = i2h.translation()(2);
+    }
     dl_.local_pose.orientation.x = rtoq.x();
     dl_.local_pose.orientation.y = rtoq.y();
     dl_.local_pose.orientation.z = rtoq.z();
     dl_.local_pose.orientation.w = rtoq.w();
 
-    if (disp_pcd_and_tf_)
-      PublishTF(r2h_center_, body_frame_,  handrail_frame_);
+    rolling_window_cnt_++;
 
     if (disp_marker_)
       PublishMarker(target_pos_err, i2h, end_point);
@@ -394,30 +475,25 @@ class HandrailDetect : public ff_util::FreeFlyerNodelet {
 
 
   bool DownsamplePoints(std::vector<int>* downsample_points) {
-    // Based on x, y steps and limited sample area, downsample points from the measured pointcloud
-    int point_cnt = 0;
-    int x_step_half = x_step_ / 2;
-    int y_step_half = y_step_ / 2;
-    for (int i = 1; i < static_cast<int>(cloud_.points.size()); i += x_step_) {
-      int i_y = i / depth_width_;
-      if (i_y % y_step_ == 0) {
-        ++point_cnt;
-        if (point_cnt % 2 == 0) i += y_step_half * depth_width_;
-        if (point_cnt == 1) i += x_step_half;
-        // Check whether the point is nan
-        if (i < static_cast<int>(cloud_.points.size())) {
-          if (cloud_.points[i].z < max_depth_dist_ && cloud_.points[i].z > min_depth_dist_ &&
-              !(std::isnan(cloud_.points[i].x) || std::isnan(cloud_.points[i].y) ||
-                std::isnan(cloud_.points[i].z))) {
-            downsample_points->push_back(i);
+    // J.L Proposed Change
+    // Keep only 1 point every 2x2 grid -> 75% reduction in sample size
+    // This does not taking geometry into consideration
+    // For example, past a certain angle with the plane, take 1 point every 1x2 grid ?
+    // (lose resolution!)
+    for (int i = 0; i < depth_height_; i++) {
+      for (int j = 0; j < depth_width_; j++) {
+        // Skip the first 5% of columns (width lines) to not see the arm (arm shadowing)
+        if (j > depth_width_ / 20) {
+          if (i % 2 == 0) {
+            if (cloud_.points[i * depth_width_ + j].z < max_depth_dist_ &&
+                cloud_.points[i * depth_width_ + j].z > min_depth_dist_ &&
+                !(std::isnan(cloud_.points[i * depth_width_ + j].x) ||
+                  std::isnan(cloud_.points[i * depth_width_ + j].y) ||
+                  std::isnan(cloud_.points[i * depth_width_ + j].z))) {
+              downsample_points->push_back(i * depth_width_ + j);
+            }
           }
-          if (point_cnt % 2 == 0)
-            i -= y_step_half * depth_width_;
-        } else {
-          break;
         }
-      } else {
-        point_cnt = 0;
       }
     }
 
@@ -467,8 +543,6 @@ class HandrailDetect : public ff_util::FreeFlyerNodelet {
       Eigen::Vector3f tmp_normal_vector;  // Normal vector to the plane (not normalized)
       tmp_normal_vector << tmp_plane_parameter(0), tmp_plane_parameter(1), tmp_plane_parameter(2);
 
-      if (fabs(tmp_normal_vector(2)) < fabs(tmp_normal_vector(0)) + fabs(tmp_normal_vector(1)))
-        continue;
       tmp_normal_vector /= tmp_normal_vector.norm();
       std::vector<int> tmp_inliers, tmp_outliers;
       tmp_inliers.reserve(downsample_points.size());
@@ -767,8 +841,6 @@ class HandrailDetect : public ff_util::FreeFlyerNodelet {
     int side_step2 = static_cast<int>(side_step * cos(plane_ang) +
                                       fabs(handrail_wall_max_gap * sin(plane_ang) / x_scale_));
 
-    // std::cout << "plane ang / thres: " << plane_ang << "/" << ang_thres << std::endl;
-
     // extention of x axis sidegap is not considered
     std::array<float, 4> plane_side_thres = {plane_side_gap, plane_side_gap, plane_side_gap, plane_side_gap};
     if (plane_ang > 0) {
@@ -779,11 +851,10 @@ class HandrailDetect : public ff_util::FreeFlyerNodelet {
       plane_side_thres[1] = long_side_gap;
     }
 
-    // std::cout << "Plane vector: " << plane_vector(0) << "/" <<
-    //    plane_vector(1) << "/" << plane_vector(2) << std::endl;
     std::vector<int> cross_inliers, width_inliers;
     float handrail_min_gap = width_filter_rate_ * handrail_width_;
-    float handrail_max_gap = handrail_width_ * sqrt(2);
+    float handrail_max_gap = handrail_width_ * sqrt(2);  // J.L -> Why is it not handrail_gap * sqrt(2) ?
+                                                         // This is handrail_max_width.
     std::vector<int> plane_outliers = new_plane_outliers;
 
     while (plane_outliers.size() != 0) {
@@ -1140,8 +1211,6 @@ class HandrailDetect : public ff_util::FreeFlyerNodelet {
       return false;
     }
 
-    // std::cout << "x/y/line_thres: " << x_scale_ << "/" << y_scale_ << "/" << line_size_thres << std::endl;
-
     std::chrono::high_resolution_clock::time_point t_strt = std::chrono::high_resolution_clock::now();
     // 1. Find potential line inliers from plane outliers
     std::vector<int> potential_line_inliers;
@@ -1426,6 +1495,16 @@ class HandrailDetect : public ff_util::FreeFlyerNodelet {
     i2h->translation() = line_center;
     i2h->linear() = r_err;
 
+     // Set up transform to get center of gripper, instead of robot
+    Eigen::Affine3f g2r;
+    Eigen::Vector3f g2r_translation;
+    g2r_translation(0) = 0.0;  // The transforms already take the reach into account
+    g2r_translation(1) = 0.0;
+    g2r_translation(2) = 0.18056;
+    g2r.translation() = g2r_translation;
+    Eigen::Matrix3f g2r_rot = Eigen::Matrix3f::Identity(3, 3);
+    g2r.linear() = g2r_rot;
+
     // Get a transformation of handrail in the robot frame
     r2h_center_ = r2i_ * (*i2h);
 
@@ -1441,9 +1520,9 @@ class HandrailDetect : public ff_util::FreeFlyerNodelet {
       if (vertical_handrail_detect_)
         target_axis_val = either_end(0);
       if (target_axis_val > 0)
-        esti_r2h_pos = r2i_ * (either_end - (0.5 * fix_handrail_length_ * line_vector));
+        esti_r2h_pos = g2r * r2i_ * (either_end - (0.5 * fix_handrail_length_ * line_vector));
       else
-        esti_r2h_pos = r2i_ * (either_end + (0.5 * fix_handrail_length_ * line_vector));
+        esti_r2h_pos = g2r * r2i_ * (either_end + (0.5 * fix_handrail_length_ * line_vector));
     }
 
     esti_r2h_center.translation() = esti_r2h_pos;
@@ -1579,11 +1658,9 @@ class HandrailDetect : public ff_util::FreeFlyerNodelet {
     const int median_idx = rand_cnt_max / 2;
     x_scale_ = std::max(pixel_diff[0][median_idx], min_scale);
     y_scale_ = std::max(pixel_diff[1][median_idx], min_scale);
-    // std::cout << "[X/Y diff]: " << x_scale_ << "/" << y_scale_ << std::endl;
 
     x_step_ = std::max(static_cast<int>(min_measure_gap_ / x_scale_), 1);
     y_step_ = std::max(static_cast<int>(min_measure_gap_ / y_scale_), 1);
-    // std::cout << "x/y: " << x_step_ << "/" << y_step_ << std::endl;
 
     return true;
   }
@@ -1637,6 +1714,7 @@ class HandrailDetect : public ff_util::FreeFlyerNodelet {
   // Only for visualization in rviz (ros marker)
   void PublishMarker(const Eigen::Vector3f& target_pos_err, const Eigen::Affine3f& i2h,
                                      const std::vector<geometry_msgs::Point>& end_point) {
+    // ROS_WARN("[DEBUG] PublishMarker called");
     float point_size = 0.005;
     visualization_msgs::Marker  points_mk;
     points_mk.header.frame_id = perch_image_frame_;
@@ -1840,6 +1918,13 @@ class HandrailDetect : public ff_util::FreeFlyerNodelet {
   int max_num_handrails_;
 
   Eigen::Affine3f r2h_center_;
+
+  // Handrail Detection Outlier Rejection
+  int rolling_window_cnt_ = 0;
+  bool start_ = false;
+  double outlier_tolerance_;
+  Eigen::Matrix<float, 3, 5> rolling_window_pos_ = Eigen::Matrix<float, 3, 5>::Zero();
+  int reject_cnt_ = 0;
 };
 
 PLUGINLIB_EXPORT_CLASS(handrail_detect::HandrailDetect, nodelet::Nodelet);

@@ -1,17 +1,23 @@
 @startuml
 
-skinparam componentStyle uml2
-'skinparam dpi 300
+title Every Astrobee Nodes groupped by Manager
 
-title Astrobee Nodes
+'!define HLP_NODE
+'!define MLP_NODE
+'!define LLP_NODE
 
-!define HLP_NODE
-!define MLP_NODE
-!define LLP_NODE
+!define SHOW_HLP
+!define SHOW_MLP
+!define SHOW_LLP
+!define SHOW_MANAGERS
+!define SHOW_ALL_TYPES
+!define SHOW_EVERY_NODE
+
+'left to right direction
 
 !include "nodes.puml"
 
-MLP --[hidden]down--> LLP
-MLP --[hidden]up--> HLP
+HLP ----[hidden]down--> MLP
+MLP ----[hidden]down--> LLP
 
 @enduml

@@ -19,6 +19,9 @@
 
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
   <xacro:macro name="perching_arm" params="bay xyz rpy">
+    <xacro:property name="prox_effort" value="1.0"/>
+    <xacro:property name="dist_effort" value="1.0"/>
+    <xacro:property name="grip_effort" value="0.1"/>
     <link name="${bay}">
       <self_collide>false</self_collide>
       <inertial>
@@ -43,7 +46,6 @@
           <mesh
             filename="package://astrobee_freeflyer/meshes/base_link.dae" />
         </geometry>
-        <material name="${bay}_beige" />
       </visual>
       <collision>
         <origin
@@ -89,7 +91,6 @@
           <mesh
             filename="package://astrobee_freeflyer/meshes/arm_proximal_link.dae" />
         </geometry>
-        <material name="${bay}_beige" />
       </visual>
       <collision>
         <origin
@@ -113,7 +114,7 @@
       <axis
         xyz="0 -1 0" />
       <limit
-        effort="2.7"
+        effort="${prox_effort}"
         lower="-2.0944"
         upper="1.57079"
         velocity="0.12" />
@@ -142,7 +143,6 @@
           <mesh
             filename="package://astrobee_freeflyer/meshes/arm_distal_link.dae" />
         </geometry>
-        <material name="${bay}_beige" />
       </visual>
       <collision>
         <origin
@@ -166,7 +166,7 @@
       <axis
         xyz="0 0 1" />
       <limit
-        effort="2.7"
+        effort="${dist_effort}"
         lower="-1.57079"
         upper="1.57079"
         velocity="0.12" />
@@ -195,7 +195,6 @@
           <mesh
             filename="package://astrobee_freeflyer/meshes/gripper_left_proximal_link.dae" />
         </geometry>
-        <material name="${bay}_beige" />
       </visual>
       <collision>
         <origin
@@ -219,7 +218,7 @@
       <axis
         xyz="0 0 1" />
       <limit
-        effort="0.1225"
+        effort="${grip_effort}"
         lower="0.349066"
         upper="0.698132"
         velocity="0.12" />
@@ -248,7 +247,6 @@
           <mesh
             filename="package://astrobee_freeflyer/meshes/gripper_left_distal_link.dae" />
         </geometry>
-        <material name="${bay}_beige" />
       </visual>
       <collision>
         <origin
@@ -272,7 +270,7 @@
       <axis
         xyz="0 0 1" />
       <limit
-        effort="0.1225"
+        effort="${grip_effort}"
         lower="-1.22173"
         upper="-0.69813"
         velocity="0.12" />
@@ -301,7 +299,6 @@
           <mesh
             filename="package://astrobee_freeflyer/meshes/gripper_right_proximal_link.dae" />
         </geometry>
-        <material name="${bay}_beige" />
       </visual>
       <collision>
         <origin
@@ -325,7 +322,7 @@
       <axis
         xyz="0 0 1" />
       <limit
-        effort="0.1225"
+        effort="${grip_effort}"
         lower="-0.698132"
         upper="-0.349066"
         velocity="0.12" />
@@ -354,7 +351,6 @@
           <mesh
             filename="package://astrobee_freeflyer/meshes/gripper_right_distal_link.dae" />
         </geometry>
-        <material name="${bay}_beige" />
       </visual>
       <collision>
         <origin
@@ -378,35 +374,11 @@
       <axis
         xyz="0 0 1" />
       <limit
-        effort="0.1225"
+        effort="${grip_effort}"
         lower="0.69813"
         upper="1.22173"
         velocity="0.12" />
     </joint>
-    <material name="${bay}_beige">
-      <texture filename="package://astrobee_freeflyer/media/materials/textures/beige.png" />
-    </material>
-    <gazebo reference="${bay}">
-      <material>Astrobee/Beige</material>
-    </gazebo>
-    <gazebo reference="${bay}_arm_proximal_link">
-      <material>Astrobee/Beige</material>
-    </gazebo>
-    <gazebo reference="${bay}_arm_distal_link">
-      <material>Astrobee/Beige</material>
-    </gazebo>
-    <gazebo reference="${bay}_gripper_left_proximal_link">
-      <material>Astrobee/Beige</material>
-    </gazebo>
-    <gazebo reference="${bay}_gripper_left_distal_link">
-      <material>Astrobee/Beige</material>
-    </gazebo>
-    <gazebo reference="${bay}_gripper_right_proximal_link">
-      <material>Astrobee/Beige</material>
-    </gazebo>
-    <gazebo reference="${bay}_gripper_right_distal_link">
-      <material>Astrobee/Beige</material>
-    </gazebo>
     <gazebo>
       <plugin name="${bay}_perching_arm_ros" filename="libgazebo_model_plugin_perching_arm.so">
         <rate>10.0</rate>
@@ -416,5 +388,6 @@
         <gripper>0</gripper>
       </plugin>
     </gazebo>
+  -->
   </xacro:macro>
 </robot>

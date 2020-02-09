@@ -32,26 +32,26 @@ DOXYFILE_ENCODING      = UTF-8
 # title of most generated pages and in a few other places.
 # The default value is: My Project.
 
-PROJECT_NAME           = "NASA Astrobee Robot software"
+PROJECT_NAME           = "NASA Astrobee Robot Software"
 
 # The PROJECT_NUMBER tag can be used to enter a project or revision number. This
 # could be handy for archiving the generated documentation or if some version
 # control system is used.
 
-PROJECT_NUMBER         = 0.8.0
+PROJECT_NUMBER         = 0.10.2
 
 # Using the PROJECT_BRIEF tag one can provide an optional one line description
 # for a project that appears at the top of each page and should give viewer a
 # quick idea about the purpose of the project. Keep the description short.
 
-PROJECT_BRIEF          = "Flight software for the Astrobee robot operating as a payload inside the International Space Station (ISS)."
+PROJECT_BRIEF          = "Flight software for the Astrobee robot operating inside the International Space Station."
 
 # With the PROJECT_LOGO tag one can specify a logo or an icon that is included
 # in the documentation. The maximum height of the logo should not exceed 55
 # pixels and the maximum width should not exceed 200 pixels. Doxygen will copy
 # the logo to the output directory.
 
-PROJECT_LOGO           = doc/images/logo.png
+PROJECT_LOGO           = doc/images/astrobee-logo.png
 
 # The OUTPUT_DIRECTORY tag is used to specify the (relative or absolute) path
 # into which the generated documentation will be written. If a relative path is
@@ -216,7 +216,7 @@ SEPARATE_MEMBER_PAGES  = NO
 # uses this value to replace tabs by spaces in code fragments.
 # Minimum value: 1, maximum value: 16, default value: 4.
 
-TAB_SIZE               = 4
+TAB_SIZE               = 2
 
 # This tag can be used to specify a number of aliases that act as commands in
 # the documentation. An alias has the form:
@@ -688,7 +688,8 @@ FILE_VERSION_FILTER    =
 # DoxygenLayout.xml, doxygen will parse it automatically even if the LAYOUT_FILE
 # tag is left empty.
 
-LAYOUT_FILE            = doc/freeflyer.xml
+#LAYOUT_FILE            = doc/style/freeflyer_layout.xml
+LAYOUT_FILE            =
 
 # The CITE_BIB_FILES tag can be used to specify one or more bib files containing
 # the reference definitions. This must be a list of .bib files. The .bib
@@ -769,13 +770,29 @@ WARN_LOGFILE           =
 # Configuration options related to the input files
 #---------------------------------------------------------------------------
 
-# The INPUT tag is used to specify the files and/or directories that contain
+# The INPUT tag is used to sp.csecify the files and/or directories that contain
 # documented source files. You may enter file names like myfile.cpp or
 # directories like /usr/src/myproject. Separate the files or directories with
 # spaces. See also FILE_PATTERNS and EXTENSION_MAPPING
 # Note: If this tag is empty the current directory is searched.
 
-INPUT                  =
+INPUT                  = doc \
+                          shared \
+                          hardware \
+                          wdock \
+                          gnc \
+                          communications \
+                          localization \
+                          mobility \
+                          management \
+                          behaviors \
+                          astrobee \
+                          description \
+                          simulation \
+                          tools \
+                          README.md \
+                          licenses.csv
+
 
 # This tag can be used to specify the character encoding of the source files
 # that doxygen parses. Internally doxygen uses the UTF-8 encoding. Doxygen uses
@@ -809,9 +826,8 @@ FILE_PATTERNS          = *.msg \
                          *.cxx \
                          *.cpp \
                          *.hpp \
-                         *.md
-                         
-#                         *.puml
+                         *.md \
+                         *.puml
 
 # The RECURSIVE tag can be used to specify whether or not subdirectories should
 # be searched for input files as well.
@@ -826,13 +842,15 @@ RECURSIVE              = YES
 # Note that relative paths are relative to the directory from which doxygen is
 # run.
 
-EXCLUDE                = devel \
-                         install \
-                         build \
-                         armhf \
-                         cmake \
-                         gnc/matlab \
-                         submodules
+# Exclude does NOT work for directories !!!
+EXCLUDE                =
+#EXCLUDE                = devel \
+#                         install \
+#                         build \
+#                         armhf \
+#                         cmake \
+#                         gnc/matlab/code_generation \
+#                         submodules
 
 # The EXCLUDE_SYMLINKS tag can be used to select whether or not files or
 # directories that are symbolic links (a Unix file system feature) are excluded
@@ -851,8 +869,12 @@ EXCLUDE_SYMLINKS       = YES
 EXCLUDE_PATTERNS       = */external/*/* \
                          */scripts/*/* \
                          */tools/visualeyez/matlab/* \
-                         */hardware/pmc_actuator/tools/nozzle_identification.csv \
+                         */gnc/matlab/code_generation/* \
+                         */hardware/pmc_actuator/tools/*.csv \
+                         */diagrams/nodes_helper.puml \
+                         */diagrams/nodes.puml \
                          */diagrams/colors.puml \
+                         */diagrams/color_palettes.puml \
                          */diagrams/common.puml
 
 # The EXCLUDE_SYMBOLS tag can be used to specify one or more symbol names
@@ -890,7 +912,8 @@ EXAMPLE_RECURSIVE      = NO
 # that contain images that are to be included in the documentation (see the
 # \image command).
 
-IMAGE_PATH             =
+IMAGE_PATH             = doc/images \
+                          doc/gen/png
 
 # The INPUT_FILTER tag can be used to specify a program that doxygen should
 # invoke to filter for each input file. Doxygen will invoke the filter program
@@ -924,11 +947,11 @@ INPUT_FILTER           =
 # need to set EXTENSION_MAPPING for the extension otherwise the files are not
 # properly processed by doxygen.
 
-FILTER_PATTERNS        = "*.msg=./doc/scripts/msg2dox.py" \
-                         "*.srv=./doc/scripts/srv2dox.py" \
-                         "*.action=./doc/scripts/action2dox.py" \
-                         "*.csv=./doc/scripts/csv2dox.py" \
-                         "*.puml=./doc/scripts/puml2dox.py"
+FILTER_PATTERNS        = "*.msg=$(SOURCE_PATH)/doc/scripts/msg2dox.py" \
+                         "*.srv=$(SOURCE_PATH)/doc/scripts/srv2dox.py" \
+                         "*.action=$(SOURCE_PATH)/doc/scripts/action2dox.py" \
+                         "*.csv=.$(SOURCE_PATH)/doc/scripts/csv2dox.py" \
+                         "*.puml=$(SOURCE_PATH)/doc/scripts/puml2dox.py"
 
 # If the FILTER_SOURCE_FILES tag is set to YES, the input filter (if set using
 # INPUT_FILTER) will also be used to filter the input files that are used for
@@ -1125,7 +1148,8 @@ HTML_FILE_EXTENSION    = .html
 # of the possible markers and block names see the documentation.
 # This tag requires that the tag GENERATE_HTML is set to YES.
 
-HTML_HEADER            = doc/freeflyer.header.html
+#HTML_HEADER            = doc/style/freeflyer_header.html
+HTML_HEADER            =
 
 # The HTML_FOOTER tag can be used to specify a user-defined HTML footer for each
 # generated HTML page. If the tag is left blank doxygen will generate a standard
@@ -1135,7 +1159,8 @@ HTML_HEADER            = doc/freeflyer.header.html
 # that doxygen normally uses.
 # This tag requires that the tag GENERATE_HTML is set to YES.
 
-HTML_FOOTER            =
+#HTML_FOOTER            = doc/style/freeflyer_footer.html
+HTML_FOOTER             =
 
 # The HTML_STYLESHEET tag can be used to specify a user-defined cascading style
 # sheet that is used by each HTML page. It can be used to fine-tune the look of
@@ -1160,7 +1185,8 @@ HTML_STYLESHEET        =
 # list). For an example see the documentation.
 # This tag requires that the tag GENERATE_HTML is set to YES.
 
-HTML_EXTRA_STYLESHEET  = doc/freeflyer.css
+#HTML_EXTRA_STYLESHEET  = doc/style/freeflyer.css
+HTML_EXTRA_STYLESHEET  =
 
 # The HTML_EXTRA_FILES tag can be used to specify one or more extra images or
 # other source files which should be copied to the HTML output directory. Note
@@ -1170,7 +1196,8 @@ HTML_EXTRA_STYLESHEET  = doc/freeflyer.css
 # files will be copied as-is; there are no commands or markers available.
 # This tag requires that the tag GENERATE_HTML is set to YES.
 
-HTML_EXTRA_FILES       = doc/freeflyer.js
+#HTML_EXTRA_FILES       = doc/style/freeflyer.js
+HTML_EXTRA_FILES       =
 
 # The HTML_COLORSTYLE_HUE tag controls the color of the HTML output. Doxygen
 # will adjust the colors in the style sheet and background images according to
@@ -1634,7 +1661,7 @@ EXTRA_SEARCH_MAPPINGS  =
 # If the GENERATE_LATEX tag is set to YES, doxygen will generate LaTeX output.
 # The default value is: YES.
 
-GENERATE_LATEX         = YES
+GENERATE_LATEX         = NO
 
 # The LATEX_OUTPUT tag is used to specify where the LaTeX docs will be put. If a
 # relative path is entered the value of OUTPUT_DIRECTORY will be put in front of
@@ -1668,7 +1695,7 @@ MAKEINDEX_CMD_NAME     = makeindex
 # The default value is: NO.
 # This tag requires that the tag GENERATE_LATEX is set to YES.
 
-COMPACT_LATEX          = NO
+COMPACT_LATEX          = YES
 
 # The PAPER_TYPE tag can be used to set the paper type that is used by the
 # printer.
@@ -1677,7 +1704,7 @@ COMPACT_LATEX          = NO
 # The default value is: a4.
 # This tag requires that the tag GENERATE_LATEX is set to YES.
 
-PAPER_TYPE             = a4
+PAPER_TYPE             = letter
 
 # The EXTRA_PACKAGES tag can be used to specify one or more LaTeX package names
 # that should be included in the LaTeX output. The package can be specified just
@@ -2240,7 +2267,7 @@ COLLABORATION_GRAPH    = NO
 # The default value is: YES.
 # This tag requires that the tag HAVE_DOT is set to YES.
 
-GROUP_GRAPHS           = YES
+GROUP_GRAPHS           = NO
 
 # If the UML_LOOK tag is set to YES, doxygen will generate inheritance and
 # collaboration diagrams in a style similar to the OMG's Unified Modeling
@@ -2248,7 +2275,7 @@ GROUP_GRAPHS           = YES
 # The default value is: NO.
 # This tag requires that the tag HAVE_DOT is set to YES.
 
-UML_LOOK               = NO
+UML_LOOK               = YES
 
 # If the UML_LOOK tag is enabled, the fields and methods are shown inside the
 # class node. If there are many fields or methods and many nodes the graph may
@@ -2261,7 +2288,7 @@ UML_LOOK               = NO
 # Minimum value: 0, maximum value: 100, default value: 10.
 # This tag requires that the tag HAVE_DOT is set to YES.
 
-UML_LIMIT_NUM_FIELDS   = 10
+UML_LIMIT_NUM_FIELDS   = 12
 
 # If the TEMPLATE_RELATIONS tag is set to YES then the inheritance and
 # collaboration graphs will show the relations between templates and their
@@ -2318,7 +2345,7 @@ CALLER_GRAPH           = NO
 # The default value is: YES.
 # This tag requires that the tag HAVE_DOT is set to YES.
 
-GRAPHICAL_HIERARCHY    = YES
+GRAPHICAL_HIERARCHY    = NO
 
 # If the DIRECTORY_GRAPH tag is set to YES then doxygen will show the
 # dependencies a directory has on other directories in a graphical way. The
@@ -2327,7 +2354,7 @@ GRAPHICAL_HIERARCHY    = YES
 # The default value is: YES.
 # This tag requires that the tag HAVE_DOT is set to YES.
 
-DIRECTORY_GRAPH        = YES
+DIRECTORY_GRAPH        = NO
 
 # The DOT_IMAGE_FORMAT tag can be used to set the image format of the images
 # generated by dot. For an explanation of the image formats see the section
@@ -2389,7 +2416,7 @@ DIAFILE_DIRS           =
 # generate a warning when it encounters a \startuml command in this case and
 # will not generate output for the diagram.
 
-PLANTUML_JAR_PATH      =
+PLANTUML_JAR_PATH      = $(SOURCE_PATH)/doc/diagrams/plantuml
 
 # When using plantuml, the specified paths are searched for files specified by
 # the !include statement in a plantuml block.
@@ -2406,7 +2433,7 @@ PLANTUML_INCLUDE_PATH  =
 # Minimum value: 0, maximum value: 10000, default value: 50.
 # This tag requires that the tag HAVE_DOT is set to YES.
 
-DOT_GRAPH_MAX_NODES    = 50
+DOT_GRAPH_MAX_NODES    = 80
 
 # The MAX_DOT_GRAPH_DEPTH tag can be used to set the maximum depth of the graphs
 # generated by dot. A depth value of 3 means that only nodes reachable from the

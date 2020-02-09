@@ -1,0 +1,6 @@
+<library path="lib/liblight_flow_nodelet">
+  <class name="light_flow/LightFlowNodelet" type="light_flow::LightFlowNodelet"
+         base_class_type="nodelet::Nodelet">
+    <description>Nodelet for the compiling and running Light Flow procedures</description>
+  </class>
+</library>

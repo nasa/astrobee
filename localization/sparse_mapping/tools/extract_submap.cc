@@ -1,14 +1,14 @@
 /* Copyright (c) 2017, United States Government, as represented by the
  * Administrator of the National Aeronautics and Space Administration.
- * 
+ *
  * All rights reserved.
- * 
+ *
  * The Astrobee platform is licensed under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -34,9 +34,10 @@
 #include <algorithm>
 #include <thread>
 
-// Given a map, extract a sub-map with only given images.
-// Alternatively, extract only the images with camera
-// centers in given box.
+// Given a map, extract a sub-map with only specified images.
+// Alternatively, extract only the images with given indices (first
+// image has index 0). Alternatively, extract the images with the
+// camera centers in given box.
 
 // Can be useful if the map failed to build properly, but parts of it
 // are still salvegeable. Those can be extracted, new small maps can
@@ -48,48 +49,103 @@
 // submaps are easier to merge.
 
 // Usage:
-// extract_submaps -input_map <input map> -output_map <output map> <images to keep>
+// extract_submap -input_map <input map> -output_map <output map> <images to keep>
+//
+// extract_submap -input_map <input map> -output_map <output map> -image_list <file>
+// or
+// extract_submap -input_map <input map> -output_map <output map> -exclude <images to exclude>
+// or
+// extract_submap -input_map <input map> -output_map <output map> -cid_range "min_cid max_cid"
 // or:
-// extract_submaps -input_map <input map> -output_map <output map> -xyz_box "xmin xmax ymin ymax zmin zmax"
+// extract_submap -input_map <input map> -output_map <output map> -xyz_box "xmin xmax ymin ymax zmin zmax"
 
 DEFINE_string(input_map, "",
-              "The input map to use.");
+              "Input map.");
 
 DEFINE_string(output_map, "",
-              "Output file containing the extracted map.");
+              "Output map.");
+
+DEFINE_string(cid_range, "",
+              "Keep only the images with indices in this range (inclusive at both ends).");
 
 DEFINE_string(xyz_box, "",
-              "Output file containing the extracted map.");
+              "Keep only the images with the camera center in this box. "
+              "Use the format: 'xmin xmax ymin ymax zmin zmax'.");
+
+DEFINE_string(image_list, "",
+              "Instead of the images being specified on the command line, "
+              "read them from a file (one per line).");
 
 DEFINE_bool(skip_bundle_adjustment, false,
-            "If specified, in the format xmin xmax ymin ymax zmin zmax, "
-            "extract the images with camera center in this box.");
+            "Skip performing bundle adjustment on the extracted submap.");
+
+DEFINE_bool(exclude, false,
+            "Extract the images not provided as input, which is the "
+            "opposite of the default behavior.");
 
 int main(int argc, char** argv) {
   common::InitFreeFlyerApplication(&argc, &argv);
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
-  if ((argc <= 1 && FLAGS_xyz_box == "") || FLAGS_input_map == "" || FLAGS_output_map == "") {
+  if ((argc <= 1 && FLAGS_cid_range == "" && FLAGS_xyz_box == "" && FLAGS_image_list == "") ||
+      FLAGS_input_map == "" || FLAGS_output_map == "") {
     LOG(INFO) << "Usage: " << argv[0]
-              << " -input_map <input map> -output_map <output map> [ <images to keep> ] "
-              << "[ -xyz_box str]";
+              << " -input_map <input map> -output_map <output map> [ -exclude ] [ <images> ] "
+              << "[ -image_list ] [ -cid_range 'beg end' ] "
+              << "[ -xyz_box 'xmin xmax ymin ymax zmin zmax' ]";
     return 0;
+  }
+
+  std::vector<std::string> images;
+  if (FLAGS_image_list == "") {
+    // Get the images from the command line
+    for (int i = 1; i < argc; i++)
+      images.push_back(argv[i]);
+  } else {
+    // Get the images from a file
+    std::string image;
+    std::ifstream image_handle(FLAGS_image_list);
+    while (image_handle >> image)
+      images.push_back(image);
   }
 
   // Start with the output being the same as the input
   sparse_mapping::SparseMap out(FLAGS_input_map);
 
   std::vector<std::string> images_to_keep;
-  for (int i = 1; i < argc; i++) {
-    images_to_keep.push_back(argv[i]);
-  }
+  if (FLAGS_cid_range == "" && FLAGS_xyz_box == "") {
+    if (!FLAGS_exclude) {
+      images_to_keep = images;
+    } else {
+      // Exclude the specified images
+      std::set<std::string> exclude;
+      for (size_t it = 0; it < images.size(); it++)
+        exclude.insert(images[it]);
+      for (size_t cid = 0; cid < out.cid_to_filename_.size(); cid++) {
+        if (exclude.find(out.cid_to_filename_[cid]) == exclude.end())
+          images_to_keep.push_back(out.cid_to_filename_[cid]);
+      }
+    }
+  } else if (FLAGS_cid_range != "") {
+    // Keep the images in the given cid range
+    std::istringstream is(FLAGS_cid_range);
+    size_t min_cid, max_cid;
+    if (!(is >> min_cid >> max_cid)) {
+        LOG(FATAL) << "Could not parse the cid range.";
+    }
 
-  // Alternatively, extract images form this box
-  if (FLAGS_xyz_box != "") {
+    images_to_keep.clear();
+    for (size_t cid = 0; cid < out.cid_to_filename_.size(); cid++) {
+      if (cid >= min_cid && cid <= max_cid) {
+        images_to_keep.push_back(out.cid_to_filename_[cid]);
+      }
+    }
+  } else if (FLAGS_xyz_box != "") {
+    // Alternatively, extract images form this box
     std::istringstream is(FLAGS_xyz_box);
     double xmin, xmax, ymin, ymax, zmin, zmax;
     if (!(is >> xmin >> xmax >> ymin >> ymax >> zmin >> zmax)) {
-      LOG(FATAL) << "Could not parse xyz box.";
+      LOG(FATAL) << "Could not parse the xyz box.";
     }
 
     images_to_keep.clear();

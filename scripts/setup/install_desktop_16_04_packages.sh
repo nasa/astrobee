@@ -45,12 +45,14 @@ then
 
   # Add these packages to the apt sources (we remove them later, so apt update succeeds)
 
-  NO_TUNNEL=0 # Set this to 1 if tunneling is not working
-
+  NO_TUNNEL=${NO_TUNNEL:-0} # Override this with 1 before invoking if the tunnel is not desired
+ 
   if [ "${NO_TUNNEL}" -eq 1 ]; then
+      echo "Getting the custom Debian without tunnel"
       sudo /bin/bash -c "echo \"deb [arch=amd64] http://astrobee.ndc.nasa.gov/software xenial main\" > $arssrc" || exit 1
       sudo /bin/bash -c "echo \"deb-src http://astrobee.ndc.nasa.gov/software xenial main\" >> $arssrc" || exit 1
   else
+      echo "Tunnelling to get the custom Debian"
       sudo /bin/bash -c "echo \"deb [arch=amd64] http://127.0.0.1:8765/software xenial main\" > $arssrc" || exit 1
       sudo /bin/bash -c "echo \"deb-src http://127.0.0.1:8765/software xenial main\" >> $arssrc" || exit 1
       ssh -N -L 8765:astrobee.ndc.nasa.gov:80 ${username}m.ndc.nasa.gov &

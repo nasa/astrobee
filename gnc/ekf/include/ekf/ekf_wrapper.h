@@ -91,7 +91,11 @@ class EkfWrapper {
    * Resets the EKF.
    **/
   bool ResetService(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res);  //NOLINT
+
+  bool ResetHandrailService(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res);
+
   /**
+
    * Initializes the bias and saves the results to a file.
    **/
   bool InitializeBiasService(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res);  //NOLINT
@@ -176,7 +180,7 @@ class EkfWrapper {
   ros::Publisher pose_pub_, twist_pub_;
   ros::Publisher reset_pub_;
   tf2_ros::TransformBroadcaster transform_pub_;
-  ros::ServiceServer reset_srv_, bias_srv_, input_mode_srv_;
+  ros::ServiceServer reset_srv_, bias_srv_, input_mode_srv_, reset_hr_srv_;
 
   /** Threading **/
 
@@ -185,6 +189,7 @@ class EkfWrapper {
   std::mutex mutex_imu_msg_;
   std::mutex mutex_of_msg_;
   std::mutex mutex_vl_msg_;
+  std::mutex mutex_dl_msg_;
   std::mutex mutex_truth_msg_;
 
   // cv to wait for an imu reading

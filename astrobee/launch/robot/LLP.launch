@@ -39,6 +39,8 @@
           name="llp_pmc" output="$(arg output)"/>
     <node pkg="nodelet" type="nodelet" args="manager"
           name="llp_imu" output="$(arg output)"/>
+    <node pkg="nodelet" type="nodelet" args="manager"
+          name="llp_lights" output="$(arg output)"/>
   </group>
 
   <!-- Launch GNC nodes -->
@@ -145,16 +147,29 @@
       <arg name="debug" value="$(arg debug)" />
       <arg name="default" value="true" />
     </include>
+<!--
     <include file="$(find ff_util)/launch/ff_nodelet.launch">
-      <arg name="class" value="signal_lights/SignalLightNodelet" />
+      <arg name="class" value="signal_lights/SignalLightsNodelet" />
       <arg name="name" value="signal_lights" />
-      <arg name="manager" value="llp_i2c" />
+      <arg name="manager" value="llp_lights" />
       <arg name="spurn" value="$(arg spurn)" />
       <arg name="nodes" value="$(arg nodes)" />
       <arg name="extra" value="$(arg extra)" />
       <arg name="debug" value="$(arg debug)" />
-      <arg name="default" value="false" />
+      <arg name="default" value="true" />
     </include>
+
+    <include file="$(find ff_util)/launch/ff_nodelet.launch">
+      <arg name="class" value="light_flow/LightFlowNodelet" />
+      <arg name="name" value="light_flow" />
+      <arg name="manager" value="llp_lights" />
+      <arg name="spurn" value="$(arg spurn)" />
+      <arg name="nodes" value="$(arg nodes)" />
+      <arg name="extra" value="$(arg extra)" />
+      <arg name="debug" value="$(arg debug)" />
+      <arg name="default" value="true" />
+    </include>
+-->
     <include file="$(find ff_util)/launch/ff_nodelet.launch">
       <arg name="class" value="speed_cam/SpeedCamNode" />
       <arg name="name" value="speed_cam" />

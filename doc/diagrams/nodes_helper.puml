@@ -2,34 +2,7 @@
 ' Some macros to add condinationaly nodes depending on the desired configuration
 '
 
-' Common color scheme for node "roles"
-!define COLOR_MOB #YellowGreen
-!define COLOR_LOC #Thistle
-!define COLOR_MGT #GoldenRod
-!define COLOR_GNC #SandyBrown
-!define COLOR_COM #LightSalmon
-!define COLOR_DRV #PowderBlue
-
-' Common colors scheme for the type of interfaces
-skinparam interface {
-  borderColor<<action>> #Tomato
-  backgroundColor<<action>> #LightPink
-  borderColor<<service>> #LimeGreen
-  backgroundColor<<service>> #PaleGreen
-  borderColor<<msg>> #DarkBlue
-  backgroundColor<<msg>> #AliceBlue
-  borderColor<<latching_msg>> #LightBlue
-  backgroundColor<<latching_msg>> #MidnightBlue
-}
-
-!ifdef SHOW_ALL_TYPES
-!define SHOW_DRV true
-!define SHOW_MGT true
-!define SHOW_COM true
-!define SHOW_GNC true
-!define SHOW_MOB true
-!define SHOW_LOC true
-!endif
+!include "common.puml"
 
 !definelong start_manager(name)
 !ifdef SHOW_MANAGERS

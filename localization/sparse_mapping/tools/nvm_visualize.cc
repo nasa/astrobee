@@ -452,7 +452,7 @@ int main(int argc, char** argv) {
 
   camera::CameraParameters camera_param = map.GetCameraParameters();
 
-  int cid = 0;
+  int cid = FLAGS_first;
   int num_images = map.GetNumFrames();
   while (1) {
     if (FLAGS_jump_to_3d_view)

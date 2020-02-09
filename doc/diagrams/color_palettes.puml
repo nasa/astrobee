@@ -1,0 +1,52 @@
+@startuml
+
+!include "colors.puml"
+
+skinparam component {
+    borderColor BLACK
+}
+
+package 6PASTEL {
+    [6 Pastel #1] COLOR_6PASTEL_1
+    [6 Pastel #2] COLOR_6PASTEL_2
+    [6 Pastel #3] COLOR_6PASTEL_3
+    [6 Pastel #4] COLOR_6PASTEL_4
+    [6 Pastel #5] COLOR_6PASTEL_5
+    [6 Pastel #6] COLOR_6PASTEL_6
+
+}
+
+package 6DARK {
+    [6 Dark #1] COLOR_6DARK_1
+    [6 Dark #2] COLOR_6DARK_2
+    [6 Dark #3] COLOR_6DARK_3
+    [6 Dark #4] COLOR_6DARK_4
+    [6 Dark #5] COLOR_6DARK_5
+    [6 Dark #6] COLOR_6DARK_6
+}
+
+package 9PASTEL {
+    [9 Pastel #1] COLOR_9PASTEL_1
+    [9 Pastel #2] COLOR_9PASTEL_2
+    [9 Pastel #3] COLOR_9PASTEL_3
+    [9 Pastel #4] COLOR_9PASTEL_4
+    [9 Pastel #5] COLOR_9PASTEL_5
+    [9 Pastel #6] COLOR_9PASTEL_6
+    [9 Pastel #7] COLOR_9PASTEL_7
+    [9 Pastel #8] COLOR_9PASTEL_8
+    [9 Pastel #9] COLOR_9PASTEL_9
+}
+
+package 9SETONE {
+    [9 Setone #1] COLOR_9SETONE_1
+    [9 Setone #2] COLOR_9SETONE_2
+    [9 Setone #3] COLOR_9SETONE_3
+    [9 Setone #4] COLOR_9SETONE_4
+    [9 Setone #5] COLOR_9SETONE_5
+    [9 Setone #6] COLOR_9SETONE_6
+    [9 Setone #7] COLOR_9SETONE_7
+    [9 Setone #8] COLOR_9SETONE_8
+    [9 Setone #9] COLOR_9SETONE_9
+}
+
+@enduml

@@ -21,8 +21,11 @@
 namespace sys_monitor {
 SysMonitor::SysMonitor() :
   ff_util::FreeFlyerNodelet(NODE_SYS_MONITOR, false),
+  time_diff_node_("ekf"),
+  time_diff_fault_triggered_(false),
   pub_queue_size_(10),
-  sub_queue_size_(100) {
+  sub_queue_size_(100),
+  time_drift_thres_sec_(0.25) {
 }
 
 SysMonitor::~SysMonitor() {
@@ -165,6 +168,31 @@ void SysMonitor::HeartbeatCallback(ff_msgs::HeartbeatConstPtr const& hb) {
     if (wd->hb_fault_occurring()) {
       wd->hb_fault_occurring(false);
       RemoveFault(wd->fault_id());
+    }
+
+    // Check time drift, use time in ekf heartbeat
+    if (hb->node == time_diff_node_) {
+      float time_diff_sec = (ros::Time::now() - hb->header.stamp).toSec();
+      PublishTimeDiff(time_diff_sec);
+      // Check if time difference is great than threshold. If it is, trigger
+      // fault
+      if (abs(time_diff_sec) > time_drift_thres_sec_) {
+        if (!time_diff_fault_triggered_) {
+          std::string key = ff_util::fault_keys[ff_util::TIME_DIFF_TOO_HIGH];
+          unsigned int id = faults_[key];
+          AddFault(id, ("Time diff is: " +
+                        std::to_string(abs(time_diff_sec))));
+          PublishFaultResponse(id);
+          time_diff_fault_triggered_ = true;
+        }
+      } else {
+        if (time_diff_fault_triggered_) {
+          std::string key = ff_util::fault_keys[ff_util::TIME_DIFF_TOO_HIGH];
+          unsigned int id = faults_[key];
+          RemoveFault(id);
+          time_diff_fault_triggered_ = false;
+        }
+      }
     }
 
     // Get last heartbeat for fault comparison
@@ -325,6 +353,11 @@ void SysMonitor::Initialize(ros::NodeHandle *nh) {
                                             pub_queue_size_,
                                             true);
 
+  pub_time_diff_ = nh_.advertise<ff_msgs::TimeDiffStamped>(
+                                        TOPIC_MANAGEMENT_SYS_MONITOR_TIME_DIFF,
+                                        pub_queue_size_,
+                                        false);
+
   fault_state_.state = ff_msgs::FaultState::FUNCTIONAL;
 
 
@@ -465,6 +498,13 @@ void SysMonitor::PublishHeartbeat(bool initialization_fault) {
   pub_heartbeat_.publish(heartbeat_);
 }
 
+void SysMonitor::PublishTimeDiff(float time_diff_sec) {
+  ff_msgs::TimeDiffStamped time_diff_msg;
+  time_diff_msg.header.stamp = ros::Time::now();
+  time_diff_msg.time_diff_sec = time_diff_sec;
+  pub_time_diff_.publish(time_diff_msg);
+}
+
 void SysMonitor::StartupTimerCallback(ros::TimerEvent const& te) {
   for (auto it = watch_dogs_.begin(); it != watch_dogs_.end(); ++it) {
     if (!it->second->heartbeat_started()) {
@@ -497,8 +537,19 @@ bool SysMonitor::ReadParams() {
   }
 
   if (!config_params_.GetUInt("heartbeat_pub_rate_sec", &heartbeat_pub_rate_)) {
-    NODELET_WARN("Unable to read heartbeat pub ratte.");
+    NODELET_WARN("Unable to read heartbeat pub rate.");
     heartbeat_pub_rate_ = 5;
+  }
+
+  if (!config_params_.GetStr("time_diff_node", &time_diff_node_)) {
+    NODELET_WARN("Unable to read time diff node name.");
+    time_diff_node_ = "ekf";
+  }
+
+  if (!config_params_.GetPosReal("time_drift_thres_sec",
+                                                      &time_drift_thres_sec_)) {
+    NODELET_WARN("Unable to read time drift threshold.");
+    time_drift_thres_sec_ = 0.25;
   }
 
   // Get the list of nodes not running so that we don't monitor or trigger the

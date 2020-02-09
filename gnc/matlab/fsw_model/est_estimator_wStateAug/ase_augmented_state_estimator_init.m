@@ -68,8 +68,8 @@ ase_pos_vec                     = single(0*1.0e+06*[-2.6922, -4.2987, 3.8541]); 
 %% Noise Parameters              
 
 % Handrail Depth Sensor Errors
-ase_hr_distance_r               = 0.01;                                     % [meters]
-ase_hr_r_mag                    = 0.005;                                    % [meters]
+% ase_hr_distance_r               = 0.01;                                     % [meters]
+% ase_hr_r_mag  = 0.005;  % Moved to tunable parameters, see tun_ase_hr_r_mag
 
  %% Measurments
 ase_H                           = single([eye(4) zeros(4,12);zeros(3,13), eye(3)]);

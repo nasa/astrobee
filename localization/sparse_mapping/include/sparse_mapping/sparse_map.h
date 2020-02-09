@@ -58,6 +58,7 @@ void InitializeCidFidToPid(int num_cid,
  **/
 bool Localize(cv::Mat const& test_descriptors,
               Eigen::Matrix2Xd const& test_keypoints,
+              camera::CameraParameters const& camera_params,
               camera::CameraModel* pose,
               std::vector<Eigen::Vector3d>* inlier_landmarks,
               std::vector<Eigen::Vector2d>* inlier_observations,
@@ -68,9 +69,11 @@ bool Localize(cv::Mat const& test_descriptors,
               int num_similar,
               std::vector<std::string> const& cid_to_filename,
               std::vector<cv::Mat> const& cid_to_descriptor_map,
+              std::vector<Eigen::Matrix2Xd > const& cid_to_keypoint_map,
               std::vector<std::map<int, int> > const& cid_fid_to_pid,
               std::vector<Eigen::Vector3d> const& pid_to_xyz,
-              int num_ransac_iterations, int ransac_inlier_tolerance);
+              int num_ransac_iterations, int ransac_inlier_tolerance,
+              int early_break_landmarks);
 
 /**
  * A class representing a sparse map, which consists of a collection
@@ -201,6 +204,10 @@ struct SparseMap {
    **/
   int GetRansacInlierTolerance(void) const {return ransac_inlier_tolerance_;}
   /**
+   * Set the number of early break landmarks, when to stop in adding landmarks when localizing.
+   **/
+  void SetEarlyBreakLandmarks(int num_landmarks) {early_break_landmarks_ = num_landmarks;}
+  /**
    * Return the parameters of the camera used to construct the map.
    **/
   camera::CameraParameters GetCameraParameters(void) const {return camera_params_;}
@@ -267,6 +274,7 @@ struct SparseMap {
   int num_similar_;
   int num_ransac_iterations_;
   int ransac_inlier_tolerance_;
+  int early_break_landmarks_;
 
   // e.g, 10th db image is 3rd image in cid_to_filename_
   std::map<int, int> db_to_cid_map_;

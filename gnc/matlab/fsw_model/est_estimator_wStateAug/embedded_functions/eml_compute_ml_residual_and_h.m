@@ -15,8 +15,14 @@
 % License for the specific language governing permissions and limitations
 % under the License.
 
-function [r_out, error_out, H_out, R_mat, numFeatures, mahal_dists] = eml_compute_ml_residual_and_h(ase_inv_focal_length, ase_distortion, ml_P_cam_ISS_ISS, ml_quat_ISS2cam, is_converged, omega, velocity, L, O, valid, P_in, mahal_distance_max, ase_min_ml_meas_tested, ase_of_num_aug, ase_ml_num_features, ase_vis_r_mag, ase_map_error, abp_q_body2cam, ase_ml_forward_projection_time, ML_update, ase_vis_r_mag_AR)
+function [r_out, error_out, H_out, R_mat, numFeatures, mahal_dists] = eml_compute_ml_residual_and_h(ase_inv_focal_length, ase_distortion, ml_P_cam_ISS_ISS, ml_quat_ISS2cam, is_converged, omega, velocity, L, O, valid, P_in, mahal_distance_max, ase_min_ml_meas_tested, ase_min_ar_meas, ase_of_num_aug, ase_ml_num_features, ase_vis_r_mag, ase_map_error, abp_q_body2cam, ase_ml_forward_projection_time, ML_update, ase_vis_r_mag_AR, max_mahal_reject_frames)
 %#codegen
+  persistent num_consecutive_rejected_meas  
+  if isempty(num_consecutive_rejected_meas)
+      num_consecutive_rejected_meas = 0;
+  end
+  
+  
   O = O(logical(valid), :);
   L = L(logical(valid), :);
   O = O .* ase_inv_focal_length;
@@ -73,17 +79,22 @@ function [r_out, error_out, H_out, R_mat, numFeatures, mahal_dists] = eml_comput
     if ML_update 
         % make the confidence depend on mapped landmarked error which is function
         % of distance
-        r_vec(i*2-1:i*2) = single(ase_map_error ./ camera_landmarks(3, i)' + [f1; f2] * ase_vis_r_mag + omega_error(i*2-1:i*2)) .^ 2;
+        r_vec(i*2-1:i*2) = single([f1; f2] .* (ase_map_error ./ camera_landmarks(3, i)' + ase_vis_r_mag + omega_error(i*2-1:i*2))) .^ 2;
     else % AR update
-        r_vec(i*2-1:i*2) = single( [f1; f2] * ase_vis_r_mag_AR + omega_error(i*2-1:i*2)) .^ 2;
+        r_vec(i*2-1:i*2) = single( [f1; f2] .* (ase_vis_r_mag_AR + omega_error(i*2-1:i*2))) .^ 2;
     end
   end
   %r_out = zeros(size(L, 1),1);
   mahal_dists = nan(ase_ml_num_features,1);
   
   num_original = size(r, 1);
-  % only ignore observations that don't match if we are converged
-  if is_converged && ML_update
+  % only ignore observations via Malanobis check in the following
+  % conditions:
+  %  1. The estimator is converged
+  %  2. The estiamtor is performing a ML update
+  %  3. The mahalanobis check hasn't previously rejected the maximum number
+  %  of consecutive frame allowed to be rejected set via tun_max_mahal_reject_frames
+  if is_converged && ML_update && (num_consecutive_rejected_meas < max_mahal_reject_frames)
 %     S = H*P_in(16:21, 16:21)*H';
 %     for i=1:size(S, 1)
 %       S(i, i) = S(i, i) + r_vec(i);
@@ -108,15 +119,25 @@ function [r_out, error_out, H_out, R_mat, numFeatures, mahal_dists] = eml_comput
   end
   
   numFeatures = uint8(size(r, 1)/2);
-  % toss if not enough measurements
-  if size(r, 1)/2 < ase_min_ml_meas_tested || size(r, 1) < num_original / 2
+  if ML_update 
+      min_features = ase_min_ml_meas_tested; % Sparse map update
+  else
+      min_features = ase_min_ar_meas; % AR update
+  end
+  
+  % toss if not enough measurements, (Mahalanobis check removed all valid features)
+  % features
+  if size(r, 1)/2 < min_features || size(r, 1) < num_original / 2
     numFeatures = uint8(0);
     error_out = int32(1);
     total_num_states = 21 + (ase_of_num_aug*6); 
     r_out = ones(6, 1, 'single');
     H_out = eye(6, total_num_states, 'single');
     R_mat = eye(6, 6, 'single');
+    num_consecutive_rejected_meas = num_consecutive_rejected_meas+1;
     return;
+  else
+      num_consecutive_rejected_meas = 0;
   end
 
   

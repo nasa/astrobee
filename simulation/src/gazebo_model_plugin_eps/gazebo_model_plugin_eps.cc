@@ -242,28 +242,28 @@ class GazeboModelPluginEps : public FreeFlyerModelPlugin {
     state_tl_.present = sdf->Get<bool>("battery_top_left");
     state_tl_.capacity = battery_capacity_;
     state_tl_.charge = battery_charge_;
-    state_tl_.percentage = state_tl_.charge / state_tl_.capacity * 100.0;
+    state_tl_.percentage = state_tl_.charge / state_tl_.capacity;
     battery_state_pub_tl_.publish(state_tl_);
     state_tr_.header.stamp = ros::Time::now();
     state_tr_.location = ff_hw_msgs::EpsBatteryLocation::TOP_RIGHT;
     state_tr_.present = sdf->Get<bool>("battery_top_right");
     state_tr_.capacity = battery_capacity_;
     state_tr_.charge = battery_charge_;
-    state_tr_.percentage = state_tr_.charge / state_tl_.capacity * 100.0;
+    state_tr_.percentage = state_tr_.charge / state_tl_.capacity;
     battery_state_pub_tr_.publish(state_tr_);
     state_bl_.header.stamp = ros::Time::now();
     state_bl_.location = ff_hw_msgs::EpsBatteryLocation::BOTTOM_LEFT;
     state_bl_.present = sdf->Get<bool>("battery_bottom_left");
     state_bl_.capacity = battery_capacity_;
     state_bl_.charge = battery_charge_;
-    state_bl_.percentage = state_bl_.charge / state_bl_.capacity * 100.0;
+    state_bl_.percentage = state_bl_.charge / state_bl_.capacity;
     battery_state_pub_bl_.publish(state_bl_);
     state_br_.header.stamp = ros::Time::now();
     state_br_.location = ff_hw_msgs::EpsBatteryLocation::BOTTOM_RIGHT;
     state_br_.present = sdf->Get<bool>("battery_bottom_right");
     state_br_.capacity = battery_capacity_;
     state_br_.charge = battery_charge_;
-    state_br_.percentage = state_br_.charge /state_br_.capacity * 100.0;
+    state_br_.percentage = state_br_.charge /state_br_.capacity;
     battery_state_pub_br_.publish(state_br_);
     // Set default values for housekeeping
     housekeeping_["AGND1_V"] = 0.0000;
@@ -427,16 +427,19 @@ class GazeboModelPluginEps : public FreeFlyerModelPlugin {
     // Iterate over the berths to check if any are within a threshold distance.
     // There are smarter ways to do this sort of search (kNN) but this we are
     // only expecting fewer than 6 berths, it seems like needless optimization.
+    bool near = false;
     for (nearest_ = berths_.begin(); nearest_ != berths_.end(); nearest_++) {
       if (GetModel()->GetWorldPose().Ign().Pos().Distance(
         nearest_->second.Pos()) > distance_) continue;
       // Now, send an event to the FSM to signal that we are close!
       fsm_.Update(SENSE_NEAR);
       // There should always only be one dock that we are close to
+      near = true;
       break;
     }
+
     // Send an FAR event if we aren't close to any berth
-    if (nearest_ == berths_.end())
+    if (!near)
       fsm_.Update(SENSE_FAR);
     // Whatever the result, publish the dock state to be used by other entites
     // in the system, and in particular the dock procedure.
@@ -569,7 +572,7 @@ class GazeboModelPluginEps : public FreeFlyerModelPlugin {
       if (state_tl_.charge < 0) {
         state_tl_.charge = battery_charge_;
       }
-      state_tl_.percentage = state_tl_.charge / state_tl_.capacity * 100.0;
+      state_tl_.percentage = state_tl_.charge / state_tl_.capacity;
     }
     // Always publish every battery state regardless if it is present or not
     // since the actual eps driver does this
@@ -581,7 +584,7 @@ class GazeboModelPluginEps : public FreeFlyerModelPlugin {
       if (state_tr_.charge < 0) {
         state_tr_.charge = battery_charge_;
       }
-      state_tr_.percentage = state_tr_.charge / state_tr_.capacity * 100.0;
+      state_tr_.percentage = state_tr_.charge / state_tr_.capacity;
     }
     state_tr_.header = header;
     battery_state_pub_tr_.publish(state_tr_);
@@ -591,7 +594,7 @@ class GazeboModelPluginEps : public FreeFlyerModelPlugin {
       if (state_bl_.charge < 0) {
         state_bl_.charge = battery_charge_;
       }
-      state_bl_.percentage = state_bl_.charge / state_bl_.capacity * 100.0;
+      state_bl_.percentage = state_bl_.charge / state_bl_.capacity;
     }
     state_bl_.header = header;
     battery_state_pub_bl_.publish(state_bl_);
@@ -601,7 +604,7 @@ class GazeboModelPluginEps : public FreeFlyerModelPlugin {
       if (state_br_.charge < 0) {
         state_br_.charge = battery_charge_;
       }
-      state_br_.percentage = state_br_.charge / state_br_.capacity * 100.0;
+      state_br_.percentage = state_br_.charge / state_br_.capacity;
     }
     state_br_.header.stamp = ros::Time::now();
     battery_state_pub_br_.publish(state_br_);

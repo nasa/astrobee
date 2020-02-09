@@ -36,6 +36,8 @@
 #include <ff_msgs/ArmStateStamped.h>
 #include <ff_msgs/JointSampleStamped.h>
 #include <ff_msgs/SetState.h>
+#include <ff_hw_msgs/SetEnabled.h>
+#include <ff_hw_msgs/CalibrateGripper.h>
 
 /**
  * \ingroup beh
@@ -44,6 +46,14 @@ namespace arm {
 
 // Different joint types
 enum JointType { PAN, TILT, GRIPPER };
+
+// Perching arm servos to enable / disable
+  enum ServoID {
+    PROXIMAL_SERVO,           // Proximal joint servo
+    DISTAL_SERVO,             // Distal joint servo
+    GRIPPER_SERVO,            // Gripper joint servo
+    ALL_SERVOS          // Proximal, Distal and Gripper servos
+  };
 
 // Joint information, where HUMAN = SCALE * DRIVER + OFFSET
 struct JointInfo {
@@ -78,11 +88,12 @@ class ArmNodelet : public ff_util::FreeFlyerNodelet {
     GOAL_STOW          = (1<<4),     // Start a new deploy action
     GOAL_MOVE          = (1<<5),     // Start a new move (pan and tilt)
     GOAL_SET           = (1<<6),     // Start a new gripper action
-    GOAL_CANCEL        = (1<<7),     // Cancel the current goal
-    PAN_COMPLETE       = (1<<8),     // Pan complete
-    TILT_COMPLETE      = (1<<9),     // Tilt complete
-    GRIPPER_COMPLETE   = (1<<10),    // Gripper action complete
-    TIMEOUT            = (1<<11)     // Current action doesn't complete in time
+    GOAL_DISABLE       = (1<<7),     // Disable the servos
+    GOAL_CANCEL        = (1<<8),     // Cancel the current goal
+    PAN_COMPLETE       = (1<<9),     // Pan complete
+    TILT_COMPLETE      = (1<<10),    // Tilt complete
+    GRIPPER_COMPLETE   = (1<<11),    // Gripper action complete
+    TIMEOUT            = (1<<12)     // Current action doesn't complete in time
   };
 
   // Constructor
@@ -94,6 +105,9 @@ class ArmNodelet : public ff_util::FreeFlyerNodelet {
     fsm_.Add(STATE::INITIALIZING,
       READY,
       [this](FSM::Event const& event) -> FSM::State {
+        ROS_DEBUG("[Arm] INITIALIZING, Enabling servos");
+        if (!EnableServo(ALL_SERVOS, true))
+          return Result(RESPONSE::ENABLE_FAILED);
         return STATE::UNKNOWN;
       });
 
@@ -102,6 +116,7 @@ class ArmNodelet : public ff_util::FreeFlyerNodelet {
     fsm_.Add(STATE::UNKNOWN,
       STOWED,
       [this](FSM::Event const& event) -> FSM::State {
+        ROS_DEBUG("[Arm] STOWED STATE");
         return STATE::STOWED;
       });
 
@@ -110,6 +125,7 @@ class ArmNodelet : public ff_util::FreeFlyerNodelet {
     fsm_.Add(STATE::UNKNOWN,
       DEPLOYED,
       [this](FSM::Event const& event) -> FSM::State {
+        ROS_DEBUG("[Arm] DEPLOYED STATE");
         return STATE::DEPLOYED;
       });
 
@@ -119,6 +135,14 @@ class ArmNodelet : public ff_util::FreeFlyerNodelet {
       DEPLOYED,
       [this](FSM::Event const& event) -> FSM::State {
         return STATE::DEPLOYED;
+      });
+
+    fsm_.Add(STATE::STOWED,
+      GOAL_DISABLE,
+      [this](FSM::Event const& event) -> FSM::State {
+        if (!EnableServo(ALL_SERVOS, false))
+          return Result(RESPONSE::DISABLE_FAILED);
+        return Result(RESPONSE::SUCCESS);
       });
 
     // DEPLOYED -> STOWED
@@ -162,11 +186,38 @@ class ArmNodelet : public ff_util::FreeFlyerNodelet {
     fsm_.Add(STATE::DEPLOYED,
       GOAL_STOW,
       [this](FSM::Event const& event) -> FSM::State {
-        // If the gripper requires closing
+        goal_stow_ = true;
+        goal_set_ = false;
+        if (!calibrated_) {
+           if (!CalibrateGripper())
+            return Result(RESPONSE::CALIBRATE_FAILED);
+          return STATE::CALIBRATING;
+        } else {
+          if (RequiresClosing()) {
+            if (!Arm(GRIPPER))
+              return Result(RESPONSE::GRIPPER_FAILED);
+            return STATE::STOWING_SETTING;
+          }
+          if (!Arm(PAN))
+            return Result(RESPONSE::PAN_FAILED);
+          return STATE::STOWING_PANNING;
+        }
+      });
+
+    fsm_.Add(STATE::CALIBRATING,
+      GRIPPER_COMPLETE,
+      [this](FSM::Event const& event) -> FSM::State {
         if (RequiresClosing()) {
-          if (!Arm(GRIPPER))
+          if (!Arm(GRIPPER)) {
             return Result(RESPONSE::GRIPPER_FAILED);
-          return STATE::STOWING_SETTING;
+          }
+          // Check which step we were at when asking for calibration
+          if (goal_stow_)
+            return STATE::STOWING_SETTING;
+          else if (goal_set_)
+            return STATE::SETTING;
+          else   // We don't know where we were, return error
+            return Result(RESPONSE::NO_GOAL);
         }
         if (!Arm(PAN))
           return Result(RESPONSE::PAN_FAILED);
@@ -277,9 +328,17 @@ class ArmNodelet : public ff_util::FreeFlyerNodelet {
     fsm_.Add(STATE::DEPLOYED,
       GOAL_SET,
       [this](FSM::Event const& event) -> FSM::State {
-        if (!Arm(GRIPPER))
-          return Result(RESPONSE::GRIPPER_FAILED);
-        return STATE::SETTING;
+        goal_stow_ = false;
+        goal_set_ = true;
+        if (!calibrated_) {
+           if (!CalibrateGripper())
+            return Result(RESPONSE::CALIBRATE_FAILED);
+          return STATE::CALIBRATING;
+        } else {
+          if (!Arm(GRIPPER))
+            return Result(RESPONSE::GRIPPER_FAILED);
+          return STATE::SETTING;
+        }
       });
 
     // SETTING -> DEPLOYED
@@ -361,6 +420,22 @@ class ArmNodelet : public ff_util::FreeFlyerNodelet {
     pub_joint_goals_ = nh->advertise<sensor_msgs::JointState>(
       TOPIC_JOINT_GOALS, 1, true);
 
+    // Subscribe to Proximal Joint Servo Enabling service
+    client_enable_prox_servo_ = nh->serviceClient<ff_hw_msgs::SetEnabled>(
+      SERVICE_HARDWARE_PERCHING_ARM_PROX_SERVO);
+
+    // Subscribe to Distal Joint Servo Enabling service
+    client_enable_dist_servo_ = nh->serviceClient<ff_hw_msgs::SetEnabled>(
+      SERVICE_HARDWARE_PERCHING_ARM_DIST_SERVO);
+
+    // Subscribe to Gripper Joint Servo Enabling service
+    client_enable_grip_servo_ = nh->serviceClient<ff_hw_msgs::SetEnabled>(
+      SERVICE_HARDWARE_PERCHING_ARM_GRIP_SERVO);
+
+    // Subscribe to Proximal Joint Servo Enabling service
+    client_calibrate_gripper_ = nh->serviceClient<ff_hw_msgs::CalibrateGripper>(
+      SERVICE_HARDWARE_PERCHING_ARM_CALIBRATE);
+
     // Internal state publisher
     pub_state_ = nh->advertise<ff_msgs::ArmState>(
       TOPIC_BEHAVIORS_ARM_STATE, 1, true);
@@ -371,7 +446,7 @@ class ArmNodelet : public ff_util::FreeFlyerNodelet {
 
     // Executive state publishers
     pub_arm_state_ = nh->advertise<ff_msgs::ArmStateStamped>(
-      TOPIC_BEHAVIORS_ARM_ARM_STATE, 1, true);
+      TOPIC_BEHAVIORS_ARM_ARM_STATE, 1);
     pub_joint_sample_ = nh->advertise<ff_msgs::JointSampleStamped>(
       TOPIC_BEHAVIORS_ARM_JOINT_SAMPLE, 1);
 
@@ -438,51 +513,12 @@ class ArmNodelet : public ff_util::FreeFlyerNodelet {
     case STATE::STOWING_TILTING:   msg.fsm_state = "STOWING_TILTING";     break;
     case STATE::DEPLOYING_PANNING: msg.fsm_state = "DEPLOYING_PANNING";   break;
     case STATE::DEPLOYING_TILTING: msg.fsm_state = "DEPLOYING_TILTING";   break;
+    case STATE::CALIBRATING:       msg.fsm_state = "CALIBRATING";         break;
     }
     // Publish the state
     pub_state_.publish(msg);
     NODELET_DEBUG_STREAM("Received event " << msg.fsm_event);
     NODELET_DEBUG_STREAM("State changed to " << msg.fsm_state);
-    // Convert to an executive-formatted state, which is a reduced-complexity
-    // full state, designed for GDS visualization purposes. The gripper state
-    // is updated in parallel through gripper feedback
-    ff_msgs::ArmStateStamped state_msg;
-    state_msg.header.frame_id = GetPlatform();
-    state_msg.header.stamp = ros::Time::now();
-    // Convert our internal state to an ArmGripperState
-    double tol = joints_[GRIPPER].tol;
-    if (fabs(joints_[GRIPPER].val - K_GRIPPER_CLOSE) < tol)
-      state_msg.gripper_state.state = ff_msgs::ArmGripperState::CLOSED;
-    else
-      state_msg.gripper_state.state = ff_msgs::ArmGripperState::OPEN;
-    // Convert the internal state to an ArmJointState
-    switch (state) {
-    default:
-    case STATE::UNKNOWN:
-      state_msg.joint_state.state = ff_msgs::ArmJointState::UNKNOWN;
-      break;
-    case STATE::DEPLOYING_PANNING:
-    case STATE::DEPLOYING_TILTING:
-      state_msg.joint_state.state = ff_msgs::ArmJointState::DEPLOYING;
-      break;
-    case STATE::DEPLOYED:
-    case STATE::SETTING:
-      state_msg.joint_state.state = ff_msgs::ArmJointState::STOPPED;
-      break;
-    case STATE::PANNING:
-    case STATE::TILTING:
-      state_msg.joint_state.state = ff_msgs::ArmJointState::MOVING;
-      break;
-    case STATE::STOWING_SETTING:
-    case STATE::STOWING_PANNING:
-    case STATE::STOWING_TILTING:
-      state_msg.joint_state.state = ff_msgs::ArmJointState::STOWING;
-      break;
-    case STATE::STOWED:
-      state_msg.joint_state.state = ff_msgs::ArmJointState::STOWED;
-      break;
-    }
-    pub_arm_state_.publish(state_msg);
   }
 
   // Complete the current action
@@ -503,6 +539,8 @@ class ArmNodelet : public ff_util::FreeFlyerNodelet {
     case STATE::STOWING_TILTING:
     case STATE::DEPLOYING_PANNING:
     case STATE::DEPLOYING_TILTING:
+    case STATE::STOWED:
+    case STATE::CALIBRATING:
       send = true;
     default:
       break;
@@ -536,6 +574,14 @@ class ArmNodelet : public ff_util::FreeFlyerNodelet {
           result.fsm_result = "Cannot communicate with arm";        break;
         case ff_msgs::ArmResult::COLLISION_AVOIDED:
           result.fsm_result = "Panning disabled when tilt > 90";    break;
+        case ff_msgs::ArmResult::ENABLE_FAILED:
+          result.fsm_result = "Cannot enable the arm servos";       break;
+        case ff_msgs::ArmResult::DISABLE_FAILED:
+          result.fsm_result = "Cannot disable the arm servos";      break;
+        case ff_msgs::ArmResult::CALIBRATE_FAILED:
+          result.fsm_result = "Cannot calibrate the gripper";       break;
+        case ff_msgs::ArmResult::NO_GOAL:
+          result.fsm_result = "Unknown call to calibration";        break;
         }
       if (response > 0)
         server_.SendResult(ff_util::FreeFlyerActionState::SUCCESS, result);
@@ -597,9 +643,11 @@ class ArmNodelet : public ff_util::FreeFlyerNodelet {
     goal.name.resize(1);
     goal.position.resize(1);
     // Set the name and conver from human to low-level
-    goal.name[0] = it->second.name;
     goal.position[0] =
       (it->second.goal - it->second.offset) / it->second.scale;
+    goal.name[0] = it->second.name;
+    if (type == GRIPPER)
+      goal.position[0] -= 100.0;
     // Publish the new goal
     pub_joint_goals_.publish(goal);
     // Start a timer
@@ -613,7 +661,9 @@ class ArmNodelet : public ff_util::FreeFlyerNodelet {
 
   // Called whenever the low-level driver produces updated joint states.
   void JointStateCallback(sensor_msgs::JointState::ConstPtr const& msg) {
-    // Add the joint sample stamped
+    ///////////////////////////
+    // Send the joint sample //
+    ///////////////////////////
     ff_msgs::JointSampleStamped jss;
     jss.header.stamp = ros::Time::now();
     jss.header.frame_id = GetPlatform();
@@ -682,6 +732,13 @@ class ArmNodelet : public ff_util::FreeFlyerNodelet {
         fsm_.Update(TILT_COMPLETE);
       }
       break;
+    // Gripper wait calibrate state
+    case STATE::CALIBRATING:
+      if (Equal(GRIPPER, K_GRIPPER_OPEN)) {
+        timer_goal_.stop();
+        fsm_.Update(GRIPPER_COMPLETE);
+      }
+      break;
     // Gripper wait state
     case STATE::SETTING:
     case STATE::STOWING_SETTING:
@@ -695,9 +752,56 @@ class ArmNodelet : public ff_util::FreeFlyerNodelet {
       return;
     }
     // Publish the updated joint samples
-    pub_joint_sample_.publish(jss);
-    // Send some feedback
-    // Send the feedback if in avalid action state
+      pub_joint_sample_.publish(jss);
+    /////////////////////////
+    // Send the full state //
+    /////////////////////////
+    ff_msgs::ArmStateStamped state_msg;
+    state_msg.header.frame_id = GetPlatform();
+    state_msg.header.stamp = ros::Time::now();
+    // Convert our internal state to an ArmGripperState
+    double tol = joints_[GRIPPER].tol;
+    if (fabs(joints_[GRIPPER].val - K_GRIPPER_CLOSE) < tol)
+      state_msg.gripper_state.state = ff_msgs::ArmGripperState::CLOSED;
+    else
+      state_msg.gripper_state.state = ff_msgs::ArmGripperState::OPEN;
+    // Convert the internal state to an ArmJointState
+    switch (fsm_.GetState()) {
+    default:
+    case STATE::UNKNOWN:
+      state_msg.joint_state.state = ff_msgs::ArmJointState::UNKNOWN;
+      break;
+    case STATE::DEPLOYING_PANNING:
+    case STATE::DEPLOYING_TILTING:
+      state_msg.joint_state.state = ff_msgs::ArmJointState::DEPLOYING;
+      break;
+    case STATE::CALIBRATING:
+      if (goal_stow_)
+        state_msg.joint_state.state = ff_msgs::ArmJointState::STOWING;
+      else if (goal_set_)
+        state_msg.joint_state.state = ff_msgs::ArmJointState::STOPPED;
+      break;
+    case STATE::DEPLOYED:
+    case STATE::SETTING:
+      state_msg.joint_state.state = ff_msgs::ArmJointState::STOPPED;
+      break;
+    case STATE::PANNING:
+    case STATE::TILTING:
+      state_msg.joint_state.state = ff_msgs::ArmJointState::MOVING;
+      break;
+    case STATE::STOWING_SETTING:
+    case STATE::STOWING_PANNING:
+    case STATE::STOWING_TILTING:
+      state_msg.joint_state.state = ff_msgs::ArmJointState::STOWING;
+      break;
+    case STATE::STOWED:
+      state_msg.joint_state.state = ff_msgs::ArmJointState::STOWED;
+      break;
+    }
+    pub_arm_state_.publish(state_msg);
+    //////////////////////////
+    // Send action feedback //
+    //////////////////////////
     static ff_msgs::ArmFeedback feedback;
     switch (fsm_.GetState()) {
     case STATE::PANNING:
@@ -828,6 +932,12 @@ class ArmNodelet : public ff_util::FreeFlyerNodelet {
         return fsm_.Update(GOAL_SET);
       }
       break;
+    case ff_msgs::ArmGoal::DISABLE_SERVO:
+      NODELET_DEBUG_STREAM("Received a new DISABLE_SERVO command");
+      if (fsm_.GetState() == STATE::STOWED) {
+        return fsm_.Update(GOAL_DISABLE);
+      }
+      break;
     default:
       // Catch-all for impossible state transitions
       Result(RESPONSE::INVALID_COMMAND, true);
@@ -845,6 +955,55 @@ class ArmNodelet : public ff_util::FreeFlyerNodelet {
   // A Cancellation request arrives
   void CancelCallback() {
     return fsm_.Update(GOAL_CANCEL);
+  }
+
+  // Calibrates the Gripper (surprising!)
+  bool CalibrateGripper(void) {
+    bool success = false;
+    // CalibrateGripper callback doesn't have a request field
+    ff_hw_msgs::CalibrateGripper enable_srv;
+    timer_goal_.setPeriod(
+    ros::Duration(cfg_.Get<double>("timeout_goal")));
+    timer_goal_.start();
+    if (client_calibrate_gripper_.call(enable_srv)) {
+      success = enable_srv.response.success;
+    }
+    if (success)
+      calibrated_ = true;
+    return success;
+  }
+
+  // Enable / Disable the perching arm servos
+  bool EnableServo(ServoID servo_number, bool servo_enable) {
+    bool success = false;
+    ff_hw_msgs::SetEnabled enable_srv;
+    enable_srv.request.enabled = servo_enable;
+    switch (servo_number) {
+      case PROXIMAL_SERVO:    // Proximal
+        if (client_enable_prox_servo_.call(enable_srv))
+          success = enable_srv.response.success;
+        break;
+      case DISTAL_SERVO:      // Distal
+        if (client_enable_dist_servo_.call(enable_srv))
+          success = enable_srv.response.success;
+        break;
+      case GRIPPER_SERVO:     // Gripper
+        if (client_enable_grip_servo_.call(enable_srv))
+          success = enable_srv.response.success;
+        break;
+      case ALL_SERVOS:        // All
+        if (client_enable_prox_servo_.call(enable_srv))
+          success = enable_srv.response.success;
+        if (client_enable_dist_servo_.call(enable_srv))
+          success = success && enable_srv.response.success;
+        if (client_enable_grip_servo_.call(enable_srv))
+          success = success && enable_srv.response.success;
+        break;
+      default:
+        NODELET_WARN("Unknown servo number");
+        break;
+    }
+     return success;
   }
 
  protected:
@@ -866,6 +1025,10 @@ class ArmNodelet : public ff_util::FreeFlyerNodelet {
   ros::Publisher pub_joint_goals_;     // Joint goal publisher
   ros::Publisher pub_arm_state_;       // Executive arm state publisher
   ros::Publisher pub_joint_sample_;    // Executive joint state publisher
+  ros::ServiceClient client_enable_prox_servo_;
+  ros::ServiceClient client_enable_dist_servo_;
+  ros::ServiceClient client_enable_grip_servo_;
+  ros::ServiceClient client_calibrate_gripper_;
   // Constant vales
   static constexpr double K_PAN_OFFSET      =    0.0;
   static constexpr double K_PAN_MIN         =  -90.0;
@@ -884,6 +1047,10 @@ class ArmNodelet : public ff_util::FreeFlyerNodelet {
   static constexpr double K_GRIPPER_CLOSE   =   20.0;
   static constexpr double K_RADS_TO_DEGS    = 180.0 / M_PI;
   static constexpr double K_DEGS_TO_RADS    = M_PI / 180.0;
+
+  bool calibrated_ = false;
+  bool goal_stow_ = false;
+  bool goal_set_ = false;
 };
 
 PLUGINLIB_EXPORT_CLASS(arm::ArmNodelet, nodelet::Nodelet);

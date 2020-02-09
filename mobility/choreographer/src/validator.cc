@@ -188,7 +188,7 @@ bool Validator::SetZonesCallback(
   // Update visualization
   PublishMarkers();
   // Send result
-  res.success = false;
+  res.success = true;
   return true;
 }
 

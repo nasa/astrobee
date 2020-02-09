@@ -46,7 +46,7 @@ class WorldPluginSpeed : public WorldPlugin {
       gzwarn << "Sim speed not specified. Trying real-time." << std::endl;
       return;
     }
-    simulation_speed *= 62.5;
+    simulation_speed *= 125;
     // Set the simulation speed
     gzmsg << "Setting target update rate to " << simulation_speed << std::endl;
     physics::PhysicsEnginePtr engine = world->GetPhysicsEngine();

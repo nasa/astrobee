@@ -27,9 +27,10 @@ uint8 ARM_MOVE            = 5                 # Pan and tilt the
 uint8 GRIPPER_SET         = 6                 # Set the gripper value
 uint8 GRIPPER_OPEN        = 7                 # Open the gripper
 uint8 GRIPPER_CLOSE       = 8                 # Close the gripper
+uint8 DISABLE_SERVO       = 9                 # Disable the servos
 
 float32 pan                                   # PAN from -90 to +90
-float32 tilt                                  # TILT from -30 to +90
+float32 tilt                                  # TILT from -120 to +90
 float32 gripper                               # SET from 20 to 45
 
 ---
@@ -48,6 +49,10 @@ int32 PAN_FAILED          = -7                # Pan command failed
 int32 GRIPPER_FAILED      = -8                # Gripper command failed
 int32 COMMUNICATION_ERROR = -9                # Cannot communicate with arm
 int32 COLLISION_AVOIDED   = -10               # No panning when tilt < 90
+int32 ENABLE_FAILED       = -11               # Cannot enable the servos
+int32 DISABLE_FAILED      = -12               # Cannot disable the servos
+int32 CALIBRATE_FAILED    = -13               # Cannot calibrate the gripper
+int32 NO_GOAL             = -14               # Unknown call to calibration
 
 # Human readable FSM result for debugging
 string fsm_result

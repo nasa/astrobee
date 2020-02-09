@@ -61,3 +61,7 @@ create_tool_targets(
 )
 
 install_launch_files()
+install(FILES
+  tools/eps_aux.py
+  DESTINATION share/${PROJECT_NAME})
+

@@ -3,7 +3,8 @@
 ## About
 
 <p>
-<img src="doc/images/astrobee.png" srcset="../images/astrobee.png 1x" title="Astrobee" align="right" style="display: inline"/>
+<img src="doc/images/astrobee.png" srcset="../images/astrobee.png 1x" 
+  title="Astrobee" align="right" style="display: inline"/>
 Astrobee is a free-flying robot designed to operate as a payload inside
 the International Space Station (ISS). The Astrobee Robot Software consists of
 embedded (on-board) software, supporting tools and a simulator. The Astrobee
@@ -41,12 +42,13 @@ If you do, please see the [NASA usage instructions](NASA_INSTALL.md).
 
 The Astrobee Robot Software is open source, and we welcome contributions
 from the public. However, for us to merge any pull requests, we must request
-that contributors sign and submit a [Contributor License Agreement](https://www.nasa.gov/sites/default/files/atoms/files/astrobee_individual_contributor_license_agreement.pdf)
+that contributors sign and submit a
+[Contributor License Agreement](https://www.nasa.gov/sites/default/files/atoms/files/astrobee_individual_contributor_license_agreement.pdf)
 due to NASA legal requirements. Thank you for your understanding.
 
 ## Documentation
 
-For familiraztion with the Asrobee project, it is recommended to read some
+For familiarization with the Astrobee project, it is recommended to read some
 background papers:
 
 #### Astrobee Software Concepts
@@ -70,11 +72,10 @@ https://www.nasa.gov/sites/default/files/atoms/files/bualat_spaceops_2018_paper.
 To generate the Astrobee documentation, run the following command after checking
 out the code:
 
-    doxygen freeflyer.doxyfile
+    cd doc/diagrams && make docs
 
 The documentation will be generated in the doc/html folder. Open the index.html
 to get to the main page of the documentation.
-
 
 ## Guest Science
 
@@ -104,4 +105,3 @@ Unless required by applicable law or agreed to in writing, software distributed
 under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
 CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
-

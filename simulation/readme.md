@@ -1,5 +1,4 @@
 \defgroup sim Simulation
-\ingroup sim
 
 This package provides the code required to simulate multiple Free-Flyers operating within the International Space Station (ISS). Our code is written as plugins for Gazebo, an open source robot simulator. In essence the plugins mimic the ros messages and services provided by real hardware, and as a result they act as drop-in replacements for the true hardware. Running a simulation is therefore as simple as loading all flight software subsystems except the hardware drivers, and spawning simulated hardware in stead of real drivers.
 
@@ -110,6 +109,28 @@ If you are actively debugging Gazebo plugins then you probably want to be able t
           respawn="false" output="screen"
           args="$(arg world) --verbose -s libgazebo_system_plugin_server.so" />
 
+## Changing Simulation properties
+
+All the simulation physical details are contained in the description folder.
+
+
+**Changing the mass/inertia of the robot**
+
+    description/description/model.urdf.xacro 
+    - Here is the parent file of all details related to the Astrobee's configurations in the simulation. You can change the properties of the base robot.
+    
+    description/description/macro_perching_arm.urdf.urdf.xacro
+    - Here you can change the properties of the arm.
+
+    description/description/model_carriage.urdf.urdf.xacro
+    - When testing the simulation in the granite table, one can change the carriage properties, namely the kp, kd, mu1, mu2 and fdir
+
+Customization: mass; origin (center of mass); inertia
+
+**Changing the sensor's properties**
+    All the Plugins that are contained in this folder are called from the model .xacro files in description/description, any change in the sensor parameters should be done there (explored further in next section).
+
+    
 
 ## Under the hood
 
@@ -134,6 +155,11 @@ This simulates the dock state produced by the actual EPS. It continually checks 
     rosrun dock dock_tool -ns %ns% -dock
     rosrun dock dock_tool -ns %ns% -undock
 
+Customization: description/description/model_eps.urdf.xacro
+    rate:     Rate at which dock state checked
+    distance: Threshold distance for magnetism
+    delay:    Delay between contact and docking
+
 **Flashlight plugin**
 
 This simulates front and aft facing flashlights. Unfortunately, Gazebo doesn't support model-fixed flashlights. So, for each flashlight a free-floating spot light is created in Gazebo, and the model plugin dynamically positions this light to be rigidly attached to the Free Flyer. To set the brightness of each light you can use the following commands:
@@ -141,11 +167,22 @@ This simulates front and aft facing flashlights. Unfortunately, Gazebo doesn't s
     rosservice call /%ns%/hw/light_front/control "brightness: 0"
     rosservice call /%ns%/hw/light_aft/control "brightness: 200"
 
+Customization: description/description/model_flashlights.urdf.xacro
+    rate:   doesn't do anything (should this be removed?)
+    width:  width of the light
+    height: height of the light
+    depth:  depth of the light
+
 **Laser plugin**
 
 To toggle the laser model:
 
     rosservice call /%ns%/hw/laser/enable "enabled: true"
+
+Customization: description/description/model_laser.urdf.xacro
+    rate:  doesn't do anything (should this be removed?)
+    range: range of the laser
+    width: width of the laser
 
 **Perching arm plugin**
 
@@ -156,12 +193,22 @@ The perching arm plugin mimics the real hardware by accepting joint goals and br
     rosrun arm arm_tool -ns %ns% -open
     rosrun arm arm_tool -ns %ns% -stow
 
+Customization: description/description/macro_perching_arm.urdf.xacro
+    rate:     rate at which the arm joints are published
+    proximal: initial position of the proximal joint
+    distal:   initial position of the distal joint 
+    gripper:  initial position of the gripper (0 is closed)
+
 **PMC plugin**
 
 This plugin subscribes to the PMC command topic, which includes an impeller speed and nozzle apertures. When a new PMC command is received, this information is passed, along with the battery voltage and current velocity, into a dynamic model that converts this information to a force and torque to apply to the Free Flyer. The dynamic model takes into account the delay between spinning the impellers up and down. This force and torque is applied to the Gazebo model, allowing its physics engine to update the state of the Free Flyer. In addition to publishing basic telemetry (current impeller speed, etc) the PMC plugin also tracks the state of the PMC, thereby realistically simulating ramp-up and ramp-down delay. To test:
 
     rostopic echo /%ns$/hw/pmc/state
     rostopic echo /%ns$/hw/pmc/telemetry
+
+Customization: description/description/macro_perching_arm.urdf.xacro
+    rate:                rate is not used and the plugin doesn't even read it
+    bypass_blower_model: whether the commands in ctr are executed directly, don't put true unless there is a reason for it
 
 **NavCam and DockCam plugins**
 
@@ -180,6 +227,17 @@ If the camera images are incorrect, it can be because the simulator cannot keep 
 
 The resolution of these cameras is 320 by 240 pixels, as set in sensor_nav_cam.urdf.xacro and sensor_dock_cam.urdf.xacro. The resolution can be increased to 1280 x 960 to agree with the real-world cameras.
 
+Customization: description/description/sensor_nav_cam.urdf.xacro
+               description/description/sensor_dock_cam.urdf.xacro
+    update_rate:    camera update rate
+    horizontal_fov: horizontal field of view
+    image>width:    image width pixels
+    image>height:   image height pixels
+    image>format:   image format
+    clip>near       nearest capture distance
+    clip>far:       maximum captured distance
+    distortion>k1:  camera distortion
+
 **HazCam and PerchCam plugins**
 
 These are forward and aft facing depth cameras. The plugin copies the point cloud data from the gazebo depth camera sensor into a sensor_msgs::PointCloud2 message and publishes it to the appropriate ROS topic. To test:
@@ -187,11 +245,26 @@ These are forward and aft facing depth cameras. The plugin copies the point clou
     rostopic hz /%ns$/hw/depth_haz/points
     rostopic hz /%ns$/hw/depth_perch/points
 
+Customization: description/description/sensor_haz_cam.urdf.xacro
+               description/description/sensor_perch_cam.urdf.xacro
+    update_rate:    camera update rate
+    horizontal_fov: horizontal field of view
+    image>width:    image width pixels
+    image>height:   image height pixels
+    image>format:   image format
+    clip>near       nearest capture distance
+    clip>far:       maximum captured distance
+    distortion>k1:  camera distortion
+
 **IMU plugin**
 
 On every update of the gazebo world, this plugin obtains the true angular velocity and linear acceleration of the Gazebo IMU sensor and publishes this information as a sensor_msgs::Imu message on the appropriate ROS topic. To test:
 
     rostopic echo /%ns$/hw/imu
+
+Customization: description/description/sensor_imu.urdf.xacro
+    pose:        pose of the imu wrt the body reference frame
+    update_rate: imu update rate
 
 **Sparse Map plugin**
 
@@ -217,3 +290,23 @@ This model plugin publishes the truth values of the pose, twist and acceleration
     rostopic echo /%ns$/loc/truth/pose
     rostopic echo /%ns$/loc/truth/twist
     rostopic echo /%ns$/loc/truth/accel
+
+Customization: description/description/sensor_imu.urdf.xacro
+    rate:   rate of which the ground truth is published
+    parent: the parent of the ground truth (world)
+    child:  the child of the ground truth, the robot
+    tf:     whether or not to publish the tf pose for visualization
+    pose:   whether or not to publish the pose of the robot
+    twist:  whether or not to publish linear and angular velocity
+    acc:    whether or not to publish linear and angular ecceleration
+
+**Drag plugin**
+The drag plugin implements the standard drag formula: D = -0.5 * rho * C_D * area * v * |v|
+
+Customization: description/description/sensor_imu.urdf.xacro
+    coefficient: drag coefficient C_D
+    area:        area exposed against the movement, can be approximated
+    density:     air density
+
+
+

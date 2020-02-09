@@ -55,14 +55,12 @@
 #include <vector>
 #include <mutex>
 #include <functional>
+#include <cstdio>
 
 DEFINE_int32(min_valid, 20,
               "Minimum number of valid inlier matches required to keep matches for given image pair.");
 DEFINE_int32(max_pairwise_matches, 5000,
              "Maximum number of matches to keep in any image pair.");
-DEFINE_bool(assume_nonsequential, false,
-            "If true, assume during incremental SfM that an image need "
-            "not be similar to the one before it. Slows down the process a lot.");
 DEFINE_int32(num_subsequent_images, std::numeric_limits<int32_t>::max()/2,  // avoid overflow
              "When no vocabulary tree is provided, match every image against this "
              "many subsequent images.");
@@ -72,6 +70,8 @@ DEFINE_bool(skip_filtering, false,
             "Skip filtering of outliers after bundle adjustment.");
 DEFINE_bool(skip_adding_new_matches_on_merging, false,
             "When merging maps, do not take advantage of performed matching to add new tracks.");
+DEFINE_bool(fast_merge, false,
+            "When merging maps that have shared images, use those and skip doing additional matches among the images.");
 DEFINE_double(reproj_thresh, 5.0,
               "Filter points with re-projection error higher than this.");
 
@@ -104,9 +104,12 @@ std::string print_vec(Eigen::Vector3d a) {
 
   // Read matches from disk into OpenMVG's format
 int ReadMatches(std::string const& matches_file,
-                 openMVG::matching::PairWiseMatches * match_map) {
+                openMVG::matching::PairWiseMatches * match_map) {
   (*match_map).clear();
   std::ifstream imfile(matches_file.c_str());
+  if (!imfile.good())
+    LOG(FATAL) << "Could not read: " << matches_file << ". The matching step needs to be redone.";
+
   LOG(INFO) << "Reading: " << matches_file;
   std::string line;
   int num_matches = 0;
@@ -155,8 +158,6 @@ void BuildMapPerformMatching(openMVG::matching::PairWiseMatches * match_map,
                              std::mutex * match_mutex,
                              int i /*query cid index*/, int j /*train cid index*/,
                              bool compute_rays_angle, double * rays_angle) {
-  CHECK(relative_affines) << "Forgot to provide relative_affines argument";
-
   Eigen::Matrix2Xd const& keypoints1 = cid_to_keypoint_map[i];
   Eigen::Matrix2Xd const& keypoints2 = cid_to_keypoint_map[j];
 
@@ -173,8 +174,10 @@ void BuildMapPerformMatching(openMVG::matching::PairWiseMatches * match_map,
     return;
   }
 
+  bool compute_inliers_only = false;
   BuildMapFindEssentialAndInliers(keypoints1, keypoints2, matches,
-                                  camera_params, i, j,
+                                  camera_params, compute_inliers_only,
+                                  i, j,
                                   match_mutex,
                                   relative_affines,
                                   &inlier_matches,
@@ -353,6 +356,12 @@ void BuildTracks(bool rm_invalid_xyz,
                               &(s->pid_to_xyz_),
                               &(s->cid_fid_to_pid_));
 
+
+  // Wipe file that is no longer needed
+  try {
+    std::remove(matches_file.c_str());
+  }catch(...) {}
+
   // PrintTrackStats(s->pid_to_cid_fid_, "track building");
 }
 
@@ -403,44 +412,6 @@ void IncrementalBA(std::string const& essential_file,
       cid_to_cam_t_local[cid] = relative_affines[P]*cid_to_cam_t_local[cid-1];
     else
       cid_to_cam_t_local[cid] = cid_to_cam_t_local[cid-1];  // no choice
-
-    if (FLAGS_assume_nonsequential) {
-      // TODO(oalexan1): Experimental code. Solution for the problem
-      // that an image need not be similar to the one before it.
-      sparse_mapping::InitializeCidFidToPid(cid,
-                                            pid_to_cid_fid_local,
-                                            &cid_fid_to_pid_local);
-
-      // Use the Localize() API to infer the most likely initial guess
-      // camera pose.
-      camera::CameraModel camera(Eigen::Vector3d(),
-                                 Eigen::Matrix3d::Identity(),
-                                 s->GetCameraParameters());
-      std::vector<Eigen::Vector3d>* inlier_landmarks = NULL;
-      std::vector<Eigen::Vector2d>* inlier_observations = NULL;
-      int max_cid_to_use = cid - 1;
-
-      if (Localize(s->cid_to_descriptor_map_[cid],
-                   s->cid_to_keypoint_map_[cid], &camera,
-                   inlier_landmarks,
-                   inlier_observations,
-                   cid, max_cid_to_use,
-                   s->detector_.GetDetectorName(),
-                   &s->vocab_db_,
-                   s->num_similar_,
-                   s->cid_to_filename_,
-                   s->cid_to_descriptor_map_,
-                   cid_fid_to_pid_local,
-                   pid_to_xyz_local,
-                   s->num_ransac_iterations_,
-                   s->ransac_inlier_tolerance_) ) {
-        LOG(INFO) << "Localization succeeded for image " << cid << ".\n";
-        Eigen::Affine3d T = camera.GetTransform();
-        cid_to_cam_t_local[cid] = T;
-      } else {
-        LOG(WARNING) << "Localization failed for image " << cid << ".\n";
-      }
-    }
 
     // Restrict tracks to images up to cid.
     pid_to_cid_fid_local.clear();
@@ -520,6 +491,11 @@ void IncrementalBA(std::string const& essential_file,
                               &(s->pid_to_cid_fid_),
                               &(s->pid_to_xyz_),
                               &(s->cid_fid_to_pid_));
+
+  // Wipe file that is no longer needed
+  try {
+    std::remove(essential_file.c_str());
+  }catch(...) {}
 }
 
 // Close loop after incremental BA
@@ -895,6 +871,276 @@ void FindPidCorrespondences(std::vector<std::map<int, int> > const& A_cid_fid_to
   }
 }
 
+
+// Determine which tracks from map A to merge with
+// which tracks from map B. For that, find which images in map A have
+// matches in map B.  We will look only at images close to the
+// endpoints of both maps, per num_image_overlaps_at_endpoints.
+void findMatchingTracks(sparse_mapping::SparseMap * A_in,
+                        sparse_mapping::SparseMap * B_in,
+                        sparse_mapping::SparseMap * C_out,
+                        std::string const& output_map,
+                        int num_image_overlaps_at_endpoints,
+                        std::map<int, int> & A2B,  // output
+                        std::map<int, int> & B2A   // output
+                        ) {
+  // Wipe the outputs
+  A2B.clear();
+  B2A.clear();
+
+  // Create aliases to not use pointers all the time.
+  sparse_mapping::SparseMap & A = *A_in;
+  sparse_mapping::SparseMap & B = *B_in;
+  sparse_mapping::SparseMap & C = *C_out;
+
+  int num_acid = A.cid_to_filename_.size();
+  int num_bcid = B.cid_to_filename_.size();
+
+  std::set<int> A_search, B_search;  // use sets to avoid duplicates
+  int num = num_image_overlaps_at_endpoints;
+
+  // Images in A to search for matches in B
+  for (int cid = 0; cid < num; cid++)
+    if (cid < num_acid) A_search.insert(cid);
+  for (int cid = num_acid-num; cid < num_acid; cid++)
+    if (cid >= 0) A_search.insert(cid);
+
+  // Images in B to search for matches in A. Add num_acid since we will
+  // match A and B inside of C.
+  for (int cid = 0; cid < num; cid++)
+    if (cid < num_bcid) B_search.insert(num_acid + cid);
+  for (int cid = num_bcid-num; cid < num_bcid; cid++)
+    if (cid >= 0) B_search.insert(num_acid + cid);
+
+  // Combine these into cid_to_cid_ and run the matching process.
+  C.cid_to_cid_.clear();
+  for (auto it1 = A_search.begin(); it1 != A_search.end() ; it1++) {
+    for (auto it2 = B_search.begin(); it2 != B_search.end(); it2++) {
+      if (*it1 == *it2)
+        LOG(FATAL) << "Book-keeping failure in map merging.";
+      C.cid_to_cid_[*it1].insert(*it2);
+    }
+  }
+
+  // Match features. Must set num_subsequent_images to not try to
+  // match images in same map, that was done when each map was built.
+  FREEFLYER_GFLAGS_NAMESPACE::SetCommandLineOption("num_subsequent_images", "0");
+  sparse_mapping::MatchFeatures(sparse_mapping::EssentialFile(output_map),
+                                sparse_mapping::MatchesFile(output_map), &C);
+
+  // Assemble the matches into tracks, this will populate C.pid_to_cid_fid_.
+  bool rm_invalid_xyz = false;  // nothing is valid yet
+  sparse_mapping::BuildTracks(rm_invalid_xyz,
+                              sparse_mapping::MatchesFile(output_map), &C);
+
+  // This is not needed any longer
+  C.cid_to_cid_.clear();
+
+  // Wipe file that is no longer needed
+  try {
+    std::remove(sparse_mapping::EssentialFile(output_map).c_str());
+  }catch(...) {}
+
+  // For each track in A, find the map to its corresponding track in B
+  // using the information in C.pid_to_cid_fid_.
+  FindPidCorrespondences(A.cid_fid_to_pid_, B.cid_fid_to_pid_,  C.pid_to_cid_fid_,
+                         num_acid, &A2B, &B2A);
+}
+
+// If two maps share images, can match tracks between the maps
+// just based on that, which is fast.
+void findTracksForSharedImages(sparse_mapping::SparseMap * A_in,
+                               sparse_mapping::SparseMap * B_in,
+                               std::map<int, int> & A2B,  // output
+                               std::map<int, int> & B2A   // output
+                               ) {
+  // Wipe the outputs
+  A2B.clear();
+  B2A.clear();
+
+  // Create aliases to not use pointers all the time.
+  sparse_mapping::SparseMap & A = *A_in;
+  sparse_mapping::SparseMap & B = *B_in;
+
+  size_t num_acid = A.cid_to_filename_.size();
+  size_t num_bcid = B.cid_to_filename_.size();
+
+  // Map from file name to cid
+  std::map<std::string, int> A_file_to_cid, B_file_to_cid;
+  for (size_t cid = 0; cid < num_acid; cid++)
+    A_file_to_cid[A.cid_to_filename_[cid]] = cid;
+  for (size_t cid = 0; cid < num_bcid; cid++)
+    B_file_to_cid[B.cid_to_filename_[cid]] = cid;
+
+  // Iterate through A's cid_fid_to_pid_ and find matches in B.
+  int num_shared_cid = 0;
+  for (size_t cid_a = 0; cid_a < A.cid_fid_to_pid_.size(); cid_a++) {
+    std::string filename = A.cid_to_filename_[cid_a];
+    auto it = B_file_to_cid.find(filename);
+    if (it == B_file_to_cid.end())
+      continue;
+
+    num_shared_cid++;
+
+    // The corresponding camera id in the second map
+    size_t cid_b = it->second;
+
+    if (A.cid_to_keypoint_map_[cid_a] != B.cid_to_keypoint_map_[cid_b])
+      LOG(FATAL) << "The input maps don't have the same features. They may need to be rebuilt with --skip_pruning.";
+
+    auto a_fid_to_pid = A.cid_fid_to_pid_[cid_a];
+    auto b_fid_to_pid = B.cid_fid_to_pid_[cid_b];
+
+    // Find tracks corresponding to same cid_fid
+    for (auto it_a = a_fid_to_pid.begin(); it_a != a_fid_to_pid.end(); it_a++) {
+      int pid_a = it_a->second;
+      int fid = it_a->first;  // shared fid
+      auto it_b = b_fid_to_pid.find(fid);
+      if (it_b == b_fid_to_pid.end()) {
+        // This fid is not in second image. This is fine. A feature in a current image
+        // may match to features in one image but not in another.
+        continue;
+      }
+
+      int pid_b = it_b->second;
+
+      A2B[pid_a] = pid_b;
+    }
+  }
+
+  // Now create B2A
+  for (auto it = A2B.begin(); it != A2B.end(); it++) {
+    B2A[it->second] = it->first;
+  }
+
+  // Just in case, recreate A2B, to avoid issues when the original
+  // A2B mapped multiple A pids to same B pid.
+  A2B.clear();
+  for (auto it = B2A.begin(); it != B2A.end(); it++) {
+    A2B[it->second] = it->first;
+  }
+
+
+  LOG(INFO) << "Number of shared images in the two maps: " << num_shared_cid << std::endl;
+  LOG(INFO) << "Number of shared tracks: " << A2B.size() << std::endl;
+
+  // Sanity check
+  if (num_shared_cid <= 0 || A2B.size() <= 5)
+    LOG(FATAL) << "Not enough shared images or features among the two maps. Run without the --fast option.";
+}
+
+// Given a sparse map in C_out, and a map cid2cid from camera (image)
+// indices to new indices, convert the map from being relative to old
+// indices to relative to the new indices. If cid2cid maps two input
+// indices to the same output index, reconcile the camera positions
+// for those indices.
+void TransformMap(std::map<int, int> & cid2cid,
+                  sparse_mapping::SparseMap * C_out) {
+  // Create aliases to not use pointers all the time.
+  sparse_mapping::SparseMap & C = *C_out;
+
+  // The total number of output cameras
+  int num_out_cams = 0;
+  for (size_t cid = 0; cid < C.cid_to_filename_.size(); cid++) {
+    num_out_cams = std::max(num_out_cams, cid2cid[cid]);
+  }
+  num_out_cams++;  // move past the last
+
+  // Each blob will be original cids that end up being a single cid
+  // after identifying repeat images.
+  std::vector< std::set<int> > blobs(num_out_cams);
+  for (size_t cid = 0; cid < C.cid_to_filename_.size(); cid++) {
+    blobs[cid2cid[cid]].insert(cid);
+  }
+
+  // To merge cid_to_cam_t_global_, find the average rotation and translation
+  // from the two maps.
+  std::vector<Eigen::Affine3d > cid_to_cam_t_global2(num_out_cams);
+  for (size_t c = 0; c < blobs.size(); c++) {
+    if (blobs[c].size() == 1) {
+      cid_to_cam_t_global2[c] = C.cid_to_cam_t_global_[*blobs[c].begin()];
+    } else {
+      int num = blobs[c].size();
+
+      // All cams to merge get equal weight
+      std::vector<double> W(num, 1.0/num);
+
+      // TODO(oalexan1): Something more clever could be done. If an
+      // image in one map has few tracks going through it, or those
+      // tracks are short, this instance could be given less weight.
+
+      std::vector< Eigen::Quaternion<double> >Q(num);
+      cid_to_cam_t_global2[c].translation() << 0.0, 0.0, 0.0;
+      int pos = -1;
+      for (auto it = blobs[c].begin(); it != blobs[c].end() ; it++) {
+        pos++;
+        int cid = *it;
+        Q[pos] = Eigen::Quaternion<double> (C.cid_to_cam_t_global_[cid].linear());
+
+        cid_to_cam_t_global2[c].translation()
+          += W[pos]*C.cid_to_cam_t_global_[cid].translation();
+      }
+      Eigen::Quaternion<double> S = sparse_mapping::slerp_n(W, Q);
+      cid_to_cam_t_global2[c].linear() = S.toRotationMatrix();
+    }
+  }
+
+  // We really count during merging that if two maps have an image in
+  // common, the same keypoint map is computed for that image in both
+  // maps. Otherwise the book-keeping of cid_fid becomes a disaster.
+  for (size_t c = 0; c < blobs.size(); c++) {
+    int num = blobs[c].size();
+    if (num <= 1) continue;
+    int cid0 = *blobs[c].begin();
+    for (auto it = blobs[c].begin(); it != blobs[c].end() ; it++) {
+      int cid = *it;
+      if (C.cid_to_keypoint_map_[cid0] != C.cid_to_keypoint_map_[cid]) {
+        LOG(FATAL) << "The two input maps do not have the same features for same images. "
+                   << "Cannot merge them. Consider rebuilding them with -skip_pruning.";
+      }
+    }
+  }
+
+  // Further removal of repetitions.
+  std::vector<std::string> cid_to_filename2(num_out_cams);
+  std::vector<Eigen::Matrix2Xd > cid_to_keypoint_map2(num_out_cams);
+  std::vector<cv::Mat> cid_to_descriptor_map2(num_out_cams);
+  for (size_t cid = 0; cid < C.cid_to_filename_.size(); cid++) {
+    int cid2 = cid2cid[cid];
+    cid_to_filename2[cid2]             = C.cid_to_filename_[cid];
+    cid_to_keypoint_map2[cid2]         = C.cid_to_keypoint_map_[cid];
+    cid_to_descriptor_map2[cid2]       = C.cid_to_descriptor_map_[cid];
+  }
+
+  // Modify the tracks after identifying identical images
+  // We would rather keep tracks of length one (which we will filter out
+  // some time later) than ruin the bookkeeping.
+  bool rm_tracks_of_len_one = false;
+  TransformTracks(cid2cid, rm_tracks_of_len_one, &C.pid_to_cid_fid_);
+
+  if (C.pid_to_xyz_.size() != C.pid_to_cid_fid_.size()) {
+    LOG(FATAL) << "Book-keeping failure in merging maps, "
+               << "pid_to_xyz_ and pid_to_cid_fid_ must have the same size.";
+  }
+
+  // The new lists for the unique images
+  C.cid_to_filename_       = cid_to_filename2;
+  C.cid_to_keypoint_map_   = cid_to_keypoint_map2;
+  C.cid_to_cam_t_global_   = cid_to_cam_t_global2;
+  C.cid_to_descriptor_map_ = cid_to_descriptor_map2;
+
+  // Note: after this step, it is possible some tracks are now
+  // duplicate.  We don't bother removing them, it would be a pain,
+  // since sometimes two tracks may differ in one or more values and
+  // those are tricky to reconcile.
+
+  // Recreate cid_fid_to_pid_ from pid_to_cid_fid_. This must happen
+  // after the merging is complete but before using the new map.
+  C.InitializeCidFidToPid();
+
+  // C.Save(output_map + ".reduced.map");
+}
+
 // Merge two maps. See merge_maps.cc. The merged map needs to be
 // bundle-adjusted. We need to have write-access to A and B to be able
 // to initialize some auxiliary structures in these maps.
@@ -944,59 +1190,18 @@ void MergeMaps(sparse_mapping::SparseMap * A_in,
     // We will have to deal with cid_to_cam_t_global_ later
   }
 
-  // To be able to determine which tracks from map A to merge with
-  // which tracks from map B, need to find which images in map A have
-  // matches in map B.  We will look only at images close to the
-  // endpoints of both maps, per num_image_overlaps_at_endpoints.
-  std::set<int> A_search, B_search;  // use sets to avoid duplicates
-  int num = num_image_overlaps_at_endpoints;
-
-  // Images in A to search for matches in B
-  for (int cid = 0; cid < num; cid++)
-    if (cid < num_acid) A_search.insert(cid);
-  for (int cid = num_acid-num; cid < num_acid; cid++)
-    if (cid >= 0) A_search.insert(cid);
-
-  // Images in B to search for matches in A. Add num_acid since we will
-  // match A and B inside of C.
-  for (int cid = 0; cid < num; cid++)
-    if (cid < num_bcid) B_search.insert(num_acid + cid);
-  for (int cid = num_bcid-num; cid < num_bcid; cid++)
-    if (cid >= 0) B_search.insert(num_acid + cid);
-
-  // Combine these into cid_to_cid_ and run the matching process.
-  C.cid_to_cid_.clear();
-  for (auto it1 = A_search.begin(); it1 != A_search.end() ; it1++) {
-    for (auto it2 = B_search.begin(); it2 != B_search.end(); it2++) {
-      if (*it1 == *it2)
-        LOG(FATAL) << "Book-keeping failure in map merging.";
-      C.cid_to_cid_[*it1].insert(*it2);
-    }
-  }
-
-  // Match features. Must set num_subsequent_images to not try to
-  // match images in same map, that was done when each map was built.
-  FREEFLYER_GFLAGS_NAMESPACE::SetCommandLineOption("num_subsequent_images", "0");
-  sparse_mapping::MatchFeatures(sparse_mapping::EssentialFile(output_map),
-                                sparse_mapping::MatchesFile(output_map), &C);
-
-  // Assemble the matches into tracks, this will populate C.pid_to_cid_fid_.
-  bool rm_invalid_xyz = false;  // nothing is valid yet
-  sparse_mapping::BuildTracks(rm_invalid_xyz,
-                              sparse_mapping::MatchesFile(output_map), &C);
-
-  // This is not needed any longer
-  C.cid_to_cid_.clear();
-
   // Create cid_fid_to_pid_ for both maps, to be able to go from cid_fid to pid.
   A.InitializeCidFidToPid();
   B.InitializeCidFidToPid();
 
-  // For each track in A, find the map to its corresponding track in B
-  // using the information in C.pid_to_cid_fid_.
   std::map<int, int> A2B, B2A;
-  FindPidCorrespondences(A.cid_fid_to_pid_, B.cid_fid_to_pid_,  C.pid_to_cid_fid_,
-                         num_acid, &A2B, &B2A);
+  if (!FLAGS_fast_merge)
+    findMatchingTracks(&A, &B, &C, output_map,
+                       num_image_overlaps_at_endpoints,
+                       A2B, B2A);  // outputs
+  else
+    findTracksForSharedImages(&A, &B,
+                              A2B, B2A);  // outputs
 
   // Put the xyz points corresponding to the tracks to merge in vectors.
   // TODO(oalexan1): May want to add xyz points for the tracks in
@@ -1040,16 +1245,21 @@ void MergeMaps(sparse_mapping::SparseMap * A_in,
     if (inlier_set.find(point_count) == inlier_set.end()) {
       auto iter_a = A2B.find(pid_a);
       if (iter_a == A2B.end())
-        LOG(FATAL) << "Bookkeeping error in merging maps.";
+        LOG(FATAL) << "Bookkeeping error 1 in merging maps.";
       A2B.erase(iter_a);
 
       auto iter_b = B2A.find(pid_b);
       if (iter_b == B2A.end())
-        LOG(FATAL) << "Bookkeeping error in merging maps.";
+        LOG(FATAL) << "Bookkeeping error 2 in merging maps.";
       B2A.erase(iter_b);
     }
     point_count++;
   }
+
+  // LOG(INFO) does not do well with Eiegn.
+  std::cout << "Affine transform from second map to first map:\n";
+  std::cout << "Matrix:\n"      << B2A_trans.linear()       << "\n";
+  std::cout << "Translation:\n" << B2A_trans.translation()  << "\n";
 
   // Bring the B map into the coordinate system of the A map
   B.ApplyTransform(B2A_trans);
@@ -1126,13 +1336,16 @@ void MergeMaps(sparse_mapping::SparseMap * A_in,
 
   // If a few images show up in both and in B, so far they show up in C twice,
   // with different cid value. Fix that.
-  int num_merged_cams = 0;
+  // Also keep the images sorted.
+  std::vector<std::string> sorted = C.cid_to_filename_;
+  std::sort(sorted.begin(), sorted.end());
+  int num_out_cams = 0;
   std::map<std::string, int> image2cid;  // the new index of each image after rm repetitions
-  for (size_t cid = 0; cid < C.cid_to_filename_.size(); cid++) {
-    std::string img = C.cid_to_filename_[cid];
+  for (size_t cid = 0; cid < sorted.size(); cid++) {
+    std::string img = sorted[cid];
     if (image2cid.find(img) == image2cid.end()) {
-      image2cid[img] = num_merged_cams;
-      num_merged_cams++;
+      image2cid[img] = num_out_cams;
+      num_out_cams++;
     }
   }
 
@@ -1142,105 +1355,14 @@ void MergeMaps(sparse_mapping::SparseMap * A_in,
     cid2cid[cid] = image2cid[ C.cid_to_filename_[cid] ];
   }
 
-  // Each blob will be original cids that end up being a single cid
-  // after identifying repeat images.
-  std::vector< std::set<int> > blobs(num_merged_cams);
-  for (size_t cid = 0; cid < C.cid_to_filename_.size(); cid++) {
-    blobs[cid2cid[cid]].insert(cid);
-  }
-
-  // To merge cid_to_cam_t_global_, find the average rotation and translation
-  // from the two maps.
-  std::vector<Eigen::Affine3d > cid_to_cam_t_global2(num_merged_cams);
-  for (size_t c = 0; c < blobs.size(); c++) {
-    if (blobs[c].size() == 1) {
-      cid_to_cam_t_global2[c] = C.cid_to_cam_t_global_[*blobs[c].begin()];
-    } else {
-      int num = blobs[c].size();
-
-      // All cams to merge get equal weight
-      std::vector<double> W(num, 1.0/num);
-
-      // TODO(oalexan1): Something more clever could be done. If an
-      // image in one map has few tracks going through it, or those
-      // tracks are short, this instance could be given less weight.
-
-      std::vector< Eigen::Quaternion<double> >Q(num);
-      cid_to_cam_t_global2[c].translation() << 0.0, 0.0, 0.0;
-      int pos = -1;
-      for (auto it = blobs[c].begin(); it != blobs[c].end() ; it++) {
-        pos++;
-        int cid = *it;
-        Q[pos] = Eigen::Quaternion<double> (C.cid_to_cam_t_global_[cid].linear());
-
-        cid_to_cam_t_global2[c].translation()
-          += W[pos]*C.cid_to_cam_t_global_[cid].translation();
-      }
-      Eigen::Quaternion<double> S = sparse_mapping::slerp_n(W, Q);
-      cid_to_cam_t_global2[c].linear() = S.toRotationMatrix();
-    }
-  }
-
-  // We really count during merging that if two maps have an image in
-  // common, the same keypoint map is computed for that image in both
-  // maps. Otherwise the book-keeping of cid_fid becomes a disaster.
-  for (size_t c = 0; c < blobs.size(); c++) {
-    int num = blobs[c].size();
-    if (num <= 1) continue;
-    int cid0 = *blobs[c].begin();
-    for (auto it = blobs[c].begin(); it != blobs[c].end() ; it++) {
-      int cid = *it;
-      if (C.cid_to_keypoint_map_[cid0] != C.cid_to_keypoint_map_[cid]) {
-        LOG(FATAL) << "The two input maps do not have the same features for same images. "
-                   << "Cannot merge them.";
-      }
-    }
-  }
-
-  // Further removal of repetitions.
-  std::vector<std::string> cid_to_filename2(num_merged_cams);
-  std::vector<Eigen::Matrix2Xd > cid_to_keypoint_map2(num_merged_cams);
-  std::vector<cv::Mat> cid_to_descriptor_map2(num_merged_cams);
-  for (size_t cid = 0; cid < C.cid_to_filename_.size(); cid++) {
-    int cid2 = cid2cid[cid];
-    cid_to_filename2[cid2]             = C.cid_to_filename_[cid];
-    cid_to_keypoint_map2[cid2]         = C.cid_to_keypoint_map_[cid];
-    cid_to_descriptor_map2[cid2]       = C.cid_to_descriptor_map_[cid];
-  }
-
-  // Modify the tracks after identifying identical images
-  // We would rather keep tracks of length one (which we will filter out
-  // some time later) than ruin the bookkeeping.
-  bool rm_tracks_of_len_one = false;
-  TransformTracks(cid2cid, rm_tracks_of_len_one, &C.pid_to_cid_fid_);
+  // Remove repetitions.
+  TransformMap(cid2cid, &C);
 
   if (!FLAGS_skip_adding_new_matches_on_merging) {
     // Modify merged_pid_to_cid_fid as well after identifying identical images
     bool rm_tracks_of_len_one = true;
     TransformTracks(cid2cid, rm_tracks_of_len_one, &merged_pid_to_cid_fid);
   }
-
-  if (C.pid_to_xyz_.size() != C.pid_to_cid_fid_.size()) {
-    LOG(FATAL) << "Book-keeping failure in merging maps, "
-               << "pid_to_xyz_ and pid_to_cid_fid_ must have the same size.";
-  }
-
-  // The new lists for the unique images
-  C.cid_to_filename_       = cid_to_filename2;
-  C.cid_to_keypoint_map_   = cid_to_keypoint_map2;
-  C.cid_to_cam_t_global_   = cid_to_cam_t_global2;
-  C.cid_to_descriptor_map_ = cid_to_descriptor_map2;
-
-  // Note: after this step, it is possible some tracks are now
-  // duplicate.  We don't bother removing them, it would be a pain,
-  // since sometimes two tracks may differ in one or more values and
-  // those are tricky to reconcile.
-
-  // Recreate cid_fid_to_pid_ from pid_to_cid_fid_. This must happen
-  // after the merging is complete but before using the new map.
-  C.InitializeCidFidToPid();
-
-  // C.Save(output_map + ".reduced.map");
 
   // Add the new tracks that were identified during matching of images of A to B.
   if (!FLAGS_skip_adding_new_matches_on_merging) {
@@ -1596,7 +1718,7 @@ void RegistrationOrVerification(std::vector<std::string> const& data_files,
     std::cout << "computed xyz -- measured xyz -- error norm (meters)" << std::endl;
   } else {
     std::cout << "Mean absolute error before registration: " << mean_err << " meters" << std::endl;
-    std::cout << "un-transformed computed xyz -- measured xyz -- error norm (meters)" << std::endl;
+    std::cout << "Un-transformed computed xyz -- measured xyz -- error norm (meters)" << std::endl;
   }
 
   for (int i = 0; i < user_xyz.cols(); i++) {
@@ -1641,7 +1763,7 @@ void RegistrationOrVerification(std::vector<std::string> const& data_files,
   std::cout << "Mean absolute error after registration and before final bundle adjustment: "
             << mean_err << " meters" << std::endl;
 
-  std::cout << "transformed computed xyz -- measured xyz -- error norm (meters)" << std::endl;
+  std::cout << "Transformed computed xyz -- measured xyz -- error norm (meters)" << std::endl;
   for (int i = 0; i < user_xyz.cols(); i++) {
     Eigen::Vector3d a = map->world_transform_*in.col(i);
     Eigen::Vector3d b = user_xyz.col(i);
@@ -1765,6 +1887,8 @@ void ReadAffineCSV(std::string const& input_filename,
                    CIDPairAffineMap* relative_affines) {
   LOG(INFO) << "Reading: " << input_filename;
   std::ifstream f(input_filename, std::ifstream::in);
+  if (!f.good())
+    LOG(FATAL) << "Could no read: " << input_filename << ". Must redo the matching step.";
   relative_affines->clear();
   PushBackCIDPairAffine(&f, std::inserter(*relative_affines, relative_affines->begin()));
   f.close();
@@ -1772,6 +1896,8 @@ void ReadAffineCSV(std::string const& input_filename,
 void ReadAffineCSV(std::string const& input_filename,
                    CIDAffineTupleVec* relative_affines) {
   std::ifstream f(input_filename, std::ifstream::in);
+  if (!f.good())
+    LOG(FATAL) << "Could no read: " << input_filename << ". Must redo the matching step.";
   relative_affines->clear();
   std::string line;
   std::getline(f, line);
@@ -1784,19 +1910,18 @@ void ReadAffineCSV(std::string const& input_filename,
   f.close();
 }
 
+// Filter the matches by a geometric constraint. Compute the essential matrix.
 void BuildMapFindEssentialAndInliers(Eigen::Matrix2Xd const& keypoints1,
                                      Eigen::Matrix2Xd const& keypoints2,
                                      std::vector<cv::DMatch> const& matches,
                                      camera::CameraParameters const& camera_params,
+                                     bool compute_inliers_only,
                                      size_t cam_a_idx, size_t cam_b_idx,
                                      std::mutex * match_mutex,
                                      CIDPairAffineMap * relative_affines,
                                      std::vector<cv::DMatch> * inlier_matches,
                                      bool compute_rays_angle,
                                      double * rays_angle) {
-  // Filter the matches by a geometric constraint
-  CHECK(relative_affines) << "Forgot to provide relative_affines argument";
-
   // Initialize the outputs
   inlier_matches->clear();
   if (compute_rays_angle)
@@ -1815,7 +1940,7 @@ void BuildMapFindEssentialAndInliers(Eigen::Matrix2Xd const& keypoints1,
   Eigen::Matrix3d k = camera_params.GetIntrinsicMatrix<camera::UNDISTORTED_C>();
 
   Eigen::Matrix3d e;
-  // Calculate the Essential Matrix
+  // Calculate the essential matrix
   std::vector<size_t> vec_inliers;
   double error_max = std::numeric_limits<double>::max();
   double max_expected_error = 2.5;
@@ -1833,6 +1958,19 @@ void BuildMapFindEssentialAndInliers(Eigen::Matrix2Xd const& keypoints1,
   if (vec_inliers.size() < static_cast<size_t>(FLAGS_min_valid)) {
     VLOG(2) << cam_a_idx << " " << cam_b_idx
             << " | Failed to get enough inliers " << vec_inliers.size();
+    return;
+  }
+
+  if (compute_inliers_only) {
+    // We only need to know which interest points are inliers and not the
+    // R and T matrices.
+    int num_inliers = vec_inliers.size();
+    inlier_matches->clear();
+    inlier_matches->reserve(num_inliers);
+    std::vector<Eigen::Matrix2Xd> observations2(2, Eigen::Matrix2Xd(2, num_inliers));
+    for (int i = 0; i < num_inliers; i++) {
+      inlier_matches->push_back(matches[vec_inliers[i]]);
+    }
     return;
   }
 
@@ -1944,6 +2082,8 @@ void BuildMapFindEssentialAndInliers(Eigen::Matrix2Xd const& keypoints1,
   result.translation().normalize();
 
   // Must use a lock to protect this map shared among the threads
+  CHECK(match_mutex) << "Forgot to provide the mutex lock.";
+  CHECK(relative_affines) << "Forgot to provide relative_affines argument.";
   match_mutex->lock();
   relative_affines->insert(std::make_pair(std::make_pair(cam_a_idx, cam_b_idx),
                                         result));

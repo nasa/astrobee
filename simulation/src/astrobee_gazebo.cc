@@ -62,7 +62,7 @@ void FreeFlyerPlugin::InitializePlugin(std::string const& robot_name) {
   Setup(nh_ff_, nh_ff_);
 
   // If we have a frame then defer chainloading until we receive them
-  timer_ = nh_.createTimer(ros::Duration(1.0),
+  timer_ = nh_.createTimer(ros::Duration(5.0),
     &FreeFlyerSensorPlugin::SetupExtrinsics, this);
 }
 

@@ -33,10 +33,13 @@
 #include <ff_msgs/FaultConfig.h>
 #include <ff_msgs/FaultInfo.h>
 #include <ff_msgs/FaultState.h>
+#include <ff_msgs/TimeDiffStamped.h>
 #include <ff_msgs/UnloadLoadNodelet.h>
+#include <ff_util/ff_faults.h>
 #include <ff_util/ff_names.h>
 #include <ff_util/ff_nodelet.h>
 
+#include <cmath>
 #include <map>
 #include <string>
 #include <vector>
@@ -136,6 +139,12 @@ class SysMonitor : public ff_util::FreeFlyerNodelet {
    */
   void HeartbeatCallback(ff_msgs::HeartbeatConstPtr const& heartbeat);
 
+  void AssertFault(ff_util::FaultKeys enum_key,
+                   std::string const& message,
+                   ros::Time time_fault_occurred = ros::Time::now());
+
+  void ClearFault(ff_util::FaultKeys enum_key);
+
   virtual void Initialize(ros::NodeHandle *nh);
 
   void OutputFaultTables();
@@ -151,6 +160,8 @@ class SysMonitor : public ff_util::FreeFlyerNodelet {
   void PublishHeartbeatCallback(ros::TimerEvent const& te);
 
   void PublishHeartbeat(bool initialization_fault = false);
+
+  void PublishTimeDiff(float time_diff_sec);
 
   void StartupTimerCallback(ros::TimerEvent const& te);
 
@@ -183,6 +194,7 @@ class SysMonitor : public ff_util::FreeFlyerNodelet {
   ros::NodeHandle nh_;
   ros::Publisher pub_cmd_, pub_heartbeat_;
   ros::Publisher pub_fault_config_, pub_fault_state_;
+  ros::Publisher pub_time_diff_;
   ros::Timer reload_params_timer_, startup_timer_, heartbeat_timer_;
   ros::ServiceServer unload_load_nodelet_service_;
   ros::Subscriber sub_hb_;
@@ -193,11 +205,15 @@ class SysMonitor : public ff_util::FreeFlyerNodelet {
   // TODO(Katie) possibly remove this
   std::vector<std::string> unwatched_heartbeats_;
 
+  std::string time_diff_node_;
+
   config_reader::ConfigReader config_params_;
 
+  bool time_diff_fault_triggered_;
   int pub_queue_size_, sub_queue_size_;
   int num_current_blocking_fault_;
   unsigned int startup_time_, heartbeat_pub_rate_;
+  float time_drift_thres_sec_;
 };
 }  // namespace sys_monitor
 

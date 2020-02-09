@@ -49,6 +49,7 @@ msg () {
 # Arguments:
 #   - 1 : led_name (string)
 #   - 2 : state (number mapping in eps_driver_tool.cc)
+#   - 3 : optional: only change the state of the LED if true
 # This function abstract the LED configuration to avoid potential
 # contentious I2C device access by the command line tool versus service
 set_led ()
@@ -73,8 +74,10 @@ set_led net on
 set_led fsw on
 set_led ros on
 
-msg "declare video is on by default"
-set_led video on
+# FSW will turn this LED on when started
+#msg "declare video is on by default"
+#set_led video on
+set_led video off
 
 # Since this script is started, LLP is up ;-)
 set_led llp on
@@ -147,9 +150,11 @@ do
   if [ "$launched" -lt 2 ]; then
     msg "FSW down"
     set_led fsw on
+    set_led video off
   else
     msg "FSW up, assuming LED is off"
     set_led fsw off true
+    set_led video on true
   fi
   sleep 1
 

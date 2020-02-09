@@ -1,0 +1,55 @@
+{
+  "procedure": [
+    [
+      "Procedure",
+      "lowbattery1",
+      [
+        "Define",
+        "$breath",
+        [
+          "ListSequence",
+          ["BasicSequence", "#000", 0.0, 1.5, "#fff"],
+          ["BasicSequence", "#fff", 1.5, 1.5, "#000"]
+        ]
+      ],
+      ["Define", "$rptBreath", ["RepeatSequence", "$breath", 3.0]],
+      [
+        "Define",
+        "$pointLights",
+        ["Domain", ["Interval", 64, 3], ["Interval", 19, 3]]
+      ],
+      ["Return", ["BasicAnimation", "$pointLights", "$rptBreath"]]
+    ],
+
+    [
+      "Procedure",
+      "lowbattery2",
+      [
+        "Define",
+        "$breath",
+        [
+          "ListSequence",
+          ["BasicSequence", "#000", 1.5, 1.5, "#fff"],
+          ["BasicSequence", "#fff", 3.0, 1.5, "#000"]
+        ]
+      ],
+      ["Define", "$rptBreath", ["RepeatSequence", "$breath", 3.0]],
+      [
+        "Define",
+        "$pointLights",
+        ["Domain", ["Interval", 49, 3], ["Interval", 34, 3]]
+      ],
+      ["Return", ["BasicAnimation", "$pointLights", "$rptBreath"]]
+    ]
+  ],
+  "state": [
+    "ExecState",
+    1.0,
+    30.0,
+    true,
+    [
+      ["Call", "both", "lowbattery1", "#fff", 1.0],
+      ["Call", "both", "lowbattery2", "#fff", 1.0]
+    ]
+  ]
+}

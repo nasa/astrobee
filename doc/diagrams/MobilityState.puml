@@ -1,7 +1,5 @@
 @startuml
 
-'skinparam dpi 300
-
 title Astrobee Mobility State (Executive)
 
 [*] --> Drifting

@@ -22,6 +22,7 @@ from data_support import PmcCommand, EkfState, FamCommand, ControlState, Quatern
 from sys import path as sysPath
 from os import path as osPath
 from time import sleep
+from pkg_resources import parse_version, get_distribution
 
 try:
     import rticonnextdds_connector as rti
@@ -35,6 +36,8 @@ import math
 
 filepath = osPath.dirname(osPath.realpath(__file__))
 connector = rti.Connector("MyParticipantLibrary::Zero", filepath + "/dds_types/DDSProfile.xml")
+rti_version = get_distribution("rticonnextdds-connector").version
+is_old_version = parse_version(rti_version) < parse_version('0.4.1')
 
 def is_shutdown():
     return False
@@ -86,6 +89,7 @@ class DdsSubscriber(threading.Thread):
     callback = None
     timeout = -1
     translator = None
+    start_index = 0
 
     def __init__(self, dds_sub, callback, ros_type):
         threading.Thread.__init__(self)
@@ -94,15 +98,17 @@ class DdsSubscriber(threading.Thread):
         self.callback = callback
         self.translator = Dict2RosMsgTranslator(ros_type)
         self.daemon = True
+	self.start_index = 1 if is_old_version else 0 
 
     def run(self):
         while not self.stopper.is_set():
             self.sem.acquire(True)
             connector.wait(self.timeout)
             self.inputDDS.take()
-            numOfSamples = self.inputDDS.samples.getLength()
+            numOfSamples = (self.inputDDS.samples.getLength() if not is_old_version 
+		else self.inputDDS.samples.getLength() + 1)
 
-            for j in range(1, numOfSamples + 1):
+            for j in range(self.start_index, numOfSamples):
                 if self.inputDDS.infos.isValid(j):
                     dictionary = self.inputDDS.samples.getDictionary(j)
                     data = self.translator.translate(dictionary)

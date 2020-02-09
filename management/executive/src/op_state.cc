@@ -69,6 +69,10 @@ OpState* OpState::HandleCmd(ff_msgs::CommandStampedPtr const& cmd,
     successful = exec_->SetEnableAutoReturn(cmd);
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_SET_TELEMETRY_RATE) {
     successful = exec_->SetTelemetryRate(cmd);
+  } else if (cmd->cmd_name == CommandConstants::CMD_NAME_START_RECORDING) {
+    successful = exec_->StartRecording(cmd);
+  } else if (cmd->cmd_name == CommandConstants::CMD_NAME_STOP_RECORDING) {
+    successful = exec_->StopRecording(cmd);
   } else {
     completed = false;
     successful = false;

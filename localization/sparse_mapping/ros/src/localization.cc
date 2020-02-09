@@ -33,7 +33,7 @@ Localizer::~Localizer(void) {
 }
 
 void Localizer::ReadParams(config_reader::ConfigReader* config) {
-  int num_similar, ransac_inlier_tolerance, ransac_iterations;
+  int num_similar, ransac_inlier_tolerance, ransac_iterations, early_break_landmarks;
   int min_features, max_features, detection_retries;
   double min_brisk_threshold, default_brisk_threshold, max_brisk_threshold;
   camera::CameraParameters cam_params(config, "nav_cam");
@@ -50,20 +50,21 @@ void Localizer::ReadParams(config_reader::ConfigReader* config) {
   if (!config->GetInt("detection_retries", &detection_retries))
     ROS_FATAL("detection_retries not specified in localization.");
 
-  // For the brisk thresholds, quietly assume some defaults
+  // For the brisk thresholds and other values, quietly assume some defaults
   if (!config->GetReal("min_brisk_threshold", &min_brisk_threshold))
-    min_brisk_threshold = 80.0;
+    min_brisk_threshold = 50.0;
   if (!config->GetReal("default_brisk_threshold", &default_brisk_threshold))
-    max_brisk_threshold = 100.0;
+    default_brisk_threshold = 75.0;
   if (!config->GetReal("max_brisk_threshold", &max_brisk_threshold))
-    max_brisk_threshold = 200.0;
-
-  // TODO(oalexan1): Check the above.
+    max_brisk_threshold = 75.0;
+  if (!config->GetInt("early_break_landmarks", &early_break_landmarks))
+    early_break_landmarks = 100;
 
   map_->SetCameraParameters(cam_params);
   map_->SetNumSimilar(num_similar);
   map_->SetRansacInlierTolerance(ransac_inlier_tolerance);
   map_->SetRansacIterations(ransac_iterations);
+  map_->SetEarlyBreakLandmarks(early_break_landmarks);
   map_->SetDetectorParams(min_features, max_features, detection_retries,
                           min_brisk_threshold, default_brisk_threshold, max_brisk_threshold);
 }

@@ -1,0 +1,27 @@
+#!/bin/bash
+
+# Move helpers to easier location
+cp -r /home/astrobee/hsc/helpers /home/astrobee
+
+# Move config files into place on the MLP
+cp /home/astrobee/hsc/fault_table.config /opt/astrobee/config/management
+cp /home/astrobee/hsc/NDDS_DISCOVERY_PEERS /opt/astrobee/config/communications/dds
+cp /home/astrobee/hsc/RAPID_QOS_PROFILES.xml /opt/astrobee/config/communications/dds
+cp /home/astrobee/hsc/honey.config /opt/astrobee/config/robots/
+cp /home/astrobee/hsc/queen.config /opt/astrobee/config/robots/
+
+# Move helpers script and config files into place on the LLP
+scp -r /home/astrobee/helpers llp:
+scp /home/astrobee/hsc/honey.config llp:/opt/astrobee/config/robots/
+scp /home/astrobee/hsc/queen.config llp:/opt/astrobee/config/robots/
+
+# Add picoflexx key config if needed
+if [[ $# -eq 1 ]]
+then
+  if [ $1 = cal ]
+  then
+    cp /home/astrobee/hsc/cameras.config /opt/astrobee/config/
+  else
+    echo "Unknown argument passed in. Please use with no arguments or cal as an argument"
+  fi
+fi

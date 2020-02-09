@@ -53,6 +53,17 @@ def has_depth_topic(filename):
 
   return False
 
+def has_dock_topic(filename):
+  '''See if a dock topic is in the file.'''
+  with open(filename, 'r') as f:
+    for line in f:
+      prog = re.compile('^\s*rostopic:\s*/hw/.*?dock')
+      m = re.match(prog, line)
+      if m:
+        return True
+
+  return False
+
 def find_close_parenthese(s):
   assert(s[0] == '(')
   count = 1
@@ -85,9 +96,10 @@ def lua_read_transform(filename, transform_name):
   except IOError:
     return None
   (transform_text, open_bracket, close_bracket) = lua_find_transform(contents, transform_name)
-  prog = re.compile('\(vec3\((.*)\),\s*quat4\((.*)\)\)')
+  prog = re.compile('\(vec3\((.*)\),\s*quat4\((.*)\)\s*\)')
   m = re.match(prog, transform_text)
   if m == None:
+    print >> sys.stderr, "Could not extract the transform from string: %s " % transform_text
     return None
   trans = map(float, map(lambda x: x.strip(), m.group(1).split(',')))
   quat = map(float, map(lambda x: x.strip(), m.group(2).split(',')))
@@ -212,6 +224,13 @@ def main():
 
   imu_yaml = SCRIPT_DIR + '/config/imu.yaml'
   config_file = SCRIPT_DIR + '/../../astrobee/config/robots/' + args.robot + '.config'
+
+  # Sanity check
+  has_dock = has_dock_topic(args.intrinsics_yaml)
+  if has_dock and (not args.dock_cam):
+    print >> sys.stderr, 'File ' + args.intrinsics_yaml + ' + has a dock topic, ' + \
+          ' yet the --dock-cam flag was not used.'
+    return
 
   print 'Calibrating camera extrinsics...'
   extrinsics_yaml = calibrate_extrinsics(args.extrinsics_bag, args.calibration_target,

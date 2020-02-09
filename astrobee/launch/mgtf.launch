@@ -18,8 +18,9 @@
 <launch>
 
   <!-- Context options (NB: SOME OVERRIDDEN BY /etc or ENVIRONMENT VARIABLES)-->
-  <arg name="robot" default="p4c" />          <!-- Robot name                -->
-  <arg name="world" default="mgtf" />         <!-- World name                -->
+  <!-- Set robot and world correctly; environment variable over rule default -->
+  <arg name="robot" default="$(optenv ASTROBEE_ROBOT p4c)" />
+  <arg name="world" default="$(optenv ASTROBEE_WORLD mgtf)" />
   <arg name="ns" default="" />                <!-- Robot namespace prefix    -->
   <arg name="output" default="log"/>          <!-- Where nodes should log    -->
   <arg name="spurn" default=""/>              <!-- Prevent a specific node   -->
@@ -45,10 +46,13 @@
   <arg name="stats" default="false" />        <!-- Message statistics        -->
 
   <!-- Make sure all environment variables are set for controller -->
-  <env if="$(eval optenv('ASTROBEE_ROBOT','')=='')"
-       name="ASTROBEE_ROBOT" value="$(arg robot)" />
-  <env if="$(eval optenv('ASTROBEE_WORLD','')=='')"
-       name="ASTROBEE_WORLD" value="$(arg world)" />
+  <!-- Override the robot and world environment variables all the time. The -->
+  <!-- environment variables are the default if they are set. So in this -->
+  <!-- case we are overriding the environment variables with themselves. -->
+  <!-- Roslaunch arguments override the environment variable which is what -->
+  <!-- this will do. -->
+  <env name="ASTROBEE_ROBOT" value="$(arg robot)" />
+  <env name="ASTROBEE_WORLD" value="$(arg world)" />
   <env if="$(eval optenv('ASTROBEE_CONFIG_DIR','')=='')"
        name="ASTROBEE_CONFIG_DIR" value="$(find astrobee)/config" />
   <env if="$(eval optenv('ASTROBEE_RESOURCE_DIR','')=='')"

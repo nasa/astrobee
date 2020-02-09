@@ -47,7 +47,7 @@ DEFINE_string(ns, "", "Robot namespace");
 
 // Argument based ommands
 DEFINE_double(pan, INFINITY, "Pan the arm (in degrees -90 to 90)");
-DEFINE_double(tilt, INFINITY, "Tilt the arm (in degrees -20 to 90)");
+DEFINE_double(tilt, INFINITY, "Tilt the arm (in degrees -120 to 90)");
 DEFINE_double(set, INFINITY, "Set the gripper (in percent)");
 
 // Toggle based commands

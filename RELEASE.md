@@ -1,5 +1,59 @@
 # Astrobee Robot Software v1
 
+## Release 0.10.2
+
+  * Perching behavior implemented
+  * Localization sparse mapping timeout increased to 10 minutes
+  * Already there tolerances decreased to allow for smaller moves
+  * Other minor bug fixes/software improvements
+
+## Release 0.10.1
+
+  * Removed the new signal lights nodes from launch
+
+## Release 0.10.0
+
+  * New control scheme for some commands
+    - Independant control of camera streaming/recording parameters
+    - Can start/stop recording data independantly of profile selection
+    - Required minor IDL changes
+  * Perching Arm driver functional with latest firmware
+  * Support for many more commands in plan to allow easy "scripting"
+  * Localization
+    - Separated tunable minimal feature count for ML versus AR
+    - Tuned EKF for better stability
+    - Fixes in localization_manager behavior
+  * Mapping
+    - Prune "less" the features in the map in order to improve the search
+      restults
+
+## Release 0.9.3
+
+* Many localization improvements making the EKF much more stable and resilient
+  to loss of mapped landmarks features.
+  - Improved tools to analyze localization bags
+  - Fixed bug in two places where the noise computation was not multiplied by
+    the focal length
+  - Changed the selection of optical flow features to pass a better subset
+    to the EKF
+  - Tuned lot of the EFK parameters
+* Added nodes to check the time synchronization between processors (with
+  associated logging and fault generation)
+* Re-positioned the dock location on ISS from the mapping activity.
+
+## Release 0.9.2
+
+ * Drop bad images from camera.
+
+## Release 0.9.1
+
+ * Honor "referenceFrame" for simpleMove6DOF commands (allows relative motion)
+ * Status video/streaming LEDs controlled by the Executive
+ * Default bagger profile tuned to include more core topics
+ * Agent state publish current world information
+ * Camera driver double buffer fix
+ * As usual, other bug fixes too
+
 ## Release 0.8.0
 
  * Fixed simulator jump under some conditions on motion start

@@ -36,6 +36,7 @@ enum FaultKeys {
   TEMPERATURE_TOO_HIGH,
   HEARTBEAT_MISSING,
   VELOCITY_TOO_HIGH,
+  TIME_DIFF_TOO_HIGH,
   LOCALIZATION_PIPELINE_UNSTABLE,
   ESTIMATE_CONFIDENCE_TOO_LOW,
   DISK_USAGE_TOO_HIGH,
@@ -52,7 +53,7 @@ enum FaultKeys {
   IMU_ACCEL_ABOVE_LIMITS
 };
 
-constexpr int kFaultKeysSize = 24;
+constexpr int kFaultKeysSize = 25;
 
 static std::string fault_keys[] = {
     "UNKNOWN_FAULT_KEY",
@@ -65,6 +66,7 @@ static std::string fault_keys[] = {
     "TEMPERATURE_TOO_HIGH",
     "HEARTBEAT_MISSING",
     "VELOCITY_TOO_HIGH",
+    "TIME_DIFF_TOO_HIGH",
     "LOCALIZATION_PIPELINE_UNSTABLE",
     "ESTIMATE_CONFIDENCE_TOO_LOW",
     "DISK_USAGE_TOO_HIGH",

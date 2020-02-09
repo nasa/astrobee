@@ -29,6 +29,7 @@
 
 #include <ff_msgs/DataToDiskState.h>
 #include <ff_msgs/DataTopicsList.h>
+#include <ff_msgs/EnableRecording.h>
 #include <ff_msgs/SetDataToDisk.h>
 
 #include <ff_util/ff_names.h>
@@ -56,6 +57,9 @@ class DataBagger : public ff_util::FreeFlyerNodelet {
   bool SetDataToDiskService(ff_msgs::SetDataToDisk::Request &req,
                             ff_msgs::SetDataToDisk::Response &res);
 
+  bool EnableRecordingService(ff_msgs::EnableRecording::Request &req,
+                              ff_msgs::EnableRecording::Response &res);
+
  protected:
   virtual void Initialize(ros::NodeHandle *nh);
   bool ReadParams();
@@ -63,39 +67,48 @@ class DataBagger : public ff_util::FreeFlyerNodelet {
  private:
   void GetTopicNames();
 
-  bool MakeDataDirs();
   bool MakeDir(std::string dir, bool assert_init_fault, std::string &err_msg);
+
+  std::string GetDate(bool with_time);
+
+  void FixTopicNamespace(std::string &topic);
 
   void OnStartupTimer(ros::TimerEvent const& event);
 
-  bool SetDataToDisk(ff_msgs::DataToDiskState &state,
-                     std::string &err_msg);
+  bool SetImmediateDataToDisk(std::string &err_msg);
+
+  bool SetDelayedDataToDisk(ff_msgs::DataToDiskState &state,
+                            std::string &err_msg);
+
   void StartDelayedRecording();
   void StartImmediateRecording();
 
-  void ResetRecorders();
+  void ResetRecorders(bool immediate);
+
+  void GenerateCombinedState(ff_msgs::DataToDiskState *ground_state);
+
+  void PublishState();
 
   astrobee_rosbag::Recorder *delayed_recorder_, *immediate_recorder_;
 
-  bool recording_delayed_bag_, recording_immediate_bag_;
-
   config_reader::ConfigReader config_params_;
 
-  ff_msgs::DataToDiskState default_data_state_;
+  ff_msgs::DataToDiskState default_data_state_, combined_data_state_;
 
   int pub_queue_size_;
   unsigned int startup_time_secs_;
+  int64_t bag_size_bytes_;
 
   ros::Publisher pub_data_state_, pub_data_topics_;
   ros::Timer startup_timer_;
 
-  ros::ServiceServer service_;
+  ros::ServiceServer set_service_, record_service_;
 
   rosbag::RecorderOptions recorder_options_delayed_;
   rosbag::RecorderOptions recorder_options_immediate_;
 
   std::thread delayed_thread_, immediate_thread_;
-  std::string save_dir_;
+  std::string save_dir_, robot_name_, delayed_profile_name_;
 };
 
 }  //  namespace data_bagger

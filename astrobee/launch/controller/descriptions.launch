@@ -22,8 +22,16 @@
     textfile="$(find astrobee_granite)/urdf/model.urdf" />
   <param if="$(eval arg('world')=='iss')" name="/iss/robot_description"
     textfile="$(find astrobee_iss)/urdf/model.urdf" />
-  <param if="$(eval arg('world')!='mgtf')" name="/dock/robot_description"
+  <param name="/dock/robot_description"
     textfile="$(find astrobee_dock)/urdf/model.urdf" />
+  <param name="/handrail_8_5/robot_description"
+    textfile="$(find astrobee_handrail_8_5)/urdf/model.urdf" />
+  <param name="/handrail_21_5/robot_description"
+    textfile="$(find astrobee_handrail_21_5)/urdf/model.urdf" />
+  <param name="/handrail_30/robot_description"
+    textfile="$(find astrobee_handrail_30)/urdf/model.urdf" />
+  <param name="/handrail_41_5/robot_description"
+    textfile="$(find astrobee_handrail_41_5)/urdf/model.urdf" />
   <!-- We must publish global transforms in case no robot has been spawned -->
   <node name="global_transforms" pkg="framestore" type="global_transforms" output="screen"/>
 </launch>

@@ -1,0 +1,49 @@
+{
+  "procedure": [
+    [
+      "Procedure",
+      "powerOnleft",
+      [
+        "Define",
+        "$gaugel",
+        [
+          "ListFrame",
+          ["BasicFrame", "#000", 0.0, 120],
+          ["BasicFrame", "#fff", 120.0, 120]
+        ]
+      ],
+      ["Define", "$rptGaugel", ["RepeatFrame", "$gaugel", 256.0]],
+      ["Define", "$gaugeUpl", ["MoveSequence", "$rptGaugel", 5.0]],
+      ["Define", "$onCirclel", ["Domain", ["Interval", 14, 60]]],
+      ["Return", ["BasicAnimation", "$onCirclel", "$gaugeUpl"]]
+    ],
+
+    [
+      "Procedure",
+      "powerOnright",
+      [
+        "Define",
+        "$gauger",
+        [
+          "ListFrame",
+          ["BasicFrame", "#000", 0.0, 120],
+          ["BasicFrame", "#fff", 120.0, 120]
+        ]
+      ],
+      ["Define", "$rptGauger", ["RepeatFrame", "$gauger", 241.0]],
+      ["Define", "$gaugeUpr", ["MoveSequence", "$rptGauger", 5.0]],
+      ["Define", "$onCircler", ["Domain", ["Interval", 29, 45]]],
+      ["Return", ["BasicAnimation", "$onCircler", "$gaugeUpr"]]
+    ]
+  ],
+  "state": [
+    "ExecState",
+    1.0,
+    30.0,
+    true,
+    [
+      ["Call", "left", "powerOnright", "#fff", 1.0],
+      ["Call", "right", "powerOnleft", "#fff", 1.0]
+    ]
+  ]
+}

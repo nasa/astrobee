@@ -1,0 +1,6 @@
+<library path="lib/libstates_nodelet">
+  <class name="states/StatesNodelet" type="states::StatesNodelet"
+         base_class_type="nodelet::Nodelet">
+    <description>Nodelet for the automatically switching between Astrobee signal states</description>
+  </class>
+</library>

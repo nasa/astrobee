@@ -34,6 +34,10 @@
 // STL includes
 #include <string>
 
+// Normal_distribution
+#include <iostream>
+#include <random>
+
 namespace gazebo {
 class GazeboSensorPluginPerchCam : public FreeFlyerSensorPlugin {
  public:
@@ -126,6 +130,7 @@ class GazeboSensorPluginPerchCam : public FreeFlyerSensorPlugin {
     if (point_cloud_pub_.getNumSubscribers() > 0 && rate_ > 0) {
       sensor_->SetUpdateRate(rate_);
       sensor_->SetActive(true);
+      camera_->SetClipDist(0.001, 5);
     } else {
       sensor_->SetUpdateRate(0.0001);
       sensor_->SetActive(false);
@@ -142,11 +147,39 @@ class GazeboSensorPluginPerchCam : public FreeFlyerSensorPlugin {
                               * point_cloud_msg_.point_step;
     point_cloud_msg_.data.resize(point_cloud_msg_.row_step
       * point_cloud_msg_.height);
-    std::copy(
+
+    /* 
+     * J.L Proposed change: The simulated camera is "perfect", and
+     * carries no noise on depth whatsoever. Usually, one would add 
+     * the noise when creating the camera model. Gazebo currently does 
+     * not permit to add noise to modeled depth sensors. Hence, we 
+     * propose here to add a gaussian noise to the data acquired.
+     */
+    float noisy_data[static_cast<int>(point_cloud_msg_.row_step)
+      * static_cast<int>(height)];
+    std::default_random_engine generator;
+    // distribution(mean, stdev)
+    if (noisy_data != NULL) {
+      std::normal_distribution<double> distribution(0.0, 0.009);
+      for (int i = 0; i<static_cast<int>(height); i++) {
+        for (int j = 0; j<static_cast<int>(point_cloud_msg_.row_step); j++) {
+          noisy_data[i * static_cast<int>(point_cloud_msg_.row_step) + j] =
+          data[i * static_cast<int>(point_cloud_msg_.row_step) + j]
+          + distribution(generator);
+        }
+      }
+      std::copy(
+        reinterpret_cast<const uint8_t*>(noisy_data),
+        reinterpret_cast<const uint8_t*>(noisy_data) + point_cloud_msg_.row_step
+        * point_cloud_msg_.height, point_cloud_msg_.data.begin());
+        point_cloud_pub_.publish(point_cloud_msg_);
+    }
+
+    /*std::copy(
       reinterpret_cast<const uint8_t*>(data),
       reinterpret_cast<const uint8_t*>(data) + point_cloud_msg_.row_step
         * point_cloud_msg_.height, point_cloud_msg_.data.begin());
-    point_cloud_pub_.publish(point_cloud_msg_);
+    point_cloud_pub_.publish(point_cloud_msg_);*/
   }
 
  private:

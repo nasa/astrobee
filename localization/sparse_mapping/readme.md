@@ -27,8 +27,8 @@ detected in the image and their 3D coordinates.
 
 ### Inputs
 
-* `/hw/cam_nav`: Camera Images
-* Map File (specified on command line, via `--map_file`)
+* `/hw/cam_nav`: Camera images
+* Map file (specified on command line, via `--map_file`)
 
 ### Outputs
 
@@ -37,7 +37,7 @@ detected in the image and their 3D coordinates.
 
 ## Tools and procedures
 
-### Record a bag.
+### Record a bag
 
 Record on the robot in order to not drop too many frames. Launch the
 camera node. Connect to the robot. Create a subdirectory in /data
@@ -71,6 +71,17 @@ From the local machine, fetch the bag:
   rsync -avzP astrobee@10.42.0.32:/data/bagfile.bag .
 
 Here, the IP address of P4D was used, which may differ from your robot's IP address.
+
+### Merging Bags
+
+The bags created on the ISS are likely split into many smaller bags,
+for easy and reliability of transfer. Those can be merged into one bag
+as follows:
+
+  export BUILD_PATH=$HOME/freeflyer_build/native
+  source $BUILD_PATH/devel/setup.bash
+  python freeflyer/localization/sparse_mapping/tools/merge_bags.py \
+    <output bag> <input bags>
 
 ###Extracting Images
 
@@ -130,7 +141,8 @@ To test localization of a single frame, use the command:
 
 If invoked with the option -verbose_localization, it will list the
 images most similar to the one being localized. To increase the 
-number of similar images, use the -num_similar option.
+number of similar images, use the -num_similar option. Another
+useful flag is --v 2 when it will print more verbose information.
 
 ### Testing Localization 
 
@@ -152,11 +164,12 @@ well-registered.
 
 This functionality is implemented in the localize_cams tool. Usage:
 
-  localize_cams -num_similar 20 -ransac_inlier_tolerance 20     \
+  localize_cams -num_similar 20 -ransac_inlier_tolerance 5      \
     -num_ransac_iterations 200 -min_brisk_features 400          \
     -max_brisk_features 800 -min_brisk_threshold 10             \
-    -default_brisk_threshold 100 -max_brisk_threshold 200       \
+    -default_brisk_threshold 75 -max_brisk_threshold 75         \
     -detection_retries 5 -num_threads 2                         \
+    -early_break_landmarks 200                                  \
     -reference_map ref.map -source_map source.map
 
 Here we use values that are different from 
@@ -169,22 +182,39 @@ for speed and here we want more accuracy.
 ### Extract sub-maps
 
 The tool `extract_submap` can be used to extract a submap from a map,
-containing only a given subset of the images or images with camera
-center in a given box. This can be useful if the map failed to build
-properly, but parts of it are still salvageable. Those can be
-extracted, new small maps can be created of the region that failed,
-then all maps can be merged together with `merge_maps`.
+containing only a specified list of images, or a given range of
+image indices, or images with camera center in a given box. Usage:
 
-    extract_submap -input_map <input map> -output_map <output map> <images to keep>
+    extract_submap -input_map <input map> -output_map <output map> \
+      <images to keep>
 
 or
+    extract_submap -input_map <input map> -output_map <output map> \
+      -image_list <file>
+or
+    extract_submap -input_map <input map> -output_map <output map> \
+     -exclude <images to exclude>
+
+or
+
+    extract_submap -input_map <input map> -output_map <output map> \
+      -cid_range "min_cid max_cid"
+
+(here first image has cid = 0, and the range is inclusive at both
+ends), or
 
     extract_submap -input_map <input map> -output_map <output map> \
       -xyz_box "xmin xmax ymin ymax zmin zmax"
 
 If it is desired to not re-adjust the cameras after the submap is
 extracted (for example, if the map is already registered), use the
-`-skip_bundle_adjustment` option.
+`-skip_bundle_adjustment` option. 
+
+If the input map has a vocabulary database of features, it will
+need to be rebuilt for the extracted submap using
+
+  build_map -vocab_db
+
 
 #### Merge Maps
 
@@ -201,7 +231,9 @@ follows:
 
 and then these regenerated maps can be merged. Note that the merged
 map will be pruned as well, unless merging is invoked also with
--skip_pruning.
+-skip_pruning. Also note that the above won't rebuild the vocabulary
+database (if desired, for brisk features). For that one should use
+additionally the '-vocab_db' option.
 
 Merging is more likely to succeed if the images at the endpoints of
 one map are similar to images at the endpoints of the second map, and
@@ -223,39 +255,108 @@ to each other, the more likely merging will succeed.
 After a merged map is created and registered, it can be rebuilt with
 the BRISK detector to be used on the robot. 
 
-###Working with Robot Data
+When manipulating many submaps, it is suggested that bundle adjustment
+be skipped during merging, using -skip_bundle_adjustment, until the
+final map is computed, as this step can be time-consuming.
 
-[This section is outdated.]
+#### How To Build a Map Efficiently
 
-To pull information from ROS bag files:
+Often times map-building can take a long time, or it can fail. A
+cautious way of building a map is to build it in portions (perhaps on
+different machines), examine them, and merge them with 'merge_maps'.
 
-    rostopic echo -b <bag.bag>  -p /cam_nav/image  --noarr > <bag.images.csv>
-    rostopic echo -b <bag.bag>  -p /ground_truth           > <bag.ground_truth.csv>
+If map-building failed, parts of it could still be salvageable (one
+can use nvm_visualize for inspection). Valid submaps can be extracted
+with 'extract_submap'. Then those can be merged with 'merge_maps'.
 
-These CSV files obtained from the ROS bag contain the timestamp for
-every image captured, as well as ground truth measurements for the bot
-position and orientation (not necessarily at the same times the images
-were captured).
+When two maps to be merged overlap only in the middle, and they are
+both large, the number -num_image_overlaps_at_endpoints will need to
+be large which would make merging very slow. A very useful option can
+then be the flag '-fast_merge' for this tool. It won't create matches
+among the two maps, but will instead identify the shared images among
+the two maps thus merging the maps, if shared images exist.
 
-Next, interpolate the ground truth measurements at image timestamps,
-and save the resulting collection of images and their poses as a
-measured map file. Along the way, convert the measurements from the
-bot coordinate frame to the camera coordinate frame using info in
-`communications/ff_frame_store/launch/ff_frame_store.launch`
+If no such images are available, but the two maps do see the same
+physical location in some portions (if from different views), each of
+the two maps can be first merged with the same small map of that
+shared location, and then the newly merged map which now will have
+shared images can be merged with the '-fast_merge' flags.
 
-    parse_cam -ground_truth_file <ground_truth.csv> -image_file <images.csv> -image_set_dir <image dir> -camera_calibration <calib.xml> -output_map <images.map>
+To summarize, with careful map surgery (extract submaps and merge
+submaps) large maps can be made from smaller or damaged ones within
+reasonable time.
 
-This command creates a map based on the ground truth data.
+All these operations should be performed on maps with SURF features.
+Hence the general approach for building maps is to create small SURF
+maps using the command:
 
-Sometimes it is desirable to build a map only from a subset of the
-images in the bag (see the documentation of the `select_images`
-executable above). In that case, `parse_cam` can be invoked with the
-desired subset with the `-image_subset_dir` option.
+  build_map -feature_detection -feature_matching -track_building \
+   -incremental_ba -tensor_initialization -bundle_adjustment     \
+   -skip_pruning -num_subsequent_images 100 images/*jpg          \
+   -output_map <map file>
 
-###Trajectory Generation
+examine them individually, merging them as appropriate, then
+performing bundle adjustment (while skipping pruning) and registration
+as per build_map.md. Only when a good enough map is obtained, a
+renamed copy of it should be rebuilt with BRISK features and a
+vocabulary database to be used on the robot.
 
-[This section is outdated.]
+# How to Add to a Map Images for Which Localization Fails
 
-A tool to generate a trajectory that P3 can follow:
+The current approach has several steps (in the future this proces may
+be streamlined). 
 
-    gen_trajectory -num_loops 3 -num_samples 50 -trajectory_file trajectory.csv
+First a new SURF map is built from the new images (using
+-skip_pruning). The program merge_maps is invoked on the old and new
+maps (in this order), using the -skip_pruning flag and with bundle
+adjustment (the latter is the default in merge_maps). The combined map
+is re-registered, and the submap corresponding to the new images is
+extracted (without redoing bundle adjustment). The obtained SURF map
+of new images is now in the same coordinate system as the old one.
+
+The new map is used as the source map in localize_cams, with the old
+map (the BRISK version of it) being the reference map. The images for
+which localization error is good are saved to a file. Then
+extract_submap is invoked on the merged map to exclude the images with
+good localization, leaving in the combined SURF map the old images
+together with the new images with bad localization. The combined map
+is rebuilt with BRISK and a vocabulary database.
+
+#### Reducing the Number of Images in a Map
+
+Sometimes a map has too many similar images. The tool reduce_map.py
+attempts to reduce their number without sacrificing the map quality.
+
+It is very important that the input map is not pruned, so when it is
+created (or rebuilt) the -skip_pruning flag must be used.  It should
+be made of of BRISK features, registered, and with a vocab db.
+
+Usage:
+
+  python reduce_map.py -input_map <input map> -min_brisk_threshold <val> \
+         -default_brisk_threshold <val> -max_brisk_threshold <val>       \
+         -localization_error <val> -work_dir <work dir>                  \
+         -sample_rate <val>
+
+A sequence of ever-smaller output maps are saved in the work
+directory. They are pruned maps, unlike the input unpruned map. 
+
+The algorithm is as follows. Randomly remove a fraction (stored in
+-sample_rate, typically 1/4 th) of images form a map. Localize the
+images from the full map against the images of the reduced map. Images
+for which localization fails with more than a given error (typically 2
+cm) are added back to the reduced map. This is repeated until no more
+images need adding (this is called the inner iteration).
+
+The reduced map is written to 
+
+  <work_dir>/submap_iter0.map
+
+Then more images are taken out of the map and all the previous process
+is repeated (this is called the outer iteration), each time obtaining
+a smaller map named
+
+  <work_dir>/submap_iter<outer iter>.map
+
+One should carefully evaluate these output maps. Likely after a couple
+of outer iterations the quality of the map may start degrading.

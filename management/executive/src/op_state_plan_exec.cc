@@ -37,12 +37,18 @@ OpState* OpStatePlanExec::StartupState(std::string const& cmd_id) {
   // Don't need to check for empty plan since this was checked before the
   // transition to plan execution state but do need to check for invalid
   // command. If the first item in the plan is a command and invalid, the ready
-  // operating state will be returned.
+  // operating state will be returned. Also, if the plan was only instantaneous
+  // commands, the ready operating state is returned. We need to check for this.
   OpState* temp_op_state = StartNextPlanItem();
   if (temp_op_state != this) {
-    // If the first item wasn't successful, pause plan
-    exec_->SetPlanExecState(ff_msgs::ExecState::PAUSED);
-    exec_->PublishPlanStatus(ff_msgs::AckStatus::QUEUED);
+    // If the plan execution status is completed then we know that the plan
+    // contained instantaneous commands only and we don't do anything. If the
+    // plan execution state is executing, we know the first item wasn't
+    // successful, so we need to pause the plan.
+    if (exec_->GetPlanExecState() == ff_msgs::AckStatus::EXECUTING) {
+      exec_->SetPlanExecState(ff_msgs::ExecState::PAUSED);
+      exec_->PublishPlanStatus(ff_msgs::AckStatus::QUEUED);
+    }
   }
   return temp_op_state;
 }
@@ -92,6 +98,10 @@ OpState* OpStatePlanExec::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
       if (!exec_->IdlePropulsion(cmd)) {
         return OpStateRepo::Instance()->ready()->StartupState();
       }
+    } else if (cmd->cmd_name == CommandConstants::CMD_NAME_INITIALIZE_BIAS) {
+      if (!exec_->InitializeBias(cmd)) {
+        return OpStateRepo::Instance()->ready()->StartupState();
+      }
     } else if (cmd->cmd_name == CommandConstants::CMD_NAME_PAUSE_PLAN) {
       exec_->PausePlan(cmd);
       return OpStateRepo::Instance()->ready()->StartupState();
@@ -112,8 +122,33 @@ OpState* OpStatePlanExec::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
         return OpStateRepo::Instance()->ready()->StartupState();
       }
     } else if (cmd->cmd_name ==
+                              CommandConstants::CMD_NAME_SET_CHECK_OBSTACLES) {
+      if (exec_->SetCheckObstacles(cmd)) {
+        return AckStartPlanItem();
+      } else {
+        return OpStateRepo::Instance()->ready()->StartupState();
+      }
+    } else if (cmd->cmd_name == CommandConstants::CMD_NAME_SET_CHECK_ZONES) {
+      if (exec_->SetCheckZones(cmd)) {
+        return AckStartPlanItem();
+      } else {
+        return OpStateRepo::Instance()->ready()->StartupState();
+      }
+    } else if (cmd->cmd_name ==
                         CommandConstants::CMD_NAME_SET_FLASHLIGHT_BRIGHTNESS) {
       if (exec_->SetFlashlightBrightness(cmd)) {
+        return AckStartPlanItem();
+      } else {
+        return OpStateRepo::Instance()->ready()->StartupState();
+      }
+    } else if (cmd->cmd_name == CommandConstants::CMD_NAME_SET_HOLONOMIC_MODE) {
+      if (exec_->SetHolonomicMode(cmd)) {
+        return AckStartPlanItem();
+      } else {
+        return OpStateRepo::Instance()->ready()->StartupState();
+      }
+    } else if (cmd->cmd_name == CommandConstants::CMD_NAME_SET_PLANNER) {
+      if (exec_->SetPlanner(cmd)) {
         return AckStartPlanItem();
       } else {
         return OpStateRepo::Instance()->ready()->StartupState();
@@ -131,12 +166,16 @@ OpState* OpStatePlanExec::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
       if (!exec_->SendGuestScienceCommand(cmd)) {
         return OpStateRepo::Instance()->ready()->StartupState();
       }
+    } else if (cmd->cmd_name ==
+                              CommandConstants::CMD_NAME_SWITCH_LOCALIZATION) {
+      if (!exec_->SwitchLocalization(cmd)) {
+        return OpStateRepo::Instance()->ready()->StartupState();
+      }
     } else if (cmd->cmd_name == CommandConstants::CMD_NAME_UNDOCK) {
       if (!exec_->Undock(cmd)) {
         return OpStateRepo::Instance()->ready()->StartupState();
       }
     } else if (cmd->cmd_name == CommandConstants::CMD_NAME_UNPERCH) {
-      // TODO(Katie) Stub, change to be actual code.
       if (!exec_->Unperch(cmd)) {
         return OpStateRepo::Instance()->ready()->StartupState();
       }
@@ -313,6 +352,8 @@ void OpStatePlanExec::AckCmd(std::string const& cmd_id,
 
 void OpStatePlanExec::AckPlanCmdFailed(uint8_t completed_status,
                                        std::string const& message) {
+  // Call ack command with the run plan command id so the run plan command id
+  // gets acked
   AckCmd(run_plan_cmd_id_, completed_status, message);
   run_plan_cmd_id_ = "";
   exec_->SetPlanExecState(ff_msgs::ExecState::PAUSED);
@@ -400,7 +441,7 @@ OpState* OpStatePlanExec::AckStartPlanItem() {
     exec_->PublishPlanStatus(ff_msgs::AckStatus::EXECUTING);
     return StartNextPlanItem();
   } else {
-    ROS_DEBUG("Plan complete!");
+    ROS_INFO("Plan complete!");
     AckCmd(run_plan_cmd_id_);
     run_plan_cmd_id_ = "";
     exec_->PublishPlanStatus(ff_msgs::AckStatus::COMPLETED);
@@ -436,6 +477,7 @@ OpState* OpStatePlanExec::StartNextPlanItem() {
       first_segment_ = false;
     }
   } else if (it == sequencer::ItemType::COMMAND) {
+    ROS_DEBUG("Executing next command.");
     return HandleCmd(exec_->GetPlanCommand());
   } else {
     // Plan is empty so it must have completed successfully

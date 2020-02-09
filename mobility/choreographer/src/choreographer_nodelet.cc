@@ -1251,6 +1251,24 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
       }
       // Save the states
       states_ = goal->states;
+      // If the reference frame is not empty,
+      // we need to transform the states to the correct frame
+      if (!goal->reference_frame.empty()) {
+        geometry_msgs::TransformStamped tfs;
+        try {
+          // transform from reference frame to FRAME_NAME_WORLD
+          tfs = tf_buffer_.lookupTransform(
+            FRAME_NAME_WORLD,
+            goal->reference_frame,
+            ros::Time(0));
+        } catch (tf2::TransformException &ex) {
+          result.response = RESPONSE::INVALID_REFERENCE_FRAME;
+          result.fsm_result = "Invalid reference frame";
+          break;
+        }
+        for (uint i = 0; i < states_.size(); i++)
+            tf2::doTransform(states_[i], states_[i], tfs);  // frame is now FRAME_NAME_WORLD
+      }
       // Start the move
       return fsm_.Update(GOAL_MOVE);
     default:

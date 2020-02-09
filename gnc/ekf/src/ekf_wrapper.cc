@@ -18,6 +18,7 @@
 
 #include <ekf/ekf_wrapper.h>
 #include <camera/camera_params.h>
+#include <camera/camera_model.h>
 
 #include <Eigen/Geometry>
 #include <Eigen/Dense>
@@ -90,6 +91,8 @@ void EkfWrapper::InitializeEkf(void) {
   reset_srv_      = nh_->advertiseService(SERVICE_GNC_EKF_RESET, &EkfWrapper::ResetService, this);
   bias_srv_       = nh_->advertiseService(SERVICE_GNC_EKF_INIT_BIAS, &EkfWrapper::InitializeBiasService, this);
   input_mode_srv_ = nh_->advertiseService(SERVICE_GNC_EKF_SET_INPUT, &EkfWrapper::SetInputService, this);
+
+  reset_hr_srv_ = nh_->advertiseService(SERVICE_GNC_EKF_RESET_HR, &EkfWrapper::ResetHandrailService, this);
 
   ekf_initialized_ = true;
 }
@@ -170,10 +173,21 @@ void EkfWrapper::PublishFeatures(ff_msgs::DepthLandmarks::ConstPtr const& l) {
   features_.row_step = features_.point_step * features_.width;
   features_.is_dense = true;
   features_.data.resize(features_.row_step);
+  // The features are expressed as image plane coordinated (u,v) and a depth. We
+  // must use the camera model to convert this to an (x,y,z) coordinate.
+  static camera::CameraParameters cam_params(&config_, "perch_cam");
+  static camera::CameraModel camera_model(Eigen::Vector3d(0, 0, 0),
+    Eigen::Matrix3d::Identity(), cam_params);
+  float x, y, z;
   for (unsigned int i = 0; i < l->landmarks.size(); i++) {
-    memcpy(&features_.data[features_.point_step * i + 0], &l->landmarks[i].u, 4);
-    memcpy(&features_.data[features_.point_step * i + 4], &l->landmarks[i].v, 4);
-    memcpy(&features_.data[features_.point_step * i + 8], &l->landmarks[i].w, 4);
+    Eigen::Vector3d p_c = l->landmarks[i].w * camera_model.Ray(
+      static_cast<int>(l->landmarks[i].u), static_cast<int>(l->landmarks[i].v));
+    x = static_cast<float>(p_c[0]);
+    y = static_cast<float>(p_c[1]);
+    z = static_cast<float>(p_c[2]);
+    memcpy(&features_.data[features_.point_step * i + 0], &x, 4);
+    memcpy(&features_.data[features_.point_step * i + 4], &y, 4);
+    memcpy(&features_.data[features_.point_step * i + 8], &z, 4);
   }
   feature_pub_.publish(features_);
 }
@@ -266,8 +280,19 @@ void EkfWrapper::ARVisualLandmarksCallBack(ff_msgs::VisualLandmarks::ConstPtr co
 
 void EkfWrapper::DepthLandmarksCallBack(ff_msgs::DepthLandmarks::ConstPtr const& dl) {
   if (input_mode_ == ff_msgs::SetEkfInputRequest::MODE_HANDRAIL) {
-    std::lock_guard<std::mutex> lock(mutex_vl_msg_);
-    ekf_.HandrailUpdate(*dl.get());
+    std::lock_guard<std::mutex> lock(mutex_dl_msg_);
+    bool updated = ekf_.HRTagUpdate(*dl.get());
+    if (updated) {
+      Eigen::Affine3d t = ekf_.GetHandrailToWorldTransform();
+      geometry_msgs::TransformStamped transform;
+      transform.header = std_msgs::Header();
+      transform.header.stamp = ros::Time::now();
+      transform.header.frame_id = "world";
+      transform.child_frame_id = "handrail/body";
+      transform.transform.translation = msg_conversions::eigen_to_ros_vector(t.translation());
+      transform.transform.rotation = msg_conversions::eigen_to_ros_quat(Eigen::Quaterniond(t.linear()));
+      transform_pub_.sendTransform(transform);
+    }
     PublishFeatures(dl);
   }
 }
@@ -355,9 +380,10 @@ int EkfWrapper::Step() {
     if (!ekf_initialized_)
       InitializeEkf();
 
-    std::lock(mutex_act_msg_, mutex_vl_msg_, mutex_of_msg_, mutex_truth_msg_);
+    std::lock(mutex_act_msg_, mutex_vl_msg_, mutex_dl_msg_, mutex_of_msg_, mutex_truth_msg_);
     std::lock_guard<std::mutex> lock_actMsg(mutex_act_msg_, std::adopt_lock);
     std::lock_guard<std::mutex> lock_vlMsg(mutex_vl_msg_, std::adopt_lock);
+    std::lock_guard<std::mutex> lock_dlMsg(mutex_dl_msg_, std::adopt_lock);
     std::lock_guard<std::mutex> lock_ofMsg(mutex_of_msg_, std::adopt_lock);
     std::lock_guard<std::mutex> lock_truthMsg(mutex_truth_msg_, std::adopt_lock);
     // copy everything in EKF, so data structures can be modified for next
@@ -374,6 +400,8 @@ int EkfWrapper::Step() {
   switch (input_mode_) {
   // Don't do anything when localization in turned off
   case ff_msgs::SetEkfInputRequest::MODE_NONE:
+    state_.ml_count = 0;  // these could be set from before
+    state_.of_count = 0;
     break;
   // In truth mode we don't step the filter forward, but we do copy the pose
   // and twist into the EKF message.
@@ -440,6 +468,13 @@ bool EkfWrapper::ResetService(std_srvs::Empty::Request& req, std_srvs::Empty::Re
   return true;
 }
 
+// Service to reset the handrail position which is only calculated once. Unused, but
+// should be used in the future.
+bool EkfWrapper::ResetHandrailService(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res) {
+  ekf_.ResetHR();
+  return true;
+}
+
 bool EkfWrapper::InitializeBiasService(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res) {  // NOLINT
   bias_reset_count_ = 0;
   for (int i = 0; i < 6; i++)
@@ -457,6 +492,7 @@ bool EkfWrapper::SetInputService(ff_msgs::SetEkfInput::Request& req, ff_msgs::Se
     ROS_INFO("EKF input switched to AR tags.");
     break;
   case ff_msgs::SetEkfInputRequest::MODE_HANDRAIL:
+    ekf_.ResetHR();
     ROS_INFO("EKF input switched to handrail.");
     break;
   case ff_msgs::SetEkfInputRequest::MODE_MAP_LANDMARKS:

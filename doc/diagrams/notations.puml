@@ -1,7 +1,5 @@
 @startuml
 
-skinparam componentStyle uml2
-
 title Notations and colors for Astrobee nodes
 
 !define SHOW_ALL_TYPES true

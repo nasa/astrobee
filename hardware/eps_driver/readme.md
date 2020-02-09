@@ -1,11 +1,18 @@
 \defgroup eps_driver EPS Driver
 \ingroup hw
 
-The Electrical Power Subsystem (EPS) is responsible for controlling power to the various components of the avionics stack. The EPS is controller from the low-level processor (LLP) over i2c, by default on /dev/i2c1 with address 0x40.
+The Electrical Power Subsystem (EPS) is responsible for controlling power to the
+various components of the avionics stack. The EPS is controller from the
+low-level processor (LLP) over i2c, by default on /dev/i2c1 with address 0x40.
 
-The eps_driver is a proxy library that converts human-readable function calls into i2c read and write transactions to and from the EPS. The eps_driver_node uses this proxy library to extract telemetry data, which it broadcasts to ROS. The eps_driver_node also offers a few ROS services that enable remote users to call a subset of commands on the EPS.
+The eps_driver is a proxy library that converts human-readable function calls
+into i2c read and write transactions to and from the EPS. The eps_driver_node
+uses this proxy library to extract telemetry data, which it broadcasts to ROS.
+The eps_driver_node also offers a few ROS services that enable remote users to
+call a subset of commands on the EPS.
 
-The eps_driver_tool is a command-line interface to the eps_driver. It allows the user (or scripts) to do the following:
+The eps_driver_tool is a command-line interface to the eps_driver. It allows the
+user (or scripts) to do the following:
 
 * Turn on an off power to various avionics components
 * Configure status LEDs to be on, off or flash
@@ -24,15 +31,23 @@ The tool itself has build-in documentation. To see it, run the tool without spec
 
     eps_driver_tool
 
-Most commands take the following form, where <system> is one of -led, -hk, -power, -state, -fault, -battery, -string or -charge. The flag -list lists all possible indexes and values for the system. The flag -set sets a value for one or more indexes shown as [ <index> ... ] below. 
+Most commands take the following form, where `<system>` is one of -led, -hk,
+-power, -state, -fault, -battery, -string or -charge. The flag -list lists all
+possible indexes and values for the system. The flag -set sets a value for one
+or more indexes shown as `[ <index> ... ]` below.
 
     eps_driver_tool <system> [ -list | -get | -set <val> ] [ <index> ... ]
 
-Every system supports -list, however only some may support -get or -set. Certain commands may also have other flags. To see the documentation for a specific section, simply add its flag. For example, to see the -led documentation type the following:
+Every system supports -list, however only some may support -get or -set. Certain
+commands may also have other flags. To see the documentation for a specific
+section, simply add its flag. For example, to see the -led documentation type
+the following:
 
     eps_driver_tool -led
 
-You might now know the index or values that you can use. So, take for example the power subsystem. Let's say you want to get a lit of all possible power channels that you can turn on and off:
+You might now know the index or values that you can use. So, take for example
+the power subsystem. Let's say you want to get a lit of all possible power
+channels that you can turn on and off:
 
     eps_driver_tool -power -list
 
@@ -66,7 +81,9 @@ You should see something like this:
      - Turn off (disable, off, false, 0)
      - Turn on (enable, on, true, 1)
 
-The format of each line above is NAME (index). You might notice that any index or value might have multiple keywords. This is just for convenience, and it means the following two commands are analogous:
+The format of each line above is NAME (index). You might notice that any index
+or value might have multiple keywords. This is just for convenience, and it
+means the following two commands are analogous:
 
     eps_driver_tool -power -set on pmc1 pmc2
     eps_driver_tool -power -set enable pmc1 pmc2
@@ -77,7 +94,7 @@ Flash the camera LED ("cam") at a medium speed of 1Hz ("medium")
 
     eps_driver_tool -led -set medium cam
 
-To turn on all LEDs ("on") just 
+To turn on all LEDs ("on") just
 
     eps_driver_tool -led -set on
 
@@ -93,4 +110,3 @@ Toggle power to both propulsion systems
 
     eps_driver_tool -power -set off pmc1 pmc2
     eps_driver_tool -power -set on  pmc1 pmc2
-

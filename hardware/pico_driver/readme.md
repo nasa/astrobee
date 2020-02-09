@@ -136,3 +136,53 @@ Our results show that we are likely to gain a 1% improvement in resource usage b
 The current version of pico_driver performed an iterative copy of all points from the royale SDK to a point cloud, and then a message conversion from the PointCloud to a PointCloud2 data type. I added the improvements mentioned in the section below, and optimized the code to use a memcpy rather than an iterative copy, by exploiting the fact that the PointCloud2 data type accommodates complex data structures. This yielded a small improvement in speed for low rates, but a massive improvement for higher rates. The results are shown in the graph below:
 
 ![alt text](../images/hw/pico-optimization.jpg "Optimizing the ROS drivers")
+
+# Setup on a laptop
+
+In order to test the PicoFlexx on a laptop, several configuration steps are necessary. The cameras.config file located in ../freeflyer/astrobee/config/ must be changed with the correct camera uuid:
+	       picoflexx = {
+		  api_key = "",
+		  devices = {
+		    {
+		      name = "perch_cam",               -- frame
+		      topic = "perch",                  -- frame
+LINE TO CHANGE -----> device = "0005-4804-0050-1421",    -- camera uuid ("" : automatic)
+		      exposure = 0,                     -- exposure time (0: automatic)
+		      mode = "MODE_9_5FPS_2000",        -- use case
+		      required = true                   -- is camera required
+		    },{
+		      name = "haz_cam",                 -- frame
+		      topic = "haz",                    -- frame
+		      device = robot_haz_cam_device,    -- camera uuid ("" : automatic)
+		      exposure = 0,                     -- exposure time (0: automatic)
+		      mode = "MODE_9_5FPS_2000",        -- use case
+		      required = false                   -- is camera required
+		    },{
+		      name = "test_cam",                -- special name
+		      topic = "test",                   -- frame
+		      device = "0005-4805-0050-1520",   -- camera uuid ("" : automatic)
+		      exposure = 0,                     -- exposure time (0: automatic)
+		      mode = "MODE_5_45FPS_500",        -- use case
+		      required = false                  -- is camera required
+		    }
+		  }
+		}
+
+To find the camera uuid, run the following executable once the camera is connected to your laptop:
+		 ../freeflyer_build/native/devel/lib/pico_driver/pico_tool
+
+If the exectuable returns the message "Could not find any cameras", make sure you give sufficient permissions to the user of the hardware by typing the following command:
+			sudo chmod 666 /PATH/TO/THE/CAMERA
+
+To find the camera, I needed to run the command lsusb which returned:
+			Bus 001 Device 024: ID 1c28:c012  
+
+Which means that, in my case, the /PATH/TO/THE/CAMERA is /dev/bus/usb/001/024
+
+Once the camera is found via the pico_tool executable, you can start using the camera. An example of how to see some imagery can be to run the following commands:
+	roslaunch astrobee granite.launch mlp:=local llp:=disabled nodes:=pico_driver,framestore
+
+And, in another terminal:	rosrun rviz rviz
+
+Finally, click the "Add" button in the bottom left corner of the display panel, select "By Topic", and choose /hw/depth_perch/depth_image/Image
+

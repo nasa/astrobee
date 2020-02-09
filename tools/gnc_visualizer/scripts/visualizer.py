@@ -57,6 +57,12 @@ def mean(array):
     return sum(array) / len(array)
 
 start_time = time.time()
+
+class VisualizerCallback:
+    def __init__(self, time_key, callbacks):
+        self.time_key = time_key
+        self.callbacks = callbacks
+
 ekf_data = {'ekf_time':         lambda x: time.time() - start_time,
             'ekf_position_x':   lambda x: x.pose.position.x,
             'ekf_position_y':   lambda x: x.pose.position.y,
@@ -100,6 +106,7 @@ ekf_data = {'ekf_time':         lambda x: time.time() - start_time,
             'ekf_cov_pos_y':    lambda x: x.cov_diag[13],
             'ekf_cov_pos_z':    lambda x: x.cov_diag[14],
             'ekf_cov_pos_m':    lambda x: sqrt(x.cov_diag[12]**2 + x.cov_diag[13]**2 + x.cov_diag[14]**2)}
+ekf_callbacks = VisualizerCallback('ekf_time', ekf_data)
 
 def mahal_filter(dists):
     f = filter(lambda t: not isnan(t), dists)
@@ -113,9 +120,11 @@ ml_data = {'ml_time':           lambda x: time.time() - start_time,
            'ml_mahal_mean':     lambda x: mean(mahal_filter(x.ml_mahal_dists)),
            'ml_mahal_max':      lambda x:  max(mahal_filter(x.ml_mahal_dists))
            }
+ml_callbacks = VisualizerCallback('ml_time', ml_data)
 
 of_data = {'of_time':           lambda x: time.time() - start_time,
            'of_landmarks':      lambda x: x.of_count}
+of_callbacks = VisualizerCallback('of_time', of_data)
 
 truth_data = {'truth_time':        lambda x: time.time() - start_time,
               'truth_position_x':  lambda x: x.pose.position.x,
@@ -124,6 +133,7 @@ truth_data = {'truth_time':        lambda x: time.time() - start_time,
               'truth_rot_x':       lambda x: quat_to_eulers(x.pose.orientation)[0] * 180 / pi,
               'truth_rot_y':       lambda x: quat_to_eulers(x.pose.orientation)[1] * 180 / pi,
               'truth_rot_z':       lambda x: quat_to_eulers(x.pose.orientation)[2] * 180 / pi}
+truth_callbacks = VisualizerCallback('truth_time', truth_data)
 
 command_data = {'command_time':        lambda x: time.time() - start_time,
               'command_status':        lambda x: x.status,
@@ -146,6 +156,7 @@ command_data = {'command_time':        lambda x: time.time() - start_time,
               'command_att_err_int_x': lambda x: x.attitude_error_integrated.x,
               'command_att_err_int_y': lambda x: x.attitude_error_integrated.y,
               'command_att_err_int_z': lambda x: x.attitude_error_integrated.z}
+command_callbacks = VisualizerCallback('command_time', command_data)
 
 traj_data = {'traj_time':         lambda x: time.time() - start_time,
              'traj_position_x':  lambda x: x.pose.position.x,
@@ -154,6 +165,7 @@ traj_data = {'traj_time':         lambda x: time.time() - start_time,
              'traj_rot_x':       lambda x: quat_to_eulers(x.pose.orientation)[0] * 180 / pi,
              'traj_rot_y':       lambda x: quat_to_eulers(x.pose.orientation)[1] * 180 / pi,
              'traj_rot_z':       lambda x: quat_to_eulers(x.pose.orientation)[2] * 180 / pi}
+traj_callbacks = VisualizerCallback('traj_time', traj_data)
 
 shaper_data = {'shaper_time':        lambda x: time.time() - start_time,
                'shaper_position_x':  lambda x: x.pose.position.x,
@@ -162,6 +174,7 @@ shaper_data = {'shaper_time':        lambda x: time.time() - start_time,
                'shaper_rot_x':       lambda x: quat_to_eulers(x.pose.orientation)[0] * 180 / pi,
                'shaper_rot_y':       lambda x: quat_to_eulers(x.pose.orientation)[1] * 180 / pi,
                'shaper_rot_z':       lambda x: quat_to_eulers(x.pose.orientation)[2] * 180 / pi}
+shaper_callbacks = VisualizerCallback('shaper_time', shaper_data)
 
 pmc_data = {'pmc_time':        lambda x: time.time() - start_time,
             'pmc_1_motor_speed':  lambda x: x.goals[0].motor_speed,
@@ -178,6 +191,9 @@ pmc_data = {'pmc_time':        lambda x: time.time() - start_time,
             'pmc_2_nozzle_4':  lambda x: ord(x.goals[1].nozzle_positions[3]),
             'pmc_2_nozzle_5':  lambda x: ord(x.goals[1].nozzle_positions[4]),
             'pmc_2_nozzle_6':  lambda x: ord(x.goals[1].nozzle_positions[5]) }
+pmc_callbacks = VisualizerCallback('pmc_time', pmc_data)
+
+callbacks_list = [ekf_callbacks, ml_callbacks, of_callbacks, truth_callbacks, command_callbacks, traj_callbacks, shaper_callbacks, pmc_callbacks]
 
 class TerminalView(QtGui.QGraphicsTextItem):
     def __init__(self, graphics_view):
@@ -232,14 +248,14 @@ class Visualizer(QtGui.QMainWindow):
         self.log_lines = 0
         self.log_text = ""
         self.data = dict()
-        for d in ekf_data.keys() + truth_data.keys() + ml_data.keys() + of_data.keys() + \
-                 command_data.keys() + traj_data.keys() + shaper_data.keys() + pmc_data.keys():
-            self.data[d] = np.full(ARRAY_SIZE, 1e-10)
+        self.data_sizes = dict()
+        for d in callbacks_list:
+            self.data_sizes[d.time_key] = 0
+            for k in d.callbacks.keys():
+                self.data[k] = np.full(ARRAY_SIZE, 1e-10)
 
         self.columns = [[plot_types.CtlPosPlot, plot_types.FeatureCountPlot, plot_types.ConfidencePlot, \
-                         plot_types.CommandStatusPlot], [plot_types.CtlRotPlot, plot_types.CovPlot], \
-                         [plot_types.Pmc1BlowerPlot, plot_types.Pmc2BlowerPlot, \
-                         plot_types.Pmc1NozzlePlot, plot_types.Pmc2NozzlePlot]]
+                         plot_types.CommandStatusPlot], [plot_types.CtlRotPlot, plot_types.CovPlot]]
 
         self.graphics_view = ParentGraphicsView()
         self.terminal_graphics_view = TerminalGraphicsView(self.graphics_view)
@@ -490,11 +506,18 @@ class Visualizer(QtGui.QMainWindow):
         if event.key() == QtCore.Qt.Key_M:
             self.toggle_pmc()
 
+    def remove_old_data(self):
+        t = time.time() - start_time
+        for c in callbacks_list:
+            while self.data_sizes[c.time_key] > 0 and \
+                    t - self.data[c.time_key][self.data_sizes[c.time_key] - 1] > plot_types.DISPLAY_TIME + 2:
+                self.data_sizes[c.time_key] -= 1
+
     def tick(self):
-        a = time.time()
         if com_manager.was_shutdown():
             self.hide()
             return
+        self.remove_old_data()
         if not self.paused and self.started:
             col = 0
             while True:
@@ -506,7 +529,7 @@ class Visualizer(QtGui.QMainWindow):
                     item = column.getItem(row, 0)
                     if item == None:
                         break
-                    item.update_plot(self.data)
+                    item.update_plot((self.data, self.data_sizes))
                     row += 1
                 col += 1
         if self.proc != None:
@@ -528,44 +551,34 @@ class Visualizer(QtGui.QMainWindow):
         r.setWidth(self.terminal_graphics_view.width() - 100)
         self.terminal_graphics_view.ensureVisible(r)
 
+    def add_data(self, callbacks, data):
+        self.data_sizes[callbacks.time_key] = min(self.data_sizes[callbacks.time_key] + 1, ARRAY_SIZE)
+        for key in callbacks.callbacks:
+            self.data[key] = np.roll(self.data[key], 1)
+            self.data[key][0] = callbacks.callbacks[key](data)
+
     def ekf_callback(self, data):
-        for d in ekf_data:
-            self.data[d] = np.roll(self.data[d], 1)
-            self.data[d][0] = ekf_data[d](data)
+        self.add_data(ekf_callbacks, data)
         if data.ml_count != 0:
-            for d in ml_data:
-                self.data[d] = np.roll(self.data[d], 1)
-                self.data[d][0] = ml_data[d](data)
+            self.add_data(ml_callbacks, data)
         if data.of_count != 0:
-            for d in of_data:
-                self.data[d] = np.roll(self.data[d], 1)
-                self.data[d][0] = of_data[d](data)
+            self.add_data(of_callbacks, data)
         self.started = True
 
     def ground_truth_callback(self, data):
-        for d in truth_data:
-            self.data[d] = np.roll(self.data[d], 1)
-            self.data[d][0] = truth_data[d](data)
+        self.add_data(truth_callbacks, data)
 
     def command_callback(self, data):
-        for d in command_data:
-            self.data[d] = np.roll(self.data[d], 1)
-            self.data[d][0] = command_data[d](data)
+        self.add_data(command_callbacks, data)
 
     def traj_callback(self, data):
-        for d in traj_data:
-            self.data[d] = np.roll(self.data[d], 1)
-            self.data[d][0] = traj_data[d](data)
+        self.add_data(traj_callbacks, data)
 
     def shaper_callback(self, data):
-        for d in shaper_data:
-            self.data[d] = np.roll(self.data[d], 1)
-            self.data[d][0] = shaper_data[d](data)
+        self.add_data(shaper_callbacks, data)
 
     def pmc_callback(self, data):
-        for d in pmc_data:
-            self.data[d] = np.roll(self.data[d], 1)
-            self.data[d][0] = pmc_data[d](data)
+        self.add_data(pmc_callbacks, data)
 
     def print_to_log(self, text, color):
         self.log_text += "<br /><font color='%s'>%s</font>" % (color, text)

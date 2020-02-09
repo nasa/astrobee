@@ -42,6 +42,10 @@ void est_ReadParams(config_reader::ConfigReader* config,  RT_MODEL_est_estimator
     ROS_FATAL("Unspecified tun_ase_dockcam_inv_focal_length.");
   if (!msg_conversions::config_read_array(config, "tun_ase_gravity_accel", 3 , p->tun_ase_gravity_accel))
     ROS_FATAL("Unspecified tun_ase_gravity_accel.");
+  if (!config->GetReal("tun_ase_hr_distance_r", &p->tun_ase_hr_distance_r))
+    ROS_FATAL("Unspecified tun_ase_hr_distance_r.");
+  if (!config->GetReal("tun_ase_hr_r_mag", &p->tun_ase_hr_r_mag))
+    ROS_FATAL("Unspecified tun_ase_hr_r_mag.");
   if (!config->GetReal("tun_ase_mahal_distance_max", &p->tun_ase_mahal_distance_max))
     ROS_FATAL("Unspecified tun_ase_mahal_distance_max.");
   if (!config->GetReal("tun_ase_map_error", &p->tun_ase_map_error))
@@ -50,6 +54,8 @@ void est_ReadParams(config_reader::ConfigReader* config,  RT_MODEL_est_estimator
     ROS_FATAL("Unspecified tun_ase_max_accel.");
   if (!config->GetReal("tun_ase_max_gyro", &p->tun_ase_max_gyro))
     ROS_FATAL("Unspecified tun_ase_max_gyro.");
+  if (!config->GetReal("tun_ase_min_ar_meas", &p->tun_ase_min_ar_meas))
+    ROS_FATAL("Unspecified tun_ase_min_ar_meas.");
   if (!config->GetReal("tun_ase_min_ml_meas", &p->tun_ase_min_ml_meas))
     ROS_FATAL("Unspecified tun_ase_min_ml_meas.");
   if (!config->GetReal("tun_ase_ml_forward_projection_time", &p->tun_ase_ml_forward_projection_time))
@@ -70,6 +76,8 @@ void est_ReadParams(config_reader::ConfigReader* config,  RT_MODEL_est_estimator
     ROS_FATAL("Unspecified tun_ase_state_ic_P_EST_ISS_ISS.");
   if (!msg_conversions::config_read_array(config, "tun_ase_state_ic_V_B_ISS_ISS", 3 , p->tun_ase_state_ic_V_B_ISS_ISS))
     ROS_FATAL("Unspecified tun_ase_state_ic_V_B_ISS_ISS.");
+  if (!msg_conversions::config_read_array(config, "tun_ase_state_ic_cov_diag", 15 , p->tun_ase_state_ic_cov_diag))
+    ROS_FATAL("Unspecified tun_ase_state_ic_cov_diag.");
   if (!msg_conversions::config_read_array(config, "tun_ase_state_ic_omega_B_ISS_B", 3 , p->tun_ase_state_ic_omega_B_ISS_B))
     ROS_FATAL("Unspecified tun_ase_state_ic_omega_B_ISS_B.");
   if (!msg_conversions::config_read_array(config, "tun_ase_state_ic_quat_ISS2B", 4 , p->tun_ase_state_ic_quat_ISS2B))
@@ -78,6 +86,8 @@ void est_ReadParams(config_reader::ConfigReader* config,  RT_MODEL_est_estimator
     ROS_FATAL("Unspecified tun_ase_vis_r_mag.");
   if (!config->GetReal("tun_ase_vocam_inv_focal_length", &p->tun_ase_vocam_inv_focal_length))
     ROS_FATAL("Unspecified tun_ase_vocam_inv_focal_length.");
+  if (!config->GetReal("tun_aug_ic_cov", &p->tun_aug_ic_cov))
+    ROS_FATAL("Unspecified tun_aug_ic_cov.");
   if (!msg_conversions::config_read_array(config, "tun_grav_hp_den", 2 , p->tun_grav_hp_den))
     ROS_FATAL("Unspecified tun_grav_hp_den.");
   if (!msg_conversions::config_read_array(config, "tun_grav_hp_num", 2 , p->tun_grav_hp_num))
@@ -86,6 +96,8 @@ void est_ReadParams(config_reader::ConfigReader* config,  RT_MODEL_est_estimator
     ROS_FATAL("Unspecified tun_ic_cov_pos.");
   if (!config->GetReal("tun_ic_cov_quat", &p->tun_ic_cov_quat))
     ROS_FATAL("Unspecified tun_ic_cov_quat.");
+  if (!config->GetReal("tun_max_mahal_reject_frames", &p->tun_max_mahal_reject_frames))
+    ROS_FATAL("Unspecified tun_max_mahal_reject_frames.");
   bool ase_enable_of;
   if (!config->GetBool("tun_ase_enable_of", &ase_enable_of))
   ROS_FATAL("Unspecified tun_ase_enable_of.");

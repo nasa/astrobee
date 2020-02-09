@@ -21,21 +21,34 @@ figure;%(5); clf;
 % Combine calcs into analysis file 
 R1 = data1.data.convert_to_eulers;
 R2 = data2.data.convert_to_eulers;
+qError = data1-data2;
 
-
+if t0 > 0
+    t1 = data1.time - t0;
+    t2 = data2.time - t0;
+    te = qError.time - t0;
+elseif t0 == 0
+    t1 = data1.time;
+    t2 = data2.time;
+    te = qError.time;
+else
+    t1 = datetime(data1.time, 'ConvertFrom', 'PosixTime');
+    t2 = datetime(data2.time, 'ConvertFrom', 'PosixTime');
+    te = datetime(qError.time, 'ConvertFrom', 'PosixTime');
+end
 
 
 subplot(2,1,1);
-plot(data1.time - t0, R1*180/pi)
+plot(t1, R1*180/pi)
 hold_on;
-plot(data2.time - t0, R2*180/pi, style2)
+plot(t2, R2*180/pi, style2)
 title(titleStr); grid on;
 ylabel('Euler Angles, Deg'); xlabel('seconds')
 legend([legend1 '_\theta'], [legend1 '_\phi'], [legend1 '_\psi'], [legend2 '_\theta'], [legend2 '_\phi'], [legend2 '_\psi']);
 
-qError = data1-data2;
+
 subplot(2,1,2);
-plot(qError.time - t0, qError.data*180/pi);
+plot(te, qError.data*180/pi);
 title([titleStr ' Error']); grid on;
 ylabel('Deg'); xlabel('seconds')
 
