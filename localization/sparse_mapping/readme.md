@@ -133,16 +133,24 @@ images in which that interest point was detected, with the interest
 point in each of them shown as a red dot. Clicking back on the
 original window with the middle mouse will make these images go away.
 
+Clicking with the left mouse button on an image will print its name
+and the pixel coordinates where the mouse hit. This can be useful in
+collecting a subset of the images. (After clicking, a bug in OpenCV
+disables the arrow keys, then one can navigate with the "Ins" and
+"Del" keys on the numpad.)
+
 ### Localize a Single Frame
 
 To test localization of a single frame, use the command:
 
-    localize <map.map> <image.jpg>
+    localize <map.map> <image.jpg> -histogram_equalization
 
 If invoked with the option -verbose_localization, it will list the
 images most similar to the one being localized. To increase the 
 number of similar images, use the -num_similar option. Another
 useful flag is --v 2 when it will print more verbose information.
+Most of the options of the localize_cams tool (see below)
+are also accepted. 
 
 ### Testing Localization 
 
@@ -166,10 +174,10 @@ This functionality is implemented in the localize_cams tool. Usage:
 
   localize_cams -num_similar 20 -ransac_inlier_tolerance 5      \
     -num_ransac_iterations 200 -min_brisk_features 400          \
-    -max_brisk_features 800 -min_brisk_threshold 10             \
-    -default_brisk_threshold 75 -max_brisk_threshold 75         \
+    -max_brisk_features 800 -min_brisk_threshold 20             \
+    -default_brisk_threshold 90 -max_brisk_threshold 110        \
     -detection_retries 5 -num_threads 2                         \
-    -early_break_landmarks 200                                  \
+    -early_break_landmarks 100 -histogram_equalization          \
     -reference_map ref.map -source_map source.map
 
 Here we use values that are different from 
@@ -256,9 +264,20 @@ After a merged map is created and registered, it can be rebuilt with
 the BRISK detector to be used on the robot. 
 
 When manipulating many submaps, it is suggested that bundle adjustment
-be skipped during merging, using -skip_bundle_adjustment, until the
-final map is computed, as this step can be time-consuming.
+be skipped during merging, using the 
 
+  -skip_bundle_adjustment
+
+option until the final map is computed, as this step can be
+time-consuming.
+
+If the first of the two maps to merge is already registered, it may be
+desirable to keep that portion fixed during merging. To achieve that,
+the merging can be done without bundle adjustment, and then build_map
+can be invoked only to do bundle adjustment, while specifying the
+range of cameras to optimize (the ones from the second map). See
+build_map.md for details.
+  
 #### How To Build a Map Efficiently
 
 Often times map-building can take a long time, or it can fail. A
@@ -303,24 +322,26 @@ vocabulary database to be used on the robot.
 
 # How to Add to a Map Images for Which Localization Fails
 
-The current approach has several steps (in the future this proces may
+The current approach has several steps (in the future this process may
 be streamlined). 
 
 First a new SURF map is built from the new images (using
 -skip_pruning). The program merge_maps is invoked on the old and new
 maps (in this order), using the -skip_pruning flag and with bundle
-adjustment (the latter is the default in merge_maps). The combined map
-is re-registered, and the submap corresponding to the new images is
-extracted (without redoing bundle adjustment). The obtained SURF map
-of new images is now in the same coordinate system as the old one.
+adjustment (the latter is the default in merge_maps). Just a handful
+of iterations and a small number of passes can be used. The combined
+map is re-registered, and the submap corresponding to the new images
+is extracted (without redoing bundle adjustment). The obtained SURF
+map of new images is now in the same coordinate system as the old one.
 
 The new map is used as the source map in localize_cams, with the old
-map (the BRISK version of it) being the reference map. The images for
-which localization error is good are saved to a file. Then
-extract_submap is invoked on the merged map to exclude the images with
-good localization, leaving in the combined SURF map the old images
-together with the new images with bad localization. The combined map
-is rebuilt with BRISK and a vocabulary database.
+map (the BRISK version of it) being the reference map. The output of
+this command is saved to a file. This file is edited to keep the names
+of the images with bad localization, and then one adds to it the list
+of images in the old map (see build_map -info). All text except the
+image names is deleted. The extract_submap tool is invoked on the
+merged map keep only these images. The updated map map is rebuilt with
+BRISK and a vocabulary database.
 
 #### Reducing the Number of Images in a Map
 
@@ -329,24 +350,29 @@ attempts to reduce their number without sacrificing the map quality.
 
 It is very important that the input map is not pruned, so when it is
 created (or rebuilt) the -skip_pruning flag must be used.  It should
-be made of of BRISK features, registered, and with a vocab db.
+be made of of BRISK features and registered. It need not have a vocab
+db.
 
 Usage:
 
   python reduce_map.py -input_map <input map> -min_brisk_threshold <val> \
          -default_brisk_threshold <val> -max_brisk_threshold <val>       \
          -localization_error <val> -work_dir <work dir>                  \
-         -sample_rate <val>
+         -sample_rate <val> -histogram_equalization
+
+The BRISK thresholds here must be as when the map was built. The
+-histogram_equalization flag is necessary if your map was built with
+it.
 
 A sequence of ever-smaller output maps are saved in the work
 directory. They are pruned maps, unlike the input unpruned map. 
 
 The algorithm is as follows. Randomly remove a fraction (stored in
--sample_rate, typically 1/4 th) of images form a map. Localize the
+-sample_rate, typically 1/4th) of images form a map. Localize the
 images from the full map against the images of the reduced map. Images
 for which localization fails with more than a given error (typically 2
 cm) are added back to the reduced map. This is repeated until no more
-images need adding (this is called the inner iteration).
+images need adding.
 
 The reduced map is written to 
 
@@ -359,4 +385,11 @@ a smaller map named
   <work_dir>/submap_iter<outer iter>.map
 
 One should carefully evaluate these output maps. Likely after a couple
-of outer iterations the quality of the map may start degrading.
+of attempts the quality of the map may start degrading. To use
+more attempts, set the value of the -attempts variable.
+
+Instead of taking images out of the map randomly, one can start with a
+reduced map with a small list of desired images which can be set with
+-image_list, and then all images for which localization fails will be
+added back to it.
+

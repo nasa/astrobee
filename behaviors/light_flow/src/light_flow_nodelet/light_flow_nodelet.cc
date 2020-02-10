@@ -192,7 +192,7 @@ class LightFlowNodelet : public ff_util::FreeFlyerNodelet {
       ff_msgs::SetStreamingLights::Response& response) {
     currentStreamingLightsState = request.state;
     response.success = true;
-    // turn off all the lights but keep the blue streaming lights on
+    // turn off all the lights but keep the amber streaming lights on
     RunLightFlow("STOP_ALL_LIGHTS");
     return true;
   }

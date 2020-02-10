@@ -171,7 +171,7 @@
     <arg name="debug" value="$(arg debug)" />
     <arg name="default" value="true" />
   </include>
-<!--
+
   <include file="$(find ff_util)/launch/ff_nodelet.launch">
     <arg name="class" value="states/StatesNodelet" />
     <arg name="name" value="states" />
@@ -182,7 +182,6 @@
     <arg name="debug" value="$(arg debug)" />
     <arg name="default" value="true" />
   </include>
--->
 
   <!-- Management -->
   <include file="$(find ff_util)/launch/ff_nodelet.launch">

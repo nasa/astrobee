@@ -1,0 +1,20 @@
+#Format is x y z in meters
+# Position of each of the corners is shown below from a top view perspective.
+# Dock station is located between points 1 & 2 facing points 3 & 4
+# 1 ---- 4
+# |      |
+# |      |
+# 2 ---- 3
+
+# 1.When one faces the dock, back corner to the right, next to dock, bar between the two lights in the corner:
+-1.015 -1.03 -0.73
+
+# 2.When one faces the dock, corner of the aluminum 90deg joint bars on top of the granite table, below dock to the left 
+-1.015 1.03 -0.025
+
+# 3.When facing the dock, rear left corner at aluminum 90deg joint bars on top of the granite table (corner next to dock in front)
+1.015 1.03 -0.025
+
+# 4.When one faces the dock, rear right corner aluminum 90deg joint bars below white rectangle light (beneath light diagonal from dock)
+1.015 -1.03 -0.835
+

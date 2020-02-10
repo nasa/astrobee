@@ -19,7 +19,6 @@
 #ifndef SIGNAL_LIGHTS_SIGNAL_LIGHTS_H_
 #define SIGNAL_LIGHTS_SIGNAL_LIGHTS_H_
 
-
 #include <functional>
 #include <string>
 
@@ -112,7 +111,7 @@ typedef struct __attribute__((packed)) {
 
 class Device {
  public:
-  Device(const char* bus, uint8_t addr);
+  Device(const char *bus, uint8_t addr);
   int read(uint8_t *buf, unsigned int length);
   int write(uint8_t *buf, unsigned int length);
 
@@ -134,6 +133,8 @@ class SignalLights {
   // Configure and return data
   bool Set(uint8_t pos, uint8_t red, uint8_t green, uint8_t blue);
 
+  void SetAll(uint8_t red, uint8_t green, uint8_t blue);
+
   // Get the polling frequency for a desired control rate
   double GetPollDuration(double rate);
 
@@ -145,6 +146,10 @@ class SignalLights {
   std::string GetTime() { return time_; }
 
  private:
+  // SignalLights(const SignalLights &sl) {
+  //   // bouh
+  // }
+
   uint16_t Read(uint8_t *buff, uint16_t len);
   uint16_t Read(uint8_t *buff);
   uint16_t Write(uint8_t *buff, uint16_t len);

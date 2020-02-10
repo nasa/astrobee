@@ -25,7 +25,7 @@ OpState* OpStatePlanExec::StartupState(std::string const& cmd_id) {
   std::string err_msg;
 
   first_segment_ = true;
-  run_plan_cmd_id_ = cmd_id;
+  exec_->SetRunPlanCmdId(cmd_id);
 
   // Change operating state and plan state stuff since the first thing in the
   // plan may not be an action meaning the op state would be ready while
@@ -57,7 +57,6 @@ OpState* OpStatePlanExec::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
   std::string err_msg;
   bool completed = false, successful = false;
 
-  // TODO(Katie) Add more commands
   if (cmd->cmd_id == "plan" && cmd->cmd_src == "plan") {
     OpState::HandleCmd(cmd, completed, successful);
     if (completed) {
@@ -78,6 +77,11 @@ OpState* OpStatePlanExec::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
       if (exec_->ClearData(cmd)) {
         return AckStartPlanItem();
       } else {
+        return OpStateRepo::Instance()->ready()->StartupState();
+      }
+    } else if (cmd->cmd_name ==
+                              CommandConstants::CMD_NAME_CUSTOM_GUEST_SCIENCE) {
+      if (!exec_->CustomGuestScience(cmd)) {
         return OpStateRepo::Instance()->ready()->StartupState();
       }
     } else if (cmd->cmd_name == CommandConstants::CMD_NAME_DOCK) {
@@ -155,15 +159,11 @@ OpState* OpStatePlanExec::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
       }
     } else if (cmd->cmd_name ==
                               CommandConstants::CMD_NAME_START_GUEST_SCIENCE) {
-      // TODO(Katie) Need to do some sort of check for primary vs. secondary
-      // since we will have to check for which commands to accept if primary
-      if (!exec_->SendGuestScienceCommand(cmd)) {
+      if (!exec_->StartGuestScience(cmd)) {
         return OpStateRepo::Instance()->ready()->StartupState();
       }
     } else if (cmd->cmd_name == CommandConstants::CMD_NAME_STOP_GUEST_SCIENCE) {
-      // TODO(Katie) Need to do some sort of check for primary vs. secondary
-      // since we will have to check for which commands to accept if primary
-      if (!exec_->SendGuestScienceCommand(cmd)) {
+      if (!exec_->StopGuestScience(cmd)) {
         return OpStateRepo::Instance()->ready()->StartupState();
       }
     } else if (cmd->cmd_name ==
@@ -201,13 +201,10 @@ OpState* OpStatePlanExec::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
       return this;
     }
 
-    if (cmd->cmd_name == CommandConstants::CMD_NAME_FAULT) {
+    if (cmd->cmd_name == CommandConstants::CMD_NAME_CUSTOM_GUEST_SCIENCE) {
+      exec_->CustomGuestScience(cmd);
+    } else if (cmd->cmd_name == CommandConstants::CMD_NAME_FAULT) {
       if (exec_->Fault(cmd)) {
-        // Need to pass the run plan command id and origin to fault state so
-        // that when the current step completes, the fault state can ack the run
-        // plan command as canceled
-        std::string cmd_id = run_plan_cmd_id_;
-
         // Check if we are executing a wait command. If we are, the wait is
         // stopped and marked as complete.
         if (waiting_) {
@@ -216,26 +213,17 @@ OpState* OpStatePlanExec::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
           exec_->AckCurrentPlanItem();
           exec_->PublishPlanStatus(ff_msgs::AckStatus::QUEUED);
           // Ack run plan command here since the current step has completed
-          AckCmd(run_plan_cmd_id_,
+          AckCmd(exec_->GetRunPlanCmdId(),
                  ff_msgs::AckCompletedStatus::EXEC_FAILED,
                  "Executive had to execute the fault command.");
-
-          // Clear out the cmd_id since we just acked the run plan
-          // command and will not need to ack it in the fault state
-          cmd_id = "";
         }
 
-        // Clear out the run plan command id and origin
-        run_plan_cmd_id_ = "";
-
-        return OpStateRepo::Instance()->fault()->StartupState(cmd_id);
+        return OpStateRepo::Instance()->fault()->StartupState();
       }
     } else if (cmd->cmd_name == CommandConstants::CMD_NAME_IDLE_PROPULSION) {
-      AckCmd(run_plan_cmd_id_,
+      AckCmd(exec_->GetRunPlanCmdId(),
              ff_msgs::AckCompletedStatus::CANCELED,
              "Run plan command failed due to an idle propulsion command.");
-      // Clear command id since we acked it and don't want to ack it again
-      run_plan_cmd_id_ = "";
 
       exec_->SetPlanExecState(ff_msgs::ExecState::PAUSED);
 
@@ -253,7 +241,7 @@ OpState* OpStatePlanExec::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
       }
       return OpStateRepo::Instance()->ready()->StartupState();
     } else if (cmd->cmd_name == CommandConstants::CMD_NAME_PAUSE_PLAN ||
-        cmd->cmd_name == CommandConstants::CMD_NAME_STOP_ALL_MOTION) {
+               cmd->cmd_name == CommandConstants::CMD_NAME_STOP_ALL_MOTION) {
       exec_->PausePlan(cmd);
       // Check if we are stopping and if so, transition to teleop. Otherwise
       // transition to ready
@@ -261,15 +249,16 @@ OpState* OpStatePlanExec::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
         return OpStateRepo::Instance()->teleop()->StartupState();
       }
       return OpStateRepo::Instance()->ready()->StartupState();
+    } else if (cmd->cmd_name ==
+                              CommandConstants::CMD_NAME_START_GUEST_SCIENCE) {
+      exec_->StartGuestScience(cmd);
     } else if (cmd->cmd_name == CommandConstants::CMD_NAME_STOP_ARM) {
       // If the plan is executing an arm action, pause plan. If not, just issue
       // a stop action to the arm
       if (exec_->IsActionRunning(ARM)) {
         // Stop Arm will cancel the arm action so just need to pause plan
-        exec_->PublishCmdAck(run_plan_cmd_id_,
+        exec_->PublishCmdAck(exec_->GetRunPlanCmdId(),
                              ff_msgs::AckCompletedStatus::CANCELED);
-        // Clear command id since we acked it and don't want to ack it again
-        run_plan_cmd_id_ = "";
         exec_->SetPlanExecState(ff_msgs::ExecState::PAUSED);
         exec_->PublishPlanStatus(ff_msgs::AckStatus::REQUEUED);
         if (exec_->StopArm(cmd)) {
@@ -280,6 +269,8 @@ OpState* OpStatePlanExec::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
       } else {
         exec_->StopArm(cmd);
       }
+    } else if (cmd->cmd_name == CommandConstants::CMD_NAME_STOP_GUEST_SCIENCE) {
+      exec_->StopGuestScience(cmd);
     } else if (cmd->cmd_name == CommandConstants::CMD_NAME_WIPE_HLP) {
       exec_->WipeHlp(cmd);
     } else {
@@ -307,19 +298,18 @@ OpState* OpStatePlanExec::HandleWaitCallback() {
   return AckStartPlanItem();
 }
 
-// TODO(Katie) Remove if you end up changing the start, custom, and stop
-// commands to actions.
 OpState* OpStatePlanExec::HandleGuestScienceAck(
                                       ff_msgs::AckStampedConstPtr const& ack) {
+  // Only need to handle guest science acks that are from plan commands. The
+  // executive will handle the rest.
   // Check if command is still executing the command and return if so
   if (ack->completed_status.status == ff_msgs::AckCompletedStatus::NOT) {
     return this;
   } else if (ack->completed_status.status != ff_msgs::AckCompletedStatus::OK) {
-    AckCmd(run_plan_cmd_id_,
+    AckCmd(exec_->GetRunPlanCmdId(),
            ack->completed_status.status,
            ack->message,
            ack->status.status);
-    run_plan_cmd_id_ = "";
     exec_->SetPlanExecState(ff_msgs::ExecState::PAUSED);
     exec_->PublishPlanStatus(ff_msgs::AckStatus::REQUEUED);
     return OpStateRepo::Instance()->ready()->StartupState();
@@ -354,8 +344,7 @@ void OpStatePlanExec::AckPlanCmdFailed(uint8_t completed_status,
                                        std::string const& message) {
   // Call ack command with the run plan command id so the run plan command id
   // gets acked
-  AckCmd(run_plan_cmd_id_, completed_status, message);
-  run_plan_cmd_id_ = "";
+  AckCmd(exec_->GetRunPlanCmdId(), completed_status, message);
   exec_->SetPlanExecState(ff_msgs::ExecState::PAUSED);
   exec_->PublishPlanStatus(ff_msgs::AckStatus::REQUEUED);
 }
@@ -364,9 +353,7 @@ bool OpStatePlanExec::PausePlan(ff_msgs::CommandStampedPtr const& cmd) {
   // Check to see if the command came from the plan. If it did, we don't need
   // to cancel actions since plans are sequential
   if (cmd->cmd_id == "plan") {
-    exec_->PublishCmdAck(run_plan_cmd_id_);
-    // Clear command id since we acked it and we don't want to ack it again
-    run_plan_cmd_id_ = "";
+    exec_->PublishCmdAck(exec_->GetRunPlanCmdId());
 
     // Ack the pause as completed in the plan
     exec_->AckCurrentPlanItem();
@@ -375,10 +362,8 @@ bool OpStatePlanExec::PausePlan(ff_msgs::CommandStampedPtr const& cmd) {
 
     exec_->SetPlanExecState(ff_msgs::ExecState::PAUSED);
   } else {
-    exec_->PublishCmdAck(run_plan_cmd_id_,
+    exec_->PublishCmdAck(exec_->GetRunPlanCmdId(),
                          ff_msgs::AckCompletedStatus::CANCELED);
-    // Clear command id since we acked it and we don't want to ack it again
-    run_plan_cmd_id_ = "";
 
     exec_->SetPlanExecState(ff_msgs::ExecState::PAUSED);
     if (exec_->AreActionsRunning()) {
@@ -421,14 +406,15 @@ OpState* OpStatePlanExec::HandleActionComplete(
 
   std::string err_msg = GenerateActionFailedMsg(state, action, result);
 
-  AckCmd(run_plan_cmd_id_, ff_msgs::AckCompletedStatus::EXEC_FAILED, err_msg);
+  AckCmd(exec_->GetRunPlanCmdId(),
+         ff_msgs::AckCompletedStatus::EXEC_FAILED,
+         err_msg);
 
   // Start a stop action since we don't know what the mobility state
   // TODO(Katie) Possibly store gnc state and only start a stop when flying
   exec_->FillMotionGoal(STOP);
   exec_->StartAction(STOP, "internal");
 
-  run_plan_cmd_id_ = "";
   exec_->SetPlanExecState(ff_msgs::ExecState::PAUSED);
   exec_->PublishPlanStatus(ff_msgs::AckStatus::REQUEUED);
   return OpStateRepo::Instance()->teleop()->StartupState();
@@ -441,9 +427,8 @@ OpState* OpStatePlanExec::AckStartPlanItem() {
     exec_->PublishPlanStatus(ff_msgs::AckStatus::EXECUTING);
     return StartNextPlanItem();
   } else {
-    ROS_INFO("Plan complete!");
-    AckCmd(run_plan_cmd_id_);
-    run_plan_cmd_id_ = "";
+    ROS_DEBUG("Plan complete!");
+    AckCmd(exec_->GetRunPlanCmdId());
     exec_->PublishPlanStatus(ff_msgs::AckStatus::COMPLETED);
     exec_->SetPlanExecState(ff_msgs::ExecState::IDLE);
     return OpStateRepo::Instance()->ready()->StartupState();
@@ -485,8 +470,7 @@ OpState* OpStatePlanExec::StartNextPlanItem() {
     // the part of the plan that got paused and it was the last item in the
     // plan.
     ROS_INFO("Plan complete!!!");
-    AckCmd(run_plan_cmd_id_);
-    run_plan_cmd_id_ = "";
+    AckCmd(exec_->GetRunPlanCmdId());
     exec_->SetPlanExecState(ff_msgs::ExecState::IDLE);
     return OpStateRepo::Instance()->ready()->StartupState();
   }

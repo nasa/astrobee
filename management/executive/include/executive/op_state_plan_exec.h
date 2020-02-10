@@ -39,8 +39,6 @@ class OpStatePlanExec : public OpState {
 
   OpState* HandleWaitCallback();
 
-  // TODO(Katie) Remove if you end up changing the start, custom, and stop
-  // commands to actions.
   OpState* HandleGuestScienceAck(ff_msgs::AckStampedConstPtr const& ack);
 
   void AckCmd(std::string const& cmd_id,
@@ -54,7 +52,7 @@ class OpStatePlanExec : public OpState {
 
  protected:
   explicit OpStatePlanExec(std::string const& name, unsigned char id) :
-    OpState(name, id), waiting_(false), run_plan_cmd_id_("") {}
+    OpState(name, id), waiting_(false) {}
 
  private:
   // allow creation only by repo
@@ -68,8 +66,6 @@ class OpStatePlanExec : public OpState {
   OpState* StartNextPlanItem();
 
   bool waiting_;
-
-  std::string run_plan_cmd_id_;
 
   // TODO(Katie) Remove before flight
   bool first_segment_;

@@ -118,7 +118,7 @@ class SysMonitor : public ff_util::FreeFlyerNodelet {
     std::string const node_name;
     bool const blocking;
     bool const warning;
-    ff_msgs::CommandStampedConstPtr response;
+    ff_msgs::CommandStampedPtr response;
   };
 
   /**
@@ -149,7 +149,7 @@ class SysMonitor : public ff_util::FreeFlyerNodelet {
 
   void OutputFaultTables();
 
-  void PublishCmd(ff_msgs::CommandStampedConstPtr cmd);
+  void PublishCmd(ff_msgs::CommandStampedPtr cmd);
 
   void PublishFaultConfig();
 

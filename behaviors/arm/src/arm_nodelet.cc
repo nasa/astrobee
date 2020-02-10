@@ -173,12 +173,48 @@ class ArmNodelet : public ff_util::FreeFlyerNodelet {
         return STATE::DEPLOYING_TILTING;
       });
 
+    // DEPLOYING_PANNING -> DEPLOYED
+    //   [label="[10]\nTIMEOUT\nResult(FAILED)", color=red];
+    fsm_.Add(STATE::DEPLOYING_PANNING,
+      GOAL_CANCEL,
+      [this](FSM::Event const& event) -> FSM::State {
+        Arm(PAN);
+        return STATE::PANNING;
+      });
+
+    // DEPLOYING_PANNING -> DEPLOYED
+    //   [label="[10]\nTIMEOUT\nResult(FAILED)", color=red];
+    fsm_.Add(STATE::DEPLOYING_PANNING,
+      TIMEOUT,
+      [this](FSM::Event const& event) -> FSM::State {
+        Result(RESPONSE::PAN_FAILED);
+        return STATE::UNKNOWN;
+      });
+
     // DEPLOYING_TILTING -> DEPLOYED
     //   [label="[7]\nTILT_COMPLETE\nResult(SUCCESS)", color=darkgreen];
     fsm_.Add(STATE::DEPLOYING_TILTING,
       TILT_COMPLETE,
       [this](FSM::Event const& event) -> FSM::State {
         return Result(RESPONSE::SUCCESS);
+      });
+
+    // DEPLOYING_TILTING -> DEPLOYED
+    //   [label="[10]\nTIMEOUT\nResult(FAILED)", color=red];
+    fsm_.Add(STATE::DEPLOYING_TILTING,
+      GOAL_CANCEL,
+      [this](FSM::Event const& event) -> FSM::State {
+        Arm(TILT);
+        return STATE::TILTING;
+      });
+
+    // DEPLOYING_TILTING -> DEPLOYED
+    //   [label="[10]\nTIMEOUT\nResult(FAILED)", color=red];
+    fsm_.Add(STATE::DEPLOYING_TILTING,
+      TIMEOUT,
+      [this](FSM::Event const& event) -> FSM::State {
+        Result(RESPONSE::TILT_FAILED);
+        return STATE::UNKNOWN;
       });
 
     // DEPLOYED -> STOWING_SETTING
@@ -237,11 +273,20 @@ class ArmNodelet : public ff_util::FreeFlyerNodelet {
     // STOWING_SETTING -> DEPLOYED
     //   [label="[10]\nTIMEOUT\nResult(FAILED)", color=red];
     fsm_.Add(STATE::STOWING_SETTING,
-      TIMEOUT | GOAL_CANCEL,
+      GOAL_CANCEL,
       [this](FSM::Event const& event) -> FSM::State {
-        return Result(RESPONSE::GRIPPER_FAILED);
+        Arm(GRIPPER);
+        return STATE::SETTING;
       });
 
+    // STOWING_SETTING -> DEPLOYED
+    //   [label="[10]\nTIMEOUT\nResult(FAILED)", color=red];
+    fsm_.Add(STATE::STOWING_SETTING,
+      TIMEOUT,
+      [this](FSM::Event const& event) -> FSM::State {
+        Result(RESPONSE::GRIPPER_FAILED);
+        return STATE::UNKNOWN;
+      });
 
     // STOWING_PANNING -> STOWING_TILTING
     //   [label="[11]\nPAN_COMPLETE\nTilt(STOWED)", color=black];
@@ -256,9 +301,19 @@ class ArmNodelet : public ff_util::FreeFlyerNodelet {
     // STOWING_PANNING -> DEPLOYED
     //   [label="[12]\nTIMEOUT\nResult(FAILED)", color=red];
     fsm_.Add(STATE::STOWING_PANNING,
-      TIMEOUT | GOAL_CANCEL,
+      GOAL_CANCEL,
       [this](FSM::Event const& event) -> FSM::State {
-        return Result(RESPONSE::PAN_FAILED);
+        Arm(PAN);
+        return STATE::PANNING;
+      });
+
+    // STOWING_PANNING -> DEPLOYED
+    //   [label="[12]\nTIMEOUT\nResult(FAILED)", color=red];
+    fsm_.Add(STATE::STOWING_PANNING,
+      TIMEOUT,
+      [this](FSM::Event const& event) -> FSM::State {
+        Result(RESPONSE::PAN_FAILED);
+        return STATE::UNKNOWN;
       });
 
     // STOWING_TILTING -> STOWED
@@ -272,9 +327,19 @@ class ArmNodelet : public ff_util::FreeFlyerNodelet {
     // STOWING_TILTING -> DEPLOYED
     //   [label="[14]\nTIMEOUT\nResult(FAILED)", color=red];
     fsm_.Add(STATE::STOWING_TILTING,
-      TIMEOUT | GOAL_CANCEL,
+      GOAL_CANCEL,
       [this](FSM::Event const& event) -> FSM::State {
-        return Result(RESPONSE::TILT_FAILED);
+        Arm(TILT);
+        return STATE::TILTING;
+      });
+
+    // STOWING_TILTING -> DEPLOYED
+    //   [label="[14]\nTIMEOUT\nResult(FAILED)", color=red];
+    fsm_.Add(STATE::STOWING_TILTING,
+      TIMEOUT,
+      [this](FSM::Event const& event) -> FSM::State {
+        Result(RESPONSE::TILT_FAILED);
+        return STATE::UNKNOWN;
       });
 
     // {STOWED, DEPLOYED} -> PANNING
@@ -302,9 +367,19 @@ class ArmNodelet : public ff_util::FreeFlyerNodelet {
     // PANNING -> DEPLOYED
     //   [label="[17]\nTIMEOUT\nResult(PAN_FAILED)", color=red];
     fsm_.Add(STATE::PANNING,
-      TIMEOUT | GOAL_CANCEL,
+      GOAL_CANCEL,
       [this](FSM::Event const& event) -> FSM::State {
-        return Result(RESPONSE::PAN_FAILED);
+        Arm(PAN);
+        return STATE::PANNING;
+      });
+
+    // PANNING -> DEPLOYED
+    //   [label="[17]\nTIMEOUT\nResult(PAN_FAILED)", color=red];
+    fsm_.Add(STATE::PANNING,
+      TIMEOUT,
+      [this](FSM::Event const& event) -> FSM::State {
+        Result(RESPONSE::PAN_FAILED);
+        return STATE::UNKNOWN;
       });
 
     // TILTING -> DEPLOYED
@@ -318,9 +393,19 @@ class ArmNodelet : public ff_util::FreeFlyerNodelet {
     // TILTING -> DEPLOYED
     //   [label="[19]\nTIMEOUT\nResult(TILT_FAILED)", color=red];
     fsm_.Add(STATE::TILTING,
-      TIMEOUT | GOAL_CANCEL,
+      GOAL_CANCEL,
       [this](FSM::Event const& event) -> FSM::State {
-        return Result(RESPONSE::TILT_FAILED);
+        Arm(TILT);
+        return STATE::TILTING;
+      });
+
+    // TILTING -> DEPLOYED
+    //   [label="[19]\nTIMEOUT\nResult(TILT_FAILED)", color=red];
+    fsm_.Add(STATE::TILTING,
+      TIMEOUT,
+      [this](FSM::Event const& event) -> FSM::State {
+        Result(RESPONSE::TILT_FAILED);
+        return STATE::UNKNOWN;
       });
 
     // DEPLOYED -> SETTING
@@ -352,9 +437,19 @@ class ArmNodelet : public ff_util::FreeFlyerNodelet {
     // SETTING -> DEPLOYED
     //   [label="[22]\nTIMEOUT\nResult(GRIPPER_FAILED)", color=red];
     fsm_.Add(STATE::SETTING,
-      TIMEOUT | GOAL_CANCEL,
+      GOAL_CANCEL,
       [this](FSM::Event const& event) -> FSM::State {
-        return Result(RESPONSE::GRIPPER_FAILED);
+        Arm(GRIPPER);
+        return STATE::SETTING;
+      });
+
+    // SETTING -> DEPLOYED
+    //   [label="[22]\nTIMEOUT\nResult(GRIPPER_FAILED)", color=red];
+    fsm_.Add(STATE::SETTING,
+      TIMEOUT,
+      [this](FSM::Event const& event) -> FSM::State {
+        Result(RESPONSE::GRIPPER_FAILED);
+        return STATE::UNKNOWN;
       });
   }
 
@@ -402,8 +497,8 @@ class ArmNodelet : public ff_util::FreeFlyerNodelet {
     joints_[GRIPPER].name = name;
     joints_[GRIPPER].generic = "gripper";
     joints_[GRIPPER].tol = cfg_.Get<double>("tol_gripper");
-    joints_[GRIPPER].scale = (K_GRIPPER_OPEN - K_GRIPPER_CLOSE) / 100.00;
-    joints_[GRIPPER].offset = K_GRIPPER_CLOSE;
+    joints_[GRIPPER].scale = 1.00;
+    joints_[GRIPPER].offset = 0.00;
     dictionary_[name] = GRIPPER;
 
     // Timer for checking goal is reached
@@ -573,7 +668,7 @@ class ArmNodelet : public ff_util::FreeFlyerNodelet {
         case ff_msgs::ArmResult::COMMUNICATION_ERROR:
           result.fsm_result = "Cannot communicate with arm";        break;
         case ff_msgs::ArmResult::COLLISION_AVOIDED:
-          result.fsm_result = "Panning disabled when tilt > 90";    break;
+          result.fsm_result = "The arm might collide, failed";      break;
         case ff_msgs::ArmResult::ENABLE_FAILED:
           result.fsm_result = "Cannot enable the arm servos";       break;
         case ff_msgs::ArmResult::DISABLE_FAILED:
@@ -760,8 +855,7 @@ class ArmNodelet : public ff_util::FreeFlyerNodelet {
     state_msg.header.frame_id = GetPlatform();
     state_msg.header.stamp = ros::Time::now();
     // Convert our internal state to an ArmGripperState
-    double tol = joints_[GRIPPER].tol;
-    if (fabs(joints_[GRIPPER].val - K_GRIPPER_CLOSE) < tol)
+    if (fabs(joints_[GRIPPER].val - K_GRIPPER_CLOSE) < joints_[GRIPPER].tol)
       state_msg.gripper_state.state = ff_msgs::ArmGripperState::CLOSED;
     else
       state_msg.gripper_state.state = ff_msgs::ArmGripperState::OPEN;
@@ -890,7 +984,12 @@ class ArmNodelet : public ff_util::FreeFlyerNodelet {
           Result(RESPONSE::BAD_PAN_VALUE, true);
           return;
         }
-        if (new_t > K_TILT_SAFE && fabs(new_p - K_PAN_STOW) > 0.1) {
+        if (new_t > K_TILT_SAFE && fabs(new_p - K_PAN_STOW) > joints_[PAN].tol) {
+          Result(RESPONSE::COLLISION_AVOIDED, true);
+          return;
+        }
+        // check gripper, to make sure if doesn't close with gripper opened
+        if (new_t > K_TILT_GRIP && !Equal(GRIPPER, K_GRIPPER_STOW)) {
           Result(RESPONSE::COLLISION_AVOIDED, true);
           return;
         }
@@ -949,11 +1048,15 @@ class ArmNodelet : public ff_util::FreeFlyerNodelet {
 
   // Preempt the current action with a new action
   void PreemptCallback() {
-    return fsm_.Update(GOAL_CANCEL);
+    Result(RESPONSE::PREEMPTED);
+    return;
   }
 
   // A Cancellation request arrives
   void CancelCallback() {
+    joints_[PAN].goal = joints_[PAN].val;
+    joints_[TILT].goal = joints_[TILT].val;
+    joints_[GRIPPER].goal = joints_[GRIPPER].val;
     return fsm_.Update(GOAL_CANCEL);
   }
 
@@ -1041,10 +1144,11 @@ class ArmNodelet : public ff_util::FreeFlyerNodelet {
   static constexpr double K_TILT_STOW       =  180.0;
   static constexpr double K_TILT_DEPLOY     =    0.0;
   static constexpr double K_TILT_SAFE       =   90.0;
-  static constexpr double K_GRIPPER_STOW    =   20.0;
-  static constexpr double K_GRIPPER_DEPLOY  =   20.0;
-  static constexpr double K_GRIPPER_OPEN    =   45.0;
-  static constexpr double K_GRIPPER_CLOSE   =   20.0;
+  static constexpr double K_TILT_GRIP       =  160.0;
+  static constexpr double K_GRIPPER_STOW    =    0.0;
+  static constexpr double K_GRIPPER_DEPLOY  =    0.0;
+  static constexpr double K_GRIPPER_OPEN    =  100.0;
+  static constexpr double K_GRIPPER_CLOSE   =    0.0;
   static constexpr double K_RADS_TO_DEGS    = 180.0 / M_PI;
   static constexpr double K_DEGS_TO_RADS    = M_PI / 180.0;
 

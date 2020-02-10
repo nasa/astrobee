@@ -266,6 +266,11 @@
       "topicName" : "loc/twist",
       "downlinkOption" : "delayed",
       "frequency" : -1
+    },
+    {
+      "topicName" : "tf",
+      "downlinkOption" : "delayed",
+      "frequency" : -1
     }
   ]
 }

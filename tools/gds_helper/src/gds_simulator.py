@@ -25,6 +25,7 @@ import time
 import getpass
 import socket
 import thread
+import signal
 
 from ff_msgs.msg import AckStamped, GuestScienceState, GuestScienceConfig, \
     GuestScienceData, AccessControlStateStamped, CommandStamped, CommandArg, \
@@ -479,5 +480,10 @@ def main():
         if return_val == ACTION_EXIT:
             break
 
+def handler(signum, frame):
+    print '\nShutting down gracefully...'
+    exit()
+
 if __name__ == '__main__':
+    signal.signal(signal.SIGINT, handler)
     main()

@@ -59,8 +59,6 @@ class OpState {
 
   virtual OpState* HandleWaitCallback();
 
-  // TODO(Katie) Remove if you end up changing the start, custom, and stop
-  // commands to actions.
   virtual OpState* HandleGuestScienceAck(
                                         ff_msgs::AckStampedConstPtr const& ack);
 
@@ -86,6 +84,7 @@ class OpState {
  protected:
   OpState(std::string const& name, unsigned char id);
   void SetExec(Executive *const exec);
+  void SetPlanStatus(bool successful, std::string err_msg = "");
 
   std::string const name_;
   unsigned char const id_;

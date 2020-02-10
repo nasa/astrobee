@@ -73,11 +73,11 @@ void ReadParams(interest_point::FeatureDetector* detector) {
 
   // For the brisk thresholds, quietly assume some defaults
   if (!config.GetReal("min_brisk_threshold", &min_brisk_threshold))
-    min_brisk_threshold = 50.0;
+    min_brisk_threshold = 20.0;
   if (!config.GetReal("default_brisk_threshold", &default_brisk_threshold))
-    default_brisk_threshold = 75.0;
+    default_brisk_threshold = 90.0;
   if (!config.GetReal("max_brisk_threshold", &max_brisk_threshold))
-    max_brisk_threshold = 75.0;
+    max_brisk_threshold = 110.0;
 
   detector->Reset("ORGBRISK", min_features, max_features, detection_retries,
                   min_brisk_threshold, default_brisk_threshold, max_brisk_threshold);
@@ -93,7 +93,16 @@ void DetectImageFeatures(interest_point::FeatureDetector & detector, sensor_msgs
     ROS_FATAL("cv_bridge exception: %s", e.what());
     return;
   }
-  detector.Detect(image->image, &keypoints, description);
+
+  bool histogram_equalization = true;
+  cv::Mat * image_ptr = const_cast<cv::Mat*>(&image->image);
+  cv::Mat hist_image;
+  if (histogram_equalization) {
+    cv::equalizeHist(image->image, hist_image);
+    image_ptr = &hist_image;
+  }
+
+  detector.Detect(*image_ptr, &keypoints, description);
 }
 
 void InterpolateGroundTruth(const geometry_msgs::PoseStampedConstPtr & last_gt,

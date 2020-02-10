@@ -51,7 +51,10 @@ class StatesNodelet : public ff_util::FreeFlyerNodelet {
  public:
   StatesNodelet() : ff_util::FreeFlyerNodelet("states") {}
 
-  virtual ~StatesNodelet() {}
+  virtual ~StatesNodelet() {
+    // on nodelet shutdown, send a shutdown message on TOPIC_SIGNALS
+    Shutdown();
+  }
 
  protected:
   virtual void Initialize(ros::NodeHandle* nh) {
@@ -59,23 +62,24 @@ class StatesNodelet : public ff_util::FreeFlyerNodelet {
         SERVICE_HARDWARE_EPS_CONF_LED_STATE);
     client_streaming_lights_ = nh->serviceClient<ff_msgs::SetStreamingLights>(
         SERVICE_STREAMING_LIGHTS);
-    pub_ = nh->advertise<ff_msgs::SignalState>(TOPIC_SIGNALS, 1);
-    sub_.push_back(nh->subscribe(TOPIC_BEHAVIORS_DOCKING_STATE, 1,
-                                 &StatesNodelet::DockStateCallback, this));
-    sub_.push_back(nh->subscribe(TOPIC_MOBILITY_MOTION_RESULT, 1,
-                                 &StatesNodelet::MotionActionResultCallback,
-                                 this));
-    sub_.push_back(nh->subscribe(TOPIC_MOBILITY_MOTION_STATE, 1,
-                                 &StatesNodelet::MobilityMotionStateCallback,
-                                 this));
+    pub_ = nh->advertise<ff_msgs::SignalState>(
+        TOPIC_SIGNALS, 1, true);  // TOPIC_SIGNALS is a latched topic
     sub_.push_back(nh->subscribe(TOPIC_MANAGEMENT_CAMERA_STATE, 1,
                                  &StatesNodelet::LiveStreamingCallback, this));
-    for (auto i : {TOPIC_HARDWARE_EPS_BATTERY_STATE_TL,
-                   TOPIC_HARDWARE_EPS_BATTERY_STATE_TR,
-                   TOPIC_HARDWARE_EPS_BATTERY_STATE_BL,
-                   TOPIC_HARDWARE_EPS_BATTERY_STATE_BR})
-      sub_.push_back(
-          nh->subscribe(i, 1, &StatesNodelet::BatteryStateCallback, this));
+    // on nodelet start, send a wakeup message on TOPIC_SIGNALS
+    Startup();
+  }
+
+  void Startup() {
+    ff_msgs::SignalState s;
+    s.state = ff_msgs::SignalState::WAKE;
+    pub_.publish(s);
+  }
+
+  void Shutdown() {
+    ff_msgs::SignalState s;
+    s.state = ff_msgs::SignalState::SLEEP;
+    pub_.publish(s);
   }
 
   void BatteryStateCallback(const sensor_msgs::BatteryState::ConstPtr& msg) {
@@ -114,11 +118,9 @@ class StatesNodelet : public ff_util::FreeFlyerNodelet {
     else
       systemLeds.request.video = systemLeds.request.OFF;
 
-    if (!client_.call(systemLeds)) {
-      ROS_ERROR("Failiure occurred when trying to configure system LEDs");
-    } else {
-      ROS_INFO("Successfully changed the system LEDs");
-    }
+    // we no longer call the system LEDs from the states nodelet
+    // as that occurs elsewhere in FSW
+    // this will be cleaned up in a later commit
 
     ff_msgs::SetStreamingLights streamingLights;
 

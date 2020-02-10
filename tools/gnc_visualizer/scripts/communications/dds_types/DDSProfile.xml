@@ -30,9 +30,9 @@
           <mask>UDPv4</mask>
         </transport_builtin>
         <discovery>
-          <initial_peers>
-            
-          <element>10.11.42.38</element><element>10.11.42.165</element><element>127.0.0.1</element></initial_peers>
+        <initial_peers>   
+          <element>127.0.0.1</element>
+        </initial_peers>
           <!-- if false, we do an explicit configuration through the discovery-peers files. -->
           <!-- This limits accidental traffic on the robot-networks. -->
           <!-- For the ground-side router, allowing unknown peers might be preferred. -->
@@ -960,7 +960,7 @@
         <partition>
           <name>
             
-          <element>Bsharp</element></name>
+          <element>Bumble</element></name>
         </partition>
       </subscriber_qos>
     </subscriber>
@@ -972,7 +972,7 @@
         <partition>
           <name>
             
-          <element>Bsharp</element></name>
+          <element>Bumble</element></name>
         </partition>
       </subscriber_qos>
     </subscriber>
@@ -987,7 +987,7 @@
         <partition>
           <name>
             
-          <element>Bsharp</element></name>
+          <element>Bumble</element></name>
         </partition>
       </subscriber_qos>
     </subscriber>
@@ -999,7 +999,7 @@
         <partition>
           <name>
             
-          <element>Bsharp</element></name>
+          <element>Bumble</element></name>
         </partition>
       </subscriber_qos>
     </subscriber>
@@ -1011,7 +1011,7 @@
         <partition>
           <name>
             
-          <element>Bsharp</element></name>
+          <element>Bumble</element></name>
         </partition>
       </subscriber_qos>
     </subscriber>

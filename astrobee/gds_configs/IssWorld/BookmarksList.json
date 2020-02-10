@@ -1,0 +1,132 @@
+{
+  "bookmarks" : [ {
+    "name" : "Origin",
+    "location" : {
+      "type" : "ModuleBayPoint",
+      "x" : 0.0,
+      "y" : 0.0,
+      "z" : 0.0,
+      "roll" : 0.0,
+      "pitch" : 0.0,
+      "yaw" : 0.0,
+      "ignoreOrientation" : false,
+      "moduleBayValid" : false,
+      "bookmark" : null,
+      "bookmarkValid" : false
+    }
+  }, {
+    "name" : "Center of US Lab",
+    "location" : {
+      "type" : "ModuleBayPoint",
+      "x" : 2.484,
+      "y" : 0.006,
+      "z" : 4.851,
+      "roll" : 0.0,
+      "pitch" : 0.0,
+      "yaw" : 0.0,
+      "ignoreOrientation" : true,
+      "moduleBayValid" : true,
+      "module" : "US Lab",
+      "bayNumberValid" : true,
+      "bayNumber" : "Between 3 and 4",
+      "centerOne" : true,
+      "wallOne" : "Deck",
+      "wallOneOffset" : 0.2,
+      "centerTwo" : true,
+      "wallTwo" : "Deck",
+      "wallTwoOffset" : 0.2,
+      "bookmark" : null,
+      "bookmarkValid" : false
+    }
+  }, {
+    "name" : "Dock Berth Left",
+    "location" : {
+      "type" : "ModuleBayPoint",
+      "x" : 9.92,
+      "y" : -9.54,
+      "z" : 4.5,
+      "roll" : 0.0,
+      "pitch" : 0.0,
+      "yaw" : 0.0,
+      "ignoreOrientation" : false,
+      "moduleBayValid" : false,
+      "bookmark" : null,
+      "bookmarkValid" : false
+    }
+  }, {
+    "name" : "Dock Berth Right",
+    "location" : {
+      "type" : "ModuleBayPoint",
+      "x" : 9.92,
+      "y" : -10.04,
+      "z" : 4.5,
+      "roll" : 179.0,
+      "pitch" : 0.0,
+      "yaw" : 0.0,
+      "ignoreOrientation" : false,
+      "moduleBayValid" : false,
+      "bookmark" : null,
+      "bookmarkValid" : false
+    }
+  }, {
+    "name" : "Half Dock Approach Point Right",
+    "location" : {
+      "type" : "ModuleBayPoint",
+      "x" : 10.09,
+      "y" : -10.04,
+      "z" : 4.5,
+      "roll" : -179.0,
+      "pitch" : 0.0,
+      "yaw" : 0.0,
+      "ignoreOrientation" : false,
+      "moduleBayValid" : false,
+      "bookmark" : null,
+      "bookmarkValid" : false
+    }
+  }, {
+    "name" : "REALM approach point",
+    "location" : {
+      "type" : "ModuleBayPoint",
+      "x" : 10.9,
+      "y" : -3.8,
+      "z" : 4.8,
+      "roll" : 0.0,
+      "pitch" : 0.0,
+      "yaw" : 90.0,
+      "ignoreOrientation" : false,
+      "moduleBayValid" : false,
+      "bookmark" : null,
+      "bookmarkValid" : false
+    }
+  }, {
+    "name" : "Dock Approach Point Right",
+    "location" : {
+      "type" : "ModuleBayPoint",
+      "x" : 10.5,
+      "y" : -9.75,
+      "z" : 4.5,
+      "roll" : 180.0,
+      "pitch" : 0.0,
+      "yaw" : 0.0,
+      "ignoreOrientation" : false,
+      "moduleBayValid" : false,
+      "bookmark" : null,
+      "bookmarkValid" : false
+    }
+  }, {
+    "name" : "Dock Approach Point Left",
+    "location" : {
+      "type" : "ModuleBayPoint",
+      "x" : 10.5,
+      "y" : -9.25,
+      "z" : 4.5,
+      "roll" : 0.0,
+      "pitch" : 0.0,
+      "yaw" : 0.0,
+      "ignoreOrientation" : false,
+      "moduleBayValid" : false,
+      "bookmark" : null,
+      "bookmarkValid" : false
+    }
+  } ]
+}

@@ -271,6 +271,56 @@
       "topicName" : "hw/cam_nav",
       "downlinkOption" : "delayed",
       "frequency" : -1
+    },
+    {
+      "topicName" : "hw/speed_cam/camera_image",
+      "downlinkOption" : "delayed",
+      "frequency" : -1
+    },
+    {
+      "topicName" : "hw/speed_cam/imu",
+      "downlinkOption" : "delayed",
+      "frequency" : -1
+    },
+    {
+      "topicName" : "hw/speed_cam/optical_flow",
+      "downlinkOption" : "delayed",
+      "frequency" : -1
+    },
+    {
+      "topicName" : "hw/speed_cam/speed",
+      "downlinkOption" : "delayed",
+      "frequency" : -1
+    },
+    {
+      "topicName" : "hw/depth_haz/depth_image",
+      "downlinkOption" : "delayed",
+      "frequency" : -1
+    },
+    {
+      "topicName" : "hw/depth_haz/points",
+      "downlinkOption" : "delayed",
+      "frequency" : -1
+    },
+    {
+      "topicName" : "hw/depth_haz/extended",
+      "downlinkOption" : "delayed",
+      "frequency" : -1
+    },
+    {
+      "topicName" : "hw/depth_perch/depth_image",
+      "downlinkOption" : "delayed",
+      "frequency" : -1
+    },
+    {
+      "topicName" : "hw/depth_perch/points",
+      "downlinkOption" : "delayed",
+      "frequency" : -1
+    },
+    {
+      "topicName" : "tf",
+      "downlinkOption" : "delayed",
+      "frequency" : -1
     }
   ]
 }

@@ -42,15 +42,30 @@
  */
 namespace signal_lights {
 
-typedef std::pair<ros::Timer, SignalLights> SignalPair;
+class SignalPair {
+ public:
+  std::string name;
+  ros::Timer timer;
+  signal_lights::SignalLights signal_lights;
 
-typedef std::map<std::string, SignalPair> SignalLightsMap;
+  SignalPair(std::string name, signal_lights::Device device)
+      : name(name), signal_lights(device) {}
+};
 
 class SignalLightsNodelet : public ff_util::FreeFlyerNodelet {
  public:
   SignalLightsNodelet() : ff_util::FreeFlyerNodelet(NODE_SIGNAL_LIGHTS) {}
 
-  virtual ~SignalLightsNodelet() {}
+  virtual ~SignalLightsNodelet() {
+    ROS_INFO("Signal lights nodelet is shutting down");
+    for (size_t i = 0; i < devices_.size(); i++) {
+      devices_[i].signal_lights.SetAll(1, 1, 1);
+      for (size_t p = 0; p < 4; p++) {
+        devices_[i].signal_lights.Poll();
+      }
+    }
+    ROS_INFO("Signal lights nodelet shut down complete");
+  }
 
  protected:
   virtual void Initialize(ros::NodeHandle* nh) {
@@ -77,6 +92,10 @@ class SignalLightsNodelet : public ff_util::FreeFlyerNodelet {
 
     // Get the addresses
     config_reader::ConfigReader::Table devices(&config_params, "i2c_devices");
+
+    // reserve enough space in devices vector
+    devices_.reserve(devices.GetSize());
+
     for (int i = 0; i < devices.GetSize(); i++) {
       config_reader::ConfigReader::Table device;
       if (!devices.GetTable(i + 1, &device)) {
@@ -93,17 +112,18 @@ class SignalLightsNodelet : public ff_util::FreeFlyerNodelet {
         ROS_ERROR("Could not get device address");
         return;
       }
+
       // Add the device to the device map
-      auto it = devices_.emplace(
-          name, SignalPair(ros::Timer(),
-                           signal_lights::SignalLights(signal_lights::Device(
-                               "/dev/i2c-2", (uint8_t)addr))));
-      // Add an update timer to poll the signal light system
-      it.first->second.first =
+      devices_.push_back(
+          SignalPair(name, signal_lights::Device("/dev/i2c-2", (uint8_t)addr)));
+
+      devices_[i].timer =
           nh->createTimer(ros::Duration(1.0 / rate),
                           boost::bind(&SignalLightsNodelet::TimerCallback, this,
-                                      _1, devices_.find(name)),
+                                      _1, &devices_[i]),
                           false, true);
+
+      ROS_INFO("Setup one signal lights device!");
     }
 
     // LED update services
@@ -112,26 +132,27 @@ class SignalLightsNodelet : public ff_util::FreeFlyerNodelet {
   }
 
   // Callback for polling the signal light system
-  void TimerCallback(ros::TimerEvent const& timer,
-                     const SignalLightsMap::iterator& it) {
-    it->second.second.Poll();
+  void TimerCallback(ros::TimerEvent const& timer, SignalPair* s) {
+    s->signal_lights.Poll();
   }
 
   // Callback for configuring the signal lights
   void ConfigureCallback(const ff_hw_msgs::ConfigureLEDGroup::ConstPtr& msg) {
-    auto it = devices_.find(msg->side);
-    if (it == devices_.end()) {
-      ROS_ERROR("Signal light update received for unknown subsystem");
-      return;
+    for (auto& d : devices_) {
+      if (msg->side == d.name) {
+        for (const auto& i : msg->leds) {
+          d.signal_lights.Set(i.pos, i.red, i.green, i.blue);
+        }
+        return;
+      }
     }
-    for (const auto& i : msg->leds)
-      it->second.second.Set(i.pos, i.red, i.green, i.blue);
+    ROS_ERROR("Signal light update received for unknown subsystem");
   }
 
  private:
   config_reader::ConfigReader config_params;  // LUA configuration reader
-  SignalLightsMap devices_;                   // Available devices
-  ros::Subscriber sub_;                       // Configure service
+  std::vector<SignalPair> devices_;
+  ros::Subscriber sub_;  // Configure service
 };
 
 PLUGINLIB_DECLARE_CLASS(signal_lights, SignalLightsNodelet,

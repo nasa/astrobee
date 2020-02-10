@@ -90,7 +90,7 @@ Eigen::Quaterniond roll_pitch_yaw_to_quaternion(ROTATIONS_MULTIPLICATION_ORDER o
 
 // Main entry point for application
 int main(int argc, char *argv[]) {
-  gflags::SetUsageMessage("Usage: plangen <options>\n");
+  google::SetUsageMessage("Usage: plangen <options>\n");
   common::InitFreeFlyerApplication(&argc, &argv);
 
   if (FLAGS_input == "" || FLAGS_output == "") {

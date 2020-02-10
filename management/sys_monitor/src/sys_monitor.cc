@@ -429,7 +429,8 @@ void SysMonitor::OutputFaultTables() {
   }
 }
 
-void SysMonitor::PublishCmd(ff_msgs::CommandStampedConstPtr cmd) {
+void SysMonitor::PublishCmd(ff_msgs::CommandStampedPtr cmd) {
+  cmd->cmd_id = "sys_monitor" + std::to_string(ros::Time::now().sec);
   pub_cmd_.publish(cmd);
 }
 

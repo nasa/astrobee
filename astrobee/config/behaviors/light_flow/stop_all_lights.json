@@ -6,7 +6,7 @@
       [
         "Define",
         "$complete",
-        ["ListSequence", ["BasicSequence", "#000", 0.0, 0.5, "#000"]]
+        ["ListSequence", ["BasicSequence", "#fff", 0.0, 0.5, "#fff"]]
       ],
       ["Define", "$rptComplete", ["RepeatSequence", "$complete", 1.0]],
       ["Define", "$allLights", ["Domain", ["Interval", 0, 74]]],

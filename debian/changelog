@@ -1,3 +1,16 @@
+astrobee (0.10.4) testing; urgency=medium
+
+  * Histogram correction for localization.
+  * Various smaller fixes.
+
+ -- Astrobee Flight Software <astrobee-fsw@nx.arc.nasa.gov>  Mon, 10 Feb 2020 15:52:31 -0800
+
+astrobee (0.10.3) testing; urgency=medium
+
+  * Don't use sparse mapping features more than once.
+
+ -- Astrobee Flight Software <astrobee-fsw@nx.arc.nasa.gov>  Tue, 29 Oct 2019 15:26:59 -0700
+
 astrobee (0.10.2) testing; urgency=medium
 
   * Perching behavior implemented

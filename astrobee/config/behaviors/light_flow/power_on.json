@@ -8,7 +8,7 @@
         "$gaugel",
         [
           "ListFrame",
-          ["BasicFrame", "#000", 0.0, 120],
+          ["BasicFrame", "#fff", 0.0, 120],
           ["BasicFrame", "#fff", 120.0, 120]
         ]
       ],
@@ -26,7 +26,7 @@
         "$gauger",
         [
           "ListFrame",
-          ["BasicFrame", "#000", 0.0, 120],
+          ["BasicFrame", "#fff", 0.0, 120],
           ["BasicFrame", "#fff", 120.0, 120]
         ]
       ],

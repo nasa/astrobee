@@ -23,7 +23,7 @@ We go through how a map is made.
 
 Here, we delete the images that overlap highly.
 
-  select_images -density_factor 1.4 bag_images/*.jpg
+  select_images -density_factor 1.4 <image dir>/*.jpg
 
 This is a non-reversible operation, so it should be invoked on a copy
 of the images.
@@ -36,12 +36,17 @@ seems to work well. Ideally the images should have perhaps on the order of
 Alternatively, one can simply first pick every 10th or 20th image,
 such as:
 
-  ls bag_images/*0.jpg
+  ls <image dir>/*.jpg
 
 then copy these to a new directory.
 
-In either case, one should inspect the images in the 'eog' viewer, 
-and delete redundant ones from it. 
+It is important to avoid rotating the bot in place when acquiring
+images, as then the map could be of poor quality. Hence, the robot
+should have some translation motion (in addition to any rotation) when
+the data is acquired.
+
+One should inspect the images in the 'eog' viewer, and delete
+redundant ones from it.
 
 ## Setup the Environment
 
@@ -77,7 +82,8 @@ More details on these and other environmental variables can be found in
 
 Execute this command to construct a complete map:
 
-  build_map <image files> [ -num_subsequent_images <val> ] -output_map <output.map>
+  build_map <image dir>/*.jpg [ -num_subsequent_images <val> ] \
+    -histogram_equalization -output_map <output.map>
 
 During map building, every image will be matched against every
 subsequent image in the sequence. To use only a limited number of
@@ -92,6 +98,10 @@ drift. If you know that a region will be revisited after say 100
 images, use this number for this parameter. Making this too big will
 result in very slow map building.
 
+The flag -histogram_equalization equalizes the histogram of the images
+before doing feature detection. It was shown to create maps that are
+more robust to illumination changes.
+
 ### Map Building Pipeline
 
 The `build_map` command runs a number of steps, which can also be invoked
@@ -99,8 +109,8 @@ individually for further control.
 
 1. **Detect Interest Points**
 
-    build_map <image files> -feature_detection [ -sample_rate <N> ]
-                            [ -detector <detector> ] [ -descriptor <descriptor> ]
+    build_map <image dir>/*.jpg -feature_detection [ -sample_rate <N> ]
+      -histogram_equalization [ -detector <detector> ] [ -descriptor <descriptor> ]
 
 Detects features in all of the input images and save them to a map
 file. The `-sample_rate <N>` flag, if specified, builds the map from
@@ -135,9 +145,16 @@ consistently across multiple frames.
 
   Adjust the initial transformations to minimize error with bundle adjustment.
 
+If the options 
+
+  -first_ba_index and -last_ba_index 
+
+are specified, only cameras with indices between these (including both
+endpoints) will be optimized during bundle adjustment.
+
 6. **Map Rebuilding**
 
-    build_map -rebuild
+    build_map -rebuild -histogram_equalization
 
 Rebuilds the map with a different feature set (by default, BRISK
 features). The initial map can be built with high quality features,
@@ -165,13 +182,14 @@ which should be done as below.
 
 Builds a vocabulary database for fast lookup of matching image pairs.
 Without this, we have to compare to every image in the map for
-localization.  The vocabulary database makes the runtime logarithmic
-instead of linear.
+localization.  The vocabulary database makes parts of the runtime
+logarithmic instead of linear.
 
 The above options can also be chained. For example, to
 run the pipeline without tensor initialization, you could do:
 
-    build_map <image files> -feature_detection -feature_matching -track_building -bundle_adjustment
+    build_map <image dir>/*.jpg -feature_detection -feature_matching \
+      -track_building -bundle_adjustment -histogram_equalization
 
 It is important to note that normally build_map prunes a map from
 features that show up in just one image after the vocabulary database
@@ -201,7 +219,7 @@ The following options can be used to create more interest point features:
   -min_surf_features, -max_surf_features, -min_surf_threshold,
   -default_surf_threshold, -max_surf_threshold, -min_brisk_features,
   -max_brisk_features, -min_brisk_threshold, -default_brisk_threshold,
-  -max_brisk_threshold
+  -max_brisk_threshold, -histogram_equalization
 
 The `build_map` command uses the file `output.map` as both input and output
 unless the flag `-output_map` is specified.
@@ -215,7 +233,7 @@ control points.
 To accomplish this, first open a subset of the images used to build
 the map in Hugin, such as:
 
-  hugin <image files>
+  hugin <image dir>/*.jpg
 
 It will ask to enter a value for the FoV (field of view). That value
 is not important since we won't use it. One can input 10 degrees,
@@ -236,6 +254,11 @@ beyond three numerical values.
 
 The xyz locations of the control points for the granite lab can be
 found in 
+
+  freeflyer/localization/sparse_mapping/granite_xyz_controlPoints.txt
+
+and the control points for the AR tags on the dock station can be
+found in
 
   localization/marker_tracking/ros/launch/granite_lab_tags.xml
 
@@ -278,7 +301,8 @@ pair.
 If all errors are large, that may mean the camera calibration is wrong
 and needs to be redone, and the map rebuilt, using
 
-  build_map -rebuild -rebuild_refloat_cameras -rebuild_replace_camera
+  build_map -rebuild -rebuild_refloat_cameras -rebuild_replace_camera \
+    -histogram_equalization
 
 or one should create images that are closer to the points used in
 registration.
@@ -393,22 +417,36 @@ To test how the map may perform on the target platform, do the following:
 
     scp <freeflyer_src>/marker_tracking/ros/tools/features_counter.py mlp:
 
-### Launch the localization node from the LLP
+### Launch the localization node on LLP
 
     ssh llp
     roslaunch astrobee astrobee.launch llp:=disabled mlp:=mlp nodes:=framestore,dds_ros_bridge,localization_node
 
-### Enable the mapped landmark production (from MLP)
+### Enable localization and the mapped landmark production (on MLP)
 
    export ROS_MASTER_URI=http://llp:11311
    rosservice call /loc/ml/enable true
 
-### Play the bags
+If this command returns an error saying that the service is not
+available, wait a little and try again.
+
+### Play the bags (on MLP)
 
     cd /data/bags/directory_of_bags
-    rosbag play --loop *.bag
+    rosbag play --loop *.bag /mgt/img_sampler/nav_cam/image_record:=/hw/cam_nav \
+      /loc/ml/features:=/tmp1 /loc/ml/registration:=/tmp2
 
-### Evaluate performance
+It is important to check the topics that were recorded to the bag. If
+the nav camera was recorded on /mgt/img_sampler/nav_cam/image_record
+instead of /hw/cam_nav, as it happens when recording data on the ISS,
+it must be redirected to the proper topic, as we do above. If
+localization was running when the bag was recorded and hence the
+topics /loc/ml/features and /loc/ml/registration were recorded, they
+must be redirected to something else (above /tmp1 and /tmp2 was used)
+to not conflict with actual localization results that would be now
+created based on the images in the bag.
+
+### Evaluate performance (on MLP)
 
 1. Look at the load with htop
 

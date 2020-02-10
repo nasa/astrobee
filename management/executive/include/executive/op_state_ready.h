@@ -30,6 +30,9 @@ class OpStateReady : public OpState {
 
   OpState* HandleCmd(ff_msgs::CommandStampedPtr const& cmd);
 
+  // Guest Science Ack
+  OpState* HandleGuestScienceAck(ff_msgs::AckStampedConstPtr const& ack);
+
  protected:
   explicit OpStateReady(std::string const& name, unsigned char id) :
     OpState(name, id) {}

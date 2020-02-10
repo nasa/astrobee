@@ -27,6 +27,9 @@
 
 // Specific arm services
 #include <ff_hw_msgs/SetJointMaxVelocity.h>
+#include <ff_msgs/SetState.h>
+#include <ff_hw_msgs/SetEnabled.h>
+#include <ff_hw_msgs/CalibrateGripper.h>
 
 // STL includes
 #include <string>
@@ -82,6 +85,7 @@ class GazeboModelPluginPerchingArm : public FreeFlyerModelPlugin {
   static constexpr double DISTAL_MAX_PAN        = 1.57079;
   static constexpr double GRIPPER_OPEN          = 100.0;
   static constexpr double GRIPPER_CLOSED        = 0.0;
+  static constexpr double GRIPPER_OFFSET        = 100.0;
   static constexpr double RPM_TO_RADS_PER_S     = 0.1047198;
 
   // Called when the plugin is loaded into the simulator
@@ -171,6 +175,29 @@ class GazeboModelPluginPerchingArm : public FreeFlyerModelPlugin {
     // Periodic timer to send feedback to executive to avoid timeout
     timer_ = nh->createTimer(ros::Rate(rate_),
       &GazeboModelPluginPerchingArm::TimerCallback, this, false, true);
+
+    // Answer to hardware services
+    // Enable/Disable the Proximal Joint Servo
+    srv_ps_ =
+        nh->advertiseService(SERVICE_HARDWARE_PERCHING_ARM_PROX_SERVO,
+                             &GazeboModelPluginPerchingArm::EnableProximalServoCallback,
+                             this);
+    // Enable/Disable the Distal Joint Servo
+    srv_ds_ =
+        nh->advertiseService(SERVICE_HARDWARE_PERCHING_ARM_DIST_SERVO,
+                             &GazeboModelPluginPerchingArm::EnableDistalServoCallback,
+                             this);
+
+    // Enable/Disable the Gripper Servo
+    srv_gs_ =
+        nh->advertiseService(SERVICE_HARDWARE_PERCHING_ARM_GRIP_SERVO,
+                             &GazeboModelPluginPerchingArm::EnableGripperServoCallback,
+                             this);
+    // Calibrate the arm
+    srv_c_ =
+        nh->advertiseService(SERVICE_HARDWARE_PERCHING_ARM_CALIBRATE,
+                             &GazeboModelPluginPerchingArm::CalibrateGripperCallback,
+                            this);
   }
 
   // Called on simulation reset
@@ -211,8 +238,8 @@ class GazeboModelPluginPerchingArm : public FreeFlyerModelPlugin {
     // Get the joint limits
     double lower = joint->GetLowerLimit(0).Radian();
     double upper = joint->GetUpperLimit(0).Radian();
-    double value = lower + position * (upper - lower);
     // Calculate the correct joint angle based on the position (0 - 100)
+    double value = lower + position * (upper - lower);
     GetModel()->GetJointController()->SetPositionTarget(
       joint->GetScopedName(), value);
   }
@@ -222,8 +249,6 @@ class GazeboModelPluginPerchingArm : public FreeFlyerModelPlugin {
     // Throw out junk values not in range
     if (position < GRIPPER_CLOSED || position > GRIPPER_OPEN)
       return;
-    // Save the gripper state
-    gripper_ = position;
     // All other cases are actual requests
     double r = (position - GRIPPER_CLOSED) / (GRIPPER_OPEN - GRIPPER_CLOSED);
     SetGripperJointGoal(bay_+"_gripper_left_proximal_joint", r);
@@ -263,7 +288,8 @@ class GazeboModelPluginPerchingArm : public FreeFlyerModelPlugin {
       // position to be specified alongside joint velocities. Apologies.
       if (msg.name[i] == bay_+"_gripper_joint") {
         if (msg.position.size() > i)
-          SetGripperGoal(msg.position[i]);
+          // Compensate for machine offset
+          SetGripperGoal(msg.position[i] + GRIPPER_OFFSET);
         else
           NODELET_WARN("Gripper: only position control is supported");
       // The only other two states that are supported are the proximal and
@@ -292,9 +318,15 @@ class GazeboModelPluginPerchingArm : public FreeFlyerModelPlugin {
       msg_.velocity[i] = joints_[i]->GetVelocity(0);
       msg_.effort[i] = joints_[i]->GetForce(0);
     }
+    // Calculate overall gripper status based on left_proximal_joint the joint
+    physics::JointPtr joint = GetModel()->GetJoint(bay_+"_gripper_left_proximal_joint");
+    double lower = joint->GetLowerLimit(0).Radian();
+    double upper = joint->GetUpperLimit(0).Radian();
+    double value = joint->GetAngle(0).Radian();
+    double gripper = (value-lower)/(upper-lower)*100;
     // Set the virtual gripper state manually as the last element
     msg_.name[i] = bay_+"_gripper_joint";
-    msg_.position[i] = gripper_;
+    msg_.position[i] = gripper;
     msg_.velocity[i] = 0;
     msg_.effort[i] = 0;
     // Publish the joint state
@@ -325,6 +357,43 @@ class GazeboModelPluginPerchingArm : public FreeFlyerModelPlugin {
     return true;
   }
 
+  // Enable/Disable the proximal joint servo
+  bool EnableProximalServoCallback(ff_hw_msgs::SetEnabled::Request &req,
+                                   ff_hw_msgs::SetEnabled::Response &res) {
+    // ROS_WARN("[Perching_arm] Enable/Disable the proximal joint servo callback");
+    res.success = true;
+    res.status_message = "Success";
+    return true;
+  }
+
+  // Enable/Disable the distal joint servo
+  bool EnableDistalServoCallback(ff_hw_msgs::SetEnabled::Request &req,
+                                 ff_hw_msgs::SetEnabled::Response &res) {
+    // ROS_WARN("[Perching_arm] Enable/Disable the distal joint servo callback");
+    res.success = true;
+    res.status_message = "Success";
+    return true;
+  }
+
+  // Enable/Disable the gripper joint servo
+  bool EnableGripperServoCallback(ff_hw_msgs::SetEnabled::Request &req,
+                                  ff_hw_msgs::SetEnabled::Response &res) {
+    // ROS_WARN("[Perching_arm] Enable/Disable the gripper joint servo callback");
+    res.success = true;
+    res.status_message = "Success";
+    return true;
+  }
+
+  // Calibrate the gripper
+  bool CalibrateGripperCallback(ff_hw_msgs::CalibrateGripper::Request &req,
+                                ff_hw_msgs::CalibrateGripper::Response &res) {
+    // ROS_WARN("[Perching_arm] Calibrate Gripper Callback");
+    SetGripperGoal(GRIPPER_OPEN);
+    res.success = true;
+    res.status_message = "Success";
+    return true;
+  }
+
  private:
   double rate_;                   // Rate of joint state update
   std::string bay_;               // Prefix to avoid name collisions
@@ -341,7 +410,10 @@ class GazeboModelPluginPerchingArm : public FreeFlyerModelPlugin {
   common::PID pid_gl_dist_p_;     // PID : gripper left distal position
   common::PID pid_gr_prox_p_;     // PID : gripper right proximal position
   common::PID pid_gr_dist_p_;     // PID : gripper right distal position
-  double gripper_;                // Gripper value
+  ros::ServiceServer srv_ps_;    // Enable/Disable the proximal joint servo
+  ros::ServiceServer srv_ds_;    // Enable/Disable the distal   joint servo
+  ros::ServiceServer srv_gs_;    // Enable/Disable the gripper  joint servo
+  ros::ServiceServer srv_c_;     // Calibrate gripper
 };
 
 // Register this plugin with the simulator
