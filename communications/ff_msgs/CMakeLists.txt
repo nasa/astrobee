@@ -23,9 +23,19 @@ find_package(catkin2 REQUIRED COMPONENTS
   geometry_msgs
   actionlib_msgs
   trajectory_msgs
-  geometry_msgs
   sensor_msgs
 )
 
 create_msg_targets(DIR msg SDIR srv ADIR action
-  DEPS std_msgs geometry_msgs actionlib_msgs trajectory_msgs geometry_msgs sensor_msgs)
+  DEPS std_msgs geometry_msgs actionlib_msgs trajectory_msgs sensor_msgs)
+
+catkin_package(
+ # INCLUDE_DIRS include
+  LIBRARIES
+  CATKIN_DEPENDS message_runtime  geometry_msgs actionlib_msgs trajectory_msgs sensor_msgs
+)
+
+include_directories(
+  include
+  ${catkin_INCLUDE_DIRS}
+)
