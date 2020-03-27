@@ -75,7 +75,6 @@ void OctoClass::SetResolution(const double resolution_in) {
       }
     }
   }
-
   ROS_DEBUG("Map resolution: %f meters", resolution_);
 }
 
@@ -296,6 +295,8 @@ void OctoClass::FadeMemory(const double &rate) {  // rate at which this function
 
   static bool is_occ;
   static octomap::OcTreeKey key;
+
+  // Fade tree_
   for (octomap::OcTree::leaf_iterator it = tree_.begin_leafs(),
                                      end= tree_.end_leafs();
                                      it!= end; ++it) {
@@ -312,6 +313,24 @@ void OctoClass::FadeMemory(const double &rate) {  // rate at which this function
     // if it was occupied then disoccupied, delete node
     if (is_occ != tree_.isNodeOccupied(n))
       tree_.deleteNode(key, it.getDepth());
+  }
+  // Fade tree_inflated_
+  for (octomap::OcTree::leaf_iterator it = tree_inflated_.begin_leafs(),
+                                     end= tree_inflated_.end_leafs();
+                                     it!= end; ++it) {
+    // fade obstacles and free areas
+    key = it.getKey();
+    octomap::OcTreeNode* n = tree_inflated_.search(key);
+    is_occ = tree_inflated_.isNodeOccupied(n);
+    if (is_occ)
+        tree_inflated_.updateNodeLogOdds(n, fading_obs_log_prob_per_run);
+    else
+        tree_inflated_.updateNodeLogOdds(n, fading_free_log_prob_per_run);
+
+    // tree nodes that are unknown
+    // if it was occupied then disoccupied, delete node
+    if (is_occ != tree_inflated_.isNodeOccupied(n))
+      tree_inflated_.deleteNode(key, it.getDepth());
   }
 }
 
@@ -522,7 +541,7 @@ void OctoClass::TreeVisMarkers(visualization_msgs::MarkerArray* obstacles,
   PointsOctomapToPointCloud2(obstacles_points, obstacles_cloud);
 }
 
-// adapted from https:// ithub.com/OctoMap/octomap_mapping
+// adapted from https:// github.com/OctoMap/octomap_mapping
 void OctoClass::InflatedVisMarkers(visualization_msgs::MarkerArray* obstacles,
                                    visualization_msgs::MarkerArray* free) {  // publish occupied nodes
   // Markers: each marker array stores a set of nodes with similar size

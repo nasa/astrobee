@@ -61,6 +61,7 @@ void MapperNodelet::BodyTfTask(ros::TimerEvent const& event) {
   mutexes_.tf.unlock();
 }
 
+// Sentinel
 void MapperNodelet::CollisionCheckTask() {
   ROS_DEBUG("collisionCheck Thread started!");
 
@@ -220,6 +221,7 @@ void MapperNodelet::OctomappingTask() {
     globals_.octomap.cam_frustum_.TransformFrustum(transform, &world_frustum);
     globals_.octomap.PclToRayOctomap(pcl_world, tf_cam2world, world_frustum);
     globals_.octomap.tree_.prune();   // prune the tree before visualizing
+    globals_.octomap.tree_inflated_.prune();
     // globals_.octomap.tree.writeBinary("simple_tree.bt");
     mutexes_.octomap.unlock();
 

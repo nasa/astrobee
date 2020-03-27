@@ -137,7 +137,7 @@ void MapperNodelet::Initialize(ros::NodeHandle *nh) {
     ros::Duration(ros::Rate(tf_update_rate_)),
       &MapperNodelet::BodyTfTask, this, false, true);
 
-  // Aubscribers
+  // Subscribers
   std::string cam_prefix = TOPIC_HARDWARE_PICOFLEXX_PREFIX;
   std::string cam_suffix = TOPIC_HARDWARE_PICOFLEXX_SUFFIX;
   if (use_haz_cam) {
