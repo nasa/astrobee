@@ -73,7 +73,7 @@ Ctl::Ctl(ros::NodeHandle* nh, std::string const& name) :
     [this](FSM::Event const& event) -> FSM::State {
       if (!Control(ff_msgs::ControlCommand::MODE_STOP))
         return Result(RESPONSE::CONTROL_FAILED);
-      return Result(RESPONSE::SUCCESS);
+      return STOPPING;
     });
   // [2]
   fsm_.Add(NOMINAL,
@@ -82,6 +82,20 @@ Ctl::Ctl(ros::NodeHandle* nh, std::string const& name) :
       if (!Control(ff_msgs::ControlCommand::MODE_STOP))
         return Result(RESPONSE::CONTROL_FAILED);
       return Result(RESPONSE::CANCELLED);
+    });
+  // [3]
+  fsm_.Add(WAITING,
+    GOAL_STOP,
+    [this](FSM::Event const& event) -> FSM::State {
+      if (!Control(ff_msgs::ControlCommand::MODE_STOP))
+        return Result(RESPONSE::CONTROL_FAILED);
+      return STOPPING;
+    });
+  // [4]
+  fsm_.Add(STOPPING,
+    GOAL_COMPLETE,
+    [this](FSM::Event const& event) -> FSM::State {
+      return Result(RESPONSE::SUCCESS);
     });
 
   // Set the operating mode to STOP by default, so that when the speed ramps
@@ -138,7 +152,6 @@ Ctl::Ctl(ros::NodeHandle* nh, std::string const& name) :
 // Destructor
 Ctl::~Ctl() {}
 
-// Complete the current dock or undock action
 FSM::State Ctl::Result(int32_t response) {
   NODELET_DEBUG_STREAM("Control action completed with code " << response);
   // Stop the platform and
@@ -152,12 +165,18 @@ FSM::State Ctl::Result(int32_t response) {
     result.segment = segment_;
     result.index = std::distance(setpoint_, segment_.begin());
   }
-  if (response > 0)
+
+  if (response == RESPONSE::SUCCESS) {
+    NODELET_INFO_STREAM("Result: Control succeeded, result sent to client");
     action_.SendResult(ff_util::FreeFlyerActionState::SUCCESS, result);
-  else if (response < 0)
+  } else if (response == RESPONSE::PREEMPTED) {
+      NODELET_INFO_STREAM("Result: Control Preempted, result sent to client");
+      action_.SendResult(ff_util::FreeFlyerActionState::PREEMPTED, result);
+  } else {
+    NODELET_INFO_STREAM("Result: Control action aborted, result sent to client");
     action_.SendResult(ff_util::FreeFlyerActionState::ABORTED, result);
-  else
-    action_.SendResult(ff_util::FreeFlyerActionState::PREEMPTED, result);
+  }
+
   // Publish an empty segment to notify that nominal mode is over
   static ff_msgs::Segment msg;
   segment_pub_.publish(msg);
@@ -177,11 +196,13 @@ void Ctl::UpdateCallback(FSM::State const& state, FSM::Event const& event) {
   case GOAL_NOMINAL:            str = "GOAL_NOMINAL";       break;
   case GOAL_COMPLETE:           str = "GOAL_COMPLETE";      break;
   case GOAL_CANCEL:             str = "GOAL_CANCEL";        break;
+  case GOAL_STOP:               str = "GOAL_STOP";          break;
   }
   NODELET_DEBUG_STREAM("Received event " << str);
   // Debug state changes
   switch (state) {
   case WAITING:                 str = "WAITING";            break;
+  case STOPPING:                str = "STOPPING";           break;
   case NOMINAL:                 str = "NOMINAL";            break;
   }
   NODELET_DEBUG_STREAM("State changed to " << str);
@@ -200,13 +221,30 @@ void Ctl::EkfCallback(const ff_msgs::EkfState::ConstPtr& state) {
     ctl.current_time_sec = state->header.stamp.sec;
     ctl.current_time_nsec = state->header.stamp.nsec;
     mutex_cmd_msg_.unlock();
+
+    // Check if Astrobee is dynamically stopped
+    if (fsm_.GetState() == STOPPING) {
+      double v_x = state->velocity.x, v_y = state->velocity.y, v_z = state->velocity.z;
+      double omega_x = state->omega.x, omega_y = state->omega.y, omega_z = state->omega.z;
+      double v_magnitude = sqrt(v_x*v_x + v_y*v_y + v_z*v_z);
+      double omega_magnitude = sqrt(omega_x*omega_x + omega_y*omega_y + omega_z*omega_z);
+      NODELET_DEBUG_STREAM("Validating velocity when stopping:  |v|=  " << (float) v_magnitude
+        << "  |omega|= " << (float) omega_magnitude);
+
+      if ((v_magnitude <= sqrt(stopping_vel_thresh_squared_)) &&
+        (omega_magnitude <= sqrt(stopping_omega_thresh_squared_))) {
+        NODELET_INFO_STREAM("Stopping Complete: |v| <=  " << (float) sqrt(stopping_vel_thresh_squared_)
+          << "  and |omega| <=  " << (float) sqrt(stopping_omega_thresh_squared_));
+        fsm_.Update(GOAL_COMPLETE);
+      }
+    }
+
     // advance control forward whenever the pose is updated
     pt_ctl_.Tick();
     Step();
     pt_ctl_.Tock();
   }
 }
-
 
 // Callback in ground truth mode
 void Ctl::PoseCallback(const geometry_msgs::PoseStamped::ConstPtr& truth) {
@@ -234,6 +272,23 @@ void Ctl::TwistCallback(const geometry_msgs::TwistStamped::ConstPtr& truth) {
     mc::ros_to_array_vector(truth->twist.linear, ctl.est_V_B_ISS_ISS);
     mc::ros_to_array_vector(truth->twist.angular, ctl.est_omega_B_ISS_B);
     mutex_cmd_msg_.unlock();
+
+    // Check if Astrobee is dynamically stopped
+    if (fsm_.GetState() == STOPPING) {
+      double v_x = truth->twist.linear.x, v_y = truth->twist.linear.y, v_z = truth->twist.linear.z;
+      double omega_x = truth->twist.angular.x, omega_y = truth->twist.angular.y, omega_z = truth->twist.angular.z;
+      double v_magnitude = sqrt(v_x*v_x + v_y*v_y + v_z*v_z);
+      double omega_magnitude = sqrt(omega_x*omega_x + omega_y*omega_y + omega_z*omega_z);
+      NODELET_DEBUG_STREAM("Validating velocity when stopping:  |v|=  " << (float) v_magnitude
+        << "  |omega|= " << (float) omega_magnitude);
+
+      if ((v_magnitude <= sqrt(stopping_vel_thresh_squared_)) &&
+        (omega_magnitude <= sqrt(stopping_omega_thresh_squared_))) {
+        NODELET_INFO_STREAM("Stopping Complete: |v| <=  " << (float) sqrt(stopping_vel_thresh_squared_)
+          << "  and |omega| <=  " << (float) sqrt(stopping_omega_thresh_squared_));
+        fsm_.Update(GOAL_COMPLETE);
+      }
+    }
     // Don't advance control, until the pose arrives
   }
 }
@@ -356,7 +411,7 @@ void Ctl::GoalCallback(ff_msgs::ControlGoalConstPtr const& goal) {
       NODELET_DEBUG_STREAM("Received STOP command");
       if (!Control(ff_msgs::ControlCommand::MODE_STOP))
         Result(RESPONSE::CONTROL_FAILED);
-      Result(RESPONSE::SUCCESS);
+      fsm_.Update(GOAL_STOP);
       return;
     // NOMINAL - waits until completion
     case ff_msgs::ControlGoal::NOMINAL: {
@@ -375,6 +430,7 @@ void Ctl::GoalCallback(ff_msgs::ControlGoalConstPtr const& goal) {
       static ff_msgs::Segment msg;
       msg.segment = goal->segment;
       segment_pub_.publish(msg);
+
       // Start executing and return
       fsm_.Update(GOAL_NOMINAL);
       return;
@@ -484,7 +540,7 @@ bool Ctl::Step(void) {
   traj_pub_.publish(current);
 
   // Publish the current setpoint,
-  if (fsm_.GetState() == NOMINAL) {
+  if ((fsm_.GetState() == NOMINAL) || (fsm_.GetState() == STOPPING)) {
     std::lock_guard<std::mutex> lock(mutex_segment_);
     static ff_msgs::ControlFeedback feedback;
     feedback.setpoint.when = cmd_msg_.header.stamp;
@@ -531,6 +587,12 @@ void Ctl::ReadParams(void) {
   gnc_.ReadParams(&config_);
   if (!config_.GetBool("tun_debug_ctl_use_truth", &use_truth_))
     ROS_FATAL("tun_debug_ctl_use_truth not specified.");
+  // Set linear- and angular velocity threshold for ekf
+  // to decide that Astrobee is dynamically stopped.
+  if (!config_.GetReal("tun_ctl_stopping_vel_thresh", &stopping_vel_thresh_squared_))
+    ROS_FATAL("tun_ctl_stopping_vel_thresh not specified.");
+  if (!config_.GetReal("tun_ctl_stopping_omega_thresh", &stopping_omega_thresh_squared_))
+    ROS_FATAL("tun_ctl_stopping_omega_thresh not specified.");
 }
 
 }  // end namespace ctl
