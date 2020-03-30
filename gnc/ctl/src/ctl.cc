@@ -69,7 +69,7 @@ Ctl::Ctl(ros::NodeHandle* nh, std::string const& name) :
     });
   // [1]
   fsm_.Add(NOMINAL,
-    GOAL_COMPLETE,
+    GOAL_STOP,
     [this](FSM::Event const& event) -> FSM::State {
       if (!Control(ff_msgs::ControlCommand::MODE_STOP))
         return Result(RESPONSE::CONTROL_FAILED);
@@ -355,7 +355,7 @@ void Ctl::TimerCallback(const ros::TimerEvent& event) {
     if (setpoint_ == segment_.end()) {
       mutex_segment_.unlock();
       NODELET_DEBUG_STREAM("Final setpoint " << idx);
-      return fsm_.Update(GOAL_COMPLETE);
+      return fsm_.Update(GOAL_STOP);
     }
     // Otherwise, we have at least one more setpoint
     msg.current = *setpoint_;
