@@ -235,7 +235,7 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
           return STATE::PREPARING;
         // Move straight to control, as we don't need to wait for speed prep.
         if (!Control(NOMINAL, segment_))
-          return Result(RESPONSE::CONTROL_FAILED );
+          return Result(RESPONSE::CONTROL_FAILED);
         return STATE::CONTROLLING;
       });
     // [7]
@@ -789,9 +789,8 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
       case STATE::PLANNING:
         {
           std::string planner = cfg_.Get<std::string>("planner");
-          if (planners_.find(planner) != planners_.end()) {
+          if (planners_.find(planner) != planners_.end())
             planners_[planner].CancelGoal();
-          }
         }
         break;
       // Controlling
@@ -1343,7 +1342,6 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
   std::vector<geometry_msgs::PoseStamped> states_;      // Plan request
   ff_util::Segment segment_;                            // Segment
   geometry_msgs::PointStamped obstacle_;                // Obstacle
-  ff_msgs::Hazard hazard_;
   // Cached number of replan attempts
   int replan_attempts_;
 };
