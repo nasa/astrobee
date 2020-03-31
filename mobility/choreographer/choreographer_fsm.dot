@@ -30,15 +30,17 @@ digraph G {
   CONTROLLING;
   REPLANNING;
   REVALIDATING;
+  HALTING;
 
   node [shape=ellipse, style=filled, fontcolor=white, fillcolor=black, color=white];
   aligned_with_all [label="Are we tolerant to all poses?"];
   within_tolerance [label="Are we at the first pose?"];
   enable_bootstrapping [label="enable_bootstrapping"];
   enable_replanning [label="enable_replanning"];
-  enough_time [label="Is there enough time?"];
+  //enough_time [label="Is there enough time?"];
   enable_validation [label="enable_validation"];
   enable_revalidation [label="enable_validation"];
+  replan_N_times [label="replan_N_times"];
 
   # Actions
   INITIALIZING -> IDLING
@@ -87,7 +89,13 @@ digraph G {
   CONTROLLING -> STOPPED
     [label="[13]\nCONTROL_SUCCESS\nResult(SUCCESS)", color=darkgreen];
   REPLANNING -> STOPPED
-    [label="[14]\nPLAN_FAILED\nResult(REPLAN_FAILED)\n-\nGOAL_CANCEL\nResult(CANCELLED)\n***\n\nControl(STOP)", color=red];
+    [label="[14]\nGOAL_CANCEL\nResult(CANCELLED)\n***\n\nControl(STOP)", color=red];
+  REPLANNING -> replan_N_times
+    [label="[14]\nPLAN_FAILED", color=black];
+  replan_N_times -> REPLANNING
+    [label="Plan(states_)",color=black];
+  replan_N_times -> STOPPED
+    [label="replanned N times\nResult(REPLAN_FAILED)"]
   CONTROLLING -> STOPPED
     [label="[15]\nCONTROL_FAILED\nResult(CONTROL_FAILED)\n-\nGOAL_CANCEL\nResult(CANCELLED)\n***\nControl(STOP)", color=red];
 
@@ -98,15 +106,15 @@ digraph G {
 
   CONTROLLING -> enable_replanning
     [label="[16]\nOBSTACLE_DETECTED", color=black];
-  enable_replanning -> enough_time
-    [color=black];
+  enable_replanning -> HALTING
+    [label="Control(STOP)", color=black];
   enable_replanning -> STOPPED
     [label="Result(OBSTACLE_DETECTED)\nControl(STOP)", color=red];
 
-  enough_time -> REPLANNING
-    [label="Plan(poseI ... poseN)", color=black];
-  enough_time -> STOPPED
-    [label="Result(REPLAN_NOT_ENOUGH_TIME)\nControl(STOP)", color=red];
+  HALTING -> REPLANNING
+    [label="[28]\nCONTROL_SUCCESS\nPlan(states_)", color=black];
+  HALTING -> STOPPED
+    [label="[29]\nGOAL_CANCEL\nResult(CANCELLED)\nResult(CONTROL_FAILED)", color=red]
 
   enable_revalidation -> REVALIDATING
     [label="Validate(segment)"];

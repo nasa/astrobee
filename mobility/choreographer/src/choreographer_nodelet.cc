@@ -235,7 +235,7 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
           return STATE::PREPARING;
         // Move straight to control, as we don't need to wait for speed prep.
         if (!Control(NOMINAL, segment_))
-          return Result(RESPONSE::CONTROL_FAILED);
+          return Result(RESPONSE::CONTROL_FAILED );
         return STATE::CONTROLLING;
       });
     // [7]
@@ -257,6 +257,9 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
           if (result != Validator::SUCCESS)
             return ValidateResult(result);
         }
+        // If this returns false then we are already on the correct speed gain
+        if (FlightMode())
+          return STATE::PREPARING;
         // If we send control directly
         if (!Control(NOMINAL, segment_))
           return Result(RESPONSE::CONTROL_FAILED);
@@ -274,7 +277,23 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
       [this](FSM::Event const& event) -> FSM::State {
         if (event == GOAL_CANCEL)
           return Result(RESPONSE::CANCELLED);
-        return Result(RESPONSE::REPLAN_FAILED);
+        int max_attempts = cfg_.Get<int>("max_replanning_attempts");
+        NODELET_INFO_STREAM("State Replanning: Replanning failed %i / %i times" <<
+          replan_attempts_ << max_attempts);
+        if (replan_attempts_ >= max_attempts) {
+          return Result(RESPONSE::REPLAN_FAILED);
+        }
+        // Get current Astrobee pose
+        geometry_msgs::PoseStamped current_pose;
+        if (!GetRobotPose(current_pose)) {
+          return Result(RESPONSE::CANNOT_QUERY_ROBOT_POSE);
+        }
+        states_.insert(states_.begin(), current_pose);
+        replan_attempts_++;
+        if (!Plan(states_)) {
+          return Result(RESPONSE::PLAN_FAILED);
+        }
+        return STATE::REPLANNING;
       });
     // [15]
     fsm_.Add(STATE::CONTROLLING,
@@ -305,34 +324,14 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
     // [16]
     fsm_.Add(STATE::CONTROLLING, OBSTACLE_DETECTED,
       [this](FSM::Event const& event) -> FSM::State {
-        // If we need to validate the segment
         if (cfg_.Get<bool>("enable_replanning")) {
-          // Find a suitable handover point between now and the collision time
-          ros::Time handover = obstacle_.header.stamp
-                             - ros::Duration(cfg_.Get<double>("time_buffer"));
-          // Find the setpoint immediately before the handover time
-          ff_util::Segment::reverse_iterator it;
-          for (it = segment_.rbegin(); it != segment_.rend(); ++it)
-            if (it->when < handover) break;
-          // Check that the handover time is after the current time
-          if (it == segment_.rend() || it->when < ros::Time::now())
-            return Result(RESPONSE::REPLAN_NOT_ENOUGH_TIME);
-          // Assemble a simple planning request
-          std::vector<geometry_msgs::PoseStamped> states;
-          geometry_msgs::PoseStamped pose;
-          // Replan from the handover point to the end of the segment
-          pose.header.stamp = it->when;
-          pose.pose = it->pose;
-          states.push_back(pose);
-          pose.header.stamp = segment_.back().when;
-          pose.pose = segment_.back().pose;
-          states.push_back(pose);
-          // Now, generate a plan between the supplied states
-          if (!Plan(states, ros::Time::now() - it->when))
-            return Result(RESPONSE::PLAN_FAILED);
-          return STATE::REPLANNING;
+          // Request a stop using the controller
+          if (!Control(STOP)) {
+            return Result(RESPONSE::CONTROL_FAILED);
+          }
+          return STATE::HALTING;
         }
-        // There's a hazard
+        // If we're not doing replanning
         return Result(RESPONSE::OBSTACLE_DETECTED);
       });
     // [17]
@@ -420,6 +419,30 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
         if (event == GOAL_CANCEL)
           return Result(RESPONSE::CANCELLED);
         return Result(RESPONSE::PMC_FAILED);
+      });
+    // [28]
+    fsm_.Add(STATE::HALTING, CONTROL_SUCCESS,
+      [this](FSM::Event const& event) -> FSM::State {
+        // Get current Astrobee pose
+        geometry_msgs::PoseStamped current_pose;
+        if (!GetRobotPose(current_pose)) {
+          return Result(RESPONSE::CANNOT_QUERY_ROBOT_POSE);
+        }
+        states_.insert(states_.begin(), current_pose);
+        // Send plan request
+        replan_attempts_ = 1;
+        if (!Plan(states_)) {
+          return Result(RESPONSE::PLAN_FAILED);
+        }
+        return STATE::REPLANNING;
+      });
+    // [29]
+    fsm_.Add(STATE::HALTING,
+      CONTROL_FAILED | GOAL_CANCEL,
+      [this](FSM::Event const& event) -> FSM::State {
+        if (event == GOAL_CANCEL)
+          return Result(RESPONSE::CANCELLED);
+        return Result(RESPONSE::CONTROL_FAILED);
       });
   }
 
@@ -766,8 +789,9 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
       case STATE::PLANNING:
         {
           std::string planner = cfg_.Get<std::string>("planner");
-          if (planners_.find(planner) != planners_.end())
+          if (planners_.find(planner) != planners_.end()) {
             planners_[planner].CancelGoal();
+          }
         }
         break;
       // Controlling
@@ -777,6 +801,7 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
       // Do nothing
       case STATE::IDLING:
       case STATE::STOPPING:
+      case STATE::HALTING:
         break;
       }
       break;
@@ -861,6 +886,7 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
     case STATE::PREPARING:        msg.fsm_state = "PREPARING";          break;
     case STATE::CONTROLLING:      msg.fsm_state = "CONTROLLING";        break;
     case STATE::REPLANNING:       msg.fsm_state = "REPLANNING";         break;
+    case STATE::HALTING:          msg.fsm_state = "HALTING";            break;
     }
     // Publish the state
     pub_state_.publish(msg);
@@ -871,6 +897,7 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
     switch (state) {
     case STATE::IDLING:
     case STATE::STOPPING:
+    case STATE::HALTING:
     case STATE::BOOTSTRAPPING:
     case STATE::PLANNING:
     case STATE::PREPARING:
@@ -1165,9 +1192,10 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
         fsm_.Update(TOLERANCE_OMEGA);
         return;
       }
-    // Send progress in stopping/idling
+    // Send progress in stopping/idling/replanning
     case STATE::STOPPING:
     case STATE::IDLING:
+    case STATE::REPLANNING:
       feedback_.progress = *feedback;
       return server_.SendFeedback(feedback_);
     default:
@@ -1189,7 +1217,6 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
 
   // MOTION ACTION SERVER
 
-  // A new arm action has been called
   void GoalCallback(ff_msgs::MotionGoalConstPtr const& goal) {
     ff_msgs::MotionResult result;
     // We can only accept new commands if we are currently in an idle state.
@@ -1316,6 +1343,9 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
   std::vector<geometry_msgs::PoseStamped> states_;      // Plan request
   ff_util::Segment segment_;                            // Segment
   geometry_msgs::PointStamped obstacle_;                // Obstacle
+  ff_msgs::Hazard hazard_;
+  // Cached number of replan attempts
+  int replan_attempts_;
 };
 
 // Declare the plugin

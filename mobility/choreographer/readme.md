@@ -41,6 +41,8 @@ The following configurable parameters are supported:
 
 Additional parameters are supported, but are not reconfigurable.
 
+A replanning approach is implemented to support obstacle avoidance using the qp-planner. To utilize this functionality set the following parameters: ```planner``` to "qp", ```enable_faceforward``` and ```enable_collision_checking``` to true.
+
 ## Under the hood
 
 Internally, the choreographer is encoded as a finite state machine depicted below and implemented using the ff_util/FSM class. This class essentially captures a map of (state, event) -> lambda function relationships. The state of the system is moved forward by setting the initial state and then pushing a sequence of events to the FSM.
