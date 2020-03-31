@@ -15,8 +15,8 @@ digraph G {
   # Actions
   WAITING -> NOMINAL
     [label="[0]\nGOAL_NOMINAL\nControl(NOMINAL, Segment)", color=black];
-  NOMINAL -> STOPPING
-    [label="[1]\nGOAL_STOP\nControl(STOP)", color=black];
+  NOMINAL -> WAITING
+    [label="[1]\nGOAL_COMPLETE\nControl(STOP)\nResult(SUCCESS)", color=black];
   NOMINAL -> WAITING
     [label="[2]\nGOAL_CANCEL\nControl(STOP)\nResult(CANCELLED)", color=black];
   WAITING -> STOPPING
