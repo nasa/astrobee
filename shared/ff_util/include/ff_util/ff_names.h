@@ -298,13 +298,16 @@
 #define NODE_ARM                                    "arm"
 #define NODE_DOCK                                   "dock"
 #define NODE_PERCH                                  "perch"
+#define NODE_RETURN_TO_DOCK                         "rtd"
 
 #define ACTION_BEHAVIORS_ARM                        "beh/arm"
 #define ACTION_BEHAVIORS_DOCK                       "beh/dock"
 #define ACTION_BEHAVIORS_PERCH                      "beh/perch"
+#define ACTION_BEHAVIORS_RETURN_TO_DOCK             "beh/rtd"
 
 #define TOPIC_BEHAVIORS_DOCKING_STATE               "beh/dock/state"
 #define TOPIC_BEHAVIORS_PERCHING_STATE              "beh/perch/state"
+#define TOPIC_BEHAVIORS_RETURN_TO_DOCK_STATE        "beh/rtd/state"
 
 #define TOPIC_BEHAVIORS_ARM_STATE                   "beh/arm/state"
 #define TOPIC_BEHAVIORS_ARM_ARM_STATE               "beh/arm/arm_state"

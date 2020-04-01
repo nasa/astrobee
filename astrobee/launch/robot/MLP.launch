@@ -54,6 +54,8 @@
           name="mlp_vive" output="$(arg output)"/>
     <node pkg="nodelet" type="nodelet" args="manager"
           name="mlp_states" output="$(arg output)"/>
+    <node pkg="nodelet" type="nodelet" args="manager"
+          name="mlp_return_to_dock" output="$(arg output)"/>
   </group>
 
   <!-- Vision / localization -->
@@ -165,6 +167,16 @@
     <arg name="class" value="perch/PerchNodelet" />
     <arg name="name" value="perch" />
     <arg name="manager" value="mlp_perch" />
+    <arg name="spurn" value="$(arg spurn)" />
+    <arg name="nodes" value="$(arg nodes)" />
+    <arg name="extra" value="$(arg extra)" />
+    <arg name="debug" value="$(arg debug)" />
+    <arg name="default" value="true" />
+  </include>
+  <include file="$(find ff_util)/launch/ff_nodelet.launch">
+    <arg name="class" value="return_to_dock/ReturnToDockNodelet" />
+    <arg name="name" value="return_to_dock" />
+    <arg name="manager" value="mlp_return_to_dock" />
     <arg name="spurn" value="$(arg spurn)" />
     <arg name="nodes" value="$(arg nodes)" />
     <arg name="extra" value="$(arg extra)" />

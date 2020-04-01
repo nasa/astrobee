@@ -1,4 +1,4 @@
-# dot -Tpdf statemachine.dot -o statemachine.pdf
+# dot -Tpdf dock_fsm.dot -o dock_fsm.pdf
 digraph G {
   graph [label="DOCK\n", labelloc=t, fontsize=50];
   ratio="fill";

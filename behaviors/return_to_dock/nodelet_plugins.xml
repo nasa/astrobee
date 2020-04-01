@@ -1,0 +1,6 @@
+<library path="lib/libreturn_to_dock">
+  <class name="return_to_dock/ReturnToDockNodelet" type="return_to_dock::ReturnToDockNodelet"
+         base_class_type="nodelet::Nodelet">
+    <description>Nodelet for the return-to-dock behavior</description>
+  </class>
+</library>

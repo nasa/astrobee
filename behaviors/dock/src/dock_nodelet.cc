@@ -489,7 +489,7 @@ class DockNodelet : public ff_util::FreeFlyerNodelet {
     default:
       break;
     }
-    // Package up the feedback
+    // Package up the result
     ff_msgs::DockResult result;
     result.fsm_result = msg;
     result.response = response;
@@ -573,9 +573,8 @@ class DockNodelet : public ff_util::FreeFlyerNodelet {
       break;
     default:
       {
-        ff_msgs::DockFeedback feedback;
-        feedback.state = msg;
-        server_.SendFeedback(feedback);
+        feedback_.state = msg;
+        server_.SendFeedback(feedback_);
       }
     }
   }
@@ -682,7 +681,9 @@ class DockNodelet : public ff_util::FreeFlyerNodelet {
 
   // Ignore the switch feedback for now
   void SFeedbackCallback(
-    ff_msgs::LocalizationFeedbackConstPtr const& feedback) {}
+    ff_msgs::LocalizationFeedbackConstPtr const& feedback) {
+    server_.SendFeedback(feedback_);
+  }
 
   // Do something with the switch result
   void SResultCallback(ff_util::FreeFlyerActionState::Enum result_code,
@@ -733,7 +734,7 @@ class DockNodelet : public ff_util::FreeFlyerNodelet {
     // Iterate over all poses in action, finding the location of each
     for (auto & pose : goal.states) {
       try {
-        // Look up the world -> berth transform
+        // Look up the berth -> world transform
         geometry_msgs::TransformStamped tf = tf_buffer_.lookupTransform(
           "world", pose.header.frame_id, ros::Time(0));
         // Copy the transform
@@ -767,8 +768,9 @@ class DockNodelet : public ff_util::FreeFlyerNodelet {
     return client_m_.SendGoal(goal);
   }
 
-  // Ignore the move feedback, for now
-  void MFeedbackCallback(ff_msgs::MotionFeedbackConstPtr const& feedback) {}
+  void MFeedbackCallback(ff_msgs::MotionFeedbackConstPtr const& msg) {
+    server_.SendFeedback(feedback_);
+  }
 
   // Result of a move action
   void MResultCallback(ff_util::FreeFlyerActionState::Enum result_code,
@@ -875,6 +877,7 @@ class DockNodelet : public ff_util::FreeFlyerNodelet {
   ff_util::FreeFlyerActionClient<ff_msgs::LocalizationAction> client_s_;
   ff_util::FreeFlyerServiceClient<ff_hw_msgs::Undock> client_u_;
   ff_util::FreeFlyerActionServer<ff_msgs::DockAction> server_;
+  ff_msgs::DockFeedback feedback_;
   ff_util::ConfigServer cfg_;
   tf2_ros::Buffer tf_buffer_;
   std::shared_ptr<tf2_ros::TransformListener> tf_listener_;

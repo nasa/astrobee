@@ -15,9 +15,49 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-add_subdirectory(arm)
-add_subdirectory(dock)
-add_subdirectory(states)
-add_subdirectory(light_flow)
-add_subdirectory(perch)
-add_subdirectory(return_to_dock)
+project(return_to_dock)
+
+catkin_package(
+  LIBRARIES
+    return_to_dock
+  CATKIN_DEPENDS
+    roscpp
+    nodelet
+    pluginlib
+    actionlib
+    tf2
+    tf2_ros
+    ff_msgs
+    ff_util
+)
+
+create_library(
+  TARGET
+    return_to_dock
+  LIBS
+    ${catkin_LIBRARIES}
+    ff_nodelet
+    msg_conversions
+    config_server
+    config_client
+  INC
+    ${catkin_INCLUDE_DIRS}
+  DEPS
+    ff_msgs
+    ff_hw_msgs
+)
+
+create_tool_targets(
+  DIR
+    tools
+  LIBS
+    ${catkin_LIBRARIES}
+    common
+    ff_nodelet
+  INC
+    ${catkin_INCLUDE_DIRS}
+  DEPS
+    ff_msgs
+)
+
+install_launch_files()

@@ -1,0 +1,47 @@
+# dot -Tpdf return_to_dock_fsm.dot -o return_to_dock_fsm.pdf
+digraph G {
+  graph [label="Return To Dock\n", labelloc=t, fontsize=50];
+  size="11.7,8.3!";
+  node [shape=box, width=2.5, fontsize=12, fontname="helvetica"];
+
+  edge [arrowsize=2, weight=2., fontsize=12, fontname="helvetica"];
+  fontname = "helvetica";
+ 
+ # node [shape=diamond, style=filled, fillcolor=lightblue, color=black];
+ # WAITING;
+
+  #node [shape=circle, style=filled, fillcolor=black, color=or=black];
+  #TEST;
+
+  node [shape=box, style=filled, fillcolor=lightblue, color=black];
+  INITIALIZING;
+
+   node [shape=box, style=filled, fillcolor=lightblue, color=black];
+  IDLE;
+
+   node [shape=box, style=filled, fillcolor=lightblue, color=black];
+  MOVING;
+
+   node [shape=box, style=filled, fillcolor=lightblue, color=black];
+  DOCKING;
+
+   start [shape=point, width=0.3, fillcolor=black, color=black];
+
+
+  # Actions
+  start -> INITIALIZING
+
+  INITIALIZING -> IDLE
+    [label="[0]\nREADY", color=black];
+  IDLE -> MOVING
+    [label="[1]\nGOAL_MOVE\nMove(BERTH_1 || BERTH_2)", color=black];
+  MOVING -> DOCKING
+    [label="[2]\nMOVE_SUCCESS\nDock(BERTH_1 || BERTH_2)", color=black];
+  MOVING -> IDLE
+    [label="[3]\nMOVE_FAILED\nGOAL_CANCEL\nGOAL_PREEMPT\nResult(FAILED)", color=red];
+  DOCKING -> IDLE
+   [label="[4]\nDOCK_SUCCESS\nResult(SUCCESS)", color=black];
+  DOCKING -> IDLE
+   [label="[5]\nDOCK_FAILED\nGOAL_CANCEL\nGOAL_PREEMPT\nResult(FAILED)", color=red]
+
+}
