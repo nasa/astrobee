@@ -113,10 +113,20 @@ class Planner : public planner::PlannerImplementation {
     pcl_sub_ = nh->subscribe(TOPIC_MAPPER_OCTOMAP_CLOUD, 5,
                              &Planner::map_callback, this);
 
+    // This timer will be used to send feedback to clients while planning
+    timer_fb_ = nh->createTimer(ros::Duration(ros::Rate(1.5*DEFAULT_DIAGNOSTICS_RATE)),
+      &Planner::SendFeedback, this, false, true);
+
     // cloud_pub_ = nh->advertise<pcl::PointCloud<pcl::PointXYZ> >
     // ("obs_points", 5, true);
     // Success
     return true;
+  }
+
+  // Send useless feedback to client
+  void SendFeedback(ros::TimerEvent const& event) {
+    ff_msgs::PlanFeedback fb;
+    PlanFeedback(fb);
   }
 
   bool ReconfigureCallback(dynamic_reconfigure::Config &config) {
@@ -352,7 +362,7 @@ class Planner : public planner::PlannerImplementation {
 
  protected:
   ff_util::ConfigServer cfg_;
-  ros::Timer timer_d_, timer_a_;
+  ros::Timer timer_d_, timer_a_, timer_fb_;
   boost::shared_ptr<traj_opt::NonlinearTrajectory> trajectory_;
   tf::Quaternion start_orientation_;
   tf::Vector3 axis_;
