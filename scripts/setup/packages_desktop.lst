@@ -1,7 +1,7 @@
-ros-kinetic-rviz
+ros-melodic-rviz
 gazebo7
 gazebo7-common
-ros-kinetic-gazebo-ros-pkgs
+ros-melodic-gazebo-ros-pkgs
 libgazebo7-dev
 python-pyqtgraph
 doxygen
