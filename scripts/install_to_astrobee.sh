@@ -82,7 +82,7 @@ FREEFLYER_INSTALL_DIR=/opt/astrobee
 
 if [[ ${FREEFLYER_TARGETS,,} =~ 'mlp' ]]; then
   echo "Copying files to MLP..."
-  if ! rsync -azh --delete --info=progress2 --exclude=/platform --exclude=/avionics --exclude '*imu_bias.config' $target/ astrobee@${mlp_ips[${robot_index}]}:${FREEFLYER_INSTALL_DIR}
+  if ! rsync -azh --delete --info=progress2 --exclude=/platform --exclude=/firmware --exclude=/avionics --exclude '*imu_bias.config' $target/ astrobee@${mlp_ips[${robot_index}]}:${FREEFLYER_INSTALL_DIR}
   then
     exit 1
   fi

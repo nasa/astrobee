@@ -50,38 +50,42 @@ digraph G {
     [label="[4]\nARM_STOWED", color=blue];
   STOWED -> DEPLOYING_PANNING
     [label="[5]\nGOAL_DEPLOY\nPan(DEPLOY)"];
+  DEPLOYING_PANNING -> UNKNOWN
+    [label="[10]\nTIMEOUT\nResult(FAILED)", color=red];
   DEPLOYING_PANNING -> DEPLOYING_TILTING
     [label="[6]\nPAN_COMPLETE\nTilt(DEPLOY)"];
+  DEPLOYING_TILTING -> UNKNOWN
+    [label="[10]\nTIMEOUT\nResult(FAILED)", color=red];
   DEPLOYING_TILTING -> DEPLOYED
     [label="[7]\nTILT_COMPLETE\nResult(SUCCESS)", color=darkgreen];
   DEPLOYED -> STOWING_SETTING
     [label="[8]\nGOAL_STOW\nGripper(CLOSE)"];
   STOWING_SETTING -> STOWING_PANNING
     [label="[9]\nGRIPPER_COMPLETE\nPan(STOWED)", color=black];
-  STOWING_SETTING -> DEPLOYED
+  STOWING_SETTING -> UNKNOWN
     [label="[10]\nTIMEOUT\nResult(FAILED)", color=red];
   STOWING_PANNING -> STOWING_TILTING
     [label="[11]\nPAN_COMPLETE\nTilt(STOWED)", color=black];
-  STOWING_PANNING -> DEPLOYED
+  STOWING_PANNING -> UNKNOWN
     [label="[12]\nTIMEOUT\nResult(FAILED)", color=red];
   STOWING_TILTING -> STOWED
     [label="[13]\nTILT_COMPLETE\nResult(SUCCESS)", color=darkgreen];
-  STOWING_TILTING -> DEPLOYED
+  STOWING_TILTING -> UNKNOWN
     [label="[14]\nTIMEOUT\nResult(FAILED)", color=red];
   DEPLOYED -> PANNING
     [label="[15]\nGOAL_MOVE\nPan(angle)"];
   PANNING -> TILTING
     [label="[16]\nPAN_COMPLETE\nTilt(angle)"];
-  PANNING -> DEPLOYED
+  PANNING -> UNKNOWN
     [label="[17]\nTIMEOUT\nResult(PAN_FAILED)", color=red];
   TILTING -> DEPLOYED
     [label="[18]\nTILT_COMPLETE\nResult(SUCCESS)", color=darkgreen];
-  TILTING -> DEPLOYED
+  TILTING -> UNKNOWN
     [label="[19]\nTIMEOUT\nResult(TILT_FAILED)", color=red];
   DEPLOYED -> SETTING
     [label="[20]\nGOAL_SET\nGripper(percent)"];
   SETTING -> DEPLOYED
     [label="[21]\nGRIPPER_COMPLETE\nResult(SUCCESS)", color=darkgreen];
-  SETTING -> DEPLOYED
+  SETTING -> UNKNOWN
     [label="[22]\nTIMEOUT\nResult(SET_FAILED)", color=red];
 }

@@ -135,11 +135,15 @@ At this point you need to decide whether you'd like to compile natively
 the code on the robot itself). Please skip to the relevant subsection.
 
 ### Note for both builds setup
+
 By default, the configure script uses the following paths:
-  - native build path: `$HOME/freeflyer_build/native`
-  - native install path: `$HOME/freeflyer_install/native`
-  - armhf build path: `$HOME/freeflyer_build/armhf`
-  - armhf install path: `$HOME/freeflyer_install/armhf`
+
+  - native build path (BUILD_PATH):     `$HOME/freeflyer_build/native`
+  - native install path (INSTALL_PATH): `$HOME/freeflyer_install/native`
+  - armhf build path (BUILD_PATH):      `$HOME/freeflyer_build/armhf`
+  - armhf install path (INSTALL_PATH):  `$HOME/freeflyer_install/armhf`
+
+You should set these values in your shell. 
 
 If you are satisfied with these paths, you can invoke the `configure.sh` without
 the `-p` and `-b` options. For the simplicity of the instructions below,
@@ -176,7 +180,8 @@ Or with explicit build and install paths:
     ./scripts/configure.sh -a -p $INSTALL_PATH -b $BUILD_PATH
 
 *Warning: `$INSTALL_PATH` and `$BUILD_PATH` used for cross compiling HAVE to be
-different than the paths for native build!*
+different than the paths for native build! See above for the default values 
+for these.*
 
 ## Building the code
 
@@ -217,7 +222,7 @@ find that the above command doesn't work, try rebuilding the cache:
 
 A simulator readme was created for guest science users. However this readme may
 be beneficial to interns and/or new members. If you fall into one of these
-categories, please see the [simulation instructions](sim_overview.md).
+categories, please see the [simulation instructions](simulation/sim_overview.md).
 
 ## Running the code on a real robot
 
@@ -238,6 +243,8 @@ takes the robot name as an argument. Here we use `p4d'.
     pushd $SOURCE_PATH
     ./scripts/install_to_astrobee.sh $INSTALL_PATH p4d
     popd
+
+Here, p4d is the name of the robot, which may be different in your case.
 
 You are now ready to run the code. This code launches a visualization tool,
 which starts the flight software as a background process.

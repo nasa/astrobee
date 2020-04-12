@@ -125,4 +125,4 @@ If you configured your virtual machine with more than the baseline resources,
 you can adjust the number of threads (eg. -j4) to speed up the build.
 
 For more information on running the simulator and moving the robot, please see
-the [simulation instructions](sim_overview.md).
+the [simulation instructions](simulation/sim_overview.md).

@@ -31,8 +31,14 @@ Executive::Executive() :
   sys_monitor_heartbeat_fault_response_(new ff_msgs::CommandStamped()),
   dock_state_(NULL),
   fault_state_(NULL),
+  guest_science_config_(NULL),
   motion_state_(NULL),
+  primary_apk_running_("None"),
+  run_plan_cmd_id_(""),
+  gs_start_stop_cmd_id_(""),
+  gs_custom_cmd_id_(""),
   action_active_timeout_(1),
+  gs_command_timeout_(4),
   arm_feedback_timeout_(4),
   motion_feedback_timeout_(1),
   dock_result_timeout_(360),
@@ -68,6 +74,8 @@ void Executive::CameraStatesCallback(ff_msgs::CameraStatesStampedConstPtr const&
     }
   }
 
+  // The state message usually only contains one camera so we have to go through
+  // all the camera states to see if any are streaming
   for (i = 0; i < camera_states_.states.size(); i++) {
     streaming |= camera_states_.states[i].streaming;
   }
@@ -86,6 +94,22 @@ void Executive::CameraStatesCallback(ff_msgs::CameraStatesStampedConstPtr const&
 }
 
 void Executive::CmdCallback(ff_msgs::CommandStampedPtr const& cmd) {
+  // Check to see if the command came from a guest science apk. If it did,
+  // make sure a primary apk is running
+  if (cmd->cmd_origin == "guest_science") {
+    // TODO(Katie) Change this when the astrobee api is changed to set cmd
+    // origin to the apk name. Need to make sure it matches the primary apk
+    // running
+    if (primary_apk_running_ == "None") {
+      state_->AckCmd(cmd->cmd_id,
+                     ff_msgs::AckCompletedStatus::EXEC_FAILED,
+                     "Can't run a gs command when a primary apk not running.");
+      return;
+    }
+  }
+
+  // TODO(Katie) add more checks
+
   SetOpState(state_->HandleCmd(cmd));
 }
 
@@ -154,21 +178,105 @@ void Executive::FaultStateCallback(ff_msgs::FaultStateConstPtr const& state) {
 
 void Executive::GuestScienceAckCallback(ff_msgs::AckStampedConstPtr const&
                                                                           ack) {
-  // TODO(Katie) Add code to change op state if sucessfully stopped or started
-  // a primary guest apk. Probably need to subscribe to the guest science
-  // config. Possibly remove this since it will probably be replaced by an
-  // action
   if (ack->cmd_id == "plan") {
     SetOpState(state_->HandleGuestScienceAck(ack));
   } else {
     cmd_ack_pub_.publish(ack);
   }
+
+  // Clear guest science command timers
+  if (ack->cmd_id == gs_start_stop_cmd_id_) {
+    gs_start_stop_command_timer_.stop();
+    gs_start_stop_cmd_id_ = "";
+  } else if (ack->cmd_id == gs_custom_cmd_id_) {
+    gs_custom_command_timer_.stop();
+    gs_custom_cmd_id_ = "";
+  }
+}
+
+void Executive::GuestScienceConfigCallback(ff_msgs::GuestScienceConfigConstPtr
+                                                                const& config) {
+  guest_science_config_ = config;
+}
+
+void Executive::GuestScienceStateCallback(ff_msgs::GuestScienceStateConstPtr
+                                                                const& state) {
+  unsigned int i = 0;
+  std::string primary_apk = "None";
+
+  // This should only happen on start up if we receive the state before the
+  // config. In this case, no gs apks should be running so this should be okay
+  if (guest_science_config_ == NULL) {
+    return;
+  }
+
+  // Check that the state and config serial values are the same. If not, we
+  // cannot compare the config and state and we must wait until they match
+  // Currently, this shouldn't happen since we only poll for the current apks on
+  // startup.
+  if (guest_science_config_->serial != state->serial) {
+    NODELET_WARN("Guest science state and config serial doesn't match.");
+    return;
+  }
+
+  // Also check that the state and config are the same size because it would be
+  // really bad if they weren't.
+  if (state->runningApks.size() != guest_science_config_->apks.size()) {
+    NODELET_ERROR("Guest science apk array size doesn't match but serial does");
+    return;
+  }
+
+  // Check to see if any apks are running
+  for (i = 0; i < state->runningApks.size(); i++) {
+    if (state->runningApks[i]) {
+      // Check if primary
+      if (guest_science_config_->apks[i].primary) {
+        if (primary_apk == "None") {
+          primary_apk = guest_science_config_->apks[i].apk_name;
+        } else {
+          NODELET_ERROR("More than 1 primary apk running in gs state.");
+        }
+      }
+    }
+  }
+
+  primary_apk_running_ = primary_apk;
+
+  if (primary_apk_running_ != "None") {
+    agent_state_.guest_science_state.state = ff_msgs::ExecState::EXECUTING;
+  } else {
+    agent_state_.guest_science_state.state = ff_msgs::ExecState::IDLE;
+  }
+}
+
+void Executive::GuestScienceCustomCmdTimeoutCallback(
+                                                    ros::TimerEvent const& te) {
+  std::string err_msg = "GS manager didn't return an ack for the custom guest ";
+  err_msg += "science command in the timeout specified. The GS manager may not";
+  err_msg += " have started or it may have died.";
+  PublishCmdAck(gs_custom_cmd_id_,
+                ff_msgs::AckCompletedStatus::EXEC_FAILED,
+                err_msg);
+  // Don't need to stop timer because it is a one shot timer
+  gs_custom_cmd_id_ = "";
+}
+
+void Executive::GuestScienceStartStopCmdTimeoutCallback(
+                                                    ros::TimerEvent const& te) {
+  std::string err_msg = "GS manager didn't return an ack for the start/stop ";
+  err_msg += "guest science command in the timeout specified. The GS manager ";
+  err_msg += "may not have started or it may have died.";
+  PublishCmdAck(gs_start_stop_cmd_id_,
+                ff_msgs::AckCompletedStatus::EXEC_FAILED,
+                err_msg);
+  // Don't need to stop timer because it is a one shot timer
+  gs_start_stop_cmd_id_ = "";
 }
 
 void Executive::LedConnectedCallback() {
   ff_hw_msgs::ConfigureSystemLeds led_srv;
 
-  // Set video light since this means the fsw starts
+  // Set video light since this means the fsw started
   led_srv.request.video = ff_hw_msgs::ConfigureSystemLeds::Request::ON;
 
   // Check if we are in the fault state
@@ -260,6 +368,8 @@ void Executive::SysMonitorHeartbeatCallback(
   if (heartbeat->faults.size() > 0 && !sys_monitor_init_fault_occurring_) {
     NODELET_ERROR("System monitor initalization fault detected in executive.");
     sys_monitor_init_fault_occurring_ = true;
+    sys_monitor_init_fault_response_->cmd_id = "executive" +
+                                          std::to_string(ros::Time::now().sec);
     CmdCallback(sys_monitor_init_fault_response_);
     // If fault is blocking, transition to fault state
     if (sys_monitor_init_fault_blocking_) {
@@ -294,6 +404,8 @@ void Executive::SysMonitorTimeoutCallback(ros::TimerEvent const& te) {
   // If the executive doesn't receive a heartbeat from the system monitor, it
   // needs to trigger the system monitor heartbeat missed fault.
   sys_monitor_heartbeat_fault_occurring_ = true;
+  sys_monitor_heartbeat_fault_response_->cmd_id = "executive" +
+                                          std::to_string(ros::Time::now().sec);
   CmdCallback(sys_monitor_heartbeat_fault_response_);
   // If fault is blocking, transition to fault state
   if (sys_monitor_heartbeat_fault_blocking_) {
@@ -416,6 +528,8 @@ bool Executive::FillArmGoal(ff_msgs::CommandStampedPtr const& cmd) {
     }
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_STOW_ARM) {
     arm_goal_.command = ff_msgs::ArmGoal::ARM_STOW;
+  } else if (cmd->cmd_name == CommandConstants::CMD_NAME_STOP_ARM) {
+    arm_goal_.command = ff_msgs::ArmGoal::ARM_STOP;
   } else {
     successful = false;
     err_msg = "Arm command not recognized in fill arm goal.";
@@ -495,7 +609,7 @@ bool Executive::FillMotionGoal(Action action,
       break;
     case MOVE:
       if (cmd == nullptr) {
-        ROS_ERROR("Executive: move cmd is null in fill motion goal.");
+        NODELET_ERROR("Executive: move cmd is null in fill motion goal.");
         return false;
       }
 
@@ -811,9 +925,12 @@ ff_msgs::MobilityState Executive::GetMobilityState() {
   return agent_state_.mobility_state;
 }
 
-
 uint8_t Executive::GetPlanExecState() {
   return agent_state_.plan_execution_state.state;
+}
+
+std::string Executive::GetRunPlanCmdId() {
+  return run_plan_cmd_id_;
 }
 
 /************************ Setters *********************************************/
@@ -864,6 +981,10 @@ void Executive::SetOpState(OpState* state) {
 void Executive::SetPlanExecState(uint8_t state) {
   agent_state_.plan_execution_state.state = state;
   PublishAgentState();
+}
+
+void Executive::SetRunPlanCmdId(std::string cmd_id) {
+  run_plan_cmd_id_ = cmd_id;
 }
 
 /************************ Helper functions ************************************/
@@ -1237,50 +1358,6 @@ bool Executive::ResetEkf(std::string const& cmd_id) {
   return StartAction(LOCALIZATION, cmd_id);
 }
 
-bool Executive::SendGuestScienceCommand(ff_msgs::CommandStampedPtr const& cmd) {
-  bool successful = true;
-  uint8_t completed_status;
-  std::string err_msg;
-
-  // TODO(Katie) May need to add code to track command to make sure it gets
-  // acked
-
-  // Three guest science commands get passed through this function, need to make
-  // sure the parameters are correct. Start and stop have the same parameters
-  if (cmd->cmd_name == CommandConstants::CMD_NAME_CUSTOM_GUEST_SCIENCE) {
-    if (cmd->args.size() != 2 ||
-        cmd->args[0].data_type != ff_msgs::CommandArg::DATA_TYPE_STRING ||
-        cmd->args[1].data_type != ff_msgs::CommandArg::DATA_TYPE_STRING) {
-      successful = false;
-      err_msg = "Malformed arguments for custom guest science command.";
-      completed_status = ff_msgs::AckCompletedStatus::BAD_SYNTAX;
-    }
-  } else if (cmd->cmd_name == CommandConstants::CMD_NAME_START_GUEST_SCIENCE ||
-             cmd->cmd_name == CommandConstants::CMD_NAME_STOP_GUEST_SCIENCE) {
-    if (cmd->args.size() != 1 ||
-        cmd->args[0].data_type != ff_msgs::CommandArg::DATA_TYPE_STRING) {
-      successful = false;
-      err_msg = "Malformed arguments for start/stop guest science command.";
-      completed_status = ff_msgs::AckCompletedStatus::BAD_SYNTAX;
-    }
-  } else {
-    successful = false;
-    err_msg = "Command " + cmd->cmd_name + " is not a guest science command.";
-    completed_status = ff_msgs::AckCompletedStatus::EXEC_FAILED;
-  }
-
-  // If command syntax was valid, send to guest science manager
-  if (successful) {
-    gs_cmd_pub_.publish(cmd);
-  } else {
-    // Ack if command had a bad syntax, otherwise the guest science manager will
-    // ack the command
-    state_->AckCmd(cmd->cmd_id, completed_status, err_msg);
-  }
-
-  return successful;
-}
-
 void Executive::StartWaitTimer(float duration) {
   wait_timer_.setPeriod(ros::Duration(duration));
   wait_timer_.start();
@@ -1381,7 +1458,29 @@ bool Executive::ClearData(ff_msgs::CommandStampedPtr const& cmd) {
 
 bool Executive::CustomGuestScience(ff_msgs::CommandStampedPtr const& cmd) {
   NODELET_INFO("Executive executing custom guest science command!");
-  return SendGuestScienceCommand(cmd);
+  // Check command arguments are correcy before sending to the guest science
+  // manager
+  if (cmd->args.size() != 2 ||
+      cmd->args[0].data_type != ff_msgs::CommandArg::DATA_TYPE_STRING ||
+      cmd->args[1].data_type != ff_msgs::CommandArg::DATA_TYPE_STRING) {
+    state_->AckCmd(cmd->cmd_id,
+                   ff_msgs::AckCompletedStatus::BAD_SYNTAX,
+                   "Malformed arguments for custom guest science command.");
+    return false;
+  }
+
+  if (gs_custom_cmd_id_ != "") {
+    std::string msg = "Already executing a custom gs command. Please wait for ";
+    msg += "it to finish before issuing another custom gs command.";
+    state_->AckCmd(cmd->cmd_id, ff_msgs::AckCompletedStatus::EXEC_FAILED, msg);
+    return false;
+  }
+
+  gs_cmd_pub_.publish(cmd);
+  gs_custom_command_timer_.setPeriod(ros::Duration(gs_command_timeout_));
+  gs_custom_command_timer_.start();
+  gs_custom_cmd_id_ = cmd->cmd_id;
+  return true;
 }
 
 bool Executive::Dock(ff_msgs::CommandStampedPtr const& cmd) {
@@ -2668,6 +2767,67 @@ bool Executive::SkipPlanStep(ff_msgs::CommandStampedPtr const& cmd) {
   return true;
 }
 
+bool Executive::StartGuestScience(ff_msgs::CommandStampedPtr const& cmd) {
+  NODELET_INFO("Executive executing start guest science!");
+  // Check command arguments are correct before sending to the guest science
+  // manager
+  if (cmd->args.size() != 1 ||
+      cmd->args[0].data_type != ff_msgs::CommandArg::DATA_TYPE_STRING) {
+    state_->AckCmd(cmd->cmd_id,
+                   ff_msgs::AckCompletedStatus::BAD_SYNTAX,
+                   "Malformed arguments for start guest science command.");
+    return false;
+  }
+
+  if (guest_science_config_ == NULL) {
+    state_->AckCmd(cmd->cmd_id,
+                   ff_msgs::AckCompletedStatus::EXEC_FAILED,
+                   "Executive never got GS config. GS manager may have died.");
+    return false;
+  }
+
+  if (gs_start_stop_cmd_id_ != "") {
+    std::string msg = "Already executing a start or stop guest science command";
+    msg += ". Please wait for it to finish before issuing another start guest ";
+    msg += "science command.";
+    state_->AckCmd(cmd->cmd_id, ff_msgs::AckCompletedStatus::EXEC_FAILED, msg);
+    return false;
+  }
+
+  // Check to see if the operator is trying to start a primary apk
+  for (unsigned int i = 0; i < guest_science_config_->apks.size(); i++) {
+    if (cmd->args[0].s == guest_science_config_->apks[i].apk_name) {
+      if (guest_science_config_->apks[i].primary) {
+        // We cannot start a primary apk if another primary apk is running or
+        // if we are executing a plan or teleop command. However we can start
+        // a primary apk if it is a plan command
+        if (primary_apk_running_ != "None") {
+          state_->AckCmd(cmd->cmd_id,
+                         ff_msgs::AckCompletedStatus::EXEC_FAILED,
+                         "Can't start primary apk when one is already running");
+          return false;
+        } else if ((state_->id() == ff_msgs::OpState::PLAN_EXECUTION &&
+                    cmd->cmd_id != "plan" && cmd->cmd_src != "plan") ||
+                    state_->id() == ff_msgs::OpState::TELEOPERATION) {
+          state_->AckCmd(cmd->cmd_id,
+                         ff_msgs::AckCompletedStatus::EXEC_FAILED,
+                         "Must be in the ready state to start a primary apk");
+          return false;
+        }
+        break;
+      }
+    }
+  }
+
+  // Don't worry if an apk is not in the config message, the guest science
+  // manager will take care of this
+  gs_cmd_pub_.publish(cmd);
+  gs_start_stop_command_timer_.setPeriod(ros::Duration(gs_command_timeout_));
+  gs_start_stop_command_timer_.start();
+  gs_start_stop_cmd_id_ = cmd->cmd_id;
+  return true;
+}
+
 bool Executive::StartRecording(ff_msgs::CommandStampedPtr const& cmd) {
   NODELET_INFO("Executive executing start recordiing command.");
   bool successful = true;
@@ -2701,7 +2861,6 @@ bool Executive::StartRecording(ff_msgs::CommandStampedPtr const& cmd) {
       }
     }
   }
-
   state_->AckCmd(cmd->cmd_id, completed_status, err_msg);
   return successful;
 }
@@ -2857,16 +3016,20 @@ bool Executive::StopAllMotion(ff_msgs::CommandStampedPtr const& cmd) {
 
 bool Executive::StopArm(ff_msgs::CommandStampedPtr const& cmd) {
   NODELET_INFO("Executive executing stop arm command!");
-  // TODO(Katie) stub, add actual code
-  // The arm action does have a stop command, may need to add to fill arm action
-  // but don't add to Arm and gripper control since that won't interrupt an arm
-  // action. May always want to stop arm even if (un)docking or docked
   // Check for an arm action already being executed. If so, cancel it.
-  NODELET_WARN("Stop arm not implemented yet! Stay tuned!");
-  state_->AckCmd(cmd->cmd_id,
-                 ff_msgs::AckCompletedStatus::EXEC_FAILED,
-                 "Stop arm not implemented yet! Stay tuned!");
-  return false;
+  if (IsActionRunning(ARM)) {
+    CancelAction(ARM, "stop arm");
+  }
+
+  if (!FillArmGoal(cmd)) {
+    return false;
+  }
+
+  if (!StartAction(ARM, cmd->cmd_id)) {
+    return false;
+  }
+
+  return true;
 }
 
 bool Executive::StopDownload(ff_msgs::CommandStampedPtr const& cmd) {
@@ -2904,6 +3067,33 @@ bool Executive::StopDownload(ff_msgs::CommandStampedPtr const& cmd) {
                  err_msg);
   // err_msg = "Not downloading data! No download to stop.";
   return false;
+}
+
+bool Executive::StopGuestScience(ff_msgs::CommandStampedPtr const& cmd) {
+  NODELET_INFO("Executive executing stop guest science command!");
+  // Check command arguments are correct before sending to the guest science
+  // manager
+  if (cmd->args.size() != 1 ||
+      cmd->args[0].data_type != ff_msgs::CommandArg::DATA_TYPE_STRING) {
+    state_->AckCmd(cmd->cmd_id,
+                   ff_msgs::AckCompletedStatus::BAD_SYNTAX,
+                   "Malformed arguments for stop guest science command.");
+    return false;
+  }
+
+  if (gs_start_stop_cmd_id_ != "") {
+    std::string msg = "Already executing a start or stop guest science command";
+    msg += ". Please wait for it to finish before issuing another start guest ";
+    msg += "science command.";
+    state_->AckCmd(cmd->cmd_id, ff_msgs::AckCompletedStatus::EXEC_FAILED, msg);
+    return false;
+  }
+
+  gs_cmd_pub_.publish(cmd);
+  gs_start_stop_command_timer_.setPeriod(ros::Duration(gs_command_timeout_));
+  gs_start_stop_command_timer_.start();
+  gs_start_stop_cmd_id_ = cmd->cmd_id;
+  return true;
 }
 
 bool Executive::StopRecording(ff_msgs::CommandStampedPtr const& cmd) {
@@ -3161,6 +3351,16 @@ void Executive::Initialize(ros::NodeHandle *nh) {
                               &Executive::GuestScienceAckCallback,
                               this);
 
+  gs_config_sub_ = nh_.subscribe(TOPIC_GUEST_SCIENCE_MANAGER_CONFIG,
+                                 sub_queue_size_,
+                                 &Executive::GuestScienceConfigCallback,
+                                 this);
+
+  gs_state_sub_ = nh_.subscribe(TOPIC_GUEST_SCIENCE_MANAGER_STATE,
+                                sub_queue_size_,
+                                &Executive::GuestScienceStateCallback,
+                                this);
+
   heartbeat_sub_ = nh_.subscribe(TOPIC_MANAGEMENT_SYS_MONITOR_HEARTBEAT,
                                  sub_queue_size_,
                                  &Executive::SysMonitorHeartbeatCallback,
@@ -3346,6 +3546,28 @@ void Executive::Initialize(ros::NodeHandle *nh) {
                                   true,
                                   true);
 
+  // Create timer for guest science start and stop command timeout. If the guest
+  // science manager doesn't respond to a start or stop guest science command
+  // in the time specified, we need to ack command as failed. Make it one shot
+  // and don't start until we send a guest science start or stop command
+  gs_start_stop_command_timer_ = nh_.createTimer(
+                            ros::Duration(gs_command_timeout_),
+                            &Executive::GuestScienceStartStopCmdTimeoutCallback,
+                            this,
+                            true,
+                            false);
+
+  // Create timer for guest science custom command timeout. If the guest science
+  // manager doesn't respond to a custom guest science command in the time
+  // specified, we need to ack command as failed. Make it one shot and don't
+  // start until we send a guest science custom command
+  gs_custom_command_timer_ = nh_.createTimer(
+                              ros::Duration(gs_command_timeout_),
+                              &Executive::GuestScienceCustomCmdTimeoutCallback,
+                              this,
+                              true,
+                              false);
+
   // Initialize the led service at the end of the initialize function as this
   // will turn off the booting up light and we only want to do this when the
   // executive has started up and is done initializing
@@ -3383,6 +3605,13 @@ bool Executive::ReadParams() {
                                  &led_connected_timeout_)) {
     NODELET_WARN("Led service available timeout not specified.");
     led_connected_timeout_ = 10;
+  }
+
+  // get gs manager timeout
+  if (!config_params_.GetPosReal("gs_command_timeout",
+                                 &gs_command_timeout_)) {
+    NODELET_WARN("Guest science command timeout not specified.");
+    gs_command_timeout_ = 4;
   }
 
   // get action feedback timeouts
@@ -3500,6 +3729,7 @@ bool Executive::ReadCommand(config_reader::ConfigReader::Table *response,
 
   cmd->cmd_name = cmd_name;
   cmd->cmd_src = "executive";
+  cmd->cmd_origin = "executive";
   cmd->subsys_name = "Astrobee";
 
   if (response->CheckValExists("args")) {

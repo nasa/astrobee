@@ -43,6 +43,9 @@
 #include <ff_msgs/EnableCamera.h>
 #include <ff_msgs/EnableRecording.h>
 #include <ff_msgs/FaultState.h>
+#include <ff_msgs/GuestScienceApk.h>
+#include <ff_msgs/GuestScienceConfig.h>
+#include <ff_msgs/GuestScienceState.h>
 #include <ff_msgs/LocalizationAction.h>
 #include <ff_msgs/MotionAction.h>
 #include <ff_msgs/PlanStatusStamped.h>
@@ -99,6 +102,12 @@ class Executive : public ff_util::FreeFlyerNodelet {
   void DockStateCallback(ff_msgs::DockStateConstPtr const& state);
   void FaultStateCallback(ff_msgs::FaultStateConstPtr const& state);
   void GuestScienceAckCallback(ff_msgs::AckStampedConstPtr const& ack);
+  void GuestScienceConfigCallback(ff_msgs::GuestScienceConfigConstPtr const&
+                                                                        config);
+  void GuestScienceStateCallback(ff_msgs::GuestScienceStateConstPtr const&
+                                                                        state);
+  void GuestScienceCustomCmdTimeoutCallback(ros::TimerEvent const& te);
+  void GuestScienceStartStopCmdTimeoutCallback(ros::TimerEvent const& te);
   void LedConnectedCallback();
   void MotionStateCallback(ff_msgs::MotionStatePtr const& state);
   void PlanCallback(ff_msgs::CompressedFileConstPtr const& plan);
@@ -144,12 +153,14 @@ class Executive : public ff_util::FreeFlyerNodelet {
   // Getters
   ff_msgs::MobilityState GetMobilityState();
   uint8_t GetPlanExecState();
+  std::string GetRunPlanCmdId();
 
   // Setters
   void SetMobilityState();
   void SetMobilityState(uint8_t state, uint32_t sub_state = 0);
   void SetOpState(OpState* state);
   void SetPlanExecState(uint8_t state);
+  void SetRunPlanCmdId(std::string cmd_id);
 
   // Helper functions
   void AckMobilityStateIssue(ff_msgs::CommandStampedPtr const& cmd,
@@ -170,7 +181,6 @@ class Executive : public ff_util::FreeFlyerNodelet {
   ros::Time MsToSec(std::string timestamp);
   bool PowerItem(ff_msgs::CommandStampedPtr const& cmd, bool on);
   bool ResetEkf(std::string const& cmd_id);
-  bool SendGuestScienceCommand(ff_msgs::CommandStampedPtr const& cmd);
   void StartWaitTimer(float duration);
   void StopWaitTimer();
 
@@ -218,11 +228,13 @@ class Executive : public ff_util::FreeFlyerNodelet {
   bool SetZones(ff_msgs::CommandStampedPtr const& cmd);
   bool Shutdown(ff_msgs::CommandStampedPtr const& cmd);
   bool SkipPlanStep(ff_msgs::CommandStampedPtr const& cmd);
+  bool StartGuestScience(ff_msgs::CommandStampedPtr const& cmd);
   bool StartRecording(ff_msgs::CommandStampedPtr const& cmd);
   bool StopAllMotion(ff_msgs::CommandStampedPtr const& cmd);
   bool StopArm(ff_msgs::CommandStampedPtr const& cmd);
   bool StopDownload(ff_msgs::CommandStampedPtr const& cmd);
   bool StopRecording(ff_msgs::CommandStampedPtr const& cmd);
+  bool StopGuestScience(ff_msgs::CommandStampedPtr const& cmd);
   bool StowArm(ff_msgs::CommandStampedPtr const& cmd);
   bool SwitchLocalization(ff_msgs::CommandStampedPtr const& cmd);
   bool Undock(ff_msgs::CommandStampedPtr const& cmd);
@@ -258,6 +270,7 @@ class Executive : public ff_util::FreeFlyerNodelet {
   ff_msgs::CameraStatesStamped camera_states_;
   ff_msgs::DockStateConstPtr dock_state_;
   ff_msgs::FaultStateConstPtr fault_state_;
+  ff_msgs::GuestScienceConfigConstPtr guest_science_config_;
   ff_msgs::MotionStatePtr motion_state_;
 
   ff_msgs::ArmGoal arm_goal_;
@@ -283,8 +296,9 @@ class Executive : public ff_util::FreeFlyerNodelet {
 
   ros::Subscriber cmd_sub_, dock_state_sub_, fault_state_sub_, gs_ack_sub_;
   ros::Subscriber heartbeat_sub_, motion_sub_, plan_sub_, zones_sub_, data_sub_;
-  ros::Subscriber camera_state_sub_;
+  ros::Subscriber gs_config_sub_, gs_state_sub_, camera_state_sub_;
 
+  ros::Timer gs_start_stop_command_timer_, gs_custom_command_timer_;
   ros::Timer reload_params_timer_, wait_timer_, sys_monitor_heartbeat_timer_;
   ros::Timer sys_monitor_startup_timer_;
 
@@ -293,10 +307,13 @@ class Executive : public ff_util::FreeFlyerNodelet {
   std::shared_ptr<ff_util::ConfigClient> choreographer_cfg_;
   std::shared_ptr<ff_util::ConfigClient> mapper_cfg_;
 
+  std::string primary_apk_running_, run_plan_cmd_id_;
+  std::string gs_start_stop_cmd_id_, gs_custom_cmd_id_;
+
   std::vector<Action> running_actions_;
 
   // Action timeouts
-  double action_active_timeout_;
+  double action_active_timeout_, gs_command_timeout_;
   double arm_feedback_timeout_, motion_feedback_timeout_;
   double dock_result_timeout_, perch_result_timeout_;
   double localization_result_timeout_, led_connected_timeout_;

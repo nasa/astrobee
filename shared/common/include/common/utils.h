@@ -58,6 +58,8 @@ namespace common {
   std::string basename(std::string const& file);
   std::string file_extension(std::string const& file);
 
+  // Extract values from a string to a vector of doubles
+  void parseStr(std::string const& str, std::vector<double> & values);
 }  // namespace common
 
 #endif  // COMMON_UTILS_H_

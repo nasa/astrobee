@@ -43,6 +43,8 @@ OpState* OpStateReady::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
     }
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_CLEAR_DATA) {
     exec_->ClearData(cmd);
+  } else if (cmd->cmd_name == CommandConstants::CMD_NAME_CUSTOM_GUEST_SCIENCE) {
+    exec_->CustomGuestScience(cmd);
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_DOCK) {
     if (exec_->Dock(cmd)) {
       return OpStateRepo::Instance()->teleop()->StartupState();
@@ -86,6 +88,7 @@ OpState* OpStateReady::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
       return OpStateRepo::Instance()->teleop()->StartupState();
     }
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_RUN_PLAN) {
+    // Store run plan command idea just in case we need to ack it in this state
     if (exec_->RunPlan(cmd)) {
       return OpStateRepo::Instance()->plan_exec()->StartupState(cmd->cmd_id);
     }
@@ -139,9 +142,7 @@ OpState* OpStateReady::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_SKIP_PLAN_STEP) {
     exec_->SkipPlanStep(cmd);
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_START_GUEST_SCIENCE) {
-    // TODO(Katie) need to do some sort of check for primary vs. secondary since
-    // we will have to go into guest science op mode if primary
-    exec_->SendGuestScienceCommand(cmd);
+    exec_->StartGuestScience(cmd);
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_STOP_ALL_MOTION) {
     // We shouldn't be executing any actions so we don't need to cancel any
     // actions. Stop is used in op state ready to transition from the drifting
@@ -157,9 +158,7 @@ OpState* OpStateReady::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_STOP_DOWNLOAD) {
     exec_->StopDownload(cmd);
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_STOP_GUEST_SCIENCE) {
-    // TODO(Katie) May need to add code to track command to make sure it gets
-    // acked
-    exec_->SendGuestScienceCommand(cmd);
+    exec_->StopGuestScience(cmd);
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_STOW_ARM) {
     if (exec_->StowArm(cmd)) {
       return OpStateRepo::Instance()->teleop()->StartupState();
@@ -183,6 +182,25 @@ OpState* OpStateReady::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
         "ready.";
     AckCmd(cmd->cmd_id, ff_msgs::AckCompletedStatus::EXEC_FAILED, err_msg);
     ROS_WARN("Executive: %s", err_msg.c_str());
+  }
+  return this;
+}
+
+OpState* OpStateReady::HandleGuestScienceAck(
+                                      ff_msgs::AckStampedConstPtr const& ack) {
+  // There is a small possibility that the ready state will have to handle a
+  // guest science ack for a plan. This is possible if the plan state starts a
+  // guest science command, a fault occurs so we transition to the fault state,
+  // the fault gets cleared so we transition to ready, and then the guest
+  // science command completes.
+  // If the command is not part of a plan, it gets acked in the executive
+  // If the command is not done, don't do anything.
+  if (ack->completed_status.status == ff_msgs::AckCompletedStatus::NOT) {
+    return this;
+  } else if (ack->completed_status.status != ff_msgs::AckCompletedStatus::OK) {
+    SetPlanStatus(false, ack->message);
+  } else {
+    SetPlanStatus(true);
   }
   return this;
 }

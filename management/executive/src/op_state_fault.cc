@@ -20,11 +20,6 @@
 
 namespace executive {
 
-OpState* OpStateFault::StartupState(std::string const& cmd_id) {
-  run_plan_cmd_id_ = cmd_id;
-  return this;
-}
-
 OpState* OpStateFault::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
   bool completed = false, successful = false;
   std::string err_msg;
@@ -38,6 +33,8 @@ OpState* OpStateFault::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
     exec_->ArmPanAndTilt(cmd);
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_CLEAR_DATA) {
     exec_->ClearData(cmd);
+  } else if (cmd->cmd_name == CommandConstants::CMD_NAME_CUSTOM_GUEST_SCIENCE) {
+    exec_->CustomGuestScience(cmd);
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_DOWNLOAD_DATA) {
     exec_->DownloadData(cmd);
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_FAULT) {
@@ -87,6 +84,8 @@ OpState* OpStateFault::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
     exec_->StopArm(cmd);
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_STOP_DOWNLOAD) {
     exec_->StopDownload(cmd);
+  } else if (cmd->cmd_name == CommandConstants::CMD_NAME_STOP_GUEST_SCIENCE) {
+    exec_->StopGuestScience(cmd);
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_STOW_ARM) {
     exec_->StowArm(cmd);
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_SWITCH_LOCALIZATION) {
@@ -98,6 +97,20 @@ OpState* OpStateFault::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
         + " fault.";
     AckCmd(cmd->cmd_id, ff_msgs::AckCompletedStatus::EXEC_FAILED, err_msg);
     ROS_WARN("Executive: %s", err_msg.c_str());
+  }
+  return this;
+}
+
+OpState* OpStateFault::HandleGuestScienceAck(
+                                      ff_msgs::AckStampedConstPtr const& ack) {
+  // If the command is not part of a plan, it gets acked in the executive
+  // If the command isn't done, don't do anything.
+  if (ack->completed_status.status == ff_msgs::AckCompletedStatus::NOT) {
+    return this;
+  } else if (ack->completed_status.status != ff_msgs::AckCompletedStatus::OK) {
+    SetPlanStatus(false, ack->message);
+  } else {
+    SetPlanStatus(true);
   }
   return this;
 }
@@ -127,7 +140,6 @@ OpState* OpStateFault::HandleResult(
     std::string err_msg = "";
     err_msg = GenerateActionFailedMsg(state, action, result_response);
     if (cmd_id == "plan") {
-      ROS_ERROR("Executive: %s", err_msg.c_str());
       SetPlanStatus(false, err_msg);
     } else {
       AckCmd(cmd_id, ff_msgs::AckCompletedStatus::EXEC_FAILED, err_msg);
@@ -135,57 +147,6 @@ OpState* OpStateFault::HandleResult(
   }
 
   return this;
-}
-
-// TODO(Katie) Remove if you end up changing the start, custom, and stop
-// commands to actions.
-OpState* OpStateFault::HandleGuestScienceAck(
-                                      ff_msgs::AckStampedConstPtr const& ack) {
-  // If the command is not part of a plan, just pass the ack through to the
-  // ground
-  if (ack->cmd_id != "plan") {
-    AckCmd(ack->cmd_id,
-           ack->completed_status.status,
-           ack->message,
-           ack->status.status);
-    return this;
-  }
-
-  // If the command isn't done, don't do anything.
-  if (ack->completed_status.status == ff_msgs::AckCompletedStatus::NOT) {
-    return this;
-  } else if (ack->completed_status.status != ff_msgs::AckCompletedStatus::OK) {
-    ROS_ERROR("Executive: %s", ack->message.c_str());
-    SetPlanStatus(false, ack->message);
-  } else {
-    SetPlanStatus(true);
-  }
-  return this;
-}
-
-void OpStateFault::SetPlanStatus(bool successful, std::string err_msg) {
-  exec_->SetPlanExecState(ff_msgs::ExecState::PAUSED);
-  if (successful) {
-    // Ack run plan command as cancelled since we are pausing the plan until the
-    // fault is cleared
-    AckCmd(run_plan_cmd_id_,
-           ff_msgs::AckCompletedStatus::CANCELED,
-           "Executive had to execute the fault command.");
-
-    exec_->AckCurrentPlanItem();
-    exec_->PublishPlanStatus(ff_msgs::AckStatus::QUEUED);
-  } else {
-    err_msg.append(" Executive also received a fault!");
-    ROS_ERROR("Executive: %s", err_msg.c_str());
-    AckCmd(run_plan_cmd_id_,
-           ff_msgs::AckCompletedStatus::EXEC_FAILED,
-           err_msg);
-    exec_->PublishPlanStatus(ff_msgs::AckStatus::REQUEUED);
-  }
-
-  // Clear out the run plan command id and origin so we don't ack the command
-  // again
-  run_plan_cmd_id_ = "";
 }
 
 }  // namespace executive

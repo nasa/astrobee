@@ -27,7 +27,9 @@ OpState* OpStateAutoReturn::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
     return this;
   }
 
-  if (cmd->cmd_name == CommandConstants::CMD_NAME_FAULT) {
+  if (cmd->cmd_name == CommandConstants::CMD_NAME_CUSTOM_GUEST_SCIENCE) {
+    exec_->CustomGuestScience(cmd);
+  } else if (cmd->cmd_name == CommandConstants::CMD_NAME_FAULT) {
     if (exec_->Fault(cmd)) {
       return OpStateRepo::Instance()->teleop()->StartupState();
     }
@@ -57,6 +59,8 @@ OpState* OpStateAutoReturn::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
     }
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_STOP_ARM) {
     exec_->StopArm(cmd);
+  } else if (cmd->cmd_name == CommandConstants::CMD_NAME_STOP_GUEST_SCIENCE) {
+    exec_->StopGuestScience(cmd);
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_WIPE_HLP) {
     exec_->WipeHlp(cmd);
   } else {

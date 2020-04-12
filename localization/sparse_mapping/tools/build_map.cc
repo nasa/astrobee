@@ -17,6 +17,7 @@
  */
 #include <common/init.h>
 #include <common/thread.h>
+#include <common/utils.h>
 #include <config_reader/config_reader.h>
 #include <camera/camera_params.h>
 #include <sparse_mapping/sparse_map.h>
@@ -89,6 +90,8 @@ DEFINE_bool(prune, false,
               "Prune the map (the vocab db is unchanged).");
 DEFINE_bool(info, false,
               "Print some information on the existing map.");
+DEFINE_bool(save_poses, false,
+              "Save the camera to world transform and its inverse for each image in the map.");
 DEFINE_int32(num_repeat_images, 0,
              "How many images from the beginning of the sequence to repeat at the end "
              "of the sequence, to help with loop closure (assuming first and last images "
@@ -103,6 +106,10 @@ DEFINE_int32(db_restarts, 1, "Number of restarts when building the tree.");
 DEFINE_int32(db_depth, 0, "Depth of the tree to build. Default: 4");
 DEFINE_int32(db_branching_factor, 0, "Branching factor of the tree to build. "
              "Default: 10");
+DEFINE_string(undistorted_camera_params, "",
+              "Assume that the camera has no distortion and given parameters. "
+              "Specify as: 'image_wid_x image_wid_y focal_length optical_center_x "
+              "optical_center_y'.");
 
 bool g_pruning_was_done = false;  // If we already pruned the map, don't prune it again
 
@@ -125,10 +132,19 @@ void DetectAllFeatures(int argc, char** argv) {
   }
   camera::CameraParameters cam_params(&config, "nav_cam");
 
-  // Useful for over-riding any config files when debugging
-  // camera::CameraParameters cam_params(Eigen::Vector2i(776, 517),
-  //                                    Eigen::Vector2d::Constant(610.502),
-  //                                    Eigen::Vector2d(776/2.0, 517/2.0));
+  // See if to override the camera when using undistorted images
+  if (FLAGS_undistorted_camera_params != "") {
+    std::vector<double> vals;
+    common::parseStr(FLAGS_undistorted_camera_params, vals);
+    if (vals.size() < 5)
+      LOG(FATAL) << "Could not parse --undistorted_camera_params.";
+    double widx = vals[0], widy = vals[1], f = vals[2], cx = vals[3], cy = vals[4];
+    LOG(INFO) << "Using camera parameters: "
+              << widx << ' ' << widy << ' ' << f << ' ' << cx << ' ' << cy;
+    cam_params = camera::CameraParameters(Eigen::Vector2i(widx, widy),
+                                          Eigen::Vector2d::Constant(f),
+                                          Eigen::Vector2d(cx, cy));
+  }
 
   // Remove some images from list based on sample rate
   int count = 0;
@@ -308,7 +324,7 @@ void PruneMap() {
 
   sparse_mapping::SparseMap map(FLAGS_output_map);
 
-  LOG(INFO) << "Pruning map.\n";
+  LOG(INFO) << "Pruning map. This step is irreversible.\n";
   map.PruneMap();
   g_pruning_was_done = true;
 
@@ -383,6 +399,48 @@ void MapInfo() {
   }
 }
 
+void SavePoses() {
+  sparse_mapping::SparseMap map(FLAGS_output_map);
+
+  LOG(INFO) << "Saving camera to world transforms.";
+
+  for (unsigned int cid = 0; cid < map.cid_to_filename_.size(); cid++) {
+    std::string img_file = map.cid_to_filename_[cid];
+    std::string ext = common::file_extension(img_file);
+
+    {
+      // Save cam2world
+      std::string cam_file = common::ReplaceInStr(img_file,
+                                                  "." + ext,
+                                                  "_cam2world.txt");
+
+      if (cam_file == img_file)
+        LOG(FATAL) << "Failed to replace the image extension in: " << img_file;
+
+      LOG(INFO) << "Writing: " << cam_file;
+      std::ofstream ofs(cam_file.c_str());
+      ofs.precision(17);
+      ofs << map.cid_to_cam_t_global_[cid].inverse().matrix() << "\n";
+      ofs.close();
+    }
+
+    {
+      // Save world2cam
+      std::string cam_file = common::ReplaceInStr(img_file,
+                                                  "." + ext,
+                                                  "_world2cam.txt");
+      if (cam_file == img_file)
+        LOG(FATAL) << "Failed to replace image extension in: " << img_file;
+
+      LOG(INFO) << "Writing: " << cam_file;
+      std::ofstream ofs(cam_file.c_str());
+      ofs.precision(17);
+      ofs << map.cid_to_cam_t_global_[cid].matrix() << "\n";
+      ofs.close();
+    }
+  }
+}
+
 
 int main(int argc, char** argv) {
   common::InitFreeFlyerApplication(&argc, &argv);
@@ -395,7 +453,7 @@ int main(int argc, char** argv) {
       !FLAGS_bundle_adjustment && !FLAGS_rebuild &&
       !FLAGS_vocab_db &&
       !FLAGS_registration && !FLAGS_verification &&
-      !FLAGS_info && !FLAGS_prune) {
+      !FLAGS_info && !FLAGS_save_poses && !FLAGS_prune) {
     FLAGS_feature_detection = true;
     FLAGS_feature_matching = true;
     FLAGS_track_building = true;
@@ -444,6 +502,10 @@ int main(int argc, char** argv) {
 
   if (FLAGS_info) {
     MapInfo();
+  }
+
+  if (FLAGS_save_poses) {
+    SavePoses();
   }
 
   google::protobuf::ShutdownProtobufLibrary();

@@ -106,3 +106,13 @@ std::string common::file_extension(std::string const& file) {
 
   return file.substr(it + 1);
 }
+
+// Extract values from a string to a vector of doubles
+void common::parseStr(std::string const& str, std::vector<double> & values) {
+  values.clear();
+  std::istringstream is(str);
+  double val;
+  while (is >> val)
+    values.push_back(val);
+}
+

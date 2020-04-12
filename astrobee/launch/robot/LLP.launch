@@ -147,7 +147,7 @@
       <arg name="debug" value="$(arg debug)" />
       <arg name="default" value="true" />
     </include>
-<!--
+
     <include file="$(find ff_util)/launch/ff_nodelet.launch">
       <arg name="class" value="signal_lights/SignalLightsNodelet" />
       <arg name="name" value="signal_lights" />
@@ -169,7 +169,7 @@
       <arg name="debug" value="$(arg debug)" />
       <arg name="default" value="true" />
     </include>
--->
+
     <include file="$(find ff_util)/launch/ff_nodelet.launch">
       <arg name="class" value="speed_cam/SpeedCamNode" />
       <arg name="name" value="speed_cam" />

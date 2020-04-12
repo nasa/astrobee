@@ -1,5 +1,14 @@
 # Astrobee Robot Software v1
 
+## Release 0.10.4
+
+  * Histogram correction for sparse mapping.
+  * Various other minor fixes.
+
+## Release 0.10.3
+
+  * Don't use sparse mapping features more than once.
+
 ## Release 0.10.2
 
   * Perching behavior implemented

@@ -800,17 +800,17 @@ void publishLightFlow(const Json::Value &statesOfExecution,
       const int newIndex = frames.left.translateIndex(i);
       if (isStreaming &&
           (newIndex == TOP_STREAMING || newIndex == BOTTOM_STREAMING)) {
-        // if we are streaming, light amber at a single LED on this side
-        leftGroupConfiguration.leds.push_back(createLED(31, 23, 0, newIndex));
+        // if we are streaming or recording from any camera, light amber at a
+        // single LED on this side
+        leftGroupConfiguration.leds.push_back(createLED(10, 7, 0, newIndex));
         continue;
       }
       if (!(newIndex < 0 || !frames.left.lights[i].set)) {
-        leftGroupConfiguration.leds.push_back(
-            createLED(frames.left.lights[i].red * 31.0,
-                      frames.left.lights[i].green * 31.0,
-                      frames.left.lights[i].blue * 31.0, newIndex));
+        leftGroupConfiguration.leds.push_back(createLED(
+            frames.left.lights[i].red * 5.0, frames.left.lights[i].green * 5.0,
+            frames.left.lights[i].blue * 5.0, newIndex));
       } else {
-        leftGroupConfiguration.leds.push_back(createLED(31, 31, 31, newIndex));
+        leftGroupConfiguration.leds.push_back(createLED(5, 5, 5, newIndex));
       }
     }
     publishLEDGroup.publish(leftGroupConfiguration);
@@ -819,17 +819,21 @@ void publishLightFlow(const Json::Value &statesOfExecution,
       const int newIndex = frames.right.translateIndex(i);
       if (isStreaming &&
           (newIndex == TOP_STREAMING || newIndex == BOTTOM_STREAMING)) {
-        // if we are streaming, light amber at a single LED on this side
-        rightGroupConfiguration.leds.push_back(createLED(31, 23, 0, newIndex));
+        // if we are streaming or recording from any camera, light amber at a
+        // single LED on this side
+        // rightGroupConfiguration.leds.push_back(createLED(10, 7, 0,
+        // newIndex)); if we are streaming or recording from any camera, light
+        // purple at a single LED on this side
+        rightGroupConfiguration.leds.push_back(createLED(15, 0, 15, newIndex));
         continue;
       }
       if (!(newIndex < 0 || !frames.right.lights[i].set)) {
         rightGroupConfiguration.leds.push_back(
-            createLED(frames.right.lights[i].red * 31.0,
-                      frames.right.lights[i].green * 31.0,
-                      frames.right.lights[i].blue * 31.0, newIndex));
+            createLED(frames.right.lights[i].red * 5.0,
+                      frames.right.lights[i].green * 5.0,
+                      frames.right.lights[i].blue * 5.0, newIndex));
       } else {
-        rightGroupConfiguration.leds.push_back(createLED(31, 31, 31, newIndex));
+        rightGroupConfiguration.leds.push_back(createLED(5, 5, 5, newIndex));
       }
     }
     publishLEDGroup.publish(rightGroupConfiguration);

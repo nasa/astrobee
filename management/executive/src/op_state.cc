@@ -51,9 +51,7 @@ OpState* OpState::HandleCmd(ff_msgs::CommandStampedPtr const& cmd,
                             bool& successful) {
   completed = true;
   successful = true;
-  if (cmd->cmd_name == CommandConstants::CMD_NAME_CUSTOM_GUEST_SCIENCE) {
-    successful = exec_->CustomGuestScience(cmd);
-  } else if (cmd->cmd_name == CommandConstants::CMD_NAME_NO_OP) {
+  if (cmd->cmd_name == CommandConstants::CMD_NAME_NO_OP) {
     successful = exec_->NoOp(cmd);
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_SET_CAMERA) {
     successful = exec_->SetCamera(cmd);
@@ -93,8 +91,6 @@ OpState* OpState::HandleWaitCallback() {
   return this;
 }
 
-// TODO(Katie) Remove if you end up changing the start, custom, and stop
-// commands to actions.
 OpState* OpState::HandleGuestScienceAck(ff_msgs::AckStampedConstPtr const&
                                                                           ack) {
   ROS_ERROR("Executive: Handle guest science ack not implemented yet!");
@@ -212,6 +208,25 @@ OpState* OpState::TransitionToState(unsigned char id) {
 
   ROS_WARN("Executive: unknown state id in transition to state.");
   return this;
+}
+
+void OpState::SetPlanStatus(bool successful, std::string err_msg) {
+  exec_->SetPlanExecState(ff_msgs::ExecState::PAUSED);
+  if (successful) {
+    // Ack run plan command as cancelled since we are pausing the plan until the
+    // fault is cleared
+    AckCmd(exec_->GetRunPlanCmdId(),
+           ff_msgs::AckCompletedStatus::CANCELED,
+           "Executive had to execute the fault command.");
+    exec_->AckCurrentPlanItem();
+    exec_->PublishPlanStatus(ff_msgs::AckStatus::QUEUED);
+  } else {
+    err_msg.append(" Executive also received a fault!");
+    AckCmd(exec_->GetRunPlanCmdId(),
+           ff_msgs::AckCompletedStatus::EXEC_FAILED,
+           err_msg);
+    exec_->PublishPlanStatus(ff_msgs::AckStatus::REQUEUED);
+  }
 }
 
 }  // namespace executive

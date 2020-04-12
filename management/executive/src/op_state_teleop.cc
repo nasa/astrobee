@@ -31,6 +31,8 @@ OpState* OpStateTeleop::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
 
   if (cmd->cmd_name == CommandConstants::CMD_NAME_ARM_PAN_AND_TILT) {
     exec_->ArmPanAndTilt(cmd);
+  } else if (cmd->cmd_name == CommandConstants::CMD_NAME_CUSTOM_GUEST_SCIENCE) {
+    exec_->CustomGuestScience(cmd);
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_FAULT) {
     if (exec_->Fault(cmd)) {
       return OpStateRepo::Instance()->fault()->StartupState();
@@ -74,12 +76,16 @@ OpState* OpStateTeleop::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
     exec_->SetZones(cmd);
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_SKIP_PLAN_STEP) {
     exec_->SkipPlanStep(cmd);
+  } else if (cmd->cmd_name == CommandConstants::CMD_NAME_START_GUEST_SCIENCE) {
+    exec_->StartGuestScience(cmd);
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_STOP_ALL_MOTION) {
     exec_->StopAllMotion(cmd);
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_STOP_ARM) {
     exec_->StopArm(cmd);
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_STOP_DOWNLOAD) {
     exec_->StopDownload(cmd);
+  } else if (cmd->cmd_name == CommandConstants::CMD_NAME_STOP_GUEST_SCIENCE) {
+    exec_->StopGuestScience(cmd);
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_STOW_ARM) {
     exec_->StowArm(cmd);
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_SWITCH_LOCALIZATION) {
@@ -116,13 +122,24 @@ OpState* OpStateTeleop::HandleResult(
         return this;
       }
     } else {
-      AckCmd(cmd_id);
+      // Need to check if command was part of a plan in the case that we got a
+      // fault and it cleared before the action completed
+      if (cmd_id == "plan") {
+        SetPlanStatus(true);
+      } else {
+        AckCmd(cmd_id);
+      }
     }
   } else {
     std::string err_msg = "";
     err_msg = GenerateActionFailedMsg(state, action, result_response);
-
-    AckCmd(cmd_id, ff_msgs::AckCompletedStatus::EXEC_FAILED, err_msg);
+    // Need to check if command was part of a plan in the case that we got a
+    // fault and it cleared before the action completed
+    if (cmd_id == "plan") {
+      SetPlanStatus(false, err_msg);
+    } else {
+      AckCmd(cmd_id, ff_msgs::AckCompletedStatus::EXEC_FAILED, err_msg);
+    }
   }
 
   // TODO(Katie) see if any other actions are excuting before transitioning to

@@ -27,7 +27,7 @@
 
 namespace signal_lights {
 
-Device::Device(const char* bus, uint8_t addr) {
+Device::Device(const char *bus, uint8_t addr) {
   handle = custom_i2c::i2c_open(bus, addr);
 }
 
@@ -45,9 +45,11 @@ SignalLights::SignalLights(const Device &i2c_dev)
     : i2c_dev_(i2c_dev), block_index_(0), metadata_index_(0) {
   for (size_t b = 0; b < NUM_BLOCKS; b++) {
     for (size_t i = 0; i < BLOCK_SIZE; i++) {
-      command_[b].pixels[i].red = 0;
-      command_[b].pixels[i].green = 0;
-      command_[b].pixels[i].blue = 0;
+      // on launch of FSW, all pixels should be a faint white
+      // the maximum number is 31 and the minimum is 0
+      command_[b].pixels[i].red = 1;
+      command_[b].pixels[i].green = 1;
+      command_[b].pixels[i].blue = 1;
       command_[b].pixels[i].ignore = 0;
     }
   }
@@ -67,6 +69,17 @@ bool SignalLights::Set(uint8_t pos, uint8_t red, uint8_t green, uint8_t blue) {
     return true;
   }
   return false;
+}
+
+void SignalLights::SetAll(uint8_t red, uint8_t green, uint8_t blue) {
+  for (size_t b = 0; b < NUM_BLOCKS; b++) {
+    for (size_t i = 0; i < BLOCK_SIZE; i++) {
+      command_[b].pixels[i].red = red;
+      command_[b].pixels[i].green = green;
+      command_[b].pixels[i].blue = blue;
+      command_[b].pixels[i].ignore = 0;
+    }
+  }
 }
 
 // Get the polling frequency for a desired control rate

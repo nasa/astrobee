@@ -7,7 +7,7 @@
  * (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     http:  //  www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
@@ -52,12 +52,12 @@ DEFINE_int32(ransac_inlier_tolerance, 3,
              "Use in localization this inlier tolerance.");
 DEFINE_int32(early_break_landmarks, 100,
              "Break early when we have this many landmarks during localization.");
+DEFINE_bool(histogram_equalization, false,
+            "If true, equalize the histogram for images to improve robustness to illumination conditions.");
 DEFINE_int32(num_extra_localization_db_images, 0,
              "Match this many extra images from the Vocab DB, only keep num_similar.");
 DEFINE_bool(geometric_verification, false,
             "If true, perform geometric verification for the matches obtained in localization.");
-DEFINE_bool(histogram_equalization, false,
-            "If true, equalize the histogram for images to improve robustness to illumination conditions.");
 DEFINE_bool(verbose_localization, false,
             "If true, list the images most similar to the one being localized.");
 
@@ -71,7 +71,8 @@ SparseMap::SparseMap(const std::vector<std::string> & filenames,
         num_similar_(FLAGS_num_similar),
         num_ransac_iterations_(FLAGS_num_ransac_iterations),
         ransac_inlier_tolerance_(FLAGS_ransac_inlier_tolerance),
-        early_break_landmarks_(FLAGS_early_break_landmarks) {
+        early_break_landmarks_(FLAGS_early_break_landmarks),
+        histogram_equalization_(FLAGS_histogram_equalization) {
   cid_to_descriptor_map_.resize(cid_to_filename_.size());
   // TODO(bcoltin): only record scale and orientation for opensift?
   cid_to_keypoint_map_.resize(cid_to_filename_.size());
@@ -81,9 +82,10 @@ SparseMap::SparseMap(const std::string & protobuf_file, bool localization) :
   camera_params_(Eigen::Vector2i(-1, -1), Eigen::Vector2d::Constant(-1),
                  Eigen::Vector2d(-1, -1)),
   num_similar_(FLAGS_num_similar),
-        num_ransac_iterations_(FLAGS_num_ransac_iterations),
+  num_ransac_iterations_(FLAGS_num_ransac_iterations),
   ransac_inlier_tolerance_(FLAGS_ransac_inlier_tolerance),
-  early_break_landmarks_(FLAGS_early_break_landmarks) {
+  early_break_landmarks_(FLAGS_early_break_landmarks),
+  histogram_equalization_(FLAGS_histogram_equalization) {
   // The above camera params used bad values because we are expected to reload
   // later.
   Load(protobuf_file, localization);
@@ -98,7 +100,8 @@ SparseMap::SparseMap(const std::vector<Eigen::Affine3d>& cid_to_cam_t,
   num_similar_(FLAGS_num_similar),
   num_ransac_iterations_(FLAGS_num_ransac_iterations),
   ransac_inlier_tolerance_(FLAGS_ransac_inlier_tolerance),
-  early_break_landmarks_(FLAGS_early_break_landmarks) {
+  early_break_landmarks_(FLAGS_early_break_landmarks),
+  histogram_equalization_(FLAGS_histogram_equalization) {
   if (filenames.size() != cid_to_cam_t.size())
     LOG(FATAL) << "Expecting as many images as cameras";
 
@@ -126,7 +129,8 @@ SparseMap::SparseMap(bool bundler_format, std::string const& filename,
   num_similar_(FLAGS_num_similar),
         num_ransac_iterations_(FLAGS_num_ransac_iterations),
   ransac_inlier_tolerance_(FLAGS_ransac_inlier_tolerance),
-  early_break_landmarks_(FLAGS_early_break_landmarks) {
+  early_break_landmarks_(FLAGS_early_break_landmarks),
+  histogram_equalization_(FLAGS_histogram_equalization) {
   int num_cams;
 
   if (bundler_format) {
@@ -311,8 +315,8 @@ void SparseMap::Load(const std::string & protobuf_file, bool localization) {
     if (frame.feature_size()) {
       size_t descriptor_length = frame.feature(0).description().size() /
         cv::getElemSize(map.descriptor_depth());
-      cid_to_descriptor_map_[cid].create(frame.feature_size(),     // rows
-                                         descriptor_length,        // columns
+      cid_to_descriptor_map_[cid].create(frame.feature_size(),  // rows
+                                         descriptor_length,     // columns
                                          map.descriptor_depth());
     } else {
       cid_to_descriptor_map_[cid].create(0, 0, map.descriptor_depth());
@@ -534,22 +538,27 @@ void SparseMap::DetectFeaturesFromFile(std::string const& filename,
                                        cv::Mat* descriptors,
                                        Eigen::Matrix2Xd* keypoints) {
   cv::Mat image = cv::imread(filename, CV_LOAD_IMAGE_GRAYSCALE);
+  if (image.rows == 0 || image.cols == 0)
+    LOG(FATAL) << "Found empty image in file: " << filename;
 
-  if (FLAGS_histogram_equalization) {
-    cv::Mat dst;
-    cv::equalizeHist(image, dst);
-    image = dst;
-  }
   DetectFeatures(image, multithreaded, descriptors, keypoints);
 }
 
-void SparseMap::DetectFeatures(const cv::Mat & image,
+void SparseMap::DetectFeatures(const cv::Mat& image,
                                bool multithreaded,
                                cv::Mat* descriptors,
                                Eigen::Matrix2Xd* keypoints) {
+  // If using histogram equalization, need an extra image to store it
+  cv::Mat * image_ptr = const_cast<cv::Mat*>(&image);
+  cv::Mat hist_image;
+  if (histogram_equalization_) {
+    cv::equalizeHist(image, hist_image);
+    image_ptr = &hist_image;
+  }
+
   std::vector<cv::KeyPoint> storage;
   if (!multithreaded) {
-    detector_.Detect(image, &storage, descriptors);
+    detector_.Detect(*image_ptr, &storage, descriptors);
   } else {
     // When using multiple threads, need an individual detector
     // instance, to avoid a crash. This is being used only in
@@ -562,7 +571,7 @@ void SparseMap::DetectFeatures(const cv::Mat & image,
     interest_point::FeatureDetector local_detector(detector_.GetDetectorName(),
                                                    min_features, max_features, max_retries,
                                                    min_thresh, default_thresh, max_thresh);
-    local_detector.Detect(image, &storage, descriptors);
+    local_detector.Detect(*image_ptr, &storage, descriptors);
   }
 
   keypoints->resize(2, storage.size());
@@ -584,7 +593,6 @@ bool Localize(cv::Mat const& test_descriptors,
               std::vector<Eigen::Vector3d>* inlier_landmarks,
               std::vector<Eigen::Vector2d>* inlier_observations,
               int num_cid,
-              int max_cid_to_use,
               std::string const& detector_name,
               sparse_mapping::VocabDB * vocab_db,
               int num_similar,
@@ -594,32 +602,26 @@ bool Localize(cv::Mat const& test_descriptors,
               std::vector<std::map<int, int> > const& cid_fid_to_pid,
               std::vector<Eigen::Vector3d> const& pid_to_xyz,
               int num_ransac_iterations, int ransac_inlier_tolerance,
-              int early_break_landmarks) {
-  // Query the vocab tree.
+              int early_break_landmarks, bool histogram_equalization,
+              std::vector<int> * cid_list) {
   std::vector<int> indices;
-  sparse_mapping::QueryDB(detector_name,
-                          vocab_db,
-                          // Notice that we request more similar
-                          // images than what we need. We'll prune
-                          // them below.
-                          num_similar + FLAGS_num_extra_localization_db_images,
-                          test_descriptors,
-                          &indices);
+  // Query the vocab tree.
+  if (cid_list == NULL)
+    sparse_mapping::QueryDB(detector_name,
+                            vocab_db,
+                            // Notice that we request more similar
+                            // images than what we need. We'll prune
+                            // them below.
+                            num_similar + FLAGS_num_extra_localization_db_images,
+                            test_descriptors,
+                            &indices);
+  else
+    indices = *cid_list;
   if (indices.empty()) {
     LOG(WARNING) << "Localizing against all keyframes without the vocab db database.";
     // Use all images, as no tree is available.
     for (int cid = 0; cid < num_cid; cid++)
       indices.push_back(cid);
-  }
-
-  // See if to use only a restricted set of cids.
-  if (max_cid_to_use >= 0) {
-    std::vector<int> indices2;
-    for (size_t i = 0; i < indices.size(); i++) {
-      if (indices[i] <= max_cid_to_use)
-        indices2.push_back(indices[i]);
-    }
-    indices = indices2;
   }
 
   // Find matches to each image in map. Do this in two passes. First,
@@ -689,6 +691,7 @@ bool Localize(cv::Mat const& test_descriptors,
   std::vector<Eigen::Vector3d> landmarks;
   std::vector<int> highly_ranked = common::rv_order(similarity_rank);
   int end = std::min(static_cast<int>(highly_ranked.size()), num_similar);
+  std::set<int> seen_landmarks;
   if (FLAGS_verbose_localization)
     std::cout << "Similar images: ";
   for (int i = 0; i < end; i++) {
@@ -698,11 +701,14 @@ bool Localize(cv::Mat const& test_descriptors,
     for (size_t j = 0; j < matches->size(); j++) {
       if (cid_fid_to_pid[cid].count(matches->at(j).trainIdx) == 0)
         continue;
+      const int landmark_id = cid_fid_to_pid.at(cid).at(matches->at(j).trainIdx);
+      if (seen_landmarks.count(landmark_id) > 0)
+        continue;
       Eigen::Vector2d obs(test_keypoints.col(matches->at(j).queryIdx)[0],
                           test_keypoints.col(matches->at(j).queryIdx)[1]);
       observations.push_back(obs);
-      const int landmark_id = cid_fid_to_pid.at(cid).at(matches->at(j).trainIdx);
       landmarks.push_back(pid_to_xyz[landmark_id]);
+      seen_landmarks.insert(landmark_id);
       num_matches++;
     }
     if (FLAGS_verbose_localization && num_matches > 0)
@@ -714,16 +720,17 @@ bool Localize(cv::Mat const& test_descriptors,
         num_ransac_iterations,
         ransac_inlier_tolerance, pose,
         inlier_landmarks, inlier_observations);
+
   return (ret == 0);
 }
 
 bool SparseMap::Localize(std::string const& img_file,
                          camera::CameraModel* pose,
                          std::vector<Eigen::Vector3d>* inlier_landmarks,
-                         std::vector<Eigen::Vector2d>* inlier_observations) {
+                         std::vector<Eigen::Vector2d>* inlier_observations,
+                         std::vector<int> * cid_list) {
   cv::Mat test_descriptors;
   Eigen::Matrix2Xd test_keypoints;
-  int max_cid_to_use = -1;
   bool multithreaded = false;
   DetectFeaturesFromFile(img_file, multithreaded, &test_descriptors, &test_keypoints);
   return sparse_mapping::Localize(test_descriptors, test_keypoints,
@@ -731,7 +738,6 @@ bool SparseMap::Localize(std::string const& img_file,
                                   pose,
                                   inlier_landmarks, inlier_observations,
                                   cid_to_filename_.size(),
-                                  max_cid_to_use,
                                   detector_.GetDetectorName(),
                                   &vocab_db_,
                                   num_similar_,
@@ -742,7 +748,9 @@ bool SparseMap::Localize(std::string const& img_file,
                                   pid_to_xyz_,
                                   num_ransac_iterations_,
                                   ransac_inlier_tolerance_,
-                                  early_break_landmarks_);
+                                  early_break_landmarks_,
+                                  histogram_equalization_,
+                                  cid_list);
 }
 
 // delete all the features that do not match to a landmark but are still around!
@@ -838,18 +846,17 @@ void SparseMap::PruneMap(void) {
 
 bool SparseMap::Localize(const cv::Mat & image, camera::CameraModel* pose,
                          std::vector<Eigen::Vector3d>* inlier_landmarks,
-                         std::vector<Eigen::Vector2d>* inlier_observations) {
+                         std::vector<Eigen::Vector2d>* inlier_observations,
+                         std::vector<int> * cid_list) {
   bool multithreaded = false;
   cv::Mat test_descriptors;
   Eigen::Matrix2Xd test_keypoints;
   DetectFeatures(image, multithreaded, &test_descriptors, &test_keypoints);
-  int max_cid_to_use = -1;
   return sparse_mapping::Localize(test_descriptors, test_keypoints,
                                   std::cref(camera_params_),
                                   pose,
                                   inlier_landmarks, inlier_observations,
                                   cid_to_filename_.size(),
-                                  max_cid_to_use,
                                   detector_.GetDetectorName(),
                                   &vocab_db_,
                                   num_similar_,
@@ -860,20 +867,21 @@ bool SparseMap::Localize(const cv::Mat & image, camera::CameraModel* pose,
                                   pid_to_xyz_,
                                   num_ransac_iterations_,
                                   ransac_inlier_tolerance_,
-                                  early_break_landmarks_);
+                                  early_break_landmarks_,
+                                  histogram_equalization_,
+                                  cid_list);
 }
 
 bool SparseMap::Localize(const cv::Mat & test_descriptors, const Eigen::Matrix2Xd & test_keypoints,
                          camera::CameraModel* pose,
                          std::vector<Eigen::Vector3d>* inlier_landmarks,
-                         std::vector<Eigen::Vector2d>* inlier_observations) {
-  int max_cid_to_use = -1;
+                         std::vector<Eigen::Vector2d>* inlier_observations,
+                         std::vector<int> * cid_list) {
   return sparse_mapping::Localize(test_descriptors, test_keypoints,
                                   std::cref(camera_params_),
                                   pose,
                                   inlier_landmarks, inlier_observations,
                                   cid_to_filename_.size(),
-                                  max_cid_to_use,
                                   detector_.GetDetectorName(),
                                   &vocab_db_,
                                   num_similar_,
@@ -884,7 +892,9 @@ bool SparseMap::Localize(const cv::Mat & test_descriptors, const Eigen::Matrix2X
                                   pid_to_xyz_,
                                   num_ransac_iterations_,
                                   ransac_inlier_tolerance_,
-                                  early_break_landmarks_);
+                                  early_break_landmarks_,
+                                  histogram_equalization_,
+                                  cid_list);
 }
 
 }  // namespace sparse_mapping

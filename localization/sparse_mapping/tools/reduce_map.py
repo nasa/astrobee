@@ -16,51 +16,39 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-# A sequence of ever-smaller output maps are saved in the work
-# directory. They are pruned maps, unlike the input unpruned
-# map. Likely the second largest output map (by size) is good
-# enough. After that they become too sparse perhaps.
-
-# The algorithm is as follows. Randomly remove a fraction (typically
-# 1/4) of images form a map. Try to localize the images from the full
-# map against the images of the reduced map. Images for which
-# localization fails with more than a given error (typically 2 cm) are
-# added back to the map.  Then this is repeated until no more images
-# need adding (this is called the inner iteration). Then more images
-# are taken out of the map and all the previous process is repeated
-# (this is called the outer iteration).
-
-#  python reduce_map.py -input_map <input map> -min_brisk_threshold <val> \
-#         -default_brisk_threshold <val> -max_brisk_threshold <val>       \
-#         -localization_error <val> -work_dir <work dir>                  \
-#         -sample_rate <val>
+# Create a small map out of a big map that has the same predictive
+# power. That is tested by localizing the images from the big map
+# against the created small map. See the documentation for more info.
              
 import sys, os, re, subprocess, argparse, random
 
-def run_cmd(cmd):
+def run_cmd(cmd, logfile = ""):
 
     print(" ".join(cmd))
-    try:
-        p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr = subprocess.PIPE,
+
+    if logfile != "":
+        f = open(logfile, 'w')
+    
+    stdout = ""
+    stderr = ""
+    popen = subprocess.Popen(cmd, stdout=subprocess.PIPE,
+                             stderr = subprocess.STDOUT,
                              universal_newlines=True)
-    except OSError as e:
-        raise Exception('%s: %s' % (libexecpath, e))
-    (stdout, stderr) = p.communicate()
-
-    if stdout is None:
-        stdout = ""
-    if stderr is None:
-        stderr = ""
-
-    stdout = stdout.encode()
-    stderr = stderr.encode()
+    for stdout_line in iter(popen.stdout.readline, ""):
+        if logfile != "":
+            f.write(stdout_line)
+            
+        stdout += stdout_line
+        
+    popen.stdout.close()
+    return_code = popen.wait()
+    if return_code:
+        raise subprocess.CalledProcessError(return_code, cmd)
     
-    p.wait()
-
-    if p.returncode != 0:
+    if return_code != 0:
         print("Failed to run command.\nOutput: ", stdout, "\nError: ", stderr)
-    
-    return (p.returncode, stdout, stderr)
+
+    return (return_code, stdout, stderr)
 
 def mkdir_p(path):
     try:
@@ -70,7 +58,19 @@ def mkdir_p(path):
             pass
         else:
             raise
-        
+
+def read_image_list(filename):
+    images = []
+    with open(filename, 'r') as f:
+        for image in f.read().splitlines():
+            images.append(image.rstrip())
+            
+    if len(images) == 0:
+        print("No images were read from: " + filename)
+        sys.exit(1)
+
+    return images
+
 def list_images_in_map(mapfile):
     
     cmd = ['build_map', '-info', '-output_map', mapfile]
@@ -82,7 +82,7 @@ def list_images_in_map(mapfile):
 
     images = []
     for line in (stdout + "\n" + stderr).split('\n'):
-
+        
         # Print warning messages to stdout
         m = re.match("^.*?\s([^\s]*?jpg)", line)
         if m:
@@ -90,7 +90,7 @@ def list_images_in_map(mapfile):
             
     return images
 
-def extract_submap_with_vocab_db(input_map, output_map, images, exclude, work_dir):
+def extract_submap_with_vocab_db(input_map, output_map, images, work_dir):
 
     image_file = work_dir + "/image_list.txt";
     with open(image_file, 'w+') as f:
@@ -100,9 +100,6 @@ def extract_submap_with_vocab_db(input_map, output_map, images, exclude, work_di
     print("Extracting submap from " + input_map + " to " + output_map)
     cmd = ['extract_submap', '-input_map', input_map, '-output_map', output_map,
            '-skip_bundle_adjustment']
-
-    if exclude:
-        cmd += ['-exclude']
 
     cmd +=['-image_list', image_file]
     
@@ -167,7 +164,13 @@ def find_hard_to_localize_images(args, ref_map, source_map, out_file):
            '-num_similar', str(args.num_similar),
            '-ransac_inlier_tolerance', str(args.ransac_inlier_tolerance),
            '-num_ransac_iterations', str(args.num_ransac_iterations)]
-    (returncode, stdout, stderr) = run_cmd(cmd) 
+    if args.histogram_equalization:
+        cmd.append('-histogram_equalization')
+
+    full_log = out_file + ".log";
+    print("Writing the log of localization to: " + full_log)
+
+    (returncode, stdout, stderr) = run_cmd(cmd, full_log) 
 
     (bad_images_set, bad_images, errors) = \
                      parse_images_with_bad_localization(stdout + "\n" + stderr,
@@ -181,13 +184,21 @@ def find_hard_to_localize_images(args, ref_map, source_map, out_file):
         for count in range(len(bad_images)):
             f.write(bad_images[count] + " " + str(errors[count]) + "\n")
 
-    full_log = out_file + ".full_log";
-    print("Writing the full log of localization to: " + full_log)
-    with open(full_log, "w+") as f:
-        f.write(stdout + "\n")
-        f.write(stderr + "\n")
-        
     return bad_images_set
+
+def check_subset(list1, list2):
+    '''Check that all images in the first list are also present in the second.'''
+
+    set2 = set()
+    for val in list2:
+        set2.add(val)
+
+    for val in list1:
+        if val not in set2:
+            print("Missing image " + str(val))
+            return False
+
+    return True
 
 def in_notin(list1, list2):
     '''Find entries in the first list that are not in the second list.'''
@@ -210,21 +221,24 @@ def parse_args():
                         help="Input registered, unpruned, BRISK map with vocab db.")
     #parser.add_argument('-output_map', type = str, required = True,
     #                    help='Output registered, pruned, BRISK map with vocab db.')
-    parser.add_argument("-min_brisk_threshold", type=int, required = False, default = 10,
+    parser.add_argument("-min_brisk_threshold", type=int, required = False, default = 20,
                         help="Min BRISK threshold.")
-    parser.add_argument("-default_brisk_threshold", type=int, required = False, default = 75,
+    parser.add_argument("-default_brisk_threshold", type=int, required = False, default = 90,
                         help="Default BRISK threshold.")
-    parser.add_argument("-max_brisk_threshold", type=int, required = False, default = 75,
+    parser.add_argument("-max_brisk_threshold", type=int, required = False, default = 110,
                         help="Max BRISK threshold.")
     parser.add_argument("-early_break_landmarks", type=int, required = False, default = 100,
-                        help = "Break early when we have this many landmarks during localization.");
+                        help = "Break early when we have this many landmarks during localization.")
+    parser.add_argument('-histogram_equalization', dest='histogram_equalization',
+                        action='store_true', required = False)
+    
     parser.add_argument("-num_similar", type=int, required = False, default = 20,
                         help = "Use in localization this many images which " + \
-                        "are most similar to the image to localize.");
+                        "are most similar to the image to localize.")
     parser.add_argument("-num_ransac_iterations", type=int, required = False, default = 100,
-                        help = "Use in localization this many ransac iterations.");
+                        help = "Use in localization this many ransac iterations.")
     parser.add_argument("-ransac_inlier_tolerance", type=int, required = False, default = 5,
-                        help = "Use in localization this inlier tolerance.");
+                        help = "Use in localization this inlier tolerance.")
     parser.add_argument("-sample_rate", type=float, required = False, default = 0.25,
                         help="The fraction of images to try to remove from the map at once.")
     parser.add_argument("-localization_error", type=float, required = False, default = 0.02,
@@ -233,10 +247,12 @@ def parse_args():
     parser.add_argument("-big_localization_error", type=float, required = False, default = 0.05,
                         help="Image whose localization error went over this threshold as " +
                         "result of reducing the map should be flagged.")
-    parser.add_argument("-attempts", type=int, required = False, default = 10,
+    parser.add_argument("-attempts", type=int, required = False, default = 2,
                         help="How many times to try to reduce the map.")
     parser.add_argument("-work_dir", type=str, required = True,
-                        help="Store all intermediate results in this directory.")
+                        help="Store all results in this directory.")
+    parser.add_argument("-image_list", type=str, required = False,
+                        help="Instead of taking out images of the map randomly, start with a submap with the images from this list.")
     #parser.add_argument("-v", "-verbosity", type=int,
     #help="increase output verbosity")
     args = parser.parse_args()
@@ -249,20 +265,39 @@ def main():
     
     mkdir_p(args.work_dir)
 
-    initial_log_file = args.work_dir + "/bad_localization_with_initial_ref_map.txt";
-    find_hard_to_localize_images(args, args.input_map, args.input_map, initial_log_file)
+    print("Using histogram_equalization: " + str(args.histogram_equalization))
+
+    input_list = []
+    if args.image_list is not None:
+        print("Initalizing the reduced map with images from " + args.image_list)
+        args.attempts = 1
+        print("Using just one attempt, hence only trying to add to the input list.")
+        input_list = read_image_list(args.image_list) 
+    else:
+        print("Using " + str(args.attempts) + " at reducing the map.")
 
     prev_map = args.input_map
-    for outer_iter in range(5):
+    for outer_iter in range(args.attempts):
 
         print("\n\n-------------------------------------------")
-        print("Outer iteration: " + str(outer_iter))
+        print("Attempting to remove images. Iteration: " + str(outer_iter) + ".")
         
         images = list_images_in_map(prev_map)
-        print("Current iteration map has " + str(len(images)) + " images.");
-        
-        exclude_images = random.sample(images, int(len(images)*args.sample_rate))
-        print("Randomly excluding " + str(len(exclude_images)) + " images from the map.")
+        print("Current iteration map has " + str(len(images)) + " images.")
+
+        if args.image_list is None:
+            exclude_images = random.sample(images, int(len(images)*args.sample_rate))
+            print("Randomly excluding " + str(len(exclude_images)) +
+                  " images from the map.")
+        else:
+            if not check_subset(input_list, images):
+                print("The images in " + args.image_list +
+                      " must be all in the input map: " + args.input_map)
+                sys.exit(1)
+
+            exclude_images = in_notin(images, input_list)
+            print("Start by excluding " + str(len(exclude_images)) +
+                  " images from the map.")
 
         #for image in images:
         #    print("image is ", image)
@@ -272,21 +307,22 @@ def main():
 
         reduced_log_file = ""
         submap = ""
+        include_images = []
         
         for inner_iter in range(10):
 
-            print("\nInner iteration: " + str(inner_iter))
+            print("\nAdding images back. Iteration: " + str(inner_iter) + ".")
 
-            submap = args.work_dir + "/" + "submap_iter" + str(outer_iter) + ".map";
+            submap = args.work_dir + "/" + "submap_iter" + str(outer_iter) + ".map"
 
-            exclude = False
             include_images = in_notin(images, exclude_images)
             
-            extract_submap_with_vocab_db(args.input_map, submap, include_images, exclude,
+            extract_submap_with_vocab_db(args.input_map, submap, include_images, 
                                          args.work_dir)
             
-            reduced_log_file = args.work_dir + "/bad_localization_with_reduced_map_outer_iter" + \
-                               str(outer_iter) + "_inner_iter_" + str(inner_iter) + ".txt";
+            reduced_log_file = args.work_dir + \
+                               "/bad_localization_with_reduced_map_outer_iter" + \
+                               str(outer_iter) + "_inner_iter_" + str(inner_iter) + ".txt"
             bad_images_set = find_hard_to_localize_images(args, submap, args.input_map,
                                                           reduced_log_file)
 
@@ -302,24 +338,22 @@ def main():
             print("Added back to the map " + str(num_added_back) + " image(s).")
 
             if num_added_back == 0:
+                print("No more images to add back to the map. Stopping.")
                 break
 
         # Do some stats
-        (initial_images, initial_errors) = parse_localization_log_file(initial_log_file)
         (reduced_images, reduced_errors) = parse_localization_log_file(reduced_log_file)
 
-        if initial_images != reduced_images:
-            print("The images in the log should not have changed.")
-            exit(1)
-        print("Images for which localization error went over " + \
-              str(args.big_localization_error) + \
-              " after reducing the map:")
-        for local_it in range(len(initial_images)):
-            if initial_errors[local_it] <= args.big_localization_error and \
-                   reduced_errors[local_it] > args.big_localization_error:
-                print(initial_images[local_it] + " " + str(initial_errors[local_it]) + " " +\
-                      str(reduced_errors[local_it]))
+        print("Images for which localization error is larger than " + \
+              str(args.localization_error) + " are:")
+        for local_it in range(len(reduced_images)):
+            if reduced_errors[local_it] > args.localization_error:
+                print(reduced_images[local_it] + " " + str(reduced_errors[local_it]))
 
+        print("The reduced map for attempt " + str(outer_iter) + \
+              " is saved to " + submap)
+        print("It has " + str(len(include_images)) + " images.")
+              
         prev_map = submap
     
 if __name__ == "__main__":
