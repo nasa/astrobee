@@ -2,15 +2,15 @@
 #
 # Copyright (c) 2017, United States Government, as represented by the
 # Administrator of the National Aeronautics and Space Administration.
-# 
+#
 # All rights reserved.
-# 
+#
 # The Astrobee platform is licensed under the Apache License, Version 2.0
 # (the "License"); you may not use this file except in compliance with the
 # License. You may obtain a copy of the License at
-# 
+#
 #     http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -37,11 +37,8 @@ do
   if [ $# -gt 1 ] && [ $2 != ${robot_names[$i]} ]; then
     continue;
   fi
-  if ping -w 1 -q -c 1 "${mlp_ips[$i]}" > /dev/null
-  then
-    robot_index=$i
-    break;
-  fi
+  robot_index=$i
+  break;
 done
 
 if [ $robot_index -lt 0 ]; then
@@ -83,17 +80,9 @@ FREEFLYER_MASTER=${FREEFLYER_MASTER:=http://${master_ip}:11311/}
 FREEFLYER_LLP_FIXES=${FREEFLYER_LLP_FIXES=rpath}
 FREEFLYER_INSTALL_DIR=/opt/astrobee
 
-if [[ ${FREEFLYER_TARGETS,,} =~ 'dock' ]]; then
-  echo "Copying files to Dock..."
-  if ! rsync -azh --delete --info=progress2 $target/ astrobee@${dock_ip}:${FREEFLYER_INSTALL_DIR}
-  then
-    exit 1
-  fi
-fi
-
 if [[ ${FREEFLYER_TARGETS,,} =~ 'mlp' ]]; then
   echo "Copying files to MLP..."
-  if ! rsync -azh --delete --info=progress2 $target/ astrobee@${mlp_ips[${robot_index}]}:${FREEFLYER_INSTALL_DIR}
+  if ! rsync -azh --delete --info=progress2 --exclude=/platform --exclude=/firmware --exclude=/avionics --exclude '*imu_bias.config' $target/ astrobee@${mlp_ips[${robot_index}]}:${FREEFLYER_INSTALL_DIR}
   then
     exit 1
   fi
@@ -101,19 +90,13 @@ fi
 
 if [[ ${FREEFLYER_TARGETS,,} =~ 'llp' ]]; then
   # Install to LLP
-  echo "Copying files to LLP..."
-  if ! rsync -azh --delete --info=progress2 $target/ astrobee@${llp_ips[${robot_index}]}:${FREEFLYER_INSTALL_DIR}
-  then
-    exit 1
+  if [[ "${llp_ips[${robot_index}]}" != "0.0.0.0" ]]; then # for dock, skip this step
+    echo "Copying files to LLP..."
+    if ! rsync -azh --delete --info=progress2 --exclude=/platform --exclude=/avionics --exclude '*imu_bias.config' $target/ astrobee@${llp_ips[${robot_index}]}:${FREEFLYER_INSTALL_DIR}
+    then
+      exit 1
+    fi
   fi
-
-  # fixes=''
-
-  # fixes=${fixes//+([[:space:]])/ }
-
-  # if [ -n "${fixes}" ]; then
-  #   ssh -t ubuntu@${subnet}.${llp} "${fixes}"
-  # fi
 fi
 
 if [ -n "$ip_addr" ]; then

@@ -1,14 +1,14 @@
 # Copyright (c) 2017, United States Government, as represented by the
 # Administrator of the National Aeronautics and Space Administration.
-# 
+#
 # All rights reserved.
-# 
+#
 # The Astrobee platform is licensed under the Apache License, Version 2.0
 # (the "License"); you may not use this file except in compliance with the
 # License. You may obtain a copy of the License at
-# 
+#
 #     http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -17,8 +17,8 @@
 
 cmake_minimum_required(VERSION 3.0)
 project(Astrobee)
-set(ASTROBEE_VERSION_MAJOR 0)
-set(ASTROBEE_VERSION_MINOR 3)
+
+set(ASTROBEE_VERSION 0.10.4)
 
 if ( "${CMAKE_VERSION}" VERSION_GREATER 3.0.0 )
   cmake_policy(SET CMP0045 OLD)
@@ -98,6 +98,12 @@ option(ENABLE_PICOFLEXX
   ON)
 option(ENABLE_GAZEBO
   "Enable support for building the Gazebo simulator"
+  ON)
+option(ENABLE_VIVE
+  "Enable support for building the Vive drivers"
+  ON)
+option(ENABLE_VIVE_SOLVER
+  "Enable support for building the Vive offline solver"
   ON)
 
 # If the user selected static libs .. set BUILD_SHARED_LIBS accordingly
@@ -201,25 +207,27 @@ find_package(Alvar REQUIRED)
 find_package(OpenMVG QUIET REQUIRED)
 find_package(JsonCpp REQUIRED)
 find_package(FFMPEG QUIET)    # Optional
-find_package(Deepdive QUIET)  # Optional
 if (ENABLE_PICOFLEXX)
   find_package(royale REQUIRED)
 endif (ENABLE_PICOFLEXX)
+# Find pkg-config supported libraries
+if (ENABLE_VIVE)
+  find_package(USB REQUIRED)
+  find_package(JSONC REQUIRED)
+  find_package(ARGTABLE2 REQUIRED)
+  find_package(ZLIB REQUIRED)
+endif (ENABLE_VIVE)
 
-#find_package(PkgConfig REQUIRED)
-#
-#pkg_check_modules(YAMLCPP REQUIRED yaml-cpp)
-#if (YAMLCPP_FOUND)
-#  set (YAMLCPP_INCLUDE_DIRS ${YAMLCPP_INCLUDEDIR})
-#endif (YAMLCPP_FOUND)
 
-pkg_check_modules(YAMLCPP REQUIRED yaml-cpp)
-if (YAMLCPP_FOUND)
-  set (YAMLCPP_INCLUDE_DIRS ${YAMLCPP_INCLUDEDIR})
-endif (YAMLCPP_FOUND)
+if (NOT USE_CTC)  # pkg-config needs extra work to be used for cross compile
+  pkg_check_modules(YAMLCPP yaml-cpp)
+  if (YAMLCPP_FOUND)
+    set (YAMLCPP_INCLUDE_DIRS ${YAMLCPP_INCLUDEDIR})
+  endif (YAMLCPP_FOUND)
+endif (NOT USE_CTC)
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wno-unused-local-typedefs -Werror")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-unused-local-typedefs -Werror")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wno-unused-local-typedefs -Werror -Wno-packed-bitfield-compat")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-unused-local-typedefs -Werror -Wno-packed-bitfield-compat")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--no-undefined")
 set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--no-undefined")
 
@@ -254,6 +262,11 @@ endif (USE_CTC)
 if (USE_ROS)
   set(ENV{ROS_LANG_DISABLE} "genlisp:gennodejs:geneus:$ENV{ROS_LANG_DISABLE}")
   find_package(catkin2 COMPONENTS roscpp message_generation std_msgs geometry_msgs sensor_msgs cv_bridge image_transport tf tf2 tf2_ros rosbag nodelet)
+
+  if (IS_BAMBOO_BUILD)
+    include(BambooFix)
+  endif()
+
   find_package(PCL REQUIRED COMPONENTS common)
   find_package(Octomap MODULE REQUIRED)
   #pkg_check_modules(OROCOS_KDL REQUIRED orocos_kdl)
@@ -274,7 +287,7 @@ if (USE_DDS)
 
   set(MIRO_ROOT_DIR ${SORACORE_ROOT_DIR})
 
-  find_package(Qt4 4.6.0 REQUIRED QtXml)
+  find_package(QtXml REQUIRED)
   find_package(Miro REQUIRED)
   find_package(RtiDds REQUIRED)
   find_package(Soracore REQUIRED)
@@ -287,6 +300,7 @@ include(CreateRosTestTargets)
 include(CreateTestTargets)
 include(CreateToolTargets)
 include(ExternalProjects)
+include(FetchContent)
 include(InstallLaunchFiles)
 
 add_subdirectory(external)
@@ -305,8 +319,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/version.txt
   COMMAND ${CMAKE_COMMAND}
   -D OUTPUT_FILE=${CMAKE_CURRENT_BINARY_DIR}/version.txt
-  -D ASTROBEE_VERSION_MAJOR=${ASTROBEE_VERSION_MAJOR}
-  -D ASTROBEE_VERSION_MINOR=${ASTROBEE_VERSION_MINOR}
+  -D ASTROBEE_VERSION=${ASTROBEE_VERSION}
   -D GIT_MODULE_FILE="${CMAKE_SOURCE_DIR}/cmake/GetGitRevisionDescription.cmake"
   -P ${CMAKE_SOURCE_DIR}/cmake/SetVersion.cmake)
 add_custom_target(version DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/version.txt)
@@ -320,13 +333,14 @@ if (USE_ROS)
   add_subdirectory(tools)
   add_subdirectory(astrobee)
   add_subdirectory(communications)
-  if (NOT USE_CTC AND ENABLE_GAZEBO)
-    add_subdirectory(simulation)
-  endif (NOT USE_CTC AND ENABLE_GAZEBO)
   add_subdirectory(gnc)
   add_subdirectory(mobility)
   add_subdirectory(behaviors)
   add_subdirectory(management)
+  add_subdirectory(description)
+  if (NOT USE_CTC AND ENABLE_GAZEBO)
+    add_subdirectory(simulation)
+  endif (NOT USE_CTC AND ENABLE_GAZEBO)
 endif (USE_ROS)
 
 if (USE_DRIVERS)

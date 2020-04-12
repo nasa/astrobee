@@ -21,6 +21,7 @@
 # Header with timestamp
 std_msgs/Header header
 
+# Used for guest science config and state message synchronization on the ground
 int64 serial
 
 ff_msgs/GuestScienceApk[] apks

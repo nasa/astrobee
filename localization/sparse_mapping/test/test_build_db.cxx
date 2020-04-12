@@ -86,7 +86,8 @@ void RunWithDB(std::string const& detector_name) {
   std::string essential_file = "essential.csv";
   std::string matches_file = "matches.txt";
   sparse_mapping::MatchFeatures(essential_file, matches_file, &map);
-  sparse_mapping::BuildTracks(matches_file, &map);
+  bool rm_invalid_xyz = true;
+  sparse_mapping::BuildTracks(rm_invalid_xyz, matches_file, &map);
   EXPECT_GT(map.GetNumLandmarks(), 30u);  // Limited now by our max pairwise feature.
   sparse_mapping::IncrementalBA(essential_file, &map);
   ceres::Solver::Options options;

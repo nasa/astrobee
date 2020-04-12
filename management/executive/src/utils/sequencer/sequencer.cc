@@ -198,8 +198,8 @@ ff_msgs::CommandStamped::Ptr Sequencer::CurrentCommand() noexcept {
   ff_msgs::CommandStamped::Ptr cmd(new ff_msgs::CommandStamped());
   cmd->subsys_name = "INVALID";
   cmd->cmd_name = "INVALID";
+  cmd->cmd_id = "plan";
   cmd->cmd_src = "plan";
-  cmd->cmd_origin = "plan";
   cmd->args.clear();
 
   jsonloader::Milestone const& m = plan_.GetMilestone(current_milestone_);
@@ -221,7 +221,7 @@ ff_msgs::CommandStamped::Ptr Sequencer::CurrentCommand() noexcept {
   }
 
   if (!it->second.fn(plan_cmd, cmd.get())) {
-    ROS_ERROR("error convertiong command %s",
+    ROS_ERROR("error converting command %s",
               plan_cmd->type().data());
     cmd.reset();
     return cmd;

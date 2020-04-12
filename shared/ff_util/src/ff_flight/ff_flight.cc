@@ -1,14 +1,14 @@
 /* Copyright (c) 2017, United States Government, as represented by the
  * Administrator of the National Aeronautics and Space Administration.
- * 
+ *
  * All rights reserved.
- * 
+ *
  * The Astrobee platform is licensed under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -82,65 +82,6 @@ namespace ff_util {
     return left;
   }
 
-  // Generate a strapdown equation for a given quaternion
-  Eigen::Matrix4d State::Omega(Eigen::Vector3d const& vec) {
-    Eigen::Matrix4d mat;
-    mat(0, 0) =  0.0;
-    mat(0, 1) = vec(2);
-    mat(0, 2) = -vec(1);
-    mat(0, 3) = vec(0);
-    mat(1, 0) = -vec(2);
-    mat(1, 1) =  0.0;
-    mat(1, 2) =  vec(0);
-    mat(1, 3) =  vec(1);
-    mat(2, 0) =  vec(1);
-    mat(2, 1) = -vec(0);
-    mat(2, 2) =  0.0;
-    mat(2, 3) =  vec(2);
-    mat(3, 0) = -vec(0);
-    mat(3, 1) = -vec(1);
-    mat(3, 2) = -vec(2);
-    mat(3, 3) =  0.0;
-    return mat;
-  }
-
-  // Quaternion integration must be done numerically, as there is no closed
-  // form solution for alpha > 0. See Jesse and Robert's notes.
-  State State::Propagate(double dt) {
-    State state;
-    if (dt > 0) {
-      Eigen::Vector4d qvec;
-      qvec(0) = q.x();
-      qvec(1) = q.y();
-      qvec(2) = q.z();
-      qvec(3) = q.w();
-      Eigen::Matrix4d ow = Omega(w);
-      Eigen::Matrix4d ob = Omega(b);
-      Eigen::Matrix4d ok = ow + 0.5 * ob * dt;
-      qvec =((0.5 * ok * dt).exp() + 1.0 / 48.0
-        * (ob * ow - ow * ob) * dt * dt *dt) * qvec;
-      state.q.x() = qvec(0);
-      state.q.y() = qvec(1);
-      state.q.z() = qvec(2);
-      state.q.w() = qvec(3);
-      state.p = p + (v + 0.5 * a * dt) * dt;
-      state.w = w + b * dt;
-      state.v = v + a * dt;
-      state.b = b;
-      state.a = a;
-      state.t = t + dt;
-    } else {
-      state.q = q;
-      state.p = p;
-      state.w = w;
-      state.v = v;
-      state.b = b;
-      state.a = a;
-      state.t = t;
-    }
-    return state;
-  }
-
   // Convert the state to a setpoint
   Setpoint State::ToSetpoint() {
     Setpoint sp;
@@ -161,7 +102,12 @@ namespace ff_util {
 
   // Return the magnitude of the rotation
   double State::QuaternionMagnitude(Eigen::Quaterniond const& iq) {
-    return 2.0 * atan2(iq.vec().norm(), iq.w());
+    double x = Eigen::AngleAxisd(iq.normalized()).angle();
+    x = fmod(x + M_PI, 2.0 * M_PI);
+    if (x < 0)
+      x += 2.0 * M_PI;
+    x -= M_PI;
+    return fabs(x);
   }
 
   // Return the magnitude of the rotation
@@ -174,26 +120,27 @@ namespace ff_util {
   /////////////////////////////////////////////////////////////////////
 
   // Get and cache default inertia configuration
-  bool FlightUtil::GetInertiaConfig(geometry_msgs::Inertia &data) {
-    static geometry_msgs::Inertia inertia;
-    if (inertia.m == 0) {
+  bool FlightUtil::GetInertiaConfig(geometry_msgs::InertiaStamped &data) {
+    static geometry_msgs::InertiaStamped inertia;
+    if (inertia.inertia.m == 0) {
       config_reader::ConfigReader cfg;
       config_reader::ConfigReader::Table com;
       float inertia_matrix[9];
       cfg.AddFile("flight.config");
       cfg.ReadFiles();
-      if (   !cfg.GetReal("inertia_mass", &inertia.m)
+      if (   !cfg.GetReal("inertia_mass", &inertia.inertia.m)
+          || !cfg.GetStr("inertia_name", &inertia.header.frame_id)
           || !msg_conversions::config_read_matrix(&cfg, "inertia_matrix", 3, 3,
                 inertia_matrix)
           || !cfg.GetTable("inertia_com", &com)
-          || !msg_conversions::config_read_vector(&com, &inertia.com))
+          || !msg_conversions::config_read_vector(&com, &inertia.inertia.com))
         return false;
-      inertia.ixx = inertia_matrix[0];
-      inertia.ixy = inertia_matrix[1];
-      inertia.ixz = inertia_matrix[2];
-      inertia.iyy = inertia_matrix[4];
-      inertia.iyz = inertia_matrix[5];
-      inertia.izz = inertia_matrix[8];
+      inertia.inertia.ixx = inertia_matrix[0];
+      inertia.inertia.ixy = inertia_matrix[1];
+      inertia.inertia.ixz = inertia_matrix[2];
+      inertia.inertia.iyy = inertia_matrix[4];
+      inertia.inertia.iyz = inertia_matrix[5];
+      inertia.inertia.izz = inertia_matrix[8];
     }
     // Copy the data and return successful
     data = inertia;
@@ -229,7 +176,6 @@ namespace ff_util {
             || !mode.GetReal("hard_limit_vel", &info.hard_limit_vel)
             || !mode.GetReal("hard_limit_alpha", &info.hard_limit_alpha)
             || !mode.GetReal("hard_limit_accel", &info.hard_limit_accel)
-            || !mode.GetReal("hard_divider", &info.hard_divider)
             || !mode.GetReal("tolerance_pos", &info.tolerance_pos)
             || !mode.GetReal("tolerance_att", &info.tolerance_att)
             || !mode.GetReal("tolerance_omega", &info.tolerance_omega)
@@ -312,7 +258,7 @@ namespace ff_util {
     // Check 1 : Always check that we have the minimum number of set points   //
     //           If we didn't check this, other tests would fail              //
     ////////////////////////////////////////////////////////////////////////////
-    if (segment.size() < 2)
+    if (segment.size() < 1)
       return ERROR_MINIMUM_NUM_SETPOINTS;
     // Iterate over all segments
     for (Segment::const_iterator it = segment.begin();
@@ -324,10 +270,10 @@ namespace ff_util {
       //////////////////////////////////////////////////////////////////////////
       if (it + 1 == segment.end()) {
         if (mask & CHECK_STATIONARY_ENDPOINT) {
-          if (State::VectorMagnitude(c_s.w) == 0
-           || State::VectorMagnitude(c_s.v) == 0
-           || State::VectorMagnitude(c_s.a) == 0
-           || State::VectorMagnitude(c_s.b) == 0)
+          if (State::VectorMagnitude(c_s.w) != 0.0
+           || State::VectorMagnitude(c_s.v) != 0.0
+           || State::VectorMagnitude(c_s.a) != 0.0
+           || State::VectorMagnitude(c_s.b) != 0.0)
             return ERROR_STATIONARY_ENDPOINT;
         }
         break;
@@ -335,9 +281,9 @@ namespace ff_util {
       ///////////////////////////////////////////////////////////////////////////
       // Check 3 : Check limits on acceleration and velocities                 //
       ///////////////////////////////////////////////////////////////////////////
-      double divider = 0;
-      if (!faceforward && flight_mode.hard_divider > 0)
-        divider = flight_mode.hard_divider;
+      double divider = 1.0;
+      if (!faceforward)
+        divider = 2.0;
       if ((mask & CHECK_LIMITS_OMEGA)
         && ValidateUpperLimit(flight_mode.hard_limit_omega,
           State::VectorMagnitude(c_s.w)) < 0)
@@ -374,26 +320,117 @@ namespace ff_util {
   SegmentResult FlightUtil::Resample(Segment const& in, Segment & out,
     double rate) {
     // Check that we have enough setpoints
-    if (in.size() < 2)
-      return ERROR_MINIMUM_NUM_SETPOINTS;
+    if (in.size() < 2) {
+      out = in;
+      return SUCCESS;
+    }
     // If the rate was not specified, try and get it from the general config
-    if (rate < MIN_CONTROL_RATE) rate = MIN_CONTROL_RATE;
+    if (rate < MIN_CONTROL_RATE)
+      rate = MIN_CONTROL_RATE;
     // Clear the output
     out.clear();
-    // Peform the resample of the segment
+    // Perform the resample of the segment - we are expecting as an input the
+    // four points of trapezoid. What we want as an output is the segment
+    Segment::const_iterator it;
+    Segment::const_iterator jt;
+    // ROS_INFO_STREAM("***");
     for (Segment::const_iterator it = in.begin(); it != in.end(); it++) {
-      // Convert the current setpoint to a state
-      State state(*it);
-      Segment::const_iterator jt = std::next(it);
+      // Convert the angular velocity and angular acceleration from the
+      // world to the body frame, avoiding a GDS / FSW incompatibility
+      State is(*it);
+      // Do we have an end setpoint?
+      jt = std::next(it);
       if (jt == in.end()) {
-        out.push_back(state.ToSetpoint());
+        out.push_back(is.ToSetpoint());
       } else {
-        // Propagate the state forward adding setpoints at a given rate, until
-        // we reach the next setpoint. Then stop, and move onto the next setpoint.
-        do {
+        // State at start end of setpoint (we just need the timestamp)
+        State js(*jt);
+        // Debug for clarity
+        /*
+        ROS_INFO_STREAM("---");
+        ROS_INFO_STREAM("PREV: "
+                          << " t: "  << is.t
+                          << " qw: " << is.q.w()
+                          << " qx: " << is.q.x()
+                          << " qy: " << is.q.y()
+                          << " qz: " << is.q.z()
+                          << " wx: " << is.w[0]
+                          << " wy: " << is.w[1]
+                          << " wz: " << is.w[2]
+                          << " bx: " << is.b[0]
+                          << " by: " << is.b[1]
+                          << " bz: " << is.b[2]);
+        ROS_INFO_STREAM("NEXT: "
+                          << " t: "  << js.t
+                          << " qw: " << js.q.w()
+                          << " qx: " << js.q.x()
+                          << " qy: " << js.q.y()
+                          << " qz: " << js.q.z()
+                          << " wx: " << js.w[0]
+                          << " wy: " << js.w[1]
+                          << " wz: " << js.w[2]
+                          << " bx: " << js.b[0]
+                          << " by: " << js.b[1]
+                          << " bz: " << js.b[2]);
+        */
+        // Get the discrete time step
+        double tsamp = 1.0 / rate;    // Trajectory sampling rate 1Hz
+        double nsamp = 0.01;          // Numerical sampling rate 100Hz
+        // Add the first
+        State state = is;
+        /*
+        ROS_INFO_STREAM("SAMP: "
+                          << " t: "  << state.t
+                          << " qw: " << state.q.w()
+                          << " qx: " << state.q.x()
+                          << " qy: " << state.q.y()
+                          << " qz: " << state.q.z()
+                          << " wx: " << state.w[0]
+                          << " wy: " << state.w[1]
+                          << " wz: " << state.w[2]
+                          << " bx: " << state.b[0]
+                          << " by: " << state.b[1]
+                          << " bz: " << state.b[2]);
+        */
+        out.push_back(state.ToSetpoint());
+        // Now resample
+        while (state.t < js.t) {
+          double tend = (state.t + tsamp < js.t ? state.t + tsamp : js.t);
+          while (state.t < tend) {
+            double dt = (state.t + nsamp < tend ? nsamp : tend - state.t);
+            Eigen::Matrix4d omega;
+            omega << 0.0,        state.w[2], -state.w[1], state.w[0],
+                    -state.w[2], 0.0,         state.w[0], state.w[1],
+                     state.w[1], -state.w[0], 0.0,        state.w[2],
+                    -state.w[0], -state.w[1], -state.w[2], 0.0;
+            Eigen::Vector4d qdiff(state.q.x(), state.q.y(), state.q.z(), state.q.w());
+            qdiff = omega * qdiff * 0.5;
+            state.q.x() += qdiff[0] * dt;
+            state.q.y() += qdiff[1] * dt;
+            state.q.z() += qdiff[2] * dt;
+            state.q.w() += qdiff[3] * dt;
+            state.q.normalize();
+            state.p += state.v * dt;
+            state.w += state.b * dt;
+            state.v += state.a * dt;
+            state.t += dt;
+          }
+          /*
+          ROS_INFO_STREAM("SAMP: "
+                            << " t: "  << state.t
+                            << " qw: " << state.q.w()
+                            << " qx: " << state.q.x()
+                            << " qy: " << state.q.y()
+                            << " qz: " << state.q.z()
+                            << " wx: " << state.w[0]
+                            << " wy: " << state.w[1]
+                            << " wz: " << state.w[2]
+                            << " bx: " << state.b[0]
+                            << " by: " << state.b[1]
+                            << " bz: " << state.b[2]);
+          */
           out.push_back(state.ToSetpoint());
-          state = state.Propagate(rate);
-        } while (state.t < jt->when.toSec());
+        }
       }
     }
     // Success
@@ -464,8 +501,8 @@ namespace ff_util {
   }
 
   // Check that the first pose is consistent with the segment/flight mode
-  bool FlightUtil::WithinTolerance(ff_msgs::FlightMode const& flight_mode,
-    geometry_msgs::Pose const& a, geometry_msgs::Pose const& b) {
+  bool FlightUtil::WithinTolerance(geometry_msgs::Pose const& a,
+    geometry_msgs::Pose const& b, double tolerance_pos, double tolerance_att) {
     // Get the desired and actual positions / attitudes
     static Eigen::Quaterniond qd, qa;
     static Eigen::Vector3d vd, va;
@@ -473,14 +510,26 @@ namespace ff_util {
     va = msg_conversions::ros_point_to_eigen_vector(a.position);
     qd = msg_conversions::ros_to_eigen_quat(b.orientation);
     vd = msg_conversions::ros_point_to_eigen_vector(b.position);
-    // We are not tolerant with respecr to our intital attitude
-    if (State::QuaternionMagnitude(
-      qd * qa.inverse()) > flight_mode.tolerance_att)
+    // We are not tolerant with respect to our intital attitude
+    double att_err = State::QuaternionMagnitude(qd * qa.inverse());
+    if (att_err > tolerance_att) {
+      ROS_DEBUG_STREAM("Attitude violation: " << att_err);
       return false;
+    }
     // We are not tolerant with respect to our initial position
-    if (State::VectorMagnitude(va - vd) > flight_mode.tolerance_pos)
+    double pos_err = State::VectorMagnitude(va - vd);
+    if (pos_err > tolerance_pos) {
+      ROS_DEBUG_STREAM("Position violation: " << pos_err);
       return false;
+    }
     // Yes, we are consistent
     return true;
+  }
+
+  // Tolerance check using default flight mode values
+  bool FlightUtil::WithinTolerance(ff_msgs::FlightMode const& flight_mode,
+    geometry_msgs::Pose const& a, geometry_msgs::Pose const& b) {
+    return WithinTolerance(a, b,
+      flight_mode.tolerance_pos, flight_mode.tolerance_att);
   }
 }  // namespace ff_util

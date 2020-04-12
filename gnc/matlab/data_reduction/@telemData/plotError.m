@@ -18,20 +18,39 @@
 function plotError(telemData1, telemData2, units, titleStr, legend1, legend2,style2, t0)
 % Prep for plot function in the telem class
 
+error_data = telemData1 - telemData2;
 
+if t0 > 0
+    t1 = telemData1.time - t0;
+    t2 = telemData2.time - t0;
+    te = error_data.time - t0;
+elseif t0 == 0
+    t1 = telemData1.time;
+    t2 = telemData2.time;
+    te = error_data.time;
+else
+    t1 = datetime(telemData1.time, 'ConvertFrom', 'PosixTime');
+    t2 = datetime(telemData2.time, 'ConvertFrom', 'PosixTime');
+    te = datetime(error_data.time, 'ConvertFrom', 'PosixTime');
+end
+    
 figure;%(5); clf;
 subplot(2,1,1);
-plot(telemData1.time - t0, telemData1.data)
+plot(t1, telemData1.data)
 hold_on;
-plot(telemData2.time - t0, telemData2.data, style2)
+plot(t2, telemData2.data, style2)
 title(titleStr); grid on;
 ylabel(units); xlabel('seconds')
-legend([legend1 '_x'], [legend1 '_y'], [legend1 '_z'], [legend2 '_x'], [legend2 '_y'], [legend2 '_z']);
+if size(telemData1.data, 2)==1 && size(telemData2.data, 2)==1
+    legend(legend1, legend2);
+else
+    legend([legend1 '_x'], [legend1 '_y'], [legend1 '_z'], [legend2 '_x'], [legend2 '_y'], [legend2 '_z']);
+end
 
-error_data = telemData1 - telemData2;
+
 subplot(2,1,2);
-plot(error_data.time - t0, error_data.data);
-hold on; magLine = plot(error_data.time - t0, rssrow(error_data.data), '--k');
+plot(te, error_data.data);
+hold on; magLine = plot(te, rssrow(error_data.data), '--k');
 legend(magLine, '|error|');
 title([titleStr ' Error']); grid on;
 ylabel(units); xlabel('seconds')

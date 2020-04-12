@@ -1,14 +1,14 @@
 /* Copyright (c) 2017, United States Government, as represented by the
  * Administrator of the National Aeronautics and Space Administration.
- * 
+ *
  * All rights reserved.
- * 
+ *
  * The Astrobee platform is licensed under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -35,11 +35,16 @@ ros::Publisher pub_a_;
 ros::Publisher pub_i_;
 ros::Publisher pub_c_;
 
+ros::Publisher pub_a_int_;
+
 // Layer extraction
-std::vector < cv::Mat > layers(4);
+std::vector <cv::Mat> layers(4);
+cv::Mat img_int;
 
 // Depth and confidence matrices
 sensor_msgs::Image distance_, confidence_;
+
+double amplitude_factor;
 
 struct null_deleter {
     void operator()(void const *) const {}
@@ -52,21 +57,40 @@ void ExtendedCallback(const ff_msgs::PicoflexxIntermediateData::ConstPtr& msg) {
     sensor_msgs::image_encodings::TYPE_32FC4);
   cv::split(cv_ptr->image, layers);
   std_msgs::Header header;
+
+  // TODO(oalexan1): May need to replace here with:
+  // header.stamp = msg->header.stamp;
+  // if the astrobee clock is wrong, to preserve consistent (if
+  // incorrect) time everywhere, as otherwise kalibr later complains.
   header.stamp = ros::Time::now();
 
-  // Change this for Haz Cam
   header.frame_id = msg->header.frame_id;
   cv_bridge::CvImage d(header, sensor_msgs::image_encodings::TYPE_32FC1, layers[0]);
-  // TYPE_8UC1 encoding for Kalibr's calibration data
-  cv_bridge::CvImage a(header, sensor_msgs::image_encodings::TYPE_8UC1, layers[1]);
+  cv_bridge::CvImage a(header, sensor_msgs::image_encodings::TYPE_32FC1, layers[1]);
   cv_bridge::CvImage i(header, sensor_msgs::image_encodings::TYPE_32FC1, layers[2]);
   cv_bridge::CvImage n(header, sensor_msgs::image_encodings::TYPE_32FC1, layers[3]);
+
+  // Kalibr cannot handle float images. Hence, we need to create an
+  // integer version of the amplitude topic (while keeping the
+  // original, as it is used in other contexts).
+
+  // TODO(oalexan1): I found out that kalibr cannot handle a float
+  // amplitude.  Hence, here it is multiplied by amplitude_factor and
+  // cast to uint16.  The best experimental value for amplitude_factor
+  // turned out to be 100, but this may need further
+  // experimentation. Casting to uint8 was not enough.  This will need
+  // a deeper study. If the amplitude image looks too saturated or too
+  // dark, a different amplitude factor can be set when launching this.
+  layers[1].convertTo(img_int, CV_16UC1, amplitude_factor, 0);
+  cv_bridge::CvImage a_int(header, sensor_msgs::image_encodings::MONO16, img_int);
 
   // Publish individual images
   pub_d_.publish(d.toImageMsg());
   pub_a_.publish(a.toImageMsg());
   pub_i_.publish(i.toImageMsg());
   pub_c_.publish(n.toImageMsg());
+
+  pub_a_int_.publish(a_int.toImageMsg());
 }
 
 // Called when depth image data arrives
@@ -80,7 +104,7 @@ void DepthImageCallback(const sensor_msgs::ImageConstPtr& msg) {
   distance_.encoding = sensor_msgs::image_encodings::TYPE_16UC1;
   distance_.step = distance_.width * sizeof(uint16_t);
   distance_.data.resize(distance_.height * distance_.step);
-  // Prepare confidenc imahe
+  // Prepare confidence imahe
   confidence_.header.stamp = ros::Time::now();
   confidence_.header.frame_id = msg->header.frame_id;
   confidence_.height = msg->height;
@@ -112,20 +136,25 @@ int main(int argc, char **argv) {
     ROS_FATAL("You need to pass a topic to the pico proxy");
   if (!n.hasParam("topic_type"))
     ROS_FATAL("You need to pass a topic type to the pico proxy");
+  if (!n.hasParam("amplitude_factor"))
+    ROS_FATAL("You need to pass the amplitude factor to the pico proxy");
   std::string topic, topic_type;
   n.getParam("topic", topic);
   n.getParam("topic_type", topic_type);
+  n.getParam("amplitude_factor", amplitude_factor);
   ROS_INFO_STREAM("Listening on topic " << topic);
+  ROS_INFO_STREAM("Using amplitude factor " << amplitude_factor);
   ros::Subscriber sub;
   if (topic_type == "extended") {
-    pub_d_ = n.advertise < sensor_msgs::Image > (topic + "/distance/", 1);
-    pub_a_ = n.advertise < sensor_msgs::Image > (topic + "/amplitude/", 1);
-    pub_i_ = n.advertise < sensor_msgs::Image > (topic + "/intensity/", 1);
-    pub_c_ = n.advertise < sensor_msgs::Image > (topic + "/noise/", 1);
+    pub_d_ = n.advertise<sensor_msgs::Image>(topic + "/distance/", 1);
+    pub_a_ = n.advertise<sensor_msgs::Image>(topic + "/amplitude/", 1);
+    pub_i_ = n.advertise<sensor_msgs::Image>(topic + "/intensity/", 1);
+    pub_c_ = n.advertise<sensor_msgs::Image>(topic + "/noise/", 1);
+    pub_a_int_ = n.advertise<sensor_msgs::Image>(topic + "/amplitude_int/", 1);
     sub = n.subscribe(topic, 1, ExtendedCallback);
   } else if (topic_type == "depth_image") {
-    pub_d_ = n.advertise < sensor_msgs::Image > (topic + "/distance", 1);
-    pub_c_ = n.advertise < sensor_msgs::Image > (topic + "/confidence", 1);
+    pub_d_ = n.advertise<sensor_msgs::Image>(topic + "/distance", 1);
+    pub_c_ = n.advertise<sensor_msgs::Image>(topic + "/confidence", 1);
     sub = n.subscribe(topic, 1, DepthImageCallback);
   } else {
     ROS_FATAL("Unsupported type (must be \"extended\" or \"depth_image\")");

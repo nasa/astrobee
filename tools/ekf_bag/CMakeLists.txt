@@ -22,7 +22,7 @@ catkin_package(
 )
 
 create_library(TARGET ekf_bag 
-  LIBS ekf lk_optical_flow roslocalization sparse_mapping interest_point camera common config_reader ${OPENCV_LIBRARIES} ${catkin_LIBRARIES}
+  LIBS ekf lk_optical_flow roslocalization sparse_mapping interest_point camera common config_reader ${OpenCV_LIBRARIES} ${catkin_LIBRARIES}
   INC ${catkin_INCLUDE_DIRS}
 )
 

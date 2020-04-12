@@ -18,7 +18,7 @@
 project(data_bagger)
 
 catkin_package(
-  LIBRARIES data_bagger
+  LIBRARIES data_bagger astrobee_recorder
   DEPENDS roscpp ff_msgs nodelet
 )
 

@@ -1,0 +1,37 @@
+<!-- Copyright (c) 2017, United States Government, as represented by the     -->
+<!-- Administrator of the National Aeronautics and Space Administration.     -->
+<!--                                                                         -->
+<!-- All rights reserved.                                                    -->
+<!--                                                                         -->
+<!-- The Astrobee platform is licensed under the Apache License, Version 2.0 -->
+<!-- (the "License"); you may not use this file except in compliance with    -->
+<!-- the License. You may obtain a copy of the License at                    -->
+<!--                                                                         -->
+<!--     http://www.apache.org/licenses/LICENSE-2.0                          -->
+<!--                                                                         -->
+<!-- Unless required by applicable law or agreed to in writing, software     -->
+<!-- distributed under the License is distributed on an "AS IS" BASIS,       -->
+<!-- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or         -->
+<!-- implied. See the License for the specific language governing            -->
+<!-- permissions and limitations under the License.                          -->
+
+<launch>
+  <arg name="world"/>
+  <!-- Description is based on the world being simulated / launched -->
+  <param if="$(eval arg('world')=='granite')" name="/granite/robot_description"
+    textfile="$(find astrobee_granite)/urdf/model.urdf" />
+  <param if="$(eval arg('world')=='iss')" name="/iss/robot_description"
+    textfile="$(find astrobee_iss)/urdf/model.urdf" />
+  <param name="/dock/robot_description"
+    textfile="$(find astrobee_dock)/urdf/model.urdf" />
+  <param name="/handrail_8_5/robot_description"
+    textfile="$(find astrobee_handrail_8_5)/urdf/model.urdf" />
+  <param name="/handrail_21_5/robot_description"
+    textfile="$(find astrobee_handrail_21_5)/urdf/model.urdf" />
+  <param name="/handrail_30/robot_description"
+    textfile="$(find astrobee_handrail_30)/urdf/model.urdf" />
+  <param name="/handrail_41_5/robot_description"
+    textfile="$(find astrobee_handrail_41_5)/urdf/model.urdf" />
+  <!-- We must publish global transforms in case no robot has been spawned -->
+  <node name="global_transforms" pkg="framestore" type="global_transforms" output="screen"/>
+</launch>

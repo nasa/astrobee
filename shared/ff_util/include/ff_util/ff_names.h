@@ -1,14 +1,14 @@
 /* Copyright (c) 2017, United States Government, as represented by the
  * Administrator of the National Aeronautics and Space Administration.
- * 
+ *
  * All rights reserved.
- * 
+ *
  * The Astrobee platform is licensed under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -37,8 +37,9 @@
 #define FRAME_NAME_WORLD                            "world"
 #define FRAME_NAME_BODY                             "body"
 #define FRAME_NAME_TRUTH                            "truth"
-#define FRAME_NAME_HANDRAIL                         "handrail"
-#define FRAME_NAME_DOCK                             "dock"
+#define FRAME_NAME_VIVE                             "vive"
+#define FRAME_NAME_HANDRAIL                         "handrail/body"
+#define FRAME_NAME_DOCK                             "dock/body"
 #define FRAME_NAME_DOCK_BERTH_1                     "dock/berth1"
 #define FRAME_NAME_DOCK_BERTH_2                     "dock/berth2"
 #define FRAME_NAME_DOCK_MARKER                      "dock/marker"
@@ -78,10 +79,12 @@
 
 #define TOPIC_COMMAND                               "command"
 #define TOPIC_HEARTBEAT                             "heartbeat"
-#define TOPIC_PERFORMANCE                           "performance"
-#define TOPIC_TRIGGER                               "trigger"
 #define TOPIC_JOINT_GOALS                           "joint_goals"
 #define TOPIC_JOINT_STATES                          "joint_states"
+#define TOPIC_PERFORMANCE                           "performance"
+#define TOPIC_ROBOT_NAME                            "robot_name"
+#define TOPIC_SIGNALS                               "signals"
+#define TOPIC_TRIGGER                               "trigger"
 
 // SUBSYSTEMS //////////////////////////////////////////////////////////////////
 
@@ -93,9 +96,13 @@
 
 #define NODE_DDS_ROS_BRIDGE                         "dds_ros_bridge"
 
+#define SERVICE_COMMUNICATIONS_DDS_SET_TELEM_RATES  "comm/dds/set_telem_rate"
+
 #define TOPIC_COMMUNICATIONS_DDS_COMMAND            "comm/dds/command"
+#define TOPIC_COMMUNICATIONS_DDS_DATA               "comm/dds/data"
 #define TOPIC_COMMUNICATIONS_DDS_PLAN               "comm/dds/plan"
 #define TOPIC_COMMUNICATIONS_DDS_ZONES              "comm/dds/zones"
+#define TOPIC_COMMUNICATIONS_ROBOTS_AVAILABLE       "comm/robots_available"
 
 /////////
 // GNC //
@@ -104,6 +111,7 @@
 #define SUBSYSTEM_GNC                               "gnc"
 
 #define NODE_CTL                                    "ctl"
+#define NODE_PERCH_CTL                              "perch_ctl"
 #define NODE_EKF                                    "ekf"
 #define NODE_FAM                                    "fam"
 #define NODE_SIM_WRAPPER                            "sim_wrapper"
@@ -116,9 +124,12 @@
 #define TOPIC_GNC_CTL_TRAJ                          "gnc/ctl/traj"
 #define TOPIC_GNC_CTL_SEGMENT                       "gnc/ctl/segment"
 #define TOPIC_GNC_CTL_PROGRESS                      "gnc/ctl/progress"
+#define TOPIC_GNC_CTL_SETPOINT                      "gnc/ctl/setpoint"
 #define TOPIC_GNC_CTL_COMMAND                       "gnc/ctl/command"
+#define TOPIC_GNC_EKF_RESET                         "gnc/ekf/reset"
 
 #define SERVICE_GNC_EKF_RESET                       "gnc/ekf/reset"
+#define SERVICE_GNC_EKF_RESET_HR                    "gnc/ekf/reset_hr"
 #define SERVICE_GNC_EKF_INIT_BIAS                   "gnc/ekf/init_bias"
 #define SERVICE_GNC_EKF_SET_INPUT                   "gnc/ekf/set_input"
 #define SERVICE_GNC_CTL_ENABLE                      "gnc/ctl/enable"
@@ -150,6 +161,7 @@
 #define NODE_DATA_BAGGER                            "data_bagger"
 
 #define TOPIC_MANAGEMENT_ACK                        "mgt/ack"
+#define TOPIC_MANAGEMENT_ACCESS_CONTROL_CMD         "mgt/access_control/cmd"
 #define TOPIC_MANAGEMENT_ACCESS_CONTROL_STATE       "mgt/access_control/state"
 #define TOPIC_MANAGEMENT_CPU_MONITOR_STATE          "mgt/cpu_monitor/state"
 #define TOPIC_MANAGEMENT_DISK_MONITOR_STATE         "mgt/disk_monitor/state"
@@ -160,6 +172,8 @@
 #define TOPIC_MANAGEMENT_EXEC_PLAN_STATUS           "mgt/executive/plan_status"
 #define TOPIC_MANAGEMENT_SYS_MONITOR_CONFIG         "mgt/sys_monitor/config"
 #define TOPIC_MANAGEMENT_SYS_MONITOR_STATE          "mgt/sys_monitor/state"
+#define TOPIC_MANAGEMENT_SYS_MONITOR_HEARTBEAT      "mgt/sys_monitor/heartbeat"
+#define TOPIC_MANAGEMENT_SYS_MONITOR_TIME_DIFF      "mgt/sys_monitor/time_diff"
 #define TOPIC_MANAGEMENT_DATA_BAGGER_STATE          "mgt/data_bagger/state"
 #define TOPIC_MANAGEMENT_DATA_BAGGER_TOPICS         "mgt/data_bagger/topics"
 #define TOPIC_MANAGEMENT_CAMERA_STATE               "mgt/camera_state"
@@ -168,11 +182,15 @@
 #define TOPIC_MANAGEMENT_IMG_SAMPLER_DOCK_CAM_RECORD "mgt/img_sampler/dock_cam/image_record"
 #define TOPIC_MANAGEMENT_IMG_SAMPLER_DOCK_CAM_STREAM "mgt/img_sampler/dock_cam/image_stream"
 
+#define SERVICE_MANAGEMENT_DATA_BAGGER_ENABLE_RECORDING "mgt/data_bagger/enable_recording"
+#define SERVICE_MANAGEMENT_DATA_BAGGER_SET_DATA_TO_DISK "mgt/data_bagger/set_data_to_disk"
 #define SERVICE_MANAGEMENT_IMG_SAMPLER_CONFIG_NAV   "mgt/img_sampler/nav_cam/configure"
 #define SERVICE_MANAGEMENT_IMG_SAMPLER_CONFIG_DOCK  "mgt/img_sampler/dock_cam/configure"
 #define SERVICE_MANAGEMENT_IMG_SAMPLER_ENABLE_NAV   "mgt/img_sampler/nav_cam/enable"
 #define SERVICE_MANAGEMENT_IMG_SAMPLER_ENABLE_DOCK  "mgt/img_sampler/dock_cam/enable"
 #define SERVICE_MANAGEMENT_SYS_MONITOR_UNLOAD_LOAD_NODELET "mgt/sys_monitor/unload_load_nodelet"
+#define SERVICE_MANAGEMENT_SCI_CAM_CONFIG           "configure_sci_cam"
+#define SERVICE_MANAGEMENT_SCI_CAM_ENABLE           "enable_sci_cam"
 
 //////////////
 // MOBILITY //
@@ -186,7 +204,7 @@
 // Exposed to peer nodes
 
 #define ACTION_MOBILITY_MOTION                      "mob/motion"
-#define ACTION_MOBILITY_VALIDATE                    "mob/validateTrajectory"
+#define ACTION_MOBILITY_VALIDATE                    "mob/validate"
 
 #define SERVICE_MOBILITY_SET_INERTIA                "mob/set_inertia"
 #define SERVICE_MOBILITY_SET_ZONES                  "mob/set_zones"
@@ -196,10 +214,13 @@
 #define SERVICE_MOBILITY_UPDATE_MEMORY_TIME         "mob/mapper/update_memory_time"
 #define SERVICE_MOBILITY_UPDATE_INFLATION           "mob/mapper/update_inflation_radius"
 #define SERVICE_MOBILITY_RESET_MAP                  "mob/mapper/reset_map"
+#define SERVICE_MOBILITY_GET_FREE_MAP               "mob/mapper/get_free_map"
+#define SERVICE_MOBILITY_GET_OBSTACLE_MAP           "mob/mapper/get_obstacle_map"
 
 #define TOPIC_MOBILITY_MOTION_STATE                 "mob/state"
 #define TOPIC_MOBILITY_FLIGHT_MODE                  "mob/flight_mode"
 #define TOPIC_MOBILITY_INERTIA                      "mob/inertia"
+#define TOPIC_MOBILITY_MOTION_RESULT                "mob/motion/result"
 
 // Used internally or for rviz plotting
 
@@ -210,10 +231,12 @@
 #define SUFFIX_MOBILITY_PLANNER                     "/plan"
 
 #define TOPIC_MOBILITY_SEGMENT                      "mob/choreographer/segment"
-#define TOPIC_MOBILITY_COLLISIONS                   "mob/sentinel/collisions"
+#define TOPIC_MOBILITY_HAZARD                       "mob/mapper/hazard"
 #define TOPIC_MOBILITY_ZONES                        "mob/mapper/zones"
 #define TOPIC_MAPPER_OCTOMAP_MARKERS                "mob/mapper/obstacle_markers"
 #define TOPIC_MAPPER_OCTOMAP_FREE_MARKERS           "mob/mapper/free_space_markers"
+#define TOPIC_MAPPER_OCTOMAP_CLOUD                  "mob/mapper/obstacle_cloud"
+#define TOPIC_MAPPER_OCTOMAP_FREE_CLOUD             "mob/mapper/free_space_cloud"
 #define TOPIC_MAPPER_OCTOMAP_INFLATED_MARKERS       "mob/mapper/inflated_obstacle_markers"
 #define TOPIC_MAPPER_OCTOMAP_INFLATED_FREE_MARKERS  "mob/mapper/inflated_free_space_markers"
 #define TOPIC_MAPPER_FRUSTRUM_MARKERS               "mob/mapper/frustum_markers"
@@ -230,23 +253,13 @@
 #define NODE_LOCALIZATION_MANAGER                   "localization_manager"
 #define NODE_AR_TAGS                                "ar_tags"
 #define NODE_MAPPED_LANDMARKS                       "ml"
+#define NODE_VIVE_LOCALIZATION                      "vive_localization"
 
 #define TOPIC_LOCALIZATION_POSE                     "loc/pose"
 #define TOPIC_LOCALIZATION_TWIST                    "loc/twist"
 #define TOPIC_LOCALIZATION_TRUTH                    "loc/truth/pose"
 #define TOPIC_LOCALIZATION_TRUTH_TWIST              "loc/truth/twist"
 #define TOPIC_LOCALIZATION_OVERHEAD_IMAGE           "loc/overhead"
-
-#define TOPIC_LOCALIZATION_MANAGER_STATUS           "loc/manager/status"
-
-#define ACTION_LOCALIZATION_MANAGER_SWITCH          "loc/manager/switch"
-#define ACTION_LOCALIZATION_MANAGER_RESET           "loc/manager/reset"
-
-#define PREFIX_LOCALIZATION_MANAGER_ML              "loc/manager/ml"
-#define PREFIX_LOCALIZATION_MANAGER_AR              "loc/manager/ar"
-#define PREFIX_LOCALIZATION_MANAGER_OF              "loc/manager/of"
-#define PREFIX_LOCALIZATION_MANAGER_HR              "loc/manager/hr"
-#define PREFIX_LOCALIZATION_MANAGER_PL              "loc/manager/pl"
 
 #define TOPIC_LOCALIZATION_ML_FEATURES              "loc/ml/features"
 #define TOPIC_LOCALIZATION_ML_REGISTRATION          "loc/ml/registration"
@@ -268,23 +281,12 @@
 #define SERVICE_LOCALIZATION_HR_ENABLE              "loc/hr/enable"
 #define SERVICE_LOCALIZATION_PL_ENABLE              "loc/pl/enable"
 
-// GROUND TRUTH SYSTEMS
+// Localization manager
 
-#define NODE_VIVE_SERVER                            "vive_server"
-#define NODE_VIVE_BRIDGE                            "vive_bridge"
-
-#define TOPIC_LOCALIZATION_VIVE_LIGHT               "loc/vive/light"
-#define TOPIC_LOCALIZATION_VIVE_IMU                 "loc/vive/imu"
-#define TOPIC_LOCALIZATION_VIVE_TRACKERS            "loc/vive/trackers"
-#define TOPIC_LOCALIZATION_VIVE_LIGHTHOUSES         "loc/vive/lighthouses"
-#define TOPIC_LOCALIZATION_VIVE_GENERAL             "loc/vive/general"
-#define TOPIC_LOCALIZATION_VIVE_IMU_MARKERS         "loc/vive/imu_markers"
-#define TOPIC_LOCALIZATION_VIVE_LIGHT_MARKERS       "loc/vive/light_markers"
-#define TOPIC_LOCALIZATION_VIVE_TRACKER_MARKERS     "loc/vive/tracker_markers"
-
-#define SERVICE_LOCALIZATION_VIVE_CONFIG            "loc/vive/config"
-
-#define SERVICE_LOCALIZATION_VIZUALEYEZ_CONFIG      "loc/visualeyez/config"
+#define TOPIC_LOCALIZATION_MANAGER_STATE            "loc/manager/state"
+#define ACTION_LOCALIZATION_MANAGER_LOCALIZATION    "loc/manager/localization"
+#define SERVICE_LOCALIZATION_MANAGER_SET_STATE      "loc/manager/set_state"
+#define SERVICE_LOCALIZATION_MANAGER_GET_PIPELINES  "loc/manager/get_pipelines"
 
 
 ///////////////
@@ -331,6 +333,8 @@
 #define NODE_DOCK_CAM                               "dock_cam"
 #define NODE_PERCH_CAM                              "perch_cam"
 #define NODE_HAZ_CAM                                "haz_cam"
+#define NODE_SIGNAL_LIGHTS                          "signal_lights"
+#define NODE_VIVE                                   "vive"
 
 #define TOPIC_HARDWARE_PMC_COMMAND                  "hw/pmc/command"
 #define TOPIC_HARDWARE_PMC_TELEMETRY                "hw/pmc/telemetry"
@@ -344,7 +348,8 @@
 #define TOPIC_HARDWARE_LASER                        "hw/laser"
 #define TOPIC_HARDWARE_LASER_RVIZ                   "hw/laser/rviz"
 #define TOPIC_HARDWARE_LIGHTS_RVIZ                  "hw/lights/rviz"
-#define TOPIC_HARDWARE_EPS_CHANNELS                 "hw/eps/channels"
+#define TOPIC_HARDWARE_EPS_HOUSEKEEPING             "hw/eps/housekeeping"
+#define TOPIC_HARDWARE_EPS_POWER_STATE              "hw/eps/power_state"
 #define TOPIC_HARDWARE_EPS_BATTERY_STATE_TL         "hw/eps/battery/top_left/state"
 #define TOPIC_HARDWARE_EPS_BATTERY_STATE_TR         "hw/eps/battery/top_right/state"
 #define TOPIC_HARDWARE_EPS_BATTERY_STATE_BL         "hw/eps/battery/bottom_left/state"
@@ -366,6 +371,14 @@
 #define TOPIC_HARDWARE_SPEED_CAM_SPEED              "hw/speed_cam/speed"
 #define TOPIC_HARDWARE_TEMP_MONITOR_PREFIX          "hw/temp_monitor/"
 #define TOPIC_HARDWARE_DOCK_STATE                   "hw/dock/state"
+#define TOPIC_HARDWARE_SIGNAL_LIGHTS_TELEMETRY      "hw/sig/telemetry"
+#define TOPIC_HARDWARE_SIGNAL_LIGHTS_CONFIG         "hw/sig/config"
+#define TOPIC_HARDWARE_SIGNAL_LIGHTS_STATE          "hw/sig/state"
+#define TOPIC_HARDWARE_VIVE_BUTTON                  "hw/vive/buttons"
+#define TOPIC_HARDWARE_VIVE_IMU                     "hw/vive/imu"
+#define TOPIC_HARDWARE_VIVE_LIGHT                   "hw/vive/light"
+#define TOPIC_HARDWARE_VIVE_TRACKERS                "hw/vive/trackers"
+#define TOPIC_HARDWARE_VIVE_LIGHTHOUSES             "hw/vive/lighthouses"
 
 #define SERVICE_HARDWARE_EPS_RESET                  "hw/eps/reset"
 #define SERVICE_HARDWARE_EPS_CONF_LED_STATE         "hw/eps/configure_led_state"
@@ -381,10 +394,15 @@
 
 #define SERVICE_HARDWARE_PERCHING_ARM_DIST_VEL      "hw/arm/set_dist_vel"
 #define SERVICE_HARDWARE_PERCHING_ARM_PROX_VEL      "hw/arm/set_prox_vel"
+#define SERVICE_HARDWARE_PERCHING_ARM_PROX_SERVO    "hw/arm/enable_proximal_servo"
+#define SERVICE_HARDWARE_PERCHING_ARM_DIST_SERVO    "hw/arm/enable_distal_servo"
+#define SERVICE_HARDWARE_PERCHING_ARM_GRIP_SERVO    "hw/arm/enable_gripper_servo"
 #define SERVICE_HARDWARE_PERCHING_ARM_CALIBRATE     "hw/arm/calibrate_gripper"
 #define SERVICE_HARDWARE_LIGHT_FRONT_CONTROL        "hw/light_front/control"
 #define SERVICE_HARDWARE_LIGHT_AFT_CONTROL          "hw/light_aft/control"
 #define SERVICE_HARDWARE_LASER_ENABLE               "hw/laser/enable"
 #define SERVICE_HARDWARE_PMC_ENABLE                 "hw/pmc/enable"
+
+#define SERVICE_STREAMING_LIGHTS                    "hw/signal_lights/streaming"
 
 #endif  // FF_UTIL_FF_NAMES_H_

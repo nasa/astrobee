@@ -1,14 +1,14 @@
 /* Copyright (c) 2017, United States Government, as represented by the
  * Administrator of the National Aeronautics and Space Administration.
- * 
+ *
  * All rights reserved.
- * 
+ *
  * The Astrobee platform is licensed under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -85,7 +85,8 @@ class NonlinearTrajectory : public Trajectory {
       const std::vector<std::pair<MatD, VecD> > &cons, int deg = 7,
       int min_dim = 3, boost::shared_ptr<std::vector<decimal_t> > ds =
                            boost::shared_ptr<std::vector<decimal_t> >(),
-      boost::shared_ptr<VecDVec> path = boost::shared_ptr<VecDVec>());
+      boost::shared_ptr<VecDVec> path = boost::shared_ptr<VecDVec>(),
+      bool time_opt = false, decimal_t gap = 1e-8, int max_it = 200);
   // nonconvex pointcloud test
   NonlinearTrajectory(const std::vector<Waypoint> &waypoints,
                       const Vec3Vec &points, int segs, decimal_t dt);
@@ -98,6 +99,7 @@ class NonlinearTrajectory : public Trajectory {
   bool isSolved() { return solved_; }
   Vec4Vec getBeads();
   void scaleTime(decimal_t ratio);
+  SolverInfo getInfo(std::vector<TrajData> *history = NULL);
 
  protected:
   void allocate_poly(

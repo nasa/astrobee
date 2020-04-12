@@ -219,32 +219,35 @@ TEST(Command, VaildGenericCommand) {
 
 TEST(Command, VaildSetCameraCommand) {
   const std::string data = u8R"({
-    "type" : "setCamera",
-    "presetName" : "High Def",
-    "options" : {
-      "preset" : [ {
-        "presetName" : "High Def",
-        "resolution" : "1920_1080",
-        "frameRate" : 5.0,
-        "bandwidth" : 100.0
-      }, {
-        "presetName" : "Low Def",
-        "resolution" : "640_480",
-        "frameRate" : 25.0,
-        "bandwidth" : 300.0
-      } ],
-      "cameraName" : "Navigation"
-    },
-    "resolution" : "1920_1080",
-    "frameRate" : 5.0,
-    "bandwidth" : 100.0,
-    "cameraName" : "Navigation",
-    "presetIndex" : "0",
-    "blocking" : true,
-    "color" : "#555555",
-    "scopeTerminate" : true,
-    "name" : "0.1 SetCamera",
-    "id" : "d2ccb6d9-0944-4dfc-ae62-c5c371698d58"
+      "type" : "setCamera",
+      "options" : {
+        "cameraName" : "Navigation",
+        "preset" : [ {
+          "resolution" : "1280_960",
+          "bandwidth" : 0.0,
+          "frameRate" : 5.0,
+          "presetName" : "ARS Default Recording",
+          "cameraMode" : "Recording"
+        }, {
+          "resolution" : "640_480",
+          "bandwidth" : 0.0,
+          "frameRate" : 2.0,
+          "presetName" : "ARS Default Streaming",
+          "cameraMode" : "Streaming"
+        } ]
+      },
+      "resolution" : "1280_960",
+      "cameraMode": "Recording",
+      "cameraName" : "Navigation",
+      "presetIndex" : "0",
+      "bandwidth" : 0.0,
+      "frameRate" : 5.0,
+      "presetName" : "ARS Default Recording",
+      "blocking" : true,
+      "color" : "#555555",
+      "scopeTerminate" : true,
+      "name" : "0.0 SetCamera",
+      "id" : "10a7a970-7201-4d4f-9beb-813631f2d52a"
   })";
   Json::Value v;
   Json::Reader().parse(data, v, false);
@@ -257,10 +260,11 @@ TEST(Command, VaildSetCameraCommand) {
   const jsonloader::SetCameraCommand *s_cmd =
       dynamic_cast<const jsonloader::SetCameraCommand *>(cmd);
 
+  ASSERT_STREQ(s_cmd->mode().data(), "Recording");
   ASSERT_STREQ(s_cmd->camera().data(), "Navigation");
-  ASSERT_STREQ(s_cmd->resolution().data(), "1920_1080");
+  ASSERT_STREQ(s_cmd->resolution().data(), "1280_960");
   ASSERT_FLOAT_EQ(s_cmd->frame_rate(), 5.0f);
-  ASSERT_FLOAT_EQ(s_cmd->bandwidth(), 100.0f);
+  ASSERT_FLOAT_EQ(s_cmd->bandwidth(), 0.0f);
 }
 
 TEST(Command, VaildStreamingCamera) {
@@ -287,4 +291,174 @@ TEST(Command, VaildStreamingCamera) {
 
   ASSERT_STREQ(s_cmd->camera().data(), "Navigation");
   ASSERT_EQ(s_cmd->stream(), true);
+}
+
+TEST(Command, ValidCheckObstacles) {
+  const std::string data = u8R"({
+      "type" : "setCheckObstacles",
+      "checkObstacles" : true,
+      "blocking" : true,
+      "color" : "#555555",
+      "scopeTerminate" : true,
+      "name" : "0.1 SetCheckObstacles",
+      "id" : "3fdf595a-c3c4-4d4c-bfd6-5c6150785f9a"
+  })";
+  Json::Value v;
+  Json::Reader().parse(data, v, false);
+
+  Command *cmd = Command::Make(v);
+
+  ASSERT_NE(cmd, nullptr);
+  ASSERT_STREQ(cmd->type().data(), jsonloader::kCmdChkObstacles);
+
+  const jsonloader::SetCheckObstaclesCommand *s_cmd =
+      dynamic_cast<const jsonloader::SetCheckObstaclesCommand *>(cmd);
+
+  ASSERT_EQ(s_cmd->checkObstacles(), true);
+}
+
+TEST(Command, ValidCheckZones) {
+  const std::string data = u8R"({
+      "type" : "setCheckZones",
+      "checkZones" : true,
+      "blocking" : true,
+      "color" : "#555555",
+      "scopeTerminate" : true,
+      "name" : "0.2 SetCheckZones",
+      "id" : "3a09f7d0-f7f4-4931-a8d8-34d689b3406d"
+  })";
+  Json::Value v;
+  Json::Reader().parse(data, v, false);
+
+  Command *cmd = Command::Make(v);
+
+  ASSERT_NE(cmd, nullptr);
+  ASSERT_STREQ(cmd->type().data(), jsonloader::kCmdChkZones);
+
+  const jsonloader::SetCheckZonesCommand *s_cmd =
+      dynamic_cast<const jsonloader::SetCheckZonesCommand *>(cmd);
+
+  ASSERT_EQ(s_cmd->checkZones(), true);
+}
+
+TEST(Command, ValidHolonomicMode) {
+  const std::string data = u8R"({
+      "type" : "setHolonomicMode",
+      "enableHolonomic" : true,
+      "blocking" : true,
+      "color" : "#555555",
+      "scopeTerminate" : true,
+      "name" : "0.3 SetHolonomicMode",
+      "id" : "2b4a1cb4-8718-4d68-9d85-d5a9c721cedc"
+  })";
+  Json::Value v;
+  Json::Reader().parse(data, v, false);
+
+  Command *cmd = Command::Make(v);
+
+  ASSERT_NE(cmd, nullptr);
+  ASSERT_STREQ(cmd->type().data(), jsonloader::kCmdSetHolonomic);
+
+  const jsonloader::SetHolonomicModeCommand *s_cmd =
+      dynamic_cast<const jsonloader::SetHolonomicModeCommand *>(cmd);
+
+  ASSERT_EQ(s_cmd->enableHolonomic(), true);
+}
+
+TEST(Command, ValidTelemetryRate) {
+  const std::string data = u8R"({
+      "type" : "setTelemetryRate",
+      "rate" : 5.0,
+      "telemetryName" : "CommStatus",
+      "blocking" : true,
+      "color" : "#555555",
+      "scopeTerminate" : true,
+      "name" : "0.5 SetTelemetryRate",
+      "id" : "e822a74f-bd94-444f-b539-377595356e95"
+  })";
+  Json::Value v;
+  Json::Reader().parse(data, v, false);
+
+  Command *cmd = Command::Make(v);
+
+  ASSERT_NE(cmd, nullptr);
+  ASSERT_STREQ(cmd->type().data(), jsonloader::kCmdTelemRate);
+
+  const jsonloader::SetTelemetryRateCommand *s_cmd =
+      dynamic_cast<const jsonloader::SetTelemetryRateCommand *>(cmd);
+
+  ASSERT_STREQ(s_cmd->telemetryName().data(), "CommStatus");
+  ASSERT_FLOAT_EQ(s_cmd->rate(), 5.0f);
+}
+
+TEST(Command, ValidPlanner) {
+  const std::string data = u8R"({
+      "type" : "setPlanner",
+      "planner" : "trapezoidal",
+      "blocking" : true,
+      "color" : "#555555",
+      "scopeTerminate" : true,
+      "name" : "0.4 SetPlanner",
+      "id" : "0b3d67be-bd12-4936-b7a5-b49f74932858"
+  })";
+  Json::Value v;
+  Json::Reader().parse(data, v, false);
+
+  Command *cmd = Command::Make(v);
+
+  ASSERT_NE(cmd, nullptr);
+  ASSERT_STREQ(cmd->type().data(), jsonloader::kCmdSetPlanner);
+
+  const jsonloader::SetPlannerCommand *s_cmd =
+      dynamic_cast<const jsonloader::SetPlannerCommand *>(cmd);
+
+  ASSERT_STREQ(s_cmd->planner().data(), "trapezoidal");
+}
+
+TEST(Command, ValidLocalizationMode) {
+  const std::string data = u8R"({
+      "type" : "switchLocalization",
+      "mode" : "MappedLandmarks",
+      "blocking" : true,
+      "color" : "#555555",
+      "scopeTerminate" : true,
+      "name" : "0.13 SwitchLocalization",
+      "id" : "8cd24824-2bd3-425b-a01f-da0861255579"
+  })";
+  Json::Value v;
+  Json::Reader().parse(data, v, false);
+
+  Command *cmd = Command::Make(v);
+
+  ASSERT_NE(cmd, nullptr);
+  ASSERT_STREQ(cmd->type().data(), jsonloader::kCmdSwitchLocal);
+
+  const jsonloader::SwitchLocalizationCommand *s_cmd =
+      dynamic_cast<const jsonloader::SwitchLocalizationCommand *>(cmd);
+
+  ASSERT_STREQ(s_cmd->mode().data(), "MappedLandmarks");
+}
+
+TEST(Command, ValidStartRecording) {
+  const std::string data = u8R"({
+      "type" : "startRecording",
+      "description" : "mom",
+      "blocking" : true,
+      "color" : "#555555",
+      "scopeTerminate" : true,
+      "name" : "0.18 StartRecording",
+      "id" : "6f78a7eb-2466-4fef-8a0c-2cd8dc6fffd9"
+  })";
+  Json::Value v;
+  Json::Reader().parse(data, v, false);
+
+  Command *cmd = Command::Make(v);
+
+  ASSERT_NE(cmd, nullptr);
+  ASSERT_STREQ(cmd->type().data(), jsonloader::kCmdStartRecord);
+
+  const jsonloader::StartRecordingCommand *s_cmd =
+      dynamic_cast<const jsonloader::StartRecordingCommand *>(cmd);
+
+  ASSERT_STREQ(s_cmd->description().data(), "mom");
 }

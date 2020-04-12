@@ -2,15 +2,15 @@
 #
 # Copyright (c) 2017, United States Government, as represented by the
 # Administrator of the National Aeronautics and Space Administration.
-# 
+#
 # All rights reserved.
-# 
+#
 # The Astrobee platform is licensed under the Apache License, Version 2.0
 # (the "License"); you may not use this file except in compliance with the
 # License. You may obtain a copy of the License at
-# 
+#
 #     http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -40,7 +40,7 @@ export ROS_ROOT=${ros_root}/share/ros
 export ROS_ETC_DIR=${ros_root}/etc/ros
 export ROS_PACKAGE_PATH=${ff_root}/share:${ff_root}/stacks:${ros_root}/share:${ros_root}/stacks
 
-export LD_LIBRARY_PATH=${ff_root}/lib:${dds_root}:${ros_root}/lib:/usr/local/lib:/lib:/usr/local/lib:${ff_root}/bin
+export LD_LIBRARY_PATH=${ff_root}/lib:${dds_root}:${ros_root}/lib:${ros_root}/lib/arm-linux-gnueabihf:/usr/local/lib:/lib:/usr/local/lib:${ff_root}/bin
 export PATH=${ff_root}/bin:${ros_root}/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
 export PYTHONPATH=${ff_root}/lib/python2.7/dist-packages:${ros_root}/lib/python2.7/dist-packages
 export CMAKE_PREFIX_PATH=${ff_root}:${ros_root}

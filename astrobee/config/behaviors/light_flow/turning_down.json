@@ -1,0 +1,32 @@
+{
+  "procedure": [
+    [
+      "Procedure",
+      "turningDownright",
+      ["Define", "$flowing", ["ListFrame", ["BasicFrame", "#fff", 0.0, 5.0]]],
+      ["Define", "$rptFlowing", ["RepeatFrame", "$flowing", 30]],
+      ["Define", "$flow", ["MoveSequence", "$rptFlowing", 10]],
+      ["Define", "$circleLights", ["Domain", ["Interval", 14, 60]]],
+      ["Return", ["BasicAnimation", "$circleLights", "$flow"]]
+    ],
+    [
+      "Procedure",
+      "turningDownleft",
+      ["Define", "$flowing", ["ListFrame", ["BasicFrame", "#fff", 15.0, 5.0]]],
+      ["Define", "$rptFlowing", ["RepeatFrame", "$flowing", 30]],
+      ["Define", "$flow", ["MoveSequence", "$rptFlowing", 10.0]],
+      ["Define", "$circleLights", ["Domain", ["Interval", 14, 60]]],
+      ["Return", ["BasicAnimation", "$circleLights", "$flow"]]
+    ]
+  ],
+  "state": [
+    "ExecState",
+    1.0,
+    30.0,
+    true,
+    [
+      ["Call", "left", "turningDownright", "#fff", 1.0],
+      ["Call", "right", "turningDownleft", "#fff", 1.0]
+    ]
+  ]
+}

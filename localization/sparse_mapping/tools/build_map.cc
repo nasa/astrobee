@@ -1,14 +1,14 @@
 /* Copyright (c) 2017, United States Government, as represented by the
  * Administrator of the National Aeronautics and Space Administration.
- * 
+ *
  * All rights reserved.
- * 
+ *
  * The Astrobee platform is licensed under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -17,6 +17,7 @@
  */
 #include <common/init.h>
 #include <common/thread.h>
+#include <common/utils.h>
 #include <config_reader/config_reader.h>
 #include <camera/camera_params.h>
 #include <sparse_mapping/sparse_map.h>
@@ -43,48 +44,54 @@ DEFINE_string(output_map, "output.map",
 
 // parameters used in feature detection step only
 DEFINE_int32(sample_rate, 1,
-              "Add one of every n input frames to the map.");
+             "Add one of every n input frames to the map.");
 DEFINE_bool(save_individual_maps, false,
-            "If true, save separately the maps after detection, matching, track building, "
+            "Save separately the maps after detection, matching, track building, "
             "tensor initialization, and bundle adjustment.");
 
 // output map parameters
 DEFINE_string(detector, "SURF",
-              "Feature detector to use. Options are [FAST, STAR, SIFT, SURF, ORB, "
-              "BRISK, ORGBRISK, MSER, GFTT, HARRIS, Dense].");
+              "Feature detector to use. Options are: SURF, ORGBRISK.");
 DEFINE_string(rebuild_detector, "ORGBRISK",
-              "Feature detector to use. Options are [FAST, STAR, SIFT, SURF, ORB, "
-              "BRISK, ORGBRISK, MSER, GFTT, HARRIS, Dense].");
+              "Feature detector to use. Options are: SURF, ORGBRISK.");
 
 // control options
 DEFINE_bool(feature_detection, false,
-              "If true, perform compute features for input NVMs.");
+            "Compute features for input images.");
 DEFINE_bool(feature_matching, false,
-              "If true, perform generate map from feature matching step.");
+            "Perform feature matching.");
 DEFINE_bool(track_building, false,
-              "If true, perform generate map from feature matching step.");
+              "Perform track building.");
 DEFINE_bool(incremental_ba, false,
-              "If true, perform incremental bundle adjustment.");
+            "Perform incremental bundle adjustment.");
 DEFINE_bool(loop_closure, false,
-              "If true, take a map where images start repeating, and close the loop.");
+            "Take a map where images start repeating, and close the loop.");
 DEFINE_bool(tensor_initialization, false,
-              "If true, perform update output_nvm with tensor initialization.");
+              "Perform update output_nvm with tensor initialization.");
 DEFINE_bool(bundle_adjustment, false,
-              "If true, perform update output_nvm with bundle adjustment.");
+              "Perform update output_nvm with bundle adjustment.");
+DEFINE_bool(skip_pruning, false,
+              "Do not prune maps, as pruned maps cannot be merged.");
 DEFINE_bool(rebuild, false,
-              "If true, rebuild the map with BRISK features.");
+              "Rebuild the map with BRISK features.");
+DEFINE_bool(rebuild_replace_camera, false,
+              "During rebuilding replace the camera with the one from ASTROBEE_ROBOT.");
 DEFINE_bool(vocab_db, false,
-              "If true, build the map with a vocabulary database.");
+              "Build the map with a vocabulary database.");
 DEFINE_bool(registration, false,
             "Register the map to world coordinates(requires control points and their xyz coordinates). "
             "This new data is used to redo the bundle adjustment");
 DEFINE_bool(verification, false,
             "Verify how an already registered map performs on an independently "
             "acquired set of control points and 3D measurements.");
-DEFINE_bool(skip_bundle_adjustment, false,
+DEFINE_bool(registration_skip_bundle_adjustment, false,
             "Skip bundle adjustment during the registration step.");
+DEFINE_bool(prune, false,
+              "Prune the map (the vocab db is unchanged).");
 DEFINE_bool(info, false,
-              "If true, just print some information on the existing map.");
+              "Print some information on the existing map.");
+DEFINE_bool(save_poses, false,
+              "Save the camera to world transform and its inverse for each image in the map.");
 DEFINE_int32(num_repeat_images, 0,
              "How many images from the beginning of the sequence to repeat at the end "
              "of the sequence, to help with loop closure (assuming first and last images "
@@ -92,13 +99,19 @@ DEFINE_int32(num_repeat_images, 0,
 DEFINE_bool(fix_cameras, false,
             "Keep the cameras fixed during bundle adjustment.");
 DEFINE_bool(rebuild_refloat_cameras, false,
-            "If true, optimize the cameras as well as part of rebuilding. Usually that is "
+            "Optimize the cameras as well as part of rebuilding. Usually that is "
             "avoided when rebuilding with ORGBRISK, but could be useful with SURF.");
 
 DEFINE_int32(db_restarts, 1, "Number of restarts when building the tree.");
 DEFINE_int32(db_depth, 0, "Depth of the tree to build. Default: 4");
 DEFINE_int32(db_branching_factor, 0, "Branching factor of the tree to build. "
              "Default: 10");
+DEFINE_string(undistorted_camera_params, "",
+              "Assume that the camera has no distortion and given parameters. "
+              "Specify as: 'image_wid_x image_wid_y focal_length optical_center_x "
+              "optical_center_y'.");
+
+bool g_pruning_was_done = false;  // If we already pruned the map, don't prune it again
 
 void DetectAllFeatures(int argc, char** argv) {
   // Check for user mistakes
@@ -110,9 +123,6 @@ void DetectAllFeatures(int argc, char** argv) {
 
   LOG(INFO) << "Detecting features.";
 
-  // load the first file to determine the resolution
-  cv::Mat image = cv::imread(std::string(argv[1]), CV_LOAD_IMAGE_GRAYSCALE);
-
   config_reader::ConfigReader config;
   config.AddFile("cameras.config");
   if (!config.ReadFiles()) {
@@ -121,6 +131,20 @@ void DetectAllFeatures(int argc, char** argv) {
     return;
   }
   camera::CameraParameters cam_params(&config, "nav_cam");
+
+  // See if to override the camera when using undistorted images
+  if (FLAGS_undistorted_camera_params != "") {
+    std::vector<double> vals;
+    common::parseStr(FLAGS_undistorted_camera_params, vals);
+    if (vals.size() < 5)
+      LOG(FATAL) << "Could not parse --undistorted_camera_params.";
+    double widx = vals[0], widy = vals[1], f = vals[2], cx = vals[3], cy = vals[4];
+    LOG(INFO) << "Using camera parameters: "
+              << widx << ' ' << widy << ' ' << f << ' ' << cx << ' ' << cy;
+    cam_params = camera::CameraParameters(Eigen::Vector2i(widx, widy),
+                                          Eigen::Vector2d::Constant(f),
+                                          Eigen::Vector2d(cx, cy));
+  }
 
   // Remove some images from list based on sample rate
   int count = 0;
@@ -146,7 +170,6 @@ void DetectAllFeatures(int argc, char** argv) {
 
   // This will invoke a detection process
   sparse_mapping::SparseMap map(files, FLAGS_detector, cam_params);
-  map.SetBriskParams(1000, 20000, 10, 3);
   map.DetectFeatures();
 
   map.Save(FLAGS_output_map);
@@ -167,7 +190,10 @@ void BuildTracks() {
   LOG(INFO) << "Building tracks.";
 
   sparse_mapping::SparseMap map(FLAGS_output_map);
-  sparse_mapping::BuildTracks(sparse_mapping::MatchesFile(FLAGS_output_map), &map);
+  bool rm_invalid_xyz = false;  // we don't have valid cameras, so can't rm xyz
+  sparse_mapping::BuildTracks(rm_invalid_xyz,
+                              sparse_mapping::MatchesFile(FLAGS_output_map),
+                              &map);
   map.Save(FLAGS_output_map);
   if (FLAGS_save_individual_maps) map.Save(FLAGS_output_map + ".track.map");
 }
@@ -199,7 +225,12 @@ void BundleAdjust() {
 
   bool fix_cameras = FLAGS_fix_cameras;
   sparse_mapping::BundleAdjust(fix_cameras, &map);
-  map.PruneMap();
+
+  // Pruning will be done after the vocab db is saved
+  // if (!FLAGS_skip_pruning) {
+  //  LOG(INFO) << "Pruning map.\n";
+  //  map.PruneMap();
+  // }
 
   map.Save(FLAGS_output_map);
   if (FLAGS_save_individual_maps) map.Save(FLAGS_output_map + ".bundle.map");
@@ -211,15 +242,29 @@ void Rebuild() {
   sparse_mapping::SparseMap original(FLAGS_output_map);
 
   camera::CameraParameters params = original.GetCameraParameters();
+  if (FLAGS_rebuild_replace_camera) {
+    char * bot_ptr = getenv("ASTROBEE_ROBOT");
+    if (bot_ptr == NULL)
+      LOG(FATAL) << "Must set ASTROBEE_ROBOT.";
+    LOG(INFO) << "Using camera for robot: " << bot_ptr << ".";
+    config_reader::ConfigReader config;
+    config.AddFile("cameras.config");
+    if (!config.ReadFiles()) {
+      LOG(ERROR) << "Failed to read config files.";
+      exit(1);
+      return;
+    }
+    params = camera::CameraParameters(&config, "nav_cam");
+  }
 
   std::vector<std::string> files(original.GetNumFrames());
   for (size_t i = 0; i < original.GetNumFrames(); i++) {
     files[i] = original.GetFrameFilename(i);
   }
 
-  LOG(INFO) << "Detecting features.";
   sparse_mapping::SparseMap map(files, FLAGS_rebuild_detector, params);
-  map.SetBriskParams(100, 20000, 20, 3);
+
+  LOG(INFO) << "Detecting features.";
   map.DetectFeatures();
 
   LOG(INFO) << "Matching features.";
@@ -244,20 +289,46 @@ void Rebuild() {
   for (unsigned int i = 0; i < original.GetNumFrames(); i++)
     map.SetFrameGlobalTransform(i, original.GetFrameGlobalTransform(i));
 
-  LOG(INFO) << "Building tracks.";
-  sparse_mapping::BuildTracks(sparse_mapping::MatchesFile(FLAGS_output_map), &map);
+  // Wipe file that is no longer needed
+  try {
+    std::remove(sparse_mapping::EssentialFile(FLAGS_output_map).c_str());
+  }catch(...) {}
 
-  LOG(INFO) << "Performing bundle adjustment.";
+  LOG(INFO) << "Building tracks.";
+  bool rm_invalid_xyz = true;  // by now cameras are good, so filter out bad stuff
+  sparse_mapping::BuildTracks(rm_invalid_xyz,
+                              sparse_mapping::MatchesFile(FLAGS_output_map),
+                              &map);
+
   // It is essential that during re-building we do not vary the
   // cameras. Those were usually computed with a lot of SURF features,
   // while rebuilding is usually done with many fewer ORGBRISK
-  // features.  If cameras really have to be varied, use build_map -bundle_adjust.
+  // features.
   bool fix_cameras = !FLAGS_rebuild_refloat_cameras;
+  if (fix_cameras)
+    LOG(INFO) << "Performing bundle adjustment with fixed cameras.";
+  else
+    LOG(INFO) << "Performing bundle adjustment while floating cameras.";
+
   sparse_mapping::BundleAdjust(fix_cameras, &map);
-  map.PruneMap();
 
   map.Save(FLAGS_output_map);
-  if (FLAGS_save_individual_maps) map.Save(FLAGS_output_map + ".brisk.map");
+  if (FLAGS_save_individual_maps) map.Save(FLAGS_output_map + "." +
+                                           FLAGS_rebuild_detector + ".map");
+}
+
+// Prune the map leaving the vocab db unchanged
+void PruneMap() {
+  if (g_pruning_was_done)
+    return;
+
+  sparse_mapping::SparseMap map(FLAGS_output_map);
+
+  LOG(INFO) << "Pruning map. This step is irreversible.\n";
+  map.PruneMap();
+  g_pruning_was_done = true;
+
+  map.Save(FLAGS_output_map);
 }
 
 void VocabDB() {
@@ -282,6 +353,13 @@ void VocabDB() {
   sparse_mapping::BuildDB(FLAGS_output_map,
                           detector, depth, branching_factor,
                           FLAGS_db_restarts);
+
+  // Pruning must always happen after the database is built, as the
+  // full set of features (so without pruning) is necessary to later
+  // effectively find similar images.
+  if (!FLAGS_skip_pruning) {
+    PruneMap();
+  }
 }
 
 // Do either registration or verification
@@ -299,12 +377,11 @@ void RegistrationOrVerification(std::vector<std::string> const& data_files) {
   if (FLAGS_verification)
     return;
 
-  if (FLAGS_skip_bundle_adjustment)
-    return;
-
-  LOG(INFO) << "Redoing bundle adjustment incorporating the user control points.";
-  bool fix_cameras = false;
-  BundleAdjust(fix_cameras, &map);
+  if (!FLAGS_registration_skip_bundle_adjustment) {
+    LOG(INFO) << "Redoing bundle adjustment incorporating the user control points.";
+    bool fix_cameras = false;
+    BundleAdjust(fix_cameras, &map);
+  }
 
   map.Save(FLAGS_output_map);
   if (FLAGS_save_individual_maps) map.Save(FLAGS_output_map + ".registered.map");
@@ -322,6 +399,48 @@ void MapInfo() {
   }
 }
 
+void SavePoses() {
+  sparse_mapping::SparseMap map(FLAGS_output_map);
+
+  LOG(INFO) << "Saving camera to world transforms.";
+
+  for (unsigned int cid = 0; cid < map.cid_to_filename_.size(); cid++) {
+    std::string img_file = map.cid_to_filename_[cid];
+    std::string ext = common::file_extension(img_file);
+
+    {
+      // Save cam2world
+      std::string cam_file = common::ReplaceInStr(img_file,
+                                                  "." + ext,
+                                                  "_cam2world.txt");
+
+      if (cam_file == img_file)
+        LOG(FATAL) << "Failed to replace the image extension in: " << img_file;
+
+      LOG(INFO) << "Writing: " << cam_file;
+      std::ofstream ofs(cam_file.c_str());
+      ofs.precision(17);
+      ofs << map.cid_to_cam_t_global_[cid].inverse().matrix() << "\n";
+      ofs.close();
+    }
+
+    {
+      // Save world2cam
+      std::string cam_file = common::ReplaceInStr(img_file,
+                                                  "." + ext,
+                                                  "_world2cam.txt");
+      if (cam_file == img_file)
+        LOG(FATAL) << "Failed to replace image extension in: " << img_file;
+
+      LOG(INFO) << "Writing: " << cam_file;
+      std::ofstream ofs(cam_file.c_str());
+      ofs.precision(17);
+      ofs << map.cid_to_cam_t_global_[cid].matrix() << "\n";
+      ofs.close();
+    }
+  }
+}
+
 
 int main(int argc, char** argv) {
   common::InitFreeFlyerApplication(&argc, &argv);
@@ -333,7 +452,8 @@ int main(int argc, char** argv) {
       !FLAGS_loop_closure && !FLAGS_tensor_initialization &&
       !FLAGS_bundle_adjustment && !FLAGS_rebuild &&
       !FLAGS_vocab_db &&
-      !FLAGS_registration && !FLAGS_verification && !FLAGS_info) {
+      !FLAGS_registration && !FLAGS_verification &&
+      !FLAGS_info && !FLAGS_save_poses && !FLAGS_prune) {
     FLAGS_feature_detection = true;
     FLAGS_feature_matching = true;
     FLAGS_track_building = true;
@@ -376,8 +496,16 @@ int main(int argc, char** argv) {
     RegistrationOrVerification(data_files);
   }
 
+  if (FLAGS_prune) {
+    PruneMap();
+  }
+
   if (FLAGS_info) {
     MapInfo();
+  }
+
+  if (FLAGS_save_poses) {
+    SavePoses();
   }
 
   google::protobuf::ShutdownProtobufLibrary();

@@ -138,6 +138,22 @@ int DdsRosBridge::BuildBatteryStateToRapid(
   return ros_sub_rapid_pubs_.size();
 }
 
+int DdsRosBridge::BuildCommandToRapid(const std::string& sub_topic,
+                                      const std::string& ac_sub_topic,
+                                      const std::string& failed_cmd_sub_topic,
+                                      const std::string& pub_topic,
+                                      const std::string& name) {
+  ff::RosSubRapidPubPtr command_to_command(new ff::RosCommandToRapid(
+                                                          sub_topic,
+                                                          ac_sub_topic,
+                                                          failed_cmd_sub_topic,
+                                                          pub_topic,
+                                                          nh_,
+                                                          agent_name_));
+  ros_sub_rapid_pubs_[name] = command_to_command;
+  return ros_sub_rapid_pubs_.size();
+}
+
 int DdsRosBridge::BuildCompressedImageToImage(const std::string& sub_topic,
                                               const std::string& pub_topic,
                                               const std::string& name) {
@@ -240,6 +256,27 @@ int DdsRosBridge::BuildGuestScienceToRapid(const std::string& state_sub_topic,
   return ros_sub_rapid_pubs_.size();
 }
 
+int DdsRosBridge::BuildInertiaDataToRapid(const std::string& sub_topic,
+                                          const std::string& pub_topic,
+                                          const std::string& name) {
+  ff::RosSubRapidPubPtr inertia_to_inertia(new ff::RosInertiaToRapid(sub_topic,
+                                                                     pub_topic,
+                                                                     nh_));
+
+  ros_sub_rapid_pubs_[name] = inertia_to_inertia;
+  return ros_sub_rapid_pubs_.size();
+}
+
+int DdsRosBridge::BuildLogSampleToRapid(const std::string& sub_topic,
+                                         const std::string& pub_topic,
+                                         const std::string& name) {
+  ff::RosSubRapidPubPtr log_to_log(new ff::RosLogSampleToRapid(sub_topic,
+                                                               pub_topic,
+                                                               nh_));
+  ros_sub_rapid_pubs_[name] = log_to_log;
+  return ros_sub_rapid_pubs_.size();
+}
+
 int DdsRosBridge::BuildOdomToPosition(const std::string& sub_topic,
                                       const std::string& pub_topic,
                                       const std::string& name) {
@@ -258,6 +295,17 @@ int DdsRosBridge::BuildPlanStatusToPlanStatus(const std::string& sub_topic,
                                                                      pub_topic,
                                                                      nh_));
   ros_sub_rapid_pubs_[name] = plan_status_to_plan_status;
+  return ros_sub_rapid_pubs_.size();
+}
+
+int DdsRosBridge::BuildPmcCmdStateToRapid(const std::string& sub_topic,
+                                              const std::string& pub_topic,
+                                              const std::string& name) {
+  ff::RosSubRapidPubPtr pmc_command_to_pmc_command(
+                                    new ff::RosPmcCmdStateToRapid(sub_topic,
+                                                                      pub_topic,
+                                                                      nh_));
+  ros_sub_rapid_pubs_[name] = pmc_command_to_pmc_command;
   return ros_sub_rapid_pubs_.size();
 }
 
@@ -340,6 +388,204 @@ int DdsRosBridge::BuildCommandConfigToCommandConfig(
   return rapid_pubs_.size();
 }
 
+bool DdsRosBridge::SetTelem(float rate, std::string &err_msg, RateType type) {
+  if (ros_sub_rapid_pubs_.count("RTRT") == 0) {
+    err_msg = "DDS Bridge: Telemetry message stuff not added but it is needed.";
+    return false;
+  }
+
+  ff::RosTelemetryRapidTelemetry *RTRT =
+                                  static_cast<ff::RosTelemetryRapidTelemetry *>
+                                  (ros_sub_rapid_pubs_["RTRT"].get());
+
+  switch (type) {
+    case COMM_STATUS:
+      RTRT->SetCommStatusRate(rate);
+      break;
+    case CPU_STATE:
+      RTRT->SetCpuStateRate(rate);
+      break;
+    case DISK_STATE:
+      RTRT->SetDiskStateRate(rate);
+      break;
+    case EKF_STATE:
+      RTRT->SetEkfStateRate(rate);
+      break;
+    case GNC_STATE:
+      RTRT->SetGncStateRate(rate);
+      break;
+    case PMC_CMD_STATE:
+      RTRT->SetPmcCmdStateRate(rate);
+      break;
+    case POSITION:
+      RTRT->SetPositionRate(rate);
+      break;
+    default:
+      err_msg = "DDS Bridge: Unknown type when setting telemetry rate!";
+      return false;
+  }
+
+  return true;
+}
+
+bool DdsRosBridge::SetCommStatusRate(float rate, std::string &err_msg) {
+  // TODO(Katie) Add comm stuff when you add comm message to bridge
+  if (!SetTelem(rate, err_msg, COMM_STATUS)) {
+    return false;
+  }
+
+  return true;
+}
+
+bool DdsRosBridge::SetCpuStateRate(float rate, std::string &err_msg) {
+  if (ros_sub_rapid_pubs_.count("RCSRCS") == 0) {
+    err_msg = "DDS Bridge: Cpu state message not added but it is needed.";
+    return false;
+  }
+
+  if (!SetTelem(rate, err_msg, CPU_STATE)) {
+    return false;
+  }
+
+  ff::RosCpuStateToRapid *RCSR = static_cast<ff::RosCpuStateToRapid *>
+                                          (ros_sub_rapid_pubs_["RCSRCS"].get());
+
+  RCSR->SetPublishRate(rate);
+  return true;
+}
+
+bool DdsRosBridge::SetDiskStateRate(float rate, std::string &err_msg) {
+  if (ros_sub_rapid_pubs_.count("RDSRDS") == 0) {
+    err_msg = "DDS Bridge: Disk state message not added but it is needed.";
+    return false;
+  }
+
+  if (!SetTelem(rate, err_msg, DISK_STATE)) {
+    return false;
+  }
+
+  ff::RosDiskStateToRapid *RDSR = static_cast<ff::RosDiskStateToRapid *>
+                                          (ros_sub_rapid_pubs_["RDSRDS"].get());
+  RDSR->SetPublishRate(rate);
+  return true;
+}
+
+bool DdsRosBridge::SetEkfPositionRate(float rate,
+                                      std::string &err_msg,
+                                      RateType type) {
+  if (ros_sub_rapid_pubs_.count("RORP") == 0) {
+    err_msg = "DDS Bridge: Ekf state message not added but it is needed.";
+    return false;
+  }
+
+  if (!SetTelem(rate, err_msg, type)) {
+    return false;
+  }
+
+  ff::RosOdomRapidPosition *RORP = static_cast<ff::RosOdomRapidPosition *>
+                                            (ros_sub_rapid_pubs_["RORP"].get());
+
+  if (type == EKF_STATE) {
+    RORP->SetEkfPublishRate(rate);
+  } else if (type == POSITION) {
+    RORP->SetPositionPublishRate(rate);
+  } else {
+      err_msg = "DDS Bridge: Unknown type when setting ekf or position rate!";
+      return false;
+  }
+
+  return true;
+}
+
+bool DdsRosBridge::SetGncStateRate(float rate, std::string &err_msg) {
+  if (ros_sub_rapid_pubs_.count("RGCCRGCC") == 0) {
+    err_msg = "DDS Bridge: Gnc control command not added but it is needed.";
+    return false;
+  }
+
+  if (ros_sub_rapid_pubs_.count("RGCSRGCS") == 0) {
+    err_msg = "DDS Bridge: Gnc control shaper not added but it is needed.";
+    return false;
+  }
+
+  if (ros_sub_rapid_pubs_.count("RGCTRGCT") == 0) {
+    err_msg = "DDS Bridge: Gnc control trajectory not added but it is needed.";
+    return false;
+  }
+
+  if (!SetTelem(rate, err_msg, GNC_STATE)) {
+    return false;
+  }
+
+  ff::RosGncFamCmdStateToRapid *RGCC =
+                                    static_cast<ff::RosGncFamCmdStateToRapid *>
+                                    (ros_sub_rapid_pubs_["RGCCRGCC"].get());
+
+  ff::RosGncControlStateToRapid *RGCS =
+                                    static_cast<ff::RosGncControlStateToRapid *>
+                                    (ros_sub_rapid_pubs_["RGCSRGCS"].get());
+
+  ff::RosGncControlStateToRapid *RGCT =
+                                    static_cast<ff::RosGncControlStateToRapid *>
+                                    (ros_sub_rapid_pubs_["RGCTRGCT"].get());
+
+  RGCC->SetGncPublishRate(rate);
+  RGCS->SetGncPublishRate(rate);
+  RGCT->SetGncPublishRate(rate);
+  return true;
+}
+
+bool DdsRosBridge::SetPmcStateRate(float rate, std::string &err_msg) {
+  if (ros_sub_rapid_pubs_.count("RPCSRPCS") == 0) {
+    err_msg = "DDS Bridge: Pmc cmd state message not added but it is needed.";
+    return false;
+  }
+
+  if (!SetTelem(rate, err_msg, PMC_CMD_STATE)) {
+    return false;
+  }
+
+  ff::RosPmcCmdStateToRapid *RPCS = static_cast<ff::RosPmcCmdStateToRapid *>
+                                        (ros_sub_rapid_pubs_["RPCSRPCS"].get());
+
+  RPCS->SetPmcPublishRate(rate);
+  return true;
+}
+
+bool DdsRosBridge::SetTelemRateCallback(ff_msgs::SetRate::Request &req,
+                                        ff_msgs::SetRate::Response &res) {
+  std::string err_msg;
+  switch (req.which) {
+    case ff_msgs::SetRate::Request::COMM_STATUS:
+      res.success = SetCommStatusRate(req.rate, err_msg);
+      break;
+    case ff_msgs::SetRate::Request::CPU_STATE:
+      res.success = SetCpuStateRate(req.rate, err_msg);
+      break;
+    case ff_msgs::SetRate::Request::DISK_STATE:
+      res.success = SetDiskStateRate(req.rate, err_msg);
+      break;
+    case ff_msgs::SetRate::Request::EKF_STATE:
+      res.success = SetEkfPositionRate(req.rate, err_msg, EKF_STATE);
+      break;
+    case ff_msgs::SetRate::Request::GNC_STATE:
+      res.success = SetGncStateRate(req.rate, err_msg);
+      break;
+    case ff_msgs::SetRate::Request::PMC_CMD_STATE:
+      res.success = SetPmcStateRate(req.rate, err_msg);
+      break;
+    case ff_msgs::SetRate::Request::POSITION:
+      res.success = SetEkfPositionRate(req.rate, err_msg, POSITION);
+      break;
+    default:
+      res.success = false;
+      err_msg = "DDS Bridge: Unknown which in set telemetry rate service.";
+  }
+
+  res.status = err_msg;
+  return res.success;
+}
+
 void DdsRosBridge::Initialize(ros::NodeHandle *nh) {
   // Need to get robot name which is in the lua config files, add files, read
   // files, and get robot name  but don't get the rest of the config parameters
@@ -360,6 +606,8 @@ void DdsRosBridge::Initialize(ros::NodeHandle *nh) {
     return;
   }
 
+  nh_ = *nh;
+
   // In simulation, the namespace is usually set to the robot name so we need to
   // check if we are in simulation and get the right name
   if (agent_name_ == "sim" || agent_name_ == "simulator") {
@@ -377,7 +625,14 @@ void DdsRosBridge::Initialize(ros::NodeHandle *nh) {
     }
   }
 
-  nh_ = *nh;
+  // Publish agent name so that the android apks have an easy way to get the
+  // robot name. Topic is latched.
+  robot_name_pub_ = nh_.advertise<std_msgs::String>(TOPIC_ROBOT_NAME,
+                                                    10,
+                                                    true);
+  std_msgs::String robot_name_msg;
+  robot_name_msg.data = agent_name_;
+  robot_name_pub_.publish(robot_name_msg);
 
   int fake_argc = 1;
 
@@ -495,13 +750,17 @@ void DdsRosBridge::Initialize(ros::NodeHandle *nh) {
     exit(EXIT_FAILURE);
     return;
   }
+
+  srv_set_telem_rate_ = nh_.advertiseService(
+                                    SERVICE_COMMUNICATIONS_DDS_SET_TELEM_RATES,
+                                    &DdsRosBridge::SetTelemRateCallback,
+                                    this);
 }
 
 bool DdsRosBridge::ReadParams() {
   std::string sub_topic, sub_topic2;
   std::string pub_topic;
   bool use;
-
   components_ = 0;
 
   // rapid_command_ros_command => RCRC
@@ -518,6 +777,26 @@ bool DdsRosBridge::ReadParams() {
 
     BuildCommandToCommand(sub_topic, TOPIC_COMMUNICATIONS_DDS_COMMAND, "RCRC");
     components_++;
+  }
+
+  // rapid_compressed_file_data_ros_compressed_file_data => RCFDRCFD
+  if (!config_params_.GetBool("use_RCFDRCFD", &use)) {
+    ROS_FATAL("DDS Bridge: use RCFDRCFD not specified!");
+    return false;
+  }
+
+  if (use) {
+    if (!config_params_.GetStr("sub_topic_RCFDRCFD", &sub_topic)) {
+      ROS_FATAL("DDS Bridge: sub topic RCFDRCFD not specified!");
+      return false;
+    }
+
+    BuildCompressedFileToCompressedFile(sub_topic,
+                                        TOPIC_COMMUNICATIONS_DDS_DATA,
+                                        "RCFDRCFD");
+    components_++;
+  } else {
+    ROS_WARN("Not bridging data to disk compressed files!");
   }
 
   // rapid_compressed_file_plan_ros_compressed_file_plan => RCFPRCFP
@@ -537,7 +816,7 @@ bool DdsRosBridge::ReadParams() {
                                         "RCFPRCFP");
     components_++;
   } else {
-    ROS_INFO("Not bridging plan compressed files");
+    ROS_WARN("Not bridging plan compressed files!");
   }
 
   // rapid_compressed_file_zones_ros_compressed_file_zones => RCFZRCFZ
@@ -557,7 +836,7 @@ bool DdsRosBridge::ReadParams() {
                                         "RCFZRCFZ");
     components_++;
   } else {
-    ROS_INFO("Not bridging zone compressed files!");
+    ROS_WARN("Not bridging zone compressed files!");
   }
 
   // ros_access_control_rapid_state => RACS
@@ -673,6 +952,26 @@ bool DdsRosBridge::ReadParams() {
     components_++;
   }
 
+  // ros_command_rapid_command => RosCRapC
+  if (!config_params_.GetBool("use_ROSCRAPC", &use)) {
+    ROS_FATAL("DDS Bridge: use ROSCRAPC not specified!");
+    return false;
+  }
+
+  if (use) {
+    if (!config_params_.GetStr("pub_topic_ROSCRAPC", &pub_topic)) {
+      ROS_FATAL("DDS Bridge: pub topic ROSCRAPC not specified!");
+      return false;
+    }
+
+    BuildCommandToRapid(TOPIC_COMMAND,
+                        TOPIC_COMMUNICATIONS_DDS_COMMAND,
+                        TOPIC_MANAGEMENT_ACCESS_CONTROL_CMD,
+                        pub_topic,
+                        "ROSCRAPC");
+    components_++;
+  }
+
   // ros_command_config_rapid_command_config => RCCRCC
   if (!config_params_.GetBool("use_RCCRCC", &use)) {
     ROS_FATAL("DDS Bridge: use RCCRCC not specified!");
@@ -689,7 +988,7 @@ bool DdsRosBridge::ReadParams() {
     components_++;
   }
 
-  // ros_compressed_file_rapid_compressed_file => RoCFRaCF
+  // ros_compressed_file_rapid_compressed_file => RosCFRapCF
   if (!config_params_.GetBool("use_ROSCFRAPCF", &use)) {
     ROS_FATAL("DDS Bridge: use ROSCFRAPCF not specified!");
     return false;
@@ -921,6 +1220,42 @@ bool DdsRosBridge::ReadParams() {
     components_++;
   }
 
+  // ros_inertia_rapid_inertia => RIRI
+  if (!config_params_.GetBool("use_RIRI", &use)) {
+    ROS_FATAL("DDS Bridge: use RIRI not specified!");
+    return false;
+  }
+
+  if (use) {
+    if (!config_params_.GetStr("pub_topic_RIRI", &pub_topic)) {
+      ROS_FATAL("DDS Bridge: pub topic RIRI not specified!");
+      return false;
+    }
+
+    BuildInertiaDataToRapid(TOPIC_MOBILITY_INERTIA, pub_topic, "RIRI");
+
+    components_++;
+  }
+
+  // ros_log_rapid_log_sample => RLRLS
+  if (!config_params_.GetBool("use_RLRLS", &use)) {
+    ROS_FATAL("DDS Bridge: use RLRLS not specified!");
+    return false;
+  }
+
+  if (use) {
+    if (!config_params_.GetStr("pub_topic_RLRLS", &pub_topic)) {
+      ROS_FATAL("DDS Bridge: pub topic RLSLS not specified!");
+      return false;
+    }
+
+    // TODO(rgarciar): Change topic name for a constant
+    BuildLogSampleToRapid("/rosout",
+                           pub_topic,
+                           "RLRLS");
+    components_++;
+  }
+
   // ros_odom_rapid_position => RORP
   if (!config_params_.GetBool("use_RORP", &use)) {
     ROS_FATAL("DDS Bridge: use RORP not specified!");
@@ -952,6 +1287,22 @@ bool DdsRosBridge::ReadParams() {
     BuildPlanStatusToPlanStatus(TOPIC_MANAGEMENT_EXEC_PLAN_STATUS,
                                 pub_topic,
                                 "RPSRPS");
+    components_++;
+  }
+
+  // ros_pmc_cmd_state_rapid_pmc_cmd_state => RPCSRPCS
+  if (!config_params_.GetBool("use_RPCSRPCS", &use)) {
+    ROS_FATAL("DDS Bridge: use RPCSRPCS not specified!");
+    return false;
+  }
+
+  if (use) {
+    if (!config_params_.GetStr("pub_topic_RPCSRPCS", &pub_topic)) {
+      ROS_FATAL("DDS Bridge: pub topic RPCSRPCS not specified!");
+      return false;
+    }
+
+    BuildPmcCmdStateToRapid(TOPIC_HARDWARE_PMC_COMMAND, pub_topic, "RPCSRPCS");
     components_++;
   }
 
@@ -992,104 +1343,11 @@ bool DdsRosBridge::ReadParams() {
     components_++;
   }
 
-  // Read in the telemetery rates so the bridge knows how often to publish
-  // the telemmetry messages
-  float temp_rate;
-  if (ros_sub_rapid_pubs_.count("RTRT") == 0) {
-    ROS_ERROR("DDS Bridge: Telemetry msg stuff not added and it is needed!");
+  // Read and set the publishing rates
+  if (!ReadRateParams()) {
+    exit(EXIT_FAILURE);
     return false;
   }
-  ff::RosTelemetryRapidTelemetry *RTRT =
-                                  static_cast<ff::RosTelemetryRapidTelemetry *>
-                                  (ros_sub_rapid_pubs_["RTRT"].get());
-
-  if (ros_sub_rapid_pubs_.count("RCSRCS") == 0) {
-    ROS_ERROR("DDS Bridge: Cpu state stuff not added and it is needed!");
-    return false;
-  }
-  ff::RosCpuStateToRapid *RCSR = static_cast<ff::RosCpuStateToRapid *>
-                                          (ros_sub_rapid_pubs_["RCSRCS"].get());
-
-  if (ros_sub_rapid_pubs_.count("RDSRDS") == 0) {
-    ROS_ERROR("DDS Bridge: Disk state stuff not added and it is needed!");
-    return false;
-  }
-  ff::RosDiskStateToRapid *RDSR = static_cast<ff::RosDiskStateToRapid *>
-                                          (ros_sub_rapid_pubs_["RDSRDS"].get());
-
-  if (ros_sub_rapid_pubs_.count("RGCCRGCC") == 0) {
-    ROS_ERROR("DDS Bridge: GNC control command stuff not added and is needed!");
-    return false;
-  }
-  ff::RosGncFamCmdStateToRapid *RGCC =
-                                    static_cast<ff::RosGncFamCmdStateToRapid *>
-                                    (ros_sub_rapid_pubs_["RGCCRGCC"].get());
-
-  if (ros_sub_rapid_pubs_.count("RGCSRGCS") == 0) {
-    ROS_ERROR("DDS Bridge: GNC control shaper stuff not added and is needed!");
-    return false;
-  }
-  ff::RosGncControlStateToRapid *RGCS =
-                                    static_cast<ff::RosGncControlStateToRapid *>
-                                    (ros_sub_rapid_pubs_["RGCSRGCS"].get());
-
-  if (ros_sub_rapid_pubs_.count("RGCTRGCT") == 0) {
-    ROS_ERROR("DDS Bridge: GNC control trajectory not added and it is needed!");
-    return false;
-  }
-  ff::RosGncControlStateToRapid *RGCT =
-                                    static_cast<ff::RosGncControlStateToRapid *>
-                                    (ros_sub_rapid_pubs_["RGCTRGCT"].get());
-
-  if (ros_sub_rapid_pubs_.count("RORP") == 0) {
-    ROS_ERROR("DDS Bridge: Odometry stuff not added and it is needed!");
-    return false;
-  }
-  ff::RosOdomRapidPosition *RORP = static_cast<ff::RosOdomRapidPosition *>
-                                            (ros_sub_rapid_pubs_["RORP"].get());
-
-  if (!config_params_.GetReal("comm_status_rate", &temp_rate)) {
-    ROS_FATAL("DDS Bridge: comm state rate not specified!");
-    return false;
-  }
-  RTRT->SetCommStatusRate(temp_rate);
-
-  if (!config_params_.GetReal("cpu_state_rate", &temp_rate)) {
-    ROS_FATAL("DDS Bridge: cpu state rate not specified!");
-    return false;
-  }
-  RTRT->SetCpuStateRate(temp_rate);
-  RCSR->SetPublishRate(temp_rate);
-
-  if (!config_params_.GetReal("disk_state_rate", &temp_rate)) {
-    ROS_FATAL("DDS Bridge: disk state rate not specified!");
-    return false;
-  }
-  RTRT->SetDiskStateRate(temp_rate);
-  RDSR->SetPublishRate(temp_rate);
-
-  if (!config_params_.GetReal("ekf_state_rate", &temp_rate)) {
-    ROS_FATAL("DDS Bridge: ekf state rate not specified!");
-    return false;
-  }
-  RTRT->SetEkfStateRate(temp_rate);
-  RORP->SetEkfPublishRate(temp_rate);
-
-  if (!config_params_.GetReal("gnc_state_rate", &temp_rate)) {
-    ROS_FATAL("DDS Bridge: gnc state rate not specified!");
-    return false;
-  }
-  RTRT->SetGncStateRate(temp_rate);
-  RGCC->SetGncPublishRate(temp_rate);
-  RGCS->SetGncPublishRate(temp_rate);
-  RGCT->SetGncPublishRate(temp_rate);
-
-  if (!config_params_.GetReal("position_rate", &temp_rate)) {
-    ROS_FATAL("DDS Bridge: position rate not specified!");
-    return false;
-  }
-  RTRT->SetPositionRate(temp_rate);
-  RORP->SetPositionPublishRate(temp_rate);
 
   // Read in the multiple that the battery estimated time remaining needs to be
   // rounded to.
@@ -1108,6 +1366,85 @@ bool DdsRosBridge::ReadParams() {
                                           (ros_sub_rapid_pubs_["RBSRBS"].get());
 
   RBSRBS->SetBatteryTimeMultiple(multiple);
+
+  return true;
+}
+
+bool DdsRosBridge::ReadRateParams() {
+  // Read in the telemetery rates so the bridge knows how often to publish
+  // the telemetry messages
+  float temp_rate;
+  std::string err_msg;
+
+  if (!config_params_.GetReal("comm_status_rate", &temp_rate)) {
+    ROS_FATAL("DDS Bridge: comm state rate not specified!");
+    return false;
+  }
+
+  if (!SetCommStatusRate(temp_rate, err_msg)) {
+    ROS_FATAL("%s", err_msg.c_str());
+    return false;
+  }
+
+  if (!config_params_.GetReal("cpu_state_rate", &temp_rate)) {
+    ROS_FATAL("DDS Bridge: cpu state rate not specified!");
+    return false;
+  }
+
+  if (!SetCpuStateRate(temp_rate, err_msg)) {
+    ROS_FATAL("%s", err_msg.c_str());
+    return false;
+  }
+
+  if (!config_params_.GetReal("disk_state_rate", &temp_rate)) {
+    ROS_FATAL("DDS Bridge: disk state rate not specified!");
+    return false;
+  }
+
+  if (!SetDiskStateRate(temp_rate, err_msg)) {
+    ROS_FATAL("%s", err_msg.c_str());
+    return false;
+  }
+
+  if (!config_params_.GetReal("ekf_state_rate", &temp_rate)) {
+    ROS_FATAL("DDS Bridge: ekf state rate not specified!");
+    return false;
+  }
+
+  if (!SetEkfPositionRate(temp_rate, err_msg, EKF_STATE)) {
+    ROS_FATAL("%s", err_msg.c_str());
+    return false;
+  }
+
+  if (!config_params_.GetReal("gnc_state_rate", &temp_rate)) {
+    ROS_FATAL("DDS Bridge: gnc state rate not specified!");
+    return false;
+  }
+
+  if (!SetGncStateRate(temp_rate, err_msg)) {
+    ROS_FATAL("%s", err_msg.c_str());
+    return false;
+  }
+
+  if (!config_params_.GetReal("pmc_command_rate", &temp_rate)) {
+    ROS_FATAL("DDS Bridge: pmc command rate not specified!");
+    return false;
+  }
+
+  if (!SetPmcStateRate(temp_rate, err_msg)) {
+    ROS_FATAL("%s", err_msg.c_str());
+    return false;
+  }
+
+  if (!config_params_.GetReal("position_rate", &temp_rate)) {
+    ROS_FATAL("DDS Bridge: position rate not specified!");
+    return false;
+  }
+
+  if (!SetEkfPositionRate(temp_rate, err_msg, POSITION)) {
+    ROS_FATAL("%s", err_msg.c_str());
+    return false;
+  }
 
   return true;
 }

@@ -1,4 +1,5 @@
 # Basic system
+add_subdirectory(framestore)
 add_subdirectory(choreographer)
 add_subdirectory(mapper)
 

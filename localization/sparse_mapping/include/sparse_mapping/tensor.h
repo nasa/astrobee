@@ -1,14 +1,14 @@
 /* Copyright (c) 2017, United States Government, as represented by the
  * Administrator of the National Aeronautics and Space Administration.
- * 
+ *
  * All rights reserved.
- * 
+ *
  * The Astrobee platform is licensed under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -65,7 +65,8 @@ namespace sparse_mapping {
   /**
    * Build the tracks based on the matches
    **/
-  void BuildTracks(const std::string & matches_file,
+  void BuildTracks(bool rm_invalid_xyz,
+                   const std::string & matches_file,
                    sparse_mapping::SparseMap * s);
 
   /**
@@ -93,7 +94,15 @@ namespace sparse_mapping {
                         bool fix_cameras = false);
 
   /**
-     Merge two maps. See merge_maps.cc.
+     Append map file.
+  **/
+  void AppendMapFile(std::string const& mapOut, std::string const& mapIn,
+                     int num_image_overlaps_at_endpoints,
+                     double outlier_factor,
+                     bool bundle_adjust, bool prune_map);
+
+  /**
+     Merge two maps.
   **/
   void MergeMaps(sparse_mapping::SparseMap * A_in,
                  sparse_mapping::SparseMap * B_in,
@@ -136,6 +145,7 @@ namespace sparse_mapping {
                                        const Eigen::Matrix2Xd & keypoints2,
                                        const std::vector<cv::DMatch> & matches,
                                        camera::CameraParameters const& camera_params,
+                                       bool compute_inliers_only,
                                        size_t cam_a_idx, size_t cam_b_idx,
                                        std::mutex * match_mutex,
                                        CIDPairAffineMap * relative_b_t_a,
@@ -157,11 +167,12 @@ namespace sparse_mapping {
 
   // Triangulates all points given camera positions. This is better
   // than what is in sparse map as it uses multiple view information.
-  void Triangulate(std::vector<Eigen::Affine3d> const& cid_to_cam_t_global,
+  void Triangulate(bool rm_invalid_xyz, double focal_length,
+                   std::vector<Eigen::Affine3d> const& cid_to_cam_t_global,
                    std::vector<Eigen::Matrix2Xd> const& cid_to_keypoint_map,
-                   double focal_length,
                    std::vector<std::map<int, int> > * pid_to_cid_fid,
-                   std::vector<Eigen::Vector3d> * pid_to_xyz);
+                   std::vector<Eigen::Vector3d> * pid_to_xyz,
+                   std::vector<std::map<int, int> > * cid_fid_to_pid);
 
 }  // namespace sparse_mapping
 

@@ -1,14 +1,14 @@
 /* Copyright (c) 2017, United States Government, as represented by the
  * Administrator of the National Aeronautics and Space Administration.
- * 
+ *
  * All rights reserved.
- * 
+ *
  * The Astrobee platform is licensed under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -43,6 +43,7 @@
 #include <ff_msgs/FlightMode.h>
 #include <ff_util/perf_timer.h>
 #include <std_srvs/Empty.h>
+#include <std_msgs/Empty.h>
 
 #include <atomic>
 #include <condition_variable> // NOLINT
@@ -51,6 +52,7 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <functional>
 
 namespace ekf {
 
@@ -64,7 +66,7 @@ class EkfWrapper {
   explicit EkfWrapper(ros::NodeHandle* nh, std::string const& name);
   ~EkfWrapper();
 
-  void Run(void);
+  void Run(std::atomic<bool> const& killed);
 
   /**
    * This moves the EKF forward one time step
@@ -89,7 +91,11 @@ class EkfWrapper {
    * Resets the EKF.
    **/
   bool ResetService(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res);  //NOLINT
+
+  bool ResetHandrailService(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res);
+
   /**
+
    * Initializes the bias and saves the results to a file.
    **/
   bool InitializeBiasService(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res);  //NOLINT
@@ -128,6 +134,11 @@ class EkfWrapper {
   void PublishFeatures(ff_msgs::VisualLandmarks::ConstPtr const& l);
   void PublishFeatures(ff_msgs::DepthLandmarks::ConstPtr const& l);
 
+  /**
+   * Callback when the EKF resets
+   **/
+  void ResetCallback();
+
   /** Variables **/
   // the actual EKF
   Ekf ekf_;
@@ -139,6 +150,10 @@ class EkfWrapper {
   sensor_msgs::Imu imu_;
   geometry_msgs::Quaternion quat_;
   int imus_dropped_;
+
+  // Truth messages
+  geometry_msgs::PoseStamped truth_pose_;
+  geometry_msgs::TwistStamped truth_twist_;
 
   // EKF wrapper needs to capture the first landmark message to do PnP before
   // it can initialize the EKF autocode and let it run. This variable holds
@@ -163,8 +178,9 @@ class EkfWrapper {
   ros::Publisher state_pub_;
   ros::Publisher feature_pub_;
   ros::Publisher pose_pub_, twist_pub_;
+  ros::Publisher reset_pub_;
   tf2_ros::TransformBroadcaster transform_pub_;
-  ros::ServiceServer reset_srv_, bias_srv_, input_mode_srv_;
+  ros::ServiceServer reset_srv_, bias_srv_, input_mode_srv_, reset_hr_srv_;
 
   /** Threading **/
 
@@ -173,6 +189,7 @@ class EkfWrapper {
   std::mutex mutex_imu_msg_;
   std::mutex mutex_of_msg_;
   std::mutex mutex_vl_msg_;
+  std::mutex mutex_dl_msg_;
   std::mutex mutex_truth_msg_;
 
   // cv to wait for an imu reading
@@ -189,6 +206,9 @@ class EkfWrapper {
   std::string platform_name_;
   bool disp_features_;
   sensor_msgs::PointCloud2 features_;
+
+  // Prevents needing to call ros::ok() from a thread
+  std::atomic<bool> killed_;
 };
 
 }  // end namespace ekf

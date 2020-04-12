@@ -1,0 +1,47 @@
+#!/bin/bash
+
+if [[ $# -lt 1 ]]
+then
+  echo "Please provide a bag file."
+  exit 1
+fi
+
+bags_str=$(ls -rt "$1")
+
+IFS=$'\n'
+read -rd '' -a bags_array <<< "$bags_str"
+
+last_bag_index_str=${#bags_array[@]}
+last_bag_index=$((last_bag_index_str-1))
+bag="$1/${bags_array[$last_bag_index]}"
+
+echo "${bags_array[$last_bag_index]} stats: "
+
+dur_str=$(rosbag info "$bag" | grep duration)
+
+IFS=' ' # space is set as delimiter
+read -ra dur_array <<< "$dur_str"
+dur="${dur_array[1]}"
+
+nav_num_str=$(rosbag info "$bag" | grep /mgt/img_sampler/nav_cam/image_record)
+dock_num_str=$(rosbag info "$bag" | grep /mgt/img_sampler/dock_cam/image_record)
+
+if [ "$nav_num_str" != "" ]
+then
+  read -ra nav_num_array <<< "$nav_num_str"
+  nav_num="${nav_num_array[1]}"
+
+  nav_height=$(rostopic echo /mgt/img_sampler/nav_cam/image_record -n 1 -b "$bag" | grep height)
+  nav_width=$(rostopic echo /mgt/img_sampler/nav_cam/image_record -n 1 -b "$bag" | grep width)
+  echo "   Nav: $nav_num images in $dur with $nav_height and $nav_width."
+fi
+
+if [ "$dock_num_str" != "" ]
+then
+  read -ra dock_num_array <<< "$dock_num_str"
+  dock_num="${dock_num_array[1]}"
+
+  dock_height=$(rostopic echo /mgt/img_sampler/dock_cam/image_record -n 1 -b "$bag" | grep height)
+  dock_width=$(rostopic echo /mgt/img_sampler/dock_cam/image_record -n 1 -b "$bag" | grep width)
+  echo "  Dock: $dock_num images in $dur with $dock_height and $dock_width."
+fi

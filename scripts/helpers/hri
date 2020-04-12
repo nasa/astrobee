@@ -1,0 +1,68 @@
+#!/bin/bash
+
+if [[ $# -lt 1 ]]
+then
+  echo "Usage:"
+  echo "  hri ey[es]"
+  echo "    re-activate / foreground the Signal Intent app"
+  echo ""
+  echo "  The FSW stack needs to be running any of the commands below:"
+  echo "  hri { las[er] {on,off} | fr[ont_light] {on,off} | af[t_light] {on,off} }"
+  echo "    turn on/off the laser or front / aft flashlights"
+  echo "    arguments on and off can be replaced with 1 and 0"
+  echo ""
+  echo "  hri im[age_sampler_setup]"
+  echo "    configure the image sampler to a low frame rate with full quality"
+  echo ""
+  echo "  Note: all verbs can be abbreviated to the first two letters"
+  echo ""
+fi
+
+if [[ $# -gt 1 ]]
+then
+  arg=$2
+else
+  arg="0"
+fi
+
+export ROS_MASTER_URI=http://llp:11311
+
+case $1 in
+  ey*)
+    adb shell am start -n gov.nasa.arc.astrobee.signal_intention_state/.MainActivity
+    ;;
+  la*)
+    if [[ "$2" = "1" ]] || [[ "$2" = "on" ]]
+    then
+      rosservice call /hw/laser/enable true
+    else
+      rosservice call /hw/laser/enable false
+    fi
+    ;;
+  fr*)
+    if [[ "$2" = "1" ]] || [[ "$2" = "on" ]]
+    then
+      rosservice call /hw/light_front/control 1
+    else
+      rosservice call /hw/light_front/control 0
+    fi
+    ;;
+  af*)
+    if [[ "$2" = "1" ]] || [[ "$2" = "on" ]]
+    then
+      rosservice call /hw/light_aft/control 1
+    else
+      rosservice call /hw/light_aft/control 0
+    fi
+    ;;
+  im*)
+    rosservice call /mgt/img_sampler/nav_cam/configure 0 1 1280 960 0
+    rosservice call /mgt/img_sampler/nav_cam/enable 2 true
+    rosservice call /mgt/img_sampler/dock_cam/configure 0 1 1280 960 0
+    rosservice call /mgt/img_sampler/dock_cam/enable 2 true
+    ;;
+  *)
+    echo "un-recognized verb"
+    exit 1
+    ;;
+esac

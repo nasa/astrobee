@@ -1,14 +1,14 @@
 /* Copyright (c) 2017, United States Government, as represented by the
  * Administrator of the National Aeronautics and Space Administration.
- * 
+ *
  * All rights reserved.
- * 
+ *
  * The Astrobee platform is licensed under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -58,19 +58,22 @@ void InitializeCidFidToPid(int num_cid,
  **/
 bool Localize(cv::Mat const& test_descriptors,
               Eigen::Matrix2Xd const& test_keypoints,
+              camera::CameraParameters const& camera_params,
               camera::CameraModel* pose,
               std::vector<Eigen::Vector3d>* inlier_landmarks,
               std::vector<Eigen::Vector2d>* inlier_observations,
               int num_cid,
-              int max_cid_to_use,
               std::string const& detector_name,
               sparse_mapping::VocabDB * vocab_db,
               int num_similar,
               std::vector<std::string> const& cid_to_filename,
               std::vector<cv::Mat> const& cid_to_descriptor_map,
+              std::vector<Eigen::Matrix2Xd > const& cid_to_keypoint_map,
               std::vector<std::map<int, int> > const& cid_fid_to_pid,
               std::vector<Eigen::Vector3d> const& pid_to_xyz,
-              int num_ransac_iterations, int ransac_inlier_tolerance);
+              int num_ransac_iterations, int ransac_inlier_tolerance,
+              int early_break_landmarks, bool histogram_equalization,
+              std::vector<int> * cid_list);
 
 /**
  * A class representing a sparse map, which consists of a collection
@@ -108,7 +111,8 @@ struct SparseMap {
 
   SparseMap(bool bundler_format, std::string const& filename, std::vector<std::string> const& files);
 
-  void SetBriskParams(int min_features, int max_features, int threshold, int retries);
+  void SetDetectorParams(int min_features, int max_features, int retries,
+                         double min_thresh, double default_thresh, double max_thresh);
 
   /**
    * Detect features in given images
@@ -125,15 +129,17 @@ struct SparseMap {
    **/
   bool Localize(std::string const& img_file, camera::CameraModel* pose,
       std::vector<Eigen::Vector3d>* inlier_landmarks = NULL,
-      std::vector<Eigen::Vector2d>* inlier_observations = NULL);
+                std::vector<Eigen::Vector2d>* inlier_observations = NULL,
+                std::vector<int> * cid_list = NULL);
   bool Localize(const cv::Mat & image,
       camera::CameraModel* pose, std::vector<Eigen::Vector3d>* inlier_landmarks = NULL,
-      std::vector<Eigen::Vector2d>* inlier_observations = NULL);
+                std::vector<Eigen::Vector2d>* inlier_observations = NULL,
+                std::vector<int> * cid_list = NULL);
   bool Localize(const cv::Mat & test_descriptors, const Eigen::Matrix2Xd & test_keypoints,
-                         camera::CameraModel* pose,
-                         std::vector<Eigen::Vector3d>* inlier_landmarks,
-                         std::vector<Eigen::Vector2d>* inlier_observations);
-
+                camera::CameraModel* pose,
+                std::vector<Eigen::Vector3d>* inlier_landmarks,
+                std::vector<Eigen::Vector2d>* inlier_observations,
+                std::vector<int> * cid_list = NULL);
   // access map frames
   /**
    * Get the number of keyframes in the map.
@@ -200,6 +206,11 @@ struct SparseMap {
    **/
   int GetRansacInlierTolerance(void) const {return ransac_inlier_tolerance_;}
   /**
+   * Set the number of early break landmarks, when to stop in adding landmarks when localizing.
+   **/
+  void SetEarlyBreakLandmarks(int early_break_landmarks) {early_break_landmarks_ = early_break_landmarks;}
+  void SetHistogramEqualization(bool histogram_equalization) {histogram_equalization_ = histogram_equalization;}
+  /**
    * Return the parameters of the camera used to construct the map.
    **/
   camera::CameraParameters GetCameraParameters(void) const {return camera_params_;}
@@ -232,9 +243,11 @@ struct SparseMap {
 
   // detect features with opencv
   void DetectFeaturesFromFile(std::string const& filename,
+                              bool multithreaded,
                               cv::Mat* descriptors,
                               Eigen::Matrix2Xd* keypoints);
   void DetectFeatures(cv::Mat const& image,
+                      bool multithreaded,
                       cv::Mat* descriptors,
                       Eigen::Matrix2Xd* keypoints);
   // delete feature descriptors with no matching landmark
@@ -244,6 +257,8 @@ struct SparseMap {
    * Set the number of similar images queried by the VocabDB.
    **/
   void SetNumSimilar(int num_similar) {num_similar_ = num_similar;}
+
+  std::string GetDetectorName() { return detector_.GetDetectorName(); }
 
   // stored in map file
   std::vector<std::string> cid_to_filename_;
@@ -262,6 +277,8 @@ struct SparseMap {
   int num_similar_;
   int num_ransac_iterations_;
   int ransac_inlier_tolerance_;
+  int early_break_landmarks_;
+  bool histogram_equalization_;
 
   // e.g, 10th db image is 3rd image in cid_to_filename_
   std::map<int, int> db_to_cid_map_;
@@ -279,6 +296,14 @@ struct SparseMap {
   std::vector<Eigen::Matrix2Xd> user_cid_to_keypoint_map_;
   std::vector<std::map<int, int> > user_pid_to_cid_fid_;
   std::vector<Eigen::Vector3d> user_pid_to_xyz_;
+
+ private:
+  // I found out the hard way that sparse maps cannot be copied
+  // correctly, hence prohibit this. The only good way seems to be to
+  // load a copy from disk. (oalexan1)
+  SparseMap();
+  SparseMap(SparseMap &);
+  SparseMap& operator=(const SparseMap&);
 };
 }  // namespace sparse_mapping
 

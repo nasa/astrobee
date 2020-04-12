@@ -24,44 +24,42 @@ DEBIAN_LOC=`pwd`
 
 sudo apt-get install -y devscripts equivs libproj-dev
 
+# delete old debians
+rm *_amd64.deb
+
 cd ${DEBIAN_LOC}/alvar
 sudo mk-build-deps -i -r -t "apt-get --no-install-recommends -y" control
 cd ${DEBIAN_LOC}
-./build_alvar.sh
-sudo dpkg -i libalvar2_2.0-3_amd64.deb
-sudo dpkg -i libalvar-dev_2.0-3_amd64.deb
+./build_alvar.sh || exit 1
+sudo dpkg -i libalvar*_amd64.deb || exit 1
 
 cd ${DEBIAN_LOC}/dlib
 sudo mk-build-deps -i -r -t "apt-get --no-install-recommends -y" control
 cd ${DEBIAN_LOC}
-./build_dlib.sh
-sudo dpkg -i libdbowdlib1_0.1-2_amd64.deb
-sudo dpkg -i libdbowdlib-dev_0.1-2_amd64.deb
+./build_dlib.sh || exit 1
+sudo dpkg -i libdbowdlib*_amd64.deb || exit 1
 
 cd ${DEBIAN_LOC}/dbow2
 sudo mk-build-deps -i -r -t "apt-get --no-install-recommends -y" control
 cd ${DEBIAN_LOC}
-./build_dbow2.sh
-sudo dpkg -i libdbow21_0.1-4_amd64.deb
-sudo dpkg -i libdbow2-dev_0.1-4_amd64.deb
+./build_dbow2.sh || exit 1
+sudo dpkg -i libdbow*_amd64.deb || exit 1
 
 cd ${DEBIAN_LOC}/decomputil
 sudo mk-build-deps -i -r -t "apt-get --no-install-recommends -y" control
 cd ${DEBIAN_LOC}
-./build_decomputil.sh
-sudo dpkg -i libdecomputil0_0.1-1_amd64.deb
-sudo dpkg -i libdecomputil-dev_0.1-1_amd64.deb
+./build_decomputil.sh || exit 1
+sudo dpkg -i libdecomputil*_amd64.deb || exit 1
 
 cd ${DEBIAN_LOC}/jps3d
 sudo mk-build-deps -i -r -t "apt-get --no-install-recommends -y" control
 cd ${DEBIAN_LOC}
-./build_jps3d.sh
-sudo dpkg -i libjps3d0_0.1-1_amd64.deb
-sudo dpkg -i libjps3d-dev_0.1-1_amd64.deb
+./build_jps3d.sh || exit 1
+sudo dpkg -i libjps3d*_amd64.deb || exit 1
 
 cd ${DEBIAN_LOC}/openmvg
 sudo mk-build-deps -i -r -t "apt-get --no-install-recommends -y" control
 cd ${DEBIAN_LOC}
-./build_openmvg.sh
-sudo dpkg -i libopenmvg1_1.1-1_amd64.deb
-sudo dpkg -i libopenmvg-dev_1.1-1_amd64.deb
+./build_openmvg.sh || exit 1
+sudo dpkg -i libopenmvg*_amd64.deb || exit 1
+

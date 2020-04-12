@@ -153,7 +153,7 @@ find_file(RTIDDS_IDL_COMMAND  ${IDL_COMMAND_FILENAME}
 ###################################################
 ## If IDL compiler was found, we can proceed
 ###################################################
-if( RTIDDS_IDL_COMMAND )
+if( NOT RTIDDS_IDL_COMMAND-NOTFOUND )
 
   string(REGEX REPLACE "/[^/]*/[^/]*$" "" _RTIDDS_ROOT_DIR ${RTIDDS_IDL_COMMAND})
   # resolve any symlinks
@@ -197,7 +197,7 @@ if( RTIDDS_IDL_COMMAND )
   endif( ENV_NDDSARCH )
 
   set( RTIDDS_INCLUDE_DIR  ${RTIDDS_ROOT_DIR}/include ${RTIDDS_ROOT_DIR}/include/ndds )
-  set( RTIDDS_LIBRARY_DIR  ${RTIDDS_ROOT_DIR}/lib/${RTIDDS_ARCHITECTURE} )
+  set( RTIDDS_LIBRARY_DIR  ${RTIDDS_ROOT_DIR}/lib/${RTIDDS_ARCHITECTURE})
   
   # find full paths to all the libraries
   #--------------------------------------------------
@@ -214,10 +214,11 @@ if( RTIDDS_IDL_COMMAND )
   
   # Find NDDS version by looking at ndds_version.h
   #--------------------------------------------------
-  find_file(NDDS_VERSION_H 
-            NAMES ndds_version.h
-            PATHS ${RTIDDS_ROOT_DIR}/include/ndds
-            NO_DEFAULT_PATH )
+  find_file(NDDS_VERSION_H "ndds_version.h"
+	  HINTS ${RTIDDS_ROOT_DIR}/include/ndds
+	  NO_DEFAULT_PATH
+	  NO_CMAKE_FIND_ROOT_PATH
+          )
   
   set(RTIDDS_VERSION "")
   if(NDDS_VERSION_H)
@@ -238,7 +239,7 @@ if( RTIDDS_IDL_COMMAND )
   if( RTIDDS_MISSING_LIBRARIES )
     message( STATUS "  Could not find the following RTI/DDS libraries:\n  ${RTIDDS_MISSING_LIBRARIES}")
   else( RTIDDS_MISSING_LIBRARIES )
-    set( RTIDDS_FOUND TRUE )
+    set( RtiDds_FOUND TRUE )
     #message(STATUS "  Found RTI DDS version ${RTIDDS_VERSION} r${RTIDDS_VERSION_REVISION} in ${RTIDDS_ROOT_DIR}")
   endif( RTIDDS_MISSING_LIBRARIES )
   
@@ -369,8 +370,8 @@ if( RTIDDS_IDL_COMMAND )
     set( RTIDDS_DLOGGER_FOUND TRUE )
     #message(STATUS "  RTI DDS Distributed Logging Library found in ${RTIDDS_ROOT_DIR}")
   endif( RTIDDS_DLOGGER_MISSING_LIBRARIES )
-else( RTIDDS_IDL_COMMAND )
-  set( RTIDDS_FOUND FALSE )
-endif( RTIDDS_IDL_COMMAND )
+else( NOT RTIDDS_IDL_COMMAND-NOTFOUND )
+  set( RtiDds_FOUND FALSE )
+endif( NOT RTIDDS_IDL_COMMAND-NOTFOUND )
 
 #message(STATUS "RTIDDS_nddscpp_LIBRARY = ${RTIDDS_nddscpp_LIBRARY}" )

@@ -1,14 +1,14 @@
 /* Copyright (c) 2017, United States Government, as represented by the
  * Administrator of the National Aeronautics and Space Administration.
- * 
+ *
  * All rights reserved.
- * 
+ *
  * The Astrobee platform is licensed under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -34,17 +34,18 @@
 #include <ff_util/config_server.h>
 #include <ff_util/config_client.h>
 
-// Software messages
-#include <ff_msgs/PerchState.h>
+// Standard messages
+#include <std_srvs/Empty.h>
 
-// Services
+// FSW messages, services and actions
+#include <ff_msgs/ArmStateStamped.h>
 #include <ff_msgs/SetState.h>
-
-// Actions
 #include <ff_msgs/MotionAction.h>
-#include <ff_msgs/SwitchAction.h>
+#include <ff_msgs/LocalizationAction.h>
 #include <ff_msgs/ArmAction.h>
 #include <ff_msgs/PerchAction.h>
+#include <ff_hw_msgs/SetEnabled.h>
+#include <ff_msgs/SetBool.h>
 
 /**
  * \ingroup beh
@@ -61,7 +62,7 @@ using RESPONSE = ff_msgs::PerchResult;
   perform both perching and unperching from a handrail. Please see the accom-
   panying state diagram for a high level overview of this logic. Note that
   there is an auto-recovery mechanism to avoid a motion tolerance error from
-  causing the freeflyer to drift uncontrollably into / away from the dock.
+  causing the freeflyer to drift uncontrollably into / away from the perch.
 
   Here are the rules of auto-recovery in the context of perching:
 
@@ -70,295 +71,405 @@ using RESPONSE = ff_msgs::PerchResult;
       implies intervention due to something having gone quite wrong.
 
     * If something during the perching or unperching procedure goes wrong,
-      the server aborts the task, then the system moved to an auto-recovery
+      the server aborts the task, then the system moves to an auto-recovery
       sequence. The callee is only notified of the error AFTER the auto-
-      recovery completes, to avoid dock and executive contention.
+      recovery completes, to avoid perch and executive contention.
 
-    * If a dock or undock procedure is preempted, the system must abort
+    * If a perch or unperch procedure is preempted, the system must abort
       the current task immediately, so that the new goal can be accepted,
       regardless of the progress (or lack thereof). The end state will
-      either be docked (if still attached) or undocked (if in flight).
+      either be perched (if still attached) or unperched (if in flight).
 */
 class PerchNodelet : public ff_util::FreeFlyerNodelet {
  public:
   // All possible events that can occur
   enum : FSM::Event {
-    READY           = (1<<0),     // System is initialized
-    GOAL_PERCH      = (1<<1),     // Start docking
-    GOAL_UNPERCH    = (1<<2),     // Stop undocking
-    GOAL_CANCEL     = (1<<3),     // Cancel an existing goal
-    GOAL_PREEMPT    = (1<<4),     // Cancel an existing goal
-    ARM_SUCCESS     = (1<<5),     // Arm action succeeded
-    ARM_FAILED      = (1<<6),     // Arm action failed
-    SWITCH_SUCCESS  = (1<<7),     // Localization manager switch result
-    SWITCH_FAILED   = (1<<8),     // Localization manager switch failed
-    MOTION_SUCCESS  = (1<<9),     // Mobility motion action success
-    MOTION_FAILED   = (1<<10)     // Mobility motion action problem
+    READY             = (1<<0),     // All services connected
+    GOAL_PERCH        = (1<<1),     // Start perching
+    GOAL_UNPERCH      = (1<<2),     // Start unperching
+    GOAL_CANCEL       = (1<<3),     // Cancel an existing goal
+    GOAL_PREEMPT      = (1<<4),     // Preempt an existing goal
+    ARM_DEPLOYED      = (1<<5),     // Arm is deployed
+    ARM_STOWED        = (1<<6),     // Arm is stowed
+    ARM_SUCCESS       = (1<<7),     // Arm action succeeded
+    ARM_FAILED        = (1<<8),     // Arm action failed
+    SWITCH_SUCCESS    = (1<<9),     // Localization manager switch result
+    SWITCH_FAILED     = (1<<10),    // Localization manager switch failed
+    MOTION_SUCCESS    = (1<<11),    // Mobility motion action success
+    MOTION_FAILED     = (1<<12),    // Mobility motion action problem
+    ENABLE_SUCCESS    = (1<<13),    // Servo enable success
+    ENABLE_FAILED     = (1<<14),    // Servo enable problem
+    UPDATE_SUCCESS    = (1<<15)     // Update handrail pose
   };
 
   // Positions that we might need to move to
   enum PerchPose {
-    APPROACH_POSE,      // The starting poses of docking
-    COMPLETE_POSE,      // The completion pose of docking
-    ATTACHED_POSE       // A small delta pose for checking attachment
+    APPROACH_POSE,      // The starting poses of perching
+    COMPLETE_POSE,      // The completion pose of perching
+    RECOVERY_POSE,      // The pose to safely stow the arm
+    UNPERCHED_POSE,     // The pose when asking for unperching
+    PERCHED_POSE        // The pose when we are perched
+  };
+
+  // Perching arm servos to enable / disable
+  enum ServoID {
+    PROXIMAL,           // Proximal joint servo
+    DISTAL,             // Distal joint servo
+    GRIPPER,            // Gripper joint servo
+    ALL_SERVOS          // Proximal, Distal and Gripper servos
   };
 
   // Constructor boostraps freeflyer nodelet and sets initial FSM state
   PerchNodelet() : ff_util::FreeFlyerNodelet(NODE_PERCH, true),
     fsm_(STATE::INITIALIZING, std::bind(&PerchNodelet::UpdateCallback,
       this, std::placeholders::_1, std::placeholders::_2)) {
-    // Add the state transition lambda functions - refer to the FSM diagram
-    // [0]
+    ////////////////////////////////
+    // NON-BLOCKING STATE UPDATES //
+    ////////////////////////////////
+    // [0] - The system has just started. Wait until all services are
+    // connected and then move to the ready state.
     fsm_.Add(STATE::INITIALIZING,
       READY, [this](FSM::Event const& event) -> FSM::State {
         return STATE::UNKNOWN;
       });
-    // [1]
+    // [1] - If the state is unknown, if the arm reports as being
+    // stowed then we will assume that we are in an unperched state.
     fsm_.Add(STATE::UNKNOWN,
-      EPS_UNPERCHED, [this](FSM::Event const& event) -> FSM::State {
+      ARM_STOWED, [this](FSM::Event const& event) -> FSM::State {
         return STATE::UNPERCHED;
       });
-    // [2]
+    // [2] - If the state is unknown, if the arm reports as being
+    // deployed then we will assume that we are in a perched state.
     fsm_.Add(STATE::UNKNOWN,
-      EPS_PERCHED, [this](FSM::Event const& event) -> FSM::State {
+      ARM_DEPLOYED, [this](FSM::Event const& event) -> FSM::State {
         return STATE::PERCHED;
       });
-    // [3]
+    // [3] - If perched and the arm is suddenly stowed, then we
+    // are probably going to be manually unperched
+    fsm_.Add(STATE::PERCHED,
+      ARM_STOWED, [this](FSM::Event const& event) -> FSM::State {
+        return STATE::UNPERCHED;
+      });
+    // [4] - If perched and the arm is suddenly deployed, then we are
+    // probably going to be manually perched
+    fsm_.Add(STATE::UNPERCHED,
+      ARM_DEPLOYED, [this](FSM::Event const& event) -> FSM::State {
+        return STATE::PERCHED;
+      });
+    ////////////////////////////
+    // NOMINAL PERCH SEQUENCE //
+    ////////////////////////////
+    // [5] - If unperched and a perch goal is received, try switching
+    // to mapped landmark localization.
     fsm_.Add(STATE::UNPERCHED,
       GOAL_PERCH, [this](FSM::Event const& event) -> FSM::State {
-        Switch(LOCALIZATION_MAPPED_LANDMARKS);
-        return STATE::PERCHING_SWITCHING_TO_ML_LOC;
+        Switch(LOCALIZATION_HANDRAIL);
+        return STATE::PERCHING_SWITCHING_TO_HR_LOC;
       });
-    // [4]
-    fsm_.Add(STATE::PERCHING_SWITCHING_TO_ML_LOC,
+    // [6] - If we successfuly switched to handrail navigation
+    // then we can try moving to the approach pose in nominal mode.
+    fsm_.Add(STATE::PERCHING_SWITCHING_TO_HR_LOC,
       SWITCH_SUCCESS, [this](FSM::Event const& event) -> FSM::State {
         Move(APPROACH_POSE, ff_msgs::MotionGoal::NOMINAL);
         return STATE::PERCHING_MOVING_TO_APPROACH_POSE;
       });
-    // [5]
-    fsm_.Add(STATE::PERCHING_SWITCHING_TO_ML_LOC,
-      SWITCH_FAILED, [this](FSM::Event const& event) -> FSM::State {
-        Result(RESPONSE::SWITCH_TO_ML_FAILED);
-        return STATE::UNPERCHED;
-      });
-    // [6]
+    // [7] - If the move to approach pose was successful, we save the approach pose
+    // as a landmark and ask for arm deployment.
     fsm_.Add(STATE::PERCHING_MOVING_TO_APPROACH_POSE,
       MOTION_SUCCESS, [this](FSM::Event const& event) -> FSM::State {
-        Switch(LOCALIZATION_HANDRAIL);
-        return STATE::PERCHING_SWITCHING_TO_HR_LOC;
+        SaveApproachPose();
+        Arm(ff_msgs::ArmGoal::ARM_DEPLOY);
+        return STATE::PERCHING_DEPLOYING_ARM;
       });
-    // [7]
-    fsm_.Add(STATE::PERCHING_MOVING_TO_APPROACH_POSE,
+    // [7 bis] - If the movement to the approach pose was unsuccessful, we revert
+    // to mapped landmark localization.
+    fsm_.Add(STATE::PERCHING_ENSURING_APPROACH_POSE,
       MOTION_FAILED, [this](FSM::Event const& event) -> FSM::State {
-        err_ = RESPONSE::MOTION_APPROACH_FAILED;
         Switch(LOCALIZATION_MAPPED_LANDMARKS);
-        return STATE::RECOVERY_SWITCH_TO_ML_LOC;
+        return STATE::RECOVERY_SWITCHING_TO_ML_LOC;
       });
-    // [31]
-    fsm_.Add(STATE::PERCHING_SWITCHING_TO_HR_LOC,
-      SWITCH_SUCCESS, [this](FSM::Event const& event) -> FSM::State {
-        Move(COMPLETE_POSE, ff_msgs::MotionGoal::PERCHING);
+    // [8] - If we successfully deployed the arm, then we open its gripper.
+    fsm_.Add(STATE::PERCHING_DEPLOYING_ARM,
+      ARM_SUCCESS, [this](FSM::Event const& event) -> FSM::State {
+        Arm(ff_msgs::ArmGoal::GRIPPER_OPEN);
+        return STATE::PERCHING_OPENING_GRIPPER;
+      });
+    // [9] - If the gripper is opened, we move to complete pose.
+    fsm_.Add(STATE::PERCHING_OPENING_GRIPPER,
+      ARM_SUCCESS, [this](FSM::Event const& event) -> FSM::State {
+        Move(COMPLETE_POSE, ff_msgs::MotionGoal::NOMINAL);
         return STATE::PERCHING_MOVING_TO_COMPLETE_POSE;
       });
-    // [32]
-    fsm_.Add(STATE::PERCHING_SWITCHING_TO_HR_LOC, SWITCH_FAILED,
-      [this](FSM::Event const& event) -> FSM::State {
-        Result(RESPONSE::SWITCH_TO_HR_FAILED);
-        return STATE::UNPERCHED;
-      });
-    // [8]
+    // [10] - If the complete pose is reached, we close the gripper.
     fsm_.Add(STATE::PERCHING_MOVING_TO_COMPLETE_POSE,
-      EPS_PERCHED, [this](FSM::Event const& event) -> FSM::State {
-        Move(ATTACHED_POSE, ff_msgs::MotionGoal::PERCHING);
+      MOTION_SUCCESS, [this](FSM::Event const& event) -> FSM::State {
+        Arm(ff_msgs::ArmGoal::GRIPPER_CLOSE);
+        return STATE::PERCHING_CLOSING_GRIPPER;
+      });
+    // [11] - If the gripper is closed, we try moving away from the handrail.
+    fsm_.Add(STATE::PERCHING_CLOSING_GRIPPER,
+      ARM_SUCCESS, [this](FSM::Event const& event) -> FSM::State {
+        Move(APPROACH_POSE, ff_msgs::MotionGoal::NOMINAL);
         return STATE::PERCHING_CHECKING_ATTACHED;
       });
-    // [9]
-    fsm_.Add(STATE::PERCHING_MOVING_TO_COMPLETE_POSE,
-      MOTION_SUCCESS | MOTION_FAILED,
-      [this](FSM::Event const& event) -> FSM::State {
-        if (event == MOTION_SUCCESS)
-          err_ = RESPONSE::EPS_PERCH_FAILED;
-        if (event == MOTION_FAILED)
-          err_ = RESPONSE::MOTION_COMPLETE_FAILED;
-        Move(APPROACH_POSE, ff_msgs::MotionGoal::PERCHING);
-        return STATE::RECOVERY_MOVING_TO_APPROACH_POSE;
-      });
-    // [10]
+    // [12] - If the motion is failed, we are grasped and ask to stop movement.
     fsm_.Add(STATE::PERCHING_CHECKING_ATTACHED,
       MOTION_FAILED, [this](FSM::Event const& event) -> FSM::State {
         Prep(ff_msgs::MotionGoal::OFF);
         return STATE::PERCHING_WAITING_FOR_SPIN_DOWN;
       });
-    // [11]
-    fsm_.Add(STATE::PERCHING_CHECKING_ATTACHED,
+    // [13] - If we successfully stopped, we switch to perch localization (future work)
+    fsm_.Add(STATE::PERCHING_WAITING_FOR_SPIN_DOWN,
       MOTION_SUCCESS, [this](FSM::Event const& event) -> FSM::State {
-        err_ = RESPONSE::MOTION_ATTACHED_FAILED;
-        Move(APPROACH_POSE, ff_msgs::MotionGoal::PERCHING);
-        return STATE::RECOVERY_MOVING_TO_APPROACH_POSE;
+        Switch(LOCALIZATION_PERCH);
+        return STATE::PERCHING_SWITCHING_TO_PL_LOC;
       });
-    // [12]
-    fsm_.Add(STATE::PERCHING_SWITCHING_TO_NO_LOC,
+    // [14] - Fill with whatever needed for perched localization, Move() is placeholder.
+    fsm_.Add(STATE::PERCHING_SWITCHING_TO_PL_LOC,
       SWITCH_SUCCESS, [this](FSM::Event const& event) -> FSM::State {
-        Result(RESPONSE::PERCHED);
-        return STATE::PERCHED;
+        Move(PERCHED_POSE, ff_msgs::MotionGoal::OFF);
+        return STATE::PERCHING_STOPPING;
       });
-    // [13]
-    fsm_.Add(STATE::PERCHING_SWITCHING_TO_NO_LOC,
-      SWITCH_FAILED, [this](FSM::Event const& event) -> FSM::State {
-        Result(RESPONSE::SWITCH_TO_NO_FAILED);
-        return STATE::PERCHED;
+    // [15] - With all steps done, we conclude we are perched.
+    fsm_.Add(STATE::PERCHING_STOPPING,
+      MOTION_SUCCESS, [this](FSM::Event const& event) -> FSM::State {
+        return Result(STATE::PERCHED, "Successfully perched");
       });
-    // [14]
+    //////////////////////////////
+    // NOMINAL UNPERCH SEQUENCE //
+    //////////////////////////////
+    // [16] - Switch to handrail localization.
     fsm_.Add(STATE::PERCHED,
       GOAL_UNPERCH, [this](FSM::Event const& event) -> FSM::State {
-        Switch(LOCALIZATION_MAPPED_LANDMARKS);
-        return STATE::UNPERCHING_SWITCHING_TO_ML_LOC;
+        Switch(LOCALIZATION_HANDRAIL);
+        return STATE::UNPERCHING_SWITCHING_TO_HR_LOC;
       });
-    // [15]
-    fsm_.Add(STATE::UNPERCHING_SWITCHING_TO_ML_LOC,
-      SWITCH_SUCCESS,
-      [this](FSM::Event const& event) -> FSM::State {
-        Prep(ff_msgs::MotionGoal::UNPERCHING);
+    // [17] -If the switch is successful,
+    // spin up the propellers to enable motion commands.
+    fsm_.Add(STATE::UNPERCHING_SWITCHING_TO_HR_LOC,
+      SWITCH_SUCCESS, [this](FSM::Event const& event) -> FSM::State {
+        Prep(ff_msgs::MotionGoal::NOMINAL);
         return STATE::UNPERCHING_WAITING_FOR_SPIN_UP;
       });
-    // [16]
-    fsm_.Add(STATE::UNPERCHING_SWITCHING_TO_ML_LOC,
-      SWITCH_FAILED, [this](FSM::Event const& event) -> FSM::State {
-        err_ = RESPONSE::SWITCH_TO_ML_FAILED;
-        Switch(LOCALIZATION_NONE);
-        return STATE::RECOVERY_SWITCH_TO_NO_LOC;
-      });
-    // [19]
-    fsm_.Add(STATE::UNPERCHING_MOVING_TO_APPROACH_POSE,
-      MOTION_SUCCESS,
-      [this](FSM::Event const& event) -> FSM::State {
-        Result(RESPONSE::UNPERCHED);
-        return STATE::UNPERCHED;
-      });
-    // [20]
-    fsm_.Add(STATE::UNPERCHING_MOVING_TO_APPROACH_POSE,
-      MOTION_FAILED, [this](FSM::Event const& event) -> FSM::State {
-        Result(RESPONSE::MOTION_APPROACH_FAILED);
-        return STATE::UNPERCHED;
-      });
-    // [21]
-    fsm_.Add(STATE::RECOVERY_MOVING_TO_APPROACH_POSE,
-      MOTION_SUCCESS | MOTION_FAILED,
-      [this](FSM::Event const& event) -> FSM::State {
-        Switch(LOCALIZATION_MAPPED_LANDMARKS);
-        return STATE::RECOVERY_SWITCH_TO_ML_LOC;
-      });
-    // [22]
-    fsm_.Add(STATE::RECOVERY_SWITCH_TO_ML_LOC,
-      SWITCH_SUCCESS | SWITCH_FAILED,
-      [this](FSM::Event const& event) -> FSM::State {
-        Result(err_);
-        return STATE::UNPERCHED;
-      });
-    // [23]
-    fsm_.Add(STATE::RECOVERY_SWITCH_TO_NO_LOC,
-      SWITCH_SUCCESS | SWITCH_FAILED,
-      [this](FSM::Event const& event) -> FSM::State {
-        Result(err_);
-        return STATE::PERCHED;
-      });
-    // [24]
-    fsm_.Add(STATE::PERCHED,
-      EPS_UNPERCHED, [this](FSM::Event const& event) -> FSM::State {
-        return STATE::UNPERCHED;
-      });
-    // [25]
-    fsm_.Add(STATE::UNPERCHED,
-      EPS_PERCHED, [this](FSM::Event const& event) -> FSM::State {
-        return STATE::PERCHED;
-      });
-    // [26]
+    // [18] - If the propellers are spinning, open the gripper.
     fsm_.Add(STATE::UNPERCHING_WAITING_FOR_SPIN_UP,
       MOTION_SUCCESS, [this](FSM::Event const& event) -> FSM::State {
-        Undock();
+        Arm(ff_msgs::ArmGoal::GRIPPER_OPEN);
+        return STATE::UNPERCHING_OPENING_GRIPPER;
+      });
+    // [19] - If the gripper opened successfully, move to the approach pose.
+    fsm_.Add(STATE::UNPERCHING_OPENING_GRIPPER,
+      ARM_SUCCESS, [this](FSM::Event const& event) -> FSM::State {
         Move(APPROACH_POSE, ff_msgs::MotionGoal::NOMINAL);
         return STATE::UNPERCHING_MOVING_TO_APPROACH_POSE;
       });
-    // [27]
-    fsm_.Add(STATE::PERCHING_WAITING_FOR_SPIN_DOWN,
+    // [20] - Once at the approach pose, stow the arm.
+    fsm_.Add(STATE::UNPERCHING_MOVING_TO_APPROACH_POSE,
       MOTION_SUCCESS, [this](FSM::Event const& event) -> FSM::State {
-        Switch(LOCALIZATION_NONE);
-        return STATE::PERCHING_SWITCHING_TO_NO_LOC;
+        Arm(ff_msgs::ArmGoal::ARM_STOW);
+        return STATE::UNPERCHING_STOWING_ARM;
+      });
+    // [21] - With all steps dones, conclude we are unperched.
+    fsm_.Add(STATE::UNPERCHING_STOWING_ARM,
+      ARM_SUCCESS, [this](FSM::Event const& event) -> FSM::State {
+        Switch(LOCALIZATION_MAPPED_LANDMARKS);
+        return STATE::UNPERCHING_SWITCHING_TO_ML_LOC;
+      });
+    fsm_.Add(STATE::UNPERCHING_SWITCHING_TO_ML_LOC,
+      SWITCH_SUCCESS, [this](FSM::Event const& event) -> FSM::State {
+        return Result(STATE::UNPERCHED, "Successfully unperched");
+      });
+    ///////////////////////
+    // RECOVERY SEQUENCE //
+    ///////////////////////
+    // [20] - Opening gripper for recovery attempt: Success and Fail options
+    fsm_.Add(STATE::RECOVERY_OPENING_GRIPPER,
+      ARM_SUCCESS, [this](FSM::Event const& event) -> FSM::State {
+        Switch(LOCALIZATION_MAPPED_LANDMARKS);
+        return STATE::RECOVERY_SWITCHING_TO_ML_LOC;
+      });
+    fsm_.Add(STATE::RECOVERY_OPENING_GRIPPER,
+      ARM_FAILED, [this](FSM::Event const& event) -> FSM::State {
+        return Result(RESPONSE::ARM_FAILED,
+          "Gripper open failed");
+      });
+    // [23] - Switching to ML loc in recovery: Success and Fail options
+    fsm_.Add(STATE::RECOVERY_SWITCHING_TO_ML_LOC,
+      SWITCH_SUCCESS, [this](FSM::Event const& event) -> FSM::State {
+        Move(RECOVERY_POSE, ff_msgs::MotionGoal::NOMINAL);
+        return STATE::RECOVERY_MOVING_TO_RECOVERY_POSE;
+      });
+    fsm_.Add(STATE::RECOVERY_SWITCHING_TO_ML_LOC,
+      SWITCH_FAILED, [this](FSM::Event const& event) -> FSM::State {
+        return Result(RESPONSE::SWITCH_FAILED,
+          "Switch to mapped landmarks localization failed");
+      });
+    // [21] - Motion to recovery pose: Success and Fail options
+    fsm_.Add(STATE::RECOVERY_MOVING_TO_RECOVERY_POSE,
+      MOTION_SUCCESS, [this](FSM::Event const& event) -> FSM::State {
+        Arm(ff_msgs::ArmGoal::ARM_STOW);
+        return STATE::RECOVERY_STOWING_ARM;
+      });
+    fsm_.Add(STATE::RECOVERY_MOVING_TO_RECOVERY_POSE,
+      MOTION_FAILED, [this](FSM::Event const& event) -> FSM::State {
+        return Result(RESPONSE::MOTION_FAILED,
+          "Recovery motion to recovery pose failed");
+      });
+    // [22] - Stowing arm in recovery: Success and Fail options
+    fsm_.Add(STATE::RECOVERY_STOWING_ARM,
+      ARM_SUCCESS, [this](FSM::Event const& event) -> FSM::State {
+        return Result(STATE::UNPERCHED, "Successful Recovery");
+      });
+    fsm_.Add(STATE::RECOVERY_STOWING_ARM,
+      ARM_FAILED, [this](FSM::Event const& event) -> FSM::State {
+        return Result(RESPONSE::ARM_FAILED,
+          "Stowing arm failed");
+      });
+    //////////////////////////////
+    // MONIAL-RECOVERY BRANCHES //
+    //////////////////////////////
+    // [25]
+    fsm_.Add(STATE::PERCHING_SWITCHING_TO_HR_LOC,
+      SWITCH_FAILED, [this](FSM::Event const& event) -> FSM::State {
+        return Result(RESPONSE::SWITCH_FAILED,
+          "Switch to handrail localization failed");
+      });
+    // [26]
+    fsm_.Add(STATE::PERCHING_MOVING_TO_APPROACH_POSE,
+      MOTION_FAILED, [this](FSM::Event const& event) -> FSM::State {
+        Switch(LOCALIZATION_MAPPED_LANDMARKS);
+        return STATE::RECOVERY_SWITCHING_TO_ML_LOC;
+      });
+    // [27]
+    fsm_.Add(STATE::PERCHING_DEPLOYING_ARM,
+      ARM_FAILED, [this](FSM::Event const& event) -> FSM::State {
+        Arm(ff_msgs::ArmGoal::ARM_STOW);
+        return STATE::RECOVERY_STOWING_ARM;
       });
     // [28]
-    fsm_.Add(STATE::PERCHING_WAITING_FOR_SPIN_DOWN,
-      MOTION_FAILED, [this](FSM::Event const& event) -> FSM::State {
-        Result(RESPONSE::PREP_DISABLE_FAILED);
-        Switch(LOCALIZATION_NONE);
-        return STATE::PERCHED;
+    fsm_.Add(STATE::PERCHING_OPENING_GRIPPER,
+      ARM_FAILED, [this](FSM::Event const& event) -> FSM::State {
+        Arm(ff_msgs::ArmGoal::ARM_STOW);
+        return STATE::RECOVERY_STOWING_ARM;
       });
     // [29]
-    fsm_.Add(STATE::UNPERCHED,
+    fsm_.Add(STATE::PERCHING_MOVING_TO_COMPLETE_POSE,
       MOTION_FAILED, [this](FSM::Event const& event) -> FSM::State {
-        err_ = RESPONSE::PREP_ENABLE_FAILED;
-        Prep(ff_msgs::MotionGoal::OFF);
-        return STATE::RECOVERY_WAITING_FOR_SPIN_DOWN;
+        Arm(ff_msgs::ArmGoal::GRIPPER_OPEN);
+        return STATE::RECOVERY_OPENING_GRIPPER;
       });
     // [30]
-    fsm_.Add(STATE::RECOVERY_WAITING_FOR_SPIN_DOWN,
-      MOTION_FAILED | MOTION_SUCCESS,
-      [this](FSM::Event const& event) -> FSM::State {
-        Switch(LOCALIZATION_NONE);
-        return STATE::RECOVERY_SWITCH_TO_NO_LOC;
+    fsm_.Add(STATE::PERCHING_CLOSING_GRIPPER,
+      ARM_FAILED, [this](FSM::Event const& event) -> FSM::State {
+        Arm(ff_msgs::ArmGoal::GRIPPER_OPEN);
+        return STATE::RECOVERY_OPENING_GRIPPER;
+      });
+    // [31]
+    fsm_.Add(STATE::PERCHING_CHECKING_ATTACHED,
+      MOTION_SUCCESS, [this](FSM::Event const& event) -> FSM::State {
+        Arm(ff_msgs::ArmGoal::GRIPPER_OPEN);
+        return STATE::RECOVERY_OPENING_GRIPPER;
+      });
+    // [32]
+    fsm_.Add(STATE::PERCHING_WAITING_FOR_SPIN_DOWN,
+      MOTION_FAILED, [this](FSM::Event const& event) -> FSM::State {
+        return Result(RESPONSE::MOTION_FAILED,
+          "Spinning down propulsion failed");
+      });
+    // [33]
+    fsm_.Add(STATE::PERCHING_SWITCHING_TO_PL_LOC,
+      SWITCH_FAILED, [this](FSM::Event const& event) -> FSM::State {
+        return Result(RESPONSE::SWITCH_FAILED,
+          "Switch to perch localization failed");
+      });
+    // [34]
+    fsm_.Add(STATE::UNPERCHING_MOVING_TO_APPROACH_POSE,
+      MOTION_FAILED, [this](FSM::Event const& event) -> FSM::State {
+        Switch(LOCALIZATION_MAPPED_LANDMARKS);
+        return STATE::RECOVERY_SWITCHING_TO_ML_LOC;
+      });
+    // [35]
+    fsm_.Add(STATE::UNPERCHING_STOWING_ARM,
+      ARM_FAILED, [this](FSM::Event const& event) -> FSM::State {
+        return Result(RESPONSE::ARM_FAILED,
+          "Stowing arm failed");
+      });
+    // [36]
+    fsm_.Add(STATE::UNPERCHING_SWITCHING_TO_HR_LOC,
+      SWITCH_FAILED, [this](FSM::Event const& event) -> FSM::State {
+        return Result(RESPONSE::SWITCH_FAILED,
+          "Switch to handrail localization failed");
+      });
+    fsm_.Add(STATE::UNPERCHING_SWITCHING_TO_ML_LOC,
+      SWITCH_FAILED, [this](FSM::Event const& event) -> FSM::State {
+        return Result(RESPONSE::SWITCH_FAILED,
+          "Switch to mapped landmarks localization failed");
+      });
+    // [37]
+    fsm_.Add(STATE::UNPERCHING_WAITING_FOR_SPIN_UP,
+      MOTION_FAILED, [this](FSM::Event const& event) -> FSM::State {
+        return Result(RESPONSE::ARM_FAILED,
+          "Spinning up propulsion failed");
+      });
+    // [38]
+    fsm_.Add(STATE::UNPERCHING_OPENING_GRIPPER,
+      ARM_FAILED, [this](FSM::Event const& event) -> FSM::State {
+        return Result(RESPONSE::ARM_FAILED,
+          "Gripper open failed");
       });
     //////////////////////////////////////////////
     // CATCH-ALL FOR CANCELLATIONS / PREEMPTION //
     //////////////////////////////////////////////
+    // [A] - If a GOAL is CANCELLED or preempted, we should immediately.
     fsm_.Add(GOAL_CANCEL | GOAL_PREEMPT,
       [this](FSM::State const& state, FSM::Event const& event) -> FSM::State {
+        // Cancel any leftover actions
         switch (state) {
-        // Values we certaintly don't want to mess with
         default:
         case STATE::INITIALIZING:
         case STATE::UNKNOWN:
         case STATE::PERCHED:
         case STATE::UNPERCHED:
-          break;
-        // Undocked and switch in progress
-        case STATE::PERCHING_SWITCHING_TO_ML_LOC:
+          return state;
+        // Motion goals
+        case STATE::RECOVERY_SWITCHING_TO_ML_LOC:
         case STATE::PERCHING_SWITCHING_TO_HR_LOC:
-        case STATE::RECOVERY_SWITCH_TO_ML_LOC:
-          client_s_.CancelGoal();
-          return STATE::UNPERCHED;
-        // Undocked and motion in progress
-        case STATE::PERCHING_MOVING_TO_APPROACH_POSE:
-        case STATE::PERCHING_MOVING_TO_COMPLETE_POSE:
-        case STATE::UNPERCHING_MOVING_TO_APPROACH_POSE:
-        case STATE::RECOVERY_MOVING_TO_APPROACH_POSE:
-          client_m_.CancelGoal();
-          return STATE::UNPERCHED;
-        // Perched and switch in progress
-        case STATE::PERCHING_SWITCHING_TO_NO_LOC:
+        case STATE::PERCHING_SWITCHING_TO_PL_LOC:
+        case STATE::UNPERCHING_SWITCHING_TO_HR_LOC:
         case STATE::UNPERCHING_SWITCHING_TO_ML_LOC:
-        case STATE::RECOVERY_SWITCH_TO_NO_LOC:
+        case STATE::PERCHING_STOPPING:
+        case STATE::PERCHING_UPDATING_HR_POSE:
           client_s_.CancelGoal();
-          return STATE::PERCHED;
-        // Perched and motion in progress
-        case STATE::UNPERCHING_WAITING_FOR_SPIN_UP:
+          return STATE::UNKNOWN;
+        case STATE::RECOVERY_MOVING_TO_APPROACH_POSE:
+        case STATE::RECOVERY_MOVING_TO_RECOVERY_POSE:
+        case STATE::PERCHING_MOVING_TO_APPROACH_POSE:
+        case STATE::PERCHING_ENSURING_APPROACH_POSE:
+        case STATE::PERCHING_MOVING_TO_COMPLETE_POSE:
         case STATE::PERCHING_CHECKING_ATTACHED:
         case STATE::PERCHING_WAITING_FOR_SPIN_DOWN:
+        case STATE::UNPERCHING_WAITING_FOR_SPIN_UP:
+        case STATE::UNPERCHING_MOVING_TO_APPROACH_POSE:
+        case STATE::UNPERCHING_MOVING_TO_PREP_POSE:
           client_m_.CancelGoal();
-          return STATE::PERCHED;
+          return STATE::UNKNOWN;
+        case STATE::RECOVERY_STOWING_ARM:
+        case STATE::RECOVERY_OPENING_GRIPPER:
+        case STATE::PERCHING_DEPLOYING_ARM:
+        case STATE::PERCHING_OPENING_GRIPPER:
+        case STATE::PERCHING_CLOSING_GRIPPER:
+        case STATE::UNPERCHING_OPENING_GRIPPER:
+        case STATE::UNPERCHING_STOWING_ARM:
+          client_a_.CancelGoal();
+          break;
         }
         // Send a response stating that we were canceled
-        switch (event) {
-        case GOAL_CANCEL:
-          Result(RESPONSE::CANCELLED);
-          break;
-        case GOAL_PREEMPT:
-          Result(RESPONSE::PREEMPTED);
-          break;
-        }
-        // Default case is to preserve the stata
-        return state;
+        if (event == GOAL_CANCEL)
+          return Result(RESPONSE::CANCELLED, "Cancelled by callee");
+        return Result(RESPONSE::PREEMPTED, "Preempted by third party");
       });
   }
-  virtual ~PerchNodelet() {}
+  ~PerchNodelet() {}
 
  protected:
   // Called to initialize this nodelet
@@ -367,35 +478,30 @@ class PerchNodelet : public ff_util::FreeFlyerNodelet {
     cfg_.Initialize(GetPrivateHandle(), "behaviors/perch.config");
     if (!cfg_.Listen(boost::bind(
       &PerchNodelet::ReconfigureCallback, this, _1)))
-      return AssertFault("INITIALIZATION_FAULT", "Could not load config");
-    // One shot timer to check if we undock with a timeout
-    timer_eps_ = nh->createTimer(
-      ros::Duration(cfg_.Get<double>("timeout_eps_response")),
-      &PerchNodelet::PerchTimerCallback, this, true, false);
+      return AssertFault(ff_util::INITIALIZATION_FAILED,
+                         "Could not load config");
 
     // Create a transform buffer to listen for transforms
     tf_listener_ = std::shared_ptr<tf2_ros::TransformListener>(
       new tf2_ros::TransformListener(tf_buffer_));
 
-    // Publish the docking state as a latched topic
+    // Publish the perching state as a latched topic
     pub_ = nh->advertise<ff_msgs::PerchState>(
       TOPIC_BEHAVIORS_PERCHING_STATE, 1, true);
 
-    // Subscribe to be notified when the dock state changes
-    sub_s_ = nh->subscribe(TOPIC_HARDWARE_EPS_PERCH_STATE, 5,
-      &PerchNodelet::PerchStateCallback, this);
+    // Subscribe to be notified when the perch state changes
+    sub_ = nh->subscribe(TOPIC_BEHAVIORS_ARM_ARM_STATE, 1,
+      &PerchNodelet::ArmStateStampedCallback, this);
 
     // Allow the state to be manually set
     server_set_state_ = nh->advertiseService(SERVICE_BEHAVIORS_PERCH_SET_STATE,
       &PerchNodelet::SetStateCallback, this);
 
-    // Contact EPS service for undocking
-    client_u_.SetConnectedTimeout(cfg_.Get<double>("timeout_undock_connected"));
-    client_u_.SetConnectedCallback(std::bind(
-      &PerchNodelet::ConnectedCallback, this));
-    client_u_.SetTimeoutCallback(std::bind(
-      &PerchNodelet::UndockTimeoutCallback, this));
-    client_u_.Create(nh, SERVICE_HARDWARE_EPS_UNPERCH);
+    client_service_of_enable_ = nh->serviceClient<ff_msgs::SetBool>(
+      SERVICE_LOCALIZATION_OF_ENABLE);
+
+    client_service_hr_reset_ = nh->serviceClient<std_srvs::Empty>(
+      SERVICE_GNC_EKF_RESET_HR);
 
     // Setup move client action
     client_m_.SetConnectedTimeout(cfg_.Get<double>("timeout_motion_connected"));
@@ -413,14 +519,26 @@ class PerchNodelet : public ff_util::FreeFlyerNodelet {
     client_s_.SetConnectedTimeout(cfg_.Get<double>("timeout_switch_connected"));
     client_s_.SetActiveTimeout(cfg_.Get<double>("timeout_switch_active"));
     client_s_.SetResponseTimeout(cfg_.Get<double>("timeout_switch_response"));
-    client_s_.SetDeadlineTimeout(cfg_.Get<double>("timeout_switch_deadline"));
+    // client_s_.SetDeadlineTimeout(cfg_.Get<double>("timeout_switch_deadline"));
     client_s_.SetFeedbackCallback(std::bind(
       &PerchNodelet::SFeedbackCallback, this, std::placeholders::_1));
     client_s_.SetResultCallback(std::bind(&PerchNodelet::SResultCallback,
       this, std::placeholders::_1, std::placeholders::_2));
     client_s_.SetConnectedCallback(std::bind(&PerchNodelet::ConnectedCallback,
       this));
-    client_s_.Create(nh, ACTION_LOCALIZATION_MANAGER_SWITCH);
+    client_s_.Create(nh, ACTION_LOCALIZATION_MANAGER_LOCALIZATION);
+
+    // Setup arm client action
+    client_a_.SetConnectedTimeout(cfg_.Get<double>("timeout_arm_connected"));
+    client_a_.SetActiveTimeout(cfg_.Get<double>("timeout_arm_active"));
+    client_a_.SetResponseTimeout(cfg_.Get<double>("timeout_arm_response"));
+    client_a_.SetFeedbackCallback(std::bind(
+      &PerchNodelet::AFeedbackCallback, this, std::placeholders::_1));
+    client_a_.SetResultCallback(std::bind(&PerchNodelet::AResultCallback,
+      this, std::placeholders::_1, std::placeholders::_2));
+    client_a_.SetConnectedCallback(std::bind(&PerchNodelet::ConnectedCallback,
+      this));
+    client_a_.Create(nh, ACTION_BEHAVIORS_ARM);
 
     // Setup the execute action
     server_.SetGoalCallback(std::bind(
@@ -432,20 +550,10 @@ class PerchNodelet : public ff_util::FreeFlyerNodelet {
     server_.Create(nh, ACTION_BEHAVIORS_PERCH);
   }
 
-  // Timeout on a trajectory generation request
-  void EnableTimeoutCallback(void) {
-    return AssertFault("INITIALIZATION_FAULT", "Could not find enable service");
-  }
-
-  // Timeout on a trajectory generation request
-  void UndockTimeoutCallback(void) {
-    return AssertFault("INITIALIZATION_FAULT", "Could not find undock service");
-  }
-
   // Ensure all clients are connected
   void ConnectedCallback() {
     NODELET_DEBUG_STREAM("ConnectedCallback()");
-    if (!client_u_.IsConnected()) return;       // Undock service
+    if (!client_a_.IsConnected()) return;       // Arm service
     if (!client_s_.IsConnected()) return;       // Switch action
     if (!client_m_.IsConnected()) return;       // Move action
     fsm_.Update(READY);                         // Ready!
@@ -459,20 +567,21 @@ class PerchNodelet : public ff_util::FreeFlyerNodelet {
     return true;
   }
 
-  // Complete the current dock or undock action
-  void Result(int32_t response) {
+  // Complete the current perch or unperch action
+  FSM::State Result(int32_t response, std::string const& msg = "") {
     // Send the feedback if needed
     switch (fsm_.GetState()) {
     case STATE::INITIALIZING:
     case STATE::UNKNOWN:
     case STATE::PERCHED:
     case STATE::UNPERCHED:
-      return;
+      return fsm_.GetState();
     default:
       break;
     }
     // Package up the feedback
     ff_msgs::PerchResult result;
+    result.fsm_result = msg;
     result.response = response;
     if (response > 0)
       server_.SendResult(ff_util::FreeFlyerActionState::SUCCESS, result);
@@ -480,65 +589,97 @@ class PerchNodelet : public ff_util::FreeFlyerNodelet {
       server_.SendResult(ff_util::FreeFlyerActionState::ABORTED, result);
     else
       server_.SendResult(ff_util::FreeFlyerActionState::PREEMPTED, result);
+    // Always move to the unknown state and let arm feedback set it for you
+    return STATE::UNKNOWN;
   }
 
   // When the FSM state changes we get a callback here, so that we
   // can choose to do various things.
   void UpdateCallback(FSM::State const& state, FSM::Event const& event) {
     // Debug events
-    std::string str = "UNKNOWN";
+    ff_msgs::PerchState msg;
+    msg.header.frame_id = GetPlatform();
+    msg.header.stamp = ros::Time::now();
+    msg.state = state;
+    // Debug events
     switch (event) {
-    case READY:          str = "READY";          break;
-    case GOAL_PERCH:     str = "GOAL_PERCH";      break;
-    case GOAL_UNPERCH:   str = "GOAL_UNPERCH";    break;
-    case GOAL_CANCEL:    str = "GOAL_CANCEL";    break;
-    case EPS_PERCHED:    str = "EPS_PERCHED";     break;
-    case EPS_UNPERCHED:  str = "EPS_UNPERCHED";   break;
-    case EPS_TIMEOUT:    str = "EPS_TIMEOUT";    break;
-    case SWITCH_SUCCESS: str = "SWITCH_SUCCESS"; break;
-    case SWITCH_FAILED:  str = "SWITCH_FAILED";  break;
-    case MOTION_SUCCESS: str = "MOTION_SUCCESS"; break;
-    case MOTION_FAILED:  str = "MOTION_FAILED";  break;
+    case READY:          msg.fsm_event = "READY";             break;
+    case GOAL_PERCH:     msg.fsm_event = "GOAL_PERCH";        break;
+    case GOAL_UNPERCH:   msg.fsm_event = "GOAL_UNPERCH";      break;
+    case GOAL_CANCEL:    msg.fsm_event = "GOAL_CANCEL";       break;
+    case GOAL_PREEMPT:   msg.fsm_event = "GOAL_PREEMPT";      break;
+    case ARM_DEPLOYED:   msg.fsm_event = "ARM_DEPLOYED";      break;
+    case ARM_STOWED:     msg.fsm_event = "ARM_STOWED";        break;
+    case ARM_SUCCESS:    msg.fsm_event = "ARM_SUCCESS";       break;
+    case ARM_FAILED:     msg.fsm_event = "ARM_FAILED";        break;
+    case SWITCH_SUCCESS: msg.fsm_event = "SWITCH_SUCCESS";    break;
+    case SWITCH_FAILED:  msg.fsm_event = "SWITCH_FAILED";     break;
+    case MOTION_SUCCESS: msg.fsm_event = "MOTION_SUCCESS";    break;
+    case MOTION_FAILED:  msg.fsm_event = "MOTION_FAILED";     break;
     }
-    NODELET_DEBUG_STREAM("Received event " << str);
+    NODELET_DEBUG_STREAM("Received event " << msg.fsm_event);
     // Debug state changes
     switch (state) {
     case STATE::INITIALIZING:
-      str = "INITIALIZING";                      break;
+      msg.fsm_state = "INITIALIZING";                         break;
     case STATE::UNKNOWN:
-      str = "UNKNOWN";                           break;
-    case STATE::UNPERCHED:
-      str = "UNPERCHED";                          break;
-    case STATE::PERCHING_SWITCHING_TO_ML_LOC:
-      str = "PERCHING_SWITCHING_TO_ML_LOC";       break;
-    case STATE::PERCHING_MOVING_TO_APPROACH_POSE:
-      str = "PERCHING_MOVING_TO_APPROACH_POSE";   break;
-    case STATE::PERCHING_SWITCHING_TO_HR_LOC:
-      str = "PERCHING_SWITCHING_TO_HR_LOC";       break;
-    case STATE::PERCHING_MOVING_TO_COMPLETE_POSE:
-      str = "PERCHING_MOVING_TO_COMPLETE_POSE";   break;
-    case STATE::PERCHING_CHECKING_ATTACHED:
-      str = "PERCHING_CHECKING_ATTACHED";         break;
-    case STATE::PERCHING_WAITING_FOR_SPIN_DOWN:
-      str = "PERCHING_WAITING_FOR_SPIN_DOWN";     break;
-    case STATE::PERCHING_SWITCHING_TO_NO_LOC:
-      str = "PERCHING_SWITCHING_TO_NO_LOC";       break;
+      msg.fsm_state = "UNKNOWN";                              break;
     case STATE::PERCHED:
-      str = "PERCHED";                            break;
-    case STATE::UNPERCHING_SWITCHING_TO_ML_LOC:
-      str = "UNPERCHING_SWITCHING_TO_ML_LOC";     break;
-    case STATE::UNPERCHING_WAITING_FOR_SPIN_UP:
-      str = "UNPERCHING_WAITING_FOR_SPIN_UP";     break;
-    case STATE::UNPERCHING_MOVING_TO_APPROACH_POSE:
-      str = "UNPERCHING_MOVING_TO_APPROACH_POSE"; break;
-    case STATE::RECOVERY_SWITCH_TO_NO_LOC:
-      str = "RECOVERY_SWITCH_TO_NO_LOC";         break;
-    case STATE::RECOVERY_MOVING_TO_APPROACH_POSE:
-      str = "RECOVERY_MOVING_TO_APPROACH_POSE";  break;
-    case STATE::RECOVERY_SWITCH_TO_ML_LOC:
-      str = "RECOVERY_SWITCH_TO_ML_LOC";         break;
+      msg.fsm_state = "PERCHED";                              break;
+    case STATE::UNPERCHED:
+      msg.fsm_state = "UNPERCHED";                            break;
+    case STATE::RECOVERY_SWITCHING_TO_ML_LOC :
+      msg.fsm_state = "RECOVERY_SWITCHING_TO_ML_LOC";         break;
+    case STATE::PERCHING_SWITCHING_TO_HR_LOC :
+      msg.fsm_state = "PERCHING_SWITCHING_TO_HR_LOC";         break;
+    case STATE::PERCHING_SWITCHING_TO_PL_LOC :
+      msg.fsm_state = "PERCHING_SWITCHING_TO_PL_LOC";         break;
+    case STATE::PERCHING_STOPPING :
+      msg.fsm_state = "PERCHING_STOPPING";                    break;
+    case STATE::UNPERCHING_SWITCHING_TO_HR_LOC :
+      msg.fsm_state = "UNPERCHING_SWITCHING_TO_HR_LOC";       break;
+    case STATE::UNPERCHING_SWITCHING_TO_ML_LOC :
+      msg.fsm_state = "UNPERCHING_SWITCHING_TO_ML_LOC";       break;
+    case STATE::RECOVERY_MOVING_TO_APPROACH_POSE :
+      msg.fsm_state = "RECOVERY_MOVING_TO_APPROACH_POSE";     break;
+    case STATE::RECOVERY_MOVING_TO_RECOVERY_POSE :
+      msg.fsm_state = "RECOVERY_MOVING_TO_RECOVERY_POSE";     break;
+    case STATE::PERCHING_MOVING_TO_APPROACH_POSE :
+      msg.fsm_state = "PERCHING_MOVING_TO_APPROACH_POSE";     break;
+    case STATE::PERCHING_UPDATING_HR_POSE :
+      msg.fsm_state = "PERCHING_UPDATING_HR_POSE";            break;
+    case STATE::PERCHING_ENSURING_APPROACH_POSE :
+      msg.fsm_state = "PERCHING_ENSURING_APPROACH_POSE";      break;
+    case STATE::PERCHING_MOVING_TO_COMPLETE_POSE :
+      msg.fsm_state = "PERCHING_MOVING_TO_COMPLETE_POSE";     break;
+    case STATE::PERCHING_CHECKING_ATTACHED :
+      msg.fsm_state = "PERCHING_CHECKING_ATTACHED";           break;
+    case STATE::PERCHING_WAITING_FOR_SPIN_DOWN :
+      msg.fsm_state = "PERCHING_WAITING_FOR_SPIN_DOWN";       break;
+    case STATE::UNPERCHING_WAITING_FOR_SPIN_UP :
+      msg.fsm_state = "UNPERCHING_WAITING_FOR_SPIN_UP";       break;
+    case STATE::UNPERCHING_MOVING_TO_APPROACH_POSE :
+      msg.fsm_state = "UNPERCHING_MOVING_TO_APPROACH_POSE";   break;
+    case STATE::UNPERCHING_MOVING_TO_PREP_POSE :
+      msg.fsm_state = "UNPERCHING_MOVING_TO_PREP_POSE";       break;
+    case STATE::RECOVERY_STOWING_ARM :
+      msg.fsm_state = "RECOVERY_STOWING_ARM";                 break;
+    case STATE::RECOVERY_OPENING_GRIPPER :
+      msg.fsm_state = "RECOVERY_OPENING_GRIPPER";             break;
+    case STATE::PERCHING_DEPLOYING_ARM :
+      msg.fsm_state = "PERCHING_DEPLOYING_ARM";               break;
+    case STATE::PERCHING_OPENING_GRIPPER :
+      msg.fsm_state = "PERCHING_OPENING_GRIPPER";             break;
+    case STATE::PERCHING_CLOSING_GRIPPER :
+      msg.fsm_state = "PERCHING_CLOSING_GRIPPER";             break;
+    case STATE::UNPERCHING_OPENING_GRIPPER :
+      msg.fsm_state = "UNPERCHING_OPENING_GRIPPER";           break;
+    case STATE::UNPERCHING_STOWING_ARM :
+      msg.fsm_state = "UNPERCHING_STOWING_ARM";               break;
     }
-    NODELET_DEBUG_STREAM("State changed to " << str);
+    NODELET_DEBUG_STREAM("State changed to " << msg.fsm_state);
+    // Broadcast the perching state
+    pub_.publish(msg);
     // Send the feedback if needed
     switch (state) {
     case STATE::INITIALIZING:
@@ -549,75 +690,10 @@ class PerchNodelet : public ff_util::FreeFlyerNodelet {
     default:
       {
         ff_msgs::PerchFeedback feedback;
-        feedback.state.state = state;
+        feedback.state = msg;
         server_.SendFeedback(feedback);
       }
     }
-    // Broadcast the docking state
-    ff_msgs::PerchState msg;
-    msg.header.frame_id = GetPlatform();
-    msg.header.stamp = ros::Time::now();
-    msg.state = state;
-    pub_.publish(msg);
-  }
-
-  // EPS (PERCHING)
-
-  bool Undock() {
-    // Any error finding the berth transform or calling the service will result
-    // in an EPS_TIMEOUT event, which the FSM will use to recover.
-    timer_eps_.start();
-    // Look for the berth
-    std::map<uint8_t, std::string>::iterator it;
-    for (it = berths_.begin(); it != berths_.end(); it++) {
-      try {
-        // Look up the body frame in the berth frame
-        geometry_msgs::TransformStamped tf = tf_buffer_.lookupTransform(
-          it->second, FRAME_NAME_BODY, ros::Time(0));
-        // Copy the transform
-        double d = tf.transform.translation.x * tf.transform.translation.x
-                 + tf.transform.translation.y * tf.transform.translation.y
-                 + tf.transform.translation.z * tf.transform.translation.z;
-        // If we are within some delta of the origin, then we are at this berth
-        if (sqrt(d) < cfg_.Get<double>("detection_tolerance"))
-          break;
-      } catch (tf2::TransformException &ex) {}
-    }
-    // Let the use know what's happening
-    if (it == berths_.end()) {
-      NODELET_ERROR_STREAM("Could not detect berth from current pose");
-      return false;
-    } else {
-      NODELET_DEBUG_STREAM("Berth frame detected: " << it->second);
-    }
-    // At this point we should have good AR or ML localization, so we can
-    // determine our pose to within a couple centimeters.
-    frame_ = it->second;
-    if (!GetPlatform().empty())
-      frame_ = GetPlatform() + std::string("/") + frame_;
-    // Call the undock service
-    ff_hw_msgs::Undock msg;
-    return client_u_.Call(msg);
-  }
-
-  void PerchStateCallback(ff_hw_msgs::EpsPerchStateStamped::ConstPtr const& msg) {
-    switch (msg->state) {
-    // We don't worry about a timeout on docking, because we'll get a motion
-    // failure if dockign doesn't succeed.
-    case ff_hw_msgs::EpsPerchStateStamped::CONNECTING:
-    case ff_hw_msgs::EpsPerchStateStamped::PERCHED:
-      return fsm_.Update(EPS_PERCHED);
-    // If the dock state is reported as undocked
-    case ff_hw_msgs::EpsPerchStateStamped::UNPERCHED:
-      timer_eps_.stop();
-      return fsm_.Update(EPS_UNPERCHED);
-    default:
-      break;
-    }
-  }
-
-  void PerchTimerCallback(const ros::TimerEvent&) {
-    return fsm_.Update(EPS_TIMEOUT);
   }
 
   // SWITCH action
@@ -625,26 +701,107 @@ class PerchNodelet : public ff_util::FreeFlyerNodelet {
   // Helper function for localization switching
   bool Switch(std::string const& pipeline) {
     // Send the switch goal
-    ff_msgs::SwitchGoal goal;
+    ff_msgs::LocalizationGoal goal;
+    goal.command = ff_msgs::LocalizationGoal::COMMAND_SWITCH_PIPELINE;
     goal.pipeline = pipeline;
+    ROS_WARN("Asking for switch");
     return client_s_.SendGoal(goal);
   }
 
   // Ignore the switch feedback for now
-  void SFeedbackCallback(ff_msgs::SwitchFeedbackConstPtr const& feedback) {}
+  void SFeedbackCallback(ff_msgs::LocalizationFeedbackConstPtr const& feedback) {}
 
   // Do something with the switch result
   void SResultCallback(ff_util::FreeFlyerActionState::Enum result_code,
-    ff_msgs::SwitchResultConstPtr const& result) {
+    ff_msgs::LocalizationResultConstPtr const& result) {
     switch (result_code) {
     case ff_util::FreeFlyerActionState::SUCCESS:
+      ROS_WARN("Switch Success");
       return fsm_.Update(SWITCH_SUCCESS);
     default:
+      ROS_WARN("Switch Failed");
       return fsm_.Update(SWITCH_FAILED);
     }
   }
 
+  // ARM ACTION CLIENT
+
+  // Asynchronous arm state callback
+  void ArmStateStampedCallback(ff_msgs::ArmStateStamped::ConstPtr const& msg) {
+    switch (msg->joint_state.state) {
+    case ff_msgs::ArmJointState::STOWED:
+      return fsm_.Update(ARM_STOWED);
+    case ff_msgs::ArmJointState::DEPLOYING:
+    case ff_msgs::ArmJointState::STOPPED:
+    case ff_msgs::ArmJointState::MOVING:
+    case ff_msgs::ArmJointState::STOWING:
+      return fsm_.Update(ARM_DEPLOYED);
+    case ff_msgs::ArmJointState::UNKNOWN:
+    default:
+      break;
+    }
+  }
+
+  // Send a move command to the arm.
+  bool Arm(uint8_t command) {
+    ff_msgs::ArmGoal goal;
+    goal.command = command;
+    return client_a_.SendGoal(goal);
+  }
+
+  // Ignore the move feedback, for now
+  void AFeedbackCallback(ff_msgs::ArmFeedbackConstPtr const& feedback) {}
+
+  // Result of a move action
+  void AResultCallback(ff_util::FreeFlyerActionState::Enum result_code,
+    ff_msgs::ArmResultConstPtr const& result) {
+    switch (result_code) {
+    case ff_util::FreeFlyerActionState::SUCCESS:
+      return fsm_.Update(ARM_SUCCESS);
+    default:
+      return fsm_.Update(ARM_FAILED);
+    }
+  }
+
   // MOTION ACTION CLIENT
+
+  /* Save approach pose to not have to recalculate handrail/approach
+   * to world transform. This only happens when reaching with
+   * success the approach pose via handrail localization. It is only
+   * called in the perching step, and never in the unperching.
+   */
+  void SaveApproachPose(void) {
+    geometry_msgs::TransformStamped tf = tf_buffer_.lookupTransform(
+     "world", "body", ros::Time(0));
+
+    ROS_WARN("[Perch] Saving Approach Pose");
+
+    // Save the transform
+    // Position - Cartesian
+    approach_position_(0) = tf.transform.translation.x;
+    approach_position_(1) = tf.transform.translation.y;
+    approach_position_(2) = tf.transform.translation.z;
+
+    // Orientation - Quaternions
+    Eigen::Quaterniond quat(tf.transform.rotation.w,
+                            tf.transform.rotation.x,
+                            tf.transform.rotation.y,
+                            tf.transform.rotation.z);
+    approach_orientation_ = quat;
+  }
+
+  // Enable or disable optical flow
+  bool OpticalFlow(bool enable) {
+    ff_msgs::SetBool msg;
+    msg.request.enable = enable;
+    return client_service_of_enable_.call(msg);
+  }
+
+  // Reset the position of the handrail in the world.
+  bool HandraiLReset(void) {
+    static std_srvs::Empty msg;
+    return client_service_hr_reset_.call(msg);
+  }
 
   // Prepare for a motion
   bool Prep(std::string const& flight_mode) {
@@ -656,31 +813,107 @@ class PerchNodelet : public ff_util::FreeFlyerNodelet {
 
   // Send a move command
   bool Move(PerchPose type, std::string const& mode) {
+    // Create a new motion foal
+    ff_msgs::MotionGoal goal;
+    goal.command = ff_msgs::MotionGoal::MOVE;
+    goal.flight_mode = mode;
+
     // Package up the desired end pose
-    static geometry_msgs::PoseStamped msg;
+    geometry_msgs::PoseStamped msg;
     msg.header.stamp = ros::Time::now();
     switch (type) {
-    case COMPLETE_POSE: msg.header.frame_id = "handrail/complete"; break;
-    case APPROACH_POSE: msg.header.frame_id = "handrail/approach"; break;
-    case ATTACHED_POSE: msg.header.frame_id = "handrail/attached"; break;
-    default:
-      return false;
+      // Move to approach pose again, for robustness of trajectory,
+      // then to the complete pose.
+      case COMPLETE_POSE:
+        // The movement to approach pose is already done twice
+        msg.header.frame_id = "handrail/approach";
+        goal.states.push_back(msg);
+        msg.header.frame_id = "handrail/complete";
+        goal.states.push_back(msg);
+        break;
+      // Move to the approach pose.
+      case APPROACH_POSE:
+        msg.header.frame_id = "handrail/approach";
+        goal.states.push_back(msg);
+        break;
+      // Move to the recovery pose. This option is currently used to move to the
+      // approach pose, but it is here for potential change in recovery options.
+      case RECOVERY_POSE:
+        msg.header.frame_id = "body";
+        goal.states.push_back(msg);
+        break;
+      // Move to the perched pose. This option is currently used as a placeholder
+      // operation for perched localization. It is implemented for futrure use,
+      // if the user wants the robot to have a pan and tilt position for example.
+      case PERCHED_POSE:
+        msg.header.frame_id = "body";
+        goal.states.push_back(msg);
+        break;
+      // Move to the unperched pose. Placeholder to return to a default pan/tilt
+      // option, to make the aft face parallel to the wall supporting the handrail,
+      // for example.
+      case UNPERCHED_POSE:
+        msg.header.frame_id = "body";
+        goal.states.push_back(msg);
+      default:
+        return false;
     }
 
-    // Get the dock -> world transform
-    try {
-      // Look up the world -> berth transform
-      geometry_msgs::TransformStamped tf = tf_buffer_.lookupTransform(
-        "world", msg.header.frame_id, ros::Time(0));
-      // Copy the transform
-      msg.pose.position.x = tf.transform.translation.x;
-      msg.pose.position.y = tf.transform.translation.y;
-      msg.pose.position.z = tf.transform.translation.z;
-      msg.pose.orientation = tf.transform.rotation;
-    } catch (tf2::TransformException &ex) {
-      NODELET_WARN_STREAM("Transform failed" << ex.what());
-      return false;
+    // Iterate over all poses in action, finding the location of each
+    for (auto & pose : goal.states) {
+      try {
+        // Look up the world -> body transform
+        if (type == RECOVERY_POSE || type == UNPERCHED_POSE) {
+        /* 
+         * If we call move with RECOVERY_POSE, no need to check a transform.
+         * We only need to ask a movement to the pose saved in the 
+         * void SaveApproachPose(void) function.
+         * For the moment, apply same reasoning when unperching.
+         * This is due to the fact that we may be too close to the handrail to
+         * see it, and hence to localize. However, I (Julien) believe it would
+         * be more robust to move relatively forward a little (10-15 cm), by
+         * having a perched localization which would place the Astrobee's
+         * aft face paralell to the wall supporting the handrail prior to movement.
+         * Or just move relatively forward away from the handrail, swap to HR loc,
+         * move to approach pose, swap to ML loc.
+         * However, as long as the approach pose is saved correctly, this works.
+         * Need to be careful with the arm state and robot orientation!
+         * 
+         * TL;DR: This is good if we don't lose localization while perched,
+         * otherwise relative movements are needed to securely move away.
+         */
+          pose.pose.orientation.w = approach_orientation_.w();
+          pose.pose.orientation.x = approach_orientation_.x();
+          pose.pose.orientation.y = approach_orientation_.y();
+          pose.pose.orientation.z = approach_orientation_.z();
+
+          pose.pose.position.x = approach_position_(0);
+          pose.pose.position.y = approach_position_(1);
+          pose.pose.position.z = approach_position_(2);
+        } else {
+          /*
+           * Any other movement implies a copy of a transform
+           * with the world.
+           */
+          geometry_msgs::TransformStamped tf = tf_buffer_.lookupTransform(
+          "world", pose.header.frame_id, ros::Time(0));
+
+          // Copy the transform
+          pose.pose.orientation.w = tf.transform.rotation.w;
+          pose.pose.orientation.x = tf.transform.rotation.x;
+          pose.pose.orientation.y = tf.transform.rotation.y;
+          pose.pose.orientation.z = tf.transform.rotation.z;
+
+          pose.pose.position.x = tf.transform.translation.x;
+          pose.pose.position.y = tf.transform.translation.y;
+          pose.pose.position.z = tf.transform.translation.z;
+        }
+      } catch (tf2::TransformException &ex) {
+        NODELET_WARN_STREAM("Transform failed" << ex.what());
+        return false;
+      }
     }
+
 
     // Reconfigure the choreographer
     ff_util::ConfigClient cfg(GetPlatformHandle(), NODE_CHOREOGRAPHER);
@@ -690,15 +923,15 @@ class PerchNodelet : public ff_util::FreeFlyerNodelet {
     cfg.Set<bool>("enable_immediate", true);
     cfg.Set<bool>("enable_timesync", false);
     cfg.Set<bool>("enable_faceforward", false);
+    cfg.Set<double>("desired_vel", -1.0);
+    cfg.Set<double>("desired_accel", -1.0);
+    cfg.Set<double>("desired_omega", -1.0);
+    cfg.Set<double>("desired_alpha", -1.0);
     cfg.Set<std::string>("planner", "trapezoidal");
     if (!cfg.Reconfigure())
       return false;
 
     // Send the goal to the mobility subsystem
-    ff_msgs::MotionGoal goal;
-    goal.command = ff_msgs::MotionGoal::MOVE;
-    goal.flight_mode = mode;
-    goal.states.push_back(msg);
     return client_m_.SendGoal(goal);
   }
 
@@ -723,39 +956,51 @@ class PerchNodelet : public ff_util::FreeFlyerNodelet {
     ff_msgs::PerchResult result;
     switch (goal->command) {
     case ff_msgs::PerchGoal::PERCH:
-      // We are undocked
+      // We are unperched
       if (fsm_.GetState() == STATE::UNPERCHED) {
-        // Do we know about the specified berth?
+        // Do we know about the specified handrail?
         return fsm_.Update(GOAL_PERCH);
-      // We are already docked
+      // We are already perched
       } else if (fsm_.GetState() == STATE::PERCHED) {
+        result.fsm_result = "Currently perched, so ignoring perch request.";
         result.response = RESPONSE::ALREADY_PERCHED;
         server_.SendResult(ff_util::FreeFlyerActionState::SUCCESS, result);
         return;
-      // We are not in  a position to dock
+      /*} else if (fsm_GetState() == STATE::UNKNOWN){
+       * If preempted goal, we return to unknown state. But we'll never leave it,
+       * since we're waiting for an arm feedback which won't happen unless we ask
+       * for it. So there is a need to know the arm state to escape this potential
+       * unknown state, which as of right now defaults to the below "currently 
+       * perched" error message, which is freaking wrong.
+       */
+      // We are not in a position to perch
       } else {
+        result.fsm_result = "Currently perched, so ignoring unperch.";
         result.response = RESPONSE::NOT_IN_UNPERCHED_STATE;
         server_.SendResult(ff_util::FreeFlyerActionState::ABORTED, result);
         return;
       }
       break;
-    // Undock command
+    // Unperch command
     case ff_msgs::PerchGoal::UNPERCH:
-      // We are docked
+      // We are perched
       if (fsm_.GetState() == STATE::PERCHED) {
         return fsm_.Update(GOAL_UNPERCH);
-      // We are already undocked
+      // We are already unperched
       } else if (fsm_.GetState() == STATE::UNPERCHED) {
+        result.fsm_result = "Currently unperched, so ignoring unperch request.";
         result.response = RESPONSE::ALREADY_UNPERCHED;
         server_.SendResult(ff_util::FreeFlyerActionState::SUCCESS, result);
         return;
-      // We are not in a position to undock
+      // We are not in a position to un
       } else {
+        result.fsm_result = "Must be perched in order to unperch";
         result.response = RESPONSE::NOT_IN_PERCHED_STATE;
       }
       break;
     // Invalid command
     default:
+      result.fsm_result = "Invalid command in request.";
       result.response = RESPONSE::INVALID_COMMAND;
       server_.SendResult(ff_util::FreeFlyerActionState::ABORTED, result);
       break;
@@ -785,24 +1030,21 @@ class PerchNodelet : public ff_util::FreeFlyerNodelet {
  protected:
   ff_util::FSM fsm_;
   ff_util::FreeFlyerActionClient<ff_msgs::MotionAction> client_m_;
-  ff_util::FreeFlyerActionClient<ff_msgs::SwitchAction> client_s_;
+  ff_util::FreeFlyerActionClient<ff_msgs::LocalizationAction> client_s_;
   ff_util::FreeFlyerActionClient<ff_msgs::ArmAction> client_a_;
-  ff_util::FreeFlyerServiceClient<ff_hw_msgs::Undock> client_u_;
   ff_util::FreeFlyerActionServer<ff_msgs::PerchAction> server_;
   ff_util::ConfigServer cfg_;
   tf2_ros::Buffer tf_buffer_;
   std::shared_ptr<tf2_ros::TransformListener> tf_listener_;
   ros::Publisher pub_;
-  ros::Subscriber sub_s_;
-  ros::Subscriber sub_p_;
+  ros::Subscriber sub_;
   ros::ServiceServer server_set_state_;
-  ros::Timer timer_eps_;
-  ros::Timer timer_pmc_;
-  std::string frame_;
-  uint8_t err_;
+  ros::ServiceClient client_service_of_enable_;
+  ros::ServiceClient client_service_hr_reset_;
+  Eigen::Quaterniond approach_orientation_;
+  Eigen::Vector3d approach_position_;
 };
 
-PLUGINLIB_DECLARE_CLASS(dock, PerchNodelet,
-                        dock::PerchNodelet, nodelet::Nodelet);
+PLUGINLIB_EXPORT_CLASS(perch::PerchNodelet, nodelet::Nodelet);
 
 }  // namespace perch

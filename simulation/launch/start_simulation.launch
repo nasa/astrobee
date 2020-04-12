@@ -1,0 +1,48 @@
+<!-- Copyright (c) 2017, United States Government, as represented by the     -->
+<!-- Administrator of the National Aeronautics and Space Administration.     -->
+<!--                                                                         -->
+<!-- All rights reserved.                                                    -->
+<!--                                                                         -->
+<!-- The Astrobee platform is licensed under the Apache License, Version 2.0 -->
+<!-- (the "License"); you may not use this file except in compliance with    -->
+<!-- the License. You may obtain a copy of the License at                    -->
+<!--                                                                         -->
+<!--     http://www.apache.org/licenses/LICENSE-2.0                          -->
+<!--                                                                         -->
+<!-- Unless required by applicable law or agreed to in writing, software     -->
+<!-- distributed under the License is distributed on an "AS IS" BASIS,       -->
+<!-- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or         -->
+<!-- implied. See the License for the specific language governing            -->
+<!-- permissions and limitations under the License.                          -->
+
+<launch>
+  <!-- User arguments -->
+  <arg name="gui" default="true"/>
+  <arg name="world" default="worlds/empty.world"/>
+  <arg name="speed" default="1"/>
+  <arg name="debug" default="false"/>
+
+  <!-- Use simulation time -->
+  <param name="/use_sim_time" value="true" />
+  <param name="/simulation_speed" value="$(arg speed)" />
+
+  <!-- set command arguments -->
+  <group if="$(arg debug)">
+    <node name="gazebo" pkg="gazebo_ros" type="debug"
+          respawn="false" output="screen"
+          args="$(arg world)" />
+  </group>
+  <group unless="$(arg debug)">
+    <node name="gazebo" pkg="astrobee_gazebo" type="start_server"
+          respawn="false" output="screen"
+          args="$(arg world)" />
+  </group>
+
+  <!-- start gazebo client -->
+  <group if="$(arg gui)">
+    <node name="gazebo_gui" pkg="astrobee_gazebo" type="start_client"
+          respawn="true" output="screen"
+          args="-g libgazebo_system_plugin_client.so"/>
+  </group>
+
+</launch>

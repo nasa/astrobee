@@ -1,14 +1,14 @@
 /* Copyright (c) 2017, United States Government, as represented by the
  * Administrator of the National Aeronautics and Space Administration.
- * 
+ *
  * All rights reserved.
- * 
+ *
  * The Astrobee platform is licensed under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -62,16 +62,25 @@ void ReadParams(interest_point::FeatureDetector* detector) {
     return;
   }
 
-  int min_features, max_features, brisk_threshold, detection_retries;
+  int min_features, max_features, detection_retries;
+  double min_brisk_threshold, default_brisk_threshold, max_brisk_threshold;
   if (!config.GetInt("min_features", &min_features))
     ROS_FATAL("min_features not specified in localization.");
   if (!config.GetInt("max_features", &max_features))
     ROS_FATAL("max_features not specified in localization.");
-  if (!config.GetInt("brisk_threshold", &brisk_threshold))
-    ROS_FATAL("brisk_threshold not specified in localization.");
   if (!config.GetInt("detection_retries", &detection_retries))
     ROS_FATAL("detection_retries not specified in localization.");
-  detector->Reset("ORGBRISK", min_features, max_features, brisk_threshold, detection_retries);
+
+  // For the brisk thresholds, quietly assume some defaults
+  if (!config.GetReal("min_brisk_threshold", &min_brisk_threshold))
+    min_brisk_threshold = 20.0;
+  if (!config.GetReal("default_brisk_threshold", &default_brisk_threshold))
+    default_brisk_threshold = 90.0;
+  if (!config.GetReal("max_brisk_threshold", &max_brisk_threshold))
+    max_brisk_threshold = 110.0;
+
+  detector->Reset("ORGBRISK", min_features, max_features, detection_retries,
+                  min_brisk_threshold, default_brisk_threshold, max_brisk_threshold);
 }
 
 void DetectImageFeatures(interest_point::FeatureDetector & detector, sensor_msgs::ImageConstPtr & image_msg,
@@ -84,7 +93,16 @@ void DetectImageFeatures(interest_point::FeatureDetector & detector, sensor_msgs
     ROS_FATAL("cv_bridge exception: %s", e.what());
     return;
   }
-  detector.Detect(image->image, &keypoints, description);
+
+  bool histogram_equalization = true;
+  cv::Mat * image_ptr = const_cast<cv::Mat*>(&image->image);
+  cv::Mat hist_image;
+  if (histogram_equalization) {
+    cv::equalizeHist(image->image, hist_image);
+    image_ptr = &hist_image;
+  }
+
+  detector.Detect(*image_ptr, &keypoints, description);
 }
 
 void InterpolateGroundTruth(const geometry_msgs::PoseStampedConstPtr & last_gt,

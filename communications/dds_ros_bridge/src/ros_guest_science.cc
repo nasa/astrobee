@@ -176,15 +176,17 @@ void ff::RosGuestScienceToRapid::DataCallback(
   msg.topic[31] = '\0';
 
   int size = data->data.size();
+  int cap = size + 1;
   if (size > 2048) {
     ROS_ERROR("DDS: Data with topic %s for Apk %s has %i bytes but only 2048 " \
               "can be sent to the ground.", data->topic.c_str(),
               data->apk_name.c_str(), size);
     size = 2048;
+    cap = size;
   }
 
   // resize
-  msg.data.ensure_length(size, size);
+  msg.data.ensure_length(size, cap);
 
   unsigned char *buff = msg.data.get_contiguous_buffer();
   if (buff == NULL) {
@@ -192,6 +194,7 @@ void ff::RosGuestScienceToRapid::DataCallback(
     return;
   }
 
+  std::memset(buff, 0, cap);
   std::memmove(buff, data->data.data(), size);
 
   data_supplier_->sendEvent();

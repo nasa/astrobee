@@ -1,0 +1,16 @@
+{
+  "type" : "DataConfigurationFile",
+  "name" : "dock_raw",
+  "topicSettings": [ 
+    {
+      "topicName" : "hw/imu",
+      "downlinkOption" : "delayed",
+      "frequency" : -1
+    },
+    {
+      "topicName" : "hw/cam_dock",
+      "downlinkOption" : "delayed",
+      "frequency" : -1
+    }
+  ]
+}

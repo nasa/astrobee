@@ -14,15 +14,19 @@
 <!-- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or         -->
 <!-- implied. See the License for the specific language governing            -->
 <!-- permissions and limitations under the License.                          -->
-  
+
 <launch>
 
   <!-- Context options (NB: THESE ARE OVERRIDDEN BY ENVIRONMENT VARIABLES)   -->
-  <arg name="robot" default="sim" />            <!-- Robot name              -->
-  <arg name="world" default="granite" />        <!-- World name              -->
+  <!-- Set robot and world correctly; environment variable over rule default -->
+  <arg name="robot" default="$(optenv ASTROBEE_ROBOT sim)" />
+  <arg name="world" default="$(optenv ASTROBEE_WORLD iss)" />
   <arg name="ns" default="" />                  <!-- Robot namespace prefix  -->
   <arg name="output" default="log"/>            <!-- Where nodes should log  -->
+  <arg name="spurn" default=""/>                <!-- Prevent a specific node -->
   <arg name="nodes" default=""/>                <!-- Launch specific nodes   -->
+  <arg name="extra" default=""/>                <!-- Inject additional node  -->
+  <arg name="debug" default=""/>                <!-- Debug node group          -->
   <arg name="sim" default="local" />            <!-- SIM IP address          -->
   <arg name="llp" default="local" />            <!-- LLP IP address          -->
   <arg name="mlp" default="local" />            <!-- MLP IP address          -->
@@ -33,21 +37,33 @@
   <arg name="rviz" default="false" />           <!-- Start visualization     -->
   <arg name="rqt" default="false" />            <!-- Start user interface    -->
   <arg name="gds" default="false" />            <!-- Enable GDS              -->
-  <arg name="vmware" default="true" />          <!-- Enable vmware           -->
 
-  <!-- Simulation-specific options -->
-  <arg name="pose" default="" />                <!-- Insert robot at pose    -->
+  <!-- Debug-specific options -->
+  <!-- Debug-specific options -->
+  <arg name="default" default="true" />         <!-- Insert default robot /  -->
+  <arg if="$(eval arg('world')=='iss')"
+       name="pose"
+       default="9.92 -9.54 4.50 0 0 0 1" />     <!-- iss: docked in JPM      -->
+  <arg if="$(eval arg('world')=='granite')"
+       name="pose"
+       default="0 0 -0.7 0 0 0 1" /> <!-- granite: docked         -->
+  <arg if="$(eval arg('world')=='perch')"
+       name="pose"
+       default="0 1 1.4 0 0 0.707 0.707" />     <!-- Perch: facing handrail  -->
 
   <!-- Make sure all environment variables are set for controller -->
-  <env if="$(eval optenv('ASTROBEE_ROBOT','')=='')" 
-       name="ASTROBEE_ROBOT" value="$(arg robot)" />
-  <env if="$(eval optenv('ASTROBEE_WORLD','')=='')" 
-       name="ASTROBEE_WORLD" value="$(arg world)" />
-  <env if="$(eval optenv('ASTROBEE_CONFIG_DIR','')=='')" 
+  <!-- Override the robot and world environment variables all the time. The -->
+  <!-- environment variables are the default if they are set. So in this -->
+  <!-- case we are overriding the environment variables with themselves. -->
+  <!-- Roslaunch arguments override the environment variable which is what -->
+  <!-- this will do. -->
+  <env name="ASTROBEE_ROBOT" value="$(arg robot)" />
+  <env name="ASTROBEE_WORLD" value="$(arg world)" />
+  <env if="$(eval optenv('ASTROBEE_CONFIG_DIR','')=='')"
        name="ASTROBEE_CONFIG_DIR" value="$(find astrobee)/config" />
-  <env if="$(eval optenv('ASTROBEE_RESOURCE_DIR','')=='')" 
+  <env if="$(eval optenv('ASTROBEE_RESOURCE_DIR','')=='')"
        name="ASTROBEE_RESOURCE_DIR" value="$(find astrobee)/resources" />
-  <env if="$(eval optenv('ROSCONSOLE_CONFIG_FILE','')=='')" 
+  <env if="$(eval optenv('ROSCONSOLE_CONFIG_FILE','')=='')"
        name="ROSCONSOLE_CONFIG_FILE" value="$(find astrobee)/resources/logging.config"/>
 
   <!-- Declare our global logging format -->
@@ -58,15 +74,17 @@
     <arg name="robot" value="$(arg robot)" />  <!-- Type of robot            -->
     <arg name="world" value="$(arg world)" />  <!-- Execution context        -->
     <arg name="ns" value="$(arg ns)" />        <!-- Robot namespace          -->
-    <arg name="output" value="$(arg output)" /><!-- Output for logging   -->    
+    <arg name="output" value="$(arg output)" /><!-- Output for logging   -->
     <arg name="pose" value="$(arg pose)" />    <!-- Initial robot pose (sim) -->
     <arg name="drivers" value="false" />       <!-- Start driver code        -->
-    <arg name="nodes" value="$(arg nodes)" />  <!-- Limit to specific nodes  -->
+    <arg name="spurn" value="$(arg spurn)" />  <!-- Prevent node         -->
+    <arg name="nodes" value="$(arg nodes)" />  <!-- Launch node group    -->
+    <arg name="extra" value="$(arg extra)" />  <!-- Inject extra nodes   -->
+    <arg name="debug" value="$(arg debug)" />  <!-- Inject extra nodes   -->
     <arg name="sim" value="$(arg sim)" />      <!-- SIM IP address           -->
     <arg name="llp" value="$(arg llp)" />      <!-- LLP IP address           -->
     <arg name="mlp" value="$(arg mlp)" />      <!-- MLP IP address           -->
     <arg name="dds" value="$(arg dds)" />      <!-- Enable DDS               -->
-    <arg name="vmware" value="$(arg vmware)" /><!-- Enable vmware            -->
   </include>
 
 </launch>

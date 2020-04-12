@@ -43,14 +43,16 @@ Eigen::Vector3f QuatToEuler(const Eigen::Quaternionf & q) {
   return euler;
 }
 
-EkfBagCsv::EkfBagCsv(const char* bagfile, const char* mapfile, const char* csvfile) :
-          EkfBag(bagfile, mapfile),
+EkfBagCsv::EkfBagCsv(const char* bagfile, const char* mapfile, const char* csvfile,
+                     bool run_ekf, bool gen_features, const char* biasfile,
+                     std::string image_topic) :
+          EkfBag(bagfile, mapfile, run_ekf, gen_features, biasfile, image_topic),
           start_time_set_(false) {
   // virtual function has to be called in subclass since not initialized in superclass
   config_reader::ConfigReader config;
   ReadParams(&config);
 
-  f_ = fopen(csvfile, "r");
+  f_ = fopen(csvfile, "w");
   if (f_ == NULL) {
     fprintf(stderr, "Failed to open file %s.", csvfile);
     exit(0);
@@ -94,14 +96,27 @@ void EkfBagCsv::UpdateEKF(const ff_msgs::EkfState & s) {
   fprintf(f_, "\n");
 }
 
-void EkfBagCsv::UpdateOpticalFlow(const ff_msgs::Feature2dArray & of) {
-  EkfBag::UpdateOpticalFlow(of);
+void EkfBagCsv::UpdateOpticalFlowReg(const ff_msgs::CameraRegistration & reg) {
+  EkfBag::UpdateOpticalFlowReg(reg);
 
+  of_reg_time_ = reg.header.stamp;
+}
+
+void EkfBagCsv::UpdateSparseMapReg(const ff_msgs::CameraRegistration & reg) {
+  EkfBag::UpdateSparseMapReg(reg);
+
+  ml_reg_time_ = reg.header.stamp;
+}
+
+void EkfBagCsv::UpdateOpticalFlow(const ff_msgs::Feature2dArray & of) {
   if (!start_time_set_)
     return;
+
+  EkfBag::UpdateOpticalFlow(of);
+
   float t = (of.header.stamp - start_time_).toSec();
   tracked_of_.UpdateFeatures(of, t);
-  fprintf(f_, "OF %g ", t);
+  fprintf(f_, "OF %g ", (of_reg_time_ - start_time_).toSec());
   fprintf(f_, "%d ", static_cast<int>(of.feature_array.size()));
   for (auto it = tracked_of_.begin(); it != tracked_of_.end(); it++) {
     const auto & a = (*it).second;
@@ -111,12 +126,13 @@ void EkfBagCsv::UpdateOpticalFlow(const ff_msgs::Feature2dArray & of) {
 }
 
 void EkfBagCsv::UpdateSparseMap(const ff_msgs::VisualLandmarks & vl) {
-  EkfBag::UpdateSparseMap(vl);
-
   if (!start_time_set_)
     return;
+
+  EkfBag::UpdateSparseMap(vl);
+
   const camera::CameraParameters & params = map_.GetCameraParameters();
-  fprintf(f_, "VL %g ", (vl.header.stamp - start_time_).toSec());
+  fprintf(f_, "VL %g ", (ml_reg_time_ - start_time_).toSec());
   fprintf(f_, "%d ", static_cast<int>(vl.landmarks.size()));
   Eigen::Vector3f trans = ekf_.GetNavCamToBody().translation().cast<float>();
   Eigen::Quaternionf q1(0, trans.x(), trans.y(), trans.z());

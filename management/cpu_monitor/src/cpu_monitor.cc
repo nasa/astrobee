@@ -12,39 +12,63 @@ constexpr char SysThermalPath[] = "/sys/class/thermal";
 
 CpuMonitor::CpuMonitor() :
   ff_util::FreeFlyerNodelet(),
+  temp_fault_triggered_(false),
+  load_fault_state_(CLEARED),
   freq_cpus_(SysCpuPath, SysThermalPath),
   temperature_scale_(1.0),
+  avg_load_high_value_(0.0),
   pub_queue_size_(10),
   update_freq_hz_(1),
-  cpu_ave_load_limit_(95) {
+  cpu_avg_load_limit_(95) {
 }
 
 CpuMonitor::~CpuMonitor() {
 }
 
 void CpuMonitor::Initialize(ros::NodeHandle *nh) {
+  std::string err_msg;
   // First three letters of the node name specifies processor
   processor_name_ = GetName().substr(0, 3);
 
   config_params_.AddFile("management/cpu_monitor.config");
   if (!ReadParams()) {
-    exit(EXIT_FAILURE);
     return;
   }
 
   reload_params_timer_ = nh->createTimer(ros::Duration(1),
       [this](ros::TimerEvent e) {
       config_params_.CheckFilesUpdated(std::bind(&CpuMonitor::ReadParams, this));},
-      false, true);
+      false,
+      true);
 
   // All state messages are latching
   cpu_state_pub_ = nh->advertise<ff_msgs::CpuStateStamped>(
-                    TOPIC_MANAGEMENT_CPU_MONITOR_STATE, pub_queue_size_, true);
+                                            TOPIC_MANAGEMENT_CPU_MONITOR_STATE,
+                                            pub_queue_size_,
+                                            true);
+
+  // Timer for asserting the cpu load too high fault
+  assert_load_fault_timer_ = nh->createTimer(
+                            ros::Duration(assert_load_high_fault_timeout_sec_),
+                            &CpuMonitor::AssertLoadHighFaultCallback,
+                            this,
+                            true,
+                            false);
+
+  // Timer for clearing the cpu load too high fault
+  clear_load_fault_timer_ = nh->createTimer(
+                              ros::Duration(clear_load_high_fault_timeout_sec_),
+                              &CpuMonitor::ClearLoadHighFaultCallback,
+                              this,
+                              true,
+                              false);
 
   // Timer for checking cpu stats. Timer is not one shot and start it right away
   stats_timer_ = nh->createTimer(ros::Duration(update_freq_hz_),
                                  &CpuMonitor::PublishStatsCallback,
-                                 this, false, true);
+                                 this,
+                                 false,
+                                 true);
 
   // Find the number of CPUs available to query
   ncpus_ = get_nprocs_conf();
@@ -53,14 +77,16 @@ void CpuMonitor::Initialize(ros::NodeHandle *nh) {
 
   // Intialize cpu freq class
   if (!freq_cpus_.Init()) {
-    ROS_FATAL("CPU Monitor: Cpu.init failed: %s", std::strerror(errno));
-    exit(EXIT_FAILURE);
+    err_msg = "CPU Monitor: Cpu.init failed: " + (*std::strerror(errno));
+    FF_ERROR(err_msg);
+    this->AssertFault(ff_util::INITIALIZATION_FAILED, err_msg);
     return;
   }
 
   if (ncpus_ != freq_cpus_.GetNumCores()) {
-    ROS_FATAL("CPU Monitor: Number of CPUs doesn't match!");
-    exit(EXIT_FAILURE);
+    err_msg = "CPU Monitor: Number of CPUs doesn't match!";
+    FF_ERROR(err_msg);
+    this->AssertFault(ff_util::INITIALIZATION_FAILED, err_msg);
     return;
   }
 
@@ -69,7 +95,7 @@ void CpuMonitor::Initialize(ros::NodeHandle *nh) {
 
   // Five load fields: nice, user, sys, virt, total
   cpu_state_msg_.load_fields.resize(5);
-  cpu_state_msg_.ave_loads.resize(5);
+  cpu_state_msg_.avg_loads.resize(5);
 
   // Load locatioms won't change
   cpu_state_msg_.load_fields[0] = ff_msgs::CpuStateStamped::NICE;
@@ -87,9 +113,12 @@ void CpuMonitor::Initialize(ros::NodeHandle *nh) {
 }
 
 bool CpuMonitor::ReadParams() {
+  std::string err_msg;
   // Read config files into lua
   if (!config_params_.ReadFiles()) {
-    ROS_FATAL("Error loading cpu monitor parameters.");
+    err_msg = "CPU monitor: Unable to read configuration files.";
+    FF_ERROR(err_msg);
+    this->AssertFault(ff_util::INITIALIZATION_FAILED, err_msg);
     return false;
   }
 
@@ -99,28 +128,81 @@ bool CpuMonitor::ReadParams() {
 
   // get udpate stats frequency
   if (!processor_config.GetInt("update_freq_hz", &update_freq_hz_)) {
-    ROS_FATAL("CPU Monitor update frequency not specified!");
+    err_msg = "CPU monitor: Update frequency not specified for " +
+                                                                processor_name_;
+    FF_ERROR(err_msg);
+    this->AssertFault(ff_util::INITIALIZATION_FAILED, err_msg);
     return false;
   }
 
   if (!processor_config.GetPosReal("temperature_scale", &temperature_scale_)) {
-    ROS_FATAL("CPU Monitor temperature scale not specified!");
+    err_msg = "CPU monitor: Temperature scale not specified for " +
+                                                                processor_name_;
+    FF_ERROR(err_msg);
+    this->AssertFault(ff_util::INITIALIZATION_FAILED, err_msg);
     return false;
   }
 
-  // get cpu ave load limit
-  if (!config_params_.GetInt("cpu_ave_load_limit", &cpu_ave_load_limit_)) {
-    ROS_FATAL("CPU Monitor cpu average load limit not specified!");
+  // get cpu average load limit
+  if (!processor_config.GetInt("cpu_avg_load_limit", &cpu_avg_load_limit_)) {
+    err_msg = "CPU monitor: CPU average load limit not specified for " +
+                                                                processor_name_;
+    FF_ERROR(err_msg);
+    this->AssertFault(ff_util::INITIALIZATION_FAILED, err_msg);
     return false;
   }
 
   // get cpu ave temp limit
-  if (!config_params_.GetInt("cpu_temp_limit", &cpu_temp_limit_)) {
-    ROS_FATAL("CPU Monitor cpu temp limit not specified!");
+  if (!processor_config.GetInt("cpu_temp_limit", &cpu_temp_limit_)) {
+    err_msg = "CPU monitor: CPU temperature limit not specified for " +
+                                                                processor_name_;
+    FF_ERROR(err_msg);
+    this->AssertFault(ff_util::INITIALIZATION_FAILED, err_msg);
+    return false;
+  }
+
+  // get cpu assert load high fault timeout secs
+  if (!processor_config.GetInt("assert_load_high_fault_timeout_sec",
+                               &assert_load_high_fault_timeout_sec_)) {
+    err_msg = "CPU monitor: CPU assert load high fault timeout seconds not ";
+    err_msg += "specified for ";
+    err_msg += processor_name_;
+    FF_ERROR(err_msg);
+    this->AssertFault(ff_util::INITIALIZATION_FAILED, err_msg);
+    return false;
+  }
+
+  // get cpu clear load high fault timeout secs
+  if (!processor_config.GetInt("clear_load_high_fault_timeout_sec",
+                               &clear_load_high_fault_timeout_sec_)) {
+    err_msg = "CPU monitor: CPU clear load high fault timeout seconds not ";
+    err_msg += "specified for ";
+    err_msg += processor_name_;
+    FF_ERROR(err_msg);
+    this->AssertFault(ff_util::INITIALIZATION_FAILED, err_msg);
     return false;
   }
 
   return true;
+}
+
+void CpuMonitor::AssertLoadHighFaultCallback(ros::TimerEvent const& te) {
+  // Stop timer so we don't trigger the fault over and over again
+  assert_load_fault_timer_.stop();
+  std::string err_msg = "CPU average load is " +
+                        std::to_string(avg_load_high_value_) +
+                        " which is greater than " +
+                        std::to_string(cpu_avg_load_limit_) + ".";
+  FF_ERROR(err_msg);
+  this->AssertFault(ff_util::LOAD_TOO_HIGH, err_msg);
+  load_fault_state_ = ASSERTED;
+}
+
+void CpuMonitor::ClearLoadHighFaultCallback(ros::TimerEvent const& te) {
+  // Stop timer so we don't try to clear the fault over and over again
+  clear_load_fault_timer_.stop();
+  this->ClearFault(ff_util::LOAD_TOO_HIGH);
+  load_fault_state_ = CLEARED;
 }
 
 int CpuMonitor::CollectLoadStats() {
@@ -224,11 +306,11 @@ void CpuMonitor::PublishStatsCallback(ros::TimerEvent const &te) {
   // starts at index 1
   // Add average cpu stats to the state message
   // see init function for order
-  cpu_state_msg_.ave_loads[0] = load_cpus_[0].nice_percentage;
-  cpu_state_msg_.ave_loads[1] = load_cpus_[0].user_percentage;
-  cpu_state_msg_.ave_loads[2] = load_cpus_[0].system_percentage;
-  cpu_state_msg_.ave_loads[3] = load_cpus_[0].virt_percentage;
-  cpu_state_msg_.ave_loads[4] = load_cpus_[0].total_percentage;
+  cpu_state_msg_.avg_loads[0] = load_cpus_[0].nice_percentage;
+  cpu_state_msg_.avg_loads[1] = load_cpus_[0].user_percentage;
+  cpu_state_msg_.avg_loads[2] = load_cpus_[0].system_percentage;
+  cpu_state_msg_.avg_loads[3] = load_cpus_[0].virt_percentage;
+  cpu_state_msg_.avg_loads[4] = load_cpus_[0].total_percentage;
 
   // Add the individual cpu loads to cpu state msg
   for (unsigned int i = 0; i < cpu_state_msg_.cpus.size(); i++) {
@@ -241,14 +323,40 @@ void CpuMonitor::PublishStatsCallback(ros::TimerEvent const &te) {
   }
 
   // Check to see if the total percentage is greater than the fault threshold
-  if (load_cpus_[0].total_percentage > cpu_ave_load_limit_) {
-    std::string msg = "CPU ave load is " +
-                      std::to_string(load_cpus_[0].total_percentage) +
-                      " which is greater than " +
-                      std::to_string(cpu_ave_load_limit_) + ".";
-    this->AssertFault("LOAD_TOO_HIGH", msg);
+  if (load_cpus_[0].total_percentage > cpu_avg_load_limit_) {
+    // Check to see if the fault is in the process of being cleared or is
+    // cleared
+    if (load_fault_state_ == CLEARING) {
+      // Just need to stop the timer put in place to clear the fault. Don't need
+      // to start the timer to assert the fault since it is already triggered.
+      clear_load_fault_timer_.stop();
+      // Switch load fault state back to triggered
+      load_fault_state_ = ASSERTED;
+    } else if (load_fault_state_ == CLEARED) {
+      // If fault isn't triggered, start the process of triggering it
+      assert_load_fault_timer_.start();
+      load_fault_state_ = ASSERTING;
+      // Keep an average total load value to report to the ground what is going
+      // on
+      avg_load_high_value_ = load_cpus_[0].total_percentage;
+    } else if (load_fault_state_ == ASSERTING) {
+      avg_load_high_value_ += load_cpus_[0].total_percentage;
+      avg_load_high_value_ /= 2;
+    }
   } else {
-    this->ClearFault("LOAD_TOO_HIGH");
+    // Check to see if the fault is in the process of being triggered or is
+    // triggered
+    if (load_fault_state_ == ASSERTING) {
+      // Just need to stop the timer put in place to trigger the fault. Don't
+      // need to start the timer to clear the fault since it is already cleared.
+      assert_load_fault_timer_.stop();
+      // Switch load fault state back to cleared
+      load_fault_state_ = CLEARED;
+    } else if (load_fault_state_ == ASSERTED) {
+      // If fault is triggered, start the process of clearing it
+      clear_load_fault_timer_.start();
+      load_fault_state_ = CLEARING;
+    }
   }
 
   // Get cpu temperature stats
@@ -256,13 +364,17 @@ void CpuMonitor::PublishStatsCallback(ros::TimerEvent const &te) {
 
   // Check to see if the temperature is greater than the fault threshold
   if (cpu_state_msg_.temp > cpu_temp_limit_) {
+    temp_fault_triggered_ = true;
     std::string msg = "CPU average temperature is " +
                       std::to_string(cpu_state_msg_.temp) +
                       " which is greater than " +
                       std::to_string(cpu_temp_limit_) + ".";
-    this->AssertFault("TEMPERATURE_TOO_HIGH", msg);
+    this->AssertFault(ff_util::TEMPERATURE_TOO_HIGH, msg);
   } else {
-    this->ClearFault("TEMPERATURE_TOO_HIGH");
+    if (temp_fault_triggered_) {
+      this->ClearFault(ff_util::TEMPERATURE_TOO_HIGH);
+      temp_fault_triggered_ = false;
+    }
   }
 
   // Get cpu frequency stats

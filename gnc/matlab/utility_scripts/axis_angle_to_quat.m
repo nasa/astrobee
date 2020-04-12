@@ -22,4 +22,4 @@ function quat = axis_angle_to_quat(axis, angle)
 
 axis = axis ./ rssrow(axis);
 
-quat = [axis*sin(angle/2) cos(angle/2)];
+quat = [axis.*sin(angle/2) cos(angle/2)];

@@ -26,7 +26,7 @@
 #include <ros/ros.h>
 
 // Standard messages
-#include <geometry_msgs/Inertia.h>
+#include <geometry_msgs/InertiaStamped.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/TwistStamped.h>
 
@@ -106,13 +106,16 @@ class Ctl {
   void TwistCallback(const geometry_msgs::TwistStamped::ConstPtr& truth);
 
   // Called when management updates inertial info
-  void InertiaCallback(const geometry_msgs::Inertia::ConstPtr& inertia);
+  void InertiaCallback(const geometry_msgs::InertiaStamped::ConstPtr& inertia);
 
   // Called when a timer has called back to progress control to next setpoint
   void ControlTimerCallback(const ros::TimerEvent & event);
 
   // Called when the choreographer updates flight modes
   void FlightModeCallback(const ff_msgs::FlightMode::ConstPtr& mode);
+
+  // Command GNC directly, bypassing the action-base dinterface
+  void SetpointCallback(const ff_msgs::ControlState::ConstPtr& command);
 
   // Used to feed segments
   void TimerCallback(const ros::TimerEvent& event);
@@ -131,7 +134,7 @@ class Ctl {
   // ORIGINAL GNC FUNCTIONS
 
   // Update control to take a new setpoint
-  bool Control(uint8_t mode,
+  bool Control(uint8_t const mode,
     ff_msgs::ControlCommand const& poseVel = ff_msgs::ControlCommand());
 
   // Step control forward
@@ -153,7 +156,7 @@ class Ctl {
   std::mutex mutex_cmd_msg_, mutex_segment_;
 
   ros::Subscriber truth_pose_sub_, inertia_sub_, flight_mode_sub_;
-  ros::Subscriber twist_sub_, pose_sub_, ekf_sub_;
+  ros::Subscriber twist_sub_, pose_sub_, ekf_sub_, command_sub_;
   ros::Publisher ctl_pub_, traj_pub_, segment_pub_, progress_pub_;
   ros::Timer timer_;
 

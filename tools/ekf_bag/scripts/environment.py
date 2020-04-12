@@ -25,7 +25,7 @@ import os.path
 
 # sets all needed environment variables. returns map and bag specified
 # by environment variables, if any
-def initialize_environment(astrobee_map, astrobee_bag):
+def initialize_environment(astrobee_map, astrobee_bag, astrobee_robot):
   if astrobee_map == None and 'ASTROBEE_MAP' in os.environ:
     astrobee_map = os.environ['ASTROBEE_MAP']
   if astrobee_map == None:
@@ -37,14 +37,6 @@ def initialize_environment(astrobee_map, astrobee_bag):
     print >> sys.stderr, 'ASTROBEE_BAG not set.'
     sys.exit(0)
 
-  robot_config = os.path.dirname(os.path.abspath(astrobee_bag))
-  robot_config += '/robot.config'
-  if not os.path.isfile(robot_config):
-    print >> sys.stderr, 'Please create the robot config file %s.' % (robot_config)
-    sys.exit(0)
-  os.environ['ASTROBEE_ROBOT'] = robot_config
-  os.environ['ASTROBEE_WORLD'] = 'granite'
-
   rospack = rospkg.RosPack()
   astrobee_path = ''
   try:
@@ -55,6 +47,19 @@ def initialize_environment(astrobee_map, astrobee_bag):
 
   os.environ['ASTROBEE_RESOURCE_DIR'] = astrobee_path + '/resources'
   os.environ['ASTROBEE_CONFIG_DIR'] = astrobee_path + '/config'
+
+  if astrobee_robot == None:
+    robot_config = os.path.dirname(os.path.abspath(astrobee_bag))
+    robot_config += '/robot.config'
+  else:
+    robot_config = astrobee_path + '/config/robots/' + astrobee_robot + '.config'
+    
+  if not os.path.isfile(robot_config):
+    print >> sys.stderr, 'Please create the robot config file %s.' % (robot_config)
+    sys.exit(0)
+
+  os.environ['ASTROBEE_ROBOT'] = robot_config
+  os.environ['ASTROBEE_WORLD'] = 'granite'
   
-  return (astrobee_map, astrobee_bag)
+  return (astrobee_map, astrobee_bag, robot_config)
 

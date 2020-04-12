@@ -1,0 +1,154 @@
+<?xml version="1.0"?>
+
+<!-- Copyright (c) 2017, United States Government, as represented by the     -->
+<!-- Administrator of the National Aeronautics and Space Administration.     -->
+<!--                                                                         -->
+<!-- All rights reserved.                                                    -->
+<!--                                                                         -->
+<!-- The Astrobee platform is licensed under the Apache License, Version 2.0 -->
+<!-- (the "License"); you may not use this file except in compliance with    -->
+<!-- the License. You may obtain a copy of the License at                    -->
+<!--                                                                         -->
+<!--     http://www.apache.org/licenses/LICENSE-2.0                          -->
+<!--                                                                         -->
+<!-- Unless required by applicable law or agreed to in writing, software     -->
+<!-- distributed under the License is distributed on an "AS IS" BASIS,       -->
+<!-- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or         -->
+<!-- implied. See the License for the specific language governing            -->
+<!-- permissions and limitations under the License.                          -->
+
+<robot name="astrobee" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- OPTIONS -->
+  <xacro:property name="world" value="$(arg world)"/>
+  <xacro:property name="pay_top_aft" value="$(arg top_aft)"/>
+  <xacro:property name="pay_bot_aft" value="$(arg bot_aft)"/>
+  <xacro:property name="pay_bot_front" value="$(arg bot_front)"/>
+  <xacro:property name="ns" value="$(arg ns)"/>
+
+  <!-- BASE GEOMETRY -->
+ <link name="body">
+    <self_collide>false</self_collide>
+    <!-- body -->
+    <visual name="body_visual">
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://astrobee_freeflyer/meshes/body.dae"/>
+      </geometry>
+    </visual>
+    <collision name="body_collision">
+      <origin xyz="-0.000794 0.000229 -0.003907" rpy="0 0 0" />
+      <geometry>
+        <box size="0.290513 0.151942 0.281129" />
+      </geometry>
+    </collision>
+    <!-- port pmc -->
+    <visual name="pmc_port_visual">
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://astrobee_freeflyer/meshes/pmc.dae"/>
+      </geometry>
+    </visual>
+    <visual name="pmc_port_bumper_visual">
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://astrobee_freeflyer/meshes/pmc_bumper.dae"/>
+      </geometry>
+    </visual>
+    <visual name="pmc_port_skin_visual">
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://astrobee_freeflyer/meshes/pmc_skin${ns}.dae"/>
+      </geometry>
+    </visual>
+    <collision name="pmc_port_collision">
+      <origin xyz="0 -0.117546 0" rpy="0 0 0" />
+      <geometry>
+        <box size="0.319199 0.083962 0.319588" />
+      </geometry>
+    </collision>
+    <!-- starboard pmc -->
+    <visual name="pmc_stbd_visual">
+      <origin xyz="0 0 0" rpy="0 3.14 3.14" />
+      <geometry>
+        <mesh filename="package://astrobee_freeflyer/meshes/pmc.dae"/>
+      </geometry>
+    </visual>
+    <visual name="pmc_stbd_bumper_visual">
+      <origin xyz="0 0 0" rpy="0 3.14 3.14" />
+      <geometry>
+        <mesh filename="package://astrobee_freeflyer/meshes/pmc_bumper.dae"/>
+      </geometry>
+    </visual>
+    <visual name="pmc_stbd_skin_visual">
+      <origin xyz="0 0 0" rpy="0 3.14 3.14" />
+      <geometry>
+        <mesh filename="package://astrobee_freeflyer/meshes/pmc_skin${ns}.dae"/>
+      </geometry>
+    </visual>
+    <collision name="pmc_stbd_collision">
+      <origin xyz="0 0.117546 0" rpy="0 0 0" />
+      <geometry>
+        <box size="0.319199 0.083962 0.319588" />
+      </geometry>
+    </collision>
+  </link>
+  <!-- This is a workaround for KDL -->
+  <link name="inertial_link">
+    <self_collide>false</self_collide>
+    <inertial>
+      <mass value="9.0877"/>
+      <origin xyz="0 0 0"/>
+      <inertia ixx="0.1454" ixy="0.0" ixz="0.0" iyy="0.1366" iyz="0.0" izz="0.1594"/>
+    </inertial>
+  </link>
+  <joint name="inertial_joint" type="fixed">
+    <origin xyz="0 0 0" rpy="0 0 0" />
+    <parent link="body" />
+    <child link="inertial_link" />
+  </joint>
+
+  <!-- MODEL -->
+  <xacro:include filename="$(find description)/urdf/model_drag.urdf.xacro" />
+  <xacro:include filename="$(find description)/urdf/model_pmc.urdf.xacro" />
+  <xacro:include filename="$(find description)/urdf/model_eps.urdf.xacro" />
+  <xacro:include filename="$(find description)/urdf/model_truth.urdf.xacro" />
+  <xacro:include filename="$(find description)/urdf/model_laser.urdf.xacro" />
+  <xacro:include filename="$(find description)/urdf/model_flashlights.urdf.xacro" />
+  <xacro:include filename="$(find description)/urdf/model_speed_cam.urdf.xacro" />
+  <xacro:include filename="$(find description)/urdf/model_signal_lights.urdf.xacro" />
+
+  <!-- Monitors -->
+  <xacro:include filename="$(find description)/urdf/model_monitors.urdf.xacro" />
+
+  <!-- SENSORS -->
+  <xacro:include filename="$(find description)/urdf/sensor_imu.urdf.xacro" />
+  <xacro:include filename="$(find description)/urdf/sensor_nav_cam.urdf.xacro" />
+  <xacro:include filename="$(find description)/urdf/sensor_dock_cam.urdf.xacro" />
+  <xacro:include filename="$(find description)/urdf/sensor_haz_cam.urdf.xacro" />
+  <xacro:include filename="$(find description)/urdf/sensor_perch_cam.urdf.xacro" />
+
+  <!-- PERCHING ARM -->
+  <xacro:include filename="$(find description)/urdf/macro_perching_arm.urdf.xacro" />
+  <xacro:if value="${pay_top_aft == 'perching_arm'}">
+    <xacro:perching_arm bay="top_aft"
+                        xyz="-0.01 0.0 -0.065"
+                        rpy="0.0 3.1415 0.0" />
+  </xacro:if>
+  <xacro:if value="${pay_bot_aft == 'perching_arm'}">
+    <xacro:perching_arm bay="bot_aft"
+                        xyz="-0.01 0.0 -0.065"
+                        rpy="0.0 3.1415 0.0" />
+  </xacro:if>
+  <xacro:if value="${pay_bot_front == 'perching_arm'}">
+    <xacro:perching_arm bay="bot_aft"
+                        xyz="-0.01 0.0 -0.065"
+                        rpy="0.0 3.1415 0.0" />
+  </xacro:if>
+
+  <!-- GRANITE-SPECIFIC OPTIONS -->
+  <xacro:if value="${world == 'granite'}">
+    <xacro:include filename="$(find description)/urdf/model_carriage.urdf.xacro" />
+  </xacro:if>
+
+</robot>

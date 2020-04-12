@@ -29,59 +29,43 @@ class OpStatePlanExec : public OpState {
  public:
   ~OpStatePlanExec() {}
 
-  OpState* StartupState(std::string const& cmd_id,
-                        std::string const& cmd_origin);
+  OpState* StartupState(std::string const& cmd_id);
   OpState* HandleCmd(ff_msgs::CommandStampedPtr const& cmd);
 
-  OpState* HandleArmResult(ff_util::FreeFlyerActionState::Enum const& state,
-                           ff_msgs::ArmResultConstPtr const& result,
-                           std::string const& cmd_id,
-                           std::string const& cmd_origin);
-
-  // Docking action stuff
-  OpState* HandleDockActive(Action const& action);
-  OpState* HandleDockFeedback(ff_msgs::DockFeedbackConstPtr const& feedback);
-  OpState* HandleDockResult(ff_util::FreeFlyerActionState::Enum const& state,
-                            ff_msgs::DockResultConstPtr const& result,
-                            std::string const& cmd_id,
-                            std::string const& cmd_origin,
-                            Action const& action);
-
-  // Teleop action stuff
-  OpState* HandleMotionActive(Action const& action);
-  OpState* HandleMotionResult(ff_util::FreeFlyerActionState::Enum const& state,
-                              ff_msgs::MotionResultConstPtr const& result,
-                              std::string const& cmd_id,
-                              std::string const& cmd_origin,
-                              Action const& action);
+  OpState* HandleResult(ff_util::FreeFlyerActionState::Enum const& state,
+                        std::string const& result_response,
+                        std::string const& cmd_id,
+                        Action const& action);
 
   OpState* HandleWaitCallback();
 
-  // TODO(Katie) Remove if you end up changing the start, custom, and stop
-  // commands to actions.
   OpState* HandleGuestScienceAck(ff_msgs::AckStampedConstPtr const& ack);
+
+  void AckCmd(std::string const& cmd_id,
+              uint8_t completed_status = ff_msgs::AckCompletedStatus::OK,
+              std::string const& message = "",
+              uint8_t status = ff_msgs::AckStatus::COMPLETED);
+
+  void AckPlanCmdFailed(uint8_t completed_status, std::string const& message);
+
+  bool PausePlan(ff_msgs::CommandStampedPtr const& cmd);
 
  protected:
   explicit OpStatePlanExec(std::string const& name, unsigned char id) :
-    OpState(name, id), waiting_(false), run_plan_cmd_id_("") {}
+    OpState(name, id), waiting_(false) {}
 
  private:
   // allow creation only by repo
   friend class OpStateRepo;
 
-  OpState* HandleCommandComplete(bool successful, std::string const& err_msg,
-                                 uint8_t status);
   OpState* HandleActionComplete(
                               ff_util::FreeFlyerActionState::Enum const& state,
-                              std::string const& name = "",
-                              std::string const& result = "");
+                              Action const& action,
+                              std::string const& result);
   OpState* AckStartPlanItem();
   OpState* StartNextPlanItem();
 
   bool waiting_;
-
-  std::string run_plan_cmd_id_;
-  std::string run_plan_cmd_origin_;
 
   // TODO(Katie) Remove before flight
   bool first_segment_;

@@ -30,30 +30,10 @@ class OpStateTeleop : public OpState {
 
   OpState* HandleCmd(ff_msgs::CommandStampedPtr const& cmd);
 
-  OpState* HandleArmResult(ff_util::FreeFlyerActionState::Enum const& state,
-                           ff_msgs::ArmResultConstPtr const& result,
-                           std::string const& cmd_id,
-                           std::string const& cmd_origin);
-
-  OpState* HandleDockActive(Action const& action);
-  OpState* HandleDockFeedback(ff_msgs::DockFeedbackConstPtr const& feedback);
-  OpState* HandleDockResult(ff_util::FreeFlyerActionState::Enum const& state,
-                            ff_msgs::DockResultConstPtr const& result,
-                            std::string const& cmd_id,
-                            std::string const& cmd_origin,
-                            Action const& action);
-
-  OpState* HandleSwitchResult(ff_util::FreeFlyerActionState::Enum const& state,
-                              ff_msgs::SwitchResultConstPtr const& result,
-                              std::string const& cmd_id,
-                              std::string const& cmd_origin);
-
-  OpState* HandleMotionActive(Action const& action);
-  OpState* HandleMotionResult(ff_util::FreeFlyerActionState::Enum const& state,
-                              ff_msgs::MotionResultConstPtr const& result,
-                              std::string const& cmd_id,
-                              std::string const& cmd_origin,
-                              Action const& action);
+  OpState* HandleResult(ff_util::FreeFlyerActionState::Enum const& state,
+                        std::string const& result_response,
+                        std::string const& cmd_id,
+                        Action const& action);
 
  protected:
   explicit OpStateTeleop(std::string const& name, unsigned char id) :

@@ -18,7 +18,12 @@
 project(mapper)
 
 catkin_package(
-  DEPENDS Eigen
+  DEPENDS 
+    Eigen
+  INCLUDE_DIRS
+    include
+    ${EIGEN3_INCLUDE_DIRS}
+    ${PCL_INCLUDE_DIRS}
   LIBRARIES
     mapper
   CATKIN_DEPENDS

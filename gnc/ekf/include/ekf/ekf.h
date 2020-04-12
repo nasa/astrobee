@@ -39,6 +39,7 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <functional>
 
 namespace ekf {
 
@@ -74,9 +75,16 @@ class Ekf {
   int Step(ff_msgs::EkfState* state);
 
   void SparseMapUpdate(const ff_msgs::VisualLandmarks & vl);
-  void ARTagUpdate(const ff_msgs::VisualLandmarks & vl);
+  bool ARTagUpdate(const ff_msgs::VisualLandmarks & vl);  // returns true if reset transform
+  bool HRTagUpdate(const ff_msgs::DepthLandmarks & dl);  // returns true if reset transform
   void OpticalFlowUpdate(const ff_msgs::Feature2dArray & of);
   void HandrailUpdate(const ff_msgs::DepthLandmarks & dl);
+
+  // transform by from dock coordinates to world coordinates
+  Eigen::Affine3d GetDockToWorldTransform(void) {return dock_to_world_;}
+
+  // transform by from perch coordinates to world coordinates
+  Eigen::Affine3d GetHandrailToWorldTransform(void) {return handrail_to_world_;}
 
   void SparseMapRegister(const ff_msgs::CameraRegistration & reg);
   void ARTagRegister(const ff_msgs::CameraRegistration & reg);
@@ -84,6 +92,10 @@ class Ekf {
   void HandrailRegister(const ff_msgs::CameraRegistration & reg);
 
   void SetSpeedGain(const uint8_t gain);
+
+  void SetResetCallback(std::function<void()> callback);
+  void ResetAR(void);  // called when switching to AR mode
+  void ResetHR(void);  // called when switching to HR (HandRail) mode
 
   Eigen::Affine3d GetNavCamToBody(void) const {return nav_cam_to_body_;}
 
@@ -96,6 +108,7 @@ class Ekf {
   void ResetPose(const Eigen::Affine3d & camera_to_body, geometry_msgs::Pose const& pose);
   void ApplyReset(void);
 
+  void DepthLandmarksUpdate(const ff_msgs::DepthLandmarks & dl);
   void VisualLandmarksUpdate(const ff_msgs::VisualLandmarks & vl);
   void VisualLandmarksRegister(const ff_msgs::CameraRegistration & reg);
 
@@ -128,6 +141,9 @@ class Ekf {
   geometry_msgs::Pose reset_pose_;
   bool reset_ready_;
 
+  // optional: called when a reset occurs
+  std::function<void()> reset_callback_;
+
   // vector of feature ids and observations, observations are features ids and positions
   // this list is sorted by feature id
   std::map<int, OFFeature> optical_flow_features_;
@@ -144,6 +160,7 @@ class Ekf {
   // only save this for writing to a file later
   geometry_msgs::Pose last_estimate_pose_;
 
+
   /** Configuration Constants **/
 
   // transform from camera frame to body frame
@@ -159,8 +176,13 @@ class Ekf {
   uint32_t of_camera_id_;
   uint32_t dl_camera_id_;
 
-  /** handrail related work **/
+  /** ar offset related **/
+  bool reset_dock_pose_;
+  Eigen::Affine3d dock_to_world_;
+
+  /** hr offset relatedd **/
   bool reset_handrail_pose_;
+  Eigen::Affine3d handrail_to_world_;
 };
 }  // end namespace ekf
 

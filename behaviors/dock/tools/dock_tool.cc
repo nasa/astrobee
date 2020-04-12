@@ -1,14 +1,14 @@
 /* Copyright (c) 2017, United States Government, as represented by the
  * Administrator of the National Aeronautics and Space Administration.
- * 
+ *
  * All rights reserved.
- * 
+ *
  * The Astrobee platform is licensed under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -56,63 +56,25 @@ DEFINE_double(deadline, -1.0, "Action deadline timeout");
 // Match the internal states and responses with the message definition
 using STATE = ff_msgs::DockState;
 
-// Arm action feedback
+// Dock action feedback
 void FeedbackCallback(ff_msgs::DockFeedbackConstPtr const& feedback) {
-  // Determine the state
-  std::string str = "UNKNOWN";
-  switch (feedback->state.state) {
-  case STATE::INITIALIZING:
-    str = "INITIALIZING";                      break;
-  case STATE::UNKNOWN:
-    str = "UNKNOWN";                           break;
-  case STATE::UNDOCKED:
-    str = "UNDOCKED";                          break;
-  case STATE::DOCKING_SWITCHING_TO_ML_LOC:
-    str = "DOCKING_SWITCHING_TO_ML_LOC";       break;
-  case STATE::DOCKING_MOVING_TO_APPROACH_POSE:
-    str = "DOCKING_MOVING_TO_APPROACH_POSE";   break;
-  case STATE::DOCKING_SWITCHING_TO_AR_LOC:
-    str = "DOCKING_SWITCHING_TO_AR_LOC";       break;
-  case STATE::DOCKING_MOVING_TO_COMPLETE_POSE:
-    str = "DOCKING_MOVING_TO_COMPLETE_POSE";   break;
-  case STATE::DOCKING_CHECKING_ATTACHED:
-    str = "DOCKING_CHECKING_ATTACHED";         break;
-  case STATE::DOCKING_WAITING_FOR_SPIN_DOWN:
-    str = "DOCKING_WAITING_FOR_SPIN_DOWN";     break;
-  case STATE::DOCKING_SWITCHING_TO_NO_LOC:
-    str = "DOCKING_SWITCHING_TO_NO_LOC";       break;
-  case STATE::DOCKED:
-    str = "DOCKED";                            break;
-  case STATE::UNDOCKING_SWITCHING_TO_ML_LOC:
-    str = "UNDOCKING_SWITCHING_TO_ML_LOC";     break;
-  case STATE::UNDOCKING_WAITING_FOR_SPIN_UP:
-    str = "UNDOCKING_WAITING_FOR_SPIN_UP";     break;
-  case STATE::UNDOCKING_MOVING_TO_APPROACH_POSE:
-    str = "UNDOCKING_MOVING_TO_APPROACH_POSE"; break;
-  case STATE::RECOVERY_SWITCHING_TO_NO_LOC:
-    str = "RECOVERY_SWITCHING_TO_NO_LOC";      break;
-  case STATE::RECOVERY_MOVING_TO_APPROACH_POSE:
-    str = "RECOVERY_MOVING_TO_APPROACH_POSE";  break;
-  case STATE::RECOVERY_SWITCHING_TO_ML_LOC:
-    str = "RECOVERY_SWITCHING_TO_ML_LOC";      break;
-  }
-  // Print out a status message
   std::cout << "\r                                                   "
-            << "\rState: " << str << std::flush;
+            << "\rFSM: " << feedback->state.fsm_event
+            << " -> " << feedback->state.fsm_state << std::flush;
 }
 
-// Arm action result
+// Dock action result
 void ResultCallback(ff_util::FreeFlyerActionState::Enum code,
   ff_msgs::DockResultConstPtr const& result) {
   std::cout << std::endl << "Result: ";
   // Print general response code
   switch (code) {
   case ff_util::FreeFlyerActionState::Enum::SUCCESS:
-    std::cout << "Action completed successfully";      break;
+    std::cout << "[SUCCESS] ";      break;
   case ff_util::FreeFlyerActionState::Enum::PREEMPTED:
-    std::cout << "Action was preempted";               break;
+    std::cout << "[PREEMPT] ";               break;
   case ff_util::FreeFlyerActionState::Enum::ABORTED:
-    std::cout << "Action was aborted by the server";   break;
+    std::cout << "[ABORTED] ";   break;
   case ff_util::FreeFlyerActionState::Enum::TIMEOUT_ON_CONNECT:
     std::cout << "Action timed out on connect";        goto teardown;
   case ff_util::FreeFlyerActionState::Enum::TIMEOUT_ON_ACTIVE:
@@ -123,51 +85,8 @@ void ResultCallback(ff_util::FreeFlyerActionState::Enum code,
     std::cout << "Action timed out on deadline";       goto teardown;
   }
   // If we get there then we have some response data
-  std::cout << std::endl << "Message: ";
-  switch (result->response) {
-  case ff_msgs::DockResult::CANCELLED:
-    std::cout << "CANCELLED";                          break;
-  case ff_msgs::DockResult::ALREADY_DOCKED:
-    std::cout << "ALREADY_DOCKED";                     break;
-  case ff_msgs::DockResult::ALREADY_UNDOCKED:
-    std::cout << "ALREADY_UNDOCKED";                   break;
-  case ff_msgs::DockResult::UNDOCKED:
-    std::cout << "UNDOCKED";                           break;
-  case ff_msgs::DockResult::DOCKED:
-    std::cout << "DOCKED";                             break;
-  case ff_msgs::DockResult::PREEMPTED:
-    std::cout << "PREEMPTED";                          break;
-  case ff_msgs::DockResult::INVALID_COMMAND:
-    std::cout << "INVALID_COMMAND";                    break;
-  case ff_msgs::DockResult::INVALID_BERTH:
-    std::cout << "INVALID_BERTH";                      break;
-  case ff_msgs::DockResult::NOT_IN_UNDOCKED_STATE:
-    std::cout << "NOT_IN_UNDOCKED_STATE";              break;
-  case ff_msgs::DockResult::NOT_IN_DOCKED_STATE:
-    std::cout << "NOT_IN_DOCKED_STATE";                break;
-  case ff_msgs::DockResult::SWITCH_TO_ML_FAILED:
-    std::cout << "SWITCH_TO_ML_FAILED";                break;
-  case ff_msgs::DockResult::SWITCH_TO_AR_FAILED:
-    std::cout << "SWITCH_TO_AR_FAILED";                break;
-  case ff_msgs::DockResult::SWITCH_TO_NO_FAILED:
-    std::cout << "SWITCH_TO_NO_FAILED";                break;
-  case ff_msgs::DockResult::PREP_DISABLE_FAILED:
-    std::cout << "PREP_DISABLE_FAILED";                break;
-  case ff_msgs::DockResult::PREP_ENABLE_FAILED:
-    std::cout << "PREP_ENABLE_FAILED";                 break;
-  case ff_msgs::DockResult::MOTION_APPROACH_FAILED:
-    std::cout << "MOTION_APPROACH_FAILED";             break;
-  case ff_msgs::DockResult::MOTION_COMPLETE_FAILED:
-    std::cout << "MOTION_COMPLETE_FAILED";             break;
-  case ff_msgs::DockResult::MOTION_ATTACHED_FAILED:
-    std::cout << "MOTION_ATTACHED_FAILED";             break;
-  case ff_msgs::DockResult::EPS_UNDOCK_FAILED:
-    std::cout << "EPS_UNDOCK_FAILED";                  break;
-  case ff_msgs::DockResult::EPS_DOCK_FAILED:
-    std::cout << "EPS_DOCK_FAILED";                    break;
-  case ff_msgs::DockResult::TOO_FAR_AWAY_FROM_APPROACH:
-    std::cout << "TOO_FAR_AWAY_FROM_APPROACH";         break;
-  }
+  std::cout << result->fsm_result
+            << " (Code " << result->response << ")" << std::endl;
 teardown:
   std::cout << std::endl;
   // In all cases we must shutdown
@@ -203,7 +122,7 @@ void ConnectedCallback(
 // Main entry point for application
 int main(int argc, char *argv[]) {
   // Initialize a ros node
-  ros::init(argc, argv, "control", ros::init_options::AnonymousName);
+  ros::init(argc, argv, "dock_tool", ros::init_options::AnonymousName);
   // Gather some data from the command
   google::SetUsageMessage("Usage: rosrun dock dock_tool <opts>");
   google::SetVersionString("0.1.0");

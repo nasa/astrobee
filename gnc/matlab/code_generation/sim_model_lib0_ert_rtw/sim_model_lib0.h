@@ -5,7 +5,7 @@
 //
 // Model version                  : 1.1142
 // Simulink Coder version         : 8.11 (R2016b) 25-Aug-2016
-// C/C++ source code generated on : Wed Jan 31 12:34:13 2018
+// C/C++ source code generated on : Mon Sep 23 17:45:47 2019
 //
 // Target selection: ert.tlc
 // Embedded hardware selection: 32-bit Generic
@@ -162,6 +162,7 @@ typedef struct {
   int8_T b_valid_in_data[8682];
   boolean_T b_valid_in_data_j[8632];
   int16_T tmp_data[3979];
+  real32_T points_out_2D_cam_e[1600];  // '<S83>/generate_output'
   real32_T new_observations_data[1600];
   real32_T tmp_data_d[1600];
   real32_T P_point_B_iss_p[1512];      // '<S116>/Matrix Concatenate'
@@ -186,7 +187,6 @@ typedef struct {
   real32_T RateTransition6_n[100];     // '<S82>/Rate Transition6'
   real32_T RateTransition5_p[150];     // '<S79>/Rate Transition5'
   real32_T RateTransition6_p[100];     // '<S79>/Rate Transition6'
-  real32_T points_out_2D_cam_e[1600];  // '<S83>/generate_output'
   real32_T id_tag_m[50];               // '<S83>/generate_output'
   real32_T ImpAsg_InsertedFor_P_points_2D_[7958];// '<S165>/pinhole_camera_projection' 
   real32_T points_out_iss_j[150];      // '<S82>/generate_output'
@@ -1030,6 +1030,12 @@ struct P_sim_model_lib0_T_ {
 
   real32_T tun_ase_gravity_accel[3];   // Variable: tun_ase_gravity_accel
                                        //  Referenced by: '<S186>/Constant4'
+
+  real32_T tun_bpm_PM1_thrust_error_sf;// Variable: tun_bpm_PM1_thrust_error_sf
+                                       //  Referenced by: '<S184>/blower_aerodynamics'
+
+  real32_T tun_bpm_PM2_thrust_error_sf;// Variable: tun_bpm_PM2_thrust_error_sf
+                                       //  Referenced by: '<S185>/blower_aerodynamics'
 
   real32_T tun_bpm_noise_on_flag;      // Variable: tun_bpm_noise_on_flag
                                        //  Referenced by:

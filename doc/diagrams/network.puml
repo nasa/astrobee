@@ -1,12 +1,30 @@
 @startuml
 
-skinparam componentStyle uml2
-'skinparam dpi 300
+' This nework diagram can be controlled by the defines below
+!define SHOW_GROUND 1
+'!define SHOW_LEGEND 1
+'!define LEGEND_ONLY 1
+!define SHOW_OS
+!define USE_NASA_ACRONYMS 1
 
 !include "colors.puml"
 
 !define COLOR_NET COLOR_6PASTEL_5
 !define COLOR_CPU COLOR_6PASTEL_3
+!define COLOR_ANT COLOR_6PASTEL_1
+!define COLOR_GDS COLOR_6PASTEL_6
+
+'left to right direction
+
+!ifdef USE_NASA_ACRONYMS
+!define elc_name ELC
+!define mmoc_name "ARC MMOC (Multi Mission Operation Center)"
+!define msfc_name "MSFC"
+!else
+!define elc_name "Astronaut Laptop"
+!define mmoc_name "NASA Ames Multi Mission Operation Center"
+!define msfc_name "NASA Marshall Space Flight Center"
+!endif
 
 skinparam component {
   backgroundColor COLOR_6PASTEL_2
@@ -28,41 +46,110 @@ skinparam boundary {
     backgroundColor<<wifi>> COLOR_6PASTEL_2
 }
 
+skinparam note {
+  backgroundColor GhostWhite
+  borderColor LightGrey
+}
+
+!ifndef LEGEND_ONLY
+
 title Astrobee Network Deployement Diagram
 
-frame Astrobee {
+frame "Astrobee Freeflyer Robot" as astrobee {
 
-  card "Network Switch" as abnet COLOR_NET
+  node HLP <<Inforce>> COLOR_CPU [
+  **HLP**
+!ifdef SHOW_OS
+  //Android 7.1//
+!endif
+  |_ Guest Science Apps
+  |_ HRI Devices
+  ]
 
-  node HLP <<Inforce>> COLOR_CPU
-  interface "hlp:\nISS_IP" <<wireless>> as hlpwlan
-  interface "hlp:\nlocal_IP" <<wired>> as hlpeth
-  boundary "HLP <&wifi>" <<wifi>> as hlpwifi
+  interface "hlp_iss_ip" <<wireless>> as hlpwlan
   HLP = hlpwlan
+
+  interface "hlp_local_ip" <<wired>> as hlpeth
   HLP = hlpeth
 
-  node MLP <<Inforce>> COLOR_CPU
-  interface "mlp:\nISS_IP" <<wireless>> as mlpwlan
-  interface "mlp:\nISS_IP\nlocal_IP" <<wired>> as mlpeth
+  boundary "HLP <&wifi>" <<wifi>> as hlpwifi
+
+  node MLP <<Inforce>> COLOR_CPU [
+  **MLP**
+!ifdef SHOW_OS
+  //Ubuntu 16.04//
+!endif
+  |_ Vision based localization
+  |_ Mobility system
+  |_ Obstacle detection
+  |_ Executive
+  |_ Faults Management
+  |_ Color and Depth cameras
+  ]
+  interface "mlp_iss_ip <U+2460>" <<wireless>> as mlpwlan
+  interface "mlp_iss_ip <U+2460>\nmlp_local_ip" <<wired>> as mlpeth
   boundary "MLP <&wifi>" <<wifi>> as mlpwifi
   MLP = mlpwlan
   MLP = mlpeth
 
-  node LLP <<Wandboard>> COLOR_CPU
-  interface "llp:\nlocal_IP" <<wired>> as llpeth
+!ifdef FALSE
+  note as eth_switch
+    <U+2460> MLP has only
+    one active interface
+    at any time (manually
+    switched)
+  end note
+!endif
+
+  'eth_switch -[hidden]down- MLP
+  'eth_switch - mlpeth
+  'eth_switch - mlpwifi
+
+  node LLP <<Wandboard>> COLOR_CPU [
+  **LLP**
+!ifdef SHOW_OS
+  //Ubuntu 16.04//
+!endif
+  |_ EFK
+  |_ Motion Control
+  |_ Hardware Devices
+  ]
+
+  interface "llp_local_ip" <<wired>> as llpeth
   LLP = llpeth
 
+  card "Network Switch" as abnet COLOR_NET
+
   boundary "Astrobee <&fork>" <<eth>> as abeth
+
+  ' Astrobee internal connections
+  llpeth -# abnet
+  abnet #- abeth
+  mlpeth --# abnet
+  hlpeth --# abnet
+  mlpwlan - mlpwifi
+  hlpwlan - hlpwifi
 }
 
-frame Dock {
-  node DockBoard <<Wandboard>> COLOR_CPU
-  interface "dock:\nISS_IP\local_IP" <<wired>> as docketh
+frame "Astrobee Dock" as dock {
+  node DockComputer <<Wandboard>> COLOR_CPU [
+    **Dock**
+!ifdef SHOW_OS
+    //Ubuntu 16.04//
+!endif
+  ]
+  interface "dock_iss_ip\ndock_local_ip" <<wired>> as docketh
   card "Network Switch" as docknet COLOR_NET
   boundary "Dock LAN <&fork>" <<eth>> as dock2iss
   boundary "Berth1 <&fork>" <<eth>> as berth1
   boundary "Berth2 <&fork>" <<eth>> as berth2
-  DockBoard =left= docketh
+  DockComputer =down= docketh
+
+  'Dock internal connections
+  docknet #- docketh
+  dock2iss -down-# docknet
+  berth1 -right-# docknet
+  berth2 --# docknet
 }
 
 frame ISS-Payload-Network as iss {
@@ -71,42 +158,101 @@ frame ISS-Payload-Network as iss {
     boundary "AB Port <&fork>" <<eth>> as iss2dock
     boundary "ISS <&wifi>" <<wifi>> as isswifi
     isswap --# issnet
-    isswifi - isswap
+    isswifi = isswap
     issnet #-- iss2dock
 
-    node ELC COLOR_CPU
+    node elc_name as ELC COLOR_CPU {
+      frame "Control Station" COLOR_GDS
+    }
     issnet #- ELC
 
-    database NAS
+    database "Network Area Storage\n(NAS)" as NAS COLOR_9PASTEL_4 {
+      storage "astrobee\nDelayed Data"
+    }
+
+    node "NTP Server" as NTP COLOR_CPU
+
     issnet #-- NAS
+
+    issnet #-- NTP
 }
 
-' Astrobee internal connections
-llpeth -# abnet
-abnet #- abeth
-mlpeth --# abnet
-hlpeth --# abnet
-mlpwlan - mlpwifi
-hlpwlan - hlpwifi
-
-'Dock internal connections
-docknet #- docketh
-dock2iss -down-# docknet
-berth1 -right-# docknet
-berth2 -up-# docknet
-
-'ISS internal connections
-
 'System connections
-abeth -right- berth1
-iss2dock -- dock2iss
+abeth -left- berth1
+iss2dock -down- dock2iss
 hlpwifi . isswifi
 mlpwifi . isswifi
 
 ' To help get a nice layout:
-Astrobee -[hidden]right- Dock
-Astrobee -[hidden]up- iss
-MLP --[hidden]down-- LLP
-HLP --[hidden]down-- MLP
+'astrobee -[hidden]up- iss
+'astrobee -[hidden]left- dock
+HLP --[hidden]down- MLP
+MLP --[hidden]down- LLP
+
+rectangle "\nKu-Band\n" as kub COLOR_ANT {
+}
+issnet - kub
+
+!ifdef SHOW_GROUND
+cloud "\n\nreal\n\nempty\n\nspace\n\n;-)\n\n\n" as space #FFFFFF
+
+rectangle "White\nSands" as kws COLOR_ANT {
+}
+
+cloud "Set of Ground Networks\nwith complex\nmulti-tiers firewalls" as ground COLOR_NET
+
+frame mmoc_name as mmoc {
+    database "Astrobee\nData\nStorage" as storage COLOR_9PASTEL_4
+    node "Ground Computer" as gds_arc COLOR_CPU {
+      frame "Control Station" as gds_1 COLOR_GDS
+    }
+}
+
+frame msfc_name {
+  node "Ground Computer" as gds_msfc COLOR_CPU {
+    frame "Control Station" as gds_2 COLOR_GDS
+  }
+}
+
+frame "Guest Institution" {
+  node "Ground Computer" as gds_guest COLOR_CPU {
+    frame "Control Station" as gds_3 COLOR_GDS
+  }
+}
+
+kub . space
+space . kws
+
+kws == ground
+ground -up- gds_arc
+ground -up- storage
+ground -- gds_msfc
+ground -- gds_guest
+!endif
+
+!endif
+
+'legend
+'  MMOC: NASA Ames Multi Mission Operation Center
+'end legend
+'  MSFC: NASA Marshall Space Flight Center
+'  ELC: Astronaut Laptop
+
+!ifdef SHOW_LEGEND
+folder legend {
+  node CPU <<Processor>> COLOR_CPU
+  card switch COLOR_NET
+  CPU -[hidden]-# switch
+  interface "Wired Interface" <<wired>> as legend_wired
+  interface "Wireless Interface" <<wireless>> as legend_wireless
+  boundary "Wired Connection <&fork>" <<eth>> as legend_eth
+  boundary "Wireless Connection <&wifi>" <<wifi>> as legend_wifi
+  ' CPU -[hidden]- switch
+  ' switch -[hidden]- legend_eth
+  ' legend_eth -[hidden]- legend_wifi
+  ' legend_wifi -[hidden]- legend_wired
+  ' legend_wifi -[hidden]- legend_wireless
+}
+!endif
 
 @enduml

@@ -46,12 +46,15 @@ def main():
 
   # Lets look for source files and headers in our repo
   for root, dirnames, filenames in os.walk(get_repo_path()):
-    if "Software" in root or "external" in root or "gnc/matlab" in root or "submodules" in root:
+    if "Software" in root or "external" in root or "gnc/matlab" in root or \
+      "submodules" in root or "agast_score" in root or "brisk" in root:
+      continue
+
+    if not filename.endswith((".cpp",".cc",".h",".hpp",".cc.in",".c",".c.in",".h.in",
+                              ".hpp.in",".cxx",".hxx")):
       continue
     print filenames
-    for filename in fnmatch.filter(filenames, "*.cc"):
-      run_cpplint(cpplint, os.path.join(root, filename))
-    for filename in fnmatch.filter(filenames, "*.h"):
+    for filename in filenames:
       run_cpplint(cpplint, os.path.join(root, filename))
 
   print "="*50

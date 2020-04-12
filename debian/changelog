@@ -1,3 +1,225 @@
+astrobee (0.10.4) testing; urgency=medium
+
+  * Histogram correction for localization.
+  * Various smaller fixes.
+
+ -- Astrobee Flight Software <astrobee-fsw@nx.arc.nasa.gov>  Mon, 10 Feb 2020 15:52:31 -0800
+
+astrobee (0.10.3) testing; urgency=medium
+
+  * Don't use sparse mapping features more than once.
+
+ -- Astrobee Flight Software <astrobee-fsw@nx.arc.nasa.gov>  Tue, 29 Oct 2019 15:26:59 -0700
+
+astrobee (0.10.2) testing; urgency=medium
+
+  * Perching behavior implemented
+  * Localization sparse mapping timeout increased to 10 minutes
+  * Already there tolerances decreased to allow for smaller moves
+  * Other minor bug fixes/software improvements
+
+ -- Astrobee Flight Software <astrobee-fsw@nx.arc.nasa.gov>  Thu, 24 Oct 2019 14:28:04 -0700
+
+astrobee (0.10.1) testing; urgency=medium
+
+  * Removed the new signal lights nodes from launch 
+
+ -- Astrobee Developer <lfluckig@astrobeast.ndc.nasa.gov>  Tue, 20 Aug 2019 17:40:26 -0700
+
+astrobee (0.10.0) testing; urgency=medium
+
+  * New control scheme for some commands
+    - Independant control of camera streaming/recording parameters
+    - Can start/stop recording data independantly of profile selection
+    - Required minor IDL changes
+  * Perching Arm driver functional with latest firmware
+  * Support for many more commands in plan to allow easy "scripting"
+  * Localization
+    - Separated tunable minimal feature count for ML versus AR
+    - Tuned EKF for better stability
+    - Fixes in localization_manager behavior
+  * Mapping
+    - Prune "less" the features in the map in order to improve the search
+      restults 
+
+ -- Astrobee Developer <lfluckig@astrobeast.ndc.nasa.gov>  Tue, 20 Aug 2019 13:05:54 -0700
+
+astrobee (0.9.3) testing; urgency=medium
+
+  * Many localization improvements making the EKF much more stable and resilient
+    to loss of mapped landmarks features.
+    - Improved tools to analyze localization bags
+    - Fixed bug in two places where the noise computation was not multiplied by
+      the focal length
+    - Changed the selection of optical flow features to pass a better subset
+      to the EKF
+    - Tuned lot of the EFK parameters
+  * Added nodes to check the time synchronization between processors (with
+    associated logging and fault generation)
+  * Re-positioned the dock location on ISS from the mapping activity.
+
+ -- Astrobee Developer <astrobee@avm>  Mon, 08 Jul 2019 18:33:16 -0700
+
+astrobee (0.9.2) testing; urgency=medium
+
+  * Drop bad images from camera.
+
+ -- Astrobee Flight Software <astrobee-fsw@nx.arc.nasa.gov>  Thu, 13 Jun 2019 10:30:33 -0700
+
+astrobee (0.9.1) testing; urgency=medium
+
+  * Honor "referenceFrame" for simpleMove6DOF commands (allows relative motion)
+  * Status video/streaming LEDs controlled by the Executive
+  * Default bagger profile tuned to include more core topics
+  * Agent state publish current world information
+  * Camera driver double buffer fix
+  * As usual, other bug fixes too
+
+ -- Astrobee Developer <astrobee@avm>  Wed, 29 May 2019 10:18:34 -0700
+
+astrobee (0.8.0) testing; urgency=medium
+
+  * Fixed simulator jump under some conditions on motion start
+  * Data bagger system implemented
+  * Command line teleoperation tools implemented
+  * SciCam commanding implemented
+  * Adjusted inertia parameters from flight unit measurements
+  * Pre-configured ISS flight parameters
+  * Signal lights communication implemented
+  * Heroic documentation effort
+  * As usual, many bug fixes
+
+ -- Astrobee Flight Software <astrobee-fsw@nx.arc.nasa.gov>  Fri, 12 Apr 2019 17:06:46 -0700
+
+astrobee (0.7.6) testing; urgency=medium
+
+  * Localization and localization manager fixes.
+
+ -- Astrobee Flight Software <astrobee-fsw@nx.arc.nasa.gov>  Thu, 17 Jan 2019 12:29:21 -0800
+
+astrobee (0.7.5) testing; urgency=medium
+
+  * Various fixes for flight units.
+  * Improvements to debians.
+
+ -- Astrobee Flight Software <astrobee-fsw@nx.arc.nasa.gov>  Thu, 20 Dec 2018 14:28:15 -0800
+
+astrobee (0.7.4) testing; urgency=medium
+
+  * Fixed compile for vive again.
+
+ -- Astrobee Flight Software <astrobee-fsw@nx.arc.nasa.gov>  Mon, 17 Dec 2018 14:13:29 -0800
+
+astrobee (0.7.3) testing; urgency=medium
+
+  * Fixed compile for vive.
+
+ -- Astrobee Flight Software <astrobee-fsw@nx.arc.nasa.gov>  Mon, 17 Dec 2018 10:22:57 -0800
+
+astrobee (0.7.2) testing; urgency=medium
+
+  * Fix cmake bug.
+
+ -- Astrobee Flight Software <astrobee-fsw@nx.arc.nasa.gov>  Fri, 14 Dec 2018 15:10:27 -0800
+
+astrobee (0.7.1) testing; urgency=medium
+
+  * Vive updates.
+  * Submodule bumps.
+
+ -- Astrobee Flight Software <astrobee-fsw@nx.arc.nasa.gov>  Thu, 13 Dec 2018 16:38:26 -0800
+
+astrobee (0.7.0) testing; urgency=medium
+
+  * Infrastructure to build the flight images completed, including HLP
+    (Android) configuration methods not requiring touchscreen access
+  * Inertia and masses reflecting the Flight Units characteristics
+  * New values for flight modes optimized for the new propulsion units
+  * Support for all functional tests (including Speedcam modes)
+  * Support for all mobility tests (including plans)
+  * Improved marker tracking simulation plugin allowing to analyze marker
+    placement
+  * Fixed a jerk motion while docking (real robot) due to camera occlusion
+  * Executive:
+    - Refactored for easier maintenance
+    - Support data to disk configuration
+    - Support telemetry rate command
+    - Support localization mode switch and EKF commands
+    - Manage guest science state
+  * Real time analysis tool (gviz) ported to support DDS telemetry:
+    allows the same capabilities of inspection for flight than on the ground.
+  * New launch file feature to support backlisting / adding extra nodes
+  * Bug fixes
+
+ -- Astrobee Flight Software <astrobee-fsw@nx.arc.nasa.gov>  Wed, 12 Dec 2018 21:09:43 -0800
+
+astrobee (0.6.1) stable; urgency=medium
+
+  * Config files for new robots.
+
+ -- Astrobee Flight Software <astrobee-fsw@nx.arc.nasa.gov>  Wed, 28 Nov 2018 10:06:39 -0800
+
+astrobee (0.6.0) stable; urgency=medium
+
+  Flight packaging candidate release
+  * Indicator LEDs management.
+  * All DDS commands to support remote tests implemented.
+  * Adjustments and tools to support test procedures in place.
+
+ -- Astrobee Flight Software <astrobee-fsw@nx.arc.nasa.gov>  Fri, 16 Nov 2018 15:49:42 -0800
+
+astrobee (0.5.0) testing; urgency=medium
+
+  * Build ready for CERT testing.
+  * Improved simulator.
+
+ -- Astrobee Flight Software <astrobee-fsw@nx.arc.nasa.gov>  Wed, 17 Oct 2018 11:47:05 -0700
+
+astrobee (0.4.4) testing; urgency=medium
+
+  * Remove astrobee-repo-version from required packages.
+
+ -- Astrobee Flight Software <astrobee-fsw@nx.arc.nasa.gov>  Thu, 27 Sep 2018 11:13:21 -0700
+
+astrobee (0.4.3) testing; urgency=medium
+
+  * Fix decomputil debian.
+
+ -- Astrobee Flight Software <astrobee-fsw@nx.arc.nasa.gov>  Wed, 01 Aug 2018 10:53:24 -0700
+
+astrobee (0.4.2) testing; urgency=medium
+
+  * Only build smart dock when we have DDS.
+
+ -- Astrobee Flight Software <astrobee-fsw@nx.arc.nasa.gov>  Fri, 20 Jul 2018 13:46:45 -0700
+
+astrobee (0.4.1) testing; urgency=medium
+
+  * Fix bug where smart dock reported "Unknown" instead of blank.
+
+ -- Astrobee Flight Software <astrobee-fsw@nx.arc.nasa.gov>  Mon, 16 Jul 2018 14:31:12 -0700
+
+astrobee (0.4.0) testing; urgency=medium
+
+  * Improvements of map building and camera calibration.
+  * Improvements on simulator performance and multi-robot support.
+  * New features for guest science.
+  * Many internal changes.
+
+ -- Astrobee Flight Software <astrobee-fsw@nx.arc.nasa.gov>  Fri, 13 Jul 2018 15:31:30 -0700
+
+astrobee (0.3.2) unstable; urgency=medium
+
+  * Fixed bug in install with new debian version numbers.
+
+ -- Astrobee Flight Software <astrobee-fsw@nx.arc.nasa.gov>  Mon, 07 May 2018 12:50:04 -0700
+
+astrobee (0.3.1) unstable; urgency=medium
+
+  * Fix to build with ROS' new opencv version.
+
+ -- Astrobee Flight Software <astrobee-fsw@nx.arc.nasa.gov>  Mon, 30 Apr 2018 16:42:31 -0700
+
 astrobee (0.3.0) unstable; urgency=medium
 
   * This release addresses several bugs identified by Guest Scientists, simulator improvements as well as many internal changes. The only API change is in the EkfState (removed augmented state).

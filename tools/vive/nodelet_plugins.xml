@@ -1,8 +1,0 @@
-<library path="lib/libvive">
-  <class name="vive/BridgeNodelet" type="vive::BridgeNodelet" base_class_type="nodelet::Nodelet">
-    <description>Nodelet for converting USB Vive data to ROS messages</description>
-  </class>
-  <class name="vive/ServerNodelet" type="vive::ServerNodelet" base_class_type="nodelet::Nodelet">
-    <description>Nodelet for tracking / calibration</description>
-  </class>>
-</library>

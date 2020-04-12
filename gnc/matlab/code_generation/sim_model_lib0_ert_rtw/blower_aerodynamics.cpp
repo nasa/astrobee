@@ -5,7 +5,7 @@
 //
 // Model version                  : 1.1142
 // Simulink Coder version         : 8.11 (R2016b) 25-Aug-2016
-// C/C++ source code generated on : Wed Jan 31 12:34:13 2018
+// C/C++ source code generated on : Mon Sep 23 17:45:47 2019
 //
 // Target selection: ert.tlc
 // Embedded hardware selection: 32-bit Generic
@@ -71,8 +71,8 @@ void sim_mod_blower_aerodynamics(real32_T rtu_rotor_speed, const real32_T
   rtp_imp_zero_thrust_area_error, real32_T rtp_noise_on_flag, const real32_T
   rtp_noz_cd[6], const real32_T rtp_noz_cd_error[6], const real32_T
   rtp_imp_cdp_lookup[334], const real32_T rtp_imp_area_lookup[334], real32_T
-  rtp_imp_diameter, real32_T rtp_const_air_den, const real_T
-  rtp_noz_thrust_noise_feedback[6])
+  rtp_imp_diameter, real32_T rtp_const_air_den, real32_T rtp_noz_thrust_sf,
+  const real_T rtp_noz_thrust_noise_feedback[6])
 {
   real32_T rtb_walking_bias[6];
   real32_T rtb_Product2_g[6];
@@ -125,6 +125,7 @@ void sim_mod_blower_aerodynamics(real32_T rtu_rotor_speed, const real32_T
   for (i = 0; i < 6; i++) {
     // Sum: '<S187>/Add1' incorporates:
     //   Constant: '<S187>/Constant4'
+    //   Constant: '<S187>/Constant9'
     //   DataTypeConversion: '<S187>/Data Type Conversion'
     //   DiscreteIntegrator: '<S187>/Discrete-Time Integrator'
     //   Product: '<S187>/Product1'
@@ -132,8 +133,8 @@ void sim_mod_blower_aerodynamics(real32_T rtu_rotor_speed, const real32_T
     //   Product: '<S187>/Product7'
 
     localB->Add1[i] = localP->Constant4_Value * rtb_walking_bias[i] *
-      rtb_walking_bias[i] * rtb_Cdp * rtu_nozzle_areas[i] + (real32_T)
-      localDW->DiscreteTimeIntegrator_DSTATE[i];
+      rtb_walking_bias[i] * rtb_Cdp * rtu_nozzle_areas[i] * rtp_noz_thrust_sf +
+      (real32_T)localDW->DiscreteTimeIntegrator_DSTATE[i];
 
     // Update for DiscreteIntegrator: '<S187>/Discrete-Time Integrator' incorporates:
     //   DiscreteIntegrator: '<S187>/Discrete-Time Integrator'
@@ -209,8 +210,8 @@ void sim_m_blower_aerodynamics_j(real32_T rtu_rotor_speed, const real32_T
   rtp_imp_zero_thrust_area_error, real32_T rtp_noise_on_flag, const real32_T
   rtp_noz_cd[6], const real32_T rtp_noz_cd_error[6], const real32_T
   rtp_imp_cdp_lookup[334], const real32_T rtp_imp_area_lookup[334], real32_T
-  rtp_imp_diameter, real32_T rtp_const_air_den, const real_T
-  rtp_noz_thrust_noise_feedback[6])
+  rtp_imp_diameter, real32_T rtp_const_air_den, real32_T rtp_noz_thrust_sf,
+  const real_T rtp_noz_thrust_noise_feedback[6])
 {
   real32_T rtb_walking_bias[6];
   real32_T rtb_Product2_h[6];
@@ -263,6 +264,7 @@ void sim_m_blower_aerodynamics_j(real32_T rtu_rotor_speed, const real32_T
   for (i = 0; i < 6; i++) {
     // Sum: '<S220>/Add1' incorporates:
     //   Constant: '<S220>/Constant4'
+    //   Constant: '<S220>/Constant9'
     //   DataTypeConversion: '<S220>/Data Type Conversion'
     //   DiscreteIntegrator: '<S220>/Discrete-Time Integrator'
     //   Product: '<S220>/Product1'
@@ -270,8 +272,8 @@ void sim_m_blower_aerodynamics_j(real32_T rtu_rotor_speed, const real32_T
     //   Product: '<S220>/Product7'
 
     localB->Add1[i] = localP->Constant4_Value * rtb_walking_bias[i] *
-      rtb_walking_bias[i] * rtb_Cdp * rtu_nozzle_areas[i] + (real32_T)
-      localDW->DiscreteTimeIntegrator_DSTATE[i];
+      rtb_walking_bias[i] * rtb_Cdp * rtu_nozzle_areas[i] * rtp_noz_thrust_sf +
+      (real32_T)localDW->DiscreteTimeIntegrator_DSTATE[i];
 
     // Update for DiscreteIntegrator: '<S220>/Discrete-Time Integrator' incorporates:
     //   DiscreteIntegrator: '<S220>/Discrete-Time Integrator'

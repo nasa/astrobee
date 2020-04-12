@@ -17,7 +17,7 @@
 
 function time_data = ab_processTimeData(time_data)
     %time_data = (time_data-time_data(1))*(10^-9);               %convert from nsec to sec
-    if all(time_data > 1E14)
+    if all(time_data > 1E10)
         time_data = (time_data)*(10^-9);               %convert from nsec to sec
     end
     

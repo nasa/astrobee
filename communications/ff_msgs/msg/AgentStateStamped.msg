@@ -63,15 +63,32 @@ float32 collision_distance
 
 # Specifies whether the Astrobee is allowed to fly blind i.e. not faceforward
 bool holonomic_enabled
+
 # Specifies whether the Astrobee is checking for obstacles
 bool check_obstacles
+
 # Specifies whether the Astrobee is checking the keepin and keepout zones
 bool check_zones
+
 # Specifies whether the Astrobee is allowed to auto return. Please note,
 # Astrobee will only use this flags when deciding if it should auto return. If
 # the astrobee gets a command to auto return from the operator or guest science,
 # it will auto return without checking this flag
 bool auto_return_enabled
+
+# Specifies whether timesync is enabled. Hopefully this will be used to
+# synchronize movements between Astrobees.
+bool time_sync_enabled
+
+# Specifies whether the choreographer should execute a segment immediately or
+# based on the time stamp in the segement
+bool immediate_enabled
+
+# Specifies the current planner being used
+string planner
+
+# Specifies the current world being used
+string world
 
 # Number of seconds since Unix Epoch
 uint32 boot_time

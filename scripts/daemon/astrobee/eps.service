@@ -1,0 +1,14 @@
+[Unit]
+Description=Use the EPS tool to determine if we booted in an off-nominal mode
+After=res.mount
+
+[Service]
+Type=oneshot
+User=astrobee
+Group=astrobee
+EnvironmentFile=/res/astrobee.env
+ExecStart=/opt/astrobee/bin/eps_driver_tool -w /res/eps_state
+TimeoutStartSec=60s
+
+[Install]
+WantedBy=multi-user.target

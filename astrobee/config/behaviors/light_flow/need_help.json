@@ -1,0 +1,55 @@
+{
+  "procedure": [
+    [
+      "Procedure",
+      "needhelp1",
+      [
+        "Define",
+        "$breath",
+        [
+          "ListSequence",
+          ["BasicSequence", "#000", 0.0, 0.5, "#fff"],
+          ["BasicSequence", "#fff", 0.5, 0.5, "#000"]
+        ]
+      ],
+      ["Define", "$rptBreath", ["RepeatSequence", "$breath", 1.0]],
+      [
+        "Define",
+        "$pointLights",
+        ["Domain", ["Interval", 2, 3], ["Interval", 64, 3], ["Interval", 19, 3]]
+      ],
+      ["Return", ["BasicAnimation", "$pointLights", "$rptBreath"]]
+    ],
+
+    [
+      "Procedure",
+      "needhelp2",
+      [
+        "Define",
+        "$breath",
+        [
+          "ListSequence",
+          ["BasicSequence", "#000", 0.5, 0.5, "#fff"],
+          ["BasicSequence", "#fff", 1.0, 0.5, "#000"]
+        ]
+      ],
+      ["Define", "$rptBreath", ["RepeatSequence", "$breath", 1.0]],
+      [
+        "Define",
+        "$pointLights",
+        ["Domain", ["Interval", 9, 3], ["Interval", 49, 3], ["Interval", 34, 3]]
+      ],
+      ["Return", ["BasicAnimation", "$pointLights", "$rptBreath"]]
+    ]
+  ],
+  "state": [
+    "ExecState",
+    1.0,
+    30.0,
+    true,
+    [
+      ["Call", "both", "needhelp1", "#fff", 1.0],
+      ["Call", "both", "needhelp2", "#fff", 1.0]
+    ]
+  ]
+}

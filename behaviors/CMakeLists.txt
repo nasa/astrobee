@@ -17,6 +17,8 @@
 
 add_subdirectory(arm)
 add_subdirectory(dock)
-#add_subdirectory(perch)
+add_subdirectory(states)
+add_subdirectory(light_flow)
+add_subdirectory(perch)
 
 

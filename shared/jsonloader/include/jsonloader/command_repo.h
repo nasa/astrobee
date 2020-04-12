@@ -52,6 +52,15 @@ constexpr char kCmdIdleProp[]    = "idlePropulsion";
 constexpr char kCmdSetCamera[]   = "setCamera";
 constexpr char kCmdStreamCamera[] = "setCameraStreaming";
 constexpr char kCmdRecordCamera[] = "setCameraRecording";
+constexpr char kCmdInitBias[]     = "initializeBias";
+constexpr char kCmdChkObstacles[] = "setCheckObstacles";
+constexpr char kCmdChkZones[]     = "setCheckZones";
+constexpr char kCmdSetHolonomic[] = "setHolonomicMode";
+constexpr char kCmdSetPlanner[]   = "setPlanner";
+constexpr char kCmdTelemRate[]    = "setTelemetryRate";
+constexpr char kCmdSwitchLocal[]  = "switchLocalization";
+constexpr char kCmdStartRecord[]  = "startRecording";
+constexpr char kCmdStopRecord[]   = "stopRecording";
 
 class DockCommand : public Command {
  public:
@@ -207,11 +216,13 @@ class SetCameraCommand : public CameraCommand {
  public:
   explicit SetCameraCommand(Json::Value const& obj);
 
+  std::string const& mode() const noexcept;
   float frame_rate() const noexcept;
   float bandwidth() const noexcept;
   std::string const& resolution() const noexcept;
 
  private:
+  std::string mode_;
   float frame_rate_;
   float bandwidth_;
   std::string resolution_;
@@ -235,6 +246,88 @@ class StreamCameraCommand : public CameraCommand {
 
  private:
   bool stream_;
+};
+
+class InitializeBiasCommand : public Command {
+ public:
+  explicit InitializeBiasCommand(Json::Value const& obj);
+};
+
+class SetCheckObstaclesCommand : public Command {
+ public:
+  explicit SetCheckObstaclesCommand(Json::Value const& obj);
+
+  bool checkObstacles() const noexcept;
+
+ private:
+  bool checkObstacles_;
+};
+
+class SetCheckZonesCommand : public Command {
+ public:
+  explicit SetCheckZonesCommand(Json::Value const& obj);
+
+  bool checkZones() const noexcept;
+
+ private:
+  bool checkZones_;
+};
+
+class SetHolonomicModeCommand : public Command {
+ public:
+  explicit SetHolonomicModeCommand(Json::Value const& obj);
+
+  bool enableHolonomic() const noexcept;
+
+ private:
+  bool enableHolonomic_;
+};
+
+class SetPlannerCommand : public Command {
+ public:
+  explicit SetPlannerCommand(Json::Value const& obj);
+
+  std::string const& planner() const noexcept;
+
+ private:
+  std::string planner_;
+};
+
+class SetTelemetryRateCommand : public Command {
+ public:
+  explicit SetTelemetryRateCommand(Json::Value const& obj);
+
+  std::string const& telemetryName() const noexcept;
+  float rate() const noexcept;
+
+ private:
+  std::string telemetryName_;
+  float rate_;
+};
+
+class SwitchLocalizationCommand : public Command {
+ public:
+  explicit SwitchLocalizationCommand(Json::Value const& obj);
+
+  std::string const& mode() const noexcept;
+
+ private:
+  std::string mode_;
+};
+
+class StartRecordingCommand : public Command {
+ public:
+  explicit StartRecordingCommand(Json::Value const& obj);
+
+  std::string const& description() const noexcept;
+
+ private:
+  std::string description_;
+};
+
+class StopRecordingCommand : public Command {
+ public:
+  explicit StopRecordingCommand(Json::Value const& obj);
 };
 
 }  // end namespace jsonloader

@@ -35,7 +35,7 @@ string TOTAL=total
 string[] load_fields
 
 # Average loads for all processors combined
-float32[] ave_loads
+float32[] avg_loads
 
 # Temperature for a cpu (average of all thermal zones)
 float32 temp

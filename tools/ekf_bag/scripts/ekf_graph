@@ -19,6 +19,7 @@
 
 import environment
 
+import argparse
 import sys
 import os
 import os.path
@@ -26,18 +27,37 @@ import math
 import time
 
 import matplotlib
-matplotlib.use('Agg')
+matplotlib.use('pdf')
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 
 import numpy as np
 from numpy.linalg import norm
 
-def run_ekf(astrobee_map, astrobee_bag, output_file):
-  os.system('rosrun ekf_bag ekf_to_csv %s %s %s' % (astrobee_map, astrobee_bag, output_file))
+def run_ekf(astrobee_map, astrobee_bag, output_file, ekf_in_bag = False, features_in_bag=False, image_topic=None):
+  cmd = 'bag_to_csv' if ekf_in_bag else 'bag_to_csv --run_ekf %s' % ('' if features_in_bag else '--gen_features')
+
+  robot_bias = os.path.dirname(os.path.abspath(astrobee_bag)) + '/imu_bias.config'
+  cmd = 'rosrun ekf_bag %s %s %s %s' % (cmd, astrobee_map, astrobee_bag, output_file)
+  print('Not running EKF.' if ekf_in_bag else 'Running EKF.')
+  if not ekf_in_bag:
+      print( 'Using features from bag.' if features_in_bag else 'Generating features from image.')
+  if os.path.isfile(robot_bias):
+      cmd += ' ' + robot_bias
+  if image_topic is not None:
+      cmd += ' --image_topic ' + image_topic      
+  os.system(cmd)
+
+def quat_to_euler(q):
+  q2q2 = q[1] * q[1]
+  x = math.atan2(2 * (q[0] * q[3] + q[1] * q[2]), 1 - 2 * (q[0] * q[0] + q2q2))
+  arg = max(-1.0, min(1.0, 2 * (q[1] * q[3] - q[0] * q[2])))
+  y = math.asin(arg)
+  z = math.atan2(2 * (q[0] * q[1] + q[2] * q[3]), 1 - 2 * (q2q2 + q[2] * q[2]))
+  return (x, y, z)
 
 class EkfLog(object):
-  def __init__(self, filename):
+  def __init__(self, filename, start_time=float('-inf'), end_time=float('inf')):
     self.ekf = {'t': [], 'x': [], 'y': [], 'z': [], 'angle1': [], 'angle2': [], 'angle3': [], \
             'vx': [], 'vy': [], 'vz': [], 'ox': [], 'oy': [], 'oz': [], 'ax': [], 'ay': [], 'az': [], \
             'abx': [], 'aby': [], 'abz': [], 'gbx': [], 'gby': [], 'gbz': [], 'c': [], 's': [], \
@@ -59,6 +79,9 @@ class EkfLog(object):
     for l in f:
       p = l.split(' ')
       if l.startswith('EKF '):
+        t = float(p[1])
+        if t < start_time or t > end_time:
+            continue
         self.ekf['t']        .append(float(p[ 1]))
         self.ekf['x']        .append(float(p[ 2]))
         self.ekf['y']        .append(float(p[ 3]))
@@ -84,50 +107,64 @@ class EkfLog(object):
         self.ekf['c']        .append(int(  p[23]))
         self.ekf['s']        .append(int(  p[24]))
         self.ekf['ml_count'] .append(int(  p[25]))
+        if self.ekf['ml_count'][-1] == 0:
+            self.ekf['ml_count'][-1] = float('nan')
         self.ekf['of_count'] .append(int(  p[26]))
+        if self.ekf['of_count'][-1] == 0:
+            self.ekf['of_count'][-1] = float('nan')
         for i in range(1, 16):
-          self.ekf['cov_' + str(i)].append(math.sqrt(float(p[26 + i])))
+          self.ekf['cov_' + str(i)].append(math.sqrt(abs(float(p[26 + i]))))
+        # convert quaternion to euler angles
+        q = (0.5 * self.ekf['cov_1'][-1],  0.5 * self.ekf['cov_2'][-1], 0.5 * self.ekf['cov_3'][-1], 1.0)
+        euler = quat_to_euler(q)
+        self.ekf['cov_1'][-1] = euler[0]
+        self.ekf['cov_2'][-1] = euler[1]
+        self.ekf['cov_3'][-1] = euler[2]
         m = []
+        MAHAL_MAX = 30.0
         for i in range(50):
           t = float(p[42 + i])
           if not math.isnan(t) and t > 0.0:
-            m.append(t)
+            m.append(min(t, MAHAL_MAX))
         if len(m) > 0:
           self.mahal['times'].append(float(p[1]))
           self.mahal['boxes'].append(m)
         self.ekf['mahal'].append(m)
-      elif l.startswith('OF '):
-        self.of['t']     .append(float(p[1]))
-        self.of['count'] .append(int(p[2]))
-        times = []
-        for i in range((len(p) - 3) / 4):
-          of_id = float(p[3 + 4 * i + 0])
-          origt = float(p[3 + 4 * i + 1])
-          u     = float(p[3 + 4 * i + 2])
-          v     = float(p[3 + 4 * i + 3])
-          times.append(self.of['t'][-1] - origt)
-          self.of_heatmap[int(round(u / self.CAMERA_RES[0] * self.HEATMAP_SIZE[0])) + self.HEATMAP_SIZE[0] / 2,
-                          int(round(v / self.CAMERA_RES[1] * self.HEATMAP_SIZE[1])) + self.HEATMAP_SIZE[1] / 2] += 1
-        self.of['oldest'].append(np.max(times))
-        self.of['youngest'].append(np.min(times))
-        self.of['median'].append(np.median(times))
-      elif l.startswith('VL '):
-        self.vl['t']        .append(float(p[ 1]))
-        self.vl['count']    .append(int(p[ 2]))
-        self.vl['x']        .append(float(p[ 3]))
-        self.vl['y']        .append(float(p[ 4]))
-        self.vl['z']        .append(float(p[ 5]))
-        self.vl['angle1']   .append(float(p[ 6]) * 180 / math.pi)
-        self.vl['angle2']   .append(float(p[ 7]) * 180 / math.pi)
-        self.vl['angle3']   .append(float(p[ 8]) * 180 / math.pi)
-        for i in range((len(p) - 9) / 5):
-          u = float(p[9 + 5 * i + 0])
-          v = float(p[9 + 5 * i + 1])
-          x = float(p[9 + 5 * i + 2])
-          y = float(p[9 + 5 * i + 3])
-          z = float(p[9 + 5 * i + 4])
-          self.vl_heatmap[int(round(u / self.CAMERA_RES[0] * self.HEATMAP_SIZE[0])) + self.HEATMAP_SIZE[0] / 2,
-                          int(round(v / self.CAMERA_RES[1] * self.HEATMAP_SIZE[1])) + self.HEATMAP_SIZE[1] / 2] += 1
+      elif l.startswith('OF ') and (len(p) - 3) / 4 >= 1:
+        t = float(p[1])
+        if t > 0.0:
+          self.of['t']     .append(t)
+          self.of['count'] .append(int(p[2]))
+          times = []
+          for i in range((len(p) - 3) / 4):
+            of_id = float(p[3 + 4 * i + 0])
+            origt = float(p[3 + 4 * i + 1])
+            u     = float(p[3 + 4 * i + 2])
+            v     = float(p[3 + 4 * i + 3])
+            times.append(self.of['t'][-1] - origt)
+            self.of_heatmap[int(round(u / self.CAMERA_RES[0] * self.HEATMAP_SIZE[0])) + self.HEATMAP_SIZE[0] / 2,
+                            int(round(v / self.CAMERA_RES[1] * self.HEATMAP_SIZE[1])) + self.HEATMAP_SIZE[1] / 2] += 1
+          self.of['oldest'].append(np.max(times))
+          self.of['youngest'].append(np.min(times))
+          self.of['median'].append(np.median(times))
+      elif l.startswith('VL ') and (len(p) - 9) / 5 >= 1:
+        if float(p[1]) > -1.0:
+          self.vl['t']        .append(float(p[ 1]))
+          self.vl['count']    .append(int(p[ 2]))
+          self.vl['x']        .append(float(p[ 3]))
+          self.vl['y']        .append(float(p[ 4]))
+          self.vl['z']        .append(float(p[ 5]))
+          self.vl['angle1']   .append(float(p[ 6]) * 180 / math.pi)
+          self.vl['angle2']   .append(float(p[ 7]) * 180 / math.pi)
+          self.vl['angle3']   .append(float(p[ 8]) * 180 / math.pi)
+          for i in range((len(p) - 9) / 5):
+            u = float(p[9 + 5 * i + 0])
+            v = float(p[9 + 5 * i + 1])
+            x = float(p[9 + 5 * i + 2])
+            y = float(p[9 + 5 * i + 3])
+            z = float(p[9 + 5 * i + 4])
+            self.vl_heatmap[int(round(u / self.CAMERA_RES[0] * self.HEATMAP_SIZE[0])) + self.HEATMAP_SIZE[0] / 2,
+                            int(round(v / self.CAMERA_RES[1] * self.HEATMAP_SIZE[1])) + self.HEATMAP_SIZE[1] / 2] += 1
       elif l.startswith('GT '):
         self.gt['t']        .append(float(p[ 1]))
         self.gt['x']        .append(float(p[ 2]))
@@ -187,6 +224,14 @@ class EkfLog(object):
       return (0.0, 0.0)
     return (math.sqrt(pos_err / err_count), math.sqrt(angle_err / err_count))
 
+  def evaluate_features(self):
+    total_time = self.ekf['t'][len(self.ekf['t']) - 1] - self.ekf['t'][0]
+    total_count = sum(self.vl['count'])
+    max_gap = 0
+    for i in range(1, len(self.vl['t'])):
+      max_gap = max(max_gap, self.vl['t'][i] - self.vl['t'][i-1])
+    return (total_count / total_time, max_gap)
+
   def plot(self, filename, output_text):
     colors = ['r', 'b', 'g']
     ekf = self.ekf
@@ -197,23 +242,28 @@ class EkfLog(object):
     with PdfPages(filename) as pdf:
       # positions
       plt.figure()
-      plt.plot(ekf['t'], ekf['x'], colors[0], linewidth=0.5, label='EKF Pos. (X)')
-      plt.plot(ekf['t'], ekf['y'], colors[1], linewidth=0.5, label='EKF Pos. (Y)')
-      plt.plot(ekf['t'], ekf['z'], colors[2], linewidth=0.5, label='EKF Pos. (Z)')
-      plt.fill_between(ekf['t'], ekf['x'] - ekf['cov_13'], ekf['x'] + ekf['cov_13'], facecolor=colors[0], alpha=0.5)
-      plt.fill_between(ekf['t'], ekf['y'] - ekf['cov_14'], ekf['y'] + ekf['cov_14'], facecolor=colors[1], alpha=0.5)
-      plt.fill_between(ekf['t'], ekf['z'] - ekf['cov_15'], ekf['z'] + ekf['cov_15'], facecolor=colors[2], alpha=0.5)
+      max_y = 10
+      def clip_list(array):
+          return [max(-max_y, min(max_y, a)) for a in array]
+
+      plt.plot(ekf['t'], clip_list(ekf['x']), colors[0], linewidth=0.5, label='EKF Pos. (X)')
+      plt.plot(ekf['t'], clip_list(ekf['y']), colors[1], linewidth=0.5, label='EKF Pos. (Y)')
+      plt.plot(ekf['t'], clip_list(ekf['z']), colors[2], linewidth=0.5, label='EKF Pos. (Z)')
+      plt.fill_between(ekf['t'], clip_list(ekf['x']) - ekf['cov_13'], clip_list(ekf['x']) + ekf['cov_13'], facecolor=colors[0], alpha=0.5)
+      plt.fill_between(ekf['t'], clip_list(ekf['y']) - ekf['cov_14'], clip_list(ekf['y']) + ekf['cov_14'], facecolor=colors[1], alpha=0.5)
+      plt.fill_between(ekf['t'], clip_list(ekf['z']) - ekf['cov_15'], clip_list(ekf['z']) + ekf['cov_15'], facecolor=colors[2], alpha=0.5)
       plt.autoscale(False)
-      plt.plot(gt['t'],   gt['x'], color=colors[0], linewidth=0.5, dashes=(1, 1), label ='Ground Truth (X)')
-      plt.plot(gt['t'],   gt['y'], color=colors[1], linewidth=0.5, dashes=(1, 1))
-      plt.plot(gt['t'],   gt['z'], color=colors[2], linewidth=0.5, dashes=(1, 1))
-      plt.plot(vl['t'],   vl['x'], color=colors[0], linestyle='None', marker='o', markersize=2, label='Observation (X)')
-      plt.plot(vl['t'],   vl['y'], color=colors[1], linestyle='None', marker='o', markersize=2)
-      plt.plot(vl['t'],   vl['z'], color=colors[2], linestyle='None', marker='o', markersize=2)
+      plt.plot(gt['t'],   clip_list(gt['x']), color=colors[0], linewidth=0.5, dashes=(1, 1), label ='Ground Truth (X)')
+      plt.plot(gt['t'],   clip_list(gt['y']), color=colors[1], linewidth=0.5, dashes=(1, 1))
+      plt.plot(gt['t'],   clip_list(gt['z']), color=colors[2], linewidth=0.5, dashes=(1, 1))
+      plt.plot(vl['t'],   clip_list(vl['x']), color=colors[0], linestyle='None', marker='o', markersize=2, label='Observation (X)')
+      plt.plot(vl['t'],   clip_list(vl['y']), color=colors[1], linestyle='None', marker='o', markersize=2)
+      plt.plot(vl['t'],   clip_list(vl['z']), color=colors[2], linestyle='None', marker='o', markersize=2)
       plt.xlabel('Time (s)')
       plt.ylabel('Position (m)')
       plt.title('Position')
       plt.legend(prop={'size':6})
+      plt.ylim(-max_y + 0.2, max_y + 0.2)
       pdf.savefig()
       
       # angles
@@ -240,10 +290,10 @@ class EkfLog(object):
       
       # feature counts
       plt.figure()
-      plt.plot(vl['t'], vl['count'], linestyle='None', marker='o', markersize=1, color='#CC3333', label='Observed VL Features (at Reg. Time)')
-      plt.plot(of['t'], of['count'], linestyle='None', marker='o', markersize=1, color='#3333CC', label='Observed OF Features (at Reg. Time)')
-      plt.plot(ekf['t'], ekf['ml_count'], linestyle='None', marker='d', markersize=4, color='#FF0000', label='Integrated VL Features')
-      plt.plot(ekf['t'], ekf['of_count'], linestyle='None', marker='d', markersize=4, color='#0000FF', label='Integrated OF Features')
+      plt.plot(ekf['t'], ekf['ml_count'], linestyle='None', marker='x', markersize=6, color='#FF0000', label='Integrated VL Features')
+      plt.plot(ekf['t'], ekf['of_count'], marker='|', markersize=2, color='#0000FF', label='Integrated OF Features')
+      plt.plot(vl['t'], vl['count'], linestyle='None', marker='.', markersize=2, color='#B300FF', label='Observed VL Features (at Reg. Time)')
+      plt.plot(of['t'], of['count'], linestyle='None', marker=',', markersize=2, color='#00FFb3', label='Observed OF Features (at Reg. Time)')
       plt.xlabel('Time (s)')
       plt.ylabel('Number of Features')
       plt.title('EKF Features')
@@ -268,24 +318,28 @@ class EkfLog(object):
     
       # linear velocity and acceleration
       plt.figure()
-      ax = plt.gca()
-      ax.plot(ekf['t'], ekf['vx'], color=colors[0], linewidth=0.5, label='Velocity')
-      ax.plot(ekf['t'], ekf['vy'], color=colors[1], linewidth=0.5)
-      ax.plot(ekf['t'], ekf['vz'], color=colors[2], linewidth=0.5)
-      ax.fill_between(ekf['t'], ekf['vx'] - ekf['cov_7'], ekf['vx'] + ekf['cov_7'], facecolor=colors[0], alpha=0.5)
-      ax.fill_between(ekf['t'], ekf['vy'] - ekf['cov_8'], ekf['vy'] + ekf['cov_8'], facecolor=colors[1], alpha=0.5)
-      ax.fill_between(ekf['t'], ekf['vz'] - ekf['cov_9'], ekf['vz'] + ekf['cov_9'], facecolor=colors[2], alpha=0.5)
-      ax2 = ax.twinx()
-      ax2.plot(ekf['t'], ekf['ax'], color=colors[0], linewidth=0.5, dashes=(1, 1), label='Acceleration')
-      ax2.plot(ekf['t'], ekf['ay'], color=colors[1], linewidth=0.5, dashes=(1, 1))
-      ax2.plot(ekf['t'], ekf['az'], color=colors[2], linewidth=0.5, dashes=(1, 1))
-      ax.set_title('Velocity and Acceleration')
-      ax.set_xlabel('Time (s)')
-      ax.set_ylabel('Velocity (m/s)')
-      ax2.set_ylabel('Acceleration (m/s$^2$)')
-      lines, labels = ax.get_legend_handles_labels()
-      lines2, labels2 = ax2.get_legend_handles_labels()
-      ax.legend(lines + lines2, labels + labels2, prop={'size':6})
+      plt.plot(ekf['t'], ekf['vx'], color=colors[0], linewidth=0.5, label='Velocity')
+      plt.plot(ekf['t'], ekf['vy'], color=colors[1], linewidth=0.5)
+      plt.plot(ekf['t'], ekf['vz'], color=colors[2], linewidth=0.5)
+      plt.fill_between(ekf['t'], ekf['vx'] - ekf['cov_7'], ekf['vx'] + ekf['cov_7'], facecolor=colors[0], alpha=0.5)
+      plt.fill_between(ekf['t'], ekf['vy'] - ekf['cov_8'], ekf['vy'] + ekf['cov_8'], facecolor=colors[1], alpha=0.5)
+      plt.fill_between(ekf['t'], ekf['vz'] - ekf['cov_9'], ekf['vz'] + ekf['cov_9'], facecolor=colors[2], alpha=0.5)
+      plt.title('Velocity')
+      plt.xlabel('Time (s)')
+      plt.ylabel('Velocity (m/s)')
+      plt.ylim(-0.5, 0.5)
+      plt.legend(prop={'size':6})
+      pdf.savefig()
+      plt.close()
+
+      plt.figure()
+      plt.plot(ekf['t'], ekf['ax'], color=colors[0], dashes=(1,1), linewidth=0.5, label='Acceleration')
+      plt.plot(ekf['t'], ekf['ay'], color=colors[1], dashes=(1,1), linewidth=0.5)
+      plt.plot(ekf['t'], ekf['az'], color=colors[2], dashes=(1,1), linewidth=0.5)
+      plt.title('Acceleration')
+      plt.xlabel('Time (s)')
+      plt.ylabel('Acceleration (m/s$^2$)')
+      plt.legend(prop={'size':6})
       pdf.savefig()
       plt.close()
       
@@ -334,6 +388,21 @@ class EkfLog(object):
       ax.legend(lines + lines2, labels + labels2, prop={'size':6})
       pdf.savefig()
       plt.close()
+
+      # covariance
+      plt.figure()
+      plt.plot(ekf['t'], map(lambda (x, y, z) : math.sqrt(x + y + z),
+                            zip(ekf['cov_13'], ekf['cov_14'], ekf['cov_15'])), colors[0], linewidth=0.5, label='Position Covariance')
+      plt.plot(ekf['t'], map(lambda (x, y, z) : math.sqrt(x + y + z),
+                            zip(ekf['cov_7'], ekf['cov_8'], ekf['cov_9'])), colors[1], linewidth=0.5, label='Velocity Covariance')
+      plt.plot(ekf['t'], map(lambda (x, y, z) : math.sqrt(x + y + z),
+                            zip(ekf['cov_1'], ekf['cov_2'], ekf['cov_3'])), colors[2], linewidth=0.5, label='Orientation Covariance')
+      plt.title('Std. Deviation')
+      plt.xlabel('Time (s)')
+      plt.ylabel('Covariance')
+      plt.legend(prop={'size':6})
+      pdf.savefig()
+      plt.close()
     
       # mahalnobis distance histogram
       plt.figure()
@@ -345,7 +414,7 @@ class EkfLog(object):
       plt.close()
 
       plt.figure()
-      plt.imshow(np.transpose(self.vl_heatmap), cmap='hot', interpolation='nearest')
+      plt.imshow(np.transpose(self.vl_heatmap), cmap='hot', interpolation='nearest', vmin=0, vmax=np.amax(self.vl_heatmap))
       plt.title('Visual Landmarks Density')
       pdf.savefig()
       plt.close()
@@ -362,7 +431,7 @@ class EkfLog(object):
       plt.close()
       
       plt.figure()
-      plt.imshow(np.transpose(self.of_heatmap), cmap='hot', interpolation='nearest')
+      plt.imshow(np.transpose(self.of_heatmap), cmap='hot', interpolation='nearest', vmin=0, vmax=np.amax(self.vl_heatmap))
       plt.title('Optical Flow Density')
       pdf.savefig()
       plt.close()
@@ -373,28 +442,56 @@ class EkfLog(object):
       pdf.savefig()
       plt.close()
 
-astrobee_map = None
-astrobee_bag = None
-if len(sys.argv) >= 2:
-  astrobee_bag = sys.argv[1]
-if len(sys.argv) >= 3:
-  astrobee_map = sys.argv[2]
+epilog_msg="""
+The arguments BAG or MAP could be ommitted if specificed with the following 
+environement variables:
+  - ASTROBEE_BAG instead of positional argument 1 BAG
+  - ASTROBEE_MAP instead of positional argument 2 MAP
 
-(astrobee_map, astrobee_bag) = environment.initialize_environment(astrobee_map, astrobee_bag)
+If [-r ROBOT] in not used, then the robot configuration file should be copied 
+locally as 'robot.config'.
+"""
+parser = argparse.ArgumentParser(description='Graph the EKF from a ros bag file.',
+    epilog=epilog_msg, formatter_class=argparse.RawDescriptionHelpFormatter)
+parser.add_argument('-e', '--ekf_in_bag', dest='ekf_in_bag', action='store_true',
+                    help='Use EKF message from bag instead of running EKF on images.')
+parser.add_argument('-f', '--features_in_bag', dest='features_in_bag', action='store_true',
+                    help='Use feature message from bag in EKF instead of generating from images.')
+parser.add_argument('-r', '--robot_name', dest='robot_name', metavar='ROBOT',
+                    help='Specify the robot to use (just name, not path).')
+parser.add_argument('-i', '--image_topic', dest='image_topic', default=None,
+                    help='Use specified image topic.')
+parser.add_argument('--start', dest='start_time', type=float, default=float('-inf'),
+                    help='Only graph starting from this time.')
+parser.add_argument('--end', dest='end_time', type=float, default=float('inf'),
+                    help='Only graph ending from this time.')
+parser.add_argument('bag_file', metavar='BAG', nargs='?',
+                    help='bag to process')
+parser.add_argument('map_file', metavar='MAP', nargs='?',
+                    help='map to use')
+parser.add_argument('--cached', dest='cached', action='store_true',
+                    help='Do not rerun EKF, draw graph only from text file.')
+
+args, args_unknown = parser.parse_known_args()
+
+(astrobee_map, astrobee_bag, robot_config) = environment.initialize_environment(args.map_file, args.bag_file, args.robot_name)
 
 name_prefix = astrobee_bag[:astrobee_bag.rfind('.')]
 
 start = time.time()
-run_ekf(astrobee_map, astrobee_bag, name_prefix + '.txt')
+if not args.cached:
+  run_ekf(astrobee_map, astrobee_bag, name_prefix + '.txt', args.ekf_in_bag, args.features_in_bag, args.image_topic)
 run_time = time.time() - start
 output_text = 'Run time: %g\n' % (run_time)
 
-log = EkfLog(name_prefix + '.txt')
+log = EkfLog(name_prefix + '.txt', args.start_time, args.end_time)
 
 offset = log.correct_ground_truth()
 (pos_err, angle_err) = log.evaluate_error()
+(fps, max_gap) = log.evaluate_features()
 output_text += 'Ground Truth Time Shift: %g\n' % (offset)
-output_text += 'RMSE Position Error: %g Angular Error: %g' % (pos_err, angle_err)
+output_text += 'RMSE Position Error: %g Angular Error: %g\n' % (pos_err, angle_err)
+output_text += 'VL Feature Throughput: %g VLs / s Max Gap: %g s' % (fps, max_gap)
 print output_text
 log.plot(name_prefix + '.pdf', output_text)
 print 'Saved results to %s.pdf' % (name_prefix)

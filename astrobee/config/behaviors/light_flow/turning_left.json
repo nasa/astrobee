@@ -1,0 +1,38 @@
+{
+  "procedure": [
+    [
+      "Procedure",
+      "turnleft",
+      [
+        "Define",
+        "$leftstrapflowing",
+        ["ListFrame", ["BasicFrame", "#fff", 0.0, 5.0]]
+      ],
+      [
+        "Define",
+        "$rptleftStrapflowing",
+        ["RepeatFrame", "$leftstrapflowing", 14]
+      ],
+      [
+        "Define",
+        "$leftstrapflow",
+        ["MoveSequence", "$rptleftStrapflowing", 10.0]
+      ],
+      ["Define", "$leftstrapLights", ["Domain", ["Interval", 0, 14]]],
+      [
+        "Return",
+        [
+          "ListAnimation",
+          ["BasicAnimation", "$leftstrapLights", "$leftstrapflow"]
+        ]
+      ]
+    ]
+  ],
+  "state": [
+    "ExecState",
+    1.0,
+    30.0,
+    true,
+    [["Call", "right", "turnleft", "#fff", 1.0]]
+  ]
+}

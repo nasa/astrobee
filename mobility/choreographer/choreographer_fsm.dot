@@ -1,4 +1,4 @@
-# dot -Tpdf statemachine.dot -o statemachine.pdf
+# dot -Tpdf choreographer_fsm.dot -o choreographer_fsm.pdf
 digraph G {
   graph [label="CHOREOGRAPHER\n", labelloc=t, fontsize=50];
   size="11.7,8.3!";
@@ -90,7 +90,7 @@ digraph G {
     [label="[14]\nPLAN_FAILED\nResult(REPLAN_FAILED)\n-\nGOAL_CANCEL\nResult(CANCELLED)\n***\n\nControl(STOP)", color=red];
   CONTROLLING -> STOPPED
     [label="[15]\nCONTROL_FAILED\nResult(CONTROL_FAILED)\n-\nGOAL_CANCEL\nResult(CANCELLED)\n***\nControl(STOP)", color=red];
-  
+
   enable_validation -> VALIDATING
     [label="Validate(Segment)"];
   enable_validation -> PREPARING

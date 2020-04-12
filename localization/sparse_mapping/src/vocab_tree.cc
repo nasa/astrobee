@@ -1,14 +1,14 @@
 /* Copyright (c) 2017, United States Government, as represented by the
  * Administrator of the National Aeronautics and Space Administration.
- * 
+ *
  * All rights reserved.
- * 
+ *
  * The Astrobee platform is licensed under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -324,8 +324,8 @@ void BuildDB(std::string const& map_file,
     depth++;
     LOG(WARNING) << "Database not large enough, increasing depth.";
   }
-  LOG(INFO) << "Total database capacity is " << pow(branching_factor, depth) <<
-    ", total features to insert are " << total_features << ".";
+  LOG(INFO) << "Total database capacity is " << pow(branching_factor, depth)
+            << ", total features to insert are " << total_features << ".";
 
   BuildDBforDBoW2(&map, descriptor, depth, branching_factor, restarts);
 
@@ -371,15 +371,12 @@ void MatDescrToVec(cv::Mat const& mat, DBoW2::BriefDescriptor * brief) {
     brief->desc[c] = mat.at<uchar>(0, c);
 }
 
-void QueryDB(std::string const& descriptor,
-                             VocabDB * vocab_db,
-                             int num_similar,
-                             cv::Mat const& descriptors,
-                             std::vector<int> * indices) {
-  // Query the database. Return the indices of the images
-  // which are most similar to the current image. Return
-  // at most num_similar such indices.
-
+// Query the database. Return the indices of the images
+// which are most similar to the current image. Return
+// at most num_similar such indices.
+void QueryDB(std::string const& descriptor, VocabDB * vocab_db,
+             int num_similar, cv::Mat const& descriptors,
+             std::vector<int> * indices) {
   indices->clear();
 
   if (vocab_db->binary_db != NULL) {
@@ -407,12 +404,10 @@ void QueryDB(std::string const& descriptor,
   return;
 }
 
-
-void BuildDBforDBoW2(SparseMap* map,
-                                     std::string const& descriptor,
-                                     int depth, int branching_factor,
-                                     int restarts) {
-  int num_files = map->GetNumFrames();
+void BuildDBforDBoW2(SparseMap* map, std::string const& descriptor,
+                     int depth, int branching_factor,
+                     int restarts) {
+  int num_frames = map->GetNumFrames();
 
   const DBoW2::WeightingType weight = DBoW2::TF_IDF;
   const DBoW2::ScoringType score = DBoW2::L1_NORM;
@@ -425,7 +420,7 @@ void BuildDBforDBoW2(SparseMap* map,
     // to a vector of vectors. Also extract individual bits from
     // each byte.
     std::vector<std::vector<DBoW2::FBrief::TDescriptor > > features;
-    for (int cid = 0; cid < num_files; cid++) {
+    for (int cid = 0; cid < num_frames; cid++) {
       int num_keys = map->GetFrameKeypoints(cid).outerSize();
       num_features += num_keys;
       std::vector<DBoW2::FBrief::TDescriptor> descriptors;

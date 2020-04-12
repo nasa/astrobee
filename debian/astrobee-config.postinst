@@ -1,0 +1,8 @@
+#!/bin/sh
+
+if [ "$1" = "configure" ]; then
+  chmod -R g+rwX /opt/astrobee/config
+  if [ $(getent group users) ]; then
+    chgrp -R users /opt/astrobee/config
+  fi
+fi

@@ -73,7 +73,8 @@ class SparseMapTest : public ::testing::Test {
     sparse_mapping::MatchFeatures(essential_file, matches_file, surf_map);
 
     // build the tracks and incremental BA
-    sparse_mapping::BuildTracks(matches_file, surf_map);
+    bool rm_invalid_xyz = false;  // no cameras yet hence can't remove invalid xyx
+    sparse_mapping::BuildTracks(rm_invalid_xyz, matches_file, surf_map);
     sparse_mapping::IncrementalBA(essential_file, surf_map);
 
     // Bundle adjustment step

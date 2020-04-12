@@ -131,10 +131,6 @@ class VisualeyezUtils {
   // (rotation, translation, scale) that maps the "in" matrix to the "out" matrix
   // Code from: https://github.com/oleg-alexandrov/projects/blob/master/eigen/Kabsch.cpp
   // License is that this code is release in the public domain... Thanks, Oleg :)
-  // This algorithm solves the Procrustes problem in that it finds an affine transform
-  // (rotation, translation, scale) that maps the "in" matrix to the "out" matrix
-  // Code from: https://github.com/oleg-alexandrov/projects/blob/master/eigen/Kabsch.cpp
-  // License is that this code is release in the public domain... Thanks, Oleg :)
   template <typename T>
   static bool Kabsch(Eigen::Matrix<T, 3, Eigen::Dynamic> in, Eigen::Matrix<T, 3, Eigen::Dynamic> out,
     Eigen::Transform<T, 3, Eigen::Affine> &A, bool allowScale) {

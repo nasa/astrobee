@@ -1,14 +1,14 @@
 # Copyright (c) 2017, United States Government, as represented by the
 # Administrator of the National Aeronautics and Space Administration.
-# 
+#
 # All rights reserved.
-# 
+#
 # The Astrobee platform is licensed under the Apache License, Version 2.0
 # (the "License"); you may not use this file except in compliance with the
 # License. You may obtain a copy of the License at
-# 
+#
 #     http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -30,16 +30,46 @@ catkin_package(
     ff_hw_msgs
 )
 
+# ROS agnostic driver and tool
+
 create_library(
+  DIR src/pmc_actuator
   TARGET pmc_actuator
-  LIBS ${catkin_LIBRARIES} i2c config_reader ff_nodelet
+  LIBS i2c
+)
+
+create_tool_targets(DIR tools/pmc_actuator_tool
+  LIBS pmc_actuator
+)
+
+# ROS nodelet and tools
+
+create_library(
+  DIR src/pmc_actuator_nodelet
+  TARGET pmc_actuator_nodelet
+  LIBS ${catkin_LIBRARIES} pmc_actuator config_reader ff_nodelet
   INC ${catkin_INCLUDE_DIRS}
   DEPS ff_hw_msgs
 )
 
 create_tool_targets(DIR tools
-  LIBS ${catkin_LIBRARIES} pmc_actuator
+  LIBS ${catkin_LIBRARIES} pmc_actuator ff_nodelet
   INC ${catkin_INCLUDE_DIRS}
 )
 
 install_launch_files()
+install(FILES
+  tools/pmc_currents.py
+  tools/pmc_status.py
+  tools/emi_smooth_lowfreq.csv
+  tools/emi_smooth_profile.csv
+  tools/nozzle_identification.csv
+  tools/nozzles_closed.csv
+  tools/nozzles_medium.csv
+  tools/nozzles_open.csv
+  tools/nozzle_calibration.csv
+  tools/impeller_left.csv
+  tools/impeller_right.csv
+  tools/prop_nominal.csv
+  tools/prop_stress.csv
+  DESTINATION share/${PROJECT_NAME})

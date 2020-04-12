@@ -1,0 +1,21 @@
+{
+  "type" : "DataConfigurationFile",
+  "name" : "front_extrinsics",
+  "topicSettings": [
+    {
+      "topicName" : "hw/imu",
+      "downlinkOption" : "delayed",
+      "frequency" : -1
+    }, 
+    {
+      "topicName" : "hw/cam_nav",
+      "downlinkOption" : "delayed",
+      "frequency" : -1
+    },
+    {
+      "topicName" : "hw/depth_haz/extended",
+      "downlinkOption" : "delayed",
+      "frequency" : -1
+    }
+  ]
+}

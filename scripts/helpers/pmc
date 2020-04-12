@@ -1,0 +1,49 @@
+#!/bin/bash
+
+if [[ $# -lt 1 ]]
+then
+  echo "Usage:"
+  echo "  pmc [start | open | medium | closed | stress | unterminate | tool]"
+  echo "    no | nodes     start the PMC (and EPS) nodes"
+  echo "    op | open      start the profile for all nozzles open, no spinning"
+  echo "    mi | mid-open  start the profile with all nozzles mid-open, no spinning"
+  echo "    cl | closed    start the profile with all nozzles closed, no spinning"
+  echo "    ri | right     start cycling to the 3 speed of the right impeller"
+  echo "    le | left      start cycling to the 3 speeds of the left impeller"
+  echo "    st | stress    start the profile performing the stress test"
+  echo "    un | unterminate unterminate the propulsion modules"
+  echo "    to | tool      start the pmc_actuator_tool"
+  echo ""
+  echo "    pmc needs to be executed from the LLP!"
+fi
+
+case $1 in
+  no*)
+    roslaunch astrobee astrobee.launch mlp:=disabled nodes:=eps_driver,pmc_actuator
+    ;;
+  op*)
+    pmc_actuator_feeder /opt/astrobee/share/pmc_actuator/nozzles_open.csv
+    ;;
+  mi*)
+    pmc_actuator_feeder /opt/astrobee/share/pmc_actuator/nozzles_medium.csv
+    ;;
+  cl*)
+    pmc_actuator_feeder /opt/astrobee/share/pmc_actuator/nozzles_closed.csv
+    ;;
+  le*)
+    pmc_actuator_feeder /opt/astrobee/share/pmc_actuator/impeller_left.csv 0
+    ;;
+  ri*)
+    pmc_actuator_feeder /opt/astrobee/share/pmc_actuator/impeller_right.csv 0
+    ;;
+  st*)
+    pmc_actuator_feeder /opt/astrobee/share/pmc_actuator/prop_stress.csv 0
+    ;;
+  un*)
+    eps_driver_tool -unterminate
+    eps_driver_tool -power -set on pmc1 pmc2 pay_tf
+    ;;
+  to*)
+    pmc_actuator_tool
+    ;;
+esac

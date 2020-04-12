@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<types xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="/opt/rti/ndds.5.1.0/scripts/../resource/rtiddsgen/schema/rti_dds_topic_types.xsd">
+<include file="Header.xml"/>
+<module name="rapid">
+<directive kind="copyDeclaration">/** Definition of message, which is the foundation of all other message types. */</directive>
+<valuetype name="Message" typeModifier="none">
+<directive kind="copyDeclaration">/** The header in a message is the key for filtering in DDS. */</directive>
+<member name="hdr" type="nonBasic" nonBasicTypeName="rapid::Header" visibility="public" key="true"/>
+</valuetype>
+</module>
+</types>

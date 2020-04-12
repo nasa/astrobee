@@ -36,16 +36,14 @@ ff::RosAckToRapid::RosAckToRapid(const std::string& subscribe_topic,
 }
 
 void ff::RosAckToRapid::Callback(const ff_msgs::AckStamped::ConstPtr& ack) {
-  if (ack->cmd_origin == "ground") {
-    rapid::Ack &msg = state_supplier_->event();
-    msg.hdr.timeStamp = util::RosTime2RapidTime(ack->header.stamp);
+  rapid::Ack &msg = state_supplier_->event();
+  msg.hdr.timeStamp = util::RosTime2RapidTime(ack->header.stamp);
 
-    msg.status = util::ConvertAckStatus(ack->status);
-    msg.completedStatus = util::ConvertAckCompletedStatus(ack->completed_status);
-    std::strncpy(msg.cmdId, ack->cmd_id.data(), 64);
-    std::strncpy(msg.message, ack->message.data(), 128);
+  msg.status = util::ConvertAckStatus(ack->status);
+  msg.completedStatus = util::ConvertAckCompletedStatus(ack->completed_status);
+  std::strncpy(msg.cmdId, ack->cmd_id.data(), 64);
+  std::strncpy(msg.message, ack->message.data(), 128);
 
-    state_supplier_->sendEvent();
-  }
+  state_supplier_->sendEvent();
 }
 

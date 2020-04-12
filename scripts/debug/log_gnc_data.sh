@@ -17,5 +17,5 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-rosbag record /hw/imu /gnc/ekf /gnc/ctl/traj /loc/truth /gnc/control/status /gnc/control/feedback /tf /tf_static /hw/pmc/command
+rosbag record /hw/imu /gnc/ekf /gnc/ctl/traj /gnc/control/status /gnc/control/feedback /tf /tf_static /hw/pmc/command /mob/flight_mode /loc/truth/pose /gnc/ctl/command
 

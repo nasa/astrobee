@@ -1,14 +1,14 @@
 /* Copyright (c) 2017, United States Government, as represented by the
  * Administrator of the National Aeronautics and Space Administration.
- * 
+ *
  * All rights reserved.
- * 
+ *
  * The Astrobee platform is licensed under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -34,9 +34,9 @@ DEFINE_bool(save_inputs_file, false, "Save the inputs to a file.");
 namespace ekf {
 
 Ekf::Ekf(void) :
-  reset_ekf_(true), reset_ready_(false),
+  reset_ekf_(true), reset_ready_(false), reset_callback_(nullptr),
   processing_of_reg_(false), of_inputs_delayed_(false), output_file_(NULL),
-  vl_camera_id_(0), of_camera_id_(0), dl_camera_id_(0) {
+  vl_camera_id_(0), of_camera_id_(0), dl_camera_id_(0), reset_dock_pose_(true) {
   gnc_.cmc_.speed_gain_cmd = 1;  // prevent from being invalid when running bags
   of_history_size_ = ASE_OF_NUM_AUG;
   of_max_features_ = ASE_OF_NUM_FEATURES;
@@ -103,8 +103,7 @@ void Ekf::ReadParams(config_reader::ConfigReader* config) {
   Eigen::Map<Eigen::Vector3f> gyro_fixed_bias(p->ase_gyro_fixed_bias),
                              accel_fixed_bias(p->ase_accel_fixed_bias);
   std::vector<real32_T> new_bias(3);
-  std::string bias_file = std::string(common::GetConfigDir()) + std::string("/") + imu_filename;
-  FILE* f = fopen(bias_file.c_str(), "r");
+  FILE* f = fopen(imu_filename.c_str(), "r");
   if (f) {
     int ret = fscanf(f, "%g %g %g\n", &new_bias[0], &new_bias[1], &new_bias[2]);
     if (ret == 3)
@@ -115,7 +114,7 @@ void Ekf::ReadParams(config_reader::ConfigReader* config) {
     }
     fclose(f);
   } else {
-    ROS_WARN("No bias file found at %s.", bias_file.c_str());
+    ROS_WARN("No bias file found at %s.", imu_filename.c_str());
   }
 }
 
@@ -173,18 +172,18 @@ void Ekf::OpticalFlowUpdate(const ff_msgs::Feature2dArray & of) {
   if (optical_flow_augs_feature_counts_.size() >= of_history_size_ &&
       optical_flow_augs_feature_counts_[of_history_size_ - 1] > 3) {
     deleting_augs_.push_back(0);
-    if (optical_flow_augs_feature_counts_[of_history_size_ - 3] < 25) {
+    if (optical_flow_augs_feature_counts_[of_history_size_ - 3] < 10) {
       deleting_augs_.push_back(of_history_size_ - 3);
       deleting_augs_.push_back(of_history_size_ - 2);
       deleting_augs_.push_back(of_history_size_ - 1);
     } else {
       deleting_augs_.push_back(2);
-      if (optical_flow_augs_feature_counts_[of_history_size_ - 2] < 25) {
+      if (optical_flow_augs_feature_counts_[of_history_size_ - 2] < 10) {
         deleting_augs_.push_back(of_history_size_ - 2);
         deleting_augs_.push_back(of_history_size_ - 1);
       } else {
         deleting_augs_.push_back(6);
-        if (optical_flow_augs_feature_counts_[of_history_size_ - 1] < 25) {
+        if (optical_flow_augs_feature_counts_[of_history_size_ - 1] < 10) {
           deleting_augs_.push_back(of_history_size_ - 1);
         } else {
           ros::Time now = of.header.stamp;
@@ -227,22 +226,24 @@ void Ekf::OpticalFlowUpdate(const ff_msgs::Feature2dArray & of) {
         unsigned int aug = i + f.missing_frames;
         if (aug >= of_history_size_)
           break;
-      //   of_.cvs_observations[aug * of_max_features_ * 2 + index] = f.obs[i].x;
-      //   of_.cvs_observations[aug * of_max_features_ * 2 + index + of_max_features_] = f.obs[i].y;
-      //   of_.cvs_valid_flag[aug * of_max_features_ + index] = 1;
+        // of_.cvs_observations[aug * of_max_features_ * 2 + index] = f.obs[i].x;
+        // of_.cvs_observations[aug * of_max_features_ * 2 + index + of_max_features_] = f.obs[i].y;
+        // of_.cvs_valid_flag[aug * of_max_features_ + index] = 1;
         if (optical_flow_augs_feature_counts_.size() > aug)
           optical_flow_augs_feature_counts_[aug]--;
       }
       iter = optical_flow_features_.erase(iter);
     } else {
-      for (unsigned int i = 0; i < deleting_augs_.size(); i++) {
-        unsigned int aug = deleting_augs_[i];
-        if (aug >= f.obs.size())
-          break;
-        of_.cvs_observations[aug * of_max_features_ * 2 + index] = f.obs[aug].x;
-        of_.cvs_observations[aug * of_max_features_ * 2 + index + of_max_features_] = f.obs[aug].y;
-        of_.cvs_valid_flag[aug * of_max_features_ + index] = 1;
-        // f.obs.erase(f.begin + aug); // feature will be deleted in registration step
+      // only use oldest features, and choose three oldest frames and newest
+      if (f.obs.size() >= of_history_size_) {
+        of_.cvs_observations[0 * of_max_features_ * 2 + index] = f.obs[0].x;
+        of_.cvs_observations[0 * of_max_features_ * 2 + index + of_max_features_] = f.obs[0].y;
+        of_.cvs_valid_flag[0 * of_max_features_ + index] = 1;
+        for (unsigned int aug = of_history_size_ - 3; aug < of_history_size_; aug++) {
+          of_.cvs_observations[aug * of_max_features_ * 2 + index] = f.obs[aug].x;
+          of_.cvs_observations[aug * of_max_features_ * 2 + index + of_max_features_] = f.obs[aug].y;
+          of_.cvs_valid_flag[aug * of_max_features_ + index] = 1;
+        }
       }
       iter++;
       index++;
@@ -272,18 +273,55 @@ void Ekf::OpticalFlowUpdate(const ff_msgs::Feature2dArray & of) {
 
 void Ekf::SparseMapUpdate(const ff_msgs::VisualLandmarks & vl) {
   VisualLandmarksUpdate(vl);
-
-  if (!output_file_ && reset_ekf_)
+  if (!output_file_ && reset_ekf_ && vl.landmarks.size() >= 5)
     ResetPose(nav_cam_to_body_, vl.pose);
   cmc_mode_ = ff_msgs::SetEkfInputRequest::MODE_MAP_LANDMARKS;
 }
 
-void Ekf::ARTagUpdate(const ff_msgs::VisualLandmarks & vl) {
-  VisualLandmarksUpdate(vl);
+void Ekf::ResetAR(void) {
+  reset_dock_pose_ = true;
+}
 
-  if (!output_file_ && reset_ekf_)
-    ResetPose(dock_cam_to_body_, vl.pose);
+void Ekf::ResetHR(void) {
+  reset_handrail_pose_ = true;
+}
+
+bool Ekf::ARTagUpdate(const ff_msgs::VisualLandmarks & vl) {
+  bool updated = false;
+  if (reset_dock_pose_) {
+    if (vl.landmarks.size() < 4)
+      return false;
+    geometry_msgs::Pose p;
+    p.position = msg_conversions::array_to_ros_point(gnc_.kfl_.P_B_ISS_ISS);
+    p.orientation = msg_conversions::array_to_ros_quat(gnc_.kfl_.quat_ISS2B);
+    Eigen::Affine3d wTb = msg_conversions::ros_pose_to_eigen_transform(p);
+    Eigen::Affine3d dTc = msg_conversions::ros_pose_to_eigen_transform(vl.pose);
+    Eigen::Affine3d bTc = dock_cam_to_body_;
+    dock_to_world_ = wTb * bTc * dTc.inverse();
+    reset_dock_pose_ = false;
+    updated = true;
+  }
+
+  ff_msgs::VisualLandmarks vl_mod = vl;
+  for (unsigned int i = 0; i < vl.landmarks.size(); i++) {
+    Eigen::Vector3d l(vl.landmarks[i].x, vl.landmarks[i].y, vl.landmarks[i].z);
+    l = dock_to_world_ * l;
+    vl_mod.landmarks[i].x = l.x();
+    vl_mod.landmarks[i].y = l.y();
+    vl_mod.landmarks[i].z = l.z();
+  }
+  VisualLandmarksUpdate(vl_mod);
+  vl_mod.pose.position = msg_conversions::eigen_to_ros_point(
+      dock_to_world_ * msg_conversions::ros_point_to_eigen_vector(vl.pose.position));
+  Eigen::Quaterniond rot(dock_to_world_.linear());
+  vl_mod.pose.orientation = msg_conversions::eigen_to_ros_quat(
+      rot * msg_conversions::ros_to_eigen_quat(vl.pose.orientation));
+
+  if (!output_file_ && reset_ekf_ && vl_mod.landmarks.size() >= 4)
+    ResetPose(dock_cam_to_body_, vl_mod.pose);
   cmc_mode_ = ff_msgs::SetEkfInputRequest::MODE_AR_TAGS;
+
+  return updated;
 }
 
 void Ekf::VisualLandmarksUpdate(const ff_msgs::VisualLandmarks & vl) {
@@ -309,6 +347,45 @@ void Ekf::VisualLandmarksUpdate(const ff_msgs::VisualLandmarks & vl) {
 
   vis_.cvs_timestamp_sec = vl.header.stamp.sec;
   vis_.cvs_timestamp_nsec = vl.header.stamp.nsec;
+}
+
+bool Ekf::HRTagUpdate(const ff_msgs::DepthLandmarks & dl) {
+  bool updated = false;
+  if (reset_handrail_pose_) {
+    if (dl.landmarks.size() < 1)
+      return false;
+    geometry_msgs::Pose p;
+    p.position = msg_conversions::array_to_ros_point(gnc_.kfl_.P_B_ISS_ISS);
+    p.orientation = msg_conversions::array_to_ros_quat(gnc_.kfl_.quat_ISS2B);
+
+    Eigen::Affine3d wTb = msg_conversions::ros_pose_to_eigen_transform(p);
+    Eigen::Affine3d hTc = msg_conversions::ros_pose_to_eigen_transform(dl.local_pose);
+    Eigen::Affine3d bTc = perch_cam_to_body_;
+    handrail_to_world_ = wTb * bTc * hTc;
+    ROS_WARN(" [EKF] Recalculated handrail_to_world transform.");
+    reset_handrail_pose_ = false;
+    updated = true;
+  }
+  ff_msgs::DepthLandmarks dl_mod = dl;
+  for (unsigned int i = 0; i < dl.landmarks.size(); i++) {
+    Eigen::Vector3d l(dl.landmarks[i].u, dl.landmarks[i].v, dl.landmarks[i].w);
+    l = handrail_to_world_ * l;
+    dl_mod.landmarks[i].u = l.x();
+    dl_mod.landmarks[i].v = l.y();
+    dl_mod.landmarks[i].w = l.z();
+  }
+  HandrailUpdate(dl);
+  dl_mod.local_pose.position = msg_conversions::eigen_to_ros_point(
+      handrail_to_world_ * msg_conversions::ros_point_to_eigen_vector(dl.local_pose.position));
+  Eigen::Quaterniond rot(handrail_to_world_.linear());
+  dl_mod.local_pose.orientation = msg_conversions::eigen_to_ros_quat(
+      rot * msg_conversions::ros_to_eigen_quat(dl.local_pose.orientation));
+
+  if (!output_file_ && reset_ekf_ && dl_mod.landmarks.size() >= 1)
+    ResetPose(perch_cam_to_body_, dl_mod.local_pose);
+  cmc_mode_ = ff_msgs::SetEkfInputRequest::MODE_HANDRAIL;
+
+  return updated;
 }
 
 void Ekf::HandrailUpdate(const ff_msgs::DepthLandmarks & dl) {
@@ -349,7 +426,6 @@ void Ekf::HandrailUpdate(const ff_msgs::DepthLandmarks & dl) {
 
   hand_.cvs_timestamp_sec = dl.header.stamp.sec;
   hand_.cvs_timestamp_nsec = dl.header.stamp.nsec;
-  cmc_mode_ = ff_msgs::SetEkfInputRequest::MODE_HANDRAIL;
 }
 
 void Ekf::OpticalFlowRegister(const ff_msgs::CameraRegistration & cr) {
@@ -419,6 +495,10 @@ void Ekf::HandrailRegister(const ff_msgs::CameraRegistration & reg) {
 
 void Ekf::SetSpeedGain(const uint8_t gain) {
   gnc_.cmc_.speed_gain_cmd = gain;
+}
+
+void Ekf::SetResetCallback(std::function<void(void)> callback) {
+  reset_callback_ = callback;
 }
 
 // this saves all the inputs to a file if an output file is specified,
@@ -583,7 +663,6 @@ void Ekf::UpdateState(ff_msgs::EkfState* state) {
             state->ml_mahal_dists.c_array());
   else
     memset(state->ml_mahal_dists.c_array(), 0, ml_max_features_ * sizeof(float));
-  assert(of_history_size_ == state->of_aug_poses.size());
 }
 
 void Ekf::Reset(void) {
@@ -645,6 +724,10 @@ void Ekf::ApplyReset(void) {
 
   reset_ready_ = false;
   reset_ekf_ = false;
+
+  // If we have set the reset callback, call it now.
+  if (reset_callback_)
+    reset_callback_();
 }
 
 }  // end namespace ekf

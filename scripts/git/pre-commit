@@ -68,7 +68,8 @@ def main():
         if filename.endswith((".cpp",".cc",".h",".hpp",".cc.in",".c",".c.in",".h.in",
                               ".hpp.in",".cxx",".hxx")):
             if not "external/" in filename and not "Software/" in filename and \
-                    not "gnc/matlab/" in filename:
+                    not "gnc/matlab/" in filename and not "agast_score" in filename and \
+                        not "brisk" in filename:
                 cpp_files_to_lint.append(filename)
 
     for filename in cpp_files_to_lint:

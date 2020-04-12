@@ -1,14 +1,14 @@
 /* Copyright (c) 2017, United States Government, as represented by the
  * Administrator of the National Aeronautics and Space Administration.
- * 
+ *
  * All rights reserved.
- * 
+ *
  * The Astrobee platform is licensed under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -56,6 +56,14 @@ DEFINE_int32(last, std::numeric_limits<int>::max(),
              "The index after the last image to plot in the 3D view.");
 DEFINE_double(scale, 0.5,
               "The scale of images in the 3D view.");
+
+// Global variables
+sparse_mapping::SparseMap * g_map_ptr;
+cv::viz::Viz3d * g_win_ptr;
+int g_cid;
+cv::Mat * g_image;
+std::string * g_windowName;
+std::vector<std::string> g_openWindows;
 
 cv::Affine3f EigenToCVAffine(const Eigen::Affine3d & e) {
   Eigen::Matrix3f r_e = e.rotation().cast<float>();
@@ -189,19 +197,18 @@ int remainder(int cid, int num) {
   return cid;
 }
 
-sparse_mapping::SparseMap * map_ptr;
-cv::viz::Viz3d * win_ptr;
-
 // Set the origin be the centroid of all camera centers, for easier rotation
 void Recenter() {
-  win_ptr->removeAllWidgets();
+  sparse_mapping::SparseMap & map = *g_map_ptr;  // make notation easy
+
+  g_win_ptr->removeAllWidgets();
 
   cv::Vec3f center(0, 0, 0);
-  int num_frames = (*map_ptr).GetNumFrames();
+  int num_frames = map.GetNumFrames();
   int count = 0;
   for (int cid = FLAGS_first; cid < FLAGS_last; cid++) {
     int cid2 = remainder(cid, num_frames);
-    cv::Affine3f camera_pose = EigenToCVAffine((*map_ptr).GetFrameGlobalTransform(cid2).inverse());
+    cv::Affine3f camera_pose = EigenToCVAffine(map.GetFrameGlobalTransform(cid2).inverse());
     center += camera_pose.translation();
     count++;
   }
@@ -209,9 +216,9 @@ void Recenter() {
 
   for (int cid = FLAGS_first; cid < FLAGS_last; cid++) {
     int cid2 = remainder(cid, num_frames);
-    Draw3DFrame(win_ptr, *map_ptr, cid2, center);
+    Draw3DFrame(g_win_ptr, map, cid2, center);
   }
-  win_ptr->resetCamera();
+  g_win_ptr->resetCamera();
 }
 
 void KeyboardCallback(const cv::viz::KeyboardEvent & event, void* param) {
@@ -322,6 +329,99 @@ void KeyboardCallback(const cv::viz::KeyboardEvent & event, void* param) {
   }
 }
 
+static void onMouse(int event, int x, int y, int, void*) {
+  if  ( event != cv::EVENT_MBUTTONDOWN ) return;
+
+  // Identify in the map the feature that was clicked with the middle
+  // mouse button. Then list the images that have that feature and
+  // show them in separate windows with the feature in each as a dot.
+
+  // If we have some windows open already, we close them, reversing
+  // the earlier call.
+  if (!g_openWindows.empty()) {
+    for (size_t it = 0; it < g_openWindows.size(); it++) {
+      cv::destroyWindow(g_openWindows[it]);
+    }
+    g_openWindows.clear();
+    return;
+  }
+
+  // Make notation easy
+  sparse_mapping::SparseMap & map = *g_map_ptr;
+  cv::Mat & image = *g_image;
+  std::string & windowName = *g_windowName;
+  int cid = g_cid;
+
+  camera::CameraParameters camera_param = map.GetCameraParameters();
+  const Eigen::Matrix2Xd & keypoint_map = map.GetFrameKeypoints(cid);
+
+  // Locate that point in the image
+  Eigen::Vector2d curr_pix(x, y);
+  int curr_pid = -1;
+
+  for (size_t pid = 0; pid < map.GetNumLandmarks(); pid++) {
+    const std::map<int, int> & cid_to_fid = map.GetLandmarkCidToFidMap(pid);
+    std::map<int, int>::const_iterator it = cid_to_fid.find(cid);
+    if (it == cid_to_fid.end()) continue;
+
+    // Assume that the desired feature is no further than this from
+    // where the mouse clicked.
+    double tol = 10.0;  // Making this big risks mis-identification
+
+    Eigen::Vector2d dist_pix;
+    camera_param.Convert<camera::UNDISTORTED_C, camera::DISTORTED>
+      (keypoint_map.col(it->second), &dist_pix);
+    if ((dist_pix - curr_pix).norm() > tol) continue;
+
+    curr_pid = pid;
+
+    // Plot the identified feature for verification
+    cv::Scalar color = cv::Scalar(0, 0, 255);  // red
+    cv::Point2f pt(dist_pix[0], dist_pix[1]);
+    int radius = 3;
+    cv::circle(image, pt, 1, color, radius, cv::FILLED);
+    cv::imshow(windowName, image);
+    break;
+  }
+
+  if (curr_pid < 0) {
+    std::cout << "The pixel that was clicked on is not in the map." << std::endl;
+    return;
+  }
+
+  // List and display the images having this feature with the feature
+  // shown as a dot.
+  std::cout << "Images having this feature: ";
+  const std::map<int, int> & cid_to_fid = map.GetLandmarkCidToFidMap(curr_pid);
+  for (std::map<int, int>::const_iterator it = cid_to_fid.begin();
+       it != cid_to_fid.end(); it++) {
+    int curr_cid = it->first;
+    int curr_fid = it->second;
+    std::string imfile = map.GetFrameFilename(curr_cid);
+    std::cout << imfile << " ";
+    {
+      std::ifstream f(imfile.c_str());
+      if (!f.good()) LOG(FATAL) << "File does not exist: " << imfile << std::endl;
+    }
+
+    cv::Mat curr_image = cv::imread(imfile);
+
+    const Eigen::Matrix2Xd & curr_keypoint_map = map.GetFrameKeypoints(curr_cid);
+    Eigen::Vector2d dist_pix;
+    camera_param.Convert<camera::UNDISTORTED_C, camera::DISTORTED>
+      (curr_keypoint_map.col(curr_fid), &dist_pix);
+
+    cv::Scalar color = cv::Scalar(0, 0, 255);  // red
+    cv::Point2f pt(dist_pix[0], dist_pix[1]);
+    int radius = 3;
+    cv::circle(curr_image, pt, 1, color, radius, cv::FILLED);
+    std::string currWindowName = "Feature in: " + imfile;
+    cv::imshow(currWindowName, curr_image);
+    g_openWindows.push_back(currWindowName);
+  }
+  std::cout << std::endl;
+}
+
 int main(int argc, char** argv) {
   common::InitFreeFlyerApplication(&argc, &argv);
 
@@ -347,9 +447,12 @@ int main(int argc, char** argv) {
   LOG(INFO) << "\t" << map.GetNumFrames() << " cameras and "
             << map.GetNumLandmarks() << " points";
 
+  // Need this to manipulate the GUI
+  g_map_ptr = &map;
+
   camera::CameraParameters camera_param = map.GetCameraParameters();
 
-  int cid = 0;
+  int cid = FLAGS_first;
   int num_images = map.GetNumFrames();
   while (1) {
     if (FLAGS_jump_to_3d_view)
@@ -362,7 +465,12 @@ int main(int argc, char** argv) {
     }
 
     cv::Mat image = cv::imread(imfile);
-    LOG(INFO) << "Showing CID: " << cid << " " << imfile;
+    g_image = &image;  // to be able to use it in callbacks
+    // Below LOG(INFO) is not used as it prints too much junk. Use cout.
+    std::cout << "Showing CID: " << cid << " " << imfile << std::endl;
+
+    // Export this to be used on onMouse
+    g_cid = cid;
 
     // cv::Mat area_check(image.rows, image.cols, CV_8U);
     // cv::rectangle(area_check, cv::Point2f(0, 0), cv::Point2f(area_check.cols,
@@ -413,23 +521,28 @@ int main(int argc, char** argv) {
 
 
     std::string windowName = map_file + ": individual frames";
+    g_windowName = &windowName;  // Export this to be used by onMouse
+
     cv::namedWindow(windowName);
+
+    cv::setMouseCallback(windowName, onMouse, 0);
+
     cv::imshow(windowName, image);
 
-    // int filled_area = 0;
-    // for (int i = 0; i < area_check.rows; i++)
-    //   for (int j = 0; j < area_check.cols; j++)
-    //     if (area_check.at<unsigned int>(i, j))
-    //       filled_area++;
-    // std::cout << cid << " " << ((float)filled_area / (area_check.rows * area_check.cols)) <<
-    // " " << keypoint_map.cols() << "\n";
-    // LOG(INFO) << "Showimg image " << map.GetFrameFilename(cid) << " with index " << cid;
-    int ret = cv::waitKey(0) & 0xFF;  // on some machines has bits set in front...
-    if (ret == 'a' || ret == 0x51 /*left arrow key*/) {
-      cid = (cid + num_images - 1) % num_images;
+    int ret = cv::waitKey(0) & 0xFF;  // On some machines there are bits set in front.
+
+    // Navigate through the images with the arrow keys.
+    if (ret == 'a'  ||  // key 'a'
+        ret == 0x51 ||  // left arrow key
+        ret == 158      // ins on numpad (when the arrow keys fail to work)
+        ) {
+      cid = (cid + num_images - 1) % num_images;  // go to prev image
     }
-    if (ret == 'd' || ret == 0x53 /*right arrow key*/) {
-      cid = (cid + num_images + 1) % num_images;
+    if (ret == 'd'  ||  // key 'd'
+        ret == 0x53 ||  // right arrow key
+        ret == 159      // del on numpad (when the arrow keys fail to work)
+        ) {
+      cid = (cid + num_images + 1) % num_images;  // go to next image
     }
     if (ret == 'c') {
       // Stop this look. Go to the next step, creating the 3D view.
@@ -445,6 +558,9 @@ int main(int argc, char** argv) {
   window.setWindowSize(cv::Size(1280, 720));
   window.showWidget("Coordinate Widget", cv::viz::WCoordinateSystem());
 
+  // Need this to later manipulate the gui
+  g_win_ptr = &window;
+
   int num_frames = map.GetNumFrames();
   if ( FLAGS_last == std::numeric_limits<int>::max())
     FLAGS_last = num_frames;
@@ -456,10 +572,6 @@ int main(int argc, char** argv) {
     int cid2 = remainder(cid, num_frames);
     Draw3DFrame(&window, map, cid2, center);
   }
-
-  // Need these to later manipulate the gui
-  map_ptr = &map;
-  win_ptr = &window;
 
   if (!FLAGS_skip_3d_points) {
     // Add a widget to display all the points

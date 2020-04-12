@@ -21,32 +21,52 @@
 namespace executive {
 OpState* OpStateAutoReturn::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
   bool completed = false, successful = false;
-  std::string err_msg;
-  uint8_t status;
   // Check if command is accepted in every op state and if so, execute it
-  OpState::HandleCmd(cmd, completed, successful, err_msg, status);
+  OpState::HandleCmd(cmd, completed, successful);
   if (completed) {
     return this;
   }
 
-  if (cmd->cmd_name == CommandConstants::CMD_NAME_POWER_ON_ITEM) {
-    exec_->PowerOnItem(cmd, err_msg, status);
+  if (cmd->cmd_name == CommandConstants::CMD_NAME_CUSTOM_GUEST_SCIENCE) {
+    exec_->CustomGuestScience(cmd);
+  } else if (cmd->cmd_name == CommandConstants::CMD_NAME_FAULT) {
+    if (exec_->Fault(cmd)) {
+      return OpStateRepo::Instance()->teleop()->StartupState();
+    }
+  } else if (cmd->cmd_name == CommandConstants::CMD_NAME_IDLE_PROPULSION) {
+    if (exec_->IdlePropulsion(cmd)) {
+      return OpStateRepo::Instance()->teleop()->StartupState();
+    }
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_POWER_OFF_ITEM) {
-    exec_->PowerOffItem(cmd, err_msg, status);
+    exec_->PowerItemOff(cmd);
+  } else if (cmd->cmd_name == CommandConstants::CMD_NAME_POWER_ON_ITEM) {
+    exec_->PowerItemOn(cmd);
   } else if (cmd->cmd_name ==
                         CommandConstants::CMD_NAME_SET_FLASHLIGHT_BRIGHTNESS) {
-    exec_->SetFlashlightBrightness(cmd, err_msg, status);
+    exec_->SetFlashlightBrightness(cmd);
+  } else if (cmd->cmd_name == CommandConstants::CMD_NAME_SET_PLAN) {
+    exec_->SetPlan(cmd);
+  } else if (cmd->cmd_name == CommandConstants::CMD_NAME_STOP_ALL_MOTION) {
+    if (exec_->StopAllMotion(cmd)) {
+      // Check if we are stopping and if so, transition to teleop. Otherwise
+      // transition to ready
+      if (exec_->IsActionRunning(STOP)) {
+        // If stop started, need to transition to teleop
+        return OpStateRepo::Instance()->teleop()->StartupState();
+      } else {  // Stop was successful but stop not started so go to ready
+        return OpStateRepo::Instance()->ready()->StartupState();
+      }
+    }
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_STOP_ARM) {
-    // TODO(Katie) Stub, add actual code later
-    exec_->StopArm(cmd->cmd_id, cmd->cmd_origin);
+    exec_->StopArm(cmd);
+  } else if (cmd->cmd_name == CommandConstants::CMD_NAME_STOP_GUEST_SCIENCE) {
+    exec_->StopGuestScience(cmd);
+  } else if (cmd->cmd_name == CommandConstants::CMD_NAME_WIPE_HLP) {
+    exec_->WipeHlp(cmd);
   } else {
-    err_msg = "Command " + cmd->cmd_name + " not accepted in op state" +
-                                                                " auto return.";
-    exec_->PublishCmdAck(cmd->cmd_id,
-                         cmd->cmd_origin,
-                         ff_msgs::AckCompletedStatus::EXEC_FAILED,
-                         err_msg);
-    ROS_ERROR("Executive: %s", err_msg.c_str());
+    std::string err_msg = "Command " + cmd->cmd_name +
+                                      " not accepted in op state auto return.";
+    AckCmd(cmd->cmd_id, ff_msgs::AckCompletedStatus::EXEC_FAILED, err_msg);
   }
   return this;
 }

@@ -1,14 +1,14 @@
 /* Copyright (c) 2017, United States Government, as represented by the
  * Administrator of the National Aeronautics and Space Administration.
- * 
+ *
  * All rights reserved.
- * 
+ *
  * The Astrobee platform is licensed under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -30,6 +30,9 @@
 #include <random>
 #include <thread>
 #include <unordered_map>
+
+DEFINE_uint64(num_min_localization_inliers, 10,
+              "If fewer than this many number of inliers, localization has failed.");
 
 namespace sparse_mapping {
 
@@ -295,8 +298,8 @@ void SelectRandomObservations(const std::vector<Eigen::Vector3d> & all_landmarks
   // not enough observations
   if (all_observations.size() < num_selected)
     return;
-  // Reserve space in the output so we don't have to keep reallocing on
-  // push_back.
+  // Reserve space in the output so we don't have to keep reallocating on
+  // push_back().
   landmarks->reserve(num_selected);
   observations->reserve(num_selected);
   while (observations->size() < num_selected) {
@@ -387,19 +390,40 @@ int RansacEstimateCamera(const std::vector<Eigen::Vector3d> & landmarks,
 
   VLOG(2) << observations.size() << " Ransac observations " << best_inliers << " inliers\n";
 
-  // TODO(bcoltin): make adjustable constant? or return some sort of confidence?
-  if (best_inliers < 10)
+  // TODO(bcoltin): Return some sort of confidence?
+  if (best_inliers < FLAGS_num_min_localization_inliers)
     return 2;
 
-  // TODO(bcoltin): take three best number of inliers, multiply by image coverage to pick best
-  // get the inliers
-  // TODO(zmoratto): If we have an output inlier landmarks and observation
-  // vector, we could use those for doing the final camera estimate instead of
-  // making another copy.
   std::vector<size_t> inliers;
   CountInliers(landmarks, observations, *camera_estimate, inlier_tolerance, &inliers);
   std::vector<Eigen::Vector3d> inlier_landmarks;
   std::vector<Eigen::Vector2d> inlier_observations;
+  inlier_landmarks.reserve(inliers.size());
+  inlier_observations.reserve(inliers.size());
+  for (size_t idx : inliers) {
+    inlier_landmarks.push_back(landmarks[idx]);
+    inlier_observations.push_back(observations[idx]);
+  }
+
+  ceres::Solver::Options options;
+  options.linear_solver_type = ceres::ITERATIVE_SCHUR;
+  options.num_threads = 1;  // it is no slower with only one thread
+  options.max_num_iterations = 100;
+  options.minimizer_progress_to_stdout = false;
+  ceres::Solver::Summary summary;
+  // improve estimate with CERES solver
+  EstimateCamera(camera_estimate, &inlier_landmarks, inlier_observations, options, &summary);
+
+  // find inliers again with refined estimate
+  inliers.clear();
+  best_inliers = CountInliers(landmarks, observations, *camera_estimate, inlier_tolerance, &inliers);
+  VLOG(2) << "Number of inliers with refined camera: " << best_inliers << "\n";
+
+  if (best_inliers < FLAGS_num_min_localization_inliers)
+    return 2;
+
+  inlier_landmarks.clear();
+  inlier_observations.clear();
   inlier_landmarks.reserve(inliers.size());
   inlier_observations.reserve(inliers.size());
   for (size_t idx : inliers) {
@@ -417,15 +441,6 @@ int RansacEstimateCamera(const std::vector<Eigen::Vector3d> & landmarks,
         std::back_inserter(*inlier_observations_out));
   }
 
-  ceres::Solver::Options options;
-  options.linear_solver_type = ceres::ITERATIVE_SCHUR;
-  options.num_threads = 1;  // it is no slower with only one thread
-  options.max_num_iterations = 100;
-  options.minimizer_progress_to_stdout = false;
-  ceres::Solver::Summary summary;
-  // improve estimate with CERES solver
-  EstimateCamera(camera_estimate, &inlier_landmarks, inlier_observations, options, &summary);
-
   return 0;
 }
 
@@ -433,7 +448,9 @@ int RansacEstimateCamera(const std::vector<Eigen::Vector3d> & landmarks,
 // which best maps the first set to the second.
 // Source: http://en.wikipedia.org/wiki/Kabsch_algorithm
 
-void Find3DAffineTransform(Eigen::Matrix3Xd & in, Eigen::Matrix3Xd & out, Eigen::Affine3d* result) {
+void Find3DAffineTransform(Eigen::Matrix3Xd const & in,
+                           Eigen::Matrix3Xd const & out,
+                           Eigen::Affine3d* result) {
   // Default output
   result->linear() = Eigen::Matrix3d::Identity(3, 3);
   result->translation() = Eigen::Vector3d::Zero();
@@ -441,34 +458,37 @@ void Find3DAffineTransform(Eigen::Matrix3Xd & in, Eigen::Matrix3Xd & out, Eigen:
   if (in.cols() != out.cols())
     throw "Find3DAffineTransform(): input data mis-match";
 
+  // Local copies we can modify
+  Eigen::Matrix3Xd local_in = in, local_out = out;
+
   // First find the scale, by finding the ratio of sums of some distances,
   // then bring the datasets to the same scale.
   double dist_in = 0, dist_out = 0;
-  for (int col = 0; col < in.cols()-1; col++) {
-    dist_in  += (in.col(col+1) - in.col(col)).norm();
-    dist_out += (out.col(col+1) - out.col(col)).norm();
+  for (int col = 0; col < local_in.cols()-1; col++) {
+    dist_in  += (local_in.col(col+1) - local_in.col(col)).norm();
+    dist_out += (local_out.col(col+1) - local_out.col(col)).norm();
   }
   if (dist_in <= 0 || dist_out <= 0)
     return;
   double scale = dist_out/dist_in;
-  out /= scale;
+  local_out /= scale;
 
   // Find the centroids then shift to the origin
   Eigen::Vector3d in_ctr = Eigen::Vector3d::Zero();
   Eigen::Vector3d out_ctr = Eigen::Vector3d::Zero();
-  for (int col = 0; col < in.cols(); col++) {
-    in_ctr  += in.col(col);
-    out_ctr += out.col(col);
+  for (int col = 0; col < local_in.cols(); col++) {
+    in_ctr  += local_in.col(col);
+    out_ctr += local_out.col(col);
   }
-  in_ctr /= in.cols();
-  out_ctr /= out.cols();
-  for (int col = 0; col < in.cols(); col++) {
-    in.col(col)  -= in_ctr;
-    out.col(col) -= out_ctr;
+  in_ctr /= local_in.cols();
+  out_ctr /= local_out.cols();
+  for (int col = 0; col < local_in.cols(); col++) {
+    local_in.col(col)  -= in_ctr;
+    local_out.col(col) -= out_ctr;
   }
 
   // SVD
-  Eigen::Matrix3d Cov = in * out.transpose();
+  Eigen::Matrix3d Cov = local_in * local_out.transpose();
   Eigen::JacobiSVD<Eigen::Matrix3d> svd(Cov, Eigen::ComputeFullU | Eigen::ComputeFullV);
 
   // Find the rotation

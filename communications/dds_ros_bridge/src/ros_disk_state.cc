@@ -24,10 +24,12 @@ ff::RosDiskStateToRapid::RosDiskStateToRapid(const std::string& subscribe_topic,
                                              const unsigned int queue_size)
   : RosSubRapidPub(subscribe_topic, pub_topic, nh, queue_size),
     updated_(false),
-    num_disks_(0),
-    llp_start_index_(-1),
-    mlp_start_index_(-1),
-    hlp_start_index_(-1) {
+    llp_disk_size_(0),
+    mlp_disk_size_(0),
+    hlp_disk_size_(0),
+    llp_state_(NULL),
+    mlp_state_(NULL),
+    hlp_state_(NULL) {
   state_supplier_.reset(new ff::RosDiskStateToRapid::StateSupplier(
        rapid::ext::astrobee::DISK_STATE_TOPIC + pub_topic, "",
       "AstrobeeDiskStateProfile", ""));
@@ -67,65 +69,63 @@ ff::RosDiskStateToRapid::RosDiskStateToRapid(const std::string& subscribe_topic,
 
 void ff::RosDiskStateToRapid::Callback(const ff_msgs::DiskStateStampedConstPtr&
                                                                         state) {
-  int j = 0, index;
-  bool add_to_config = false;
+  unsigned int index = 0, length = 0;
+  bool change_config = false;
+
+  std::string temp_name;
 
   rapid::ext::astrobee::DiskConfig &config_msg = config_supplier_->event();
   rapid::ext::astrobee::DiskState &state_msg = state_supplier_->event();
 
-  // Check to see what processor the message came from and if we have already
-  // received the first state message from the processor. If it is, initialize
-  // index and message. If not, see if you need to update the first state msg
+  // Check to see what processor the message came from and if the size is the
+  // same as what we expect. If it doesn't, we need to reconfigure the dds
+  // config and state messages. If not, see if you need to update the state msg
   if (state->processor_name == "llp") {
-    if (llp_start_index_ == -1) {
-      llp_start_index_ = num_disks_;
-      add_to_config = true;
+    index = 0;
+    llp_state_ = state;
+    if (llp_disk_size_ != state->disks.size()) {
+      llp_disk_size_ = state->disks.size();
+      change_config = true;
     }
-
-    index = llp_start_index_;
   } else if (state->processor_name == "mlp") {
-    if (mlp_start_index_ == -1) {
-      mlp_start_index_ = num_disks_;
-      add_to_config = true;
+    index = llp_disk_size_;
+    mlp_state_ = state;
+    if (mlp_disk_size_ != state->disks.size()) {
+      mlp_disk_size_ = state->disks.size();
+      change_config = true;
     }
-
-    index = mlp_start_index_;
   } else if (state->processor_name == "hlp") {
-    if (hlp_start_index_ == -1) {
-      hlp_start_index_ = num_disks_;
-      add_to_config = true;
+    index = llp_disk_size_ + mlp_disk_size_;
+    hlp_state_ = state;
+    if (hlp_disk_size_ != state->disks.size()) {
+      hlp_disk_size_ = state->disks.size();
+      change_config = true;
     }
-
-    index = hlp_start_index_;
   } else {
     ROS_FATAL("DDS Bridge: Processor %s not recognized in disk state!",
               state->processor_name.c_str());
     return;
   }
 
-  if (add_to_config) {
-    // increase the number of disks
-    num_disks_ += state->disks.size();
-    if (num_disks_ > 8) {
-      ROS_ERROR("DDS Bridge: Number of disks is greater than 8!");
-      num_disks_ = 8;
+  if (change_config) {
+    length = llp_disk_size_ + mlp_disk_size_ + hlp_disk_size_;
+    // Output warning if there more disks in the ROS message than there are
+    // spaces available in the DDS message
+    if (length > 8) {
+      ROS_WARN("DDS Bridge: Number of disks is greater than 8!");
+      length = 8;
     }
-    // Resize file systems
-    config_msg.filesystems.length(num_disks_);
-    state_msg.filesystems.length(num_disks_);
-    j = 0;
-    std::string temp_name;
 
-    // Add data to both config and state
-    for (auto i = index; i < num_disks_; i++) {
-      temp_name = state->processor_name + " - " + state->disks[j].path;
-      std::strncpy(config_msg.filesystems[i].name, temp_name.data(), 32);
-      config_msg.filesystems[i].name[31] = '\0';
-      config_msg.filesystems[i].capacity = state->disks[j].capacity;
+    // Resize file system
+    config_msg.filesystems.length(length);
+    state_msg.filesystems.length(length);
 
-      state_msg.filesystems[i].used = state->disks[j].used;
-      j++;
-    }
+    // Copy data out of state messages
+    FillConfigAndState(llp_state_, 0, llp_disk_size_);  // LLP
+    FillConfigAndState(mlp_state_, llp_disk_size_, mlp_disk_size_);  // MLP
+    FillConfigAndState(hlp_state_,
+                       (llp_disk_size_ + mlp_disk_size_),
+                       hlp_disk_size_);  // HLP
 
     // increase serial number since we are sending a new config
     config_msg.hdr.serial += 1;
@@ -138,7 +138,7 @@ void ff::RosDiskStateToRapid::Callback(const ff_msgs::DiskStateStampedConstPtr&
     config_msg.hdr.timeStamp = util::RosTime2RapidTime(state->header.stamp);
     config_supplier_->sendEvent();
   } else {
-    j = 0;
+    unsigned int j = 0;
     for (unsigned int i = index; (i < (index + state->disks.size()) && i < 8);
                                                                           i++) {
       // Check to see if the value has changed
@@ -146,6 +146,29 @@ void ff::RosDiskStateToRapid::Callback(const ff_msgs::DiskStateStampedConstPtr&
         state_msg.filesystems[i].used = state->disks[j].used;
         updated_ = true;
       }
+      j++;
+    }
+  }
+}
+
+void ff::RosDiskStateToRapid::FillConfigAndState(
+                                        ff_msgs::DiskStateStampedConstPtr state,
+                                        unsigned int index,
+                                        unsigned int size) {
+  if (state != NULL) {
+    unsigned int j = 0;
+    std::string temp_name;
+
+    rapid::ext::astrobee::DiskConfig &config_msg = config_supplier_->event();
+    rapid::ext::astrobee::DiskState &state_msg = state_supplier_->event();
+
+    for (unsigned int i = index; (i < (index + size) && i < 8); i++) {
+      temp_name = state->processor_name + " - " + state->disks[j].path;
+      std::strncpy(config_msg.filesystems[i].name, temp_name.data(), 32);
+      config_msg.filesystems[i].name[31] = '\0';
+      config_msg.filesystems[i].capacity = state->disks[j].capacity;
+
+      state_msg.filesystems[i].used = state->disks[j].used;
       j++;
     }
   }

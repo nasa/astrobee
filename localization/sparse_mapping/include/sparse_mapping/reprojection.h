@@ -134,8 +134,8 @@ int RansacEstimateCamera(const std::vector<Eigen::Vector3d> & landmarks,
 
 // ICP solver that given matching 3D points, finds an affine transform that
 // best fits in to out.
-void Find3DAffineTransform(Eigen::Matrix3Xd & in,
-                           Eigen::Matrix3Xd & out,
+void Find3DAffineTransform(Eigen::Matrix3Xd const& in,
+                           Eigen::Matrix3Xd const& out,
                            Eigen::Affine3d* result);
 }  // namespace sparse_mapping
 

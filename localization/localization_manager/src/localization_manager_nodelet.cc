@@ -1,14 +1,14 @@
 /* Copyright (c) 2017, United States Government, as represented by the
  * Administrator of the National Aeronautics and Space Administration.
- * 
+ *
  * All rights reserved.
- * 
+ *
  * The Astrobee platform is licensed under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -23,23 +23,26 @@
 
 // Common includes
 #include <ff_util/ff_nodelet.h>
+#include <ff_util/ff_faults.h>
 #include <ff_util/ff_action.h>
 #include <ff_util/ff_service.h>
+#include <ff_util/ff_fsm.h>
 #include <ff_util/config_server.h>
 #include <ff_util/conversion.h>
 
-// Messages we use
-#include <ff_msgs/EkfState.h>
-#include <ff_msgs/SetEkfInput.h>
-#include <ff_msgs/SwitchAction.h>
+// Standard messages
+#include <std_srvs/Empty.h>
 
-// Pipelines
-#include <localization_manager/localization_pipeline_ml.h>
-#include <localization_manager/localization_pipeline_ar.h>
-#include <localization_manager/localization_pipeline_hr.h>
-#include <localization_manager/localization_pipeline_pl.h>
-#include <localization_manager/localization_pipeline_gt.h>
-#include <localization_manager/localization_pipeline_no.h>
+// Messages we use
+#include <ff_msgs/SetBool.h>
+#include <ff_msgs/SetState.h>
+#include <ff_msgs/SetEkfInput.h>
+#include <ff_msgs/LocalizationState.h>
+#include <ff_msgs/LocalizationAction.h>
+#include <ff_msgs/GetPipelines.h>
+
+// This application header
+#include <localization_manager/localization_pipeline.h>
 
 // STL includes
 #include <functional>
@@ -51,661 +54,858 @@
  */
 namespace localization_manager {
 
-// Convenience declarations
-typedef std::map<std::string, std::shared_ptr<Pipeline>> PipelineMap;
+// Match the internal states and responses with the message definition
+using FSM = ff_util::FSM;
+using STATE = ff_msgs::LocalizationState;
+using RESPONSE = ff_msgs::LocalizationResult;
 
 // The manager nodelet for switching between localization modes
 class LocalizationManagerNodelet : public ff_util::FreeFlyerNodelet {
  public:
-  enum State : uint8_t {
-    STATE_INITIALIZING           = 0,    // System not yet ready
-    STATE_WAITING_FOR_SWITCH     = 1,    // Waiting for switch call
-    STATE_WAITING_FOR_STABLE     = 2,    // Waiting for pipeline to report stable
-    STATE_WAITING_FOR_CONFIDENCE = 3     // Eaiting for EKF confience to rise
-  };
-  enum Event : uint8_t {
-    EVENT_CURRENT_STABLE         = 0,    // Current pipeline is stable
-    EVENT_CURRENT_UNSTABLE       = 1,    // Current pipeline is unstable
-    EVENT_GOAL_STABLE            = 2,    // Goal pipeline is stable
-    EVENT_GOAL_UNSTABLE          = 3,    // Goal pipeline is unstable
-    EVENT_EKF_STABLE             = 4,    // EKF stable
-    EVENT_EKF_UNSTABLE           = 5,    // EKF unstable
-    EVENT_CANCEL                 = 6,    // Cancel the operation in process
-    EVENT_PREEMPT                = 7,    // Preemption request
-    EVENT_NEW                    = 8     // New request
+  // Finite state machine
+  enum Event : FSM::Event {
+    READY                  = (1<<0),    // All pipelines initialized
+    GOAL_CANCEL            = (1<<1),    // Cancel the operation in process
+    GOAL_PREEMPT           = (1<<2),    // Preemption request
+    GOAL_SWITCH_PIPELINE   = (1<<3),    // New request
+    GOAL_ESTIMATE_BIAS     = (1<<4),    // New request
+    GOAL_RESET_FILTER      = (1<<5),    // New request
+    CURRENT_UNSTABLE       = (1<<6),    // Current pipeline is unstable
+    GOAL_UNSTABLE          = (1<<7),    // Goal pipeline is unstable
+    STABLE                 = (1<<8),    // Filter/pipeline is stable
+    TIMEOUT                = (1<<9)     // Could not complete the action
   };
 
   // Constructor
   LocalizationManagerNodelet() :
     ff_util::FreeFlyerNodelet(NODE_LOCALIZATION_MANAGER, true),
-    state_(STATE_INITIALIZING) {}
+      fsm_(STATE::INITIALIZING, std::bind(&LocalizationManagerNodelet::UpdateCallback,
+        this, std::placeholders::_1, std::placeholders::_2)) {
+    // When all services appear, then turn on optical flow and pipeline. We
+    // need to activate the correct pipeline
+    fsm_.Add(STATE::INITIALIZING,
+      READY, [this](FSM::Event const& event) -> FSM::State {
+        // Turn on optical flow
+        if (!OpticalFlow(curr_->second.RequiresOpticalFlow())) {
+          AssertFault(ff_util::INITIALIZATION_FAILED,
+            "Could not initialize optical flow for the default pipeline");
+          return STATE::DISABLED;
+        }
+        // Enable the pipeline
+        if (!curr_->second.Toggle(true)) {
+          AssertFault(ff_util::INITIALIZATION_FAILED,
+            "Could not enable teh default pipeline");
+          return STATE::DISABLED;
+        }
+        // Try and switch to the pipeline
+        if (!SwitchFilterInput(curr_->second.GetMode())) {
+          AssertFault(ff_util::INITIALIZATION_FAILED,
+            "Could not switch to the default pipeline");
+          return STATE::DISABLED;
+        }
+        // Now start usin the new pipeline
+        if (!curr_->second.Use(true)) {
+          AssertFault(ff_util::INITIALIZATION_FAILED,
+            "Could not start using the default pipeline");
+          return STATE::DISABLED;
+        }
+        // Now return the correct default state
+        goal_ = curr_;
+        // Return the correct state
+        if (curr_->first == ff_msgs::LocalizationGoal::PIPELINE_NONE)
+          return STATE::DISABLED;
+        return STATE::LOCALIZING;
+      });
+
+    // GENERAL PIPELINE MONITORING PATTERN
+
+    // We are busy localizing and the pipeline goes unstable -- we need to
+    // react by switching to the fallback pipeline.
+    fsm_.Add(STATE::LOCALIZING,
+      CURRENT_UNSTABLE, [this](FSM::Event const& event) -> FSM::State {
+        // If we are on the fallback pipeline and it is unstable, then we can't
+        // really do anything except issue a fault...
+        if (curr_ == fall_) {
+          AssertFault(ff_util::LOCALIZATION_PIPELINE_UNSTABLE,
+            "Currently on fallback pipeline and it is unstable");
+          ResetTimer(timer_recovery_);
+          return STATE::UNSTABLE;
+        }
+        // All other case is a fallback
+        NODELET_DEBUG("Pipeline unstable. Falling back to safe pipeline");
+        // Turn on optical flow
+        if (fall_->second.RequiresOpticalFlow() && !OpticalFlow(true)) {
+          AssertFault(ff_util::LOCALIZATION_PIPELINE_UNSTABLE,
+            "Could not toggle optical flow on begin");
+          return STATE::DISABLED;
+        }
+        // Enable the pipeline
+        if (!fall_->second.Toggle(true)) {
+          AssertFault(ff_util::LOCALIZATION_PIPELINE_UNSTABLE,
+            "Could not enable fallback pipeline");
+          return STATE::DISABLED;
+        }
+        // Try and switch to the pipeline
+        if (!SwitchFilterInput(fall_->second.GetMode())) {
+          AssertFault(ff_util::LOCALIZATION_PIPELINE_UNSTABLE,
+            "Could not switch to fallback pipeline");
+          return STATE::DISABLED;
+        }
+        // Now start using the new pipeline
+        if (!fall_->second.Use(true)) {
+          AssertFault(ff_util::INITIALIZATION_FAILED,
+            "Could not start using the default pipeline");
+          return STATE::DISABLED;
+        }
+        // Disable the active the pipeline
+        if (!curr_->second.Toggle(false)) {
+          AssertFault(ff_util::LOCALIZATION_PIPELINE_UNSTABLE,
+            "Could not disable fallback pipeline");
+          return STATE::DISABLED;
+        }
+        // Turn off optical flow if it's not required
+        if (!OpticalFlow(fall_->second.RequiresOpticalFlow())) {
+          AssertFault(ff_util::LOCALIZATION_PIPELINE_UNSTABLE,
+            "Could not toggle optical flow on end");
+          return STATE::DISABLED;
+        }
+        // Set all pipelines to fallback
+        curr_ = fall_;
+        goal_ = fall_;
+        // Return the correct state
+        if (curr_->first == ff_msgs::LocalizationGoal::PIPELINE_NONE)
+          return STATE::DISABLED;
+        return STATE::LOCALIZING;
+      });
+
+    // In an unstable state we keep getting marked as unstable
+    fsm_.Add(STATE::UNSTABLE,
+      CURRENT_UNSTABLE, [this](FSM::Event const& event) -> FSM::State {
+        ResetTimer(timer_recovery_);
+        return STATE::UNSTABLE;
+      });
+
+    // In an unstable state we are finally marked as stable
+    fsm_.Add(STATE::UNSTABLE,
+      STABLE, [this](FSM::Event const& event) -> FSM::State {
+      ClearFault(ff_util::LOCALIZATION_PIPELINE_UNSTABLE);
+      return STATE::LOCALIZING;
+      });
+
+    // SWITCH PIPELINE PATTERN
+
+    // We are disabled or busy localizing and we get a new switch pipeline event
+    // We emable the pipline and possibly optical flow, and wait for stability
+    fsm_.Add(STATE::LOCALIZING, STATE::DISABLED, STATE::UNSTABLE,
+      GOAL_SWITCH_PIPELINE, [this](FSM::Event const& event) -> FSM::State {
+        if (goal_->second.RequiresOpticalFlow() && !OpticalFlow(true))
+          return Result(RESPONSE::OPTICAL_FLOW_FAILED, "Could not toggle optical flow");
+        if (!goal_->second.Toggle(true))
+          return Result(RESPONSE::PIPELINE_TOGGLE_FAILED, "Could not enable new pipeline");
+        ResetTimer(timer_stability_);
+        ResetTimer(timer_deadline_);
+        return STATE::SWITCH_WAITING_FOR_PIPELINE;
+      });
+
+    // Waiting for the goal pipeline to go stable, and it does. We need to
+    // switch the EKF to use the new pipeline and wait for the filter.
+    fsm_.Add(STATE::SWITCH_WAITING_FOR_PIPELINE,
+      STABLE, [this](FSM::Event const& event) -> FSM::State {
+        // Try and switch to the pipeline
+        if (!SwitchFilterInput(goal_->second.GetMode()))
+          return Result(RESPONSE::SET_INPUT_FAILED, "Could not switch to new pipeline");
+        // Now activate the pipeline
+        if (!goal_->second.Use(true))
+          return Result(RESPONSE::PIPELINE_USE_FAILED, "Could not start using new pipeline");
+        ResetTimer(timer_stability_);
+        ResetTimer(timer_deadline_);
+        return STATE::SWITCH_WAITING_FOR_FILTER;
+      });
+
+    // Waiting for pipeline stability and the pipeline reports being unstable.
+    // We need to reset the stability timer
+    fsm_.Add(STATE::SWITCH_WAITING_FOR_PIPELINE,
+      GOAL_UNSTABLE, [this](FSM::Event const& event) -> FSM::State {
+        ResetTimer(timer_stability_);
+        return STATE::SWITCH_WAITING_FOR_PIPELINE;
+      });
+
+    // Waiting for the goal pipeline to go stable, and it does not. We need to
+    // gracefully disable the goal pipeline and return an error
+    fsm_.Add(STATE::SWITCH_WAITING_FOR_PIPELINE,
+      TIMEOUT, [this](FSM::Event const& event) -> FSM::State {
+        // Disable the goal pipeline
+        if (!goal_->second.Toggle(false))
+          return Result(RESPONSE::PIPELINE_TOGGLE_FAILED, "Could not enable new pipeline");
+        // Possibly also disable optical flow
+        if (!OpticalFlow(curr_->second.RequiresOpticalFlow()))
+          return Result(RESPONSE::OPTICAL_FLOW_FAILED, "Could not toggle optical flow");
+        // Return the goal pipeline to the current pipeline
+        goal_ = curr_;
+        // Return the error
+        return Result(RESPONSE::PIPELINE_UNSTABLE, "Pipeline took too long to stabilize pre-switch");
+      });
+
+    // Waiting for the goal pipeline to go stable, and it does. We need to
+    // switch the EKF to use the new pipeline and wait for the filter.
+    fsm_.Add(STATE::SWITCH_WAITING_FOR_FILTER,
+      STABLE, [this](FSM::Event const& event) -> FSM::State {
+        // Disable the goal pipeline
+        if (!curr_->second.Toggle(false))
+          return Result(RESPONSE::PIPELINE_TOGGLE_FAILED, "Could not disable old pipeline");
+        // Possibly also disable optical flow
+        if (!OpticalFlow(goal_->second.RequiresOpticalFlow()))
+          return Result(RESPONSE::OPTICAL_FLOW_FAILED, "Could not toggle optical flow");
+        // Return the goal pipeline to the current pipeline
+        curr_ = goal_;
+        // Return the error
+        return Result(RESPONSE::SUCCESS, "Switched to new pipeline");
+      });
+
+    // Waiting for the reset and the watchdog fires
+    fsm_.Add(STATE::SWITCH_WAITING_FOR_FILTER,
+      GOAL_UNSTABLE, [this](FSM::Event const& event) -> FSM::State {
+        ResetTimer(timer_stability_);
+        return STATE::SWITCH_WAITING_FOR_FILTER;
+      });
+
+    // Waiting for the goal pipeline to go stable, and it does not. We need to
+    // gracefully turn off the goal pipeline and return an error
+    fsm_.Add(STATE::SWITCH_WAITING_FOR_FILTER,
+      TIMEOUT, [this](FSM::Event const& event) -> FSM::State {
+        // Try and switch to the pipeline
+        if (!SwitchFilterInput(curr_->second.GetMode()))
+          return Result(RESPONSE::SET_INPUT_FAILED, "Could not switch back to old pipeline");
+        // Disable the goal pipeline
+        if (!goal_->second.Toggle(false))
+          return Result(RESPONSE::PIPELINE_TOGGLE_FAILED, "Could not disable new pipeline");
+        // Possibly also disable optical flow
+        if (!OpticalFlow(curr_->second.RequiresOpticalFlow()))
+          return Result(RESPONSE::OPTICAL_FLOW_FAILED, "Could not toggle optical flow");
+        // Return the goal pipeline to the current pipeline
+        goal_ = curr_;
+        // Return the error
+        return Result(RESPONSE::PIPELINE_UNSTABLE, "Pipeline took too long to stabilize post-switch");
+      });
+
+    //  BIAS ESTIMATION PATTERN
+
+    // Localizing normally and bias estimate command is called
+    fsm_.Add(STATE::LOCALIZING,
+      GOAL_ESTIMATE_BIAS, [this](FSM::Event const& event) -> FSM::State {
+        if (!EstimateBias())
+          return Result(RESPONSE::ESTIMATE_BIAS_FAILED, "Could not call bias estimation service");
+        ResetTimer(timer_stability_);
+        ResetTimer(timer_deadline_);
+        return STATE::BIAS_WAITING_FOR_FILTER;
+      });
+
+    // We don't need to localize normally to reset the bias and bias estimate
+    // command is called
+    fsm_.Add(STATE::UNSTABLE,
+      GOAL_ESTIMATE_BIAS, [this](FSM::Event const& event) -> FSM::State {
+        if (!EstimateBias())
+          return Result(RESPONSE::ESTIMATE_BIAS_FAILED, "Could not call bias estimation service");
+        ResetTimer(timer_stability_);
+        ResetTimer(timer_deadline_);
+        return STATE::BIAS_WAITING_FOR_FILTER;
+      });
+
+    // Waiting for bias estimation to complete and we get stable notification
+    fsm_.Add(STATE::BIAS_WAITING_FOR_FILTER,
+      STABLE, [this](FSM::Event const& event) -> FSM::State {
+        return Result(RESPONSE::SUCCESS, "Bias estimation completed successfully");
+      });
+
+    // Waiting for bias estimation to complete and we get an unsable notification
+    fsm_.Add(STATE::BIAS_WAITING_FOR_FILTER,
+      CURRENT_UNSTABLE, [this](FSM::Event const& event) -> FSM::State {
+        ResetTimer(timer_stability_);
+        return STATE::BIAS_WAITING_FOR_FILTER;
+      });
+
+    // Waiting for bias estimation and we exceed the deadline
+    fsm_.Add(STATE::BIAS_WAITING_FOR_FILTER,
+      TIMEOUT, [this](FSM::Event const& event) -> FSM::State {
+        return Result(RESPONSE::PIPELINE_UNSTABLE, "Pipeline took too long to stabilize after bias");
+      });
+
+    // FILTER RESET PATTERN
+
+    // Busy localizing and a filter reset command is called
+    fsm_.Add(STATE::LOCALIZING,
+      GOAL_RESET_FILTER, [this](FSM::Event const& event) -> FSM::State {
+        if (!ResetFilter())
+          return Result(RESPONSE::RESET_FAILED, "Could not call filter reset service");
+        ResetTimer(timer_stability_);
+        ResetTimer(timer_deadline_);
+        return STATE::RESET_WAITING_FOR_FILTER;
+      });
+
+    // Waiting for the reset to complete and we get stable notification
+    fsm_.Add(STATE::RESET_WAITING_FOR_FILTER,
+      STABLE, [this](FSM::Event const& event) -> FSM::State {
+        return Result(RESPONSE::SUCCESS, "Filter reset completed successfully");
+      });
+
+    // Waiting for the reset to complete and the EKF to stabilize
+    fsm_.Add(STATE::RESET_WAITING_FOR_FILTER,
+      CURRENT_UNSTABLE, [this](FSM::Event const& event) -> FSM::State {
+        ResetTimer(timer_stability_);
+        return STATE::RESET_WAITING_FOR_FILTER;
+      });
+
+    // Waiting for bias estimation and we exceed the deadline
+    fsm_.Add(STATE::RESET_WAITING_FOR_FILTER,
+      TIMEOUT, [this](FSM::Event const& event) -> FSM::State {
+        return Result(RESPONSE::PIPELINE_UNSTABLE, "Pipeline took too long to stabilize after reset");
+      });
+
+    // CATCH-ALL FOR CANCELLATIONS / PREEMPTIONS
+
+    // On cancel or preemption, notify previous callee and revert to LOCALIZING
+    fsm_.Add(GOAL_CANCEL | GOAL_PREEMPT,
+      [this](FSM::State const& state, FSM::Event const& event) -> FSM::State {
+        if (event == GOAL_CANCEL)
+          return Result(RESPONSE::CANCELLED, "User cancelled the operation");
+        return Result(RESPONSE::PREEMPTED, "Third party preempted operation");
+      });
+  }
 
   // Destructor
-  virtual ~LocalizationManagerNodelet() {}
+  ~LocalizationManagerNodelet() {}
 
  protected:
   void Initialize(ros::NodeHandle *nh) {
-    // Cannot create until we have a callback function
-    PipelineCallbackType cb = std::bind(&LocalizationManagerNodelet::PipelineCallback, this,
-      std::placeholders::_1, std::placeholders::_2);
-
-    // Set up the individual localization pipelines
-    if (!AddPipeline(nh, GetPrivateHandle(), cb, ff_msgs::SetEkfInput::Request::MODE_NONE))
-      NODELET_ERROR("Could not create the none localization pipeline");
-    if (!AddPipeline(nh, GetPrivateHandle(), cb, ff_msgs::SetEkfInput::Request::MODE_MAP_LANDMARKS))
-      NODELET_ERROR("Could not create the map_landmarks localization pipeline");
-    if (!AddPipeline(nh, GetPrivateHandle(), cb, ff_msgs::SetEkfInput::Request::MODE_AR_TAGS))
-      NODELET_ERROR("Could not create the ar_tags localization pipeline");
-    if (!AddPipeline(nh, GetPrivateHandle(), cb, ff_msgs::SetEkfInput::Request::MODE_HANDRAIL))
-      NODELET_ERROR("Could not create the handrail localization pipeline");
-    if (!AddPipeline(nh, GetPrivateHandle(), cb, ff_msgs::SetEkfInput::Request::MODE_PERCH))
-      NODELET_ERROR("Could not create the perch localization pipeline");
-    if (!AddPipeline(nh, GetPrivateHandle(), cb, ff_msgs::SetEkfInput::Request::MODE_TRUTH))
-      NODELET_ERROR("Could not create the ground truth localization pipeline");
-
+    NODELET_DEBUG_STREAM("Initialize()");
     // Read the node parameters
     cfg_.Initialize(GetPrivateHandle(), "localization/localization_manager.config");
     cfg_.Listen(boost::bind(&LocalizationManagerNodelet::ReconfigureCallback, this, _1));
+
+    // Read and configure the pipelines
+    config_reader::ConfigReader::Table pipelines(cfg_.GetConfigReader(), "pipelines");
+    for (int i = 0; i < pipelines.GetSize(); i++) {
+      config_reader::ConfigReader::Table pipeline;
+      if (!pipelines.GetTable(i + 1, &pipeline))
+        AssertFault(ff_util::INITIALIZATION_FAILED, "Could not get pipeline");
+      // Get mandatory fields
+      std::string id;
+      if (!pipeline.GetStr("id", &id))
+        AssertFault(ff_util::INITIALIZATION_FAILED, "Could not get id");
+      std::string name;
+      if (!pipeline.GetStr("name", &name))
+        AssertFault(ff_util::INITIALIZATION_FAILED, "Could not get name");
+      int mode;
+      if (!pipeline.GetInt("ekf_input", &mode))
+        AssertFault(ff_util::INITIALIZATION_FAILED, "Could not get ekf_input");
+
+      // Allocate the pipeline
+      Pipeline & p = pipelines_.emplace(id,
+        Pipeline(static_cast<uint8_t>(mode), name)).first->second;
+
+      // Filter requirement
+      if (pipeline.CheckValExists("needs_filter")) {
+        bool needs_filter = false;
+        if (pipeline.GetBool("needs_filter", &needs_filter)) {
+          if (needs_filter) {
+            int max_confidence = 0;
+            if (!pipeline.GetInt("max_confidence", &max_confidence)) {
+              AssertFault(ff_util::INITIALIZATION_FAILED,
+                            "Could not get max confidence");
+            }
+
+            bool optical_flow = false;
+            if (!pipeline.GetBool("optical_flow", &optical_flow)) {
+              AssertFault(ff_util::INITIALIZATION_FAILED,
+                          "Could not get optical flow");
+            }
+
+            double timeout = 1.0;
+            if (!pipeline.GetReal("timeout", &timeout)) {
+              AssertFault(ff_util::INITIALIZATION_FAILED,
+                          "Could not get timeout");
+            }
+
+            // Set a filter need
+            p.NeedsFilter(max_confidence, optical_flow, timeout);
+          }
+        }
+      }
+
+      // Enable requirement
+      if (pipeline.CheckValExists("enable_topic")) {
+        std::string enable_topic;
+        if (pipeline.GetStr("enable_topic", &enable_topic)) {
+          double enable_timeout = 1.0;
+          if (!pipeline.GetReal("enable_timeout", &enable_timeout)) {
+            AssertFault(ff_util::INITIALIZATION_FAILED,
+                        "Could not get enable_timeout");
+          }
+
+          // Set an enable need
+          p.NeedsEnable(enable_topic, enable_timeout);
+        }
+      }
+
+      // Registration requirement
+      if (pipeline.CheckValExists("reg_topic")) {
+        std::string reg_topic;
+        if (pipeline.GetStr("reg_topic", &reg_topic)) {
+          double reg_timeout = 1.0;
+          if (!pipeline.GetReal("reg_timeout", &reg_timeout)) {
+            AssertFault(ff_util::INITIALIZATION_FAILED,
+                        "Could not get reg_timeout");
+          }
+
+          // Set an enable need
+          p.NeedsRegistrations(reg_topic, reg_timeout);
+        }
+      }
+
+      // Visual feature requirement
+      if (pipeline.CheckValExists("feat_topic")) {
+        std::string feat_topic;
+        if (pipeline.GetStr("feat_topic", &feat_topic)) {
+          double feat_timeout = 1.0;
+          if (!pipeline.GetReal("feat_timeout", &feat_timeout)) {
+            AssertFault(ff_util::INITIALIZATION_FAILED,
+                        "Could not get feat_timeout");
+          }
+
+          int feat_threshold = 0;
+          if (!pipeline.GetInt("feat_threshold", &feat_threshold)) {
+            AssertFault(ff_util::INITIALIZATION_FAILED,
+                        "Could not get feat_threshold");
+          }
+
+          // Set a feature need
+          p.NeedsVisualFeatures(feat_topic, feat_timeout, feat_threshold);
+        }
+      }
+
+      // Depth feature requirement
+      if (pipeline.CheckValExists("depth_topic")) {
+        std::string depth_topic;
+        if (pipeline.GetStr("depth_topic", &depth_topic)) {
+          double depth_timeout = 1.0;
+          if (!pipeline.GetReal("depth_timeout", &depth_timeout)) {
+            AssertFault(ff_util::INITIALIZATION_FAILED,
+                        "Could not get depth_timeout");
+          }
+
+          int depth_threshold = 0;
+          if (!pipeline.GetInt("depth_threshold", &depth_threshold)) {
+            AssertFault(ff_util::INITIALIZATION_FAILED,
+                        "Could not get depth_threshold");
+          }
+
+          // Set a feature need
+          p.NeedsDepthFeatures(depth_topic, depth_timeout, depth_threshold);
+        }
+      }
+    }
+
+    // Update config server with the pipelines
     cfg_.Lim<std::string>("pipeline", EnumeratePipelines());
     cfg_.Lim<std::string>("fallback", EnumeratePipelines());
 
+    // Set the fallback and current pipelines
+    std::string pipeline;
+    if (!cfg_.Get<std::string>("fallback", pipeline))
+      AssertFault(ff_util::INITIALIZATION_FAILED,
+        "No valid fallback pipeline specfified in the localization manager");
+    fall_ = pipelines_.find(pipeline);
+    if (fall_ == pipelines_.end())
+      AssertFault(ff_util::INITIALIZATION_FAILED,
+        "Fallback pipeline specified in config does not exist");
+    if (!cfg_.Get<std::string>("pipeline", pipeline))
+      AssertFault(ff_util::INITIALIZATION_FAILED,
+        "No valid default pipeline specfified in the localization manager");
+    curr_ = pipelines_.find(pipeline);
+    if (curr_ == pipelines_.end())
+      AssertFault(ff_util::INITIALIZATION_FAILED,
+        "Default pipeline specified in config does not exist");
+    goal_ = curr_;
+
+    // Initiaize all pipelines in the system
+    for (auto & pipeline : pipelines_) {
+      if (!pipeline.second.Initialize(nh,
+        std::bind(&LocalizationManagerNodelet::PipelineCallback, this,
+          pipeline.first, std::placeholders::_1),
+        std::bind(&LocalizationManagerNodelet::ConnectedCallback, this),
+        std::bind(&LocalizationManagerNodelet::TimeoutCallback, this))) {
+        AssertFault(ff_util::INITIALIZATION_FAILED,
+          std::string("Could not init pipeline: ") + pipeline.first);
+      }
+    }
+
+    // Publish the docking state as a latched topic
+    pub_ = nh->advertise<ff_msgs::LocalizationState>(
+      TOPIC_LOCALIZATION_MANAGER_STATE, 1, true);
+
     // Set EKF input service
     service_i_.SetConnectedTimeout(cfg_.Get<double>("timeout_service_set_input"));
-    service_i_.SetConnectedCallback(std::bind(&LocalizationManagerNodelet::ConnectedCallback, this));
-    service_i_.SetTimeoutCallback(std::bind(&LocalizationManagerNodelet::TimeoutCallback, this));
+    service_i_.SetConnectedCallback(
+      std::bind(&LocalizationManagerNodelet::ConnectedCallback, this));
+    service_i_.SetTimeoutCallback(
+      std::bind(&LocalizationManagerNodelet::TimeoutCallback, this));
     service_i_.Create(nh, SERVICE_GNC_EKF_SET_INPUT);
 
     // Enable optical flow service
     service_o_.SetConnectedTimeout(cfg_.Get<double>("timeout_service_enable_of"));
-    service_o_.SetConnectedCallback(std::bind(&LocalizationManagerNodelet::ConnectedCallback, this));
-    service_o_.SetTimeoutCallback(std::bind(&LocalizationManagerNodelet::TimeoutCallback, this));
+    service_o_.SetConnectedCallback(
+      std::bind(&LocalizationManagerNodelet::ConnectedCallback, this));
+    service_o_.SetTimeoutCallback(
+      std::bind(&LocalizationManagerNodelet::TimeoutCallback, this));
     service_o_.Create(nh, SERVICE_LOCALIZATION_OF_ENABLE);
 
+    // Initilize bias service
+    service_b_.SetConnectedTimeout(cfg_.Get<double>("timeout_service_bias"));
+    service_b_.SetConnectedCallback(
+      std::bind(&LocalizationManagerNodelet::ConnectedCallback, this));
+    service_b_.SetTimeoutCallback(
+      std::bind(&LocalizationManagerNodelet::TimeoutCallback, this));
+    service_b_.Create(nh, SERVICE_GNC_EKF_INIT_BIAS);
+
+    // Reset EKF service
+    service_r_.SetConnectedTimeout(cfg_.Get<double>("timeout_service_reset"));
+    service_r_.SetConnectedCallback(
+      std::bind(&LocalizationManagerNodelet::ConnectedCallback, this));
+    service_r_.SetTimeoutCallback(
+      std::bind(&LocalizationManagerNodelet::TimeoutCallback, this));
+    service_r_.Create(nh, SERVICE_GNC_EKF_RESET);
+
     // Timers to check for EKF stability / instability
-    timer_s_ = nh->createTimer(ros::Duration(cfg_.Get<double>("timeout_stability")),
-      &LocalizationManagerNodelet::TimerSCallback, this, true, false);
-    timer_u_ = nh->createTimer(ros::Duration(cfg_.Get<double>("timeout_stability")),
-      &LocalizationManagerNodelet::TimerUCallback, this, true, false);
+    timer_stability_ =
+      nh->createTimer(ros::Duration(cfg_.Get<double>("timeout_stability")),
+        &LocalizationManagerNodelet::StabilityTimerCallback, this, true, false);
+    timer_recovery_ =
+      nh->createTimer(ros::Duration(cfg_.Get<double>("timeout_recovery")),
+        &LocalizationManagerNodelet::StabilityTimerCallback, this, true, false);
+    timer_deadline_ =
+      nh->createTimer(ros::Duration(cfg_.Get<double>("timeout_deadline")),
+        &LocalizationManagerNodelet::DeadlineTimerCallback, this, true, false);
 
-    // Backup the NodeHandle for use in the ConnectedCallback
-    nh_ = nh;
-  }
+    // Allow the state to be manually set
+    server_set_state_ = nh->advertiseService(
+      SERVICE_LOCALIZATION_MANAGER_SET_STATE,
+        &LocalizationManagerNodelet::SetStateCallback, this);
 
-  // Ensure all clients are connected
-  void ConnectedCallback() {
-    NODELET_DEBUG_STREAM("ConnectedCallback()");
-    if (!service_i_.IsConnected()) return;     // Check service is connected
-    if (!service_o_.IsConnected()) return;     // Check service is connected
-    if (state_ != STATE_INITIALIZING) return;  // Prevent multiple calls
-
-    // Set the fallback pipeline
-    std::string fallback = "no";
-    if (!cfg_.Get<std::string>("fallback", fallback))
-      NODELET_ERROR("No valid fallback pipeline specfified in the localization manager");
-    fall_ = pipelines_.find(fallback);
-    if (fall_ == pipelines_.end())
-      NODELET_ERROR("Fallback pipeline specified in config does not exist");
-
-    // Set the current pipeline
-    std::string pipeline = "no";
-    if (!cfg_.Get<std::string>("pipeline", pipeline))
-      NODELET_ERROR("No valid default pipeline specfified in the localization manager");
-    curr_ = pipelines_.find(pipeline);
-    if (curr_ == pipelines_.end())
-      NODELET_ERROR("Default pipeline specified in config does not exist");
-
-    // Set the goal pipeline
-    goal_ = curr_;
-
-    // Turn off all pipelines but the one we want
-    for (PipelineMap::iterator it = pipelines_.begin(); it != pipelines_.end(); it++)
-      if (!it->second->Enable(curr_ == it))
-        NODELET_ERROR_STREAM("Could not toggle localization pipeline: " << it->first);
-
-    // Forcibly EKF to use the current localization pipeline
-    ff_msgs::SetEkfInput msg;
-    msg.request.mode = curr_->second->GetMode();
-    if (!service_i_.Call(msg))
-      NODELET_ERROR_STREAM("Could not set the EKF to use the fallback localization pipeline");
-
-    // Subscribe to EKF updates from GNC
-    sub_ = nh_->subscribe(TOPIC_GNC_EKF, 1, &LocalizationManagerNodelet::EkfCallback, this);
-
-    // Start the EKF stability timers - when a good EKF confidence calls back it simply defers
-    // the deadline of the unstable timer. Therefore, if "timer_s_" calls back, the EKF has
-    // been stable for duration "timeout_stability". Conversely, if "timer_u_" calls back.
-    // the EKF has been unstable for "timeout_stability".
-    Pipeline::StartTimer(timer_s_, cfg_.Get<double>("timeout_stability"));
-    Pipeline::StartTimer(timer_u_, cfg_.Get<double>("timeout_stability"));
-
-    // Set the mode to initialized
-    ChangeState(STATE_WAITING_FOR_SWITCH);
+    // Allow the state to be manually set
+    server_get_pipelines_ = nh->advertiseService(
+      SERVICE_LOCALIZATION_MANAGER_GET_PIPELINES,
+        &LocalizationManagerNodelet::GetPipelinesCallback, this);
 
     // Create the switch action
     action_.SetGoalCallback(std::bind(&LocalizationManagerNodelet::GoalCallback, this, std::placeholders::_1));
     action_.SetPreemptCallback(std::bind(&LocalizationManagerNodelet::PreemptCallback, this));
     action_.SetCancelCallback(std::bind(&LocalizationManagerNodelet::CancelCallback, this));
-    action_.Create(nh_, ACTION_LOCALIZATION_MANAGER_SWITCH);
+    action_.Create(nh, ACTION_LOCALIZATION_MANAGER_LOCALIZATION);
+  }
+
+  // Enumerate all pipelines
+  std::map<std::string, std::string> EnumeratePipelines() {
+    std::map<std::string, std::string> enumeration;
+    for (auto & pipeline : pipelines_) {
+      enumeration[pipeline.first] = pipeline.second.GetName();
+      NODELET_DEBUG_STREAM(pipeline.first << " " << pipeline.second.GetName());
+    }
+    return enumeration;
   }
 
   // Callback for a reconfigure (switch localization mode manually)
   bool ReconfigureCallback(dynamic_reconfigure::Config &config) {
-    if (state_ != STATE_WAITING_FOR_SWITCH) {
-      NODELET_DEBUG("Cannot reconfigure in non-WAITING_FOR_SWITCH state");
-      return false;
+    NODELET_DEBUG_STREAM("ReconfigureCallback()");
+    switch (fsm_.GetState()) {
+    case STATE::DISABLED:
+    case STATE::LOCALIZING:
+      return cfg_.Reconfigure(config);
+      return true;
     }
-    return cfg_.Reconfigure(config);
-  }
-
-  // Timeout on a trajectory generation request
-  void TimeoutCallback(void) {
-    NODELET_ERROR("ServiceTimeoutCallback()");
-  }
-
-  ////////////////////////////////////////////////////////////////////////////////////////
-
-  // Convenience
-  bool Error(std::string const& msg) {
-    NODELET_ERROR_STREAM(msg);
+    NODELET_DEBUG("Cannot reconfigure in non-waiting state");
     return false;
   }
 
-  // Turn on the goal pipeline
-  bool EnableNew() {
-    // Sanity check
-    if (goal_ == pipelines_.end())
-      return Error("The goal pipeline pointer is invalid");
-    // If the pipeline requires optic
-    if (goal_->second->NeedsOpticalFlow()) {
-      ff_msgs::SetBool msg;
-      msg.request.enable = true;
-      if (!service_o_.Call(msg))
-        return Error("Could not enable optical flow for the goal pipeline");
-    }
-    // Enable the new pipeline
-    if (!goal_->second->Enable(true))
-      return Error("Could not enable the goal pipeline");
-    // Success
+  // Ensure all clients are connected
+  void ConnectedCallback() {
+    NODELET_DEBUG_STREAM("ConnectedCallback()");
+    if (!service_i_.IsConnected()) return;     // Check set input service
+    if (!service_o_.IsConnected()) return;     // Check optical flow service
+    if (!service_r_.IsConnected()) return;     // Check EKF reset service
+    if (!service_b_.IsConnected()) return;     // Check EKF init biase
+    for (auto & pipeline : pipelines_)         // Check all pipelines
+      if (!pipeline.second.IsConnected()) return;
+    fsm_.Update(READY);                        // Ready!
+  }
+
+  // Timeout on a trajectory generation request
+  void TimeoutCallback() {
+    NODELET_DEBUG_STREAM("TimeoutCallback()");
+    AssertFault(ff_util::INITIALIZATION_FAILED,
+      "One of the manager or pipeline services failed to appear");
+  }
+
+  // Called when a user manually updates the internal state
+  bool SetStateCallback(ff_msgs::SetState::Request& req,
+                        ff_msgs::SetState::Response& res) {
+    NODELET_DEBUG_STREAM("SetStateCallback()");
+    fsm_.SetState(req.state);
+    res.success = true;
     return true;
   }
 
-  // Set the EKF to use the goal localizatin pipeline
-  bool SetEKFInput() {
-    // Sanity check
-    if (goal_ == pipelines_.end())
-      return Error("The goal pipeline pointer is invalid");
-    // Immediately tell the EKF to use the goal localization pipeline
-    ff_msgs::SetEkfInput msg;
-    msg.request.mode = goal_->second->GetMode();
-    if (!service_i_.Call(msg))
-      return Error("Could not set the EKF to use the goal localization pipeline");
-    // Success
+  // Called when a user manually updates the internal state
+  bool GetPipelinesCallback(ff_msgs::GetPipelines::Request& req,
+                            ff_msgs::GetPipelines::Response& res) {
+    NODELET_DEBUG_STREAM("GetPipelinesCallback()");
+    ff_msgs::LocalizationPipeline msg;
+    for (auto & pipeline : pipelines_) {
+      msg.id = pipeline.first;
+      msg.mode = pipeline.second.GetMode();
+      msg.name = pipeline.second.GetName();
+      msg.requires_optical_flow = pipeline.second.RequiresOpticalFlow();
+      msg.requires_filter = pipeline.second.RequiresFilter();
+      res.pipelines.push_back(msg);
+    }
     return true;
   }
 
-  // Adopt the goal pipeline as the current pipeline
-  bool DisableOld() {
-    // Sanity check
-    if (curr_ == pipelines_.end())
-      return Error("The goal pipeline pointer is invalid");
-    if (goal_ == pipelines_.end())
-      return Error("The goal pipeline pointer is invalid");
-    // If the goal doesn't require optical flow, turn it off
-    if (!goal_->second->NeedsOpticalFlow()) {
-      ff_msgs::SetBool msg;
-      msg.request.enable = false;
-      if (!service_o_.Call(msg))
-        return Error("could not disable optical flow for the goal pipeline");
-    }
-    // Disable the oldpipeline
-    if (!curr_->second->Enable(false))
-      return Error("Could not enable the goal pipeline");
-    // Set the current equal to the goal
-    curr_ = goal_;
-    // Success
-    return true;
-  }
-
-  // Cancel a switch completely
-  bool Revert() {
-    // Sanity check
-    if (curr_ == pipelines_.end()) return false;
-    if (goal_ == pipelines_.end()) return false;
-    // Immediately tell the EKF to use the current localization pipeline
-    ff_msgs::SetEkfInput msg;
-    msg.request.mode = curr_->second->GetMode();
-    if (!service_i_.Call(msg))
-      return Error("Could not set the EKF to use the fallback localization pipeline");
-    // If the current pipeline does not require optical flow, disable it
-    if (!curr_->second->NeedsOpticalFlow()) {
-      ff_msgs::SetBool msg;
-      msg.request.enable = false;
-      if (!service_o_.Call(msg))
-        return Error("Could not disable optical flow");
-    }
-    // Disable the goal pipeline
-    if (!goal_->second->Enable(false))
-      return Error("Could not disable the new pipeline");
-    // Set the goal pipeline to the current pipeline
+  // Complete the current dock or undock action
+  FSM::State Result(int32_t response, std::string const& msg = "") {
+    NODELET_DEBUG_STREAM("Result(" << response << ")");
+    // Always return the goal pipeline to the current pipeline
     goal_ = curr_;
-    // Success
-    return true;
-  }
-
-  // Fall back to a "safe" pipeline -- turn on the fallback pipeline and set the EKF to
-  // imediately receive its features as the input.
-  bool Fallback() {
-    // If we don't allwo fallback, we'll have to deal with the bad current pipeling
-    if (!cfg_.Get<bool>("enable_fallback"))
-      return Error("Fallback is disabled");
-    // Don't try and fallback to a pipeline we are currently using...
-    if (fall_ == curr_) {
-       NODELET_WARN("We are currently on the fallback pipeline. Have you set the bias?.");
-       return true;
+    // Send the feedback if needed
+    switch (fsm_.GetState()) {
+    case STATE::INITIALIZING:
+    case STATE::LOCALIZING:
+    case STATE::DISABLED:
+      NODELET_DEBUG("Result called but action is not being tracked");
+      break;
+    default: {
+        ff_msgs::LocalizationResult result;
+        result.fsm_result = msg;
+        result.response = response;
+        if (response > 0)
+          action_.SendResult(ff_util::FreeFlyerActionState::SUCCESS, result);
+        else if (response < 0)
+          action_.SendResult(ff_util::FreeFlyerActionState::ABORTED, result);
+        else
+          action_.SendResult(ff_util::FreeFlyerActionState::PREEMPTED, result);
+      }
+      break;
     }
-    // Turn on optical flow if the fallback localization system requires it
-    if (!fall_->second->NeedsOpticalFlow()) {
-      ff_msgs::SetBool msg;
-      msg.request.enable = true;
-      if (!service_o_.Call(msg))
-        return Error("Could not enable optical flow for the fallback localization pipeline");
-    }
-    // Enable the fallback pipeline
-    if (!fall_->second->Enable(true))
-      return Error("Could not enable the fallback localization pipeline");
-    // Immediately switch to the EKF
-    ff_msgs::SetEkfInput msg;
-    msg.request.mode = fall_->second->GetMode();
-    if (!service_i_.Call(msg))
-      return Error("Could not set the EKF to use the fallback localization pipeline");
-    // Disable both the current and goal pipelines
-    if (curr_ != pipelines_.end())
-      curr_->second->Enable(false);
-    if (goal_ != pipelines_.end())
-      goal_->second->Enable(false);
-    // Switch both the current and goal pipelines to fallback
-    curr_ = fall_;
-    goal_ = fall_;
-    // Success
-    return true;
+    // If the current state is "no localization", then localization is disabled
+    if (curr_->first == ff_msgs::LocalizationGoal::PIPELINE_NONE)
+      return STATE::DISABLED;
+    // All other states are localizing states
+    return STATE::LOCALIZING;
   }
 
-  //////////////////////////////////////////////////////////////////////////////////////
-
-  // Control state change with nice debug output
-  void ChangeState(State state) {
-    switch (state) {
-    case STATE_INITIALIZING:
-      NODELET_DEBUG_STREAM("Moving to state INITIALIZING");                     break;
-    case STATE_WAITING_FOR_SWITCH:
-      NODELET_DEBUG_STREAM("Moving to state WAITING_FOR_SWITCH");               break;
-    case STATE_WAITING_FOR_STABLE:
-      NODELET_DEBUG_STREAM("Moving to state WAITING_FOR_STABLE");               break;
-    case STATE_WAITING_FOR_CONFIDENCE:
-      NODELET_DEBUG_STREAM("Moving to state WAITING_FOR_CONFIDENCE");           break;
-    }
-    state_ = state;
-  }
-
-  // Complete a switch action
-  void Complete(int32_t response) {
-    // Package up the response
-    ff_msgs::SwitchResult switch_result;
-    switch_result.response = response;
-    if (response > 0)
-      action_.SendResult(ff_util::FreeFlyerActionState::SUCCESS, switch_result);
-    else if (response < 0)
-      action_.SendResult(ff_util::FreeFlyerActionState::ABORTED, switch_result);
-    else
-      action_.SendResult(ff_util::FreeFlyerActionState::PREEMPTED, switch_result);
-    // Always return to a waiting state
-    return ChangeState(STATE_WAITING_FOR_SWITCH);
-  }
-
-  // The state
-  void StateMachine(Event event, std::string const& pipeline = "") {
+  // When the FSM state changes we get a callback here, so that we
+  // can choose to do various things.
+  void UpdateCallback(FSM::State const& state, FSM::Event const& event) {
+    // Debug events
+    ff_msgs::LocalizationState msg;
+    msg.header.frame_id = GetPlatform();
+    msg.header.stamp = ros::Time::now();
+    msg.state = state;
+    // Info about the current pipeline
+    msg.pipeline.id = curr_->first;
+    msg.pipeline.mode = curr_->second.GetMode();
+    msg.pipeline.name = curr_->second.GetName();
+    msg.pipeline.requires_optical_flow = curr_->second.RequiresOpticalFlow();
+    msg.pipeline.requires_filter = curr_->second.RequiresFilter();
+    // Debug events
     switch (event) {
-    ///////////////////////////////////////////////////////////////////
-    // WE RECEIVE NOTIFICATION THAT THE CURRENT PIPELINE GOES STABLE //
-    ///////////////////////////////////////////////////////////////////
-
-    case EVENT_CURRENT_STABLE: {
-      switch (state_) {
-      case STATE_WAITING_FOR_SWITCH:
-      case STATE_WAITING_FOR_STABLE:
-      case STATE_WAITING_FOR_CONFIDENCE:
-        NODELET_DEBUG_STREAM("Pipline is stable");
-        return;
-      // We should never get here
-      default:
-        break;
-      }
+    case READY:                msg.fsm_event = "READY";                 break;
+    case GOAL_CANCEL:          msg.fsm_event = "GOAL_CANCEL";           break;
+    case GOAL_PREEMPT:         msg.fsm_event = "GOAL_PREEMPT";          break;
+    case GOAL_SWITCH_PIPELINE: msg.fsm_event = "GOAL_SWITCH_PIPELINE";  break;
+    case GOAL_ESTIMATE_BIAS:   msg.fsm_event = "GOAL_ESTIMATE_BIAS";    break;
+    case GOAL_RESET_FILTER:    msg.fsm_event = "GOAL_RESET_FILTER";     break;
+    case CURRENT_UNSTABLE:     msg.fsm_event = "CURRENT_UNSTABLE";      break;
+    case GOAL_UNSTABLE:        msg.fsm_event = "GOAL_UNSTABLE";         break;
+    case STABLE:               msg.fsm_event = "STABLE";                break;
+    case TIMEOUT:              msg.fsm_event = "TIMEOUT";               break;
     }
-    break;
-
-    /////////////////////////////////////////////////////////////////////
-    // WE RECEIVE NOTIFICATION THAT THE CURRENT PIPELINE GOES UNSTABLE //
-    /////////////////////////////////////////////////////////////////////
-
-    case EVENT_CURRENT_UNSTABLE: {
-      switch (state_) {
-      case STATE_WAITING_FOR_SWITCH:
-      case STATE_WAITING_FOR_STABLE:
-        if (!curr_->second->NeedsEKF()) {
-          NODELET_DEBUG_STREAM("Ignoring unstable EKF");
-        } else {
-          NODELET_WARN_STREAM("Pipeline is unstable. Falling back to safe pipeline.");
-          if (!Fallback())
-            NODELET_ERROR_STREAM("Could not fall back to safe pipeline. Are you already on it?");
-        }
-        return;
-      case STATE_WAITING_FOR_CONFIDENCE:
-      // We should never get here
-      default:
-        break;
-      }
+    NODELET_DEBUG_STREAM("Received event " << msg.fsm_event);
+    // Debug state changes
+    switch (state) {
+    case STATE::INITIALIZING:
+      msg.fsm_state = "INITIALIZING";                       break;
+    case STATE::DISABLED:
+      msg.fsm_state = "DISABLED";                           break;
+    case STATE::LOCALIZING:
+      msg.fsm_state = "LOCALIZING";                         break;
+    case STATE::SWITCH_WAITING_FOR_PIPELINE:
+      msg.fsm_state = "SWITCH_WAITING_FOR_PIPELINE";        break;
+    case STATE::SWITCH_WAITING_FOR_FILTER:
+      msg.fsm_state = "SWITCH_WAITING_FOR_FILTER";          break;
+    case STATE::BIAS_WAITING_FOR_FILTER:
+      msg.fsm_state = "BIAS_WAITING_FOR_FILTER";            break;
+    case STATE::RESET_WAITING_FOR_FILTER:
+      msg.fsm_state = "RESET_WAITING_FOR_FILTER";           break;
+    case STATE::UNSTABLE:
+      msg.fsm_state = "UNSTABLE";                           break;
     }
-    break;
-
-    ////////////////////////////////////////////////////////////////
-    // WE RECEIVE NOTIFICATION THAT THE GOAL PIPELINE GOES STABLE //
-    ////////////////////////////////////////////////////////////////
-
-    case EVENT_GOAL_STABLE: {
-      switch (state_) {
-      // If we are waiting for pipeline or EKF stability, then we need to abort the switcj
-      case STATE_WAITING_FOR_STABLE:
-        NODELET_DEBUG_STREAM("Goal pipeline has gone stable. Switching EKF.");
-        if (!SetEKFInput())
-          return Complete(ff_msgs::SwitchResult::COULD_NOT_SWITCH_EKF);
-        // Change the state
-        ChangeState(STATE_WAITING_FOR_CONFIDENCE);
-        // Special case: immediatelty fake EKF confidence
-        if (!goal_->second->NeedsEKF())
-          StateMachine(EVENT_EKF_STABLE);
-        return;
-      // Ignore stability updates during confidence check
-      case STATE_WAITING_FOR_SWITCH:
-      case STATE_WAITING_FOR_CONFIDENCE:
-        return;
-      // We should never get here
-      default:
-        break;
-      }
-    }
-    break;
-
-    //////////////////////////////////////////////////////////////////
-    // WE RECEIVE NOTIFICATION THAT THE GOAL PIPELINE GOES UNSTABLE //
-    //////////////////////////////////////////////////////////////////
-
-    case EVENT_GOAL_UNSTABLE: {
-      switch (state_) {
-      // If we are waiting for pipeline or EKF stability, then we need to abort the switcj
-      case STATE_WAITING_FOR_STABLE:
-      case STATE_WAITING_FOR_CONFIDENCE:
-        NODELET_WARN_STREAM("Goal pipeline has gone unstable. Aborting switch.");
-        if (!Revert())
-          return Complete(ff_msgs::SwitchResult::COULD_NOT_CANCEL);
-        return Complete(ff_msgs::SwitchResult::PIPELINE_NOT_STABLE);
-      // We should never get here
-      default:
-        break;
-      }
-    }
-    break;
-
-    //////////////////////////////////////////////////////
-    // WE RECEIVE NOTIFICATION THAT THE EKF GOES STABLE //
-    //////////////////////////////////////////////////////
-
-    case EVENT_EKF_STABLE: {
-      switch (state_) {
-      // Nominal case: we expect stability pre and during switch
-      case STATE_WAITING_FOR_SWITCH:
-      case STATE_WAITING_FOR_STABLE:
-        NODELET_DEBUG_STREAM("EKF is stable.");
-        return;
-      // If we are waiting for EKF confidence before completing switck
-      case STATE_WAITING_FOR_CONFIDENCE:
-        NODELET_DEBUG_STREAM("EKF is stable. Completing the switch");
-        if (!DisableOld())
-          return Complete(ff_msgs::SwitchResult::COULD_NOT_DISABLE_OLD_PIPELINE);
-        // Nominal case
-        return Complete(ff_msgs::SwitchResult::SUCCESS);
-      // We should never get here
-      default:
-        break;
-      }
-    }
-    break;
-
-    ////////////////////////////////////////////////////////
-    // WE RECEIVE NOTIFICATION THAT THE EKF GOES UNSTABLE //
-    ////////////////////////////////////////////////////////
-
-    case EVENT_EKF_UNSTABLE: {
-      switch (state_) {
-      // If in idle mode and EKF goes unstable, try to automatically revert to fallback pipeline
-      case STATE_WAITING_FOR_SWITCH:
-        NODELET_WARN_STREAM("EKF is unstable. Falling back to safe pipeline.");
-        if (!Fallback())
-          NODELET_ERROR_STREAM("Could not fall back to safe pipeline. Are you already on it?");
-        return;
-      // If current pipeline goes unstable prior ro switching, force the switch to keep stability.
-      case STATE_WAITING_FOR_STABLE:
-        NODELET_WARN_STREAM("Premature switch to goal pipeline to avoid unstable current pipleine");
-        if (!SetEKFInput())
-          return Complete(ff_msgs::SwitchResult::COULD_NOT_SWITCH_EKF);
-        // Nominal behaviour
-        return ChangeState(STATE_WAITING_FOR_STABLE);
-      // If we are waiting for thew EKF to stabilize and it doesn't, return an error
-      case STATE_WAITING_FOR_CONFIDENCE:
-        NODELET_WARN_STREAM("EKF not stable in new pipeline. Reverting to previous pipeline.");
-        if (!Revert())
-          return Complete(ff_msgs::SwitchResult::COULD_NOT_CANCEL);
-        return Complete(ff_msgs::SwitchResult::EKF_NOT_STABLE);
-      // We should never get here
-      default:
-        break;
-      }
-    }
-    break;
-
-    //////////////////////////////////
-    // WE RECEIVE A NEW SWITCH GOAL //
-    //////////////////////////////////
-
-    case EVENT_NEW: {
-      switch (state_) {
-      case STATE_WAITING_FOR_SWITCH: {
-        PipelineMap::iterator test = pipelines_.find(pipeline);
-        if (test == pipelines_.end())
-          return Complete(ff_msgs::SwitchResult::PIPELINE_NOT_FOUND);
-        if (curr_ == test)
-          return Complete(ff_msgs::SwitchResult::PIPELINE_ALREADY_ACTIVE);
-        // Try and initiate the switch
-        if (test->second->NeedsOpticalFlow()) {
-          ff_msgs::SetBool msg;
-          msg.request.enable = true;
-          if (!service_o_.Call(msg))
-            return Complete(ff_msgs::SwitchResult::COULD_NOT_ENABLE_OPTICAL_FLOW);
-        }
-        // Enable the new pipeline
-        if (!test->second->Enable(true))
-          return Complete(ff_msgs::SwitchResult::COULD_NOT_ENABLE_NEW_PIPELINE);
-        // Mark the goal as the test
-        goal_ = test;
-        // Change the state to waiting
-        ChangeState(STATE_WAITING_FOR_STABLE);
-        // Special case: If NONE is selected, fake stability
-        if (!goal_->second->NeedsEKF())
-          StateMachine(EVENT_GOAL_STABLE);
-        // Always return at this point
-        return;
-      }
-      // Disallowed state transitions
-      case STATE_WAITING_FOR_STABLE:
-      case STATE_WAITING_FOR_CONFIDENCE:
-        return Complete(ff_msgs::SwitchResult::BAD_STATE_TRANSITION);
-        break;
-      case STATE_INITIALIZING:
-      default:
-        break;
-      }
-    }
-    break;
-
-    ////////////////
-    // PREEMPTION //
-    ////////////////
-
-    case EVENT_PREEMPT: {
-      switch (state_) {
-      case STATE_WAITING_FOR_STABLE:
-      case STATE_WAITING_FOR_CONFIDENCE:
-        return Complete(ff_msgs::SwitchResult::PREEMPTED);
-      case STATE_WAITING_FOR_SWITCH:
-      case STATE_INITIALIZING:
-      default:
-        break;
-      }
-    }
-    break;
-
-    //////////////////
-    // CANCELLATION //
-    //////////////////
-
-    case EVENT_CANCEL: {
-      switch (state_) {
-      case STATE_WAITING_FOR_STABLE:
-      case STATE_WAITING_FOR_CONFIDENCE:
-        return Complete(ff_msgs::SwitchResult::CANCELLED);
-      case STATE_WAITING_FOR_SWITCH:
-      case STATE_INITIALIZING:
-      default:
-        break;
-      }
-    }
-    break;
-
-    /////////////////////////
-    // INVALID TRANSITIONS //
-    /////////////////////////
-
+    NODELET_DEBUG_STREAM("State changed to " << msg.fsm_state);
+    // Broadcast the docking state
+    pub_.publish(msg);
+    // Send the feedback if needed
+    switch (state) {
+    case STATE::INITIALIZING:
+    case STATE::DISABLED:
+    case STATE::LOCALIZING:
+    case STATE::UNSTABLE:
+      return;
     default:
       break;
     }
-
-    // Catch all for bad state transitions
-    NODELET_ERROR_STREAM("Unexpected event " << event << " in state " << state_);
+    // If we get here then we have an active goal running, so send feedback
+    ff_msgs::LocalizationFeedback feedback;
+    feedback.state = msg;
+    action_.SendFeedback(feedback);
   }
 
-  ////////////////////////////////////////////////////////////////////////////////////////
-
-  // If this ever gets called then we've been unstable for duration:timeout_stability
-  void TimerSCallback(ros::TimerEvent const& event) {
-    StateMachine(EVENT_EKF_STABLE);
-    Pipeline::StartTimer(timer_s_, cfg_.Get<double>("timeout_stability"));
-  }
-
-  // If this ever gets called then we've been unstable for duration:timeout_stability
-  void TimerUCallback(ros::TimerEvent const& event) {
-    StateMachine(EVENT_EKF_UNSTABLE);
-    Pipeline::StartTimer(timer_s_, cfg_.Get<double>("timeout_stability"));
-    Pipeline::StartTimer(timer_u_, cfg_.Get<double>("timeout_stability"));
-  }
-
-  // Every time we get an EKF callback with valid data we defer the nstable callback
-  void EkfCallback(ff_msgs::EkfState::ConstPtr const& msg) {
-    if (msg->confidence <= cfg_.Get<int>("maximum_confidence"))
-      Pipeline::StartTimer(timer_u_, cfg_.Get<double>("timeout_stability"));
-  }
-
-  // Called on a pipeline state change
-  void PipelineCallback(std::string const& name, bool stable) {
-    // Deal with events from the pipeline we are currently in
-    if (curr_ != pipelines_.end() && name == curr_->first)
-      return StateMachine(stable ? EVENT_CURRENT_STABLE : EVENT_CURRENT_UNSTABLE, name);
-    // Deal with events from the pipeline to which we should switch
-    if (goal_ != pipelines_.end() && name == goal_->first)
-      return StateMachine(stable ? EVENT_GOAL_STABLE : EVENT_GOAL_UNSTABLE, name);
+  // Called when any of the pipelines
+  void PipelineCallback(std::string const& name, uint8_t error) {
+    NODELET_DEBUG_STREAM("PipelineCallback("  << name << ")");
+    // Work out which pipeline is giving problems
+    bool current = false;
+    if (pipelines_.find(name) == curr_)
+      current = true;
+    else if (pipelines_.find(name) == goal_)
+      current = false;
+    else
+      return;
+    // Create a pipeline name programatically
+    std::string pipeline = std::string("Localization unstable: Pipeline ")
+      + name + (current ? " [CURRENT] " : " [GOAL] ");
+    // Debug output for the node
+    switch (error) {
+    case ERROR_REGISTRATION_TIMEOUT:
+      NODELET_DEBUG_STREAM(pipeline << ": ERROR_REGISTRATION_TIMEOUT"); break;
+    case ERROR_VISUAL_TIMEOUT:
+      NODELET_DEBUG_STREAM(pipeline << ": ERROR_VISUAL_TIMEOUT");       break;
+    case ERROR_DEPTH_TIMEOUT:
+      NODELET_DEBUG_STREAM(pipeline << ": ERROR_DEPTH_TIMEOUT");        break;
+    case ERROR_FILTER_TIMEOUT:
+      NODELET_DEBUG_STREAM(pipeline << ": ERROR_FILTER_TIMEOUT");       break;
+    }
+    // Advance the state machine
+    return fsm_.Update(current ? CURRENT_UNSTABLE : GOAL_UNSTABLE);
   }
 
   // Called when the localization mode must be switched
-  void GoalCallback(ff_msgs::SwitchGoalConstPtr const& goal) {
-    return StateMachine(EVENT_NEW, goal->pipeline);
+  void GoalCallback(ff_msgs::LocalizationGoalConstPtr const& goal) {
+    NODELET_DEBUG_STREAM("GoalCallback()");
+    ff_msgs::LocalizationResult result;
+    switch (goal->command) {
+    case ff_msgs::LocalizationGoal::COMMAND_SWITCH_PIPELINE: {
+      PipelineMap::iterator arg = pipelines_.find(goal->pipeline);
+      if (arg == pipelines_.end()) {
+        result.fsm_result = "Invalid pipeline in request";
+        result.response = RESPONSE::INVALID_PIPELINE;
+        action_.SendResult(ff_util::FreeFlyerActionState::ABORTED, result);
+        return;
+      }
+      if (arg == curr_) {
+        result.fsm_result = "We are already on this pipeline";
+        result.response = RESPONSE::PIPELINE_ALREADY_ACTIVE;
+        action_.SendResult(ff_util::FreeFlyerActionState::SUCCESS, result);
+        return;
+      }
+      goal_ = arg;
+      return fsm_.Update(GOAL_SWITCH_PIPELINE);
+    }
+    case ff_msgs::LocalizationGoal::COMMAND_ESTIMATE_BIAS:
+      if (curr_->second.RequiresFilter())
+        return fsm_.Update(GOAL_ESTIMATE_BIAS);
+      break;
+    case ff_msgs::LocalizationGoal::COMMAND_RESET_FILTER:
+      if (curr_->second.RequiresFilter())
+        return fsm_.Update(GOAL_RESET_FILTER);
+      break;
+    default:
+      result.fsm_result = "Invalid command";
+      result.response = RESPONSE::INVALID_COMMAND;
+      action_.SendResult(ff_util::FreeFlyerActionState::ABORTED, result);
+      return;
+    }
+    // Catch-all for filter actions in a non-filtering state
+    result.fsm_result = "Cannot reset or initialize bias filter when not in use";
+    result.response = RESPONSE::FILTER_NOT_IN_USE;
+    action_.SendResult(ff_util::FreeFlyerActionState::ABORTED, result);
   }
 
   // Called when a switch request is preempted by another switch request
   void PreemptCallback() {
-    StateMachine(EVENT_CANCEL);
+    NODELET_DEBUG_STREAM("CancelCallback()");
+    fsm_.Update(GOAL_CANCEL);
   }
 
   // Called when a switch request is preempted by another switch request
   void CancelCallback() {
-    StateMachine(EVENT_PREEMPT);
+    NODELET_DEBUG_STREAM("PreemptCallback()");
+    fsm_.Update(GOAL_PREEMPT);
+  }
+
+  // Estimate bias
+  bool EstimateBias() {
+    std_srvs::Empty msg;
+    return service_b_.Call(msg);
+  }
+
+  // Reset filter
+  bool ResetFilter() {
+    std_srvs::Empty msg;
+    return service_r_.Call(msg);
+  }
+
+  // Enable or disable optical flow
+  bool OpticalFlow(bool enable) {
+    ff_msgs::SetBool msg;
+    msg.request.enable = enable;
+    return service_o_.Call(msg);
+  }
+
+  // Set the EKF to use the goal localizatin pipeline
+  bool SwitchFilterInput(uint8_t mode) {
+    ff_msgs::SetEkfInput msg;
+    msg.request.mode = mode;
+    return service_i_.Call(msg);
+  }
+
+  // Start a watchdog timer to expire after a given number of seconds
+  void ResetTimer(ros::Timer &timer) {
+    timer.stop();
+    timer.start();
+  }
+
+  // Called if the filter or pipeline is stable after
+  void StabilityTimerCallback(ros::TimerEvent const& event) {
+    fsm_.Update(STABLE);
+  }
+
+  // Called
+  void DeadlineTimerCallback(ros::TimerEvent const& event) {
+    fsm_.Update(TIMEOUT);
   }
 
  private:
-  // Enumerate all pipelines
-  std::map<std::string, std::string> EnumeratePipelines() {
-    std::map<std::string, std::string> enumeration;
-    for (PipelineMap::iterator it = pipelines_.begin(); it != pipelines_.end(); it++)
-      enumeration[it->second->GetName()] = it->second->GetDesc();
-    return enumeration;
-  }
-
-  // Create a new pipeline
-  bool AddPipeline(ros::NodeHandle *nh, ros::NodeHandle *nhp, PipelineCallbackType cb, uint8_t mode) {
-    // Create the object
-    std::shared_ptr<Pipeline> ptr = nullptr;
-    switch (mode) {
-    case ff_msgs::SetEkfInput::Request::MODE_NONE:
-      ptr = std::shared_ptr<Pipeline>(new NOPipeline(nh, nhp, mode, cb));
-      break;
-    case ff_msgs::SetEkfInput::Request::MODE_MAP_LANDMARKS:
-      ptr = std::shared_ptr<Pipeline>(new MLPipeline(nh, nhp, mode, cb));
-      break;
-    case ff_msgs::SetEkfInput::Request::MODE_AR_TAGS:
-      ptr = std::shared_ptr<Pipeline>(new ARPipeline(nh, nhp, mode, cb));
-      break;
-    case ff_msgs::SetEkfInput::Request::MODE_HANDRAIL:
-      ptr = std::shared_ptr<Pipeline>(new HRPipeline(nh, nhp, mode, cb));
-      break;
-    case ff_msgs::SetEkfInput::Request::MODE_PERCH:
-      ptr = std::shared_ptr<Pipeline>(new PLPipeline(nh, nhp, mode, cb));
-      break;
-    case ff_msgs::SetEkfInput::Request::MODE_TRUTH:
-      ptr = std::shared_ptr<Pipeline>(new GTPipeline(nh, nhp, mode, cb));
-      break;
-    default:
-      break;
-    }
-    // If the pointer is null then there was a problem allocating the object
-    if (ptr == nullptr)
-      return false;
-    // We now add this to the pipeline registry
-    pipelines_[ptr->GetName()] = ptr;
-    // Success
-    return true;
-  }
-
- private:
-  State state_;                                                       // State
-  ff_util::ConfigServer cfg_;                                         // Configuration server
-  ff_util::FreeFlyerServiceClient<ff_msgs::SetEkfInput> service_i_;   // EKF set input service
-  ff_util::FreeFlyerServiceClient<ff_msgs::SetBool> service_o_;       // Optical flow service
-  ff_util::FreeFlyerActionServer<ff_msgs::SwitchAction> action_;      // Action server
-  PipelineMap pipelines_;                                             // Available pipelines
-  PipelineMap::iterator curr_;                                        // Current pipeline
-  PipelineMap::iterator goal_;                                        // Goal pipeline
-  PipelineMap::iterator fall_;                                        // Fallback pipeline
-  ros::NodeHandle *nh_;                                               // Cached NodeHandle
-  ros::Subscriber sub_;                                               // EKF subscriber
-  ros::Timer timer_s_;                                                // Stability timer
-  ros::Timer timer_u_;                                                // Timeout timer
+  ff_util::FSM fsm_;
+  ff_util::ConfigServer cfg_;
+  ff_util::FreeFlyerServiceClient<ff_msgs::SetEkfInput> service_i_;
+  ff_util::FreeFlyerServiceClient<ff_msgs::SetBool> service_o_;
+  ff_util::FreeFlyerServiceClient<std_srvs::Empty> service_b_;
+  ff_util::FreeFlyerServiceClient<std_srvs::Empty> service_r_;
+  ff_util::FreeFlyerActionServer<ff_msgs::LocalizationAction> action_;
+  ros::Publisher pub_;
+  ros::Timer timer_deadline_, timer_recovery_, timer_stability_;
+  ros::ServiceServer server_set_state_, server_get_pipelines_;
+  PipelineMap pipelines_;
+  PipelineMap::iterator curr_, goal_, fall_;
 };
 
 PLUGINLIB_EXPORT_CLASS(localization_manager::LocalizationManagerNodelet, nodelet::Nodelet);

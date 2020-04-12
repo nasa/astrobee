@@ -5,7 +5,7 @@
 //
 // Model version                  : 1.1142
 // Simulink Coder version         : 8.11 (R2016b) 25-Aug-2016
-// C/C++ source code generated on : Wed Jan 31 12:34:43 2018
+// C/C++ source code generated on : Mon Sep 23 17:46:28 2019
 //
 // Target selection: ert.tlc
 // Embedded hardware selection: 32-bit Generic
@@ -70,8 +70,8 @@ void bpm_blower__blower_aerodynamics(real32_T rtu_rotor_speed, const real32_T
   rtp_imp_zero_thrust_area_error, real32_T rtp_noise_on_flag, const real32_T
   rtp_noz_cd[6], const real32_T rtp_noz_cd_error[6], const real32_T
   rtp_imp_cdp_lookup[334], const real32_T rtp_imp_area_lookup[334], real32_T
-  rtp_imp_diameter, real32_T rtp_const_air_den, const real_T
-  rtp_noz_thrust_noise_feedback[6]);
+  rtp_imp_diameter, real32_T rtp_const_air_den, real32_T rtp_noz_thrust_sf,
+  const real_T rtp_noz_thrust_noise_feedback[6]);
 
 #endif                                 // RTW_HEADER_blower_aerodynamics_h_
 

@@ -21,5 +21,6 @@
     <arg name="name" value="$(arg name)" />
     <arg name="manager" value="$(arg manager)" />
     <arg name="class" value="planner_qp/Planner" />
+    <arg name="output" value="screen" />
   </include>
 </launch>

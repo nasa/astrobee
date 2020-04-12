@@ -20,6 +20,7 @@
 % Inputs: two quaternions                                                %
 %                                                                        %
 % Ouptus: angular error, in deg
+% Source: https://math.stackexchange.com/questions/90081/quaternion-distance
 function [ total_angle_deg ] = quat_error_deg( q1, q2 )
 
-total_angle_deg = 2*acosd(dot(q1, q2, 2));
+total_angle_deg = acosd((2*dot(q1, q2, 2).^2) - 1);

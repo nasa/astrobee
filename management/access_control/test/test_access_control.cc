@@ -34,7 +34,6 @@ ros::Subscriber cmd_sub, ack_sub, state_sub;
 ros::Publisher cmd_pub;
 
 std::string cmd_id = "";
-std::string cmd_origin = "";
 std::string cookie = "";
 std::string cmd_name = "";
 std::string controller = "";
@@ -49,7 +48,6 @@ void PublishCommand(std::vector<ff_msgs::CommandArg> *args) {
   ff_msgs::CommandStamped cmd;
   cmd.cmd_name = cmd_name;
   cmd.cmd_id = cmd_id;
-  cmd.cmd_origin = cmd_origin;
   cmd.cmd_src = controller;
   if (args != NULL) {
     cmd.args = *args;
@@ -72,7 +70,6 @@ void PublishGrabControl() {
 
 void GCAckCallback(ff_msgs::AckStampedConstPtr const& ack) {
   EXPECT_EQ(ack->cmd_id, cmd_id.c_str());
-  EXPECT_EQ(ack->cmd_origin, cmd_origin.c_str());
   EXPECT_EQ(ack->status.status, ff_msgs::AckStatus::COMPLETED);
   EXPECT_EQ(ack->completed_status.status, ff_msgs::AckCompletedStatus::OK);
   // check request ack succeed and grab control
@@ -96,7 +93,6 @@ void GCAckCallback(ff_msgs::AckStampedConstPtr const& ack) {
 
 void CWCAckCallback(ff_msgs::AckStampedConstPtr const& ack) {
   EXPECT_EQ(ack->cmd_id, cmd_id.c_str());
-  EXPECT_EQ(ack->cmd_origin, cmd_origin.c_str());
   EXPECT_EQ(ack->status.status, ff_msgs::AckStatus::COMPLETED);
   EXPECT_EQ(ack->completed_status.status, ff_msgs::AckCompletedStatus::OK);
 
@@ -121,7 +117,6 @@ void CWCAckCallback(ff_msgs::AckStampedConstPtr const& ack) {
 
 void FailedAckCallback(ff_msgs::AckStampedConstPtr const& ack) {
   EXPECT_EQ(ack->cmd_id, cmd_id.c_str());
-  EXPECT_EQ(ack->cmd_origin, cmd_origin.c_str());
   EXPECT_EQ(ack->status.status, ff_msgs::AckStatus::COMPLETED);
 
   // Two diffent failures bad syntex and execution failed
@@ -147,7 +142,6 @@ void StateCallback(ff_msgs::AccessControlStateStampedConstPtr const& state) {
   cookie = state->cookie;
   if (cookie != "" && got_request_ack) {
     cmd_id = "grab_control";
-    cmd_origin = "grab_control";
     PublishGrabControl();
     return;
   }
@@ -189,7 +183,6 @@ TEST(access_control, GrabControl) {
 
   cmd_name = ff_msgs::CommandConstants::CMD_NAME_REQUEST_CONTROL;
   cmd_id = "request_control";
-  cmd_origin = "request_control";
   PublishCommand(NULL);
 
   while (!test_done) {
@@ -227,7 +220,6 @@ TEST(access_control, CommandWithControl) {
 
   cmd_name = ff_msgs::CommandConstants::CMD_NAME_REQUEST_CONTROL;
   cmd_id = "request_control";
-  cmd_origin = "request_control";
   PublishCommand(NULL);
 
   while (!test_done) {
@@ -256,7 +248,6 @@ TEST(access_control, StopCommandWithoutControl) {
 
   cmd_name = ff_msgs::CommandConstants::CMD_NAME_STOP_ALL_MOTION;
   cmd_id = "stop";
-  cmd_origin = "stop";
   PublishCommand(NULL);
 
   while (!test_done) {
@@ -283,7 +274,6 @@ TEST(access_control, IdlePropulsionCommandWithoutControl) {
 
   cmd_name = ff_msgs::CommandConstants::CMD_NAME_IDLE_PROPULSION;
   cmd_id = "idle_propulsion";
-  cmd_origin = "idle_propulsion";
   PublishCommand(NULL);
 
   while (!test_done) {
@@ -309,7 +299,6 @@ TEST(access_control, GrabControlCommandInvalidCookie) {
   controller = "rogue_operator";
 
   cmd_id = "invalid_cookie";
-  cmd_origin = "invalid_cookie";
   cookie = "yummy_cookies";
   PublishGrabControl();
 
@@ -337,7 +326,6 @@ TEST(access_control, GrabControlNoArgs) {
 
   cmd_name = ff_msgs::CommandConstants::CMD_NAME_GRAB_CONTROL;
   cmd_id = "no_args";
-  cmd_origin = "no_args";
   PublishCommand(NULL);
 
   while (!test_done) {
@@ -364,7 +352,6 @@ TEST(access_control, GrabControlWrongArgType) {
 
   cmd_name = ff_msgs::CommandConstants::CMD_NAME_GRAB_CONTROL;
   cmd_id = "invalid_argument";
-  cmd_origin = "invalid_argument";
   std::vector<ff_msgs::CommandArg> args;
   ff_msgs::CommandArg arg;
   arg.data_type = ff_msgs::CommandArg::DATA_TYPE_BOOL;
@@ -396,7 +383,6 @@ TEST(access_control, CommandWithoutControl) {
 
   cmd_name = ff_msgs::CommandConstants::CMD_NAME_NO_OP;
   cmd_id = "rogue_operator";
-  cmd_origin = "rogue_operator";
   PublishCommand(NULL);
 
   while (!test_done) {

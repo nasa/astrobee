@@ -1,0 +1,32 @@
+# Copyright (c) 2017, United States Government, as represented by the
+# Administrator of the National Aeronautics and Space Administration.
+# 
+# All rights reserved.
+# 
+# The Astrobee platform is licensed under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with the
+# License. You may obtain a copy of the License at
+# 
+#     http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+#
+# This message sets the rates at which certain messages are published.
+
+uint8 COMM_STATUS   = 0 # Set the communication status message rate
+uint8 CPU_STATE     = 1 # Set the cpu state message rate
+uint8 DISK_STATE    = 2 # Set the disk state message rate
+uint8 EKF_STATE     = 3 # Set the ekf state message rate
+uint8 GNC_STATE     = 4 # Set the gnc state message rate
+uint8 PMC_CMD_STATE = 5 # Set the pmc command state message rate
+uint8 POSITION      = 6 # Set the position message rate
+
+uint8 which  # which message we are setting the rate for
+float32 rate # the rate
+---
+bool success
+string status

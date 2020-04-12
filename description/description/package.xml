@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<package>
+  <name>description</name>
+  <version>0.0.0</version>
+  <description>
+    Description of the Astrobee Free-Flyer
+  </description>
+  <license>
+    Apache License, Version 2.0
+  </license>
+  <author email="astrobee-fsw@nx.arc.nasa.gov">
+    Astrobee Flight Software
+  </author>
+  <maintainer email="astrobee-fsw@nx.arc.nasa.gov">
+    Astrobee Flight Software
+  </maintainer>
+  <buildtool_depend>catkin</buildtool_depend>
+  <export/>
+</package>

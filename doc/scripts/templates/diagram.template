@@ -1,10 +1,20 @@
 \defgroup uml Astrobee UML Diagrams
 \ingroup doc
-\defgroup uml_%(package)s  %(package)s
-\ingroup uml
 \defgroup %(package)s_%(diagram_name)s %(diagram_name)s
-\ingroup uml_%(package)s
+\ingroup uml
 
 ##  %(diagram_name)s UML Diagram
 
+
+\htmlonly
+<div class="image">
+<object type="image/svg+xml" width="%(width)spx" data="%(diagram_path)s" alt="%(diagram_name)s"></object>
+</div>
+<center>
+<a href="%(diagram_path)s">Full size <b>%(diagram_name)s</b> diagram.</a>
+</center>
+\endhtmlonly
+
+\latexonly
 ![%(diagram_name)s](%(diagram_path)s)
+\endlatexonly

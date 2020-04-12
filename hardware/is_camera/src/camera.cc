@@ -258,10 +258,8 @@ namespace is_camera {
 
   void CameraNodelet::PublishLoop() {
     bool camera_running = true;
-    int cur_buf = 0;
 
     while (thread_running_) {
-      cur_buf = (cur_buf + 1) % v4l_->req.count;
       if (!camera_running) {
         while ((pub_.getNumSubscribers() == 0) && thread_running_)
           usleep(100000);
@@ -270,7 +268,7 @@ namespace is_camera {
         memset(&v4l_->buf, 0, sizeof(v4l_->buf));
         v4l_->buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
         v4l_->buf.memory = V4L2_MEMORY_MMAP;
-        v4l_->buf.index = cur_buf;
+        v4l_->buf.index = 0;
         xioctl(v4l_->fd, VIDIOC_QBUF, &v4l_->buf);
         camera_running = true;
       }
@@ -293,8 +291,14 @@ namespace is_camera {
       memset(&v4l_->buf, 0, sizeof(v4l_->buf));
       v4l_->buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
       v4l_->buf.memory = V4L2_MEMORY_MMAP;
-      v4l_->buf.index = cur_buf;
       xioctl(v4l_->fd, VIDIOC_DQBUF, &v4l_->buf);
+      bool failed = (v4l_->buf.bytesused != v4l_->buf.length);
+      if (failed) {
+        ROS_ERROR("Dropped frame: %d Requested: %d Flags: %x", v4l_->buf.bytesused, v4l_->buf.length, v4l_->buf.flags);
+      }
+      int last_buf = v4l_->buf.index;
+
+      v4l_->buf.index = (last_buf + 1) % v4l_->req.count;
       if (pub_.getNumSubscribers() != 0)
         xioctl(v4l_->fd, VIDIOC_QBUF, &v4l_->buf);
       else
@@ -304,24 +308,26 @@ namespace is_camera {
       // Select our output msg buffer
       img_msg_buffer_idx_ = (img_msg_buffer_idx_ + 1) % kImageMsgBuffer;
 
-      // Wrap the buffer with cv::Mat so we can manipulate it.
-      cv::Mat wrapped(v4l_->fmt.fmt.pix.height,
-          v4l_->fmt.fmt.pix.width,
-          cv::DataType<uint8_t>::type,
-          v4l_->buffers[v4l_->buf.index].start,
-          v4l_->fmt.fmt.pix.width);  // does not copy
-      cv::Mat owrapped(kImageHeight, kImageWidth,
-          cv::DataType<uint8_t>::type,
-          &(img_msg_buffer_[img_msg_buffer_idx_]->data[0]),
-          kImageWidth);
-      cv::cvtColor(wrapped, owrapped,
-          CV_BayerGR2GRAY);
+      if (!failed) {
+        // Wrap the buffer with cv::Mat so we can manipulate it.
+        cv::Mat wrapped(v4l_->fmt.fmt.pix.height,
+            v4l_->fmt.fmt.pix.width,
+            cv::DataType<uint8_t>::type,
+            v4l_->buffers[last_buf].start,
+            v4l_->fmt.fmt.pix.width);  // does not copy
+        cv::Mat owrapped(kImageHeight, kImageWidth,
+            cv::DataType<uint8_t>::type,
+            &(img_msg_buffer_[img_msg_buffer_idx_]->data[0]),
+            kImageWidth);
+        cv::cvtColor(wrapped, owrapped,
+            CV_BayerGR2GRAY);
 
-      // Attach the time
-      img_msg_buffer_[img_msg_buffer_idx_]->header = std_msgs::Header();
-      img_msg_buffer_[img_msg_buffer_idx_]->header.stamp = timestamp;
+        // Attach the time
+        img_msg_buffer_[img_msg_buffer_idx_]->header = std_msgs::Header();
+        img_msg_buffer_[img_msg_buffer_idx_]->header.stamp = timestamp;
 
-      pub_.publish(img_msg_buffer_[img_msg_buffer_idx_]);
+        pub_.publish(img_msg_buffer_[img_msg_buffer_idx_]);
+      }
 
       ros::spinOnce();
     }

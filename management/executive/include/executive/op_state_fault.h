@@ -29,6 +29,14 @@ class OpStateFault : public OpState {
 
   OpState* HandleCmd(ff_msgs::CommandStampedPtr const& cmd);
 
+  // Guest Science Ack
+  OpState* HandleGuestScienceAck(ff_msgs::AckStampedConstPtr const& ack);
+
+  OpState* HandleResult(ff_util::FreeFlyerActionState::Enum const& state,
+                        std::string const& result_response,
+                        std::string const& cmd_id,
+                        Action const& action);
+
  protected:
   explicit OpStateFault(std::string const& name, unsigned char id) :
     OpState(name, id) {}

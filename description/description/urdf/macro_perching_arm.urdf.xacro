@@ -1,0 +1,393 @@
+<?xml version="1.0"?>
+
+<!-- Copyright (c) 2017, United States Government, as represented by the     -->
+<!-- Administrator of the National Aeronautics and Space Administration.     -->
+<!--                                                                         -->
+<!-- All rights reserved.                                                    -->
+<!--                                                                         -->
+<!-- The Astrobee platform is licensed under the Apache License, Version 2.0 -->
+<!-- (the "License"); you may not use this file except in compliance with    -->
+<!-- the License. You may obtain a copy of the License at                    -->
+<!--                                                                         -->
+<!--     http://www.apache.org/licenses/LICENSE-2.0                          -->
+<!--                                                                         -->
+<!-- Unless required by applicable law or agreed to in writing, software     -->
+<!-- distributed under the License is distributed on an "AS IS" BASIS,       -->
+<!-- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or         -->
+<!-- implied. See the License for the specific language governing            -->
+<!-- permissions and limitations under the License.                          -->
+
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <xacro:macro name="perching_arm" params="bay xyz rpy">
+    <xacro:property name="prox_effort" value="1.0"/>
+    <xacro:property name="dist_effort" value="1.0"/>
+    <xacro:property name="grip_effort" value="0.1"/>
+    <link name="${bay}">
+      <self_collide>false</self_collide>
+      <inertial>
+        <origin
+          xyz="0 0 0"
+          rpy="0 0 0" />
+        <mass
+          value="0.3078" />
+        <inertia
+          ixx="0.02705"
+          ixy="0.0"
+          ixz="0.0"
+          iyy="0.02705"
+          iyz="0.0"
+          izz="0.02705" />
+      </inertial>
+      <visual>
+        <origin
+          xyz="0 0 0"
+          rpy="0 0 0" />
+        <geometry>
+          <mesh
+            filename="package://astrobee_freeflyer/meshes/base_link.dae" />
+        </geometry>
+      </visual>
+      <collision>
+        <origin
+          xyz="0 -0.038125 0"
+          rpy="0 0 0" />
+        <geometry>
+          <box size="0.090441 0.152400 0.076250" />
+        </geometry>
+      </collision>
+    </link>
+    <joint
+      name="${bay}"
+      type="fixed">
+      <origin
+        xyz="${xyz}"
+        rpy="${rpy}" />
+      <parent
+        link="body" />
+      <child
+        link="${bay}" />
+    </joint>
+    <link name="${bay}_arm_proximal_link">
+      <self_collide>false</self_collide>
+      <inertial>
+        <origin
+          xyz="0 0 0"
+          rpy="0 0 0" />
+        <mass
+          value="0.1623" />
+        <inertia
+          ixx="0.02705"
+          ixy="0.0"
+          ixz="0.0"
+          iyy="0.02705"
+          iyz="0.0"
+          izz="0.02705" />
+      </inertial>
+      <visual>
+        <origin
+          xyz="0 0 0"
+          rpy="0 0 0" />
+        <geometry>
+          <mesh
+            filename="package://astrobee_freeflyer/meshes/arm_proximal_link.dae" />
+        </geometry>
+      </visual>
+      <collision>
+        <origin
+          xyz="-0.049625 -0.0022 0"
+          rpy="0 0 0" />
+        <geometry>
+          <box size="0.123250 0.068000 0.042400" />
+        </geometry>
+      </collision>
+    </link>
+    <joint
+      name="${bay}_arm_proximal_joint"
+      type="revolute">
+      <origin
+        xyz="0.11945 0 0.065"
+        rpy="0 1.57079632679 0" />
+      <parent
+        link="${bay}" />
+      <child
+        link="${bay}_arm_proximal_link" />
+      <axis
+        xyz="0 -1 0" />
+      <limit
+        effort="${prox_effort}"
+        lower="-2.0944"
+        upper="1.57079"
+        velocity="0.12" />
+    </joint>
+    <link name="${bay}_arm_distal_link">
+      <self_collide>false</self_collide>
+      <inertial>
+        <origin
+          xyz="0 0 0"
+          rpy="0 0 0" />
+        <mass
+          value="0.1033" />
+        <inertia
+          ixx="0.002705"
+          ixy="0.0"
+          ixz="0.0"
+          iyy="0.002705"
+          iyz="0.0"
+          izz="0.002705" />
+      </inertial>
+      <visual>
+        <origin
+          xyz="0 0 0"
+          rpy="0 0 0" />
+        <geometry>
+          <mesh
+            filename="package://astrobee_freeflyer/meshes/arm_distal_link.dae" />
+        </geometry>
+      </visual>
+      <collision>
+        <origin
+          xyz="0 0 -0.02"
+          rpy="0 0 0" />
+        <geometry>
+          <box size="0.075000 0.070000 0.087400" />
+        </geometry>
+      </collision>
+    </link>
+    <joint
+      name="${bay}_arm_distal_joint"
+      type="revolute">
+      <origin
+        xyz="-0.1 0 0"
+        rpy="0 0 0" />
+      <parent
+        link="${bay}_arm_proximal_link" />
+      <child
+        link="${bay}_arm_distal_link" />
+      <axis
+        xyz="0 0 1" />
+      <limit
+        effort="${dist_effort}"
+        lower="-1.57079"
+        upper="1.57079"
+        velocity="0.12" />
+    </joint>
+    <link name="${bay}_gripper_left_proximal_link">
+      <self_collide>false</self_collide>
+      <inertial>
+        <origin
+          xyz="0 0 0"
+          rpy="0 0 0" />
+        <mass
+          value="0.04" />
+        <inertia
+          ixx="0.002705"
+          ixy="0.0"
+          ixz="0.0"
+          iyy="0.002705"
+          iyz="0.0"
+          izz="0.002705" />
+      </inertial>
+      <visual>
+        <origin
+          xyz="0 0 0"
+          rpy="0 0 0" />
+        <geometry>
+          <mesh
+            filename="package://astrobee_freeflyer/meshes/gripper_left_proximal_link.dae" />
+        </geometry>
+      </visual>
+      <collision>
+        <origin
+          xyz="-0.025547 0 -0.000875"
+          rpy="0 0 0" />
+        <geometry>
+          <box size="0.067654 0.021750 0.025400" />
+        </geometry>
+      </collision>
+    </link>
+    <joint
+      name="${bay}_gripper_left_proximal_joint"
+      type="revolute">
+      <origin
+        xyz="-0.039 -0.010002 -0.0497"
+        rpy="0 0 0" />
+      <parent
+        link="${bay}_arm_distal_link" />
+      <child
+        link="${bay}_gripper_left_proximal_link" />
+      <axis
+        xyz="0 0 1" />
+      <limit
+        effort="${grip_effort}"
+        lower="0.349066"
+        upper="0.698132"
+        velocity="0.12" />
+    </joint>
+    <link name="${bay}_gripper_left_distal_link">
+      <self_collide>false</self_collide>
+      <inertial>
+        <origin
+          xyz="0 0 0"
+          rpy="0 0 0" />
+        <mass
+          value="0.0116026396896178" />
+        <inertia
+          ixx="0.002705"
+          ixy="0.0"
+          ixz="0.0"
+          iyy="0.002705"
+          iyz="0.0"
+          izz="0.002705" />
+      </inertial>
+      <visual>
+        <origin
+          xyz="0 0 0"
+          rpy="0 0 0" />
+        <geometry>
+          <mesh
+            filename="package://astrobee_freeflyer/meshes/gripper_left_distal_link.dae" />
+        </geometry>
+      </visual>
+      <collision>
+        <origin
+          xyz="-0.021524 0 -0.000875"
+          rpy="0 0 0" />
+        <geometry>
+          <box size="0.056953 0.021750 0.025400" />
+        </geometry>
+      </collision>
+    </link>
+    <joint
+      name="${bay}_gripper_left_distal_joint"
+      type="revolute">
+      <origin
+        xyz="-0.05 0 0"
+        rpy="0 0 0" />
+      <parent
+        link="${bay}_gripper_left_proximal_link" />
+      <child
+        link="${bay}_gripper_left_distal_link" />
+      <axis
+        xyz="0 0 1" />
+      <limit
+        effort="${grip_effort}"
+        lower="-1.22173"
+        upper="-0.69813"
+        velocity="0.12" />
+    </joint>
+    <link name="${bay}_gripper_right_proximal_link">
+      <self_collide>false</self_collide>
+      <inertial>
+        <origin
+          xyz="0 0 0"
+          rpy="0 0 0" />
+        <mass
+          value="0.04" />
+        <inertia
+          ixx="0.002705"
+          ixy="0.0"
+          ixz="0.0"
+          iyy="0.002705"
+          iyz="0.0"
+          izz="0.002705" />
+      </inertial>
+      <visual>
+        <origin
+          xyz="0 0 0"
+          rpy="0 0 0" />
+        <geometry>
+          <mesh
+            filename="package://astrobee_freeflyer/meshes/gripper_right_proximal_link.dae" />
+        </geometry>
+      </visual>
+      <collision>
+        <origin
+          xyz="-0.025547 0 0.000875"
+          rpy="0 0 0" />
+        <geometry>
+          <box size="0.067654 0.021750 0.025400" />
+        </geometry>
+      </collision>
+    </link>
+    <joint
+      name="${bay}_gripper_right_proximal_joint"
+      type="revolute">
+      <origin
+        xyz="-0.039 0.010002 -0.0497"
+        rpy="0 0 0" />
+      <parent
+        link="${bay}_arm_distal_link" />
+      <child
+        link="${bay}_gripper_right_proximal_link" />
+      <axis
+        xyz="0 0 1" />
+      <limit
+        effort="${grip_effort}"
+        lower="-0.698132"
+        upper="-0.349066"
+        velocity="0.12" />
+    </joint>
+    <link name="${bay}_gripper_right_distal_link">
+      <self_collide>false</self_collide>
+      <inertial>
+        <origin
+          xyz="0 0 0"
+          rpy="0 0 0" />
+        <mass
+          value="0.02285" />
+        <inertia
+          ixx="0.002705"
+          ixy="0.0"
+          ixz="0.0"
+          iyy="0.002705"
+          iyz="0.0"
+          izz="0.002705" />
+      </inertial>
+      <visual>
+        <origin
+          xyz="0 0 0"
+          rpy="0 0 0" />
+        <geometry>
+          <mesh
+            filename="package://astrobee_freeflyer/meshes/gripper_right_distal_link.dae" />
+        </geometry>
+      </visual>
+      <collision>
+        <origin
+          xyz="-0.021512 0 0.000875"
+          rpy="0 0 0" />
+        <geometry>
+          <box size="0.056894 0.021750 0.025400" />
+        </geometry>
+      </collision>
+    </link>
+    <joint
+      name="${bay}_gripper_right_distal_joint"
+      type="revolute">
+      <origin
+        xyz="-0.05 0 0"
+        rpy="0 0 0" />
+      <parent
+        link="${bay}_gripper_right_proximal_link" />
+      <child
+        link="${bay}_gripper_right_distal_link" />
+      <axis
+        xyz="0 0 1" />
+      <limit
+        effort="${grip_effort}"
+        lower="0.69813"
+        upper="1.22173"
+        velocity="0.12" />
+    </joint>
+    <gazebo>
+      <plugin name="${bay}_perching_arm_ros" filename="libgazebo_model_plugin_perching_arm.so">
+        <rate>10.0</rate>
+        <bay>${bay}</bay>
+        <proximal>1.57079632679</proximal>
+        <distal>0</distal>
+        <gripper>0</gripper>
+      </plugin>
+    </gazebo>
+  -->
+  </xacro:macro>
+</robot>

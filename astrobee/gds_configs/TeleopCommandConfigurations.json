@@ -1,0 +1,135 @@
+{
+  "type" : "TeleopCommandsConfigurationFile",
+  "teleopCommandConfigs" : [ {
+    "type" : "NoParamsTeleopCommand",
+    "label": "Initialize Bias",
+	"buttonText": "Initialize Bias",
+    "command": "initializeBias",
+    "subsystem": "Mobility"
+  },{
+    "type" : "NoParamsTeleopCommand",
+    "label": "Reset EKF",
+    "buttonText": "Reset EKF",
+    "command": "resetEkf",
+    "subsystem": "Mobility"
+  },{
+    "type" : "NoParamsTeleopCommand",
+    "label": "Idle Propulsion",
+    "buttonText": "Idle",
+    "command": "idlePropulsion",
+    "subsystem": "Mobility"
+  },{
+    "type" : "NoParamsTeleopCommand",
+    "label": "Undock",
+    "buttonText": "Undock",
+    "command": "undock",
+    "subsystem": "Mobility"
+  },{
+     "type" : "HorizontalSeparatorTeleopCommand"
+  },{
+    "type" : "OperatingLimitsTeleopCommand",
+    "label": "Operating Limits",
+    "buttonText": "Set"
+  },{
+    "type" : "StringListIntTeleopCommand",
+    "label": "Manual Dock",
+    "command": "dock",
+    "paramName": "berthMethod",
+    "buttonText": "Dock",
+    "paramOptions": ["Berth 1","Berth 2"],
+    "subsystem": "Mobility"
+  },{
+    "type" : "HorizontalSeparatorTeleopCommand"
+  },{
+    "type" : "StringBooleanTeleopCommand",
+    "label": "Camera to Record",
+    "secondColumnLabel": "Recording",
+    "command": "setCameraRecording",
+    "stringParamName": "cameraName",
+    "stringOptions": ["Dock", "Navigation", "Science"],
+    "boolParamName": "record",
+    "buttonText": "Send",
+    "subsystem": "Camera"
+  },{
+    "type" : "StringBooleanTeleopCommand",
+    "label": "Camera to Stream",
+    "secondColumnLabel": "Streaming",
+    "command": "setCameraStreaming",
+    "stringParamName": "cameraName",
+    "stringOptions": ["Dock", "Navigation", "Science"],
+    "boolParamName": "stream",
+    "buttonText": "Send",
+    "subsystem": "Camera"
+  },{ 
+    "type" : "CameraPresetTeleopCommand",
+    "label": "Camera to Configure",
+    "secondColumnLabel": "Configuration",
+    "buttonText": "Set",
+    "optionsForOneCamera": [ {
+      "cameraName": "Dock",
+      "preset": [ {
+        "presetName": "ARS Default Recording",
+		"cameraMode" : "Recording",
+        "resolution" : "1280_960",
+        "frameRate" : 5,
+        "bandwidth" : 0
+      },{
+        "presetName": "ARS Default Streaming",
+		"cameraMode" : "Streaming",
+        "resolution" : "640_480",
+        "frameRate" : 2,
+        "bandwidth" : 0
+      } ]
+    },{
+      "cameraName": "Navigation",
+      "preset": [ {
+        "presetName": "ARS Default Recording",
+		"cameraMode" : "Recording",
+        "resolution" : "1280_960",
+        "frameRate" : 5,
+        "bandwidth" : 0
+      },{
+        "presetName": "ARS Default Streaming",
+		"cameraMode" : "Streaming",
+        "resolution" : "640_480",
+        "frameRate" : 2,
+        "bandwidth" : 0
+      } ]
+    },{
+      "cameraName": "Science",
+      "preset": [ {
+        "presetName": "ARS Default Streaming",
+		"cameraMode": "Streaming",
+        "resolution" : "1280_720",
+        "frameRate" : 30,
+        "bandwidth" : 2336
+      } ]
+    } ],
+    "subsystem": "Camera"
+  },{
+    "type" : "HorizontalSeparatorTeleopCommand"
+  },{
+    "type" : "FlashlightTeleopCommand",
+    "label": "Flashlight",
+    "secondColumnLabel": "Brightness",
+    "command": "setFlashlightBrightness",
+    "buttonText": "Set",
+    "names":["Front", "Back"],
+    "brightnessNames":["High", "Medium", "Low", "Off"],
+    "brightnessValues":[1.0, 0.6, 0.3, 0.0],
+    "subsystem": "Settings"
+  },{
+    "type" : "HorizontalSeparatorTeleopCommand"
+  },{
+    "type" : "OppositeCommandsTeleopCommand",
+    "label": "Laser Pointer",
+    "command": "powerOnItem",
+    "oppositeCommand": "powerOffItem",
+    "paramValue":"Laser Pointer",
+    "paramName": "which",
+    "buttonText": "Power On",
+    "buttonPushedText": "Power Off"
+  },{
+    "type" : "HorizontalSeparatorTeleopCommand"
+  } ]
+}

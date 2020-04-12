@@ -33,8 +33,8 @@ proto4_init;
 setup_scn01;
 
 mlp_speed_gain_cmd_list = uint8([3 3 3]');
-abp_nozzle_max_open_angle     = single(79.91)*units_deg_2_rad;
-abp_servo_max_PWM               = single(100); 
+% abp_nozzle_max_open_angle     = single(79.91)*units_deg_2_rad;
+% abp_servo_max_PWM               = single(100); 
 
 astrobee_prep;
 

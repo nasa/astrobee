@@ -1,14 +1,14 @@
 /* Copyright (c) 2017, United States Government, as represented by the
  * Administrator of the National Aeronautics and Space Administration.
- * 
+ *
  * All rights reserved.
- * 
+ *
  * The Astrobee platform is licensed under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -32,6 +32,7 @@
 #include <ff_msgs/Heartbeat.h>
 #include <ff_msgs/Trigger.h>
 
+#include <ff_util/ff_faults.h>
 #include <ff_util/ff_names.h>
 
 #include <map>
@@ -67,14 +68,21 @@ class FreeFlyerNodelet : public nodelet::Nodelet {
   explicit FreeFlyerNodelet(std::string const& name, bool autostart_hb_timer = true);
   virtual ~FreeFlyerNodelet();
 
-  // these are public because they are used by GNC
-  // which is outside the class
-  // Fault management
-  void AssertFault(std::string const& key, std::string const& message,
-                    ros::Time time_fault_occurred = ros::Time::now());
+  void AssertFault(FaultKeys enum_key,
+                   std::string const& message,
+                   ros::Time time_fault_occurred = ros::Time::now());
   void ClearAllFaults();
-  void ClearFault(std::string const& key);
+  void ClearFault(FaultKeys enum_key);
   void PrintFaults();
+
+  // NodeHandle management
+  ros::NodeHandle* GetPlatformHandle(bool multithreaded = false);
+  ros::NodeHandle* GetPrivateHandle(bool multithreaded = false);
+
+  // Get the name of this node (mainly useful for drivers)
+  std::string GetName();
+  std::string GetPlatform();
+  std::string GetTransform(std::string const& child);
 
  protected:
   // Virtual methods that *can* be implemented by FF nodes. We don't make
@@ -90,18 +98,12 @@ class FreeFlyerNodelet : public nodelet::Nodelet {
   // Diagnostic management
   void SendDiagnostics(const std::vector<diagnostic_msgs::KeyValue> &keyval);
 
-  // NodeHandle management
-  ros::NodeHandle* GetPlatformHandle(bool multithreaded = false);
-  ros::NodeHandle* GetPrivateHandle(bool multithreaded = false);
-
-  // Get the name of this node (mainly useful for drivers)
-  std::string GetName();
-  std::string GetPlatform();
-
   // The set function does all of the internal work. We have moved this out
   // of the onInit() call, so that it can be invoked when a nodelet is not used
   // for example, in simulation, where the dynamic loading is within gazebo...
   void Setup(ros::NodeHandle & nh, ros::NodeHandle & nh_mt);
+
+  std::map<std::string, int> faults_;
 
  private:
   // Called on a heartbeat event
@@ -150,8 +152,6 @@ class FreeFlyerNodelet : public nodelet::Nodelet {
 
   // Reset service
   ros::ServiceServer srv_trigger_;
-
-  std::map<std::string, int> faults_;
 
   // Name and subsystem
   std::string platform_;

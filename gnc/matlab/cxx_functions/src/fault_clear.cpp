@@ -37,7 +37,20 @@ void fault_clear(unsigned char* key) {
   if (nodelet == NULL) {
     ROS_FATAL("Cannot clear fault, global_gnc_nodelet not set.\n");
   } else {
-    nodelet->ClearFault(std::string(k));
+    std::string key = std::string(k);
+    bool found = false;
+    int enum_val;
+    for (int i = 0; i < ff_util::kFaultKeysSize && !found; i++) {
+      if (key == ff_util::fault_keys[i]) {
+        found = true;
+        enum_val = i;
+      }
+    }
+    if (found) {
+      nodelet->ClearFault(static_cast<ff_util::FaultKeys>(enum_val));
+    } else {
+      nodelet->ClearFault(ff_util::UNKNOWN_FAULT_KEY);
+    }
   }
 #endif
 }

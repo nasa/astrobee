@@ -2,31 +2,20 @@
 #
 # Copyright (c) 2017, United States Government, as represented by the
 # Administrator of the National Aeronautics and Space Administration.
-# 
+#
 # All rights reserved.
-# 
+#
 # The Astrobee platform is licensed under the Apache License, Version 2.0
 # (the "License"); you may not use this file except in compliance with the
 # License. You may obtain a copy of the License at
-# 
+#
 #     http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
-
-import plot_types
-
-import rospy
-import rosgraph
-from ff_hw_msgs.msg import PmcCommand
-from ff_msgs.msg import EkfState, FamCommand, ControlState, CommandStamped
-from ff_msgs.srv import SetBool
-from geometry_msgs.msg import PoseStamped
-from rosgraph_msgs.msg import Log
-from std_srvs.srv import Empty
 
 from pyqtgraph.Qt import QtGui, QtCore
 import pyqtgraph as pg
@@ -44,10 +33,20 @@ import signal
 import socket
 import subprocess
 import time
+import sys
+
+filepath = os.path.dirname(os.path.realpath(__file__))
+sys.path.append(filepath + "/communications")
+
+import com_manager as com
+import plot_types
 
 ARRAY_SIZE = plot_types.DISPLAY_TIME * 65
 
 ASTROBEE_ROOT = os.path.dirname(os.path.realpath(__file__)) + '/../../../'
+
+# Creating communication manager with default value
+com_manager = com.ComManager()
 
 def quat_to_eulers(quat):
     return [atan2(2 * (quat.w * quat.x + quat.y * quat.z), 1 - 2 * (quat.x**2 + quat.y**2)),
@@ -58,6 +57,12 @@ def mean(array):
     return sum(array) / len(array)
 
 start_time = time.time()
+
+class VisualizerCallback:
+    def __init__(self, time_key, callbacks):
+        self.time_key = time_key
+        self.callbacks = callbacks
+
 ekf_data = {'ekf_time':         lambda x: time.time() - start_time,
             'ekf_position_x':   lambda x: x.pose.position.x,
             'ekf_position_y':   lambda x: x.pose.position.y,
@@ -101,6 +106,7 @@ ekf_data = {'ekf_time':         lambda x: time.time() - start_time,
             'ekf_cov_pos_y':    lambda x: x.cov_diag[13],
             'ekf_cov_pos_z':    lambda x: x.cov_diag[14],
             'ekf_cov_pos_m':    lambda x: sqrt(x.cov_diag[12]**2 + x.cov_diag[13]**2 + x.cov_diag[14]**2)}
+ekf_callbacks = VisualizerCallback('ekf_time', ekf_data)
 
 def mahal_filter(dists):
     f = filter(lambda t: not isnan(t), dists)
@@ -114,9 +120,11 @@ ml_data = {'ml_time':           lambda x: time.time() - start_time,
            'ml_mahal_mean':     lambda x: mean(mahal_filter(x.ml_mahal_dists)),
            'ml_mahal_max':      lambda x:  max(mahal_filter(x.ml_mahal_dists))
            }
+ml_callbacks = VisualizerCallback('ml_time', ml_data)
 
 of_data = {'of_time':           lambda x: time.time() - start_time,
            'of_landmarks':      lambda x: x.of_count}
+of_callbacks = VisualizerCallback('of_time', of_data)
 
 truth_data = {'truth_time':        lambda x: time.time() - start_time,
               'truth_position_x':  lambda x: x.pose.position.x,
@@ -125,6 +133,7 @@ truth_data = {'truth_time':        lambda x: time.time() - start_time,
               'truth_rot_x':       lambda x: quat_to_eulers(x.pose.orientation)[0] * 180 / pi,
               'truth_rot_y':       lambda x: quat_to_eulers(x.pose.orientation)[1] * 180 / pi,
               'truth_rot_z':       lambda x: quat_to_eulers(x.pose.orientation)[2] * 180 / pi}
+truth_callbacks = VisualizerCallback('truth_time', truth_data)
 
 command_data = {'command_time':        lambda x: time.time() - start_time,
               'command_status':        lambda x: x.status,
@@ -147,6 +156,7 @@ command_data = {'command_time':        lambda x: time.time() - start_time,
               'command_att_err_int_x': lambda x: x.attitude_error_integrated.x,
               'command_att_err_int_y': lambda x: x.attitude_error_integrated.y,
               'command_att_err_int_z': lambda x: x.attitude_error_integrated.z}
+command_callbacks = VisualizerCallback('command_time', command_data)
 
 traj_data = {'traj_time':         lambda x: time.time() - start_time,
              'traj_position_x':  lambda x: x.pose.position.x,
@@ -155,6 +165,7 @@ traj_data = {'traj_time':         lambda x: time.time() - start_time,
              'traj_rot_x':       lambda x: quat_to_eulers(x.pose.orientation)[0] * 180 / pi,
              'traj_rot_y':       lambda x: quat_to_eulers(x.pose.orientation)[1] * 180 / pi,
              'traj_rot_z':       lambda x: quat_to_eulers(x.pose.orientation)[2] * 180 / pi}
+traj_callbacks = VisualizerCallback('traj_time', traj_data)
 
 shaper_data = {'shaper_time':        lambda x: time.time() - start_time,
                'shaper_position_x':  lambda x: x.pose.position.x,
@@ -163,6 +174,7 @@ shaper_data = {'shaper_time':        lambda x: time.time() - start_time,
                'shaper_rot_x':       lambda x: quat_to_eulers(x.pose.orientation)[0] * 180 / pi,
                'shaper_rot_y':       lambda x: quat_to_eulers(x.pose.orientation)[1] * 180 / pi,
                'shaper_rot_z':       lambda x: quat_to_eulers(x.pose.orientation)[2] * 180 / pi}
+shaper_callbacks = VisualizerCallback('shaper_time', shaper_data)
 
 pmc_data = {'pmc_time':        lambda x: time.time() - start_time,
             'pmc_1_motor_speed':  lambda x: x.goals[0].motor_speed,
@@ -179,6 +191,9 @@ pmc_data = {'pmc_time':        lambda x: time.time() - start_time,
             'pmc_2_nozzle_4':  lambda x: ord(x.goals[1].nozzle_positions[3]),
             'pmc_2_nozzle_5':  lambda x: ord(x.goals[1].nozzle_positions[4]),
             'pmc_2_nozzle_6':  lambda x: ord(x.goals[1].nozzle_positions[5]) }
+pmc_callbacks = VisualizerCallback('pmc_time', pmc_data)
+
+callbacks_list = [ekf_callbacks, ml_callbacks, of_callbacks, truth_callbacks, command_callbacks, traj_callbacks, shaper_callbacks, pmc_callbacks]
 
 class TerminalView(QtGui.QGraphicsTextItem):
     def __init__(self, graphics_view):
@@ -222,8 +237,9 @@ class ParentGraphicsView(pg.GraphicsView):
             self.emit(QtCore.SIGNAL("resize"), event)
 
 class Visualizer(QtGui.QMainWindow):
-    def __init__(self, launch_command = None, plan = None):
+    def __init__(self, launch_command = None, plan = None, com_method = com.DDS_COM):
         super(Visualizer, self).__init__()
+        self.com_method = com_method
         self.launch_command = launch_command
         self.plan = plan
 
@@ -232,19 +248,19 @@ class Visualizer(QtGui.QMainWindow):
         self.log_lines = 0
         self.log_text = ""
         self.data = dict()
-        for d in ekf_data.keys() + truth_data.keys() + ml_data.keys() + of_data.keys() + \
-                 command_data.keys() + traj_data.keys() + shaper_data.keys() + pmc_data.keys():
-            self.data[d] = np.full(ARRAY_SIZE, 1e-10)
+        self.data_sizes = dict()
+        for d in callbacks_list:
+            self.data_sizes[d.time_key] = 0
+            for k in d.callbacks.keys():
+                self.data[k] = np.full(ARRAY_SIZE, 1e-10)
 
         self.columns = [[plot_types.CtlPosPlot, plot_types.FeatureCountPlot, plot_types.ConfidencePlot, \
-                         plot_types.CommandStatusPlot], [plot_types.CtlRotPlot, plot_types.CovPlot], \
-                         [plot_types.Pmc1BlowerPlot, plot_types.Pmc2BlowerPlot, \
-                         plot_types.Pmc1NozzlePlot, plot_types.Pmc2NozzlePlot]]
-        
+                         plot_types.CommandStatusPlot], [plot_types.CtlRotPlot, plot_types.CovPlot]]
+
         self.graphics_view = ParentGraphicsView()
         self.terminal_graphics_view = TerminalGraphicsView(self.graphics_view)
         self.terminal_view = TerminalView(self.terminal_graphics_view)
-        
+
         self.layout = pg.GraphicsLayout(border=(100,100,100))
         self.layout.setBorder(None)
         self.layout.setZValue(-1)
@@ -254,7 +270,7 @@ class Visualizer(QtGui.QMainWindow):
         self.pmc_enabled = True
         self.setCentralWidget(self.graphics_view)
         self.create_menu()
-        
+
         row = 0
         for c in range(len(self.columns)):
             l = self.layout.addLayout(0, c)
@@ -329,7 +345,7 @@ class Visualizer(QtGui.QMainWindow):
     def delete_plot(self, col, row):
         del self.columns[col][row]
         l = self.layout.getItem(0, col)
-        
+
         self.layout.removeItem(l)
         new_layout = pg.GraphicsLayout()
         new_layout.setBorder(pg.mkColor(150, 150, 150))
@@ -355,7 +371,7 @@ class Visualizer(QtGui.QMainWindow):
         if len(self.columns[col]) == 0:
             self.delete_column(col)
         self.create_menu()
-    
+
     def delete_column(self, col):
         del self.columns[col]
         self.create_menu()
@@ -412,6 +428,13 @@ class Visualizer(QtGui.QMainWindow):
             if i < len(self.columns):
                 colmenu.addAction("Delete Column", functools.partial(self.delete_column, i))
 
+        if self.com_method == com.DDS_COM:
+            # Disable menu actions for commands
+            for action in self.menuBar().actions():
+                if (action.menu() and action.text() == 'Commands'):
+                    for act in action.menu().actions():
+                        act.setEnabled(False)
+
     def quit(self):
         self.close()
 
@@ -429,18 +452,10 @@ class Visualizer(QtGui.QMainWindow):
         self.log_shown = not self.log_shown
 
     def initialize_bias(self):
-        try:
-            initialize = rospy.ServiceProxy('/gnc/ekf/init_bias', Empty)
-            initialize()
-        except rospy.ServiceException, e:
-            print "Service call failed: %s" % e
+        com_manager.initialize_bias()
 
     def reset_ekf(self):
-        try:
-            reset = rospy.ServiceProxy('/gnc/ekf/reset', Empty)
-            reset()
-        except rospy.ServiceException, e:
-            print "Service call failed: %s" % e
+        com_manager.reset_ekf()
 
     def start_stop_process(self):
         if self.launch_command != None:
@@ -451,20 +466,15 @@ class Visualizer(QtGui.QMainWindow):
 
     def run_plan(self):
         if self.plan != None:
-            ret = os.system(ASTROBEE_ROOT + '/scripts/run_plan.sh ' + self.plan + ' > /dev/null &')
+            ret = os.system(ASTROBEE_ROOT + '/scripts/teleop/run_plan.sh ' + self.plan + ' > /dev/null &')
         else:
             self.print_to_log('No plan file specified.', '#FF0000')
-    
+
     def undock(self):
-        ret = os.system('bash ' + ASTROBEE_ROOT + '/scripts/undock.sh > /dev/null &')
+        ret = os.system('bash ' + ASTROBEE_ROOT + '/scripts/teleop/run_undock.sh > /dev/null &')
 
     def toggle_pmc(self):
-        try:
-            pmc_enable = rospy.ServiceProxy('/hw/pmc/enable', SetBool)
-            self.pmc_enabled = not self.pmc_enabled
-            pmc_enable(self.pmc_enabled)
-        except rospy.ServiceException, e:
-            print "Service call failed: %s" % e
+        self.pmc_enabled = com_manager.toggle_pmc(self.pmc_enabled)
 
     def choose_plan(self):
         result = QtGui.QFileDialog.getOpenFileName(self, 'Open Plan', ASTROBEE_ROOT + '/gnc/matlab/scenarios', 'Plans (*.fplan)')
@@ -496,11 +506,18 @@ class Visualizer(QtGui.QMainWindow):
         if event.key() == QtCore.Qt.Key_M:
             self.toggle_pmc()
 
+    def remove_old_data(self):
+        t = time.time() - start_time
+        for c in callbacks_list:
+            while self.data_sizes[c.time_key] > 0 and \
+                    t - self.data[c.time_key][self.data_sizes[c.time_key] - 1] > plot_types.DISPLAY_TIME + 2:
+                self.data_sizes[c.time_key] -= 1
+
     def tick(self):
-        a = time.time()
-        if rospy.is_shutdown():
+        if com_manager.was_shutdown():
             self.hide()
             return
+        self.remove_old_data()
         if not self.paused and self.started:
             col = 0
             while True:
@@ -512,7 +529,7 @@ class Visualizer(QtGui.QMainWindow):
                     item = column.getItem(row, 0)
                     if item == None:
                         break
-                    item.update_plot(self.data)
+                    item.update_plot((self.data, self.data_sizes))
                     row += 1
                 col += 1
         if self.proc != None:
@@ -534,44 +551,34 @@ class Visualizer(QtGui.QMainWindow):
         r.setWidth(self.terminal_graphics_view.width() - 100)
         self.terminal_graphics_view.ensureVisible(r)
 
+    def add_data(self, callbacks, data):
+        self.data_sizes[callbacks.time_key] = min(self.data_sizes[callbacks.time_key] + 1, ARRAY_SIZE)
+        for key in callbacks.callbacks:
+            self.data[key] = np.roll(self.data[key], 1)
+            self.data[key][0] = callbacks.callbacks[key](data)
+
     def ekf_callback(self, data):
-        for d in ekf_data:
-            self.data[d] = np.roll(self.data[d], 1)
-            self.data[d][0] = ekf_data[d](data)
+        self.add_data(ekf_callbacks, data)
         if data.ml_count != 0:
-            for d in ml_data:
-                self.data[d] = np.roll(self.data[d], 1)
-                self.data[d][0] = ml_data[d](data)
+            self.add_data(ml_callbacks, data)
         if data.of_count != 0:
-            for d in of_data:
-                self.data[d] = np.roll(self.data[d], 1)
-                self.data[d][0] = of_data[d](data)
+            self.add_data(of_callbacks, data)
         self.started = True
-    
+
     def ground_truth_callback(self, data):
-        for d in truth_data:
-            self.data[d] = np.roll(self.data[d], 1)
-            self.data[d][0] = truth_data[d](data)
+        self.add_data(truth_callbacks, data)
 
     def command_callback(self, data):
-        for d in command_data:
-            self.data[d] = np.roll(self.data[d], 1)
-            self.data[d][0] = command_data[d](data)
-    
+        self.add_data(command_callbacks, data)
+
     def traj_callback(self, data):
-        for d in traj_data:
-            self.data[d] = np.roll(self.data[d], 1)
-            self.data[d][0] = traj_data[d](data)
-    
+        self.add_data(traj_callbacks, data)
+
     def shaper_callback(self, data):
-        for d in shaper_data:
-            self.data[d] = np.roll(self.data[d], 1)
-            self.data[d][0] = shaper_data[d](data)
+        self.add_data(shaper_callbacks, data)
 
     def pmc_callback(self, data):
-        for d in pmc_data:
-            self.data[d] = np.roll(self.data[d], 1)
-            self.data[d][0] = pmc_data[d](data)
+        self.add_data(pmc_callbacks, data)
 
     def print_to_log(self, text, color):
         self.log_text += "<br /><font color='%s'>%s</font>" % (color, text)
@@ -591,7 +598,11 @@ def sigint_handler(*args):
     QtGui.QApplication.quit()
 
 def main():
+    com_method = com.DDS_COM
+
     parser = argparse.ArgumentParser(description='Gnc visualization.')
+
+    # ROS arguments only
     parser.add_argument('--gantry', dest='launch_command', action='append_const',
                                const='roslaunch astrobee proto4c.launch disable_fans:=true',
                                help='Launch proto4.')
@@ -606,53 +617,84 @@ def main():
                                help='Launch simulator.launch.')
     parser.add_argument('--plan', dest='plan', action='store', help='The plan to execute.')
     parser.add_argument('--disable_pmcs', dest='disable_pmcs', action='store_true', help='Disable the pmcs.')
+
+    # General argument
+    parser.add_argument('--comm', dest='com_method', action='store',
+            help='Communication method to the robot: dds or ros')
+
+    # DDS arguments only
+    parser.add_argument('--use_ip', dest='use_ip', action='store',
+            help='Type an IP to be treated as initial peer for DDS.')
+    parser.add_argument('--robot_name', dest='robot_name', action='store',
+            help='Type the name of the robot you want to hear telemetry of over DDS.')
+
     args, unknown = parser.parse_known_args()
-    if args.launch_command == None:
-        args.launch_command = []
+
+    com_method = com.ROS_COM
+
+    if args.com_method != None:
+        if args.com_method in (com.DDS_COM, com.ROS_COM):
+            com_method = args.com_method
+        else:
+            print >> sys.stderr, 'Invalid communication method. Must be dds or ros'
+            return
+
     launch_command = None
-    if len(args.launch_command) > 1:
-        print >> sys.stderr, 'Can only specify one launch command.'
+
+    # Exclude ROS arguments when using DDS communication
+    if com_method == com.DDS_COM and ( args.launch_command != None or args.disable_pmcs or args.plan != None):
+        print >> sys.stderr, ( '\n###\n' +
+                '\nAdditional arguments (--gantry --granite --bag --sim --plan --disable_pmcs) ' +
+                'will not be processed when using DDS mode. You may use "--comm ros" or do not include this ' +
+                'argument at all in order to use additional arguments.\n\n###\n')
         return
-    if len(args.launch_command) == 1:
-        launch_command = args.launch_command[0]
-    if args.disable_pmcs:
-        if launch_command != None:
-            launch_command += ' disable_fans:=true'
+    # Exclude DDS commands when using ROS communication
+    elif com_method == com.ROS_COM and ( args.use_ip != None or args.robot_name != None):
+        print >> sys.stderr, ( '\n###\n' +
+                '\nAdditional arguments (--use_ip --robot_name) ' +
+                'will not be processed when using ROS mode. You may include "--comm dds" ' +
+                'argument in order to use these additional arguments.\n\n###\n')
+        return
+    else:
+        if args.launch_command == None:
+            args.launch_command = []
+        if len(args.launch_command) > 1:
+            print >> sys.stderr, 'Can only specify one launch command.'
+            return
+        if len(args.launch_command) == 1:
+            launch_command = args.launch_command[0]
+        if args.disable_pmcs:
+            if launch_command != None:
+                launch_command += ' disable_fans:=true'
+
+
+    # Setting communication method
+    dds_args = dict(partition_name=args.robot_name, given_peer=args.use_ip)
+    if not com_manager.set_com_method(com_method, dds_args):
+        return
 
     app = QtGui.QApplication([])
     signal.signal(signal.SIGINT, sigint_handler)
-    v = Visualizer(launch_command, args.plan)
-    v.show()
-    
-    rosmaster = None
-    try:
-        rosgraph.Master('/rostopic').getPid()
-    except socket.error:
-        v.print_to_log('Starting roscore.', '#FFB266')
-        rosmaster = subprocess.Popen("roscore", preexec_fn=os.setsid, shell=True,
-                    stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        time.sleep(1)
-    v.startProcess()
+    v = Visualizer(launch_command, args.plan, com_manager.current_com_method)
 
-    rospy.init_node('gnc_visualizer', anonymous=False, disable_signals=True)
-    rospy.Subscriber("/rosout", Log, v.log_callback)
-    rospy.Subscriber("/loc/truth", PoseStamped, v.ground_truth_callback)
-    rospy.Subscriber("/gnc/ekf", EkfState, v.ekf_callback)
-    rospy.Subscriber("/gnc/ctl/command", FamCommand, v.command_callback)
-    rospy.Subscriber("/gnc/ctl/traj", ControlState, v.traj_callback)
-    rospy.Subscriber("/gnc/ctl/shaper", ControlState, v.shaper_callback)
-    rospy.Subscriber("/hw/pmc/command", PmcCommand, v.pmc_callback)
-    app.exec_()
-    v.hide()
-    v.stopProcess()
-    rospy.signal_shutdown("Finished")
-    if rosmaster != None:
-        os.killpg(os.getpgid(rosmaster.pid), signal.SIGINT)
-        rosmaster.wait()
+    try:
+        # TODO(Ruben): Catch errors from Threads started in com_manager
+
+        # Starting communications
+        com_manager.start_communications(v)
+        v.show()
+        v.startProcess()
+        app.exec_()
+    except (KeyboardInterrupt, SystemExit):
+        pass
+        print("GVIZ will exit")
+    except Exception as e:
+        print(e)
+    finally:
+        v.hide()
+        v.stopProcess()
+        com_manager.stop_communications()
+        com_manager.config.destroy_dom()
 
 if __name__ == '__main__':
-    try:
-        main()
-    except rospy.ROSInterruptException:
-        pass
-
+    main()

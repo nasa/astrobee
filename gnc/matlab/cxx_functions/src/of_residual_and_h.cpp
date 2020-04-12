@@ -184,7 +184,7 @@ int of_residual_and_h(float* of_measured_p, float* global_points_p, float* camer
     MatrixXf S(H_x_j_reduced.rows(), H_x_j_reduced.rows());
     S.triangularView<Lower>() = H_x_j_reduced * reduced_P * H_x_j_reduced.transpose();
     for (int i = 0; i < S.rows(); i++)
-      S(i, i) += ase_of_r_mag * ase_of_r_mag;
+      S(i, i) += (ase_inv_focal_length * ase_of_r_mag) * (ase_inv_focal_length * ase_of_r_mag);
     MatrixXf S_inv(S.rows(), S.cols());
     if (pinv(S, S_inv)) {
       fprintf(stderr, "Failed to take inverse for Mahalanobis distance.\n");

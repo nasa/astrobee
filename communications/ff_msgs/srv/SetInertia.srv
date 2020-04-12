@@ -17,7 +17,6 @@
 #
 # This message allows the MOBILITY::CHOREOGRAPHER inertia to be set
 
-time timestamp                           # When this inertia was created
-geometry_msgs/Inertia inertia            # New inertia information
+geometry_msgs/InertiaStamped inertia        # New inertia information
 ---
-bool success                             # Did the update work?
+bool success                                # Did the update work?

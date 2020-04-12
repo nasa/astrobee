@@ -28,6 +28,10 @@ void sim_ReadParams(config_reader::ConfigReader* config,  RT_MODEL_sim_model_lib
     ROS_FATAL("Unspecified tun_abp_quat_body2imu.");
   if (!msg_conversions::config_read_array(config, "tun_ase_gravity_accel", 3 , p->tun_ase_gravity_accel))
     ROS_FATAL("Unspecified tun_ase_gravity_accel.");
+  if (!config->GetReal("tun_bpm_PM1_thrust_error_sf", &p->tun_bpm_PM1_thrust_error_sf))
+    ROS_FATAL("Unspecified tun_bpm_PM1_thrust_error_sf.");
+  if (!config->GetReal("tun_bpm_PM2_thrust_error_sf", &p->tun_bpm_PM2_thrust_error_sf))
+    ROS_FATAL("Unspecified tun_bpm_PM2_thrust_error_sf.");
   if (!config->GetReal("tun_bpm_noise_on_flag", &p->tun_bpm_noise_on_flag))
     ROS_FATAL("Unspecified tun_bpm_noise_on_flag.");
   if (!config->GetReal("tun_cvs_dockcam_focal_length_X", &p->tun_cvs_dockcam_focal_length_X))

@@ -28,7 +28,7 @@ namespace cpu_monitor {
 
 Core::Core(const std::string sys_cpu_path, int id)
   : sys_cpu_path_(sys_cpu_path)
-  , id_(id) {
+  , id_(id), always_on_(false) {
 }
 
 Core::~Core(void) {
@@ -47,6 +47,12 @@ bool Core::Init(void) {
     std::ifstream is(files[i]);
 
     if (!is.is_open()) {
+      if (i == 0) {
+        std::cerr << "CPU0 is forced to be always on" << std::endl;
+        always_on_ = true;
+        continue;
+      }
+
       std::cerr << "Error opening file '" << files[i] << "': " <<
         std::strerror(errno) << std::endl;
 
@@ -72,6 +78,8 @@ int Core::GetMaxFreq(void) {
 }
 
 bool Core::IsOn(void) {
+  if (always_on_)
+    return true;
   return GetIntValue(sys_cpu_path_ + "/online") == 1 ? true : false;
 }
 

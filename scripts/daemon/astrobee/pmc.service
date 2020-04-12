@@ -1,0 +1,14 @@
+[Unit]
+Description=Use the PMC tool to determine if we have PMCs attached and powered
+After=res.mount
+
+[Service]
+Type=oneshot
+User=astrobee
+Group=astrobee
+EnvironmentFile=/res/astrobee.env
+ExecStart=/opt/astrobee/bin/pmc_actuator_tool -w /res/pmc_state
+TimeoutStartSec=60s
+
+[Install]
+WantedBy=multi-user.target

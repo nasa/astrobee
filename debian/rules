@@ -5,7 +5,7 @@
 
 
 # see FEATURE AREAS in dpkg-buildflags(1)
-export DEB_BUILD_OPTIONS = parallel=`nproc`
+#export DEB_BUILD_OPTIONS = parallel=`nproc`
 #export DEB_BUILD_MAINT_OPTIONS = hardening=+all
 
 # see ENVIRONMENT in dpkg-buildflags(1)
@@ -20,14 +20,17 @@ ifeq ($(DEB_HOST_ARCH),armhf)
   export EXTRA_CMAKE_OPTS=-DCMAKE_TOOLCHAIN_FILE=../scripts/build/ubuntu_cross.cmake -DUSE_CTC=true
 	# stripping doesn't work with the cross compile
   #export DEB_BUILD_OPTIONS += nostrip
-	export LIB_SEARCH_OPTIONS = -l$(ARMHF_CHROOT_DIR)/opt/rti/ndds/lib/armv6vfphLinux3.xgcc4.7.2:$(ARMHF_CHROOT_DIR)/opt/ros/kinetic/lib:$(ARMHF_CHROOT_DIR)/lib:$(ARMHF_CHROOT_DIR)/usr/lib:$(ARMHF_CHROOT_DIR)/usr/lib/arm-linux-gnueabihf:$(ARMHF_CHROOT_DIR)/lib/arm-linux-gnueabihf -- --ignore-missing-info --admindir=$(ARMHF_CHROOT_DIR)/var/lib/dpkg 
+	export LIB_SEARCH_OPTIONS = -l$(ARMHF_CHROOT_DIR)/opt/rti/ndds/lib/armv6vfphLinux3.xgcc4.7.2:$(ARMHF_CHROOT_DIR)/opt/ros/kinetic/lib:$(ARMHF_CHROOT_DIR)/opt/ros/kinetic/lib/arm-linux-gnueabihf:$(ARMHF_CHROOT_DIR)/lib:$(ARMHF_CHROOT_DIR)/usr/lib:$(ARMHF_CHROOT_DIR)/usr/lib/arm-linux-gnueabihf:$(ARMHF_CHROOT_DIR)/lib/arm-linux-gnueabihf -- --ignore-missing-info --admindir=$(ARMHF_CHROOT_DIR)/var/lib/dpkg 
 	export DEB_MAINT_CC_SET = $(ARMHF_TOOLCHAIN)/bin/arm-linux-gnueabihf-gcc
 	export DEB_MAINT_CXX_SET = $(ARMHF_TOOLCHAIN)/bin/arm-linux-gnueabihf-g++
 endif
 
-%:
-	dh $@ --buildsystem=cmake --parallel --builddirectory=build/
+# skip build for config files
+build-indep: ;
+	mkdir -p build
 
+%:
+	dh $@ --buildsystem=cmake --builddirectory=build/ --parallel
 
 # we always need release, otherwise it is too slow
 override_dh_auto_configure:

@@ -33,7 +33,7 @@ if len(sys.argv) >= 2:
 if len(sys.argv) >= 3:
   astrobee_map = sys.argv[2]
 
-(astrobee_map, astrobee_bag) = environment.initialize_environment(astrobee_map, astrobee_bag)
+(astrobee_map, astrobee_bag, astrobee_robot) = environment.initialize_environment(astrobee_map, astrobee_bag, None)
 name_prefix = astrobee_bag[:astrobee_bag.rfind('.')]
 
 start = time.time()

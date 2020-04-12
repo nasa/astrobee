@@ -1,0 +1,37 @@
+#
+# Sequence to verify the nozzles upper and lower limits calibration
+#
+# Open/Close fully every nozzles, one side after the other.
+# The operator will monitor current during the pattern
+# to identify any over current, potentially indicating bad calibration
+#
+
+# File format:
+#   - 1 line per command
+#   - lines starting with # or space are ignored
+#   - 15 fields required, space as separator
+#   - fields:
+#     - time (in seconds, relative to the start of the program)
+#     - side 1 blower speed
+#     - side 2 nozzle position x 6
+#     - side 2 blower speed
+#     - side 2 nozzle position x 6
+
+# Start side 1
+0 50 128 128 128 128 128 128 0 0 0 0 0 0 0
+
+# After 20 seconds, test side 1, fully open
+20 50 255 255 255 255 255 255 0 0 0 0 0 0 0
+# After 40 seconds, test side 1, fully closed
+40 50 0 0 0 0 0 0 0 0 0 0 0 0 0
+
+# Start side 2
+60 0 0 0 0 0 0 0 50 128 128 128 128 128 128
+
+# After 80 seconds, test side 2, fully open
+80 0 0 0 0 0 0 0 50 255 255 255 255 255 255
+# After 100 seconds, test side 2, fully closed
+100 0 0 0 0 0 0 0 50 0 0 0 0 0 0
+
+# Spin down
+120 0 0 0 0 0 0 0 0 0 0 0 0 0 0

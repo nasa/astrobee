@@ -103,7 +103,8 @@ class VectorPlot(GraphPlot):
     def update_plot(self, data):
         super(VectorPlot, self).update_plot(data)
         for i in range(len(self.y_names)):
-            self.plot_data[i].setData(data[self.time_names[i]], data[self.y_names[i]])
+            s = data[1][self.time_names[i]]
+            self.plot_data[i].setData(data[0][self.time_names[i]][:s], data[0][self.y_names[i]][:s])
 
 class PositionPlot(GraphPlot):
     def __init__(self):
@@ -117,12 +118,14 @@ class PositionPlot(GraphPlot):
 
     def update_plot(self, data):
         super(PositionPlot, self).update_plot(data)
-        self.pos_x.setData(data['ekf_time'], data['ekf_position_x'])
-        self.pos_y.setData(data['ekf_time'], data['ekf_position_y'])
-        self.pos_z.setData(data['ekf_time'], data['ekf_position_z'])
-        self.truth_x.setData(data['truth_time'], data['truth_position_x'])
-        self.truth_y.setData(data['truth_time'], data['truth_position_y'])
-        self.truth_z.setData(data['truth_time'], data['truth_position_z'])
+        s = data[1]['ekf_time']
+        self.pos_x.setData(data[0]['ekf_time'][:s], data[0]['ekf_position_x'][:s])
+        self.pos_y.setData(data[0]['ekf_time'][:s], data[0]['ekf_position_y'][:s])
+        self.pos_z.setData(data[0]['ekf_time'][:s], data[0]['ekf_position_z'][:s])
+        s = data[1]['truth_time']
+        self.truth_x.setData(data[0]['truth_time'][:s], data[0]['truth_position_x'][:s])
+        self.truth_y.setData(data[0]['truth_time'][:s], data[0]['truth_position_y'][:s])
+        self.truth_z.setData(data[0]['truth_time'][:s], data[0]['truth_position_z'][:s])
 
 class VelocityPlot(VectorPlot):
     def __init__(self):
@@ -151,12 +154,14 @@ class OrientationPlot(GraphPlot):
 
     def update_plot(self, data):
         super(OrientationPlot, self).update_plot(data)
-        self.rot_x.setData(data['ekf_time'], data['ekf_rot_x'])
-        self.rot_y.setData(data['ekf_time'], data['ekf_rot_y'])
-        self.rot_z.setData(data['ekf_time'], data['ekf_rot_z'])
-        self.truth_x.setData(data['truth_time'], data['truth_rot_x'])
-        self.truth_y.setData(data['truth_time'], data['truth_rot_y'])
-        self.truth_z.setData(data['truth_time'], data['truth_rot_z'])
+        s = data[1]['ekf_time']
+        self.rot_x.setData(data[0]['ekf_time'][:s], data[0]['ekf_rot_x'][:s])
+        self.rot_y.setData(data[0]['ekf_time'][:s], data[0]['ekf_rot_y'][:s])
+        self.rot_z.setData(data[0]['ekf_time'][:s], data[0]['ekf_rot_z'][:s])
+        s = data[1]['truth_time']
+        self.truth_x.setData(data[0]['truth_time'][:s], data[0]['truth_rot_x'][:s])
+        self.truth_y.setData(data[0]['truth_time'][:s], data[0]['truth_rot_y'][:s])
+        self.truth_z.setData(data[0]['truth_time'][:s], data[0]['truth_rot_z'][:s])
 
 class OmegaPlot(VectorPlot):
     def __init__(self):
@@ -189,23 +194,23 @@ class ModePlot(GraphPlot):
                 break
         new_items = 0
         if len(self.confidence_rects) == 0:
-            new_items = len(data[self.x_value])
+            new_items = len(data[0][self.x_value])
         else:
-            for r in data[self.x_value]:
+            for r in data[0][self.x_value]:
                 if r > self.confidence_rects[-1].rect().x() + self.confidence_rects[-1].rect().width():
                     new_items += 1
                 else:
                     break
         for j in range(new_items):
             i = new_items - 1 - j
-            val = data[self.y_value][i]
+            val = data[0][self.y_value][i]
             if val == self.last_value:
                 continue
             self.last_value = val
             if len(self.confidence_rects) > 0:
                 r = self.confidence_rects[-1].rect()
-                self.confidence_rects[-1].setRect(r.x(), 0, data[self.x_value][i] - r.x(), 1)
-            start_t = data[self.x_value][i]
+                self.confidence_rects[-1].setRect(r.x(), 0, data[0][self.x_value][i] - r.x(), 1)
+            start_t = data[0][self.x_value][i]
             r = QtGui.QGraphicsRectItem(start_t, 0, 0, 1)
             r.setBrush(self.colormap[int(val)])
             self.addItem(r)
@@ -271,18 +276,18 @@ class FeatureCountPlot(GraphPlot):
                 break
         new_ml = 0
         if len(self.features) == 0:
-            new_ml = len(filter(lambda x: x > 1e-2, data['ml_time']))
+            new_ml = len(filter(lambda x: x > 1e-2, data[0]['ml_time']))
         else:
-            for r in data['ml_time']:
+            for r in data[0]['ml_time']:
                 if r > self.features[-1].x() + 1e-5 and r > 1e-2:
                     new_ml += 1
                 else:
                     break
         new_of = 0
         if len(self.features) == 0:
-            new_of = len(filter(lambda x: x > 1e-2, data['of_time']))
+            new_of = len(filter(lambda x: x > 1e-2, data[0]['of_time']))
         else:
-            for r in data['of_time']:
+            for r in data[0]['of_time']:
                 if r > self.features[-1].x() + 1e-5 and r > 1e-2:
                     new_of += 1
                 else:
@@ -293,11 +298,11 @@ class FeatureCountPlot(GraphPlot):
             add_ml = True
             if cur_ml < 0:
                 add_ml = False
-            elif cur_of >= 0 and data['of_time'][cur_of] < data['ml_time'][cur_ml]:
+            elif cur_of >= 0 and data[0]['of_time'][cur_of] < data[0]['ml_time'][cur_ml]:
                 add_ml = False
-            t = data['ml_time'][cur_ml] if add_ml else data['of_time'][cur_of]
-            v = data['ml_landmarks'][cur_ml] if add_ml else data['of_landmarks'][cur_of]
-            r = QtGui.QGraphicsEllipseItem(-5, -5, 10, 10)
+            t = data[0]['ml_time'][cur_ml] if add_ml else data[0]['of_time'][cur_of]
+            v = data[0]['ml_landmarks'][cur_ml] if add_ml else data[0]['of_landmarks'][cur_of]
+            r = QtGui.QGraphicsEllipseItem(-5, -5, 10, 10) if add_ml else QtGui.QGraphicsEllipseItem(-3, -3, 6, 6)
             r.setPos(t, v)
             r.setBrush(colors[1] if add_ml else colors[0])
             r.setFlag(QtGui.QGraphicsItem.ItemIgnoresTransformations)
@@ -322,9 +327,10 @@ class MLMahalPlot(GraphPlot):
 
     def update_plot(self, data):
         super(MLMahalPlot, self).update_plot(data)
-        self.mahal_min.setData(data['ml_time'], data['ml_mahal_min'])
-        self.mahal_max.setData(data['ml_time'], data['ml_mahal_max'])
-        self.mahal_mean.setData(data['ml_time'], data['ml_mahal_mean'])
+        s = data[1]['ml_time']
+        self.mahal_min.setData( data[0]['ml_time'][:s], data[0]['ml_mahal_min'][:s])
+        self.mahal_max.setData( data[0]['ml_time'][:s], data[0]['ml_mahal_max'][:s])
+        self.mahal_mean.setData(data[0]['ml_time'][:s], data[0]['ml_mahal_mean'][:s])
 
 class CommandForcePlot(VectorPlot):
     def __init__(self):

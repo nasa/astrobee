@@ -18,6 +18,8 @@
 project(planner_trapezoidal)
 
 catkin_package(
+  INCLUDE_DIRS 
+    include
   LIBRARIES
     planner_trapezoidal
   CATKIN_DEPENDS
@@ -31,8 +33,8 @@ catkin_package(
 )
 
 create_library(TARGET planner_trapezoidal
-  LIBS ${catkin_LIBRARIES} ff_nodelet msg_conversions ff_flight config_server config_client jsonloader
-  INC  ${catkin_INCLUDE_DIRS}
+  LIBS ${catkin_LIBRARIES} ff_nodelet msg_conversions ff_flight config_server config_client jsonloader choreographer
+  INC  ${catkin_INCLUDE_DIRS} 
   DEPS choreographer
 )
 

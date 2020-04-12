@@ -57,7 +57,6 @@ class AccessControl : public ff_util::FreeFlyerNodelet {
   void HandleRequestControl(ff_msgs::CommandStampedConstPtr const& cmd);
 
   void PublishAck(std::string const& cmd_id,
-                  std::string const& cmd_origin,
                   std::string const& message = "",
                   uint8_t completed_status = ff_msgs::AckCompletedStatus::OK,
                   uint8_t status = ff_msgs::AckStatus::COMPLETED);
@@ -72,7 +71,7 @@ class AccessControl : public ff_util::FreeFlyerNodelet {
   int pub_queue_size_;
   int sub_queue_size_;
 
-  ros::Publisher cmd_ack_pub_, state_pub_, cmd_pub_;
+  ros::Publisher cmd_ack_pub_, state_pub_, cmd_pub_, failed_cmd_pub_;
   ros::Subscriber cmd_sub_;
 
   std::string requestor_;

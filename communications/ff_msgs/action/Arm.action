@@ -1,14 +1,14 @@
 # Copyright (c) 2017, United States Government, as represented by the
 # Administrator of the National Aeronautics and Space Administration.
-# 
+#
 # All rights reserved.
-# 
+#
 # The Astrobee platform is licensed under the Apache License, Version 2.0
 # (the "License"); you may not use this file except in compliance with the
 # License. You may obtain a copy of the License at
-# 
+#
 #     http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -24,17 +24,18 @@ uint8 ARM_STOW            = 2                 # Retract the arm
 uint8 ARM_PAN             = 3                 # Pan the arm
 uint8 ARM_TILT            = 4                 # Tilt the arm
 uint8 ARM_MOVE            = 5                 # Pan and tilt the
-uint8 GRIPPER_CALIBRATE   = 6                 # Calibrate the gripper
-uint8 GRIPPER_SET         = 7                 # Set the gripper value
-uint8 GRIPPER_OPEN        = 8                 # Open the gripper
-uint8 GRIPPER_CLOSE       = 9                 # Open the gripper
+uint8 GRIPPER_SET         = 6                 # Set the gripper value
+uint8 GRIPPER_OPEN        = 7                 # Open the gripper
+uint8 GRIPPER_CLOSE       = 8                 # Close the gripper
+uint8 DISABLE_SERVO       = 9                 # Disable the servos
 
 float32 pan                                   # PAN from -90 to +90
-float32 tilt                                  # TILT from -30 to +90
+float32 tilt                                  # TILT from -120 to +90
 float32 gripper                               # SET from 20 to 45
 
 ---
 
+# Machine-readable reseult code
 int32 response
 int32 SUCCESS             =  1                # Successfully completed
 int32 PREEMPTED           =  0                # Action was preempted
@@ -43,13 +44,18 @@ int32 BAD_TILT_VALUE      = -2                # Invalid value for tilt
 int32 BAD_PAN_VALUE       = -3                # Invalid value for pan
 int32 BAD_GRIPPER_VALUE   = -4                # Invalid value for gripper
 int32 NOT_ALLOWED         = -5                # Not allowed
-int32 NEED_TO_CALIBRATE   = -6                # Cannot OPEN/CLOSE/SET gripper
-int32 TILT_FAILED         = -7                # Tilt command failed
-int32 PAN_FAILED          = -8                # Pan command failed
-int32 GRIPPER_FAILED      = -9                # Gripper command failed
-int32 CALIBRATE_FAILED    = -10               # Gripper calibrate failed
-int32 COMMUNICATION_ERROR = -11               # Cannot communicate with arm
-int32 COLLISION_AVOIDED   = -12               # No panning when tilt < 90
+int32 TILT_FAILED         = -6                # Tilt command failed
+int32 PAN_FAILED          = -7                # Pan command failed
+int32 GRIPPER_FAILED      = -8                # Gripper command failed
+int32 COMMUNICATION_ERROR = -9                # Cannot communicate with arm
+int32 COLLISION_AVOIDED   = -10               # No panning when tilt < 90
+int32 ENABLE_FAILED       = -11               # Cannot enable the servos
+int32 DISABLE_FAILED      = -12               # Cannot disable the servos
+int32 CALIBRATE_FAILED    = -13               # Cannot calibrate the gripper
+int32 NO_GOAL             = -14               # Unknown call to calibration
+
+# Human readable FSM result for debugging
+string fsm_result
 
 ---
 

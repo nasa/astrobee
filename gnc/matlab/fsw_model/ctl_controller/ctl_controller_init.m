@@ -35,8 +35,9 @@ ctl_linear_vel_limit = single(10000); %m/s,  0.5 m/s reads(3.GNC.22), need to re
 ctl_omega_limit             = single(10000*pi/180*ones(3,1)); %rad/sec Still TBD (3.GNC.23)
 
 %% Thresholds
-ctl_stopping_vel_thresh     = single(.01^2); % Linear velocity threshold squared below which the vehicle is considered to be stopped, (m/s)^2
-ctl_stopping_omega_thresh   = single(.01^2); % Angular velocity threshold squared below which the vehicle is considered to be stopped, (rad/s)^2
+% %% Moved to lua conig file [ASTROBEE_ROOT '/../../management/astrobee/config/gnc.config']
+% ctl_stopping_vel_thresh     = single(.01^2); % Linear velocity threshold squared below which the vehicle is considered to be stopped, (m/s)^2
+% ctl_stopping_omega_thresh   = single(.01^2); % Angular velocity threshold squared below which the vehicle is considered to be stopped, (rad/s)^2
 
 %% Moved to lua conig file [ASTROBEE_ROOT '/../../management/astrobee/config/gnc.config']
 % tun_ctl_bypass_cmd_shaper = uint8(0);

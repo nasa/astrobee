@@ -1,14 +1,14 @@
 /* Copyright (c) 2017, United States Government, as represented by the
  * Administrator of the National Aeronautics and Space Administration.
- * 
+ *
  * All rights reserved.
- * 
+ *
  * The Astrobee platform is licensed under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -25,66 +25,71 @@ namespace mapper {
 // Update resolution of the map
 bool MapperNodelet::UpdateResolution(ff_msgs::SetFloat::Request &req,
                                      ff_msgs::SetFloat::Response &res) {
-    pthread_mutex_lock(&mutexes_.octomap);
-        globals_.octomap.SetResolution(req.data);
-    pthread_mutex_unlock(&mutexes_.octomap);
-
-    res.success = true;
-    return true;
+  mutexes_.octomap.lock();
+  globals_.octomap.SetResolution(req.data);
+  mutexes_.octomap.unlock();
+  res.success = true;
+  return true;
 }
 
 // Update map memory time
 bool MapperNodelet::UpdateMemoryTime(ff_msgs::SetFloat::Request &req,
                                      ff_msgs::SetFloat::Response &res) {
-    pthread_mutex_lock(&mutexes_.octomap);
-        globals_.octomap.SetMemory(req.data);
-    pthread_mutex_unlock(&mutexes_.octomap);
-
-    res.success = true;
-    return true;
+  mutexes_.octomap.lock();
+  globals_.octomap.SetMemory(req.data);
+  mutexes_.octomap.unlock();
+  res.success = true;
+  return true;
 }
 
 bool MapperNodelet::MapInflation(ff_msgs::SetFloat::Request &req,
                                  ff_msgs::SetFloat::Response &res) {
-    pthread_mutex_lock(&mutexes_.octomap);
-        globals_.octomap.SetMapInflation(req.data);
-    pthread_mutex_unlock(&mutexes_.octomap);
-
-    res.success = true;
-    return true;
+  mutexes_.octomap.lock();
+  globals_.octomap.SetMapInflation(req.data);
+  mutexes_.octomap.unlock();
+  res.success = true;
+  return true;
 }
 
 bool MapperNodelet::ResetMap(std_srvs::Trigger::Request &req,
                              std_srvs::Trigger::Response &res) {
-    pthread_mutex_lock(&mutexes_.octomap);
-        globals_.octomap.ResetMap();
-    pthread_mutex_unlock(&mutexes_.octomap);
-
-    res.success = true;
-    res.message = "Map has been reset!";
-    return true;
-}
-
-// Callback to get the keep in/out zones
-bool MapperNodelet::GetZonesCallback(ff_msgs::GetZones::Request &req,
-                                     ff_msgs::GetZones::Response &res) {
-res.timestamp = zones_.timestamp;
-res.zones = zones_.zones;
-return true;
-}
-
-// Callback to set the keep in/out zones
-bool MapperNodelet::SetZonesCallback(ff_msgs::SetZones::Request &req,
-                                     ff_msgs::SetZones::Response &res) {  //NOLINT
-if (req.timestamp >= zones_.timestamp) {
-  zones_ = req;
-  fs::path zone_file(std::to_string(zones_.timestamp.sec) + ".bin");
-  if (!ff_util::Serialization::WriteFile(
-    (zone_dir_ / zone_file).native(), zones_)) return false;
-  UpdateKeepInOutMarkers();
+  mutexes_.octomap.lock();
+  globals_.octomap.ResetMap();
+  mutexes_.octomap.unlock();
+  res.success = true;
+  res.message = "Map has been reset!";
   return true;
 }
-return false;
+
+bool MapperNodelet::GetFreeMapCallback(ff_msgs::GetMap::Request &req,
+                                       ff_msgs::GetMap::Response &res) {
+  visualization_msgs::MarkerArray om, fm;
+  sensor_msgs::PointCloud2 oc, fc;
+
+  mutexes_.octomap.lock();
+  globals_.octomap.TreeVisMarkers(&om, &fm, &oc, &fc);
+  mutexes_.octomap.unlock();
+
+  res.points = fc;
+  res.resolution = globals_.octomap.GetResolution();
+  res.free = true;
+
+  return true;
+}
+bool MapperNodelet::GetObstacleMapCallback(ff_msgs::GetMap::Request &req,
+                                       ff_msgs::GetMap::Response &res) {
+  visualization_msgs::MarkerArray om, fm;
+  sensor_msgs::PointCloud2 oc, fc;
+
+  mutexes_.octomap.lock();
+  globals_.octomap.TreeVisMarkers(&om, &fm, &oc, &fc);
+  mutexes_.octomap.unlock();
+
+  res.points = oc;
+  res.resolution = globals_.octomap.GetResolution();
+  res.free = false;
+
+  return true;
 }
 
 }  // namespace mapper

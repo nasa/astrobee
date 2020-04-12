@@ -4,20 +4,20 @@
 numPmcs = 2
 
 -- duration of the generated sequence (seconds)
-duration = 12
+duration = 6
 
 -- frame rate at wich commands are generated
-rate = 62.5
+rate = 5
 
 -- speed of the impeller (fixed over the sequence)
-speed = 200
+speed = 207
 
 -- number of nozzles on each PMCs
 numNozzles = 6
 
 -- min and max opening of the nozzles
-minPosition = 0
-maxPosition = 255
+minPosition = 5
+maxPosition = 250
 
 -- range of servo position
 positionRange = maxPosition-minPosition
@@ -32,7 +32,7 @@ use_phase = true
 ts = 1.0 / rate
 
 -- sinusoid power (<1 -> sharper peaks / >1 -> steeper slopes)
-power = 0.7
+power = 0.8
 
 -- modified sine wave
 function wave(time, phase)
@@ -60,7 +60,7 @@ for i = 0,rate*duration do
     io.write(speed .. " ")
     for n = 0,numNozzles-1 do
       if use_phase then
-        phase = n*math.pi/(numPmcs+1)
+        phase = n*2.0*math.pi/numNozzles
       else
         phase = 0.0
       end

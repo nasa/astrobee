@@ -54,6 +54,9 @@ int32 EPS_UNDOCK_FAILED                  = -13
 int32 EPS_DOCK_FAILED                    = -14
 int32 TOO_FAR_AWAY_FROM_APPROACH         = -15
 
+# Human readable FSM result for debugging
+string fsm_result
+
 ---
 
 # Feedback

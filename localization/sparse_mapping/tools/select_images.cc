@@ -1,14 +1,14 @@
 /* Copyright (c) 2017, United States Government, as represented by the
  * Administrator of the National Aeronautics and Space Administration.
- * 
+ *
  * All rights reserved.
- * 
+ *
  * The Astrobee platform is licensed under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -39,6 +39,9 @@
 // From a given set of images, eliminate images such that the sequence
 // is still contiguous, but has fewer images.
 
+DEFINE_double(density_factor, 1.4,
+              "Increasing this value will allow more images to be kept.");
+
 int main(int argc, char** argv) {
   common::InitFreeFlyerApplication(&argc, &argv);
   GOOGLE_PROTOBUF_VERIFY_VERSION;
@@ -52,7 +55,7 @@ int main(int argc, char** argv) {
   cv::Mat image1, image2, image_last, descriptors1, descriptors2, descriptors_last;
   std::vector<cv::KeyPoint> storage;
 
-  detector.Reset("ORGBRISK", 100, 20000, 20, 3);
+  detector.Reset("ORGBRISK");
 
   printf("Removing duplicate images...\n");
   common::PrintProgressBar(stdout, 0.0);
@@ -69,12 +72,14 @@ int main(int argc, char** argv) {
       interest_point::FindMatches(descriptors1, descriptors2, &matches);
       common::PrintProgressBar(stdout, static_cast<float>(j - 1) / (argc - 2));
       // if many descriptors match, we can ignore
-      if (matches.size() >= static_cast<unsigned int>(descriptors1.rows / 4) || matches.size() >= 2000) {
+      double d = FLAGS_density_factor;
+      if (matches.size() >= d*descriptors1.rows/4.0 || matches.size() >= d*2000) {
         image_last = image2;
         descriptors_last = descriptors2;
         // we can delete everything up to here in this special case
         if (j == argc - 1) {
           for (int k = i + 1; k < argc; k++) {
+            LOG(INFO) << "Deleting " << argv[k] << ".";
             if (std::remove(argv[k])) {
               LOG(WARNING) << "Couldn't delete " << argv[k] << ".";
             }
@@ -97,6 +102,7 @@ int main(int argc, char** argv) {
           descriptors1 = descriptors_last;
           // delete the skipped files
           for (int k = i + 1; k < j - 1; k++) {
+            LOG(INFO) << "Deleting " << argv[k] << ".";
             if (std::remove(argv[k])) {
               LOG(WARNING) << "Couldn't delete " << argv[k] << ".";
             }

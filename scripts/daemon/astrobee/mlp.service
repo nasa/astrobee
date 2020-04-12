@@ -1,0 +1,14 @@
+[Unit]
+Description=Wait until the mid-level processor can be pinged
+After=network.target
+
+[Service]
+Type=oneshot
+User=astrobee
+Group=astrobee
+EnvironmentFile=/res/astrobee.env
+ExecStart=/bin/bash -c 'while ! ping -c1 ${ASTROBEE_MLP}; do sleep 1; done'
+TimeoutStartSec=60s
+
+[Install]
+WantedBy=multi-user.target

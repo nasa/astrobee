@@ -7,8 +7,11 @@ support some of our Gazebo plugins.
 
     sudo apt-get install build-essential git
 
-*Note: You will need 3 GBs of RAM to compile the software. If you don't have
+*Note: You will need 4 GBs of RAM to compile the software. If you don't have
 that much RAM available, please use swap space.*
+
+*Note: Please ensure you install Ubuntu 16.04. At this time we do not support
+any other operating system or Ubuntu version.*
 
 *Note: Please ensure you install the 64-bit version of Ubuntu. We do not
 support running Astrobee Robot Software on 32-bit systems.*
@@ -19,25 +22,25 @@ support running Astrobee Robot Software on 32-bit systems.*
 
 At this point you need to decide where you'd like to put the source code
 (`SOURCE_PATH`) on your machine:
-```
+
     export SOURCE_PATH=$HOME/freeflyer
-```
+
 First, clone the flight software repository:
-```
+
     git clone https://github.com/nasa/astrobee.git $SOURCE_PATH
-```
+
 
 If you are planning to work on guest science stuff, you will also need the
 `astrobee_android` repository. You should checkout the repository in the same
 directory you checked out the source code in:
-```
+
     export ANDROID_PATH="${SOURCE_PATH}_android"
-```
+
 
 Clone the android repository:
-```
+
     git clone https://github.com/nasa/astrobee_android.git $ANDROID_PATH
-```
+
 
 ### Dependencies
 
@@ -49,6 +52,7 @@ Next, install all required dependencies:
     pushd $SOURCE_PATH
     cd scripts/setup
     ./add_ros_repository.sh
+    sudo apt-get update
     cd debians
     ./build_install_debians.sh
     cd ../
@@ -56,6 +60,17 @@ Next, install all required dependencies:
     sudo rosdep init
     rosdep update
     popd
+
+**Important**: you can safely ignore the following error messages, as they are simply letting you know that certain libraries cannot be found. These libraries are for internal NASA use only, and are not required by public users provided that software is launched with DDS disabled.
+
+    E: Unable to locate package libroyale1
+    E: Unable to locate package rti
+    E: Unable to locate package libmiro0
+    E: Unable to locate package libsoracore1
+    E: Unable to locate package libroyale-dev
+    E: Unable to locate package rti-dev
+    E: Unable to locate package libsoracore-dev
+    E: Unable to locate package libmiro-dev
 
 ## Configuring the build
 
@@ -67,7 +82,10 @@ By default, the configure script uses the following paths:
 If you are satisfied with these paths, you can invoke the `configure.sh` without
 the `-p` and `-b` options. For the simplicity of the instructions below,
 we assume that `$BUILD_PATH` and `$INSTALL_PATH` contain the location of the
-build and install path.
+build and install path. For example:
+
+    export BUILD_PATH=$HOME/freeflyer_build/native
+    export INSTALL_PATH=$HOME/freeflyer_install/native
 
 ### Native build
 
@@ -100,33 +118,11 @@ time round. Future builds will be faster, as only changes to the code are
 rebuilt, and not the entire code base.
 
     pushd $BUILD_PATH
-    make -j6
+    make -j2
     popd
 
-## Running a simulation
+If you configured your virtual machine with more than the baseline resources,
+you can adjust the number of threads (eg. -j4) to speed up the build.
 
-You will need to first setup your environment, so that ROS knows about the new
-packages provided by Astrobee flight software:
-
-    pushd $BUILD_PATH
-    source devel/setup.bash
-    popd
-
-After this command has completed, you should be able to run a simulator from any
-directory in your Linux filesystem. So, for example, to start a simulation of a
-single Astrobee in the ISS, run the following:
-
-    roslaunch astrobee sim.launch dds:=false robot:=sim_pub rviz:=true
-
-- Note 1: The very first time Gazebo starts, it could take a long time because
-  it loads some large models
-- Note 2: To run the simulation with the Gazebo rendering, you can add the flag
-  `sviz:=true`. This allow to see the ISS module used for the simulation,
-  however this is demanding more resources on your computer.
-
-This command tells ROS to look for the `sim.launch` file provided by the
-`astrobee` package, and use roslaunch to run it. Internally, ROS maintains a
-cache of information about package locations, libraries and executables. If you
-find that the above command doesn't work, try rebuilding the cache:
-
-    rospack profile
+For more information on running the simulator and moving the robot, please see
+the [simulation instructions](simulation/sim_overview.md).

@@ -1,25 +1,29 @@
 @startuml
 
-'skinparam dpi 300
-
 title Astrobee Mobility State (Executive)
 
 [*] --> Drifting
 
 Drifting --> Stopping : stop
-Stopping ----> Flying : move
+Drifting --> Flying : move
+Drifting --> Docking : dock
+Drifting --> Perching : perch
 
+Stopping ----> Flying : move
 Stopping --> Docking : dock
 Stopping --> Perching : perch
 Stopping --> Drifting : idle propulsion
+
 Perching --> Stopping : unperch
 Perching --> Stopping: stop
+Perching --> Drifting : idle propulsion
+
+Docking --> Drifting : idle propulsion
 Docking --> Stopping : undock
 Docking --> Stopping : stop
+
 Flying --> Stopping : stop
 Flying --> Drifting : idle propulsion
-Perching --> Drifting : idle propulsion
-Docking --> Drifting : idle propulsion
 
 
 state Stopping {

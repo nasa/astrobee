@@ -16,12 +16,8 @@
 <!-- permissions and limitations under the License.                          -->
 
 <launch>
-  <!-- Astrobee and granite table -->
-  <include file="$(find rviz_visualizer)/launch/granite_table_visualizer.launch" />
-  <!-- Frame transform -->
-  <node pkg="tf2_ros" type="static_transform_publisher"
-        name="world2rviz" args="0 0 0 1 0 0 0  world rviz" />
-  <!-- Rviz -->
+  <arg name="world"/>
   <node name="rviz_node" pkg="rviz" type="rviz" 
-        respawn="true" args="-d $(find astrobee)/resources/gui.rviz" output="log"/>
+        respawn="true"  output="log"
+        args="-d $(find astrobee)/resources/rviz/$(arg world).rviz"/>
 </launch>

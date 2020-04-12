@@ -1,0 +1,21 @@
+{
+  "type" : "DataConfigurationFile",
+  "name" : "aft_extrinsics",
+  "topicSettings": [
+    {
+      "topicName" : "hw/imu",
+      "downlinkOption" : "delayed",
+      "frequency" : -1
+    }, 
+    {
+      "topicName" : "hw/cam_dock",
+      "downlinkOption" : "delayed",
+      "frequency" : -1
+    },
+    {
+      "topicName" : "hw/depth_perch/extended",
+      "downlinkOption" : "delayed",
+      "frequency" : -1
+    }
+  ]
+}

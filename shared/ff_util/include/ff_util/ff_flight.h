@@ -23,7 +23,7 @@
 #include <ros/ros.h>
 
 // General information
-#include <geometry_msgs/Inertia.h>
+#include <geometry_msgs/InertiaStamped.h>
 
 // Message includes
 #include <ff_msgs/EkfState.h>
@@ -44,35 +44,37 @@ namespace ff_util {
 // Convenience declarations
 typedef ff_msgs::ControlState Setpoint;
 typedef ff_msgs::EkfState Estimate;
-typedef std::vector < Setpoint > Segment;
+typedef std::vector<Setpoint> Segment;
 
 class State {
  public:
   // Empty state
   State();
+
   // Create a state from a ff_msgs::ControlState message
   explicit State(Setpoint const& msg);
+
   // Create a state from a ff_msgs::ControlState message
   explicit State(Estimate const& msg);
+
   // Destructor
   virtual ~State();
+
   // Assignment operator
   void operator=(State const& right);
+
   // Minus operator
   State operator-(State const& right);
-  // Propagate the state forward by a dome time step
-  State Propagate(double dt);
+
   // Convert the state to a setpoint
   Setpoint ToSetpoint();
+
   // Return the magnitude of a rotation
   double QuaternionMagnitude();
-    // Useful helper functions
+
+  // Useful helper functions
   static double QuaternionMagnitude(Eigen::Quaterniond const& iq);
   static double VectorMagnitude(Eigen::Vector3d const& iv);
-
- protected:
-  // Generate a strapdown equation for a given quaternion
-  Eigen::Matrix4d Omega(Eigen::Vector3d const& vec);
 
  public:
   double t;               // Time
@@ -89,7 +91,7 @@ class State {
 ////////////////////////////////////////
 
 // Segment check bitmask
-enum SegmentCheckMask : unsigned int {
+enum SegmentCheckMask : uint32_t {
   CHECK_NONE                      = 0x000,
   CHECK_MINIMUM_FREQUENCY         = 0x001,
   CHECK_STATIONARY_ENDPOINT       = 0x002,
@@ -105,7 +107,7 @@ enum SegmentCheckMask : unsigned int {
   CHECK_ALL                       = 0x800
 };
 // Segment result bitmask
-enum SegmentResult : int {
+enum SegmentResult : int32_t {
   SUCCESS                         =  0,
   ERROR_MINIMUM_FREQUENCY         = -1,
   ERROR_STATIONARY_ENDPOINT       = -2,
@@ -127,7 +129,7 @@ class FlightUtil {
   static constexpr double MIN_CONTROL_RATE = 1.0;
 
   // Get all inertia configuration (LUA config file is queried only once)
-  static bool GetInertiaConfig(geometry_msgs::Inertia & data);
+  static bool GetInertiaConfig(geometry_msgs::InertiaStamped & data);
 
   // Get data for a given flight mode (leave empty for default value)
   static bool GetFlightMode(
@@ -157,7 +159,11 @@ class FlightUtil {
   static bool Equal(Setpoint const& left, Setpoint const& right,
     size_t degree = 2);
 
-  // Check that the first pose is consistent with the segment/flight mode
+  // Check if two poses are within position and attitude tolerance
+  static bool WithinTolerance(geometry_msgs::Pose const& a,
+    geometry_msgs::Pose const& b, double tolerance_pos, double tolerance_att);
+
+  // Check if two poses are within tolerance of a flight mode
   static bool WithinTolerance(ff_msgs::FlightMode const& fm,
     geometry_msgs::Pose const& a, geometry_msgs::Pose const& b);
 };
