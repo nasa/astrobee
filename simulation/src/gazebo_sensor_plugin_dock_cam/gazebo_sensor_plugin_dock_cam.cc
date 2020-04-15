@@ -41,7 +41,7 @@ class GazeboSensorPluginDockCam : public FreeFlyerSensorPlugin {
 
   ~GazeboSensorPluginDockCam() {
     if (update_)
-      sensor_->DisconnectUpdated(update_);
+      update_.reset();
   }
 
  protected:

@@ -41,7 +41,7 @@ class GazeboSensorPluginNavCam : public FreeFlyerSensorPlugin {
 
   ~GazeboSensorPluginNavCam() {
     if (update_)
-      sensor_->DisconnectUpdated(update_);
+      update_.reset();
   }
 
  protected:

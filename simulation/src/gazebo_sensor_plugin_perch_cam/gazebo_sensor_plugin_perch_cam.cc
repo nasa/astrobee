@@ -46,7 +46,7 @@ class GazeboSensorPluginPerchCam : public FreeFlyerSensorPlugin {
 
   ~GazeboSensorPluginPerchCam() {
     if (update_)
-      camera_->DisconnectNewRGBPointCloud(update_);
+      update_.reset();
   }
 
  protected:

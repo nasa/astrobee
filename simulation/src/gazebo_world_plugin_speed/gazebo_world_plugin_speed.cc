@@ -49,7 +49,7 @@ class WorldPluginSpeed : public WorldPlugin {
     simulation_speed *= 125;
     // Set the simulation speed
     gzmsg << "Setting target update rate to " << simulation_speed << std::endl;
-    physics::PhysicsEnginePtr engine = world->GetPhysicsEngine();
+    physics::PhysicsEnginePtr engine = world->Physics();
     engine->SetRealTimeUpdateRate(simulation_speed);
   }
 

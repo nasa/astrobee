@@ -155,7 +155,6 @@ class SignalLightsNodelet : public ff_util::FreeFlyerNodelet {
   ros::Subscriber sub_;  // Configure service
 };
 
-PLUGINLIB_DECLARE_CLASS(signal_lights, SignalLightsNodelet,
-                        signal_lights::SignalLightsNodelet, nodelet::Nodelet);
+PLUGINLIB_EXPORT_CLASS(signal_lights::SignalLightsNodelet, nodelet::Nodelet);
 
 }  // namespace signal_lights

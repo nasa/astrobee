@@ -181,7 +181,7 @@ class GazeboModelPluginEps : public FreeFlyerModelPlugin {
 
   // Destructor
   ~GazeboModelPluginEps() {
-    event::Events::DisconnectWorldUpdateEnd(update_);
+    update_.reset();
   }
 
  protected:
@@ -389,7 +389,7 @@ class GazeboModelPluginEps : public FreeFlyerModelPlugin {
         tf.transform.rotation.y,
         tf.transform.rotation.z);
       // Kill the connection when we have a dock pose
-      event::Events::DisconnectWorldUpdateEnd(update_);
+      update_.reset();
       // Once we have berth locations start timer for checking dock status
       timer_update_.start();
     // If we have an exception we need to quietly wait for transform(s)
@@ -402,11 +402,11 @@ class GazeboModelPluginEps : public FreeFlyerModelPlugin {
       // We are not guaranteed to have a dock yet, so we need to check to see
       // that the model pointer is valid. If it is valid, then we to quietly
       // ignore locking for the time being.
-      physics::ModelPtr dock = GetWorld()->GetModel("dock");
+      physics::ModelPtr dock = GetWorld()->ModelByName("dock");
       if (dock == nullptr)
         return;
       // By this point we are guaranteed to have a dock
-      joint_ = GetWorld()->GetPhysicsEngine()->CreateJoint("fixed", GetModel());
+      joint_ = GetWorld()->Physics()->CreateJoint("fixed", GetModel());
       joint_->Attach(GetModel()->GetLink(), dock->GetLink());
       // If we have an air carriage, stop colliding with anything
       physics::LinkPtr link = GetModel()->GetLink("body");
@@ -429,7 +429,7 @@ class GazeboModelPluginEps : public FreeFlyerModelPlugin {
     // only expecting fewer than 6 berths, it seems like needless optimization.
     bool near = false;
     for (nearest_ = berths_.begin(); nearest_ != berths_.end(); nearest_++) {
-      if (GetModel()->GetWorldPose().Ign().Pos().Distance(
+      if (GetModel()->WorldPose().Pos().Distance(
         nearest_->second.Pos()) > distance_) continue;
       // Now, send an event to the FSM to signal that we are close!
       fsm_.Update(SENSE_NEAR);

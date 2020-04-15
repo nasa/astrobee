@@ -51,15 +51,14 @@ cd ${DEBIAN_LOC}
 ./build_decomputil.sh || exit 1
 sudo dpkg -i libdecomputil*_amd64.deb || exit 1
 
-cd ${DEBIAN_LOC}/jps3d
-sudo mk-build-deps -i -r -t "apt-get --no-install-recommends -y" control
-cd ${DEBIAN_LOC}
-./build_jps3d.sh || exit 1
-sudo dpkg -i libjps3d*_amd64.deb || exit 1
-
 cd ${DEBIAN_LOC}/openmvg
 sudo mk-build-deps -i -r -t "apt-get --no-install-recommends -y" control
 cd ${DEBIAN_LOC}
 ./build_openmvg.sh || exit 1
 sudo dpkg -i libopenmvg*_amd64.deb || exit 1
 
+cd ${DEBIAN_LOC}/jps3d
+sudo mk-build-deps -i -r -t "apt-get --no-install-recommends -y" control
+cd ${DEBIAN_LOC}
+./build_jps3d.sh || exit 1
+sudo dpkg -i libjps3d*_amd64.deb || exit 1  

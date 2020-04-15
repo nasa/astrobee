@@ -27,7 +27,8 @@ namespace gazebo {
 class SystemPluginClient : public SystemPlugin {
  public:
   ~SystemPluginClient() {
-    event::Events::DisconnectPreRender(update_);
+    // Disconnect ptr removed from Gazebo 9 - how to update it?
+    // event::Events::Disconnect(update_);
   }
 
   // Called before initializing

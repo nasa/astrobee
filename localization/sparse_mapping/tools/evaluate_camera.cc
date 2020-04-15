@@ -31,6 +31,7 @@
 #include <gflags/gflags.h>
 #include <glog/logging.h>
 #include <opencv2/features2d/features2d.hpp>
+#include <random>
 
 DEFINE_bool(ransac, false,
               "Use RANSAC algorithm. If not use ceres solver.");

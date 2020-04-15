@@ -100,9 +100,9 @@ class GazeboSensorPluginSparseMap : public FreeFlyerSensorPlugin {
       TOPIC_LOCALIZATION_ML_FEATURES, 1);
 
     // Create a shape for collision testing
-    GetWorld()->GetPhysicsEngine()->InitForThread();
+    GetWorld()->Physics()->InitForThread();
     shape_ = boost::dynamic_pointer_cast<physics::RayShape>(GetWorld()
-        ->GetPhysicsEngine()->CreateShape("ray", physics::CollisionPtr()));
+        ->Physics()->CreateShape("ray", physics::CollisionPtr()));
 
     // Only do this once
     msg_feat_.header.frame_id = std::string(FRAME_NAME_WORLD);
@@ -153,14 +153,14 @@ class GazeboSensorPluginSparseMap : public FreeFlyerSensorPlugin {
     // Handle the transform for all sensor types
     Eigen::Affine3d wTb = (
         Eigen::Translation3d(
-          GetModel()->GetWorldPose().pos.x,
-          GetModel()->GetWorldPose().pos.y,
-          GetModel()->GetWorldPose().pos.z) *
+          GetModel()->WorldPose().Pos().X(),
+          GetModel()->WorldPose().Pos().Y(),
+          GetModel()->WorldPose().Pos().Z()) *
         Eigen::Quaterniond(
-          GetModel()->GetWorldPose().rot.w,
-          GetModel()->GetWorldPose().rot.x,
-          GetModel()->GetWorldPose().rot.y,
-          GetModel()->GetWorldPose().rot.z));
+          GetModel()->WorldPose().Rot().W(),
+          GetModel()->WorldPose().Rot().X(),
+          GetModel()->WorldPose().Rot().Y(),
+          GetModel()->WorldPose().Rot().Z()));
     Eigen::Affine3d bTs = (
         Eigen::Translation3d(
           sensor_->Pose().Pos().X(),
@@ -191,9 +191,9 @@ class GazeboSensorPluginSparseMap : public FreeFlyerSensorPlugin {
 
     {
       // Initialize and lock the physics engine
-      GetWorld()->GetPhysicsEngine()->InitForThread();
+      GetWorld()->Physics()->InitForThread();
       boost::unique_lock<boost::recursive_mutex> lock(*(
-        GetWorld()->GetPhysicsEngine()->GetPhysicsUpdateMutex()));
+        GetWorld()->Physics()->GetPhysicsUpdateMutex()));
 
       // Create a new ray in the world
       size_t i = 0;

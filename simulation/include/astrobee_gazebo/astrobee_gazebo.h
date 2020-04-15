@@ -40,7 +40,6 @@
 #include <gazebo/common/common.hh>
 #include <gazebo/physics/physics.hh>
 #include <gazebo/sensors/sensors.hh>
-#include <gazebo/math/gzmath.hh>
 #include <gazebo/rendering/rendering.hh>
 
 // STL includes

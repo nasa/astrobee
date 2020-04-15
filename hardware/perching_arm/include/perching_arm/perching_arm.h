@@ -23,6 +23,7 @@
 
 #include <functional>
 #include <string>
+#include <iostream>
 
 #define MAX_PACKET_SIZE 64
 

@@ -42,7 +42,7 @@ class GazeboSensorPluginHazCam : public FreeFlyerSensorPlugin {
 
   ~GazeboSensorPluginHazCam() {
     if (update_)
-      camera_->DisconnectNewRGBPointCloud(update_);
+      update_.reset();
   }
 
  protected:

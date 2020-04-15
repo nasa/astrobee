@@ -214,9 +214,9 @@ class GazeboModelPluginPerchingArm : public FreeFlyerModelPlugin {
     double value = 0.0;
     switch (type) {
     case POSITION: {
-      double lower = joint->GetLowerLimit(0).Radian();
-      double upper = joint->GetUpperLimit(0).Radian();
-      value = (joint->GetAngle(0).Radian() - lower) / (upper - lower);
+      double lower = joint->LowerLimit();
+      double upper = joint->UpperLimit();
+      value = (joint->Position() - lower) / (upper - lower);
       break;
     }
     case VELOCITY:
@@ -236,8 +236,8 @@ class GazeboModelPluginPerchingArm : public FreeFlyerModelPlugin {
   void SetGripperJointGoal(std::string const& name, double position) {
     physics::JointPtr joint = GetModel()->GetJoint(name);
     // Get the joint limits
-    double lower = joint->GetLowerLimit(0).Radian();
-    double upper = joint->GetUpperLimit(0).Radian();
+    double lower = joint->LowerLimit();
+    double upper = joint->UpperLimit();
     // Calculate the correct joint angle based on the position (0 - 100)
     double value = lower + position * (upper - lower);
     GetModel()->GetJointController()->SetPositionTarget(
@@ -262,8 +262,8 @@ class GazeboModelPluginPerchingArm : public FreeFlyerModelPlugin {
   // Set the joint angle based on a gripper position from 0 to 100
   void SetGripperJointPosition(std::string const& name, double position) {
     physics::JointPtr joint = GetModel()->GetJoint(name);
-    double lower = joint->GetLowerLimit(0).Radian();
-    double upper = joint->GetUpperLimit(0).Radian();
+    double lower = joint->LowerLimit();
+    double upper = joint->UpperLimit();
     double value = lower + position * (upper - lower);
     joint->SetPosition(0, value);
   }
@@ -314,15 +314,15 @@ class GazeboModelPluginPerchingArm : public FreeFlyerModelPlugin {
     size_t i = 0;
     for (; i < joints_.size(); i++) {
       msg_.name[i] = joints_[i]->GetName();
-      msg_.position[i] = joints_[i]->GetAngle(0).Radian();
+      msg_.position[i] = joints_[i]->Position();
       msg_.velocity[i] = joints_[i]->GetVelocity(0);
       msg_.effort[i] = joints_[i]->GetForce(0);
     }
     // Calculate overall gripper status based on left_proximal_joint the joint
     physics::JointPtr joint = GetModel()->GetJoint(bay_+"_gripper_left_proximal_joint");
-    double lower = joint->GetLowerLimit(0).Radian();
-    double upper = joint->GetUpperLimit(0).Radian();
-    double value = joint->GetAngle(0).Radian();
+    double lower = joint->LowerLimit();
+    double upper = joint->UpperLimit();
+    double value = joint->Position();
     double gripper = (value-lower)/(upper-lower)*100;
     // Set the virtual gripper state manually as the last element
     msg_.name[i] = bay_+"_gripper_joint";

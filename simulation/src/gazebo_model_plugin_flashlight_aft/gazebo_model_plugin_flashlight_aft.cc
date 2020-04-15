@@ -45,7 +45,7 @@ class GazeboModelPluginFlashlightAft : public FreeFlyerModelPlugin {
 
   ~GazeboModelPluginFlashlightAft() {
     if (update_)
-      event::Events::DisconnectWorldUpdateBegin(update_);
+      update_.reset();
   }
 
  protected:
@@ -155,7 +155,7 @@ class GazeboModelPluginFlashlightAft : public FreeFlyerModelPlugin {
     msgs::Set(light_.mutable_diffuse(), common::Color(0.5, 0.5, 0.5, 1));
     msgs::Set(light_.mutable_specular(), common::Color(0.1, 0.1, 0.1, 1));
     msgs::Set(light_.mutable_pose(), pose_ +
-       GetModel()->GetLink()->GetWorldPose().Ign());
+      GetModel()->GetLink()->WorldPose());
     pub_factory_->Publish(light_);
 
     // Modify the new entity to be only visible in the GUI
@@ -193,7 +193,7 @@ class GazeboModelPluginFlashlightAft : public FreeFlyerModelPlugin {
   // Called when a new entity is created
   void WorldUpdateBegin() {
     msgs::Set(light_.mutable_pose(), pose_ +
-       GetModel()->GetLink()->GetWorldPose().Ign());
+       GetModel()->GetLink()->WorldPose());
     pub_light_->Publish(light_);
   }
 

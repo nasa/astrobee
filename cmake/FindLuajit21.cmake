@@ -68,7 +68,7 @@ endif()
 include(FindPackageHandleStandardArgs)
 # handle the QUIETLY and REQUIRED arguments and set LUA_FOUND to TRUE if
 # all listed variables are TRUE
-FIND_PACKAGE_HANDLE_STANDARD_ARGS(Luajit21\
+FIND_PACKAGE_HANDLE_STANDARD_ARGS(Luajit21
                                   REQUIRED_VARS LUAJIT_LIBRARIES 
                                   LUAJIT_INCLUDE_DIR VERSION_VAR 
                                   LUAJIT_VERSION_STRING)

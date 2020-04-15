@@ -32,7 +32,7 @@ class GazeboModelPluginDrag : public FreeFlyerModelPlugin {
     coefficient_(1.05), area_(0.092903), density_(1.225) {}
 
   ~GazeboModelPluginDrag() {
-    event::Events::DisconnectWorldUpdateBegin(update_);
+    update_.reset();
   }
 
  protected:
@@ -49,22 +49,22 @@ class GazeboModelPluginDrag : public FreeFlyerModelPlugin {
     if (sdf->HasElement("density"))
       density_ = sdf->Get<double>("density");
     // Called before each iteration of simulated world update
-    next_tick_ = GetWorld()->GetSimTime();
+    next_tick_ = GetWorld()->SimTime();
     update_ = event::Events::ConnectWorldUpdateBegin(
       std::bind(&GazeboModelPluginDrag::WorldUpdateCallback, this));
   }
 
   // Called on simulation reset
   void Reset() {
-    next_tick_ = GetWorld()->GetSimTime();
+    next_tick_ = GetWorld()->SimTime();
   }
 
   // Called on each sensor update event
   void WorldUpdateCallback() {
     // Calculate drag
-    drag_ = GetLink()->GetRelativeLinearVel();
+    drag_ = GetLink()->RelativeLinearVel();
     drag_ = -0.5 * coefficient_ * area_ * density_
-          * drag_.GetLength() * drag_.GetLength() * drag_.Normalize();
+          * drag_.Length() * drag_.Length() * drag_.Normalize();
     // Apply the force and torque to the model
     GetLink()->AddRelativeForce(drag_);
   }
@@ -72,7 +72,7 @@ class GazeboModelPluginDrag : public FreeFlyerModelPlugin {
  private:
   double coefficient_, area_, density_;              // Drag parameters
   common::Time next_tick_;
-  math::Vector3 drag_;
+  ignition::math::Vector3d drag_;
   event::ConnectionPtr update_;
 };
 

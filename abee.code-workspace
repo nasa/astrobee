@@ -1,0 +1,14 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"configurations": [
+			{
+				"includePath": ["/usr/local/include", "/usr/include", "/usr/include/gazebo-9/gazebo"]
+			}
+		]
+	}
+}

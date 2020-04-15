@@ -15,7 +15,7 @@
 
 
 %:
-	dh $@ --buildsystem=cmake
+	dh $@ --buildsystem=cmake --dpkg-shlibdeps-params=--ignore-missing-info
 
 
 # dh_make generated override targets

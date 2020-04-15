@@ -36,9 +36,9 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 list(APPEND CMAKE_PREFIX_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
 if (USE_CTC)
-  list(APPEND CMAKE_PREFIX_PATH "${ARM_CHROOT_DIR}/opt/ros/kinetic")
+  list(APPEND CMAKE_PREFIX_PATH "${ARM_CHROOT_DIR}/opt/ros/melodic")
 else (USE_CTC)
-  list(APPEND CMAKE_PREFIX_PATH "/opt/ros/kinetic")
+  list(APPEND CMAKE_PREFIX_PATH "/opt/ros/melodic")
 endif (USE_CTC)
 
 # Enable RPATHs
@@ -48,7 +48,7 @@ set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
 # The following works for then the binaries are not installed, but are
 # ran from the build directory.
 list(APPEND CMAKE_INSTALL_RPATH "$ORIGIN/../lib")
-list(APPEND CMAKE_INSTALL_RPATH "/opt/ros/kinetic/lib")
+list(APPEND CMAKE_INSTALL_RPATH "/opt/ros/melodic/lib")
 
 # The following RPATHs work for when the binaries are installed
 if (USE_CTC)
@@ -180,7 +180,7 @@ find_package(Ceres REQUIRED)
 find_package(Boost 1.54.0 QUIET REQUIRED COMPONENTS filesystem system iostreams thread program_options)
 find_package(Eigen3 REQUIRED)
 find_package(ZLIB)
-find_package(Luajit20 REQUIRED)
+find_package(Luajit21 REQUIRED)
 
 # Find OpenCV and fix a 3.3.1 bug
 find_package(OpenCV 3 REQUIRED)
@@ -200,7 +200,7 @@ if (${OpenCV_VERSION} MATCHES "3.3.1")
     endif()
   endforeach(__cvcomponent)
 endif()
-set(OpenCV_LIBRARIES ${OpenCV_LIBS})
+set(OpenCV_LIBRARIES ${OpenCV_LIBS} ${OpenCV_LIBRARIES})
 
 find_package(dbow2 REQUIRED)
 find_package(Alvar REQUIRED)
@@ -226,8 +226,8 @@ if (NOT USE_CTC)  # pkg-config needs extra work to be used for cross compile
   endif (YAMLCPP_FOUND)
 endif (NOT USE_CTC)
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wno-unused-local-typedefs -Werror -Wno-packed-bitfield-compat")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-unused-local-typedefs -Werror -Wno-packed-bitfield-compat")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wno-unused-local-typedefs -Wno-packed-bitfield-compat -std=c++11 ") # removed -Werror
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-unused-local-typedefs -Wno-packed-bitfield-compat -std=c++11 ") # removed -Werror
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--no-undefined")
 set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--no-undefined")
 
@@ -260,6 +260,7 @@ if (USE_CTC)
   set(CATKIN_SKIP_TESTING OFF)
 endif (USE_CTC)
 if (USE_ROS)
+  message([WARNING] "Using ROS")
   set(ENV{ROS_LANG_DISABLE} "genlisp:gennodejs:geneus:$ENV{ROS_LANG_DISABLE}")
   find_package(catkin2 COMPONENTS roscpp message_generation std_msgs geometry_msgs sensor_msgs cv_bridge image_transport tf tf2 tf2_ros rosbag nodelet)
 
@@ -271,7 +272,7 @@ if (USE_ROS)
   find_package(Octomap MODULE REQUIRED)
   #pkg_check_modules(OROCOS_KDL REQUIRED orocos_kdl)
   if (USE_CTC)
-    set(OROCOS_KDL_LIBRARIES ${ARM_CHROOT_DIR}/opt/ros/kinetic/lib/liborocos-kdl.so)
+    set(OROCOS_KDL_LIBRARIES ${ARM_CHROOT_DIR}/opt/ros/melodic/lib/liborocos-kdl.so)
   endif (USE_CTC)
   set(catkin_FOUND ${catkin2_FOUND})
 endif(USE_ROS)
