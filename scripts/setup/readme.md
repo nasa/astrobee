@@ -7,8 +7,16 @@ This is WIP. The above instructions should work to build the Astrobee simulator 
     https://docs.opencv.org/master/d7/d9f/tutorial_linux_install.html
 
     Make sure that, after cloning the repositories, you checkout the correct versions with
-    git checkout 3.3.1
+    git checkout 3.2.0
 
+    Build with:
+    cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local -DOPENCV_EXTRA_MODULES_PATH=../../opencv_contrib/modules -DINSTALL_C_EXAMPLES=ON -DINSTALL_PYTHON_EXAMPLES=ON -DBUILD_EXAMPLES=ON -DOPENCV_ENABLED_NONFREE=YES ..
+
+3. Build and install Luajit 2.0.5 from
+  https://luajit.org/download.html  
+
+4. Go to scripts/setup/debians and do:
+  
 3. Run in order:
     cd debians
     ./build_install_debians.sh
@@ -21,10 +29,13 @@ This is WIP. The above instructions should work to build the Astrobee simulator 
 
 4. Update Gazebo 9.0 to 9.13, following the step-by-step installation:
   http://gazebosim.org/tutorials?tut=install_ubuntu
+  and afterwards run
+  "sudo apt upgrade libignition-math2"
 
   If, when running gazebo on the terminal, you get the error: "gazebo: error while loading shared libraries: libgazebo_common.so.1: cannot open shared object file: No such file or directory", run
   "echo '/usr/local/lib' | sudo tee /etc/ld.so.conf.d/gazebo.conf"
   "sudo ldconfig"
+  
 
 5. Configure and build the simulator
 
