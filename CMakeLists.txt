@@ -180,7 +180,7 @@ find_package(Ceres REQUIRED)
 find_package(Boost 1.54.0 QUIET REQUIRED COMPONENTS filesystem system iostreams thread program_options)
 find_package(Eigen3 REQUIRED)
 find_package(ZLIB)
-find_package(Luajit21 REQUIRED)
+find_package(Luajit20 REQUIRED)
 
 # Find OpenCV and fix a 3.3.1 bug
 find_package(OpenCV 3 REQUIRED)

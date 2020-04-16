@@ -23,7 +23,7 @@
 #  LUAJIT_VERSION_STRING, the version of Lua found (since CMake 2.8.8)
 
 find_path(LUAJIT_INCLUDE_DIR luajit.h
-  PATH_SUFFIXES include/luajit-2.1 include
+  PATH_SUFFIXES include/luajit-2.0 include
   PATHS
   ~/Library/Frameworks
   /Library/Frameworks
@@ -68,11 +68,10 @@ endif()
 include(FindPackageHandleStandardArgs)
 # handle the QUIETLY and REQUIRED arguments and set LUA_FOUND to TRUE if
 # all listed variables are TRUE
-FIND_PACKAGE_HANDLE_STANDARD_ARGS(Luajit21\
+FIND_PACKAGE_HANDLE_STANDARD_ARGS(Luajit20
                                   REQUIRED_VARS LUAJIT_LIBRARIES 
                                   LUAJIT_INCLUDE_DIR VERSION_VAR 
                                   LUAJIT_VERSION_STRING)
 
 mark_as_advanced(LUAJIT_INCLUDE_DIR LUAJIT_LIBRARIES LUAJIT_LIBRARY 
                   LUAJIT_MATH_LIBRARY)
-
