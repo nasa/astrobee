@@ -1,3 +1,41 @@
+# Building NASA Astrobee Simulator on Ubuntu 18.04
+
+This is WIP. The above instructions should work to build the Astrobee simulator on a clean Ubuntu 18.04 install.
+1. Clone the NASA Astrobee 18.04 merge request branch
+
+2. Install OpenCV with Contrib modules, version 3.3.1, and following:
+    https://docs.opencv.org/master/d7/d9f/tutorial_linux_install.html
+
+    Make sure that, after cloning the repositories, you checkout the correct versions with
+    git checkout 3.3.1
+
+3. Run in order:
+    cd debians
+    ./build_install_debians.sh
+    cd ../
+    ./add_ros_repository.sh
+    ./install_desktop_18_04_packages.sh
+    sudo rosdep init
+    rosdep update
+    popd
+
+4. Update Gazebo 9.0 to 9.13, following the step-by-step installation:
+  http://gazebosim.org/tutorials?tut=install_ubuntu
+
+  If, when running gazebo on the terminal, you get the error: "gazebo: error while loading shared libraries: libgazebo_common.so.1: cannot open shared object file: No such file or directory", run
+  "echo '/usr/local/lib' | sudo tee /etc/ld.so.conf.d/gazebo.conf"
+  "sudo ldconfig"
+
+5. Configure and build the simulator
+
+
+
+
+
+
+
+
+
 # Temporary instructions to build a VM
 
 ```
