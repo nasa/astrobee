@@ -428,7 +428,7 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
         if (!GetRobotPose(current_pose)) {
           return Result(RESPONSE::CANNOT_QUERY_ROBOT_POSE);
         }
-        states_.insert(states_.begin(), current_pose);
+        states_.front() = current_pose;
         // Send plan request
         replan_attempts_ = 1;
         if (!Plan(states_)) {
