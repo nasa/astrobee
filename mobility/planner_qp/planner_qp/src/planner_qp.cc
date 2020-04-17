@@ -801,7 +801,7 @@ class Planner : public planner::PlannerImplementation {
       error_angle = error_quat.getAngle();
       if (error_angle > M_PI) error_angle -= 2 * M_PI;
       axis = error_quat.getAxis();
-      axis_world_frame = tf::Transform(start_orientation_) * axis;
+      axis_world_frame = tf::Transform(start_orientation) * axis;
       tf::vector3TFToMsg(axis_world_frame * error_angle / dt,
                          state.twist.angular);
     }
@@ -848,7 +848,7 @@ class Planner : public planner::PlannerImplementation {
         v /= T;
         a /= T * T;
         state.pose.position = controls->back().pose.position;
-        tf::quaternionTFToMsg(start_orientation_ * tf::Quaternion(axis, p),
+        tf::quaternionTFToMsg(start_orientation * tf::Quaternion(axis, p),
                               state.pose.orientation);
         tf::vector3TFToMsg(axis_world_frame * v, state.twist.angular);
         tf::vector3TFToMsg(axis_world_frame * a, state.accel.angular);
