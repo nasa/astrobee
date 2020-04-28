@@ -183,6 +183,9 @@ find_package(ZLIB)
 find_package(Luajit20 REQUIRED)
 
 # Find OpenCV and fix a 3.3.1 bug
+list(APPEND CMAKE_INSTALL_RPATH "/home/roque/.local/lib") # find opencv3
+find_path(OpenCV_DIR OpenCVConfig.cmake PATHS ~/Git/opencv/build
+  PATH_SUFFIXES OpenCV-3.1.0 OpenCV-3.1.0-dev OpenCV-3.2.0 OpenCV-3.2.0-dev OpenCV-3.3.1 OpenCV-3.3.1-dev)
 find_package(OpenCV 3 REQUIRED)
 if (${OpenCV_VERSION} MATCHES "3.3.1")
   foreach(__cvcomponent ${OpenCV_LIB_COMPONENTS})

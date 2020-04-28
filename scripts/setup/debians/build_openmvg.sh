@@ -21,10 +21,6 @@ PACKAGE_NAME=libopenmvg
 ORIG_TAR=libopenmvg_1.1.orig.tar.gz
 DEB_DIR=openmvg
 
-if [ -d $PACKAGE_NAME ]; then
-  rm -rf $PACKAGE_NAME
-fi
-git clone https://github.com/openMVG/openMVG.git $PACKAGE_NAME --branch v1.1 || exit 1
 cd $PACKAGE_NAME
 git archive --prefix=$PACKAGE_NAME/ --output=../$ORIG_TAR --format tar.gz HEAD || exit 1
 cp -r ../$DEB_DIR debian
