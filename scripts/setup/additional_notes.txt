@@ -1,0 +1,24 @@
+1) Install OpenCV 3.2.0 to $HOME/.local, add -DENABLE_PRECOMPILED_HEADERS=OFF
+2) Install Luajit
+3) Run scritps/setup/debians/clone_debs.sh
+4) Edit the libraries CMakeLists.txt to add the OpenCV paths:
+  4.1)  On: list(APPEND CMAKE_INSTALL_RPATH "/opt/ros/kinetic/lib" "/opt/ros/kinetic/lib/x86_64-linux-gnu" "/opt/ros/kinetic/lib/arm-linux-gnueabihf")
+	Substitute to: list(APPEND CMAKE_INSTALL_RPATH "/opt/ros/kinetic/lib" "/opt/ros/kinetic/lib/x86_64-linux-gnu" "/opt/ros/kinetic/lib/arm-linux-gnueabihf" "/home/<user>/.local/lib"), replacing <user> with the username. Eg: "/home/john/.local/.lib"
+  4.2) On: find_path(OpenCV_DIR OpenCVConfig.cmake PATHS /opt/ros/kinetic/share/ 
+  PATH_SUFFIXES OpenCV-3.1.0 OpenCV-3.1.0-dev OpenCV-3.2.0 OpenCV-3.2.0-dev OpenCV-3.3.1 OpenCV-3.3.1-dev)
+	Add to the PATHS variable your OpenCV build directory, such as  ~/Git/opencv/build. E.g.:
+	find_path(OpenCV_DIR OpenCVConfig.cmake PATHS /opt/ros/kinetic/share/ ~/Git/opencv/build 
+  PATH_SUFFIXES OpenCV-3.1.0 OpenCV-3.1.0-dev OpenCV-3.2.0 OpenCV-3.2.0-dev OpenCV-3.3.1 OpenCV-3.3.1-dev)
+   4.3) Do this for libalvar, libdbow2, libdbowdlib
+
+   Note: if you get an error like "pkg-source: error: aborting due to unexpected upstream changes", then go into the lib* that gave the error, and do "dpkg-source --commit", type some patch name and description, and re-run the script.
+5) Run build_install_debians.sh
+6) Edit astrobee's CMakeLists.txt and add, on line 189 before findpackage:
+list(APPEND CMAKE_INSTALL_RPATH "/home/roque/.local/lib") # find opencv3
+find_path(OpenCV_DIR OpenCVConfig.cmake PATHS ~/Git/opencv/build
+  PATH_SUFFIXES OpenCV-3.1.0 OpenCV-3.1.0-dev OpenCV-3.2.0 OpenCV-3.2.0-dev OpenCV-3.3.1 OpenCV-3.3.1-dev)
+7) Configure and build
+
+
+------------------------- This last part is not needed anymore
+---- add to packages_base.lst: libboost-system1.62.0 libboost-filesystem1.65.1
