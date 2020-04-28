@@ -10,7 +10,7 @@ This is WIP. The above instructions should work to build the Astrobee simulator 
     git checkout 3.2.0
 
     Build with:
-    cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local -DOPENCV_EXTRA_MODULES_PATH=../../opencv_contrib/modules -DINSTALL_C_EXAMPLES=ON -DINSTALL_PYTHON_EXAMPLES=ON -DBUILD_EXAMPLES=ON -DOPENCV_ENABLED_NONFREE=YES ..
+    cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local -DOPENCV_EXTRA_MODULES_PATH=../../opencv_contrib/modules -DINSTALL_PYTHON_EXAMPLES=ON -DOPENCV_ENABLED_NONFREE=YES -DENABLE_PRECOMPILED_HEADERS=OFF ..
 
 3. Build and install Luajit 2.0.5 from
   https://luajit.org/download.html  
