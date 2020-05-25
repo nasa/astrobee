@@ -227,9 +227,8 @@ bool DataBagger::MakeDir(std::string dir,
           }
 
           // Clean up memory
-          if (char_dir != NULL) {
-            delete [] char_dir;
-          }
+          delete [] char_dir;
+          char_dir = NULL;
           return false;
         }
       }
@@ -237,9 +236,8 @@ bool DataBagger::MakeDir(std::string dir,
     }
 
     // Clean up memory
-    if (char_dir != NULL) {
-      delete [] char_dir;
-    }
+    delete [] char_dir;
+    char_dir = NULL;
   }
 
   return true;

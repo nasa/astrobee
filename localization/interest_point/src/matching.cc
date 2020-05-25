@@ -193,10 +193,8 @@ namespace interest_point {
   }
 
   FeatureDetector::~FeatureDetector(void) {
-    if (detector_ != NULL) {
-      delete detector_;
-      detector_ = NULL;
-    }
+    delete detector_;
+    detector_ = NULL;
   }
 
   void FeatureDetector::Reset(std::string const& detector_name,
@@ -204,10 +202,8 @@ namespace interest_point {
                               double min_thresh, double default_thresh, double max_thresh) {
     detector_name_ = detector_name;
 
-    if (detector_ != NULL) {
-      delete detector_;
-      detector_ = NULL;
-    }
+    delete detector_;
+    detector_ = NULL;
 
     // Populate the defaults
     if (max_features <= 0) {
