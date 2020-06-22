@@ -24,7 +24,9 @@
       <always_on>true</always_on>
       <update_rate>62.5</update_rate>
       <visualize>0</visualize>
-      <plugin name="sensor_imu_ros" filename="libgazebo_sensor_plugin_imu.so"/>
+      <plugin name="sensor_imu_ros" filename="libgazebo_sensor_plugin_imu.so">
+        <namespace>/${ns}/</namespace>
+      </plugin>
     </sensor>
   </gazebo>
 </robot>

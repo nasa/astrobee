@@ -15,6 +15,9 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+cmake_minimum_required(VERSION 2.8.3)
+project(interest_point)
+
 set(LIBS
   ${GLOG_LIBRARIES}
   ${GFLAGS_LIBRARIES}
@@ -33,6 +36,13 @@ set(INCLUDES
   ${GLOG_INCLUDE_DIRS}
 )
 
+catkin_package(
+  INCLUDE_DIRS include
+  LIBRARIES interest_point
+  CATKIN_DEPENDS
+#  DEPENDS system_lib
+)
+
 create_library(TARGET interest_point
   LIBS ${LIBS}
   INC ${INCLUDES}
@@ -40,7 +50,7 @@ create_library(TARGET interest_point
 
 set(INTEREST_LIBS
   interest_point
-  common
+  ff_common
   ${LIBS})
 
 create_tool_targets(DIR tools

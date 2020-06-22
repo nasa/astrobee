@@ -1,5 +1,4 @@
-\defgroup mapper Mapper
-\ingroup mobility
+\page mapper Mapper
 
 The \ref mapper node is responsible for maintaining a representation of the
 environment, which is in turn used by the \ref planner node for planning
@@ -27,48 +26,42 @@ respectively. Each zone is a cuboid in 3-space, and is fully-defined by the
 coordinates of two diagonally opposite vertices. The union of all keep-in zones
 minus the union of all keep-out zones describes the free space in which safe
 flight can occur. The default zones are provided as JSON formatted files with
-suffix `.json` in the `zones` directory of the \ref astrobee folder.
+suffix `.json` in the `astrobee/gds_config` directory.
 
-An example of a keep-in zone JSON file might look like this:
-
-	{
-	  "sequence" : [ [ -1.0, -1.0, -3.0, 1.0, 1.0, 3.0 ]  ] ,
-	  "dateCreated" : "1475516840",
-	  "notes" : "Keep-in zone",
-	  "author" : "John Smith",
-	  "name" : "GraniteTableWorkspace",
-	  "safe" : true
-	}
-
-Whereas, a keep-out zone JSON file might contain this:
+An example of a keep-in and keep-out zone JSON file might look like this:
 
 	{
-	  "sequence" : [ [ -1.0, -0.3, -3, -0.6, 1.0, 3.0 ], [0.3,-0.3,-3.0,1.0,0.3,3.0] ] ,
-	  "dateCreated" : "1475516840",
-	  "notes" : "Keep-out zone",
-	  "author" : "John Smith",
-	  "name" : "GraniteTableDockAndClutter",
-	  "safe" : false
+    "timestamp" : "1475516840",
+    "zones":
+    [
+    {
+      "name" : "keepout",
+      "safe" : false,
+      "sequence" : [ [ -1.0, -0.3, -3, -0.6, 1.0, 3.0 ], [ 0.5, -0.3, -3, 1.0, 1.0, 3.0 ] ]
+    },
+    {
+      "name" : "keepin",
+      "safe" : true,
+      "sequence" : [ [ -1.5, -1.5, 0, 1.5, 1.5, 3.0 ] ]
+    }
+    ]
 	}
 
 Note that the "sequence" field takes an array of 6-vectors, and not just a
 single 6-vector. Each element of this array represents a zone, with each vector
-denoting the two coordinates that fully-define the cuboid. A consequence of this
-design choice is that multiple keep-in or keep-out zones can be specified in a
-single file (but you cannot mix keep-outs and keep-ins in one file).
+denoting the two coordinates that fully-define the cuboid.
 
-After loading and parsing these JSON files, the resulting data structure is
-serialized into a binary file called `0.bin`. The digit zero tells the \ref
-mapper system that the binary structure contains the default set of zones. At
-any point an operator can upload a new set of zones using the `SetZones` service
-call on the ROS namespace `~/mob/mapper/set_zones`. Calling this service will
-result in the creation of a new file `%lu.bin` in the `zones` file, where `%lu`
-is a unsigned long Unix timestamp for the zones. When the \ref mapper node is
-next started, it will search for the `*.bin` file with the latest timestamp, and
-load it by default.
+At any point while running the robot, the operator can load and parse a JSON file:
 
+    `rosrun executive zones_pub -compression none <file_name>.json`
+
+Or manually through the `SetZones` service call on the ROS namespace `~/mob/set_zones`.
 Please refer to the definition of \ref ff_msgs_SetZones for more information on
 how to update zones using a ROS service call.
+
+The resulting data structure is serialized into a binary file. If the option `zone_overwrite`
+in `mobility/choreographer.config` is activated (default), it will overwrite the current
+`<world>.bin` file containing the default set of zones at start-up. 
 
 The \ref mapper node publishes
 [visualization_msgs::MarkerArrays](http://docs.ros.org/kinetic/api/visualization_msgs/html/msg/MarkerArray.html)

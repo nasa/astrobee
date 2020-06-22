@@ -48,7 +48,7 @@ create_tool_targets(
     tools
   LIBS
     ${catkin_LIBRARIES}
-    common
+    ff_common
     ff_nodelet
   INC
     ${catkin_INCLUDE_DIRS}

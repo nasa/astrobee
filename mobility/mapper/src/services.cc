@@ -67,7 +67,7 @@ bool MapperNodelet::GetFreeMapCallback(ff_msgs::GetMap::Request &req,
   sensor_msgs::PointCloud2 oc, fc;
 
   mutexes_.octomap.lock();
-  globals_.octomap.TreeVisMarkers(&om, &fm, &oc, &fc);
+  globals_.octomap.InflatedVisMarkers(&om, &fm, &oc, &fc);
   mutexes_.octomap.unlock();
 
   res.points = fc;
@@ -82,7 +82,7 @@ bool MapperNodelet::GetObstacleMapCallback(ff_msgs::GetMap::Request &req,
   sensor_msgs::PointCloud2 oc, fc;
 
   mutexes_.octomap.lock();
-  globals_.octomap.TreeVisMarkers(&om, &fm, &oc, &fc);
+  globals_.octomap.InflatedVisMarkers(&om, &fm, &oc, &fc);
   mutexes_.octomap.unlock();
 
   res.points = oc;

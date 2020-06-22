@@ -1,5 +1,4 @@
-\defgroup eps_driver_test_battery_status Test : Battery status
-\ingroup eps_driver
+\page eps_driver_test_battery_status Test : Battery status
 
 The EPS subsystem is responsible for managing up to four rechargeable batteries, each of which operates on its own channel. At least one battery must be inserted to power the robot, with each subsequent battery extending the operating lifetime at the cost of some additional mass.
 

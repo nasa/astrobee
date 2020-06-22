@@ -147,7 +147,11 @@ class GazeboModelPluginPmc : public FreeFlyerModelPlugin {
 
   // Destructor
   ~GazeboModelPluginPmc() {
+    #if GAZEBO_MAJOR_VERSION > 7
+    update_.reset();
+    #else
     event::Events::DisconnectWorldUpdateBegin(update_);
+    #endif
   }
 
  protected:
@@ -309,13 +313,30 @@ class GazeboModelPluginPmc : public FreeFlyerModelPlugin {
   // Must be called at 62.5Hz to satisfy the needs of GNC
   void CommandTimerCallback(ros::TimerEvent const& event) {
     // Step the blower model
+    #if GAZEBO_MAJOR_VERSION > 7
+    blowers_.SetAngularVelocity(
+      GetLink()->RelativeAngularVel().X(),
+      GetLink()->RelativeAngularVel().Y(),
+      GetLink()->RelativeAngularVel().Z());
+    #else
     blowers_.SetAngularVelocity(
       GetLink()->GetRelativeAngularVel().x,
       GetLink()->GetRelativeAngularVel().y,
       GetLink()->GetRelativeAngularVel().z);
+    #endif
     blowers_.SetBatteryVoltage(14.0);
     blowers_.Step();
     // Calculate the force and torque on the platform
+    #if GAZEBO_MAJOR_VERSION > 7
+    force_ = ignition::math::Vector3d(0, 0, 0);
+    torque_ = ignition::math::Vector3d(0, 0, 0);
+    for (size_t i = 0; i < NUMBER_OF_PMCS; i++) {
+      force_ += ignition::math::Vector3d(blowers_.states_[i].force_B[0],
+        blowers_.states_[i].force_B[1], blowers_.states_[i].force_B[2]);
+      torque_ += ignition::math::Vector3d(blowers_.states_[i].torque_B[0],
+        blowers_.states_[i].torque_B[1], blowers_.states_[i].torque_B[2]);
+    }
+    #else
     force_ = math::Vector3(0, 0, 0);
     torque_ = math::Vector3(0, 0, 0);
     for (size_t i = 0; i < NUMBER_OF_PMCS; i++) {
@@ -324,6 +345,7 @@ class GazeboModelPluginPmc : public FreeFlyerModelPlugin {
       torque_ += math::Vector3(blowers_.states_[i].torque_B[0],
         blowers_.states_[i].torque_B[1], blowers_.states_[i].torque_B[2]);
     }
+    #endif
     // Publish telemetry
     PublishTelemetry();
   }
@@ -378,10 +400,17 @@ class GazeboModelPluginPmc : public FreeFlyerModelPlugin {
   // Called on each sensor update event
   void WorldUpdateCallback() {
     if (bypass_blower_model_) {
+      #if GAZEBO_MAJOR_VERSION > 7
+      GetLink()->AddRelativeForce(ignition::math::Vector3d(
+        wrench_.force.x, wrench_.force.y, wrench_.force.z));
+      GetLink()->AddRelativeTorque(ignition::math::Vector3d(
+        wrench_.torque.x, wrench_.torque.y, wrench_.torque.z));
+      #else
       GetLink()->AddRelativeForce(math::Vector3(
         wrench_.force.x, wrench_.force.y, wrench_.force.z));
       GetLink()->AddRelativeTorque(math::Vector3(
         wrench_.torque.x, wrench_.torque.y, wrench_.torque.z));
+      #endif
     } else {
       GetLink()->AddRelativeForce(force_);
       GetLink()->AddRelativeTorque(torque_);
@@ -396,8 +425,13 @@ class GazeboModelPluginPmc : public FreeFlyerModelPlugin {
   ros::Subscriber sub_command_;                     // Command subscriber
   ros::Subscriber sub_fam_;                         // Fam command subscriber
   ros::Timer timer_command_, timer_watchdog_;       // Timers
+  #if GAZEBO_MAJOR_VERSION > 7
+  ignition::math::Vector3d force_;                  // Current body-frame force
+  ignition::math::Vector3d torque_;                 // Current body-frame torque
+  #else
   math::Vector3 force_;                             // Current body-frame force
   math::Vector3 torque_;                            // Current body-frame torque
+  #endif
   geometry_msgs::Wrench wrench_;                    // Used when bypassing PMC
   gnc_autocode::GncBlowersAutocode blowers_;        // Autocode blower iface
   ff_hw_msgs::PmcCommand null_command_;             // PMC null command

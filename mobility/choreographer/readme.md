@@ -1,5 +1,4 @@
-\defgroup choreographer Choreographer
-\ingroup mobility
+\page choreographer Choreographer
 
 The choreographer is the core of the mobility system and provides six critical functions in support of mobility:
 
@@ -20,7 +19,7 @@ The action supports only one goal, which is fully-preemptible. This means that a
 
 ## Configurable parameters
 
-The choreographer exposes its configuration through ```common::ConfigServer``` class. Thus, the ```rqt_reconfigure``` client can be used to change settings manually, or the ```common::ConfigClient``` can be used to change the settings programatically.
+The choreographer exposes its configuration through ```ff_common::ConfigServer``` class. Thus, the ```rqt_reconfigure``` client can be used to change settings manually, or the ```ff_common::ConfigClient``` can be used to change the settings programatically.
 
 The following configurable parameters are supported:
 
@@ -40,6 +39,8 @@ The following configurable parameters are supported:
 | ```desired_rate```               | Desired sampling rate of segment when planning (move) |
 
 Additional parameters are supported, but are not reconfigurable.
+
+A replanning approach is implemented to support obstacle avoidance using the qp-planner. To utilize this functionality set the following parameters: ```planner``` to "qp", ```enable_faceforward``` and ```enable_collision_checking``` to true.
 
 ## Under the hood
 

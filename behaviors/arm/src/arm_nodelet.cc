@@ -93,7 +93,8 @@ class ArmNodelet : public ff_util::FreeFlyerNodelet {
     PAN_COMPLETE       = (1<<9),     // Pan complete
     TILT_COMPLETE      = (1<<10),    // Tilt complete
     GRIPPER_COMPLETE   = (1<<11),    // Gripper action complete
-    TIMEOUT            = (1<<12)     // Current action doesn't complete in time
+    TIMEOUT            = (1<<12),    // Current action doesn't complete in time
+    MANUAL_STATE_SET   = (1<<13)     // Setting the state manually with service
   };
 
   // Constructor
@@ -593,6 +594,7 @@ class ArmNodelet : public ff_util::FreeFlyerNodelet {
     case TILT_COMPLETE:            msg.fsm_event = "TILT_COMPLETE";       break;
     case GRIPPER_COMPLETE:         msg.fsm_event = "GRIPPER_COMPLETE";    break;
     case TIMEOUT:                  msg.fsm_event = "TIMEOUT";             break;
+    case MANUAL_STATE_SET:         msg.fsm_event = "MANUAL_STATE_SET";    break;
     }
     // Debug state changes
     switch (state) {
@@ -700,6 +702,7 @@ class ArmNodelet : public ff_util::FreeFlyerNodelet {
                         ff_msgs::SetState::Response& res) {
     fsm_.SetState(req.state);
     res.success = true;
+    UpdateCallback(fsm_.GetState(), MANUAL_STATE_SET);
     return true;
   }
 
@@ -942,22 +945,24 @@ class ArmNodelet : public ff_util::FreeFlyerNodelet {
     // Deploy the arm
     case ff_msgs::ArmGoal::ARM_DEPLOY:
       NODELET_DEBUG_STREAM("Received a new ARM_DEPLOY command");
-      if (fsm_.GetState() == STATE::STOWED) {
-        joints_[PAN].goal = K_PAN_DEPLOY;
-        joints_[TILT].goal = K_TILT_DEPLOY;
-        joints_[GRIPPER].goal = K_GRIPPER_DEPLOY;
-        return fsm_.Update(GOAL_DEPLOY);
+      if (fsm_.GetState() == STATE::DEPLOYED) {
+        Result(RESPONSE::SUCCESS, true);
       }
+      joints_[PAN].goal = K_PAN_DEPLOY;
+      joints_[TILT].goal = K_TILT_DEPLOY;
+      joints_[GRIPPER].goal = K_GRIPPER_DEPLOY;
+      return fsm_.Update(GOAL_DEPLOY);
       break;
     // Stow the arm
     case ff_msgs::ArmGoal::ARM_STOW:
       NODELET_DEBUG_STREAM("Received a new ARM_STOW command");
-      if (fsm_.GetState() == STATE::DEPLOYED) {
-        joints_[PAN].goal = K_PAN_STOW;
-        joints_[TILT].goal = K_TILT_STOW;
-        joints_[GRIPPER].goal = K_GRIPPER_STOW;
-        return fsm_.Update(GOAL_STOW);
+      if (fsm_.GetState() == STATE::STOWED) {
+        Result(RESPONSE::SUCCESS, true);
       }
+      joints_[PAN].goal = K_PAN_STOW;
+      joints_[TILT].goal = K_TILT_STOW;
+      joints_[GRIPPER].goal = K_GRIPPER_STOW;
+      return fsm_.Update(GOAL_STOW);
       break;
     // Pan the arm
     case ff_msgs::ArmGoal::ARM_PAN:

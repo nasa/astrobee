@@ -20,7 +20,7 @@
 #define SPEED_CAM_SPEED_CAM_H_
 
 // Serial abstraction
-#include <serial/serial.h>
+#include <ff_serial/serial.h>
 
 // Mavlink protocol
 #include <mavlink/v1.0/common/mavlink.h>
@@ -85,7 +85,7 @@ class SpeedCam {
   void TimeoutCallback(void);
 
  private:
-  serial::Serial serial_;                         // Serial port
+  ff_serial::Serial serial_;                         // Serial port
   SpeedCamImuCallback cb_imu_;                    // Imu data callback
   SpeedCamCameraImageCallback cb_camera_image_;   // Camera image callback
   SpeedCamOpticalFlowCallback  cb_optical_flow_;  // Optical flow callback

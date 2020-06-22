@@ -35,7 +35,7 @@
 // For the trapezoidal planner implementation
 #include <planner_trapezoidal/planner_trapezoidal.h>
 
-// C++ STL inclues
+// C++ STL includes
 #include <iostream>
 #include <sstream>
 #include <fstream>
@@ -91,7 +91,7 @@ Eigen::Quaterniond roll_pitch_yaw_to_quaternion(ROTATIONS_MULTIPLICATION_ORDER o
 // Main entry point for application
 int main(int argc, char *argv[]) {
   google::SetUsageMessage("Usage: plangen <options>\n");
-  common::InitFreeFlyerApplication(&argc, &argv);
+  ff_common::InitFreeFlyerApplication(&argc, &argv);
 
   if (FLAGS_input == "" || FLAGS_output == "") {
     std::cout << "Must specify input and output files via -input and -output. "

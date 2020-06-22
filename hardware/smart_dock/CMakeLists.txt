@@ -25,7 +25,7 @@ set(LIBS
   Qt4::QtXml
   rapidIo
   rapidExtAstrobee
-  common)
+  ff_common)
 
 set(INCLUDES
   ${CMAKE_CURRENT_SOURCE_DIR}/include

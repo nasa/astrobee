@@ -19,6 +19,8 @@
 
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
   <gazebo>
-    <plugin name="signal_lights_ros" filename="libgazebo_model_signal_lights.so"/>
+    <plugin name="signal_lights_ros" filename="libgazebo_model_plugin_signal_lights.so">
+      <namespace>/${ns}/</namespace>
+    </plugin>
   </gazebo>
 </robot>

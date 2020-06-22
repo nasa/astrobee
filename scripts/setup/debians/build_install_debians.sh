@@ -20,12 +20,12 @@
 # Install the dependencies needed for the debians. Build and install flight
 # software debians.
 
-DEBIAN_LOC=`pwd`
+DEBIAN_LOC=$(dirname "$(readlink -f "$0")")
 
 sudo apt-get install -y devscripts equivs libproj-dev
 
-# delete old debians
-rm *_amd64.deb
+# delete old debians (-f avoids 'no such file' warning on first run)
+rm -f *_amd64.deb
 
 cd ${DEBIAN_LOC}/alvar
 sudo mk-build-deps -i -r -t "apt-get --no-install-recommends -y" control

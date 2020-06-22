@@ -114,7 +114,7 @@ class GazeboSensorPluginHandrailDetect : public FreeFlyerSensorPlugin {
     msg_reg_.header.frame_id = std::string(FRAME_NAME_WORLD);
   }
 
-  // Only send measurements when estrinsics are available
+  // Only send measurements when extrinsics are available
   void OnExtrinsicsReceived(ros::NodeHandle *nh) {
     // Sercide for enabling mapped landmarks
     srv_enable_ = nh->advertiseService(SERVICE_LOCALIZATION_HR_ENABLE,

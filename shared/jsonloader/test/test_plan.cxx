@@ -170,6 +170,68 @@ TEST(Station, NormalConstruction) {
   ASSERT_EQ(cmds.size(), 0);
 }
 
+TEST(InertiaConfiguration, NormalConstruction) {
+  static const std::string data = u8R"(
+    { "name" : "UnloadedAstrobee",
+      "matrix" : [ 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0 ],
+      "mass" : 5.0
+    }
+  )";
+  Json::Value v;
+  Json::Reader().parse(data, v, false);
+
+  jsonloader::InertiaConfiguration c(v);
+  ASSERT_TRUE(c.valid());
+
+  EXPECT_EQ(c.name(), "UnloadedAstrobee");
+  EXPECT_FLOAT_EQ(c.mass(), 5.0f);
+  EXPECT_EQ(c.matrix().size(), 9);
+  for (int i = 0; i < 9; i++) {
+    EXPECT_FLOAT_EQ(c.matrix()[i], static_cast<float>(i+1));
+  }
+}
+
+TEST(InertiaConfiguration, BadMatrix) {
+  static const std::string data = u8R"(
+    { "name" : "UnloadedAstrobee",
+      "matrix" : [ 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0 ],
+      "mass" : 5.0
+    }
+  )";
+  Json::Value v;
+  Json::Reader().parse(data, v, false);
+
+  jsonloader::InertiaConfiguration c(v);
+  ASSERT_FALSE(c.valid());
+}
+
+TEST(OperatingLimits, NormalConstruction) {
+  static const std::string data = u8R"(
+    {
+      "targetAngularAccel" : 0.1234,
+      "targetLinearAccel" : 0.0123,
+      "targetAngularVelocity" : 0.5678,
+      "targetLinearVelocity" : 0.0567,
+      "flightMode" : "nominal",
+      "profileName" : "iss_nominal",
+      "collisionDistance" : 0.25
+    },
+  )";
+  Json::Value v;
+  Json::Reader().parse(data, v, false);
+
+  jsonloader::OperatingLimits l(v);
+  ASSERT_TRUE(l.valid());
+
+  EXPECT_EQ(l.flight_mode(), "nominal");
+  EXPECT_EQ(l.profile_name(), "iss_nominal");
+  EXPECT_FLOAT_EQ(l.collision_distance(), 0.25f);
+  EXPECT_FLOAT_EQ(l.angular_accel(), 0.1234f);
+  EXPECT_FLOAT_EQ(l.angular_velocity(), 0.5678f);
+  EXPECT_FLOAT_EQ(l.linear_accel(), 0.0123f);
+  EXPECT_FLOAT_EQ(l.linear_velocity(), 0.0567f);
+}
+
 TEST(Plan, SimplePlan) {
   Json::Value v;
   std::ifstream file(kDataDir + "simple_plan.fplan");
@@ -244,5 +306,8 @@ TEST(PlanIO, PlanEvolution) {
     std::string data = SlurpFile(p.string());
     jsonloader::Plan plan(jsonloader::LoadPlan(data));
     ASSERT_TRUE(plan.valid());
+
+    jsonloader::OperatingLimits ol = plan.operating_limits();
+    LOG(INFO) << "Operating Limits: " << ol.valid();
   }
 }

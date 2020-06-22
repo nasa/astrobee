@@ -17,7 +17,7 @@
  */
 
 // Common freeflyer code
-#include <common/init.h>
+#include <ff_common/init.h>
 
 // Gflag code
 #include <gflags/gflags.h>
@@ -228,7 +228,7 @@ int main(int argc, char** argv) {
   // Set up gflags
   google::SetUsageMessage("Usage: smart_dock_tool <options> [value]\n");
   google::SetVersionString("0.3.0");
-  common::InitFreeFlyerApplication(&argc, &argv);
+  ff_common::InitFreeFlyerApplication(&argc, &argv);
 
   // Get the channel list, if exists
   std::vector<std::string> input;

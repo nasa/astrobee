@@ -18,7 +18,7 @@
 
 #include <ekf/ekf_wrapper.h>
 
-#include <common/init.h>
+#include <ff_common/init.h>
 #include <ff_util/ff_nodelet.h>
 
 #include <nodelet/nodelet.h>
@@ -42,7 +42,7 @@ class EkfNodelet : public ff_util::FreeFlyerNodelet {
   // This is called when the nodelet is loaded into the nodelet manager
   void Initialize(ros::NodeHandle *nh) {
     // Bootstrap our environment
-    common::InitFreeFlyerApplication(getMyArgv());
+    ff_common::InitFreeFlyerApplication(getMyArgv());
     gnc_autocode::InitializeAutocode(this);
     ekf_.reset(
       new ekf::EkfWrapper(this->GetPlatformHandle(true), GetPlatform()));

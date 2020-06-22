@@ -1,4 +1,3 @@
-\defgroup perching_arm Perching arm
-\ingroup hw
+\page perching_arm Perching arm
 
 To be written...

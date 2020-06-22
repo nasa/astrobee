@@ -101,16 +101,22 @@ class GazeboSensorPluginOpticalFlow : public FreeFlyerSensorPlugin {
       TOPIC_LOCALIZATION_OF_FEATURES, 1);
 
     // Create a shape for collision testing
+    #if GAZEBO_MAJOR_VERSION > 7
+    GetWorld()->Physics()->InitForThread();
+    shape_ = boost::dynamic_pointer_cast<physics::RayShape>(GetWorld()
+        ->Physics()->CreateShape("ray", physics::CollisionPtr()));
+    #else
     GetWorld()->GetPhysicsEngine()->InitForThread();
     shape_ = boost::dynamic_pointer_cast<physics::RayShape>(GetWorld()
         ->GetPhysicsEngine()->CreateShape("ray", physics::CollisionPtr()));
+    #endif
 
     // Only do this once
     msg_feat_.header.frame_id = std::string(FRAME_NAME_WORLD);
     msg_reg_.header.frame_id = std::string(FRAME_NAME_WORLD);
   }
 
-  // Only send measurements when estrinsics are available
+  // Only send measurements when extrinsics are available
   void OnExtrinsicsReceived(ros::NodeHandle *nh) {
     // Servide for enabling optical flow
     srv_enable_ = nh->advertiseService(SERVICE_LOCALIZATION_OF_ENABLE,
@@ -151,6 +157,18 @@ class GazeboSensorPluginOpticalFlow : public FreeFlyerSensorPlugin {
     msg_feat_.camera_id = msg_reg_.camera_id;
 
     // Handle the transform for all sensor types
+  #if GAZEBO_MAJOR_VERSION > 7
+    Eigen::Affine3d wTb = (
+        Eigen::Translation3d(
+          GetModel()->WorldPose().Pos().X(),
+          GetModel()->WorldPose().Pos().Y(),
+          GetModel()->WorldPose().Pos().Z()) *
+        Eigen::Quaterniond(
+          GetModel()->WorldPose().Rot().W(),
+          GetModel()->WorldPose().Rot().X(),
+          GetModel()->WorldPose().Rot().Y(),
+          GetModel()->WorldPose().Rot().Z()));
+  #else
     Eigen::Affine3d wTb = (
         Eigen::Translation3d(
           GetModel()->GetWorldPose().pos.x,
@@ -161,6 +179,7 @@ class GazeboSensorPluginOpticalFlow : public FreeFlyerSensorPlugin {
           GetModel()->GetWorldPose().rot.x,
           GetModel()->GetWorldPose().rot.y,
           GetModel()->GetWorldPose().rot.z));
+  #endif
     Eigen::Affine3d bTs = (
         Eigen::Translation3d(
           sensor_->Pose().Pos().X(),
@@ -204,9 +223,15 @@ class GazeboSensorPluginOpticalFlow : public FreeFlyerSensorPlugin {
 
     {
       // Initialize and lock the physics engine
+    #if GAZEBO_MAJOR_VERSION > 7
+      GetWorld()->Physics()->InitForThread();
+      boost::unique_lock<boost::recursive_mutex> lock(*(
+        GetWorld()->Physics()->GetPhysicsUpdateMutex()));
+    #else
       GetWorld()->GetPhysicsEngine()->InitForThread();
       boost::unique_lock<boost::recursive_mutex> lock(*(
         GetWorld()->GetPhysicsEngine()->GetPhysicsUpdateMutex()));
+    #endif
 
       // Iterate over the map in an attempt to find features in the frustrum
       for (size_t i = 0; i < num_features_; i++) {

@@ -22,6 +22,13 @@
 // Gazebo includes
 #include <astrobee_gazebo/astrobee_gazebo.h>
 
+// FSW nodelet
+#include <ff_util/ff_names.h>
+#include <ff_util/ff_nodelet.h>
+
+// Services
+#include <ff_msgs/SetStreamingLights.h>
+
 // STL includes
 #include <string>
 
@@ -37,12 +44,29 @@ class GazeboModelPluginSignalLights : public FreeFlyerModelPlugin {
  protected:
   // Called when the plugin is loaded into the simulator
   void LoadCallback(ros::NodeHandle *nh,
-    physics::ModelPtr model, sdf::ElementPtr sdf) {}
+    physics::ModelPtr model, sdf::ElementPtr sdf) {
+    // this service is a special case for when we need to light
+    // two AMBER leds on each side only when we are streaming
+    // live video
+    streaming_service_ =
+        nh->advertiseService(SERVICE_STREAMING_LIGHTS,
+        &GazeboModelPluginSignalLights::StreamingLightsCallback, this);
+  }
 
   // Manage the extrinsics based on the sensor type
   bool ExtrinsicsCallback(geometry_msgs::TransformStamped const* tf) {
     return true;
   }
+
+  bool StreamingLightsCallback(
+      ff_msgs::SetStreamingLights::Request& request,
+      ff_msgs::SetStreamingLights::Response& response) {
+    // Send successful response
+    response.success = true;
+    return true;
+  }
+
+  ros::ServiceServer streaming_service_;
 };
 
 // Register this plugin with the simulator

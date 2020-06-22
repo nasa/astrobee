@@ -17,8 +17,19 @@
 
 project(config_reader)
 
+catkin_package(
+  INCLUDE_DIRS include ${GFLAGS_INCLUDE_DIRS} ${GLOG_INCLUDE_DIRS} ${LUAJIT_INCLUDE_DIR}
+  LIBRARIES config_reader
+  CATKIN_DEPENDS ff_common
+)
+
+include_directories(
+  include
+  ${catkin_INCLUDE_DIRS}
+)
+
 create_library(TARGET config_reader
-  INC ${GFLAGS_INCLUDE_DIRS} ${GLOG_INCLUDE_DIRS} ${LUAJIT_INCLUDE_DIR} common
+  INC ${GFLAGS_INCLUDE_DIRS} ${GLOG_INCLUDE_DIRS} ${LUAJIT_INCLUDE_DIR} ff_common
   ${CMAKE_CURRENT_BINARY_DIR}/include
-  LIBS ${GFLAGS_LIBRARIES} ${GLOG_LIBRARIES} ${LUAJIT_LIBRARIES} common
+  LIBS ${GFLAGS_LIBRARIES} ${GLOG_LIBRARIES} ${LUAJIT_LIBRARIES} ff_common
 )

@@ -44,8 +44,13 @@ class GazeboModelPluginFlashlightFront : public FreeFlyerModelPlugin {
       width_(0.03), height_(0.02), depth_(0.005) {}
 
   ~GazeboModelPluginFlashlightFront() {
-    if (update_)
+    if (update_) {
+      #if GAZEBO_MAJOR_VERSION > 7
+      update_.reset();
+      #else
       event::Events::DisconnectWorldUpdateBegin(update_);
+      #endif
+    }
   }
 
  protected:
@@ -77,7 +82,7 @@ class GazeboModelPluginFlashlightFront : public FreeFlyerModelPlugin {
     pose_ = ignition::math::Pose3d(0.0, 0, 0, 0.70710678, 0, -0.70710678, 0);
   }
 
-  // Only send measurements when estrinsics are available
+  // Only send measurements when extrinsics are available
   void OnExtrinsicsReceived(ros::NodeHandle *nh) {
     srv_ = nh->advertiseService(SERVICE_HARDWARE_LIGHT_FRONT_CONTROL,
       &GazeboModelPluginFlashlightFront::ToggleCallback, this);
@@ -154,8 +159,13 @@ class GazeboModelPluginFlashlightFront : public FreeFlyerModelPlugin {
     light_.set_spot_falloff(1.0);
     msgs::Set(light_.mutable_diffuse(), common::Color(0.5, 0.5, 0.5, 1));
     msgs::Set(light_.mutable_specular(), common::Color(0.1, 0.1, 0.1, 1));
+    #if GAZEBO_MAJOR_VERSION > 7
+    msgs::Set(light_.mutable_pose(), pose_ +
+       GetModel()->GetLink()->WorldPose());
+    #else
     msgs::Set(light_.mutable_pose(), pose_ +
        GetModel()->GetLink()->GetWorldPose().Ign());
+    #endif
     pub_factory_->Publish(light_);
 
     // Modify the new entity to be only visible in the GUI
@@ -192,8 +202,13 @@ class GazeboModelPluginFlashlightFront : public FreeFlyerModelPlugin {
 
   // Called when a new entity is created
   void WorldUpdateBegin() {
+    #if GAZEBO_MAJOR_VERSION > 7
+    msgs::Set(light_.mutable_pose(), pose_ +
+       GetModel()->GetLink()->WorldPose());
+    #else
     msgs::Set(light_.mutable_pose(), pose_ +
        GetModel()->GetLink()->GetWorldPose().Ign());
+    #endif
     pub_light_->Publish(light_);
   }
 

@@ -1,5 +1,4 @@
-\defgroup buildmap Map Building
-\ingroup sparsemapping
+\page buildmap Map building
 
 Here we describe how to build a map.
 
@@ -15,13 +14,14 @@ Here we describe how to build a map.
 
 5. Register the map.
 
-# Map Building
+# Map building
 
 We go through how a map is made.
 
-## Reduce the number of images.
+## Reduce the number of images
 
-Here, we delete the images that overlap highly.
+Here, we delete the images that overlap highly. (This tool is, like all
+others, in freeflyer_build/native.)
 
   select_images -density_factor 1.4 <image dir>/*.jpg
 
@@ -29,9 +29,21 @@ This is a non-reversible operation, so it should be invoked on a copy
 of the images.
 
 The higher the value of the density factor, the more images will be
-kept. Some experimentation with this number is necessary. A value of 1.4
-seems to work well. Ideally the images should have perhaps on the order of 
-2/3 to 3/4 of overlap.
+kept. Some experimentation with this number is necessary. A value of
+1.4 seems to work well. It may be needed to decrease this to 1.0 if
+images appear to be too dense. Ideally the images should have perhaps
+on the order of 2/3 to 3/4 of overlap. This tool is not perfect. One
+should inspect the images in the 'eog' viewer, and delete redundant
+ones from it manually, using the Delete key.
+
+The images can also be inspected and deleted with nvm_visualize, a
+tool included with this software. See readme.md for details.  This
+tool, unlike eog, echoes each image name as it is displayed, which can
+be useful with image manipulation tasks.
+
+If the images do not have enough overlap, the selection tool needs to
+be run again with a different value of this factor, or otherwise
+images must be added back manually.
 
 Alternatively, one can simply first pick every 10th or 20th image,
 such as:
@@ -45,10 +57,7 @@ images, as then the map could be of poor quality. Hence, the robot
 should have some translation motion (in addition to any rotation) when
 the data is acquired.
 
-One should inspect the images in the 'eog' viewer, and delete
-redundant ones from it.
-
-## Setup the Environment
+## Setup the environment
 
 In the first step, one needs to set some environmental variables, as
 follows:
@@ -78,7 +87,7 @@ More details on these and other environmental variables can be found in
 
   freeflyer/astrobee/readme.md
 
-## Building a Map
+## Building a map
 
 Execute this command to construct a complete map:
 
@@ -102,12 +111,16 @@ The flag -histogram_equalization equalizes the histogram of the images
 before doing feature detection. It was shown to create maps that are
 more robust to illumination changes.
 
-### Map Building Pipeline
+In practice, the map is build in pieces, and then merged. Then the
+above process needs to be modified. See readme.md in this directory
+for how this approach should go.
+
+### Map building pipeline
 
 The `build_map` command runs a number of steps, which can also be invoked
 individually for further control.
 
-1. **Detect Interest Points**
+1. **Detect interest points**
 
     build_map <image dir>/*.jpg -feature_detection [ -sample_rate <N> ]
       -histogram_equalization [ -detector <detector> ] [ -descriptor <descriptor> ]
@@ -117,31 +130,34 @@ file. The `-sample_rate <N>` flag, if specified, builds the map from
 only one out of N input images. If desired, the feature detector and
 feature descriptor can be specified. The default is ORGBRISK.
 
-2. **Match Images**
+Here and below we omitted for brevity the list of images and the
+-output_map option that are needed for the tool to run.
 
-    build_map -feature_matching [ -num_subsequent_images <val> ]
+2. **Match images**
+
+    build_map -feature_matching -histogram_equalization [ -num_subsequent_images <val> ]
 
 Match the detected features between images, detecting similar features
 that appear in multiple images. The number of subsequent images to
 match against can be specified, otherwise all pairwise matches are
 evaluated.
 
-3. **Build Tracks**
+3. **Build tracks**
 
-    build_map -track_building
+    build_map -track_building -histogram_equalization
 
 Take the feature matches and form "tracks" of features seen
 consistently across multiple frames.
 
-4. **Incremental Bundle Adjustment**
+4. **Incremental bundle adjustment**
 
-    build_map -tensor_initialization
+    build_map -incremental_ba -histogram_equalization
 
   Incremental bundle adjustment for transform initialization.
 
-5. **Bundle Adjustment**
+5. **Bundle adjustment**
 
-    build_map -bundle_adjustment
+    build_map -bundle_adjustment -histogram_equalization
 
   Adjust the initial transformations to minimize error with bundle adjustment.
 
@@ -152,7 +168,7 @@ If the options
 are specified, only cameras with indices between these (including both
 endpoints) will be optimized during bundle adjustment.
 
-6. **Map Rebuilding**
+6. **Map rebuilding**
 
     build_map -rebuild -histogram_equalization
 
@@ -176,7 +192,7 @@ use the option -rebuild_detector.
 Note that rebuilding the map does not rebuild the vocabulary database
 which should be done as below.
 
-7. **Vocabulary Database**
+7. **Vocabulary database**
 
     build_map -vocab_db
 
@@ -185,11 +201,14 @@ Without this, we have to compare to every image in the map for
 localization.  The vocabulary database makes parts of the runtime
 logarithmic instead of linear.
 
-The above options can also be chained. For example, to
-run the pipeline without tensor initialization, you could do:
+8. ** Building a SURF map only ***
+
+The above options can also be chained. For example, to run the
+pipeline to just create a SURF map one can do:
 
     build_map <image dir>/*.jpg -feature_detection -feature_matching \
-      -track_building -bundle_adjustment -histogram_equalization
+      -track_building -incremental_ba -bundle_adjustment             \
+      -histogram_equalization -num_subsequent_images 100
 
 It is important to note that normally build_map prunes a map from
 features that show up in just one image after the vocabulary database
@@ -200,19 +219,24 @@ to recover the pruned features is to invoke map-building with the
 -rebuild flag, followed again by the -vocab_db flag which will rebuild
 the database of vocabulary features and then prune the map.
 
-### Additional Options
+### Additional options
 
 There are a few steps that can be used which are not included in the default map
 building process. These include:
 
-* `-tensor_initialization`: Initialize transformation matrices between nearby images.
 * `-loop_closure`: Take a map where images start repeating, and close the loop.
+   This is not used much, as loop closure is handled automatically for loops
+   smaller than what is given in -num_subsequent_images. For very large loops
+   it is better to build the map in two overlapping pieces, and use merge_maps
+   to merge them which will close loops as well.
 * `-covariance_computation`: Compute the covariance of the triangulated points
    (after bundle adjustment only).
 * `-registration`: Register to a real-world coordinate system, discussed later.
 * `-verification`: Verify how an already registered map performs on an independently 
    acquired set of control points and corresponding 3D measurements.
-* `-info`: Print some information about the map, including list of images.
+* `-info`: Print some information about the map, including list of images,
+   and if histogram equalization was used, and the latter can have the values:
+   0 (not used), 1 (was used), 2 (unknown).
 
 The following options can be used to create more interest point features:
 
@@ -224,7 +248,7 @@ The following options can be used to create more interest point features:
 The `build_map` command uses the file `output.map` as both input and output
 unless the flag `-output_map` is specified.
 
-## Map Registration
+## Map registration
 
 Maps are built in an arbitrary coordinate system. They need to be
 transformed to a real-world coordinate system using manually defined
@@ -266,8 +290,8 @@ If a new set of world coordinates needs to be acquired, one can use
 the Total Station, as described in total_station.md, which is in the
 same directory as this file.
 
-How to create xyz coordinates for the JPM module of ISS is described
-later on in this section.
+How to create xyz coordinates for the JPM module of ISS and information
+about control points in the MGTF is described later in this document.
 
 Register the map with the command:
     
@@ -352,7 +376,7 @@ Go back to the simulated ISS and examine the registration points.
 If the Rviz display looks too cluttered, most topics can be turned off.
 The registration points will be shown in Rviz under 
 
-Debug/Sensors/Localization/Registration
+  Debug/Sensors/Localization/Registration
 
 If this topic is unchecked, it should be checked and one should
 run the Python script above again.
@@ -379,7 +403,22 @@ flip the sign of the y and z coordinates.
 After the file with the datapoints is saved, re-running the earlier
 Python command will refresh them.
 
-## Map Verification
+### Registration in the MGTF
+
+A set of 10 registration points were measured in the MGTF with the
+Total Station. They are in the file
+
+  $HOME/freeflyer/localization/sparse_mapping/mgtf_registration.txt
+
+Two of these are on the back wall, and the rest are on the metal
+columns on the side walls, with four on each wall. Half of the points
+are at eye level, and half at about knee-level.
+
+Each such point is a corner of a portion of a checkerboard pattern, 
+and it has a number written on the paper it is printed on, which is
+the id from the above file. 
+
+## Map verification
 
 A registered and bundle-adjusted map can be used to study how well it
 predicts the computed 3D locations for an independently acquired set
@@ -388,9 +427,11 @@ for registration. The map is not modified in any way during this step.
 
     build_map -verification <hugin files> <xyz files>
 
-## Map Performance
+## Sparse map performance and quality evaluation on the robot
 
-To test how the map may perform on the target platform, do the following:
+(See below about how it can be done on a local machine.)
+
+To test how the map may perform on the robot, do the following:
 
 ### Stage the new map
 
@@ -412,7 +453,6 @@ To test how the map may perform on the target platform, do the following:
 
     rsync --archive --partial --progress directory_of_bags mlp:/data/bags
 
-
 ### Stage the feature counter utility (should be added to the install at one point)
 
     scp <freeflyer_src>/marker_tracking/ros/tools/features_counter.py mlp:
@@ -422,10 +462,13 @@ To test how the map may perform on the target platform, do the following:
     ssh llp
     roslaunch astrobee astrobee.launch llp:=disabled mlp:=mlp nodes:=framestore,dds_ros_bridge,localization_node
 
+(TODO(oalexan1): Not sure if to set the robot name above. We are using
+one robot to localize with the data and map for another one.)
+ 
 ### Enable localization and the mapped landmark production (on MLP)
 
-   export ROS_MASTER_URI=http://llp:11311
-   rosservice call /loc/ml/enable true
+    export ROS_MASTER_URI=http://llp:11311
+    rosservice call /loc/ml/enable true
 
 If this command returns an error saying that the service is not
 available, wait a little and try again.
@@ -433,8 +476,11 @@ available, wait a little and try again.
 ### Play the bags (on MLP)
 
     cd /data/bags/directory_of_bags
-    rosbag play --loop *.bag /mgt/img_sampler/nav_cam/image_record:=/hw/cam_nav \
-      /loc/ml/features:=/tmp1 /loc/ml/registration:=/tmp2
+    export ROS_MASTER_URI=http://llp:11311
+    rosbag play --loop *.bag                               \
+      /mgt/img_sampler/nav_cam/image_record:=/hw/cam_nav   \
+      /loc/ml/features:=/loc/ml/old_features               \
+      /loc/ml/registration:=/loc/ml/old_registration
 
 It is important to check the topics that were recorded to the bag. If
 the nav camera was recorded on /mgt/img_sampler/nav_cam/image_record
@@ -446,7 +492,7 @@ must be redirected to something else (above /tmp1 and /tmp2 was used)
 to not conflict with actual localization results that would be now
 created based on the images in the bag.
 
-### Evaluate performance (on MLP)
+### Examine the performance and features on MLP
 
 1. Look at the load with htop
 
@@ -454,8 +500,74 @@ created based on the images in the bag.
 
     rostopic hz -w 5 /loc/ml/features
 
+and echo the pose being output with the features:
+
+    rostopic echo /loc/ml/features | grep -A 17 header:
+
 3. Watch the number of features being produced
 
     ~/features_counter.py ml
 
+## Verify localization against a sparse map on a local machine
+
+To test localization of data from a bag against a map, one need not
+run things on the robot, but use instead a local machine. This should
+result on similar results as on the robot, but the speed of
+computations may differ.
+
+Set up the environment in every terminal that is used. Ensure that you
+use the correct robot name below.
+
+  source ~/freeflyer_build/native/devel/setup.bash
+  export ASTROBEE_RESOURCE_DIR=$HOME/freeflyer/astrobee/resources
+  export ASTROBEE_CONFIG_DIR=$HOME/freeflyer/astrobee/config
+  export ASTROBEE_WORLD=iss
+  export ASTROBEE_ROBOT=bumble # your robot's name may be different
+  export ROS_MASTER_URI=http://127.0.0.1:11311/
+
+Examine the localization configuration file:
+
+  $HOME/freeflyer/astrobee/config/localization.config
+
+Sym link the map to test:
+
+  rm -fv $HOME/freeflyer/astrobee/resources/maps/iss.map
+  ln -s $(pwd)/mymap.map $HOME/freeflyer/astrobee/resources/maps/iss.map
+
+Start the localization node:
+
+  roslaunch astrobee astrobee.launch mlp:=local llp:=disabled \
+    nodes:=framestore,localization_node
+
+Enable localization:
+
+  rosservice call /loc/ml/enable true
+
+Then, as above, one must play a bag while redirecting the existing
+/loc topics, and ensure that the images are published on /hw/cam_nav.
+
+The poses of the newly localized camera images can be displayed as:
+
+  rostopic echo /loc/ml/features | grep -A 17 header:
+
+and compared to the old ones via:
+
+  rostopic echo /loc/ml/old_features | grep -A 17 header:
+
+## Evaluating the map without running the localization node
+
+See freeflyer/tools/ekf_bag/readme.md for how to run the
+sparse_map_eval tool that takes as inputs a bag and a BRISK map and
+prints the number of detected features.
+
+Note that this approach may give slightly different results than using
+the localization node, and even with using this node, things can
+differ somewhat if running on a local machine vs running on the robot.
+Hence, the most faithful test is the one in which such experiments are
+performed on a robot, and ensuring that the software version on that
+robot is the same as for the real robot on the space station, if the
+goal is to prepare a map for an actual flight. The software version on
+the robot can be found using:
+
+cat /opt/astrobee/version.txt 
 

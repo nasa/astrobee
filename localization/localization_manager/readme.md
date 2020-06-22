@@ -1,12 +1,11 @@
-\defgroup localization_manager Localization Manager
-\ingroup localization
+\page localization_manager Localization Manager
 
 Depending on the context, flight software might switch localization systems. For example, in free-flight sparse mapping is used to localize the robot. However, the accuracy of this method (several centimeters) is not high enough to ensure reliable docking. Thus, when approaching the dock, flight software will switch to another localization mechanism (marker tracking), which localizes by visually tracking targets on the dock itself with a different camera. The **localization manager** is responsible for carrying out a controlled switch between the two localization systems, continually monitoring the health of the active localization system, and falling back to a safe localization system automatically when there is a problem.
 
 The localization manager supports the following localization pipelines:
 
 1. None (NO) - Do not localize.
-2. Sparse mapping (ML) - Localize by finding correspondences between features seen from the navigation camera and those in a 3D map, build a priori. This relies on messages produced by the sparse_mapping node.
+2. Sparse mapping (ML) - Localize by finding correspondences between features seen from the navigation camera and those in a 3D map, build a priori. This relies on messages produced by localization_node (see localization/localization_node/readme.md for more information).
 3. Marker tracking (AR) - Localize by detecting augmented reality (AR) markers on a target that has a known pose with respect to the world. This relies on messages produced by the marker_tracking node and optical flow.
 4. Handrail localization (HR) - Localize with respect to a specific handrail detected from a point cloud, with an unknwon pose with respect to the world. This relies on messages produced by the handrail_detect node.
 5. Ground truth (GT) - Localize using pose and twist feedback from a ground truth localization system, such as the HTC Vive or Gazebo simulator.  This relies on either the vive node (real experiement) or the Gazebo simulator.

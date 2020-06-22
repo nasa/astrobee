@@ -23,7 +23,7 @@ catkin_package(
 )
 
 create_library(TARGET cpu_monitor
-  LIBS ${catkin_LIBRARIES} config_reader ff_nodelet i2c
+  LIBS ${catkin_LIBRARIES} config_reader ff_nodelet
   INC ${catkin_INCLUDES}
   DEPS ff_msgs ff_hw_msgs
 )

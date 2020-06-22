@@ -48,6 +48,15 @@ due to NASA legal requirements. Thank you for your understanding.
 
 ## Documentation
 
+To generate the Astrobee documentation, run the following command after checking
+out the code (the latest version of doxygen should be [installed](https://www.doxygen.nl/download.html) for correct
+markdown support) :
+
+    doxygen doc/freeflyer.doxyfile
+
+The documentation will be generated in the doc/html folder. Open the doc/documentation.html
+to get to the main page of the documentation.
+
 For familiarization with the Astrobee project, it is recommended to read some
 background papers:
 
@@ -68,14 +77,6 @@ https://www.nasa.gov/sites/default/files/atoms/files/coltin2016localization.pdf)
 [Maria Bualat et al. "Astrobee: A New Tool for ISS Operations." *2018 
 SpaceOps Conference*. 2018.](
 https://www.nasa.gov/sites/default/files/atoms/files/bualat_spaceops_2018_paper.pdf)
-
-To generate the Astrobee documentation, run the following command after checking
-out the code:
-
-    cd doc/diagrams && make docs
-
-The documentation will be generated in the doc/html folder. Open the index.html
-to get to the main page of the documentation.
 
 ## Guest Science
 

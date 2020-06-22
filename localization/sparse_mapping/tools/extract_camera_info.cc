@@ -16,7 +16,7 @@
  * under the License.
  */
 
-#include <common/init.h>
+#include <ff_common/init.h>
 #include <sparse_mapping/sparse_map.h>
 
 #include <Eigen/Geometry>
@@ -33,7 +33,7 @@ DEFINE_string(show_spec_triplet, "",
               "Specify a triplet that you want to see, ex: '0_3_43'");
 
 int main(int argc, char** argv) {
-  common::InitFreeFlyerApplication(&argc, &argv);
+  ff_common::InitFreeFlyerApplication(&argc, &argv);
 
   // We require a map input
   if (argc < 2) {

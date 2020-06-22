@@ -33,7 +33,7 @@ catkin_package(
 
 create_library(
   TARGET speed_cam
-  LIBS ${catkin_LIBRARIES} serial config_reader ff_nodelet
+  LIBS ${catkin_LIBRARIES} ff_serial config_reader ff_nodelet
   INC ${catkin_INCLUDE_DIRS}
   DEPS mavlink speed_cam_gencpp
 )

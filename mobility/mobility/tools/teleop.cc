@@ -41,7 +41,7 @@
 #include <Eigen/Dense>
 #include <Eigen/Geometry>
 
-// C++ STL inclues
+// C++ STL includes
 #include <iostream>
 #include <sstream>
 #include <fstream>

@@ -1,4 +1,4 @@
-# Setting up a new robot
+\page new_robot Setting up a new robot
 
 ## Create a new "custom" image for the robot
 

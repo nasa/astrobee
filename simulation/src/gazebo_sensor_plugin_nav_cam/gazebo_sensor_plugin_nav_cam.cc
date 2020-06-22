@@ -25,8 +25,10 @@
 // Sensor plugin interface
 #include <astrobee_gazebo/astrobee_gazebo.h>
 
-// IMU Sensor message
+// Messages
 #include <sensor_msgs/Image.h>
+#include <geometry_msgs/PoseStamped.h>
+#include <sensor_msgs/CameraInfo.h>
 #include <sensor_msgs/image_encodings.h>
 
 // STL includes
@@ -40,8 +42,13 @@ class GazeboSensorPluginNavCam : public FreeFlyerSensorPlugin {
     FreeFlyerSensorPlugin("nav_cam", "nav_cam", true), rate_(0.0) {}
 
   ~GazeboSensorPluginNavCam() {
-    if (update_)
+    if (update_) {
+      #if GAZEBO_MAJOR_VERSION > 7
+      update_.reset();
+      #else
       sensor_->DisconnectUpdated(update_);
+      #endif
+    }
   }
 
  protected:
@@ -60,14 +67,17 @@ class GazeboSensorPluginNavCam : public FreeFlyerSensorPlugin {
       ROS_FATAL_STREAM("Camera format must be L8");
 
     // Set image constants
-    msg_.is_bigendian = false;
-    msg_.header.frame_id = GetFrame();
-    msg_.encoding = sensor_msgs::image_encodings::MONO8;
+    image_msg_.is_bigendian = false;
+    image_msg_.header.frame_id = GetFrame();
+    image_msg_.encoding = sensor_msgs::image_encodings::MONO8;
 
     // Create a publisher
     pub_img_ = nh->advertise<sensor_msgs::Image>(TOPIC_HARDWARE_NAV_CAM, 1,
       boost::bind(&GazeboSensorPluginNavCam::ToggleCallback, this),
       boost::bind(&GazeboSensorPluginNavCam::ToggleCallback, this));
+
+    pub_pose_ = nh->advertise<geometry_msgs::PoseStamped>(TOPIC_NAV_CAM_SIM_POSE, 10);
+    pub_info_ = nh->advertise<sensor_msgs::CameraInfo>(TOPIC_NAV_CAM_SIM_INFO, 10);
 
     // Read configuration
     config_reader::ConfigReader config;
@@ -92,11 +102,11 @@ class GazeboSensorPluginNavCam : public FreeFlyerSensorPlugin {
     ToggleCallback();
   }
 
-  // Only send measurements when estrinsics are available
+  // Only send measurements when extrinsics are available
   void OnExtrinsicsReceived(ros::NodeHandle *nh) {
     // Connect to the camera update event.
     update_ = sensor_->ConnectUpdated(
-      std::bind(&GazeboSensorPluginNavCam::UpdateCallback, this));
+      std::bind(&GazeboSensorPluginNavCam::ImageCallback, this));
   }
 
   // Turn camera on or off based on topic subscription
@@ -111,22 +121,54 @@ class GazeboSensorPluginNavCam : public FreeFlyerSensorPlugin {
   }
 
   // Called when a new image must be rendered
-  void UpdateCallback() {
-    msg_.header.stamp.sec = sensor_->LastMeasurementTime().sec;
-    msg_.header.stamp.nsec = sensor_->LastMeasurementTime().nsec;
-    msg_.height = sensor_->ImageHeight();
-    msg_.width = sensor_->ImageWidth();
-    msg_.step = msg_.width;
-    msg_.data.resize(msg_.step * msg_.height);
+  void ImageCallback() {
+    // Quickly record the current time and current pose before doing other computations
+    ros::Time curr_time = ros::Time::now();
+
+    // Publish the nav cam pose
+    #if GAZEBO_MAJOR_VERSION > 7
+    Eigen::Affine3d sensor_to_world = SensorToWorld(GetModel()->WorldPose(), sensor_->Pose());
+    #else
+    Eigen::Affine3d sensor_to_world = SensorToWorld(GetModel()->GetWorldPose(), sensor_->Pose());
+    #endif
+    pose_msg_.header.frame_id = GetFrame();
+    pose_msg_.header.stamp = curr_time;  // it is very important to get the time right
+    pose_msg_.pose.position.x = sensor_to_world.translation().x();
+    pose_msg_.pose.position.y = sensor_to_world.translation().y();
+    pose_msg_.pose.position.z = sensor_to_world.translation().z();
+    Eigen::Quaterniond q(sensor_to_world.rotation());
+    pose_msg_.pose.orientation.w = q.w();
+    pose_msg_.pose.orientation.x = q.x();
+    pose_msg_.pose.orientation.y = q.y();
+    pose_msg_.pose.orientation.z = q.z();
+    pub_pose_.publish(pose_msg_);
+
+    // Publish the nav cam intrinsics
+    info_msg_.header.frame_id = GetFrame();
+    info_msg_.header.stamp = curr_time;  // it is very important to get the time right
+    FillCameraInfo(sensor_->Camera(), info_msg_);  // fill in from the camera pointer
+    pub_info_.publish(info_msg_);
+
+    // Publish the nav cam image
+    image_msg_.header.stamp.sec  = sensor_->LastMeasurementTime().sec;
+    image_msg_.header.stamp.nsec = sensor_->LastMeasurementTime().nsec;
+    image_msg_.height            = sensor_->ImageHeight();
+    image_msg_.width             = sensor_->ImageWidth();
+    image_msg_.step              = image_msg_.width;
+    image_msg_.data.resize(image_msg_.step * image_msg_.height);
     const uint8_t* data_start = reinterpret_cast<const uint8_t*>(sensor_->ImageData());
-    std::copy(data_start, data_start + msg_.step * msg_.height,
-              msg_.data.begin());
-    pub_img_.publish(msg_);
+    std::copy(data_start, data_start + image_msg_.step * image_msg_.height,
+              image_msg_.data.begin());
+    pub_img_.publish(image_msg_);
   }
 
  private:
-  sensor_msgs::Image msg_;
+  sensor_msgs::Image image_msg_;
+  geometry_msgs::PoseStamped pose_msg_;
+  sensor_msgs::CameraInfo info_msg_;
   ros::Publisher pub_img_;
+  ros::Publisher pub_pose_;
+  ros::Publisher pub_info_;
   std::shared_ptr<sensors::WideAngleCameraSensor> sensor_;
   event::ConnectionPtr update_;
   double rate_;

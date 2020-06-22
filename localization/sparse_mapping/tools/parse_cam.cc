@@ -15,9 +15,9 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#include <common/init.h>
-#include <common/thread.h>
-#include <common/utils.h>
+#include <ff_common/init.h>
+#include <ff_common/thread.h>
+#include <ff_common/utils.h>
 #include <sparse_mapping/sparse_map.h>
 #include <sparse_mapping/sparse_mapping.h>
 
@@ -77,7 +77,7 @@ DEFINE_string(trajectory_file, "trajectory.csv",
               "Save the trajectory to this file.");
 
 int main(int argc, char** argv) {
-  common::InitFreeFlyerApplication(&argc, &argv);
+  ff_common::InitFreeFlyerApplication(&argc, &argv);
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
   // Parse ground truth data
@@ -89,7 +89,7 @@ int main(int argc, char** argv) {
   sparse_mapping::ParseCSV(FLAGS_image_file, &image_data);
 
   std::vector<std::string> images;
-  common::ListFiles(FLAGS_image_set_dir, "jpg", &images);
+  ff_common::ListFiles(FLAGS_image_set_dir, "jpg", &images);
   if (images.empty())
     LOG(FATAL) << "No input images provided";
 
@@ -133,14 +133,14 @@ int main(int argc, char** argv) {
     std::map<std::string, int> image2num;
 
     for (size_t cid = 0; cid < good_images.size(); cid++) {
-      image2num[common::basename(good_images[cid])] = cid;
+      image2num[ff_common::basename(good_images[cid])] = cid;
     }
 
     std::vector<std::string> sub_images;
-    common::ListFiles(FLAGS_image_subset_dir, "jpg", &sub_images);
+    ff_common::ListFiles(FLAGS_image_subset_dir, "jpg", &sub_images);
     for (size_t cid = 0; cid < sub_images.size(); cid++) {
       std::string sub_image = sub_images[cid];
-      std::string base_image = common::basename(sub_image);
+      std::string base_image = ff_common::basename(sub_image);
       auto it = image2num.find(base_image);
       if (it == image2num.end()) continue;
       good_images2.push_back(sub_image);

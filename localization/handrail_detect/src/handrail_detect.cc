@@ -20,7 +20,7 @@
 #include <ros/ros.h>
 
 // Shared includes
-#include <common/init.h>
+#include <ff_common/init.h>
 #include <config_reader/config_reader.h>
 #include <msg_conversions/msg_conversions.h>
 #include <ff_util/ff_nodelet.h>
@@ -431,11 +431,17 @@ class HandrailDetect : public ff_util::FreeFlyerNodelet {
         dl_.local_pose.position.x = rolling_window_pos_(0, previous_index);
         dl_.local_pose.position.y = rolling_window_pos_(1, previous_index);
         dl_.local_pose.position.z = rolling_window_pos_(2, previous_index);
+        // Don't publish landmark if it refuses point
+        dl_.landmarks.clear();
 
         // Since we copy the previous point in the hope of rejecting 1 or two wrong samples
         // We have to stop if we copy too many points in a row. This would imply we are lost
         if (reject_cnt_ >= 5) {
           ROS_ERROR("[Handrail] Rejected 5 or more handrail positions in a row");
+          // Restart handrail detect if we are lost
+          start_ = false;
+          //  Don't publish landmark if we are lost
+          dl_.landmarks.clear();
           return false;
         }
       } else {

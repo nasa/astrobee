@@ -26,7 +26,7 @@ create_library(TARGET flashlight
 # Standalone test programs
 create_tool_targets(DIR tools
   INC ${GFLAGS_INCLUDE_DIRS}
-  LIBS ${GFLAGS_LIBRARIES} flashlight common
+  LIBS ${GFLAGS_LIBRARIES} flashlight ff_common
 )
 
 # Create ROS nodes if we are using ROS

@@ -1,4 +1,4 @@
-# List of common issues encountered with the simulator
+\page sim_issues List of common issues encountered with the simulator
 
 **This is a draft document**
 

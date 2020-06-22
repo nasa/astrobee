@@ -1,5 +1,4 @@
-\defgroup smart_dock Smart dock driver
-\ingroup hw
+\page smart_dock Smart dock driver
 
 The smart_dock package provides a single non-ROS service that accepts a DDS
 command to wake up an Astrobee that is docked to berth 1 or 2. It is essentially

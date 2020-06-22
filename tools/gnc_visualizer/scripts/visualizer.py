@@ -23,7 +23,6 @@ import numpy as np
 
 import argparse
 import atexit
-import fcntl
 import functools
 from math import asin, atan2, isnan, pi, sqrt
 import os
@@ -613,7 +612,7 @@ def main():
                                const='roslaunch astrobee play_bag.launch',
                                help='Launch play_bag.launch.')
     parser.add_argument('--sim', dest='launch_command', action='append_const',
-                               const='roslaunch astrobee simulator.launch',
+                               const='roslaunch astrobee sim.launch',
                                help='Launch simulator.launch.')
     parser.add_argument('--plan', dest='plan', action='store', help='The plan to execute.')
     parser.add_argument('--disable_pmcs', dest='disable_pmcs', action='store_true', help='Disable the pmcs.')
@@ -627,6 +626,10 @@ def main():
             help='Type an IP to be treated as initial peer for DDS.')
     parser.add_argument('--robot_name', dest='robot_name', action='store',
             help='Type the name of the robot you want to hear telemetry of over DDS.')
+    parser.add_argument('--domain', dest='domain', action='store',
+        help='DDS Domain ID. Default 37 ')
+    parser.add_argument('--public_ip', dest='public_ip', action='store',
+            help='TReK IP. Only use if needed')
 
     args, unknown = parser.parse_known_args()
 
@@ -642,16 +645,19 @@ def main():
     launch_command = None
 
     # Exclude ROS arguments when using DDS communication
-    if com_method == com.DDS_COM and ( args.launch_command != None or args.disable_pmcs or args.plan != None):
+    if com_method == com.DDS_COM and ( args.launch_command != None
+            or args.disable_pmcs or args.plan != None):
         print >> sys.stderr, ( '\n###\n' +
                 '\nAdditional arguments (--gantry --granite --bag --sim --plan --disable_pmcs) ' +
                 'will not be processed when using DDS mode. You may use "--comm ros" or do not include this ' +
                 'argument at all in order to use additional arguments.\n\n###\n')
         return
     # Exclude DDS commands when using ROS communication
-    elif com_method == com.ROS_COM and ( args.use_ip != None or args.robot_name != None):
+    elif com_method == com.ROS_COM and ( args.use_ip != None
+            or args.robot_name != None or args.public_ip != None
+            or args.domain != None):
         print >> sys.stderr, ( '\n###\n' +
-                '\nAdditional arguments (--use_ip --robot_name) ' +
+                '\nAdditional arguments (--use_ip --robot_name --public_ip) ' +
                 'will not be processed when using ROS mode. You may include "--comm dds" ' +
                 'argument in order to use these additional arguments.\n\n###\n')
         return
@@ -669,7 +675,8 @@ def main():
 
 
     # Setting communication method
-    dds_args = dict(partition_name=args.robot_name, given_peer=args.use_ip)
+    dds_args = dict(partition_name=args.robot_name, given_peer=args.use_ip,
+            domain=args.domain, public_ip=args.public_ip)
     if not com_manager.set_com_method(com_method, dds_args):
         return
 
@@ -678,15 +685,13 @@ def main():
     v = Visualizer(launch_command, args.plan, com_manager.current_com_method)
 
     try:
-        # TODO(Ruben): Catch errors from Threads started in com_manager
-
+        # TODO(rgarciar): Catch errors from Threads started in com_manager
         # Starting communications
         com_manager.start_communications(v)
         v.show()
         v.startProcess()
         app.exec_()
     except (KeyboardInterrupt, SystemExit):
-        pass
         print("GVIZ will exit")
     except Exception as e:
         print(e)
@@ -694,7 +699,8 @@ def main():
         v.hide()
         v.stopProcess()
         com_manager.stop_communications()
-        com_manager.config.destroy_dom()
+        if com_manager.current_com_method == com.DDS_COM:
+            com_manager.config.destroy_dom()
 
 if __name__ == '__main__':
     main()

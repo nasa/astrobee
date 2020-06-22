@@ -175,6 +175,8 @@ OpState* OpStateReady::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
     if (exec_->Unperch(cmd)) {
       return OpStateRepo::Instance()->teleop()->StartupState();
     }
+  } else if (cmd->cmd_name == CommandConstants::CMD_NAME_UNTERMINATE) {
+    exec_->Unterminate(cmd);
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_WIPE_HLP) {
     exec_->WipeHlp(cmd);
   } else {

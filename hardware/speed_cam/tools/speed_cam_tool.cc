@@ -22,7 +22,7 @@
 // Check file access ok
 #include <unistd.h>
 
-// C++ STL inclues
+// C++ STL includes
 #include <iostream>
 #include <sstream>
 #include <fstream>

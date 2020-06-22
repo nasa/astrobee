@@ -24,6 +24,12 @@ namespace executive {
 OpState* OpStatePlanExec::StartupState(std::string const& cmd_id) {
   std::string err_msg;
 
+  if (!exec_->GetSetPlanInertia(cmd_id)) {
+    return OpStateRepo::Instance()->ready()->StartupState();
+  }
+
+  exec_->GetSetPlanOperatingLimits();
+
   first_segment_ = true;
   exec_->SetRunPlanCmdId(cmd_id);
 
@@ -444,11 +450,7 @@ OpState* OpStatePlanExec::StartNextPlanItem() {
     ROS_DEBUG("Got and sending segment.");
     exec_->FillMotionGoal(EXECUTE);
 
-    // TODO(Katie) Temporarily force holonomic mode on the initial segment, as
-    // the granite table doesn't permit a faceforward move to start because
-    // there are no visual features near spheresgoat
-    // TODO(Katie) Change this to extract facefoward out of plan
-    if (!exec_->ConfigureMobility(first_segment_, true, err_msg)) {
+    if (!exec_->ConfigureMobility(first_segment_, err_msg)) {
       AckPlanCmdFailed(ff_msgs::AckCompletedStatus::EXEC_FAILED, err_msg);
       return OpStateRepo::Instance()->ready()->StartupState();
     }

@@ -28,7 +28,7 @@ catkin_package(
 set(CMAKE_CXX_FLAGS_HACKY "${CMAKE_CXX_FLAGS} -Wno-return-type")
 
 create_library(TARGET ${PROJECT_NAME}
-  LIBS ${catkin_LIBRARIES} ${OROCOS_KDL_LIBRARIES} common config_reader msg_conversions ff_nodelet
+  LIBS ${catkin_LIBRARIES} ${OROCOS_KDL_LIBRARIES} ff_common config_reader msg_conversions ff_nodelet
   INC ${catkin_INCLUDE_DIRS} ${EIGEN3_INCLUDE_DIRS}
   DEPS ff_msgs
 )

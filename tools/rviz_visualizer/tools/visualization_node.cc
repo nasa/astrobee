@@ -16,7 +16,7 @@
  * under the License.
  */
 
-#include <common/init.h>
+#include <ff_common/init.h>
 #include <config_reader/config_reader.h>
 #include <msg_conversions/msg_conversions.h>
 
@@ -94,7 +94,7 @@ void ReadParams(config_reader::ConfigReader *config) {
 }
 
 int main(int argc, char **argv) {
-  common::InitFreeFlyerApplication(&argc, &argv);
+  ff_common::InitFreeFlyerApplication(&argc, &argv);
   ros::init(argc, argv, "visualization_node");
 
   ros::NodeHandle nh("~");

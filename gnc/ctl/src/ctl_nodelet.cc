@@ -18,7 +18,7 @@
 
 #include <ctl/ctl.h>
 
-#include <common/init.h>
+#include <ff_common/init.h>
 #include <ff_util/ff_nodelet.h>
 
 #include <nodelet/nodelet.h>
@@ -37,7 +37,7 @@ class CtlNodelet : public ff_util::FreeFlyerNodelet {
   // This is called when the nodelet is loaded into the nodelet manager
   void Initialize(ros::NodeHandle *nh) {
     // Bootstrap our environment
-    common::InitFreeFlyerApplication(getMyArgv(), false);
+    ff_common::InitFreeFlyerApplication(getMyArgv(), false);
     gnc_autocode::InitializeAutocode(this);
     ctl_.reset(new ctl::Ctl(this->GetPlatformHandle(true), getName()));
   }

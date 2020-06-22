@@ -61,11 +61,9 @@ void MapperNodelet::BodyTfTask(ros::TimerEvent const& event) {
   mutexes_.tf.unlock();
 }
 
+// Sentinel
 void MapperNodelet::CollisionCheckTask() {
   ROS_DEBUG("collisionCheck Thread started!");
-
-  // Rate at which the collision checker will run
-  // ros::Rate loop_rate(collision_check_rate_);
 
   // visualization markers
   visualization_msgs::MarkerArray traj_markers, samples_markers;
@@ -220,6 +218,7 @@ void MapperNodelet::OctomappingTask() {
     globals_.octomap.cam_frustum_.TransformFrustum(transform, &world_frustum);
     globals_.octomap.PclToRayOctomap(pcl_world, tf_cam2world, world_frustum);
     globals_.octomap.tree_.prune();   // prune the tree before visualizing
+    globals_.octomap.tree_inflated_.prune();
     // globals_.octomap.tree.writeBinary("simple_tree.bt");
     mutexes_.octomap.unlock();
 
@@ -227,8 +226,10 @@ void MapperNodelet::OctomappingTask() {
     bool pub_obstacles, pub_free, pub_obstacles_inflated, pub_free_inflated;
     pub_obstacles = (obstacle_marker_pub_.getNumSubscribers() > 0) || (obstacle_cloud_pub_.getNumSubscribers() > 0);
     pub_free = (free_space_marker_pub_.getNumSubscribers() > 0) || (free_space_cloud_pub_.getNumSubscribers() > 0);
-    pub_obstacles_inflated = (inflated_obstacle_marker_pub_.getNumSubscribers() > 0);
-    pub_free_inflated = (inflated_free_space_marker_pub_.getNumSubscribers() > 0);
+    pub_obstacles_inflated = (inflated_obstacle_marker_pub_.getNumSubscribers() > 0)
+                          || (inflated_obstacle_cloud_pub_.getNumSubscribers() > 0);
+    pub_free_inflated = (inflated_free_space_marker_pub_.getNumSubscribers() > 0)
+                     || (inflated_free_space_cloud_pub_.getNumSubscribers() > 0);
 
     if (pub_obstacles || pub_free) {
       visualization_msgs::MarkerArray obstacle_markers, free_markers;
@@ -248,15 +249,20 @@ void MapperNodelet::OctomappingTask() {
     }
 
     if (pub_obstacles_inflated || pub_free_inflated) {
-      visualization_msgs::MarkerArray inflated_markers;
-      visualization_msgs::MarkerArray inflated_free_markers;
+      visualization_msgs::MarkerArray inflated_obstacle_markers, inflated_free_markers;
+      sensor_msgs::PointCloud2 inflated_obstacle_cloud, inflated_free_cloud;
       mutexes_.octomap.lock();
-      globals_.octomap.InflatedVisMarkers(&inflated_markers, &inflated_free_markers);
+      globals_.octomap.InflatedVisMarkers(&inflated_obstacle_markers, &inflated_free_markers,
+                                          &inflated_obstacle_cloud,   &inflated_free_cloud);
       mutexes_.octomap.unlock();
-      if (pub_obstacles_inflated)
-        inflated_obstacle_marker_pub_.publish(inflated_markers);
-      if (pub_free_inflated)
+      if (pub_obstacles_inflated) {
+        inflated_obstacle_marker_pub_.publish(inflated_obstacle_markers);
+        inflated_obstacle_cloud_pub_.publish(inflated_obstacle_cloud);
+      }
+      if (pub_free_inflated) {
         inflated_free_space_marker_pub_.publish(inflated_free_markers);
+        inflated_free_space_cloud_pub_.publish(inflated_free_cloud);
+      }
     }
 
     if (cam_frustum_pub_.getNumSubscribers() > 0) {

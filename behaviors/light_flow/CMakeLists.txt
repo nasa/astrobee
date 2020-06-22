@@ -25,7 +25,6 @@ catkin_package(
     ff_hw_msgs
     ff_msgs
     ff_util
-    signal_lights
     nodelet
     pluginlib
 )
@@ -36,11 +35,9 @@ create_library(
   DEPS
     ff_msgs
     ff_hw_msgs
-    signal_lights
   LIBS
     ${catkin_LIBRARIES}
     ff_nodelet
-    signal_lights
     ${JSONCPP_LIBRARIES}
   INC
     ${catkin_INCLUDE_DIRS}
@@ -54,7 +51,6 @@ create_tool_targets(
     ${catkin_LIBRARIES}
     ff_nodelet
     ${JSONCPP_LIBRARIES}
-    signal_lights
     light_flow
   INC
     ${catkin_INCLUDE_DIRS}
@@ -62,7 +58,6 @@ create_tool_targets(
   DEPS
     ff_msgs
     ff_hw_msgs
-    signal_lights
     light_flow
 )
 
@@ -72,7 +67,6 @@ create_library(
   LIBS 
     ${catkin_LIBRARIES} 
     ${JSONCPP_LIBRARIES}
-    signal_lights 
     config_reader 
     ff_nodelet 
     light_flow
@@ -83,7 +77,6 @@ create_library(
     ff_msgs
     ff_hw_msgs
     light_flow
-    signal_lights
 )
 
 install_launch_files()

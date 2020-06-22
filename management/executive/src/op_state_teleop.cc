@@ -1,14 +1,14 @@
 /* Copyright (c) 2017, United States Government, as represented by the
  * Administrator of the National Aeronautics and Space Administration.
- * 
+ *
  * All rights reserved.
- * 
+ *
  * The Astrobee platform is licensed under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -74,6 +74,36 @@ OpState* OpStateTeleop::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
     exec_->SetTimeSync(cmd);
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_SET_ZONES) {
     exec_->SetZones(cmd);
+  } else if (cmd->cmd_name == CommandConstants::CMD_NAME_SIMPLE_MOVE6DOF) {
+    // Make sure we aren't docked, docking, perched, or perching
+    if (exec_->GetMobilityState().state != ff_msgs::MobilityState::DOCKING &&
+        exec_->GetMobilityState().state != ff_msgs::MobilityState::PERCHING) {
+      // If flying, need to stop
+      if (exec_->GetMobilityState().state == ff_msgs::MobilityState::FLYING) {
+        exec_->CancelAction(MOVE, "move");
+        // Need to stop before we can issue the next move
+        exec_->FillMotionGoal(STOP);
+        if (!exec_->StartAction(STOP, cmd->cmd_id)) {
+          return OpStateRepo::Instance()->ready()->StartupState();
+        }
+        // Store move command for when stop is done
+        move_cmd_ = cmd;
+      } else {
+        if (!exec_->FillMotionGoal(MOVE, cmd)) {
+          return this;
+        }
+
+        if (!exec_->ConfigureMobility(cmd->cmd_id)) {
+          return this;
+        }
+
+        exec_->StartAction(MOVE, cmd->cmd_id);
+      }
+    } else {
+      AckCmd(cmd->cmd_id,
+             ff_msgs::AckCompletedStatus::EXEC_FAILED,
+             "Cannot execute a move when docked, docking, perched or perching");
+    }
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_SKIP_PLAN_STEP) {
     exec_->SkipPlanStep(cmd);
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_START_GUEST_SCIENCE) {
@@ -120,6 +150,28 @@ OpState* OpStateTeleop::HandleResult(
       // the command either way so we don't need to worry about acking it.
       if (exec_->ResetEkf(cmd_id)) {
         return this;
+      }
+    } else if (action == STOP) {
+      // If we stopped so we could move again, we need to issue the move
+      if (move_cmd_ != NULL) {
+        if (!exec_->FillMotionGoal(MOVE, move_cmd_)) {
+          move_cmd_ = NULL;
+          return OpStateRepo::Instance()->ready()->StartupState();
+        }
+
+        if (!exec_->ConfigureMobility(move_cmd_->cmd_id)) {
+          move_cmd_ = NULL;
+          return OpStateRepo::Instance()->ready()->StartupState();
+        }
+
+        if (exec_->StartAction(MOVE, move_cmd_->cmd_id)) {
+          move_cmd_ = NULL;
+          return this;
+        }
+        // Clear out move command
+        move_cmd_ = NULL;
+      } else {
+        AckCmd(cmd_id);
       }
     } else {
       // Need to check if command was part of a plan in the case that we got a

@@ -1,15 +1,15 @@
 # DDS Profile and Types
 
-This directory contains all xml files used to define the DDS entities needed 
+This directory contains all xml files used to define the DDS entities needed
 for the visualizer DDS mode.
 
 ## Files description
 
-### DDSProfile.xml
+### BaseDDSProfile.xml
 
-This xml defines the QoS Profiles as well as the DDS Entities and Types needed 
+This xml defines the QoS Profiles as well as the DDS Entities and Types needed
 for the visualizer. From line 1 to 993, it is a copy from the file located in
-*freeflyer/astrobee/config/communications/dds/RAPID_QOS_PROFILES*. From then on 
+*freeflyer/astrobee/config/communications/dds/RAPID_QOS_PROFILES*. From then on
 it defines all entities and types needed.
 
 #### Future improvements
@@ -20,11 +20,11 @@ it defines all entities and types needed.
 
 ### Free-flyer types
 
-EkfState.xml, GncControlState.xml, GncFamCmdState.xml, LogSample.xml and 
-PmcCmdState.xml are custom DDS type definitions for the freeflyer ROS messages. 
+EkfState.xml, GncControlState.xml, GncFamCmdState.xml, LogSample.xml and
+PmcCmdState.xml are custom DDS type definitions for the freeflyer ROS messages.
 
 Once you build the freeflyer project you should be able to find an update copy
-of this files in *freeflyer_build/native/communications/dds_msgs/idl
+of this files in *freeflyer_build/native/communications/dds_msgs/idl*
 
 ### Common types
 

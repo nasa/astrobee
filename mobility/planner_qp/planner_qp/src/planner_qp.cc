@@ -110,13 +110,23 @@ class Planner : public planner::PlannerImplementation {
         nh->createTimer(ros::Duration(ros::Rate(10.0)),
                         &Planner::AnimateTimer, this, false, true);
 
-    pcl_sub_ = nh->subscribe(TOPIC_MAPPER_OCTOMAP_CLOUD, 5,
+    pcl_sub_ = nh->subscribe(TOPIC_MAPPER_OCTOMAP_INFLATED_CLOUD, 5,
                              &Planner::map_callback, this);
+
+    // This timer will be used to send feedback to clients while planning
+    timer_fb_ = nh->createTimer(ros::Duration(ros::Rate(1.5*DEFAULT_DIAGNOSTICS_RATE)),
+      &Planner::SendFeedback, this, false, false);
 
     // cloud_pub_ = nh->advertise<pcl::PointCloud<pcl::PointXYZ> >
     // ("obs_points", 5, true);
     // Success
     return true;
+  }
+
+  // Send useless feedback to client
+  void SendFeedback(ros::TimerEvent const& event) {
+    ff_msgs::PlanFeedback fb;
+    PlanFeedback(fb);
   }
 
   bool ReconfigureCallback(dynamic_reconfigure::Config &config) {
@@ -281,15 +291,17 @@ class Planner : public planner::PlannerImplementation {
     SendDiagnostics(cfg_.Dump());
   }
 
-  // Why are we returing things on a void function?
   void PlanCallback(ff_msgs::PlanGoal const &goal) override {
     ff_msgs::PlanResult plan_result;
+    timer_fb_.start();
     // get important vars
     const std::vector<geometry_msgs::PoseStamped> &states = goal.states;
     if (!LoadActionParams(goal)) {
       ROS_ERROR_STREAM("Planner params are bad");
       plan_result.response = RESPONSE::BAD_ARGUMENTS;
-      return PlanResult(plan_result);
+      PlanResult(plan_result);
+      timer_fb_.stop();
+      return;
     }
 
     OUTPUT_DEBUG("PlannerQP: Face forward: " << faceforward_);
@@ -329,13 +341,19 @@ class Planner : public planner::PlannerImplementation {
     if (use_2d) end_eig(2) = start_eig(2);
 
     // try to optimize trajectory, return on failure
-    if (!generate_trajectory(start_eig, end_eig, &plan_result))
-      return PlanResult(plan_result);
+    if (!generate_trajectory(start_eig, end_eig, &plan_result)) {
+      PlanResult(plan_result);
+      timer_fb_.stop();
+      return;
+    }
+
 
     // Check face forward
     if (!calculate_time_scale()) {
       plan_result.response = RESPONSE::BAD_ARGUMENTS;
-      return PlanResult(plan_result);
+      PlanResult(plan_result);
+      timer_fb_.stop();
+      return;
     }
 
     sample_trajectory(&plan_result.segment);
@@ -344,7 +362,9 @@ class Planner : public planner::PlannerImplementation {
       add_face_forward_trajectories(states, &plan_result.segment);
 
     plan_result.response = RESPONSE::SUCCESS;
-    return PlanResult(plan_result);
+    PlanResult(plan_result);
+    timer_fb_.stop();
+    return;
   }
 
   // Called to interrupt the process
@@ -352,7 +372,7 @@ class Planner : public planner::PlannerImplementation {
 
  protected:
   ff_util::ConfigServer cfg_;
-  ros::Timer timer_d_, timer_a_;
+  ros::Timer timer_d_, timer_a_, timer_fb_;
   boost::shared_ptr<traj_opt::NonlinearTrajectory> trajectory_;
   tf::Quaternion start_orientation_;
   tf::Vector3 axis_;
@@ -514,14 +534,10 @@ class Planner : public planner::PlannerImplementation {
       max_iterations_ = 200;
 
     // try to get zones
-    std::vector<ff_msgs::Zone> zones;
     if (!load_map()) {
       ROS_ERROR("Planner::QP: Planner failed to load keepins and keepouts");
       return false;
     }
-    // get sample increment
-    double radius;
-    if (!cfg_.Get<double>("robot_radius", radius)) radius = 0.26;
 
     traj_opt::Vec3 start3 = start.block<3, 1>(0, 0);
     traj_opt::Vec3 goal3 = goal.block<3, 1>(0, 0);
@@ -791,7 +807,7 @@ class Planner : public planner::PlannerImplementation {
       error_angle = error_quat.getAngle();
       if (error_angle > M_PI) error_angle -= 2 * M_PI;
       axis = error_quat.getAxis();
-      axis_world_frame = tf::Transform(start_orientation_) * axis;
+      axis_world_frame = tf::Transform(start_orientation) * axis;
       tf::vector3TFToMsg(axis_world_frame * error_angle / dt,
                          state.twist.angular);
     }
@@ -838,7 +854,7 @@ class Planner : public planner::PlannerImplementation {
         v /= T;
         a /= T * T;
         state.pose.position = controls->back().pose.position;
-        tf::quaternionTFToMsg(start_orientation_ * tf::Quaternion(axis, p),
+        tf::quaternionTFToMsg(start_orientation * tf::Quaternion(axis, p),
                               state.pose.orientation);
         tf::vector3TFToMsg(axis_world_frame * v, state.twist.angular);
         tf::vector3TFToMsg(axis_world_frame * a, state.accel.angular);
@@ -905,7 +921,8 @@ class Planner : public planner::PlannerImplementation {
     jps_map_util_.reset(new JPS::VoxelMapUtil());
     jps_map_util_->setMap(origin, dim, map, map_res_);
 
-    vec_Vec3f keepout_points = mapper_points_;
+    vec_Vec3f keepout_points_mapper = mapper_points_;
+    vec_Vec3f keepout_points_zones;
 
     // add contour
     for (auto &zone : zones) {
@@ -950,9 +967,9 @@ class Planner : public planner::PlannerImplementation {
               tmp(j) = zx;
               tmp(k) = zy;
               tmp(i) = zmin(i);
-              keepout_points.push_back(tmp);
+              keepout_points_zones.push_back(tmp);
               tmp(i) = zmax(i);
-              keepout_points.push_back(tmp);
+              keepout_points_zones.push_back(tmp);
             } else {
               for (auto zz = zmin(i); zz <= zmax(i); zz += map_res_) {
                 tmp(j) = zx;
@@ -971,19 +988,22 @@ class Planner : public planner::PlannerImplementation {
     jps_map_util_->setMap(origin, dim, map, map_res_);
     // for(auto &p:keepout_points)
     // OUTPUT_DEBUG("PlannerQP: Keepout point: " << p.transpose());
-    OUTPUT_DEBUG("PlannerQP: add3DPoints: " << keepout_points.size());
+    OUTPUT_DEBUG("PlannerQP: add3DPoints zones: " << keepout_points_zones.size()
+                                    << " mapper: " << keepout_points_mapper.size());
     // dialate
     double radius;
-    if (!cfg_.Get<double>("robot_radius", radius)) radius = 0.26;
+    if (!cfg_.Get<double>("robot_radius", radius)) radius = 0.16;
 
     jps_map_util_->freeUnKnown();
     jps_map_util_->dilate(radius, radius);
-    jps_map_util_->add3DPoints(keepout_points);
+    OUTPUT_DEBUG("PlannerQP: Dilating");
+    jps_map_util_->dilating();
+    // keepout add point includes dilating
+    jps_map_util_->add3DPoints(keepout_points_zones);
+    jps_map_util_->add3DPoints(keepout_points_mapper);
     OUTPUT_DEBUG("PlannerQP: Map origin " << origin.transpose() << " dim "
                                           << dim.transpose() << " resolution "
                                           << map_res_);
-    OUTPUT_DEBUG("PlannerQP: Dilating");
-    jps_map_util_->dilating();
 
     jps_planner_.reset(new JPS::JPS3DUtil(false));
     jps_planner_->setMapUtil(jps_map_util_.get());

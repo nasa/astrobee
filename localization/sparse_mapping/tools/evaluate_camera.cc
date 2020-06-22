@@ -21,8 +21,8 @@
  * estimates the error that global localization via either
  * RANSAC or least-squares will have.
  **/
-#include <common/init.h>
-#include <common/thread.h>
+#include <ff_common/init.h>
+#include <ff_common/thread.h>
 #include <camera/camera_model.h>
 #include <sparse_mapping/reprojection.h>
 
@@ -31,6 +31,7 @@
 #include <gflags/gflags.h>
 #include <glog/logging.h>
 #include <opencv2/features2d/features2d.hpp>
+#include <random>
 
 DEFINE_bool(ransac, false,
               "Use RANSAC algorithm. If not use ceres solver.");
@@ -233,7 +234,7 @@ void EstimateRandomCameraError(double* dist_error, double* angle_error) {
 }
 
 int main(int argc, char** argv) {
-  common::InitFreeFlyerApplication(&argc, &argv);
+  ff_common::InitFreeFlyerApplication(&argc, &argv);
   rand_seed = time(NULL);
 
   double dist_error_mean = 0.0, dist_error_mean_2 = 0.0;

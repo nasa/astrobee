@@ -1,5 +1,4 @@
-\defgroup visualeyez Visualeyez marker tracking system
-\ingroup tools
+\page visualeyez Visualeyez marker tracking system
 
 ## Overview
 

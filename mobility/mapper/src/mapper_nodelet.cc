@@ -115,6 +115,10 @@ void MapperNodelet::Initialize(ros::NodeHandle *nh) {
     TOPIC_MAPPER_OCTOMAP_FREE_CLOUD, 1, true);
   obstacle_cloud_pub_ = nh->advertise<sensor_msgs::PointCloud2>(
     TOPIC_MAPPER_OCTOMAP_CLOUD, 1, true);
+  inflated_free_space_cloud_pub_ = nh->advertise<sensor_msgs::PointCloud2>(
+    TOPIC_MAPPER_OCTOMAP_INFLATED_FREE_CLOUD, 1, true);
+  inflated_obstacle_cloud_pub_ = nh->advertise<sensor_msgs::PointCloud2>(
+    TOPIC_MAPPER_OCTOMAP_INFLATED_CLOUD, 1, true);
   hazard_pub_ = nh->advertise<ff_msgs::Hazard>(
     TOPIC_MOBILITY_HAZARD, 1);
 
@@ -137,7 +141,7 @@ void MapperNodelet::Initialize(ros::NodeHandle *nh) {
     ros::Duration(ros::Rate(tf_update_rate_)),
       &MapperNodelet::BodyTfTask, this, false, true);
 
-  // Aubscribers
+  // Subscribers
   std::string cam_prefix = TOPIC_HARDWARE_PICOFLEXX_PREFIX;
   std::string cam_suffix = TOPIC_HARDWARE_PICOFLEXX_SUFFIX;
   if (use_haz_cam) {

@@ -140,6 +140,59 @@ jsonloader::Plan const& Sequencer::plan() const noexcept {
   return plan_;
 }
 
+bool Sequencer::HaveInertia() const noexcept {
+  return plan_.inertia_configuration().valid();
+}
+
+geometry_msgs::InertiaStamped Sequencer::GetInertia() const noexcept {
+  geometry_msgs::InertiaStamped i;
+  jsonloader::InertiaConfiguration const& ic = plan_.inertia_configuration();
+
+  if (!ic.valid()) {
+    ROS_WARN("requesting inertia, but no inertia was provided");
+  }
+
+  i.header.frame_id = ic.name();
+
+  // Inertia Tensor [kg-m^2]
+  //     | ixx ixy ixz |
+  // I = | ixy iyy iyz |
+  //     | ixz iyz izz |
+  i.inertia.m = ic.mass();
+  i.inertia.ixx = ic.matrix()[0];
+  i.inertia.ixy = ic.matrix()[1];
+  i.inertia.ixz = ic.matrix()[2];
+  i.inertia.iyy = ic.matrix()[4];
+  i.inertia.iyz = ic.matrix()[5];
+  i.inertia.izz = ic.matrix()[8];
+
+  return i;
+}
+
+bool Sequencer::HaveOperatingLimits() const noexcept {
+  return plan_.operating_limits().valid();
+}
+
+bool Sequencer::GetOperatingLimits(ff_msgs::AgentStateStamped &state) const noexcept {
+  jsonloader::OperatingLimits const & ol = plan_.operating_limits();
+  if (!ol.valid()) {
+    ROS_WARN("requesting operating limits, but none provided.");
+    return false;
+  }
+
+  state.profile_name = ol.profile_name();
+  state.flight_mode = ol.flight_mode();
+
+  state.collision_distance = ol.collision_distance();
+
+  state.target_linear_velocity = ol.linear_velocity();
+  state.target_linear_accel = ol.linear_accel();
+  state.target_angular_velocity = ol.angular_velocity();
+  state.target_angular_accel = ol.angular_accel();
+
+  return true;
+}
+
 ItemType Sequencer::CurrentType(bool reset_time) noexcept {
   if (!valid_)
     return ItemType::NONE;

@@ -57,7 +57,7 @@ def mkdir_p(path):
         if os.path.isdir(path):
             pass
         else:
-            raise
+            raise Exception('Could not make directory ' + path + ' as a file with this name exists.')
 
 def read_image_list(filename):
     images = []

@@ -15,7 +15,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-add_subdirectory(common)
+add_subdirectory(ff_common)
 add_subdirectory(config_reader)
 add_subdirectory(jsonloader)
 if(USE_ROS)

@@ -119,6 +119,11 @@ class ValueField : public Field {
       return false;
     }
 
+    // Field is not required and not present
+    if (!obj.isMember(name())) {
+      return true;
+    }
+
     Json::Value wanted(value_);
     Json::Value const& actual = obj[name()];
 
@@ -164,6 +169,11 @@ class RangeField : public Field {
   bool Validate(Json::Value const& obj) const override {
     if (!Field::Validate(obj)) {
       return false;
+    }
+
+    // Field is not required and not present
+    if (!obj.isMember(name())) {
+      return true;
     }
 
     T val;

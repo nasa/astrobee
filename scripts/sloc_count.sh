@@ -29,7 +29,7 @@ scriptdir=`dirname $callcmd`
 scriptname=${0##*/}
 rootpath=`cd $scriptdir/..; pwd`
 
-fsw_dirs="astrobee behaviors cmake communications description hardware"
+fsw_dirs="astrobee behaviors cmake communications description hardware shared tools"
 fsw_dirs+=" localization management mobility scripts shared simulation tools wdock"
 
 dirs_to_exclude="code_generation,hardware/embedded,scripts/git"

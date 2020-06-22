@@ -19,7 +19,7 @@ set(LIBS
   ${ALVAR_LIBRARIES}
   ${OpenCV_LIBRARIES}
   camera
-  common
+  ff_common
   config_reader
   ${GLOG_LIBRARIES}
   ${GFLAGS_LIBRARIES}

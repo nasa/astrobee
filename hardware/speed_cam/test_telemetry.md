@@ -1,5 +1,4 @@
-\defgroup speed_cam_test_telemetry Test : Telemetry
-\ingroup speed_cam
+\page speed_cam_test_telemetry Test : Telemetry
 
 The speed camera provides a velocity estimate, along with raw measurements: optical flow, inertial, and camera images. The data is broadcast to the topics `hw/speed_cam/speed`, `hw/speed_cam/optical_flow` `hw/speed_cam/imu` and `speed_cam/camera_image`, optionally prefixed by the name space for the robot on which the driver is being run. 
 

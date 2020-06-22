@@ -42,7 +42,7 @@ PerchingArmResult PerchingArm::Connect(std::string const &port, uint32_t baud,
   // Check the serial opens and return failure if not
   if (!serial_.Open(port, baud)) return RESULT_PORT_NOT_OPEN;
   // Make sure the DTR pin is set low be default
-  serial_.SetResetPinState(serial::RESET_PIN_LOW);
+  serial_.SetResetPinState(ff_serial::RESET_PIN_LOW);
   // Save the callbacks
   if (cb_raw_data) {
     std::cout << "Connecting raw data callback" << std::endl;
@@ -214,9 +214,9 @@ PerchingArmResult PerchingArm::HardReset() {
   // Check serial is open
   if (!serial_.IsOpen()) return RESULT_PORT_NOT_OPEN;
   // Reset the board
-  serial_.SetResetPinState(serial::RESET_PIN_HIGH);
+  serial_.SetResetPinState(ff_serial::RESET_PIN_HIGH);
   cb_sleep_ms_(500);
-  serial_.SetResetPinState(serial::RESET_PIN_LOW);
+  serial_.SetResetPinState(ff_serial::RESET_PIN_LOW);
   return RESULT_SUCCESS;
 }
 

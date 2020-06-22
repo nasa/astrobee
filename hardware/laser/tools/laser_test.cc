@@ -17,7 +17,7 @@
  */
 
 
-#include <common/init.h>
+#include <ff_common/init.h>
 
 #include <glog/logging.h>
 #include <gflags/gflags.h>
@@ -57,7 +57,7 @@ DECLARE_bool(logtostderr);
 
 int main(int argc, char** argv) {
   FLAGS_logtostderr = true;
-  common::InitFreeFlyerApplication(&argc, &argv);
+  ff_common::InitFreeFlyerApplication(&argc, &argv);
 
   i2c::Error err;
 

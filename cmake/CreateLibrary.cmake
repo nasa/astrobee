@@ -77,7 +77,7 @@ function(create_library)
   endif()
 
   install(TARGETS ${library_TARGET} DESTINATION lib)
-  install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/include/
+  install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/
     DESTINATION include
     FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp")
 endfunction()

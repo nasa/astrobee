@@ -25,6 +25,7 @@
 
 #include <Eigen/Dense>
 
+#include <array>
 #include <memory>
 #include <vector>
 #include <string>
@@ -149,6 +150,54 @@ class Segment : public Milestone {
   WaypointSeq waypoints_;
 };
 
+class InertiaConfiguration {
+ public:
+  explicit InertiaConfiguration(Json::Value const& obj);
+  InertiaConfiguration();
+
+  bool valid() const noexcept;
+
+  std::string const& name() const noexcept;
+  float mass() const noexcept;
+  std::array<float, 9> const& matrix() const noexcept;
+
+ private:
+  bool valid_;
+
+  std::string name_;
+  float mass_;
+  std::array<float, 9> matrix_;
+};
+
+class OperatingLimits {
+ public:
+  explicit OperatingLimits(Json::Value const& obj);
+  OperatingLimits();
+
+  bool valid() const noexcept;
+
+  std::string const& flight_mode() const noexcept;
+  std::string const& profile_name() const noexcept;
+
+  float collision_distance() const noexcept;
+  float angular_accel() const noexcept;
+  float angular_velocity() const noexcept;
+  float linear_accel() const noexcept;
+  float linear_velocity() const noexcept;
+
+ private:
+  bool valid_;
+
+  std::string flight_mode_;
+  std::string profile_;
+
+  float collision_distance_;
+  float angular_accel_;
+  float angular_vel_;
+  float linear_accel_;
+  float linear_vel_;
+};
+
 class Plan {
  public:
   explicit Plan(Json::Value const& obj);
@@ -166,6 +215,8 @@ class Plan {
   std::string const& name() const noexcept;
   float default_speed() const noexcept;
   float default_tolerance() const noexcept;
+  InertiaConfiguration const& inertia_configuration() const noexcept;
+  OperatingLimits const& operating_limits() const noexcept;
   std::vector<Station> const& stations() const noexcept;
   std::vector<Segment> const& segments() const noexcept;
 
@@ -180,6 +231,9 @@ class Plan {
   float default_tolerance_;
 
   std::string waypoint_type_;
+
+  InertiaConfiguration inertia_config_;
+  OperatingLimits operating_limits_;
 
   std::vector<Station> stations_;
   std::vector<Segment> segments_;

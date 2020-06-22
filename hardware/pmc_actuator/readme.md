@@ -1,5 +1,4 @@
-\defgroup pmc_actuator PMC actuator
-\ingroup hw
+\page pmc_actuator PMC actuator
 
 # How to test the PMC - Using bare C++ program
 

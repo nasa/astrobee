@@ -1,21 +1,28 @@
-\defgroup subsystems Subsystems
-\ingroup doc
+\page subsystems Subsystems
 
-# Freeflyer Subsystems organization and topic name hierarchy
+## Freeflyer Subsystems organization and topic name hierarchy
 
-Definition of topic names are maintained in:<br>
+Definition of topic names are maintained in \subpage shared:<br>
   `shared/ff_util/ff_names.h`
 
-## Management
+### Management
+  - \subpage management
   - directory: `managment`
   - topic prefix: `mgt`
   - include:
-    - Executive
-    - SystemMonitor
-    - AccessControl
-    - ResourceMonitors (CPU, disk, etc.) (or should they go to HW?)
+    - \ref executive
+    - \ref sys_monitor
+    - \ref access_control
+    - \ref imagesampler
+    - \ref imagesampler
+    - \ref data_bagger
+    - ResourceMonitors
+      - \ref cpu_monitor
+      - \ref disk_monitor
+    - \ref log_monitor
 
-## Localization
+### Localization
+  - \subpage localization
   - directory: `localization`
   - topic prefix: `loc`
   - We keep this name, everything necessary for localization, pose estimation is performed in the GNC EKF...
@@ -24,9 +31,10 @@ Definition of topic names are maintained in:<br>
     - AR Tags
     - Handrail detect
     - Optical Flow
-    - Localization Manager ?
+    - Localization Manager
 
-## Mobility
+### Mobility
+  - \subpage mobility
   - directory: `mobility`
   - topic prefix: `mob`
   - include:
@@ -39,7 +47,8 @@ Definition of topic names are maintained in:<br>
     - perching
     - docking
 
-## GN&C
+### GN&C
+  - \subpage gnc
   - directory: `gnc`
   - topic prefix: `gnc`
   - include:
@@ -47,7 +56,19 @@ Definition of topic names are maintained in:<br>
     - Visual Odometry
     - Control
 
-## Communication
+### Behaviors
+  - \subpage beh
+  - directory: `behaviors`
+  - topic prefix: `beh`
+  - include:
+    - \ref arm
+    - \ref dock
+    - \ref perch
+    - \ref states
+    - \ref signal
+
+### Communication
+  - \subpage comms
   - directory: `communication`
   - topic prefix: `comm`
   - This is not a subsystem like the others... Does the bridge still get a prefix and publish all "FF-ROS-Commands" under it? [ted]
@@ -55,7 +76,8 @@ Definition of topic names are maintained in:<br>
     - Bridge
     - Msg / Srv / Action
 
-## Drivers (hardware)
+### Drivers (hardware)
+  - \subpage hw
   - directory: `hardware`
   - topic prefix: `hw`
   - include all the LLP/MLP/HLP hardware "drivers"

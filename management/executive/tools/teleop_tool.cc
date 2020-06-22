@@ -183,16 +183,12 @@ void AgentStateCallback(ff_msgs::AgentStateStampedConstPtr const& state) {
         } else if (state->mobility_state.sub_state < 0) {
           msg += "Unperching (on step " + (state->mobility_state.sub_state *
                                                                             -1);
-          // TODO(Katie) Comment in when perching is implemented
-          // msg += " of " + (ff_msgs::PerchState::UNPERCHING_MAX_STATE * -1);
-          // msg += ")";
-          msg += " of ?)";
+          msg += " of " + (ff_msgs::PerchState::UNPERCHING_MAX_STATE * -1);
+          msg += ")";
         } else {
           msg += "Perching (on step " + state->mobility_state.sub_state;
-          // TODO(Katie) Comment in when perching is implemented
-          // msg += " of " + ff_msgs::PerchState::PERCHING_MAX_STATE;
-          // msg += ")";
-          msg += " of ?)";
+          msg += " of " + ff_msgs::PerchState::PERCHING_MAX_STATE;
+          msg += ")";
         }
         break;
       default:

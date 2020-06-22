@@ -77,7 +77,7 @@ int main(int argc, char** argv) {
 
   // Fault table config is not in the standard config dir, need to set the
   // config dir to the right location.
-  std::string path = common::GetConfigDir();
+  std::string path = ff_common::GetConfigDir();
   path += "/management/";
   config_params.SetPath(path.c_str());
 

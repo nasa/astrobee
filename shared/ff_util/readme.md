@@ -1,5 +1,4 @@
-\defgroup ff_util Utility code
-\ingroup shared
+\page ff_util Utility code
 
 This package contains modular code blocks that are used throughout the flight software.
 

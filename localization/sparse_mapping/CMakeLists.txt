@@ -16,6 +16,7 @@
 # under the License.
 
 cmake_minimum_required(VERSION 2.8.12) # Need get_filename_component DIRECTORY
+project(sparse_mapping)
 
 PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS protobuf/sparse_map.proto)
 get_filename_component(PROTO_HDR_DIR ${PROTO_HDRS} DIRECTORY)
@@ -29,7 +30,7 @@ set(LIBS
   ${PROTOBUF_LIBRARIES}
   interest_point
   config_reader
-  common
+  ff_common
 )
 set(INCLUDES
   ${CERES_INCLUDE_DIRS}
@@ -43,12 +44,17 @@ set(INCLUDES
   ${PROTO_HDR_DIR}
   ${DBOW2_INCLUDE_DIRS}
 )
-set(SPARSE_MAPPING_LIBRARIES sparse_mapping ${LIBS} PARENT_SCOPE)
 set(SPARSE_MAPPING_LIBRARIES sparse_mapping ${LIBS})
+
+catkin_package(
+  INCLUDE_DIRS include
+  LIBRARIES sparse_mapping
+  CATKIN_DEPENDS camera interest_point config_reader ff_common
+)
 
 create_library(TARGET sparse_mapping
   LIBS ${LIBS}
-  INC ${INCLUDES}
+  INC include ${INCLUDES}
   DEPS ${DEPS}
   ADD_SRCS ${PROTO_SRCS} )
 
@@ -68,10 +74,9 @@ create_test_targets(DIR test
 set(SPARSE_MAPPING_INCLUDE_DIRS
   ${CMAKE_CURRENT_SOURCE_DIR}/include
   ${INTEREST_INCLUDE_DIRS}
+  ${CAMERA_INCLUDE_DIRS}
   ${EIGEN3_INCLUDE_DIRS}
-  ${CERES_INCLUDE_DIRS}
-  PARENT_SCOPE)
+  ${CERES_INCLUDE_DIRS})
 
-if (USE_ROS)
-  add_subdirectory(ros)
-endif (USE_ROS)
+set(SPARSE_MAPPING_LIBRARIES ${SPARSE_MAPPING_LIBRARIES} PARENT_SCOPE)
+set(SPARSE_MAPPING_INCLUDE_DIRS ${SPARSE_MAPPING_INCLUDE_DIRS} PARENT_SCOPE)

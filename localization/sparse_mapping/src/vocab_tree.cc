@@ -59,7 +59,7 @@
 #include <sparse_map.pb.h>
 #include <glog/logging.h>
 #include <opencv2/highgui/highgui.hpp>
-#include <common/utils.h>
+#include <ff_common/utils.h>
 
 // DBoW2 utils
 #pragma GCC diagnostic ignored "-Wdelete-non-virtual-dtor"
@@ -333,7 +333,10 @@ void BuildDB(std::string const& map_file,
 }
 
 void ResetDB(VocabDB* db) {
-  if (db->binary_db    != NULL) { delete db->binary_db;    db->binary_db    = NULL; }
+  if (db->binary_db != NULL) {
+    delete db->binary_db;
+    db->binary_db = NULL;
+  }
 }
 
 // These are defined here, rather than in the header file,

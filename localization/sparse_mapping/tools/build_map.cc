@@ -7,7 +7,7 @@
  * (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
@@ -15,9 +15,9 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#include <common/init.h>
-#include <common/thread.h>
-#include <common/utils.h>
+#include <ff_common/init.h>
+#include <ff_common/thread.h>
+#include <ff_common/utils.h>
 #include <config_reader/config_reader.h>
 #include <camera/camera_params.h>
 #include <sparse_mapping/sparse_map.h>
@@ -39,7 +39,7 @@
 #include <thread>
 
 // outputs
-DEFINE_string(output_map, "output.map",
+DEFINE_string(output_map, "",
               "Output file containing the matches and control network.");
 
 // parameters used in feature detection step only
@@ -47,7 +47,7 @@ DEFINE_int32(sample_rate, 1,
              "Add one of every n input frames to the map.");
 DEFINE_bool(save_individual_maps, false,
             "Save separately the maps after detection, matching, track building, "
-            "tensor initialization, and bundle adjustment.");
+            "incremental bundle adjustment, and global bundle adjustment.");
 
 // output map parameters
 DEFINE_string(detector, "SURF",
@@ -66,8 +66,6 @@ DEFINE_bool(incremental_ba, false,
             "Perform incremental bundle adjustment.");
 DEFINE_bool(loop_closure, false,
             "Take a map where images start repeating, and close the loop.");
-DEFINE_bool(tensor_initialization, false,
-              "Perform update output_nvm with tensor initialization.");
 DEFINE_bool(bundle_adjustment, false,
               "Perform update output_nvm with bundle adjustment.");
 DEFINE_bool(skip_pruning, false,
@@ -92,6 +90,8 @@ DEFINE_bool(info, false,
               "Print some information on the existing map.");
 DEFINE_bool(save_poses, false,
               "Save the camera to world transform and its inverse for each image in the map.");
+DEFINE_bool(save_xyz, false,
+              "Save the sparse set of points obtained by triangulating the interest point matches.");
 DEFINE_int32(num_repeat_images, 0,
              "How many images from the beginning of the sequence to repeat at the end "
              "of the sequence, to help with loop closure (assuming first and last images "
@@ -106,8 +106,11 @@ DEFINE_int32(db_restarts, 1, "Number of restarts when building the tree.");
 DEFINE_int32(db_depth, 0, "Depth of the tree to build. Default: 4");
 DEFINE_int32(db_branching_factor, 0, "Branching factor of the tree to build. "
              "Default: 10");
+DEFINE_string(robot_camera, "nav_cam",
+              "Which of bot's cameras to use for map-building. Anything except nav_cam is experimental.");
+
 DEFINE_string(undistorted_camera_params, "",
-              "Assume that the camera has no distortion and given parameters. "
+              "Assume that the camera has no distortion and given intrinsics. "
               "Specify as: 'image_wid_x image_wid_y focal_length optical_center_x "
               "optical_center_y'.");
 
@@ -130,12 +133,12 @@ void DetectAllFeatures(int argc, char** argv) {
     exit(1);
     return;
   }
-  camera::CameraParameters cam_params(&config, "nav_cam");
+  camera::CameraParameters cam_params(&config, FLAGS_robot_camera.c_str());
 
   // See if to override the camera when using undistorted images
   if (FLAGS_undistorted_camera_params != "") {
     std::vector<double> vals;
-    common::parseStr(FLAGS_undistorted_camera_params, vals);
+    ff_common::parseStr(FLAGS_undistorted_camera_params, vals);
     if (vals.size() < 5)
       LOG(FATAL) << "Could not parse --undistorted_camera_params.";
     double widx = vals[0], widy = vals[1], f = vals[2], cx = vals[3], cy = vals[4];
@@ -254,7 +257,7 @@ void Rebuild() {
       exit(1);
       return;
     }
-    params = camera::CameraParameters(&config, "nav_cam");
+    params = camera::CameraParameters(&config, FLAGS_robot_camera.c_str());
   }
 
   std::vector<std::string> files(original.GetNumFrames());
@@ -390,34 +393,33 @@ void RegistrationOrVerification(std::vector<std::string> const& data_files) {
 void MapInfo() {
   sparse_mapping::SparseMap map(FLAGS_output_map);
 
-  LOG(INFO) << "\t" << map.GetNumFrames() << " cameras and "
-            << map.GetNumLandmarks()      << " points.";
+  std::cout << map.GetNumFrames()    << " cameras and "
+            << map.GetNumLandmarks() << " points.\n";
+  std::cout << "Histogram equalization: " << map.GetHistogramEqualization() << std::endl;
 
-  LOG(INFO) << "Images in the map: ";
+  std::cout << "Images in the map:\n";
   for (unsigned int cid = 0; cid < map.cid_to_filename_.size(); cid++) {
-    LOG(INFO) << cid << " " << map.cid_to_filename_[cid];
+    std::cout << cid << " " << map.cid_to_filename_[cid] << "\n";
   }
 }
 
 void SavePoses() {
   sparse_mapping::SparseMap map(FLAGS_output_map);
 
-  LOG(INFO) << "Saving camera to world transforms.";
-
   for (unsigned int cid = 0; cid < map.cid_to_filename_.size(); cid++) {
     std::string img_file = map.cid_to_filename_[cid];
-    std::string ext = common::file_extension(img_file);
+    std::string ext = ff_common::file_extension(img_file);
 
     {
       // Save cam2world
-      std::string cam_file = common::ReplaceInStr(img_file,
+      std::string cam_file = ff_common::ReplaceInStr(img_file,
                                                   "." + ext,
                                                   "_cam2world.txt");
 
       if (cam_file == img_file)
         LOG(FATAL) << "Failed to replace the image extension in: " << img_file;
 
-      LOG(INFO) << "Writing: " << cam_file;
+      std::cout << "Writing: " << cam_file << "\n";
       std::ofstream ofs(cam_file.c_str());
       ofs.precision(17);
       ofs << map.cid_to_cam_t_global_[cid].inverse().matrix() << "\n";
@@ -426,13 +428,13 @@ void SavePoses() {
 
     {
       // Save world2cam
-      std::string cam_file = common::ReplaceInStr(img_file,
+      std::string cam_file = ff_common::ReplaceInStr(img_file,
                                                   "." + ext,
                                                   "_world2cam.txt");
       if (cam_file == img_file)
         LOG(FATAL) << "Failed to replace image extension in: " << img_file;
 
-      LOG(INFO) << "Writing: " << cam_file;
+      std::cout << "Writing: " << cam_file << "\n";
       std::ofstream ofs(cam_file.c_str());
       ofs.precision(17);
       ofs << map.cid_to_cam_t_global_[cid].matrix() << "\n";
@@ -441,19 +443,36 @@ void SavePoses() {
   }
 }
 
+// Save the xyz coordinates of triangulated interest point matches
+void SaveXYZ() {
+  sparse_mapping::SparseMap map(FLAGS_output_map);
+  std::string xyz_file = ff_common::ReplaceInStr(FLAGS_output_map,
+                                                  ".map",
+                                              "_xyz.txt");
+  std::cout << "Writing: " << xyz_file << std::endl;
+  std::ofstream ofs(xyz_file);
+  ofs.precision(17);
+  for (size_t it = 0; it < map.pid_to_xyz_.size(); it++)
+    ofs << map.pid_to_xyz_[it][0] << ' '
+        << map.pid_to_xyz_[it][1] << ' '
+        << map.pid_to_xyz_[it][2] << std::endl;
+  ofs.close();
+}
 
 int main(int argc, char** argv) {
-  common::InitFreeFlyerApplication(&argc, &argv);
+  ff_common::InitFreeFlyerApplication(&argc, &argv);
   GOOGLE_PROTOBUF_VERIFY_VERSION;
+
+  if (FLAGS_output_map == "")
+    LOG(FATAL) << "Must specify the output map name.";
 
   // If the user selected no steps ... they selected all steps
   if (!FLAGS_feature_detection && !FLAGS_feature_matching &&
       !FLAGS_track_building && !FLAGS_incremental_ba &&
-      !FLAGS_loop_closure && !FLAGS_tensor_initialization &&
+      !FLAGS_loop_closure &&
       !FLAGS_bundle_adjustment && !FLAGS_rebuild &&
-      !FLAGS_vocab_db &&
-      !FLAGS_registration && !FLAGS_verification &&
-      !FLAGS_info && !FLAGS_save_poses && !FLAGS_prune) {
+      !FLAGS_vocab_db && !FLAGS_registration && !FLAGS_verification &&
+      !FLAGS_info && !FLAGS_save_poses && !FLAGS_save_xyz && !FLAGS_prune) {
     FLAGS_feature_detection = true;
     FLAGS_feature_matching = true;
     FLAGS_track_building = true;
@@ -496,17 +515,17 @@ int main(int argc, char** argv) {
     RegistrationOrVerification(data_files);
   }
 
-  if (FLAGS_prune) {
+  if (FLAGS_prune)
     PruneMap();
-  }
 
-  if (FLAGS_info) {
+  if (FLAGS_info)
     MapInfo();
-  }
 
-  if (FLAGS_save_poses) {
+  if (FLAGS_save_poses)
     SavePoses();
-  }
+
+  if (FLAGS_save_xyz)
+    SaveXYZ();
 
   google::protobuf::ShutdownProtobufLibrary();
 

@@ -16,7 +16,7 @@
  * under the License.
  */
 
-#include <common/init.h>
+#include <ff_common/init.h>
 #include <ros/ros.h>
 #include <sensor_msgs/CameraInfo.h>
 #include <sensor_msgs/Image.h>
@@ -67,7 +67,7 @@ void imageCB(const sensor_msgs::Image::ConstPtr &img) {
 }
 
 int main(int argc, char **argv) {
-  common::InitFreeFlyerApplication(&argc, &argv);
+  ff_common::InitFreeFlyerApplication(&argc, &argv);
   ros::init(argc, argv, "overhead_node");
 
   ros::NodeHandle nh("~");

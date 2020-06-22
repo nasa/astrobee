@@ -26,7 +26,7 @@ create_library(TARGET laser
 # Standalone test programs
 create_tool_targets(DIR tools
   INC ${GFLAGS_INCLUDE_DIRS}
-  LIBS ${GFLAGS_LIBRARIES} laser common
+  LIBS ${GFLAGS_LIBRARIES} laser ff_common
   DEPS laser)
 
 # Create ROS nodes if we are using ROS

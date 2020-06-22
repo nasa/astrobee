@@ -20,7 +20,7 @@
 // Brian Coltin is in the team and said this code could be used for the project
 
 #include "config_reader/config_reader.h"
-
+#include <iostream>
 
 /*
   [ References ]
@@ -462,7 +462,7 @@ ConfigReader::ConfigReader() {
   path_ = "";
   l_ = NULL;
   modified_ = false;
-  const char* p = common::GetConfigDir();
+  const char* p = ff_common::GetConfigDir();
   SetPath(p);
   AddStandard();
 }
@@ -903,8 +903,8 @@ void ConfigReader::OutputGetValueError(const char *exp, const char *type) {
     LOG(WARNING) << "ConfigReader: \"" << exp << "\" doesn't exist!";
   } else {
     int luaType = lua_type(l_, -1);
-    LOG(WARNING) << "ConfigReader: \"" << exp << "\" is a(n) " <<
-      lua_typename(l_, luaType) << " not a(n) " << type << "!";
+    LOG(WARNING) << "ConfigReader: \"" << exp << "\" is a " <<
+      lua_typename(l_, luaType) << " not a " << type << "!";
   }
 }
 

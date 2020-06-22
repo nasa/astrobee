@@ -16,7 +16,7 @@
  * under the License.
  */
 
-#include <common/init.h>
+#include <ff_common/init.h>
 
 #include <ros/ros.h>
 #include <ff_msgs/CommandConstants.h>
@@ -103,7 +103,7 @@ void on_plan_status(ff_msgs::PlanStatusStamped::ConstPtr const& ps) {
 }
 
 int main(int argc, char** argv) {
-  common::InitFreeFlyerApplication(&argc, &argv);
+  ff_common::InitFreeFlyerApplication(&argc, &argv);
   ros::init(argc, argv, "plan_pub");
   ros::NodeHandle n;
 

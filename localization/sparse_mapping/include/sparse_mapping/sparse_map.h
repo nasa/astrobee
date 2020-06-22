@@ -72,7 +72,7 @@ bool Localize(cv::Mat const& test_descriptors,
               std::vector<std::map<int, int> > const& cid_fid_to_pid,
               std::vector<Eigen::Vector3d> const& pid_to_xyz,
               int num_ransac_iterations, int ransac_inlier_tolerance,
-              int early_break_landmarks, bool histogram_equalization,
+              int early_break_landmarks, int histogram_equalization,
               std::vector<int> * cid_list);
 
 /**
@@ -209,7 +209,8 @@ struct SparseMap {
    * Set the number of early break landmarks, when to stop in adding landmarks when localizing.
    **/
   void SetEarlyBreakLandmarks(int early_break_landmarks) {early_break_landmarks_ = early_break_landmarks;}
-  void SetHistogramEqualization(bool histogram_equalization) {histogram_equalization_ = histogram_equalization;}
+  void SetHistogramEqualization(int histogram_equalization) {histogram_equalization_ = histogram_equalization;}
+  int GetHistogramEqualization() {return histogram_equalization_;}
   /**
    * Return the parameters of the camera used to construct the map.
    **/
@@ -278,7 +279,7 @@ struct SparseMap {
   int num_ransac_iterations_;
   int ransac_inlier_tolerance_;
   int early_break_landmarks_;
-  bool histogram_equalization_;
+  int histogram_equalization_;
 
   // e.g, 10th db image is 3rd image in cid_to_filename_
   std::map<int, int> db_to_cid_map_;

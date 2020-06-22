@@ -1,5 +1,4 @@
-\defgroup laser_test_laser Test: Laser
-\ingroup laser
+\page laser_test_laser Test: Laser
 
 The laser node is responsible for turning the laser on and off. It contains a test program to do this. The program must be run on the llp. The executable should be found in armhf/bin and is called laser test. To turn the laser on, run:
 

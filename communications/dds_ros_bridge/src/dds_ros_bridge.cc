@@ -639,7 +639,7 @@ void DdsRosBridge::Initialize(ros::NodeHandle *nh) {
   // TODO(tfmorse): make hardcoded values configurable
 
   // Make path to QOS and NDDS files
-  std::string config_path = common::GetConfigDir();
+  std::string config_path = ff_common::GetConfigDir();
   config_path += "/communications/dds/";
 
   // Create fake argv containing only the particaptant name
@@ -1042,6 +1042,24 @@ bool DdsRosBridge::ReadParams() {
     components_++;
   }
 
+  // ros_compressed_haz_cam_image_rapid_image => RCHCIRI
+  if (!config_params_.GetBool("use_RCHCIRI", &use)) {
+    ROS_FATAL("DDS Bridge: use RCHCIRI not specified!");
+    return false;
+  }
+
+  if (use) {
+    if (!config_params_.GetStr("pub_topic_RCHCIRI", &pub_topic)) {
+      ROS_FATAL("DDS Bridge: pub topic RCHCIRI not specified.");
+      return false;
+    }
+
+    BuildCompressedImageToImage(TOPIC_MANAGEMENT_IMG_SAMPLER_HAZ_CAM_STREAM,
+                                pub_topic,
+                                "RCHCIRI");
+    components_++;
+  }
+
   // ros_compressed_nav_cam_image_rapid_image => RCNCIRI
   if (!config_params_.GetBool("use_RCNCIRI", &use)) {
     ROS_FATAL("DDS Bridge: use RCNCIRI not specified!");
@@ -1057,6 +1075,24 @@ bool DdsRosBridge::ReadParams() {
     BuildCompressedImageToImage(TOPIC_MANAGEMENT_IMG_SAMPLER_NAV_CAM_STREAM,
                                 pub_topic,
                                 "RCNCIRI");
+    components_++;
+  }
+
+  // ros_compressed_perch_cam_image_rapid_image => RCPCIRI
+  if (!config_params_.GetBool("use_RCPCIRI", &use)) {
+    ROS_FATAL("DDS Bridge: use RCPCIRI not specified!");
+    return false;
+  }
+
+  if (use) {
+    if (!config_params_.GetStr("pub_topic_RCPCIRI", &pub_topic)) {
+      ROS_FATAL("DDS Bridge: pub topic RCPCIRI not specified!");
+      return false;
+    }
+
+    BuildCompressedImageToImage(TOPIC_MANAGEMENT_IMG_SAMPLER_PERCH_CAM_STREAM,
+                                pub_topic,
+                                "RCPCIRI");
     components_++;
   }
 

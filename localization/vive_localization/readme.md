@@ -1,5 +1,4 @@
-\defgroup vive_localization Vive Localization
-\ingroup localization
+\page vive_localization Vive Localization
 
 This is the high-level tool for post-processing raw HTC vive data captured by the low-level driver and recorded to a rosbag. It fuses light capture measurements to track the pose of a robot over time.
 

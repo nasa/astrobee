@@ -24,9 +24,9 @@ DEB_DIR=decomputil
 if [ -d $PACKAGE_NAME ]; then
   rm -rf $PACKAGE_NAME
 fi
-git clone https://github.com/bcoltinnasa/DecompUtil.git $PACKAGE_NAME || exit 1
+git clone --quiet https://github.com/bcoltinnasa/DecompUtil.git $PACKAGE_NAME 2>&1 || exit 1
 cd $PACKAGE_NAME
-git checkout 5d652b8d144c8075b272094fb95b90ab9ff0e48e
+git checkout --quiet 5d652b8d144c8075b272094fb95b90ab9ff0e48e 2>&1
 git archive --prefix=$PACKAGE_NAME/ --output=../$ORIG_TAR --format tar.gz HEAD || exit 1
 cp -r ../$DEB_DIR debian
 debuild -us -uc || exit 1

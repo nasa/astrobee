@@ -17,7 +17,7 @@
  */
 
 // Common freeflyer code
-#include <common/init.h>
+#include <ff_common/init.h>
 
 // Gflag code
 #include <gflags/gflags.h>

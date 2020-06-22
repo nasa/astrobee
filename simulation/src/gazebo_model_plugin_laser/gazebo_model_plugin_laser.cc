@@ -43,8 +43,13 @@ class GazeboModelPluginLaser : public FreeFlyerModelPlugin {
     rate_(10.0), range_(50.0), width_(0.0025), ready_(false) {}
 
   ~GazeboModelPluginLaser() {
-    if (update_)
+    if (update_) {
+      #if GAZEBO_MAJOR_VERSION > 7
+      update_.reset();
+      #else
       event::Events::DisconnectWorldUpdateBegin(update_);
+      #endif
+    }
   }
 
  protected:
@@ -67,7 +72,7 @@ class GazeboModelPluginLaser : public FreeFlyerModelPlugin {
       TOPIC_HARDWARE_LASER_RVIZ, 0, true);
   }
 
-  // Only send measurements when estrinsics are available
+  // Only send measurements when extrinsics are available
   void OnExtrinsicsReceived(ros::NodeHandle *nh) {
     // Advertise the presence of the laser
     srv_ = nh->advertiseService(SERVICE_HARDWARE_LASER_ENABLE,
@@ -172,8 +177,13 @@ class GazeboModelPluginLaser : public FreeFlyerModelPlugin {
     if (!visual)
       return;
     visual->SetVisibilityFlags(GZ_VISIBILITY_GUI);
-    if (update_)
+    if (update_) {
+      #if GAZEBO_MAJOR_VERSION > 7
+      update_.reset();
+      #else
       event::Events::DisconnectWorldUpdateBegin(update_);
+      #endif
+    }
   }
 
  private:

@@ -30,7 +30,7 @@ class EkfBagCsv : public EkfBag {
  public:
   EkfBagCsv(const char* bagfile, const char* mapfile, const char* csvfile,
       bool run_ekf = true, bool gen_features = true, const char* biasfile = NULL,
-      std::string image_topic = std::string(TOPIC_HARDWARE_NAV_CAM));
+      std::string image_topic = std::string(TOPIC_HARDWARE_NAV_CAM), const std::string& gnc_config = "gnc.config");
   virtual ~EkfBagCsv(void);
 
  protected:

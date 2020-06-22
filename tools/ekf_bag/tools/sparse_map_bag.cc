@@ -16,8 +16,8 @@
  * under the License.
  */
 
-#include <common/init.h>
-#include <common/utils.h>
+#include <ff_common/init.h>
+#include <ff_common/utils.h>
 #include <config_reader/config_reader.h>
 #include <ekf/ekf.h>
 #include <sparse_mapping/sparse_map.h>
@@ -32,6 +32,8 @@
 #include <rosbag/view.h>
 #include <sensor_msgs/Image.h>
 #include <sensor_msgs/Imu.h>
+#include <opencv2/core/core.hpp>
+#include <opencv2/highgui/highgui.hpp>
 
 Eigen::Vector3f QuatToEuler(const geometry_msgs::Quaternion & q) {
   Eigen::Vector3f euler;
@@ -67,7 +69,7 @@ void ReadParams(localization_node::Localizer* loc) {
 }
 
 int main(int argc, char ** argv) {
-  common::InitFreeFlyerApplication(&argc, &argv);
+  ff_common::InitFreeFlyerApplication(&argc, &argv);
 
   struct timespec tstart={0, 0}, tend={0, 0};
   struct timespec tstart2={0, 0}, tend2={0, 0};
@@ -100,6 +102,12 @@ int main(int argc, char ** argv) {
   int images = 0;
   int failures = 0;
   int total_features = 0;
+
+  // If the user provided an existing directory in which to save the
+  // failed images, do so.
+  char * failed_images_dir = getenv("SAVE_FAILED_IMAGES_DIR");
+  char filename_buffer[256];
+
   for (rosbag::MessageInstance const m : view) {
     progress++;
 
@@ -114,14 +122,24 @@ int main(int argc, char ** argv) {
       }
       ff_msgs::VisualLandmarks vl_features;
       loc.Localize(image, &vl_features);
-      if (vl_features.landmarks.size() == 0)
+      if (vl_features.landmarks.size() == 0) {
         failures++;
+
+        if (failed_images_dir != NULL) {
+          double curr_image_time = image_msg->header.stamp.toSec();
+          snprintf(filename_buffer, sizeof(filename_buffer),
+                   "%s/%10.7f.jpg", failed_images_dir, curr_image_time);
+          std::cout << "Writing image with failed localization: " << filename_buffer << std::endl;
+          cv::imwrite(filename_buffer, image->image);
+        }
+      }
+
       images++;
       total_features += vl_features.landmarks.size();
     } else if (m.isType<geometry_msgs::PoseStamped>()) {
       geometry_msgs::PoseStampedConstPtr gt_msg = m.instantiate<geometry_msgs::PoseStamped>();
     }
-    common::PrintProgressBar(stdout, static_cast<float>(progress) / view.size());
+    ff_common::PrintProgressBar(stdout, static_cast<float>(progress) / view.size());
   }
 
   bag.close();

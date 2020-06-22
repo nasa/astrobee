@@ -18,6 +18,7 @@
 project(msg_conversions)
 catkin_package(
   LIBRARIES ${PROJECT_NAME}
+  INCLUDE_DIRS include
   CATKIN_DEPENDS roscpp message_runtime std_msgs geometry_msgs sensor_msgs
   DEPENDS ff_msgs
 )
@@ -29,7 +30,7 @@ create_library(TARGET msg_conversions
 )
 
 create_tool_targets(DIR tools
-  LIBS ${catkin_LIBRARIES} ${GFLAGS_LIBRARIES} common
+  LIBS ${catkin_LIBRARIES} ${GFLAGS_LIBRARIES} ff_common
   INC ${catkin_INCLUDE_DIRS} ${GFLAGS_INCLUDE_DIRS}
   DEPS ff_msgs
 )

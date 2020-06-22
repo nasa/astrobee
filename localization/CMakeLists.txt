@@ -24,7 +24,12 @@ if (USE_ROS)
   add_subdirectory(lk_optical_flow)
   add_subdirectory(handrail_detect)
   add_subdirectory(localization_manager)
+  add_subdirectory(localization_node)
   if (ENABLE_VIVE_SOLVER)
     add_subdirectory(vive_localization)
   endif()
 endif (USE_ROS)
+
+set(SPARSE_MAPPING_LIBRARIES ${SPARSE_MAPPING_LIBRARIES} PARENT_SCOPE)
+set(SPARSE_MAPPING_INCLUDE_DIRS ${SPARSE_MAPPING_INCLUDE_DIRS} PARENT_SCOPE)
+

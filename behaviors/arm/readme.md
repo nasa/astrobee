@@ -1,5 +1,4 @@
-\defgroup arm Arm Behavior
-\ingroup beh
+\page arm Arm Behavior
 
 # Overview
 

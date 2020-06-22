@@ -1,5 +1,4 @@
-\defgroup vive Vive Driver
-\ingroup hw
+\page vive Vive Driver
 
 This package provides drivers for pulling lighthouse, tracker, inertial, button and light capture data for the HTC VIVE Lighthouse tracking system, and converting all data to ROS messages. 
 

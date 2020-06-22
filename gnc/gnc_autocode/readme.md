@@ -1,5 +1,4 @@
-\defgroup gncautocode GNC Autocode Wrapper
-\ingroup gnc
+\page gncautocode GNC Autocode Wrapper
 
 A thin wrapper around the C code automatically generated from Matlab and Simulink.
 

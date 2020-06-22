@@ -1,5 +1,4 @@
-\defgroup opticalflow Optical Flow
-\ingroup localization
+\page opticalflow Optical Flow
 
 This nodelet tracks optical flow features using the Lucas Kanade algorithm.
 The features used are `Pretty Good Features to Track`, and more features are detected

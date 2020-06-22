@@ -60,9 +60,11 @@ class OctoClass{
                                const double probability_miss);
   void SetClampingThresholds(const double clamping_threshold_min,
                              const double clamping_threshold_max);
-  octomap::point3d_list Voxelize(const octomap::OcTree::leaf_iterator &leaf);  // turns leaf into voxel representation
-  void PointsOctomapToPointCloud2(const octomap::point3d_list& points,
-                                  sensor_msgs::PointCloud2* cloud);  // Convert from octomap to pointcloud2
+  // DEPRECATED: turns leaf into voxel representation
+  // octomap::point3d_list Voxelize(const octomap::OcTree::leaf_iterator &leaf);
+  // DEPRECATED: Convert from octomap to pointcloud2
+  // void PointsOctomapToPointCloud2(const octomap::point3d_list& points,
+  //                                 sensor_msgs::PointCloud2* cloud);
   void PclToRayOctomap(const pcl::PointCloud< pcl::PointXYZ > &cloud,
                         const geometry_msgs::TransformStamped &tf_cam2world,
                         const algebra_3d::FrustumPlanes &frustum);    // Map obstacles and free area
@@ -74,10 +76,11 @@ class OctoClass{
                      octomap::KeySet *free_slim,
                      octomap::KeySet *free_inflated);  // Raycasting method for inflated maps
   void FadeMemory(const double &rate);  // Run fading memory method
-  void InflateObstacles(const double &thickness);  // DEPRECATED: it was used to inflate the whole map (too expensive)
-  // Returns all colliding nodes in the pcl
-  void FindCollidingNodesTree(const pcl::PointCloud< pcl::PointXYZ > &point_cloud,
-                              std::vector<octomap::point3d> *colliding_nodes);
+  // DEPRECATED: it was used to inflate the whole map (too expensive)
+  // void InflateObstacles(const double &thickness);
+  // DEPRECATED: Returns all colliding nodes in the pcl
+  // void FindCollidingNodesTree(const pcl::PointCloud< pcl::PointXYZ > &point_cloud,
+  //                             std::vector<octomap::point3d> *colliding_nodes);
   // Returns points from the pcl that collides with inflated tree
   void FindCollidingNodesInflated(const pcl::PointCloud< pcl::PointXYZ > &point_cloud,
                                   std::vector<octomap::point3d> *colliding_nodes);
@@ -88,7 +91,9 @@ class OctoClass{
                       sensor_msgs::PointCloud2* obstacles_cloud,
                       sensor_msgs::PointCloud2* free_cloud);
   void InflatedVisMarkers(visualization_msgs::MarkerArray *obstacles,
-                          visualization_msgs::MarkerArray *free);
+                          visualization_msgs::MarkerArray *free,
+                          sensor_msgs::PointCloud2* obstacles_cloud,
+                          sensor_msgs::PointCloud2* free_cloud);
   // void freeVisMarkers(visualization_msgs::MarkerArray* marker_array);
   // void inflatedFreeVisMarkers(visualization_msgs::MarkerArray* marker_array);
 

@@ -1,5 +1,4 @@
-\defgroup signal Signal behavior
-\ingroup beh
+\page signal Signal behavior
 
 Astrobee has 44 individually addressable LEDs on each PMC.  To control the LEDs, patterns specified by the LightFlow programming language are interpreted into messages containing the RGB value of each LED.  These messages are sent over ROS to a hardware driver that formats the message into a buffer, which is sent over I2C.  
 

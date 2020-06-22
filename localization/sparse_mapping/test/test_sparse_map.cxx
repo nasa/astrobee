@@ -16,7 +16,7 @@
  * under the License.
  */
 
-#include <common/thread.h>
+#include <ff_common/thread.h>
 #include <camera/camera_model.h>
 #include <sparse_mapping/tensor.h>
 #include <sparse_mapping/sparse_map.h>

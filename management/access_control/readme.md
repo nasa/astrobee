@@ -1,5 +1,4 @@
-\defgroup access_control Access Control
-\ingroup management
+\page access_control Access Control
 
 The access control node is the command gate keeper of the robot. It is responsible for allowing and blocking commands from flowing through the robot. It is also responsible for granting control to operators.
 

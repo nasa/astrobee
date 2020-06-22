@@ -38,8 +38,8 @@ catkin_package(
     gazebo_model_plugin_flashlight_aft
     gazebo_model_plugin_llp_disk_monitor
     gazebo_model_plugin_llp_cpu_monitor
-    gazebo_model_plugin mlp_disk_monitor
-    gazebo_model_plugin mlp_cpu_monitor
+    gazebo_model_plugin_mlp_disk_monitor
+    gazebo_model_plugin_mlp_cpu_monitor
     gazebo_model_plugin_speed_cam
     gazebo_model_plugin_signal_lights
     gazebo_sensor_plugin_imu
@@ -51,6 +51,7 @@ catkin_package(
     gazebo_sensor_plugin_perch_cam
     #gazebo_sensor_plugin_handrail_detect
     gazebo_sensor_plugin_haz_cam
+    gazebo_sensor_plugin_sci_cam
     gazebo_world_plugin_speed
     gazebo_system_plugin_client
   CATKIN_DEPENDS
@@ -457,6 +458,24 @@ create_library(
     ff_util
 )
 
+# Create a sensor plugin for the sci cam
+create_library(
+  DIR
+    src/gazebo_sensor_plugin_sci_cam
+  TARGET
+    gazebo_sensor_plugin_sci_cam
+  LIBS
+    ${GAZEBO_LIBRARIES}
+    ${catkin_LIBRARIES}
+    astrobee_gazebo
+  INC
+    ${GAZEBO_INCLUDE_DIRS}
+    ${catkin_INCLUDE_DIRS}
+  DEPS
+    ff_util
+    ff_msgs
+)
+
 # Create a model plugin for sparse mapping
 create_library(
   DIR
@@ -551,8 +570,6 @@ create_library(
 install_launch_files()
 
 # Also install some other resources
-install(DIRECTORY media  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
-install(DIRECTORY models DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
 install(DIRECTORY worlds DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
-catkin_install_python(PROGRAMS scripts/spawn_model scripts/perf_wrapper
+catkin_install_python(PROGRAMS scripts/spawn_model scripts/perf_wrapper scripts/start_server scripts/common
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})

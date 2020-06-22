@@ -1,5 +1,4 @@
-\defgroup eps_driver EPS Driver
-\ingroup hw
+\page eps_driver EPS Driver
 
 The Electrical Power Subsystem (EPS) is responsible for controlling power to the
 various components of the avionics stack. The EPS is controller from the
@@ -110,3 +109,7 @@ Toggle power to both propulsion systems
 
     eps_driver_tool -power -set off pmc1 pmc2
     eps_driver_tool -power -set on  pmc1 pmc2
+
+\subpage eps_driver_test_battery_status
+\subpage eps_driver_test_payload_power
+\subpage eps_driver_test_status_leds

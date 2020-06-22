@@ -66,14 +66,16 @@ class Ctl {
   // Declaration of all possible states
   enum : ff_util::FSM::State {
     WAITING        = 1,
-    NOMINAL        = 2
+    NOMINAL        = 2,
+    STOPPING       = 3
   };
 
   // Declaration of all possible events
   enum : ff_util::FSM::Event {
     GOAL_COMPLETE  = (1<<0),
     GOAL_NOMINAL   = (1<<1),
-    GOAL_CANCEL    = (1<<2)
+    GOAL_CANCEL    = (1<<2),
+    GOAL_STOP      = (1<<3)
   };
 
   // Maximum acceptable latency
@@ -174,6 +176,8 @@ class Ctl {
   bool inertia_received_;
   bool control_enabled_;
   bool use_truth_;
+  float stopping_vel_thresh_squared_;
+  float stopping_omega_thresh_squared_;
 };
 
 }  // end namespace ctl

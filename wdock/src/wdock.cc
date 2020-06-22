@@ -62,7 +62,7 @@ WDock::WDock(int argc, char** argv, std::string const& entity_name) :
   int fakeArgc = 1;
 
   // Make path to QOS and NDDS files
-  std::string config_path = common::GetConfigDir();
+  std::string config_path = ff_common::GetConfigDir();
   config_path += "/communications/dds/";
 
   /* fake miro log into thinking we have no arguments */

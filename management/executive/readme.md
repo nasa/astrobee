@@ -1,5 +1,4 @@
-\defgroup executive Executive
-\ingroup management
+\page executive Executive
 
 The executive is responsible for keeping track of the operating and mobility states of the robot. It uses these states to accept or reject commands it receives. Please see https://babelfish.arc.nasa.gov/svn/freeflyer_docs/FlightSoftware/Software.xlsx for possible operating-mobility state combinations and which commands are accepted in the state combinations. The executive is also responsible for  for forwarding accepted commands to the correct nodes and informing the ground and system on the status of the command.
 

@@ -25,9 +25,9 @@ if [ -d $PACKAGE_NAME ]; then
   rm -rf $PACKAGE_NAME
 fi
 # originally from sikang... but he deleted his history
-git clone https://github.com/bcoltin/jps3d.git $PACKAGE_NAME || exit 1
+git clone --quiet https://github.com/bcoltin/jps3d.git $PACKAGE_NAME 2>&1 || exit 1
 cd $PACKAGE_NAME
-git checkout e5d0fba1913e19c02bae7eb277ce68996e31a136
+git checkout --quiet 85e6b22171478684119a119c45dbf6b42653d828 2>&1
 git archive --prefix=$PACKAGE_NAME/ --output=../$ORIG_TAR --format tar.gz HEAD || exit 1
 cp -r ../$DEB_DIR debian
 debuild -us -uc || exit 1

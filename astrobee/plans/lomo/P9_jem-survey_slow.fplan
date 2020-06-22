@@ -1,18 +1,18 @@
 {
   "type" : "ModuleBayPlan",
   "inertiaConfiguration" : {
-    "matrix" : [ 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0 ],
-    "mass" : 5.0,
-    "name" : "UnloadedAstrobee"
+    "name" : "UnloadedAstrobee",
+    "matrix" : [ 0.15342799, 0.0, 0.0, 0.0, 0.14271405, 0.0, 0.0, 0.0, 0.16230276 ],
+    "mass" : 9.583789
   },
   "operatingLimits" : {
     "targetLinearVelocity" : 0.15,
     "targetLinearAccel" : 0.0175,
     "targetAngularVelocity" : 0.0873,
     "targetAngularAccel" : 0.1745,
+    "collisionDistance" : 0.25,
     "profileName" : "iss_lomo",
-    "flightMode" : "nominal",
-    "collisionDistance" : 0.25
+    "flightMode" : "nominal"
   },
   "site" : {
     "type" : "Site",
@@ -36,7 +36,7 @@
   "defaultSpeed" : 0.15,
   "defaultTolerance" : 1.0,
   "dateCreated" : "2019-08-28T01:04:40Z",
-  "dateModified" : "2019-10-31T17:38:16Z",
+  "dateModified" : "2020-04-01T22:39:59Z",
   "creator" : "astrobee",
   "schemaUrl" : "http://www.example.com/freeFlyerPlanSchema.json",
   "planNumber" : 0,
@@ -1112,8 +1112,8 @@
     "id" : "b6558fac-fe9f-4ccf-ac0e-86ca9cc9df47",
     "sequence" : [ {
       "type" : "pausePlan",
-      "scopeTerminate" : true,
       "blocking" : true,
+      "scopeTerminate" : true,
       "color" : "#555555",
       "name" : "30.0 PausePlan",
       "id" : "742c83c2-b513-4977-b424-8afee3fb8167"

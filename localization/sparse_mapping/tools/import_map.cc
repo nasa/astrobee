@@ -15,8 +15,8 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#include <common/init.h>
-#include <common/thread.h>
+#include <ff_common/init.h>
+#include <ff_common/thread.h>
 #include <sparse_mapping/tensor.h>
 #include <sparse_mapping/sparse_map.h>
 #include <sparse_mapping/sparse_mapping.h>
@@ -40,7 +40,7 @@ DEFINE_bool(bundler_map, false,
             "If true, read the bundler or theia format.");
 
 int main(int argc, char** argv) {
-  common::InitFreeFlyerApplication(&argc, &argv);
+  ff_common::InitFreeFlyerApplication(&argc, &argv);
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
   std::vector<std::string> files;

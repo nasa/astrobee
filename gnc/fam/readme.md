@@ -1,5 +1,4 @@
-\defgroup fam Force Allocation Module (FAM)
-\ingroup gnc
+\page fam Force Allocation Module (FAM)
 
 The force allocation module (FAM) converts the force and torques output by control into 
 PMC speeds and nozzle positions.

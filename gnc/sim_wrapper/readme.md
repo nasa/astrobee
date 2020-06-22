@@ -1,5 +1,4 @@
-\defgroup simwrapper GNC Simulation Wrapper
-\ingroup gnc
+\page simwrapper GNC Simulation Wrapper
 
 This package wraps around the GNC simulator functionality.
 Currently, the things it simulates are very limited, to

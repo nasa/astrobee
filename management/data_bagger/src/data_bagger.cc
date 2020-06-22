@@ -39,8 +39,6 @@ DataBagger::~DataBagger() {
 }
 
 void DataBagger::Initialize(ros::NodeHandle *nh) {
-  std::string err_msg = "";
-
   config_params_.AddFile("management/data_bagger.config");
   if (!ReadParams()) {
     return;
@@ -53,17 +51,8 @@ void DataBagger::Initialize(ros::NodeHandle *nh) {
                                             pub_queue_size_,
                                             true);
 
-  // Check to see if there were default topics to start recording. Have to do
-  // this after the state publisher is initialized.
-  if (default_data_state_.topic_save_settings.size() > 0) {
-    if (!SetImmediateDataToDisk(err_msg)) {
-      this->AssertFault(ff_util::INITIALIZATION_FAILED, err_msg);
-      return;
-    }
-  } else {
-    // Publish empty state
-    PublishState();
-  }
+  // Publish empty state
+  PublishState();
 
   pub_data_topics_ = nh->advertise<ff_msgs::DataTopicsList>(
                                             TOPIC_MANAGEMENT_DATA_BAGGER_TOPICS,
@@ -275,7 +264,17 @@ void DataBagger::FixTopicNamespace(std::string &topic) {
 }
 
 void DataBagger::OnStartupTimer(ros::TimerEvent const& event) {
+  std::string err_msg = "";
+
   GetTopicNames();
+
+  // Check to see if there were default topics to start recording.
+  if (default_data_state_.topic_save_settings.size() > 0) {
+    if (!SetImmediateDataToDisk(err_msg)) {
+      this->AssertFault(ff_util::INITIALIZATION_FAILED, err_msg);
+      return;
+    }
+  }
 }
 
 bool DataBagger::SetDataToDiskService(ff_msgs::SetDataToDisk::Request &req,

@@ -141,7 +141,7 @@ camera::CameraParameters::CameraParameters(config_reader::ConfigReader* config, 
   SetUndistortedSize(size);
 
   // right now all our crops are zero
-  // common::ConfigReader::Table crop_table(&camera, "crop");
+  // ff_common::ConfigReader::Table crop_table(&camera, "crop");
   // // Read in crop offset
   // if (!crop_table.GetInt("x", &size[0]))
   //   size[0] = 0;

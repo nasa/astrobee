@@ -253,8 +253,8 @@ rapid::ext::astrobee::CameraResolution
     RosTelemetryRapidTelemetry::ConvertResolution(std::string const& resolution) {
   if (resolution == "1_1") {
     return rapid::ext::astrobee::RESOLUTION_1_1;
-  } else if (resolution == "224_172") {
-    return rapid::ext::astrobee::RESOLUTION_224_172;
+  } else if (resolution == "224_171") {
+    return rapid::ext::astrobee::RESOLUTION_224_171;
   } else if (resolution == "320_240") {
     return rapid::ext::astrobee::RESOLUTION_320_240;
   } else if (resolution == "480_270") {

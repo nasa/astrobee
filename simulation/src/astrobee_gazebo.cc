@@ -7,7 +7,7 @@
  * (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
@@ -16,6 +16,7 @@
  * under the License.
  */
 
+#include <gazebo/sensors/WideAngleCameraSensor.hh>
 #include <astrobee_gazebo/astrobee_gazebo.h>
 
 // Transformation helper code
@@ -117,8 +118,19 @@ void FreeFlyerModelPlugin::Load(physics::ModelPtr model, sdf::ElementPtr sdf) {
   link_  = model->GetLink();
   world_ = model->GetWorld();
   model_ = model;
-  // Initialize the FreeFlyerPlugin
-  InitializePlugin(model_->GetName());
+
+  // Read namespace
+  if (sdf->HasElement("namespace")) {
+    std::string ns = sdf->Get<std::string>("namespace");
+    ns.erase(1);   // Errase _ because urdf can't handle empty arguments
+
+    // Initialize the FreeFlyerPlugin
+    InitializePlugin(ns);
+  } else {
+    // Initialize the FreeFlyerPlugin
+    InitializePlugin(model_->GetName());
+  }
+
   // Now load the rest of the plugin
   LoadCallback(&nh_, model_, sdf_);
 }
@@ -175,10 +187,24 @@ void FreeFlyerSensorPlugin::Load(sensors::SensorPtr sensor, sdf::ElementPtr sdf)
   sensor_ = sensor;
   sdf_ = sdf;
   world_ = gazebo::physics::get_world(sensor->WorldName());
+  #if GAZEBO_MAJOR_VERSION > 7
+  model_ = boost::static_pointer_cast < physics::Link >(
+    world_->EntityByName(sensor->ParentName()))->GetModel();
+  #else
   model_ = boost::static_pointer_cast<physics::Link>(
     world_->GetEntity(sensor->ParentName()))->GetModel();
-  // Initialize the FreeFlyerPlugin
-  InitializePlugin(model_->GetName());
+  #endif
+  // Read namespace
+  if (sdf->HasElement("namespace")) {
+    std::string ns = sdf->Get<std::string>("namespace");
+    ns.erase(1);   // Errase _ because urdf can't handle empty arguments
+
+    // Initialize the FreeFlyerPlugin
+    InitializePlugin(ns);
+  } else {
+    // Initialize the FreeFlyerPlugin
+    InitializePlugin(model_->GetName());
+  }
   // Now load the rest of the plugin
   LoadCallback(&nh_, sensor_, sdf_);
 }
@@ -229,11 +255,18 @@ bool FreeFlyerSensorPlugin::ExtrinsicsCallback(
       tf->transform.translation.y,
       tf->transform.translation.z,
       pose_temp.w(), pose_temp.x(), pose_temp.y(), pose_temp.z());
+    #if GAZEBO_MAJOR_VERSION > 7
+    ignition::math::Pose3d tf_bs = pose;
+    ignition::math::Pose3d tf_wb = model_->WorldPose();
+    ignition::math::Pose3d tf_ws = tf_bs + tf_wb;
+    ignition::math::Pose3d world_pose(tf_bs + tf_wb);
+    #else
     math::Pose tf_bs = pose;
     math::Pose tf_wb = model_->GetWorldPose();
     math::Pose tf_ws = tf_bs + tf_wb;
     ignition::math::Pose3d world_pose(tf_ws.pos.x, tf_ws.pos.y,
       tf_ws.pos.z, tf_ws.rot.w, tf_ws.rot.x, tf_ws.rot.y, tf_ws.rot.z);
+    #endif
 
     // In the case of a camera update the camera world pose
     if (sensor_->Type() == "camera") {
@@ -247,7 +280,7 @@ bool FreeFlyerSensorPlugin::ExtrinsicsCallback(
 
     // In the case of a wide angle camera update the camera world pose
     if (sensor_->Type() == "wideanglecamera") {
-      sensors::WideAngleCameraSensorPtr sensor =
+      std::shared_ptr<sensors::WideAngleCameraSensor> sensor =
         std::dynamic_pointer_cast<sensors::WideAngleCameraSensor>(sensor_);
       if (sensor && sensor->Camera())
         sensor->Camera()->SetWorldPose(world_pose);
@@ -268,5 +301,92 @@ bool FreeFlyerSensorPlugin::ExtrinsicsCallback(
   // Success
   return true;
 }
+
+// Compute the transform from sensor to world coordinates
+#if GAZEBO_MAJOR_VERSION > 7
+Eigen::Affine3d SensorToWorld(ignition::math::Pose3d const& world_pose,
+                              ignition::math::Pose3d const& sensor_pose) {
+    Eigen::Affine3d body_to_world
+      = (Eigen::Translation3d(world_pose.Pos().X(),
+                              world_pose.Pos().Y(),
+                              world_pose.Pos().Z()) *
+         Eigen::Quaterniond(world_pose.Rot().W(),
+                            world_pose.Rot().X(),
+                            world_pose.Rot().Y(),
+                            world_pose.Rot().Z()));
+#else
+Eigen::Affine3d SensorToWorld(gazebo::math::Pose const& world_pose,
+                              ignition::math::Pose3d const& sensor_pose) {
+    Eigen::Affine3d body_to_world
+      = (Eigen::Translation3d(world_pose.pos.x,
+                              world_pose.pos.y,
+                              world_pose.pos.z) *
+         Eigen::Quaterniond(world_pose.rot.w,
+                            world_pose.rot.x,
+                            world_pose.rot.y,
+                            world_pose.rot.z));
+#endif
+    Eigen::Affine3d sensor_to_body
+      = (Eigen::Translation3d(sensor_pose.Pos().X(),
+                              sensor_pose.Pos().Y(),
+                              sensor_pose.Pos().Z()) *
+         Eigen::Quaterniond(sensor_pose.Rot().W(),
+                            sensor_pose.Rot().X(),
+                            sensor_pose.Rot().Y(),
+                            sensor_pose.Rot().Z()));
+    return body_to_world * sensor_to_body;
+}
+
+void FillCameraInfo(rendering::CameraPtr camera, sensor_msgs::CameraInfo & msg) {
+    msg.width = camera->ImageWidth();
+    msg.height = camera->ImageHeight();
+
+    double hfov = camera->HFOV().Radian();  // horizontal field of view in radians
+    double focal_length = camera->ImageWidth()/(2.0 * tan(hfov/2.0));
+    double opitcal_center_x = msg.width/2.0;
+    double optical_center_y = msg.height/2.0;
+
+    // Intrinsics matrix
+    msg.K = {focal_length, 0, opitcal_center_x,
+             0, focal_length, optical_center_y,
+             0, 0, 1};
+
+    // Projection matrix. We won't use this, but initalize it to something.
+    msg.P = {1, 0, 0, 0,
+             0, 1, 0, 0,
+             0, 0, 1, 0};
+
+    // Rotation matrix. We won't use it.
+    msg.R = {1, 0, 0,
+             0, 1, 0,
+             0, 0, 1};
+
+    rendering::DistortionPtr dPtr = camera->LensDistortion();
+
+    // sensor_msgs::CameraInfo can manage only a few distortion
+    // models. Here we assume plumb_bob just to pass along the
+    // coefficients. Out of all the simulated cameras, nav_cam is
+    // fisheye, which uses only K1, and all others have zero
+    // distortion. Hence this code was not tested in the most general
+    // setting.
+    msg.distortion_model = "plumb_bob";
+    if (dPtr) {
+      #if GAZEBO_MAJOR_VERSION > 8
+      msg.D = {camera->LensDistortion()->K1(),
+               camera->LensDistortion()->K2(),
+               camera->LensDistortion()->K3(),
+               camera->LensDistortion()->P1(),
+               camera->LensDistortion()->P2()};
+      #else
+      msg.D = {camera->LensDistortion()->GetK1(),
+               camera->LensDistortion()->GetK2(),
+               camera->LensDistortion()->GetK3(),
+               camera->LensDistortion()->GetP1(),
+               camera->LensDistortion()->GetP2()};
+      #endif
+    } else {
+      msg.D = {0.0, 0.0, 0.0, 0.0, 0.0};
+    }
+  }
 
 }  // namespace gazebo

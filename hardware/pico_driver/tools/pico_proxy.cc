@@ -56,15 +56,12 @@ void ExtendedCallback(const ff_msgs::PicoflexxIntermediateData::ConstPtr& msg) {
     sensor_msgs::ImageConstPtr(&msg->raw, null_deleter()),
     sensor_msgs::image_encodings::TYPE_32FC4);
   cv::split(cv_ptr->image, layers);
+
+  // Keep the same timestamp as the original data
   std_msgs::Header header;
-
-  // TODO(oalexan1): May need to replace here with:
-  // header.stamp = msg->header.stamp;
-  // if the astrobee clock is wrong, to preserve consistent (if
-  // incorrect) time everywhere, as otherwise kalibr later complains.
-  header.stamp = ros::Time::now();
-
+  header.stamp =  msg->header.stamp;
   header.frame_id = msg->header.frame_id;
+
   cv_bridge::CvImage d(header, sensor_msgs::image_encodings::TYPE_32FC1, layers[0]);
   cv_bridge::CvImage a(header, sensor_msgs::image_encodings::TYPE_32FC1, layers[1]);
   cv_bridge::CvImage i(header, sensor_msgs::image_encodings::TYPE_32FC1, layers[2]);
@@ -96,6 +93,7 @@ void ExtendedCallback(const ff_msgs::PicoflexxIntermediateData::ConstPtr& msg) {
 // Called when depth image data arrives
 void DepthImageCallback(const sensor_msgs::ImageConstPtr& msg) {
   // Prepare distance image
+  // TODO(oalexan1): keep same timestamp as the input?
   distance_.header.stamp = ros::Time::now();
   distance_.header.frame_id = msg->header.frame_id;
   distance_.height = msg->height;
@@ -104,7 +102,8 @@ void DepthImageCallback(const sensor_msgs::ImageConstPtr& msg) {
   distance_.encoding = sensor_msgs::image_encodings::TYPE_16UC1;
   distance_.step = distance_.width * sizeof(uint16_t);
   distance_.data.resize(distance_.height * distance_.step);
-  // Prepare confidence imahe
+  // Prepare confidence image
+  // TODO(oalexan1): keep same timestamp as the input?
   confidence_.header.stamp = ros::Time::now();
   confidence_.header.frame_id = msg->header.frame_id;
   confidence_.height = msg->height;

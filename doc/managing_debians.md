@@ -1,4 +1,4 @@
-# Debians management for deployment on the physical robots
+\page managing_debians Debians management for deployment on the physical robots
 
 This page describes the steps to deploy FSW Debian packages on the server.
 
@@ -36,7 +36,7 @@ before invoking this script*
 
 ### Push the changelog
 
-    git commit -m"meaningful message" files_that_changed
+    git commit -m "meaningful message" files_that_changed
     git push
 
 ### Create an official release
@@ -99,29 +99,29 @@ to sign the Debians.
 This step requires to have access to the private key maintained by Brian Coltin.
 
 Master key owner:
-```
+
     gpg --export-secret-key
+
 New user:
-```
+
     gpg --import ~bcoltin/secret.key
-```
+
 
 Master key owner deletes `secret.key`
 
 ### Push Debian to the server
-```
-./publish_snapshot.sh <snapshot_date_and_tag>
-# convention for the argument: follow this example
-# 20180702_pre-dock-flight-release
-#
-# Input the Master Password when asked (twice).
-```
+
+    ./publish_snapshot.sh <snapshot_date_and_tag>
+
+Convention for the argument: follow this example 20180702_pre-dock-flight-release.
+Input the Master Password when asked (twice).
+
 
 ## Build FSW dependencies Debians packages
 
 When a FSW dependecy is changed, it is necessary to rebuild the Debian packages:
 
-    scripts/setup/debians/build_install_debians.sh
+    ./scripts/setup/debians/build_install_debians.sh
 
 Then, follow the common step above to stage the Debian packages on volar and
 create the snapshot on the server.

@@ -17,7 +17,7 @@
  */
 
 #include <camera/camera_params.h>
-#include <common/init.h>
+#include <ff_common/init.h>
 #include <marker_tracking/marker_detector.h>
 
 #include <glog/logging.h>
@@ -29,7 +29,7 @@ DEFINE_string(camera_calibration, "",
               "The camera calibration file, in OpenCV's XML format.");
 
 int main(int argc, char** argv) {
-  common::InitFreeFlyerApplication(&argc, &argv);
+  ff_common::InitFreeFlyerApplication(&argc, &argv);
 
   if (FLAGS_camera_calibration.empty())
     LOG(FATAL) << "Camera calibration file was not specified.";

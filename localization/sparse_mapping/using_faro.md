@@ -1,3 +1,5 @@
+\page using_faro Using Faro
+
 IRG has an instrument, called FARO, that can create very
 high-resolution 3D scans with overlaid texture. Such a scan can be
 used to register a sparse map and verify its quality.

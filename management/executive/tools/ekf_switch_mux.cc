@@ -25,7 +25,7 @@
 
 #include <topic_tools/MuxSelect.h>
 
-#include <common/init.h>
+#include <ff_common/init.h>
 
 #include <iostream>
 #include <string>
@@ -34,7 +34,7 @@ const std::string kRegistrationNode = "mux_registration";
 const std::string kLandmarksNode    = "mux_landmarks";
 
 int main(int argc, char **argv) {
-  common::InitFreeFlyerApplication(&argc, &argv);
+  ff_common::InitFreeFlyerApplication(&argc, &argv);
   ros::init(argc, argv, "ekf_switch_mux");
 
   if (argc < 2) {

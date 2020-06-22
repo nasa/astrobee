@@ -16,7 +16,7 @@
  * under the License.
  */
 
-#include <common/init.h>
+#include <ff_common/init.h>
 
 #include <ros/ros.h>
 #include <ff_msgs/CompressedFile.h>
@@ -46,6 +46,13 @@ namespace io = boost::iostreams;
 
 namespace flags = FREEFLYER_GFLAGS_NAMESPACE;
 
+DEFINE_string(compression, "none",
+              "Type of compression [none, deflate, gzip]");
+
+constexpr uintmax_t kMaxSize = 128 * 1024;
+ros::Time zones_pub_time;
+ros::Publisher command_pub;
+
 bool ValidateCompression(const char* name, std::string const &value) {
   if (value == "none" || value == "gzip" || value == "deflate")
     return true;
@@ -55,12 +62,6 @@ bool ValidateCompression(const char* name, std::string const &value) {
   return false;
 }
 
-DEFINE_string(compression, "none",
-              "Type of compression [none, deflate, gzip]");
-
-constexpr uintmax_t kMaxSize = 128 * 1024;
-ros::Time zones_pub_time;
-
 void on_connect(ros::SingleSubscriberPublisher const& sub,
                 ff_msgs::CompressedFile &cf) {  // NOLINT
   ROS_INFO("subscriber present: sending zones");
@@ -68,8 +69,8 @@ void on_connect(ros::SingleSubscriberPublisher const& sub,
   sub.publish(cf);
 }
 
-ros::Publisher command_pub;
 void on_cf_ack(ff_msgs::CompressedFileAckConstPtr const& cf_ack) {
+  ROS_INFO("ack received: sending zone update command");
   // compressed file ack is latched so we need to check the timestamp to make
   // sure this plan is being acked
   if (zones_pub_time < cf_ack->header.stamp) {
@@ -82,7 +83,7 @@ void on_cf_ack(ff_msgs::CompressedFileAckConstPtr const& cf_ack) {
 }
 
 int main(int argc, char** argv) {
-  common::InitFreeFlyerApplication(&argc, &argv);
+  ff_common::InitFreeFlyerApplication(&argc, &argv);
   ros::init(argc, argv, "zone_publisher");
 
   if (!flags::RegisterFlagValidator(&FLAGS_compression, &ValidateCompression)) {
@@ -137,17 +138,18 @@ int main(int argc, char** argv) {
   }
 
   ros::NodeHandle n;
-
   zones_pub_time = ros::Time::now();
-  std::string sub_topic_zone = TOPIC_COMMUNICATIONS_DDS_ZONES;
-  ros::Publisher zone_pub =
-    n.advertise<ff_msgs::CompressedFile>(sub_topic_zone, 10,
-      std::bind(&on_connect, std::placeholders::_1, cf));
 
-  std::string sub_topic_command = TOPIC_COMMAND;
+  // Publishes the zones when to the executive using subscriber status callbacks
+  ros::Publisher zone_pub = n.advertise<ff_msgs::CompressedFile>(
+                              TOPIC_COMMUNICATIONS_DDS_ZONES, 10,
+                              std::bind(&on_connect, std::placeholders::_1, cf));
+
+  // After the zones are received, commands a set zones to the executive
   command_pub = n.advertise<ff_msgs::CommandStamped>(
-                                                    sub_topic_command, 5, true);
+                                                    TOPIC_COMMAND, 5, true);
 
+  // Subscriber that receives confirmation that the zones were received
   ros::Subscriber cf_acK_pub = n.subscribe(TOPIC_MANAGEMENT_EXEC_CF_ACK, 10, &on_cf_ack);
 
   ROS_INFO("waiting for a subscriber...");

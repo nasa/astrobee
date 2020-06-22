@@ -33,7 +33,7 @@
 #include <ff_msgs/JointSampleStamped.h>
 #include <ff_msgs/JointSample.h>
 
-// C++ STL inclues
+// C++ STL includes
 #include <iostream>
 #include <sstream>
 #include <fstream>

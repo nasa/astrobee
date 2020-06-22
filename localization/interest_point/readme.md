@@ -1,5 +1,4 @@
-\defgroup interestpoint Interest Point Library
-\ingroup localization
+\page interestpoint Interest Point Library
 
 This library handles detecting OpenSIFT features, ORGBRISK features,
 and provides helper functions for feature matching and estimating

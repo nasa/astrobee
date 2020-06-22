@@ -15,11 +15,17 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+cmake_minimum_required(VERSION 2.8.3)
+project(camera)
+
 set(LIBS
   config_reader
   ${GLOG_LIBRARIES}
   ${GFLAGS_LIBRARIES}
   ${OpenCV_LIBRARIES}
+  ${EIGEN_LIBRARIES}
+  ${Boost_SYSTEM_LIBRARY}
+  ${Boost_FILESYSTEM_LIBRARY}
   )
 set(INCLUDES
   config_reader
@@ -27,6 +33,14 @@ set(INCLUDES
   ${GLOG_INCLUDE_DIRS}
   ${EIGEN3_INCLUDE_DIRS}
   ${OpenCV_INCLUDE_DIRS}
+  ${Boost_INCLUDE_DIRS}
+)
+
+catkin_package(
+  INCLUDE_DIRS include
+  LIBRARIES camera
+  CATKIN_DEPENDS
+#  DEPENDS system_lib
 )
 
 create_library(TARGET camera
@@ -44,3 +58,4 @@ create_test_targets(DIR test
   INC ${INCLUDES} ${CERES_INCLUDE_DIRS}
 )
 
+set(CAMERA_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/include PARENT_SCOPE)

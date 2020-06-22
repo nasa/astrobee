@@ -2,41 +2,41 @@
   "type" : "ModuleBayPlan",
   "inertiaConfiguration" : {
     "name" : "UnloadedAstrobee",
-    "matrix" : [ 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0 ],
-    "mass" : 5.0
+    "matrix" : [ 0.15342799, 0.0, 0.0, 0.0, 0.14271405, 0.0, 0.0, 0.0, 0.16230276 ],
+    "mass" : 9.583789
   },
   "operatingLimits" : {
-    "targetAngularAccel" : 0.1745,
-    "targetLinearAccel" : 0.0175,
     "targetLinearVelocity" : 0.2,
+    "targetLinearAccel" : 0.0175,
     "targetAngularVelocity" : 0.1745,
+    "targetAngularAccel" : 0.1745,
     "collisionDistance" : 0.25,
     "profileName" : "iss_nominal",
     "flightMode" : "nominal"
   },
-  "valid" : true,
   "site" : {
     "type" : "Site",
-    "bbox" : [ -0.7, -0.5, -0.65, 0.7, 0.5, 0.65 ],
     "crs" : {
       "properties" : {
         "name" : "ISS Module"
       }
     },
+    "bbox" : [ -0.7, -0.5, -0.65, 0.7, 0.5, 0.65 ],
     "name" : "ISS Analysis Frame",
     "id" : "iss"
   },
+  "valid" : true,
   "platform" : {
     "type" : "Platform",
     "name" : "FreeFlyer",
     "id" : "FreeFlyer"
   },
   "visible" : true,
-  "defaultTolerance" : 1.0,
   "xpjson" : "0.1",
   "defaultSpeed" : 0.2,
+  "defaultTolerance" : 1.0,
   "dateCreated" : "2019-08-12T17:02:33Z",
-  "dateModified" : "2019-08-12T17:12:33Z",
+  "dateModified" : "2020-04-01T22:31:50Z",
   "creator" : "kmhamil1",
   "schemaUrl" : "http://www.example.com/freeFlyerPlanSchema.json",
   "planNumber" : 0,
@@ -45,9 +45,9 @@
     "type" : "ModuleBayStation",
     "coordinate" : {
       "type" : "ModuleBayPoint",
-      "x" : 10.94,
-      "y" : -6.11,
-      "z" : 4.85,
+      "x" : 10.936,
+      "y" : -6.111,
+      "z" : 4.851,
       "roll" : 0.0,
       "pitch" : 0.0,
       "yaw" : 0.0,
@@ -71,122 +71,122 @@
     "id" : "b4b65de5-b1ef-4d48-ac89-b0ce6f4f740d",
     "sequence" : [ {
       "type" : "setCamera",
+      "cameraMode" : "Recording",
+      "presetIndex" : "0",
       "options" : {
-        "cameraName" : "Navigation",
         "preset" : [ {
-          "resolution" : "1280_960",
           "cameraMode" : "Recording",
+          "resolution" : "1280_960",
+          "presetName" : "ARS Default Recording",
           "frameRate" : 5.0,
-          "bandwidth" : 0.0,
-          "presetName" : "ARS Default Recording"
+          "bandwidth" : 0.0
         }, {
-          "resolution" : "640_480",
           "cameraMode" : "Streaming",
+          "resolution" : "640_480",
+          "presetName" : "ARS Default Streaming",
           "frameRate" : 2.0,
-          "bandwidth" : 0.0,
-          "presetName" : "ARS Default Streaming"
-        } ]
+          "bandwidth" : 0.0
+        } ],
+        "cameraName" : "Navigation"
       },
       "resolution" : "1280_960",
-      "presetIndex" : "0",
+      "presetName" : "ARS Default Recording",
       "cameraName" : "Navigation",
-      "cameraMode" : "Recording",
       "frameRate" : 5.0,
       "bandwidth" : 0.0,
-      "presetName" : "ARS Default Recording",
       "blocking" : true,
-      "color" : "#555555",
       "scopeTerminate" : true,
+      "color" : "#555555",
       "name" : "0.0 SetCamera",
       "id" : "f878ed9e-580c-4ded-b73d-71fae076d74b"
     }, {
       "type" : "setCamera",
+      "cameraMode" : "Streaming",
+      "presetIndex" : "1",
       "options" : {
-        "cameraName" : "Navigation",
         "preset" : [ {
-          "resolution" : "1280_960",
           "cameraMode" : "Recording",
+          "resolution" : "1280_960",
+          "presetName" : "ARS Default Recording",
           "frameRate" : 5.0,
-          "bandwidth" : 0.0,
-          "presetName" : "ARS Default Recording"
+          "bandwidth" : 0.0
         }, {
-          "resolution" : "640_480",
           "cameraMode" : "Streaming",
+          "resolution" : "640_480",
+          "presetName" : "ARS Default Streaming",
           "frameRate" : 2.0,
-          "bandwidth" : 0.0,
-          "presetName" : "ARS Default Streaming"
-        } ]
+          "bandwidth" : 0.0
+        } ],
+        "cameraName" : "Navigation"
       },
       "resolution" : "640_480",
-      "presetIndex" : "1",
+      "presetName" : "ARS Default Streaming",
       "cameraName" : "Navigation",
-      "cameraMode" : "Streaming",
       "frameRate" : 2.0,
       "bandwidth" : 0.0,
-      "presetName" : "ARS Default Streaming",
       "blocking" : true,
-      "color" : "#555555",
       "scopeTerminate" : true,
+      "color" : "#555555",
       "name" : "0.1 SetCamera",
       "id" : "95cef947-8d29-413c-9436-2051bceff43e"
     }, {
       "type" : "setCamera",
+      "cameraMode" : "Recording",
+      "presetIndex" : "0",
       "options" : {
-        "cameraName" : "Dock",
         "preset" : [ {
-          "resolution" : "1280_960",
           "cameraMode" : "Recording",
+          "resolution" : "1280_960",
+          "presetName" : "ARS Default Recording",
           "frameRate" : 5.0,
-          "bandwidth" : 0.0,
-          "presetName" : "ARS Default Recording"
+          "bandwidth" : 0.0
         }, {
-          "resolution" : "640_480",
           "cameraMode" : "Streaming",
+          "resolution" : "640_480",
+          "presetName" : "ARS Default Streaming",
           "frameRate" : 2.0,
-          "bandwidth" : 0.0,
-          "presetName" : "ARS Default Streaming"
-        } ]
+          "bandwidth" : 0.0
+        } ],
+        "cameraName" : "Dock"
       },
       "resolution" : "1280_960",
-      "presetIndex" : "0",
+      "presetName" : "ARS Default Recording",
       "cameraName" : "Dock",
-      "cameraMode" : "Recording",
       "frameRate" : 5.0,
       "bandwidth" : 0.0,
-      "presetName" : "ARS Default Recording",
       "blocking" : true,
-      "color" : "#555555",
       "scopeTerminate" : true,
+      "color" : "#555555",
       "name" : "0.2 SetCamera",
       "id" : "e076138a-67cd-4a4f-bea5-1e38784b450a"
     }, {
       "type" : "setCamera",
+      "cameraMode" : "Streaming",
+      "presetIndex" : "1",
       "options" : {
-        "cameraName" : "Dock",
         "preset" : [ {
-          "resolution" : "1280_960",
           "cameraMode" : "Recording",
+          "resolution" : "1280_960",
+          "presetName" : "ARS Default Recording",
           "frameRate" : 5.0,
-          "bandwidth" : 0.0,
-          "presetName" : "ARS Default Recording"
+          "bandwidth" : 0.0
         }, {
-          "resolution" : "640_480",
           "cameraMode" : "Streaming",
+          "resolution" : "640_480",
+          "presetName" : "ARS Default Streaming",
           "frameRate" : 2.0,
-          "bandwidth" : 0.0,
-          "presetName" : "ARS Default Streaming"
-        } ]
+          "bandwidth" : 0.0
+        } ],
+        "cameraName" : "Dock"
       },
       "resolution" : "640_480",
-      "presetIndex" : "1",
+      "presetName" : "ARS Default Streaming",
       "cameraName" : "Dock",
-      "cameraMode" : "Streaming",
       "frameRate" : 2.0,
       "bandwidth" : 0.0,
-      "presetName" : "ARS Default Streaming",
       "blocking" : true,
-      "color" : "#555555",
       "scopeTerminate" : true,
+      "color" : "#555555",
       "name" : "0.3 SetCamera",
       "id" : "b5cb0e48-e179-4747-947b-054f69c0275d"
     }, {
@@ -194,8 +194,8 @@
       "record" : true,
       "cameraName" : "Navigation",
       "blocking" : true,
-      "color" : "#555555",
       "scopeTerminate" : true,
+      "color" : "#555555",
       "name" : "0.4 SetCameraRecording",
       "id" : "ba5c1a70-bbab-4ecb-abf6-614d1d42e989"
     }, {
@@ -203,8 +203,8 @@
       "record" : true,
       "cameraName" : "Dock",
       "blocking" : true,
-      "color" : "#555555",
       "scopeTerminate" : true,
+      "color" : "#555555",
       "name" : "0.5 SetCameraRecording",
       "id" : "29f383ab-23d0-4b7b-8fc8-ee50de165a50"
     }, {
@@ -212,8 +212,8 @@
       "stream" : true,
       "cameraName" : "Navigation",
       "blocking" : true,
-      "color" : "#555555",
       "scopeTerminate" : true,
+      "color" : "#555555",
       "name" : "0.6 SetCameraStreaming",
       "id" : "017fc1a4-cace-4bac-8b44-4da248b23ebd"
     }, {
@@ -221,8 +221,8 @@
       "stream" : true,
       "cameraName" : "Dock",
       "blocking" : true,
-      "color" : "#555555",
       "scopeTerminate" : true,
+      "color" : "#555555",
       "name" : "0.7 SetCameraStreaming",
       "id" : "0657e0a4-84fc-4084-9a89-2e989a67261a"
     }, {
@@ -230,8 +230,8 @@
       "telemetryName" : "EkfState",
       "rate" : 5.0,
       "blocking" : true,
-      "color" : "#555555",
       "scopeTerminate" : true,
+      "color" : "#555555",
       "name" : "0.8 SetTelemetryRate",
       "id" : "d6082a30-63de-41c9-b209-a7287afe5b1b"
     }, {
@@ -239,8 +239,8 @@
       "telemetryName" : "GncState",
       "rate" : 5.0,
       "blocking" : true,
-      "color" : "#555555",
       "scopeTerminate" : true,
+      "color" : "#555555",
       "name" : "0.9 SetTelemetryRate",
       "id" : "796627c9-3d66-477f-9fc6-b0a5d88b1cfc"
     }, {
@@ -248,39 +248,39 @@
       "telemetryName" : "PmcCmdState",
       "rate" : 5.0,
       "blocking" : true,
-      "color" : "#555555",
       "scopeTerminate" : true,
+      "color" : "#555555",
       "name" : "0.10 SetTelemetryRate",
       "id" : "6fc25901-ba26-489e-a6ce-cdb97f96251e"
     }, {
       "type" : "setCheckZones",
       "checkZones" : false,
       "blocking" : true,
-      "color" : "#555555",
       "scopeTerminate" : true,
+      "color" : "#555555",
       "name" : "0.11 SetCheckZones",
       "id" : "192a3098-cf20-4d3b-abe9-f21767022527"
     }, {
       "type" : "setHolonomicMode",
       "enableHolonomic" : true,
       "blocking" : true,
-      "color" : "#555555",
       "scopeTerminate" : true,
+      "color" : "#555555",
       "name" : "0.12 SetHolonomicMode",
       "id" : "61bd6419-5004-41f2-b901-41154b3b727e"
     }, {
       "type" : "setCheckObstacles",
       "checkObstacles" : false,
       "blocking" : true,
-      "color" : "#555555",
       "scopeTerminate" : true,
+      "color" : "#555555",
       "name" : "0.13 SetCheckObstacles",
       "id" : "84b8fcad-18f3-4adc-860d-2a64770fc64d"
     }, {
       "type" : "initializeBias",
       "blocking" : true,
-      "color" : "#555555",
       "scopeTerminate" : true,
+      "color" : "#555555",
       "name" : "0.14 InitializeBias",
       "id" : "0a07d4d6-258c-492c-95e1-7ca77f409c22"
     } ]

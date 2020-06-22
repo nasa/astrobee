@@ -35,7 +35,7 @@ import threading
 import math
 
 filepath = osPath.dirname(osPath.realpath(__file__))
-connector = rti.Connector("MyParticipantLibrary::Zero", filepath + "/dds_types/DDSProfile.xml")
+connector = rti.Connector("MyParticipantLibrary::Zero", filepath + "/dds_types/CurrentDDSProfile.xml")
 rti_version = get_distribution("rticonnextdds-connector").version
 is_old_version = parse_version(rti_version) < parse_version('0.4.1')
 
@@ -98,15 +98,15 @@ class DdsSubscriber(threading.Thread):
         self.callback = callback
         self.translator = Dict2RosMsgTranslator(ros_type)
         self.daemon = True
-	self.start_index = 1 if is_old_version else 0 
+        self.start_index = 1 if is_old_version else 0
 
     def run(self):
         while not self.stopper.is_set():
             self.sem.acquire(True)
             connector.wait(self.timeout)
             self.inputDDS.take()
-            numOfSamples = (self.inputDDS.samples.getLength() if not is_old_version 
-		else self.inputDDS.samples.getLength() + 1)
+            numOfSamples = (self.inputDDS.samples.getLength() if not is_old_version
+                else self.inputDDS.samples.getLength() + 1)
 
             for j in range(self.start_index, numOfSamples):
                 if self.inputDDS.infos.isValid(j):

@@ -69,6 +69,13 @@ void ConfigServer::Initialize(ros::NodeHandle *private_nh, const std::string &fn
   AddFile(fname);
 }
 
+void ConfigServer::SetPath(const std::string &pname) {
+  if (listening_) {
+    ROS_WARN_STREAM("Cannot set path " << pname << " to ConfigServer after listening has started");
+  }
+  config_params_.SetPath(pname.c_str());
+}
+
 void ConfigServer::AddFile(const std::string &fname) {
   if (listening_) {
     ROS_WARN_STREAM("Cannot add file " << fname << " to ConfigServer after listening has started");

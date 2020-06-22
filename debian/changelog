@@ -1,3 +1,12 @@
+astrobee (0.11.0) testing; urgency=medium
+
+  * Added Ubuntu 18 compatibility
+  * Added dockerfiles for simplified install
+  * Fixes to QP planner
+  * Various other minor fixes
+
+ -- Astrobee Flight Software <astrobee-fsw@nx.arc.nasa.gov>  Mon, 22 Jun 2020 09:16:06 -0700
+
 astrobee (0.10.4) testing; urgency=medium
 
   * Histogram correction for localization.

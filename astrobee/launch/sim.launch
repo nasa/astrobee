@@ -21,6 +21,7 @@
   <!-- Set robot and world correctly; environment variable over rule default -->
   <arg name="robot" default="$(optenv ASTROBEE_ROBOT sim)" />
   <arg name="world" default="$(optenv ASTROBEE_WORLD iss)" />
+  <arg name="perch" default="false" />
   <arg name="ns" default="" />                  <!-- Robot namespace prefix  -->
   <arg name="output" default="log"/>            <!-- Where nodes should log  -->
   <arg name="spurn" default=""/>                <!-- Prevent a specific node -->
@@ -49,12 +50,19 @@
 
   <!-- Debug-specific options -->
   <arg name="default" default="true" />         <!-- Insert default robot    -->
-  <arg if="$(eval arg('world')=='iss')"
+  <arg if="$(eval arg('world')=='iss' and arg('perch')==0)"
        name="pose"
-       default="10.001 -9.754 4.410 1 0 0 0" />     <!-- iss: docked in JPM      -->
-  <arg if="$(eval arg('world')=='granite')"
+       default="10.05 -9.245 4.406 0 0 0 1" />     <!-- iss: docked in JPM      -->
+  <arg if="$(eval arg('world')=='iss' and arg('perch'))"
        name="pose"
-       default="0 0 -0.7 0 0 0 1" /> <!-- granite: docked         -->
+       default="10.7 -8.3 5.1 0.707 0 -0.707 0" />           <!-- iss: perch position     -->
+  <arg if="$(eval arg('world')=='granite' and arg('perch')==0)"
+       name="pose"
+       default="0 0 -0.7 0 0 0 1" />                         <!-- granite: docked         -->
+  <arg if="$(eval arg('world')=='granite' and arg('perch'))"
+       name="pose"
+       default="0 0 -0.7 0 0 0 1" />                         <!-- granite: perch position -->
+
   <arg name="bumble_pose" default="" />         <!-- Use to overide bumble's pose -->
 
   <!-- Multi-robot simulation -->

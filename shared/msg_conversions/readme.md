@@ -1,5 +1,4 @@
-\defgroup msg_conversions Message Conversions
-\ingroup shared
+\page msg_conversions Message Conversions
 
 This library assissts in converting messages between various formats,
 mainly in converting geometric transforms between Eigen, ROS, C arrays,

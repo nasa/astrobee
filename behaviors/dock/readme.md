@@ -1,5 +1,4 @@
-\defgroup dock Dock Behavior
-\ingroup beh
+\page dock Dock Behavior
 
 # Overview
 

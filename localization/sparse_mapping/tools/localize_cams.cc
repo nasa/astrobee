@@ -15,8 +15,8 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#include <common/init.h>
-#include <common/thread.h>
+#include <ff_common/init.h>
+#include <ff_common/thread.h>
 #include <sparse_mapping/sparse_map.h>
 #include <sparse_mapping/sparse_mapping.h>
 #include <sparse_mapping/reprojection.h>
@@ -60,15 +60,22 @@ DEFINE_string(source_map, "",
 DEFINE_double(error_thresh, 0.05,
               "Count how many localization errors are no more than this threshold, in meters..");
 
+DECLARE_bool(histogram_equalization);  // its value will be pulled from sparse_map.cc
+
 // These are synched up with localization.config. Note that
 // -num_similar and -ransac_inlier_tolerance and
 // -num_ransac_iterations need not be defined as flags here, since
 // they already exist in sparse_map.cc.
 int main(int argc, char** argv) {
-  common::InitFreeFlyerApplication(&argc, &argv);
+  ff_common::InitFreeFlyerApplication(&argc, &argv);
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
   sparse_mapping::SparseMap reference(FLAGS_reference_map);
+
+  // Ensure we localize with the same flag as in the map
+  sparse_mapping::HistogramEqualizationCheck(reference.GetHistogramEqualization(),
+                                             FLAGS_histogram_equalization);
+
   std::string detector = reference.GetDetectorName();
 
   Eigen::IOFormat CSVFormat(3, 0, ", ", ",   ");
@@ -85,7 +92,7 @@ int main(int argc, char** argv) {
 
     // localize frame
     camera::CameraModel localized_cam(Eigen::Vector3d(), Eigen::Matrix3d::Identity(),
-                               reference.GetCameraParameters());
+                                      reference.GetCameraParameters());
 
     camera::CameraModel source_cam(source.GetFrameGlobalTransform(cid),
                                    source.GetCameraParameters());

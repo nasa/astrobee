@@ -1,6 +1,6 @@
-\defgroup mobility Mobility
+\page mobility Mobility
 
-# Overview
+## Overview
 
 The overarching objective of the mobility subsystem is to provide a clean interface for moving the Astrobee in such a way that avoids obstacles, adheres to kinematic constraints, and keeps within specified flight zones.
 
@@ -10,7 +10,7 @@ A segment is a time-ordered sequence of **setpoints** and a corresponding **flig
 
 ![alt text](../images/mobility/definitions.png "Core nomenclature")
 
-# Basic operation
+## Basic operation
 
 The mobility subsystem provides the callee with a single action-based entry point for control, called ```ff_msgs::MotionAction```. This "motion action" accepts one of the following five commands:
 
@@ -36,7 +36,7 @@ The diagram below illustrates how the various ndoes in the system interact with 
 
 ![alt text](../images/mobility/mob_overview.png "Interaction between mobility modules")
 
-# Using the mobility subsystem
+## Using the mobility subsystem
 
 Typically, mobility will be controlled through the Ground Data System (GDS). However, The arm behavior is packaged with its own gflags-based tool called teleop. This tool is essentially a convenience wrapper around an action client can be used to control the arm from the command-line.
 
@@ -72,7 +72,7 @@ If you ever need to manually set the motion state to a specific value, you can c
 
     rosservice call /mob/motion/set_state 1
 
-#  Generating a plan from a sequence of poses.
+##  Generating a plan from a sequence of poses.
 
 Given a list of poses (positions in meters, and angles in degrees) the
 plangen tool can use the trapezoidal planner to create planned
@@ -100,8 +100,8 @@ sideways.
 
 Here is another example:
 
-# 360 degree yaw rotation at a 45 degree pitch.
-# x    y      z  roll pitch   yaw (degrees)
+### 360 degree yaw rotation at a 45 degree pitch.
+### x    y      z  roll pitch   yaw (degrees)
 10.93 -9.2  4.85   0     0     90 # face forward
 10.93 -9.2  4.85   0    45     90 # pitch up at 45 degrees
 10.93 -9.2  4.85   0    45    180 # yaw rotation
@@ -141,9 +141,14 @@ there are six ways of multiplying these rotation matrices.
 
 Other options can be seen by invoking the -help option.
 
-# Creating acceleration profiles.
+## Creating acceleration profiles.
 
 If plangen is invoked with --output-type csv, it will create
 acceleration profiles that could be used to control the gantry in
 MGTF.
 
+\subpage choreographer
+\subpage framestore
+\subpage mapper
+\subpage planner_qp
+\subpage planner_trapezoidal

@@ -16,7 +16,7 @@
  * under the License.
  */
 
-#include <common/thread.h>
+#include <ff_common/thread.h>
 #include <sparse_mapping/sparse_mapping.h>
 #include <sparse_mapping/vocab_tree.h>
 #include <sparse_mapping/tensor.h>

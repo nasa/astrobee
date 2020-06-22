@@ -1,5 +1,4 @@
-\defgroup eps_driver_test_status_leds Test : Status LEDs
-\ingroup eps_driver
+\page eps_driver_test_status_leds Test : Status LEDs
 
 The EPS subsystem controls nine light emitting diodes (LEDs),  which flight software can use to communicate status visually to a user. Six of these LEDs communicate programmatic status, and the remaining three communicate whether the camera is streaming, whether the camera is turned on, or whether the microphone is turned. Each LED can be turned on or off; there is no dimming support. The LEDs are enumerated and colored as per the table below.
 

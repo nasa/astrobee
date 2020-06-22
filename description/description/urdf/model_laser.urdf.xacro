@@ -20,6 +20,7 @@
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
   <gazebo>
     <plugin name="laser_ros" filename="libgazebo_model_plugin_laser.so">
+      <namespace>/${ns}/</namespace>
       <rate>10.0</rate>
       <range>5.0</range>
       <width>0.0025</width>

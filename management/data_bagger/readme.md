@@ -1,4 +1,3 @@
-\defgroup data_bagger Data Bagger
-\ingroup management
+\page data_bagger Data Bagger
 
 TBD

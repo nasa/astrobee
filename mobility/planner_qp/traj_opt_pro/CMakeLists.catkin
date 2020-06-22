@@ -52,15 +52,15 @@ include_directories(${OpenCV_INCLUDE_DIR})
 catkin_simple()
 
 # Add libraries
-cs_add_library(common src/polynomial_basis.cpp src/trajectory_solver.cpp)
+cs_add_library(ff_common src/polynomial_basis.cpp src/trajectory_solver.cpp)
 
 if(BUILD_GUROBI)
   cs_add_library(gurobi_backend src/gurobi_solver.cpp  src/gurobi_trajectory.cpp )
-  target_link_libraries(gurobi_backend common ${GUROBI_LIBRARIES})
+  target_link_libraries(gurobi_backend ff_common ${GUROBI_LIBRARIES})
 endif()
 
 cs_add_library(fancy_custom_backend src/nonlinear_polynomial.cpp  src/nonlinear_solver.cpp  src/nonlinear_trajectory.cpp)
-target_link_libraries(fancy_custom_backend common ${OpenCV_LIBRARIES})
+target_link_libraries(fancy_custom_backend ff_common ${OpenCV_LIBRARIES})
 
 # Catkin simple stuff
 cs_install()

@@ -16,7 +16,7 @@
  * under the License.
  */
 
-#include <common/init.h>
+#include <ff_common/init.h>
 #include <ekf_bag/ekf_bag_csv.h>
 
 DEFINE_bool(gen_features, false,
@@ -27,7 +27,7 @@ DEFINE_string(image_topic, TOPIC_HARDWARE_NAV_CAM,
               "The topic to get images from..");
 
 int main(int argc, char** argv) {
-  common::InitFreeFlyerApplication(&argc, &argv);
+  ff_common::InitFreeFlyerApplication(&argc, &argv);
 
   ros::Time::init();
 
@@ -37,10 +37,9 @@ int main(int argc, char** argv) {
   }
 
   const char* biasfile = NULL;
-  if (argc >= 5) biasfile = argv[4];
+  if (argc >= 6) biasfile = argv[5];
 
   ekf_bag::EkfBagCsv bag(argv[2], argv[1], argv[3], FLAGS_run_ekf,
-                         FLAGS_gen_features, biasfile, FLAGS_image_topic);
-
+                         FLAGS_gen_features, biasfile, FLAGS_image_topic, argv[4]);
   bag.Run();
 }

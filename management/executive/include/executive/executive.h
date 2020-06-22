@@ -23,6 +23,7 @@
 #include <executive/executive_action_client.h>
 #include <executive/utils/sequencer/plan_io.h>
 #include <executive/utils/sequencer/sequencer.h>
+#include <ff_hw_msgs/ClearTerminate.h>
 #include <ff_hw_msgs/ConfigurePayloadPower.h>
 #include <ff_hw_msgs/ConfigureSystemLeds.h>
 #include <ff_hw_msgs/SetEnabled.h>
@@ -48,6 +49,7 @@
 #include <ff_msgs/GuestScienceState.h>
 #include <ff_msgs/LocalizationAction.h>
 #include <ff_msgs/MotionAction.h>
+#include <ff_msgs/PerchAction.h>
 #include <ff_msgs/PlanStatusStamped.h>
 #include <ff_msgs/SetDataToDisk.h>
 #include <ff_msgs/SetInertia.h>
@@ -108,8 +110,10 @@ class Executive : public ff_util::FreeFlyerNodelet {
                                                                         state);
   void GuestScienceCustomCmdTimeoutCallback(ros::TimerEvent const& te);
   void GuestScienceStartStopCmdTimeoutCallback(ros::TimerEvent const& te);
+  void InertiaCallback(geometry_msgs::InertiaStampedConstPtr const& inertia);
   void LedConnectedCallback();
   void MotionStateCallback(ff_msgs::MotionStatePtr const& state);
+  void PerchStateCallback(ff_msgs::PerchStateConstPtr const& state);
   void PlanCallback(ff_msgs::CompressedFileConstPtr const& plan);
   void SysMonitorHeartbeatCallback(ff_msgs::HeartbeatConstPtr const& heartbeat);
   void SysMonitorTimeoutCallback(ros::TimerEvent const& te);
@@ -141,6 +145,9 @@ class Executive : public ff_util::FreeFlyerNodelet {
   void MotionFeedbackCallback(ff_msgs::MotionFeedbackConstPtr const& feedback);
   void MotionResultCallback(ff_util::FreeFlyerActionState::Enum const& state,
                            ff_msgs::MotionResultConstPtr const& result);
+
+  void PerchResultCallback(ff_util::FreeFlyerActionState::Enum const& state,
+                           ff_msgs::PerchResultConstPtr const& result);
 
   // Publishers
   void PublishCmdAck(std::string const& cmd_id,
@@ -176,7 +183,6 @@ class Executive : public ff_util::FreeFlyerNodelet {
   bool ConfigureLed(ff_hw_msgs::ConfigureSystemLeds& led_srv);
   bool ConfigureMobility(std::string const& cmd_id);
   bool ConfigureMobility(bool move_to_start,
-                         bool enable_holonomic,
                          std::string& err_msg);
   ros::Time MsToSec(std::string timestamp);
   bool PowerItem(ff_msgs::CommandStampedPtr const& cmd, bool on);
@@ -188,6 +194,8 @@ class Executive : public ff_util::FreeFlyerNodelet {
   bool AckCurrentPlanItem();
   sequencer::ItemType GetCurrentPlanItemType();
   ff_msgs::CommandStampedPtr GetPlanCommand();
+  bool GetSetPlanInertia(std::string const& cmd_id);
+  void GetSetPlanOperatingLimits();
 
   // Commands
   bool ArmPanAndTilt(ff_msgs::CommandStampedPtr const& cmd);
@@ -239,6 +247,7 @@ class Executive : public ff_util::FreeFlyerNodelet {
   bool SwitchLocalization(ff_msgs::CommandStampedPtr const& cmd);
   bool Undock(ff_msgs::CommandStampedPtr const& cmd);
   bool Unperch(ff_msgs::CommandStampedPtr const& cmd);
+  bool Unterminate(ff_msgs::CommandStampedPtr const& cmd);
   bool Wait(ff_msgs::CommandStampedPtr const& cmd);
   bool WipeHlp(ff_msgs::CommandStampedPtr const& cmd);
 
@@ -252,8 +261,9 @@ class Executive : public ff_util::FreeFlyerNodelet {
 
   ExecutiveActionClient<ff_msgs::ArmAction> arm_ac_;
   ExecutiveActionClient<ff_msgs::DockAction> dock_ac_;
-  ExecutiveActionClient<ff_msgs::MotionAction> motion_ac_;
   ExecutiveActionClient<ff_msgs::LocalizationAction> localization_ac_;
+  ExecutiveActionClient<ff_msgs::MotionAction> motion_ac_;
+  ExecutiveActionClient<ff_msgs::PerchAction> perch_ac_;
 
   config_reader::ConfigReader config_params_;
 
@@ -272,13 +282,17 @@ class Executive : public ff_util::FreeFlyerNodelet {
   ff_msgs::FaultStateConstPtr fault_state_;
   ff_msgs::GuestScienceConfigConstPtr guest_science_config_;
   ff_msgs::MotionStatePtr motion_state_;
+  ff_msgs::PerchStateConstPtr perch_state_;
 
   ff_msgs::ArmGoal arm_goal_;
   ff_msgs::DockGoal dock_goal_;
-  ff_msgs::MotionGoal motion_goal_;
   ff_msgs::LocalizationGoal localization_goal_;
+  ff_msgs::MotionGoal motion_goal_;
+  ff_msgs::PerchGoal perch_goal_;
 
   ff_util::FreeFlyerServiceClient<ff_hw_msgs::ConfigureSystemLeds> led_client_;
+
+  geometry_msgs::InertiaStampedConstPtr current_inertia_;
 
   ros::NodeHandle nh_;
 
@@ -288,15 +302,19 @@ class Executive : public ff_util::FreeFlyerNodelet {
   ros::ServiceClient zones_client_, laser_enable_client_;
   ros::ServiceClient front_flashlight_client_, back_flashlight_client_;
   ros::ServiceClient dock_cam_config_client_, dock_cam_enable_client_;
+  ros::ServiceClient haz_cam_config_client_, haz_cam_enable_client_;
   ros::ServiceClient nav_cam_config_client_, nav_cam_enable_client_;
+  ros::ServiceClient perch_cam_config_client_, perch_cam_enable_client_;
   ros::ServiceClient sci_cam_config_client_, sci_cam_enable_client_;
   ros::ServiceClient payload_power_client_, pmc_enable_client_;
   ros::ServiceClient set_inertia_client_, set_rate_client_;
   ros::ServiceClient set_data_client_, enable_recording_client_;
+  ros::ServiceClient eps_terminate_client_;
 
   ros::Subscriber cmd_sub_, dock_state_sub_, fault_state_sub_, gs_ack_sub_;
   ros::Subscriber heartbeat_sub_, motion_sub_, plan_sub_, zones_sub_, data_sub_;
   ros::Subscriber gs_config_sub_, gs_state_sub_, camera_state_sub_;
+  ros::Subscriber perch_state_sub_, inertia_sub_;
 
   ros::Timer gs_start_stop_command_timer_, gs_custom_command_timer_;
   ros::Timer reload_params_timer_, wait_timer_, sys_monitor_heartbeat_timer_;

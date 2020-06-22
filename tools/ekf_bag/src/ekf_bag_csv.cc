@@ -45,8 +45,8 @@ Eigen::Vector3f QuatToEuler(const Eigen::Quaternionf & q) {
 
 EkfBagCsv::EkfBagCsv(const char* bagfile, const char* mapfile, const char* csvfile,
                      bool run_ekf, bool gen_features, const char* biasfile,
-                     std::string image_topic) :
-          EkfBag(bagfile, mapfile, run_ekf, gen_features, biasfile, image_topic),
+                     std::string image_topic, const std::string& gnc_config) :
+          EkfBag(bagfile, mapfile, run_ekf, gen_features, biasfile, image_topic, gnc_config),
           start_time_set_(false) {
   // virtual function has to be called in subclass since not initialized in superclass
   config_reader::ConfigReader config;

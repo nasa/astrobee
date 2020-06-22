@@ -46,7 +46,7 @@
     "secondColumnLabel": "Recording",
     "command": "setCameraRecording",
     "stringParamName": "cameraName",
-    "stringOptions": ["Dock", "Navigation", "Science"],
+    "stringOptions": ["Dock", "Hazard", "Navigation", "Perch", "Science"],
     "boolParamName": "record",
     "buttonText": "Send",
     "subsystem": "Camera"
@@ -56,7 +56,7 @@
     "secondColumnLabel": "Streaming",
     "command": "setCameraStreaming",
     "stringParamName": "cameraName",
-    "stringOptions": ["Dock", "Navigation", "Science"],
+    "stringOptions": ["Dock", "Hazard", "Navigation", "Perch", "Science"],
     "boolParamName": "stream",
     "buttonText": "Send",
     "subsystem": "Camera"
@@ -69,29 +69,59 @@
       "cameraName": "Dock",
       "preset": [ {
         "presetName": "ARS Default Recording",
-		"cameraMode" : "Recording",
-        "resolution" : "1280_960",
-        "frameRate" : 5,
-        "bandwidth" : 0
+        "cameraMode": "Recording",
+        "resolution": "1280_960",
+        "frameRate": 5,
+        "bandwidth": 0
       },{
         "presetName": "ARS Default Streaming",
-		"cameraMode" : "Streaming",
-        "resolution" : "640_480",
-        "frameRate" : 2,
-        "bandwidth" : 0
+        "cameraMode": "Streaming",
+        "resolution": "640_480",
+        "frameRate": 2,
+        "bandwidth": 0
+      } ]
+    },{
+      "cameraName": "Hazard",
+      "preset": [ {
+        "presetName": "ARS Default Recording",
+        "cameraMode": "Recording",
+        "resolution": "224_171",
+        "frameRate": 5,
+        "bandwidth": 0
+      },{
+        "presetName": "ARS Default Streaming",
+        "cameraMode": "Streaming",
+        "resolution": "224_171",
+        "frameRate": 2,
+        "bandwidth": 0
       } ]
     },{
       "cameraName": "Navigation",
       "preset": [ {
         "presetName": "ARS Default Recording",
-		"cameraMode" : "Recording",
-        "resolution" : "1280_960",
-        "frameRate" : 5,
-        "bandwidth" : 0
+        "cameraMode": "Recording",
+        "resolution": "1280_960",
+        "frameRate": 5,
+        "bandwidth": 0
       },{
         "presetName": "ARS Default Streaming",
-		"cameraMode" : "Streaming",
-        "resolution" : "640_480",
+        "cameraMode": "Streaming",
+        "resolution": "640_480",
+        "frameRate": 2,
+        "bandwidth": 0
+      } ]
+    },{
+      "cameraName": "Perch",
+      "preset": [ {
+        "presetName": "ARS Default Recording",
+        "cameraMode": "Recording",
+        "resolution": "224_171",
+        "frameRate": 5,
+        "bandwidth" : 0
+      },{
+        "presetName" : "ARS Default Streaming",
+        "cameraMode" : "Streaming",
+        "resolution": "224_171",
         "frameRate" : 2,
         "bandwidth" : 0
       } ]
@@ -99,10 +129,10 @@
       "cameraName": "Science",
       "preset": [ {
         "presetName": "ARS Default Streaming",
-		"cameraMode": "Streaming",
-        "resolution" : "1280_720",
-        "frameRate" : 30,
-        "bandwidth" : 2336
+        "cameraMode": "Streaming",
+        "resolution": "1280_720",
+        "frameRate": 30,
+        "bandwidth": 2336
       } ]
     } ],
     "subsystem": "Camera"

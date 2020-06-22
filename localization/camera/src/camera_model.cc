@@ -87,6 +87,7 @@ Eigen::Vector2d CameraModel::ImageCoordinates(double x, double y, double z) cons
 }
 
 Eigen::Vector2d CameraModel::ImageCoordinates(const Eigen::Vector3d & p) const {
+  // This returns undistorted pixels relative to the center of the undistorted image.
   return params_.GetFocalVector().cwiseProduct((cam_t_global_ * p).hnormalized());
 }
 
@@ -103,6 +104,8 @@ Eigen::Vector3d CameraModel::CameraCoordinates(const Eigen::Vector3d & p) const 
   return cam_t_global_ * p;
 }
 
+// TODO(oalexan1): This looks buggy. Because ImageCoordinates()
+// returns an undistorted pixel, it must compare to GetUndistortedHalfSize().
 bool CameraModel::IsInFov(const Eigen::Vector3d & p) const {
   Eigen::Vector3d t = cam_t_global_ * p;
   if (t.z() <= 0.0)

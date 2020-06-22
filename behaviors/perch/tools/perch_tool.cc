@@ -30,7 +30,7 @@
 // Action
 #include <ff_msgs/PerchAction.h>
 
-// C++ STL inclues
+// C++ STL includes
 #include <iostream>
 #include <sstream>
 #include <fstream>

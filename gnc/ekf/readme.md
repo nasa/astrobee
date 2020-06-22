@@ -1,5 +1,4 @@
-\defgroup ekf GNC EKF Wrapper
-\ingroup gnc
+\page ekf GNC EKF Wrapper
 
 The extended kalman filter tracks the robot's pose.
 

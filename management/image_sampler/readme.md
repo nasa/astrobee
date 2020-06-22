@@ -1,5 +1,4 @@
-\defgroup imagesampler Image Sampler
-\ingroup management
+\page imagesampler Image Sampler
 
 ## Image Sampler Node
 

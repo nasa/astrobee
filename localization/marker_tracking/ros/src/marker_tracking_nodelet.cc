@@ -18,7 +18,7 @@
 
 #include <marker_tracking_node/marker_tracking_nodelet.h>
 
-#include <common/init.h>
+#include <ff_common/init.h>
 #include <nodelet/nodelet.h>
 #include <pluginlib/class_list_macros.h>
 
@@ -28,7 +28,7 @@ MarkerTrackingNodelet::MarkerTrackingNodelet(void)
     : ff_util::FreeFlyerNodelet(NODE_AR_TAGS) {}
 
 void MarkerTrackingNodelet::Initialize(ros::NodeHandle* nh) {
-  common::InitFreeFlyerApplication(getMyArgv(), false);
+  ff_common::InitFreeFlyerApplication(getMyArgv(), false);
 
   inst_.reset(new MarkerTracker(nh, GetPrivateHandle(), getName()));
 }

@@ -1,5 +1,4 @@
-\defgroup signal_lights Signal light driver
-\ingroup hw
+\page signal_lights Signal light driver
 
 The signal_lights driver controls the signal lights on the port and starboard
 PMC. Since the exact behavior of the signal lights is a work-in-progress, this

@@ -19,9 +19,17 @@
 
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
   <gazebo>
-    <plugin name="llp_disk_monitor" filename="libgazebo_model_plugin_llp_disk_monitor.so"/>
-    <plugin name="llp_cpu_monitor" filename="libgazebo_model_plugin_llp_cpu_monitor.so"/>
-    <plugin name="mlp_disk_monitor" filename="libgazebo_model_plugin_mlp_disk_monitor.so"/>
-    <plugin name="mlp_cpu_monitor" filename="libgazebo_model_plugin_mlp_cpu_monitor.so"/>
+    <plugin name="llp_disk_monitor" filename="libgazebo_model_plugin_llp_disk_monitor.so">
+      <namespace>/${ns}/</namespace>
+    </plugin>
+    <plugin name="llp_cpu_monitor" filename="libgazebo_model_plugin_llp_cpu_monitor.so">
+      <namespace>/${ns}/</namespace>
+    </plugin>
+    <plugin name="mlp_disk_monitor" filename="libgazebo_model_plugin_mlp_disk_monitor.so">
+      <namespace>/${ns}/</namespace>
+    </plugin>
+    <plugin name="mlp_cpu_monitor" filename="libgazebo_model_plugin_mlp_cpu_monitor.so">
+      <namespace>/${ns}/</namespace>
+    </plugin>
   </gazebo>
 </robot>

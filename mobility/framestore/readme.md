@@ -1,5 +1,4 @@
-\defgroup framestore Framestore
-\ingroup mobility
+\page framestore Framestore
 
 We can broadly divide all static transforms into *global* and *local* types based on its highest rigid ancestor. Intuitively, if an entity is fixed with respect to the world, then it's a global static transform. Conversely, if the entity is fixed with respect to a robot, then it's a local static transform. For example, the IMU and dock poses are local and global respectively.
 

@@ -1,9 +1,8 @@
-\defgroup config_reader Config Reader
-\ingroup shared
+\page config_reader Config Reader
 
 This library assists in reading values from Lua config files. It also provides a way to check if files have been changed so that a program can reload the config values if desired.
 
-# Usage
+## Usage
 To use this library, specify the config files needed by using the add files function. After all the files have been added, call the read files function to load the variables into Lua.
 
 For the purpose of this config reader, Lua is made up of four basic types: booleans, numbers, strings, and tables. Use the getter functions along with the variable names to read these types out of Lua. The getter functions will return true if the value was successfully read or it will return false if the variable name doesn't exist or if the wrong type getter was used. For instance, if a value is of type int and the GetBool function is used, the function will fail. A check value exists function is provide so that a programmer can check to see if a value exists before trying to read it.

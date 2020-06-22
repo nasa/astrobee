@@ -25,16 +25,16 @@ catkin_package(
 
 # Create global_transforms
 create_tool_targets(DIR tools
-  LIBS ${catkin_LIBRARIES} common msg_conversions config_reader
+  LIBS ${catkin_LIBRARIES} ff_common msg_conversions config_reader
   INC ${catkin_INCLUDE_DIRS}
-  DEPS common msg_conversions config_reader tf2 tf2_ros geometry_msgs
+  DEPS ff_common msg_conversions config_reader tf2 tf2_ros geometry_msgs
 )
 
 # Create framestore
 create_library(TARGET framestore
-  LIBS ${catkin_LIBRARIES} common ff_nodelet msg_conversions
+  LIBS ${catkin_LIBRARIES} ff_common ff_nodelet msg_conversions
   INC  ${catkin_INCLUDE_DIRS}
-  DEPS common msg_conversions roscpp nodelet pluginlib tf2 tf2_ros geometry_msgs
+  DEPS ff_common msg_conversions roscpp nodelet pluginlib tf2 tf2_ros geometry_msgs
 )
 
 # Install our launch file

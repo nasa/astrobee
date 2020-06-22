@@ -1,4 +1,4 @@
-# Conventions
+\page conventions Conventions
 
 ## Quaternions
 

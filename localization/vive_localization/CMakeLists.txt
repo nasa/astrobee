@@ -43,15 +43,15 @@ catkin_package(
 
 create_library(TARGET vive_localization
   DIR src
-  LIBS ${catkin_LIBRARIES} ${OpenCV_LIBS} ${CERES_LIBRARIES} common config_reader msg_conversions ff_nodelet
+  LIBS ${catkin_LIBRARIES} ${OpenCV_LIBS} ${CERES_LIBRARIES} ff_common config_reader msg_conversions ff_nodelet
   INC  ${catkin_INCLUDE_DIRS} ${CERES_INCLUDE_DIRS} ${OpenCV_INCLUDE_DIRS} ${EIGEN3_INCLUDE_DIRS}
-  DEPS common geometry_msgs sensor_msgs ff_hw_msgs)
+  DEPS ff_common geometry_msgs sensor_msgs ff_hw_msgs)
 
 create_tool_targets(
   DIR src/tool
-  LIBS ${catkin_LIBRARIES} ${EIGEN3_LIBRARIES} vive_localization common config_reader
+  LIBS ${catkin_LIBRARIES} ${EIGEN3_LIBRARIES} vive_localization ff_common config_reader
   INC  ${catkin_INCLUDE_DIRS} ${EIGEN3_INCLUDE_DIRS}
-DEPS common geometry_msgs sensor_msgs ff_hw_msgs)
+DEPS ff_common geometry_msgs sensor_msgs ff_hw_msgs)
 
 install_launch_files()
 

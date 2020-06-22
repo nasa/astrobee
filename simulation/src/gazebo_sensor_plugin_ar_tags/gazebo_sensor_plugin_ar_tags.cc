@@ -124,7 +124,7 @@ class GazeboSensorPluginARTags : public FreeFlyerSensorPlugin {
     msg_reg_.header.frame_id = std::string(FRAME_NAME_DOCK);
   }
 
-  // Only send measurements when estrinsics are available
+  // Only send measurements when extrinsics are available
   void OnExtrinsicsReceived(ros::NodeHandle *nh) {
     // Enable mapped landmarks
     srv_enable_ = nh->advertiseService(SERVICE_LOCALIZATION_AR_ENABLE,
@@ -200,6 +200,17 @@ class GazeboSensorPluginARTags : public FreeFlyerSensorPlugin {
 
     // Handle the transform for all sensor types
     Eigen::Affine3d wTb = (
+      #if GAZEBO_MAJOR_VERSION > 7
+        Eigen::Translation3d(
+          GetModel()->WorldPose().Pos().X(),
+          GetModel()->WorldPose().Pos().Y(),
+          GetModel()->WorldPose().Pos().Z()) *
+        Eigen::Quaterniond(
+          GetModel()->WorldPose().Rot().W(),
+          GetModel()->WorldPose().Rot().X(),
+          GetModel()->WorldPose().Rot().Y(),
+          GetModel()->WorldPose().Rot().Z()));
+      #else
         Eigen::Translation3d(
           GetModel()->GetWorldPose().pos.x,
           GetModel()->GetWorldPose().pos.y,
@@ -209,6 +220,7 @@ class GazeboSensorPluginARTags : public FreeFlyerSensorPlugin {
           GetModel()->GetWorldPose().rot.x,
           GetModel()->GetWorldPose().rot.y,
           GetModel()->GetWorldPose().rot.z));
+      #endif
     Eigen::Affine3d bTs = (
         Eigen::Translation3d(
           sensor_->Pose().Pos().X(),

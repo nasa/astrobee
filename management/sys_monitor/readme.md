@@ -1,5 +1,4 @@
-\defgroup sys_monitor System Monitor
-\ingroup management
+\page sys_monitor System Monitor
 
 The system monitor is responsible for triggering fault responses and notifying the ground of all the faults occurring on the robot. The system monitor is only responsible for detecting heartbeat faults. All other faults should be detected by the nodes in the system.
 

@@ -35,9 +35,9 @@ catkin_package(
 )
 
 create_library(TARGET choreographer
-  LIBS ${catkin_LIBRARIES} common ff_nodelet ff_flight config_server mapper
+  LIBS ${catkin_LIBRARIES} ff_common ff_nodelet ff_flight config_server mapper
   INC  ${catkin_INCLUDE_DIRS}
-  DEPS common nav_msgs geometry_msgs ff_msgs ff_util mapper
+  DEPS ff_common nav_msgs geometry_msgs ff_msgs ff_util mapper
 )
 
 install_launch_files()

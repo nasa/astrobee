@@ -46,7 +46,11 @@ class GazeboSensorPluginPerchCam : public FreeFlyerSensorPlugin {
 
   ~GazeboSensorPluginPerchCam() {
     if (update_)
+    #if GAZEBO_MAJOR_VERSION > 7
+    update_.reset();
+    #else
       camera_->DisconnectNewRGBPointCloud(update_);
+    #endif
   }
 
  protected:
@@ -62,7 +66,7 @@ class GazeboSensorPluginPerchCam : public FreeFlyerSensorPlugin {
     // Get a link to the depth camera
     camera_ = sensor_->DepthCamera();
     if (!camera_) {
-      gzerr << "GazeboSensorPluginHazCam cant get rendering object.\n";
+      gzerr << "GazeboSensorPluginPerchCam can't get rendering object.\n";
       return;
     }
     // Create a publisher for the point cloud
@@ -115,7 +119,7 @@ class GazeboSensorPluginPerchCam : public FreeFlyerSensorPlugin {
       if (simulation_speed > 1.0 && dos) rate_ = 0.0;
   }
 
-  // Only send measurements when estrinsics are available
+  // Only send measurements when extrinsics are available
   void OnExtrinsicsReceived(ros::NodeHandle *nh) {
     // Setup the camera
     ToggleCallback();

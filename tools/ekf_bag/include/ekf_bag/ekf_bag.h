@@ -37,7 +37,7 @@ class EkfBag {
  public:
   EkfBag(const char* bagfile, const char* mapfile, bool run_ekf = true,
          bool gen_features = true, const char* biasfile = NULL,
-         std::string image_topic = std::string(TOPIC_HARDWARE_NAV_CAM));
+         std::string image_topic = std::string(TOPIC_HARDWARE_NAV_CAM), const std::string& gnc_config = "gnc.config");
   virtual ~EkfBag(void);
 
   void Run(void);
@@ -77,6 +77,7 @@ class EkfBag {
   bool gen_features_;
   const char* bias_file_;
   std::string image_topic_;
+  std::string gnc_config_;
   // configuration parameters
   float sparse_map_delay_, of_delay_;
 

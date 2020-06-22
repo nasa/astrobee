@@ -23,11 +23,14 @@
 #include <ros/console.h>
 #include <ros/time.h>
 
+#include <ff_msgs/AgentStateStamped.h>
 #include <ff_msgs/ControlState.h>
 #include <ff_msgs/CommandStamped.h>
 #include <ff_msgs/CompressedFile.h>
 #include <ff_msgs/ControlFeedback.h>
 #include <ff_msgs/PlanStatusStamped.h>
+
+#include <geometry_msgs/InertiaStamped.h>
 
 #include <jsonloader/command.h>
 #include <jsonloader/plan.h>
@@ -67,6 +70,14 @@ class Sequencer {
   // I can haz validity?
   bool valid() const noexcept;
   jsonloader::Plan const& plan() const noexcept;
+
+  // does the current plan have what it takes?
+  bool HaveInertia() const noexcept;
+  bool HaveOperatingLimits() const noexcept;
+
+  // get the goods
+  geometry_msgs::InertiaStamped GetInertia() const noexcept;
+  bool GetOperatingLimits(ff_msgs::AgentStateStamped &state) const noexcept;
 
  private:
   int AppendStatus(ff_msgs::Status const& msg) noexcept;

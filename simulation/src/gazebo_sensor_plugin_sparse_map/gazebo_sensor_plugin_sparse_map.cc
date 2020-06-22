@@ -100,16 +100,22 @@ class GazeboSensorPluginSparseMap : public FreeFlyerSensorPlugin {
       TOPIC_LOCALIZATION_ML_FEATURES, 1);
 
     // Create a shape for collision testing
+    #if GAZEBO_MAJOR_VERSION > 7
+     GetWorld()->Physics()->InitForThread();
+     shape_ = boost::dynamic_pointer_cast<physics::RayShape>(GetWorld()
+        ->Physics()->CreateShape("ray", physics::CollisionPtr()));
+    #else
     GetWorld()->GetPhysicsEngine()->InitForThread();
     shape_ = boost::dynamic_pointer_cast<physics::RayShape>(GetWorld()
         ->GetPhysicsEngine()->CreateShape("ray", physics::CollisionPtr()));
+    #endif
 
     // Only do this once
     msg_feat_.header.frame_id = std::string(FRAME_NAME_WORLD);
     msg_reg_.header.frame_id = std::string(FRAME_NAME_WORLD);
   }
 
-  // Only send measurements when estrinsics are available
+  // Only send measurements when extrinsics are available
   void OnExtrinsicsReceived(ros::NodeHandle *nh) {
     // Sercide for enabling mapped landmarks
     srv_enable_ = nh->advertiseService(SERVICE_LOCALIZATION_ML_ENABLE,
@@ -151,38 +157,22 @@ class GazeboSensorPluginSparseMap : public FreeFlyerSensorPlugin {
     msg_feat_.camera_id = msg_reg_.camera_id;
 
     // Handle the transform for all sensor types
-    Eigen::Affine3d wTb = (
-        Eigen::Translation3d(
-          GetModel()->GetWorldPose().pos.x,
-          GetModel()->GetWorldPose().pos.y,
-          GetModel()->GetWorldPose().pos.z) *
-        Eigen::Quaterniond(
-          GetModel()->GetWorldPose().rot.w,
-          GetModel()->GetWorldPose().rot.x,
-          GetModel()->GetWorldPose().rot.y,
-          GetModel()->GetWorldPose().rot.z));
-    Eigen::Affine3d bTs = (
-        Eigen::Translation3d(
-          sensor_->Pose().Pos().X(),
-          sensor_->Pose().Pos().Y(),
-          sensor_->Pose().Pos().Z()) *
-        Eigen::Quaterniond(
-          sensor_->Pose().Rot().W(),
-          sensor_->Pose().Rot().X(),
-          sensor_->Pose().Rot().Y(),
-          sensor_->Pose().Rot().Z()));
-    Eigen::Affine3d wTs = wTb * bTs;
+    #if GAZEBO_MAJOR_VERSION > 7
+      Eigen::Affine3d sensor_to_world = SensorToWorld(GetModel()->WorldPose(), sensor_->Pose());
+    #else
+      Eigen::Affine3d sensor_to_world = SensorToWorld(GetModel()->GetWorldPose(), sensor_->Pose());
+    #endif
 
-    // Initialize the camera paremeters
+    // Initialize the camera parameters
     static camera::CameraParameters cam_params(&config_, "nav_cam");
     static camera::CameraModel camera(Eigen::Vector3d(0, 0, 0),
       Eigen::Matrix3d::Identity(), cam_params);
 
     // Assemble the feature message
-    msg_feat_.pose.position.x = wTs.translation().x();
-    msg_feat_.pose.position.y = wTs.translation().y();
-    msg_feat_.pose.position.z = wTs.translation().z();
-    Eigen::Quaterniond q(wTs.rotation());
+    msg_feat_.pose.position.x = sensor_to_world.translation().x();
+    msg_feat_.pose.position.y = sensor_to_world.translation().y();
+    msg_feat_.pose.position.z = sensor_to_world.translation().z();
+    Eigen::Quaterniond q(sensor_to_world.rotation());
     msg_feat_.pose.orientation.w = q.w();
     msg_feat_.pose.orientation.x = q.x();
     msg_feat_.pose.orientation.y = q.y();
@@ -191,9 +181,15 @@ class GazeboSensorPluginSparseMap : public FreeFlyerSensorPlugin {
 
     {
       // Initialize and lock the physics engine
+    #if GAZEBO_MAJOR_VERSION > 7
+      GetWorld()->Physics()->InitForThread();
+      boost::unique_lock<boost::recursive_mutex> lock(*(
+          GetWorld()->Physics()->GetPhysicsUpdateMutex()));
+    #else
       GetWorld()->GetPhysicsEngine()->InitForThread();
       boost::unique_lock<boost::recursive_mutex> lock(*(
         GetWorld()->GetPhysicsEngine()->GetPhysicsUpdateMutex()));
+    #endif
 
       // Create a new ray in the world
       size_t i = 0;
@@ -210,8 +206,8 @@ class GazeboSensorPluginSparseMap : public FreeFlyerSensorPlugin {
         Eigen::Vector3d f_c = far_clip_ * ray;
 
         // Get the world coordinate of the ray near and far clips
-        Eigen::Vector3d n_w = wTs * n_c;
-        Eigen::Vector3d f_w = wTs * f_c;
+        Eigen::Vector3d n_w = sensor_to_world * n_c;
+        Eigen::Vector3d f_w = sensor_to_world * f_c;
 
         // Collision detection
         double dist;

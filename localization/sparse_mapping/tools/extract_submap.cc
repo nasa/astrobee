@@ -15,8 +15,8 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#include <common/init.h>
-#include <common/thread.h>
+#include <ff_common/init.h>
+#include <ff_common/thread.h>
 #include <sparse_mapping/tensor.h>
 #include <sparse_mapping/sparse_map.h>
 #include <sparse_mapping/sparse_mapping.h>
@@ -84,7 +84,7 @@ DEFINE_bool(exclude, false,
             "opposite of the default behavior.");
 
 int main(int argc, char** argv) {
-  common::InitFreeFlyerApplication(&argc, &argv);
+  ff_common::InitFreeFlyerApplication(&argc, &argv);
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
   if ((argc <= 1 && FLAGS_cid_range == "" && FLAGS_xyz_box == "" && FLAGS_image_list == "") ||

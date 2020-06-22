@@ -114,7 +114,7 @@ To launch the nodes needed for calibration, do:
    cd $SCRIPT_DIR
    roslaunch calibration.launch
 
-On the flight unit, do:
+On the flight unit, more specifically on MLP, do:
 
    roslaunch astrobee astrobee.launch llp:=??? mlp:=??? \
      nodes:=calibration_nav_cam,calibration_dock_cam,calibration_imu,pico_driver,framestore
@@ -130,18 +130,24 @@ low-resolution perch camera, which is again of the depth type. We will
 refer to the high-resolution nav and dock cameras as the HD camera.
 
 To be able to record the amplitude, which is necessary for haz_cam
-calibration, the file cameras.config (on astrobee, not on the local
-machine) needs to be edited before calibration.launch is started. The
-api_key variable in the picoflexx section should be set to the correct
-value. This will cause the depth camera to run in L2 mode, and produce
-data on the "extended" topic.
+calibration, the file 
+
+ /opt/astrobee/config/cameras.config
+
+(on the robot's MLP, not on the local machine) needs to be edited
+before calibration.launch is started. The api_key variable in the
+picoflexx section should be set to the correct value. This will cause
+the depth camera to run in L2 mode, and produce data on the "extended"
+topic.
 
 After calibration.launch is run, one should also invoke
 
   roslaunch $SOURCE_PATH/hardware/pico_driver/launch/pico_proxy.launch 
   
 which will process the extended topic and produce the needed amplitude
-data.
+data. Note that on the robot itself this file is stored at:
+
+ /opt/astrobee/share/pico_driver/launch/pico_proxy.launch
 
 When it is desired to record the amplitude for the perch camera,
 one should pass to roslaunch the argument:
@@ -202,8 +208,7 @@ Run
 
      export KALIBR_WS=$HOME/source/kalibr_workspace
      source $KALIBR_WS/devel/setup.bash
-     cd $SCRIPT_DIR
-     ./intrinsics_calibrate.py robotname bagfile \
+     $SCRIPT_DIR/intrinsics_calibrate.py robotname bagfile \
         --calibration_target targetname
 
 Arguments: 
@@ -216,15 +221,21 @@ Additional flags:
 
 	--dock_cam: To calibrate the dock cam and perch cam pair. If
           not set, the script calibrates nav cam and haz cam.
-	--depth_cam: To calibrate both HD camera (nav or dock) and 
+	--depth_cam: To calibrate both the HD camera (nav or dock) and 
           respective depth camera (haz or perch). If not set, the script
           only calibrates the HD camera.
+	--sci_cam: To calibrate together the nav, haz, and sci cameras.
+          A bag having these may need to be pre-processed with
+          dense_map/mapper/ros/tools/process_bag.py.
 	--only_depth_cam: To calibrate only the depth camera (haz or perch).
         --from <value> --to <value>: Use bag data between these times,
           in seconds.
         --approx_sync <value> Time tolerance for approximate image 
           synchronization [s] (default: 0.02).
  	--verbose: To output additional information on the Kalibr's calibration. 
+        --nav_cam_topic, --haz_cam_topic, --sci_cam_topic: Specify these topic
+          names, overriding the defaults, which are /hw/cam_nav,
+          /hw/depth_haz/extended/amplitude_int, /hw/cam_sci
 
 The script will overwrite the intrinsics calibration in the specified
 config file. It will also generate in the bagfile directory the
@@ -236,13 +247,21 @@ following files:
            as an input to the extrinsics calibration 
            (see # Extrinsic camera calibration -> ## Processing data)
 
+If invoked for the nav and haz cameras, it will also save the
+transform from the second to the first in the
+'hazcam_to_navcam_transform' field in the robot config file, if that
+field exists. If in addition invoked for the sci camera, it will also
+update the field scicam_to_hazcam_transform if it exits.
+
 ## Advice on intrinsics calibration
 
 It is strongly suggested that the intrinsics of the HD and depth
 camera be calibrated separately. This makes the process much better
 behaved. To calibrate the HD camera only, do not specify the flag
 --depth_cam, and to calibrate the depth camera only, use
---only_depth_cam.
+--only_depth_cam. The only time it may be needed to calibrate both of
+these cameras together if it is desired to find the transform between
+them, which is not necessary in regular operations.
 
 It is suggested to examine the calibration results*txt file. If the
 errors are too large or the camera parameters are implausible, perhaps
@@ -285,13 +304,13 @@ possible while still having all of it visible at most times.
 
 ## Processing the data
 
-Make sure the target configuration yaml file and the IMU yaml file are in $SCRIPT_DIR/config/.
+Make sure the target configuration yaml file and the IMU yaml file are
+in $SCRIPT_DIR/config/.
 
 Run
      export KALIBR_WS=$HOME/source/kalibr_workspace
      source $KALIBR_WS/devel/setup.bash
-     cd $SCRIPT_DIR
-     ./extrinsics_calibrate.py robotname intrinsicsYaml bagfile \
+     $SCRIPT_DIR/extrinsics_calibrate.py robotname intrinsicsYaml bagfile \
         --calibration_target targetname
 
 Arguments: 

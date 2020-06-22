@@ -31,7 +31,7 @@ catkin_package(
 )
 
 create_library(TARGET localization_manager
-  LIBS ${catkin_LIBRARIES} common ff_nodelet config_server
+  LIBS ${catkin_LIBRARIES} ff_common ff_nodelet config_server
   INC  ${catkin_INCLUDE_DIRS}
   DEPS ff_msgs
 )

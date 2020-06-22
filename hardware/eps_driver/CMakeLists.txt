@@ -38,7 +38,7 @@ create_library(
 
 create_tool_targets(
   DIR tools/eps_driver_tool
-  LIBS eps_driver common
+  LIBS eps_driver ff_common
 )
 
 # ROS node

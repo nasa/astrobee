@@ -19,7 +19,7 @@
 
 #include <image_sampler/image_sampler.h>
 
-#include <common/init.h>
+#include <ff_common/init.h>
 #include <cv_bridge/cv_bridge.h>
 #include <gflags/gflags.h>
 #include <opencv2/core/core.hpp>
@@ -37,6 +37,8 @@ ImageSampler::~ImageSampler() {
 void ImageSampler::Initialize(ros::NodeHandle *nh) {
   camera_states_[NAV_CAM_ID].camera_name =  "nav_cam";
   camera_states_[DOCK_CAM_ID].camera_name = "dock_cam";
+  camera_states_[HAZ_CAM_ID].camera_name =  "haz_cam";
+  camera_states_[PERCH_CAM_ID].camera_name = "perch_cam";
 
   for (int i = 0; i < NUM_CAMERAS; i++) {
     record_last_publish_time_[i] = ros::Time::now();
@@ -68,15 +70,27 @@ void ImageSampler::Initialize(ros::NodeHandle *nh) {
   stream_image_pub_[NAV_CAM_ID]  = img_transp.advertiseCamera(TOPIC_MANAGEMENT_IMG_SAMPLER_NAV_CAM_STREAM,  1);
   record_image_pub_[DOCK_CAM_ID] = img_transp.advertiseCamera(TOPIC_MANAGEMENT_IMG_SAMPLER_DOCK_CAM_RECORD, 1);
   stream_image_pub_[DOCK_CAM_ID] = img_transp.advertiseCamera(TOPIC_MANAGEMENT_IMG_SAMPLER_DOCK_CAM_STREAM, 1);
+  record_image_pub_[HAZ_CAM_ID]   = img_transp.advertiseCamera(TOPIC_MANAGEMENT_IMG_SAMPLER_HAZ_CAM_RECORD, 1);
+  stream_image_pub_[HAZ_CAM_ID]   = img_transp.advertiseCamera(TOPIC_MANAGEMENT_IMG_SAMPLER_HAZ_CAM_STREAM, 1);
+  record_image_pub_[PERCH_CAM_ID] = img_transp.advertiseCamera(TOPIC_MANAGEMENT_IMG_SAMPLER_PERCH_CAM_RECORD, 1);
+  stream_image_pub_[PERCH_CAM_ID] = img_transp.advertiseCamera(TOPIC_MANAGEMENT_IMG_SAMPLER_PERCH_CAM_STREAM, 1);
 
   configure_srv_[NAV_CAM_ID]  = nh->advertiseService(SERVICE_MANAGEMENT_IMG_SAMPLER_CONFIG_NAV,
                                                      &ImageSampler::ConfigureServiceNavCam,  this);
   configure_srv_[DOCK_CAM_ID] = nh->advertiseService(SERVICE_MANAGEMENT_IMG_SAMPLER_CONFIG_DOCK,
                                                      &ImageSampler::ConfigureServiceDockCam, this);
+  configure_srv_[HAZ_CAM_ID] = nh->advertiseService(SERVICE_MANAGEMENT_IMG_SAMPLER_CONFIG_HAZ,
+                                                     &ImageSampler::ConfigureServiceHazCam, this);
+  configure_srv_[PERCH_CAM_ID] = nh->advertiseService(SERVICE_MANAGEMENT_IMG_SAMPLER_CONFIG_PERCH,
+                                                     &ImageSampler::ConfigureServicePerchCam, this);
   enable_srv_[NAV_CAM_ID] = nh->advertiseService(SERVICE_MANAGEMENT_IMG_SAMPLER_ENABLE_NAV,
                                                      &ImageSampler::EnableServiceNavCam,  this);
   enable_srv_[DOCK_CAM_ID] = nh->advertiseService(SERVICE_MANAGEMENT_IMG_SAMPLER_ENABLE_DOCK,
                                                      &ImageSampler::EnableServiceDockCam,  this);
+  enable_srv_[HAZ_CAM_ID] = nh->advertiseService(SERVICE_MANAGEMENT_IMG_SAMPLER_ENABLE_HAZ,
+                                                     &ImageSampler::EnableServiceHazCam,  this);
+  enable_srv_[PERCH_CAM_ID] = nh->advertiseService(SERVICE_MANAGEMENT_IMG_SAMPLER_ENABLE_PERCH,
+                                                     &ImageSampler::EnableServicePerchCam,  this);
 }
 
 void ImageSampler::UpdateState(int camera, bool streaming, int width, int height, float rate) {
@@ -104,6 +118,16 @@ bool ImageSampler::ConfigureServiceNavCam(ff_msgs::ConfigureCamera::Request& req
 bool ImageSampler::ConfigureServiceDockCam(ff_msgs::ConfigureCamera::Request& req,
                                            ff_msgs::ConfigureCamera::Response& res) {
   return ConfigureService(req, res, DOCK_CAM_ID);
+}
+
+bool ImageSampler::ConfigureServiceHazCam(ff_msgs::ConfigureCamera::Request& req,
+                                           ff_msgs::ConfigureCamera::Response& res) {
+  return ConfigureService(req, res, HAZ_CAM_ID);
+}
+
+bool ImageSampler::ConfigureServicePerchCam(ff_msgs::ConfigureCamera::Request& req,
+                                           ff_msgs::ConfigureCamera::Response& res) {
+  return ConfigureService(req, res, PERCH_CAM_ID);
 }
 
 bool ImageSampler::ConfigureService(ff_msgs::ConfigureCamera::Request& req,
@@ -137,6 +161,33 @@ bool ImageSampler::ConfigureService(ff_msgs::ConfigureCamera::Request& req,
   return true;
 }
 
+
+bool ImageSampler::EnableServiceNavCam(ff_msgs::EnableCamera::Request& req,
+                                ff_msgs::EnableCamera::Response& res) {
+  return EnableService(req, res, NAV_CAM_ID, TOPIC_HARDWARE_NAV_CAM, &ImageSampler::NavCamCallback);
+}
+
+bool ImageSampler::EnableServiceDockCam(ff_msgs::EnableCamera::Request& req,
+                                 ff_msgs::EnableCamera::Response& res) {
+  return EnableService(req, res, DOCK_CAM_ID, TOPIC_HARDWARE_DOCK_CAM, &ImageSampler::DockCamCallback);
+}
+
+bool ImageSampler::EnableServiceHazCam(ff_msgs::EnableCamera::Request& req,
+                                ff_msgs::EnableCamera::Response& res) {
+  std::string topic_name_d = (std::string) TOPIC_HARDWARE_PICOFLEXX_PREFIX
+                           + (std::string) TOPIC_HARDWARE_NAME_HAZ_CAM
+                           + (std::string) TOPIC_HARDWARE_PICOFLEXX_SUFFIX_DEPTH_IMAGE;
+  return EnableService(req, res, HAZ_CAM_ID, topic_name_d, &ImageSampler::HazCamCallback);
+}
+
+bool ImageSampler::EnableServicePerchCam(ff_msgs::EnableCamera::Request& req,
+                                 ff_msgs::EnableCamera::Response& res) {
+  std::string topic_name_d = (std::string) TOPIC_HARDWARE_PICOFLEXX_PREFIX
+                           + (std::string) TOPIC_HARDWARE_NAME_PERCH_CAM
+                           + (std::string) TOPIC_HARDWARE_PICOFLEXX_SUFFIX_DEPTH_IMAGE;
+  return EnableService(req, res, PERCH_CAM_ID, topic_name_d, &ImageSampler::PerchCamCallback);
+}
+
 bool ImageSampler::EnableService(ff_msgs::EnableCamera::Request& req,
                                  ff_msgs::EnableCamera::Response& res, int camera, std::string topic,
                                     void (ImageSampler::*callback)(const sensor_msgs::ImageConstPtr &)) {
@@ -166,22 +217,20 @@ bool ImageSampler::EnableService(ff_msgs::EnableCamera::Request& req,
   return true;
 }
 
-bool ImageSampler::EnableServiceNavCam(ff_msgs::EnableCamera::Request& req,
-                                ff_msgs::EnableCamera::Response& res) {
-  return EnableService(req, res, NAV_CAM_ID, TOPIC_HARDWARE_NAV_CAM, &ImageSampler::NavCamCallback);
-}
-
-bool ImageSampler::EnableServiceDockCam(ff_msgs::EnableCamera::Request& req,
-                                 ff_msgs::EnableCamera::Response& res) {
-  return EnableService(req, res, DOCK_CAM_ID, TOPIC_HARDWARE_DOCK_CAM, &ImageSampler::DockCamCallback);
-}
-
 void ImageSampler::NavCamCallback(const sensor_msgs::ImageConstPtr & msg) {
   ImageCallback(msg, NAV_CAM_ID);
 }
 
 void ImageSampler::DockCamCallback(const sensor_msgs::ImageConstPtr & msg) {
   ImageCallback(msg, DOCK_CAM_ID);
+}
+
+void ImageSampler::HazCamCallback(const sensor_msgs::ImageConstPtr & msg) {
+  ImageCallback(msg, HAZ_CAM_ID);
+}
+
+void ImageSampler::PerchCamCallback(const sensor_msgs::ImageConstPtr & msg) {
+  ImageCallback(msg, PERCH_CAM_ID);
 }
 
 void ImageSampler::ImageCallback(const sensor_msgs::ImageConstPtr & msg, int camera) {

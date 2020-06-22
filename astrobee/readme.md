@@ -1,4 +1,4 @@
-\defgroup astrobee Astrobee
+\page astrobee Astrobee
 
 # Folder description
 

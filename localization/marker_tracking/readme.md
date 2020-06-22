@@ -1,5 +1,4 @@
-\defgroup markertracking Marker Tracking
-\ingroup localization
+\page markertracking Marker Tracking
 
 This folder provides a library for detecting AR tags using ALVAR.
 

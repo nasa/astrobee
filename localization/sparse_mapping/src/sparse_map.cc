@@ -18,8 +18,8 @@
 
 #include <sparse_mapping/sparse_map.h>
 #include <camera/camera_params.h>
-#include <common/thread.h>
-#include <common/utils.h>
+#include <ff_common/thread.h>
+#include <ff_common/utils.h>
 #include <interest_point/matching.h>
 #include <sparse_mapping/reprojection.h>
 #include <sparse_mapping/sparse_mapping.h>
@@ -56,8 +56,6 @@ DEFINE_bool(histogram_equalization, false,
             "If true, equalize the histogram for images to improve robustness to illumination conditions.");
 DEFINE_int32(num_extra_localization_db_images, 0,
              "Match this many extra images from the Vocab DB, only keep num_similar.");
-DEFINE_bool(geometric_verification, false,
-            "If true, perform geometric verification for the matches obtained in localization.");
 DEFINE_bool(verbose_localization, false,
             "If true, list the images most similar to the one being localized.");
 
@@ -218,11 +216,11 @@ SparseMap::SparseMap(bool bundler_format, std::string const& filename,
 
 // Detect features in given images
 void SparseMap::DetectFeatures() {
-  common::ThreadPool pool;
+  ff_common::ThreadPool pool;
   bool multithreaded = true;
   size_t num_files = cid_to_filename_.size();
   for (size_t cid = 0; cid < num_files; cid++) {
-    common::PrintProgressBar(stdout, static_cast<float>(cid) / static_cast<float>(num_files - 1));
+    ff_common::PrintProgressBar(stdout, static_cast<float>(cid) / static_cast<float>(num_files - 1));
 
     pool.AddTask(&SparseMap::DetectFeaturesFromFile, this,
                  std::ref(cid_to_filename_[cid]),
@@ -387,6 +385,12 @@ void SparseMap::Load(const std::string & protobuf_file, bool localization) {
   if (map.has_vocab_db())
     vocab_db_.LoadProtobuf(input, map.vocab_db());
 
+  histogram_equalization_ = map.histogram_equalization();
+
+  assert(histogram_equalization_ == 0 ||
+         histogram_equalization_ == 1 ||
+         histogram_equalization_ == 2);
+
   delete input;
   close(input_fd);
 }
@@ -428,6 +432,8 @@ void SparseMap::Save(const std::string & protobuf_file) const {
 
   if (vocab_db_.binary_db != NULL)
     map.set_vocab_db(sparse_mapping_protobuf::Map::BINARYDB);
+
+  map.set_histogram_equalization(histogram_equalization_);
 
   LOG(INFO) << "Writing: " << protobuf_file;
   int output_fd = open(protobuf_file.c_str(), O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
@@ -556,6 +562,18 @@ void SparseMap::DetectFeatures(const cv::Mat& image,
     image_ptr = &hist_image;
   }
 
+#if 0
+  // This is useful for debugging
+  std::cout << "Histogram equalization is " << histogram_equalization_ << std::endl;
+  static int count = 10000;
+  count++;
+  std::ostringstream oss;
+  oss << "image_" << count << ".jpg";
+  std::string image_file = oss.str();
+  std::cout << "Writing: " << image_file << std::endl;
+  cv::imwrite(image_file, *image_ptr);
+#endif
+
   std::vector<cv::KeyPoint> storage;
   if (!multithreaded) {
     detector_.Detect(*image_ptr, &storage, descriptors);
@@ -573,6 +591,9 @@ void SparseMap::DetectFeatures(const cv::Mat& image,
                                                    min_thresh, default_thresh, max_thresh);
     local_detector.Detect(*image_ptr, &storage, descriptors);
   }
+
+  if (FLAGS_verbose_localization)
+    std::cout << "Features detected " << storage.size() << std::endl;
 
   keypoints->resize(2, storage.size());
   Eigen::Vector2d output;
@@ -602,7 +623,7 @@ bool Localize(cv::Mat const& test_descriptors,
               std::vector<std::map<int, int> > const& cid_fid_to_pid,
               std::vector<Eigen::Vector3d> const& pid_to_xyz,
               int num_ransac_iterations, int ransac_inlier_tolerance,
-              int early_break_landmarks, bool histogram_equalization,
+              int early_break_landmarks, int histogram_equalization,
               std::vector<int> * cid_list) {
   std::vector<int> indices;
   // Query the vocab tree.
@@ -618,59 +639,31 @@ bool Localize(cv::Mat const& test_descriptors,
   else
     indices = *cid_list;
   if (indices.empty()) {
-    LOG(WARNING) << "Localizing against all keyframes without the vocab db database.";
+    LOG(WARNING) << "Localizing against all keyframes as the vocab database is missing.";
     // Use all images, as no tree is available.
     for (int cid = 0; cid < num_cid; cid++)
       indices.push_back(cid);
   }
 
+  // To turn on verbose localization for debugging
+  // FREEFLYER_GFLAGS_NAMESPACE::SetCommandLineOption("verbose_localization", "true");
+
   // Find matches to each image in map. Do this in two passes. First,
   // find matches to all map images, then keep only num_similar
   // best matched images, then localize against those.
 
-  // TODO(bcoltin): don't include same landmark multiple times?
   // We will not localize using all images having matches, there are too
   // many false positives that way. Instead, limit ourselves to the images
   // which have most observations in common with the current one.
-  // TODO(oalexan1): Perhaps we must not localize against images
-  // which have too few observations in common with the current one
-  // even after we reduce the number of images we localize against.
   std::vector<int> similarity_rank(indices.size(), 0);
   std::vector<std::vector<cv::DMatch> > all_matches(indices.size());
   int total = 0;
+  // TODO(oalexan1): Use multiple threads here?
   for (size_t i = 0; i < indices.size(); i++) {
     int cid = indices[i];
     interest_point::FindMatches(test_descriptors,
                                 cid_to_descriptor_map[cid],
                                 &all_matches[i]);
-
-    // This is an expensive check. Ensure that the matches pass the geometric check.
-    // This throws out a lot of outliers.
-    if (FLAGS_geometric_verification) {
-      std::vector<cv::DMatch> inlier_matches;
-      bool compute_iniers_only = true;
-      int cam_a_idx = -1, cam_b_idx = -1;  // not important
-      std::mutex * match_mutex = NULL;
-      sparse_mapping::CIDPairAffineMap * relative_affines = NULL;
-      bool compute_rays_angle = false;
-      double * rays_angle = NULL;
-      sparse_mapping::BuildMapFindEssentialAndInliers(test_keypoints,
-                                                      cid_to_keypoint_map[cid],
-                                                      all_matches[i],
-                                                      camera_params,
-                                                      compute_iniers_only,
-                                                      cam_a_idx, cam_b_idx,
-                                                      match_mutex,
-                                                      relative_affines,
-                                                      &inlier_matches,
-                                                      compute_rays_angle,
-                                                      rays_angle);
-
-      if (FLAGS_verbose_localization)
-        std::cout << "Matches and inliers "
-                  << all_matches[i].size() << ' ' << inlier_matches.size() << std::endl;
-      all_matches[i] = inlier_matches;  // keep only the inliers
-    }
 
     for (size_t j = 0; j < all_matches[i].size(); j++) {
       if (cid_fid_to_pid[cid].count(all_matches[i][j].trainIdx) == 0)
@@ -689,7 +682,7 @@ bool Localize(cv::Mat const& test_descriptors,
 
   std::vector<Eigen::Vector2d> observations;
   std::vector<Eigen::Vector3d> landmarks;
-  std::vector<int> highly_ranked = common::rv_order(similarity_rank);
+  std::vector<int> highly_ranked = ff_common::rv_order(similarity_rank);
   int end = std::min(static_cast<int>(highly_ranked.size()), num_similar);
   std::set<int> seen_landmarks;
   if (FLAGS_verbose_localization)
@@ -717,10 +710,10 @@ bool Localize(cv::Mat const& test_descriptors,
   if (FLAGS_verbose_localization) std::cout << std::endl;
 
   int ret = RansacEstimateCamera(landmarks, observations,
-        num_ransac_iterations,
-        ransac_inlier_tolerance, pose,
-        inlier_landmarks, inlier_observations);
-
+                                 num_ransac_iterations,
+                                 ransac_inlier_tolerance, pose,
+                                 inlier_landmarks, inlier_observations,
+                                 FLAGS_verbose_localization);
   return (ret == 0);
 }
 

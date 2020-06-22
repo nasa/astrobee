@@ -74,14 +74,20 @@ class ComManager:
             self.current_com_method = com_method
             partition_name = None
             given_peer = None
+            domain = None
+            public_ip = None
 
             if args != None and isinstance(args, dict):
                 if "partition_name" in args:
                     partition_name = args["partition_name"]
                 if "given_peer" in args:
                     given_peer = args["given_peer"]
+                if "domain" in args:
+                    domain = args["domain"]
+                if "public_ip" in args:
+                    public_ip = args["public_ip"]
 
-            if self.config.set_preferences(partition_name, given_peer):
+            if self.config.set_preferences(partition_name, given_peer, domain, public_ip):
                 # Print result
                 print >> sys.stderr, (self.config.get_all_warnings() + self.config.get_all_info())
             else:

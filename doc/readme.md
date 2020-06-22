@@ -1,4 +1,4 @@
-\defgroup doc Documentation
+\page doc Documentation
 
 # Tools used for FSW documentation
 

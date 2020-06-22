@@ -1,8 +1,8 @@
 {
   "type" : "ModuleBayPlan",
   "inertiaConfiguration" : {
-    "matrix" : [ 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0 ],
-    "mass" : 5.0,
+    "matrix" : [ 0.15342799, 0.0, 0.0, 0.0, 0.14271405, 0.0, 0.0, 0.0, 0.16230276 ],
+    "mass" : 9.583789,
     "name" : "UnloadedAstrobee"
   },
   "operatingLimits" : {

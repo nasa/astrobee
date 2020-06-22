@@ -25,6 +25,7 @@
 
 #include <json/json.h>
 
+#include <array>
 #include <cmath>
 #include <string>
 #include <vector>
@@ -40,10 +41,29 @@ using jsonloader::Validate;
 
 namespace {
 
+const Fields inertiaConfFields {
+  new Field("name", Json::stringValue),
+  new Field("matrix", Json::arrayValue),
+  new Field("mass", Json::realValue),
+};
+
+// TODO(tfmorse): narrow down flightMode
+const Fields opLimitFields {
+  new Field("flightMode", Json::stringValue),
+  new Field("profileName", Json::stringValue),
+  new Field("collisionDistance", Json::realValue),
+  new Field("targetAngularAccel", Json::realValue),
+  new Field("targetLinearAccel", Json::realValue),
+  new Field("targetAngularVelocity", Json::realValue),
+  new Field("targetLinearVelocity", Json::realValue),
+};
+
 const Fields planFields {
   new Field("name", Json::stringValue),
   new EnumField("type", { "FreeFlyerPlan", "ModuleBayPlan" }),
   new BoolField("valid", true),
+  new ObjectField("inertiaConfiguration", inertiaConfFields, false),
+  new ObjectField("operatingLimits", opLimitFields, false),
   new ObjectField("site", {
     new StringField("type", "Site"),
     new StringField("id", "iss")
@@ -103,6 +123,22 @@ jsonloader::Plan::Plan(Json::Value const& obj)
   default_speed_ = obj["defaultSpeed"].asFloat();
   default_tolerance_ = obj["defaultTolerance"].asFloat();
 
+  if (obj.isMember("inertiaConfiguration")) {
+    inertia_config_ = InertiaConfiguration(obj["inertiaConfiguration"]);
+    if (!inertia_config_.valid()) {
+      LOG(ERROR) << "invalid plan: invalid inertia config";
+      return;
+    }
+  }
+
+  if (obj.isMember("operatingLimits")) {
+    operating_limits_ = OperatingLimits(obj["operatingLimits"]);
+    if (!operating_limits_.valid()) {
+      LOG(ERROR) << "invalid plan: invalid inertia config";
+      return;
+    }
+  }
+
   int i = 0;
   for (Json::Value const& v : obj["sequence"]) {
     if (i % 2 == 0) {  // Station
@@ -155,6 +191,16 @@ float jsonloader::Plan::default_tolerance() const noexcept {
   return default_tolerance_;
 }
 
+jsonloader::InertiaConfiguration const&
+jsonloader::Plan::inertia_configuration() const noexcept {
+  return inertia_config_;
+}
+
+jsonloader::OperatingLimits const&
+jsonloader::Plan::operating_limits() const noexcept {
+  return operating_limits_;
+}
+
 std::vector<jsonloader::Station> const&
 jsonloader::Plan::stations() const noexcept {
   return stations_;
@@ -185,6 +231,112 @@ jsonloader::Plan::GetMilestone(std::size_t index) const {
 
 std::string const& jsonloader::Plan::waypoint_type() const noexcept {
   return waypoint_type_;
+}
+
+jsonloader::InertiaConfiguration::InertiaConfiguration()
+  : valid_(false), name_(""), mass_(0.0f) {
+  matrix_.fill(0.0f);
+}
+
+jsonloader::InertiaConfiguration::InertiaConfiguration(Json::Value const& obj)
+  : valid_(false), name_(""), mass_(0.0f) {
+  matrix_.fill(0.0f);
+
+  if (!Validate(obj, inertiaConfFields)) {
+    LOG(ERROR) << "invalid inertia configuration.";
+    return;
+  }
+
+  name_ = obj["name"].asString();
+  mass_ = obj["mass"].asFloat();
+
+  if (obj["matrix"].size() != 9) {
+    LOG(ERROR) << "invalid inertial matrix";
+    return;
+  }
+
+  for (int i = 0; i < 9; i++) {
+    matrix_[i] = obj["matrix"][i].asFloat();
+  }
+
+  valid_ = true;
+}
+
+bool jsonloader::InertiaConfiguration::valid() const noexcept {
+  return valid_;
+}
+
+std::string const& jsonloader::InertiaConfiguration::name() const noexcept {
+  return name_;
+}
+
+float jsonloader::InertiaConfiguration::mass() const noexcept {
+  return mass_;
+}
+
+std::array<float, 9> const&
+jsonloader::InertiaConfiguration::matrix() const noexcept {
+  return matrix_;
+}
+
+jsonloader::OperatingLimits::OperatingLimits()
+  : valid_(false), flight_mode_(""), profile_(""),
+    collision_distance_(0.0f), angular_accel_(0.0f), angular_vel_(0.0f),
+    linear_accel_(0.0f), linear_vel_(0.0f) {
+}
+
+jsonloader::OperatingLimits::OperatingLimits(Json::Value const& obj)
+  : valid_(false), flight_mode_(""), profile_(""),
+    collision_distance_(0.0f), angular_accel_(0.0f), angular_vel_(0.0f),
+    linear_accel_(0.0f), linear_vel_(0.0f) {
+  if (!Validate(obj, opLimitFields)) {
+    LOG(ERROR) << "invalid operating limits";
+    return;
+  }
+
+  flight_mode_ = obj["flightMode"].asString();
+  profile_ = obj["profileName"].asString();
+
+  collision_distance_ = obj["collisionDistance"].asFloat();
+
+  angular_accel_ = obj["targetAngularAccel"].asFloat();
+  angular_vel_ = obj["targetAngularVelocity"].asFloat();
+  linear_accel_ = obj["targetLinearAccel"].asFloat();
+  linear_vel_ = obj["targetLinearVelocity"].asFloat();
+
+  valid_ = true;
+}
+
+bool jsonloader::OperatingLimits::valid() const noexcept {
+  return valid_;
+}
+
+std::string const& jsonloader::OperatingLimits::flight_mode() const noexcept {
+  return flight_mode_;
+}
+
+std::string const& jsonloader::OperatingLimits::profile_name() const noexcept {
+  return profile_;
+}
+
+float jsonloader::OperatingLimits::collision_distance() const noexcept {
+  return collision_distance_;
+}
+
+float jsonloader::OperatingLimits::angular_accel() const noexcept {
+  return angular_accel_;
+}
+
+float jsonloader::OperatingLimits::angular_velocity() const noexcept {
+  return angular_vel_;
+}
+
+float jsonloader::OperatingLimits::linear_accel() const noexcept {
+  return linear_accel_;
+}
+
+float jsonloader::OperatingLimits::linear_velocity() const noexcept {
+  return linear_vel_;
 }
 
 jsonloader::Time::Time(const uint32_t sec, const uint32_t nsec)

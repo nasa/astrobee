@@ -47,10 +47,15 @@ TEST(Validation, Field) {
   Field wrong_type("null", Json::booleanValue, true);
   Field not_object("not_important", Json::booleanValue, true);
 
+  Field optional("string", Json::stringValue, false);
+  Field optional_404("404", Json::nullValue, false);
+
   EXPECT_TRUE(exists.Validate(v));
   EXPECT_FALSE(upda.Validate(v));
   EXPECT_FALSE(wrong_type.Validate(v));
   EXPECT_FALSE(not_object.Validate(Json::Value()));
+  EXPECT_TRUE(optional.Validate(v));
+  EXPECT_TRUE(optional_404.Validate(v));
 }
 
 TEST(Validation, FloatAsIntegerField) {
@@ -74,6 +79,7 @@ TEST(Validation, StringField) {
   StringField good_insensitive("string", "StringValue", false);
   StringField bad_insensitive("string", "stringbalue", false);
   StringField bad_insensitive_length("string", "stringValue2", false);
+  StringField optional("404", "non-existent", true, false);
 
   EXPECT_TRUE(sensitive.Validate(v));
   EXPECT_TRUE(insensitive.Validate(v));
@@ -81,6 +87,7 @@ TEST(Validation, StringField) {
   EXPECT_FALSE(bad_sensitive.Validate(v));
   EXPECT_FALSE(bad_insensitive.Validate(v));
   EXPECT_FALSE(bad_insensitive_length.Validate(v));
+  EXPECT_TRUE(optional.Validate(v));
 }
 
 TEST(Validation, ValueField) {
@@ -97,10 +104,12 @@ TEST(Validation, ValueField) {
   ValueField<bool> check_bool("bool", true);
   ValueField<int> check_int("int", 1);
   ValueField<unsigned int> check_uint("uint", 3);
+  ValueField<bool> check_optional_bool("404", false, false);
 
   EXPECT_TRUE(check_bool.Validate(v));
   EXPECT_TRUE(check_int.Validate(v));
   EXPECT_TRUE(check_uint.Validate(v));
+  EXPECT_TRUE(check_optional_bool.Validate(v));
 
   v["bool"] = false;
   v["int"] = 2;
@@ -122,11 +131,13 @@ TEST(Validation, RangeField) {
   RangeField<float> badFloat("float", 0.0f, 0.5f);
   RangeField<int> goodInt("int", 0, 10);
   RangeField<int> badInt("int", 10, 20);
+  RangeField<int> optional("404", 10, 20, false);
 
   EXPECT_TRUE(goodFloat.Validate(v));
   EXPECT_TRUE(goodInt.Validate(v));
   EXPECT_FALSE(badFloat.Validate(v));
   EXPECT_FALSE(badInt.Validate(v));
+  EXPECT_TRUE(optional.Validate(v));
 }
 
 TEST(Validation, ObjectField) {
@@ -141,6 +152,13 @@ TEST(Validation, ObjectField) {
   ObjectField bad("parent",
       { new Field("non_child", Json::nullValue) });
   EXPECT_FALSE(bad.Validate(v));
+
+  ObjectField optional("parent",
+      { new Field("non_child", Json::nullValue, false) });
+  ObjectField optional_obj("404",
+      { new Field("not_found", Json::nullValue) }, false);
+  EXPECT_TRUE(optional.Validate(v));
+  EXPECT_TRUE(optional_obj.Validate(v));
 }
 
 TEST(Validation, EnumField) {
@@ -150,8 +168,10 @@ TEST(Validation, EnumField) {
 
   EnumField good("item", { "red", "green", "blue", "grey" });
   EnumField bad("item", { "banana", "apple", "blueberry" });
+  EnumField optional("404", { "item", "not", "found" }, false);
 
   EXPECT_TRUE(good.Validate(v));
   EXPECT_FALSE(bad.Validate(v));
+  EXPECT_TRUE(optional.Validate(v));
 }
 

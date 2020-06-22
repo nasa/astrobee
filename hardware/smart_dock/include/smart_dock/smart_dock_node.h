@@ -30,7 +30,7 @@
 
 #include "AstrobeeConstants.h"
 
-#include "common/init.h"
+#include "ff_common/init.h"
 
 #include "DockStateSupport.h"
 

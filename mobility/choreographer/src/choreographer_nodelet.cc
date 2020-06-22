@@ -101,7 +101,8 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
     TOLERANCE_ATT                  = (1<<14),     // Attitude tolerance failure
     TOLERANCE_VEL                  = (1<<15),     // Velocity tolerance failure
     TOLERANCE_OMEGA                = (1<<16),     // Omega tolerance failure
-    OBSTACLE_DETECTED              = (1<<17)      // Hazard: obstacle
+    OBSTACLE_DETECTED              = (1<<17),     // Hazard: obstacle
+    MANUAL_STATE_SET               = (1<<18)     // Setting the state manually with service
   };
 
   // The various types of control
@@ -257,6 +258,9 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
           if (result != Validator::SUCCESS)
             return ValidateResult(result);
         }
+        // If this returns false then we are already on the correct speed gain
+        if (FlightMode())
+          return STATE::PREPARING;
         // If we send control directly
         if (!Control(NOMINAL, segment_))
           return Result(RESPONSE::CONTROL_FAILED);
@@ -274,7 +278,23 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
       [this](FSM::Event const& event) -> FSM::State {
         if (event == GOAL_CANCEL)
           return Result(RESPONSE::CANCELLED);
-        return Result(RESPONSE::REPLAN_FAILED);
+        int max_attempts = cfg_.Get<int>("max_replanning_attempts");
+        NODELET_INFO_STREAM("State Replanning: Replanning failed %i / %i times" <<
+          replan_attempts_ << max_attempts);
+        if (replan_attempts_ >= max_attempts) {
+          return Result(RESPONSE::REPLAN_FAILED);
+        }
+        // Get current Astrobee pose
+        geometry_msgs::PoseStamped current_pose;
+        if (!GetRobotPose(current_pose)) {
+          return Result(RESPONSE::CANNOT_QUERY_ROBOT_POSE);
+        }
+        states_.insert(states_.begin(), current_pose);
+        replan_attempts_++;
+        if (!Plan(states_)) {
+          return Result(RESPONSE::PLAN_FAILED);
+        }
+        return STATE::REPLANNING;
       });
     // [15]
     fsm_.Add(STATE::CONTROLLING,
@@ -305,34 +325,14 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
     // [16]
     fsm_.Add(STATE::CONTROLLING, OBSTACLE_DETECTED,
       [this](FSM::Event const& event) -> FSM::State {
-        // If we need to validate the segment
         if (cfg_.Get<bool>("enable_replanning")) {
-          // Find a suitable handover point between now and the collision time
-          ros::Time handover = obstacle_.header.stamp
-                             - ros::Duration(cfg_.Get<double>("time_buffer"));
-          // Find the setpoint immediately before the handover time
-          ff_util::Segment::reverse_iterator it;
-          for (it = segment_.rbegin(); it != segment_.rend(); ++it)
-            if (it->when < handover) break;
-          // Check that the handover time is after the current time
-          if (it == segment_.rend() || it->when < ros::Time::now())
-            return Result(RESPONSE::REPLAN_NOT_ENOUGH_TIME);
-          // Assemble a simple planning request
-          std::vector<geometry_msgs::PoseStamped> states;
-          geometry_msgs::PoseStamped pose;
-          // Replan from the handover point to the end of the segment
-          pose.header.stamp = it->when;
-          pose.pose = it->pose;
-          states.push_back(pose);
-          pose.header.stamp = segment_.back().when;
-          pose.pose = segment_.back().pose;
-          states.push_back(pose);
-          // Now, generate a plan between the supplied states
-          if (!Plan(states, ros::Time::now() - it->when))
-            return Result(RESPONSE::PLAN_FAILED);
-          return STATE::REPLANNING;
+          // Request a stop using the controller
+          if (!Control(STOP)) {
+            return Result(RESPONSE::CONTROL_FAILED);
+          }
+          return STATE::HALTING;
         }
-        // There's a hazard
+        // If we're not doing replanning
         return Result(RESPONSE::OBSTACLE_DETECTED);
       });
     // [17]
@@ -421,6 +421,30 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
           return Result(RESPONSE::CANCELLED);
         return Result(RESPONSE::PMC_FAILED);
       });
+    // [28]
+    fsm_.Add(STATE::HALTING, CONTROL_SUCCESS,
+      [this](FSM::Event const& event) -> FSM::State {
+        // Get current Astrobee pose
+        geometry_msgs::PoseStamped current_pose;
+        if (!GetRobotPose(current_pose)) {
+          return Result(RESPONSE::CANNOT_QUERY_ROBOT_POSE);
+        }
+        states_.insert(states_.begin(), current_pose);
+        // Send plan request
+        replan_attempts_ = 1;
+        if (!Plan(states_)) {
+          return Result(RESPONSE::PLAN_FAILED);
+        }
+        return STATE::REPLANNING;
+      });
+    // [29]
+    fsm_.Add(STATE::HALTING,
+      CONTROL_FAILED | GOAL_CANCEL,
+      [this](FSM::Event const& event) -> FSM::State {
+        if (event == GOAL_CANCEL)
+          return Result(RESPONSE::CANCELLED);
+        return Result(RESPONSE::CONTROL_FAILED);
+      });
   }
 
   // Destructor
@@ -457,6 +481,9 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
                   "Problem with default inertia");
       return;
     }
+
+    // Read max time a tolerance is allowed
+    tolerance_max_time_ = cfg_.Get<double>("tolerance_max_time");
 
     // Create a transform buffer ot listen for transforms
     tf_listener_ = std::shared_ptr<tf2_ros::TransformListener>(
@@ -560,6 +587,7 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
                         ff_msgs::SetState::Response& res) {
     fsm_.SetState(req.state);
     res.success = true;
+    UpdateCallback(fsm_.GetState(), MANUAL_STATE_SET);
     return true;
   }
 
@@ -777,6 +805,7 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
       // Do nothing
       case STATE::IDLING:
       case STATE::STOPPING:
+      case STATE::HALTING:
         break;
       }
       break;
@@ -847,6 +876,7 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
     case TOLERANCE_VEL:           msg.fsm_event = "TOLERANCE_VEL";      break;
     case TOLERANCE_OMEGA:         msg.fsm_event = "TOLERANCE_OMEGA";    break;
     case OBSTACLE_DETECTED:       msg.fsm_event = "OBSTACLE_DETECTED";  break;
+    case MANUAL_STATE_SET:        msg.fsm_event = "MANUAL_STATE_SET";   break;
     }
     // Debug state changes
     switch (state) {
@@ -861,6 +891,7 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
     case STATE::PREPARING:        msg.fsm_state = "PREPARING";          break;
     case STATE::CONTROLLING:      msg.fsm_state = "CONTROLLING";        break;
     case STATE::REPLANNING:       msg.fsm_state = "REPLANNING";         break;
+    case STATE::HALTING:          msg.fsm_state = "HALTING";            break;
     }
     // Publish the state
     pub_state_.publish(msg);
@@ -871,6 +902,7 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
     switch (state) {
     case STATE::IDLING:
     case STATE::STOPPING:
+    case STATE::HALTING:
     case STATE::BOOTSTRAPPING:
     case STATE::PLANNING:
     case STATE::PREPARING:
@@ -1128,46 +1160,71 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
     case STATE::CONTROLLING:
       if (flight_mode_.tolerance_pos > 0.0 &&
           feedback->error_position > flight_mode_.tolerance_pos) {
-        NODELET_DEBUG_STREAM("Position tolerance violated");
-        NODELET_DEBUG_STREAM("- Value: " << feedback->error_position
-                                        << ", Thresh: "
-                                        << flight_mode_.tolerance_pos);
-        fsm_.Update(TOLERANCE_POS);
-        return;
+        // If tolerance is present more that the allowable time
+        if ((ros::Time::now() - tolerance_pos_timer).toSec() > tolerance_max_time_) {
+          NODELET_DEBUG_STREAM("Position tolerance violated");
+          NODELET_DEBUG_STREAM("- Value: " << feedback->error_position
+                                          << ", Thresh: "
+                                          << flight_mode_.tolerance_pos);
+          fsm_.Update(TOLERANCE_POS);
+          return;
+        }
+      } else {
+        // If there is no tolerance violation, reset time
+        tolerance_pos_timer = ros::Time::now();
       }
       // Check attitude tolerance
       if (flight_mode_.tolerance_att > 0.0 &&
           feedback->error_attitude > flight_mode_.tolerance_att) {
-        NODELET_DEBUG_STREAM("Attitude tolerance violated");
-        NODELET_DEBUG_STREAM("- Value: " << feedback->error_attitude
-                                        << ", Thresh: "
-                                        << flight_mode_.tolerance_att);
-        fsm_.Update(TOLERANCE_ATT);
-        return;
+        // If tolerance is present more that the allowable time
+        if ((ros::Time::now() - tolerance_att_timer).toSec() > tolerance_max_time_) {
+          NODELET_DEBUG_STREAM("Attitude tolerance violated");
+          NODELET_DEBUG_STREAM("- Value: " << feedback->error_attitude
+                                          << ", Thresh: "
+                                          << flight_mode_.tolerance_att);
+          fsm_.Update(TOLERANCE_ATT);
+          return;
+        }
+      } else {
+        // If there is no tolerance violation, reset time
+        tolerance_att_timer = ros::Time::now();
       }
       // Check velocity tolerance
       if (flight_mode_.tolerance_vel > 0.0 &&
           feedback->error_velocity > flight_mode_.tolerance_vel) {
-        NODELET_DEBUG_STREAM("Velocity tolerance violated");
-        NODELET_DEBUG_STREAM("- Value: " << feedback->error_velocity
-                                        << ", Thresh: "
-                                        << flight_mode_.tolerance_vel);
-        fsm_.Update(TOLERANCE_VEL);
-        return;
+        // If tolerance is present more that the allowable time
+        if ((ros::Time::now() - tolerance_vel_timer).toSec() > tolerance_max_time_) {
+          NODELET_DEBUG_STREAM("Velocity tolerance violated");
+          NODELET_DEBUG_STREAM("- Value: " << feedback->error_velocity
+                                          << ", Thresh: "
+                                          << flight_mode_.tolerance_vel);
+          fsm_.Update(TOLERANCE_VEL);
+          return;
+        }
+      } else {
+        // If there is no tolerance violation, reset time
+        tolerance_vel_timer = ros::Time::now();
       }
       // Check angular velocity tolerance
       if (flight_mode_.tolerance_omega > 0.0 &&
           feedback->error_omega > flight_mode_.tolerance_omega) {
-        NODELET_DEBUG_STREAM("Angular velocity tolerance violated");
-        NODELET_DEBUG_STREAM("- Value: " << feedback->error_omega
-                                        << ", Thresh: "
-                                        << flight_mode_.tolerance_omega);
-        fsm_.Update(TOLERANCE_OMEGA);
-        return;
+        // If tolerance is present more that the allowable time
+        if ((ros::Time::now() - tolerance_omega_timer).toSec() > tolerance_max_time_) {
+          NODELET_DEBUG_STREAM("Angular velocity tolerance violated");
+          NODELET_DEBUG_STREAM("- Value: " << feedback->error_omega
+                                          << ", Thresh: "
+                                          << flight_mode_.tolerance_omega);
+          fsm_.Update(TOLERANCE_OMEGA);
+          return;
+        }
+      } else {
+        // If there is no tolerance violation, reset time
+        tolerance_omega_timer = ros::Time::now();
       }
-    // Send progress in stopping/idling
+    // Send progress in stopping/idling/replanning
     case STATE::STOPPING:
     case STATE::IDLING:
+    case STATE::REPLANNING:
       feedback_.progress = *feedback;
       return server_.SendFeedback(feedback_);
     default:
@@ -1189,7 +1246,6 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
 
   // MOTION ACTION SERVER
 
-  // A new arm action has been called
   void GoalCallback(ff_msgs::MotionGoalConstPtr const& goal) {
     ff_msgs::MotionResult result;
     // We can only accept new commands if we are currently in an idle state.
@@ -1316,6 +1372,12 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
   std::vector<geometry_msgs::PoseStamped> states_;      // Plan request
   ff_util::Segment segment_;                            // Segment
   geometry_msgs::PointStamped obstacle_;                // Obstacle
+  // Tolerance check Timers
+  double tolerance_max_time_;
+  ros::Time tolerance_pos_timer, tolerance_att_timer,
+                tolerance_vel_timer, tolerance_omega_timer;
+  // Cached number of replan attempts
+  int replan_attempts_;
 };
 
 // Declare the plugin

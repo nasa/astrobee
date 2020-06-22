@@ -40,7 +40,7 @@ extern "C" {
 #include <string>
 #include <vector>
 
-#include "common/init.h"
+#include "ff_common/init.h"
 #include "config_reader/watch_files.h"
 
 namespace config_reader {

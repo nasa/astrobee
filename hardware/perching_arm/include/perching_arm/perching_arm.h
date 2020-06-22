@@ -19,8 +19,9 @@
 #ifndef PERCHING_ARM_PERCHING_ARM_H_
 #define PERCHING_ARM_PERCHING_ARM_H_
 
-#include <serial/serial.h>
+#include <ff_serial/serial.h>
 
+#include <iostream>
 #include <functional>
 #include <string>
 
@@ -535,7 +536,7 @@ class PerchingArm {
   void ProcessErrorMsgTelemetry(const host_arm_error_msg_telemetry_t* packet);
 
  private:
-  serial::Serial serial_;                   // Serial port
+  ff_serial::Serial serial_;                   // Serial port
   PerchingArmRawDataCallback cb_raw_data_;  // Feedback callback
   PerchingArmSleepMsCallback cb_sleep_ms_;  // Sleep callback
   PerchingArmRaw raw_;                      // Feedback data structure

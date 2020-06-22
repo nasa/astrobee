@@ -19,7 +19,7 @@
 #include <sparse_mapping/reprojection.h>
 #include <sparse_mapping/sparse_mapping.h>
 
-#include <common/thread.h>
+#include <ff_common/thread.h>
 #include <camera/camera_model.h>
 
 #include <ceres/rotation.h>
@@ -104,7 +104,7 @@ void BundleAdjust(std::vector<std::map<int, int> > const& pid_to_cid_fid,
                   ceres::LossFunction * loss,
                   ceres::Solver::Options const& options,
                   ceres::Solver::Summary* summary,
-                  int first, int last, bool fix_cameras) {
+                  int first, int last, bool fix_cameras, bool fix_all_xyz) {
   // Perform bundle adjustment. Keep fixed all cameras with cid
   // not within [first, last] and all xyz points which project only
   // onto fixed cameras.
@@ -171,7 +171,7 @@ void BundleAdjust(std::vector<std::map<int, int> > const& pid_to_cid_fid,
           problem.SetParameterBlockConstant(&camera_aa_storage[3 * cid_fid.first]);
         }
       }
-      if (fix_pid || pass == 1) {
+      if (fix_pid || pass == 1 || fix_all_xyz) {
         // Fix pids which don't project in cameras that are floated.
         // Also, must not float points given by the user, those are measurements
         // we are supposed to reference ourselves against, and floating
@@ -354,7 +354,8 @@ int RansacEstimateCamera(const std::vector<Eigen::Vector3d> & landmarks,
                          const std::vector<Eigen::Vector2d> & observations,
                          int num_tries, int inlier_tolerance, camera::CameraModel * camera_estimate,
                          std::vector<Eigen::Vector3d> * inlier_landmarks_out,
-                         std::vector<Eigen::Vector2d> * inlier_observations_out) {
+                         std::vector<Eigen::Vector2d> * inlier_observations_out,
+                         bool verbose) {
   size_t best_inliers = 0;
   camera::CameraParameters params = camera_estimate->GetParameters();
 
@@ -365,6 +366,7 @@ int RansacEstimateCamera(const std::vector<Eigen::Vector3d> & landmarks,
   // RANSAC to find the best camera with P3P
   std::vector<cv::Point3d> subset_landmarks;
   std::vector<cv::Point2d> subset_observations;
+  // TODO(oalexan1): Use multiple threads here?
   for (int i = 0; i < num_tries; i++) {
     subset_landmarks.clear();
     subset_observations.clear();
@@ -388,7 +390,9 @@ int RansacEstimateCamera(const std::vector<Eigen::Vector3d> & landmarks,
     }
   }
 
-  VLOG(2) << observations.size() << " Ransac observations " << best_inliers << " inliers\n";
+  if (verbose)
+    std::cout << observations.size() << " Ransac observations "
+              << best_inliers << " inliers\n";
 
   // TODO(bcoltin): Return some sort of confidence?
   if (best_inliers < FLAGS_num_min_localization_inliers)
@@ -417,7 +421,9 @@ int RansacEstimateCamera(const std::vector<Eigen::Vector3d> & landmarks,
   // find inliers again with refined estimate
   inliers.clear();
   best_inliers = CountInliers(landmarks, observations, *camera_estimate, inlier_tolerance, &inliers);
-  VLOG(2) << "Number of inliers with refined camera: " << best_inliers << "\n";
+
+  if (verbose)
+    std::cout << "Number of inliers with refined camera: " << best_inliers << "\n";
 
   if (best_inliers < FLAGS_num_min_localization_inliers)
     return 2;

@@ -49,6 +49,8 @@ class ConfigServer {
   virtual ~ConfigServer();
   // Initialize the system
   void Initialize(ros::NodeHandle *private_nh, const std::string &fname);
+  // Manually set the path to the config file
+  void SetPath(const std::string &pname);
   // Add another (optional) LUA config file to the configuration
   void AddFile(const std::string &fname);
   // Start listening for updates

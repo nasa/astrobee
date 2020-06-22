@@ -33,6 +33,8 @@ Executive::Executive() :
   fault_state_(NULL),
   guest_science_config_(NULL),
   motion_state_(NULL),
+  perch_state_(NULL),
+  current_inertia_(NULL),
   primary_apk_running_("None"),
   run_plan_cmd_id_(""),
   gs_start_stop_cmd_id_(""),
@@ -131,8 +133,6 @@ void Executive::DockStateCallback(ff_msgs::DockStateConstPtr const& state) {
   if (dock_state_->state <= ff_msgs::DockState::DOCKING_MAX_STATE &&
       dock_state_->state > ff_msgs::DockState::UNDOCKED) {
     SetMobilityState(ff_msgs::MobilityState::DOCKING, dock_state_->state);
-    // TODO(Katie) Possible check the perching state to make sure it doesn't say
-    // perched.
   }
 
   // If the dock state is undocked, the mobility state needs to be set to
@@ -273,6 +273,12 @@ void Executive::GuestScienceStartStopCmdTimeoutCallback(
   gs_start_stop_cmd_id_ = "";
 }
 
+
+void Executive::InertiaCallback(
+                        geometry_msgs::InertiaStampedConstPtr const& inertia) {
+  current_inertia_ = inertia;
+}
+
 void Executive::LedConnectedCallback() {
   ff_hw_msgs::ConfigureSystemLeds led_srv;
 
@@ -324,8 +330,50 @@ void Executive::MotionStateCallback(ff_msgs::MotionStatePtr const& state) {
     }
   }
 
+  // Check to see if we are perching or unperching. If we are, don't use the
+  // motion state as our mobility state.
+  if (perch_state_ != NULL) {
+    if (perch_state_->state > ff_msgs::PerchState::UNPERCHED) {
+      // If perching state is unknown or initializing, use motion state to set
+      // mobility state
+      if (perch_state_->state != ff_msgs::PerchState::UNKNOWN &&
+          perch_state_->state != ff_msgs::PerchState::INITIALIZING) {
+        return;
+      }
+    }
+  }
+
   // Set mobility state
   SetMobilityState();
+}
+
+void Executive::PerchStateCallback(ff_msgs::PerchStateConstPtr const& state) {
+  perch_state_ = state;
+
+  // Check to see if the perch state is perching/perched/unperching. If it is,
+  // we can change the mobility state to perching/perched.
+  // Perching max state signifies that we are perching
+  if (perch_state_->state <= ff_msgs::PerchState::PERCHING_MAX_STATE &&
+      perch_state_->state > ff_msgs::PerchState::UNPERCHED) {
+    SetMobilityState(ff_msgs::MobilityState::PERCHING, perch_state_->state);
+  }
+
+  // Check to see if we are docked. If we are, don't use the motion state
+  // as our mobility state.
+  // This prevents the robot from sometimes going into drifting state if we are
+  // already docked when FSW starts.
+  // More docking and undocking states might be added to the check if needed
+  if (dock_state_ != NULL) {
+    if (dock_state_->state == ff_msgs::DockState::DOCKED) {
+      return;
+    }
+  }
+
+  // If the perch state is unperched, the mobility state needs to be set to
+  // whatever the motion state is.
+  if (perch_state_->state == ff_msgs::PerchState::UNPERCHED) {
+    SetMobilityState();
+  }
 }
 
 void Executive::PlanCallback(ff_msgs::CompressedFileConstPtr const& plan) {
@@ -471,7 +519,12 @@ void Executive::CancelAction(Action action, std::string cmd) {
       break;
     case PERCH:
     case UNPERCH:
-      // TODO(Katie) Add Me
+      perch_ac_.CancelGoal();
+      err_msg = "Perch action was canceled due to a " + cmd + " command.";
+      state_->AckCmd(perch_ac_.cmd_id(),
+                     ff_msgs::AckCompletedStatus::CANCELED,
+                     err_msg);
+      perch_ac_.SetCmdInfo(NONE, "");
       break;
     default:
       NODELET_ERROR("Action to cancel not recognized!");
@@ -724,7 +777,14 @@ bool Executive::StartAction(Action action, std::string const& cmd_id) {
       break;
     case PERCH:
     case UNPERCH:
-      // TODO(Katie) Add Me
+      if (perch_ac_.IsConnected()) {
+        perch_ac_.SetCmdInfo(action, cmd_id);
+        perch_ac_.SendGoal(perch_goal_);
+        NODELET_DEBUG("Perch action goal sent/started.");
+      } else {
+        successful = false;
+        err_msg = "Perch action server not connected. Node may have died!";
+      }
       break;
     default:
       successful = false;
@@ -879,6 +939,32 @@ void Executive::MotionResultCallback(
   // action info before starting another action
   // Reset command id so we don't try to ack the same id twice
   motion_ac_.SetCmdInfo(NONE, "");
+
+  SetOpState(state_->HandleResult(state,
+                                  response,
+                                  cmd_id,
+                                  current_action));
+}
+
+void Executive::PerchResultCallback(
+                              ff_util::FreeFlyerActionState::Enum const& state,
+                              ff_msgs::PerchResultConstPtr const& result) {
+  std::string response = "";
+  Action current_action = perch_ac_.action();
+  std::string cmd_id = perch_ac_.cmd_id();
+
+  // Remove action from the running action vector
+  RemoveAction(current_action);
+
+  // Get response for op state functions
+  if (result != nullptr) {
+      response = result->fsm_result;
+  }
+
+  // In the case of a plan, handle result may start another perch action so we
+  // need to clear the action info before starting another perch action.
+  // Reset command id so we don't try to ack the same id twice
+  perch_ac_.SetCmdInfo(NONE, "");
 
   SetOpState(state_->HandleResult(state,
                                   response,
@@ -1180,7 +1266,6 @@ bool Executive::ConfigureMobility(std::string const& cmd_id) {
 }
 
 bool Executive::ConfigureMobility(bool move_to_start,
-                                  bool enable_holonomic,
                                   std::string& err_msg) {
   bool successful = true;
 
@@ -1207,7 +1292,8 @@ bool Executive::ConfigureMobility(bool move_to_start,
                                           agent_state_.target_angular_velocity);
   choreographer_cfg_->Set<double>("desired_alpha",
                                           agent_state_.target_angular_accel);
-  choreographer_cfg_->Set<bool>("enable_faceforward", enable_holonomic);
+  choreographer_cfg_->Set<bool>("enable_faceforward",
+                                              !agent_state_.holonomic_enabled);
   choreographer_cfg_->Set<bool>("enable_collision_checking",
                                                   agent_state_.check_obstacles);
   choreographer_cfg_->Set<bool>("enable_validation", agent_state_.check_zones);
@@ -1383,6 +1469,46 @@ ff_msgs::CommandStampedPtr Executive::GetPlanCommand() {
   return sequencer_.CurrentCommand();
 }
 
+bool Executive::GetSetPlanInertia(std::string const& cmd_id) {
+  // If the plan has inertia, set it. Otherwise, leave the inertia the way it is
+  if (sequencer_.HaveInertia()) {
+    ff_msgs::SetInertia inertia_srv;
+    inertia_srv.request.inertia = sequencer_.GetInertia();
+    // Plan header doesn't contain the center of mass so we need to get the
+    // current center of mass
+    inertia_srv.request.inertia.inertia.com = current_inertia_->inertia.com;
+
+    if (!CheckServiceExists(set_inertia_client_, "Set inertia", cmd_id)) {
+      return false;
+    }
+
+    if (!set_inertia_client_.call(inertia_srv)) {
+      state_->AckCmd(cmd_id,
+                     ff_msgs::AckCompletedStatus::EXEC_FAILED,
+                     "Set inertia service returned false for plan inertia.");
+      return false;
+    }
+
+    if (!inertia_srv.response.success) {
+      state_->AckCmd(cmd_id,
+                     ff_msgs::AckCompletedStatus::EXEC_FAILED,
+                     "Set inertia srv returned unsuccessful for plan inertia");
+      return false;
+    }
+  }
+  return true;
+}
+
+void Executive::GetSetPlanOperatingLimits() {
+  // If the plan has operating limits, set them. Otherwise, use the current ones
+  if (sequencer_.HaveOperatingLimits()) {
+    sequencer_.GetOperatingLimits(agent_state_);
+    // Don't configure mobility. That is done in the plan op state before we
+    // execute a segment.
+    PublishAgentState();
+  }
+}
+
 /************************ Commands ********************************************/
 bool Executive::ArmPanAndTilt(ff_msgs::CommandStampedPtr const& cmd) {
   NODELET_INFO("Executive executing arm pan and tilt command!");
@@ -1489,8 +1615,8 @@ bool Executive::Dock(ff_msgs::CommandStampedPtr const& cmd) {
   std::string err_msg;
 
   // Make sure robot is stopped before attempting to dock. Only accept dock in
-  // ready op state so perched, docked, or drifting are the only mobility states
-  // we need to check for
+  // ready op state so perched and docked are the only mobility states we need
+  // to check for
   if (agent_state_.mobility_state.state == ff_msgs::MobilityState::DOCKING) {
     err_msg = "Already docked.";
   } else if (agent_state_.mobility_state.state ==
@@ -1510,7 +1636,6 @@ bool Executive::Dock(ff_msgs::CommandStampedPtr const& cmd) {
   // Fill dock goal and start action publish failed command acks so we only
   // need to fail an ack if we aren't stopped and thus cannot dock
   if (!successful) {
-    NODELET_ERROR("%s", err_msg.c_str());
     state_->AckCmd(cmd->cmd_id,
                    ff_msgs::AckCompletedStatus::EXEC_FAILED,
                    err_msg);
@@ -1631,6 +1756,14 @@ bool Executive::IdlePropulsion(ff_msgs::CommandStampedPtr const& cmd) {
 
 bool Executive::InitializeBias(ff_msgs::CommandStampedPtr const& cmd) {
   NODELET_INFO("Executive executing initialize bias command!");
+  // We don't want to initialize the bias when stopped because we will not be
+  // completely still
+  if (agent_state_.mobility_state.state == ff_msgs::MobilityState::STOPPING) {
+    AckMobilityStateIssue(cmd, "stopped",  "docked, idle, or perched");
+    return false;
+  }
+
+  // We also cannot be moving when we initialize the bias
   if (CheckNotMoving(cmd)) {
     localization_goal_.command =
                               ff_msgs::LocalizationGoal::COMMAND_ESTIMATE_BIAS;
@@ -1654,23 +1787,34 @@ bool Executive::PausePlan(ff_msgs::CommandStampedPtr const& cmd) {
 
 bool Executive::Perch(ff_msgs::CommandStampedPtr const& cmd) {
   NODELET_INFO("Executive executing perch command!");
-  // TODO(Katie) Stub, change to be actual code
-  if (CheckStoppedOrDrifting(cmd->cmd_id, "perching")) {
-    SetMobilityState(ff_msgs::MobilityState::PERCHING, 4);
-    ros::Duration(1).sleep();
-    SetMobilityState(ff_msgs::MobilityState::PERCHING, 3);
-    ros::Duration(1).sleep();
-    SetMobilityState(ff_msgs::MobilityState::PERCHING, 2);
-    ros::Duration(1).sleep();
-    SetMobilityState(ff_msgs::MobilityState::PERCHING, 1);
-    ros::Duration(1).sleep();
-    SetMobilityState(ff_msgs::MobilityState::PERCHING, 0);
+  bool successful = false;
+  std::string err_msg;
+
+  // Make sure robot is stopped before attempting to perch. Only accept perch in
+  // ready op state so perched and docked are the only mobility states we need
+  // to check for
+  if (agent_state_.mobility_state.state == ff_msgs::MobilityState::DOCKING) {
+    err_msg = "Astrobee cannot attempt to perch while it is perched.";
+  } else if (agent_state_.mobility_state.state ==
+                                            ff_msgs::MobilityState::PERCHING) {
+    err_msg = "Already perched.";
+  } else {
+    successful = true;
+    perch_goal_.command = ff_msgs::PerchGoal::PERCH;
+
+    if (!StartAction(PERCH, cmd->cmd_id)) {
+      return false;
+    }
+  }
+
+  // Start action publishes failed command acks so we only need to fail an ack
+  // if we aren't stopped and thus cannot perch
+  if (!successful) {
     state_->AckCmd(cmd->cmd_id,
                    ff_msgs::AckCompletedStatus::EXEC_FAILED,
-                   "Perch not implemented yet! Stay tune!");
-    return false;
+                   err_msg);
   }
-  return false;
+  return successful;
 }
 
 bool Executive::PowerItemOff(ff_msgs::CommandStampedPtr const& cmd) {
@@ -1744,7 +1888,6 @@ bool Executive::RunPlan(ff_msgs::CommandStampedPtr const& cmd) {
   return true;
 }
 
-// TODO(Katie) Need to add perch and haz cams
 bool Executive::SetCamera(ff_msgs::CommandStampedPtr const& cmd) {
   NODELET_INFO("Executive executing set camera command!");
   std::string err_msg = "";
@@ -1821,6 +1964,23 @@ bool Executive::SetCamera(ff_msgs::CommandStampedPtr const& cmd) {
           }
         }
       } else if (cmd->args[0].s ==
+                                CommandConstants::PARAM_NAME_CAMERA_NAME_HAZ) {
+        // Check to make sure the haz cam service is valid
+        if (!haz_cam_config_client_.exists()) {
+          successful = false;
+          err_msg = "Haz cam config service not running! Node may have died";
+          completed_status = ff_msgs::AckCompletedStatus::EXEC_FAILED;
+        } else {
+          // Check to see if the haz cam was successfully configured
+          if (!haz_cam_config_client_.call(config_img_srv)) {
+            // Service only fails if height, width or rate are less than or
+            // equal to 0
+            successful = false;
+            err_msg = "Height, width, and/or rate was invalid for haz camera.";
+            completed_status = ff_msgs::AckCompletedStatus::EXEC_FAILED;
+          }
+        }
+      } else if (cmd->args[0].s ==
                                 CommandConstants::PARAM_NAME_CAMERA_NAME_NAV) {
         // Check to make sure the nav cam service is valid
         if (!nav_cam_config_client_.exists()) {
@@ -1834,6 +1994,23 @@ bool Executive::SetCamera(ff_msgs::CommandStampedPtr const& cmd) {
             // equal to 0
             successful = false;
             err_msg = "Height, width, and/or rate was invalid for nav camera.";
+            completed_status = ff_msgs::AckCompletedStatus::EXEC_FAILED;
+          }
+        }
+      } else if (cmd->args[0].s ==
+                              CommandConstants::PARAM_NAME_CAMERA_NAME_PERCH) {
+        // Check to make sure the perch cam service is valid
+        if (!perch_cam_config_client_.exists()) {
+          successful = false;
+          err_msg = "Perch cam config service not running! Node may have died";
+          completed_status = ff_msgs::AckCompletedStatus::EXEC_FAILED;
+        } else {
+          // Check to see if the perch cam was successfully configured
+          if (!perch_cam_config_client_.call(config_img_srv)) {
+            // Service only fails if height, width or rate are less than or
+            // equal to 0
+            successful = false;
+            err_msg = "Height, width, and/or rate was invalid for perch camera";
             completed_status = ff_msgs::AckCompletedStatus::EXEC_FAILED;
           }
         }
@@ -1867,7 +2044,6 @@ bool Executive::SetCamera(ff_msgs::CommandStampedPtr const& cmd) {
   return successful;
 }
 
-// TODO(Katie) Need to add perch and haz cams
 bool Executive::SetCameraRecording(ff_msgs::CommandStampedPtr const& cmd) {
   NODELET_INFO("Executive executing set camera recording command!");
   bool successful = true;
@@ -1895,8 +2071,21 @@ bool Executive::SetCameraRecording(ff_msgs::CommandStampedPtr const& cmd) {
         // Check to see if recording was set successfully
         if (!dock_cam_enable_client_.call(enable_img_srv)) {
           successful = false;
-          // Service call should never fail but check just for kicks and giggles
           err_msg = "Enable recording failed for dock cam.";
+          completed_status = ff_msgs::AckCompletedStatus::EXEC_FAILED;
+        }
+      }
+    } else if (cmd->args[0].s == CommandConstants::PARAM_NAME_CAMERA_NAME_HAZ) {
+      // Check to make sure the haz cam enable service exists
+      if (!haz_cam_enable_client_.exists()) {
+        successful = false;
+        err_msg = "Haz cam enable service not running! Node may have died!";
+        completed_status = ff_msgs::AckCompletedStatus::EXEC_FAILED;
+      } else {
+        // Check to see if recording was set successfully
+        if (!haz_cam_enable_client_.call(enable_img_srv)) {
+          successful = false;
+          err_msg = "Enable recording failed for haz cam.";
           completed_status = ff_msgs::AckCompletedStatus::EXEC_FAILED;
         }
       }
@@ -1910,8 +2099,22 @@ bool Executive::SetCameraRecording(ff_msgs::CommandStampedPtr const& cmd) {
         // Check to see if recording was set successfully
         if (!nav_cam_enable_client_.call(enable_img_srv)) {
           successful = false;
-          // Service call should never fail but check just for kicks and giggles
           err_msg = "Enable recording failed for nav cam.";
+          completed_status = ff_msgs::AckCompletedStatus::EXEC_FAILED;
+        }
+      }
+    } else if (cmd->args[0].s ==
+                              CommandConstants::PARAM_NAME_CAMERA_NAME_PERCH) {
+      // Check to make sure the perch cam enable service exists
+      if (!perch_cam_enable_client_.exists()) {
+        successful = false;
+        err_msg = "Perch cam enable service not running! Node may have died!";
+        completed_status = ff_msgs::AckCompletedStatus::EXEC_FAILED;
+      } else {
+        // Check to see if recording was set successfully
+        if (!perch_cam_enable_client_.call(enable_img_srv)) {
+          successful = false;
+          err_msg = "Enable recording failed for perch cam.";
           completed_status = ff_msgs::AckCompletedStatus::EXEC_FAILED;
         }
       }
@@ -1925,7 +2128,6 @@ bool Executive::SetCameraRecording(ff_msgs::CommandStampedPtr const& cmd) {
         // Check to see if recording was set successfully
         if (!sci_cam_enable_client_.call(enable_img_srv)) {
           successful = false;
-          // Service call should never fail but check just for kicks and giggles
           err_msg = "Enable recording failed for sci cam.";
           completed_status = ff_msgs::AckCompletedStatus::EXEC_FAILED;
         }
@@ -1937,14 +2139,10 @@ bool Executive::SetCameraRecording(ff_msgs::CommandStampedPtr const& cmd) {
     }
   }
 
-  // TODO(Katie) Is this all we need to do? Do we also need to set the topics
-  // to be recorded
-
   state_->AckCmd(cmd->cmd_id, completed_status, err_msg);
   return successful;
 }
 
-// TODO(Katie) Need to add perch and haz cams
 bool Executive::SetCameraStreaming(ff_msgs::CommandStampedPtr const& cmd) {
   NODELET_INFO("Executive executing set camera streaming command!");
   bool successful = true;
@@ -1972,8 +2170,21 @@ bool Executive::SetCameraStreaming(ff_msgs::CommandStampedPtr const& cmd) {
         // Check to see if streaming was successfully set
         if (!dock_cam_enable_client_.call(enable_img_srv)) {
           successful = false;
-          // Service call should never fail but check just for kicks and giggles
           err_msg = "Enable streaming failed for dock cam.";
+          completed_status = ff_msgs::AckCompletedStatus::EXEC_FAILED;
+        }
+      }
+    } else if (cmd->args[0].s == CommandConstants::PARAM_NAME_CAMERA_NAME_HAZ) {
+      // Check to make sure the haz cam service is valid
+      if (!haz_cam_enable_client_.exists()) {
+        successful = false;
+        err_msg = "Haz cam enable service not running! Node may have died!";
+        completed_status = ff_msgs::AckCompletedStatus::EXEC_FAILED;
+      } else {
+        // Check to see if streaming was successfully set
+        if (!haz_cam_enable_client_.call(enable_img_srv)) {
+          successful = false;
+          err_msg = "Enable streaming failed for haz cam.";
           completed_status = ff_msgs::AckCompletedStatus::EXEC_FAILED;
         }
       }
@@ -1987,8 +2198,22 @@ bool Executive::SetCameraStreaming(ff_msgs::CommandStampedPtr const& cmd) {
         // Check to see if streaming was successfully set
         if (!nav_cam_enable_client_.call(enable_img_srv)) {
           successful = false;
-          // Service call should never fail but check just for kicks and giggles
           err_msg = "Enable streaming failed for nav cam.";
+          completed_status = ff_msgs::AckCompletedStatus::EXEC_FAILED;
+        }
+      }
+    } else if (cmd->args[0].s ==
+                              CommandConstants::PARAM_NAME_CAMERA_NAME_PERCH) {
+      // Check to make sure the perch cam service is valid
+      if (!perch_cam_enable_client_.exists()) {
+        successful = false;
+        err_msg = "Perch cam enable service not running! Node may have died!";
+        completed_status = ff_msgs::AckCompletedStatus::EXEC_FAILED;
+      } else {
+        // Check to see if streaming was successfully set
+        if (!perch_cam_enable_client_.call(enable_img_srv)) {
+          successful = false;
+          err_msg = "Enable streaming failed for perch cam.";
           completed_status = ff_msgs::AckCompletedStatus::EXEC_FAILED;
         }
       }
@@ -2002,7 +2227,6 @@ bool Executive::SetCameraStreaming(ff_msgs::CommandStampedPtr const& cmd) {
         // Check to see if streaming was successfully set
         if (!sci_cam_enable_client_.call(enable_img_srv)) {
           successful = false;
-          // Service call should never fail but check just for kicks and giggles
           err_msg = "Enable streaming failed for sci cam.";
           completed_status = ff_msgs::AckCompletedStatus::EXEC_FAILED;
         }
@@ -2931,11 +3155,11 @@ bool Executive::StopAllMotion(ff_msgs::CommandStampedPtr const& cmd) {
       // check
       successful = true;
     } else if (running_actions_[i] == DOCK) {
-      // Don't stop if we are deactivating PMC. Docker doesn't count down so
-      // need to do some math to check this
+      // Don't stop if we are deactivating the PMCs or already docked but
+      // switching localiization
       if (agent_state_.mobility_state.sub_state <=
                         ff_msgs::DockState::DOCKING_WAITING_FOR_SPIN_DOWN) {
-        err_msg = "Already deactivating pmcs. Cannot stop.";
+        err_msg = "Already deactivating pmcs or docked. Cannot stop.";
         start_stop = false;
         successful = false;
       } else {
@@ -2953,8 +3177,17 @@ bool Executive::StopAllMotion(ff_msgs::CommandStampedPtr const& cmd) {
       CancelAction(MOVE, "stop");
       i--;
     } else if (running_actions_[i] == PERCH) {
-      // TODO(Katie) Fill when perch implemented! Be sure to follow what did
-      // for dock
+      // Don't stop if we are deactivating the PMCs or already perched but
+      // switching localization
+      if (agent_state_.mobility_state.sub_state <=
+                        ff_msgs::PerchState::PERCHING_WAITING_FOR_SPIN_DOWN) {
+        err_msg = "Already deactivating the pmcs or perched. Cannot stop.";
+        start_stop = false;
+        successful = false;
+      } else {
+        CancelAction(PERCH, "stop");
+        i--;
+      }
     } else if (running_actions_[i] == STOP) {
       err_msg = "Already stopping.";
       successful = false;
@@ -2964,13 +3197,11 @@ bool Executive::StopAllMotion(ff_msgs::CommandStampedPtr const& cmd) {
       i--;
       // Figure out where we are in the undock process and only send a stop if
       // we are in or have completed the egressing state
-      // Invert sub state since that is what we do when we set the substate for
-      // undocking
       if (agent_state_.mobility_state.sub_state >
-                    ff_msgs::DockState::UNDOCKING_MOVING_TO_APPROACH_POSE) {
+                        ff_msgs::DockState::UNDOCKING_MOVING_TO_APPROACH_POSE) {
         start_stop = false;
         // Set successful to true since it may have been set to false in the
-       // if docked statement
+        // if docked statement
         successful = true;
         // Set mobility state to docked
         agent_state_.mobility_state.sub_state = 0;
@@ -2981,8 +3212,24 @@ bool Executive::StopAllMotion(ff_msgs::CommandStampedPtr const& cmd) {
         start_stop = true;
       }
     } else if (running_actions_[i] == UNPERCH) {
-      // TODO(Katie) Fill when unperch implemented! Be sure to follow what you
-      // did for undock
+      CancelAction(UNPERCH, "stop");
+      i--;
+      // Figure out where we are in the unperching process and only send a stop
+      // if we might not be perched any more.
+      if (agent_state_.mobility_state.sub_state >
+                              ff_msgs::PerchState::UNPERCHING_OPENING_GRIPPER) {
+        start_stop = false;
+        // Set successful to true since it may have been set to false in the if
+        // perched statement
+        successful = true;
+        // Set mobility state to perched
+        agent_state_.mobility_state.sub_state = 0;
+      } else {  // Off handle rail so we need to send a stop
+        // Set successful and start stop to true since it may have been set to
+        // false in the if perched checked
+        successful = true;
+        start_stop = true;
+      }
     }
   }
 
@@ -3183,8 +3430,8 @@ bool Executive::Undock(ff_msgs::CommandStampedPtr const& cmd) {
   bool docked = false;
   std::string err_msg = "";
 
-  // Make sure robot is docked before attempted to undock. Only accept undock
-  // ready op state so only need to check perched, stopped, or drifting
+  // Make sure robot is docked before attempting to undock. Only accept undock
+  // in the ready op state so only need to check perched, stopped, or drifting
   if (agent_state_.mobility_state.state == ff_msgs::MobilityState::DRIFTING) {
     err_msg = "Can't undock when not docked. Astrobee is currently drifting.";
   } else if (agent_state_.mobility_state.state ==
@@ -3204,8 +3451,8 @@ bool Executive::Undock(ff_msgs::CommandStampedPtr const& cmd) {
     }
   }
 
-  // Start action publish failed command acks so we only need to fail an ack if
-  // we aren't docked and thus cannot undock
+  // Fill dock goal and start action publishes failed command acks so we only
+  // need to fail an ack if we aren't docked and thus cannot undock
   if (!docked) {
     state_->AckCmd(cmd->cmd_id,
                    ff_msgs::AckCompletedStatus::EXEC_FAILED,
@@ -3216,30 +3463,65 @@ bool Executive::Undock(ff_msgs::CommandStampedPtr const& cmd) {
 
 bool Executive::Unperch(ff_msgs::CommandStampedPtr const& cmd) {
   NODELET_INFO("Executive executing unperch command!");
-  // Have to be perched to unperch
-  if (agent_state_.mobility_state.state == ff_msgs::MobilityState::PERCHING &&
-      agent_state_.mobility_state.sub_state == 0) {
-    // TODO(Katie) Stub, change to be actual code
-    SetMobilityState(ff_msgs::MobilityState::PERCHING, -1);
-    ros::Duration(1).sleep();
-    SetMobilityState(ff_msgs::MobilityState::PERCHING, -2);
-    ros::Duration(1).sleep();
-    SetMobilityState(ff_msgs::MobilityState::PERCHING, -3);
-    ros::Duration(1).sleep();
-    SetMobilityState(ff_msgs::MobilityState::PERCHING, -4);
-    ros::Duration(1).sleep();
-    SetMobilityState(ff_msgs::MobilityState::STOPPING, 0);
+  bool perched = false;
+  std::string err_msg = "";
+
+  // Make sure robot is perched before attempting to unperch. Only accept
+  // unperch in the ready op state so only need to check docked, stopped, or
+  // drifting
+  if (agent_state_.mobility_state.state == ff_msgs::MobilityState::DOCKING) {
+    err_msg = "Can't unperch when not perched. Astrobee is currently docked.";
+  } else if (agent_state_.mobility_state.state ==
+                                            ff_msgs::MobilityState::DRIFTING) {
+    err_msg = "Can't unperch when not perched. Astrobeep is currently drifting";
+  } else if (agent_state_.mobility_state.state ==
+                                            ff_msgs::MobilityState::STOPPING) {
+    err_msg = "Can't unperch when not perched. Astrobee is currently stopped.";
+  } else {
+    perched = true;
+    perch_goal_.command = ff_msgs::PerchGoal::UNPERCH;
+
+    if (!StartAction(UNPERCH, cmd->cmd_id)) {
+      return false;
+    }
+  }
+
+  // Start action publishes failed command acks so we only need to fail an ack
+  // if we aren't perched and thus cannot unperch
+  if (!perched) {
     state_->AckCmd(cmd->cmd_id,
                    ff_msgs::AckCompletedStatus::EXEC_FAILED,
-                   "Unperch not implemented yet! Stay tune!");
+                   err_msg);
+  }
+  return perched;
+}
+
+bool Executive::Unterminate(ff_msgs::CommandStampedPtr const& cmd) {
+  ff_hw_msgs::ClearTerminate clear_srv;
+
+  // Clear eps terminate flag
+  if (!CheckServiceExists(eps_terminate_client_,
+                          "EPS terminate",
+                          cmd->cmd_id)) {
     return false;
+  }
+
+  if (eps_terminate_client_.call(clear_srv)) {
+    if (!clear_srv.response.success) {
+      state_->AckCmd(cmd->cmd_id,
+                     ff_msgs::AckCompletedStatus::EXEC_FAILED,
+                     clear_srv.response.status_message);
+      return false;
+    }
   } else {
     state_->AckCmd(cmd->cmd_id,
                    ff_msgs::AckCompletedStatus::EXEC_FAILED,
-                   "Not perched! Must be perched to unperch.");
+                   "Eps clear terminate service returned false.");
     return false;
   }
-  return false;
+
+  state_->AckCmd(cmd->cmd_id);
+  return true;
 }
 
 bool Executive::Wait(ff_msgs::CommandStampedPtr const& cmd) {
@@ -3325,6 +3607,14 @@ void Executive::Initialize(ros::NodeHandle *nh) {
                                std::placeholders::_2));
   motion_ac_.Create(nh, ACTION_MOBILITY_MOTION);
 
+  perch_ac_.SetActiveTimeout(action_active_timeout_);
+  perch_ac_.SetDeadlineTimeout(perch_result_timeout_);
+  perch_ac_.SetResultCallback(std::bind(&Executive::PerchResultCallback,
+                              this,
+                              std::placeholders::_1,
+                              std::placeholders::_2));
+  perch_ac_.Create(nh, ACTION_BEHAVIORS_PERCH);
+
   // initialize subs
   camera_state_sub_ = nh_.subscribe(TOPIC_MANAGEMENT_CAMERA_STATE,
                                     sub_queue_size_,
@@ -3346,6 +3636,11 @@ void Executive::Initialize(ros::NodeHandle *nh) {
                                   &Executive::DockStateCallback,
                                   this);
 
+  fault_state_sub_ = nh_.subscribe(TOPIC_MANAGEMENT_SYS_MONITOR_STATE,
+                                   sub_queue_size_,
+                                   &Executive::FaultStateCallback,
+                                   this);
+
   gs_ack_sub_ = nh_.subscribe(TOPIC_GUEST_SCIENCE_MANAGER_ACK,
                               sub_queue_size_,
                               &Executive::GuestScienceAckCallback,
@@ -3366,20 +3661,26 @@ void Executive::Initialize(ros::NodeHandle *nh) {
                                  &Executive::SysMonitorHeartbeatCallback,
                                  this);
 
+
+  inertia_sub_ = nh_.subscribe(TOPIC_MOBILITY_INERTIA,
+                               sub_queue_size_,
+                               &Executive::InertiaCallback,
+                               this);
+
   motion_sub_ = nh_.subscribe(TOPIC_MOBILITY_MOTION_STATE,
                               sub_queue_size_,
                               &Executive::MotionStateCallback,
                               this);
 
+  perch_state_sub_ = nh_.subscribe(TOPIC_BEHAVIORS_PERCHING_STATE,
+                                   sub_queue_size_,
+                                   &Executive::PerchStateCallback,
+                                   this);
+
   plan_sub_ = nh_.subscribe(TOPIC_COMMUNICATIONS_DDS_PLAN,
                             sub_queue_size_,
                             &Executive::PlanCallback,
                             this);
-
-  fault_state_sub_ = nh_.subscribe(TOPIC_MANAGEMENT_SYS_MONITOR_STATE,
-                                   sub_queue_size_,
-                                   &Executive::FaultStateCallback,
-                                   this);
 
   zones_sub_ = nh_.subscribe(TOPIC_COMMUNICATIONS_DDS_ZONES,
                              sub_queue_size_,
@@ -3440,11 +3741,23 @@ void Executive::Initialize(ros::NodeHandle *nh) {
   dock_cam_enable_client_ = nh_.serviceClient<ff_msgs::EnableCamera>(
                                     SERVICE_MANAGEMENT_IMG_SAMPLER_ENABLE_DOCK);
 
+  haz_cam_config_client_ = nh_.serviceClient<ff_msgs::ConfigureCamera>(
+                                    SERVICE_MANAGEMENT_IMG_SAMPLER_CONFIG_HAZ);
+
+  haz_cam_enable_client_ = nh_.serviceClient<ff_msgs::EnableCamera>(
+                                    SERVICE_MANAGEMENT_IMG_SAMPLER_ENABLE_HAZ);
+
   nav_cam_config_client_ = nh_.serviceClient<ff_msgs::ConfigureCamera>(
                                     SERVICE_MANAGEMENT_IMG_SAMPLER_CONFIG_NAV);
 
   nav_cam_enable_client_ = nh_.serviceClient<ff_msgs::EnableCamera>(
                                     SERVICE_MANAGEMENT_IMG_SAMPLER_ENABLE_NAV);
+
+  perch_cam_config_client_ = nh_.serviceClient<ff_msgs::ConfigureCamera>(
+                                  SERVICE_MANAGEMENT_IMG_SAMPLER_CONFIG_PERCH);
+
+  perch_cam_enable_client_ = nh_.serviceClient<ff_msgs::EnableCamera>(
+                                  SERVICE_MANAGEMENT_IMG_SAMPLER_ENABLE_PERCH);
 
   sci_cam_config_client_ = nh_.serviceClient<ff_msgs::ConfigureCamera>(
                                             SERVICE_MANAGEMENT_SCI_CAM_CONFIG);
@@ -3463,6 +3776,9 @@ void Executive::Initialize(ros::NodeHandle *nh) {
 
   enable_recording_client_ = nh_.serviceClient<ff_msgs::EnableRecording>(
                               SERVICE_MANAGEMENT_DATA_BAGGER_ENABLE_RECORDING);
+
+  eps_terminate_client_ = nh_.serviceClient<ff_hw_msgs::ClearTerminate>(
+                                          SERVICE_HARDWARE_EPS_CLEAR_TERMINATE);
 
   // initialize configure clients later, when initialized here, the service is
   // invalid when we try to use it. Must have something to do with startup order

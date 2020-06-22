@@ -30,7 +30,7 @@
 // Action
 #include <ff_msgs/DockAction.h>
 
-// C++ STL inclues
+// C++ STL includes
 #include <iostream>
 #include <sstream>
 #include <fstream>
@@ -50,7 +50,7 @@ DEFINE_int32(berth, 1, "Berth ID (1 = left, 2 = right)");
 // Timeout values
 DEFINE_double(connect, 10.0, "Action connect timeout");
 DEFINE_double(active, 10.0, "Action active timeout");
-DEFINE_double(response, 90.0, "Action response timeout");
+DEFINE_double(response, 200.0, "Action response timeout");
 DEFINE_double(deadline, -1.0, "Action deadline timeout");
 
 // Match the internal states and responses with the message definition

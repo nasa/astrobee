@@ -99,6 +99,7 @@
     <arg name="debug" value="$(arg debug)" />
     <arg name="default" value="true" />
   </include>
+
   <include file="$(find ff_util)/launch/ff_nodelet.launch">
     <arg name="class" value="planner_qp/Planner" />
     <arg name="name" value="planner_qp" />

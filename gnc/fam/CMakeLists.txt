@@ -20,11 +20,11 @@ project(fam)
 catkin_package(
  LIBRARIES fam
  CATKIN_DEPENDS roscpp sensor_msgs nav_msgs
- DEPENDS ff_msgs ff_hw_msgs common
+ DEPENDS ff_msgs ff_hw_msgs ff_common
 )
 
 create_library(TARGET fam
-  LIBS ${catkin_LIBRARIES} ${EIGEN_LIBRARIES} gnc_autocode msg_conversions common config_reader ff_nodelet
+  LIBS ${catkin_LIBRARIES} ${EIGEN_LIBRARIES} gnc_autocode msg_conversions ff_common config_reader ff_nodelet
   INC ${catkin_INCLUDE_DIRS} ${EIGEN3_INCLUDE_DIRS}
   DEPS ff_msgs ff_hw_msgs)
 

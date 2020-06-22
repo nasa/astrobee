@@ -1,5 +1,4 @@
-\defgroup planner_qp Quadratic Program (QP) planner
-\ingroup mobility
+\page planner_qp Quadratic Program (QP) planner
 
 # Overview 
 

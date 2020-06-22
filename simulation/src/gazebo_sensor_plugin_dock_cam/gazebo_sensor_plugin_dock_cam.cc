@@ -40,8 +40,13 @@ class GazeboSensorPluginDockCam : public FreeFlyerSensorPlugin {
     FreeFlyerSensorPlugin("dock_cam", "dock_cam", true), rate_(0.0) {}
 
   ~GazeboSensorPluginDockCam() {
-    if (update_)
+    if (update_) {
+      #if GAZEBO_MAJOR_VERSION > 7
+      update_.reset();
+      #else
       sensor_->DisconnectUpdated(update_);
+      #endif
+    }
   }
 
  protected:
@@ -92,7 +97,7 @@ class GazeboSensorPluginDockCam : public FreeFlyerSensorPlugin {
     ToggleCallback();
   }
 
-  // Only send measurements when estrinsics are available
+  // Only send measurements when extrinsics are available
   void OnExtrinsicsReceived(ros::NodeHandle *nh) {
     // Connect to the camera update event.
     update_ = sensor_->ConnectUpdated(

@@ -16,7 +16,7 @@
  * under the License.
  */
 
-#include <common/init.h>
+#include <ff_common/init.h>
 #include <sparse_mapping/sparse_map.h>
 #include <sparse_mapping/reprojection.h>
 
@@ -27,7 +27,7 @@
 #include <thread>
 
 int main(int argc, char** argv) {
-  common::InitFreeFlyerApplication(&argc, &argv);
+  ff_common::InitFreeFlyerApplication(&argc, &argv);
   if (argc < 3) {
     std::cerr << "Usage: evaluate_localization map.nvm testfile.txt\n";
     std::exit(0);

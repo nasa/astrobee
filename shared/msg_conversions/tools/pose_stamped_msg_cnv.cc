@@ -16,8 +16,8 @@
  * under the License.
  */
 
-#include <common/init.h>
-#include <common/utils.h>
+#include <ff_common/init.h>
+#include <ff_common/utils.h>
 #include <gflags/gflags.h>
 
 #include <geometry_msgs/PoseStamped.h>
@@ -47,7 +47,7 @@ void odometry_callback(geometry_msgs::PoseStampedPtr const & odometry) {
 }
 
 int main(int argc, char** argv) {
-  common::InitFreeFlyerApplication(&argc, &argv);
+  ff_common::InitFreeFlyerApplication(&argc, &argv);
   ros::init(argc, argv, "pose_stamped_msg_cnv");
 
   ros::NodeHandle nh;

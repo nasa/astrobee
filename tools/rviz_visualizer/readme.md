@@ -1,5 +1,4 @@
-\defgroup rvizvisualizer RViz Visualizer
-\ingroup tools
+\page rvizvisualizer RViz Visualizer
 
 This helper node publishes various topics that aid
 in visualization using rviz. It currently publishes

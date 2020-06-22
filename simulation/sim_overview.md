@@ -1,6 +1,6 @@
-# Simulator usage instructions for non-NASA users
+\page sim_overview Simulator usage instructions for non-NASA users
 
-This documentation assumes you have followed the [install readme](INSTALL.md).
+This documentation assumes you have followed the [install readme](../INSTALL.md).
 
 ## Setting up your Environment
 
@@ -86,7 +86,7 @@ measurements, etc.).*
 #### sviz
 
 This flag is used to start up the Gazebo GUI. This GUI is the most
-computationaly intensive GUI we have. We recommend using this GUI if you have a
+computationally intensive GUI we have. We recommend using this GUI if you have a
 high performance machine.
 
 *Note: `sviz` displays the model of the world (ground truth). This means that
@@ -139,7 +139,7 @@ flag to sim_pub.
 
 This flag tells ROS to launch the default robot into the world. If you want to
 launch the world without the default robot, please set this to `false` (see the
-[developers simulator introduction](simulation/readme.md) for an example).
+[developers simulator introduction](readme.md) for an example).
 
 #### world
 
@@ -153,7 +153,7 @@ simulation using the following:
 
 After the simulator is launched, you will have to reset the bias as we encode
 gravity in our bias. Please see the Reset Bias section of the 
-[teleop tool readme](management/executive/teleop_tool.md#reset-bias)
+[teleop tool readme](../management/executive/teleop_tool.md#reset-bias)
 for instructions on how to send the reset bias command. After you do
 this, the robot should be stable. If you want to go back to using the ISS world,
 you will have to issue another reset bias command after launching the robot in
@@ -197,12 +197,12 @@ have created. Please see the
 information.
 
 For information on how to use the teleop tool, please see the
-[teleop tool instructions](management/executive/teleop_tool.md).
+[teleop tool instructions](../management/executive/teleop_tool.md).
 
 ### Guest Science Applications
 
 If you are a guest scientist, please make sure you have the astrobee_android
-nasa github project checked out (if you followed the usage instructions, you
+NASA GitHub project checked out (if you followed the usage instructions, you
 should have checked this out already). For more information on guest science
 and how to create guest science applications, please see
 [`astrobee_android/readme.md`](https://github.com/nasa/astrobee_android/blob/master/README.md)
@@ -210,23 +210,27 @@ located in the `astrobee_android/` folder.
 
 ## Images
 
-When running RVIZ, you may notice the big "No Image" text in the two `DEBUG`
-windows. This is because, by default, we don't publish simulated camera images
-for the navigation and dock cameras due to the fact that simulating these images
-is very resource intensive. If you do want to generate these images, please open
-`astrobee/config/simulation/simulation.config` and change the `nav_cam_rate` and
-the `dock_cam_rate` to something other than 0. We recommend setting these values
-to 1 meaning these images will be published once per second. After this, you
-should see those images when you start the simulator. Please note this only
-works when the namespace is blank. If you want to see these images, please don't
-use the ns flag when launching the simulator.
+When running RVIZ, you may notice the big "No Image" text in the two
+`DEBUG` windows that are meant to show camera information. This is
+because, by default, we don't publish simulated camera images for the
+navigation and dock cameras due to the fact that simulating these
+images is very resource intensive. If you do want to generate these
+images, please open `astrobee/config/simulation/simulation.config` and
+change one or more of `nav_cam_rate` and `dock_cam_rate` to something
+other than 0. We recommend setting these values to 1 meaning these
+images will be published once per second. After this, you should see
+those images when you start the simulator. Please note this only works
+when the namespace is blank. If you want to see these images, please
+don't use the ns flag when launching the simulator. To show sci camera
+images, modify analogously the `sci_cam_rate` field, and enable this camera
+from the `Panels` menu in RVIZ.
 
 **Important** Unless you have a high performance machine, there is a good chance
 that these images will not initialize properly and you will be looking at the
 inside of the robot. If this happens, you will need to launch the world and
 Astrobee separately. Please follow the
 [Issues Starting up the Simulator](#issues-starting-up-the-Simulator) section
-with one cavet. DO NOT start up Astrobee (i.e. don't issue the second terminal
+with one caveat. DO NOT start up Astrobee (i.e. don't issue the second terminal
 command) until 30 to 40 seconds after RVIZ has started up. If you have a low
 performance computer, this fix may not be the only thing you have to do to fix
 the images. Please try reducing the speed of your simulator as well. For
@@ -240,7 +244,7 @@ Coming soon!!!
 <!---
  (Each robot takes more computer resources)
 <> (GDS only supports 3 robots.)
-<> (While this is offered, we have not tested this throughly and you could run into unforseen issues.)
+<> (While this is offered, we have not tested this thoroughly and you could run into unforeseen issues.)
 <> (If using teleop tool, be sure to specify the namespace)
 -->
 

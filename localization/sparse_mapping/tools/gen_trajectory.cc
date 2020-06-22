@@ -15,8 +15,8 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#include <common/init.h>
-#include <common/thread.h>
+#include <ff_common/init.h>
+#include <ff_common/thread.h>
 #include <sparse_mapping/sparse_map.h>
 #include <sparse_mapping/sparse_mapping.h>
 
@@ -56,7 +56,7 @@ DEFINE_string(trajectory_file, "trajectory.csv",
               "Save the trajectory to this file.");
 
 int main(int argc, char** argv) {
-  common::InitFreeFlyerApplication(&argc, &argv);
+  ff_common::InitFreeFlyerApplication(&argc, &argv);
 
   double z = -0.7;   // z is constant as the table is flat
   double mx = 0.6;  // x and y are within [-mx, mx]

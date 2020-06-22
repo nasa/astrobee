@@ -2,8 +2,8 @@
 
 #include <ff_msgs/VisualLandmarks.h>
 
-#include <common/init.h>
-#include <common/utils.h>
+#include <ff_common/init.h>
+#include <ff_common/utils.h>
 #include <gflags/gflags.h>
 #include <ros/ros.h>
 #include <sensor_msgs/PointCloud2.h>
@@ -53,7 +53,7 @@ void landmarks_callback(ff_msgs::VisualLandmarksPtr const & l) {
 }
 
 int main(int argc, char** argv) {
-  common::InitFreeFlyerApplication(&argc, &argv);
+  ff_common::InitFreeFlyerApplication(&argc, &argv);
   ros::init(argc, argv, "landmark_msg_cnv");
 
   ros::NodeHandle nh;

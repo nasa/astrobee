@@ -35,7 +35,7 @@
 #include <openMVG/tracks/tracks.hpp>
 #pragma GCC diagnostic pop
 
-#include <common/utils.h>
+#include <ff_common/utils.h>
 
 #include <fstream>
 #include <iostream>
@@ -111,6 +111,16 @@ namespace sparse_mapping {
 
 
 }  // namespace sparse_mapping
+
+// Logic for implementing if two histogram equalization flags are compatible.
+// This flag can be either 0 (false), 1 (true), or 2 (unknown). Be tolerant
+// of unknown values, but intolerant when true and false are mixed.
+void sparse_mapping::HistogramEqualizationCheck(int histogram_equalization1,
+                                                int histogram_equalization2) {
+  if ( (histogram_equalization1 == 0 && histogram_equalization2 == 1) ||
+       (histogram_equalization1 == 1 && histogram_equalization2 == 0) )
+    LOG(FATAL) << "Incompatible values of histogram equalization detected.";
+}
 
 bool sparse_mapping::IsBinaryDescriptor(std::string const& descriptor) {
   if (descriptor == "OPENSIFT" || descriptor == "SIFT" || descriptor == "SURF")
@@ -279,10 +289,6 @@ std::string sparse_mapping::MatchesFile(std::string const& map_file) {
 
 std::string sparse_mapping::EssentialFile(std::string const& map_file) {
   return map_file + ".essential.csv";
-}
-
-std::string sparse_mapping::TensorFile(std::string const& map_file) {
-  return map_file + ".tesnor.csv";
 }
 
 int sparse_mapping::ReadFeaturesSIFT(std::string const& filename,

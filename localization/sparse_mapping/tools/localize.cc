@@ -16,7 +16,7 @@
  * under the License.
  */
 
-#include <common/init.h>
+#include <ff_common/init.h>
 #include <sparse_mapping/sparse_map.h>
 #include <sparse_mapping/reprojection.h>
 
@@ -26,13 +26,14 @@
 #include <thread>
 DEFINE_string(reference_map, "",
               "Reference map to localize against.");
+DECLARE_bool(histogram_equalization);  // its value will be pulled from sparse_map.cc
 
 int main(int argc, char** argv) {
   if (argc < 3) {
     std::cerr << "Usage: localize <map file> <image>\n";
     std::exit(0);
   }
-  common::InitFreeFlyerApplication(&argc, &argv);
+  ff_common::InitFreeFlyerApplication(&argc, &argv);
 
   std::string map_file, img_file;
   if (FLAGS_reference_map != "") {
@@ -47,6 +48,10 @@ int main(int argc, char** argv) {
 
   // initialize map
   sparse_mapping::SparseMap map(map_file);
+
+  // Ensure we localize with the same flag as in the map
+  sparse_mapping::HistogramEqualizationCheck(map.GetHistogramEqualization(),
+                                             FLAGS_histogram_equalization);
 
   // localize frame
   camera::CameraModel camera(Eigen::Vector3d(), Eigen::Matrix3d::Identity(),

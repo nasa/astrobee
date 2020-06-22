@@ -1,0 +1,22 @@
+Source: libalvar
+Priority: optional
+Maintainer: Brian Coltin <brianfakeemailn@nasa.gov>
+Build-Depends: debhelper (>=9), cmake (>=3.5), libtinyxml-dev (>=2.6)
+Standards-Version: 3.9.7
+Section: libs
+Homepage: http://virtual.vtt.fi/virtual/proj2/multimedia/alvar/index.html
+#Vcs-Git: git://anonscm.debian.org/collab-maint/libalvar.git
+#Vcs-Browser: https://anonscm.debian.org/cgit/collab-maint/libalvar.git
+
+Package: libalvar-dev
+Section: libdevel
+Architecture: any
+Depends: libalvar2 (= ${binary:Version}), ${misc:Depends}
+Description: A library for detecting AR tags. Development packcage.
+ Alvar detects AR tags. The development packcage.
+
+Package: libalvar2
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: A library for detecting AR tags.
+ Alvar detects AR tags.

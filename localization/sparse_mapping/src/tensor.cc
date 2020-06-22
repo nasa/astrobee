@@ -16,9 +16,9 @@
  * under the License.
  */
 
-#include <common/init.h>
-#include <common/thread.h>
-#include <common/utils.h>
+#include <ff_common/init.h>
+#include <ff_common/thread.h>
+#include <ff_common/utils.h>
 #include <sparse_mapping/tensor.h>
 #include <sparse_mapping/ransac.h>
 #include <sparse_mapping/reprojection.h>
@@ -210,13 +210,13 @@ void MatchFeatures(const std::string & essential_file,
   sparse_mapping::CIDPairAffineMap relative_affines;
 
   // Iterate through the cid pairings
-  common::ThreadPool thread_pool;
+  ff_common::ThreadPool thread_pool;
   std::mutex match_mutex;
 
   openMVG::matching::PairWiseMatches match_map;
   for (size_t cid = 0; cid < s->cid_to_keypoint_map_.size(); cid++) {
     // Query the db for similar images
-    common::PrintProgressBar(stdout, static_cast<float>(cid)
+    ff_common::PrintProgressBar(stdout, static_cast<float>(cid)
                              / static_cast <float>(s->cid_to_keypoint_map_.size() - 1));
     std::vector<int> indices, queried_indices;
     sparse_mapping::QueryDB(s->detector_.GetDetectorName(),
@@ -1162,6 +1162,9 @@ void MergeMaps(sparse_mapping::SparseMap * A_in,
   if ( !(A.detector_ == B.detector_) )
     LOG(FATAL) << "The input maps don't have the same detector and/or descriptor.";
 
+  sparse_mapping::HistogramEqualizationCheck(A.GetHistogramEqualization(),
+                                             B.GetHistogramEqualization());
+
   // Wipe things that we won't merge (or not yet)
   C.vocab_db_ = sparse_mapping::VocabDB();
   C.pid_to_cid_fid_.clear();
@@ -1204,10 +1207,6 @@ void MergeMaps(sparse_mapping::SparseMap * A_in,
                               A2B, B2A);  // outputs
 
   // Put the xyz points corresponding to the tracks to merge in vectors.
-  // TODO(oalexan1): May want to add xyz points for the tracks in
-  // C.pid_to_cid_fid_ that have at least two features in each
-  // of the maps A and B and that are not pre-existing tracks in A
-  // and B.
   std::vector<Eigen::Vector3d> A_vec(A2B.size()), B_vec(A2B.size());
   int point_count = 0;
   for (auto it = A2B.begin(); it != A2B.end(); it++) {
@@ -1547,7 +1546,7 @@ void RegistrationOrVerification(std::vector<std::string> const& data_files,
   Eigen::Matrix3Xd user_xyz;
   for (size_t file_id = 0; file_id < data_files.size(); file_id++) {
     std::string file = data_files[file_id];
-    std::string ext = common::file_extension(file);
+    std::string ext = ff_common::file_extension(file);
     std::vector<std::string> curr_images;
     Eigen::MatrixXd curr_ip, curr_xyz;
 
@@ -1715,10 +1714,10 @@ void RegistrationOrVerification(std::vector<std::string> const& data_files,
 
   if (verification) {
     std::cout << "Mean absolute error on verification: " << mean_err << " meters" << std::endl;
-    std::cout << "computed xyz -- measured xyz -- error norm (meters)" << std::endl;
+    std::cout << "computed xyz -- measured xyz -- error diff -- error norm (meters)" << std::endl;
   } else {
     std::cout << "Mean absolute error before registration: " << mean_err << " meters" << std::endl;
-    std::cout << "Un-transformed computed xyz -- measured xyz -- error norm (meters)" << std::endl;
+    std::cout << "Un-transformed computed xyz -- measured xyz -- error diff -- error norm (meters)" << std::endl;
   }
 
   for (int i = 0; i < user_xyz.cols(); i++) {
@@ -1726,6 +1725,7 @@ void RegistrationOrVerification(std::vector<std::string> const& data_files,
     Eigen::Vector3d b = user_xyz.col(i);
     std::cout << print_vec(a) << " -- "
               << print_vec(b) << " -- "
+              << print_vec(a-b) << " -- "
               << print_vec((a - b).norm())
               << std::endl;
   }
@@ -1763,7 +1763,7 @@ void RegistrationOrVerification(std::vector<std::string> const& data_files,
   std::cout << "Mean absolute error after registration and before final bundle adjustment: "
             << mean_err << " meters" << std::endl;
 
-  std::cout << "Transformed computed xyz -- measured xyz -- error norm (meters)" << std::endl;
+  std::cout << "Transformed computed xyz -- measured xyz -- error diff - error norm (meters)" << std::endl;
   for (int i = 0; i < user_xyz.cols(); i++) {
     Eigen::Vector3d a = map->world_transform_*in.col(i);
     Eigen::Vector3d b = user_xyz.col(i);
@@ -1772,7 +1772,8 @@ void RegistrationOrVerification(std::vector<std::string> const& data_files,
 
     std::cout << print_vec(a) << " -- "
               << print_vec(b) << " -- "
-              << print_vec((a - b).norm()) << " "
+              << print_vec(a - b) << " -- "
+              << print_vec((a - b).norm()) << " -- "
               << images[id1] << ' '
               << images[id2] << std::endl;
   }

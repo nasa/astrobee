@@ -32,7 +32,7 @@
 #include <camera/camera_model.h>
 #include <sparse_mapping/reprojection.h>
 
-#include <common/init.h>
+#include <ff_common/init.h>
 
 // parameters sim_model_lib0_P are set in
 //  matlab/code_generation/sim_model_lib0_ert_rtw/sim_model_lib0_data.c
@@ -109,7 +109,7 @@ void Sim::ReadParams(void) {
   if (!config_.GetStr("imu_bias_file", &imu_filename)) {
     ROS_FATAL("IMU bias file not specified.");
   }
-  std::string bias_file = std::string(common::GetConfigDir()) + std::string("/") + imu_filename;
+  std::string bias_file = std::string(ff_common::GetConfigDir()) + std::string("/") + imu_filename;
 
   // set the biases to what the EKF expects
   Eigen::Map<Eigen::Vector3f> accel_bias(p->epson_accel_bias_ic);

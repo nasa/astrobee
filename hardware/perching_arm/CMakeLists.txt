@@ -31,15 +31,15 @@ catkin_package(
 
 create_library(
   TARGET perching_arm
-  LIBS ${catkin_LIBRARIES} serial config_reader ff_nodelet
+  LIBS ${catkin_LIBRARIES} ff_serial config_reader ff_nodelet
   INC ${catkin_INCLUDE_DIRS}
   DEPS perching_arm_gencpp
 )
 
 create_tool_targets(DIR tools
-  LIBS ${catkin_LIBRARIES} perching_arm common
+  LIBS ${catkin_LIBRARIES} perching_arm ff_common
   INC ${catkin_INCLUDE_DIRS}
-  DEPS common
+  DEPS ff_common
 )
 
 install_launch_files()

@@ -16,7 +16,7 @@
  * under the License.
  */
 
-#include <common/init.h>
+#include <ff_common/init.h>
 #include <ekf_video/ekf_bag_video.h>
 
 #include <QtCore>
@@ -32,7 +32,7 @@ DEFINE_bool(
 DEFINE_string(image_topic, "/hw/cam_nav", "The topic to get images from..");
 
 int main(int argc, char* argv[]) {
-  common::InitFreeFlyerApplication(&argc, &argv);
+  ff_common::InitFreeFlyerApplication(&argc, &argv);
 
   ros::Time::init();
 

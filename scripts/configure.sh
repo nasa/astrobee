@@ -76,7 +76,7 @@ usage_string="$scriptname [-h] [-l <linux build>] [-a <arm build>]\
 #[-t make_target]
 
 # options to parse
-optstring="hlap:b:B:cCdDrRfFkKvVg"
+optstring="hlap:b:B:cCdDrRfFkKvVmMg"
 
 # Print the script usage
 print_usage()
@@ -169,6 +169,10 @@ parse_args()
 	    "v") extra_opts+=" -DENABLE_VIVE=on"
 		 ;;
 	    "V") extra_opts+=" -DENABLE_VIVE=off"
+		 ;;
+	    "m") extra_opts+=" -DENABLE_DENSE_MAPPER=on"
+		 ;;
+	    "M") extra_opts+=" -DENABLE_DENSE_MAPPER=off"
 		 ;;
 	    "g") debug_mode=1
 		 ;;

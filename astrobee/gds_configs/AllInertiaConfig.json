@@ -1,0 +1,9 @@
+{	
+  "type" : "InertiaConfigurationFile",
+  "inertiaConfigs" : [ {
+    "name" : "UnloadedAstrobee",
+    "mass" : 9.583789,
+    "matrix" : [ 0.153427988291, 0.0, 0.0, 0.0, 0.142714053392, 0.0, 0.0, 0.0, 0.16230276227 ]
+ 	} ]
+}
+

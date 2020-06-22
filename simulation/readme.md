@@ -1,4 +1,4 @@
-\defgroup sim Simulation
+\page sim Simulation
 
 This package provides the code required to simulate multiple Free-Flyers operating within the International Space Station (ISS). Our code is written as plugins for Gazebo, an open source robot simulator. In essence the plugins mimic the ros messages and services provided by real hardware, and as a result they act as drop-in replacements for the true hardware. Running a simulation is therefore as simple as loading all flight software subsystems except the hardware drivers, and spawning simulated hardware in stead of real drivers.
 
@@ -6,7 +6,7 @@ There is once key exception to the rule above: although we do simulate cameras, 
 
 At its core, Gazebo provides a headless server which loads a collection of shared library plugins and performs the simulation itself. One can optionally load the client interface which provides a high-fidelity rendering of the world, and an interface that enables basic interaction with the elements.
 
-Note that if the simulation is run any speed over real-time then the DockCam and NavCam are disabled. We do this because there is large computational overhead required to generate the images: they are wide-angle cameras and hence require multiple projections to be taken and fused, which does not scale well as you increase the requested speed multiplier.
+Note that if the simulation is run any speed over real-time then the NavCam, DockCam, and SciCam plugins are disabled. We do this because there is large computational overhead required to generate the images: they are wide-angle cameras and hence require multiple projections to be taken and fused, which does not scale well as you increase the requested speed multiplier.
 
 ## Obtaining media
 
@@ -39,6 +39,10 @@ To view the GNC GUI:
 To view the GDS GUI:
 
     gds:=true
+
+To start in a perch ready position:
+
+    perch:=true
 
 If the launch fails because of DDS-related errors, that functionality can be turned off with:
 
@@ -210,25 +214,34 @@ Customization: description/description/macro_perching_arm.urdf.xacro
     rate:                rate is not used and the plugin doesn't even read it
     bypass_blower_model: whether the commands in ctr are executed directly, don't put true unless there is a reason for it
 
-**NavCam and DockCam plugins**
+**NavCam, DockCam, and SciCam plugins**
 
-These are forward and aft-facing grayscale cameras. The plugin copies the image data from the gazebo camera sensor into a sensor_msgs::Image message and publishes is to the to the appropriate ROS topic. To test:
+The NavCam and DockCam are forward and aft-facing grayscale fisheye cameras. The SciCam is a forward-facing camera with no distortion and typically of higher resolution than the other two. These plugins copy the image data from the gazebo camera sensor into sensor_msgs::Image messages and publishe them to the to the appropriate ROS topic. To test:
 
     rostopic hz /%ns$/hw/cam_nav
     rostopic hz /%ns$/hw/cam_dock
+    rostopic hz /%ns$/hw/cam_sci
 
-By default, the cameras are disabled, for performance reasons. To enable one of both them, one can edit
+Each camera also publishes its pose and intrinsics. Those can be seen, for example for sci cam, as:
+
+    rostopic echo /sim/sci_cam/pose
+    rostopic echo /sim/sci_cam/info
+
+By default, the cameras are disabled, for performance reasons. To enable one of more of them, one can edit
 
   astrobee/config/simulation/simulation.config
+
+The sci cam is a special case. Even when enabled, so sci_cam_rate is positive, it will publish only camera pose info and no actual images until it receives a custom guest science command on topic /comm/dds/command to do so. (This can be overwritten however by setting sci_cam_continuous_picture_taking in simulation.config to true.)
 
 If the camera images are incorrect, it can be because the simulator cannot keep up. Then the speed of simulation can be decreased, for example, with:
 
     speed:=0.5
 
-The resolution of these cameras is 320 by 240 pixels, as set in sensor_nav_cam.urdf.xacro and sensor_dock_cam.urdf.xacro. The resolution can be increased to 1280 x 960 to agree with the real-world cameras.
+The resolution of NavCam and DockCam is 320 by 240 pixels, as set in sensor_nav_cam.urdf.xacro and sensor_dock_cam.urdf.xacro. The resolution can be increased to 1280 x 960 to agree with the real-world cameras. The SciCam properties can be modified in sensor_sci_cam.urdf.xacro.
 
 Customization: description/description/sensor_nav_cam.urdf.xacro
                description/description/sensor_dock_cam.urdf.xacro
+               description/description/sensor_sci_cam.urdf.xacro
     update_rate:    camera update rate
     horizontal_fov: horizontal field of view
     image>width:    image width pixels
@@ -244,6 +257,8 @@ These are forward and aft facing depth cameras. The plugin copies the point clou
 
     rostopic hz /%ns$/hw/depth_haz/points
     rostopic hz /%ns$/hw/depth_perch/points
+
+The haz cam plugin also publishes the haz cam camera pose and image intensity measured at the points in the cloud.
 
 Customization: description/description/sensor_haz_cam.urdf.xacro
                description/description/sensor_perch_cam.urdf.xacro
@@ -298,7 +313,7 @@ Customization: description/description/sensor_imu.urdf.xacro
     tf:     whether or not to publish the tf pose for visualization
     pose:   whether or not to publish the pose of the robot
     twist:  whether or not to publish linear and angular velocity
-    acc:    whether or not to publish linear and angular ecceleration
+    acc:    whether or not to publish linear and angular acceleration
 
 **Drag plugin**
 The drag plugin implements the standard drag formula: D = -0.5 * rho * C_D * area * v * |v|
@@ -310,3 +325,5 @@ Customization: description/description/sensor_imu.urdf.xacro
 
 
 
+\subpage sim_overview
+\subpage sim_issues

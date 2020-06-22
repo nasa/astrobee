@@ -122,5 +122,7 @@ message Map {
   }
   optional VocabDB vocab_db = 7 [default = NONE];
   optional int32 orgbrisk_threshold = 8;  // this is no longer used but remains for compatability
+  // histogram_equalization 1 means true, 0 means false, 2 means not known 
+  optional int32 histogram_equalization = 9 [default = 2];
 }
 

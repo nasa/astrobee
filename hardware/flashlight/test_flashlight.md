@@ -1,5 +1,4 @@
-\defgroup flashlight_test_flashlight Test: Flashlight
-\ingroup flashlight
+\page flashlight_test_flashlight Test: Flashlight
 
 The flashlight node is responsible for turning the flashlights on and off and setting the brightness. It contains a test program to do this without running the fsw. The program must be run on the llp. The executable can be found in armhf/bin and is called flashlight test. To turn the front flashlight on, run:
 

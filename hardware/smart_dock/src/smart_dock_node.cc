@@ -60,7 +60,7 @@ SmartDockNode::SmartDockNode(int argc, char** argv, const i2c::Device& i2c_dev,
       sub_suffix_(""),
       dds_event_loop_(name) {
   // Make path to QOS and NDDS files
-  std::string config_path = common::GetConfigDir();
+  std::string config_path = ff_common::GetConfigDir();
   config_path += "/communications/dds/";
 
   /* fake miro log into thinking we have no arguments */

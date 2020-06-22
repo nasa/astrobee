@@ -73,7 +73,8 @@ class LocalizationManagerNodelet : public ff_util::FreeFlyerNodelet {
     CURRENT_UNSTABLE       = (1<<6),    // Current pipeline is unstable
     GOAL_UNSTABLE          = (1<<7),    // Goal pipeline is unstable
     STABLE                 = (1<<8),    // Filter/pipeline is stable
-    TIMEOUT                = (1<<9)     // Could not complete the action
+    TIMEOUT                = (1<<9),    // Could not complete the action
+    MANUAL_STATE_SET       = (1<<10)    // Setting the state manually with service
   };
 
   // Constructor
@@ -651,6 +652,7 @@ class LocalizationManagerNodelet : public ff_util::FreeFlyerNodelet {
     NODELET_DEBUG_STREAM("SetStateCallback()");
     fsm_.SetState(req.state);
     res.success = true;
+    UpdateCallback(fsm_.GetState(), MANUAL_STATE_SET);
     return true;
   }
 
@@ -728,6 +730,7 @@ class LocalizationManagerNodelet : public ff_util::FreeFlyerNodelet {
     case GOAL_UNSTABLE:        msg.fsm_event = "GOAL_UNSTABLE";         break;
     case STABLE:               msg.fsm_event = "STABLE";                break;
     case TIMEOUT:              msg.fsm_event = "TIMEOUT";               break;
+    case MANUAL_STATE_SET:     msg.fsm_event = "MANUAL_STATE_SET";      break;
     }
     NODELET_DEBUG_STREAM("Received event " << msg.fsm_event);
     // Debug state changes

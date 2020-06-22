@@ -45,7 +45,7 @@ create_library(
 
 create_tool_targets(
   DIR tools
-  LIBS signal_lights common custom_i2c
+  LIBS signal_lights ff_common custom_i2c
 )
 
 # ROS nodelet and tools

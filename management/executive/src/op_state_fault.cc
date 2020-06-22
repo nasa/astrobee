@@ -90,6 +90,8 @@ OpState* OpStateFault::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
     exec_->StowArm(cmd);
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_SWITCH_LOCALIZATION) {
     exec_->SwitchLocalization(cmd);
+  } else if (cmd->cmd_name == CommandConstants::CMD_NAME_UNTERMINATE) {
+    exec_->Unterminate(cmd);
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_WIPE_HLP) {
     exec_->WipeHlp(cmd);
   } else {

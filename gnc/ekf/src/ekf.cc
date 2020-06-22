@@ -22,7 +22,7 @@
 #include <Eigen/Geometry>
 #include <Eigen/Dense>
 
-#include <common/init.h>
+#include <ff_common/init.h>
 #include <ff_msgs/EkfState.h>
 #include <ff_msgs/SetEkfInput.h>
 #include <gflags/gflags.h>

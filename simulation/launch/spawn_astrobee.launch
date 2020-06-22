@@ -21,7 +21,7 @@
   <!-- Use the namespace forward-slash to signify that this model has no name -->
   <node if="$(eval arg('ns')=='')"
         name="spawn_astrobee" pkg="astrobee_gazebo" type="spawn_model"
-        args="-param /robot_description -model / -urdf -pose  $(arg pose)" />
+        args="-param /robot_description -model bsharp -urdf -pose  $(arg pose)" />
   <!-- Spawn with an actual string namespace -->
   <node unless="$(eval arg('ns')=='')"
         name="spawn_astrobee" pkg="astrobee_gazebo" type="spawn_model"

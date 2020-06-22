@@ -1,5 +1,4 @@
-\defgroup matlab GNC Matlab Code
-\ingroup gnc
+\page matlab GNC Matlab Code
 
 In this directory, all the matlab, simulink and embedded C++ functions used
 therein are stored.

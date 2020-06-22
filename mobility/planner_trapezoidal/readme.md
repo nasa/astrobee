@@ -1,5 +1,4 @@
-\defgroup planner_trapezoidal Trapezoidal planner
-\ingroup mobility
+\page planner_trapezoidal Trapezoidal planner
 
 The trapezoidal planner provides a baseline mechanism for generating **segments** that pass through a supplied sequence of poses. It constructs linear translations between poses, with a trapezoidal ramp on angular and linear velocity. This planner is completely agnostic to clutter and keep-out zones, and so it is typically used for short moves, like those in docking or perching.
 

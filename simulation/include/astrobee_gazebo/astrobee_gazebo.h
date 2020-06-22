@@ -7,7 +7,7 @@
  * (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
@@ -29,6 +29,7 @@
 #include <sensor_msgs/point_cloud2_iterator.h>
 #include <sensor_msgs/Image.h>
 #include <sensor_msgs/image_encodings.h>
+#include <sensor_msgs/CameraInfo.h>
 
 // Transformation helper code
 #include <tf2_ros/transform_listener.h>
@@ -40,8 +41,13 @@
 #include <gazebo/common/common.hh>
 #include <gazebo/physics/physics.hh>
 #include <gazebo/sensors/sensors.hh>
+#if GAZEBO_MAJOR_VERSION <= 7
 #include <gazebo/math/gzmath.hh>
+#endif
 #include <gazebo/rendering/rendering.hh>
+
+// Eigen includes
+#include <Eigen/Geometry>
 
 // STL includes
 #include <string>
@@ -168,6 +174,20 @@ class FreeFlyerSensorPlugin : public FreeFlyerPlugin, public SensorPlugin {
   physics::ModelPtr model_;
   sdf::ElementPtr sdf_;
 };
+
+// Utility functions
+
+// Find the transform from the sensor to the world
+#if GAZEBO_MAJOR_VERSION > 7
+Eigen::Affine3d SensorToWorld(ignition::math::Pose3d const& world_pose,
+                              ignition::math::Pose3d const& sensor_pose);
+#else
+Eigen::Affine3d SensorToWorld(gazebo::math::Pose const& world_pose,
+                              ignition::math::Pose3d const& sensor_pose);
+#endif
+
+// Read the camera info
+void FillCameraInfo(rendering::CameraPtr camera, sensor_msgs::CameraInfo & info_msg);
 
 }  // namespace gazebo
 

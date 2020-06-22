@@ -1,5 +1,4 @@
-\defgroup eps_driver_test_payload_power Test : Payload power
-\ingroup eps_driver
+\page eps_driver_test_payload_power Test : Payload power
 
 The EPS subsystem is responsible for enabling and disabling power to payloads being carried by the astrobee. There are four payload bays -- two on the top side and two on the underside of the robot. 
 

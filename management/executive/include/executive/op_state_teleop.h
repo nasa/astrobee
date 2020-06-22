@@ -42,6 +42,7 @@ class OpStateTeleop : public OpState {
  private:
   // allow creation only by repo
   friend class OpStateRepo;
+  ff_msgs::CommandStampedPtr move_cmd_;
 };
 }  // namespace executive
 #endif  // EXECUTIVE_OP_STATE_TELEOP_H_

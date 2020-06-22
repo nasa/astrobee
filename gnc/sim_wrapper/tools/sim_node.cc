@@ -24,12 +24,12 @@
 #include <gflags/gflags.h>
 #include <ros/ros.h>
 
-#include <common/init.h>
+#include <ff_common/init.h>
 
 DEFINE_double(rate, 1.0, "Speed up time by this factor.");
 
 int main(int argc, char** argv) {
-  common::InitFreeFlyerApplication(&argc, &argv);
+  ff_common::InitFreeFlyerApplication(&argc, &argv);
   ros::init(argc, argv, "sim_wrapper");
 
   ros::NodeHandle nh("~");

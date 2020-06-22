@@ -22,20 +22,21 @@
 #include <image_transport/image_transport.h>
 
 #include <camera/camera_params.h>
-#include <common/utils.h>
+#include <ff_common/utils.h>
 #include <rosbag/view.h>
 #include <Eigen/Core>
 
 namespace ekf_bag {
 
 EkfBag::EkfBag(const char* bagfile, const char* mapfile, bool run_ekf,
-               bool gen_features, const char* biasfile, std::string image_topic)
+               bool gen_features, const char* biasfile, std::string image_topic, const std::string& gnc_config)
     : map_(mapfile, true),
       loc_(&map_),
       run_ekf_(run_ekf),
       gen_features_(gen_features),
       bias_file_(biasfile),
-      image_topic_(image_topic) {
+      image_topic_(image_topic),
+      gnc_config_(gnc_config) {
   bag_.open(bagfile, rosbag::bagmode::Read);
 }
 
@@ -43,7 +44,7 @@ EkfBag::~EkfBag(void) { bag_.close(); }
 
 void EkfBag::ReadParams(config_reader::ConfigReader* config) {
   config->AddFile("tools/ekf_bag.config");
-  config->AddFile("gnc.config");
+  config->AddFile(gnc_config_.c_str());
   config->AddFile("cameras.config");
   config->AddFile("geometry.config");
   config->AddFile("localization.config");
@@ -240,6 +241,7 @@ void EkfBag::Run(void) {
     topics.push_back(std::string("/") + TOPIC_GNC_EKF);
     topics.push_back(TOPIC_GNC_EKF);
   }
+
   rosbag::View view(bag_, rosbag::TopicQuery(topics));
   bag_start_time_ = view.getBeginTime();
 
@@ -254,8 +256,9 @@ void EkfBag::Run(void) {
       sensor_msgs::ImageConstPtr image_msg =
           m.instantiate<sensor_msgs::Image>();
       UpdateImage(m.getTime(), image_msg);
-      common::PrintProgressBar(stdout,
-                               static_cast<float>(progress) / view.size());
+      // TODO(rsoussan): making print this optional
+      /*ff_common::PrintProgressBar(stdout,
+                               static_cast<float>(progress) / view.size());*/
     } else if (string_ends_with(m.getTopic(), TOPIC_HARDWARE_IMU)) {
       sensor_msgs::ImuConstPtr imu_msg = m.instantiate<sensor_msgs::Imu>();
       UpdateImu(m.getTime(), *imu_msg.get());

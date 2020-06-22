@@ -16,7 +16,7 @@
 # under the License.
 
 add_subdirectory(i2c)
-add_subdirectory(serial)
+add_subdirectory(ff_serial)
 add_subdirectory(flashlight)
 add_subdirectory(laser)
 add_subdirectory(gpio)

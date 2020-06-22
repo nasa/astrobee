@@ -1,0 +1,9 @@
+ros-melodic-rviz
+gazebo9
+gazebo9-common
+ros-melodic-gazebo-ros-pkgs
+libgazebo9-dev
+python-pyqtgraph
+doxygen
+zlib1g-dev
+libusb-1.0-0-dev

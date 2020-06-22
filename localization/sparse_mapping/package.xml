@@ -1,0 +1,28 @@
+<package>
+  <name>sparse_mapping</name>
+  <version>1.0.0</version>
+  <description>
+    This package localizes the Astrobee on a map.
+  </description>
+  <license>
+    Apache License, Version 2.0
+  </license>
+  <author email="astrobee-fsw@nx.arc.nasa.gov">
+    Astrobee Flight Software
+  </author>
+  <maintainer email="astrobee-fsw@nx.arc.nasa.gov">
+    Astrobee Flight Software
+  </maintainer>
+  <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>camera</build_depend>
+  <build_depend>roscpp</build_depend>
+  <build_depend>interest_point</build_depend>
+  <build_depend>config_reader</build_depend>
+  <build_depend>ff_common</build_depend>
+  <run_depend>roscpp</run_depend>
+  <run_depend>camera</run_depend>
+  <run_depend>interest_point</run_depend>
+  <run_depend>config_reader</run_depend>
+  <run_depend>ff_common</run_depend>
+
+</package>

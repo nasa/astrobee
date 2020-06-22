@@ -38,9 +38,15 @@
           <k1>0.993308</k1>
         </distortion>
       </camera>
-      <plugin name="nav_cam_ros" filename="libgazebo_sensor_plugin_nav_cam.so"/>
-      <plugin name="sparse_map_ros" filename="libgazebo_sensor_plugin_sparse_map.so"/>
-      <plugin name="optical_flow_ros" filename="libgazebo_sensor_plugin_optical_flow.so"/>
+      <plugin name="nav_cam_ros" filename="libgazebo_sensor_plugin_nav_cam.so">
+        <namespace>/${ns}/</namespace>
+      </plugin>
+      <plugin name="sparse_map_ros" filename="libgazebo_sensor_plugin_sparse_map.so">
+        <namespace>/${ns}/</namespace>
+      </plugin>
+      <plugin name="optical_flow_ros" filename="libgazebo_sensor_plugin_optical_flow.so">
+        <namespace>/${ns}/</namespace>
+      </plugin>
     </sensor>
   </gazebo>
 </robot>

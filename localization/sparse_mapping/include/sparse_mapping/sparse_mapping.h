@@ -74,6 +74,9 @@ namespace sparse_mapping {
 
   bool IsBinaryDescriptor(std::string const& descriptor);
 
+  // Logic for implementing if two histogram equalization flags are compatible
+  void HistogramEqualizationCheck(int histogram_equalization1, int histogram_equalization2);
+
   // Writes the NVM control network format.
   void WriteNVM(std::vector<Eigen::Matrix2Xd > const& cid_to_keypoint_map,
                 std::vector<std::string> const& cid_to_filename,
@@ -102,9 +105,6 @@ namespace sparse_mapping {
 
   // The name of the essential file
   std::string EssentialFile(std::string const& map_file);
-
-  // The name of the tensor file
-  std::string TensorFile(std::string const& map_file);
 
   // Write features yaml file
   void WriteFeatures(std::string const& detector_name,

@@ -1,5 +1,4 @@
-\defgroup perch Perch behavior
-\ingroup beh
+\page perch Perch behavior
 
 Astrobee may be optionally equipped with a **perching arm** payload, which provides the robot with a three degrees of freedom arm. This enables Astrobee to perch and unperch from handrails on the ISS, alowing it to turn off localization and propulsion thereby saving considerable energy. When perched the arm provides two degrees of freedom, allowing the operator to pan and tilt the robot as required.
 
@@ -33,6 +32,6 @@ At any point one can view the internal state of the perch behavior using the fol
 
     rostopic echo /beh/perch/state
 
-If you ever need to manually set the perch state to a speficic value, you can call the ```set_state``` service with the new state as the single argument:
+If you ever need to manually set the perch state to a speficic value, you can call the ```set_state``` service with the new state as the single argument (PERCHED = 0, UNPERCHED  = -6):
 
     rosservice call /beh/perch/set_state 3

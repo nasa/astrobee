@@ -24,34 +24,32 @@ import re
 import subprocess
 import sys
 import yaml
+import numpy as np
+import numpy.linalg
+from tf import transformations
+from calibration_utils import *
 
-# returns intrinsics and distortion from yaml file
+# returns intrinsics, distortion, and transforms between cameras from a yaml file
 def read_yaml(filename, cameras):
-  intrinsic = None
-  dist = None
+  dist       = []
+  intrinsics = []
+  transforms = []
   with open(filename, 'r') as f:
-    dist = []
-    intrinsic = []
     try:
       d = yaml.load(f)
       for cam in cameras:
         dist.append(d[cam]['distortion_coeffs'])
-        intrinsic.append(d[cam]['intrinsics'])
+        intrinsics.append(d[cam]['intrinsics'])
+        if cam == 'cam0':
+          # No transform from cam0 to itself, just use a placeholder
+          transforms.append(np.array([[]]))
+        else:
+          # Transform from current camera to previous one
+          transforms.append(np.array(d[cam]['T_cn_cnm1']))
     except yaml.YAMLError as exc:
       print >> sys.stderr, exc
-  return (intrinsic, dist)
-
-def find_close_bracket(s):
-  assert(s[0] == '{')
-  count = 1
-  for i in range(1, len(s)):
-    if s[i] == '{':
-      count += 1
-    elif s[i] == '}':
-      count -= 1
-    if count == 0:
-      return i
-  return -1
+  
+  return (intrinsics, dist, transforms)
 
 def update_intrinsics(filename, camera, intrinsics, distortion):
   try:
@@ -103,16 +101,19 @@ def update_intrinsics(filename, camera, intrinsics, distortion):
   return False
 
 def calibrate_camera(bag, calibration_target, from_time, to_time, approx_sync,
-                     dock_cam=False, depth_cam=False, only_depth_cam=False,
-                     verbose=False, model='pinhole-fov',
-                     model_depth='pinhole-radtan'):
-
-  CAMERA_TOPIC = '/hw/cam_dock' if dock_cam else '/hw/cam_nav'
+                     nav_cam_topic, haz_cam_topic, sci_cam_topic,
+                     dock_cam, depth_cam, sci_cam, only_depth_cam,
+                     verbose):
   
-  if CAMERA_TOPIC == '/hw/cam_dock':
-      CAMERA_TOPIC_DEPTH = '/hw/depth_perch/extended/amplitude_int'
+  fov_model    = 'pinhole-fov'
+  radtan_model = 'pinhole-radtan'
+
+  HD_CAMERA_TOPIC = '/hw/cam_dock' if dock_cam else nav_cam_topic
+  
+  if HD_CAMERA_TOPIC == '/hw/cam_dock':
+      DEPTH_CAMERA_TOPIC = '/hw/depth_perch/extended/amplitude_int'
   else:
-      CAMERA_TOPIC_DEPTH = '/hw/depth_haz/extended/amplitude_int'
+      DEPTH_CAMERA_TOPIC = haz_cam_topic
 
   extra_flags = ' --verbose' if verbose else ' --dont-show-report'
 
@@ -134,23 +135,33 @@ def calibrate_camera(bag, calibration_target, from_time, to_time, approx_sync,
   bag_name = os.path.splitext(bag_file)[0]
 
   if only_depth_cam:
+    # Calibrate only the depth camera
     cmd = ('rosrun kalibr kalibr_calibrate_cameras --topics %s --models %s ' + 
            '--target %s --bag %s%s') % \
-    (CAMERA_TOPIC_DEPTH, model_depth, calibration_target, bag_file, extra_flags)
+    (DEPTH_CAMERA_TOPIC, radtan_model, calibration_target, bag_file, extra_flags)
+  elif sci_cam:
+    # Calibrate the nav, haz, and sci cameras
+    cmd = ('rosrun kalibr kalibr_calibrate_cameras --topics %s %s %s --models %s %s %s ' + 
+           '--target %s --bag %s%s') % \
+    (HD_CAMERA_TOPIC, DEPTH_CAMERA_TOPIC, sci_cam_topic, fov_model, radtan_model, radtan_model,
+     calibration_target, bag_file, extra_flags)
   elif depth_cam:
+    # Calibrate the HD and depth cameras
     cmd = ('rosrun kalibr kalibr_calibrate_cameras --topics %s %s --models %s %s ' + 
            '--target %s --bag %s%s') % \
-    (CAMERA_TOPIC, CAMERA_TOPIC_DEPTH, model, model_depth, calibration_target, bag_file, extra_flags)
+    (HD_CAMERA_TOPIC, DEPTH_CAMERA_TOPIC, fov_model, radtan_model,
+     calibration_target, bag_file, extra_flags)
   else:
+    # Calibrate only the HD camera (nav or dock)
     cmd = ('rosrun kalibr kalibr_calibrate_cameras --topics %s ' +
            '--models %s --target %s --bag %s%s') % \
-          (CAMERA_TOPIC, model, calibration_target, bag_file, extra_flags)
+          (HD_CAMERA_TOPIC, fov_model, calibration_target, bag_file, extra_flags)
   
   print("Running in: " + bag_dir)
   print(cmd)
   output_arg = None   # Display in the terminal what is going on
   ret = subprocess.call(cmd.split(), cwd=bag_dir, stdout=output_arg, stderr=output_arg)
-
+  
   if ret != 0:
     print >> sys.stderr, 'Failed to calibrate camera from bag file.'
     return None
@@ -167,49 +178,67 @@ def main():
   parser.add_argument('-d', '--dock_cam', dest='dock_cam', action='store_true', help='Calibrate dock camera.')
   parser.add_argument('-depth', '--depth_cam', dest='depth_cam', action='store_true', help='Calibrate respective depth camera.')
   parser.add_argument('--only_depth_cam', dest='only_depth_cam', action='store_true', help='Calibrate only the depth camera (haz or perch).')
+  parser.add_argument('--sci_cam', dest='sci_cam', action='store_true', help='Calibrate nav_cam, haz_cam, and sci_cam.')
   parser.add_argument('-f', '--from', dest='from_time', help='Use the bag data starting at this time, in seconds.')
   parser.add_argument('-t', '--to', dest='to_time', help='Use the bag data until this time, in seconds.')
   parser.add_argument('--calibration_target', dest='calibration_target', help='Use this yaml file to desribe the calibration target, overriding the default: ' + default_calibration_target)
   parser.add_argument('--approx_sync', dest='approx_sync', help='Time tolerance for approximate image synchronization [s] (default: 0.02).')
+  parser.add_argument('--nav_cam_topic', default = '/hw/cam_nav', help='The nav cam topic name.')
+  parser.add_argument('--haz_cam_topic', default = '/hw/depth_haz/extended/amplitude_int', help='The haz cam topic name.')
+  parser.add_argument('--sci_cam_topic', default = '/hw/cam_sci', help='The sci cam topic name.')
   parser.add_argument('-v', '--verbose',  dest='verbose', action='store_true', help='Verbose mode.')
   args = parser.parse_args()
 
   if args.calibration_target is None:
     args.calibration_target = default_calibration_target
 
+  # Sanity checks for sci_cam
+  if args.sci_cam:
+    if args.only_depth_cam or args.dock_cam:
+      print >> sys.stderr, "The sci cam must be calibrated together with the nav and haz cams."
+      return
+    if not args.depth_cam:
+      print("Since sci cam is to be calibrated, also calibrate the haz cam.")
+      args.depth_cam = True
+      
   # Setup files
   yaml_file = calibrate_camera(args.bag, args.calibration_target,
                                args.from_time, args.to_time, args.approx_sync,
-                               dock_cam=args.dock_cam,
-                               depth_cam=args.depth_cam,
-                               only_depth_cam=args.only_depth_cam,
-                               verbose=args.verbose)
+                               args.nav_cam_topic, args.haz_cam_topic, args.sci_cam_topic,
+                               args.dock_cam, args.depth_cam, args.sci_cam, args.only_depth_cam,
+                               args.verbose)
 
   if yaml_file is None:
     print >> sys.stderr, 'Failed to run calibration.'
     return 
 
-  print("Created file: " + yaml_file)
+  print("Reading calibration report file: " + yaml_file)
   
-  if args.depth_cam:
+  if args.sci_cam:
+    # The yaml file has info for nav, haz, and sci cameras
+    (intrinsics, distortion, transforms) = read_yaml(yaml_file, ['cam0', 'cam1', 'cam2'])
+    if len(intrinsics) < 3 or len(distortion) < 3:
+      print >> sys.stderr, 'Failed to read intrinsics for the nav, haz, and sci cameras.'
+      return
+  elif args.depth_cam:
     # The yaml file has info for both cameras
-    (intrinsics, distortion) = read_yaml(yaml_file, ['cam0', 'cam1'])
+    (intrinsics, distortion, transforms) = read_yaml(yaml_file, ['cam0', 'cam1'])
     if len(intrinsics) < 2 or len(distortion) < 2:
       print >> sys.stderr, 'Failed to read depth camera parameters.'
       return
   elif args.only_depth_cam:
     # The yaml file only has the depth camera info
-    (intrinsics, distortion) = read_yaml(yaml_file, ['cam0'])
+    (intrinsics, distortion, transforms) = read_yaml(yaml_file, ['cam0'])
   else:
     # The yaml file has only the hd camera info
-    (intrinsics, distortion) = read_yaml(yaml_file,  ['cam0'])
+    (intrinsics, distortion, transforms) = read_yaml(yaml_file,  ['cam0'])
   
   if not intrinsics or not distortion:
     print >> sys.stderr, 'Failed to read camera intrinsics.'
     return
 
   config_file = SCRIPT_DIR + '/../../astrobee/config/robots/' + args.robot + '.config'
-  print("Updating file: " + config_file)
+  print("Updating intrinsics in file: " + config_file)
 
   if args.only_depth_cam:
     if update_intrinsics(config_file, 'perch_cam' if args.dock_cam else 'haz_cam',
@@ -217,17 +246,48 @@ def main():
       print >> sys.stderr, 'Failed to update config file with depth camera intrinsics.'
       return
   else:
+    # Replace the intrinsics of the HD camera
     if update_intrinsics(config_file, 'dock_cam' if args.dock_cam else 'nav_cam',
                          intrinsics[0], distortion[0][0]):
       print >> sys.stderr, 'Failed to update config file with HD camera intrinsics.'
       return
     
-    # Replace the intrinsics of depth cameras in addition to the HD cameras
+    # Replace the intrinsics of the depth camera in addition to the HD camera
     if args.depth_cam:
       if update_intrinsics(config_file, 'perch_cam' if args.dock_cam else 'haz_cam',
                            intrinsics[1], distortion[1]):
         print >> sys.stderr, 'Failed to update config file with depth camera intrinsics.'
         return
+
+      # Update the haz cam to nav cam transform. This was not implemented for
+      # the dock and perch cameras.
+      if not args.dock_cam:
+        trans = transforms[1]
+        t = trans[0:3,3]
+        q = transformations.quaternion_from_matrix(trans)
+        trans_name = 'hazcam_to_navcam_transform'
+        if lua_replace_transform(config_file, trans_name, (t, q)):
+          print >> sys.stderr, 'Will not update the value of ' + trans_name + \
+                ' (this one is needed only for the dense mapper).'
+          return
+
+        # If the sci cam is present, also update sci cam intrinsics and the
+        # sci cam to haz cam transform 
+        if args.sci_cam:
+
+          if update_intrinsics(config_file, 'sci_cam',
+                               intrinsics[2], distortion[2]):
+            print >> sys.stderr, 'Failed to update config file with sci camera intrinsics.'
+            return
+          
+          trans = transforms[2]
+          t = trans[0:3,3]
+          q = transformations.quaternion_from_matrix(trans)
+          trans_name = 'scicam_to_hazcam_transform'
+          if lua_replace_transform(config_file, trans_name, (t, q)):
+            print >> sys.stderr, 'Will not update the value of ' + trans_name + \
+                  ' (this one is needed only for the dense mapper).'
+            return
 
 if __name__ == '__main__':
   main()

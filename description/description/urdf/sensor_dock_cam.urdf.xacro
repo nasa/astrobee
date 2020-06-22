@@ -38,8 +38,12 @@
           <k1>1.0049199133284734</k1>
         </distortion>
       </camera>
-      <plugin name="dock_cam_ros" filename="libgazebo_sensor_plugin_dock_cam.so" />
-      <plugin name="ar_tags_ros" filename="libgazebo_sensor_plugin_ar_tags.so"/>
+      <plugin name="dock_cam_ros" filename="libgazebo_sensor_plugin_dock_cam.so">
+        <namespace>/${ns}/</namespace>
+      </plugin>
+      <plugin name="ar_tags_ros" filename="libgazebo_sensor_plugin_ar_tags.so">
+        <namespace>/${ns}/</namespace>
+      </plugin>
     </sensor>
   </gazebo>
 </robot>

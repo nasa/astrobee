@@ -15,9 +15,9 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#include <common/init.h>
-#include <common/thread.h>
-#include <common/utils.h>
+#include <ff_common/init.h>
+#include <ff_common/thread.h>
+#include <ff_common/utils.h>
 #include <camera/camera_params.h>
 #include <sparse_mapping/sparse_map.h>
 #include <sparse_mapping/tensor.h>
@@ -43,7 +43,7 @@ DEFINE_double(density_factor, 1.4,
               "Increasing this value will allow more images to be kept.");
 
 int main(int argc, char** argv) {
-  common::InitFreeFlyerApplication(&argc, &argv);
+  ff_common::InitFreeFlyerApplication(&argc, &argv);
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
   if (argc < 2) {
@@ -58,7 +58,7 @@ int main(int argc, char** argv) {
   detector.Reset("ORGBRISK");
 
   printf("Removing duplicate images...\n");
-  common::PrintProgressBar(stdout, 0.0);
+  ff_common::PrintProgressBar(stdout, 0.0);
   image1 = cv::imread(argv[1], CV_LOAD_IMAGE_GRAYSCALE);
   detector.Detect(image1, &storage, &descriptors1);
   int deleted_count = 0;
@@ -70,7 +70,7 @@ int main(int argc, char** argv) {
       image2 = cv::imread(argv[j], CV_LOAD_IMAGE_GRAYSCALE);
       detector.Detect(image2, &storage, &descriptors2);
       interest_point::FindMatches(descriptors1, descriptors2, &matches);
-      common::PrintProgressBar(stdout, static_cast<float>(j - 1) / (argc - 2));
+      ff_common::PrintProgressBar(stdout, static_cast<float>(j - 1) / (argc - 2));
       // if many descriptors match, we can ignore
       double d = FLAGS_density_factor;
       if (matches.size() >= d*descriptors1.rows/4.0 || matches.size() >= d*2000) {

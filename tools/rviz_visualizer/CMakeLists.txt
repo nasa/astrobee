@@ -22,7 +22,7 @@ catkin_package(
 )
 
 create_tool_targets(DIR tools
-  LIBS ${catkin_LIBRARIES} msg_conversions common config_reader
+  LIBS ${catkin_LIBRARIES} msg_conversions ff_common config_reader
   INC ${catkin_INCLUDE_DIRS}
 )
 

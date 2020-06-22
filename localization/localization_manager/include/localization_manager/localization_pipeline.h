@@ -166,7 +166,7 @@ struct Pipeline {
         sub_reg_ = nh_->subscribe(topic_reg_, 1,
           &Pipeline::RegistrationCallback, this);
         timer_reg_ = nh_->createTimer(ros::Duration(timeout_reg_),
-          &Pipeline::RegistrationTimeoutCallback, this, false, false);
+          &Pipeline::RegistrationTimeoutCallback, this);
       }
       if (components_ & COMPONENT_VISUAL_FEATURES) {
         sub_visual_ = nh_->subscribe(topic_visual_, 1,
@@ -178,7 +178,7 @@ struct Pipeline {
         sub_depth_ = nh_->subscribe(topic_depth_, 1,
           &Pipeline::DepthCallback, this);
         timer_depth_ = nh_->createTimer(ros::Duration(timeout_depth_),
-          &Pipeline::DepthTimeoutCallback, this, false, false);
+          &Pipeline::DepthTimeoutCallback, this);
       }
     } else {
       // Make sure we don't keep monitoring the filter when the pipeline

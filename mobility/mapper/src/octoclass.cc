@@ -15,7 +15,8 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#include "mapper/octoclass.h"
+
+#include <mapper/octoclass.h>
 #include <mapper/pcl_conversions.h>
 
 #include <utility>
@@ -75,7 +76,6 @@ void OctoClass::SetResolution(const double resolution_in) {
       }
     }
   }
-
   ROS_DEBUG("Map resolution: %f meters", resolution_);
 }
 
@@ -140,24 +140,24 @@ void OctoClass::SetClampingThresholds(const double clamping_threshold_min,
   ROS_DEBUG("Clamping threshold maximum: %f", clamping_threshold_max);
 }
 
-// Function obtained from https://github.com/OctoMap/octomap_ros
-void OctoClass::PointsOctomapToPointCloud2(const octomap::point3d_list& points,
-                                           sensor_msgs::PointCloud2* cloud) {
-  // create pcl version
-  pcl::PointCloud<pcl::PointXYZ> out_cloud;
-  out_cloud.reserve(points.size());
+// // Function obtained from https://github.com/OctoMap/octomap_ros
+// void OctoClass::PointsOctomapToPointCloud2(const octomap::point3d_list& points,
+//                                            sensor_msgs::PointCloud2* cloud) {
+//   // create pcl version
+//   pcl::PointCloud<pcl::PointXYZ> out_cloud;
+//  out_cloud.reserve(points.size());
 
-  // copy points
-  for (auto &p : points)
-    out_cloud.push_back(pcl::PointXYZ(p.x(), p.y(), p.z()));
+//   // copy points
+//   for (auto &p : points)
+//     out_cloud.push_back(pcl::PointXYZ(p.x(), p.y(), p.z()));
 
-  // convert msg
-  pcl::toROSMsg(out_cloud, *cloud);
+//   // convert msg
+//   pcl::toROSMsg(out_cloud, *cloud);
 
-  // add stamps
-  cloud->header.stamp = ros::Time::now();
-  cloud->header.frame_id = "world";
-}
+//   // add stamps
+//   cloud->header.stamp = ros::Time::now();
+//   cloud->header.frame_id = "world";
+// }
 
 void OctoClass::PclToRayOctomap(const pcl::PointCloud< pcl::PointXYZ > &cloud,
                                 const geometry_msgs::TransformStamped &tf_cam2world,
@@ -296,6 +296,8 @@ void OctoClass::FadeMemory(const double &rate) {  // rate at which this function
 
   static bool is_occ;
   static octomap::OcTreeKey key;
+
+  // Fade tree_
   for (octomap::OcTree::leaf_iterator it = tree_.begin_leafs(),
                                      end= tree_.end_leafs();
                                      it!= end; ++it) {
@@ -313,84 +315,102 @@ void OctoClass::FadeMemory(const double &rate) {  // rate at which this function
     if (is_occ != tree_.isNodeOccupied(n))
       tree_.deleteNode(key, it.getDepth());
   }
-}
+  // Fade tree_inflated_
+  for (octomap::OcTree::leaf_iterator it = tree_inflated_.begin_leafs(),
+                                     end= tree_inflated_.end_leafs();
+                                     it!= end; ++it) {
+    // fade obstacles and free areas
+    key = it.getKey();
+    octomap::OcTreeNode* n = tree_inflated_.search(key);
+    is_occ = tree_inflated_.isNodeOccupied(n);
+    if (is_occ)
+        tree_inflated_.updateNodeLogOdds(n, fading_obs_log_prob_per_run);
+    else
+        tree_inflated_.updateNodeLogOdds(n, fading_free_log_prob_per_run);
 
-void OctoClass::InflateObstacles(const double &thickness) {
-  // set all pixels in a sphere around the origin
-  std::vector<Eigen::Vector3d> sphere;
-  static Eigen::Vector3d xyz;
-  const int max_xyz = static_cast<int>(ceil(thickness/resolution_));
-  const float max_dist = thickness*thickness;
-  static float d_origin;
-  for (int x = -max_xyz; x <= max_xyz; x++) {
-    for (int y = -max_xyz; y <= max_xyz; y++) {
-      for (int z = -max_xyz; z <= max_xyz; z++) {
-        xyz << x*resolution_, y*resolution_, z*resolution_;
-        d_origin = xyz.dot(xyz);  // distance from origin squared
-        if (d_origin <= max_dist)
-          sphere.push_back(xyz);
-      }
-    }
-  }
-
-  // create inflated tree
-  tree_inflated_.clear();
-  const int n_sphere_nodes = sphere.size();
-  static bool is_central_occ;
-  static octomap::point3d central_point, cur_point;
-  octomap::OcTreeNode *node, *node_inflated;
-  for (octomap::OcTree::leaf_iterator it = tree_.begin_leafs(),
-                                     end= tree_.end_leafs();
-                                   it!= end; ++it) {
-    // check occupancy of the current point
-    central_point = it.getCoordinate();
-    node = tree_.search(central_point);
-    is_central_occ = tree_.isNodeOccupied(node);
-
-    // populate the inflated map accordingly
-    if (is_central_occ) {  // populate the inflated with a sphere around this node
-      for (int j = 0; j < n_sphere_nodes; j++) {
-          cur_point = central_point + octomap::point3d(sphere[j][0], sphere[j][1], sphere[j][2]);
-          tree_inflated_.updateNode(cur_point, true);
-      }
-    } else {  // set as free if not uccupied already
-      node_inflated = tree_inflated_.search(central_point);
-      if (node_inflated == NULL)
-        tree_inflated_.updateNode(central_point, false);
-      else if (!tree_inflated_.isNodeOccupied(node_inflated))
-        tree_inflated_.updateNode(central_point, false);
-    }
+    // tree nodes that are unknown
+    // if it was occupied then disoccupied, delete node
+    if (is_occ != tree_inflated_.isNodeOccupied(n))
+      tree_inflated_.deleteNode(key, it.getDepth());
   }
 }
 
-void OctoClass::FindCollidingNodesTree(const pcl::PointCloud< pcl::PointXYZ > &point_cloud,
-                                       std::vector<octomap::point3d> *colliding_nodes) {
-  static octomap::point3d query, node_center;
-  static octomap::OcTreeNode* node;
-  static octomap::OcTreeKey key;
-  octomap::KeySet endpoints;
+// void OctoClass::InflateObstacles(const double &thickness) {
+//   // set all pixels in a sphere around the origin
+//   std::vector<Eigen::Vector3d> sphere;
+//   static Eigen::Vector3d xyz;
+//   const int max_xyz = static_cast<int>(ceil(thickness/resolution_));
+//   const float max_dist = thickness*thickness;
+//   static float d_origin;
+//   for (int x = -max_xyz; x <= max_xyz; x++) {
+//     for (int y = -max_xyz; y <= max_xyz; y++) {
+//       for (int z = -max_xyz; z <= max_xyz; z++) {
+//         xyz << x*resolution_, y*resolution_, z*resolution_;
+//         d_origin = xyz.dot(xyz);  // distance from origin squared
+//         if (d_origin <= max_dist)
+//           sphere.push_back(xyz);
+//       }
+//     }
+//   }
 
-  const int cloudsize = point_cloud.size();
+//   // create inflated tree
+//   tree_inflated_.clear();
+//   const int n_sphere_nodes = sphere.size();
+//   static bool is_central_occ;
+//   static octomap::point3d central_point, cur_point;
+//   octomap::OcTreeNode *node, *node_inflated;
+//   for (octomap::OcTree::leaf_iterator it = tree_.begin_leafs(),
+//                                      end= tree_.end_leafs();
+//                                    it!= end; ++it) {
+//     // check occupancy of the current point
+//     central_point = it.getCoordinate();
+//     node = tree_.search(central_point);
+//     is_central_occ = tree_.isNodeOccupied(node);
 
-  for (int j = 0; j < cloudsize; j++) {
-    query = octomap::point3d(point_cloud.points[j].x,
-                             point_cloud.points[j].y,
-                             point_cloud.points[j].z);
-    key = tree_.coordToKey(query);
-    std::pair<octomap::KeySet::iterator, bool> ret = endpoints.insert(key);
+//     // populate the inflated map accordingly
+//     if (is_central_occ) {  // populate the inflated with a sphere around this node
+//       for (int j = 0; j < n_sphere_nodes; j++) {
+//           cur_point = central_point + octomap::point3d(sphere[j][0], sphere[j][1], sphere[j][2]);
+//           tree_inflated_.updateNode(cur_point, true);
+//       }
+//     } else {  // set as free if not uccupied already
+//       node_inflated = tree_inflated_.search(central_point);
+//       if (node_inflated == NULL)
+//         tree_inflated_.updateNode(central_point, false);
+//       else if (!tree_inflated_.isNodeOccupied(node_inflated))
+//         tree_inflated_.updateNode(central_point, false);
+//     }
+//   }
+// }
 
-    // check if current node has not been evaluated yet
-    if (ret.second) {  // insertion took place => new node being evaluated
-      node = tree_.search(query);
-      if (node == NULL) {
-        continue;
-      } else if (tree_.isNodeOccupied(node)) {
-        node_center = tree_.keyToCoord(key);
-        colliding_nodes->push_back(node_center);
-      }
-    }
-  }
-}
+// void OctoClass::FindCollidingNodesTree(const pcl::PointCloud< pcl::PointXYZ > &point_cloud,
+//                                        std::vector<octomap::point3d> *colliding_nodes) {
+//   static octomap::point3d query, node_center;
+//   static octomap::OcTreeNode* node;
+//   static octomap::OcTreeKey key;
+//   octomap::KeySet endpoints;
+
+//   const int cloudsize = point_cloud.size();
+
+//   for (int j = 0; j < cloudsize; j++) {
+//     query = octomap::point3d(point_cloud.points[j].x,
+//                              point_cloud.points[j].y,
+//                              point_cloud.points[j].z);
+//     key = tree_.coordToKey(query);
+//     std::pair<octomap::KeySet::iterator, bool> ret = endpoints.insert(key);
+
+//     // check if current node has not been evaluated yet
+//     if (ret.second) {  // insertion took place => new node being evaluated
+//       node = tree_.search(query);
+//       if (node == NULL) {
+//         continue;
+//       } else if (tree_.isNodeOccupied(node)) {
+//         node_center = tree_.keyToCoord(key);
+//         colliding_nodes->push_back(node_center);
+//       }
+//     }
+//   }
+// }
 
 void OctoClass::FindCollidingNodesInflated(const pcl::PointCloud< pcl::PointXYZ > &point_cloud,
                                            std::vector<octomap::point3d> *colliding_nodes) {
@@ -422,26 +442,26 @@ void OctoClass::FindCollidingNodesInflated(const pcl::PointCloud< pcl::PointXYZ 
 }
 
 // turns into voxelized representation
-octomap::point3d_list OctoClass::Voxelize(const octomap::OcTree::leaf_iterator &leaf) {
-  double res = tree_.getResolution();
-  double size = leaf.getSize();
+// octomap::point3d_list OctoClass::Voxelize(const octomap::OcTree::leaf_iterator &leaf) {
+//   double res = tree_.getResolution();
+//   double size = leaf.getSize();
 
-  double low = -size*0.5 +  res/2.0;
-  double high = -low;
+//   double low = -size*0.5 +  res/2.0;
+//   double high = -low;
 
-  octomap::point3d_list list;
+//   octomap::point3d_list list;
 
-  for (double dx = low; dx <= high; dx+=res) {
-    for (double dy = low; dy <= high; dy+=res) {
-      for (double dz = low; dz <= high; dz+=res) {
-        octomap::point3d d(dx, dy, dz);
-        list.push_back(d+leaf.getCoordinate());
-      }
-    }
-  }
+//   for (double dx = low; dx <= high; dx+=res) {
+//     for (double dy = low; dy <= high; dy+=res) {
+//       for (double dz = low; dz <= high; dz+=res) {
+//         octomap::point3d d(dx, dy, dz);
+//         list.push_back(d+leaf.getCoordinate());
+//       }
+//     }
+//   }
 
-  return list;
-}
+//   return list;
+// }
 
 // adapted from https:// ithub.com/OctoMap/octomap_mapping
 void OctoClass::TreeVisMarkers(visualization_msgs::MarkerArray* obstacles,
@@ -454,7 +474,7 @@ void OctoClass::TreeVisMarkers(visualization_msgs::MarkerArray* obstacles,
   const ros::Time rostime = ros::Time::now();
 
   // get pointcloud holder
-  octomap::point3d_list free_points, obstacles_points;
+  pcl::PointCloud<pcl::PointXYZ>  free_points, obstacles_points;
 
   // set tree min and max
   static double min_x, min_y, min_z, max_x, max_y, max_z;
@@ -473,17 +493,16 @@ void OctoClass::TreeVisMarkers(visualization_msgs::MarkerArray* obstacles,
     point_center.y = it.getY();
     point_center.z = it.getZ();
     const double h = (1.0 - std::min(std::max((point_center.z-min_z)/ (max_z - min_z), 0.0), 1.0))*colorFactor;
-    octomap::point3d_list voxels = Voxelize(it);
 
     if (tree_.isNodeOccupied(*it)) {
       // Add point and set color based on height
       obstacles->markers[idx].points.push_back(point_center);
       obstacles->markers[idx].colors.push_back(HeightMapColor(h, 1.0));
-      obstacles_points.insert(obstacles_points.end(), voxels.begin(), voxels.end());
+      obstacles_points.push_back(pcl::PointXYZ(point_center.x, point_center.y, point_center.z));
     } else {
       free->markers[idx].points.push_back(point_center);
       free->markers[idx].colors.push_back(HeightMapColor(h, 0.05));
-      free_points.insert(free_points.end(), voxels.begin(), voxels.end());
+      free_points.push_back(pcl::PointXYZ(point_center.x, point_center.y, point_center.z));
     }
   }
 
@@ -518,17 +537,26 @@ void OctoClass::TreeVisMarkers(visualization_msgs::MarkerArray* obstacles,
         free->markers[i].action = visualization_msgs::Marker::DELETE;
   }
 
-  PointsOctomapToPointCloud2(free_points, free_cloud);
-  PointsOctomapToPointCloud2(obstacles_points, obstacles_cloud);
+  pcl::toROSMsg(free_points, *free_cloud);
+  free_cloud->header.stamp = ros::Time::now();
+  free_cloud->header.frame_id = "world";
+  pcl::toROSMsg(obstacles_points, *obstacles_cloud);
+  obstacles_cloud->header.stamp = ros::Time::now();
+  obstacles_cloud->header.frame_id = "world";
 }
 
-// adapted from https:// ithub.com/OctoMap/octomap_mapping
+// adapted from https:// github.com/OctoMap/octomap_mapping
 void OctoClass::InflatedVisMarkers(visualization_msgs::MarkerArray* obstacles,
-                                   visualization_msgs::MarkerArray* free) {  // publish occupied nodes
+                                   visualization_msgs::MarkerArray* free,
+                                   sensor_msgs::PointCloud2* obstacles_cloud,
+                                   sensor_msgs::PointCloud2* free_cloud) {
   // Markers: each marker array stores a set of nodes with similar size
   obstacles->markers.resize(tree_depth_+1);
   free->markers.resize(tree_depth_+1);
   const ros::Time rostime = ros::Time::now();
+
+  // get pointcloud holder
+  pcl::PointCloud<pcl::PointXYZ> free_points, obstacles_points;
 
   // set tree_inflated_ min and max
   static double min_x, min_y, min_z, max_x, max_y, max_z;
@@ -551,9 +579,11 @@ void OctoClass::InflatedVisMarkers(visualization_msgs::MarkerArray* obstacles,
           // Add point and set color based on height
           obstacles->markers[idx].points.push_back(point_center);
           obstacles->markers[idx].colors.push_back(HeightMapColor(h, 1.0));
+          obstacles_points.push_back(pcl::PointXYZ(point_center.x, point_center.y, point_center.z));
       } else {
           free->markers[idx].points.push_back(point_center);
           free->markers[idx].colors.push_back(HeightMapColor(h, 0.05));
+          free_points.push_back(pcl::PointXYZ(point_center.x, point_center.y, point_center.z));
       }
   }
 
@@ -587,6 +617,12 @@ void OctoClass::InflatedVisMarkers(visualization_msgs::MarkerArray* obstacles,
     else
       free->markers[i].action = visualization_msgs::Marker::DELETE;
   }
+  pcl::toROSMsg(free_points, *free_cloud);
+  free_cloud->header.stamp = ros::Time::now();
+  free_cloud->header.frame_id = "world";
+  pcl::toROSMsg(obstacles_points, *obstacles_cloud);
+  obstacles_cloud->header.stamp = ros::Time::now();
+  obstacles_cloud->header.frame_id = "world";
 }
 
 // Returns -1 if node is unknown, 0 if its free and 1 if its occupied

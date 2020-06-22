@@ -198,13 +198,15 @@ class MapperNodelet : public ff_util::FreeFlyerNodelet {
   tf2_ros::Buffer buffer_;
 
   // Marker publishers
-  ros::Publisher hazard_pub_;
-  ros::Publisher obstacle_marker_pub_;
-  ros::Publisher free_space_marker_pub_;
-  ros::Publisher obstacle_cloud_pub_;
-  ros::Publisher free_space_cloud_pub_;
-  ros::Publisher inflated_obstacle_marker_pub_;
-  ros::Publisher inflated_free_space_marker_pub_;
+  ros::Publisher hazard_pub_;                      // Collision warnign
+  ros::Publisher obstacle_marker_pub_;             // Obstacle map
+  ros::Publisher free_space_marker_pub_;           // Obstacle map
+  ros::Publisher obstacle_cloud_pub_;              // Obstacle map
+  ros::Publisher free_space_cloud_pub_;            // Obstacle map
+  ros::Publisher inflated_obstacle_marker_pub_;    // Inflated obstacle map
+  ros::Publisher inflated_free_space_marker_pub_;  // Inflated free map
+  ros::Publisher inflated_obstacle_cloud_pub_;     // Inflated obstacle map
+  ros::Publisher inflated_free_space_cloud_pub_;   // Inflated free map
   ros::Publisher path_marker_pub_;
   ros::Publisher cam_frustum_pub_;
   ros::Publisher map_keep_in_out_pub_;

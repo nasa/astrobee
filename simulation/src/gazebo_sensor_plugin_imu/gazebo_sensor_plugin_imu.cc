@@ -47,8 +47,13 @@ class GazeboSensorPluginImu : public FreeFlyerSensorPlugin {
   }
 
   ~GazeboSensorPluginImu() {
-    if (update_)
+    if (update_) {
+      #if GAZEBO_MAJOR_VERSION > 7
+      update_.reset();
+      #else
       sensor_->DisconnectUpdated(update_);
+      #endif
+    }
   }
 
  protected:

@@ -120,7 +120,14 @@ jsonloader::StringField::StringField(std::string const& name,
 { }
 
 bool jsonloader::StringField::Validate(Json::Value const& obj) const {
-  jsonloader::Field::Validate(obj);
+  if (!Field::Validate(obj))
+    return false;
+
+  // Field is not required and not present
+  if (!obj.isMember(name())) {
+    LOG(INFO) << name() << " is missing but optional";
+    return true;
+  }
 
   if (!case_sensitive_) {
     if (!streq(value_, obj[name()].asString())) {
@@ -147,6 +154,12 @@ bool jsonloader::ObjectField::Validate(Json::Value const& obj) const {
   if (!Field::Validate(obj))
     return false;
 
+  // Field is not required and not present
+  if (!obj.isMember(name())) {
+    LOG(INFO) << name() << " is missing but optional";
+    return true;
+  }
+
   Json::Value const& child = obj[name()];
   for (const Field* f : fields_) {
     if (!f->Validate(child)) {
@@ -165,6 +178,12 @@ jsonloader::EnumField::EnumField(std::string const& name,
 bool jsonloader::EnumField::Validate(Json::Value const& obj) const {
   if (!Field::Validate(obj))
     return false;
+
+  // Field is not required and not present
+  if (!obj.isMember(name())) {
+    LOG(INFO) << name() << " is missing but optional";
+    return true;
+  }
 
   std::string const& actual = obj[name()].asString();
   for (std::string const& v : values_) {

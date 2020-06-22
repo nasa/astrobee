@@ -1,27 +1,27 @@
 {
   "type" : "ModuleBayPlan",
   "inertiaConfiguration" : {
-    "matrix" : [ 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0 ],
-    "mass" : 5.0,
-    "name" : "UnloadedAstrobee"
+    "name" : "UnloadedAstrobee",
+    "matrix" : [ 0.15342799, 0.0, 0.0, 0.0, 0.14271405, 0.0, 0.0, 0.0, 0.16230276 ],
+    "mass" : 9.583789
   },
   "operatingLimits" : {
     "targetLinearVelocity" : 0.15,
     "targetLinearAccel" : 0.0175,
     "targetAngularVelocity" : 0.0873,
     "targetAngularAccel" : 0.1745,
-    "flightMode" : "nominal",
     "collisionDistance" : 0.25,
-    "profileName" : "iss_lomo"
+    "profileName" : "iss_lomo",
+    "flightMode" : "nominal"
   },
   "site" : {
     "type" : "Site",
-    "bbox" : [ -0.7, -0.5, -0.65, 0.7, 0.5, 0.65 ],
     "crs" : {
       "properties" : {
         "name" : "ISS Module"
       }
     },
+    "bbox" : [ -0.7, -0.5, -0.65, 0.7, 0.5, 0.65 ],
     "name" : "ISS Analysis Frame",
     "id" : "iss"
   },
@@ -36,7 +36,7 @@
   "defaultSpeed" : 0.15,
   "defaultTolerance" : 1.0,
   "dateCreated" : "2019-08-28T12:39:49Z",
-  "dateModified" : "2019-08-28T12:45:48Z",
+  "dateModified" : "2020-04-01T22:40:58Z",
   "creator" : "astrobee",
   "schemaUrl" : "http://www.example.com/freeFlyerPlanSchema.json",
   "planNumber" : 0,

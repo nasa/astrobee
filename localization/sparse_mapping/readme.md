@@ -1,9 +1,8 @@
-\defgroup sparsemapping Sparse Mapping
-\ingroup localization
+\page sparsemapping Sparse Mapping
 
 This folder deals with creating and using sparse maps of visual features.
 
-# Package Overview
+# Package overview
 
 ## Library
 
@@ -16,11 +15,11 @@ A map consists of feature descriptors and associated 3D positions of
 the features.  A map may also contain a vocabulary database which
 enables fast lookup of similar images.
 
-### Map Files
+### Map files
 
 Maps are stored as protobuf files, which are defined in the `protobuf` folder.
 
-## ROS Node
+## ROS node
 
 The ROS node takes images and a map as input, and outputs visual features
 detected in the image and their 3D coordinates.
@@ -72,7 +71,7 @@ From the local machine, fetch the bag:
 
 Here, the IP address of P4D was used, which may differ from your robot's IP address.
 
-### Merging Bags
+### Merging bags
 
 The bags created on the ISS are likely split into many smaller bags,
 for easy and reliability of transfer. Those can be merged into one bag
@@ -81,32 +80,38 @@ as follows:
   export BUILD_PATH=$HOME/freeflyer_build/native
   source $BUILD_PATH/devel/setup.bash
   python freeflyer/localization/sparse_mapping/tools/merge_bags.py \
-    <output bag> <input bags>
+    <output bag> <input bags> --verbose
 
-###Extracting Images
+### Extracting images
 
 To extract images from a bag file:
 
-    freeflyer_build/native/devel/lib/localization_node/extract_image_bag <bagfile.bag> \
-      -image_topic /hw/cam_nav -output_directory <output dir>
+   extract_image_bag <bagfile.bag> -use_timestamp_as_image_name \
+     -image_topic /hw/cam_nav -output_directory <output dir>
 
-(the above assumes that the software was built with ROS on).
+The above assumes that the software was built with ROS on. This tool should
+exist in freeflyer_build/native.
 
-### Building a Map
+Please check using 'rosbag info' the nav cam topic in the bag, as its
+name can change.
 
-The `build_map` tools aids in constructing a map. See [here](@ref buildmap) for
+### Building a map
+
+The `build_map` tools aids in constructing a map. See build_map.md for
 further details.
 
-###Visualization
+### Visualization
 
-To visualize a map, use the command:
+To visualize a map, or just a list of images, use the command:
 
-    nvm_visualize <output.map> [ <image1.jpg> <image2.jpg> ... ]
+    nvm_visualize [ <output.map> ] [ <image1.jpg> <image2.jpg> ... ]
 
 In the viewer, press `a` and `d` (or the left and right arrow keys, or
 the Ins and Del keys on the num pad) to navigate through the
-images. Press `c` to show the cameras and triangulated points in
-3D. Press `q` to exit the viewer.
+images. The current image being displayed will be echoed on the
+command line. Press `c` to show the cameras and triangulated points in
+3D. Press `q` to exit the viewer. Press 'Home' and 'End' to go 
+to first and last image.
 
 In `c` mode, press left and right to visualize the localization
 results for the input image `imageN.jpg`. If no images are
@@ -139,7 +144,16 @@ collecting a subset of the images. (After clicking, a bug in OpenCV
 disables the arrow keys, then one can navigate with the "Ins" and
 "Del" keys on the numpad.)
 
-### Localize a Single Frame
+This tool can be invoked to just look at images, without any map being
+built. It can also delete images in this mode, with the 'Delete' and
+'x' keys, if invoked as:
+
+ nvm_visualize -enable_image_deletion <image dir>/*jpg
+
+### Localize a single frame
+
+All the commands below assume that the environment was set up, 
+as specified in build_map.md.
 
 To test localization of a single frame, use the command:
 
@@ -152,7 +166,7 @@ useful flag is --v 2 when it will print more verbose information.
 Most of the options of the localize_cams tool (see below)
 are also accepted. 
 
-### Testing Localization 
+### Testing localization using two maps
 
 To test localization of many images, one can acquire two sets of
 images of the same indoor environment, and create two maps ready for
@@ -186,6 +200,15 @@ Here we use values that are different from
 
 which are used for localization on the robot, since those are optimized
 for speed and here we want more accuracy.
+
+### Testing localization using a bag 
+
+See: 
+
+  freeflyer/tools/ekf_bag/readme.md
+
+for how to see how well a BRISK map with a vocabulary database does
+when localizing images from a bag.
 
 ### Extract sub-maps
 
@@ -224,18 +247,20 @@ need to be rebuilt for the extracted submap using
   build_map -vocab_db
 
 
-#### Merge Maps
+#### Merge maps
 
 Given a set of maps, they can be merged using the command:
 
-    merge_maps <input maps> -output_map merged.map -num_image_overlaps_at_endpoints 10
+  merge_maps <input maps> -skip_pruning -output_map merged.map \
+    -num_image_overlaps_at_endpoints 50
 
 It is very important to note that only maps that have not been pruned
 can be merged, hence the maps should have been built with
 -skip_pruning. If a map is already pruned, it needs to be rebuilt, as
 follows:
 
-    build_map -rebuild -skip_pruning -rebuild_detector <detector> -output_map <output map>
+    build_map -rebuild -skip_pruning -histogram_equalization \
+      -rebuild_detector <detector> -output_map <output map>
 
 and then these regenerated maps can be merged. Note that the merged
 map will be pruned as well, unless merging is invoked also with
@@ -278,7 +303,7 @@ can be invoked only to do bundle adjustment, while specifying the
 range of cameras to optimize (the ones from the second map). See
 build_map.md for details.
   
-#### How To Build a Map Efficiently
+#### How to build a map efficiently
 
 Often times map-building can take a long time, or it can fail. A
 cautious way of building a map is to build it in portions (perhaps on
@@ -309,10 +334,10 @@ All these operations should be performed on maps with SURF features.
 Hence the general approach for building maps is to create small SURF
 maps using the command:
 
-  build_map -feature_detection -feature_matching -track_building \
-   -incremental_ba -tensor_initialization -bundle_adjustment     \
-   -skip_pruning -num_subsequent_images 100 images/*jpg          \
-   -output_map <map file>
+  build_map -feature_detection -feature_matching -track_building    \
+   -incremental_ba -bundle_adjustment -skip_pruning                 \
+   -histogram_equalization -num_subsequent_images 100               \
+   images/*jpg -output_map <map file>
 
 examine them individually, merging them as appropriate, then
 performing bundle adjustment (while skipping pruning) and registration
@@ -320,38 +345,114 @@ as per build_map.md. Only when a good enough map is obtained, a
 renamed copy of it should be rebuilt with BRISK features and a
 vocabulary database to be used on the robot.
 
-# How to Add to a Map Images for Which Localization Fails
+#### Map strategy for the space station
 
-The current approach has several steps (in the future this process may
-be streamlined). 
+For the space station, there exists one large SURF map with many
+images, and a small BRISK map with fewer images. If new images are
+acquired, it is suggested several small maps be assembed from them,
+and those be merged to the large SURF map.
 
-First a new SURF map is built from the new images (using
--skip_pruning). The program merge_maps is invoked on the old and new
-maps (in this order), using the -skip_pruning flag and with bundle
-adjustment (the latter is the default in merge_maps). Just a handful
-of iterations and a small number of passes can be used. The combined
-map is re-registered, and the submap corresponding to the new images
-is extracted (without redoing bundle adjustment). The obtained SURF
-map of new images is now in the same coordinate system as the old one.
+The key idea here is to add some well-chosen subsequences of those new
+images to the SURF map, but only a few, for which localization failed,
+to the BRISK map. This is best illustrated by an example.
 
-The new map is used as the source map in localize_cams, with the old
-map (the BRISK version of it) being the reference map. The output of
-this command is saved to a file. This file is edited to keep the names
-of the images with bad localization, and then one adds to it the list
-of images in the old map (see build_map -info). All text except the
-image names is deleted. The extract_submap tool is invoked on the
-merged map keep only these images. The updated map map is rebuilt with
-BRISK and a vocabulary database.
+Say the large original SURF map had 2000 images, and the smaller BRISK
+map had only 1400 images. Say 300 new images have been acquired, and
+for 80 of them localization failed. So, things will change as follows:
 
-#### Reducing the Number of Images in a Map
+  - SURF map goes from  2000 to 2000 + 300 = 2300 images
+  - BRISK map goes from 1400 to 1400 +  80 = 1480 images
+
+The precise details are described in the next section.
+
+#### Growing a map when more images are acquired
+
+Sometimes things in the desired environment change enough, or the
+lighting changes, and an existing map may no longer do as well in some
+areas. Then, new images should be added to the map. The tool
+grow_map.py can help with that.
+
+First, out of the new images a set must be selected from which to
+build a new map. We assume that the images in that set are further
+broken up into several subsets, with each image in a subset
+overlapping with the next one in that subset. For example, there can
+exist a subset for the ceiling, one for the walls, etc.
+
+A SURF map can be built for each subset, and those can be merged. (A
+very useful option here can be -fast_merge.) Then, the new merged SURF
+map can be merged with the earlier SURF map, and the combined map can
+be bundle-adjusted and registered. While such a SURF map will be very
+reliable, it will contain redundant information, so we will outline
+below how to create a BRISK map that starts the same as the BRISK map
+that existed before that, with only a minimum of images added for
+which localization now fails. The new large SURF map will be used as
+the source of the camera poses for the updated BRISK map, but the
+latter will have fewer images.
+
+We need some notation. Let prev_brisk_vocab_hist.map be the previous
+BRISK map, before new images are added, prev_surf_registered.map be
+the previous registred SURF map (that can have more images than
+prev_brisk_vocab_hist.map). Let curr_surf_registered.map be the large
+SURF map that is obtained from prev_surf_registered.map merged with
+the images acquired this time, and curr_brisk_no_prune_hist.map be
+obtained from curr_surf_registered.map using the -rebuild and
+-histogram_equalization options. The prev_brisk_vocab_hist.map will
+already be pruned and have a vocabulary database, but
+curr_brisk_no_prune_hist.map is assumed to have none of these. Not
+being pruned is very imporant. And again, all these maps must be
+registered.
+
+Let also list1.txt, ..., listN.txt contain the images for those
+subsets of new images mentioned earlier, such as list_wall.txt,
+list_floor.txt, etc., with the order of images in this list be the
+same as in the submap for the subset made from that list (which is the
+same order as output by build_map -info). We will create a new BRISK
+map, named curr_brisk_vocab_hist.map, that will be pruned and with a
+vocabulary database (so ready to be used, just like
+prev_brisk_vocab_hist.map) that will have only some of the new images
+as follows:
+
+ - Start with prev_brisk_vocab_hist.map
+ - Add all new images in list1.txt for which localization failed
+   against prev_brisk_vocab_hist.map, thus getting a map named curr1.map.
+ - Add all new images in list2.txt for which localization against
+   curr1.map failed. 
+ - Etc.
+
+The logic here is very simple. Don't add all new images at once. Add
+them in batches, and for each batch remember the fact that the
+previous batch already made the map better, so don't add images from a
+batch if they are not strictly necessary.
+
+The following Python code implements this:
+
+ python ~/freeflyer/localization/sparse_mapping/tools/grow_map.py  \
+   -histogram_equalization -small_map prev_brisk_vocab_hist.map    \
+   -big_map curr_brisk_no_prune_hist.map -work_dir work            \
+   -output_map curr_brisk_vocab_hist.map                           \
+   list1.txt list2.txt ... listN.txt
+
+After this is finished, the work directory can be wiped.
+
+It is very important to never remove like this images from the SURF
+map. This can result in this map breaking into disconnected sets when
+being bundle adjusted. If desired to make the SURF map smaller, one
+should examine the submaps it is made of (typically each submap has
+its images in a subdirectory), and then one should carefully study
+which submap (or portions of it) are not necessary for the whole map's
+cohesiveness.
+
+Also note that the grow_map.py script takes a lot of other parameters
+on input that must be the same as in localization.config.
+
+#### Reducing the number of images in a map
 
 Sometimes a map has too many similar images. The tool reduce_map.py
 attempts to reduce their number without sacrificing the map quality.
 
-It is very important that the input map is not pruned, so when it is
-created (or rebuilt) the -skip_pruning flag must be used.  It should
-be made of of BRISK features and registered. It need not have a vocab
-db.
+To use this feature, it is very important that the input map is not
+pruned. This map should be made of of BRISK features and registered. It
+need not have a vocab db.
 
 Usage:
 
@@ -360,12 +461,13 @@ Usage:
          -localization_error <val> -work_dir <work dir>                  \
          -sample_rate <val> -histogram_equalization
 
-The BRISK thresholds here must be as when the map was built. The
--histogram_equalization flag is necessary if your map was built with
-it.
+The BRISK thresholds here must be as when the map was built (ideally
+like in localization.config). The -histogram_equalization flag is
+necessary if your map was built with it.
 
 A sequence of ever-smaller output maps are saved in the work
-directory. They are pruned maps, unlike the input unpruned map. 
+directory. They are pruned maps, with a vocabulary database, unlike
+the input unpruned map.
 
 The algorithm is as follows. Randomly remove a fraction (stored in
 -sample_rate, typically 1/4th) of images form a map. Localize the
@@ -393,3 +495,6 @@ reduced map with a small list of desired images which can be set with
 -image_list, and then all images for which localization fails will be
 added back to it.
 
+\subpage buildmap
+\subpage using_faro
+\subpage total_station

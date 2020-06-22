@@ -16,7 +16,7 @@
  * under the License.
  */
 
-#include <common/init.h>
+#include <ff_common/init.h>
 #include <config_reader/config_reader.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <marker_tracking/arxmlio.h>
@@ -204,7 +204,7 @@ class RosMarkerTrackingAdaptor {
 };
 
 int main(int argc, char *argv[]) {
-  common::InitFreeFlyerApplication(&argc, &argv);
+  ff_common::InitFreeFlyerApplication(&argc, &argv);
   // Initialize ROS
   ros::init(argc, argv, "overhead_tracking");
 

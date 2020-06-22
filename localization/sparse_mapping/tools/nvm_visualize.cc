@@ -16,7 +16,8 @@
  * under the License.
  */
 
-#include <common/init.h>
+#include <ff_common/init.h>
+#include <ff_common/utils.h>
 #include <camera/camera_model.h>
 #include <sparse_mapping/reprojection.h>
 #include <sparse_mapping/sparse_map.h>
@@ -31,6 +32,7 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/viz/vizcore.hpp>
+#include <boost/filesystem.hpp>
 
 #include <iomanip>
 #include <iostream>
@@ -49,6 +51,9 @@ DEFINE_bool(fit_view_to_points_bdbox, false,
             "Zoom just enough to see all points in the cloud.");
 DEFINE_bool(plot_matches, false,
             "For each feature, also plot (in red) its match in the next image.");
+DEFINE_bool(enable_image_deletion, false,
+            "When viewing only images, so without a map, enable deleting the currently "
+            "seen image with the Del key.");
 
 DEFINE_int32(first, 0,
              "The index of the first image to plot in the 3D view.");
@@ -58,7 +63,7 @@ DEFINE_double(scale, 0.5,
               "The scale of images in the 3D view.");
 
 // Global variables
-sparse_mapping::SparseMap * g_map_ptr;
+std::shared_ptr<sparse_mapping::SparseMap> g_map_ptr;
 cv::viz::Viz3d * g_win_ptr;
 int g_cid;
 cv::Mat * g_image;
@@ -330,7 +335,22 @@ void KeyboardCallback(const cv::viz::KeyboardEvent & event, void* param) {
 }
 
 static void onMouse(int event, int x, int y, int, void*) {
-  if  ( event != cv::EVENT_MBUTTONDOWN ) return;
+  // Make notation easy
+  sparse_mapping::SparseMap & map = *g_map_ptr;
+  cv::Mat & image = *g_image;
+  std::string & windowName = *g_windowName;
+  int cid = g_cid;
+
+  // Print the current image and the pixel clicked onto.
+  // This is useful in assembling a subset of images.
+  if (event == cv::EVENT_LBUTTONDOWN) {
+    std::cout << "Pixel: " << x << " " << y << " in "
+              << map.GetFrameFilename(cid)  << "\n";
+    return;
+  }
+
+  if (event != cv::EVENT_MBUTTONDOWN)
+    return;
 
   // Identify in the map the feature that was clicked with the middle
   // mouse button. Then list the images that have that feature and
@@ -346,12 +366,6 @@ static void onMouse(int event, int x, int y, int, void*) {
     return;
   }
 
-  // Make notation easy
-  sparse_mapping::SparseMap & map = *g_map_ptr;
-  cv::Mat & image = *g_image;
-  std::string & windowName = *g_windowName;
-  int cid = g_cid;
-
   camera::CameraParameters camera_param = map.GetCameraParameters();
   const Eigen::Matrix2Xd & keypoint_map = map.GetFrameKeypoints(cid);
 
@@ -366,7 +380,7 @@ static void onMouse(int event, int x, int y, int, void*) {
 
     // Assume that the desired feature is no further than this from
     // where the mouse clicked.
-    double tol = 10.0;  // Making this big risks mis-identification
+    double tol = 15.0;  // Making this big risks mis-identification
 
     Eigen::Vector2d dist_pix;
     camera_param.Convert<camera::UNDISTORTED_C, camera::DISTORTED>
@@ -422,11 +436,51 @@ static void onMouse(int event, int x, int y, int, void*) {
   std::cout << std::endl;
 }
 
+// Form a map with images only, for the purpose of visualization
+std::shared_ptr<sparse_mapping::SparseMap> map_with_no_features(int argc, char ** argv) {
+  std::vector<std::string> images;
+  for (int i = 1; i < argc; i++) {
+    std::string image_name = argv[i];
+    if (ff_common::file_extension(image_name) != "jpg")
+      LOG(FATAL) << "Unsupported image: " << image_name;
+    images.push_back(image_name);
+  }
+
+  camera::CameraParameters cam_params(Eigen::Vector2i(0, 0), Eigen::Vector2d(0, 0),
+                                      Eigen::Vector2d(0, 0));
+  return std::shared_ptr<sparse_mapping::SparseMap>
+    (new sparse_mapping::SparseMap(images, "SURF", cam_params));
+}
+
+// Delete an image from disk and from a map, such as when we would like to weed out similar images.
+void deleteImageFromDiskAndMap(sparse_mapping::SparseMap & map, std::string const& image_name) {
+  // This must not be attempted for non-empty maps.
+  if (!map.pid_to_cid_fid_.empty())
+    LOG(FATAL) << "Tried to delete images from a non-empty map. That is not supported.";
+
+  std::vector<std::string> & images = map.cid_to_filename_;  // alias
+  auto pos = std::find(images.begin(), images.end(), image_name);
+  if (pos == images.end()) {
+    std::cout << "Could not find image: " << image_name << std::endl;
+  } else {
+    std::cout << "Deleting from disk image: " << image_name << std::endl;
+    images.erase(pos);  // this changes the map
+    boost::filesystem::path image_path(image_name);
+    if ( boost::filesystem::exists(image_path))
+      boost::filesystem::remove(image_path);
+  }
+}
+
+bool file_exists(const std::string& name) {
+  std::ifstream f(name.c_str());
+  return f.good();
+}
+
 int main(int argc, char** argv) {
-  common::InitFreeFlyerApplication(&argc, &argv);
+  ff_common::InitFreeFlyerApplication(&argc, &argv);
 
   if (argc < 2) {
-    std::cerr << "Usage: " << argv[0] << " map.map [image1.jpg image2.jpg ...]" << "\n";
+    std::cerr << "Usage: " << argv[0] << " [ map.map ] [image1.jpg image2.jpg ...]" << "\n";
     return 0;
   }
 
@@ -440,34 +494,40 @@ int main(int argc, char** argv) {
     LOG(FATAL) << "File does not exist: " << argv[1];
   }
 
-  // Load up the NVM
+  // Load up the map. Assign it to global variable g_map_ptr so that we can access
+  // it in the GUI. If only images are provided, cook up a map. This is useful
+  // for visualizing images.
   std::string map_file = argv[1];
-  sparse_mapping::SparseMap map(map_file);
+  if (ff_common::file_extension(map_file) == "map") {
+    g_map_ptr = std::shared_ptr<sparse_mapping::SparseMap>(new sparse_mapping::SparseMap(map_file));
+  } else {
+    g_map_ptr = map_with_no_features(argc, argv);
+  }
+
+  // Make notation easy
+  sparse_mapping::SparseMap & map = *g_map_ptr;
+
   LOG(INFO) << "Loaded " << argv[1];
   LOG(INFO) << "\t" << map.GetNumFrames() << " cameras and "
             << map.GetNumLandmarks() << " points";
-
-  // Need this to manipulate the GUI
-  g_map_ptr = &map;
 
   camera::CameraParameters camera_param = map.GetCameraParameters();
 
   int cid = FLAGS_first;
   int num_images = map.GetNumFrames();
+  bool windowInitalized = false;
   while (1) {
     if (FLAGS_jump_to_3d_view)
       break;
 
     std::string imfile = map.GetFrameFilename(cid);
-    {
-      std::ifstream f(imfile.c_str());
-      if (!f.good()) LOG(FATAL) << "File does not exist: " << imfile << std::endl;
-    }
+    if (!file_exists(imfile))
+      LOG(FATAL) << "File does not exist: " << imfile << std::endl;
 
     cv::Mat image = cv::imread(imfile);
     g_image = &image;  // to be able to use it in callbacks
     // Below LOG(INFO) is not used as it prints too much junk. Use cout.
-    std::cout << "Showing CID: " << cid << " " << imfile << std::endl;
+    std::cout << "CID: " << cid << " " << imfile << std::endl;
 
     // Export this to be used on onMouse
     g_cid = cid;
@@ -520,14 +580,18 @@ int main(int argc, char** argv) {
     }
 
 
+    // Create a window that can be resized by the user
     std::string windowName = map_file + ": individual frames";
+    cv::namedWindow(windowName, CV_WINDOW_NORMAL | CV_WINDOW_KEEPRATIO | CV_GUI_EXPANDED);
     g_windowName = &windowName;  // Export this to be used by onMouse
-
-    cv::namedWindow(windowName);
-
     cv::setMouseCallback(windowName, onMouse, 0);
-
     cv::imshow(windowName, image);
+
+    // This gets called only once to set the initial size that later the user can modify
+    if (!windowInitalized) {
+      cv::resizeWindow(windowName, image.cols, image.rows);
+      windowInitalized = true;
+    }
 
     int ret = cv::waitKey(0) & 0xFF;  // On some machines there are bits set in front.
 
@@ -544,6 +608,25 @@ int main(int argc, char** argv) {
         ) {
       cid = (cid + num_images + 1) % num_images;  // go to next image
     }
+
+    if (ret == 80) {
+      cid = 0;  // The 'Home' key was pressed, go to the first image
+    }
+
+    if (ret == 87) {
+      cid = num_images - 1;  // The 'End' key was pressed, go to the last image
+    }
+
+    if ((ret =='x' || ret == 255) && FLAGS_enable_image_deletion) {
+      deleteImageFromDiskAndMap(map, imfile);
+      num_images = map.GetNumFrames();  // update the number of images
+      if (num_images == 0) {
+        std::cout << "No more images left." << std::endl;
+        return 0;
+      }
+      cid = cid % num_images;  // now it will point to next image
+    }
+
     if (ret == 'c') {
       // Stop this look. Go to the next step, creating the 3D view.
       break;

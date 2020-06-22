@@ -69,7 +69,7 @@ void BundleAdjust(std::vector<std::map<int, int> > const& pid_to_cid_fid,
                   ceres::Solver::Options const& options,
                   ceres::Solver::Summary* summary,
                   int first = 0, int last = std::numeric_limits<int>::max(),
-                  bool fix_cameras = false);
+                  bool fix_cameras = false, bool fix_all_xyz = false);
 
 
 /**
@@ -127,10 +127,11 @@ void EstimateCamera(camera::CameraModel * camera_estimate, std::vector<Eigen::Ve
  * Returns zero on success, nonzero on failure.
  **/
 int RansacEstimateCamera(const std::vector<Eigen::Vector3d> & landmarks,
-                    const std::vector<Eigen::Vector2d> & observations,
-                    int num_tries, int inlier_tolerance, camera::CameraModel * camera_estimate,
-                    std::vector<Eigen::Vector3d> * inlier_landmarks_out = NULL,
-                    std::vector<Eigen::Vector2d> * inlier_observations_out = NULL);
+                         const std::vector<Eigen::Vector2d> & observations,
+                         int num_tries, int inlier_tolerance, camera::CameraModel * camera_estimate,
+                         std::vector<Eigen::Vector3d> * inlier_landmarks_out = NULL,
+                         std::vector<Eigen::Vector2d> * inlier_observations_out = NULL,
+                         bool verbose = false);
 
 // ICP solver that given matching 3D points, finds an affine transform that
 // best fits in to out.

@@ -19,14 +19,14 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-unused-variable")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-unused-variable")
 
 set(LIBS
-  common
+  ff_common
   ${GLOG_LIBRARIES}
   ${JSONCPP_LIBRARIES}
   ${Boost_SYSTEM_LIBRARY}
   ${Boost_FILESYSTEM_LIBRARY}
   )
 set(INCLUDES
-  common
+  ff_common
   ${CMAKE_CURRENT_SOURCE_DIR}/include
   ${EIGEN3_INCLUDE_DIRS}
   ${GLOG_INCLUDE_DIRS}
