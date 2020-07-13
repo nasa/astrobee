@@ -17,6 +17,10 @@ To open another terminal inside the docker container run:
 
     docker exec -it astrobee bash
 
+Don't forget to source astrobee by doing:
+
+	source /build/astrobee/devel/setup.bash
+
 To shutdown the docker container, run:
 
     ./shutdown.sh

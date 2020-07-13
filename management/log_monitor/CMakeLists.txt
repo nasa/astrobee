@@ -41,5 +41,3 @@ create_tool_targets(
   DEPS
     ff_msgs
 )
-
-install_launch_files()

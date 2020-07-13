@@ -201,7 +201,9 @@ Without this, we have to compare to every image in the map for
 localization.  The vocabulary database makes parts of the runtime
 logarithmic instead of linear.
 
-8. ** Building a SURF map only ***
+At this stage the map is ready to be used on the robot.
+
+### Building a SURF map only
 
 The above options can also be chained. For example, to run the
 pipeline to just create a SURF map one can do:
@@ -209,6 +211,8 @@ pipeline to just create a SURF map one can do:
     build_map <image dir>/*.jpg -feature_detection -feature_matching \
       -track_building -incremental_ba -bundle_adjustment             \
       -histogram_equalization -num_subsequent_images 100
+
+### Map pruning
 
 It is important to note that normally build_map prunes a map from
 features that show up in just one image after the vocabulary database

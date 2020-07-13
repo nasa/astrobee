@@ -59,14 +59,14 @@ class GazeboSensorPluginSciCam : public FreeFlyerSensorPlugin {
       return;
     }
 
-    // Check that we have a mono camera
-    if (sensor_->Camera()->ImageFormat() != "L8")
-      ROS_FATAL_STREAM("Camera format must be L8");
+    // Check that we have a color camera
+    if (sensor_->Camera()->ImageFormat() != "B8G8R8")
+      ROS_FATAL_STREAM("Camera format must be B8G8R8");
 
     // Set image constants
     sci_cam_image_msg_.is_bigendian = false;
     sci_cam_image_msg_.header.frame_id = GetFrame();
-    sci_cam_image_msg_.encoding = sensor_msgs::image_encodings::MONO8;
+    sci_cam_image_msg_.encoding = sensor_msgs::image_encodings::BGR8;
 
     // Create subscriber to DDS commands though which the sci cam will be controlled
     dds_cmd_sub_ = nh->subscribe(TOPIC_COMMUNICATIONS_DDS_COMMAND, 10,
@@ -243,7 +243,7 @@ class GazeboSensorPluginSciCam : public FreeFlyerSensorPlugin {
     sci_cam_image_msg_.header.stamp.nsec = sensor_->LastMeasurementTime().nsec;
     sci_cam_image_msg_.height = sensor_->ImageHeight();
     sci_cam_image_msg_.width = sensor_->ImageWidth();
-    sci_cam_image_msg_.step = sci_cam_image_msg_.width;
+    sci_cam_image_msg_.step = sci_cam_image_msg_.width * 3;
     sci_cam_image_msg_.data.resize(sci_cam_image_msg_.step * sci_cam_image_msg_.height);
     const uint8_t* data_start = reinterpret_cast<const uint8_t*>(sensor_->ImageData());
     std::copy(data_start, data_start + sci_cam_image_msg_.step * sci_cam_image_msg_.height,

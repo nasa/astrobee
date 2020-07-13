@@ -76,18 +76,18 @@ not yet open source.
 ## Common steps: staging and snapshoting
 
 ### Stage the Debian on volar
-```
-cd ..
-export ASTROBEE_DEBIAN_DIR=/home/p-free-flyer/free-flyer/FSW/ars_debs/dists/xenial/main
-scp astrobee-avionics_<version>_*.deb \
-  <ndc_username>@volar:$ASTROBEE_DEBIAN_DIR/binary-armhf
-```
+
+    cd ..
+    export ASTROBEE_DEBIAN_DIR=/home/p-free-flyer/free-flyer/FSW/ars_debs/dists/xenial/main
+    scp astrobee-avionics_<version>_*.deb \
+      <ndc_username>@volar:$ASTROBEE_DEBIAN_DIR/binary-armhf
+
 
 ### Update the Debian mirror on volar
 
-   ssh volar
-   cd /home/p-free-flyer/free-flyer/FSW/aptly/scripts
-   ./update_astrobee_debians.sh
+    ssh volar
+    cd /home/p-free-flyer/free-flyer/FSW/aptly/scripts
+    ./update_astrobee_debians.sh
 
 Warnings [!] will be displayed for the existing packages, but the new generated
 debian should be listed with a [+].

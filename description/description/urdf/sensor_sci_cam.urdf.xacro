@@ -28,7 +28,7 @@
         <image>
           <width>1024</width>
           <height>1024</height>
-          <format>L8</format>
+          <format>B8G8R8</format>
         </image>
         <clip>
           <near>0.1</near>
