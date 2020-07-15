@@ -26,6 +26,7 @@ RUN /setup/freeflyer/add_ros_repository.sh >/dev/null 2>&1
 RUN apt-get update && apt-get install -y \
   libtinyxml-dev \
   ros-kinetic-opencv3 \
+  python-rosdep \
   && rm -rf /var/lib/apt/lists/*
 
 # suppress detached head warnings later

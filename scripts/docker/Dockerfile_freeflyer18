@@ -62,6 +62,7 @@ RUN apt-get update && apt-get install -y \
     libtbb2 \
     libtbb-dev \
     libdc1394-22-dev \
+    python-rosdep \
   && rm -rf /var/lib/apt/lists/*
 
 # Downloading OpenCV repo & switching to 3.3.1 branch,
@@ -118,7 +119,7 @@ RUN useradd -m $USERNAME && \
         groupmod --gid 1000 $USERNAME
 
 #Add the entrypoint for docker
-RUN echo "#!/bin/bash\nset -e\n\nsource \"/opt/ros/kinetic/setup.bash\"\nsource \"/build/astrobee/devel/setup.bash\"\nexport ASTROBEE_CONFIG_DIR=\"/src/astrobee/astrobee/config\"\nexec \"\$@\"" > /freeflyer_init.sh && \
+RUN echo "#!/bin/bash\nset -e\n\nsource \"/opt/ros/melodic/setup.bash\"\nsource \"/build/astrobee/devel/setup.bash\"\nexport ASTROBEE_CONFIG_DIR=\"/src/astrobee/astrobee/config\"\nexec \"\$@\"" > /freeflyer_init.sh && \
   chmod +x /freeflyer_init.sh && \
   rosdep init && \
   rosdep update 2>&1 | egrep -v 'as root|fix-permissions'
