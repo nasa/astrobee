@@ -1,0 +1,35 @@
+name: Docker Image CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+
+  build-and-test:
+
+    runs-on: ubuntu-16.04
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Build the Docker image for Ubuntu 16
+      run: docker build . --file ./scripts/docker/rebuild_astrobee_kinetic.Dockerfile --tag astrobee:latest-kinetic
+
+    - name: Start docker container
+      run: ./scripts/docker/run.sh
+
+    - name: Run unit tests
+      run: docker exec -it astrobee  -c "cd /build/astrobee && make test && make run_tests"
+
+  build:
+
+    runs-on: ubuntu-18.04
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Build the Docker image for Ubuntu 16
+      run: docker build . --file ./scripts/docker/rebuild_astrobee_melodic.Dockerfile --tag astrobee:latest-melodic

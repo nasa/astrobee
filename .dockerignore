@@ -1,2 +1,4 @@
 .git/
-scripts/setup/Dockerfile
+submodules/avionics/
+submodules/common/
+submodules/platform/

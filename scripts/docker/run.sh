@@ -14,5 +14,5 @@ docker run -it --rm --name astrobee \
         --env="DISPLAY" \
         --user="astrobee" \
         --gpus all \
-      astrobee \
+      astrobee/astrobee \
     /astrobee_init.sh roslaunch astrobee sim.launch dds:=false
