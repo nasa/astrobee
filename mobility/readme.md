@@ -111,7 +111,7 @@ Here is another example:
 
 The planner tool can be invoked as follows:
 
-freeflyer_build/native/devel/lib/mobility/plangen -input input.txt \
+astrobee_build/native/devel/lib/mobility/plangen -input input.txt \
  -output output.fplan -vel 0.2 -accel 0.017 -omega 0.17 -alpha 0.2
 
 It will write the file output.fplan that can be loaded and tested in GDS.

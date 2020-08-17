@@ -82,6 +82,14 @@ In many cases you'll only want a single robot spawned on the root namespace, so 
 
 The robot will be on the root namespace and placed at a default location. You should see it appear in rviz within a few seconds of launch.
 
+## Rviz in Localization Only Mode
+
+To run only localization nodes, and visualize localization running on a rosbag containing only imu data and NavCam images, run with the loc_only parameter.  This can be done as described below:
+1: Move a map file for your chosen world to astrobee/resources/rviz.  For example, astrobee/resources/rviz/iss.map
+2: Launch rviz using the loc_only command.  For example: 'roslaunch astrobee sim.launch default:=false rviz:=true loc_only:=true'
+3: In a separate command prompt, launch the astrobee localization software, and provide a global path to your rosbag.  For example: 'roslaunch astrobee astrobee.launch robot:=bumble world:=iss loc_only:=true bag:=/path/to/bag/MyBag.bag'
+There are several visualizations that can be enabled in the file astrobee/config/localization.config.  matched_features_on enables a live camera feed with all sparse mapping features in use overlayed over each frame.  all_features_on enables a live camera feed with all detected features in each frame overlayed.  map_cloud_on draws the entire stored sparse map in rviz.
+
 ## Collisions and performance
 
 One of the great sources of computational complexity in simulation is the calculation of collisions between objects. This is especially hard when the collision is a function of two complex meshes. Our simulation optimizes for performance by approximating the Free Flyer's complex meshes with geometric primitives. The Free Flyer collision mesh can be thought of as a sequence of boxes connected by joints, which never self-collide. Collisions are checked between robots and the ISS / Dock meshes, as well as between robots.

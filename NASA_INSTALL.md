@@ -75,11 +75,11 @@ exit this session on `m` with <ctrl>+D.
 At this point you need to decide where you'd like to put the source code
 (`SOURCE_PATH`) on your machine:
 
-    export SOURCE_PATH=$HOME/freeflyer
+    export SOURCE_PATH=$HOME/astrobee
 
 First, clone the flight software repository:
 
-    git clone --recursive https://$NDC_USERNAME@babelfish.arc.nasa.gov/git/freeflyer \
+    git clone --recursive https://$NDC_USERNAME@babelfish.arc.nasa.gov/bitbucket/scm/astrobee/astrobee.git \
         --branch develop $SOURCE_PATH
 
 (Note: re-enter your username and password for every submodules that are cloned)
@@ -105,7 +105,7 @@ If you prefer to install them at a different location, you can use the
 
 ```
 export NDC_USERNAME=jdoe
-export ARS_DEB_DIR=$HOME/freeflyer_debs
+export ARS_DEB_DIR=$HOME/astrobee_debs
 ./add_local_repository.sh
 ```
 
@@ -138,10 +138,10 @@ the code on the robot itself). Please skip to the relevant subsection.
 
 By default, the configure script uses the following paths:
 
-  - native build path (BUILD_PATH):     `$HOME/freeflyer_build/native`
-  - native install path (INSTALL_PATH): `$HOME/freeflyer_install/native`
-  - armhf build path (BUILD_PATH):      `$HOME/freeflyer_build/armhf`
-  - armhf install path (INSTALL_PATH):  `$HOME/freeflyer_install/armhf`
+  - native build path (BUILD_PATH):     `$HOME/astrobee_build/native`
+  - native install path (INSTALL_PATH): `$HOME/astrobee_install/native`
+  - armhf build path (BUILD_PATH):      `$HOME/astrobee_build/armhf`
+  - armhf install path (INSTALL_PATH):  `$HOME/astrobee_install/armhf`
 
 You should set these values in your shell. 
 

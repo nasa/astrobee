@@ -1,5 +1,10 @@
 # Astrobee Robot Software v1
 
+## Release 0.12.0
+
+  * Localization visualization improvements
+  * Changes for migration to github
+
 ## Release 0.11.1
 
   * Fix install error.
@@ -213,7 +218,7 @@ and many internal changes.
 
 ### Internal (support for non-open source platform and avionics repos)
   - Mechanisms for local (robot) launch at startup.
-  - Support for freeflyer_avionics (firmware) improvements.
+  - Support for astrobee_avionics (firmware) improvements.
   - Smarter management of propulsion modules.
   - Support for Software/Firmware Upgrade, EMI and Network tests.
 

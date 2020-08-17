@@ -72,6 +72,61 @@ void LocalizationNodelet::Initialize(ros::NodeHandle* nh) {
   // Subscribe to input video feed and publish output odometry info
   image_sub_ = it_->subscribe(TOPIC_HARDWARE_NAV_CAM, 1, &LocalizationNodelet::ImageCallback, this);
 
+  matched_features_on_ = false;
+  all_features_on_ = false;
+  map_cloud_on_ = false;
+  config_.GetBool("matched_features_on", &matched_features_on_);
+  config_.GetBool("all_features_on", &all_features_on_);
+  config_.GetBool("map_cloud_on", &map_cloud_on_);
+
+  if (matched_features_on_) {
+    used_features_publisher_ = nh->advertise<sensor_msgs::Image>("rviz/used_features", 10);
+  }
+  if (all_features_on_) {
+    detected_features_publisher_ = nh->advertise<sensor_msgs::Image>("rviz/detected_features", 10);
+  }
+  if (map_cloud_on_) {
+    all_features_publisher_ = nh->advertise<sensor_msgs::PointCloud2>("rviz/all_features", 1, true);
+    sensor_msgs::PointCloud2 features;
+    features.header = std_msgs::Header();
+    features.header.frame_id = "world";
+    features.height = 1;
+    features.width = (map_.get())->GetNumLandmarks();
+    features.fields.resize(3);
+    features.fields[0].name = "x";
+    features.fields[0].offset = 0;
+    features.fields[0].datatype = 7;
+    features.fields[0].count = 1;
+    features.fields[1].name = "y";
+    features.fields[1].offset = 4;
+    features.fields[1].datatype = 7;
+    features.fields[1].count = 1;
+    features.fields[2].name = "z";
+    features.fields[2].offset = 8;
+    features.fields[2].datatype = 7;
+    features.fields[2].count = 1;
+    features.is_bigendian = false;
+    features.point_step = 12;
+    features.row_step = features.point_step * features.width;
+    features.is_dense = true;
+    features.data.resize(features.row_step);
+
+    // store the entire map file once as a PointCloud2
+    for (int i = 0; i < static_cast<int>(features.width); i++) {
+      Eigen::Vector3d pos_vector = (map_.get())->GetLandmarkPosition(i);
+      float x = static_cast<float>(pos_vector[0]);
+      float y = static_cast<float>(pos_vector[1]);
+      float z = static_cast<float>(pos_vector[2]);
+
+      memcpy(&features.data[features.point_step * i + 0], &x, 4);
+      memcpy(&features.data[features.point_step * i + 4], &y, 4);
+      memcpy(&features.data[features.point_step * i + 8], &z, 4);
+    }
+
+    features.header.stamp = ros::Time::now();
+    all_features_publisher_.publish(features);
+  }
+
   // start a new thread to run everything
   thread_.reset(new std::thread(&localization_node::LocalizationNodelet::Run, this));
 
@@ -132,8 +187,9 @@ void LocalizationNodelet::ImageCallback(const sensor_msgs::ImageConstPtr& msg) {
 
 void LocalizationNodelet::Localize(void) {
   ff_msgs::VisualLandmarks vl;
+  Eigen::Matrix2Xd image_keypoints;
 
-  bool success = inst_->Localize(image_ptr_, &vl);
+  bool success = inst_->Localize(image_ptr_, &vl, &image_keypoints);
 
   vl.camera_id = count_;
   landmark_publisher_.publish(vl);
@@ -142,6 +198,36 @@ void LocalizationNodelet::Localize(void) {
   // only send transform if succeeded
   if (!success)
     return;
+
+  // send rviz feature overlay messages
+  sensor_msgs::ImagePtr image_pointer;
+  if (matched_features_on_ || all_features_on_) {
+    image_pointer = (*image_ptr_).toImageMsg();
+  }
+  if (matched_features_on_) {
+    cv_bridge::CvImagePtr used_image = cv_bridge::toCvCopy(image_pointer);
+    for (size_t i = 0; i < vl.landmarks.size(); i++) {
+      Eigen::Vector2d undistorted, distorted;
+      undistorted[0] = vl.landmarks[i].u;
+      undistorted[1] = vl.landmarks[i].v;
+      (map_->GetCameraParameters()).Convert<camera::UNDISTORTED_C, camera::DISTORTED>(undistorted, &distorted);
+      cv::circle(used_image->image, cv::Point(distorted[0], distorted[1]), 10, CV_RGB(255, 255, 255), 3, 8);
+      cv::circle(used_image->image, cv::Point(distorted[0], distorted[1]), 6, CV_RGB(0, 0, 0), 3, 8);
+    }
+    used_features_publisher_.publish(*used_image);
+  }
+  if (all_features_on_) {
+    cv_bridge::CvImagePtr detected_image = cv_bridge::toCvCopy(image_pointer);
+    for (int i = 0; i < image_keypoints.cols(); i++) {
+      Eigen::Vector2d undistorted, distorted;
+      undistorted[0] = image_keypoints.col(i)[0];
+      undistorted[1] = image_keypoints.col(i)[1];
+      (map_->GetCameraParameters()).Convert<camera::UNDISTORTED_C, camera::DISTORTED>(undistorted, &distorted);
+      cv::circle(detected_image->image, cv::Point(distorted[0], distorted[1]), 10, CV_RGB(255, 255, 255), 3, 8);
+      cv::circle(detected_image->image, cv::Point(distorted[0], distorted[1]), 6, CV_RGB(0, 0, 0), 2, 8);
+    }
+    detected_features_publisher_.publish(*detected_image);
+  }
 
   // now publish the transform
   static tf2_ros::TransformBroadcaster br;

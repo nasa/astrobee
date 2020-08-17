@@ -9,7 +9,7 @@ for the visualizer DDS mode.
 
 This xml defines the QoS Profiles as well as the DDS Entities and Types needed
 for the visualizer. From line 1 to 993, it is a copy from the file located in
-*freeflyer/astrobee/config/communications/dds/RAPID_QOS_PROFILES*. From then on
+*astrobee/astrobee/config/communications/dds/RAPID_QOS_PROFILES*. From then on
 it defines all entities and types needed.
 
 #### Future improvements
@@ -23,11 +23,11 @@ it defines all entities and types needed.
 EkfState.xml, GncControlState.xml, GncFamCmdState.xml, LogSample.xml and
 PmcCmdState.xml are custom DDS type definitions for the freeflyer ROS messages.
 
-Once you build the freeflyer project you should be able to find an update copy
-of this files in *freeflyer_build/native/communications/dds_msgs/idl*
+Once you build the astrobee project you should be able to find an update copy
+of this files in *astrobee_build/native/communications/dds_msgs/idl*
 
 ### Common types
 
 BaseTypes.xml, Header.xml and Message.xml are common types for the free-flyer
 ones. This files have been taken from */usr/etc/rtiRoutingService* once the
-freeflyer repo was cloned and installed.
+astrobee repo was cloned and installed.

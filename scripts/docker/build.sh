@@ -12,8 +12,8 @@ ubuntu18=0
 
 while [ "$1" != "" ]; do
     case $1 in
-        -a | --freeflyer_source_dir )   shift
-                                		freeflyer_source=$1
+        -a | --astrobee_source_dir )   shift
+                                		astrobee_source=$1
                                 		;;
         -n | --ubuntu18 )               ubuntu18=1
                                         ;;
@@ -29,10 +29,10 @@ done
 
 thisdir=$(dirname "$(readlink -f "$0")")
 rootdir=${thisdir}/../../..
-echo "Freeflyer path: "${freeflyer_source:-${rootdir}/freeflyer/}
+echo "Astrobee path: "${astrobee_source:-${rootdir}/astrobee/}
 if [ $ubuntu18 == 0 ]; then
-    docker build --no-cache ${freeflyer_source:-${rootdir}/freeflyer/} -f ${freeflyer_source:-${rootdir}/freeflyer/}scripts/docker/Dockerfile_freeflyer -t astrobee
+    docker build --no-cache ${astrobee_source:-${rootdir}/astrobee/} -f ${astrobee_source:-${rootdir}/astrobee/}scripts/docker/Dockerfile_astrobee -t astrobee
 else
-    docker build --no-cache ${freeflyer_source:-${rootdir}/freeflyer/} -f ${freeflyer_source:-${rootdir}/freeflyer/}scripts/docker/Dockerfile_freeflyer18 -t astrobee
+    docker build --no-cache ${astrobee_source:-${rootdir}/astrobee/} -f ${astrobee_source:-${rootdir}/astrobee/}scripts/docker/Dockerfile_astrobee18 -t astrobee
 fi
 

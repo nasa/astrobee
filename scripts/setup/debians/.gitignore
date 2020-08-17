@@ -4,6 +4,8 @@
 *.tar.xz
 *.tar.gz
 *.deb
+*.ddeb
+*.buildinfo
 libalvar
 libdeepdive
 libdbow2

@@ -120,16 +120,11 @@ void FreeFlyerModelPlugin::Load(physics::ModelPtr model, sdf::ElementPtr sdf) {
   model_ = model;
 
   // Read namespace
-  if (sdf->HasElement("namespace")) {
-    std::string ns = sdf->Get<std::string>("namespace");
-    ns.erase(1);   // Errase _ because urdf can't handle empty arguments
-
-    // Initialize the FreeFlyerPlugin
-    InitializePlugin(ns);
-  } else {
-    // Initialize the FreeFlyerPlugin
-    InitializePlugin(model_->GetName());
-  }
+  std::string ns = model_->GetName();
+  if (ns == "bsharp")
+    ns = "/";
+  // Initialize the FreeFlyerPlugin
+  InitializePlugin(ns);
 
   // Now load the rest of the plugin
   LoadCallback(&nh_, model_, sdf_);
@@ -194,17 +189,15 @@ void FreeFlyerSensorPlugin::Load(sensors::SensorPtr sensor, sdf::ElementPtr sdf)
   model_ = boost::static_pointer_cast<physics::Link>(
     world_->GetEntity(sensor->ParentName()))->GetModel();
   #endif
-  // Read namespace
-  if (sdf->HasElement("namespace")) {
-    std::string ns = sdf->Get<std::string>("namespace");
-    ns.erase(1);   // Errase _ because urdf can't handle empty arguments
 
-    // Initialize the FreeFlyerPlugin
-    InitializePlugin(ns);
-  } else {
-    // Initialize the FreeFlyerPlugin
-    InitializePlugin(model_->GetName());
-  }
+  // Read namespace
+  std::string ns = model_->GetName();
+  if (ns == "bsharp")
+    ns = "/";
+
+  // Initialize the FreeFlyerPlugin
+  InitializePlugin(ns);
+
   // Now load the rest of the plugin
   LoadCallback(&nh_, sensor_, sdf_);
 }

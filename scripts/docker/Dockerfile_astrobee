@@ -17,11 +17,11 @@ RUN apt-get update \
     sudo \
     wget \
   && rm -rf /var/lib/apt/lists/*
-COPY ./scripts/setup/*.sh /setup/freeflyer/
-COPY ./scripts/setup/debians /setup/freeflyer/debians
+COPY ./scripts/setup/*.sh /setup/astrobee/
+COPY ./scripts/setup/debians /setup/astrobee/debians
 
 # this command is expected to have output on stderr, so redirect to suppress warning
-RUN /setup/freeflyer/add_ros_repository.sh >/dev/null 2>&1
+RUN /setup/astrobee/add_ros_repository.sh >/dev/null 2>&1
 
 RUN apt-get update && apt-get install -y \
   libtinyxml-dev \
@@ -32,12 +32,12 @@ RUN apt-get update && apt-get install -y \
 RUN git config --global advice.detachedHead false
 
 RUN apt-get update \
-  && /setup/freeflyer/debians/build_install_debians.sh \
+  && /setup/astrobee/debians/build_install_debians.sh \
   && rm -rf /var/lib/apt/lists/*
 
-COPY ./scripts/setup/packages_*.lst /setup/freeflyer/
+COPY ./scripts/setup/packages_*.lst /setup/astrobee/
 # note apt-get update is run within the following shell script
-RUN /setup/freeflyer/install_desktop_16_04_packages.sh \
+RUN /setup/astrobee/install_desktop_16_04_packages.sh \
   && rm -rf /var/lib/apt/lists/*
 
 COPY . /src/astrobee
@@ -58,7 +58,7 @@ RUN useradd -m $USERNAME && \
         groupmod --gid 1000 $USERNAME
 
 #Add the entrypoint for docker
-RUN echo "#!/bin/bash\nset -e\n\nsource \"/opt/ros/kinetic/setup.bash\"\nsource \"/build/astrobee/devel/setup.bash\"\nexport ASTROBEE_CONFIG_DIR=\"/src/astrobee/astrobee/config\"\nexec \"\$@\"" > /freeflyer_init.sh && \
-  chmod +x /freeflyer_init.sh && \
+RUN echo "#!/bin/bash\nset -e\n\nsource \"/opt/ros/kinetic/setup.bash\"\nsource \"/build/astrobee/devel/setup.bash\"\nexport ASTROBEE_CONFIG_DIR=\"/src/astrobee/astrobee/config\"\nexec \"\$@\"" > /astrobee_init.sh && \
+  chmod +x /astrobee_init.sh && \
   rosdep init && \
   rosdep update 2>&1 | egrep -v 'as root|fix-permissions'

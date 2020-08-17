@@ -1,12 +1,12 @@
 [submodule "submodules/common"]
 	path = submodules/common
-	url = https://babelfish.arc.nasa.gov/git/astrobee_common
+	url = https://babelfish.arc.nasa.gov/bitbucket/scm/astrobee/astrobee_common.git
 [submodule "submodules/android"]
 	path = submodules/android
-	url = https://babelfish.arc.nasa.gov/git/freeflyer_android
+	url = https://babelfish.arc.nasa.gov/bitbucket/scm/astrobee/astrobee_android.git
 [submodule "submodules/avionics"]
 	path = submodules/avionics
-	url = https://babelfish.arc.nasa.gov/git/freeflyer_avionics
+	url = https://babelfish.arc.nasa.gov/bitbucket/scm/astrobee/astrobee_avionics.git
 [submodule "submodules/platform"]
 	path = submodules/platform
-	url = https://babelfish.arc.nasa.gov/git/freeflyer_platform
+	url = https://babelfish.arc.nasa.gov/bitbucket/scm/astrobee/astrobee_platform.git

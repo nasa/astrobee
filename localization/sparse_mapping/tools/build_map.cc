@@ -68,8 +68,6 @@ DEFINE_bool(loop_closure, false,
             "Take a map where images start repeating, and close the loop.");
 DEFINE_bool(bundle_adjustment, false,
               "Perform update output_nvm with bundle adjustment.");
-DEFINE_bool(skip_pruning, false,
-              "Do not prune maps, as pruned maps cannot be merged.");
 DEFINE_bool(rebuild, false,
               "Rebuild the map with BRISK features.");
 DEFINE_bool(rebuild_replace_camera, false,
@@ -229,12 +227,6 @@ void BundleAdjust() {
   bool fix_cameras = FLAGS_fix_cameras;
   sparse_mapping::BundleAdjust(fix_cameras, &map);
 
-  // Pruning will be done after the vocab db is saved
-  // if (!FLAGS_skip_pruning) {
-  //  LOG(INFO) << "Pruning map.\n";
-  //  map.PruneMap();
-  // }
-
   map.Save(FLAGS_output_map);
   if (FLAGS_save_individual_maps) map.Save(FLAGS_output_map + ".bundle.map");
 }
@@ -360,9 +352,7 @@ void VocabDB() {
   // Pruning must always happen after the database is built, as the
   // full set of features (so without pruning) is necessary to later
   // effectively find similar images.
-  if (!FLAGS_skip_pruning) {
-    PruneMap();
-  }
+  PruneMap();
 }
 
 // Do either registration or verification

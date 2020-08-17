@@ -59,7 +59,7 @@ using FSM = ff_util::FSM;
 /*
   Provides a simple EPS plugin for helping with the the docking procedure.
   Like the EPS, it publishes a dock state. To do this is it first determines
-  the static location of the berths. When the freeflyer is "close to" the
+  the static location of the berths. When the astrobee is "close to" the
   berth it synthetically adds a small force to replicate the effect of the
   docking magnets on the final approach. Once close enough that pin contact
   would be established, it moved to a "docking" state. After a threshold

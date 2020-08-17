@@ -22,7 +22,7 @@ support running Astrobee Robot Software on 32-bit systems.*
 At this point you need to decide where you'd like to put the source code
 (`SOURCE_PATH`) on your machine:
 
-    export SOURCE_PATH=$HOME/freeflyer
+    export SOURCE_PATH=$HOME/astrobee
 
 First, clone the flight software repository:
 
@@ -85,16 +85,16 @@ Install Luajit, it will be installed in /usr/local
 
 ### Note for the build setup
 By default, the configure script uses the following paths:
-  - native build path: `$HOME/freeflyer_build/native`
-  - native install path: `$HOME/freeflyer_install/native`
+  - native build path: `$HOME/astrobee_build/native`
+  - native install path: `$HOME/astrobee_install/native`
 
 If you are satisfied with these paths, you can invoke the `configure.sh` without
 the `-p` and `-b` options. For the simplicity of the instructions below,
 we assume that `$BUILD_PATH` and `$INSTALL_PATH` contain the location of the
 build and install path. For example:
 
-    export BUILD_PATH=$HOME/freeflyer_build/native
-    export INSTALL_PATH=$HOME/freeflyer_install/native
+    export BUILD_PATH=$HOME/astrobee_build/native
+    export INSTALL_PATH=$HOME/astrobee_install/native
 
 ### Native build
 

@@ -6,7 +6,7 @@
 To build the docker images, run:
     
     ./build.sh
-The option -a is used to select the location of the freeflyer source code, otherwise it is assumed we are in the scripts/docker folder.
+The option -a is used to select the location of the astrobee source code, otherwise it is assumed we are in the scripts/docker folder.
 The option -n is used for ubuntu 18 docker images
 
 To run the docker container, run:

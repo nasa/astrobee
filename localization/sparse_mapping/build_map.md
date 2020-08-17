@@ -21,7 +21,7 @@ We go through how a map is made.
 ## Reduce the number of images
 
 Here, we delete the images that overlap highly. (This tool is, like all
-others, in freeflyer_build/native.)
+others, in astrobee_build/native.)
 
   select_images -density_factor 1.4 <image dir>/*.jpg
 
@@ -62,8 +62,8 @@ the data is acquired.
 In the first step, one needs to set some environmental variables, as
 follows:
 
-export ASTROBEE_RESOURCE_DIR=/path/to/freeflyer/astrobee/resources
-export ASTROBEE_CONFIG_DIR=/path/to/freeflyer/astrobee/config
+export ASTROBEE_RESOURCE_DIR=$SOURCE_PATH/astrobee/resources
+export ASTROBEE_CONFIG_DIR=$SOURCE_PATH/astrobee/config
 export ASTROBEE_ROBOT=p4d
 export ASTROBEE_WORLD=granite
 
@@ -85,7 +85,7 @@ temporarily modify the above files to reflect your camera's parameters
 
 More details on these and other environmental variables can be found in
 
-  freeflyer/astrobee/readme.md
+  astrobee/astrobee/readme.md
 
 ## Building a map
 
@@ -130,8 +130,9 @@ file. The `-sample_rate <N>` flag, if specified, builds the map from
 only one out of N input images. If desired, the feature detector and
 feature descriptor can be specified. The default is ORGBRISK.
 
-Here and below we omitted for brevity the list of images and the
--output_map option that are needed for the tool to run.
+Here and below we omitted for brevity the -output_map option that is
+needed for the tool to run. The images need to be specified only at
+step 1 above, and not below, as by then they are rememberd by the map.
 
 2. **Match images**
 
@@ -192,6 +193,17 @@ use the option -rebuild_detector.
 Note that rebuilding the map does not rebuild the vocabulary database
 which should be done as below.
 
+Rebuilding a map while floating the cameras is not recommended if the
+map had images taken out of it as is typically done to reduce its size
+in order to be deployed on the robot. Refloating the cameras may then
+result in the map breaking up into several connected components that
+would drift from each other.
+
+If it is desired to take out images from the map, it should happen at
+this stage, before the vocabulary database and pruning happens at the
+next step. See readme.md when it comes to such operations, where the
+script grow_map.py is used.
+
 7. **Vocabulary database**
 
     build_map -vocab_db
@@ -200,6 +212,14 @@ Builds a vocabulary database for fast lookup of matching image pairs.
 Without this, we have to compare to every image in the map for
 localization.  The vocabulary database makes parts of the runtime
 logarithmic instead of linear.
+
+It is very important to note that when the vocabulary database is
+created the map is pruned from features that show up in just one
+image. This is an irreversible operation and after it no other
+operations can be performed on this map, such as extracting as submap,
+or even recreating the vocabulary database again without a large loss
+of quality. Hence this operation must be the very last to be applied
+to a map.
 
 At this stage the map is ready to be used on the robot.
 
@@ -211,17 +231,6 @@ pipeline to just create a SURF map one can do:
     build_map <image dir>/*.jpg -feature_detection -feature_matching \
       -track_building -incremental_ba -bundle_adjustment             \
       -histogram_equalization -num_subsequent_images 100
-
-### Map pruning
-
-It is important to note that normally build_map prunes a map from
-features that show up in just one image after the vocabulary database
-is built (unless it is invoked with -skip_pruning). Hence, invoking
-the -vocab_db on a map already pruned will create a much smaller
-database against which localization won't work so well. The only way
-to recover the pruned features is to invoke map-building with the
--rebuild flag, followed again by the -vocab_db flag which will rebuild
-the database of vocabulary features and then prune the map.
 
 ### Additional options
 
@@ -283,7 +292,7 @@ beyond three numerical values.
 The xyz locations of the control points for the granite lab can be
 found in 
 
-  freeflyer/localization/sparse_mapping/granite_xyz_controlPoints.txt
+  astrobee/localization/sparse_mapping/granite_xyz_controlPoints.txt
 
 and the control points for the AR tags on the dock station can be
 found in
@@ -362,7 +371,7 @@ be visualized in the ISS as follows:
 
 Open two terminals, and in each one type:
 
-  export BUILD_PATH=$HOME/freeflyer_build/native
+  export BUILD_PATH=$HOME/astrobee_build/native
   source $BUILD_PATH/devel/setup.bash
 
 In the first terminal start the simulator:
@@ -371,10 +380,8 @@ In the first terminal start the simulator:
  
 In the second, run:
 
-  python $HOME/freeflyer/localization/sparse_mapping/tools/view_control_points.py \
-    $HOME/freeflyer/localization/sparse_mapping/iss_registration.txt
-
-(here it is assumed that the freeflyer directory is in your home directory).
+  python $SOURCE_PATH/localization/sparse_mapping/tools/view_control_points.py \
+    $SOURCE_PATH/localization/sparse_mapping/iss_registration.txt
 
 Go back to the simulated ISS and examine the registration points.
 If the Rviz display looks too cluttered, most topics can be turned off.
@@ -412,7 +419,7 @@ Python command will refresh them.
 A set of 10 registration points were measured in the MGTF with the
 Total Station. They are in the file
 
-  $HOME/freeflyer/localization/sparse_mapping/mgtf_registration.txt
+  $SOURCE_PATH/localization/sparse_mapping/mgtf_registration.txt
 
 Two of these are on the back wall, and the rest are on the metal
 columns on the side walls, with four on each wall. Half of the points
@@ -440,18 +447,19 @@ To test how the map may perform on the robot, do the following:
 ### Stage the new map
 
 1. Copy the new map on the robot MLP (preference in /data)
-
+```
     scp <map2test.map> mlp:/data
-    
+ ```   
 2. On the MLP, move the current map aside
-
+```
     ssh mlp
     cd /res/maps
     mv granite.map _granite.map
-
+```
 3. On the MLP, create a symlink to the new map
-
+```
     ln -s /data/<map2test.map /res/maps/granite.map
+```
 
 ### Stage the bag with images
 
@@ -459,7 +467,7 @@ To test how the map may perform on the robot, do the following:
 
 ### Stage the feature counter utility (should be added to the install at one point)
 
-    scp <freeflyer_src>/marker_tracking/ros/tools/features_counter.py mlp:
+    scp $SOURCE_PATH/localization/marker_tracking/ros/tools/features_counter.py mlp:
 
 ### Launch the localization node on LLP
 
@@ -501,16 +509,17 @@ created based on the images in the bag.
 1. Look at the load with htop
 
 2. Watch the frequency of feature production
-
+```
     rostopic hz -w 5 /loc/ml/features
-
+```
 and echo the pose being output with the features:
-
+```
     rostopic echo /loc/ml/features | grep -A 17 header:
-
+```
 3. Watch the number of features being produced
-
+```
     ~/features_counter.py ml
+```
 
 ## Verify localization against a sparse map on a local machine
 
@@ -522,30 +531,30 @@ computations may differ.
 Set up the environment in every terminal that is used. Ensure that you
 use the correct robot name below.
 
-  source ~/freeflyer_build/native/devel/setup.bash
-  export ASTROBEE_RESOURCE_DIR=$HOME/freeflyer/astrobee/resources
-  export ASTROBEE_CONFIG_DIR=$HOME/freeflyer/astrobee/config
-  export ASTROBEE_WORLD=iss
-  export ASTROBEE_ROBOT=bumble # your robot's name may be different
-  export ROS_MASTER_URI=http://127.0.0.1:11311/
+    source ~/astrobee_build/native/devel/setup.bash
+    export ASTROBEE_RESOURCE_DIR=$SOURCE_PATH/astrobee/resources
+    export ASTROBEE_CONFIG_DIR=$SOURCE_PATH/astrobee/config
+    export ASTROBEE_WORLD=iss
+    export ASTROBEE_ROBOT=bumble # your robot's name may be different
+    export ROS_MASTER_URI=http://127.0.0.1:11311/
 
 Examine the localization configuration file:
 
-  $HOME/freeflyer/astrobee/config/localization.config
+    astrobee/config/localization.config
 
 Sym link the map to test:
 
-  rm -fv $HOME/freeflyer/astrobee/resources/maps/iss.map
-  ln -s $(pwd)/mymap.map $HOME/freeflyer/astrobee/resources/maps/iss.map
+    rm -fv $SOURCE_PATH/astrobee/resources/maps/iss.map
+    ln -s $(pwd)/mymap.map $SOURCE_PATH/astrobee/resources/maps/iss.map
 
 Start the localization node:
 
-  roslaunch astrobee astrobee.launch mlp:=local llp:=disabled \
-    nodes:=framestore,localization_node
+    roslaunch astrobee astrobee.launch mlp:=local llp:=disabled \
+      nodes:=framestore,localization_node
 
 Enable localization:
 
-  rosservice call /loc/ml/enable true
+    rosservice call /loc/ml/enable true
 
 Then, as above, one must play a bag while redirecting the existing
 /loc topics, and ensure that the images are published on /hw/cam_nav.
@@ -560,7 +569,7 @@ and compared to the old ones via:
 
 ## Evaluating the map without running the localization node
 
-See freeflyer/tools/ekf_bag/readme.md for how to run the
+See astrobee/tools/ekf_bag/readme.md for how to run the
 sparse_map_eval tool that takes as inputs a bag and a BRISK map and
 prints the number of detected features.
 

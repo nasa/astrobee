@@ -77,9 +77,8 @@ The bags created on the ISS are likely split into many smaller bags,
 for easy and reliability of transfer. Those can be merged into one bag
 as follows:
 
-  export BUILD_PATH=$HOME/freeflyer_build/native
   source $BUILD_PATH/devel/setup.bash
-  python freeflyer/localization/sparse_mapping/tools/merge_bags.py \
+  python $SOURCE_PATH/localization/sparse_mapping/tools/merge_bags.py \
     <output bag> <input bags> --verbose
 
 ### Extracting images
@@ -90,7 +89,7 @@ To extract images from a bag file:
      -image_topic /hw/cam_nav -output_directory <output dir>
 
 The above assumes that the software was built with ROS on. This tool should
-exist in freeflyer_build/native.
+exist in astrobee_build/native.
 
 Please check using 'rosbag info' the nav cam topic in the bag, as its
 name can change.
@@ -205,7 +204,7 @@ for speed and here we want more accuracy.
 
 See: 
 
-  freeflyer/tools/ekf_bag/readme.md
+  astrobee/tools/ekf_bag/readme.md
 
 for how to see how well a BRISK map with a vocabulary database does
 when localizing images from a bag.
@@ -249,24 +248,19 @@ need to be rebuilt for the extracted submap using
 
 #### Merge maps
 
-Given a set of maps, they can be merged using the command:
+Given a set of SURF maps, they can be merged using the command:
 
-  merge_maps <input maps> -skip_pruning -output_map merged.map \
+  merge_maps <input maps> -output_map merged.map \
     -num_image_overlaps_at_endpoints 50
 
-It is very important to note that only maps that have not been pruned
-can be merged, hence the maps should have been built with
--skip_pruning. If a map is already pruned, it needs to be rebuilt, as
-follows:
+It is very important to note that only maps with SURF features (see
+build_map.md) can be merged. If a map has BRISK features, it needs to
+be rebuilt with SURF features, as follows:
 
-    build_map -rebuild -skip_pruning -histogram_equalization \
-      -rebuild_detector <detector> -output_map <output map>
+    build_map -rebuild -histogram_equalization \
+      -rebuild_detector SURF -output_map <output map>
 
-and then these regenerated maps can be merged. Note that the merged
-map will be pruned as well, unless merging is invoked also with
--skip_pruning. Also note that the above won't rebuild the vocabulary
-database (if desired, for brisk features). For that one should use
-additionally the '-vocab_db' option.
+and then these regenerated maps can be merged.
 
 Merging is more likely to succeed if the images at the endpoints of
 one map are similar to images at the endpoints of the second map, and
@@ -335,21 +329,21 @@ Hence the general approach for building maps is to create small SURF
 maps using the command:
 
   build_map -feature_detection -feature_matching -track_building    \
-   -incremental_ba -bundle_adjustment -skip_pruning                 \
+   -incremental_ba -bundle_adjustment                               \
    -histogram_equalization -num_subsequent_images 100               \
    images/*jpg -output_map <map file>
 
 examine them individually, merging them as appropriate, then
-performing bundle adjustment (while skipping pruning) and registration
-as per build_map.md. Only when a good enough map is obtained, a
-renamed copy of it should be rebuilt with BRISK features and a
-vocabulary database to be used on the robot.
+performing bundle adjustment and registration as per build_map.md. 
+Only when a good enough map is obtained, a renamed copy of it 
+should be rebuilt with BRISK features and a vocabulary database
+to be used on the robot.
 
 #### Map strategy for the space station
 
 For the space station, there exists one large SURF map with many
 images, and a small BRISK map with fewer images. If new images are
-acquired, it is suggested several small maps be assembed from them,
+acquired, it is suggested several small maps be assembled from them,
 and those be merged to the large SURF map.
 
 The key idea here is to add some well-chosen subsequences of those new
@@ -391,7 +385,7 @@ latter will have fewer images.
 
 We need some notation. Let prev_brisk_vocab_hist.map be the previous
 BRISK map, before new images are added, prev_surf_registered.map be
-the previous registred SURF map (that can have more images than
+the previous registered SURF map (that can have more images than
 prev_brisk_vocab_hist.map). Let curr_surf_registered.map be the large
 SURF map that is obtained from prev_surf_registered.map merged with
 the images acquired this time, and curr_brisk_no_prune_hist.map be
@@ -399,7 +393,7 @@ obtained from curr_surf_registered.map using the -rebuild and
 -histogram_equalization options. The prev_brisk_vocab_hist.map will
 already be pruned and have a vocabulary database, but
 curr_brisk_no_prune_hist.map is assumed to have none of these. Not
-being pruned is very imporant. And again, all these maps must be
+being pruned is very important. And again, all these maps must be
 registered.
 
 Let also list1.txt, ..., listN.txt contain the images for those
@@ -426,7 +420,7 @@ batch if they are not strictly necessary.
 
 The following Python code implements this:
 
- python ~/freeflyer/localization/sparse_mapping/tools/grow_map.py  \
+ python ~/astrobee/localization/sparse_mapping/tools/grow_map.py  \
    -histogram_equalization -small_map prev_brisk_vocab_hist.map    \
    -big_map curr_brisk_no_prune_hist.map -work_dir work            \
    -output_map curr_brisk_vocab_hist.map                           \

@@ -165,7 +165,7 @@ work reliably with VirtualBox. Run:
 11. To be able to interact with the robot in its environment using a
 GUI program, either via teleoperation, or by writing and running a
 plan, one can use the Astrobee Ground Control Station (GDS). See
-https://babelfish.arc.nasa.gov/trac/freeflyerworkbench/wiki/HowToRunWorkbench
+https://github.com/nasa/astrobee_gds
 for detailed instructions for how to install and run GDS.
 
 Once GDS is downloaded and extracted, its directory should be renamed

@@ -35,8 +35,8 @@
   Undistort camera images for a robot.
   Usage:
 
-  export ASTROBEE_RESOURCE_DIR=$HOME/freeflyer/astrobee/resources
-  export ASTROBEE_CONFIG_DIR=$HOME/freeflyer/astrobee/config
+  export ASTROBEE_RESOURCE_DIR=$SOURCE_PATH/astrobee/resources
+  export ASTROBEE_CONFIG_DIR=$SOURCE_PATH/astrobee/config
   export ASTROBEE_WORLD=granite
   export ASTROBEE_ROBOT=p4d
   undistort_image *[0-9].jpg

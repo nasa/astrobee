@@ -15,4 +15,4 @@ docker run -it --rm --name astrobee \
         --user="astrobee" \
         --gpus all \
       astrobee \
-    /freeflyer_init.sh roslaunch astrobee sim.launch dds:=false
+    /astrobee_init.sh roslaunch astrobee sim.launch dds:=false

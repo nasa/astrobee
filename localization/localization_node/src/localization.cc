@@ -23,6 +23,8 @@
 #include <msg_conversions/msg_conversions.h>
 #include <ros/ros.h>
 
+#include <camera/camera_params.h>
+
 namespace localization_node {
 
 Localizer::Localizer(sparse_mapping::SparseMap* comp_map_ptr) :
@@ -76,22 +78,27 @@ void Localizer::ReadParams(config_reader::ConfigReader* config) {
                           min_brisk_threshold, default_brisk_threshold, max_brisk_threshold);
 }
 
-bool Localizer::Localize(cv_bridge::CvImageConstPtr image_ptr, ff_msgs::VisualLandmarks* vl) {
+bool Localizer::Localize(cv_bridge::CvImageConstPtr image_ptr, ff_msgs::VisualLandmarks* vl,
+     Eigen::Matrix2Xd* image_keypoints) {
   bool multithreaded = false;
   cv::Mat image_descriptors;
-  Eigen::Matrix2Xd image_keypoints;
+
+  Eigen::Matrix2Xd keypoints;
+  if (image_keypoints == NULL) {
+    image_keypoints = &keypoints;
+  }
 
   vl->header = std_msgs::Header();
   vl->header.stamp = image_ptr->header.stamp;
   vl->header.frame_id = "world";
 
-  map_->DetectFeatures(image_ptr->image, multithreaded, &image_descriptors, &image_keypoints);
+  map_->DetectFeatures(image_ptr->image, multithreaded, &image_descriptors, image_keypoints);
   camera::CameraModel camera(Eigen::Vector3d(),
                              Eigen::Matrix3d::Identity(),
                              map_->GetCameraParameters());
   std::vector<Eigen::Vector3d> landmarks;
   std::vector<Eigen::Vector2d> observations;
-  if (!map_->Localize(image_descriptors, image_keypoints,
+  if (!map_->Localize(image_descriptors, *image_keypoints,
                                &camera, &landmarks, &observations)) {
     // LOG(INFO) << "Failed to localize image.";
     return false;
@@ -104,6 +111,7 @@ bool Localizer::Localize(cv_bridge::CvImageConstPtr image_ptr, ff_msgs::VisualLa
   vl->pose.orientation = msg_conversions::eigen_to_ros_quat(quat);
   assert(landmarks.size() == observations.size());
   vl->landmarks.reserve(landmarks.size());
+
   for (size_t i = 0; i < landmarks.size(); i++) {
     ff_msgs::VisualLandmark l;
     l.x = landmarks[i].x();

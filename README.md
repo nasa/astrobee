@@ -52,7 +52,7 @@ To generate the Astrobee documentation, run the following command after checking
 out the code (the latest version of doxygen should be [installed](https://www.doxygen.nl/download.html) for correct
 markdown support) :
 
-    doxygen doc/freeflyer.doxyfile
+    doxygen doc/astrobee.doxyfile
 
 The documentation will be generated in the doc/html folder. Open the doc/documentation.html
 to get to the main page of the documentation.
@@ -86,8 +86,8 @@ information.
 If you are a non-NASA user, please checkout the astrobee_android nasa github
 project (if you followed the usage instructions, you should have checked this
 out already). Once that is checked out, please see
-[`freeflyer_android/README.md`](https://github.com/nasa/astrobee_android/blob/master/README.md)
-located in the `freeflyer_android/` folder.
+[`astrobee_android/README.md`](https://github.com/nasa/astrobee_android/blob/master/README.md)
+located in the `astrobee_android/` folder.
 
 If you are a NASA user, please make sure the `android` submodule was checked out
 and then visit `submodules/android/guest_science_readme.md`.

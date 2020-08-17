@@ -99,7 +99,7 @@ namespace sparse_mapping {
   void AppendMapFile(std::string const& mapOut, std::string const& mapIn,
                      int num_image_overlaps_at_endpoints,
                      double outlier_factor,
-                     bool bundle_adjust, bool prune_map);
+                     bool bundle_adjust);
 
   /**
      Merge two maps.

@@ -32,4 +32,3 @@ if len(sys.argv) >= 3:
 (astrobee_map, astrobee_bag, astrobee_robot) = environment.initialize_environment(astrobee_map, astrobee_bag, None)
 
 os.system('rosrun ekf_bag ekf_bag %s %s --save_inputs_file=true' % (astrobee_map, astrobee_bag))
-

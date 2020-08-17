@@ -22,10 +22,10 @@ RUN apt-get update \
 RUN git config --global advice.detachedHead false
 
 # Install ROS Melodic----------------------------------------------------------------
-COPY ./scripts/setup/*.sh /setup/freeflyer/
+COPY ./scripts/setup/*.sh /setup/astrobee/
 
 # this command is expected to have output on stderr, so redirect to suppress warning
-RUN /setup/freeflyer/add_ros_repository.sh >/dev/null 2>&1
+RUN /setup/astrobee/add_ros_repository.sh >/dev/null 2>&1
 
 RUN apt-get update \
   && apt-get install -y \
@@ -35,6 +35,7 @@ RUN apt-get update \
 RUN apt-get update \
   && apt-get install -y \
   ros-melodic-desktop \
+  python-rosdep \
   && rm -rf /var/lib/apt/lists/*
 
 # Install OpenCV----------------------------------------------------------------
@@ -86,17 +87,17 @@ RUN cd /opencv_build/opencv/build  \
   && make install \
   && rm -rf /var/lib/apt/lists/*
 
-# Install Freeflyer----------------------------------------------------------------
-COPY ./scripts/setup/debians /setup/freeflyer/debians
+# Install Astrobee----------------------------------------------------------------
+COPY ./scripts/setup/debians /setup/astrobee/debians
 
 RUN apt-get update \
-  && /setup/freeflyer/install_luajit.sh \
-  && /setup/freeflyer/debians/build_install_debians_18_04.sh \
+  && /setup/astrobee/install_luajit.sh \
+  && /setup/astrobee/debians/build_install_debians_18_04.sh \
   && rm -rf /var/lib/apt/lists/*
 
-COPY ./scripts/setup/packages_*.lst /setup/freeflyer/
+COPY ./scripts/setup/packages_*.lst /setup/astrobee/
 # note apt-get update is run within the following shell script
-RUN /setup/freeflyer/install_desktop_18_04_packages.sh \
+RUN /setup/astrobee/install_desktop_18_04_packages.sh \
   && rm -rf /var/lib/apt/lists/*
 
 COPY . /src/astrobee
@@ -118,7 +119,7 @@ RUN useradd -m $USERNAME && \
         groupmod --gid 1000 $USERNAME
 
 #Add the entrypoint for docker
-RUN echo "#!/bin/bash\nset -e\n\nsource \"/opt/ros/kinetic/setup.bash\"\nsource \"/build/astrobee/devel/setup.bash\"\nexport ASTROBEE_CONFIG_DIR=\"/src/astrobee/astrobee/config\"\nexec \"\$@\"" > /freeflyer_init.sh && \
-  chmod +x /freeflyer_init.sh && \
+RUN echo "#!/bin/bash\nset -e\n\nsource \"/opt/ros/kinetic/setup.bash\"\nsource \"/build/astrobee/devel/setup.bash\"\nexport ASTROBEE_CONFIG_DIR=\"/src/astrobee/astrobee/config\"\nexec \"\$@\"" > /astrobee_init.sh && \
+  chmod +x /astrobee_init.sh && \
   rosdep init && \
   rosdep update 2>&1 | egrep -v 'as root|fix-permissions'

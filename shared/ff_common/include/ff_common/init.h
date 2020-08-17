@@ -17,7 +17,7 @@
  */
 
 
-// These are the configured options for the FreeFlyer Vision
+// These are the configured options for the Astrobee Vision
 // Navigation Project.
 
 #ifndef FF_COMMON_INIT_H_
