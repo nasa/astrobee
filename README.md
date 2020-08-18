@@ -48,14 +48,7 @@ due to NASA legal requirements. Thank you for your understanding.
 
 ### Documentation
 
-To generate the Astrobee documentation, run the following command after checking
-out the code (the latest version of doxygen should be [installed](https://www.doxygen.nl/download.html) for correct
-markdown support) :
-
-    doxygen doc/astrobee.doxyfile
-
-The documentation will be generated in the doc/html folder. Open the doc/documentation.html
-to get to the main page of the documentation.
+To view the Astrobee documentation, visit [documentation](https://nasa.github.io/astrobee/html/documentation.html)
 
 For familiarization with the Astrobee project, it is recommended to read some
 background papers:
