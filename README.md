@@ -1,6 +1,6 @@
-# Astrobee Robot Software - Flight Software repository
+# Astrobee Robot Software
 
-## About
+### About
 
 <p>
 <img src="doc/images/astrobee.png" srcset="../images/astrobee.png 1x" 
@@ -31,14 +31,14 @@ The Astrobee Robot Software is in a beta stage. This means that some
 features are incomplete, and extensive changes can be expected. Please consult
 [RELEASE](RELEASE.md) for the current list of features and limitations.
 
-## Usage instructions
+### Usage instructions
 
 If you don't have access to NASA's internal network, please see the
 [usage instructions](INSTALL.md).
 
 If you do, please see the [NASA usage instructions](NASA_INSTALL.md).
 
-## Contributors
+### Contributors
 
 The Astrobee Robot Software is open source, and we welcome contributions
 from the public. However, for us to merge any pull requests, we must request
@@ -46,7 +46,7 @@ that contributors sign and submit a
 [Contributor License Agreement](https://www.nasa.gov/sites/default/files/atoms/files/astrobee_individual_contributor_license_agreement.pdf)
 due to NASA legal requirements. Thank you for your understanding.
 
-## Documentation
+### Documentation
 
 To generate the Astrobee documentation, run the following command after checking
 out the code (the latest version of doxygen should be [installed](https://www.doxygen.nl/download.html) for correct
@@ -78,7 +78,7 @@ https://www.nasa.gov/sites/default/files/atoms/files/coltin2016localization.pdf)
 SpaceOps Conference*. 2018.](
 https://www.nasa.gov/sites/default/files/atoms/files/bualat_spaceops_2018_paper.pdf)
 
-## Guest Science
+### Guest Science
 
 If you are interested in guest science, please do one of the following for more
 information.
@@ -92,7 +92,7 @@ located in the `astrobee_android/` folder.
 If you are a NASA user, please make sure the `android` submodule was checked out
 and then visit `submodules/android/guest_science_readme.md`.
 
-## License
+### License
 
 Copyright (c) 2017, United States Government, as represented by the
 Administrator of the National Aeronautics and Space Administration.

@@ -1,3 +1,5 @@
+\page release Generate GitHub release
+
 # Generate releases and synching with Github
 
 ## Create a release branch

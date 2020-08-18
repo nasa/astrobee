@@ -1,4 +1,8 @@
-# Usage instructions for docker images
+\page install-docker Docker build
+
+# Usage instructions for NASA users
+
+Here there are instructions on how to build and run the FSW using Docker.
 
 
 ## Building the docker images

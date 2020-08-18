@@ -1,3 +1,5 @@
+\page install-nasa Install in Ubuntu 16.04 / ROS kinetic for NASA users
+
 # Usage instructions for NASA users
 
 Install the 64-bit version of

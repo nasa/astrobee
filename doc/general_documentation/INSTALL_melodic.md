@@ -1,3 +1,5 @@
+\page install-melodic Install in Ubuntu 18.04 / ROS melodic
+
 # Usage instructions for non-NASA users
 
 Install the 64-bit version of [Ubuntu 18.04](http://releases.ubuntu.com/18.04)
