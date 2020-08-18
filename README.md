@@ -41,35 +41,20 @@ If you do, please see the [NASA usage instructions](NASA_INSTALL.md).
 ### Contributors
 
 The Astrobee Robot Software is open source, and we welcome contributions
-from the public. However, for us to merge any pull requests, we must request
-that contributors sign and submit a
+from the public. Please submit pull requests to the develop branch.
+For us to merge any pull requests, we must request that contributors sign and submit a
 [Contributor License Agreement](https://www.nasa.gov/sites/default/files/atoms/files/astrobee_individual_contributor_license_agreement.pdf)
 due to NASA legal requirements. Thank you for your understanding.
 
 ### Documentation
 
-To view the Astrobee documentation, visit [documentation](https://nasa.github.io/astrobee/html/documentation.html)
+To view the Astrobee documentation, visit [documentation](https://nasa.github.io/astrobee/html/documentation.html).
 
-For familiarization with the Astrobee project, it is recommended to read some
-background papers:
-
-#### Astrobee Software Concepts
-[Lorenzo Fluckiger, Kathryn Browne, Brian Coltin, Jesse Fusco, Theodore Morse,
-and Andrew Symington. “Astrobee Robot Software: Enabling Mobile Autonomy on the 
-ISS”, *In Proc. of the Int. Symposium on Artificial Intelligence, Robotics and 
-Automation in Space (i-SAIRAS)*, 2018.](
-https://www.nasa.gov/sites/default/files/atoms/files/fluckiger2018astrobee.pdf)
-
-#### Localization method
-[Brian Coltin et al. “Localization from visual landmarks on a free-flying
-robot”. *In: Intelligent Robots and Systems (IROS), 2016 IEEE/RSJ International
-Conference on. IEEE.* 2016, pp. 4377–4382.](
-https://www.nasa.gov/sites/default/files/atoms/files/coltin2016localization.pdf)
-
-#### Astrobee platform
-[Maria Bualat et al. "Astrobee: A New Tool for ISS Operations." *2018 
-SpaceOps Conference*. 2018.](
-https://www.nasa.gov/sites/default/files/atoms/files/bualat_spaceops_2018_paper.pdf)
+For more information, read the Astrobee [publications](https://www.nasa.gov/content/research-publications-0).
+Learning about the Astrobee [platform](https://www.nasa.gov/sites/default/files/atoms/files/bualat_spaceops_2018_paper.pdf),
+[software](https://www.nasa.gov/sites/default/files/atoms/files/fluckiger2018astrobee.pdf),
+and [localization](https://www.nasa.gov/sites/default/files/atoms/files/coltin2016localization.pdf)
+are good starting points.
 
 ### Guest Science
 
