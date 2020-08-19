@@ -35,24 +35,25 @@
 #include <vector>
 
 namespace graph_bag {
-// Reads through a bag file and passes relevant messages to graph localizer wrapper.  Contains its own
-// instances of sensor parsers (lk_optical_flow, localizer (for sparse map matching)) and passes output
-// to graph localizer wrapper so this does not require a ROS core and can parse bags more quickly.
+// Reads through a bag file and passes relevant messages to graph localizer
+// wrapper.  Contains its own instances of sensor parsers (lk_optical_flow,
+// localizer (for sparse map matching)) and passes output to graph localizer
+// wrapper so this does not require a ROS core and can parse bags more quickly.
 class GraphBag {
  public:
-  GraphBag(const std::string& bag_name, const std::string& map_file, const std::string& image_topic,
-           const std::string& results_bag);
+  GraphBag(const std::string &bag_name, const std::string &map_file, const std::string &image_topic,
+           const std::string &results_bag);
   void Run();
 
  private:
   void InitializeGraph();
-  ff_msgs::Feature2dArray GenerateOFFeatures(const sensor_msgs::ImageConstPtr& image_msg);
-  bool GenerateVLFeatures(const sensor_msgs::ImageConstPtr& image_msg, ff_msgs::VisualLandmarks& vl_features);
-  void SaveOpticalFlowTracksImage(const sensor_msgs::ImageConstPtr& image_msg,
-                                  const graph_localizer::FeatureTrackMap* const feature_tracks);
-  void SaveGroundtruthPose(const ff_msgs::VisualLandmarks& vl_features);
-  void SavePose(const geometry_msgs::PoseWithCovarianceStamped& latest_pose_msg);
-  void FeatureTrackImage(const graph_localizer::FeatureTrackMap& feature_tracks, cv::Mat& feature_track_image) const;
+  ff_msgs::Feature2dArray GenerateOFFeatures(const sensor_msgs::ImageConstPtr &image_msg);
+  bool GenerateVLFeatures(const sensor_msgs::ImageConstPtr &image_msg, ff_msgs::VisualLandmarks &vl_features);
+  void SaveOpticalFlowTracksImage(const sensor_msgs::ImageConstPtr &image_msg,
+                                  const graph_localizer::FeatureTrackMap *const feature_tracks);
+  void SaveGroundtruthPose(const ff_msgs::VisualLandmarks &vl_features);
+  void SavePose(const geometry_msgs::PoseWithCovarianceStamped &latest_pose_msg);
+  void FeatureTrackImage(const graph_localizer::FeatureTrackMap &feature_tracks, cv::Mat &feature_track_image) const;
 
   rosbag::Bag bag_;
   rosbag::Bag results_bag_;

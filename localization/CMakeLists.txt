@@ -16,9 +16,10 @@
 # under the License.
 
 add_subdirectory(camera)
-add_subdirectory(interest_point)
-add_subdirectory(sparse_mapping)
 add_subdirectory(graph_localizer)
+add_subdirectory(interest_point)
+add_subdirectory(localization_measurements)
+add_subdirectory(sparse_mapping)
 
 if (USE_ROS)
   add_subdirectory(marker_tracking)

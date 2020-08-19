@@ -21,11 +21,12 @@
 #include <glog/logging.h>
 
 namespace graph_localizer {
-void FeatureTracker::UpdateFeatureTracks(const FeaturePoints& feature_points) {
+namespace lm = localization_measurements;
+void FeatureTracker::UpdateFeatureTracks(const lm::FeaturePoints &feature_points) {
   const int starting_num_feature_tracks = feature_tracks_.size();
   DLOG(INFO) << "UpdateFeatureTracks: Starting num feature tracks: " << starting_num_feature_tracks;
   // Update existing features or add new one
-  for (const auto& feature_point : feature_points) {
+  for (const auto &feature_point : feature_points) {
     feature_tracks_[feature_point.feature_id].latest_image_id = feature_point.image_id;
     feature_tracks_[feature_point.feature_id].points.emplace_back(feature_point);
   }
@@ -50,8 +51,8 @@ void FeatureTracker::UpdateFeatureTracks(const FeaturePoints& feature_points) {
   DLOG(INFO) << "UpdateFeatureTracks: Final total num feature tracks: " << feature_tracks_.size();
 }
 
-void FeatureTracker::RemoveOldFeaturePoints(const Time oldest_allowed_time) {
-  for (auto& feature : feature_tracks_) {
+void FeatureTracker::RemoveOldFeaturePoints(const lm::Time oldest_allowed_time) {
+  for (auto &feature : feature_tracks_) {
     auto point_it = feature.second.points.cbegin();
     while (point_it != feature.second.points.cend() && point_it->timestamp < oldest_allowed_time) {
       ++point_it;

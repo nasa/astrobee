@@ -16,8 +16,12 @@
  * under the License.
  */
 
-#include <graph_localizer/time.h>
+#ifndef LOCALIZATION_MEASUREMENTS_TIME_H_
+#define LOCALIZATION_MEASUREMENTS_TIME_H_
 
-namespace graph_localizer {
-Time GetTime(const int seconds, const int nanoseconds) { return seconds + 1e-9 * nanoseconds; }
-}  // namespace graph_localizer
+namespace localization_measurements {
+using Time = double;
+Time GetTime(const int seconds, const int nanoseconds);
+}  // namespace localization_measurements
+
+#endif  // LOCALIZATION_MEASUREMENTS_TIME_H_

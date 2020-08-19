@@ -19,15 +19,15 @@
 #include <config_reader/config_reader.h>
 #include <graph_localizer/graph_localizer_wrapper.h>
 #include <graph_localizer/imu_utilities.h>
-#include <graph_localizer/measurement_conversions.h>
 #include <graph_localizer/utilities.h>
+#include <localization_measurements/measurement_conversions.h>
 
 #include <Eigen/Core>
 
 #include <glog/logging.h>
 
 namespace graph_localizer {
-
+namespace lm = localization_measurements;
 GraphLocalizerWrapper::GraphLocalizerWrapper() {
   // Needed for ConfigReader construction
   // TODO(rsoussan): load this somewhere else/ how do other nodelets do this?
@@ -53,18 +53,21 @@ GraphLocalizerWrapper::GraphLocalizerWrapper() {
   graph_loc_initialization_.LoadGraphLocalizerParams(config);
 }
 
-void GraphLocalizerWrapper::OpticalFlowCallback(const ff_msgs::Feature2dArray& feature_array_msg) {
-  if (graph_localizer_) graph_localizer_->AddOpticalFlowMeasurement(MakeFeaturePointsMeasurement(feature_array_msg));
+void GraphLocalizerWrapper::OpticalFlowCallback(const ff_msgs::Feature2dArray &feature_array_msg) {
+  if (graph_localizer_)
+    graph_localizer_->AddOpticalFlowMeasurement(lm::MakeFeaturePointsMeasurement(feature_array_msg));
 }
 
 void GraphLocalizerWrapper::ResetLocalizer() {
   LOG(INFO) << "ResetLocalizer: Resetting localizer.";
   graph_loc_initialization_.ResetStartPose();
   if (!have_latest_imu_biases_) {
-    LOG(DFATAL) << "ResetLocalizer: Trying to reset localizer when no biases are available.";
+    LOG(DFATAL) << "ResetLocalizer: Trying to reset localizer when no biases "
+                   "are available.";
     return;
   }
-  // TODO(rsoussan): compare current time with latest bias timestamp and print warning if it is too old
+  // TODO(rsoussan): compare current time with latest bias timestamp and print
+  // warning if it is too old
   graph_loc_initialization_.SetBiases(latest_accelerometer_bias_, latest_gyro_bias_);
   graph_localizer_.reset();
 }
@@ -75,30 +78,31 @@ void GraphLocalizerWrapper::ResetBiasesAndLocalizer() {
   graph_localizer_.reset();
 }
 
-void GraphLocalizerWrapper::VLVisualLandmarksCallback(const ff_msgs::VisualLandmarks& visual_landmarks_msg) {
+void GraphLocalizerWrapper::VLVisualLandmarksCallback(const ff_msgs::VisualLandmarks &visual_landmarks_msg) {
   if (graph_localizer_) {
-    graph_localizer_->AddSparseMappingMeasurement(MakeMatchedProjectionsMeasurement(visual_landmarks_msg));
+    graph_localizer_->AddSparseMappingMeasurement(lm::MakeMatchedProjectionsMeasurement(visual_landmarks_msg));
   } else {
-    // Set or update initial pose if a new one is available before the localizer has
-    // started running.
+    // Set or update initial pose if a new one is available before the localizer
+    // has started running.
     const Eigen::Isometry3d global_T_body =
         graph_localizer::EigenPose(visual_landmarks_msg, graph_loc_initialization_.params().body_T_nav_cam().inverse());
-    const graph_localizer::Time timestamp = graph_localizer::TimeFromHeader(visual_landmarks_msg.header);
+    const lm::Time timestamp = graph_localizer::TimeFromHeader(visual_landmarks_msg.header);
     graph_loc_initialization_.SetStartPose(global_T_body, timestamp);
   }
 }
 
-void GraphLocalizerWrapper::ARVisualLandmarksCallback(const ff_msgs::VisualLandmarks& visual_landmarks_msg) {
-  if (graph_localizer_) graph_localizer_->AddARTagMeasurement(MakeMatchedProjectionsMeasurement(visual_landmarks_msg));
+void GraphLocalizerWrapper::ARVisualLandmarksCallback(const ff_msgs::VisualLandmarks &visual_landmarks_msg) {
+  if (graph_localizer_)
+    graph_localizer_->AddARTagMeasurement(lm::MakeMatchedProjectionsMeasurement(visual_landmarks_msg));
 }
 
-void GraphLocalizerWrapper::ImuCallback(const sensor_msgs::Imu& imu_msg) {
+void GraphLocalizerWrapper::ImuCallback(const sensor_msgs::Imu &imu_msg) {
   if (graph_localizer_) {
-    graph_localizer_->AddImuMeasurement(ImuMeasurement(imu_msg));
+    graph_localizer_->AddImuMeasurement(lm::ImuMeasurement(imu_msg));
     graph_localizer_->LatestBiases(latest_accelerometer_bias_, latest_gyro_bias_, latest_bias_timestamp_);
     have_latest_imu_biases_ = true;
   } else if (graph_loc_initialization_.EstimateBiases()) {
-    EstimateAndSetImuBiases(ImuMeasurement(imu_msg), num_bias_estimation_measurements_, imu_bias_measurements_,
+    EstimateAndSetImuBiases(lm::ImuMeasurement(imu_msg), num_bias_estimation_measurements_, imu_bias_measurements_,
                             graph_loc_initialization_);
   }
 
@@ -118,12 +122,12 @@ void GraphLocalizerWrapper::InitializeGraph() {
   graph_localizer_.reset(new graph_localizer::GraphLocalizer(graph_loc_initialization_.params()));
 }
 
-const FeatureTrackMap* const GraphLocalizerWrapper::feature_tracks() const {
+const FeatureTrackMap *const GraphLocalizerWrapper::feature_tracks() const {
   if (!graph_localizer_) return nullptr;
   return &(graph_localizer_->feature_tracks());
 }
 
-bool GraphLocalizerWrapper::LatestPoseMsg(geometry_msgs::PoseWithCovarianceStamped& latest_pose_msg) const {
+bool GraphLocalizerWrapper::LatestPoseMsg(geometry_msgs::PoseWithCovarianceStamped &latest_pose_msg) const {
   if (!graph_localizer_) return false;
   latest_pose_msg = graph_localizer::LatestPoseMsg(*graph_localizer_);
   return true;

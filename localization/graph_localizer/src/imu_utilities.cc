@@ -21,14 +21,16 @@
 #include <glog/logging.h>
 
 namespace graph_localizer {
-void EstimateAndSetImuBiases(const ImuMeasurement& imu_measurement, const int num_imu_measurements_per_bias_estimate,
-                             std::vector<ImuMeasurement>& imu_bias_measurements,
-                             GraphLocInitialization& graph_loc_initialization) {
+namespace lm = localization_measurements;
+void EstimateAndSetImuBiases(const lm::ImuMeasurement &imu_measurement,
+                             const int num_imu_measurements_per_bias_estimate,
+                             std::vector<lm::ImuMeasurement> &imu_bias_measurements,
+                             GraphLocInitialization &graph_loc_initialization) {
   imu_bias_measurements.emplace_back(imu_measurement);
   if (imu_bias_measurements.size() >= num_imu_measurements_per_bias_estimate) {
     Eigen::Vector3d sum_of_acceleration_measurements = Eigen::Vector3d::Zero();
     Eigen::Vector3d sum_of_angular_velocity_measurements = Eigen::Vector3d::Zero();
-    for (const auto& imu_measurement : imu_bias_measurements) {
+    for (const auto &imu_measurement : imu_bias_measurements) {
       sum_of_acceleration_measurements += imu_measurement.acceleration;
       sum_of_angular_velocity_measurements += imu_measurement.angular_velocity;
     }
@@ -44,10 +46,11 @@ void EstimateAndSetImuBiases(const ImuMeasurement& imu_measurement, const int nu
   }
 }
 
-ImuMeasurement Interpolate(const ImuMeasurement& imu_measurement_a, const ImuMeasurement& imu_measurement_b,
-                           const Time timestamp) {
+lm::ImuMeasurement Interpolate(const lm::ImuMeasurement &imu_measurement_a, const lm::ImuMeasurement &imu_measurement_b,
+                               const lm::Time timestamp) {
   if (timestamp < imu_measurement_a.timestamp || timestamp > imu_measurement_b.timestamp) {
-    LOG(FATAL) << "Interpolate: Interpolation timestamp out of range of imu measurements.";
+    LOG(FATAL) << "Interpolate: Interpolation timestamp out of range of imu "
+                  "measurements.";
   }
 
   const double alpha =
@@ -57,19 +60,19 @@ ImuMeasurement Interpolate(const ImuMeasurement& imu_measurement_a, const ImuMea
   const Eigen::Vector3d interpolated_angular_velocity =
       (1.0 - alpha) * imu_measurement_a.angular_velocity + alpha * imu_measurement_b.angular_velocity;
 
-  return ImuMeasurement(interpolated_acceleration, interpolated_angular_velocity, timestamp);
+  return lm::ImuMeasurement(interpolated_acceleration, interpolated_angular_velocity, timestamp);
 }
 
 gtsam::PreintegratedCombinedMeasurements Pim(
-    const gtsam::imuBias::ConstantBias& bias,
-    const boost::shared_ptr<gtsam::PreintegratedCombinedMeasurements::Params>& params) {
+    const gtsam::imuBias::ConstantBias &bias,
+    const boost::shared_ptr<gtsam::PreintegratedCombinedMeasurements::Params> &params) {
   gtsam::PreintegratedCombinedMeasurements pim(params);
   pim.resetIntegrationAndSetBias(bias);
   return pim;
 }
 
-void AddMeasurement(const ImuMeasurement& imu_measurement, Time& last_added_imu_measurement_time,
-                    gtsam::PreintegratedCombinedMeasurements& pim) {
+void AddMeasurement(const lm::ImuMeasurement &imu_measurement, lm::Time &last_added_imu_measurement_time,
+                    gtsam::PreintegratedCombinedMeasurements &pim) {
   // TODO(rsoussan): check if dt too large?
 
   const double dt = imu_measurement.timestamp - last_added_imu_measurement_time;
@@ -80,15 +83,15 @@ void AddMeasurement(const ImuMeasurement& imu_measurement, Time& last_added_imu_
   // DLOG(INFO) << "deltaRij: " << pim_->deltaRij().matrix();
 }
 
-CombinedNavState PimPredict(const CombinedNavState& combined_nav_state,
-                            const gtsam::PreintegratedCombinedMeasurements& pim) {
+lm::CombinedNavState PimPredict(const lm::CombinedNavState &combined_nav_state,
+                                const gtsam::PreintegratedCombinedMeasurements &pim) {
   const gtsam::NavState predicted_nav_state = pim.predict(combined_nav_state.nav_state(), pim.biasHat());
-  const Time timestamp = combined_nav_state.timestamp() + pim.deltaTij();
-  return CombinedNavState(predicted_nav_state, pim.biasHat(), timestamp);
+  const lm::Time timestamp = combined_nav_state.timestamp() + pim.deltaTij();
+  return lm::CombinedNavState(predicted_nav_state, pim.biasHat(), timestamp);
 }
 
 gtsam::CombinedImuFactor::shared_ptr MakeCombinedImuFactor(const int key_index_0, const int key_index_1,
-                                                           const gtsam::PreintegratedCombinedMeasurements& pim) {
+                                                           const gtsam::PreintegratedCombinedMeasurements &pim) {
   return gtsam::CombinedImuFactor::shared_ptr(
       new gtsam::CombinedImuFactor(sym::P(key_index_0), sym::V(key_index_0), sym::P(key_index_1), sym::V(key_index_1),
                                    sym::B(key_index_0), sym::B(key_index_1), pim));

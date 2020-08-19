@@ -16,25 +16,19 @@
  * under the License.
  */
 
-#ifndef GRAPH_LOCALIZER_MATCHED_PROJECTION_H_
-#define GRAPH_LOCALIZER_MATCHED_PROJECTION_H_
+#ifndef LOCALIZATION_MEASUREMENTS_FEATURE_POINTS_MEASUREMENT_H_
+#define LOCALIZATION_MEASUREMENTS_FEATURE_POINTS_MEASUREMENT_H_
 
-#include <graph_localizer/image_point.h>
-#include <graph_localizer/map_point.h>
-#include <graph_localizer/time.h>
+#include <localization_measurements/feature_point.h>
+#include <localization_measurements/time.h>
 
 #include <vector>
 
-namespace graph_localizer {
-struct MatchedProjection {
-  MatchedProjection(const ImagePoint& image_point, const MapPoint& map_point, const Time timestamp)
-      : image_point(image_point), map_point(map_point), timestamp(timestamp) {}
-  ImagePoint image_point;
-  MapPoint map_point;
+namespace localization_measurements {
+struct FeaturePointsMeasurement {
+  FeaturePoints feature_points;
   Time timestamp;
 };
+}  // namespace localization_measurements
 
-using MatchedProjections = std::vector<MatchedProjection>;
-}  // namespace graph_localizer
-
-#endif  // GRAPH_LOCALIZER_MATCHED_PROJECTION_H_
+#endif  // LOCALIZATION_MEASUREMENTS_FEATURE_POINTS_MEASUREMENT_H_

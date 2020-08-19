@@ -16,14 +16,13 @@
  * under the License.
  */
 
-#include <graph_localizer/combined_nav_state.h>
+#ifndef LOCALIZATION_MEASUREMENTS_MAP_POINT_H_
+#define LOCALIZATION_MEASUREMENTS_MAP_POINT_H_
 
-namespace graph_localizer {
-CombinedNavState::CombinedNavState(const gtsam::NavState& nav_state, const gtsam::imuBias::ConstantBias& bias,
-                                   const Time timestamp)
-    : nav_state_(nav_state), bias_(bias), timestamp_(timestamp) {}
+#include <gtsam/geometry/Point3.h>
 
-CombinedNavState::CombinedNavState(const gtsam::Pose3& pose, const gtsam::Velocity3& velocity,
-                                   const gtsam::imuBias::ConstantBias& bias, const Time timestamp)
-    : CombinedNavState(gtsam::NavState(pose, velocity), bias, timestamp) {}
-}  // namespace graph_localizer
+namespace localization_measurements {
+using MapPoint = gtsam::Point3;
+}  // namespace localization_measurements
+
+#endif  // LOCALIZATION_MEASUREMENTS_MAP_POINT_H_

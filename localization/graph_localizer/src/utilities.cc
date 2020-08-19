@@ -24,11 +24,12 @@
 #include <string>
 
 namespace graph_localizer {
-gtsam::Pose3 GtPose(const Eigen::Isometry3d& eigen_pose) {
+namespace lm = localization_measurements;
+gtsam::Pose3 GtPose(const Eigen::Isometry3d &eigen_pose) {
   return gtsam::Pose3(gtsam::Rot3(eigen_pose.linear().matrix()), eigen_pose.translation());
 }
 
-Eigen::Isometry3d LoadTransform(config_reader::ConfigReader& config, const std::string& transform_config_name) {
+Eigen::Isometry3d LoadTransform(config_reader::ConfigReader &config, const std::string &transform_config_name) {
   Eigen::Vector3d body_t_sensor;
   Eigen::Quaterniond body_Q_sensor;
   if (!msg_conversions::config_read_transform(&config, transform_config_name.c_str(), &body_t_sensor, &body_Q_sensor))
@@ -39,7 +40,7 @@ Eigen::Isometry3d LoadTransform(config_reader::ConfigReader& config, const std::
   return body_T_sensor;
 }
 
-void SetEnvironmentConfigs(const std::string& astrobee_configs_path, const std::string& world) {
+void SetEnvironmentConfigs(const std::string &astrobee_configs_path, const std::string &world) {
   setenv("ASTROBEE_RESOURCE_DIR", (astrobee_configs_path + "/resources").c_str(), true);
   setenv("ASTROBEE_CONFIG_DIR", (astrobee_configs_path + "/config").c_str(), true);
   // TODO(rsoussan): pass this as an argument
@@ -47,22 +48,144 @@ void SetEnvironmentConfigs(const std::string& astrobee_configs_path, const std::
   setenv("ASTROBEE_WORLD", world.c_str(), true);
 }
 
-bool ValidPointSet(const std::deque<FeaturePoint>& points, const double min_avg_distance_from_mean) {
+bool ValidPointSet(const std::deque<lm::FeaturePoint> &points, const double min_avg_distance_from_mean) {
   if (points.size() < 2) return false;
 
   // Calculate mean point and avg distance from mean
   Eigen::Vector2d sum_of_points = Eigen::Vector2d::Zero();
-  for (const auto& point : points) {
+  for (const auto &point : points) {
     sum_of_points += point.image_point;
   }
   const Eigen::Vector2d mean_point = sum_of_points / points.size();
 
   double sum_of_distances_from_mean = 0;
-  for (const auto& point : points) {
+  for (const auto &point : points) {
     const Eigen::Vector2d mean_centered_point = point.image_point - mean_point;
     sum_of_distances_from_mean += mean_centered_point.norm();
   }
   const double average_distance_from_mean = sum_of_distances_from_mean / points.size();
   return (average_distance_from_mean >= min_avg_distance_from_mean);
+}
+
+geometry_msgs::PoseWithCovarianceStamped LatestPoseMsg(const GraphLocalizer &localization_measurements) {
+  Eigen::Isometry3d global_T_body_graph_latest;
+  double latest_graph_timestamp;
+  localization_measurements.LatestPose(global_T_body_graph_latest, latest_graph_timestamp);
+  const ros::Time latest_graph_time(latest_graph_timestamp);
+  std_msgs::Header header;
+  header.stamp.sec = latest_graph_time.sec;
+  header.stamp.nsec = latest_graph_time.nsec;
+  const auto latest_graph_localization_pose_msg = PoseMsg(global_T_body_graph_latest, header);
+  return latest_graph_localization_pose_msg;
+}
+
+ros::Time RosTimeFromHeader(const std_msgs::Header &header) { return ros::Time(header.stamp.sec, header.stamp.nsec); }
+
+lm::Time TimeFromHeader(const std_msgs::Header &header) { return lm::GetTime(header.stamp.sec, header.stamp.nsec); }
+
+Eigen::Isometry3d EigenPose(const ff_msgs::VisualLandmarks &vl_features, const Eigen::Isometry3d &cam_T_body) {
+  Eigen::Isometry3d global_T_cam;
+  global_T_cam.translation() << vl_features.pose.position.x, vl_features.pose.position.y, vl_features.pose.position.z;
+  const Eigen::Quaterniond global_Q_cam(vl_features.pose.orientation.w, vl_features.pose.orientation.x,
+                                        vl_features.pose.orientation.y, vl_features.pose.orientation.z);
+  global_T_cam.linear() = global_Q_cam.toRotationMatrix();
+  const Eigen::Isometry3d global_T_body = global_T_cam * cam_T_body;
+  return global_T_body;
+}
+
+ff_msgs::EkfState EkfStateMsg(const lm::CombinedNavState &combined_nav_state, const Eigen::Vector3d &acceleration,
+                              const Eigen::Vector3d &angular_velocity,
+                              const lm::CombinedNavStateCovariances &covariances) {
+  ff_msgs::EkfState loc_msg;
+
+  // Set Header
+  const ros::Time timestamp(combined_nav_state.timestamp());
+  loc_msg.header.stamp.sec = timestamp.sec;
+  loc_msg.header.stamp.nsec = timestamp.nsec;
+  loc_msg.header.frame_id = "world";
+  loc_msg.child_frame_id = "body";
+
+  // Set Pose
+  loc_msg.pose.position.x = combined_nav_state.pose().x();
+  loc_msg.pose.position.y = combined_nav_state.pose().y();
+  loc_msg.pose.position.z = combined_nav_state.pose().z();
+
+  const auto nav_state_quaternion = combined_nav_state.pose().rotation().toQuaternion();
+  loc_msg.pose.orientation.x = nav_state_quaternion.x();
+  loc_msg.pose.orientation.y = nav_state_quaternion.y();
+  loc_msg.pose.orientation.z = nav_state_quaternion.z();
+  loc_msg.pose.orientation.w = nav_state_quaternion.w();
+
+  // Set Velocity
+  loc_msg.velocity.x = combined_nav_state.velocity().x();
+  loc_msg.velocity.y = combined_nav_state.velocity().y();
+  loc_msg.velocity.z = combined_nav_state.velocity().z();
+
+  // Set Gyro Bias
+  loc_msg.gyro_bias.x = combined_nav_state.bias().gyroscope().x();
+  loc_msg.gyro_bias.y = combined_nav_state.bias().gyroscope().y();
+  loc_msg.gyro_bias.z = combined_nav_state.bias().gyroscope().z();
+
+  // Set Acceleration Bias
+  loc_msg.accel_bias.x = combined_nav_state.bias().accelerometer().x();
+  loc_msg.accel_bias.y = combined_nav_state.bias().accelerometer().y();
+  loc_msg.accel_bias.z = combined_nav_state.bias().accelerometer().z();
+
+  loc_msg.estimating_bias = true;
+
+  // Set Acceleration
+  loc_msg.accel.x = acceleration.x();
+  loc_msg.accel.y = acceleration.y();
+  loc_msg.accel.z = acceleration.z();
+
+  // Set Angular Velocity
+  loc_msg.omega.x = angular_velocity.x();
+  loc_msg.omega.y = angular_velocity.y();
+  loc_msg.omega.z = angular_velocity.z();
+
+  // Set Variances
+  // Orientation (0-2)
+  loc_msg.cov_diag[0] = covariances.orientation_variances().x();
+  loc_msg.cov_diag[1] = covariances.orientation_variances().y();
+  loc_msg.cov_diag[2] = covariances.orientation_variances().z();
+  // Gyro Bias (3-5)
+  loc_msg.cov_diag[3] = covariances.gyro_bias_variances().x();
+  loc_msg.cov_diag[4] = covariances.gyro_bias_variances().y();
+  loc_msg.cov_diag[5] = covariances.gyro_bias_variances().z();
+  // Velocity (6-8)
+  loc_msg.cov_diag[6] = covariances.velocity_variances().x();
+  loc_msg.cov_diag[7] = covariances.velocity_variances().y();
+  loc_msg.cov_diag[8] = covariances.velocity_variances().z();
+  // Accel Bias (9-11)
+  loc_msg.cov_diag[9] = covariances.accel_bias_variances().x();
+  loc_msg.cov_diag[10] = covariances.accel_bias_variances().y();
+  loc_msg.cov_diag[11] = covariances.accel_bias_variances().z();
+  // Position (12-14)
+  loc_msg.cov_diag[12] = covariances.position_variances().x();
+  loc_msg.cov_diag[13] = covariances.position_variances().y();
+  loc_msg.cov_diag[14] = covariances.position_variances().z();
+
+  // Set Confidence
+  loc_msg.confidence = covariances.PoseConfidence();
+
+  return loc_msg;
+}
+
+geometry_msgs::PoseWithCovarianceStamped PoseMsg(const Eigen::Isometry3d &global_T_body,
+                                                 const std_msgs::Header &header) {
+  geometry_msgs::PoseWithCovarianceStamped pose_msg;
+  pose_msg.header = header;
+
+  pose_msg.pose.pose.position.x = global_T_body.translation().x();
+  pose_msg.pose.pose.position.y = global_T_body.translation().y();
+  pose_msg.pose.pose.position.z = global_T_body.translation().z();
+
+  const Eigen::Quaterniond global_Q_body(global_T_body.linear());
+  pose_msg.pose.pose.orientation.x = global_Q_body.x();
+  pose_msg.pose.pose.orientation.y = global_Q_body.y();
+  pose_msg.pose.pose.orientation.z = global_Q_body.z();
+  pose_msg.pose.pose.orientation.w = global_Q_body.w();
+
+  return pose_msg;
 }
 }  // namespace graph_localizer

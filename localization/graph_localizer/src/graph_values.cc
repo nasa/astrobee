@@ -29,6 +29,7 @@
 #include <iomanip>
 
 namespace graph_localizer {
+namespace lm = localization_measurements;
 GraphValues::GraphValues(const double window_ideal_duration, const int window_min_num_states)
     : kWindowIdealDuration(window_ideal_duration), kWindowMinNumStates(window_min_num_states) {
   DLOG(INFO) << "GraphValues: Window duration: " << kWindowIdealDuration;
@@ -37,9 +38,10 @@ GraphValues::GraphValues(const double window_ideal_duration, const int window_mi
 
 // Removes keys from timestamp map, values from values.
 // Also removes any factors using these keys from graph argument
-bool GraphValues::RemoveCombinedNavStateAndFactors(const Time timestamp, gtsam::NonlinearFactorGraph& graph) {
+bool GraphValues::RemoveCombinedNavStateAndFactors(const lm::Time timestamp, gtsam::NonlinearFactorGraph &graph) {
   if (!HasKey(timestamp)) {
-    LOG(WARNING) << "RemoveCombinedNavStateAndFactors: No key index for timestamp exists.";
+    LOG(WARNING) << "RemoveCombinedNavStateAndFactors: No key index for "
+                    "timestamp exists.";
     return false;
   }
 
@@ -58,25 +60,25 @@ bool GraphValues::RemoveCombinedNavStateAndFactors(const Time timestamp, gtsam::
   return successful;
 }
 
-CombinedNavState GraphValues::LatestCombinedNavState() const {
+lm::CombinedNavState GraphValues::LatestCombinedNavState() const {
   // TODO(rsoussan): account for this better -> use boost::optional?
   if (Empty()) {
     LOG(FATAL) << "LatestCombinedNavState: No combined nav states available.";
   }
-  const Time timestamp = timestamp_key_index_map_.crbegin()->first;
+  const lm::Time timestamp = timestamp_key_index_map_.crbegin()->first;
   return GetCombinedNavState(timestamp);
 }
 
-CombinedNavState GraphValues::OldestCombinedNavState() const {
+lm::CombinedNavState GraphValues::OldestCombinedNavState() const {
   // TODO(rsoussan): account for this better -> use boost::optional?
   if (Empty()) {
     LOG(FATAL) << "OldestCombinedNavState: No combined nav states available.";
   }
-  const Time timestamp = timestamp_key_index_map_.cbegin()->first;
+  const lm::Time timestamp = timestamp_key_index_map_.cbegin()->first;
   return GetCombinedNavState(timestamp);
 }
 
-Time GraphValues::OldestTimestamp() const {
+lm::Time GraphValues::OldestTimestamp() const {
   // TODO(rsoussan): account for this better -> use boost::optional?
   if (Empty()) {
     LOG(FATAL) << "OldestTimestamp: No states available.";
@@ -84,7 +86,7 @@ Time GraphValues::OldestTimestamp() const {
   return timestamp_key_index_map_.cbegin()->first;
 }
 
-Time GraphValues::LatestTimestamp() const {
+lm::Time GraphValues::LatestTimestamp() const {
   // TODO(rsoussan): account for this better -> use boost::optional?
   if (Empty()) {
     LOG(FATAL) << "LatestTimestamp: No states available.";
@@ -93,7 +95,7 @@ Time GraphValues::LatestTimestamp() const {
 }
 
 // TODO(rsoussan): unify this with lowerandupperboundtimestamp?
-Time GraphValues::ClosestPoseTimestamp(const Time timestamp) const {
+lm::Time GraphValues::ClosestPoseTimestamp(const lm::Time timestamp) const {
   // TODO(rsoussan): account for this better -> use boost::optional?
   if (Empty()) {
     LOG(FATAL) << "ClosestPoseTimestamp: No states available.";
@@ -101,7 +103,7 @@ Time GraphValues::ClosestPoseTimestamp(const Time timestamp) const {
 
   // Find closest timestamped pose
   int key_index;
-  Time closest_timestamp;
+  lm::Time closest_timestamp;
   // lower bound returns first it >= query, call this upper bound
   const auto upper_bound_it = timestamp_key_index_map_.lower_bound(timestamp);
   if (upper_bound_it == timestamp_key_index_map_.cend()) {
@@ -132,7 +134,7 @@ Time GraphValues::ClosestPoseTimestamp(const Time timestamp) const {
   return closest_timestamp;
 }
 
-std::pair<Time, Time> GraphValues::LowerAndUpperBoundTimestamp(const Time timestamp) const {
+std::pair<lm::Time, lm::Time> GraphValues::LowerAndUpperBoundTimestamp(const lm::Time timestamp) const {
   // TODO(rsoussan): account for this better -> use boost::optional?
   if (Empty()) {
     LOG(FATAL) << "LowerAndUpperBoundTimestamp: No states available.";
@@ -149,22 +151,24 @@ std::pair<Time, Time> GraphValues::LowerAndUpperBoundTimestamp(const Time timest
 
   const auto upper_bound_key_index = upper_bound_it->second;
   if (!values_.exists(sym::P(upper_bound_key_index))) {
-    LOG(FATAL) << "LowerAndUpperBoundTimestamp: Upper bound pose key not present in values.";
+    LOG(FATAL) << "LowerAndUpperBoundTimestamp: Upper bound pose key not "
+                  "present in values.";
   }
 
   const auto lower_bound_key_index = lower_bound_it->second;
   if (!values_.exists(sym::P(lower_bound_key_index))) {
-    LOG(FATAL) << "LowerAndUpperBoundTimestamp: Lower bound pose key not present in values.";
+    LOG(FATAL) << "LowerAndUpperBoundTimestamp: Lower bound pose key not "
+                  "present in values.";
   }
 
   return {lower_bound_it->first, upper_bound_it->first};
 }
 
-bool GraphValues::HasKey(const Time timestamp) const { return (timestamp_key_index_map_.count(timestamp) != 0); }
+bool GraphValues::HasKey(const lm::Time timestamp) const { return (timestamp_key_index_map_.count(timestamp) != 0); }
 
 bool GraphValues::Empty() const { return timestamp_key_index_map_.empty(); }
 
-gtsam::Key GraphValues::PoseKey(const Time timestamp) const {
+gtsam::Key GraphValues::PoseKey(const lm::Time timestamp) const {
   // TODO(rsoussan): account for this better -> use boost::optional?
   if (timestamp_key_index_map_.count(timestamp) == 0) {
     LOG(FATAL) << "PoseKey: No CombinedNavState found at timestamp." << std::setprecision(15)
@@ -182,15 +186,15 @@ gtsam::Key GraphValues::PoseKey(const Time timestamp) const {
   return sym::P(key_index);
 }
 
-CombinedNavState GraphValues::GetCombinedNavState(const Time timestamp) const {
+lm::CombinedNavState GraphValues::GetCombinedNavState(const lm::Time timestamp) const {
   // TODO(rsoussan): account for this better -> use boost::optional?
   if (!HasKey(timestamp)) {
     LOG(FATAL) << "GetCombinedNavState: No CombinedNavState found at timestamp.";
   }
   const auto key_index = KeyIndex(timestamp);
 
-  return CombinedNavState(at<gtsam::Pose3>(sym::P(key_index)), at<gtsam::Velocity3>(sym::V(key_index)),
-                          at<gtsam::imuBias::ConstantBias>(sym::B(key_index)), timestamp);
+  return lm::CombinedNavState(at<gtsam::Pose3>(sym::P(key_index)), at<gtsam::Velocity3>(sym::V(key_index)),
+                              at<gtsam::imuBias::ConstantBias>(sym::B(key_index)), timestamp);
 }
 
 int GraphValues::LatestCombinedNavStateKeyIndex() const {
@@ -224,7 +228,7 @@ gtsam::imuBias::ConstantBias GraphValues::LatestBias() const {
   return at<gtsam::imuBias::ConstantBias>(sym::B(key_index));
 }
 
-int GraphValues::SlideWindow(gtsam::NonlinearFactorGraph& graph) {
+int GraphValues::SlideWindow(gtsam::NonlinearFactorGraph &graph) {
   if (Empty()) {
     LOG(FATAL) << "SlideWindow: No states in map.";
     return 0;
@@ -232,7 +236,7 @@ int GraphValues::SlideWindow(gtsam::NonlinearFactorGraph& graph) {
   const double total_duration = timestamp_key_index_map_.crbegin()->first - timestamp_key_index_map_.cbegin()->first;
   DLOG(INFO) << "SlideWindow: Starting total num states: " << timestamp_key_index_map_.size();
   DLOG(INFO) << "SlideWindow: Starting total duration is " << total_duration;
-  const Time ideal_oldest_allowed_state =
+  const lm::Time ideal_oldest_allowed_state =
       std::max(0.0, timestamp_key_index_map_.crbegin()->first - kWindowIdealDuration);
   int num_states_removed = 0;
   while (timestamp_key_index_map_.begin()->first < ideal_oldest_allowed_state &&
@@ -249,10 +253,11 @@ int GraphValues::SlideWindow(gtsam::NonlinearFactorGraph& graph) {
 }
 
 // Add timestamp and keys to timestamp_key_index_map, and values to values
-void GraphValues::AddCombinedNavState(const CombinedNavState& combined_nav_state, const int key_index) {
+void GraphValues::AddCombinedNavState(const lm::CombinedNavState &combined_nav_state, const int key_index) {
   // TODO(rsoussan): remove or add option to disable these checks
   if (HasKey(combined_nav_state.timestamp())) {
-    LOG(ERROR) << "AddCombinedNavState: Timestamp key index map already contains timestamp.";
+    LOG(ERROR) << "AddCombinedNavState: Timestamp key index map already "
+                  "contains timestamp.";
     return;
   }
   timestamp_key_index_map_.emplace(combined_nav_state.timestamp(), key_index);
@@ -274,7 +279,7 @@ void GraphValues::AddCombinedNavState(const CombinedNavState& combined_nav_state
   DLOG(INFO) << "AddCombinedNavState: Added timestamp " << std::setprecision(15) << combined_nav_state.timestamp();
 }
 
-int GraphValues::KeyIndex(const Time timestamp) const {
+int GraphValues::KeyIndex(const lm::Time timestamp) const {
   if (!HasKey(timestamp)) {
     LOG(FATAL) << "KeyIndex: No key found for timestamp.";
   }
@@ -282,13 +287,14 @@ int GraphValues::KeyIndex(const Time timestamp) const {
   return timestamp_key_index_map_.at(timestamp);
 }
 
-void GraphValues::UpdateValues(const gtsam::Values& new_values) { values_ = new_values; }
+void GraphValues::UpdateValues(const gtsam::Values &new_values) { values_ = new_values; }
 
 // Removes keys from timestamp_key_index_map, values from values
 // Assumes for each stamped_key_index there is a Pose, Velocity, and Bias key
-bool GraphValues::RemoveCombinedNavState(const Time timestamp) {
+bool GraphValues::RemoveCombinedNavState(const lm::Time timestamp) {
   if (!HasKey(timestamp)) {
-    LOG(ERROR) << "RemoveCombinedNavState: Timestamp not found in timestamp key index map.";
+    LOG(ERROR) << "RemoveCombinedNavState: Timestamp not found in timestamp "
+                  "key index map.";
     return false;
   }
   const int key_index = timestamp_key_index_map_.at(timestamp);

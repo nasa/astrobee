@@ -31,12 +31,12 @@
 namespace graph_localizer {
 class GraphLocInitialization {
  public:
-  void SetBiases(const Eigen::Vector3d& accelerometer_bias, const Eigen::Vector3d& gyro_bias);
-  void SetStartPose(const Eigen::Isometry3d& global_T_body_start, const double timestamp);
-  void SetCalibration(const Eigen::Isometry3d& body_T_imu, const Eigen::Isometry3d& body_T_nav_cam,
-                      const Eigen::Matrix3d& nav_cam_intrinsics, const Eigen::Isometry3d& body_T_dock_cam,
-                      const Eigen::Matrix3d& dock_cam_intrinsics, const Eigen::Isometry3d& world_T_dock,
-                      const Eigen::Vector3d& gravity);
+  void SetBiases(const Eigen::Vector3d &accelerometer_bias, const Eigen::Vector3d &gyro_bias);
+  void SetStartPose(const Eigen::Isometry3d &global_T_body_start, const double timestamp);
+  void SetCalibration(const Eigen::Isometry3d &body_T_imu, const Eigen::Isometry3d &body_T_nav_cam,
+                      const Eigen::Matrix3d &nav_cam_intrinsics, const Eigen::Isometry3d &body_T_dock_cam,
+                      const Eigen::Matrix3d &dock_cam_intrinsics, const Eigen::Isometry3d &world_T_dock,
+                      const Eigen::Vector3d &gravity);
   bool ReadyToInitialize() const;
   void ResetBiasesAndStartPose();
   void ResetStartPose();
@@ -47,9 +47,9 @@ class GraphLocInitialization {
   bool HasCalibration() const;
   bool HasParams() const;
   bool EstimateBiases() const;
-  const GraphLocalizerParams& params() const;
-  void LoadSensorParams(config_reader::ConfigReader& config);
-  void LoadGraphLocalizerParams(config_reader::ConfigReader& config);
+  const GraphLocalizerParams &params() const;
+  void LoadSensorParams(config_reader::ConfigReader &config);
+  void LoadGraphLocalizerParams(config_reader::ConfigReader &config);
 
  private:
   bool has_calibration_ = false;

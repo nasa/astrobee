@@ -16,18 +16,18 @@
  * under the License.
  */
 
-#ifndef GRAPH_LOCALIZER_IMU_MEASUREMENT_H_
-#define GRAPH_LOCALIZER_IMU_MEASUREMENT_H_
+#ifndef LOCALIZATION_MEASUREMENTS_IMU_MEASUREMENT_H_
+#define LOCALIZATION_MEASUREMENTS_IMU_MEASUREMENT_H_
 
-#include <graph_localizer/time.h>
+#include <localization_measurements/time.h>
 
 #include <Eigen/Core>
 
 #include <sensor_msgs/Imu.h>
 
-namespace graph_localizer {
+namespace localization_measurements {
 struct ImuMeasurement {
-  explicit ImuMeasurement(const sensor_msgs::Imu& imu_msg) {
+  explicit ImuMeasurement(const sensor_msgs::Imu &imu_msg) {
     acceleration.x() = imu_msg.linear_acceleration.x;
     acceleration.y() = imu_msg.linear_acceleration.y;
     acceleration.z() = imu_msg.linear_acceleration.z;
@@ -37,13 +37,13 @@ struct ImuMeasurement {
     // Ros headers are stored as seconds and nanoseconds
     timestamp = imu_msg.header.stamp.sec + 1e-9 * imu_msg.header.stamp.nsec;
   }
-  ImuMeasurement(const Eigen::Vector3d& acceleration, const Eigen::Vector3d& angular_velocity, const Time timestamp)
+  ImuMeasurement(const Eigen::Vector3d &acceleration, const Eigen::Vector3d &angular_velocity, const Time timestamp)
       : acceleration(acceleration), angular_velocity(angular_velocity), timestamp(timestamp) {}
 
   Eigen::Vector3d acceleration;
   Eigen::Vector3d angular_velocity;
   Time timestamp;
 };
-}  // namespace graph_localizer
+}  // namespace localization_measurements
 
-#endif  // GRAPH_LOCALIZER_IMU_MEASUREMENT_H_
+#endif  // LOCALIZATION_MEASUREMENTS_IMU_MEASUREMENT_H_

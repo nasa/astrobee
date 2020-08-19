@@ -16,17 +16,29 @@
  * under the License.
  */
 
-#ifndef GRAPH_LOCALIZER_MATCHED_PROJECTIONS_MEASUREMENT_H_
-#define GRAPH_LOCALIZER_MATCHED_PROJECTIONS_MEASUREMENT_H_
+#ifndef LOCALIZATION_MEASUREMENTS_FEATURE_POINT_H_
+#define LOCALIZATION_MEASUREMENTS_FEATURE_POINT_H_
 
-#include <graph_localizer/matched_projection.h>
-#include <graph_localizer/time.h>
+#include <localization_measurements/time.h>
 
-namespace graph_localizer {
-struct MatchedProjectionsMeasurement {
-  MatchedProjections matched_projections;
+#include <gtsam/geometry/Point2.h>
+
+#include <vector>
+
+namespace localization_measurements {
+using FeatureId = int;
+using ImageId = int;
+
+struct FeaturePoint {
+  FeaturePoint(const double u, const double v, const ImageId image_id, const FeatureId feature_id, const Time timestamp)
+      : image_point(u, v), image_id(image_id), feature_id(feature_id), timestamp(timestamp) {}
+  gtsam::Point2 image_point;
+  ImageId image_id;
+  FeatureId feature_id;
   Time timestamp;
 };
-}  // namespace graph_localizer
 
-#endif  // GRAPH_LOCALIZER_MATCHED_PROJECTIONS_MEASUREMENT_H_
+using FeaturePoints = std::vector<FeaturePoint>;
+}  // namespace localization_measurements
+
+#endif  // LOCALIZATION_MEASUREMENTS_FEATURE_POINT_H_

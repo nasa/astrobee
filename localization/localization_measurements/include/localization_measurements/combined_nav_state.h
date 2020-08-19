@@ -16,10 +16,10 @@
  * under the License.
  */
 
-#ifndef GRAPH_LOCALIZER_COMBINED_NAV_STATE_H_
-#define GRAPH_LOCALIZER_COMBINED_NAV_STATE_H_
+#ifndef LOCALIZATION_MEASUREMENTS_COMBINED_NAV_STATE_H_
+#define LOCALIZATION_MEASUREMENTS_COMBINED_NAV_STATE_H_
 
-#include <graph_localizer/time.h>
+#include <localization_measurements/time.h>
 
 #include <gtsam/base/Vector.h>
 #include <gtsam/geometry/Pose3.h>
@@ -28,7 +28,7 @@
 #include <gtsam/navigation/ImuBias.h>
 #include <gtsam/navigation/NavState.h>
 
-namespace graph_localizer {
+namespace localization_measurements {
 struct CombinedNavStateNoise {
   gtsam::SharedNoiseModel pose_noise;
   gtsam::SharedNoiseModel velocity_noise;
@@ -37,14 +37,14 @@ struct CombinedNavStateNoise {
 
 class CombinedNavState {
  public:
-  CombinedNavState(const gtsam::NavState& nav_state, const gtsam::imuBias::ConstantBias& bias, const Time timestamp);
-  CombinedNavState(const gtsam::Pose3& pose, const gtsam::Velocity3& velocity, const gtsam::imuBias::ConstantBias& bias,
+  CombinedNavState(const gtsam::NavState &nav_state, const gtsam::imuBias::ConstantBias &bias, const Time timestamp);
+  CombinedNavState(const gtsam::Pose3 &pose, const gtsam::Velocity3 &velocity, const gtsam::imuBias::ConstantBias &bias,
                    const Time timestamp);
   Time timestamp() const { return timestamp_; }
-  const gtsam::NavState& nav_state() const { return nav_state_; }
+  const gtsam::NavState &nav_state() const { return nav_state_; }
   gtsam::Pose3 pose() const { return nav_state().pose(); }
-  const gtsam::Velocity3& velocity() const { return nav_state().velocity(); }
-  const gtsam::imuBias::ConstantBias& bias() const { return bias_; }
+  const gtsam::Velocity3 &velocity() const { return nav_state().velocity(); }
+  const gtsam::imuBias::ConstantBias &bias() const { return bias_; }
 
  private:
   Time timestamp_;
@@ -52,6 +52,6 @@ class CombinedNavState {
   gtsam::imuBias::ConstantBias bias_;
 };
 
-}  // namespace graph_localizer
+}  // namespace localization_measurements
 
-#endif  // GRAPH_LOCALIZER_COMBINED_NAV_STATE_H_
+#endif  // LOCALIZATION_MEASUREMENTS_COMBINED_NAV_STATE_H_

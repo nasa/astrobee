@@ -16,19 +16,13 @@
  * under the License.
  */
 
-#ifndef GRAPH_LOCALIZER_FEATURE_POINTS_MEASUREMENT_H_
-#define GRAPH_LOCALIZER_FEATURE_POINTS_MEASUREMENT_H_
+#ifndef LOCALIZATION_MEASUREMENTS_IMAGE_POINT_H_
+#define LOCALIZATION_MEASUREMENTS_IMAGE_POINT_H_
 
-#include <graph_localizer/feature_point.h>
-#include <graph_localizer/time.h>
+#include <gtsam/geometry/Point2.h>
 
-#include <vector>
+namespace localization_measurements {
+using ImagePoint = gtsam::Point2;
+}  // namespace localization_measurements
 
-namespace graph_localizer {
-struct FeaturePointsMeasurement {
-  FeaturePoints feature_points;
-  Time timestamp;
-};
-}  // namespace graph_localizer
-
-#endif  // GRAPH_LOCALIZER_FEATURE_POINTS_MEASUREMENT_H_
+#endif  // LOCALIZATION_MEASUREMENTS_IMAGE_POINT_H_

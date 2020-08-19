@@ -19,7 +19,7 @@
 #ifndef GRAPH_LOCALIZER_FEATURE_TRACK_H_
 #define GRAPH_LOCALIZER_FEATURE_TRACK_H_
 
-#include <graph_localizer/feature_point.h>
+#include <localization_measurements/feature_point.h>
 
 #include <deque>
 #include <vector>
@@ -27,9 +27,9 @@
 namespace graph_localizer {
 
 struct FeatureTrack {
-  FeatureId id;
-  std::deque<FeaturePoint> points;
-  ImageId latest_image_id;
+  localization_measurements::FeatureId id;
+  std::deque<localization_measurements::FeaturePoint> points;
+  localization_measurements::ImageId latest_image_id;
 };
 
 using FeatureTracks = std::vector<FeatureTrack>;

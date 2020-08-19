@@ -19,9 +19,9 @@
 #ifndef GRAPH_LOCALIZER_IMU_INTEGRATOR_H_
 #define GRAPH_LOCALIZER_IMU_INTEGRATOR_H_
 
-#include <graph_localizer/combined_nav_state.h>
-#include <graph_localizer/imu_measurement.h>
-#include <graph_localizer/time.h>
+#include <localization_measurements/combined_nav_state.h>
+#include <localization_measurements/imu_measurement.h>
+#include <localization_measurements/time.h>
 
 #include <gtsam/navigation/CombinedImuFactor.h>
 #include <gtsam/navigation/ImuBias.h>
@@ -33,37 +33,40 @@
 
 namespace graph_localizer {
 // Integrates imu measurements and propagates uncertainties.
-// Maintains a window of measurements so that any interval of measurements in that window can
-// be integrated into a pim.
+// Maintains a window of measurements so that any interval of measurements in
+// that window can be integrated into a pim.
 class ImuIntegrator {
  public:
-  ImuIntegrator(const Eigen::Isometry3d& body_T_imu, const Eigen::Vector3d& gyro_bias,
-                const Eigen::Vector3d& accelerometer_bias, const Time start_time, const Eigen::Vector3d& gravity);
+  ImuIntegrator(const Eigen::Isometry3d &body_T_imu, const Eigen::Vector3d &gyro_bias,
+                const Eigen::Vector3d &accelerometer_bias, const localization_measurements::Time start_time,
+                const Eigen::Vector3d &gravity);
 
   // Buffers imu measurement so they can be integrated when needed.
   // Delayed integration useful so imu integation does not advance
   // past latest sensor measurement timestamps.
-  void BufferImuMeasurement(const ImuMeasurement& imu_measurement);
+  void BufferImuMeasurement(const localization_measurements::ImuMeasurement &imu_measurement);
 
   // Integrates all imu measurements that have not been added up to end_time.
-  void IntegrateLatestImuMeasurements(const Time end_time);
+  void IntegrateLatestImuMeasurements(const localization_measurements::Time end_time);
 
-  Time IntegrateImuMeasurements(const Time start_time, const Time end_time,
-                                gtsam::PreintegratedCombinedMeasurements& pim) const;
+  localization_measurements::Time IntegrateImuMeasurements(const localization_measurements::Time start_time,
+                                                           const localization_measurements::Time end_time,
+                                                           gtsam::PreintegratedCombinedMeasurements &pim) const;
 
-  const gtsam::PreintegratedCombinedMeasurements& latest_pim() const;
+  const gtsam::PreintegratedCombinedMeasurements &latest_pim() const;
 
   gtsam::PreintegratedCombinedMeasurements IntegratedPim(
-      const gtsam::imuBias::ConstantBias& bias, const Time start_time, const Time end_time,
+      const gtsam::imuBias::ConstantBias &bias, const localization_measurements::Time start_time,
+      const localization_measurements::Time end_time,
       boost::shared_ptr<gtsam::PreintegratedCombinedMeasurements::Params> params) const;
 
-  void ResetLatestPimIntegrationAndSetBias(const gtsam::imuBias::ConstantBias& bias);
+  void ResetLatestPimIntegrationAndSetBias(const gtsam::imuBias::ConstantBias &bias);
 
-  void RemoveOldMeasurements(const Time new_start_time);
+  void RemoveOldMeasurements(const localization_measurements::Time new_start_time);
 
-  Time OldestTime() const;
+  localization_measurements::Time OldestTime() const;
 
-  Time LatestTime() const;
+  localization_measurements::Time LatestTime() const;
 
   bool Empty() const;
 
@@ -72,16 +75,16 @@ class ImuIntegrator {
  private:
   boost::shared_ptr<gtsam::PreintegratedCombinedMeasurements::Params> pim_params_;
   std::unique_ptr<gtsam::PreintegratedCombinedMeasurements> latest_pim_;
-  std::map<Time, ImuMeasurement> measurements_;
+  std::map<localization_measurements::Time, localization_measurements::ImuMeasurement> measurements_;
   // Static calibration
   Eigen::Isometry3d body_T_imu_;
-  Time last_added_imu_measurement_time_;
+  localization_measurements::Time last_added_imu_measurement_time_;
   bool initialized_;
-  Time start_time_;
-  // From gtsam: Realistic MEMS white noise characteristics. Angular and velocity random walk
-  // expressed in degrees respectively m/s per sqrt(hr).
+  localization_measurements::Time start_time_;
+  // From gtsam: Realistic MEMS white noise characteristics. Angular and
+  // velocity random walk expressed in degrees respectively m/s per sqrt(hr).
   static constexpr double kGyroSigma_ = 0.00001;    // (0.5 * M_PI / 180) / 60;  // 0.5 degree ARW
-  static constexpr double kAccelSigma_ = 0.000001;  // 0.1 / 60;                // 10 cm VRW
+  static constexpr double kAccelSigma_ = 0.000001;  // 0.1 / 60; // 10 cm VRW
   // TODO(rsoussan): tune these
   static constexpr double kAccelBiasSigma_ = 0.0001;
   static constexpr double kGyroBiasSigma_ = 0.0001;

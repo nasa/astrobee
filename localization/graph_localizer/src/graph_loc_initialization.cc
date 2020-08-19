@@ -22,23 +22,23 @@
 #include <iostream>
 
 namespace graph_localizer {
-void GraphLocInitialization::SetBiases(const Eigen::Vector3d& accelerometer_bias, const Eigen::Vector3d& gyro_bias) {
+void GraphLocInitialization::SetBiases(const Eigen::Vector3d &accelerometer_bias, const Eigen::Vector3d &gyro_bias) {
   params_.SetBiases(accelerometer_bias, gyro_bias);
   has_biases_ = true;
   estimate_biases_ = false;
 }
 
-void GraphLocInitialization::SetStartPose(const Eigen::Isometry3d& global_T_body_start, const double timestamp) {
+void GraphLocInitialization::SetStartPose(const Eigen::Isometry3d &global_T_body_start, const double timestamp) {
   params_.SetStartPose(global_T_body_start, timestamp);
   has_start_pose_ = true;
 }
 
-void GraphLocInitialization::SetCalibration(const Eigen::Isometry3d& body_T_imu,
-                                            const Eigen::Isometry3d& body_T_nav_cam,
-                                            const Eigen::Matrix3d& nav_cam_intrinsics,
-                                            const Eigen::Isometry3d& body_T_dock_cam,
-                                            const Eigen::Matrix3d& dock_cam_intrinsics,
-                                            const Eigen::Isometry3d& world_T_dock, const Eigen::Vector3d& gravity) {
+void GraphLocInitialization::SetCalibration(const Eigen::Isometry3d &body_T_imu,
+                                            const Eigen::Isometry3d &body_T_nav_cam,
+                                            const Eigen::Matrix3d &nav_cam_intrinsics,
+                                            const Eigen::Isometry3d &body_T_dock_cam,
+                                            const Eigen::Matrix3d &dock_cam_intrinsics,
+                                            const Eigen::Isometry3d &world_T_dock, const Eigen::Vector3d &gravity) {
   params_.SetCalibration(body_T_imu, body_T_nav_cam, nav_cam_intrinsics, body_T_dock_cam, dock_cam_intrinsics,
                          world_T_dock, gravity);
   has_calibration_ = true;
@@ -56,7 +56,7 @@ void GraphLocInitialization::ResetBiases() {
   StartBiasEstimation();
 }
 
-void GraphLocInitialization::LoadSensorParams(config_reader::ConfigReader& config) {
+void GraphLocInitialization::LoadSensorParams(config_reader::ConfigReader &config) {
   const Eigen::Isometry3d body_T_nav_cam = LoadTransform(config, "nav_cam_transform");
   const Eigen::Isometry3d body_T_dock_cam = LoadTransform(config, "dock_cam_transform");
   const camera::CameraParameters nav_cam_params(&config, "nav_cam");
@@ -69,7 +69,7 @@ void GraphLocInitialization::LoadSensorParams(config_reader::ConfigReader& confi
                  body_T_dock_cam, dock_cam_params.GetIntrinsicMatrix<camera::UNDISTORTED_C>(), world_T_dock, gravity);
 }
 
-void GraphLocInitialization::LoadGraphLocalizerParams(config_reader::ConfigReader& config) {
+void GraphLocInitialization::LoadGraphLocalizerParams(config_reader::ConfigReader &config) {
   double sliding_window_duration;
   if (!config.GetReal("sliding_window_duration", &sliding_window_duration))
     LOG(FATAL) << "Failed to load sliding window duration.";
@@ -98,6 +98,6 @@ bool GraphLocInitialization::HasCalibration() const { return has_calibration_; }
 bool GraphLocInitialization::HasParams() const { return has_params_; }
 bool GraphLocInitialization::EstimateBiases() const { return estimate_biases_; }
 
-const GraphLocalizerParams& GraphLocInitialization::params() const { return params_; }
+const GraphLocalizerParams &GraphLocInitialization::params() const { return params_; }
 
 }  // namespace graph_localizer

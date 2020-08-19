@@ -19,15 +19,15 @@
 #ifndef GRAPH_LOCALIZER_GRAPH_LOCALIZER_H_
 #define GRAPH_LOCALIZER_GRAPH_LOCALIZER_H_
 
-#include <graph_localizer/combined_nav_state.h>
-#include <graph_localizer/combined_nav_state_covariances.h>
-#include <graph_localizer/feature_points_measurement.h>
 #include <graph_localizer/feature_tracker.h>
 #include <graph_localizer/graph_localizer_params.h>
 #include <graph_localizer/graph_values.h>
 #include <graph_localizer/imu_integrator.h>
-#include <graph_localizer/matched_projections_measurement.h>
-#include <graph_localizer/time.h>
+#include <localization_measurements/combined_nav_state.h>
+#include <localization_measurements/combined_nav_state_covariances.h>
+#include <localization_measurements/feature_points_measurement.h>
+#include <localization_measurements/matched_projections_measurement.h>
+#include <localization_measurements/time.h>
 
 #include <gtsam/geometry/Cal3_S2.h>
 #include <gtsam/inference/Symbol.h>
@@ -51,41 +51,49 @@ namespace graph_localizer {
 namespace sym = gtsam::symbol_shorthand;
 class GraphLocalizer {
  public:
-  explicit GraphLocalizer(const GraphLocalizerParams& params);
-  void AddImuMeasurement(const ImuMeasurement& imu_measurement);
-  bool LatestPose(Eigen::Isometry3d& global_T_body_latest_, Time& timestamp) const;
-  std::pair<CombinedNavState, CombinedNavStateCovariances> LatestCombinedNavStateAndCovariances(
-      const gtsam::Marginals& marginals) const;
-  void AddOpticalFlowMeasurement(const FeaturePointsMeasurement& optical_flow_feature_points_measurement);
-  void AddARTagMeasurement(const MatchedProjectionsMeasurement& matched_projections_measurement);
-  void AddSparseMappingMeasurement(const MatchedProjectionsMeasurement& matched_projections_measurement);
-  void AddProjectionMeasurement(const MatchedProjectionsMeasurement& matched_projections_measurement,
-                                const gtsam::Pose3& body_T_cam, const boost::shared_ptr<gtsam::Cal3_S2>& cam_intrinsics,
-                                const gtsam::SharedIsotropic& cam_noise);
+  explicit GraphLocalizer(const GraphLocalizerParams &params);
+  void AddImuMeasurement(const localization_measurements::ImuMeasurement &imu_measurement);
+  bool LatestPose(Eigen::Isometry3d &global_T_body_latest_, localization_measurements::Time &timestamp) const;
+  std::pair<localization_measurements::CombinedNavState, localization_measurements::CombinedNavStateCovariances>
+  LatestCombinedNavStateAndCovariances(const gtsam::Marginals &marginals) const;
+  void AddOpticalFlowMeasurement(
+      const localization_measurements::FeaturePointsMeasurement &optical_flow_feature_points_measurement);
+  void AddARTagMeasurement(
+      const localization_measurements::MatchedProjectionsMeasurement &matched_projections_measurement);
+  void AddSparseMappingMeasurement(
+      const localization_measurements::MatchedProjectionsMeasurement &matched_projections_measurement);
+  void AddProjectionMeasurement(
+      const localization_measurements::MatchedProjectionsMeasurement &matched_projections_measurement,
+      const gtsam::Pose3 &body_T_cam, const boost::shared_ptr<gtsam::Cal3_S2> &cam_intrinsics,
+      const gtsam::SharedIsotropic &cam_noise);
 
   void Update();
-  const FeatureTrackMap& feature_tracks() const { return feature_tracker_.feature_tracks(); }
-  void LatestBiases(Eigen::Vector3d& accelerometer_bias, Eigen::Vector3d& gyro_bias, Time& timestamp) const;
+  const FeatureTrackMap &feature_tracks() const { return feature_tracker_.feature_tracks(); }
+  void LatestBiases(Eigen::Vector3d &accelerometer_bias, Eigen::Vector3d &gyro_bias,
+                    localization_measurements::Time &timestamp) const;
 
  private:
   // Removes Keys and Values outside of sliding window.
   // Removes any factors depending on removed values
-  void SlideWindow(const gtsam::Marginals& marginals);
-  // Integrates latest imu measurements up to timestamp and adds imu factor and new combined nav state
-  void CreateAndAddLatestImuFactorAndCombinedNavState(const Time timestamp);
+  void SlideWindow(const gtsam::Marginals &marginals);
+  // Integrates latest imu measurements up to timestamp and adds imu factor and
+  // new combined nav state
+  void CreateAndAddLatestImuFactorAndCombinedNavState(const localization_measurements::Time timestamp);
 
-  bool AddOrSplitImuFactorIfNeeded(const Time timestamp);
+  bool AddOrSplitImuFactorIfNeeded(const localization_measurements::Time timestamp);
 
-  bool SplitOldImuFactorAndAddCombinedNavState(const Time timestamp);
+  bool SplitOldImuFactorAndAddCombinedNavState(const localization_measurements::Time timestamp);
 
-  void AddStartingPriors(const CombinedNavState& global_cgN_body_start, const int key_index,
-                         const gtsam::Values& values, gtsam::NonlinearFactorGraph& graph);
+  void AddStartingPriors(const localization_measurements::CombinedNavState &global_cgN_body_start, const int key_index,
+                         const gtsam::Values &values, gtsam::NonlinearFactorGraph &graph);
 
-  void AddPriors(const CombinedNavState& global_cgN_body, const CombinedNavStateNoise& noise, const int key_index,
-                 const gtsam::Values& values, gtsam::NonlinearFactorGraph& graph);
+  void AddPriors(const localization_measurements::CombinedNavState &global_cgN_body,
+                 const localization_measurements::CombinedNavStateNoise &noise, const int key_index,
+                 const gtsam::Values &values, gtsam::NonlinearFactorGraph &graph);
 
-  void CreateAndAddImuFactorAndPredictedCombinedNavState(const CombinedNavState& global_cgN_body,
-                                                         const gtsam::PreintegratedCombinedMeasurements& pim);
+  void CreateAndAddImuFactorAndPredictedCombinedNavState(
+      const localization_measurements::CombinedNavState &global_cgN_body,
+      const gtsam::PreintegratedCombinedMeasurements &pim);
 
   // TODO(rsoussan): make a static and dynamic key index?
   static int GenerateKeyIndex() {

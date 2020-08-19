@@ -22,8 +22,8 @@
 #include <ff_msgs/VisualLandmarks.h>
 #include <graph_localizer/graph_loc_initialization.h>
 #include <graph_localizer/graph_localizer.h>
-#include <graph_localizer/imu_measurement.h>
-#include <graph_localizer/matched_projections_measurement.h>
+#include <localization_measurements/imu_measurement.h>
+#include <localization_measurements/matched_projections_measurement.h>
 
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <sensor_msgs/Imu.h>
@@ -32,9 +32,10 @@
 #include <vector>
 
 namespace graph_localizer {
-// Handles initialization of parameters, biases, and initial pose for graph localizer.  Provides callbacks that can be
-// used by a ROS or non-ROS system (i.e. graph_bag, which does not use a ROS core, vs. graph_localizer_nodelet, which is
-// used when running live).
+// Handles initialization of parameters, biases, and initial pose for graph
+// localizer.  Provides callbacks that can be used by a ROS or non-ROS system
+// (i.e. graph_bag, which does not use a ROS core, vs. graph_localizer_nodelet,
+// which is used when running live).
 class GraphLocalizerWrapper {
  public:
   GraphLocalizerWrapper();
@@ -44,28 +45,29 @@ class GraphLocalizerWrapper {
 
   void ResetBiasesAndLocalizer();
 
-  bool LatestPoseMsg(geometry_msgs::PoseWithCovarianceStamped& latest_pose_msg) const;
+  bool LatestPoseMsg(geometry_msgs::PoseWithCovarianceStamped &latest_pose_msg) const;
 
-  void OpticalFlowCallback(const ff_msgs::Feature2dArray& feature_array_msg);
+  void OpticalFlowCallback(const ff_msgs::Feature2dArray &feature_array_msg);
 
-  void VLVisualLandmarksCallback(const ff_msgs::VisualLandmarks& visual_landmarks_msg);
+  void VLVisualLandmarksCallback(const ff_msgs::VisualLandmarks &visual_landmarks_msg);
 
-  void ARVisualLandmarksCallback(const ff_msgs::VisualLandmarks& visual_landmarks_msg);
+  void ARVisualLandmarksCallback(const ff_msgs::VisualLandmarks &visual_landmarks_msg);
 
-  void ImuCallback(const sensor_msgs::Imu& imu_msg);
+  void ImuCallback(const sensor_msgs::Imu &imu_msg);
 
-  const FeatureTrackMap* const feature_tracks() const;
+  const FeatureTrackMap *const feature_tracks() const;
 
  private:
   void InitializeGraph();
 
   std::unique_ptr<GraphLocalizer> graph_localizer_;
-  std::vector<ImuMeasurement> imu_bias_measurements_;
+  std::vector<localization_measurements::ImuMeasurement> imu_bias_measurements_;
   int num_bias_estimation_measurements_;
-  // TODO(rsoussan): put these somewhere else? make accessor that returns false if latest imu measurement not available?
+  // TODO(rsoussan): put these somewhere else? make accessor that returns false
+  // if latest imu measurement not available?
   Eigen::Vector3d latest_accelerometer_bias_;
   Eigen::Vector3d latest_gyro_bias_;
-  Time latest_bias_timestamp_;
+  localization_measurements::Time latest_bias_timestamp_;
   bool have_latest_imu_biases_;
   // TODO(rsoussan): rename this!
   GraphLocInitialization graph_loc_initialization_;

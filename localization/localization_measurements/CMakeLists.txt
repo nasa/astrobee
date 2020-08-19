@@ -17,27 +17,20 @@
 
 cmake_minimum_required(VERSION 2.8.3)
 
-project(graph_localizer)
-
-# For gprof - remove otherwise
-#SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pg")
-# For google prof: 
-#SET(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--no-as-needed -lprofiler -Wl,--as-needed")
+project(localization_measurements)
 
 find_package(GTSAM REQUIRED)
 
-find_package(catkin REQUIRED COMPONENTS roscpp)
-
 # include ff_nodelet to get ff_util header files since these aren't exposed elsewhere
 catkin_package(
-  LIBRARIES ${PROJECT_NAME} ${GTSAM_LIBRARIES} camera config_reader ff_nodelet localization_measurements msg_conversions
+  LIBRARIES ${PROJECT_NAME} ${GTSAM_LIBRARIES} 
   INCLUDE_DIRS include ${GTSAM_INCLUDE_DIR} 
-  CATKIN_DEPENDS roscpp 
-  DEPENDS gtsam ff_msgs #gtsam_unstable  
+  CATKIN_DEPENDS 
+  DEPENDS gtsam ff_msgs 
 )
 
 create_library(TARGET ${PROJECT_NAME} 
-  LIBS ${catkin_LIBRARIES} gtsam camera config_reader ff_nodelet localization_measurements msg_conversions #gtsam_unstable  
+  LIBS ${catkin_LIBRARIES} gtsam 
   INC ${catkin_INCLUDE_DIRS} 
   DEPS ff_msgs
 )

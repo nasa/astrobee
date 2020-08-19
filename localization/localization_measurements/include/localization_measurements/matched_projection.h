@@ -16,13 +16,25 @@
  * under the License.
  */
 
-#ifndef GRAPH_LOCALIZER_MAP_POINT_H_
-#define GRAPH_LOCALIZER_MAP_POINT_H_
+#ifndef LOCALIZATION_MEASUREMENTS_MATCHED_PROJECTION_H_
+#define LOCALIZATION_MEASUREMENTS_MATCHED_PROJECTION_H_
 
-#include <gtsam/geometry/Point3.h>
+#include <localization_measurements/image_point.h>
+#include <localization_measurements/map_point.h>
+#include <localization_measurements/time.h>
 
-namespace graph_localizer {
-using MapPoint = gtsam::Point3;
-}  // namespace graph_localizer
+#include <vector>
 
-#endif  // GRAPH_LOCALIZER_MAP_POINT_H_
+namespace localization_measurements {
+struct MatchedProjection {
+  MatchedProjection(const ImagePoint &image_point, const MapPoint &map_point, const Time timestamp)
+      : image_point(image_point), map_point(map_point), timestamp(timestamp) {}
+  ImagePoint image_point;
+  MapPoint map_point;
+  Time timestamp;
+};
+
+using MatchedProjections = std::vector<MatchedProjection>;
+}  // namespace localization_measurements
+
+#endif  // LOCALIZATION_MEASUREMENTS_MATCHED_PROJECTION_H_

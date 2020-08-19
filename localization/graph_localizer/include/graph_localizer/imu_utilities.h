@@ -19,9 +19,9 @@
 #ifndef GRAPH_LOCALIZER_IMU_UTILITIES_H_
 #define GRAPH_LOCALIZER_IMU_UTILITIES_H_
 
-#include <graph_localizer/combined_nav_state.h>
 #include <graph_localizer/graph_loc_initialization.h>
-#include <graph_localizer/imu_measurement.h>
+#include <localization_measurements/combined_nav_state.h>
+#include <localization_measurements/imu_measurement.h>
 
 #include <gtsam/inference/Symbol.h>
 #include <gtsam/navigation/CombinedImuFactor.h>
@@ -33,25 +33,30 @@
 
 namespace graph_localizer {
 namespace sym = gtsam::symbol_shorthand;
-void EstimateAndSetImuBiases(const ImuMeasurement& imu_measurement, const int num_imu_measurements_per_bias_estimate,
-                             std::vector<ImuMeasurement>& imu_bias_measurements,
-                             GraphLocInitialization& graph_loc_initialization);
+void EstimateAndSetImuBiases(const localization_measurements::ImuMeasurement &imu_measurement,
+                             const int num_imu_measurements_per_bias_estimate,
+                             std::vector<localization_measurements::ImuMeasurement> &imu_bias_measurements,
+                             GraphLocInitialization &graph_loc_initialization);
 
-ImuMeasurement Interpolate(const ImuMeasurement& imu_measurement_a, const ImuMeasurement& imu_measurement_b,
-                           const Time timestamp);
+localization_measurements::ImuMeasurement Interpolate(
+    const localization_measurements::ImuMeasurement &imu_measurement_a,
+    const localization_measurements::ImuMeasurement &imu_measurement_b,
+    const localization_measurements::Time timestamp);
 
 gtsam::PreintegratedCombinedMeasurements Pim(
-    const gtsam::imuBias::ConstantBias& bias,
-    const boost::shared_ptr<gtsam::PreintegratedCombinedMeasurements::Params>& params);
+    const gtsam::imuBias::ConstantBias &bias,
+    const boost::shared_ptr<gtsam::PreintegratedCombinedMeasurements::Params> &params);
 
-void AddMeasurement(const ImuMeasurement& imu_measurement, Time& last_added_imu_measurement_time,
-                    gtsam::PreintegratedCombinedMeasurements& pim);
+void AddMeasurement(const localization_measurements::ImuMeasurement &imu_measurement,
+                    localization_measurements::Time &last_added_imu_measurement_time,
+                    gtsam::PreintegratedCombinedMeasurements &pim);
 
-CombinedNavState PimPredict(const CombinedNavState& combined_nav_state,
-                            const gtsam::PreintegratedCombinedMeasurements& pim);
+localization_measurements::CombinedNavState PimPredict(
+    const localization_measurements::CombinedNavState &combined_nav_state,
+    const gtsam::PreintegratedCombinedMeasurements &pim);
 
 gtsam::CombinedImuFactor::shared_ptr MakeCombinedImuFactor(const int key_index_0, const int key_index_1,
-                                                           const gtsam::PreintegratedCombinedMeasurements& pim);
+                                                           const gtsam::PreintegratedCombinedMeasurements &pim);
 }  // namespace graph_localizer
 
 #endif  // GRAPH_LOCALIZER_IMU_UTILITIES_H_

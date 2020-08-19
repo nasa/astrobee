@@ -41,9 +41,9 @@ class GraphLocalizerNodelet : public ff_util::FreeFlyerNodelet {
   void Run();
 
  private:
-  void Initialize(ros::NodeHandle* nh) final;
+  void Initialize(ros::NodeHandle *nh) final;
 
-  bool SetMode(ff_msgs::SetEkfInput::Request& req, ff_msgs::SetEkfInput::Response& res);
+  bool SetMode(ff_msgs::SetEkfInput::Request &req, ff_msgs::SetEkfInput::Response &res);
 
   void DisableLocalizer();
 
@@ -51,25 +51,25 @@ class GraphLocalizerNodelet : public ff_util::FreeFlyerNodelet {
 
   bool localizer_enabled() const;
 
-  bool ResetBiasesAndLocalizer(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res);
+  bool ResetBiasesAndLocalizer(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 
-  bool ResetLocalizer(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res);
+  bool ResetLocalizer(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 
   void ResetAndEnableLocalizer();
 
-  void SubscribeAndAdvertise(ros::NodeHandle* nh);
+  void SubscribeAndAdvertise(ros::NodeHandle *nh);
 
   void InitializeGraph();
 
   void PublishPose() const;
 
-  void OpticalFlowCallback(const ff_msgs::Feature2dArray::ConstPtr& feature_array_msg);
+  void OpticalFlowCallback(const ff_msgs::Feature2dArray::ConstPtr &feature_array_msg);
 
-  void VLVisualLandmarksCallback(const ff_msgs::VisualLandmarks::ConstPtr& visual_landmarks_msg);
+  void VLVisualLandmarksCallback(const ff_msgs::VisualLandmarks::ConstPtr &visual_landmarks_msg);
 
-  void ARVisualLandmarksCallback(const ff_msgs::VisualLandmarks::ConstPtr& visual_landmarks_msg);
+  void ARVisualLandmarksCallback(const ff_msgs::VisualLandmarks::ConstPtr &visual_landmarks_msg);
 
-  void ImuCallback(const sensor_msgs::Imu::ConstPtr& imu_msg);
+  void ImuCallback(const sensor_msgs::Imu::ConstPtr &imu_msg);
 
   graph_localizer::GraphLocalizerWrapper graph_localizer_wrapper_;
   bool localizer_enabled_ = true;

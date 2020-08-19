@@ -30,8 +30,9 @@
 namespace gtsam {
 
 /**
- * Non-linear factor for a constraint derived from a 2D measurement. The calibration and landmark point are known here.
- * Adapted from gtsam GenericProjectionFactor.
+ * Non-linear factor for a constraint derived from a 2D measurement. The
+ * calibration and landmark point are known here. Adapted from gtsam
+ * GenericProjectionFactor.
  */
 template <class POSE = Pose3, class LANDMARK = Point3, class CALIBRATION = Cal3_S2>
 class LocProjectionFactor : public NoiseModelFactor1<POSE> {
@@ -43,8 +44,10 @@ class LocProjectionFactor : public NoiseModelFactor1<POSE> {
   boost::optional<POSE> body_P_sensor_;  ///< The pose of the sensor in the body frame
 
   // verbosity handling for Cheirality Exceptions
-  bool throwCheirality_;    ///< If true, rethrows Cheirality exceptions (default: false)
-  bool verboseCheirality_;  ///< If true, prints text for Cheirality exceptions (default: false)
+  bool throwCheirality_;    ///< If true, rethrows Cheirality exceptions (default:
+                            ///< false)
+  bool verboseCheirality_;  ///< If true, prints text for Cheirality exceptions
+                            ///< (default: false)
 
  public:
   /// shorthand for base class type
@@ -62,15 +65,17 @@ class LocProjectionFactor : public NoiseModelFactor1<POSE> {
 
   /**
    * Constructor
-   * @param measured is the 2 dimensional location of point in image (the measurement)
+   * @param measured is the 2 dimensional location of point in image (the
+   * measurement)
    * @param model is the standard deviation
    * @param poseKey is the index of the camera
    * @param pointKey is the index of the landmark
    * @param K shared pointer to the constant calibration
-   * @param body_P_sensor is the transform from body to sensor frame (default identity)
+   * @param body_P_sensor is the transform from body to sensor frame (default
+   * identity)
    */
-  LocProjectionFactor(const Point2& measured, const LANDMARK& landmark_point, const SharedNoiseModel& model,
-                      Key poseKey, const boost::shared_ptr<CALIBRATION>& K,
+  LocProjectionFactor(const Point2 &measured, const LANDMARK &landmark_point, const SharedNoiseModel &model,
+                      Key poseKey, const boost::shared_ptr<CALIBRATION> &K,
                       boost::optional<POSE> body_P_sensor = boost::none)
       : Base(model, poseKey),
         measured_(measured),
@@ -82,17 +87,21 @@ class LocProjectionFactor : public NoiseModelFactor1<POSE> {
 
   /**
    * Constructor with exception-handling flags
-   * @param measured is the 2 dimensional location of point in image (the measurement)
+   * @param measured is the 2 dimensional location of point in image (the
+   * measurement)
    * @param model is the standard deviation
    * @param poseKey is the index of the camera
    * @param pointKey is the index of the landmark
    * @param K shared pointer to the constant calibration
-   * @param throwCheirality determines whether Cheirality exceptions are rethrown
-   * @param verboseCheirality determines whether exceptions are printed for Cheirality
-   * @param body_P_sensor is the transform from body to sensor frame  (default identity)
+   * @param throwCheirality determines whether Cheirality exceptions are
+   * rethrown
+   * @param verboseCheirality determines whether exceptions are printed for
+   * Cheirality
+   * @param body_P_sensor is the transform from body to sensor frame  (default
+   * identity)
    */
-  LocProjectionFactor(const Point2& measured, const LANDMARK& landmark_point, const SharedNoiseModel& model,
-                      Key poseKey, const boost::shared_ptr<CALIBRATION>& K, bool throwCheirality,
+  LocProjectionFactor(const Point2 &measured, const LANDMARK &landmark_point, const SharedNoiseModel &model,
+                      Key poseKey, const boost::shared_ptr<CALIBRATION> &K, bool throwCheirality,
                       bool verboseCheirality, boost::optional<POSE> body_P_sensor = boost::none)
       : Base(model, poseKey),
         measured_(measured),
@@ -115,7 +124,7 @@ class LocProjectionFactor : public NoiseModelFactor1<POSE> {
    * @param s optional string naming the factor
    * @param keyFormatter optional formatter useful for printing Symbols
    */
-  void print(const std::string& s = "", const KeyFormatter& keyFormatter = DefaultKeyFormatter) const {
+  void print(const std::string &s = "", const KeyFormatter &keyFormatter = DefaultKeyFormatter) const {
     std::cout << s << "LocProjectionFactor, z = ";
     traits<Point2>::Print(measured_);
     std::cout << " landmark_point = ";
@@ -125,8 +134,8 @@ class LocProjectionFactor : public NoiseModelFactor1<POSE> {
   }
 
   /// equals
-  virtual bool equals(const NonlinearFactor& p, double tol = 1e-9) const {
-    const This* e = dynamic_cast<const This*>(&p);
+  virtual bool equals(const NonlinearFactor &p, double tol = 1e-9) const {
+    const This *e = dynamic_cast<const This *>(&p);
     return e && Base::equals(p, tol) && traits<Point2>::Equals(this->measured_, e->measured_, tol) &&
            traits<LANDMARK>::Equals(this->landmark_point_, e->landmark_point_, tol) && this->K_->equals(*e->K_, tol) &&
            ((!body_P_sensor_ && !e->body_P_sensor_) ||
@@ -134,7 +143,7 @@ class LocProjectionFactor : public NoiseModelFactor1<POSE> {
   }
 
   /// Evaluate error h(x)-z and optionally derivatives
-  Vector evaluateError(const Pose3& pose, boost::optional<Matrix&> H1 = boost::none) const {
+  Vector evaluateError(const Pose3 &pose, boost::optional<Matrix &> H1 = boost::none) const {
     try {
       if (body_P_sensor_) {
         if (H1) {
@@ -151,7 +160,7 @@ class LocProjectionFactor : public NoiseModelFactor1<POSE> {
         PinholeCamera<CALIBRATION> camera(pose, *K_);
         return camera.project(landmark_point_, H1, boost::none, boost::none) - measured_;
       }
-    } catch (CheiralityException& e) {
+    } catch (CheiralityException &e) {
       if (H1) *H1 = Matrix::Zero(2, 6);
       if (verboseCheirality_)
         std::cout << e.what() << ": Landmark moved behind camera " << DefaultKeyFormatter(this->key()) << std::endl;
@@ -161,9 +170,9 @@ class LocProjectionFactor : public NoiseModelFactor1<POSE> {
   }
 
   /** return the measurement */
-  const Point2& measured() const { return measured_; }
+  const Point2 &measured() const { return measured_; }
 
-  const LANDMARK& landmark_point() const { return landmark_point_; }
+  const LANDMARK &landmark_point() const { return landmark_point_; }
 
   /** return the calibration object */
   inline const boost::shared_ptr<CALIBRATION> calibration() const { return K_; }
@@ -178,14 +187,14 @@ class LocProjectionFactor : public NoiseModelFactor1<POSE> {
   /// Serialization function
   friend class boost::serialization::access;
   template <class ARCHIVE>
-  void serialize(ARCHIVE& ar, const unsigned int /*version*/) {
-    ar& BOOST_SERIALIZATION_BASE_OBJECT_NVP(Base);
-    ar& BOOST_SERIALIZATION_NVP(measured_);
-    ar& BOOST_SERIALIZATION_NVP(landmark_point_);
-    ar& BOOST_SERIALIZATION_NVP(K_);
-    ar& BOOST_SERIALIZATION_NVP(body_P_sensor_);
-    ar& BOOST_SERIALIZATION_NVP(throwCheirality_);
-    ar& BOOST_SERIALIZATION_NVP(verboseCheirality_);
+  void serialize(ARCHIVE &ar, const unsigned int /*version*/) {
+    ar &BOOST_SERIALIZATION_BASE_OBJECT_NVP(Base);
+    ar &BOOST_SERIALIZATION_NVP(measured_);
+    ar &BOOST_SERIALIZATION_NVP(landmark_point_);
+    ar &BOOST_SERIALIZATION_NVP(K_);
+    ar &BOOST_SERIALIZATION_NVP(body_P_sensor_);
+    ar &BOOST_SERIALIZATION_NVP(throwCheirality_);
+    ar &BOOST_SERIALIZATION_NVP(verboseCheirality_);
   }
 
  public:
@@ -194,8 +203,8 @@ class LocProjectionFactor : public NoiseModelFactor1<POSE> {
 
 /// traits
 template <class POSE, class LANDMARK, class CALIBRATION>
-struct traits<LocProjectionFactor<POSE, LANDMARK, CALIBRATION> >
-    : public Testable<LocProjectionFactor<POSE, LANDMARK, CALIBRATION> > {};
+struct traits<LocProjectionFactor<POSE, LANDMARK, CALIBRATION>>
+    : public Testable<LocProjectionFactor<POSE, LANDMARK, CALIBRATION>> {};
 
 }  // namespace gtsam
 

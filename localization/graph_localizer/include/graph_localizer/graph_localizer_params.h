@@ -24,21 +24,21 @@
 namespace graph_localizer {
 class GraphLocalizerParams {
  public:
-  void SetBiases(const Eigen::Vector3d& accelerometer_bias, const Eigen::Vector3d& gyro_bias) {
+  void SetBiases(const Eigen::Vector3d &accelerometer_bias, const Eigen::Vector3d &gyro_bias) {
     accelerometer_bias_ = accelerometer_bias;
     gyro_bias_ = gyro_bias;
   }
 
-  void SetStartPose(const Eigen::Isometry3d& global_T_body_start, const double timestamp) {
+  void SetStartPose(const Eigen::Isometry3d &global_T_body_start, const double timestamp) {
     global_T_body_start_ = global_T_body_start;
     start_time_ = timestamp;
   }
 
   // TODO(rsoussan): rename this?
-  void SetCalibration(const Eigen::Isometry3d& body_T_imu, const Eigen::Isometry3d& body_T_nav_cam,
-                      const Eigen::Matrix3d& nav_cam_intrinsics, const Eigen::Isometry3d& body_T_dock_cam,
-                      const Eigen::Matrix3d& dock_cam_intrinsics, const Eigen::Isometry3d& world_T_dock,
-                      const Eigen::Vector3d& gravity) {
+  void SetCalibration(const Eigen::Isometry3d &body_T_imu, const Eigen::Isometry3d &body_T_nav_cam,
+                      const Eigen::Matrix3d &nav_cam_intrinsics, const Eigen::Isometry3d &body_T_dock_cam,
+                      const Eigen::Matrix3d &dock_cam_intrinsics, const Eigen::Isometry3d &world_T_dock,
+                      const Eigen::Vector3d &gravity) {
     body_T_imu_ = body_T_imu;
     body_T_nav_cam_ = body_T_nav_cam;
     nav_cam_focal_lengths_ = Eigen::Vector2d(nav_cam_intrinsics(0, 0), nav_cam_intrinsics(1, 1));
@@ -59,18 +59,18 @@ class GraphLocalizerParams {
 
   const double start_time() const { return start_time_; }
 
-  const Eigen::Isometry3d& body_T_imu() const { return body_T_imu_; }
-  const Eigen::Isometry3d& body_T_nav_cam() const { return body_T_nav_cam_; }
-  const Eigen::Isometry3d& body_T_dock_cam() const { return body_T_dock_cam_; }
-  const Eigen::Isometry3d& global_T_body_start() const { return global_T_body_start_; }
-  const Eigen::Isometry3d& world_T_dock() const { return world_T_dock_; }
-  const Eigen::Vector3d& accelerometer_bias() const { return accelerometer_bias_; }
-  const Eigen::Vector3d& gyro_bias() const { return gyro_bias_; }
-  const Eigen::Vector2d& nav_cam_focal_lengths() const { return nav_cam_focal_lengths_; }
-  const Eigen::Vector2d& nav_cam_principal_point() const { return nav_cam_principal_point_; }
-  const Eigen::Vector2d& dock_cam_focal_lengths() const { return dock_cam_focal_lengths_; }
-  const Eigen::Vector2d& dock_cam_principal_point() const { return dock_cam_principal_point_; }
-  const Eigen::Vector3d& gravity() const { return gravity_; }
+  const Eigen::Isometry3d &body_T_imu() const { return body_T_imu_; }
+  const Eigen::Isometry3d &body_T_nav_cam() const { return body_T_nav_cam_; }
+  const Eigen::Isometry3d &body_T_dock_cam() const { return body_T_dock_cam_; }
+  const Eigen::Isometry3d &global_T_body_start() const { return global_T_body_start_; }
+  const Eigen::Isometry3d &world_T_dock() const { return world_T_dock_; }
+  const Eigen::Vector3d &accelerometer_bias() const { return accelerometer_bias_; }
+  const Eigen::Vector3d &gyro_bias() const { return gyro_bias_; }
+  const Eigen::Vector2d &nav_cam_focal_lengths() const { return nav_cam_focal_lengths_; }
+  const Eigen::Vector2d &nav_cam_principal_point() const { return nav_cam_principal_point_; }
+  const Eigen::Vector2d &dock_cam_focal_lengths() const { return dock_cam_focal_lengths_; }
+  const Eigen::Vector2d &dock_cam_principal_point() const { return dock_cam_principal_point_; }
+  const Eigen::Vector3d &gravity() const { return gravity_; }
   const double sliding_window_duration() const { return sliding_window_duration_; }
   const int min_num_sliding_window_states() const { return min_num_sliding_window_states_; }
   const double min_of_avg_distance_from_mean() const { return min_of_avg_distance_from_mean_; }

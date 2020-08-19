@@ -27,7 +27,7 @@ namespace graph_localizer {
 
 GraphLocalizerNodelet::GraphLocalizerNodelet() {}
 
-void GraphLocalizerNodelet::Initialize(ros::NodeHandle* nh) {
+void GraphLocalizerNodelet::Initialize(ros::NodeHandle *nh) {
   // Bootstrap our environment
   // TODO(rsoussan): are these needed?
   // ff_common::InitFreeFlyerApplication(getMyArgv());
@@ -35,11 +35,12 @@ void GraphLocalizerNodelet::Initialize(ros::NodeHandle* nh) {
   Run();
 }
 
-void GraphLocalizerNodelet::SubscribeAndAdvertise(ros::NodeHandle* nh) {
+void GraphLocalizerNodelet::SubscribeAndAdvertise(ros::NodeHandle *nh) {
   state_pub_ = nh->advertise<ff_msgs::EkfState>(TOPIC_GNC_EKF, 1);
   pose_pub_ = nh->advertise<geometry_msgs::PoseWithCovarianceStamped>(TOPIC_LOCALIZATION_POSE, 1);
   // TODO(rsoussan): is this needed?
-  // twist_pub_   = nh->advertise<geometry_msgs::TwistStamped>(TOPIC_LOCALIZATION_TWIST, 1);
+  // twist_pub_   =
+  // nh->advertise<geometry_msgs::TwistStamped>(TOPIC_LOCALIZATION_TWIST, 1);
 
   ar_sub_ = nh->subscribe(TOPIC_LOCALIZATION_AR_FEATURES, 1, &GraphLocalizerNodelet::ARVisualLandmarksCallback, this,
                           ros::TransportHints().tcpNoDelay());
@@ -52,15 +53,17 @@ void GraphLocalizerNodelet::SubscribeAndAdvertise(ros::NodeHandle* nh) {
   input_mode_srv_ = nh->advertiseService(SERVICE_GNC_EKF_SET_INPUT, &GraphLocalizerNodelet::SetMode, this);
 }
 
-// TODO(rsoussan): This is stupid and not a service.  Remove if we don't have to use loc manager anymore
-bool GraphLocalizerNodelet::SetMode(ff_msgs::SetEkfInput::Request& req, ff_msgs::SetEkfInput::Response& res) {
+// TODO(rsoussan): This is stupid and not a service.  Remove if we don't have to
+// use loc manager anymore
+bool GraphLocalizerNodelet::SetMode(ff_msgs::SetEkfInput::Request &req, ff_msgs::SetEkfInput::Response &res) {
   const auto input_mode = req.mode;
   static int last_mode = -1;
   if (input_mode == ff_msgs::SetEkfInputRequest::MODE_NONE) {
     LOG(INFO) << "Received Mode None request, turning off localizer.";
     DisableLocalizer();
   } else if (last_mode == ff_msgs::SetEkfInputRequest::MODE_NONE) {
-    LOG(INFO) << "Received Mode request that is not None and current mode is None, resetting localizer.";
+    LOG(INFO) << "Received Mode request that is not None and current mode is "
+                 "None, resetting localizer.";
     ResetAndEnableLocalizer();
   }
   return true;
@@ -72,15 +75,17 @@ void GraphLocalizerNodelet::EnableLocalizer() { localizer_enabled_ = true; }
 
 bool GraphLocalizerNodelet::localizer_enabled() const { return localizer_enabled_; }
 
-// TODO(rsoussan): This is stupid and not a service.  Remove if we don't have to use loc manager anymore
-bool GraphLocalizerNodelet::ResetBiasesAndLocalizer(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res) {
+// TODO(rsoussan): This is stupid and not a service.  Remove if we don't have to
+// use loc manager anymore
+bool GraphLocalizerNodelet::ResetBiasesAndLocalizer(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res) {
   graph_localizer_wrapper_.ResetBiasesAndLocalizer();
   EnableLocalizer();
   return true;
 }
 
-// TODO(rsoussan): This is stupid and not a service.  Remove if we don't have to use loc manager anymore
-bool GraphLocalizerNodelet::ResetLocalizer(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res) {
+// TODO(rsoussan): This is stupid and not a service.  Remove if we don't have to
+// use loc manager anymore
+bool GraphLocalizerNodelet::ResetLocalizer(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res) {
   ResetAndEnableLocalizer();
   return true;
 }
@@ -90,24 +95,24 @@ void GraphLocalizerNodelet::ResetAndEnableLocalizer() {
   EnableLocalizer();
 }
 
-void GraphLocalizerNodelet::OpticalFlowCallback(const ff_msgs::Feature2dArray::ConstPtr& feature_array_msg) {
+void GraphLocalizerNodelet::OpticalFlowCallback(const ff_msgs::Feature2dArray::ConstPtr &feature_array_msg) {
   if (!localizer_enabled()) return;
   graph_localizer_wrapper_.OpticalFlowCallback(*feature_array_msg);
   // TODO(rsoussan): move this somwhere else?
   PublishPose();
 }
 
-void GraphLocalizerNodelet::VLVisualLandmarksCallback(const ff_msgs::VisualLandmarks::ConstPtr& visual_landmarks_msg) {
+void GraphLocalizerNodelet::VLVisualLandmarksCallback(const ff_msgs::VisualLandmarks::ConstPtr &visual_landmarks_msg) {
   if (!localizer_enabled()) return;
   graph_localizer_wrapper_.VLVisualLandmarksCallback(*visual_landmarks_msg);
 }
 
-void GraphLocalizerNodelet::ARVisualLandmarksCallback(const ff_msgs::VisualLandmarks::ConstPtr& visual_landmarks_msg) {
+void GraphLocalizerNodelet::ARVisualLandmarksCallback(const ff_msgs::VisualLandmarks::ConstPtr &visual_landmarks_msg) {
   if (!localizer_enabled()) return;
   graph_localizer_wrapper_.ARVisualLandmarksCallback(*visual_landmarks_msg);
 }
 
-void GraphLocalizerNodelet::ImuCallback(const sensor_msgs::Imu::ConstPtr& imu_msg) {
+void GraphLocalizerNodelet::ImuCallback(const sensor_msgs::Imu::ConstPtr &imu_msg) {
   if (!localizer_enabled()) return;
   graph_localizer_wrapper_.ImuCallback(*imu_msg);
 }

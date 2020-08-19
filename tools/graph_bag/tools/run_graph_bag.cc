@@ -21,17 +21,25 @@
 
 // #include <gperftools/profiler.h>
 
-int main(int argc, char** argv) {
+int main(int argc, char **argv) {
   // ProfilerStart("/home/rsoussan/graph_bag_tests/prof.txt");
   // TODO(rsoussan): pass this from the command line using arg parse!
-  // const std::string input_bag = "/home/rsoussan/Downloads/nasa_data/bags/20160211_1701_nav_sampled_shortened.bag";
-  // const std::string input_bag = "/home/rsoussan/Downloads/nasa_data/bags/20160211_1707_nav_sampled.bag";
-  // const std::string input_bag = "/home/rsoussan/Downloads/nasa_data/bags/20160211_1711_nav_sampled.bag";
-  //  const std::string input_bag = "/home/rsoussan/Downloads/nasa_data/bags/20160211_1718_nav_sampled.bag";
-  const std::string input_bag = "/home/rsoussan/Downloads/nasa_data/docking/20200702_1853_mobNavSpd_trimmed.bag";
+  // const std::string input_bag =
+  // "/home/rsoussan/Downloads/nasa_data/bags/20160211_1701_nav_sampled_shortened.bag";
+  // const std::string input_bag =
+  // "/home/rsoussan/Downloads/nasa_data/bags/20160211_1707_nav_sampled.bag";
+  // const std::string input_bag =
+  // "/home/rsoussan/Downloads/nasa_data/bags/20160211_1711_nav_sampled.bag";
+  //  const std::string input_bag =
+  //  "/home/rsoussan/Downloads/nasa_data/bags/20160211_1718_nav_sampled.bag";
+  const std::string input_bag =
+      "/home/rsoussan/Downloads/nasa_data/docking/"
+      "20200702_1853_mobNavSpd_trimmed.bag";
   // const std::string map_file =
   // "/home/rsoussan/Downloads/nasa_data/merged_20190523_0614_0712_0724_0828_1101_20200513_0521.brisk.hist.map";
-  const std::string map_file = "/home/rsoussan/Downloads/nasa_data/merged_0523_0614_0712_0724_0828_1101.brisk.hist.map";
+  const std::string map_file =
+      "/home/rsoussan/Downloads/nasa_data/"
+      "merged_0523_0614_0712_0724_0828_1101.brisk.hist.map";
   const std::string image_topic = "mgt/img_sampler/nav_cam/image_record";
   const std::string results_bag = "/home/rsoussan/graph_bag_tests/results.bag";
   // TODO(rsoussan): why is this needed?
