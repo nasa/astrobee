@@ -18,6 +18,7 @@
 add_subdirectory(camera)
 add_subdirectory(interest_point)
 add_subdirectory(sparse_mapping)
+add_subdirectory(graph_localizer)
 
 if (USE_ROS)
   add_subdirectory(marker_tracking)
