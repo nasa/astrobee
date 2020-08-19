@@ -814,6 +814,9 @@ int main(int argc, char** argv) {
     idxs[SD::FAULT_OT_CHARGER] = Value("Charger o/temp", {"t_chg"});
     idxs[SD::FAULT_OT_ACTUATOR_1] = Value("Actuator 1 o/temp", {"t_act1"});
     idxs[SD::FAULT_OT_ACTUATOR_2] = Value("Actuator 2 o/temp", {"t_act2"});
+    idxs[SD::FAULT_WDT1_EPS_REBOOT] = Value("WatchDog Timer 1 has rebooted EPS", {"wdt1_eps"});
+    idxs[SD::FAULT_WDT2_DOCKCTL_REBOOT] = Value("WatchDog Timer 2 has rebooted Dock Controller", {"wdt2_dctl"});
+    idxs[SD::FAULT_WDT3_DOCKPC_REBOOT] = Value("WatchDog Timer 3 has rebooted Dock Processor", {"wdt3_dpc"});
     if (FLAGS_list) return Print("Indexes", idxs, true);
     if (FLAGS_clear) {
       if (!sd.ClearFaults()) return Error("Could not clear the faults.");
