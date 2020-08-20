@@ -24,12 +24,12 @@ jobs:
     - name: Run unit tests
       run: docker exec -it astrobee  -c "cd /build/astrobee && make test && make run_tests"
 
-  build:
-
-    runs-on: ubuntu-18.04
-
-    steps:
-    - uses: actions/checkout@v2
-
-    - name: Build the Docker image for Ubuntu 16
-      run: docker build . --file ./scripts/docker/rebuild_astrobee_melodic.Dockerfile --tag astrobee:latest-melodic
+#  build:
+#
+#    runs-on: ubuntu-18.04
+#
+#    steps:
+#    - uses: actions/checkout@v2
+#
+#    - name: Build the Docker image for Ubuntu 16
+#      run: docker build . --file ./scripts/docker/rebuild_astrobee_melodic.Dockerfile --tag astrobee:latest-melodic
