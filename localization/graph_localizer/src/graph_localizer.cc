@@ -89,8 +89,6 @@ void GraphLocalizer::AddStartingPriors(const lm::CombinedNavState& global_cgN_bo
                                                 kAccelBiasPriorSigma, kGyroBiasPriorSigma, kGyroBiasPriorSigma,
                                                 kGyroBiasPriorSigma)
                                                    .finished());
-  // TODO(rsoussan): why is explicit cast necessary? could this be used in
-  // GtPose function?
   lm::CombinedNavStateNoise noise;
   noise.pose_noise = gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(pose_prior_noise_sigmas));
   noise.velocity_noise =
