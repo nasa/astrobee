@@ -16,25 +16,28 @@
  * under the License.
  */
 
+#include <imu_augmentor/imu_augmentor.h>
 #include <imu_integration/imu_utilities.h>
-#include <localization_measurements/measurement_conversions.h>
-
-#include <glog/logging.h>
 
 namespace imu_augmentor {
 namespace ii = imu_integration;
 namespace lm = localization_measurements;
-// Initialize with zero bias and start time since these will be set when a combined_nav_state is passed to the augmentor
 ImuAugmentor::ImuAugmentor(const Eigen::Isometry3d& body_T_imu, const Eigen::Vector3d& gravity)
-    : imu_integrator_(body_T_imu, Eigen
-                      : Vector3d::Zero(), Eigen::Vector3d::Zero(), 0, gravity) {}
+    : imu_integrator_(body_T_imu, gravity) {}
+
+void ImuAugmentor::BufferImuMeasurement(const lm::ImuMeasurement& imu_measurement) {
+  imu_integrator_.BufferImuMeasurement(imu_measurement);
+}
 
 lm::CombinedNavState ImuAugmentor::PimPredict(const lm::CombinedNavState& combined_nav_state) {
-  imu_integrator_.ResetLatestPimIntegrationAndSetBias(combined_nav_state.bias());
-  imu_integrator_.IntegrateImuMeasurements(combined_nav_state.timestamp(), imu_integrator_.LatestTimestamp(),
-                                           imu_integrator_.latest_pim());
-  // integrate measurements from start time to end time
+  const auto pim = imu_integrator_.IntegratedPim(combined_nav_state.bias(), combined_nav_state.timestamp(),
+                                                 imu_integrator_.LatestTime(), imu_integrator_.pim_params());
+  const auto latest_combined_nav_state = ii::PimPredict(combined_nav_state, pim);
+  RemoveOldMeasurements(combined_nav_state.timestamp());
+  return latest_combined_nav_state;
+}
 
-  return ii::PimPredict(combined_nav_state, imu_integrator_.latest_pim());
+void ImuAugmentor::RemoveOldMeasurements(const lm::Time new_start_time) {
+  imu_integrator_.RemoveOldMeasurements(new_start_time);
 }
 }  // namespace imu_augmentor
