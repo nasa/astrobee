@@ -24,14 +24,11 @@
 
 namespace imu_integration {
 namespace lm = localization_measurements;
-ImuIntegrator::ImuIntegrator(const Eigen::Isometry3d& body_T_imu, const Eigen::Vector3d& gyro_bias,
-                             const Eigen::Vector3d& accelerometer_bias, const lm::Time start_time,
-                             const Eigen::Vector3d& gravity)
-    : body_T_imu_(body_T_imu), last_added_imu_measurement_time_(0), start_time_(start_time) {
+ImuIntegrator::ImuIntegrator(const Eigen::Isometry3d& body_T_imu, const Eigen::Vector3d& gravity)
+    : body_T_imu_(body_T_imu) {
   DLOG(INFO) << "ImuIntegrator: Gravity vector: " << std::endl << gravity.matrix();
   pim_params_.reset(new gtsam::PreintegratedCombinedMeasurements::Params(gravity));
-  // Set sensor covariances TODO(rsoussan): change these when receive new
-  // measurements? also set these in factor?
+  // Set sensor covariances
   pim_params_->gyroscopeCovariance = kGyroSigma_ * kGyroSigma_ * gtsam::I_3x3;
   pim_params_->accelerometerCovariance = kAccelSigma_ * kAccelSigma_ * gtsam::I_3x3;
   pim_params_->integrationCovariance = 0.0001 * gtsam::I_3x3;
@@ -42,33 +39,10 @@ ImuIntegrator::ImuIntegrator(const Eigen::Isometry3d& body_T_imu, const Eigen::V
   pim_params_->biasAccOmegaInt = 0.0001 * gtsam::I_6x6;
   // Set imu calibration relative pose
   pim_params_->setBodyPSensor(lm::GtPose(body_T_imu_));
-  latest_pim_.reset(new gtsam::PreintegratedCombinedMeasurements(pim_params_));
-  latest_pim_->resetIntegrationAndSetBias(gtsam::imuBias::ConstantBias(accelerometer_bias, gyro_bias));
 }
 
 void ImuIntegrator::BufferImuMeasurement(const lm::ImuMeasurement& imu_measurement) {
-  if (imu_measurement.timestamp < start_time_) {
-    LOG(WARNING) << "BufferImuMeasurement: Failed to add imu measurement since "
-                    "timestamp is before start time, ignoring "
-                    "measurement.";
-    return;
-  }
-
   measurements_.emplace(imu_measurement.timestamp, imu_measurement);
-}
-
-void ImuIntegrator::IntegrateLatestImuMeasurements(const lm::Time end_time) {
-  if (measurements_.size() < 2) {
-    LOG(FATAL) << "IntegrateLatestImuMeasurements: Less than 2 measurements "
-                  "available.";
-  }
-
-  if (last_added_imu_measurement_time_ == 0) {
-    DLOG(INFO) << "IntegrateLatestImuMeasurements: Adding first imu measurement.";
-    last_added_imu_measurement_time_ = start_time_;
-  }
-
-  last_added_imu_measurement_time_ = IntegrateImuMeasurements(last_added_imu_measurement_time_, end_time, *latest_pim_);
 }
 
 lm::Time ImuIntegrator::IntegrateImuMeasurements(const lm::Time start_time, const lm::Time end_time,
@@ -114,18 +88,12 @@ void ImuIntegrator::RemoveOldMeasurements(const lm::Time new_start_time) {
   }
 }
 
-const gtsam::PreintegratedCombinedMeasurements& ImuIntegrator::latest_pim() const { return *latest_pim_; }
-
 gtsam::PreintegratedCombinedMeasurements ImuIntegrator::IntegratedPim(
     const gtsam::imuBias::ConstantBias& bias, const lm::Time start_time, const lm::Time end_time,
     boost::shared_ptr<gtsam::PreintegratedCombinedMeasurements::Params> params) const {
   auto pim = Pim(bias, params);
   IntegrateImuMeasurements(start_time, end_time, pim);
   return pim;
-}
-
-void ImuIntegrator::ResetLatestPimIntegrationAndSetBias(const gtsam::imuBias::ConstantBias& bias) {
-  latest_pim_->resetIntegrationAndSetBias(bias);
 }
 
 boost::shared_ptr<gtsam::PreintegratedCombinedMeasurements::Params> ImuIntegrator::pim_params() const {
@@ -151,5 +119,7 @@ lm::Time ImuIntegrator::LatestTime() const {
 }
 
 bool ImuIntegrator::Empty() const { return measurements_.empty(); }
+
+int ImuIntegrator::Size() const { return measurements_.size(); }
 
 }  // namespace imu_integration

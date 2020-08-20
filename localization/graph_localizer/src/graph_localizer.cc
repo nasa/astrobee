@@ -38,8 +38,8 @@ namespace ii = imu_integration;
 namespace lm = localization_measurements;
 
 GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
-    : imu_integrator_(params.body_T_imu(), params.gyro_bias(), params.accelerometer_bias(), params.start_time(),
-                      params.gravity()),
+    : latest_imu_integrator_(params.body_T_imu(), params.gyro_bias(), params.accelerometer_bias(), params.start_time(),
+                             params.gravity()),
       body_T_nav_cam_(lm::GtPose(params.body_T_nav_cam())),
       nav_cam_intrinsics_(new gtsam::Cal3_S2(params.nav_cam_focal_lengths().x(), params.nav_cam_focal_lengths().y(), 0,
                                              params.nav_cam_principal_point().x(),
@@ -138,7 +138,7 @@ void GraphLocalizer::LatestBiases(Eigen::Vector3d& accelerometer_bias, Eigen::Ve
 }
 
 void GraphLocalizer::AddImuMeasurement(const lm::ImuMeasurement& imu_measurement) {
-  imu_integrator_.BufferImuMeasurement(imu_measurement);
+  latest_imu_integrator_.BufferImuMeasurement(imu_measurement);
 }
 
 void GraphLocalizer::AddOpticalFlowMeasurement(
@@ -255,19 +255,19 @@ bool GraphLocalizer::AddOrSplitImuFactorIfNeeded(const lm::Time timestamp) {
     return false;
   }
 
-  if (imu_integrator_.Empty()) {
+  if (latest_imu_integrator_.Empty()) {
     LOG(WARNING) << "AddOrSplitImuFactorIfNeeded: No measurements available in "
                     "imu integrator, ignoring.";
     return false;
   }
 
-  if (timestamp < imu_integrator_.OldestTime() || timestamp > imu_integrator_.LatestTime()) {
+  if (timestamp < latest_imu_integrator_.OldestTime() || timestamp > latest_imu_integrator_.LatestTime()) {
     LOG(WARNING) << "AddOrSplitImuFactorIfNeeded: Timestamp occured outside "
                     "times available in imu integrator, ignoring."
                  << std::endl
                  << std::setprecision(15) << "Timestamp: " << timestamp << std::endl
-                 << "imu oldest: " << imu_integrator_.OldestTime() << std::endl
-                 << "imu latest: " << imu_integrator_.LatestTime();
+                 << "imu oldest: " << latest_imu_integrator_.OldestTime() << std::endl
+                 << "imu latest: " << latest_imu_integrator_.LatestTime();
     return false;
   }
 
@@ -315,15 +315,15 @@ bool GraphLocalizer::SplitOldImuFactorAndAddCombinedNavState(const lm::Time time
 
   const auto lower_bound_bias = graph_values_.at<gtsam::imuBias::ConstantBias>(sym::B(lower_bound_key_index));
   // Add first factor and new nav state at timestamp
-  auto first_integrated_pim =
-      imu_integrator_.IntegratedPim(lower_bound_bias, lower_bound_time, timestamp, imu_integrator_.pim_params());
+  auto first_integrated_pim = latest_imu_integrator_.IntegratedPim(lower_bound_bias, lower_bound_time, timestamp,
+                                                                   latest_imu_integrator_.pim_params());
   const auto lower_bound_combined_nav_state = graph_values_.GetCombinedNavState(lower_bound_time);
   CreateAndAddImuFactorAndPredictedCombinedNavState(lower_bound_combined_nav_state, first_integrated_pim);
 
   // Add second factor, use lower_bound_bias as starting bias since that is the
   // best estimate available
-  auto second_integrated_pim =
-      imu_integrator_.IntegratedPim(lower_bound_bias, timestamp, upper_bound_time, imu_integrator_.pim_params());
+  auto second_integrated_pim = latest_imu_integrator_.IntegratedPim(lower_bound_bias, timestamp, upper_bound_time,
+                                                                    latest_imu_integrator_.pim_params());
   // New nav state already added so just get its key index
   const auto new_key_index = graph_values_.KeyIndex(timestamp);
   const auto combined_imu_factor =
@@ -333,10 +333,10 @@ bool GraphLocalizer::SplitOldImuFactorAndAddCombinedNavState(const lm::Time time
 }
 
 void GraphLocalizer::CreateAndAddLatestImuFactorAndCombinedNavState(const lm::Time timestamp) {
-  imu_integrator_.IntegrateLatestImuMeasurements(timestamp);
+  latest_imu_integrator_.IntegrateLatestImuMeasurements(timestamp);
   CreateAndAddImuFactorAndPredictedCombinedNavState(graph_values_.LatestCombinedNavState(),
-                                                    imu_integrator_.latest_pim());
-  imu_integrator_.ResetLatestPimIntegrationAndSetBias(graph_values_.LatestBias());
+                                                    latest_imu_integrator_.pim());
+  latest_imu_integrator_.ResetPimIntegrationAndSetBias(graph_values_.LatestBias());
 }
 
 void GraphLocalizer::CreateAndAddImuFactorAndPredictedCombinedNavState(
@@ -356,7 +356,7 @@ void GraphLocalizer::SlideWindow(const gtsam::Marginals& marginals) {
   }
 
   feature_tracker_.RemoveOldFeaturePoints(graph_values_.OldestTimestamp());
-  imu_integrator_.RemoveOldMeasurements(graph_values_.OldestTimestamp());
+  latest_imu_integrator_.RemoveOldMeasurements(graph_values_.OldestTimestamp());
 
   // Add prior to oldest nav state using covariances from last round of
   // optimization
@@ -403,7 +403,7 @@ void GraphLocalizer::Update() {
   graph_.saveGraph(of, graph_values_.values());
 
   // Update imu integrator bias
-  imu_integrator_.ResetLatestPimIntegrationAndSetBias(graph_values_.LatestBias());
+  latest_imu_integrator_.ResetPimIntegrationAndSetBias(graph_values_.LatestBias());
   // Calculate marginals before sliding window since this depends on values that
   // would be removed in SlideWindow()
   const gtsam::Marginals marginals(graph_, graph_values_.values());

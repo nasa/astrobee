@@ -22,7 +22,7 @@
 #include <graph_localizer/feature_tracker.h>
 #include <graph_localizer/graph_localizer_params.h>
 #include <graph_localizer/graph_values.h>
-#include <imu_integration/imu_integrator.h>
+#include <imu_integration/latest_imu_integrator.h>
 #include <localization_measurements/combined_nav_state.h>
 #include <localization_measurements/combined_nav_state_covariances.h>
 #include <localization_measurements/feature_points_measurement.h>
@@ -105,7 +105,7 @@ class GraphLocalizer {
 
   // TODO(rsoussan): put these somewhere else
   gtsam::NavState global_gN_body_start_;
-  imu_integration::ImuIntegrator imu_integrator_;
+  imu_integration::LatestImuIntegrator latest_imu_integrator_;
   gtsam::NonlinearFactorGraph graph_;
   GraphValues graph_values_;
   FeatureTracker feature_tracker_;
