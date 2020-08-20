@@ -19,10 +19,11 @@ jobs:
       run: docker build . --file ./scripts/docker/rebuild_astrobee_kinetic.Dockerfile --tag astrobee:latest-kinetic
 
     - name: Start docker container
-      run: ./scripts/docker/run.sh
-
-    - name: Run unit tests
-      run: docker exec -it astrobee  -c "cd /build/astrobee && make test && make run_tests"
+      run: docker run -it --rm --name astrobee \
+                      --user="astrobee" \
+                      --gpus all \
+                    astrobee:latest-kinetic \
+                  /astrobee_init.sh roslaunch astrobee sim.launch dds:=false
 
 #  build:
 #
