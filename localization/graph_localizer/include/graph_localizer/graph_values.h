@@ -39,12 +39,12 @@ class GraphValues {
   explicit GraphValues(const double window_ideal_duration, const int window_min_num_states);
 
   // Add timestamp and keys to timestamp_key_index_map, and values to values
-  void AddCombinedNavState(const localization_measurements::CombinedNavState &combined_nav_state, const int key_index);
+  void AddCombinedNavState(const localization_measurements::CombinedNavState& combined_nav_state, const int key_index);
 
   // Removes keys from timestamp map, values from values.
   // Also removes any factors using these keys from graph argument
   bool RemoveCombinedNavStateAndFactors(const localization_measurements::Time timestamp,
-                                        gtsam::NonlinearFactorGraph &graph);
+                                        gtsam::NonlinearFactorGraph& graph);
 
   localization_measurements::CombinedNavState LatestCombinedNavState() const;
 
@@ -59,13 +59,13 @@ class GraphValues {
   // Removes keys and their values that are too old.
   // Also removes any factors using these keys from graph argument.
   // Returns number of states removed.
-  int SlideWindow(gtsam::NonlinearFactorGraph &graph);
+  int SlideWindow(gtsam::NonlinearFactorGraph& graph);
 
   int KeyIndex(const localization_measurements::Time timestamp) const;
 
-  void UpdateValues(const gtsam::Values &new_values);
+  void UpdateValues(const gtsam::Values& new_values);
 
-  const gtsam::Values &values() const { return values_; }
+  const gtsam::Values& values() const { return values_; }
 
   gtsam::Key PoseKey(const localization_measurements::Time timestamp) const;
 
@@ -83,7 +83,7 @@ class GraphValues {
 
   // TODO(rsoussan): move this somewhere else
   template <class FACTOR>
-  static bool ContainsCombinedNavStateKey(const FACTOR &factor, const int key_index) {
+  static bool ContainsCombinedNavStateKey(const FACTOR& factor, const int key_index) {
     if (factor.find(sym::P(key_index)) != factor.end()) return true;
     if (factor.find(sym::V(key_index)) != factor.end()) return true;
     if (factor.find(sym::B(key_index)) != factor.end()) return true;
@@ -94,7 +94,7 @@ class GraphValues {
       const localization_measurements::Time timestamp) const;
 
   template <typename ValueType>
-  ValueType at(const gtsam::Key &key) const {
+  ValueType at(const gtsam::Key& key) const {
     if (!values_.exists(key)) {
       LOG(FATAL) << "at: Key not present in values.";
     }

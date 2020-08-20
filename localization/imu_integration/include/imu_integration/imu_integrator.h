@@ -37,30 +37,30 @@ namespace imu_integration {
 // that window can be integrated into a pim.
 class ImuIntegrator {
  public:
-  ImuIntegrator(const Eigen::Isometry3d &body_T_imu, const Eigen::Vector3d &gyro_bias,
-                const Eigen::Vector3d &accelerometer_bias, const localization_measurements::Time start_time,
-                const Eigen::Vector3d &gravity);
+  ImuIntegrator(const Eigen::Isometry3d& body_T_imu, const Eigen::Vector3d& gyro_bias,
+                const Eigen::Vector3d& accelerometer_bias, const localization_measurements::Time start_time,
+                const Eigen::Vector3d& gravity);
 
   // Buffers imu measurement so they can be integrated when needed.
   // Delayed integration useful so imu integation does not advance
   // past latest sensor measurement timestamps.
-  void BufferImuMeasurement(const localization_measurements::ImuMeasurement &imu_measurement);
+  void BufferImuMeasurement(const localization_measurements::ImuMeasurement& imu_measurement);
 
   // Integrates all imu measurements that have not been added up to end_time.
   void IntegrateLatestImuMeasurements(const localization_measurements::Time end_time);
 
   localization_measurements::Time IntegrateImuMeasurements(const localization_measurements::Time start_time,
                                                            const localization_measurements::Time end_time,
-                                                           gtsam::PreintegratedCombinedMeasurements &pim) const;
+                                                           gtsam::PreintegratedCombinedMeasurements& pim) const;
 
-  const gtsam::PreintegratedCombinedMeasurements &latest_pim() const;
+  const gtsam::PreintegratedCombinedMeasurements& latest_pim() const;
 
   gtsam::PreintegratedCombinedMeasurements IntegratedPim(
-      const gtsam::imuBias::ConstantBias &bias, const localization_measurements::Time start_time,
+      const gtsam::imuBias::ConstantBias& bias, const localization_measurements::Time start_time,
       const localization_measurements::Time end_time,
       boost::shared_ptr<gtsam::PreintegratedCombinedMeasurements::Params> params) const;
 
-  void ResetLatestPimIntegrationAndSetBias(const gtsam::imuBias::ConstantBias &bias);
+  void ResetLatestPimIntegrationAndSetBias(const gtsam::imuBias::ConstantBias& bias);
 
   void RemoveOldMeasurements(const localization_measurements::Time new_start_time);
 

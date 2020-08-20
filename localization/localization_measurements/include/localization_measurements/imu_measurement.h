@@ -27,7 +27,7 @@
 
 namespace localization_measurements {
 struct ImuMeasurement {
-  explicit ImuMeasurement(const sensor_msgs::Imu &imu_msg) {
+  explicit ImuMeasurement(const sensor_msgs::Imu& imu_msg) {
     acceleration.x() = imu_msg.linear_acceleration.x;
     acceleration.y() = imu_msg.linear_acceleration.y;
     acceleration.z() = imu_msg.linear_acceleration.z;
@@ -37,7 +37,7 @@ struct ImuMeasurement {
     // Ros headers are stored as seconds and nanoseconds
     timestamp = imu_msg.header.stamp.sec + 1e-9 * imu_msg.header.stamp.nsec;
   }
-  ImuMeasurement(const Eigen::Vector3d &acceleration, const Eigen::Vector3d &angular_velocity, const Time timestamp)
+  ImuMeasurement(const Eigen::Vector3d& acceleration, const Eigen::Vector3d& angular_velocity, const Time timestamp)
       : acceleration(acceleration), angular_velocity(angular_velocity), timestamp(timestamp) {}
 
   Eigen::Vector3d acceleration;

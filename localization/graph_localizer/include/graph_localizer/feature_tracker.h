@@ -34,8 +34,8 @@ class FeatureTracker {
  public:
   // Update existing tracks and add new tracks.  Remove tracks without
   // detections.
-  void UpdateFeatureTracks(const localization_measurements::FeaturePoints &feature_points);
-  const FeatureTrackMap &feature_tracks() const { return feature_tracks_; }
+  void UpdateFeatureTracks(const localization_measurements::FeaturePoints& feature_points);
+  const FeatureTrackMap& feature_tracks() const { return feature_tracks_; }
   void RemoveOldFeaturePoints(const localization_measurements::Time oldest_allowed_time);
 
  private:

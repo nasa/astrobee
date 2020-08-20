@@ -38,7 +38,7 @@
 #include <vector>
 
 namespace {
-cv::Point Distort(const Eigen::Vector2d &undistorted_point, const camera::CameraParameters &params) {
+cv::Point Distort(const Eigen::Vector2d& undistorted_point, const camera::CameraParameters& params) {
   Eigen::Vector2d distorted_point;
   params.Convert<camera::UNDISTORTED_C, camera::DISTORTED>(undistorted_point, &distorted_point);
   return cv::Point(distorted_point.x(), distorted_point.y());
@@ -47,8 +47,8 @@ cv::Point Distort(const Eigen::Vector2d &undistorted_point, const camera::Camera
 
 namespace graph_bag {
 
-GraphBag::GraphBag(const std::string &bag_name, const std::string &map_file, const std::string &image_topic,
-                   const std::string &results_bag)
+GraphBag::GraphBag(const std::string& bag_name, const std::string& map_file, const std::string& image_topic,
+                   const std::string& results_bag)
     : bag_(bag_name, rosbag::bagmode::Read),
       map_(map_file, true),
       map_feature_matcher_(&map_),
@@ -76,13 +76,13 @@ GraphBag::GraphBag(const std::string &bag_name, const std::string &map_file, con
 // TODO(rsoussan): remove this? cite leo?
 // TODO(rsoussan): draw latest tracks as circles?
 // TODO(rsoussan): draw larger arrow for most recent track
-void GraphBag::FeatureTrackImage(const graph_localizer::FeatureTrackMap &feature_tracks,
-                                 cv::Mat &feature_track_image) const {
+void GraphBag::FeatureTrackImage(const graph_localizer::FeatureTrackMap& feature_tracks,
+                                 cv::Mat& feature_track_image) const {
   int num_feature_tracks = 0;
   int longest_track = 0;
 
-  for (const auto &feature_track : feature_tracks) {
-    const auto &points = feature_track.second.points;
+  for (const auto& feature_track : feature_tracks) {
+    const auto& points = feature_track.second.points;
     // change color based on track length
     cv::Scalar color(255, 255, 0, 1);  // yellow
     if (points.size() > 5) {
@@ -110,7 +110,7 @@ void GraphBag::FeatureTrackImage(const graph_localizer::FeatureTrackMap &feature
   DLOG(INFO) << "FeatureTrackImage: Drew " << num_feature_tracks << " tracks, the longest was: " << longest_track;
 }
 
-bool string_ends_with(const std::string &str, const std::string &ending) {
+bool string_ends_with(const std::string& str, const std::string& ending) {
   if (str.length() >= ending.length()) {
     return (0 == str.compare(str.length() - ending.length(), ending.length(), ending));
   } else {
@@ -118,18 +118,18 @@ bool string_ends_with(const std::string &str, const std::string &ending) {
   }
 }
 
-ff_msgs::Feature2dArray GraphBag::GenerateOFFeatures(const sensor_msgs::ImageConstPtr &image_msg) {
+ff_msgs::Feature2dArray GraphBag::GenerateOFFeatures(const sensor_msgs::ImageConstPtr& image_msg) {
   ff_msgs::Feature2dArray of_features;
   optical_flow_tracker_.OpticalFlow(image_msg, &of_features);
   return of_features;
 }
 
-bool GraphBag::GenerateVLFeatures(const sensor_msgs::ImageConstPtr &image_msg, ff_msgs::VisualLandmarks &vl_features) {
+bool GraphBag::GenerateVLFeatures(const sensor_msgs::ImageConstPtr& image_msg, ff_msgs::VisualLandmarks& vl_features) {
   // Convert image to cv image
   cv_bridge::CvImageConstPtr image;
   try {
     image = cv_bridge::toCvShare(image_msg, sensor_msgs::image_encodings::MONO8);
-  } catch (cv_bridge::Exception &e) {
+  } catch (cv_bridge::Exception& e) {
     ROS_ERROR("cv_bridge exception: %s", e.what());
     return false;
   }
@@ -138,20 +138,20 @@ bool GraphBag::GenerateVLFeatures(const sensor_msgs::ImageConstPtr &image_msg, f
   return true;
 }
 
-void GraphBag::SaveGroundtruthPose(const ff_msgs::VisualLandmarks &vl_features) {
+void GraphBag::SaveGroundtruthPose(const ff_msgs::VisualLandmarks& vl_features) {
   const Eigen::Isometry3d global_T_body = graph_localizer::EigenPose(vl_features, body_T_nav_cam_.inverse());
   const auto sparse_mapping_pose_msg = graph_localizer::PoseMsg(global_T_body, vl_features.header);
   const ros::Time timestamp = graph_localizer::RosTimeFromHeader(sparse_mapping_pose_msg.header);
   results_bag_.write(kSparseMappingPoseTopic_, timestamp, sparse_mapping_pose_msg);
 }
 
-void GraphBag::SaveOpticalFlowTracksImage(const sensor_msgs::ImageConstPtr &image_msg,
-                                          const graph_localizer::FeatureTrackMap *const feature_tracks) {
+void GraphBag::SaveOpticalFlowTracksImage(const sensor_msgs::ImageConstPtr& image_msg,
+                                          const graph_localizer::FeatureTrackMap* const feature_tracks) {
   if (feature_tracks == nullptr) return;
   cv_bridge::CvImagePtr feature_track_image;
   try {
     feature_track_image = cv_bridge::toCvCopy(image_msg, sensor_msgs::image_encodings::RGB8);
-  } catch (cv_bridge::Exception &e) {
+  } catch (cv_bridge::Exception& e) {
     ROS_ERROR("cv_bridge exception: %s", e.what());
     return;
   }
@@ -162,7 +162,7 @@ void GraphBag::SaveOpticalFlowTracksImage(const sensor_msgs::ImageConstPtr &imag
   results_bag_.write(kFeatureTracksImageTopic_, timestamp, *feature_track_image_msg);
 }
 
-void GraphBag::SavePose(const geometry_msgs::PoseWithCovarianceStamped &latest_pose_msg) {
+void GraphBag::SavePose(const geometry_msgs::PoseWithCovarianceStamped& latest_pose_msg) {
   const ros::Time timestamp = graph_localizer::RosTimeFromHeader(latest_pose_msg.header);
   results_bag_.write(kGraphLocalizationPoseTopic_, timestamp, latest_pose_msg);
 }

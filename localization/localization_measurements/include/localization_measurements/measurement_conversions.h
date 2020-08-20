@@ -32,14 +32,14 @@
 #include <Eigen/Core>
 
 namespace localization_measurements {
-gtsam::Pose3 GtPose(const Eigen::Isometry3d &eigen_pose);
+gtsam::Pose3 GtPose(const Eigen::Isometry3d& eigen_pose);
 
-MatchedProjectionsMeasurement MakeMatchedProjectionsMeasurement(const ff_msgs::VisualLandmarks &visual_landmarks);
+MatchedProjectionsMeasurement MakeMatchedProjectionsMeasurement(const ff_msgs::VisualLandmarks& visual_landmarks);
 
-void FrameChangeMatchedProjectionsMeasurement(MatchedProjectionsMeasurement &matched_projections_measurement,
-                                              const gtsam::Pose3 &b_T_a);
+void FrameChangeMatchedProjectionsMeasurement(MatchedProjectionsMeasurement& matched_projections_measurement,
+                                              const gtsam::Pose3& b_T_a);
 
-FeaturePointsMeasurement MakeFeaturePointsMeasurement(const ff_msgs::Feature2dArray &optical_flow_tracks);
+FeaturePointsMeasurement MakeFeaturePointsMeasurement(const ff_msgs::Feature2dArray& optical_flow_tracks);
 }  // namespace localization_measurements
 
 #endif  // LOCALIZATION_MEASUREMENTS_MEASUREMENT_CONVERSIONS_H_

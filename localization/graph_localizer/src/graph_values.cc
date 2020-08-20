@@ -38,7 +38,7 @@ GraphValues::GraphValues(const double window_ideal_duration, const int window_mi
 
 // Removes keys from timestamp map, values from values.
 // Also removes any factors using these keys from graph argument
-bool GraphValues::RemoveCombinedNavStateAndFactors(const lm::Time timestamp, gtsam::NonlinearFactorGraph &graph) {
+bool GraphValues::RemoveCombinedNavStateAndFactors(const lm::Time timestamp, gtsam::NonlinearFactorGraph& graph) {
   if (!HasKey(timestamp)) {
     LOG(WARNING) << "RemoveCombinedNavStateAndFactors: No key index for "
                     "timestamp exists.";
@@ -228,7 +228,7 @@ gtsam::imuBias::ConstantBias GraphValues::LatestBias() const {
   return at<gtsam::imuBias::ConstantBias>(sym::B(key_index));
 }
 
-int GraphValues::SlideWindow(gtsam::NonlinearFactorGraph &graph) {
+int GraphValues::SlideWindow(gtsam::NonlinearFactorGraph& graph) {
   if (Empty()) {
     LOG(FATAL) << "SlideWindow: No states in map.";
     return 0;
@@ -253,7 +253,7 @@ int GraphValues::SlideWindow(gtsam::NonlinearFactorGraph &graph) {
 }
 
 // Add timestamp and keys to timestamp_key_index_map, and values to values
-void GraphValues::AddCombinedNavState(const lm::CombinedNavState &combined_nav_state, const int key_index) {
+void GraphValues::AddCombinedNavState(const lm::CombinedNavState& combined_nav_state, const int key_index) {
   // TODO(rsoussan): remove or add option to disable these checks
   if (HasKey(combined_nav_state.timestamp())) {
     LOG(ERROR) << "AddCombinedNavState: Timestamp key index map already "
@@ -287,7 +287,7 @@ int GraphValues::KeyIndex(const lm::Time timestamp) const {
   return timestamp_key_index_map_.at(timestamp);
 }
 
-void GraphValues::UpdateValues(const gtsam::Values &new_values) { values_ = new_values; }
+void GraphValues::UpdateValues(const gtsam::Values& new_values) { values_ = new_values; }
 
 // Removes keys from timestamp_key_index_map, values from values
 // Assumes for each stamped_key_index there is a Pose, Velocity, and Bias key

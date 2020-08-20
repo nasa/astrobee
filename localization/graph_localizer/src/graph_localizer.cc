@@ -37,7 +37,7 @@ namespace graph_localizer {
 namespace ii = imu_integration;
 namespace lm = localization_measurements;
 
-GraphLocalizer::GraphLocalizer(const GraphLocalizerParams &params)
+GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
     : imu_integrator_(params.body_T_imu(), params.gyro_bias(), params.accelerometer_bias(), params.start_time(),
                       params.gravity()),
       body_T_nav_cam_(lm::GtPose(params.body_T_nav_cam())),
@@ -71,8 +71,8 @@ GraphLocalizer::GraphLocalizer(const GraphLocalizerParams &params)
   smart_projection_params_.setDynamicOutlierRejectionThreshold(5);
 }
 
-void GraphLocalizer::AddStartingPriors(const lm::CombinedNavState &global_cgN_body_start, const int key_index,
-                                       const gtsam::Values &values, gtsam::NonlinearFactorGraph &graph) {
+void GraphLocalizer::AddStartingPriors(const lm::CombinedNavState& global_cgN_body_start, const int key_index,
+                                       const gtsam::Values& values, gtsam::NonlinearFactorGraph& graph) {
   // TODO(rsoussan): tune these
   constexpr double kPoseTranslationPriorSigma = 0.02;
   constexpr double kPoseQuaternionPriorSigma = 0.01;
@@ -99,8 +99,8 @@ void GraphLocalizer::AddStartingPriors(const lm::CombinedNavState &global_cgN_bo
   AddPriors(global_cgN_body_start, noise, key_index, values, graph);
 }
 
-void GraphLocalizer::AddPriors(const lm::CombinedNavState &global_cgN_body, const lm::CombinedNavStateNoise &noise,
-                               const int key_index, const gtsam::Values &values, gtsam::NonlinearFactorGraph &graph) {
+void GraphLocalizer::AddPriors(const lm::CombinedNavState& global_cgN_body, const lm::CombinedNavStateNoise& noise,
+                               const int key_index, const gtsam::Values& values, gtsam::NonlinearFactorGraph& graph) {
   gtsam::PriorFactor<gtsam::Pose3> pose_prior_factor(sym::P(key_index), global_cgN_body.pose(), noise.pose_noise);
   graph.push_back(pose_prior_factor);
   gtsam::PriorFactor<gtsam::Velocity3> velocity_prior_factor(sym::V(key_index), global_cgN_body.velocity(),
@@ -112,7 +112,7 @@ void GraphLocalizer::AddPriors(const lm::CombinedNavState &global_cgN_body, cons
 }
 
 std::pair<lm::CombinedNavState, lm::CombinedNavStateCovariances> GraphLocalizer::LatestCombinedNavStateAndCovariances(
-    const gtsam::Marginals &marginals) const {
+    const gtsam::Marginals& marginals) const {
   const lm::CombinedNavState global_cgN_body_latest = graph_values_.LatestCombinedNavState();
   const int latest_combined_nav_state_key_index = graph_values_.LatestCombinedNavStateKeyIndex();
   const auto pose_covariance = marginals.marginalCovariance(sym::P(latest_combined_nav_state_key_index));
@@ -123,15 +123,15 @@ std::pair<lm::CombinedNavState, lm::CombinedNavStateCovariances> GraphLocalizer:
   return {global_cgN_body_latest, latest_combined_nav_state_covariances};
 }
 
-bool GraphLocalizer::LatestPose(Eigen::Isometry3d &global_T_body_latest, lm::Time &timestamp) const {
+bool GraphLocalizer::LatestPose(Eigen::Isometry3d& global_T_body_latest, lm::Time& timestamp) const {
   const lm::CombinedNavState global_cgN_body_latest = graph_values_.LatestCombinedNavState();
   global_T_body_latest = Eigen::Isometry3d(global_cgN_body_latest.pose().matrix());
   timestamp = global_cgN_body_latest.timestamp();
   return true;
 }
 
-void GraphLocalizer::LatestBiases(Eigen::Vector3d &accelerometer_bias, Eigen::Vector3d &gyro_bias,
-                                  lm::Time &timestamp) const {
+void GraphLocalizer::LatestBiases(Eigen::Vector3d& accelerometer_bias, Eigen::Vector3d& gyro_bias,
+                                  lm::Time& timestamp) const {
   const auto latest_bias = graph_values_.LatestBias();
   accelerometer_bias = latest_bias.accelerometer();
   gyro_bias = latest_bias.gyroscope();
@@ -139,12 +139,12 @@ void GraphLocalizer::LatestBiases(Eigen::Vector3d &accelerometer_bias, Eigen::Ve
   timestamp = graph_values_.LatestTimestamp();
 }
 
-void GraphLocalizer::AddImuMeasurement(const lm::ImuMeasurement &imu_measurement) {
+void GraphLocalizer::AddImuMeasurement(const lm::ImuMeasurement& imu_measurement) {
   imu_integrator_.BufferImuMeasurement(imu_measurement);
 }
 
 void GraphLocalizer::AddOpticalFlowMeasurement(
-    const lm::FeaturePointsMeasurement &optical_flow_feature_points_measurement) {
+    const lm::FeaturePointsMeasurement& optical_flow_feature_points_measurement) {
   // TODO(rsoussan): put these somewhere else? in header?
   using Calibration = gtsam::Cal3_S2;
   using Camera = gtsam::PinholeCamera<Calibration>;
@@ -169,7 +169,7 @@ void GraphLocalizer::AddOpticalFlowMeasurement(
   // iteration.  TODO(rsoussan): make this more efficient?
   int num_removed_smart_factors = 0;
   for (auto factor_it = graph_.begin(); factor_it != graph_.end();) {
-    if (dynamic_cast<SmartFactor *>(factor_it->get())) {
+    if (dynamic_cast<SmartFactor*>(factor_it->get())) {
       factor_it = graph_.erase(factor_it);
       ++num_removed_smart_factors;
       continue;
@@ -180,12 +180,12 @@ void GraphLocalizer::AddOpticalFlowMeasurement(
 
   int num_added_smart_factors = 0;
   // Add smart factor for each feature track
-  for (const auto &feature_track : feature_tracker_.feature_tracks()) {
+  for (const auto& feature_track : feature_tracker_.feature_tracks()) {
     if (!ValidPointSet(feature_track.second.points, min_of_avg_distance_from_mean_)) continue;
     SharedSmartFactor smart_factor(
         new SmartFactor(nav_cam_noise_, nav_cam_intrinsics_, body_T_nav_cam_, smart_projection_params_));
     int num_points_added = 0;
-    for (const auto &feature_point : feature_track.second.points) {
+    for (const auto& feature_point : feature_track.second.points) {
       smart_factor->add(Camera::Measurement(feature_point.image_point), graph_values_.PoseKey(feature_point.timestamp));
       ++num_points_added;
     }
@@ -200,7 +200,7 @@ void GraphLocalizer::AddOpticalFlowMeasurement(
   Update();
 }
 
-void GraphLocalizer::AddARTagMeasurement(const lm::MatchedProjectionsMeasurement &matched_projections_measurement) {
+void GraphLocalizer::AddARTagMeasurement(const lm::MatchedProjectionsMeasurement& matched_projections_measurement) {
   LOG(INFO) << "AddARTagMeasurement: Adding AR tag measurement.";
   // Hack to delay AR tag measurements until timestamp issue is fixed (uses
   // Ros::now instead of image timestamp, causes AR tag measurements to arrive
@@ -219,15 +219,15 @@ void GraphLocalizer::AddARTagMeasurement(const lm::MatchedProjectionsMeasurement
 }
 
 void GraphLocalizer::AddSparseMappingMeasurement(
-    const lm::MatchedProjectionsMeasurement &matched_projections_measurement) {
+    const lm::MatchedProjectionsMeasurement& matched_projections_measurement) {
   LOG(INFO) << "AddSparseMappingMeasurement: Adding sparse mapping measurement.";
   AddProjectionMeasurement(matched_projections_measurement, body_T_nav_cam_, nav_cam_intrinsics_, nav_cam_noise_);
 }
 
-void GraphLocalizer::AddProjectionMeasurement(const lm::MatchedProjectionsMeasurement &matched_projections_measurement,
-                                              const gtsam::Pose3 &body_T_cam,
-                                              const boost::shared_ptr<gtsam::Cal3_S2> &cam_intrinsics,
-                                              const gtsam::SharedIsotropic &cam_noise) {
+void GraphLocalizer::AddProjectionMeasurement(const lm::MatchedProjectionsMeasurement& matched_projections_measurement,
+                                              const gtsam::Pose3& body_T_cam,
+                                              const boost::shared_ptr<gtsam::Cal3_S2>& cam_intrinsics,
+                                              const gtsam::SharedIsotropic& cam_noise) {
   if (matched_projections_measurement.matched_projections.empty()) {
     LOG(WARNING) << "AddProjectionMeasurement: Empty measurement.";
     return;
@@ -239,7 +239,7 @@ void GraphLocalizer::AddProjectionMeasurement(const lm::MatchedProjectionsMeasur
   }
 
   int num_added_loc_projection_factors = 0;
-  for (const auto &matched_projection : matched_projections_measurement.matched_projections) {
+  for (const auto& matched_projection : matched_projections_measurement.matched_projections) {
     gtsam::LocProjectionFactor<>::shared_ptr loc_projection_factor(new gtsam::LocProjectionFactor<>(
         matched_projection.image_point, matched_projection.map_point, cam_noise,
         graph_values_.PoseKey(matched_projections_measurement.timestamp), cam_intrinsics, body_T_cam));
@@ -300,7 +300,7 @@ bool GraphLocalizer::SplitOldImuFactorAndAddCombinedNavState(const lm::Time time
   // get old imu factor, delete it
   bool removed_old_imu_factor = false;
   for (auto factor_it = graph_.begin(); factor_it != graph_.end();) {
-    if (dynamic_cast<gtsam::CombinedImuFactor *>(factor_it->get()) &&
+    if (dynamic_cast<gtsam::CombinedImuFactor*>(factor_it->get()) &&
         graph_values_.ContainsCombinedNavStateKey(**factor_it, lower_bound_key_index) &&
         graph_values_.ContainsCombinedNavStateKey(**factor_it, upper_bound_key_index)) {
       graph_.erase(factor_it);
@@ -342,7 +342,7 @@ void GraphLocalizer::CreateAndAddLatestImuFactorAndCombinedNavState(const lm::Ti
 }
 
 void GraphLocalizer::CreateAndAddImuFactorAndPredictedCombinedNavState(
-    const lm::CombinedNavState &global_cgN_body, const gtsam::PreintegratedCombinedMeasurements &pim) {
+    const lm::CombinedNavState& global_cgN_body, const gtsam::PreintegratedCombinedMeasurements& pim) {
   const int key_index_0 = graph_values_.KeyIndex(global_cgN_body.timestamp());
   const lm::CombinedNavState global_cgN_body_predicted = ii::PimPredict(global_cgN_body, pim);
   const int key_index_1 = GenerateKeyIndex();
@@ -351,7 +351,7 @@ void GraphLocalizer::CreateAndAddImuFactorAndPredictedCombinedNavState(
   graph_values_.AddCombinedNavState(global_cgN_body_predicted, key_index_1);
 }
 
-void GraphLocalizer::SlideWindow(const gtsam::Marginals &marginals) {
+void GraphLocalizer::SlideWindow(const gtsam::Marginals& marginals) {
   if (graph_values_.SlideWindow(graph_) == 0) {
     DLOG(INFO) << "SlideWindow: No states removed. ";
     return;
@@ -380,10 +380,10 @@ void GraphLocalizer::PrintFactorDebugInfo() const {
   using SmartFactor = gtsam::SmartProjectionPoseFactor<Calibration>;
   using SharedSmartFactor = boost::shared_ptr<SmartFactor>;
   for (auto factor_it = graph_.begin(); factor_it != graph_.end();) {
-    if (dynamic_cast<const SmartFactor *>(factor_it->get())) {
-      dynamic_cast<const SmartFactor *>(factor_it->get())->print();
+    if (dynamic_cast<const SmartFactor*>(factor_it->get())) {
+      dynamic_cast<const SmartFactor*>(factor_it->get())->print();
       DLOG(INFO) << "PrintFactorDebugInfo: SmartPose Error: "
-                 << dynamic_cast<const SmartFactor *>(factor_it->get())->error(graph_values_.values());
+                 << dynamic_cast<const SmartFactor*>(factor_it->get())->error(graph_values_.values());
     }
     ++factor_it;
   }

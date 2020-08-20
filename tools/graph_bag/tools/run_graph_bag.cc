@@ -21,7 +21,7 @@
 
 // #include <gperftools/profiler.h>
 
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
   // ProfilerStart("/home/rsoussan/graph_bag_tests/prof.txt");
   // TODO(rsoussan): pass this from the command line using arg parse!
   // const std::string input_bag =

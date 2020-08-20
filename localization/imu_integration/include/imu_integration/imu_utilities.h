@@ -32,30 +32,30 @@
 
 namespace imu_integration {
 namespace sym = gtsam::symbol_shorthand;
-bool EstimateAndSetImuBiases(const localization_measurements::ImuMeasurement &imu_measurement,
+bool EstimateAndSetImuBiases(const localization_measurements::ImuMeasurement& imu_measurement,
                              const int num_imu_measurements_per_bias_estimate,
-                             std::vector<localization_measurements::ImuMeasurement> &imu_bias_measurements,
-                             Eigen::Vector3d &accelerometer_bias, Eigen::Vector3d &gyro_bias);
+                             std::vector<localization_measurements::ImuMeasurement>& imu_bias_measurements,
+                             Eigen::Vector3d& accelerometer_bias, Eigen::Vector3d& gyro_bias);
 
 localization_measurements::ImuMeasurement Interpolate(
-    const localization_measurements::ImuMeasurement &imu_measurement_a,
-    const localization_measurements::ImuMeasurement &imu_measurement_b,
+    const localization_measurements::ImuMeasurement& imu_measurement_a,
+    const localization_measurements::ImuMeasurement& imu_measurement_b,
     const localization_measurements::Time timestamp);
 
 gtsam::PreintegratedCombinedMeasurements Pim(
-    const gtsam::imuBias::ConstantBias &bias,
-    const boost::shared_ptr<gtsam::PreintegratedCombinedMeasurements::Params> &params);
+    const gtsam::imuBias::ConstantBias& bias,
+    const boost::shared_ptr<gtsam::PreintegratedCombinedMeasurements::Params>& params);
 
-void AddMeasurement(const localization_measurements::ImuMeasurement &imu_measurement,
-                    localization_measurements::Time &last_added_imu_measurement_time,
-                    gtsam::PreintegratedCombinedMeasurements &pim);
+void AddMeasurement(const localization_measurements::ImuMeasurement& imu_measurement,
+                    localization_measurements::Time& last_added_imu_measurement_time,
+                    gtsam::PreintegratedCombinedMeasurements& pim);
 
 localization_measurements::CombinedNavState PimPredict(
-    const localization_measurements::CombinedNavState &combined_nav_state,
-    const gtsam::PreintegratedCombinedMeasurements &pim);
+    const localization_measurements::CombinedNavState& combined_nav_state,
+    const gtsam::PreintegratedCombinedMeasurements& pim);
 
 gtsam::CombinedImuFactor::shared_ptr MakeCombinedImuFactor(const int key_index_0, const int key_index_1,
-                                                           const gtsam::PreintegratedCombinedMeasurements &pim);
+                                                           const gtsam::PreintegratedCombinedMeasurements& pim);
 }  // namespace imu_integration
 
 #endif  // IMU_INTEGRATION_IMU_UTILITIES_H_

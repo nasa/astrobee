@@ -27,7 +27,7 @@
 
 namespace localization_measurements {
 struct MatchedProjection {
-  MatchedProjection(const ImagePoint &image_point, const MapPoint &map_point, const Time timestamp)
+  MatchedProjection(const ImagePoint& image_point, const MapPoint& map_point, const Time timestamp)
       : image_point(image_point), map_point(map_point), timestamp(timestamp) {}
   ImagePoint image_point;
   MapPoint map_point;

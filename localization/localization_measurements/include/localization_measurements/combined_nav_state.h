@@ -37,14 +37,14 @@ struct CombinedNavStateNoise {
 
 class CombinedNavState {
  public:
-  CombinedNavState(const gtsam::NavState &nav_state, const gtsam::imuBias::ConstantBias &bias, const Time timestamp);
-  CombinedNavState(const gtsam::Pose3 &pose, const gtsam::Velocity3 &velocity, const gtsam::imuBias::ConstantBias &bias,
+  CombinedNavState(const gtsam::NavState& nav_state, const gtsam::imuBias::ConstantBias& bias, const Time timestamp);
+  CombinedNavState(const gtsam::Pose3& pose, const gtsam::Velocity3& velocity, const gtsam::imuBias::ConstantBias& bias,
                    const Time timestamp);
   Time timestamp() const { return timestamp_; }
-  const gtsam::NavState &nav_state() const { return nav_state_; }
+  const gtsam::NavState& nav_state() const { return nav_state_; }
   gtsam::Pose3 pose() const { return nav_state().pose(); }
-  const gtsam::Velocity3 &velocity() const { return nav_state().velocity(); }
-  const gtsam::imuBias::ConstantBias &bias() const { return bias_; }
+  const gtsam::Velocity3& velocity() const { return nav_state().velocity(); }
+  const gtsam::imuBias::ConstantBias& bias() const { return bias_; }
 
  private:
   Time timestamp_;

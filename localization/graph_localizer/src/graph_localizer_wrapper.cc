@@ -53,7 +53,7 @@ GraphLocalizerWrapper::GraphLocalizerWrapper() {
   graph_loc_initialization_.LoadGraphLocalizerParams(config);
 }
 
-void GraphLocalizerWrapper::OpticalFlowCallback(const ff_msgs::Feature2dArray &feature_array_msg) {
+void GraphLocalizerWrapper::OpticalFlowCallback(const ff_msgs::Feature2dArray& feature_array_msg) {
   if (graph_localizer_)
     graph_localizer_->AddOpticalFlowMeasurement(lm::MakeFeaturePointsMeasurement(feature_array_msg));
 }
@@ -78,7 +78,7 @@ void GraphLocalizerWrapper::ResetBiasesAndLocalizer() {
   graph_localizer_.reset();
 }
 
-void GraphLocalizerWrapper::VLVisualLandmarksCallback(const ff_msgs::VisualLandmarks &visual_landmarks_msg) {
+void GraphLocalizerWrapper::VLVisualLandmarksCallback(const ff_msgs::VisualLandmarks& visual_landmarks_msg) {
   if (graph_localizer_) {
     graph_localizer_->AddSparseMappingMeasurement(lm::MakeMatchedProjectionsMeasurement(visual_landmarks_msg));
   } else {
@@ -91,12 +91,12 @@ void GraphLocalizerWrapper::VLVisualLandmarksCallback(const ff_msgs::VisualLandm
   }
 }
 
-void GraphLocalizerWrapper::ARVisualLandmarksCallback(const ff_msgs::VisualLandmarks &visual_landmarks_msg) {
+void GraphLocalizerWrapper::ARVisualLandmarksCallback(const ff_msgs::VisualLandmarks& visual_landmarks_msg) {
   if (graph_localizer_)
     graph_localizer_->AddARTagMeasurement(lm::MakeMatchedProjectionsMeasurement(visual_landmarks_msg));
 }
 
-void GraphLocalizerWrapper::ImuCallback(const sensor_msgs::Imu &imu_msg) {
+void GraphLocalizerWrapper::ImuCallback(const sensor_msgs::Imu& imu_msg) {
   if (graph_localizer_) {
     graph_localizer_->AddImuMeasurement(lm::ImuMeasurement(imu_msg));
     graph_localizer_->LatestBiases(latest_accelerometer_bias_, latest_gyro_bias_, latest_bias_timestamp_);
@@ -122,12 +122,12 @@ void GraphLocalizerWrapper::InitializeGraph() {
   graph_localizer_.reset(new graph_localizer::GraphLocalizer(graph_loc_initialization_.params()));
 }
 
-const FeatureTrackMap *const GraphLocalizerWrapper::feature_tracks() const {
+const FeatureTrackMap* const GraphLocalizerWrapper::feature_tracks() const {
   if (!graph_localizer_) return nullptr;
   return &(graph_localizer_->feature_tracks());
 }
 
-bool GraphLocalizerWrapper::LatestPoseMsg(geometry_msgs::PoseWithCovarianceStamped &latest_pose_msg) const {
+bool GraphLocalizerWrapper::LatestPoseMsg(geometry_msgs::PoseWithCovarianceStamped& latest_pose_msg) const {
   if (!graph_localizer_) return false;
   latest_pose_msg = graph_localizer::LatestPoseMsg(*graph_localizer_);
   return true;

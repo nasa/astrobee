@@ -23,9 +23,9 @@ namespace localization_measurements {
 enum Confidence { kGood, kPoor, kLost };
 class CombinedNavStateCovariances {
  public:
-  CombinedNavStateCovariances(const Eigen::Matrix<double, 6, 6> &pose_covariance,
-                              const Eigen::Matrix3d &velocity_covariance,
-                              const Eigen::Matrix<double, 6, 6> &bias_covariance)
+  CombinedNavStateCovariances(const Eigen::Matrix<double, 6, 6>& pose_covariance,
+                              const Eigen::Matrix3d& velocity_covariance,
+                              const Eigen::Matrix<double, 6, 6>& bias_covariance)
       : pose_covariance_(pose_covariance),
         velocity_covariance_(velocity_covariance),
         bias_covariance_(bias_covariance) {}
@@ -48,9 +48,9 @@ class CombinedNavStateCovariances {
     return Confidence::kPoor;
   }
 
-  const Eigen::Matrix<double, 6, 6> &pose_covariance() const { return pose_covariance_; }
-  const Eigen::Matrix3d &velocity_covariance() const { return velocity_covariance_; }
-  const Eigen::Matrix<double, 6, 6> &bias_covariance() const { return bias_covariance_; }
+  const Eigen::Matrix<double, 6, 6>& pose_covariance() const { return pose_covariance_; }
+  const Eigen::Matrix3d& velocity_covariance() const { return velocity_covariance_; }
+  const Eigen::Matrix<double, 6, 6>& bias_covariance() const { return bias_covariance_; }
 
   // Diagonal Accessors for Loc msg
   Eigen::Vector3d position_variances() const { return pose_covariance_.block<3, 3>(0, 0).diagonal(); }

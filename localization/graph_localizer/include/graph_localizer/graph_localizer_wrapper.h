@@ -45,17 +45,17 @@ class GraphLocalizerWrapper {
 
   void ResetBiasesAndLocalizer();
 
-  bool LatestPoseMsg(geometry_msgs::PoseWithCovarianceStamped &latest_pose_msg) const;
+  bool LatestPoseMsg(geometry_msgs::PoseWithCovarianceStamped& latest_pose_msg) const;
 
-  void OpticalFlowCallback(const ff_msgs::Feature2dArray &feature_array_msg);
+  void OpticalFlowCallback(const ff_msgs::Feature2dArray& feature_array_msg);
 
-  void VLVisualLandmarksCallback(const ff_msgs::VisualLandmarks &visual_landmarks_msg);
+  void VLVisualLandmarksCallback(const ff_msgs::VisualLandmarks& visual_landmarks_msg);
 
-  void ARVisualLandmarksCallback(const ff_msgs::VisualLandmarks &visual_landmarks_msg);
+  void ARVisualLandmarksCallback(const ff_msgs::VisualLandmarks& visual_landmarks_msg);
 
-  void ImuCallback(const sensor_msgs::Imu &imu_msg);
+  void ImuCallback(const sensor_msgs::Imu& imu_msg);
 
-  const FeatureTrackMap *const feature_tracks() const;
+  const FeatureTrackMap* const feature_tracks() const;
 
  private:
   void InitializeGraph();

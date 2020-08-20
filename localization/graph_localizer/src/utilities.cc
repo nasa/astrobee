@@ -26,7 +26,7 @@
 
 namespace graph_localizer {
 namespace lm = localization_measurements;
-Eigen::Isometry3d LoadTransform(config_reader::ConfigReader &config, const std::string &transform_config_name) {
+Eigen::Isometry3d LoadTransform(config_reader::ConfigReader& config, const std::string& transform_config_name) {
   Eigen::Vector3d body_t_sensor;
   Eigen::Quaterniond body_Q_sensor;
   if (!msg_conversions::config_read_transform(&config, transform_config_name.c_str(), &body_t_sensor, &body_Q_sensor))
@@ -37,7 +37,7 @@ Eigen::Isometry3d LoadTransform(config_reader::ConfigReader &config, const std::
   return body_T_sensor;
 }
 
-void SetEnvironmentConfigs(const std::string &astrobee_configs_path, const std::string &world) {
+void SetEnvironmentConfigs(const std::string& astrobee_configs_path, const std::string& world) {
   setenv("ASTROBEE_RESOURCE_DIR", (astrobee_configs_path + "/resources").c_str(), true);
   setenv("ASTROBEE_CONFIG_DIR", (astrobee_configs_path + "/config").c_str(), true);
   // TODO(rsoussan): pass this as an argument
@@ -45,18 +45,18 @@ void SetEnvironmentConfigs(const std::string &astrobee_configs_path, const std::
   setenv("ASTROBEE_WORLD", world.c_str(), true);
 }
 
-bool ValidPointSet(const std::deque<lm::FeaturePoint> &points, const double min_avg_distance_from_mean) {
+bool ValidPointSet(const std::deque<lm::FeaturePoint>& points, const double min_avg_distance_from_mean) {
   if (points.size() < 2) return false;
 
   // Calculate mean point and avg distance from mean
   Eigen::Vector2d sum_of_points = Eigen::Vector2d::Zero();
-  for (const auto &point : points) {
+  for (const auto& point : points) {
     sum_of_points += point.image_point;
   }
   const Eigen::Vector2d mean_point = sum_of_points / points.size();
 
   double sum_of_distances_from_mean = 0;
-  for (const auto &point : points) {
+  for (const auto& point : points) {
     const Eigen::Vector2d mean_centered_point = point.image_point - mean_point;
     sum_of_distances_from_mean += mean_centered_point.norm();
   }
@@ -64,7 +64,7 @@ bool ValidPointSet(const std::deque<lm::FeaturePoint> &points, const double min_
   return (average_distance_from_mean >= min_avg_distance_from_mean);
 }
 
-geometry_msgs::PoseWithCovarianceStamped LatestPoseMsg(const GraphLocalizer &localization_measurements) {
+geometry_msgs::PoseWithCovarianceStamped LatestPoseMsg(const GraphLocalizer& localization_measurements) {
   Eigen::Isometry3d global_T_body_graph_latest;
   double latest_graph_timestamp;
   localization_measurements.LatestPose(global_T_body_graph_latest, latest_graph_timestamp);
@@ -76,11 +76,11 @@ geometry_msgs::PoseWithCovarianceStamped LatestPoseMsg(const GraphLocalizer &loc
   return latest_graph_localization_pose_msg;
 }
 
-ros::Time RosTimeFromHeader(const std_msgs::Header &header) { return ros::Time(header.stamp.sec, header.stamp.nsec); }
+ros::Time RosTimeFromHeader(const std_msgs::Header& header) { return ros::Time(header.stamp.sec, header.stamp.nsec); }
 
-lm::Time TimeFromHeader(const std_msgs::Header &header) { return lm::GetTime(header.stamp.sec, header.stamp.nsec); }
+lm::Time TimeFromHeader(const std_msgs::Header& header) { return lm::GetTime(header.stamp.sec, header.stamp.nsec); }
 
-Eigen::Isometry3d EigenPose(const ff_msgs::VisualLandmarks &vl_features, const Eigen::Isometry3d &cam_T_body) {
+Eigen::Isometry3d EigenPose(const ff_msgs::VisualLandmarks& vl_features, const Eigen::Isometry3d& cam_T_body) {
   Eigen::Isometry3d global_T_cam;
   global_T_cam.translation() << vl_features.pose.position.x, vl_features.pose.position.y, vl_features.pose.position.z;
   const Eigen::Quaterniond global_Q_cam(vl_features.pose.orientation.w, vl_features.pose.orientation.x,
@@ -90,9 +90,9 @@ Eigen::Isometry3d EigenPose(const ff_msgs::VisualLandmarks &vl_features, const E
   return global_T_body;
 }
 
-ff_msgs::EkfState EkfStateMsg(const lm::CombinedNavState &combined_nav_state, const Eigen::Vector3d &acceleration,
-                              const Eigen::Vector3d &angular_velocity,
-                              const lm::CombinedNavStateCovariances &covariances) {
+ff_msgs::EkfState EkfStateMsg(const lm::CombinedNavState& combined_nav_state, const Eigen::Vector3d& acceleration,
+                              const Eigen::Vector3d& angular_velocity,
+                              const lm::CombinedNavStateCovariances& covariances) {
   ff_msgs::EkfState loc_msg;
 
   // Set Header
@@ -168,8 +168,8 @@ ff_msgs::EkfState EkfStateMsg(const lm::CombinedNavState &combined_nav_state, co
   return loc_msg;
 }
 
-geometry_msgs::PoseWithCovarianceStamped PoseMsg(const Eigen::Isometry3d &global_T_body,
-                                                 const std_msgs::Header &header) {
+geometry_msgs::PoseWithCovarianceStamped PoseMsg(const Eigen::Isometry3d& global_T_body,
+                                                 const std_msgs::Header& header) {
   geometry_msgs::PoseWithCovarianceStamped pose_msg;
   pose_msg.header = header;
 
@@ -186,10 +186,10 @@ geometry_msgs::PoseWithCovarianceStamped PoseMsg(const Eigen::Isometry3d &global
   return pose_msg;
 }
 
-void EstimateAndSetImuBiases(const lm::ImuMeasurement &imu_measurement,
+void EstimateAndSetImuBiases(const lm::ImuMeasurement& imu_measurement,
                              const int num_imu_measurements_per_bias_estimate,
-                             std::vector<lm::ImuMeasurement> &imu_bias_measurements,
-                             GraphLocInitialization &graph_loc_initialization) {
+                             std::vector<lm::ImuMeasurement>& imu_bias_measurements,
+                             GraphLocInitialization& graph_loc_initialization) {
   Eigen::Vector3d accelerometer_bias;
   Eigen::Vector3d gyro_bias;
   if (!imu_integration::EstimateAndSetImuBiases(imu_measurement, num_imu_measurements_per_bias_estimate,
