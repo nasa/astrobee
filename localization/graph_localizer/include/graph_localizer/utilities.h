@@ -58,7 +58,7 @@ geometry_msgs::PoseWithCovarianceStamped LatestPoseMsg(const GraphLocalizer& loc
 
 ros::Time RosTimeFromHeader(const std_msgs::Header& header);
 
-localization_measurements::Time TimeFromHeader(const std_msgs::Header& header);
+localization_common::Time TimeFromHeader(const std_msgs::Header& header);
 
 Eigen::Isometry3d EigenPose(const ff_msgs::VisualLandmarks& vl_features, const Eigen::Isometry3d& nav_cam_T_body);
 

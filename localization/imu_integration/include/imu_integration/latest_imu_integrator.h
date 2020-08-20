@@ -29,7 +29,7 @@ namespace imu_integration {
 class LatestImuIntegrator : public ImuIntegrator {
  public:
   LatestImuIntegrator(const Eigen::Isometry3d& body_T_imu, const Eigen::Vector3d& gyro_bias,
-                      const Eigen::Vector3d& accelerometer_bias, const localization_measurements::Time start_time,
+                      const Eigen::Vector3d& accelerometer_bias, const localization_common::Time start_time,
                       const Eigen::Vector3d& gravity);
 
   const gtsam::PreintegratedCombinedMeasurements& pim() const;
@@ -37,12 +37,12 @@ class LatestImuIntegrator : public ImuIntegrator {
   void ResetPimIntegrationAndSetBias(const gtsam::imuBias::ConstantBias& bias);
 
   // Integrates all imu measurements that have not been added up to end_time.
-  void IntegrateLatestImuMeasurements(const localization_measurements::Time end_time);
+  void IntegrateLatestImuMeasurements(const localization_common::Time end_time);
 
  private:
   std::unique_ptr<gtsam::PreintegratedCombinedMeasurements> pim_;
-  localization_measurements::Time start_time_;
-  localization_measurements::Time last_added_imu_measurement_time_;
+  localization_common::Time start_time_;
+  localization_common::Time last_added_imu_measurement_time_;
 };
 }  // namespace imu_integration
 

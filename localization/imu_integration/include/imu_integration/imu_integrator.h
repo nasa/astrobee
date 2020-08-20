@@ -19,9 +19,9 @@
 #ifndef IMU_INTEGRATION_IMU_INTEGRATOR_H_
 #define IMU_INTEGRATION_IMU_INTEGRATOR_H_
 
+#include <localization_common/time.h>
 #include <localization_measurements/combined_nav_state.h>
 #include <localization_measurements/imu_measurement.h>
-#include <localization_measurements/time.h>
 
 #include <gtsam/navigation/CombinedImuFactor.h>
 #include <gtsam/navigation/ImuBias.h>
@@ -43,20 +43,20 @@ class ImuIntegrator {
   // past latest sensor measurement timestamps.
   void BufferImuMeasurement(const localization_measurements::ImuMeasurement& imu_measurement);
 
-  localization_measurements::Time IntegrateImuMeasurements(const localization_measurements::Time start_time,
-                                                           const localization_measurements::Time end_time,
-                                                           gtsam::PreintegratedCombinedMeasurements& pim) const;
+  localization_common::Time IntegrateImuMeasurements(const localization_common::Time start_time,
+                                                     const localization_common::Time end_time,
+                                                     gtsam::PreintegratedCombinedMeasurements& pim) const;
 
   gtsam::PreintegratedCombinedMeasurements IntegratedPim(
-      const gtsam::imuBias::ConstantBias& bias, const localization_measurements::Time start_time,
-      const localization_measurements::Time end_time,
+      const gtsam::imuBias::ConstantBias& bias, const localization_common::Time start_time,
+      const localization_common::Time end_time,
       boost::shared_ptr<gtsam::PreintegratedCombinedMeasurements::Params> params) const;
 
-  void RemoveOldMeasurements(const localization_measurements::Time new_start_time);
+  void RemoveOldMeasurements(const localization_common::Time new_start_time);
 
-  localization_measurements::Time OldestTime() const;
+  localization_common::Time OldestTime() const;
 
-  localization_measurements::Time LatestTime() const;
+  localization_common::Time LatestTime() const;
 
   bool Empty() const;
 
@@ -66,7 +66,7 @@ class ImuIntegrator {
 
  private:
   boost::shared_ptr<gtsam::PreintegratedCombinedMeasurements::Params> pim_params_;
-  std::map<localization_measurements::Time, localization_measurements::ImuMeasurement> measurements_;
+  std::map<localization_common::Time, localization_measurements::ImuMeasurement> measurements_;
   // Static calibration
   Eigen::Isometry3d body_T_imu_;
   // From gtsam: Realistic MEMS white noise characteristics. Angular and

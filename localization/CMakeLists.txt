@@ -17,9 +17,10 @@
 
 add_subdirectory(camera)
 add_subdirectory(graph_localizer)
-add_subdirectory(imu_augmentor)
+#add_subdirectory(imu_augmentor)
 add_subdirectory(imu_integration)
 add_subdirectory(interest_point)
+add_subdirectory(localization_common)
 add_subdirectory(localization_measurements)
 add_subdirectory(sparse_mapping)
 

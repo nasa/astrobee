@@ -35,6 +35,7 @@
 
 namespace graph_localizer {
 namespace ii = imu_integration;
+namespace lc = localization_common;
 namespace lm = localization_measurements;
 
 GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
@@ -121,7 +122,7 @@ std::pair<lm::CombinedNavState, lm::CombinedNavStateCovariances> GraphLocalizer:
   return {global_cgN_body_latest, latest_combined_nav_state_covariances};
 }
 
-bool GraphLocalizer::LatestPose(Eigen::Isometry3d& global_T_body_latest, lm::Time& timestamp) const {
+bool GraphLocalizer::LatestPose(Eigen::Isometry3d& global_T_body_latest, lc::Time& timestamp) const {
   const lm::CombinedNavState global_cgN_body_latest = graph_values_.LatestCombinedNavState();
   global_T_body_latest = Eigen::Isometry3d(global_cgN_body_latest.pose().matrix());
   timestamp = global_cgN_body_latest.timestamp();
@@ -129,7 +130,7 @@ bool GraphLocalizer::LatestPose(Eigen::Isometry3d& global_T_body_latest, lm::Tim
 }
 
 void GraphLocalizer::LatestBiases(Eigen::Vector3d& accelerometer_bias, Eigen::Vector3d& gyro_bias,
-                                  lm::Time& timestamp) const {
+                                  lc::Time& timestamp) const {
   const auto latest_bias = graph_values_.LatestBias();
   accelerometer_bias = latest_bias.accelerometer();
   gyro_bias = latest_bias.gyroscope();
@@ -248,7 +249,7 @@ void GraphLocalizer::AddProjectionMeasurement(const lm::MatchedProjectionsMeasur
   DLOG(INFO) << "AddProjectionMeasurement: Added " << num_added_loc_projection_factors << " loc projection factors.";
 }
 
-bool GraphLocalizer::AddOrSplitImuFactorIfNeeded(const lm::Time timestamp) {
+bool GraphLocalizer::AddOrSplitImuFactorIfNeeded(const lc::Time timestamp) {
   if (timestamp < graph_values_.OldestTimestamp()) {
     LOG(WARNING) << "AddOrSplitImuFactorIfNeeded: Timestamp occured before "
                     "oldest time in graph, ignoring.";
@@ -288,10 +289,10 @@ bool GraphLocalizer::AddOrSplitImuFactorIfNeeded(const lm::Time timestamp) {
   }
 }
 
-bool GraphLocalizer::SplitOldImuFactorAndAddCombinedNavState(const lm::Time timestamp) {
+bool GraphLocalizer::SplitOldImuFactorAndAddCombinedNavState(const lc::Time timestamp) {
   const auto timestamp_bounds = graph_values_.LowerAndUpperBoundTimestamp(timestamp);
-  const lm::Time lower_bound_time = timestamp_bounds.first;
-  const lm::Time upper_bound_time = timestamp_bounds.second;
+  const lc::Time lower_bound_time = timestamp_bounds.first;
+  const lc::Time upper_bound_time = timestamp_bounds.second;
   const auto lower_bound_key_index = graph_values_.KeyIndex(lower_bound_time);
   const auto upper_bound_key_index = graph_values_.KeyIndex(upper_bound_time);
 
@@ -332,7 +333,7 @@ bool GraphLocalizer::SplitOldImuFactorAndAddCombinedNavState(const lm::Time time
   return true;
 }
 
-void GraphLocalizer::CreateAndAddLatestImuFactorAndCombinedNavState(const lm::Time timestamp) {
+void GraphLocalizer::CreateAndAddLatestImuFactorAndCombinedNavState(const lc::Time timestamp) {
   latest_imu_integrator_.IntegrateLatestImuMeasurements(timestamp);
   CreateAndAddImuFactorAndPredictedCombinedNavState(graph_values_.LatestCombinedNavState(),
                                                     latest_imu_integrator_.pim());

@@ -16,12 +16,8 @@
  * under the License.
  */
 
-#ifndef LOCALIZATION_MEASUREMENTS_TIME_H_
-#define LOCALIZATION_MEASUREMENTS_TIME_H_
+#include <localization_common/time.h>
 
-namespace localization_measurements {
-using Time = double;
-Time GetTime(const int seconds, const int nanoseconds);
-}  // namespace localization_measurements
-
-#endif  // LOCALIZATION_MEASUREMENTS_TIME_H_
+namespace localization_common {
+Time GetTime(const int seconds, const int nanoseconds) { return seconds + 1e-9 * nanoseconds; }
+}  // namespace localization_common

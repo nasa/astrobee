@@ -19,13 +19,13 @@
 #ifndef LOCALIZATION_MEASUREMENTS_MATCHED_PROJECTIONS_MEASUREMENT_H_
 #define LOCALIZATION_MEASUREMENTS_MATCHED_PROJECTIONS_MEASUREMENT_H_
 
+#include <localization_common/time.h>
 #include <localization_measurements/matched_projection.h>
-#include <localization_measurements/time.h>
 
 namespace localization_measurements {
 struct MatchedProjectionsMeasurement {
   MatchedProjections matched_projections;
-  Time timestamp;
+  localization_common::Time timestamp;
 };
 }  // namespace localization_measurements
 

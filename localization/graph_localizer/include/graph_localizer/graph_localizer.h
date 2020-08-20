@@ -23,11 +23,11 @@
 #include <graph_localizer/graph_localizer_params.h>
 #include <graph_localizer/graph_values.h>
 #include <imu_integration/latest_imu_integrator.h>
+#include <localization_common/time.h>
 #include <localization_measurements/combined_nav_state.h>
 #include <localization_measurements/combined_nav_state_covariances.h>
 #include <localization_measurements/feature_points_measurement.h>
 #include <localization_measurements/matched_projections_measurement.h>
-#include <localization_measurements/time.h>
 
 #include <gtsam/geometry/Cal3_S2.h>
 #include <gtsam/inference/Symbol.h>
@@ -53,7 +53,7 @@ class GraphLocalizer {
  public:
   explicit GraphLocalizer(const GraphLocalizerParams& params);
   void AddImuMeasurement(const localization_measurements::ImuMeasurement& imu_measurement);
-  bool LatestPose(Eigen::Isometry3d& global_T_body_latest_, localization_measurements::Time& timestamp) const;
+  bool LatestPose(Eigen::Isometry3d& global_T_body_latest_, localization_common::Time& timestamp) const;
   std::pair<localization_measurements::CombinedNavState, localization_measurements::CombinedNavStateCovariances>
   LatestCombinedNavStateAndCovariances(const gtsam::Marginals& marginals) const;
   void AddOpticalFlowMeasurement(
@@ -70,7 +70,7 @@ class GraphLocalizer {
   void Update();
   const FeatureTrackMap& feature_tracks() const { return feature_tracker_.feature_tracks(); }
   void LatestBiases(Eigen::Vector3d& accelerometer_bias, Eigen::Vector3d& gyro_bias,
-                    localization_measurements::Time& timestamp) const;
+                    localization_common::Time& timestamp) const;
 
  private:
   // Removes Keys and Values outside of sliding window.
@@ -78,11 +78,11 @@ class GraphLocalizer {
   void SlideWindow(const gtsam::Marginals& marginals);
   // Integrates latest imu measurements up to timestamp and adds imu factor and
   // new combined nav state
-  void CreateAndAddLatestImuFactorAndCombinedNavState(const localization_measurements::Time timestamp);
+  void CreateAndAddLatestImuFactorAndCombinedNavState(const localization_common::Time timestamp);
 
-  bool AddOrSplitImuFactorIfNeeded(const localization_measurements::Time timestamp);
+  bool AddOrSplitImuFactorIfNeeded(const localization_common::Time timestamp);
 
-  bool SplitOldImuFactorAndAddCombinedNavState(const localization_measurements::Time timestamp);
+  bool SplitOldImuFactorAndAddCombinedNavState(const localization_common::Time timestamp);
 
   void AddStartingPriors(const localization_measurements::CombinedNavState& global_cgN_body_start, const int key_index,
                          const gtsam::Values& values, gtsam::NonlinearFactorGraph& graph);

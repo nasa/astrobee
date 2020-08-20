@@ -20,8 +20,8 @@
 #define GRAPH_LOCALIZER_FEATURE_TRACKER_H_
 
 #include <graph_localizer/feature_track.h>
+#include <localization_common/time.h>
 #include <localization_measurements/feature_point.h>
-#include <localization_measurements/time.h>
 
 #include <gtsam/geometry/Point2.h>
 
@@ -36,7 +36,7 @@ class FeatureTracker {
   // detections.
   void UpdateFeatureTracks(const localization_measurements::FeaturePoints& feature_points);
   const FeatureTrackMap& feature_tracks() const { return feature_tracks_; }
-  void RemoveOldFeaturePoints(const localization_measurements::Time oldest_allowed_time);
+  void RemoveOldFeaturePoints(const localization_common::Time oldest_allowed_time);
 
  private:
   FeatureTrackMap feature_tracks_;

@@ -19,7 +19,7 @@
 #ifndef LOCALIZATION_MEASUREMENTS_FEATURE_POINT_H_
 #define LOCALIZATION_MEASUREMENTS_FEATURE_POINT_H_
 
-#include <localization_measurements/time.h>
+#include <localization_common/time.h>
 
 #include <gtsam/geometry/Point2.h>
 
@@ -30,12 +30,13 @@ using FeatureId = int;
 using ImageId = int;
 
 struct FeaturePoint {
-  FeaturePoint(const double u, const double v, const ImageId image_id, const FeatureId feature_id, const Time timestamp)
+  FeaturePoint(const double u, const double v, const ImageId image_id, const FeatureId feature_id,
+               const localization_common::Time timestamp)
       : image_point(u, v), image_id(image_id), feature_id(feature_id), timestamp(timestamp) {}
   gtsam::Point2 image_point;
   ImageId image_id;
   FeatureId feature_id;
-  Time timestamp;
+  localization_common::Time timestamp;
 };
 
 using FeaturePoints = std::vector<FeaturePoint>;

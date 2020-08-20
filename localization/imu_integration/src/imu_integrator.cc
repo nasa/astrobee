@@ -23,6 +23,7 @@
 #include <glog/logging.h>
 
 namespace imu_integration {
+namespace lc = localization_common;
 namespace lm = localization_measurements;
 ImuIntegrator::ImuIntegrator(const Eigen::Isometry3d& body_T_imu, const Eigen::Vector3d& gravity)
     : body_T_imu_(body_T_imu) {
@@ -45,7 +46,7 @@ void ImuIntegrator::BufferImuMeasurement(const lm::ImuMeasurement& imu_measureme
   measurements_.emplace(imu_measurement.timestamp, imu_measurement);
 }
 
-lm::Time ImuIntegrator::IntegrateImuMeasurements(const lm::Time start_time, const lm::Time end_time,
+lc::Time ImuIntegrator::IntegrateImuMeasurements(const lc::Time start_time, const lc::Time end_time,
                                                  gtsam::PreintegratedCombinedMeasurements& pim) const {
   if (measurements_.size() < 2) {
     LOG(FATAL) << "IntegrateImuMeasurements: Less than 2 measurements available.";
@@ -59,7 +60,7 @@ lm::Time ImuIntegrator::IntegrateImuMeasurements(const lm::Time start_time, cons
 
   // Start with least upper bound or equal measurement
   auto measurement_it = measurements_.lower_bound(start_time);
-  lm::Time last_added_imu_measurement_time = start_time;
+  lc::Time last_added_imu_measurement_time = start_time;
   int num_measurements_added = 0;
   for (; measurement_it != measurements_.cend() && measurement_it->first <= end_time; ++measurement_it) {
     AddMeasurement(measurement_it->second, last_added_imu_measurement_time, pim);
@@ -81,7 +82,7 @@ lm::Time ImuIntegrator::IntegrateImuMeasurements(const lm::Time start_time, cons
   return last_added_imu_measurement_time;
 }
 
-void ImuIntegrator::RemoveOldMeasurements(const lm::Time new_start_time) {
+void ImuIntegrator::RemoveOldMeasurements(const lc::Time new_start_time) {
   for (auto measurement_it = measurements_.cbegin();
        measurement_it != measurements_.cend() && measurement_it->first < new_start_time;) {
     measurement_it = measurements_.erase(measurement_it);
@@ -89,7 +90,7 @@ void ImuIntegrator::RemoveOldMeasurements(const lm::Time new_start_time) {
 }
 
 gtsam::PreintegratedCombinedMeasurements ImuIntegrator::IntegratedPim(
-    const gtsam::imuBias::ConstantBias& bias, const lm::Time start_time, const lm::Time end_time,
+    const gtsam::imuBias::ConstantBias& bias, const lc::Time start_time, const lc::Time end_time,
     boost::shared_ptr<gtsam::PreintegratedCombinedMeasurements::Params> params) const {
   auto pim = Pim(bias, params);
   IntegrateImuMeasurements(start_time, end_time, pim);
@@ -104,14 +105,14 @@ boost::shared_ptr<gtsam::PreintegratedCombinedMeasurements::Params> ImuIntegrato
   return copied_params;
 }
 
-lm::Time ImuIntegrator::OldestTime() const {
+lc::Time ImuIntegrator::OldestTime() const {
   if (Empty()) {
     LOG(FATAL) << "OldestTime: No measurements available.";
   }
   return measurements_.cbegin()->first;
 }
 
-lm::Time ImuIntegrator::LatestTime() const {
+lc::Time ImuIntegrator::LatestTime() const {
   if (Empty()) {
     LOG(FATAL) << "LatestTime: No measurements available.";
   }

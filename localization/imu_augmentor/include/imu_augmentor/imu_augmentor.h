@@ -20,9 +20,9 @@
 #define IMU_AUGMENTOR_IMU_AUGMENTOR_H_
 
 #include <imu_integration/imu_integrator.h>
+#include <localization_common/time.h>
 #include <localization_measurements/combined_nav_state.h>
 #include <localization_measurements/imu_measurement.h>
-#include <localization_measurements/time.h>
 
 #include <gtsam/navigation/CombinedImuFactor.h>
 #include <gtsam/navigation/ImuBias.h>
@@ -40,7 +40,7 @@ class ImuAugmentor {
       const localization_measurements::CombinedNavState& combined_nav_state);
 
  private:
-  void RemoveOldMeasurements(const localization_measurements::Time new_start_time);
+  void RemoveOldMeasurements(const localization_common::Time new_start_time);
 
   imu_integration::ImuIntegrator imu_integrator_;
 };

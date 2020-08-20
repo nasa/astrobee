@@ -19,7 +19,7 @@
 #ifndef LOCALIZATION_MEASUREMENTS_IMU_MEASUREMENT_H_
 #define LOCALIZATION_MEASUREMENTS_IMU_MEASUREMENT_H_
 
-#include <localization_measurements/time.h>
+#include <localization_common/time.h>
 
 #include <Eigen/Core>
 
@@ -37,12 +37,13 @@ struct ImuMeasurement {
     // Ros headers are stored as seconds and nanoseconds
     timestamp = imu_msg.header.stamp.sec + 1e-9 * imu_msg.header.stamp.nsec;
   }
-  ImuMeasurement(const Eigen::Vector3d& acceleration, const Eigen::Vector3d& angular_velocity, const Time timestamp)
+  ImuMeasurement(const Eigen::Vector3d& acceleration, const Eigen::Vector3d& angular_velocity,
+                 const localization_common::Time timestamp)
       : acceleration(acceleration), angular_velocity(angular_velocity), timestamp(timestamp) {}
 
   Eigen::Vector3d acceleration;
   Eigen::Vector3d angular_velocity;
-  Time timestamp;
+  localization_common::Time timestamp;
 };
 }  // namespace localization_measurements
 

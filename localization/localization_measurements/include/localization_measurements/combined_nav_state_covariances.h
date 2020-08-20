@@ -19,6 +19,8 @@
 #ifndef LOCALIZATION_MEASUREMENTS_COMBINED_NAV_STATE_COVARIANCES_H_
 #define LOCALIZATION_MEASUREMENTS_COMBINED_NAV_STATE_COVARIANCES_H_
 
+#include <Eigen/Core>
+
 namespace localization_measurements {
 enum Confidence { kGood, kPoor, kLost };
 class CombinedNavStateCovariances {

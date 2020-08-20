@@ -25,6 +25,7 @@
 #include <string>
 
 namespace graph_localizer {
+namespace lc = localization_common;
 namespace lm = localization_measurements;
 Eigen::Isometry3d LoadTransform(config_reader::ConfigReader& config, const std::string& transform_config_name) {
   Eigen::Vector3d body_t_sensor;
@@ -78,7 +79,7 @@ geometry_msgs::PoseWithCovarianceStamped LatestPoseMsg(const GraphLocalizer& loc
 
 ros::Time RosTimeFromHeader(const std_msgs::Header& header) { return ros::Time(header.stamp.sec, header.stamp.nsec); }
 
-lm::Time TimeFromHeader(const std_msgs::Header& header) { return lm::GetTime(header.stamp.sec, header.stamp.nsec); }
+lc::Time TimeFromHeader(const std_msgs::Header& header) { return lc::GetTime(header.stamp.sec, header.stamp.nsec); }
 
 Eigen::Isometry3d EigenPose(const ff_msgs::VisualLandmarks& vl_features, const Eigen::Isometry3d& cam_T_body) {
   Eigen::Isometry3d global_T_cam;

@@ -39,15 +39,14 @@ bool EstimateAndSetImuBiases(const localization_measurements::ImuMeasurement& im
 
 localization_measurements::ImuMeasurement Interpolate(
     const localization_measurements::ImuMeasurement& imu_measurement_a,
-    const localization_measurements::ImuMeasurement& imu_measurement_b,
-    const localization_measurements::Time timestamp);
+    const localization_measurements::ImuMeasurement& imu_measurement_b, const localization_common::Time timestamp);
 
 gtsam::PreintegratedCombinedMeasurements Pim(
     const gtsam::imuBias::ConstantBias& bias,
     const boost::shared_ptr<gtsam::PreintegratedCombinedMeasurements::Params>& params);
 
 void AddMeasurement(const localization_measurements::ImuMeasurement& imu_measurement,
-                    localization_measurements::Time& last_added_imu_measurement_time,
+                    localization_common::Time& last_added_imu_measurement_time,
                     gtsam::PreintegratedCombinedMeasurements& pim);
 
 localization_measurements::CombinedNavState PimPredict(

@@ -19,6 +19,7 @@
 #include <localization_measurements/measurement_conversions.h>
 
 namespace localization_measurements {
+namespace lc = localization_common;
 gtsam::Pose3 GtPose(const Eigen::Isometry3d& eigen_pose) {
   return gtsam::Pose3(Eigen::Ref<const Eigen::MatrixXd>(eigen_pose.matrix()));
 }
@@ -26,7 +27,7 @@ gtsam::Pose3 GtPose(const Eigen::Isometry3d& eigen_pose) {
 MatchedProjectionsMeasurement MakeMatchedProjectionsMeasurement(const ff_msgs::VisualLandmarks& visual_landmarks) {
   MatchedProjectionsMeasurement matched_projections_measurement;
   matched_projections_measurement.matched_projections.reserve(visual_landmarks.landmarks.size());
-  const Time timestamp = GetTime(visual_landmarks.header.stamp.sec, visual_landmarks.header.stamp.nsec);
+  const lc::Time timestamp = lc::GetTime(visual_landmarks.header.stamp.sec, visual_landmarks.header.stamp.nsec);
   matched_projections_measurement.timestamp = timestamp;
 
   for (const auto& landmark : visual_landmarks.landmarks) {
@@ -48,7 +49,8 @@ void FrameChangeMatchedProjectionsMeasurement(MatchedProjectionsMeasurement& mat
 FeaturePointsMeasurement MakeFeaturePointsMeasurement(const ff_msgs::Feature2dArray& optical_flow_feature_points) {
   FeaturePointsMeasurement feature_points_measurement;
   feature_points_measurement.feature_points.reserve(optical_flow_feature_points.feature_array.size());
-  Time timestamp = GetTime(optical_flow_feature_points.header.stamp.sec, optical_flow_feature_points.header.stamp.nsec);
+  lc::Time timestamp =
+      lc::GetTime(optical_flow_feature_points.header.stamp.sec, optical_flow_feature_points.header.stamp.nsec);
   feature_points_measurement.timestamp = timestamp;
   // TODO(rsoussan): put this somewhere else?
   static int image_id = 0;

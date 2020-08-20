@@ -30,14 +30,14 @@ find_package(catkin REQUIRED COMPONENTS roscpp)
 
 # include ff_nodelet to get ff_util header files since these aren't exposed elsewhere
 catkin_package(
-  LIBRARIES ${PROJECT_NAME} ${GLOG_LIBRARIES} ${GTSAM_LIBRARIES} camera config_reader ff_nodelet imu_integration localization_measurements msg_conversions
+  LIBRARIES ${PROJECT_NAME} ${GLOG_LIBRARIES} ${GTSAM_LIBRARIES} camera config_reader ff_nodelet imu_integration localization_common localization_measurements msg_conversions
   INCLUDE_DIRS include ${GLOG_INCLUDE_DIRS} ${GTSAM_INCLUDE_DIR} 
   CATKIN_DEPENDS roscpp 
   DEPENDS gtsam ff_msgs #gtsam_unstable  
 )
 
 create_library(TARGET ${PROJECT_NAME} 
-  LIBS ${catkin_LIBRARIES} ${GLOG_LIBRARIES} gtsam camera config_reader ff_nodelet imu_integration localization_measurements msg_conversions #gtsam_unstable  
+  LIBS ${catkin_LIBRARIES} ${GLOG_LIBRARIES} gtsam camera config_reader ff_nodelet imu_integration localization_common localization_measurements msg_conversions #gtsam_unstable  
   INC ${catkin_INCLUDE_DIRS} ${GLOG_INCLUDE_DIRS} 
   DEPS ff_msgs
 )

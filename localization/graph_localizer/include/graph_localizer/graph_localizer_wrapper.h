@@ -67,7 +67,7 @@ class GraphLocalizerWrapper {
   // if latest imu measurement not available?
   Eigen::Vector3d latest_accelerometer_bias_;
   Eigen::Vector3d latest_gyro_bias_;
-  localization_measurements::Time latest_bias_timestamp_;
+  localization_common::Time latest_bias_timestamp_;
   bool have_latest_imu_biases_;
   // TODO(rsoussan): rename this!
   GraphLocInitialization graph_loc_initialization_;

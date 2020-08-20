@@ -19,8 +19,8 @@
 #ifndef GRAPH_LOCALIZER_GRAPH_VALUES_H_
 #define GRAPH_LOCALIZER_GRAPH_VALUES_H_
 
+#include <localization_common/time.h>
 #include <localization_measurements/combined_nav_state.h>
-#include <localization_measurements/time.h>
 
 #include <gtsam/inference/Symbol.h>
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
@@ -43,8 +43,7 @@ class GraphValues {
 
   // Removes keys from timestamp map, values from values.
   // Also removes any factors using these keys from graph argument
-  bool RemoveCombinedNavStateAndFactors(const localization_measurements::Time timestamp,
-                                        gtsam::NonlinearFactorGraph& graph);
+  bool RemoveCombinedNavStateAndFactors(const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& graph);
 
   localization_measurements::CombinedNavState LatestCombinedNavState() const;
 
@@ -61,25 +60,25 @@ class GraphValues {
   // Returns number of states removed.
   int SlideWindow(gtsam::NonlinearFactorGraph& graph);
 
-  int KeyIndex(const localization_measurements::Time timestamp) const;
+  int KeyIndex(const localization_common::Time timestamp) const;
 
   void UpdateValues(const gtsam::Values& new_values);
 
   const gtsam::Values& values() const { return values_; }
 
-  gtsam::Key PoseKey(const localization_measurements::Time timestamp) const;
+  gtsam::Key PoseKey(const localization_common::Time timestamp) const;
 
-  localization_measurements::Time OldestTimestamp() const;
+  localization_common::Time OldestTimestamp() const;
 
-  localization_measurements::Time LatestTimestamp() const;
+  localization_common::Time LatestTimestamp() const;
 
-  localization_measurements::Time ClosestPoseTimestamp(const localization_measurements::Time timestamp) const;
+  localization_common::Time ClosestPoseTimestamp(const localization_common::Time timestamp) const;
 
   // Assumes timestamp is within bounds of graph values timestamps.
-  std::pair<localization_measurements::Time, localization_measurements::Time> LowerAndUpperBoundTimestamp(
-      const localization_measurements::Time timestamp) const;
+  std::pair<localization_common::Time, localization_common::Time> LowerAndUpperBoundTimestamp(
+      const localization_common::Time timestamp) const;
 
-  bool HasKey(const localization_measurements::Time timestamp) const;
+  bool HasKey(const localization_common::Time timestamp) const;
 
   // TODO(rsoussan): move this somewhere else
   template <class FACTOR>
@@ -90,8 +89,7 @@ class GraphValues {
     return false;
   }
 
-  localization_measurements::CombinedNavState GetCombinedNavState(
-      const localization_measurements::Time timestamp) const;
+  localization_measurements::CombinedNavState GetCombinedNavState(const localization_common::Time timestamp) const;
 
   template <typename ValueType>
   ValueType at(const gtsam::Key& key) const {
@@ -104,7 +102,7 @@ class GraphValues {
 
  private:
   // Removes keys from timestamp_key_index_map, values from values
-  bool RemoveCombinedNavState(const localization_measurements::Time timestamp);
+  bool RemoveCombinedNavState(const localization_common::Time timestamp);
 
   bool Empty() const;
 
@@ -114,7 +112,7 @@ class GraphValues {
   // possible
   const double kWindowMinNumStates;
   gtsam::Values values_;
-  std::map<localization_measurements::Time, int> timestamp_key_index_map_;
+  std::map<localization_common::Time, int> timestamp_key_index_map_;
 };
 }  // namespace graph_localizer
 

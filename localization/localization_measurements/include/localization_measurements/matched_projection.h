@@ -19,19 +19,19 @@
 #ifndef LOCALIZATION_MEASUREMENTS_MATCHED_PROJECTION_H_
 #define LOCALIZATION_MEASUREMENTS_MATCHED_PROJECTION_H_
 
+#include <localization_common/time.h>
 #include <localization_measurements/image_point.h>
 #include <localization_measurements/map_point.h>
-#include <localization_measurements/time.h>
 
 #include <vector>
 
 namespace localization_measurements {
 struct MatchedProjection {
-  MatchedProjection(const ImagePoint& image_point, const MapPoint& map_point, const Time timestamp)
+  MatchedProjection(const ImagePoint& image_point, const MapPoint& map_point, const localization_common::Time timestamp)
       : image_point(image_point), map_point(map_point), timestamp(timestamp) {}
   ImagePoint image_point;
   MapPoint map_point;
-  Time timestamp;
+  localization_common::Time timestamp;
 };
 
 using MatchedProjections = std::vector<MatchedProjection>;

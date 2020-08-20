@@ -21,9 +21,10 @@
 #include <glog/logging.h>
 
 namespace imu_integration {
+namespace lc = localization_common;
 namespace lm = localization_measurements;
 LatestImuIntegrator::LatestImuIntegrator(const Eigen::Isometry3d& body_T_imu, const Eigen::Vector3d& gyro_bias,
-                                         const Eigen::Vector3d& accelerometer_bias, const lm::Time start_time,
+                                         const Eigen::Vector3d& accelerometer_bias, const lc::Time start_time,
                                          const Eigen::Vector3d& gravity)
     : ImuIntegrator(body_T_imu, gravity), start_time_(start_time), last_added_imu_measurement_time_(0) {
   pim_.reset(new gtsam::PreintegratedCombinedMeasurements(pim_params()));
@@ -36,7 +37,7 @@ void LatestImuIntegrator::ResetPimIntegrationAndSetBias(const gtsam::imuBias::Co
   pim_->resetIntegrationAndSetBias(bias);
 }
 
-void LatestImuIntegrator::IntegrateLatestImuMeasurements(const lm::Time end_time) {
+void LatestImuIntegrator::IntegrateLatestImuMeasurements(const lc::Time end_time) {
   if (Size() < 2) {
     LOG(FATAL) << "IntegrateLatestImuMeasurements: Less than 2 measurements "
                   "available.";

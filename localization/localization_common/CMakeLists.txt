@@ -17,19 +17,19 @@
 
 cmake_minimum_required(VERSION 2.8.3)
 
-project(localization_measurements)
+project(localization_common)
 
 find_package(GTSAM REQUIRED)
 
 catkin_package(
-  LIBRARIES ${PROJECT_NAME} ${GTSAM_LIBRARIES}  localization_common
-  INCLUDE_DIRS include ${GTSAM_INCLUDE_DIR} 
+  LIBRARIES ${PROJECT_NAME} ${GTSAM_LIBRARIES}  
+  INCLUDE_DIRS include ${GTSAM_INCLUDE_DIR}  
   CATKIN_DEPENDS 
-  DEPENDS gtsam ff_msgs 
+  DEPENDS gtsam 
 )
 
 create_library(TARGET ${PROJECT_NAME} 
-  LIBS ${catkin_LIBRARIES} gtsam localization_common 
+  LIBS ${catkin_LIBRARIES} gtsam 
   INC ${catkin_INCLUDE_DIRS} 
-  DEPS ff_msgs
+  DEPS 
 )

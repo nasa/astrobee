@@ -21,6 +21,7 @@
 
 namespace imu_augmentor {
 namespace ii = imu_integration;
+namespace lc = localization_common;
 namespace lm = localization_measurements;
 ImuAugmentor::ImuAugmentor(const Eigen::Isometry3d& body_T_imu, const Eigen::Vector3d& gravity)
     : imu_integrator_(body_T_imu, gravity) {}
@@ -37,7 +38,7 @@ lm::CombinedNavState ImuAugmentor::PimPredict(const lm::CombinedNavState& combin
   return latest_combined_nav_state;
 }
 
-void ImuAugmentor::RemoveOldMeasurements(const lm::Time new_start_time) {
+void ImuAugmentor::RemoveOldMeasurements(const lc::Time new_start_time) {
   imu_integrator_.RemoveOldMeasurements(new_start_time);
 }
 }  // namespace imu_augmentor

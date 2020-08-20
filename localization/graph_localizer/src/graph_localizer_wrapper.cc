@@ -27,6 +27,7 @@
 #include <glog/logging.h>
 
 namespace graph_localizer {
+namespace lc = localization_common;
 namespace lm = localization_measurements;
 GraphLocalizerWrapper::GraphLocalizerWrapper() {
   // Needed for ConfigReader construction
@@ -86,7 +87,7 @@ void GraphLocalizerWrapper::VLVisualLandmarksCallback(const ff_msgs::VisualLandm
     // has started running.
     const Eigen::Isometry3d global_T_body =
         graph_localizer::EigenPose(visual_landmarks_msg, graph_loc_initialization_.params().body_T_nav_cam().inverse());
-    const lm::Time timestamp = graph_localizer::TimeFromHeader(visual_landmarks_msg.header);
+    const lc::Time timestamp = graph_localizer::TimeFromHeader(visual_landmarks_msg.header);
     graph_loc_initialization_.SetStartPose(global_T_body, timestamp);
   }
 }

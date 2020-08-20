@@ -19,15 +19,15 @@
 #ifndef LOCALIZATION_MEASUREMENTS_FEATURE_POINTS_MEASUREMENT_H_
 #define LOCALIZATION_MEASUREMENTS_FEATURE_POINTS_MEASUREMENT_H_
 
+#include <localization_common/time.h>
 #include <localization_measurements/feature_point.h>
-#include <localization_measurements/time.h>
 
 #include <vector>
 
 namespace localization_measurements {
 struct FeaturePointsMeasurement {
   FeaturePoints feature_points;
-  Time timestamp;
+  localization_common::Time timestamp;
 };
 }  // namespace localization_measurements
 

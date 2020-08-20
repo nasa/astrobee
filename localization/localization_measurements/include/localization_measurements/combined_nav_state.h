@@ -19,7 +19,7 @@
 #ifndef LOCALIZATION_MEASUREMENTS_COMBINED_NAV_STATE_H_
 #define LOCALIZATION_MEASUREMENTS_COMBINED_NAV_STATE_H_
 
-#include <localization_measurements/time.h>
+#include <localization_common/time.h>
 
 #include <gtsam/base/Vector.h>
 #include <gtsam/geometry/Pose3.h>
@@ -37,17 +37,18 @@ struct CombinedNavStateNoise {
 
 class CombinedNavState {
  public:
-  CombinedNavState(const gtsam::NavState& nav_state, const gtsam::imuBias::ConstantBias& bias, const Time timestamp);
+  CombinedNavState(const gtsam::NavState& nav_state, const gtsam::imuBias::ConstantBias& bias,
+                   const localization_common::Time timestamp);
   CombinedNavState(const gtsam::Pose3& pose, const gtsam::Velocity3& velocity, const gtsam::imuBias::ConstantBias& bias,
-                   const Time timestamp);
-  Time timestamp() const { return timestamp_; }
+                   const localization_common::Time timestamp);
+  localization_common::Time timestamp() const { return timestamp_; }
   const gtsam::NavState& nav_state() const { return nav_state_; }
   gtsam::Pose3 pose() const { return nav_state().pose(); }
   const gtsam::Velocity3& velocity() const { return nav_state().velocity(); }
   const gtsam::imuBias::ConstantBias& bias() const { return bias_; }
 
  private:
-  Time timestamp_;
+  localization_common::Time timestamp_;
   gtsam::NavState nav_state_;
   gtsam::imuBias::ConstantBias bias_;
 };

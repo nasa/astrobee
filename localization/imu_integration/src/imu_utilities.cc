@@ -21,6 +21,7 @@
 #include <glog/logging.h>
 
 namespace imu_integration {
+namespace lc = localization_common;
 namespace lm = localization_measurements;
 bool EstimateAndSetImuBiases(const lm::ImuMeasurement& imu_measurement,
                              const int num_imu_measurements_per_bias_estimate,
@@ -46,7 +47,7 @@ bool EstimateAndSetImuBiases(const lm::ImuMeasurement& imu_measurement,
 }
 
 lm::ImuMeasurement Interpolate(const lm::ImuMeasurement& imu_measurement_a, const lm::ImuMeasurement& imu_measurement_b,
-                               const lm::Time timestamp) {
+                               const lc::Time timestamp) {
   if (timestamp < imu_measurement_a.timestamp || timestamp > imu_measurement_b.timestamp) {
     LOG(FATAL) << "Interpolate: Interpolation timestamp out of range of imu "
                   "measurements.";
@@ -70,7 +71,7 @@ gtsam::PreintegratedCombinedMeasurements Pim(
   return pim;
 }
 
-void AddMeasurement(const lm::ImuMeasurement& imu_measurement, lm::Time& last_added_imu_measurement_time,
+void AddMeasurement(const lm::ImuMeasurement& imu_measurement, lc::Time& last_added_imu_measurement_time,
                     gtsam::PreintegratedCombinedMeasurements& pim) {
   // TODO(rsoussan): check if dt too large?
 
@@ -85,7 +86,7 @@ void AddMeasurement(const lm::ImuMeasurement& imu_measurement, lm::Time& last_ad
 lm::CombinedNavState PimPredict(const lm::CombinedNavState& combined_nav_state,
                                 const gtsam::PreintegratedCombinedMeasurements& pim) {
   const gtsam::NavState predicted_nav_state = pim.predict(combined_nav_state.nav_state(), pim.biasHat());
-  const lm::Time timestamp = combined_nav_state.timestamp() + pim.deltaTij();
+  const lc::Time timestamp = combined_nav_state.timestamp() + pim.deltaTij();
   return lm::CombinedNavState(predicted_nav_state, pim.biasHat(), timestamp);
 }
 

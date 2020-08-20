@@ -22,14 +22,14 @@ project(imu_augmentor)
 find_package(GTSAM REQUIRED)
 
 catkin_package(
-  LIBRARIES ${PROJECT_NAME} ${GLOG_LIBRARIES} ${GTSAM_LIBRARIES} imu_integration localization_measurements
+  LIBRARIES ${PROJECT_NAME} ${GLOG_LIBRARIES} ${GTSAM_LIBRARIES} imu_integration localization_common localization_measurements
   INCLUDE_DIRS include ${GTSAM_INCLUDE_DIR} ${GLOG_INCLUDE_DIRS} 
   CATKIN_DEPENDS 
   DEPENDS gtsam 
 )
 
 create_library(TARGET ${PROJECT_NAME} 
-  LIBS ${catkin_LIBRARIES} ${GLOG_LIBRARIES} imu_integration localization_measurements 
+  LIBS ${catkin_LIBRARIES} ${GLOG_LIBRARIES} imu_integration localization_common localization_measurements 
   INC ${catkin_INCLUDE_DIRS} ${GLOG_INCLUDE_DIRS}  
   DEPS gtsam 
 )
