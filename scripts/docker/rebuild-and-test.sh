@@ -31,8 +31,8 @@ thisdir=$(dirname "$(readlink -f "$0")")
 rootdir=${thisdir}/../../..
 echo "Astrobee path: "${astrobee_source:-${rootdir}/astrobee/}
 if [ $ubuntu18 == 0 ]; then
-    docker build ${astrobee_source:-${rootdir}/astrobee/} -f ${astrobee_source:-${rootdir}/astrobee/}scripts/docker/rebuild_astrobee_kinetic.Dockerfile -t astrobee/astrobee:latest-kinetic
+    docker build ${astrobee_source:-${rootdir}/astrobee/} -f ${astrobee_source:-${rootdir}/astrobee/}scripts/docker/rebuild_astrobee_kinetic.Dockerfile -t astrobee/astrobee:test
 else
-    docker build ${astrobee_source:-${rootdir}/astrobee/} -f ${astrobee_source:-${rootdir}/astrobee/}scripts/docker/rebuild_astrobee_melodic.Dockerfile -t astrobee/astrobee:latest-melodic
+    docker build ${astrobee_source:-${rootdir}/astrobee/} -f ${astrobee_source:-${rootdir}/astrobee/}scripts/docker/rebuild_astrobee_melodic.Dockerfile -t astrobee/astrobee:test
 fi
 

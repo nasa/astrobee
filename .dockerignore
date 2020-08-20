@@ -1,4 +1,5 @@
 .git/
+submodules/android/
 submodules/avionics/
 submodules/common/
 submodules/platform/
