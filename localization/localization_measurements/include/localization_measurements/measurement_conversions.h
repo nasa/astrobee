@@ -32,6 +32,8 @@
 #include <Eigen/Core>
 
 namespace localization_measurements {
+gtsam::Pose3 GtPose(const Eigen::Isometry3d &eigen_pose);
+
 MatchedProjectionsMeasurement MakeMatchedProjectionsMeasurement(const ff_msgs::VisualLandmarks &visual_landmarks);
 
 void FrameChangeMatchedProjectionsMeasurement(MatchedProjectionsMeasurement &matched_projections_measurement,

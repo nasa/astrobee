@@ -16,13 +16,13 @@
  * under the License.
  */
 
-#include <graph_localizer/imu_integrator.h>
-#include <graph_localizer/imu_utilities.h>
-#include <graph_localizer/utilities.h>
+#include <imu_integration/imu_integrator.h>
+#include <imu_integration/imu_utilities.h>
+#include <localization_measurements/measurement_conversions.h>
 
 #include <glog/logging.h>
 
-namespace graph_localizer {
+namespace imu_integration {
 namespace lm = localization_measurements;
 ImuIntegrator::ImuIntegrator(const Eigen::Isometry3d &body_T_imu, const Eigen::Vector3d &gyro_bias,
                              const Eigen::Vector3d &accelerometer_bias, const lm::Time start_time,
@@ -41,7 +41,7 @@ ImuIntegrator::ImuIntegrator(const Eigen::Isometry3d &body_T_imu, const Eigen::V
   // Set bias covariance used for pim integration
   pim_params_->biasAccOmegaInt = 0.0001 * gtsam::I_6x6;
   // Set imu calibration relative pose
-  pim_params_->setBodyPSensor(GtPose(body_T_imu_));
+  pim_params_->setBodyPSensor(lm::GtPose(body_T_imu_));
   latest_pim_.reset(new gtsam::PreintegratedCombinedMeasurements(pim_params_));
   latest_pim_->resetIntegrationAndSetBias(gtsam::imuBias::ConstantBias(accelerometer_bias, gyro_bias));
 }
@@ -152,4 +152,4 @@ lm::Time ImuIntegrator::LatestTime() const {
 
 bool ImuIntegrator::Empty() const { return measurements_.empty(); }
 
-}  // namespace graph_localizer
+}  // namespace imu_integration

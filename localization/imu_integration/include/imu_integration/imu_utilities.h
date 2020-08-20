@@ -16,10 +16,9 @@
  * under the License.
  */
 
-#ifndef GRAPH_LOCALIZER_IMU_UTILITIES_H_
-#define GRAPH_LOCALIZER_IMU_UTILITIES_H_
+#ifndef IMU_INTEGRATION_IMU_UTILITIES_H_
+#define IMU_INTEGRATION_IMU_UTILITIES_H_
 
-#include <graph_localizer/graph_loc_initialization.h>
 #include <localization_measurements/combined_nav_state.h>
 #include <localization_measurements/imu_measurement.h>
 
@@ -31,12 +30,12 @@
 
 #include <vector>
 
-namespace graph_localizer {
+namespace imu_integration {
 namespace sym = gtsam::symbol_shorthand;
-void EstimateAndSetImuBiases(const localization_measurements::ImuMeasurement &imu_measurement,
+bool EstimateAndSetImuBiases(const localization_measurements::ImuMeasurement &imu_measurement,
                              const int num_imu_measurements_per_bias_estimate,
                              std::vector<localization_measurements::ImuMeasurement> &imu_bias_measurements,
-                             GraphLocInitialization &graph_loc_initialization);
+                             Eigen::Vector3d &accelerometer_bias, Eigen::Vector3d &gyro_bias);
 
 localization_measurements::ImuMeasurement Interpolate(
     const localization_measurements::ImuMeasurement &imu_measurement_a,
@@ -57,6 +56,6 @@ localization_measurements::CombinedNavState PimPredict(
 
 gtsam::CombinedImuFactor::shared_ptr MakeCombinedImuFactor(const int key_index_0, const int key_index_1,
                                                            const gtsam::PreintegratedCombinedMeasurements &pim);
-}  // namespace graph_localizer
+}  // namespace imu_integration
 
-#endif  // GRAPH_LOCALIZER_IMU_UTILITIES_H_
+#endif  // IMU_INTEGRATION_IMU_UTILITIES_H_

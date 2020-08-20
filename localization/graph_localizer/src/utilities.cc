@@ -17,6 +17,7 @@
  */
 
 #include <graph_localizer/utilities.h>
+#include <imu_integration/imu_utilities.h>
 
 #include <glog/logging.h>
 
@@ -25,10 +26,6 @@
 
 namespace graph_localizer {
 namespace lm = localization_measurements;
-gtsam::Pose3 GtPose(const Eigen::Isometry3d &eigen_pose) {
-  return gtsam::Pose3(gtsam::Rot3(eigen_pose.linear().matrix()), eigen_pose.translation());
-}
-
 Eigen::Isometry3d LoadTransform(config_reader::ConfigReader &config, const std::string &transform_config_name) {
   Eigen::Vector3d body_t_sensor;
   Eigen::Quaterniond body_Q_sensor;
@@ -187,5 +184,18 @@ geometry_msgs::PoseWithCovarianceStamped PoseMsg(const Eigen::Isometry3d &global
   pose_msg.pose.pose.orientation.w = global_Q_body.w();
 
   return pose_msg;
+}
+
+void EstimateAndSetImuBiases(const lm::ImuMeasurement &imu_measurement,
+                             const int num_imu_measurements_per_bias_estimate,
+                             std::vector<lm::ImuMeasurement> &imu_bias_measurements,
+                             GraphLocInitialization &graph_loc_initialization) {
+  Eigen::Vector3d accelerometer_bias;
+  Eigen::Vector3d gyro_bias;
+  if (!imu_integration::EstimateAndSetImuBiases(imu_measurement, num_imu_measurements_per_bias_estimate,
+                                                imu_bias_measurements, accelerometer_bias, gyro_bias))
+    return;
+
+  graph_loc_initialization.SetBiases(accelerometer_bias, gyro_bias);
 }
 }  // namespace graph_localizer

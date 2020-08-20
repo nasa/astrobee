@@ -16,8 +16,8 @@
  * under the License.
  */
 
-#ifndef GRAPH_LOCALIZER_IMU_INTEGRATOR_H_
-#define GRAPH_LOCALIZER_IMU_INTEGRATOR_H_
+#ifndef IMU_INTEGRATION_IMU_INTEGRATOR_H_
+#define IMU_INTEGRATION_IMU_INTEGRATOR_H_
 
 #include <localization_measurements/combined_nav_state.h>
 #include <localization_measurements/imu_measurement.h>
@@ -31,7 +31,7 @@
 #include <map>
 #include <memory>
 
-namespace graph_localizer {
+namespace imu_integration {
 // Integrates imu measurements and propagates uncertainties.
 // Maintains a window of measurements so that any interval of measurements in
 // that window can be integrated into a pim.
@@ -89,6 +89,6 @@ class ImuIntegrator {
   static constexpr double kAccelBiasSigma_ = 0.0001;
   static constexpr double kGyroBiasSigma_ = 0.0001;
 };
-}  // namespace graph_localizer
+}  // namespace imu_integration
 
-#endif  // GRAPH_LOCALIZER_IMU_INTEGRATOR_H_
+#endif  // IMU_INTEGRATION_IMU_INTEGRATOR_H_

@@ -17,9 +17,9 @@
  */
 
 #include <graph_localizer/graph_localizer.h>
-#include <graph_localizer/imu_utilities.h>
 #include <graph_localizer/loc_projection_factor.h>
 #include <graph_localizer/utilities.h>
+#include <imu_integration/imu_utilities.h>
 #include <localization_measurements/measurement_conversions.h>
 
 #include <gtsam/base/Vector.h>
@@ -34,27 +34,28 @@
 #include <glog/logging.h>
 
 namespace graph_localizer {
+namespace ii = imu_integration;
 namespace lm = localization_measurements;
 
 GraphLocalizer::GraphLocalizer(const GraphLocalizerParams &params)
     : imu_integrator_(params.body_T_imu(), params.gyro_bias(), params.accelerometer_bias(), params.start_time(),
                       params.gravity()),
-      body_T_nav_cam_(GtPose(params.body_T_nav_cam())),
+      body_T_nav_cam_(lm::GtPose(params.body_T_nav_cam())),
       nav_cam_intrinsics_(new gtsam::Cal3_S2(params.nav_cam_focal_lengths().x(), params.nav_cam_focal_lengths().y(), 0,
                                              params.nav_cam_principal_point().x(),
                                              params.nav_cam_principal_point().y())),
       nav_cam_noise_(gtsam::noiseModel::Isotropic::Sigma(2, 0.1)),
-      body_T_dock_cam_(GtPose(params.body_T_dock_cam())),
+      body_T_dock_cam_(lm::GtPose(params.body_T_dock_cam())),
       dock_cam_intrinsics_(new gtsam::Cal3_S2(params.dock_cam_focal_lengths().x(), params.dock_cam_focal_lengths().y(),
                                               0, params.dock_cam_principal_point().x(),
                                               params.dock_cam_principal_point().y())),
       dock_cam_noise_(gtsam::noiseModel::Isotropic::Sigma(2, 0.1)),
       graph_values_(params.sliding_window_duration(), params.min_num_sliding_window_states()),
       min_of_avg_distance_from_mean_(params.min_of_avg_distance_from_mean()),
-      world_T_dock_(GtPose(params.world_T_dock())) {
+      world_T_dock_(lm::GtPose(params.world_T_dock())) {
   // Assumes zero initial velocity
   const lm::CombinedNavState global_cgN_body_start(
-      GtPose(params.global_T_body_start()), gtsam::Velocity3::Zero(),
+      lm::GtPose(params.global_T_body_start()), gtsam::Velocity3::Zero(),
       gtsam::imuBias::ConstantBias(params.accelerometer_bias(), params.gyro_bias()), params.start_time());
 
   // Add first nav state and priors to graph
@@ -327,7 +328,8 @@ bool GraphLocalizer::SplitOldImuFactorAndAddCombinedNavState(const lm::Time time
       imu_integrator_.IntegratedPim(lower_bound_bias, timestamp, upper_bound_time, imu_integrator_.pim_params());
   // New nav state already added so just get its key index
   const auto new_key_index = graph_values_.KeyIndex(timestamp);
-  const auto combined_imu_factor = MakeCombinedImuFactor(new_key_index, upper_bound_key_index, second_integrated_pim);
+  const auto combined_imu_factor =
+      ii::MakeCombinedImuFactor(new_key_index, upper_bound_key_index, second_integrated_pim);
   graph_.push_back(combined_imu_factor);
   return true;
 }
@@ -342,9 +344,9 @@ void GraphLocalizer::CreateAndAddLatestImuFactorAndCombinedNavState(const lm::Ti
 void GraphLocalizer::CreateAndAddImuFactorAndPredictedCombinedNavState(
     const lm::CombinedNavState &global_cgN_body, const gtsam::PreintegratedCombinedMeasurements &pim) {
   const int key_index_0 = graph_values_.KeyIndex(global_cgN_body.timestamp());
-  const lm::CombinedNavState global_cgN_body_predicted = PimPredict(global_cgN_body, pim);
+  const lm::CombinedNavState global_cgN_body_predicted = ii::PimPredict(global_cgN_body, pim);
   const int key_index_1 = GenerateKeyIndex();
-  const auto combined_imu_factor = MakeCombinedImuFactor(key_index_0, key_index_1, pim);
+  const auto combined_imu_factor = ii::MakeCombinedImuFactor(key_index_0, key_index_1, pim);
   graph_.push_back(combined_imu_factor);
   graph_values_.AddCombinedNavState(global_cgN_body_predicted, key_index_1);
 }

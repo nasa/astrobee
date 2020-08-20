@@ -19,6 +19,11 @@
 #include <localization_measurements/measurement_conversions.h>
 
 namespace localization_measurements {
+gtsam::Pose3 GtPose(const Eigen::Isometry3d &eigen_pose) {
+  return gtsam::Pose3(gtsam::Rot3(eigen_pose.linear().matrix()), eigen_pose.translation());
+  // return Eigen::Ref<const Eigen::MatrixXd>(eigen_pose.matrix());
+}
+
 MatchedProjectionsMeasurement MakeMatchedProjectionsMeasurement(const ff_msgs::VisualLandmarks &visual_landmarks) {
   MatchedProjectionsMeasurement matched_projections_measurement;
   matched_projections_measurement.matched_projections.reserve(visual_landmarks.landmarks.size());
