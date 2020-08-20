@@ -8,7 +8,7 @@ on:
 
 jobs:
 
-  build-and-test:
+  build-kinetic:
 
     runs-on: ubuntu-16.04
 
@@ -18,7 +18,7 @@ jobs:
     - name: Build the code for Ubuntu 16
       run: docker build . --file ./scripts/docker/astrobee_kinetic.Dockerfile
 
- build:
+  build-melodic:
 
    runs-on: ubuntu-18.04
 
