@@ -1,7 +1,24 @@
 #!/bin/bash
+#
+# Copyright (c) 2017, United States Government, as represented by the
+# Administrator of the National Aeronautics and Space Administration.
+# 
+# All rights reserved.
+# 
+# The Astrobee platform is licensed under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with the
+# License. You may obtain a copy of the License at
+# 
+#     http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
 
 # short help
-usage_string="$scriptname [-h] [-a <astrobee source path>] [-i <isaac source path>] [-d <idi source path>]"
+usage_string="$scriptname [-h] [-n <use ubuntu 18 installation>]"
 #[-t make_target]
 
 usage()
@@ -28,13 +45,21 @@ done
 
 
 thisdir=$(dirname "$(readlink -f "$0")")
-rootdir=${thisdir}/../../..
-echo "Astrobee path: "${astrobee_source:-${rootdir}/astrobee/}
+rootdir=${thisdir}/../..
+echo "Astrobee path: "${astrobee_source:-${rootdir}/}
 if [ $ubuntu18 == 0 ]; then
-    docker build ${astrobee_source:-${rootdir}/astrobee/} -f ${astrobee_source:-${rootdir}/astrobee/}scripts/docker/astrobee_base_kinetic.Dockerfile -t astrobee/astrobee:base-latest-kinetic
-    docker build ${astrobee_source:-${rootdir}/astrobee/} -f ${astrobee_source:-${rootdir}/astrobee/}scripts/docker/astrobee_kinetic.Dockerfile -t astrobee/astrobee:latest-kinetic
+    docker build ${astrobee_source:-${rootdir}/} \
+                -f ${astrobee_source:-${rootdir}/}scripts/docker/astrobee_base_kinetic.Dockerfile \
+                -t astrobee/astrobee:base-latest-kinetic
+    docker build ${astrobee_source:-${rootdir}/} \
+                -f ${astrobee_source:-${rootdir}/}scripts/docker/astrobee_kinetic.Dockerfile \
+                -t astrobee/astrobee:latest-kinetic
 else
-    docker build ${astrobee_source:-${rootdir}/astrobee/} -f ${astrobee_source:-${rootdir}/astrobee/}scripts/docker/astrobee_base_melodic.Dockerfile -t astrobee/astrobee:base-latest-melodic
-    docker build ${astrobee_source:-${rootdir}/astrobee/} -f ${astrobee_source:-${rootdir}/astrobee/}scripts/docker/astrobee_melodic.Dockerfile -t astrobee/astrobee:latest-melodic
+    docker build ${astrobee_source:-${rootdir}/} \
+                -f ${astrobee_source:-${rootdir}/}scripts/docker/astrobee_base_melodic.Dockerfile \
+                -t astrobee/astrobee:base-latest-melodic
+    docker build ${astrobee_source:-${rootdir}/} \
+                -f ${astrobee_source:-${rootdir}/}scripts/docker/astrobee_melodic.Dockerfile \
+                -t astrobee/astrobee:latest-melodic
 fi
 

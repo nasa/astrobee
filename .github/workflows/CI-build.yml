@@ -1,0 +1,29 @@
+name: Docker Image CI
+
+on:
+  push:
+    branches: [ master, develop ]
+  pull_request:
+    branches: [ master, develop ]
+
+jobs:
+
+  build-and-test:
+
+    runs-on: ubuntu-16.04
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Build the code for Ubuntu 16
+      run: docker build . --file ./scripts/docker/astrobee_kinetic.Dockerfile
+
+ build:
+
+   runs-on: ubuntu-18.04
+
+   steps:
+   - uses: actions/checkout@v2
+
+   - name: Build the code for Ubuntu 18
+     run: docker build . --file ./scripts/docker/astrobee_melodic.Dockerfile
