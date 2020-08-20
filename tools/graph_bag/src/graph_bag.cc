@@ -22,7 +22,6 @@
 #include <graph_localizer/utilities.h>
 #include <localization_common/utilities.h>
 #include <localization_measurements/measurement_conversions.h>
-#include <localization_measurements/time.h>
 #include <msg_conversions/msg_conversions.h>
 
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
