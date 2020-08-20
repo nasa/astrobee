@@ -27,17 +27,6 @@
 namespace graph_localizer {
 namespace lc = localization_common;
 namespace lm = localization_measurements;
-Eigen::Isometry3d LoadTransform(config_reader::ConfigReader& config, const std::string& transform_config_name) {
-  Eigen::Vector3d body_t_sensor;
-  Eigen::Quaterniond body_Q_sensor;
-  if (!msg_conversions::config_read_transform(&config, transform_config_name.c_str(), &body_t_sensor, &body_Q_sensor))
-    LOG(FATAL) << "Unspecified transform config: " << transform_config_name;
-  Eigen::Isometry3d body_T_sensor = Eigen::Isometry3d::Identity();
-  body_T_sensor.translation() = body_t_sensor;
-  body_T_sensor.linear() = body_Q_sensor.toRotationMatrix();
-  return body_T_sensor;
-}
-
 bool ValidPointSet(const std::deque<lm::FeaturePoint>& points, const double min_avg_distance_from_mean) {
   if (points.size() < 2) return false;
 

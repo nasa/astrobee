@@ -19,6 +19,7 @@
 #ifndef LOCALIZATION_COMMON_UTILITIES_H_
 #define LOCALIZATION_COMMON_UTILITIES_H_
 
+#include <config_reader/config_reader.h>
 #include <localization_common/time.h>
 
 #include <gtsam/geometry/Pose3.h>
@@ -30,6 +31,8 @@
 #include <string>
 
 namespace localization_common {
+Eigen::Isometry3d LoadTransform(config_reader::ConfigReader& config, const std::string& transform_config_name);
+
 gtsam::Pose3 GtPose(const Eigen::Isometry3d& eigen_pose);
 
 void SetEnvironmentConfigs(const std::string& astrobee_configs_path, const std::string& world);

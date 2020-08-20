@@ -18,31 +18,45 @@
 
 #include <config_reader/config_reader.h>
 #include <imu_augmentor/imu_augmentor_wrapper.h>
+#include <localization_common/utilities.h>
+#include <localization_measurements/imu_measurement.h>
+#include <msg_conversions/msg_conversions.h>
+
+#include <glog/logging.h>
 
 namespace imu_augmentor {
+namespace lc = localization_common;
+namespace lm = localization_measurements;
 ImuAugmentorWrapper::ImuAugmentorWrapper() {
   // Needed for ConfigReader construction
   // TODO(rsoussan): load this somewhere else/ how do other nodelets do this?
   const std::string astrobee_configs_path = "/home/rsoussan/astrobee/astrobee";
   const std::string world = "iss";
-  SetEnvironmentConfigs(astrobee_configs_path, world);
+  lc::SetEnvironmentConfigs(astrobee_configs_path, world);
   config_reader::ConfigReader config;
 
   config.AddFile("transforms.config");
   config.AddFile("geometry.config");
 
   if (!config.ReadFiles()) {
-    ROS_FATAL("Failed to read config files.");
+    LOG(FATAL) << "Failed to read config files.";
   }
 
-  // TODO(rsoussan): load body_T_imu and gravity!!!!
+  body_T_imu_ = lc::LoadTransform(config, "imu_transform");
+  msg_conversions::config_read_vector(&config, "world_gravity_vector", &gravity_vector_);
+  imu_augmentor_.reset(new ImuAugmentor(body_T_imu_, gravity_vector_));
 }
 
-bool LatestPoseMsg(geometry_msgs::PoseWithCovarianceStamped& latest_pose_msg) const;
+void ImuAugmentorWrapper::LocalizationPoseCallback(
+    const geometry_msgs::PoseWithCovarianceStamped& localization_pose_msg) {
+  // TODO(rsoussan): fill this in!
+  // convert pose msg to combined_nav_state
+  // pass to pim predit
+  // publish ekf state!
+  return;
+}
 
-void LocalizationPoseCallback(const geometry_msgs::PoseWithCovarianceStamped& localization_pose_msg);
-
-void ImuCallback(const sensor_msgs::Imu& imu_msg);
-
-std::unique_ptr<ImuAugmentor> imu_augmentor_;
+void ImuAugmentorWrapper::ImuCallback(const sensor_msgs::Imu& imu_msg) {
+  imu_augmentor_->BufferImuMeasurement(lm::ImuMeasurement(imu_msg));
+}
 }  // namespace imu_augmentor

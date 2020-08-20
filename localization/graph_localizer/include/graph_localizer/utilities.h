@@ -19,7 +19,6 @@
 #ifndef GRAPH_LOCALIZER_UTILITIES_H_
 #define GRAPH_LOCALIZER_UTILITIES_H_
 
-#include <config_reader/config_reader.h>
 #include <ff_msgs/EkfState.h>
 #include <ff_msgs/VisualLandmarks.h>
 #include <graph_localizer/graph_loc_initialization.h>
@@ -40,7 +39,6 @@
 #include <vector>
 
 namespace graph_localizer {
-Eigen::Isometry3d LoadTransform(config_reader::ConfigReader& config, const std::string& transform_config_name);
 
 void EstimateAndSetImuBiases(const localization_measurements::ImuMeasurement& imu_measurement,
                              const int num_imu_measurements_per_bias_estimate,

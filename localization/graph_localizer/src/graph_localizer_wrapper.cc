@@ -44,11 +44,11 @@ GraphLocalizerWrapper::GraphLocalizerWrapper() {
   config.AddFile("geometry.config");
 
   if (!config.ReadFiles()) {
-    ROS_FATAL("Failed to read config files.");
+    LOG(FATAL) << "Failed to read config files.";
   }
 
   if (!config.GetInt("num_bias_estimation_measurements", &num_bias_estimation_measurements_)) {
-    ROS_FATAL("Failed to load num_bias_estimation_measurements.");
+    LOG(FATAL) << "Failed to load num_bias_estimation_measurements.";
   }
 
   graph_loc_initialization_.LoadSensorParams(config);

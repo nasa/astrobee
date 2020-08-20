@@ -18,10 +18,12 @@
 
 #include <graph_localizer/graph_loc_initialization.h>
 #include <graph_localizer/utilities.h>
+#include <localization_common/utilities.h>
 
 #include <iostream>
 
 namespace graph_localizer {
+namespace lc = localization_common;
 void GraphLocInitialization::SetBiases(const Eigen::Vector3d& accelerometer_bias, const Eigen::Vector3d& gyro_bias) {
   params_.SetBiases(accelerometer_bias, gyro_bias);
   has_biases_ = true;
@@ -57,12 +59,12 @@ void GraphLocInitialization::ResetBiases() {
 }
 
 void GraphLocInitialization::LoadSensorParams(config_reader::ConfigReader& config) {
-  const Eigen::Isometry3d body_T_nav_cam = LoadTransform(config, "nav_cam_transform");
-  const Eigen::Isometry3d body_T_dock_cam = LoadTransform(config, "dock_cam_transform");
+  const Eigen::Isometry3d body_T_nav_cam = lc::LoadTransform(config, "nav_cam_transform");
+  const Eigen::Isometry3d body_T_dock_cam = lc::LoadTransform(config, "dock_cam_transform");
   const camera::CameraParameters nav_cam_params(&config, "nav_cam");
   const camera::CameraParameters dock_cam_params(&config, "dock_cam");
-  const Eigen::Isometry3d world_T_dock = LoadTransform(config, "world_dock_transform");
-  const Eigen::Isometry3d body_T_imu = LoadTransform(config, "imu_transform");
+  const Eigen::Isometry3d world_T_dock = lc::LoadTransform(config, "world_dock_transform");
+  const Eigen::Isometry3d body_T_imu = lc::LoadTransform(config, "imu_transform");
   Eigen::Vector3d gravity;
   msg_conversions::config_read_vector(&config, "world_gravity_vector", &gravity);
   SetCalibration(body_T_imu, body_T_nav_cam, nav_cam_params.GetIntrinsicMatrix<camera::UNDISTORTED_C>(),

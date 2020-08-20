@@ -24,12 +24,12 @@
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <sensor_msgs/Imu.h>
 
+#include <Eigen/Core>
+
 namespace imu_augmentor {
 class ImuAugmentorWrapper {
  public:
   ImuAugmentorWrapper();
-
-  bool LatestPoseMsg(geometry_msgs::PoseWithCovarianceStamped& latest_pose_msg) const;
 
   void LocalizationPoseCallback(const geometry_msgs::PoseWithCovarianceStamped& localization_pose_msg);
 
@@ -37,7 +37,8 @@ class ImuAugmentorWrapper {
 
  private:
   std::unique_ptr<ImuAugmentor> imu_augmentor_;
+  Eigen::Isometry3d body_T_imu_;
+  Eigen::Vector3d gravity_vector_;
 };
 }  // namespace imu_augmentor
-
 #endif  // IMU_AUGMENTOR_IMU_AUGMENTOR_WRAPPER_H_
