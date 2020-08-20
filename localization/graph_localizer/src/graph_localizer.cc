@@ -20,6 +20,7 @@
 #include <graph_localizer/loc_projection_factor.h>
 #include <graph_localizer/utilities.h>
 #include <imu_integration/imu_utilities.h>
+#include <localization_common/utilities.h>
 #include <localization_measurements/measurement_conversions.h>
 
 #include <gtsam/base/Vector.h>
@@ -41,22 +42,22 @@ namespace lm = localization_measurements;
 GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
     : latest_imu_integrator_(params.body_T_imu(), params.gyro_bias(), params.accelerometer_bias(), params.start_time(),
                              params.gravity()),
-      body_T_nav_cam_(lm::GtPose(params.body_T_nav_cam())),
+      body_T_nav_cam_(lc::GtPose(params.body_T_nav_cam())),
       nav_cam_intrinsics_(new gtsam::Cal3_S2(params.nav_cam_focal_lengths().x(), params.nav_cam_focal_lengths().y(), 0,
                                              params.nav_cam_principal_point().x(),
                                              params.nav_cam_principal_point().y())),
       nav_cam_noise_(gtsam::noiseModel::Isotropic::Sigma(2, 0.1)),
-      body_T_dock_cam_(lm::GtPose(params.body_T_dock_cam())),
+      body_T_dock_cam_(lc::GtPose(params.body_T_dock_cam())),
       dock_cam_intrinsics_(new gtsam::Cal3_S2(params.dock_cam_focal_lengths().x(), params.dock_cam_focal_lengths().y(),
                                               0, params.dock_cam_principal_point().x(),
                                               params.dock_cam_principal_point().y())),
       dock_cam_noise_(gtsam::noiseModel::Isotropic::Sigma(2, 0.1)),
       graph_values_(params.sliding_window_duration(), params.min_num_sliding_window_states()),
       min_of_avg_distance_from_mean_(params.min_of_avg_distance_from_mean()),
-      world_T_dock_(lm::GtPose(params.world_T_dock())) {
+      world_T_dock_(lc::GtPose(params.world_T_dock())) {
   // Assumes zero initial velocity
   const lm::CombinedNavState global_cgN_body_start(
-      lm::GtPose(params.global_T_body_start()), gtsam::Velocity3::Zero(),
+      lc::GtPose(params.global_T_body_start()), gtsam::Velocity3::Zero(),
       gtsam::imuBias::ConstantBias(params.accelerometer_bias(), params.gyro_bias()), params.start_time());
 
   // Add first nav state and priors to graph

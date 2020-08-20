@@ -18,7 +18,7 @@
 
 #include <imu_integration/imu_integrator.h>
 #include <imu_integration/imu_utilities.h>
-#include <localization_measurements/measurement_conversions.h>
+#include <localization_common/utilities.h>
 
 #include <glog/logging.h>
 
@@ -39,7 +39,7 @@ ImuIntegrator::ImuIntegrator(const Eigen::Isometry3d& body_T_imu, const Eigen::V
   // Set bias covariance used for pim integration
   pim_params_->biasAccOmegaInt = 0.0001 * gtsam::I_6x6;
   // Set imu calibration relative pose
-  pim_params_->setBodyPSensor(lm::GtPose(body_T_imu_));
+  pim_params_->setBodyPSensor(lc::GtPose(body_T_imu_));
 }
 
 void ImuIntegrator::BufferImuMeasurement(const lm::ImuMeasurement& imu_measurement) {

@@ -40,11 +40,7 @@
 #include <vector>
 
 namespace graph_localizer {
-gtsam::Pose3 GtPose(const Eigen::Isometry3d& eigen_pose);
-
 Eigen::Isometry3d LoadTransform(config_reader::ConfigReader& config, const std::string& transform_config_name);
-
-void SetEnvironmentConfigs(const std::string& astrobee_configs_path, const std::string& world);
 
 void EstimateAndSetImuBiases(const localization_measurements::ImuMeasurement& imu_measurement,
                              const int num_imu_measurements_per_bias_estimate,
@@ -55,10 +51,6 @@ bool ValidPointSet(const std::deque<localization_measurements::FeaturePoint>& po
                    const double min_avg_distance_from_mean);
 
 geometry_msgs::PoseWithCovarianceStamped LatestPoseMsg(const GraphLocalizer& localization_measurements);
-
-ros::Time RosTimeFromHeader(const std_msgs::Header& header);
-
-localization_common::Time TimeFromHeader(const std_msgs::Header& header);
 
 Eigen::Isometry3d EigenPose(const ff_msgs::VisualLandmarks& vl_features, const Eigen::Isometry3d& nav_cam_T_body);
 

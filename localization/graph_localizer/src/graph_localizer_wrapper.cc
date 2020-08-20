@@ -20,6 +20,7 @@
 #include <graph_localizer/graph_localizer_wrapper.h>
 #include <graph_localizer/utilities.h>
 #include <imu_integration/imu_utilities.h>
+#include <localization_common/utilities.h>
 #include <localization_measurements/measurement_conversions.h>
 
 #include <Eigen/Core>
@@ -34,7 +35,7 @@ GraphLocalizerWrapper::GraphLocalizerWrapper() {
   // TODO(rsoussan): load this somewhere else/ how do other nodelets do this?
   const std::string astrobee_configs_path = "/home/rsoussan/astrobee/astrobee";
   const std::string world = "iss";
-  SetEnvironmentConfigs(astrobee_configs_path, world);
+  lc::SetEnvironmentConfigs(astrobee_configs_path, world);
   config_reader::ConfigReader config;
 
   config.AddFile("graph_localizer.config");
@@ -87,7 +88,7 @@ void GraphLocalizerWrapper::VLVisualLandmarksCallback(const ff_msgs::VisualLandm
     // has started running.
     const Eigen::Isometry3d global_T_body =
         graph_localizer::EigenPose(visual_landmarks_msg, graph_loc_initialization_.params().body_T_nav_cam().inverse());
-    const lc::Time timestamp = graph_localizer::TimeFromHeader(visual_landmarks_msg.header);
+    const lc::Time timestamp = lc::TimeFromHeader(visual_landmarks_msg.header);
     graph_loc_initialization_.SetStartPose(global_T_body, timestamp);
   }
 }

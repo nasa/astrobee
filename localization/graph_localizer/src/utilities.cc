@@ -38,14 +38,6 @@ Eigen::Isometry3d LoadTransform(config_reader::ConfigReader& config, const std::
   return body_T_sensor;
 }
 
-void SetEnvironmentConfigs(const std::string& astrobee_configs_path, const std::string& world) {
-  setenv("ASTROBEE_RESOURCE_DIR", (astrobee_configs_path + "/resources").c_str(), true);
-  setenv("ASTROBEE_CONFIG_DIR", (astrobee_configs_path + "/config").c_str(), true);
-  // TODO(rsoussan): pass this as an argument
-  setenv("ASTROBEE_ROBOT", (astrobee_configs_path + "/config/robots/bumble.config").c_str(), true);
-  setenv("ASTROBEE_WORLD", world.c_str(), true);
-}
-
 bool ValidPointSet(const std::deque<lm::FeaturePoint>& points, const double min_avg_distance_from_mean) {
   if (points.size() < 2) return false;
 
@@ -76,10 +68,6 @@ geometry_msgs::PoseWithCovarianceStamped LatestPoseMsg(const GraphLocalizer& loc
   const auto latest_graph_localization_pose_msg = PoseMsg(global_T_body_graph_latest, header);
   return latest_graph_localization_pose_msg;
 }
-
-ros::Time RosTimeFromHeader(const std_msgs::Header& header) { return ros::Time(header.stamp.sec, header.stamp.nsec); }
-
-lc::Time TimeFromHeader(const std_msgs::Header& header) { return lc::GetTime(header.stamp.sec, header.stamp.nsec); }
 
 Eigen::Isometry3d EigenPose(const ff_msgs::VisualLandmarks& vl_features, const Eigen::Isometry3d& cam_T_body) {
   Eigen::Isometry3d global_T_cam;

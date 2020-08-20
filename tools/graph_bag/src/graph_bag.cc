@@ -20,6 +20,7 @@
 #include <ff_util/ff_names.h>
 #include <graph_bag/graph_bag.h>
 #include <graph_localizer/utilities.h>
+#include <localization_common/utilities.h>
 #include <localization_measurements/measurement_conversions.h>
 #include <localization_measurements/time.h>
 #include <msg_conversions/msg_conversions.h>
@@ -46,6 +47,7 @@ cv::Point Distort(const Eigen::Vector2d& undistorted_point, const camera::Camera
 }  // namespace
 
 namespace graph_bag {
+namespace lc = localization_common;
 
 GraphBag::GraphBag(const std::string& bag_name, const std::string& map_file, const std::string& image_topic,
                    const std::string& results_bag)
@@ -141,7 +143,7 @@ bool GraphBag::GenerateVLFeatures(const sensor_msgs::ImageConstPtr& image_msg, f
 void GraphBag::SaveGroundtruthPose(const ff_msgs::VisualLandmarks& vl_features) {
   const Eigen::Isometry3d global_T_body = graph_localizer::EigenPose(vl_features, body_T_nav_cam_.inverse());
   const auto sparse_mapping_pose_msg = graph_localizer::PoseMsg(global_T_body, vl_features.header);
-  const ros::Time timestamp = graph_localizer::RosTimeFromHeader(sparse_mapping_pose_msg.header);
+  const ros::Time timestamp = lc::RosTimeFromHeader(sparse_mapping_pose_msg.header);
   results_bag_.write(kSparseMappingPoseTopic_, timestamp, sparse_mapping_pose_msg);
 }
 
@@ -158,12 +160,12 @@ void GraphBag::SaveOpticalFlowTracksImage(const sensor_msgs::ImageConstPtr& imag
 
   FeatureTrackImage(*feature_tracks, feature_track_image->image);
   const auto feature_track_image_msg = feature_track_image->toImageMsg();
-  const ros::Time timestamp = graph_localizer::RosTimeFromHeader(image_msg->header);
+  const ros::Time timestamp = lc::RosTimeFromHeader(image_msg->header);
   results_bag_.write(kFeatureTracksImageTopic_, timestamp, *feature_track_image_msg);
 }
 
 void GraphBag::SavePose(const geometry_msgs::PoseWithCovarianceStamped& latest_pose_msg) {
-  const ros::Time timestamp = graph_localizer::RosTimeFromHeader(latest_pose_msg.header);
+  const ros::Time timestamp = lc::RosTimeFromHeader(latest_pose_msg.header);
   results_bag_.write(kGraphLocalizationPoseTopic_, timestamp, latest_pose_msg);
 }
 
