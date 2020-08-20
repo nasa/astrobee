@@ -42,7 +42,7 @@ RUN /setup/astrobee/install_desktop_16_04_packages.sh \
 
 COPY . /src/astrobee
 RUN /src/astrobee/scripts/configure.sh -l -F -D -p /opt/astrobee -b /build/astrobee
-RUN cd /build/astrobee && make install -j`nproc`
+RUN cd /build/astrobee && make -j`nproc`
 COPY ./astrobee/resources /opt/astrobee/share/astrobee/resources
 
 #Add new sudo user
