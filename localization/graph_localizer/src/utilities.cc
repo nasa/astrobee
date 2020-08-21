@@ -76,24 +76,12 @@ ff_msgs::EkfState EkfStateMsg(const lc::CombinedNavState& combined_nav_state, co
                               const int num_sparse_mapping_features_in_last_measurement, const bool estimating_bias) {
   ff_msgs::EkfState loc_msg;
 
-  // Set Header
-  const ros::Time timestamp(combined_nav_state.timestamp());
-  loc_msg.header.stamp.sec = timestamp.sec;
-  loc_msg.header.stamp.nsec = timestamp.nsec;
+  // Set Header Frames
   loc_msg.header.frame_id = "world";
   loc_msg.child_frame_id = "body";
 
-  // Set Pose
-  lc::PoseToMsg(combined_nav_state.pose(), loc_msg.pose);
-
-  // Set Velocity
-  lc::VectorToMsg(combined_nav_state.velocity(), loc_msg.velocity);
-
-  // Set Gyro Bias
-  lc::VectorToMsg(combined_nav_state.bias().gyroscope(), loc_msg.gyro_bias);
-
-  // Set Acceleration Bias
-  lc::VectorToMsg(combined_nav_state.bias().accelerometer(), loc_msg.accel_bias);
+  // Set CombinedNavState
+  lc::CombinedNavStateToMsg(combined_nav_state, loc_msg);
 
   // Set Acceleration
   lc::VectorToMsg(acceleration, loc_msg.accel);

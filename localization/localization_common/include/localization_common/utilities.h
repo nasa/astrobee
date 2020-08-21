@@ -20,6 +20,8 @@
 #define LOCALIZATION_COMMON_UTILITIES_H_
 
 #include <config_reader/config_reader.h>
+#include <ff_msgs/EkfState.h>
+#include <localization_common/combined_nav_state.h>
 #include <localization_common/time.h>
 
 #include <gtsam/geometry/Pose3.h>
@@ -42,24 +44,26 @@ ros::Time RosTimeFromHeader(const std_msgs::Header& header);
 
 Time TimeFromHeader(const std_msgs::Header& header);
 
-template <typename MsgVectorType, typename VectorType>
+void TimeToHeader(const Time timestamp, std_msgs::Header& header);
+
+template <typename VectorType, typename MsgVectorType>
 VectorType VectorFromMsg(const MsgVectorType& msg_vector) {
   return VectorType(msg_vector.x, msg_vector.y, msg_vector.z);
 }
 
-template <typename MsgVectorType, typename VectorType>
+template <typename VectorType, typename MsgVectorType>
 void VectorToMsg(const VectorType& vector, MsgVectorType& msg_vector) {
   msg_vector.x = vector.x();
   msg_vector.y = vector.y();
   msg_vector.z = vector.z();
 }
 
-template <typename MsgRotationType, typename RotationType>
+template <typename RotationType, typename MsgRotationType>
 RotationType RotationFromMsg(const MsgRotationType& msg_rotation) {
   return RotationType(msg_rotation.w, msg_rotation.x, msg_rotation.y, msg_rotation.z);
 }
 
-template <typename MsgRotationType, typename RotationType>
+template <typename RotationType, typename MsgRotationType>
 void RotationToMsg(const RotationType& rotation, MsgRotationType& msg_rotation) {
   msg_rotation.w = rotation.w();
   msg_rotation.x = rotation.x();
@@ -74,6 +78,10 @@ void PoseToMsg(const gtsam::Pose3& pose, geometry_msgs::Pose& msg_pose);
 void VariancesToCovDiag(const Eigen::Vector3d& variances, float* const cov_diag);
 
 Eigen::Vector3d CovDiagToVariances(float* const cov_diag);
+
+CombinedNavState CreateCombinedNavState(const ff_msgs::EkfState& loc_msg);
+
+void CombinedNavStateToMsg(const CombinedNavState& combined_nav_state, ff_msgs::EkfState& loc_msg);
 }  // namespace localization_common
 
 #endif  // LOCALIZATION_COMMON_UTILITIES_H_

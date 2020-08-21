@@ -16,6 +16,7 @@
  * under the License.
  */
 
+#include <ff_msgs/EkfState.h>
 #include <localization_common/utilities.h>
 #include <msg_conversions/msg_conversions.h>
 
@@ -55,9 +56,15 @@ ros::Time RosTimeFromHeader(const std_msgs::Header& header) { return ros::Time(h
 
 Time TimeFromHeader(const std_msgs::Header& header) { return GetTime(header.stamp.sec, header.stamp.nsec); }
 
+void TimeToHeader(const Time timestamp, std_msgs::Header& header) {
+  ros::Time ros_time(timestamp);
+  header.stamp.sec = ros_time.sec;
+  header.stamp.nsec = ros_time.nsec;
+}
+
 gtsam::Pose3 PoseFromMsg(const geometry_msgs::Pose& msg_pose) {
-  return gtsam::Pose3(RotationFromMsg<geometry_msgs::Quaternion, gtsam::Rot3>(msg_pose.orientation),
-                      VectorFromMsg<geometry_msgs::Point, gtsam::Point3>(msg_pose.position));
+  return gtsam::Pose3(RotationFromMsg<gtsam::Rot3, geometry_msgs::Quaternion>(msg_pose.orientation),
+                      VectorFromMsg<gtsam::Point3, geometry_msgs::Point>(msg_pose.position));
 }
 
 void PoseToMsg(const gtsam::Pose3& pose, geometry_msgs::Pose& msg_pose) {
@@ -74,5 +81,22 @@ void VariancesToCovDiag(const Eigen::Vector3d& variances, float* const cov_diag)
 
 Eigen::Vector3d CovDiagToVariances(float* const cov_diag) {
   return Eigen::Vector3d(cov_diag[0], cov_diag[1], cov_diag[2]);
+}
+
+CombinedNavState CreateCombinedNavState(const ff_msgs::EkfState& loc_msg) {
+  const auto pose = PoseFromMsg(loc_msg.pose);
+  const auto velocity = VectorFromMsg<gtsam::Velocity3, geometry_msgs::Vector3>(loc_msg.velocity);
+  const auto accel_bias = VectorFromMsg<gtsam::Vector3, geometry_msgs::Vector3>(loc_msg.accel_bias);
+  const auto gyro_bias = VectorFromMsg<gtsam::Vector3, geometry_msgs::Vector3>(loc_msg.gyro_bias);
+  const auto timestamp = TimeFromHeader(loc_msg.header);
+  return CombinedNavState(pose, velocity, gtsam::imuBias::ConstantBias(accel_bias, gyro_bias), timestamp);
+}
+
+void CombinedNavStateToMsg(const CombinedNavState& combined_nav_state, ff_msgs::EkfState& loc_msg) {
+  PoseToMsg(combined_nav_state.pose(), loc_msg.pose);
+  VectorToMsg(combined_nav_state.velocity(), loc_msg.velocity);
+  VectorToMsg(combined_nav_state.bias().accelerometer(), loc_msg.accel_bias);
+  VectorToMsg(combined_nav_state.bias().gyroscope(), loc_msg.gyro_bias);
+  TimeToHeader(combined_nav_state.timestamp(), loc_msg.header);
 }
 }  // namespace localization_common
