@@ -29,6 +29,9 @@ ubuntu18=0
 
 while [ "$1" != "" ]; do
     case $1 in
+        -a | --astrobee_source_dir )   shift
+                                		astrobee_source=$1
+                                		;;
         -n | --ubuntu18 )               ubuntu18=1
                                         ;;
         -h | --help )           		usage
@@ -41,31 +44,16 @@ while [ "$1" != "" ]; do
 done
 
 
-rootdir=$(dirname "$(readlink -f "$0")")
-cd $rootdir
-
-XSOCK=/tmp/.X11-unix
-XAUTH=/tmp/.docker.xauth
-touch $XAUTH
-xauth nlist $DISPLAY | sed -e 's/^..../ffff/' | xauth -f $XAUTH nmerge -
-
+thisdir=$(dirname "$(readlink -f "$0")")
+rootdir=${thisdir}/../..
+echo "Astrobee path: "${astrobee_source:-${rootdir}/astrobee/}
 if [ $ubuntu18 == 0 ]; then
-docker run -it --rm --name astrobee \
-        --volume=$XSOCK:$XSOCK:rw \
-        --volume=$XAUTH:$XAUTH:rw \
-        --env="XAUTHORITY=${XAUTH}" \
-        --env="DISPLAY" \
-        --user="astrobee" \
-        --gpus all \
-      astrobee/astrobee:latest-kinetic \
-    /astrobee_init.sh roslaunch astrobee sim.launch dds:=false
+    docker build ${astrobee_source:-${rootdir}} \
+                 -f ${astrobee_source:-${rootdir}/}scripts/docker/rebuild_test_astrobee_kinetic.Dockerfile \
+                 -t astrobee/astrobee:test
 else
-docker run -it --rm --name astrobee \
-        --volume=$XSOCK:$XSOCK:rw \
-        --volume=$XAUTH:$XAUTH:rw \
-        --env="XAUTHORITY=${XAUTH}" \
-        --env="DISPLAY" \
-        --user="astrobee" \
-      astrobee/astrobee:latest-melodic \
-    /astrobee_init.sh roslaunch astrobee sim.launch dds:=false
+    docker build ${astrobee_source:-${rootdir}} \
+                 -f ${astrobee_source:-${rootdir}/}scripts/docker/rebuild_test_astrobee_melodic.Dockerfile \
+                 -t astrobee/astrobee:test
 fi
+

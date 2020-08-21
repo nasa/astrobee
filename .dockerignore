@@ -1,2 +1,6 @@
 .git/
-scripts/setup/Dockerfile
+scripts/docker/
+submodules/android/
+submodules/avionics/
+submodules/common/
+submodules/platform/

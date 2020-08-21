@@ -40,11 +40,6 @@ COPY ./scripts/setup/packages_*.lst /setup/astrobee/
 RUN /setup/astrobee/install_desktop_16_04_packages.sh \
   && rm -rf /var/lib/apt/lists/*
 
-COPY . /src/astrobee
-RUN /src/astrobee/scripts/configure.sh -l -F -D -p /opt/astrobee -b /build/astrobee
-RUN cd /build/astrobee && make install -j`nproc`
-COPY ./astrobee/resources /opt/astrobee/share/astrobee/resources
-
 #Add new sudo user
 ENV USERNAME astrobee
 RUN useradd -m $USERNAME && \
