@@ -1,0 +1,51 @@
+# Build documentation and commit to gh-pages branch.
+
+name: Build and Push Documentation to gh-pages Branch
+
+on:
+  push:
+    branches: [ 'master']
+
+jobs:
+  build_and_push_docs:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        path: repo/
+    - name: Checkout gh-pages
+      uses: actions/checkout@v2
+      with:
+        path: docs/
+        ref: gh-pages
+    - name: Install dependencies
+      run: |
+        sudo apt-get install bson
+        sudo apt-get install flex
+    - name: Install doxygen
+      run: |
+        git clone https://github.com/doxygen/doxygen.git
+        cd doxygen
+        mkdir build
+        cd build
+        cmake -G "Unix Makefiles" ..
+        make
+        sudo make install
+    - name: Build Documentation
+      run: |
+        cd repo
+        doxygen astrobee.doxyfile
+    - name: Commit and Push
+      run: |
+        cd repo
+        EMAIL=`git show -s --format='%ae' HEAD`
+        NAME=`git show -s --format='%an' HEAD`
+        cd ..
+        cd docs
+        git add html/*
+        git config user.email "$EMAIL"
+        git config user.name "$NAME"
+        git commit -m "Automatic update for $GITHUB_SHA."
+        git push origin gh-pages
