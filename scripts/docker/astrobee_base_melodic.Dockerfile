@@ -85,6 +85,7 @@ RUN mkdir /opencv_build && cd /opencv_build && \
     make -j6
 RUN cd /opencv_build/opencv/build  \
   && make install \
+  && rm -rf /opencv_build \
   && rm -rf /var/lib/apt/lists/*
 
 # Install Astrobee----------------------------------------------------------------
@@ -119,7 +120,7 @@ RUN useradd -m $USERNAME && \
         groupmod --gid 1000 $USERNAME
 
 #Add the entrypoint for docker
-RUN echo "#!/bin/bash\nset -e\n\nsource \"/opt/ros/kinetic/setup.bash\"\nsource \"/build/astrobee/devel/setup.bash\"\nexport ASTROBEE_CONFIG_DIR=\"/src/astrobee/astrobee/config\"\nexec \"\$@\"" > /astrobee_init.sh && \
+RUN echo "#!/bin/bash\nset -e\n\nsource \"/opt/ros/melodic/setup.bash\"\nsource \"/build/astrobee/devel/setup.bash\"\nexport ASTROBEE_CONFIG_DIR=\"/src/astrobee/astrobee/config\"\nexec \"\$@\"" > /astrobee_init.sh && \
   chmod +x /astrobee_init.sh && \
   rosdep init && \
   rosdep update 2>&1 | egrep -v 'as root|fix-permissions'
