@@ -18,6 +18,7 @@
 
 #include <graph_localizer/utilities.h>
 #include <imu_integration/utilities.h>
+#include <localization_common/utilities.h>
 
 #include <glog/logging.h>
 
@@ -83,42 +84,22 @@ ff_msgs::EkfState EkfStateMsg(const lm::CombinedNavState& combined_nav_state, co
   loc_msg.child_frame_id = "body";
 
   // Set Pose
-  loc_msg.pose.position.x = combined_nav_state.pose().x();
-  loc_msg.pose.position.y = combined_nav_state.pose().y();
-  loc_msg.pose.position.z = combined_nav_state.pose().z();
-
-  const auto nav_state_quaternion = combined_nav_state.pose().rotation().toQuaternion();
-  loc_msg.pose.orientation.x = nav_state_quaternion.x();
-  loc_msg.pose.orientation.y = nav_state_quaternion.y();
-  loc_msg.pose.orientation.z = nav_state_quaternion.z();
-  loc_msg.pose.orientation.w = nav_state_quaternion.w();
+  lc::PoseToMsg(combined_nav_state.pose(), loc_msg.pose);
 
   // Set Velocity
-  loc_msg.velocity.x = combined_nav_state.velocity().x();
-  loc_msg.velocity.y = combined_nav_state.velocity().y();
-  loc_msg.velocity.z = combined_nav_state.velocity().z();
+  lc::VectorToMsg(combined_nav_state.velocity(), loc_msg.velocity);
 
   // Set Gyro Bias
-  loc_msg.gyro_bias.x = combined_nav_state.bias().gyroscope().x();
-  loc_msg.gyro_bias.y = combined_nav_state.bias().gyroscope().y();
-  loc_msg.gyro_bias.z = combined_nav_state.bias().gyroscope().z();
+  lc::VectorToMsg(combined_nav_state.bias().gyroscope(), loc_msg.gyro_bias);
 
   // Set Acceleration Bias
-  loc_msg.accel_bias.x = combined_nav_state.bias().accelerometer().x();
-  loc_msg.accel_bias.y = combined_nav_state.bias().accelerometer().y();
-  loc_msg.accel_bias.z = combined_nav_state.bias().accelerometer().z();
-
-  loc_msg.estimating_bias = true;
+  lc::VectorToMsg(combined_nav_state.bias().accelerometer(), loc_msg.accel_bias);
 
   // Set Acceleration
-  loc_msg.accel.x = acceleration.x();
-  loc_msg.accel.y = acceleration.y();
-  loc_msg.accel.z = acceleration.z();
+  lc::VectorToMsg(acceleration, loc_msg.accel);
 
   // Set Angular Velocity
-  loc_msg.omega.x = angular_velocity.x();
-  loc_msg.omega.y = angular_velocity.y();
-  loc_msg.omega.z = angular_velocity.z();
+  lc::VectorToMsg(angular_velocity, loc_msg.omega);
 
   // Set Variances
   // Orientation (0-2)
