@@ -17,7 +17,7 @@
  */
 
 #include <graph_localizer/utilities.h>
-#include <imu_integration/imu_utilities.h>
+#include <imu_integration/utilities.h>
 
 #include <glog/logging.h>
 

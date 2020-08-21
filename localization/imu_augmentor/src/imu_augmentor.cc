@@ -17,7 +17,7 @@
  */
 
 #include <imu_augmentor/imu_augmentor.h>
-#include <imu_integration/imu_utilities.h>
+#include <imu_integration/utilities.h>
 
 namespace imu_augmentor {
 namespace ii = imu_integration;

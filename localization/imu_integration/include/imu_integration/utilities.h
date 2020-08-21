@@ -16,8 +16,8 @@
  * under the License.
  */
 
-#ifndef IMU_INTEGRATION_IMU_UTILITIES_H_
-#define IMU_INTEGRATION_IMU_UTILITIES_H_
+#ifndef IMU_INTEGRATION_UTILITIES_H_
+#define IMU_INTEGRATION_UTILITIES_H_
 
 #include <localization_measurements/combined_nav_state.h>
 #include <localization_measurements/imu_measurement.h>
@@ -57,4 +57,4 @@ gtsam::CombinedImuFactor::shared_ptr MakeCombinedImuFactor(const int key_index_0
                                                            const gtsam::PreintegratedCombinedMeasurements& pim);
 }  // namespace imu_integration
 
-#endif  // IMU_INTEGRATION_IMU_UTILITIES_H_
+#endif  // IMU_INTEGRATION_UTILITIES_H_

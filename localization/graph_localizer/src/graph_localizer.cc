@@ -19,7 +19,7 @@
 #include <graph_localizer/graph_localizer.h>
 #include <graph_localizer/loc_projection_factor.h>
 #include <graph_localizer/utilities.h>
-#include <imu_integration/imu_utilities.h>
+#include <imu_integration/utilities.h>
 #include <localization_common/utilities.h>
 #include <localization_measurements/measurement_conversions.h>
 

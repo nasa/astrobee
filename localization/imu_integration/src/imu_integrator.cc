@@ -17,7 +17,7 @@
  */
 
 #include <imu_integration/imu_integrator.h>
-#include <imu_integration/imu_utilities.h>
+#include <imu_integration/utilities.h>
 #include <localization_common/utilities.h>
 
 #include <glog/logging.h>

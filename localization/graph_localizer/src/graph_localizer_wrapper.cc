@@ -19,7 +19,7 @@
 #include <config_reader/config_reader.h>
 #include <graph_localizer/graph_localizer_wrapper.h>
 #include <graph_localizer/utilities.h>
-#include <imu_integration/imu_utilities.h>
+#include <imu_integration/utilities.h>
 #include <localization_common/utilities.h>
 #include <localization_measurements/measurement_conversions.h>
 
