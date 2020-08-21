@@ -1,4 +1,5 @@
 .git/
+scripts/docker/
 submodules/android/
 submodules/avionics/
 submodules/common/
