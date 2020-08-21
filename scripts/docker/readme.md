@@ -10,8 +10,8 @@ Available docker files:
 	astrobee_kinetic - Builds the astrobee FSW code on top of astrobee_base_kinetic.
 	astrobee_melodic - Builds the astrobee FSW code on top of astrobee_base_melodic.
 
-	rebuild_astrobee_kinetic - Builds the astrobee FSW code on top of astrobee_kinetic. This makes for a faster rebuild leveraging the cached data and rebuilding only the nodes that were changed, for testing purposes only.
-	rebuild_astrobee_melodic - Builds the astrobee FSW code on top of astrobee_melodic. This makes for a faster rebuild leveraging the cached data and rebuilding only the nodes that were changed, for testing purposes only.
+	rebuild_and_test_astrobee_kinetic - Rebuilds the astrobee FSW code on top of astrobee_kinetic and performs the unit tests. This makes for a faster rebuild leveraging the cached data and rebuilding only the nodes that were changed, for testing purposes only.
+	rebuild_and_test_astrobee_melodic - Rebuilds the astrobee FSW code on top of astrobee_melodic and performs the unit tests. This makes for a faster rebuild leveraging the cached data and rebuilding only the nodes that were changed, for testing purposes only.
 
 
 ## Building the docker images
@@ -24,7 +24,7 @@ The option -n is used for ubuntu 18 docker images
 
 To rebuild the docker image, use:
 
-	./rebuild.sh
+	./rebuild-and-test.sh
 The extra options are the same as the build command. The resulting image will overwrite the previous image and can be used for testing purposes. Do not upload this image to the docker hub, instead use the build.sh command for size purposes, no need to have an extra layer.
 
 ## Run the container
