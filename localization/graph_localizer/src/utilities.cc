@@ -46,10 +46,10 @@ bool ValidPointSet(const std::deque<lm::FeaturePoint>& points, const double min_
   return (average_distance_from_mean >= min_avg_distance_from_mean);
 }
 
-geometry_msgs::PoseWithCovarianceStamped LatestPoseMsg(const GraphLocalizer& localization_measurements) {
+geometry_msgs::PoseWithCovarianceStamped LatestPoseMsg(const GraphLocalizer& graph_localizer) {
   Eigen::Isometry3d global_T_body_graph_latest;
   double latest_graph_timestamp;
-  localization_measurements.LatestPose(global_T_body_graph_latest, latest_graph_timestamp);
+  graph_localizer.LatestPose(global_T_body_graph_latest, latest_graph_timestamp);
   const ros::Time latest_graph_time(latest_graph_timestamp);
   std_msgs::Header header;
   header.stamp.sec = latest_graph_time.sec;
@@ -70,7 +70,9 @@ Eigen::Isometry3d EigenPose(const ff_msgs::VisualLandmarks& vl_features, const E
 
 ff_msgs::EkfState EkfStateMsg(const lm::CombinedNavState& combined_nav_state, const Eigen::Vector3d& acceleration,
                               const Eigen::Vector3d& angular_velocity,
-                              const lm::CombinedNavStateCovariances& covariances) {
+                              const lm::CombinedNavStateCovariances& covariances,
+                              const int num_optical_flow_features_in_last_measurement,
+                              const int num_sparse_mapping_features_in_last_measurement, const bool estimating_bias) {
   ff_msgs::EkfState loc_msg;
 
   // Set Header
@@ -142,6 +144,11 @@ ff_msgs::EkfState EkfStateMsg(const lm::CombinedNavState& combined_nav_state, co
 
   // Set Confidence
   loc_msg.confidence = covariances.PoseConfidence();
+
+  // Set Graph Feature Counts/Information
+  loc_msg.of_count = num_optical_flow_features_in_last_measurement;
+  loc_msg.ml_count = num_sparse_mapping_features_in_last_measurement;
+  loc_msg.estimating_bias = estimating_bias;
 
   return loc_msg;
 }

@@ -30,7 +30,10 @@
 namespace graph_localizer {
 namespace lc = localization_common;
 namespace lm = localization_measurements;
-GraphLocalizerWrapper::GraphLocalizerWrapper() {
+GraphLocalizerWrapper::GraphLocalizerWrapper()
+    : num_optical_flow_features_in_last_measurement_(0),
+      num_sparse_mapping_features_in_last_measurement_(0),
+      estimating_bias_(false) {
   // Needed for ConfigReader construction
   // TODO(rsoussan): load this somewhere else/ how do other nodelets do this?
   const std::string astrobee_configs_path = "/home/rsoussan/astrobee/astrobee";
@@ -132,6 +135,23 @@ const FeatureTrackMap* const GraphLocalizerWrapper::feature_tracks() const {
 bool GraphLocalizerWrapper::LatestPoseMsg(geometry_msgs::PoseWithCovarianceStamped& latest_pose_msg) const {
   if (!graph_localizer_) return false;
   latest_pose_msg = graph_localizer::LatestPoseMsg(*graph_localizer_);
+  return true;
+}
+
+bool GraphLocalizerWrapper::LatestLocalizationMsg(ff_msgs::EkfState& localization_msg) const {
+  if (!graph_localizer_) return false;
+  lm::CombinedNavState latest_combined_nav_state;
+  lm::CombinedNavStateCovariances latest_combined_nav_state_covariances;
+  if (!graph_localizer_->LatestCombinedNavStateAndCovariances(latest_combined_nav_state,
+                                                              latest_combined_nav_state_covariances)) {
+    LOG(ERROR) << "LatestLocalizationMsg: No combined nav state and covariances available.";
+    return false;
+  }
+  // TODO(rsoussan): Add angular velocity and acceleration from imu integrator
+  localization_msg =
+      EkfStateMsg(latest_combined_nav_state, Eigen::Vector3d::Zero(), Eigen::Vector3d::Zero(),
+                  latest_combined_nav_state_covariances, num_optical_flow_features_in_last_measurement_,
+                  num_sparse_mapping_features_in_last_measurement_, graph_loc_initialization_.EstimateBiases());
   return true;
 }
 }  // namespace graph_localizer

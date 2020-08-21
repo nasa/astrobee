@@ -98,8 +98,9 @@ void GraphLocalizerNodelet::ResetAndEnableLocalizer() {
 void GraphLocalizerNodelet::OpticalFlowCallback(const ff_msgs::Feature2dArray::ConstPtr& feature_array_msg) {
   if (!localizer_enabled()) return;
   graph_localizer_wrapper_.OpticalFlowCallback(*feature_array_msg);
-  // TODO(rsoussan): move this somwhere else?
+  // TODO(rsoussan): move these somwhere else?
   PublishPose();
+  PublishLocalizationState();
 }
 
 void GraphLocalizerNodelet::VLVisualLandmarksCallback(const ff_msgs::VisualLandmarks::ConstPtr& visual_landmarks_msg) {
@@ -115,6 +116,12 @@ void GraphLocalizerNodelet::ARVisualLandmarksCallback(const ff_msgs::VisualLandm
 void GraphLocalizerNodelet::ImuCallback(const sensor_msgs::Imu::ConstPtr& imu_msg) {
   if (!localizer_enabled()) return;
   graph_localizer_wrapper_.ImuCallback(*imu_msg);
+}
+
+void GraphLocalizerNodelet::PublishLocalizationState() const {
+  ff_msgs::EkfState latest_localization_msg;
+  if (!graph_localizer_wrapper_.LatestLocalizationMsg(latest_localization_msg)) return;
+  state_pub_.publish(latest_localization_msg);
 }
 
 void GraphLocalizerNodelet::PublishPose() const {

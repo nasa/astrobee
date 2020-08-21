@@ -111,6 +111,19 @@ void GraphLocalizer::AddPriors(const lm::CombinedNavState& global_cgN_body, cons
   graph.push_back(bias_prior_factor);
 }
 
+bool GraphLocalizer::LatestCombinedNavStateAndCovariances(
+    lm::CombinedNavState& latest_combined_nav_state,
+    lm::CombinedNavStateCovariances& latest_combined_nav_state_covariances) const {
+  if (!marginals_) {
+    LOG(ERROR) << "LatestCombinedNavStateAndCovariances: No marginals available.";
+    return false;
+  }
+  const auto state_covariance_pair = LatestCombinedNavStateAndCovariances(*marginals_);
+  latest_combined_nav_state = state_covariance_pair.first;
+  latest_combined_nav_state_covariances = state_covariance_pair.second;
+  return true;
+}
+
 std::pair<lm::CombinedNavState, lm::CombinedNavStateCovariances> GraphLocalizer::LatestCombinedNavStateAndCovariances(
     const gtsam::Marginals& marginals) const {
   const lm::CombinedNavState global_cgN_body_latest = graph_values_.LatestCombinedNavState();
@@ -408,7 +421,7 @@ void GraphLocalizer::Update() {
   latest_imu_integrator_.ResetPimIntegrationAndSetBias(graph_values_.LatestBias());
   // Calculate marginals before sliding window since this depends on values that
   // would be removed in SlideWindow()
-  const gtsam::Marginals marginals(graph_, graph_values_.values());
-  SlideWindow(marginals);
+  marginals_.reset(new gtsam::Marginals(graph_, graph_values_.values()));
+  SlideWindow(*marginals_);
 }
 }  // namespace graph_localizer

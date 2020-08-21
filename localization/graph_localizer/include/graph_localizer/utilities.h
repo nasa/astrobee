@@ -54,7 +54,9 @@ Eigen::Isometry3d EigenPose(const ff_msgs::VisualLandmarks& vl_features, const E
 
 ff_msgs::EkfState EkfStateMsg(const localization_measurements::CombinedNavState& combined_nav_state,
                               const Eigen::Vector3d& acceleration, const Eigen::Vector3d& angular_velocity,
-                              const localization_measurements::CombinedNavStateCovariances& covariances);
+                              const localization_measurements::CombinedNavStateCovariances& covariances,
+                              const int num_optical_flow_features_in_last_measurement,
+                              const int num_sparse_mapping_features_in_last_measurement, const bool estimating_bias);
 
 geometry_msgs::PoseWithCovarianceStamped PoseMsg(const Eigen::Isometry3d& global_T_body,
                                                  const std_msgs::Header& header);

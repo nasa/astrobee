@@ -18,6 +18,7 @@
 #ifndef GRAPH_LOCALIZER_GRAPH_LOCALIZER_WRAPPER_H_
 #define GRAPH_LOCALIZER_GRAPH_LOCALIZER_WRAPPER_H_
 
+#include <ff_msgs/EkfState.h>
 #include <ff_msgs/Feature2dArray.h>
 #include <ff_msgs/VisualLandmarks.h>
 #include <graph_localizer/graph_loc_initialization.h>
@@ -47,6 +48,8 @@ class GraphLocalizerWrapper {
 
   bool LatestPoseMsg(geometry_msgs::PoseWithCovarianceStamped& latest_pose_msg) const;
 
+  bool LatestLocalizationMsg(ff_msgs::EkfState& localization_msg) const;
+
   void OpticalFlowCallback(const ff_msgs::Feature2dArray& feature_array_msg);
 
   void VLVisualLandmarksCallback(const ff_msgs::VisualLandmarks& visual_landmarks_msg);
@@ -71,6 +74,9 @@ class GraphLocalizerWrapper {
   bool have_latest_imu_biases_;
   // TODO(rsoussan): rename this!
   GraphLocInitialization graph_loc_initialization_;
+  int num_optical_flow_features_in_last_measurement_;
+  int num_sparse_mapping_features_in_last_measurement_;
+  bool estimating_bias_;
 };
 }  // namespace graph_localizer
 

@@ -41,6 +41,7 @@ class CombinedNavState {
                    const localization_common::Time timestamp);
   CombinedNavState(const gtsam::Pose3& pose, const gtsam::Velocity3& velocity, const gtsam::imuBias::ConstantBias& bias,
                    const localization_common::Time timestamp);
+  CombinedNavState() = default;
   localization_common::Time timestamp() const { return timestamp_; }
   const gtsam::NavState& nav_state() const { return nav_state_; }
   gtsam::Pose3 pose() const { return nav_state().pose(); }

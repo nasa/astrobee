@@ -31,6 +31,7 @@ class CombinedNavStateCovariances {
       : pose_covariance_(pose_covariance),
         velocity_covariance_(velocity_covariance),
         bias_covariance_(bias_covariance) {}
+  CombinedNavStateCovariances() = default;
   // create constructor from marginals! -> put this in
   // localization_measurements!
   Confidence PoseConfidence() const {

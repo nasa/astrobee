@@ -54,8 +54,9 @@ class GraphLocalizer {
   explicit GraphLocalizer(const GraphLocalizerParams& params);
   void AddImuMeasurement(const localization_measurements::ImuMeasurement& imu_measurement);
   bool LatestPose(Eigen::Isometry3d& global_T_body_latest_, localization_common::Time& timestamp) const;
-  std::pair<localization_measurements::CombinedNavState, localization_measurements::CombinedNavStateCovariances>
-  LatestCombinedNavStateAndCovariances(const gtsam::Marginals& marginals) const;
+  bool LatestCombinedNavStateAndCovariances(
+      localization_measurements::CombinedNavState& latest_combined_nav_state,
+      localization_measurements::CombinedNavStateCovariances& latest_combined_nav_state_covariances) const;
   void AddOpticalFlowMeasurement(
       const localization_measurements::FeaturePointsMeasurement& optical_flow_feature_points_measurement);
   void AddARTagMeasurement(
@@ -90,6 +91,8 @@ class GraphLocalizer {
   void AddPriors(const localization_measurements::CombinedNavState& global_cgN_body,
                  const localization_measurements::CombinedNavStateNoise& noise, const int key_index,
                  const gtsam::Values& values, gtsam::NonlinearFactorGraph& graph);
+  std::pair<localization_measurements::CombinedNavState, localization_measurements::CombinedNavStateCovariances>
+  LatestCombinedNavStateAndCovariances(const gtsam::Marginals& marginals) const;
 
   void CreateAndAddImuFactorAndPredictedCombinedNavState(
       const localization_measurements::CombinedNavState& global_cgN_body,
@@ -109,6 +112,7 @@ class GraphLocalizer {
   gtsam::NonlinearFactorGraph graph_;
   GraphValues graph_values_;
   FeatureTracker feature_tracker_;
+  std::unique_ptr<gtsam::Marginals> marginals_;
   gtsam::SmartProjectionParams smart_projection_params_;
   gtsam::Pose3 body_T_nav_cam_;
   gtsam::Pose3 body_T_dock_cam_;

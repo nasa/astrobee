@@ -61,6 +61,8 @@ class GraphLocalizerNodelet : public ff_util::FreeFlyerNodelet {
 
   void InitializeGraph();
 
+  void PublishLocalizationState() const;
+
   void PublishPose() const;
 
   void OpticalFlowCallback(const ff_msgs::Feature2dArray::ConstPtr& feature_array_msg);
