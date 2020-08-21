@@ -51,4 +51,15 @@ void SetEnvironmentConfigs(const std::string& astrobee_configs_path, const std::
 ros::Time RosTimeFromHeader(const std_msgs::Header& header) { return ros::Time(header.stamp.sec, header.stamp.nsec); }
 
 Time TimeFromHeader(const std_msgs::Header& header) { return GetTime(header.stamp.sec, header.stamp.nsec); }
+
+gtsam::Pose3 PoseFromMsg(const geometry_msgs::Pose& msg_pose) {
+  return gtsam::Pose3(RotationFromMsg<geometry_msgs::Orientation, gtsam::Rot3>(msg_pose.orientation),
+                      VectorFromMsg<geometry_msgs::Point, gtsam::Point3>(msg_pose.position));
+}
+
+void PoseToMsg(const gtsam::Pose3& pose, geometry_msgs::Pose& msg_pose) {
+  const gtsam::Quaternion quaternion = pose.rotation().toQuaternion();
+  RotationToMsg(quaternion, msg_pose.orientation);
+  VectorToMsg(pose.translation(), msg_pose.position);
+}
 }  // namespace localization_common

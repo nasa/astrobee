@@ -41,6 +41,34 @@ ros::Time RosTimeFromHeader(const std_msgs::Header& header);
 
 Time TimeFromHeader(const std_msgs::Header& header);
 
+template <typename MsgVectorType, typename VectorType>
+VectorType VectorFromMsg(const MsgVectorType& msg_vector) {
+  return VectorType(msg_vector.x, msg_vector.y, msg_vector.z);
+}
+
+template <typename MsgVectorType, typename VectorType>
+void VectorToMsg(const VectorType& vector, MsgVectorType& msg_vector) {
+  msg_vector.x = vector.x();
+  msg_vector.y = vector.y();
+  msg_vector.z = vector.z();
+}
+
+template <typename MsgRotationType, typename RotationType>
+RotationType RotationFromMsg(const MsgRotationType& msg_rotation) {
+  return RotationType(msg_rotation.w, msg_rotation.x, msg_rotation.y, msg_rotation.z);
+}
+
+template <typename MsgRotationType, typename RotationType>
+void RotationToMsg(const RotationType& rotation, MsgRotationType& msg_rotation) {
+  msg_rotation.w = rotation.w();
+  msg_rotation.x = rotation.x();
+  msg_rotation.y = rotation.y();
+  msg_rotation.z = rotation.z();
+}
+
+gtsam::Pose3 PoseFromMsg(const geometry_msgs::Pose& msg_pose);
+
+void PoseToMsg(const gtsam::Pose3& pose, geometry_msgs::Pose& msg_pose);
 }  // namespace localization_common
 
 #endif  // LOCALIZATION_COMMON_UTILITIES_H_

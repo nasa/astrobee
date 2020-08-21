@@ -47,14 +47,18 @@ ImuAugmentorWrapper::ImuAugmentorWrapper() {
   imu_augmentor_.reset(new ImuAugmentor(body_T_imu_, gravity_vector_));
 }
 
-void ImuAugmentorWrapper::LocalizationPoseCallback(
-    const geometry_msgs::PoseWithCovarianceStamped& localization_pose_msg) {
-  // TODO(rsoussan): fill this in!
-  // convert pose msg to combined_nav_state
-  // pass to pim predit
-  // publish ekf state!
-  return;
-}
+bool ImuAugmentorWrapper::LocalizationStateCallback(const ff_msgs::EkfState& localization_msg) if (
+    !imu_augmentor_) return false;
+// TODO(rsoussan): add copy function???
+imu_augmented_localization_msg = localization_msg;
+// TODO(rsoussan): copy covs???? test this!!!
+const auto combined_nav_state = GetCombinedNavState(localization_msg);
+
+imu_augmented_combined_nav_state = imu_augmentor_->PimPredict(combined_nav_state);
+UpdateCombinedNavState(imu_augmented_localization_msg);
+UpdateAccelerationAndAngularVelocity(imu_augmentor_->LatestImuMeasurement, imu_augmented_localization_msg);
+return true;
+}  // namespace imu_augmentor
 
 void ImuAugmentorWrapper::ImuCallback(const sensor_msgs::Imu& imu_msg) {
   imu_augmentor_->BufferImuMeasurement(lm::ImuMeasurement(imu_msg));
