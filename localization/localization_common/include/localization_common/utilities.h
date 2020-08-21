@@ -26,6 +26,7 @@
 
 #include <Eigen/Core>
 
+#include <geometry_msgs/Pose.h>
 #include <std_msgs/Header.h>
 
 #include <string>

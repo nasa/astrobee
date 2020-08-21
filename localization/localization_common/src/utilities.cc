@@ -19,6 +19,9 @@
 #include <localization_common/utilities.h>
 #include <msg_conversions/msg_conversions.h>
 
+#include <geometry_msgs/Point.h>
+#include <geometry_msgs/Quaternion.h>
+
 #include <glog/logging.h>
 
 #include <cstdlib>
@@ -53,7 +56,7 @@ ros::Time RosTimeFromHeader(const std_msgs::Header& header) { return ros::Time(h
 Time TimeFromHeader(const std_msgs::Header& header) { return GetTime(header.stamp.sec, header.stamp.nsec); }
 
 gtsam::Pose3 PoseFromMsg(const geometry_msgs::Pose& msg_pose) {
-  return gtsam::Pose3(RotationFromMsg<geometry_msgs::Orientation, gtsam::Rot3>(msg_pose.orientation),
+  return gtsam::Pose3(RotationFromMsg<geometry_msgs::Quaternion, gtsam::Rot3>(msg_pose.orientation),
                       VectorFromMsg<geometry_msgs::Point, gtsam::Point3>(msg_pose.position));
 }
 
