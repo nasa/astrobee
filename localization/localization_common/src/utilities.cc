@@ -71,4 +71,8 @@ void VariancesToCovDiag(const Eigen::Vector3d& variances, float* const cov_diag)
   cov_diag[1] = variances.y();
   cov_diag[2] = variances.z();
 }
+
+Eigen::Vector3d CovDiagToVariances(float* const cov_diag) {
+  return Eigen::Vector3d(cov_diag[0], cov_diag[1], cov_diag[2]);
+}
 }  // namespace localization_common

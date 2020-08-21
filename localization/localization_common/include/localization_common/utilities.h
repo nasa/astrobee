@@ -72,6 +72,8 @@ gtsam::Pose3 PoseFromMsg(const geometry_msgs::Pose& msg_pose);
 void PoseToMsg(const gtsam::Pose3& pose, geometry_msgs::Pose& msg_pose);
 
 void VariancesToCovDiag(const Eigen::Vector3d& variances, float* const cov_diag);
+
+Eigen::Vector3d CovDiagToVariances(float* const cov_diag);
 }  // namespace localization_common
 
 #endif  // LOCALIZATION_COMMON_UTILITIES_H_

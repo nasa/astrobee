@@ -27,29 +27,15 @@ class CombinedNavStateCovariances {
  public:
   CombinedNavStateCovariances(const Eigen::Matrix<double, 6, 6>& pose_covariance,
                               const Eigen::Matrix3d& velocity_covariance,
-                              const Eigen::Matrix<double, 6, 6>& bias_covariance)
-      : pose_covariance_(pose_covariance),
-        velocity_covariance_(velocity_covariance),
-        bias_covariance_(bias_covariance) {}
+                              const Eigen::Matrix<double, 6, 6>& bias_covariance);
+  CombinedNavStateCovariances(const Eigen::Vector3d& position_variances, const Eigen::Vector3d& orientation_variances,
+                              const Eigen::Vector3d& velocity_variances,
+                              const Eigen::Vector3d& accelerometer_bias_variances,
+                              const Eigen::Vector3d& gyro_bias_variances);
   CombinedNavStateCovariances() = default;
   // create constructor from marginals! -> put this in
   // localization_common!
-  Confidence PoseConfidence() const {
-    const double position_log_det = std::log10(pose_covariance().block<3, 3>(0, 0).determinant());
-    const double orientation_log_det = std::log10(pose_covariance().block<3, 3>(3, 3).determinant());
-
-    const Confidence position_confidence =
-        position_log_det < kPositionLogDetThreshold ? Confidence::kGood : Confidence::kPoor;
-    const Confidence orientation_confidence =
-        orientation_log_det < kOrientationLogDetThreshold ? Confidence::kGood : Confidence::kPoor;
-
-    if (position_confidence == Confidence::kGood && orientation_confidence == Confidence::kGood)
-      return Confidence::kGood;
-    // Lost if both confidences are bad, poor if only 1 is bad
-    if (position_confidence == Confidence::kPoor && orientation_confidence == Confidence::kPoor)
-      return Confidence::kLost;
-    return Confidence::kPoor;
-  }
+  Confidence PoseConfidence() const;
 
   const Eigen::Matrix<double, 6, 6>& pose_covariance() const { return pose_covariance_; }
   const Eigen::Matrix3d& velocity_covariance() const { return velocity_covariance_; }
