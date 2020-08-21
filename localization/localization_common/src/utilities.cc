@@ -66,7 +66,7 @@ void PoseToMsg(const gtsam::Pose3& pose, geometry_msgs::Pose& msg_pose) {
   VectorToMsg(pose.translation(), msg_pose.position);
 }
 
-void VariancesToCovDiag(const Eigen::Vector3d& variances, float32* const cov_diag) {
+void VariancesToCovDiag(const Eigen::Vector3d& variances, float* const cov_diag) {
   cov_diag[0] = variances.x();
   cov_diag[1] = variances.y();
   cov_diag[2] = variances.z();
