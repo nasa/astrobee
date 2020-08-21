@@ -76,7 +76,6 @@ class GraphLocalizerWrapper {
   GraphLocInitialization graph_loc_initialization_;
   int num_optical_flow_features_in_last_measurement_;
   int num_sparse_mapping_features_in_last_measurement_;
-  bool estimating_bias_;
 };
 }  // namespace graph_localizer
 
