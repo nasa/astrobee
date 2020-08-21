@@ -103,25 +103,19 @@ ff_msgs::EkfState EkfStateMsg(const lm::CombinedNavState& combined_nav_state, co
 
   // Set Variances
   // Orientation (0-2)
-  loc_msg.cov_diag[0] = covariances.orientation_variances().x();
-  loc_msg.cov_diag[1] = covariances.orientation_variances().y();
-  loc_msg.cov_diag[2] = covariances.orientation_variances().z();
+  lc::VariancesToCovDiag(covariances.orientation_variances(), &loc_msg.cov_diag[0]);
+
   // Gyro Bias (3-5)
-  loc_msg.cov_diag[3] = covariances.gyro_bias_variances().x();
-  loc_msg.cov_diag[4] = covariances.gyro_bias_variances().y();
-  loc_msg.cov_diag[5] = covariances.gyro_bias_variances().z();
+  lc::VariancesToCovDiag(covariances.gyro_bias_variances(), &loc_msg.cov_diag[3]);
+
   // Velocity (6-8)
-  loc_msg.cov_diag[6] = covariances.velocity_variances().x();
-  loc_msg.cov_diag[7] = covariances.velocity_variances().y();
-  loc_msg.cov_diag[8] = covariances.velocity_variances().z();
+  lc::VariancesToCovDiag(covariances.velocity_variances(), &loc_msg.cov_diag[6]);
+
   // Accel Bias (9-11)
-  loc_msg.cov_diag[9] = covariances.accel_bias_variances().x();
-  loc_msg.cov_diag[10] = covariances.accel_bias_variances().y();
-  loc_msg.cov_diag[11] = covariances.accel_bias_variances().z();
+  lc::VariancesToCovDiag(covariances.accel_bias_variances(), &loc_msg.cov_diag[9]);
+
   // Position (12-14)
-  loc_msg.cov_diag[12] = covariances.position_variances().x();
-  loc_msg.cov_diag[13] = covariances.position_variances().y();
-  loc_msg.cov_diag[14] = covariances.position_variances().z();
+  lc::VariancesToCovDiag(covariances.position_variances(), &loc_msg.cov_diag[12]);
 
   // Set Confidence
   loc_msg.confidence = covariances.PoseConfidence();
