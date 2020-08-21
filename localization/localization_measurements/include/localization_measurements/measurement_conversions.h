@@ -21,8 +21,8 @@
 
 #include <ff_msgs/Feature2dArray.h>
 #include <ff_msgs/VisualLandmarks.h>
-#include <localization_measurements/combined_nav_state.h>
-#include <localization_measurements/combined_nav_state_covariances.h>
+#include <localization_common/combined_nav_state.h>
+#include <localization_common/combined_nav_state_covariances.h>
 #include <localization_measurements/feature_points_measurement.h>
 #include <localization_measurements/imu_measurement.h>
 #include <localization_measurements/matched_projections_measurement.h>

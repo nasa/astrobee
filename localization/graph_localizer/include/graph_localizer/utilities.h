@@ -23,7 +23,8 @@
 #include <ff_msgs/VisualLandmarks.h>
 #include <graph_localizer/graph_loc_initialization.h>
 #include <graph_localizer/graph_localizer.h>
-#include <localization_measurements/combined_nav_state_covariances.h>
+#include <localization_common/combined_nav_state.h>
+#include <localization_common/combined_nav_state_covariances.h>
 #include <localization_measurements/feature_point.h>
 #include <localization_measurements/imu_measurement.h>
 
@@ -52,9 +53,9 @@ geometry_msgs::PoseWithCovarianceStamped LatestPoseMsg(const GraphLocalizer& loc
 
 Eigen::Isometry3d EigenPose(const ff_msgs::VisualLandmarks& vl_features, const Eigen::Isometry3d& nav_cam_T_body);
 
-ff_msgs::EkfState EkfStateMsg(const localization_measurements::CombinedNavState& combined_nav_state,
+ff_msgs::EkfState EkfStateMsg(const localization_common::CombinedNavState& combined_nav_state,
                               const Eigen::Vector3d& acceleration, const Eigen::Vector3d& angular_velocity,
-                              const localization_measurements::CombinedNavStateCovariances& covariances,
+                              const localization_common::CombinedNavStateCovariances& covariances,
                               const int num_optical_flow_features_in_last_measurement,
                               const int num_sparse_mapping_features_in_last_measurement, const bool estimating_bias);
 

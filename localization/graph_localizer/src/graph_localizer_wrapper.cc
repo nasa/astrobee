@@ -140,8 +140,8 @@ bool GraphLocalizerWrapper::LatestPoseMsg(geometry_msgs::PoseWithCovarianceStamp
 
 bool GraphLocalizerWrapper::LatestLocalizationMsg(ff_msgs::EkfState& localization_msg) const {
   if (!graph_localizer_) return false;
-  lm::CombinedNavState latest_combined_nav_state;
-  lm::CombinedNavStateCovariances latest_combined_nav_state_covariances;
+  lc::CombinedNavState latest_combined_nav_state;
+  lc::CombinedNavStateCovariances latest_combined_nav_state_covariances;
   if (!graph_localizer_->LatestCombinedNavStateAndCovariances(latest_combined_nav_state,
                                                               latest_combined_nav_state_covariances)) {
     LOG(ERROR) << "LatestLocalizationMsg: No combined nav state and covariances available.";

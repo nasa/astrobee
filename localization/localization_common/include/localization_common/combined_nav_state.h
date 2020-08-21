@@ -16,8 +16,8 @@
  * under the License.
  */
 
-#ifndef LOCALIZATION_MEASUREMENTS_COMBINED_NAV_STATE_H_
-#define LOCALIZATION_MEASUREMENTS_COMBINED_NAV_STATE_H_
+#ifndef LOCALIZATION_COMMON_COMBINED_NAV_STATE_H_
+#define LOCALIZATION_COMMON_COMBINED_NAV_STATE_H_
 
 #include <localization_common/time.h>
 
@@ -28,7 +28,7 @@
 #include <gtsam/navigation/ImuBias.h>
 #include <gtsam/navigation/NavState.h>
 
-namespace localization_measurements {
+namespace localization_common {
 struct CombinedNavStateNoise {
   gtsam::SharedNoiseModel pose_noise;
   gtsam::SharedNoiseModel velocity_noise;
@@ -37,23 +37,22 @@ struct CombinedNavStateNoise {
 
 class CombinedNavState {
  public:
-  CombinedNavState(const gtsam::NavState& nav_state, const gtsam::imuBias::ConstantBias& bias,
-                   const localization_common::Time timestamp);
+  CombinedNavState(const gtsam::NavState& nav_state, const gtsam::imuBias::ConstantBias& bias, const Time timestamp);
   CombinedNavState(const gtsam::Pose3& pose, const gtsam::Velocity3& velocity, const gtsam::imuBias::ConstantBias& bias,
-                   const localization_common::Time timestamp);
+                   const Time timestamp);
   CombinedNavState() = default;
-  localization_common::Time timestamp() const { return timestamp_; }
+  Time timestamp() const { return timestamp_; }
   const gtsam::NavState& nav_state() const { return nav_state_; }
   gtsam::Pose3 pose() const { return nav_state().pose(); }
   const gtsam::Velocity3& velocity() const { return nav_state().velocity(); }
   const gtsam::imuBias::ConstantBias& bias() const { return bias_; }
 
  private:
-  localization_common::Time timestamp_;
+  Time timestamp_;
   gtsam::NavState nav_state_;
   gtsam::imuBias::ConstantBias bias_;
 };
 
-}  // namespace localization_measurements
+}  // namespace localization_common
 
-#endif  // LOCALIZATION_MEASUREMENTS_COMBINED_NAV_STATE_H_
+#endif  // LOCALIZATION_COMMON_COMBINED_NAV_STATE_H_

@@ -16,12 +16,12 @@
  * under the License.
  */
 
-#ifndef LOCALIZATION_MEASUREMENTS_COMBINED_NAV_STATE_COVARIANCES_H_
-#define LOCALIZATION_MEASUREMENTS_COMBINED_NAV_STATE_COVARIANCES_H_
+#ifndef LOCALIZATION_COMMON_COMBINED_NAV_STATE_COVARIANCES_H_
+#define LOCALIZATION_COMMON_COMBINED_NAV_STATE_COVARIANCES_H_
 
 #include <Eigen/Core>
 
-namespace localization_measurements {
+namespace localization_common {
 enum Confidence { kGood, kPoor, kLost };
 class CombinedNavStateCovariances {
  public:
@@ -33,7 +33,7 @@ class CombinedNavStateCovariances {
         bias_covariance_(bias_covariance) {}
   CombinedNavStateCovariances() = default;
   // create constructor from marginals! -> put this in
-  // localization_measurements!
+  // localization_common!
   Confidence PoseConfidence() const {
     const double position_log_det = std::log10(pose_covariance().block<3, 3>(0, 0).determinant());
     const double orientation_log_det = std::log10(pose_covariance().block<3, 3>(3, 3).determinant());
@@ -70,6 +70,6 @@ class CombinedNavStateCovariances {
   static constexpr double kPositionLogDetThreshold = 1;
   static constexpr double kOrientationLogDetThreshold = 1;
 };
-}  // namespace localization_measurements
+}  // namespace localization_common
 
-#endif  // LOCALIZATION_MEASUREMENTS_COMBINED_NAV_STATE_COVARIANCES_H_
+#endif  // LOCALIZATION_COMMON_COMBINED_NAV_STATE_COVARIANCES_H_

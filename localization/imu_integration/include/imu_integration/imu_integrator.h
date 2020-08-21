@@ -19,8 +19,8 @@
 #ifndef IMU_INTEGRATION_IMU_INTEGRATOR_H_
 #define IMU_INTEGRATION_IMU_INTEGRATOR_H_
 
+#include <localization_common/combined_nav_state.h>
 #include <localization_common/time.h>
-#include <localization_measurements/combined_nav_state.h>
 #include <localization_measurements/imu_measurement.h>
 
 #include <gtsam/navigation/CombinedImuFactor.h>

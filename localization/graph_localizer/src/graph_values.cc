@@ -30,7 +30,6 @@
 
 namespace graph_localizer {
 namespace lc = localization_common;
-namespace lm = localization_measurements;
 GraphValues::GraphValues(const double window_ideal_duration, const int window_min_num_states)
     : kWindowIdealDuration(window_ideal_duration), kWindowMinNumStates(window_min_num_states) {
   DLOG(INFO) << "GraphValues: Window duration: " << kWindowIdealDuration;
@@ -61,7 +60,7 @@ bool GraphValues::RemoveCombinedNavStateAndFactors(const lc::Time timestamp, gts
   return successful;
 }
 
-lm::CombinedNavState GraphValues::LatestCombinedNavState() const {
+lc::CombinedNavState GraphValues::LatestCombinedNavState() const {
   // TODO(rsoussan): account for this better -> use boost::optional?
   if (Empty()) {
     LOG(FATAL) << "LatestCombinedNavState: No combined nav states available.";
@@ -70,7 +69,7 @@ lm::CombinedNavState GraphValues::LatestCombinedNavState() const {
   return GetCombinedNavState(timestamp);
 }
 
-lm::CombinedNavState GraphValues::OldestCombinedNavState() const {
+lc::CombinedNavState GraphValues::OldestCombinedNavState() const {
   // TODO(rsoussan): account for this better -> use boost::optional?
   if (Empty()) {
     LOG(FATAL) << "OldestCombinedNavState: No combined nav states available.";
@@ -187,14 +186,14 @@ gtsam::Key GraphValues::PoseKey(const lc::Time timestamp) const {
   return sym::P(key_index);
 }
 
-lm::CombinedNavState GraphValues::GetCombinedNavState(const lc::Time timestamp) const {
+lc::CombinedNavState GraphValues::GetCombinedNavState(const lc::Time timestamp) const {
   // TODO(rsoussan): account for this better -> use boost::optional?
   if (!HasKey(timestamp)) {
     LOG(FATAL) << "GetCombinedNavState: No CombinedNavState found at timestamp.";
   }
   const auto key_index = KeyIndex(timestamp);
 
-  return lm::CombinedNavState(at<gtsam::Pose3>(sym::P(key_index)), at<gtsam::Velocity3>(sym::V(key_index)),
+  return lc::CombinedNavState(at<gtsam::Pose3>(sym::P(key_index)), at<gtsam::Velocity3>(sym::V(key_index)),
                               at<gtsam::imuBias::ConstantBias>(sym::B(key_index)), timestamp);
 }
 
@@ -254,7 +253,7 @@ int GraphValues::SlideWindow(gtsam::NonlinearFactorGraph& graph) {
 }
 
 // Add timestamp and keys to timestamp_key_index_map, and values to values
-void GraphValues::AddCombinedNavState(const lm::CombinedNavState& combined_nav_state, const int key_index) {
+void GraphValues::AddCombinedNavState(const lc::CombinedNavState& combined_nav_state, const int key_index) {
   // TODO(rsoussan): remove or add option to disable these checks
   if (HasKey(combined_nav_state.timestamp())) {
     LOG(ERROR) << "AddCombinedNavState: Timestamp key index map already "

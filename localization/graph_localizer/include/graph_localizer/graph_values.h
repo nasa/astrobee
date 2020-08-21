@@ -19,8 +19,8 @@
 #ifndef GRAPH_LOCALIZER_GRAPH_VALUES_H_
 #define GRAPH_LOCALIZER_GRAPH_VALUES_H_
 
+#include <localization_common/combined_nav_state.h>
 #include <localization_common/time.h>
-#include <localization_measurements/combined_nav_state.h>
 
 #include <gtsam/inference/Symbol.h>
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
@@ -39,15 +39,15 @@ class GraphValues {
   explicit GraphValues(const double window_ideal_duration, const int window_min_num_states);
 
   // Add timestamp and keys to timestamp_key_index_map, and values to values
-  void AddCombinedNavState(const localization_measurements::CombinedNavState& combined_nav_state, const int key_index);
+  void AddCombinedNavState(const localization_common::CombinedNavState& combined_nav_state, const int key_index);
 
   // Removes keys from timestamp map, values from values.
   // Also removes any factors using these keys from graph argument
   bool RemoveCombinedNavStateAndFactors(const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& graph);
 
-  localization_measurements::CombinedNavState LatestCombinedNavState() const;
+  localization_common::CombinedNavState LatestCombinedNavState() const;
 
-  localization_measurements::CombinedNavState OldestCombinedNavState() const;
+  localization_common::CombinedNavState OldestCombinedNavState() const;
 
   int OldestCombinedNavStateKeyIndex() const;
 
@@ -89,7 +89,7 @@ class GraphValues {
     return false;
   }
 
-  localization_measurements::CombinedNavState GetCombinedNavState(const localization_common::Time timestamp) const;
+  localization_common::CombinedNavState GetCombinedNavState(const localization_common::Time timestamp) const;
 
   template <typename ValueType>
   ValueType at(const gtsam::Key& key) const {

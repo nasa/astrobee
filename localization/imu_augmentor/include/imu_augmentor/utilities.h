@@ -20,11 +20,11 @@
 #define IMU_AUGMENTOR_UTILITIES_H_
 
 #include <ff_msgs/EkfState.h>
-#include <localization_measurements/combined_nav_state.h>
+#include <localization_common/combined_nav_state.h>
 #include <localization_measurements/imu_measurement.h>
 
 namespace imu_augmentor {
-localization_measurements::CombinedNavState GetCombinedNavState(const ff_msgs::EkfState& localization_msg);
+localization_common::CombinedNavState GetCombinedNavState(const ff_msgs::EkfState& localization_msg);
 void UpdateCombinedNavState(ff_msgs::EkfState& localization_msg);
 void UpdateAccelerationAndAngularVelocity(const localization_measurements::ImuMeasurement& latest_imu_measurement,
                                           ff_msgs::EkfState& localization_msg);

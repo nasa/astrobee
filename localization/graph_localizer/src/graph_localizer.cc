@@ -56,7 +56,7 @@ GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
       min_of_avg_distance_from_mean_(params.min_of_avg_distance_from_mean()),
       world_T_dock_(lc::GtPose(params.world_T_dock())) {
   // Assumes zero initial velocity
-  const lm::CombinedNavState global_cgN_body_start(
+  const lc::CombinedNavState global_cgN_body_start(
       lc::GtPose(params.global_T_body_start()), gtsam::Velocity3::Zero(),
       gtsam::imuBias::ConstantBias(params.accelerometer_bias(), params.gyro_bias()), params.start_time());
 
@@ -73,7 +73,7 @@ GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
   smart_projection_params_.setDynamicOutlierRejectionThreshold(5);
 }
 
-void GraphLocalizer::AddStartingPriors(const lm::CombinedNavState& global_cgN_body_start, const int key_index,
+void GraphLocalizer::AddStartingPriors(const lc::CombinedNavState& global_cgN_body_start, const int key_index,
                                        const gtsam::Values& values, gtsam::NonlinearFactorGraph& graph) {
   // TODO(rsoussan): tune these
   constexpr double kPoseTranslationPriorSigma = 0.02;
@@ -91,7 +91,7 @@ void GraphLocalizer::AddStartingPriors(const lm::CombinedNavState& global_cgN_bo
                                                 kAccelBiasPriorSigma, kGyroBiasPriorSigma, kGyroBiasPriorSigma,
                                                 kGyroBiasPriorSigma)
                                                    .finished());
-  lm::CombinedNavStateNoise noise;
+  lc::CombinedNavStateNoise noise;
   noise.pose_noise = gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(pose_prior_noise_sigmas));
   noise.velocity_noise =
       gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(velocity_prior_noise_sigmas));
@@ -99,7 +99,7 @@ void GraphLocalizer::AddStartingPriors(const lm::CombinedNavState& global_cgN_bo
   AddPriors(global_cgN_body_start, noise, key_index, values, graph);
 }
 
-void GraphLocalizer::AddPriors(const lm::CombinedNavState& global_cgN_body, const lm::CombinedNavStateNoise& noise,
+void GraphLocalizer::AddPriors(const lc::CombinedNavState& global_cgN_body, const lc::CombinedNavStateNoise& noise,
                                const int key_index, const gtsam::Values& values, gtsam::NonlinearFactorGraph& graph) {
   gtsam::PriorFactor<gtsam::Pose3> pose_prior_factor(sym::P(key_index), global_cgN_body.pose(), noise.pose_noise);
   graph.push_back(pose_prior_factor);
@@ -112,8 +112,8 @@ void GraphLocalizer::AddPriors(const lm::CombinedNavState& global_cgN_body, cons
 }
 
 bool GraphLocalizer::LatestCombinedNavStateAndCovariances(
-    lm::CombinedNavState& latest_combined_nav_state,
-    lm::CombinedNavStateCovariances& latest_combined_nav_state_covariances) const {
+    lc::CombinedNavState& latest_combined_nav_state,
+    lc::CombinedNavStateCovariances& latest_combined_nav_state_covariances) const {
   if (!marginals_) {
     LOG(ERROR) << "LatestCombinedNavStateAndCovariances: No marginals available.";
     return false;
@@ -124,20 +124,20 @@ bool GraphLocalizer::LatestCombinedNavStateAndCovariances(
   return true;
 }
 
-std::pair<lm::CombinedNavState, lm::CombinedNavStateCovariances> GraphLocalizer::LatestCombinedNavStateAndCovariances(
+std::pair<lc::CombinedNavState, lc::CombinedNavStateCovariances> GraphLocalizer::LatestCombinedNavStateAndCovariances(
     const gtsam::Marginals& marginals) const {
-  const lm::CombinedNavState global_cgN_body_latest = graph_values_.LatestCombinedNavState();
+  const lc::CombinedNavState global_cgN_body_latest = graph_values_.LatestCombinedNavState();
   const int latest_combined_nav_state_key_index = graph_values_.LatestCombinedNavStateKeyIndex();
   const auto pose_covariance = marginals.marginalCovariance(sym::P(latest_combined_nav_state_key_index));
   const auto velocity_covariance = marginals.marginalCovariance(sym::V(latest_combined_nav_state_key_index));
   const auto bias_covariance = marginals.marginalCovariance(sym::B(latest_combined_nav_state_key_index));
-  const lm::CombinedNavStateCovariances latest_combined_nav_state_covariances(pose_covariance, velocity_covariance,
+  const lc::CombinedNavStateCovariances latest_combined_nav_state_covariances(pose_covariance, velocity_covariance,
                                                                               bias_covariance);
   return {global_cgN_body_latest, latest_combined_nav_state_covariances};
 }
 
 bool GraphLocalizer::LatestPose(Eigen::Isometry3d& global_T_body_latest, lc::Time& timestamp) const {
-  const lm::CombinedNavState global_cgN_body_latest = graph_values_.LatestCombinedNavState();
+  const lc::CombinedNavState global_cgN_body_latest = graph_values_.LatestCombinedNavState();
   global_T_body_latest = Eigen::Isometry3d(global_cgN_body_latest.pose().matrix());
   timestamp = global_cgN_body_latest.timestamp();
   return true;
@@ -355,9 +355,9 @@ void GraphLocalizer::CreateAndAddLatestImuFactorAndCombinedNavState(const lc::Ti
 }
 
 void GraphLocalizer::CreateAndAddImuFactorAndPredictedCombinedNavState(
-    const lm::CombinedNavState& global_cgN_body, const gtsam::PreintegratedCombinedMeasurements& pim) {
+    const lc::CombinedNavState& global_cgN_body, const gtsam::PreintegratedCombinedMeasurements& pim) {
   const int key_index_0 = graph_values_.KeyIndex(global_cgN_body.timestamp());
-  const lm::CombinedNavState global_cgN_body_predicted = ii::PimPredict(global_cgN_body, pim);
+  const lc::CombinedNavState global_cgN_body_predicted = ii::PimPredict(global_cgN_body, pim);
   const int key_index_1 = GenerateKeyIndex();
   const auto combined_imu_factor = ii::MakeCombinedImuFactor(key_index_0, key_index_1, pim);
   graph_.push_back(combined_imu_factor);
@@ -375,11 +375,11 @@ void GraphLocalizer::SlideWindow(const gtsam::Marginals& marginals) {
 
   // Add prior to oldest nav state using covariances from last round of
   // optimization
-  const lm::CombinedNavState global_cgN_body_oldest = graph_values_.OldestCombinedNavState();
+  const lc::CombinedNavState global_cgN_body_oldest = graph_values_.OldestCombinedNavState();
   DLOG(INFO) << "SlideWindow: Oldest state time: " << global_cgN_body_oldest.timestamp();
   const int key_index = graph_values_.OldestCombinedNavStateKeyIndex();
   DLOG(INFO) << "SlideWindow: key index: " << key_index;
-  lm::CombinedNavStateNoise noise;
+  lc::CombinedNavStateNoise noise;
   noise.pose_noise = gtsam::noiseModel::Gaussian::Covariance(marginals.marginalCovariance(sym::P(key_index)));
   noise.velocity_noise = gtsam::noiseModel::Gaussian::Covariance(marginals.marginalCovariance(sym::V(key_index)));
   noise.bias_noise = gtsam::noiseModel::Gaussian::Covariance(marginals.marginalCovariance(sym::B(key_index)));

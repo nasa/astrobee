@@ -44,6 +44,7 @@ bool EstimateAndSetImuBiases(const lm::ImuMeasurement& imu_measurement,
   LOG(INFO) << "Gyro bias: " << std::endl << gyro_bias.matrix();
 
   imu_bias_measurements.clear();
+  return true;
 }
 
 lm::ImuMeasurement Interpolate(const lm::ImuMeasurement& imu_measurement_a, const lm::ImuMeasurement& imu_measurement_b,
@@ -83,11 +84,11 @@ void AddMeasurement(const lm::ImuMeasurement& imu_measurement, lc::Time& last_ad
   // DLOG(INFO) << "deltaRij: " << pim_->deltaRij().matrix();
 }
 
-lm::CombinedNavState PimPredict(const lm::CombinedNavState& combined_nav_state,
+lc::CombinedNavState PimPredict(const lc::CombinedNavState& combined_nav_state,
                                 const gtsam::PreintegratedCombinedMeasurements& pim) {
   const gtsam::NavState predicted_nav_state = pim.predict(combined_nav_state.nav_state(), pim.biasHat());
   const lc::Time timestamp = combined_nav_state.timestamp() + pim.deltaTij();
-  return lm::CombinedNavState(predicted_nav_state, pim.biasHat(), timestamp);
+  return lc::CombinedNavState(predicted_nav_state, pim.biasHat(), timestamp);
 }
 
 gtsam::CombinedImuFactor::shared_ptr MakeCombinedImuFactor(const int key_index_0, const int key_index_1,

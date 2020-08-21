@@ -30,7 +30,7 @@ void ImuAugmentor::BufferImuMeasurement(const lm::ImuMeasurement& imu_measuremen
   imu_integrator_.BufferImuMeasurement(imu_measurement);
 }
 
-lm::CombinedNavState ImuAugmentor::PimPredict(const lm::CombinedNavState& combined_nav_state) {
+lc::CombinedNavState ImuAugmentor::PimPredict(const lc::CombinedNavState& combined_nav_state) {
   const auto pim = imu_integrator_.IntegratedPim(combined_nav_state.bias(), combined_nav_state.timestamp(),
                                                  imu_integrator_.LatestTime(), imu_integrator_.pim_params());
   const auto latest_combined_nav_state = ii::PimPredict(combined_nav_state, pim);

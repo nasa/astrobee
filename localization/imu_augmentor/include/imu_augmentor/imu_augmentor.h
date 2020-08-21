@@ -20,8 +20,8 @@
 #define IMU_AUGMENTOR_IMU_AUGMENTOR_H_
 
 #include <imu_integration/imu_integrator.h>
+#include <localization_common/combined_nav_state.h>
 #include <localization_common/time.h>
-#include <localization_measurements/combined_nav_state.h>
 #include <localization_measurements/imu_measurement.h>
 
 #include <gtsam/navigation/CombinedImuFactor.h>
@@ -36,8 +36,7 @@ class ImuAugmentor {
 
   void BufferImuMeasurement(const localization_measurements::ImuMeasurement& imu_measurement);
 
-  localization_measurements::CombinedNavState PimPredict(
-      const localization_measurements::CombinedNavState& combined_nav_state);
+  localization_common::CombinedNavState PimPredict(const localization_common::CombinedNavState& combined_nav_state);
 
  private:
   void RemoveOldMeasurements(const localization_common::Time new_start_time);

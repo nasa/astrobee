@@ -16,15 +16,14 @@
  * under the License.
  */
 
-#include <localization_measurements/combined_nav_state.h>
+#include <localization_common/combined_nav_state.h>
 
-namespace localization_measurements {
-namespace lc = localization_common;
+namespace localization_common {
 CombinedNavState::CombinedNavState(const gtsam::NavState& nav_state, const gtsam::imuBias::ConstantBias& bias,
-                                   const lc::Time timestamp)
+                                   const Time timestamp)
     : nav_state_(nav_state), bias_(bias), timestamp_(timestamp) {}
 
 CombinedNavState::CombinedNavState(const gtsam::Pose3& pose, const gtsam::Velocity3& velocity,
-                                   const gtsam::imuBias::ConstantBias& bias, const lc::Time timestamp)
+                                   const gtsam::imuBias::ConstantBias& bias, const Time timestamp)
     : CombinedNavState(gtsam::NavState(pose, velocity), bias, timestamp) {}
-}  // namespace localization_measurements
+}  // namespace localization_common

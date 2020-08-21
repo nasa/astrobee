@@ -23,9 +23,9 @@
 #include <graph_localizer/graph_localizer_params.h>
 #include <graph_localizer/graph_values.h>
 #include <imu_integration/latest_imu_integrator.h>
+#include <localization_common/combined_nav_state.h>
+#include <localization_common/combined_nav_state_covariances.h>
 #include <localization_common/time.h>
-#include <localization_measurements/combined_nav_state.h>
-#include <localization_measurements/combined_nav_state_covariances.h>
 #include <localization_measurements/feature_points_measurement.h>
 #include <localization_measurements/matched_projections_measurement.h>
 
@@ -55,8 +55,8 @@ class GraphLocalizer {
   void AddImuMeasurement(const localization_measurements::ImuMeasurement& imu_measurement);
   bool LatestPose(Eigen::Isometry3d& global_T_body_latest_, localization_common::Time& timestamp) const;
   bool LatestCombinedNavStateAndCovariances(
-      localization_measurements::CombinedNavState& latest_combined_nav_state,
-      localization_measurements::CombinedNavStateCovariances& latest_combined_nav_state_covariances) const;
+      localization_common::CombinedNavState& latest_combined_nav_state,
+      localization_common::CombinedNavStateCovariances& latest_combined_nav_state_covariances) const;
   void AddOpticalFlowMeasurement(
       const localization_measurements::FeaturePointsMeasurement& optical_flow_feature_points_measurement);
   void AddARTagMeasurement(
@@ -85,18 +85,17 @@ class GraphLocalizer {
 
   bool SplitOldImuFactorAndAddCombinedNavState(const localization_common::Time timestamp);
 
-  void AddStartingPriors(const localization_measurements::CombinedNavState& global_cgN_body_start, const int key_index,
+  void AddStartingPriors(const localization_common::CombinedNavState& global_cgN_body_start, const int key_index,
                          const gtsam::Values& values, gtsam::NonlinearFactorGraph& graph);
 
-  void AddPriors(const localization_measurements::CombinedNavState& global_cgN_body,
-                 const localization_measurements::CombinedNavStateNoise& noise, const int key_index,
+  void AddPriors(const localization_common::CombinedNavState& global_cgN_body,
+                 const localization_common::CombinedNavStateNoise& noise, const int key_index,
                  const gtsam::Values& values, gtsam::NonlinearFactorGraph& graph);
-  std::pair<localization_measurements::CombinedNavState, localization_measurements::CombinedNavStateCovariances>
+  std::pair<localization_common::CombinedNavState, localization_common::CombinedNavStateCovariances>
   LatestCombinedNavStateAndCovariances(const gtsam::Marginals& marginals) const;
 
-  void CreateAndAddImuFactorAndPredictedCombinedNavState(
-      const localization_measurements::CombinedNavState& global_cgN_body,
-      const gtsam::PreintegratedCombinedMeasurements& pim);
+  void CreateAndAddImuFactorAndPredictedCombinedNavState(const localization_common::CombinedNavState& global_cgN_body,
+                                                         const gtsam::PreintegratedCombinedMeasurements& pim);
 
   // TODO(rsoussan): make a static and dynamic key index?
   static int GenerateKeyIndex() {
