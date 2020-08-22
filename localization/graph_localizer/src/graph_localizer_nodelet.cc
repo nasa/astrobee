@@ -38,10 +38,9 @@ void GraphLocalizerNodelet::Initialize(ros::NodeHandle* nh) {
 void GraphLocalizerNodelet::SubscribeAndAdvertise(ros::NodeHandle* nh) {
   state_pub_ = nh->advertise<ff_msgs::EkfState>(TOPIC_GNC_EKF, 1);
   pose_pub_ = nh->advertise<geometry_msgs::PoseWithCovarianceStamped>(TOPIC_LOCALIZATION_POSE, 1);
-  // TODO(rsoussan): is this needed?
-  // twist_pub_   =
-  // nh->advertise<geometry_msgs::TwistStamped>(TOPIC_LOCALIZATION_TWIST, 1);
 
+  imu_sub_ = nh->subscribe(TOPIC_HARDWARE_IMU, 1, &GraphLocalizerNodelet::ImuCallback, this,
+                           ros::TransportHints().tcpNoDelay());
   ar_sub_ = nh->subscribe(TOPIC_LOCALIZATION_AR_FEATURES, 1, &GraphLocalizerNodelet::ARVisualLandmarksCallback, this,
                           ros::TransportHints().tcpNoDelay());
   of_sub_ = nh->subscribe(TOPIC_LOCALIZATION_OF_FEATURES, 1, &GraphLocalizerNodelet::OpticalFlowCallback, this,
