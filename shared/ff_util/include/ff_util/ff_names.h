@@ -116,6 +116,8 @@
 #define NODE_FAM                                    "fam"
 #define NODE_SIM_WRAPPER                            "sim_wrapper"
 
+#define TOPIC_GRAPH_LOC_STATE                       "graph_loc/state"
+
 #define ACTION_GNC_CTL_CONTROL                      "gnc/control"
 
 #define TOPIC_GNC_EKF                               "gnc/ekf"
