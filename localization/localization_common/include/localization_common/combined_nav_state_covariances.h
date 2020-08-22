@@ -20,6 +20,7 @@
 #define LOCALIZATION_COMMON_COMBINED_NAV_STATE_COVARIANCES_H_
 
 #include <Eigen/Core>
+#include <Eigen/Geometry>
 
 namespace localization_common {
 enum Confidence { kGood, kPoor, kLost };
