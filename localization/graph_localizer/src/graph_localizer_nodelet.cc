@@ -36,7 +36,7 @@ void GraphLocalizerNodelet::Initialize(ros::NodeHandle* nh) {
 }
 
 void GraphLocalizerNodelet::SubscribeAndAdvertise(ros::NodeHandle* nh) {
-  state_pub_ = nh->advertise<ff_msgs::EkfState>(TOPIC_GNC_EKF, 1);
+  state_pub_ = nh->advertise<ff_msgs::EkfState>(TOPIC_GRAPH_LOC_STATE, 1);
   pose_pub_ = nh->advertise<geometry_msgs::PoseWithCovarianceStamped>(TOPIC_LOCALIZATION_POSE, 1);
 
   imu_sub_ = nh->subscribe(TOPIC_HARDWARE_IMU, 1, &GraphLocalizerNodelet::ImuCallback, this,
@@ -130,7 +130,6 @@ void GraphLocalizerNodelet::PublishPose() const {
 }
 
 void GraphLocalizerNodelet::Run() {
-  // TODO(rsoussan): handle reset? handle mode change?
   ros::Rate rate(100);  // 100 Hz
   while (ros::ok()) {
     ros::spinOnce();

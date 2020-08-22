@@ -40,14 +40,18 @@ class ImuAugmentorWrapper {
 
   void ImuCallback(const sensor_msgs::Imu& imu_msg);
 
+  bool LatestImuAugmentedLocalizationMsg(ff_msgs::EkfState& latest_imu_augmented_loc_msg);
+
+ private:
   bool LatestImuAugmentedCombinedNavStateAndCovariances(
       localization_common::CombinedNavState& latest_imu_augmented_combined_nav_state,
       localization_common::CombinedNavStateCovariances& latest_imu_augmented_covariances);
 
- private:
   std::unique_ptr<ImuAugmentor> imu_augmentor_;
+  // TODO(rsoussan): change these to boost optionals?
   std::unique_ptr<localization_common::CombinedNavState> latest_combined_nav_state_;
   std::unique_ptr<localization_common::CombinedNavStateCovariances> latest_covariances_;
+  std::unique_ptr<ff_msgs::EkfState> latest_loc_msg_;
   Eigen::Isometry3d body_T_imu_;
   Eigen::Vector3d gravity_vector_;
 };

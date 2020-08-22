@@ -59,10 +59,35 @@ void ImuAugmentorWrapper::ImuCallback(const sensor_msgs::Imu& imu_msg) {
 bool ImuAugmentorWrapper::LatestImuAugmentedCombinedNavStateAndCovariances(
     lc::CombinedNavState& latest_imu_augmented_combined_nav_state,
     lc::CombinedNavStateCovariances& latest_imu_augmented_covariances) {
-  if (!latest_combined_nav_state_ || !latest_covariances_ || !imu_augmentor_) return false;
+  if (!latest_combined_nav_state_ || !latest_covariances_ || !imu_augmentor_) {
+    LOG(ERROR)
+        << "LatestImuAugmentedCombinedNavStateAndCovariances: Not enough information available to create desired data.";
+    return false;
+  }
   // TODO(rsoussan): propogate uncertainties from imu augmentor
   latest_imu_augmented_covariances = *latest_covariances_;
   latest_imu_augmented_combined_nav_state = imu_augmentor_->PimPredict(*latest_combined_nav_state_);
+  return true;
+}
+
+bool ImuAugmentorWrapper::LatestImuAugmentedLocalizationMsg(ff_msgs::EkfState& latest_imu_augmented_loc_msg) {
+  if (!latest_loc_msg_) {
+    LOG(ERROR) << "LatestImuAugmentedLocalizationMsg: No latest loc msg available.";
+    return false;
+  }
+
+  lc::CombinedNavState latest_imu_augmented_combined_nav_state;
+  lc::CombinedNavStateCovariances latest_imu_augmented_covariances;
+  if (!LatestImuAugmentedCombinedNavStateAndCovariances(latest_imu_augmented_combined_nav_state,
+                                                        latest_imu_augmented_covariances)) {
+    LOG(ERROR) << "LatestImuAugmentedLocalizationMsg: Failed to get latest imu augmented nav state and covariances.";
+    return false;
+  }
+
+  // Get feature counts and other info from latest_loc_msg
+  latest_imu_augmented_loc_msg = *latest_loc_msg_;
+  lc::CombinedNavStateToMsg(latest_imu_augmented_combined_nav_state, latest_imu_augmented_loc_msg);
+  lc::CombinedNavStateCovariancesToMsg(latest_imu_augmented_covariances, latest_imu_augmented_loc_msg);
   return true;
 }
 }  // namespace imu_augmentor
