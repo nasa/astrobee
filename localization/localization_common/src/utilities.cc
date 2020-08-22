@@ -83,7 +83,7 @@ Eigen::Vector3d CovDiagToVariances(const float* const cov_diag) {
   return Eigen::Vector3d(cov_diag[0], cov_diag[1], cov_diag[2]);
 }
 
-CombinedNavState CreateCombinedNavState(const ff_msgs::EkfState& loc_msg) {
+CombinedNavState CombinedNavStateFromMsg(const ff_msgs::EkfState& loc_msg) {
   const auto pose = PoseFromMsg(loc_msg.pose);
   const auto velocity = VectorFromMsg<gtsam::Velocity3, geometry_msgs::Vector3>(loc_msg.velocity);
   const auto accel_bias = VectorFromMsg<gtsam::Vector3, geometry_msgs::Vector3>(loc_msg.accel_bias);
@@ -100,7 +100,7 @@ void CombinedNavStateToMsg(const CombinedNavState& combined_nav_state, ff_msgs::
   TimeToHeader(combined_nav_state.timestamp(), loc_msg.header);
 }
 
-CombinedNavStateCovariances CreateCombinedNavStateCovariances(const ff_msgs::EkfState& loc_msg) {
+CombinedNavStateCovariances CombinedNavStateCovariancesFromMsg(const ff_msgs::EkfState& loc_msg) {
   const Eigen::Vector3d orientation_variances = CovDiagToVariances(&loc_msg.cov_diag[0]);
   const Eigen::Vector3d gyro_bias_variances = CovDiagToVariances(&loc_msg.cov_diag[3]);
   const Eigen::Vector3d velocity_variances = CovDiagToVariances(&loc_msg.cov_diag[6]);

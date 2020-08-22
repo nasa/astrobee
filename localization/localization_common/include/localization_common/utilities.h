@@ -80,11 +80,11 @@ void VariancesToCovDiag(const Eigen::Vector3d& variances, float* const cov_diag)
 
 Eigen::Vector3d CovDiagToVariances(const float* const cov_diag);
 
-CombinedNavState CreateCombinedNavState(const ff_msgs::EkfState& loc_msg);
+CombinedNavState CombinedNavStateFromMsg(const ff_msgs::EkfState& loc_msg);
 
 void CombinedNavStateToMsg(const CombinedNavState& combined_nav_state, ff_msgs::EkfState& loc_msg);
 
-CombinedNavStateCovariances CreateCombinedNavStateCovariances(const ff_msgs::EkfState& loc_msg);
+CombinedNavStateCovariances CombinedNavStateCovariancesFromMsg(const ff_msgs::EkfState& loc_msg);
 
 void CombinedNavStateCovariancesToMsg(const CombinedNavStateCovariances& covariances, ff_msgs::EkfState& loc_msg);
 }  // namespace localization_common

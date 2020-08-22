@@ -18,7 +18,10 @@
 #ifndef IMU_AUGMENTOR_IMU_AUGMENTOR_WRAPPER_H_
 #define IMU_AUGMENTOR_IMU_AUGMENTOR_WRAPPER_H_
 
+#include <ff_msgs/EkfState.h>
 #include <imu_augmentor/imu_augmentor.h>
+#include <localization_common/combined_nav_state.h>
+#include <localization_common/combined_nav_state_covariances.h>
 #include <localization_measurements/imu_measurement.h>
 
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
@@ -26,17 +29,25 @@
 
 #include <Eigen/Core>
 
+#include <memory>
+
 namespace imu_augmentor {
 class ImuAugmentorWrapper {
  public:
   ImuAugmentorWrapper();
 
-  void LocalizationPoseCallback(const geometry_msgs::PoseWithCovarianceStamped& localization_pose_msg);
+  void LocalizationStateCallback(const ff_msgs::EkfState& loc_msg);
 
   void ImuCallback(const sensor_msgs::Imu& imu_msg);
 
+  bool LatestImuAugmentedCombinedNavStateAndCovariances(
+      localization_common::CombinedNavState& latest_imu_augmented_combined_nav_state,
+      localization_common::CombinedNavStateCovariances& latest_imu_augmented_covariances);
+
  private:
   std::unique_ptr<ImuAugmentor> imu_augmentor_;
+  std::unique_ptr<localization_common::CombinedNavState> latest_combined_nav_state_;
+  std::unique_ptr<localization_common::CombinedNavStateCovariances> latest_covariances_;
   Eigen::Isometry3d body_T_imu_;
   Eigen::Vector3d gravity_vector_;
 };

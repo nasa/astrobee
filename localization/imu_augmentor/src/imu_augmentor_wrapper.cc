@@ -47,20 +47,22 @@ ImuAugmentorWrapper::ImuAugmentorWrapper() {
   imu_augmentor_.reset(new ImuAugmentor(body_T_imu_, gravity_vector_));
 }
 
-bool ImuAugmentorWrapper::LocalizationStateCallback(const ff_msgs::EkfState& localization_msg) if (
-    !imu_augmentor_) return false;
-// TODO(rsoussan): add copy function???
-imu_augmented_localization_msg = localization_msg;
-// TODO(rsoussan): copy covs???? test this!!!
-const auto combined_nav_state = GetCombinedNavState(localization_msg);
-
-imu_augmented_combined_nav_state = imu_augmentor_->PimPredict(combined_nav_state);
-UpdateCombinedNavState(imu_augmented_localization_msg);
-UpdateAccelerationAndAngularVelocity(imu_augmentor_->LatestImuMeasurement, imu_augmented_localization_msg);
-return true;
-}  // namespace imu_augmentor
+void ImuAugmentorWrapper::LocalizationStateCallback(const ff_msgs::EkfState& loc_msg) {
+  latest_combined_nav_state_.reset(new lc::CombinedNavState(lc::CombinedNavStateFromMsg(loc_msg)));
+  latest_covariances_.reset(new lc::CombinedNavStateCovariances(lc::CombinedNavStateCovariancesFromMsg(loc_msg)));
+}
 
 void ImuAugmentorWrapper::ImuCallback(const sensor_msgs::Imu& imu_msg) {
   imu_augmentor_->BufferImuMeasurement(lm::ImuMeasurement(imu_msg));
+}
+
+bool ImuAugmentorWrapper::LatestImuAugmentedCombinedNavStateAndCovariances(
+    lc::CombinedNavState& latest_imu_augmented_combined_nav_state,
+    lc::CombinedNavStateCovariances& latest_imu_augmented_covariances) {
+  if (!latest_combined_nav_state_ || !latest_covariances_ || !imu_augmentor_) return false;
+  // TODO(rsoussan): propogate uncertainties from imu augmentor
+  latest_imu_augmented_covariances = *latest_covariances_;
+  latest_imu_augmented_combined_nav_state = imu_augmentor_->PimPredict(*latest_combined_nav_state_);
+  return true;
 }
 }  // namespace imu_augmentor
