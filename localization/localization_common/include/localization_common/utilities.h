@@ -22,6 +22,7 @@
 #include <config_reader/config_reader.h>
 #include <ff_msgs/EkfState.h>
 #include <localization_common/combined_nav_state.h>
+#include <localization_common/combined_nav_state_covariances.h>
 #include <localization_common/time.h>
 
 #include <gtsam/geometry/Pose3.h>
@@ -77,11 +78,15 @@ void PoseToMsg(const gtsam::Pose3& pose, geometry_msgs::Pose& msg_pose);
 
 void VariancesToCovDiag(const Eigen::Vector3d& variances, float* const cov_diag);
 
-Eigen::Vector3d CovDiagToVariances(float* const cov_diag);
+Eigen::Vector3d CovDiagToVariances(const float* const cov_diag);
 
 CombinedNavState CreateCombinedNavState(const ff_msgs::EkfState& loc_msg);
 
 void CombinedNavStateToMsg(const CombinedNavState& combined_nav_state, ff_msgs::EkfState& loc_msg);
+
+CombinedNavStateCovariances CreateCombinedNavStateCovariances(const ff_msgs::EkfState& loc_msg);
+
+void CombinedNavStateCovariancesToMsg(const CombinedNavStateCovariances& covariances, ff_msgs::EkfState& loc_msg);
 }  // namespace localization_common
 
 #endif  // LOCALIZATION_COMMON_UTILITIES_H_

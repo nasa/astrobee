@@ -79,7 +79,7 @@ void VariancesToCovDiag(const Eigen::Vector3d& variances, float* const cov_diag)
   cov_diag[2] = variances.z();
 }
 
-Eigen::Vector3d CovDiagToVariances(float* const cov_diag) {
+Eigen::Vector3d CovDiagToVariances(const float* const cov_diag) {
   return Eigen::Vector3d(cov_diag[0], cov_diag[1], cov_diag[2]);
 }
 
@@ -98,5 +98,32 @@ void CombinedNavStateToMsg(const CombinedNavState& combined_nav_state, ff_msgs::
   VectorToMsg(combined_nav_state.bias().accelerometer(), loc_msg.accel_bias);
   VectorToMsg(combined_nav_state.bias().gyroscope(), loc_msg.gyro_bias);
   TimeToHeader(combined_nav_state.timestamp(), loc_msg.header);
+}
+
+CombinedNavStateCovariances CreateCombinedNavStateCovariances(const ff_msgs::EkfState& loc_msg) {
+  const Eigen::Vector3d orientation_variances = CovDiagToVariances(&loc_msg.cov_diag[0]);
+  const Eigen::Vector3d gyro_bias_variances = CovDiagToVariances(&loc_msg.cov_diag[3]);
+  const Eigen::Vector3d velocity_variances = CovDiagToVariances(&loc_msg.cov_diag[6]);
+  const Eigen::Vector3d accelerometer_bias_variances = CovDiagToVariances(&loc_msg.cov_diag[9]);
+  const Eigen::Vector3d position_variances = CovDiagToVariances(&loc_msg.cov_diag[12]);
+  return CombinedNavStateCovariances(position_variances, orientation_variances, velocity_variances,
+                                     accelerometer_bias_variances, gyro_bias_variances);
+}
+
+void CombinedNavStateCovariancesToMsg(const CombinedNavStateCovariances& covariances, ff_msgs::EkfState& loc_msg) {
+  // Orientation (0-2)
+  VariancesToCovDiag(covariances.orientation_variances(), &loc_msg.cov_diag[0]);
+
+  // Gyro Bias (3-5)
+  VariancesToCovDiag(covariances.gyro_bias_variances(), &loc_msg.cov_diag[3]);
+
+  // Velocity (6-8)
+  VariancesToCovDiag(covariances.velocity_variances(), &loc_msg.cov_diag[6]);
+
+  // Accel Bias (9-11)
+  VariancesToCovDiag(covariances.accel_bias_variances(), &loc_msg.cov_diag[9]);
+
+  // Position (12-14)
+  VariancesToCovDiag(covariances.position_variances(), &loc_msg.cov_diag[12]);
 }
 }  // namespace localization_common

@@ -90,20 +90,7 @@ ff_msgs::EkfState EkfStateMsg(const lc::CombinedNavState& combined_nav_state, co
   lc::VectorToMsg(angular_velocity, loc_msg.omega);
 
   // Set Variances
-  // Orientation (0-2)
-  lc::VariancesToCovDiag(covariances.orientation_variances(), &loc_msg.cov_diag[0]);
-
-  // Gyro Bias (3-5)
-  lc::VariancesToCovDiag(covariances.gyro_bias_variances(), &loc_msg.cov_diag[3]);
-
-  // Velocity (6-8)
-  lc::VariancesToCovDiag(covariances.velocity_variances(), &loc_msg.cov_diag[6]);
-
-  // Accel Bias (9-11)
-  lc::VariancesToCovDiag(covariances.accel_bias_variances(), &loc_msg.cov_diag[9]);
-
-  // Position (12-14)
-  lc::VariancesToCovDiag(covariances.position_variances(), &loc_msg.cov_diag[12]);
+  lc::CombinedNavStateCovariancesToMsg(covariances, loc_msg);
 
   // Set Confidence
   loc_msg.confidence = covariances.PoseConfidence();
