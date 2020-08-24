@@ -92,8 +92,8 @@ bool ImuAugmentorWrapper::LatestImuAugmentedLocalizationMsg(ff_msgs::EkfState& l
 
   // Add latest acceleration and angular velocity to loc msg
   const auto latest_imu_measurement = imu_augmentor_->LatestMeasurement();
-  lc::VectorToMsg(latest_imu_measurement.acceleration, msg.accel);
-  lc::VectorToMsg(latest_imu_measurement.angular_velocity, msg.omega);
+  lc::VectorToMsg(latest_imu_measurement.acceleration, latest_imu_augmented_loc_msg.accel);
+  lc::VectorToMsg(latest_imu_measurement.angular_velocity, latest_imu_augmented_loc_msg.omega);
 
   return true;
 }

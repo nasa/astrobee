@@ -119,7 +119,7 @@ lc::Time ImuIntegrator::LatestTime() const {
   return measurements_.crbegin()->first;
 }
 
-lm::ImuMeasurement LatestMeasurement() const {
+lm::ImuMeasurement ImuIntegrator::LatestMeasurement() const {
   if (Empty()) {
     LOG(FATAL) << "LatestTime: No measurements available.";
   }
