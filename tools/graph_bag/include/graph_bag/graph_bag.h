@@ -22,6 +22,7 @@
 #include <camera/camera_params.h>
 #include <ff_util/ff_names.h>
 #include <graph_localizer/graph_localizer_wrapper.h>
+#include <imu_augmentor/imu_augmentor_wrapper.h>
 #include <lk_optical_flow/lk_optical_flow.h>
 #include <localization_node/localization.h>
 #include <sparse_mapping/sparse_map.h>
@@ -53,17 +54,21 @@ class GraphBag {
                                   const graph_localizer::FeatureTrackMap* const feature_tracks);
   void SaveGroundtruthPose(const ff_msgs::VisualLandmarks& vl_features);
   void SavePose(const geometry_msgs::PoseWithCovarianceStamped& latest_pose_msg);
+  void SaveLocState(const ff_msgs::EkfState& loc_msg, const std::string& topic);
   void FeatureTrackImage(const graph_localizer::FeatureTrackMap& feature_tracks, cv::Mat& feature_track_image) const;
 
   rosbag::Bag bag_;
   rosbag::Bag results_bag_;
   graph_localizer::GraphLocalizerWrapper graph_localizer_wrapper_;
+  imu_augmentor::ImuAugmentorWrapper imu_augmentor_wrapper_;
   lk_optical_flow::LKOpticalFlow optical_flow_tracker_;
   sparse_mapping::SparseMap map_;
   localization_node::Localizer map_feature_matcher_;
   const std::string kImageTopic_;
   const std::string kSparseMappingPoseTopic_ = "sparse_mapping_pose";
   const std::string kGraphLocalizationPoseTopic_ = "graph_localization_pose";
+  const std::string kGraphLocalizationLocTopic_ = "graph_localization_loc_state";
+  const std::string kImuAugmentorLocTopic_ = "imu_augmentor_loc_state";
   const std::string kFeatureTracksImageTopic_ = "feature_track_image";
   std::unique_ptr<camera::CameraParameters> nav_cam_params_;
   Eigen::Isometry3d body_T_nav_cam_;

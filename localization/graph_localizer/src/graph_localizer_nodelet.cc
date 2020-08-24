@@ -97,7 +97,8 @@ void GraphLocalizerNodelet::ResetAndEnableLocalizer() {
 void GraphLocalizerNodelet::OpticalFlowCallback(const ff_msgs::Feature2dArray::ConstPtr& feature_array_msg) {
   if (!localizer_enabled()) return;
   graph_localizer_wrapper_.OpticalFlowCallback(*feature_array_msg);
-  // TODO(rsoussan): move these somwhere else?
+
+  // Publish loc state here since graph updates occur on optical flow updates
   PublishPose();
   PublishLocalizationState();
 }

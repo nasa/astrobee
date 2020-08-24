@@ -71,7 +71,7 @@ GraphBag::GraphBag(const std::string& bag_name, const std::string& map_file, con
   optical_flow_tracker_.ReadParams(&config);
   // Needed for feature tracks visualization
   nav_cam_params_.reset(new camera::CameraParameters(&config, "nav_cam"));
-  body_T_nav_cam_ = graph_localizer::LoadTransform(config, "nav_cam_transform");
+  body_T_nav_cam_ = lc::LoadTransform(config, "nav_cam_transform");
 }
 
 // TODO(rsoussan): remove this? cite leo?
@@ -168,6 +168,11 @@ void GraphBag::SavePose(const geometry_msgs::PoseWithCovarianceStamped& latest_p
   results_bag_.write(kGraphLocalizationPoseTopic_, timestamp, latest_pose_msg);
 }
 
+void GraphBag::SaveLocState(const ff_msgs::EkfState& loc_msg, const std::string& topic) {
+  const ros::Time timestamp = lc::RosTimeFromHeader(loc_msg.header);
+  results_bag_.write(topic, timestamp, loc_msg);
+}
+
 void GraphBag::Run() {
   std::vector<std::string> topics;
   topics.push_back(std::string("/") + TOPIC_HARDWARE_IMU);
@@ -186,6 +191,13 @@ void GraphBag::Run() {
     if (string_ends_with(m.getTopic(), TOPIC_HARDWARE_IMU)) {
       sensor_msgs::ImuConstPtr imu_msg = m.instantiate<sensor_msgs::Imu>();
       graph_localizer_wrapper_.ImuCallback(*imu_msg);
+      imu_augmentor_wrapper_.ImuCallback(*imu_msg);
+
+      // Save imu augmented loc msg if available
+      ff_msgs::EkfState imu_augmented_loc_msg;
+      if (imu_augmentor_wrapper_.LatestImuAugmentedLocalizationMsg(imu_augmented_loc_msg)) {
+        SaveLocState(imu_augmented_loc_msg, TOPIC_GNC_EKF);
+      }
     } else if (string_ends_with(m.getTopic(), kImageTopic_)) {
       sensor_msgs::ImageConstPtr image_msg = m.instantiate<sensor_msgs::Image>();
 
@@ -203,11 +215,12 @@ void GraphBag::Run() {
         SaveGroundtruthPose(vl_features);
       }
 
-      // Save latest graph pose, which should have just been optimized for after
-      // adding of and/or vl features
-      geometry_msgs::PoseWithCovarianceStamped latest_pose_msg;
-      if (graph_localizer_wrapper_.LatestPoseMsg(latest_pose_msg)) {
-        SavePose(latest_pose_msg);
+      // Save latest graph localization msg, which should have just been optimized after adding of and/or vl features.
+      // Pass latest loc state to imu augmentor if it is available.
+      ff_msgs::EkfState localization_msg;
+      if (graph_localizer_wrapper_.LatestLocalizationMsg(localization_msg)) {
+        imu_augmentor_wrapper_.LocalizationStateCallback(localization_msg);
+        SaveLocState(localization_msg, TOPIC_GRAPH_LOC_STATE);
       }
     } else if (string_ends_with(m.getTopic(), TOPIC_LOCALIZATION_AR_FEATURES)) {
       const ff_msgs::VisualLandmarksConstPtr vl_features = m.instantiate<ff_msgs::VisualLandmarks>();
