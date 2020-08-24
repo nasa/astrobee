@@ -58,6 +58,8 @@ class ImuIntegrator {
 
   localization_common::Time LatestTime() const;
 
+  localization_measurements::ImuMeasurement LatestMeasurement() const;
+
   bool Empty() const;
 
   int Size() const;

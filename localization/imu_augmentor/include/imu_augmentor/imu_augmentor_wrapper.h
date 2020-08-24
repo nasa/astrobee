@@ -47,6 +47,8 @@ class ImuAugmentorWrapper {
       localization_common::CombinedNavState& latest_imu_augmented_combined_nav_state,
       localization_common::CombinedNavStateCovariances& latest_imu_augmented_covariances);
 
+  bool LatestImuMeasurement(localization_measurements::ImuMeasurement& latest_imu_measurement);
+
   std::unique_ptr<ImuAugmentor> imu_augmentor_;
   // TODO(rsoussan): change these to boost optionals?
   std::unique_ptr<localization_common::CombinedNavState> latest_combined_nav_state_;

@@ -21,7 +21,6 @@ import matplotlib
 matplotlib.use('pdf')
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
-
 import scipy.spatial.transform
 
 import math
@@ -63,7 +62,8 @@ sparse_mapping_pose_topic = 'sparse_mapping_pose'
 # graph_localization_pose_topic = 'graph_localization_pose'
 graph_localization_loc_topic = 'graph_loc/state'
 imu_augmentor_loc_topic = 'gnc/ekf'
-for topic, msg, t in bag.read_messages(topics=[sparse_mapping_pose_topic, graph_localization_loc_topic]):
+for topic, msg, t in bag.read_messages(
+    topics=[sparse_mapping_pose_topic, graph_localization_loc_topic, imu_augmentor_loc_topic]):
   if topic == sparse_mapping_pose_topic:
     add_pose(msg.pose.pose, msg.header.stamp, sparse_mapping_poses)
   elif topic == graph_localization_loc_topic:
@@ -119,30 +119,10 @@ with PdfPages(filename) as pdf:
            linewidth=0.5,
            label='Graph Localization Pos. (Z)')
 
-  plt.plot(imu_augmented_graph_localization_poses.times,
-           imu_augmented_graph_localization_poses.xs,
-           colors[0],
-           linewidth=0.5,
-           linestyle='dashed',
-           label='Imu Augmented Graph Localization Pos. (X)')
-  plt.plot(imu_augmented_graph_localization_poses.times,
-           imu_augmented_graph_localization_poses.ys,
-           colors[1],
-           linewidth=0.5,
-           linestyle='dashed',
-           label='Imu Augmented Graph Localization Pos. (Y)')
-  plt.plot(imu_augmented_graph_localization_poses.times,
-           imu_augmented_graph_localization_poses.zs,
-           colors[2],
-           linewidth=0.5,
-           linestyle='dashed',
-           label='Imu Augmented Graph Localization Pos. (Z)')
-
   plt.xlabel('Time (s)')
   plt.ylabel('Position (m)')
   plt.title('Position')
   plt.legend(prop={'size': 6})
-  #plt.ylim(-max_y + 0.2, max_y + 0.2)
   pdf.savefig()
   plt.close()
 
@@ -193,6 +173,55 @@ with PdfPages(filename) as pdf:
   plt.ylabel('Orienation (deg)')
   plt.title('Orientation')
   plt.legend(prop={'size': 6})
-  #plt.ylim(-max_y + 0.2, max_y + 0.2)
+  pdf.savefig()
+  plt.close()
+
+  # positions
+  plt.figure()
+  plt.plot(sparse_mapping_poses.times,
+           sparse_mapping_poses.xs,
+           colors[0],
+           linestyle='None',
+           marker='o',
+           markeredgewidth=0.1,
+           markersize=1.5,
+           label='Sparse Mapping Pos. (X)')
+  plt.plot(sparse_mapping_poses.times,
+           sparse_mapping_poses.ys,
+           colors[1],
+           linestyle='None',
+           marker='o',
+           markeredgewidth=0.1,
+           markersize=1.5,
+           label='Sparse Mapping Pos. (Y)')
+  plt.plot(sparse_mapping_poses.times,
+           sparse_mapping_poses.zs,
+           colors[2],
+           linestyle='None',
+           marker='o',
+           markeredgewidth=0.1,
+           markersize=1.5,
+           label='Sparse Mapping Pos. (Z)')
+
+  plt.plot(imu_augmented_graph_localization_poses.times,
+           imu_augmented_graph_localization_poses.xs,
+           colors[0],
+           linewidth=0.5,
+           label='Imu Augmented Graph Localization Pos. (X)')
+  plt.plot(imu_augmented_graph_localization_poses.times,
+           imu_augmented_graph_localization_poses.ys,
+           colors[1],
+           linewidth=0.5,
+           label='Imu Augmented Graph Localization Pos. (Y)')
+  plt.plot(imu_augmented_graph_localization_poses.times,
+           imu_augmented_graph_localization_poses.zs,
+           colors[2],
+           linewidth=0.5,
+           label='Imu Augmented Graph Localization Pos. (Z)')
+
+  plt.xlabel('Time (s)')
+  plt.ylabel('Position (m)')
+  plt.title('Position')
+  plt.legend(prop={'size': 6})
   pdf.savefig()
   plt.close()

@@ -38,6 +38,8 @@ class ImuAugmentor {
 
   localization_common::CombinedNavState PimPredict(const localization_common::CombinedNavState& combined_nav_state);
 
+  localization_measurements::ImuMeasurement LatestMeasurement() const;
+
  private:
   void RemoveOldMeasurements(const localization_common::Time new_start_time);
 

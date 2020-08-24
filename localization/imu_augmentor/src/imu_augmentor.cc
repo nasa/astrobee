@@ -41,4 +41,6 @@ lc::CombinedNavState ImuAugmentor::PimPredict(const lc::CombinedNavState& combin
 void ImuAugmentor::RemoveOldMeasurements(const lc::Time new_start_time) {
   imu_integrator_.RemoveOldMeasurements(new_start_time);
 }
+
+lm::ImuMeasurement ImuAugmentor::LatestMeasurement() const { return imu_integrator_.LatestMeasurement(); }
 }  // namespace imu_augmentor
