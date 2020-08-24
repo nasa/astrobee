@@ -73,7 +73,7 @@ bool ImuAugmentorWrapper::LatestImuAugmentedCombinedNavStateAndCovariances(
 
 bool ImuAugmentorWrapper::LatestImuAugmentedLocalizationMsg(ff_msgs::EkfState& latest_imu_augmented_loc_msg) {
   if (!latest_loc_msg_) {
-    LOG(ERROR) << "LatestImuAugmentedLocalizationMsg: No latest loc msg available.";
+    LOG_EVERY_N(WARNING, 50) << "LatestImuAugmentedLocalizationMsg: No latest loc msg available.";
     return false;
   }
 
