@@ -30,31 +30,76 @@ import rosbag
 import geometry_msgs
 
 
-class Poses:
+class Vector3ds:
 
-  def __init__(self, pose_type, topic):
+  def __init__(self):
     self.xs = []
     self.ys = []
     self.zs = []
-    self.times = []
-    self.rolls = []
-    self.pitches = []
+
+  def add(self, x, y, z):
+    self.xs.append(x)
+    self.ys.append(y)
+    self.zs.append(z)
+
+  def add_vector3d(self, vector3d):
+    self.xs.append(vector3d.x)
+    self.ys.append(vector3d.y)
+    self.zs.append(vector3d.z)
+
+
+class Orientations:
+
+  def __init__(self):
     self.yaws = []
+    self.pitches = []
+    self.rolls = []
+
+  def add(self, yaw, pitch, roll):
+    self.yaws.append(yaw)
+    self.pitches.append(pitch)
+    self.rolls.append(roll)
+
+
+class Poses(object):
+
+  def __init__(self, pose_type, topic):
+    self.positions = Vector3ds()
+    self.orientations = Orientations()
+    self.times = []
     self.pose_type = pose_type
     self.topic = topic
 
+  def add_pose(self, pose_msg, timestamp):
+    self.positions.add(pose_msg.position.x, pose_msg.position.y, pose_msg.position.z)
+    euler_angles = scipy.spatial.transform.Rotation.from_quat(
+      [pose_msg.orientation.x, pose_msg.orientation.y, pose_msg.orientation.z,
+       pose_msg.orientation.w]).as_euler('ZYX', degrees=True)
+    self.orientations.add(euler_angles[0], euler_angles[1], euler_angles[2])
+    self.times.append(timestamp.secs + 1e-9 * timestamp.nsecs)
 
-def add_pose(pose_msg, timestamp, poses):
-  poses.xs.append(pose_msg.position.x)
-  poses.ys.append(pose_msg.position.y)
-  poses.zs.append(pose_msg.position.z)
-  euler_angles = scipy.spatial.transform.Rotation.from_quat(
-    [pose_msg.orientation.x, pose_msg.orientation.y, pose_msg.orientation.z,
-     pose_msg.orientation.w]).as_euler('ZYX', degrees=True)
-  poses.yaws.append(euler_angles[0])
-  poses.pitches.append(euler_angles[1])
-  poses.rolls.append(euler_angles[2])
-  poses.times.append(timestamp.secs + 1e-9 * timestamp.nsecs)
+
+class LocStates(Poses):
+
+  def __init__(self, loc_type, topic):
+    super(LocStates, self).__init__(loc_type, topic)
+    self.of_counts = []
+    self.vl_counts = []
+    self.accelerations = Vector3ds()
+    self.velocities = Vector3ds()
+    self.angular_velocities = Vector3ds()
+    self.accelerometer_biases = Vector3ds()
+    self.gyro_biases = Vector3ds()
+
+  def add_loc_state(self, msg):
+    self.add_pose(msg.pose, msg.header.stamp)
+    self.of_counts.append(msg.of_count)
+    self.vl_counts.append(msg.ml_count)
+    self.accelerations.add_vector3d(msg.accel)
+    self.velocities.add_vector3d(msg.velocity)
+    self.angular_velocities.add_vector3d(msg.omega)
+    self.accelerometer_biases.add_vector3d(msg.accel_bias)
+    self.gyro_biases.add_vector3d(msg.gyro_bias)
 
 
 def plot_vals(x_axis_vals,
@@ -80,8 +125,8 @@ def plot_vals(x_axis_vals,
 
 def plot_positions(poses, colors, linewidth=1, linestyle='-', marker=None, markeredgewidth=None, markersize=1):
   labels = [poses.pose_type + ' Pos. (X)', poses.pose_type + ' Pos. (Y)', poses.pose_type + 'Pos. (Z)']
-  plot_vals(poses.times, [poses.xs, poses.ys, poses.zs], labels, colors, linewidth, linestyle, marker, markeredgewidth,
-            markersize)
+  plot_vals(poses.times, [poses.positions.xs, poses.positions.ys, poses.positions.zs], labels, colors, linewidth,
+            linestyle, marker, markeredgewidth, markersize)
 
 
 def plot_orientations(poses, colors, linewidth=1, linestyle='-', marker=None, markeredgewidth=None, markersize=1):
@@ -89,8 +134,8 @@ def plot_orientations(poses, colors, linewidth=1, linestyle='-', marker=None, ma
     poses.pose_type + ' Orientation (Yaw)', poses.pose_type + ' Orientation (Roll)',
     poses.pose_type + 'Orienation (Pitch)'
   ]
-  plot_vals(poses.times, [poses.yaws, poses.rolls, poses.pitches], labels, colors, linewidth, linestyle, marker,
-            markeredgewidth, markersize)
+  plot_vals(poses.times, [poses.orientations.yaws, poses.orientations.rolls, poses.orientations.pitches], labels,
+            colors, linewidth, linestyle, marker, markeredgewidth, markersize)
 
 
 def add_pose_plots(pdf, sparse_mapping_poses, graph_localization_poses, imu_augmented_graph_localization_poses):
@@ -139,24 +184,42 @@ def add_pose_plots(pdf, sparse_mapping_poses, graph_localization_poses, imu_augm
   plt.close()
 
 
-def load_msgs(vec_of_poses, bag):
+def add_other_loc_plots(pdf, graph_localization_states, imu_augmented_graph_localization_states):
+  pass
+  # add plots for of and vl feature counts!
+
+
+def load_pose_msgs(vec_of_poses, bag):
   topics = [poses.topic for poses in vec_of_poses]
   for topic, msg, t in bag.read_messages(topics):
     for poses in vec_of_poses:
       if poses.topic == topic:
-        add_pose(msg.pose, msg.header.stamp, poses)
+        poses.add_pose(msg.pose, msg.header.stamp)
         break
-  bag.close()
+
+
+def load_loc_state_msgs(vec_of_loc_states, bag):
+  topics = [loc_states.topic for loc_states in vec_of_loc_states]
+  for topic, msg, t in bag.read_messages(topics):
+    for loc_states in vec_of_loc_states:
+      if loc_states.topic == topic:
+        loc_states.add_loc_state(msg)
+        break
 
 
 def create_plots(bagfile, output_file):
   bag = rosbag.Bag(bagfile)
   sparse_mapping_poses = Poses('Sparse Mapping', 'sparse_mapping_pose')
-  graph_localization_poses = Poses('Graph Localization', 'graph_loc/state')
-  imu_augmented_graph_localization_poses = Poses('Imu Augmented Graph Localization', 'gnc/ekf')
-  vec_of_poses = [sparse_mapping_poses, graph_localization_poses, imu_augmented_graph_localization_poses]
-  load_msgs(vec_of_poses, bag)
+  vec_of_poses = [sparse_mapping_poses]
+  load_pose_msgs(vec_of_poses, bag)
 
-  #TODO(rsoussan): add this as commandn line arg
+  graph_localization_states = LocStates('Graph Localization', 'graph_loc/state')
+  imu_augmented_graph_localization_states = LocStates('Imu Augmented Graph Localization', 'gnc/ekf')
+  vec_of_loc_states = [graph_localization_states, imu_augmented_graph_localization_states]
+  load_loc_state_msgs(vec_of_loc_states, bag)
+
+  bag.close()
+
   with PdfPages(output_file) as pdf:
-    add_pose_plots(pdf, sparse_mapping_poses, graph_localization_poses, imu_augmented_graph_localization_poses)
+    add_pose_plots(pdf, sparse_mapping_poses, graph_localization_states, imu_augmented_graph_localization_states)
+    add_other_loc_plots(pdf, graph_localization_states, imu_augmented_graph_localization_states)
