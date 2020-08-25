@@ -47,7 +47,7 @@ bool ValidPointSet(const std::deque<lm::FeaturePoint>& points, const double min_
   return (average_distance_from_mean >= min_avg_distance_from_mean);
 }
 
-geometry_msgs::PoseWithCovarianceStamped LatestPoseMsg(const GraphLocalizer& graph_localizer) {
+geometry_msgs::PoseStamped LatestPoseMsg(const GraphLocalizer& graph_localizer) {
   Eigen::Isometry3d global_T_body_graph_latest;
   double latest_graph_timestamp;
   graph_localizer.LatestPose(global_T_body_graph_latest, latest_graph_timestamp);
@@ -103,20 +103,19 @@ ff_msgs::EkfState EkfStateMsg(const lc::CombinedNavState& combined_nav_state, co
   return loc_msg;
 }
 
-geometry_msgs::PoseWithCovarianceStamped PoseMsg(const Eigen::Isometry3d& global_T_body,
-                                                 const std_msgs::Header& header) {
-  geometry_msgs::PoseWithCovarianceStamped pose_msg;
+geometry_msgs::PoseStamped PoseMsg(const Eigen::Isometry3d& global_T_body, const std_msgs::Header& header) {
+  geometry_msgs::PoseStamped pose_msg;
   pose_msg.header = header;
 
-  pose_msg.pose.pose.position.x = global_T_body.translation().x();
-  pose_msg.pose.pose.position.y = global_T_body.translation().y();
-  pose_msg.pose.pose.position.z = global_T_body.translation().z();
+  pose_msg.pose.position.x = global_T_body.translation().x();
+  pose_msg.pose.position.y = global_T_body.translation().y();
+  pose_msg.pose.position.z = global_T_body.translation().z();
 
   const Eigen::Quaterniond global_Q_body(global_T_body.linear());
-  pose_msg.pose.pose.orientation.x = global_Q_body.x();
-  pose_msg.pose.pose.orientation.y = global_Q_body.y();
-  pose_msg.pose.pose.orientation.z = global_Q_body.z();
-  pose_msg.pose.pose.orientation.w = global_Q_body.w();
+  pose_msg.pose.orientation.x = global_Q_body.x();
+  pose_msg.pose.orientation.y = global_Q_body.y();
+  pose_msg.pose.orientation.z = global_Q_body.z();
+  pose_msg.pose.orientation.w = global_Q_body.w();
 
   return pose_msg;
 }

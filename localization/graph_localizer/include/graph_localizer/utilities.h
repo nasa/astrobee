@@ -32,7 +32,7 @@
 
 #include <Eigen/Core>
 
-#include <geometry_msgs/PoseWithCovarianceStamped.h>
+#include <geometry_msgs/PoseStamped.h>
 #include <std_msgs/Header.h>
 
 #include <deque>
@@ -49,7 +49,7 @@ void EstimateAndSetImuBiases(const localization_measurements::ImuMeasurement& im
 bool ValidPointSet(const std::deque<localization_measurements::FeaturePoint>& points,
                    const double min_avg_distance_from_mean);
 
-geometry_msgs::PoseWithCovarianceStamped LatestPoseMsg(const GraphLocalizer& localization_measurements);
+geometry_msgs::PoseStamped LatestPoseMsg(const GraphLocalizer& localization_measurements);
 
 Eigen::Isometry3d EigenPose(const ff_msgs::VisualLandmarks& vl_features, const Eigen::Isometry3d& nav_cam_T_body);
 
@@ -59,8 +59,7 @@ ff_msgs::EkfState EkfStateMsg(const localization_common::CombinedNavState& combi
                               const int num_optical_flow_features_in_last_measurement,
                               const int num_sparse_mapping_features_in_last_measurement, const bool estimating_bias);
 
-geometry_msgs::PoseWithCovarianceStamped PoseMsg(const Eigen::Isometry3d& global_T_body,
-                                                 const std_msgs::Header& header);
+geometry_msgs::PoseStamped PoseMsg(const Eigen::Isometry3d& global_T_body, const std_msgs::Header& header);
 }  // namespace graph_localizer
 
 #endif  // GRAPH_LOCALIZER_UTILITIES_H_

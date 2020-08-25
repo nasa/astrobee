@@ -37,7 +37,7 @@ void GraphLocalizerNodelet::Initialize(ros::NodeHandle* nh) {
 
 void GraphLocalizerNodelet::SubscribeAndAdvertise(ros::NodeHandle* nh) {
   state_pub_ = nh->advertise<ff_msgs::EkfState>(TOPIC_GRAPH_LOC_STATE, 1);
-  pose_pub_ = nh->advertise<geometry_msgs::PoseWithCovarianceStamped>(TOPIC_LOCALIZATION_POSE, 1);
+  pose_pub_ = nh->advertise<geometry_msgs::PoseStamped>(TOPIC_LOCALIZATION_POSE, 1);
 
   imu_sub_ = nh->subscribe(TOPIC_HARDWARE_IMU, 1, &GraphLocalizerNodelet::ImuCallback, this,
                            ros::TransportHints().tcpNoDelay());
@@ -125,7 +125,7 @@ void GraphLocalizerNodelet::PublishLocalizationState() const {
 }
 
 void GraphLocalizerNodelet::PublishPose() const {
-  geometry_msgs::PoseWithCovarianceStamped latest_pose_msg;
+  geometry_msgs::PoseStamped latest_pose_msg;
   if (!graph_localizer_wrapper_.LatestPoseMsg(latest_pose_msg)) return;
   pose_pub_.publish(latest_pose_msg);
 }

@@ -53,7 +53,7 @@ class GraphBag {
   void SaveOpticalFlowTracksImage(const sensor_msgs::ImageConstPtr& image_msg,
                                   const graph_localizer::FeatureTrackMap* const feature_tracks);
   void SaveGroundtruthPose(const ff_msgs::VisualLandmarks& vl_features);
-  void SavePose(const geometry_msgs::PoseWithCovarianceStamped& latest_pose_msg);
+  void SavePose(const geometry_msgs::PoseStamped& latest_pose_msg);
   void SaveLocState(const ff_msgs::EkfState& loc_msg, const std::string& topic);
   void FeatureTrackImage(const graph_localizer::FeatureTrackMap& feature_tracks, cv::Mat& feature_track_image) const;
 

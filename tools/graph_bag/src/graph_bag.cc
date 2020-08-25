@@ -24,7 +24,7 @@
 #include <localization_measurements/measurement_conversions.h>
 #include <msg_conversions/msg_conversions.h>
 
-#include <geometry_msgs/PoseWithCovarianceStamped.h>
+#include <geometry_msgs/PoseStamped.h>
 #include <image_transport/image_transport.h>
 #include <ros/time.h>
 #include <rosbag/view.h>
@@ -163,7 +163,7 @@ void GraphBag::SaveOpticalFlowTracksImage(const sensor_msgs::ImageConstPtr& imag
   results_bag_.write(kFeatureTracksImageTopic_, timestamp, *feature_track_image_msg);
 }
 
-void GraphBag::SavePose(const geometry_msgs::PoseWithCovarianceStamped& latest_pose_msg) {
+void GraphBag::SavePose(const geometry_msgs::PoseStamped& latest_pose_msg) {
   const ros::Time timestamp = lc::RosTimeFromHeader(latest_pose_msg.header);
   results_bag_.write(kGraphLocalizationPoseTopic_, timestamp, latest_pose_msg);
 }

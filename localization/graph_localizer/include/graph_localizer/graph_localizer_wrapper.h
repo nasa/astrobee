@@ -26,7 +26,7 @@
 #include <localization_measurements/imu_measurement.h>
 #include <localization_measurements/matched_projections_measurement.h>
 
-#include <geometry_msgs/PoseWithCovarianceStamped.h>
+#include <geometry_msgs/PoseStamped.h>
 #include <sensor_msgs/Imu.h>
 
 #include <string>
@@ -46,7 +46,7 @@ class GraphLocalizerWrapper {
 
   void ResetBiasesAndLocalizer();
 
-  bool LatestPoseMsg(geometry_msgs::PoseWithCovarianceStamped& latest_pose_msg) const;
+  bool LatestPoseMsg(geometry_msgs::PoseStamped& latest_pose_msg) const;
 
   bool LatestLocalizationMsg(ff_msgs::EkfState& localization_msg) const;
 

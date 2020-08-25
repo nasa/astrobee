@@ -132,7 +132,7 @@ const FeatureTrackMap* const GraphLocalizerWrapper::feature_tracks() const {
   return &(graph_localizer_->feature_tracks());
 }
 
-bool GraphLocalizerWrapper::LatestPoseMsg(geometry_msgs::PoseWithCovarianceStamped& latest_pose_msg) const {
+bool GraphLocalizerWrapper::LatestPoseMsg(geometry_msgs::PoseStamped& latest_pose_msg) const {
   if (!graph_localizer_) return false;
   latest_pose_msg = graph_localizer::LatestPoseMsg(*graph_localizer_);
   return true;

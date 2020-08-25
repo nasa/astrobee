@@ -32,7 +32,7 @@ import geometry_msgs
 
 class Poses:
 
-  def __init__(self, pose_type):
+  def __init__(self, pose_type, topic):
     self.xs = []
     self.ys = []
     self.zs = []
@@ -41,6 +41,7 @@ class Poses:
     self.pitches = []
     self.yaws = []
     self.pose_type = pose_type
+    self.topic = topic
 
 
 def add_pose(pose_msg, timestamp, poses):
@@ -138,25 +139,23 @@ def add_pose_plots(pdf, sparse_mapping_poses, graph_localization_poses, imu_augm
   plt.close()
 
 
+def load_msgs(vec_of_poses, bag):
+  topics = [poses.topic for poses in vec_of_poses]
+  for topic, msg, t in bag.read_messages(topics):
+    for poses in vec_of_poses:
+      if poses.topic == topic:
+        add_pose(msg.pose, msg.header.stamp, poses)
+        break
+  bag.close()
+
+
 def create_plots(bagfile, output_file):
   bag = rosbag.Bag(bagfile)
-  sparse_mapping_poses = Poses('Sparse Mapping')
-  graph_localization_poses = Poses('Graph Localization')
-  imu_augmented_graph_localization_poses = Poses('Imu Augmented Graph Localization')
-  sparse_mapping_pose_topic = 'sparse_mapping_pose'
-  graph_localization_loc_topic = 'graph_loc/state'
-  imu_augmentor_loc_topic = 'gnc/ekf'
-
-  # Read and save pose and loc msgs from bag file
-  for topic, msg, t in bag.read_messages(
-      topics=[sparse_mapping_pose_topic, graph_localization_loc_topic, imu_augmentor_loc_topic]):
-    if topic == sparse_mapping_pose_topic:
-      add_pose(msg.pose.pose, msg.header.stamp, sparse_mapping_poses)
-    elif topic == graph_localization_loc_topic:
-      add_pose(msg.pose, msg.header.stamp, graph_localization_poses)
-    elif topic == imu_augmentor_loc_topic:
-      add_pose(msg.pose, msg.header.stamp, imu_augmented_graph_localization_poses)
-  bag.close()
+  sparse_mapping_poses = Poses('Sparse Mapping', 'sparse_mapping_pose')
+  graph_localization_poses = Poses('Graph Localization', 'graph_loc/state')
+  imu_augmented_graph_localization_poses = Poses('Imu Augmented Graph Localization', 'gnc/ekf')
+  vec_of_poses = [sparse_mapping_poses, graph_localization_poses, imu_augmented_graph_localization_poses]
+  load_msgs(vec_of_poses, bag)
 
   #TODO(rsoussan): add this as commandn line arg
   with PdfPages(output_file) as pdf:
