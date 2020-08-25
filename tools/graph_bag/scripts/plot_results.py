@@ -30,7 +30,7 @@ import geometry_msgs
 
 class Poses:
 
-  def __init__(self):
+  def __init__(self, pose_type):
     self.xs = []
     self.ys = []
     self.zs = []
@@ -38,6 +38,7 @@ class Poses:
     self.rolls = []
     self.pitches = []
     self.yaws = []
+    self.pose_type = pose_type
 
 
 def add_pose(pose_msg, timestamp, poses):
@@ -53,72 +54,47 @@ def add_pose(pose_msg, timestamp, poses):
   poses.times.append(timestamp.secs + 1e-9 * timestamp.nsecs)
 
 
-#TODO(rsoussan): add this as commandn line arg
-bag = rosbag.Bag('/home/rsoussan/graph_bag_tests/results.bag')
-sparse_mapping_poses = Poses()
-graph_localization_poses = Poses()
-imu_augmented_graph_localization_poses = Poses()
-sparse_mapping_pose_topic = 'sparse_mapping_pose'
-# graph_localization_pose_topic = 'graph_localization_pose'
-graph_localization_loc_topic = 'graph_loc/state'
-imu_augmentor_loc_topic = 'gnc/ekf'
-for topic, msg, t in bag.read_messages(
-    topics=[sparse_mapping_pose_topic, graph_localization_loc_topic, imu_augmentor_loc_topic]):
-  if topic == sparse_mapping_pose_topic:
-    add_pose(msg.pose.pose, msg.header.stamp, sparse_mapping_poses)
-  elif topic == graph_localization_loc_topic:
-    add_pose(msg.pose, msg.header.stamp, graph_localization_poses)
-  elif topic == imu_augmentor_loc_topic:
-    add_pose(msg.pose, msg.header.stamp, imu_augmented_graph_localization_poses)
-bag.close()
+def plot_vals(x_axis_vals,
+              vec_of_y_axis_vals,
+              labels,
+              colors,
+              linewidth=1,
+              linestyle='-',
+              marker=None,
+              markeredgewidth=None,
+              markersize=1):
+  for index, _ in enumerate(vec_of_y_axis_vals):
+    plt.plot(x_axis_vals,
+             vec_of_y_axis_vals[index],
+             colors[index],
+             linestyle=linestyle,
+             linewidth=linewidth,
+             marker=marker,
+             markeredgewidth=markeredgewidth,
+             markersize=markersize,
+             label=labels[index])
 
-colors = ['r', 'b', 'g']
-#TODO(rsoussan): add this as commandn line arg
-filename = 'output.pdf'
-with PdfPages(filename) as pdf:
-  # positions
+
+def plot_positions(poses, colors, linewidth=1, linestyle='-', marker=None, markeredgewidth=None, markersize=1):
+  labels = [poses.pose_type + ' Pos. (X)', poses.pose_type + ' Pos. (Y)', poses.pose_type + 'Pos. (Z)']
+  plot_vals(poses.times, [poses.xs, poses.ys, poses.zs], labels, colors, linewidth, linestyle, marker, markeredgewidth,
+            markersize)
+
+
+def plot_orientations(poses, colors, linewidth=1, linestyle='-', marker=None, markeredgewidth=None, markersize=1):
+  labels = [
+    poses.pose_type + ' Orientation (Yaw)', poses.pose_type + ' Orientation (Roll)',
+    poses.pose_type + 'Orienation (Pitch)'
+  ]
+  plot_vals(poses.times, [poses.yaws, poses.rolls, poses.pitches], labels, colors, linewidth, linestyle, marker,
+            markeredgewidth, markersize)
+
+
+def add_pose_plots(pdf, sparse_mapping_poses, graph_localization_poses, imu_augmented_graph_localization_poses):
+  colors = ['r', 'b', 'g']
   plt.figure()
-  plt.plot(sparse_mapping_poses.times,
-           sparse_mapping_poses.xs,
-           colors[0],
-           linestyle='None',
-           marker='o',
-           markeredgewidth=0.1,
-           markersize=1.5,
-           label='Sparse Mapping Pos. (X)')
-  plt.plot(sparse_mapping_poses.times,
-           sparse_mapping_poses.ys,
-           colors[1],
-           linestyle='None',
-           marker='o',
-           markeredgewidth=0.1,
-           markersize=1.5,
-           label='Sparse Mapping Pos. (Y)')
-  plt.plot(sparse_mapping_poses.times,
-           sparse_mapping_poses.zs,
-           colors[2],
-           linestyle='None',
-           marker='o',
-           markeredgewidth=0.1,
-           markersize=1.5,
-           label='Sparse Mapping Pos. (Z)')
-
-  plt.plot(graph_localization_poses.times,
-           graph_localization_poses.xs,
-           colors[0],
-           linewidth=0.5,
-           label='Graph Localization Pos. (X)')
-  plt.plot(graph_localization_poses.times,
-           graph_localization_poses.ys,
-           colors[1],
-           linewidth=0.5,
-           label='Graph Localization Pos. (Y)')
-  plt.plot(graph_localization_poses.times,
-           graph_localization_poses.zs,
-           colors[2],
-           linewidth=0.5,
-           label='Graph Localization Pos. (Z)')
-
+  plot_positions(sparse_mapping_poses, colors, marker='o', markeredgewidth=0.1, markersize=1.5)
+  plot_positions(graph_localization_poses, colors, linewidth=0.5)
   plt.xlabel('Time (s)')
   plt.ylabel('Position (m)')
   plt.title('Position')
@@ -128,47 +104,8 @@ with PdfPages(filename) as pdf:
 
   # orientations
   plt.figure()
-  plt.plot(sparse_mapping_poses.times,
-           sparse_mapping_poses.yaws,
-           colors[0],
-           linestyle='None',
-           marker='o',
-           markeredgewidth=0.1,
-           markersize=1.5,
-           label='Sparse Mapping Orientation (Yaw)')
-  plt.plot(sparse_mapping_poses.times,
-           sparse_mapping_poses.rolls,
-           colors[1],
-           linestyle='None',
-           marker='o',
-           markeredgewidth=0.1,
-           markersize=1.5,
-           label='Sparse Mapping Orientation (Roll)')
-  plt.plot(sparse_mapping_poses.times,
-           sparse_mapping_poses.pitches,
-           colors[2],
-           linestyle='None',
-           marker='o',
-           markeredgewidth=0.1,
-           markersize=1.5,
-           label='Sparse Mapping Orientation (Pitch)')
-
-  plt.plot(graph_localization_poses.times,
-           graph_localization_poses.yaws,
-           colors[0],
-           linewidth=0.5,
-           label='Graph Localization Orientation (Yaw)')
-  plt.plot(graph_localization_poses.times,
-           graph_localization_poses.rolls,
-           colors[1],
-           linewidth=0.5,
-           label='Graph Localization Orientation (Roll)')
-  plt.plot(graph_localization_poses.times,
-           graph_localization_poses.pitches,
-           colors[2],
-           linewidth=0.5,
-           label='Graph Localization Orientation (Pitch')
-
+  plot_orientations(sparse_mapping_poses, colors, marker='o', markeredgewidth=0.1, markersize=1.5)
+  plot_orientations(graph_localization_poses, colors, linewidth=0.5)
   plt.xlabel('Time (s)')
   plt.ylabel('Orienation (deg)')
   plt.title('Orientation')
@@ -176,52 +113,55 @@ with PdfPages(filename) as pdf:
   pdf.savefig()
   plt.close()
 
-  # positions
+  # Imu Augmented Loc vs. Loc
   plt.figure()
-  plt.plot(sparse_mapping_poses.times,
-           sparse_mapping_poses.xs,
-           colors[0],
-           linestyle='None',
-           marker='o',
-           markeredgewidth=0.1,
-           markersize=1.5,
-           label='Sparse Mapping Pos. (X)')
-  plt.plot(sparse_mapping_poses.times,
-           sparse_mapping_poses.ys,
-           colors[1],
-           linestyle='None',
-           marker='o',
-           markeredgewidth=0.1,
-           markersize=1.5,
-           label='Sparse Mapping Pos. (Y)')
-  plt.plot(sparse_mapping_poses.times,
-           sparse_mapping_poses.zs,
-           colors[2],
-           linestyle='None',
-           marker='o',
-           markeredgewidth=0.1,
-           markersize=1.5,
-           label='Sparse Mapping Pos. (Z)')
-
-  plt.plot(imu_augmented_graph_localization_poses.times,
-           imu_augmented_graph_localization_poses.xs,
-           colors[0],
-           linewidth=0.5,
-           label='Imu Augmented Graph Localization Pos. (X)')
-  plt.plot(imu_augmented_graph_localization_poses.times,
-           imu_augmented_graph_localization_poses.ys,
-           colors[1],
-           linewidth=0.5,
-           label='Imu Augmented Graph Localization Pos. (Y)')
-  plt.plot(imu_augmented_graph_localization_poses.times,
-           imu_augmented_graph_localization_poses.zs,
-           colors[2],
-           linewidth=0.5,
-           label='Imu Augmented Graph Localization Pos. (Z)')
-
+  plot_positions(graph_localization_poses, colors, marker='o', markeredgewidth=0.1, markersize=1.5)
+  plot_positions(imu_augmented_graph_localization_poses, colors, linewidth=0.5)
   plt.xlabel('Time (s)')
   plt.ylabel('Position (m)')
   plt.title('Position')
   plt.legend(prop={'size': 6})
   pdf.savefig()
   plt.close()
+
+  # orientations
+  plt.figure()
+  plot_orientations(graph_localization_poses, colors, marker='o', markeredgewidth=0.1, markersize=1.5)
+  plot_orientations(imu_augmented_graph_localization_poses, colors, linewidth=0.5)
+  plt.xlabel('Time (s)')
+  plt.ylabel('Orienation (deg)')
+  plt.title('Orientation')
+  plt.legend(prop={'size': 6})
+  pdf.savefig()
+  plt.close()
+
+
+def main():
+  #TODO(rsoussan): add this as commandn line arg
+  bag = rosbag.Bag('/home/rsoussan/graph_bag_tests/results.bag')
+  sparse_mapping_poses = Poses('Sparse Mapping')
+  graph_localization_poses = Poses('Graph Localization')
+  imu_augmented_graph_localization_poses = Poses('Imu Augmented Graph Localization')
+  sparse_mapping_pose_topic = 'sparse_mapping_pose'
+  graph_localization_loc_topic = 'graph_loc/state'
+  imu_augmentor_loc_topic = 'gnc/ekf'
+
+  # Read and save pose and loc msgs from bag file
+  for topic, msg, t in bag.read_messages(
+      topics=[sparse_mapping_pose_topic, graph_localization_loc_topic, imu_augmentor_loc_topic]):
+    if topic == sparse_mapping_pose_topic:
+      add_pose(msg.pose.pose, msg.header.stamp, sparse_mapping_poses)
+    elif topic == graph_localization_loc_topic:
+      add_pose(msg.pose, msg.header.stamp, graph_localization_poses)
+    elif topic == imu_augmentor_loc_topic:
+      add_pose(msg.pose, msg.header.stamp, imu_augmented_graph_localization_poses)
+  bag.close()
+
+  #TODO(rsoussan): add this as commandn line arg
+  filename = 'output.pdf'
+  with PdfPages(filename) as pdf:
+    add_pose_plots(pdf, sparse_mapping_poses, graph_localization_poses, imu_augmented_graph_localization_poses)
+
+
+if __name__ == '__main__':
+  main()
