@@ -30,8 +30,7 @@
 namespace graph_localizer {
 namespace lc = localization_common;
 namespace lm = localization_measurements;
-GraphLocalizerWrapper::GraphLocalizerWrapper()
-    : num_optical_flow_features_in_last_measurement_(0), num_sparse_mapping_features_in_last_measurement_(0) {
+GraphLocalizerWrapper::GraphLocalizerWrapper() {
   // Needed for ConfigReader construction
   // TODO(rsoussan): load this somewhere else/ how do other nodelets do this?
   const std::string astrobee_configs_path = "/home/rsoussan/astrobee/astrobee";
@@ -57,7 +56,6 @@ GraphLocalizerWrapper::GraphLocalizerWrapper()
 }
 
 void GraphLocalizerWrapper::OpticalFlowCallback(const ff_msgs::Feature2dArray& feature_array_msg) {
-  num_optical_flow_features_in_last_measurement_ = feature_array_msg.feature_array.size();
   if (graph_localizer_)
     graph_localizer_->AddOpticalFlowMeasurement(lm::MakeFeaturePointsMeasurement(feature_array_msg));
 }
@@ -83,7 +81,6 @@ void GraphLocalizerWrapper::ResetBiasesAndLocalizer() {
 }
 
 void GraphLocalizerWrapper::VLVisualLandmarksCallback(const ff_msgs::VisualLandmarks& visual_landmarks_msg) {
-  num_sparse_mapping_features_in_last_measurement_ = visual_landmarks_msg.landmarks.size();
   if (graph_localizer_) {
     graph_localizer_->AddSparseMappingMeasurement(lm::MakeMatchedProjectionsMeasurement(visual_landmarks_msg));
   } else {
@@ -148,10 +145,9 @@ bool GraphLocalizerWrapper::LatestLocalizationMsg(ff_msgs::EkfState& localizatio
     return false;
   }
   // TODO(rsoussan): Add angular velocity and acceleration from imu integrator
-  localization_msg =
-      EkfStateMsg(latest_combined_nav_state, Eigen::Vector3d::Zero(), Eigen::Vector3d::Zero(),
-                  latest_combined_nav_state_covariances, num_optical_flow_features_in_last_measurement_,
-                  num_sparse_mapping_features_in_last_measurement_, graph_loc_initialization_.EstimateBiases());
+  localization_msg = EkfStateMsg(latest_combined_nav_state, Eigen::Vector3d::Zero(), Eigen::Vector3d::Zero(),
+                                 latest_combined_nav_state_covariances, graph_localizer_->NumOFFactors(),
+                                 graph_localizer_->NumVLFactors(), graph_loc_initialization_.EstimateBiases());
   return true;
 }
 }  // namespace graph_localizer

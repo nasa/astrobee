@@ -73,6 +73,12 @@ class GraphLocalizer {
   void LatestBiases(Eigen::Vector3d& accelerometer_bias, Eigen::Vector3d& gyro_bias,
                     localization_common::Time& timestamp) const;
 
+  // Helper function for filling in loc state msg
+  int NumOFFactors() const;
+
+  // Helper function for filling in loc state msg
+  int NumVLFactors() const;
+
  private:
   // Removes Keys and Values outside of sliding window.
   // Removes any factors depending on removed values
@@ -104,6 +110,17 @@ class GraphLocalizer {
   }
 
   void PrintFactorDebugInfo() const;
+
+  template <typename FactorType>
+  int NumFactors() const {
+    int num_factors = 0;
+    for (auto factor_it = graph_.begin(); factor_it != graph_.end();) {
+      if (dynamic_cast<const FactorType*>(factor_it->get())) {
+        ++num_factors;
+      }
+    }
+    return num_factors;
+  }
 
   // TODO(rsoussan): put these somewhere else
   gtsam::NavState global_gN_body_start_;

@@ -402,6 +402,15 @@ void GraphLocalizer::PrintFactorDebugInfo() const {
   }
 }
 
+int GraphLocalizer::NumOFFactors() const {
+  // TODO(rsoussan): put these using statements somewhere else?
+  using Calibration = gtsam::Cal3_S2;
+  using SmartFactor = gtsam::SmartProjectionPoseFactor<Calibration>;
+  return NumFactors<SmartFactor>();
+}
+
+int GraphLocalizer::NumVLFactors() const { return NumFactors<gtsam::LocProjectionFactor<>>(); }
+
 void GraphLocalizer::Update() {
   LOG(INFO) << "Update: Updating.";
 
