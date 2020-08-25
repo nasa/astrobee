@@ -184,9 +184,42 @@ def add_pose_plots(pdf, sparse_mapping_poses, graph_localization_poses, imu_augm
   plt.close()
 
 
+def plot_features(feature_counts, times, label, color, marker, markeredgewidth=0.1, markersize=1.5):
+  plt.plot(times,
+           feature_counts,
+           color,
+           marker=marker,
+           markeredgewidth=markeredgewidth,
+           markersize=markersize,
+           label=label)
+
+
+def add_feature_count_plots(pdf, graph_localization_states):
+  plt.figure()
+  plot_features(graph_localization_states.of_counts,
+                graph_localization_states.times,
+                'OF',
+                'r',
+                marker='x',
+                markeredgewidth=0.1,
+                markersize=1.5)
+  plot_features(graph_localization_states.vl_counts,
+                graph_localization_states.times,
+                'VL',
+                'b',
+                marker='o',
+                markeredgewidth=0.1,
+                markersize=1.5)
+  plt.xlabel('Time (s)')
+  plt.ylabel('Feature Counts (num features in graph)')
+  plt.title('Feature Counts')
+  plt.legend(prop={'size': 6})
+  pdf.savefig()
+  plt.close()
+
+
 def add_other_loc_plots(pdf, graph_localization_states, imu_augmented_graph_localization_states):
-  pass
-  # add plots for of and vl feature counts!
+  add_feature_count_plots(pdf, graph_localization_states)
 
 
 def load_pose_msgs(vec_of_poses, bag):
