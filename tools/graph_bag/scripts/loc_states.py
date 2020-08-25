@@ -32,6 +32,8 @@ class LocStates(poses.Poses):
     self.angular_velocities = vector3ds.Vector3ds()
     self.accelerometer_biases = vector3ds.Vector3ds()
     self.gyro_biases = vector3ds.Vector3ds()
+    self.position_covariances = vcetor3ds.Vector3ds()
+    self.orientation_covariances = vector3ds.Vector3ds()
 
   def add_loc_state(self, msg):
     self.add_pose(msg.pose, msg.header.stamp)

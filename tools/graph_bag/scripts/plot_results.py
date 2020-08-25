@@ -51,10 +51,29 @@ def plot_vals(x_axis_vals,
              label=labels[index])
 
 
+def plot_vector3ds(vector3ds,
+                   times,
+                   label,
+                   colors=['r', 'g', 'b'],
+                   linewidth=1,
+                   linestyle='-',
+                   marker=None,
+                   markeredgewidth=None,
+                   markersize=1):
+  labels = [label + ' (X)', label + ' (Y)', label + ' (Z)']
+  plot_vals(times, [vector3ds.xs, vector3ds.ys, vector3ds.zs], labels, colors, linewidth, linestyle, marker,
+            markeredgewidth, markersize)
+
+
 def plot_positions(poses, colors, linewidth=1, linestyle='-', marker=None, markeredgewidth=None, markersize=1):
-  labels = [poses.pose_type + ' Pos. (X)', poses.pose_type + ' Pos. (Y)', poses.pose_type + 'Pos. (Z)']
-  plot_vals(poses.times, [poses.positions.xs, poses.positions.ys, poses.positions.zs], labels, colors, linewidth,
-            linestyle, marker, markeredgewidth, markersize)
+  plot_vector3ds(poses.positions,
+                 poses.times,
+                 'Pos.',
+                 linewidth=linewidth,
+                 linestyle=linestyle,
+                 marker=marker,
+                 markeredgewidth=markeredgewidth,
+                 markersize=markersize)
 
 
 def plot_orientations(poses, colors, linewidth=1, linestyle='-', marker=None, markeredgewidth=None, markersize=1):
@@ -146,8 +165,57 @@ def add_feature_count_plots(pdf, graph_localization_states):
   plt.close()
 
 
+def add_other_vector3d_plots(pdf, imu_augmented_graph_localization_states):
+  # Acceleration
+  plt.figure()
+  plot_vector3ds(imu_augmented_graph_localization_states.accelerations, imu_augmented_graph_localization_states.times,
+                 'Acc.')
+  plt.xlabel('Time (s)')
+  plt.ylabel('Acceleration (m/s^2)')
+  plt.title('Acceleration')
+  plt.legend(prop={'size': 6})
+  pdf.savefig()
+  plt.close()
+
+  # Biases
+  plt.figure()
+  plot_vector3ds(imu_augmented_graph_localization_states.accelerometer_biases,
+                 imu_augmented_graph_localization_states.times, 'Acc. Bias')
+  plot_vector3ds(imu_augmented_graph_localization_states.gyro_biases, imu_augmented_graph_localization_states.times,
+                 'Gyro Bias')
+  plt.xlabel('Time (s)')
+  plt.ylabel('Biases')
+  plt.title('Biases')
+  plt.legend(prop={'size': 6})
+  pdf.savefig()
+  plt.close()
+
+  # Angular Velocity
+  plt.figure()
+  plot_vector3ds(imu_augmented_graph_localization_states.angular_velocities,
+                 imu_augmented_graph_localization_states.times, 'Ang. Vel.')
+  plt.xlabel('Time (s)')
+  plt.ylabel('Angular Velocities')
+  plt.title('Angular Velocities')
+  plt.legend(prop={'size': 6})
+  pdf.savefig()
+  plt.close()
+
+  # Velocity
+  plt.figure()
+  plot_vector3ds(imu_augmented_graph_localization_states.velocities, imu_augmented_graph_localization_states.times,
+                 'Vel.')
+  plt.xlabel('Time (s)')
+  plt.ylabel('Velocities')
+  plt.title('Velocities')
+  plt.legend(prop={'size': 6})
+  pdf.savefig()
+  plt.close()
+
+
 def add_other_loc_plots(pdf, graph_localization_states, imu_augmented_graph_localization_states):
   add_feature_count_plots(pdf, graph_localization_states)
+  add_other_vector3d_plots(pdf, imu_augmented_graph_localization_states)
 
 
 def load_pose_msgs(vec_of_poses, bag):
