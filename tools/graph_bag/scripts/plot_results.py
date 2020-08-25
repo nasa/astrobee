@@ -17,89 +17,17 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import argparse
+import poses
+import loc_states
 
 import matplotlib
 matplotlib.use('pdf')
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
-import scipy.spatial.transform
 
 import math
 import rosbag
 import geometry_msgs
-
-
-class Vector3ds:
-
-  def __init__(self):
-    self.xs = []
-    self.ys = []
-    self.zs = []
-
-  def add(self, x, y, z):
-    self.xs.append(x)
-    self.ys.append(y)
-    self.zs.append(z)
-
-  def add_vector3d(self, vector3d):
-    self.xs.append(vector3d.x)
-    self.ys.append(vector3d.y)
-    self.zs.append(vector3d.z)
-
-
-class Orientations:
-
-  def __init__(self):
-    self.yaws = []
-    self.pitches = []
-    self.rolls = []
-
-  def add(self, yaw, pitch, roll):
-    self.yaws.append(yaw)
-    self.pitches.append(pitch)
-    self.rolls.append(roll)
-
-
-class Poses(object):
-
-  def __init__(self, pose_type, topic):
-    self.positions = Vector3ds()
-    self.orientations = Orientations()
-    self.times = []
-    self.pose_type = pose_type
-    self.topic = topic
-
-  def add_pose(self, pose_msg, timestamp):
-    self.positions.add(pose_msg.position.x, pose_msg.position.y, pose_msg.position.z)
-    euler_angles = scipy.spatial.transform.Rotation.from_quat(
-      [pose_msg.orientation.x, pose_msg.orientation.y, pose_msg.orientation.z,
-       pose_msg.orientation.w]).as_euler('ZYX', degrees=True)
-    self.orientations.add(euler_angles[0], euler_angles[1], euler_angles[2])
-    self.times.append(timestamp.secs + 1e-9 * timestamp.nsecs)
-
-
-class LocStates(Poses):
-
-  def __init__(self, loc_type, topic):
-    super(LocStates, self).__init__(loc_type, topic)
-    self.of_counts = []
-    self.vl_counts = []
-    self.accelerations = Vector3ds()
-    self.velocities = Vector3ds()
-    self.angular_velocities = Vector3ds()
-    self.accelerometer_biases = Vector3ds()
-    self.gyro_biases = Vector3ds()
-
-  def add_loc_state(self, msg):
-    self.add_pose(msg.pose, msg.header.stamp)
-    self.of_counts.append(msg.of_count)
-    self.vl_counts.append(msg.ml_count)
-    self.accelerations.add_vector3d(msg.accel)
-    self.velocities.add_vector3d(msg.velocity)
-    self.angular_velocities.add_vector3d(msg.omega)
-    self.accelerometer_biases.add_vector3d(msg.accel_bias)
-    self.gyro_biases.add_vector3d(msg.gyro_bias)
 
 
 def plot_vals(x_axis_vals,
@@ -242,12 +170,12 @@ def load_loc_state_msgs(vec_of_loc_states, bag):
 
 def create_plots(bagfile, output_file):
   bag = rosbag.Bag(bagfile)
-  sparse_mapping_poses = Poses('Sparse Mapping', 'sparse_mapping_pose')
+  sparse_mapping_poses = poses.Poses('Sparse Mapping', 'sparse_mapping_pose')
   vec_of_poses = [sparse_mapping_poses]
   load_pose_msgs(vec_of_poses, bag)
 
-  graph_localization_states = LocStates('Graph Localization', 'graph_loc/state')
-  imu_augmented_graph_localization_states = LocStates('Imu Augmented Graph Localization', 'gnc/ekf')
+  graph_localization_states = loc_states.LocStates('Graph Localization', 'graph_loc/state')
+  imu_augmented_graph_localization_states = loc_states.LocStates('Imu Augmented Graph Localization', 'gnc/ekf')
   vec_of_loc_states = [graph_localization_states, imu_augmented_graph_localization_states]
   load_loc_state_msgs(vec_of_loc_states, bag)
 
