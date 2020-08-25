@@ -19,32 +19,63 @@
 #include <ff_common/init.h>
 #include <graph_bag/graph_bag.h>
 
+#include <boost/filesystem.hpp>
+#include <boost/program_options.hpp>
+
+#include <glog/logging.h>
+
 // #include <gperftools/profiler.h>
+
+namespace po = boost::program_options;
 
 int main(int argc, char** argv) {
   // ProfilerStart("/home/rsoussan/graph_bag_tests/prof.txt");
-  // TODO(rsoussan): pass this from the command line using arg parse!
-  // const std::string input_bag =
-  // "/home/rsoussan/Downloads/nasa_data/bags/20160211_1701_nav_sampled_shortened.bag";
-  // const std::string input_bag =
-  // "/home/rsoussan/Downloads/nasa_data/bags/20160211_1707_nav_sampled.bag";
-  // const std::string input_bag =
-  // "/home/rsoussan/Downloads/nasa_data/bags/20160211_1711_nav_sampled.bag";
-  //  const std::string input_bag =
-  //  "/home/rsoussan/Downloads/nasa_data/bags/20160211_1718_nav_sampled.bag";
-  const std::string input_bag =
-      "/home/rsoussan/Downloads/nasa_data/docking/"
-      "20200702_1853_mobNavSpd_trimmed.bag";
-  // const std::string map_file =
-  // "/home/rsoussan/Downloads/nasa_data/merged_20190523_0614_0712_0724_0828_1101_20200513_0521.brisk.hist.map";
-  const std::string map_file =
-      "/home/rsoussan/Downloads/nasa_data/"
-      "merged_0523_0614_0712_0724_0828_1101.brisk.hist.map";
-  const std::string image_topic = "mgt/img_sampler/nav_cam/image_record";
-  const std::string results_bag = "/home/rsoussan/graph_bag_tests/results.bag";
+  po::options_description desc("Runs graph localization on a bagfile and saves the results to a new bagfile.");
+  desc.add_options()("help", "produce help message")("bagfile", po::value<std::string>()->required(), "Input bagfile")(
+      "map-file", po::value<std::string>()->required(), "Map file")(
+      "image-topic,i", po::value<std::string>()->default_value("mgt/img_sampler/nav_cam/image_record"), "Image topic")(
+      "output-bagfile,o", po::value<std::string>()->default_value("results.bag"), "Output bagfile");
+
+  po::positional_options_description p;
+  p.add("bagfile", 1);
+  p.add("map-file", 1);
+  po::variables_map vm;
+  try {
+    po::store(po::command_line_parser(argc, argv).options(desc).positional(p).run(), vm);
+    po::notify(vm);
+  } catch (std::exception& e) {
+    std::cerr << "Error: " << e.what() << "\n";
+    return 1;
+  }
+
+  if (vm.count("help")) {
+    std::cout << desc << "\n";
+    return 1;
+  }
+
+  const std::string input_bag = vm["bagfile"].as<std::string>();
+  const std::string map_file = vm["map-file"].as<std::string>();
+  const std::string image_topic = vm["image-topic"].as<std::string>();
+  std::string output_bag = vm["output-bagfile"].as<std::string>();
+
+  if (!boost::filesystem::exists(input_bag)) {
+    LOG(FATAL) << "Bagfile " << input_bag << " not found.";
+  }
+
+  if (!boost::filesystem::exists(map_file)) {
+    LOG(FATAL) << "Map file " << map_file << " not found.";
+  }
+
+  if (vm["output-bag"].defaulted()) {
+    const auto current_path = boost::filesystem::current_path();
+    boost::filesystem::path output_bag_path(output_bag);
+    const auto output_bag_full_path = current_path / output_bag_path;
+    output_bag = output_bag_full_path.string();
+  }
+
   // TODO(rsoussan): why is this needed?
   ff_common::InitFreeFlyerApplication(&argc, &argv);
-  graph_bag::GraphBag graph_bag(input_bag, map_file, image_topic, results_bag);
+  graph_bag::GraphBag graph_bag(input_bag, map_file, image_topic, output_bag);
   graph_bag.Run();
   // ProfilerFlush();
   // ProfilerStop();
