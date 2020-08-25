@@ -17,6 +17,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import argparse
+
 import matplotlib
 matplotlib.use('pdf')
 import matplotlib.pyplot as plt
@@ -136,9 +138,8 @@ def add_pose_plots(pdf, sparse_mapping_poses, graph_localization_poses, imu_augm
   plt.close()
 
 
-def main():
-  #TODO(rsoussan): add this as commandn line arg
-  bag = rosbag.Bag('/home/rsoussan/graph_bag_tests/results.bag')
+def create_plots(bagfile, output_file):
+  bag = rosbag.Bag(bagfile)
   sparse_mapping_poses = Poses('Sparse Mapping')
   graph_localization_poses = Poses('Graph Localization')
   imu_augmented_graph_localization_poses = Poses('Imu Augmented Graph Localization')
@@ -158,10 +159,5 @@ def main():
   bag.close()
 
   #TODO(rsoussan): add this as commandn line arg
-  filename = 'output.pdf'
-  with PdfPages(filename) as pdf:
+  with PdfPages(output_file) as pdf:
     add_pose_plots(pdf, sparse_mapping_poses, graph_localization_poses, imu_augmented_graph_localization_poses)
-
-
-if __name__ == '__main__':
-  main()
