@@ -181,11 +181,19 @@ def add_other_vector3d_plots(pdf, imu_augmented_graph_localization_states):
   plt.figure()
   plot_vector3ds(imu_augmented_graph_localization_states.accelerometer_biases,
                  imu_augmented_graph_localization_states.times, 'Acc. Bias')
+  plt.xlabel('Time (s)')
+  plt.ylabel('Accelerometer Biases')
+  plt.title('Accelerometer Biases')
+  plt.legend(prop={'size': 6})
+  pdf.savefig()
+  plt.close()
+
+  plt.figure()
   plot_vector3ds(imu_augmented_graph_localization_states.gyro_biases, imu_augmented_graph_localization_states.times,
                  'Gyro Bias')
   plt.xlabel('Time (s)')
-  plt.ylabel('Biases')
-  plt.title('Biases')
+  plt.ylabel('Gyro Biases')
+  plt.title('Gyro Biases')
   plt.legend(prop={'size': 6})
   pdf.savefig()
   plt.close()
