@@ -87,13 +87,19 @@ bool ImuAugmentorWrapper::LatestImuAugmentedLocalizationMsg(ff_msgs::EkfState& l
 
   // Get feature counts and other info from latest_loc_msg
   latest_imu_augmented_loc_msg = *latest_loc_msg_;
+
+  // Update nav state and covariances with latest imu measurements
   lc::CombinedNavStateToMsg(latest_imu_augmented_combined_nav_state, latest_imu_augmented_loc_msg);
   lc::CombinedNavStateCovariancesToMsg(latest_imu_augmented_covariances, latest_imu_augmented_loc_msg);
 
-  // Add latest acceleration and angular velocity to loc msg
+  // Add latest bias corrected acceleration and angular velocity to loc msg
   const auto latest_imu_measurement = imu_augmentor_->LatestMeasurement();
-  lc::VectorToMsg(latest_imu_measurement.acceleration, latest_imu_augmented_loc_msg.accel);
-  lc::VectorToMsg(latest_imu_measurement.angular_velocity, latest_imu_augmented_loc_msg.omega);
+  const auto& latest_bias = latest_imu_augmented_combined_nav_state.bias();
+  const auto latest_bias_corrected_acceleration = latest_bias.correctAccelerometer(latest_imu_measurement.acceleration);
+  const auto latest_bias_corrected_angular_velocity =
+      latest_bias.correctGyroscope(latest_imu_measurement.angular_velocity);
+  lc::VectorToMsg(latest_bias_corrected_acceleration, latest_imu_augmented_loc_msg.accel);
+  lc::VectorToMsg(latest_bias_corrected_angular_velocity, latest_imu_augmented_loc_msg.omega);
 
   return true;
 }
