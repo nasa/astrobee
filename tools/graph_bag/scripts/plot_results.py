@@ -88,7 +88,7 @@ def plot_orientations(poses, colors, linewidth=1, linestyle='-', marker=None, ma
 def add_pose_plots(pdf, sparse_mapping_poses, graph_localization_poses, imu_augmented_graph_localization_poses):
   colors = ['r', 'b', 'g']
   plt.figure()
-  plot_positions(sparse_mapping_poses, colors, marker='o', markeredgewidth=0.1, markersize=1.5)
+  plot_positions(sparse_mapping_poses, colors, linestyle='None', marker='o', markeredgewidth=0.1, markersize=1.5)
   plot_positions(graph_localization_poses, colors, linewidth=0.5)
   plt.xlabel('Time (s)')
   plt.ylabel('Position (m)')
@@ -99,7 +99,7 @@ def add_pose_plots(pdf, sparse_mapping_poses, graph_localization_poses, imu_augm
 
   # orientations
   plt.figure()
-  plot_orientations(sparse_mapping_poses, colors, marker='o', markeredgewidth=0.1, markersize=1.5)
+  plot_orientations(sparse_mapping_poses, colors, linestyle='None', marker='o', markeredgewidth=0.1, markersize=1.5)
   plot_orientations(graph_localization_poses, colors, linewidth=0.5)
   plt.xlabel('Time (s)')
   plt.ylabel('Orienation (deg)')
