@@ -68,7 +68,7 @@ def plot_vector3ds(vector3ds,
 def plot_positions(poses, colors, linewidth=1, linestyle='-', marker=None, markeredgewidth=None, markersize=1):
   plot_vector3ds(poses.positions,
                  poses.times,
-                 'Pos.',
+                 poses.pose_type + ' Pos.',
                  linewidth=linewidth,
                  linestyle=linestyle,
                  marker=marker,
@@ -79,7 +79,7 @@ def plot_positions(poses, colors, linewidth=1, linestyle='-', marker=None, marke
 def plot_orientations(poses, colors, linewidth=1, linestyle='-', marker=None, markeredgewidth=None, markersize=1):
   labels = [
     poses.pose_type + ' Orientation (Yaw)', poses.pose_type + ' Orientation (Roll)',
-    poses.pose_type + 'Orienation (Pitch)'
+    poses.pose_type + ' Orienation (Pitch)'
   ]
   plot_vals(poses.times, [poses.orientations.yaws, poses.orientations.rolls, poses.orientations.pitches], labels,
             colors, linewidth, linestyle, marker, markeredgewidth, markersize)
@@ -92,7 +92,7 @@ def add_pose_plots(pdf, sparse_mapping_poses, graph_localization_poses, imu_augm
   plot_positions(graph_localization_poses, colors, linewidth=0.5)
   plt.xlabel('Time (s)')
   plt.ylabel('Position (m)')
-  plt.title('Position')
+  plt.title('Graph vs. Sparse Mapping Position')
   plt.legend(prop={'size': 6})
   pdf.savefig()
   plt.close()
@@ -103,7 +103,7 @@ def add_pose_plots(pdf, sparse_mapping_poses, graph_localization_poses, imu_augm
   plot_orientations(graph_localization_poses, colors, linewidth=0.5)
   plt.xlabel('Time (s)')
   plt.ylabel('Orienation (deg)')
-  plt.title('Orientation')
+  plt.title('Graph vs. Sparse Mapping Orientation')
   plt.legend(prop={'size': 6})
   pdf.savefig()
   plt.close()
@@ -114,7 +114,7 @@ def add_pose_plots(pdf, sparse_mapping_poses, graph_localization_poses, imu_augm
   plot_positions(imu_augmented_graph_localization_poses, colors, linewidth=0.5)
   plt.xlabel('Time (s)')
   plt.ylabel('Position (m)')
-  plt.title('Position')
+  plt.title('Graph vs. Imu Augmented Graph Position')
   plt.legend(prop={'size': 6})
   pdf.savefig()
   plt.close()
@@ -125,7 +125,7 @@ def add_pose_plots(pdf, sparse_mapping_poses, graph_localization_poses, imu_augm
   plot_orientations(imu_augmented_graph_localization_poses, colors, linewidth=0.5)
   plt.xlabel('Time (s)')
   plt.ylabel('Orienation (deg)')
-  plt.title('Orientation')
+  plt.title('Graph vs. Imu Augmented Graph Orientation')
   plt.legend(prop={'size': 6})
   pdf.savefig()
   plt.close()
