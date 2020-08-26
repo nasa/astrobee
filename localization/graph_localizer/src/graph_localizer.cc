@@ -389,9 +389,7 @@ void GraphLocalizer::SlideWindow(const gtsam::Marginals& marginals) {
 void GraphLocalizer::PrintFactorDebugInfo() const {
   // TODO(rsoussan): put these using statements somewhere else?
   using Calibration = gtsam::Cal3_S2;
-  using Camera = gtsam::PinholeCamera<Calibration>;
   using SmartFactor = gtsam::SmartProjectionPoseFactor<Calibration>;
-  using SharedSmartFactor = boost::shared_ptr<SmartFactor>;
   for (auto factor_it = graph_.begin(); factor_it != graph_.end();) {
     if (dynamic_cast<const SmartFactor*>(factor_it->get())) {
       dynamic_cast<const SmartFactor*>(factor_it->get())->print();

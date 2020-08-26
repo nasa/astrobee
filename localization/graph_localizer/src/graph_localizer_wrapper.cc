@@ -144,7 +144,7 @@ bool GraphLocalizerWrapper::LatestLocalizationMsg(ff_msgs::EkfState& localizatio
     LOG(ERROR) << "LatestLocalizationMsg: No combined nav state and covariances available.";
     return false;
   }
-  // TODO(rsoussan): Add angular velocity and acceleration from imu integrator
+  // Angular velocity and acceleration are added by imu integrator
   localization_msg = EkfStateMsg(latest_combined_nav_state, Eigen::Vector3d::Zero(), Eigen::Vector3d::Zero(),
                                  latest_combined_nav_state_covariances, graph_localizer_->NumOFFactors(),
                                  graph_localizer_->NumVLFactors(), graph_loc_initialization_.EstimateBiases());
