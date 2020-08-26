@@ -1,3 +1,9 @@
+astrobee (0.10.4c) testing; urgency=medium
+
+  * Switch to different parameters in docking mode.
+
+ -- Astrobee Flight Software <astrobee-fsw@nx.arc.nasa.gov>  Mon, 20 Jul 2020 16:30:56 -0700
+
 astrobee (0.10.4) testing; urgency=medium
 
   * Histogram correction for localization.

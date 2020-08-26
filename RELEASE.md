@@ -1,5 +1,9 @@
 # Astrobee Robot Software v1
 
+## Release 0.10.4c
+
+  * Switch to different parameters in docking mode.
+
 ## Release 0.10.4
 
   * Histogram correction for sparse mapping.

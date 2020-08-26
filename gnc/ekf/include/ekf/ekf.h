@@ -98,6 +98,8 @@ class Ekf {
   void ResetHR(void);  // called when switching to HR (HandRail) mode
 
   Eigen::Affine3d GetNavCamToBody(void) const {return nav_cam_to_body_;}
+  void ApplyDockConfigChanges(config_reader::ConfigReader* dock_config);
+  void UndoDockConfigChanges(config_reader::ConfigReader* original_config);
 
  protected:
   /** Functions **/
@@ -111,6 +113,8 @@ class Ekf {
   void DepthLandmarksUpdate(const ff_msgs::DepthLandmarks & dl);
   void VisualLandmarksUpdate(const ff_msgs::VisualLandmarks & vl);
   void VisualLandmarksRegister(const ff_msgs::CameraRegistration & reg);
+
+  void SetDockConfigSubset(config_reader::ConfigReader* config);
 
   /**
    * Writes the inputs for one time step to a file

@@ -282,6 +282,24 @@ void Ekf::ResetAR(void) {
   reset_dock_pose_ = true;
 }
 
+void Ekf::ApplyDockConfigChanges(config_reader::ConfigReader* dock_config) {
+  SetDockConfigSubset(dock_config);
+}
+
+void Ekf::UndoDockConfigChanges(config_reader::ConfigReader* original_config) {
+  SetDockConfigSubset(original_config);
+}
+
+void Ekf::SetDockConfigSubset(config_reader::ConfigReader* config) {
+  auto& p = gnc_.est_->defaultParam;
+  if (!msg_conversions::config_read_array(config, "tun_ase_Q_imu", 12 , p->tun_ase_Q_imu))
+    ROS_FATAL("Unspecified tun_ase_Q_imu.");
+  if (!config->GetReal("tun_ase_of_r_mag", &p->tun_ase_of_r_mag))
+    ROS_FATAL("Unspecified tun_ase_of_r_mag.");
+  if (!config->GetReal("tun_ase_mahal_distance_max", &p->tun_ase_mahal_distance_max))
+    ROS_FATAL("Unspecified tun_ase_mahal_distance_max.");
+}
+
 void Ekf::ResetHR(void) {
   reset_handrail_pose_ = true;
 }

@@ -165,6 +165,8 @@ class EkfWrapper {
 
   /** Ros **/
   config_reader::ConfigReader config_;
+  // Dock mode needs special config files
+  config_reader::ConfigReader dock_config_;
   ff_util::PerfTimer pt_ekf_;
   ros::Timer config_timer_;
 
@@ -209,6 +211,10 @@ class EkfWrapper {
 
   // Prevents needing to call ros::ok() from a thread
   std::atomic<bool> killed_;
+
+  // Needed to see if we change out of dock mode and have
+  // to reset and dock config changes
+  int last_input_request_;
 };
 
 }  // end namespace ekf

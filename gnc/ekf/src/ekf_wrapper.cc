@@ -33,12 +33,14 @@ namespace ekf {
 EkfWrapper::EkfWrapper(ros::NodeHandle* nh, std::string const& platform_name) :
           ekf_initialized_(false), imus_dropped_(0), have_imu_(false),
           input_mode_(ff_msgs::SetEkfInputRequest::MODE_NONE), nh_(nh),
-          estimating_bias_(false), disp_features_(false), killed_(false) {
+          estimating_bias_(false), disp_features_(false), killed_(false),
+          last_input_request_(ff_msgs::SetEkfInputRequest::MODE_NONE) {
   platform_name_ = (platform_name.empty() ? "" : platform_name + "/");
 
   config_.AddFile("gnc.config");
   config_.AddFile("cameras.config");
   config_.AddFile("geometry.config");
+  dock_config_.AddFile("dock_gnc.config");
   ReadParams();
   config_timer_ = nh->createTimer(ros::Duration(1), [this](ros::TimerEvent e) {
       config_.CheckFilesUpdated(std::bind(&EkfWrapper::ReadParams, this));}, false, true);
@@ -100,6 +102,11 @@ void EkfWrapper::InitializeEkf(void) {
 void EkfWrapper::ReadParams(void) {
   if (!config_.ReadFiles()) {
     ROS_ERROR("Failed to read config files.");
+    return;
+  }
+
+  if (!dock_config_.ReadFiles()) {
+    ROS_ERROR("Failed to read dock config files.");
     return;
   }
 
@@ -486,8 +493,11 @@ bool EkfWrapper::InitializeBiasService(std_srvs::Empty::Request& req, std_srvs::
 
 bool EkfWrapper::SetInputService(ff_msgs::SetEkfInput::Request& req, ff_msgs::SetEkfInput::Response& res) {  //NOLINT
   input_mode_ = req.mode;
+  if (input_mode_ != ff_msgs::SetEkfInputRequest::MODE_AR_TAGS
+      && last_input_request_ == ff_msgs::SetEkfInputRequest::MODE_AR_TAGS) ekf_.UndoDockConfigChanges(&config_);
   switch (input_mode_) {
   case ff_msgs::SetEkfInputRequest::MODE_AR_TAGS:
+    ekf_.ApplyDockConfigChanges(&dock_config_);
     ekf_.ResetAR();
     ROS_INFO("EKF input switched to AR tags.");
     break;
@@ -507,6 +517,7 @@ bool EkfWrapper::SetInputService(ff_msgs::SetEkfInput::Request& req, ff_msgs::Se
   default:
     break;
   }
+  last_input_request_ = input_mode_;
   return true;
 }
 
