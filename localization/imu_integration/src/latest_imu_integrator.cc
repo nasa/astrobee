@@ -49,6 +49,14 @@ bool LatestImuIntegrator::IntegrateLatestImuMeasurements(const lc::Time end_time
     last_added_imu_measurement_time_ = start_time_;
   }
 
-  return IntegrateImuMeasurements(last_added_imu_measurement_time_, end_time, *pim_, last_added_imu_measurement_time_);
+  const auto last_added_imu_measurement_time =
+      IntegrateImuMeasurements(last_added_imu_measurement_time_, end_time, *pim_);
+  if (!last_added_imu_measurement_time) {
+    LOG(ERROR) << "IntegrateLatestImuMeasurements: Failed to integrate measurements.";
+    return false;
+  }
+
+  last_added_imu_measurement_time_ = *last_added_imu_measurement_time;
+  return true;
 }
 }  // namespace imu_integration

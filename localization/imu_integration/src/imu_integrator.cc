@@ -46,20 +46,19 @@ void ImuIntegrator::BufferImuMeasurement(const lm::ImuMeasurement& imu_measureme
   measurements_.emplace(imu_measurement.timestamp, imu_measurement);
 }
 
-bool ImuIntegrator::IntegrateImuMeasurements(const lc::Time start_time, const lc::Time end_time,
-                                             gtsam::PreintegratedCombinedMeasurements& pim,
-                                             lc::Time& last_added_timestamp) const {
+boost::optional<lc::Time> ImuIntegrator::IntegrateImuMeasurements(const lc::Time start_time, const lc::Time end_time,
+                                                                  gtsam::PreintegratedCombinedMeasurements& pim) const {
   if (measurements_.size() < 2) {
     LOG(ERROR) << "IntegrateImuMeasurements: Less than 2 measurements available.";
-    return false;
+    return boost::none;
   }
   if (end_time > measurements_.crbegin()->first) {
     LOG(ERROR) << "IntegrateImuMeasurements: End time occurs after last measurement.";
-    return false;
+    return boost::none;
   }
   if (start_time > end_time) {
     LOG(ERROR) << "IntegrateImuMeasurements: Start time occurs after end time.";
-    return false;
+    return boost::none;
   }
 
   // Start with least upper bound or equal measurement
@@ -77,10 +76,15 @@ bool ImuIntegrator::IntegrateImuMeasurements(const lc::Time start_time, const lc
         Interpolate(std::prev(measurement_it)->second, measurement_it->second, end_time);
     if (!interpolated_measurement) {
       LOG(ERROR) << "IntegrateImuMeasurements: Failed to interpolate final measurement.";
-      return false;
+      return boost::none;
     }
     AddMeasurement(*interpolated_measurement, last_added_imu_measurement_time, pim);
     ++num_measurements_added;
+  }
+
+  if (last_added_imu_measurement_time != end_time) {
+    LOG(ERROR) << "IntegrateImuMeasurements: Last added time not equal to end time.";
+    return boost::none;
   }
 
   VLOG(2) << "IntegrateImuMeasurements: Num imu measurements integrated: " << num_measurements_added;
@@ -101,8 +105,8 @@ boost::optional<gtsam::PreintegratedCombinedMeasurements> ImuIntegrator::Integra
     const gtsam::imuBias::ConstantBias& bias, const lc::Time start_time, const lc::Time end_time,
     boost::shared_ptr<gtsam::PreintegratedCombinedMeasurements::Params> params) const {
   auto pim = Pim(bias, params);
-  lc::Time last_integrated_time;
-  if (!IntegrateImuMeasurements(start_time, end_time, pim, last_integrated_time)) {
+  const auto last_integrated_measurement_time = IntegrateImuMeasurements(start_time, end_time, pim);
+  if (!last_integrated_measurement_time) {
     LOG(ERROR) << "IntegratedPim: Failed to integrate imu measurments.";
     return boost::none;
   }
