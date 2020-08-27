@@ -30,11 +30,15 @@ namespace po = boost::program_options;
 
 int main(int argc, char** argv) {
   // ProfilerStart("/home/rsoussan/graph_bag_tests/prof.txt");
+  std::string image_topic;
+  std::string output_bagfile;
   po::options_description desc("Runs graph localization on a bagfile and saves the results to a new bagfile.");
   desc.add_options()("help", "produce help message")("bagfile", po::value<std::string>()->required(), "Input bagfile")(
       "map-file", po::value<std::string>()->required(), "Map file")(
-      "image-topic,i", po::value<std::string>()->default_value("mgt/img_sampler/nav_cam/image_record"), "Image topic")(
-      "output-bagfile,o", po::value<std::string>()->default_value("results.bag"), "Output bagfile");
+      "image-topic,i", po::value<std::string>(&image_topic)->default_value("mgt/img_sampler/nav_cam/image_record"),
+      "Image topic")("output-bagfile,o", po::value<std::string>(&output_bagfile)->default_value("results.bag"),
+                     "Output bagfile")("verbosity,v", po::value<int>(&FLAGS_v)->default_value(0),
+                                       "Set verbose logging level, defaults to 0");
 
   po::positional_options_description p;
   p.add("bagfile", 1);
@@ -55,8 +59,12 @@ int main(int argc, char** argv) {
 
   const std::string input_bag = vm["bagfile"].as<std::string>();
   const std::string map_file = vm["map-file"].as<std::string>();
-  const std::string image_topic = vm["image-topic"].as<std::string>();
-  std::string output_bag = vm["output-bagfile"].as<std::string>();
+
+  // Only pass program name to free flyer so that boost command line options
+  // are ignored when parsing gflags.
+  // TODO(rsoussan): better way to call this function?
+  int ff_argc = 1;
+  ff_common::InitFreeFlyerApplication(&ff_argc, &argv);
 
   if (!boost::filesystem::exists(input_bag)) {
     LOG(FATAL) << "Bagfile " << input_bag << " not found.";
@@ -66,16 +74,14 @@ int main(int argc, char** argv) {
     LOG(FATAL) << "Map file " << map_file << " not found.";
   }
 
-  if (vm["output-bag"].defaulted()) {
+  if (vm["output-bagfile"].defaulted()) {
     const auto current_path = boost::filesystem::current_path();
-    boost::filesystem::path output_bag_path(output_bag);
-    const auto output_bag_full_path = current_path / output_bag_path;
-    output_bag = output_bag_full_path.string();
+    boost::filesystem::path output_bagfile_path(output_bagfile);
+    const auto output_bagfile_full_path = current_path / output_bagfile_path;
+    output_bagfile = output_bagfile_full_path.string();
   }
 
-  // TODO(rsoussan): why is this needed?
-  ff_common::InitFreeFlyerApplication(&argc, &argv);
-  graph_bag::GraphBag graph_bag(input_bag, map_file, image_topic, output_bag);
+  graph_bag::GraphBag graph_bag(input_bag, map_file, image_topic, output_bagfile);
   graph_bag.Run();
   // ProfilerFlush();
   // ProfilerStop();
