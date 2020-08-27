@@ -53,8 +53,6 @@ bool ValidPointSet(const std::deque<localization_measurements::FeaturePoint>& po
 
 boost::optional<geometry_msgs::PoseStamped> LatestPoseMsg(const GraphLocalizer& localization_measurements);
 
-Eigen::Isometry3d EigenPose(const ff_msgs::VisualLandmarks& vl_features, const Eigen::Isometry3d& nav_cam_T_body);
-
 ff_msgs::EkfState EkfStateMsg(const localization_common::CombinedNavState& combined_nav_state,
                               const Eigen::Vector3d& acceleration, const Eigen::Vector3d& angular_velocity,
                               const localization_common::CombinedNavStateCovariances& covariances,

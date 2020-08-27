@@ -95,44 +95,32 @@ boost::optional<lc::Time> GraphValues::LatestTimestamp() const {
   return timestamp_key_index_map_.crbegin()->first;
 }
 
-// TODO(rsoussan): unify this with lowerandupperboundtimestamp?
 boost::optional<lc::Time> GraphValues::ClosestPoseTimestamp(const lc::Time timestamp) const {
   if (Empty()) {
     LOG(ERROR) << "ClosestPoseTimestamp: No states available.";
     return boost::none;
   }
 
-  // Find closest timestamped pose
-  int key_index;
-  lc::Time closest_timestamp;
-  // lower bound returns first it >= query, call this upper bound
-  const auto upper_bound_it = timestamp_key_index_map_.lower_bound(timestamp);
-  if (upper_bound_it == timestamp_key_index_map_.cend()) {
-    key_index = std::prev(upper_bound_it)->second;
-    closest_timestamp = std::prev(upper_bound_it)->first;
-  } else if (upper_bound_it == timestamp_key_index_map_.cbegin()) {
-    key_index = upper_bound_it->second;
-    closest_timestamp = upper_bound_it->first;
-  } else {
-    const double upper_bound_dt = std::abs(timestamp - upper_bound_it->first);
-    const auto lower_bound_it = std::prev(upper_bound_it);
-    const double lower_bound_dt = std::abs(timestamp - lower_bound_it->first);
-    if (upper_bound_dt < lower_bound_dt) {
-      key_index = upper_bound_it->second;
-      closest_timestamp = upper_bound_it->first;
-    } else {
-      key_index = lower_bound_it->second;
-      closest_timestamp = lower_bound_it->first;
-    }
-  }
-
-  VLOG(2) << "ClosestPoseTimestamp: dt is " << std::abs(timestamp - closest_timestamp);
-
-  if (!values_.exists(sym::P(key_index))) {
-    LOG(ERROR) << "ClosestPoseTimestamp: Pose key not present in values.";
+  const auto lower_and_upper_bound_timestamp = LowerAndUpperBoundTimestamp(timestamp);
+  if (!lower_and_upper_bound_timestamp.first && !lower_and_upper_bound_timestamp.second) {
+    LOG(ERROR) << "ClosestPoseTimestamp: Failed to get lower or upper bound timestamp.";
     return boost::none;
   }
 
+  lc::Time closest_timestamp;
+  if (!lower_and_upper_bound_timestamp.first) {
+    closest_timestamp = *(lower_and_upper_bound_timestamp.second);
+  } else if (!lower_and_upper_bound_timestamp.second) {
+    closest_timestamp = *(lower_and_upper_bound_timestamp.first);
+  } else {
+    const lc::Time lower_bound_timestamp = *(lower_and_upper_bound_timestamp.first);
+    const lc::Time upper_bound_timestamp = *(lower_and_upper_bound_timestamp.second);
+    const double upper_bound_dt = std::abs(timestamp - upper_bound_timestamp);
+    const double lower_bound_dt = std::abs(timestamp - lower_bound_timestamp);
+    closest_timestamp = (upper_bound_dt < lower_bound_dt) ? upper_bound_timestamp : lower_bound_timestamp;
+  }
+
+  VLOG(2) << "ClosestPoseTimestamp: dt is " << std::abs(timestamp - closest_timestamp);
   return closest_timestamp;
 }
 
@@ -146,27 +134,14 @@ std::pair<boost::optional<lc::Time>, boost::optional<lc::Time>> GraphValues::Low
   // lower bound returns first it >= query, call this upper bound
   const auto upper_bound_it = timestamp_key_index_map_.lower_bound(timestamp);
   if (upper_bound_it == timestamp_key_index_map_.cend()) {
-    LOG(ERROR) << "LowerAndUpperBoundTimestamp: No upper bound timestamp exists.";
-    return {boost::none, boost::none};
+    VLOG(2) << "LowerAndUpperBoundTimestamp: No upper bound timestamp exists.";
+    const lc::Time lower_bound_time = (timestamp_key_index_map_.crbegin())->first;
+    return {boost::optional<lc::Time>(lower_bound_time), boost::none};
   } else if (upper_bound_it == timestamp_key_index_map_.cbegin()) {
-    LOG(ERROR) << "LowerAndUpperBoundTimestamp: No lower bound timestamp exists.";
-    return {boost::none, boost::none};
+    VLOG(2) << "LowerAndUpperBoundTimestamp: No lower bound timestamp exists.";
+    return {boost::none, boost::optional<lc::Time>(upper_bound_it->first)};
   }
   const auto lower_bound_it = std::prev(upper_bound_it);
-
-  const auto upper_bound_key_index = upper_bound_it->second;
-  if (!values_.exists(sym::P(upper_bound_key_index))) {
-    LOG(ERROR) << "LowerAndUpperBoundTimestamp: Upper bound pose key not "
-                  "present in values.";
-    return {boost::none, boost::none};
-  }
-
-  const auto lower_bound_key_index = lower_bound_it->second;
-  if (!values_.exists(sym::P(lower_bound_key_index))) {
-    LOG(ERROR) << "LowerAndUpperBoundTimestamp: Lower bound pose key not "
-                  "present in values.";
-    return {boost::none, boost::none};
-  }
 
   return {lower_bound_it->first, upper_bound_it->first};
 }
@@ -261,6 +236,31 @@ boost::optional<std::pair<gtsam::imuBias::ConstantBias, lc::Time>> GraphValues::
   }
 
   return std::pair<gtsam::imuBias::ConstantBias, lc::Time>{*bias, timestamp};
+}
+
+boost::optional<lc::Time> GraphValues::LowerBoundOrEqualTimestamp(const lc::Time timestamp) const {
+  const auto lower_and_upper_bound_timestamp = LowerAndUpperBoundTimestamp(timestamp);
+  if (!lower_and_upper_bound_timestamp.first && !lower_and_upper_bound_timestamp.second) {
+    LOG(ERROR) << "LowerBoundOrEqualTimestamp: Failed to get lower or upper bound timestamps.";
+    return boost::none;
+  }
+
+  // Only return upper bound timestamp if it is equal to timestamp
+  if (lower_and_upper_bound_timestamp.second && *(lower_and_upper_bound_timestamp.second) == timestamp) {
+    return lower_and_upper_bound_timestamp.second;
+  }
+
+  return lower_and_upper_bound_timestamp.first;
+}
+
+boost::optional<lc::CombinedNavState> GraphValues::LowerBoundOrEqualCombinedNavState(const lc::Time timestamp) const {
+  const auto lower_bound_or_equal_timestamp = LowerBoundOrEqualTimestamp(timestamp);
+  if (!lower_bound_or_equal_timestamp) {
+    LOG(ERROR) << "LowerBoundOrEqualCombinedNavState: Failed to get lower bound or equal timestamp.";
+    return boost::none;
+  }
+
+  return GetCombinedNavState(*lower_bound_or_equal_timestamp);
 }
 
 int GraphValues::SlideWindow(gtsam::NonlinearFactorGraph& graph) {

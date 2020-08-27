@@ -48,6 +48,22 @@ Eigen::Isometry3d EigenPose(const CombinedNavState& combined_nav_state) {
   return Eigen::Isometry3d(combined_nav_state.pose().matrix());
 }
 
+Eigen::Isometry3d EigenPose(const ff_msgs::VisualLandmarks& vl_features, const Eigen::Isometry3d& sensor_T_body) {
+  const Eigen::Isometry3d vl_global_T_sensor = EigenPose(vl_features);
+  const Eigen::Isometry3d vl_global_T_body = vl_global_T_sensor * sensor_T_body;
+  return vl_global_T_body;
+}
+
+Eigen::Isometry3d EigenPose(const ff_msgs::VisualLandmarks& vl_features) {
+  Eigen::Isometry3d vl_global_T_sensor;
+  vl_global_T_sensor.translation() << vl_features.pose.position.x, vl_features.pose.position.y,
+      vl_features.pose.position.z;
+  const Eigen::Quaterniond vl_global_Q_sensor(vl_features.pose.orientation.w, vl_features.pose.orientation.x,
+                                              vl_features.pose.orientation.y, vl_features.pose.orientation.z);
+  vl_global_T_sensor.linear() = vl_global_Q_sensor.toRotationMatrix();
+  return vl_global_T_sensor;
+}
+
 void SetEnvironmentConfigs(const std::string& astrobee_configs_path, const std::string& world) {
   setenv("ASTROBEE_RESOURCE_DIR", (astrobee_configs_path + "/resources").c_str(), true);
   setenv("ASTROBEE_CONFIG_DIR", (astrobee_configs_path + "/config").c_str(), true);

@@ -140,7 +140,7 @@ bool GraphBag::GenerateVLFeatures(const sensor_msgs::ImageConstPtr& image_msg, f
 }
 
 void GraphBag::SaveGroundtruthPose(const ff_msgs::VisualLandmarks& vl_features) {
-  const Eigen::Isometry3d global_T_body = graph_localizer::EigenPose(vl_features, body_T_nav_cam_.inverse());
+  const Eigen::Isometry3d global_T_body = lc::EigenPose(vl_features, body_T_nav_cam_.inverse());
   const auto sparse_mapping_pose_msg = graph_localizer::PoseMsg(global_T_body, vl_features.header);
   const ros::Time timestamp = lc::RosTimeFromHeader(sparse_mapping_pose_msg.header);
   results_bag_.write(kSparseMappingPoseTopic_, timestamp, sparse_mapping_pose_msg);

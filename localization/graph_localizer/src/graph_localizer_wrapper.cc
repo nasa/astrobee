@@ -87,15 +87,18 @@ void GraphLocalizerWrapper::VLVisualLandmarksCallback(const ff_msgs::VisualLandm
     // Set or update initial pose if a new one is available before the localizer
     // has started running.
     const Eigen::Isometry3d global_T_body =
-        graph_localizer::EigenPose(visual_landmarks_msg, graph_loc_initialization_.params().body_T_nav_cam().inverse());
+        lc::EigenPose(visual_landmarks_msg, graph_loc_initialization_.params().body_T_nav_cam().inverse());
     const lc::Time timestamp = lc::TimeFromHeader(visual_landmarks_msg.header);
     graph_loc_initialization_.SetStartPose(global_T_body, timestamp);
   }
 }
 
 void GraphLocalizerWrapper::ARVisualLandmarksCallback(const ff_msgs::VisualLandmarks& visual_landmarks_msg) {
-  if (graph_localizer_)
-    graph_localizer_->AddARTagMeasurement(lm::MakeMatchedProjectionsMeasurement(visual_landmarks_msg));
+  if (graph_localizer_) {
+    const Eigen::Isometry3d dock_T_dock_cam = lc::EigenPose(visual_landmarks_msg);
+    graph_localizer_->AddARTagMeasurement(lm::MakeMatchedProjectionsMeasurement(visual_landmarks_msg),
+                                          lc::GtPose(dock_T_dock_cam.inverse()));
+  }
 }
 
 void GraphLocalizerWrapper::ImuCallback(const sensor_msgs::Imu& imu_msg) {

@@ -62,16 +62,6 @@ boost::optional<geometry_msgs::PoseStamped> LatestPoseMsg(const GraphLocalizer& 
   return latest_graph_localization_pose_msg;
 }
 
-Eigen::Isometry3d EigenPose(const ff_msgs::VisualLandmarks& vl_features, const Eigen::Isometry3d& cam_T_body) {
-  Eigen::Isometry3d global_T_cam;
-  global_T_cam.translation() << vl_features.pose.position.x, vl_features.pose.position.y, vl_features.pose.position.z;
-  const Eigen::Quaterniond global_Q_cam(vl_features.pose.orientation.w, vl_features.pose.orientation.x,
-                                        vl_features.pose.orientation.y, vl_features.pose.orientation.z);
-  global_T_cam.linear() = global_Q_cam.toRotationMatrix();
-  const Eigen::Isometry3d global_T_body = global_T_cam * cam_T_body;
-  return global_T_body;
-}
-
 ff_msgs::EkfState EkfStateMsg(const lc::CombinedNavState& combined_nav_state, const Eigen::Vector3d& acceleration,
                               const Eigen::Vector3d& angular_velocity,
                               const lc::CombinedNavStateCovariances& covariances,

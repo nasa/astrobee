@@ -54,12 +54,15 @@ class GraphLocalizer {
   explicit GraphLocalizer(const GraphLocalizerParams& params);
   void AddImuMeasurement(const localization_measurements::ImuMeasurement& imu_measurement);
   boost::optional<localization_common::CombinedNavState> LatestCombinedNavState() const;
+  boost::optional<localization_common::CombinedNavState> GetCombinedNavState(
+      const localization_common::Time time) const;
   boost::optional<std::pair<localization_common::CombinedNavState, localization_common::CombinedNavStateCovariances>>
   LatestCombinedNavStateAndCovariances() const;
   void AddOpticalFlowMeasurement(
       const localization_measurements::FeaturePointsMeasurement& optical_flow_feature_points_measurement);
   void AddARTagMeasurement(
-      const localization_measurements::MatchedProjectionsMeasurement& matched_projections_measurement);
+      const localization_measurements::MatchedProjectionsMeasurement& matched_projections_measurement,
+      const gtsam::Pose3& dock_cam_T_dock);
   void AddSparseMappingMeasurement(
       const localization_measurements::MatchedProjectionsMeasurement& matched_projections_measurement);
   void AddProjectionMeasurement(

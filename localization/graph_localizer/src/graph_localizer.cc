@@ -159,6 +159,31 @@ boost::optional<lc::CombinedNavState> GraphLocalizer::LatestCombinedNavState() c
   return global_cgN_body_latest;
 }
 
+boost::optional<lc::CombinedNavState> GraphLocalizer::GetCombinedNavState(const lc::Time time) const {
+  const auto lower_bound_or_equal_combined_nav_state = graph_values_.LowerBoundOrEqualCombinedNavState(time);
+  if (!lower_bound_or_equal_combined_nav_state) {
+    LOG(ERROR) << "GetCombinedNavState: Failed to get lower bound or equal combined nav state.";
+    return boost::none;
+  }
+
+  if (lower_bound_or_equal_combined_nav_state->timestamp() == time) {
+    return lower_bound_or_equal_combined_nav_state;
+  }
+
+  // Pim predict from lower bound state rather than closest state so there is no
+  // need to reverse predict (going backwards in time) using a pim prediction which is not yet supported in gtsam.
+  // TODO(rsoussan): Add this
+  auto integrated_pim = latest_imu_integrator_.IntegratedPim(lower_bound_or_equal_combined_nav_state->bias(),
+                                                             lower_bound_or_equal_combined_nav_state->timestamp(), time,
+                                                             latest_imu_integrator_.pim_params());
+  if (!integrated_pim) {
+    LOG(ERROR) << "GetCombinedNavState: Failed to create integrated pim.";
+    return boost::none;
+  }
+
+  return ii::PimPredict(*lower_bound_or_equal_combined_nav_state, *integrated_pim);
+}
+
 boost::optional<std::pair<gtsam::imuBias::ConstantBias, lc::Time>> GraphLocalizer::LatestBiases() const {
   const auto latest_bias = graph_values_.LatestBias();
   if (!latest_bias) {
@@ -234,22 +259,40 @@ void GraphLocalizer::AddOpticalFlowMeasurement(
   Update();
 }
 
-void GraphLocalizer::AddARTagMeasurement(const lm::MatchedProjectionsMeasurement& matched_projections_measurement) {
+void GraphLocalizer::AddARTagMeasurement(const lm::MatchedProjectionsMeasurement& matched_projections_measurement,
+                                         const gtsam::Pose3& dock_cam_T_dock) {
   LOG(INFO) << "AddARTagMeasurement: Adding AR tag measurement.";
   // Hack to delay AR tag measurements until timestamp issue is fixed (uses
   // Ros::now instead of image timestamp, causes AR tag measurements to arrive
   // "ahead" of imu measurements.
   // TODO(rsoussan): Remove this when AR tag timestamp is fixed
   static lm::MatchedProjectionsMeasurement buffered_measurement = matched_projections_measurement;
-  static bool add_measurement = false;
-  if (!add_measurement) {
-    add_measurement = true;
+  static gtsam::Pose3 buffered_dock_cam_T_dock = dock_cam_T_dock;
+  static bool first_measurement = true;
+  // Delay adding first measurement until second measurement arrives
+  // and so on
+  if (first_measurement) {
+    first_measurement = false;
     return;
   }
 
-  lm::FrameChangeMatchedProjectionsMeasurement(buffered_measurement, world_T_dock_);
+  // Get world_T_dock using current loc estimate since dock can be moved on the ISS.
+  // TODO(rsoussan): Optimize this online using config value as a prior, update this
+  // config value periodically after running localizer.
+  const auto combined_nav_state = GetCombinedNavState(buffered_measurement.timestamp);
+  if (!combined_nav_state) {
+    LOG(ERROR) << "AddARTagMeasurement: Failed to get combined nav state.";
+    buffered_measurement = matched_projections_measurement;
+    buffered_dock_cam_T_dock = dock_cam_T_dock;
+    return;
+  }
+
+  const gtsam::Pose3 world_T_body = combined_nav_state->pose();
+  const gtsam::Pose3 estimated_world_T_dock = world_T_body * body_T_dock_cam_ * buffered_dock_cam_T_dock;
+  lm::FrameChangeMatchedProjectionsMeasurement(buffered_measurement, estimated_world_T_dock);
   AddProjectionMeasurement(buffered_measurement, body_T_dock_cam_, dock_cam_intrinsics_, dock_cam_noise_);
   buffered_measurement = matched_projections_measurement;
+  buffered_dock_cam_T_dock = dock_cam_T_dock;
 }
 
 void GraphLocalizer::AddSparseMappingMeasurement(

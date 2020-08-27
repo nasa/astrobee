@@ -80,6 +80,9 @@ class GraphValues {
   std::pair<boost::optional<localization_common::Time>, boost::optional<localization_common::Time>>
   LowerAndUpperBoundTimestamp(const localization_common::Time timestamp) const;
 
+  boost::optional<localization_common::CombinedNavState> LowerBoundOrEqualCombinedNavState(
+      const localization_common::Time timestamp) const;
+
   bool HasKey(const localization_common::Time timestamp) const;
 
   // TODO(rsoussan): move this somewhere else
@@ -109,6 +112,9 @@ class GraphValues {
   bool RemoveCombinedNavState(const localization_common::Time timestamp);
 
   bool Empty() const;
+
+  boost::optional<localization_common::Time> LowerBoundOrEqualTimestamp(
+      const localization_common::Time timestamp) const;
 
   // Ideal since this is only kept if there are at least kWindowMinNumberStates
   const double kWindowIdealDuration;
