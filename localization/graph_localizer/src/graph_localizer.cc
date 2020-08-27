@@ -423,6 +423,7 @@ bool GraphLocalizer::CreateAndAddLatestImuFactorAndCombinedNavState(const lc::Ti
   }
 
   latest_imu_integrator_.ResetPimIntegrationAndSetBias(latest_bias->first);
+  return true;
 }
 
 bool GraphLocalizer::CreateAndAddImuFactorAndPredictedCombinedNavState(
@@ -534,5 +535,6 @@ bool GraphLocalizer::Update() {
     LOG(ERROR) << "Update: Failed to slide window.";
     return false;
   }
+  return true;
 }
 }  // namespace graph_localizer

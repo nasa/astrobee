@@ -23,6 +23,7 @@ project(graph_bag)
 #SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pg")
 # For google prof: 
 #SET(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--no-as-needed -lprofiler -Wl,--as-needed")
+#SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDEBUG")
 
 catkin_package(
   CATKIN_DEPENDS roscpp rosbag
