@@ -4,7 +4,7 @@ name: Build and Push Documentation to gh-pages Branch
 
 on:
   push:
-    branches: [ 'master']
+    branches: ['develop']
 
 jobs:
   build_and_push_docs:
@@ -22,7 +22,7 @@ jobs:
         ref: gh-pages
     - name: Install dependencies
       run: |
-        sudo apt-get install bson
+        sudo apt-get install python-bson
         sudo apt-get install flex
     - name: Install doxygen
       run: |
@@ -37,14 +37,17 @@ jobs:
       run: |
         cd repo
         doxygen astrobee.doxyfile
+        cd ..
+    - name: Replace old documentation with new
+      run: |
+        rm -r docs/html
+        cp -r repo/doc/html docs
     - name: Commit and Push
       run: |
-        cd repo
-        EMAIL=`git show -s --format='%ae' HEAD`
-        NAME=`git show -s --format='%an' HEAD`
-        cd ..
         cd docs
         git add html/*
+        EMAIL=`git show -s --format='%ae' HEAD`
+        NAME=`git show -s --format='%an' HEAD`
         git config user.email "$EMAIL"
         git config user.name "$NAME"
         git commit -m "Automatic update for $GITHUB_SHA."
