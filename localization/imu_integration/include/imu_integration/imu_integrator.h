@@ -43,22 +43,22 @@ class ImuIntegrator {
   // past latest sensor measurement timestamps.
   void BufferImuMeasurement(const localization_measurements::ImuMeasurement& imu_measurement);
 
-  localization_common::Time IntegrateImuMeasurements(const localization_common::Time start_time,
-                                                     const localization_common::Time end_time,
-                                                     gtsam::PreintegratedCombinedMeasurements& pim) const;
+  bool IntegrateImuMeasurements(const localization_common::Time start_time, const localization_common::Time end_time,
+                                gtsam::PreintegratedCombinedMeasurements& pim,
+                                localization_common::Time& last_added_timestamp) const;
 
-  gtsam::PreintegratedCombinedMeasurements IntegratedPim(
+  boost::optional<gtsam::PreintegratedCombinedMeasurements> IntegratedPim(
       const gtsam::imuBias::ConstantBias& bias, const localization_common::Time start_time,
       const localization_common::Time end_time,
       boost::shared_ptr<gtsam::PreintegratedCombinedMeasurements::Params> params) const;
 
   void RemoveOldMeasurements(const localization_common::Time new_start_time);
 
-  localization_common::Time OldestTime() const;
+  boost::optional<localization_common::Time> OldestTime() const;
 
-  localization_common::Time LatestTime() const;
+  boost::optional<localization_common::Time> LatestTime() const;
 
-  localization_measurements::ImuMeasurement LatestMeasurement() const;
+  boost::optional<localization_measurements::ImuMeasurement> LatestMeasurement() const;
 
   bool Empty() const;
 

@@ -48,12 +48,12 @@ void ImuAugmentorNodelet::LocalizationStateCallback(const ff_msgs::EkfState::Con
 }
 
 void ImuAugmentorNodelet::PublishLatestImuAugmentedLocalizationState() {
-  ff_msgs::EkfState latest_imu_augmented_loc_msg;
-  if (!imu_augmentor_wrapper_.LatestImuAugmentedLocalizationMsg(latest_imu_augmented_loc_msg)) {
+  const auto latest_imu_augmented_loc_msg = imu_augmentor_wrapper_.LatestImuAugmentedLocalizationMsg();
+  if (!latest_imu_augmented_loc_msg) {
     LOG(ERROR) << "PublishLatestImuAugmentedLocalizationState: Failed to get latest imu augmented loc msg.";
     return;
   }
-  state_pub_.publish(latest_imu_augmented_loc_msg);
+  state_pub_.publish(*latest_imu_augmented_loc_msg);
 }
 
 void ImuAugmentorNodelet::Run() {

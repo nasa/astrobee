@@ -36,9 +36,10 @@ class ImuAugmentor {
 
   void BufferImuMeasurement(const localization_measurements::ImuMeasurement& imu_measurement);
 
-  localization_common::CombinedNavState PimPredict(const localization_common::CombinedNavState& combined_nav_state);
+  boost::optional<localization_common::CombinedNavState> PimPredict(
+      const localization_common::CombinedNavState& combined_nav_state);
 
-  localization_measurements::ImuMeasurement LatestMeasurement() const;
+  boost::optional<localization_measurements::ImuMeasurement> LatestMeasurement() const;
 
  private:
   void RemoveOldMeasurements(const localization_common::Time new_start_time);

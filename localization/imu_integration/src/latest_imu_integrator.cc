@@ -37,10 +37,11 @@ void LatestImuIntegrator::ResetPimIntegrationAndSetBias(const gtsam::imuBias::Co
   pim_->resetIntegrationAndSetBias(bias);
 }
 
-void LatestImuIntegrator::IntegrateLatestImuMeasurements(const lc::Time end_time) {
+bool LatestImuIntegrator::IntegrateLatestImuMeasurements(const lc::Time end_time) {
   if (Size() < 2) {
-    LOG(FATAL) << "IntegrateLatestImuMeasurements: Less than 2 measurements "
+    LOG(ERROR) << "IntegrateLatestImuMeasurements: Less than 2 measurements "
                   "available.";
+    return false;
   }
 
   if (last_added_imu_measurement_time_ == 0) {
@@ -48,6 +49,6 @@ void LatestImuIntegrator::IntegrateLatestImuMeasurements(const lc::Time end_time
     last_added_imu_measurement_time_ = start_time_;
   }
 
-  last_added_imu_measurement_time_ = IntegrateImuMeasurements(last_added_imu_measurement_time_, end_time, *pim_);
+  return IntegrateImuMeasurements(last_added_imu_measurement_time_, end_time, *pim_, last_added_imu_measurement_time_);
 }
 }  // namespace imu_integration

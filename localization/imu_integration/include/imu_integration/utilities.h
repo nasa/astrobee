@@ -37,7 +37,7 @@ bool EstimateAndSetImuBiases(const localization_measurements::ImuMeasurement& im
                              std::vector<localization_measurements::ImuMeasurement>& imu_bias_measurements,
                              Eigen::Vector3d& accelerometer_bias, Eigen::Vector3d& gyro_bias);
 
-localization_measurements::ImuMeasurement Interpolate(
+boost::optional<localization_measurements::ImuMeasurement> Interpolate(
     const localization_measurements::ImuMeasurement& imu_measurement_a,
     const localization_measurements::ImuMeasurement& imu_measurement_b, const localization_common::Time timestamp);
 

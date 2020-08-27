@@ -57,50 +57,60 @@ void ImuAugmentorWrapper::ImuCallback(const sensor_msgs::Imu& imu_msg) {
   imu_augmentor_->BufferImuMeasurement(lm::ImuMeasurement(imu_msg));
 }
 
-bool ImuAugmentorWrapper::LatestImuAugmentedCombinedNavStateAndCovariances(
-    lc::CombinedNavState& latest_imu_augmented_combined_nav_state,
-    lc::CombinedNavStateCovariances& latest_imu_augmented_covariances) {
+boost::optional<std::pair<lc::CombinedNavState, lc::CombinedNavStateCovariances>>
+ImuAugmentorWrapper::LatestImuAugmentedCombinedNavStateAndCovariances() {
   if (!latest_combined_nav_state_ || !latest_covariances_ || !imu_augmentor_) {
     LOG(ERROR)
         << "LatestImuAugmentedCombinedNavStateAndCovariances: Not enough information available to create desired data.";
-    return false;
+    return boost::none;
+  }
+
+  const auto latest_imu_augmented_combined_nav_state = imu_augmentor_->PimPredict(*latest_combined_nav_state_);
+  if (!latest_imu_augmented_combined_nav_state) {
+    LOG(ERROR) << "LatestImuAugmentedCombinedNavSTateAndCovariances: Failed to pim predict combined nav state.";
+    return boost::none;
   }
   // TODO(rsoussan): propogate uncertainties from imu augmentor
-  latest_imu_augmented_covariances = *latest_covariances_;
-  latest_imu_augmented_combined_nav_state = imu_augmentor_->PimPredict(*latest_combined_nav_state_);
-  return true;
+  return std::pair<lc::CombinedNavState, lc::CombinedNavStateCovariances>{*latest_imu_augmented_combined_nav_state,
+                                                                          *latest_covariances_};
 }
 
-bool ImuAugmentorWrapper::LatestImuAugmentedLocalizationMsg(ff_msgs::EkfState& latest_imu_augmented_loc_msg) {
+boost::optional<ff_msgs::EkfState> ImuAugmentorWrapper::LatestImuAugmentedLocalizationMsg() {
   if (!latest_loc_msg_) {
     LOG_EVERY_N(WARNING, 50) << "LatestImuAugmentedLocalizationMsg: No latest loc msg available.";
-    return false;
+    return boost::none;
   }
 
-  lc::CombinedNavState latest_imu_augmented_combined_nav_state;
-  lc::CombinedNavStateCovariances latest_imu_augmented_covariances;
-  if (!LatestImuAugmentedCombinedNavStateAndCovariances(latest_imu_augmented_combined_nav_state,
-                                                        latest_imu_augmented_covariances)) {
+  const auto latest_imu_augmented_combined_nav_state_and_covariances =
+      LatestImuAugmentedCombinedNavStateAndCovariances();
+  if (!latest_imu_augmented_combined_nav_state_and_covariances) {
     LOG(ERROR) << "LatestImuAugmentedLocalizationMsg: Failed to get latest imu augmented nav state and covariances.";
-    return false;
+    return boost::none;
   }
 
   // Get feature counts and other info from latest_loc_msg
-  latest_imu_augmented_loc_msg = *latest_loc_msg_;
+  auto latest_imu_augmented_loc_msg = *latest_loc_msg_;
 
   // Update nav state and covariances with latest imu measurements
-  lc::CombinedNavStateToMsg(latest_imu_augmented_combined_nav_state, latest_imu_augmented_loc_msg);
-  lc::CombinedNavStateCovariancesToMsg(latest_imu_augmented_covariances, latest_imu_augmented_loc_msg);
+  lc::CombinedNavStateToMsg(latest_imu_augmented_combined_nav_state_and_covariances->first,
+                            latest_imu_augmented_loc_msg);
+  lc::CombinedNavStateCovariancesToMsg(latest_imu_augmented_combined_nav_state_and_covariances->second,
+                                       latest_imu_augmented_loc_msg);
 
   // Add latest bias corrected acceleration and angular velocity to loc msg
   const auto latest_imu_measurement = imu_augmentor_->LatestMeasurement();
-  const auto& latest_bias = latest_imu_augmented_combined_nav_state.bias();
-  const auto latest_bias_corrected_acceleration = latest_bias.correctAccelerometer(latest_imu_measurement.acceleration);
+  if (!latest_imu_measurement) {
+    LOG(ERROR) << "LatestImuAugmentedLocalizationMsg: Failed to get latest measurement.";
+    return boost::none;
+  }
+  const auto& latest_bias = latest_imu_augmented_combined_nav_state_and_covariances->first.bias();
+  const auto latest_bias_corrected_acceleration =
+      latest_bias.correctAccelerometer(latest_imu_measurement->acceleration);
   const auto latest_bias_corrected_angular_velocity =
-      latest_bias.correctGyroscope(latest_imu_measurement.angular_velocity);
+      latest_bias.correctGyroscope(latest_imu_measurement->angular_velocity);
   lc::VectorToMsg(latest_bias_corrected_acceleration, latest_imu_augmented_loc_msg.accel);
   lc::VectorToMsg(latest_bias_corrected_angular_velocity, latest_imu_augmented_loc_msg.omega);
 
-  return true;
+  return latest_imu_augmented_loc_msg;
 }
 }  // namespace imu_augmentor

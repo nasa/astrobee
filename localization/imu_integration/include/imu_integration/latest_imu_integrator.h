@@ -37,7 +37,7 @@ class LatestImuIntegrator : public ImuIntegrator {
   void ResetPimIntegrationAndSetBias(const gtsam::imuBias::ConstantBias& bias);
 
   // Integrates all imu measurements that have not been added up to end_time.
-  void IntegrateLatestImuMeasurements(const localization_common::Time end_time);
+  bool IntegrateLatestImuMeasurements(const localization_common::Time end_time);
 
  private:
   std::unique_ptr<gtsam::PreintegratedCombinedMeasurements> pim_;

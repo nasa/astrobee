@@ -39,6 +39,8 @@ Eigen::Isometry3d LoadTransform(config_reader::ConfigReader& config, const std::
 
 gtsam::Pose3 GtPose(const Eigen::Isometry3d& eigen_pose);
 
+Eigen::Isometry3d EigenPose(const CombinedNavState& combined_nav_state);
+
 void SetEnvironmentConfigs(const std::string& astrobee_configs_path, const std::string& world);
 
 ros::Time RosTimeFromHeader(const std_msgs::Header& header);

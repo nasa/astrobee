@@ -44,6 +44,10 @@ gtsam::Pose3 GtPose(const Eigen::Isometry3d& eigen_pose) {
   return gtsam::Pose3(Eigen::Ref<const Eigen::MatrixXd>(eigen_pose.matrix()));
 }
 
+Eigen::Isometry3d EigenPose(const CombinedNavState& combined_nav_state) {
+  return Eigen::Isometry3d(combined_nav_state.pose().matrix());
+}
+
 void SetEnvironmentConfigs(const std::string& astrobee_configs_path, const std::string& world) {
   setenv("ASTROBEE_RESOURCE_DIR", (astrobee_configs_path + "/resources").c_str(), true);
   setenv("ASTROBEE_CONFIG_DIR", (astrobee_configs_path + "/config").c_str(), true);

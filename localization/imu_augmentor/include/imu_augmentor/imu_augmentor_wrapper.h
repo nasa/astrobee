@@ -30,6 +30,7 @@
 #include <Eigen/Core>
 
 #include <memory>
+#include <utility>
 
 namespace imu_augmentor {
 class ImuAugmentorWrapper {
@@ -40,7 +41,10 @@ class ImuAugmentorWrapper {
 
   void ImuCallback(const sensor_msgs::Imu& imu_msg);
 
-  bool LatestImuAugmentedLocalizationMsg(ff_msgs::EkfState& latest_imu_augmented_loc_msg);
+  boost::optional<std::pair<localization_common::CombinedNavState, localization_common::CombinedNavStateCovariances>>
+  LatestImuAugmentedCombinedNavStateAndCovariances();
+
+  boost::optional<ff_msgs::EkfState> LatestImuAugmentedLocalizationMsg();
 
  private:
   bool LatestImuAugmentedCombinedNavStateAndCovariances(

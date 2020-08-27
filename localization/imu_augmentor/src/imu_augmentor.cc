@@ -19,6 +19,8 @@
 #include <imu_augmentor/imu_augmentor.h>
 #include <imu_integration/utilities.h>
 
+#include <glog/logging.h>
+
 namespace imu_augmentor {
 namespace ii = imu_integration;
 namespace lc = localization_common;
@@ -30,10 +32,20 @@ void ImuAugmentor::BufferImuMeasurement(const lm::ImuMeasurement& imu_measuremen
   imu_integrator_.BufferImuMeasurement(imu_measurement);
 }
 
-lc::CombinedNavState ImuAugmentor::PimPredict(const lc::CombinedNavState& combined_nav_state) {
+boost::optional<lc::CombinedNavState> ImuAugmentor::PimPredict(const lc::CombinedNavState& combined_nav_state) {
+  const auto latest_time = imu_integrator_.LatestTime();
+  if (!latest_time) {
+    LOG(ERROR) << "PimPredict: Failed to get latest imu time.";
+    return boost::none;
+  }
   const auto pim = imu_integrator_.IntegratedPim(combined_nav_state.bias(), combined_nav_state.timestamp(),
-                                                 imu_integrator_.LatestTime(), imu_integrator_.pim_params());
-  const auto latest_combined_nav_state = ii::PimPredict(combined_nav_state, pim);
+                                                 *latest_time, imu_integrator_.pim_params());
+  if (!pim) {
+    LOG(ERROR) << "PimPredict: Failed to create integrated pim.";
+    return boost::none;
+  }
+
+  const auto latest_combined_nav_state = ii::PimPredict(combined_nav_state, *pim);
   RemoveOldMeasurements(combined_nav_state.timestamp());
   return latest_combined_nav_state;
 }
@@ -42,5 +54,7 @@ void ImuAugmentor::RemoveOldMeasurements(const lc::Time new_start_time) {
   imu_integrator_.RemoveOldMeasurements(new_start_time);
 }
 
-lm::ImuMeasurement ImuAugmentor::LatestMeasurement() const { return imu_integrator_.LatestMeasurement(); }
+boost::optional<lm::ImuMeasurement> ImuAugmentor::LatestMeasurement() const {
+  return imu_integrator_.LatestMeasurement();
+}
 }  // namespace imu_augmentor

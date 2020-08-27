@@ -47,11 +47,12 @@ bool EstimateAndSetImuBiases(const lm::ImuMeasurement& imu_measurement,
   return true;
 }
 
-lm::ImuMeasurement Interpolate(const lm::ImuMeasurement& imu_measurement_a, const lm::ImuMeasurement& imu_measurement_b,
-                               const lc::Time timestamp) {
+boost::optional<lm::ImuMeasurement> Interpolate(const lm::ImuMeasurement& imu_measurement_a,
+                                                const lm::ImuMeasurement& imu_measurement_b, const lc::Time timestamp) {
   if (timestamp < imu_measurement_a.timestamp || timestamp > imu_measurement_b.timestamp) {
-    LOG(FATAL) << "Interpolate: Interpolation timestamp out of range of imu "
+    LOG(ERROR) << "Interpolate: Interpolation timestamp out of range of imu "
                   "measurements.";
+    return boost::none;
   }
 
   const double alpha =
