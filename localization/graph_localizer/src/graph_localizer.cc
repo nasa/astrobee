@@ -445,7 +445,7 @@ bool GraphLocalizer::CreateAndAddImuFactorAndPredictedCombinedNavState(
 bool GraphLocalizer::SlideWindow(const gtsam::Marginals& marginals) {
   if (graph_values_.SlideWindow(graph_) == 0) {
     VLOG(2) << "SlideWindow: No states removed. ";
-    return false;
+    return true;
   }
 
   const auto oldest_timestamp = graph_values_.OldestTimestamp();
