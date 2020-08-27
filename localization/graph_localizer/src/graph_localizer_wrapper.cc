@@ -101,8 +101,15 @@ void GraphLocalizerWrapper::ARVisualLandmarksCallback(const ff_msgs::VisualLandm
 void GraphLocalizerWrapper::ImuCallback(const sensor_msgs::Imu& imu_msg) {
   if (graph_localizer_) {
     graph_localizer_->AddImuMeasurement(lm::ImuMeasurement(imu_msg));
-    graph_localizer_->LatestBiases(latest_accelerometer_bias_, latest_gyro_bias_, latest_bias_timestamp_);
-    have_latest_imu_biases_ = true;
+    const auto latest_biases = graph_localizer_->LatestBiases();
+    if (!latest_biases) {
+      LOG(WARNING) << "ImuCallback: Failed to get latest biases.";
+    } else {
+      latest_accelerometer_bias_ = latest_biases->first.accelerometer();
+      latest_gyro_bias_ = latest_biases->first.gyroscope();
+      latest_bias_timestamp_ = latest_biases->second;
+      have_latest_imu_biases_ = true;
+    }
   } else if (graph_loc_initialization_.EstimateBiases()) {
     EstimateAndSetImuBiases(lm::ImuMeasurement(imu_msg), num_bias_estimation_measurements_, imu_bias_measurements_,
                             graph_loc_initialization_);
@@ -129,25 +136,27 @@ const FeatureTrackMap* const GraphLocalizerWrapper::feature_tracks() const {
   return &(graph_localizer_->feature_tracks());
 }
 
-bool GraphLocalizerWrapper::LatestPoseMsg(geometry_msgs::PoseStamped& latest_pose_msg) const {
-  if (!graph_localizer_) return false;
-  latest_pose_msg = graph_localizer::LatestPoseMsg(*graph_localizer_);
-  return true;
+boost::optional<geometry_msgs::PoseStamped> GraphLocalizerWrapper::LatestPoseMsg() const {
+  if (!graph_localizer_) {
+    LOG(ERROR) << "LatestPoseMsg: Failed to get latest pose msg.";
+    return boost::none;
+  }
+  return graph_localizer::LatestPoseMsg(*graph_localizer_);
 }
 
-bool GraphLocalizerWrapper::LatestLocalizationMsg(ff_msgs::EkfState& localization_msg) const {
-  if (!graph_localizer_) return false;
-  lc::CombinedNavState latest_combined_nav_state;
-  lc::CombinedNavStateCovariances latest_combined_nav_state_covariances;
-  if (!graph_localizer_->LatestCombinedNavStateAndCovariances(latest_combined_nav_state,
-                                                              latest_combined_nav_state_covariances)) {
+boost::optional<ff_msgs::EkfState> GraphLocalizerWrapper::LatestLocalizationMsg() const {
+  if (!graph_localizer_) {
+    LOG(ERROR) << "LatestLocalizationMsg: Graph localizater not initialized yet.";
+    return boost::none;
+  }
+  const auto combined_nav_state_and_covariances = graph_localizer_->LatestCombinedNavStateAndCovariances();
+  if (!combined_nav_state_and_covariances) {
     LOG(ERROR) << "LatestLocalizationMsg: No combined nav state and covariances available.";
-    return false;
+    return boost::none;
   }
   // Angular velocity and acceleration are added by imu integrator
-  localization_msg = EkfStateMsg(latest_combined_nav_state, Eigen::Vector3d::Zero(), Eigen::Vector3d::Zero(),
-                                 latest_combined_nav_state_covariances, graph_localizer_->NumOFFactors(),
-                                 graph_localizer_->NumVLFactors(), graph_loc_initialization_.EstimateBiases());
-  return true;
+  return EkfStateMsg(combined_nav_state_and_covariances->first, Eigen::Vector3d::Zero(), Eigen::Vector3d::Zero(),
+                     combined_nav_state_and_covariances->second, graph_localizer_->NumOFFactors(),
+                     graph_localizer_->NumVLFactors(), graph_loc_initialization_.EstimateBiases());
 }
 }  // namespace graph_localizer

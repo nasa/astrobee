@@ -111,45 +111,61 @@ void GraphLocalizer::AddPriors(const lc::CombinedNavState& global_cgN_body, cons
   graph.push_back(bias_prior_factor);
 }
 
-bool GraphLocalizer::LatestCombinedNavStateAndCovariances(
-    lc::CombinedNavState& latest_combined_nav_state,
-    lc::CombinedNavStateCovariances& latest_combined_nav_state_covariances) const {
+boost::optional<std::pair<lc::CombinedNavState, lc::CombinedNavStateCovariances>>
+GraphLocalizer::LatestCombinedNavStateAndCovariances() const {
   if (!marginals_) {
     LOG(ERROR) << "LatestCombinedNavStateAndCovariances: No marginals available.";
-    return false;
+    return boost::none;
   }
   const auto state_covariance_pair = LatestCombinedNavStateAndCovariances(*marginals_);
-  latest_combined_nav_state = state_covariance_pair.first;
-  latest_combined_nav_state_covariances = state_covariance_pair.second;
-  return true;
+  if (!state_covariance_pair) {
+    LOG(ERROR) << "LatestCombinedNavStateAndCovariances: Failed to get latest combined nav state and "
+                  "covariances.";
+    return boost::none;
+  }
+
+  return state_covariance_pair;
 }
 
-std::pair<lc::CombinedNavState, lc::CombinedNavStateCovariances> GraphLocalizer::LatestCombinedNavStateAndCovariances(
-    const gtsam::Marginals& marginals) const {
-  const lc::CombinedNavState global_cgN_body_latest = graph_values_.LatestCombinedNavState();
-  const int latest_combined_nav_state_key_index = graph_values_.LatestCombinedNavStateKeyIndex();
-  const auto pose_covariance = marginals.marginalCovariance(sym::P(latest_combined_nav_state_key_index));
-  const auto velocity_covariance = marginals.marginalCovariance(sym::V(latest_combined_nav_state_key_index));
-  const auto bias_covariance = marginals.marginalCovariance(sym::B(latest_combined_nav_state_key_index));
+boost::optional<std::pair<lc::CombinedNavState, lc::CombinedNavStateCovariances>>
+GraphLocalizer::LatestCombinedNavStateAndCovariances(const gtsam::Marginals& marginals) const {
+  const auto global_cgN_body_latest = graph_values_.LatestCombinedNavState();
+  if (!global_cgN_body_latest) {
+    LOG(ERROR) << "LatestCombinedNavStateAndCovariance: Failed to get latest combined nav state.";
+    return boost::none;
+  }
+  const auto latest_combined_nav_state_key_index = graph_values_.LatestCombinedNavStateKeyIndex();
+  if (!latest_combined_nav_state_key_index) {
+    LOG(ERROR) << "LatestCombinedNavStateAndCovariance: Failed to get latest combined nav state.";
+    return boost::none;
+  }
+
+  const auto pose_covariance = marginals.marginalCovariance(sym::P(*latest_combined_nav_state_key_index));
+  const auto velocity_covariance = marginals.marginalCovariance(sym::V(*latest_combined_nav_state_key_index));
+  const auto bias_covariance = marginals.marginalCovariance(sym::B(*latest_combined_nav_state_key_index));
   const lc::CombinedNavStateCovariances latest_combined_nav_state_covariances(pose_covariance, velocity_covariance,
                                                                               bias_covariance);
-  return {global_cgN_body_latest, latest_combined_nav_state_covariances};
+  return std::pair<lc::CombinedNavState, lc::CombinedNavStateCovariances>{*global_cgN_body_latest,
+                                                                          latest_combined_nav_state_covariances};
 }
 
-bool GraphLocalizer::LatestPose(Eigen::Isometry3d& global_T_body_latest, lc::Time& timestamp) const {
-  const lc::CombinedNavState global_cgN_body_latest = graph_values_.LatestCombinedNavState();
-  global_T_body_latest = Eigen::Isometry3d(global_cgN_body_latest.pose().matrix());
-  timestamp = global_cgN_body_latest.timestamp();
-  return true;
+boost::optional<lc::CombinedNavState> GraphLocalizer::LatestCombinedNavState() const {
+  const auto global_cgN_body_latest = graph_values_.LatestCombinedNavState();
+  if (!global_cgN_body_latest) {
+    LOG(ERROR) << "LatestCombinedNavState: Failed to get latest combined nav state.";
+    return boost::none;
+  }
+
+  return global_cgN_body_latest;
 }
 
-void GraphLocalizer::LatestBiases(Eigen::Vector3d& accelerometer_bias, Eigen::Vector3d& gyro_bias,
-                                  lc::Time& timestamp) const {
+boost::optional<std::pair<gtsam::imuBias::ConstantBias, lc::Time>> GraphLocalizer::LatestBiases() const {
   const auto latest_bias = graph_values_.LatestBias();
-  accelerometer_bias = latest_bias.accelerometer();
-  gyro_bias = latest_bias.gyroscope();
-  // Assumes each nav state includes bias estimation
-  timestamp = graph_values_.LatestTimestamp();
+  if (!latest_bias) {
+    LOG(ERROR) << "LatestBiases: Failed to get latest biases.";
+    return boost::none;
+  }
+  return latest_bias;
 }
 
 void GraphLocalizer::AddImuMeasurement(const lm::ImuMeasurement& imu_measurement) {
@@ -199,7 +215,12 @@ void GraphLocalizer::AddOpticalFlowMeasurement(
         new SmartFactor(nav_cam_noise_, nav_cam_intrinsics_, body_T_nav_cam_, smart_projection_params_));
     int num_points_added = 0;
     for (const auto& feature_point : feature_track.second.points) {
-      smart_factor->add(Camera::Measurement(feature_point.image_point), graph_values_.PoseKey(feature_point.timestamp));
+      const auto pose_key = graph_values_.PoseKey(feature_point.timestamp);
+      if (!pose_key) {
+        LOG(ERROR) << "AddOpticalFlowMeasurement: Failed to find pose key for timestamp.";
+        continue;
+      }
+      smart_factor->add(Camera::Measurement(feature_point.image_point), *pose_key);
       ++num_points_added;
     }
 
@@ -253,9 +274,15 @@ void GraphLocalizer::AddProjectionMeasurement(const lm::MatchedProjectionsMeasur
 
   int num_added_loc_projection_factors = 0;
   for (const auto& matched_projection : matched_projections_measurement.matched_projections) {
-    gtsam::LocProjectionFactor<>::shared_ptr loc_projection_factor(new gtsam::LocProjectionFactor<>(
-        matched_projection.image_point, matched_projection.map_point, cam_noise,
-        graph_values_.PoseKey(matched_projections_measurement.timestamp), cam_intrinsics, body_T_cam));
+    const auto pose_key = graph_values_.PoseKey(matched_projections_measurement.timestamp);
+    if (!pose_key) {
+      LOG(ERROR) << "AddProjectionMeasurement: Failed to find pose key for timestamp.";
+      continue;
+    }
+
+    gtsam::LocProjectionFactor<>::shared_ptr loc_projection_factor(
+        new gtsam::LocProjectionFactor<>(matched_projection.image_point, matched_projection.map_point, cam_noise,
+                                         *pose_key, cam_intrinsics, body_T_cam));
     graph_.push_back(loc_projection_factor);
     ++num_added_loc_projection_factors;
   }
@@ -264,39 +291,22 @@ void GraphLocalizer::AddProjectionMeasurement(const lm::MatchedProjectionsMeasur
 }
 
 bool GraphLocalizer::AddOrSplitImuFactorIfNeeded(const lc::Time timestamp) {
-  if (timestamp < graph_values_.OldestTimestamp()) {
-    LOG(WARNING) << "AddOrSplitImuFactorIfNeeded: Timestamp occured before "
-                    "oldest time in graph, ignoring.";
-    return false;
-  }
-
-  if (latest_imu_integrator_.Empty()) {
-    LOG(WARNING) << "AddOrSplitImuFactorIfNeeded: No measurements available in "
-                    "imu integrator, ignoring.";
-    return false;
-  }
-
-  if (timestamp < latest_imu_integrator_.OldestTime() || timestamp > latest_imu_integrator_.LatestTime()) {
-    LOG(WARNING) << "AddOrSplitImuFactorIfNeeded: Timestamp occured outside "
-                    "times available in imu integrator, ignoring."
-                 << std::endl
-                 << std::setprecision(15) << "Timestamp: " << timestamp << std::endl
-                 << "imu oldest: " << latest_imu_integrator_.OldestTime() << std::endl
-                 << "imu latest: " << latest_imu_integrator_.LatestTime();
-    return false;
-  }
-
   if (graph_values_.HasKey(timestamp)) {
     DLOG(INFO) << "AddOrSplitImuFactorIfNeeded: CombinedNavState exists at "
                   "timestamp, nothing to do.";
     return true;
   }
 
-  if (timestamp > graph_values_.LatestTimestamp()) {
+  const auto latest_timestamp = graph_values_.LatestTimestamp();
+  if (!latest_timestamp) {
+    LOG(ERROR) << "AddOrSplitImuFactorIfNeeded: Failed to get latest timestamp.";
+    return false;
+  }
+
+  if (timestamp > *latest_timestamp) {
     DLOG(INFO) << "AddOrSplitImuFactorIfNeeded: Creating and adding latest imu "
                   "factor and nav state.";
-    CreateAndAddLatestImuFactorAndCombinedNavState(timestamp);
-    return true;
+    return CreateAndAddLatestImuFactorAndCombinedNavState(timestamp);
   } else {
     DLOG(INFO) << "AddOrSplitImuFactorIfNeeded: Splitting old imu factor.";
     return SplitOldImuFactorAndAddCombinedNavState(timestamp);
@@ -305,17 +315,32 @@ bool GraphLocalizer::AddOrSplitImuFactorIfNeeded(const lc::Time timestamp) {
 
 bool GraphLocalizer::SplitOldImuFactorAndAddCombinedNavState(const lc::Time timestamp) {
   const auto timestamp_bounds = graph_values_.LowerAndUpperBoundTimestamp(timestamp);
-  const lc::Time lower_bound_time = timestamp_bounds.first;
-  const lc::Time upper_bound_time = timestamp_bounds.second;
+  if (!*(timestamp_bounds.first) || !*(timestamp_bounds.second)) {
+    LOG(ERROR) << "SplitOldImuFactorAndAddCombinedNavState: Failed to get upper and lower bound timestamp.";
+    return false;
+  }
+
+  const lc::Time lower_bound_time = *(timestamp_bounds.first);
+  const lc::Time upper_bound_time = *(timestamp_bounds.second);
+
+  if (timestamp < lower_bound_time || timestamp > upper_bound_time) {
+    LOG(ERROR) << "SplitOldImuFactorAndAddCombinedNavState: Timestamp is not within bounds of existing timestamps.";
+    return false;
+  }
+
   const auto lower_bound_key_index = graph_values_.KeyIndex(lower_bound_time);
   const auto upper_bound_key_index = graph_values_.KeyIndex(upper_bound_time);
+  if (!lower_bound_key_index || !upper_bound_key_index) {
+    LOG(ERROR) << "SplitOldImuFactorAndAddCombinedNavState: Failed to get lower and upper bound key indices.";
+    return false;
+  }
 
   // get old imu factor, delete it
   bool removed_old_imu_factor = false;
   for (auto factor_it = graph_.begin(); factor_it != graph_.end();) {
     if (dynamic_cast<gtsam::CombinedImuFactor*>(factor_it->get()) &&
-        graph_values_.ContainsCombinedNavStateKey(**factor_it, lower_bound_key_index) &&
-        graph_values_.ContainsCombinedNavStateKey(**factor_it, upper_bound_key_index)) {
+        graph_values_.ContainsCombinedNavStateKey(**factor_it, *lower_bound_key_index) &&
+        graph_values_.ContainsCombinedNavStateKey(**factor_it, *upper_bound_key_index)) {
       graph_.erase(factor_it);
       removed_old_imu_factor = true;
       break;
@@ -323,67 +348,137 @@ bool GraphLocalizer::SplitOldImuFactorAndAddCombinedNavState(const lc::Time time
     ++factor_it;
   }
   if (!removed_old_imu_factor) {
-    LOG(DFATAL) << "SplitOldImuFactorAndAddCombinedNavState: Failed to remove "
-                   "old imu factor.";
+    LOG(ERROR) << "SplitOldImuFactorAndAddCombinedNavState: Failed to remove "
+                  "old imu factor.";
     return false;
   }
 
-  const auto lower_bound_bias = graph_values_.at<gtsam::imuBias::ConstantBias>(sym::B(lower_bound_key_index));
+  const auto lower_bound_bias = graph_values_.at<gtsam::imuBias::ConstantBias>(sym::B(*lower_bound_key_index));
+  if (!lower_bound_bias) {
+    LOG(ERROR) << "SplitOldImuFactorAndAddCombinedNavState: Failed to get lower bound bias.";
+    return false;
+  }
+
   // Add first factor and new nav state at timestamp
-  auto first_integrated_pim = latest_imu_integrator_.IntegratedPim(lower_bound_bias, lower_bound_time, timestamp,
+  auto first_integrated_pim = latest_imu_integrator_.IntegratedPim(*lower_bound_bias, lower_bound_time, timestamp,
                                                                    latest_imu_integrator_.pim_params());
+  if (!first_integrated_pim) {
+    LOG(ERROR) << "SplitOldImuFactorAndAddCombinedNavState: Failed to create first integrated pim.";
+    return false;
+  }
+
   const auto lower_bound_combined_nav_state = graph_values_.GetCombinedNavState(lower_bound_time);
-  CreateAndAddImuFactorAndPredictedCombinedNavState(lower_bound_combined_nav_state, first_integrated_pim);
+  if (!lower_bound_combined_nav_state) {
+    LOG(ERROR) << "SplitOldImuFactorAndAddCombinedNavState: Failed to get lower bound combined nav state.";
+    return false;
+  }
+
+  if (!CreateAndAddImuFactorAndPredictedCombinedNavState(*lower_bound_combined_nav_state, *first_integrated_pim)) {
+    LOG(ERROR) << "SplitOldImuFactorAndAddCombinedNavState: Failed to create and add imu factor.";
+    return false;
+  }
 
   // Add second factor, use lower_bound_bias as starting bias since that is the
   // best estimate available
-  auto second_integrated_pim = latest_imu_integrator_.IntegratedPim(lower_bound_bias, timestamp, upper_bound_time,
+  auto second_integrated_pim = latest_imu_integrator_.IntegratedPim(*lower_bound_bias, timestamp, upper_bound_time,
                                                                     latest_imu_integrator_.pim_params());
+  if (!second_integrated_pim) {
+    LOG(ERROR) << "SplitOldImuFactorAndAddCombinedNavState: Failed to create second integrated pim.";
+    return false;
+  }
+
   // New nav state already added so just get its key index
   const auto new_key_index = graph_values_.KeyIndex(timestamp);
+  if (!new_key_index) {
+    LOG(ERROR) << "SplitOldImuFactorAndAddCombinedNavState: Failed to get new key index.";
+    return false;
+  }
+
   const auto combined_imu_factor =
-      ii::MakeCombinedImuFactor(new_key_index, upper_bound_key_index, second_integrated_pim);
+      ii::MakeCombinedImuFactor(*new_key_index, *upper_bound_key_index, *second_integrated_pim);
   graph_.push_back(combined_imu_factor);
   return true;
 }
 
-void GraphLocalizer::CreateAndAddLatestImuFactorAndCombinedNavState(const lc::Time timestamp) {
-  latest_imu_integrator_.IntegrateLatestImuMeasurements(timestamp);
-  CreateAndAddImuFactorAndPredictedCombinedNavState(graph_values_.LatestCombinedNavState(),
-                                                    latest_imu_integrator_.pim());
-  latest_imu_integrator_.ResetPimIntegrationAndSetBias(graph_values_.LatestBias());
-}
-
-void GraphLocalizer::CreateAndAddImuFactorAndPredictedCombinedNavState(
-    const lc::CombinedNavState& global_cgN_body, const gtsam::PreintegratedCombinedMeasurements& pim) {
-  const int key_index_0 = graph_values_.KeyIndex(global_cgN_body.timestamp());
-  const lc::CombinedNavState global_cgN_body_predicted = ii::PimPredict(global_cgN_body, pim);
-  const int key_index_1 = GenerateKeyIndex();
-  const auto combined_imu_factor = ii::MakeCombinedImuFactor(key_index_0, key_index_1, pim);
-  graph_.push_back(combined_imu_factor);
-  graph_values_.AddCombinedNavState(global_cgN_body_predicted, key_index_1);
-}
-
-void GraphLocalizer::SlideWindow(const gtsam::Marginals& marginals) {
-  if (graph_values_.SlideWindow(graph_) == 0) {
-    DLOG(INFO) << "SlideWindow: No states removed. ";
-    return;
+bool GraphLocalizer::CreateAndAddLatestImuFactorAndCombinedNavState(const lc::Time timestamp) {
+  if (!latest_imu_integrator_.IntegrateLatestImuMeasurements(timestamp)) {
+    LOG(ERROR) << "CreateAndAddLatestImuFactorAndCombinedNavState: Failed to integrate latest imu measurements.";
+    return false;
   }
 
-  feature_tracker_.RemoveOldFeaturePoints(graph_values_.OldestTimestamp());
-  latest_imu_integrator_.RemoveOldMeasurements(graph_values_.OldestTimestamp());
+  const auto latest_combined_nav_state = graph_values_.LatestCombinedNavState();
+  if (!latest_combined_nav_state) {
+    LOG(ERROR) << "CreateAndAddLatestImuFactorAndCombinedNavState: Failed to get latest combined nav state.";
+    return false;
+  }
+  if (!CreateAndAddImuFactorAndPredictedCombinedNavState(*latest_combined_nav_state, latest_imu_integrator_.pim())) {
+    LOG(ERROR) << "CreateAndAddLatestImuFactorAndCombinedNavState: Failed to create and add imu factor.";
+    return false;
+  }
+
+  const auto latest_bias = graph_values_.LatestBias();
+  if (!latest_bias) {
+    LOG(ERROR) << "CreateAndAddLatestImuFactorAndCombinedNavState: Failed to get latest bias.";
+    return false;
+  }
+
+  latest_imu_integrator_.ResetPimIntegrationAndSetBias(latest_bias->first);
+}
+
+bool GraphLocalizer::CreateAndAddImuFactorAndPredictedCombinedNavState(
+    const lc::CombinedNavState& global_cgN_body, const gtsam::PreintegratedCombinedMeasurements& pim) {
+  const auto key_index_0 = graph_values_.KeyIndex(global_cgN_body.timestamp());
+  if (!key_index_0) {
+    LOG(ERROR) << "CreateAndAddImuFactorAndPredictedCombinedNavState: Failed to get first key index.";
+    return false;
+  }
+
+  const lc::CombinedNavState global_cgN_body_predicted = ii::PimPredict(global_cgN_body, pim);
+  const int key_index_1 = GenerateKeyIndex();
+  const auto combined_imu_factor = ii::MakeCombinedImuFactor(*key_index_0, key_index_1, pim);
+  graph_.push_back(combined_imu_factor);
+  graph_values_.AddCombinedNavState(global_cgN_body_predicted, key_index_1);
+  return true;
+}
+
+bool GraphLocalizer::SlideWindow(const gtsam::Marginals& marginals) {
+  if (graph_values_.SlideWindow(graph_) == 0) {
+    DLOG(INFO) << "SlideWindow: No states removed. ";
+    return false;
+  }
+
+  const auto oldest_timestamp = graph_values_.OldestTimestamp();
+  if (!oldest_timestamp) {
+    LOG(ERROR) << "SlideWindow: Failed to get oldest timestamp.";
+    return false;
+  }
+
+  feature_tracker_.RemoveOldFeaturePoints(*oldest_timestamp);
+  latest_imu_integrator_.RemoveOldMeasurements(*oldest_timestamp);
 
   // Add prior to oldest nav state using covariances from last round of
   // optimization
-  const lc::CombinedNavState global_cgN_body_oldest = graph_values_.OldestCombinedNavState();
-  DLOG(INFO) << "SlideWindow: Oldest state time: " << global_cgN_body_oldest.timestamp();
-  const int key_index = graph_values_.OldestCombinedNavStateKeyIndex();
-  DLOG(INFO) << "SlideWindow: key index: " << key_index;
+  const auto global_cgN_body_oldest = graph_values_.OldestCombinedNavState();
+  if (!global_cgN_body_oldest) {
+    LOG(ERROR) << "SlideWindow: Failed to get oldest combined nav state.";
+    return false;
+  }
+
+  DLOG(INFO) << "SlideWindow: Oldest state time: " << global_cgN_body_oldest->timestamp();
+
+  const auto key_index = graph_values_.OldestCombinedNavStateKeyIndex();
+  if (!key_index) {
+    LOG(ERROR) << "SlideWindow: Failed to get oldest combined nav state key index.";
+    return false;
+  }
+
+  DLOG(INFO) << "SlideWindow: key index: " << *key_index;
   lc::CombinedNavStateNoise noise;
-  noise.pose_noise = gtsam::noiseModel::Gaussian::Covariance(marginals.marginalCovariance(sym::P(key_index)));
-  noise.velocity_noise = gtsam::noiseModel::Gaussian::Covariance(marginals.marginalCovariance(sym::V(key_index)));
-  noise.bias_noise = gtsam::noiseModel::Gaussian::Covariance(marginals.marginalCovariance(sym::B(key_index)));
-  AddPriors(global_cgN_body_oldest, noise, key_index, graph_values_.values(), graph_);
+  noise.pose_noise = gtsam::noiseModel::Gaussian::Covariance(marginals.marginalCovariance(sym::P(*key_index)));
+  noise.velocity_noise = gtsam::noiseModel::Gaussian::Covariance(marginals.marginalCovariance(sym::V(*key_index)));
+  noise.bias_noise = gtsam::noiseModel::Gaussian::Covariance(marginals.marginalCovariance(sym::B(*key_index)));
+  AddPriors(*global_cgN_body_oldest, noise, *key_index, graph_values_.values(), graph_);
+  return true;
 }
 
 void GraphLocalizer::PrintFactorDebugInfo() const {
@@ -409,7 +504,7 @@ int GraphLocalizer::NumOFFactors() const {
 
 int GraphLocalizer::NumVLFactors() const { return NumFactors<gtsam::LocProjectionFactor<>>(); }
 
-void GraphLocalizer::Update() {
+bool GraphLocalizer::Update() {
   LOG(INFO) << "Update: Updating.";
 
   // Optimize
@@ -425,10 +520,19 @@ void GraphLocalizer::Update() {
   graph_.saveGraph(of, graph_values_.values());
 
   // Update imu integrator bias
-  latest_imu_integrator_.ResetPimIntegrationAndSetBias(graph_values_.LatestBias());
+  const auto latest_bias = graph_values_.LatestBias();
+  if (!latest_bias) {
+    LOG(ERROR) << "Update: Failed to get latest bias.";
+    return false;
+  }
+
+  latest_imu_integrator_.ResetPimIntegrationAndSetBias(latest_bias->first);
   // Calculate marginals before sliding window since this depends on values that
   // would be removed in SlideWindow()
   marginals_.reset(new gtsam::Marginals(graph_, graph_values_.values()));
-  SlideWindow(*marginals_);
+  if (!SlideWindow(*marginals_)) {
+    LOG(ERROR) << "Update: Failed to slide window.";
+    return false;
+  }
 }
 }  // namespace graph_localizer

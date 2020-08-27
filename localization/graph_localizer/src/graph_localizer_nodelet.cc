@@ -119,15 +119,21 @@ void GraphLocalizerNodelet::ImuCallback(const sensor_msgs::Imu::ConstPtr& imu_ms
 }
 
 void GraphLocalizerNodelet::PublishLocalizationState() const {
-  ff_msgs::EkfState latest_localization_msg;
-  if (!graph_localizer_wrapper_.LatestLocalizationMsg(latest_localization_msg)) return;
-  state_pub_.publish(latest_localization_msg);
+  const auto latest_localization_msg = graph_localizer_wrapper_.LatestLocalizationMsg();
+  if (!latest_localization_msg) {
+    LOG(WARNING) << "PublishLocalizationState: Failed to get latest localization msg.";
+    return;
+  }
+  state_pub_.publish(*latest_localization_msg);
 }
 
 void GraphLocalizerNodelet::PublishPose() const {
-  geometry_msgs::PoseStamped latest_pose_msg;
-  if (!graph_localizer_wrapper_.LatestPoseMsg(latest_pose_msg)) return;
-  pose_pub_.publish(latest_pose_msg);
+  const auto latest_pose_msg = graph_localizer_wrapper_.LatestPoseMsg();
+  if (!latest_pose_msg) {
+    LOG(WARNING) << "PublishPose: Failed to get latest pose msg.";
+    return;
+  }
+  pose_pub_.publish(*latest_pose_msg);
 }
 
 void GraphLocalizerNodelet::Run() {

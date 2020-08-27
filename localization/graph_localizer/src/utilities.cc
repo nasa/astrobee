@@ -47,15 +47,18 @@ bool ValidPointSet(const std::deque<lm::FeaturePoint>& points, const double min_
   return (average_distance_from_mean >= min_avg_distance_from_mean);
 }
 
-geometry_msgs::PoseStamped LatestPoseMsg(const GraphLocalizer& graph_localizer) {
-  Eigen::Isometry3d global_T_body_graph_latest;
-  double latest_graph_timestamp;
-  graph_localizer.LatestPose(global_T_body_graph_latest, latest_graph_timestamp);
-  const ros::Time latest_graph_time(latest_graph_timestamp);
+boost::optional<geometry_msgs::PoseStamped> LatestPoseMsg(const GraphLocalizer& graph_localizer) {
+  const auto latest_combined_nav_state = graph_localizer.LatestCombinedNavState();
+  if (!latest_combined_nav_state) {
+    LOG(ERROR) << "LatestPoseMsg: Failed to get latest combined nav state.";
+    return boost::none;
+  }
+
+  const ros::Time latest_graph_time(latest_combined_nav_state->timestamp());
   std_msgs::Header header;
   header.stamp.sec = latest_graph_time.sec;
   header.stamp.nsec = latest_graph_time.nsec;
-  const auto latest_graph_localization_pose_msg = PoseMsg(global_T_body_graph_latest, header);
+  const auto latest_graph_localization_pose_msg = PoseMsg(lc::EigenPose(*latest_combined_nav_state), header);
   return latest_graph_localization_pose_msg;
 }
 

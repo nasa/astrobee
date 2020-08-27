@@ -28,6 +28,8 @@
 
 #include <glog/logging.h>
 
+#include <boost/optional.hpp>
+
 #include <map>
 #include <utility>
 
@@ -39,44 +41,44 @@ class GraphValues {
   explicit GraphValues(const double window_ideal_duration, const int window_min_num_states);
 
   // Add timestamp and keys to timestamp_key_index_map, and values to values
-  void AddCombinedNavState(const localization_common::CombinedNavState& combined_nav_state, const int key_index);
+  bool AddCombinedNavState(const localization_common::CombinedNavState& combined_nav_state, const int key_index);
 
   // Removes keys from timestamp map, values from values.
   // Also removes any factors using these keys from graph argument
   bool RemoveCombinedNavStateAndFactors(const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& graph);
 
-  localization_common::CombinedNavState LatestCombinedNavState() const;
+  boost::optional<localization_common::CombinedNavState> LatestCombinedNavState() const;
 
-  localization_common::CombinedNavState OldestCombinedNavState() const;
+  boost::optional<localization_common::CombinedNavState> OldestCombinedNavState() const;
 
-  int OldestCombinedNavStateKeyIndex() const;
+  boost::optional<int> OldestCombinedNavStateKeyIndex() const;
 
-  int LatestCombinedNavStateKeyIndex() const;
+  boost::optional<int> LatestCombinedNavStateKeyIndex() const;
 
-  gtsam::imuBias::ConstantBias LatestBias() const;
+  boost::optional<std::pair<gtsam::imuBias::ConstantBias, localization_common::Time>> LatestBias() const;
 
   // Removes keys and their values that are too old.
   // Also removes any factors using these keys from graph argument.
   // Returns number of states removed.
   int SlideWindow(gtsam::NonlinearFactorGraph& graph);
 
-  int KeyIndex(const localization_common::Time timestamp) const;
+  boost::optional<int> KeyIndex(const localization_common::Time timestamp) const;
 
   void UpdateValues(const gtsam::Values& new_values);
 
   const gtsam::Values& values() const { return values_; }
 
-  gtsam::Key PoseKey(const localization_common::Time timestamp) const;
+  boost::optional<gtsam::Key> PoseKey(const localization_common::Time timestamp) const;
 
-  localization_common::Time OldestTimestamp() const;
+  boost::optional<localization_common::Time> OldestTimestamp() const;
 
-  localization_common::Time LatestTimestamp() const;
+  boost::optional<localization_common::Time> LatestTimestamp() const;
 
-  localization_common::Time ClosestPoseTimestamp(const localization_common::Time timestamp) const;
+  boost::optional<localization_common::Time> ClosestPoseTimestamp(const localization_common::Time timestamp) const;
 
   // Assumes timestamp is within bounds of graph values timestamps.
-  std::pair<localization_common::Time, localization_common::Time> LowerAndUpperBoundTimestamp(
-      const localization_common::Time timestamp) const;
+  std::pair<boost::optional<localization_common::Time>, boost::optional<localization_common::Time>>
+  LowerAndUpperBoundTimestamp(const localization_common::Time timestamp) const;
 
   bool HasKey(const localization_common::Time timestamp) const;
 
@@ -89,12 +91,14 @@ class GraphValues {
     return false;
   }
 
-  localization_common::CombinedNavState GetCombinedNavState(const localization_common::Time timestamp) const;
+  boost::optional<localization_common::CombinedNavState> GetCombinedNavState(
+      const localization_common::Time timestamp) const;
 
   template <typename ValueType>
-  ValueType at(const gtsam::Key& key) const {
+  boost::optional<ValueType> at(const gtsam::Key& key) const {
     if (!values_.exists(key)) {
-      LOG(FATAL) << "at: Key not present in values.";
+      LOG(ERROR) << "at: Key not present in values.";
+      return boost::none;
     }
 
     return values_.at<ValueType>(key);

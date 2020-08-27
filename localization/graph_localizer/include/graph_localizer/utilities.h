@@ -32,6 +32,8 @@
 
 #include <Eigen/Core>
 
+#include <boost/optional.hpp>
+
 #include <geometry_msgs/PoseStamped.h>
 #include <std_msgs/Header.h>
 
@@ -49,7 +51,7 @@ void EstimateAndSetImuBiases(const localization_measurements::ImuMeasurement& im
 bool ValidPointSet(const std::deque<localization_measurements::FeaturePoint>& points,
                    const double min_avg_distance_from_mean);
 
-geometry_msgs::PoseStamped LatestPoseMsg(const GraphLocalizer& localization_measurements);
+boost::optional<geometry_msgs::PoseStamped> LatestPoseMsg(const GraphLocalizer& localization_measurements);
 
 Eigen::Isometry3d EigenPose(const ff_msgs::VisualLandmarks& vl_features, const Eigen::Isometry3d& nav_cam_T_body);
 

@@ -46,9 +46,9 @@ class GraphLocalizerWrapper {
 
   void ResetBiasesAndLocalizer();
 
-  bool LatestPoseMsg(geometry_msgs::PoseStamped& latest_pose_msg) const;
+  boost::optional<geometry_msgs::PoseStamped> LatestPoseMsg() const;
 
-  bool LatestLocalizationMsg(ff_msgs::EkfState& localization_msg) const;
+  boost::optional<ff_msgs::EkfState> LatestLocalizationMsg() const;
 
   void OpticalFlowCallback(const ff_msgs::Feature2dArray& feature_array_msg);
 
