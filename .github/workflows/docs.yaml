@@ -5,6 +5,8 @@ name: Build and Push Documentation to gh-pages Branch
 on:
   push:
     branches: ['develop']
+  pull_request: # to remove after action is verified
+    branches: ['develop' ] 
 
 jobs:
   build_and_push_docs:
