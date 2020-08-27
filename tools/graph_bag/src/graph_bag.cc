@@ -196,7 +196,7 @@ void GraphBag::Run() {
       // Save imu augmented loc msg if available
       const auto imu_augmented_loc_msg = imu_augmentor_wrapper_.LatestImuAugmentedLocalizationMsg();
       if (!imu_augmented_loc_msg) {
-        LOG_EVERY_N(ERROR, 50) << "Run: Failed to get latest imu augmented loc msg.";
+        LOG_EVERY_N(WARNING, 50) << "Run: Failed to get latest imu augmented loc msg.";
       } else {
         SaveLocState(*imu_augmented_loc_msg, TOPIC_GNC_EKF);
       }
@@ -221,7 +221,7 @@ void GraphBag::Run() {
       // Pass latest loc state to imu augmentor if it is available.
       const auto localization_msg = graph_localizer_wrapper_.LatestLocalizationMsg();
       if (!localization_msg) {
-        LOG(ERROR) << "Run: Failed to get localization msg.";
+        LOG_EVERY_N(WARNING, 50) << "Run: Failed to get localization msg.";
       } else {
         imu_augmentor_wrapper_.LocalizationStateCallback(*localization_msg);
         SaveLocState(*localization_msg, TOPIC_GRAPH_LOC_STATE);

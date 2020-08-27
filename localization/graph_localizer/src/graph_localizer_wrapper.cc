@@ -146,7 +146,7 @@ boost::optional<geometry_msgs::PoseStamped> GraphLocalizerWrapper::LatestPoseMsg
 
 boost::optional<ff_msgs::EkfState> GraphLocalizerWrapper::LatestLocalizationMsg() const {
   if (!graph_localizer_) {
-    LOG(ERROR) << "LatestLocalizationMsg: Graph localizater not initialized yet.";
+    LOG_EVERY_N(WARNING, 50) << "LatestLocalizationMsg: Graph localizater not initialized yet.";
     return boost::none;
   }
   const auto combined_nav_state_and_covariances = graph_localizer_->LatestCombinedNavStateAndCovariances();
