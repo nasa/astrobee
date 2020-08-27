@@ -4,10 +4,7 @@
 
 ## Code documentation
 
-Code should be documented using doxygen.
-
-*Add here an explanation of the overall structure and how to create subsystem
- pages (or just provide a default template).*
+Code should be documented using doxygen using the latest version.
 
 ## UML diagraming
 

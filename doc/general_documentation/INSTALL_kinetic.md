@@ -12,7 +12,7 @@ support some of our Gazebo plugins.
 *Note: You will need 4 GBs of RAM to compile the software. If you don't have
 that much RAM available, please use swap space.*
 
-*Note: Please ensure you install Ubuntu 16.04. Running the simulation in Ubuntu 18.04 is possible, but not officially supported, instructions in README_Ubuntu18.md. At this time we do not support
+*Note: Please ensure you install Ubuntu 16.04. At this time we do not officially support
 any other operating system or Ubuntu version.*
 
 *Note: Please ensure you install the 64-bit version of Ubuntu. We do not
@@ -128,7 +128,3 @@ you can adjust the number of threads (eg. -j4) to speed up the build.
 
 For more information on running the simulator and moving the robot, please see
 the [simulation instructions](simulation/sim_overview.md).
-
-## Ubuntu 18.04 Install
-
-Ubuntu 18.04 is currently not officially supported

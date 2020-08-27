@@ -33,10 +33,8 @@ features are incomplete, and extensive changes can be expected. Please consult
 
 ### Usage instructions
 
-If you don't have access to NASA's internal network, please see the
-[usage instructions](INSTALL.md).
-
-If you do, please see the [NASA usage instructions](NASA_INSTALL.md).
+To install and use astrobee, please see the
+[usage instructions](\ref install).
 
 ### Contributors
 
@@ -58,17 +56,11 @@ are good starting points.
 
 ### Guest Science
 
-If you are interested in guest science, please do one of the following for more
-information.
-
-If you are a non-NASA user, please checkout the astrobee_android nasa github
+If you are interested in guest science, please checkout the astrobee_android nasa github
 project (if you followed the usage instructions, you should have checked this
 out already). Once that is checked out, please see
 [`astrobee_android/README.md`](https://github.com/nasa/astrobee_android/blob/master/README.md)
 located in the `astrobee_android/` folder.
-
-If you are a NASA user, please make sure the `android` submodule was checked out
-and then visit `submodules/android/guest_science_readme.md`.
 
 ### License
 
