@@ -205,7 +205,7 @@ void GraphLocalizer::AddOpticalFlowMeasurement(
     }
     ++factor_it;
   }
-  DLOG(INFO) << "AddOpticalFLowMeasurement: Num removed smart factors: " << num_removed_smart_factors;
+  VLOG(2) << "AddOpticalFLowMeasurement: Num removed smart factors: " << num_removed_smart_factors;
 
   int num_added_smart_factors = 0;
   // Add smart factor for each feature track
@@ -227,7 +227,7 @@ void GraphLocalizer::AddOpticalFlowMeasurement(
     graph_.push_back(smart_factor);
     ++num_added_smart_factors;
   }
-  DLOG(INFO) << "AddOpticalFLowMeasurement: Newly added " << num_added_smart_factors << " smart factors.";
+  VLOG(2) << "AddOpticalFLowMeasurement: Newly added " << num_added_smart_factors << " smart factors.";
 
   // Optimize Graph on receival of camera images
   // TODO(rsoussan): move this elsewhere???
@@ -287,13 +287,13 @@ void GraphLocalizer::AddProjectionMeasurement(const lm::MatchedProjectionsMeasur
     ++num_added_loc_projection_factors;
   }
 
-  DLOG(INFO) << "AddProjectionMeasurement: Added " << num_added_loc_projection_factors << " loc projection factors.";
+  VLOG(2) << "AddProjectionMeasurement: Added " << num_added_loc_projection_factors << " loc projection factors.";
 }
 
 bool GraphLocalizer::AddOrSplitImuFactorIfNeeded(const lc::Time timestamp) {
   if (graph_values_.HasKey(timestamp)) {
-    DLOG(INFO) << "AddOrSplitImuFactorIfNeeded: CombinedNavState exists at "
-                  "timestamp, nothing to do.";
+    VLOG(2) << "AddOrSplitImuFactorIfNeeded: CombinedNavState exists at "
+               "timestamp, nothing to do.";
     return true;
   }
 
@@ -304,11 +304,11 @@ bool GraphLocalizer::AddOrSplitImuFactorIfNeeded(const lc::Time timestamp) {
   }
 
   if (timestamp > *latest_timestamp) {
-    DLOG(INFO) << "AddOrSplitImuFactorIfNeeded: Creating and adding latest imu "
-                  "factor and nav state.";
+    VLOG(2) << "AddOrSplitImuFactorIfNeeded: Creating and adding latest imu "
+               "factor and nav state.";
     return CreateAndAddLatestImuFactorAndCombinedNavState(timestamp);
   } else {
-    DLOG(INFO) << "AddOrSplitImuFactorIfNeeded: Splitting old imu factor.";
+    VLOG(2) << "AddOrSplitImuFactorIfNeeded: Splitting old imu factor.";
     return SplitOldImuFactorAndAddCombinedNavState(timestamp);
   }
 }
@@ -444,7 +444,7 @@ bool GraphLocalizer::CreateAndAddImuFactorAndPredictedCombinedNavState(
 
 bool GraphLocalizer::SlideWindow(const gtsam::Marginals& marginals) {
   if (graph_values_.SlideWindow(graph_) == 0) {
-    DLOG(INFO) << "SlideWindow: No states removed. ";
+    VLOG(2) << "SlideWindow: No states removed. ";
     return false;
   }
 
@@ -465,7 +465,7 @@ bool GraphLocalizer::SlideWindow(const gtsam::Marginals& marginals) {
     return false;
   }
 
-  DLOG(INFO) << "SlideWindow: Oldest state time: " << global_cgN_body_oldest->timestamp();
+  VLOG(2) << "SlideWindow: Oldest state time: " << global_cgN_body_oldest->timestamp();
 
   const auto key_index = graph_values_.OldestCombinedNavStateKeyIndex();
   if (!key_index) {
@@ -473,7 +473,7 @@ bool GraphLocalizer::SlideWindow(const gtsam::Marginals& marginals) {
     return false;
   }
 
-  DLOG(INFO) << "SlideWindow: key index: " << *key_index;
+  VLOG(2) << "SlideWindow: key index: " << *key_index;
   lc::CombinedNavStateNoise noise;
   noise.pose_noise = gtsam::noiseModel::Gaussian::Covariance(marginals.marginalCovariance(sym::P(*key_index)));
   noise.velocity_noise = gtsam::noiseModel::Gaussian::Covariance(marginals.marginalCovariance(sym::V(*key_index)));
@@ -489,8 +489,8 @@ void GraphLocalizer::PrintFactorDebugInfo() const {
   for (auto factor_it = graph_.begin(); factor_it != graph_.end();) {
     if (dynamic_cast<const SmartFactor*>(factor_it->get())) {
       dynamic_cast<const SmartFactor*>(factor_it->get())->print();
-      DLOG(INFO) << "PrintFactorDebugInfo: SmartPose Error: "
-                 << dynamic_cast<const SmartFactor*>(factor_it->get())->error(graph_values_.values());
+      VLOG(2) << "PrintFactorDebugInfo: SmartPose Error: "
+              << dynamic_cast<const SmartFactor*>(factor_it->get())->error(graph_values_.values());
     }
     ++factor_it;
   }

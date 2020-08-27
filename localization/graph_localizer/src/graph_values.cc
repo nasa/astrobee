@@ -32,8 +32,8 @@ namespace graph_localizer {
 namespace lc = localization_common;
 GraphValues::GraphValues(const double window_ideal_duration, const int window_min_num_states)
     : kWindowIdealDuration(window_ideal_duration), kWindowMinNumStates(window_min_num_states) {
-  DLOG(INFO) << "GraphValues: Window duration: " << kWindowIdealDuration;
-  DLOG(INFO) << "GraphValues: Window min num states: " << kWindowMinNumStates;
+  VLOG(2) << "GraphValues: Window duration: " << kWindowIdealDuration;
+  VLOG(2) << "GraphValues: Window min num states: " << kWindowMinNumStates;
 }
 
 // Removes keys from timestamp map, values from values.
@@ -56,7 +56,7 @@ bool GraphValues::RemoveCombinedNavStateAndFactors(const lc::Time timestamp, gts
     }
     ++factor_it;
   }
-  DLOG(INFO) << "RemoveCombinedNavStateAndFactors: Removed " << removed_factors << " factors.";
+  VLOG(2) << "RemoveCombinedNavStateAndFactors: Removed " << removed_factors << " factors.";
   return successful;
 }
 
@@ -126,7 +126,7 @@ boost::optional<lc::Time> GraphValues::ClosestPoseTimestamp(const lc::Time times
     }
   }
 
-  DLOG(INFO) << "ClosestPoseTimestamp: dt is " << std::abs(timestamp - closest_timestamp);
+  VLOG(2) << "ClosestPoseTimestamp: dt is " << std::abs(timestamp - closest_timestamp);
 
   if (!values_.exists(sym::P(key_index))) {
     LOG(ERROR) << "ClosestPoseTimestamp: Pose key not present in values.";
@@ -269,8 +269,8 @@ int GraphValues::SlideWindow(gtsam::NonlinearFactorGraph& graph) {
     return 0;
   }
   const double total_duration = timestamp_key_index_map_.crbegin()->first - timestamp_key_index_map_.cbegin()->first;
-  DLOG(INFO) << "SlideWindow: Starting total num states: " << timestamp_key_index_map_.size();
-  DLOG(INFO) << "SlideWindow: Starting total duration is " << total_duration;
+  VLOG(2) << "SlideWindow: Starting total num states: " << timestamp_key_index_map_.size();
+  VLOG(2) << "SlideWindow: Starting total duration is " << total_duration;
   const lc::Time ideal_oldest_allowed_state =
       std::max(0.0, timestamp_key_index_map_.crbegin()->first - kWindowIdealDuration);
   int num_states_removed = 0;
@@ -279,11 +279,11 @@ int GraphValues::SlideWindow(gtsam::NonlinearFactorGraph& graph) {
     RemoveCombinedNavStateAndFactors(timestamp_key_index_map_.begin()->first, graph);
     ++num_states_removed;
   }
-  DLOG(INFO) << "SlideWindow: New total num states: " << timestamp_key_index_map_.size();
+  VLOG(2) << "SlideWindow: New total num states: " << timestamp_key_index_map_.size();
   const double new_total_duration =
       timestamp_key_index_map_.crbegin()->first - timestamp_key_index_map_.cbegin()->first;
-  DLOG(INFO) << "SlideWindow: New total duration is " << new_total_duration;
-  DLOG(INFO) << "SlideWindow: Num states removed: " << num_states_removed;
+  VLOG(2) << "SlideWindow: New total duration is " << new_total_duration;
+  VLOG(2) << "SlideWindow: Num states removed: " << num_states_removed;
   return num_states_removed;
 }
 
@@ -313,8 +313,8 @@ bool GraphValues::AddCombinedNavState(const lc::CombinedNavState& combined_nav_s
   values_.insert(sym::V(key_index), combined_nav_state.velocity());
   values_.insert(sym::B(key_index), combined_nav_state.bias());
 
-  DLOG(INFO) << "AddCombinedNavState: Added key_index " << key_index;
-  DLOG(INFO) << "AddCombinedNavState: Added timestamp " << std::setprecision(15) << combined_nav_state.timestamp();
+  VLOG(2) << "AddCombinedNavState: Added key_index " << key_index;
+  VLOG(2) << "AddCombinedNavState: Added timestamp " << std::setprecision(15) << combined_nav_state.timestamp();
   return true;
 }
 
@@ -361,8 +361,8 @@ bool GraphValues::RemoveCombinedNavState(const lc::Time timestamp) {
     removed_values = false;
   }
 
-  DLOG(INFO) << "RemoveCombinedNavState: Removed key index " << key_index;
-  DLOG(INFO) << "RemoveCombinedNavState: Removed timestamp" << std::setprecision(15) << timestamp;
+  VLOG(2) << "RemoveCombinedNavState: Removed key index " << key_index;
+  VLOG(2) << "RemoveCombinedNavState: Removed timestamp" << std::setprecision(15) << timestamp;
   return removed_values;
 }
 }  // namespace graph_localizer

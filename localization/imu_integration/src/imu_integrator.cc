@@ -27,7 +27,7 @@ namespace lc = localization_common;
 namespace lm = localization_measurements;
 ImuIntegrator::ImuIntegrator(const Eigen::Isometry3d& body_T_imu, const Eigen::Vector3d& gravity)
     : body_T_imu_(body_T_imu) {
-  DLOG(INFO) << "ImuIntegrator: Gravity vector: " << std::endl << gravity.matrix();
+  VLOG(2) << "ImuIntegrator: Gravity vector: " << std::endl << gravity.matrix();
   pim_params_.reset(new gtsam::PreintegratedCombinedMeasurements::Params(gravity));
   // Set sensor covariances
   pim_params_->gyroscopeCovariance = kGyroSigma_ * kGyroSigma_ * gtsam::I_3x3;
@@ -83,10 +83,10 @@ bool ImuIntegrator::IntegrateImuMeasurements(const lc::Time start_time, const lc
     ++num_measurements_added;
   }
 
-  DLOG(INFO) << "IntegrateImuMeasurements: Num imu measurements integrated: " << num_measurements_added;
-  DLOG(INFO) << "IntegrateImuMeasurements: Total Num Imu Measurements after "
-                "integrating: "
-             << measurements_.size();
+  VLOG(2) << "IntegrateImuMeasurements: Num imu measurements integrated: " << num_measurements_added;
+  VLOG(2) << "IntegrateImuMeasurements: Total Num Imu Measurements after "
+             "integrating: "
+          << measurements_.size();
   return last_added_imu_measurement_time;
 }
 

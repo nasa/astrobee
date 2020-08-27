@@ -37,7 +37,7 @@ bool EstimateAndSetImuBiases(const lm::ImuMeasurement& imu_measurement,
     sum_of_angular_velocity_measurements += imu_measurement.angular_velocity;
   }
 
-  DLOG(INFO) << "Number of imu measurements per bias estimate: " << num_imu_measurements_per_bias_estimate;
+  VLOG(2) << "Number of imu measurements per bias estimate: " << num_imu_measurements_per_bias_estimate;
   accelerometer_bias = sum_of_acceleration_measurements / imu_bias_measurements.size();
   gyro_bias = sum_of_angular_velocity_measurements / imu_bias_measurements.size();
   LOG(INFO) << "Accelerometer bias: " << std::endl << accelerometer_bias.matrix();
@@ -80,9 +80,9 @@ void AddMeasurement(const lm::ImuMeasurement& imu_measurement, lc::Time& last_ad
   const double dt = imu_measurement.timestamp - last_added_imu_measurement_time;
   pim.integrateMeasurement(imu_measurement.acceleration, imu_measurement.angular_velocity, dt);
   last_added_imu_measurement_time = imu_measurement.timestamp;
-  // DLOG(INFO) << "deltaPij: " << pim_->deltaPij().matrix();
-  // DLOG(INFO) << "deltaVij: " << pim_->deltaVij().matrix();
-  // DLOG(INFO) << "deltaRij: " << pim_->deltaRij().matrix();
+  // VLOG(2) << "deltaPij: " << pim_->deltaPij().matrix();
+  // VLOG(2) << "deltaVij: " << pim_->deltaVij().matrix();
+  // VLOG(2) << "deltaRij: " << pim_->deltaRij().matrix();
 }
 
 lc::CombinedNavState PimPredict(const lc::CombinedNavState& combined_nav_state,

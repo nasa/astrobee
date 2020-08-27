@@ -45,7 +45,7 @@ bool LatestImuIntegrator::IntegrateLatestImuMeasurements(const lc::Time end_time
   }
 
   if (last_added_imu_measurement_time_ == 0) {
-    DLOG(INFO) << "IntegrateLatestImuMeasurements: Adding first imu measurement.";
+    VLOG(2) << "IntegrateLatestImuMeasurements: Adding first imu measurement.";
     last_added_imu_measurement_time_ = start_time_;
   }
 

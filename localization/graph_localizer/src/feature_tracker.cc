@@ -25,7 +25,7 @@ namespace lc = localization_common;
 namespace lm = localization_measurements;
 void FeatureTracker::UpdateFeatureTracks(const lm::FeaturePoints& feature_points) {
   const int starting_num_feature_tracks = feature_tracks_.size();
-  DLOG(INFO) << "UpdateFeatureTracks: Starting num feature tracks: " << starting_num_feature_tracks;
+  VLOG(2) << "UpdateFeatureTracks: Starting num feature tracks: " << starting_num_feature_tracks;
   // Update existing features or add new one
   for (const auto& feature_point : feature_points) {
     feature_tracks_[feature_point.feature_id].latest_image_id = feature_point.image_id;
@@ -33,8 +33,7 @@ void FeatureTracker::UpdateFeatureTracks(const lm::FeaturePoints& feature_points
   }
 
   const int post_add_num_feature_tracks = feature_tracks_.size();
-  DLOG(INFO) << "UpdateFeatureTracks: Added feature tracks: "
-             << post_add_num_feature_tracks - starting_num_feature_tracks;
+  VLOG(2) << "UpdateFeatureTracks: Added feature tracks: " << post_add_num_feature_tracks - starting_num_feature_tracks;
 
   // Remove features that weren't detected
   const auto image_id = feature_points.empty() ? 0 : feature_points.front().image_id;
@@ -48,8 +47,8 @@ void FeatureTracker::UpdateFeatureTracks(const lm::FeaturePoints& feature_points
   }
 
   const int removed_num_feature_tracks = post_add_num_feature_tracks - feature_tracks_.size();
-  DLOG(INFO) << "UpdateFeatureTracks: Removed feature tracks: " << removed_num_feature_tracks;
-  DLOG(INFO) << "UpdateFeatureTracks: Final total num feature tracks: " << feature_tracks_.size();
+  VLOG(2) << "UpdateFeatureTracks: Removed feature tracks: " << removed_num_feature_tracks;
+  VLOG(2) << "UpdateFeatureTracks: Final total num feature tracks: " << feature_tracks_.size();
 }
 
 void FeatureTracker::RemoveOldFeaturePoints(const lc::Time oldest_allowed_time) {
