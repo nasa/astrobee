@@ -10,37 +10,72 @@
     right: 0;
     top: 0;
     width: 3px;
-    background-color: #003399;
+    background-color: #a1a4a7;
 }
 
+.sm-dox a, .sm-dox a:focus, .sm-dox a:hover, .sm-dox a:active {
+    background-image: none;
+    padding: 0 12px;
+    padding-right: 43px;
+    font-size: 13px;
+    font-weight: bold;
+    line-height: 36px;
+    text-decoration: none;
+    text-shadow: none;
+    color: #f6f6f6;
+    outline: 0;
+}
+
+.sm-dox a:hover {
+    background-image: none;
+    color: white;
+    text-shadow:none;
+    background-color: #a1a4a7
+}
+
+.arrow {
+    color: #1c1c1c;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    cursor: pointer;
+    font-size: 80%;
+    display: inline-block;
+    width: 16px;
+    height: 22px;
+}
 
 /* The standard CSS for doxygen 1.9.0 */
 
 body, table, div, p, dl {
-	font: 400 14px/22px Roboto,sans-serif;
+	font: 300 14px/22px Roboto,sans-serif;
+  background-color: #f6f6f6;
 }
 
 p.reference, p.definition {
-	font: 400 14px/22px Roboto,sans-serif;
+	font: 300 14px/22px Roboto,sans-serif;
 }
 
 /* @group Heading Levels */
-
-h1.groupheader {
-	font-size: 150%;
+h1 {
+  font: 400 30px/22px Roboto,sans-serif;
 }
 
 .title {
-	font: 400 14px/28px Roboto,sans-serif;
-	font-size: 150%;
-	font-weight: bold;
+	font: 500 25px/28px Roboto,sans-serif;
 	margin: 10px 2px;
+}
+
+h2 {
+  font: 400 22px/22px Roboto,sans-serif;
 }
 
 h2.groupheader {
 	border-bottom: 1px solid #879ECB;
 	color: #354C7B;
-	font-size: 150%;
+	font-size: 120%;
 	font-weight: normal;
 	margin-top: 1.75em;
 	padding-top: 8px;
@@ -146,13 +181,13 @@ div.navtab {
 /* @group Link Styling */
 
 a {
-	color: #3D578C;
+	color: #1c1c1c;
 	font-weight: normal;
 	text-decoration: none;
 }
 
 .contents a:visited {
-	color: #4665A2;
+	color: #1c1c1c;
 }
 
 a:hover {
@@ -199,9 +234,18 @@ ul {
   overflow: hidden; /*Fixed: list item bullets overlap floating elements*/
 }
 
-#side-nav ul {
+#titlearea
+{
+  padding: 0px;
+  margin: 0px;
+  width: 100%;
+  border-bottom: 1px solid #32363d;
+}
+
+#side-nav {
   overflow: visible; /* reset ul rule for scroll bar in GENERATE_TREEVIEW window */
   background-image: none;
+  left: auto;
 }
 
 #main-nav ul {
@@ -209,6 +253,27 @@ ul {
   /* Added mgouveia*/
   border-bottom: 1px solid #32363d;
   background-image: none;
+  background-color: #2b2b2b;
+}
+
+#nav-tree {
+  padding: 0px 6px 0px 6px;
+  background-image: none;
+  background-color: #a1a4a7;
+}
+
+#nav-tree .item {
+    background-color: #a1a4a7;
+}
+
+#nav-tree .selected {
+    background-image: none;
+    text-shadow: none;
+    background-color: #eeeeee;
+}
+
+#nav-tree .selected a {
+    color: #1c1c1c;
 }
 
 .fragment {
@@ -339,10 +404,10 @@ div.groupText {
 }
 
 body {
-	background-color: white;
+	background-color: #eeeeee;
 	color: black;
-        margin: 0;
-}
+    max-width: 1400px;
+	margin: auto;
 
 div.contents {
 	margin-top: 10px;
@@ -846,20 +911,6 @@ div.directory {
 	color: #3D578C;
 }
 
-.arrow {
-    color: #9CAFD4;
-    -webkit-user-select: none;
-    -khtml-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-    cursor: pointer;
-    font-size: 80%;
-    display: inline-block;
-    width: 16px;
-    height: 22px;
-}
-
 .icon {
     font-family: Arial, Helvetica;
     font-weight: bold;
@@ -1330,7 +1381,7 @@ dl.section dd {
 	padding: 0px;
 	margin: 0px;
 	width: 100%;
-	border-bottom: 1px solid #5373B4;
+  border-bottom: 1px solid #32363d;
 }
 
 .image

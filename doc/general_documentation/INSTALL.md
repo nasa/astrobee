@@ -1,4 +1,4 @@
-\page install-kinetic Install in Ubuntu 16.04 / ROS kinetic
+\page install-nonNASA Install for general users
 
 # Usage instructions for non-NASA users
 
@@ -12,8 +12,9 @@ support some of our Gazebo plugins.
 *Note: You will need 4 GBs of RAM to compile the software. If you don't have
 that much RAM available, please use swap space.*
 
-*Note: Please ensure you install Ubuntu 16.04. At this time we do not officially support
-any other operating system or Ubuntu version.*
+*Note: Preferably install Ubuntu 16.04. At this time we do not officially support
+any other operating system or Ubuntu version. Experimental instructions steps for 
+Ubuntu 18 installation are included*
 
 *Note: Please ensure you install the 64-bit version of Ubuntu. We do not
 support running Astrobee Robot Software on 32-bit systems.*
@@ -44,7 +45,7 @@ Clone the android repository:
     git clone https://github.com/nasa/astrobee_android.git $ANDROID_PATH
 
 
-### Dependencies
+### Dependencies Ubuntu 16 + ROS Melodic
 
 Next, install all required dependencies:
 *Note: `root` access is necessary to install the compiled debian packages below*
@@ -73,6 +74,47 @@ Next, install all required dependencies:
     E: Unable to locate package rti-dev
     E: Unable to locate package libsoracore-dev
     E: Unable to locate package libmiro-dev
+
+### Dependencies Ubuntu 18 + ROS melodic
+
+Next, install all required dependencies:
+*Note: `root` access is necessary to install the compiled debian packages below*
+*Note: You should instal ROS melodic beforehand following the [Installation Instructions](http://wiki.ros.org/melodic/Installation/Ubuntu)*
+*Note: Before running this please ensure that your system is completely updated
+    by running 'sudo apt-get update' and then 'sudo apt-get upgrade'*
+
+    pushd $SOURCE_PATH
+    cd scripts/setup
+    ./add_ros_repository.sh
+    sudo apt-get update
+
+Install OpenCV 3.3.1, you can parse the argument -p to change install directory. By default, install directory is in /usr/local. If you do so, make sure CMake can find it.
+
+    ./install_opencv.sh
+
+Install Luajit, it will be installed in /usr/local
+
+    ./install_luajit.sh
+
+    cd debians
+    ./build_install_debians_18_04.sh
+    cd ../
+    ./install_desktop_18_04_packages.sh
+    sudo rosdep init
+    rosdep update
+    popd
+
+**Important**: you can safely ignore the following error messages, as they are simply letting you know that certain libraries cannot be found. These libraries are for internal NASA use only, and are not required by public users provided that software is launched with DDS disabled.
+
+    E: Unable to locate package libroyale1
+    E: Unable to locate package rti
+    E: Unable to locate package libmiro0
+    E: Unable to locate package libsoracore1
+    E: Unable to locate package libroyale-dev
+    E: Unable to locate package rti-dev
+    E: Unable to locate package libsoracore-dev
+    E: Unable to locate package libmiro-dev
+
 
 ## Configuring the build
 

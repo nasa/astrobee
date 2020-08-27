@@ -28,8 +28,8 @@ Java API, which uses the ROS messaging system to communicate with flight
 software.
 
 The Astrobee Robot Software is in a beta stage. This means that some
-features are incomplete, and extensive changes can be expected. Please consult
-[RELEASE](RELEASE.md) for the current list of features and limitations.
+features are incomplete, and extensive changes can be expected. Please consult the
+[release](\ref release) for the current list of features and limitations.
 
 ### Usage instructions
 
@@ -46,7 +46,7 @@ due to NASA legal requirements. Thank you for your understanding.
 
 ### Documentation
 
-To view the Astrobee documentation, visit [documentation](https://nasa.github.io/astrobee/html/documentation.html).
+To view the Astrobee documentation, visit [documentation](https://nasa.github.io/astrobee/documentation.html).
 
 For more information, read the Astrobee [publications](https://www.nasa.gov/content/research-publications-0).
 Learning about the Astrobee [platform](https://www.nasa.gov/sites/default/files/atoms/files/bualat_spaceops_2018_paper.pdf),
