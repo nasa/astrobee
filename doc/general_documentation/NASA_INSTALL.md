@@ -1,3 +1,5 @@
+\page install-NASA Install for NASA users
+
 # Usage instructions for NASA users
 
 Install the 64-bit version of
@@ -79,7 +81,7 @@ At this point you need to decide where you'd like to put the source code
 
 First, clone the flight software repository:
 
-    git clone --recursive https://$NDC_USERNAME@babelfish.arc.nasa.gov/bitbucket/scm/astrobee/astrobee.git \
+    git clone --recursive https://github.com/nasa/astrobee.git \
         --branch develop $SOURCE_PATH
 
 (Note: re-enter your username and password for every submodules that are cloned)
@@ -255,4 +257,4 @@ which starts the flight software as a background process.
 
 # Further information
 
-Please refer to the [wiki](https://babelfish.arc.nasa.gov/trac/freeflyer).
+Please refer to the [wiki](https://github.com/nasa/astrobee/wiki).

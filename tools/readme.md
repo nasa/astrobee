@@ -9,3 +9,4 @@ but are not run on the robot.
 \subpage rvizvisualizer
 \subpage visualeyez
 \subpage simulator
+\subpage dds_profile

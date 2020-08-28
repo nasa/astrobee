@@ -1,4 +1,4 @@
-# DDS Profile and Types
+\page dds_profile DDS Profile and Types
 
 This directory contains all xml files used to define the DDS entities needed
 for the visualizer DDS mode.
