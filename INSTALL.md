@@ -1,4 +1,4 @@
-\page install Install
+# Install
 
 There are different ways to build and test the code.
 

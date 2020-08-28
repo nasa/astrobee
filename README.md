@@ -29,12 +29,12 @@ software.
 
 The Astrobee Robot Software is in a beta stage. This means that some
 features are incomplete, and extensive changes can be expected. Please consult the
-[release](\ref release) for the current list of features and limitations.
+[release](RELEASE.md) for the current list of features and limitations.
 
 ### Usage instructions
 
 To install and use astrobee, please see the
-[usage instructions](\ref install).
+[usage instructions](INSTALL.md).
 
 ### Contributors
 

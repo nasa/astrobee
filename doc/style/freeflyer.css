@@ -50,7 +50,7 @@
 /* The standard CSS for doxygen 1.9.0 */
 
 body, table, div, p, dl {
-	font: 300 14px/22px Roboto,sans-serif;
+	font: 300 14px/24px Roboto,sans-serif;
   background-color: #f6f6f6;
 }
 
@@ -257,7 +257,7 @@ ul {
 }
 
 #nav-tree {
-  padding: 0px 6px 0px 6px;
+  padding: 3px 6px 20px 10px;
   background-image: none;
   background-color: #a1a4a7;
 }
@@ -274,6 +274,10 @@ ul {
 
 #nav-tree .selected a {
     color: #1c1c1c;
+}
+
+#nav-sync {
+    background-color: #a1a4a7;
 }
 
 .fragment {
