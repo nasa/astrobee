@@ -26,8 +26,8 @@ add_subdirectory(description)
 if ((NOT USE_CTC) AND (NOT IS_BAMBOO_BUILD))
   set(FETCHCONTENT_QUIET OFF)
   FetchContent_Declare(media
-    URL https://github.com/nasa/astrobee_media/archive/v0.0.4.tar.gz
-    URL_HASH SHA1=f346593c1fbd95bf629e0328cb1d403066877599
+    URL https://github.com/nasa/astrobee_media/archive/v0.0.8b.tar.gz
+    URL_HASH SHA1=2ae9334e3c25484b778069d8c7073310c720fc8a
     SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/media
   )
   FetchContent_GetProperties(media)

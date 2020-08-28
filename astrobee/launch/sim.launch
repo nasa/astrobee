@@ -51,7 +51,8 @@
   <arg name="default" default="true" />         <!-- Insert default robot    -->
   <arg if="$(eval arg('world')=='iss')"
        name="pose"
-       default="10.001 -9.754 4.410 1 0 0 0" />     <!-- iss: docked in JPM      -->
+       default="9.817 -10.312 4.293 0 0 0 1" /> <!-- iss: docked in JPM berth 2 -->
+       <!-- default="9.816 -9.806 4.293 1 0 0 0"   - iss: docked in JPM berth 1 --> 
   <arg if="$(eval arg('world')=='granite')"
        name="pose"
        default="0 0 -0.7 0 0 0 1" /> <!-- granite: docked         -->
