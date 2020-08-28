@@ -1,6 +1,8 @@
+\page install-nonNASA Install for general users
+
 # Usage instructions for non-NASA users
 
-Install the 64-bit version of [Ubuntu 18.04](http://releases.ubuntu.com/18.04)
+Install the 64-bit version of [Ubuntu 16.04](http://releases.ubuntu.com/16.04)
 on a host machine, and make sure that you can checkout and build code.
 If you are using a virtual machine, please use VMware. Virtualbox doesn't
 support some of our Gazebo plugins.
@@ -10,7 +12,9 @@ support some of our Gazebo plugins.
 *Note: You will need 4 GBs of RAM to compile the software. If you don't have
 that much RAM available, please use swap space.*
 
-*Note: This version of Ubuntu is only supported for native install and not for cross-compile.*
+*Note: Preferably install Ubuntu 16.04. At this time we do not officially support
+any other operating system or Ubuntu version. Experimental instructions steps for 
+Ubuntu 18 installation are included*
 
 *Note: Please ensure you install the 64-bit version of Ubuntu. We do not
 support running Astrobee Robot Software on 32-bit systems.*
@@ -41,7 +45,37 @@ Clone the android repository:
     git clone https://github.com/nasa/astrobee_android.git $ANDROID_PATH
 
 
-### Dependencies
+### Dependencies Ubuntu 16 + ROS Melodic
+
+Next, install all required dependencies:
+*Note: `root` access is necessary to install the compiled debian packages below*
+*Note: Before running this please ensure that your system is completely updated
+    by running 'sudo apt-get update' and then 'sudo apt-get upgrade'*
+
+    pushd $SOURCE_PATH
+    cd scripts/setup
+    ./add_ros_repository.sh
+    sudo apt-get update
+    cd debians
+    ./build_install_debians.sh
+    cd ../
+    ./install_desktop_16_04_packages.sh
+    sudo rosdep init
+    rosdep update
+    popd
+
+**Important**: you can safely ignore the following error messages, as they are simply letting you know that certain libraries cannot be found. These libraries are for internal NASA use only, and are not required by public users provided that software is launched with DDS disabled.
+
+    E: Unable to locate package libroyale1
+    E: Unable to locate package rti
+    E: Unable to locate package libmiro0
+    E: Unable to locate package libsoracore1
+    E: Unable to locate package libroyale-dev
+    E: Unable to locate package rti-dev
+    E: Unable to locate package libsoracore-dev
+    E: Unable to locate package libmiro-dev
+
+### Dependencies Ubuntu 18 + ROS melodic
 
 Next, install all required dependencies:
 *Note: `root` access is necessary to install the compiled debian packages below*
@@ -80,6 +114,7 @@ Install Luajit, it will be installed in /usr/local
     E: Unable to locate package rti-dev
     E: Unable to locate package libsoracore-dev
     E: Unable to locate package libmiro-dev
+
 
 ## Configuring the build
 

@@ -1,4 +1,4 @@
-\page sim Simulation
+# Simulation
 
 This package provides the code required to simulate multiple Free-Flyers operating within the International Space Station (ISS). Our code is written as plugins for Gazebo, an open source robot simulator. In essence the plugins mimic the ros messages and services provided by real hardware, and as a result they act as drop-in replacements for the true hardware. Running a simulation is therefore as simple as loading all flight software subsystems except the hardware drivers, and spawning simulated hardware in stead of real drivers.
 
@@ -10,7 +10,9 @@ Note that if the simulation is run any speed over real-time then the NavCam, Doc
 
 ## Obtaining media
 
-If you you are not cross-compiling, then the build process started with "make" will download and extract a correct version of the media automatically for you. This is done by the *description* package, as the media is shared between rviz and Gazebo. To see if the media was installed correctly, check that there are subdirectories in the *description/media* directory.
+If you you are not cross-compiling, then the build process started with "make" will download and extract a correct version of the media automatically for you. This is done by the *description* package [\ref media], as the media is shared between rviz and Gazebo. To see if the media was installed correctly, check that there are subdirectories in the *description/media* directory.
+
+
 
 ## Running the Simulator
 
@@ -335,3 +337,5 @@ Customization: description/description/sensor_imu.urdf.xacro
 
 \subpage sim_overview
 \subpage sim_issues
+\subpage urdf
+\subpage media

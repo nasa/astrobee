@@ -1,6 +1,6 @@
-# Astrobee Robot Software - Flight Software repository
+# Astrobee Robot Software
 
-## About
+### About
 
 <p>
 <img src="doc/images/astrobee.png" srcset="../images/astrobee.png 1x" 
@@ -28,71 +28,41 @@ Java API, which uses the ROS messaging system to communicate with flight
 software.
 
 The Astrobee Robot Software is in a beta stage. This means that some
-features are incomplete, and extensive changes can be expected. Please consult
-[RELEASE](RELEASE.md) for the current list of features and limitations.
+features are incomplete, and extensive changes can be expected. Please consult the
+[release](RELEASE.md) for the current list of features and limitations.
 
-## Usage instructions
+### Usage instructions
 
-If you don't have access to NASA's internal network, please see the
+To install and use astrobee, please see the
 [usage instructions](INSTALL.md).
 
-If you do, please see the [NASA usage instructions](NASA_INSTALL.md).
-
-## Contributors
+### Contributors
 
 The Astrobee Robot Software is open source, and we welcome contributions
-from the public. However, for us to merge any pull requests, we must request
-that contributors sign and submit a
+from the public. Please submit pull requests to the develop branch.
+For us to merge any pull requests, we must request that contributors sign and submit a
 [Contributor License Agreement](https://www.nasa.gov/sites/default/files/atoms/files/astrobee_individual_contributor_license_agreement.pdf)
 due to NASA legal requirements. Thank you for your understanding.
 
-## Documentation
+### Documentation
 
-To generate the Astrobee documentation, run the following command after checking
-out the code (the latest version of doxygen should be [installed](https://www.doxygen.nl/download.html) for correct
-markdown support) :
+To view the Astrobee documentation, visit [documentation](https://nasa.github.io/astrobee/documentation.html).
 
-    doxygen doc/astrobee.doxyfile
+For more information, read the Astrobee [publications](https://www.nasa.gov/content/research-publications-0).
+Learning about the Astrobee [platform](https://www.nasa.gov/sites/default/files/atoms/files/bualat_spaceops_2018_paper.pdf),
+[software](https://www.nasa.gov/sites/default/files/atoms/files/fluckiger2018astrobee.pdf),
+and [localization](https://www.nasa.gov/sites/default/files/atoms/files/coltin2016localization.pdf)
+are good starting points.
 
-The documentation will be generated in the doc/html folder. Open the doc/documentation.html
-to get to the main page of the documentation.
+### Guest Science
 
-For familiarization with the Astrobee project, it is recommended to read some
-background papers:
-
-#### Astrobee Software Concepts
-[Lorenzo Fluckiger, Kathryn Browne, Brian Coltin, Jesse Fusco, Theodore Morse,
-and Andrew Symington. “Astrobee Robot Software: Enabling Mobile Autonomy on the 
-ISS”, *In Proc. of the Int. Symposium on Artificial Intelligence, Robotics and 
-Automation in Space (i-SAIRAS)*, 2018.](
-https://www.nasa.gov/sites/default/files/atoms/files/fluckiger2018astrobee.pdf)
-
-#### Localization method
-[Brian Coltin et al. “Localization from visual landmarks on a free-flying
-robot”. *In: Intelligent Robots and Systems (IROS), 2016 IEEE/RSJ International
-Conference on. IEEE.* 2016, pp. 4377–4382.](
-https://www.nasa.gov/sites/default/files/atoms/files/coltin2016localization.pdf)
-
-#### Astrobee platform
-[Maria Bualat et al. "Astrobee: A New Tool for ISS Operations." *2018 
-SpaceOps Conference*. 2018.](
-https://www.nasa.gov/sites/default/files/atoms/files/bualat_spaceops_2018_paper.pdf)
-
-## Guest Science
-
-If you are interested in guest science, please do one of the following for more
-information.
-
-If you are a non-NASA user, please checkout the astrobee_android nasa github
+If you are interested in guest science, please checkout the astrobee_android nasa github
 project (if you followed the usage instructions, you should have checked this
 out already). Once that is checked out, please see
 [`astrobee_android/README.md`](https://github.com/nasa/astrobee_android/blob/master/README.md)
 located in the `astrobee_android/` folder.
 
-If you are a NASA user, please make sure the `android` submodule was checked out
-and then visit `submodules/android/guest_science_readme.md`.
-
-## License
+### License
 
 Copyright (c) 2017, United States Government, as represented by the
 Administrator of the National Aeronautics and Space Administration.

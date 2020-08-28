@@ -1,4 +1,4 @@
-# Teleoperation Tool Instructions
+\page teleop Teleoperation Tool Instructions
 
 These instructions assume that you have followed the
 [install instructions](../../INSTALL.md) and the
