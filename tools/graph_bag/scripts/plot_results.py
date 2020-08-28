@@ -29,6 +29,9 @@ import math
 import rosbag
 import geometry_msgs
 
+def l2_map(vector3ds):
+  return map(lambda (x, y, z) : math.sqrt(x + y + z),
+                            zip(vector3ds.xs, vector3ds.ys, vector3ds.zs))
 
 def plot_vals(x_axis_vals,
               vec_of_y_axis_vals,
@@ -220,6 +223,15 @@ def add_other_vector3d_plots(pdf, imu_augmented_graph_localization_states):
   pdf.savefig()
   plt.close()
 
+  # covariance
+  plt.figure()
+  plt.plot((l2_map(imu_augmented_graph_localization_states.position_covariances), imu_augmented_graph_localization_states.times, colors[0], linewidth=0.5, label='Position Covariance')
+  plt.title('Position Covariance')
+  plt.xlabel('Time (s)')
+  plt.ylabel('Covariance')
+  plt.legend(prop={'size':6})
+  pdf.savefig()
+  plt.close()
 
 def add_other_loc_plots(pdf, graph_localization_states, imu_augmented_graph_localization_states):
   add_feature_count_plots(pdf, graph_localization_states)

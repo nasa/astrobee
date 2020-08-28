@@ -56,8 +56,13 @@ GraphLocalizerWrapper::GraphLocalizerWrapper() {
 }
 
 void GraphLocalizerWrapper::OpticalFlowCallback(const ff_msgs::Feature2dArray& feature_array_msg) {
-  if (graph_localizer_)
-    graph_localizer_->AddOpticalFlowMeasurement(lm::MakeFeaturePointsMeasurement(feature_array_msg));
+  if (graph_localizer_) {
+    if (graph_localizer_->AddOpticalFlowMeasurement(lm::MakeFeaturePointsMeasurement(feature_array_msg))) {
+      feature_counts_.of = graph_localizer_->NumOFFactors();
+      // Optimize graph on receival of camera images
+      graph_localizer_->Update();
+    }
+  }
 }
 
 void GraphLocalizerWrapper::ResetLocalizer() {
@@ -83,6 +88,7 @@ void GraphLocalizerWrapper::ResetBiasesAndLocalizer() {
 void GraphLocalizerWrapper::VLVisualLandmarksCallback(const ff_msgs::VisualLandmarks& visual_landmarks_msg) {
   if (graph_localizer_) {
     graph_localizer_->AddSparseMappingMeasurement(lm::MakeMatchedProjectionsMeasurement(visual_landmarks_msg));
+    feature_counts_.vl = visual_landmarks_msg.landmarks.size();
   } else {
     // Set or update initial pose if a new one is available before the localizer
     // has started running.
@@ -98,6 +104,8 @@ void GraphLocalizerWrapper::ARVisualLandmarksCallback(const ff_msgs::VisualLandm
     const Eigen::Isometry3d dock_T_dock_cam = lc::EigenPose(visual_landmarks_msg);
     graph_localizer_->AddARTagMeasurement(lm::MakeMatchedProjectionsMeasurement(visual_landmarks_msg),
                                           lc::GtPose(dock_T_dock_cam.inverse()));
+    // TODO(rsoussan): Make seperate ar count, update EkfState
+    feature_counts_.vl = visual_landmarks_msg.landmarks.size();
   }
 }
 
@@ -147,7 +155,7 @@ boost::optional<geometry_msgs::PoseStamped> GraphLocalizerWrapper::LatestPoseMsg
   return graph_localizer::LatestPoseMsg(*graph_localizer_);
 }
 
-boost::optional<ff_msgs::EkfState> GraphLocalizerWrapper::LatestLocalizationMsg() const {
+boost::optional<ff_msgs::EkfState> GraphLocalizerWrapper::LatestLocalizationMsg() {
   if (!graph_localizer_) {
     LOG_EVERY_N(WARNING, 50) << "LatestLocalizationMsg: Graph localizater not initialized yet.";
     return boost::none;
@@ -158,8 +166,11 @@ boost::optional<ff_msgs::EkfState> GraphLocalizerWrapper::LatestLocalizationMsg(
     return boost::none;
   }
   // Angular velocity and acceleration are added by imu integrator
-  return EkfStateMsg(combined_nav_state_and_covariances->first, Eigen::Vector3d::Zero(), Eigen::Vector3d::Zero(),
-                     combined_nav_state_and_covariances->second, graph_localizer_->NumOFFactors(),
-                     graph_localizer_->NumVLFactors(), graph_loc_initialization_.EstimateBiases());
+  const auto ekf_state_msg =
+      EkfStateMsg(combined_nav_state_and_covariances->first, Eigen::Vector3d::Zero(), Eigen::Vector3d::Zero(),
+                  combined_nav_state_and_covariances->second, feature_counts_.of, feature_counts_.vl,
+                  graph_loc_initialization_.EstimateBiases());
+  feature_counts_.Reset();
+  return ekf_state_msg;
 }
 }  // namespace graph_localizer

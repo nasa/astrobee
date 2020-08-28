@@ -21,6 +21,7 @@
 #include <ff_msgs/EkfState.h>
 #include <ff_msgs/Feature2dArray.h>
 #include <ff_msgs/VisualLandmarks.h>
+#include <graph_localizer/feature_counts.h>
 #include <graph_localizer/graph_loc_initialization.h>
 #include <graph_localizer/graph_localizer.h>
 #include <localization_measurements/imu_measurement.h>
@@ -48,7 +49,7 @@ class GraphLocalizerWrapper {
 
   boost::optional<geometry_msgs::PoseStamped> LatestPoseMsg() const;
 
-  boost::optional<ff_msgs::EkfState> LatestLocalizationMsg() const;
+  boost::optional<ff_msgs::EkfState> LatestLocalizationMsg();
 
   void OpticalFlowCallback(const ff_msgs::Feature2dArray& feature_array_msg);
 
@@ -74,6 +75,7 @@ class GraphLocalizerWrapper {
   bool have_latest_imu_biases_;
   // TODO(rsoussan): rename this!
   GraphLocInitialization graph_loc_initialization_;
+  FeatureCounts feature_counts_;
 };
 }  // namespace graph_localizer
 

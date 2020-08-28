@@ -197,7 +197,7 @@ void GraphLocalizer::AddImuMeasurement(const lm::ImuMeasurement& imu_measurement
   latest_imu_integrator_.BufferImuMeasurement(imu_measurement);
 }
 
-void GraphLocalizer::AddOpticalFlowMeasurement(
+bool GraphLocalizer::AddOpticalFlowMeasurement(
     const lm::FeaturePointsMeasurement& optical_flow_feature_points_measurement) {
   // TODO(rsoussan): put these somewhere else? in header?
   using Calibration = gtsam::Cal3_S2;
@@ -210,11 +210,11 @@ void GraphLocalizer::AddOpticalFlowMeasurement(
 
   if (optical_flow_feature_points_measurement.feature_points.empty()) {
     LOG(WARNING) << "AddOpticalFlowMeasurement: Empty measurement.";
-    return;
+    return false;
   }
   if (!AddOrSplitImuFactorIfNeeded(optical_flow_feature_points_measurement.timestamp)) {
     LOG(DFATAL) << "AddOpicalFlowMeasurement: Failed to add optical flow measurement.";
-    return;
+    return false;
   }
 
   // Remove all camera factors from graph since SmartFactor does not allow for
@@ -253,10 +253,7 @@ void GraphLocalizer::AddOpticalFlowMeasurement(
     ++num_added_smart_factors;
   }
   VLOG(2) << "AddOpticalFLowMeasurement: Newly added " << num_added_smart_factors << " smart factors.";
-
-  // Optimize Graph on receival of camera images
-  // TODO(rsoussan): move this elsewhere???
-  Update();
+  return true;
 }
 
 void GraphLocalizer::AddARTagMeasurement(const lm::MatchedProjectionsMeasurement& matched_projections_measurement,

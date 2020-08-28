@@ -20,7 +20,6 @@
 import poses
 import vector3ds
 
-
 class LocStates(poses.Poses):
 
   def __init__(self, loc_type, topic):
@@ -34,6 +33,7 @@ class LocStates(poses.Poses):
     self.gyro_biases = vector3ds.Vector3ds()
     self.position_covariances = vector3ds.Vector3ds()
     self.orientation_covariances = vector3ds.Vector3ds()
+    self.velocity_covariances = vector3ds.Vector3ds()
 
   def add_loc_state(self, msg):
     self.add_pose(msg.pose, msg.header.stamp)
@@ -44,3 +44,7 @@ class LocStates(poses.Poses):
     self.angular_velocities.add_vector3d(msg.omega)
     self.accelerometer_biases.add_vector3d(msg.accel_bias)
     self.gyro_biases.add_vector3d(msg.gyro_bias)
+    # See EkfState.msg for cov_diag offsets
+    self.position_covariances.add_vector3d(msg.cov_diag[12], msg.cov_diag[13], msg.cov_diag[14])
+    self.orientation_covariances.add_vector3d(msg.cov_diag[0], msg.cov_diag[1], msg.cov_diag[2])
+    self.velocity_covariances.add_vector3d(msg.cov_diag[6], msg.cov_diag[7], msg.cov_diag[8])

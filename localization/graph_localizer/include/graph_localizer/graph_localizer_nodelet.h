@@ -61,7 +61,7 @@ class GraphLocalizerNodelet : public ff_util::FreeFlyerNodelet {
 
   void InitializeGraph();
 
-  void PublishLocalizationState() const;
+  void PublishLocalizationState();
 
   void PublishPose() const;
 

@@ -58,7 +58,7 @@ class GraphLocalizer {
       const localization_common::Time time) const;
   boost::optional<std::pair<localization_common::CombinedNavState, localization_common::CombinedNavStateCovariances>>
   LatestCombinedNavStateAndCovariances() const;
-  void AddOpticalFlowMeasurement(
+  bool AddOpticalFlowMeasurement(
       const localization_measurements::FeaturePointsMeasurement& optical_flow_feature_points_measurement);
   void AddARTagMeasurement(
       const localization_measurements::MatchedProjectionsMeasurement& matched_projections_measurement,

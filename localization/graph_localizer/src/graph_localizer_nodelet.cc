@@ -118,7 +118,7 @@ void GraphLocalizerNodelet::ImuCallback(const sensor_msgs::Imu::ConstPtr& imu_ms
   graph_localizer_wrapper_.ImuCallback(*imu_msg);
 }
 
-void GraphLocalizerNodelet::PublishLocalizationState() const {
+void GraphLocalizerNodelet::PublishLocalizationState() {
   const auto latest_localization_msg = graph_localizer_wrapper_.LatestLocalizationMsg();
   if (!latest_localization_msg) {
     LOG(WARNING) << "PublishLocalizationState: Failed to get latest localization msg.";
