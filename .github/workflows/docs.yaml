@@ -46,7 +46,6 @@ jobs:
       run: |
         cd docs
         git add --all html/
-        git status
         EMAIL=`git show -s --format='%ae' HEAD`
         NAME=`git show -s --format='%an' HEAD`
         git config user.email "$EMAIL"
