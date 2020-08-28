@@ -16,7 +16,7 @@
  * under the License.
  */
 
-#include "localization_graph_display.h" // NOLINT
+#include "localization_graph_display.h"  // NOLINT
 
 #include <OGRE/OgreSceneManager.h>
 #include <OGRE/OgreSceneNode.h>
@@ -46,24 +46,16 @@ LocalizationGraphDisplay::LocalizationGraphDisplay() {
   history_length_property_->setMax(100000);
 }
 
-LocalizationGraphDisplay::~LocalizationGraphDisplay() {}  //= default;
-
-//  Note that "MFDClass" is a typedef of
-// ``MessageFilterDisplay<message type>``, to save typing that long
-// templated class name every time you need to refer to the
-// superclass.
 void LocalizationGraphDisplay::onInitialize() {
   MFDClass::onInitialize();
   updateHistoryLength();
 }
 
-// Clear the visuals by deleting their objects.
 void LocalizationGraphDisplay::reset() {
   MFDClass::reset();
   // visuals_.clear();
 }
 
-// Set the current color and alpha values for each visual.
 void LocalizationGraphDisplay::updateColorAndAlpha() {
   float alpha = alpha_property_->getFloat();
   Ogre::ColourValue color = color_property_->getOgreColor();
@@ -73,12 +65,10 @@ void LocalizationGraphDisplay::updateColorAndAlpha() {
   //}
 }
 
-// Set the number of past visuals to show.
 void LocalizationGraphDisplay::updateHistoryLength() {
   // visuals_.rset_capacity(history_length_property_->getInt());
 }
 
-// This is our callback to handle an incoming message.
 void LocalizationGraphDisplay::processMessage(const ff_msgs::LocalizationGraph::ConstPtr& msg) {
   // Here we call the rviz::FrameManager to get the transform from the
   // fixed frame to the frame in the header of this Imu message.  If

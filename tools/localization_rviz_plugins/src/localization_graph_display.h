@@ -16,9 +16,11 @@
  * under the License.
  */
 
-#ifndef LOCALIZATION_RVIZ_PLUGINS_LOCALIZATION_GRAPH_DISPLAY_H_ // NOLINT
-#define LOCALIZATION_RVIZ_PLUGINS_LOCALIZATION_GRAPH_DISPLAY_H_ // NOLINT
+// Header file must go in src directory for Qt/Rviz plugin
+#ifndef LOCALIZATION_RVIZ_PLUGINS_LOCALIZATION_GRAPH_DISPLAY_H_  // NOLINT
+#define LOCALIZATION_RVIZ_PLUGINS_LOCALIZATION_GRAPH_DISPLAY_H_  // NOLINT
 
+// Required for Qt
 #ifndef Q_MOC_RUN
 #include <ff_msgs/LocalizationGraph.h>
 #include <rviz/message_filter_display.h>
@@ -42,14 +44,14 @@ class LocalizationGraphDisplay : public rviz::MessageFilterDisplay<ff_msgs::Loca
   Q_OBJECT
  public:
   LocalizationGraphDisplay();
-  virtual ~LocalizationGraphDisplay();  // {}//= default;
+  ~LocalizationGraphDisplay() = default;
 
   // private:
  protected:
-  virtual void onInitialize();
-  virtual void reset();
+  void onInitialize() final;
+  void reset() final;
 
- private Q_SLOTS: // NOLINT
+ private Q_SLOTS:  // NOLINT
   void updateColorAndAlpha();
   void updateHistoryLength();
 
