@@ -42,7 +42,7 @@
 
     <include>
       <uri>model://astrobee_dock</uri>
-      <pose>9.7 -9.79 4.5 0 0 0</pose>
+      <pose>9.5868938 -10.0604698 4.2955872 0 0 0</pose>
     </include>
 
     <include>
