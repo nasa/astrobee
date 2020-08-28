@@ -41,3 +41,5 @@ create_library(TARGET ${PROJECT_NAME}
   INC ${catkin_INCLUDE_DIRS} ${GLOG_INCLUDE_DIRS} 
   DEPS ff_msgs
 )
+
+install_launch_files()

@@ -34,7 +34,7 @@ set(QT_LIBRARIES Qt5::Widgets)
 #add_definitions(-DQT_NO_KEYWORDS)
 
 catkin_package(
-  LIBRARIES ${PROJECT_NAME} ${GLOG_LIBRARIES} ${GTSAM_LIBRARIES} ${QT_LIBRARIES}  localization_common localization_measurements
+  LIBRARIES ${PROJECT_NAME} ${GLOG_LIBRARIES} ${GTSAM_LIBRARIES} ${QT_LIBRARIES}  graph_localizer localization_common localization_measurements
 #${rviz_DEFAULT_PLUGIN_LIBRARIES}
   INCLUDE_DIRS include ${GTSAM_INCLUDE_DIR} ${GLOG_INCLUDE_DIRS} ${Qt5Core_INCLUDE_DIRS} ${Qt5Gui_INCLUDE_DIRS} 
   CATKIN_DEPENDS rviz 
@@ -42,7 +42,7 @@ catkin_package(
 )
 
 create_library(TARGET ${PROJECT_NAME} 
-  LIBS ${catkin_LIBRARIES} ${GLOG_LIBRARIES} ${QT_LIBRARIES} localization_common localization_measurements 
+  LIBS ${catkin_LIBRARIES} ${GLOG_LIBRARIES} ${QT_LIBRARIES} graph_localizer localization_common localization_measurements 
 # ${rviz_DEFAULT_PLUGIN_LIBRARIES} 
   INC ${catkin_INCLUDE_DIRS} ${GLOG_INCLUDE_DIRS} ${Qt5Core_INCLUDE_DIRS} ${Qt5Gui_INCLUDE_DIRS} 
   ADD_SRCS src/localization_graph_display.cc ${MOC_FILES}

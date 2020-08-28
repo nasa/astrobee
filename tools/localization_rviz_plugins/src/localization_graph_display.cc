@@ -17,6 +17,9 @@
  */
 
 #include "localization_graph_display.h"  // NOLINT
+#include <graph_localizer/graph_localizer.h>
+
+#include <gtsam/base/serialization.h>
 
 #include <OGRE/OgreSceneManager.h>
 #include <OGRE/OgreSceneNode.h>
@@ -70,9 +73,13 @@ void LocalizationGraphDisplay::updateHistoryLength() {
 }
 
 void LocalizationGraphDisplay::processMessage(const ff_msgs::LocalizationGraph::ConstPtr& msg) {
-  // Here we call the rviz::FrameManager to get the transform from the
-  // fixed frame to the frame in the header of this Imu message.  If
-  // it fails, we can't do anything else so we return.
+  // TODO(rsoussan): cleaner way to do this, serialize/deserialize properly
+  graph_localizer::GraphLocalizerParams params;
+  graph_localizer::GraphLocalizer graph_localizer(params);
+  gtsam::deserializeBinary(msg->serialized_graph, graph_localizer);
+  std::cout << "num of factors: " << graph_localizer.NumOFFactors() << std::endl;
+  std::cout << "num vl factors: " << graph_localizer.NumVLFactors() << std::endl;
+
   Ogre::Quaternion orientation;
   Ogre::Vector3 position;
   if (!context_->getFrameManager()->getTransform(msg->header.frame_id, msg->header.stamp, position, orientation)) {

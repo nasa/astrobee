@@ -35,7 +35,7 @@
 namespace localization_node {
 
 LocalizationNodelet::LocalizationNodelet() : ff_util::FreeFlyerNodelet(NODE_MAPPED_LANDMARKS),
-        enabled_(false), count_(0), processing_image_(true) {
+        enabled_(true /*TODO(rsoussan): put back to false*/), count_(0), processing_image_(true) {
   pthread_mutex_init(&mutex_features_, NULL);
   pthread_cond_init(&cond_features_, NULL);
 }

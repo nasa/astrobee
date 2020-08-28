@@ -131,7 +131,7 @@ class GraphLocalizer {
   template <class ARCHIVE>
   void serialize(ARCHIVE& ar, const unsigned int /*version*/) {
     ar& BOOST_SERIALIZATION_NVP(graph_);
-    ar& BOOST_SERIALIZATION_NVP(graph_values_.values());
+    // ar& BOOST_SERIALIZATION_NVP(graph_values_.values());
   }
 
   // TODO(rsoussan): put these somewhere else

@@ -21,17 +21,19 @@
 #include <ff_util/ff_names.h>
 #include <graph_localizer/graph_localizer_nodelet.h>
 #include <graph_localizer/utilities.h>
+#include <localization_common/utilities.h>
 
 #include <glog/logging.h>
 
 namespace graph_localizer {
-
+namespace lc = localization_common;
 GraphLocalizerNodelet::GraphLocalizerNodelet() {}
 
 void GraphLocalizerNodelet::Initialize(ros::NodeHandle* nh) {
+  // TODO(rsoussan): load this somewhere else/ how do other nodelets do this?
   // Bootstrap our environment
   // TODO(rsoussan): are these needed?
-  // ff_common::InitFreeFlyerApplication(getMyArgv());
+  ff_common::InitFreeFlyerApplication(getMyArgv());
   SubscribeAndAdvertise(nh);
   Run();
 }
