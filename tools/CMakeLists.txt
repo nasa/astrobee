@@ -17,6 +17,7 @@
 
 add_subdirectory(ekf_bag)
 add_subdirectory(graph_bag)
+add_subdirectory(localization_rviz_plugins)
 add_subdirectory(rviz_visualizer)
 add_subdirectory(visualeyez)
 add_subdirectory(simulator)
