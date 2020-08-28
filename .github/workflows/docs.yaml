@@ -45,7 +45,7 @@ jobs:
     - name: Commit and Push
       run: |
         cd docs
-        git add html/*
+        git add --all html/
         EMAIL=`git show -s --format='%ae' HEAD`
         NAME=`git show -s --format='%an' HEAD`
         git config user.email "$EMAIL"
