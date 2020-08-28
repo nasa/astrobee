@@ -29,9 +29,10 @@ import math
 import rosbag
 import geometry_msgs
 
+
 def l2_map(vector3ds):
-  return map(lambda (x, y, z) : math.sqrt(x + y + z),
-                            zip(vector3ds.xs, vector3ds.ys, vector3ds.zs))
+  return map(lambda (x, y, z): math.sqrt(x + y + z), zip(vector3ds.xs, vector3ds.ys, vector3ds.zs))
+
 
 def plot_vals(x_axis_vals,
               vec_of_y_axis_vals,
@@ -134,10 +135,18 @@ def add_pose_plots(pdf, sparse_mapping_poses, graph_localization_poses, imu_augm
   plt.close()
 
 
-def plot_features(feature_counts, times, label, color, marker, markeredgewidth=0.1, markersize=1.5):
+def plot_features(feature_counts,
+                  times,
+                  label,
+                  color,
+                  linestyle='None',
+                  marker='o',
+                  markeredgewidth=0.1,
+                  markersize=1.5):
   plt.plot(times,
            feature_counts,
            color,
+           linestyle=linestyle,
            marker=marker,
            markeredgewidth=markeredgewidth,
            markersize=markersize,
@@ -223,15 +232,48 @@ def add_other_vector3d_plots(pdf, imu_augmented_graph_localization_states):
   pdf.savefig()
   plt.close()
 
-  # covariance
+  # Position covariance
   plt.figure()
-  plt.plot((l2_map(imu_augmented_graph_localization_states.position_covariances), imu_augmented_graph_localization_states.times, colors[0], linewidth=0.5, label='Position Covariance')
+  plt.plot(imu_augmented_graph_localization_states.times,
+           l2_map(imu_augmented_graph_localization_states.position_covariances),
+           'r',
+           linewidth=0.5,
+           label='Position Covariance')
   plt.title('Position Covariance')
   plt.xlabel('Time (s)')
-  plt.ylabel('Covariance')
-  plt.legend(prop={'size':6})
+  plt.ylabel('Position Covariance')
+  plt.legend(prop={'size': 6})
   pdf.savefig()
   plt.close()
+
+  # Orientation covariance
+  plt.figure()
+  plt.plot(imu_augmented_graph_localization_states.times,
+           l2_map(imu_augmented_graph_localization_states.orientation_covariances),
+           'r',
+           linewidth=0.5,
+           label='Orientation Covariance')
+  plt.title('Orientation Covariance (Quaternion)')
+  plt.xlabel('Time (s)')
+  plt.ylabel('Orientation Covariance')
+  plt.legend(prop={'size': 6})
+  pdf.savefig()
+  plt.close()
+
+  # Velocity covariance
+  plt.figure()
+  plt.plot(imu_augmented_graph_localization_states.times,
+           l2_map(imu_augmented_graph_localization_states.velocity_covariances),
+           'r',
+           linewidth=0.5,
+           label='Velocity Covariance')
+  plt.title('Velocity Covariance')
+  plt.xlabel('Time (s)')
+  plt.ylabel('Velocity Covariance')
+  plt.legend(prop={'size': 6})
+  pdf.savefig()
+  plt.close()
+
 
 def add_other_loc_plots(pdf, graph_localization_states, imu_augmented_graph_localization_states):
   add_feature_count_plots(pdf, graph_localization_states)
