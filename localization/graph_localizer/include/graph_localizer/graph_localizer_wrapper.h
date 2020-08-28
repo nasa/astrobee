@@ -50,9 +50,9 @@ class GraphLocalizerWrapper {
 
   boost::optional<geometry_msgs::PoseStamped> LatestPoseMsg() const;
 
-  boost::optional<ff_msgs::EkfState> LatestLocalizationMsg();
+  boost::optional<ff_msgs::EkfState> LatestLocalizationStateMsg();
 
-  boost::optional<ff_msgs::LocalizationGraph> LatestGraphMsg() const;
+  boost::optional<ff_msgs::LocalizationGraph> LatestLocalizationGraphMsg() const;
 
   void OpticalFlowCallback(const ff_msgs::Feature2dArray& feature_array_msg);
 

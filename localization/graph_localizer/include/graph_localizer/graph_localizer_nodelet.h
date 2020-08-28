@@ -63,6 +63,8 @@ class GraphLocalizerNodelet : public ff_util::FreeFlyerNodelet {
 
   void PublishLocalizationState();
 
+  void PublishLocalizationGraph();
+
   void PublishPose() const;
 
   void OpticalFlowCallback(const ff_msgs::Feature2dArray::ConstPtr& feature_array_msg);
@@ -76,14 +78,8 @@ class GraphLocalizerNodelet : public ff_util::FreeFlyerNodelet {
   graph_localizer::GraphLocalizerWrapper graph_localizer_wrapper_;
   bool localizer_enabled_ = true;
   ros::Subscriber imu_sub_, of_sub_, vl_sub_, ar_sub_;
-  ros::Publisher state_pub_;
-  ros::Publisher pose_pub_;
+  ros::Publisher state_pub_, graph_pub_, pose_pub_;
   ros::ServiceServer reset_srv_, bias_srv_, input_mode_srv_;
-  // ros::Publisher feature_pub_;
-  // ros::Publisher pose_pub_, twist_pub_;
-  // ros::Publisher reset_pub_;
-  // tf2_ros::TransformBroadcaster transform_pub_;
-  // ros::ServiceServer input_mode_srv_, reset_hr_srv_;
 };
 }  // namespace graph_localizer
 

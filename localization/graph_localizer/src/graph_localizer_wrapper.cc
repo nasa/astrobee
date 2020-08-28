@@ -155,7 +155,7 @@ boost::optional<geometry_msgs::PoseStamped> GraphLocalizerWrapper::LatestPoseMsg
   return graph_localizer::LatestPoseMsg(*graph_localizer_);
 }
 
-boost::optional<ff_msgs::EkfState> GraphLocalizerWrapper::LatestLocalizationMsg() {
+boost::optional<ff_msgs::EkfState> GraphLocalizerWrapper::LatestLocalizationStateMsg() {
   if (!graph_localizer_) {
     LOG_EVERY_N(WARNING, 50) << "LatestLocalizationMsg: Graph localizater not initialized yet.";
     return boost::none;
@@ -174,7 +174,7 @@ boost::optional<ff_msgs::EkfState> GraphLocalizerWrapper::LatestLocalizationMsg(
   return ekf_state_msg;
 }
 
-boost::optional<ff_msgs::LocalizationGraph> GraphLocalizerWrapper::LatestGraphMsg() const {
+boost::optional<ff_msgs::LocalizationGraph> GraphLocalizerWrapper::LatestLocalizationGraphMsg() const {
   if (!graph_localizer_) {
     LOG_EVERY_N(WARNING, 50) << "LatestGraphMsg: Graph localizater not initialized yet.";
     return boost::none;

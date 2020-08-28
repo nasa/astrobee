@@ -17,6 +17,7 @@
  */
 
 #include <ff_msgs/EkfState.h>
+#include <ff_msgs/LocalizationGraph.h>
 #include <ff_util/ff_names.h>
 #include <graph_localizer/graph_localizer_nodelet.h>
 #include <graph_localizer/utilities.h>
@@ -38,6 +39,7 @@ void GraphLocalizerNodelet::Initialize(ros::NodeHandle* nh) {
 void GraphLocalizerNodelet::SubscribeAndAdvertise(ros::NodeHandle* nh) {
   state_pub_ = nh->advertise<ff_msgs::EkfState>(TOPIC_GRAPH_LOC_STATE, 1);
   pose_pub_ = nh->advertise<geometry_msgs::PoseStamped>(TOPIC_LOCALIZATION_POSE, 1);
+  graph_pub_ = nh->advertise<ff_msgs::LocalizationGraph>(TOPIC_GRAPH_LOC, 1);
 
   imu_sub_ = nh->subscribe(TOPIC_HARDWARE_IMU, 1, &GraphLocalizerNodelet::ImuCallback, this,
                            ros::TransportHints().tcpNoDelay());
@@ -98,9 +100,10 @@ void GraphLocalizerNodelet::OpticalFlowCallback(const ff_msgs::Feature2dArray::C
   if (!localizer_enabled()) return;
   graph_localizer_wrapper_.OpticalFlowCallback(*feature_array_msg);
 
-  // Publish loc state here since graph updates occur on optical flow updates
+  // Publish loc information here since graph updates occur on optical flow updates
   PublishPose();
   PublishLocalizationState();
+  PublishLocalizationGraph();
 }
 
 void GraphLocalizerNodelet::VLVisualLandmarksCallback(const ff_msgs::VisualLandmarks::ConstPtr& visual_landmarks_msg) {
@@ -119,12 +122,21 @@ void GraphLocalizerNodelet::ImuCallback(const sensor_msgs::Imu::ConstPtr& imu_ms
 }
 
 void GraphLocalizerNodelet::PublishLocalizationState() {
-  const auto latest_localization_msg = graph_localizer_wrapper_.LatestLocalizationMsg();
-  if (!latest_localization_msg) {
-    LOG(WARNING) << "PublishLocalizationState: Failed to get latest localization msg.";
+  const auto latest_localization_state_msg = graph_localizer_wrapper_.LatestLocalizationStateMsg();
+  if (!latest_localization_state_msg) {
+    LOG(WARNING) << "PublishLocalizationState: Failed to get latest localization state msg.";
     return;
   }
-  state_pub_.publish(*latest_localization_msg);
+  state_pub_.publish(*latest_localization_state_msg);
+}
+
+void GraphLocalizerNodelet::PublishLocalizationGraph() {
+  const auto latest_localization_graph_msg = graph_localizer_wrapper_.LatestLocalizationGraphMsg();
+  if (!latest_localization_graph_msg) {
+    LOG(WARNING) << "PublishLocalizationGraph: Failed to get latest localization graph msg.";
+    return;
+  }
+  graph_pub_.publish(*latest_localization_graph_msg);
 }
 
 void GraphLocalizerNodelet::PublishPose() const {
