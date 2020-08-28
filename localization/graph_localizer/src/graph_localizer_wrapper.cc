@@ -173,4 +173,13 @@ boost::optional<ff_msgs::EkfState> GraphLocalizerWrapper::LatestLocalizationMsg(
   feature_counts_.Reset();
   return ekf_state_msg;
 }
+
+boost::optional<ff_msgs::LocalizationGraph> GraphLocalizerWrapper::LatestGraphMsg() const {
+  if (!graph_localizer_) {
+    LOG_EVERY_N(WARNING, 50) << "LatestGraphMsg: Graph localizater not initialized yet.";
+    return boost::none;
+  }
+  return GraphMsg(*graph_localizer_);
+}
+
 }  // namespace graph_localizer

@@ -20,6 +20,7 @@
 #define GRAPH_LOCALIZER_UTILITIES_H_
 
 #include <ff_msgs/EkfState.h>
+#include <ff_msgs/LocalizationGraph.h>
 #include <ff_msgs/VisualLandmarks.h>
 #include <graph_localizer/graph_loc_initialization.h>
 #include <graph_localizer/graph_localizer.h>
@@ -58,6 +59,8 @@ ff_msgs::EkfState EkfStateMsg(const localization_common::CombinedNavState& combi
                               const localization_common::CombinedNavStateCovariances& covariances,
                               const int num_optical_flow_features_in_last_measurement,
                               const int num_sparse_mapping_features_in_last_measurement, const bool estimating_bias);
+
+ff_msgs::LocalizationGraph GraphMsg(const GraphLocalizer& graph_localizer);
 
 geometry_msgs::PoseStamped PoseMsg(const Eigen::Isometry3d& global_T_body, const std_msgs::Header& header);
 }  // namespace graph_localizer

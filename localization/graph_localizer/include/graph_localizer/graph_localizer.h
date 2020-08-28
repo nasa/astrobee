@@ -42,6 +42,8 @@
 #include <ros/console.h>
 #include <sensor_msgs/Imu.h>
 
+#include <boost/serialization/serialization.hpp>
+
 #include <map>
 #include <memory>
 #include <utility>
@@ -122,6 +124,14 @@ class GraphLocalizer {
       }
     }
     return num_factors;
+  }
+
+  // Serialization function
+  friend class boost::serialization::access;
+  template <class ARCHIVE>
+  void serialize(ARCHIVE& ar, const unsigned int /*version*/) {
+    ar& BOOST_SERIALIZATION_NVP(graph_);
+    ar& BOOST_SERIALIZATION_NVP(graph_values_.values());
   }
 
   // TODO(rsoussan): put these somewhere else

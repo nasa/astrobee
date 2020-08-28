@@ -20,6 +20,8 @@
 #include <imu_integration/utilities.h>
 #include <localization_common/utilities.h>
 
+#include <gtsam/base/serialization.h>
+
 #include <glog/logging.h>
 
 #include <cstdlib>
@@ -94,6 +96,20 @@ ff_msgs::EkfState EkfStateMsg(const lc::CombinedNavState& combined_nav_state, co
   loc_msg.estimating_bias = estimating_bias;
 
   return loc_msg;
+}
+
+ff_msgs::LocalizationGraph GraphMsg(const GraphLocalizer& graph_localizer) {
+  ff_msgs::LocalizationGraph graph_msg;
+
+  // Set Header Frames
+  graph_msg.header.frame_id = "world";
+  graph_msg.child_frame_id = "body";
+
+  // TODO(rsoussan): set correct time
+  lc::TimeToHeader(5, graph_msg.header);
+
+  graph_msg.serialized_graph = gtsam::serializeBinary(graph_localizer);
+  return graph_msg;
 }
 
 geometry_msgs::PoseStamped PoseMsg(const Eigen::Isometry3d& global_T_body, const std_msgs::Header& header) {
