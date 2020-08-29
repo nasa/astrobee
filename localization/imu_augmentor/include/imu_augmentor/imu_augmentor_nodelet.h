@@ -32,8 +32,6 @@ class ImuAugmentorNodelet : public ff_util::FreeFlyerNodelet {
  public:
   ImuAugmentorNodelet();
 
-  void Run();
-
  private:
   void Initialize(ros::NodeHandle* nh) final;
 

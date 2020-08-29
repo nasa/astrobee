@@ -24,6 +24,7 @@
   <!-- Command line arguments -->
   <arg name="bagfile"/>             
   <arg name="record" default="false" />
+  <arg name="imu_augmentor" default="false" />
   <arg name="robot" default="bumble" />
   <arg name="world" default="iss" />
 
@@ -47,6 +48,14 @@
       <arg name="output_bagfile" value="$(arg output_bagfile)"/>
     </include>
   </group>
+
+  <!-- Run imu augmentor if required -->
+  <group if="$(arg imu_augmentor)">
+    <include file="$(find imu_augmentor)/launch/imu_augmentor.launch">
+      <arg name="terminal" value="terminator -x"/>
+    </include>
+  </group>
+
 
   <!-- Nodes to run -->
   <include file="$(find lk_optical_flow)/launch/lk_optical_flow.launch">

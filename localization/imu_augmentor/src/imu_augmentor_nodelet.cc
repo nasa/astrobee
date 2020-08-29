@@ -25,10 +25,7 @@ namespace imu_augmentor {
 
 ImuAugmentorNodelet::ImuAugmentorNodelet() {}
 
-void ImuAugmentorNodelet::Initialize(ros::NodeHandle* nh) {
-  SubscribeAndAdvertise(nh);
-  Run();
-}
+void ImuAugmentorNodelet::Initialize(ros::NodeHandle* nh) { SubscribeAndAdvertise(nh); }
 
 void ImuAugmentorNodelet::SubscribeAndAdvertise(ros::NodeHandle* nh) {
   state_pub_ = nh->advertise<ff_msgs::EkfState>(TOPIC_GNC_EKF, 1);
@@ -54,14 +51,6 @@ void ImuAugmentorNodelet::PublishLatestImuAugmentedLocalizationState() {
     return;
   }
   state_pub_.publish(*latest_imu_augmented_loc_msg);
-}
-
-void ImuAugmentorNodelet::Run() {
-  ros::Rate rate(100);  // 100 Hz
-  while (ros::ok()) {
-    ros::spinOnce();
-    rate.sleep();
-  }
 }
 }  // namespace imu_augmentor
 
