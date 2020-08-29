@@ -139,7 +139,7 @@ bool GraphBag::GenerateVLFeatures(const sensor_msgs::ImageConstPtr& image_msg, f
   return true;
 }
 
-void GraphBag::SaveSparseMappingPoseMsg(const geometry_msgs::StampedPoseMsg& pose_msg) {
+void GraphBag::SaveSparseMappingPoseMsg(const geometry_msgs::PoseStamped& sparse_mapping_pose_msg) {
   const ros::Time timestamp = lc::RosTimeFromHeader(sparse_mapping_pose_msg.header);
   results_bag_.write(TOPIC_SPARSE_MAPPING_POSE, timestamp, sparse_mapping_pose_msg);
 }
@@ -207,7 +207,7 @@ void GraphBag::Run() {
       ff_msgs::VisualLandmarks vl_features;
       if (GenerateVLFeatures(image_msg, vl_features)) {
         graph_localizer_wrapper_.VLVisualLandmarksCallback(vl_features);
-        const auto sparse_mapping_pose_msg = graph_localizer_wrapper_->LatestSparseMappingPoseMsg();
+        const auto sparse_mapping_pose_msg = graph_localizer_wrapper_.LatestSparseMappingPoseMsg();
         if (sparse_mapping_pose_msg) {
           SaveSparseMappingPoseMsg(*sparse_mapping_pose_msg);
         }
@@ -215,7 +215,7 @@ void GraphBag::Run() {
 
       // Save latest graph localization msg, which should have just been optimized after adding of and/or vl features.
       // Pass latest loc state to imu augmentor if it is available.
-      const auto localization_msg = graph_localizer_wrapper_.LatestLocalizationMsg();
+      const auto localization_msg = graph_localizer_wrapper_.LatestLocalizationStateMsg();
       if (!localization_msg) {
         LOG_EVERY_N(WARNING, 50) << "Run: Failed to get localization msg.";
       } else {

@@ -52,7 +52,7 @@ class GraphBag {
   bool GenerateVLFeatures(const sensor_msgs::ImageConstPtr& image_msg, ff_msgs::VisualLandmarks& vl_features);
   void SaveOpticalFlowTracksImage(const sensor_msgs::ImageConstPtr& image_msg,
                                   const graph_localizer::FeatureTrackMap* const feature_tracks);
-  void SaveSparseMappingPoseMsg(const geometry_msgs::StampedPoseMsg& pose_msg);
+  void SaveSparseMappingPoseMsg(const geometry_msgs::PoseStamped& sparse_mapping_pose_msg);
 
   void SavePose(const geometry_msgs::PoseStamped& latest_pose_msg);
   void SaveLocState(const ff_msgs::EkfState& loc_msg, const std::string& topic);
