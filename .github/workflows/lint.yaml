@@ -1,0 +1,22 @@
+# Check for lint error and auto correct them
+
+name: Clang format lint
+
+on: [push]
+
+jobs:
+  build_and_push_docs:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        path: repo/
+    - name: Install clang
+      run: |
+        sudo apt-get install clang-format
+    - name: Run clang
+      run: |
+        cd repo
+        clang-format -i -style=scripts/git/astrobee.clang-format *.cpp *.cc *.cxx *.h *.hpp

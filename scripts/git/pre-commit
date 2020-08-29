@@ -1,96 +1,28 @@
-#!/usr/bin/env python
+#!/bin/bash
 
-import datetime, os, imp, subprocess
+STYLE=$(git config --get hooks.clangformat.style)
+if [ -n "${STYLE}" ] ; then
+  STYLEARG="-style=${STYLE}"
+else
+  STYLEARG=""
+fi
+echo "STYLEARG $STYLEARG"
 
-def get_cpplint_path():
-    pwd = os.path.realpath(os.path.curdir)
-    root = -1
-    if 'FreeFlyerMLP' in pwd:
-        root = pwd.split("/").index("FreeFlyerMLP")
-        return "/".join(pwd.split("/")[:root+1] + ["scripts","git","cpplint.py"])
-    else:
-        return get_repo_path() + "/scripts/git/cpplint.py"
-    return ""
+format_file() {
+  file="${1}"
+  if [ -f $file ]; then
+    clang-format -i ${STYLEARG} ${1}
+    git add ${1}
+  fi
+}
 
-def get_repo_path():
-    pwd = os.path.realpath(os.path.curdir)
-    root = -1
-    if 'FreeFlyerMLP' in pwd:
-        root = pwd.split("/").index("FreeFlyerMLP")
-        return "/".join(pwd.split("/")[:root+1])
-    else:
-        try:
-			return subprocess.Popen(["git", "rev-parse", "--show-toplevel"], 
-			                       stdout=subprocess.PIPE).communicate()[0].rstrip()
-        except:
-            print "Can't find repo path"
-            exit(1)
-    return ""
-
-def run_cpplint(filename, cpplint_path):
-    cpplint = imp.load_source('cpplint', cpplint_path)
-    cpplint._cpplint_state.ResetErrorCounts()
-    cpplint.print_stdout = False
-    cpplint._line_length = 120
-    cpplint.output = []
-    try:
-        index = filename.split("/").index("include")
-        cpplint._root = "/".join(filename.split("/")[:index+1])
-    except ValueError:
-        pass
-    cpplint.ProcessFile(filename, cpplint._cpplint_state.verbose_level)
-    return cpplint.output
-
-def print_objection():
-    print "   ____  __      _           __  _             __"
-    print "  / __ \/ /_    (_)__  _____/ /_(_)___  ____  / /"
-    print " / / / / __ \  / / _ \/ ___/ __/ / __ \/ __ \/ / "
-    print "/ /_/ / /_/ / / /  __/ /__/ /_/ / /_/ / / / /_/  "
-    print "\____/_.___/_/ /\___/\___/\__/_/\____/_/ /_(_)   "
-    print "          /___/                                  "
-
-def main():
-    num_errors = 0
-
-    cpplint_path = get_cpplint_path()
-    repo_path = get_repo_path()
-
-    os.chdir(repo_path)
-    cmd = ["git", "diff", "--cached", "--name-only"]
-    p = subprocess.Popen(cmd, stdin=subprocess.PIPE,
-                         stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    output, err = p.communicate()
-    if p.returncode:
-        print "Failed to run git ls-files"
-        exit(1)
-    cpp_files_to_lint = []
-    for filename in output.split():
-        if filename.endswith((".cpp",".cc",".h",".hpp",".cc.in",".c",".c.in",".h.in",
-                              ".hpp.in",".cxx",".hxx")):
-            if not "external/" in filename and not "Software/" in filename and \
-                    not "gnc/matlab/" in filename and not "agast_score" in filename and \
-                        not "brisk" in filename:
-                cpp_files_to_lint.append(filename)
-
-    for filename in cpp_files_to_lint:
-        output = run_cpplint(filename, cpplint_path)
-
-        # Print an objection at first sight of errors
-        if num_errors == 0 and len(output) > 0:
-            print_objection()
-
-        num_errors += len(output)
-        for error in output:
-            print "%s:%s: %s" % (filename, str(error[0]), error[1])
-
-    print "="*50
-    if num_errors > 0:
-        print "  You have %d lint errors, commit failed" % num_errors
-    elif num_errors == 0:
-        print "  Code adheres to style guide lines, committing ..."
-
-    exit(num_errors)
-
-
-if __name__ == "__main__":
-    main()
+case "${1}" in
+  --about )
+    echo "Runs clang-format on source files"
+    ;;
+  * )
+    for file in `git diff-index --cached --name-only HEAD | grep -iE '\.(cpp|cc|h|hpp)' ` ; do
+      format_file "${file}"
+    done
+    ;;
+esac

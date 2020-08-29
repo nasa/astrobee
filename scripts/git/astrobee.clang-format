@@ -1,0 +1,6 @@
+BasedOnStyle: Google
+ColumnLimit: 120
+BraceWrapping:
+  BeforeElse: false
+DerivePointerAlignment: false
+PointerAlignment: Left
