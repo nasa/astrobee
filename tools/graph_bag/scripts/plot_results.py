@@ -298,8 +298,15 @@ def load_loc_state_msgs(vec_of_loc_states, bag):
         break
 
 
+def has_topic(bag, topic):
+  topics = bag.get_type_and_topic_info().topics
+  return topic in topics
+
+
 def create_plots(bagfile, output_file):
   bag = rosbag.Bag(bagfile)
+
+  has_imu_augmented_graph_localization_state = has_topic(bag, '/gnc/ekf')
   sparse_mapping_poses = poses.Poses('Sparse Mapping', '/sparse_mapping/pose')
   vec_of_poses = [sparse_mapping_poses]
   load_pose_msgs(vec_of_poses, bag)
@@ -313,4 +320,7 @@ def create_plots(bagfile, output_file):
 
   with PdfPages(output_file) as pdf:
     add_pose_plots(pdf, sparse_mapping_poses, graph_localization_states, imu_augmented_graph_localization_states)
-    add_other_loc_plots(pdf, graph_localization_states, imu_augmented_graph_localization_states)
+    if has_imu_augmented_graph_localization_state:
+      add_other_loc_plots(pdf, graph_localization_states, imu_augmented_graph_localization_states)
+    else:
+      add_other_loc_plots(pdf, graph_localization_states, graph_localization_states)
