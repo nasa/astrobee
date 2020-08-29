@@ -141,7 +141,7 @@ bool GraphBag::GenerateVLFeatures(const sensor_msgs::ImageConstPtr& image_msg, f
 
 void GraphBag::SaveSparseMappingPoseMsg(const geometry_msgs::PoseStamped& sparse_mapping_pose_msg) {
   const ros::Time timestamp = lc::RosTimeFromHeader(sparse_mapping_pose_msg.header);
-  results_bag_.write(TOPIC_SPARSE_MAPPING_POSE, timestamp, sparse_mapping_pose_msg);
+  results_bag_.write("/" + TOPIC_SPARSE_MAPPING_POSE, timestamp, sparse_mapping_pose_msg);
 }
 
 void GraphBag::SaveOpticalFlowTracksImage(const sensor_msgs::ImageConstPtr& image_msg,
@@ -158,12 +158,12 @@ void GraphBag::SaveOpticalFlowTracksImage(const sensor_msgs::ImageConstPtr& imag
   FeatureTrackImage(*feature_tracks, feature_track_image->image);
   const auto feature_track_image_msg = feature_track_image->toImageMsg();
   const ros::Time timestamp = lc::RosTimeFromHeader(image_msg->header);
-  results_bag_.write(kFeatureTracksImageTopic_, timestamp, *feature_track_image_msg);
+  results_bag_.write("/" + kFeatureTracksImageTopic_, timestamp, *feature_track_image_msg);
 }
 
 void GraphBag::SaveLocState(const ff_msgs::EkfState& loc_msg, const std::string& topic) {
   const ros::Time timestamp = lc::RosTimeFromHeader(loc_msg.header);
-  results_bag_.write(topic, timestamp, loc_msg);
+  results_bag_.write("/" + topic, timestamp, loc_msg);
 }
 
 void GraphBag::Run() {
