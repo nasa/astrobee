@@ -16,11 +16,5 @@
 <!-- permissions and limitations under the License.                          -->
 
 <launch>
-  <param name="use_sim_time" value="true"/> 
-  <remap from="/mgt/img_sampler/nav_cam/image_record" to="/hw/cam_nav"/>
-  <include file="$(find lk_optical_flow)/launch/lk_optical_flow.launch" />
-  <include file="$(find localization_node)/launch/localization_node.launch" />
-  <include file="$(find graph_localizer)/launch/graph_localizer.launch" />
-  <node pkg="rosbag" type="play" name="player" output="screen" args="--clock /home/rsoussan/Downloads/nasa_data/bags/20160211_1701_nav_sampled_shortened.bag"/>
-  <node pkg="rosservice" type="rosservice" name="imu_calibration" args="call --wait /gnc/ekf/init_bias" />
+  <node pkg="rosbag" type="record" name="recorder" output="screen" args="/graph_loc/state /sparse_mapping/pose  -O /home/rsoussan/astrobee/astrobee/launch/live_loc.bag"/>
 </launch>

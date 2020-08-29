@@ -1,0 +1,26 @@
+<!-- Copyright (c) 2017, United States Government, as represented by the     -->
+<!-- Administrator of the National Aeronautics and Space Administration.     -->
+<!--                                                                         -->
+<!-- All rights reserved.                                                    -->
+<!--                                                                         -->
+<!-- The Astrobee platform is licensed under the Apache License, Version 2.0 -->
+<!-- (the "License"); you may not use this file except in compliance with    -->
+<!-- the License. You may obtain a copy of the License at                    -->
+<!--                                                                         -->
+<!--     http://www.apache.org/licenses/LICENSE-2.0                          -->
+<!--                                                                         -->
+<!-- Unless required by applicable law or agreed to in writing, software     -->
+<!-- distributed under the License is distributed on an "AS IS" BASIS,       -->
+<!-- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or         -->
+<!-- implied. See the License for the specific language governing            -->
+<!-- permissions and limitations under the License.                          -->
+
+<launch>
+  <param name="use_sim_time" value="true"/> 
+  <remap from="/mgt/img_sampler/nav_cam/image_record" to="/hw/cam_nav"/>
+  <include file="$(find lk_optical_flow)/launch/lk_optical_flow.launch" />
+  <include file="$(find localization_node)/launch/localization_node.launch" />
+  <include file="$(find graph_localizer)/launch/graph_localizer.launch" />
+  <node pkg="rosbag" type="play" name="player" output="screen" args="--clock /home/rsoussan/Downloads/nasa_data/bags/20160211_1711_nav_sampled.bag"/>
+  <node pkg="rosservice" type="rosservice" name="imu_calibration" args="call --wait /gnc/ekf/init_bias" />
+</launch>
