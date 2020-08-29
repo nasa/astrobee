@@ -16,5 +16,5 @@
 <!-- permissions and limitations under the License.                          -->
 
 <launch>
-  <node pkg="rosbag" type="record" name="recorder" output="screen" args="/graph_loc/state /sparse_mapping/pose  -O /home/rsoussan/astrobee/astrobee/launch/live_loc.bag"/>
+  <node pkg="rosbag" type="record" name="recorder" output="screen" args="/graph_loc/state /sparse_mapping/pose  -O /home/rsoussan/astrobee/astrobee/launch/offline_localization/live_loc.bag"/>
 </launch>
