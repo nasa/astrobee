@@ -47,7 +47,8 @@ void ImuAugmentorNodelet::LocalizationStateCallback(const ff_msgs::EkfState::Con
 void ImuAugmentorNodelet::PublishLatestImuAugmentedLocalizationState() {
   const auto latest_imu_augmented_loc_msg = imu_augmentor_wrapper_.LatestImuAugmentedLocalizationMsg();
   if (!latest_imu_augmented_loc_msg) {
-    LOG(ERROR) << "PublishLatestImuAugmentedLocalizationState: Failed to get latest imu augmented loc msg.";
+    LOG_EVERY_N(WARNING, 50)
+        << "PublishLatestImuAugmentedLocalizationState: Failed to get latest imu augmented loc msg.";
     return;
   }
   state_pub_.publish(*latest_imu_augmented_loc_msg);
