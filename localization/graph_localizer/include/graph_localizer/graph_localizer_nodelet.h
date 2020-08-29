@@ -38,7 +38,7 @@ class GraphLocalizerNodelet : public ff_util::FreeFlyerNodelet {
  public:
   GraphLocalizerNodelet();
 
-  void Run();
+  // void Run();
 
  private:
   void Initialize(ros::NodeHandle* nh) final;

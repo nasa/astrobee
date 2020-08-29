@@ -27,7 +27,7 @@
 
 namespace graph_localizer {
 namespace lc = localization_common;
-GraphLocalizerNodelet::GraphLocalizerNodelet() {}
+GraphLocalizerNodelet::GraphLocalizerNodelet() : ff_util::FreeFlyerNodelet(NODE_GRAPH_LOC, true) {}
 
 void GraphLocalizerNodelet::Initialize(ros::NodeHandle* nh) {
   // TODO(rsoussan): load this somewhere else/ how do other nodelets do this?
@@ -35,7 +35,7 @@ void GraphLocalizerNodelet::Initialize(ros::NodeHandle* nh) {
   // TODO(rsoussan): are these needed?
   ff_common::InitFreeFlyerApplication(getMyArgv());
   SubscribeAndAdvertise(nh);
-  Run();
+  // Run();
 }
 
 void GraphLocalizerNodelet::SubscribeAndAdvertise(ros::NodeHandle* nh) {
@@ -150,13 +150,13 @@ void GraphLocalizerNodelet::PublishPose() const {
   pose_pub_.publish(*latest_pose_msg);
 }
 
-void GraphLocalizerNodelet::Run() {
+/* void GraphLocalizerNodelet::Run() {
   ros::Rate rate(100);  // 100 Hz
   while (ros::ok()) {
     ros::spinOnce();
     rate.sleep();
   }
-}
+} */
 }  // namespace graph_localizer
 
 PLUGINLIB_EXPORT_CLASS(graph_localizer::GraphLocalizerNodelet, nodelet::Nodelet);
