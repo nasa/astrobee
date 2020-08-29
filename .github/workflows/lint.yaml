@@ -19,4 +19,5 @@ jobs:
     - name: Run clang
       run: |
         cd repo
+        echo "Running clang-format"
         clang-format -i -style=scripts/git/astrobee.clang-format *.cpp *.cc *.cxx *.h *.hpp
