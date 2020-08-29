@@ -16,11 +16,22 @@
 <!-- permissions and limitations under the License.                          -->
 
 <launch>
+  <!-- Arguments -->
+  <arg name="bagfile"/>             
+
+  <!-- Set params -->
   <param name="use_sim_time" value="true"/> 
+
+  <!-- Topic Remappings -->
   <remap from="/mgt/img_sampler/nav_cam/image_record" to="/hw/cam_nav"/>
+
+  <!-- Nodes to run -->
   <include file="$(find lk_optical_flow)/launch/lk_optical_flow.launch" />
   <include file="$(find localization_node)/launch/localization_node.launch" />
   <include file="$(find graph_localizer)/launch/graph_localizer.launch" />
-  <node pkg="rosbag" type="play" name="player" output="screen" args="--clock /home/rsoussan/Downloads/nasa_data/bags/20160211_1711_nav_sampled.bag"/>
-  <node pkg="rosservice" type="rosservice" name="imu_calibration" args="call --wait /gnc/ekf/init_bias" />
+  <node pkg="rosbag" type="play" name="player" output="screen" args="--clock $(arg bagfile)"/>
+
+  <!-- Service calls -->
+  <!-- Add 'wait' here so localizer is running before the service call is made -->
+  <node pkg="rosservice" type="rosservice" name="imu_calibration" args="call --wait /gnc/ekf/init_bias" /> 
 </launch>
