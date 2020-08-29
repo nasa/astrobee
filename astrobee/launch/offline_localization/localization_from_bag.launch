@@ -32,6 +32,8 @@
   <node pkg="rosbag" type="play" name="player" output="screen" args="--clock $(arg bagfile)"/>
 
   <!-- Service calls -->
-  <!-- Add 'wait' here so localizer is running before the service call is made -->
+  <!-- Add 'wait' here so nodes are running before the service calls are made -->
   <node pkg="rosservice" type="rosservice" name="imu_calibration" args="call --wait /gnc/ekf/init_bias" /> 
+  <node pkg="rosservice" type="rosservice" name="enable_lk_optiocal_flow" args="call --wait /loc/of/enable" /> 
+  <node pkg="rosservice" type="rosservice" name="enable_sparse_mapping" args="call --wait /loc/ml/enable" /> 
 </launch>
