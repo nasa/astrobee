@@ -300,12 +300,12 @@ def load_loc_state_msgs(vec_of_loc_states, bag):
 
 def create_plots(bagfile, output_file):
   bag = rosbag.Bag(bagfile)
-  sparse_mapping_poses = poses.Poses('Sparse Mapping', 'sparse_mapping/pose')
+  sparse_mapping_poses = poses.Poses('Sparse Mapping', '/sparse_mapping/pose')
   vec_of_poses = [sparse_mapping_poses]
   load_pose_msgs(vec_of_poses, bag)
 
-  graph_localization_states = loc_states.LocStates('Graph Localization', 'graph_loc/state')
-  imu_augmented_graph_localization_states = loc_states.LocStates('Imu Augmented Graph Localization', 'gnc/ekf')
+  graph_localization_states = loc_states.LocStates('Graph Localization', '/graph_loc/state')
+  imu_augmented_graph_localization_states = loc_states.LocStates('Imu Augmented Graph Localization', '/gnc/ekf')
   vec_of_loc_states = [graph_localization_states, imu_augmented_graph_localization_states]
   load_loc_state_msgs(vec_of_loc_states, bag)
 
