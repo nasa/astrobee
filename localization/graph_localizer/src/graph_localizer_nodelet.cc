@@ -41,6 +41,7 @@ void GraphLocalizerNodelet::Initialize(ros::NodeHandle* nh) {
 void GraphLocalizerNodelet::SubscribeAndAdvertise(ros::NodeHandle* nh) {
   state_pub_ = nh->advertise<ff_msgs::EkfState>(TOPIC_GRAPH_LOC_STATE, 1);
   pose_pub_ = nh->advertise<geometry_msgs::PoseStamped>(TOPIC_LOCALIZATION_POSE, 1);
+  sparse_mapping_pose_pub_ = nh->advertise<geometry_msgs::PoseStamped>(TOPIC_SPARSE_MAPPING_POSE, 1);
   graph_pub_ = nh->advertise<ff_msgs::LocalizationGraph>(TOPIC_GRAPH_LOC, 1);
 
   imu_sub_ = nh->subscribe(TOPIC_HARDWARE_IMU, 1, &GraphLocalizerNodelet::ImuCallback, this,
@@ -111,6 +112,7 @@ void GraphLocalizerNodelet::OpticalFlowCallback(const ff_msgs::Feature2dArray::C
 void GraphLocalizerNodelet::VLVisualLandmarksCallback(const ff_msgs::VisualLandmarks::ConstPtr& visual_landmarks_msg) {
   if (!localizer_enabled()) return;
   graph_localizer_wrapper_.VLVisualLandmarksCallback(*visual_landmarks_msg);
+  PublishSparseMappingPose();
 }
 
 void GraphLocalizerNodelet::ARVisualLandmarksCallback(const ff_msgs::VisualLandmarks::ConstPtr& visual_landmarks_msg) {
@@ -148,6 +150,15 @@ void GraphLocalizerNodelet::PublishPose() const {
     return;
   }
   pose_pub_.publish(*latest_pose_msg);
+}
+
+void GraphLocalizerNodelet::PublishSparseMappingPose() const {
+  const auto latest_sparse_mapping_pose_msg = graph_localizer_wrapper_.LatestSparseMappingPoseMsg();
+  if (!latest_sparse_mapping_pose_msg) {
+    LOG(WARNING) << "PublishSparseMappingPose: Failed to get latest sparse mapping pose msg.";
+    return;
+  }
+  sparse_mapping_pose_pub_.publish(*latest_sparse_mapping_pose_msg);
 }
 
 /* void GraphLocalizerNodelet::Run() {

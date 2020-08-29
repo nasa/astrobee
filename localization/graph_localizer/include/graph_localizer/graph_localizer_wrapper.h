@@ -32,6 +32,7 @@
 #include <sensor_msgs/Imu.h>
 
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace graph_localizer {
@@ -49,6 +50,8 @@ class GraphLocalizerWrapper {
   void ResetBiasesAndLocalizer();
 
   boost::optional<geometry_msgs::PoseStamped> LatestPoseMsg() const;
+
+  boost::optional<geometry_msgs::PoseStamped> LatestSparseMappingPoseMsg() const;
 
   boost::optional<ff_msgs::EkfState> LatestLocalizationStateMsg();
 
@@ -79,6 +82,7 @@ class GraphLocalizerWrapper {
   // TODO(rsoussan): rename this!
   GraphLocInitialization graph_loc_initialization_;
   FeatureCounts feature_counts_;
+  boost::optional<std::pair<Eigen::Isometry3d, localization_common::Time>> sparse_mapping_pose_;
 };
 }  // namespace graph_localizer
 

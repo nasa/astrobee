@@ -52,7 +52,8 @@ class GraphBag {
   bool GenerateVLFeatures(const sensor_msgs::ImageConstPtr& image_msg, ff_msgs::VisualLandmarks& vl_features);
   void SaveOpticalFlowTracksImage(const sensor_msgs::ImageConstPtr& image_msg,
                                   const graph_localizer::FeatureTrackMap* const feature_tracks);
-  void SaveGroundtruthPose(const ff_msgs::VisualLandmarks& vl_features);
+  void SaveSparseMappingPoseMsg(const geometry_msgs::StampedPoseMsg& pose_msg);
+
   void SavePose(const geometry_msgs::PoseStamped& latest_pose_msg);
   void SaveLocState(const ff_msgs::EkfState& loc_msg, const std::string& topic);
   void FeatureTrackImage(const graph_localizer::FeatureTrackMap& feature_tracks, cv::Mat& feature_track_image) const;
@@ -65,10 +66,6 @@ class GraphBag {
   sparse_mapping::SparseMap map_;
   localization_node::Localizer map_feature_matcher_;
   const std::string kImageTopic_;
-  const std::string kSparseMappingPoseTopic_ = "sparse_mapping_pose";
-  const std::string kGraphLocalizationPoseTopic_ = "graph_localization_pose";
-  const std::string kGraphLocalizationLocTopic_ = "graph_localization_loc_state";
-  const std::string kImuAugmentorLocTopic_ = "imu_augmentor_loc_state";
   const std::string kFeatureTracksImageTopic_ = "feature_track_image";
   std::unique_ptr<camera::CameraParameters> nav_cam_params_;
   Eigen::Isometry3d body_T_nav_cam_;

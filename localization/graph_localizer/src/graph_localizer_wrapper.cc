@@ -89,13 +89,17 @@ void GraphLocalizerWrapper::VLVisualLandmarksCallback(const ff_msgs::VisualLandm
   if (graph_localizer_) {
     graph_localizer_->AddSparseMappingMeasurement(lm::MakeMatchedProjectionsMeasurement(visual_landmarks_msg));
     feature_counts_.vl = visual_landmarks_msg.landmarks.size();
-  } else {
+  }
+
+  const Eigen::Isometry3d sparse_mapping_global_T_body =
+      lc::EigenPose(visual_landmarks_msg, graph_loc_initialization_.params().body_T_nav_cam().inverse());
+  const lc::Time timestamp = lc::TimeFromHeader(visual_landmarks_msg.header);
+  sparse_mapping_pose_ = std::make_pair(sparse_mapping_global_T_body, timestamp);
+
+  if (!graph_localizer_) {
     // Set or update initial pose if a new one is available before the localizer
     // has started running.
-    const Eigen::Isometry3d global_T_body =
-        lc::EigenPose(visual_landmarks_msg, graph_loc_initialization_.params().body_T_nav_cam().inverse());
-    const lc::Time timestamp = lc::TimeFromHeader(visual_landmarks_msg.header);
-    graph_loc_initialization_.SetStartPose(global_T_body, timestamp);
+    graph_loc_initialization_.SetStartPose(sparse_mapping_pose_->first, sparse_mapping_pose_->second);
   }
 }
 
@@ -153,6 +157,15 @@ boost::optional<geometry_msgs::PoseStamped> GraphLocalizerWrapper::LatestPoseMsg
     return boost::none;
   }
   return graph_localizer::LatestPoseMsg(*graph_localizer_);
+}
+
+boost::optional<geometry_msgs::PoseStamped> GraphLocalizerWrapper::LatestSparseMappingPoseMsg() const {
+  if (!sparse_mapping_pose_) {
+    LOG_EVERY_N(WARNING, 50) << "LatestSparseMappingPoseMsg: Failed to get latest sparse mapping pose msg.";
+    return boost::none;
+  }
+
+  return PoseMsg(sparse_mapping_pose_->first, sparse_mapping_pose_->second);
 }
 
 boost::optional<ff_msgs::EkfState> GraphLocalizerWrapper::LatestLocalizationStateMsg() {

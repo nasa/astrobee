@@ -119,6 +119,7 @@
 
 #define TOPIC_GRAPH_LOC                             "graph_loc/graph"
 #define TOPIC_GRAPH_LOC_STATE                       "graph_loc/state"
+#define TOPIC_SPARSE_MAPPING_POSE                    "sparse_mapping/pose"
 
 #define ACTION_GNC_CTL_CONTROL                      "gnc/control"
 

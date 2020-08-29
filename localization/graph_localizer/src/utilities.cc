@@ -115,18 +115,14 @@ ff_msgs::LocalizationGraph GraphMsg(const GraphLocalizer& graph_localizer) {
 geometry_msgs::PoseStamped PoseMsg(const Eigen::Isometry3d& global_T_body, const std_msgs::Header& header) {
   geometry_msgs::PoseStamped pose_msg;
   pose_msg.header = header;
-
-  pose_msg.pose.position.x = global_T_body.translation().x();
-  pose_msg.pose.position.y = global_T_body.translation().y();
-  pose_msg.pose.position.z = global_T_body.translation().z();
-
-  const Eigen::Quaterniond global_Q_body(global_T_body.linear());
-  pose_msg.pose.orientation.x = global_Q_body.x();
-  pose_msg.pose.orientation.y = global_Q_body.y();
-  pose_msg.pose.orientation.z = global_Q_body.z();
-  pose_msg.pose.orientation.w = global_Q_body.w();
-
+  lc::EigenPoseToMsg(global_T_body, pose_msg.pose);
   return pose_msg;
+}
+
+geometry_msgs::PoseStamped PoseMsg(const Eigen::Isometry3d& global_T_body, const lc::Time time) {
+  std_msgs::Header header;
+  lc::TimeToHeader(time, header);
+  return PoseMsg(global_T_body, header);
 }
 
 void EstimateAndSetImuBiases(const lm::ImuMeasurement& imu_measurement,

@@ -85,6 +85,8 @@ gtsam::Pose3 PoseFromMsg(const geometry_msgs::Pose& msg_pose);
 
 void PoseToMsg(const gtsam::Pose3& pose, geometry_msgs::Pose& msg_pose);
 
+void EigenPoseToMsg(const Eigen::Isometry3d& pose, geometry_msgs::Pose& msg_pose);
+
 void VariancesToCovDiag(const Eigen::Vector3d& variances, float* const cov_diag);
 
 Eigen::Vector3d CovDiagToVariances(const float* const cov_diag);

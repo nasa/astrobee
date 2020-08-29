@@ -139,11 +139,9 @@ bool GraphBag::GenerateVLFeatures(const sensor_msgs::ImageConstPtr& image_msg, f
   return true;
 }
 
-void GraphBag::SaveGroundtruthPose(const ff_msgs::VisualLandmarks& vl_features) {
-  const Eigen::Isometry3d global_T_body = lc::EigenPose(vl_features, body_T_nav_cam_.inverse());
-  const auto sparse_mapping_pose_msg = graph_localizer::PoseMsg(global_T_body, vl_features.header);
+void GraphBag::SaveSparseMappingPoseMsg(const geometry_msgs::StampedPoseMsg& pose_msg) {
   const ros::Time timestamp = lc::RosTimeFromHeader(sparse_mapping_pose_msg.header);
-  results_bag_.write(kSparseMappingPoseTopic_, timestamp, sparse_mapping_pose_msg);
+  results_bag_.write(TOPIC_SPARSE_MAPPING_POSE, timestamp, sparse_mapping_pose_msg);
 }
 
 void GraphBag::SaveOpticalFlowTracksImage(const sensor_msgs::ImageConstPtr& image_msg,
@@ -161,11 +159,6 @@ void GraphBag::SaveOpticalFlowTracksImage(const sensor_msgs::ImageConstPtr& imag
   const auto feature_track_image_msg = feature_track_image->toImageMsg();
   const ros::Time timestamp = lc::RosTimeFromHeader(image_msg->header);
   results_bag_.write(kFeatureTracksImageTopic_, timestamp, *feature_track_image_msg);
-}
-
-void GraphBag::SavePose(const geometry_msgs::PoseStamped& latest_pose_msg) {
-  const ros::Time timestamp = lc::RosTimeFromHeader(latest_pose_msg.header);
-  results_bag_.write(kGraphLocalizationPoseTopic_, timestamp, latest_pose_msg);
 }
 
 void GraphBag::SaveLocState(const ff_msgs::EkfState& loc_msg, const std::string& topic) {
@@ -214,7 +207,10 @@ void GraphBag::Run() {
       ff_msgs::VisualLandmarks vl_features;
       if (GenerateVLFeatures(image_msg, vl_features)) {
         graph_localizer_wrapper_.VLVisualLandmarksCallback(vl_features);
-        SaveGroundtruthPose(vl_features);
+        const auto sparse_mapping_pose_msg = graph_localizer_wrapper_->LatestSparseMappingPoseMsg();
+        if (sparse_mapping_pose_msg) {
+          SaveSparseMappingPoseMsg(*sparse_mapping_pose_msg);
+        }
       }
 
       // Save latest graph localization msg, which should have just been optimized after adding of and/or vl features.
