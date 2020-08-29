@@ -17,11 +17,13 @@
 
 
 <!-- Runs required nodes for localization and the provided bag.  Remaps      -->
-<!-- topics and sets necessary params and configs.                           -->
+<!-- topics and sets necessary params and configs. Optionally save output to -->
+<!-- a bagfile.                                                              -->
 
 <launch>
   <!-- Command line arguments -->
   <arg name="bagfile"/>             
+  <arg name="record" default="false" />
   <arg name="robot" default="bumble" />
   <arg name="world" default="iss" />
 
@@ -36,6 +38,15 @@
 
   <!-- Topic Remappings -->
   <remap from="/mgt/img_sampler/nav_cam/image_record" to="/hw/cam_nav"/>
+
+  <!-- Record output if required -->
+  <group if="$(arg record)">
+    <arg name="output_bagfile"/>             
+    <include file="$(find astrobee)/launch/offline_localization/record_localization.launch">
+      <arg name="terminal" value="terminator -x"/>
+      <arg name="output_bagfile" value="$(arg output_bagfile)"/>
+    </include>
+  </group>
 
   <!-- Nodes to run -->
   <include file="$(find lk_optical_flow)/launch/lk_optical_flow.launch">
