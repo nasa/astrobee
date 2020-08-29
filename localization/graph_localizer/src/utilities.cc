@@ -49,6 +49,10 @@ bool ValidPointSet(const std::deque<lm::FeaturePoint>& points, const double min_
   return (average_distance_from_mean >= min_avg_distance_from_mean);
 }
 
+bool ValidVLMsg(const ff_msgs::VisualLandmarks& visual_landmarks_msg) {
+  return !visual_landmarks_msg.landmarks.empty();
+}
+
 boost::optional<geometry_msgs::PoseStamped> LatestPoseMsg(const GraphLocalizer& graph_localizer) {
   const auto latest_combined_nav_state = graph_localizer.LatestCombinedNavState();
   if (!latest_combined_nav_state) {

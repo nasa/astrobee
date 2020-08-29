@@ -52,6 +52,8 @@ void EstimateAndSetImuBiases(const localization_measurements::ImuMeasurement& im
 bool ValidPointSet(const std::deque<localization_measurements::FeaturePoint>& points,
                    const double min_avg_distance_from_mean);
 
+bool ValidVLMsg(const ff_msgs::VisualLandmarks& visual_landmarks_msg);
+
 boost::optional<geometry_msgs::PoseStamped> LatestPoseMsg(const GraphLocalizer& localization_measurements);
 
 ff_msgs::EkfState EkfStateMsg(const localization_common::CombinedNavState& combined_nav_state,

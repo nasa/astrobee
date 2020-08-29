@@ -86,6 +86,7 @@ void GraphLocalizerWrapper::ResetBiasesAndLocalizer() {
 }
 
 void GraphLocalizerWrapper::VLVisualLandmarksCallback(const ff_msgs::VisualLandmarks& visual_landmarks_msg) {
+  if (!ValidVLMsg(visual_landmarks_msg)) return;
   if (graph_localizer_) {
     graph_localizer_->AddSparseMappingMeasurement(lm::MakeMatchedProjectionsMeasurement(visual_landmarks_msg));
     feature_counts_.vl = visual_landmarks_msg.landmarks.size();
@@ -104,6 +105,7 @@ void GraphLocalizerWrapper::VLVisualLandmarksCallback(const ff_msgs::VisualLandm
 }
 
 void GraphLocalizerWrapper::ARVisualLandmarksCallback(const ff_msgs::VisualLandmarks& visual_landmarks_msg) {
+  if (!ValidVLMsg(visual_landmarks_msg)) return;
   if (graph_localizer_) {
     const Eigen::Isometry3d dock_T_dock_cam = lc::EigenPose(visual_landmarks_msg);
     graph_localizer_->AddARTagMeasurement(lm::MakeMatchedProjectionsMeasurement(visual_landmarks_msg),
