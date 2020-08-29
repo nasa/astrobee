@@ -15,9 +15,21 @@
 <!-- implied. See the License for the specific language governing            -->
 <!-- permissions and limitations under the License.                          -->
 
+
+<!-- Runs required nodes for localization and the provided bag.  Remaps      -->
+<!-- topics and sets necessary params and configs.                           -->
+
 <launch>
-  <!-- Arguments -->
+  <!-- Command line arguments -->
   <arg name="bagfile"/>             
+  <arg name="robot" default="bumble" />
+  <arg name="world" default="iss" />
+
+  <!-- Set environment configs that are required to run nodes -->
+  <env name="ASTROBEE_ROBOT" value="$(arg robot)" />
+  <env name="ASTROBEE_WORLD" value="$(arg world)" />
+  <env name="ASTROBEE_CONFIG_DIR" value="$(find astrobee)/config" />
+  <env name="ASTROBEE_RESOURCE_DIR" value="$(find astrobee)/resources" />
 
   <!-- Set params -->
   <param name="use_sim_time" value="true"/> 
