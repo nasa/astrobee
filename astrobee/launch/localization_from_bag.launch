@@ -18,4 +18,8 @@
 <launch>
   <param name="use_sim_time" value="true"/> 
   <remap from="/mgt/img_sampler/nav_cam/image_record" to="/hw/cam_nav"/>
+  <include file="$(find lk_optical_flow)/launch/lk_optical_flow.launch" />
+  <include file="$(find localization_node)/launch/localization_node.launch" />
+  <include file="$(find graph_localizer)/launch/graph_localizer.launch" />
+  <node pkg="rosservice" type="rosservice" name="imu_calibration" args="call --wait /gnc/ekf/init_bias" />
 </launch>
