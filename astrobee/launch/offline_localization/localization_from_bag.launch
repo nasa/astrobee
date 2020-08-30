@@ -72,8 +72,11 @@
   <!-- Service calls -->
   <group if="$(arg service_calls)">
     <!-- Add 'wait' here so nodes are running before the service calls are made -->
-    <node pkg="rosservice" type="rosservice" name="imu_calibration" args="call --wait /gnc/ekf/init_bias" /> 
-    <node pkg="rosservice" type="rosservice" name="enable_lk_optiocal_flow" args="call --wait /loc/of/enable true" /> 
-    <node pkg="rosservice" type="rosservice" name="enable_sparse_mapping" args="call --wait /loc/ml/enable true" /> 
+    <include file="$(find astrobee)/launch/offline_localization/service_calls/enable_sparse_mapping_srv.launch">
+    </include>
+    <include file="$(find astrobee)/launch/offline_localization/service_calls/enable_lk_optical_flow_srv.launch">
+    </include>
+    <include file="$(find astrobee)/launch/offline_localization/service_calls/estimate_bias_srv.launch">
+    </include>
   </group>
 </launch>
