@@ -25,9 +25,11 @@
   <arg name="bagfile"/>             
   <arg name="record" default="false" />
   <arg name="imu_augmentor" default="false" />
-  <arg name="service_calls" default="true" />
   <arg name="robot" default="bumble" />
   <arg name="world" default="iss" />
+  <arg name="localization_manager" default="false" />
+  <arg name="service_calls" default="true" unless="$(arg localization_manager)"/>     
+  <arg name="service_calls" value="false" if="$(arg localization_manager)" />   
 
   <!-- Set environment configs that are required to run nodes -->
   <env name="ASTROBEE_ROBOT" value="$(arg robot)" />
@@ -67,6 +69,11 @@
   <include file="$(find graph_localizer)/launch/graph_localizer.launch">
     <arg name="terminal" value="terminator -x"/>
   </include>
+  <group if="$(arg localization_manager)">
+    <include file="$(find localization_manager)/launch/localization_manager.launch">
+      <arg name="terminal" value="terminator -x"/>
+    </include>
+  </group>
   <node pkg="rosbag" type="play" name="player" output="screen" args="--clock $(arg bagfile)"/>
 
   <!-- Service calls -->
