@@ -80,6 +80,16 @@
     <arg name="debug" value="$(arg debug)" />
     <arg name="default" value="true" />
   </include>
+ <include file="$(find ff_util)/launch/ff_nodelet.launch">
+    <arg name="class" value="graph_localizer/GraphLocalizerNodelet" />
+    <arg name="name" value="graph_localizer" />
+    <arg name="manager" value="mlp_localization" />
+    <arg name="spurn" value="$(arg spurn)" />
+    <arg name="nodes" value="$(arg nodes)" />
+    <arg name="extra" value="$(arg extra)" />
+    <arg name="debug" value="$(arg debug)" />
+    <arg name="default" value="true" />
+  </include>
 
   <group unless="$(arg loc_only)">
 

@@ -49,8 +49,8 @@
 
   <!-- Launch GNC nodes -->
   <include file="$(find ff_util)/launch/ff_nodelet.launch">
-    <arg name="class" value="ekf/ekf" />
-    <arg name="name" value="ekf_node" />
+    <arg name="class" value="imu_augmentor/ImuAugmentorNodelet" />
+    <arg name="name" value="imu_augmentor_nodelet" />
     <arg name="manager" value="llp_gnc" />
     <arg name="spurn" value="$(arg spurn)" />
     <arg name="nodes" value="$(arg nodes)" />
