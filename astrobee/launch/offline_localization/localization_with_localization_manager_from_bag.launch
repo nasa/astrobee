@@ -25,7 +25,6 @@
   <arg name="bagfile"/>             
   <arg name="record" default="false" />
   <arg name="imu_augmentor" default="false" />
-  <arg name="service_calls" default="true" />
   <arg name="robot" default="bumble" />
   <arg name="world" default="iss" />
 
@@ -57,6 +56,7 @@
     </include>
   </group>
 
+
   <!-- Nodes to run -->
   <include file="$(find lk_optical_flow)/launch/lk_optical_flow.launch">
     <arg name="terminal" value="terminator -x"/>
@@ -70,10 +70,8 @@
   <node pkg="rosbag" type="play" name="player" output="screen" args="--clock $(arg bagfile)"/>
 
   <!-- Service calls -->
-  <group if="$(arg service_calls)">
-    <!-- Add 'wait' here so nodes are running before the service calls are made -->
-    <node pkg="rosservice" type="rosservice" name="imu_calibration" args="call --wait /gnc/ekf/init_bias" /> 
-    <node pkg="rosservice" type="rosservice" name="enable_lk_optiocal_flow" args="call --wait /loc/of/enable true" /> 
-    <node pkg="rosservice" type="rosservice" name="enable_sparse_mapping" args="call --wait /loc/ml/enable true" /> 
-  </group>
+  <!-- Add 'wait' here so nodes are running before the service calls are made -->
+  <node pkg="rosservice" type="rosservice" name="imu_calibration" args="call --wait /gnc/ekf/init_bias" /> 
+  <node pkg="rosservice" type="rosservice" name="enable_lk_optiocal_flow" args="call --wait /loc/of/enable true" /> 
+  <node pkg="rosservice" type="rosservice" name="enable_sparse_mapping" args="call --wait /loc/ml/enable true" /> 
 </launch>
