@@ -114,6 +114,7 @@
 #define NODE_PERCH_CTL                              "perch_ctl"
 #define NODE_EKF                                    "ekf"
 #define NODE_GRAPH_LOC                              "graph_loc"
+#define NODE_SIM_LOC                                "sim_loc"
 #define NODE_FAM                                    "fam"
 #define NODE_SIM_WRAPPER                            "sim_wrapper"
 

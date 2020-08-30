@@ -16,8 +16,6 @@
 # under the License.
 
 add_subdirectory(camera)
-add_subdirectory(graph_localizer)
-add_subdirectory(imu_augmentor)
 add_subdirectory(imu_integration)
 add_subdirectory(interest_point)
 add_subdirectory(localization_common)
@@ -25,11 +23,14 @@ add_subdirectory(localization_measurements)
 add_subdirectory(sparse_mapping)
 
 if (USE_ROS)
+  add_subdirectory(graph_localizer)
+  add_subdirectory(imu_augmentor)
   add_subdirectory(marker_tracking)
   add_subdirectory(lk_optical_flow)
   add_subdirectory(handrail_detect)
   add_subdirectory(localization_manager)
   add_subdirectory(localization_node)
+  add_subdirectory(simulation_localizer)
   if (ENABLE_VIVE_SOLVER)
     add_subdirectory(vive_localization)
   endif()
