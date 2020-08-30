@@ -79,11 +79,13 @@
   <!-- Service calls -->
   <group if="$(arg service_calls)">
     <!-- Add 'wait' here so nodes are running before the service calls are made -->
-    <include file="$(find astrobee)/launch/offline_localization/service_calls/enable_sparse_mapping_srv.launch">
-    </include>
     <include file="$(find astrobee)/launch/offline_localization/service_calls/enable_lk_optical_flow_srv.launch">
     </include>
     <include file="$(find astrobee)/launch/offline_localization/service_calls/estimate_bias_srv.launch">
     </include>
   </group>
+  <!-- Localization manager doesn't enable sparse mapping so always manually call enable -->
+  <include file="$(find astrobee)/launch/offline_localization/service_calls/enable_sparse_mapping_srv.launch">
+  </include>
+
 </launch>
