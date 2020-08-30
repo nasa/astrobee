@@ -28,13 +28,7 @@ namespace imu_augmentor {
 namespace lc = localization_common;
 namespace lm = localization_measurements;
 ImuAugmentorWrapper::ImuAugmentorWrapper() {
-  // Needed for ConfigReader construction
-  // TODO(rsoussan): load this somewhere else/ how do other nodelets do this?
-  const std::string astrobee_configs_path = "/home/rsoussan/astrobee/astrobee";
-  const std::string world = "iss";
-  lc::SetEnvironmentConfigs(astrobee_configs_path, world);
   config_reader::ConfigReader config;
-
   config.AddFile("transforms.config");
   config.AddFile("geometry.config");
 

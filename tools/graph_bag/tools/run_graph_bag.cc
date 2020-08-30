@@ -18,6 +18,7 @@
 
 #include <ff_common/init.h>
 #include <graph_bag/graph_bag.h>
+#include <localization_common/utilities.h>
 
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
@@ -27,8 +28,10 @@
 // #include <gperftools/profiler.h>
 
 namespace po = boost::program_options;
+namespace lc = localization_common;
 
 int main(int argc, char** argv) {
+  // TODO(rsoussan): pass this as command line argument
   // ProfilerStart("/home/rsoussan/graph_bag_tests/prof.txt");
   std::string image_topic;
   std::string output_bagfile;
@@ -80,6 +83,13 @@ int main(int argc, char** argv) {
     const auto output_bagfile_full_path = current_path / output_bagfile_path;
     output_bagfile = output_bagfile_full_path.string();
   }
+
+  // Set environment configs
+  // TODO(rsoussan): make these command line args
+  const std::string astrobee_configs_path = "/home/rsoussan/astrobee/astrobee";
+  const std::string world = "iss";
+  lc::SetEnvironmentConfigs(astrobee_configs_path, world);
+  config_reader::ConfigReader config;
 
   graph_bag::GraphBag graph_bag(input_bag, map_file, image_topic, output_bagfile);
   graph_bag.Run();

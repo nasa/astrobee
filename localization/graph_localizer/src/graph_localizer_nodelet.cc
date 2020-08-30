@@ -30,12 +30,8 @@ namespace lc = localization_common;
 GraphLocalizerNodelet::GraphLocalizerNodelet() : ff_util::FreeFlyerNodelet(NODE_GRAPH_LOC, true) {}
 
 void GraphLocalizerNodelet::Initialize(ros::NodeHandle* nh) {
-  // TODO(rsoussan): load this somewhere else/ how do other nodelets do this?
-  // Bootstrap our environment
-  // TODO(rsoussan): are these needed?
   ff_common::InitFreeFlyerApplication(getMyArgv());
   SubscribeAndAdvertise(nh);
-  // Run();
 }
 
 void GraphLocalizerNodelet::SubscribeAndAdvertise(ros::NodeHandle* nh) {
@@ -57,8 +53,6 @@ void GraphLocalizerNodelet::SubscribeAndAdvertise(ros::NodeHandle* nh) {
   input_mode_srv_ = nh->advertiseService(SERVICE_GNC_EKF_SET_INPUT, &GraphLocalizerNodelet::SetMode, this);
 }
 
-// TODO(rsoussan): This is stupid and not a service.  Remove if we don't have to
-// use loc manager anymore
 bool GraphLocalizerNodelet::SetMode(ff_msgs::SetEkfInput::Request& req, ff_msgs::SetEkfInput::Response& res) {
   const auto input_mode = req.mode;
   static int last_mode = -1;
@@ -79,16 +73,12 @@ void GraphLocalizerNodelet::EnableLocalizer() { localizer_enabled_ = true; }
 
 bool GraphLocalizerNodelet::localizer_enabled() const { return localizer_enabled_; }
 
-// TODO(rsoussan): This is stupid and not a service.  Remove if we don't have to
-// use loc manager anymore
 bool GraphLocalizerNodelet::ResetBiasesAndLocalizer(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res) {
   graph_localizer_wrapper_.ResetBiasesAndLocalizer();
   EnableLocalizer();
   return true;
 }
 
-// TODO(rsoussan): This is stupid and not a service.  Remove if we don't have to
-// use loc manager anymore
 bool GraphLocalizerNodelet::ResetLocalizer(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res) {
   ResetAndEnableLocalizer();
   return true;
@@ -160,14 +150,6 @@ void GraphLocalizerNodelet::PublishSparseMappingPose() const {
   }
   sparse_mapping_pose_pub_.publish(*latest_sparse_mapping_pose_msg);
 }
-
-/* void GraphLocalizerNodelet::Run() {
-  ros::Rate rate(100);  // 100 Hz
-  while (ros::ok()) {
-    ros::spinOnce();
-    rate.sleep();
-  }
-} */
 }  // namespace graph_localizer
 
 PLUGINLIB_EXPORT_CLASS(graph_localizer::GraphLocalizerNodelet, nodelet::Nodelet);
