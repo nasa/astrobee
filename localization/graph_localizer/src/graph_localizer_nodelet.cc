@@ -27,7 +27,8 @@
 
 namespace graph_localizer {
 namespace lc = localization_common;
-GraphLocalizerNodelet::GraphLocalizerNodelet() : ff_util::FreeFlyerNodelet(NODE_GRAPH_LOC, true) {}
+GraphLocalizerNodelet::GraphLocalizerNodelet()
+    : ff_util::FreeFlyerNodelet(NODE_GRAPH_LOC, true), platform_name_(GetPlatform()) {}
 
 void GraphLocalizerNodelet::Initialize(ros::NodeHandle* nh) {
   ff_common::InitFreeFlyerApplication(getMyArgv());

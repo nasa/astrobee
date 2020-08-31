@@ -77,6 +77,7 @@ class GraphLocalizerNodelet : public ff_util::FreeFlyerNodelet {
 
   graph_localizer::GraphLocalizerWrapper graph_localizer_wrapper_;
   bool localizer_enabled_ = true;
+  std::string platform_name_;
   ros::Subscriber imu_sub_, of_sub_, vl_sub_, ar_sub_;
   ros::Publisher state_pub_, graph_pub_, pose_pub_, sparse_mapping_pose_pub_;
   ros::ServiceServer reset_srv_, bias_srv_, input_mode_srv_;
