@@ -39,38 +39,32 @@ namespace ff_util {
 // the connection is not established on each query, at the expense of a little
 // more complexity.
 
-template <class ServiceSpec> class FreeFlyerServiceClient {
-protected:
+template <class ServiceSpec>
+class FreeFlyerServiceClient {
+ protected:
   enum State {
-    WAITING_FOR_CREATE = 0,  // Connect() has not been called
-    WAITING_FOR_CONNECT = 1, // Waiting to connect to server
-    WAITING_FOR_CALL = 2     // Connection established, waiting on call
+    WAITING_FOR_CREATE  = 0,  // Connect() has not been called
+    WAITING_FOR_CONNECT = 1,  // Waiting to connect to server
+    WAITING_FOR_CALL    = 2   // Connection established, waiting on call
   };
   static constexpr double DEFAULT_TIMEOUT_CONNECTED = 10.0;
-  static constexpr double DEFAULT_POLL_DURATION = 0.1;
+  static constexpr double DEFAULT_POLL_DURATION     = 0.1;
 
-public:
+ public:
   // Callback types
   typedef std::function<void(void)> ConnectedCallbackType;
   typedef std::function<void(void)> TimeoutCallbackType;
 
   // Setters for callbacks
-  void SetTimeoutCallback(TimeoutCallbackType cb_timeout) {
-    cb_timeout_ = cb_timeout;
-  }
-  void SetConnectedCallback(ConnectedCallbackType cb_connected) {
-    cb_connected_ = cb_connected;
-  }
+  void SetTimeoutCallback(TimeoutCallbackType cb_timeout) { cb_timeout_ = cb_timeout; }
+  void SetConnectedCallback(ConnectedCallbackType cb_connected) { cb_connected_ = cb_connected; }
 
   // Setters for timeouts
-  void SetConnectedTimeout(double to_connected) {
-    to_connected_ = ros::Duration(to_connected);
-  }
+  void SetConnectedTimeout(double to_connected) { to_connected_ = ros::Duration(to_connected); }
 
   // Constructor
   FreeFlyerServiceClient()
-      : state_(WAITING_FOR_CREATE), to_connected_(DEFAULT_TIMEOUT_CONNECTED),
-        to_poll_(DEFAULT_POLL_DURATION) {}
+      : state_(WAITING_FOR_CREATE), to_connected_(DEFAULT_TIMEOUT_CONNECTED), to_poll_(DEFAULT_POLL_DURATION) {}
 
   // Destructor
   ~FreeFlyerServiceClient() {}
@@ -81,16 +75,12 @@ public:
   // be true. The non-blocking
   // case will always return false, and you will receive a callback when the
   // connection is ready.
-  bool Create(ros::NodeHandle *nh, std::string const &topic) {
+  bool Create(ros::NodeHandle* nh, std::string const& topic) {
     // Create a timer to poll to see if the server is connected [autostart]
-    timer_connected_ =
-        nh->createTimer(to_connected_, &FreeFlyerServiceClient::TimeoutCallback,
-                        this, true, false);
-    timer_poll_ =
-        nh->createTimer(to_poll_, &FreeFlyerServiceClient::ConnectPollCallback,
-                        this, false, false);
+    timer_connected_ = nh->createTimer(to_connected_, &FreeFlyerServiceClient::TimeoutCallback, this, true, false);
+    timer_poll_      = nh->createTimer(to_poll_, &FreeFlyerServiceClient::ConnectPollCallback, this, false, false);
     // Save the node handle and topic to support reconnects
-    nh_ = nh;
+    nh_    = nh;
     topic_ = topic;
     // Create a persistent connection to the service
     return IsConnected();
@@ -98,70 +88,65 @@ public:
 
   // Check that we are connected to the server
   bool IsConnected() {
-    if (service_.isValid())
-      return true;
+    if (service_.isValid()) return true;
     ConnectPollCallback(ros::TimerEvent());
     return false;
   }
 
   // Call triggers a check for connection in order to prevent continual polling
-  bool Call(ServiceSpec &service) {
-    if (!IsConnected())
-      return false;
+  bool Call(ServiceSpec& service) {
+    if (!IsConnected()) return false;
     return service_.call(service);
   }
 
-protected:
+ protected:
   // Simple wrapper around an optional timer
-  void StartOptionalTimer(ros::Timer &timer, ros::Duration const &duration) {
-    if (duration.isZero())
-      return;
+  void StartOptionalTimer(ros::Timer& timer, ros::Duration const& duration) {
+    if (duration.isZero()) return;
     timer.stop();
     timer.setPeriod(duration);
     timer.start();
   }
 
   // Called periodically until the server is connected
-  void ConnectPollCallback(ros::TimerEvent const &event) {
+  void ConnectPollCallback(ros::TimerEvent const& event) {
     // Case: connected
     if (service_.isValid()) {
       if (state_ != WAITING_FOR_CALL) {
         state_ = WAITING_FOR_CALL;
         timer_connected_.stop();
         timer_poll_.stop();
-        if (cb_connected_)
-          cb_connected_();
+        if (cb_connected_) cb_connected_();
       }
       // Case: disconnected
     } else {
       service_ = nh_->serviceClient<ServiceSpec>(topic_, true);
-      state_ = WAITING_FOR_CONNECT;
+      state_   = WAITING_FOR_CONNECT;
       StartOptionalTimer(timer_connected_, to_connected_);
       StartOptionalTimer(timer_poll_, to_poll_);
     }
   }
 
   // Called when the service doesn't go active or a response isn't received
-  void TimeoutCallback(ros::TimerEvent const &event) {
+  void TimeoutCallback(ros::TimerEvent const& event) {
     timer_connected_.stop();
     timer_poll_.stop();
-    if (cb_timeout_)
-      cb_timeout_();
+    if (cb_timeout_) cb_timeout_();
   }
 
-protected:
-  State state_;
-  ros::Duration to_connected_;
-  ros::Duration to_poll_;
-  TimeoutCallbackType cb_timeout_;
+ protected:
+  State                 state_;
+  ros::Duration         to_connected_;
+  ros::Duration         to_poll_;
+  TimeoutCallbackType   cb_timeout_;
   ConnectedCallbackType cb_connected_;
-  ros::ServiceClient service_;
-  ros::Timer timer_connected_;
-  ros::Timer timer_poll_;
-  std::string topic_;
-  ros::NodeHandle *nh_;
+  ros::ServiceClient    service_;
+  ros::Timer            timer_connected_;
+  ros::Timer            timer_poll_;
+  std::string           topic_;
+  ros::NodeHandle*      nh_;
 };
 
-} // namespace ff_util
+}  // namespace ff_util
 
-#endif // FF_UTIL_FF_SERVICE_H_
+#endif  // FF_UTIL_FF_SERVICE_H_
