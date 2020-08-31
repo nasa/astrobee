@@ -116,6 +116,14 @@ class GraphValues {
   boost::optional<localization_common::Time> LowerBoundOrEqualTimestamp(
       const localization_common::Time timestamp) const;
 
+  // Serialization function
+  friend class boost::serialization::access;
+  template <class ARCHIVE>
+  void serialize(ARCHIVE& ar, const unsigned int /*version*/) {
+    ar& BOOST_SERIALIZATION_NVP(values_);
+    ar& BOOST_SERIALIZATION_NVP(timestamp_key_index_map_);
+  }
+
   // Ideal since this is only kept if there are at least kWindowMinNumberStates
   const double kWindowIdealDuration;
   // Don't leave less than kWindowMinNumberStates per state in window if

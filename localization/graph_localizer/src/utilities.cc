@@ -16,11 +16,10 @@
  * under the License.
  */
 
+#include <graph_localizer/serialization.h>
 #include <graph_localizer/utilities.h>
 #include <imu_integration/utilities.h>
 #include <localization_common/utilities.h>
-
-#include <gtsam/base/serialization.h>
 
 #include <glog/logging.h>
 
@@ -97,7 +96,7 @@ ff_msgs::LocalizationGraph GraphMsg(const GraphLocalizer& graph_localizer) {
   // TODO(rsoussan): set correct time
   lc::TimeToHeader(5, graph_msg.header);
 
-  graph_msg.serialized_graph = gtsam::serializeBinary(graph_localizer);
+  graph_msg.serialized_graph = SerializeBinary(graph_localizer);
   return graph_msg;
 }
 

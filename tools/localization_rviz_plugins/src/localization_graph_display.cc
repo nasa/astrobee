@@ -79,6 +79,8 @@ void LocalizationGraphDisplay::processMessage(const ff_msgs::LocalizationGraph::
   gtsam::deserializeBinary(msg->serialized_graph, graph_localizer);
   std::cout << "num of factors: " << graph_localizer.NumOFFactors() << std::endl;
   std::cout << "num vl factors: " << graph_localizer.NumVLFactors() << std::endl;
+  // TODO(rsoussan): draw axes for each pose!!!!
+  // draw line between each pose?
 
   Ogre::Quaternion orientation;
   Ogre::Vector3 position;
