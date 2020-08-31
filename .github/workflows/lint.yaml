@@ -20,4 +20,4 @@ jobs:
       run: |
         cd repo
         echo "Running clang-format"
-        clang-format -i -style=scripts/git/astrobee.clang-format *.cpp *.cc *.cxx *.h *.hpp
+        find . -regex '.*\.\(cpp\|hpp\|cxx\|c\|cc\|h\)' -exec clang-format -style=file -i {} \;
