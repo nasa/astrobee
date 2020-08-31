@@ -26,7 +26,8 @@
 
 namespace simulation_localizer {
 namespace lc = localization_common;
-SimulationLocalizerNodelet::SimulationLocalizerNodelet() : ff_util::FreeFlyerNodelet(NODE_SIM_LOC, true) {}
+SimulationLocalizerNodelet::SimulationLocalizerNodelet()
+    : ff_util::FreeFlyerNodelet(NODE_SIM_LOC, true), platform_name_(GetPlatform()) {}
 
 void SimulationLocalizerNodelet::Initialize(ros::NodeHandle* nh) {
   ff_common::InitFreeFlyerApplication(getMyArgv());
@@ -74,8 +75,11 @@ void SimulationLocalizerNodelet::PublishLocState(const lc::Time& timestamp) {
   if (!twist_ || !pose_) return;
   const auto loc_state_msg = LocStateMsg(*pose_, *twist_, timestamp);
   state_pub_.publish(loc_state_msg);
-}
 
+  // Also publish world_T_body TF
+  const auto world_T_body_tf = lc::PoseToTF(*pose_, "world", "body", timestamp, platform_name_);
+  transform_pub_.sendTransform(world_T_body_tf);
+}
 }  // namespace simulation_localizer
 
 PLUGINLIB_EXPORT_CLASS(simulation_localizer::SimulationLocalizerNodelet, nodelet::Nodelet);

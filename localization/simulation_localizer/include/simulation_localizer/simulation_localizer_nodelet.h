@@ -29,11 +29,14 @@
 #include <ros/publisher.h>
 #include <ros/subscriber.h>
 #include <std_srvs/Empty.h>
+#include <tf2_ros/transform_broadcaster.h>
 
 #include <boost/optional.hpp>
 
 #include <Eigen/Core>
 #include <Eigen/Geometry>
+
+#include <string>
 
 namespace simulation_localizer {
 class SimulationLocalizerNodelet : public ff_util::FreeFlyerNodelet {
@@ -53,11 +56,13 @@ class SimulationLocalizerNodelet : public ff_util::FreeFlyerNodelet {
 
   void PublishLocState(const localization_common::Time& timestamp);
 
+  std::string platform_name_;
   boost::optional<Eigen::Isometry3d> pose_;
   boost::optional<Twist> twist_;
   int input_mode_ = ff_msgs::SetEkfInputRequest::MODE_TRUTH;
   ros::Subscriber pose_sub_, twist_sub_;
   ros::Publisher state_pub_, pose_pub_, twist_pub_;
+  tf2_ros::TransformBroadcaster transform_pub_;
   ros::ServiceServer input_mode_srv_;
 };
 }  // namespace simulation_localizer

@@ -31,6 +31,7 @@
 #include <Eigen/Core>
 
 #include <geometry_msgs/Pose.h>
+#include <geometry_msgs/TransformStamped.h>
 #include <std_msgs/Header.h>
 
 #include <string>
@@ -85,7 +86,13 @@ gtsam::Pose3 PoseFromMsg(const geometry_msgs::Pose& msg_pose);
 
 void PoseToMsg(const gtsam::Pose3& pose, geometry_msgs::Pose& msg_pose);
 
+geometry_msgs::TransformStamped PoseToTF(const Eigen::Isometry3d& pose, const std::string& parent_frame,
+                                         const std::string& child_frame, const Time timestamp,
+                                         const std::string& platform_name = "");
+
 void EigenPoseToMsg(const Eigen::Isometry3d& pose, geometry_msgs::Pose& msg_pose);
+
+void EigenPoseToMsg(const Eigen::Isometry3d& pose, geometry_msgs::Transform& msg_transform);
 
 void VariancesToCovDiag(const Eigen::Vector3d& variances, float* const cov_diag);
 

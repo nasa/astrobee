@@ -93,9 +93,25 @@ void PoseToMsg(const gtsam::Pose3& pose, geometry_msgs::Pose& msg_pose) {
   VectorToMsg(pose.translation(), msg_pose.position);
 }
 
+geometry_msgs::TransformStamped PoseToTF(const Eigen::Isometry3d& pose, const std::string& parent_frame,
+                                         const std::string& child_frame, const Time timestamp,
+                                         const std::string& platform_name) {
+  geometry_msgs::TransformStamped transform;
+  TimeToHeader(timestamp, transform.header);
+  transform.header.frame_id = parent_frame;
+  transform.child_frame_id = platform_name + child_frame;
+  EigenPoseToMsg(pose, transform.transform);
+  return transform;
+}
+
 void EigenPoseToMsg(const Eigen::Isometry3d& pose, geometry_msgs::Pose& msg_pose) {
   RotationToMsg(Eigen::Quaterniond(pose.linear()), msg_pose.orientation);
   VectorToMsg(pose.translation(), msg_pose.position);
+}
+
+void EigenPoseToMsg(const Eigen::Isometry3d& pose, geometry_msgs::Transform& msg_transform) {
+  RotationToMsg(Eigen::Quaterniond(pose.linear()), msg_transform.rotation);
+  VectorToMsg(pose.translation(), msg_transform.translation);
 }
 
 void VariancesToCovDiag(const Eigen::Vector3d& variances, float* const cov_diag) {
