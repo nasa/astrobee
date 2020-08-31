@@ -79,7 +79,7 @@ void LocalizationGraphDisplay::processMessage(const ff_msgs::LocalizationGraph::
   gtsam::deserializeBinary(msg->serialized_graph, graph_localizer);
   std::cout << "values size: " << graph_localizer.graph_values().values().size() << std::endl;
   const auto latest_timestamp = graph_localizer.graph_values().LatestTimestamp();
-  if (latest_timestamp) std::cout << "values latest time: " << *latest_timestamp << std::endl;
+  if (latest_timestamp) std::cout << std::setprecision(15) << "values latest time: " << *latest_timestamp << std::endl;
   // TODO(rsoussan): draw axes for each pose!!!!
   // draw line between each pose?
 

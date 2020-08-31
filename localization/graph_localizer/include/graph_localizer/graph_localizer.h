@@ -132,10 +132,8 @@ class GraphLocalizer {
   friend class boost::serialization::access;
   template <class ARCHIVE>
   void serialize(ARCHIVE& ar, const unsigned int /*version*/) {
-    // ar& BOOST_SERIALIZATION_NVP(graph_);
+    ar& BOOST_SERIALIZATION_NVP(graph_);
     ar& BOOST_SERIALIZATION_NVP(graph_values_);
-    ar& BOOST_SERIALIZATION_NVP(min_of_avg_distance_from_mean_);
-    ar& BOOST_SERIALIZATION_NVP(world_T_dock_);
   }
 
   // TODO(rsoussan): put these somewhere else
