@@ -50,8 +50,8 @@ TEST(MarkerDetector, TestDetection) {
   expected_corner_loc.push_back(std::make_pair(350, 482));
   expected_corner_loc.push_back(std::make_pair(52, 537));
 
-  cv::Mat  image;
-  IplImage ipl_image;
+  cv::Mat                                     image;
+  IplImage                                    ipl_image;
   std::vector<std::pair<int, int> >::iterator expected_it = expected_corner_loc.begin();
   for (std::string const& image_filename : image_filenames) {
     image     = cv::imread(data_dir + image_filename, CV_LOAD_IMAGE_GRAYSCALE);

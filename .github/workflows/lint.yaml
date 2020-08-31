@@ -15,7 +15,7 @@ jobs:
         source: '.'
         exclude: './submodules'
         extensions: 'cxx'
-        clangFormatVersion: 9
+        clangFormatVersion: 8
         style: file
 
 

@@ -26,12 +26,12 @@
 #include <algorithm>
 #include <string>
 
+using jsonloader::EnumField;
 using jsonloader::Field;
+using jsonloader::ObjectField;
+using jsonloader::RangeField;
 using jsonloader::StringField;
 using jsonloader::ValueField;
-using jsonloader::RangeField;
-using jsonloader::ObjectField;
-using jsonloader::EnumField;
 
 TEST(Validation, Field) {
   const std::string data =

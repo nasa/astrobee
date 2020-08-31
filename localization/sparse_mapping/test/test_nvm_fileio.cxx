@@ -30,11 +30,11 @@
 
 TEST(nvm_fileio, read_write_loop) {
   // Generate a control network with very little in it.
-  std::vector<Eigen::Matrix2Xd> cid_to_keypoint_map, cid_to_keypoint_map2;
-  std::vector<std::string>      cid_to_filename, cid_to_filename2;
+  std::vector<Eigen::Matrix2Xd>    cid_to_keypoint_map, cid_to_keypoint_map2;
+  std::vector<std::string>         cid_to_filename, cid_to_filename2;
   std::vector<std::map<int, int> > pid_to_cid_fid, pid_to_cid_fid2;
-  std::vector<Eigen::Vector3d> pid_to_xyz, pid_to_xyz2;
-  std::vector<Eigen::Affine3d> cid_to_camera_transform, cid_to_camera_transform2;
+  std::vector<Eigen::Vector3d>     pid_to_xyz, pid_to_xyz2;
+  std::vector<Eigen::Affine3d>     cid_to_camera_transform, cid_to_camera_transform2;
   cid_to_keypoint_map.resize(2, Eigen::Matrix2Xd(2, 2));
   cid_to_keypoint_map[0] << 1, 4, 2, 5;
   cid_to_keypoint_map[1] << 7, 10, 8, 11;
