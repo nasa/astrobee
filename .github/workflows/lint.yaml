@@ -14,7 +14,7 @@ jobs:
       with:
         source: '.'
         exclude: './submodules'
-        extensions: 'h,cpp'
+        extensions: 'cxx'
         clangFormatVersion: 9
         style: file
 
