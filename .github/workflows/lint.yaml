@@ -9,15 +9,24 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout
-      uses: actions/checkout@v2
+    - uses: actions/checkout@v2
+    - uses: DoozyX/clang-format-lint-action@v0.8
       with:
-        path: repo/
-    - name: Install clang
-      run: |
-        sudo apt-get install clang-format
-    - name: Run clang
-      run: |
-        cd repo
-        echo "Running clang-format"
-        find . -regex '.*\.\(cpp\|hpp\|cxx\|c\|cc\|h\)' -exec clang-format -style=file -i {} \;
+        source: '.'
+        exclude: './submodules'
+        extensions: 'h,cpp'
+        clangFormatVersion: 9
+        style: file
+
+
+    #   uses: clang-format-lint-action
+    #   with:
+    #     path: repo/
+    # - name: Install clang
+    #   run: |
+    #     sudo apt-get install clang-format
+    # - name: Run clang
+    #   run: |
+    #     cd repo
+    #     echo "Running clang-format"
+    #     find . -regex '.*\.\(cpp\|hpp\|cxx\|c\|cc\|h\)' -exec clang-format -style=file -i {} \;
