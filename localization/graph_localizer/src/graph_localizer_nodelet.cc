@@ -23,6 +23,8 @@
 #include <graph_localizer/utilities.h>
 #include <localization_common/utilities.h>
 
+#include <std_msgs/Empty.h>
+
 #include <glog/logging.h>
 
 namespace graph_localizer {
@@ -36,9 +38,9 @@ void GraphLocalizerNodelet::Initialize(ros::NodeHandle* nh) {
 
 void GraphLocalizerNodelet::SubscribeAndAdvertise(ros::NodeHandle* nh) {
   state_pub_ = nh->advertise<ff_msgs::EkfState>(TOPIC_GRAPH_LOC_STATE, 1);
-  pose_pub_ = nh->advertise<geometry_msgs::PoseStamped>(TOPIC_LOCALIZATION_POSE, 1);
   sparse_mapping_pose_pub_ = nh->advertise<geometry_msgs::PoseStamped>(TOPIC_SPARSE_MAPPING_POSE, 1);
   graph_pub_ = nh->advertise<ff_msgs::LocalizationGraph>(TOPIC_GRAPH_LOC, 1);
+  reset_pub_ = nh->advertise<std_msgs::Empty>(TOPIC_GNC_EKF_RESET, 1);
 
   imu_sub_ = nh->subscribe(TOPIC_HARDWARE_IMU, 1, &GraphLocalizerNodelet::ImuCallback, this,
                            ros::TransportHints().tcpNoDelay());
@@ -75,6 +77,7 @@ bool GraphLocalizerNodelet::localizer_enabled() const { return localizer_enabled
 
 bool GraphLocalizerNodelet::ResetBiasesAndLocalizer(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res) {
   graph_localizer_wrapper_.ResetBiasesAndLocalizer();
+  PublishReset();
   EnableLocalizer();
   return true;
 }
@@ -86,6 +89,7 @@ bool GraphLocalizerNodelet::ResetLocalizer(std_srvs::Empty::Request& req, std_sr
 
 void GraphLocalizerNodelet::ResetAndEnableLocalizer() {
   graph_localizer_wrapper_.ResetLocalizer();
+  PublishReset();
   EnableLocalizer();
 }
 
@@ -94,7 +98,6 @@ void GraphLocalizerNodelet::OpticalFlowCallback(const ff_msgs::Feature2dArray::C
   graph_localizer_wrapper_.OpticalFlowCallback(*feature_array_msg);
 
   // Publish loc information here since graph updates occur on optical flow updates
-  PublishPose();
   PublishLocalizationState();
   PublishLocalizationGraph();
 }
@@ -133,15 +136,6 @@ void GraphLocalizerNodelet::PublishLocalizationGraph() {
   graph_pub_.publish(*latest_localization_graph_msg);
 }
 
-void GraphLocalizerNodelet::PublishPose() const {
-  const auto latest_pose_msg = graph_localizer_wrapper_.LatestPoseMsg();
-  if (!latest_pose_msg) {
-    LOG(WARNING) << "PublishPose: Failed to get latest pose msg.";
-    return;
-  }
-  pose_pub_.publish(*latest_pose_msg);
-}
-
 void GraphLocalizerNodelet::PublishSparseMappingPose() const {
   const auto latest_sparse_mapping_pose_msg = graph_localizer_wrapper_.LatestSparseMappingPoseMsg();
   if (!latest_sparse_mapping_pose_msg) {
@@ -149,6 +143,11 @@ void GraphLocalizerNodelet::PublishSparseMappingPose() const {
     return;
   }
   sparse_mapping_pose_pub_.publish(*latest_sparse_mapping_pose_msg);
+}
+
+void GraphLocalizerNodelet::PublishReset() const {
+  std_msgs::Empty msg;
+  reset_pub_.publish(msg);
 }
 }  // namespace graph_localizer
 

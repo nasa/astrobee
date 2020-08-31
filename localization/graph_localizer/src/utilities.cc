@@ -53,21 +53,6 @@ bool ValidVLMsg(const ff_msgs::VisualLandmarks& visual_landmarks_msg) {
   return !visual_landmarks_msg.landmarks.empty();
 }
 
-boost::optional<geometry_msgs::PoseStamped> LatestPoseMsg(const GraphLocalizer& graph_localizer) {
-  const auto latest_combined_nav_state = graph_localizer.LatestCombinedNavState();
-  if (!latest_combined_nav_state) {
-    LOG(ERROR) << "LatestPoseMsg: Failed to get latest combined nav state.";
-    return boost::none;
-  }
-
-  const ros::Time latest_graph_time(latest_combined_nav_state->timestamp());
-  std_msgs::Header header;
-  header.stamp.sec = latest_graph_time.sec;
-  header.stamp.nsec = latest_graph_time.nsec;
-  const auto latest_graph_localization_pose_msg = PoseMsg(lc::EigenPose(*latest_combined_nav_state), header);
-  return latest_graph_localization_pose_msg;
-}
-
 ff_msgs::EkfState EkfStateMsg(const lc::CombinedNavState& combined_nav_state, const Eigen::Vector3d& acceleration,
                               const Eigen::Vector3d& angular_velocity,
                               const lc::CombinedNavStateCovariances& covariances,

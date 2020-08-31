@@ -147,14 +147,6 @@ const FeatureTrackMap* const GraphLocalizerWrapper::feature_tracks() const {
   return &(graph_localizer_->feature_tracks());
 }
 
-boost::optional<geometry_msgs::PoseStamped> GraphLocalizerWrapper::LatestPoseMsg() const {
-  if (!graph_localizer_) {
-    LOG(ERROR) << "LatestPoseMsg: Failed to get latest pose msg.";
-    return boost::none;
-  }
-  return graph_localizer::LatestPoseMsg(*graph_localizer_);
-}
-
 boost::optional<geometry_msgs::PoseStamped> GraphLocalizerWrapper::LatestSparseMappingPoseMsg() const {
   if (!sparse_mapping_pose_) {
     LOG_EVERY_N(WARNING, 50) << "LatestSparseMappingPoseMsg: Failed to get latest sparse mapping pose msg.";

@@ -54,8 +54,6 @@ bool ValidPointSet(const std::deque<localization_measurements::FeaturePoint>& po
 
 bool ValidVLMsg(const ff_msgs::VisualLandmarks& visual_landmarks_msg);
 
-boost::optional<geometry_msgs::PoseStamped> LatestPoseMsg(const GraphLocalizer& localization_measurements);
-
 ff_msgs::EkfState EkfStateMsg(const localization_common::CombinedNavState& combined_nav_state,
                               const Eigen::Vector3d& acceleration, const Eigen::Vector3d& angular_velocity,
                               const localization_common::CombinedNavStateCovariances& covariances,
