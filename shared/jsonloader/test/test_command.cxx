@@ -1,14 +1,14 @@
 /* Copyright (c) 2017, United States Government, as represented by the
  * Administrator of the National Aeronautics and Space Administration.
- * 
+ *
  * All rights reserved.
- * 
+ *
  * The Astrobee platform is licensed under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -30,7 +30,8 @@ using jsonloader::Command;
 
 TEST(Command, InvalidObject) {
   // Missing "blocking"
-  const std::string data = u8R"({
+  const std::string data =
+      u8R"({
     "type": "not_a_command"
   })";
   Json::Value v;
@@ -40,7 +41,8 @@ TEST(Command, InvalidObject) {
 }
 
 TEST(Command, InvalidCommand) {
-  const std::string data = u8R"({
+  const std::string data =
+      u8R"({
     "type": "not_a_command",
     "blocking": false
   })";
@@ -51,7 +53,8 @@ TEST(Command, InvalidCommand) {
 }
 
 TEST(Command, VaildDockingCommand) {
-  const std::string data = u8R"({
+  const std::string data =
+      u8R"({
     "type" : "dock",
     "berth" : 2,
     "blocking" : true,
@@ -63,19 +66,19 @@ TEST(Command, VaildDockingCommand) {
   Json::Value v;
   Json::Reader().parse(data, v, false);
 
-  Command *cmd = Command::Make(v);
+  Command* cmd = Command::Make(v);
 
   ASSERT_NE(cmd, nullptr);
   ASSERT_STREQ(cmd->type().data(), jsonloader::kCmdDock);
 
-  const jsonloader::DockCommand *d_cmd =
-      dynamic_cast<const jsonloader::DockCommand *>(cmd);
+  const jsonloader::DockCommand* d_cmd = dynamic_cast<const jsonloader::DockCommand*>(cmd);
 
   ASSERT_EQ(d_cmd->berth_number(), 2);
 }
 
 TEST(Command, VaildWaitCommand) {
-  const std::string data = u8R"({
+  const std::string data =
+      u8R"({
     "type": "StationKeep",
     "duration": 1.0,
     "blocking": true
@@ -83,14 +86,15 @@ TEST(Command, VaildWaitCommand) {
   Json::Value v;
   Json::Reader().parse(data, v, false);
 
-  Command *cmd = Command::Make(v);
+  Command* cmd = Command::Make(v);
 
   ASSERT_NE(cmd, nullptr);
   ASSERT_STREQ(cmd->type().data(), jsonloader::kCmdWait);
 }
 
 TEST(Command, VaildGripperCommand) {
-  const std::string data = u8R"({
+  const std::string data =
+      u8R"({
     "type" : "gripperControl",
     "open" : true,
     "blocking" : true,
@@ -102,20 +106,20 @@ TEST(Command, VaildGripperCommand) {
   Json::Value v;
   Json::Reader().parse(data, v, false);
 
-  Command *cmd = Command::Make(v);
+  Command* cmd = Command::Make(v);
 
   ASSERT_NE(cmd, nullptr);
   ASSERT_TRUE(cmd->valid());
   ASSERT_STREQ(cmd->type().data(), jsonloader::kCmdGripper);
 
-  const jsonloader::GripperCommand *g_cmd =
-      dynamic_cast<const jsonloader::GripperCommand *>(cmd);
+  const jsonloader::GripperCommand* g_cmd = dynamic_cast<const jsonloader::GripperCommand*>(cmd);
 
   ASSERT_EQ(g_cmd->open(), true);
 }
 
 TEST(Command, VaildDataCommand) {
-  const std::string data = u8R"({
+  const std::string data =
+      u8R"({
     "type" : "downloadData",
     "dataMethod" : "Immediate",
     "blocking" : true,
@@ -127,20 +131,20 @@ TEST(Command, VaildDataCommand) {
   Json::Value v;
   Json::Reader().parse(data, v, false);
 
-  Command *cmd = Command::Make(v);
+  Command* cmd = Command::Make(v);
 
   ASSERT_NE(cmd, nullptr);
   ASSERT_TRUE(cmd->valid());
   ASSERT_STREQ(cmd->type().data(), jsonloader::kCmdDownload);
 
-  const jsonloader::DataCommand *d_cmd =
-      dynamic_cast<const jsonloader::DataCommand *>(cmd);
+  const jsonloader::DataCommand* d_cmd = dynamic_cast<const jsonloader::DataCommand*>(cmd);
 
   ASSERT_STREQ(d_cmd->data_method().data(), "Immediate");
 }
 
 TEST(Command, ValidGuestScienceCommand) {
-  const std::string data = u8R"({
+  const std::string data =
+      u8R"({
     "type" : "startGuestScience",
     "apkName" : "gov.nasa.arc.irg.astrobee.air_sampler",
     "blocking" : true,
@@ -152,20 +156,20 @@ TEST(Command, ValidGuestScienceCommand) {
   Json::Value v;
   Json::Reader().parse(data, v, false);
 
-  Command *cmd = Command::Make(v);
+  Command* cmd = Command::Make(v);
 
   ASSERT_NE(cmd, nullptr);
   ASSERT_TRUE(cmd->valid());
   ASSERT_STREQ(cmd->type().data(), jsonloader::kCmdStartGuest);
 
-  const jsonloader::GuestScienceCommand *gs_cmd =
-      dynamic_cast<const jsonloader::GuestScienceCommand *>(cmd);
+  const jsonloader::GuestScienceCommand* gs_cmd = dynamic_cast<const jsonloader::GuestScienceCommand*>(cmd);
 
   ASSERT_STREQ(gs_cmd->apk().data(), "gov.nasa.arc.irg.astrobee.air_sampler");
 }
 
 TEST(Command, ValidGuestCustomCommand) {
-  const std::string data = u8R"({
+  const std::string data =
+      u8R"({
     "type" : "customGuestScience",
     "command" : "{name=Take, num=5, time_between=10}",
     "apkName" : "gov.nasa.arc.irg.astrobee.air_sampler",
@@ -178,21 +182,21 @@ TEST(Command, ValidGuestCustomCommand) {
   Json::Value v;
   Json::Reader().parse(data, v, false);
 
-  Command *cmd = Command::Make(v);
+  Command* cmd = Command::Make(v);
 
   ASSERT_NE(cmd, nullptr);
   ASSERT_TRUE(cmd->valid());
   ASSERT_STREQ(cmd->type().data(), jsonloader::kCmdCustomGuest);
 
-  const jsonloader::CustomGuestScienceCommand *gs_cmd =
-      dynamic_cast<const jsonloader::CustomGuestScienceCommand *>(cmd);
+  const jsonloader::CustomGuestScienceCommand* gs_cmd = dynamic_cast<const jsonloader::CustomGuestScienceCommand*>(cmd);
 
   ASSERT_STREQ(gs_cmd->apk().data(), "gov.nasa.arc.irg.astrobee.air_sampler");
   ASSERT_STREQ(gs_cmd->command().data(), "{name=Take, num=5, time_between=10}");
 }
 
 TEST(Command, VaildGenericCommand) {
-  const std::string data = u8R"({
+  const std::string data =
+      u8R"({
     "type" : "genericCommand",
     "commandName" : "CommandName",
     "param" : "Parameters",
@@ -205,20 +209,20 @@ TEST(Command, VaildGenericCommand) {
   Json::Value v;
   Json::Reader().parse(data, v, false);
 
-  Command *cmd = Command::Make(v);
+  Command* cmd = Command::Make(v);
 
   ASSERT_NE(cmd, nullptr);
   ASSERT_STREQ(cmd->type().data(), jsonloader::kCmdGenericCmd);
 
-  const jsonloader::GenericCommand *g_cmd =
-      dynamic_cast<const jsonloader::GenericCommand *>(cmd);
+  const jsonloader::GenericCommand* g_cmd = dynamic_cast<const jsonloader::GenericCommand*>(cmd);
 
   ASSERT_STREQ(g_cmd->name().data(), "CommandName");
   ASSERT_STREQ(g_cmd->param().data(), "Parameters");
 }
 
 TEST(Command, VaildSetCameraCommand) {
-  const std::string data = u8R"({
+  const std::string data =
+      u8R"({
       "type" : "setCamera",
       "options" : {
         "cameraName" : "Navigation",
@@ -252,13 +256,12 @@ TEST(Command, VaildSetCameraCommand) {
   Json::Value v;
   Json::Reader().parse(data, v, false);
 
-  Command *cmd = Command::Make(v);
+  Command* cmd = Command::Make(v);
 
   ASSERT_NE(cmd, nullptr);
   ASSERT_STREQ(cmd->type().data(), jsonloader::kCmdSetCamera);
 
-  const jsonloader::SetCameraCommand *s_cmd =
-      dynamic_cast<const jsonloader::SetCameraCommand *>(cmd);
+  const jsonloader::SetCameraCommand* s_cmd = dynamic_cast<const jsonloader::SetCameraCommand*>(cmd);
 
   ASSERT_STREQ(s_cmd->mode().data(), "Recording");
   ASSERT_STREQ(s_cmd->camera().data(), "Navigation");
@@ -268,7 +271,8 @@ TEST(Command, VaildSetCameraCommand) {
 }
 
 TEST(Command, VaildStreamingCamera) {
-  const std::string data = u8R"({
+  const std::string data =
+      u8R"({
     "type" : "setCameraStreaming",
     "stream" : true,
     "cameraName" : "Navigation",
@@ -281,20 +285,20 @@ TEST(Command, VaildStreamingCamera) {
   Json::Value v;
   Json::Reader().parse(data, v, false);
 
-  Command *cmd = Command::Make(v);
+  Command* cmd = Command::Make(v);
 
   ASSERT_NE(cmd, nullptr);
   ASSERT_STREQ(cmd->type().data(), jsonloader::kCmdStreamCamera);
 
-  const jsonloader::StreamCameraCommand *s_cmd =
-      dynamic_cast<const jsonloader::StreamCameraCommand *>(cmd);
+  const jsonloader::StreamCameraCommand* s_cmd = dynamic_cast<const jsonloader::StreamCameraCommand*>(cmd);
 
   ASSERT_STREQ(s_cmd->camera().data(), "Navigation");
   ASSERT_EQ(s_cmd->stream(), true);
 }
 
 TEST(Command, ValidCheckObstacles) {
-  const std::string data = u8R"({
+  const std::string data =
+      u8R"({
       "type" : "setCheckObstacles",
       "checkObstacles" : true,
       "blocking" : true,
@@ -306,19 +310,19 @@ TEST(Command, ValidCheckObstacles) {
   Json::Value v;
   Json::Reader().parse(data, v, false);
 
-  Command *cmd = Command::Make(v);
+  Command* cmd = Command::Make(v);
 
   ASSERT_NE(cmd, nullptr);
   ASSERT_STREQ(cmd->type().data(), jsonloader::kCmdChkObstacles);
 
-  const jsonloader::SetCheckObstaclesCommand *s_cmd =
-      dynamic_cast<const jsonloader::SetCheckObstaclesCommand *>(cmd);
+  const jsonloader::SetCheckObstaclesCommand* s_cmd = dynamic_cast<const jsonloader::SetCheckObstaclesCommand*>(cmd);
 
   ASSERT_EQ(s_cmd->checkObstacles(), true);
 }
 
 TEST(Command, ValidCheckZones) {
-  const std::string data = u8R"({
+  const std::string data =
+      u8R"({
       "type" : "setCheckZones",
       "checkZones" : true,
       "blocking" : true,
@@ -330,19 +334,19 @@ TEST(Command, ValidCheckZones) {
   Json::Value v;
   Json::Reader().parse(data, v, false);
 
-  Command *cmd = Command::Make(v);
+  Command* cmd = Command::Make(v);
 
   ASSERT_NE(cmd, nullptr);
   ASSERT_STREQ(cmd->type().data(), jsonloader::kCmdChkZones);
 
-  const jsonloader::SetCheckZonesCommand *s_cmd =
-      dynamic_cast<const jsonloader::SetCheckZonesCommand *>(cmd);
+  const jsonloader::SetCheckZonesCommand* s_cmd = dynamic_cast<const jsonloader::SetCheckZonesCommand*>(cmd);
 
   ASSERT_EQ(s_cmd->checkZones(), true);
 }
 
 TEST(Command, ValidHolonomicMode) {
-  const std::string data = u8R"({
+  const std::string data =
+      u8R"({
       "type" : "setHolonomicMode",
       "enableHolonomic" : true,
       "blocking" : true,
@@ -354,19 +358,19 @@ TEST(Command, ValidHolonomicMode) {
   Json::Value v;
   Json::Reader().parse(data, v, false);
 
-  Command *cmd = Command::Make(v);
+  Command* cmd = Command::Make(v);
 
   ASSERT_NE(cmd, nullptr);
   ASSERT_STREQ(cmd->type().data(), jsonloader::kCmdSetHolonomic);
 
-  const jsonloader::SetHolonomicModeCommand *s_cmd =
-      dynamic_cast<const jsonloader::SetHolonomicModeCommand *>(cmd);
+  const jsonloader::SetHolonomicModeCommand* s_cmd = dynamic_cast<const jsonloader::SetHolonomicModeCommand*>(cmd);
 
   ASSERT_EQ(s_cmd->enableHolonomic(), true);
 }
 
 TEST(Command, ValidTelemetryRate) {
-  const std::string data = u8R"({
+  const std::string data =
+      u8R"({
       "type" : "setTelemetryRate",
       "rate" : 5.0,
       "telemetryName" : "CommStatus",
@@ -379,20 +383,20 @@ TEST(Command, ValidTelemetryRate) {
   Json::Value v;
   Json::Reader().parse(data, v, false);
 
-  Command *cmd = Command::Make(v);
+  Command* cmd = Command::Make(v);
 
   ASSERT_NE(cmd, nullptr);
   ASSERT_STREQ(cmd->type().data(), jsonloader::kCmdTelemRate);
 
-  const jsonloader::SetTelemetryRateCommand *s_cmd =
-      dynamic_cast<const jsonloader::SetTelemetryRateCommand *>(cmd);
+  const jsonloader::SetTelemetryRateCommand* s_cmd = dynamic_cast<const jsonloader::SetTelemetryRateCommand*>(cmd);
 
   ASSERT_STREQ(s_cmd->telemetryName().data(), "CommStatus");
   ASSERT_FLOAT_EQ(s_cmd->rate(), 5.0f);
 }
 
 TEST(Command, ValidPlanner) {
-  const std::string data = u8R"({
+  const std::string data =
+      u8R"({
       "type" : "setPlanner",
       "planner" : "trapezoidal",
       "blocking" : true,
@@ -404,19 +408,19 @@ TEST(Command, ValidPlanner) {
   Json::Value v;
   Json::Reader().parse(data, v, false);
 
-  Command *cmd = Command::Make(v);
+  Command* cmd = Command::Make(v);
 
   ASSERT_NE(cmd, nullptr);
   ASSERT_STREQ(cmd->type().data(), jsonloader::kCmdSetPlanner);
 
-  const jsonloader::SetPlannerCommand *s_cmd =
-      dynamic_cast<const jsonloader::SetPlannerCommand *>(cmd);
+  const jsonloader::SetPlannerCommand* s_cmd = dynamic_cast<const jsonloader::SetPlannerCommand*>(cmd);
 
   ASSERT_STREQ(s_cmd->planner().data(), "trapezoidal");
 }
 
 TEST(Command, ValidLocalizationMode) {
-  const std::string data = u8R"({
+  const std::string data =
+      u8R"({
       "type" : "switchLocalization",
       "mode" : "MappedLandmarks",
       "blocking" : true,
@@ -428,19 +432,19 @@ TEST(Command, ValidLocalizationMode) {
   Json::Value v;
   Json::Reader().parse(data, v, false);
 
-  Command *cmd = Command::Make(v);
+  Command* cmd = Command::Make(v);
 
   ASSERT_NE(cmd, nullptr);
   ASSERT_STREQ(cmd->type().data(), jsonloader::kCmdSwitchLocal);
 
-  const jsonloader::SwitchLocalizationCommand *s_cmd =
-      dynamic_cast<const jsonloader::SwitchLocalizationCommand *>(cmd);
+  const jsonloader::SwitchLocalizationCommand* s_cmd = dynamic_cast<const jsonloader::SwitchLocalizationCommand*>(cmd);
 
   ASSERT_STREQ(s_cmd->mode().data(), "MappedLandmarks");
 }
 
 TEST(Command, ValidStartRecording) {
-  const std::string data = u8R"({
+  const std::string data =
+      u8R"({
       "type" : "startRecording",
       "description" : "mom",
       "blocking" : true,
@@ -452,13 +456,12 @@ TEST(Command, ValidStartRecording) {
   Json::Value v;
   Json::Reader().parse(data, v, false);
 
-  Command *cmd = Command::Make(v);
+  Command* cmd = Command::Make(v);
 
   ASSERT_NE(cmd, nullptr);
   ASSERT_STREQ(cmd->type().data(), jsonloader::kCmdStartRecord);
 
-  const jsonloader::StartRecordingCommand *s_cmd =
-      dynamic_cast<const jsonloader::StartRecordingCommand *>(cmd);
+  const jsonloader::StartRecordingCommand* s_cmd = dynamic_cast<const jsonloader::StartRecordingCommand*>(cmd);
 
   ASSERT_STREQ(s_cmd->description().data(), "mom");
 }

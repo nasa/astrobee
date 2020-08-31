@@ -1,14 +1,14 @@
 /* Copyright (c) 2017, United States Government, as represented by the
  * Administrator of the National Aeronautics and Space Administration.
- * 
+ *
  * All rights reserved.
- * 
+ *
  * The Astrobee platform is licensed under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -18,8 +18,8 @@
 
 #include <marker_tracking/arxmlio.h>
 
-#include <gtest/gtest.h>
 #include <glog/logging.h>
+#include <gtest/gtest.h>
 
 #include <string>
 
@@ -27,8 +27,7 @@ TEST(AR_XML_IO, Reading) {
   std::string data_dir = std::string(TEST_DIR) + "/data/";
 
   marker_tracking::ARTagMap ar_tags;
-  marker_tracking::LoadARTagLocation(data_dir + "ar_lab_tags.xml",
-                                     &ar_tags);
+  marker_tracking::LoadARTagLocation(data_dir + "ar_lab_tags.xml", &ar_tags);
 
   // There are 2 traditional AR tags and then one multiscale AR tag. A
   // multscale AR tag is 9 trad AR tags.

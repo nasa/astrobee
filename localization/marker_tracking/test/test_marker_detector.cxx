@@ -1,14 +1,14 @@
 /* Copyright (c) 2017, United States Government, as represented by the
  * Administrator of the National Aeronautics and Space Administration.
- * 
+ *
  * All rights reserved.
- * 
+ *
  * The Astrobee platform is licensed under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -16,11 +16,11 @@
  * under the License.
  */
 
-#include <marker_tracking/marker_detector.h>
 #include <camera/camera_params.h>
+#include <marker_tracking/marker_detector.h>
 
-#include <gtest/gtest.h>
 #include <glog/logging.h>
+#include <gtest/gtest.h>
 #include <opencv2/highgui/highgui.hpp>
 
 #include <string>
@@ -31,8 +31,7 @@ TEST(MarkerDetector, TestDetection) {
   std::string data_dir = std::string(TEST_DIR) + "/data/";
 
   // Create a fake alvar camera for our work.
-  camera::CameraParameters cam(Eigen::Vector2i(816, 612),
-      Eigen::Vector2d::Constant(2), Eigen::Vector2d(408, 306));
+  camera::CameraParameters cam(Eigen::Vector2i(816, 612), Eigen::Vector2d::Constant(2), Eigen::Vector2d(408, 306));
 
   marker_tracking::MarkerCornerDetector detector(cam);
 
@@ -51,11 +50,11 @@ TEST(MarkerDetector, TestDetection) {
   expected_corner_loc.push_back(std::make_pair(350, 482));
   expected_corner_loc.push_back(std::make_pair(52, 537));
 
-  cv::Mat image;
+  cv::Mat  image;
   IplImage ipl_image;
   std::vector<std::pair<int, int> >::iterator expected_it = expected_corner_loc.begin();
   for (std::string const& image_filename : image_filenames) {
-    image = cv::imread(data_dir + image_filename, CV_LOAD_IMAGE_GRAYSCALE);
+    image     = cv::imread(data_dir + image_filename, CV_LOAD_IMAGE_GRAYSCALE);
     ipl_image = image;
     detector.Detect(&ipl_image, 0.08, 0.2);
     EXPECT_EQ(1u, detector.NumMarkers());

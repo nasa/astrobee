@@ -1,14 +1,14 @@
 /* Copyright (c) 2017, United States Government, as represented by the
  * Administrator of the National Aeronautics and Space Administration.
- * 
+ *
  * All rights reserved.
- * 
+ *
  * The Astrobee platform is licensed under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -18,9 +18,9 @@
 
 #include <camera/camera_params.h>
 
-#include <Eigen/Geometry>
 #include <ceres/rotation.h>
 #include <gtest/gtest.h>
+#include <Eigen/Geometry>
 
 #include <functional>
 #include <list>
@@ -28,10 +28,14 @@
 #include <string>
 #include <vector>
 
-#define EXPECT_VECTOR3D_NEAR(p1, p2, t) EXPECT_NEAR(p1[0], p2[0], t); EXPECT_NEAR(p1[1], p2[1], t); \
+#define EXPECT_VECTOR3D_NEAR(p1, p2, t) \
+  EXPECT_NEAR(p1[0], p2[0], t);         \
+  EXPECT_NEAR(p1[1], p2[1], t);         \
   EXPECT_NEAR(p1[2], p2[2], t);
 
-#define EXPECT_VECTOR2D_NEAR(p1, p2, t) EXPECT_NEAR(p1[0], p2[0], t); EXPECT_NEAR(p1[1], p2[1], t);
+#define EXPECT_VECTOR2D_NEAR(p1, p2, t) \
+  EXPECT_NEAR(p1[0], p2[0], t);         \
+  EXPECT_NEAR(p1[1], p2[1], t);
 
 void Function(camera::CameraParameters const& params) {
   EXPECT_VECTOR2D_NEAR(Eigen::Vector2i(1200, 600), params.GetDistortedSize(), 1e-3);
@@ -44,10 +48,7 @@ void Function(camera::CameraParameters const& params) {
 }
 
 TEST(camera_params, creation) {
-  camera::CameraParameters params(
-      Eigen::Vector2i(1200, 600),
-      Eigen::Vector2d(300, 200),
-      Eigen::Vector2d(660.7, 500.3));
+  camera::CameraParameters params(Eigen::Vector2i(1200, 600), Eigen::Vector2d(300, 200), Eigen::Vector2d(660.7, 500.3));
   EXPECT_VECTOR2D_NEAR(params.GetDistortedHalfSize(), Eigen::Vector2i(600, 300), 1e-3);
   EXPECT_VECTOR2D_NEAR(params.GetUndistortedHalfSize(), Eigen::Vector2i(600, 300), 1e-3);
   EXPECT_EQ(0, params.GetDistortion().size());
@@ -127,7 +128,6 @@ TEST(camera_params, creation) {
   list.emplace_back(params);
 }
 
-
 TEST(camera_params, conversion) {
   //       raw d d_c u u_c
   // 1      --->
@@ -143,10 +143,8 @@ TEST(camera_params, conversion) {
 
   Eigen::VectorXd distortion(1);
   distortion[0] = 0.7;  // FOV model
-  camera::CameraParameters params(
-      Eigen::Vector2i(1200, 600),
-      Eigen::Vector2d(300, 300),
-      Eigen::Vector2d(660.5, 500.3), distortion);
+  camera::CameraParameters params(Eigen::Vector2i(1200, 600), Eigen::Vector2d(300, 300), Eigen::Vector2d(660.5, 500.3),
+                                  distortion);
   params.SetCropOffset(Eigen::Vector2i(25, 50));
 
   // RAW to DISTORTED conversions
