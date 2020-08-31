@@ -77,11 +77,13 @@ class GraphLocalizer {
 
   boost::optional<std::pair<gtsam::imuBias::ConstantBias, localization_common::Time>> LatestBiases() const;
 
-  // Helper function for filling in loc state msg
   int NumOFFactors() const;
 
-  // Helper function for filling in loc state msg
   int NumVLFactors() const;
+
+  const GraphValues& graph_values() const;
+
+  const gtsam::NonlinearFactorGraph& factor_graph() const;
 
  private:
   // Removes Keys and Values outside of sliding window.

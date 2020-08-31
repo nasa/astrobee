@@ -46,7 +46,7 @@
   <!-- Record output if required -->
   <group if="$(arg record)">
     <arg name="output_bagfile"/>             
-    <include file="$(find astrobee)/launch/offline_localization/record_localization.launch">
+    <include file="$(find astrobee)/launch/offline_localization/launch/record_localization.launch">
       <arg name="terminal" value="terminator -x"/>
       <arg name="output_bagfile" value="$(arg output_bagfile)"/>
     </include>

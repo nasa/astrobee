@@ -545,6 +545,10 @@ int GraphLocalizer::NumOFFactors() const {
 
 int GraphLocalizer::NumVLFactors() const { return NumFactors<gtsam::LocProjectionFactor<>>(); }
 
+const GraphValues& GraphLocalizer::graph_values() const { return graph_values_; }
+
+const gtsam::NonlinearFactorGraph& GraphLocalizer::factor_graph() const { return graph_; }
+
 bool GraphLocalizer::Update() {
   LOG(INFO) << "Update: Updating.";
 

@@ -77,8 +77,9 @@ void LocalizationGraphDisplay::processMessage(const ff_msgs::LocalizationGraph::
   graph_localizer::GraphLocalizerParams params;
   graph_localizer::GraphLocalizer graph_localizer(params);
   gtsam::deserializeBinary(msg->serialized_graph, graph_localizer);
-  std::cout << "num of factors: " << graph_localizer.NumOFFactors() << std::endl;
-  std::cout << "num vl factors: " << graph_localizer.NumVLFactors() << std::endl;
+  std::cout << "values size: " << graph_localizer.graph_values().values().size() << std::endl;
+  const auto latest_timestamp = graph_localizer.graph_values().LatestTimestamp();
+  if (latest_timestamp) std::cout << "values latest time: " << *latest_timestamp << std::endl;
   // TODO(rsoussan): draw axes for each pose!!!!
   // draw line between each pose?
 
