@@ -26,6 +26,11 @@
 #include <ros/publisher.h>
 #include <ros/subscriber.h>
 #include <sensor_msgs/Imu.h>
+#include <tf2_ros/transform_broadcaster.h>
+
+#include <boost/optional.hpp>
+
+#include <string>
 
 namespace imu_augmentor {
 class ImuAugmentorNodelet : public ff_util::FreeFlyerNodelet {
@@ -41,11 +46,15 @@ class ImuAugmentorNodelet : public ff_util::FreeFlyerNodelet {
 
   void LocalizationStateCallback(const ff_msgs::EkfState::ConstPtr& loc_msg);
 
-  void PublishLatestImuAugmentedLocalizationState();
+  boost::optional<ff_msgs::EkfState> PublishLatestImuAugmentedLocalizationState();
+
+  void PublishPoseAndTwistAndTransform(const ff_msgs::EkfState& loc_msg);
 
   imu_augmentor::ImuAugmentorWrapper imu_augmentor_wrapper_;
+  std::string platform_name_;
   ros::Subscriber imu_sub_, state_sub_;
-  ros::Publisher state_pub_;
+  ros::Publisher state_pub_, pose_pub_, twist_pub_;
+  tf2_ros::TransformBroadcaster transform_pub_;
 };
 }  // namespace imu_augmentor
 

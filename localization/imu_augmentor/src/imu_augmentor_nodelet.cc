@@ -19,16 +19,22 @@
 #include <ff_util/ff_names.h>
 #include <imu_augmentor/imu_augmentor_nodelet.h>
 
+#include <geometry_msgs/PoseStamped.h>
+#include <geometry_msgs/TwistStamped.h>
+
 #include <glog/logging.h>
 
 namespace imu_augmentor {
 
-ImuAugmentorNodelet::ImuAugmentorNodelet() {}
+ImuAugmentorNodelet::ImuAugmentorNodelet() : platform_name_(GetPlatform()) {}
 
 void ImuAugmentorNodelet::Initialize(ros::NodeHandle* nh) { SubscribeAndAdvertise(nh); }
 
 void ImuAugmentorNodelet::SubscribeAndAdvertise(ros::NodeHandle* nh) {
   state_pub_ = nh->advertise<ff_msgs::EkfState>(TOPIC_GNC_EKF, 1);
+  pose_pub_ = nh->advertise<geometry_msgs::PoseStamped>(TOPIC_LOCALIZATION_POSE, 1);
+  twist_pub_ = nh->advertise<geometry_msgs::TwistStamped>(TOPIC_LOCALIZATION_TWIST, 1);
+
   imu_sub_ =
       nh->subscribe(TOPIC_HARDWARE_IMU, 1, &ImuAugmentorNodelet::ImuCallback, this, ros::TransportHints().tcpNoDelay());
   state_sub_ = nh->subscribe(TOPIC_GRAPH_LOC_STATE, 1, &ImuAugmentorNodelet::LocalizationStateCallback, this,
@@ -37,21 +43,50 @@ void ImuAugmentorNodelet::SubscribeAndAdvertise(ros::NodeHandle* nh) {
 
 void ImuAugmentorNodelet::ImuCallback(const sensor_msgs::Imu::ConstPtr& imu_msg) {
   imu_augmentor_wrapper_.ImuCallback(*imu_msg);
-  PublishLatestImuAugmentedLocalizationState();
+  const auto loc_msg = PublishLatestImuAugmentedLocalizationState();
+  if (loc_msg) {
+    PublishPoseAndTwistAndTransform(*loc_msg);
+  }
 }
 
 void ImuAugmentorNodelet::LocalizationStateCallback(const ff_msgs::EkfState::ConstPtr& loc_msg) {
   imu_augmentor_wrapper_.LocalizationStateCallback(*loc_msg);
 }
 
-void ImuAugmentorNodelet::PublishLatestImuAugmentedLocalizationState() {
+boost::optional<ff_msgs::EkfState> ImuAugmentorNodelet::PublishLatestImuAugmentedLocalizationState() {
   const auto latest_imu_augmented_loc_msg = imu_augmentor_wrapper_.LatestImuAugmentedLocalizationMsg();
   if (!latest_imu_augmented_loc_msg) {
     LOG_EVERY_N(WARNING, 50)
         << "PublishLatestImuAugmentedLocalizationState: Failed to get latest imu augmented loc msg.";
-    return;
+    return boost::none;
   }
   state_pub_.publish(*latest_imu_augmented_loc_msg);
+  return latest_imu_augmented_loc_msg;
+}
+
+void ImuAugmentorNodelet::PublishPoseAndTwistAndTransform(const ff_msgs::EkfState& loc_msg) {
+  // Publish pose
+  geometry_msgs::PoseStamped pose_msg;
+  pose_msg.header = loc_msg.header;
+  pose_msg.pose = loc_msg.pose;
+  pose_pub_.publish(pose_msg);
+
+  // Publish twist
+  geometry_msgs::TwistStamped twist_msg;
+  twist_msg.header = loc_msg.header;
+  twist_msg.twist.linear = loc_msg.velocity;
+  twist_msg.twist.angular = loc_msg.omega;
+  twist_pub_.publish(twist_msg);
+
+  // Publish TF
+  geometry_msgs::TransformStamped transform_msg;
+  transform_msg.header = loc_msg.header;
+  transform_msg.child_frame_id = platform_name_ + "body";
+  transform_msg.transform.translation.x = loc_msg.pose.position.x;
+  transform_msg.transform.translation.y = loc_msg.pose.position.y;
+  transform_msg.transform.translation.z = loc_msg.pose.position.z;
+  transform_msg.transform.rotation = loc_msg.pose.orientation;
+  transform_pub_.sendTransform(transform_msg);
 }
 }  // namespace imu_augmentor
 
