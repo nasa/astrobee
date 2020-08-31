@@ -29,15 +29,11 @@
 
 namespace ff_util {
 
-//////////////////////////////////////// ACTION CLIENT CODE
-///////////////////////////////////////////////////
+//////////////////////////////////////// ACTION CLIENT CODE ////////////////////////////////////////////////
 
-// This is a simple wrapper around a ROS service client, which forces the
-// connection to be persistent, and
-// handles reconnection if the connection is dropped. This improves the
-// performance of the service call as
-// the connection is not established on each query, at the expense of a little
-// more complexity.
+// This is a simple wrapper around a ROS service client, which forces the connection to be persistent, and
+// handles reconnection if the connection is dropped. This improves the performance of the service call as
+// the connection is not established on each query, at the expense of a little more complexity.
 
 template <class ServiceSpec>
 class FreeFlyerServiceClient {
@@ -69,12 +65,9 @@ class FreeFlyerServiceClient {
   // Destructor
   ~FreeFlyerServiceClient() {}
 
-  // Try and connect to the service client, and return whether the connection is
-  // active. In the blocking
-  // case (NOT RECOMMENDED) if the server exists, then the return value should
-  // be true. The non-blocking
-  // case will always return false, and you will receive a callback when the
-  // connection is ready.
+  // Try and connect to the service client, and return whether the connection is active. In the blocking
+  // case (NOT RECOMMENDED) if the server exists, then the return value should be true. The non-blocking
+  // case will always return false, and you will receive a callback when the connection is ready.
   bool Create(ros::NodeHandle* nh, std::string const& topic) {
     // Create a timer to poll to see if the server is connected [autostart]
     timer_connected_ = nh->createTimer(to_connected_, &FreeFlyerServiceClient::TimeoutCallback, this, true, false);
