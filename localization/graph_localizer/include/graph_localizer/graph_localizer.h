@@ -130,10 +130,33 @@ class GraphLocalizer {
 
   // Serialization function
   friend class boost::serialization::access;
-  template <class ARCHIVE>
-  void serialize(ARCHIVE& ar, const unsigned int /*version*/) {
-    ar& BOOST_SERIALIZATION_NVP(graph_);
-    ar& BOOST_SERIALIZATION_NVP(graph_values_);
+  template <class Archive>
+  void save(Archive& ar, const unsigned int version) const {
+    // Workaround to removed combined imu factors before serializing.
+    // This avoids a bug in gtsam for serializing combined imu factors.
+    // Remove when new stable gtsam version is available.
+    gtsam::NonlinearFactorGraph graph_copy = graph_;
+    for (auto factor_it = graph_copy.begin(); factor_it != graph_copy.end();) {
+      if (dynamic_cast<gtsam::CombinedImuFactor*>(factor_it->get())) {
+        factor_it = graph_copy.erase(factor_it);
+        continue;
+      }
+      ++factor_it;
+    }
+
+    ar << graph_copy;
+    ar << graph_values_;
+  }
+
+  template <class Archive>
+  void load(Archive& ar, const unsigned int version) {
+    ar >> graph_;
+    ar >> graph_values_;
+  }
+
+  template <class Archive>
+  void serialize(Archive& ar, const unsigned int file_version) {
+    boost::serialization::split_member(ar, *this, file_version);
   }
 
   // TODO(rsoussan): put these somewhere else
