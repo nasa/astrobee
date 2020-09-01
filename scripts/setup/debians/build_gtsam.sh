@@ -17,8 +17,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-PACKAGE_NAME=gtsam
-ORIG_TAR=gtsam_4.0.2.orig.tar.gz
+PACKAGE_NAME=libgtsam
+ORIG_TAR=libgtsam_4.0.2.orig.tar.gz
 DEB_DIR=gtsam
 
 if [ -d $PACKAGE_NAME ]; then
