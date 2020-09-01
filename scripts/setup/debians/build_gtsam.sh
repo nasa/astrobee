@@ -18,13 +18,13 @@
 # under the License.
 
 PACKAGE_NAME=gtsam
-ORIG_TAR=gtsam_4.0.orig.tar.gz
+ORIG_TAR=gtsam_4.0.2.orig.tar.gz
 DEB_DIR=gtsam
 
 if [ -d $PACKAGE_NAME ]; then
   rm -rf $PACKAGE_NAME
 fi
-git clone --quiet https://github.com/borglab/gtsam.git $PACKAGE_NAME --branch master 2>&1 || exit 1
+git clone --quiet https://github.com/borglab/gtsam.git $PACKAGE_NAME --branch 4.0.2 2>&1 || exit 1
 cd $PACKAGE_NAME
 git archive --prefix=$PACKAGE_NAME/ --output=../$ORIG_TAR --format tar.gz HEAD || exit 1
 cp -r ../$DEB_DIR debian
