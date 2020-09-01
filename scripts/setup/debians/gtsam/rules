@@ -13,6 +13,8 @@
 # package maintainers to append LDFLAGS
 #export DEB_LDFLAGS_MAINT_APPEND = -Wl,--as-needed
 
+export DEB_CPPFLAGS_MAINT_APPEND = -DGTSAM_BUILD_WITH_MARCH_NATIVE=OFF -DGTSAM_USE_SYSTEM_EIGEN=ON -DGTSAM_WITH_TBB=OFF 
+
 
 %:
 	dh $@ --buildsystem=cmake
