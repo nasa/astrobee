@@ -78,6 +78,7 @@ ros-melodic-xacro
 ros-melodic-octomap
 libalvar2
 libdbow21
+libgtsam
 libopenmvg1
 libroyale1
 libceres1
@@ -114,6 +115,7 @@ libjson-c-dev
 libargtable2-dev
 libalvar-dev
 libdbow2-dev
+libgtsam-dev
 libopenmvg-dev
 libroyale-dev
 libceres-dev

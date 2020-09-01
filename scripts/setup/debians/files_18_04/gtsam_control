@@ -1,0 +1,18 @@
+Source: gtsam
+Priority: optional
+Maintainer: Ryan Soussan <nospam@nospam.org>
+Build-Depends: debhelper (>=9), cmake (>=3.5), libboost-dev (>=1.43)
+Standards-Version: 3.9.2 
+Section: libs
+Homepage: https://github.com/borglab/gtsam
+
+Package: libgtsam-dev
+Section: libdevel
+Architecture: any
+Depends: libgtsam (= ${binary:Version}), ${misc:Depends}
+Description: Smoothing and mapping library for robotics and vision. The development package. 
+
+Package: libgtsam
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Smoothing and mapping library for robotics and vision. 
