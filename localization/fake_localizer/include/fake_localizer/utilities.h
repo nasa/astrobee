@@ -26,7 +26,7 @@
 #include <geometry_msgs/TwistStamped.h>
 #include <std_msgs/Header.h>
 
-#include <Eigen/Core>
+#include <Eigen/Geometry>
 
 namespace fake_localizer {
 Eigen::Isometry3d PoseFromMsg(const geometry_msgs::PoseStamped& pose_msg);
