@@ -24,4 +24,6 @@ export DEB_CPPFLAGS_MAINT_APPEND = -DGTSAM_BUILD_WITH_MARCH_NATIVE=OFF -DGTSAM_U
 # This is example for Cmake (See https://bugs.debian.org/641051 )
 #override_dh_auto_configure:
 #	dh_auto_configure -- #	-DCMAKE_LIBRARY_PATH=$(DEB_HOST_MULTIARCH)
+override_dh_auto_configure:
+	dh_auto_configure -- -DGTSAM_BUILD_EXAMPLES_ALWAYS=OFF -DGTSAM_BUILD_TESTS=OFF -DGTSAM_BUILD_WRAP=OFF -DGTSAM_BUILD_DOCS=OFF
 
