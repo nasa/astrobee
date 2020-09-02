@@ -45,6 +45,10 @@ GraphLocalizerWrapper::GraphLocalizerWrapper() {
     LOG(FATAL) << "Failed to load num_bias_estimation_measurements.";
   }
 
+  if (!config.GetBool("publish_localization_graph", &publish_localization_graph_)) {
+    LOG(FATAL) << "Failed to load publish_localization_graph.";
+  }
+
   graph_loc_initialization_.LoadSensorParams(config);
   graph_loc_initialization_.LoadGraphLocalizerParams(config);
 }
@@ -190,5 +194,7 @@ boost::optional<ff_msgs::LocalizationGraph> GraphLocalizerWrapper::LatestLocaliz
   }
   return GraphMsg(*graph_localizer_);
 }
+
+bool GraphLocalizerWrapper::publish_localization_graph() const { return publish_localization_graph_; }
 
 }  // namespace graph_localizer

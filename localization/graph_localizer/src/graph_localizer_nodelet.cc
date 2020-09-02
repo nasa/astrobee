@@ -99,7 +99,7 @@ void GraphLocalizerNodelet::OpticalFlowCallback(const ff_msgs::Feature2dArray::C
 
   // Publish loc information here since graph updates occur on optical flow updates
   PublishLocalizationState();
-  PublishLocalizationGraph();
+  if (graph_localizer_wrapper_.publish_localization_graph()) PublishLocalizationGraph();
 }
 
 void GraphLocalizerNodelet::VLVisualLandmarksCallback(const ff_msgs::VisualLandmarks::ConstPtr& visual_landmarks_msg) {
