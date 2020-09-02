@@ -1,8 +1,8 @@
 <package>
-  <name>simulation_localizer</name>
+  <name>fake_localizer</name>
   <version>1.0.0</version>
   <description>
-    The simulation localizer package
+    The fake localizer package
   </description>
   <license>
     Apache License, Version 2.0

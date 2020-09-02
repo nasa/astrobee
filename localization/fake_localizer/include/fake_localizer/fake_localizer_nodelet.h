@@ -15,13 +15,13 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef SIMULATION_LOCALIZER_SIMULATION_LOCALIZER_NODELET_H_
-#define SIMULATION_LOCALIZER_SIMULATION_LOCALIZER_NODELET_H_
+#ifndef FAKE_LOCALIZER_FAKE_LOCALIZER_NODELET_H_
+#define FAKE_LOCALIZER_FAKE_LOCALIZER_NODELET_H_
 
+#include <fake_localizer/twist.h>
 #include <ff_msgs/SetEkfInput.h>
 #include <ff_util/ff_nodelet.h>
 #include <localization_common/time.h>
-#include <simulation_localizer/twist.h>
 
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/TwistStamped.h>
@@ -38,10 +38,10 @@
 
 #include <string>
 
-namespace simulation_localizer {
-class SimulationLocalizerNodelet : public ff_util::FreeFlyerNodelet {
+namespace fake_localizer {
+class FakeLocalizerNodelet : public ff_util::FreeFlyerNodelet {
  public:
-  SimulationLocalizerNodelet();
+  FakeLocalizerNodelet();
 
  private:
   void Initialize(ros::NodeHandle* nh);
@@ -65,6 +65,6 @@ class SimulationLocalizerNodelet : public ff_util::FreeFlyerNodelet {
   tf2_ros::TransformBroadcaster transform_pub_;
   ros::ServiceServer input_mode_srv_;
 };
-}  // namespace simulation_localizer
+}  // namespace fake_localizer
 
-#endif  // SIMULATION_LOCALIZER_SIMULATION_LOCALIZER_NODELET_H_
+#endif  // FAKE_LOCALIZER_FAKE_LOCALIZER_NODELET_H_

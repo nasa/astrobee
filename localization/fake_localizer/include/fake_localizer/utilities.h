@@ -15,12 +15,12 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef SIMULATION_LOCALIZER_UTILITIES_H_
-#define SIMULATION_LOCALIZER_UTILITIES_H_
+#ifndef FAKE_LOCALIZER_UTILITIES_H_
+#define FAKE_LOCALIZER_UTILITIES_H_
 
+#include <fake_localizer/twist.h>
 #include <ff_msgs/EkfState.h>
 #include <localization_common/time.h>
-#include <simulation_localizer/twist.h>
 
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/TwistStamped.h>
@@ -28,10 +28,10 @@
 
 #include <Eigen/Core>
 
-namespace simulation_localizer {
+namespace fake_localizer {
 Eigen::Isometry3d PoseFromMsg(const geometry_msgs::PoseStamped& pose_msg);
 Twist TwistFromMsg(const geometry_msgs::TwistStamped& twist_msg);
 ff_msgs::EkfState LocStateMsg(const Eigen::Isometry3d& pose, const Twist& twist, const localization_common::Time& time);
-}  // namespace simulation_localizer
+}  // namespace fake_localizer
 
-#endif  // SIMULATION_LOCALIZER_UTILITIES_H_
+#endif  // FAKE_LOCALIZER_UTILITIES_H_

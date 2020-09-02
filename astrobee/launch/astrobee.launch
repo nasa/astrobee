@@ -29,9 +29,8 @@
 
   <!-- Remaining options -->
   <arg name="output" default="log" />         <!-- Output to screen or log   -->
-  <arg name="loc_only" default="false" />     <!-- Only run the localization related nodes -->
-  <arg name="drivers" default="true" unless="$(arg loc_only)" />       <!-- Should we launch drivers? -->
-  <arg name="drivers" value="false" if="$(arg loc_only)" />       <!-- Should we launch drivers? -->
+  <arg name="fake_localizer" default="false" />     <!-- Run fake localizer -->
+  <arg name="drivers" default="true" />       <!-- Should we launch drivers? -->
   <arg name="sim" default="local" />          <!-- SIM IP address            -->
   <arg name="llp" default="local" />          <!-- LLP IP address            -->
   <arg name="mlp" default="local" />          <!-- MLP IP address            -->
@@ -63,9 +62,6 @@
   <env if="$(eval optenv('ROSCONSOLE_CONFIG_FILE','')=='')"
        name="ROSCONSOLE_CONFIG_FILE" value="$(find astrobee)/resources/logging.config"/>
 
-  <!-- Use time from bag file -->
-  <param name="use_sim_time" value="true" if="$(arg loc_only)"/>
-
   <!-- Launch the platform on its own namespace -->
   <group ns="/$(arg ns)">
 
@@ -78,16 +74,14 @@
 
     <!-- If we need to load synthetic drivers (we are not running on a real robot) -->
     <!-- TODO(asymingt) - pass nodes, spurn and extra into gazebo                  -->
-    <group unless="$(arg loc_only)">
-      <include unless="$(arg drivers)"
-             file="$(find astrobee)/launch/controller/synthetic.launch">
-        <arg name="world" value="$(arg world)" />   <!-- World name                -->
-        <arg name="ns" value="$(arg ns)" />         <!-- Robot namespace           -->
-        <arg name="sim" value="$(arg sim)" />       <!-- SIM IP address            -->
-        <arg name="pose" value="$(arg pose)" />     <!-- Initial pose (sim only)   -->
-        <arg name="bag" value="$(arg bag)" />       <!-- Bag to replay             -->
-      </include>
-    </group>
+    <include unless="$(arg drivers)"
+           file="$(find astrobee)/launch/controller/synthetic.launch">
+      <arg name="world" value="$(arg world)" />   <!-- World name                -->
+      <arg name="ns" value="$(arg ns)" />         <!-- Robot namespace           -->
+      <arg name="sim" value="$(arg sim)" />       <!-- SIM IP address            -->
+      <arg name="pose" value="$(arg pose)" />     <!-- Initial pose (sim only)   -->
+      <arg name="bag" value="$(arg bag)" />       <!-- Bag to replay             -->
+    </include>
 
     <!-- LLP -->
     <group unless="$(eval arg('llp')=='disabled')">
@@ -120,7 +114,7 @@
         <arg name="extra" value="$(arg extra)" />      <!-- Inject extra nodes   -->
         <arg name="debug" value="$(arg debug)" />      <!-- Debug node group     -->
         <arg name="output" value="$(arg output)" />
-        <arg name="loc_only" value="$(arg loc_only)" />
+        <arg name="fake_localizer" value="$(arg fake_localizer)" />
       </include>
 
       <!-- If we have specified a bag, then play it back into flight software-->
@@ -160,7 +154,7 @@
         <arg name="extra" value="$(arg extra)" />      <!-- Inject extra nodes   -->
         <arg name="debug" value="$(arg debug)" />      <!-- Debug node group     -->
         <arg name="output" value="$(arg output)" />
-        <arg name="loc_only" value="$(arg loc_only)" />
+        <arg name="fake_localizer" value="$(arg fake_localizer)" />
       </include>
 
       <!-- If we have specified a bag, then play it back into flight software-->
@@ -168,13 +162,6 @@
 
     </group>
 
-  </group>
-
-  <group if="$(arg loc_only)">
-    <node pkg="rosbag" type="play" name="player" output="log" args="--clock $(arg bag)">
-      <remap from="mgt/img_sampler/nav_cam/image_record" to="/hw/cam_nav"/>>
-    </node>
-    <node pkg="rosservice" type="rosservice" name="imu_calibration" args="call --wait /gnc/ekf/init_bias" />
   </group>
 
 </launch>

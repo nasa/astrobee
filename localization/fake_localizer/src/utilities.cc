@@ -16,10 +16,10 @@
  * under the License.
  */
 
+#include <fake_localizer/utilities.h>
 #include <localization_common/utilities.h>
-#include <simulation_localizer/utilities.h>
 
-namespace simulation_localizer {
+namespace fake_localizer {
 namespace lc = localization_common;
 Eigen::Isometry3d PoseFromMsg(const geometry_msgs::PoseStamped& pose_msg) {
   Eigen::Isometry3d pose = Eigen::Isometry3d::Identity();
@@ -45,4 +45,4 @@ ff_msgs::EkfState LocStateMsg(const Eigen::Isometry3d& pose, const Twist& twist,
   lc::TimeToHeader(timestamp, loc_msg.header);
   return loc_msg;
 }
-}  // namespace simulation_localizer
+}  // namespace fake_localizer

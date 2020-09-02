@@ -15,16 +15,16 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef SIMULATION_LOCALIZER_TWIST_H_
-#define SIMULATION_LOCALIZER_TWIST_H_
+#ifndef FAKE_LOCALIZER_TWIST_H_
+#define FAKE_LOCALIZER_TWIST_H_
 
 #include <Eigen/Core>
 
-namespace simulation_localizer {
+namespace fake_localizer {
 struct Twist {
   Eigen::Vector3d linear_velocity;
   Eigen::Vector3d angular_velocity;
 };
-}  // namespace simulation_localizer
+}  // namespace fake_localizer
 
-#endif  // SIMULATION_LOCALIZER_TWIST_H_
+#endif  // FAKE_LOCALIZER_TWIST_H_
