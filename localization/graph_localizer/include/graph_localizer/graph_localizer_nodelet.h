@@ -29,6 +29,7 @@
 #include <ros/subscriber.h>
 #include <sensor_msgs/Imu.h>
 #include <std_srvs/Empty.h>
+#include <tf2_ros/transform_broadcaster.h>
 
 #include <string>
 #include <vector>
@@ -65,6 +66,8 @@ class GraphLocalizerNodelet : public ff_util::FreeFlyerNodelet {
 
   void PublishSparseMappingPose() const;
 
+  void PublishWorldTDockTF();
+
   void PublishReset() const;
 
   void OpticalFlowCallback(const ff_msgs::Feature2dArray::ConstPtr& feature_array_msg);
@@ -80,6 +83,7 @@ class GraphLocalizerNodelet : public ff_util::FreeFlyerNodelet {
   ros::Subscriber imu_sub_, of_sub_, vl_sub_, ar_sub_;
   ros::Publisher state_pub_, graph_pub_, sparse_mapping_pose_pub_, reset_pub_;
   ros::ServiceServer reset_srv_, bias_srv_, input_mode_srv_;
+  tf2_ros::TransformBroadcaster transform_pub_;
 };
 }  // namespace graph_localizer
 

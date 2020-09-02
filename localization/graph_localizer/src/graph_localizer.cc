@@ -54,7 +54,7 @@ GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
       dock_cam_noise_(gtsam::noiseModel::Isotropic::Sigma(2, 0.1)),
       graph_values_(params.sliding_window_duration(), params.min_num_sliding_window_states()),
       min_of_avg_distance_from_mean_(params.min_of_avg_distance_from_mean()),
-      world_T_dock_(lc::GtPose(params.world_T_dock())) {
+      config_world_T_dock_(lc::GtPose(params.world_T_dock())) {
   // Assumes zero initial velocity
   const lc::CombinedNavState global_cgN_body_start(
       lc::GtPose(params.global_T_body_start()), gtsam::Velocity3::Zero(),
@@ -285,8 +285,9 @@ void GraphLocalizer::AddARTagMeasurement(const lm::MatchedProjectionsMeasurement
   }
 
   const gtsam::Pose3 world_T_body = combined_nav_state->pose();
-  const gtsam::Pose3 estimated_world_T_dock = world_T_body * body_T_dock_cam_ * buffered_dock_cam_T_dock;
-  lm::FrameChangeMatchedProjectionsMeasurement(buffered_measurement, estimated_world_T_dock);
+  estimated_world_T_dock_ =
+      std::make_pair(world_T_body * body_T_dock_cam_ * buffered_dock_cam_T_dock, buffered_measurement.timestamp);
+  lm::FrameChangeMatchedProjectionsMeasurement(buffered_measurement, estimated_world_T_dock_->first);
   AddProjectionMeasurement(buffered_measurement, body_T_dock_cam_, dock_cam_intrinsics_, dock_cam_noise_);
   buffered_measurement = matched_projections_measurement;
   buffered_dock_cam_T_dock = dock_cam_T_dock;
@@ -548,6 +549,14 @@ int GraphLocalizer::NumVLFactors() const { return NumFactors<gtsam::LocProjectio
 const GraphValues& GraphLocalizer::graph_values() const { return graph_values_; }
 
 const gtsam::NonlinearFactorGraph& GraphLocalizer::factor_graph() const { return graph_; }
+
+boost::optional<std::pair<Eigen::Isometry3d, lc::Time>> GraphLocalizer::estimated_world_T_dock() const {
+  if (!estimated_world_T_dock_) {
+    LOG(ERROR) << "estimated_world_T_dock: Failed to get estimated_world_T_dock.";
+    return boost::none;
+  }
+  return std::make_pair(lc::EigenPose(estimated_world_T_dock_->first), estimated_world_T_dock_->second);
+}
 
 bool GraphLocalizer::Update() {
   LOG(INFO) << "Update: Updating.";

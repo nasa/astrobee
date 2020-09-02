@@ -44,9 +44,9 @@ gtsam::Pose3 GtPose(const Eigen::Isometry3d& eigen_pose) {
   return gtsam::Pose3(Eigen::Ref<const Eigen::MatrixXd>(eigen_pose.matrix()));
 }
 
-Eigen::Isometry3d EigenPose(const CombinedNavState& combined_nav_state) {
-  return Eigen::Isometry3d(combined_nav_state.pose().matrix());
-}
+Eigen::Isometry3d EigenPose(const CombinedNavState& combined_nav_state) { return EigenPose(combined_nav_state.pose()); }
+
+Eigen::Isometry3d EigenPose(const gtsam::Pose3& pose) { return Eigen::Isometry3d(pose.matrix()); }
 
 Eigen::Isometry3d EigenPose(const ff_msgs::VisualLandmarks& vl_features, const Eigen::Isometry3d& sensor_T_body) {
   const Eigen::Isometry3d vl_global_T_sensor = EigenPose(vl_features);

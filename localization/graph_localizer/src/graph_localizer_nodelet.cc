@@ -145,6 +145,21 @@ void GraphLocalizerNodelet::PublishSparseMappingPose() const {
   sparse_mapping_pose_pub_.publish(*latest_sparse_mapping_pose_msg);
 }
 
+void GraphLocalizerNodelet::PublishWorldTDockTF() {
+  const auto world_T_dock = graph_localizer_wrapper_.estimated_world_T_dock();
+  if (!world_T_dock) {
+    LOG(ERROR) << "PublishWorldTDockTF: Failed to get world_T_dock.";
+    return;
+  }
+  geometry_msgs::TransformStamped world_T_dock_transform;
+  world_T_dock_transform.header = std_msgs::Header();
+  lc::TimeToHeader(world_T_dock->second, world_T_dock_transform.header);
+  world_T_dock_transform.header.frame_id = "world";
+  world_T_dock_transform.child_frame_id = "dock/body";
+  lc::EigenPoseToMsg(world_T_dock->first, world_T_dock_transform.transform);
+  transform_pub_.sendTransform(world_T_dock_transform);
+}
+
 void GraphLocalizerNodelet::PublishReset() const {
   std_msgs::Empty msg;
   reset_pub_.publish(msg);

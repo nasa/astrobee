@@ -65,6 +65,8 @@ class GraphLocalizerWrapper {
 
   const FeatureTrackMap* const feature_tracks() const;
 
+  boost::optional<std::pair<Eigen::Isometry3d, localization_common::Time>> estimated_world_T_dock() const;
+
  private:
   void InitializeGraph();
 

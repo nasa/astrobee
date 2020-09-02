@@ -81,6 +81,8 @@ class GraphLocalizer {
 
   int NumVLFactors() const;
 
+  boost::optional<std::pair<Eigen::Isometry3d, localization_common::Time>> estimated_world_T_dock() const;
+
   const GraphValues& graph_values() const;
 
   const gtsam::NonlinearFactorGraph& factor_graph() const;
@@ -169,7 +171,8 @@ class GraphLocalizer {
   gtsam::SmartProjectionParams smart_projection_params_;
   gtsam::Pose3 body_T_nav_cam_;
   gtsam::Pose3 body_T_dock_cam_;
-  gtsam::Pose3 world_T_dock_;
+  gtsam::Pose3 config_world_T_dock_;
+  boost::optional<std::pair<gtsam::Pose3, localization_common::Time>> estimated_world_T_dock_;
   boost::shared_ptr<gtsam::Cal3_S2> nav_cam_intrinsics_;
   boost::shared_ptr<gtsam::Cal3_S2> dock_cam_intrinsics_;
   gtsam::SharedIsotropic nav_cam_noise_;

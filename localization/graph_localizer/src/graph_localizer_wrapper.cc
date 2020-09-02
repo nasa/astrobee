@@ -147,6 +147,14 @@ const FeatureTrackMap* const GraphLocalizerWrapper::feature_tracks() const {
   return &(graph_localizer_->feature_tracks());
 }
 
+boost::optional<std::pair<Eigen::Isometry3d, lc::Time>> GraphLocalizerWrapper::estimated_world_T_dock() const {
+  if (!graph_localizer_ || !graph_localizer_->estimated_world_T_dock()) {
+    LOG(ERROR) << "estimated_world_T_dock: Failed to get world_T_dock";
+    return boost::none;
+  }
+  return graph_localizer_->estimated_world_T_dock();
+}
+
 boost::optional<geometry_msgs::PoseStamped> GraphLocalizerWrapper::LatestSparseMappingPoseMsg() const {
   if (!sparse_mapping_pose_) {
     LOG_EVERY_N(WARNING, 50) << "LatestSparseMappingPoseMsg: Failed to get latest sparse mapping pose msg.";

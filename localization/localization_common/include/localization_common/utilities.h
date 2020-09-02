@@ -43,6 +43,8 @@ gtsam::Pose3 GtPose(const Eigen::Isometry3d& eigen_pose);
 
 Eigen::Isometry3d EigenPose(const CombinedNavState& combined_nav_state);
 
+Eigen::Isometry3d EigenPose(const gtsam::Pose3& pose);
+
 // Returns pose in body frame
 Eigen::Isometry3d EigenPose(const ff_msgs::VisualLandmarks& vl_features, const Eigen::Isometry3d& sensor_T_body);
 
