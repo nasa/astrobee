@@ -16,17 +16,16 @@
  * under the License.
  */
 
-#ifndef LOCALIZATION_MEASUREMENTS_MATCHED_PROJECTIONS_MEASUREMENT_H_
-#define LOCALIZATION_MEASUREMENTS_MATCHED_PROJECTIONS_MEASUREMENT_H_
+#ifndef LOCALIZATION_MEASUREMENTS_MEASUREMENT_H_
+#define LOCALIZATION_MEASUREMENTS_MEASUREMENT_H_
 
 #include <localization_common/time.h>
-#include <localization_measurements/matched_projection.h>
-#include <localization_measurements/measurement.h>
 
 namespace localization_measurements {
-struct MatchedProjectionsMeasurement : public Measurement {
-  MatchedProjections matched_projections;
+struct Measurement {
+  virtual ~Measurement() = default;
+  localization_common::Time timestamp;
 };
 }  // namespace localization_measurements
 
-#endif  // LOCALIZATION_MEASUREMENTS_MATCHED_PROJECTIONS_MEASUREMENT_H_
+#endif  // LOCALIZATION_MEASUREMENTS_MEASUREMENT_H_

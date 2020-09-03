@@ -20,13 +20,14 @@
 #define LOCALIZATION_MEASUREMENTS_IMU_MEASUREMENT_H_
 
 #include <localization_common/time.h>
+#include <localization_measurements/measurement.h>
 
 #include <Eigen/Core>
 
 #include <sensor_msgs/Imu.h>
 
 namespace localization_measurements {
-struct ImuMeasurement {
+struct ImuMeasurement : public Measurement {
   explicit ImuMeasurement(const sensor_msgs::Imu& imu_msg) {
     acceleration.x() = imu_msg.linear_acceleration.x;
     acceleration.y() = imu_msg.linear_acceleration.y;
@@ -43,7 +44,6 @@ struct ImuMeasurement {
 
   Eigen::Vector3d acceleration;
   Eigen::Vector3d angular_velocity;
-  localization_common::Time timestamp;
 };
 }  // namespace localization_measurements
 

@@ -21,13 +21,13 @@
 
 #include <localization_common/time.h>
 #include <localization_measurements/feature_point.h>
+#include <localization_measurements/measurement.h>
 
 #include <vector>
 
 namespace localization_measurements {
-struct FeaturePointsMeasurement {
+struct FeaturePointsMeasurement : public Measurement {
   FeaturePoints feature_points;
-  localization_common::Time timestamp;
 };
 }  // namespace localization_measurements
 
