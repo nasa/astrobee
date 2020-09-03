@@ -1,2 +1,2 @@
 usr/include/*
-# usr/lib/cmake/GTSAM/* usr/share/gtsam/cmake
+usr/lib/cmake/GTSAM/* usr/share/gtsam/cmake
