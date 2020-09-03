@@ -35,11 +35,13 @@ MatchedProjectionsMeasurement MakeMatchedProjectionsMeasurement(const ff_msgs::V
   return matched_projections_measurement;
 }
 
-void FrameChangeMatchedProjectionsMeasurement(MatchedProjectionsMeasurement& matched_projections_measurement,
-                                              const gtsam::Pose3& b_T_a) {
-  for (auto& matched_projection : matched_projections_measurement.matched_projections) {
+MatchedProjectionsMeasurement FrameChangeMatchedProjectionsMeasurement(
+    const MatchedProjectionsMeasurement& matched_projections_measurement, const gtsam::Pose3& b_T_a) {
+  auto frame_changed_measurement = matched_projections_measurement;
+  for (auto& matched_projection : frame_changed_measurement.matched_projections) {
     matched_projection.map_point = b_T_a * matched_projection.map_point;
   }
+  return frame_changed_measurement;
 }
 
 FeaturePointsMeasurement MakeFeaturePointsMeasurement(const ff_msgs::Feature2dArray& optical_flow_feature_points) {

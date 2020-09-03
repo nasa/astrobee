@@ -27,6 +27,7 @@
 #include <string>
 
 namespace graph_localizer {
+namespace ii = imu_integration;
 namespace lc = localization_common;
 namespace lm = localization_measurements;
 bool ValidPointSet(const std::deque<lm::FeaturePoint>& points, const double min_avg_distance_from_mean) {
@@ -119,8 +120,8 @@ void EstimateAndSetImuBiases(const lm::ImuMeasurement& imu_measurement,
                              GraphLocInitialization& graph_loc_initialization) {
   Eigen::Vector3d accelerometer_bias;
   Eigen::Vector3d gyro_bias;
-  if (!imu_integration::EstimateAndSetImuBiases(imu_measurement, num_imu_measurements_per_bias_estimate,
-                                                imu_bias_measurements, accelerometer_bias, gyro_bias))
+  if (!ii::EstimateAndSetImuBiases(imu_measurement, num_imu_measurements_per_bias_estimate, imu_bias_measurements,
+                                   accelerometer_bias, gyro_bias))
     return;
 
   graph_loc_initialization.SetBiases(accelerometer_bias, gyro_bias);

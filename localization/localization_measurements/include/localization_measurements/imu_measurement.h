@@ -40,7 +40,7 @@ struct ImuMeasurement : public Measurement {
   }
   ImuMeasurement(const Eigen::Vector3d& acceleration, const Eigen::Vector3d& angular_velocity,
                  const localization_common::Time timestamp)
-      : acceleration(acceleration), angular_velocity(angular_velocity), timestamp(timestamp) {}
+      : Measurement(timestamp), acceleration(acceleration), angular_velocity(angular_velocity) {}
 
   Eigen::Vector3d acceleration;
   Eigen::Vector3d angular_velocity;

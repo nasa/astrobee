@@ -117,6 +117,8 @@ class GraphLocalizer {
     return key_index++;
   }
 
+  bool ReadyToAddMeasurement(const localization_common::Time timestamp);
+
   void PrintFactorDebugInfo() const;
 
   template <typename FactorType>
@@ -178,6 +180,10 @@ class GraphLocalizer {
   gtsam::SharedIsotropic nav_cam_noise_;
   gtsam::SharedIsotropic dock_cam_noise_;
   double min_of_avg_distance_from_mean_;
+  std::map<localization_common::Time, localization_measurements::FeaturePointsMeasurement>
+      buffered_optical_flow_measurements_;
+  std::map<localization_common::Time, localization_measurements::MatchedProjectionsMeasurement>
+      buffered_projection_measurements_;
 };
 }  // namespace graph_localizer
 

@@ -205,53 +205,64 @@ bool GraphLocalizer::AddOpticalFlowMeasurement(
   using SmartFactor = gtsam::SmartProjectionPoseFactor<Calibration>;
   using SharedSmartFactor = boost::shared_ptr<SmartFactor>;
 
-  LOG(INFO) << "AddOpticalFlowMeasurement: Adding optical flow measurement.";
-  feature_tracker_.UpdateFeatureTracks(optical_flow_feature_points_measurement.feature_points);
+  buffered_optical_flow_measurements_.emplace(optical_flow_feature_points_measurement.timestamp,
+                                              optical_flow_feature_points_measurement);
 
-  if (optical_flow_feature_points_measurement.feature_points.empty()) {
-    LOG(WARNING) << "AddOpticalFlowMeasurement: Empty measurement.";
-    return false;
-  }
-  if (!AddOrSplitImuFactorIfNeeded(optical_flow_feature_points_measurement.timestamp)) {
-    LOG(DFATAL) << "AddOpicalFlowMeasurement: Failed to add optical flow measurement.";
-    return false;
-  }
-
-  // Remove all camera factors from graph since SmartFactor does not allow for
-  // the removal of a measurement Since measurements are linked to poses which
-  // are pruned in the sliding window, need to create new factors each
-  // iteration.  TODO(rsoussan): make this more efficient?
-  int num_removed_smart_factors = 0;
-  for (auto factor_it = graph_.begin(); factor_it != graph_.end();) {
-    if (dynamic_cast<SmartFactor*>(factor_it->get())) {
-      factor_it = graph_.erase(factor_it);
-      ++num_removed_smart_factors;
-      continue;
-    }
-    ++factor_it;
-  }
-  VLOG(2) << "AddOpticalFLowMeasurement: Num removed smart factors: " << num_removed_smart_factors;
-
+  // Add then erase measurements that are ready to be added
   int num_added_smart_factors = 0;
-  // Add smart factor for each feature track
-  for (const auto& feature_track : feature_tracker_.feature_tracks()) {
-    if (!ValidPointSet(feature_track.second.points, min_of_avg_distance_from_mean_)) continue;
-    SharedSmartFactor smart_factor(
-        new SmartFactor(nav_cam_noise_, nav_cam_intrinsics_, body_T_nav_cam_, smart_projection_params_));
-    int num_points_added = 0;
-    for (const auto& feature_point : feature_track.second.points) {
-      const auto pose_key = graph_values_.PoseKey(feature_point.timestamp);
-      if (!pose_key) {
-        LOG(ERROR) << "AddOpticalFlowMeasurement: Failed to find pose key for timestamp.";
+  for (auto measurement_it = buffered_optical_flow_measurements_.cbegin();
+       measurement_it != buffered_optical_flow_measurements_.cend() && ReadyToAddMeasurement(measurement_it->first);) {
+    const auto& measurement = measurement_it->second;
+
+    LOG(INFO) << "AddOpticalFlowMeasurement: Adding optical flow measurement.";
+    feature_tracker_.UpdateFeatureTracks(measurement.feature_points);
+
+    if (measurement.feature_points.empty()) {
+      LOG(WARNING) << "AddOpticalFlowMeasurement: Empty measurement.";
+      return false;
+    }
+    if (!AddOrSplitImuFactorIfNeeded(measurement.timestamp)) {
+      LOG(DFATAL) << "AddOpicalFlowMeasurement: Failed to add optical flow measurement.";
+      return false;
+    }
+
+    // Remove all camera factors from graph since SmartFactor does not allow for
+    // the removal of a measurement Since measurements are linked to poses which
+    // are pruned in the sliding window, need to create new factors each
+    // iteration.  TODO(rsoussan): make this more efficient?
+    int num_removed_smart_factors = 0;
+    for (auto factor_it = graph_.begin(); factor_it != graph_.end();) {
+      if (dynamic_cast<SmartFactor*>(factor_it->get())) {
+        factor_it = graph_.erase(factor_it);
+        ++num_removed_smart_factors;
         continue;
       }
-      smart_factor->add(Camera::Measurement(feature_point.image_point), *pose_key);
-      ++num_points_added;
+      ++factor_it;
     }
+    VLOG(2) << "AddOpticalFLowMeasurement: Num removed smart factors: " << num_removed_smart_factors;
 
-    graph_.push_back(smart_factor);
-    ++num_added_smart_factors;
+    // Add smart factor for each feature track
+    for (const auto& feature_track : feature_tracker_.feature_tracks()) {
+      if (!ValidPointSet(feature_track.second.points, min_of_avg_distance_from_mean_)) continue;
+      SharedSmartFactor smart_factor(
+          new SmartFactor(nav_cam_noise_, nav_cam_intrinsics_, body_T_nav_cam_, smart_projection_params_));
+      int num_points_added = 0;
+      for (const auto& feature_point : feature_track.second.points) {
+        const auto pose_key = graph_values_.PoseKey(feature_point.timestamp);
+        if (!pose_key) {
+          LOG(ERROR) << "AddOpticalFlowMeasurement: Failed to find pose key for timestamp.";
+          continue;
+        }
+        smart_factor->add(Camera::Measurement(feature_point.image_point), *pose_key);
+        ++num_points_added;
+      }
+
+      graph_.push_back(smart_factor);
+      ++num_added_smart_factors;
+    }
+    measurement_it = buffered_optical_flow_measurements_.erase(measurement_it);
   }
+
   VLOG(2) << "AddOpticalFLowMeasurement: Newly added " << num_added_smart_factors << " smart factors.";
   return true;
 }
@@ -259,38 +270,23 @@ bool GraphLocalizer::AddOpticalFlowMeasurement(
 void GraphLocalizer::AddARTagMeasurement(const lm::MatchedProjectionsMeasurement& matched_projections_measurement,
                                          const gtsam::Pose3& dock_cam_T_dock) {
   LOG(INFO) << "AddARTagMeasurement: Adding AR tag measurement.";
-  // Hack to delay AR tag measurements until timestamp issue is fixed (uses
-  // Ros::now instead of image timestamp, causes AR tag measurements to arrive
-  // "ahead" of imu measurements.
-  // TODO(rsoussan): Remove this when AR tag timestamp is fixed
-  static lm::MatchedProjectionsMeasurement buffered_measurement = matched_projections_measurement;
-  static gtsam::Pose3 buffered_dock_cam_T_dock = dock_cam_T_dock;
-  static bool first_measurement = true;
-  // Delay adding first measurement until second measurement arrives
-  // and so on
-  if (first_measurement) {
-    first_measurement = false;
-    return;
-  }
-
   // Get world_T_dock using current loc estimate since dock can be moved on the ISS.
   // TODO(rsoussan): Optimize this online using config value as a prior, update this
   // config value periodically after running localizer.
-  const auto combined_nav_state = GetCombinedNavState(buffered_measurement.timestamp);
+  // TODO(rsoussan): Fix timestamp issue of ar tag measurements (uses ros::now instead of timestamp of measurement)
+  const auto combined_nav_state = GetCombinedNavState(matched_projections_measurement.timestamp);
   if (!combined_nav_state) {
     LOG(ERROR) << "AddARTagMeasurement: Failed to get combined nav state.";
-    buffered_measurement = matched_projections_measurement;
-    buffered_dock_cam_T_dock = dock_cam_T_dock;
     return;
   }
 
   const gtsam::Pose3 world_T_body = combined_nav_state->pose();
   estimated_world_T_dock_ =
-      std::make_pair(world_T_body * body_T_dock_cam_ * buffered_dock_cam_T_dock, buffered_measurement.timestamp);
-  lm::FrameChangeMatchedProjectionsMeasurement(buffered_measurement, estimated_world_T_dock_->first);
-  AddProjectionMeasurement(buffered_measurement, body_T_dock_cam_, dock_cam_intrinsics_, dock_cam_noise_);
-  buffered_measurement = matched_projections_measurement;
-  buffered_dock_cam_T_dock = dock_cam_T_dock;
+      std::make_pair(world_T_body * body_T_dock_cam_ * dock_cam_T_dock, matched_projections_measurement.timestamp);
+  const auto frame_changed_projections_measurement =
+      lm::FrameChangeMatchedProjectionsMeasurement(matched_projections_measurement, estimated_world_T_dock_->first);
+  AddProjectionMeasurement(frame_changed_projections_measurement, body_T_dock_cam_, dock_cam_intrinsics_,
+                           dock_cam_noise_);
 }
 
 void GraphLocalizer::AddSparseMappingMeasurement(
@@ -305,27 +301,35 @@ void GraphLocalizer::AddProjectionMeasurement(const lm::MatchedProjectionsMeasur
                                               const gtsam::SharedIsotropic& cam_noise) {
   if (matched_projections_measurement.matched_projections.empty()) {
     LOG(WARNING) << "AddProjectionMeasurement: Empty measurement.";
-    return;
+  } else {
+    buffered_projection_measurements_.emplace(matched_projections_measurement.timestamp,
+                                              matched_projections_measurement);
   }
 
-  if (!AddOrSplitImuFactorIfNeeded(matched_projections_measurement.timestamp)) {
-    LOG(DFATAL) << "AddProjectionMeasurement: Failed to add projection measurement.";
-    return;
-  }
-
+  // Add then erase measurements that are ready to be added
   int num_added_loc_projection_factors = 0;
-  for (const auto& matched_projection : matched_projections_measurement.matched_projections) {
-    const auto pose_key = graph_values_.PoseKey(matched_projections_measurement.timestamp);
-    if (!pose_key) {
-      LOG(ERROR) << "AddProjectionMeasurement: Failed to find pose key for timestamp.";
-      continue;
+  for (auto measurement_it = buffered_projection_measurements_.cbegin();
+       measurement_it != buffered_projection_measurements_.cend() && ReadyToAddMeasurement(measurement_it->first);) {
+    const auto& measurement = measurement_it->second;
+    if (!AddOrSplitImuFactorIfNeeded(measurement.timestamp)) {
+      LOG(DFATAL) << "AddProjectionMeasurement: Failed to add projection measurement.";
+      return;
     }
 
-    gtsam::LocProjectionFactor<>::shared_ptr loc_projection_factor(
-        new gtsam::LocProjectionFactor<>(matched_projection.image_point, matched_projection.map_point, cam_noise,
-                                         *pose_key, cam_intrinsics, body_T_cam));
-    graph_.push_back(loc_projection_factor);
-    ++num_added_loc_projection_factors;
+    for (const auto& matched_projection : measurement.matched_projections) {
+      const auto pose_key = graph_values_.PoseKey(measurement.timestamp);
+      if (!pose_key) {
+        LOG(ERROR) << "AddProjectionMeasurement: Failed to find pose key for timestamp.";
+        continue;
+      }
+
+      gtsam::LocProjectionFactor<>::shared_ptr loc_projection_factor(
+          new gtsam::LocProjectionFactor<>(matched_projection.image_point, matched_projection.map_point, cam_noise,
+                                           *pose_key, cam_intrinsics, body_T_cam));
+      graph_.push_back(loc_projection_factor);
+      ++num_added_loc_projection_factors;
+    }
+    measurement_it = buffered_projection_measurements_.erase(measurement_it);
   }
 
   VLOG(2) << "AddProjectionMeasurement: Added " << num_added_loc_projection_factors << " loc projection factors.";
@@ -521,6 +525,10 @@ bool GraphLocalizer::SlideWindow(const gtsam::Marginals& marginals) {
   noise.bias_noise = gtsam::noiseModel::Gaussian::Covariance(marginals.marginalCovariance(sym::B(*key_index)));
   AddPriors(*global_cgN_body_oldest, noise, *key_index, graph_values_.values(), graph_);
   return true;
+}
+
+bool GraphLocalizer::ReadyToAddMeasurement(const lc::Time timestamp) {
+  return latest_imu_integrator_.WithinBounds(timestamp);
 }
 
 void GraphLocalizer::PrintFactorDebugInfo() const {

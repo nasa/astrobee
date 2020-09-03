@@ -23,6 +23,8 @@
 
 namespace localization_measurements {
 struct Measurement {
+  explicit Measurement(localization_common::Time timestamp) : timestamp(timestamp) {}
+  Measurement() = default;
   virtual ~Measurement() = default;
   localization_common::Time timestamp;
 };
