@@ -33,6 +33,7 @@
 #include <localization_measurements/matched_projections_measurement.h>
 
 #include <gtsam/geometry/Cal3_S2.h>
+#include <gtsam/geometry/PinholePose.h>
 #include <gtsam/inference/Symbol.h>
 #include <gtsam/navigation/CombinedImuFactor.h>
 #include <gtsam/navigation/ImuBias.h>
@@ -41,6 +42,7 @@
 #include <gtsam/nonlinear/Marginals.h>
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
 #include <gtsam/slam/SmartFactorParams.h>
+#include <gtsam/slam/SmartProjectionPoseFactor.h>
 
 #include <ros/console.h>
 #include <sensor_msgs/Imu.h>
@@ -54,6 +56,12 @@
 namespace graph_localizer {
 // TODO(rsoussan): is this kosher?
 namespace sym = gtsam::symbol_shorthand;
+// TODO(rsoussan): put these somewhere else?
+using Calibration = gtsam::Cal3_S2;
+using Camera = gtsam::PinholeCamera<Calibration>;
+using SmartFactor = gtsam::SmartProjectionPoseFactor<Calibration>;
+using SharedSmartFactor = boost::shared_ptr<SmartFactor>;
+
 class GraphLocalizer {
  public:
   explicit GraphLocalizer(const GraphLocalizerParams& params);
@@ -123,6 +131,20 @@ class GraphLocalizer {
   bool Rekey(FactorToAdd& factor_to_add);
 
   bool ReadyToAddMeasurement(const localization_common::Time timestamp) const;
+
+  template <typename FactorType>
+  void DeleteFactors() {
+    int num_removed_factors = 0;
+    for (auto factor_it = graph_.begin(); factor_it != graph_.end();) {
+      if (dynamic_cast<FactorType*>(factor_it->get())) {
+        factor_it = graph_.erase(factor_it);
+        ++num_removed_factors;
+        continue;
+      }
+      ++factor_it;
+    }
+    VLOG(2) << "DeleteFactors: Num removed factors: " << num_removed_factors;
+  }
 
   // TODO(rsoussan): make a static and dynamic key index?
   static int GenerateKeyIndex() {

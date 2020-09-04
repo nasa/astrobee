@@ -24,13 +24,11 @@
 #include <localization_measurements/measurement_conversions.h>
 
 #include <gtsam/base/Vector.h>
-#include <gtsam/geometry/PinholePose.h>
 #include <gtsam/geometry/Pose3.h>
 #include <gtsam/linear/NoiseModel.h>
 #include <gtsam/navigation/ImuBias.h>
 #include <gtsam/navigation/NavState.h>
 #include <gtsam/slam/PriorFactor.h>
-#include <gtsam/slam/SmartProjectionPoseFactor.h>
 
 #include <glog/logging.h>
 
@@ -199,79 +197,37 @@ void GraphLocalizer::AddImuMeasurement(const lm::ImuMeasurement& imu_measurement
 
 bool GraphLocalizer::AddOpticalFlowMeasurement(
     const lm::FeaturePointsMeasurement& optical_flow_feature_points_measurement) {
-  // TODO(rsoussan): put these somewhere else? in header?
-  using Calibration = gtsam::Cal3_S2;
-  using Camera = gtsam::PinholeCamera<Calibration>;
-  using SmartFactor = gtsam::SmartProjectionPoseFactor<Calibration>;
-  using SharedSmartFactor = boost::shared_ptr<SmartFactor>;
+  LOG(INFO) << "AddOpticalFlowMeasurement: Adding optical flow measurement.";
+  feature_tracker_.UpdateFeatureTracks(optical_flow_feature_points_measurement.feature_points);
 
-  buffered_optical_flow_measurements_.emplace(optical_flow_feature_points_measurement.timestamp,
-                                              optical_flow_feature_points_measurement);
-
-  // Add latest possible optical flow measurements
-  // Delete old factors to prevent having multiple smart factors for the same feature tracks.
-  // TODO(rsoussan): Simply add latest maeasuremetns to existing feature track factors and remove old measurements
-  // when this is enabled.  Gtsam smart factors currently do not allow removing old measurements.
-  int num_buffered_smart_factors = 0;
-  for (auto measurement_it = buffered_optical_flow_measurements_.cbegin();
-       measurement_it != buffered_optical_flow_measurements_.cend() && ReadyToAddMeasurement(measurement_it->first);) {
-    const auto& measurement = measurement_it->second;
-
-    LOG(INFO) << "AddOpticalFlowMeasurement: Adding optical flow measurement.";
-    feature_tracker_.UpdateFeatureTracks(measurement.feature_points);
-
-    if (measurement.feature_points.empty()) {
-      LOG(WARNING) << "AddOpticalFlowMeasurement: Empty measurement.";
-      measurement_it = buffered_optical_flow_measurements_.erase(measurement_it);
-      continue;
-    }
-
-    // Remove all camera factors from graph since SmartFactor does not allow for
-    // the removal of a measurement Since measurements are linked to poses which
-    // are pruned in the sliding window, need to create new factors each
-    // iteration.  TODO(rsoussan): make this more efficient?
-    int num_removed_smart_factors = 0;
-    for (auto factor_it = graph_.begin(); factor_it != graph_.end();) {
-      if (dynamic_cast<SmartFactor*>(factor_it->get())) {
-        factor_it = graph_.erase(factor_it);
-        ++num_removed_smart_factors;
-        continue;
-      }
-      ++factor_it;
-    }
-    VLOG(2) << "AddOpticalFLowMeasurement: Num removed smart factors: " << num_removed_smart_factors;
-
-    // Reset here so only latest round of added measurements is logged (since old ones are removed)
-    num_buffered_smart_factors = 0;
-    // Add smart factor for each feature track
-    for (const auto& feature_track : feature_tracker_.feature_tracks()) {
-      if (!ValidPointSet(feature_track.second.points, min_of_avg_distance_from_mean_)) continue;
-      SharedSmartFactor smart_factor(
-          new SmartFactor(nav_cam_noise_, nav_cam_intrinsics_, body_T_nav_cam_, smart_projection_params_));
-
-      int num_points_added = 0;
-      KeyInfos key_infos;
-      key_infos.reserve(feature_track.second.points.size());
-      lc::Time latest_timestamp = std::numeric_limits<int>::lowest();
-      for (const auto& feature_point : feature_track.second.points) {
-        const KeyInfo key_info(&sym::P, feature_point.timestamp);
-        key_infos.emplace_back(key_info);
-        smart_factor->add(Camera::Measurement(feature_point.image_point), key_info.UninitializedKey());
-        ++num_points_added;
-        if (feature_point.timestamp > latest_timestamp) latest_timestamp = feature_point.timestamp;
-      }
-
-      const FactorToAdd factor_to_add(key_infos, smart_factor);
-      BufferFactors({latest_timestamp, {factor_to_add}, GraphAction::kDeleteExistingSmartFactors});
-      ++num_buffered_smart_factors;
-    }
-
-    measurement_it = buffered_optical_flow_measurements_.erase(measurement_it);
-    // Add buffered factors iteratively so states are created for all poses necessary.
-    // After adding all buffered factors, only latest ones remain but states for the history
-    // of feature tracks will have been created in graph values.
-    AddBufferedFactors();
+  if (optical_flow_feature_points_measurement.feature_points.empty()) {
+    LOG(WARNING) << "AddOpticalFlowMeasurement: Empty measurement.";
+    return false;
   }
+
+  // Add smart factor for each feature track
+  FactorsToAdd factors_to_add(GraphAction::kDeleteExistingSmartFactors);
+  int num_buffered_smart_factors = 0;
+  lc::Time latest_timestamp = std::numeric_limits<int>::lowest();
+  for (const auto& feature_track : feature_tracker_.feature_tracks()) {
+    if (!ValidPointSet(feature_track.second.points, min_of_avg_distance_from_mean_)) continue;
+    SharedSmartFactor smart_factor(
+        new SmartFactor(nav_cam_noise_, nav_cam_intrinsics_, body_T_nav_cam_, smart_projection_params_));
+
+    KeyInfos key_infos;
+    key_infos.reserve(feature_track.second.points.size());
+    for (const auto& feature_point : feature_track.second.points) {
+      const KeyInfo key_info(&sym::P, feature_point.timestamp);
+      key_infos.emplace_back(key_info);
+      smart_factor->add(Camera::Measurement(feature_point.image_point), key_info.UninitializedKey());
+      if (feature_point.timestamp > latest_timestamp) latest_timestamp = feature_point.timestamp;
+    }
+
+    factors_to_add.factors_to_add.emplace_back(key_infos, smart_factor);
+    ++num_buffered_smart_factors;
+  }
+  factors_to_add.timestamp = latest_timestamp;
+  BufferFactors(factors_to_add);
 
   VLOG(2) << "AddOpticalFLowMeasurement: Buffered " << num_buffered_smart_factors << " smart factors.";
   return true;
@@ -532,6 +488,8 @@ void GraphLocalizer::AddBufferedFactors() {
        factors_to_add_it != buffered_factors_to_add_.end() && latest_imu_integrator_.LatestTime() &&
        factors_to_add_it->first <= *(latest_imu_integrator_.LatestTime());) {
     auto& factors_to_add = factors_to_add_it->second;
+    DoGraphAction(factors_to_add.graph_action);
+
     // Factors in a factors_to_add container have the same timestamp
     auto timestamp = factors_to_add.timestamp;
     for (auto& factor_to_add : factors_to_add.factors_to_add) {
@@ -551,6 +509,17 @@ void GraphLocalizer::AddBufferedFactors() {
   }
 
   LOG(INFO) << "AddBufferedFactors: Added " << num_added_factors << " factors.";
+}
+
+void GraphLocalizer::DoGraphAction(const GraphAction graph_action) {
+  switch (graph_action) {
+    case GraphAction::kNone:
+      return;
+    case GraphAction::kDeleteExistingSmartFactors:
+      DeleteFactors<SmartFactor>();
+      VLOG(2) << "DoGraphAction: Deleting smart factors.";
+      return;
+  }
 }
 
 bool GraphLocalizer::Rekey(FactorToAdd& factor_to_add) {
@@ -578,9 +547,6 @@ bool GraphLocalizer::ReadyToAddMeasurement(const localization_common::Time times
 }
 
 void GraphLocalizer::PrintFactorDebugInfo() const {
-  // TODO(rsoussan): put these using statements somewhere else?
-  using Calibration = gtsam::Cal3_S2;
-  using SmartFactor = gtsam::SmartProjectionPoseFactor<Calibration>;
   for (auto factor_it = graph_.begin(); factor_it != graph_.end();) {
     if (dynamic_cast<const SmartFactor*>(factor_it->get())) {
       dynamic_cast<const SmartFactor*>(factor_it->get())->print();
@@ -591,12 +557,7 @@ void GraphLocalizer::PrintFactorDebugInfo() const {
   }
 }
 
-int GraphLocalizer::NumOFFactors() const {
-  // TODO(rsoussan): put these using statements somewhere else?
-  using Calibration = gtsam::Cal3_S2;
-  using SmartFactor = gtsam::SmartProjectionPoseFactor<Calibration>;
-  return NumFactors<SmartFactor>();
-}
+int GraphLocalizer::NumOFFactors() const { return NumFactors<SmartFactor>(); }
 
 int GraphLocalizer::NumVLFactors() const { return NumFactors<gtsam::LocProjectionFactor<>>(); }
 
@@ -614,6 +575,8 @@ boost::optional<std::pair<Eigen::Isometry3d, lc::Time>> GraphLocalizer::estimate
 
 bool GraphLocalizer::Update() {
   LOG(INFO) << "Update: Updating.";
+
+  AddBufferedFactors();
 
   // Optimize
   // TODO(rsoussan): change lin solver?

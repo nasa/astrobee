@@ -41,6 +41,8 @@ struct FactorsToAdd {
                const GraphAction graph_action = GraphAction::kNone)
       : timestamp(timestamp), factors_to_add(factors_to_add), graph_action(graph_action) {}
 
+  explicit FactorsToAdd(const GraphAction graph_action = GraphAction::kNone) : graph_action(graph_action) {}
+
   localization_common::Time timestamp;
   std::vector<FactorToAdd> factors_to_add;
   GraphAction graph_action;
