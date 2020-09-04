@@ -19,7 +19,9 @@
 #ifndef GRAPH_LOCALIZER_GRAPH_LOCALIZER_H_
 #define GRAPH_LOCALIZER_GRAPH_LOCALIZER_H_
 
+#include <graph_localizer/factor_to_add.h>
 #include <graph_localizer/feature_tracker.h>
+#include <graph_localizer/graph_action.h>
 #include <graph_localizer/graph_localizer_params.h>
 #include <graph_localizer/graph_values.h>
 #include <graph_localizer/key_info.h>
@@ -112,13 +114,13 @@ class GraphLocalizer {
   bool CreateAndAddImuFactorAndPredictedCombinedNavState(const localization_common::CombinedNavState& global_cgN_body,
                                                          const gtsam::PreintegratedCombinedMeasurements& pim);
 
-  void BufferFactor(const localization_common::Time timestamp, const KeyInfos& key_infos,
-                    boost::shared_ptr<gtsam::NonlinearFactor> factor);
+  void BufferFactors(const FactorsToAdd& factors_to_add);
 
   void AddBufferedFactors();
 
-  boost::optional<gtsam::KeyVector> NewKeys(const KeyInfos& key_infos,
-                                            const boost::shared_ptr<gtsam::NonlinearFactor>& factor) const;
+  void DoGraphAction(const GraphAction graph_action);
+
+  bool Rekey(FactorToAdd& factor_to_add);
 
   bool ReadyToAddMeasurement(const localization_common::Time timestamp) const;
 
@@ -189,7 +191,7 @@ class GraphLocalizer {
   gtsam::SharedIsotropic nav_cam_noise_;
   gtsam::SharedIsotropic dock_cam_noise_;
   double min_of_avg_distance_from_mean_;
-  std::map<localization_common::Time, std::pair<KeyInfos, boost::shared_ptr<gtsam::NonlinearFactor>>> buffered_factors_;
+  std::map<localization_common::Time, FactorsToAdd> buffered_factors_to_add_;
   std::map<localization_common::Time, localization_measurements::FeaturePointsMeasurement>
       buffered_optical_flow_measurements_;
 };

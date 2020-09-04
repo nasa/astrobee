@@ -261,7 +261,8 @@ bool GraphLocalizer::AddOpticalFlowMeasurement(
         if (feature_point.timestamp > latest_timestamp) latest_timestamp = feature_point.timestamp;
       }
 
-      BufferFactor(latest_timestamp, key_infos, smart_factor);
+      const FactorToAdd factor_to_add(key_infos, smart_factor);
+      BufferFactors({latest_timestamp, {factor_to_add}, GraphAction::kDeleteExistingSmartFactors});
       ++num_buffered_smart_factors;
     }
 
@@ -319,7 +320,8 @@ void GraphLocalizer::AddProjectionMeasurement(const lm::MatchedProjectionsMeasur
     gtsam::LocProjectionFactor<>::shared_ptr loc_projection_factor(
         new gtsam::LocProjectionFactor<>(matched_projection.image_point, matched_projection.map_point, cam_noise,
                                          key_info.UninitializedKey(), cam_intrinsics, body_T_cam));
-    BufferFactor(matched_projections_measurement.timestamp, {key_info}, loc_projection_factor);
+    const FactorToAdd factor_to_add({key_info}, loc_projection_factor);
+    BufferFactors({matched_projections_measurement.timestamp, {factor_to_add}});
     ++num_buffered_loc_projection_factors;
   }
 
@@ -518,56 +520,51 @@ bool GraphLocalizer::SlideWindow(const gtsam::Marginals& marginals) {
   return true;
 }
 
-void GraphLocalizer::BufferFactor(const lc::Time timestamp, const KeyInfos& key_infos,
-                                  boost::shared_ptr<gtsam::NonlinearFactor> factor) {
-  buffered_factors_.emplace(timestamp, std::make_pair(key_infos, factor));
+void GraphLocalizer::BufferFactors(const FactorsToAdd& factors_to_add) {
+  buffered_factors_to_add_.emplace(factors_to_add.timestamp, factors_to_add);
 }
 
 void GraphLocalizer::AddBufferedFactors() {
   LOG(INFO) << "AddBufferedfactors: Adding buffered factors.";
 
   int num_added_factors = 0;
-  for (auto factor_it = buffered_factors_.cbegin(); factor_it != buffered_factors_.cend() &&
-                                                    latest_imu_integrator_.LatestTime() &&
-                                                    factor_it->first <= *(latest_imu_integrator_.LatestTime());) {
-    const auto& timestamp = factor_it->first;
-    // TODO(rsoussan): make struct for this?
-    const auto& key_infos = factor_it->second.first;
-    const auto& factor = factor_it->second.second;
+  for (auto factors_to_add_it = buffered_factors_to_add_.begin();
+       factors_to_add_it != buffered_factors_to_add_.end() && latest_imu_integrator_.LatestTime() &&
+       factors_to_add_it->first <= *(latest_imu_integrator_.LatestTime());) {
+    auto& factors_to_add = factors_to_add_it->second;
+    // Factors in a factors_to_add container have the same timestamp
+    auto timestamp = factors_to_add.timestamp;
+    for (auto& factor_to_add : factors_to_add.factors_to_add) {
+      if (!AddOrSplitImuFactorIfNeeded(timestamp)) {
+        LOG(DFATAL) << "AddBufferedFactor: Failed to add or split imu factors necessary for adding measurement factor.";
+        continue;
+      }
 
-    if (!AddOrSplitImuFactorIfNeeded(timestamp)) {
-      LOG(DFATAL) << "AddBufferedFactor: Failed to add or split imu factors necessary for adding measurement factor.";
-      factor_it = buffered_factors_.erase(factor_it);
-      continue;
+      if (!Rekey(factor_to_add)) {
+        LOG(DFATAL) << "AddBufferedMeasurements: Failed to rekey factor to add.";
+        continue;
+      }
+      graph_.push_back(factor_to_add.factor);
+      ++num_added_factors;
     }
-
-    const auto new_keys = NewKeys(key_infos, factor);
-    if (!new_keys) {
-      LOG(DFATAL) << "AddBufferedMeasurements: Failed to get new keys for factor.";
-      continue;
-    }
-    factor->keys() = *new_keys;
-    graph_.push_back(factor);
-    ++num_added_factors;
-    factor_it = buffered_factors_.erase(factor_it);
+    factors_to_add_it = buffered_factors_to_add_.erase(factors_to_add_it);
   }
 
   LOG(INFO) << "AddBufferedFactors: Added " << num_added_factors << " factors.";
 }
 
-boost::optional<gtsam::KeyVector> GraphLocalizer::NewKeys(
-    const KeyInfos& key_infos, const boost::shared_ptr<gtsam::NonlinearFactor>& factor) const {
+bool GraphLocalizer::Rekey(FactorToAdd& factor_to_add) {
   gtsam::KeyVector new_keys;
-  for (const auto& key_info : key_infos) {
+  for (const auto& key_info : factor_to_add.key_infos) {
     const auto new_key = graph_values_.GetKey(key_info.key_creator_function(), key_info.timestamp());
     if (!new_key) {
       LOG(ERROR) << "NewKeys: Failed to find new key for timestamp.";
-      return boost::none;
+      return false;
     }
     new_keys.emplace_back(*new_key);
   }
-
-  return new_keys;
+  factor_to_add.factor->keys() = new_keys;
+  return true;
 }
 
 bool GraphLocalizer::ReadyToAddMeasurement(const localization_common::Time timestamp) const {
