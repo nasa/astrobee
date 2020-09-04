@@ -36,6 +36,6 @@ create_library(TARGET ${PROJECT_NAME}
 )
 
 create_tool_targets(DIR tools
-  LIBS ${PROJECT_NAME} profiler
+  LIBS ${PROJECT_NAME} # profiler
   INC ${catkin_INCLUDE_DIRS}
 )

@@ -19,6 +19,7 @@
 #ifndef GRAPH_LOCALIZER_GRAPH_VALUES_H_
 #define GRAPH_LOCALIZER_GRAPH_VALUES_H_
 
+#include <graph_localizer/key_info.h>
 #include <localization_common/combined_nav_state.h>
 #include <localization_common/time.h>
 
@@ -69,6 +70,9 @@ class GraphValues {
   const gtsam::Values& values() const { return values_; }
 
   boost::optional<gtsam::Key> PoseKey(const localization_common::Time timestamp) const;
+
+  boost::optional<gtsam::Key> GetKey(KeyCreatorFunction key_creator_function,
+                                     const localization_common::Time timestamp) const;
 
   boost::optional<localization_common::Time> OldestTimestamp() const;
 

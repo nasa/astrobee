@@ -146,25 +146,29 @@ std::pair<boost::optional<lc::Time>, boost::optional<lc::Time>> GraphValues::Low
   return {lower_bound_it->first, upper_bound_it->first};
 }
 
-bool GraphValues::HasKey(const lc::Time timestamp) const { return (timestamp_key_index_map_.count(timestamp) != 0); }
-
-bool GraphValues::Empty() const { return timestamp_key_index_map_.empty(); }
-
-boost::optional<gtsam::Key> GraphValues::PoseKey(const lc::Time timestamp) const {
+boost::optional<gtsam::Key> GraphValues::GetKey(KeyCreatorFunction key_creator_function,
+                                                const localization_common::Time timestamp) const {
   if (timestamp_key_index_map_.count(timestamp) == 0) {
-    LOG(ERROR) << "PoseKey: No CombinedNavState found at timestamp.";
+    LOG(ERROR) << "GetKey: No key index found at timestamp.";
     return boost::none;
   }
 
   const int key_index = timestamp_key_index_map_.at(timestamp);
 
-  if (!values_.exists(sym::P(key_index))) {
-    LOG(ERROR) << "PoseKey: Pose key not present in values.";
+  const auto key = key_creator_function(key_index);
+  if (!values_.exists(key)) {
+    LOG(ERROR) << "GetKey: Key not present in values.";
     return boost::none;
   }
 
-  return sym::P(key_index);
+  return key;
 }
+
+bool GraphValues::HasKey(const lc::Time timestamp) const { return (timestamp_key_index_map_.count(timestamp) != 0); }
+
+bool GraphValues::Empty() const { return timestamp_key_index_map_.empty(); }
+
+boost::optional<gtsam::Key> GraphValues::PoseKey(const lc::Time timestamp) const { return GetKey(&sym::P, timestamp); }
 
 boost::optional<lc::CombinedNavState> GraphValues::GetCombinedNavState(const lc::Time timestamp) const {
   if (!HasKey(timestamp)) {

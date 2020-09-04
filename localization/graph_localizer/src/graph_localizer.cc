@@ -208,8 +208,11 @@ bool GraphLocalizer::AddOpticalFlowMeasurement(
   buffered_optical_flow_measurements_.emplace(optical_flow_feature_points_measurement.timestamp,
                                               optical_flow_feature_points_measurement);
 
-  // Add then erase measurements that are ready to be added
-  int num_added_smart_factors = 0;
+  // Add latest possible optical flow measurements
+  // Delete old factors to prevent having multiple smart factors for the same feature tracks.
+  // TODO(rsoussan): Simply add latest maeasuremetns to existing feature track factors and remove old measurements
+  // when this is enabled.  Gtsam smart factors currently do not allow removing old measurements.
+  int num_buffered_smart_factors = 0;
   for (auto measurement_it = buffered_optical_flow_measurements_.cbegin();
        measurement_it != buffered_optical_flow_measurements_.cend() && ReadyToAddMeasurement(measurement_it->first);) {
     const auto& measurement = measurement_it->second;
@@ -219,11 +222,8 @@ bool GraphLocalizer::AddOpticalFlowMeasurement(
 
     if (measurement.feature_points.empty()) {
       LOG(WARNING) << "AddOpticalFlowMeasurement: Empty measurement.";
-      return false;
-    }
-    if (!AddOrSplitImuFactorIfNeeded(measurement.timestamp)) {
-      LOG(DFATAL) << "AddOpicalFlowMeasurement: Failed to add optical flow measurement.";
-      return false;
+      measurement_it = buffered_optical_flow_measurements_.erase(measurement_it);
+      continue;
     }
 
     // Remove all camera factors from graph since SmartFactor does not allow for
@@ -241,29 +241,38 @@ bool GraphLocalizer::AddOpticalFlowMeasurement(
     }
     VLOG(2) << "AddOpticalFLowMeasurement: Num removed smart factors: " << num_removed_smart_factors;
 
+    // Reset here so only latest round of added measurements is logged (since old ones are removed)
+    num_buffered_smart_factors = 0;
     // Add smart factor for each feature track
     for (const auto& feature_track : feature_tracker_.feature_tracks()) {
       if (!ValidPointSet(feature_track.second.points, min_of_avg_distance_from_mean_)) continue;
       SharedSmartFactor smart_factor(
           new SmartFactor(nav_cam_noise_, nav_cam_intrinsics_, body_T_nav_cam_, smart_projection_params_));
+
       int num_points_added = 0;
+      KeyInfos key_infos;
+      key_infos.reserve(feature_track.second.points.size());
+      lc::Time latest_timestamp = std::numeric_limits<int>::lowest();
       for (const auto& feature_point : feature_track.second.points) {
-        const auto pose_key = graph_values_.PoseKey(feature_point.timestamp);
-        if (!pose_key) {
-          LOG(ERROR) << "AddOpticalFlowMeasurement: Failed to find pose key for timestamp.";
-          continue;
-        }
-        smart_factor->add(Camera::Measurement(feature_point.image_point), *pose_key);
+        const KeyInfo key_info(&sym::P, feature_point.timestamp);
+        key_infos.emplace_back(key_info);
+        smart_factor->add(Camera::Measurement(feature_point.image_point), key_info.UninitializedKey());
         ++num_points_added;
+        if (feature_point.timestamp > latest_timestamp) latest_timestamp = feature_point.timestamp;
       }
 
-      graph_.push_back(smart_factor);
-      ++num_added_smart_factors;
+      BufferFactor(latest_timestamp, key_infos, smart_factor);
+      ++num_buffered_smart_factors;
     }
+
     measurement_it = buffered_optical_flow_measurements_.erase(measurement_it);
+    // Add buffered factors iteratively so states are created for all poses necessary.
+    // After adding all buffered factors, only latest ones remain but states for the history
+    // of feature tracks will have been created in graph values.
+    AddBufferedFactors();
   }
 
-  VLOG(2) << "AddOpticalFLowMeasurement: Newly added " << num_added_smart_factors << " smart factors.";
+  VLOG(2) << "AddOpticalFLowMeasurement: Buffered " << num_buffered_smart_factors << " smart factors.";
   return true;
 }
 
@@ -301,38 +310,20 @@ void GraphLocalizer::AddProjectionMeasurement(const lm::MatchedProjectionsMeasur
                                               const gtsam::SharedIsotropic& cam_noise) {
   if (matched_projections_measurement.matched_projections.empty()) {
     LOG(WARNING) << "AddProjectionMeasurement: Empty measurement.";
-  } else {
-    buffered_projection_measurements_.emplace(matched_projections_measurement.timestamp,
-                                              matched_projections_measurement);
+    return;
   }
 
-  // Add then erase measurements that are ready to be added
-  int num_added_loc_projection_factors = 0;
-  for (auto measurement_it = buffered_projection_measurements_.cbegin();
-       measurement_it != buffered_projection_measurements_.cend() && ReadyToAddMeasurement(measurement_it->first);) {
-    const auto& measurement = measurement_it->second;
-    if (!AddOrSplitImuFactorIfNeeded(measurement.timestamp)) {
-      LOG(DFATAL) << "AddProjectionMeasurement: Failed to add projection measurement.";
-      return;
-    }
-
-    for (const auto& matched_projection : measurement.matched_projections) {
-      const auto pose_key = graph_values_.PoseKey(measurement.timestamp);
-      if (!pose_key) {
-        LOG(ERROR) << "AddProjectionMeasurement: Failed to find pose key for timestamp.";
-        continue;
-      }
-
-      gtsam::LocProjectionFactor<>::shared_ptr loc_projection_factor(
-          new gtsam::LocProjectionFactor<>(matched_projection.image_point, matched_projection.map_point, cam_noise,
-                                           *pose_key, cam_intrinsics, body_T_cam));
-      graph_.push_back(loc_projection_factor);
-      ++num_added_loc_projection_factors;
-    }
-    measurement_it = buffered_projection_measurements_.erase(measurement_it);
+  int num_buffered_loc_projection_factors = 0;
+  for (const auto& matched_projection : matched_projections_measurement.matched_projections) {
+    const KeyInfo key_info(&sym::P, matched_projections_measurement.timestamp);
+    gtsam::LocProjectionFactor<>::shared_ptr loc_projection_factor(
+        new gtsam::LocProjectionFactor<>(matched_projection.image_point, matched_projection.map_point, cam_noise,
+                                         key_info.UninitializedKey(), cam_intrinsics, body_T_cam));
+    BufferFactor(matched_projections_measurement.timestamp, {key_info}, loc_projection_factor);
+    ++num_buffered_loc_projection_factors;
   }
 
-  VLOG(2) << "AddProjectionMeasurement: Added " << num_added_loc_projection_factors << " loc projection factors.";
+  VLOG(2) << "AddProjectionMeasurement: Buffered " << num_buffered_loc_projection_factors << " loc projection factors.";
 }
 
 bool GraphLocalizer::AddOrSplitImuFactorIfNeeded(const lc::Time timestamp) {
@@ -527,8 +518,66 @@ bool GraphLocalizer::SlideWindow(const gtsam::Marginals& marginals) {
   return true;
 }
 
-bool GraphLocalizer::ReadyToAddMeasurement(const lc::Time timestamp) {
-  return latest_imu_integrator_.WithinBounds(timestamp);
+void GraphLocalizer::BufferFactor(const lc::Time timestamp, const KeyInfos& key_infos,
+                                  boost::shared_ptr<gtsam::NonlinearFactor> factor) {
+  buffered_factors_.emplace(timestamp, std::make_pair(key_infos, factor));
+}
+
+void GraphLocalizer::AddBufferedFactors() {
+  LOG(INFO) << "AddBufferedfactors: Adding buffered factors.";
+
+  int num_added_factors = 0;
+  for (auto factor_it = buffered_factors_.cbegin(); factor_it != buffered_factors_.cend() &&
+                                                    latest_imu_integrator_.LatestTime() &&
+                                                    factor_it->first <= *(latest_imu_integrator_.LatestTime());) {
+    const auto& timestamp = factor_it->first;
+    // TODO(rsoussan): make struct for this?
+    const auto& key_infos = factor_it->second.first;
+    const auto& factor = factor_it->second.second;
+
+    if (!AddOrSplitImuFactorIfNeeded(timestamp)) {
+      LOG(DFATAL) << "AddBufferedFactor: Failed to add or split imu factors necessary for adding measurement factor.";
+      factor_it = buffered_factors_.erase(factor_it);
+      continue;
+    }
+
+    const auto new_keys = NewKeys(key_infos, factor);
+    if (!new_keys) {
+      LOG(DFATAL) << "AddBufferedMeasurements: Failed to get new keys for factor.";
+      continue;
+    }
+    factor->keys() = *new_keys;
+    graph_.push_back(factor);
+    ++num_added_factors;
+    factor_it = buffered_factors_.erase(factor_it);
+  }
+
+  LOG(INFO) << "AddBufferedFactors: Added " << num_added_factors << " factors.";
+}
+
+boost::optional<gtsam::KeyVector> GraphLocalizer::NewKeys(
+    const KeyInfos& key_infos, const boost::shared_ptr<gtsam::NonlinearFactor>& factor) const {
+  gtsam::KeyVector new_keys;
+  for (const auto& key_info : key_infos) {
+    const auto new_key = graph_values_.GetKey(key_info.key_creator_function(), key_info.timestamp());
+    if (!new_key) {
+      LOG(ERROR) << "NewKeys: Failed to find new key for timestamp.";
+      return boost::none;
+    }
+    new_keys.emplace_back(*new_key);
+  }
+
+  return new_keys;
+}
+
+bool GraphLocalizer::ReadyToAddMeasurement(const localization_common::Time timestamp) const {
+  const auto latest_time = latest_imu_integrator_.LatestTime();
+  if (!latest_time) {
+    LOG(ERROR) << "ReadyToAddMeasurement: Failed to get latet imu time.";
+    return false;
+  }
+
+  return (timestamp <= *latest_time);
 }
 
 void GraphLocalizer::PrintFactorDebugInfo() const {
