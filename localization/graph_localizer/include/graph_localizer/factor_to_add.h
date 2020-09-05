@@ -43,6 +43,7 @@ struct FactorsToAdd {
 
   explicit FactorsToAdd(const GraphAction graph_action = GraphAction::kNone) : graph_action(graph_action) {}
 
+  // Timestamp used to sort factors when adding to graph.
   localization_common::Time timestamp;
   std::vector<FactorToAdd> factors_to_add;
   GraphAction graph_action;

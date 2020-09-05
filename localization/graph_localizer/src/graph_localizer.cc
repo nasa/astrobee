@@ -32,6 +32,8 @@
 
 #include <glog/logging.h>
 
+#include <iomanip>
+
 namespace graph_localizer {
 namespace ii = imu_integration;
 namespace lc = localization_common;
@@ -484,6 +486,7 @@ void GraphLocalizer::BufferFactors(const FactorsToAdd& factors_to_add) {
 
 void GraphLocalizer::AddBufferedFactors() {
   LOG(INFO) << "AddBufferedfactors: Adding buffered factors.";
+  VLOG(2) << "AddBufferedFactors: Num buffered factors to add: " << buffered_factors_to_add_.size();
 
   int num_added_factors = 0;
   for (auto factors_to_add_it = buffered_factors_to_add_.begin();
@@ -492,12 +495,14 @@ void GraphLocalizer::AddBufferedFactors() {
     auto& factors_to_add = factors_to_add_it->second;
     DoGraphAction(factors_to_add.graph_action);
 
-    // Factors in a factors_to_add container have the same timestamp
-    auto timestamp = factors_to_add.timestamp;
     for (auto& factor_to_add : factors_to_add.factors_to_add) {
-      if (!AddOrSplitImuFactorIfNeeded(timestamp)) {
-        LOG(DFATAL) << "AddBufferedFactor: Failed to add or split imu factors necessary for adding measurement factor.";
-        continue;
+      // Add combined nav states and connecting imu factors for each key in factor if necessary
+      // TODO(rsoussan): make this more efficient for factors with multiple keys with the same timestamp?
+      for (const auto& key_info : factor_to_add.key_infos) {
+        if (!AddOrSplitImuFactorIfNeeded(key_info.timestamp())) {
+          LOG(DFATAL) << "AddBufferedFactor: Failed to add or split imu factors necessary for adding factor.";
+          continue;
+        }
       }
 
       if (!Rekey(factor_to_add)) {
