@@ -216,10 +216,12 @@ bool GraphLocalizer::AddOpticalFlowMeasurement(
 
     KeyInfos key_infos;
     key_infos.reserve(feature_track.second.points.size());
+    // Gtsam requires unique key indices for each key, even though these will be replaced later
+    int uninitialized_key_index = 0;
     for (const auto& feature_point : feature_track.second.points) {
       const KeyInfo key_info(&sym::P, feature_point.timestamp);
       key_infos.emplace_back(key_info);
-      smart_factor->add(Camera::Measurement(feature_point.image_point), key_info.UninitializedKey());
+      smart_factor->add(Camera::Measurement(feature_point.image_point), key_info.MakeKey(uninitialized_key_index++));
       if (feature_point.timestamp > latest_timestamp) latest_timestamp = feature_point.timestamp;
     }
 
@@ -516,8 +518,8 @@ void GraphLocalizer::DoGraphAction(const GraphAction graph_action) {
     case GraphAction::kNone:
       return;
     case GraphAction::kDeleteExistingSmartFactors:
-      DeleteFactors<SmartFactor>();
       VLOG(2) << "DoGraphAction: Deleting smart factors.";
+      DeleteFactors<SmartFactor>();
       return;
   }
 }
@@ -527,7 +529,7 @@ bool GraphLocalizer::Rekey(FactorToAdd& factor_to_add) {
   for (const auto& key_info : factor_to_add.key_infos) {
     const auto new_key = graph_values_.GetKey(key_info.key_creator_function(), key_info.timestamp());
     if (!new_key) {
-      LOG(ERROR) << "NewKeys: Failed to find new key for timestamp.";
+      LOG(ERROR) << "ReKey: Failed to find new key for timestamp.";
       return false;
     }
     new_keys.emplace_back(*new_key);

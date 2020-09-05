@@ -33,6 +33,7 @@ class KeyInfo {
   KeyInfo(KeyCreatorFunction key_creator_function, const localization_common::Time timestamp)
       : key_creator_function_(key_creator_function), timestamp_(timestamp) {}
   gtsam::Key UninitializedKey() const { return key_creator_function_(0); }
+  gtsam::Key MakeKey(const std::uint64_t key_index) const { return key_creator_function_(key_index); }
   static gtsam::Key UninitializedKey(KeyCreatorFunction key_creator_function) { return key_creator_function(0); }
   KeyCreatorFunction key_creator_function() const { return key_creator_function_; }
   localization_common::Time timestamp() const { return timestamp_; }
