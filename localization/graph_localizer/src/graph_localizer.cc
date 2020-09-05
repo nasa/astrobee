@@ -227,10 +227,10 @@ bool GraphLocalizer::AddOpticalFlowMeasurement(
       if (feature_point.timestamp > latest_timestamp) latest_timestamp = feature_point.timestamp;
     }
 
-    factors_to_add.factors_to_add.emplace_back(key_infos, smart_factor);
+    factors_to_add.push_back({key_infos, smart_factor});
     ++num_buffered_smart_factors;
   }
-  factors_to_add.timestamp = latest_timestamp;
+  factors_to_add.SetTimestamp(latest_timestamp);
   BufferFactors(factors_to_add);
 
   VLOG(2) << "AddOpticalFLowMeasurement: Buffered " << num_buffered_smart_factors << " smart factors.";
@@ -275,15 +275,18 @@ void GraphLocalizer::AddProjectionMeasurement(const lm::MatchedProjectionsMeasur
   }
 
   int num_buffered_loc_projection_factors = 0;
+  FactorsToAdd factors_to_add;
+  factors_to_add.reserve(matched_projections_measurement.matched_projections.size());
   for (const auto& matched_projection : matched_projections_measurement.matched_projections) {
     const KeyInfo key_info(&sym::P, matched_projections_measurement.timestamp);
     gtsam::LocProjectionFactor<>::shared_ptr loc_projection_factor(
         new gtsam::LocProjectionFactor<>(matched_projection.image_point, matched_projection.map_point, cam_noise,
                                          key_info.UninitializedKey(), cam_intrinsics, body_T_cam));
-    const FactorToAdd factor_to_add({key_info}, loc_projection_factor);
-    BufferFactors({matched_projections_measurement.timestamp, {factor_to_add}});
+    factors_to_add.push_back({{key_info}, loc_projection_factor});
     ++num_buffered_loc_projection_factors;
   }
+  factors_to_add.SetTimestamp(matched_projections_measurement.timestamp);
+  BufferFactors(factors_to_add);
 
   VLOG(2) << "AddProjectionMeasurement: Buffered " << num_buffered_loc_projection_factors << " loc projection factors.";
 }
@@ -481,7 +484,7 @@ bool GraphLocalizer::SlideWindow(const gtsam::Marginals& marginals) {
 }
 
 void GraphLocalizer::BufferFactors(const FactorsToAdd& factors_to_add) {
-  buffered_factors_to_add_.emplace(factors_to_add.timestamp, factors_to_add);
+  buffered_factors_to_add_.emplace(factors_to_add.timestamp(), factors_to_add);
 }
 
 void GraphLocalizer::AddBufferedFactors() {
@@ -493,9 +496,9 @@ void GraphLocalizer::AddBufferedFactors() {
        factors_to_add_it != buffered_factors_to_add_.end() && latest_imu_integrator_.LatestTime() &&
        factors_to_add_it->first <= *(latest_imu_integrator_.LatestTime());) {
     auto& factors_to_add = factors_to_add_it->second;
-    DoGraphAction(factors_to_add.graph_action);
+    DoGraphAction(factors_to_add.graph_action());
 
-    for (auto& factor_to_add : factors_to_add.factors_to_add) {
+    for (auto& factor_to_add : factors_to_add.Get()) {
       // Add combined nav states and connecting imu factors for each key in factor if necessary
       // TODO(rsoussan): make this more efficient for factors with multiple keys with the same timestamp?
       for (const auto& key_info : factor_to_add.key_infos) {

@@ -36,17 +36,30 @@ struct FactorToAdd {
   KeyInfos key_infos;
 };
 
-struct FactorsToAdd {
+class FactorsToAdd {
+ public:
   FactorsToAdd(const localization_common::Time timestamp, const std::vector<FactorToAdd>& factors_to_add,
                const GraphAction graph_action = GraphAction::kNone)
-      : timestamp(timestamp), factors_to_add(factors_to_add), graph_action(graph_action) {}
+      : timestamp_(timestamp), factors_to_add_(factors_to_add), graph_action_(graph_action) {}
 
-  explicit FactorsToAdd(const GraphAction graph_action = GraphAction::kNone) : graph_action(graph_action) {}
+  explicit FactorsToAdd(const GraphAction graph_action = GraphAction::kNone) : graph_action_(graph_action) {}
 
+  void reserve(const int size) { factors_to_add_.reserve(size); }
+  void push_back(FactorToAdd&& factor_to_add) { factors_to_add_.emplace_back(std::move(factor_to_add)); }  // NOLINT
+  void push_back(const FactorToAdd& factor_to_add) { factors_to_add_.push_back(factor_to_add); }
+  void SetTimestamp(const localization_common::Time timestamp) { timestamp_ = timestamp; }
+
+  localization_common::Time timestamp() const { return timestamp_; }
+  // TODO(rsoussan): rename this?
+  const std::vector<FactorToAdd>& Get() const { return factors_to_add_; }
+  std::vector<FactorToAdd>& Get() { return factors_to_add_; }
+  GraphAction graph_action() const { return graph_action_; }
+
+ private:
   // Timestamp used to sort factors when adding to graph.
-  localization_common::Time timestamp;
-  std::vector<FactorToAdd> factors_to_add;
-  GraphAction graph_action;
+  localization_common::Time timestamp_;
+  std::vector<FactorToAdd> factors_to_add_;
+  GraphAction graph_action_;
 };
 }  // namespace graph_localizer
 
