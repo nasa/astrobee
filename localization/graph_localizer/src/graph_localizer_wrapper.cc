@@ -49,6 +49,10 @@ GraphLocalizerWrapper::GraphLocalizerWrapper() {
     LOG(FATAL) << "Failed to load publish_localization_graph.";
   }
 
+  if (!config.GetBool("save_localization_graph_dot_file", &save_localization_graph_dot_file_)) {
+    LOG(FATAL) << "Failed to load save_localization_graph_dot_file.";
+  }
+
   graph_loc_initialization_.LoadSensorParams(config);
   graph_loc_initialization_.LoadGraphLocalizerParams(config);
 }
@@ -195,6 +199,12 @@ boost::optional<ff_msgs::LocalizationGraph> GraphLocalizerWrapper::LatestLocaliz
   return GraphMsg(*graph_localizer_);
 }
 
+void GraphLocalizerWrapper::SaveLocalizationGraphDotFile() const {
+  if (graph_localizer_) graph_localizer_->SaveGraphDotFile();
+}
+
 bool GraphLocalizerWrapper::publish_localization_graph() const { return publish_localization_graph_; }
+
+bool GraphLocalizerWrapper::save_localization_graph_dot_file() const { return save_localization_graph_dot_file_; }
 
 }  // namespace graph_localizer

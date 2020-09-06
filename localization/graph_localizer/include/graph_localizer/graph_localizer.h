@@ -51,6 +51,7 @@
 
 #include <map>
 #include <memory>
+#include <string>
 #include <utility>
 
 namespace graph_localizer {
@@ -97,6 +98,8 @@ class GraphLocalizer {
   const GraphValues& graph_values() const;
 
   const gtsam::NonlinearFactorGraph& factor_graph() const;
+
+  void SaveGraphDotFile(const std::string& output_path = "graph.dot") const;
 
  private:
   // Removes Keys and Values outside of sliding window.

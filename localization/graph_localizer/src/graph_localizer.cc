@@ -575,6 +575,11 @@ const GraphValues& GraphLocalizer::graph_values() const { return graph_values_; 
 
 const gtsam::NonlinearFactorGraph& GraphLocalizer::factor_graph() const { return graph_; }
 
+void GraphLocalizer::SaveGraphDotFile(const std::string& output_path) const {
+  std::ofstream of(output_path.c_str());
+  graph_.saveGraph(of, graph_values_.values());
+}
+
 boost::optional<std::pair<Eigen::Isometry3d, lc::Time>> GraphLocalizer::estimated_world_T_dock() const {
   if (!estimated_world_T_dock_) {
     LOG(ERROR) << "estimated_world_T_dock: Failed to get estimated_world_T_dock.";
@@ -593,13 +598,6 @@ bool GraphLocalizer::Update() {
   gtsam::LevenbergMarquardtOptimizer optimizer(graph_, graph_values_.values());
   graph_values_.UpdateValues(optimizer.optimize());
 
-  // PrintFactorDebugInfo();
-
-  // TODO(rsoussan): put this somewhere else
-  const std::string output_path("/home/rsoussan/graph_bag_tests/graph.dot");
-  std::ofstream of(output_path.c_str());
-  graph_.saveGraph(of, graph_values_.values());
-
   // Update imu integrator bias
   const auto latest_bias = graph_values_.LatestBias();
   if (!latest_bias) {
@@ -608,6 +606,7 @@ bool GraphLocalizer::Update() {
   }
 
   latest_imu_integrator_.ResetPimIntegrationAndSetBias(latest_bias->first);
+
   // Calculate marginals before sliding window since this depends on values that
   // would be removed in SlideWindow()
   marginals_.reset(new gtsam::Marginals(graph_, graph_values_.values()));

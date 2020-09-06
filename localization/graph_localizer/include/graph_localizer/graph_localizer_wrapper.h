@@ -67,7 +67,11 @@ class GraphLocalizerWrapper {
 
   boost::optional<std::pair<Eigen::Isometry3d, localization_common::Time>> estimated_world_T_dock() const;
 
+  void SaveLocalizationGraphDotFile() const;
+
   bool publish_localization_graph() const;
+
+  bool save_localization_graph_dot_file() const;
 
  private:
   void InitializeGraph();
@@ -76,6 +80,7 @@ class GraphLocalizerWrapper {
   std::vector<localization_measurements::ImuMeasurement> imu_bias_measurements_;
   int num_bias_estimation_measurements_;
   bool publish_localization_graph_;
+  bool save_localization_graph_dot_file_;
   // TODO(rsoussan): put these somewhere else? make accessor that returns false
   // if latest imu measurement not available?
   Eigen::Vector3d latest_accelerometer_bias_;
