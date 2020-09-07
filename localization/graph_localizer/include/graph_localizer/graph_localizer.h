@@ -171,6 +171,16 @@ class GraphLocalizer {
   }
 
   // Serialization function
+  /*template <typename Archive>
+   friend void boost::serialization::serialize(Archive& ar, graph_localizer::GraphLocalizer& graph_localizer, const
+  unsigned int version); template <typename Archive> friend void boost::serialization::split_free(Archive& ar,
+  graph_localizer::GraphLocalizer& graph_localizer, const unsigned int version); template <typename Archive> friend void
+  boost::serialization::save(Archive& ar, const graph_localizer::GraphLocalizer& graph_localizer, const unsigned int
+  version);
+   // friend boost::serialization::save<Archive>;
+   template <typename Archive>
+   friend void boost::serialization::load(Archive& ar, graph_localizer::GraphLocalizer& graph_localizer, const unsigned
+  int version);*/
   friend class boost::serialization::access;
   template <class Archive>
   void save(Archive& ar, const unsigned int version) const {
