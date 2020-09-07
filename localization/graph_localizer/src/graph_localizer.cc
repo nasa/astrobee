@@ -522,6 +522,9 @@ bool GraphLocalizer::DoGraphAction(FactorsToAdd& factors_to_add) {
     case GraphAction::kTransformARMeasurementAndUpdateDockTWorld:
       return TransformARMeasurementAndUpdateDockTWorld(factors_to_add);
   }
+
+  // Shouldn't occur
+  return true;
 }
 
 bool GraphLocalizer::Rekey(FactorToAdd& factor_to_add) {

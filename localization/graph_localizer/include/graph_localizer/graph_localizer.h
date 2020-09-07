@@ -220,8 +220,6 @@ class GraphLocalizer {
   gtsam::SharedIsotropic dock_cam_noise_;
   double min_of_avg_distance_from_mean_;
   std::multimap<localization_common::Time, FactorsToAdd> buffered_factors_to_add_;
-  std::map<localization_common::Time, localization_measurements::FeaturePointsMeasurement>
-      buffered_optical_flow_measurements_;
 };
 }  // namespace graph_localizer
 
