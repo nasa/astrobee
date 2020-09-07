@@ -65,7 +65,6 @@ ff_msgs::LocalizationGraph GraphMsg(const GraphLocalizer& graph_localizer);
 geometry_msgs::PoseStamped PoseMsg(const Eigen::Isometry3d& global_T_body, const std_msgs::Header& header);
 
 geometry_msgs::PoseStamped PoseMsg(const Eigen::Isometry3d& global_T_body, const localization_common::Time time);
-
 }  // namespace graph_localizer
 
 #endif  // GRAPH_LOCALIZER_UTILITIES_H_

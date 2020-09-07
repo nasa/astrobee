@@ -82,7 +82,7 @@ class GraphLocalizer {
   void AddProjectionMeasurement(
       const localization_measurements::MatchedProjectionsMeasurement& matched_projections_measurement,
       const gtsam::Pose3& body_T_cam, const boost::shared_ptr<gtsam::Cal3_S2>& cam_intrinsics,
-      const gtsam::SharedIsotropic& cam_noise);
+      const gtsam::SharedIsotropic& cam_noise, const GraphAction& graph_action = GraphAction::kNone);
 
   bool Update();
   const FeatureTrackMap& feature_tracks() const { return feature_tracker_.feature_tracks(); }
@@ -129,11 +129,13 @@ class GraphLocalizer {
 
   void AddBufferedFactors();
 
-  void DoGraphAction(const GraphAction graph_action);
+  bool DoGraphAction(FactorsToAdd& factors_to_add);
 
   bool Rekey(FactorToAdd& factor_to_add);
 
   bool ReadyToAddMeasurement(const localization_common::Time timestamp) const;
+
+  bool TransformARMeasurementAndUpdateDockTWorld(FactorsToAdd& factors_to_add);
 
   template <typename FactorType>
   void DeleteFactors() {
@@ -211,6 +213,7 @@ class GraphLocalizer {
   gtsam::Pose3 body_T_dock_cam_;
   gtsam::Pose3 config_world_T_dock_;
   boost::optional<std::pair<gtsam::Pose3, localization_common::Time>> estimated_world_T_dock_;
+  std::map<localization_common::Time, gtsam::Pose3> dock_cam_T_dock_estimates_;
   boost::shared_ptr<gtsam::Cal3_S2> nav_cam_intrinsics_;
   boost::shared_ptr<gtsam::Cal3_S2> dock_cam_intrinsics_;
   gtsam::SharedIsotropic nav_cam_noise_;

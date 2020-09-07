@@ -240,23 +240,9 @@ bool GraphLocalizer::AddOpticalFlowMeasurement(
 void GraphLocalizer::AddARTagMeasurement(const lm::MatchedProjectionsMeasurement& matched_projections_measurement,
                                          const gtsam::Pose3& dock_cam_T_dock) {
   LOG(INFO) << "AddARTagMeasurement: Adding AR tag measurement.";
-  // Get world_T_dock using current loc estimate since dock can be moved on the ISS.
-  // TODO(rsoussan): Optimize this online using config value as a prior, update this
-  // config value periodically after running localizer.
-  // TODO(rsoussan): Fix timestamp issue of ar tag measurements (uses ros::now instead of timestamp of measurement)
-  const auto combined_nav_state = GetCombinedNavState(matched_projections_measurement.timestamp);
-  if (!combined_nav_state) {
-    LOG(ERROR) << "AddARTagMeasurement: Failed to get combined nav state.";
-    return;
-  }
-
-  const gtsam::Pose3 world_T_body = combined_nav_state->pose();
-  estimated_world_T_dock_ =
-      std::make_pair(world_T_body * body_T_dock_cam_ * dock_cam_T_dock, matched_projections_measurement.timestamp);
-  const auto frame_changed_projections_measurement =
-      lm::FrameChangeMatchedProjectionsMeasurement(matched_projections_measurement, estimated_world_T_dock_->first);
-  AddProjectionMeasurement(frame_changed_projections_measurement, body_T_dock_cam_, dock_cam_intrinsics_,
-                           dock_cam_noise_);
+  dock_cam_T_dock_estimates_.emplace(matched_projections_measurement.timestamp, dock_cam_T_dock);
+  AddProjectionMeasurement(matched_projections_measurement, body_T_dock_cam_, dock_cam_intrinsics_, dock_cam_noise_,
+                           GraphAction::kTransformARMeasurementAndUpdateDockTWorld);
 }
 
 void GraphLocalizer::AddSparseMappingMeasurement(
@@ -268,14 +254,15 @@ void GraphLocalizer::AddSparseMappingMeasurement(
 void GraphLocalizer::AddProjectionMeasurement(const lm::MatchedProjectionsMeasurement& matched_projections_measurement,
                                               const gtsam::Pose3& body_T_cam,
                                               const boost::shared_ptr<gtsam::Cal3_S2>& cam_intrinsics,
-                                              const gtsam::SharedIsotropic& cam_noise) {
+                                              const gtsam::SharedIsotropic& cam_noise,
+                                              const GraphAction& graph_action) {
   if (matched_projections_measurement.matched_projections.empty()) {
     LOG(WARNING) << "AddProjectionMeasurement: Empty measurement.";
     return;
   }
 
   int num_buffered_loc_projection_factors = 0;
-  FactorsToAdd factors_to_add;
+  FactorsToAdd factors_to_add(graph_action);
   factors_to_add.reserve(matched_projections_measurement.matched_projections.size());
   for (const auto& matched_projection : matched_projections_measurement.matched_projections) {
     const KeyInfo key_info(&sym::P, matched_projections_measurement.timestamp);
@@ -496,7 +483,10 @@ void GraphLocalizer::AddBufferedFactors() {
        factors_to_add_it != buffered_factors_to_add_.end() && latest_imu_integrator_.LatestTime() &&
        factors_to_add_it->first <= *(latest_imu_integrator_.LatestTime());) {
     auto& factors_to_add = factors_to_add_it->second;
-    DoGraphAction(factors_to_add.graph_action());
+    if (!DoGraphAction(factors_to_add)) {
+      LOG(ERROR) << "AddBufferedFactors: Failed to complete graph action.";
+      continue;
+    }
 
     for (auto& factor_to_add : factors_to_add.Get()) {
       // Add combined nav states and connecting imu factors for each key in factor if necessary
@@ -521,14 +511,16 @@ void GraphLocalizer::AddBufferedFactors() {
   LOG(INFO) << "AddBufferedFactors: Added " << num_added_factors << " factors.";
 }
 
-void GraphLocalizer::DoGraphAction(const GraphAction graph_action) {
-  switch (graph_action) {
+bool GraphLocalizer::DoGraphAction(FactorsToAdd& factors_to_add) {
+  switch (factors_to_add.graph_action()) {
     case GraphAction::kNone:
-      return;
+      return true;
     case GraphAction::kDeleteExistingSmartFactors:
       VLOG(2) << "DoGraphAction: Deleting smart factors.";
       DeleteFactors<SmartFactor>();
-      return;
+      return true;
+    case GraphAction::kTransformARMeasurementAndUpdateDockTWorld:
+      return TransformARMeasurementAndUpdateDockTWorld(factors_to_add);
   }
 }
 
@@ -554,6 +546,40 @@ bool GraphLocalizer::ReadyToAddMeasurement(const localization_common::Time times
   }
 
   return (timestamp <= *latest_time);
+}
+
+bool GraphLocalizer::TransformARMeasurementAndUpdateDockTWorld(FactorsToAdd& factors_to_add) {
+  // Get world_T_dock using current loc estimate since dock can be moved on the ISS.
+  // TODO(rsoussan): Optimize this online using config value as a prior, update this
+  // config value periodically after running localizer.
+  // TODO(rsoussan): Fix timestamp issue of ar tag measurements (uses ros::now instead of timestamp of measurement)
+  const auto combined_nav_state = GetCombinedNavState(factors_to_add.timestamp());
+  if (!combined_nav_state) {
+    LOG(ERROR) << "AddARTagMeasurement: Failed to get combined nav state.";
+    return false;
+  }
+
+  auto estimated_dock_cam_T_dock_it = dock_cam_T_dock_estimates_.find(factors_to_add.timestamp());
+  if (estimated_dock_cam_T_dock_it == dock_cam_T_dock_estimates_.end()) {
+    LOG(ERROR) << "TransformARMeasurementAndUpdateDockTWorld: Failed to find dock_cam_T_dock estimate at timestamp.";
+    return false;
+  }
+
+  const gtsam::Pose3 world_T_body = combined_nav_state->pose();
+  estimated_world_T_dock_ = std::make_pair(world_T_body * body_T_dock_cam_ * estimated_dock_cam_T_dock_it->second,
+                                           factors_to_add.timestamp());
+
+  // Frame change dock frame of landmark point using updated estimate of world_T_dock_
+  for (auto& factor_to_add : factors_to_add.Get()) {
+    gtsam::LocProjectionFactor<>* loc_factor = dynamic_cast<gtsam::LocProjectionFactor<>*>(factor_to_add.factor.get());
+    if (!loc_factor) {
+      LOG(ERROR) << "TransformARMeasurementAndUpdateDockTWorld: Failed to cast factor to loc projection factor.";
+      return false;
+    }
+    loc_factor->landmark_point() = estimated_world_T_dock_->first * loc_factor->landmark_point();
+  }
+
+  return true;
 }
 
 void GraphLocalizer::PrintFactorDebugInfo() const {
