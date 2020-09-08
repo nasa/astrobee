@@ -39,3 +39,6 @@ class Poses(object):
        pose_msg.orientation.w]).as_euler('ZYX', degrees=True)
     self.orientations.add(euler_angles[0], euler_angles[1], euler_angles[2])
     self.times.append(timestamp.secs + 1e-9 * timestamp.nsecs)
+
+  def position_vector(self, index):
+    return [self.positions.xs[index], self.positions.ys[index], self.positions.zs[index]]

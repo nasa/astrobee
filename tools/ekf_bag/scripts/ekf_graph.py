@@ -56,8 +56,8 @@ def quat_to_euler(q):
   return (x, y, z)
 
 # RMSE of matrix interpreted as n (dim(rows) vectors of dim(col) 
-def rmse_matrix(x):
-  return np.mean(np.sqrt(np.sum(np.square(x), axis=1)))
+def rmse_matrix(error_matrix):
+  return np.sqrt(np.mean(np.sum(np.square(error_matrix), axis=1)))
 
 # Removes the ith entry of a_xs, a_ys, and a_zs if a_times[i] is 
 # not in b_times[i].  Assumes timestamp vectors are sorted
@@ -65,8 +65,10 @@ def prune_missing_timestamps(a_xs, a_ys, a_zs, a_times, b_times):
   a_index = 0
   pruned_a_matrix = np.empty(shape=(len(b_times), 3)) 
   for b_index, b_time in enumerate(b_times):
-    while not np.isclose(a_times[a_index], b_time) and a_times[a_index] < b_time and a_index < len(a_times):
+    while not np.isclose(a_times[a_index], b_time, rtol=0) and a_times[a_index] < b_time and a_index < len(a_times):
       a_index += 1 
+    if not np.isclose(a_times[a_index], b_time, rtol=0, atol=0.02):
+      print('Failed to find a time close to b time.')
     pruned_a_matrix[b_index] = np.array([a_xs[a_index], a_ys[a_index], a_zs[a_index]])
   return pruned_a_matrix
 
