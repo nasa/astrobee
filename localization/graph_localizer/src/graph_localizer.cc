@@ -261,6 +261,13 @@ void GraphLocalizer::AddProjectionMeasurement(const lm::MatchedProjectionsMeasur
     return;
   }
 
+  // TODO(rsoussan): Make this a config variable
+  constexpr int kMinNumMatches = 5;
+  if (matched_projections_measurement.matched_projections.size() < kMinNumMatches) {
+    LOG(WARNING) << "AddProjectionMeasurement: Not enough matches in projection measurement.";
+    return;
+  }
+
   int num_buffered_loc_projection_factors = 0;
   FactorsToAdd factors_to_add(graph_action);
   factors_to_add.reserve(matched_projections_measurement.matched_projections.size());
