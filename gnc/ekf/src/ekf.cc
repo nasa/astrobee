@@ -332,7 +332,9 @@ void Ekf::VisualLandmarksUpdate(const ff_msgs::VisualLandmarks & vl) {
   }
   if (vl.landmarks.size() < 5)
     return;
+
   last_estimate_pose_= vl.pose;
+  has_pose_estimate_ = true;
   // find better way to choose limited landmarks to send?
   for (int i = 0; i < std::min(ml_max_features_, static_cast<int>(vl.landmarks.size())); i++) {
     vis_.cvs_landmarks[i]                        = vl.landmarks[i].x;

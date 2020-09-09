@@ -77,6 +77,10 @@ void EkfBagCsv::UpdateEKF(const ff_msgs::EkfState & s) {
     start_time_ = s.header.stamp;
     start_time_set_ = true;
   }
+
+  // Only print ekf results if it has been initialized with a sparse mapping measurement
+  if (!ekf_.HasPoseEstimate()) return;
+
   fprintf(f_, "EKF %g ", (s.header.stamp - start_time_).toSec());
   fprintf(f_, "%g %g %g ", s.pose.position.x, s.pose.position.y, s.pose.position.z);
   Eigen::Vector3f euler = QuatToEuler(s.pose.orientation);
