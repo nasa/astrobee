@@ -46,7 +46,7 @@ GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
       nav_cam_intrinsics_(new gtsam::Cal3_S2(params.nav_cam_focal_lengths().x(), params.nav_cam_focal_lengths().y(), 0,
                                              params.nav_cam_principal_point().x(),
                                              params.nav_cam_principal_point().y())),
-      nav_cam_noise_(gtsam::noiseModel::Isotropic::Sigma(2, 0.01)),
+      nav_cam_noise_(gtsam::noiseModel::Isotropic::Sigma(2, 0.05)),
       body_T_dock_cam_(lc::GtPose(params.body_T_dock_cam())),
       dock_cam_intrinsics_(new gtsam::Cal3_S2(params.dock_cam_focal_lengths().x(), params.dock_cam_focal_lengths().y(),
                                               0, params.dock_cam_principal_point().x(),
