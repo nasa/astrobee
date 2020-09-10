@@ -31,20 +31,6 @@ namespace ii = imu_integration;
 namespace lc = localization_common;
 namespace lm = localization_measurements;
 
-PointSetStatus PointSetValidity(const std::deque<lm::FeaturePoint>& points, const double min_avg_distance_from_mean,
-                                const double standstill_average_distance_from_mean_max_value) {
-  const double average_distance_from_mean = AverageDistanceFromMean(points);
-  if (ValidPointSet(points, average_distance_from_mean, min_avg_distance_from_mean)) return PointSetStatus::kValid;
-  if (ValidStandstillPointSet(points, average_distance_from_mean, standstill_average_distance_from_mean_max_value))
-    return PointSetStatus::kStandstill;
-  return PointSetStatus::kInvalid;
-}
-
-bool ValidPointSet(const std::deque<lm::FeaturePoint>& points, const double min_avg_distance_from_mean) {
-  const double average_distance_from_mean = AverageDistanceFromMean(points);
-  return ValidPointSet(points, average_distance_from_mean, min_avg_distance_from_mean);
-}
-
 bool ValidPointSet(const std::deque<lm::FeaturePoint>& points, const double average_distance_from_mean,
                    const double min_avg_distance_from_mean) {
   if (points.size() < 2) return false;
@@ -54,6 +40,7 @@ bool ValidPointSet(const std::deque<lm::FeaturePoint>& points, const double aver
 bool ValidStandstillPointSet(const std::deque<lm::FeaturePoint>& points, const double average_distance_from_mean,
                              const double standstill_average_distance_from_mean_max_value) {
   // TODO(rsoussan): Make this a config variable
+  // todo: make sure points have enough tracks!!!! get average num points per track?????
   if (points.size() < 5) return false;
   return average_distance_from_mean < standstill_average_distance_from_mean_max_value;
 }
@@ -72,6 +59,7 @@ double AverageDistanceFromMean(const std::deque<lm::FeaturePoint>& points) {
     sum_of_distances_from_mean += mean_centered_point.norm();
   }
   const double average_distance_from_mean = sum_of_distances_from_mean / points.size();
+  std::cout << "average distance from mean: " << average_distance_from_mean << std::endl;
   return average_distance_from_mean;
 }
 

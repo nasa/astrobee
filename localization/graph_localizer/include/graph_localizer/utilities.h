@@ -43,20 +43,10 @@
 #include <vector>
 
 namespace graph_localizer {
-// TODO(rsoussan): Move this somewhere else?
-enum class PointSetStatus { kValid, kInvalid, kStandstill };
-
 void EstimateAndSetImuBiases(const localization_measurements::ImuMeasurement& imu_measurement,
                              const int num_imu_measurements_per_bias_estimate,
                              std::vector<localization_measurements::ImuMeasurement>& imu_bias_measurements,
                              GraphLocInitialization& graph_loc_initialization);
-
-PointSetStatus PointSetValidity(const std::deque<localization_measurements::FeaturePoint>& points,
-                                const double min_avg_distance_from_mean,
-                                const double standstill_average_distance_from_mean_max_value);
-
-bool ValidPointSet(const std::deque<localization_measurements::FeaturePoint>& points,
-                   const double min_avg_distance_from_mean);
 
 bool ValidPointSet(const std::deque<localization_measurements::FeaturePoint>& points,
                    const double average_distance_from_mean, const double min_avg_distance_from_mean);

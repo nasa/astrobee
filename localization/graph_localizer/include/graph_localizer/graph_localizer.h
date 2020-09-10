@@ -140,7 +140,8 @@ class GraphLocalizer {
 
   bool TransformARMeasurementAndUpdateDockTWorld(FactorsToAdd& factors_to_add);
 
-  void AddStandstillPriorFactor(const FeatureTrack& feature_track, FactorsToAdd& standstill_prior_factors_to_add);
+  void AddStandstillPriorFactor(const localization_common::Time timestamp,
+                                FactorsToAdd& standstill_prior_factors_to_add);
 
   bool FillPriorFactors(FactorsToAdd& factors_to_add);
 
@@ -235,9 +236,9 @@ class GraphLocalizer {
   boost::shared_ptr<gtsam::Cal3_S2> dock_cam_intrinsics_;
   gtsam::SharedIsotropic nav_cam_noise_;
   gtsam::SharedIsotropic dock_cam_noise_;
-  double min_of_avg_distance_from_mean_;
+  double min_valid_feature_track_avg_distance_from_mean_;
   // TODO(rsousan): Make this a cfg variable
-  static constexpr double kStandstillAverageDistanceFromMeanMaxValue = 0.05;
+  static constexpr double kStandstillAverageDistanceFromMeanMaxValue = 0.2;
   std::multimap<localization_common::Time, FactorsToAdd> buffered_factors_to_add_;
 };
 }  // namespace graph_localizer

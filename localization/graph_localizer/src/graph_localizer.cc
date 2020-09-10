@@ -46,14 +46,14 @@ GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
       nav_cam_intrinsics_(new gtsam::Cal3_S2(params.nav_cam_focal_lengths().x(), params.nav_cam_focal_lengths().y(), 0,
                                              params.nav_cam_principal_point().x(),
                                              params.nav_cam_principal_point().y())),
-      nav_cam_noise_(gtsam::noiseModel::Isotropic::Sigma(2, 0.05)),
+      nav_cam_noise_(gtsam::noiseModel::Isotropic::Sigma(2, 0.1)),
       body_T_dock_cam_(lc::GtPose(params.body_T_dock_cam())),
       dock_cam_intrinsics_(new gtsam::Cal3_S2(params.dock_cam_focal_lengths().x(), params.dock_cam_focal_lengths().y(),
                                               0, params.dock_cam_principal_point().x(),
                                               params.dock_cam_principal_point().y())),
       dock_cam_noise_(gtsam::noiseModel::Isotropic::Sigma(2, 0.1)),
       graph_values_(params.sliding_window_duration(), params.min_num_sliding_window_states()),
-      min_of_avg_distance_from_mean_(params.min_of_avg_distance_from_mean()),
+      min_valid_feature_track_avg_distance_from_mean_(params.min_of_avg_distance_from_mean()),
       config_world_T_dock_(lc::GtPose(params.world_T_dock())) {
   // Assumes zero initial velocity
   const lc::CombinedNavState global_cgN_body_start(
@@ -209,40 +209,47 @@ bool GraphLocalizer::AddOpticalFlowMeasurement(
 
   // Add smart factor for each valid feature track
   FactorsToAdd smart_factors_to_add(GraphAction::kDeleteExistingSmartFactors);
-  // Add prior factor if there is low disparity indicating standstill, since a smart factor in this case would
-  // be ill-constrained
+  // Add prior factor if there is low disparity for all feature tracks, indicating standstill, since a smart factor in
+  // this case would be ill-constrained
   FactorsToAdd prior_factors_to_add(GraphAction::kFillPriors);
-  lc::Time latest_timestamp = std::numeric_limits<int>::lowest();
+  double potential_standstill_feature_tracks_average_distance_from_mean = 0;
+  int num_potential_standstill_feature_tracks = 0;
   for (const auto& feature_track : feature_tracker_.feature_tracks()) {
-    const auto point_set_status = PointSetValidity(feature_track.second.points, min_of_avg_distance_from_mean_,
-                                                   kStandstillAverageDistanceFromMeanMaxValue);
-    switch (point_set_status) {
-      case PointSetStatus::kInvalid:
-        continue;
-      case PointSetStatus::kStandstill:
-        AddStandstillPriorFactor(feature_track.second, prior_factors_to_add);
-        continue;
-      case PointSetStatus::kValid:
-        AddSmartFactor(feature_track.second, smart_factors_to_add);
-        // tODO: update latest timestamp here! get timestamp of last added smart factor!!!
-        continue;
+    const double feature_track_average_distance_from_mean = AverageDistanceFromMean(feature_track.second.points);
+    if (ValidPointSet(feature_track.second.points, feature_track_average_distance_from_mean,
+                      min_valid_feature_track_avg_distance_from_mean_)) {
+      AddSmartFactor(feature_track.second, smart_factors_to_add);
+    } else if (feature_track.second.points.size() >
+               5) {  // Only consider long enough feature tracks for standstill candidates
+      potential_standstill_feature_tracks_average_distance_from_mean += feature_track_average_distance_from_mean;
+      ++num_potential_standstill_feature_tracks;
     }
   }
 
-  int num_buffered_factors = 0;
-  if (!prior_factors_to_add.empty()) {
-    prior_factors_to_add.SetTimestamp(optical_flow_feature_points_measurement.timestamp);
-    BufferFactors(prior_factors_to_add);
-    num_buffered_factors += prior_factors_to_add.size();
-  }
+  if (num_potential_standstill_feature_tracks > 0)
+    potential_standstill_feature_tracks_average_distance_from_mean /= num_potential_standstill_feature_tracks;
+  std::cout << "potential_standstill avg: " << potential_standstill_feature_tracks_average_distance_from_mean
+            << std::endl;
+  std::cout << "potential_standstill_num: " << num_potential_standstill_feature_tracks << std::endl;
 
   if (!smart_factors_to_add.empty()) {
     smart_factors_to_add.SetTimestamp(optical_flow_feature_points_measurement.timestamp);
     BufferFactors(smart_factors_to_add);
-    num_buffered_factors += smart_factors_to_add.size();
+    std::cout << "added : " << smart_factors_to_add.size() << " smart factors." << std::endl;
+    VLOG(2) << "AddOpticalFLowMeasurement: Buffered " << smart_factors_to_add.size() << " smart factors.";
+  } else if (potential_standstill_feature_tracks_average_distance_from_mean < 0.35 &&
+             num_potential_standstill_feature_tracks >
+                 5) {  // Only add a standstill prior if no smart factors added and other conditions met
+    std::cout << "potential_standstill_feature_tracks_average_distance_from_mean: "
+              << potential_standstill_feature_tracks_average_distance_from_mean << std::endl;
+    std::cout << "num potential tracks: " << num_potential_standstill_feature_tracks << std::endl;
+    AddStandstillPriorFactor(optical_flow_feature_points_measurement.timestamp, prior_factors_to_add);
+    prior_factors_to_add.SetTimestamp(optical_flow_feature_points_measurement.timestamp);
+    BufferFactors(prior_factors_to_add);
+    std::cout << "added pose and vel prior factors!." << std::endl;
+    VLOG(2) << "AddOpticalFLowMeasurement: Buffered a pose and velocity prior factor.";
   }
 
-  VLOG(2) << "AddOpticalFLowMeasurement: Buffered " << num_buffered_factors << " factors.";
   return true;
 }
 
@@ -263,15 +270,8 @@ void GraphLocalizer::AddSmartFactor(const FeatureTrack& feature_track, FactorsTo
   smart_factors_to_add.push_back({key_infos, smart_factor});
 }
 
-void GraphLocalizer::AddStandstillPriorFactor(const FeatureTrack& feature_track,
-                                              FactorsToAdd& standstill_prior_factors_to_add) {
-  LOG_EVERY_N(INFO, 50) << "AddStandstillPriorFactor: Adding standstill priors.";
-
-  // Use latest timestamp for prior factor
-  lc::Time latest_timestamp = std::numeric_limits<int>::lowest();
-  for (const auto& feature_point : feature_track.points) {
-    if (feature_point.timestamp > latest_timestamp) latest_timestamp = feature_point.timestamp;
-  }
+void GraphLocalizer::AddStandstillPriorFactor(const lc::Time timestamp, FactorsToAdd& standstill_prior_factors_to_add) {
+  LOG_EVERY_N(INFO, 1) << "AddStandstillPriorFactor: Adding standstill priors.";
 
   // TODO(rsoussan): tune these
   // Create noise for priors
@@ -290,10 +290,10 @@ void GraphLocalizer::AddStandstillPriorFactor(const FeatureTrack& feature_track,
       gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(velocity_prior_noise_sigmas));
 
   // Pose and Velocity will be filled in with current values by GraphAction
-  const KeyInfo pose_key_info(&sym::P, latest_timestamp);
+  const KeyInfo pose_key_info(&sym::P, timestamp);
   gtsam::PriorFactor<gtsam::Pose3>::shared_ptr pose_prior_factor(
       new gtsam::PriorFactor<gtsam::Pose3>(pose_key_info.UninitializedKey(), gtsam::Pose3(), pose_noise));
-  const KeyInfo velocity_key_info(&sym::V, latest_timestamp);
+  const KeyInfo velocity_key_info(&sym::V, timestamp);
   gtsam::PriorFactor<gtsam::Velocity3>::shared_ptr velocity_prior_factor(new gtsam::PriorFactor<gtsam::Velocity3>(
       velocity_key_info.UninitializedKey(), gtsam::Velocity3(), velocity_noise));
   standstill_prior_factors_to_add.push_back({{pose_key_info}, pose_prior_factor});
