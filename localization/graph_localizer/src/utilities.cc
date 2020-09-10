@@ -53,7 +53,8 @@ bool ValidPointSet(const std::deque<lm::FeaturePoint>& points, const double aver
 
 bool ValidStandstillPointSet(const std::deque<lm::FeaturePoint>& points, const double average_distance_from_mean,
                              const double standstill_average_distance_from_mean_max_value) {
-  if (points.size() < 2) return false;
+  // TODO(rsoussan): Make this a config variable
+  if (points.size() < 5) return false;
   return average_distance_from_mean < standstill_average_distance_from_mean_max_value;
 }
 
