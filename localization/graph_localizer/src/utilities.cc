@@ -30,9 +30,34 @@ namespace graph_localizer {
 namespace ii = imu_integration;
 namespace lc = localization_common;
 namespace lm = localization_measurements;
-bool ValidPointSet(const std::deque<lm::FeaturePoint>& points, const double min_avg_distance_from_mean) {
-  if (points.size() < 2) return false;
 
+PointSetStatus PointSetValidity(const std::deque<lm::FeaturePoint>& points, const double min_avg_distance_from_mean,
+                                const double standstill_average_distance_from_mean_max_value) {
+  const double average_distance_from_mean = AverageDistanceFromMean(points);
+  if (ValidPointSet(points, average_distance_from_mean, min_avg_distance_from_mean)) return PointSetStatus::kValid;
+  if (ValidStandstillPointSet(points, average_distance_from_mean, standstill_average_distance_from_mean_max_value))
+    return PointSetStatus::kStandstill;
+  return PointSetStatus::kInvalid;
+}
+
+bool ValidPointSet(const std::deque<lm::FeaturePoint>& points, const double min_avg_distance_from_mean) {
+  const double average_distance_from_mean = AverageDistanceFromMean(points);
+  return ValidPointSet(points, average_distance_from_mean, min_avg_distance_from_mean);
+}
+
+bool ValidPointSet(const std::deque<lm::FeaturePoint>& points, const double average_distance_from_mean,
+                   const double min_avg_distance_from_mean) {
+  if (points.size() < 2) return false;
+  return (average_distance_from_mean >= min_avg_distance_from_mean);
+}
+
+bool ValidStandstillPointSet(const std::deque<lm::FeaturePoint>& points, const double average_distance_from_mean,
+                             const double standstill_average_distance_from_mean_max_value) {
+  if (points.size() < 2) return false;
+  return average_distance_from_mean < standstill_average_distance_from_mean_max_value;
+}
+
+double AverageDistanceFromMean(const std::deque<lm::FeaturePoint>& points) {
   // Calculate mean point and avg distance from mean
   Eigen::Vector2d sum_of_points = Eigen::Vector2d::Zero();
   for (const auto& point : points) {
@@ -46,7 +71,7 @@ bool ValidPointSet(const std::deque<lm::FeaturePoint>& points, const double min_
     sum_of_distances_from_mean += mean_centered_point.norm();
   }
   const double average_distance_from_mean = sum_of_distances_from_mean / points.size();
-  return (average_distance_from_mean >= min_avg_distance_from_mean);
+  return average_distance_from_mean;
 }
 
 bool ValidVLMsg(const ff_msgs::VisualLandmarks& visual_landmarks_msg) {

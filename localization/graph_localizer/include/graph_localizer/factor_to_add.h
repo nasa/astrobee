@@ -45,6 +45,8 @@ class FactorsToAdd {
   explicit FactorsToAdd(const GraphAction graph_action = GraphAction::kNone) : graph_action_(graph_action) {}
 
   void reserve(const int size) { factors_to_add_.reserve(size); }
+  size_t size() const { return factors_to_add_.size(); }
+  bool empty() const { return factors_to_add_.empty(); }
   void push_back(FactorToAdd&& factor_to_add) { factors_to_add_.emplace_back(std::move(factor_to_add)); }  // NOLINT
   void push_back(const FactorToAdd& factor_to_add) { factors_to_add_.push_back(factor_to_add); }
   void SetTimestamp(const localization_common::Time timestamp) { timestamp_ = timestamp; }

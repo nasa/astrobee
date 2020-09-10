@@ -119,6 +119,9 @@ class GraphLocalizer {
   void AddPriors(const localization_common::CombinedNavState& global_cgN_body,
                  const localization_common::CombinedNavStateNoise& noise, const int key_index,
                  const gtsam::Values& values, gtsam::NonlinearFactorGraph& graph);
+
+  void AddSmartFactor(const FeatureTrack& feature_track, FactorsToAdd& smart_factors_to_add);
+
   boost::optional<std::pair<localization_common::CombinedNavState, localization_common::CombinedNavStateCovariances>>
   LatestCombinedNavStateAndCovariances(const gtsam::Marginals& marginals) const;
 
@@ -136,6 +139,10 @@ class GraphLocalizer {
   bool ReadyToAddMeasurement(const localization_common::Time timestamp) const;
 
   bool TransformARMeasurementAndUpdateDockTWorld(FactorsToAdd& factors_to_add);
+
+  void AddStandstillPriorFactor(const FeatureTrack& feature_track, FactorsToAdd& standstill_prior_factors_to_add);
+
+  bool FillPriorFactors(FactorsToAdd& factors_to_add);
 
   template <typename FactorType>
   void DeleteFactors() {
@@ -229,6 +236,8 @@ class GraphLocalizer {
   gtsam::SharedIsotropic nav_cam_noise_;
   gtsam::SharedIsotropic dock_cam_noise_;
   double min_of_avg_distance_from_mean_;
+  // TODO(rsousan): Make this a cfg variable
+  static constexpr double kStandstillAverageDistanceFromMeanMaxValue = 0.05;
   std::multimap<localization_common::Time, FactorsToAdd> buffered_factors_to_add_;
 };
 }  // namespace graph_localizer

@@ -207,34 +207,97 @@ bool GraphLocalizer::AddOpticalFlowMeasurement(
     return false;
   }
 
-  // Add smart factor for each feature track
-  FactorsToAdd factors_to_add(GraphAction::kDeleteExistingSmartFactors);
-  int num_buffered_smart_factors = 0;
+  // Add smart factor for each valid feature track
+  FactorsToAdd smart_factors_to_add(GraphAction::kDeleteExistingSmartFactors);
+  // Add prior factor if there is low disparity indicating standstill, since a smart factor in this case would
+  // be ill-constrained
+  FactorsToAdd prior_factors_to_add(GraphAction::kFillPriors);
   lc::Time latest_timestamp = std::numeric_limits<int>::lowest();
   for (const auto& feature_track : feature_tracker_.feature_tracks()) {
-    if (!ValidPointSet(feature_track.second.points, min_of_avg_distance_from_mean_)) continue;
-    SharedSmartFactor smart_factor(
-        new SmartFactor(nav_cam_noise_, nav_cam_intrinsics_, body_T_nav_cam_, smart_projection_params_));
-
-    KeyInfos key_infos;
-    key_infos.reserve(feature_track.second.points.size());
-    // Gtsam requires unique key indices for each key, even though these will be replaced later
-    int uninitialized_key_index = 0;
-    for (const auto& feature_point : feature_track.second.points) {
-      const KeyInfo key_info(&sym::P, feature_point.timestamp);
-      key_infos.emplace_back(key_info);
-      smart_factor->add(Camera::Measurement(feature_point.image_point), key_info.MakeKey(uninitialized_key_index++));
-      if (feature_point.timestamp > latest_timestamp) latest_timestamp = feature_point.timestamp;
+    const auto point_set_status = PointSetValidity(feature_track.second.points, min_of_avg_distance_from_mean_,
+                                                   kStandstillAverageDistanceFromMeanMaxValue);
+    switch (point_set_status) {
+      case PointSetStatus::kInvalid:
+        continue;
+      case PointSetStatus::kStandstill:
+        AddStandstillPriorFactor(feature_track.second, prior_factors_to_add);
+        continue;
+      case PointSetStatus::kValid:
+        AddSmartFactor(feature_track.second, smart_factors_to_add);
+        // tODO: update latest timestamp here! get timestamp of last added smart factor!!!
+        continue;
     }
-
-    factors_to_add.push_back({key_infos, smart_factor});
-    ++num_buffered_smart_factors;
   }
-  factors_to_add.SetTimestamp(latest_timestamp);
-  BufferFactors(factors_to_add);
 
-  VLOG(2) << "AddOpticalFLowMeasurement: Buffered " << num_buffered_smart_factors << " smart factors.";
+  int num_buffered_factors = 0;
+  if (!prior_factors_to_add.empty()) {
+    prior_factors_to_add.SetTimestamp(optical_flow_feature_points_measurement.timestamp);
+    BufferFactors(prior_factors_to_add);
+    num_buffered_factors += prior_factors_to_add.size();
+  }
+
+  if (!smart_factors_to_add.empty()) {
+    smart_factors_to_add.SetTimestamp(optical_flow_feature_points_measurement.timestamp);
+    BufferFactors(smart_factors_to_add);
+    num_buffered_factors += smart_factors_to_add.size();
+  }
+
+  VLOG(2) << "AddOpticalFLowMeasurement: Buffered " << num_buffered_factors << " factors.";
   return true;
+}
+
+void GraphLocalizer::AddSmartFactor(const FeatureTrack& feature_track, FactorsToAdd& smart_factors_to_add) {
+  SharedSmartFactor smart_factor(
+      new SmartFactor(nav_cam_noise_, nav_cam_intrinsics_, body_T_nav_cam_, smart_projection_params_));
+
+  KeyInfos key_infos;
+  key_infos.reserve(feature_track.points.size());
+  // Gtsam requires unique key indices for each key, even though these will be replaced later
+  int uninitialized_key_index = 0;
+  for (const auto& feature_point : feature_track.points) {
+    const KeyInfo key_info(&sym::P, feature_point.timestamp);
+    key_infos.emplace_back(key_info);
+    smart_factor->add(Camera::Measurement(feature_point.image_point), key_info.MakeKey(uninitialized_key_index++));
+    // if (feature_point.timestamp > latest_timestamp) latest_timestamp = feature_point.timestamp;
+  }
+  smart_factors_to_add.push_back({key_infos, smart_factor});
+}
+
+void GraphLocalizer::AddStandstillPriorFactor(const FeatureTrack& feature_track,
+                                              FactorsToAdd& standstill_prior_factors_to_add) {
+  LOG_EVERY_N(INFO, 50) << "AddStandstillPriorFactor: Adding standstill priors.";
+
+  // Use latest timestamp for prior factor
+  lc::Time latest_timestamp = std::numeric_limits<int>::lowest();
+  for (const auto& feature_point : feature_track.points) {
+    if (feature_point.timestamp > latest_timestamp) latest_timestamp = feature_point.timestamp;
+  }
+
+  // TODO(rsoussan): tune these
+  // Create noise for priors
+  constexpr double kPoseTranslationPriorSigma = 0.02;
+  constexpr double kPoseQuaternionPriorSigma = 0.01;
+  constexpr double kVelPriorSigma = 0.01;
+  const gtsam::Vector6 pose_prior_noise_sigmas(
+      (gtsam::Vector(6) << kPoseTranslationPriorSigma, kPoseTranslationPriorSigma, kPoseTranslationPriorSigma,
+       kPoseQuaternionPriorSigma, kPoseQuaternionPriorSigma, kPoseQuaternionPriorSigma)
+          .finished());
+  const gtsam::Vector3 velocity_prior_noise_sigmas(
+      (gtsam::Vector(3) << kVelPriorSigma, kVelPriorSigma, kVelPriorSigma).finished());
+  const auto pose_noise =
+      gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(pose_prior_noise_sigmas));
+  const auto velocity_noise =
+      gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(velocity_prior_noise_sigmas));
+
+  // Pose and Velocity will be filled in with current values by GraphAction
+  const KeyInfo pose_key_info(&sym::P, latest_timestamp);
+  gtsam::PriorFactor<gtsam::Pose3>::shared_ptr pose_prior_factor(
+      new gtsam::PriorFactor<gtsam::Pose3>(pose_key_info.UninitializedKey(), gtsam::Pose3(), pose_noise));
+  const KeyInfo velocity_key_info(&sym::V, latest_timestamp);
+  gtsam::PriorFactor<gtsam::Velocity3>::shared_ptr velocity_prior_factor(new gtsam::PriorFactor<gtsam::Velocity3>(
+      velocity_key_info.UninitializedKey(), gtsam::Velocity3(), velocity_noise));
+  standstill_prior_factors_to_add.push_back({{pose_key_info}, pose_prior_factor});
+  standstill_prior_factors_to_add.push_back({{velocity_key_info}, velocity_prior_factor});
 }
 
 void GraphLocalizer::AddARTagMeasurement(const lm::MatchedProjectionsMeasurement& matched_projections_measurement,
@@ -490,11 +553,6 @@ void GraphLocalizer::AddBufferedFactors() {
        factors_to_add_it != buffered_factors_to_add_.end() && latest_imu_integrator_.LatestTime() &&
        factors_to_add_it->first <= *(latest_imu_integrator_.LatestTime());) {
     auto& factors_to_add = factors_to_add_it->second;
-    if (!DoGraphAction(factors_to_add)) {
-      LOG(ERROR) << "AddBufferedFactors: Failed to complete graph action.";
-      continue;
-    }
-
     for (auto& factor_to_add : factors_to_add.Get()) {
       // Add combined nav states and connecting imu factors for each key in factor if necessary
       // TODO(rsoussan): make this more efficient for factors with multiple keys with the same timestamp?
@@ -509,6 +567,15 @@ void GraphLocalizer::AddBufferedFactors() {
         LOG(DFATAL) << "AddBufferedMeasurements: Failed to rekey factor to add.";
         continue;
       }
+    }
+
+    // Do graph action after adding necessary imu factors and nav states so these are available
+    if (!DoGraphAction(factors_to_add)) {
+      LOG(ERROR) << "AddBufferedFactors: Failed to complete graph action.";
+      continue;
+    }
+
+    for (auto& factor_to_add : factors_to_add.Get()) {
       graph_.push_back(factor_to_add.factor);
       ++num_added_factors;
     }
@@ -528,6 +595,8 @@ bool GraphLocalizer::DoGraphAction(FactorsToAdd& factors_to_add) {
       return true;
     case GraphAction::kTransformARMeasurementAndUpdateDockTWorld:
       return TransformARMeasurementAndUpdateDockTWorld(factors_to_add);
+    case GraphAction::kFillPriors:
+      return FillPriorFactors(factors_to_add);
   }
 
   // Shouldn't occur
@@ -592,12 +661,45 @@ bool GraphLocalizer::TransformARMeasurementAndUpdateDockTWorld(FactorsToAdd& fac
   return true;
 }
 
+bool GraphLocalizer::FillPriorFactors(FactorsToAdd& factors_to_add) {
+  for (auto& factor_to_add : factors_to_add.Get()) {
+    const auto combined_nav_state = GetCombinedNavState(factors_to_add.timestamp());
+    if (!combined_nav_state) {
+      LOG(ERROR) << "FillPriorFactors: Failed to get combined nav state.";
+      return false;
+    }
+
+    // TODO(rsoussan): Generalize this better
+    const auto pose_prior_factor = dynamic_cast<gtsam::PriorFactor<gtsam::Pose3>*>(factor_to_add.factor.get());
+    const auto velocity_prior_factor = dynamic_cast<gtsam::PriorFactor<gtsam::Velocity3>*>(factor_to_add.factor.get());
+
+    // Pose Prior
+    if (pose_prior_factor) {
+      const auto pose_key = pose_prior_factor->key();
+      const auto pose_noise = pose_prior_factor->noiseModel();
+      factor_to_add.factor.reset(
+          new gtsam::PriorFactor<gtsam::Pose3>(pose_key, combined_nav_state->pose(), pose_noise));
+      continue;
+    } else if (velocity_prior_factor) {
+      const auto velocity_key = velocity_prior_factor->key();
+      const auto velocity_noise = velocity_prior_factor->noiseModel();
+      factor_to_add.factor.reset(
+          new gtsam::PriorFactor<gtsam::Velocity3>(velocity_key, combined_nav_state->velocity(), velocity_noise));
+      continue;
+    } else {
+      LOG(ERROR) << "FillPriorFactors: Unrecognized factor.";
+      return false;
+    }
+  }
+  return true;
+}
+
 void GraphLocalizer::PrintFactorDebugInfo() const {
   for (auto factor_it = graph_.begin(); factor_it != graph_.end();) {
-    if (dynamic_cast<const SmartFactor*>(factor_it->get())) {
-      dynamic_cast<const SmartFactor*>(factor_it->get())->print();
-      VLOG(2) << "PrintFactorDebugInfo: SmartPose Error: "
-              << dynamic_cast<const SmartFactor*>(factor_it->get())->error(graph_values_.values());
+    const auto factor = dynamic_cast<const SmartFactor*>(factor_it->get());
+    if (factor) {
+      factor->print();
+      VLOG(2) << "PrintFactorDebugInfo: SmartPose Error: " << factor->error(graph_values_.values());
     }
     ++factor_it;
   }
