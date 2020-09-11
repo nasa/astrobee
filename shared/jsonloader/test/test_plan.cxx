@@ -1,14 +1,14 @@
 /* Copyright (c) 2017, United States Government, as represented by the
  * Administrator of the National Aeronautics and Space Administration.
- *
+ * 
  * All rights reserved.
- *
+ * 
  * The Astrobee platform is licensed under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- *
+ * 
  *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -19,17 +19,17 @@
 #include <jsonloader/plan.h>
 #include <jsonloader/planio.h>
 
+#include <json/json.h>
 #include <glog/logging.h>
 #include <gtest/gtest.h>
-#include <json/json.h>
 
 #include <boost/filesystem.hpp>
 #include <boost/range/iterator_range.hpp>
 
-#include <algorithm>
 #include <fstream>
 #include <string>
 #include <vector>
+#include <algorithm>
 
 namespace fs = boost::filesystem;
 
@@ -37,8 +37,9 @@ const std::string kDataDir = std::string(TEST_DIR) + "/data/";
 
 std::string SlurpFile(std::string const& f_name) {
   std::ifstream file(f_name, std::ios::in | std::ios::binary);
-  std::string   data;
-  data.append(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
+  std::string data;
+  data.append(std::istreambuf_iterator<char>(file),
+              std::istreambuf_iterator<char>());
   file.close();
 
   return data;
@@ -46,14 +47,14 @@ std::string SlurpFile(std::string const& f_name) {
 
 TEST(PlanIO, LoadData) {
   static const std::string data = u8R"({ "hi":"mom" })";
-  Json::Value              v;
+  Json::Value v;
   ASSERT_TRUE(jsonloader::LoadData(data, &v));
   ASSERT_TRUE(v.isMember("hi"));
   EXPECT_EQ(v["hi"].asString(), "mom");
 }
 
 struct WaypointTimeCase {
-  double   time;
+  double time;
   uint32_t sec;
   uint32_t nsec;
 };
@@ -63,11 +64,13 @@ const uint32_t kNsec = 100000000UL;
 TEST(Time, FromDouble) {
   jsonloader::Time t;
 
-  std::vector<WaypointTimeCase> cases = {{0.0, 0, 0},
-                                         {1.0, 1, 0},
-                                         {2.5, 2, 5 * kNsec},
-                                         {5.25, 5, 25 * (kNsec / 10)},
-                                         {10.9673, 10, 9673 * (kNsec / 1000)}};
+  std::vector<WaypointTimeCase> cases = {
+    { 0.0, 0, 0 },
+    { 1.0, 1, 0 },
+    { 2.5, 2, 5 * kNsec },
+    { 5.25, 5, 25 * (kNsec / 10) },
+    { 10.9673, 10, 9673 * (kNsec / 1000) }
+  };
 
   for (auto c : cases) {
     t.Set(c.time);
@@ -78,8 +81,7 @@ TEST(Time, FromDouble) {
 
 // TODO(tfmorse): Update waypointType to be proper type
 TEST(Segment, NormalConstruction) {
-  static const std::string data =
-      u8R"(
+  static const std::string data = u8R"(
     { "type": "Segment",
       "stopAtEnd": true,
       "speed": 0.25,
@@ -109,13 +111,12 @@ TEST(Segment, NormalConstruction) {
   // Make sure we are creating the Eigen::Vectors right
   ASSERT_EQ(wpts[0].cwaypoint().size(), 6);
   for (int i = 0; i < 6; i++) {
-    EXPECT_FLOAT_EQ(static_cast<float>(i + 1), wpts[0].cwaypoint()[i]);
+    EXPECT_FLOAT_EQ(static_cast<float>(i+1), wpts[0].cwaypoint()[i]);
   }
 }
 
 TEST(Segment, InvalidWaypoint) {
-  static const std::string data =
-      u8R"(
+  static const std::string data = u8R"(
     { "type": "Segment",
       "stopAtEnd": true,
       "speed": 0.25,
@@ -133,8 +134,7 @@ TEST(Segment, InvalidWaypoint) {
 }
 
 TEST(Station, NormalConstruction) {
-  static const std::string data =
-      u8R"(
+  static const std::string data = u8R"(
     { "type": "Station",
       "stopOnArrival": true,
       "tolerance": 0.52,
@@ -171,8 +171,7 @@ TEST(Station, NormalConstruction) {
 }
 
 TEST(InertiaConfiguration, NormalConstruction) {
-  static const std::string data =
-      u8R"(
+  static const std::string data = u8R"(
     { "name" : "UnloadedAstrobee",
       "matrix" : [ 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0 ],
       "mass" : 5.0
@@ -188,13 +187,12 @@ TEST(InertiaConfiguration, NormalConstruction) {
   EXPECT_FLOAT_EQ(c.mass(), 5.0f);
   EXPECT_EQ(c.matrix().size(), 9);
   for (int i = 0; i < 9; i++) {
-    EXPECT_FLOAT_EQ(c.matrix()[i], static_cast<float>(i + 1));
+    EXPECT_FLOAT_EQ(c.matrix()[i], static_cast<float>(i+1));
   }
 }
 
 TEST(InertiaConfiguration, BadMatrix) {
-  static const std::string data =
-      u8R"(
+  static const std::string data = u8R"(
     { "name" : "UnloadedAstrobee",
       "matrix" : [ 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0 ],
       "mass" : 5.0
@@ -208,8 +206,7 @@ TEST(InertiaConfiguration, BadMatrix) {
 }
 
 TEST(OperatingLimits, NormalConstruction) {
-  static const std::string data =
-      u8R"(
+  static const std::string data = u8R"(
     {
       "targetAngularAccel" : 0.1234,
       "targetLinearAccel" : 0.0123,
@@ -236,7 +233,7 @@ TEST(OperatingLimits, NormalConstruction) {
 }
 
 TEST(Plan, SimplePlan) {
-  Json::Value   v;
+  Json::Value v;
   std::ifstream file(kDataDir + "simple_plan.fplan");
   file >> v;
 
@@ -259,7 +256,7 @@ TEST(Plan, SimplePlan) {
 }
 
 TEST(Plan, CompiledPlan) {
-  Json::Value   v;
+  Json::Value v;
   std::ifstream file(kDataDir + "compiled_plan.fplan");
   file >> v;
 
@@ -270,7 +267,7 @@ TEST(Plan, CompiledPlan) {
 }
 
 TEST(Plan, InconsistentWaypoints) {
-  Json::Value   v;
+  Json::Value v;
   std::ifstream file(kDataDir + "inconsistent_waypoints.json");
   file >> v;
 
@@ -279,7 +276,7 @@ TEST(Plan, InconsistentWaypoints) {
 }
 
 TEST(PlanIO, LoadPlan) {
-  std::string      data = SlurpFile(kDataDir + "compiled_plan.fplan");
+  std::string data = SlurpFile(kDataDir + "compiled_plan.fplan");
   jsonloader::Plan p(jsonloader::LoadPlan(data));
   ASSERT_TRUE(p.valid());
 }
@@ -294,7 +291,8 @@ TEST(PlanIO, PlanEvolution) {
   ASSERT_TRUE(fs::exists(evo_dir));
   ASSERT_TRUE(fs::is_directory(evo_dir));
 
-  for (fs::directory_entry& e : boost::make_iterator_range(fs::directory_iterator(evo_dir), {})) {
+  for (fs::directory_entry & e :
+       boost::make_iterator_range(fs::directory_iterator(evo_dir), {})) {
     const fs::path p = e.path();
     if (!fs::exists(p) || !fs::is_regular_file(p)) {
       continue;
@@ -305,7 +303,7 @@ TEST(PlanIO, PlanEvolution) {
     }
 
     LOG(INFO) << "Loading " << p.string();
-    std::string      data = SlurpFile(p.string());
+    std::string data = SlurpFile(p.string());
     jsonloader::Plan plan(jsonloader::LoadPlan(data));
     ASSERT_TRUE(plan.valid());
 

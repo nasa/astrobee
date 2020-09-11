@@ -1,14 +1,14 @@
 /* Copyright (c) 2017, United States Government, as represented by the
  * Administrator of the National Aeronautics and Space Administration.
- *
+ * 
  * All rights reserved.
- *
+ * 
  * The Astrobee platform is licensed under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- *
+ * 
  *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -27,11 +27,19 @@ void Simple(int a, int b) {
   EXPECT_EQ(3, b);
 }
 
-void SimpleVecPass(std::vector<int> const& vec1, std::vector<int> const& vec2) { EXPECT_EQ(&vec1, &vec2); }
+void SimpleVecPass(std::vector<int> const& vec1,
+                   std::vector<int> const& vec2) {
+  EXPECT_EQ(&vec1, &vec2);
+}
 
-void SimpleVecFail(std::vector<int> const& vec1, std::vector<int> const& vec2) { EXPECT_NE(&vec1, &vec2); }
+void SimpleVecFail(std::vector<int> const& vec1,
+                   std::vector<int> const& vec2) {
+  EXPECT_NE(&vec1, &vec2);
+}
 
-void AppendToVec(std::vector<int>* vec) { vec->push_back(3); }
+void AppendToVec(std::vector<int> * vec) {
+  vec->push_back(3);
+}
 
 TEST(thread, thread_pool) {
   FLAGS_num_threads = 1;

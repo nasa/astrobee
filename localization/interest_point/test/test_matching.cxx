@@ -18,9 +18,9 @@
 
 #include <interest_point/matching.h>
 
+#include <Eigen/Geometry>
 #include <glog/logging.h>
 #include <gtest/gtest.h>
-#include <Eigen/Geometry>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
@@ -33,8 +33,10 @@ class MatchingTest : public ::testing::Test {
     // TEST_DIR is defined as this modules test directory. However
     // that is not where the test imagery is located.
     std::string data_dir = std::string(TEST_DIR) + "/../../sparse_mapping/test/data";
-    image1               = cv::imread(data_dir + "/m0004000.jpg", CV_LOAD_IMAGE_GRAYSCALE);
-    image2               = cv::imread(data_dir + "/m0004025.jpg", CV_LOAD_IMAGE_GRAYSCALE);
+    image1 = cv::imread(data_dir + "/m0004000.jpg",
+                        CV_LOAD_IMAGE_GRAYSCALE);
+    image2 = cv::imread(data_dir + "/m0004025.jpg",
+                        CV_LOAD_IMAGE_GRAYSCALE);
 
     // Decimate the image to speed things up for our unit tests
     cv::resize(image1, image1, cv::Size(), 0.7, 0.7, cv::INTER_AREA);
@@ -47,10 +49,10 @@ class MatchingTest : public ::testing::Test {
     ipdetect.Detect(image2, &keypoints2, &descriptor2);
   }
 
-  cv::Mat                   image1, image2;
+  cv::Mat image1, image2;
   std::vector<cv::KeyPoint> keypoints1, keypoints2;
-  cv::Mat                   descriptor1, descriptor2;
-  std::vector<cv::DMatch>   matches;
+  cv::Mat descriptor1, descriptor2;
+  std::vector<cv::DMatch> matches;
 };
 
 TEST_F(MatchingTest, SURF) {
