@@ -1,0 +1,63 @@
+/*
+ * Copyright 2016 Intelligent Robotics Group, NASA ARC
+ */
+
+#include "Message.idl"
+
+module rapid {
+  module ext {
+    module astrobee {
+
+      struct BerthState {
+        //@copy-declaration /** Whether this berth is occupied or not */
+        boolean occupied;
+
+        //@copy-declaration /**
+        //@copy-declaration   * Name of Astrobee. If there is no Astrobee in
+        //@copy-declaration   * the berth or if the dock doesn't know what the
+        //@copy-declaration   * name of the Astrobee on it is, the name will 
+        //@copy-declaration   * be blank.
+        //@copy-declaration   */
+        String32 astrobeeName;
+
+        //@copy-declaration /** Whether the freeflyer is awake or hibernated */
+        boolean awake;
+
+        //@copy-declaration /** Number of batteries plugged into the astrobee */
+        short numBatteries;
+
+        //@copy-declaration /** Maximum capacity of the batteries plugged in */
+        long maxCapacity;
+
+        //@copy-declaration /** Current capacity of the batteries plugged in */
+        long currentCapacity;
+      };
+
+      //@copy-c-declaration class DockStateTypeSupport;
+      //@copy-c-declaration class DockStateDataWriter;
+      //@copy-c-declaration class DockStateDataReader;
+      //@copy-c-declaration struct DockStateSeq;
+
+      //@copy-declaration /**
+      //@copy-declaration   * State message for the dock. Used to tell which
+      //@copy-declaration   * Astrobee is berthed, in which berth, and if
+      //@copy-declaration   * the Astrobee is hibernated or awake.
+      //@copy-declaration   */
+      valuetype DockState : Message {
+        //@copy-c-declaration #if RTI_DDS_VERSION_MAJOR < 4 || (RTI_DDS_VERSION_MAJOR == 4  && RTI_DDS_VERSION_MINOR < 5) || (RTI_DDS_VERSION_MAJOR == 4  && RTI_DDS_VERSION_MINOR == 5 && RTI_DDS_VERSION_RELEASE != 'f' )
+        //@copy-c-declaration typedef DockStateTypeSupport TypeSupport;
+        //@copy-c-declaration typedef DockStateDataWriter DataWriter;
+        //@copy-c-declaration typedef DockStateDataReader DataReader;
+        //@copy-c-declaration typedef DockStateSeq Seq;
+        //@copy-c-declaration #endif
+        //@copy-c-declaration typedef DockState Type;
+
+        //@copy-declaration /** State of berth 1 */
+        public BerthState berthOne;
+
+        //@copy-declaration /** State of berth 2*/
+        public BerthState berthTwo;
+      };
+    };
+  };
+};

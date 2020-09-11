@@ -1,0 +1,61 @@
+/*
+ * Copyright 2015 (c) 2015 Intelligent Robotics Group, NASA ARC
+ */
+
+#include "Message.idl"
+
+module rapid {
+  module ext {
+    module astrobee {
+
+      //@copy-declaration /**
+      //@copy-declaration  * Location of the battery
+      //@copy-declaration  * <ul>
+      //@copy-declaration  *   <li>SLOT_TOP_LEFT: Battery slot located at the top left side of the robot.
+      //@copy-declaration  *   <li>SLOT_TOP_RIGHT: Battery slot located at the top right side of the robot.
+      //@copy-declaration  *   <li>SLOT_BOTTOM_LEFT: Battery slot located at the bottom left side of the robot.
+      //@copy-declaration  *   <li>SLOT_BOTTOM_RIGHT: Battery slot located at the bottom right side of the robot. 
+      //@copy-declaration  * </ul>
+      //@copy-declaration  */
+      enum BatterySlot {
+        SLOT_TOP_LEFT,
+        SLOT_TOP_RIGHT,
+        SLOT_BOTTOM_LEFT,
+        SLOT_BOTTOM_RIGHT,
+        SLOT_UNKNOWN
+      };
+
+      //@copy-declaration /** The stats of a battery
+      //@copy-declaration   * - slot: location of battery slot"
+      //@copy-declararion   * - maxCapacity: Maximum capacity of the battery in this slot.
+      //@copy-declaration   */
+      struct BatteryInfoConfig {
+        BatterySlot slot;
+        float designedCapacity;
+        float currentMaxCapacity;
+      };
+
+      typedef sequence<BatteryInfoConfig, 4> BatteryInfoConfigSequence4;
+
+      //@copy-c-declaration class EpsConfigTypeSupport;
+      //@copy-c-declaration class EpsConfigDataWriter;
+      //@copy-c-declaration class EpsConfigDataReader;
+      //@copy-c-declaration struct EpsConfigSeq;
+
+      //@copy-declaration /**
+      //@copy-declaration   * The state of the data partitions on Astrobee
+      //@copy-declaration   */
+      valuetype EpsConfig : Message {
+        //@copy-c-declaration #if RTI_DDS_VERSION_MAJOR < 4 || (RTI_DDS_VERSION_MAJOR == 4  && RTI_DDS_VERSION_MINOR < 5) || (RTI_DDS_VERSION_MAJOR == 4  && RTI_DDS_VERSION_MINOR  == 5 && RTI_DDS_VERSION_RELEASE != 'f' )
+        //@copy-c-declaration typedef EpsConfigTypeSupport TypeSupport;
+        //@copy-c-declaration typedef EpsConfigDataWriter DataWriter;
+        //@copy-c-declaration typedef EpsConfigDataReader DataReader;
+        //@copy-c-declaration typedef EpsConfigSeq Seq;
+        //@copy-c-declaration #endif
+        //@copy-c-declaration typedef EpsConfig Type;
+
+        public BatteryInfoConfigSequence4 batteries;
+      };
+    };
+  };
+};
