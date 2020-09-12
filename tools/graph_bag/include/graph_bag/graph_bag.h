@@ -68,7 +68,6 @@ class GraphBag {
   const std::string kImageTopic_;
   const std::string kFeatureTracksImageTopic_ = "feature_track_image";
   std::unique_ptr<camera::CameraParameters> nav_cam_params_;
-  Eigen::Isometry3d body_T_nav_cam_;
 };
 }  // end namespace graph_bag
 

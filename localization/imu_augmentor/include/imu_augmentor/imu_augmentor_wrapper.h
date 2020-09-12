@@ -58,8 +58,6 @@ class ImuAugmentorWrapper {
   std::unique_ptr<localization_common::CombinedNavState> latest_combined_nav_state_;
   std::unique_ptr<localization_common::CombinedNavStateCovariances> latest_covariances_;
   std::unique_ptr<ff_msgs::EkfState> latest_loc_msg_;
-  Eigen::Isometry3d body_T_imu_;
-  Eigen::Vector3d gravity_vector_;
 };
 }  // namespace imu_augmentor
 #endif  // IMU_AUGMENTOR_IMU_AUGMENTOR_WRAPPER_H_

@@ -71,7 +71,6 @@ GraphBag::GraphBag(const std::string& bag_name, const std::string& map_file, con
   optical_flow_tracker_.ReadParams(&config);
   // Needed for feature tracks visualization
   nav_cam_params_.reset(new camera::CameraParameters(&config, "nav_cam"));
-  body_T_nav_cam_ = lc::LoadTransform(config, "nav_cam_transform");
 }
 
 // TODO(rsoussan): remove this? cite leo?

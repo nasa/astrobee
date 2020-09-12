@@ -25,7 +25,7 @@ namespace imu_augmentor {
 namespace ii = imu_integration;
 namespace lc = localization_common;
 namespace lm = localization_measurements;
-ImuAugmentor::ImuAugmentor(const ImuIntegratorParams& params) : imu_integrator_(params) {}
+ImuAugmentor::ImuAugmentor(const ii::ImuIntegratorParams& params) : imu_integrator_(params) {}
 
 void ImuAugmentor::BufferImuMeasurement(const lm::ImuMeasurement& imu_measurement) {
   imu_integrator_.BufferImuMeasurement(imu_measurement);

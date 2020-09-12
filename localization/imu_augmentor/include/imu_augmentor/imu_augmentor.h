@@ -33,7 +33,7 @@
 namespace imu_augmentor {
 class ImuAugmentor {
  public:
-  explicit ImuAugmentor(const ImuIntegratorParams& params);
+  explicit ImuAugmentor(const imu_integration::ImuIntegratorParams& params);
 
   void BufferImuMeasurement(const localization_measurements::ImuMeasurement& imu_measurement);
 

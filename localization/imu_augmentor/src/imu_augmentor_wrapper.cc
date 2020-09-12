@@ -25,6 +25,7 @@
 #include <glog/logging.h>
 
 namespace imu_augmentor {
+namespace ii = imu_integration;
 namespace lc = localization_common;
 namespace lm = localization_measurements;
 ImuAugmentorWrapper::ImuAugmentorWrapper() {
@@ -37,10 +38,10 @@ ImuAugmentorWrapper::ImuAugmentorWrapper() {
   }
 
   // TODO(rsoussan): Unify this with graph localizer param reader LoadImuIntegratorParams
-  ImuIntegratorParams params;
+  ii::ImuIntegratorParams params;
   params.body_T_imu = lc::LoadTransform(config, "imu_transform");
-  params.gravity_vector = lc::LoadVector(config, "world_gravity_vector");
-  imu_augmentor_.reset(new ImuAugmentor(params);
+  params.gravity = lc::LoadVector3(config, "world_gravity_vector");
+  imu_augmentor_.reset(new ImuAugmentor(params));
 }
 
 void ImuAugmentorWrapper::LocalizationStateCallback(const ff_msgs::EkfState& loc_msg) {
