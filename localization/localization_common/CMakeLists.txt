@@ -22,14 +22,14 @@ project(localization_common)
 find_package(GTSAM REQUIRED)
 
 catkin_package(
-  LIBRARIES ${PROJECT_NAME} ${GTSAM_LIBRARIES} config_reader msg_conversions 
+  LIBRARIES ${PROJECT_NAME} ${GTSAM_LIBRARIES} camera config_reader msg_conversions 
   INCLUDE_DIRS include ${GTSAM_INCLUDE_DIR}  
   CATKIN_DEPENDS 
   DEPENDS gtsam 
 )
 
 create_library(TARGET ${PROJECT_NAME} 
-  LIBS ${catkin_LIBRARIES} config_reader gtsam msg_conversions 
+  LIBS ${catkin_LIBRARIES} camera config_reader gtsam msg_conversions 
   INC ${catkin_INCLUDE_DIRS} 
   DEPS 
 )

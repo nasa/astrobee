@@ -36,9 +36,11 @@ ImuAugmentorWrapper::ImuAugmentorWrapper() {
     LOG(FATAL) << "Failed to read config files.";
   }
 
-  body_T_imu_ = lc::LoadTransform(config, "imu_transform");
-  msg_conversions::config_read_vector(&config, "world_gravity_vector", &gravity_vector_);
-  imu_augmentor_.reset(new ImuAugmentor(body_T_imu_, gravity_vector_));
+  // TODO(rsoussan): Unify this with graph localizer param reader LoadImuIntegratorParams
+  ImuIntegratorParams params;
+  params.body_T_imu = lc::LoadTransform(config, "imu_transform");
+  params.gravity_vector = lc::LoadVector(config, "world_gravity_vector");
+  imu_augmentor_.reset(new ImuAugmentor(params);
 }
 
 void ImuAugmentorWrapper::LocalizationStateCallback(const ff_msgs::EkfState& loc_msg) {

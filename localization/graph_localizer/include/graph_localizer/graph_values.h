@@ -19,6 +19,7 @@
 #ifndef GRAPH_LOCALIZER_GRAPH_VALUES_H_
 #define GRAPH_LOCALIZER_GRAPH_VALUES_H_
 
+#include <graph_localizer/graph_values_params.h>
 #include <graph_localizer/key_info.h>
 #include <localization_common/combined_nav_state.h>
 #include <localization_common/time.h>
@@ -39,7 +40,7 @@ namespace graph_localizer {
 namespace sym = gtsam::symbol_shorthand;
 class GraphValues {
  public:
-  explicit GraphValues(const double window_ideal_duration, const int window_min_num_states);
+  explicit GraphValues(const GraphValuesParams& params);
 
   // Add timestamp and keys to timestamp_key_index_map, and values to values
   bool AddCombinedNavState(const localization_common::CombinedNavState& combined_nav_state, const int key_index);
@@ -128,11 +129,7 @@ class GraphValues {
     ar& BOOST_SERIALIZATION_NVP(timestamp_key_index_map_);
   }
 
-  // Ideal since this is only kept if there are at least kWindowMinNumberStates
-  const double kWindowIdealDuration;
-  // Don't leave less than kWindowMinNumberStates per state in window if
-  // possible
-  const double kWindowMinNumStates;
+  GraphValuesParams params_;
   gtsam::Values values_;
   std::map<localization_common::Time, int> timestamp_key_index_map_;
 };

@@ -20,6 +20,7 @@
 #define IMU_INTEGRATION_LATEST_IMU_INTEGRATOR_H_
 
 #include <imu_integration/imu_integrator.h>
+#include <imu_integration/latest_imu_integrator_params.h>
 
 #include <memory>
 
@@ -28,9 +29,7 @@ namespace imu_integration {
 // last integrated measurement and only integrates measurements more recent than that measurement.
 class LatestImuIntegrator : public ImuIntegrator {
  public:
-  LatestImuIntegrator(const Eigen::Isometry3d& body_T_imu, const Eigen::Vector3d& gyro_bias,
-                      const Eigen::Vector3d& accelerometer_bias, const localization_common::Time start_time,
-                      const Eigen::Vector3d& gravity);
+  explicit LatestImuIntegrator(const LatestImuIntegratorParams& params);
 
   const gtsam::PreintegratedCombinedMeasurements& pim() const;
 
@@ -40,8 +39,8 @@ class LatestImuIntegrator : public ImuIntegrator {
   bool IntegrateLatestImuMeasurements(const localization_common::Time end_time);
 
  private:
+  LatestImuIntegratorParams params_;
   std::unique_ptr<gtsam::PreintegratedCombinedMeasurements> pim_;
-  localization_common::Time start_time_;
   localization_common::Time last_added_imu_measurement_time_;
 };
 }  // namespace imu_integration

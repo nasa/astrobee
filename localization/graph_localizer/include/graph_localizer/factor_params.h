@@ -15,23 +15,14 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef GRAPH_LOCALIZER_GRAPH_LOCALIZER_PARAMS_H_
-#define GRAPH_LOCALIZER_GRAPH_LOCALIZER_PARAMS_H_
-
-#include <graph_localizer/calibration_params.h>
-#include <graph_localizer/factor_params.h>
-#include <graph_localizer/graph_initialization_params.h>
-#include <graph_localizer/graph_values_params.h>
-#include <graph_localizer/noise_params.h>
+#ifndef GRAPH_LOCALIZER_FACTOR_PARAMS_H_
+#define GRAPH_LOCALIZER_FACTOR_PARAMS_H_
 
 namespace graph_localizer {
-struct GraphLocalizerParams {
-  CalibrationParams calibration;
-  FactorParams factor;
-  GraphValuesParams graph_values;
-  NoiseParams noise;
-  GraphInitializationParams graph_initialization;
+struct FactorParams {
+  double min_valid_feature_track_avg_distance_from_mean;
+  double max_standstill_feature_track_avg_distance_from_mean;
 };
 }  // namespace graph_localizer
 
-#endif  // GRAPH_LOCALIZER_GRAPH_LOCALIZER_PARAMS_H_
+#endif  // GRAPH_LOCALIZER_FACTOR_PARAMS_H_

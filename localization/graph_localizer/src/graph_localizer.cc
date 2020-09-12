@@ -40,25 +40,11 @@ namespace lc = localization_common;
 namespace lm = localization_measurements;
 
 GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
-    : latest_imu_integrator_(params.body_T_imu(), params.gyro_bias(), params.accelerometer_bias(), params.start_time(),
-                             params.gravity()),
-      body_T_nav_cam_(lc::GtPose(params.body_T_nav_cam())),
-      nav_cam_intrinsics_(new gtsam::Cal3_S2(params.nav_cam_focal_lengths().x(), params.nav_cam_focal_lengths().y(), 0,
-                                             params.nav_cam_principal_point().x(),
-                                             params.nav_cam_principal_point().y())),
-      nav_cam_noise_(gtsam::noiseModel::Isotropic::Sigma(2, 0.1)),
-      body_T_dock_cam_(lc::GtPose(params.body_T_dock_cam())),
-      dock_cam_intrinsics_(new gtsam::Cal3_S2(params.dock_cam_focal_lengths().x(), params.dock_cam_focal_lengths().y(),
-                                              0, params.dock_cam_principal_point().x(),
-                                              params.dock_cam_principal_point().y())),
-      dock_cam_noise_(gtsam::noiseModel::Isotropic::Sigma(2, 0.1)),
-      graph_values_(params.sliding_window_duration(), params.min_num_sliding_window_states()),
-      min_valid_feature_track_avg_distance_from_mean_(params.min_of_avg_distance_from_mean()),
-      config_world_T_dock_(lc::GtPose(params.world_T_dock())) {
+    : latest_imu_integrator_(params.graph_initialization), graph_values_(params.graph_values), params_(params) {
   // Assumes zero initial velocity
   const lc::CombinedNavState global_cgN_body_start(
-      lc::GtPose(params.global_T_body_start()), gtsam::Velocity3::Zero(),
-      gtsam::imuBias::ConstantBias(params.accelerometer_bias(), params.gyro_bias()), params.start_time());
+      params_.graph_initialization.global_T_body_start, gtsam::Velocity3::Zero(),
+      params_.graph_initialization.initial_imu_bias, params_.graph_initialization.start_time);
 
   // Add first nav state and priors to graph
   const int key_index = GenerateKeyIndex();
@@ -217,7 +203,7 @@ bool GraphLocalizer::AddOpticalFlowMeasurement(
   for (const auto& feature_track : feature_tracker_.feature_tracks()) {
     const double feature_track_average_distance_from_mean = AverageDistanceFromMean(feature_track.second.points);
     if (ValidPointSet(feature_track.second.points, feature_track_average_distance_from_mean,
-                      min_valid_feature_track_avg_distance_from_mean_)) {
+                      params_.factor.min_valid_feature_track_avg_distance_from_mean)) {
       AddSmartFactor(feature_track.second, smart_factors_to_add);
     } else if (feature_track.second.points.size() >
                5) {  // Only consider long enough feature tracks for standstill candidates
@@ -237,7 +223,7 @@ bool GraphLocalizer::AddOpticalFlowMeasurement(
     BufferFactors(smart_factors_to_add);
     std::cout << "added : " << smart_factors_to_add.size() << " smart factors." << std::endl;
     VLOG(2) << "AddOpticalFLowMeasurement: Buffered " << smart_factors_to_add.size() << " smart factors.";
-  } else if (potential_standstill_feature_tracks_average_distance_from_mean < 0.35 &&
+  } else if (potential_standstill_feature_tracks_average_distance_from_mean < 1 &&
              num_potential_standstill_feature_tracks >
                  5) {  // Only add a standstill prior if no smart factors added and other conditions met
     std::cout << "potential_standstill_feature_tracks_average_distance_from_mean: "
@@ -254,8 +240,8 @@ bool GraphLocalizer::AddOpticalFlowMeasurement(
 }
 
 void GraphLocalizer::AddSmartFactor(const FeatureTrack& feature_track, FactorsToAdd& smart_factors_to_add) {
-  SharedSmartFactor smart_factor(
-      new SmartFactor(nav_cam_noise_, nav_cam_intrinsics_, body_T_nav_cam_, smart_projection_params_));
+  SharedSmartFactor smart_factor(new SmartFactor(params_.noise.nav_cam_noise, params_.calibration.nav_cam_intrinsics,
+                                                 params_.calibration.body_T_nav_cam, smart_projection_params_));
 
   KeyInfos key_infos;
   key_infos.reserve(feature_track.points.size());
@@ -275,9 +261,9 @@ void GraphLocalizer::AddStandstillPriorFactor(const lc::Time timestamp, FactorsT
 
   // TODO(rsoussan): tune these
   // Create noise for priors
-  constexpr double kPoseTranslationPriorSigma = 0.02;
-  constexpr double kPoseQuaternionPriorSigma = 0.01;
-  constexpr double kVelPriorSigma = 0.01;
+  constexpr double kPoseTranslationPriorSigma = 0.2;  // 0.02;
+  constexpr double kPoseQuaternionPriorSigma = 0.1;   // 0.01;
+  constexpr double kVelPriorSigma = 0.1;              // 0.01;
   const gtsam::Vector6 pose_prior_noise_sigmas(
       (gtsam::Vector(6) << kPoseTranslationPriorSigma, kPoseTranslationPriorSigma, kPoseTranslationPriorSigma,
        kPoseQuaternionPriorSigma, kPoseQuaternionPriorSigma, kPoseQuaternionPriorSigma)
@@ -304,14 +290,16 @@ void GraphLocalizer::AddARTagMeasurement(const lm::MatchedProjectionsMeasurement
                                          const gtsam::Pose3& dock_cam_T_dock) {
   LOG(INFO) << "AddARTagMeasurement: Adding AR tag measurement.";
   dock_cam_T_dock_estimates_.emplace(matched_projections_measurement.timestamp, dock_cam_T_dock);
-  AddProjectionMeasurement(matched_projections_measurement, body_T_dock_cam_, dock_cam_intrinsics_, dock_cam_noise_,
+  AddProjectionMeasurement(matched_projections_measurement, params_.calibration.body_T_dock_cam,
+                           params_.calibration.dock_cam_intrinsics, params_.noise.dock_cam_noise,
                            GraphAction::kTransformARMeasurementAndUpdateDockTWorld);
 }
 
 void GraphLocalizer::AddSparseMappingMeasurement(
     const lm::MatchedProjectionsMeasurement& matched_projections_measurement) {
   LOG(INFO) << "AddSparseMappingMeasurement: Adding sparse mapping measurement.";
-  AddProjectionMeasurement(matched_projections_measurement, body_T_nav_cam_, nav_cam_intrinsics_, nav_cam_noise_);
+  AddProjectionMeasurement(matched_projections_measurement, params_.calibration.body_T_nav_cam,
+                           params_.calibration.nav_cam_intrinsics, params_.noise.nav_cam_noise);
 }
 
 void GraphLocalizer::AddProjectionMeasurement(const lm::MatchedProjectionsMeasurement& matched_projections_measurement,
@@ -645,8 +633,9 @@ bool GraphLocalizer::TransformARMeasurementAndUpdateDockTWorld(FactorsToAdd& fac
   }
 
   const gtsam::Pose3 world_T_body = combined_nav_state->pose();
-  estimated_world_T_dock_ = std::make_pair(world_T_body * body_T_dock_cam_ * estimated_dock_cam_T_dock_it->second,
-                                           factors_to_add.timestamp());
+  estimated_world_T_dock_ =
+      std::make_pair(world_T_body * params_.calibration.body_T_dock_cam * estimated_dock_cam_T_dock_it->second,
+                     factors_to_add.timestamp());
 
   // Frame change dock frame of landmark point using updated estimate of world_T_dock_
   for (auto& factor_to_add : factors_to_add.Get()) {

@@ -19,6 +19,8 @@
 #ifndef IMU_INTEGRATION_IMU_INTEGRATOR_H_
 #define IMU_INTEGRATION_IMU_INTEGRATOR_H_
 
+#include <imu_integration/imu_integrator_params.h>
+
 #include <localization_common/combined_nav_state.h>
 #include <localization_common/time.h>
 #include <localization_measurements/imu_measurement.h>
@@ -36,7 +38,7 @@ namespace imu_integration {
 // that window can be integrated into a pim.
 class ImuIntegrator {
  public:
-  ImuIntegrator(const Eigen::Isometry3d& body_T_imu, const Eigen::Vector3d& gravity);
+  explicit ImuIntegrator(const ImuIntegratorParams& params);
 
   // Buffers imu measurement so they can be integrated when needed.
   // Delayed integration useful so imu integation does not advance
@@ -70,10 +72,10 @@ class ImuIntegrator {
   bool WithinBounds(const localization_common::Time timestamp);
 
  private:
+  ImuIntegratorParams params_;
   boost::shared_ptr<gtsam::PreintegratedCombinedMeasurements::Params> pim_params_;
   std::map<localization_common::Time, localization_measurements::ImuMeasurement> measurements_;
-  // Static calibration
-  Eigen::Isometry3d body_T_imu_;
+  // TODO(rsoussan): Add these to params?
   // From gtsam: Realistic MEMS white noise characteristics. Angular and
   // velocity random walk expressed in degrees respectively m/s per sqrt(hr).
   static constexpr double kGyroSigma_ = 0.00001;    // (0.5 * M_PI / 180) / 60;  // 0.5 degree ARW

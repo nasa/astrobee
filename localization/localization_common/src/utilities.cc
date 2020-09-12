@@ -16,6 +16,7 @@
  * under the License.
  */
 
+#include <camera/camera_params.h>
 #include <ff_msgs/EkfState.h>
 #include <localization_common/utilities.h>
 #include <msg_conversions/msg_conversions.h>
@@ -29,7 +30,12 @@
 #include <string>
 
 namespace localization_common {
-Eigen::Isometry3d LoadTransform(config_reader::ConfigReader& config, const std::string& transform_config_name) {
+gtsam::Pose3 LoadTransform(config_reader::ConfigReader& config, const std::string& transform_config_name) {
+  const auto body_T_sensor = LoadEigenTransform(config, transform_config_name);
+  return GtPose(body_T_sensor);
+}
+
+Eigen::Isometry3d LoadEigenTransform(config_reader::ConfigReader& config, const std::string& transform_config_name) {
   Eigen::Vector3d body_t_sensor;
   Eigen::Quaterniond body_Q_sensor;
   if (!msg_conversions::config_read_transform(&config, transform_config_name.c_str(), &body_t_sensor, &body_Q_sensor))
@@ -38,6 +44,31 @@ Eigen::Isometry3d LoadTransform(config_reader::ConfigReader& config, const std::
   body_T_sensor.translation() = body_t_sensor;
   body_T_sensor.linear() = body_Q_sensor.toRotationMatrix();
   return body_T_sensor;
+}
+
+double LoadDouble(config_reader::ConfigReader& config, const std::string& transform_config_name) {
+  double val;
+  if (!config.GetReal(transform_config_name.c_str(), &val)) LOG(FATAL) << "Failed to load " << transform_config_name;
+  return val;
+}
+
+int LoadInt(config_reader::ConfigReader& config, const std::string& transform_config_name) {
+  int val;
+  if (!config.GetInt(transform_config_name.c_str(), &val)) LOG(FATAL) << "Failed to load " << transform_config_name;
+  return val;
+}
+
+gtsam::Vector3 LoadVector3(config_reader::ConfigReader& config, const std::string& transform_config_name) {
+  Eigen::Vector3d vec;
+  msg_conversions::config_read_vector(&config, transform_config_name.c_str(), &vec);
+  return vec;
+}
+
+gtsam::Cal3_S2 LoadCameraIntrinsics(config_reader::ConfigReader& config, const std::string& intrinsics_config_name) {
+  const camera::CameraParameters cam_params(&config, intrinsics_config_name.c_str());
+  const auto intrinsics = cam_params.GetIntrinsicMatrix<camera::UNDISTORTED_C>();
+  // Assumes zero skew
+  return gtsam::Cal3_S2(intrinsics(0, 0), intrinsics(1, 1), 0, intrinsics(0, 2), intrinsics(1, 2));
 }
 
 gtsam::Pose3 GtPose(const Eigen::Isometry3d& eigen_pose) {

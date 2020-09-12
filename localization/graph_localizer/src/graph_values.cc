@@ -30,10 +30,9 @@
 
 namespace graph_localizer {
 namespace lc = localization_common;
-GraphValues::GraphValues(const double window_ideal_duration, const int window_min_num_states)
-    : kWindowIdealDuration(window_ideal_duration), kWindowMinNumStates(window_min_num_states) {
-  VLOG(2) << "GraphValues: Window duration: " << kWindowIdealDuration;
-  VLOG(2) << "GraphValues: Window min num states: " << kWindowMinNumStates;
+GraphValues::GraphValues(const GraphValuesParams& params) : params_(params) {
+  VLOG(2) << "GraphValues: Window duration: " << params_.sliding_window_duration;
+  VLOG(2) << "GraphValues: Window min num states: " << params_.min_num_sliding_window_states;
 }
 
 // Removes keys from timestamp map, values from values.
@@ -276,10 +275,10 @@ int GraphValues::SlideWindow(gtsam::NonlinearFactorGraph& graph) {
   VLOG(2) << "SlideWindow: Starting total num states: " << timestamp_key_index_map_.size();
   VLOG(2) << "SlideWindow: Starting total duration is " << total_duration;
   const lc::Time ideal_oldest_allowed_state =
-      std::max(0.0, timestamp_key_index_map_.crbegin()->first - kWindowIdealDuration);
+      std::max(0.0, timestamp_key_index_map_.crbegin()->first - params_.sliding_window_duration);
   int num_states_removed = 0;
   while (timestamp_key_index_map_.begin()->first < ideal_oldest_allowed_state &&
-         timestamp_key_index_map_.size() > kWindowMinNumStates) {
+         timestamp_key_index_map_.size() > params_.min_num_sliding_window_states) {
     RemoveCombinedNavStateAndFactors(timestamp_key_index_map_.begin()->first, graph);
     ++num_states_removed;
   }

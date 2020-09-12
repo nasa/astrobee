@@ -26,6 +26,7 @@
 #include <localization_common/combined_nav_state_covariances.h>
 #include <localization_common/time.h>
 
+#include <gtsam/geometry/Cal3_S2.h>
 #include <gtsam/geometry/Pose3.h>
 
 #include <Eigen/Core>
@@ -37,7 +38,17 @@
 #include <string>
 
 namespace localization_common {
-Eigen::Isometry3d LoadTransform(config_reader::ConfigReader& config, const std::string& transform_config_name);
+gtsam::Pose3 LoadTransform(config_reader::ConfigReader& config, const std::string& transform_config_name);
+
+Eigen::Isometry3d LoadEigenTransform(config_reader::ConfigReader& config, const std::string& transform_config_name);
+
+gtsam::Cal3_S2 LoadCameraIntrinsics(config_reader::ConfigReader& config, const std::string& intrinsics_config_name);
+
+double LoadDouble(config_reader::ConfigReader& config, const std::string& transform_config_name);
+
+int LoadInt(config_reader::ConfigReader& config, const std::string& transform_config_name);
+
+gtsam::Vector3 LoadVector3(config_reader::ConfigReader& config, const std::string& transform_config_name);
 
 gtsam::Pose3 GtPose(const Eigen::Isometry3d& eigen_pose);
 

@@ -15,23 +15,17 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef GRAPH_LOCALIZER_GRAPH_LOCALIZER_PARAMS_H_
-#define GRAPH_LOCALIZER_GRAPH_LOCALIZER_PARAMS_H_
+#ifndef IMU_INTEGRATION_IMU_INTEGRATOR_PARAMS_H_
+#define IMU_INTEGRATION_IMU_INTEGRATOR_PARAMS_H_
 
-#include <graph_localizer/calibration_params.h>
-#include <graph_localizer/factor_params.h>
-#include <graph_localizer/graph_initialization_params.h>
-#include <graph_localizer/graph_values_params.h>
-#include <graph_localizer/noise_params.h>
+#include <gtsam/base/Vector.h>
+#include <gtsam/geometry/Pose3.h>
 
-namespace graph_localizer {
-struct GraphLocalizerParams {
-  CalibrationParams calibration;
-  FactorParams factor;
-  GraphValuesParams graph_values;
-  NoiseParams noise;
-  GraphInitializationParams graph_initialization;
+namespace imu_integration {
+struct ImuIntegratorParams {
+  gtsam::Vector3 gravity;
+  gtsam::Pose3 body_T_imu;
 };
-}  // namespace graph_localizer
+}  // namespace imu_integration
 
-#endif  // GRAPH_LOCALIZER_GRAPH_LOCALIZER_PARAMS_H_
+#endif  // IMU_INTEGRATION_IMU_INTEGRATOR_PARAMS_H_

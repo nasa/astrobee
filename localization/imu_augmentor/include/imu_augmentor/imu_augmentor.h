@@ -20,6 +20,7 @@
 #define IMU_AUGMENTOR_IMU_AUGMENTOR_H_
 
 #include <imu_integration/imu_integrator.h>
+#include <imu_integration/imu_integrator_params.h>
 #include <localization_common/combined_nav_state.h>
 #include <localization_common/time.h>
 #include <localization_measurements/imu_measurement.h>
@@ -32,7 +33,7 @@
 namespace imu_augmentor {
 class ImuAugmentor {
  public:
-  ImuAugmentor(const Eigen::Isometry3d& body_T_imu, const Eigen::Vector3d& gravity);
+  explicit ImuAugmentor(const ImuIntegratorParams& params);
 
   void BufferImuMeasurement(const localization_measurements::ImuMeasurement& imu_measurement);
 

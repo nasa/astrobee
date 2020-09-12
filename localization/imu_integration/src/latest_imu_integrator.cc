@@ -23,12 +23,10 @@
 namespace imu_integration {
 namespace lc = localization_common;
 namespace lm = localization_measurements;
-LatestImuIntegrator::LatestImuIntegrator(const Eigen::Isometry3d& body_T_imu, const Eigen::Vector3d& gyro_bias,
-                                         const Eigen::Vector3d& accelerometer_bias, const lc::Time start_time,
-                                         const Eigen::Vector3d& gravity)
-    : ImuIntegrator(body_T_imu, gravity), start_time_(start_time), last_added_imu_measurement_time_(0) {
+LatestImuIntegrator::LatestImuIntegrator(const LatestImuIntegratorParams& params)
+    : ImuIntegrator(params), params_(params), last_added_imu_measurement_time_(0) {
   pim_.reset(new gtsam::PreintegratedCombinedMeasurements(pim_params()));
-  ResetPimIntegrationAndSetBias(gtsam::imuBias::ConstantBias(accelerometer_bias, gyro_bias));
+  ResetPimIntegrationAndSetBias(params_.initial_imu_bias);
 }
 
 const gtsam::PreintegratedCombinedMeasurements& LatestImuIntegrator::pim() const { return *pim_; }
@@ -46,7 +44,7 @@ bool LatestImuIntegrator::IntegrateLatestImuMeasurements(const lc::Time end_time
 
   if (last_added_imu_measurement_time_ == 0) {
     VLOG(2) << "IntegrateLatestImuMeasurements: Adding first imu measurement.";
-    last_added_imu_measurement_time_ = start_time_;
+    last_added_imu_measurement_time_ = params_.start_time;
   }
 
   const auto last_added_imu_measurement_time =

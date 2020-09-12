@@ -15,23 +15,19 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef GRAPH_LOCALIZER_GRAPH_LOCALIZER_PARAMS_H_
-#define GRAPH_LOCALIZER_GRAPH_LOCALIZER_PARAMS_H_
+#ifndef GRAPH_LOCALIZER_NOISE_PARAMS_H_
+#define GRAPH_LOCALIZER_NOISE_PARAMS_H_
 
-#include <graph_localizer/calibration_params.h>
-#include <graph_localizer/factor_params.h>
-#include <graph_localizer/graph_initialization_params.h>
-#include <graph_localizer/graph_values_params.h>
-#include <graph_localizer/noise_params.h>
+#include <gtsam/linear/NoiseModel.h>
 
 namespace graph_localizer {
-struct GraphLocalizerParams {
-  CalibrationParams calibration;
-  FactorParams factor;
-  GraphValuesParams graph_values;
-  NoiseParams noise;
-  GraphInitializationParams graph_initialization;
+struct NoiseParams {
+  gtsam::SharedIsotropic dock_cam_noise;
+  gtsam::SharedIsotropic nav_cam_noise;
+  double optical_flow_prior_translation_stddev;
+  double optical_flow_prior_quaternion_stddev;
+  double optical_flow_prior_velocity_stddev;
 };
 }  // namespace graph_localizer
 
-#endif  // GRAPH_LOCALIZER_GRAPH_LOCALIZER_PARAMS_H_
+#endif  // GRAPH_LOCALIZER_NOISE_PARAMS_H_

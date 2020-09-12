@@ -15,23 +15,20 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef GRAPH_LOCALIZER_GRAPH_LOCALIZER_PARAMS_H_
-#define GRAPH_LOCALIZER_GRAPH_LOCALIZER_PARAMS_H_
+#ifndef GRAPH_LOCALIZER_CALIBRATION_PARAMS_H_
+#define GRAPH_LOCALIZER_CALIBRATION_PARAMS_H_
 
-#include <graph_localizer/calibration_params.h>
-#include <graph_localizer/factor_params.h>
-#include <graph_localizer/graph_initialization_params.h>
-#include <graph_localizer/graph_values_params.h>
-#include <graph_localizer/noise_params.h>
+#include <gtsam/geometry/Cal3_S2.h>
+#include <gtsam/geometry/Pose3.h>
 
 namespace graph_localizer {
-struct GraphLocalizerParams {
-  CalibrationParams calibration;
-  FactorParams factor;
-  GraphValuesParams graph_values;
-  NoiseParams noise;
-  GraphInitializationParams graph_initialization;
+struct CalibrationParams {
+  gtsam::Pose3 body_T_dock_cam;
+  gtsam::Pose3 body_T_nav_cam;
+  gtsam::Pose3 world_T_dock;
+  boost::shared_ptr<gtsam::Cal3_S2> nav_cam_intrinsics;
+  boost::shared_ptr<gtsam::Cal3_S2> dock_cam_intrinsics;
 };
 }  // namespace graph_localizer
 
-#endif  // GRAPH_LOCALIZER_GRAPH_LOCALIZER_PARAMS_H_
+#endif  // GRAPH_LOCALIZER_CALIBRATION_PARAMS_H_

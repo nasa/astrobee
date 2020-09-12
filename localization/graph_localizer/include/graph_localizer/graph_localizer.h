@@ -44,9 +44,6 @@
 #include <gtsam/slam/SmartFactorParams.h>
 #include <gtsam/slam/SmartProjectionPoseFactor.h>
 
-#include <ros/console.h>
-#include <sensor_msgs/Imu.h>
-
 #include <boost/serialization/serialization.hpp>
 
 #include <map>
@@ -219,26 +216,15 @@ class GraphLocalizer {
     boost::serialization::split_member(ar, *this, file_version);
   }
 
-  // TODO(rsoussan): put these somewhere else
-  gtsam::NavState global_gN_body_start_;
+  GraphLocalizerParams params_;
   imu_integration::LatestImuIntegrator latest_imu_integrator_;
   gtsam::NonlinearFactorGraph graph_;
   GraphValues graph_values_;
   FeatureTracker feature_tracker_;
   std::unique_ptr<gtsam::Marginals> marginals_;
   gtsam::SmartProjectionParams smart_projection_params_;
-  gtsam::Pose3 body_T_nav_cam_;
-  gtsam::Pose3 body_T_dock_cam_;
-  gtsam::Pose3 config_world_T_dock_;
   boost::optional<std::pair<gtsam::Pose3, localization_common::Time>> estimated_world_T_dock_;
   std::map<localization_common::Time, gtsam::Pose3> dock_cam_T_dock_estimates_;
-  boost::shared_ptr<gtsam::Cal3_S2> nav_cam_intrinsics_;
-  boost::shared_ptr<gtsam::Cal3_S2> dock_cam_intrinsics_;
-  gtsam::SharedIsotropic nav_cam_noise_;
-  gtsam::SharedIsotropic dock_cam_noise_;
-  double min_valid_feature_track_avg_distance_from_mean_;
-  // TODO(rsousan): Make this a cfg variable
-  static constexpr double kStandstillAverageDistanceFromMeanMaxValue = 0.2;
   std::multimap<localization_common::Time, FactorsToAdd> buffered_factors_to_add_;
 };
 }  // namespace graph_localizer

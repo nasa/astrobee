@@ -15,23 +15,18 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef GRAPH_LOCALIZER_GRAPH_LOCALIZER_PARAMS_H_
-#define GRAPH_LOCALIZER_GRAPH_LOCALIZER_PARAMS_H_
+#ifndef IMU_INTEGRATION_LATEST_IMU_INTEGRATOR_PARAMS_H_
+#define IMU_INTEGRATION_LATEST_IMU_INTEGRATOR_PARAMS_H_
 
-#include <graph_localizer/calibration_params.h>
-#include <graph_localizer/factor_params.h>
-#include <graph_localizer/graph_initialization_params.h>
-#include <graph_localizer/graph_values_params.h>
-#include <graph_localizer/noise_params.h>
+#include <imu_integration/imu_integrator_params.h>
 
-namespace graph_localizer {
-struct GraphLocalizerParams {
-  CalibrationParams calibration;
-  FactorParams factor;
-  GraphValuesParams graph_values;
-  NoiseParams noise;
-  GraphInitializationParams graph_initialization;
+#include <gtsam/navigation/ImuBias.h>
+
+namespace imu_integration {
+struct LatestImuIntegratorParams : public ImuIntegratorParams {
+  double start_time;
+  gtsam::imuBias::ConstantBias initial_imu_bias;
 };
-}  // namespace graph_localizer
+}  // namespace imu_integration
 
-#endif  // GRAPH_LOCALIZER_GRAPH_LOCALIZER_PARAMS_H_
+#endif  // IMU_INTEGRATION_LATEST_IMU_INTEGRATOR_PARAMS_H_

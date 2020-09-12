@@ -25,10 +25,9 @@
 namespace imu_integration {
 namespace lc = localization_common;
 namespace lm = localization_measurements;
-ImuIntegrator::ImuIntegrator(const Eigen::Isometry3d& body_T_imu, const Eigen::Vector3d& gravity)
-    : body_T_imu_(body_T_imu) {
-  VLOG(2) << "ImuIntegrator: Gravity vector: " << std::endl << gravity.matrix();
-  pim_params_.reset(new gtsam::PreintegratedCombinedMeasurements::Params(gravity));
+ImuIntegrator::ImuIntegrator(const ImuIntegratorParams& params) : params_(params) {
+  VLOG(2) << "ImuIntegrator: Gravity vector: " << std::endl << params_.gravity.matrix();
+  pim_params_.reset(new gtsam::PreintegratedCombinedMeasurements::Params(params_.gravity));
   // Set sensor covariances
   pim_params_->gyroscopeCovariance = kGyroSigma_ * kGyroSigma_ * gtsam::I_3x3;
   pim_params_->accelerometerCovariance = kAccelSigma_ * kAccelSigma_ * gtsam::I_3x3;
@@ -39,7 +38,7 @@ ImuIntegrator::ImuIntegrator(const Eigen::Isometry3d& body_T_imu, const Eigen::V
   // Set bias covariance used for pim integration
   pim_params_->biasAccOmegaInt = 0.0001 * gtsam::I_6x6;
   // Set imu calibration relative pose
-  pim_params_->setBodyPSensor(lc::GtPose(body_T_imu_));
+  pim_params_->setBodyPSensor(params_.body_T_imu);
 }
 
 void ImuIntegrator::BufferImuMeasurement(const lm::ImuMeasurement& imu_measurement) {

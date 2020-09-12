@@ -53,7 +53,6 @@ GraphLocalizerWrapper::GraphLocalizerWrapper() {
     LOG(FATAL) << "Failed to load save_localization_graph_dot_file.";
   }
 
-  graph_loc_initialization_.LoadSensorParams(config);
   graph_loc_initialization_.LoadGraphLocalizerParams(config);
 }
 
@@ -94,8 +93,9 @@ void GraphLocalizerWrapper::VLVisualLandmarksCallback(const ff_msgs::VisualLandm
     feature_counts_.vl = visual_landmarks_msg.landmarks.size();
   }
 
-  const Eigen::Isometry3d sparse_mapping_global_T_body =
-      lc::EigenPose(visual_landmarks_msg, graph_loc_initialization_.params().body_T_nav_cam().inverse());
+  // TODO(rsoussan): Clean this up
+  const Eigen::Isometry3d sparse_mapping_global_T_body = lc::EigenPose(
+      visual_landmarks_msg, lc::EigenPose(graph_loc_initialization_.params().calibration.body_T_nav_cam.inverse()));
   const lc::Time timestamp = lc::TimeFromHeader(visual_landmarks_msg.header);
   sparse_mapping_pose_ = std::make_pair(sparse_mapping_global_T_body, timestamp);
 
