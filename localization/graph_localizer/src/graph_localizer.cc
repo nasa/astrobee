@@ -223,7 +223,8 @@ bool GraphLocalizer::AddOpticalFlowMeasurement(
     BufferFactors(smart_factors_to_add);
     std::cout << "added : " << smart_factors_to_add.size() << " smart factors." << std::endl;
     VLOG(2) << "AddOpticalFLowMeasurement: Buffered " << smart_factors_to_add.size() << " smart factors.";
-  } else if (potential_standstill_feature_tracks_average_distance_from_mean < 1 &&
+  } else if (potential_standstill_feature_tracks_average_distance_from_mean <
+                 params_.factor.max_standstill_feature_track_avg_distance_from_mean &&
              num_potential_standstill_feature_tracks >
                  5) {  // Only add a standstill prior if no smart factors added and other conditions met
     std::cout << "potential_standstill_feature_tracks_average_distance_from_mean: "
@@ -259,17 +260,16 @@ void GraphLocalizer::AddSmartFactor(const FeatureTrack& feature_track, FactorsTo
 void GraphLocalizer::AddStandstillPriorFactor(const lc::Time timestamp, FactorsToAdd& standstill_prior_factors_to_add) {
   LOG_EVERY_N(INFO, 1) << "AddStandstillPriorFactor: Adding standstill priors.";
 
-  // TODO(rsoussan): tune these
-  // Create noise for priors
-  constexpr double kPoseTranslationPriorSigma = 0.2;  // 0.02;
-  constexpr double kPoseQuaternionPriorSigma = 0.1;   // 0.01;
-  constexpr double kVelPriorSigma = 0.1;              // 0.01;
   const gtsam::Vector6 pose_prior_noise_sigmas(
-      (gtsam::Vector(6) << kPoseTranslationPriorSigma, kPoseTranslationPriorSigma, kPoseTranslationPriorSigma,
-       kPoseQuaternionPriorSigma, kPoseQuaternionPriorSigma, kPoseQuaternionPriorSigma)
+      (gtsam::Vector(6) << params_.noise.optical_flow_prior_translation_stddev,
+       params_.noise.optical_flow_prior_translation_stddev, params_.noise.optical_flow_prior_translation_stddev,
+       params_.noise.optical_flow_prior_quaternion_stddev, params_.noise.optical_flow_prior_quaternion_stddev,
+       params_.noise.optical_flow_prior_quaternion_stddev)
           .finished());
   const gtsam::Vector3 velocity_prior_noise_sigmas(
-      (gtsam::Vector(3) << kVelPriorSigma, kVelPriorSigma, kVelPriorSigma).finished());
+      (gtsam::Vector(3) << params_.noise.optical_flow_prior_velocity_stddev,
+       params_.noise.optical_flow_prior_velocity_stddev, params_.noise.optical_flow_prior_velocity_stddev)
+          .finished());
   const auto pose_noise =
       gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(pose_prior_noise_sigmas));
   const auto velocity_noise =
