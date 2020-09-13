@@ -214,26 +214,18 @@ bool GraphLocalizer::AddOpticalFlowMeasurement(
 
   if (num_potential_standstill_feature_tracks > 0)
     potential_standstill_feature_tracks_average_distance_from_mean /= num_potential_standstill_feature_tracks;
-  std::cout << "potential_standstill avg: " << potential_standstill_feature_tracks_average_distance_from_mean
-            << std::endl;
-  std::cout << "potential_standstill_num: " << num_potential_standstill_feature_tracks << std::endl;
 
   if (!smart_factors_to_add.empty()) {
     smart_factors_to_add.SetTimestamp(optical_flow_feature_points_measurement.timestamp);
     BufferFactors(smart_factors_to_add);
-    std::cout << "added : " << smart_factors_to_add.size() << " smart factors." << std::endl;
     VLOG(2) << "AddOpticalFLowMeasurement: Buffered " << smart_factors_to_add.size() << " smart factors.";
-  } else if (potential_standstill_feature_tracks_average_distance_from_mean <
-                 params_.factor.max_standstill_feature_track_avg_distance_from_mean &&
-             num_potential_standstill_feature_tracks >
-                 5) {  // Only add a standstill prior if no smart factors added and other conditions met
-    std::cout << "potential_standstill_feature_tracks_average_distance_from_mean: "
-              << potential_standstill_feature_tracks_average_distance_from_mean << std::endl;
-    std::cout << "num potential tracks: " << num_potential_standstill_feature_tracks << std::endl;
+  } else if (ShouldAddStandstillPrior(
+                 potential_standstill_feature_tracks_average_distance_from_mean,
+                 num_potential_standstill_feature_tracks,
+                 params_.factor)) {  // Only add a standstill prior if no smart factors added and other conditions met
     AddStandstillPriorFactor(optical_flow_feature_points_measurement.timestamp, prior_factors_to_add);
     prior_factors_to_add.SetTimestamp(optical_flow_feature_points_measurement.timestamp);
     BufferFactors(prior_factors_to_add);
-    std::cout << "added pose and vel prior factors!." << std::endl;
     VLOG(2) << "AddOpticalFLowMeasurement: Buffered a pose and velocity prior factor.";
   }
 
@@ -260,30 +252,42 @@ void GraphLocalizer::AddSmartFactor(const FeatureTrack& feature_track, FactorsTo
 void GraphLocalizer::AddStandstillPriorFactor(const lc::Time timestamp, FactorsToAdd& standstill_prior_factors_to_add) {
   LOG_EVERY_N(INFO, 1) << "AddStandstillPriorFactor: Adding standstill priors.";
 
-  const gtsam::Vector6 pose_prior_noise_sigmas(
-      (gtsam::Vector(6) << params_.noise.optical_flow_prior_translation_stddev,
-       params_.noise.optical_flow_prior_translation_stddev, params_.noise.optical_flow_prior_translation_stddev,
-       params_.noise.optical_flow_prior_quaternion_stddev, params_.noise.optical_flow_prior_quaternion_stddev,
-       params_.noise.optical_flow_prior_quaternion_stddev)
-          .finished());
-  const gtsam::Vector3 velocity_prior_noise_sigmas(
-      (gtsam::Vector(3) << params_.noise.optical_flow_prior_velocity_stddev,
-       params_.noise.optical_flow_prior_velocity_stddev, params_.noise.optical_flow_prior_velocity_stddev)
-          .finished());
-  const auto pose_noise =
-      gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(pose_prior_noise_sigmas));
-  const auto velocity_noise =
-      gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(velocity_prior_noise_sigmas));
+  if (params_.factor.optical_flow_standstill_pose_prior) {
+    const gtsam::Vector6 pose_prior_noise_sigmas(
+        (gtsam::Vector(6) << params_.noise.optical_flow_prior_translation_stddev,
+         params_.noise.optical_flow_prior_translation_stddev, params_.noise.optical_flow_prior_translation_stddev,
+         params_.noise.optical_flow_prior_quaternion_stddev, params_.noise.optical_flow_prior_quaternion_stddev,
+         params_.noise.optical_flow_prior_quaternion_stddev)
+            .finished());
 
-  // Pose and Velocity will be filled in with current values by GraphAction
-  const KeyInfo pose_key_info(&sym::P, timestamp);
-  gtsam::PriorFactor<gtsam::Pose3>::shared_ptr pose_prior_factor(
-      new gtsam::PriorFactor<gtsam::Pose3>(pose_key_info.UninitializedKey(), gtsam::Pose3(), pose_noise));
-  const KeyInfo velocity_key_info(&sym::V, timestamp);
-  gtsam::PriorFactor<gtsam::Velocity3>::shared_ptr velocity_prior_factor(new gtsam::PriorFactor<gtsam::Velocity3>(
-      velocity_key_info.UninitializedKey(), gtsam::Velocity3(), velocity_noise));
-  standstill_prior_factors_to_add.push_back({{pose_key_info}, pose_prior_factor});
-  standstill_prior_factors_to_add.push_back({{velocity_key_info}, velocity_prior_factor});
+    const auto pose_noise =
+        gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(pose_prior_noise_sigmas));
+
+    const KeyInfo pose_key_info(&sym::P, timestamp);
+    // Pose will be filled in with current values by GraphAction when buffered factors are added to graph
+    gtsam::PriorFactor<gtsam::Pose3>::shared_ptr pose_prior_factor(
+        new gtsam::PriorFactor<gtsam::Pose3>(pose_key_info.UninitializedKey(), gtsam::Pose3(), pose_noise));
+
+    standstill_prior_factors_to_add.push_back({{pose_key_info}, pose_prior_factor});
+
+    LOG_EVERY_N(INFO, 1) << "AddStandstillPriorFactor: Added pose standstill prior.";
+  }
+
+  if (params_.factor.optical_flow_standstill_velocity_prior) {
+    const gtsam::Vector3 velocity_prior_noise_sigmas(
+        (gtsam::Vector(3) << params_.noise.optical_flow_prior_velocity_stddev,
+         params_.noise.optical_flow_prior_velocity_stddev, params_.noise.optical_flow_prior_velocity_stddev)
+            .finished());
+    const auto velocity_noise =
+        gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(velocity_prior_noise_sigmas));
+
+    const KeyInfo velocity_key_info(&sym::V, timestamp);
+    // Velocity will be filled in with current values by GraphAction when buffered factors are added to graph
+    gtsam::PriorFactor<gtsam::Velocity3>::shared_ptr velocity_prior_factor(new gtsam::PriorFactor<gtsam::Velocity3>(
+        velocity_key_info.UninitializedKey(), gtsam::Velocity3(), velocity_noise));
+    standstill_prior_factors_to_add.push_back({{velocity_key_info}, velocity_prior_factor});
+    LOG_EVERY_N(INFO, 1) << "AddStandstillPriorFactor: Added velocity standstill prior.";
+  }
 }
 
 void GraphLocalizer::AddARTagMeasurement(const lm::MatchedProjectionsMeasurement& matched_projections_measurement,

@@ -58,6 +58,12 @@ int LoadInt(config_reader::ConfigReader& config, const std::string& transform_co
   return val;
 }
 
+bool LoadBool(config_reader::ConfigReader& config, const std::string& transform_config_name) {
+  bool val;
+  if (!config.GetBool(transform_config_name.c_str(), &val)) LOG(FATAL) << "Failed to load " << transform_config_name;
+  return val;
+}
+
 gtsam::Vector3 LoadVector3(config_reader::ConfigReader& config, const std::string& transform_config_name) {
   Eigen::Vector3d vec;
   msg_conversions::config_read_vector(&config, transform_config_name.c_str(), &vec);

@@ -34,6 +34,8 @@ void LoadFactorParams(config_reader::ConfigReader& config, FactorParams& params)
       lc::LoadDouble(config, "min_valid_feature_track_avg_distance_from_mean");
   params.max_standstill_feature_track_avg_distance_from_mean =
       lc::LoadDouble(config, "max_standstill_feature_track_avg_distance_from_mean");
+  params.optical_flow_standstill_pose_prior = lc::LoadBool(config, "optical_flow_standstill_pose_prior");
+  params.optical_flow_standstill_velocity_prior = lc::LoadBool(config, "optical_flow_standstill_velocity_prior");
 }
 
 void LoadImuIntegrationParams(config_reader::ConfigReader& config, GraphInitializationParams& params) {

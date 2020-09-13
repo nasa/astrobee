@@ -37,12 +37,14 @@ bool ValidPointSet(const std::deque<lm::FeaturePoint>& points, const double aver
   return (average_distance_from_mean >= min_avg_distance_from_mean);
 }
 
-bool ValidStandstillPointSet(const std::deque<lm::FeaturePoint>& points, const double average_distance_from_mean,
-                             const double standstill_average_distance_from_mean_max_value) {
+bool ShouldAddStandstillPrior(const double standstill_feature_tracks_average_distance_from_mean,
+                              const int num_standstill_feature_tracks, const FactorParams& params) {
+  if (!params.optical_flow_standstill_pose_prior && !params.optical_flow_standstill_velocity_prior) return false;
   // TODO(rsoussan): Make this a config variable
   // todo: make sure points have enough tracks!!!! get average num points per track?????
-  if (points.size() < 5) return false;
-  return average_distance_from_mean < standstill_average_distance_from_mean_max_value;
+  if (num_standstill_feature_tracks < 5) return false;
+  return standstill_feature_tracks_average_distance_from_mean <
+         params.max_standstill_feature_track_avg_distance_from_mean;
 }
 
 double AverageDistanceFromMean(const std::deque<lm::FeaturePoint>& points) {

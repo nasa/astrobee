@@ -51,9 +51,8 @@ void EstimateAndSetImuBiases(const localization_measurements::ImuMeasurement& im
 bool ValidPointSet(const std::deque<localization_measurements::FeaturePoint>& points,
                    const double average_distance_from_mean, const double min_avg_distance_from_mean);
 
-bool ValidStandstillPointSet(const std::deque<localization_measurements::FeaturePoint>& points,
-                             const double average_distance_from_mean,
-                             const double standstill_average_distance_from_mean_max_value);
+bool ShouldAddStandstillPrior(const double standstill_feature_tracks_average_distance_from_mean,
+                              const int num_standstill_feature_tracks, const FactorParams& params);
 
 double AverageDistanceFromMean(const std::deque<localization_measurements::FeaturePoint>& points);
 
