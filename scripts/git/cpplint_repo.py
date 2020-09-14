@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
-import os, imp, fnmatch
+import os, imp, fnmatch, subprocess
+from operator import itemgetter
+from itertools import groupby
 
 num_errors = 0
 
@@ -41,9 +43,11 @@ def main():
     # Lets look for source files and headers in our repo
     for root, dirnames, filenames in os.walk(get_repo_path()):
         if "Software" in root or "external" in root or "gnc/matlab" in root or \
-        "submodules" in root or "agast_score" in root or "brisk" in root:
+        "submodules" in root:
             continue
         for filename in filenames:
+            if "agast_score" in filename or "brisk" in filename:
+                continue
             if not filename.endswith((".cpp",".cc",".h",".hpp",".cc.in",".c.in",".h.in",
                                       ".hpp.in",".cxx",".hxx")):
                 continue
@@ -51,14 +55,27 @@ def main():
             # Print an objection at first sight of errors
             if num_errors == 0 and len(output) > 0:
                 print_objection()
-
+            lines = []
             num_errors += len(output)
             for error in output:
                 print "%s:%s: %s" % ((root + "/" + filename).replace(get_repo_path() + "/", ''), str(error[0]), error[1])
+                lines.append(error[0])
+            # Run the clang-format if there are errors in the identified ranges
+            if len(output) > 0:
+                command = "clang-format-8 -style=file -i " + root + "/" + filename
+                ranges = []
+                for k, g in groupby(enumerate(lines), lambda (i,x):i-x):
+                    group = map(itemgetter(1), g)
+                    ranges.append((group[0], group[-1]))
+                for clang_range in ranges:
+                    command = command + " --lines=" + str(clang_range[0]) + ":" + str(clang_range[1])
+                print command
+                retcode = subprocess.Popen(command, shell=True)
 
     print "="*50
     if num_errors > 0:
         print "  You have %d lint errors" % num_errors
+        print "  The errors were automatically corrected"
     elif num_errors == 0:
         print "  Code adheres to style guide lines"
 
