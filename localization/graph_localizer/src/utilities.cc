@@ -61,7 +61,6 @@ double AverageDistanceFromMean(const std::deque<lm::FeaturePoint>& points) {
     sum_of_distances_from_mean += mean_centered_point.norm();
   }
   const double average_distance_from_mean = sum_of_distances_from_mean / points.size();
-  std::cout << "average distance from mean: " << average_distance_from_mean << std::endl;
   return average_distance_from_mean;
 }
 

@@ -331,8 +331,8 @@ void GraphLocalizer::AddProjectionMeasurement(const lm::MatchedProjectionsMeasur
   for (const auto& matched_projection : matched_projections_measurement.matched_projections) {
     const KeyInfo key_info(&sym::P, matched_projections_measurement.timestamp);
     gtsam::LocProjectionFactor<>::shared_ptr loc_projection_factor(
-        new gtsam::LocProjectionFactor<>(matched_projection.image_point, matched_projection.map_point, cam_noise,
-                                         key_info.UninitializedKey(), cam_intrinsics, body_T_cam));
+        new gtsam::LocProjectionFactor<>(matched_projection.image_point, matched_projection.map_point,
+                                         Robust(cam_noise), key_info.UninitializedKey(), cam_intrinsics, body_T_cam));
     factors_to_add.push_back({{key_info}, loc_projection_factor});
     ++num_buffered_loc_projection_factors;
   }
