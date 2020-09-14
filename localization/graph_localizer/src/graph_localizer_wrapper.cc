@@ -84,14 +84,14 @@ void GraphLocalizerWrapper::ResetLocalizer() {
   // warning if it is too old
   graph_loc_initialization_.SetBiases(latest_accelerometer_bias_, latest_gyro_bias_);
   graph_localizer_.reset();
-  sanity_checker_.reset();
+  sanity_checker_->Reset();
 }
 
 void GraphLocalizerWrapper::ResetBiasesAndLocalizer() {
   LOG(INFO) << "ResetBiasAndLocalizer: Resetting biases and localizer.";
   graph_loc_initialization_.ResetBiasesAndStartPose();
   graph_localizer_.reset();
-  sanity_checker_.reset();
+  sanity_checker_->Reset();
 }
 
 void GraphLocalizerWrapper::VLVisualLandmarksCallback(const ff_msgs::VisualLandmarks& visual_landmarks_msg) {
