@@ -235,6 +235,7 @@ bool GraphLocalizer::AddOpticalFlowMeasurement(
 }
 
 void GraphLocalizer::AddSmartFactor(const FeatureTrack& feature_track, FactorsToAdd& smart_factors_to_add) {
+  // TODO(rsoussan): Modify smart factor to allow for robust kernel
   SharedSmartFactor smart_factor(new SmartFactor(params_.noise.nav_cam_noise, params_.calibration.nav_cam_intrinsics,
                                                  params_.calibration.body_T_nav_cam, smart_projection_params_));
 

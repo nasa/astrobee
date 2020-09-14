@@ -57,6 +57,12 @@ void LoadNoiseParams(config_reader::ConfigReader& config, NoiseParams& params) {
   params.optical_flow_prior_velocity_stddev = lc::LoadDouble(config, "optical_flow_prior_velocity_stddev");
 }
 
+void LoadSanityCheckerParams(config_reader::ConfigReader& config, SanityCheckerParams& params) {
+  params.num_consecutive_failures_until_insane = lc::LoadInt(config, "num_consecutive_failures_until_insane");
+  params.max_sane_position_difference = lc::LoadDouble(config, "max_sane_position_difference");
+  params.enabled = lc::LoadBool(config, "sanity_checker_enabled");
+}
+
 void LoadGraphLocalizerParams(config_reader::ConfigReader& config, GraphLocalizerParams& params) {
   LoadCalibrationParams(config, params.calibration);
   LoadImuIntegrationParams(config, params.graph_initialization);

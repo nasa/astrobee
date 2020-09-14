@@ -25,6 +25,7 @@
 #include <graph_localizer/feature_counts.h>
 #include <graph_localizer/graph_loc_initialization.h>
 #include <graph_localizer/graph_localizer.h>
+#include <graph_localizer/sanity_checker.h>
 #include <localization_measurements/imu_measurement.h>
 #include <localization_measurements/matched_projections_measurement.h>
 
@@ -76,6 +77,8 @@ class GraphLocalizerWrapper {
  private:
   void InitializeGraph();
 
+  bool CheckSanity(const Eigen::Isometry3d& sparse_mapping_pose, const localization_common::Time timestamp);
+
   std::unique_ptr<GraphLocalizer> graph_localizer_;
   std::vector<localization_measurements::ImuMeasurement> imu_bias_measurements_;
   int num_bias_estimation_measurements_;
@@ -91,6 +94,8 @@ class GraphLocalizerWrapper {
   GraphLocInitialization graph_loc_initialization_;
   FeatureCounts feature_counts_;
   boost::optional<std::pair<Eigen::Isometry3d, localization_common::Time>> sparse_mapping_pose_;
+  std::unique_ptr<SanityChecker> sanity_checker_;
+  bool sanity_checker_enabled_;
 };
 }  // namespace graph_localizer
 

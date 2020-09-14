@@ -18,6 +18,7 @@
 
 #include <config_reader/config_reader.h>
 #include <graph_localizer/graph_localizer_wrapper.h>
+#include <graph_localizer/parameter_reader.h>
 #include <graph_localizer/utilities.h>
 #include <imu_integration/utilities.h>
 #include <localization_common/utilities.h>
@@ -54,6 +55,10 @@ GraphLocalizerWrapper::GraphLocalizerWrapper() {
   }
 
   graph_loc_initialization_.LoadGraphLocalizerParams(config);
+  SanityCheckerParams sanity_checker_params;
+  LoadSanityCheckerParams(config, sanity_checker_params);
+  sanity_checker_.reset(new SanityChecker(sanity_checker_params));
+  sanity_checker_enabled_ = sanity_checker_params.enabled;
 }
 
 void GraphLocalizerWrapper::OpticalFlowCallback(const ff_msgs::Feature2dArray& feature_array_msg) {
@@ -99,11 +104,28 @@ void GraphLocalizerWrapper::VLVisualLandmarksCallback(const ff_msgs::VisualLandm
   const lc::Time timestamp = lc::TimeFromHeader(visual_landmarks_msg.header);
   sparse_mapping_pose_ = std::make_pair(sparse_mapping_global_T_body, timestamp);
 
+  // Sanity Check
+  if (graph_localizer_ && sanity_checker_enabled_ && !CheckSanity(sparse_mapping_global_T_body, timestamp)) {
+    LOG(INFO) << "VLVisualLandmarksCallback: Sanity check failed, resetting localizer.";
+    ResetLocalizer();
+    return;
+  }
+
   if (!graph_localizer_) {
     // Set or update initial pose if a new one is available before the localizer
     // has started running.
     graph_loc_initialization_.SetStartPose(sparse_mapping_pose_->first, sparse_mapping_pose_->second);
   }
+}
+
+bool GraphLocalizerWrapper::CheckSanity(const Eigen::Isometry3d& sparse_mapping_pose, const lc::Time timestamp) {
+  if (!graph_localizer_) return true;
+  const auto combined_nav_state = graph_localizer_->GetCombinedNavState(timestamp);
+  if (!combined_nav_state) {
+    LOG(INFO) << "VLVisualLandmarksCallback: Failed to get combined nav state for sanity check.";
+    return true;
+  }
+  return sanity_checker_->CheckSanity(lc::GtPose(sparse_mapping_pose), combined_nav_state->pose());
 }
 
 void GraphLocalizerWrapper::ARVisualLandmarksCallback(const ff_msgs::VisualLandmarks& visual_landmarks_msg) {

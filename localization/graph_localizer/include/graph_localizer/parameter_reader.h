@@ -25,6 +25,7 @@
 #include <graph_localizer/graph_localizer_params.h>
 #include <graph_localizer/graph_values_params.h>
 #include <graph_localizer/noise_params.h>
+#include <graph_localizer/sanity_checker_params.h>
 
 namespace graph_localizer {
 void LoadCalibrationParams(config_reader::ConfigReader& config, CalibrationParams& params);
@@ -32,6 +33,7 @@ void LoadFactorParams(config_reader::ConfigReader& config, FactorParams& params)
 void LoadGraphValuesParams(config_reader::ConfigReader& config, GraphValuesParams& params);
 void LoadImuIntegrationParams(config_reader::ConfigReader& config, GraphInitializationParams& params);
 void LoadNoiseParams(config_reader::ConfigReader& config, NoiseParams& params);
+void LoadSanityCheckerParams(config_reader::ConfigReader& config, SanityCheckerParams& params);
 // Loads all params except some in graph_initialization_params (biases and start pose) that are
 // not loaded from config files
 void LoadGraphLocalizerParams(config_reader::ConfigReader& config, GraphLocalizerParams& params);
