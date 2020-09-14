@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import os, imp, fnmatch, subprocess
+import os, imp, fnmatch
 
 num_errors = 0
 

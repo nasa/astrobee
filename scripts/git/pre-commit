@@ -66,7 +66,6 @@ def main():
         print "Failed to run git ls-files"
         exit(1)
     cpp_files_to_lint = []
-    print output.split()
     for filename in output.split():
         if filename.endswith((".cpp",".cc",".h",".hpp",".cc.in",".c",".c.in",".h.in",
                               ".hpp.in",".cxx",".hxx")):
@@ -76,7 +75,6 @@ def main():
                 cpp_files_to_lint.append(filename)
 
     for filename in cpp_files_to_lint:
-        print filename
         output = run_cpplint(filename, cpplint_path)
 
         # Print an objection at first sight of errors
