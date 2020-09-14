@@ -142,4 +142,9 @@ void EstimateAndSetImuBiases(const lm::ImuMeasurement& imu_measurement,
 
   graph_loc_initialization.SetBiases(accelerometer_bias, gyro_bias);
 }
+
+gtsam::noiseModel::Robust::shared_ptr Robust(const gtsam::SharedNoiseModel& noise) {
+  return gtsam::noiseModel::Robust::Create(gtsam::noiseModel::mEstimator::Huber::Create(1.345 /*Taken from gtsam*/),
+                                           noise);
+}
 }  // namespace graph_localizer

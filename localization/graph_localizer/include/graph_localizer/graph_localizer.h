@@ -79,7 +79,7 @@ class GraphLocalizer {
   void AddProjectionMeasurement(
       const localization_measurements::MatchedProjectionsMeasurement& matched_projections_measurement,
       const gtsam::Pose3& body_T_cam, const boost::shared_ptr<gtsam::Cal3_S2>& cam_intrinsics,
-      const gtsam::SharedIsotropic& cam_noise, const GraphAction& graph_action = GraphAction::kNone);
+      const gtsam::SharedNoiseModel& cam_noise, const GraphAction& graph_action = GraphAction::kNone);
 
   bool Update();
   const FeatureTrackMap& feature_tracks() const { return feature_tracker_.feature_tracks(); }

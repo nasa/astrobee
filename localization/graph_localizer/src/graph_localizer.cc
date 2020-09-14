@@ -78,10 +78,12 @@ void GraphLocalizer::AddStartingPriors(const lc::CombinedNavState& global_cgN_bo
                                                 kGyroBiasPriorSigma)
                                                    .finished());
   lc::CombinedNavStateNoise noise;
-  noise.pose_noise = gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(pose_prior_noise_sigmas));
+  noise.pose_noise =
+      Robust(gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(pose_prior_noise_sigmas)));
   noise.velocity_noise =
-      gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(velocity_prior_noise_sigmas));
-  noise.bias_noise = gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(bias_prior_noise_sigmas));
+      Robust(gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(velocity_prior_noise_sigmas)));
+  noise.bias_noise =
+      Robust(gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(bias_prior_noise_sigmas)));
   AddPriors(global_cgN_body_start, noise, key_index, values, graph);
 }
 
@@ -261,7 +263,7 @@ void GraphLocalizer::AddStandstillPriorFactor(const lc::Time timestamp, FactorsT
             .finished());
 
     const auto pose_noise =
-        gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(pose_prior_noise_sigmas));
+        Robust(gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(pose_prior_noise_sigmas)));
 
     const KeyInfo pose_key_info(&sym::P, timestamp);
     // Pose will be filled in with current values by GraphAction when buffered factors are added to graph
@@ -279,7 +281,7 @@ void GraphLocalizer::AddStandstillPriorFactor(const lc::Time timestamp, FactorsT
          params_.noise.optical_flow_prior_velocity_stddev, params_.noise.optical_flow_prior_velocity_stddev)
             .finished());
     const auto velocity_noise =
-        gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(velocity_prior_noise_sigmas));
+        Robust(gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(velocity_prior_noise_sigmas)));
 
     const KeyInfo velocity_key_info(&sym::V, timestamp);
     // Velocity will be filled in with current values by GraphAction when buffered factors are added to graph
@@ -309,7 +311,7 @@ void GraphLocalizer::AddSparseMappingMeasurement(
 void GraphLocalizer::AddProjectionMeasurement(const lm::MatchedProjectionsMeasurement& matched_projections_measurement,
                                               const gtsam::Pose3& body_T_cam,
                                               const boost::shared_ptr<gtsam::Cal3_S2>& cam_intrinsics,
-                                              const gtsam::SharedIsotropic& cam_noise,
+                                              const gtsam::SharedNoiseModel& cam_noise,
                                               const GraphAction& graph_action) {
   if (matched_projections_measurement.matched_projections.empty()) {
     LOG(WARNING) << "AddProjectionMeasurement: Empty measurement.";
@@ -525,9 +527,10 @@ bool GraphLocalizer::SlideWindow(const gtsam::Marginals& marginals) {
 
   VLOG(2) << "SlideWindow: key index: " << *key_index;
   lc::CombinedNavStateNoise noise;
-  noise.pose_noise = gtsam::noiseModel::Gaussian::Covariance(marginals.marginalCovariance(sym::P(*key_index)));
-  noise.velocity_noise = gtsam::noiseModel::Gaussian::Covariance(marginals.marginalCovariance(sym::V(*key_index)));
-  noise.bias_noise = gtsam::noiseModel::Gaussian::Covariance(marginals.marginalCovariance(sym::B(*key_index)));
+  noise.pose_noise = Robust(gtsam::noiseModel::Gaussian::Covariance(marginals.marginalCovariance(sym::P(*key_index))));
+  noise.velocity_noise =
+      Robust(gtsam::noiseModel::Gaussian::Covariance(marginals.marginalCovariance(sym::V(*key_index))));
+  noise.bias_noise = Robust(gtsam::noiseModel::Gaussian::Covariance(marginals.marginalCovariance(sym::B(*key_index))));
   AddPriors(*global_cgN_body_oldest, noise, *key_index, graph_values_.values(), graph_);
   return true;
 }

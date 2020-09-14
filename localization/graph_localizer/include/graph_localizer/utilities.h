@@ -30,6 +30,7 @@
 #include <localization_measurements/imu_measurement.h>
 
 #include <gtsam/geometry/Pose3.h>
+#include <gtsam/linear/NoiseModel.h>
 
 #include <Eigen/Core>
 
@@ -69,6 +70,8 @@ ff_msgs::LocalizationGraph GraphMsg(const GraphLocalizer& graph_localizer);
 geometry_msgs::PoseStamped PoseMsg(const Eigen::Isometry3d& global_T_body, const std_msgs::Header& header);
 
 geometry_msgs::PoseStamped PoseMsg(const Eigen::Isometry3d& global_T_body, const localization_common::Time time);
+
+gtsam::noiseModel::Robust::shared_ptr Robust(const gtsam::SharedNoiseModel& noise);
 }  // namespace graph_localizer
 
 #endif  // GRAPH_LOCALIZER_UTILITIES_H_

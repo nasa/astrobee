@@ -17,6 +17,7 @@
  */
 
 #include <graph_localizer/parameter_reader.h>
+#include <graph_localizer/utilities.h>
 #include <localization_common/utilities.h>
 
 namespace graph_localizer {
@@ -49,8 +50,9 @@ void LoadGraphValuesParams(config_reader::ConfigReader& config, GraphValuesParam
 }
 
 void LoadNoiseParams(config_reader::ConfigReader& config, NoiseParams& params) {
-  params.dock_cam_noise = gtsam::noiseModel::Isotropic::Sigma(2, lc::LoadDouble(config, "dock_cam_noise_stddev"));
-  params.nav_cam_noise = gtsam::noiseModel::Isotropic::Sigma(2, lc::LoadDouble(config, "nav_cam_noise_stddev"));
+  params.dock_cam_noise =
+      Robust(gtsam::noiseModel::Isotropic::Sigma(2, lc::LoadDouble(config, "dock_cam_noise_stddev")));
+  params.nav_cam_noise = Robust(gtsam::noiseModel::Isotropic::Sigma(2, lc::LoadDouble(config, "nav_cam_noise_stddev")));
   params.optical_flow_prior_translation_stddev = lc::LoadDouble(config, "optical_flow_prior_translation_stddev");
   params.optical_flow_prior_quaternion_stddev = lc::LoadDouble(config, "optical_flow_prior_quaternion_stddev");
   params.optical_flow_prior_velocity_stddev = lc::LoadDouble(config, "optical_flow_prior_velocity_stddev");
