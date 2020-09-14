@@ -72,7 +72,7 @@ class Ctl {
 
   // Declaration of all possible events
   enum : ff_util::FSM::Event {
-    GOAL_COMPLETE  = (1<<0),
+    GOAL_COMPLETE  =(1<<0),
     GOAL_NOMINAL   = (1<<1),
     GOAL_CANCEL    = (1<<2),
     GOAL_STOP      = (1<<3)
