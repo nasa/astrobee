@@ -67,7 +67,11 @@ void GraphLocalizerWrapper::OpticalFlowCallback(const ff_msgs::Feature2dArray& f
       // Optimize graph on receival of camera images
       graph_localizer_->Update();
       // Sanity check covariances after updates
-      CheckCovarianceSanity();
+      if (!CheckCovarianceSanity()) {
+        LOG(INFO) << "OpticalFlowCallback: Covariance sanity check failed, resetting localizer.";
+        ResetLocalizer();
+        return;
+      }
     }
   }
 }
