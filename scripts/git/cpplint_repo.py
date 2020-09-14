@@ -61,7 +61,6 @@ def main():
     print "="*50
     if num_errors > 0:
         print "  You have %d lint errors" % num_errors
-        print "  The errors were automatically corrected"
     elif num_errors == 0:
         print "  Code adheres to style guide lines"
 
