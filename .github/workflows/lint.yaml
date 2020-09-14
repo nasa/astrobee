@@ -2,7 +2,7 @@
 
 name: Check for lint errors
 
-on: [push]
+on: ['push', 'pull_request']
 
 jobs:
   build_and_push_docs:
