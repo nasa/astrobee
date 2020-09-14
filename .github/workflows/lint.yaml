@@ -1,6 +1,6 @@
 # Check for lint error and auto correct them
 
-name: Clang format lint
+name: Check for lint errors
 
 on: [push]
 
@@ -10,23 +10,5 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - uses: DoozyX/clang-format-lint-action@v0.8
-      with:
-        source: '.'
-        exclude: './submodules'
-        extensions: 'cxx'
-        clangFormatVersion: 8
-        style: file
-
-
-    #   uses: clang-format-lint-action
-    #   with:
-    #     path: repo/
-    # - name: Install clang
-    #   run: |
-    #     sudo apt-get install clang-format
-    # - name: Run clang
-    #   run: |
-    #     cd repo
-    #     echo "Running clang-format"
-    #     find . -regex '.*\.\(cpp\|hpp\|cxx\|c\|cc\|h\)' -exec clang-format -style=file -i {} \;
+    - name: Check repo for lint errors
+      run: ./scripts/git/cpplint_repo.py .
