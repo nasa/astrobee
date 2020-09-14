@@ -36,8 +36,16 @@ CombinedNavStateCovariances::CombinedNavStateCovariances(const Eigen::Vector3d& 
   bias_covariance_.block<3, 3>(3, 3) = gyro_bias_variances.asDiagonal();
 }
 
+double CombinedNavStateCovariances::LogDeterminantPositionCovariance() const {
+  return std::log10(pose_covariance().block<3, 3>(0, 0).determinant());
+}
+
+double CombinedNavStateCovariances::LogDeterminantOrientationCovariance() const {
+  return std::log10(pose_covariance().block<3, 3>(3, 3).determinant());
+}
+
 Confidence CombinedNavStateCovariances::PoseConfidence() const {
-  const double position_log_det = std::log10(pose_covariance().block<3, 3>(0, 0).determinant());
+  const double position_log_det = LogDeterminantPositionCovariance();
   const double orientation_log_det = std::log10(pose_covariance().block<3, 3>(3, 3).determinant());
 
   const Confidence position_confidence =

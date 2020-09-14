@@ -77,7 +77,9 @@ class GraphLocalizerWrapper {
  private:
   void InitializeGraph();
 
-  bool CheckSanity(const Eigen::Isometry3d& sparse_mapping_pose, const localization_common::Time timestamp);
+  bool CheckPoseSanity(const Eigen::Isometry3d& sparse_mapping_pose, const localization_common::Time timestamp) const;
+
+  bool CheckCovarianceSanity() const;
 
   std::unique_ptr<GraphLocalizer> graph_localizer_;
   std::vector<localization_measurements::ImuMeasurement> imu_bias_measurements_;
@@ -95,7 +97,6 @@ class GraphLocalizerWrapper {
   FeatureCounts feature_counts_;
   boost::optional<std::pair<Eigen::Isometry3d, localization_common::Time>> sparse_mapping_pose_;
   std::unique_ptr<SanityChecker> sanity_checker_;
-  bool sanity_checker_enabled_;
 };
 }  // namespace graph_localizer
 

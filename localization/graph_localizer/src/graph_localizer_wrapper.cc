@@ -58,7 +58,6 @@ GraphLocalizerWrapper::GraphLocalizerWrapper() {
   SanityCheckerParams sanity_checker_params;
   LoadSanityCheckerParams(config, sanity_checker_params);
   sanity_checker_.reset(new SanityChecker(sanity_checker_params));
-  sanity_checker_enabled_ = sanity_checker_params.enabled;
 }
 
 void GraphLocalizerWrapper::OpticalFlowCallback(const ff_msgs::Feature2dArray& feature_array_msg) {
@@ -67,6 +66,8 @@ void GraphLocalizerWrapper::OpticalFlowCallback(const ff_msgs::Feature2dArray& f
       feature_counts_.of = graph_localizer_->NumOFFactors();
       // Optimize graph on receival of camera images
       graph_localizer_->Update();
+      // Sanity check covariances after updates
+      CheckCovarianceSanity();
     }
   }
 }
@@ -83,12 +84,14 @@ void GraphLocalizerWrapper::ResetLocalizer() {
   // warning if it is too old
   graph_loc_initialization_.SetBiases(latest_accelerometer_bias_, latest_gyro_bias_);
   graph_localizer_.reset();
+  sanity_checker_.reset();
 }
 
 void GraphLocalizerWrapper::ResetBiasesAndLocalizer() {
   LOG(INFO) << "ResetBiasAndLocalizer: Resetting biases and localizer.";
   graph_loc_initialization_.ResetBiasesAndStartPose();
   graph_localizer_.reset();
+  sanity_checker_.reset();
 }
 
 void GraphLocalizerWrapper::VLVisualLandmarksCallback(const ff_msgs::VisualLandmarks& visual_landmarks_msg) {
@@ -105,7 +108,7 @@ void GraphLocalizerWrapper::VLVisualLandmarksCallback(const ff_msgs::VisualLandm
   sparse_mapping_pose_ = std::make_pair(sparse_mapping_global_T_body, timestamp);
 
   // Sanity Check
-  if (graph_localizer_ && sanity_checker_enabled_ && !CheckSanity(sparse_mapping_global_T_body, timestamp)) {
+  if (graph_localizer_ && !CheckPoseSanity(sparse_mapping_global_T_body, timestamp)) {
     LOG(INFO) << "VLVisualLandmarksCallback: Sanity check failed, resetting localizer.";
     ResetLocalizer();
     return;
@@ -118,14 +121,26 @@ void GraphLocalizerWrapper::VLVisualLandmarksCallback(const ff_msgs::VisualLandm
   }
 }
 
-bool GraphLocalizerWrapper::CheckSanity(const Eigen::Isometry3d& sparse_mapping_pose, const lc::Time timestamp) {
+bool GraphLocalizerWrapper::CheckPoseSanity(const Eigen::Isometry3d& sparse_mapping_pose,
+                                            const lc::Time timestamp) const {
   if (!graph_localizer_) return true;
   const auto combined_nav_state = graph_localizer_->GetCombinedNavState(timestamp);
   if (!combined_nav_state) {
-    LOG(INFO) << "VLVisualLandmarksCallback: Failed to get combined nav state for sanity check.";
+    LOG(INFO) << "CheckPoseSanity: Failed to get combined nav state.";
     return true;
   }
-  return sanity_checker_->CheckSanity(lc::GtPose(sparse_mapping_pose), combined_nav_state->pose());
+  return sanity_checker_->CheckPoseSanity(lc::GtPose(sparse_mapping_pose), combined_nav_state->pose());
+}
+
+bool GraphLocalizerWrapper::CheckCovarianceSanity() const {
+  if (!graph_localizer_) return true;
+  const auto combined_nav_state_and_covariances = graph_localizer_->LatestCombinedNavStateAndCovariances();
+  if (!combined_nav_state_and_covariances) {
+    LOG(INFO) << "CheckCovarianceSanity: No combined nav state and covariances available.";
+    return true;
+  }
+
+  return sanity_checker_->CheckCovarianceSanity(combined_nav_state_and_covariances->second);
 }
 
 void GraphLocalizerWrapper::ARVisualLandmarksCallback(const ff_msgs::VisualLandmarks& visual_landmarks_msg) {

@@ -20,6 +20,7 @@
 #define GRAPH_LOCALIZER_SANITY_CHECKER_H_
 
 #include <graph_localizer/sanity_checker_params.h>
+#include <localization_common/combined_nav_state_covariances.h>
 
 #include <gtsam/geometry/Pose3.h>
 
@@ -27,7 +28,9 @@ namespace graph_localizer {
 class SanityChecker {
  public:
   explicit SanityChecker(const SanityCheckerParams& params);
-  bool CheckSanity(const gtsam::Pose3& sparse_mapping_pose, const gtsam::Pose3& localizer_pose);
+  bool CheckPoseSanity(const gtsam::Pose3& sparse_mapping_pose, const gtsam::Pose3& localizer_pose);
+  bool CheckCovarianceSanity(const localization_common::CombinedNavStateCovariances& covariances) const;
+  void Reset();
 
  private:
   SanityCheckerParams params_;

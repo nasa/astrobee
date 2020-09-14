@@ -20,10 +20,15 @@
 
 namespace graph_localizer {
 struct SanityCheckerParams {
-  int num_consecutive_failures_until_insane;
-  // Euclidean distance between localizer position and sparse mapping position
+  // Check Pose
+  bool check_pose_difference;
+  int num_consecutive_pose_difference_failures_until_insane;
   double max_sane_position_difference;
-  bool enabled;
+  // Check Covariances
+  bool check_position_covariance;
+  bool check_orientation_covariance;
+  double position_covariance_threshold;
+  double orientation_covariance_threshold;
 };
 }  // namespace graph_localizer
 

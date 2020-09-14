@@ -17,17 +17,39 @@
  */
 
 #include <graph_localizer/sanity_checker.h>
+#include <localization_common/combined_nav_state_covariances.h>
 
 namespace graph_localizer {
+namespace lc = localization_common;
 SanityChecker::SanityChecker(const SanityCheckerParams& params) : params_(params), num_consecutive_failures_(0) {}
 
-bool SanityChecker::CheckSanity(const gtsam::Pose3& sparse_mapping_pose, const gtsam::Pose3& localizer_pose) {
+bool SanityChecker::CheckPoseSanity(const gtsam::Pose3& sparse_mapping_pose, const gtsam::Pose3& localizer_pose) {
+  if (!params_.check_pose_difference) return true;
+
   const gtsam::Vector3 difference_vector = sparse_mapping_pose.translation() - localizer_pose.translation();
   const double euclidean_distance = difference_vector.norm();
   if (euclidean_distance > params_.max_sane_position_difference)
     ++num_consecutive_failures_;
   else
     num_consecutive_failures_ = 0;
-  return (num_consecutive_failures_ < params_.num_consecutive_failures_until_insane);
+  return (num_consecutive_failures_ < params_.num_consecutive_pose_difference_failures_until_insane);
 }
+
+bool SanityChecker::CheckCovarianceSanity(const lc::CombinedNavStateCovariances& covariances) const {
+  bool sane = true;
+  if (params_.check_position_covariance) {
+    const double log_det_position_cov = covariances.LogDeterminantPositionCovariance();
+    sane &= (log_det_position_cov <= params_.position_covariance_threshold);
+  }
+
+  if (params_.check_orientation_covariance) {
+    const double log_det_orientation_cov = covariances.LogDeterminantOrientationCovariance();
+    sane &= (log_det_orientation_cov <= params_.orientation_covariance_threshold);
+  }
+
+  return sane;
+}
+
+void SanityChecker::Reset() { num_consecutive_failures_ = 0; }
+
 }  // namespace graph_localizer

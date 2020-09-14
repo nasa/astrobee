@@ -58,9 +58,14 @@ void LoadNoiseParams(config_reader::ConfigReader& config, NoiseParams& params) {
 }
 
 void LoadSanityCheckerParams(config_reader::ConfigReader& config, SanityCheckerParams& params) {
-  params.num_consecutive_failures_until_insane = lc::LoadInt(config, "num_consecutive_failures_until_insane");
+  params.num_consecutive_pose_difference_failures_until_insane =
+      lc::LoadInt(config, "num_consecutive_pose_difference_failures_until_insane");
   params.max_sane_position_difference = lc::LoadDouble(config, "max_sane_position_difference");
-  params.enabled = lc::LoadBool(config, "sanity_checker_enabled");
+  params.check_pose_difference = lc::LoadBool(config, "check_pose_difference");
+  params.check_position_covariance = lc::LoadBool(config, "check_position_covariance");
+  params.check_orientation_covariance = lc::LoadBool(config, "check_orientation_covariance");
+  params.position_covariance_threshold = lc::LoadDouble(config, "position_covariance_threshold");
+  params.orientation_covariance_threshold = lc::LoadDouble(config, "orientation_covariance_threshold");
 }
 
 void LoadGraphLocalizerParams(config_reader::ConfigReader& config, GraphLocalizerParams& params) {

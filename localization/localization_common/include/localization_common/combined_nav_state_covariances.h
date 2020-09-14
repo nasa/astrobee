@@ -49,6 +49,10 @@ class CombinedNavStateCovariances {
   Eigen::Vector3d gyro_bias_variances() const { return bias_covariance_.block<3, 3>(3, 3).diagonal(); }
   Eigen::Vector3d accel_bias_variances() const { return bias_covariance_.block<3, 3>(0, 0).diagonal(); }
 
+  double LogDeterminantPositionCovariance() const;
+
+  double LogDeterminantOrientationCovariance() const;
+
  private:
   Eigen::Matrix<double, 6, 6> pose_covariance_;
   Eigen::Matrix3d velocity_covariance_;
