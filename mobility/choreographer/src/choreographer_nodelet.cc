@@ -951,7 +951,7 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
       NODELET_WARN_STREAM("Velocity violated " << goal_flight_mode_.name);
       return false;
     }
-    // Check deesired acceleration
+    // Check desired acceleration
     if (plan_goal.desired_accel < 0) {
       plan_goal.desired_accel = goal_flight_mode_.hard_limit_accel / divider;
     } else if (plan_goal.desired_accel > goal_flight_mode_.hard_limit_accel / divider) {
