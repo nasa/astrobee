@@ -52,7 +52,7 @@ ConstructorInitializerAllOnOneLineOrOnePerLine: true
 ConstructorInitializerIndentWidth: 4
 ContinuationIndentWidth: 2                     # changed
 Cpp11BracedListStyle: true
-DerivePointerAlignment: false
+DerivePointerAlignment: false                  # changed
 DisableFormat:   false
 ExperimentalAutoDetectBinPacking: false
 FixNamespaceComments: true
