@@ -97,7 +97,7 @@ def write_marker_file(fileIn, fileOut):
                 continue
             
             Point = [float(vals[0]), float(vals[1]), float(vals[2])]
-            marker_text = vals[3]
+            marker_text = vals[4]
             
             # Plot a point as a sphere
             marker_id += 1
