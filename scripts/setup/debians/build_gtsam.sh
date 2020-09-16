@@ -18,16 +18,15 @@
 # under the License.
 
 PACKAGE_NAME=libgtsam
-ORIG_TAR=libgtsam_4.0.2.orig.tar.gz
+ORIG_TAR=libgtsam_4.1.0.orig.tar.gz
 DEB_DIR=gtsam
 
 if [ -d $PACKAGE_NAME ]; then
   rm -rf $PACKAGE_NAME
 fi
-git clone --quiet https://github.com/borglab/gtsam.git $PACKAGE_NAME --branch 4.0.2 2>&1 || exit 1
+git clone --quiet https://github.com/borglab/gtsam.git $PACKAGE_NAME --branch 4.1rc 2>&1 || exit 1
 cd $PACKAGE_NAME
 git archive --prefix=$PACKAGE_NAME/ --output=../$ORIG_TAR --format tar.gz HEAD || exit 1
-rm -rf debian # Remove outdated debian included by gtsam
 cp -r ../$DEB_DIR debian
 debuild -us -uc || exit 1
 cd ..
