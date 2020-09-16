@@ -47,5 +47,3 @@ endif (YAMLCPP_FOUND)
 if (USE_ROS)
   add_subdirectory(ros)
 endif (USE_ROS)
-
-install_launch_files()
