@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
 import datetime, os, imp, subprocess
+from operator import itemgetter
+from itertools import groupby
 
 def get_cpplint_path():
     pwd = os.path.realpath(os.path.curdir)
@@ -80,12 +82,27 @@ def main():
             print_objection()
 
         num_errors += len(output)
-        for error in output:
-            print "%s:%s: %s" % (filename, str(error[0]), error[1])
+        if len(output) > 0:
+            lines = []
+            for error in output:
+                print "%s:%s: %s" % (filename, str(error[0]), error[1])
+                lines.append(error[0])
+            # Run the clang-format if there are errors in the identified ranges
+            if len(output) > 0:
+                command = "clang-format-8 -style=file -i " + filename
+                ranges = []
+                for k, g in groupby(enumerate(lines), lambda (i,x):i-x):
+                    group = map(itemgetter(1), g)
+                    ranges.append((group[0], group[-1]))
+                for clang_range in ranges:
+                    command = command + " --lines=" + str(clang_range[0]) + ":" + str(clang_range[1])
+                # print command
+                retcode = subprocess.Popen(command, shell=True)
 
     print "="*50
     if num_errors > 0:
         print "  You have %d lint errors, commit failed" % num_errors
+        print "  The errors were automatically piped through clang-format-8"
     elif num_errors == 0:
         print "  Code adheres to style guide lines, committing ..."
 

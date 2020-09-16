@@ -5,28 +5,24 @@ import os, imp, fnmatch
 num_errors = 0
 
 def get_cpplint_path():
-  return os.path.dirname(os.path.realpath(__file__)) + "/cpplint.py"
+    return os.path.dirname(os.path.realpath(__file__)) + "/cpplint.py"
 
 def get_repo_path():
-  return os.path.realpath(os.path.dirname(os.path.realpath(__file__)) + "/..")
+    return os.path.realpath(os.path.dirname(os.path.realpath(__file__)) + "/../..")
 
-def run_cpplint(cpplint, filename):
-  global num_errors
-  cpplint._cpplint_state.ResetErrorCounts()
-  cpplint.output = []
-  try:
-    index = filename.split("/").index("include")
-    cpplint._root = os.path.relpath("/".join(filename.split("/")[:index+1]), get_repo_path())
-  except ValueError:
-    pass
-  cpplint.ProcessFile(filename, cpplint._cpplint_state.verbose_level)
-
-  if (num_errors == 0 and len(cpplint.output) > 0):
-    print_objection()
-
-  num_errors += len(cpplint.output)
-  for error in cpplint.output:
-    print "%s:%s: %s" % (filename, str(error[0]), error[1])
+def run_cpplint(filename, cpplint_path):
+    cpplint = imp.load_source('cpplint', cpplint_path)
+    cpplint._cpplint_state.ResetErrorCounts()
+    cpplint.print_stdout = False
+    cpplint._line_length = 120
+    cpplint.output = []
+    try:
+        index = filename.split("/").index("include")
+        cpplint._root = "/".join(filename.split("/")[:index+1])
+    except ValueError:
+        pass
+    cpplint.ProcessFile(filename, cpplint._cpplint_state.verbose_level)
+    return cpplint.output
 
 def print_objection():
     print "   ____  __      _           __  _             __"
@@ -37,33 +33,39 @@ def print_objection():
     print "          /___/                                  "
 
 def main():
-  # Load up cpplint
-  cpplint = imp.load_source('cpplint', get_cpplint_path())
-  cpplint._cpplint_state.ResetErrorCounts()
-  cpplint.print_stdout = False
-  cpplint._line_length = 120
-  cpplint.output = []
+    num_errors = 0
 
-  # Lets look for source files and headers in our repo
-  for root, dirnames, filenames in os.walk(get_repo_path()):
-    if "Software" in root or "external" in root or "gnc/matlab" in root or \
-      "submodules" in root or "agast_score" in root or "brisk" in root:
-      continue
+    cpplint_path = get_cpplint_path()
+    repo_path = get_repo_path()
 
-    if not filename.endswith((".cpp",".cc",".h",".hpp",".cc.in",".c",".c.in",".h.in",
-                              ".hpp.in",".cxx",".hxx")):
-      continue
-    print filenames
-    for filename in filenames:
-      run_cpplint(cpplint, os.path.join(root, filename))
+    # Lets look for source files and headers in our repo
+    for root, dirnames, filenames in os.walk(get_repo_path()):
+        if "Software" in root or "external" in root or "gnc/matlab" in root or \
+        "submodules" in root:
+            continue
+        for filename in filenames:
+            if "agast_score" in filename or "brisk" in filename:
+                continue
+            if not filename.endswith((".cpp",".cc",".h",".hpp",".cc.in",".c.in",".h.in",
+                                      ".hpp.in",".cxx",".hxx")):
+                continue
+            output = run_cpplint((root + "/" + filename).replace(get_repo_path() + "/", ''), cpplint_path)
+            # Print an objection at first sight of errors
+            if num_errors == 0 and len(output) > 0:
+                print_objection()
+            
+            num_errors += len(output)
+            for error in output:
+                print "%s:%s: %s" % ((root + "/" + filename).replace(get_repo_path() + "/", ''), str(error[0]), error[1])
 
-  print "="*50
-  if num_errors > 0:
-    print "  You have %d lint errors, commit failed" % num_errors
-  elif num_errors == 0:
-    print "  Code adheres to style guide lines"
+    print "="*50
+    if num_errors > 0:
+        print "  You have %d lint errors" % num_errors
+    elif num_errors == 0:
+        print "  Code adheres to style guide lines"
 
-  exit(num_errors)
+    exit(num_errors)
+
 
 if __name__ == "__main__":
   main()
