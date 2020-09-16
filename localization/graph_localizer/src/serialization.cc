@@ -42,7 +42,6 @@
 GTSAM_VALUE_EXPORT(gtsam::Cal3_S2);
 GTSAM_VALUE_EXPORT(gtsam::imuBias::ConstantBias);
 GTSAM_VALUE_EXPORT(gtsam::PinholeCamera<gtsam::Cal3_S2>);
-GTSAM_VALUE_EXPORT(gtsam::Point3);
 GTSAM_VALUE_EXPORT(gtsam::Pose3);
 GTSAM_VALUE_EXPORT(gtsam::Vector3);
 
