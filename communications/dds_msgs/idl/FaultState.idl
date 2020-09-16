@@ -1,0 +1,51 @@
+/*
+ * Copyright (c) 2015 United States Government as represented by the 
+ * Administrator of the National Aeronautics and Space Administration.
+ * All Rights Reserved.
+ */
+
+#include "Message.idl"
+
+module rapid {
+  module ext {
+    module astrobee {
+
+      //@copy-declaration /** A fault within Astrobee.
+      //@copy-declaration   * - timestamp: when this fault happened, in microseconds
+      //@copy-declaration   * - code: an error code defined elsewhere
+      //@copy-declaration   * - message: string containing why fault occurred
+      //@copy-declaration   * - data: useful data that may accompany the fault
+      //@copy-declaration   */
+      struct Fault {
+        long long timestamp;
+        long code;
+        String128 message; 
+        KeyTypeValueSequence8 data;
+      };
+
+      typedef sequence<Fault, 32> FaultSequence32;
+
+      //@copy-c-declaration class FaultStateTypeSupport;
+      //@copy-c-declaration class FaultStateDataWriter;
+      //@copy-c-declaration class FaultStateDataReader;
+      //@copy-c-declaration struct FaultStateSeq;
+
+      //@copy-declaration /**
+      //@copy-declaration   * The state of any faults in Astrobee
+      //@copy-declaration   */
+      valuetype FaultState : Message {
+        //@copy-c-declaration #if RTI_DDS_VERSION_MAJOR < 4 || (RTI_DDS_VERSION_MAJOR == 4  && RTI_DDS_VERSION_MINOR < 5) || (RTI_DDS_VERSION_MAJOR == 4  && RTI_DDS_VERSION_MINOR  == 5 && RTI_DDS_VERSION_RELEASE != 'f' )
+        //@copy-c-declaration typedef FaultStateTypeSupport TypeSupport;
+        //@copy-c-declaration typedef FaultStateDataWriter DataWriter;
+        //@copy-c-declaration typedef FaultStateDataReader DataReader;
+        //@copy-c-declaration typedef FaultStateSeq Seq;
+        //@copy-c-declaration #endif
+        //@copy-c-declaration typedef FaultState Type;
+        
+        //@copy-declaration /** Up to 32 different faults within Astrobee */
+        public FaultSequence32 faults;
+      };
+
+    };
+  };
+};

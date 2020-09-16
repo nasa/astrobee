@@ -1,0 +1,1310 @@
+{
+  "xpjson": "0.2",
+  "type": "PlanSchema",
+  "name": "Astrobee Free Flyer Plan Schema",
+  "notes": "Define FreeFlyer plans",
+  "id": "http://example.com/freeFlyerPlanSchema.json",
+  "paramSpecs": [
+
+    {
+      "type": "ParamSpec",
+      "id": "Settings.CameraName",
+      "valueType": "string",
+      "choices": [
+        ["Science", "SCI"],
+        ["Navigation", "NAV"],
+        ["Hazard", "HAZ"],
+        ["Dock", "DOCK"],
+        ["Perch", "PERCH"]
+      ]
+    },
+
+    {
+      "type": "ParamSpec",
+      "id": "Settings.CameraResolution",
+      "valueType": "string",
+      "choices": [
+        ["224x171", "224x171"],
+        ["320x240", "320x240"],
+        ["480x270", "480x270"],
+        ["640x480", "640x480"],
+        ["960x540", "960x540"],
+        ["1024x768", "1024x768"],
+        ["1280x720", "1280x720"],
+        ["1280x960", "1280x960"],
+        ["1920x1080", "1920x1080"]
+      ]
+    },
+
+    {
+      "type": "ParamSpec",
+      "id": "Settings.CameraMode",
+      "valueType": "string",
+      "choices": [
+        ["Both", "Both"],
+        ["Recording", "Recording"],
+        ["Streaming", "Streaming"]
+      ]
+    },
+
+    {
+      "type": "ParamSpec",
+      "id": "Data.DownloadMethod",
+      "valueType": "string",
+      "choices": [
+        ["Immediate", "Immediate"],
+        ["Delayed", "Delayed"]
+      ]
+    },
+
+    {
+      "type": "ParamSpec",
+      "id": "Settings.FlightMode",
+      "valueType": "string",
+      "notes": "PMC gain set, influences motion behavior.",
+      "choices": [
+        ["Nominal", "Nominal"],
+        ["Difficult", "Difficult"],
+        ["Quiet", "Quiet"],
+        ["Docking", "Docking"],
+        ["Perching", "Perching"]
+      ]
+    },
+
+    {
+      "type": "ParamSpec",
+      "id": "Power.PoweredComponent",
+      "valueType": "string",
+      "notes": "Any component within Astrobee that can be turned on or off.",
+      "choices": [
+        ["Laser Pointer", "Laser Pointer"],
+        ["Payload Top Aft", "Payload Top Aft"],
+        ["Payload Bottom Aft", "Payload Bottom Aft"],
+        ["Payload Bottom Front", "Payload Bottom Front"],
+        ["PMC", "PMCs and Signal Lights"]
+      ]
+    },
+
+    {
+      "type": "ParamSpec",
+      "id": "Arm.ActionType",
+      "valueType": "string",
+      "notes": "Specifies whether the arm needs to pan, tilt, or both.",
+      "choices": [
+        ["Pan", "Pan"],
+        ["Tilt", "Tilt"],
+        ["Both", "Both"]
+      ]
+    },
+
+    {
+      "type": "ParamSpec",
+      "id": "Settings.TelemetryType",
+      "valueType": "string",
+      "choices": [
+        ["CommStatus", "CommStatus"],
+        ["CpuState", "CpuState"],
+        ["DiskState", "DiskState"],
+        ["EkfState", "EkfState"],
+        ["GncState", "GncState"],
+        ["PmcCmdState", "PmcCmdState"],
+        ["Position", "Position"]
+      ]
+    }, 
+
+    {
+      "type": "ParamSpec",
+      "id": "Settings.FlashlightLocation",
+      "valueType" : "string",
+      "choices": [
+        ["Back", "Back"],
+        ["Front", "Front"]
+      ]
+    },
+
+    {
+      "type": "ParamSpec",
+      "id": "Settings.PlannerType",
+      "valueType": "string",
+      "choices": [
+        ["trapezoidal", "Trapezoidal"],
+        ["qp", "QuadraticProgram"]
+      ]
+    },
+
+    {
+      "type": "ParamSpec",
+      "id": "Admin.LocalizationMode",
+      "valueType": "string",
+      "choices": [
+        ["None", "None"],
+        ["MappedLandmarks", "MappedLandmarks"],
+        ["ARTags", "ARTags"],
+        ["Handrail", "Handrail"],
+        ["Perch", "Perch"],
+        ["Truth", "Truth"]
+      ]
+    }
+  ],
+  "commandSpecs": [
+
+    {
+      "type": "CommandSpec",
+      "id": "Admin.wake",
+      "notes": "This command wakes astrobee from a hibernated state into a nominal state.",
+      "javaNotes": "Do not use this command. It is a dock command, not an astrobee command.",
+      "parent": "Command",
+      "params": [
+        {
+          "type": "ParamSpec",
+          "id": "berthNumber",
+          "valueType": "long"
+        }
+      ]
+    },
+
+    {
+      "type": "CommandSpec",
+      "id": "Admin.wakeSafe",
+      "notes": "This command wakes astrobee from a hibernated state into a safe state.",
+      "javaNotes": "Do not use this command. It is a dock command, not an astrobee command.",
+      "parent": "Command",
+      "params": [
+        {
+          "type": "ParamSpec",
+          "id": "berthNumber",
+          "valueType": "long"
+        }
+      ]
+    },
+
+    {
+      "type": "CommandSpec",
+      "id": "Mobility.simpleMove6DOF",
+      "isRapidNative": true,
+      "notes": "Astrobee teleop move command",
+      "availableContexts": [
+        "teleop"
+      ],
+      "parent": "Command",
+      "params": [
+        {
+          "type": "ParamSpec",
+          "id": "referenceFrame",
+          "valueType": "string",
+          "default": "ISS",
+          "notes": "Which reference frame to use. Please specify either ISS or body."
+        },
+        {
+          "type": "ParamSpec",
+          "id": "xyz",
+          "valueType": "Point",
+          "notes": "target point"
+        },
+        {
+          "type": "ParamSpec",
+          "id": "xyzTolerance",
+          "valueType": "array[3].double",
+          "default": [0, 0, 0],
+          "notes": "Not used! Tolerance is dictated by the flight mode."
+        },
+        {
+          "type": "ParamSpec",
+          "id": "rot",
+          "valueType": "quaternion",
+          "notes": "target attitude"
+        }
+      ]
+    },
+
+    {
+      "type": "CommandSpec",
+      "id": "Settings.setCamera",
+      "notes": "Set camera parameters.",
+      "availableContexts": [
+        "teleop",
+        "planner"
+      ],
+      "parent": "Command",
+      "params": [
+        {
+          "type": "ParamSpec",
+          "id": "cameraName",
+          "parent": "Settings.CameraName",
+          "notes": "Camera name"
+        },
+        {
+          "type": "ParamSpec",
+          "id": "cameraMode",
+          "parent": "Settings.CameraMode",
+          "notes": "Desired camera mode. Either streaming or recording."
+        },
+        {
+          "type": "ParamSpec",
+          "id": "resolution",
+          "parent": "Settings.CameraResolution",
+          "notes": "Desired frame size in pixels."
+        },
+        {
+          "type": "ParamSpec",
+          "id": "frameRate",
+          "valueType": "float",
+          "minimum": 1,
+          "maximum": 60,
+          "unit": "Hz",
+          "notes": "Applies to both modes of camera."
+        },
+        {
+          "type": "ParamSpec",
+          "id": "bandwidth",
+          "valueType": "float",
+          "notes": "Only for sci camera; related to quality, may change name to bitrate.",
+          "minimum": 0
+        }
+      ]
+    },
+
+    {
+      "type": "CommandSpec",
+      "id": "Settings.setCameraStreaming",
+      "notes": "Set streaming camera video to the ground.",
+      "availableContexts": [
+        "teleop",
+        "planner"
+      ],
+      "parent": "Command",
+      "params": [
+        {
+          "type": "ParamSpec",
+          "id": "cameraName",
+          "parent": "Settings.CameraName",
+          "notes": "Camera name"
+        },
+        {
+          "type": "ParamSpec",
+          "id": "stream",
+          "valueType": "boolean",
+          "notes": "Send live video to the ground."
+        }
+      ]
+    },
+
+    {
+      "type": "CommandSpec",
+      "id": "Settings.setCameraRecording",
+      "notes": "Set camera to record video.",
+      "availableContexts": [
+        "teleop",
+        "planner"
+      ],
+      "parent": "Command",
+      "params": [
+        {
+          "type": "ParamSpec",
+          "id": "cameraName",
+          "parent": "Settings.CameraName",
+          "notes": "Camera name"
+        },
+        {
+          "type": "ParamSpec",
+          "id": "record",
+          "valueType": "boolean",
+          "notes": "Record camera video."
+        }
+      ]
+    },
+
+    {
+      "type": "CommandSpec",
+      "id": "AccessControl.grabControl",
+      "isRapidNative": false,
+      "notes": "Grab control of an agent",
+      "javaNotes": "Do not use this command. Guest science apks don't have to grab control of the robot. Only ground operators need to use this command.",
+      "availableContexts": [
+        "teleop"
+      ],
+      "parent": "Command",
+      "params": [
+        {
+          "type": "ParamSpec",
+          "id": "cookie",
+          "valueType": "string"
+        }
+      ]
+    },
+
+    {
+      "type": "CommandSpec",
+      "id": "AccessControl.requestControl",
+      "isRapidNative": true,
+      "notes": "Request a string that can be used to grab control of an agent",
+      "javaNotes": "Do not use this command. Guest science apks don't have to request/grab control of the robot. Only ground operators need to use this command.",
+      "availableContexts": [
+        "teleop"
+      ],
+      "parent": "Command",
+      "params": []
+    },
+
+    {
+      "type": "CommandSpec",
+      "id": "Admin.wipeHlp",
+      "isRapidNative": false,
+      "notes": "Erases everything on the hlp.",
+      "javaNotes": "Do not use this command. It will erase your running apk.",
+      "availableContexts": [
+        "teleop"
+      ],
+      "parent": "Command",
+      "params": []
+    },
+
+    {
+      "type": "CommandSpec",
+      "id": "Mobility.idlePropulsion",
+      "isRapidNative": false,
+      "notes": "Stop propulsion impeller motors",
+      "availableContexts": [
+        "teleop",
+        "planner"
+      ],
+      "parent": "Command",
+      "params": []
+    },
+
+    {
+      "type": "CommandSpec",
+      "id": "Data.downloadData",
+      "isRapidNative": false,
+      "oldFswAlias": "startDownload",
+      "notes": "Start downloading data",
+      "javaNotes": "Data can only be downloaded when docked.",
+      "availableContexts": [
+        "teleop",
+        "planner"
+      ],
+      "parent": "Command",
+      "params": [
+        {
+          "type": "ParamSpec",
+          "id": "dataMethod",
+          "parent": "Data.DownloadMethod"
+        }
+      ]
+    },
+
+    {
+      "type": "CommandSpec",
+      "id": "Data.stopDownload",
+      "isRapidNative": false,
+      "isStopCommand": true,
+      "stopCommandType": "Data.downloadData",
+      "notes": "Stop downloading data",
+      "availableContexts": [
+        "teleop"
+      ],
+      "parent": "Command",
+      "params": [
+        {
+          "type": "ParamSpec",
+          "id": "dataMethod",
+          "parent": "Data.DownloadMethod"
+        }
+      ]
+    },
+
+    {
+      "type": "CommandSpec",
+      "id": "Data.clearData",
+      "isRapidNative": false,
+      "notes": "Clear data",
+      "availableContexts": [
+        "teleop",
+        "planner"
+      ],
+      "parent": "Command",
+      "params": [
+        {
+          "type": "ParamSpec",
+          "id": "dataMethod",
+          "parent": "Data.DownloadMethod"
+        }
+      ]
+    },
+
+    {
+      "type": "CommandSpec",
+      "id": "Mobility.dock",
+      "isRapidNative": false,
+      "notes": "Dock Astrobee. Must meet dock approach preconditions (positioned at dock approach point, etc).",
+      "availableContexts": [
+        "teleop",
+        "planner"
+      ],
+      "parent": "Command",
+      "params": [
+        {
+          "type": "ParamSpec",
+          "id": "berthNumber",
+          "valueType": "long",
+          "notes": "Berth number can only be 1 or 2."
+        }
+      ]
+    },
+
+    {
+      "type": "CommandSpec",
+      "id": "Mobility.undock",
+      "isRapidNative": false,
+      "notes": "Undock Astrobee",
+      "availableContexts": [
+        "teleop",
+        "planner"
+      ],
+      "parent": "Command",
+      "params": []
+    },
+
+    {
+      "type": "CommandSpec",
+      "id": "Plan.runPlan",
+      "isRapidNative": false,
+      "notes": "Run the loaded plan",
+      "javaNotes": "Do not use this command! This is mainly for ground operators.",
+      "availableContexts": [
+        "teleop"
+      ],
+      "parent": "Command",
+      "params": []
+    },
+
+    {
+      "type": "CommandSpec",
+      "id": "Plan.pausePlan",
+      "isRapidNative": false,
+      "notes": "Pause the running plan",
+      "javaNotes": "Do not use this command! This is mainly for ground operators.",
+      "availableContexts": [
+        "teleop",
+        "planner"
+      ],
+      "parent": "Command",
+      "params": []
+    },
+
+    {
+      "type": "CommandSpec",
+      "id": "Plan.skipPlanStep",
+      "isRapidNative": false,
+      "notes": "Skip next trajectory or command in the plan",
+      "javaNotes": "Do not use this command! This is mainly for ground operators.",
+      "availableContexts": [
+        "teleop"
+      ],
+      "parent": "Command",
+      "params": []
+    },
+
+    {
+      "type": "CommandSpec",
+      "id": "Power.powerOnItem",
+      "isRapidNative": false,
+      "notes": "Power on an item within Astrobee",
+      "availableContexts": [
+        "teleop",
+        "planner"
+      ],
+      "parent": "Command",
+      "params": [
+        {
+          "type": "ParamSpec",
+          "id": "which",
+          "parent": "Power.PoweredComponent"
+        }
+      ]
+    },
+
+    {
+      "type": "CommandSpec",
+      "id": "Power.powerOffItem",
+      "isRapidNative": false,
+      "notes": "Power off an item within Astrobee",
+      "availableContexts": [
+        "teleop",
+        "planner"
+      ],
+      "parent": "Command",
+      "params": [
+        {
+          "type": "ParamSpec",
+          "id": "which",
+          "parent": "Power.PoweredComponent"
+        }
+      ]
+    },
+
+    {
+      "type": "CommandSpec",
+      "id": "Settings.setInertia",
+      "isRapidNative": false,
+      "notes": "Set mass and inertia matrix for Astrobee control",
+      "availableContexts": [
+        "teleop"
+      ],
+      "parent": "Command",
+      "params": [
+        {
+          "type": "ParamSpec",
+          "id": "name_",
+          "valueType": "string"
+        },
+        {
+          "type": "ParamSpec",
+          "id": "mass",
+          "valueType": "float",
+          "unit": "kg",
+          "minimum": 0
+        },
+        {
+          "type": "ParamSpec",
+          "id": "centerOfMass",
+          "valueType": "array[3].double",
+          "notes": "The center of mass of Astrobee."
+        },
+        {
+          "type": "ParamSpec",
+          "id": "matrix",
+          "valueType": "array[9].float",
+          "unit": "kg m^2",
+          "notes": "The moment of inertia tensor. Must be a symmetric matrix."
+        }
+      ]
+    },
+
+    {
+      "type": "CommandSpec",
+      "id": "Mobility.perch",
+      "isRapidNative": false,
+      "availableContexts": [
+        "teleop",
+        "planner"
+      ],
+      "parent": "Command",
+      "params": []
+    },
+
+    {
+      "type": "CommandSpec",
+      "id": "Mobility.unperch",
+      "isRapidNative": false,
+      "availableContexts": [
+        "teleop",
+        "planner"
+      ],
+      "parent": "Command",
+      "params": []
+    },
+
+    {
+      "type": "CommandSpec",
+      "id": "Arm.gripperControl",
+      "isRapidNative": false,
+      "notes": "Open or close gripper",
+      "availableContexts": [
+        "teleop",
+        "planner"
+      ],
+      "parent": "Command",
+      "params": [
+        {
+          "type": "ParamSpec",
+          "id": "open",
+          "valueType": "boolean"
+        }
+      ]
+    },
+
+    {
+      "type": "CommandSpec",
+      "id": "Arm.armPanAndTilt",
+      "oldFswAlias": "panAndTilt",
+      "isRapidNative": false,
+      "notes": "Move arm while perched to control camera angle",
+      "availableContexts": [
+        "teleop",
+        "planner"
+      ],
+      "parent": "Command",
+      "params": [
+        {
+          "type": "ParamSpec",
+          "id": "pan",
+          "valueType": "float",
+          "unit": "degrees",
+          "minimum": -90,
+          "maximum": 90
+        },
+        {
+          "type": "ParamSpec",
+          "id": "tilt",
+          "valueType": "float",
+          "unit": "degrees",
+          "minimum": -30,
+          "maximum": 90
+        },
+        {
+          "type": "ParamSpec",
+          "id": "which",
+          "parent": "Arm.ActionType",
+          "notes": "Whether to perform a pan, tilt, or both."
+        }
+      ]
+    },
+
+    {
+      "type": "CommandSpec",
+      "id": "Arm.stopArm",
+      "isRapidNative": false,
+      "availableContexts": [
+        "teleop"
+      ],
+      "parent": "Command",
+      "params": []
+    },
+
+    {
+      "type": "CommandSpec",
+      "id": "Arm.stowArm",
+      "isRapidNative": false,
+      "availableContexts": [
+        "teleop"
+      ],
+      "parent": "Command",
+      "params": []
+    },
+
+    {
+      "type": "CommandSpec",
+      "id": "Settings.setTelemetryRate",
+      "isRapidNative": false,
+      "notes": "Change the frequency at which one type of telemetry is sent to GDS",
+      "availableContexts": [
+        "teleop",
+        "planner"
+      ],
+      "parent": "Command",
+      "params": [
+        {
+          "type": "ParamSpec",
+          "id": "telemetryName",
+          "parent": "Settings.TelemetryType"
+        },
+        {
+          "type": "ParamSpec",
+          "id": "rate",
+          "valueType": "float",
+          "unit": "Hz"
+        }
+      ]
+    },
+
+    {
+      "type": "CommandSpec",
+      "id": "Settings.setOperatingLimits",
+      "isRapidNative": false,
+      "notes": "Change the value of Astrobee operating limits",
+      "availableContexts": [
+        "teleop"
+      ],
+      "parent": "Command",
+      "params": [
+        {
+          "type": "ParamSpec",
+          "id": "profileName",
+          "valueType": "string"
+        },
+        {
+          "type": "ParamSpec",
+          "id": "flightMode",
+          "parent": "Settings.FlightMode",
+          "notes": "Defines GN&C gains, hard limits, tolerances, etc."
+        },
+        {
+          "type": "ParamSpec",
+          "id": "targetLinearVelocity",
+          "valueType": "float",
+          "unit": "m/s",
+          "minimum": 0,
+          "notes": "The maximum linear velocity to target while translating"
+        },
+        {
+          "type": "ParamSpec",
+          "id": "targetLinearAcceleration",
+          "valueType": "float",
+          "unit": "m/s^2",
+          "minimum": 0,
+          "notes": "The maximum linear acceleration to target while translating"
+        },
+        {
+          "type": "ParamSpec",
+          "id": "targetAngularVelocity",
+          "valueType": "float",
+          "unit": "deg/s",
+          "minimum": 0,
+          "notes": "The maximum angular velocity to target while rotating"
+        },
+        {
+          "type": "ParamSpec",
+          "id": "targetAngularAcceleration",
+          "valueType": "float",
+          "unit": "deg/s^2",
+          "minimum": 0,
+          "notes": "The maximum angular acceleration to target while rotating"
+        },
+        {
+          "type": "ParamSpec",
+          "id": "collisionDistance",
+          "valueType": "float",
+          "unit": "meters",
+          "minimum": 0,
+          "notes": "Minimum distance margin to maintain away from obstacles"
+        }
+      ]
+    },
+
+    {
+      "type": "CommandSpec",
+      "id": "Settings.setHolonomicMode",
+      "isRapidNative": false,
+      "notes": "Command to allow blind flying",
+      "availableContexts": [
+        "teleop",
+        "planner"
+      ],
+      "parent": "Command",
+      "params": [
+        {
+          "type": "ParamSpec",
+          "id": "enableHolonomic",
+          "valueType": "boolean"
+        }
+      ]
+    },
+
+    {
+      "type": "CommandSpec",
+      "id": "Settings.setCheckObstacles",
+      "isRapidNative": false,
+      "notes": "Command to turn on and off the obstacle detector",
+      "availableContexts": [
+        "teleop",
+        "planner"
+      ],
+      "parent": "Command",
+      "params": [
+        {
+          "type": "ParamSpec",
+          "id": "checkObstacles",
+          "valueType": "boolean"
+        }
+      ]
+    },
+
+    {
+      "type": "CommandSpec",
+      "id": "Settings.setCheckZones",
+      "isRapidNative": false,
+      "notes": "Command to turn on and off checking keepout zones",
+      "availableContexts": [
+        "teleop",
+        "planner"
+      ],
+      "parent": "Command",
+      "params": [
+        {
+          "type": "ParamSpec",
+          "id": "checkZones",
+          "valueType": "boolean"
+        }
+      ]
+    },
+
+    {
+      "type": "CommandSpec",
+      "id": "Settings.setEnableAutoReturn",
+      "isRapidNative": false,
+      "notes": "Command to allow auto return",
+      "availableContexts": [
+        "teleop"
+      ],
+      "parent": "Command",
+      "params": [
+        {
+          "type": "ParamSpec",
+          "id": "enableAutoReturn",
+          "valueType": "boolean"
+        }
+      ]
+    },
+
+    {
+      "type": "CommandSpec",
+      "id": "GuestScience.startGuestScience",
+      "isRapidNative": false,
+      "notes": "Start guest science APK",
+      "availableContexts": [
+        "teleop",
+        "planner"
+      ],
+      "parent": "Command",
+      "params": [
+        {
+          "type": "ParamSpec",
+          "id": "apkName",
+          "valueType": "string",
+          "notes": "Specify which guest science APK to start"
+        }
+      ]
+    },
+
+    {
+      "type": "CommandSpec",
+      "id": "GuestScience.stopGuestScience",
+      "isRapidNative": false,
+      "notes": "Terminate guest science APK",
+      "availableContexts": [
+        "teleop",
+        "planner"
+      ],
+      "parent": "Command",
+      "params": [
+        {
+          "type": "ParamSpec",
+          "id": "apkName",
+          "valueType": "string",
+          "notes": "Specify which guest science APK to terminate"
+        }
+      ]
+    },
+
+    {
+      "type": "CommandSpec",
+      "id": "GuestScience.customGuestScience",
+      "oldFswAlias": "guestScience",
+      "isRapidNative": false,
+      "notes": "Pass data to guest science APK",
+      "availableContexts": [
+        "teleop",
+        "planner"
+      ],
+      "parent": "Command",
+      "params": [
+        {
+          "type": "ParamSpec",
+          "id": "apkName",
+          "valueType": "string",
+          "notes": "Specify which guest science APK to send the data to"
+        },
+        {
+          "type": "ParamSpec",
+          "id": "command",
+          "valueType": "string",
+          "notes": "The data to send (e.g. could be JSON-encoded data structure)"
+        }
+      ]
+    },
+
+    {
+      "type": "CommandSpec",
+      "id": "Plan.setPlan",
+      "isRapidNative": false,
+      "notes": "Set active plan to be the plan file that was most recently uploaded",
+      "availableContexts": [
+        "teleop"
+      ],
+      "parent": "Command",
+      "params": []
+    },
+
+    {
+      "type": "CommandSpec",
+      "id": "Settings.setZones",
+      "isRapidNative": false,
+      "notes": "Set active keepout zones to be the zones file that was most recently uploaded",
+      "availableContexts": [
+        "teleop"
+      ],
+      "parent": "Command",
+      "params": []
+    },
+
+    {
+      "type": "CommandSpec",
+      "id": "Plan.wait",
+      "isRapidNative": false,
+      "notes": "Pause plan for specified duration. Do nothing if docked/perched, otherwise station keep.",
+      "availableContexts": [
+        "planner"
+      ],
+      "parent": "Command",
+      "params": [
+        {
+          "type": "ParamSpec",
+          "id": "duration",
+          "valueType": "float",
+          "unit": "seconds",
+          "minimum": 0,
+          "notes": "seconds to pause"
+        }
+      ]
+    },
+
+    {
+      "type": "CommandSpec",
+      "id": "Admin.shutdown",
+      "isRapidNative": true,
+      "notes": "Put free flyer in hibernate power mode.",
+      "availableContexts": [
+        "teleop"
+      ],
+      "parent": "Command",
+      "params": []
+    },
+
+    {
+      "type": "CommandSpec",
+      "id": "Mobility.stopAllMotion",
+      "isRapidNative": true,
+      "notes": "Stop teleop motion. Stop plan execution and pause plan.",
+      "availableContexts": [
+        "teleop"
+      ],
+      "parent": "Command",
+      "params": []
+    },
+
+    {
+      "type": "CommandSpec",
+      "id": "Data.setDataToDisk",
+      "isRapidNative": false,
+      "notes": "Set data-to-disk configuration to be the data-to-disk file most recently uplinked; the file specifies which data to save to free flyer onboard storage, and at what rates",
+      "availableContexts": [
+        "teleop"
+      ],
+      "parent": "Command",
+      "params": []
+    },
+
+    {
+      "type": "CommandSpec",
+      "id": "Data.startRecording",
+      "isRapidNative": false,
+      "notes": "Starts the recording of the topics configured with the set data to disk command.",
+      "availableContexts": [
+        "teleop",
+        "planner"
+      ],
+      "parent": "Command",
+      "params": [
+        {
+          "type": "ParamSpec",
+          "id": "description",
+          "valueType": "string"
+        }
+      ]
+    },
+
+    {
+      "type": "CommandSpec",
+      "id": "Data.stopRecording",
+      "isRapidNative": false,
+      "notes": "Stops the recording of the topics configured with the set data to disk command.",
+      "availableContexts": [
+        "teleop",
+        "planner"
+      ],
+      "parent": "Command",
+      "params": []
+    },
+
+    {
+      "type": "CommandSpec",
+      "id": "Mobility.autoReturn",
+      "isRapidNative": false,
+      "availableContexts": [
+        "teleop"
+      ],
+      "parent": "Command",
+      "params": []
+    },
+
+    {
+      "type": "CommandSpec",
+      "id": "Admin.noOp",
+      "isRapidNative": true,
+      "availableContexts": [
+        "teleop"
+      ],
+      "parent": "Command",
+      "params": []
+    },
+
+    {
+      "type": "CommandSpec",
+      "id": "Admin.fault",
+      "isRapidNative": false,
+      "availableContexts": [
+        "teleop"
+      ],
+      "parent": "Command",
+      "params": []
+    },
+
+    {
+      "type": "CommandSpec",
+      "id": "Settings.setFlashlightBrightness",
+      "isRapidNative": false,
+      "availableContexts" : [
+        "teleop",
+        "planner"
+      ],
+      "parent": "Command",
+      "params": [
+        {
+          "type": "ParamSpec",
+          "id": "which",
+          "parent": "Settings.FlashlightLocation",
+          "notes": "Specify which flashlight."
+        },
+        {
+          "type": "ParamSpec",
+          "id": "brightness",
+          "valueType": "float",
+          "minimum": 0,
+          "maximum": 1,
+          "notes": "Brightness percentage between 0 - 1"
+        }
+      ]
+    },
+
+    {
+      "type": "CommandSpec",
+      "id": "Admin.reacquirePosition",
+      "isRapidNative": false,
+      "availableContexts" : [
+        "teleop"
+      ],
+      "parent": "Command",
+      "params": []
+    },
+
+    {
+      "type": "CommandSpec",
+      "id": "Settings.genericCommand",
+      "isRapidNative": false,
+      "notes": "Generic command used to make up a command after the Control Station freeze.",
+      "availableContexts": [
+        "teleop",
+        "planner"
+      ],
+      "parent": "Command",
+      "params": [
+        {
+          "type": "ParamSpec",
+          "id": "commandName",
+          "valueType": "string"
+        },
+        {
+          "type": "ParamSpec",
+          "id": "param",
+          "valueType": "string"
+        }
+      ]
+    },
+
+    {
+      "type": "CommandSpec",
+      "id": "Admin.loadNodelet",
+      "isRapidNative": false,
+      "notes": "Command used to load a nodelet in the system. Doesn't work with nodes running on the HLP.",
+      "availableContext": [
+        "teleop"
+      ],
+      "parent": "Command",
+      "params": [
+        {
+          "type": "ParamSpec",
+          "id" : "nodeletName",
+          "valueType": "string"
+        },
+        {
+          "type": "ParamSpec",
+          "id": "type",
+          "valueType": "string",
+          "notes": "Type of nodelet (namespace/classname). The type is specified in the system monitor config file so you may not need to specify this."
+        },
+        {
+          "type": "ParamSpec",
+          "id": "managerName",
+          "valueType": "string",
+          "notes": "Name of nodelet manager. This should be unnecessary since the system monitor should have received a heartbeat at startup from the node and the nodelet manager name is in the heartbeat. The system monitor saves it and should be able to use it to load nodelets. If commands fails, you may want to try to specify it."
+        },
+        {
+          "type": "ParamSpec",
+          "id": "bondId",
+          "valueType": "string",
+          "notes": "Can be left blank."
+        }
+      ]
+    },
+
+    {
+      "type": "CommandSpec",
+      "id": "Admin.unloadNodelet",
+      "isRapidNative": false,
+      "notes": "Command used to unload a nodelet in the system. Doesn't work with nodes running on the HLP. With great power comes great responsibility! Don't unload a nodelet crucial to the system!!",
+      "availableContext": [
+        "teleop"
+      ],
+      "parent": "Command",
+      "params": [
+        {
+          "type": "ParamSpec",
+          "id": "nodeletName",
+          "valueType": "string"
+        },
+        {
+          "type": "ParamSpec",
+          "id": "managerName",
+          "valueType": "string",
+          "notes": "This should be unnecessary since the system monitor should have received a heartbeat at startup from the node and the heartbeat contains thenodelet manager name. If the command fails, you may want to try to specify it."
+        }
+      ]
+    },
+
+    {
+      "type": "CommandSpec",
+      "id": "Mobility.prepare",
+      "isRapidNative": false,
+      "notes": "It takes the prop modules a couple of seconds to ramp up to the requested flight mode if not already at that flight mode. This command ramps up the prop modules so that when a move command is issued, it will execute right away. This doesn't need to be used for nominal use but may be used/needed for astrobee synchronization.",
+      "availableContext": [
+        "teleop"
+      ],
+      "parent": "Command",
+      "params": []
+    },
+
+    {
+      "type": "CommandSpec",
+      "id": "Settings.setEnableImmediate",
+      "isRapidNative": false,
+      "notes": "This command is only used for segments in a plan. Currently GDS does not handle timestamps since it is so tricky to get them right. So plan timestamps start at 0 and are not used by mobility since the Astrobee's system time is not 0. Thus in the nominal case set enable immediate should be set to true so that every segment sent to the mobility subsystem will be started immediately. If someone wants to do synchronized Astrobee movement, they can create plans by hand and have the timestamps start in the future. They will also have to set enable immediate to false so that the mobility system abides by the timestamp. Please note that these plans need to be started close to the first timestamp. If they are not, you could end up waiting a long time for the robot to start moving. Also the timestamp cannot be in the past or the segment will be skipped. It is probably easier to juse use GDS plan. To do this, you will want to upload the plans to the robots, use the prepare command to get the robots ready to move, and then run the plans. There could be up to a half of a second delay between the robots starting their plans. See the set time sync command. Astrobee to Astrobee communication is in the works and may solve synchronizing Astrobees in a better way.",
+      "availableContext": [
+        "teleop"
+      ],
+      "parent": "Command",
+      "params": [
+        {
+          "type": "ParamSpec",
+          "id": "enableImmediate",
+          "valueType": "boolean"
+        }
+      ]
+    },
+
+    {
+      "type": "CommandSpec",
+      "id": "Settings.setTimeSync",
+      "isRapidNative": false,
+      "notes": "This command is used to help with Astrobee synchronization. It will try to account for the delay in communication between the ground and space and the time it takes to plan and validate a segment. This will hopefully result in two Astrobees starting to move at the same time.",
+      "availableContext": [
+        "teleop"
+      ],
+      "parent": "Command",
+      "params": [
+        {
+          "type": "ParamSpec",
+          "id": "setTimeSync",
+          "valueType": "boolean"
+        }
+      ]
+    },
+
+    {
+      "type": "CommandSpec",
+      "id": "Settings.setPlanner",
+      "isRapidNative": false,
+      "notes": "This command is used to switch planners.",
+      "availableContext": [
+        "teleop",
+        "planner"
+      ],
+      "parent": "Command",
+      "params": [
+        {
+          "type": "ParamSpec",
+          "id": "planner",
+          "parent": "Settings.PlannerType",
+          "notes": "Specify which planner to switch to."
+        }
+      ]
+    },
+
+    {
+      "type": "CommandSpec",
+      "id": "Admin.initializeBias",
+      "isRapidNative": false,
+      "notes": "Initialize bias.",
+      "availableContext": [
+        "teleop",
+        "planner"
+      ],
+      "parent": "Command",
+      "params": []
+    },
+
+    {
+      "type": "CommandSpec",
+      "id": "Admin.resetEkf",
+      "isRapidNative": false,
+      "notes": "Reset ekf.",
+      "availableContext": [
+        "teleop"
+      ],
+      "parent": "Command",
+      "params": []
+    },
+
+    {
+      "type": "CommandSpec",
+      "id": "Admin.switchLocalization",
+      "isRapidNative": false,
+      "notes": "This command is used to switch between localization pipelines.",
+      "availableContext": [
+        "teleop",
+        "planner"
+      ],
+      "parent": "Command",
+      "params": [
+        {
+          "type": "ParamSpec",
+          "id": "mode",
+          "parent": "Admin.LocalizationMode",
+          "notes": "Specify which pipeline to switch to."
+        }
+      ]
+    },
+
+    {
+      "type": "CommandSpec",
+      "id": "Admin.unterminate",
+      "isRapidNative": false,
+      "notes": "This command is used to unterminate the robot. It will only reset the terminate flag but will not start up the pmcs or repower the payloads.",
+      "availableContext": [
+        "teleop"
+      ],
+      "parent": "Command",
+      "params": []
+    }
+  ]
+}

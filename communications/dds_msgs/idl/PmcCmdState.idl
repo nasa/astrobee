@@ -1,0 +1,48 @@
+/*
+ * Copyright (c) 2015 United States Government as represented by the
+ * Administrator of the National Aeronautics and Space Adminstration.
+ * All Rights Reserved.
+ */
+
+#include "Message.idl"
+
+module rapid {
+  module ext {
+    module astrobee {
+      typedef sequence<short, 6> ShortSequence6;
+
+      //@copy-declaration /** Command state for one PMC unit
+      //@copy-declaration   * - motorSpeed: Motor speed. Unitless. 0-255
+      //@copy-declaration   * - nozzlePositions: Nozzle positions. Unitless. 0-255
+      //@copy-declaration   */
+      struct PmcGoal {
+        short motorSpeed;
+        ShortSequence6 nozzlePositions;
+      };
+
+      typedef sequence<PmcGoal, 8> PmcGoalSequence8;
+
+      //@copy-c-declaration class PmcCmdStateTypeSupport;
+      //@copy-c-declaration class PmcCmdStateDataWriter;
+      //@copy-c-declaration class PmcCmdStateDataReader;
+      //@copy-c-declaration struct PmcCmdStateSeq;
+
+      //@copy-declaration /**
+      //@copy-declaration   * Command from the Force Allocation Module to the PMCs
+      //@copy-declaration   */
+      valuetype PmcCmdState : Message {
+        //@copy-c-declaration #if RTI_DDS_VERSION_MAJOR < 4 || (RTI_DDS_VERSION_MAJOR == 4  && RTI_DDS_VERSION_MINOR < 5) || (RTI_DDS_VERSION_MAJOR == 4  && RTI_DDS_VERSION_MINOR  == 5 && RTI_DDS_VERSION_RELEASE != 'f' )
+        //@copy-c-declaration typedef PmcCmdStateTypeSupport TypeSupport;
+        //@copy-c-declaration typedef PmcCmdStateDataWriter DataWriter;
+        //@copy-c-declaration typedef PmcCmdStateDataReader DataReader;
+        //@copy-c-declaration typedef PmcCmdStateSeq Seq;
+        //@copy-c-declaration #endif
+        //@copy-c-declaration typedef PmcCmdState Type;
+
+        //@copy-declaration /** Commands to the pmcs */
+        public PmcGoalSequence8 goals;
+      };
+
+    };
+  };
+};

@@ -1,6 +1,3 @@
-[submodule "submodules/common"]
-	path = submodules/common
-	url = https://babelfish.arc.nasa.gov/bitbucket/scm/astrobee/astrobee_common.git
 [submodule "submodules/android"]
 	path = submodules/android
 	url = https://babelfish.arc.nasa.gov/bitbucket/scm/astrobee/astrobee_android.git

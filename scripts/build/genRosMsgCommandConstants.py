@@ -29,8 +29,8 @@ import logging
 
 # hack to set up PYTHONPATH
 ffroot = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-sys.path.insert(0, os.path.join(ffroot, 'submodules', 'common', 'plans', 'xgds_planner2'))
-sys.path.insert(0, os.path.join(ffroot, 'submodules', 'common', 'scripts'))
+
+sys.path.insert(0, os.path.join(ffroot, 'astrobee', 'commands', 'xgds_planner2'))
 
 from xgds_planner2 import xpjson
 import xpjsonAstrobee
