@@ -282,14 +282,13 @@ else (USE_CTC)
 endif (USE_CTC)
 
 # Bring in catkin
-set(CATKIN_SKIP_TESTING ON CACHE BOOL "NO")
+set(CATKIN_SKIP_TESTING OFF)
 if (USE_CTC)
   # Catkin brings in GTest as a dependency. We don't want it because
   # we have our own ... on top of that it doesn't build correctly for
   # ARM. Our own unit tests however will continue to
   # work. (non-catkin)
   set(CATKIN_ENABLE_TESTING OFF)
-  set(CATKIN_SKIP_TESTING OFF)
 endif (USE_CTC)
 if (USE_ROS)
   set(ENV{ROS_LANG_DISABLE} "genlisp:gennodejs:geneus:$ENV{ROS_LANG_DISABLE}")
