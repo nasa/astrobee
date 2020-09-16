@@ -37,6 +37,7 @@ void FakeLocalizerNodelet::Initialize(ros::NodeHandle* nh) {
 void FakeLocalizerNodelet::SubscribeAndAdvertise(ros::NodeHandle* nh) {
   pose_pub_ = nh->advertise<geometry_msgs::PoseStamped>(TOPIC_LOCALIZATION_POSE, 1);
   twist_pub_ = nh->advertise<geometry_msgs::TwistStamped>(TOPIC_LOCALIZATION_TWIST, 1);
+  state_pub_ = nh->advertise<ff_msgs::EkfState>(TOPIC_GNC_EKF, 1);
 
   pose_sub_ = nh->subscribe(TOPIC_LOCALIZATION_TRUTH, 1, &FakeLocalizerNodelet::PoseCallback, this,
                             ros::TransportHints().tcpNoDelay());
@@ -53,22 +54,18 @@ bool FakeLocalizerNodelet::SetMode(ff_msgs::SetEkfInput::Request& req, ff_msgs::
 
 void FakeLocalizerNodelet::PoseCallback(geometry_msgs::PoseStamped::ConstPtr const& pose) {
   assert(pose->header.frame_id == "world");
-  if (input_mode_ == ff_msgs::SetEkfInputRequest::MODE_TRUTH) {
-    pose_ = PoseFromMsg(*pose);
-    pose_pub_.publish(pose);
-    const lc::Time timestamp = lc::TimeFromHeader(pose->header);
-    PublishLocState(timestamp);
-  }
+  pose_ = PoseFromMsg(*pose);
+  pose_pub_.publish(pose);
+  const lc::Time timestamp = lc::TimeFromHeader(pose->header);
+  PublishLocState(timestamp);
 }
 
 void FakeLocalizerNodelet::TwistCallback(geometry_msgs::TwistStamped::ConstPtr const& twist) {
   assert(twist->header.frame_id == "world");
-  if (input_mode_ == ff_msgs::SetEkfInputRequest::MODE_TRUTH) {
-    twist_ = TwistFromMsg(*twist);
-    twist_pub_.publish(twist);
-    const lc::Time timestamp = lc::TimeFromHeader(twist->header);
-    PublishLocState(timestamp);
-  }
+  twist_ = TwistFromMsg(*twist);
+  twist_pub_.publish(twist);
+  const lc::Time timestamp = lc::TimeFromHeader(twist->header);
+  PublishLocState(timestamp);
 }
 
 void FakeLocalizerNodelet::PublishLocState(const lc::Time& timestamp) {

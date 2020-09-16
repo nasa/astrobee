@@ -29,7 +29,7 @@
 
   <!-- Remaining options -->
   <arg name="output" default="log" />         <!-- Output to screen or log   -->
-  <arg name="fake_localizer" default="false" />     <!-- Run fake localizer -->
+  <arg name="fake_localizer" default="false" /> <!-- Use Fake Localizer      -->
   <arg name="drivers" default="true" />       <!-- Should we launch drivers? -->
   <arg name="sim" default="local" />          <!-- SIM IP address            -->
   <arg name="llp" default="local" />          <!-- LLP IP address            -->
