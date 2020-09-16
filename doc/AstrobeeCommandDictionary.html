@@ -1,0 +1,1846 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html>
+<head><style>
+
+body {
+  font-family: Sans-Serif;
+}
+
+h1.title {
+  font-size: 1.5em;
+  padding: 5px;
+}
+
+h2.title {
+  font-size: 1.2em;
+  padding: 5px;
+}
+
+div.command_index {
+  padding-bottom: 20px;
+}
+
+div.commandSpec {
+  border-top-style: solid;
+  border-top-width: 3px;
+  margin-bottom: 40px;
+}
+
+div.commandSpecId {
+  font-size: 1.5em;
+  background-color: #ddd;
+  padding: 5px;
+  font-weight: bold;
+}
+
+div.commandSpecNotes {
+  padding-left: 5px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+.commandSpec table {
+  border-collapse: collapse;
+}
+
+.commandSpec th {
+  background-color: #ddd;
+}
+
+.commandSpec th, td {
+  border: 1px solid black;
+  text-align: left;
+  vertical-align: top;
+  padding: 5px;
+}
+
+.commandSpec td.param_choices_value {
+  font-family: 'Courier', monospace;
+}
+
+td.inner_table {
+  padding: 0px;
+}
+
+
+</style></head>
+<body>
+<h1 class="title">Command Dictionary</h1>
+<div class="command_index">
+  <h6 class="title">Index</h6>
+  <ul>
+    <li><a href="#command_AccessControl.grabControl">AccessControl.grabControl</a></li>
+    <li><a href="#command_AccessControl.requestControl">AccessControl.requestControl</a></li>
+    <li><a href="#command_Admin.fault">Admin.fault</a></li>
+    <li><a href="#command_Admin.initializeBias">Admin.initializeBias</a></li>
+    <li><a href="#command_Admin.loadNodelet">Admin.loadNodelet</a></li>
+    <li><a href="#command_Admin.noOp">Admin.noOp</a></li>
+    <li><a href="#command_Admin.reacquirePosition">Admin.reacquirePosition</a></li>
+    <li><a href="#command_Admin.resetEkf">Admin.resetEkf</a></li>
+    <li><a href="#command_Admin.shutdown">Admin.shutdown</a></li>
+    <li><a href="#command_Admin.switchLocalization">Admin.switchLocalization</a></li>
+    <li><a href="#command_Admin.unloadNodelet">Admin.unloadNodelet</a></li>
+    <li><a href="#command_Admin.unterminate">Admin.unterminate</a></li>
+    <li><a href="#command_Admin.wake">Admin.wake</a></li>
+    <li><a href="#command_Admin.wakeSafe">Admin.wakeSafe</a></li>
+    <li><a href="#command_Admin.wipeHlp">Admin.wipeHlp</a></li>
+    <li><a href="#command_Arm.armPanAndTilt">Arm.armPanAndTilt</a></li>
+    <li><a href="#command_Arm.gripperControl">Arm.gripperControl</a></li>
+    <li><a href="#command_Arm.stopArm">Arm.stopArm</a></li>
+    <li><a href="#command_Arm.stowArm">Arm.stowArm</a></li>
+    <li><a href="#command_Data.clearData">Data.clearData</a></li>
+    <li><a href="#command_Data.downloadData">Data.downloadData</a></li>
+    <li><a href="#command_Data.setDataToDisk">Data.setDataToDisk</a></li>
+    <li><a href="#command_Data.startRecording">Data.startRecording</a></li>
+    <li><a href="#command_Data.stopDownload">Data.stopDownload</a></li>
+    <li><a href="#command_Data.stopRecording">Data.stopRecording</a></li>
+    <li><a href="#command_GuestScience.customGuestScience">GuestScience.customGuestScience</a></li>
+    <li><a href="#command_GuestScience.startGuestScience">GuestScience.startGuestScience</a></li>
+    <li><a href="#command_GuestScience.stopGuestScience">GuestScience.stopGuestScience</a></li>
+    <li><a href="#command_Mobility.autoReturn">Mobility.autoReturn</a></li>
+    <li><a href="#command_Mobility.dock">Mobility.dock</a></li>
+    <li><a href="#command_Mobility.idlePropulsion">Mobility.idlePropulsion</a></li>
+    <li><a href="#command_Mobility.perch">Mobility.perch</a></li>
+    <li><a href="#command_Mobility.prepare">Mobility.prepare</a></li>
+    <li><a href="#command_Mobility.simpleMove6DOF">Mobility.simpleMove6DOF</a></li>
+    <li><a href="#command_Mobility.stopAllMotion">Mobility.stopAllMotion</a></li>
+    <li><a href="#command_Mobility.undock">Mobility.undock</a></li>
+    <li><a href="#command_Mobility.unperch">Mobility.unperch</a></li>
+    <li><a href="#command_Plan.pausePlan">Plan.pausePlan</a></li>
+    <li><a href="#command_Plan.runPlan">Plan.runPlan</a></li>
+    <li><a href="#command_Plan.setPlan">Plan.setPlan</a></li>
+    <li><a href="#command_Plan.skipPlanStep">Plan.skipPlanStep</a></li>
+    <li><a href="#command_Plan.wait">Plan.wait</a></li>
+    <li><a href="#command_Power.powerOffItem">Power.powerOffItem</a></li>
+    <li><a href="#command_Power.powerOnItem">Power.powerOnItem</a></li>
+    <li><a href="#command_Settings.genericCommand">Settings.genericCommand</a></li>
+    <li><a href="#command_Settings.setCamera">Settings.setCamera</a></li>
+    <li><a href="#command_Settings.setCameraRecording">Settings.setCameraRecording</a></li>
+    <li><a href="#command_Settings.setCameraStreaming">Settings.setCameraStreaming</a></li>
+    <li><a href="#command_Settings.setCheckObstacles">Settings.setCheckObstacles</a></li>
+    <li><a href="#command_Settings.setCheckZones">Settings.setCheckZones</a></li>
+    <li><a href="#command_Settings.setEnableAutoReturn">Settings.setEnableAutoReturn</a></li>
+    <li><a href="#command_Settings.setEnableImmediate">Settings.setEnableImmediate</a></li>
+    <li><a href="#command_Settings.setFlashlightBrightness">Settings.setFlashlightBrightness</a></li>
+    <li><a href="#command_Settings.setHolonomicMode">Settings.setHolonomicMode</a></li>
+    <li><a href="#command_Settings.setInertia">Settings.setInertia</a></li>
+    <li><a href="#command_Settings.setOperatingLimits">Settings.setOperatingLimits</a></li>
+    <li><a href="#command_Settings.setPlanner">Settings.setPlanner</a></li>
+    <li><a href="#command_Settings.setTelemetryRate">Settings.setTelemetryRate</a></li>
+    <li><a href="#command_Settings.setTimeSync">Settings.setTimeSync</a></li>
+    <li><a href="#command_Settings.setZones">Settings.setZones</a></li>
+  </ul>
+</div>
+
+<div class="commandSpec">
+  <div class="commandSpecId"><a name="command_AccessControl.grabControl">AccessControl.grabControl</a></div>
+  <div class="commandSpecNotes">Grab control of an agent</div>
+  <div class="commandSpecParams">
+    <table class="params">
+  <tr>
+    <th class="params_parameter">Parameter</th>
+    <th class="params_type">Type</th>
+    <th class="params_default">Default</th>
+  </tr>
+  <tr>
+    <td class="params_parameter">Cookie</td>
+    <td class="params_type">string</td>
+    <td class="params_default">required</td>
+  </tr>
+</table>
+
+  </div>
+</div>
+
+
+<div class="commandSpec">
+  <div class="commandSpecId"><a name="command_AccessControl.requestControl">AccessControl.requestControl</a></div>
+  <div class="commandSpecNotes">Request a string that can be used to grab control of an agent</div>
+  <div class="commandSpecParams">
+    <table class="params">
+  <tr>
+  </tr>
+</table>
+
+  </div>
+</div>
+
+
+<div class="commandSpec">
+  <div class="commandSpecId"><a name="command_Admin.fault">Admin.fault</a></div>
+  <div class="commandSpecNotes"></div>
+  <div class="commandSpecParams">
+    <table class="params">
+  <tr>
+  </tr>
+</table>
+
+  </div>
+</div>
+
+
+<div class="commandSpec">
+  <div class="commandSpecId"><a name="command_Admin.initializeBias">Admin.initializeBias</a></div>
+  <div class="commandSpecNotes">Initialize bias.</div>
+  <div class="commandSpecParams">
+    <table class="params">
+  <tr>
+  </tr>
+</table>
+
+  </div>
+</div>
+
+
+<div class="commandSpec">
+  <div class="commandSpecId"><a name="command_Admin.loadNodelet">Admin.loadNodelet</a></div>
+  <div class="commandSpecNotes">Command used to load a nodelet in the system. Doesn't work with nodes running on the HLP.</div>
+  <div class="commandSpecParams">
+    <table class="params">
+  <tr>
+    <th class="params_parameter">Parameter</th>
+    <th class="params_type">Type</th>
+    <th class="params_default">Default</th>
+    <th class="params_notes">Notes</th>
+  </tr>
+  <tr>
+    <td class="params_parameter">Nodelet Name</td>
+    <td class="params_type">string</td>
+    <td class="params_default">required</td>
+    <td class="params_notes"></td>
+  </tr>
+  <tr>
+    <td class="params_parameter">Type</td>
+    <td class="params_type">string</td>
+    <td class="params_default">required</td>
+    <td class="params_notes">Type of nodelet (namespace/classname). The type is specified in the system monitor config file so you may not need to specify this.</td>
+  </tr>
+  <tr>
+    <td class="params_parameter">Manager Name</td>
+    <td class="params_type">string</td>
+    <td class="params_default">required</td>
+    <td class="params_notes">Name of nodelet manager. This should be unnecessary since the system monitor should have received a heartbeat at startup from the node and the nodelet manager name is in the heartbeat. The system monitor saves it and should be able to use it to load nodelets. If commands fails, you may want to try to specify it.</td>
+  </tr>
+  <tr>
+    <td class="params_parameter">Bond Id</td>
+    <td class="params_type">string</td>
+    <td class="params_default">required</td>
+    <td class="params_notes">Can be left blank.</td>
+  </tr>
+</table>
+
+  </div>
+</div>
+
+
+<div class="commandSpec">
+  <div class="commandSpecId"><a name="command_Admin.noOp">Admin.noOp</a></div>
+  <div class="commandSpecNotes"></div>
+  <div class="commandSpecParams">
+    <table class="params">
+  <tr>
+  </tr>
+</table>
+
+  </div>
+</div>
+
+
+<div class="commandSpec">
+  <div class="commandSpecId"><a name="command_Admin.reacquirePosition">Admin.reacquirePosition</a></div>
+  <div class="commandSpecNotes"></div>
+  <div class="commandSpecParams">
+    <table class="params">
+  <tr>
+  </tr>
+</table>
+
+  </div>
+</div>
+
+
+<div class="commandSpec">
+  <div class="commandSpecId"><a name="command_Admin.resetEkf">Admin.resetEkf</a></div>
+  <div class="commandSpecNotes">Reset ekf.</div>
+  <div class="commandSpecParams">
+    <table class="params">
+  <tr>
+  </tr>
+</table>
+
+  </div>
+</div>
+
+
+<div class="commandSpec">
+  <div class="commandSpecId"><a name="command_Admin.shutdown">Admin.shutdown</a></div>
+  <div class="commandSpecNotes">Put free flyer in hibernate power mode.</div>
+  <div class="commandSpecParams">
+    <table class="params">
+  <tr>
+  </tr>
+</table>
+
+  </div>
+</div>
+
+
+<div class="commandSpec">
+  <div class="commandSpecId"><a name="command_Admin.switchLocalization">Admin.switchLocalization</a></div>
+  <div class="commandSpecNotes">This command is used to switch between localization pipelines.</div>
+  <div class="commandSpecParams">
+    <table class="params">
+  <tr>
+    <th class="params_parameter">Parameter</th>
+    <th class="params_type">Type</th>
+    <th class="params_default">Default</th>
+    <th class="params_constraints">Constraints</th>
+    <th class="params_notes">Notes</th>
+  </tr>
+  <tr>
+    <td class="params_parameter">Mode</td>
+    <td class="params_type">string</td>
+    <td class="params_default">required</td>
+    <td class="params_constraints inner_table"><table class="param_choices">
+  <tr>
+    <th class="param_choices_name">Name</th>
+    <th class="param_choices_value">Value</th>
+  </tr>
+  <tr>
+    <td class="param_choices_name">None</td>
+    <td class="param_choices_value">&quot;None&quot;</td>
+  </tr>
+  <tr>
+    <td class="param_choices_name">MappedLandmarks</td>
+    <td class="param_choices_value">&quot;MappedLandmarks&quot;</td>
+  </tr>
+  <tr>
+    <td class="param_choices_name">ARTags</td>
+    <td class="param_choices_value">&quot;ARTags&quot;</td>
+  </tr>
+  <tr>
+    <td class="param_choices_name">Handrail</td>
+    <td class="param_choices_value">&quot;Handrail&quot;</td>
+  </tr>
+  <tr>
+    <td class="param_choices_name">Perch</td>
+    <td class="param_choices_value">&quot;Perch&quot;</td>
+  </tr>
+  <tr>
+    <td class="param_choices_name">Truth</td>
+    <td class="param_choices_value">&quot;Truth&quot;</td>
+  </tr>
+</table>
+</td>
+    <td class="params_notes">Specify which pipeline to switch to.</td>
+  </tr>
+</table>
+
+  </div>
+</div>
+
+
+<div class="commandSpec">
+  <div class="commandSpecId"><a name="command_Admin.unloadNodelet">Admin.unloadNodelet</a></div>
+  <div class="commandSpecNotes">Command used to unload a nodelet in the system. Doesn't work with nodes running on the HLP. With great power comes great responsibility! Don't unload a nodelet crucial to the system!!</div>
+  <div class="commandSpecParams">
+    <table class="params">
+  <tr>
+    <th class="params_parameter">Parameter</th>
+    <th class="params_type">Type</th>
+    <th class="params_default">Default</th>
+    <th class="params_notes">Notes</th>
+  </tr>
+  <tr>
+    <td class="params_parameter">Nodelet Name</td>
+    <td class="params_type">string</td>
+    <td class="params_default">required</td>
+    <td class="params_notes"></td>
+  </tr>
+  <tr>
+    <td class="params_parameter">Manager Name</td>
+    <td class="params_type">string</td>
+    <td class="params_default">required</td>
+    <td class="params_notes">This should be unnecessary since the system monitor should have received a heartbeat at startup from the node and the heartbeat contains thenodelet manager name. If the command fails, you may want to try to specify it.</td>
+  </tr>
+</table>
+
+  </div>
+</div>
+
+
+<div class="commandSpec">
+  <div class="commandSpecId"><a name="command_Admin.unterminate">Admin.unterminate</a></div>
+  <div class="commandSpecNotes">This command is used to unterminate the robot. It will only reset the terminate flag but will not start up the pmcs or repower the payloads.</div>
+  <div class="commandSpecParams">
+    <table class="params">
+  <tr>
+  </tr>
+</table>
+
+  </div>
+</div>
+
+
+<div class="commandSpec">
+  <div class="commandSpecId"><a name="command_Admin.wake">Admin.wake</a></div>
+  <div class="commandSpecNotes">This command wakes astrobee from a hibernated state into a nominal state.</div>
+  <div class="commandSpecParams">
+    <table class="params">
+  <tr>
+    <th class="params_parameter">Parameter</th>
+    <th class="params_type">Type</th>
+    <th class="params_default">Default</th>
+  </tr>
+  <tr>
+    <td class="params_parameter">Berth Number</td>
+    <td class="params_type">long</td>
+    <td class="params_default">required</td>
+  </tr>
+</table>
+
+  </div>
+</div>
+
+
+<div class="commandSpec">
+  <div class="commandSpecId"><a name="command_Admin.wakeSafe">Admin.wakeSafe</a></div>
+  <div class="commandSpecNotes">This command wakes astrobee from a hibernated state into a safe state.</div>
+  <div class="commandSpecParams">
+    <table class="params">
+  <tr>
+    <th class="params_parameter">Parameter</th>
+    <th class="params_type">Type</th>
+    <th class="params_default">Default</th>
+  </tr>
+  <tr>
+    <td class="params_parameter">Berth Number</td>
+    <td class="params_type">long</td>
+    <td class="params_default">required</td>
+  </tr>
+</table>
+
+  </div>
+</div>
+
+
+<div class="commandSpec">
+  <div class="commandSpecId"><a name="command_Admin.wipeHlp">Admin.wipeHlp</a></div>
+  <div class="commandSpecNotes">Erases everything on the hlp.</div>
+  <div class="commandSpecParams">
+    <table class="params">
+  <tr>
+  </tr>
+</table>
+
+  </div>
+</div>
+
+
+<div class="commandSpec">
+  <div class="commandSpecId"><a name="command_Arm.armPanAndTilt">Arm.armPanAndTilt</a></div>
+  <div class="commandSpecNotes">Move arm while perched to control camera angle</div>
+  <div class="commandSpecParams">
+    <table class="params">
+  <tr>
+    <th class="params_parameter">Parameter</th>
+    <th class="params_type">Type</th>
+    <th class="params_unit">Unit</th>
+    <th class="params_default">Default</th>
+    <th class="params_constraints">Constraints</th>
+    <th class="params_notes">Notes</th>
+  </tr>
+  <tr>
+    <td class="params_parameter">Pan</td>
+    <td class="params_type">float</td>
+    <td class="params_unit">degrees</td>
+    <td class="params_default">required</td>
+    <td class="params_constraints">-90 &#8804; val &#8804; 90</td>
+    <td class="params_notes"></td>
+  </tr>
+  <tr>
+    <td class="params_parameter">Tilt</td>
+    <td class="params_type">float</td>
+    <td class="params_unit">degrees</td>
+    <td class="params_default">required</td>
+    <td class="params_constraints">-30 &#8804; val &#8804; 90</td>
+    <td class="params_notes"></td>
+  </tr>
+  <tr>
+    <td class="params_parameter">Which</td>
+    <td class="params_type">string</td>
+    <td class="params_unit"></td>
+    <td class="params_default">required</td>
+    <td class="params_constraints inner_table"><table class="param_choices">
+  <tr>
+    <th class="param_choices_name">Name</th>
+    <th class="param_choices_value">Value</th>
+  </tr>
+  <tr>
+    <td class="param_choices_name">Pan</td>
+    <td class="param_choices_value">&quot;Pan&quot;</td>
+  </tr>
+  <tr>
+    <td class="param_choices_name">Tilt</td>
+    <td class="param_choices_value">&quot;Tilt&quot;</td>
+  </tr>
+  <tr>
+    <td class="param_choices_name">Both</td>
+    <td class="param_choices_value">&quot;Both&quot;</td>
+  </tr>
+</table>
+</td>
+    <td class="params_notes">Whether to perform a pan, tilt, or both.</td>
+  </tr>
+</table>
+
+  </div>
+</div>
+
+
+<div class="commandSpec">
+  <div class="commandSpecId"><a name="command_Arm.gripperControl">Arm.gripperControl</a></div>
+  <div class="commandSpecNotes">Open or close gripper</div>
+  <div class="commandSpecParams">
+    <table class="params">
+  <tr>
+    <th class="params_parameter">Parameter</th>
+    <th class="params_type">Type</th>
+    <th class="params_default">Default</th>
+  </tr>
+  <tr>
+    <td class="params_parameter">Open</td>
+    <td class="params_type">boolean</td>
+    <td class="params_default">required</td>
+  </tr>
+</table>
+
+  </div>
+</div>
+
+
+<div class="commandSpec">
+  <div class="commandSpecId"><a name="command_Arm.stopArm">Arm.stopArm</a></div>
+  <div class="commandSpecNotes"></div>
+  <div class="commandSpecParams">
+    <table class="params">
+  <tr>
+  </tr>
+</table>
+
+  </div>
+</div>
+
+
+<div class="commandSpec">
+  <div class="commandSpecId"><a name="command_Arm.stowArm">Arm.stowArm</a></div>
+  <div class="commandSpecNotes"></div>
+  <div class="commandSpecParams">
+    <table class="params">
+  <tr>
+  </tr>
+</table>
+
+  </div>
+</div>
+
+
+<div class="commandSpec">
+  <div class="commandSpecId"><a name="command_Data.clearData">Data.clearData</a></div>
+  <div class="commandSpecNotes">Clear data</div>
+  <div class="commandSpecParams">
+    <table class="params">
+  <tr>
+    <th class="params_parameter">Parameter</th>
+    <th class="params_type">Type</th>
+    <th class="params_default">Default</th>
+    <th class="params_constraints">Constraints</th>
+  </tr>
+  <tr>
+    <td class="params_parameter">Data Method</td>
+    <td class="params_type">string</td>
+    <td class="params_default">required</td>
+    <td class="params_constraints inner_table"><table class="param_choices">
+  <tr>
+    <th class="param_choices_name">Name</th>
+    <th class="param_choices_value">Value</th>
+  </tr>
+  <tr>
+    <td class="param_choices_name">Immediate</td>
+    <td class="param_choices_value">&quot;Immediate&quot;</td>
+  </tr>
+  <tr>
+    <td class="param_choices_name">Delayed</td>
+    <td class="param_choices_value">&quot;Delayed&quot;</td>
+  </tr>
+</table>
+</td>
+  </tr>
+</table>
+
+  </div>
+</div>
+
+
+<div class="commandSpec">
+  <div class="commandSpecId"><a name="command_Data.downloadData">Data.downloadData</a></div>
+  <div class="commandSpecNotes">Start downloading data</div>
+  <div class="commandSpecParams">
+    <table class="params">
+  <tr>
+    <th class="params_parameter">Parameter</th>
+    <th class="params_type">Type</th>
+    <th class="params_default">Default</th>
+    <th class="params_constraints">Constraints</th>
+  </tr>
+  <tr>
+    <td class="params_parameter">Data Method</td>
+    <td class="params_type">string</td>
+    <td class="params_default">required</td>
+    <td class="params_constraints inner_table"><table class="param_choices">
+  <tr>
+    <th class="param_choices_name">Name</th>
+    <th class="param_choices_value">Value</th>
+  </tr>
+  <tr>
+    <td class="param_choices_name">Immediate</td>
+    <td class="param_choices_value">&quot;Immediate&quot;</td>
+  </tr>
+  <tr>
+    <td class="param_choices_name">Delayed</td>
+    <td class="param_choices_value">&quot;Delayed&quot;</td>
+  </tr>
+</table>
+</td>
+  </tr>
+</table>
+
+  </div>
+</div>
+
+
+<div class="commandSpec">
+  <div class="commandSpecId"><a name="command_Data.setDataToDisk">Data.setDataToDisk</a></div>
+  <div class="commandSpecNotes">Set data-to-disk configuration to be the data-to-disk file most recently uplinked; the file specifies which data to save to free flyer onboard storage, and at what rates</div>
+  <div class="commandSpecParams">
+    <table class="params">
+  <tr>
+  </tr>
+</table>
+
+  </div>
+</div>
+
+
+<div class="commandSpec">
+  <div class="commandSpecId"><a name="command_Data.startRecording">Data.startRecording</a></div>
+  <div class="commandSpecNotes">Starts the recording of the topics configured with the set data to disk command.</div>
+  <div class="commandSpecParams">
+    <table class="params">
+  <tr>
+    <th class="params_parameter">Parameter</th>
+    <th class="params_type">Type</th>
+    <th class="params_default">Default</th>
+  </tr>
+  <tr>
+    <td class="params_parameter">Description</td>
+    <td class="params_type">string</td>
+    <td class="params_default">required</td>
+  </tr>
+</table>
+
+  </div>
+</div>
+
+
+<div class="commandSpec">
+  <div class="commandSpecId"><a name="command_Data.stopDownload">Data.stopDownload</a></div>
+  <div class="commandSpecNotes">Stop downloading data</div>
+  <div class="commandSpecParams">
+    <table class="params">
+  <tr>
+    <th class="params_parameter">Parameter</th>
+    <th class="params_type">Type</th>
+    <th class="params_default">Default</th>
+    <th class="params_constraints">Constraints</th>
+  </tr>
+  <tr>
+    <td class="params_parameter">Data Method</td>
+    <td class="params_type">string</td>
+    <td class="params_default">required</td>
+    <td class="params_constraints inner_table"><table class="param_choices">
+  <tr>
+    <th class="param_choices_name">Name</th>
+    <th class="param_choices_value">Value</th>
+  </tr>
+  <tr>
+    <td class="param_choices_name">Immediate</td>
+    <td class="param_choices_value">&quot;Immediate&quot;</td>
+  </tr>
+  <tr>
+    <td class="param_choices_name">Delayed</td>
+    <td class="param_choices_value">&quot;Delayed&quot;</td>
+  </tr>
+</table>
+</td>
+  </tr>
+</table>
+
+  </div>
+</div>
+
+
+<div class="commandSpec">
+  <div class="commandSpecId"><a name="command_Data.stopRecording">Data.stopRecording</a></div>
+  <div class="commandSpecNotes">Stops the recording of the topics configured with the set data to disk command.</div>
+  <div class="commandSpecParams">
+    <table class="params">
+  <tr>
+  </tr>
+</table>
+
+  </div>
+</div>
+
+
+<div class="commandSpec">
+  <div class="commandSpecId"><a name="command_GuestScience.customGuestScience">GuestScience.customGuestScience</a></div>
+  <div class="commandSpecNotes">Pass data to guest science APK</div>
+  <div class="commandSpecParams">
+    <table class="params">
+  <tr>
+    <th class="params_parameter">Parameter</th>
+    <th class="params_type">Type</th>
+    <th class="params_default">Default</th>
+    <th class="params_notes">Notes</th>
+  </tr>
+  <tr>
+    <td class="params_parameter">Apk Name</td>
+    <td class="params_type">string</td>
+    <td class="params_default">required</td>
+    <td class="params_notes">Specify which guest science APK to send the data to</td>
+  </tr>
+  <tr>
+    <td class="params_parameter">Command</td>
+    <td class="params_type">string</td>
+    <td class="params_default">required</td>
+    <td class="params_notes">The data to send (e.g. could be JSON-encoded data structure)</td>
+  </tr>
+</table>
+
+  </div>
+</div>
+
+
+<div class="commandSpec">
+  <div class="commandSpecId"><a name="command_GuestScience.startGuestScience">GuestScience.startGuestScience</a></div>
+  <div class="commandSpecNotes">Start guest science APK</div>
+  <div class="commandSpecParams">
+    <table class="params">
+  <tr>
+    <th class="params_parameter">Parameter</th>
+    <th class="params_type">Type</th>
+    <th class="params_default">Default</th>
+    <th class="params_notes">Notes</th>
+  </tr>
+  <tr>
+    <td class="params_parameter">Apk Name</td>
+    <td class="params_type">string</td>
+    <td class="params_default">required</td>
+    <td class="params_notes">Specify which guest science APK to start</td>
+  </tr>
+</table>
+
+  </div>
+</div>
+
+
+<div class="commandSpec">
+  <div class="commandSpecId"><a name="command_GuestScience.stopGuestScience">GuestScience.stopGuestScience</a></div>
+  <div class="commandSpecNotes">Terminate guest science APK</div>
+  <div class="commandSpecParams">
+    <table class="params">
+  <tr>
+    <th class="params_parameter">Parameter</th>
+    <th class="params_type">Type</th>
+    <th class="params_default">Default</th>
+    <th class="params_notes">Notes</th>
+  </tr>
+  <tr>
+    <td class="params_parameter">Apk Name</td>
+    <td class="params_type">string</td>
+    <td class="params_default">required</td>
+    <td class="params_notes">Specify which guest science APK to terminate</td>
+  </tr>
+</table>
+
+  </div>
+</div>
+
+
+<div class="commandSpec">
+  <div class="commandSpecId"><a name="command_Mobility.autoReturn">Mobility.autoReturn</a></div>
+  <div class="commandSpecNotes"></div>
+  <div class="commandSpecParams">
+    <table class="params">
+  <tr>
+  </tr>
+</table>
+
+  </div>
+</div>
+
+
+<div class="commandSpec">
+  <div class="commandSpecId"><a name="command_Mobility.dock">Mobility.dock</a></div>
+  <div class="commandSpecNotes">Dock Astrobee. Must meet dock approach preconditions (positioned at dock approach point, etc).</div>
+  <div class="commandSpecParams">
+    <table class="params">
+  <tr>
+    <th class="params_parameter">Parameter</th>
+    <th class="params_type">Type</th>
+    <th class="params_default">Default</th>
+    <th class="params_notes">Notes</th>
+  </tr>
+  <tr>
+    <td class="params_parameter">Berth Number</td>
+    <td class="params_type">long</td>
+    <td class="params_default">required</td>
+    <td class="params_notes">Berth number can only be 1 or 2.</td>
+  </tr>
+</table>
+
+  </div>
+</div>
+
+
+<div class="commandSpec">
+  <div class="commandSpecId"><a name="command_Mobility.idlePropulsion">Mobility.idlePropulsion</a></div>
+  <div class="commandSpecNotes">Stop propulsion impeller motors</div>
+  <div class="commandSpecParams">
+    <table class="params">
+  <tr>
+  </tr>
+</table>
+
+  </div>
+</div>
+
+
+<div class="commandSpec">
+  <div class="commandSpecId"><a name="command_Mobility.perch">Mobility.perch</a></div>
+  <div class="commandSpecNotes"></div>
+  <div class="commandSpecParams">
+    <table class="params">
+  <tr>
+  </tr>
+</table>
+
+  </div>
+</div>
+
+
+<div class="commandSpec">
+  <div class="commandSpecId"><a name="command_Mobility.prepare">Mobility.prepare</a></div>
+  <div class="commandSpecNotes">It takes the prop modules a couple of seconds to ramp up to the requested flight mode if not already at that flight mode. This command ramps up the prop modules so that when a move command is issued, it will execute right away. This doesn't need to be used for nominal use but may be used/needed for astrobee synchronization.</div>
+  <div class="commandSpecParams">
+    <table class="params">
+  <tr>
+  </tr>
+</table>
+
+  </div>
+</div>
+
+
+<div class="commandSpec">
+  <div class="commandSpecId"><a name="command_Mobility.simpleMove6DOF">Mobility.simpleMove6DOF</a></div>
+  <div class="commandSpecNotes">Astrobee teleop move command</div>
+  <div class="commandSpecParams">
+    <table class="params">
+  <tr>
+    <th class="params_parameter">Parameter</th>
+    <th class="params_type">Type</th>
+    <th class="params_default">Default</th>
+    <th class="params_notes">Notes</th>
+  </tr>
+  <tr>
+    <td class="params_parameter">Reference Frame</td>
+    <td class="params_type">string</td>
+    <td class="params_default"><span style="font-family: 'Courier';">&quot;ISS&quot;</span></td>
+    <td class="params_notes">Which reference frame to use. Please specify either ISS or body.</td>
+  </tr>
+  <tr>
+    <td class="params_parameter">Xyz</td>
+    <td class="params_type">Point</td>
+    <td class="params_default">required</td>
+    <td class="params_notes">target point</td>
+  </tr>
+  <tr>
+    <td class="params_parameter">Xyz Tolerance</td>
+    <td class="params_type">array[3].double</td>
+    <td class="params_default"><span style="font-family: 'Courier';">[0, 0, 0]</span></td>
+    <td class="params_notes">Not used! Tolerance is dictated by the flight mode.</td>
+  </tr>
+  <tr>
+    <td class="params_parameter">Rot</td>
+    <td class="params_type">quaternion</td>
+    <td class="params_default">required</td>
+    <td class="params_notes">target attitude</td>
+  </tr>
+</table>
+
+  </div>
+</div>
+
+
+<div class="commandSpec">
+  <div class="commandSpecId"><a name="command_Mobility.stopAllMotion">Mobility.stopAllMotion</a></div>
+  <div class="commandSpecNotes">Stop teleop motion. Stop plan execution and pause plan.</div>
+  <div class="commandSpecParams">
+    <table class="params">
+  <tr>
+  </tr>
+</table>
+
+  </div>
+</div>
+
+
+<div class="commandSpec">
+  <div class="commandSpecId"><a name="command_Mobility.undock">Mobility.undock</a></div>
+  <div class="commandSpecNotes">Undock Astrobee</div>
+  <div class="commandSpecParams">
+    <table class="params">
+  <tr>
+  </tr>
+</table>
+
+  </div>
+</div>
+
+
+<div class="commandSpec">
+  <div class="commandSpecId"><a name="command_Mobility.unperch">Mobility.unperch</a></div>
+  <div class="commandSpecNotes"></div>
+  <div class="commandSpecParams">
+    <table class="params">
+  <tr>
+  </tr>
+</table>
+
+  </div>
+</div>
+
+
+<div class="commandSpec">
+  <div class="commandSpecId"><a name="command_Plan.pausePlan">Plan.pausePlan</a></div>
+  <div class="commandSpecNotes">Pause the running plan</div>
+  <div class="commandSpecParams">
+    <table class="params">
+  <tr>
+  </tr>
+</table>
+
+  </div>
+</div>
+
+
+<div class="commandSpec">
+  <div class="commandSpecId"><a name="command_Plan.runPlan">Plan.runPlan</a></div>
+  <div class="commandSpecNotes">Run the loaded plan</div>
+  <div class="commandSpecParams">
+    <table class="params">
+  <tr>
+  </tr>
+</table>
+
+  </div>
+</div>
+
+
+<div class="commandSpec">
+  <div class="commandSpecId"><a name="command_Plan.setPlan">Plan.setPlan</a></div>
+  <div class="commandSpecNotes">Set active plan to be the plan file that was most recently uploaded</div>
+  <div class="commandSpecParams">
+    <table class="params">
+  <tr>
+  </tr>
+</table>
+
+  </div>
+</div>
+
+
+<div class="commandSpec">
+  <div class="commandSpecId"><a name="command_Plan.skipPlanStep">Plan.skipPlanStep</a></div>
+  <div class="commandSpecNotes">Skip next trajectory or command in the plan</div>
+  <div class="commandSpecParams">
+    <table class="params">
+  <tr>
+  </tr>
+</table>
+
+  </div>
+</div>
+
+
+<div class="commandSpec">
+  <div class="commandSpecId"><a name="command_Plan.wait">Plan.wait</a></div>
+  <div class="commandSpecNotes">Pause plan for specified duration. Do nothing if docked/perched, otherwise station keep.</div>
+  <div class="commandSpecParams">
+    <table class="params">
+  <tr>
+    <th class="params_parameter">Parameter</th>
+    <th class="params_type">Type</th>
+    <th class="params_unit">Unit</th>
+    <th class="params_default">Default</th>
+    <th class="params_constraints">Constraints</th>
+    <th class="params_notes">Notes</th>
+  </tr>
+  <tr>
+    <td class="params_parameter">Duration</td>
+    <td class="params_type">float</td>
+    <td class="params_unit">seconds</td>
+    <td class="params_default">required</td>
+    <td class="params_constraints">val &#8805; 0</td>
+    <td class="params_notes">seconds to pause</td>
+  </tr>
+</table>
+
+  </div>
+</div>
+
+
+<div class="commandSpec">
+  <div class="commandSpecId"><a name="command_Power.powerOffItem">Power.powerOffItem</a></div>
+  <div class="commandSpecNotes">Power off an item within Astrobee</div>
+  <div class="commandSpecParams">
+    <table class="params">
+  <tr>
+    <th class="params_parameter">Parameter</th>
+    <th class="params_type">Type</th>
+    <th class="params_default">Default</th>
+    <th class="params_constraints">Constraints</th>
+    <th class="params_notes">Notes</th>
+  </tr>
+  <tr>
+    <td class="params_parameter">Which</td>
+    <td class="params_type">string</td>
+    <td class="params_default">required</td>
+    <td class="params_constraints inner_table"><table class="param_choices">
+  <tr>
+    <th class="param_choices_name">Name</th>
+    <th class="param_choices_value">Value</th>
+  </tr>
+  <tr>
+    <td class="param_choices_name">Laser Pointer</td>
+    <td class="param_choices_value">&quot;Laser Pointer&quot;</td>
+  </tr>
+  <tr>
+    <td class="param_choices_name">Payload Top Aft</td>
+    <td class="param_choices_value">&quot;Payload Top Aft&quot;</td>
+  </tr>
+  <tr>
+    <td class="param_choices_name">Payload Bottom Aft</td>
+    <td class="param_choices_value">&quot;Payload Bottom Aft&quot;</td>
+  </tr>
+  <tr>
+    <td class="param_choices_name">Payload Bottom Front</td>
+    <td class="param_choices_value">&quot;Payload Bottom Front&quot;</td>
+  </tr>
+  <tr>
+    <td class="param_choices_name">PMCs and Signal Lights</td>
+    <td class="param_choices_value">&quot;PMC&quot;</td>
+  </tr>
+</table>
+</td>
+    <td class="params_notes">Any component within Astrobee that can be turned on or off.</td>
+  </tr>
+</table>
+
+  </div>
+</div>
+
+
+<div class="commandSpec">
+  <div class="commandSpecId"><a name="command_Power.powerOnItem">Power.powerOnItem</a></div>
+  <div class="commandSpecNotes">Power on an item within Astrobee</div>
+  <div class="commandSpecParams">
+    <table class="params">
+  <tr>
+    <th class="params_parameter">Parameter</th>
+    <th class="params_type">Type</th>
+    <th class="params_default">Default</th>
+    <th class="params_constraints">Constraints</th>
+    <th class="params_notes">Notes</th>
+  </tr>
+  <tr>
+    <td class="params_parameter">Which</td>
+    <td class="params_type">string</td>
+    <td class="params_default">required</td>
+    <td class="params_constraints inner_table"><table class="param_choices">
+  <tr>
+    <th class="param_choices_name">Name</th>
+    <th class="param_choices_value">Value</th>
+  </tr>
+  <tr>
+    <td class="param_choices_name">Laser Pointer</td>
+    <td class="param_choices_value">&quot;Laser Pointer&quot;</td>
+  </tr>
+  <tr>
+    <td class="param_choices_name">Payload Top Aft</td>
+    <td class="param_choices_value">&quot;Payload Top Aft&quot;</td>
+  </tr>
+  <tr>
+    <td class="param_choices_name">Payload Bottom Aft</td>
+    <td class="param_choices_value">&quot;Payload Bottom Aft&quot;</td>
+  </tr>
+  <tr>
+    <td class="param_choices_name">Payload Bottom Front</td>
+    <td class="param_choices_value">&quot;Payload Bottom Front&quot;</td>
+  </tr>
+  <tr>
+    <td class="param_choices_name">PMCs and Signal Lights</td>
+    <td class="param_choices_value">&quot;PMC&quot;</td>
+  </tr>
+</table>
+</td>
+    <td class="params_notes">Any component within Astrobee that can be turned on or off.</td>
+  </tr>
+</table>
+
+  </div>
+</div>
+
+
+<div class="commandSpec">
+  <div class="commandSpecId"><a name="command_Settings.genericCommand">Settings.genericCommand</a></div>
+  <div class="commandSpecNotes">Generic command used to make up a command after the Control Station freeze.</div>
+  <div class="commandSpecParams">
+    <table class="params">
+  <tr>
+    <th class="params_parameter">Parameter</th>
+    <th class="params_type">Type</th>
+    <th class="params_default">Default</th>
+  </tr>
+  <tr>
+    <td class="params_parameter">Command Name</td>
+    <td class="params_type">string</td>
+    <td class="params_default">required</td>
+  </tr>
+  <tr>
+    <td class="params_parameter">Param</td>
+    <td class="params_type">string</td>
+    <td class="params_default">required</td>
+  </tr>
+</table>
+
+  </div>
+</div>
+
+
+<div class="commandSpec">
+  <div class="commandSpecId"><a name="command_Settings.setCamera">Settings.setCamera</a></div>
+  <div class="commandSpecNotes">Set camera parameters.</div>
+  <div class="commandSpecParams">
+    <table class="params">
+  <tr>
+    <th class="params_parameter">Parameter</th>
+    <th class="params_type">Type</th>
+    <th class="params_unit">Unit</th>
+    <th class="params_default">Default</th>
+    <th class="params_constraints">Constraints</th>
+    <th class="params_notes">Notes</th>
+  </tr>
+  <tr>
+    <td class="params_parameter">Camera Name</td>
+    <td class="params_type">string</td>
+    <td class="params_unit"></td>
+    <td class="params_default">required</td>
+    <td class="params_constraints inner_table"><table class="param_choices">
+  <tr>
+    <th class="param_choices_name">Name</th>
+    <th class="param_choices_value">Value</th>
+  </tr>
+  <tr>
+    <td class="param_choices_name">SCI</td>
+    <td class="param_choices_value">&quot;Science&quot;</td>
+  </tr>
+  <tr>
+    <td class="param_choices_name">NAV</td>
+    <td class="param_choices_value">&quot;Navigation&quot;</td>
+  </tr>
+  <tr>
+    <td class="param_choices_name">HAZ</td>
+    <td class="param_choices_value">&quot;Hazard&quot;</td>
+  </tr>
+  <tr>
+    <td class="param_choices_name">DOCK</td>
+    <td class="param_choices_value">&quot;Dock&quot;</td>
+  </tr>
+  <tr>
+    <td class="param_choices_name">PERCH</td>
+    <td class="param_choices_value">&quot;Perch&quot;</td>
+  </tr>
+</table>
+</td>
+    <td class="params_notes">Camera name</td>
+  </tr>
+  <tr>
+    <td class="params_parameter">Camera Mode</td>
+    <td class="params_type">string</td>
+    <td class="params_unit"></td>
+    <td class="params_default">required</td>
+    <td class="params_constraints inner_table"><table class="param_choices">
+  <tr>
+    <th class="param_choices_name">Name</th>
+    <th class="param_choices_value">Value</th>
+  </tr>
+  <tr>
+    <td class="param_choices_name">Both</td>
+    <td class="param_choices_value">&quot;Both&quot;</td>
+  </tr>
+  <tr>
+    <td class="param_choices_name">Recording</td>
+    <td class="param_choices_value">&quot;Recording&quot;</td>
+  </tr>
+  <tr>
+    <td class="param_choices_name">Streaming</td>
+    <td class="param_choices_value">&quot;Streaming&quot;</td>
+  </tr>
+</table>
+</td>
+    <td class="params_notes">Desired camera mode. Either streaming or recording.</td>
+  </tr>
+  <tr>
+    <td class="params_parameter">Resolution</td>
+    <td class="params_type">string</td>
+    <td class="params_unit"></td>
+    <td class="params_default">required</td>
+    <td class="params_constraints inner_table"><table class="param_choices">
+  <tr>
+    <th class="param_choices_name">Name</th>
+    <th class="param_choices_value">Value</th>
+  </tr>
+  <tr>
+    <td class="param_choices_name">224x171</td>
+    <td class="param_choices_value">&quot;224x171&quot;</td>
+  </tr>
+  <tr>
+    <td class="param_choices_name">320x240</td>
+    <td class="param_choices_value">&quot;320x240&quot;</td>
+  </tr>
+  <tr>
+    <td class="param_choices_name">480x270</td>
+    <td class="param_choices_value">&quot;480x270&quot;</td>
+  </tr>
+  <tr>
+    <td class="param_choices_name">640x480</td>
+    <td class="param_choices_value">&quot;640x480&quot;</td>
+  </tr>
+  <tr>
+    <td class="param_choices_name">960x540</td>
+    <td class="param_choices_value">&quot;960x540&quot;</td>
+  </tr>
+  <tr>
+    <td class="param_choices_name">1024x768</td>
+    <td class="param_choices_value">&quot;1024x768&quot;</td>
+  </tr>
+  <tr>
+    <td class="param_choices_name">1280x720</td>
+    <td class="param_choices_value">&quot;1280x720&quot;</td>
+  </tr>
+  <tr>
+    <td class="param_choices_name">1280x960</td>
+    <td class="param_choices_value">&quot;1280x960&quot;</td>
+  </tr>
+  <tr>
+    <td class="param_choices_name">1920x1080</td>
+    <td class="param_choices_value">&quot;1920x1080&quot;</td>
+  </tr>
+</table>
+</td>
+    <td class="params_notes">Desired frame size in pixels.</td>
+  </tr>
+  <tr>
+    <td class="params_parameter">Frame Rate</td>
+    <td class="params_type">float</td>
+    <td class="params_unit">Hz</td>
+    <td class="params_default">required</td>
+    <td class="params_constraints">1 &#8804; val &#8804; 60</td>
+    <td class="params_notes">Applies to both modes of camera.</td>
+  </tr>
+  <tr>
+    <td class="params_parameter">Bandwidth</td>
+    <td class="params_type">float</td>
+    <td class="params_unit"></td>
+    <td class="params_default">required</td>
+    <td class="params_constraints">val &#8805; 0</td>
+    <td class="params_notes">Only for sci camera; related to quality, may change name to bitrate.</td>
+  </tr>
+</table>
+
+  </div>
+</div>
+
+
+<div class="commandSpec">
+  <div class="commandSpecId"><a name="command_Settings.setCameraRecording">Settings.setCameraRecording</a></div>
+  <div class="commandSpecNotes">Set camera to record video.</div>
+  <div class="commandSpecParams">
+    <table class="params">
+  <tr>
+    <th class="params_parameter">Parameter</th>
+    <th class="params_type">Type</th>
+    <th class="params_default">Default</th>
+    <th class="params_constraints">Constraints</th>
+    <th class="params_notes">Notes</th>
+  </tr>
+  <tr>
+    <td class="params_parameter">Camera Name</td>
+    <td class="params_type">string</td>
+    <td class="params_default">required</td>
+    <td class="params_constraints inner_table"><table class="param_choices">
+  <tr>
+    <th class="param_choices_name">Name</th>
+    <th class="param_choices_value">Value</th>
+  </tr>
+  <tr>
+    <td class="param_choices_name">SCI</td>
+    <td class="param_choices_value">&quot;Science&quot;</td>
+  </tr>
+  <tr>
+    <td class="param_choices_name">NAV</td>
+    <td class="param_choices_value">&quot;Navigation&quot;</td>
+  </tr>
+  <tr>
+    <td class="param_choices_name">HAZ</td>
+    <td class="param_choices_value">&quot;Hazard&quot;</td>
+  </tr>
+  <tr>
+    <td class="param_choices_name">DOCK</td>
+    <td class="param_choices_value">&quot;Dock&quot;</td>
+  </tr>
+  <tr>
+    <td class="param_choices_name">PERCH</td>
+    <td class="param_choices_value">&quot;Perch&quot;</td>
+  </tr>
+</table>
+</td>
+    <td class="params_notes">Camera name</td>
+  </tr>
+  <tr>
+    <td class="params_parameter">Record</td>
+    <td class="params_type">boolean</td>
+    <td class="params_default">required</td>
+    <td class="params_constraints"></td>
+    <td class="params_notes">Record camera video.</td>
+  </tr>
+</table>
+
+  </div>
+</div>
+
+
+<div class="commandSpec">
+  <div class="commandSpecId"><a name="command_Settings.setCameraStreaming">Settings.setCameraStreaming</a></div>
+  <div class="commandSpecNotes">Set streaming camera video to the ground.</div>
+  <div class="commandSpecParams">
+    <table class="params">
+  <tr>
+    <th class="params_parameter">Parameter</th>
+    <th class="params_type">Type</th>
+    <th class="params_default">Default</th>
+    <th class="params_constraints">Constraints</th>
+    <th class="params_notes">Notes</th>
+  </tr>
+  <tr>
+    <td class="params_parameter">Camera Name</td>
+    <td class="params_type">string</td>
+    <td class="params_default">required</td>
+    <td class="params_constraints inner_table"><table class="param_choices">
+  <tr>
+    <th class="param_choices_name">Name</th>
+    <th class="param_choices_value">Value</th>
+  </tr>
+  <tr>
+    <td class="param_choices_name">SCI</td>
+    <td class="param_choices_value">&quot;Science&quot;</td>
+  </tr>
+  <tr>
+    <td class="param_choices_name">NAV</td>
+    <td class="param_choices_value">&quot;Navigation&quot;</td>
+  </tr>
+  <tr>
+    <td class="param_choices_name">HAZ</td>
+    <td class="param_choices_value">&quot;Hazard&quot;</td>
+  </tr>
+  <tr>
+    <td class="param_choices_name">DOCK</td>
+    <td class="param_choices_value">&quot;Dock&quot;</td>
+  </tr>
+  <tr>
+    <td class="param_choices_name">PERCH</td>
+    <td class="param_choices_value">&quot;Perch&quot;</td>
+  </tr>
+</table>
+</td>
+    <td class="params_notes">Camera name</td>
+  </tr>
+  <tr>
+    <td class="params_parameter">Stream</td>
+    <td class="params_type">boolean</td>
+    <td class="params_default">required</td>
+    <td class="params_constraints"></td>
+    <td class="params_notes">Send live video to the ground.</td>
+  </tr>
+</table>
+
+  </div>
+</div>
+
+
+<div class="commandSpec">
+  <div class="commandSpecId"><a name="command_Settings.setCheckObstacles">Settings.setCheckObstacles</a></div>
+  <div class="commandSpecNotes">Command to turn on and off the obstacle detector</div>
+  <div class="commandSpecParams">
+    <table class="params">
+  <tr>
+    <th class="params_parameter">Parameter</th>
+    <th class="params_type">Type</th>
+    <th class="params_default">Default</th>
+  </tr>
+  <tr>
+    <td class="params_parameter">Check Obstacles</td>
+    <td class="params_type">boolean</td>
+    <td class="params_default">required</td>
+  </tr>
+</table>
+
+  </div>
+</div>
+
+
+<div class="commandSpec">
+  <div class="commandSpecId"><a name="command_Settings.setCheckZones">Settings.setCheckZones</a></div>
+  <div class="commandSpecNotes">Command to turn on and off checking keepout zones</div>
+  <div class="commandSpecParams">
+    <table class="params">
+  <tr>
+    <th class="params_parameter">Parameter</th>
+    <th class="params_type">Type</th>
+    <th class="params_default">Default</th>
+  </tr>
+  <tr>
+    <td class="params_parameter">Check Zones</td>
+    <td class="params_type">boolean</td>
+    <td class="params_default">required</td>
+  </tr>
+</table>
+
+  </div>
+</div>
+
+
+<div class="commandSpec">
+  <div class="commandSpecId"><a name="command_Settings.setEnableAutoReturn">Settings.setEnableAutoReturn</a></div>
+  <div class="commandSpecNotes">Command to allow auto return</div>
+  <div class="commandSpecParams">
+    <table class="params">
+  <tr>
+    <th class="params_parameter">Parameter</th>
+    <th class="params_type">Type</th>
+    <th class="params_default">Default</th>
+  </tr>
+  <tr>
+    <td class="params_parameter">Enable Auto Return</td>
+    <td class="params_type">boolean</td>
+    <td class="params_default">required</td>
+  </tr>
+</table>
+
+  </div>
+</div>
+
+
+<div class="commandSpec">
+  <div class="commandSpecId"><a name="command_Settings.setEnableImmediate">Settings.setEnableImmediate</a></div>
+  <div class="commandSpecNotes">This command is only used for segments in a plan. Currently GDS does not handle timestamps since it is so tricky to get them right. So plan timestamps start at 0 and are not used by mobility since the Astrobee's system time is not 0. Thus in the nominal case set enable immediate should be set to true so that every segment sent to the mobility subsystem will be started immediately. If someone wants to do synchronized Astrobee movement, they can create plans by hand and have the timestamps start in the future. They will also have to set enable immediate to false so that the mobility system abides by the timestamp. Please note that these plans need to be started close to the first timestamp. If they are not, you could end up waiting a long time for the robot to start moving. Also the timestamp cannot be in the past or the segment will be skipped. It is probably easier to juse use GDS plan. To do this, you will want to upload the plans to the robots, use the prepare command to get the robots ready to move, and then run the plans. There could be up to a half of a second delay between the robots starting their plans. See the set time sync command. Astrobee to Astrobee communication is in the works and may solve synchronizing Astrobees in a better way.</div>
+  <div class="commandSpecParams">
+    <table class="params">
+  <tr>
+    <th class="params_parameter">Parameter</th>
+    <th class="params_type">Type</th>
+    <th class="params_default">Default</th>
+  </tr>
+  <tr>
+    <td class="params_parameter">Enable Immediate</td>
+    <td class="params_type">boolean</td>
+    <td class="params_default">required</td>
+  </tr>
+</table>
+
+  </div>
+</div>
+
+
+<div class="commandSpec">
+  <div class="commandSpecId"><a name="command_Settings.setFlashlightBrightness">Settings.setFlashlightBrightness</a></div>
+  <div class="commandSpecNotes"></div>
+  <div class="commandSpecParams">
+    <table class="params">
+  <tr>
+    <th class="params_parameter">Parameter</th>
+    <th class="params_type">Type</th>
+    <th class="params_default">Default</th>
+    <th class="params_constraints">Constraints</th>
+    <th class="params_notes">Notes</th>
+  </tr>
+  <tr>
+    <td class="params_parameter">Which</td>
+    <td class="params_type">string</td>
+    <td class="params_default">required</td>
+    <td class="params_constraints inner_table"><table class="param_choices">
+  <tr>
+    <th class="param_choices_name">Name</th>
+    <th class="param_choices_value">Value</th>
+  </tr>
+  <tr>
+    <td class="param_choices_name">Back</td>
+    <td class="param_choices_value">&quot;Back&quot;</td>
+  </tr>
+  <tr>
+    <td class="param_choices_name">Front</td>
+    <td class="param_choices_value">&quot;Front&quot;</td>
+  </tr>
+</table>
+</td>
+    <td class="params_notes">Specify which flashlight.</td>
+  </tr>
+  <tr>
+    <td class="params_parameter">Brightness</td>
+    <td class="params_type">float</td>
+    <td class="params_default">required</td>
+    <td class="params_constraints">0 &#8804; val &#8804; 1</td>
+    <td class="params_notes">Brightness percentage between 0 - 1</td>
+  </tr>
+</table>
+
+  </div>
+</div>
+
+
+<div class="commandSpec">
+  <div class="commandSpecId"><a name="command_Settings.setHolonomicMode">Settings.setHolonomicMode</a></div>
+  <div class="commandSpecNotes">Command to allow blind flying</div>
+  <div class="commandSpecParams">
+    <table class="params">
+  <tr>
+    <th class="params_parameter">Parameter</th>
+    <th class="params_type">Type</th>
+    <th class="params_default">Default</th>
+  </tr>
+  <tr>
+    <td class="params_parameter">Enable Holonomic</td>
+    <td class="params_type">boolean</td>
+    <td class="params_default">required</td>
+  </tr>
+</table>
+
+  </div>
+</div>
+
+
+<div class="commandSpec">
+  <div class="commandSpecId"><a name="command_Settings.setInertia">Settings.setInertia</a></div>
+  <div class="commandSpecNotes">Set mass and inertia matrix for Astrobee control</div>
+  <div class="commandSpecParams">
+    <table class="params">
+  <tr>
+    <th class="params_parameter">Parameter</th>
+    <th class="params_type">Type</th>
+    <th class="params_unit">Unit</th>
+    <th class="params_default">Default</th>
+    <th class="params_constraints">Constraints</th>
+    <th class="params_notes">Notes</th>
+  </tr>
+  <tr>
+    <td class="params_parameter">Name_</td>
+    <td class="params_type">string</td>
+    <td class="params_unit"></td>
+    <td class="params_default">required</td>
+    <td class="params_constraints"></td>
+    <td class="params_notes"></td>
+  </tr>
+  <tr>
+    <td class="params_parameter">Mass</td>
+    <td class="params_type">float</td>
+    <td class="params_unit">kg</td>
+    <td class="params_default">required</td>
+    <td class="params_constraints">val &#8805; 0</td>
+    <td class="params_notes"></td>
+  </tr>
+  <tr>
+    <td class="params_parameter">Center Of Mass</td>
+    <td class="params_type">array[3].double</td>
+    <td class="params_unit"></td>
+    <td class="params_default">required</td>
+    <td class="params_constraints"></td>
+    <td class="params_notes">The center of mass of Astrobee.</td>
+  </tr>
+  <tr>
+    <td class="params_parameter">Matrix</td>
+    <td class="params_type">array[9].float</td>
+    <td class="params_unit">kg m<sup>2</sup></td>
+    <td class="params_default">required</td>
+    <td class="params_constraints"></td>
+    <td class="params_notes">The moment of inertia tensor. Must be a symmetric matrix.</td>
+  </tr>
+</table>
+
+  </div>
+</div>
+
+
+<div class="commandSpec">
+  <div class="commandSpecId"><a name="command_Settings.setOperatingLimits">Settings.setOperatingLimits</a></div>
+  <div class="commandSpecNotes">Change the value of Astrobee operating limits</div>
+  <div class="commandSpecParams">
+    <table class="params">
+  <tr>
+    <th class="params_parameter">Parameter</th>
+    <th class="params_type">Type</th>
+    <th class="params_unit">Unit</th>
+    <th class="params_default">Default</th>
+    <th class="params_constraints">Constraints</th>
+    <th class="params_notes">Notes</th>
+  </tr>
+  <tr>
+    <td class="params_parameter">Profile Name</td>
+    <td class="params_type">string</td>
+    <td class="params_unit"></td>
+    <td class="params_default">required</td>
+    <td class="params_constraints"></td>
+    <td class="params_notes"></td>
+  </tr>
+  <tr>
+    <td class="params_parameter">Flight Mode</td>
+    <td class="params_type">string</td>
+    <td class="params_unit"></td>
+    <td class="params_default">required</td>
+    <td class="params_constraints inner_table"><table class="param_choices">
+  <tr>
+    <th class="param_choices_name">Name</th>
+    <th class="param_choices_value">Value</th>
+  </tr>
+  <tr>
+    <td class="param_choices_name">Nominal</td>
+    <td class="param_choices_value">&quot;Nominal&quot;</td>
+  </tr>
+  <tr>
+    <td class="param_choices_name">Difficult</td>
+    <td class="param_choices_value">&quot;Difficult&quot;</td>
+  </tr>
+  <tr>
+    <td class="param_choices_name">Quiet</td>
+    <td class="param_choices_value">&quot;Quiet&quot;</td>
+  </tr>
+  <tr>
+    <td class="param_choices_name">Docking</td>
+    <td class="param_choices_value">&quot;Docking&quot;</td>
+  </tr>
+  <tr>
+    <td class="param_choices_name">Perching</td>
+    <td class="param_choices_value">&quot;Perching&quot;</td>
+  </tr>
+</table>
+</td>
+    <td class="params_notes">Defines GN&C gains, hard limits, tolerances, etc.</td>
+  </tr>
+  <tr>
+    <td class="params_parameter">Target Linear Velocity</td>
+    <td class="params_type">float</td>
+    <td class="params_unit">m/s</td>
+    <td class="params_default">required</td>
+    <td class="params_constraints">val &#8805; 0</td>
+    <td class="params_notes">The maximum linear velocity to target while translating</td>
+  </tr>
+  <tr>
+    <td class="params_parameter">Target Linear Acceleration</td>
+    <td class="params_type">float</td>
+    <td class="params_unit">m/s<sup>2</sup></td>
+    <td class="params_default">required</td>
+    <td class="params_constraints">val &#8805; 0</td>
+    <td class="params_notes">The maximum linear acceleration to target while translating</td>
+  </tr>
+  <tr>
+    <td class="params_parameter">Target Angular Velocity</td>
+    <td class="params_type">float</td>
+    <td class="params_unit">deg/s</td>
+    <td class="params_default">required</td>
+    <td class="params_constraints">val &#8805; 0</td>
+    <td class="params_notes">The maximum angular velocity to target while rotating</td>
+  </tr>
+  <tr>
+    <td class="params_parameter">Target Angular Acceleration</td>
+    <td class="params_type">float</td>
+    <td class="params_unit">deg/s<sup>2</sup></td>
+    <td class="params_default">required</td>
+    <td class="params_constraints">val &#8805; 0</td>
+    <td class="params_notes">The maximum angular acceleration to target while rotating</td>
+  </tr>
+  <tr>
+    <td class="params_parameter">Collision Distance</td>
+    <td class="params_type">float</td>
+    <td class="params_unit">meters</td>
+    <td class="params_default">required</td>
+    <td class="params_constraints">val &#8805; 0</td>
+    <td class="params_notes">Minimum distance margin to maintain away from obstacles</td>
+  </tr>
+</table>
+
+  </div>
+</div>
+
+
+<div class="commandSpec">
+  <div class="commandSpecId"><a name="command_Settings.setPlanner">Settings.setPlanner</a></div>
+  <div class="commandSpecNotes">This command is used to switch planners.</div>
+  <div class="commandSpecParams">
+    <table class="params">
+  <tr>
+    <th class="params_parameter">Parameter</th>
+    <th class="params_type">Type</th>
+    <th class="params_default">Default</th>
+    <th class="params_constraints">Constraints</th>
+    <th class="params_notes">Notes</th>
+  </tr>
+  <tr>
+    <td class="params_parameter">Planner</td>
+    <td class="params_type">string</td>
+    <td class="params_default">required</td>
+    <td class="params_constraints inner_table"><table class="param_choices">
+  <tr>
+    <th class="param_choices_name">Name</th>
+    <th class="param_choices_value">Value</th>
+  </tr>
+  <tr>
+    <td class="param_choices_name">Trapezoidal</td>
+    <td class="param_choices_value">&quot;trapezoidal&quot;</td>
+  </tr>
+  <tr>
+    <td class="param_choices_name">QuadraticProgram</td>
+    <td class="param_choices_value">&quot;qp&quot;</td>
+  </tr>
+</table>
+</td>
+    <td class="params_notes">Specify which planner to switch to.</td>
+  </tr>
+</table>
+
+  </div>
+</div>
+
+
+<div class="commandSpec">
+  <div class="commandSpecId"><a name="command_Settings.setTelemetryRate">Settings.setTelemetryRate</a></div>
+  <div class="commandSpecNotes">Change the frequency at which one type of telemetry is sent to GDS</div>
+  <div class="commandSpecParams">
+    <table class="params">
+  <tr>
+    <th class="params_parameter">Parameter</th>
+    <th class="params_type">Type</th>
+    <th class="params_unit">Unit</th>
+    <th class="params_default">Default</th>
+    <th class="params_constraints">Constraints</th>
+  </tr>
+  <tr>
+    <td class="params_parameter">Telemetry Name</td>
+    <td class="params_type">string</td>
+    <td class="params_unit"></td>
+    <td class="params_default">required</td>
+    <td class="params_constraints inner_table"><table class="param_choices">
+  <tr>
+    <th class="param_choices_name">Name</th>
+    <th class="param_choices_value">Value</th>
+  </tr>
+  <tr>
+    <td class="param_choices_name">CommStatus</td>
+    <td class="param_choices_value">&quot;CommStatus&quot;</td>
+  </tr>
+  <tr>
+    <td class="param_choices_name">CpuState</td>
+    <td class="param_choices_value">&quot;CpuState&quot;</td>
+  </tr>
+  <tr>
+    <td class="param_choices_name">DiskState</td>
+    <td class="param_choices_value">&quot;DiskState&quot;</td>
+  </tr>
+  <tr>
+    <td class="param_choices_name">EkfState</td>
+    <td class="param_choices_value">&quot;EkfState&quot;</td>
+  </tr>
+  <tr>
+    <td class="param_choices_name">GncState</td>
+    <td class="param_choices_value">&quot;GncState&quot;</td>
+  </tr>
+  <tr>
+    <td class="param_choices_name">PmcCmdState</td>
+    <td class="param_choices_value">&quot;PmcCmdState&quot;</td>
+  </tr>
+  <tr>
+    <td class="param_choices_name">Position</td>
+    <td class="param_choices_value">&quot;Position&quot;</td>
+  </tr>
+</table>
+</td>
+  </tr>
+  <tr>
+    <td class="params_parameter">Rate</td>
+    <td class="params_type">float</td>
+    <td class="params_unit">Hz</td>
+    <td class="params_default">required</td>
+    <td class="params_constraints"></td>
+  </tr>
+</table>
+
+  </div>
+</div>
+
+
+<div class="commandSpec">
+  <div class="commandSpecId"><a name="command_Settings.setTimeSync">Settings.setTimeSync</a></div>
+  <div class="commandSpecNotes">This command is used to help with Astrobee synchronization. It will try to account for the delay in communication between the ground and space and the time it takes to plan and validate a segment. This will hopefully result in two Astrobees starting to move at the same time.</div>
+  <div class="commandSpecParams">
+    <table class="params">
+  <tr>
+    <th class="params_parameter">Parameter</th>
+    <th class="params_type">Type</th>
+    <th class="params_default">Default</th>
+  </tr>
+  <tr>
+    <td class="params_parameter">Set Time Sync</td>
+    <td class="params_type">boolean</td>
+    <td class="params_default">required</td>
+  </tr>
+</table>
+
+  </div>
+</div>
+
+
+<div class="commandSpec">
+  <div class="commandSpecId"><a name="command_Settings.setZones">Settings.setZones</a></div>
+  <div class="commandSpecNotes">Set active keepout zones to be the zones file that was most recently uploaded</div>
+  <div class="commandSpecParams">
+    <table class="params">
+  <tr>
+  </tr>
+</table>
+
+  </div>
+</div>
+
+
+</body></html>

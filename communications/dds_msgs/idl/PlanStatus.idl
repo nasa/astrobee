@@ -1,0 +1,63 @@
+/*
+ * Copyright (c) 2015 United States Government as represented by the 
+ * Administrator of the National Aeronautics and Space Administration.
+ * All Rights Reserved.
+ */
+
+#include "Ack.idl"
+
+module rapid {
+  module ext {
+    module astrobee {
+
+      //@copy-declaration /** The completed status of a thing in the past.
+      //@copy-declaration   * Specifies the thing and the Completed status
+      //@copy-declaration   * Also specifies the duration that the thing took
+      //@copy-declaration   * @see AckCompletedStatus
+      //@copy-declaration   */
+      struct Status {
+        long point;
+        long command;
+        long duration;
+        AckCompletedStatus status;
+      };
+
+      //@copy-declaration /** A secquence of status events */
+      typedef sequence<Status,64> StatusSequence;
+
+      //@copy-c-declaration class PlanStatusTypeSupport;
+      //@copy-c-declaration class PlanStatusDataWriter;
+      //@copy-c-declaration class PlanStatusDataReader;
+      //@copy-c-declaration struct PlanStatusSeq;
+
+      //@copy-declaration /**
+      //@copy-declaration   * The status of the current plan that may or may not be running.
+      //@copy-declaration   */
+      valuetype PlanStatus : Message {
+        //@copy-c-declaration #if RTI_DDS_VERSION_MAJOR < 4 || (RTI_DDS_VERSION_MAJOR == 4  && RTI_DDS_VERSION_MINOR < 5) || (RTI_DDS_VERSION_MAJOR == 4  && RTI_DDS_VERSION_MINOR  == 5 && RTI_DDS_VERSION_RELEASE != 'f' )
+        //@copy-c-declaration typedef PlanStatusTypeSupport TypeSupport;
+        //@copy-c-declaration typedef PlanStatusDataWriter DataWriter;
+        //@copy-c-declaration typedef PlanStatusDataReader DataReader;
+        //@copy-c-declaration typedef PlanStatusSeq Seq;
+        //@copy-c-declaration #endif
+        //@copy-c-declaration typedef PlanStatus Type;
+
+        //@copy-declaration /**  the name of the currently executing/paused plan */
+        public String32 planName;
+
+        //@copy-declaration /**  The current station or segment */
+        public long currentPoint;
+
+        //@copy-declaration /**  The current command within the station/segment. -1 means no command */
+        public long currentCommand;
+
+        //@copy-declaration /**  Status of the currently executing 'thing' @see AckStatus */
+        public AckStatus currentStatus;
+
+        //@copy-declaration /**  Status of the last N things (N=64) @see AckCompletedStatus */
+        public StatusSequence statusHistory;
+      };
+
+    };
+  };
+};

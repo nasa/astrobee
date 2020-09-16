@@ -1,0 +1,78 @@
+/*
+ * Copyright 2015 (c) 2015 Intelligent Robotics Group, NASA ARC
+ */
+
+#include "Message.idl"
+
+module rapid {
+  module ext {
+    module astrobee {
+      typedef sequence<float, 15> FloatSequence15;
+      typedef sequence<float, 50> FloatSequence50;
+
+      //@copy-c-declaration class EkfStateTypeSupport;
+      //@copy-c-declaration class EkfStateDataWriter;
+      //@copy-c-declaration class EkfStateDataReader;
+      //@copy-c-declaration struct EkfStateSeq;
+
+      //@copy-declaration /**
+      //@copy-declaration   * The state of the ekf.
+      //@copy-declaration   */
+      valuetype EkfState : Message {
+        //@copy-c-declaration #if RTI_DDS_VERSION_MAJOR < 4 || (RTI_DDS_VERSION_MAJOR == 4  && RTI_DDS_VERSION_MINOR < 5) || (RTI_DDS_VERSION_MAJOR == 4  && RTI_DDS_VERSION_MINOR  == 5 && RTI_DDS_VERSION_RELEASE != 'f' )
+        //@copy-c-declaration typedef EkfStateTypeSupport TypeSupport;
+        //@copy-c-declaration typedef EkfStateDataWriter DataWriter;
+        //@copy-c-declaration typedef EkfStateDataReader DataReader;
+        //@copy-c-declaration typedef EkfStateSeq Seq;
+        //@copy-c-declaration #endif
+        //@copy-c-declaration typedef EkfState Type;
+
+        //@copy-declaration /** robot body pose */
+        public Transform3D pose;
+
+        //@copy-declaration /** the body velocity (m/s) */
+        public Vec3d velocity;
+
+        //@copy-declaration /** body rotational velocity (rad/s) */
+        public Vec3d omega;
+
+        //@copy-declaration /** estimated gyro bias (rad/s) */
+        public Vec3d gyro_bias;
+
+        //@copy-declaration /** acceleration in body frame (m/s/s) */
+        public Vec3d accel;
+
+        //@copy-declaration /** estimated accel bias (m/s/s) */
+        public Vec3d accel_bias;
+
+        //@copy-declaration /** Filter Health - covariance diagonal.
+        //@copy-declaration   * 1-3 orientation, 4-6 gyro bias, 7-9 velocity,
+        //@copy-declaration   * 10-12 accel bias, 13-15 position
+        //@copy-declaration   */
+        public FloatSequence15 cov_diag;
+
+        //@copy-declaration /** confidence in EKF, 0 is good, 1 is a bit
+        //@copy-declaration   * confused, 2 is lost
+        //@copy-declaration   */
+        public short confidence;
+
+        //@copy-declaration /** Status byte sent by GNC */
+        public short status;
+
+        //@copy-declaration /** optical flow features this frame
+        //@copy-declaration   * (0 if no update)
+        //@copy-declaration   */
+        public short of_count;
+
+        //@copy-declaration /** ml features this frame (0 if no update) */
+        public short ml_count;
+
+        //@copy-declaration /** Global handrail pose */
+        public Transform3D hr_global_pose;
+
+        //@copy-declaration /** Mahalanobis distances for features */
+        public FloatSequence50 ml_mahal_dists;
+      };
+    };
+  };
+};
