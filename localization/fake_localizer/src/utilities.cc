@@ -43,6 +43,7 @@ ff_msgs::EkfState LocStateMsg(const Eigen::Isometry3d& pose, const Twist& twist,
   lc::VectorToMsg(twist.linear_velocity, loc_msg.velocity);
   lc::VectorToMsg(twist.angular_velocity, loc_msg.omega);
   lc::TimeToHeader(timestamp, loc_msg.header);
+  loc_msg.confidence = lc::Confidence::kGood;
   return loc_msg;
 }
 }  // namespace fake_localizer
