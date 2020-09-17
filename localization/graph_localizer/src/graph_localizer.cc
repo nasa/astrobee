@@ -527,18 +527,12 @@ bool GraphLocalizer::SlideWindow(const gtsam::Marginals& marginals) {
   }
 
   VLOG(2) << "SlideWindow: key index: " << *key_index;
-  // Threshold covariances to avoid too small of covariances being passed to optimizer
-  // (which can cause solver errors).
-  auto pose_covariance = marginals.marginalCovariance(sym::P(*key_index));
-  Threshold(params_.noise.prior_min_variance_val, pose_covariance);
-  auto velocity_covariance = marginals.marginalCovariance(sym::V(*key_index));
-  Threshold(params_.noise.prior_min_variance_val, velocity_covariance);
-  auto bias_covariance = marginals.marginalCovariance(sym::B(*key_index));
-  Threshold(params_.noise.prior_min_variance_val, bias_covariance);
+
   lc::CombinedNavStateNoise noise;
-  noise.pose_noise = Robust(gtsam::noiseModel::Gaussian::Covariance(pose_covariance));
-  noise.velocity_noise = Robust(gtsam::noiseModel::Gaussian::Covariance(velocity_covariance));
-  noise.bias_noise = Robust(gtsam::noiseModel::Gaussian::Covariance(bias_covariance));
+  noise.pose_noise = Robust(gtsam::noiseModel::Gaussian::Covariance(marginals.marginalCovariance(sym::P(*key_index))));
+  noise.velocity_noise =
+      Robust(gtsam::noiseModel::Gaussian::Covariance(marginals.marginalCovariance(sym::V(*key_index))));
+  noise.bias_noise = Robust(gtsam::noiseModel::Gaussian::Covariance(marginals.marginalCovariance(sym::B(*key_index))));
   AddPriors(*global_cgN_body_oldest, noise, *key_index, graph_values_.values(), graph_);
   return true;
 }

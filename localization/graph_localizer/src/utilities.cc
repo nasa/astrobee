@@ -148,13 +148,4 @@ gtsam::noiseModel::Robust::shared_ptr Robust(const gtsam::SharedNoiseModel& nois
                                            noise);
 }
 
-void Threshold(const double min_val, gtsam::Matrix& matrix) {
-  // TODO(rsoussan): Better way to do this?
-  for (int row = 0; row < matrix.rows(); ++row) {
-    for (int col = 0; col < matrix.cols(); ++col) {
-      if (matrix(row, col) < min_val) matrix(row, col) = min_val;
-    }
-  }
-}
-
 }  // namespace graph_localizer
