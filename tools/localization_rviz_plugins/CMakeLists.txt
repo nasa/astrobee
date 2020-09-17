@@ -19,32 +19,36 @@ cmake_minimum_required(VERSION 2.8.3)
 
 project(localization_rviz_plugins)
 
-find_package(GTSAM REQUIRED)
+set(BUILD_LOC_RVIZ_PLUGINS OFF CACHE BOOL "Ignore loc rviz plugins due to cross compile error" FORCE)
 
-# For Qt
-set(CMAKE_AUTOMOC ON)
-
-#TODO(rsoussan): why quiet?
-find_package(catkin COMPONENTS rviz QUIET)
-
-#find_package(Qt5 ${rviz_QT_VERSION} EXACT REQUIRED Core Widgets)
-find_package(Qt5 ${rviz_QT_VERSION} REQUIRED Core Widgets)
-set(QT_LIBRARIES Qt5::Widgets)
-# TODO(rsoussan): Is this necessary?
-#add_definitions(-DQT_NO_KEYWORDS)
-
-catkin_package(
-  LIBRARIES ${PROJECT_NAME} ${GLOG_LIBRARIES} ${GTSAM_LIBRARIES} ${QT_LIBRARIES}  graph_localizer localization_common localization_measurements
-#${rviz_DEFAULT_PLUGIN_LIBRARIES}
-  INCLUDE_DIRS ${GTSAM_INCLUDE_DIR} ${GLOG_INCLUDE_DIRS} ${Qt5Core_INCLUDE_DIRS} ${Qt5Gui_INCLUDE_DIRS} 
-  CATKIN_DEPENDS rviz 
-  DEPENDS gtsam 
-)
-
-create_library(TARGET ${PROJECT_NAME} 
-  LIBS ${catkin_LIBRARIES} ${GLOG_LIBRARIES} ${QT_LIBRARIES} graph_localizer localization_common localization_measurements 
-# ${rviz_DEFAULT_PLUGIN_LIBRARIES} 
-  INC ${catkin_INCLUDE_DIRS} ${GLOG_INCLUDE_DIRS} ${Qt5Core_INCLUDE_DIRS} ${Qt5Gui_INCLUDE_DIRS} 
-  ADD_SRCS src/localization_graph_display.cc ${MOC_FILES}
-  DEPS gtsam rviz 
-)
+if(BUILD_LOC_RVIZ_PLUGINS)
+ find_package(GTSAM REQUIRED)
+ 
+ # For Qt
+ set(CMAKE_AUTOMOC ON)
+ 
+ #TODO(rsoussan): why quiet?
+ find_package(catkin COMPONENTS rviz QUIET)
+ 
+ #find_package(Qt5 ${rviz_QT_VERSION} EXACT REQUIRED Core Widgets)
+ find_package(Qt5 ${rviz_QT_VERSION} REQUIRED Core Widgets)
+ set(QT_LIBRARIES Qt5::Widgets)
+ # TODO(rsoussan): Is this necessary?
+ #add_definitions(-DQT_NO_KEYWORDS)
+ 
+ catkin_package(
+   LIBRARIES ${PROJECT_NAME} ${GLOG_LIBRARIES} ${GTSAM_LIBRARIES} ${QT_LIBRARIES}  graph_localizer localization_common localization_measurements
+ #${rviz_DEFAULT_PLUGIN_LIBRARIES}
+   INCLUDE_DIRS ${GTSAM_INCLUDE_DIR} ${GLOG_INCLUDE_DIRS} ${Qt5Core_INCLUDE_DIRS} ${Qt5Gui_INCLUDE_DIRS} 
+   CATKIN_DEPENDS rviz 
+   DEPENDS gtsam 
+ )
+ 
+ create_library(TARGET ${PROJECT_NAME} 
+   LIBS ${catkin_LIBRARIES} ${GLOG_LIBRARIES} ${QT_LIBRARIES} graph_localizer localization_common localization_measurements 
+ # ${rviz_DEFAULT_PLUGIN_LIBRARIES} 
+   INC ${catkin_INCLUDE_DIRS} ${GLOG_INCLUDE_DIRS} ${Qt5Core_INCLUDE_DIRS} ${Qt5Gui_INCLUDE_DIRS} 
+   ADD_SRCS src/localization_graph_display.cc ${MOC_FILES}
+   DEPS gtsam rviz 
+ )
+endif()
