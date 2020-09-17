@@ -23,23 +23,13 @@
 add_subdirectory(description)
 
 # Optional: install only for simulated context
-if ((NOT USE_CTC) AND (NOT IS_BAMBOO_BUILD))
-  set(FETCHCONTENT_QUIET OFF)
-  FetchContent_Declare(media
-    URL https://github.com/nasa/astrobee_media/archive/v0.0.8b.tar.gz
-    URL_HASH SHA1=2ae9334e3c25484b778069d8c7073310c720fc8a
-    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/media
-  )
-  FetchContent_GetProperties(media)
-  if(NOT media_POPULATED)
-    FetchContent_Populate(media)
-    add_subdirectory(${media_SOURCE_DIR}/astrobee_granite)
-    add_subdirectory(${media_SOURCE_DIR}/astrobee_dock)
-    add_subdirectory(${media_SOURCE_DIR}/astrobee_iss)
-    add_subdirectory(${media_SOURCE_DIR}/astrobee_handrail_8_5)
-    add_subdirectory(${media_SOURCE_DIR}/astrobee_handrail_21_5)
-    add_subdirectory(${media_SOURCE_DIR}/astrobee_handrail_30)
-    add_subdirectory(${media_SOURCE_DIR}/astrobee_handrail_41_5)
-    add_subdirectory(${media_SOURCE_DIR}/astrobee_freeflyer)
-  endif()
-endif ((NOT USE_CTC) AND (NOT IS_BAMBOO_BUILD))
+if (NOT USE_CTC)
+  add_subdirectory(media/astrobee_granite)
+  add_subdirectory(media/astrobee_dock)
+  add_subdirectory(media/astrobee_iss)
+  add_subdirectory(media/astrobee_handrail_8_5)
+  add_subdirectory(media/astrobee_handrail_21_5)
+  add_subdirectory(media/astrobee_handrail_30)
+  add_subdirectory(media/astrobee_handrail_41_5)
+  add_subdirectory(media/astrobee_freeflyer)
+endif (NOT USE_CTC)

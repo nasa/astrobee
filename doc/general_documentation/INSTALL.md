@@ -28,12 +28,13 @@ At this point you need to decide where you'd like to put the source code
 
     export SOURCE_PATH=$HOME/astrobee
 
-First, clone the flight software repository:
+First, clone the flight software repository and media:
 
     git clone https://github.com/nasa/astrobee.git $SOURCE_PATH
+    git submodule update --init --depth 1 description/media
 
 
-If you are planning to work on guest science stuff, you will also need the
+If you are planning to work with guest science code, you will also need the
 `astrobee_android` repository. You should checkout the repository in the same
 directory you checked out the source code in:
 
