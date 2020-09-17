@@ -36,7 +36,7 @@ class CombinedNavStateCovariances {
   CombinedNavStateCovariances() = default;
   // create constructor from marginals! -> put this in
   // localization_common!
-  Confidence PoseConfidence() const;
+  Confidence PoseConfidence(const double position_log_det_threshold, const double orientation_log_det_threshold) const;
 
   const Eigen::Matrix<double, 6, 6>& pose_covariance() const { return pose_covariance_; }
   const Eigen::Matrix3d& velocity_covariance() const { return velocity_covariance_; }
@@ -57,9 +57,6 @@ class CombinedNavStateCovariances {
   Eigen::Matrix<double, 6, 6> pose_covariance_;
   Eigen::Matrix3d velocity_covariance_;
   Eigen::Matrix<double, 6, 6> bias_covariance_;
-  // TODO(rsoussan): tune these!
-  static constexpr double kPositionLogDetThreshold = 1;
-  static constexpr double kOrientationLogDetThreshold = 1;
 };
 }  // namespace localization_common
 

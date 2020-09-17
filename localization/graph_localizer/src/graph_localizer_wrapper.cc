@@ -54,6 +54,9 @@ GraphLocalizerWrapper::GraphLocalizerWrapper() {
     LOG(FATAL) << "Failed to load save_localization_graph_dot_file.";
   }
 
+  position_cov_log_det_lost_threshold_ = lc::LoadDouble(config, "position_cov_log_det_lost_threshold");
+  orientation_cov_log_det_lost_threshold_ = lc::LoadDouble(config, "orientation_cov_log_det_lost_threshold");
+
   graph_loc_initialization_.LoadGraphLocalizerParams(config);
   SanityCheckerParams sanity_checker_params;
   LoadSanityCheckerParams(config, sanity_checker_params);
@@ -227,7 +230,8 @@ boost::optional<ff_msgs::EkfState> GraphLocalizerWrapper::LatestLocalizationStat
   const auto ekf_state_msg =
       EkfStateMsg(combined_nav_state_and_covariances->first, Eigen::Vector3d::Zero(), Eigen::Vector3d::Zero(),
                   combined_nav_state_and_covariances->second, feature_counts_.of, feature_counts_.vl,
-                  graph_loc_initialization_.EstimateBiases());
+                  graph_loc_initialization_.EstimateBiases(), position_cov_log_det_lost_threshold_,
+                  orientation_cov_log_det_lost_threshold_);
   feature_counts_.Reset();
   return ekf_state_msg;
 }

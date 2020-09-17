@@ -97,6 +97,8 @@ class GraphLocalizerWrapper {
   FeatureCounts feature_counts_;
   boost::optional<std::pair<Eigen::Isometry3d, localization_common::Time>> sparse_mapping_pose_;
   std::unique_ptr<SanityChecker> sanity_checker_;
+  double position_cov_log_det_lost_threshold_;
+  double orientation_cov_log_det_lost_threshold_;
 };
 }  // namespace graph_localizer
 

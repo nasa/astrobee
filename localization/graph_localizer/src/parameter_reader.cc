@@ -60,6 +60,7 @@ void LoadNoiseParams(config_reader::ConfigReader& config, NoiseParams& params) {
   params.starting_prior_velocity_stddev = lc::LoadDouble(config, "starting_prior_velocity_stddev");
   params.starting_prior_accel_bias_stddev = lc::LoadDouble(config, "starting_prior_accel_bias_stddev");
   params.starting_prior_gyro_bias_stddev = lc::LoadDouble(config, "starting_prior_gyro_bias_stddev");
+  params.prior_min_variance_val = lc::LoadDouble(config, "prior_min_variance_val");
 }
 
 void LoadSanityCheckerParams(config_reader::ConfigReader& config, SanityCheckerParams& params) {

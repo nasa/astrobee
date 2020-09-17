@@ -32,6 +32,8 @@ struct NoiseParams {
   double starting_prior_velocity_stddev;
   double starting_prior_accel_bias_stddev;
   double starting_prior_gyro_bias_stddev;
+  // TODO(rsoussan): put this somewhere else?
+  double prior_min_variance_val;
 };
 }  // namespace graph_localizer
 

@@ -63,7 +63,8 @@ ff_msgs::EkfState EkfStateMsg(const localization_common::CombinedNavState& combi
                               const Eigen::Vector3d& acceleration, const Eigen::Vector3d& angular_velocity,
                               const localization_common::CombinedNavStateCovariances& covariances,
                               const int num_optical_flow_features_in_last_measurement,
-                              const int num_sparse_mapping_features_in_last_measurement, const bool estimating_bias);
+                              const int num_sparse_mapping_features_in_last_measurement, const bool estimating_bias,
+                              const double position_log_det_threshold, const double orientation_log_det_threshold);
 
 ff_msgs::LocalizationGraph GraphMsg(const GraphLocalizer& graph_localizer);
 
@@ -72,6 +73,9 @@ geometry_msgs::PoseStamped PoseMsg(const Eigen::Isometry3d& global_T_body, const
 geometry_msgs::PoseStamped PoseMsg(const Eigen::Isometry3d& global_T_body, const localization_common::Time time);
 
 gtsam::noiseModel::Robust::shared_ptr Robust(const gtsam::SharedNoiseModel& noise);
+
+void Threshold(const double min_val, gtsam::Matrix& matrix);
+
 }  // namespace graph_localizer
 
 #endif  // GRAPH_LOCALIZER_UTILITIES_H_

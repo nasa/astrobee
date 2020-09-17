@@ -72,7 +72,8 @@ ff_msgs::EkfState EkfStateMsg(const lc::CombinedNavState& combined_nav_state, co
                               const Eigen::Vector3d& angular_velocity,
                               const lc::CombinedNavStateCovariances& covariances,
                               const int num_optical_flow_features_in_last_measurement,
-                              const int num_sparse_mapping_features_in_last_measurement, const bool estimating_bias) {
+                              const int num_sparse_mapping_features_in_last_measurement, const bool estimating_bias,
+                              const double position_log_det_threshold, const double orientation_log_det_threshold) {
   ff_msgs::EkfState loc_msg;
 
   // Set Header Frames
@@ -92,7 +93,7 @@ ff_msgs::EkfState EkfStateMsg(const lc::CombinedNavState& combined_nav_state, co
   lc::CombinedNavStateCovariancesToMsg(covariances, loc_msg);
 
   // Set Confidence
-  loc_msg.confidence = covariances.PoseConfidence();
+  loc_msg.confidence = covariances.PoseConfidence(position_log_det_threshold, orientation_log_det_threshold);
 
   // Set Graph Feature Counts/Information
   loc_msg.of_count = num_optical_flow_features_in_last_measurement;
@@ -146,4 +147,14 @@ gtsam::noiseModel::Robust::shared_ptr Robust(const gtsam::SharedNoiseModel& nois
   return gtsam::noiseModel::Robust::Create(gtsam::noiseModel::mEstimator::Huber::Create(1.345 /*Taken from gtsam*/),
                                            noise);
 }
+
+void Threshold(const double min_val, gtsam::Matrix& matrix) {
+  // TODO(rsoussan): Better way to do this?
+  for (int row = 0; row < matrix.rows(); ++row) {
+    for (int col = 0; col < matrix.cols(); ++col) {
+      if (matrix(row, col) < min_val) matrix(row, col) = min_val;
+    }
+  }
+}
+
 }  // namespace graph_localizer
