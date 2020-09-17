@@ -55,6 +55,11 @@ void LoadNoiseParams(config_reader::ConfigReader& config, NoiseParams& params) {
   params.optical_flow_prior_translation_stddev = lc::LoadDouble(config, "optical_flow_prior_translation_stddev");
   params.optical_flow_prior_quaternion_stddev = lc::LoadDouble(config, "optical_flow_prior_quaternion_stddev");
   params.optical_flow_prior_velocity_stddev = lc::LoadDouble(config, "optical_flow_prior_velocity_stddev");
+  params.starting_prior_translation_stddev = lc::LoadDouble(config, "starting_prior_translation_stddev");
+  params.starting_prior_quaternion_stddev = lc::LoadDouble(config, "starting_prior_quaternion_stddev");
+  params.starting_prior_velocity_stddev = lc::LoadDouble(config, "starting_prior_velocity_stddev");
+  params.starting_prior_accel_bias_stddev = lc::LoadDouble(config, "starting_prior_accel_bias_stddev");
+  params.starting_prior_gyro_bias_stddev = lc::LoadDouble(config, "starting_prior_gyro_bias_stddev");
 }
 
 void LoadSanityCheckerParams(config_reader::ConfigReader& config, SanityCheckerParams& params) {

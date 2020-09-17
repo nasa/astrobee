@@ -27,6 +27,11 @@ struct NoiseParams {
   double optical_flow_prior_translation_stddev;
   double optical_flow_prior_quaternion_stddev;
   double optical_flow_prior_velocity_stddev;
+  double starting_prior_translation_stddev;
+  double starting_prior_quaternion_stddev;
+  double starting_prior_velocity_stddev;
+  double starting_prior_accel_bias_stddev;
+  double starting_prior_gyro_bias_stddev;
 };
 }  // namespace graph_localizer
 

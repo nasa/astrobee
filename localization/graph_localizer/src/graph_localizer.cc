@@ -61,22 +61,22 @@ GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
 
 void GraphLocalizer::AddStartingPriors(const lc::CombinedNavState& global_cgN_body_start, const int key_index,
                                        const gtsam::Values& values, gtsam::NonlinearFactorGraph& graph) {
-  // TODO(rsoussan): tune these
-  constexpr double kPoseTranslationPriorSigma = 0.02;
-  constexpr double kPoseQuaternionPriorSigma = 0.01;
-  constexpr double kVelPriorSigma = 0.01;
-  constexpr double kAccelBiasPriorSigma = 0.001;
-  constexpr double kGyroBiasPriorSigma = 0.001;
   const gtsam::Vector6 pose_prior_noise_sigmas(
-      (gtsam::Vector(6) << kPoseTranslationPriorSigma, kPoseTranslationPriorSigma, kPoseTranslationPriorSigma,
-       kPoseQuaternionPriorSigma, kPoseQuaternionPriorSigma, kPoseQuaternionPriorSigma)
+      (gtsam::Vector(6) << params_.noise.starting_prior_translation_stddev,
+       params_.noise.starting_prior_translation_stddev, params_.noise.starting_prior_translation_stddev,
+       params_.noise.starting_prior_quaternion_stddev, params_.noise.starting_prior_quaternion_stddev,
+       params_.noise.starting_prior_quaternion_stddev)
           .finished());
-  const gtsam::Vector3 velocity_prior_noise_sigmas(
-      (gtsam::Vector(3) << kVelPriorSigma, kVelPriorSigma, kVelPriorSigma).finished());
-  const gtsam::Vector6 bias_prior_noise_sigmas((gtsam::Vector(6) << kAccelBiasPriorSigma, kAccelBiasPriorSigma,
-                                                kAccelBiasPriorSigma, kGyroBiasPriorSigma, kGyroBiasPriorSigma,
-                                                kGyroBiasPriorSigma)
-                                                   .finished());
+  const gtsam::Vector3 velocity_prior_noise_sigmas((gtsam::Vector(3) << params_.noise.starting_prior_velocity_stddev,
+                                                    params_.noise.starting_prior_velocity_stddev,
+                                                    params_.noise.starting_prior_velocity_stddev)
+                                                       .finished());
+  const gtsam::Vector6 bias_prior_noise_sigmas(
+      (gtsam::Vector(6) << params_.noise.starting_prior_accel_bias_stddev,
+       params_.noise.starting_prior_accel_bias_stddev, params_.noise.starting_prior_accel_bias_stddev,
+       params_.noise.starting_prior_gyro_bias_stddev, params_.noise.starting_prior_gyro_bias_stddev,
+       params_.noise.starting_prior_gyro_bias_stddev)
+          .finished());
   lc::CombinedNavStateNoise noise;
   noise.pose_noise =
       Robust(gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(pose_prior_noise_sigmas)));
@@ -749,6 +749,7 @@ bool GraphLocalizer::Update() {
     LOG(ERROR) << "Update: Failed to slide window.";
     return false;
   }
+
   return true;
 }
 }  // namespace graph_localizer
