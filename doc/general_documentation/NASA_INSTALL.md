@@ -79,12 +79,12 @@ At this point you need to decide where you'd like to put the source code
 
     export SOURCE_PATH=$HOME/astrobee
 
-First, clone the flight software repository:
+First, clone the flight software repository and submodules:
 
-    git clone --recursive https://github.com/nasa/astrobee.git \
-        --branch develop $SOURCE_PATH
+    git clone https://github.com/nasa/astrobee.git --branch develop $SOURCE_PATH
+    git submodule update --init --depth 1
 
-(Note: re-enter your username and password for every submodules that are cloned)
+(Note: re-enter your username and password for every submodule that is cloned)
 
 ### Dependencies
 
