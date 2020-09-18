@@ -15,15 +15,21 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
+    - name: Checkout submodule
+      run: git submodule update --init --depth 1 description/media
+
     - name: Build the code for Ubuntu 16
       run: docker build . --file ./scripts/docker/rebuild_test_astrobee_kinetic.Dockerfile
 
   build-melodic:
 
-   runs-on: ubuntu-18.04
+    runs-on: ubuntu-18.04
 
-   steps:
-   - uses: actions/checkout@v2
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Checkout submodule
+      run: git submodule update --init --depth 1 description/media
 
    - name: Build the code for Ubuntu 18
      run: docker build . --file ./scripts/docker/rebuild_test_astrobee_melodic.Dockerfile

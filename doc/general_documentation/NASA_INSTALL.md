@@ -81,10 +81,22 @@ At this point you need to decide where you'd like to put the source code
 
 First, clone the flight software repository:
 
-    git clone --recursive https://github.com/nasa/astrobee.git \
-        --branch develop $SOURCE_PATH
+    git clone https://github.com/nasa/astrobee.git --branch develop $SOURCE_PATH
+    git submodule update --init --depth 1 description/media
 
-(Note: re-enter your username and password for every submodules that are cloned)
+You can either choose which optional submodules to clone and log depth with:
+
+    git submodule update --init --depth 1 submodules/android
+    git submodule update --init --depth 1 submodules/avionics
+    git submodule update --init --depth 1 submodules/platform
+
+Or checkout all the submodules as:
+
+    git submodule update --init --depth 1
+
+(Note: re-enter your username and password for every submodule that is cloned)
+The android module is necessary for guest science code; the avionics and platform
+module is used when cross-compiling to test on the robot hardware.
 
 ### Dependencies
 

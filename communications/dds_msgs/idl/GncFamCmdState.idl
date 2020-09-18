@@ -1,0 +1,72 @@
+/*
+ * Copyright 2017 Intelligent Robotics Group, NASA ARC
+ */
+
+#include "Message.idl"
+
+module rapid {
+  module ext {
+    module astrobee {
+
+      //@copy-declaration /**
+      //@copy-declaration   * Represents force in free space.
+      //@copy-declaration   */
+      struct Wrench {
+        Vec3d force;
+        Vec3d torque;
+      };
+
+      //@copy-c-declaration class GncFamCmdStateTypeSupport;
+      //@copy-c-declaration class GncFamCmdStateDataWriter;
+      //@copy-c-declaration class GncFamCmdStateDataReader;
+      //@copy-c-declaration struct GncFamCmdStateSeq;
+
+      //@copy-declaration /**
+      //@copy-declaration   * Command sent from control to FAM.
+      //@copy-declaration   */
+      valuetype GncFamCmdState : Message {
+        //@copy-c-declaration #if RTI_DDS_VERSION_MAJOR < 4 || (RTI_DDS_VERSION_MAJOR == 4 && RTI_DDS_VERSION_MINOR < 5) || (RTI_DDS_VERSION_MAJOR == 4 && RTI_DDS_VERSION_MINOR == 5 && RTI_DDS_VERSION_RELEASE != 'f')
+        //@copy-c-declaration typedef GncFamCmdStateTypeSupport TypeSupport;
+        //@copy-c-declaration typedef GncFamCmdStateDataWriter DataWriter;
+        //@copy-c-declaration typedef GncFamCmdStateDataReader DataReader;
+        //@copy-c-declaration typedef GncFamCmdStateSeq seq;
+        //@copy-c-declaration #endif
+        //@copy-c-declaration typedef GncFamCmdState Type;
+
+        //@copy-declaration /** Force and torque */
+        public Wrench wrench;
+
+        //@copy-declaration /** Linear acceleration (wrench without estimated
+        //@copy-declaration   * mass)
+        //@copy-declaration   */
+        public Vec3d accel;
+
+        //@copy-declaration /** Angular acceleration (wrench without estimated
+        //@copy-declaration   * mass)
+        //@copy-declaration   */
+        public Vec3d alpha;
+
+        //@copy-declaration /** Status byte from GNC ICD */
+        public short status;
+
+        //@copy-declaration /** Position error */
+        public Vec3d position_error;
+
+        //@copy-declaration /** Integrated position error */
+        public Vec3d position_error_integrated;
+
+        //@copy-declaration /** Attitude error */
+        public Vec3d attitude_error;
+
+        //@copy-declaration /** Integrated attitude error */
+        public Vec3d attitude_error_integrated;
+
+        //@copy-declaration /** Magnitude of attitude error */
+        public float attitude_error_mag;
+
+        //@copy-declaration /** Control mode from GNC ICD */
+        public short control_mode;
+      };
+    };
+  };
+};

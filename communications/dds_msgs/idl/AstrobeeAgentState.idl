@@ -1,0 +1,162 @@
+/*
+ * Copyright (c) 2015 United States Government as represented by the 
+ * Administrator of the National Aeronautics and Space Administration.
+ * All Rights Reserved.
+ */
+
+#include "Message.idl"
+
+module rapid {
+  module ext {
+    module astrobee {
+
+      //@copy-declaration /**
+      //@copy-declaration  * Operating state of Astrobee
+      //@copy-declaration  * <ul>
+      //@copy-declaration  *   <li>OPERATING_STATE_READY: Robot is ready to take commands.
+      //@copy-declaration  *   <li>OPERATING_STATE_FAULT: Robot is executing a fault response
+      //@copy-declaration  *   <li>OPERATING_STATE_PLAN_EXECUTION: Robot is executing a loaded plan
+      //@copy-declaration  *   <li>OPERATING_STATE_TELEOPERATION: Robot is executing a teleop command
+      //@copy-declaration  *   <li>OPERATING_STATE_AUTO_RETURN: Robot returns to dock
+      //@copy-declaration  *   <li>OPERATING_STATE_GUEST_SCIENCE: Guest science has control.
+      //@copy-declaration  * </ul>
+      //@copy-declaration  */
+      enum OperatingState { 
+        OPERATING_STATE_READY,
+        OPERATING_STATE_PLAN_EXECUTION,
+        OPERATING_STATE_TELEOPERATION,
+        OPERATING_STATE_AUTO_RETURN,
+        OPERATING_STATE_FAULT
+      };
+
+      //@copy-declaration /**
+      //@copy-declaration  * Executing state of Astrobee
+      //@copy-declaration  * <ul>
+      //@copy-declaration  *   <li>EXECUTION_STATE_IDLE: Robot does not have a plan loaded.
+      //@copy-declaration  *   <li>EXECUTION_STATE_EXECUTING: Robot is executing a plan
+      //@copy-declaration  *   <li>EXECUTION_STATE_PAUSED: Robot is not executing a plan, but has a plan loaded and ready to resume
+      //@copy-declaration  *   <li>EXECUTION_STATE_ERROR: Robot was unable to load the plan
+      //@copy-declaration  * </ul>
+      //@copy-declaration  */
+      enum ExecutionState {
+        EXECUTION_STATE_IDLE,
+        EXECUTION_STATE_EXECUTING,
+        EXECUTION_STATE_PAUSED,
+        EXECUTION_STATE_ERROR
+      };
+
+      //@copy-declaration /**
+      //@copy-declaration  * Mobility state of Astrobee
+      //@copy-declaration  * <ul>
+      //@copy-declaration  *   <li>MOBILITY_STATE_DRIFTING: Robot is floating around in spaaaaace
+      //@copy-declaration  *   <li>MOBILITY_STATE_STOPPING: Robot is either stopping or stopped
+      //@copy-declaration  *   <li>MOBILITY_STATE_FLYING: Robot is flying around in spaaaaace
+      //@copy-declaration  *   <li>MOBILITY_STATE_DOCKING: Robot is either docking, docked, or undocking.
+      //@copy-declaration  *   <li>MOBILITY_STATE_PERCHING: Robot is either perching, perched, or unperching via the arm.
+      //@copy-declaration  * </ul>
+      //@copy-declaration  */
+      enum MobilityState {
+        MOBILITY_STATE_DRIFTING,
+        MOBILITY_STATE_STOPPING,
+        MOBILITY_STATE_FLYING,
+        MOBILITY_STATE_DOCKING,
+        MOBILITY_STATE_PERCHING
+      };
+
+      //@copy-c-declaration class AgentStateTypeSupport;
+      //@copy-c-declaration class AgentStateDataWriter;
+      //@copy-c-declaration class AgentStateDataReader;
+      //@copy-c-declaration struct AgentStateSeq;
+
+      //@copy-declaration /**
+      //@copy-declaration   * The state of Astrobee.
+      //@copy-declaration   */
+      valuetype AgentState : Message {
+        //@copy-c-declaration #if RTI_DDS_VERSION_MAJOR < 4 || (RTI_DDS_VERSION_MAJOR == 4  && RTI_DDS_VERSION_MINOR < 5) || (RTI_DDS_VERSION_MAJOR == 4  && RTI_DDS_VERSION_MINOR  == 5 && RTI_DDS_VERSION_RELEASE != 'f' )
+        //@copy-c-declaration typedef AgentStateTypeSupport TypeSupport;
+        //@copy-c-declaration typedef AgentStateDataWriter DataWriter;
+        //@copy-c-declaration typedef AgentStateDataReader DataReader;
+        //@copy-c-declaration typedef AgentStateSeq Seq;
+        //@copy-c-declaration #endif
+        //@copy-c-declaration typedef AgentState Type;
+
+        //@copy-declaration /**  @see OperatingState */
+        public OperatingState operatingState;
+
+        //@copy-declaration /**  @see ExecutionState */
+        public ExecutionState executionState;
+
+        //@copy-declaration /**  @see MobilityState */
+        public MobilityState mobilityState;
+
+        //@copy-declaration /**  For MOBILITY_STATE_PERCHING, 
+        //@copy-declaration   *  MOBILITY_STATE_STOPPING, and 
+        //@copy-declaration   *  MOBILITY_STATE_DOCKING, this specifies the 
+        //@copy-declaration   *  progress of the action. For docking, this value
+        //@copy-declaration   *  can be N to -N where N through 1 is docking, 
+        //@copy-declaration   *  0 is docked, and -1 through -N is undocking.
+        //@copy-declaration   *  For stopping, this value can be 1 or where 1 is
+        //@copy-declaration   *  stopping and 0 is stopped. For perching, this
+        //@copy-declaration   *  value can be N to -N where N through 1 is 
+        //@copy-declaration   *  perching, 0 is perched, and -1 through -N is
+        //@copy-declaration   *  unperching. In other states this field's value
+        //@copy-declaration   *  SHOULD be 0.
+        //@copy-declaration   */
+        public long subMobilityState;
+
+        //@copy-declaration /**  The Executing State of Guest Science mode of Astrobee,
+        //@copy-declaration   *  this is only valid if the Operating State is
+        //@copy-declaration   *  OPERATING_STATE_GUEST_SCIENCE
+        //@copy-declaration   */
+        public ExecutionState guestScienceState;
+
+        //@copy-declaration /**  For MOBILITY_STATE_PERCHING and MOBILITY_STATE_DOCKING, 
+        //@copy-declaration   *  this specifies the proximity to the target.  In other states
+        //@copy-declaration   *  this field's value SHOULD be 0.
+        //@copy-declaration   */
+        public float proximity;
+
+      	//@copy-declaration /**  Name of configuration, i.e. Nominal, 
+        //@copy-declaration   *  IgnoreObstacles, Faceforward, Quiet, etc.*/
+      	public String32 profileName;
+
+        //@copy-declaration /**  Defines OMC gains, hard limits, and tolerances
+        //@copy-declaration   *  i.e. Nominal, quiet, aggressive, etc. */
+        public String32 flightMode;
+
+        //@copy-declaration /**  Target speed in m/s */
+        public float targetLinearVelocity;
+
+        //@copy-declaration /**  Target acceleration in m/s/s */
+        public float targetLinearAccel;
+
+      	//@copy-declaration /**  Target turning speed in rad/s   */
+        public float targetAngularVelocity;
+
+        //@copy-declaration /**  Target turning acceleration in rad/s/s  */
+        public float targetAngularAccel;
+
+        //@copy-declaration /**  The operational hard limit on the collision distance.  */
+        public float collisionDistance;
+
+	      //@copy-declaration /**  Allow Astrobee to fly in a direction it does not have cameras pointing  */
+	      public boolean enableHolonomic;
+  
+	      //@copy-declaration /**  Set to false to disable checking for obstacles  */
+        public boolean checkObstacles;
+
+      	//@copy-declaration /**  Set to false to disable keepout checks  */
+	      public boolean checkKeepouts;
+
+        //@copy-declaration /**  Setting this to true allows Astrobee to 
+        //@copy-declaration   *  auto return when battery gets low and there is
+        //@copy-declaration   *  a LOS */
+        public boolean enableAutoReturn;
+
+        //@copy-declaration /**  Number of seconds since the Unix Epoch.  */
+        public long bootTime;
+      };
+
+    };
+  };
+};

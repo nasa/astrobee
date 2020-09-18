@@ -1,0 +1,472 @@
+
+/*
+ * Copyright (c) 2015 United States Government as represented by the
+ * Administrator of the National Aeronautics and Space Administration.
+ * All Rights Reserved.
+ */
+
+#include "BaseTypes.idl"
+
+/**
+ * \file
+ *
+ * \brief AstrobeeCommandConstants.idl extends the RAPID CommandConstants.idl file
+ * with Astrobee-specific commands.
+ *
+ * \details Refer to RAPID CommandConstants.idl for interpretation.
+ *
+ * \ingroup idlfiles
+ */
+module rapid {
+  module ext {
+    module astrobee {
+      const rapid::String32 ACCESSCONTROL = "AccessControl";
+
+      //@copy-declaration /** Grab control of an agent */
+      const rapid::String32 ACCESSCONTROL_METHOD_GRAB_CONTROL = "grabControl";
+
+      const rapid::String32 ACCESSCONTROL_METHOD_GRAB_CONTROL_PARAM_COOKIE = "cookie";
+      const rapid::DataType ACCESSCONTROL_METHOD_GRAB_CONTROL_DTYPE_COOKIE = rapid::RAPID_STRING;
+
+      const rapid::String32 ADMIN = "Admin";
+
+      const rapid::String32 ADMIN_METHOD_FAULT = "fault";
+
+      //@copy-declaration /** Initialize bias. */
+      const rapid::String32 ADMIN_METHOD_INITIALIZE_BIAS = "initializeBias";
+
+      //@copy-declaration /** Command used to load a nodelet in the system. Doesn't work with nodes running on the HLP. */
+      const rapid::String32 ADMIN_METHOD_LOAD_NODELET = "loadNodelet";
+
+      const rapid::String32 ADMIN_METHOD_LOAD_NODELET_PARAM_NODELET_NAME = "nodeletName";
+      const rapid::DataType ADMIN_METHOD_LOAD_NODELET_DTYPE_NODELET_NAME = rapid::RAPID_STRING;
+
+      //@copy-declaration /** Type of nodelet (namespace/classname). The type is specified in the system monitor config file so you may not need to specify this. */
+      const rapid::String32 ADMIN_METHOD_LOAD_NODELET_PARAM_TYPE = "type";
+      const rapid::DataType ADMIN_METHOD_LOAD_NODELET_DTYPE_TYPE = rapid::RAPID_STRING;
+
+      //@copy-declaration /** Name of nodelet manager. This should be unnecessary since the system monitor should have received a heartbeat at startup from the node and the nodelet manager name is in the heartbeat. The system monitor saves it and should be able to use it to load nodelets. If commands fails, you may want to try to specify it. */
+      const rapid::String32 ADMIN_METHOD_LOAD_NODELET_PARAM_MANAGER_NAME = "managerName";
+      const rapid::DataType ADMIN_METHOD_LOAD_NODELET_DTYPE_MANAGER_NAME = rapid::RAPID_STRING;
+
+      //@copy-declaration /** Can be left blank. */
+      const rapid::String32 ADMIN_METHOD_LOAD_NODELET_PARAM_BOND_ID = "bondId";
+      const rapid::DataType ADMIN_METHOD_LOAD_NODELET_DTYPE_BOND_ID = rapid::RAPID_STRING;
+
+      const rapid::String32 ADMIN_METHOD_REACQUIRE_POSITION = "reacquirePosition";
+
+      //@copy-declaration /** Reset ekf. */
+      const rapid::String32 ADMIN_METHOD_RESET_EKF = "resetEkf";
+
+      //@copy-declaration /** This command is used to switch between localization pipelines. */
+      const rapid::String32 ADMIN_METHOD_SWITCH_LOCALIZATION = "switchLocalization";
+
+      //@copy-declaration /** Specify which pipeline to switch to. */
+      const rapid::String32 ADMIN_METHOD_SWITCH_LOCALIZATION_PARAM_MODE = "mode";
+      const rapid::DataType ADMIN_METHOD_SWITCH_LOCALIZATION_DTYPE_MODE = rapid::RAPID_STRING;
+
+      //@copy-declaration /** Command used to unload a nodelet in the system. Doesn't work with nodes running on the HLP. With great power comes great responsibility! Don't unload a nodelet crucial to the system!! */
+      const rapid::String32 ADMIN_METHOD_UNLOAD_NODELET = "unloadNodelet";
+
+      const rapid::String32 ADMIN_METHOD_UNLOAD_NODELET_PARAM_NODELET_NAME = "nodeletName";
+      const rapid::DataType ADMIN_METHOD_UNLOAD_NODELET_DTYPE_NODELET_NAME = rapid::RAPID_STRING;
+
+      //@copy-declaration /** This should be unnecessary since the system monitor should have received a heartbeat at startup from the node and the heartbeat contains thenodelet manager name. If the command fails, you may want to try to specify it. */
+      const rapid::String32 ADMIN_METHOD_UNLOAD_NODELET_PARAM_MANAGER_NAME = "managerName";
+      const rapid::DataType ADMIN_METHOD_UNLOAD_NODELET_DTYPE_MANAGER_NAME = rapid::RAPID_STRING;
+
+      //@copy-declaration /** This command is used to unterminate the robot. It will only reset the terminate flag but will not start up the pmcs or repower the payloads. */
+      const rapid::String32 ADMIN_METHOD_UNTERMINATE = "unterminate";
+
+      //@copy-declaration /** This command wakes astrobee from a hibernated state into a nominal state. */
+      const rapid::String32 ADMIN_METHOD_WAKE = "wake";
+
+      const rapid::String32 ADMIN_METHOD_WAKE_PARAM_BERTH_NUMBER = "berthNumber";
+      const rapid::DataType ADMIN_METHOD_WAKE_DTYPE_BERTH_NUMBER = rapid::RAPID_INT;
+
+      //@copy-declaration /** This command wakes astrobee from a hibernated state into a safe state. */
+      const rapid::String32 ADMIN_METHOD_WAKE_SAFE = "wakeSafe";
+
+      const rapid::String32 ADMIN_METHOD_WAKE_SAFE_PARAM_BERTH_NUMBER = "berthNumber";
+      const rapid::DataType ADMIN_METHOD_WAKE_SAFE_DTYPE_BERTH_NUMBER = rapid::RAPID_INT;
+
+      //@copy-declaration /** Erases everything on the hlp. */
+      const rapid::String32 ADMIN_METHOD_WIPE_HLP = "wipeHlp";
+
+      const rapid::String32 ARM = "Arm";
+
+      //@copy-declaration /** Move arm while perched to control camera angle */
+      const rapid::String32 ARM_METHOD_ARM_PAN_AND_TILT = "armPanAndTilt";
+
+      const rapid::String32 ARM_METHOD_ARM_PAN_AND_TILT_PARAM_PAN = "pan";
+      const rapid::DataType ARM_METHOD_ARM_PAN_AND_TILT_DTYPE_PAN = rapid::RAPID_FLOAT;
+
+      const rapid::String32 ARM_METHOD_ARM_PAN_AND_TILT_PARAM_TILT = "tilt";
+      const rapid::DataType ARM_METHOD_ARM_PAN_AND_TILT_DTYPE_TILT = rapid::RAPID_FLOAT;
+
+      //@copy-declaration /** Whether to perform a pan, tilt, or both. */
+      const rapid::String32 ARM_METHOD_ARM_PAN_AND_TILT_PARAM_WHICH = "which";
+      const rapid::DataType ARM_METHOD_ARM_PAN_AND_TILT_DTYPE_WHICH = rapid::RAPID_STRING;
+
+      //@copy-declaration /** Open or close gripper */
+      const rapid::String32 ARM_METHOD_GRIPPER_CONTROL = "gripperControl";
+
+      const rapid::String32 ARM_METHOD_GRIPPER_CONTROL_PARAM_OPEN = "open";
+      const rapid::DataType ARM_METHOD_GRIPPER_CONTROL_DTYPE_OPEN = rapid::RAPID_BOOL;
+
+      const rapid::String32 ARM_METHOD_STOP_ARM = "stopArm";
+
+      const rapid::String32 ARM_METHOD_STOW_ARM = "stowArm";
+
+      const rapid::String32 DATA = "Data";
+
+      //@copy-declaration /** Clear data */
+      const rapid::String32 DATA_METHOD_CLEAR_DATA = "clearData";
+
+      const rapid::String32 DATA_METHOD_CLEAR_DATA_PARAM_DATA_METHOD = "dataMethod";
+      const rapid::DataType DATA_METHOD_CLEAR_DATA_DTYPE_DATA_METHOD = rapid::RAPID_STRING;
+
+      //@copy-declaration /** Start downloading data */
+      const rapid::String32 DATA_METHOD_DOWNLOAD_DATA = "downloadData";
+
+      const rapid::String32 DATA_METHOD_DOWNLOAD_DATA_PARAM_DATA_METHOD = "dataMethod";
+      const rapid::DataType DATA_METHOD_DOWNLOAD_DATA_DTYPE_DATA_METHOD = rapid::RAPID_STRING;
+
+      //@copy-declaration /** Set data-to-disk configuration to be the data-to-disk file most recently uplinked; the file specifies which data to save to free flyer onboard storage, and at what rates */
+      const rapid::String32 DATA_METHOD_SET_DATA_TO_DISK = "setDataToDisk";
+
+      //@copy-declaration /** Starts the recording of the topics configured with the set data to disk command. */
+      const rapid::String32 DATA_METHOD_START_RECORDING = "startRecording";
+
+      const rapid::String32 DATA_METHOD_START_RECORDING_PARAM_DESCRIPTION = "description";
+      const rapid::DataType DATA_METHOD_START_RECORDING_DTYPE_DESCRIPTION = rapid::RAPID_STRING;
+
+      //@copy-declaration /** Stop downloading data */
+      const rapid::String32 DATA_METHOD_STOP_DOWNLOAD = "stopDownload";
+
+      const rapid::String32 DATA_METHOD_STOP_DOWNLOAD_PARAM_DATA_METHOD = "dataMethod";
+      const rapid::DataType DATA_METHOD_STOP_DOWNLOAD_DTYPE_DATA_METHOD = rapid::RAPID_STRING;
+
+      //@copy-declaration /** Stops the recording of the topics configured with the set data to disk command. */
+      const rapid::String32 DATA_METHOD_STOP_RECORDING = "stopRecording";
+
+      const rapid::String32 GUESTSCIENCE = "GuestScience";
+
+      //@copy-declaration /** Pass data to guest science APK */
+      const rapid::String32 GUESTSCIENCE_METHOD_CUSTOM_GUEST_SCIENCE = "customGuestScience";
+
+      //@copy-declaration /** Specify which guest science APK to send the data to */
+      const rapid::String32 GUESTSCIENCE_METHOD_CUSTOM_GUEST_SCIENCE_PARAM_APK_NAME = "apkName";
+      const rapid::DataType GUESTSCIENCE_METHOD_CUSTOM_GUEST_SCIENCE_DTYPE_APK_NAME = rapid::RAPID_STRING;
+
+      //@copy-declaration /** The data to send (e.g. could be JSON-encoded data structure) */
+      const rapid::String32 GUESTSCIENCE_METHOD_CUSTOM_GUEST_SCIENCE_PARAM_COMMAND = "command";
+      const rapid::DataType GUESTSCIENCE_METHOD_CUSTOM_GUEST_SCIENCE_DTYPE_COMMAND = rapid::RAPID_STRING;
+
+      //@copy-declaration /** Start guest science APK */
+      const rapid::String32 GUESTSCIENCE_METHOD_START_GUEST_SCIENCE = "startGuestScience";
+
+      //@copy-declaration /** Specify which guest science APK to start */
+      const rapid::String32 GUESTSCIENCE_METHOD_START_GUEST_SCIENCE_PARAM_APK_NAME = "apkName";
+      const rapid::DataType GUESTSCIENCE_METHOD_START_GUEST_SCIENCE_DTYPE_APK_NAME = rapid::RAPID_STRING;
+
+      //@copy-declaration /** Terminate guest science APK */
+      const rapid::String32 GUESTSCIENCE_METHOD_STOP_GUEST_SCIENCE = "stopGuestScience";
+
+      //@copy-declaration /** Specify which guest science APK to terminate */
+      const rapid::String32 GUESTSCIENCE_METHOD_STOP_GUEST_SCIENCE_PARAM_APK_NAME = "apkName";
+      const rapid::DataType GUESTSCIENCE_METHOD_STOP_GUEST_SCIENCE_DTYPE_APK_NAME = rapid::RAPID_STRING;
+
+      const rapid::String32 MOBILITY = "Mobility";
+
+      const rapid::String32 MOBILITY_METHOD_AUTO_RETURN = "autoReturn";
+
+      //@copy-declaration /** Dock Astrobee. Must meet dock approach preconditions (positioned at dock approach point, etc). */
+      const rapid::String32 MOBILITY_METHOD_DOCK = "dock";
+
+      //@copy-declaration /** Berth number can only be 1 or 2. */
+      const rapid::String32 MOBILITY_METHOD_DOCK_PARAM_BERTH_NUMBER = "berthNumber";
+      const rapid::DataType MOBILITY_METHOD_DOCK_DTYPE_BERTH_NUMBER = rapid::RAPID_INT;
+
+      //@copy-declaration /** Stop propulsion impeller motors */
+      const rapid::String32 MOBILITY_METHOD_IDLE_PROPULSION = "idlePropulsion";
+
+      const rapid::String32 MOBILITY_METHOD_PERCH = "perch";
+
+      //@copy-declaration /** It takes the prop modules a couple of seconds to ramp up to the requested flight mode if not already at that flight mode. This command ramps up the prop modules so that when a move command is issued, it will execute right away. This doesn't need to be used for nominal use but may be used/needed for astrobee synchronization. */
+      const rapid::String32 MOBILITY_METHOD_PREPARE = "prepare";
+
+      //@copy-declaration /** Undock Astrobee */
+      const rapid::String32 MOBILITY_METHOD_UNDOCK = "undock";
+
+      const rapid::String32 MOBILITY_METHOD_UNPERCH = "unperch";
+
+      const rapid::String32 PLAN = "Plan";
+
+      //@copy-declaration /** Pause the running plan */
+      const rapid::String32 PLAN_METHOD_PAUSE_PLAN = "pausePlan";
+
+      //@copy-declaration /** Run the loaded plan */
+      const rapid::String32 PLAN_METHOD_RUN_PLAN = "runPlan";
+
+      //@copy-declaration /** Set active plan to be the plan file that was most recently uploaded */
+      const rapid::String32 PLAN_METHOD_SET_PLAN = "setPlan";
+
+      //@copy-declaration /** Skip next trajectory or command in the plan */
+      const rapid::String32 PLAN_METHOD_SKIP_PLAN_STEP = "skipPlanStep";
+
+      //@copy-declaration /** Pause plan for specified duration. Do nothing if docked/perched, otherwise station keep. */
+      const rapid::String32 PLAN_METHOD_WAIT = "wait";
+
+      //@copy-declaration /** seconds to pause */
+      const rapid::String32 PLAN_METHOD_WAIT_PARAM_DURATION = "duration";
+      const rapid::DataType PLAN_METHOD_WAIT_DTYPE_DURATION = rapid::RAPID_FLOAT;
+
+      const rapid::String32 POWER = "Power";
+
+      //@copy-declaration /** Power off an item within Astrobee */
+      const rapid::String32 POWER_METHOD_POWER_OFF_ITEM = "powerOffItem";
+
+      //@copy-declaration /** Any component within Astrobee that can be turned on or off. */
+      const rapid::String32 POWER_METHOD_POWER_OFF_ITEM_PARAM_WHICH = "which";
+      const rapid::DataType POWER_METHOD_POWER_OFF_ITEM_DTYPE_WHICH = rapid::RAPID_STRING;
+
+      //@copy-declaration /** Power on an item within Astrobee */
+      const rapid::String32 POWER_METHOD_POWER_ON_ITEM = "powerOnItem";
+
+      //@copy-declaration /** Any component within Astrobee that can be turned on or off. */
+      const rapid::String32 POWER_METHOD_POWER_ON_ITEM_PARAM_WHICH = "which";
+      const rapid::DataType POWER_METHOD_POWER_ON_ITEM_DTYPE_WHICH = rapid::RAPID_STRING;
+
+      const rapid::String32 SETTINGS = "Settings";
+
+      //@copy-declaration /** Generic command used to make up a command after the Control Station freeze. */
+      const rapid::String32 SETTINGS_METHOD_GENERIC_COMMAND = "genericCommand";
+
+      const rapid::String32 SETTINGS_METHOD_GENERIC_COMMAND_PARAM_COMMAND_NAME = "commandName";
+      const rapid::DataType SETTINGS_METHOD_GENERIC_COMMAND_DTYPE_COMMAND_NAME = rapid::RAPID_STRING;
+
+      const rapid::String32 SETTINGS_METHOD_GENERIC_COMMAND_PARAM_PARAM = "param";
+      const rapid::DataType SETTINGS_METHOD_GENERIC_COMMAND_DTYPE_PARAM = rapid::RAPID_STRING;
+
+      //@copy-declaration /** Set camera parameters. */
+      const rapid::String32 SETTINGS_METHOD_SET_CAMERA = "setCamera";
+
+      //@copy-declaration /** Camera name */
+      const rapid::String32 SETTINGS_METHOD_SET_CAMERA_PARAM_CAMERA_NAME = "cameraName";
+      const rapid::DataType SETTINGS_METHOD_SET_CAMERA_DTYPE_CAMERA_NAME = rapid::RAPID_STRING;
+
+      //@copy-declaration /** Desired camera mode. Either streaming or recording. */
+      const rapid::String32 SETTINGS_METHOD_SET_CAMERA_PARAM_CAMERA_MODE = "cameraMode";
+      const rapid::DataType SETTINGS_METHOD_SET_CAMERA_DTYPE_CAMERA_MODE = rapid::RAPID_STRING;
+
+      //@copy-declaration /** Desired frame size in pixels. */
+      const rapid::String32 SETTINGS_METHOD_SET_CAMERA_PARAM_RESOLUTION = "resolution";
+      const rapid::DataType SETTINGS_METHOD_SET_CAMERA_DTYPE_RESOLUTION = rapid::RAPID_STRING;
+
+      //@copy-declaration /** Applies to both modes of camera. */
+      const rapid::String32 SETTINGS_METHOD_SET_CAMERA_PARAM_FRAME_RATE = "frameRate";
+      const rapid::DataType SETTINGS_METHOD_SET_CAMERA_DTYPE_FRAME_RATE = rapid::RAPID_FLOAT;
+
+      //@copy-declaration /** Only for sci camera; related to quality, may change name to bitrate. */
+      const rapid::String32 SETTINGS_METHOD_SET_CAMERA_PARAM_BANDWIDTH = "bandwidth";
+      const rapid::DataType SETTINGS_METHOD_SET_CAMERA_DTYPE_BANDWIDTH = rapid::RAPID_FLOAT;
+
+      //@copy-declaration /** Set camera to record video. */
+      const rapid::String32 SETTINGS_METHOD_SET_CAMERA_RECORDING = "setCameraRecording";
+
+      //@copy-declaration /** Camera name */
+      const rapid::String32 SETTINGS_METHOD_SET_CAMERA_RECORDING_PARAM_CAMERA_NAME = "cameraName";
+      const rapid::DataType SETTINGS_METHOD_SET_CAMERA_RECORDING_DTYPE_CAMERA_NAME = rapid::RAPID_STRING;
+
+      //@copy-declaration /** Record camera video. */
+      const rapid::String32 SETTINGS_METHOD_SET_CAMERA_RECORDING_PARAM_RECORD = "record";
+      const rapid::DataType SETTINGS_METHOD_SET_CAMERA_RECORDING_DTYPE_RECORD = rapid::RAPID_BOOL;
+
+      //@copy-declaration /** Set streaming camera video to the ground. */
+      const rapid::String32 SETTINGS_METHOD_SET_CAMERA_STREAMING = "setCameraStreaming";
+
+      //@copy-declaration /** Camera name */
+      const rapid::String32 SETTINGS_METHOD_SET_CAMERA_STREAMING_PARAM_CAMERA_NAME = "cameraName";
+      const rapid::DataType SETTINGS_METHOD_SET_CAMERA_STREAMING_DTYPE_CAMERA_NAME = rapid::RAPID_STRING;
+
+      //@copy-declaration /** Send live video to the ground. */
+      const rapid::String32 SETTINGS_METHOD_SET_CAMERA_STREAMING_PARAM_STREAM = "stream";
+      const rapid::DataType SETTINGS_METHOD_SET_CAMERA_STREAMING_DTYPE_STREAM = rapid::RAPID_BOOL;
+
+      //@copy-declaration /** Command to turn on and off the obstacle detector */
+      const rapid::String32 SETTINGS_METHOD_SET_CHECK_OBSTACLES = "setCheckObstacles";
+
+      const rapid::String32 SETTINGS_METHOD_SET_CHECK_OBSTACLES_PARAM_CHECK_OBSTACLES = "checkObstacles";
+      const rapid::DataType SETTINGS_METHOD_SET_CHECK_OBSTACLES_DTYPE_CHECK_OBSTACLES = rapid::RAPID_BOOL;
+
+      //@copy-declaration /** Command to turn on and off checking keepout zones */
+      const rapid::String32 SETTINGS_METHOD_SET_CHECK_ZONES = "setCheckZones";
+
+      const rapid::String32 SETTINGS_METHOD_SET_CHECK_ZONES_PARAM_CHECK_ZONES = "checkZones";
+      const rapid::DataType SETTINGS_METHOD_SET_CHECK_ZONES_DTYPE_CHECK_ZONES = rapid::RAPID_BOOL;
+
+      //@copy-declaration /** Command to allow auto return */
+      const rapid::String32 SETTINGS_METHOD_SET_ENABLE_AUTO_RETURN = "setEnableAutoReturn";
+
+      const rapid::String32 SETTINGS_METHOD_SET_ENABLE_AUTO_RETURN_PARAM_ENABLE_AUTO_RETURN = "enableAutoReturn";
+      const rapid::DataType SETTINGS_METHOD_SET_ENABLE_AUTO_RETURN_DTYPE_ENABLE_AUTO_RETURN = rapid::RAPID_BOOL;
+
+      //@copy-declaration /** This command is only used for segments in a plan. Currently GDS does not handle timestamps since it is so tricky to get them right. So plan timestamps start at 0 and are not used by mobility since the Astrobee's system time is not 0. Thus in the nominal case set enable immediate should be set to true so that every segment sent to the mobility subsystem will be started immediately. If someone wants to do synchronized Astrobee movement, they can create plans by hand and have the timestamps start in the future. They will also have to set enable immediate to false so that the mobility system abides by the timestamp. Please note that these plans need to be started close to the first timestamp. If they are not, you could end up waiting a long time for the robot to start moving. Also the timestamp cannot be in the past or the segment will be skipped. It is probably easier to juse use GDS plan. To do this, you will want to upload the plans to the robots, use the prepare command to get the robots ready to move, and then run the plans. There could be up to a half of a second delay between the robots starting their plans. See the set time sync command. Astrobee to Astrobee communication is in the works and may solve synchronizing Astrobees in a better way. */
+      const rapid::String32 SETTINGS_METHOD_SET_ENABLE_IMMEDIATE = "setEnableImmediate";
+
+      const rapid::String32 SETTINGS_METHOD_SET_ENABLE_IMMEDIATE_PARAM_ENABLE_IMMEDIATE = "enableImmediate";
+      const rapid::DataType SETTINGS_METHOD_SET_ENABLE_IMMEDIATE_DTYPE_ENABLE_IMMEDIATE = rapid::RAPID_BOOL;
+
+      const rapid::String32 SETTINGS_METHOD_SET_FLASHLIGHT_BRIGHTNESS = "setFlashlightBrightness";
+
+      //@copy-declaration /** Specify which flashlight. */
+      const rapid::String32 SETTINGS_METHOD_SET_FLASHLIGHT_BRIGHTNESS_PARAM_WHICH = "which";
+      const rapid::DataType SETTINGS_METHOD_SET_FLASHLIGHT_BRIGHTNESS_DTYPE_WHICH = rapid::RAPID_STRING;
+
+      //@copy-declaration /** Brightness percentage between 0 - 1 */
+      const rapid::String32 SETTINGS_METHOD_SET_FLASHLIGHT_BRIGHTNESS_PARAM_BRIGHTNESS = "brightness";
+      const rapid::DataType SETTINGS_METHOD_SET_FLASHLIGHT_BRIGHTNESS_DTYPE_BRIGHTNESS = rapid::RAPID_FLOAT;
+
+      //@copy-declaration /** Command to allow blind flying */
+      const rapid::String32 SETTINGS_METHOD_SET_HOLONOMIC_MODE = "setHolonomicMode";
+
+      const rapid::String32 SETTINGS_METHOD_SET_HOLONOMIC_MODE_PARAM_ENABLE_HOLONOMIC = "enableHolonomic";
+      const rapid::DataType SETTINGS_METHOD_SET_HOLONOMIC_MODE_DTYPE_ENABLE_HOLONOMIC = rapid::RAPID_BOOL;
+
+      //@copy-declaration /** Set mass and inertia matrix for Astrobee control */
+      const rapid::String32 SETTINGS_METHOD_SET_INERTIA = "setInertia";
+
+      const rapid::String32 SETTINGS_METHOD_SET_INERTIA_PARAM_NAME = "name";
+      const rapid::DataType SETTINGS_METHOD_SET_INERTIA_DTYPE_NAME = rapid::RAPID_STRING;
+
+      const rapid::String32 SETTINGS_METHOD_SET_INERTIA_PARAM_MASS = "mass";
+      const rapid::DataType SETTINGS_METHOD_SET_INERTIA_DTYPE_MASS = rapid::RAPID_FLOAT;
+
+      //@copy-declaration /** The center of mass of Astrobee. */
+      const rapid::String32 SETTINGS_METHOD_SET_INERTIA_PARAM_CENTER_OF_MASS = "centerOfMass";
+      const rapid::DataType SETTINGS_METHOD_SET_INERTIA_DTYPE_CENTER_OF_MASS = rapid::RAPID_VEC3d;
+
+      //@copy-declaration /** The moment of inertia tensor. Must be a symmetric matrix. */
+      const rapid::String32 SETTINGS_METHOD_SET_INERTIA_PARAM_MATRIX = "matrix";
+      const rapid::DataType SETTINGS_METHOD_SET_INERTIA_DTYPE_MATRIX = rapid::RAPID_MAT33f;
+
+      //@copy-declaration /** Change the value of Astrobee operating limits */
+      const rapid::String32 SETTINGS_METHOD_SET_OPERATING_LIMITS = "setOperatingLimits";
+
+      const rapid::String32 SETTINGS_METHOD_SET_OPERATING_LIMITS_PARAM_PROFILE_NAME = "profileName";
+      const rapid::DataType SETTINGS_METHOD_SET_OPERATING_LIMITS_DTYPE_PROFILE_NAME = rapid::RAPID_STRING;
+
+      //@copy-declaration /** Defines GN&C gains, hard limits, tolerances, etc. */
+      const rapid::String32 SETTINGS_METHOD_SET_OPERATING_LIMITS_PARAM_FLIGHT_MODE = "flightMode";
+      const rapid::DataType SETTINGS_METHOD_SET_OPERATING_LIMITS_DTYPE_FLIGHT_MODE = rapid::RAPID_STRING;
+
+      //@copy-declaration /** The maximum linear velocity to target while translating */
+      const rapid::String32 SETTINGS_METHOD_SET_OPERATING_LIMITS_PARAM_TARGET_LINEAR_VELOCITY = "targetLinearVelocity";
+      const rapid::DataType SETTINGS_METHOD_SET_OPERATING_LIMITS_DTYPE_TARGET_LINEAR_VELOCITY = rapid::RAPID_FLOAT;
+
+      //@copy-declaration /** The maximum linear acceleration to target while translating */
+      const rapid::String32 SETTINGS_METHOD_SET_OPERATING_LIMITS_PARAM_TARGET_LINEAR_ACCELERATION = "targetLinearAcceleration";
+      const rapid::DataType SETTINGS_METHOD_SET_OPERATING_LIMITS_DTYPE_TARGET_LINEAR_ACCELERATION = rapid::RAPID_FLOAT;
+
+      //@copy-declaration /** The maximum angular velocity to target while rotating */
+      const rapid::String32 SETTINGS_METHOD_SET_OPERATING_LIMITS_PARAM_TARGET_ANGULAR_VELOCITY = "targetAngularVelocity";
+      const rapid::DataType SETTINGS_METHOD_SET_OPERATING_LIMITS_DTYPE_TARGET_ANGULAR_VELOCITY = rapid::RAPID_FLOAT;
+
+      //@copy-declaration /** The maximum angular acceleration to target while rotating */
+      const rapid::String32 SETTINGS_METHOD_SET_OPERATING_LIMITS_PARAM_TARGET_ANGULAR_ACCELERATION = "targetAngularAcceleration";
+      const rapid::DataType SETTINGS_METHOD_SET_OPERATING_LIMITS_DTYPE_TARGET_ANGULAR_ACCELERATION = rapid::RAPID_FLOAT;
+
+      //@copy-declaration /** Minimum distance margin to maintain away from obstacles */
+      const rapid::String32 SETTINGS_METHOD_SET_OPERATING_LIMITS_PARAM_COLLISION_DISTANCE = "collisionDistance";
+      const rapid::DataType SETTINGS_METHOD_SET_OPERATING_LIMITS_DTYPE_COLLISION_DISTANCE = rapid::RAPID_FLOAT;
+
+      //@copy-declaration /** This command is used to switch planners. */
+      const rapid::String32 SETTINGS_METHOD_SET_PLANNER = "setPlanner";
+
+      //@copy-declaration /** Specify which planner to switch to. */
+      const rapid::String32 SETTINGS_METHOD_SET_PLANNER_PARAM_PLANNER = "planner";
+      const rapid::DataType SETTINGS_METHOD_SET_PLANNER_DTYPE_PLANNER = rapid::RAPID_STRING;
+
+      //@copy-declaration /** Change the frequency at which one type of telemetry is sent to GDS */
+      const rapid::String32 SETTINGS_METHOD_SET_TELEMETRY_RATE = "setTelemetryRate";
+
+      const rapid::String32 SETTINGS_METHOD_SET_TELEMETRY_RATE_PARAM_TELEMETRY_NAME = "telemetryName";
+      const rapid::DataType SETTINGS_METHOD_SET_TELEMETRY_RATE_DTYPE_TELEMETRY_NAME = rapid::RAPID_STRING;
+
+      const rapid::String32 SETTINGS_METHOD_SET_TELEMETRY_RATE_PARAM_RATE = "rate";
+      const rapid::DataType SETTINGS_METHOD_SET_TELEMETRY_RATE_DTYPE_RATE = rapid::RAPID_FLOAT;
+
+      //@copy-declaration /** This command is used to help with Astrobee synchronization. It will try to account for the delay in communication between the ground and space and the time it takes to plan and validate a segment. This will hopefully result in two Astrobees starting to move at the same time. */
+      const rapid::String32 SETTINGS_METHOD_SET_TIME_SYNC = "setTimeSync";
+
+      const rapid::String32 SETTINGS_METHOD_SET_TIME_SYNC_PARAM_SET_TIME_SYNC = "setTimeSync";
+      const rapid::DataType SETTINGS_METHOD_SET_TIME_SYNC_DTYPE_SET_TIME_SYNC = rapid::RAPID_BOOL;
+
+      //@copy-declaration /** Set active keepout zones to be the zones file that was most recently uploaded */
+      const rapid::String32 SETTINGS_METHOD_SET_ZONES = "setZones";
+
+      const rapid::String32 ADMIN_LOCALIZATION_MODE_NONE = "None";
+      const rapid::String32 ADMIN_LOCALIZATION_MODE_MAPPED_LANDMARKS = "MappedLandmarks";
+      const rapid::String32 ADMIN_LOCALIZATION_MODE_ARTAGS = "ARTags";
+      const rapid::String32 ADMIN_LOCALIZATION_MODE_HANDRAIL = "Handrail";
+      const rapid::String32 ADMIN_LOCALIZATION_MODE_PERCH = "Perch";
+      const rapid::String32 ADMIN_LOCALIZATION_MODE_TRUTH = "Truth";
+
+      const rapid::String32 ARM_ACTION_TYPE_PAN = "Pan";
+      const rapid::String32 ARM_ACTION_TYPE_TILT = "Tilt";
+      const rapid::String32 ARM_ACTION_TYPE_BOTH = "Both";
+
+      const rapid::String32 DATA_DOWNLOAD_METHOD_IMMEDIATE = "Immediate";
+      const rapid::String32 DATA_DOWNLOAD_METHOD_DELAYED = "Delayed";
+
+      const rapid::String32 POWER_POWERED_COMPONENT_LASER_POINTER = "Laser Pointer";
+      const rapid::String32 POWER_POWERED_COMPONENT_PAYLOAD_TOP_AFT = "Payload Top Aft";
+      const rapid::String32 POWER_POWERED_COMPONENT_PAYLOAD_BOTTOM_AFT = "Payload Bottom Aft";
+      const rapid::String32 POWER_POWERED_COMPONENT_PAYLOAD_BOTTOM_FRONT = "Payload Bottom Front";
+      const rapid::String32 POWER_POWERED_COMPONENT_PMCS_AND_SIGNAL_LIGHTS = "PMC";
+
+      const rapid::String32 SETTINGS_CAMERA_MODE_BOTH = "Both";
+      const rapid::String32 SETTINGS_CAMERA_MODE_RECORDING = "Recording";
+      const rapid::String32 SETTINGS_CAMERA_MODE_STREAMING = "Streaming";
+
+      const rapid::String32 SETTINGS_CAMERA_NAME_SCI = "Science";
+      const rapid::String32 SETTINGS_CAMERA_NAME_NAV = "Navigation";
+      const rapid::String32 SETTINGS_CAMERA_NAME_HAZ = "Hazard";
+      const rapid::String32 SETTINGS_CAMERA_NAME_DOCK = "Dock";
+      const rapid::String32 SETTINGS_CAMERA_NAME_PERCH = "Perch";
+
+      const rapid::String32 SETTINGS_CAMERA_RESOLUTION_224X171 = "224x171";
+      const rapid::String32 SETTINGS_CAMERA_RESOLUTION_320X240 = "320x240";
+      const rapid::String32 SETTINGS_CAMERA_RESOLUTION_480X270 = "480x270";
+      const rapid::String32 SETTINGS_CAMERA_RESOLUTION_640X480 = "640x480";
+      const rapid::String32 SETTINGS_CAMERA_RESOLUTION_960X540 = "960x540";
+      const rapid::String32 SETTINGS_CAMERA_RESOLUTION_1024X768 = "1024x768";
+      const rapid::String32 SETTINGS_CAMERA_RESOLUTION_1280X720 = "1280x720";
+      const rapid::String32 SETTINGS_CAMERA_RESOLUTION_1280X960 = "1280x960";
+      const rapid::String32 SETTINGS_CAMERA_RESOLUTION_1920X1080 = "1920x1080";
+
+      const rapid::String32 SETTINGS_FLASHLIGHT_LOCATION_BACK = "Back";
+      const rapid::String32 SETTINGS_FLASHLIGHT_LOCATION_FRONT = "Front";
+
+      const rapid::String32 SETTINGS_FLIGHT_MODE_NOMINAL = "Nominal";
+      const rapid::String32 SETTINGS_FLIGHT_MODE_DIFFICULT = "Difficult";
+      const rapid::String32 SETTINGS_FLIGHT_MODE_QUIET = "Quiet";
+      const rapid::String32 SETTINGS_FLIGHT_MODE_DOCKING = "Docking";
+      const rapid::String32 SETTINGS_FLIGHT_MODE_PERCHING = "Perching";
+
+      const rapid::String32 SETTINGS_PLANNER_TYPE_TRAPEZOIDAL = "trapezoidal";
+      const rapid::String32 SETTINGS_PLANNER_TYPE_QUADRATIC_PROGRAM = "qp";
+
+      const rapid::String32 SETTINGS_TELEMETRY_TYPE_COMM_STATUS = "CommStatus";
+      const rapid::String32 SETTINGS_TELEMETRY_TYPE_CPU_STATE = "CpuState";
+      const rapid::String32 SETTINGS_TELEMETRY_TYPE_DISK_STATE = "DiskState";
+      const rapid::String32 SETTINGS_TELEMETRY_TYPE_EKF_STATE = "EkfState";
+      const rapid::String32 SETTINGS_TELEMETRY_TYPE_GNC_STATE = "GncState";
+      const rapid::String32 SETTINGS_TELEMETRY_TYPE_PMC_CMD_STATE = "PmcCmdState";
+      const rapid::String32 SETTINGS_TELEMETRY_TYPE_POSITION = "Position";
+
+
+    };
+  };
+};

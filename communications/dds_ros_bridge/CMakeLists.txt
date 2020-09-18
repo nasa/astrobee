@@ -40,13 +40,6 @@ set(INCLUDES
   ${SORACORE_INCLUDE_DIRS}
 )
 
-set(RTI_QOS_FILES
-  ${CMAKE_SOURCE_DIR}/submodules/common/communications/dds/NDDS_DISCOVERY_PEERS
-  ${CMAKE_SOURCE_DIR}/submodules/common/communications/dds/RAPID_QOS_PROFILES.xml
-)
-
-set(CONFIG_DIR ${CMAKE_SOURCE_DIR}/astrobee/config/communications/dds)
-
 create_library(TARGET dds_ros_bridge
   LIBS ${LIBS}
   INC ${INCLUDES}
@@ -71,11 +64,3 @@ install(CODE "execute_process(
   )")
 
 install_launch_files()
-
-# Copy these files outside of an install to make available
-# with rosrun/roslaunch
-file(MAKE_DIRECTORY ${CONFIG_DIR})
-file(COPY ${RTI_QOS_FILES}
-  DESTINATION ${CONFIG_DIR})
-
-
