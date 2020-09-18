@@ -46,7 +46,7 @@ def check_params(graph_bag_params_list):
       print('Map file ' + params.map_file + ' does not exist.')
       sys.exit()
     if os.path.isfile(params.output_file):
-      print('Output file' + params.output_file + ' already exists.')
+      print('Output file ' + params.output_file + ' already exists.')
       sys.exit()
 
 def run_graph_bag(graph_bag_params_list): 
