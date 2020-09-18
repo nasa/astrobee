@@ -34,14 +34,17 @@ int main(int argc, char** argv) {
   // TODO(rsoussan): pass this as command line argument
   // ProfilerStart("/home/rsoussan/graph_bag_tests/prof.txt");
   std::string image_topic;
+  std::string config_path;
   std::string output_bagfile;
   po::options_description desc("Runs graph localization on a bagfile and saves the results to a new bagfile.");
   desc.add_options()("help", "produce help message")("bagfile", po::value<std::string>()->required(), "Input bagfile")(
       "map-file", po::value<std::string>()->required(), "Map file")(
       "image-topic,i", po::value<std::string>(&image_topic)->default_value("mgt/img_sampler/nav_cam/image_record"),
-      "Image topic")("output-bagfile,o", po::value<std::string>(&output_bagfile)->default_value("results.bag"),
-                     "Output bagfile")("verbosity,v", po::value<int>(&FLAGS_v)->default_value(0),
-                                       "Set verbose logging level, defaults to 0");
+      "Image topic")("config-path,c",
+                     po::value<std::string>(&config_path)->default_value("/home/rsoussan/astrobee/astrobee"),
+                     "Image topic")(
+      "output-bagfile,o", po::value<std::string>(&output_bagfile)->default_value("results.bag"), "Output bagfile")(
+      "verbosity,v", po::value<int>(&FLAGS_v)->default_value(0), "Set verbose logging level, defaults to 0");
 
   po::positional_options_description p;
   p.add("bagfile", 1);
@@ -85,10 +88,9 @@ int main(int argc, char** argv) {
   }
 
   // Set environment configs
-  // TODO(rsoussan): make these command line args
-  const std::string astrobee_configs_path = "/home/rsoussan/astrobee/astrobee";
+  // TODO(rsoussan): make this command line arg
   const std::string world = "iss";
-  lc::SetEnvironmentConfigs(astrobee_configs_path, world);
+  lc::SetEnvironmentConfigs(config_path, world);
   config_reader::ConfigReader config;
 
   graph_bag::GraphBag graph_bag(input_bag, map_file, image_topic, output_bagfile);
