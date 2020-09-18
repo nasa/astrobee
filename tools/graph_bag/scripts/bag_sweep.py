@@ -19,6 +19,7 @@
  
 import csv 
 import os
+import sys
  
 class GraphBagParams(object):
   def __init__(self, bagfile, map_file, image_topic, output_file):
