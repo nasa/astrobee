@@ -44,6 +44,7 @@ int main(int argc, char** argv) {
                      po::value<std::string>(&config_path)->default_value("/home/rsoussan/astrobee/astrobee"),
                      "Image topic")(
       "output-bagfile,o", po::value<std::string>(&output_bagfile)->default_value("results.bag"), "Output bagfile")(
+      "feature-track-image,f", po::bool_switch()->default_value(false), "Save feature track image")(
       "verbosity,v", po::value<int>(&FLAGS_v)->default_value(0), "Set verbose logging level, defaults to 0");
 
   po::positional_options_description p;
@@ -65,6 +66,7 @@ int main(int argc, char** argv) {
 
   const std::string input_bag = vm["bagfile"].as<std::string>();
   const std::string map_file = vm["map-file"].as<std::string>();
+  const bool save_feature_track_image = vm["feature-track-image"].as<bool>();
 
   // Only pass program name to free flyer so that boost command line options
   // are ignored when parsing gflags.
@@ -93,7 +95,7 @@ int main(int argc, char** argv) {
   lc::SetEnvironmentConfigs(config_path, world);
   config_reader::ConfigReader config;
 
-  graph_bag::GraphBag graph_bag(input_bag, map_file, image_topic, output_bagfile);
+  graph_bag::GraphBag graph_bag(input_bag, map_file, image_topic, save_feature_track_image, output_bagfile);
   graph_bag.Run();
   // ProfilerFlush();
   // ProfilerStop();

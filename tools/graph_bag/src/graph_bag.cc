@@ -49,11 +49,12 @@ namespace graph_bag {
 namespace lc = localization_common;
 
 GraphBag::GraphBag(const std::string& bag_name, const std::string& map_file, const std::string& image_topic,
-                   const std::string& results_bag)
+                   const bool save_feature_track_image, const std::string& results_bag)
     : bag_(bag_name, rosbag::bagmode::Read),
       map_(map_file, true),
       map_feature_matcher_(&map_),
       kImageTopic_(image_topic),
+      kSaveFeatureTrackImage_(save_feature_track_image),
       results_bag_(results_bag, rosbag::bagmode::Write) {
   config_reader::ConfigReader config;
   config.AddFile("cameras.config");
@@ -200,7 +201,7 @@ void GraphBag::Run() {
       // are created when adding of features
       const ff_msgs::Feature2dArray of_features = GenerateOFFeatures(image_msg);
       graph_localizer_wrapper_.OpticalFlowCallback(of_features);
-      SaveOpticalFlowTracksImage(image_msg, graph_localizer_wrapper_.feature_tracks());
+      if (kSaveFeatureTrackImage_) SaveOpticalFlowTracksImage(image_msg, graph_localizer_wrapper_.feature_tracks());
 
       // Handle vl features
       ff_msgs::VisualLandmarks vl_features;

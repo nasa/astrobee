@@ -43,7 +43,7 @@ namespace graph_bag {
 class GraphBag {
  public:
   GraphBag(const std::string& bag_name, const std::string& map_file, const std::string& image_topic,
-           const std::string& results_bag);
+           const bool save_feature_track_image, const std::string& results_bag);
   void Run();
 
  private:
@@ -66,6 +66,7 @@ class GraphBag {
   sparse_mapping::SparseMap map_;
   localization_node::Localizer map_feature_matcher_;
   const std::string kImageTopic_;
+  const bool kSaveFeatureTrackImage_;
   const std::string kFeatureTracksImageTopic_ = "feature_track_image";
   std::unique_ptr<camera::CameraParameters> nav_cam_params_;
 };
