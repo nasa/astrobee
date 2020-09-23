@@ -29,7 +29,8 @@
 
 namespace graph_localizer {
 namespace lc = localization_common;
-GraphLocalizerNodelet::GraphLocalizerNodelet() : ff_util::FreeFlyerNodelet(NODE_GRAPH_LOC, true) {}
+GraphLocalizerNodelet::GraphLocalizerNodelet()
+    : ff_util::FreeFlyerNodelet(NODE_GRAPH_LOC, true), platform_name_(GetPlatform()) {}
 
 void GraphLocalizerNodelet::Initialize(ros::NodeHandle* nh) {
   ff_common::InitFreeFlyerApplication(getMyArgv());
@@ -104,7 +105,6 @@ void GraphLocalizerNodelet::OpticalFlowCallback(const ff_msgs::Feature2dArray::C
     graph_localizer_wrapper_.SaveLocalizationGraphDotFile();
   // TODO(rsoussan): put this somewhere else? only publish if available?
   PublishWorldTDockTF();
-  PublishWorldTBodyTF();
 }
 
 void GraphLocalizerNodelet::VLVisualLandmarksCallback(const ff_msgs::VisualLandmarks::ConstPtr& visual_landmarks_msg) {
@@ -156,13 +156,11 @@ void GraphLocalizerNodelet::PublishWorldTBodyTF() {
     LOG_EVERY_N(ERROR, 50) << "PublishWorldTBodyTF: Failed to get world_T_body.";
     return;
   }
-  geometry_msgs::TransformStamped world_T_body_transform;
-  world_T_body_transform.header = std_msgs::Header();
-  lc::TimeToHeader(latest_combined_nav_state->timestamp(), world_T_body_transform.header);
-  world_T_body_transform.header.frame_id = "world";
-  world_T_body_transform.child_frame_id = "body";
-  lc::EigenPoseToMsg(lc::EigenPose(latest_combined_nav_state->pose()), world_T_body_transform.transform);
-  transform_pub_.sendTransform(world_T_body_transform);
+
+  const Eigen::Isometry3d pose = lc::EigenPose(latest_combined_nav_state->pose());
+  const auto timestamp = latest_combined_nav_state->timestamp();
+  const auto world_T_body_tf = lc::PoseToTF(pose, "world", "body", timestamp, platform_name_);
+  transform_pub_.sendTransform(world_T_body_tf);
 }
 
 void GraphLocalizerNodelet::PublishWorldTDockTF() {
@@ -171,13 +169,10 @@ void GraphLocalizerNodelet::PublishWorldTDockTF() {
     LOG_EVERY_N(ERROR, 50) << "PublishWorldTDockTF: Failed to get world_T_dock.";
     return;
   }
-  geometry_msgs::TransformStamped world_T_dock_transform;
-  world_T_dock_transform.header = std_msgs::Header();
-  lc::TimeToHeader(world_T_dock->second, world_T_dock_transform.header);
-  world_T_dock_transform.header.frame_id = "world";
-  world_T_dock_transform.child_frame_id = "dock/body";
-  lc::EigenPoseToMsg(world_T_dock->first, world_T_dock_transform.transform);
-  transform_pub_.sendTransform(world_T_dock_transform);
+
+  const auto world_T_dock_tf =
+      lc::PoseToTF(world_T_dock->first, "world", "dock/body", world_T_dock->second, platform_name_);
+  transform_pub_.sendTransform(world_T_dock_tf);
 }
 
 void GraphLocalizerNodelet::PublishReset() const {

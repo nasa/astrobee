@@ -86,6 +86,7 @@ class GraphLocalizerNodelet : public ff_util::FreeFlyerNodelet {
   ros::Publisher state_pub_, graph_pub_, sparse_mapping_pose_pub_, reset_pub_;
   ros::ServiceServer reset_srv_, bias_srv_, input_mode_srv_;
   tf2_ros::TransformBroadcaster transform_pub_;
+  std::string platform_name_;
 };
 }  // namespace graph_localizer
 
