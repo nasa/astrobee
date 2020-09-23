@@ -52,6 +52,8 @@ class GraphLocalizerWrapper {
 
   boost::optional<geometry_msgs::PoseStamped> LatestSparseMappingPoseMsg() const;
 
+  boost::optional<localization_common::CombinedNavState> LatestCombinedNavState() const;
+
   boost::optional<ff_msgs::EkfState> LatestLocalizationStateMsg();
 
   boost::optional<ff_msgs::LocalizationGraph> LatestLocalizationGraphMsg() const;

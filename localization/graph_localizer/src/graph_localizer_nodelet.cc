@@ -102,6 +102,9 @@ void GraphLocalizerNodelet::OpticalFlowCallback(const ff_msgs::Feature2dArray::C
   if (graph_localizer_wrapper_.publish_localization_graph()) PublishLocalizationGraph();
   if (graph_localizer_wrapper_.save_localization_graph_dot_file())
     graph_localizer_wrapper_.SaveLocalizationGraphDotFile();
+  // TODO(rsoussan): put this somewhere else? only publish if available?
+  PublishWorldTDockTF();
+  PublishWorldTBodyTF();
 }
 
 void GraphLocalizerNodelet::VLVisualLandmarksCallback(const ff_msgs::VisualLandmarks::ConstPtr& visual_landmarks_msg) {
@@ -147,10 +150,25 @@ void GraphLocalizerNodelet::PublishSparseMappingPose() const {
   sparse_mapping_pose_pub_.publish(*latest_sparse_mapping_pose_msg);
 }
 
+void GraphLocalizerNodelet::PublishWorldTBodyTF() {
+  const auto latest_combined_nav_state = graph_localizer_wrapper_.LatestCombinedNavState();
+  if (!latest_combined_nav_state) {
+    LOG_EVERY_N(ERROR, 50) << "PublishWorldTBodyTF: Failed to get world_T_body.";
+    return;
+  }
+  geometry_msgs::TransformStamped world_T_body_transform;
+  world_T_body_transform.header = std_msgs::Header();
+  lc::TimeToHeader(latest_combined_nav_state->timestamp(), world_T_body_transform.header);
+  world_T_body_transform.header.frame_id = "world";
+  world_T_body_transform.child_frame_id = "body";
+  lc::EigenPoseToMsg(lc::EigenPose(latest_combined_nav_state->pose()), world_T_body_transform.transform);
+  transform_pub_.sendTransform(world_T_body_transform);
+}
+
 void GraphLocalizerNodelet::PublishWorldTDockTF() {
   const auto world_T_dock = graph_localizer_wrapper_.estimated_world_T_dock();
   if (!world_T_dock) {
-    LOG(ERROR) << "PublishWorldTDockTF: Failed to get world_T_dock.";
+    LOG_EVERY_N(ERROR, 50) << "PublishWorldTDockTF: Failed to get world_T_dock.";
     return;
   }
   geometry_msgs::TransformStamped world_T_dock_transform;

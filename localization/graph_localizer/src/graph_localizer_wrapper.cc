@@ -201,7 +201,7 @@ const FeatureTrackMap* const GraphLocalizerWrapper::feature_tracks() const {
 
 boost::optional<std::pair<Eigen::Isometry3d, lc::Time>> GraphLocalizerWrapper::estimated_world_T_dock() const {
   if (!graph_localizer_ || !graph_localizer_->estimated_world_T_dock()) {
-    LOG(ERROR) << "estimated_world_T_dock: Failed to get world_T_dock";
+    LOG_EVERY_N(WARNING, 50) << "estimated_world_T_dock: Failed to get world_T_dock";
     return boost::none;
   }
   return graph_localizer_->estimated_world_T_dock();
@@ -214,6 +214,19 @@ boost::optional<geometry_msgs::PoseStamped> GraphLocalizerWrapper::LatestSparseM
   }
 
   return PoseMsg(sparse_mapping_pose_->first, sparse_mapping_pose_->second);
+}
+
+boost::optional<lc::CombinedNavState> GraphLocalizerWrapper::LatestCombinedNavState() const {
+  if (!graph_localizer_) {
+    LOG_EVERY_N(WARNING, 50) << "LatestCombinedNavState: Graph localizater not initialized yet.";
+    return boost::none;
+  }
+  const auto latest_combined_nav_state = graph_localizer_->LatestCombinedNavState();
+  if (!latest_combined_nav_state) {
+    LOG_EVERY_N(WARNING, 50) << "LatestCombinedNavState: No combined nav state available.";
+    return boost::none;
+  }
+  return latest_combined_nav_state;
 }
 
 boost::optional<ff_msgs::EkfState> GraphLocalizerWrapper::LatestLocalizationStateMsg() {
