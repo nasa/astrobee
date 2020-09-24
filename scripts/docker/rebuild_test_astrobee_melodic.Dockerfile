@@ -10,4 +10,4 @@ RUN cd /build/astrobee && make -j`nproc`
 COPY ./astrobee/resources /opt/astrobee/share/astrobee/resources
 
 # Run tests
-RUN cd /build/astrobee && make test && make run_tests
+RUN cd /build/astrobee && make tests && make test
