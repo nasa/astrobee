@@ -833,7 +833,8 @@
       "type": "CommandSpec",
       "id": "Settings.setEnableAutoReturn",
       "isRapidNative": false,
-      "notes": "Command to allow auto return",
+      "notes": "Command to allow auto return. Currently auto return is not implemented as intended. When this command is issued, astrobee will return to the dock and dock on berth 1. If there is already another astrobee on berth 1, the astrobees will collide and bad things will happen. DO NOT issue this command if berth 1 is occupied.",
+      "javaNotes": "Only issue this command if you are sure berth 1 is unoccupied.",
       "availableContexts": [
         "teleop"
       ],

@@ -306,7 +306,7 @@ module rapid {
       const rapid::String32 SETTINGS_METHOD_SET_CHECK_ZONES_PARAM_CHECK_ZONES = "checkZones";
       const rapid::DataType SETTINGS_METHOD_SET_CHECK_ZONES_DTYPE_CHECK_ZONES = rapid::RAPID_BOOL;
 
-      //@copy-declaration /** Command to allow auto return */
+      //@copy-declaration /** Command to allow auto return. Currently auto return is not implemented as intended. When this command is issued, astrobee will return to the dock and dock on berth 1. If there is already another astrobee on berth 1, the astrobees will collide and bad things will happen. DO NOT issue this command if berth 1 is occupied. */
       const rapid::String32 SETTINGS_METHOD_SET_ENABLE_AUTO_RETURN = "setEnableAutoReturn";
 
       const rapid::String32 SETTINGS_METHOD_SET_ENABLE_AUTO_RETURN_PARAM_ENABLE_AUTO_RETURN = "enableAutoReturn";
