@@ -181,6 +181,11 @@ void GraphBag::Run() {
   graph_localizer_wrapper_.ResetBiasesAndLocalizer();
   const auto start_time = std::chrono::steady_clock::now();
   for (rosbag::MessageInstance const m : view) {
+    // Flush results
+    google::FlushLogFiles(google::INFO);
+    google::FlushLogFiles(google::WARNING);
+    google::FlushLogFiles(google::ERROR);
+    google::FlushLogFiles(google::FATAL);
     if (string_ends_with(m.getTopic(), TOPIC_HARDWARE_IMU)) {
       sensor_msgs::ImuConstPtr imu_msg = m.instantiate<sensor_msgs::Imu>();
       graph_localizer_wrapper_.ImuCallback(*imu_msg);
