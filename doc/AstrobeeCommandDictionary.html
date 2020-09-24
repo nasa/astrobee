@@ -1445,7 +1445,7 @@ td.inner_table {
 
 <div class="commandSpec">
   <div class="commandSpecId"><a name="command_Settings.setEnableAutoReturn">Settings.setEnableAutoReturn</a></div>
-  <div class="commandSpecNotes">Command to allow auto return</div>
+  <div class="commandSpecNotes">Command to allow auto return. Currently auto return is not implemented as intended. When this command is issued, astrobee will return to the dock and dock on berth 1. If there is already another astrobee on berth 1, the astrobees will collide and bad things will happen. DO NOT issue this command if berth 1 is occupied.</div>
   <div class="commandSpecParams">
     <table class="params">
   <tr>

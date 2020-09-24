@@ -46,6 +46,7 @@ DEFINE_string(ns, "", "Robot namespace");
 DEFINE_bool(dock, false, "Send a dock command");
 DEFINE_bool(undock, false, "Send an undock command");
 DEFINE_int32(berth, 1, "Berth ID (1 = left, 2 = right)");
+DEFINE_bool(return_dock, false, "Return to dock from afar");
 
 // Timeout values
 DEFINE_double(connect, 10.0, "Action connect timeout");
@@ -113,6 +114,7 @@ void ConnectedCallback(
       ros::shutdown();
       break;
     }
+    goal.return_dock = FLAGS_return_dock;
   } else if (FLAGS_undock) {
     goal.command = ff_msgs::DockGoal::UNDOCK;
   }
