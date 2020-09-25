@@ -369,6 +369,16 @@
       <arg name="debug" value="$(arg debug)" />
       <arg name="default" value="true" />
     </include>
+    <include file="$(find ff_util)/launch/ff_nodelet.launch">
+      <arg name="class" value="mem_monitor/MemMonitor" />
+      <arg name="name" value="mlp_mem_monitor" />
+      <arg name="manager" value="mlp_monitors" />
+      <arg name="spurn" value="$(arg spurn)" />
+      <arg name="nodes" value="$(arg nodes)" />
+      <arg name="extra" value="$(arg extra)" />
+      <arg name="debug" value="$(arg debug)" />
+      <arg name="default" value="true" />
+    </include>
 
     <!-- Vive (optional) -->
     <include file="$(find ff_util)/launch/ff_nodelet.launch">

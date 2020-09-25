@@ -14,13 +14,15 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
+#
+# State of the Memory.
 
-add_subdirectory(access_control)
-add_subdirectory(cpu_monitor)
-add_subdirectory(disk_monitor)
-add_subdirectory(image_sampler)
-add_subdirectory(sys_monitor)
-add_subdirectory(executive)
-add_subdirectory(data_bagger)
-add_subdirectory(log_monitor)
-add_subdirectory(mem_monitor)
+# The load (in percentages) of the cpu, for the fields given in
+# CpuStateStamped
+float32[] loads 
+
+# Current operating frequency in Hz
+uint32 frequency
+
+# Max frequency (may be less than theoretical limit of the processor)
+uint32 max_frequency

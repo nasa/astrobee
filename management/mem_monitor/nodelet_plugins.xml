@@ -1,0 +1,9 @@
+<library path="lib/libmem_monitor">
+  <class name="mem_monitor/MemMonitor"
+	 type="mem_monitor::MemMonitor"
+	 base_class_type="nodelet::Nodelet">
+    <description>
+	  Nodelet to monitor Memory stats.
+    </description>
+  </class>
+</library>

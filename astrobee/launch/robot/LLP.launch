@@ -209,4 +209,15 @@
 
   </group>
 
+    <include file="$(find ff_util)/launch/ff_nodelet.launch">
+      <arg name="class" value="mem_monitor/MemMonitor" />
+      <arg name="name" value="llp_mem_monitor" />
+      <arg name="manager" value="llp_monitors" />
+      <arg name="spurn" value="$(arg spurn)" />
+      <arg name="nodes" value="$(arg nodes)" />
+      <arg name="extra" value="$(arg extra)" />
+      <arg name="debug" value="$(arg debug)" />
+      <arg name="default" value="true" />
+    </include>
+
 </launch>

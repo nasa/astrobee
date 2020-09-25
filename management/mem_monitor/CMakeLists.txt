@@ -15,12 +15,17 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-add_subdirectory(access_control)
-add_subdirectory(cpu_monitor)
-add_subdirectory(disk_monitor)
-add_subdirectory(image_sampler)
-add_subdirectory(sys_monitor)
-add_subdirectory(executive)
-add_subdirectory(data_bagger)
-add_subdirectory(log_monitor)
-add_subdirectory(mem_monitor)
+project(mem_monitor)
+
+catkin_package(
+  LIBRARIES mem_monitor
+  CATKIN_DEPENDS roscpp roslib nodelet ff_hw_msgs ff_msgs std_msgs
+)
+
+create_library(TARGET mem_monitor
+  LIBS ${catkin_LIBRARIES} config_reader ff_nodelet
+  INC ${catkin_INCLUDES}
+  DEPS ff_msgs ff_hw_msgs
+)
+
+install_launch_files()
