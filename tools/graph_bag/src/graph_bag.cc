@@ -182,15 +182,11 @@ void GraphBag::Run() {
   const auto start_time = std::chrono::steady_clock::now();
   for (rosbag::MessageInstance const m : view) {
     // TODO(rsousan): remve this
-    static int counter = 0;
-    if (++counter > 1000) LOG(FATAL) << "Counter";
     // Flush results
     google::FlushLogFiles(google::INFO);
     google::FlushLogFiles(google::WARNING);
     google::FlushLogFiles(google::ERROR);
     google::FlushLogFiles(google::FATAL);
-    // google::LogMessage::SendToLog();
-    // google::LogMessage::Flush();
 
     if (string_ends_with(m.getTopic(), TOPIC_HARDWARE_IMU)) {
       sensor_msgs::ImuConstPtr imu_msg = m.instantiate<sensor_msgs::Imu>();
