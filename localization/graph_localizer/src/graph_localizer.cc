@@ -725,13 +725,16 @@ boost::optional<std::pair<Eigen::Isometry3d, lc::Time>> GraphLocalizer::estimate
 }
 
 bool GraphLocalizer::Update() {
-  LOG(INFO) << "Update: Updating.";
+  LOG(INFO) << "Update: Updating1.";
 
   AddBufferedFactors();
 
   // Optimize
   // TODO(rsoussan): change lin solver?
-  gtsam::LevenbergMarquardtOptimizer optimizer(graph_, graph_values_.values());
+  gtsam::LevenbergMarquardtParams params;
+  params.verbosityLM = gtsam::LevenbergMarquardtParams::VerbosityLM::TRYDELTA;
+  params.verbosity = gtsam::NonlinearOptimizerParams::Verbosity::LINEAR;
+  gtsam::LevenbergMarquardtOptimizer optimizer(graph_, graph_values_.values(), params);
   graph_values_.UpdateValues(optimizer.optimize());
 
   // Update imu integrator bias
