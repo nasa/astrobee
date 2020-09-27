@@ -142,6 +142,8 @@ class GraphLocalizer {
 
   bool FillPriorFactors(FactorsToAdd& factors_to_add);
 
+  bool MeasurementRecentEnough(const localization_common::Time timestamp) const;
+
   template <typename FactorType>
   void DeleteFactors() {
     int num_removed_factors = 0;

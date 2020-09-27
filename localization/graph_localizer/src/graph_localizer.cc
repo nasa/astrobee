@@ -187,6 +187,11 @@ void GraphLocalizer::AddImuMeasurement(const lm::ImuMeasurement& imu_measurement
 
 bool GraphLocalizer::AddOpticalFlowMeasurement(
     const lm::FeaturePointsMeasurement& optical_flow_feature_points_measurement) {
+  if (!MeasurementRecentEnough(optical_flow_feature_points_measurement.timestamp)) {
+    LOG(WARNING) << "AddOpticalFlowMeasurement: Measurement too old - discarding.";
+    return false;
+  }
+
   LOG(INFO) << "AddOpticalFlowMeasurement: Adding optical flow measurement.";
   feature_tracker_.UpdateFeatureTracks(optical_flow_feature_points_measurement.feature_points);
 
@@ -295,7 +300,13 @@ void GraphLocalizer::AddStandstillPriorFactor(const lc::Time timestamp, FactorsT
 
 void GraphLocalizer::AddARTagMeasurement(const lm::MatchedProjectionsMeasurement& matched_projections_measurement,
                                          const gtsam::Pose3& dock_cam_T_dock) {
+  if (!MeasurementRecentEnough(matched_projections_measurement.timestamp)) {
+    LOG(WARNING) << "AddARTagMeasurement: Measurement too old - discarding.";
+    return;
+  }
+
   LOG(INFO) << "AddARTagMeasurement: Adding AR tag measurement.";
+
   dock_cam_T_dock_estimates_.emplace(matched_projections_measurement.timestamp, dock_cam_T_dock);
   AddProjectionMeasurement(matched_projections_measurement, params_.calibration.body_T_dock_cam,
                            params_.calibration.dock_cam_intrinsics, params_.noise.dock_cam_noise,
@@ -304,6 +315,11 @@ void GraphLocalizer::AddARTagMeasurement(const lm::MatchedProjectionsMeasurement
 
 void GraphLocalizer::AddSparseMappingMeasurement(
     const lm::MatchedProjectionsMeasurement& matched_projections_measurement) {
+  if (!MeasurementRecentEnough(matched_projections_measurement.timestamp)) {
+    LOG(WARNING) << "AddSparseMappingMeasurement: Measurement too old - discarding.";
+    return;
+  }
+
   LOG(INFO) << "AddSparseMappingMeasurement: Adding sparse mapping measurement.";
   AddProjectionMeasurement(matched_projections_measurement, params_.calibration.body_T_nav_cam,
                            params_.calibration.nav_cam_intrinsics, params_.noise.nav_cam_noise);
@@ -689,6 +705,12 @@ bool GraphLocalizer::FillPriorFactors(FactorsToAdd& factors_to_add) {
       return false;
     }
   }
+  return true;
+}
+
+bool GraphLocalizer::MeasurementRecentEnough(const lc::Time timestamp) const {
+  if (timestamp < graph_values_.OldestTimestamp()) return false;
+  if (timestamp < latest_imu_integrator_.OldestTime()) return false;
   return true;
 }
 
