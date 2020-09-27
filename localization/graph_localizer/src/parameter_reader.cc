@@ -80,5 +80,6 @@ void LoadGraphLocalizerParams(config_reader::ConfigReader& config, GraphLocalize
   LoadFactorParams(config, params.factor);
   LoadGraphValuesParams(config, params.graph_values);
   LoadNoiseParams(config, params.noise);
+  params.verbose = lc::LoadBool(config, "verbose");
 }
 }  // namespace graph_localizer

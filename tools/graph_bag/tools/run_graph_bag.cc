@@ -44,8 +44,7 @@ int main(int argc, char** argv) {
                      po::value<std::string>(&config_path)->default_value("/home/rsoussan/astrobee/astrobee"),
                      "Image topic")(
       "output-bagfile,o", po::value<std::string>(&output_bagfile)->default_value("results.bag"), "Output bagfile")(
-      "feature-track-image,f", po::bool_switch()->default_value(false), "Save feature track image")(
-      "verbosity,v", po::value<int>(&FLAGS_v)->default_value(0), "Set verbose logging level, defaults to 0");
+      "feature-track-image,f", po::bool_switch()->default_value(false), "Save feature track image");
 
   po::positional_options_description p;
   p.add("bagfile", 1);

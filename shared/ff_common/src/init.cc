@@ -37,11 +37,6 @@ namespace ff_common {
 
     // Parse the command line options
     if (!logging_initialized) {
-      FLAGS_minloglevel = 0;
-      FLAGS_v = 5;
-      google::SetLogDestination(google::INFO, "/data/ryan_data/glog/info");
-      google::SetLogDestination(google::ERROR, "/data/ryan_data/glog/error");
-      google::SetLogDestination(google::WARNING, "/data/ryan_data/glog/warning");
       google::InitGoogleLogging((*argv)[0]);
       logging_initialized = true;
     }

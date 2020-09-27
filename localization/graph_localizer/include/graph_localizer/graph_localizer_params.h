@@ -31,6 +31,7 @@ struct GraphLocalizerParams {
   GraphValuesParams graph_values;
   NoiseParams noise;
   GraphInitializationParams graph_initialization;
+  bool verbose;
 };
 }  // namespace graph_localizer
 
