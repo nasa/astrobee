@@ -20,13 +20,12 @@
 CURRENT_LOC=$(dirname "$(readlink -f "$0")")
 echo ${CURRENT_LOC}
 # cd /usr/local/lib
-PACKAGE_NAME=LuaJIT-2.0.5
+PACKAGE_NAME=luajit-2.0
 
 if [ -d $PACKAGE_NAME ]; then
   sudo rm -rf $PACKAGE_NAME
 fi
-wget https://luajit.org/download/LuaJIT-2.0.5.tar.gz
-tar xvzf LuaJIT-2.0.5.tar.gz
+sudo git clone --quiet https://luajit.org/git/luajit-2.0.git $PACKAGE_NAME 2>&1 || exit 1
 cd $PACKAGE_NAME
 make && sudo make install
 # cd ${CURRENT_LOC}
