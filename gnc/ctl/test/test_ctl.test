@@ -17,7 +17,6 @@
 
 <launch>
   <include file="$(find astrobee)/launch/sim.launch">
-    <arg name="gui" value="false"/>
     <arg name="dds" value="false"/>
   </include>
   <test pkg="ctl" type="test_ctl" test-name="test_ctl" />

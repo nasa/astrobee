@@ -5,7 +5,7 @@ name: Check for lint errors
 on: ['push', 'pull_request']
 
 jobs:
-  build_and_push_docs:
+  lint_check:
     runs-on: ubuntu-latest
 
     steps:

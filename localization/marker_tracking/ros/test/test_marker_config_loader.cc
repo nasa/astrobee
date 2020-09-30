@@ -25,7 +25,7 @@
 #include <string>
 
 TEST(MarkerDetector, ConfigLoader) {
-  std::string data_dir = std::string(TEST_DIR) + std::string("/data/");
+  std::string data_dir = std::string(std::getenv("DATA_DIR"));
   std::string filename = std::string("markers_sample.config");
   config_reader::ConfigReader config;
   config.AddFile((data_dir + filename).c_str());

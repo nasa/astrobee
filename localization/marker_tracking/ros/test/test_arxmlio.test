@@ -14,12 +14,8 @@
 <!-- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or         -->
 <!-- implied. See the License for the specific language governing            -->
 <!-- permissions and limitations under the License.                          -->
+
 <launch>
-  <arg name="name" default="choreographer" />
-  <arg name="manager" default="" />
-  <include file="$(find ff_util)/launch/ff_nodelet.launch">
-    <arg name="name" value="$(arg name)" />
-    <arg name="manager" value="$(arg manager)" />
-    <arg name="class" value="choreographer/ChoreographerNodelet" />
-  </include>
+  <env name="DATA_DIR" value="$(find marker_tracking)/test/data/" />
+  <test pkg="marker_tracking" type="test_arxmlio" test-name="test_arxmlio" />
 </launch>

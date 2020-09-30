@@ -30,6 +30,18 @@ create_library(TARGET ${PROJECT_NAME}
   INC  ${catkin_INCLUDE_DIRS} ${royale_INCLUDE_DIRS}
 )
 
+if(CATKIN_ENABLE_TESTING)
+  # Pico flexx initialization fault tester
+  add_rostest_gtest(test_init_pico_flexx
+    test/test_init_pico_flexx.test
+    test/test_init_pico_flexx.cc
+  )
+
+  target_link_libraries(test_init_pico_flexx
+    ${catkin_LIBRARIES} config_reader ff_nodelet
+  )
+endif()
+
 create_tool_targets(DIR tools
   LIBS ${catkin_LIBRARIES} ${royale_LIBRARIES} uvc
   INC ${catkin_INCLUDE_DIRS} ${royale_INCLUDE_DIRS}
