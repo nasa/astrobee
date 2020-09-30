@@ -24,7 +24,7 @@
 #include <string>
 
 TEST(AR_XML_IO, Reading) {
-  std::string data_dir = std::string(TEST_DIR) + "/data/";
+  std::string data_dir = std::string(std::getenv("DATA_DIR"));
 
   marker_tracking::ARTagMap ar_tags;
   marker_tracking::LoadARTagLocation(data_dir + "ar_lab_tags.xml",

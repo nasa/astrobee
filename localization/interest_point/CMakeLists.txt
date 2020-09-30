@@ -36,13 +36,6 @@ set(INCLUDES
   ${GLOG_INCLUDE_DIRS}
 )
 
-catkin_package(
-  INCLUDE_DIRS include
-  LIBRARIES interest_point
-  CATKIN_DEPENDS
-#  DEPENDS system_lib
-)
-
 create_library(TARGET interest_point
   LIBS ${LIBS}
   INC ${INCLUDES}
@@ -60,6 +53,13 @@ create_tool_targets(DIR tools
 create_test_targets(DIR test
   LIBS ${INTEREST_LIBS}
   INC ${INCLUDES}
+)
+
+catkin_package(
+  INCLUDE_DIRS include
+  LIBRARIES interest_point
+  CATKIN_DEPENDS
+#  DEPENDS system_lib
 )
 
 set(INTEREST_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/include PARENT_SCOPE)

@@ -37,16 +37,13 @@ create_library(TARGET marker_tracking
   LIBS ${LIBS}
   INC ${INCLUDES}
   DEPS camera)
+
 if (YAMLCPP_FOUND)
   create_tool_targets(DIR tools
     LIBS marker_tracking ${YAMLCPP_LIBRARIES}
     INC ${INCLUDES})
 endif (YAMLCPP_FOUND)
-create_test_targets(DIR test
-  LIBS marker_tracking
-  INC ${INCLUDES})
 
 if (USE_ROS)
   add_subdirectory(ros)
 endif (USE_ROS)
-

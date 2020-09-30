@@ -28,7 +28,7 @@
 #include <vector>
 
 TEST(MarkerDetector, TestDetection) {
-  std::string data_dir = std::string(TEST_DIR) + "/data/";
+  std::string data_dir = std::string(std::getenv("DATA_DIR"));
 
   // Create a fake alvar camera for our work.
   camera::CameraParameters cam(Eigen::Vector2i(816, 612),
