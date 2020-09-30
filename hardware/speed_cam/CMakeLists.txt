@@ -38,6 +38,19 @@ create_library(
   DEPS mavlink speed_cam_gencpp
 )
 
+if(CATKIN_ENABLE_TESTING)
+  find_package(rostest REQUIRED)
+  # Speed cam initialization fault tester
+  add_rostest_gtest(test_init_speed_cam
+    test/test_init_speed_cam.test
+    test/test_init_speed_cam.cc
+  )
+
+  target_link_libraries(test_init_speed_cam
+    ${catkin_LIBRARIES} config_reader ff_nodelet
+  )
+endif()
+
 create_tool_targets(DIR tools
   LIBS ${catkin_LIBRARIES} speed_cam
   INC ${catkin_INCLUDE_DIRS}

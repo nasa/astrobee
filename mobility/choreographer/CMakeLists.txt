@@ -40,4 +40,17 @@ create_library(TARGET choreographer
   DEPS ff_common nav_msgs geometry_msgs ff_msgs ff_util mapper
 )
 
+if(CATKIN_ENABLE_TESTING)
+  find_package(rostest REQUIRED)
+  # Choreographer initialization fault tester
+  add_rostest_gtest(test_init_choreographer
+    test/test_init_choreographer.test
+    test/test_init_choreographer.cc
+  )
+
+  target_link_libraries(test_init_choreographer
+    ${catkin_LIBRARIES} config_reader ff_nodelet
+  )
+endif()
+
 install_launch_files()
