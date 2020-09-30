@@ -144,6 +144,8 @@ class GraphLocalizer {
 
   bool MeasurementRecentEnough(const localization_common::Time timestamp) const;
 
+  void RemoveOldBufferedFactors(const localization_common::Time oldest_allowed_timestamp);
+
   template <typename FactorType>
   void DeleteFactors() {
     int num_removed_factors = 0;

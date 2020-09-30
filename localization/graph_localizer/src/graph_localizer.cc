@@ -525,6 +525,8 @@ bool GraphLocalizer::SlideWindow(const gtsam::Marginals& marginals) {
 
   feature_tracker_.RemoveOldFeaturePoints(*oldest_timestamp);
   latest_imu_integrator_.RemoveOldMeasurements(*oldest_timestamp);
+  // Currently this only applies to optical flow smart factors.  Remove if no longer use these
+  RemoveOldBufferedFactors(*oldest_timestamp);
 
   // Add prior to oldest nav state using covariances from last round of
   // optimization
@@ -555,6 +557,31 @@ bool GraphLocalizer::SlideWindow(const gtsam::Marginals& marginals) {
 
 void GraphLocalizer::BufferFactors(const FactorsToAdd& factors_to_add) {
   buffered_factors_to_add_.emplace(factors_to_add.timestamp(), factors_to_add);
+}
+
+void GraphLocalizer::RemoveOldBufferedFactors(const lc::Time oldest_allowed_timestamp) {
+  for (auto factors_to_add_it = buffered_factors_to_add_.begin();
+       factors_to_add_it != buffered_factors_to_add_.end();) {
+    auto& factors_to_add = factors_to_add_it->second.Get();
+    for (auto factor_to_add_it = factors_to_add.begin(); factor_to_add_it != factors_to_add.end();) {
+      bool removed_factor = false;
+      for (const auto& key_info : factor_to_add_it->key_infos) {
+        if (key_info.timestamp() < oldest_allowed_timestamp) {
+          LOG(INFO) << "RemoveOldBufferedFactors: Removing old factor from buffered factors.";
+          factor_to_add_it = factors_to_add.erase(factor_to_add_it);
+          removed_factor = true;
+          break;
+        }
+      }
+      if (!removed_factor) ++factor_to_add_it;
+    }
+    if (factors_to_add_it->second.Get().empty()) {
+      LOG(INFO) << "RemoveOldBufferedFactors: Removing old factors from buffered factors.";
+      factors_to_add_it = buffered_factors_to_add_.erase(factors_to_add_it);
+    } else {
+      ++factors_to_add_it;
+    }
+  }
 }
 
 void GraphLocalizer::AddBufferedFactors() {
