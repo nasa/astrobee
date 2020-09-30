@@ -75,14 +75,14 @@ gtsam::PreintegratedCombinedMeasurements Pim(
 
 void AddMeasurement(const lm::ImuMeasurement& imu_measurement, lc::Time& last_added_imu_measurement_time,
                     gtsam::PreintegratedCombinedMeasurements& pim) {
-  // TODO(rsoussan): check if dt too large?
-
   const double dt = imu_measurement.timestamp - last_added_imu_measurement_time;
+  // TODO(rsoussan): check if dt too large? Pass threshold param?
+  if (dt == 0) {
+    LOG(DFATAL) << "AddMeasurement: Timestamp difference 0, failed to add measurement.";
+    return;
+  }
   pim.integrateMeasurement(imu_measurement.acceleration, imu_measurement.angular_velocity, dt);
   last_added_imu_measurement_time = imu_measurement.timestamp;
-  // VLOG(2) << "deltaPij: " << pim_->deltaPij().matrix();
-  // VLOG(2) << "deltaVij: " << pim_->deltaVij().matrix();
-  // VLOG(2) << "deltaRij: " << pim_->deltaRij().matrix();
 }
 
 lc::CombinedNavState PimPredict(const lc::CombinedNavState& combined_nav_state,

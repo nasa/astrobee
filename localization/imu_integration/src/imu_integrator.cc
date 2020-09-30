@@ -64,8 +64,10 @@ boost::optional<lc::Time> ImuIntegrator::IntegrateImuMeasurements(const lc::Time
     return boost::none;
   }
 
-  // Start with least upper bound or equal measurement
-  auto measurement_it = measurements_.lower_bound(start_time);
+  // Start with least upper bound measurement
+  // Don't add measurements with same timestamp as start_time
+  // since these would have a dt of 0 (wrt the pim start time) and cause errors for the pim
+  auto measurement_it = measurements_.upper_bound(start_time);
   lc::Time last_added_imu_measurement_time = start_time;
   int num_measurements_added = 0;
   for (; measurement_it != measurements_.cend() && measurement_it->first <= end_time; ++measurement_it) {
