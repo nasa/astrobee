@@ -28,5 +28,5 @@
   <env name="ASTROBEE_WORLD" value="iss" />
   <include file="$(find sys_monitor)/launch/sys_monitor.launch" />
 
-  <test pkg="sys_monitor" type="test_init_speed_cam" test-name="test_init_speed_cam" />
+  <test pkg="speed_cam" type="test_init_speed_cam" test-name="test_init_speed_cam" />
 </launch>

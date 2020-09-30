@@ -28,5 +28,5 @@
   <env name="ASTROBEE_WORLD" value="iss" />
   <include file="$(find sys_monitor)/launch/sys_monitor.launch" />
 
-  <test pkg="sys_monitor" type="test_init_executive" test-name="test_init_executive" />
+  <test pkg="executive" type="test_init_executive" test-name="test_init_executive" />
 </launch>
