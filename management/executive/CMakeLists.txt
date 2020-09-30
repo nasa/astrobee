@@ -42,6 +42,20 @@ create_library(TARGET executive
   DEPS ff_flight ff_msgs ff_util config_reader sequencer
 )
 
+if(CATKIN_ENABLE_TESTING)
+  find_package(rostest REQUIRED)
+  # Executive initialization fault tester
+  add_rostest_gtest(test_init_executive
+    test/test_init_executive.test
+    test/test_init_executive.cc
+  )
+
+  target_link_libraries(test_init_executive
+    ${catkin_LIBRARIES} config_reader ff_nodelet
+  )
+endif()
+
+
 create_tool_targets(DIR tools
   LIBS executive ${catkin_LIBRARIES} ${Boost_IOSTREAMS_LIBRARY}
   INC ${catkin_INCLUDE_DIRS}

@@ -18,17 +18,15 @@
 <launch>
   <env name="ASTROBEE_CONFIG_DIR" value="$(find astrobee)/config/tests" />
   <env name="ASTROBEE_RESOURCE_DIR" value="$(find astrobee)/resources" />
-  <env name="ASTROBEE_ROBOT" value="p4d" />
+  <env name="ASTROBEE_ROBOT" value="sim" />
   <env name="ASTROBEE_WORLD" value="iss" />
-  <include file="$(find cpu_monitor)/launch/cpu_monitor.launch">
-    <arg name="name" value="llp_cpu_monitor" />
-  </include>
+  <include file="$(find executive)/launch/executive.launch" />
 
   <env name="ASTROBEE_CONFIG_DIR" value="$(find astrobee)/config" />
   <env name="ASTROBEE_RESOURCE_DIR" value="$(find astrobee)/resources" />
-  <env name="ASTROBEE_ROBOT" value="p4d" />
+  <env name="ASTROBEE_ROBOT" value="sim" />
   <env name="ASTROBEE_WORLD" value="iss" />
   <include file="$(find sys_monitor)/launch/sys_monitor.launch" />
 
-  <test pkg="sys_monitor" type="test_init_llp_cpu_monitor" test-name="test_init_llp_cpu_monitor" />
+  <test pkg="executive" type="test_init_executive" test-name="test_init_executive" />
 </launch>
