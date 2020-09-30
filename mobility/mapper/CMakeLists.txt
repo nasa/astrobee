@@ -46,4 +46,17 @@ create_library(TARGET mapper
   INC  ${catkin_INCLUDE_DIRS} ${INCLUDES} ${OCTOMAP_INCLUDE_DIRS}
 )
 
+if(CATKIN_ENABLE_TESTING)
+  find_package(rostest REQUIRED)
+  # Mapper initialization fault tester
+  add_rostest_gtest(test_init_mapper
+    test/test_init_mapper.test
+    test/test_init_mapper.cc
+  )
+
+  target_link_libraries(test_init_mapper
+    ${catkin_LIBRARIES} config_reader ff_nodelet
+  )
+endif()
+
 install_launch_files()

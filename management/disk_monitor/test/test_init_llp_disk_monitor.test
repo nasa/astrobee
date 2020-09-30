@@ -30,5 +30,5 @@
   <env name="ASTROBEE_WORLD" value="iss" />
   <include file="$(find sys_monitor)/launch/sys_monitor.launch" />
 
-  <test pkg="sys_monitor" type="test_init_llp_disk_monitor" test-name="test_init_llp_disk_monitor" />
+  <test pkg="disk_monitor" type="test_init_llp_disk_monitor" test-name="test_init_llp_disk_monitor" />
 </launch>

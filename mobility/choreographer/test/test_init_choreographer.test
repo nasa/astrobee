@@ -20,9 +20,7 @@
   <env name="ASTROBEE_RESOURCE_DIR" value="$(find astrobee)/resources" />
   <env name="ASTROBEE_ROBOT" value="p4d" />
   <env name="ASTROBEE_WORLD" value="iss" />
-  <include file="$(find disk_monitor)/launch/disk_monitor.launch">
-    <arg name="name" value="mlp_disk_monitor" />
-  </include>
+  <include file="$(find choreographer)/launch/choreographer.launch" />
 
   <env name="ASTROBEE_CONFIG_DIR" value="$(find astrobee)/config" />
   <env name="ASTROBEE_RESOURCE_DIR" value="$(find astrobee)/resources" />
@@ -30,5 +28,5 @@
   <env name="ASTROBEE_WORLD" value="iss" />
   <include file="$(find sys_monitor)/launch/sys_monitor.launch" />
 
-  <test pkg="sys_monitor" type="test_init_mlp_disk_monitor" test-name="test_init_mlp_disk_monitor" />
+  <test pkg="choreographer" type="test_init_choreographer" test-name="test_init_choreographer" />
 </launch>
