@@ -166,7 +166,7 @@ class LocProjectionFactor : public NoiseModelFactor1<POSE> {
         std::cout << e.what() << ": Landmark moved behind camera " << DefaultKeyFormatter(this->key()) << std::endl;
       if (throwCheirality_) throw CheiralityException(this->key());
     }
-    return Vector2::Constant(2.0 * K_->fx());
+    return Vector2::Constant(0.0);
   }
 
   /** return the measurement */
