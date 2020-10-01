@@ -60,5 +60,18 @@ void FeatureTracker::RemoveOldFeaturePoints(const lc::Time oldest_allowed_time) 
     }
     feature.second.points.erase(feature.second.points.begin(), point_it);
   }
+
+  // Handle any out of order tracks that are too old. Split into two for loops
+  // so ordered points can be removed in sub linear time (most measurements are ordered).
+  // TODO(rsoussan): Do this more efficiently
+  for (auto& feature : feature_tracks_) {
+    auto point_it = feature.second.points.cbegin();
+    while (point_it != feature.second.points.cend()) {
+      if (point_it->timestamp < oldest_allowed_time)
+        point_it = feature.second.points.erase(point_it);
+      else
+        ++point_it;
+    }
+  }
 }
 }  // namespace graph_localizer

@@ -384,7 +384,7 @@ bool GraphLocalizer::AddOrSplitImuFactorIfNeeded(const lc::Time timestamp) {
 
 bool GraphLocalizer::SplitOldImuFactorAndAddCombinedNavState(const lc::Time timestamp) {
   const auto timestamp_bounds = graph_values_.LowerAndUpperBoundTimestamp(timestamp);
-  if (!*(timestamp_bounds.first) || !*(timestamp_bounds.second)) {
+  if (!timestamp_bounds.first || !timestamp_bounds.second) {
     LOG(ERROR) << "SplitOldImuFactorAndAddCombinedNavState: Failed to get upper and lower bound timestamp.";
     return false;
   }
@@ -736,6 +736,10 @@ bool GraphLocalizer::FillPriorFactors(FactorsToAdd& factors_to_add) {
 }
 
 bool GraphLocalizer::MeasurementRecentEnough(const lc::Time timestamp) const {
+  if (!latest_imu_integrator_.OldestTime()) {
+    LOG(WARNING) << "MeasurementRecentEnough: Waiting until imu measurements have been received.";
+    return false;
+  }
   if (timestamp < graph_values_.OldestTimestamp()) return false;
   if (timestamp < latest_imu_integrator_.OldestTime()) return false;
   return true;
