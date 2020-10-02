@@ -166,7 +166,7 @@ void GraphLocalizerNodelet::PublishWorldTBodyTF() {
 void GraphLocalizerNodelet::PublishWorldTDockTF() {
   const auto world_T_dock = graph_localizer_wrapper_.estimated_world_T_dock();
   if (!world_T_dock) {
-    LOG_EVERY_N(ERROR, 50) << "PublishWorldTDockTF: Failed to get world_T_dock.";
+    LOG_EVERY_N(WARNING, 50) << "PublishWorldTDockTF: Failed to get world_T_dock.";
     return;
   }
 
