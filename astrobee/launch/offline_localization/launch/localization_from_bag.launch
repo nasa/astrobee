@@ -42,6 +42,7 @@
 
   <!-- Topic Remappings -->
   <remap from="/mgt/img_sampler/nav_cam/image_record" to="/hw/cam_nav"/>
+  <remap from="/gnc/ekf" to="/bag/gnc/ekf"/>
 
   <!-- Record output if required -->
   <group if="$(arg record)">
