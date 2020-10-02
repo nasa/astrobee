@@ -37,13 +37,6 @@
   <env name="ASTROBEE_CONFIG_DIR" value="$(find astrobee)/config" />
   <env name="ASTROBEE_RESOURCE_DIR" value="$(find astrobee)/resources" />
 
-  <!-- Set params -->
-  <param name="use_sim_time" value="true"/> 
-
-  <!-- Topic Remappings -->
-  <remap from="/mgt/img_sampler/nav_cam/image_record" to="/hw/cam_nav"/>
-  <remap from="/gnc/ekf" to="/bag/gnc/ekf"/>
-
   <!-- Record output if required -->
   <group if="$(arg record)">
     <arg name="output_bagfile"/>             
@@ -75,7 +68,12 @@
       <arg name="terminal" value="terminator -x"/>
     </include>
   </group>
-  <node pkg="rosbag" type="play" name="player" output="screen" args="--clock $(arg bagfile)"/>
+
+  <!-- Play bagfile -->
+  <include file="$(find astrobee)/launch/offline_localization/launch/replay_localization.launch">
+    <arg name="bagfile" value="$(arg bagfile)"/>
+    <arg name="terminal" value="terminator -x"/>
+  </include>
 
   <!-- Service calls -->
   <group if="$(arg service_calls)">
