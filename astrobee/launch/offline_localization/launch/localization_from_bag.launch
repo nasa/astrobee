@@ -34,8 +34,10 @@
   <!-- Set environment configs that are required to run nodes -->
   <env name="ASTROBEE_ROBOT" value="$(arg robot)" />
   <env name="ASTROBEE_WORLD" value="$(arg world)" />
-  <env name="ASTROBEE_CONFIG_DIR" value="$(find astrobee)/config" />
-  <env name="ASTROBEE_RESOURCE_DIR" value="$(find astrobee)/resources" />
+  <env if="$(eval optenv('ASTROBEE_CONFIG_DIR','')=='')"
+       name="ASTROBEE_CONFIG_DIR" value="$(find astrobee)/config" />
+  <env if="$(eval optenv('ASTROBEE_RESOURCE_DIR','')=='')"
+       name="ASTROBEE_RESOURCE_DIR" value="$(find astrobee)/resources" />
 
   <!-- Record output if required -->
   <group if="$(arg record)">
