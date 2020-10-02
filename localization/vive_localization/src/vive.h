@@ -243,7 +243,7 @@ static void Predict(T const* params, T const* xyz, T* ang, bool correct) {
       c = -xyz[0];
     }
     // Ideal angle in radians [0, 2pi] relative to the start of the sweep
-    ang[i] = atan2(a, b);
+    ang[i] = atan2(b, a);
     // Perturb this angle based on the base station parameters
     if (correct) {
       T const* p = &params[i*NUM_PARAMS];
