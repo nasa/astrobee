@@ -771,7 +771,7 @@ void GraphLocalizer::SaveGraphDotFile(const std::string& output_path) const {
 
 boost::optional<std::pair<Eigen::Isometry3d, lc::Time>> GraphLocalizer::estimated_world_T_dock() const {
   if (!estimated_world_T_dock_) {
-    LOG(ERROR) << "estimated_world_T_dock: Failed to get estimated_world_T_dock.";
+    LOG_EVERY_N(WARNING, 50) << "estimated_world_T_dock: Failed to get estimated_world_T_dock.";
     return boost::none;
   }
   return std::make_pair(lc::EigenPose(estimated_world_T_dock_->first), estimated_world_T_dock_->second);
