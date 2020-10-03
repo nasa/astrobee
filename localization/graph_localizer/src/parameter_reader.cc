@@ -39,6 +39,10 @@ void LoadFactorParams(config_reader::ConfigReader& config, FactorParams& params)
   params.optical_flow_standstill_velocity_prior = lc::LoadBool(config, "optical_flow_standstill_velocity_prior");
 }
 
+void LoadFeatureTrackerParams(config_reader::ConfigReader& config, FeatureTrackerParams& params) {
+  params.sliding_window_duration = lc::LoadDouble(config, "feature_tracker_sliding_window_duration");
+}
+
 void LoadImuIntegrationParams(config_reader::ConfigReader& config, GraphInitializationParams& params) {
   params.gravity = lc::LoadVector3(config, "world_gravity_vector");
   params.body_T_imu = lc::LoadTransform(config, "imu_transform");
@@ -78,6 +82,7 @@ void LoadGraphLocalizerParams(config_reader::ConfigReader& config, GraphLocalize
   LoadCalibrationParams(config, params.calibration);
   LoadImuIntegrationParams(config, params.graph_initialization);
   LoadFactorParams(config, params.factor);
+  LoadFeatureTrackerParams(config, params.feature_tracker);
   LoadGraphValuesParams(config, params.graph_values);
   LoadNoiseParams(config, params.noise);
   params.verbose = lc::LoadBool(config, "verbose");

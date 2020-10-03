@@ -21,6 +21,7 @@
 #include <config_reader/config_reader.h>
 #include <graph_localizer/calibration_params.h>
 #include <graph_localizer/factor_params.h>
+#include <graph_localizer/feature_tracker_params.h>
 #include <graph_localizer/graph_initialization_params.h>
 #include <graph_localizer/graph_localizer_params.h>
 #include <graph_localizer/graph_values_params.h>
@@ -30,6 +31,7 @@
 namespace graph_localizer {
 void LoadCalibrationParams(config_reader::ConfigReader& config, CalibrationParams& params);
 void LoadFactorParams(config_reader::ConfigReader& config, FactorParams& params);
+void LoadFeatureTrackerParams(config_reader::ConfigReader& config, FeatureTrackerParams& params);
 void LoadGraphValuesParams(config_reader::ConfigReader& config, GraphValuesParams& params);
 void LoadImuIntegrationParams(config_reader::ConfigReader& config, GraphInitializationParams& params);
 void LoadNoiseParams(config_reader::ConfigReader& config, NoiseParams& params);

@@ -20,6 +20,7 @@
 #define GRAPH_LOCALIZER_FEATURE_TRACKER_H_
 
 #include <graph_localizer/feature_track.h>
+#include <graph_localizer/feature_tracker_params.h>
 #include <localization_common/time.h>
 #include <localization_measurements/feature_point.h>
 
@@ -32,14 +33,17 @@ namespace graph_localizer {
 using FeatureTrackMap = std::map<localization_measurements::FeatureId, FeatureTrack>;
 class FeatureTracker {
  public:
+  explicit FeatureTracker(const FeatureTrackerParams& params);
   // Update existing tracks and add new tracks.  Remove tracks without
   // detections.
   void UpdateFeatureTracks(const localization_measurements::FeaturePoints& feature_points);
   const FeatureTrackMap& feature_tracks() const { return feature_tracks_; }
-  void RemoveOldFeaturePoints(const localization_common::Time oldest_allowed_time);
+  void RemoveOldFeaturePoints(localization_common::Time oldest_allowed_time);
 
  private:
   FeatureTrackMap feature_tracks_;
+  FeatureTrackerParams params_;
+  boost::optional<localization_common::Time> latest_time_;
 };
 }  // namespace graph_localizer
 

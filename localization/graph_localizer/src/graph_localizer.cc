@@ -40,7 +40,10 @@ namespace lc = localization_common;
 namespace lm = localization_measurements;
 
 GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
-    : latest_imu_integrator_(params.graph_initialization), graph_values_(params.graph_values), params_(params) {
+    : feature_tracker_(params.feature_tracker),
+      latest_imu_integrator_(params.graph_initialization),
+      graph_values_(params.graph_values),
+      params_(params) {
   // Assumes zero initial velocity
   const lc::CombinedNavState global_cgN_body_start(
       params_.graph_initialization.global_T_body_start, gtsam::Velocity3::Zero(),
