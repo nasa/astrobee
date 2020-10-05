@@ -35,3 +35,5 @@ create_library(TARGET ${PROJECT_NAME}
   INC ${catkin_INCLUDE_DIRS} ${GLOG_INCLUDE_DIRS}  
   DEPS gtsam ff_msgs 
 )
+
+install_launch_files()
