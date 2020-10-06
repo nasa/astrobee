@@ -20,26 +20,21 @@
 #define GRAPH_BAG_GRAPH_BAG_H_
 
 #include <camera/camera_params.h>
-#include <ff_util/ff_names.h>
+#include <graph_bag/live_measurement_simulator.h>
 #include <graph_localizer/graph_localizer_wrapper.h>
 #include <imu_augmentor/imu_augmentor_wrapper.h>
-#include <lk_optical_flow/lk_optical_flow.h>
-#include <localization_node/localization.h>
-#include <sparse_mapping/sparse_map.h>
-
-#include <Eigen/Core>
 
 #include <rosbag/bag.h>
+#include <sensor_msgs/Image.h>
 
 #include <memory>
 #include <string>
-#include <vector>
 
 namespace graph_bag {
 // Reads through a bag file and passes relevant messages to graph localizer
-// wrapper.  Contains its own instances of sensor parsers (lk_optical_flow,
+// wrapper.  Uses LiveMeasurementSimulator which contains its own instances of sensor parsers (lk_optical_flow,
 // localizer (for sparse map matching)) and passes output to graph localizer
-// wrapper so this does not require a ROS core and can parse bags more quickly.
+// wrapper so this does not require a ROS core and can parse bags more quickly. Saves output to a new bagfile.
 class GraphBag {
  public:
   GraphBag(const std::string& bag_name, const std::string& map_file, const std::string& image_topic,
@@ -48,8 +43,6 @@ class GraphBag {
 
  private:
   void InitializeGraph();
-  ff_msgs::Feature2dArray GenerateOFFeatures(const sensor_msgs::ImageConstPtr& image_msg);
-  bool GenerateVLFeatures(const sensor_msgs::ImageConstPtr& image_msg, ff_msgs::VisualLandmarks& vl_features);
   void SaveOpticalFlowTracksImage(const sensor_msgs::ImageConstPtr& image_msg,
                                   const graph_localizer::FeatureTrackMap* const feature_tracks);
   void SaveSparseMappingPoseMsg(const geometry_msgs::PoseStamped& sparse_mapping_pose_msg);
@@ -58,14 +51,10 @@ class GraphBag {
   void SaveLocState(const ff_msgs::EkfState& loc_msg, const std::string& topic);
   void FeatureTrackImage(const graph_localizer::FeatureTrackMap& feature_tracks, cv::Mat& feature_track_image) const;
 
-  rosbag::Bag bag_;
+  std::unique_ptr<LiveMeasurementSimulator> live_measurement_simulator_;
   rosbag::Bag results_bag_;
   graph_localizer::GraphLocalizerWrapper graph_localizer_wrapper_;
   imu_augmentor::ImuAugmentorWrapper imu_augmentor_wrapper_;
-  lk_optical_flow::LKOpticalFlow optical_flow_tracker_;
-  sparse_mapping::SparseMap map_;
-  localization_node::Localizer map_feature_matcher_;
-  const std::string kImageTopic_;
   const bool kSaveFeatureTrackImage_;
   const std::string kFeatureTracksImageTopic_ = "feature_track_image";
   std::unique_ptr<camera::CameraParameters> nav_cam_params_;

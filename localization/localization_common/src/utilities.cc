@@ -113,6 +113,8 @@ ros::Time RosTimeFromHeader(const std_msgs::Header& header) { return ros::Time(h
 
 Time TimeFromHeader(const std_msgs::Header& header) { return GetTime(header.stamp.sec, header.stamp.nsec); }
 
+Time TimeFromRosTime(const ros::Time& time) { return GetTime(time.sec, time.nsec); }
+
 void TimeToHeader(const Time timestamp, std_msgs::Header& header) {
   ros::Time ros_time(timestamp);
   header.stamp.sec = ros_time.sec;

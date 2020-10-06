@@ -19,17 +19,17 @@
 #include <ff_common/utils.h>
 #include <ff_util/ff_names.h>
 #include <graph_bag/graph_bag.h>
+#include <graph_bag/parameter_reader.h>
 #include <graph_localizer/utilities.h>
 #include <localization_common/utilities.h>
-#include <localization_measurements/measurement_conversions.h>
 #include <msg_conversions/msg_conversions.h>
 
 #include <geometry_msgs/PoseStamped.h>
 #include <image_transport/image_transport.h>
 #include <ros/time.h>
-#include <rosbag/view.h>
-#include <sensor_msgs/Image.h>
 #include <sensor_msgs/Imu.h>
+
+#include <Eigen/Core>
 
 #include <glog/logging.h>
 
@@ -50,26 +50,20 @@ namespace lc = localization_common;
 
 GraphBag::GraphBag(const std::string& bag_name, const std::string& map_file, const std::string& image_topic,
                    const bool save_feature_track_image, const std::string& results_bag)
-    : bag_(bag_name, rosbag::bagmode::Read),
-      map_(map_file, true),
-      map_feature_matcher_(&map_),
-      kImageTopic_(image_topic),
-      kSaveFeatureTrackImage_(save_feature_track_image),
-      results_bag_(results_bag, rosbag::bagmode::Write) {
+    : kSaveFeatureTrackImage_(save_feature_track_image), results_bag_(results_bag, rosbag::bagmode::Write) {
   config_reader::ConfigReader config;
   config.AddFile("cameras.config");
   config.AddFile("geometry.config");
-  config.AddFile("localization.config");
-  config.AddFile("optical_flow.config");
+  config.AddFile("tools/graph_bag.config");
 
   if (!config.ReadFiles()) {
     ROS_FATAL("Failed to read config files.");
-    // TODO(rsoussan): read params somewhere else!!!
     exit(0);
   }
 
-  map_feature_matcher_.ReadParams(&config);
-  optical_flow_tracker_.ReadParams(&config);
+  LiveMeasurementSimulatorParams params;
+  LoadLiveMeasurementSimulatorParams(config, bag_name, map_file, image_topic, params);
+  live_measurement_simulator_.reset(new LiveMeasurementSimulator(params));
   // Needed for feature tracks visualization
   nav_cam_params_.reset(new camera::CameraParameters(&config, "nav_cam"));
 }
@@ -111,34 +105,6 @@ void GraphBag::FeatureTrackImage(const graph_localizer::FeatureTrackMap& feature
   DLOG(INFO) << "FeatureTrackImage: Drew " << num_feature_tracks << " tracks, the longest was: " << longest_track;
 }
 
-bool string_ends_with(const std::string& str, const std::string& ending) {
-  if (str.length() >= ending.length()) {
-    return (0 == str.compare(str.length() - ending.length(), ending.length(), ending));
-  } else {
-    return false;
-  }
-}
-
-ff_msgs::Feature2dArray GraphBag::GenerateOFFeatures(const sensor_msgs::ImageConstPtr& image_msg) {
-  ff_msgs::Feature2dArray of_features;
-  optical_flow_tracker_.OpticalFlow(image_msg, &of_features);
-  return of_features;
-}
-
-bool GraphBag::GenerateVLFeatures(const sensor_msgs::ImageConstPtr& image_msg, ff_msgs::VisualLandmarks& vl_features) {
-  // Convert image to cv image
-  cv_bridge::CvImageConstPtr image;
-  try {
-    image = cv_bridge::toCvShare(image_msg, sensor_msgs::image_encodings::MONO8);
-  } catch (cv_bridge::Exception& e) {
-    ROS_ERROR("cv_bridge exception: %s", e.what());
-    return false;
-  }
-
-  if (!map_feature_matcher_.Localize(image, &vl_features)) return false;
-  return true;
-}
-
 void GraphBag::SaveSparseMappingPoseMsg(const geometry_msgs::PoseStamped& sparse_mapping_pose_msg) {
   const ros::Time timestamp = lc::RosTimeFromHeader(sparse_mapping_pose_msg.header);
   results_bag_.write("/" + std::string(TOPIC_SPARSE_MAPPING_POSE), timestamp, sparse_mapping_pose_msg);
@@ -167,29 +133,13 @@ void GraphBag::SaveLocState(const ff_msgs::EkfState& loc_msg, const std::string&
 }
 
 void GraphBag::Run() {
-  std::vector<std::string> topics;
-  topics.push_back(std::string("/") + TOPIC_HARDWARE_IMU);
-  topics.push_back(TOPIC_HARDWARE_IMU);
-  topics.push_back(std::string("/") + kImageTopic_);
-  topics.push_back(kImageTopic_);
-  // Only use recorded ar features
-  topics.push_back(std::string("/") + TOPIC_LOCALIZATION_AR_FEATURES);
-  topics.push_back(TOPIC_LOCALIZATION_AR_FEATURES);
-
-  rosbag::View view(bag_, rosbag::TopicQuery(topics));
   // Required to start bias estimation
   graph_localizer_wrapper_.ResetBiasesAndLocalizer();
   const auto start_time = std::chrono::steady_clock::now();
-  for (rosbag::MessageInstance const m : view) {
-    // TODO(rsousan): remve this
-    // Flush results
-    google::FlushLogFiles(google::INFO);
-    google::FlushLogFiles(google::WARNING);
-    google::FlushLogFiles(google::ERROR);
-    google::FlushLogFiles(google::FATAL);
-
-    if (string_ends_with(m.getTopic(), TOPIC_HARDWARE_IMU)) {
-      sensor_msgs::ImuConstPtr imu_msg = m.instantiate<sensor_msgs::Imu>();
+  while (live_measurement_simulator_->ProcessMessage()) {
+    const lc::Time current_time = live_measurement_simulator_->CurrentTime();
+    const auto imu_msg = live_measurement_simulator_->GetImuMessage(current_time);
+    if (imu_msg) {
       graph_localizer_wrapper_.ImuCallback(*imu_msg);
       imu_augmentor_wrapper_.ImuCallback(*imu_msg);
 
@@ -200,25 +150,15 @@ void GraphBag::Run() {
       } else {
         SaveLocState(*imu_augmented_loc_msg, TOPIC_GNC_EKF);
       }
-    } else if (string_ends_with(m.getTopic(), kImageTopic_)) {
-      sensor_msgs::ImageConstPtr image_msg = m.instantiate<sensor_msgs::Image>();
-
+    }
+    const auto of_msg = live_measurement_simulator_->GetOFMessage(current_time);
+    if (of_msg) {
       // Handle of features before vl features since graph requires states to
       // exist at timestamp already when adding vl features, and these states
       // are created when adding of features
-      const ff_msgs::Feature2dArray of_features = GenerateOFFeatures(image_msg);
-      graph_localizer_wrapper_.OpticalFlowCallback(of_features);
-      if (kSaveFeatureTrackImage_) SaveOpticalFlowTracksImage(image_msg, graph_localizer_wrapper_.feature_tracks());
-
-      // Handle vl features
-      ff_msgs::VisualLandmarks vl_features;
-      if (GenerateVLFeatures(image_msg, vl_features)) {
-        graph_localizer_wrapper_.VLVisualLandmarksCallback(vl_features);
-        const auto sparse_mapping_pose_msg = graph_localizer_wrapper_.LatestSparseMappingPoseMsg();
-        if (sparse_mapping_pose_msg) {
-          SaveSparseMappingPoseMsg(*sparse_mapping_pose_msg);
-        }
-      }
+      graph_localizer_wrapper_.OpticalFlowCallback(*of_msg);
+      // TODO(rsoussan): save image msg for each of/vl msg
+      // if (kSaveFeatureTrackImage_) SaveOpticalFlowTracksImage(image_msg, graph_localizer_wrapper_.feature_tracks());
 
       // Save latest graph localization msg, which should have just been optimized after adding of and/or vl features.
       // Pass latest loc state to imu augmentor if it is available.
@@ -229,11 +169,18 @@ void GraphBag::Run() {
         imu_augmentor_wrapper_.LocalizationStateCallback(*localization_msg);
         SaveLocState(*localization_msg, TOPIC_GRAPH_LOC_STATE);
       }
-    } else if (string_ends_with(m.getTopic(), TOPIC_LOCALIZATION_AR_FEATURES)) {
-      const ff_msgs::VisualLandmarksConstPtr vl_features = m.instantiate<ff_msgs::VisualLandmarks>();
-      graph_localizer_wrapper_.ARVisualLandmarksCallback(*vl_features);
-    } else {
-      continue;
+    }
+    const auto vl_msg = live_measurement_simulator_->GetVLMessage(current_time);
+    if (vl_msg) {
+      graph_localizer_wrapper_.VLVisualLandmarksCallback(*vl_msg);
+      const auto sparse_mapping_pose_msg = graph_localizer_wrapper_.LatestSparseMappingPoseMsg();
+      if (sparse_mapping_pose_msg) {
+        SaveSparseMappingPoseMsg(*sparse_mapping_pose_msg);
+      }
+    }
+    const auto ar_msg = live_measurement_simulator_->GetARMessage(current_time);
+    if (ar_msg) {
+      graph_localizer_wrapper_.ARVisualLandmarksCallback(*ar_msg);
     }
   }
   const auto end_time = std::chrono::steady_clock::now();

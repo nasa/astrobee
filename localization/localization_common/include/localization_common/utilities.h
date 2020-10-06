@@ -70,6 +70,8 @@ ros::Time RosTimeFromHeader(const std_msgs::Header& header);
 
 Time TimeFromHeader(const std_msgs::Header& header);
 
+Time TimeFromRosTime(const ros::Time& time);
+
 void TimeToHeader(const Time timestamp, std_msgs::Header& header);
 
 template <typename VectorType, typename MsgVectorType>
