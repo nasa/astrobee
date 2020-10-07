@@ -17,8 +17,18 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+# This image is split into two, because we need to copy over the toolchain
+# folder and rootfs folder. Because docker can only access files in the
+# build context, and we don't want it to scan the entire computer by
+# chosing a bigger build context, this is the easiest solution. This also
+# allows the user to place the folders freely.
 
-thisdir=$(dirname "$(readlink -f "$0")")
-echo "Build context: "$ARMHF_CHROOT_DIR/../
+# Base docker image copies over the toolchain and rootfs, resulting from
+# the NASA_INSTALL.md instructions. Also installs minimum dependencies
+echo "Build context for base: "${ARMHF_CHROOT_DIR/../}
 docker build $ARMHF_CHROOT_DIR/../ -f scripts/docker/cross_compile/astrobee_base_cross.Dockerfile -t astrobee/astrobee:base-cross
+
+# Cross-compiles the code
+thisdir=$(dirname "$(readlink -f "$0")")
+echo "Build context for cross: "${thisdir}
 docker build . -f scripts/docker/cross_compile/astrobee_cross.Dockerfile -t astrobee/astrobee:cross

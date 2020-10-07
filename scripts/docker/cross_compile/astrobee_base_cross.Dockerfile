@@ -16,9 +16,8 @@ RUN apt-get update \
     protobuf-compiler \
   && rm -rf /var/lib/apt/lists/*
 
-# Copy over the files
-ARG ARMHF_CHROOT_DIR=rootfs
-ARG ARMHF_TOOLCHAIN=toolchain/gcc
+# Copy over the rootfs
+COPY rootfs /arm_cross/rootfs
 
-COPY $ARMHF_CHROOT_DIR /arm_cross/rootfs
-COPY $ARMHF_TOOLCHAIN /arm_cross/toolchain/gcc
+# Copy over the toolchain
+COPY toolchain/gcc /arm_cross/toolchain/gcc

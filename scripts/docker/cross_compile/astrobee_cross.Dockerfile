@@ -23,7 +23,7 @@ RUN apt-get update && apt-get install -y \
 # Copy astrobee code
 COPY . /src/astrobee
 
-# Copy over the files
+# Define the appropriate environment variables
 ARG ARMHF_CHROOT_DIR=/arm_cross/rootfs
 ARG ARMHF_TOOLCHAIN=/arm_cross/toolchain/gcc
 
