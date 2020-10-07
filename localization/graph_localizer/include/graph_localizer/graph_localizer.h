@@ -142,6 +142,8 @@ class GraphLocalizer {
 
   bool FillPriorFactors(FactorsToAdd& factors_to_add);
 
+  void AddCombinedImuFactorAndBiasPrior(const gtsam::CombinedImuFactor::shared_ptr& combined_imu_factor);
+
   bool MeasurementRecentEnough(const localization_common::Time timestamp) const;
 
   void RemoveOldBufferedFactors(const localization_common::Time oldest_allowed_timestamp);

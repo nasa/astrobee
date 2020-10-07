@@ -37,6 +37,7 @@ void LoadFactorParams(config_reader::ConfigReader& config, FactorParams& params)
       lc::LoadDouble(config, "max_standstill_feature_track_avg_distance_from_mean");
   params.optical_flow_standstill_pose_prior = lc::LoadBool(config, "optical_flow_standstill_pose_prior");
   params.optical_flow_standstill_velocity_prior = lc::LoadBool(config, "optical_flow_standstill_velocity_prior");
+  params.bias_prior = lc::LoadBool(config, "bias_prior");
 }
 
 void LoadFeatureTrackerParams(config_reader::ConfigReader& config, FeatureTrackerParams& params) {
@@ -64,6 +65,8 @@ void LoadNoiseParams(config_reader::ConfigReader& config, NoiseParams& params) {
   params.starting_prior_velocity_stddev = lc::LoadDouble(config, "starting_prior_velocity_stddev");
   params.starting_prior_accel_bias_stddev = lc::LoadDouble(config, "starting_prior_accel_bias_stddev");
   params.starting_prior_gyro_bias_stddev = lc::LoadDouble(config, "starting_prior_gyro_bias_stddev");
+  params.prior_accel_bias_stddev = lc::LoadDouble(config, "prior_accel_bias_stddev");
+  params.prior_gyro_bias_stddev = lc::LoadDouble(config, "prior_gyro_bias_stddev");
   params.prior_min_variance_val = lc::LoadDouble(config, "prior_min_variance_val");
 }
 

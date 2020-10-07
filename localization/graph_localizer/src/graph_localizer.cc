@@ -468,7 +468,7 @@ bool GraphLocalizer::SplitOldImuFactorAndAddCombinedNavState(const lc::Time time
 
   const auto combined_imu_factor =
       ii::MakeCombinedImuFactor(*new_key_index, *upper_bound_key_index, *second_integrated_pim);
-  graph_.push_back(combined_imu_factor);
+  AddCombinedImuFactorAndBiasPrior(combined_imu_factor);
   return true;
 }
 
@@ -509,7 +509,7 @@ bool GraphLocalizer::CreateAndAddImuFactorAndPredictedCombinedNavState(
   const lc::CombinedNavState global_cgN_body_predicted = ii::PimPredict(global_cgN_body, pim);
   const int key_index_1 = GenerateKeyIndex();
   const auto combined_imu_factor = ii::MakeCombinedImuFactor(*key_index_0, key_index_1, pim);
-  graph_.push_back(combined_imu_factor);
+  AddCombinedImuFactorAndBiasPrior(combined_imu_factor);
   graph_values_.AddCombinedNavState(global_cgN_body_predicted, key_index_1);
   return true;
 }
@@ -736,6 +736,25 @@ bool GraphLocalizer::FillPriorFactors(FactorsToAdd& factors_to_add) {
     }
   }
   return true;
+}
+
+void GraphLocalizer::AddCombinedImuFactorAndBiasPrior(const gtsam::CombinedImuFactor::shared_ptr& combined_imu_factor) {
+  if (params_.factor.bias_prior) {
+    const gtsam::Vector6 bias_prior_noise_sigmas(
+        (gtsam::Vector(6) << params_.noise.prior_accel_bias_stddev, params_.noise.prior_accel_bias_stddev,
+         params_.noise.prior_accel_bias_stddev, params_.noise.prior_gyro_bias_stddev,
+         params_.noise.prior_gyro_bias_stddev, params_.noise.prior_gyro_bias_stddev)
+            .finished());
+    const auto bias_noise =
+        Robust(gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(bias_prior_noise_sigmas)));
+    // key6 for the CombinedImuFactor is the current bias
+    const auto key = combined_imu_factor->key6();
+    // Use previous bias as a prior for new bias
+    const auto& bias = combined_imu_factor->preintegratedMeasurements().biasHat();
+    gtsam::PriorFactor<gtsam::imuBias::ConstantBias> bias_prior_factor(key, bias, bias_noise);
+    graph_.push_back(bias_prior_factor);
+  }
+  graph_.push_back(combined_imu_factor);
 }
 
 bool GraphLocalizer::MeasurementRecentEnough(const lc::Time timestamp) const {

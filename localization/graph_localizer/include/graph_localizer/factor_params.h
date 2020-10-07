@@ -24,6 +24,7 @@ struct FactorParams {
   double max_standstill_feature_track_avg_distance_from_mean;
   bool optical_flow_standstill_pose_prior;
   bool optical_flow_standstill_velocity_prior;
+  bool bias_prior;
 };
 }  // namespace graph_localizer
 
