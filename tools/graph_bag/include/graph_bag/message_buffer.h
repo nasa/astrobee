@@ -32,11 +32,12 @@ class MessageBuffer {
   // Assumes messages are buffered in time order
   void BufferMessage(const MessageType& msg) {
     const localization_common::Time timestamp = localization_common::TimeFromHeader(msg.header);
-    if (!msg_buffer_.empty() && std::abs(msg_buffer_.crbegin()->first - timestamp) < params_.min_msg_spacing) {
-      LOG(WARNING) << "BufferMessage: Dropping message that arrived to close to previous message.";
+    if (last_measurement_time_ && std::abs(*last_measurement_time_ - timestamp) < params_.min_msg_spacing) {
+      LOG(WARNING) << "BufferMessage: Dropping message that arrived too close to previous message.";
       return;
     }
     msg_buffer_.emplace(timestamp, msg);
+    last_measurement_time_ = timestamp;
   }
 
   boost::optional<MessageType> GetMessage(const localization_common::Time current_time) {
@@ -53,6 +54,7 @@ class MessageBuffer {
  private:
   MessageBufferParams params_;
   std::map<localization_common::Time, MessageType> msg_buffer_;
+  boost::optional<localization_common::Time> last_measurement_time_;
 };
 }  // namespace graph_bag
 
