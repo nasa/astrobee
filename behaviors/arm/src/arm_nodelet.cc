@@ -989,7 +989,10 @@ class ArmNodelet : public ff_util::FreeFlyerNodelet {
           Result(RESPONSE::BAD_PAN_VALUE, true);
           return;
         }
-        if (new_t > K_TILT_SAFE && fabs(new_p - K_PAN_STOW) > joints_[PAN].tol) {
+        // Check current and goal tilt, and if close to stowed, make
+        // sure the pan value is zero within tolerance
+        if ((joints_[TILT].goal > K_TILT_SAFE || new_t > K_TILT_SAFE)
+          && fabs(new_p - K_PAN_STOW) > joints_[PAN].tol) {
           Result(RESPONSE::COLLISION_AVOIDED, true);
           return;
         }
