@@ -222,6 +222,7 @@ class GraphLocalizer {
   }
 
   GraphLocalizerParams params_;
+  gtsam::LevenbergMarquardtParams levenberg_marquardt_params_;
   imu_integration::LatestImuIntegrator latest_imu_integrator_;
   gtsam::NonlinearFactorGraph graph_;
   GraphValues graph_values_;

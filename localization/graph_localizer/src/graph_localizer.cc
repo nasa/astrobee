@@ -32,6 +32,7 @@
 
 #include <glog/logging.h>
 
+#include <chrono>
 #include <iomanip>
 
 namespace graph_localizer {
@@ -62,6 +63,14 @@ GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
   smart_projection_params_.setDynamicOutlierRejectionThreshold(params_.factor.dynamic_outlier_rejection_threshold);
   smart_projection_params_.setRetriangulationThreshold(params_.factor.retriangulation_threshold);
   smart_projection_params_.setEnableEPI(params_.factor.enable_EPI);
+
+  // Initialize lm params
+  // gtsam::LevenbergMarquardtParams::SetCeresDefaults(&levenberg_marquardt_params_);
+  if (params_.verbose) {
+    levenberg_marquardt_params_.verbosityLM = gtsam::LevenbergMarquardtParams::VerbosityLM::TRYDELTA;
+    levenberg_marquardt_params_.verbosity = gtsam::NonlinearOptimizerParams::Verbosity::LINEAR;
+  }
+  levenberg_marquardt_params_.maxIterations = params_.max_iterations;
 }
 
 void GraphLocalizer::AddStartingPriors(const lc::CombinedNavState& global_cgN_body_start, const int key_index,
@@ -850,14 +859,20 @@ bool GraphLocalizer::Update() {
   AddBufferedFactors();
 
   // Optimize
-  gtsam::LevenbergMarquardtParams params;
-  if (params_.verbose) {
-    params.verbosityLM = gtsam::LevenbergMarquardtParams::VerbosityLM::TRYDELTA;
-    params.verbosity = gtsam::NonlinearOptimizerParams::Verbosity::LINEAR;
-  }
   // TODO(rsoussan): change lin solver?
-  gtsam::LevenbergMarquardtOptimizer optimizer(graph_, graph_values_.values(), params);
+  gtsam::LevenbergMarquardtOptimizer optimizer(graph_, graph_values_.values(), levenberg_marquardt_params_);
+
+  const auto optimize_start_time = std::chrono::steady_clock::now();
   graph_values_.UpdateValues(optimizer.optimize());
+  const auto optimize_end_time = std::chrono::steady_clock::now();
+  const double optimization_time = std::chrono::duration<double>(optimize_end_time - optimize_start_time).count();
+  static double average_optimization_time = 0;
+  static int num_optimizations = 0;
+  ++num_optimizations;
+  // Compute moving average to avoid overflow
+  average_optimization_time += (optimization_time - average_optimization_time) / num_optimizations;
+  LOG(INFO) << "Optimization time: " << optimization_time << " seconds.";
+  LOG(INFO) << "Average optimization time: " << average_optimization_time << " seconds.";
 
   // Update imu integrator bias
   const auto latest_bias = graph_values_.LatestBias();
