@@ -226,33 +226,53 @@ void MemMonitor::PublishStatsCallback(ros::TimerEvent const &te) {
   std::vector<std::string> nodes;
   ros::master::getNodes(nodes);
 
+  // Get own URI
+  // Check if the node is being executed in this computer
+  // Get URI of the node
+  XmlRpc::XmlRpcValue args, result, payload;
+  args.setSize(2);
+  args[0] = ros::this_node::getName();
+  args[1] = ros::this_node::getName();
+  ros::master::execute("lookupNode", args, result, payload, true);
+  std::string monitor_URI = result[2];
+  monitor_URI.erase(monitor_URI.begin(), monitor_URI.begin() + monitor_URI.find_first_of("/") + 2),
+                    monitor_URI.erase(monitor_URI.begin() + monitor_URI.find_last_of(":"), monitor_URI.end());
+
   // Go through all the node list and
   for (uint i = 0; i < nodes.size(); ++i) {
     // Look for PID if not already on the list
     if (nodes_pid_.find(nodes[i]) == nodes_pid_.end()) {
       // Check if the node is being executed in this computer
       // Get URI of the node
-      // XmlRpc::XmlRpcValue args, result, payload;
-      // args.setSize(2);
-      // args[0] = ros::this_node::getName();
-      // args[1] = ros::this_node::getName();
-      // ros::master::execute("lookupNode", args, result, payload, true);
-      // std::string uri = result[2];
+      args.setSize(2);
+      args[0] = ros::this_node::getName();
+      args[1] = nodes[i];
+      ros::master::execute("lookupNode", args, result, payload, true);
+      std::string node_URI = result[2];
+      node_URI.erase(node_URI.begin(), node_URI.begin() + node_URI.find_first_of("/") + 2),
+                     node_URI.erase(node_URI.begin() + node_URI.find_last_of(":"), node_URI.end());
 
-      // Get the node PID
-      std::array<char, 128> buffer;
-      std::string pid;
-      FILE* pipe = popen(("rosnode info " + nodes[i] + " 2>/dev/null | grep Pid| cut -d' ' -f2").c_str(), "r");
-      if (!pipe) {
-        // Node not found
-        continue;
+      ROS_ERROR_STREAM("monitor_URI: " << monitor_URI << " node_URI: " << node_URI);
+      // If it is in the same cpu
+      if (node_URI == monitor_URI) {
+        // Get the node PID
+        std::array<char, 128> buffer;
+        std::string pid;
+        FILE* pipe = popen(("rosnode info " + nodes[i] + " 2>/dev/null | grep Pid| cut -d' ' -f2").c_str(), "r");
+        if (!pipe) {
+          // Node not found
+          continue;
+        }
+        while (fgets(buffer.data(), 128, pipe) != NULL) {
+          pid += buffer.data();
+        }
+        pclose(pipe);
+        // Insert it on the list
+        nodes_pid_.insert(std::pair<std::string, int>(nodes[i], std::stoi(pid)));
+      } else {
+        // Insert it on the list
+        nodes_pid_.insert(std::pair<std::string, int>(nodes[i], 0));
       }
-      while (fgets(buffer.data(), 128, pipe) != NULL) {
-        pid += buffer.data();
-      }
-      pclose(pipe);
-      // Insert it on the list
-      nodes_pid_.insert(std::pair<std::string, int>(nodes[i], std::stoi(pid)));
     }
     // Check that the process is in this computer
     if (nodes_pid_.find(nodes[i])->second == 0)
