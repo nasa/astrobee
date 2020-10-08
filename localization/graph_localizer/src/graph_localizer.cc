@@ -359,8 +359,7 @@ void GraphLocalizer::AddProjectionMeasurement(const lm::MatchedProjectionsMeasur
 
     const KeyInfo key_info(&sym::P, matched_projections_measurement.timestamp);
     gtsam::PriorFactor<gtsam::Pose3>::shared_ptr pose_prior_factor(new gtsam::PriorFactor<gtsam::Pose3>(
-        key_info.UninitializedKey(), matched_projections_measurement.global_T_cam * body_T_cam.inverse(),
-        pose_prior_noise_sigmas));
+        key_info.UninitializedKey(), matched_projections_measurement.global_T_cam * body_T_cam.inverse(), pose_noise));
     factors_to_add.push_back({{key_info}, pose_prior_factor});
     factors_to_add.SetTimestamp(matched_projections_measurement.timestamp);
     BufferFactors(factors_to_add);
