@@ -20,11 +20,19 @@
 
 namespace graph_localizer {
 struct FactorParams {
+  // Optical flow factors
   double min_valid_feature_track_avg_distance_from_mean;
   double max_standstill_feature_track_avg_distance_from_mean;
   bool optical_flow_standstill_pose_prior;
   bool optical_flow_standstill_velocity_prior;
+  bool enable_EPI;
+  double landmark_distance_threshold;
+  double dynamic_outlier_rejection_threshold;
+  double retriangulation_threshold;
+  bool verbose_cheirality;
+  // Combined Imu factors
   bool bias_prior;
+  // Loc factors
   bool loc_pose_priors;
   bool loc_projections;
 };

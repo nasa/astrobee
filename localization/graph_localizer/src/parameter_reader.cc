@@ -37,6 +37,11 @@ void LoadFactorParams(config_reader::ConfigReader& config, FactorParams& params)
       lc::LoadDouble(config, "max_standstill_feature_track_avg_distance_from_mean");
   params.optical_flow_standstill_pose_prior = lc::LoadBool(config, "optical_flow_standstill_pose_prior");
   params.optical_flow_standstill_velocity_prior = lc::LoadBool(config, "optical_flow_standstill_velocity_prior");
+  params.enable_EPI = lc::LoadBool(config, "enable_EPI");
+  params.landmark_distance_threshold = lc::LoadDouble(config, "landmark_distance_threshold");
+  params.dynamic_outlier_rejection_threshold = lc::LoadDouble(config, "dynamic_outlier_rejection_threshold");
+  params.retriangulation_threshold = lc::LoadDouble(config, "retriangulation_threshold");
+  params.verbose_cheirality = lc::LoadBool(config, "verbose_cheirality");
   params.bias_prior = lc::LoadBool(config, "bias_prior");
   params.loc_pose_priors = lc::LoadBool(config, "loc_pose_priors");
   params.loc_projections = lc::LoadBool(config, "loc_projections");

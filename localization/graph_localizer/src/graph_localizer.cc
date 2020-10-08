@@ -55,11 +55,13 @@ GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
   AddStartingPriors(global_cgN_body_start, key_index, graph_values_.values(), graph_);
 
   // Initialize smart projection factor params
-  smart_projection_params_.verboseCheirality = true;
+  smart_projection_params_.verboseCheirality = params_.factor.verbose_cheirality;
   smart_projection_params_.setDegeneracyMode(gtsam::DegeneracyMode::ZERO_ON_DEGENERACY);
   smart_projection_params_.setRankTolerance(1e-9);
-  smart_projection_params_.setLandmarkDistanceThreshold(100);
-  smart_projection_params_.setDynamicOutlierRejectionThreshold(5);
+  smart_projection_params_.setLandmarkDistanceThreshold(params_.factor.landmark_distance_threshold);
+  smart_projection_params_.setDynamicOutlierRejectionThreshold(params_.factor.dynamic_outlier_rejection_threshold);
+  smart_projection_params_.setRetriangulationThreshold(params_.factor.retriangulation_threshold);
+  smart_projection_params_.setEnableEPI(params_.factor.enable_EPI);
 }
 
 void GraphLocalizer::AddStartingPriors(const lc::CombinedNavState& global_cgN_body_start, const int key_index,
