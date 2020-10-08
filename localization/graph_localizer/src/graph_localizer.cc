@@ -65,7 +65,6 @@ GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
   smart_projection_params_.setEnableEPI(params_.factor.enable_EPI);
 
   // Initialize lm params
-  // gtsam::LevenbergMarquardtParams::SetCeresDefaults(&levenberg_marquardt_params_);
   if (params_.verbose) {
     levenberg_marquardt_params_.verbosityLM = gtsam::LevenbergMarquardtParams::VerbosityLM::TRYDELTA;
     levenberg_marquardt_params_.verbosity = gtsam::NonlinearOptimizerParams::Verbosity::LINEAR;
