@@ -237,6 +237,7 @@ void MemMonitor::PublishStatsCallback(ros::TimerEvent const &te) {
   std::string monitor_URI = result[2];
   monitor_URI.erase(monitor_URI.begin(), monitor_URI.begin() + monitor_URI.find_first_of("/") + 2),
                     monitor_URI.erase(monitor_URI.begin() + monitor_URI.find_last_of(":"), monitor_URI.end());
+  mem_state_msg.name = monitor_URI;
 
   // Go through all the node list and
   for (uint i = 0; i < nodes.size(); ++i) {
@@ -306,6 +307,7 @@ void MemMonitor::PublishStatsCallback(ros::TimerEvent const &te) {
     mem_state_msg.nodes.push_back(mem_node);
   }
 
+  ROS_ERROR_STREAM("pub");
   // Send mem stats
   mem_state_msg.header.stamp = ros::Time::now();
   mem_state_pub_.publish(mem_state_msg);
