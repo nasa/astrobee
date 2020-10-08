@@ -79,7 +79,7 @@ class GraphLocalizerWrapper {
  private:
   void InitializeGraph();
 
-  bool CheckPoseSanity(const Eigen::Isometry3d& sparse_mapping_pose, const localization_common::Time timestamp) const;
+  bool CheckPoseSanity(const gtsam::Pose3& sparse_mapping_pose, const localization_common::Time timestamp) const;
 
   bool CheckCovarianceSanity() const;
 

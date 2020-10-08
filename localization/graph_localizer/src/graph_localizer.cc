@@ -301,16 +301,16 @@ void GraphLocalizer::AddStandstillPriorFactor(const lc::Time timestamp, FactorsT
   }
 }
 
-void GraphLocalizer::AddARTagMeasurement(const lm::MatchedProjectionsMeasurement& matched_projections_measurement,
-                                         const gtsam::Pose3& dock_cam_T_dock) {
+void GraphLocalizer::AddARTagMeasurement(const lm::MatchedProjectionsMeasurement& matched_projections_measurement) {
   if (!MeasurementRecentEnough(matched_projections_measurement.timestamp)) {
     LOG(WARNING) << "AddARTagMeasurement: Measurement too old - discarding.";
     return;
   }
 
   LOG(INFO) << "AddARTagMeasurement: Adding AR tag measurement.";
-
-  dock_cam_T_dock_estimates_.emplace(matched_projections_measurement.timestamp, dock_cam_T_dock);
+  // AR projections measurement global frame is dock frame
+  dock_cam_T_dock_estimates_.emplace(matched_projections_measurement.timestamp,
+                                     matched_projections_measurement.global_T_cam.inverse());
   AddProjectionMeasurement(matched_projections_measurement, params_.calibration.body_T_dock_cam,
                            params_.calibration.dock_cam_intrinsics, params_.noise.dock_cam_noise,
                            GraphAction::kTransformARMeasurementAndUpdateDockTWorld);
@@ -345,21 +345,47 @@ void GraphLocalizer::AddProjectionMeasurement(const lm::MatchedProjectionsMeasur
     return;
   }
 
-  int num_buffered_loc_projection_factors = 0;
-  FactorsToAdd factors_to_add(graph_action);
-  factors_to_add.reserve(matched_projections_measurement.matched_projections.size());
-  for (const auto& matched_projection : matched_projections_measurement.matched_projections) {
-    const KeyInfo key_info(&sym::P, matched_projections_measurement.timestamp);
-    gtsam::LocProjectionFactor<>::shared_ptr loc_projection_factor(
-        new gtsam::LocProjectionFactor<>(matched_projection.image_point, matched_projection.map_point,
-                                         Robust(cam_noise), key_info.UninitializedKey(), cam_intrinsics, body_T_cam));
-    factors_to_add.push_back({{key_info}, loc_projection_factor});
-    ++num_buffered_loc_projection_factors;
-  }
-  factors_to_add.SetTimestamp(matched_projections_measurement.timestamp);
-  BufferFactors(factors_to_add);
+  if (params_.factor.loc_pose_priors) {
+    int num_buffered_loc_pose_prior_factors = 0;
+    FactorsToAdd factors_to_add(graph_action);
+    factors_to_add.reserve(1);
+    const gtsam::Vector6 pose_prior_noise_sigmas(
+        (gtsam::Vector(6) << params_.noise.loc_prior_translation_stddev, params_.noise.loc_prior_translation_stddev,
+         params_.noise.loc_prior_translation_stddev, params_.noise.loc_prior_quaternion_stddev,
+         params_.noise.loc_prior_quaternion_stddev, params_.noise.loc_prior_quaternion_stddev)
+            .finished());
+    const auto pose_noise =
+        Robust(gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(pose_prior_noise_sigmas)));
 
-  VLOG(2) << "AddProjectionMeasurement: Buffered " << num_buffered_loc_projection_factors << " loc projection factors.";
+    const KeyInfo key_info(&sym::P, matched_projections_measurement.timestamp);
+    gtsam::PriorFactor<gtsam::Pose3>::shared_ptr pose_prior_factor(new gtsam::PriorFactor<gtsam::Pose3>(
+        key_info.UninitializedKey(), matched_projections_measurement.global_T_cam * body_T_cam.inverse(),
+        pose_prior_noise_sigmas));
+    factors_to_add.push_back({{key_info}, pose_prior_factor});
+    factors_to_add.SetTimestamp(matched_projections_measurement.timestamp);
+    BufferFactors(factors_to_add);
+    VLOG(2) << "AddProjectionMeasurement: Buffered " << num_buffered_loc_pose_prior_factors
+            << " loc pose priors factors.";
+  }
+
+  if (params_.factor.loc_projections) {
+    int num_buffered_loc_projection_factors = 0;
+    FactorsToAdd factors_to_add(graph_action);
+    factors_to_add.reserve(matched_projections_measurement.matched_projections.size());
+    for (const auto& matched_projection : matched_projections_measurement.matched_projections) {
+      const KeyInfo key_info(&sym::P, matched_projections_measurement.timestamp);
+      gtsam::LocProjectionFactor<>::shared_ptr loc_projection_factor(
+          new gtsam::LocProjectionFactor<>(matched_projection.image_point, matched_projection.map_point,
+                                           Robust(cam_noise), key_info.UninitializedKey(), cam_intrinsics, body_T_cam));
+      factors_to_add.push_back({{key_info}, loc_projection_factor});
+      ++num_buffered_loc_projection_factors;
+    }
+    factors_to_add.SetTimestamp(matched_projections_measurement.timestamp);
+    BufferFactors(factors_to_add);
+
+    VLOG(2) << "AddProjectionMeasurement: Buffered " << num_buffered_loc_projection_factors
+            << " loc projection factors.";
+  }
 }
 
 bool GraphLocalizer::AddOrSplitImuFactorIfNeeded(const lc::Time timestamp) {

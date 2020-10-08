@@ -25,6 +25,8 @@ struct FactorParams {
   bool optical_flow_standstill_pose_prior;
   bool optical_flow_standstill_velocity_prior;
   bool bias_prior;
+  bool loc_pose_priors;
+  bool loc_projections;
 };
 }  // namespace graph_localizer
 

@@ -72,8 +72,7 @@ class GraphLocalizer {
   bool AddOpticalFlowMeasurement(
       const localization_measurements::FeaturePointsMeasurement& optical_flow_feature_points_measurement);
   void AddARTagMeasurement(
-      const localization_measurements::MatchedProjectionsMeasurement& matched_projections_measurement,
-      const gtsam::Pose3& dock_cam_T_dock);
+      const localization_measurements::MatchedProjectionsMeasurement& matched_projections_measurement);
   void AddSparseMappingMeasurement(
       const localization_measurements::MatchedProjectionsMeasurement& matched_projections_measurement);
   void AddProjectionMeasurement(

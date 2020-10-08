@@ -38,6 +38,8 @@ void LoadFactorParams(config_reader::ConfigReader& config, FactorParams& params)
   params.optical_flow_standstill_pose_prior = lc::LoadBool(config, "optical_flow_standstill_pose_prior");
   params.optical_flow_standstill_velocity_prior = lc::LoadBool(config, "optical_flow_standstill_velocity_prior");
   params.bias_prior = lc::LoadBool(config, "bias_prior");
+  params.loc_pose_priors = lc::LoadBool(config, "loc_pose_priors");
+  params.loc_projections = lc::LoadBool(config, "loc_projections");
 }
 
 void LoadFeatureTrackerParams(config_reader::ConfigReader& config, FeatureTrackerParams& params) {
@@ -68,6 +70,8 @@ void LoadNoiseParams(config_reader::ConfigReader& config, NoiseParams& params) {
   params.prior_accel_bias_stddev = lc::LoadDouble(config, "prior_accel_bias_stddev");
   params.prior_gyro_bias_stddev = lc::LoadDouble(config, "prior_gyro_bias_stddev");
   params.prior_min_variance_val = lc::LoadDouble(config, "prior_min_variance_val");
+  params.loc_prior_translation_stddev = lc::LoadDouble(config, "loc_prior_translation_stddev");
+  params.loc_prior_quaternion_stddev = lc::LoadDouble(config, "loc_prior_quaternion_stddev");
 }
 
 void LoadSanityCheckerParams(config_reader::ConfigReader& config, SanityCheckerParams& params) {

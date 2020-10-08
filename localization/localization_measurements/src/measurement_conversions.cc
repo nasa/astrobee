@@ -16,6 +16,7 @@
  * under the License.
  */
 
+#include <localization_common/utilities.h>
 #include <localization_measurements/measurement_conversions.h>
 
 namespace localization_measurements {
@@ -31,6 +32,8 @@ MatchedProjectionsMeasurement MakeMatchedProjectionsMeasurement(const ff_msgs::V
     const MapPoint map_point(landmark.x, landmark.y, landmark.z);
     matched_projections_measurement.matched_projections.emplace_back(image_point, map_point, timestamp);
   }
+
+  matched_projections_measurement.global_T_cam = lc::GtPose(visual_landmarks);
 
   return matched_projections_measurement;
 }

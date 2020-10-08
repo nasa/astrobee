@@ -34,6 +34,8 @@ struct NoiseParams {
   double starting_prior_gyro_bias_stddev;
   double prior_accel_bias_stddev;
   double prior_gyro_bias_stddev;
+  double loc_prior_translation_stddev;
+  double loc_prior_quaternion_stddev;
 
   // TODO(rsoussan): put this somewhere else?
   double prior_min_variance_val;

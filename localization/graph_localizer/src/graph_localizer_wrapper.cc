@@ -108,11 +108,10 @@ void GraphLocalizerWrapper::VLVisualLandmarksCallback(const ff_msgs::VisualLandm
     feature_counts_.vl = visual_landmarks_msg.landmarks.size();
   }
 
-  // TODO(rsoussan): Clean this up
-  const Eigen::Isometry3d sparse_mapping_global_T_body = lc::EigenPose(
-      visual_landmarks_msg, lc::EigenPose(graph_loc_initialization_.params().calibration.body_T_nav_cam.inverse()));
+  const gtsam::Pose3 sparse_mapping_global_T_body =
+      lc::GtPose(visual_landmarks_msg, graph_loc_initialization_.params().calibration.body_T_nav_cam.inverse());
   const lc::Time timestamp = lc::TimeFromHeader(visual_landmarks_msg.header);
-  sparse_mapping_pose_ = std::make_pair(sparse_mapping_global_T_body, timestamp);
+  sparse_mapping_pose_ = std::make_pair(lc::EigenPose(sparse_mapping_global_T_body), timestamp);
 
   // Sanity Check
   if (graph_localizer_ && !CheckPoseSanity(sparse_mapping_global_T_body, timestamp)) {
@@ -128,15 +127,14 @@ void GraphLocalizerWrapper::VLVisualLandmarksCallback(const ff_msgs::VisualLandm
   }
 }
 
-bool GraphLocalizerWrapper::CheckPoseSanity(const Eigen::Isometry3d& sparse_mapping_pose,
-                                            const lc::Time timestamp) const {
+bool GraphLocalizerWrapper::CheckPoseSanity(const gtsam::Pose3& sparse_mapping_pose, const lc::Time timestamp) const {
   if (!graph_localizer_) return true;
   const auto combined_nav_state = graph_localizer_->GetCombinedNavState(timestamp);
   if (!combined_nav_state) {
     LOG(INFO) << "CheckPoseSanity: Failed to get combined nav state.";
     return true;
   }
-  return sanity_checker_->CheckPoseSanity(lc::GtPose(sparse_mapping_pose), combined_nav_state->pose());
+  return sanity_checker_->CheckPoseSanity(sparse_mapping_pose, combined_nav_state->pose());
 }
 
 bool GraphLocalizerWrapper::CheckCovarianceSanity() const {
@@ -153,9 +151,7 @@ bool GraphLocalizerWrapper::CheckCovarianceSanity() const {
 void GraphLocalizerWrapper::ARVisualLandmarksCallback(const ff_msgs::VisualLandmarks& visual_landmarks_msg) {
   if (!ValidVLMsg(visual_landmarks_msg)) return;
   if (graph_localizer_) {
-    const Eigen::Isometry3d dock_T_dock_cam = lc::EigenPose(visual_landmarks_msg);
-    graph_localizer_->AddARTagMeasurement(lm::MakeMatchedProjectionsMeasurement(visual_landmarks_msg),
-                                          lc::GtPose(dock_T_dock_cam.inverse()));
+    graph_localizer_->AddARTagMeasurement(lm::MakeMatchedProjectionsMeasurement(visual_landmarks_msg));
     // TODO(rsoussan): Make seperate ar count, update EkfState
     feature_counts_.vl = visual_landmarks_msg.landmarks.size();
   }
