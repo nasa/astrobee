@@ -718,13 +718,31 @@ bool GraphLocalizer::TransformARMeasurementAndUpdateDockTWorld(FactorsToAdd& fac
                      factors_to_add.timestamp());
 
   // Frame change dock frame of landmark point using updated estimate of world_T_dock_
-  for (auto& factor_to_add : factors_to_add.Get()) {
-    gtsam::LocProjectionFactor<>* loc_factor = dynamic_cast<gtsam::LocProjectionFactor<>*>(factor_to_add.factor.get());
-    if (!loc_factor) {
-      LOG(ERROR) << "TransformARMeasurementAndUpdateDockTWorld: Failed to cast factor to loc projection factor.";
+  std::vector<FactorToAdd> frame_changed_pose_prior_factors;
+  for (auto factor_to_add_it = factors_to_add.Get().begin(); factor_to_add_it != factors_to_add.Get().end();) {
+    gtsam::LocProjectionFactor<>* loc_proj_factor =
+        dynamic_cast<gtsam::LocProjectionFactor<>*>(factor_to_add_it->factor.get());
+    gtsam::PriorFactor<gtsam::Pose3>* loc_prior_factor =
+        dynamic_cast<gtsam::PriorFactor<gtsam::Pose3>*>(factor_to_add_it->factor.get());
+    if (!loc_proj_factor && !loc_prior_factor) {
+      LOG(ERROR)
+          << "TransformARMeasurementAndUpdateDockTWorld: Failed to cast factor to loc projection or prior factor.";
       return false;
     }
-    loc_factor->landmark_point() = estimated_world_T_dock_->first * loc_factor->landmark_point();
+    if (loc_proj_factor) {
+      loc_proj_factor->landmark_point() = estimated_world_T_dock_->first * loc_proj_factor->landmark_point();
+      ++factor_to_add_it;
+    } else {
+      // Make new factor with changed frame and erase old one since gtsam doesn't allow modifying PriorFactor estimate
+      gtsam::PriorFactor<gtsam::Pose3>::shared_ptr frame_changed_pose_prior_factor(new gtsam::PriorFactor<gtsam::Pose3>(
+          loc_prior_factor->key(), estimated_world_T_dock_->first * loc_prior_factor->prior(),
+          loc_prior_factor->noiseModel()));
+      frame_changed_pose_prior_factors.emplace_back(factor_to_add_it->key_infos, frame_changed_pose_prior_factor);
+      factor_to_add_it = factors_to_add.Get().erase(factor_to_add_it);
+    }
+  }
+  for (const auto& frame_changed_pose_prior_factor : frame_changed_pose_prior_factors) {
+    factors_to_add.push_back(frame_changed_pose_prior_factor);
   }
 
   return true;
