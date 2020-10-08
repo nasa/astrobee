@@ -24,16 +24,14 @@ std_msgs/Header header
 string name
 
 # Physical Memory (RAM)
-uint32 total_ram
-uint32 used_ram
-float32 avg_ram_load
+uint32 ram_total   # total physical memeory in system Mb
+uint32 ram_used    # totalphysical memeory used in Mb
 
 # Virtual Memory
-uint32 total_swap
-uint32 used_swap
-float32 avg_swap_load
+uint32 virt_total  # total virtual memeory in system in Mb
+uint32 virt_used   # total virtual memeory used in Mb
 
 # Individual nodes
-# TODO @mgouveia
+ff_msgs/MemState[] nodes
 
 

@@ -46,6 +46,7 @@
 #include <cstdint>
 #include <string>
 #include <vector>
+#include <map>
 
 namespace mem_monitor {
 
@@ -66,50 +67,6 @@ class MemMonitor : public ff_util::FreeFlyerNodelet {
   bool ReadParams();
 
  private:
-  struct Load {
-    std::uint64_t total_time,
-                  user_time,
-                  system_time,
-                  idle_time,
-                  nice_time,
-                  io_time,
-                  irq_time,
-                  soft_irq_time,
-                  steal_time,
-                  guest_time,
-                  system_all_time,
-                  idle_all_time;
-
-    double total_percentage,
-           nice_percentage,
-           user_percentage,
-           system_percentage,
-           virt_percentage;
-  };
-
-  // Scope memory info from sysinfo
-  struct sysinfo mem_info_;
-
-  bool temp_fault_triggered_;
-
-  LoadFaultState load_fault_state_;
-
-  config_reader::ConfigReader config_params_;
-
-  double temperature_scale_;
-
-  float avg_load_high_value_;
-
-  ff_msgs::MemStateStamped mem_state_msg_;
-
-  int pub_queue_size_, update_freq_hz_, mem_avg_load_limit_;
-  int assert_load_high_fault_timeout_sec_, clear_load_high_fault_timeout_sec_;
-
-  ros::Publisher mem_state_pub_;
-  ros::Timer reload_params_timer_, stats_timer_;
-  ros::Timer assert_load_fault_timer_, clear_load_fault_timer_;
-  std::string processor_name_;
-
   void AssertLoadHighFaultCallback(ros::TimerEvent const& te);
 
   void ClearLoadHighFaultCallback(ros::TimerEvent const& te);
@@ -117,9 +74,30 @@ class MemMonitor : public ff_util::FreeFlyerNodelet {
   /** Collect usage stats about memory useage, calculate percentages
     * based on the last time this was called. You should call this in
     * regular intervals for the numbers to make sense over time. */
-  int CollectLoadStats();
-
+  int ParseLine(char* line);
+  void AssertStats();
   void PublishStatsCallback(ros::TimerEvent const &te);
+
+  // Relevant variables
+
+
+  // Scope memory info from sysinfo
+  struct sysinfo mem_info_;
+
+  LoadFaultState load_fault_state_;
+  int pub_queue_size_, update_freq_hz_, mem_avg_load_limit_;
+  float mem_load_value_, mem_load_limit_, avg_load_high_value_;
+  int assert_load_high_fault_timeout_sec_, clear_load_high_fault_timeout_sec_;
+
+  config_reader::ConfigReader config_params_;
+
+  ros::Publisher mem_state_pub_;
+  ros::Timer reload_params_timer_, stats_timer_;
+  ros::Timer assert_load_fault_timer_, clear_load_fault_timer_;
+  std::string processor_name_;
+
+  // Store PID values
+  std::map<std::string, int> nodes_pid_;
 };
 
 }  // namespace mem_monitor

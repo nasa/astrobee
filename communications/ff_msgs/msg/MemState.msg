@@ -17,12 +17,14 @@
 #
 # State of the Memory.
 
-# The load (in percentages) of the cpu, for the fields given in
-# CpuStateStamped
-float32[] loads 
+# The memory load of the node, for the fields given in
+string name
+# Virtual Memory
+uint32 virt        # virtual memeory used in Mb
+uint32 virt_peak   # peak virtual memory used in Mb
 
-# Current operating frequency in Hz
-uint32 frequency
+# Physical Memory
+uint32 ram        # physical memory used in Mb
+uint32 ram_peak   # peak physical memory used in Mb
+float32 ram_perc  # percentage of physical memory in %
 
-# Max frequency (may be less than theoretical limit of the processor)
-uint32 max_frequency
