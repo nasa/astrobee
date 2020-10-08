@@ -69,7 +69,6 @@ void LoadNoiseParams(config_reader::ConfigReader& config, NoiseParams& params) {
   params.starting_prior_gyro_bias_stddev = lc::LoadDouble(config, "starting_prior_gyro_bias_stddev");
   params.prior_accel_bias_stddev = lc::LoadDouble(config, "prior_accel_bias_stddev");
   params.prior_gyro_bias_stddev = lc::LoadDouble(config, "prior_gyro_bias_stddev");
-  params.prior_min_variance_val = lc::LoadDouble(config, "prior_min_variance_val");
   params.loc_prior_translation_stddev = lc::LoadDouble(config, "loc_prior_translation_stddev");
   params.loc_prior_quaternion_stddev = lc::LoadDouble(config, "loc_prior_quaternion_stddev");
 }
