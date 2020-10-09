@@ -872,6 +872,7 @@ bool GraphLocalizer::Update() {
   average_optimization_time += (optimization_time - average_optimization_time) / num_optimizations;
   LOG(INFO) << "Optimization time: " << optimization_time << " seconds.";
   LOG(INFO) << "Average optimization time: " << average_optimization_time << " seconds.";
+  LOG(INFO) << "Number of iterations: " << optimizer.iterations();
 
   // Update imu integrator bias
   const auto latest_bias = graph_values_.LatestBias();
