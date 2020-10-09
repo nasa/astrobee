@@ -235,8 +235,18 @@ void MemMonitor::PublishStatsCallback(ros::TimerEvent const &te) {
   args[1] = ros::this_node::getName();
   ros::master::execute("lookupNode", args, result, payload, true);
   std::string monitor_URI = result[2];
-  monitor_URI.erase(monitor_URI.begin(), monitor_URI.begin() + monitor_URI.find_first_of("/") + 2),
-                    monitor_URI.erase(monitor_URI.begin() + monitor_URI.find_last_of(":"), monitor_URI.end());
+  ROS_ERROR_STREAM("monitor_URI: " << monitor_URI);
+  std::size_t monitor_URI_begin = monitor_URI.find_first_of("/");
+  std::size_t monitor_URI_end = monitor_URI.find_last_of(":");
+  ROS_ERROR_STREAM("monitor_URI: " << monitor_URI << " first: " << monitor_URI_begin << " end: " << monitor_URI_end);
+  if (std::string::npos != monitor_URI_begin && std::string::npos != monitor_URI_end &&
+      monitor_URI_begin <= monitor_URI_end) {
+    monitor_URI.erase(monitor_URI.begin() + monitor_URI_end, monitor_URI.end());
+    monitor_URI.erase(monitor_URI.begin(), monitor_URI.begin() + monitor_URI_begin + 2);
+  } else {
+    ROS_ERROR_STREAM("Invalid monitor URI, returning ");
+    return;
+  }
   mem_state_msg.name = monitor_URI;
 
   // Go through all the node list and
@@ -250,8 +260,16 @@ void MemMonitor::PublishStatsCallback(ros::TimerEvent const &te) {
       args[1] = nodes[i];
       ros::master::execute("lookupNode", args, result, payload, true);
       std::string node_URI = result[2];
-      node_URI.erase(node_URI.begin(), node_URI.begin() + node_URI.find_first_of("/") + 2),
-                     node_URI.erase(node_URI.begin() + node_URI.find_last_of(":"), node_URI.end());
+      std::size_t  node_URI_begin = node_URI.find_first_of("/");
+      std::size_t  node_URI_end = node_URI.find_last_of(":");
+      if (std::string::npos != node_URI_begin && std::string::npos != node_URI_end && node_URI_begin <= node_URI_end) {
+        node_URI.erase(node_URI.begin() + node_URI_end, node_URI.end());
+        node_URI.erase(node_URI.begin(), node_URI.begin() + node_URI_begin + 2);
+      } else {
+        ROS_ERROR_STREAM("Invalid URI");
+        nodes_pid_.insert(std::pair<std::string, int>(nodes[i], 0));
+        continue;
+      }
 
       ROS_ERROR_STREAM("monitor_URI: " << monitor_URI << " node_URI: " << node_URI);
       // If it is in the same cpu
