@@ -30,7 +30,12 @@
 namespace graph_localizer {
 namespace lc = localization_common;
 GraphLocalizerNodelet::GraphLocalizerNodelet()
-    : ff_util::FreeFlyerNodelet(NODE_GRAPH_LOC, true), platform_name_(GetPlatform()) {}
+    : ff_util::FreeFlyerNodelet(NODE_GRAPH_LOC, true),
+      platform_name_(GetPlatform()),
+      vl_timer_("VL msg"),
+      of_timer_("OF msg"),
+      ar_timer_("AR msg"),
+      imu_timer_("Imu msg") {}
 
 void GraphLocalizerNodelet::Initialize(ros::NodeHandle* nh) {
   ff_common::InitFreeFlyerApplication(getMyArgv());
@@ -95,8 +100,8 @@ void GraphLocalizerNodelet::ResetAndEnableLocalizer() {
 }
 
 void GraphLocalizerNodelet::OpticalFlowCallback(const ff_msgs::Feature2dArray::ConstPtr& feature_array_msg) {
-  const ros::Duration delay = ros::Time::now() - lc::RosTimeFromHeader(feature_array_msg->header);
-  VLOG(2) << "Optical flow msg delay: " << delay.toSec();
+  of_timer_.HeaderDiff(feature_array_msg->header);
+  of_timer_.Vlog();
 
   if (!localizer_enabled()) return;
   graph_localizer_wrapper_.OpticalFlowCallback(*feature_array_msg);
@@ -111,8 +116,8 @@ void GraphLocalizerNodelet::OpticalFlowCallback(const ff_msgs::Feature2dArray::C
 }
 
 void GraphLocalizerNodelet::VLVisualLandmarksCallback(const ff_msgs::VisualLandmarks::ConstPtr& visual_landmarks_msg) {
-  const ros::Duration delay = ros::Time::now() - lc::RosTimeFromHeader(visual_landmarks_msg->header);
-  VLOG(2) << "Sparse mapping msg delay: " << delay.toSec();
+  vl_timer_.HeaderDiff(visual_landmarks_msg->header);
+  vl_timer_.Vlog();
 
   if (!localizer_enabled()) return;
   graph_localizer_wrapper_.VLVisualLandmarksCallback(*visual_landmarks_msg);
@@ -120,16 +125,16 @@ void GraphLocalizerNodelet::VLVisualLandmarksCallback(const ff_msgs::VisualLandm
 }
 
 void GraphLocalizerNodelet::ARVisualLandmarksCallback(const ff_msgs::VisualLandmarks::ConstPtr& visual_landmarks_msg) {
-  const ros::Duration delay = ros::Time::now() - lc::RosTimeFromHeader(visual_landmarks_msg->header);
-  VLOG(2) << "AR landmarks msg delay: " << delay.toSec();
+  ar_timer_.HeaderDiff(visual_landmarks_msg->header);
+  ar_timer_.Vlog();
 
   if (!localizer_enabled()) return;
   graph_localizer_wrapper_.ARVisualLandmarksCallback(*visual_landmarks_msg);
 }
 
 void GraphLocalizerNodelet::ImuCallback(const sensor_msgs::Imu::ConstPtr& imu_msg) {
-  const ros::Duration delay = ros::Time::now() - lc::RosTimeFromHeader(imu_msg->header);
-  VLOG(2) << "Imu msg delay: " << delay.toSec();
+  imu_timer_.HeaderDiff(imu_msg->header);
+  imu_timer_.Vlog();
 
   if (!localizer_enabled()) return;
   graph_localizer_wrapper_.ImuCallback(*imu_msg);

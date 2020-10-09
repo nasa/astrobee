@@ -44,7 +44,8 @@ GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
     : feature_tracker_(params.feature_tracker),
       latest_imu_integrator_(params.graph_initialization),
       graph_values_(params.graph_values),
-      params_(params) {
+      params_(params),
+      optimization_timer_("Optimization") {
   // Assumes zero initial velocity
   const lc::CombinedNavState global_cgN_body_start(
       params_.graph_initialization.global_T_body_start, gtsam::Velocity3::Zero(),
@@ -861,17 +862,10 @@ bool GraphLocalizer::Update() {
   // TODO(rsoussan): change lin solver?
   gtsam::LevenbergMarquardtOptimizer optimizer(graph_, graph_values_.values(), levenberg_marquardt_params_);
 
-  const auto optimize_start_time = std::chrono::steady_clock::now();
+  optimization_timer_.Start();
   graph_values_.UpdateValues(optimizer.optimize());
-  const auto optimize_end_time = std::chrono::steady_clock::now();
-  const double optimization_time = std::chrono::duration<double>(optimize_end_time - optimize_start_time).count();
-  static double average_optimization_time = 0;
-  static int num_optimizations = 0;
-  ++num_optimizations;
-  // Compute moving average to avoid overflow
-  average_optimization_time += (optimization_time - average_optimization_time) / num_optimizations;
-  LOG(INFO) << "Optimization time: " << optimization_time << " seconds.";
-  LOG(INFO) << "Average optimization time: " << average_optimization_time << " seconds.";
+  optimization_timer_.Stop();
+  optimization_timer_.Log();
   LOG(INFO) << "Number of iterations: " << optimizer.iterations();
 
   // Update imu integrator bias

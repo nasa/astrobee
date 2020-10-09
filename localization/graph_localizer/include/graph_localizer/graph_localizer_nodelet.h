@@ -23,6 +23,7 @@
 #include <ff_msgs/VisualLandmarks.h>
 #include <ff_util/ff_nodelet.h>
 #include <graph_localizer/graph_localizer_wrapper.h>
+#include <localization_common/ros_timer.h>
 
 #include <ros/node_handle.h>
 #include <ros/publisher.h>
@@ -87,6 +88,10 @@ class GraphLocalizerNodelet : public ff_util::FreeFlyerNodelet {
   ros::ServiceServer reset_srv_, bias_srv_, input_mode_srv_;
   tf2_ros::TransformBroadcaster transform_pub_;
   std::string platform_name_;
+  localization_common::RosTimer vl_timer_;
+  localization_common::RosTimer of_timer_;
+  localization_common::RosTimer ar_timer_;
+  localization_common::RosTimer imu_timer_;
 };
 }  // namespace graph_localizer
 

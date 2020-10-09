@@ -29,6 +29,7 @@
 #include <localization_common/combined_nav_state.h>
 #include <localization_common/combined_nav_state_covariances.h>
 #include <localization_common/time.h>
+#include <localization_common/timer.h>
 #include <localization_measurements/feature_points_measurement.h>
 #include <localization_measurements/matched_projections_measurement.h>
 
@@ -232,6 +233,7 @@ class GraphLocalizer {
   boost::optional<std::pair<gtsam::Pose3, localization_common::Time>> estimated_world_T_dock_;
   std::map<localization_common::Time, gtsam::Pose3> dock_cam_T_dock_estimates_;
   std::multimap<localization_common::Time, FactorsToAdd> buffered_factors_to_add_;
+  localization_common::Timer optimization_timer_;
 };
 }  // namespace graph_localizer
 
