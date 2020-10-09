@@ -39,10 +39,10 @@ void RosTimer::Stop() {
 }
 void RosTimer::Log() const {
   LOG(INFO) << name_ + " time: " << last_elapsed_time_ << " seconds.";
-  LOG(INFO) << "Average" + name_ + " time: " << average_elapsed_time_ << " seconds.";
+  LOG(INFO) << "Average " + name_ + " time: " << average_elapsed_time_ << " seconds.";
 }
 void RosTimer::Vlog(const int level) const {
   VLOG(level) << name_ + " time: " << last_elapsed_time_ << " seconds.";
-  VLOG(level) << "Average" + name_ + " time: " << average_elapsed_time_ << " seconds.";
+  VLOG(level) << "Average " + name_ + " time: " << average_elapsed_time_ << " seconds.";
 }
 }  // namespace localization_common
