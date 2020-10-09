@@ -55,7 +55,7 @@ module rapid {
       const rapid::String32 ADMIN_METHOD_LOAD_NODELET_PARAM_BOND_ID = "bondId";
       const rapid::DataType ADMIN_METHOD_LOAD_NODELET_DTYPE_BOND_ID = rapid::RAPID_STRING;
 
-      //@copy-declaration /** Reacquires pose fix in localization system.<p/>Currently, this command is equivalent to Admin.switchLocalization with pipeline set to "MappedLandmarks". */
+      //@copy-declaration /** Switch Astrobee's localization to use the general-purpose pipeline.<p/>This command is equivalent to calling Admin.switchLocalization with the "MappedLandmarks" pipeline, which also has the side-effect of resetting the EKF, like calling Admin.resetEKF. It could be useful as a way to manually recover localization if Astrobee is lost because it is using the wrong localization pipeline (e.g., if docking or perching approach got interrupted, and targets are no longer in view). */
       const rapid::String32 ADMIN_METHOD_REACQUIRE_POSITION = "reacquirePosition";
 
       //@copy-declaration /** Resets the EKF component of Astrobee's localization.<p/>This command discards the EKF state and forces the localization system to acquire a new fix. It should not be needed unless the localization system has failure modes where it gets persistently stuck with invalid state information. (Unfortunately, as of this writing in 9/2020, that is a frequent occurrence.) */
@@ -488,9 +488,6 @@ module rapid {
       const rapid::String32 SETTINGS_FLIGHT_MODE_DIFFICULT = "Difficult";
       const rapid::String32 SETTINGS_FLIGHT_MODE_QUIET = "Quiet";
       const rapid::String32 SETTINGS_FLIGHT_MODE_DOCKING = "Docking";
-      const rapid::String32 SETTINGS_FLIGHT_MODE_UNDOCKING = "Undocking";
-      const rapid::String32 SETTINGS_FLIGHT_MODE_PERCHING = "Perching";
-      const rapid::String32 SETTINGS_FLIGHT_MODE_UNPERCHING = "Unperching";
 
       const rapid::String32 SETTINGS_PLANNER_TYPE_TRAPEZOIDAL = "trapezoidal";
       const rapid::String32 SETTINGS_PLANNER_TYPE_QUADRATIC_PROGRAM = "qp";

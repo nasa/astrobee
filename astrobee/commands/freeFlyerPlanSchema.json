@@ -70,10 +70,7 @@
         ["Nominal", "Nominal"],
         ["Difficult", "Difficult"],
         ["Quiet", "Quiet"],
-        ["Docking", "Docking"],
-        ["Undocking", "Undocking"],
-        ["Perching", "Perching"],
-        ["Unperching", "Unperching"]
+        ["Docking", "Docking"]
       ]
     },
 
@@ -1133,7 +1130,7 @@
       "type": "CommandSpec",
       "id": "Admin.reacquirePosition",
       "isRapidNative": false,
-      "notes": "Reacquires pose fix in localization system.<p/>Currently, this command is equivalent to Admin.switchLocalization with pipeline set to \"MappedLandmarks\".",
+      "notes": "Switch Astrobee's localization to use the general-purpose pipeline.<p/>This command is equivalent to calling Admin.switchLocalization with the \"MappedLandmarks\" pipeline, which also has the side-effect of resetting the EKF, like calling Admin.resetEKF. It could be useful as a way to manually recover localization if Astrobee is lost because it is using the wrong localization pipeline (e.g., if docking or perching approach got interrupted, and targets are no longer in view).",
       "availableContexts" : [
         "teleop"
       ],

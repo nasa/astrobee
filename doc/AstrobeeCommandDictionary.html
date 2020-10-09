@@ -248,7 +248,7 @@ td.inner_table {
 
 <div class="commandSpec">
   <div class="commandSpecId"><a name="command_Admin.reacquirePosition">Admin.reacquirePosition</a></div>
-  <div class="commandSpecNotes">Reacquires pose fix in localization system.<p/>Currently, this command is equivalent to Admin.switchLocalization with pipeline set to "MappedLandmarks".</div>
+  <div class="commandSpecNotes">Switch Astrobee's localization to use the general-purpose pipeline.<p/>This command is equivalent to calling Admin.switchLocalization with the "MappedLandmarks" pipeline, which also has the side-effect of resetting the EKF, like calling Admin.resetEKF. It could be useful as a way to manually recover localization if Astrobee is lost because it is using the wrong localization pipeline (e.g., if docking or perching approach got interrupted, and targets are no longer in view).</div>
   <div class="commandSpecParams">
     <table class="params">
   <tr>
@@ -1743,18 +1743,6 @@ td.inner_table {
   <tr>
     <td class="param_choices_name">Docking</td>
     <td class="param_choices_value">&quot;Docking&quot;</td>
-  </tr>
-  <tr>
-    <td class="param_choices_name">Undocking</td>
-    <td class="param_choices_value">&quot;Undocking&quot;</td>
-  </tr>
-  <tr>
-    <td class="param_choices_name">Perching</td>
-    <td class="param_choices_value">&quot;Perching&quot;</td>
-  </tr>
-  <tr>
-    <td class="param_choices_name">Unperching</td>
-    <td class="param_choices_value">&quot;Unperching&quot;</td>
   </tr>
 </table>
 </td>
