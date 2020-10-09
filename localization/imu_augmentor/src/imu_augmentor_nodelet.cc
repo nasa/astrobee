@@ -26,7 +26,8 @@
 
 namespace imu_augmentor {
 
-ImuAugmentorNodelet::ImuAugmentorNodelet() : platform_name_(GetPlatform()) {}
+ImuAugmentorNodelet::ImuAugmentorNodelet()
+    : ff_util::FreeFlyerNodelet(NODE_IMU_AUG, true), platform_name_(GetPlatform()) {}
 
 void ImuAugmentorNodelet::Initialize(ros::NodeHandle* nh) { SubscribeAndAdvertise(nh); }
 
