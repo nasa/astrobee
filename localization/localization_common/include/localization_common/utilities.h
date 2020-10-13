@@ -122,6 +122,12 @@ void CombinedNavStateToMsg(const CombinedNavState& combined_nav_state, ff_msgs::
 CombinedNavStateCovariances CombinedNavStateCovariancesFromMsg(const ff_msgs::EkfState& loc_msg);
 
 void CombinedNavStateCovariancesToMsg(const CombinedNavStateCovariances& covariances, ff_msgs::EkfState& loc_msg);
+
+// Returns gravity corrected accelerometer measurement
+gtsam::Vector3 RemoveGravityFromAccelerometerMeasurement(const gtsam::Vector3& global_F_gravity,
+                                                         const gtsam::Pose3& body_T_imu,
+                                                         const gtsam::Pose3& global_T_body,
+                                                         const gtsam::Vector3& uncorrected_accelerometer_measurement);
 }  // namespace localization_common
 
 #endif  // LOCALIZATION_COMMON_UTILITIES_H_

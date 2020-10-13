@@ -38,10 +38,15 @@ ImuAugmentorWrapper::ImuAugmentorWrapper() {
   }
 
   // TODO(rsoussan): Unify this with graph localizer param reader LoadImuIntegratorParams
-  ii::ImuIntegratorParams params;
-  params.body_T_imu = lc::LoadTransform(config, "imu_transform");
-  params.gravity = lc::LoadVector3(config, "world_gravity_vector");
-  imu_augmentor_.reset(new ImuAugmentor(params));
+  params_.body_T_imu = lc::LoadTransform(config, "imu_transform");
+  params_.gravity = lc::LoadVector3(config, "world_gravity_vector");
+  imu_augmentor_.reset(new ImuAugmentor(params_));
+
+  // Preintegration_helper_ is only being used to frame change and remove centrifugal acceleration, so body_T_imu is the
+  // only parameter needed.
+  boost::shared_ptr<gtsam::PreintegrationParams> preintegration_params(new gtsam::PreintegrationParams());
+  preintegration_params->setBodyPSensor(params_.body_T_imu);
+  preintegration_helper_.reset(new gtsam::TangentPreintegration(preintegration_params, gtsam::imuBias::ConstantBias()));
 }
 
 void ImuAugmentorWrapper::LocalizationStateCallback(const ff_msgs::EkfState& loc_msg) {
@@ -105,9 +110,17 @@ boost::optional<ff_msgs::EkfState> ImuAugmentorWrapper::LatestImuAugmentedLocali
       latest_bias.correctAccelerometer(latest_imu_measurement->acceleration);
   const auto latest_bias_corrected_angular_velocity =
       latest_bias.correctGyroscope(latest_imu_measurement->angular_velocity);
-  lc::VectorToMsg(latest_bias_corrected_acceleration, latest_imu_augmented_loc_msg.accel);
-  lc::VectorToMsg(latest_bias_corrected_angular_velocity, latest_imu_augmented_loc_msg.omega);
+  // Frame change measurements to body frame, correct for centripetal accel, correct for gravity if needed
+  auto corrected_measurements = preintegration_helper_->correctMeasurementsBySensorPose(
+      latest_bias_corrected_acceleration, latest_bias_corrected_angular_velocity);
+  if (!params_.gravity.isZero()) {
+    const gtsam::Pose3& global_T_body_latest = latest_imu_augmented_combined_nav_state_and_covariances->first.pose();
+    corrected_measurements.first = lc::RemoveGravityFromAccelerometerMeasurement(
+        params_.gravity, params_.body_T_imu, global_T_body_latest, corrected_measurements.first);
+  }
 
+  lc::VectorToMsg(corrected_measurements.first, latest_imu_augmented_loc_msg.accel);
+  lc::VectorToMsg(corrected_measurements.second, latest_imu_augmented_loc_msg.omega);
   return latest_imu_augmented_loc_msg;
 }
 }  // namespace imu_augmentor

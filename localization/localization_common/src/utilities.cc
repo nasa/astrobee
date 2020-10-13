@@ -205,4 +205,14 @@ void CombinedNavStateCovariancesToMsg(const CombinedNavStateCovariances& covaria
   // Position (12-14)
   VariancesToCovDiag(covariances.position_variances(), &loc_msg.cov_diag[12]);
 }
+
+gtsam::Vector3 RemoveGravityFromAccelerometerMeasurement(const gtsam::Vector3& global_F_gravity,
+                                                         const gtsam::Pose3& body_T_imu,
+                                                         const gtsam::Pose3& global_T_body,
+                                                         const gtsam::Vector3& uncorrected_accelerometer_measurement) {
+  const gtsam::Rot3 global_R_imu = global_T_body.rotation() * body_T_imu.rotation();
+  const gtsam::Vector3 imu_F_gravity = global_R_imu.inverse() * global_F_gravity;
+  // Add gravity correction to measurement to offset negatively measured gravity
+  return (uncorrected_accelerometer_measurement + imu_F_gravity);
+}
 }  // namespace localization_common

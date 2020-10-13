@@ -145,10 +145,8 @@ void EstimateAndSetImuBiases(const lm::ImuMeasurement& imu_measurement,
 
 void RemoveGravityFromBias(const gtsam::Vector3& global_F_gravity, const gtsam::Pose3& body_T_imu,
                            const gtsam::Pose3& global_T_body, gtsam::imuBias::ConstantBias& imu_bias) {
-  const gtsam::Rot3 global_R_imu = global_T_body.rotation() * body_T_imu.rotation();
-  const gtsam::Vector3 imu_F_gravity = global_R_imu.inverse() * global_F_gravity;
-  // Add gravity correction to bias to offset negatively measured gravity in imu measurements
-  const gtsam::Vector3 gravity_corrected_accelerometer_bias = imu_bias.accelerometer() + imu_F_gravity;
+  const gtsam::Vector3 gravity_corrected_accelerometer_bias = lc::RemoveGravityFromAccelerometerMeasurement(
+      global_F_gravity, body_T_imu, global_T_body, imu_bias.accelerometer());
   imu_bias = gtsam::imuBias::ConstantBias(gravity_corrected_accelerometer_bias, imu_bias.gyroscope());
 }
 
