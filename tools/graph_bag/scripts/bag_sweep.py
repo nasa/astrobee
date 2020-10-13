@@ -22,18 +22,17 @@ import os
 import sys
  
 class GraphBagParams(object):
-  def __init__(self, bagfile, map_file, image_topic, output_file):
+  def __init__(self, bagfile, map_file, image_topic):
     self.bagfile = bagfile
     self.map_file = map_file
     self.image_topic = image_topic
-    self.output_file = output_file
 
 def load_params(param_file):
   graph_bag_params_list = []
   with open(param_file) as param_csvfile:
     reader = csv.reader(param_csvfile, delimiter=' ')
     for row in reader:
-      graph_bag_params_list.append(GraphBagParams(row[0], row[1], row[2], row[3]))
+      graph_bag_params_list.append(GraphBagParams(row[0], row[1], row[2]))
       
   return graph_bag_params_list
 
@@ -45,19 +44,18 @@ def check_params(graph_bag_params_list):
     if not os.path.isfile(params.map_file):
       print('Map file ' + params.map_file + ' does not exist.')
       sys.exit()
-    if os.path.isfile(params.output_file):
-      print('Output file ' + params.output_file + ' already exists.')
-      sys.exit()
 
-def run_graph_bag(graph_bag_params_list): 
-  output_bag_path = os.getcwd() + 'tmp_results.bag'
+def run_graph_bag(graph_bag_params_list, output_dir): 
   for params in graph_bag_params_list:
+    bag_name = os.path.splitext(os.path.basename(params.bagfile))[0]
+    output_bag_path = os.path.join(output_dir, bag_name + '_results.bag')
     run_command = 'rosrun graph_bag run_graph_bag ' + params.bagfile + ' ' + params.map_file + ' -i ' + params.image_topic + ' -o ' + output_bag_path
     os.system(run_command)
-    plot_command = 'rosrun graph_bag plot_results_main.py ' + output_bag_path + ' --output-file ' + params.output_file 
+    output_file = os.path.join(output_dir, bag_name + '_output.pdf')
+    plot_command = 'rosrun graph_bag plot_results_main.py ' + output_bag_path + ' --output-file ' + output_file 
     os.system(plot_command)
 
-def bag_sweep(config_file):
+def bag_sweep(config_file, output_dir):
   graph_bag_params_list = load_params(config_file)
   check_params(graph_bag_params_list)
-  run_graph_bag(graph_bag_params_list)
+  run_graph_bag(graph_bag_params_list, output_dir)

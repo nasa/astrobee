@@ -27,8 +27,14 @@ import sys
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
   parser.add_argument('config_file')
+  parser.add_argument('output_dir')
   args = parser.parse_args()
   if not os.path.isfile(args.config_file):
     print('Config file ' + args.config_file + ' does not exist.')
     sys.exit()
-  bag_sweep.bag_sweep(args.config_file)
+  if os.path.isdir(args.output_dir):
+    print('Output directory ' + args.output_dir + ' already exists.')
+    sys.exit()
+  os.makedirs(args.output_dir)
+
+  bag_sweep.bag_sweep(args.config_file, args.output_dir)
