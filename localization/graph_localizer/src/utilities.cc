@@ -143,6 +143,14 @@ void EstimateAndSetImuBiases(const lm::ImuMeasurement& imu_measurement,
   graph_loc_initialization.SetBiases(accelerometer_bias, gyro_bias);
 }
 
+void RemoveGravityFromBias(const gtsam::Vector3& global_F_gravity, const gtsam::Pose3& body_T_imu,
+                           const gtsam::Pose3& global_T_body, gtsam::imuBias::ConstantBias& imu_bias) {
+  const gtsam::Rot3 global_R_imu = global_T_body.rotation() * body_T_imu.rotation();
+  const gtsam::Vector3 imu_F_gravity = global_R_imu.inverse() * global_F_gravity;
+  const gtsam::Vector3 gravity_corrected_accelerometer_bias = imu_bias.accelerometer() - imu_F_gravity;
+  imu_bias = gtsam::imuBias::ConstantBias(gravity_corrected_accelerometer_bias, imu_bias.gyroscope());
+}
+
 gtsam::noiseModel::Robust::shared_ptr Robust(const gtsam::SharedNoiseModel& noise) {
   return gtsam::noiseModel::Robust::Create(gtsam::noiseModel::mEstimator::Huber::Create(1.345 /*Taken from gtsam*/),
                                            noise);

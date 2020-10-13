@@ -33,6 +33,7 @@ class GraphLocInitialization {
  public:
   void SetBiases(const Eigen::Vector3d& accelerometer_bias, const Eigen::Vector3d& gyro_bias);
   void SetStartPose(const Eigen::Isometry3d& global_T_body_start, const double timestamp);
+  void RemoveGravityFromBiasIfPossibleAndNecessary();
   bool ReadyToInitialize() const;
   void ResetBiasesAndStartPose();
   void ResetStartPose();
@@ -44,12 +45,14 @@ class GraphLocInitialization {
   bool EstimateBiases() const;
   const GraphLocalizerParams& params() const;
   void LoadGraphLocalizerParams(config_reader::ConfigReader& config);
+  bool RemovedGravityFromBiasIfNecessary() const;
 
  private:
   bool has_biases_ = false;
   bool has_start_pose_ = false;
   bool has_params_ = false;
   bool estimate_biases_ = false;
+  bool removed_gravity_from_bias_if_necessary_ = false;
   graph_localizer::GraphLocalizerParams params_;
 };
 }  // namespace graph_localizer

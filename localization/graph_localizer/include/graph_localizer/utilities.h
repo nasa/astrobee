@@ -49,6 +49,9 @@ void EstimateAndSetImuBiases(const localization_measurements::ImuMeasurement& im
                              std::vector<localization_measurements::ImuMeasurement>& imu_bias_measurements,
                              GraphLocInitialization& graph_loc_initialization);
 
+void RemoveGravityFromBias(const gtsam::Vector3& global_F_gravity, const gtsam::Pose3& body_T_imu,
+                           const gtsam::Pose3& global_T_body, gtsam::imuBias::ConstantBias& imu_bias);
+
 bool ValidPointSet(const std::deque<localization_measurements::FeaturePoint>& points,
                    const double average_distance_from_mean, const double min_avg_distance_from_mean);
 

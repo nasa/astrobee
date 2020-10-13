@@ -29,12 +29,30 @@ void GraphLocInitialization::SetBiases(const Eigen::Vector3d& accelerometer_bias
   params_.graph_initialization.initial_imu_bias = gtsam::imuBias::ConstantBias(accelerometer_bias, gyro_bias);
   has_biases_ = true;
   estimate_biases_ = false;
+  RemoveGravityFromBiasIfPossibleAndNecessary();
 }
 
 void GraphLocInitialization::SetStartPose(const Eigen::Isometry3d& global_T_body_start, const double timestamp) {
   params_.graph_initialization.start_time = timestamp;
   params_.graph_initialization.global_T_body_start = lc::GtPose(global_T_body_start);
   has_start_pose_ = true;
+  RemoveGravityFromBiasIfPossibleAndNecessary();
+}
+
+void GraphLocInitialization::RemoveGravityFromBiasIfPossibleAndNecessary() {
+  if (RemovedGravityFromBiasIfNecessary() || !HasParams()) return;
+  if (params_.graph_initialization.gravity.isZero()) {
+    removed_gravity_from_bias_if_necessary_ = true;
+    return;
+  }
+  if (!HasStartPose() || !HasBiases()) return;
+  // Biases, start pose and params are available and gravity is non zero, gravity can and should now be removed
+  // from the initial bias estimates.
+  RemoveGravityFromBias(params_.graph_initialization.gravity, params_.graph_initialization.body_T_imu,
+                        params_.graph_initialization.global_T_body_start,
+                        params_.graph_initialization.initial_imu_bias);
+  removed_gravity_from_bias_if_necessary_ = true;
+  return;
 }
 
 void GraphLocInitialization::ResetBiasesAndStartPose() {
@@ -54,7 +72,9 @@ void GraphLocInitialization::LoadGraphLocalizerParams(config_reader::ConfigReade
   has_params_ = true;
 }
 
-bool GraphLocInitialization::ReadyToInitialize() const { return HasBiases() && HasStartPose() && HasParams(); }
+bool GraphLocInitialization::ReadyToInitialize() const {
+  return HasBiases() && HasStartPose() && HasParams() && RemovedGravityFromBiasIfNecessary();
+}
 
 void GraphLocInitialization::StartBiasEstimation() { estimate_biases_ = true; }
 
@@ -62,6 +82,9 @@ bool GraphLocInitialization::HasBiases() const { return has_biases_; }
 bool GraphLocInitialization::HasStartPose() const { return has_start_pose_; }
 bool GraphLocInitialization::HasParams() const { return has_params_; }
 bool GraphLocInitialization::EstimateBiases() const { return estimate_biases_; }
+bool GraphLocInitialization::RemovedGravityFromBiasIfNecessary() const {
+  return removed_gravity_from_bias_if_necessary_;
+}
 
 const GraphLocalizerParams& GraphLocInitialization::params() const { return params_; }
 
