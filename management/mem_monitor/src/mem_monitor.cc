@@ -195,8 +195,23 @@ void MemMonitor::AssertStats() {
   }
 }
 
+std::string getHostfromURI(std::string uri) {
+  std::size_t uri_begin = uri.find_first_of("/");
+  std::size_t uri_end = uri.find_last_of(":");
+  if (std::string::npos != uri_begin && std::string::npos != uri_end &&
+      uri_begin <= uri_end) {
+    uri.erase(uri.begin() + uri_end, uri.end());
+    uri.erase(uri.begin(), uri.begin() + uri_begin + 2);
+    return uri;
+  } else {
+    ROS_ERROR_STREAM("Invalid URI, returning ");
+    return {};
+  }
+}
 
 void MemMonitor::PublishStatsCallback(ros::TimerEvent const &te) {
+  // Stop the timer
+  stats_timer_.stop();
   // Declare the message
   ff_msgs::MemStateStamped mem_state_msg;
 
@@ -234,20 +249,12 @@ void MemMonitor::PublishStatsCallback(ros::TimerEvent const &te) {
   args[0] = ros::this_node::getName();
   args[1] = ros::this_node::getName();
   ros::master::execute("lookupNode", args, result, payload, true);
-  std::string monitor_URI = result[2];
-  ROS_ERROR_STREAM("monitor_URI: " << monitor_URI);
-  std::size_t monitor_URI_begin = monitor_URI.find_first_of("/");
-  std::size_t monitor_URI_end = monitor_URI.find_last_of(":");
-  ROS_ERROR_STREAM("monitor_URI: " << monitor_URI << " first: " << monitor_URI_begin << " end: " << monitor_URI_end);
-  if (std::string::npos != monitor_URI_begin && std::string::npos != monitor_URI_end &&
-      monitor_URI_begin <= monitor_URI_end) {
-    monitor_URI.erase(monitor_URI.begin() + monitor_URI_end, monitor_URI.end());
-    monitor_URI.erase(monitor_URI.begin(), monitor_URI.begin() + monitor_URI_begin + 2);
-  } else {
-    ROS_ERROR_STREAM("Invalid monitor URI, returning ");
+  std::string monitor_host = getHostfromURI(result[2]);
+  if (monitor_host.empty()) {
+    ROS_ERROR_STREAM("URI of the memory monitor not valid");
     return;
   }
-  mem_state_msg.name = monitor_URI;
+  mem_state_msg.name = monitor_host;
 
   // Go through all the node list and
   for (uint i = 0; i < nodes.size(); ++i) {
@@ -259,48 +266,47 @@ void MemMonitor::PublishStatsCallback(ros::TimerEvent const &te) {
       args[0] = ros::this_node::getName();
       args[1] = nodes[i];
       ros::master::execute("lookupNode", args, result, payload, true);
-      std::string node_URI = result[2];
-      std::size_t  node_URI_begin = node_URI.find_first_of("/");
-      std::size_t  node_URI_end = node_URI.find_last_of(":");
-      if (std::string::npos != node_URI_begin && std::string::npos != node_URI_end && node_URI_begin <= node_URI_end) {
-        node_URI.erase(node_URI.begin() + node_URI_end, node_URI.end());
-        node_URI.erase(node_URI.begin(), node_URI.begin() + node_URI_begin + 2);
-      } else {
-        ROS_ERROR_STREAM("Invalid URI");
-        nodes_pid_.insert(std::pair<std::string, int>(nodes[i], 0));
+      std::string node_host = getHostfromURI(result[2]);
+      if (node_host.empty()) {
+        ROS_ERROR_STREAM("Invalid host");
+        nodes_pid_.insert(std::pair<std::string, int>(nodes[i], -1));
         continue;
       }
 
-      ROS_ERROR_STREAM("monitor_URI: " << monitor_URI << " node_URI: " << node_URI);
       // If it is in the same cpu
-      if (node_URI == monitor_URI) {
-        // Get the node PID
-        std::array<char, 128> buffer;
-        std::string pid;
-        FILE* pipe = popen(("rosnode info " + nodes[i] + " 2>/dev/null | grep Pid| cut -d' ' -f2").c_str(), "r");
-        if (!pipe) {
-          // Node not found
-          continue;
-        }
-        while (fgets(buffer.data(), 128, pipe) != NULL) {
-          pid += buffer.data();
-        }
-        pclose(pipe);
+      ROS_ERROR_STREAM("monitor_host: " << monitor_host << " node_URI: " << node_host);
+      if (node_host != monitor_host) {
         // Insert it on the list
-        nodes_pid_.insert(std::pair<std::string, int>(nodes[i], std::stoi(pid)));
-      } else {
-        // Insert it on the list
-        nodes_pid_.insert(std::pair<std::string, int>(nodes[i], 0));
+        nodes_pid_.insert(std::pair<std::string, int>(nodes[i], -1));
       }
+
+      // Get the node PID
+      std::array<char, 128> buffer;
+      std::string pid;
+      FILE* pipe = popen(("rosnode info " + nodes[i] + " 2>/dev/null | grep Pid| cut -d' ' -f2").c_str(), "r");
+      if (!pipe) {
+        // Node not found
+        continue;
+      }
+      while (fgets(buffer.data(), 128, pipe) != NULL) {
+        pid += buffer.data();
+      }
+      pclose(pipe);
+      // Insert it on the list
+      nodes_pid_.insert(std::pair<std::string, int>(nodes[i], std::stoi(pid)));
     }
     // Check that the process is in this computer
-    if (nodes_pid_.find(nodes[i])->second == 0)
+    if (nodes_pid_.find(nodes[i])->second <= 0)
       continue;
 
     // Get Memory useage
     ff_msgs::MemState mem_node;
     mem_node.name = nodes[i];
     FILE* file = fopen(("/proc/" + std::to_string(nodes_pid_.find(nodes[i])->second) + "/status").c_str(), "r");
+    if (!file) {
+      // File not found
+      continue;
+    }
     char line[128];
     while (fgets(line, 128, file) != NULL) {
       // Get virtual memory in Mb
@@ -332,6 +338,9 @@ void MemMonitor::PublishStatsCallback(ros::TimerEvent const &te) {
 
   // Assert stats
   AssertStats();
+
+  // Restart the timer
+  stats_timer_.start();
 }
 
 }  // namespace mem_monitor
