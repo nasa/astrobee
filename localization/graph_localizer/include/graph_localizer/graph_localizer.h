@@ -110,10 +110,10 @@ class GraphLocalizer {
 
   bool SplitOldImuFactorAndAddCombinedNavState(const localization_common::Time timestamp);
 
-  void AddStartingPriors(const localization_common::CombinedNavState& global_cgN_body_start, const int key_index,
+  void AddStartingPriors(const localization_common::CombinedNavState& global_N_body_start, const int key_index,
                          const gtsam::Values& values, gtsam::NonlinearFactorGraph& graph);
 
-  void AddPriors(const localization_common::CombinedNavState& global_cgN_body,
+  void AddPriors(const localization_common::CombinedNavState& global_N_body,
                  const localization_common::CombinedNavStateNoise& noise, const int key_index,
                  const gtsam::Values& values, gtsam::NonlinearFactorGraph& graph);
 
@@ -122,7 +122,7 @@ class GraphLocalizer {
   boost::optional<std::pair<localization_common::CombinedNavState, localization_common::CombinedNavStateCovariances>>
   LatestCombinedNavStateAndCovariances(const gtsam::Marginals& marginals) const;
 
-  bool CreateAndAddImuFactorAndPredictedCombinedNavState(const localization_common::CombinedNavState& global_cgN_body,
+  bool CreateAndAddImuFactorAndPredictedCombinedNavState(const localization_common::CombinedNavState& global_N_body,
                                                          const gtsam::PreintegratedCombinedMeasurements& pim);
 
   void BufferFactors(const FactorsToAdd& factors_to_add);
