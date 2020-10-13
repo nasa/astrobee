@@ -48,6 +48,7 @@ void GraphLocInitialization::RemoveGravityFromBiasIfPossibleAndNecessary() {
   if (!HasStartPose() || !HasBiases()) return;
   // Biases, start pose and params are available and gravity is non zero, gravity can and should now be removed
   // from the initial bias estimates.
+  VLOG(2) << "RemoveGravityFromBiasIfPossibleAndNecessary: Removing gravity from initial biases.";
   RemoveGravityFromBias(params_.graph_initialization.gravity, params_.graph_initialization.body_T_imu,
                         params_.graph_initialization.global_T_body_start,
                         params_.graph_initialization.initial_imu_bias);

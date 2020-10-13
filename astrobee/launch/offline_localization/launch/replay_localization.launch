@@ -17,6 +17,13 @@
 
 <launch>
   <arg name="bagfile"/>             
+  <arg name="image" default="true" />
+  <arg name="image_features" default="false" />
+  <arg name="image_topic" default="" unless="$(arg image)"/>
+  <arg name="image_topic" value="/mgt/img_sampler/nav_cam/image_record" if="$(arg image)"/>
+  <arg name="image_feature_topics" default="" unless="$(arg image_features)"/>
+  <arg name="image_feature_topics" value="/loc/ml/features /loc/of/features" if="$(arg image_features)"/>
+
   <arg name="terminal" default="" />
 
   <param name="use_sim_time" value="true"/> 
@@ -25,5 +32,5 @@
   <remap from="/mgt/img_sampler/nav_cam/image_record" to="/hw/cam_nav"/>
   <remap from="/gnc/ekf" to="/bag/gnc/ekf"/>
 
-  <node pkg="rosbag" type="play" name="player" output="screen" launch-prefix="$(arg terminal)" args="--clock $(arg bagfile) --topics /hw/imu /loc/ar/features /mgt/img_sampler/nav_cam/image_record" />
+  <node pkg="rosbag" type="play" name="player" output="screen" launch-prefix="$(arg terminal)" args="--clock $(arg bagfile) --topics /hw/imu /loc/ar/features $(arg image_topic) $(arg image_feature_topics)" />
 </launch>

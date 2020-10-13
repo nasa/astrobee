@@ -30,6 +30,9 @@
   <arg name="localization_manager" default="false" />
   <arg name="service_calls" default="true" unless="$(arg localization_manager)"/>     
   <arg name="service_calls" value="false" if="$(arg localization_manager)" />   
+  <arg name="image_features" default="false" />
+  <arg name="image" default="true" />
+
 
   <!-- Set environment configs that are required to run nodes -->
   <env name="ASTROBEE_ROBOT" value="$(arg robot)" />
@@ -75,6 +78,8 @@
   <include file="$(find astrobee)/launch/offline_localization/launch/replay_localization.launch">
     <arg name="bagfile" value="$(arg bagfile)"/>
     <arg name="terminal" value="terminator -x"/>
+    <arg name="image_features" value="$(arg image_features)"/>
+    <arg name="image" value="$(arg image)"/>
   </include>
 
   <!-- Service calls -->
