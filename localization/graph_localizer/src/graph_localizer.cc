@@ -281,7 +281,6 @@ void GraphLocalizer::AddStandstillVelocityPriorFactor(const lc::Time timestamp,
       Robust(gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(velocity_prior_noise_sigmas)));
 
   const KeyInfo velocity_key_info(&sym::V, timestamp);
-  // Velocity key will be filled in by GraphAction when buffered factors are added to graph
   gtsam::PriorFactor<gtsam::Velocity3>::shared_ptr velocity_prior_factor(new gtsam::PriorFactor<gtsam::Velocity3>(
       velocity_key_info.UninitializedKey(), gtsam::Velocity3::Zero(), velocity_noise));
   standstill_prior_factors_to_add.push_back({{velocity_key_info}, velocity_prior_factor});
