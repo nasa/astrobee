@@ -25,16 +25,16 @@
 
 namespace graph_localizer {
 namespace lc = localization_common;
-void GraphLocInitialization::SetBiases(const Eigen::Vector3d& accelerometer_bias, const Eigen::Vector3d& gyro_bias) {
-  params_.graph_initialization.initial_imu_bias = gtsam::imuBias::ConstantBias(accelerometer_bias, gyro_bias);
+void GraphLocInitialization::SetBiases(const gtsam::imuBias::ConstantBias& imu_bias) {
+  params_.graph_initialization.initial_imu_bias = imu_bias;
   has_biases_ = true;
   estimate_biases_ = false;
   RemoveGravityFromBiasIfPossibleAndNecessary();
 }
 
-void GraphLocInitialization::SetStartPose(const Eigen::Isometry3d& global_T_body_start, const double timestamp) {
+void GraphLocInitialization::SetStartPose(const gtsam::Pose3& global_T_body_start, const double timestamp) {
   params_.graph_initialization.start_time = timestamp;
-  params_.graph_initialization.global_T_body_start = lc::GtPose(global_T_body_start);
+  params_.graph_initialization.global_T_body_start = global_T_body_start;
   has_start_pose_ = true;
   RemoveGravityFromBiasIfPossibleAndNecessary();
 }

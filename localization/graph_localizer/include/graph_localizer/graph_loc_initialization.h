@@ -23,16 +23,16 @@
 #include <graph_localizer/graph_localizer_params.h>
 #include <msg_conversions/msg_conversions.h>
 
-#include <Eigen/Core>
-#include <Eigen/Geometry>
+#include <gtsam/geometry/Pose3.h>
+#include <gtsam/navigation/ImuBias.h>
 
 #include <string>
 
 namespace graph_localizer {
 class GraphLocInitialization {
  public:
-  void SetBiases(const Eigen::Vector3d& accelerometer_bias, const Eigen::Vector3d& gyro_bias);
-  void SetStartPose(const Eigen::Isometry3d& global_T_body_start, const double timestamp);
+  void SetBiases(const gtsam::imuBias::ConstantBias& imu_bias);
+  void SetStartPose(const gtsam::Pose3& global_T_body_start, const double timestamp);
   void RemoveGravityFromBiasIfPossibleAndNecessary();
   bool ReadyToInitialize() const;
   void ResetBiasesAndStartPose();

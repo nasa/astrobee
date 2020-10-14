@@ -131,6 +131,12 @@ void PoseToMsg(const gtsam::Pose3& pose, geometry_msgs::Pose& msg_pose) {
   VectorToMsg(pose.translation(), msg_pose.position);
 }
 
+geometry_msgs::TransformStamped PoseToTF(const gtsam::Pose3& pose, const std::string& parent_frame,
+                                         const std::string& child_frame, const Time timestamp,
+                                         const std::string& platform_name) {
+  return PoseToTF(EigenPose(pose), parent_frame, child_frame, timestamp, platform_name);
+}
+
 geometry_msgs::TransformStamped PoseToTF(const Eigen::Isometry3d& pose, const std::string& parent_frame,
                                          const std::string& child_frame, const Time timestamp,
                                          const std::string& platform_name) {

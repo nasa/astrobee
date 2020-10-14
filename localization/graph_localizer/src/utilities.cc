@@ -130,17 +130,18 @@ geometry_msgs::PoseStamped PoseMsg(const Eigen::Isometry3d& global_T_body, const
   return PoseMsg(global_T_body, header);
 }
 
+geometry_msgs::PoseStamped PoseMsg(const gtsam::Pose3& global_T_body, const lc::Time time) {
+  return PoseMsg(lc::EigenPose(global_T_body), time);
+}
+
 void EstimateAndSetImuBiases(const lm::ImuMeasurement& imu_measurement,
                              const int num_imu_measurements_per_bias_estimate,
                              std::vector<lm::ImuMeasurement>& imu_bias_measurements,
                              GraphLocInitialization& graph_loc_initialization) {
-  Eigen::Vector3d accelerometer_bias;
-  Eigen::Vector3d gyro_bias;
-  if (!ii::EstimateAndSetImuBiases(imu_measurement, num_imu_measurements_per_bias_estimate, imu_bias_measurements,
-                                   accelerometer_bias, gyro_bias))
-    return;
-
-  graph_loc_initialization.SetBiases(accelerometer_bias, gyro_bias);
+  const auto biases =
+      ii::EstimateAndSetImuBiases(imu_measurement, num_imu_measurements_per_bias_estimate, imu_bias_measurements);
+  if (!biases) return;
+  graph_loc_initialization.SetBiases(*biases);
 }
 
 void RemoveGravityFromBias(const gtsam::Vector3& global_F_gravity, const gtsam::Pose3& body_T_imu,

@@ -82,14 +82,14 @@ void GraphLocalizerWrapper::OpticalFlowCallback(const ff_msgs::Feature2dArray& f
 void GraphLocalizerWrapper::ResetLocalizer() {
   LOG(INFO) << "ResetLocalizer: Resetting localizer.";
   graph_loc_initialization_.ResetStartPose();
-  if (!have_latest_imu_biases_) {
+  if (!latest_biases_) {
     LOG(DFATAL) << "ResetLocalizer: Trying to reset localizer when no biases "
                    "are available.";
     return;
   }
   // TODO(rsoussan): compare current time with latest bias timestamp and print
   // warning if it is too old
-  graph_loc_initialization_.SetBiases(latest_accelerometer_bias_, latest_gyro_bias_);
+  graph_loc_initialization_.SetBiases(latest_biases_->first);
   graph_localizer_.reset();
   sanity_checker_->Reset();
 }
@@ -111,7 +111,7 @@ void GraphLocalizerWrapper::VLVisualLandmarksCallback(const ff_msgs::VisualLandm
   const gtsam::Pose3 sparse_mapping_global_T_body =
       lc::GtPose(visual_landmarks_msg, graph_loc_initialization_.params().calibration.body_T_nav_cam.inverse());
   const lc::Time timestamp = lc::TimeFromHeader(visual_landmarks_msg.header);
-  sparse_mapping_pose_ = std::make_pair(lc::EigenPose(sparse_mapping_global_T_body), timestamp);
+  sparse_mapping_pose_ = std::make_pair(sparse_mapping_global_T_body, timestamp);
 
   // Sanity Check
   if (graph_localizer_ && !CheckPoseSanity(sparse_mapping_global_T_body, timestamp)) {
@@ -160,14 +160,9 @@ void GraphLocalizerWrapper::ARVisualLandmarksCallback(const ff_msgs::VisualLandm
 void GraphLocalizerWrapper::ImuCallback(const sensor_msgs::Imu& imu_msg) {
   if (graph_localizer_) {
     graph_localizer_->AddImuMeasurement(lm::ImuMeasurement(imu_msg));
-    const auto latest_biases = graph_localizer_->LatestBiases();
-    if (!latest_biases) {
+    latest_biases_ = graph_localizer_->LatestBiases();
+    if (!latest_biases_) {
       LOG(WARNING) << "ImuCallback: Failed to get latest biases.";
-    } else {
-      latest_accelerometer_bias_ = latest_biases->first.accelerometer();
-      latest_gyro_bias_ = latest_biases->first.gyroscope();
-      latest_bias_timestamp_ = latest_biases->second;
-      have_latest_imu_biases_ = true;
     }
   } else if (graph_loc_initialization_.EstimateBiases()) {
     EstimateAndSetImuBiases(lm::ImuMeasurement(imu_msg), num_bias_estimation_measurements_, imu_bias_measurements_,
@@ -195,7 +190,7 @@ const FeatureTrackMap* const GraphLocalizerWrapper::feature_tracks() const {
   return &(graph_localizer_->feature_tracks());
 }
 
-boost::optional<std::pair<Eigen::Isometry3d, lc::Time>> GraphLocalizerWrapper::estimated_world_T_dock() const {
+boost::optional<std::pair<gtsam::Pose3, lc::Time>> GraphLocalizerWrapper::estimated_world_T_dock() const {
   if (!graph_localizer_ || !graph_localizer_->estimated_world_T_dock()) {
     LOG_EVERY_N(WARNING, 50) << "estimated_world_T_dock: Failed to get world_T_dock";
     return boost::none;

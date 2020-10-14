@@ -845,12 +845,12 @@ void GraphLocalizer::SaveGraphDotFile(const std::string& output_path) const {
   graph_.saveGraph(of, graph_values_.values());
 }
 
-boost::optional<std::pair<Eigen::Isometry3d, lc::Time>> GraphLocalizer::estimated_world_T_dock() const {
+boost::optional<std::pair<gtsam::Pose3, lc::Time>> GraphLocalizer::estimated_world_T_dock() const {
   if (!estimated_world_T_dock_) {
     LOG_EVERY_N(WARNING, 50) << "estimated_world_T_dock: Failed to get estimated_world_T_dock.";
     return boost::none;
   }
-  return std::make_pair(lc::EigenPose(estimated_world_T_dock_->first), estimated_world_T_dock_->second);
+  return std::make_pair(estimated_world_T_dock_->first, estimated_world_T_dock_->second);
 }
 
 bool GraphLocalizer::Update() {

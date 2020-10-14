@@ -107,6 +107,10 @@ geometry_msgs::TransformStamped PoseToTF(const Eigen::Isometry3d& pose, const st
                                          const std::string& child_frame, const Time timestamp,
                                          const std::string& platform_name = "");
 
+geometry_msgs::TransformStamped PoseToTF(const gtsam::Pose3& pose, const std::string& parent_frame,
+                                         const std::string& child_frame, const Time timestamp,
+                                         const std::string& platform_name);
+
 void EigenPoseToMsg(const Eigen::Isometry3d& pose, geometry_msgs::Pose& msg_pose);
 
 void EigenPoseToMsg(const Eigen::Isometry3d& pose, geometry_msgs::Transform& msg_transform);

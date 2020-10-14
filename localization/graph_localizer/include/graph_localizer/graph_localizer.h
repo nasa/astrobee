@@ -90,7 +90,7 @@ class GraphLocalizer {
 
   int NumVLFactors() const;
 
-  boost::optional<std::pair<Eigen::Isometry3d, localization_common::Time>> estimated_world_T_dock() const;
+  boost::optional<std::pair<gtsam::Pose3, localization_common::Time>> estimated_world_T_dock() const;
 
   const GraphValues& graph_values() const;
 

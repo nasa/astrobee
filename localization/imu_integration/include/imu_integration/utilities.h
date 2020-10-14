@@ -32,10 +32,9 @@
 
 namespace imu_integration {
 namespace sym = gtsam::symbol_shorthand;
-bool EstimateAndSetImuBiases(const localization_measurements::ImuMeasurement& imu_measurement,
-                             const int num_imu_measurements_per_bias_estimate,
-                             std::vector<localization_measurements::ImuMeasurement>& imu_bias_measurements,
-                             Eigen::Vector3d& accelerometer_bias, Eigen::Vector3d& gyro_bias);
+boost::optional<gtsam::imuBias::ConstantBias> EstimateAndSetImuBiases(
+    const localization_measurements::ImuMeasurement& imu_measurement, const int num_imu_measurements_per_bias_estimate,
+    std::vector<localization_measurements::ImuMeasurement>& imu_bias_measurements);
 
 boost::optional<localization_measurements::ImuMeasurement> Interpolate(
     const localization_measurements::ImuMeasurement& imu_measurement_a,
