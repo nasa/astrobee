@@ -50,9 +50,9 @@ ImuAugmentorWrapper::ImuAugmentorWrapper() {
 }
 
 void ImuAugmentorWrapper::LocalizationStateCallback(const ff_msgs::EkfState& loc_msg) {
-  latest_combined_nav_state_.reset(new lc::CombinedNavState(lc::CombinedNavStateFromMsg(loc_msg)));
-  latest_covariances_.reset(new lc::CombinedNavStateCovariances(lc::CombinedNavStateCovariancesFromMsg(loc_msg)));
-  latest_loc_msg_.reset(new ff_msgs::EkfState(loc_msg));
+  latest_combined_nav_state_ = lc::CombinedNavStateFromMsg(loc_msg);
+  latest_covariances_ = lc::CombinedNavStateCovariancesFromMsg(loc_msg);
+  latest_loc_msg_ = loc_msg;
 }
 
 void ImuAugmentorWrapper::ImuCallback(const sensor_msgs::Imu& imu_msg) {
