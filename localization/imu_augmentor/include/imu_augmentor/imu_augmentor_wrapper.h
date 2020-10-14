@@ -27,8 +27,6 @@
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <sensor_msgs/Imu.h>
 
-#include <Eigen/Core>
-
 #include <memory>
 #include <utility>
 

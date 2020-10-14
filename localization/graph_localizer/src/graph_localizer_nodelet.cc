@@ -174,9 +174,8 @@ void GraphLocalizerNodelet::PublishWorldTBodyTF() {
     return;
   }
 
-  const Eigen::Isometry3d pose = lc::EigenPose(latest_combined_nav_state->pose());
-  const auto timestamp = latest_combined_nav_state->timestamp();
-  const auto world_T_body_tf = lc::PoseToTF(pose, "world", "body", timestamp, platform_name_);
+  const auto world_T_body_tf = lc::PoseToTF(latest_combined_nav_state->pose(), "world", "body",
+                                            latest_combined_nav_state->timestamp(), platform_name_);
   transform_pub_.sendTransform(world_T_body_tf);
 }
 
