@@ -19,10 +19,11 @@ cmake_minimum_required(VERSION 2.8.3)
 
 project(graph_localizer)
 
-# For gprof - remove otherwise
-#SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pg")
-# For google prof: 
-#SET(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--no-as-needed -lprofiler -Wl,--as-needed")
+#TODO(rsoussan): Is this needed here and in graph_bag?
+if(USE_GOOGLE_PROFILER)
+  SET(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--no-as-needed -lprofiler -Wl,--as-needed")
+  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDEBUG")
+endif()
 
 find_package(GTSAM REQUIRED)
 

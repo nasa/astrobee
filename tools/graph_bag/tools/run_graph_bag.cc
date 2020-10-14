@@ -25,14 +25,14 @@
 
 #include <glog/logging.h>
 
-// #include <gperftools/profiler.h>
+#ifdef GOOGLE_PROFILER
+#include <gperftools/profiler.h>
+#endif
 
 namespace po = boost::program_options;
 namespace lc = localization_common;
 
 int main(int argc, char** argv) {
-  // TODO(rsoussan): Set as variable in cmake file
-  // ProfilerStart("/home/rsoussan/graph_bag_tests/prof.txt");
   std::string image_topic;
   std::string config_path;
   std::string output_bagfile;
@@ -95,7 +95,12 @@ int main(int argc, char** argv) {
   config_reader::ConfigReader config;
 
   graph_bag::GraphBag graph_bag(input_bag, map_file, image_topic, save_feature_track_image, output_bagfile);
+#ifdef GOOGLE_PROFILER
+  ProfilerStart(boost::filesystem::current_path() + "/graph_bag_prof.txt");
+#endif
   graph_bag.Run();
-  // ProfilerFlush();
-  // ProfilerStop();
+#ifdef GOOLGE_PROFILER
+  ProfilerFlush();
+  ProfilerStop();
+#endif
 }
