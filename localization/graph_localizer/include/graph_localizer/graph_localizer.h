@@ -135,10 +135,8 @@ class GraphLocalizer {
 
   bool TransformARMeasurementAndUpdateDockTWorld(FactorsToAdd& factors_to_add);
 
-  void AddStandstillPriorFactor(const localization_common::Time timestamp,
-                                FactorsToAdd& standstill_prior_factors_to_add);
-
-  bool FillPriorFactors(FactorsToAdd& factors_to_add);
+  void AddStandstillVelocityPriorFactor(const localization_common::Time timestamp,
+                                        FactorsToAdd& standstill_prior_factors_to_add);
 
   void AddCombinedImuFactorAndBiasPrior(const gtsam::CombinedImuFactor::shared_ptr& combined_imu_factor);
 

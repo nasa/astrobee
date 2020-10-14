@@ -37,7 +37,6 @@ void LoadFactorParams(config_reader::ConfigReader& config, FactorParams& params)
       lc::LoadDouble(config, "min_valid_feature_track_avg_distance_from_mean");
   params.max_standstill_feature_track_avg_distance_from_mean =
       lc::LoadDouble(config, "max_standstill_feature_track_avg_distance_from_mean");
-  params.optical_flow_standstill_pose_prior = lc::LoadBool(config, "optical_flow_standstill_pose_prior");
   params.optical_flow_standstill_velocity_prior = lc::LoadBool(config, "optical_flow_standstill_velocity_prior");
   params.enable_EPI = lc::LoadBool(config, "enable_EPI");
   params.landmark_distance_threshold = lc::LoadDouble(config, "landmark_distance_threshold");
@@ -62,8 +61,6 @@ void LoadGraphValuesParams(config_reader::ConfigReader& config, GraphValuesParam
 void LoadNoiseParams(config_reader::ConfigReader& config, NoiseParams& params) {
   params.dock_cam_noise = gtsam::noiseModel::Isotropic::Sigma(2, lc::LoadDouble(config, "dock_cam_noise_stddev"));
   params.nav_cam_noise = gtsam::noiseModel::Isotropic::Sigma(2, lc::LoadDouble(config, "nav_cam_noise_stddev"));
-  params.optical_flow_prior_translation_stddev = lc::LoadDouble(config, "optical_flow_prior_translation_stddev");
-  params.optical_flow_prior_quaternion_stddev = lc::LoadDouble(config, "optical_flow_prior_quaternion_stddev");
   params.optical_flow_prior_velocity_stddev = lc::LoadDouble(config, "optical_flow_prior_velocity_stddev");
   params.starting_prior_translation_stddev = lc::LoadDouble(config, "starting_prior_translation_stddev");
   params.starting_prior_quaternion_stddev = lc::LoadDouble(config, "starting_prior_quaternion_stddev");
