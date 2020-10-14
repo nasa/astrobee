@@ -23,8 +23,8 @@
 #include <ff_msgs/LocalizationGraph.h>
 #include <ff_msgs/VisualLandmarks.h>
 #include <graph_localizer/feature_counts.h>
-#include <graph_localizer/graph_loc_initialization.h>
 #include <graph_localizer/graph_localizer.h>
+#include <graph_localizer/graph_localizer_initialization.h>
 #include <graph_localizer/sanity_checker.h>
 #include <localization_measurements/imu_measurement.h>
 #include <localization_measurements/matched_projections_measurement.h>
@@ -89,7 +89,7 @@ class GraphLocalizerWrapper {
   bool publish_localization_graph_;
   bool save_localization_graph_dot_file_;
   boost::optional<std::pair<gtsam::imuBias::ConstantBias, localization_common::Time>> latest_biases_;
-  GraphLocInitialization graph_loc_initialization_;
+  GraphLocalizerInitialization graph_localizer_initialization_;
   FeatureCounts feature_counts_;
   boost::optional<std::pair<gtsam::Pose3, localization_common::Time>> sparse_mapping_pose_;
   std::unique_ptr<SanityChecker> sanity_checker_;

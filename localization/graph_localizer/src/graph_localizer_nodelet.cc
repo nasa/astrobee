@@ -108,11 +108,10 @@ void GraphLocalizerNodelet::OpticalFlowCallback(const ff_msgs::Feature2dArray::C
 
   // Publish loc information here since graph updates occur on optical flow updates
   PublishLocalizationState();
+  PublishWorldTDockTF();
   if (graph_localizer_wrapper_.publish_localization_graph()) PublishLocalizationGraph();
   if (graph_localizer_wrapper_.save_localization_graph_dot_file())
     graph_localizer_wrapper_.SaveLocalizationGraphDotFile();
-  // TODO(rsoussan): put this somewhere else? only publish if available?
-  PublishWorldTDockTF();
 }
 
 void GraphLocalizerNodelet::VLVisualLandmarksCallback(const ff_msgs::VisualLandmarks::ConstPtr& visual_landmarks_msg) {
