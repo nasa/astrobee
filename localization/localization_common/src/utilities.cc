@@ -100,11 +100,11 @@ gtsam::Pose3 GtPose(const ff_msgs::VisualLandmarks& vl_features) {
   return gtsam::Pose3(vl_global_R_sensor, vl_global_t_sensor);
 }
 
-void SetEnvironmentConfigs(const std::string& astrobee_configs_path, const std::string& world) {
+void SetEnvironmentConfigs(const std::string& astrobee_configs_path, const std::string& world,
+                           const std::string& robot_config_file) {
   setenv("ASTROBEE_RESOURCE_DIR", (astrobee_configs_path + "/resources").c_str(), true);
   setenv("ASTROBEE_CONFIG_DIR", (astrobee_configs_path + "/config").c_str(), true);
-  // TODO(rsoussan): pass this as an argument
-  setenv("ASTROBEE_ROBOT", (astrobee_configs_path + "/config/robots/bumble.config").c_str(), true);
+  setenv("ASTROBEE_ROBOT", (astrobee_configs_path + "/" + robot_config_file).c_str(), true);
   setenv("ASTROBEE_WORLD", world.c_str(), true);
 }
 

@@ -64,7 +64,8 @@ gtsam::Pose3 GtPose(const ff_msgs::VisualLandmarks& vl_features, const gtsam::Po
 // Returns pose in sensor frame
 gtsam::Pose3 GtPose(const ff_msgs::VisualLandmarks& vl_features);
 
-void SetEnvironmentConfigs(const std::string& astrobee_configs_path, const std::string& world);
+void SetEnvironmentConfigs(const std::string& astrobee_configs_path, const std::string& world,
+                           const std::string& robot_config_file);
 
 ros::Time RosTimeFromHeader(const std_msgs::Header& header);
 
