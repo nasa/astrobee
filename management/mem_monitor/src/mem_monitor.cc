@@ -258,6 +258,7 @@ void MemMonitor::PublishStatsCallback(ros::TimerEvent const &te) {
 
   // Go through all the node list and
   for (uint i = 0; i < nodes.size(); ++i) {
+    ROS_ERROR_STREAM(monitor_host << " reading " << nodes[i] << " node:" << i << "/" << nodes.size());
     // Look for PID if not already on the list
     if (nodes_pid_.find(nodes[i]) == nodes_pid_.end()) {
       // Check if the node is being executed in this computer
@@ -268,13 +269,11 @@ void MemMonitor::PublishStatsCallback(ros::TimerEvent const &te) {
       ros::master::execute("lookupNode", args, result, payload, true);
       std::string node_host = getHostfromURI(result[2]);
       if (node_host.empty()) {
-        ROS_ERROR_STREAM("Invalid host");
         nodes_pid_.insert(std::pair<std::string, int>(nodes[i], -1));
         continue;
       }
 
       // If it is in the same cpu
-      ROS_ERROR_STREAM("monitor_host: " << monitor_host << " node_URI: " << node_host);
       if (node_host != monitor_host) {
         // Insert it on the list
         nodes_pid_.insert(std::pair<std::string, int>(nodes[i], -1));
@@ -286,10 +285,18 @@ void MemMonitor::PublishStatsCallback(ros::TimerEvent const &te) {
       FILE* pipe = popen(("rosnode info " + nodes[i] + " 2>/dev/null | grep Pid| cut -d' ' -f2").c_str(), "r");
       if (!pipe) {
         // Node not found
+        ROS_ERROR_STREAM("rosnode info failed for node " << nodes[i]);
+        nodes_pid_.insert(std::pair<std::string, int>(nodes[i], -1));
         continue;
       }
       while (fgets(buffer.data(), 128, pipe) != NULL) {
         pid += buffer.data();
+      }
+      ROS_ERROR_STREAM("pid found " << pid);
+
+      if (pid.empty()) {
+        nodes_pid_.insert(std::pair<std::string, int>(nodes[i], -1));
+        continue;
       }
       pclose(pipe);
       // Insert it on the list
@@ -305,9 +312,11 @@ void MemMonitor::PublishStatsCallback(ros::TimerEvent const &te) {
     FILE* file = fopen(("/proc/" + std::to_string(nodes_pid_.find(nodes[i])->second) + "/status").c_str(), "r");
     if (!file) {
       // File not found
+      ROS_ERROR_STREAM("failed reading the PID file for " << nodes[i]);
       continue;
     }
     char line[128];
+    ROS_ERROR_STREAM("start reading stats for " << nodes[i]);
     while (fgets(line, 128, file) != NULL) {
       // Get virtual memory in Mb
       if (strncmp(line, "VmSize:", 7) == 0) {
@@ -328,6 +337,7 @@ void MemMonitor::PublishStatsCallback(ros::TimerEvent const &te) {
       }
     }
     fclose(file);
+    ROS_ERROR_STREAM("finished reading for " << nodes[i]);
     mem_state_msg.nodes.push_back(mem_node);
   }
 
