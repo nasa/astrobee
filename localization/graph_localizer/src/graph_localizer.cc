@@ -217,7 +217,7 @@ bool GraphLocalizer::AddOpticalFlowMeasurement(
   FactorsToAdd smart_factors_to_add(GraphAction::kDeleteExistingSmartFactors);
   // Add standstill velocity prior factor if there is low disparity for all feature tracks, indicating standstill, since
   // a smart factor in this case would not have enough disparity to estimate the 3d position of a feature
-  FactorsToAdd prior_factors_to_add();
+  FactorsToAdd prior_factors_to_add;
   double potential_standstill_feature_tracks_average_distance_from_mean = 0;
   int num_potential_standstill_feature_tracks = 0;
   for (const auto& feature_track : feature_tracker_.feature_tracks()) {
