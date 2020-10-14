@@ -47,6 +47,7 @@ void LoadFactorParams(config_reader::ConfigReader& config, FactorParams& params)
   params.bias_prior = lc::LoadBool(config, "bias_prior");
   params.loc_pose_priors = lc::LoadBool(config, "loc_pose_priors");
   params.loc_projections = lc::LoadBool(config, "loc_projections");
+  params.min_num_matches = lc::LoadInt(config, "min_num_matches");
 }
 
 void LoadFeatureTrackerParams(config_reader::ConfigReader& config, FeatureTrackerParams& params) {

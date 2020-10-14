@@ -35,6 +35,7 @@ struct FactorParams {
   // Loc factors
   bool loc_pose_priors;
   bool loc_projections;
+  int min_num_matches;
 };
 }  // namespace graph_localizer
 
