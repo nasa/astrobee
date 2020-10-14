@@ -18,9 +18,11 @@
 
 #include <graph_localizer/parameter_reader.h>
 #include <graph_localizer/utilities.h>
+#include <imu_integration/utilities.h>
 #include <localization_common/utilities.h>
 
 namespace graph_localizer {
+namespace ii = imu_integration;
 namespace lc = localization_common;
 void LoadCalibrationParams(config_reader::ConfigReader& config, CalibrationParams& params) {
   params.body_T_dock_cam = lc::LoadTransform(config, "dock_cam_transform");
@@ -49,11 +51,6 @@ void LoadFactorParams(config_reader::ConfigReader& config, FactorParams& params)
 
 void LoadFeatureTrackerParams(config_reader::ConfigReader& config, FeatureTrackerParams& params) {
   params.sliding_window_duration = lc::LoadDouble(config, "feature_tracker_sliding_window_duration");
-}
-
-void LoadImuIntegrationParams(config_reader::ConfigReader& config, GraphInitializationParams& params) {
-  params.gravity = lc::LoadVector3(config, "world_gravity_vector");
-  params.body_T_imu = lc::LoadTransform(config, "imu_transform");
 }
 
 void LoadGraphValuesParams(config_reader::ConfigReader& config, GraphValuesParams& params) {
@@ -91,7 +88,7 @@ void LoadSanityCheckerParams(config_reader::ConfigReader& config, SanityCheckerP
 
 void LoadGraphLocalizerParams(config_reader::ConfigReader& config, GraphLocalizerParams& params) {
   LoadCalibrationParams(config, params.calibration);
-  LoadImuIntegrationParams(config, params.graph_initialization);
+  ii::LoadImuIntegratorParams(config, params.graph_initialization);
   LoadFactorParams(config, params.factor);
   LoadFeatureTrackerParams(config, params.feature_tracker);
   LoadGraphValuesParams(config, params.graph_values);

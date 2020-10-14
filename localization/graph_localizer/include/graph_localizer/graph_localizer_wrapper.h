@@ -89,7 +89,6 @@ class GraphLocalizerWrapper {
   bool publish_localization_graph_;
   bool save_localization_graph_dot_file_;
   boost::optional<std::pair<gtsam::imuBias::ConstantBias, localization_common::Time>> latest_biases_;
-  // TODO(rsoussan): rename this!
   GraphLocInitialization graph_loc_initialization_;
   FeatureCounts feature_counts_;
   boost::optional<std::pair<gtsam::Pose3, localization_common::Time>> sparse_mapping_pose_;

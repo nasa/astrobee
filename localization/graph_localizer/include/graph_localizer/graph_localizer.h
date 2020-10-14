@@ -53,9 +53,7 @@
 #include <utility>
 
 namespace graph_localizer {
-// TODO(rsoussan): is this kosher?
 namespace sym = gtsam::symbol_shorthand;
-// TODO(rsoussan): put these somewhere else?
 using Calibration = gtsam::Cal3_S2;
 using Camera = gtsam::PinholeCamera<Calibration>;
 using SmartFactor = gtsam::SmartProjectionPoseFactor<Calibration>;

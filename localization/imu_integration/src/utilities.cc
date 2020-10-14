@@ -17,6 +17,7 @@
  */
 
 #include <imu_integration/utilities.h>
+#include <localization_common/utilities.h>
 
 #include <glog/logging.h>
 
@@ -97,4 +98,10 @@ gtsam::CombinedImuFactor::shared_ptr MakeCombinedImuFactor(const int key_index_0
       new gtsam::CombinedImuFactor(sym::P(key_index_0), sym::V(key_index_0), sym::P(key_index_1), sym::V(key_index_1),
                                    sym::B(key_index_0), sym::B(key_index_1), pim));
 }
+
+void LoadImuIntegratorParams(config_reader::ConfigReader& config, ImuIntegratorParams& params) {
+  params.gravity = lc::LoadVector3(config, "world_gravity_vector");
+  params.body_T_imu = lc::LoadTransform(config, "imu_transform");
+}
+
 }  // namespace imu_integration

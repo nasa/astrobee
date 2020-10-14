@@ -174,7 +174,6 @@ boost::optional<lc::CombinedNavState> GraphLocalizer::GetCombinedNavState(const 
 
   // Pim predict from lower bound state rather than closest state so there is no
   // need to reverse predict (going backwards in time) using a pim prediction which is not yet supported in gtsam.
-  // TODO(rsoussan): Add this
   auto integrated_pim = latest_imu_integrator_.IntegratedPim(lower_bound_or_equal_combined_nav_state->bias(),
                                                              lower_bound_or_equal_combined_nav_state->timestamp(), time,
                                                              latest_imu_integrator_.pim_params());
@@ -859,7 +858,6 @@ bool GraphLocalizer::Update() {
   AddBufferedFactors();
 
   // Optimize
-  // TODO(rsoussan): change lin solver?
   gtsam::LevenbergMarquardtOptimizer optimizer(graph_, graph_values_.values(), levenberg_marquardt_params_);
 
   optimization_timer_.Start();

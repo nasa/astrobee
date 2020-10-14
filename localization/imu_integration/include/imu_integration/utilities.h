@@ -19,6 +19,8 @@
 #ifndef IMU_INTEGRATION_UTILITIES_H_
 #define IMU_INTEGRATION_UTILITIES_H_
 
+#include <config_reader/config_reader.h>
+#include <imu_integration/imu_integrator_params.h>
 #include <localization_common/combined_nav_state.h>
 #include <localization_measurements/imu_measurement.h>
 
@@ -53,6 +55,8 @@ localization_common::CombinedNavState PimPredict(const localization_common::Comb
 
 gtsam::CombinedImuFactor::shared_ptr MakeCombinedImuFactor(const int key_index_0, const int key_index_1,
                                                            const gtsam::PreintegratedCombinedMeasurements& pim);
+
+void LoadImuIntegratorParams(config_reader::ConfigReader& config, ImuIntegratorParams& params);
 }  // namespace imu_integration
 
 #endif  // IMU_INTEGRATION_UTILITIES_H_

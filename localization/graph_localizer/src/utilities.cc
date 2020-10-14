@@ -41,7 +41,6 @@ bool ShouldAddStandstillPrior(const double standstill_feature_tracks_average_dis
                               const int num_standstill_feature_tracks, const FactorParams& params) {
   if (!params.optical_flow_standstill_pose_prior && !params.optical_flow_standstill_velocity_prior) return false;
   // TODO(rsoussan): Make this a config variable
-  // todo: make sure points have enough tracks!!!! get average num points per track?????
   if (num_standstill_feature_tracks < 5) return false;
   return standstill_feature_tracks_average_distance_from_mean <
          params.max_standstill_feature_track_avg_distance_from_mean;

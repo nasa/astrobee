@@ -169,7 +169,6 @@ void GraphLocalizerWrapper::ImuCallback(const sensor_msgs::Imu& imu_msg) {
                             graph_loc_initialization_);
   }
 
-  // TODO(rsoussan): put this somewhere else?
   if (!graph_localizer_ && graph_loc_initialization_.ReadyToInitialize()) {
     InitializeGraph();
     LOG(INFO) << "ImuCallback: Initialized Graph.";
