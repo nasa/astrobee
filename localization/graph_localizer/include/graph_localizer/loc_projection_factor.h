@@ -174,7 +174,6 @@ class LocProjectionFactor : public NoiseModelFactor1<POSE> {
 
   const LANDMARK& landmark_point() const { return landmark_point_; }
 
-  // TODO(rsoussan): remove this?
   LANDMARK& landmark_point() { return landmark_point_; }
 
   /** return the calibration object */

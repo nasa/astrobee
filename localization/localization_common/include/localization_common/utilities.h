@@ -64,7 +64,8 @@ gtsam::Pose3 GtPose(const ff_msgs::VisualLandmarks& vl_features, const gtsam::Po
 // Returns pose in sensor frame
 gtsam::Pose3 GtPose(const ff_msgs::VisualLandmarks& vl_features);
 
-void SetEnvironmentConfigs(const std::string& astrobee_configs_path, const std::string& world);
+void SetEnvironmentConfigs(const std::string& astrobee_configs_path, const std::string& world,
+                           const std::string& robot_config_file);
 
 ros::Time RosTimeFromHeader(const std_msgs::Header& header);
 
@@ -106,6 +107,10 @@ void PoseToMsg(const gtsam::Pose3& pose, geometry_msgs::Pose& msg_pose);
 geometry_msgs::TransformStamped PoseToTF(const Eigen::Isometry3d& pose, const std::string& parent_frame,
                                          const std::string& child_frame, const Time timestamp,
                                          const std::string& platform_name = "");
+
+geometry_msgs::TransformStamped PoseToTF(const gtsam::Pose3& pose, const std::string& parent_frame,
+                                         const std::string& child_frame, const Time timestamp,
+                                         const std::string& platform_name);
 
 void EigenPoseToMsg(const Eigen::Isometry3d& pose, geometry_msgs::Pose& msg_pose);
 

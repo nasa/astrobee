@@ -23,8 +23,8 @@
 #include <ff_msgs/LocalizationGraph.h>
 #include <ff_msgs/VisualLandmarks.h>
 #include <graph_localizer/feature_counts.h>
-#include <graph_localizer/graph_loc_initialization.h>
 #include <graph_localizer/graph_localizer.h>
+#include <graph_localizer/graph_localizer_initialization.h>
 #include <graph_localizer/sanity_checker.h>
 #include <localization_measurements/imu_measurement.h>
 #include <localization_measurements/matched_projections_measurement.h>
@@ -68,7 +68,7 @@ class GraphLocalizerWrapper {
 
   const FeatureTrackMap* const feature_tracks() const;
 
-  boost::optional<std::pair<Eigen::Isometry3d, localization_common::Time>> estimated_world_T_dock() const;
+  boost::optional<std::pair<gtsam::Pose3, localization_common::Time>> estimated_world_T_dock() const;
 
   void SaveLocalizationGraphDotFile() const;
 
@@ -88,16 +88,10 @@ class GraphLocalizerWrapper {
   int num_bias_estimation_measurements_;
   bool publish_localization_graph_;
   bool save_localization_graph_dot_file_;
-  // TODO(rsoussan): put these somewhere else? make accessor that returns false
-  // if latest imu measurement not available?
-  Eigen::Vector3d latest_accelerometer_bias_;
-  Eigen::Vector3d latest_gyro_bias_;
-  localization_common::Time latest_bias_timestamp_;
-  bool have_latest_imu_biases_;
-  // TODO(rsoussan): rename this!
-  GraphLocInitialization graph_loc_initialization_;
+  boost::optional<std::pair<gtsam::imuBias::ConstantBias, localization_common::Time>> latest_biases_;
+  GraphLocalizerInitialization graph_localizer_initialization_;
   FeatureCounts feature_counts_;
-  boost::optional<std::pair<Eigen::Isometry3d, localization_common::Time>> sparse_mapping_pose_;
+  boost::optional<std::pair<gtsam::Pose3, localization_common::Time>> sparse_mapping_pose_;
   std::unique_ptr<SanityChecker> sanity_checker_;
   double position_cov_log_det_lost_threshold_;
   double orientation_cov_log_det_lost_threshold_;

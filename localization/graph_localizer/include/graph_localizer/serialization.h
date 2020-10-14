@@ -23,41 +23,7 @@
 
 #include <string>
 
-/*namespace boost {
-namespace serialization {
-template <class Archive>
-void serialize(Archive& ar, graph_localizer::GraphLocalizer& graph_localizer, const unsigned int version) {
-  split_free(ar, graph_localizer, version);
-}
-
-template <class Archive>
-void save(Archive& ar, const graph_localizer::GraphLocalizer& graph_localizer, const unsigned int version) {
-  // Workaround to removed combined imu factors before serializing.
-  // This avoids a bug in gtsam for serializing combined imu factors.
-  // Remove when new stable gtsam version is available.
-  gtsam::NonlinearFactorGraph graph_copy = graph_localizer.graph_;
-  for (auto factor_it = graph_copy.begin(); factor_it != graph_copy.end();) {
-    if (dynamic_cast<gtsam::CombinedImuFactor*>(factor_it->get())) {
-      factor_it = graph_copy.erase(factor_it);
-      continue;
-    }
-    ++factor_it;
-  }
-
-  ar << graph_copy;
-  ar << graph_localizer.graph_values_;
-}
-
-template <class Archive>
-void load(Archive& ar, graph_localizer::GraphLocalizer& graph_localizer, const unsigned int version) {
-  ar >> graph_localizer.graph_;
-  ar >> graph_localizer.graph_values_;
-}
-}  // namespace serialization
-}  // namespace boost */
-
 namespace graph_localizer {
-
 std::string SerializeBinary(const GraphLocalizer& graph_localizer);
 }  // namespace graph_localizer
 

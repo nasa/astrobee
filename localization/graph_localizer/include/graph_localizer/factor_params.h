@@ -23,7 +23,6 @@ struct FactorParams {
   // Optical flow factors
   double min_valid_feature_track_avg_distance_from_mean;
   double max_standstill_feature_track_avg_distance_from_mean;
-  bool optical_flow_standstill_pose_prior;
   bool optical_flow_standstill_velocity_prior;
   bool enable_EPI;
   double landmark_distance_threshold;
@@ -35,6 +34,7 @@ struct FactorParams {
   // Loc factors
   bool loc_pose_priors;
   bool loc_projections;
+  int min_num_matches;
 };
 }  // namespace graph_localizer
 

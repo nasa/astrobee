@@ -36,7 +36,6 @@
 #include <utility>
 
 namespace graph_localizer {
-// TODO(rsoussan): this already exists in graph_localizer.h, is that legal?
 namespace sym = gtsam::symbol_shorthand;
 class GraphValues {
  public:
@@ -90,7 +89,6 @@ class GraphValues {
 
   bool HasKey(const localization_common::Time timestamp) const;
 
-  // TODO(rsoussan): move this somewhere else
   template <class FACTOR>
   static bool ContainsCombinedNavStateKey(const FACTOR& factor, const int key_index) {
     if (factor.find(sym::P(key_index)) != factor.end()) return true;

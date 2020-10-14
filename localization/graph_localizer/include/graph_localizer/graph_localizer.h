@@ -53,9 +53,7 @@
 #include <utility>
 
 namespace graph_localizer {
-// TODO(rsoussan): is this kosher?
 namespace sym = gtsam::symbol_shorthand;
-// TODO(rsoussan): put these somewhere else?
 using Calibration = gtsam::Cal3_S2;
 using Camera = gtsam::PinholeCamera<Calibration>;
 using SmartFactor = gtsam::SmartProjectionPoseFactor<Calibration>;
@@ -90,7 +88,7 @@ class GraphLocalizer {
 
   int NumVLFactors() const;
 
-  boost::optional<std::pair<Eigen::Isometry3d, localization_common::Time>> estimated_world_T_dock() const;
+  boost::optional<std::pair<gtsam::Pose3, localization_common::Time>> estimated_world_T_dock() const;
 
   const GraphValues& graph_values() const;
 
@@ -137,10 +135,8 @@ class GraphLocalizer {
 
   bool TransformARMeasurementAndUpdateDockTWorld(FactorsToAdd& factors_to_add);
 
-  void AddStandstillPriorFactor(const localization_common::Time timestamp,
-                                FactorsToAdd& standstill_prior_factors_to_add);
-
-  bool FillPriorFactors(FactorsToAdd& factors_to_add);
+  void AddStandstillVelocityPriorFactor(const localization_common::Time timestamp,
+                                        FactorsToAdd& standstill_prior_factors_to_add);
 
   void AddCombinedImuFactorAndBiasPrior(const gtsam::CombinedImuFactor::shared_ptr& combined_imu_factor);
 
@@ -182,44 +178,11 @@ class GraphLocalizer {
   }
 
   // Serialization function
-  /*template <typename Archive>
-   friend void boost::serialization::serialize(Archive& ar, graph_localizer::GraphLocalizer& graph_localizer, const
-  unsigned int version); template <typename Archive> friend void boost::serialization::split_free(Archive& ar,
-  graph_localizer::GraphLocalizer& graph_localizer, const unsigned int version); template <typename Archive> friend void
-  boost::serialization::save(Archive& ar, const graph_localizer::GraphLocalizer& graph_localizer, const unsigned int
-  version);
-   // friend boost::serialization::save<Archive>;
-   template <typename Archive>
-   friend void boost::serialization::load(Archive& ar, graph_localizer::GraphLocalizer& graph_localizer, const unsigned
-  int version);*/
   friend class boost::serialization::access;
   template <class Archive>
-  void save(Archive& ar, const unsigned int version) const {
-    // Workaround to removed combined imu factors before serializing.
-    // This avoids a bug in gtsam for serializing combined imu factors.
-    // Remove when new stable gtsam version is available.
-    gtsam::NonlinearFactorGraph graph_copy = graph_;
-    for (auto factor_it = graph_copy.begin(); factor_it != graph_copy.end();) {
-      if (dynamic_cast<gtsam::CombinedImuFactor*>(factor_it->get())) {
-        factor_it = graph_copy.erase(factor_it);
-        continue;
-      }
-      ++factor_it;
-    }
-
-    ar << graph_copy;
-    ar << graph_values_;
-  }
-
-  template <class Archive>
-  void load(Archive& ar, const unsigned int version) {
-    ar >> graph_;
-    ar >> graph_values_;
-  }
-
-  template <class Archive>
   void serialize(Archive& ar, const unsigned int file_version) {
-    boost::serialization::split_member(ar, *this, file_version);
+    ar& BOOST_SERIALIZATION_NVP(graph_);
+    ar& BOOST_SERIALIZATION_NVP(graph_values_);
   }
 
   GraphLocalizerParams params_;

@@ -100,11 +100,11 @@ gtsam::Pose3 GtPose(const ff_msgs::VisualLandmarks& vl_features) {
   return gtsam::Pose3(vl_global_R_sensor, vl_global_t_sensor);
 }
 
-void SetEnvironmentConfigs(const std::string& astrobee_configs_path, const std::string& world) {
+void SetEnvironmentConfigs(const std::string& astrobee_configs_path, const std::string& world,
+                           const std::string& robot_config_file) {
   setenv("ASTROBEE_RESOURCE_DIR", (astrobee_configs_path + "/resources").c_str(), true);
   setenv("ASTROBEE_CONFIG_DIR", (astrobee_configs_path + "/config").c_str(), true);
-  // TODO(rsoussan): pass this as an argument
-  setenv("ASTROBEE_ROBOT", (astrobee_configs_path + "/config/robots/bumble.config").c_str(), true);
+  setenv("ASTROBEE_ROBOT", (astrobee_configs_path + "/" + robot_config_file).c_str(), true);
   setenv("ASTROBEE_WORLD", world.c_str(), true);
 }
 
@@ -129,6 +129,12 @@ void PoseToMsg(const gtsam::Pose3& pose, geometry_msgs::Pose& msg_pose) {
   const gtsam::Quaternion quaternion = pose.rotation().toQuaternion();
   RotationToMsg(quaternion, msg_pose.orientation);
   VectorToMsg(pose.translation(), msg_pose.position);
+}
+
+geometry_msgs::TransformStamped PoseToTF(const gtsam::Pose3& pose, const std::string& parent_frame,
+                                         const std::string& child_frame, const Time timestamp,
+                                         const std::string& platform_name) {
+  return PoseToTF(EigenPose(pose), parent_frame, child_frame, timestamp, platform_name);
 }
 
 geometry_msgs::TransformStamped PoseToTF(const Eigen::Isometry3d& pose, const std::string& parent_frame,

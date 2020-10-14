@@ -25,27 +25,30 @@
 
 #include <glog/logging.h>
 
-// #include <gperftools/profiler.h>
+#ifdef GOOGLE_PROFILER
+#include <gperftools/profiler.h>
+#endif
 
 namespace po = boost::program_options;
 namespace lc = localization_common;
 
 int main(int argc, char** argv) {
-  // TODO(rsoussan): pass this as command line argument
-  // ProfilerStart("/home/rsoussan/graph_bag_tests/prof.txt");
   std::string image_topic;
   std::string config_path;
   std::string output_bagfile;
+  std::string robot_config_file;
+  std::string world;
   po::options_description desc("Runs graph localization on a bagfile and saves the results to a new bagfile.");
   desc.add_options()("help", "produce help message")("bagfile", po::value<std::string>()->required(), "Input bagfile")(
       "map-file", po::value<std::string>()->required(), "Map file")(
       "image-topic,i", po::value<std::string>(&image_topic)->default_value("mgt/img_sampler/nav_cam/image_record"),
       "Image topic")("config-path,c",
                      po::value<std::string>(&config_path)->default_value("/home/rsoussan/astrobee/astrobee"),
-                     "Image topic")(
+                     "Config path")(
       "output-bagfile,o", po::value<std::string>(&output_bagfile)->default_value("results.bag"), "Output bagfile")(
+      "robot-config-file,r", po::value<std::string>(&robot_config_file)->default_value("config/robots/bumble.config"),
+      "Robot config file")("world,w", po::value<std::string>(&world)->default_value("iss"), "World name")(
       "feature-track-image,f", po::bool_switch()->default_value(false), "Save feature track image");
-
   po::positional_options_description p;
   p.add("bagfile", 1);
   p.add("map-file", 1);
@@ -69,7 +72,6 @@ int main(int argc, char** argv) {
 
   // Only pass program name to free flyer so that boost command line options
   // are ignored when parsing gflags.
-  // TODO(rsoussan): better way to call this function?
   int ff_argc = 1;
   ff_common::InitFreeFlyerApplication(&ff_argc, &argv);
 
@@ -89,13 +91,16 @@ int main(int argc, char** argv) {
   }
 
   // Set environment configs
-  // TODO(rsoussan): make this command line arg
-  const std::string world = "iss";
-  lc::SetEnvironmentConfigs(config_path, world);
+  lc::SetEnvironmentConfigs(config_path, world, robot_config_file);
   config_reader::ConfigReader config;
 
   graph_bag::GraphBag graph_bag(input_bag, map_file, image_topic, save_feature_track_image, output_bagfile);
+#ifdef GOOGLE_PROFILER
+  ProfilerStart(boost::filesystem::current_path() + "/graph_bag_prof.txt");
+#endif
   graph_bag.Run();
-  // ProfilerFlush();
-  // ProfilerStop();
+#ifdef GOOLGE_PROFILER
+  ProfilerFlush();
+  ProfilerStop();
+#endif
 }

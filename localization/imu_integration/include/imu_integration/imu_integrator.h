@@ -28,8 +28,6 @@
 #include <gtsam/navigation/CombinedImuFactor.h>
 #include <gtsam/navigation/ImuBias.h>
 
-#include <Eigen/Core>
-
 #include <map>
 
 namespace imu_integration {

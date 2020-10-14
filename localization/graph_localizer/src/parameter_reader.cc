@@ -18,9 +18,11 @@
 
 #include <graph_localizer/parameter_reader.h>
 #include <graph_localizer/utilities.h>
+#include <imu_integration/utilities.h>
 #include <localization_common/utilities.h>
 
 namespace graph_localizer {
+namespace ii = imu_integration;
 namespace lc = localization_common;
 void LoadCalibrationParams(config_reader::ConfigReader& config, CalibrationParams& params) {
   params.body_T_dock_cam = lc::LoadTransform(config, "dock_cam_transform");
@@ -35,7 +37,6 @@ void LoadFactorParams(config_reader::ConfigReader& config, FactorParams& params)
       lc::LoadDouble(config, "min_valid_feature_track_avg_distance_from_mean");
   params.max_standstill_feature_track_avg_distance_from_mean =
       lc::LoadDouble(config, "max_standstill_feature_track_avg_distance_from_mean");
-  params.optical_flow_standstill_pose_prior = lc::LoadBool(config, "optical_flow_standstill_pose_prior");
   params.optical_flow_standstill_velocity_prior = lc::LoadBool(config, "optical_flow_standstill_velocity_prior");
   params.enable_EPI = lc::LoadBool(config, "enable_EPI");
   params.landmark_distance_threshold = lc::LoadDouble(config, "landmark_distance_threshold");
@@ -45,15 +46,11 @@ void LoadFactorParams(config_reader::ConfigReader& config, FactorParams& params)
   params.bias_prior = lc::LoadBool(config, "bias_prior");
   params.loc_pose_priors = lc::LoadBool(config, "loc_pose_priors");
   params.loc_projections = lc::LoadBool(config, "loc_projections");
+  params.min_num_matches = lc::LoadInt(config, "min_num_matches");
 }
 
 void LoadFeatureTrackerParams(config_reader::ConfigReader& config, FeatureTrackerParams& params) {
   params.sliding_window_duration = lc::LoadDouble(config, "feature_tracker_sliding_window_duration");
-}
-
-void LoadImuIntegrationParams(config_reader::ConfigReader& config, GraphInitializationParams& params) {
-  params.gravity = lc::LoadVector3(config, "world_gravity_vector");
-  params.body_T_imu = lc::LoadTransform(config, "imu_transform");
 }
 
 void LoadGraphValuesParams(config_reader::ConfigReader& config, GraphValuesParams& params) {
@@ -64,8 +61,6 @@ void LoadGraphValuesParams(config_reader::ConfigReader& config, GraphValuesParam
 void LoadNoiseParams(config_reader::ConfigReader& config, NoiseParams& params) {
   params.dock_cam_noise = gtsam::noiseModel::Isotropic::Sigma(2, lc::LoadDouble(config, "dock_cam_noise_stddev"));
   params.nav_cam_noise = gtsam::noiseModel::Isotropic::Sigma(2, lc::LoadDouble(config, "nav_cam_noise_stddev"));
-  params.optical_flow_prior_translation_stddev = lc::LoadDouble(config, "optical_flow_prior_translation_stddev");
-  params.optical_flow_prior_quaternion_stddev = lc::LoadDouble(config, "optical_flow_prior_quaternion_stddev");
   params.optical_flow_prior_velocity_stddev = lc::LoadDouble(config, "optical_flow_prior_velocity_stddev");
   params.starting_prior_translation_stddev = lc::LoadDouble(config, "starting_prior_translation_stddev");
   params.starting_prior_quaternion_stddev = lc::LoadDouble(config, "starting_prior_quaternion_stddev");
@@ -91,7 +86,7 @@ void LoadSanityCheckerParams(config_reader::ConfigReader& config, SanityCheckerP
 
 void LoadGraphLocalizerParams(config_reader::ConfigReader& config, GraphLocalizerParams& params) {
   LoadCalibrationParams(config, params.calibration);
-  LoadImuIntegrationParams(config, params.graph_initialization);
+  ii::LoadImuIntegratorParams(config, params.graph_initialization);
   LoadFactorParams(config, params.factor);
   LoadFeatureTrackerParams(config, params.feature_tracker);
   LoadGraphValuesParams(config, params.graph_values);

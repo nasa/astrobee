@@ -108,11 +108,10 @@ void GraphLocalizerNodelet::OpticalFlowCallback(const ff_msgs::Feature2dArray::C
 
   // Publish loc information here since graph updates occur on optical flow updates
   PublishLocalizationState();
+  PublishWorldTDockTF();
   if (graph_localizer_wrapper_.publish_localization_graph()) PublishLocalizationGraph();
   if (graph_localizer_wrapper_.save_localization_graph_dot_file())
     graph_localizer_wrapper_.SaveLocalizationGraphDotFile();
-  // TODO(rsoussan): put this somewhere else? only publish if available?
-  PublishWorldTDockTF();
 }
 
 void GraphLocalizerNodelet::VLVisualLandmarksCallback(const ff_msgs::VisualLandmarks::ConstPtr& visual_landmarks_msg) {
@@ -174,9 +173,8 @@ void GraphLocalizerNodelet::PublishWorldTBodyTF() {
     return;
   }
 
-  const Eigen::Isometry3d pose = lc::EigenPose(latest_combined_nav_state->pose());
-  const auto timestamp = latest_combined_nav_state->timestamp();
-  const auto world_T_body_tf = lc::PoseToTF(pose, "world", "body", timestamp, platform_name_);
+  const auto world_T_body_tf = lc::PoseToTF(latest_combined_nav_state->pose(), "world", "body",
+                                            latest_combined_nav_state->timestamp(), platform_name_);
   transform_pub_.sendTransform(world_T_body_tf);
 }
 

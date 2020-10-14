@@ -57,7 +57,7 @@ GraphLocalizerWrapper::GraphLocalizerWrapper() {
   position_cov_log_det_lost_threshold_ = lc::LoadDouble(config, "position_cov_log_det_lost_threshold");
   orientation_cov_log_det_lost_threshold_ = lc::LoadDouble(config, "orientation_cov_log_det_lost_threshold");
 
-  graph_loc_initialization_.LoadGraphLocalizerParams(config);
+  graph_localizer_initialization_.LoadGraphLocalizerParams(config);
   SanityCheckerParams sanity_checker_params;
   LoadSanityCheckerParams(config, sanity_checker_params);
   sanity_checker_.reset(new SanityChecker(sanity_checker_params));
@@ -81,22 +81,22 @@ void GraphLocalizerWrapper::OpticalFlowCallback(const ff_msgs::Feature2dArray& f
 
 void GraphLocalizerWrapper::ResetLocalizer() {
   LOG(INFO) << "ResetLocalizer: Resetting localizer.";
-  graph_loc_initialization_.ResetStartPose();
-  if (!have_latest_imu_biases_) {
+  graph_localizer_initialization_.ResetStartPose();
+  if (!latest_biases_) {
     LOG(DFATAL) << "ResetLocalizer: Trying to reset localizer when no biases "
                    "are available.";
     return;
   }
   // TODO(rsoussan): compare current time with latest bias timestamp and print
   // warning if it is too old
-  graph_loc_initialization_.SetBiases(latest_accelerometer_bias_, latest_gyro_bias_);
+  graph_localizer_initialization_.SetBiases(latest_biases_->first);
   graph_localizer_.reset();
   sanity_checker_->Reset();
 }
 
 void GraphLocalizerWrapper::ResetBiasesAndLocalizer() {
   LOG(INFO) << "ResetBiasAndLocalizer: Resetting biases and localizer.";
-  graph_loc_initialization_.ResetBiasesAndStartPose();
+  graph_localizer_initialization_.ResetBiasesAndStartPose();
   graph_localizer_.reset();
   sanity_checker_->Reset();
 }
@@ -109,9 +109,9 @@ void GraphLocalizerWrapper::VLVisualLandmarksCallback(const ff_msgs::VisualLandm
   }
 
   const gtsam::Pose3 sparse_mapping_global_T_body =
-      lc::GtPose(visual_landmarks_msg, graph_loc_initialization_.params().calibration.body_T_nav_cam.inverse());
+      lc::GtPose(visual_landmarks_msg, graph_localizer_initialization_.params().calibration.body_T_nav_cam.inverse());
   const lc::Time timestamp = lc::TimeFromHeader(visual_landmarks_msg.header);
-  sparse_mapping_pose_ = std::make_pair(lc::EigenPose(sparse_mapping_global_T_body), timestamp);
+  sparse_mapping_pose_ = std::make_pair(sparse_mapping_global_T_body, timestamp);
 
   // Sanity Check
   if (graph_localizer_ && !CheckPoseSanity(sparse_mapping_global_T_body, timestamp)) {
@@ -123,7 +123,7 @@ void GraphLocalizerWrapper::VLVisualLandmarksCallback(const ff_msgs::VisualLandm
   if (!graph_localizer_) {
     // Set or update initial pose if a new one is available before the localizer
     // has started running.
-    graph_loc_initialization_.SetStartPose(sparse_mapping_pose_->first, sparse_mapping_pose_->second);
+    graph_localizer_initialization_.SetStartPose(sparse_mapping_pose_->first, sparse_mapping_pose_->second);
   }
 }
 
@@ -160,34 +160,28 @@ void GraphLocalizerWrapper::ARVisualLandmarksCallback(const ff_msgs::VisualLandm
 void GraphLocalizerWrapper::ImuCallback(const sensor_msgs::Imu& imu_msg) {
   if (graph_localizer_) {
     graph_localizer_->AddImuMeasurement(lm::ImuMeasurement(imu_msg));
-    const auto latest_biases = graph_localizer_->LatestBiases();
-    if (!latest_biases) {
+    latest_biases_ = graph_localizer_->LatestBiases();
+    if (!latest_biases_) {
       LOG(WARNING) << "ImuCallback: Failed to get latest biases.";
-    } else {
-      latest_accelerometer_bias_ = latest_biases->first.accelerometer();
-      latest_gyro_bias_ = latest_biases->first.gyroscope();
-      latest_bias_timestamp_ = latest_biases->second;
-      have_latest_imu_biases_ = true;
     }
-  } else if (graph_loc_initialization_.EstimateBiases()) {
+  } else if (graph_localizer_initialization_.EstimateBiases()) {
     EstimateAndSetImuBiases(lm::ImuMeasurement(imu_msg), num_bias_estimation_measurements_, imu_bias_measurements_,
-                            graph_loc_initialization_);
+                            graph_localizer_initialization_);
   }
 
-  // TODO(rsoussan): put this somewhere else?
-  if (!graph_localizer_ && graph_loc_initialization_.ReadyToInitialize()) {
+  if (!graph_localizer_ && graph_localizer_initialization_.ReadyToInitialize()) {
     InitializeGraph();
     LOG(INFO) << "ImuCallback: Initialized Graph.";
   }
 }
 
 void GraphLocalizerWrapper::InitializeGraph() {
-  if (!graph_loc_initialization_.ReadyToInitialize()) {
+  if (!graph_localizer_initialization_.ReadyToInitialize()) {
     LOG(ERROR) << "InitializeGraph: Trying to initialize graph when not ready.";
     return;
   }
 
-  graph_localizer_.reset(new graph_localizer::GraphLocalizer(graph_loc_initialization_.params()));
+  graph_localizer_.reset(new graph_localizer::GraphLocalizer(graph_localizer_initialization_.params()));
 }
 
 const FeatureTrackMap* const GraphLocalizerWrapper::feature_tracks() const {
@@ -195,7 +189,7 @@ const FeatureTrackMap* const GraphLocalizerWrapper::feature_tracks() const {
   return &(graph_localizer_->feature_tracks());
 }
 
-boost::optional<std::pair<Eigen::Isometry3d, lc::Time>> GraphLocalizerWrapper::estimated_world_T_dock() const {
+boost::optional<std::pair<gtsam::Pose3, lc::Time>> GraphLocalizerWrapper::estimated_world_T_dock() const {
   if (!graph_localizer_ || !graph_localizer_->estimated_world_T_dock()) {
     LOG_EVERY_N(WARNING, 50) << "estimated_world_T_dock: Failed to get world_T_dock";
     return boost::none;
@@ -239,7 +233,7 @@ boost::optional<ff_msgs::EkfState> GraphLocalizerWrapper::LatestLocalizationStat
   const auto ekf_state_msg =
       EkfStateMsg(combined_nav_state_and_covariances->first, Eigen::Vector3d::Zero(), Eigen::Vector3d::Zero(),
                   combined_nav_state_and_covariances->second, feature_counts_.of, feature_counts_.vl,
-                  graph_loc_initialization_.EstimateBiases(), position_cov_log_det_lost_threshold_,
+                  graph_localizer_initialization_.EstimateBiases(), position_cov_log_det_lost_threshold_,
                   orientation_cov_log_det_lost_threshold_);
   feature_counts_.Reset();
   return ekf_state_msg;

@@ -18,6 +18,7 @@
 
 #include <config_reader/config_reader.h>
 #include <imu_augmentor/imu_augmentor_wrapper.h>
+#include <imu_integration/utilities.h>
 #include <localization_common/utilities.h>
 #include <localization_measurements/imu_measurement.h>
 #include <msg_conversions/msg_conversions.h>
@@ -37,9 +38,7 @@ ImuAugmentorWrapper::ImuAugmentorWrapper() {
     LOG(FATAL) << "Failed to read config files.";
   }
 
-  // TODO(rsoussan): Unify this with graph localizer param reader LoadImuIntegratorParams
-  params_.body_T_imu = lc::LoadTransform(config, "imu_transform");
-  params_.gravity = lc::LoadVector3(config, "world_gravity_vector");
+  ii::LoadImuIntegratorParams(config, params_);
   imu_augmentor_.reset(new ImuAugmentor(params_));
 
   // Preintegration_helper_ is only being used to frame change and remove centrifugal acceleration, so body_T_imu is the
@@ -50,9 +49,9 @@ ImuAugmentorWrapper::ImuAugmentorWrapper() {
 }
 
 void ImuAugmentorWrapper::LocalizationStateCallback(const ff_msgs::EkfState& loc_msg) {
-  latest_combined_nav_state_.reset(new lc::CombinedNavState(lc::CombinedNavStateFromMsg(loc_msg)));
-  latest_covariances_.reset(new lc::CombinedNavStateCovariances(lc::CombinedNavStateCovariancesFromMsg(loc_msg)));
-  latest_loc_msg_.reset(new ff_msgs::EkfState(loc_msg));
+  latest_combined_nav_state_ = lc::CombinedNavStateFromMsg(loc_msg);
+  latest_covariances_ = lc::CombinedNavStateCovariancesFromMsg(loc_msg);
+  latest_loc_msg_ = loc_msg;
 }
 
 void ImuAugmentorWrapper::ImuCallback(const sensor_msgs::Imu& imu_msg) {

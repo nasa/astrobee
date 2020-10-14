@@ -292,7 +292,6 @@ int GraphValues::SlideWindow(gtsam::NonlinearFactorGraph& graph) {
 
 // Add timestamp and keys to timestamp_key_index_map, and values to values
 bool GraphValues::AddCombinedNavState(const lc::CombinedNavState& combined_nav_state, const int key_index) {
-  // TODO(rsoussan): remove or add option to disable these checks
   if (HasKey(combined_nav_state.timestamp())) {
     LOG(ERROR) << "AddCombinedNavState: Timestamp key index map already "
                   "contains timestamp.";

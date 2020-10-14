@@ -52,7 +52,6 @@ class FactorsToAdd {
   void SetTimestamp(const localization_common::Time timestamp) { timestamp_ = timestamp; }
 
   localization_common::Time timestamp() const { return timestamp_; }
-  // TODO(rsoussan): rename this?
   const std::vector<FactorToAdd>& Get() const { return factors_to_add_; }
   std::vector<FactorToAdd>& Get() { return factors_to_add_; }
   GraphAction graph_action() const { return graph_action_; }
