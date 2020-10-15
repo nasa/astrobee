@@ -33,6 +33,7 @@ ImuAugmentorWrapper::ImuAugmentorWrapper() {
   config_reader::ConfigReader config;
   config.AddFile("transforms.config");
   config.AddFile("geometry.config");
+  config.AddFile("graph_localizer.config");
 
   if (!config.ReadFiles()) {
     LOG(FATAL) << "Failed to read config files.";

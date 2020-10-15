@@ -29,14 +29,14 @@ ImuIntegrator::ImuIntegrator(const ImuIntegratorParams& params) : params_(params
   VLOG(2) << "ImuIntegrator: Gravity vector: " << std::endl << params_.gravity.matrix();
   pim_params_.reset(new gtsam::PreintegratedCombinedMeasurements::Params(params_.gravity));
   // Set sensor covariances
-  pim_params_->gyroscopeCovariance = kGyroSigma_ * kGyroSigma_ * gtsam::I_3x3;
-  pim_params_->accelerometerCovariance = kAccelSigma_ * kAccelSigma_ * gtsam::I_3x3;
-  pim_params_->integrationCovariance = 0.0001 * gtsam::I_3x3;
+  pim_params_->gyroscopeCovariance = params_.gyro_sigma * params_.gyro_sigma * gtsam::I_3x3;
+  pim_params_->accelerometerCovariance = params_.accel_sigma * params_.accel_sigma * gtsam::I_3x3;
+  pim_params_->integrationCovariance = params_.integration_variance * gtsam::I_3x3;
   // Set bias random walk covariances
-  pim_params_->biasAccCovariance = kAccelBiasSigma_ * kAccelBiasSigma_ * gtsam::I_3x3;
-  pim_params_->biasOmegaCovariance = kGyroBiasSigma_ * kGyroBiasSigma_ * gtsam::I_3x3;
+  pim_params_->biasAccCovariance = params_.accel_bias_sigma * params_.accel_bias_sigma * gtsam::I_3x3;
+  pim_params_->biasOmegaCovariance = params_.gyro_bias_sigma * params_.gyro_bias_sigma * gtsam::I_3x3;
   // Set bias covariance used for pim integration
-  pim_params_->biasAccOmegaInt = 0.0001 * gtsam::I_6x6;
+  pim_params_->biasAccOmegaInt = params_.bias_acc_omega_int * gtsam::I_6x6;
   // Set imu calibration relative pose
   pim_params_->setBodyPSensor(params_.body_T_imu);
 }

@@ -73,14 +73,6 @@ class ImuIntegrator {
   ImuIntegratorParams params_;
   boost::shared_ptr<gtsam::PreintegratedCombinedMeasurements::Params> pim_params_;
   std::map<localization_common::Time, localization_measurements::ImuMeasurement> measurements_;
-  // TODO(rsoussan): Add these to params?
-  // From gtsam: Realistic MEMS white noise characteristics. Angular and
-  // velocity random walk expressed in degrees respectively m/s per sqrt(hr).
-  static constexpr double kGyroSigma_ = 0.00001;    // (0.5 * M_PI / 180) / 60;  // 0.5 degree ARW
-  static constexpr double kAccelSigma_ = 0.000001;  // 0.1 / 60; // 10 cm VRW
-  // TODO(rsoussan): tune these
-  static constexpr double kAccelBiasSigma_ = 0.0001;
-  static constexpr double kGyroBiasSigma_ = 0.0001;
 };
 }  // namespace imu_integration
 

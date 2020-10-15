@@ -102,6 +102,12 @@ gtsam::CombinedImuFactor::shared_ptr MakeCombinedImuFactor(const int key_index_0
 void LoadImuIntegratorParams(config_reader::ConfigReader& config, ImuIntegratorParams& params) {
   params.gravity = lc::LoadVector3(config, "world_gravity_vector");
   params.body_T_imu = lc::LoadTransform(config, "imu_transform");
+  params.gyro_sigma = lc::LoadDouble(config, "gyro_sigma");
+  params.accel_sigma = lc::LoadDouble(config, "accel_sigma");
+  params.accel_bias_sigma = lc::LoadDouble(config, "accel_bias_sigma");
+  params.gyro_bias_sigma = lc::LoadDouble(config, "gyro_bias_sigma");
+  params.integration_variance = lc::LoadDouble(config, "integration_variance");
+  params.bias_acc_omega_int = lc::LoadDouble(config, "bias_acc_omega_int");
 }
 
 }  // namespace imu_integration

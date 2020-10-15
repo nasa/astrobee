@@ -25,6 +25,13 @@ namespace imu_integration {
 struct ImuIntegratorParams {
   gtsam::Vector3 gravity;
   gtsam::Pose3 body_T_imu;
+  // From gtsam: Angular and velocity random walk expressed in degrees respectively m/s per sqrt(hr).
+  double gyro_sigma;
+  double accel_sigma;
+  double accel_bias_sigma;
+  double gyro_bias_sigma;
+  double integration_variance;
+  double bias_acc_omega_int;
 };
 }  // namespace imu_integration
 
