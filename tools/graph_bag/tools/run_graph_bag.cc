@@ -39,6 +39,7 @@ int main(int argc, char** argv) {
   std::string robot_config_file;
   std::string world;
   po::options_description desc("Runs graph localization on a bagfile and saves the results to a new bagfile.");
+  // TODO(rsoussan): change config default path to not be hardcoded
   desc.add_options()("help", "produce help message")("bagfile", po::value<std::string>()->required(), "Input bagfile")(
       "map-file", po::value<std::string>()->required(), "Map file")(
       "image-topic,i", po::value<std::string>(&image_topic)->default_value("mgt/img_sampler/nav_cam/image_record"),
