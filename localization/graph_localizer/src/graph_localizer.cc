@@ -59,6 +59,14 @@ GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
   // Initialize smart projection factor params
   smart_projection_params_.verboseCheirality = params_.factor.verbose_cheirality;
   smart_projection_params_.setDegeneracyMode(gtsam::DegeneracyMode::ZERO_ON_DEGENERACY);
+  if (params_.factor.linearization_mode == "jacobian_svd") {
+    smart_projection_params_.setLinearizationMode(gtsam::LinearizationMode::JACOBIAN_SVD);
+  } else if (params_.factor.linearization_mode == "hessian") {
+    smart_projection_params_.setLinearizationMode(gtsam::LinearizationMode::HESSIAN);
+  } else {
+    LOG(WARNING) << "GraphLocalizer: No linearization mode entered, defaulting to jacobian svd.";
+    smart_projection_params_.setLinearizationMode(gtsam::LinearizationMode::JACOBIAN_SVD);
+  }
   smart_projection_params_.setRankTolerance(1e-9);
   smart_projection_params_.setLandmarkDistanceThreshold(params_.factor.landmark_distance_threshold);
   smart_projection_params_.setDynamicOutlierRejectionThreshold(params_.factor.dynamic_outlier_rejection_threshold);

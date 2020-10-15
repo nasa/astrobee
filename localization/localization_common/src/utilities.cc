@@ -46,27 +46,33 @@ Eigen::Isometry3d LoadEigenTransform(config_reader::ConfigReader& config, const 
   return body_T_sensor;
 }
 
-double LoadDouble(config_reader::ConfigReader& config, const std::string& transform_config_name) {
+double LoadDouble(config_reader::ConfigReader& config, const std::string& config_name) {
   double val;
-  if (!config.GetReal(transform_config_name.c_str(), &val)) LOG(FATAL) << "Failed to load " << transform_config_name;
+  if (!config.GetReal(config_name.c_str(), &val)) LOG(FATAL) << "Failed to load " << config_name;
   return val;
 }
 
-int LoadInt(config_reader::ConfigReader& config, const std::string& transform_config_name) {
+int LoadInt(config_reader::ConfigReader& config, const std::string& config_name) {
   int val;
-  if (!config.GetInt(transform_config_name.c_str(), &val)) LOG(FATAL) << "Failed to load " << transform_config_name;
+  if (!config.GetInt(config_name.c_str(), &val)) LOG(FATAL) << "Failed to load " << config_name;
   return val;
 }
 
-bool LoadBool(config_reader::ConfigReader& config, const std::string& transform_config_name) {
+bool LoadBool(config_reader::ConfigReader& config, const std::string& config_name) {
   bool val;
-  if (!config.GetBool(transform_config_name.c_str(), &val)) LOG(FATAL) << "Failed to load " << transform_config_name;
+  if (!config.GetBool(config_name.c_str(), &val)) LOG(FATAL) << "Failed to load " << config_name;
   return val;
 }
 
-gtsam::Vector3 LoadVector3(config_reader::ConfigReader& config, const std::string& transform_config_name) {
+std::string LoadString(config_reader::ConfigReader& config, const std::string& config_name) {
+  std::string val;
+  if (!config.GetStr(config_name.c_str(), &val)) LOG(FATAL) << "Failed to load " << config_name;
+  return val;
+}
+
+gtsam::Vector3 LoadVector3(config_reader::ConfigReader& config, const std::string& config_name) {
   Eigen::Vector3d vec;
-  msg_conversions::config_read_vector(&config, transform_config_name.c_str(), &vec);
+  msg_conversions::config_read_vector(&config, config_name.c_str(), &vec);
   return vec;
 }
 

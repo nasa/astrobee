@@ -18,6 +18,8 @@
 #ifndef GRAPH_LOCALIZER_FACTOR_PARAMS_H_
 #define GRAPH_LOCALIZER_FACTOR_PARAMS_H_
 
+#include <string>
+
 namespace graph_localizer {
 struct FactorParams {
   // Optical flow factors
@@ -28,6 +30,7 @@ struct FactorParams {
   double landmark_distance_threshold;
   double dynamic_outlier_rejection_threshold;
   double retriangulation_threshold;
+  std::string linearization_mode;
   bool verbose_cheirality;
   // Combined Imu factors
   bool bias_prior;
