@@ -776,10 +776,19 @@ bool GraphLocalizer::MeasurementRecentEnough(const lc::Time timestamp) const {
 
 void GraphLocalizer::PrintFactorDebugInfo() const {
   for (auto factor_it = graph_.begin(); factor_it != graph_.end();) {
-    const auto factor = dynamic_cast<const SmartFactor*>(factor_it->get());
-    if (factor) {
-      factor->print();
-      VLOG(2) << "PrintFactorDebugInfo: SmartPose Error: " << factor->error(graph_values_.values());
+    const auto smart_factor = dynamic_cast<const SmartFactor*>(factor_it->get());
+    if (smart_factor) {
+      smart_factor->print();
+      LOG(INFO) << "PrintFactorDebugInfo: SmartPose Error: " << smart_factor->error(graph_values_.values());
+      if (!smart_factor->isValid()) LOG(WARNING) << "PrintFactorDebugInfo: SmartFactor invalid.";
+      if (smart_factor->isDegenerate()) LOG(WARNING) << "PrintFactorDebugInfo: SmartFactor degenerate.";
+      if (smart_factor->isPointBehindCamera()) LOG(WARNING) << "PrintFactorDebugInfo: SmartFactor point behind camera.";
+      if (smart_factor->isOutlier()) LOG(WARNING) << "PrintFactorDebugInfo: SmartFactor is outlier.";
+      if (smart_factor->isFarPoint()) LOG(WARNING) << "PrintFactorDebugInfo: SmartFactor is far point.";
+    }
+    const auto imu_factor = dynamic_cast<gtsam::CombinedImuFactor*>(factor_it->get());
+    if (imu_factor) {
+      LOG(INFO) << "PrintFactorDebugInfo: CombinedImuFactor: " << *imu_factor;
     }
     ++factor_it;
   }
