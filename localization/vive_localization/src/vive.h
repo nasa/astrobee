@@ -265,8 +265,8 @@ static void Correct(T const* params, T * angle, bool correct) {
     ideal[0] = angle[0];
     ideal[1] = angle[1];
     for (size_t i = 0; i < 10; i++) {
-      xyz[0] = tan(ideal[0]);
-      xyz[1] = tan(ideal[1]);
+      xyz[0] = T(-1.0) / tan(ideal[0]);
+      xyz[1] = T(-1.0) / tan(ideal[1]);
       xyz[2] = T(1.0);
       Predict(params, xyz, pred, correct);
       ideal[0] += (angle[0] - pred[0]);
