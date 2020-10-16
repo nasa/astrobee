@@ -101,6 +101,8 @@ gtsam::CombinedImuFactor::shared_ptr MakeCombinedImuFactor(const int key_index_0
 
 void LoadImuIntegratorParams(config_reader::ConfigReader& config, ImuIntegratorParams& params) {
   params.gravity = lc::LoadVector3(config, "world_gravity_vector");
+  const bool ignore_gravity = lc::LoadBool(config, "ignore_gravity");
+  if (ignore_gravity) params.gravity = gtsam::Vector3::Zero();
   params.body_T_imu = lc::LoadTransform(config, "imu_transform");
   params.gyro_sigma = lc::LoadDouble(config, "gyro_sigma");
   params.accel_sigma = lc::LoadDouble(config, "accel_sigma");
