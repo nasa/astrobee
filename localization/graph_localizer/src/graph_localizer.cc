@@ -779,8 +779,11 @@ void GraphLocalizer::PrintFactorDebugInfo() const {
     const auto smart_factor = dynamic_cast<const SmartFactor*>(factor_it->get());
     if (smart_factor) {
       smart_factor->print();
-      LOG(INFO) << "PrintFactorDebugInfo: SmartPose Error: " << smart_factor->error(graph_values_.values());
-      if (!smart_factor->isValid()) LOG(WARNING) << "PrintFactorDebugInfo: SmartFactor invalid.";
+      LOG(INFO) << "PrintFactorDebugInfo: SmartFactor Error: " << smart_factor->error(graph_values_.values());
+      if (smart_factor->isValid())
+        LOG(WARNING) << "PrintFactorDebugInfo: SmartFactor valid.";
+      else
+        LOG(WARNING) << "PrintFactorDebugInfo: SmartFactor invalid.";
       if (smart_factor->isDegenerate()) LOG(WARNING) << "PrintFactorDebugInfo: SmartFactor degenerate.";
       if (smart_factor->isPointBehindCamera()) LOG(WARNING) << "PrintFactorDebugInfo: SmartFactor point behind camera.";
       if (smart_factor->isOutlier()) LOG(WARNING) << "PrintFactorDebugInfo: SmartFactor is outlier.";
@@ -789,6 +792,7 @@ void GraphLocalizer::PrintFactorDebugInfo() const {
     const auto imu_factor = dynamic_cast<gtsam::CombinedImuFactor*>(factor_it->get());
     if (imu_factor) {
       LOG(INFO) << "PrintFactorDebugInfo: CombinedImuFactor: " << *imu_factor;
+      LOG(INFO) << "PrintFactorDebugInfo: CombinedImuFactor PIM: " << imu_factor->preintegratedMeasurements();
     }
     ++factor_it;
   }
@@ -828,6 +832,8 @@ bool GraphLocalizer::Update() {
   optimization_timer_.Stop();
   optimization_timer_.Log();
   LOG(INFO) << "Number of iterations: " << optimizer.iterations();
+
+  if (params_.print_factor_info) PrintFactorDebugInfo();
 
   // Update imu integrator bias
   const auto latest_bias = graph_values_.LatestBias();
