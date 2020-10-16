@@ -106,18 +106,18 @@ boost::optional<ff_msgs::EkfState> ImuAugmentorWrapper::LatestImuAugmentedLocali
     return boost::none;
   }
   const auto& latest_bias = latest_imu_augmented_combined_nav_state_and_covariances->first.bias();
-  const auto latest_bias_corrected_acceleration =
-      latest_bias.correctAccelerometer(latest_imu_measurement->acceleration);
+  auto latest_bias_corrected_acceleration = latest_bias.correctAccelerometer(latest_imu_measurement->acceleration);
   const auto latest_bias_corrected_angular_velocity =
       latest_bias.correctGyroscope(latest_imu_measurement->angular_velocity);
-  // Frame change measurements to body frame, correct for centripetal accel, correct for gravity if needed
-  auto corrected_measurements = preintegration_helper_->correctMeasurementsBySensorPose(
-      latest_bias_corrected_acceleration, latest_bias_corrected_angular_velocity);
+  // Correct for gravity if needed
   if (!params_.gravity.isZero()) {
     const gtsam::Pose3& global_T_body_latest = latest_imu_augmented_combined_nav_state_and_covariances->first.pose();
-    corrected_measurements.first = lc::RemoveGravityFromAccelerometerMeasurement(
-        params_.gravity, params_.body_T_imu, global_T_body_latest, corrected_measurements.first);
+    latest_bias_corrected_acceleration = lc::RemoveGravityFromAccelerometerMeasurement(
+        params_.gravity, params_.body_T_imu, global_T_body_latest, latest_bias_corrected_acceleration);
   }
+  // Frame change measurements to body frame, correct for centripetal accel
+  const auto corrected_measurements = preintegration_helper_->correctMeasurementsBySensorPose(
+      latest_bias_corrected_acceleration, latest_bias_corrected_angular_velocity);
 
   lc::VectorToMsg(corrected_measurements.first, latest_imu_augmented_loc_msg.accel);
   lc::VectorToMsg(corrected_measurements.second, latest_imu_augmented_loc_msg.omega);
