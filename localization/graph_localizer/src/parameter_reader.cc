@@ -42,6 +42,7 @@ void LoadFactorParams(config_reader::ConfigReader& config, FactorParams& params)
   params.landmark_distance_threshold = lc::LoadDouble(config, "landmark_distance_threshold");
   params.dynamic_outlier_rejection_threshold = lc::LoadDouble(config, "dynamic_outlier_rejection_threshold");
   params.retriangulation_threshold = lc::LoadDouble(config, "retriangulation_threshold");
+  params.degeneracy_mode = lc::LoadString(config, "degeneracy_mode");
   params.linearization_mode = lc::LoadString(config, "linearization_mode");
   params.verbose_cheirality = lc::LoadBool(config, "verbose_cheirality");
   params.bias_prior = lc::LoadBool(config, "bias_prior");

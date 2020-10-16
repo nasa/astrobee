@@ -30,6 +30,7 @@ struct FactorParams {
   double landmark_distance_threshold;
   double dynamic_outlier_rejection_threshold;
   double retriangulation_threshold;
+  std::string degeneracy_mode;
   std::string linearization_mode;
   bool verbose_cheirality;
   // Combined Imu factors

@@ -58,7 +58,14 @@ GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
 
   // Initialize smart projection factor params
   smart_projection_params_.verboseCheirality = params_.factor.verbose_cheirality;
-  smart_projection_params_.setDegeneracyMode(gtsam::DegeneracyMode::ZERO_ON_DEGENERACY);
+  if (params_.factor.degeneracy_mode == "zero_on_degeneracy") {
+    smart_projection_params_.setDegeneracyMode(gtsam::DegeneracyMode::ZERO_ON_DEGENERACY);
+  } else if (params_.factor.degeneracy_mode == "handle_infinity") {
+    smart_projection_params_.setDegeneracyMode(gtsam::DegeneracyMode::HANDLE_INFINITY);
+  } else {
+    LOG(WARNING) << "GraphLocalizer: No degeneracy mode entered, defaulting to zero on degeneracy.";
+    smart_projection_params_.setDegeneracyMode(gtsam::DegeneracyMode::ZERO_ON_DEGENERACY);
+  }
   if (params_.factor.linearization_mode == "jacobian_svd") {
     smart_projection_params_.setLinearizationMode(gtsam::LinearizationMode::JACOBIAN_SVD);
   } else if (params_.factor.linearization_mode == "hessian") {
