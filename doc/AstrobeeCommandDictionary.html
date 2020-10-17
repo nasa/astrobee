@@ -977,7 +977,7 @@ td.inner_table {
 
 <div class="commandSpec">
   <div class="commandSpecId"><a name="command_Mobility.stopAllMotion">Mobility.stopAllMotion</a></div>
-  <div class="commandSpecNotes">Stops motion of the mobility system and the arm.<p/>Stopping the mobility system means that if the robot is currently moving, it will transition to active station keeping (the propulsion system continues running). If the propulsion impellers are currently idle, they will not be activated. The arm is stopped as in Arm.stopArm (the joints are commanded to maintain their current position, and the gripper is not affected).</div>
+  <div class="commandSpecNotes">Stops motion of the mobility system and the arm.<p/>Stopping the mobility system means transitioning to active station keeping (the propulsion system is activated if needed). The arm is stopped as in Arm.stopArm (the joints are commanded to maintain their current position, and the gripper is not affected).<p/>Note that there is special behavior when this command is issued by the system monitor as a fault response: in that case, idled propulsion will not be activated. The special behavior ensures that when responding to multiple faults with different responses configured (stopAllMotion vs. idlePropulsion), the idlePropulsion response takes priority.</div>
   <div class="commandSpecParams">
     <table class="params">
   <tr>
@@ -1042,7 +1042,7 @@ td.inner_table {
 
 <div class="commandSpec">
   <div class="commandSpecId"><a name="command_Plan.setPlan">Plan.setPlan</a></div>
-  <div class="commandSpecNotes">Loads the most recently uplinked plan.<p/>An Astrobee plan is specified as a JSON-formatted fplan file that contains a list of stations (locations to visit), segments (trajectories for flying between stations), and commands to execute at stations. Plans are generated using the control station plan editor. Sample fplan files can be found in the astrobee/astrobee/plans folder.<p/>The Astrobee control station implements the protocol for managing plans:<ol><li>Uplink a new fplan file using the RAPID compressed file protocol over DDS. (File uplink is not considered a command, so it does not appear in this command dictionary).</li><li>Send this Plan.setPlan command to load the uplinked fplan file. Any errors in the fplan will be reported at this time. Once the plan is loaded, it is initially in the 'paused' state.</li><li>Use the Plan.runPlan / Plan.pausePlan commands to start / stop plan execution. Note that after a plan is paused using Plan.pausePlan, Plan.runPlan will resume plan execution where it previously left off.</li></ol>Other related commands include:<ul><li>Plan.skipNextStep: Skips the next step of the currently loaded (and paused) plan.</li><li>Plan.wait: Same as Plan.pausePlan, but execution will resume automatically after the specified wait duration.</li></ul></div>
+  <div class="commandSpecNotes">Loads the most recently uplinked plan.<p/>An Astrobee plan is specified as a JSON-formatted fplan file that contains a list of stations (locations to visit), segments (trajectories for flying between stations), and commands to execute at stations. Plans are generated using the control station plan editor. Sample fplan files can be found in the astrobee/astrobee/plans folder.<p/>The Astrobee control station implements the protocol for managing plans:<ol><li>Uplink a new fplan file using the RAPID compressed file protocol over DDS. (File uplink is not considered a command, so it does not appear in this command dictionary).</li><li>Send this Plan.setPlan command to load the uplinked fplan file. Any errors in the fplan will be reported at this time. Once the plan is loaded, it is initially in the 'paused' state.</li><li>Use the Plan.runPlan / Plan.pausePlan commands to start / stop plan execution. Note that after a plan is paused using Plan.pausePlan, Plan.runPlan will resume plan execution at the beginning of the first plan step that was not fully completed. In the case that a trajectory segment is paused partway through, resuming the plan will cause the robot to fly back to the beginning of the segment and execute the whole segment again. If this behavior is not desired, you can use Plan.skipNextStep.</li></ol>Other related commands include:<ul><li>Plan.skipNextStep: Skips the next step of the currently loaded (and paused) plan.</li><li>Plan.wait: Same as Plan.pausePlan, but execution will resume automatically after the specified wait duration.</li></ul></div>
   <div class="commandSpecParams">
     <table class="params">
   <tr>
@@ -1068,7 +1068,7 @@ td.inner_table {
 
 <div class="commandSpec">
   <div class="commandSpecId"><a name="command_Plan.wait">Plan.wait</a></div>
-  <div class="commandSpecNotes">Temporarily pauses the running plan. Execution will resume automatically after the specified duration. See plan.setPlan.</div>
+  <div class="commandSpecNotes">Temporarily pauses the running plan. This command only affects plan execution, not individual teleoperated commands. Plan execution will resume automatically after the specified duration. See plan.setPlan.</div>
   <div class="commandSpecParams">
     <table class="params">
   <tr>
@@ -1371,7 +1371,7 @@ td.inner_table {
 
 <div class="commandSpec">
   <div class="commandSpecId"><a name="command_Settings.setCameraRecording">Settings.setCameraRecording</a></div>
-  <div class="commandSpecNotes">Sets camera video onboard recording on/off. See Settings.setCamera for context.</div>
+  <div class="commandSpecNotes">Sets camera video onboard recording on/off.<p/>Note: For the SciCam, this command actually enables independent recording of H.264 compressed video. For other cameras, this command enables publishing image frames to a topic designated for onboard recording together with other telemetry, but you also need to double-check that the Settings.setDataToDisk configuration will actually log that telemetry topic.<p/>See Settings.setCamera for context.</div>
   <div class="commandSpecParams">
     <table class="params">
   <tr>
@@ -1665,7 +1665,7 @@ td.inner_table {
     <td class="params_unit"></td>
     <td class="params_default"><span style="font-family: 'Courier';">&quot;&quot;</span></td>
     <td class="params_constraints"></td>
-    <td class="params_notes">This field was originally intended to allow specifying what reference frame the center of mass is expressed in. However, in the current implementation, the reference frame is hard-coded to be the body frame, and this field is ignored.</td>
+    <td class="params_notes">An optional profile name for this inertia profile. The name has no functional effect, but may be reported in status telemetry and operator displays.</td>
   </tr>
   <tr>
     <td class="params_parameter">Mass</td>

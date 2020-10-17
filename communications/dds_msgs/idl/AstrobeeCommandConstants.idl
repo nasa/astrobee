@@ -227,13 +227,13 @@ module rapid {
       //@copy-declaration /** Runs the currently loaded plan. If the plan was previously paused with Plan.pausePlan, this command will resume execution where it previously left off. See plan.setPlan. */
       const rapid::String32 PLAN_METHOD_RUN_PLAN = "runPlan";
 
-      //@copy-declaration /** Loads the most recently uplinked plan.<p/>An Astrobee plan is specified as a JSON-formatted fplan file that contains a list of stations (locations to visit), segments (trajectories for flying between stations), and commands to execute at stations. Plans are generated using the control station plan editor. Sample fplan files can be found in the astrobee/astrobee/plans folder.<p/>The Astrobee control station implements the protocol for managing plans:<ol><li>Uplink a new fplan file using the RAPID compressed file protocol over DDS. (File uplink is not considered a command, so it does not appear in this command dictionary).</li><li>Send this Plan.setPlan command to load the uplinked fplan file. Any errors in the fplan will be reported at this time. Once the plan is loaded, it is initially in the 'paused' state.</li><li>Use the Plan.runPlan / Plan.pausePlan commands to start / stop plan execution. Note that after a plan is paused using Plan.pausePlan, Plan.runPlan will resume plan execution where it previously left off.</li></ol>Other related commands include:<ul><li>Plan.skipNextStep: Skips the next step of the currently loaded (and paused) plan.</li><li>Plan.wait: Same as Plan.pausePlan, but execution will resume automatically after the specified wait duration.</li></ul> */
+      //@copy-declaration /** Loads the most recently uplinked plan.<p/>An Astrobee plan is specified as a JSON-formatted fplan file that contains a list of stations (locations to visit), segments (trajectories for flying between stations), and commands to execute at stations. Plans are generated using the control station plan editor. Sample fplan files can be found in the astrobee/astrobee/plans folder.<p/>The Astrobee control station implements the protocol for managing plans:<ol><li>Uplink a new fplan file using the RAPID compressed file protocol over DDS. (File uplink is not considered a command, so it does not appear in this command dictionary).</li><li>Send this Plan.setPlan command to load the uplinked fplan file. Any errors in the fplan will be reported at this time. Once the plan is loaded, it is initially in the 'paused' state.</li><li>Use the Plan.runPlan / Plan.pausePlan commands to start / stop plan execution. Note that after a plan is paused using Plan.pausePlan, Plan.runPlan will resume plan execution at the beginning of the first plan step that was not fully completed. In the case that a trajectory segment is paused partway through, resuming the plan will cause the robot to fly back to the beginning of the segment and execute the whole segment again. If this behavior is not desired, you can use Plan.skipNextStep.</li></ol>Other related commands include:<ul><li>Plan.skipNextStep: Skips the next step of the currently loaded (and paused) plan.</li><li>Plan.wait: Same as Plan.pausePlan, but execution will resume automatically after the specified wait duration.</li></ul> */
       const rapid::String32 PLAN_METHOD_SET_PLAN = "setPlan";
 
       //@copy-declaration /** Skips the next step of the currently loaded plan (the step could be a trajectory segment or a command at a station). The plan must be paused. See plan.setPlan. */
       const rapid::String32 PLAN_METHOD_SKIP_PLAN_STEP = "skipPlanStep";
 
-      //@copy-declaration /** Temporarily pauses the running plan. Execution will resume automatically after the specified duration. See plan.setPlan. */
+      //@copy-declaration /** Temporarily pauses the running plan. This command only affects plan execution, not individual teleoperated commands. Plan execution will resume automatically after the specified duration. See plan.setPlan. */
       const rapid::String32 PLAN_METHOD_WAIT = "wait";
 
       //@copy-declaration /** Seconds to pause */
@@ -292,7 +292,7 @@ module rapid {
       const rapid::String32 SETTINGS_METHOD_SET_CAMERA_PARAM_BANDWIDTH = "bandwidth";
       const rapid::DataType SETTINGS_METHOD_SET_CAMERA_DTYPE_BANDWIDTH = rapid::RAPID_FLOAT;
 
-      //@copy-declaration /** Sets camera video onboard recording on/off. See Settings.setCamera for context. */
+      //@copy-declaration /** Sets camera video onboard recording on/off.<p/>Note: For the SciCam, this command actually enables independent recording of H.264 compressed video. For other cameras, this command enables publishing image frames to a topic designated for onboard recording together with other telemetry, but you also need to double-check that the Settings.setDataToDisk configuration will actually log that telemetry topic.<p/>See Settings.setCamera for context. */
       const rapid::String32 SETTINGS_METHOD_SET_CAMERA_RECORDING = "setCameraRecording";
 
       //@copy-declaration /** Which camera */
@@ -363,7 +363,7 @@ module rapid {
       //@copy-declaration /** Sets mass and inertia parameters for Astrobee control.<p/>The default inertial parameters for each robot are stored in an onboard configuration file, and should not need to be changed as long as the Astrobee remains in its baseline configuration (four batteries and no payloads installed). However, the inertial parameters may vary when the robot configuration changes. Examples are when a payload is installed or reconfigured (like deploying the arm). When configuration changes for a planned activity are known in advance, the standard management approach is to specify them in the inertiaConfig field of the relevant fplan. This command provides the same parameter update capability, but with more flexibility as to when it is applied (for example, you can change in the middle of a plan, during teleoperation, or when commanded by a guest science app). */
       const rapid::String32 SETTINGS_METHOD_SET_INERTIA = "setInertia";
 
-      //@copy-declaration /** This field was originally intended to allow specifying what reference frame the center of mass is expressed in. However, in the current implementation, the reference frame is hard-coded to be the body frame, and this field is ignored. */
+      //@copy-declaration /** An optional profile name for this inertia profile. The name has no functional effect, but may be reported in status telemetry and operator displays. */
       const rapid::String32 SETTINGS_METHOD_SET_INERTIA_PARAM_NAME = "name";
       const rapid::DataType SETTINGS_METHOD_SET_INERTIA_DTYPE_NAME = rapid::RAPID_STRING;
 
