@@ -36,7 +36,7 @@ module rapid {
       //@copy-declaration /** Calibrates the bias parameters of Astrobee's IMU.<p/>Astrobee's IMU biases slowly drift over time. While Astrobee is actively running its localization system and maintaining a position fix, its EKF automatically corrects for bias drift under the assumption that the local environment is inertially fixed. If the localization system is turned off or loses its fix for an extended period, this command should be used to explicitly calibrate the biases prior to restarting motion. It works by integrating the robot's linear acceleration and angular velocity for about five seconds, and taking the resulting average values as the new zero. During the calibration period, the robot must remain stationary (e.g. docked or perched on a handrail, not held by an astronaut). */
       const rapid::String32 ADMIN_METHOD_INITIALIZE_BIAS = "initializeBias";
 
-      //@copy-declaration /** This command is not implemented. The intent is that it will load a ROS nodelet in the Astrobee flight software.<p/>A note for developers: there is an internal service advertised by the system monitor that provides a method very similar to this command, but as of this writing, there does not appear to be any way to invoke it through a standard Astrobee API call. Also note, the underlying system monitor service can't load nodelets that run on the HLP. */
+      //@copy-declaration /** Not implemented. This command is intended to load a ROS nodelet in the Astrobee flight software.<p/>There is an internal service advertised by the system monitor that provides a method very similar to this command, but as of Oct 2020, there is no way to invoke it through a standard Astrobee API call. Also note, the underlying system monitor service can't load nodelets that run on the HLP. */
       const rapid::String32 ADMIN_METHOD_LOAD_NODELET = "loadNodelet";
 
       //@copy-declaration /** Name of nodelet */
@@ -55,20 +55,20 @@ module rapid {
       const rapid::String32 ADMIN_METHOD_LOAD_NODELET_PARAM_BOND_ID = "bondId";
       const rapid::DataType ADMIN_METHOD_LOAD_NODELET_DTYPE_BOND_ID = rapid::RAPID_STRING;
 
-      //@copy-declaration /** Switch Astrobee's localization to use the general-purpose pipeline.<p/>This command is equivalent to calling Admin.switchLocalization with the "MappedLandmarks" pipeline, which also has the side-effect of resetting the EKF, like calling Admin.resetEKF. It could be useful as a way to manually recover localization if Astrobee is lost because it is using the wrong localization pipeline (e.g., if docking or perching approach got interrupted, and targets are no longer in view). */
+      //@copy-declaration /** Switches Astrobee's localization to use the general-purpose pipeline.<p/>This command is equivalent to calling Admin.switchLocalization with the "MappedLandmarks" pipeline and then calling Admin.resetEKF. It could be useful as a way to manually recover localization if Astrobee is lost because it is using the wrong localization pipeline (e.g., if docking or perching approach got interrupted, and targets are no longer in view). */
       const rapid::String32 ADMIN_METHOD_REACQUIRE_POSITION = "reacquirePosition";
 
-      //@copy-declaration /** Resets the EKF component of Astrobee's localization.<p/>This command discards the EKF state and forces the localization system to acquire a new fix. It should not be needed unless the localization system has failure modes where it gets persistently stuck with invalid state information. (Unfortunately, as of this writing in 9/2020, that is a frequent occurrence.) */
+      //@copy-declaration /** Resets the EKF component of Astrobee's localization.<p/>This command discards the EKF state and forces the localization system to acquire a new fix. It should not be needed unless the localization system has failure modes where it gets persistently stuck with invalid state information. (Unfortunately, as of 10/2020, that is a frequent occurrence.) */
       const rapid::String32 ADMIN_METHOD_RESET_EKF = "resetEkf";
 
       //@copy-declaration /** This rarely used command manually switches between localization pipelines. Normally, Astrobee switches its localization pipeline automatically based on what activity it is conducting (normal free flight, docking, perching, etc.).<p/>Note that, although Astrobee could logically integrate information from multiple pipelines at the same time (e.g., NavCam sparse map features as well as DockCam AR targets), at present, it only uses data from one of these pipelines at a time. IMU information is always integrated, regardless of which pipeline is used. While switching pipelines from A to B, updates from A stop, then there may be a dropout period of a few seconds before B acquires a fix. During the dropout period, localization relies solely on the IMU. */
       const rapid::String32 ADMIN_METHOD_SWITCH_LOCALIZATION = "switchLocalization";
 
-      //@copy-declaration /** Which pipeline to use:<ul><li>MappedLandmarks: General-purpose localization mode; Astrobee uses its NavCam to recognize landmark features on the ISS interior, as well as for visual odometry.</li><li>ARTags: During docking, Astrobee uses its DockCam to view AR tags located on the dock and obtain more robust and accurate localization.</li><li>Handrail: During perching approach, Astrobee uses its PerchCam LIDAR to recognize the geometry of a handrail in front of a wall.</li><li>Perch: Not implemented yet. While perched, Astrobee could use a simplified localization approach based on remembering its initial perched pose and updating its pose during pan/tilt motions using a kinematic model of the arm. </li><li>Truth: During lab testing, Astrobee can optionally subscribe to pose telemetry from an external ground-truth localization system and use it for motion control.</li></ul> */
+      //@copy-declaration /** Which pipeline to use:<ul><li>MappedLandmarks: General-purpose localization mode; Astrobee uses its NavCam to recognize landmark features on the ISS interior, as well as for visual odometry.</li><li>ARTags: During docking, Astrobee uses its DockCam to view AR tags located on the dock and obtain more robust and accurate localization.</li><li>Handrail: During perching approach, Astrobee uses its PerchCam LIDAR to recognize the geometry of a handrail in front of a wall.</li><li>Perch: Not implemented. While perched, Astrobee could use a simplified localization approach based on remembering its initial perched pose and updating its pose during pan/tilt motions using a kinematic model of the arm. </li><li>Truth: During lab testing, Astrobee can optionally subscribe to pose telemetry from an external ground-truth localization system and use it for motion control.</li></ul> */
       const rapid::String32 ADMIN_METHOD_SWITCH_LOCALIZATION_PARAM_MODE = "mode";
       const rapid::DataType ADMIN_METHOD_SWITCH_LOCALIZATION_DTYPE_MODE = rapid::RAPID_STRING;
 
-      //@copy-declaration /** For internal use only. Unloads a ROS nodelet in Astrobee's flight software. This command is defined only so as to make it available in the system monitor's fault response table. It is the usual response if initialization of a nodelet fails. There does not appear to be any way to invoke this command through a standard Astrobee API call. It doesn't work for nodes running on the HLP. */
+      //@copy-declaration /** Not implemented. This command is intended to unload a ROS nodelet in Astrobee's flight software. Its primary use is in the system monitor's fault response table, where it is the usual response if initialization of a nodelet fails. As of Oct 2020, there is an internal service that implements this function, but there is no way to invoke it through a standard Astrobee API call. Also, the internal service can't unload nodes running on the HLP. */
       const rapid::String32 ADMIN_METHOD_UNLOAD_NODELET = "unloadNodelet";
 
       //@copy-declaration /** Name of nodelet */
@@ -82,21 +82,21 @@ module rapid {
       //@copy-declaration /** Clears the terminate flag on the robot. This functionality is tied to Astrobee's physical terminate button and terminate indicator LED. The terminate life cycle is as follows:<ul><li>Nominal ops: When Astrobee is active, the amber terminate LED is turned on and the robot functions normally.</li><li>Terminate: A crew member may press the terminate button as a way to quickly power down the propulsion modules and payloads, while leaving the main processors running and able to communicate with the ground operator. This is a gentler way to intervene than turning off the physical power switch. While terminated, the terminate LED is also turned off.</li><li>Unterminate: The ground operator can send this command to clear the terminate flag and turn the terminate LED back on. This does <b>not</b> automatically restore power to the hardware.</li><li>Configure power: Send Power.powerOnItem commands as needed to restore power to individual hardware components.</li></ul> */
       const rapid::String32 ADMIN_METHOD_UNTERMINATE = "unterminate";
 
-      //@copy-declaration /** Wakes an Astrobee from a hibernating state (only EPS powered) into a ready state (main processors powered, flight software stack running, ready to receive Astrobee API commands). The Astrobee in question must be docked. Because each wake command is routed through a dock berth, which Astrobee to wake is specified using the berth number. See also Admin.wakeSafe.<p/>Note: For context about how to wake an Astrobee on the ISS, see the procedure IRG-FFTEST207a Astrobee Quick Wakeup and Checkout. This command is usually issued using a terminal menu configured in the astrobee_ops repo. After wake-up is commanded, additional network configuration may be needed before an Astrobee on the ISS can actually receive API commands from the ground. */
+      //@copy-declaration /** Wakes an Astrobee from a hibernating state (only EPS powered) by powering up the main processors. This command is intended to also automatically start the flight software stack such that Astrobee is ready to receive Astrobee API commands, but that feature is not implemented.<p/>The Astrobee in question must be docked. Because each wake command is routed through a dock berth, which Astrobee to wake is specified using the berth number.<p/>See also Admin.wakeSafe. The difference between Admin.wake and Admin.wakeSafe is that Admin.wake is intended to automatically start the flight software stack. Since that feature is not implemented, at present, the two commands are equivalent.<p/>Note: For context about how to wake an Astrobee on the ISS, see the procedure IRG-FFTEST207a Astrobee Quick Wakeup and Checkout. */
       const rapid::String32 ADMIN_METHOD_WAKE = "wake";
 
       //@copy-declaration /** Which berth the Astrobee is using. 1=left, 2=right. */
       const rapid::String32 ADMIN_METHOD_WAKE_PARAM_BERTH_NUMBER = "berthNumber";
       const rapid::DataType ADMIN_METHOD_WAKE_DTYPE_BERTH_NUMBER = rapid::RAPID_INT;
 
-      //@copy-declaration /** Wakes Astrobee from a hibernating state (only EPS powered) into a safe state (main processors powered, available to log in for debugging, but flight software stack not started). The Astrobee in question must be docked. Because each wake command is routed through a dock berth, which Astrobee to wake is specified using the berth number. */
+      //@copy-declaration /** Wakes Astrobee from a hibernating state (only EPS powered) into a safe state (main processors powered, available to log in for debugging, but flight software stack not started).<p/>The Astrobee in question must be docked. Because each wake command is routed through a dock berth, which Astrobee to wake is specified using the berth number. See also Admin.wake. */
       const rapid::String32 ADMIN_METHOD_WAKE_SAFE = "wakeSafe";
 
       //@copy-declaration /** Which berth the Astrobee is using. 1=left, 2=right. */
       const rapid::String32 ADMIN_METHOD_WAKE_SAFE_PARAM_BERTH_NUMBER = "berthNumber";
       const rapid::DataType ADMIN_METHOD_WAKE_SAFE_DTYPE_BERTH_NUMBER = rapid::RAPID_INT;
 
-      //@copy-declaration /** Not implemented yet. The intent is to erase certain data on the Astrobee HLP's local storage. */
+      //@copy-declaration /** Not implemented. This command is intended to erase certain data on the Astrobee HLP's local storage. */
       const rapid::String32 ADMIN_METHOD_WIPE_HLP = "wipeHlp";
 
       const rapid::String32 ARM = "Arm";
@@ -131,14 +131,14 @@ module rapid {
 
       const rapid::String32 DATA = "Data";
 
-      //@copy-declaration /** This command is not implemented. The intent is that it will clear certain data logs onboard the robot after they have been downloaded, in order to free storage space.<p/>Currently, onboard storage is managed as follows:<ol><li>Prior to an activity, review what files have been downloaded after previous activities, and specify which files are ready be deleted from onboard storage in the Test Readiness Review notes on the FFFSW Confluence wiki.</li><li>Manually delete those files (via SSH session) at the start of the commanding window, before executing the activity.</li></ol><p/>See also IRG-FFTEST207a Astrobee Quick Wakeup and Checkout. */
+      //@copy-declaration /** Not implemented. This command is intended to clear certain data logs onboard the robot after they have been downloaded, in order to free storage space.<p/>Currently, onboard storage is managed as follows:<ol><li>Prior to an activity, review what files have been downloaded after previous activities, and specify which files are ready be deleted from onboard storage in the Test Readiness Review notes on the FFFSW Confluence wiki.</li><li>Manually delete those files (via SSH session) at the start of the commanding window, before executing the activity.</li></ol><p/>See also IRG-FFTEST207a Astrobee Quick Wakeup and Checkout. */
       const rapid::String32 DATA_METHOD_CLEAR_DATA = "clearData";
 
       //@copy-declaration /** Specifies which log to operate on. Typically, the "Immediate" log is for high-priority telemetry that should be downloaded immediately after the activity, and the "Delayed" log is for other telemetry. */
       const rapid::String32 DATA_METHOD_CLEAR_DATA_PARAM_DATA_METHOD = "dataMethod";
       const rapid::DataType DATA_METHOD_CLEAR_DATA_DTYPE_DATA_METHOD = rapid::RAPID_STRING;
 
-      //@copy-declaration /** This command is not implemented. The intent is that it will start downloading certain data logs stored onboard the robot.<p/>Currently, downlink is initiated manually via SSH and rsync, managed by a terminal menu configured in the astrobee_ops repo. See also IRG-FFTEST217 Astrobee Wrap-Up and Shutdown. */
+      //@copy-declaration /** Not implemented. This command is intended to start downloading certain data logs stored onboard the robot.<p/>Currently, downlink is initiated manually via SSH and rsync, managed by a terminal menu configured in the astrobee_ops repo. See also IRG-FFTEST217 Astrobee Wrap-Up and Shutdown. */
       const rapid::String32 DATA_METHOD_DOWNLOAD_DATA = "downloadData";
 
       //@copy-declaration /** Specifies which log to operate on. Typically, the "Immediate" log is for high-priority telemetry that should be downloaded immediately after the activity, and the "Delayed" log is for other telemetry. */
@@ -155,7 +155,7 @@ module rapid {
       const rapid::String32 DATA_METHOD_START_RECORDING_PARAM_DESCRIPTION = "description";
       const rapid::DataType DATA_METHOD_START_RECORDING_DTYPE_DESCRIPTION = rapid::RAPID_STRING;
 
-      //@copy-declaration /** This command is not implemented. The intent is that it will stop downloading data. See Data.downloadData. */
+      //@copy-declaration /** Not implemented. This command is intended to stop downloading data. See Data.downloadData. */
       const rapid::String32 DATA_METHOD_STOP_DOWNLOAD = "stopDownload";
 
       //@copy-declaration /** Specifies which log to operate on. Typically, the "Immediate" log is for high-priority telemetry that should be downloaded immediately after the activity, and the "Delayed" log is for other telemetry. */
@@ -210,7 +210,7 @@ module rapid {
       //@copy-declaration /** Perches Astrobee on a handrail. The robot must already be near the appropriate perch approach point for the desired perch location, with the handrail in view of the PerchCam.<p/>The nominal perching sequence is as follows:<ol><li>Switch to the "Handrail" (handrail-relative) localization pipeline.</li><li>Fine-tune positioning at perch approach point.</li><li>Deploy arm.</li><li>Open gripper.</li><li>Move until handrail is in contact, within gripper capture box.</li><li>Close gripper.</li><li>Confirm grasp by attempting to fly away from the handrail. Lack of motion indicates success.</li><li>Idle propulsion.</li></ol> */
       const rapid::String32 MOBILITY_METHOD_PERCH = "perch";
 
-      //@copy-declaration /** This rarely used command manually spins up the propulsion modules, so that a future motion command can execute without a spin-up delay. Normally, you would just command the desired motion and the spin-up would be triggered automatically if needed. This command is intended to help with synchronizing motion of multiple Astrobees, but that scenario hasn't really been tested. */
+      //@copy-declaration /** Manually spins up the propulsion modules, so that a future motion command can execute without a spin-up delay. This command is rarely used. Normally, you would just command the desired motion and the spin-up would be triggered automatically if needed. This command is intended to help with synchronizing motion of multiple Astrobees, but that scenario hasn't really been tested. */
       const rapid::String32 MOBILITY_METHOD_PREPARE = "prepare";
 
       //@copy-declaration /** Undocks Astrobee.<p/>The nominal undocking sequence is as follows:<ol><li>Switch to the "MappedLandmarks" localization pipeline (the default for general-purpose navigation).</li><li>Spin up impellers.</li><li>Command the dock berth retention magnets to retract, releasing Astrobee. (They will automatically re-extend after a fixed time delay.)</li><li>Move to the dock approach point. (Note: Astrobee attempts to move immediately, without waiting for the berth magnets to fully retract.)</li></ol> */
@@ -242,14 +242,14 @@ module rapid {
 
       const rapid::String32 POWER = "Power";
 
-      //@copy-declaration /** Power off a component within Astrobee. Note: to turn flashlights on or off, see Settings.setFlashlightBrightness. */
+      //@copy-declaration /** Powers off a component within Astrobee. Note: to turn flashlights on or off, see Settings.setFlashlightBrightness. */
       const rapid::String32 POWER_METHOD_POWER_OFF_ITEM = "powerOffItem";
 
       //@copy-declaration /** Which component. Note: 'Front' means 'Forward'. */
       const rapid::String32 POWER_METHOD_POWER_OFF_ITEM_PARAM_WHICH = "which";
       const rapid::DataType POWER_METHOD_POWER_OFF_ITEM_DTYPE_WHICH = rapid::RAPID_STRING;
 
-      //@copy-declaration /** Power on a component within Astrobee. Note: to turn flashlights on or off, see Settings.setFlashlightBrightness. */
+      //@copy-declaration /** Powers on a component within Astrobee. Note: to turn flashlights on or off, see Settings.setFlashlightBrightness. */
       const rapid::String32 POWER_METHOD_POWER_ON_ITEM = "powerOnItem";
 
       //@copy-declaration /** Which component. Note: 'Front' means 'Forward'. */
@@ -269,14 +269,14 @@ module rapid {
       const rapid::String32 SETTINGS_METHOD_GENERIC_COMMAND_PARAM_PARAM = "param";
       const rapid::DataType SETTINGS_METHOD_GENERIC_COMMAND_DTYPE_PARAM = rapid::RAPID_STRING;
 
-      //@copy-declaration /** Set camera parameters. This command must be sent while the camera is not recording. Once parameters are set, use Settings.setCameraRecording to start recording. */
+      //@copy-declaration /** Sets camera parameters.<p/>The Astrobee camera control life cycle is as follows:<ul><li>When the Astrobee flight software stack is started, recording and streaming are initially disabled for all cameras, and the default camera parameters are as specified in the astrobee/config/cameras.config file.</li><li>For each camera, while recording and streaming are disabled, you may use this Settings.setCamera command to adjust its parameters.</li><li>For each camera, you may enable/disable recording imagery to onboard storage using Settings.setCameraRecording.</li><li>For each camera, you may enable/disable live imagery downlink using Settings.setCameraStreaming.</li></ul> */
       const rapid::String32 SETTINGS_METHOD_SET_CAMERA = "setCamera";
 
       //@copy-declaration /** Which camera */
       const rapid::String32 SETTINGS_METHOD_SET_CAMERA_PARAM_CAMERA_NAME = "cameraName";
       const rapid::DataType SETTINGS_METHOD_SET_CAMERA_DTYPE_CAMERA_NAME = rapid::RAPID_STRING;
 
-      //@copy-declaration /** Where to send the camera imagery:<br/>- Recording: Log imagery to the robot's local storage.<br/>- Streaming: Downlink live imagery. (The SciCam downlinks streaming video via RTSP. Other cameras downlink image frames via DDS.)<br/>- Both: Enable simultaneous recording and streaming. */
+      //@copy-declaration /** Cameras can both stream and record, potentially with different parameters (typically, you might downlink at lower frame rate and lower resolution). Use this field to specify which mode you want to change parameters for. */
       const rapid::String32 SETTINGS_METHOD_SET_CAMERA_PARAM_CAMERA_MODE = "cameraMode";
       const rapid::DataType SETTINGS_METHOD_SET_CAMERA_DTYPE_CAMERA_MODE = rapid::RAPID_STRING;
 
@@ -284,7 +284,7 @@ module rapid {
       const rapid::String32 SETTINGS_METHOD_SET_CAMERA_PARAM_RESOLUTION = "resolution";
       const rapid::DataType SETTINGS_METHOD_SET_CAMERA_DTYPE_RESOLUTION = rapid::RAPID_STRING;
 
-      //@copy-declaration /** Applies to streaming and recording. Maximum frame rate varies by camera:<br/>- SciCam: 30 Hz <br/>- NavCam, DockCam: 15 Hz<br/>- HazCam, PerchCam: 5 Hz */
+      //@copy-declaration /** Frame rate to send. Maximum frame rate varies by camera:<br/>- SciCam: 30 Hz <br/>- NavCam, DockCam: 15 Hz<br/>- HazCam, PerchCam: 5 Hz */
       const rapid::String32 SETTINGS_METHOD_SET_CAMERA_PARAM_FRAME_RATE = "frameRate";
       const rapid::DataType SETTINGS_METHOD_SET_CAMERA_DTYPE_FRAME_RATE = rapid::RAPID_FLOAT;
 
@@ -292,7 +292,7 @@ module rapid {
       const rapid::String32 SETTINGS_METHOD_SET_CAMERA_PARAM_BANDWIDTH = "bandwidth";
       const rapid::DataType SETTINGS_METHOD_SET_CAMERA_DTYPE_BANDWIDTH = rapid::RAPID_FLOAT;
 
-      //@copy-declaration /** Set camera video onboard recording on/off. */
+      //@copy-declaration /** Sets camera video onboard recording on/off. See Settings.setCamera for context. */
       const rapid::String32 SETTINGS_METHOD_SET_CAMERA_RECORDING = "setCameraRecording";
 
       //@copy-declaration /** Which camera */
@@ -303,7 +303,7 @@ module rapid {
       const rapid::String32 SETTINGS_METHOD_SET_CAMERA_RECORDING_PARAM_RECORD = "record";
       const rapid::DataType SETTINGS_METHOD_SET_CAMERA_RECORDING_DTYPE_RECORD = rapid::RAPID_BOOL;
 
-      //@copy-declaration /** Sets camera streaming live video to the ground on/off. */
+      //@copy-declaration /** Sets camera streaming live video to the ground on/off.<p/>The SciCam streams H.264 compressed video via RTSP. All other cameras publish independent image frames via DDS.<p/>See Settings.setCamera for context. */
       const rapid::String32 SETTINGS_METHOD_SET_CAMERA_STREAMING = "setCameraStreaming";
 
       //@copy-declaration /** Which camera */
@@ -328,7 +328,7 @@ module rapid {
       const rapid::String32 SETTINGS_METHOD_SET_CHECK_ZONES_PARAM_CHECK_ZONES = "checkZones";
       const rapid::DataType SETTINGS_METHOD_SET_CHECK_ZONES_DTYPE_CHECK_ZONES = rapid::RAPID_BOOL;
 
-      //@copy-declaration /** For expert use only. Enables/disables auto-return to the dock. See Mobility.autoReturn.<p/>Note: Currently this flag appears to be ignored. */
+      //@copy-declaration /** Not implemented. This commmand is intended to enable/disable auto-return to the dock, under the assumption that auto-return will eventually be configured in Astrobee's fault table as the automatic fault response for a low-battery fault. The flag is currently ignored because auto-return has not been sufficiently tested and is not used in the fault table. See Mobility.autoReturn. */
       const rapid::String32 SETTINGS_METHOD_SET_ENABLE_AUTO_RETURN = "setEnableAutoReturn";
 
       //@copy-declaration /** Set to true/false to enable/disable auto-return. */
@@ -386,7 +386,7 @@ module rapid {
       const rapid::String32 SETTINGS_METHOD_SET_OPERATING_LIMITS_PARAM_PROFILE_NAME = "profileName";
       const rapid::DataType SETTINGS_METHOD_SET_OPERATING_LIMITS_DTYPE_PROFILE_NAME = rapid::RAPID_STRING;
 
-      //@copy-declaration /** Setting the flight mode updates the GN&C gains, hard limits, tolerances, etc., as specified in the world config file. See e.g. astrobee/astrobee/config/worlds/iss.config. Note that executing certain operations, such as perching and docking, automatically switches to the corresponding flight mode. */
+      //@copy-declaration /** Setting the flight mode updates the GN&C gains, hard limits, tolerances, etc., as specified in the world config file. See e.g. astrobee/astrobee/config/worlds/iss.config. Note that executing certain operations, such as docking, automatically switches the flight mode as needed. Values:<ul><li>Off: Turns off propulsion.</li><li>Quiet: Sets propulsion impeller speed to QUIET (low speed) with gains and limits tuned to safely fly within the reduced performance.</li><li>Nominal: Sets propulsion impeller speed to NOMINAL (medium speed), with gains and limits tuned for typical utility flying.</li><li>Difficult: Sets propulsion impeller speed to AGGRESSIVE (high speed), with gains and limits tuned for maximum performance.</li><li>Docking: Sets propulsion impeller speed to AGGRESSIVE, with gains and limits tuned for reliable docking (conservative approach speed, tight position and attitude tolerances).</li></ul> */
       const rapid::String32 SETTINGS_METHOD_SET_OPERATING_LIMITS_PARAM_FLIGHT_MODE = "flightMode";
       const rapid::DataType SETTINGS_METHOD_SET_OPERATING_LIMITS_DTYPE_FLIGHT_MODE = rapid::RAPID_STRING;
 
@@ -413,14 +413,14 @@ module rapid {
       //@copy-declaration /** Switches which trajectory planner is used when Astrobee needs to generate a trajectory to reach a target pose. Astrobee uses its trajectory planner when it receives a teleoperation motion command. However, when an fplan is generated by the Astrobee control station plan editor, it normally contains pre-computed trajectories for its motion segments; when Astrobee executes these fplans, the onboard trajectory planner is not used. */
       const rapid::String32 SETTINGS_METHOD_SET_PLANNER = "setPlanner";
 
-      //@copy-declaration /** Which planner to use:<ul><li>Trapezoidal planner: Generates a straight-line trajectory from the start position to the target position, with a trapezoidal velocity profile. If not in holonomic mode, the robot will rotate to face the target position before beginning to translate. After translating to the target position, the robot will turn to face the target attitude.</li><li>QP planner: An experimental planner that generates a curved trajectory from start to target, avoiding intervening obstacles. As of this writing (9/2020), using the QP planner is not recommended, because it has not yet been tested on the ISS.</li></ul> */
+      //@copy-declaration /** Which planner to use:<ul><li>Trapezoidal planner: Generates a straight-line trajectory from the start position to the target position, with a trapezoidal velocity profile. If not in holonomic mode, the robot will rotate to face the target position before beginning to translate. After translating to the target position, the robot will turn to face the target attitude.</li><li>QP planner: An experimental planner that generates a curved trajectory from start to target, avoiding intervening obstacles. As of 10/2020, using the QP planner is not recommended, because it has not yet been tested on the ISS.</li></ul> */
       const rapid::String32 SETTINGS_METHOD_SET_PLANNER_PARAM_PLANNER = "planner";
       const rapid::DataType SETTINGS_METHOD_SET_PLANNER_DTYPE_PLANNER = rapid::RAPID_STRING;
 
       //@copy-declaration /** Changes the frequency at which one DDS telemetry topic is published. */
       const rapid::String32 SETTINGS_METHOD_SET_TELEMETRY_RATE = "setTelemetryRate";
 
-      //@copy-declaration /** The DDS telemetry topic to manage. Note: The "CommStatus" topic does not appear to actually be in use. */
+      //@copy-declaration /** The DDS telemetry topic to manage. Note: As of Oct 2020, the "CommStatus" topic is not implemented. */
       const rapid::String32 SETTINGS_METHOD_SET_TELEMETRY_RATE_PARAM_TELEMETRY_NAME = "telemetryName";
       const rapid::DataType SETTINGS_METHOD_SET_TELEMETRY_RATE_DTYPE_TELEMETRY_NAME = rapid::RAPID_STRING;
 
@@ -484,9 +484,10 @@ module rapid {
       const rapid::String32 SETTINGS_FLASHLIGHT_LOCATION_BACK = "Back";
       const rapid::String32 SETTINGS_FLASHLIGHT_LOCATION_FRONT = "Front";
 
+      const rapid::String32 SETTINGS_FLIGHT_MODE_OFF = "Off";
+      const rapid::String32 SETTINGS_FLIGHT_MODE_QUIET = "Quiet";
       const rapid::String32 SETTINGS_FLIGHT_MODE_NOMINAL = "Nominal";
       const rapid::String32 SETTINGS_FLIGHT_MODE_DIFFICULT = "Difficult";
-      const rapid::String32 SETTINGS_FLIGHT_MODE_QUIET = "Quiet";
       const rapid::String32 SETTINGS_FLIGHT_MODE_DOCKING = "Docking";
 
       const rapid::String32 SETTINGS_PLANNER_TYPE_TRAPEZOIDAL = "trapezoidal";

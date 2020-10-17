@@ -194,7 +194,7 @@ td.inner_table {
 
 <div class="commandSpec">
   <div class="commandSpecId"><a name="command_Admin.loadNodelet">Admin.loadNodelet</a></div>
-  <div class="commandSpecNotes">This command is not implemented. The intent is that it will load a ROS nodelet in the Astrobee flight software.<p/>A note for developers: there is an internal service advertised by the system monitor that provides a method very similar to this command, but as of this writing, there does not appear to be any way to invoke it through a standard Astrobee API call. Also note, the underlying system monitor service can't load nodelets that run on the HLP.</div>
+  <div class="commandSpecNotes">Not implemented. This command is intended to load a ROS nodelet in the Astrobee flight software.<p/>There is an internal service advertised by the system monitor that provides a method very similar to this command, but as of Oct 2020, there is no way to invoke it through a standard Astrobee API call. Also note, the underlying system monitor service can't load nodelets that run on the HLP.</div>
   <div class="commandSpecParams">
     <table class="params">
   <tr>
@@ -248,7 +248,7 @@ td.inner_table {
 
 <div class="commandSpec">
   <div class="commandSpecId"><a name="command_Admin.reacquirePosition">Admin.reacquirePosition</a></div>
-  <div class="commandSpecNotes">Switch Astrobee's localization to use the general-purpose pipeline.<p/>This command is equivalent to calling Admin.switchLocalization with the "MappedLandmarks" pipeline, which also has the side-effect of resetting the EKF, like calling Admin.resetEKF. It could be useful as a way to manually recover localization if Astrobee is lost because it is using the wrong localization pipeline (e.g., if docking or perching approach got interrupted, and targets are no longer in view).</div>
+  <div class="commandSpecNotes">Switches Astrobee's localization to use the general-purpose pipeline.<p/>This command is equivalent to calling Admin.switchLocalization with the "MappedLandmarks" pipeline and then calling Admin.resetEKF. It could be useful as a way to manually recover localization if Astrobee is lost because it is using the wrong localization pipeline (e.g., if docking or perching approach got interrupted, and targets are no longer in view).</div>
   <div class="commandSpecParams">
     <table class="params">
   <tr>
@@ -261,7 +261,7 @@ td.inner_table {
 
 <div class="commandSpec">
   <div class="commandSpecId"><a name="command_Admin.resetEkf">Admin.resetEkf</a></div>
-  <div class="commandSpecNotes">Resets the EKF component of Astrobee's localization.<p/>This command discards the EKF state and forces the localization system to acquire a new fix. It should not be needed unless the localization system has failure modes where it gets persistently stuck with invalid state information. (Unfortunately, as of this writing in 9/2020, that is a frequent occurrence.)</div>
+  <div class="commandSpecNotes">Resets the EKF component of Astrobee's localization.<p/>This command discards the EKF state and forces the localization system to acquire a new fix. It should not be needed unless the localization system has failure modes where it gets persistently stuck with invalid state information. (Unfortunately, as of 10/2020, that is a frequent occurrence.)</div>
   <div class="commandSpecParams">
     <table class="params">
   <tr>
@@ -274,7 +274,7 @@ td.inner_table {
 
 <div class="commandSpec">
   <div class="commandSpecId"><a name="command_Admin.shutdown">Admin.shutdown</a></div>
-  <div class="commandSpecNotes">Puts Astrobee in hibernate power mode.<p/>An Astrobee that is hibernating can't receive Astrobee API commands. However, it can later be remotely awakened using Admin.wake, if it is on the dock and not physically switched off.</div>
+  <div class="commandSpecNotes">Not implemented. This command is intended to put Astrobee in hibernate power mode.<p/>An Astrobee that is hibernating can't receive Astrobee API commands. However, it can later be remotely awakened, if it is on the dock and not physically switched off. See the procedure IRG-FFTEST217 Astrobee Wrap-Up and Shutdown for current instructions on how to shut down an Astrobee, using a terminal session.</div>
   <div class="commandSpecParams">
     <table class="params">
   <tr>
@@ -332,7 +332,7 @@ td.inner_table {
   </tr>
 </table>
 </td>
-    <td class="params_notes">Which pipeline to use:<ul><li>MappedLandmarks: General-purpose localization mode; Astrobee uses its NavCam to recognize landmark features on the ISS interior, as well as for visual odometry.</li><li>ARTags: During docking, Astrobee uses its DockCam to view AR tags located on the dock and obtain more robust and accurate localization.</li><li>Handrail: During perching approach, Astrobee uses its PerchCam LIDAR to recognize the geometry of a handrail in front of a wall.</li><li>Perch: Not implemented yet. While perched, Astrobee could use a simplified localization approach based on remembering its initial perched pose and updating its pose during pan/tilt motions using a kinematic model of the arm. </li><li>Truth: During lab testing, Astrobee can optionally subscribe to pose telemetry from an external ground-truth localization system and use it for motion control.</li></ul></td>
+    <td class="params_notes">Which pipeline to use:<ul><li>MappedLandmarks: General-purpose localization mode; Astrobee uses its NavCam to recognize landmark features on the ISS interior, as well as for visual odometry.</li><li>ARTags: During docking, Astrobee uses its DockCam to view AR tags located on the dock and obtain more robust and accurate localization.</li><li>Handrail: During perching approach, Astrobee uses its PerchCam LIDAR to recognize the geometry of a handrail in front of a wall.</li><li>Perch: Not implemented. While perched, Astrobee could use a simplified localization approach based on remembering its initial perched pose and updating its pose during pan/tilt motions using a kinematic model of the arm. </li><li>Truth: During lab testing, Astrobee can optionally subscribe to pose telemetry from an external ground-truth localization system and use it for motion control.</li></ul></td>
   </tr>
 </table>
 
@@ -342,7 +342,7 @@ td.inner_table {
 
 <div class="commandSpec">
   <div class="commandSpecId"><a name="command_Admin.unloadNodelet">Admin.unloadNodelet</a></div>
-  <div class="commandSpecNotes">For internal use only. Unloads a ROS nodelet in Astrobee's flight software. This command is defined only so as to make it available in the system monitor's fault response table. It is the usual response if initialization of a nodelet fails. There does not appear to be any way to invoke this command through a standard Astrobee API call. It doesn't work for nodes running on the HLP.</div>
+  <div class="commandSpecNotes">Not implemented. This command is intended to unload a ROS nodelet in Astrobee's flight software. Its primary use is in the system monitor's fault response table, where it is the usual response if initialization of a nodelet fails. As of Oct 2020, there is an internal service that implements this function, but there is no way to invoke it through a standard Astrobee API call. Also, the internal service can't unload nodes running on the HLP.</div>
   <div class="commandSpecParams">
     <table class="params">
   <tr>
@@ -384,7 +384,7 @@ td.inner_table {
 
 <div class="commandSpec">
   <div class="commandSpecId"><a name="command_Admin.wake">Admin.wake</a></div>
-  <div class="commandSpecNotes">Wakes an Astrobee from a hibernating state (only EPS powered) into a ready state (main processors powered, flight software stack running, ready to receive Astrobee API commands). The Astrobee in question must be docked. Because each wake command is routed through a dock berth, which Astrobee to wake is specified using the berth number. See also Admin.wakeSafe.<p/>Note: For context about how to wake an Astrobee on the ISS, see the procedure IRG-FFTEST207a Astrobee Quick Wakeup and Checkout. This command is usually issued using a terminal menu configured in the astrobee_ops repo. After wake-up is commanded, additional network configuration may be needed before an Astrobee on the ISS can actually receive API commands from the ground.</div>
+  <div class="commandSpecNotes">Wakes an Astrobee from a hibernating state (only EPS powered) by powering up the main processors. This command is intended to also automatically start the flight software stack such that Astrobee is ready to receive Astrobee API commands, but that feature is not implemented.<p/>The Astrobee in question must be docked. Because each wake command is routed through a dock berth, which Astrobee to wake is specified using the berth number.<p/>See also Admin.wakeSafe. The difference between Admin.wake and Admin.wakeSafe is that Admin.wake is intended to automatically start the flight software stack. Since that feature is not implemented, at present, the two commands are equivalent.<p/>Note: For context about how to wake an Astrobee on the ISS, see the procedure IRG-FFTEST207a Astrobee Quick Wakeup and Checkout.</div>
   <div class="commandSpecParams">
     <table class="params">
   <tr>
@@ -423,7 +423,7 @@ td.inner_table {
 
 <div class="commandSpec">
   <div class="commandSpecId"><a name="command_Admin.wakeSafe">Admin.wakeSafe</a></div>
-  <div class="commandSpecNotes">Wakes Astrobee from a hibernating state (only EPS powered) into a safe state (main processors powered, available to log in for debugging, but flight software stack not started). The Astrobee in question must be docked. Because each wake command is routed through a dock berth, which Astrobee to wake is specified using the berth number.</div>
+  <div class="commandSpecNotes">Wakes Astrobee from a hibernating state (only EPS powered) into a safe state (main processors powered, available to log in for debugging, but flight software stack not started).<p/>The Astrobee in question must be docked. Because each wake command is routed through a dock berth, which Astrobee to wake is specified using the berth number. See also Admin.wake.</div>
   <div class="commandSpecParams">
     <table class="params">
   <tr>
@@ -462,7 +462,7 @@ td.inner_table {
 
 <div class="commandSpec">
   <div class="commandSpecId"><a name="command_Admin.wipeHlp">Admin.wipeHlp</a></div>
-  <div class="commandSpecNotes">Not implemented yet. The intent is to erase certain data on the Astrobee HLP's local storage.</div>
+  <div class="commandSpecNotes">Not implemented. This command is intended to erase certain data on the Astrobee HLP's local storage.</div>
   <div class="commandSpecParams">
     <table class="params">
   <tr>
@@ -585,7 +585,7 @@ td.inner_table {
 
 <div class="commandSpec">
   <div class="commandSpecId"><a name="command_Data.clearData">Data.clearData</a></div>
-  <div class="commandSpecNotes">This command is not implemented. The intent is that it will clear certain data logs onboard the robot after they have been downloaded, in order to free storage space.<p/>Currently, onboard storage is managed as follows:<ol><li>Prior to an activity, review what files have been downloaded after previous activities, and specify which files are ready be deleted from onboard storage in the Test Readiness Review notes on the FFFSW Confluence wiki.</li><li>Manually delete those files (via SSH session) at the start of the commanding window, before executing the activity.</li></ol><p/>See also IRG-FFTEST207a Astrobee Quick Wakeup and Checkout.</div>
+  <div class="commandSpecNotes">Not implemented. This command is intended to clear certain data logs onboard the robot after they have been downloaded, in order to free storage space.<p/>Currently, onboard storage is managed as follows:<ol><li>Prior to an activity, review what files have been downloaded after previous activities, and specify which files are ready be deleted from onboard storage in the Test Readiness Review notes on the FFFSW Confluence wiki.</li><li>Manually delete those files (via SSH session) at the start of the commanding window, before executing the activity.</li></ol><p/>See also IRG-FFTEST207a Astrobee Quick Wakeup and Checkout.</div>
   <div class="commandSpecParams">
     <table class="params">
   <tr>
@@ -624,7 +624,7 @@ td.inner_table {
 
 <div class="commandSpec">
   <div class="commandSpecId"><a name="command_Data.downloadData">Data.downloadData</a></div>
-  <div class="commandSpecNotes">This command is not implemented. The intent is that it will start downloading certain data logs stored onboard the robot.<p/>Currently, downlink is initiated manually via SSH and rsync, managed by a terminal menu configured in the astrobee_ops repo. See also IRG-FFTEST217 Astrobee Wrap-Up and Shutdown.</div>
+  <div class="commandSpecNotes">Not implemented. This command is intended to start downloading certain data logs stored onboard the robot.<p/>Currently, downlink is initiated manually via SSH and rsync, managed by a terminal menu configured in the astrobee_ops repo. See also IRG-FFTEST217 Astrobee Wrap-Up and Shutdown.</div>
   <div class="commandSpecParams">
     <table class="params">
   <tr>
@@ -699,7 +699,7 @@ td.inner_table {
 
 <div class="commandSpec">
   <div class="commandSpecId"><a name="command_Data.stopDownload">Data.stopDownload</a></div>
-  <div class="commandSpecNotes">This command is not implemented. The intent is that it will stop downloading data. See Data.downloadData.</div>
+  <div class="commandSpecNotes">Not implemented. This command is intended to stop downloading data. See Data.downloadData.</div>
   <div class="commandSpecParams">
     <table class="params">
   <tr>
@@ -904,7 +904,7 @@ td.inner_table {
 
 <div class="commandSpec">
   <div class="commandSpecId"><a name="command_Mobility.prepare">Mobility.prepare</a></div>
-  <div class="commandSpecNotes">This rarely used command manually spins up the propulsion modules, so that a future motion command can execute without a spin-up delay. Normally, you would just command the desired motion and the spin-up would be triggered automatically if needed. This command is intended to help with synchronizing motion of multiple Astrobees, but that scenario hasn't really been tested.</div>
+  <div class="commandSpecNotes">Manually spins up the propulsion modules, so that a future motion command can execute without a spin-up delay. This command is rarely used. Normally, you would just command the desired motion and the spin-up would be triggered automatically if needed. This command is intended to help with synchronizing motion of multiple Astrobees, but that scenario hasn't really been tested.</div>
   <div class="commandSpecParams">
     <table class="params">
   <tr>
@@ -917,7 +917,7 @@ td.inner_table {
 
 <div class="commandSpec">
   <div class="commandSpecId"><a name="command_Mobility.simpleMove6DOF">Mobility.simpleMove6DOF</a></div>
-  <div class="commandSpecNotes">Astrobee move command. Using the default trapezoidal planner, the move has the following steps:<br/>- If not in holonomic mode, the robot rotates to face the target position.<br/>- Once rotation is complete, the robot translates in a straight line to the target position.<br/>- Once translation is complete, the robot rotates to the target attitude.</div>
+  <div class="commandSpecNotes">Moves the robot to the specified pose.<p/>Using the default trapezoidal planner, the move has the following steps:<br/>- If not in holonomic mode, the robot rotates to face the target position.<br/>- Once rotation is complete, the robot translates in a straight line to the target position.<br/>- Once translation is complete, the robot rotates to the target attitude.</div>
   <div class="commandSpecParams">
     <table class="params">
   <tr>
@@ -1095,7 +1095,7 @@ td.inner_table {
 
 <div class="commandSpec">
   <div class="commandSpecId"><a name="command_Power.powerOffItem">Power.powerOffItem</a></div>
-  <div class="commandSpecNotes">Power off a component within Astrobee. Note: to turn flashlights on or off, see Settings.setFlashlightBrightness.</div>
+  <div class="commandSpecNotes">Powers off a component within Astrobee. Note: to turn flashlights on or off, see Settings.setFlashlightBrightness.</div>
   <div class="commandSpecParams">
     <table class="params">
   <tr>
@@ -1146,7 +1146,7 @@ td.inner_table {
 
 <div class="commandSpec">
   <div class="commandSpecId"><a name="command_Power.powerOnItem">Power.powerOnItem</a></div>
-  <div class="commandSpecNotes">Power on a component within Astrobee. Note: to turn flashlights on or off, see Settings.setFlashlightBrightness.</div>
+  <div class="commandSpecNotes">Powers on a component within Astrobee. Note: to turn flashlights on or off, see Settings.setFlashlightBrightness.</div>
   <div class="commandSpecParams">
     <table class="params">
   <tr>
@@ -1226,7 +1226,7 @@ td.inner_table {
 
 <div class="commandSpec">
   <div class="commandSpecId"><a name="command_Settings.setCamera">Settings.setCamera</a></div>
-  <div class="commandSpecNotes">Set camera parameters. This command must be sent while the camera is not recording. Once parameters are set, use Settings.setCameraRecording to start recording.</div>
+  <div class="commandSpecNotes">Sets camera parameters.<p/>The Astrobee camera control life cycle is as follows:<ul><li>When the Astrobee flight software stack is started, recording and streaming are initially disabled for all cameras, and the default camera parameters are as specified in the astrobee/config/cameras.config file.</li><li>For each camera, while recording and streaming are disabled, you may use this Settings.setCamera command to adjust its parameters.</li><li>For each camera, you may enable/disable recording imagery to onboard storage using Settings.setCameraRecording.</li><li>For each camera, you may enable/disable live imagery downlink using Settings.setCameraStreaming.</li></ul></div>
   <div class="commandSpecParams">
     <table class="params">
   <tr>
@@ -1295,7 +1295,7 @@ td.inner_table {
   </tr>
 </table>
 </td>
-    <td class="params_notes">Where to send the camera imagery:<br/>- Recording: Log imagery to the robot's local storage.<br/>- Streaming: Downlink live imagery. (The SciCam downlinks streaming video via RTSP. Other cameras downlink image frames via DDS.)<br/>- Both: Enable simultaneous recording and streaming.</td>
+    <td class="params_notes">Cameras can both stream and record, potentially with different parameters (typically, you might downlink at lower frame rate and lower resolution). Use this field to specify which mode you want to change parameters for.</td>
   </tr>
   <tr>
     <td class="params_parameter">Resolution</td>
@@ -1353,7 +1353,7 @@ td.inner_table {
     <td class="params_unit">Hz</td>
     <td class="params_default">required</td>
     <td class="params_constraints">1 &#8804; val &#8804; 30</td>
-    <td class="params_notes">Applies to streaming and recording. Maximum frame rate varies by camera:<br/>- SciCam: 30 Hz <br/>- NavCam, DockCam: 15 Hz<br/>- HazCam, PerchCam: 5 Hz</td>
+    <td class="params_notes">Frame rate to send. Maximum frame rate varies by camera:<br/>- SciCam: 30 Hz <br/>- NavCam, DockCam: 15 Hz<br/>- HazCam, PerchCam: 5 Hz</td>
   </tr>
   <tr>
     <td class="params_parameter">Bandwidth</td>
@@ -1371,7 +1371,7 @@ td.inner_table {
 
 <div class="commandSpec">
   <div class="commandSpecId"><a name="command_Settings.setCameraRecording">Settings.setCameraRecording</a></div>
-  <div class="commandSpecNotes">Set camera video onboard recording on/off.</div>
+  <div class="commandSpecNotes">Sets camera video onboard recording on/off. See Settings.setCamera for context.</div>
   <div class="commandSpecParams">
     <table class="params">
   <tr>
@@ -1429,7 +1429,7 @@ td.inner_table {
 
 <div class="commandSpec">
   <div class="commandSpecId"><a name="command_Settings.setCameraStreaming">Settings.setCameraStreaming</a></div>
-  <div class="commandSpecNotes">Sets camera streaming live video to the ground on/off.</div>
+  <div class="commandSpecNotes">Sets camera streaming live video to the ground on/off.<p/>The SciCam streams H.264 compressed video via RTSP. All other cameras publish independent image frames via DDS.<p/>See Settings.setCamera for context.</div>
   <div class="commandSpecParams">
     <table class="params">
   <tr>
@@ -1533,7 +1533,7 @@ td.inner_table {
 
 <div class="commandSpec">
   <div class="commandSpecId"><a name="command_Settings.setEnableAutoReturn">Settings.setEnableAutoReturn</a></div>
-  <div class="commandSpecNotes">For expert use only. Enables/disables auto-return to the dock. See Mobility.autoReturn.<p/>Note: Currently this flag appears to be ignored.</div>
+  <div class="commandSpecNotes">Not implemented. This commmand is intended to enable/disable auto-return to the dock, under the assumption that auto-return will eventually be configured in Astrobee's fault table as the automatic fault response for a low-battery fault. The flag is currently ignored because auto-return has not been sufficiently tested and is not used in the fault table. See Mobility.autoReturn.</div>
   <div class="commandSpecParams">
     <table class="params">
   <tr>
@@ -1729,6 +1729,14 @@ td.inner_table {
     <th class="param_choices_value">Value</th>
   </tr>
   <tr>
+    <td class="param_choices_name">Off</td>
+    <td class="param_choices_value">&quot;Off&quot;</td>
+  </tr>
+  <tr>
+    <td class="param_choices_name">Quiet</td>
+    <td class="param_choices_value">&quot;Quiet&quot;</td>
+  </tr>
+  <tr>
     <td class="param_choices_name">Nominal</td>
     <td class="param_choices_value">&quot;Nominal&quot;</td>
   </tr>
@@ -1737,16 +1745,12 @@ td.inner_table {
     <td class="param_choices_value">&quot;Difficult&quot;</td>
   </tr>
   <tr>
-    <td class="param_choices_name">Quiet</td>
-    <td class="param_choices_value">&quot;Quiet&quot;</td>
-  </tr>
-  <tr>
     <td class="param_choices_name">Docking</td>
     <td class="param_choices_value">&quot;Docking&quot;</td>
   </tr>
 </table>
 </td>
-    <td class="params_notes">Setting the flight mode updates the GN&C gains, hard limits, tolerances, etc., as specified in the world config file. See e.g. astrobee/astrobee/config/worlds/iss.config. Note that executing certain operations, such as perching and docking, automatically switches to the corresponding flight mode.</td>
+    <td class="params_notes">Setting the flight mode updates the GN&C gains, hard limits, tolerances, etc., as specified in the world config file. See e.g. astrobee/astrobee/config/worlds/iss.config. Note that executing certain operations, such as docking, automatically switches the flight mode as needed. Values:<ul><li>Off: Turns off propulsion.</li><li>Quiet: Sets propulsion impeller speed to QUIET (low speed) with gains and limits tuned to safely fly within the reduced performance.</li><li>Nominal: Sets propulsion impeller speed to NOMINAL (medium speed), with gains and limits tuned for typical utility flying.</li><li>Difficult: Sets propulsion impeller speed to AGGRESSIVE (high speed), with gains and limits tuned for maximum performance.</li><li>Docking: Sets propulsion impeller speed to AGGRESSIVE, with gains and limits tuned for reliable docking (conservative approach speed, tight position and attitude tolerances).</li></ul></td>
   </tr>
   <tr>
     <td class="params_parameter">Target Linear Velocity</td>
@@ -1825,7 +1829,7 @@ td.inner_table {
   </tr>
 </table>
 </td>
-    <td class="params_notes">Which planner to use:<ul><li>Trapezoidal planner: Generates a straight-line trajectory from the start position to the target position, with a trapezoidal velocity profile. If not in holonomic mode, the robot will rotate to face the target position before beginning to translate. After translating to the target position, the robot will turn to face the target attitude.</li><li>QP planner: An experimental planner that generates a curved trajectory from start to target, avoiding intervening obstacles. As of this writing (9/2020), using the QP planner is not recommended, because it has not yet been tested on the ISS.</li></ul></td>
+    <td class="params_notes">Which planner to use:<ul><li>Trapezoidal planner: Generates a straight-line trajectory from the start position to the target position, with a trapezoidal velocity profile. If not in holonomic mode, the robot will rotate to face the target position before beginning to translate. After translating to the target position, the robot will turn to face the target attitude.</li><li>QP planner: An experimental planner that generates a curved trajectory from start to target, avoiding intervening obstacles. As of 10/2020, using the QP planner is not recommended, because it has not yet been tested on the ISS.</li></ul></td>
   </tr>
 </table>
 
@@ -1886,7 +1890,7 @@ td.inner_table {
   </tr>
 </table>
 </td>
-    <td class="params_notes">The DDS telemetry topic to manage. Note: The "CommStatus" topic does not appear to actually be in use.</td>
+    <td class="params_notes">The DDS telemetry topic to manage. Note: As of Oct 2020, the "CommStatus" topic is not implemented.</td>
   </tr>
   <tr>
     <td class="params_parameter">Rate</td>

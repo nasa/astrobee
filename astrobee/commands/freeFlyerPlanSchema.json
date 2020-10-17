@@ -42,7 +42,7 @@
       "type": "ParamSpec",
       "id": "Settings.CameraMode",
       "valueType": "string",
-      "notes": "Where to send the camera imagery:<br/>- Recording: Log imagery to the robot's local storage.<br/>- Streaming: Downlink live imagery. (The SciCam downlinks streaming video via RTSP. Other cameras downlink image frames via DDS.)<br/>- Both: Enable simultaneous recording and streaming.",
+      "notes": "Cameras can both stream and record, potentially with different parameters (typically, you might downlink at lower frame rate and lower resolution). Use this field to specify which mode you want to change parameters for.",
       "choices": [
         ["Both", "Both"],
         ["Recording", "Recording"],
@@ -65,11 +65,12 @@
       "type": "ParamSpec",
       "id": "Settings.FlightMode",
       "valueType": "string",
-      "notes": "Setting the flight mode updates the GN&C gains, hard limits, tolerances, etc., as specified in the world config file. See e.g. astrobee/astrobee/config/worlds/iss.config. Note that executing certain operations, such as perching and docking, automatically switches to the corresponding flight mode.",
+      "notes": "Setting the flight mode updates the GN&C gains, hard limits, tolerances, etc., as specified in the world config file. See e.g. astrobee/astrobee/config/worlds/iss.config. Note that executing certain operations, such as docking, automatically switches the flight mode as needed. Values:<ul><li>Off: Turns off propulsion.</li><li>Quiet: Sets propulsion impeller speed to QUIET (low speed) with gains and limits tuned to safely fly within the reduced performance.</li><li>Nominal: Sets propulsion impeller speed to NOMINAL (medium speed), with gains and limits tuned for typical utility flying.</li><li>Difficult: Sets propulsion impeller speed to AGGRESSIVE (high speed), with gains and limits tuned for maximum performance.</li><li>Docking: Sets propulsion impeller speed to AGGRESSIVE, with gains and limits tuned for reliable docking (conservative approach speed, tight position and attitude tolerances).</li></ul>",
       "choices": [
+        ["Off", "Off"],
+        ["Quiet", "Quiet"],
         ["Nominal", "Nominal"],
         ["Difficult", "Difficult"],
-        ["Quiet", "Quiet"],
         ["Docking", "Docking"]
       ]
     },
@@ -130,7 +131,7 @@
       "type": "ParamSpec",
       "id": "Settings.PlannerType",
       "valueType": "string",
-      "notes": "Which planner to use:<ul><li>Trapezoidal planner: Generates a straight-line trajectory from the start position to the target position, with a trapezoidal velocity profile. If not in holonomic mode, the robot will rotate to face the target position before beginning to translate. After translating to the target position, the robot will turn to face the target attitude.</li><li>QP planner: An experimental planner that generates a curved trajectory from start to target, avoiding intervening obstacles. As of this writing (9/2020), using the QP planner is not recommended, because it has not yet been tested on the ISS.</li></ul>",
+      "notes": "Which planner to use:<ul><li>Trapezoidal planner: Generates a straight-line trajectory from the start position to the target position, with a trapezoidal velocity profile. If not in holonomic mode, the robot will rotate to face the target position before beginning to translate. After translating to the target position, the robot will turn to face the target attitude.</li><li>QP planner: An experimental planner that generates a curved trajectory from start to target, avoiding intervening obstacles. As of 10/2020, using the QP planner is not recommended, because it has not yet been tested on the ISS.</li></ul>",
       "choices": [
         ["trapezoidal", "Trapezoidal"],
         ["qp", "QuadraticProgram"]
@@ -141,7 +142,7 @@
       "type": "ParamSpec",
       "id": "Admin.LocalizationMode",
       "valueType": "string",
-      "notes": "Which pipeline to use:<ul><li>MappedLandmarks: General-purpose localization mode; Astrobee uses its NavCam to recognize landmark features on the ISS interior, as well as for visual odometry.</li><li>ARTags: During docking, Astrobee uses its DockCam to view AR tags located on the dock and obtain more robust and accurate localization.</li><li>Handrail: During perching approach, Astrobee uses its PerchCam LIDAR to recognize the geometry of a handrail in front of a wall.</li><li>Perch: Not implemented yet. While perched, Astrobee could use a simplified localization approach based on remembering its initial perched pose and updating its pose during pan/tilt motions using a kinematic model of the arm. </li><li>Truth: During lab testing, Astrobee can optionally subscribe to pose telemetry from an external ground-truth localization system and use it for motion control.</li></ul>",
+      "notes": "Which pipeline to use:<ul><li>MappedLandmarks: General-purpose localization mode; Astrobee uses its NavCam to recognize landmark features on the ISS interior, as well as for visual odometry.</li><li>ARTags: During docking, Astrobee uses its DockCam to view AR tags located on the dock and obtain more robust and accurate localization.</li><li>Handrail: During perching approach, Astrobee uses its PerchCam LIDAR to recognize the geometry of a handrail in front of a wall.</li><li>Perch: Not implemented. While perched, Astrobee could use a simplified localization approach based on remembering its initial perched pose and updating its pose during pan/tilt motions using a kinematic model of the arm. </li><li>Truth: During lab testing, Astrobee can optionally subscribe to pose telemetry from an external ground-truth localization system and use it for motion control.</li></ul>",
       "choices": [
         ["None", "None"],
         ["MappedLandmarks", "MappedLandmarks"],
@@ -168,7 +169,7 @@
     {
       "type": "CommandSpec",
       "id": "Admin.wake",
-      "notes": "Wakes an Astrobee from a hibernating state (only EPS powered) into a ready state (main processors powered, flight software stack running, ready to receive Astrobee API commands). The Astrobee in question must be docked. Because each wake command is routed through a dock berth, which Astrobee to wake is specified using the berth number. See also Admin.wakeSafe.<p/>Note: For context about how to wake an Astrobee on the ISS, see the procedure IRG-FFTEST207a Astrobee Quick Wakeup and Checkout. This command is usually issued using a terminal menu configured in the astrobee_ops repo. After wake-up is commanded, additional network configuration may be needed before an Astrobee on the ISS can actually receive API commands from the ground.",
+      "notes": "Wakes an Astrobee from a hibernating state (only EPS powered) by powering up the main processors. This command is intended to also automatically start the flight software stack such that Astrobee is ready to receive Astrobee API commands, but that feature is not implemented.<p/>The Astrobee in question must be docked. Because each wake command is routed through a dock berth, which Astrobee to wake is specified using the berth number.<p/>See also Admin.wakeSafe. The difference between Admin.wake and Admin.wakeSafe is that Admin.wake is intended to automatically start the flight software stack. Since that feature is not implemented, at present, the two commands are equivalent.<p/>Note: For context about how to wake an Astrobee on the ISS, see the procedure IRG-FFTEST207a Astrobee Quick Wakeup and Checkout.",
       "javaNotes": "Do not use this command. It is a dock command, not an Astrobee command.",
       "parent": "Command",
       "params": [
@@ -183,7 +184,7 @@
     {
       "type": "CommandSpec",
       "id": "Admin.wakeSafe",
-      "notes": "Wakes Astrobee from a hibernating state (only EPS powered) into a safe state (main processors powered, available to log in for debugging, but flight software stack not started). The Astrobee in question must be docked. Because each wake command is routed through a dock berth, which Astrobee to wake is specified using the berth number.",
+      "notes": "Wakes Astrobee from a hibernating state (only EPS powered) into a safe state (main processors powered, available to log in for debugging, but flight software stack not started).<p/>The Astrobee in question must be docked. Because each wake command is routed through a dock berth, which Astrobee to wake is specified using the berth number. See also Admin.wake.",
       "javaNotes": "Do not use this command. It is a dock command, not an Astrobee command.",
       "parent": "Command",
       "params": [
@@ -199,7 +200,7 @@
       "type": "CommandSpec",
       "id": "Mobility.simpleMove6DOF",
       "isRapidNative": true,
-      "notes": "Astrobee move command. Using the default trapezoidal planner, the move has the following steps:<br/>- If not in holonomic mode, the robot rotates to face the target position.<br/>- Once rotation is complete, the robot translates in a straight line to the target position.<br/>- Once translation is complete, the robot rotates to the target attitude.",
+      "notes": "Moves the robot to the specified pose.<p/>Using the default trapezoidal planner, the move has the following steps:<br/>- If not in holonomic mode, the robot rotates to face the target position.<br/>- Once rotation is complete, the robot translates in a straight line to the target position.<br/>- Once translation is complete, the robot rotates to the target attitude.",
       "availableContexts": [
         "teleop"
       ],
@@ -241,7 +242,7 @@
     {
       "type": "CommandSpec",
       "id": "Settings.setCamera",
-      "notes": "Set camera parameters. This command must be sent while the camera is not recording. Once parameters are set, use Settings.setCameraRecording to start recording.",
+      "notes": "Sets camera parameters.<p/>The Astrobee camera control life cycle is as follows:<ul><li>When the Astrobee flight software stack is started, recording and streaming are initially disabled for all cameras, and the default camera parameters are as specified in the astrobee/config/cameras.config file.</li><li>For each camera, while recording and streaming are disabled, you may use this Settings.setCamera command to adjust its parameters.</li><li>For each camera, you may enable/disable recording imagery to onboard storage using Settings.setCameraRecording.</li><li>For each camera, you may enable/disable live imagery downlink using Settings.setCameraStreaming.</li></ul>",
       "availableContexts": [
         "teleop",
         "planner"
@@ -270,7 +271,7 @@
           "minimum": 1,
           "maximum": 30,
           "unit": "Hz",
-          "notes": "Applies to streaming and recording. Maximum frame rate varies by camera:<br/>- SciCam: 30 Hz <br/>- NavCam, DockCam: 15 Hz<br/>- HazCam, PerchCam: 5 Hz"
+          "notes": "Frame rate to send. Maximum frame rate varies by camera:<br/>- SciCam: 30 Hz <br/>- NavCam, DockCam: 15 Hz<br/>- HazCam, PerchCam: 5 Hz"
         },
         {
           "type": "ParamSpec",
@@ -286,7 +287,7 @@
     {
       "type": "CommandSpec",
       "id": "Settings.setCameraStreaming",
-      "notes": "Sets camera streaming live video to the ground on/off.",
+      "notes": "Sets camera streaming live video to the ground on/off.<p/>The SciCam streams H.264 compressed video via RTSP. All other cameras publish independent image frames via DDS.<p/>See Settings.setCamera for context.",
       "availableContexts": [
         "teleop",
         "planner"
@@ -310,7 +311,7 @@
     {
       "type": "CommandSpec",
       "id": "Settings.setCameraRecording",
-      "notes": "Set camera video onboard recording on/off.",
+      "notes": "Sets camera video onboard recording on/off. See Settings.setCamera for context.",
       "availableContexts": [
         "teleop",
         "planner"
@@ -367,7 +368,7 @@
       "type": "CommandSpec",
       "id": "Admin.wipeHlp",
       "isRapidNative": false,
-      "notes": "Not implemented yet. The intent is to erase certain data on the Astrobee HLP's local storage.",
+      "notes": "Not implemented. This command is intended to erase certain data on the Astrobee HLP's local storage.",
       "javaNotes": "Do not use this command. It will erase your running APK.",
       "availableContexts": [
         "teleop"
@@ -394,7 +395,7 @@
       "id": "Data.downloadData",
       "isRapidNative": false,
       "oldFswAlias": "startDownload",
-      "notes": "This command is not implemented. The intent is that it will start downloading certain data logs stored onboard the robot.<p/>Currently, downlink is initiated manually via SSH and rsync, managed by a terminal menu configured in the astrobee_ops repo. See also IRG-FFTEST217 Astrobee Wrap-Up and Shutdown.",
+      "notes": "Not implemented. This command is intended to start downloading certain data logs stored onboard the robot.<p/>Currently, downlink is initiated manually via SSH and rsync, managed by a terminal menu configured in the astrobee_ops repo. See also IRG-FFTEST217 Astrobee Wrap-Up and Shutdown.",
       "javaNotes": "Data can only be downloaded when docked.",
       "availableContexts": [
         "teleop",
@@ -416,7 +417,7 @@
       "isRapidNative": false,
       "isStopCommand": true,
       "stopCommandType": "Data.downloadData",
-      "notes": "This command is not implemented. The intent is that it will stop downloading data. See Data.downloadData.",
+      "notes": "Not implemented. This command is intended to stop downloading data. See Data.downloadData.",
       "availableContexts": [
         "teleop"
       ],
@@ -434,7 +435,7 @@
       "type": "CommandSpec",
       "id": "Data.clearData",
       "isRapidNative": false,
-      "notes": "This command is not implemented. The intent is that it will clear certain data logs onboard the robot after they have been downloaded, in order to free storage space.<p/>Currently, onboard storage is managed as follows:<ol><li>Prior to an activity, review what files have been downloaded after previous activities, and specify which files are ready be deleted from onboard storage in the Test Readiness Review notes on the FFFSW Confluence wiki.</li><li>Manually delete those files (via SSH session) at the start of the commanding window, before executing the activity.</li></ol><p/>See also IRG-FFTEST207a Astrobee Quick Wakeup and Checkout.",
+      "notes": "Not implemented. This command is intended to clear certain data logs onboard the robot after they have been downloaded, in order to free storage space.<p/>Currently, onboard storage is managed as follows:<ol><li>Prior to an activity, review what files have been downloaded after previous activities, and specify which files are ready be deleted from onboard storage in the Test Readiness Review notes on the FFFSW Confluence wiki.</li><li>Manually delete those files (via SSH session) at the start of the commanding window, before executing the activity.</li></ol><p/>See also IRG-FFTEST207a Astrobee Quick Wakeup and Checkout.",
       "availableContexts": [
         "teleop",
         "planner"
@@ -525,7 +526,7 @@
       "type": "CommandSpec",
       "id": "Power.powerOnItem",
       "isRapidNative": false,
-      "notes": "Power on a component within Astrobee. Note: to turn flashlights on or off, see Settings.setFlashlightBrightness.",
+      "notes": "Powers on a component within Astrobee. Note: to turn flashlights on or off, see Settings.setFlashlightBrightness.",
       "availableContexts": [
         "teleop",
         "planner"
@@ -544,7 +545,7 @@
       "type": "CommandSpec",
       "id": "Power.powerOffItem",
       "isRapidNative": false,
-      "notes": "Power off a component within Astrobee. Note: to turn flashlights on or off, see Settings.setFlashlightBrightness.",
+      "notes": "Powers off a component within Astrobee. Note: to turn flashlights on or off, see Settings.setFlashlightBrightness.",
       "availableContexts": [
         "teleop",
         "planner"
@@ -724,7 +725,7 @@
           "type": "ParamSpec",
           "id": "telemetryName",
           "parent": "Settings.TelemetryType",
-          "notes": "The DDS telemetry topic to manage. Note: The \"CommStatus\" topic does not appear to actually be in use."
+          "notes": "The DDS telemetry topic to manage. Note: As of Oct 2020, the \"CommStatus\" topic is not implemented."
         },
         {
           "type": "ParamSpec",
@@ -865,7 +866,7 @@
       "type": "CommandSpec",
       "id": "Settings.setEnableAutoReturn",
       "isRapidNative": false,
-      "notes": "For expert use only. Enables/disables auto-return to the dock. See Mobility.autoReturn.<p/>Note: Currently this flag appears to be ignored.",
+      "notes": "Not implemented. This commmand is intended to enable/disable auto-return to the dock, under the assumption that auto-return will eventually be configured in Astrobee's fault table as the automatic fault response for a low-battery fault. The flag is currently ignored because auto-return has not been sufficiently tested and is not used in the fault table. See Mobility.autoReturn.",
       "availableContexts": [
         "teleop"
       ],
@@ -996,7 +997,7 @@
       "type": "CommandSpec",
       "id": "Admin.shutdown",
       "isRapidNative": true,
-      "notes": "Puts Astrobee in hibernate power mode.<p/>An Astrobee that is hibernating can't receive Astrobee API commands. However, it can later be remotely awakened using Admin.wake, if it is on the dock and not physically switched off.",
+      "notes": "Not implemented. This command is intended to put Astrobee in hibernate power mode.<p/>An Astrobee that is hibernating can't receive Astrobee API commands. However, it can later be remotely awakened, if it is on the dock and not physically switched off. See the procedure IRG-FFTEST217 Astrobee Wrap-Up and Shutdown for current instructions on how to shut down an Astrobee, using a terminal session.",
       "availableContexts": [
         "teleop"
       ],
@@ -1130,7 +1131,7 @@
       "type": "CommandSpec",
       "id": "Admin.reacquirePosition",
       "isRapidNative": false,
-      "notes": "Switch Astrobee's localization to use the general-purpose pipeline.<p/>This command is equivalent to calling Admin.switchLocalization with the \"MappedLandmarks\" pipeline, which also has the side-effect of resetting the EKF, like calling Admin.resetEKF. It could be useful as a way to manually recover localization if Astrobee is lost because it is using the wrong localization pipeline (e.g., if docking or perching approach got interrupted, and targets are no longer in view).",
+      "notes": "Switches Astrobee's localization to use the general-purpose pipeline.<p/>This command is equivalent to calling Admin.switchLocalization with the \"MappedLandmarks\" pipeline and then calling Admin.resetEKF. It could be useful as a way to manually recover localization if Astrobee is lost because it is using the wrong localization pipeline (e.g., if docking or perching approach got interrupted, and targets are no longer in view).",
       "availableContexts" : [
         "teleop"
       ],
@@ -1168,7 +1169,7 @@
       "type": "CommandSpec",
       "id": "Admin.loadNodelet",
       "isRapidNative": false,
-      "notes": "This command is not implemented. The intent is that it will load a ROS nodelet in the Astrobee flight software.<p/>A note for developers: there is an internal service advertised by the system monitor that provides a method very similar to this command, but as of this writing, there does not appear to be any way to invoke it through a standard Astrobee API call. Also note, the underlying system monitor service can't load nodelets that run on the HLP.",
+      "notes": "Not implemented. This command is intended to load a ROS nodelet in the Astrobee flight software.<p/>There is an internal service advertised by the system monitor that provides a method very similar to this command, but as of Oct 2020, there is no way to invoke it through a standard Astrobee API call. Also note, the underlying system monitor service can't load nodelets that run on the HLP.",
       "availableContext": [
         "teleop"
       ],
@@ -1208,7 +1209,7 @@
       "type": "CommandSpec",
       "id": "Admin.unloadNodelet",
       "isRapidNative": false,
-      "notes": "For internal use only. Unloads a ROS nodelet in Astrobee's flight software. This command is defined only so as to make it available in the system monitor's fault response table. It is the usual response if initialization of a nodelet fails. There does not appear to be any way to invoke this command through a standard Astrobee API call. It doesn't work for nodes running on the HLP.",
+      "notes": "Not implemented. This command is intended to unload a ROS nodelet in Astrobee's flight software. Its primary use is in the system monitor's fault response table, where it is the usual response if initialization of a nodelet fails. As of Oct 2020, there is an internal service that implements this function, but there is no way to invoke it through a standard Astrobee API call. Also, the internal service can't unload nodes running on the HLP.",
       "availableContext": [
         "teleop"
       ],
@@ -1234,7 +1235,7 @@
       "type": "CommandSpec",
       "id": "Mobility.prepare",
       "isRapidNative": false,
-      "notes": "This rarely used command manually spins up the propulsion modules, so that a future motion command can execute without a spin-up delay. Normally, you would just command the desired motion and the spin-up would be triggered automatically if needed. This command is intended to help with synchronizing motion of multiple Astrobees, but that scenario hasn't really been tested.",
+      "notes": "Manually spins up the propulsion modules, so that a future motion command can execute without a spin-up delay. This command is rarely used. Normally, you would just command the desired motion and the spin-up would be triggered automatically if needed. This command is intended to help with synchronizing motion of multiple Astrobees, but that scenario hasn't really been tested.",
       "availableContext": [
         "teleop"
       ],
@@ -1316,7 +1317,7 @@
       "type": "CommandSpec",
       "id": "Admin.resetEkf",
       "isRapidNative": false,
-      "notes": "Resets the EKF component of Astrobee's localization.<p/>This command discards the EKF state and forces the localization system to acquire a new fix. It should not be needed unless the localization system has failure modes where it gets persistently stuck with invalid state information. (Unfortunately, as of this writing in 9/2020, that is a frequent occurrence.)",
+      "notes": "Resets the EKF component of Astrobee's localization.<p/>This command discards the EKF state and forces the localization system to acquire a new fix. It should not be needed unless the localization system has failure modes where it gets persistently stuck with invalid state information. (Unfortunately, as of 10/2020, that is a frequent occurrence.)",
       "availableContext": [
         "teleop"
       ],
