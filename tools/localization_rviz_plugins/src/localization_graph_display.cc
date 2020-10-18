@@ -17,104 +17,102 @@
  */
 
 #include "localization_graph_display.h"  // NOLINT
-#include <graph_localizer/graph_localizer.h>
+
+#include <imu_integration/utilities.h>
+#include <localization_common/combined_nav_state.h>
 
 #include <gtsam/base/serialization.h>
 
 #include <OGRE/OgreSceneManager.h>
 #include <OGRE/OgreSceneNode.h>
 
-#include <tf/transform_listener.h>
-
 #include <rviz/frame_manager.h>
-#include <rviz/properties/color_property.h>
-#include <rviz/properties/float_property.h>
-#include <rviz/properties/int_property.h>
 #include <rviz/visualization_manager.h>
 
 #include <glog/logging.h>
 
 namespace localization_rviz_plugins {
+namespace ii = imu_integration;
+namespace lc = localization_common;
 
-LocalizationGraphDisplay::LocalizationGraphDisplay() {
-  color_property_ = new rviz::ColorProperty("Color", QColor(204, 51, 204), "Color to draw the acceleration arrows.",
-                                            this, SLOT(updateColorAndAlpha()));
+namespace {
+Ogre::Vector3 OgrePosition(const gtsam::Pose3& pose) {
+  return Ogre::Vector3(pose.translation().x(), pose.translation().y(), pose.translation().z());
+}  // anonymous ns
+}  // namespace
 
-  alpha_property_ = new rviz::FloatProperty("Alpha", 1.0, "0 is fully transparent, 1.0 is fully opaque.", this,
-                                            SLOT(updateColorAndAlpha()));
+LocalizationGraphDisplay::LocalizationGraphDisplay() {}
 
-  history_length_property_ = new rviz::IntProperty("History Length", 1, "Number of prior measurements to display.",
-                                                   this, SLOT(updateHistoryLength()));
-  history_length_property_->setMin(1);
-  history_length_property_->setMax(100000);
-}
-
-void LocalizationGraphDisplay::onInitialize() {
-  MFDClass::onInitialize();
-  updateHistoryLength();
-}
+void LocalizationGraphDisplay::onInitialize() { MFDClass::onInitialize(); }
 
 void LocalizationGraphDisplay::reset() {
   MFDClass::reset();
-  // visuals_.clear();
+  clearDisplay();
 }
 
-void LocalizationGraphDisplay::updateColorAndAlpha() {
-  float alpha = alpha_property_->getFloat();
-  Ogre::ColourValue color = color_property_->getOgreColor();
-
-  // for (size_t i = 0; i < visuals_.size(); i++) {
-  // visuals_[ i ]->setColor( color.r, color.g, color.b, alpha );
-  //}
+void LocalizationGraphDisplay::clearDisplay() {
+  graph_pose_axes_.clear();
+  imu_factor_lines_.clear();
 }
 
-void LocalizationGraphDisplay::updateHistoryLength() {
-  // visuals_.rset_capacity(history_length_property_->getInt());
-}
+void LocalizationGraphDisplay::addImuVisual(const graph_localizer::GraphLocalizer& graph_localizer,
+                                            const gtsam::CombinedImuFactor* const imu_factor) {
+  const auto pose = graph_localizer.graph_values().at<gtsam::Pose3>(imu_factor->key1());
+  if (!pose) {
+    LOG(ERROR) << "ProcessMessage: Failed to get pose.";
+    return;
+  }
+  addPose(*pose);
 
-void LocalizationGraphDisplay::processMessage(const ff_msgs::LocalizationGraph::ConstPtr& msg) {
-  // TODO(rsoussan): cleaner way to do this, serialize/deserialize properly
-  graph_localizer::GraphLocalizerParams params;
-  graph_localizer::GraphLocalizer graph_localizer(params);
-  gtsam::deserializeBinary(msg->serialized_graph, graph_localizer);
-  std::cout << "values size: " << graph_localizer.graph_values().values().size() << std::endl;
-  const auto latest_timestamp = graph_localizer.graph_values().LatestTimestamp();
-  if (latest_timestamp) std::cout << std::setprecision(15) << "values latest time: " << *latest_timestamp << std::endl;
-  graph_localizer.factor_graph().print();
-  // TODO(rsoussan): draw axes for each pose!!!!
-  // draw line between each pose?
-
-  Ogre::Quaternion orientation;
-  Ogre::Vector3 position;
-  if (!context_->getFrameManager()->getTransform(msg->header.frame_id, msg->header.stamp, position, orientation)) {
-    // TODO(rsoussan): remove q printable???
-    LOG(ERROR) << "Error transforming from frame " << msg->header.frame_id << " to frame " << qPrintable(fixed_frame_);
+  const auto velocity = graph_localizer.graph_values().at<gtsam::Velocity3>(imu_factor->key2());
+  if (!velocity) {
+    LOG(ERROR) << "ProcessMessage: Failed to get velocity.";
     return;
   }
 
-  /*// We are keeping a circular buffer of visual pointers.  This gets
-  // the next one, or creates and stores it if the buffer is not full
-  boost::shared_ptr<ImuVisual> visual;
-  if( visuals_.full() )
-  {
-    visual = visuals_.front();
-  }
-  else
-  {
-    visual.reset(new ImuVisual( context_->getSceneManager(), scene_node_ ));
+  // TODO(rsoussan): is this correct bias to use???
+  const auto bias = graph_localizer.graph_values().at<gtsam::imuBias::ConstantBias>(imu_factor->key5());
+  if (!bias) {
+    LOG(ERROR) << "ProcessMessage: Failed to get bias.";
+    return;
   }
 
-  // Now set or update the contents of the chosen visual.
-  visual->setMessage( msg );
-  visual->setFramePosition( position );
-  visual->setFrameOrientation( orientation );
+  const lc::CombinedNavState combined_nav_state(*pose, *velocity, *bias, 0 /*Dummy Timestamp*/);
+  const auto& pim = imu_factor->preintegratedMeasurements();
+  const auto imu_predicted_combined_nav_state = ii::PimPredict(combined_nav_state, pim);
+  auto imu_factor_line = std::unique_ptr<rviz::Line>(new rviz::Line(context_->getSceneManager(), scene_node_));
+  imu_factor_line->setPoints(OgrePosition(*pose), OgrePosition(imu_predicted_combined_nav_state.pose()));
+  imu_factor_lines_.emplace_back(std::move(imu_factor_line));
+}
 
-  float alpha = alpha_property_->getFloat();
-  Ogre::ColourValue color = color_property_->getOgreColor();
-  visual->setColor( color.r, color.g, color.b, alpha );
+void LocalizationGraphDisplay::addPose(const gtsam::Pose3& pose) {
+  auto graph_pose_axis = std::unique_ptr<rviz::Axes>(new rviz::Axes(context_->getSceneManager(), scene_node_));
+  graph_pose_axis->setPosition(OgrePosition(pose));
+  // TODO(rsoussan): set orientation!!!!
+  graph_pose_axes_.emplace_back(std::move(graph_pose_axis));
+}
 
-  // And send it to the end of the circular buffer
-  visuals_.push_back(visual);*/
+void LocalizationGraphDisplay::processMessage(const ff_msgs::LocalizationGraph::ConstPtr& msg) {
+  // TODO(rsoussan): put these somewhere else!
+  using Calibration = gtsam::Cal3_S2;
+  using Camera = gtsam::PinholeCamera<Calibration>;
+  using SmartFactor = gtsam::SmartProjectionPoseFactor<Calibration>;
+
+  // TODO(rsoussan): cleaner way to do this, serialize/deserialize properly
+  clearDisplay();
+  graph_localizer::GraphLocalizerParams params;
+  graph_localizer::GraphLocalizer graph_localizer(params);
+  gtsam::deserializeBinary(msg->serialized_graph, graph_localizer);
+  for (const auto factor : graph_localizer.factor_graph()) {
+    const auto smart_factor = dynamic_cast<const SmartFactor*>(factor.get());
+    if (smart_factor) {
+      std::cout << "smart factor!" << std::endl;
+    }
+    const auto imu_factor = dynamic_cast<gtsam::CombinedImuFactor*>(factor.get());
+    if (imu_factor) {
+      addImuVisual(graph_localizer, imu_factor);
+    }
+  }
 }
 
 }  // namespace localization_rviz_plugins

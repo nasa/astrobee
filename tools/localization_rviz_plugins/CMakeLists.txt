@@ -19,7 +19,7 @@ cmake_minimum_required(VERSION 2.8.3)
 
 project(localization_rviz_plugins)
 
-set(BUILD_LOC_RVIZ_PLUGINS OFF CACHE BOOL "Ignore loc rviz plugins due to cross compile error" FORCE)
+set(BUILD_LOC_RVIZ_PLUGINS ON CACHE BOOL "Ignore loc rviz plugins due to cross compile error" FORCE)
 
 if(BUILD_LOC_RVIZ_PLUGINS)
  find_package(GTSAM REQUIRED)
@@ -37,7 +37,7 @@ if(BUILD_LOC_RVIZ_PLUGINS)
  #add_definitions(-DQT_NO_KEYWORDS)
  
  catkin_package(
-   LIBRARIES ${PROJECT_NAME} ${GLOG_LIBRARIES} ${GTSAM_LIBRARIES} ${QT_LIBRARIES}  graph_localizer localization_common localization_measurements
+   LIBRARIES ${PROJECT_NAME} ${GLOG_LIBRARIES} ${GTSAM_LIBRARIES} ${QT_LIBRARIES}  graph_localizer imu_integration localization_common localization_measurements
  #${rviz_DEFAULT_PLUGIN_LIBRARIES}
    INCLUDE_DIRS ${GTSAM_INCLUDE_DIR} ${GLOG_INCLUDE_DIRS} ${Qt5Core_INCLUDE_DIRS} ${Qt5Gui_INCLUDE_DIRS} 
    CATKIN_DEPENDS rviz 
@@ -45,7 +45,7 @@ if(BUILD_LOC_RVIZ_PLUGINS)
  )
  
  create_library(TARGET ${PROJECT_NAME} 
-   LIBS ${catkin_LIBRARIES} ${GLOG_LIBRARIES} ${QT_LIBRARIES} graph_localizer localization_common localization_measurements 
+   LIBS ${catkin_LIBRARIES} ${GLOG_LIBRARIES} ${QT_LIBRARIES} graph_localizer imu_integration localization_common localization_measurements 
  # ${rviz_DEFAULT_PLUGIN_LIBRARIES} 
    INC ${catkin_INCLUDE_DIRS} ${GLOG_INCLUDE_DIRS} ${Qt5Core_INCLUDE_DIRS} ${Qt5Gui_INCLUDE_DIRS} 
    ADD_SRCS src/localization_graph_display.cc ${MOC_FILES}

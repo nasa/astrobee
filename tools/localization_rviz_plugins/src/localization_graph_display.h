@@ -23,20 +23,20 @@
 // Required for Qt
 #ifndef Q_MOC_RUN
 #include <ff_msgs/LocalizationGraph.h>
+#include <graph_localizer/graph_localizer.h>
+#include <gtsam/geometry/Pose3.h>
+#include <gtsam/navigation/CombinedImuFactor.h>
 #include <rviz/message_filter_display.h>
-#include <boost/circular_buffer.hpp>
+#include <rviz/ogre_helpers/axes.h>
+#include <rviz/ogre_helpers/line.h>
 #endif
+
+#include <vector>
 
 // Forward declarations for ogre and rviz
 namespace Ogre {
 class SceneNode;
 }
-
-namespace rviz {
-class ColorProperty;
-class FloatProperty;
-class IntProperty;
-}  // namespace rviz
 
 namespace localization_rviz_plugins {
 
@@ -52,17 +52,18 @@ class LocalizationGraphDisplay : public rviz::MessageFilterDisplay<ff_msgs::Loca
   void reset() final;
 
  private Q_SLOTS:  // NOLINT
-  void updateColorAndAlpha();
-  void updateHistoryLength();
+                   //  void updateColorAndAlpha();
+                   //  void updateHistoryLength();
 
  private:
   void processMessage(const ff_msgs::LocalizationGraph::ConstPtr& graph_msg);
-  // boost::circular_buffer<boost::shared_ptr<ImuVisual> > visuals_;
+  void clearDisplay();
+  void addPose(const gtsam::Pose3& graph_pose);
+  void addImuVisual(const graph_localizer::GraphLocalizer& graph_localizer,
+                    const gtsam::CombinedImuFactor* const imu_factor);
 
-  // User-editable property variables.
-  rviz::ColorProperty* color_property_;
-  rviz::FloatProperty* alpha_property_;
-  rviz::IntProperty* history_length_property_;
+  std::vector<std::unique_ptr<rviz::Axes>> graph_pose_axes_;
+  std::vector<std::unique_ptr<rviz::Line>> imu_factor_lines_;
 };
 }  // namespace localization_rviz_plugins
 #endif  // LOCALIZATION_RVIZ_PLUGINS_LOCALIZATION_GRAPH_DISPLAY_H_ NOLINT
