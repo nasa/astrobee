@@ -16,8 +16,6 @@
  * under the License.
  */
 
-#include "localization_graph_display.h"  // NOLINT
-
 #include <imu_integration/utilities.h>
 #include <localization_common/combined_nav_state.h>
 
@@ -33,19 +31,14 @@
 
 #include <utility>
 
+#include "localization_graph_display.h"  // NOLINT
+#include "utilities.h"                   // NOLINT
+
 namespace localization_rviz_plugins {
 namespace ii = imu_integration;
 namespace lc = localization_common;
 
 namespace {
-Ogre::Vector3 OgrePosition(const gtsam::Pose3& pose) {
-  return Ogre::Vector3(pose.translation().x(), pose.translation().y(), pose.translation().z());
-}
-Ogre::Quaternion OgreQuaternion(const gtsam::Pose3& pose) {
-  const auto quaternion = pose.rotation().toQuaternion();
-  return Ogre::Quaternion(quaternion.w(), quaternion.x(), quaternion.y(), quaternion.z());
-}
-
 std::pair<Ogre::Quaternion, double> getOrientationAndLength(const gtsam::Point3& point_a,
                                                             const gtsam::Point3& point_b) {
   // Ogre identity vector is along negative z axis
@@ -85,7 +78,10 @@ void LocalizationGraphDisplay::addImuVisual(const graph_localizer::GraphLocalize
     LOG(ERROR) << "ProcessMessage: Failed to get pose.";
     return;
   }
-  if (show_pose_axes_->getBool()) addPose(*pose);
+  if (show_pose_axes_->getBool()) {
+    const float scale = pose_axes_size_->getFloat();
+    addPoseAsAxis(*pose, scale, graph_pose_axes_, context_->getSceneManager(), scene_node_);
+  }
 
   const auto velocity = graph_localizer.graph_values().at<gtsam::Velocity3>(imu_factor->key2());
   if (!velocity) {
@@ -119,15 +115,6 @@ void LocalizationGraphDisplay::addImuVisual(const graph_localizer::GraphLocalize
     imu_factor_arrow->setColor(1, 1, 0, 1);
     imu_factor_arrows_.emplace_back(std::move(imu_factor_arrow));
   }
-}
-
-void LocalizationGraphDisplay::addPose(const gtsam::Pose3& pose) {
-  auto graph_pose_axis = std::unique_ptr<rviz::Axes>(new rviz::Axes(context_->getSceneManager(), scene_node_));
-  graph_pose_axis->setPosition(OgrePosition(pose));
-  graph_pose_axis->setOrientation(OgreQuaternion(pose));
-  const float scale = pose_axes_size_->getFloat();
-  graph_pose_axis->setScale(Ogre::Vector3(scale, scale, scale));
-  graph_pose_axes_.emplace_back(std::move(graph_pose_axis));
 }
 
 void LocalizationGraphDisplay::processMessage(const ff_msgs::LocalizationGraph::ConstPtr& msg) {

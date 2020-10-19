@@ -37,7 +37,7 @@ if(BUILD_LOC_RVIZ_PLUGINS)
  #add_definitions(-DQT_NO_KEYWORDS)
  
  catkin_package(
-   LIBRARIES ${PROJECT_NAME} ${GLOG_LIBRARIES} ${GTSAM_LIBRARIES} ${QT_LIBRARIES}  graph_localizer imu_integration localization_common localization_measurements
+   LIBRARIES ${PROJECT_NAME} ${GLOG_LIBRARIES} ${GTSAM_LIBRARIES} ${QT_LIBRARIES} config_reader graph_localizer imu_integration localization_common localization_measurements
  #${rviz_DEFAULT_PLUGIN_LIBRARIES}
    INCLUDE_DIRS ${GTSAM_INCLUDE_DIR} ${GLOG_INCLUDE_DIRS} ${Qt5Core_INCLUDE_DIRS} ${Qt5Gui_INCLUDE_DIRS} 
    CATKIN_DEPENDS rviz 
@@ -45,10 +45,10 @@ if(BUILD_LOC_RVIZ_PLUGINS)
  )
  
  create_library(TARGET ${PROJECT_NAME} 
-   LIBS ${catkin_LIBRARIES} ${GLOG_LIBRARIES} ${QT_LIBRARIES} graph_localizer imu_integration localization_common localization_measurements 
+   LIBS ${catkin_LIBRARIES} ${GLOG_LIBRARIES} ${QT_LIBRARIES} config_reader graph_localizer imu_integration localization_common localization_measurements 
  # ${rviz_DEFAULT_PLUGIN_LIBRARIES} 
    INC ${catkin_INCLUDE_DIRS} ${GLOG_INCLUDE_DIRS} ${Qt5Core_INCLUDE_DIRS} ${Qt5Gui_INCLUDE_DIRS} 
-   ADD_SRCS src/localization_graph_display.cc ${MOC_FILES}
+   ADD_SRCS src/localization_graph_display.cc src/sparse_mapping_display.cc src/utilities.cc ${MOC_FILES}
    DEPS gtsam rviz 
  )
 endif()

@@ -17,21 +17,19 @@
  */
 
 // Header file must go in src directory for Qt/Rviz plugin
-#ifndef LOCALIZATION_RVIZ_PLUGINS_LOCALIZATION_GRAPH_DISPLAY_H_  // NOLINT
-#define LOCALIZATION_RVIZ_PLUGINS_LOCALIZATION_GRAPH_DISPLAY_H_  // NOLINT
+#ifndef LOCALIZATION_RVIZ_PLUGINS_SPARSE_MAPPING_DISPLAY_H_  // NOLINT
+#define LOCALIZATION_RVIZ_PLUGINS_SPARSE_MAPPING_DISPLAY_H_  // NOLINT
 
 // Required for Qt
 #ifndef Q_MOC_RUN
-#include <ff_msgs/LocalizationGraph.h>
-#include <graph_localizer/graph_localizer.h>
+#include <ff_msgs/VisualLandmarks.h>
 #include <gtsam/geometry/Pose3.h>
-#include <gtsam/navigation/CombinedImuFactor.h>
 #include <rviz/message_filter_display.h>
-#include <rviz/ogre_helpers/arrow.h>
 #include <rviz/ogre_helpers/axes.h>
 #include <rviz/properties/float_property.h>
-#include <vector>
 #endif
+
+#include <vector>
 
 // Forward declarations for ogre and rviz
 namespace Ogre {
@@ -40,11 +38,11 @@ class SceneNode;
 
 namespace localization_rviz_plugins {
 
-class LocalizationGraphDisplay : public rviz::MessageFilterDisplay<ff_msgs::LocalizationGraph> {
+class SparseMappingDisplay : public rviz::MessageFilterDisplay<ff_msgs::VisualLandmarks> {
   Q_OBJECT      // NOLINT
       public :  // NOLINT
-                LocalizationGraphDisplay();
-  ~LocalizationGraphDisplay() = default;
+                SparseMappingDisplay();
+  ~SparseMappingDisplay() = default;
 
   // private:
  protected:
@@ -54,17 +52,12 @@ class LocalizationGraphDisplay : public rviz::MessageFilterDisplay<ff_msgs::Loca
  private Q_SLOTS:  // NOLINT
 
  private:
-  void processMessage(const ff_msgs::LocalizationGraph::ConstPtr& graph_msg);
+  void processMessage(const ff_msgs::VisualLandmarks::ConstPtr& graph_msg);
   void clearDisplay();
-  void addImuVisual(const graph_localizer::GraphLocalizer& graph_localizer,
-                    const gtsam::CombinedImuFactor* const imu_factor);
 
-  std::vector<std::unique_ptr<rviz::Axes>> graph_pose_axes_;
-  std::vector<std::unique_ptr<rviz::Arrow>> imu_factor_arrows_;
-  std::unique_ptr<rviz::BoolProperty> show_pose_axes_;
+  std::vector<std::unique_ptr<rviz::Axes>> sparse_mapping_pose_axes_;
   std::unique_ptr<rviz::FloatProperty> pose_axes_size_;
-  std::unique_ptr<rviz::BoolProperty> show_imu_factor_arrows_;
-  std::unique_ptr<rviz::FloatProperty> imu_factor_arrows_diameter_;
+  gtsam::Pose3 nav_cam_T_body_;
 };
 }  // namespace localization_rviz_plugins
-#endif  // LOCALIZATION_RVIZ_PLUGINS_LOCALIZATION_GRAPH_DISPLAY_H_ NOLINT
+#endif  // LOCALIZATION_RVIZ_PLUGINS_SPARSE_MAPPING_DISPLAY_H_ NOLINT
