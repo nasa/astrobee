@@ -40,6 +40,7 @@ namespace lm = localization_measurements;
 
 SparseMappingDisplay::SparseMappingDisplay() {
   pose_axes_size_.reset(new rviz::FloatProperty("Pose Axes Size", 0.1, "Pose axes size.", this));
+  number_of_poses_.reset(new rviz::IntProperty("Number of Poses", 10, "Number of poses to display.", this));
 
   // TODO(rsoussan): avoid this and pass config path directly to config reader!!!!
   // make sure body_T_nav cam is correct!!!! (bsharp not bumble)
@@ -73,11 +74,18 @@ void SparseMappingDisplay::reset() {
 void SparseMappingDisplay::clearDisplay() { sparse_mapping_pose_axes_.clear(); }
 
 void SparseMappingDisplay::processMessage(const ff_msgs::VisualLandmarks::ConstPtr& msg) {
-  clearDisplay();
   const auto projections_measurement = lm::MakeMatchedProjectionsMeasurement(*msg);
   const float scale = pose_axes_size_->getFloat();
   const gtsam::Pose3 global_T_body = projections_measurement.global_T_cam * nav_cam_T_body_;
+  // TODO(rsoussan): use circular buffer instead of vector
+  const int number_of_poses = number_of_poses_->getInt();
+  if (sparse_mapping_pose_axes_.size() > number_of_poses)
+    sparse_mapping_pose_axes_.erase(sparse_mapping_pose_axes_.begin());
   addPoseAsAxis(global_T_body, scale, sparse_mapping_pose_axes_, context_->getSceneManager(), scene_node_);
+  // TODO(rsoussan): pass these to addposeasaxis???
+  (*sparse_mapping_pose_axes_.rbegin())->setXColor(Ogre::ColourValue(0.5, 0, 0, 0.3));
+  (*sparse_mapping_pose_axes_.rbegin())->setYColor(Ogre::ColourValue(0, 0.5, 0, 0.3));
+  (*sparse_mapping_pose_axes_.rbegin())->setZColor(Ogre::ColourValue(0, 0, 0.5, 0.3));
 }
 }  // namespace localization_rviz_plugins
 

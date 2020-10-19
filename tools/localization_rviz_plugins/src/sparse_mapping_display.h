@@ -27,6 +27,7 @@
 #include <rviz/message_filter_display.h>
 #include <rviz/ogre_helpers/axes.h>
 #include <rviz/properties/float_property.h>
+#include <rviz/properties/int_property.h>
 #endif
 
 #include <vector>
@@ -57,6 +58,7 @@ class SparseMappingDisplay : public rviz::MessageFilterDisplay<ff_msgs::VisualLa
 
   std::vector<std::unique_ptr<rviz::Axes>> sparse_mapping_pose_axes_;
   std::unique_ptr<rviz::FloatProperty> pose_axes_size_;
+  std::unique_ptr<rviz::IntProperty> number_of_poses_;
   gtsam::Pose3 nav_cam_T_body_;
 };
 }  // namespace localization_rviz_plugins

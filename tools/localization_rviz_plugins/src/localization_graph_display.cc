@@ -100,10 +100,6 @@ void LocalizationGraphDisplay::addImuVisual(const graph_localizer::GraphLocalize
     const lc::CombinedNavState combined_nav_state(*pose, *velocity, *bias, 0 /*Dummy Timestamp*/);
     const auto& pim = imu_factor->preintegratedMeasurements();
     const auto imu_predicted_combined_nav_state = ii::PimPredict(combined_nav_state, pim);
-    std::cout << "pose trans: " << std::endl
-              << pose->translation().matrix() << std::endl
-              << "pim pose trans: " << std::endl
-              << imu_predicted_combined_nav_state.pose().translation().matrix() << std::endl;
     auto imu_factor_arrow = std::unique_ptr<rviz::Arrow>(new rviz::Arrow(context_->getSceneManager(), scene_node_));
     imu_factor_arrow->setPosition(OgrePosition(*pose));
     const auto orientation_and_length =
@@ -131,7 +127,6 @@ void LocalizationGraphDisplay::processMessage(const ff_msgs::LocalizationGraph::
   for (const auto factor : graph_localizer.factor_graph()) {
     const auto smart_factor = dynamic_cast<const SmartFactor*>(factor.get());
     if (smart_factor) {
-      std::cout << "smart factor!" << std::endl;
     }
     const auto imu_factor = dynamic_cast<gtsam::CombinedImuFactor*>(factor.get());
     if (imu_factor) {

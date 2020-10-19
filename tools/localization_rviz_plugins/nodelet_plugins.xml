@@ -6,6 +6,14 @@
       Localization Graph Display
     </description>
   </class>
+  <class name="localization_rviz_plugins/GraphPanel"
+         type="localization_rviz_plugins::LocalizationGraphPanel"
+         base_class_type="rviz::Panel">
+    <description>
+      Localization Graph Panel 
+    </description>
+  </class>
+
   <class name="localization_rviz_plugins/SparseMapping"
          type="localization_rviz_plugins::SparseMappingDisplay"
          base_class_type="rviz::Display">
