@@ -31,6 +31,8 @@
 
 #include <glog/logging.h>
 
+#include <utility>
+
 namespace localization_rviz_plugins {
 namespace ii = imu_integration;
 namespace lc = localization_common;
@@ -38,10 +40,31 @@ namespace lc = localization_common;
 namespace {
 Ogre::Vector3 OgrePosition(const gtsam::Pose3& pose) {
   return Ogre::Vector3(pose.translation().x(), pose.translation().y(), pose.translation().z());
-}  // anonymous ns
+}
+Ogre::Quaternion OgreQuaternion(const gtsam::Pose3& pose) {
+  const auto quaternion = pose.rotation().toQuaternion();
+  return Ogre::Quaternion(quaternion.w(), quaternion.x(), quaternion.y(), quaternion.z());
+}
+
+std::pair<Ogre::Quaternion, double> getOrientationAndLength(const gtsam::Point3& point_a,
+                                                            const gtsam::Point3& point_b) {
+  // Ogre identity vector is along negative z axis
+  const Eigen::Vector3d negative_z(0, 0, 1);
+  const auto normalized_difference_vector = (point_b - point_a).normalized();
+  const double norm = (point_b - point_a).norm();
+  const auto orientation = Eigen::Quaterniond().setFromTwoVectors(negative_z, normalized_difference_vector);
+  return {Ogre::Quaternion(orientation.w(), orientation.x(), orientation.y(), orientation.z()), norm};
+}
 }  // namespace
 
-LocalizationGraphDisplay::LocalizationGraphDisplay() {}
+LocalizationGraphDisplay::LocalizationGraphDisplay() {
+  show_pose_axes_.reset(new rviz::BoolProperty("Show Pose Axes", true, "Show graph poses as axes.", this));
+  pose_axes_size_.reset(new rviz::FloatProperty("Pose Axes Size", 0.1, "Pose axes size.", this));
+  show_imu_factor_arrows_.reset(
+      new rviz::BoolProperty("Show Imu Factor Arrows", true, "Show imu factors as arrows.", this));
+  imu_factor_arrows_diameter_.reset(
+      new rviz::FloatProperty("Imu Factor Arrows Diameter", 0.01, "Imu factor arrows diameter.", this));
+}
 
 void LocalizationGraphDisplay::onInitialize() { MFDClass::onInitialize(); }
 
@@ -52,7 +75,7 @@ void LocalizationGraphDisplay::reset() {
 
 void LocalizationGraphDisplay::clearDisplay() {
   graph_pose_axes_.clear();
-  imu_factor_lines_.clear();
+  imu_factor_arrows_.clear();
 }
 
 void LocalizationGraphDisplay::addImuVisual(const graph_localizer::GraphLocalizer& graph_localizer,
@@ -62,7 +85,7 @@ void LocalizationGraphDisplay::addImuVisual(const graph_localizer::GraphLocalize
     LOG(ERROR) << "ProcessMessage: Failed to get pose.";
     return;
   }
-  addPose(*pose);
+  if (show_pose_axes_->getBool()) addPose(*pose);
 
   const auto velocity = graph_localizer.graph_values().at<gtsam::Velocity3>(imu_factor->key2());
   if (!velocity) {
@@ -77,18 +100,33 @@ void LocalizationGraphDisplay::addImuVisual(const graph_localizer::GraphLocalize
     return;
   }
 
-  const lc::CombinedNavState combined_nav_state(*pose, *velocity, *bias, 0 /*Dummy Timestamp*/);
-  const auto& pim = imu_factor->preintegratedMeasurements();
-  const auto imu_predicted_combined_nav_state = ii::PimPredict(combined_nav_state, pim);
-  auto imu_factor_line = std::unique_ptr<rviz::Line>(new rviz::Line(context_->getSceneManager(), scene_node_));
-  imu_factor_line->setPoints(OgrePosition(*pose), OgrePosition(imu_predicted_combined_nav_state.pose()));
-  imu_factor_lines_.emplace_back(std::move(imu_factor_line));
+  if (show_imu_factor_arrows_->getBool()) {
+    const lc::CombinedNavState combined_nav_state(*pose, *velocity, *bias, 0 /*Dummy Timestamp*/);
+    const auto& pim = imu_factor->preintegratedMeasurements();
+    const auto imu_predicted_combined_nav_state = ii::PimPredict(combined_nav_state, pim);
+    std::cout << "pose trans: " << std::endl
+              << pose->translation().matrix() << std::endl
+              << "pim pose trans: " << std::endl
+              << imu_predicted_combined_nav_state.pose().translation().matrix() << std::endl;
+    auto imu_factor_arrow = std::unique_ptr<rviz::Arrow>(new rviz::Arrow(context_->getSceneManager(), scene_node_));
+    imu_factor_arrow->setPosition(OgrePosition(*pose));
+    const auto orientation_and_length =
+        getOrientationAndLength(pose->translation(), imu_predicted_combined_nav_state.pose().translation());
+    imu_factor_arrow->setOrientation(orientation_and_length.first);
+    const float diameter = 2.0 * imu_factor_arrows_diameter_->getFloat();
+    imu_factor_arrow->set(3.0 * orientation_and_length.second / 4.0, diameter, orientation_and_length.second / 4.0,
+                          diameter);
+    imu_factor_arrow->setColor(1, 1, 0, 1);
+    imu_factor_arrows_.emplace_back(std::move(imu_factor_arrow));
+  }
 }
 
 void LocalizationGraphDisplay::addPose(const gtsam::Pose3& pose) {
   auto graph_pose_axis = std::unique_ptr<rviz::Axes>(new rviz::Axes(context_->getSceneManager(), scene_node_));
   graph_pose_axis->setPosition(OgrePosition(pose));
-  // TODO(rsoussan): set orientation!!!!
+  graph_pose_axis->setOrientation(OgreQuaternion(pose));
+  const float scale = pose_axes_size_->getFloat();
+  graph_pose_axis->setScale(Ogre::Vector3(scale, scale, scale));
   graph_pose_axes_.emplace_back(std::move(graph_pose_axis));
 }
 
@@ -117,5 +155,5 @@ void LocalizationGraphDisplay::processMessage(const ff_msgs::LocalizationGraph::
 
 }  // namespace localization_rviz_plugins
 
-#include <pluginlib/class_list_macros.h>
+#include <pluginlib/class_list_macros.h>  // NOLINT
 PLUGINLIB_EXPORT_CLASS(localization_rviz_plugins::LocalizationGraphDisplay, rviz::Display)

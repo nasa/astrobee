@@ -27,8 +27,9 @@
 #include <gtsam/geometry/Pose3.h>
 #include <gtsam/navigation/CombinedImuFactor.h>
 #include <rviz/message_filter_display.h>
+#include <rviz/ogre_helpers/arrow.h>
 #include <rviz/ogre_helpers/axes.h>
-#include <rviz/ogre_helpers/line.h>
+#include <rviz/properties/float_property.h>
 #endif
 
 #include <vector>
@@ -41,8 +42,8 @@ class SceneNode;
 namespace localization_rviz_plugins {
 
 class LocalizationGraphDisplay : public rviz::MessageFilterDisplay<ff_msgs::LocalizationGraph> {
-  Q_OBJECT
- public:
+  Q_OBJECT // NOLINT
+ public:   // NOLINT
   LocalizationGraphDisplay();
   ~LocalizationGraphDisplay() = default;
 
@@ -63,7 +64,11 @@ class LocalizationGraphDisplay : public rviz::MessageFilterDisplay<ff_msgs::Loca
                     const gtsam::CombinedImuFactor* const imu_factor);
 
   std::vector<std::unique_ptr<rviz::Axes>> graph_pose_axes_;
-  std::vector<std::unique_ptr<rviz::Line>> imu_factor_lines_;
+  std::vector<std::unique_ptr<rviz::Arrow>> imu_factor_arrows_;
+  std::unique_ptr<rviz::BoolProperty> show_pose_axes_;
+  std::unique_ptr<rviz::FloatProperty> pose_axes_size_;
+  std::unique_ptr<rviz::BoolProperty> show_imu_factor_arrows_;
+  std::unique_ptr<rviz::FloatProperty> imu_factor_arrows_diameter_;
 };
 }  // namespace localization_rviz_plugins
 #endif  // LOCALIZATION_RVIZ_PLUGINS_LOCALIZATION_GRAPH_DISPLAY_H_ NOLINT
