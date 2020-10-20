@@ -56,11 +56,18 @@ LocalizationGraphPanel::LocalizationGraphPanel(QWidget* parent) : rviz::Panel(pa
   imu_info_layout->addWidget(imu_avg_dp_label_);
   imu_info_layout->addWidget(imu_avg_dv_label_);
 
+  QHBoxLayout* imu_norm_layout = new QHBoxLayout;
+  imu_avg_dp_norm_label_ = new QLabel("Avg IMU dp norm: ");
+  imu_avg_dv_norm_label_ = new QLabel("Avg IMU dv norm: ");
+  imu_norm_layout->addWidget(imu_avg_dp_norm_label_);
+  imu_norm_layout->addWidget(imu_avg_dv_norm_label_);
+
   QVBoxLayout* layout = new QVBoxLayout;
   layout->addLayout(feature_count_layout);
   layout->addLayout(of_result_layout);
   layout->addLayout(of_info_layout);
   layout->addLayout(imu_info_layout);
+  layout->addLayout(imu_norm_layout);
   setLayout(layout);
 
   graph_sub_ = nh_.subscribe(TOPIC_GRAPH_LOC, 1, &LocalizationGraphPanel::LocalizationGraphCallback, this,
@@ -88,6 +95,8 @@ void LocalizationGraphPanel::LocalizationGraphCallback(const ff_msgs::Localizati
   double total_imu_dt = 0;
   gtsam::Vector3 total_imu_dp = gtsam::Vector3::Zero();
   gtsam::Vector3 total_imu_dv = gtsam::Vector3::Zero();
+  double total_imu_dp_norm = 0;
+  double total_imu_dv_norm = 0;
   for (const auto factor : graph_localizer.factor_graph()) {
     const auto smart_factor = dynamic_cast<const SmartFactor*>(factor.get());
     if (smart_factor) {
@@ -108,7 +117,9 @@ void LocalizationGraphPanel::LocalizationGraphCallback(const ff_msgs::Localizati
         LOG(ERROR) << "LocalizationGraphCallback: Failed to get pim predicted nav state.";
       } else {
         total_imu_dp += imu_predicted_combined_nav_state->pose().translation();
+        total_imu_dp_norm += imu_predicted_combined_nav_state->pose().translation().norm();
         total_imu_dv += imu_predicted_combined_nav_state->velocity();
+        total_imu_dv_norm += imu_predicted_combined_nav_state->velocity().norm();
       }
     }
   }
@@ -191,9 +202,19 @@ void LocalizationGraphPanel::LocalizationGraphCallback(const ff_msgs::Localizati
     imu_avg_dv_z_string.setNum(imu_avg_dv.z(), 'g', 3);
     imu_avg_dv_label_->setText("Avg IMU dv: (" + imu_avg_dv_x_string + ", " + imu_avg_dv_y_string + ", " +
                                imu_avg_dv_z_string + ")");
+
+    const auto imu_avg_dp_norm = total_imu_dp_norm / imu_factors;
+    QString imu_avg_dp_norm_string;
+    imu_avg_dp_norm_string.setNum(imu_avg_dp_norm, 'g', 3);
+    imu_avg_dp_norm_label_->setText("Avg IMU dp norm: " + imu_avg_dp_norm_string);
+
+    const auto imu_avg_dv_norm = total_imu_dv_norm / imu_factors;
+    QString imu_avg_dv_norm_string;
+    imu_avg_dv_norm_string.setNum(imu_avg_dv_norm, 'g', 3);
+    imu_avg_dv_norm_label_->setText("Avg IMU dv norm: " + imu_avg_dv_norm_string);
   }
 }
 }  // namespace localization_rviz_plugins
 
-#include <pluginlib/class_list_macros.h> // NOLINT
+#include <pluginlib/class_list_macros.h>  // NOLINT
 PLUGINLIB_EXPORT_CLASS(localization_rviz_plugins::LocalizationGraphPanel, rviz::Panel)

@@ -56,6 +56,8 @@ class LocalizationGraphPanel : public rviz::Panel {
   QLabel* imu_avg_dt_label_;
   QLabel* imu_avg_dp_label_;
   QLabel* imu_avg_dv_label_;
+  QLabel* imu_avg_dp_norm_label_;
+  QLabel* imu_avg_dv_norm_label_;
 
   ros::NodeHandle nh_;
   ros::Subscriber graph_sub_;
