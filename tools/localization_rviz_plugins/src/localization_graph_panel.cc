@@ -42,18 +42,19 @@ void highlightLabel(const double val, const double green_threshold, const double
 
 void addVectorToLabel(const gtsam::Vector3& vec, const QString& description, QLabel& label, bool add_norm = false,
                       const int precision = 3) {
+  QString text = description + " ";
+  if (add_norm) {
+    QString vec_norm_string;
+    vec_norm_string.setNum(vec.norm(), 'g', precision);
+    text += "norm: " + vec_norm_string + ", ";
+  }
   QString vec_x_string;
   QString vec_y_string;
   QString vec_z_string;
   vec_x_string.setNum(vec.x(), 'g', precision);
   vec_y_string.setNum(vec.y(), 'g', precision);
   vec_z_string.setNum(vec.z(), 'g', precision);
-  QString text = description + ": (" + vec_x_string + ", " + vec_y_string + ", " + vec_z_string + ")";
-  if (add_norm) {
-    QString vec_norm_string;
-    vec_norm_string.setNum(vec.norm(), 'g', precision);
-    text += " norm: " + vec_norm_string;
-  }
+  text += "vec (" + vec_x_string + ", " + vec_y_string + ", " + vec_z_string + ")";
   label.setText(text);
 }
 }  // namespace
@@ -99,9 +100,11 @@ LocalizationGraphPanel::LocalizationGraphPanel(QWidget* parent) : rviz::Panel(pa
 
   QHBoxLayout* graph_latest_layout = new QHBoxLayout;
   time_since_latest_label_ = new QLabel("Time since latest: ");
-  latest_velocity_label_ = new QLabel("Latest Vel: ");
   graph_latest_layout->addWidget(time_since_latest_label_);
-  graph_latest_layout->addWidget(latest_velocity_label_);
+
+  QHBoxLayout* latest_velocity_layout = new QHBoxLayout;
+  latest_velocity_label_ = new QLabel("Latest Vel: ");
+  latest_velocity_layout->addWidget(latest_velocity_label_);
 
   QVBoxLayout* layout = new QVBoxLayout;
   layout->addLayout(feature_count_layout);
@@ -111,6 +114,7 @@ LocalizationGraphPanel::LocalizationGraphPanel(QWidget* parent) : rviz::Panel(pa
   layout->addLayout(imu_dp_layout);
   layout->addLayout(imu_dv_layout);
   layout->addLayout(graph_latest_layout);
+  layout->addLayout(latest_velocity_layout);
   setLayout(layout);
 
   graph_sub_ = nh_.subscribe(TOPIC_GRAPH_LOC, 1, &LocalizationGraphPanel::LocalizationGraphCallback, this,
