@@ -23,9 +23,14 @@ MSG_DIR=../../communications/ff_msgs/msg
 IDL_DIR=../../communications/dds_msgs/idl
 DOC_DIR=../../doc
 
+# Allow selecting the python shell to use, but default to 'python'.
+# For example: 'PYTHON=python2.7 processCommandSchema.sh'
+PYTHON=${PYTHON:=python}
+
 cd "$( dirname "${BASH_SOURCE[0]}" )"
 
-./genCommandConfigLua.py $SCHEMA $CONFIG_DIR/commands.config
-./genRosMsgCommandConstants.py $SCHEMA $MSG_DIR/CommandConstants.msg
-./genCommandConstantsIdl.py $SCHEMA $IDL_DIR/AstrobeeCommandConstants.idl
-./genCommandDictionary.py $SCHEMA $DOC_DIR/AstrobeeCommandDictionary.html
+set -x
+$PYTHON ./genCommandConfigLua.py $SCHEMA $CONFIG_DIR/commands.config
+$PYTHON ./genRosMsgCommandConstants.py $SCHEMA $MSG_DIR/CommandConstants.msg
+$PYTHON ./genCommandConstantsIdl.py $SCHEMA $IDL_DIR/AstrobeeCommandConstants.idl
+$PYTHON ./genCommandDictionary.py $SCHEMA $DOC_DIR/AstrobeeCommandDictionary.html
