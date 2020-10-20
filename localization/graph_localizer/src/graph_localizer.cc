@@ -846,8 +846,7 @@ bool GraphLocalizer::Update() {
   } catch (...) {
     LOG(ERROR) << "Update: Graph optimization failed, keeping old values.";
   }
-  optimization_timer_.Stop();
-  optimization_timer_.Log();
+  optimization_timer_.StopAndLog();
   LOG(INFO) << "Number of iterations: " << optimizer.iterations();
 
   if (params_.print_factor_info) PrintFactorDebugInfo();
@@ -874,8 +873,7 @@ bool GraphLocalizer::Update() {
     LOG(FATAL) << "Update: Computing marginals failed.";
     // TODO(rsoussan): slide window without computing marginals if this fails!!!!
   }
-  marginals_timer_.Stop();
-  marginals_timer_.Log();
+  marginals_timer_.StopAndLog();
 
   if (!SlideWindow(*marginals_)) {
     LOG(ERROR) << "Update: Failed to slide window.";

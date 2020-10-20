@@ -35,6 +35,11 @@ void Timer::Log() {
   LOG(INFO) << name_ + " time: " << last_elapsed_time_ << " seconds.";
   LOG(INFO) << "Average " + name_ + " time: " << average_elapsed_time_ << " seconds.";
 }
+void Timer::StopAndLog() {
+  Stop();
+  Log();
+}
+
 void Timer::Vlog(const int level) {
   VLOG(level) << name_ + " time: " << last_elapsed_time_ << " seconds.";
   VLOG(level) << "Average " + name_ + " time: " << average_elapsed_time_ << " seconds.";

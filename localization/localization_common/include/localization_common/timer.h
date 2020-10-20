@@ -31,6 +31,7 @@ class Timer {
   void Start();
   void Stop();
   void Log();
+  void StopAndLog();
   void Vlog(const int level = 2);
 
  private:
