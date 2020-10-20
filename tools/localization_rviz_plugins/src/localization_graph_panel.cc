@@ -90,13 +90,13 @@ LocalizationGraphPanel::LocalizationGraphPanel(QWidget* parent) : rviz::Panel(pa
   imu_avg_dt_label_ = new QLabel("Avg IMU dt: ");
   imu_info_layout->addWidget(imu_avg_dt_label_);
 
-  QHBoxLayout* imu_dp_layout = new QHBoxLayout;
-  imu_avg_dp_label_ = new QLabel("Avg IMU dp: ");
-  imu_dp_layout->addWidget(imu_avg_dp_label_);
+  QHBoxLayout* imu_dp_dt_layout = new QHBoxLayout;
+  imu_avg_dp_dt_label_ = new QLabel("Avg IMU dp/dt: ");
+  imu_dp_dt_layout->addWidget(imu_avg_dp_dt_label_);
 
-  QHBoxLayout* imu_dv_layout = new QHBoxLayout;
-  imu_avg_dv_label_ = new QLabel("Avg IMU dv: ");
-  imu_dv_layout->addWidget(imu_avg_dv_label_);
+  QHBoxLayout* imu_dv_dt_layout = new QHBoxLayout;
+  imu_avg_dv_dt_label_ = new QLabel("Avg IMU dv/dt: ");
+  imu_dv_dt_layout->addWidget(imu_avg_dv_dt_label_);
 
   QHBoxLayout* graph_latest_layout = new QHBoxLayout;
   time_since_latest_label_ = new QLabel("Time since latest: ");
@@ -111,8 +111,8 @@ LocalizationGraphPanel::LocalizationGraphPanel(QWidget* parent) : rviz::Panel(pa
   layout->addLayout(of_result_layout);
   layout->addLayout(of_info_layout);
   layout->addLayout(imu_info_layout);
-  layout->addLayout(imu_dp_layout);
-  layout->addLayout(imu_dv_layout);
+  layout->addLayout(imu_dp_dt_layout);
+  layout->addLayout(imu_dv_dt_layout);
   layout->addLayout(graph_latest_layout);
   layout->addLayout(latest_velocity_layout);
   setLayout(layout);
@@ -140,8 +140,8 @@ void LocalizationGraphPanel::LocalizationGraphCallback(const ff_msgs::Localizati
   int of_far_point = 0;
   int of_total_num_measurements = 0;
   double total_imu_dt = 0;
-  gtsam::Vector3 total_imu_dp = gtsam::Vector3::Zero();
-  gtsam::Vector3 total_imu_dv = gtsam::Vector3::Zero();
+  gtsam::Vector3 total_imu_dp_dt = gtsam::Vector3::Zero();
+  gtsam::Vector3 total_imu_dv_dt = gtsam::Vector3::Zero();
   for (const auto factor : graph_localizer.factor_graph()) {
     const auto smart_factor = dynamic_cast<const SmartFactor*>(factor.get());
     if (smart_factor) {
@@ -156,7 +156,8 @@ void LocalizationGraphPanel::LocalizationGraphCallback(const ff_msgs::Localizati
     const auto imu_factor = dynamic_cast<gtsam::CombinedImuFactor*>(factor.get());
     if (imu_factor) {
       ++imu_factors;
-      total_imu_dt += imu_factor->preintegratedMeasurements().deltaTij();
+      const double dt = imu_factor->preintegratedMeasurements().deltaTij();
+      total_imu_dt += dt;
       const auto imu_combined_nav_state = firstCombinedNavState(graph_localizer, imu_factor);
       const auto imu_predicted_combined_nav_state = pimPredict(graph_localizer, imu_factor);
       if (!imu_predicted_combined_nav_state || !imu_combined_nav_state) {
@@ -164,9 +165,9 @@ void LocalizationGraphPanel::LocalizationGraphCallback(const ff_msgs::Localizati
       } else {
         const gtsam::Vector3 dp =
             imu_predicted_combined_nav_state->pose().translation() - imu_combined_nav_state->pose().translation();
-        total_imu_dp += dp;
+        total_imu_dp_dt += dp / dt;
         const gtsam::Vector3 dv = imu_predicted_combined_nav_state->velocity() - imu_combined_nav_state->velocity();
-        total_imu_dv += dv;
+        total_imu_dv_dt += dv / dt;
       }
     }
   }
@@ -228,11 +229,11 @@ void LocalizationGraphPanel::LocalizationGraphCallback(const ff_msgs::Localizati
     imu_avg_dt_label_->setText("Avg IMU dt: " + imu_avg_dt_string);
     // Green if <= 0.1, yellow if <= .3 and > .1, red if > 0.3
     highlightLabel<std::less_equal<double>>(imu_avg_dt, 0.1, 0.3, *imu_avg_dt_label_);
-    const auto imu_avg_dp = total_imu_dp / imu_factors;
-    addVectorToLabel(imu_avg_dp, "Avg IMU dp", *imu_avg_dp_label_, true);
+    const auto imu_avg_dp_dt = total_imu_dp_dt / imu_factors;
+    addVectorToLabel(imu_avg_dp_dt, "Avg IMU dp/dt", *imu_avg_dp_dt_label_, true);
 
-    const auto imu_avg_dv = total_imu_dv / imu_factors;
-    addVectorToLabel(imu_avg_dv, "Avg IMU dv", *imu_avg_dv_label_, true);
+    const auto imu_avg_dv_dt = total_imu_dv_dt / imu_factors;
+    addVectorToLabel(imu_avg_dv_dt, "Avg IMU dv/dt", *imu_avg_dv_dt_label_, true);
   }
 }
 }  // namespace localization_rviz_plugins

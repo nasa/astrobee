@@ -54,8 +54,8 @@ class LocalizationGraphPanel : public rviz::Panel {
   QLabel* of_avg_num_measurements_label_;
   // IMU info
   QLabel* imu_avg_dt_label_;
-  QLabel* imu_avg_dp_label_;
-  QLabel* imu_avg_dv_label_;
+  QLabel* imu_avg_dp_dt_label_;
+  QLabel* imu_avg_dv_dt_label_;
   // Graph Latest
   QLabel* latest_velocity_label_;
   QLabel* time_since_latest_label_;
