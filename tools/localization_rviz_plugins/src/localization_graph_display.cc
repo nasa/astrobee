@@ -16,7 +16,6 @@
  * under the License.
  */
 
-#include <imu_integration/utilities.h>
 #include <localization_common/combined_nav_state.h>
 
 #include <gtsam/base/serialization.h>
@@ -35,7 +34,6 @@
 #include "utilities.h"                   // NOLINT
 
 namespace localization_rviz_plugins {
-namespace ii = imu_integration;
 namespace lc = localization_common;
 
 namespace {
@@ -83,27 +81,16 @@ void LocalizationGraphDisplay::addImuVisual(const graph_localizer::GraphLocalize
     addPoseAsAxis(*pose, scale, graph_pose_axes_, context_->getSceneManager(), scene_node_);
   }
 
-  const auto velocity = graph_localizer.graph_values().at<gtsam::Velocity3>(imu_factor->key2());
-  if (!velocity) {
-    LOG(ERROR) << "ProcessMessage: Failed to get velocity.";
-    return;
-  }
-
-  // TODO(rsoussan): is this correct bias to use???
-  const auto bias = graph_localizer.graph_values().at<gtsam::imuBias::ConstantBias>(imu_factor->key5());
-  if (!bias) {
-    LOG(ERROR) << "ProcessMessage: Failed to get bias.";
-    return;
-  }
-
   if (show_imu_factor_arrows_->getBool()) {
-    const lc::CombinedNavState combined_nav_state(*pose, *velocity, *bias, 0 /*Dummy Timestamp*/);
-    const auto& pim = imu_factor->preintegratedMeasurements();
-    const auto imu_predicted_combined_nav_state = ii::PimPredict(combined_nav_state, pim);
+    const auto imu_predicted_combined_nav_state = pimPredict(graph_localizer, imu_factor);
+    if (!imu_predicted_combined_nav_state) {
+      LOG(ERROR) << "AddImuVisual: Failed to get pim predicted nav state.";
+      return;
+    }
     auto imu_factor_arrow = std::unique_ptr<rviz::Arrow>(new rviz::Arrow(context_->getSceneManager(), scene_node_));
     imu_factor_arrow->setPosition(OgrePosition(*pose));
     const auto orientation_and_length =
-        getOrientationAndLength(pose->translation(), imu_predicted_combined_nav_state.pose().translation());
+        getOrientationAndLength(pose->translation(), imu_predicted_combined_nav_state->pose().translation());
     imu_factor_arrow->setOrientation(orientation_and_length.first);
     const float diameter = 2.0 * imu_factor_arrows_diameter_->getFloat();
     imu_factor_arrow->set(3.0 * orientation_and_length.second / 4.0, diameter, orientation_and_length.second / 4.0,

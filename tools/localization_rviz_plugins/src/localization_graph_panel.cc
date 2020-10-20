@@ -16,11 +16,12 @@
  * under the License.
  */
 
-#include "localization_graph_panel.h"  // NOLINT
-
 #include <QHBoxLayout>
 #include <QPainter>
 #include <QVBoxLayout>
+
+#include "localization_graph_panel.h"  // NOLINT
+#include "utilities.h"                 // NOLINT
 
 namespace localization_rviz_plugins {
 LocalizationGraphPanel::LocalizationGraphPanel(QWidget* parent) : rviz::Panel(parent) {
@@ -102,8 +103,13 @@ void LocalizationGraphPanel::LocalizationGraphCallback(const ff_msgs::Localizati
     if (imu_factor) {
       ++imu_factors;
       total_imu_dt += imu_factor->preintegratedMeasurements().deltaTij();
-      total_imu_dp += imu_factor->preintegratedMeasurements().deltaPij();
-      total_imu_dv += imu_factor->preintegratedMeasurements().deltaVij();
+      const auto imu_predicted_combined_nav_state = pimPredict(graph_localizer, imu_factor);
+      if (!imu_predicted_combined_nav_state) {
+        LOG(ERROR) << "LocalizationGraphCallback: Failed to get pim predicted nav state.";
+      } else {
+        total_imu_dp += imu_predicted_combined_nav_state->pose().translation();
+        total_imu_dv += imu_predicted_combined_nav_state->velocity();
+      }
     }
   }
 
@@ -189,5 +195,5 @@ void LocalizationGraphPanel::LocalizationGraphCallback(const ff_msgs::Localizati
 }
 }  // namespace localization_rviz_plugins
 
-#include <pluginlib/class_list_macros.h>
+#include <pluginlib/class_list_macros.h> // NOLINT
 PLUGINLIB_EXPORT_CLASS(localization_rviz_plugins::LocalizationGraphPanel, rviz::Panel)

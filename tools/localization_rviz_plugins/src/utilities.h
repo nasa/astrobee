@@ -19,7 +19,12 @@
 #ifndef LOCALIZATION_RVIZ_PLUGINS_UTILITIES_H_  // NOLINT
 #define LOCALIZATION_RVIZ_PLUGINS_UTILITIES_H_  // NOLINT
 
+#include <graph_localizer/graph_localizer.h>
+#include <imu_integration/utilities.h>
+#include <localization_common/combined_nav_state.h>
+
 #include <gtsam/geometry/Pose3.h>
+#include <gtsam/navigation/CombinedImuFactor.h>
 
 #include <rviz/ogre_helpers/axes.h>
 
@@ -36,5 +41,8 @@ Ogre::Quaternion OgreQuaternion(const gtsam::Pose3& pose);
 
 void addPoseAsAxis(const gtsam::Pose3& pose, const double scale, std::vector<std::unique_ptr<rviz::Axes>>& axes,
                    Ogre::SceneManager* scene_manager, Ogre::SceneNode* scene_node);
+
+boost::optional<localization_common::CombinedNavState> pimPredict(
+    const graph_localizer::GraphLocalizer& graph_localizer, const gtsam::CombinedImuFactor* const imu_factor);
 }  // namespace localization_rviz_plugins
 #endif  // LOCALIZATION_RVIZ_PLUGINS_UTILITIES_H_  NOLINT

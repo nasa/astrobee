@@ -19,6 +19,9 @@
 #include "utilities.h"  // NOLINT
 
 namespace localization_rviz_plugins {
+namespace lc = localization_common;
+namespace ii = imu_integration;
+
 Ogre::Vector3 OgrePosition(const gtsam::Pose3& pose) {
   return Ogre::Vector3(pose.translation().x(), pose.translation().y(), pose.translation().z());
 }
@@ -35,5 +38,31 @@ void addPoseAsAxis(const gtsam::Pose3& pose, const double scale, std::vector<std
   axis->setOrientation(OgreQuaternion(pose));
   axis->setScale(Ogre::Vector3(scale, scale, scale));
   axes.emplace_back(std::move(axis));
+}
+
+boost::optional<lc::CombinedNavState> pimPredict(const graph_localizer::GraphLocalizer& graph_localizer,
+                                                 const gtsam::CombinedImuFactor* const imu_factor) {
+  const auto pose = graph_localizer.graph_values().at<gtsam::Pose3>(imu_factor->key1());
+  if (!pose) {
+    LOG(ERROR) << "pimPredict: Failed to get pose.";
+    return boost::none;
+  }
+
+  const auto velocity = graph_localizer.graph_values().at<gtsam::Velocity3>(imu_factor->key2());
+  if (!velocity) {
+    LOG(ERROR) << "pimPredict: Failed to get velocity.";
+    return boost::none;
+  }
+
+  // TODO(rsoussan): is this correct bias to use???
+  const auto bias = graph_localizer.graph_values().at<gtsam::imuBias::ConstantBias>(imu_factor->key5());
+  if (!bias) {
+    LOG(ERROR) << "pimPredict: Failed to get bias.";
+    return boost::none;
+  }
+
+  const lc::CombinedNavState combined_nav_state(*pose, *velocity, *bias, 0 /*Dummy Timestamp*/);
+  const auto& pim = imu_factor->preintegratedMeasurements();
+  return ii::PimPredict(combined_nav_state, pim);
 }
 }  // namespace localization_rviz_plugins
