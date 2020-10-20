@@ -22,8 +22,24 @@
 #include <QPainter>
 #include <QVBoxLayout>
 
+#include <functional>
+
 #include "localization_graph_panel.h"  // NOLINT
 #include "utilities.h"                 // NOLINT
+
+namespace {
+template <typename Comparator>
+// Pass Comparator so green/yellow/red can be sorted in ascending or descending order
+void highlightLabel(const double val, const double green_threshold, const double yellow_threshold, QLabel& label,
+                    const Comparator comparator = Comparator()) {
+  if (comparator(val, green_threshold))
+    label.setStyleSheet("QLabel { background-color : green; color : white; }");
+  else if (comparator(val, yellow_threshold))
+    label.setStyleSheet("QLabel { background-color : yellow; color : black; }");
+  else
+    label.setStyleSheet("QLabel { background-color : red; color : white; }");
+}
+}  // namespace
 
 namespace localization_rviz_plugins {
 namespace lc = localization_common;
@@ -141,12 +157,12 @@ void LocalizationGraphPanel::LocalizationGraphCallback(const ff_msgs::Localizati
   const auto latest_combined_nav_state = graph_localizer.graph_values().LatestCombinedNavState();
   if (latest_combined_nav_state) {
     QString latest_vel_norm_string;
-    latest_vel_norm_string.setNum(latest_combined_nav_state->velocity().norm(), 'g', 4);
+    latest_vel_norm_string.setNum(latest_combined_nav_state->velocity().norm(), 'g', 3);
     latest_velocity_norm_label_->setText("Latest Vel norm: " + latest_vel_norm_string);
 
     QString time_since_latest_string;
     const auto current_time = lc::TimeFromRosTime(ros::Time::now());
-    time_since_latest_string.setNum(current_time - latest_combined_nav_state->timestamp(), 'g', 6);
+    time_since_latest_string.setNum(current_time - latest_combined_nav_state->timestamp(), 'g', 3);
     time_since_latest_label_->setText("Time since latest: " + time_since_latest_string);
   }
 
@@ -161,16 +177,11 @@ void LocalizationGraphPanel::LocalizationGraphCallback(const ff_msgs::Localizati
   // OF status
   if (of_factors > 0) {
     QString of_valid_percent;
-    of_valid_percent.setNum(static_cast<double>(100.0 * of_valid) / of_factors, 'g', 4);
+    of_valid_percent.setNum(static_cast<double>(100.0 * of_valid) / of_factors, 'g', 3);
     of_valid_label_->setText("OF Valid: " + of_valid_percent + "%");
-    // Green if >= 50% valid, yellow if < 50% and > 0%, red if 0% valid
     const double of_valid_percentage = 100.0 * static_cast<double>(of_valid) / of_factors;
-    if (of_valid_percentage == 0)
-      of_valid_label_->setStyleSheet("QLabel { background-color : red; color : white; }");
-    else if (of_valid_percentage < 50)
-      of_valid_label_->setStyleSheet("QLabel { background-color : yellow; color : black; }");
-    else
-      of_valid_label_->setStyleSheet("QLabel { background-color : green; color : white; }");
+    // Green if >= 50% valid, yellow if < 50% and > 0%, red if 0% valid
+    highlightLabel<std::greater_equal<double>>(of_valid_percentage, 50, 0.1, *of_valid_label_);
 
     QString of_degenerate_percent;
     of_degenerate_percent.setNum(static_cast<double>(100.0 * of_degenerate) / of_factors, 'g', 2);
@@ -199,13 +210,8 @@ void LocalizationGraphPanel::LocalizationGraphCallback(const ff_msgs::Localizati
     QString imu_avg_dt_string;
     imu_avg_dt_string.setNum(imu_avg_dt, 'g', 3);
     imu_avg_dt_label_->setText("Avg IMU dt: " + imu_avg_dt_string);
-    // Green if <= 0.1, yellow if < .3 and > .1, red if >= 0.3
-    if (imu_avg_dt <= 0.1)
-      imu_avg_dt_label_->setStyleSheet("QLabel { background-color : green; color : white; }");
-    else if (imu_avg_dt < 0.3)
-      imu_avg_dt_label_->setStyleSheet("QLabel { background-color : yellow; color : black; }");
-    else
-      imu_avg_dt_label_->setStyleSheet("QLabel { background-color : red; color : white; }");
+    // Green if <= 0.1, yellow if <= .3 and > .1, red if > 0.3
+    highlightLabel<std::less_equal<double>>(imu_avg_dt, 0.1, 0.3, *imu_avg_dt_label_);
 
     const auto imu_avg_dp = total_imu_dp / imu_factors;
     // TODO(rsoussan): make function to do this, pass prefix string
