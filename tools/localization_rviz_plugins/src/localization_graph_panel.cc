@@ -16,6 +16,8 @@
  * under the License.
  */
 
+#include <localization_common/utilities.h>
+
 #include <QHBoxLayout>
 #include <QPainter>
 #include <QVBoxLayout>
@@ -24,6 +26,8 @@
 #include "utilities.h"                 // NOLINT
 
 namespace localization_rviz_plugins {
+namespace lc = localization_common;
+
 LocalizationGraphPanel::LocalizationGraphPanel(QWidget* parent) : rviz::Panel(parent) {
   QHBoxLayout* feature_count_layout = new QHBoxLayout;
   of_count_label_ = new QLabel("OF Factors:");
@@ -62,12 +66,19 @@ LocalizationGraphPanel::LocalizationGraphPanel(QWidget* parent) : rviz::Panel(pa
   imu_vector_layout->addWidget(imu_avg_dp_label_);
   imu_vector_layout->addWidget(imu_avg_dv_label_);
 
+  QHBoxLayout* graph_latest_layout = new QHBoxLayout;
+  latest_velocity_norm_label_ = new QLabel("Latest Vel norm: ");
+  time_since_latest_label_ = new QLabel("Time since latest: ");
+  graph_latest_layout->addWidget(latest_velocity_norm_label_);
+  graph_latest_layout->addWidget(time_since_latest_label_);
+
   QVBoxLayout* layout = new QVBoxLayout;
   layout->addLayout(feature_count_layout);
   layout->addLayout(of_result_layout);
   layout->addLayout(of_info_layout);
   layout->addLayout(imu_info_layout);
   layout->addLayout(imu_vector_layout);
+  layout->addLayout(graph_latest_layout);
   setLayout(layout);
 
   graph_sub_ = nh_.subscribe(TOPIC_GRAPH_LOC, 1, &LocalizationGraphPanel::LocalizationGraphCallback, this,
@@ -126,6 +137,17 @@ void LocalizationGraphPanel::LocalizationGraphCallback(const ff_msgs::Localizati
         total_imu_dv_norm += dv.norm();
       }
     }
+  }
+  const auto latest_combined_nav_state = graph_localizer.graph_values().LatestCombinedNavState();
+  if (latest_combined_nav_state) {
+    QString latest_vel_norm_string;
+    latest_vel_norm_string.setNum(latest_combined_nav_state->velocity().norm(), 'g', 4);
+    latest_velocity_norm_label_->setText("Latest Vel norm: " + latest_vel_norm_string);
+
+    QString time_since_latest_string;
+    const auto current_time = lc::TimeFromRosTime(ros::Time::now());
+    time_since_latest_string.setNum(current_time - latest_combined_nav_state->timestamp(), 'g', 6);
+    time_since_latest_label_->setText("Time since latest: " + time_since_latest_string);
   }
 
   // Factor Counts
