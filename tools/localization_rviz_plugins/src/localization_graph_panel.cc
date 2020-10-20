@@ -50,24 +50,24 @@ LocalizationGraphPanel::LocalizationGraphPanel(QWidget* parent) : rviz::Panel(pa
 
   QHBoxLayout* imu_info_layout = new QHBoxLayout;
   imu_avg_dt_label_ = new QLabel("Avg IMU dt: ");
-  imu_avg_dp_label_ = new QLabel("Avg IMU dp: ");
-  imu_avg_dv_label_ = new QLabel("Avg IMU dv: ");
-  imu_info_layout->addWidget(imu_avg_dt_label_);
-  imu_info_layout->addWidget(imu_avg_dp_label_);
-  imu_info_layout->addWidget(imu_avg_dv_label_);
-
-  QHBoxLayout* imu_norm_layout = new QHBoxLayout;
   imu_avg_dp_norm_label_ = new QLabel("Avg IMU dp norm: ");
   imu_avg_dv_norm_label_ = new QLabel("Avg IMU dv norm: ");
-  imu_norm_layout->addWidget(imu_avg_dp_norm_label_);
-  imu_norm_layout->addWidget(imu_avg_dv_norm_label_);
+  imu_info_layout->addWidget(imu_avg_dt_label_);
+  imu_info_layout->addWidget(imu_avg_dp_norm_label_);
+  imu_info_layout->addWidget(imu_avg_dv_norm_label_);
+
+  QHBoxLayout* imu_vector_layout = new QHBoxLayout;
+  imu_avg_dp_label_ = new QLabel("Avg IMU dp: ");
+  imu_avg_dv_label_ = new QLabel("Avg IMU dv: ");
+  imu_vector_layout->addWidget(imu_avg_dp_label_);
+  imu_vector_layout->addWidget(imu_avg_dv_label_);
 
   QVBoxLayout* layout = new QVBoxLayout;
   layout->addLayout(feature_count_layout);
   layout->addLayout(of_result_layout);
   layout->addLayout(of_info_layout);
   layout->addLayout(imu_info_layout);
-  layout->addLayout(imu_norm_layout);
+  layout->addLayout(imu_vector_layout);
   setLayout(layout);
 
   graph_sub_ = nh_.subscribe(TOPIC_GRAPH_LOC, 1, &LocalizationGraphPanel::LocalizationGraphCallback, this,
@@ -112,14 +112,18 @@ void LocalizationGraphPanel::LocalizationGraphCallback(const ff_msgs::Localizati
     if (imu_factor) {
       ++imu_factors;
       total_imu_dt += imu_factor->preintegratedMeasurements().deltaTij();
+      const auto imu_combined_nav_state = firstCombinedNavState(graph_localizer, imu_factor);
       const auto imu_predicted_combined_nav_state = pimPredict(graph_localizer, imu_factor);
-      if (!imu_predicted_combined_nav_state) {
-        LOG(ERROR) << "LocalizationGraphCallback: Failed to get pim predicted nav state.";
+      if (!imu_predicted_combined_nav_state || !imu_combined_nav_state) {
+        LOG(ERROR) << "LocalizationGraphCallback: Failed to get imu nav state and pim predicted nav state.";
       } else {
-        total_imu_dp += imu_predicted_combined_nav_state->pose().translation();
-        total_imu_dp_norm += imu_predicted_combined_nav_state->pose().translation().norm();
-        total_imu_dv += imu_predicted_combined_nav_state->velocity();
-        total_imu_dv_norm += imu_predicted_combined_nav_state->velocity().norm();
+        const gtsam::Vector3 dp =
+            imu_predicted_combined_nav_state->pose().translation() - imu_combined_nav_state->pose().translation();
+        total_imu_dp += dp;
+        total_imu_dp_norm += dp.norm();
+        const gtsam::Vector3 dv = imu_predicted_combined_nav_state->velocity() - imu_combined_nav_state->velocity();
+        total_imu_dv += dv;
+        total_imu_dv_norm += dv.norm();
       }
     }
   }

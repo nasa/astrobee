@@ -40,8 +40,8 @@ void addPoseAsAxis(const gtsam::Pose3& pose, const double scale, std::vector<std
   axes.emplace_back(std::move(axis));
 }
 
-boost::optional<lc::CombinedNavState> pimPredict(const graph_localizer::GraphLocalizer& graph_localizer,
-                                                 const gtsam::CombinedImuFactor* const imu_factor) {
+boost::optional<lc::CombinedNavState> firstCombinedNavState(const graph_localizer::GraphLocalizer& graph_localizer,
+                                                            const gtsam::CombinedImuFactor* const imu_factor) {
   const auto pose = graph_localizer.graph_values().at<gtsam::Pose3>(imu_factor->key1());
   if (!pose) {
     LOG(ERROR) << "pimPredict: Failed to get pose.";
@@ -61,8 +61,14 @@ boost::optional<lc::CombinedNavState> pimPredict(const graph_localizer::GraphLoc
     return boost::none;
   }
 
-  const lc::CombinedNavState combined_nav_state(*pose, *velocity, *bias, 0 /*Dummy Timestamp*/);
+  return lc::CombinedNavState(*pose, *velocity, *bias, 0 /*Dummy Timestamp*/);
+}
+
+boost::optional<lc::CombinedNavState> pimPredict(const graph_localizer::GraphLocalizer& graph_localizer,
+                                                 const gtsam::CombinedImuFactor* const imu_factor) {
+  const auto combined_nav_state(firstCombinedNavState(graph_localizer, imu_factor));
+  if (!combined_nav_state) return boost::none;
   const auto& pim = imu_factor->preintegratedMeasurements();
-  return ii::PimPredict(combined_nav_state, pim);
+  return ii::PimPredict(*combined_nav_state, pim);
 }
 }  // namespace localization_rviz_plugins
