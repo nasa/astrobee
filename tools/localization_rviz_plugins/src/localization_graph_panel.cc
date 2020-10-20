@@ -39,6 +39,23 @@ void highlightLabel(const double val, const double green_threshold, const double
   else
     label.setStyleSheet("QLabel { background-color : red; color : white; }");
 }
+
+void addVectorToLabel(const gtsam::Vector3& vec, const QString& description, QLabel& label, bool add_norm = false,
+                      const int precision = 3) {
+  QString vec_x_string;
+  QString vec_y_string;
+  QString vec_z_string;
+  vec_x_string.setNum(vec.x(), 'g', precision);
+  vec_y_string.setNum(vec.y(), 'g', precision);
+  vec_z_string.setNum(vec.z(), 'g', precision);
+  QString text = description + ": (" + vec_x_string + ", " + vec_y_string + ", " + vec_z_string + ")";
+  if (add_norm) {
+    QString vec_norm_string;
+    vec_norm_string.setNum(vec.norm(), 'g', precision);
+    text += " norm: " + vec_norm_string;
+  }
+  label.setText(text);
+}
 }  // namespace
 
 namespace localization_rviz_plugins {
@@ -70,30 +87,29 @@ LocalizationGraphPanel::LocalizationGraphPanel(QWidget* parent) : rviz::Panel(pa
 
   QHBoxLayout* imu_info_layout = new QHBoxLayout;
   imu_avg_dt_label_ = new QLabel("Avg IMU dt: ");
-  imu_avg_dp_norm_label_ = new QLabel("Avg IMU dp norm: ");
-  imu_avg_dv_norm_label_ = new QLabel("Avg IMU dv norm: ");
   imu_info_layout->addWidget(imu_avg_dt_label_);
-  imu_info_layout->addWidget(imu_avg_dp_norm_label_);
-  imu_info_layout->addWidget(imu_avg_dv_norm_label_);
 
-  QHBoxLayout* imu_vector_layout = new QHBoxLayout;
+  QHBoxLayout* imu_dp_layout = new QHBoxLayout;
   imu_avg_dp_label_ = new QLabel("Avg IMU dp: ");
+  imu_dp_layout->addWidget(imu_avg_dp_label_);
+
+  QHBoxLayout* imu_dv_layout = new QHBoxLayout;
   imu_avg_dv_label_ = new QLabel("Avg IMU dv: ");
-  imu_vector_layout->addWidget(imu_avg_dp_label_);
-  imu_vector_layout->addWidget(imu_avg_dv_label_);
+  imu_dv_layout->addWidget(imu_avg_dv_label_);
 
   QHBoxLayout* graph_latest_layout = new QHBoxLayout;
-  latest_velocity_norm_label_ = new QLabel("Latest Vel norm: ");
   time_since_latest_label_ = new QLabel("Time since latest: ");
-  graph_latest_layout->addWidget(latest_velocity_norm_label_);
+  latest_velocity_label_ = new QLabel("Latest Vel: ");
   graph_latest_layout->addWidget(time_since_latest_label_);
+  graph_latest_layout->addWidget(latest_velocity_label_);
 
   QVBoxLayout* layout = new QVBoxLayout;
   layout->addLayout(feature_count_layout);
   layout->addLayout(of_result_layout);
   layout->addLayout(of_info_layout);
   layout->addLayout(imu_info_layout);
-  layout->addLayout(imu_vector_layout);
+  layout->addLayout(imu_dp_layout);
+  layout->addLayout(imu_dv_layout);
   layout->addLayout(graph_latest_layout);
   setLayout(layout);
 
@@ -122,8 +138,6 @@ void LocalizationGraphPanel::LocalizationGraphCallback(const ff_msgs::Localizati
   double total_imu_dt = 0;
   gtsam::Vector3 total_imu_dp = gtsam::Vector3::Zero();
   gtsam::Vector3 total_imu_dv = gtsam::Vector3::Zero();
-  double total_imu_dp_norm = 0;
-  double total_imu_dv_norm = 0;
   for (const auto factor : graph_localizer.factor_graph()) {
     const auto smart_factor = dynamic_cast<const SmartFactor*>(factor.get());
     if (smart_factor) {
@@ -147,18 +161,14 @@ void LocalizationGraphPanel::LocalizationGraphCallback(const ff_msgs::Localizati
         const gtsam::Vector3 dp =
             imu_predicted_combined_nav_state->pose().translation() - imu_combined_nav_state->pose().translation();
         total_imu_dp += dp;
-        total_imu_dp_norm += dp.norm();
         const gtsam::Vector3 dv = imu_predicted_combined_nav_state->velocity() - imu_combined_nav_state->velocity();
         total_imu_dv += dv;
-        total_imu_dv_norm += dv.norm();
       }
     }
   }
   const auto latest_combined_nav_state = graph_localizer.graph_values().LatestCombinedNavState();
   if (latest_combined_nav_state) {
-    QString latest_vel_norm_string;
-    latest_vel_norm_string.setNum(latest_combined_nav_state->velocity().norm(), 'g', 3);
-    latest_velocity_norm_label_->setText("Latest Vel norm: " + latest_vel_norm_string);
+    addVectorToLabel(latest_combined_nav_state->velocity(), "Latest Vel", *latest_velocity_label_, true);
 
     QString time_since_latest_string;
     const auto current_time = lc::TimeFromRosTime(ros::Time::now());
@@ -214,38 +224,11 @@ void LocalizationGraphPanel::LocalizationGraphCallback(const ff_msgs::Localizati
     imu_avg_dt_label_->setText("Avg IMU dt: " + imu_avg_dt_string);
     // Green if <= 0.1, yellow if <= .3 and > .1, red if > 0.3
     highlightLabel<std::less_equal<double>>(imu_avg_dt, 0.1, 0.3, *imu_avg_dt_label_);
-
     const auto imu_avg_dp = total_imu_dp / imu_factors;
-    // TODO(rsoussan): make function to do this, pass prefix string
-    QString imu_avg_dp_x_string;
-    QString imu_avg_dp_y_string;
-    QString imu_avg_dp_z_string;
-    imu_avg_dp_x_string.setNum(imu_avg_dp.x(), 'g', 3);
-    imu_avg_dp_y_string.setNum(imu_avg_dp.y(), 'g', 3);
-    imu_avg_dp_z_string.setNum(imu_avg_dp.z(), 'g', 3);
-    imu_avg_dp_label_->setText("Avg IMU dp: (" + imu_avg_dp_x_string + ", " + imu_avg_dp_y_string + ", " +
-                               imu_avg_dp_z_string + ")");
+    addVectorToLabel(imu_avg_dp, "Avg IMU dp", *imu_avg_dp_label_, true);
 
     const auto imu_avg_dv = total_imu_dv / imu_factors;
-    QString imu_avg_dv_x_string;
-    QString imu_avg_dv_y_string;
-    QString imu_avg_dv_z_string;
-    // TODO(rsoussan): make function to do this, pass prefix string
-    imu_avg_dv_x_string.setNum(imu_avg_dv.x(), 'g', 3);
-    imu_avg_dv_y_string.setNum(imu_avg_dv.y(), 'g', 3);
-    imu_avg_dv_z_string.setNum(imu_avg_dv.z(), 'g', 3);
-    imu_avg_dv_label_->setText("Avg IMU dv: (" + imu_avg_dv_x_string + ", " + imu_avg_dv_y_string + ", " +
-                               imu_avg_dv_z_string + ")");
-
-    const auto imu_avg_dp_norm = total_imu_dp_norm / imu_factors;
-    QString imu_avg_dp_norm_string;
-    imu_avg_dp_norm_string.setNum(imu_avg_dp_norm, 'g', 3);
-    imu_avg_dp_norm_label_->setText("Avg IMU dp norm: " + imu_avg_dp_norm_string);
-
-    const auto imu_avg_dv_norm = total_imu_dv_norm / imu_factors;
-    QString imu_avg_dv_norm_string;
-    imu_avg_dv_norm_string.setNum(imu_avg_dv_norm, 'g', 3);
-    imu_avg_dv_norm_label_->setText("Avg IMU dv norm: " + imu_avg_dv_norm_string);
+    addVectorToLabel(imu_avg_dv, "Avg IMU dv", *imu_avg_dv_label_, true);
   }
 }
 }  // namespace localization_rviz_plugins
