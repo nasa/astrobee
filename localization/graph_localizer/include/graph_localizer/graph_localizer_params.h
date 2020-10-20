@@ -36,6 +36,7 @@ struct GraphLocalizerParams {
   NoiseParams noise;
   GraphInitializationParams graph_initialization;
   bool verbose;
+  bool fatal_failures;
   bool print_factor_info;
   int max_iterations;
   std::string marginals_factorization;

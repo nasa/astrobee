@@ -35,6 +35,18 @@
 #include <chrono>
 #include <iomanip>
 
+namespace {
+// TODO(rsoussan): Is this necessary? Just use DFATAL and compile with debug?
+// Avoid having to compile with DEBUG to toggle between fatal and non-fatal failures
+void log(const bool fatal_failure, const std::string& description) {
+  if (fatal_failure) {
+    LOG(FATAL) << description;
+  } else {
+    LOG(ERROR) << description;
+  }
+}
+}  // namespace
+
 namespace graph_localizer {
 namespace ii = imu_integration;
 namespace lc = localization_common;
@@ -849,9 +861,9 @@ bool GraphLocalizer::Update() {
   try {
     graph_values_.UpdateValues(optimizer.optimize());
   } catch (gtsam::IndeterminantLinearSystemException) {
-    LOG(ERROR) << "Update: Indeterminant linear system error during optimization, keeping old values.";
+    log(params_.fatal_failures, "Update: Indeterminant linear system error during optimization, keeping old values.");
   } catch (...) {
-    LOG(ERROR) << "Update: Graph optimization failed, keeping old values.";
+    log(params_.fatal_failures, "Update: Graph optimization failed, keeping old values.");
   }
   optimization_timer_.StopAndLog();
   LOG(INFO) << "Number of iterations: " << optimizer.iterations();
@@ -874,10 +886,10 @@ bool GraphLocalizer::Update() {
   try {
     marginals_ = gtsam::Marginals(graph_, graph_values_.values(), marginals_factorization_);
   } catch (gtsam::IndeterminantLinearSystemException) {
-    LOG(FATAL) << "Update: Indeterminant linear system error during computation of marginals.";
+    log(params_.fatal_failures, "Update: Indeterminant linear system error during computation of marginals.");
     marginals_ = boost::none;
   } catch (...) {
-    LOG(FATAL) << "Update: Computing marginals failed.";
+    log(params_.fatal_failures, "Update: Computing marginals failed.");
     marginals_ = boost::none;
   }
   marginals_timer_.StopAndLog();
