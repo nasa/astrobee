@@ -43,14 +43,23 @@ LocalizationGraphPanel::LocalizationGraphPanel(QWidget* parent) : rviz::Panel(pa
   of_result_layout->addWidget(of_outlier_label_);
   of_result_layout->addWidget(of_far_point_label_);
 
-  QHBoxLayout* of_other_layout = new QHBoxLayout;
+  QHBoxLayout* of_info_layout = new QHBoxLayout;
   of_avg_num_measurements_label_ = new QLabel("OF Avg # Measurements: ");
-  of_other_layout->addWidget(of_avg_num_measurements_label_);
+  of_info_layout->addWidget(of_avg_num_measurements_label_);
+
+  QHBoxLayout* imu_info_layout = new QHBoxLayout;
+  imu_avg_dt_label_ = new QLabel("Avg IMU dt: ");
+  imu_avg_dp_label_ = new QLabel("Avg IMU dp: ");
+  imu_avg_dv_label_ = new QLabel("Avg IMU dv: ");
+  imu_info_layout->addWidget(imu_avg_dt_label_);
+  imu_info_layout->addWidget(imu_avg_dp_label_);
+  imu_info_layout->addWidget(imu_avg_dv_label_);
 
   QVBoxLayout* layout = new QVBoxLayout;
   layout->addLayout(feature_count_layout);
   layout->addLayout(of_result_layout);
-  layout->addLayout(of_other_layout);
+  layout->addLayout(of_info_layout);
+  layout->addLayout(imu_info_layout);
   setLayout(layout);
 
   graph_sub_ = nh_.subscribe(TOPIC_GRAPH_LOC, 1, &LocalizationGraphPanel::LocalizationGraphCallback, this,
@@ -75,6 +84,9 @@ void LocalizationGraphPanel::LocalizationGraphCallback(const ff_msgs::Localizati
   int of_outlier = 0;
   int of_far_point = 0;
   int of_total_num_measurements = 0;
+  double total_imu_dt = 0;
+  gtsam::Vector3 total_imu_dp = gtsam::Vector3::Zero();
+  gtsam::Vector3 total_imu_dv = gtsam::Vector3::Zero();
   for (const auto factor : graph_localizer.factor_graph()) {
     const auto smart_factor = dynamic_cast<const SmartFactor*>(factor.get());
     if (smart_factor) {
@@ -89,6 +101,9 @@ void LocalizationGraphPanel::LocalizationGraphCallback(const ff_msgs::Localizati
     const auto imu_factor = dynamic_cast<gtsam::CombinedImuFactor*>(factor.get());
     if (imu_factor) {
       ++imu_factors;
+      total_imu_dt += imu_factor->preintegratedMeasurements().deltaTij();
+      total_imu_dp += imu_factor->preintegratedMeasurements().deltaPij();
+      total_imu_dv += imu_factor->preintegratedMeasurements().deltaVij();
     }
   }
 
@@ -103,7 +118,7 @@ void LocalizationGraphPanel::LocalizationGraphCallback(const ff_msgs::Localizati
   // OF status
   if (of_factors > 0) {
     QString of_valid_percent;
-    of_valid_percent.setNum(static_cast<double>(100.0 * of_valid) / of_factors);
+    of_valid_percent.setNum(static_cast<double>(100.0 * of_valid) / of_factors, 'g', 4);
     of_valid_label_->setText("OF Valid: " + of_valid_percent + "%");
     // Green if >= 50% valid, yellow if < 50% and > 0%, red if 0% valid
     const double of_valid_percentage = 100.0 * static_cast<double>(of_valid) / of_factors;
@@ -115,24 +130,61 @@ void LocalizationGraphPanel::LocalizationGraphCallback(const ff_msgs::Localizati
       of_valid_label_->setStyleSheet("QLabel { background-color : green; color : white; }");
 
     QString of_degenerate_percent;
-    of_degenerate_percent.setNum(static_cast<double>(100.0 * of_degenerate) / of_factors);
+    of_degenerate_percent.setNum(static_cast<double>(100.0 * of_degenerate) / of_factors, 'g', 2);
     of_degenerate_label_->setText("OF Degenerate: " + of_degenerate_percent + "%");
 
     QString of_behind_camera_percent;
-    of_behind_camera_percent.setNum(static_cast<double>(100.0 * of_behind_camera) / of_factors);
+    of_behind_camera_percent.setNum(static_cast<double>(100.0 * of_behind_camera) / of_factors, 'g', 2);
     of_behind_camera_label_->setText("OF Behind Camera: " + of_behind_camera_percent + "%");
 
     QString of_outlier_percent;
-    of_outlier_percent.setNum(static_cast<double>(100.0 * of_outlier) / of_factors);
+    of_outlier_percent.setNum(static_cast<double>(100.0 * of_outlier) / of_factors, 'g', 2);
     of_outlier_label_->setText("OF Outlier: " + of_outlier_percent + "%");
 
     QString of_far_point_percent;
-    of_far_point_percent.setNum(static_cast<double>(100.0 * of_far_point) / of_factors);
+    of_far_point_percent.setNum(static_cast<double>(100.0 * of_far_point) / of_factors, 'g', 2);
     of_far_point_label_->setText("OF Far Point: " + of_far_point_percent + "%");
 
     QString of_average_num_measurements;
-    of_average_num_measurements.setNum(static_cast<double>(of_total_num_measurements) / of_factors);
+    of_average_num_measurements.setNum(static_cast<double>(of_total_num_measurements) / of_factors, 'g', 3);
     of_avg_num_measurements_label_->setText("OF Avg # Measurements: " + of_average_num_measurements);
+  }
+
+  // IMU status
+  if (imu_factors > 0) {
+    const double imu_avg_dt = total_imu_dt / imu_factors;
+    QString imu_avg_dt_string;
+    imu_avg_dt_string.setNum(imu_avg_dt, 'g', 3);
+    imu_avg_dt_label_->setText("Avg IMU dt: " + imu_avg_dt_string);
+    // Green if <= 0.1, yellow if < .3 and > .1, red if >= 0.3
+    if (imu_avg_dt <= 0.1)
+      imu_avg_dt_label_->setStyleSheet("QLabel { background-color : green; color : white; }");
+    else if (imu_avg_dt < 0.3)
+      imu_avg_dt_label_->setStyleSheet("QLabel { background-color : yellow; color : black; }");
+    else
+      imu_avg_dt_label_->setStyleSheet("QLabel { background-color : red; color : white; }");
+
+    const auto imu_avg_dp = total_imu_dp / imu_factors;
+    // TODO(rsoussan): make function to do this, pass prefix string
+    QString imu_avg_dp_x_string;
+    QString imu_avg_dp_y_string;
+    QString imu_avg_dp_z_string;
+    imu_avg_dp_x_string.setNum(imu_avg_dp.x(), 'g', 3);
+    imu_avg_dp_y_string.setNum(imu_avg_dp.y(), 'g', 3);
+    imu_avg_dp_z_string.setNum(imu_avg_dp.z(), 'g', 3);
+    imu_avg_dp_label_->setText("Avg IMU dp: (" + imu_avg_dp_x_string + ", " + imu_avg_dp_y_string + ", " +
+                               imu_avg_dp_z_string + ")");
+
+    const auto imu_avg_dv = total_imu_dv / imu_factors;
+    QString imu_avg_dv_x_string;
+    QString imu_avg_dv_y_string;
+    QString imu_avg_dv_z_string;
+    // TODO(rsoussan): make function to do this, pass prefix string
+    imu_avg_dv_x_string.setNum(imu_avg_dv.x(), 'g', 3);
+    imu_avg_dv_y_string.setNum(imu_avg_dv.y(), 'g', 3);
+    imu_avg_dv_z_string.setNum(imu_avg_dv.z(), 'g', 3);
+    imu_avg_dv_label_->setText("Avg IMU dv: (" + imu_avg_dv_x_string + ", " + imu_avg_dv_y_string + ", " +
+                               imu_avg_dv_z_string + ")");
   }
 }
 }  // namespace localization_rviz_plugins

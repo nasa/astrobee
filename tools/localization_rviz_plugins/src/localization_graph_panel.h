@@ -35,11 +35,11 @@ namespace localization_rviz_plugins {
 
 class LocalizationGraphPanel : public rviz::Panel {
   Q_OBJECT
- public:
+ public:  // NOLINT
   explicit LocalizationGraphPanel(QWidget* parent = 0);
  public Q_SLOTS:     // NOLINT
  protected Q_SLOTS:  // NOLINT
- protected:
+ protected:          // NOLINT
   void LocalizationGraphCallback(const ff_msgs::LocalizationGraph::ConstPtr& loc_msg);
   // Factor Counts
   QLabel* of_count_label_;
@@ -50,8 +50,12 @@ class LocalizationGraphPanel : public rviz::Panel {
   QLabel* of_behind_camera_label_;
   QLabel* of_outlier_label_;
   QLabel* of_far_point_label_;
-  // OF other
+  // OF info
   QLabel* of_avg_num_measurements_label_;
+  // IMU info
+  QLabel* imu_avg_dt_label_;
+  QLabel* imu_avg_dp_label_;
+  QLabel* imu_avg_dv_label_;
 
   ros::NodeHandle nh_;
   ros::Subscriber graph_sub_;
