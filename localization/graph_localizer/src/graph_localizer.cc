@@ -828,6 +828,7 @@ bool GraphLocalizer::Update() {
   gtsam::LevenbergMarquardtOptimizer optimizer(graph_, graph_values_.values(), levenberg_marquardt_params_);
 
   optimization_timer_.Start();
+  // TODO(rsoussan): Indicate if failure occurs in state msg, perhaps using confidence value for localizer
   try {
     graph_values_.UpdateValues(optimizer.optimize());
   } catch (gtsam::IndeterminantLinearSystemException) {
