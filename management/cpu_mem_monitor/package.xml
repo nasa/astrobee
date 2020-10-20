@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package>
-  <name>cpu_monitor</name>
+  <name>cpu_mem_monitor</name>
   <version>0.0.0</version>
   <description>
     Measure the processor stats and periodically publish it over ROS.

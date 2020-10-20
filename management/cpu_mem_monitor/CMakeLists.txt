@@ -15,14 +15,14 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-project(cpu_monitor)
+project(cpu_mem_monitor)
 
 catkin_package(
-  LIBRARIES cpu_monitor
+  LIBRARIES cpu_mem_monitor
   CATKIN_DEPENDS roscpp roslib nodelet ff_hw_msgs ff_msgs std_msgs
 )
 
-create_library(TARGET cpu_monitor
+create_library(TARGET cpu_mem_monitor
   LIBS ${catkin_LIBRARIES} config_reader ff_nodelet
   INC ${catkin_INCLUDES}
   DEPS ff_msgs ff_hw_msgs

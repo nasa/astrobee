@@ -16,7 +16,7 @@
 # under the License.
 
 add_subdirectory(access_control)
-add_subdirectory(cpu_monitor)
+add_subdirectory(cpu_mem_monitor)
 add_subdirectory(disk_monitor)
 add_subdirectory(image_sampler)
 add_subdirectory(sys_monitor)
