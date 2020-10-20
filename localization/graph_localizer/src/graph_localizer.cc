@@ -45,7 +45,8 @@ GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
       latest_imu_integrator_(params.graph_initialization),
       graph_values_(params.graph_values),
       params_(params),
-      optimization_timer_("Optimization") {
+      optimization_timer_("Optimization"),
+      marginals_timer_("Marginals") {
   // Assumes zero initial velocity
   const lc::CombinedNavState global_N_body_start(
       params_.graph_initialization.global_T_body_start, gtsam::Velocity3::Zero(),
@@ -86,6 +87,15 @@ GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
     levenberg_marquardt_params_.verbosity = gtsam::NonlinearOptimizerParams::Verbosity::LINEAR;
   }
   levenberg_marquardt_params_.maxIterations = params_.max_iterations;
+
+  if (params_.marginals_factorization == "qr") {
+    marginals_factorization_ = gtsam::Marginals::Factorization::QR;
+  } else if (params_.marginals_factorization == "cholesky") {
+    marginals_factorization_ = gtsam::Marginals::Factorization::CHOLESKY;
+  } else {
+    LOG(WARNING) << "GraphLocalizer: No marginals factorization entered, defaulting to qr.";
+    marginals_factorization_ = gtsam::Marginals::Factorization::QR;
+  }
 }
 
 void GraphLocalizer::AddStartingPriors(const lc::CombinedNavState& global_N_body_start, const int key_index,
@@ -834,7 +844,7 @@ bool GraphLocalizer::Update() {
   } catch (gtsam::IndeterminantLinearSystemException) {
     LOG(ERROR) << "Update: Indeterminant linear system error during optimization, keeping old values.";
   } catch (...) {
-    LOG(FATAL) << "Update: Graph optimization failed, keeping old values.";
+    LOG(ERROR) << "Update: Graph optimization failed, keeping old values.";
   }
   optimization_timer_.Stop();
   optimization_timer_.Log();
@@ -853,7 +863,20 @@ bool GraphLocalizer::Update() {
 
   // Calculate marginals before sliding window since this depends on values that
   // would be removed in SlideWindow()
-  marginals_.reset(new gtsam::Marginals(graph_, graph_values_.values()));
+
+  marginals_timer_.Start();
+  try {
+    marginals_.reset(new gtsam::Marginals(graph_, graph_values_.values(), marginals_factorization_));
+  } catch (gtsam::IndeterminantLinearSystemException) {
+    LOG(FATAL) << "Update: Indeterminant linear system error during computation of marginals.";
+    // TODO(rsoussan): slide window without computing marginals if this fails!!!!
+  } catch (...) {
+    LOG(FATAL) << "Update: Computing marginals failed.";
+    // TODO(rsoussan): slide window without computing marginals if this fails!!!!
+  }
+  marginals_timer_.Stop();
+  marginals_timer_.Log();
+
   if (!SlideWindow(*marginals_)) {
     LOG(ERROR) << "Update: Failed to slide window.";
     return false;

@@ -25,6 +25,8 @@
 #include <graph_localizer/graph_values_params.h>
 #include <graph_localizer/noise_params.h>
 
+#include <string>
+
 namespace graph_localizer {
 struct GraphLocalizerParams {
   CalibrationParams calibration;
@@ -36,6 +38,7 @@ struct GraphLocalizerParams {
   bool verbose;
   bool print_factor_info;
   int max_iterations;
+  std::string marginals_factorization;
 };
 }  // namespace graph_localizer
 
