@@ -16,7 +16,7 @@
  * under the License.
  */
 
-#include "localization_graph_panel.h" // NOLINT
+#include "localization_graph_panel.h"  // NOLINT
 
 #include <QHBoxLayout>
 #include <QPainter>
@@ -43,9 +43,14 @@ LocalizationGraphPanel::LocalizationGraphPanel(QWidget* parent) : rviz::Panel(pa
   of_result_layout->addWidget(of_outlier_label_);
   of_result_layout->addWidget(of_far_point_label_);
 
+  QHBoxLayout* of_other_layout = new QHBoxLayout;
+  of_avg_num_measurements_label_ = new QLabel("OF Avg # Measurements: ");
+  of_other_layout->addWidget(of_avg_num_measurements_label_);
+
   QVBoxLayout* layout = new QVBoxLayout;
   layout->addLayout(feature_count_layout);
   layout->addLayout(of_result_layout);
+  layout->addLayout(of_other_layout);
   setLayout(layout);
 
   graph_sub_ = nh_.subscribe(TOPIC_GRAPH_LOC, 1, &LocalizationGraphPanel::LocalizationGraphCallback, this,
@@ -69,10 +74,12 @@ void LocalizationGraphPanel::LocalizationGraphCallback(const ff_msgs::Localizati
   int of_behind_camera = 0;
   int of_outlier = 0;
   int of_far_point = 0;
+  int of_total_num_measurements = 0;
   for (const auto factor : graph_localizer.factor_graph()) {
     const auto smart_factor = dynamic_cast<const SmartFactor*>(factor.get());
     if (smart_factor) {
       ++of_factors;
+      of_total_num_measurements += smart_factor->measured().size();
       if (smart_factor->isValid()) ++of_valid;
       if (smart_factor->isDegenerate()) ++of_degenerate;
       if (smart_factor->isPointBehindCamera()) ++of_behind_camera;
@@ -98,12 +105,12 @@ void LocalizationGraphPanel::LocalizationGraphCallback(const ff_msgs::Localizati
     QString of_valid_percent;
     of_valid_percent.setNum(static_cast<double>(100.0 * of_valid) / of_factors);
     of_valid_label_->setText("OF Valid: " + of_valid_percent + "%");
-    // Green if >= 50% valid, yellow if < 50% and > 0%, red if none valid
+    // Green if >= 50% valid, yellow if < 50% and > 0%, red if 0% valid
     const double of_valid_percentage = 100.0 * static_cast<double>(of_valid) / of_factors;
-    if (of_valid_percentage < 50)
-      of_valid_label_->setStyleSheet("QLabel { background-color : yellow; color : black; }");
-    else if (of_valid_percentage <= 0)
+    if (of_valid_percentage == 0)
       of_valid_label_->setStyleSheet("QLabel { background-color : red; color : white; }");
+    else if (of_valid_percentage < 50)
+      of_valid_label_->setStyleSheet("QLabel { background-color : yellow; color : black; }");
     else
       of_valid_label_->setStyleSheet("QLabel { background-color : green; color : white; }");
 
@@ -122,6 +129,10 @@ void LocalizationGraphPanel::LocalizationGraphCallback(const ff_msgs::Localizati
     QString of_far_point_percent;
     of_far_point_percent.setNum(static_cast<double>(100.0 * of_far_point) / of_factors);
     of_far_point_label_->setText("OF Far Point: " + of_far_point_percent + "%");
+
+    QString of_average_num_measurements;
+    of_average_num_measurements.setNum(static_cast<double>(of_total_num_measurements) / of_factors);
+    of_avg_num_measurements_label_->setText("OF Avg # Measurements: " + of_average_num_measurements);
   }
 }
 }  // namespace localization_rviz_plugins

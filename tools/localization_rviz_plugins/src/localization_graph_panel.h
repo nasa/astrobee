@@ -16,8 +16,8 @@
  * under the License.
  */
 
-#ifndef LOCALIZATION_RVIZ_PLUGINS_LOCALIZATION_GRAPH_PANEL_H // NOLINT
-#define LOCALIZATION_RVIZ_PLUGINS_LOCALIZATION_GRAPH_PANEL_H // NOLINT
+#ifndef LOCALIZATION_RVIZ_PLUGINS_LOCALIZATION_GRAPH_PANEL_H  // NOLINT
+#define LOCALIZATION_RVIZ_PLUGINS_LOCALIZATION_GRAPH_PANEL_H  // NOLINT
 
 #ifndef Q_MOC_RUN
 #include <ff_msgs/LocalizationGraph.h>
@@ -37,8 +37,8 @@ class LocalizationGraphPanel : public rviz::Panel {
   Q_OBJECT
  public:
   explicit LocalizationGraphPanel(QWidget* parent = 0);
- public Q_SLOTS: // NOLINT
- protected Q_SLOTS: // NOLINT
+ public Q_SLOTS:     // NOLINT
+ protected Q_SLOTS:  // NOLINT
  protected:
   void LocalizationGraphCallback(const ff_msgs::LocalizationGraph::ConstPtr& loc_msg);
   // Factor Counts
@@ -50,6 +50,8 @@ class LocalizationGraphPanel : public rviz::Panel {
   QLabel* of_behind_camera_label_;
   QLabel* of_outlier_label_;
   QLabel* of_far_point_label_;
+  // OF other
+  QLabel* of_avg_num_measurements_label_;
 
   ros::NodeHandle nh_;
   ros::Subscriber graph_sub_;
