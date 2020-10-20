@@ -548,7 +548,7 @@ bool GraphLocalizer::CreateAndAddImuFactorAndPredictedCombinedNavState(
   return true;
 }
 
-bool GraphLocalizer::SlideWindow(const gtsam::Marginals& marginals) {
+bool GraphLocalizer::SlideWindow(const boost::optional<gtsam::Marginals>& marginals) {
   if (graph_values_.SlideWindow(graph_) == 0) {
     VLOG(2) << "SlideWindow: No states removed. ";
     return true;
@@ -583,12 +583,19 @@ bool GraphLocalizer::SlideWindow(const gtsam::Marginals& marginals) {
 
   VLOG(2) << "SlideWindow: key index: " << *key_index;
 
-  lc::CombinedNavStateNoise noise;
-  noise.pose_noise = Robust(gtsam::noiseModel::Gaussian::Covariance(marginals.marginalCovariance(sym::P(*key_index))));
-  noise.velocity_noise =
-      Robust(gtsam::noiseModel::Gaussian::Covariance(marginals.marginalCovariance(sym::V(*key_index))));
-  noise.bias_noise = Robust(gtsam::noiseModel::Gaussian::Covariance(marginals.marginalCovariance(sym::B(*key_index))));
-  AddPriors(*global_N_body_oldest, noise, *key_index, graph_values_.values(), graph_);
+  if (marginals) {
+    lc::CombinedNavStateNoise noise;
+    noise.pose_noise =
+        Robust(gtsam::noiseModel::Gaussian::Covariance(marginals->marginalCovariance(sym::P(*key_index))));
+    noise.velocity_noise =
+        Robust(gtsam::noiseModel::Gaussian::Covariance(marginals->marginalCovariance(sym::V(*key_index))));
+    noise.bias_noise =
+        Robust(gtsam::noiseModel::Gaussian::Covariance(marginals->marginalCovariance(sym::B(*key_index))));
+    AddPriors(*global_N_body_oldest, noise, *key_index, graph_values_.values(), graph_);
+  } else {
+    // TODO(rsoussan): Add seperate marginal fallback sigmas instead of relying on starting prior sigmas
+    AddStartingPriors(*global_N_body_oldest, *key_index, graph_values_.values(), graph_);
+  }
   return true;
 }
 
@@ -865,17 +872,17 @@ bool GraphLocalizer::Update() {
 
   marginals_timer_.Start();
   try {
-    marginals_.reset(new gtsam::Marginals(graph_, graph_values_.values(), marginals_factorization_));
+    marginals_ = gtsam::Marginals(graph_, graph_values_.values(), marginals_factorization_);
   } catch (gtsam::IndeterminantLinearSystemException) {
     LOG(FATAL) << "Update: Indeterminant linear system error during computation of marginals.";
-    // TODO(rsoussan): slide window without computing marginals if this fails!!!!
+    marginals_ = boost::none;
   } catch (...) {
     LOG(FATAL) << "Update: Computing marginals failed.";
-    // TODO(rsoussan): slide window without computing marginals if this fails!!!!
+    marginals_ = boost::none;
   }
   marginals_timer_.StopAndLog();
 
-  if (!SlideWindow(*marginals_)) {
+  if (!SlideWindow(marginals_)) {
     LOG(ERROR) << "Update: Failed to slide window.";
     return false;
   }

@@ -48,7 +48,6 @@
 #include <boost/serialization/serialization.hpp>
 
 #include <map>
-#include <memory>
 #include <string>
 #include <utility>
 
@@ -99,7 +98,7 @@ class GraphLocalizer {
  private:
   // Removes Keys and Values outside of sliding window.
   // Removes any factors depending on removed values
-  bool SlideWindow(const gtsam::Marginals& marginals);
+  bool SlideWindow(const boost::optional<gtsam::Marginals>& marginals);
   // Integrates latest imu measurements up to timestamp and adds imu factor and
   // new combined nav state
   bool CreateAndAddLatestImuFactorAndCombinedNavState(const localization_common::Time timestamp);
@@ -191,7 +190,7 @@ class GraphLocalizer {
   gtsam::NonlinearFactorGraph graph_;
   GraphValues graph_values_;
   FeatureTracker feature_tracker_;
-  std::unique_ptr<gtsam::Marginals> marginals_;
+  boost::optional<gtsam::Marginals> marginals_;
   gtsam::SmartProjectionParams smart_projection_params_;
   boost::optional<std::pair<gtsam::Pose3, localization_common::Time>> estimated_world_T_dock_;
   std::map<localization_common::Time, gtsam::Pose3> dock_cam_T_dock_estimates_;
