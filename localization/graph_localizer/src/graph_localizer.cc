@@ -828,7 +828,13 @@ bool GraphLocalizer::Update() {
   gtsam::LevenbergMarquardtOptimizer optimizer(graph_, graph_values_.values(), levenberg_marquardt_params_);
 
   optimization_timer_.Start();
-  graph_values_.UpdateValues(optimizer.optimize());
+  try {
+    graph_values_.UpdateValues(optimizer.optimize());
+  } catch (gtsam::IndeterminantLinearSystemException) {
+    LOG(ERROR) << "Update: Indeterminant linear system error during optimization, keeping old values.";
+  } catch (...) {
+    LOG(FATAL) << "Update: Graph optimization failed, keeping old values.";
+  }
   optimization_timer_.Stop();
   optimization_timer_.Log();
   LOG(INFO) << "Number of iterations: " << optimizer.iterations();
