@@ -162,7 +162,9 @@ void LocalizationGraphPanel::LocalizationGraphCallback(const ff_msgs::Localizati
 
     QString time_since_latest_string;
     const auto current_time = lc::TimeFromRosTime(ros::Time::now());
-    time_since_latest_string.setNum(current_time - latest_combined_nav_state->timestamp(), 'g', 3);
+    const double time_since_latest = current_time - latest_combined_nav_state->timestamp();
+    time_since_latest_string.setNum(time_since_latest, 'g', 3);
+    highlightLabel<std::less_equal<double>>(time_since_latest, 0.25, 0.35, *time_since_latest_label_);
     time_since_latest_label_->setText("Time since latest: " + time_since_latest_string);
   }
 
