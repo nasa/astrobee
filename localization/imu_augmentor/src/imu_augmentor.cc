@@ -35,11 +35,12 @@ boost::optional<lc::CombinedNavState> ImuAugmentor::PimPredict(const lc::Combine
   auto measurement_it = measurements().upper_bound(combined_nav_state.timestamp());
   if (measurement_it == measurements().cend()) return combined_nav_state;
   auto last_predicted_combined_nav_state = combined_nav_state;
+  auto pim = ii::Pim(last_predicted_combined_nav_state.bias(), pim_params());
   int num_measurements_added = 0;
   // Create new pim each time since pim uses beginning orientation and velocity for
   // gravity integration and initial velocity integration.
   for (; measurement_it != measurements().cend(); ++measurement_it) {
-    auto pim = ii::Pim(last_predicted_combined_nav_state.bias(), pim_params());
+    pim.resetIntegrationAndSetBias(last_predicted_combined_nav_state.bias());
     auto time = last_predicted_combined_nav_state.timestamp();
     ii::AddMeasurement(measurement_it->second, time, pim);
     last_predicted_combined_nav_state = ii::PimPredict(last_predicted_combined_nav_state, pim);
