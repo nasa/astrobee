@@ -124,7 +124,7 @@ class Executive : public ff_util::FreeFlyerNodelet {
   bool AreActionsRunning();
   void CancelAction(Action action, std::string cmd);
   bool FillArmGoal(ff_msgs::CommandStampedPtr const& cmd);
-  bool FillDockGoal(ff_msgs::CommandStampedPtr const& cmd);
+  bool FillDockGoal(ff_msgs::CommandStampedPtr const& cmd, bool return_to_dock);
   bool FillMotionGoal(Action action,
                       ff_msgs::CommandStampedPtr const& cmd = nullptr);
   bool IsActionRunning(Action action);

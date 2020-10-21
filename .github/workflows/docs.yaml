@@ -51,4 +51,4 @@ jobs:
         git config user.email "$EMAIL"
         git config user.name "$NAME"
         git commit -m "Automatic update for $GITHUB_SHA."
-        git push origin gh-pages
+        { git push origin gh-pages || true; }

@@ -100,7 +100,7 @@ void StateCallback(const ff_msgs::EkfStateConstPtr& state) {
 
 // Holonomic test
 TEST(ctl_nominal, Holonomic) {
-  // The default namespace is given by the group hierarchy in the luanch file
+  // The default namespace is given by the group hierarchy in the launch file
   ros::NodeHandle nh;
   // Wait for the servcer
   ac = std::shared_ptr<actionlib::SimpleActionClient<ff_msgs::ControlAction>>(

@@ -35,6 +35,32 @@ create_tool_targets(DIR tools
   DEPS rosmarkertracking
 )
 
+if(CATKIN_ENABLE_TESTING)
+  find_package(rostest REQUIRED)
+  add_rostest_gtest(test_arxmlio test/test_arxmlio.test
+    test/test_arxmlio.cc
+  )
+  target_link_libraries(test_arxmlio
+    marker_tracking
+  )
+
+  find_package(rostest REQUIRED)
+  add_rostest_gtest(test_marker_config_loader test/test_marker_config_loader.test
+    test/test_marker_config_loader.cc
+  )
+  target_link_libraries(test_marker_config_loader
+    marker_tracking
+  )
+
+  find_package(rostest REQUIRED)
+  add_rostest_gtest(test_marker_detector test/test_marker_detector.test
+    test/test_marker_detector.cc
+  )
+  target_link_libraries(test_marker_detector
+    marker_tracking
+  )
+endif()
+
 install_launch_files()
 install(FILES
   tools/features_counter.py

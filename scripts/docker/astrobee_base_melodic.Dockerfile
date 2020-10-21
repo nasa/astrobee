@@ -31,9 +31,6 @@ RUN apt-get update \
   && apt-get install -y \
   debhelper \
   libtinyxml-dev \
-  && rm -rf /var/lib/apt/lists/*
-RUN apt-get update \
-  && apt-get install -y \
   ros-melodic-desktop \
   python-rosdep \
   && rm -rf /var/lib/apt/lists/*
@@ -100,12 +97,6 @@ COPY ./scripts/setup/packages_*.lst /setup/astrobee/
 # note apt-get update is run within the following shell script
 RUN /setup/astrobee/install_desktop_18_04_packages.sh \
   && rm -rf /var/lib/apt/lists/*
-
-COPY . /src/astrobee
-RUN /src/astrobee/scripts/configure.sh -l -F -D -p /opt/astrobee -b /build/astrobee
-RUN cd /build/astrobee && make -j4
-
-COPY ./astrobee/resources /opt/astrobee/share/astrobee/resources
 
 #Add new sudo user
 ENV USERNAME astrobee

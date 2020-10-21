@@ -49,11 +49,11 @@ rootdir=${thisdir}/../..
 echo "Astrobee path: "${astrobee_source:-${rootdir}/astrobee/}
 if [ $ubuntu18 == 0 ]; then
     docker build ${astrobee_source:-${rootdir}} \
-                 -f ${astrobee_source:-${rootdir}/}scripts/docker/rebuild_test_astrobee_kinetic.Dockerfile \
-                 -t astrobee/astrobee:test
+                 -f ${astrobee_source:-${rootdir}/}scripts/docker/test_astrobee_kinetic.Dockerfile \
+                 -t test
 else
     docker build ${astrobee_source:-${rootdir}} \
-                 -f ${astrobee_source:-${rootdir}/}scripts/docker/rebuild_test_astrobee_melodic.Dockerfile \
-                 -t astrobee/astrobee:test
+                 -f ${astrobee_source:-${rootdir}/}scripts/docker/test_astrobee_melodic.Dockerfile \
+                 -t test
 fi
 

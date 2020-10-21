@@ -28,6 +28,9 @@ uint8 BERTH_UNKNOWN = 0 # When we undock, we don't know what berth we are in
 uint8 BERTH_1       = 1
 uint8 BERTH_2       = 2
 
+# Return to dock
+bool return_dock
+
 ---
 
 # Result

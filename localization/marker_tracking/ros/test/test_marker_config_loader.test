@@ -17,16 +17,6 @@
 
 <launch>
   <env name="ASTROBEE_CONFIG_DIR" value="$(find astrobee)/config/tests" />
-  <env name="ASTROBEE_RESOURCE_DIR" value="$(find astrobee)/resources" />
-  <env name="ASTROBEE_ROBOT" value="p4d" />
-  <env name="ASTROBEE_WORLD" value="iss" />
-  <include file="$(find mapper)/launch/mapper.launch" />
-
-  <env name="ASTROBEE_CONFIG_DIR" value="$(find astrobee)/config" />
-  <env name="ASTROBEE_RESOURCE_DIR" value="$(find astrobee)/resources" />
-  <env name="ASTROBEE_ROBOT" value="p4d" />
-  <env name="ASTROBEE_WORLD" value="iss" />
-  <include file="$(find sys_monitor)/launch/sys_monitor.launch" />
-
-  <test pkg="sys_monitor" type="test_init_mapper" test-name="test_init_mapper" />
+  <env name="DATA_DIR" value="$(find marker_tracking)/test/data/" />
+  <test pkg="marker_tracking" type="test_marker_config_loader" test-name="test_marker_config_loader" />
 </launch>

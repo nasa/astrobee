@@ -16,17 +16,6 @@
 <!-- permissions and limitations under the License.                          -->
 
 <launch>
-  <env name="ASTROBEE_CONFIG_DIR" value="$(find astrobee)/config/tests" />
-  <env name="ASTROBEE_RESOURCE_DIR" value="$(find astrobee)/resources" />
-  <env name="ASTROBEE_ROBOT" value="p4d" />
-  <env name="ASTROBEE_WORLD" value="iss" />
-  <include file="$(find choreographer)/launch/choreographer.launch" />
-
-  <env name="ASTROBEE_CONFIG_DIR" value="$(find astrobee)/config" />
-  <env name="ASTROBEE_RESOURCE_DIR" value="$(find astrobee)/resources" />
-  <env name="ASTROBEE_ROBOT" value="p4d" />
-  <env name="ASTROBEE_WORLD" value="iss" />
-  <include file="$(find sys_monitor)/launch/sys_monitor.launch" />
-
-  <test pkg="sys_monitor" type="test_init_choreographer" test-name="test_init_choreographer" />
+  <env name="DATA_DIR" value="$(find marker_tracking)/test/data/" />
+  <test pkg="marker_tracking" type="test_marker_detector" test-name="test_marker_detector" />
 </launch>

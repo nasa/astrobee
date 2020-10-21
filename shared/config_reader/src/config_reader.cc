@@ -689,13 +689,6 @@ bool ConfigReader::InitLua() {
   // load libraries
   luaL_openlibs(l_);
 
-  // report error if lua was unable to open the libraries
-  if (!lua_isnil(l_, -1)) {
-    LOG(ERROR) << "ConfigReader: Unable to load libraries!! This is very bad!";
-    CloseLua();
-    return false;
-  }
-
   // discard any results from initialization
   lua_settop(l_, 0);
 

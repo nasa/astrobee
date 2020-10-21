@@ -16,17 +16,6 @@
 <!-- permissions and limitations under the License.                          -->
 
 <launch>
-  <env name="ASTROBEE_CONFIG_DIR" value="$(find astrobee)/config/tests" />
-  <env name="ASTROBEE_RESOURCE_DIR" value="$(find astrobee)/resources" />
-  <env name="ASTROBEE_ROBOT" value="sim" />
-  <env name="ASTROBEE_WORLD" value="iss" />
-  <include file="$(find executive)/launch/executive.launch" />
-
-  <env name="ASTROBEE_CONFIG_DIR" value="$(find astrobee)/config" />
-  <env name="ASTROBEE_RESOURCE_DIR" value="$(find astrobee)/resources" />
-  <env name="ASTROBEE_ROBOT" value="sim" />
-  <env name="ASTROBEE_WORLD" value="iss" />
-  <include file="$(find sys_monitor)/launch/sys_monitor.launch" />
-
-  <test pkg="sys_monitor" type="test_init_executive" test-name="test_init_executive" />
+  <env name="DATA_DIR" value="$(find marker_tracking)/test/data/" />
+  <test pkg="marker_tracking" type="test_arxmlio" test-name="test_arxmlio" />
 </launch>
