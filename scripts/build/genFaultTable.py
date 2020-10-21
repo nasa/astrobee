@@ -98,29 +98,29 @@ def ConvertToNumber(value):
     return False, -1
 
 def main():
-    if len(sys.argv) < 4:
-        print "Incorrect nmuber of arguments! Please restart with path to " \
-                + "the FMECA csv file, the path to the config files, and the " \
-                + "path to the shared file."
-        return
+    astrobee_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+    config_path = astrobee_root + "/astrobee/config/"
+    csv_file = os.getenv('FMECA_CSV_PATH', (astrobee_root + "/doc")) + \
+                                            "/IRG-FF042-01-Astrobee-FMECA.csv"
 
     try:
-        file = open(sys.argv[1], 'r')
+        file = open(csv_file, 'r')
     except IOError:
-        print "Couldn't open file " + sys.argv[1]
+        print "Couldn't open file " + csv_file
         return
 
     lines = file.readlines()
 
     file.close()
 
-    faults_config_file_name = sys.argv[2] + "/faults.config"
-    faults_test_config_file_name = sys.argv[2] + "tests/faults.config"
-    fault_table_config_file_name = sys.argv[2] + \
+    faults_config_file_name = config_path + "/faults.config"
+    faults_test_config_file_name = config_path + "tests/faults.config"
+    fault_table_config_file_name = config_path + \
                                                 "/management/fault_table.config"
-    sys_monitor_faults_file_name = sys.argv[2] + \
+    sys_monitor_faults_file_name = config_path + \
                                     "/management/sys_monitor_fault_info.config"
-    fault_keys_file_name = sys.argv[3] + "/ff_util/include/ff_util/ff_faults.h"
+    fault_keys_file_name = astrobee_root + \
+                                "/shared/ff_util/include/ff_util/ff_faults.h"
 
     config_header = "-- Copyright (c) 2017, United States Government, as " + \
                     "represented by the\n-- Administrator of the National " + \
@@ -325,7 +325,7 @@ def main():
                     print "Could not find heartbeat timeout column!"
                     break
                 if misses_index == -1:
-                    print "Could not find heartbeat timeout column!"
+                    print "Could not find heartbeat misses column!"
                     break
 
 
