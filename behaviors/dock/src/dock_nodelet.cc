@@ -166,7 +166,7 @@ class DockNodelet : public ff_util::FreeFlyerNodelet {
     // [31]
     fsm_.Add(STATE::DOCKING_SWITCHING_TO_AR_LOC,
       SWITCH_SUCCESS, [this](FSM::Event const& event) -> FSM::State {
-        Move(BERTHING_POSE, ff_msgs::MotionGoal::DOCKING);
+        Move(BERTHING_POSE, ff_msgs::MotionGoal::PRECISION);
         return STATE::DOCKING_MOVING_TO_COMPLETE_POSE;
       });
     // [32]
@@ -179,7 +179,7 @@ class DockNodelet : public ff_util::FreeFlyerNodelet {
     // [8]
     fsm_.Add(STATE::DOCKING_MOVING_TO_COMPLETE_POSE,
       EPS_DOCKED, [this](FSM::Event const& event) -> FSM::State {
-        Move(APPROACH_POSE, ff_msgs::MotionGoal::DOCKING);
+        Move(APPROACH_POSE, ff_msgs::MotionGoal::PRECISION);
         return STATE::DOCKING_CHECKING_ATTACHED;
       });
     // [9]
@@ -194,7 +194,7 @@ class DockNodelet : public ff_util::FreeFlyerNodelet {
           err_ = RESPONSE::MOTION_COMPLETE_FAILED;
           err_msg_ = "Motion failed trying to go to complete pose";
         }
-        Move(APPROACH_POSE, ff_msgs::MotionGoal::DOCKING);
+        Move(APPROACH_POSE, ff_msgs::MotionGoal::PRECISION);
         return STATE::RECOVERY_MOVING_TO_APPROACH_POSE;
       });
     // [10]
