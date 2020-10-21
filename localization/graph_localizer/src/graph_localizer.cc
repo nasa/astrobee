@@ -255,31 +255,29 @@ bool GraphLocalizer::AddOpticalFlowMeasurement(
   // Add standstill velocity prior factor if there is low disparity for all feature tracks, indicating standstill, since
   // a smart factor in this case would not have enough disparity to estimate the 3d position of a feature
   FactorsToAdd prior_factors_to_add;
-  double potential_standstill_feature_tracks_average_distance_from_mean = 0;
-  int num_potential_standstill_feature_tracks = 0;
+  double total_average_distance_from_mean = 0;
+  int num_feature_tracks = 0;
   for (const auto& feature_track : feature_tracker_.feature_tracks()) {
-    const double feature_track_average_distance_from_mean = AverageDistanceFromMean(feature_track.second.points);
-    if (ValidPointSet(feature_track.second.points, feature_track_average_distance_from_mean,
+    const double average_distance_from_mean = AverageDistanceFromMean(feature_track.second.points);
+    if (ValidPointSet(feature_track.second.points, average_distance_from_mean,
                       params_.factor.min_valid_feature_track_avg_distance_from_mean)) {
       AddSmartFactor(feature_track.second, smart_factors_to_add);
-    } else if (feature_track.second.points.size() >
-               5) {  // Only consider long enough feature tracks for standstill candidates
-      potential_standstill_feature_tracks_average_distance_from_mean += feature_track_average_distance_from_mean;
-      ++num_potential_standstill_feature_tracks;
+    }
+    if (feature_track.second.points.size() > 5) {  // Only consider long enough feature tracks for standstill candidates
+      total_average_distance_from_mean += average_distance_from_mean;
+      ++num_feature_tracks;
     }
   }
 
-  if (num_potential_standstill_feature_tracks > 0)
-    potential_standstill_feature_tracks_average_distance_from_mean /= num_potential_standstill_feature_tracks;
+  double average_distance_from_mean = 0;
+  if (num_feature_tracks > 0) average_distance_from_mean = total_average_distance_from_mean / num_feature_tracks;
 
   if (!smart_factors_to_add.empty()) {
     smart_factors_to_add.SetTimestamp(optical_flow_feature_points_measurement.timestamp);
     BufferFactors(smart_factors_to_add);
     VLOG(2) << "AddOpticalFLowMeasurement: Buffered " << smart_factors_to_add.size() << " smart factors.";
-  } else if (ShouldAddStandstillPrior(
-                 potential_standstill_feature_tracks_average_distance_from_mean,
-                 num_potential_standstill_feature_tracks,
-                 params_.factor)) {  // Only add a standstill prior if no smart factors added and other conditions met
+  }
+  if (ShouldAddStandstillPrior(average_distance_from_mean, num_feature_tracks, params_.factor)) {
     AddStandstillVelocityPriorFactor(optical_flow_feature_points_measurement.timestamp, prior_factors_to_add);
     prior_factors_to_add.SetTimestamp(optical_flow_feature_points_measurement.timestamp);
     BufferFactors(prior_factors_to_add);
