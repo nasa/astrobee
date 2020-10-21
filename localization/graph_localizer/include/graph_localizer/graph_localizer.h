@@ -61,6 +61,8 @@ using SharedSmartFactor = boost::shared_ptr<SmartFactor>;
 class GraphLocalizer {
  public:
   explicit GraphLocalizer(const GraphLocalizerParams& params);
+  // For Serialization Only
+  GraphLocalizer() {}
   void AddImuMeasurement(const localization_measurements::ImuMeasurement& imu_measurement);
   boost::optional<localization_common::CombinedNavState> LatestCombinedNavState() const;
   boost::optional<localization_common::CombinedNavState> GetCombinedNavState(

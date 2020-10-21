@@ -36,7 +36,7 @@ namespace imu_integration {
 // that window can be integrated into a pim.
 class ImuIntegrator {
  public:
-  explicit ImuIntegrator(const ImuIntegratorParams& params);
+  explicit ImuIntegrator(const ImuIntegratorParams& params = ImuIntegratorParams());
 
   // Buffers imu measurement so they can be integrated when needed.
   // Delayed integration useful so imu integation does not advance

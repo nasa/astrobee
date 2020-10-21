@@ -29,7 +29,7 @@ namespace imu_integration {
 // last integrated measurement and only integrates measurements more recent than that measurement.
 class LatestImuIntegrator : public ImuIntegrator {
  public:
-  explicit LatestImuIntegrator(const LatestImuIntegratorParams& params);
+  explicit LatestImuIntegrator(const LatestImuIntegratorParams& params = LatestImuIntegratorParams());
 
   const gtsam::PreintegratedCombinedMeasurements& pim() const;
 

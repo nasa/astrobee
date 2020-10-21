@@ -39,7 +39,7 @@ namespace graph_localizer {
 namespace sym = gtsam::symbol_shorthand;
 class GraphValues {
  public:
-  explicit GraphValues(const GraphValuesParams& params);
+  explicit GraphValues(const GraphValuesParams& params = GraphValuesParams());
 
   // Add timestamp and keys to timestamp_key_index_map, and values to values
   bool AddCombinedNavState(const localization_common::CombinedNavState& combined_nav_state, const int key_index);

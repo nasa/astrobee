@@ -33,7 +33,7 @@ namespace graph_localizer {
 using FeatureTrackMap = std::map<localization_measurements::FeatureId, FeatureTrack>;
 class FeatureTracker {
  public:
-  explicit FeatureTracker(const FeatureTrackerParams& params);
+  explicit FeatureTracker(const FeatureTrackerParams& params = FeatureTrackerParams());
   // Update existing tracks and add new tracks.  Remove tracks without
   // detections.
   void UpdateFeatureTracks(const localization_measurements::FeaturePoints& feature_points);

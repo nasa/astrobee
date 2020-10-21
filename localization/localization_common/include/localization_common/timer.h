@@ -27,7 +27,7 @@
 namespace localization_common {
 class Timer {
  public:
-  explicit Timer(const std::string& timer_name);
+  explicit Timer(const std::string& timer_name = "");
   void Start();
   void Stop();
   void Log();

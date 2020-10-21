@@ -152,9 +152,7 @@ void LocalizationGraphPanel::LocalizationGraphCallback(const ff_msgs::Localizati
   using Camera = gtsam::PinholeCamera<Calibration>;
   using SmartFactor = gtsam::SmartProjectionPoseFactor<Calibration>;
 
-  // TODO(rsoussan): cleaner way to do this, serialize/deserialize properly
-  gl::GraphLocalizerParams params;
-  gl::GraphLocalizer graph_localizer(params);
+  gl::GraphLocalizer graph_localizer;
   gtsam::deserializeBinary(loc_msg->serialized_graph, graph_localizer);
   int of_factors = 0;
   int imu_factors = 0;
