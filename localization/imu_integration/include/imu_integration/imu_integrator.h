@@ -69,6 +69,8 @@ class ImuIntegrator {
 
   bool WithinBounds(const localization_common::Time timestamp);
 
+  const std::map<localization_common::Time, localization_measurements::ImuMeasurement>& measurements() const;
+
  private:
   ImuIntegratorParams params_;
   boost::shared_ptr<gtsam::PreintegratedCombinedMeasurements::Params> pim_params_;

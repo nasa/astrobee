@@ -25,35 +25,29 @@ namespace imu_augmentor {
 namespace ii = imu_integration;
 namespace lc = localization_common;
 namespace lm = localization_measurements;
-ImuAugmentor::ImuAugmentor(const ii::ImuIntegratorParams& params) : imu_integrator_(params) {}
-
-void ImuAugmentor::BufferImuMeasurement(const lm::ImuMeasurement& imu_measurement) {
-  imu_integrator_.BufferImuMeasurement(imu_measurement);
-}
+ImuAugmentor::ImuAugmentor(const ii::ImuIntegratorParams& params) : ii::ImuIntegrator(params) {}
 
 boost::optional<lc::CombinedNavState> ImuAugmentor::PimPredict(const lc::CombinedNavState& combined_nav_state) {
-  const auto latest_time = imu_integrator_.LatestTime();
-  if (!latest_time) {
-    LOG(ERROR) << "PimPredict: Failed to get latest imu time.";
-    return boost::none;
-  }
-  const auto pim = imu_integrator_.IntegratedPim(combined_nav_state.bias(), combined_nav_state.timestamp(),
-                                                 *latest_time, imu_integrator_.pim_params());
-  if (!pim) {
-    LOG(ERROR) << "PimPredict: Failed to create integrated pim.";
-    return boost::none;
+  if (Empty()) return combined_nav_state;
+  // Start with least upper bound measurement
+  // Don't add measurements with same timestamp as start_time
+  // since these would have a dt of 0 (wrt the pim start time) and cause errors for the pim
+  auto measurement_it = measurements().upper_bound(combined_nav_state.timestamp());
+  if (measurement_it == measurements().cend()) return combined_nav_state;
+  auto last_predicted_combined_nav_state = combined_nav_state;
+  int num_measurements_added = 0;
+  // Create new pim each time since pim uses beginning orientation and velocity for
+  // gravity integration and initial velocity integration.
+  for (; measurement_it != measurements().cend(); ++measurement_it) {
+    auto pim = ii::Pim(last_predicted_combined_nav_state.bias(), pim_params());
+    auto time = last_predicted_combined_nav_state.timestamp();
+    ii::AddMeasurement(measurement_it->second, time, pim);
+    last_predicted_combined_nav_state = ii::PimPredict(last_predicted_combined_nav_state, pim);
+    ++num_measurements_added;
   }
 
-  const auto latest_combined_nav_state = ii::PimPredict(combined_nav_state, *pim);
   RemoveOldMeasurements(combined_nav_state.timestamp());
-  return latest_combined_nav_state;
-}
-
-void ImuAugmentor::RemoveOldMeasurements(const lc::Time new_start_time) {
-  imu_integrator_.RemoveOldMeasurements(new_start_time);
-}
-
-boost::optional<lm::ImuMeasurement> ImuAugmentor::LatestMeasurement() const {
-  return imu_integrator_.LatestMeasurement();
+  VLOG(2) << "PimPredict: Added " << num_measurements_added << " measurements.";
+  return last_predicted_combined_nav_state;
 }
 }  // namespace imu_augmentor

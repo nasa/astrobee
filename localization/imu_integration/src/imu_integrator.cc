@@ -164,4 +164,9 @@ bool ImuIntegrator::WithinBounds(const localization_common::Time timestamp) {
   return (timestamp >= *oldest_time && timestamp <= *latest_time);
 }
 
+const std::map<localization_common::Time, localization_measurements::ImuMeasurement>& ImuIntegrator::measurements()
+    const {
+  return measurements_;
+}
+
 }  // namespace imu_integration

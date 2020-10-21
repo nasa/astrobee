@@ -22,28 +22,14 @@
 #include <imu_integration/imu_integrator.h>
 #include <imu_integration/imu_integrator_params.h>
 #include <localization_common/combined_nav_state.h>
-#include <localization_common/time.h>
-#include <localization_measurements/imu_measurement.h>
-
-#include <gtsam/navigation/CombinedImuFactor.h>
-#include <gtsam/navigation/ImuBias.h>
 
 namespace imu_augmentor {
-class ImuAugmentor {
+class ImuAugmentor : public imu_integration::ImuIntegrator {
  public:
   explicit ImuAugmentor(const imu_integration::ImuIntegratorParams& params);
 
-  void BufferImuMeasurement(const localization_measurements::ImuMeasurement& imu_measurement);
-
   boost::optional<localization_common::CombinedNavState> PimPredict(
       const localization_common::CombinedNavState& combined_nav_state);
-
-  boost::optional<localization_measurements::ImuMeasurement> LatestMeasurement() const;
-
- private:
-  void RemoveOldMeasurements(const localization_common::Time new_start_time);
-
-  imu_integration::ImuIntegrator imu_integrator_;
 };
 }  // namespace imu_augmentor
 
