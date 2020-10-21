@@ -595,6 +595,8 @@ bool GraphLocalizer::SlideWindow(const boost::optional<gtsam::Marginals>& margin
 
   VLOG(2) << "SlideWindow: key index: " << *key_index;
 
+  // Make sure priors are removed before adding new ones
+  RemovePriors(*key_index);
   if (marginals) {
     lc::CombinedNavStateNoise noise;
     noise.pose_noise =
@@ -609,6 +611,34 @@ bool GraphLocalizer::SlideWindow(const boost::optional<gtsam::Marginals>& margin
     AddStartingPriors(*global_N_body_oldest, *key_index, graph_values_.values(), graph_);
   }
   return true;
+}
+
+void GraphLocalizer::RemovePriors(const int key_index) {
+  int removed_factors = 0;
+  for (auto factor_it = graph_.begin(); factor_it != graph_.end();) {
+    bool erase_factor = false;
+    const auto pose_prior_factor = dynamic_cast<gtsam::PriorFactor<gtsam::Pose3>*>(factor_it->get());
+    if (pose_prior_factor && pose_prior_factor->key() == sym::P(key_index)) {
+      erase_factor = true;
+    }
+    const auto velocity_prior_factor = dynamic_cast<gtsam::PriorFactor<gtsam::Velocity3>*>(factor_it->get());
+    if (velocity_prior_factor && velocity_prior_factor->key() == sym::V(key_index)) {
+      erase_factor = true;
+    }
+    const auto bias_prior_factor = dynamic_cast<gtsam::PriorFactor<gtsam::imuBias::ConstantBias>*>(factor_it->get());
+    if (bias_prior_factor && bias_prior_factor->key() == sym::B(key_index)) {
+      erase_factor = true;
+    }
+
+    if (erase_factor) {
+      factor_it = graph_.erase(factor_it);
+      ++removed_factors;
+    } else {
+      ++factor_it;
+      continue;
+    }
+  }
+  VLOG(2) << "RemovePriors: Erase " << removed_factors << " factors.";
 }
 
 void GraphLocalizer::BufferFactors(const FactorsToAdd& factors_to_add) {
