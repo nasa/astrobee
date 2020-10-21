@@ -45,7 +45,9 @@ class LocalizationGraphPanel : public rviz::Panel {
   QLabel* of_count_label_;
   QLabel* imu_count_label_;
   QLabel* loc_count_label_;
-  QLabel* standstill_vel_prior_count_label_;
+  QLabel* pose_prior_count_label_;
+  QLabel* velocity_prior_count_label_;
+  QLabel* bias_prior_count_label_;
   // OF status
   QLabel* of_valid_label_;
   QLabel* of_degenerate_label_;
