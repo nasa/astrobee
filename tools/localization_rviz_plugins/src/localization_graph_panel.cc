@@ -92,9 +92,9 @@ LocalizationGraphPanel::LocalizationGraphPanel(QWidget* parent) : rviz::Panel(pa
   feature_count_layout->addWidget(loc_count_label_);
 
   QHBoxLayout* prior_count_layout = new QHBoxLayout;
-  pose_prior_count_label_ = new QLabel("Pose Prior Factors:");
-  velocity_prior_count_label_ = new QLabel("Vel Prior Factors:");
-  bias_prior_count_label_ = new QLabel("Bias Prior Factors:");
+  pose_prior_count_label_ = new QLabel("Pose Priors:");
+  velocity_prior_count_label_ = new QLabel("Vel Priors:");
+  bias_prior_count_label_ = new QLabel("Bias Priors:");
   prior_count_layout->addWidget(pose_prior_count_label_);
   prior_count_layout->addWidget(velocity_prior_count_label_);
   prior_count_layout->addWidget(bias_prior_count_label_);
@@ -251,13 +251,13 @@ void LocalizationGraphPanel::LocalizationGraphCallback(const ff_msgs::Localizati
   loc_count_label_->setText("Loc Factors: " + loc_count);
   QString pose_prior_count;
   pose_prior_count.setNum(pose_prior_factors);
-  pose_prior_count_label_->setText("Pose Prior Factors: " + pose_prior_count);
+  pose_prior_count_label_->setText("Pose Priors: " + pose_prior_count);
   QString velocity_prior_count;
   velocity_prior_count.setNum(velocity_prior_factors);
-  velocity_prior_count_label_->setText("Vel Prior Factors: " + velocity_prior_count);
+  velocity_prior_count_label_->setText("Vel Priors: " + velocity_prior_count);
   QString bias_prior_count;
   bias_prior_count.setNum(bias_prior_factors);
-  bias_prior_count_label_->setText("Bias Prior Factors: " + bias_prior_count);
+  bias_prior_count_label_->setText("Bias Priors: " + bias_prior_count);
 
   // OF status
   if (of_factors > 0) {
