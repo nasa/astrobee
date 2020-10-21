@@ -208,7 +208,7 @@ class DockNodelet : public ff_util::FreeFlyerNodelet {
       MOTION_SUCCESS, [this](FSM::Event const& event) -> FSM::State {
         err_ = RESPONSE::MOTION_ATTACHED_FAILED;
         err_msg_ = "Check attached failed, magnets didn't stop robot's movement";
-        Move(APPROACH_POSE, ff_msgs::MotionGoal::DOCKING);
+        Move(APPROACH_POSE, ff_msgs::MotionGoal::PRECISION);
         return STATE::RECOVERY_MOVING_TO_APPROACH_POSE;
       });
     // [12]
