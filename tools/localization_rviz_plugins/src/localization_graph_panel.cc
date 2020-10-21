@@ -42,7 +42,7 @@ void highlightLabel(const double val, const double green_threshold, const double
 }
 
 void addVectorToLabel(const gtsam::Vector3& vec, const QString& description, QLabel& label, bool add_norm = false,
-                      const int precision = 3) {
+                      const int precision = 2) {
   QString text = description + " ";
   if (add_norm) {
     QString vec_norm_string;
@@ -234,7 +234,7 @@ void LocalizationGraphPanel::LocalizationGraphCallback(const ff_msgs::Localizati
     QString time_since_latest_string;
     const auto current_time = lc::TimeFromRosTime(ros::Time::now());
     const double time_since_latest = current_time - latest_combined_nav_state->timestamp();
-    time_since_latest_string.setNum(time_since_latest, 'g', 3);
+    time_since_latest_string.setNum(time_since_latest, 'g', 2);
     highlightLabel<std::less_equal<double>>(time_since_latest, 0.25, 0.35, *time_since_latest_label_);
     time_since_latest_label_->setText("Time since latest: " + time_since_latest_string);
   }
@@ -262,7 +262,7 @@ void LocalizationGraphPanel::LocalizationGraphCallback(const ff_msgs::Localizati
   // OF status
   if (of_factors > 0) {
     QString of_valid_percent;
-    of_valid_percent.setNum(static_cast<double>(100.0 * of_valid) / of_factors, 'g', 3);
+    of_valid_percent.setNum(static_cast<double>(100.0 * of_valid) / of_factors, 'g', 2);
     of_valid_label_->setText("OF Valid: " + of_valid_percent + "%");
     const double of_valid_percentage = 100.0 * static_cast<double>(of_valid) / of_factors;
     // Green if >= 50% valid, yellow if < 50% and > 0%, red if 0% valid
@@ -285,11 +285,11 @@ void LocalizationGraphPanel::LocalizationGraphCallback(const ff_msgs::Localizati
     of_far_point_label_->setText("OF Far Point: " + of_far_point_percent + "%");
 
     QString of_average_num_measurements;
-    of_average_num_measurements.setNum(static_cast<double>(of_total_num_measurements) / of_factors, 'g', 3);
+    of_average_num_measurements.setNum(static_cast<double>(of_total_num_measurements) / of_factors, 'g', 2);
     of_avg_num_measurements_label_->setText("OF Avg # Measurements: " + of_average_num_measurements);
 
     QString of_average_dist_from_mean;
-    of_average_dist_from_mean.setNum(static_cast<double>(of_total_avg_dist_from_mean) / of_factors, 'g', 3);
+    of_average_dist_from_mean.setNum(static_cast<double>(of_total_avg_dist_from_mean) / of_factors, 'g', 2);
     of_avg_dist_from_mean_label_->setText("OF Avg Dist From Mean: " + of_average_dist_from_mean);
   }
 
@@ -297,7 +297,7 @@ void LocalizationGraphPanel::LocalizationGraphCallback(const ff_msgs::Localizati
   if (imu_factors > 0) {
     const double imu_avg_dt = total_imu_dt / imu_factors;
     QString imu_avg_dt_string;
-    imu_avg_dt_string.setNum(imu_avg_dt, 'g', 3);
+    imu_avg_dt_string.setNum(imu_avg_dt, 'g', 2);
     imu_avg_dt_label_->setText("Avg IMU dt: " + imu_avg_dt_string);
     // Green if <= 0.1, yellow if <= .3 and > .1, red if > 0.3
     highlightLabel<std::less_equal<double>>(imu_avg_dt, 0.1, 0.3, *imu_avg_dt_label_);
