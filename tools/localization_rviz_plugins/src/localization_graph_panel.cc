@@ -102,14 +102,16 @@ LocalizationGraphPanel::LocalizationGraphPanel(QWidget* parent) : rviz::Panel(pa
   QHBoxLayout* of_result_layout = new QHBoxLayout;
   of_valid_label_ = new QLabel("OF Valid:");
   of_degenerate_label_ = new QLabel("OF Degenerate:");
+  of_result_layout->addWidget(of_valid_label_);
+  of_result_layout->addWidget(of_degenerate_label_);
+
+  QHBoxLayout* of_result2_layout = new QHBoxLayout;
   of_behind_camera_label_ = new QLabel("OF Behind Camera:");
   of_outlier_label_ = new QLabel("OF Outlier:");
   of_far_point_label_ = new QLabel("OF Far Point:");
-  of_result_layout->addWidget(of_valid_label_);
-  of_result_layout->addWidget(of_degenerate_label_);
-  of_result_layout->addWidget(of_behind_camera_label_);
-  of_result_layout->addWidget(of_outlier_label_);
-  of_result_layout->addWidget(of_far_point_label_);
+  of_result2_layout->addWidget(of_behind_camera_label_);
+  of_result2_layout->addWidget(of_outlier_label_);
+  of_result2_layout->addWidget(of_far_point_label_);
 
   QHBoxLayout* of_info_layout = new QHBoxLayout;
   of_avg_num_measurements_label_ = new QLabel("OF Avg # Measurements: ");
@@ -141,6 +143,7 @@ LocalizationGraphPanel::LocalizationGraphPanel(QWidget* parent) : rviz::Panel(pa
   layout->addLayout(feature_count_layout);
   layout->addLayout(prior_count_layout);
   layout->addLayout(of_result_layout);
+  layout->addLayout(of_result2_layout);
   layout->addLayout(of_info_layout);
   layout->addLayout(imu_info_layout);
   layout->addLayout(imu_dp_dt_layout);
