@@ -87,11 +87,17 @@ LocalizationGraphPanel::LocalizationGraphPanel(QWidget* parent) : rviz::Panel(pa
   of_count_label_ = new QLabel("OF Factors:");
   imu_count_label_ = new QLabel("Imu Factors:");
   loc_count_label_ = new QLabel("Loc Factors:");
-  standstill_vel_prior_count_label_ = new QLabel("Standstill Vel Prior Factors:");
   feature_count_layout->addWidget(of_count_label_);
   feature_count_layout->addWidget(imu_count_label_);
   feature_count_layout->addWidget(loc_count_label_);
-  feature_count_layout->addWidget(standstill_vel_prior_count_label_);
+
+  QHBoxLayout* prior_count_layout = new QHBoxLayout;
+  pose_prior_count_label_ = new QLabel("Pose Prior Factors:");
+  velocity_prior_count_label_ = new QLabel("Vel Prior Factors:");
+  bias_prior_count_label_ = new QLabel("Bias Prior Factors:");
+  prior_count_layout->addWidget(pose_prior_count_label_);
+  prior_count_layout->addWidget(velocity_prior_count_label_);
+  prior_count_layout->addWidget(bias_prior_count_label_);
 
   QHBoxLayout* of_result_layout = new QHBoxLayout;
   of_valid_label_ = new QLabel("OF Valid:");
@@ -133,6 +139,7 @@ LocalizationGraphPanel::LocalizationGraphPanel(QWidget* parent) : rviz::Panel(pa
 
   QVBoxLayout* layout = new QVBoxLayout;
   layout->addLayout(feature_count_layout);
+  layout->addLayout(prior_count_layout);
   layout->addLayout(of_result_layout);
   layout->addLayout(of_info_layout);
   layout->addLayout(imu_info_layout);
@@ -157,7 +164,9 @@ void LocalizationGraphPanel::LocalizationGraphCallback(const ff_msgs::Localizati
   int of_factors = 0;
   int imu_factors = 0;
   int loc_factors = 0;
-  int standstill_vel_prior_factors = 0;
+  int pose_prior_factors = 0;
+  int velocity_prior_factors = 0;
+  int bias_prior_factors = 0;
   int of_valid = 0;
   int of_degenerate = 0;
   int of_behind_camera = 0;
@@ -201,9 +210,18 @@ void LocalizationGraphPanel::LocalizationGraphCallback(const ff_msgs::Localizati
     if (loc_factor) {
       ++loc_factors;
     }
-    const auto standstill_vel_prior_factor = dynamic_cast<gtsam::PriorFactor<gtsam::Velocity3>*>(factor.get());
-    if (standstill_vel_prior_factor) {
-      ++standstill_vel_prior_factors;
+    // Prior Factors
+    const auto pose_prior_factor = dynamic_cast<gtsam::PriorFactor<gtsam::Pose3>*>(factor.get());
+    if (pose_prior_factor) {
+      ++pose_prior_factors;
+    }
+    const auto velocity_prior_factor = dynamic_cast<gtsam::PriorFactor<gtsam::Velocity3>*>(factor.get());
+    if (velocity_prior_factor) {
+      ++velocity_prior_factors;
+    }
+    const auto bias_prior_factor = dynamic_cast<gtsam::PriorFactor<gtsam::imuBias::ConstantBias>*>(factor.get());
+    if (bias_prior_factor) {
+      ++bias_prior_factors;
     }
   }
   const auto latest_combined_nav_state = graph_localizer.graph_values().LatestCombinedNavState();
@@ -228,9 +246,15 @@ void LocalizationGraphPanel::LocalizationGraphCallback(const ff_msgs::Localizati
   QString loc_count;
   loc_count.setNum(loc_factors);
   loc_count_label_->setText("Loc Factors: " + loc_count);
-  QString standstill_vel_prior_count;
-  standstill_vel_prior_count.setNum(standstill_vel_prior_factors);
-  standstill_vel_prior_count_label_->setText("Standstill Vel Prior Factors: " + standstill_vel_prior_count);
+  QString pose_prior_count;
+  pose_prior_count.setNum(pose_prior_factors);
+  pose_prior_count_label_->setText("Pose Prior Factors: " + pose_prior_count);
+  QString velocity_prior_count;
+  velocity_prior_count.setNum(velocity_prior_factors);
+  velocity_prior_count_label_->setText("Vel Prior Factors: " + velocity_prior_count);
+  QString bias_prior_count;
+  bias_prior_count.setNum(bias_prior_factors);
+  bias_prior_count_label_->setText("Bias Prior Factors: " + bias_prior_count);
 
   // OF status
   if (of_factors > 0) {
