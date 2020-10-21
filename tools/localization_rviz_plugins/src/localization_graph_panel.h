@@ -44,6 +44,8 @@ class LocalizationGraphPanel : public rviz::Panel {
   // Factor Counts
   QLabel* of_count_label_;
   QLabel* imu_count_label_;
+  QLabel* loc_count_label_;
+  QLabel* standstill_vel_prior_count_label_;
   // OF status
   QLabel* of_valid_label_;
   QLabel* of_degenerate_label_;
@@ -52,6 +54,7 @@ class LocalizationGraphPanel : public rviz::Panel {
   QLabel* of_far_point_label_;
   // OF info
   QLabel* of_avg_num_measurements_label_;
+  QLabel* of_avg_dist_from_mean_label_;
   // IMU info
   QLabel* imu_avg_dt_label_;
   QLabel* imu_avg_dp_dt_label_;

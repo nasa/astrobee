@@ -16,6 +16,7 @@
  * under the License.
  */
 
+#include <graph_localizer/loc_projection_factor.h>
 #include <localization_common/utilities.h>
 
 #include <QHBoxLayout>
@@ -57,18 +58,40 @@ void addVectorToLabel(const gtsam::Vector3& vec, const QString& description, QLa
   text += "vec (" + vec_x_string + ", " + vec_y_string + ", " + vec_z_string + ")";
   label.setText(text);
 }
+
+// TODO(rsoussan): unify this with version from graph utilities
+double AverageDistanceFromMean(const gtsam::Point2Vector& points) {
+  // Calculate mean point and avg distance from mean
+  Eigen::Vector2d sum_of_points = Eigen::Vector2d::Zero();
+  for (const auto& point : points) {
+    sum_of_points += point;
+  }
+  const Eigen::Vector2d mean_point = sum_of_points / points.size();
+
+  double sum_of_distances_from_mean = 0;
+  for (const auto& point : points) {
+    const Eigen::Vector2d mean_centered_point = point - mean_point;
+    sum_of_distances_from_mean += mean_centered_point.norm();
+  }
+  const double average_distance_from_mean = sum_of_distances_from_mean / points.size();
+  return average_distance_from_mean;
+}
 }  // namespace
 
 namespace localization_rviz_plugins {
+namespace gl = graph_localizer;
 namespace lc = localization_common;
 
 LocalizationGraphPanel::LocalizationGraphPanel(QWidget* parent) : rviz::Panel(parent) {
   QHBoxLayout* feature_count_layout = new QHBoxLayout;
   of_count_label_ = new QLabel("OF Factors:");
   imu_count_label_ = new QLabel("Imu Factors:");
-  // of_count_label_->setAlignment(Qt::AlignLeft);
+  loc_count_label_ = new QLabel("Loc Factors:");
+  standstill_vel_prior_count_label_ = new QLabel("Standstill Vel Prior Factors:");
   feature_count_layout->addWidget(of_count_label_);
   feature_count_layout->addWidget(imu_count_label_);
+  feature_count_layout->addWidget(loc_count_label_);
+  feature_count_layout->addWidget(standstill_vel_prior_count_label_);
 
   QHBoxLayout* of_result_layout = new QHBoxLayout;
   of_valid_label_ = new QLabel("OF Valid:");
@@ -84,7 +107,9 @@ LocalizationGraphPanel::LocalizationGraphPanel(QWidget* parent) : rviz::Panel(pa
 
   QHBoxLayout* of_info_layout = new QHBoxLayout;
   of_avg_num_measurements_label_ = new QLabel("OF Avg # Measurements: ");
+  of_avg_dist_from_mean_label_ = new QLabel("OF Avg Dist From Mean: ");
   of_info_layout->addWidget(of_avg_num_measurements_label_);
+  of_info_layout->addWidget(of_avg_dist_from_mean_label_);
 
   QHBoxLayout* imu_info_layout = new QHBoxLayout;
   imu_avg_dt_label_ = new QLabel("Avg IMU dt: ");
@@ -128,17 +153,20 @@ void LocalizationGraphPanel::LocalizationGraphCallback(const ff_msgs::Localizati
   using SmartFactor = gtsam::SmartProjectionPoseFactor<Calibration>;
 
   // TODO(rsoussan): cleaner way to do this, serialize/deserialize properly
-  graph_localizer::GraphLocalizerParams params;
-  graph_localizer::GraphLocalizer graph_localizer(params);
+  gl::GraphLocalizerParams params;
+  gl::GraphLocalizer graph_localizer(params);
   gtsam::deserializeBinary(loc_msg->serialized_graph, graph_localizer);
   int of_factors = 0;
   int imu_factors = 0;
+  int loc_factors = 0;
+  int standstill_vel_prior_factors = 0;
   int of_valid = 0;
   int of_degenerate = 0;
   int of_behind_camera = 0;
   int of_outlier = 0;
   int of_far_point = 0;
   int of_total_num_measurements = 0;
+  double of_total_avg_dist_from_mean = 0;
   double total_imu_dt = 0;
   gtsam::Vector3 total_imu_dp_dt = gtsam::Vector3::Zero();
   gtsam::Vector3 total_imu_dv_dt = gtsam::Vector3::Zero();
@@ -152,6 +180,7 @@ void LocalizationGraphPanel::LocalizationGraphCallback(const ff_msgs::Localizati
       if (smart_factor->isPointBehindCamera()) ++of_behind_camera;
       if (smart_factor->isOutlier()) ++of_outlier;
       if (smart_factor->isFarPoint()) ++of_far_point;
+      of_total_avg_dist_from_mean += AverageDistanceFromMean(smart_factor->measured());
     }
     const auto imu_factor = dynamic_cast<gtsam::CombinedImuFactor*>(factor.get());
     if (imu_factor) {
@@ -169,6 +198,14 @@ void LocalizationGraphPanel::LocalizationGraphCallback(const ff_msgs::Localizati
         const gtsam::Vector3 dv = imu_predicted_combined_nav_state->velocity() - imu_combined_nav_state->velocity();
         total_imu_dv_dt += dv / dt;
       }
+    }
+    const auto loc_factor = dynamic_cast<gtsam::LocProjectionFactor<>*>(factor.get());
+    if (loc_factor) {
+      ++loc_factors;
+    }
+    const auto standstill_vel_prior_factor = dynamic_cast<gtsam::PriorFactor<gtsam::Velocity3>*>(factor.get());
+    if (standstill_vel_prior_factor) {
+      ++standstill_vel_prior_factors;
     }
   }
   const auto latest_combined_nav_state = graph_localizer.graph_values().LatestCombinedNavState();
@@ -190,6 +227,12 @@ void LocalizationGraphPanel::LocalizationGraphCallback(const ff_msgs::Localizati
   QString imu_count;
   imu_count.setNum(imu_factors);
   imu_count_label_->setText("IMU Factors: " + imu_count);
+  QString loc_count;
+  loc_count.setNum(loc_factors);
+  loc_count_label_->setText("Loc Factors: " + loc_count);
+  QString standstill_vel_prior_count;
+  standstill_vel_prior_count.setNum(standstill_vel_prior_factors);
+  standstill_vel_prior_count_label_->setText("Standstill Vel Prior Factors: " + standstill_vel_prior_count);
 
   // OF status
   if (of_factors > 0) {
@@ -219,6 +262,10 @@ void LocalizationGraphPanel::LocalizationGraphCallback(const ff_msgs::Localizati
     QString of_average_num_measurements;
     of_average_num_measurements.setNum(static_cast<double>(of_total_num_measurements) / of_factors, 'g', 3);
     of_avg_num_measurements_label_->setText("OF Avg # Measurements: " + of_average_num_measurements);
+
+    QString of_average_dist_from_mean;
+    of_average_dist_from_mean.setNum(static_cast<double>(of_total_avg_dist_from_mean) / of_factors, 'g', 3);
+    of_avg_dist_from_mean_label_->setText("OF Avg Dist From Mean: " + of_average_dist_from_mean);
   }
 
   // IMU status
