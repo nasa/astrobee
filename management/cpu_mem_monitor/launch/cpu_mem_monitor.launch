@@ -15,11 +15,11 @@
 <!-- implied. See the License for the specific language governing            -->
 <!-- permissions and limitations under the License.                          -->
 <launch>
-  <arg name="name" default="cpu_monitor" />
+  <arg name="name" default="cpu_mem_monitor" />
   <arg name="manager" default="" />
   <include file="$(find ff_util)/launch/ff_nodelet.launch">
     <arg name="name" value="$(arg name)" />
     <arg name="manager" value="$(arg manager)" />
-    <arg name="class" value="cpu_monitor/CpuMonitor" />
+    <arg name="class" value="cpu_mem_monitor/CpuMemMonitor" />
   </include>
 </launch>

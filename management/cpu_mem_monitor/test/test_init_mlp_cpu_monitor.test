@@ -20,7 +20,7 @@
   <env name="ASTROBEE_RESOURCE_DIR" value="$(find astrobee)/resources" />
   <env name="ASTROBEE_ROBOT" value="p4d" />
   <env name="ASTROBEE_WORLD" value="iss" />
-  <include file="$(find cpu_monitor)/launch/cpu_monitor.launch">
+  <include file="$(find cpu_mem_monitor)/launch/cpu_mem_monitor.launch">
     <arg name="name" value="mlp_cpu_monitor" />
   </include>
 
@@ -30,5 +30,5 @@
   <env name="ASTROBEE_WORLD" value="iss" />
   <include file="$(find sys_monitor)/launch/sys_monitor.launch" />
 
-  <test pkg="cpu_monitor" type="test_init_mlp_cpu_monitor" test-name="test_init_mlp_cpu_monitor" />
+  <test pkg="cpu_mem_monitor" type="test_init_mlp_cpu_monitor" test-name="test_init_mlp_cpu_monitor" />
 </launch>

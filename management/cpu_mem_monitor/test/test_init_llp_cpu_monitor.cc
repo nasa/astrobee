@@ -61,7 +61,7 @@ TEST(init_llp_cpu_monitor, LlpCpuMonitorInitFailed) {
     return;
   }
 
-  if (!fault_config.CheckValExists("llp_cpu_monitor")) {
+  if (!fault_config.CheckValExists("llp_cpu_mem_monitor")) {
     ROS_ERROR("Couldn't extract llp cpu monitor fault. Need for init fault id");
     // Cause test to fail
     EXPECT_EQ(2, 1);
@@ -69,7 +69,7 @@ TEST(init_llp_cpu_monitor, LlpCpuMonitorInitFailed) {
   }
 
   config_reader::ConfigReader::Table fault_table(&fault_config,
-                                                 "llp_cpu_monitor");
+                                                 "llp_cpu_mem_monitor");
   std::string fault_key;
   // Lua indices start at one
   for (int i = 1; i < (fault_table.GetSize() + 1); i++) {
