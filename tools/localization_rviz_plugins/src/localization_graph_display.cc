@@ -36,18 +36,6 @@
 namespace localization_rviz_plugins {
 namespace lc = localization_common;
 
-namespace {
-std::pair<Ogre::Quaternion, double> getOrientationAndLength(const gtsam::Point3& point_a,
-                                                            const gtsam::Point3& point_b) {
-  // Ogre identity vector is along negative z axis
-  const Eigen::Vector3d negative_z(0, 0, 1);
-  const auto normalized_difference_vector = (point_b - point_a).normalized();
-  const double norm = (point_b - point_a).norm();
-  const auto orientation = Eigen::Quaterniond().setFromTwoVectors(negative_z, normalized_difference_vector);
-  return {Ogre::Quaternion(orientation.w(), orientation.x(), orientation.y(), orientation.z()), norm};
-}
-}  // namespace
-
 LocalizationGraphDisplay::LocalizationGraphDisplay() {
   show_pose_axes_.reset(new rviz::BoolProperty("Show Pose Axes", true, "Show graph poses as axes.", this));
   pose_axes_size_.reset(new rviz::FloatProperty("Pose Axes Size", 0.1, "Pose axes size.", this));
@@ -78,7 +66,8 @@ void LocalizationGraphDisplay::addImuVisual(const graph_localizer::GraphLocalize
   }
   if (show_pose_axes_->getBool()) {
     const float scale = pose_axes_size_->getFloat();
-    addPoseAsAxis(*pose, scale, graph_pose_axes_, context_->getSceneManager(), scene_node_);
+    auto axis = axisFromPose(*pose, scale, context_->getSceneManager(), scene_node_);
+    graph_pose_axes_.emplace_back(std::move(axis));
   }
 
   if (show_imu_factor_arrows_->getBool()) {
@@ -88,13 +77,13 @@ void LocalizationGraphDisplay::addImuVisual(const graph_localizer::GraphLocalize
       return;
     }
     auto imu_factor_arrow = std::unique_ptr<rviz::Arrow>(new rviz::Arrow(context_->getSceneManager(), scene_node_));
-    imu_factor_arrow->setPosition(OgrePosition(*pose));
+    imu_factor_arrow->setPosition(ogrePosition(*pose));
     const auto orientation_and_length =
         getOrientationAndLength(pose->translation(), imu_predicted_combined_nav_state->pose().translation());
     imu_factor_arrow->setOrientation(orientation_and_length.first);
-    const float diameter = 2.0 * imu_factor_arrows_diameter_->getFloat();
-    imu_factor_arrow->set(3.0 * orientation_and_length.second / 4.0, diameter, orientation_and_length.second / 4.0,
-                          diameter);
+    const float diameter = imu_factor_arrows_diameter_->getFloat();
+    imu_factor_arrow->set(3.0 * orientation_and_length.second / 4.0, 0.5 * diameter,
+                          orientation_and_length.second / 4.0, diameter);
     imu_factor_arrow->setColor(1, 1, 0, 1);
     imu_factor_arrows_.emplace_back(std::move(imu_factor_arrow));
   }
@@ -106,10 +95,8 @@ void LocalizationGraphDisplay::processMessage(const ff_msgs::LocalizationGraph::
   using Camera = gtsam::PinholeCamera<Calibration>;
   using SmartFactor = gtsam::SmartProjectionPoseFactor<Calibration>;
 
-  // TODO(rsoussan): cleaner way to do this, serialize/deserialize properly
   clearDisplay();
-  graph_localizer::GraphLocalizerParams params;
-  graph_localizer::GraphLocalizer graph_localizer(params);
+  graph_localizer::GraphLocalizer graph_localizer;
   gtsam::deserializeBinary(msg->serialized_graph, graph_localizer);
   for (const auto factor : graph_localizer.factor_graph()) {
     const auto smart_factor = dynamic_cast<const SmartFactor*>(factor.get());

@@ -32,20 +32,23 @@
 #include <OgreVector3.h>
 
 #include <memory>
+#include <utility>
 #include <vector>
 
 namespace localization_rviz_plugins {
-Ogre::Vector3 OgrePosition(const gtsam::Pose3& pose);
+Ogre::Vector3 ogrePosition(const gtsam::Pose3& pose);
 
-Ogre::Quaternion OgreQuaternion(const gtsam::Pose3& pose);
+Ogre::Quaternion ogreQuaternion(const gtsam::Pose3& pose);
 
-void addPoseAsAxis(const gtsam::Pose3& pose, const double scale, std::vector<std::unique_ptr<rviz::Axes>>& axes,
-                   Ogre::SceneManager* scene_manager, Ogre::SceneNode* scene_node);
+std::unique_ptr<rviz::Axes> axisFromPose(const gtsam::Pose3& pose, const double scale,
+                                         Ogre::SceneManager* scene_manager, Ogre::SceneNode* scene_node);
 
 boost::optional<localization_common::CombinedNavState> firstCombinedNavState(
     const graph_localizer::GraphLocalizer& graph_localizer, const gtsam::CombinedImuFactor* const imu_factor);
 
 boost::optional<localization_common::CombinedNavState> pimPredict(
     const graph_localizer::GraphLocalizer& graph_localizer, const gtsam::CombinedImuFactor* const imu_factor);
+
+std::pair<Ogre::Quaternion, double> getOrientationAndLength(const gtsam::Point3& point_a, const gtsam::Point3& point_b);
 }  // namespace localization_rviz_plugins
 #endif  // LOCALIZATION_RVIZ_PLUGINS_UTILITIES_H_  NOLINT

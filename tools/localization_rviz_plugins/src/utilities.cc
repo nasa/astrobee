@@ -22,22 +22,22 @@ namespace localization_rviz_plugins {
 namespace lc = localization_common;
 namespace ii = imu_integration;
 
-Ogre::Vector3 OgrePosition(const gtsam::Pose3& pose) {
+Ogre::Vector3 ogrePosition(const gtsam::Pose3& pose) {
   return Ogre::Vector3(pose.translation().x(), pose.translation().y(), pose.translation().z());
 }
 
-Ogre::Quaternion OgreQuaternion(const gtsam::Pose3& pose) {
+Ogre::Quaternion ogreQuaternion(const gtsam::Pose3& pose) {
   const auto quaternion = pose.rotation().toQuaternion();
   return Ogre::Quaternion(quaternion.w(), quaternion.x(), quaternion.y(), quaternion.z());
 }
 
-void addPoseAsAxis(const gtsam::Pose3& pose, const double scale, std::vector<std::unique_ptr<rviz::Axes>>& axes,
-                   Ogre::SceneManager* scene_manager, Ogre::SceneNode* scene_node) {
+std::unique_ptr<rviz::Axes> axisFromPose(const gtsam::Pose3& pose, const double scale,
+                                         Ogre::SceneManager* scene_manager, Ogre::SceneNode* scene_node) {
   auto axis = std::unique_ptr<rviz::Axes>(new rviz::Axes(scene_manager, scene_node));
-  axis->setPosition(OgrePosition(pose));
-  axis->setOrientation(OgreQuaternion(pose));
+  axis->setPosition(ogrePosition(pose));
+  axis->setOrientation(ogreQuaternion(pose));
   axis->setScale(Ogre::Vector3(scale, scale, scale));
-  axes.emplace_back(std::move(axis));
+  return axis;
 }
 
 boost::optional<lc::CombinedNavState> firstCombinedNavState(const graph_localizer::GraphLocalizer& graph_localizer,
@@ -70,5 +70,15 @@ boost::optional<lc::CombinedNavState> pimPredict(const graph_localizer::GraphLoc
   if (!combined_nav_state) return boost::none;
   const auto& pim = imu_factor->preintegratedMeasurements();
   return ii::PimPredict(*combined_nav_state, pim);
+}
+
+std::pair<Ogre::Quaternion, double> getOrientationAndLength(const gtsam::Point3& point_a,
+                                                            const gtsam::Point3& point_b) {
+  // Ogre identity vector is along negative z axis
+  const Eigen::Vector3d negative_z(0, 0, 1);
+  const auto normalized_difference_vector = (point_b - point_a).normalized();
+  const double norm = (point_b - point_a).norm();
+  const auto orientation = Eigen::Quaterniond().setFromTwoVectors(negative_z, normalized_difference_vector);
+  return {Ogre::Quaternion(orientation.w(), orientation.x(), orientation.y(), orientation.z()), norm};
 }
 }  // namespace localization_rviz_plugins

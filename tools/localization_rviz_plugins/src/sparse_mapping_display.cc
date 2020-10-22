@@ -74,18 +74,16 @@ void SparseMappingDisplay::reset() {
 void SparseMappingDisplay::clearDisplay() { sparse_mapping_pose_axes_.clear(); }
 
 void SparseMappingDisplay::processMessage(const ff_msgs::VisualLandmarks::ConstPtr& msg) {
+  sparse_mapping_pose_axes_.set_capacity(number_of_poses_->getInt());
   const auto projections_measurement = lm::MakeMatchedProjectionsMeasurement(*msg);
   const float scale = pose_axes_size_->getFloat();
   const gtsam::Pose3 global_T_body = projections_measurement.global_T_cam * nav_cam_T_body_;
-  // TODO(rsoussan): use circular buffer instead of vector
-  const int number_of_poses = number_of_poses_->getInt();
-  if (sparse_mapping_pose_axes_.size() > number_of_poses)
-    sparse_mapping_pose_axes_.erase(sparse_mapping_pose_axes_.begin());
-  addPoseAsAxis(global_T_body, scale, sparse_mapping_pose_axes_, context_->getSceneManager(), scene_node_);
+  auto axis = axisFromPose(global_T_body, scale, context_->getSceneManager(), scene_node_);
   // TODO(rsoussan): pass these to addposeasaxis???
-  (*sparse_mapping_pose_axes_.rbegin())->setXColor(Ogre::ColourValue(0.5, 0, 0, 0.3));
-  (*sparse_mapping_pose_axes_.rbegin())->setYColor(Ogre::ColourValue(0, 0.5, 0, 0.3));
-  (*sparse_mapping_pose_axes_.rbegin())->setZColor(Ogre::ColourValue(0, 0, 0.5, 0.3));
+  axis->setXColor(Ogre::ColourValue(0.5, 0, 0, 0.3));
+  axis->setYColor(Ogre::ColourValue(0, 0.5, 0, 0.3));
+  axis->setZColor(Ogre::ColourValue(0, 0, 0.5, 0.3));
+  sparse_mapping_pose_axes_.push_back(std::move(axis));
 }
 }  // namespace localization_rviz_plugins
 
