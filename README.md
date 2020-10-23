@@ -46,7 +46,9 @@ due to NASA legal requirements. Thank you for your understanding.
 
 ### Documentation
 
-To view the Astrobee documentation, visit [documentation](https://nasa.github.io/astrobee/documentation.html).
+To view all the Astrobee documentation, please visit [documentation](https://nasa.github.io/astrobee/documentation.html).
+
+If you want to perform research using the astrobee platform, a good tutorial guide is ["A Brief Guide to Astrobee’s Flight Software"](https://github.com/albee/a-brief-guide-to-astrobee/raw/master/a_brief_guide_to_astrobee_v1.0.pdf). This will teach you what Astrobee is, how the robot works, how to make your own package, and much more!
 
 For more information, read the Astrobee [publications](https://www.nasa.gov/content/research-publications-0).
 Learning about the Astrobee [platform](https://www.nasa.gov/sites/default/files/atoms/files/bualat_spaceops_2018_paper.pdf),
