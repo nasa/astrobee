@@ -3,6 +3,8 @@
 name: Build and Push Documentation to gh-pages Branch
 
 on:
+  pull_request:
+    branches: ['develop' ]
   push:
     branches: ['develop']
 
@@ -26,7 +28,8 @@ jobs:
         sudo apt-get install flex
     - name: Install doxygen
       run: |
-        git clone https://github.com/doxygen/doxygen.git
+        wget http://doxygen.nl/files/doxygen-1.8.20.src.tar.gz
+        tar -zxvf doxygen-1.8.20.src.tar.gz
         cd doxygen
         mkdir build
         cd build
