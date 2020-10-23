@@ -350,16 +350,6 @@
 
     <!-- Monitors -->
     <include file="$(find ff_util)/launch/ff_nodelet.launch">
-      <arg name="class" value="cpu_mem_monitor/CpuMemMonitor" />
-      <arg name="name" value="mlp_cpu_mem_monitor" />
-      <arg name="manager" value="mlp_monitors" />
-      <arg name="spurn" value="$(arg spurn)" />
-      <arg name="nodes" value="$(arg nodes)" />
-      <arg name="extra" value="$(arg extra)" />
-      <arg name="debug" value="$(arg debug)" />
-      <arg name="default" value="true" />
-    </include>
-    <include file="$(find ff_util)/launch/ff_nodelet.launch">
       <arg name="class" value="disk_monitor/DiskMonitor" />
       <arg name="name" value="mlp_disk_monitor" />
       <arg name="manager" value="mlp_monitors" />
@@ -384,6 +374,16 @@
 
   </group>
 
+    <include file="$(find ff_util)/launch/ff_nodelet.launch">
+      <arg name="class" value="cpu_mem_monitor/CpuMemMonitor" />
+      <arg name="name" value="mlp_cpu_mem_monitor" />
+      <arg name="manager" value="mlp_monitors" />
+      <arg name="spurn" value="$(arg spurn)" />
+      <arg name="nodes" value="$(arg nodes)" />
+      <arg name="extra" value="$(arg extra)" />
+      <arg name="debug" value="$(arg debug)" />
+      <arg name="default" value="true" />
+    </include>
   <group if="$(arg loc_only)">
     <include file="$(find ff_util)/launch/ff_nodelet.launch">
       <arg name="class" value="localization_node/LocalizationNodelet" />

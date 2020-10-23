@@ -215,6 +215,21 @@ bool CpuMemMonitor::ReadParams() {
     return false;
   }
 
+  config_reader::ConfigReader::Table nodes;
+  if (!processor_config.GetTable("nodes",
+                               &nodes)) {
+    err_msg = "CPU Memory monitor: Nodes for inspection not in config file ";
+    err_msg += "specified for ";
+    err_msg += processor_name_;
+    FF_ERROR(err_msg);
+    this->AssertFault(ff_util::INITIALIZATION_FAILED, err_msg);
+  }
+  std::string name;
+  for (int i = 0; i < nodes.GetSize(); i++) {
+    if (nodes.GetStr("name", &name)) {
+      nodes_pid_.insert(std::pair<std::string, int>(name, -1));
+    }
+  }
   return true;
 }
 
@@ -254,6 +269,80 @@ void CpuMemMonitor::ClearMemLoadHighFaultCallback(ros::TimerEvent const& te) {
   clear_mem_load_fault_timer_.stop();
   this->ClearFault(ff_util::MEMORY_USAGE_TOO_HIGH);
   load_fault_state_ = CLEARED;
+}
+
+int CpuMemMonitor::GetPIDs() {
+  // Get own URI
+  // Check if the node is being executed in this computer
+  // Get URI of the node
+  XmlRpc::XmlRpcValue args, result, payload;
+  args.setSize(2);
+  args[0] = ros::this_node::getName();
+  args[1] = ros::this_node::getName();
+  ros::master::execute("lookupNode", args, result, payload, true);
+  std::string monitor_host = getHostfromURI(result[2]);
+  if (monitor_host.empty()) {
+    ROS_ERROR_STREAM("URI of the memory monitor not valid");
+    return -1;
+  }
+  mem_state_msg_.name = monitor_host;
+  mem_state_msg_.nodes.clear();
+  // Go through all the node list and get the PID
+  std::map<std::string, int>::iterator it;
+  for ( it = nodes_pid_.begin(); it != nodes_pid_.end(); it++ ) {
+    // Look for PID if not already on the list
+    if (it->second == 0) {
+      // Check if the node is being executed in this computer
+      // Get URI of the node
+      args.setSize(2);
+      args[0] = ros::this_node::getName();
+      args[1] = it->first;
+      ros::master::execute("lookupNode", args, result, payload, true);
+      std::string node_host = getHostfromURI(result[2]);
+      if (node_host.empty()) {
+        it->second = -1;
+        continue;
+      }
+
+      // If it is not in the same cpu
+      if (node_host != monitor_host) {
+        // Insert it on the list
+        it->second = -1;
+        std::string err_msg = "CPU Memory Monitor: Specified node " + it->first + "in" + monitor_host +
+                              " and not in the same cpu as manager " + monitor_host + ".";
+        FF_WARN(err_msg);
+        continue;
+      }
+
+      // Get the node PID
+      std::array<char, 128> buffer;
+      std::string pid;
+      FILE* pipe = popen(("rosnode info " + it->first +
+                          " 2>/dev/null | grep Pid| cut -d' ' -f2").c_str(), "r");
+      if (!pipe) {
+        it->second = -1;
+        std::string err_msg = "CPU Memory Monitor: Could not open rosnode process for node " + it->first;
+        FF_WARN(err_msg);
+        continue;
+      }
+      while (fgets(buffer.data(), 128, pipe) != NULL) {
+        pid += buffer.data();
+      }
+
+      if (pid.empty()) {
+        // Node not found
+        it->second = -1;
+        std::string err_msg = "CPU Memory Monitor: Specified node " +
+                              it->first + "does not have a PID.";
+        FF_WARN(err_msg);
+        continue;
+      }
+      pclose(pipe);
+      // Insert it on the list
+      it->second = std::stoi(pid);
+    }
+  }
+  return 0;
 }
 
 int CpuMemMonitor::CollectCPUStats() {
@@ -299,47 +388,41 @@ int CpuMemMonitor::CollectCPUStats() {
     virtual_all = guest + guest_nice;
     total = user + nice + system_all + idle_all + steal + virtual_all;
 
-    Load *cpu = (&load_cpus_[i]);
+    // Calculate time difference
+    user_period       = user        - load_cpus_[i].user_time;
+    nice_period       = nice        - load_cpus_[i].nice_time;
+    steal_period      = steal       - load_cpus_[i].steal_time;
+    guest_period      = virtual_all - load_cpus_[i].guest_time;
+    system_all_period = system_all  - load_cpus_[i].system_all_time;
+    total_period      = total       - load_cpus_[i].total_time;
 
-    user_period = user - cpu->user_time;
-    nice_period = nice - cpu->nice_time;
-    // system_period = system - cpu->system_time;
-    // idle_period = idle - cpu->idle_time;
-    // io_period = iowait - cpu->io_time;
-    // irq_period = irq - cpu->irq_time;
-    // soft_irq_period = softirq - cpu->soft_irq_time;
-    steal_period = steal - cpu->steal_time;
-    guest_period = virtual_all - cpu->guest_time;
-    system_all_period = system_all - cpu->system_all_time;
-    // idle_all_period = idle_all - cpu->idle_all_time;
-    total_period = total - cpu->total_time;
-
-    cpu->user_time = user;
-    cpu->nice_time = nice;
-    cpu->system_time = system;
-    cpu->idle_time = idle;
-    cpu->io_time = iowait;
-    cpu->irq_time = irq;
-    cpu->soft_irq_time = softirq;
-    cpu->steal_time = steal;
-    cpu->guest_time = virtual_all;
-    cpu->system_all_time = system_all;
-    cpu->idle_all_time = idle_all;
-    cpu->total_time = total;
+    // Update parameters
+    load_cpus_[i].user_time       = user;
+    load_cpus_[i].nice_time       = nice;
+    load_cpus_[i].system_time     = system;
+    load_cpus_[i].idle_time       = idle;
+    load_cpus_[i].io_time         = iowait;
+    load_cpus_[i].irq_time        = irq;
+    load_cpus_[i].soft_irq_time   = softirq;
+    load_cpus_[i].steal_time      = steal;
+    load_cpus_[i].guest_time      = virtual_all;
+    load_cpus_[i].system_all_time = system_all;
+    load_cpus_[i].idle_all_time   = idle_all;
+    load_cpus_[i].total_time      = total;
 
     // This can happen if android turns the CPU off, for example.
     if (total_period == 0)
       total_period = 1;
 
     double totald = static_cast<double>(total_period);
-    cpu->nice_percentage = nice_period / totald * 100.0d;
-    cpu->user_percentage = user_period / totald * 100.0d;
-    cpu->system_percentage = system_all_period / totald * 100.0d;
-    cpu->virt_percentage = (guest_period + steal_period) / totald * 100.0d;
-    cpu->total_percentage = cpu->nice_percentage +
-                            cpu->user_percentage +
-                            cpu->system_percentage +
-                            cpu->virt_percentage;
+    load_cpus_[i].nice_percentage   = nice_period / totald * 100.0d;
+    load_cpus_[i].user_percentage   = user_period / totald * 100.0d;
+    load_cpus_[i].system_percentage = system_all_period / totald * 100.0d;
+    load_cpus_[i].virt_percentage   = (guest_period + steal_period) / totald * 100.0d;
+    load_cpus_[i].total_percentage  = load_cpus_[i].nice_percentage   +
+                                      load_cpus_[i].user_percentage   +
+                                      load_cpus_[i].system_percentage +
+                                      load_cpus_[i].virt_percentage;
   }
 
   fclose(statf);
@@ -365,6 +448,24 @@ int CpuMemMonitor::CollectCPUStats() {
     cpu_state_msg_.cpus[i].loads[4] = load_cpus_[(i + 1)].total_percentage;
   }
 
+  // Get cpu temperature stats
+  cpu_state_msg_.temp = freq_cpus_.GetTemperature(temperature_scale_);
+
+  // Get cpu frequency stats
+  for (unsigned int i = 0; i < freq_cpus_.GetNumCores(); i++) {
+    Core *c = (freq_cpus_.GetCores())[i];
+
+    cpu_state_msg_.cpus[i].enabled = c->IsOn();
+    cpu_state_msg_.cpus[i].max_frequency = c->GetMaxFreq();
+    cpu_state_msg_.cpus[i].frequency = c->IsOn() ? c->GetCurFreq() : 0;
+  }
+
+  // Add time stamp
+  cpu_state_msg_.header.stamp = ros::Time::now();
+  return 0;
+}
+
+void CpuMemMonitor::AssertCpuStats() {
   // Check to see if the total percentage is greater than the fault threshold
   if (load_cpus_[0].total_percentage > cpu_avg_load_limit_) {
     // Check to see if the fault is in the process of being cleared or is
@@ -402,9 +503,6 @@ int CpuMemMonitor::CollectCPUStats() {
     }
   }
 
-  // Get cpu temperature stats
-  cpu_state_msg_.temp = freq_cpus_.GetTemperature(temperature_scale_);
-
   // Check to see if the temperature is greater than the fault threshold
   if (cpu_state_msg_.temp > cpu_temp_limit_) {
     temp_fault_triggered_ = true;
@@ -419,21 +517,7 @@ int CpuMemMonitor::CollectCPUStats() {
       temp_fault_triggered_ = false;
     }
   }
-
-  // Get cpu frequency stats
-  for (unsigned int i = 0; i < freq_cpus_.GetNumCores(); i++) {
-    Core *c = (freq_cpus_.GetCores())[i];
-
-    cpu_state_msg_.cpus[i].enabled = c->IsOn();
-    cpu_state_msg_.cpus[i].max_frequency = c->GetMaxFreq();
-    cpu_state_msg_.cpus[i].frequency = c->IsOn() ? c->GetCurFreq() : 0;
-  }
-
-  // Add time stamp
-  cpu_state_msg_.header.stamp = ros::Time::now();
-  return 0;
 }
-
 
 int CpuMemMonitor::CollectMemStats() {
   // Update memory info
@@ -458,76 +542,18 @@ int CpuMemMonitor::CollectMemStats() {
                             + mem_state_msg_.ram_used;
 
   mem_load_value_ = mem_state_msg_.ram_used / mem_state_msg_.ram_total * 1e+2;
-  // Get ROS nodes memory useage
-  std::vector<std::string> nodes;
-  ros::master::getNodes(nodes);
 
-  // Get own URI
-  // Check if the node is being executed in this computer
-  // Get URI of the node
-  XmlRpc::XmlRpcValue args, result, payload;
-  args.setSize(2);
-  args[0] = ros::this_node::getName();
-  args[1] = ros::this_node::getName();
-  ros::master::execute("lookupNode", args, result, payload, true);
-  std::string monitor_host = getHostfromURI(result[2]);
-  if (monitor_host.empty()) {
-    ROS_ERROR_STREAM("URI of the memory monitor not valid");
-    return -1;
-  }
-  mem_state_msg_.name = monitor_host;
-  mem_state_msg_.nodes.clear();
   // Go through all the node list and
-  for (uint i = 0; i < nodes.size(); ++i) {
-    // Look for PID if not already on the list
-    if (nodes_pid_.find(nodes[i]) == nodes_pid_.end()) {
-      // Check if the node is being executed in this computer
-      // Get URI of the node
-      args.setSize(2);
-      args[0] = ros::this_node::getName();
-      args[1] = nodes[i];
-      ros::master::execute("lookupNode", args, result, payload, true);
-      std::string node_host = getHostfromURI(result[2]);
-      if (node_host.empty()) {
-        nodes_pid_.insert(std::pair<std::string, int>(nodes[i], -1));
-        continue;
-      }
-
-      // If it is in the same cpu
-      if (node_host != monitor_host) {
-        // Insert it on the list
-        nodes_pid_.insert(std::pair<std::string, int>(nodes[i], -1));
-      }
-
-      // Get the node PID
-      std::array<char, 128> buffer;
-      std::string pid;
-      FILE* pipe = popen(("rosnode info " + nodes[i] + " 2>/dev/null | grep Pid| cut -d' ' -f2").c_str(), "r");
-      if (!pipe) {
-        // Node not found
-        nodes_pid_.insert(std::pair<std::string, int>(nodes[i], -1));
-        continue;
-      }
-      while (fgets(buffer.data(), 128, pipe) != NULL) {
-        pid += buffer.data();
-      }
-
-      if (pid.empty()) {
-        nodes_pid_.insert(std::pair<std::string, int>(nodes[i], -1));
-        continue;
-      }
-      pclose(pipe);
-      // Insert it on the list
-      nodes_pid_.insert(std::pair<std::string, int>(nodes[i], std::stoi(pid)));
-    }
-    // Check that the process is in this computer
-    if (nodes_pid_.find(nodes[i])->second <= 0)
+  mem_state_msg_.nodes.clear();
+  std::map<std::string, int>::iterator it;
+  for ( it = nodes_pid_.begin(); it != nodes_pid_.end(); it++ ) {
+    // Look if PID is invalid
+    if (it->second == -1)
       continue;
-
-    // Get Memory useage
+    // Get Memory useage for individual nodes
     ff_msgs::MemState mem_node;
-    mem_node.name = nodes[i];
-    FILE* file = fopen(("/proc/" + std::to_string(nodes_pid_.find(nodes[i])->second) + "/status").c_str(), "r");
+    mem_node.name = it->first;
+    FILE* file = fopen(("/proc/" + std::to_string(it->second) + "/status").c_str(), "r");
     if (!file) {
       continue;
     }
@@ -600,11 +626,16 @@ void CpuMemMonitor::AssertMemStats() {
 }
 
 void CpuMemMonitor::PublishStatsCallback(ros::TimerEvent const &te) {
+  // Get PIDs of the nodes to monitor
+  GetPIDs();
+
   // Get cpu stats
   if (CollectCPUStats() < 0) {
     ROS_FATAL("CPU node unable to get load stats!");
     return;
   }
+  // Assert cpu stats
+  AssertMemStats();
   // Publish CPU stats
   cpu_state_pub_.publish(cpu_state_msg_);
 
@@ -614,7 +645,7 @@ void CpuMemMonitor::PublishStatsCallback(ros::TimerEvent const &te) {
     ROS_FATAL("Memory node unable to get load stats!");
     return;
   }
-  // Assert Memory stats
+  // Assert memory stats
   AssertMemStats();
   // Publish memory stats
   mem_state_pub_.publish(mem_state_msg_);

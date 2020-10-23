@@ -73,6 +73,9 @@ class CpuMemMonitor : public ff_util::FreeFlyerNodelet {
   bool ReadParams();
 
  private:
+  // Get the PIDs of the nodes to monitor
+  int GetPIDs();
+
   // Assert CPU loads and report if too high
   void AssertCPULoadHighFaultCallback(ros::TimerEvent const& te);
   void ClearCPULoadHighFaultCallback(ros::TimerEvent const& te);
@@ -81,6 +84,8 @@ class CpuMemMonitor : public ff_util::FreeFlyerNodelet {
   void AssertMemLoadHighFaultCallback(ros::TimerEvent const& te);
   void ClearMemLoadHighFaultCallback(ros::TimerEvent const& te);
 
+  // Assert the collected CPU and Memory status
+  void AssertCpuStats();
   void AssertMemStats();
 
   // Collect usage stats about all the CPUs and memory, calculate
