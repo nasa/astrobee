@@ -40,6 +40,8 @@ struct GraphLocalizerParams {
   bool print_factor_info;
   int max_iterations;
   std::string marginals_factorization;
+  bool limit_imu_factor_spacing;
+  double max_imu_factor_spacing;
 };
 }  // namespace graph_localizer
 

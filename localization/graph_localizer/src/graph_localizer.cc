@@ -422,7 +422,18 @@ bool GraphLocalizer::AddOrSplitImuFactorIfNeeded(const lc::Time timestamp) {
   if (timestamp > *latest_timestamp) {
     VLOG(2) << "AddOrSplitImuFactorIfNeeded: Creating and adding latest imu "
                "factor and nav state.";
-    return CreateAndAddLatestImuFactorAndCombinedNavState(timestamp);
+    const double timestamp_difference = timestamp - *latest_timestamp;
+    const double halfway_timestamp = timestamp - timestamp_difference / 2.0;
+    // TODO(rsoussan): This only splits the difference, keep checking and insert as many imu factors as needed to limit
+    // imu spacing?
+    if (params_.limit_imu_factor_spacing && timestamp_difference > params_.max_imu_factor_spacing &&
+        MeasurementRecentEnough(halfway_timestamp)) {
+      VLOG(2) << "AddOrSplitImuFactorIfNeeded: Adding extra imu factor and nav state due to large time difference.";
+      return (CreateAndAddLatestImuFactorAndCombinedNavState(halfway_timestamp) &&
+              CreateAndAddLatestImuFactorAndCombinedNavState(timestamp));
+    } else {
+      return CreateAndAddLatestImuFactorAndCombinedNavState(timestamp);
+    }
   } else {
     VLOG(2) << "AddOrSplitImuFactorIfNeeded: Splitting old imu factor.";
     return SplitOldImuFactorAndAddCombinedNavState(timestamp);
