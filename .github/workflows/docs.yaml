@@ -50,6 +50,7 @@ jobs:
     - name: Generating command dictionary documentation
       run: |
         cd repo
+        mkdir doc/html
         ./scripts/build/genCommandDictionary.py astrobee/commands/freeFlyerPlanSchema.json doc/html/AstrobeeCommandDictionary.html 
     - name: Build Documentation
       run: |
