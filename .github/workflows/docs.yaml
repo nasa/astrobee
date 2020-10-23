@@ -36,6 +36,15 @@ jobs:
         cmake -G "Unix Makefiles" ..
         make
         sudo make install
+    - name: install xgds_planner2
+      run: |
+        git clone https://github.com/xgds/xgds_planner2.git
+        cd xgds_planner2
+        python setup.py install
+    - name: Generating command dictionary documentation
+      run: |
+        cd repo
+        ./scripts/build/genCommandDictionary.py astrobee/commands/freeFlyerPlanSchema.json doc/html/AstrobeeCommandDictionary.html 
     - name: Build Documentation
       run: |
         cd repo

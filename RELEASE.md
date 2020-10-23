@@ -1,4 +1,4 @@
-# Astrobee Robot Software v1
+# Releases
 
 ## Release 0.12.0
 
