@@ -31,6 +31,7 @@ struct LiveMeasurementSimulatorParams {
   std::string bag_name;
   std::string map_file;
   std::string image_topic;
+  bool use_image_features;
 };
 }  // namespace graph_bag
 

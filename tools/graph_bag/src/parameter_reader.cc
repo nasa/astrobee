@@ -34,6 +34,7 @@ void LoadLiveMeasurementSimulatorParams(config_reader::ConfigReader& config, con
   LoadMessageBufferParams("of", config, params.of);
   LoadMessageBufferParams("vl", config, params.vl);
   LoadMessageBufferParams("ar", config, params.ar);
+  params.use_image_features = lc::LoadBool(config, "use_image_features");
   params.bag_name = bag_name;
   params.map_file = map_file;
   params.image_topic = image_topic;

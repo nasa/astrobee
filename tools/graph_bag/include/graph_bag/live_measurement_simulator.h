@@ -69,6 +69,7 @@ class LiveMeasurementSimulator {
   MessageBuffer<ff_msgs::VisualLandmarks> vl_buffer_;
   MessageBuffer<ff_msgs::VisualLandmarks> ar_buffer_;
   localization_common::Time current_time_;
+  LiveMeasurementSimulatorParams params_;
 };
 }  // namespace graph_bag
 
