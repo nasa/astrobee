@@ -285,6 +285,30 @@ def plot_stats(pdf, graph_localization_states, sparse_mapping_poses):
   pdf.savefig()
 
 
+def add_imu_bias_tester_poses(pdf, imu_bias_tester_poses, sparse_mapping_poses): 
+  colors = ['r', 'b', 'g']
+  plt.figure()
+  plot_positions(sparse_mapping_poses, colors, linestyle='None', marker='o', markeredgewidth=0.1, markersize=1.5)
+  plot_positions(imu_bias_tester_poses, colors, linewidth=0.5)
+  plt.xlabel('Time (s)')
+  plt.ylabel('Position (m)')
+  plt.title('Imu Bias Tester vs. Sparse Mapping Position')
+  plt.legend(prop={'size': 6})
+  pdf.savefig()
+  plt.close()
+
+  # orientations
+  plt.figure()
+  plot_orientations(sparse_mapping_poses, colors, linestyle='None', marker='o', markeredgewidth=0.1, markersize=1.5)
+  plot_orientations(imu_bias_tester_poses, colors, linewidth=0.5)
+  plt.xlabel('Time (s)')
+  plt.ylabel('Orienation (deg)')
+  plt.title('Imu Bias Tester vs. Sparse Mapping Orientation')
+  plt.legend(prop={'size': 6})
+  pdf.savefig()
+  plt.close()
+
+
 def add_other_loc_plots(pdf, graph_localization_states, imu_augmented_graph_localization_states):
   add_feature_count_plots(pdf, graph_localization_states)
   add_other_vector3d_plots(pdf, imu_augmented_graph_localization_states)
@@ -317,8 +341,10 @@ def create_plots(bagfile, output_file):
   bag = rosbag.Bag(bagfile)
 
   has_imu_augmented_graph_localization_state = has_topic(bag, '/gnc/ekf')
+  has_imu_bias_tester_poses = has_topic(bag, '/imu_bias_tester')
   sparse_mapping_poses = poses.Poses('Sparse Mapping', '/sparse_mapping/pose')
-  vec_of_poses = [sparse_mapping_poses]
+  imu_bias_tester_poses = poses.Poses('Imu Bias Tester', '/imu_bias_tester/pose')
+  vec_of_poses = [sparse_mapping_poses, imu_bias_tester_poses]
   load_pose_msgs(vec_of_poses, bag)
 
   graph_localization_states = loc_states.LocStates('Graph Localization', '/graph_loc/state')
@@ -334,4 +360,6 @@ def create_plots(bagfile, output_file):
       add_other_loc_plots(pdf, graph_localization_states, imu_augmented_graph_localization_states)
     else:
       add_other_loc_plots(pdf, graph_localization_states, graph_localization_states)
+    if has_imu_bias_tester_poses:
+      add_imu_bias_tester_poses(pdf, imu_bias_tester_poses, sparse_mapping_poses) 
     plot_stats(pdf, graph_localization_states, sparse_mapping_poses)

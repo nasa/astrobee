@@ -30,6 +30,7 @@
 
 #include <memory>
 #include <string>
+#include <vector>
 
 namespace graph_bag {
 // Reads through a bag file and passes relevant messages to graph localizer
