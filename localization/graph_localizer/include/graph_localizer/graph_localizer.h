@@ -50,6 +50,7 @@
 #include <map>
 #include <string>
 #include <utility>
+#include <vector>
 
 namespace graph_localizer {
 namespace sym = gtsam::symbol_shorthand;
@@ -147,6 +148,9 @@ class GraphLocalizer {
   bool MeasurementRecentEnough(const localization_common::Time timestamp) const;
 
   void RemoveOldBufferedFactors(const localization_common::Time oldest_allowed_timestamp);
+
+  std::vector<localization_common::Time> TimestampsToAdd(const localization_common::Time timestamp,
+                                                         const localization_common::Time last_added_timestamp);
 
   template <typename FactorType>
   void DeleteFactors() {

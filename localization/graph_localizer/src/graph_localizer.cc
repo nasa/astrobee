@@ -422,22 +422,41 @@ bool GraphLocalizer::AddOrSplitImuFactorIfNeeded(const lc::Time timestamp) {
   if (timestamp > *latest_timestamp) {
     VLOG(2) << "AddOrSplitImuFactorIfNeeded: Creating and adding latest imu "
                "factor and nav state.";
-    const double timestamp_difference = timestamp - *latest_timestamp;
-    const double halfway_timestamp = timestamp - timestamp_difference / 2.0;
-    // TODO(rsoussan): This only splits the difference, keep checking and insert as many imu factors as needed to limit
-    // imu spacing?
-    if (params_.limit_imu_factor_spacing && timestamp_difference > params_.max_imu_factor_spacing &&
-        MeasurementRecentEnough(halfway_timestamp)) {
-      VLOG(2) << "AddOrSplitImuFactorIfNeeded: Adding extra imu factor and nav state due to large time difference.";
-      return (CreateAndAddLatestImuFactorAndCombinedNavState(halfway_timestamp) &&
-              CreateAndAddLatestImuFactorAndCombinedNavState(timestamp));
-    } else {
-      return CreateAndAddLatestImuFactorAndCombinedNavState(timestamp);
+    const auto timestamps_to_add = TimestampsToAdd(timestamp, *latest_timestamp);
+    if (timestamps_to_add.size() > 1)
+      LOG(ERROR)
+          << "AddOrSplitImuFactorIfNeeded: Adding extra imu factors and nav states due to large time difference.";
+    LOG(ERROR) << std::setprecision(15) << "timestamp: " << timestamp << ", latest: " << *latest_timestamp;
+    bool added_timestamps = true;
+    for (const auto timestamp_to_add : timestamps_to_add) {
+      LOG(ERROR) << "timestamp to add: " << std::setprecision(15) << timestamp_to_add;
+      added_timestamps &= CreateAndAddLatestImuFactorAndCombinedNavState(timestamp_to_add);
     }
+    return added_timestamps;
   } else {
     VLOG(2) << "AddOrSplitImuFactorIfNeeded: Splitting old imu factor.";
     return SplitOldImuFactorAndAddCombinedNavState(timestamp);
   }
+}
+
+std::vector<lc::Time> GraphLocalizer::TimestampsToAdd(const lc::Time timestamp, const lc::Time last_added_timestamp) {
+  if (!params_.limit_imu_factor_spacing) return {timestamp};
+  const double timestamp_difference = timestamp - last_added_timestamp;
+  if (timestamp_difference < params_.max_imu_factor_spacing) return {timestamp};
+  // Evenly distribute timestamps so that the min number is added such that each spacing is <= max_imu_factor_spacing
+  const int num_timestamps_to_add = std::ceil(timestamp_difference / params_.max_imu_factor_spacing);
+  const double timestamps_to_add_spacing = timestamp_difference / num_timestamps_to_add;
+  std::vector<lc::Time> timestamps_to_add;
+  // Add up to final timestamp, insert timestamp argument as final timestamp to ensure no floating point errors occur,
+  // since the final timestamp should exactly match the given timestamp
+  for (int i = 1; i < num_timestamps_to_add; ++i) {
+    const double timestamp_to_add = last_added_timestamp + i * timestamps_to_add_spacing;
+    // TODO(rsoussan): Account for recent enough when calculating spacing?
+    if (MeasurementRecentEnough(timestamp_to_add)) timestamps_to_add.emplace_back(timestamp_to_add);
+  }
+  timestamps_to_add.emplace_back(timestamp);
+
+  return timestamps_to_add;
 }
 
 bool GraphLocalizer::SplitOldImuFactorAndAddCombinedNavState(const lc::Time timestamp) {
