@@ -30,7 +30,7 @@ jobs:
       run: |
         wget http://doxygen.nl/files/doxygen-1.8.20.src.tar.gz
         tar -zxvf doxygen-1.8.20.src.tar.gz
-        cd doxygen
+        cd doxygen-1.8.20
         mkdir build
         cd build
         cmake -G "Unix Makefiles" ..
