@@ -176,7 +176,7 @@ class PerchNodelet : public ff_util::FreeFlyerNodelet {
     // [7] - If the gripper is opened, we move to complete pose.
     fsm_.Add(STATE::PERCHING_OPENING_GRIPPER,
       ARM_SUCCESS, [this](FSM::Event const& event) -> FSM::State {
-        Move(COMPLETE_POSE, ff_msgs::MotionGoal::NOMINAL);
+        Move(COMPLETE_POSE, ff_msgs::MotionGoal::PRECISION);
         return STATE::PERCHING_MOVING_TO_COMPLETE_POSE;
       });
     // [8] - If the complete pose is reached, we close the gripper.
