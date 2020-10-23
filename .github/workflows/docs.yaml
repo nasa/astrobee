@@ -40,7 +40,7 @@ jobs:
       run: |
         git clone https://github.com/xgds/xgds_planner2.git
         cd xgds_planner2
-        python setup.py install
+        sudo python setup.py install
     - name: Generating command dictionary documentation
       run: |
         cd repo
