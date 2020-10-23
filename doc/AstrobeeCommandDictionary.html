@@ -1745,12 +1745,12 @@ td.inner_table {
     <td class="param_choices_value">&quot;Difficult&quot;</td>
   </tr>
   <tr>
-    <td class="param_choices_name">Docking</td>
-    <td class="param_choices_value">&quot;Docking&quot;</td>
+    <td class="param_choices_name">Precision</td>
+    <td class="param_choices_value">&quot;Precision&quot;</td>
   </tr>
 </table>
 </td>
-    <td class="params_notes">Setting the flight mode updates the GN&C gains, hard limits, tolerances, etc., as specified in the world config file. See e.g. astrobee/astrobee/config/worlds/iss.config. Note that executing certain operations, such as docking, automatically switches the flight mode as needed. Values:<ul><li>Off: Turns off propulsion.</li><li>Quiet: Sets propulsion impeller speed to QUIET (low speed) with gains and limits tuned to safely fly within the reduced performance.</li><li>Nominal: Sets propulsion impeller speed to NOMINAL (medium speed), with gains and limits tuned for typical utility flying.</li><li>Difficult: Sets propulsion impeller speed to AGGRESSIVE (high speed), with gains and limits tuned for maximum performance.</li><li>Docking: Sets propulsion impeller speed to AGGRESSIVE, with gains and limits tuned for reliable docking (conservative approach speed, tight position and attitude tolerances).</li></ul></td>
+    <td class="params_notes">Setting the flight mode updates the GN&C gains, hard limits, tolerances, etc., as specified in the world config file. See e.g. astrobee/astrobee/config/worlds/iss.config. Note that executing certain operations, such as docking, automatically switches the flight mode as needed. Values:<ul><li>Off: Turns off propulsion.</li><li>Quiet: Sets propulsion impeller speed to QUIET (low speed) with gains and limits tuned to safely fly within the reduced performance.</li><li>Nominal: Sets propulsion impeller speed to NOMINAL (medium speed), with gains and limits tuned for typical utility flying.</li><li>Difficult: Sets propulsion impeller speed to AGGRESSIVE (high speed), with gains and limits tuned for maximum performance.</li><li>Precision: Sets propulsion impeller speed to AGGRESSIVE, with gains and limits tuned for precise motion (slow speed, tight position and attitude tolerances).</li></ul></td>
   </tr>
   <tr>
     <td class="params_parameter">Target Linear Velocity</td>
