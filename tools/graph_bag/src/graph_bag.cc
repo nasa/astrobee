@@ -127,6 +127,16 @@ void GraphBag::SaveOpticalFlowTracksImage(const sensor_msgs::ImageConstPtr& imag
   results_bag_.write("/" + kFeatureTracksImageTopic_, timestamp, *feature_track_image_msg);
 }
 
+void GraphBag::SaveImuBiasTesterPredictedStates(
+    const std::vector<lc::CombinedNavState>& imu_bias_tester_predicted_states) {
+  for (const auto state : imu_bias_tester_predicted_states) {
+    geometry_msgs::PoseStamped pose_msg;
+    lc::PoseToMsg(state.pose(), pose_msg.pose);
+    lc::TimeToHeader(state.timestamp(), pose_msg.header);
+    results_bag_.write("/" + kImuBiasTesterPoseTopic_ + "/pose", ros::Time(state.timestamp()), pose_msg);
+  }
+}
+
 void GraphBag::SaveLocState(const ff_msgs::EkfState& loc_msg, const std::string& topic) {
   const ros::Time timestamp = lc::RosTimeFromHeader(loc_msg.header);
   results_bag_.write("/" + topic, timestamp, loc_msg);
@@ -142,6 +152,7 @@ void GraphBag::Run() {
     if (imu_msg) {
       graph_localizer_wrapper_.ImuCallback(*imu_msg);
       imu_augmentor_wrapper_.ImuCallback(*imu_msg);
+      imu_bias_tester_wrapper_.ImuCallback(*imu_msg);
 
       // Save imu augmented loc msg if available
       const auto imu_augmented_loc_msg = imu_augmentor_wrapper_.LatestImuAugmentedLocalizationMsg();
@@ -168,6 +179,9 @@ void GraphBag::Run() {
       } else {
         imu_augmentor_wrapper_.LocalizationStateCallback(*localization_msg);
         SaveLocState(*localization_msg, TOPIC_GRAPH_LOC_STATE);
+        const auto imu_bias_tester_predicted_states =
+            imu_bias_tester_wrapper_.LocalizationStateCallback(*localization_msg);
+        SaveImuBiasTesterPredictedStates(imu_bias_tester_predicted_states);
       }
     }
     const auto vl_msg = live_measurement_simulator_->GetVLMessage(current_time);

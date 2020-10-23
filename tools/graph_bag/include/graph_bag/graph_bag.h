@@ -20,6 +20,7 @@
 #define GRAPH_BAG_GRAPH_BAG_H_
 
 #include <camera/camera_params.h>
+#include <graph_bag/imu_bias_tester_wrapper.h>
 #include <graph_bag/live_measurement_simulator.h>
 #include <graph_localizer/graph_localizer_wrapper.h>
 #include <imu_augmentor/imu_augmentor_wrapper.h>
@@ -48,6 +49,8 @@ class GraphBag {
   void SaveSparseMappingPoseMsg(const geometry_msgs::PoseStamped& sparse_mapping_pose_msg);
 
   void SavePose(const geometry_msgs::PoseStamped& latest_pose_msg);
+  void SaveImuBiasTesterPredictedStates(
+      const std::vector<localization_common::CombinedNavState>& imu_bias_tester_predicted_states);
   void SaveLocState(const ff_msgs::EkfState& loc_msg, const std::string& topic);
   void FeatureTrackImage(const graph_localizer::FeatureTrackMap& feature_tracks, cv::Mat& feature_track_image) const;
 
@@ -55,8 +58,10 @@ class GraphBag {
   rosbag::Bag results_bag_;
   graph_localizer::GraphLocalizerWrapper graph_localizer_wrapper_;
   imu_augmentor::ImuAugmentorWrapper imu_augmentor_wrapper_;
+  ImuBiasTesterWrapper imu_bias_tester_wrapper_;
   const bool kSaveFeatureTrackImage_;
   const std::string kFeatureTracksImageTopic_ = "feature_track_image";
+  const std::string kImuBiasTesterPoseTopic_ = "imu_bias_tester";
   std::unique_ptr<camera::CameraParameters> nav_cam_params_;
 };
 }  // end namespace graph_bag
