@@ -341,7 +341,7 @@ def create_plots(bagfile, output_file):
   bag = rosbag.Bag(bagfile)
 
   has_imu_augmented_graph_localization_state = has_topic(bag, '/gnc/ekf')
-  has_imu_bias_tester_poses = has_topic(bag, '/imu_bias_tester')
+  has_imu_bias_tester_poses = has_topic(bag, '/imu_bias_tester/pose')
   sparse_mapping_poses = poses.Poses('Sparse Mapping', '/sparse_mapping/pose')
   imu_bias_tester_poses = poses.Poses('Imu Bias Tester', '/imu_bias_tester/pose')
   vec_of_poses = [sparse_mapping_poses, imu_bias_tester_poses]
