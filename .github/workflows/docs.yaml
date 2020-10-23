@@ -39,6 +39,7 @@ jobs:
     - name: install xgds_planner2
       run: |
         sudo pip install iso8601
+        sudo pip install geocamUtil
         git clone https://github.com/xgds/xgds_planner2.git
         cd xgds_planner2
         sudo python setup.py install
