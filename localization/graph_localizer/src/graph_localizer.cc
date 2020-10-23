@@ -424,12 +424,9 @@ bool GraphLocalizer::AddOrSplitImuFactorIfNeeded(const lc::Time timestamp) {
                "factor and nav state.";
     const auto timestamps_to_add = TimestampsToAdd(timestamp, *latest_timestamp);
     if (timestamps_to_add.size() > 1)
-      LOG(ERROR)
-          << "AddOrSplitImuFactorIfNeeded: Adding extra imu factors and nav states due to large time difference.";
-    LOG(ERROR) << std::setprecision(15) << "timestamp: " << timestamp << ", latest: " << *latest_timestamp;
+      VLOG(2) << "AddOrSplitImuFactorIfNeeded: Adding extra imu factors and nav states due to large time difference.";
     bool added_timestamps = true;
     for (const auto timestamp_to_add : timestamps_to_add) {
-      LOG(ERROR) << "timestamp to add: " << std::setprecision(15) << timestamp_to_add;
       added_timestamps &= CreateAndAddLatestImuFactorAndCombinedNavState(timestamp_to_add);
     }
     return added_timestamps;
