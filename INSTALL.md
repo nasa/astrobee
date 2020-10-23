@@ -30,7 +30,7 @@ If you are a NASA user and want to install the cross-compiler for robot testing 
 
 \subpage install-NASA
 
-### Docker
+## Using Docker
 
 Docker build is also available for Ubuntu 16 and Ubuntu 18, 
 

@@ -56,6 +56,5 @@ Once everything compiles, make sure you commit and push your changes.
 
 The last step is to add the command to the executive. Please make sure you have a full understanding of the executive and operating state classes before adding the command. If you have questions, please contact Katie Hamilton.
 
-\htmlinclude AstrobeeCommandDictionary.html
 
 
