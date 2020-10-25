@@ -17,6 +17,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import plot_helpers
 import poses
 import loc_states
 import utilities
@@ -35,66 +36,11 @@ def l2_map(vector3ds):
   return map(lambda (x, y, z): math.sqrt(x + y + z), zip(vector3ds.xs, vector3ds.ys, vector3ds.zs))
 
 
-def plot_vals(x_axis_vals,
-              vec_of_y_axis_vals,
-              labels,
-              colors,
-              linewidth=1,
-              linestyle='-',
-              marker=None,
-              markeredgewidth=None,
-              markersize=1):
-  for index, _ in enumerate(vec_of_y_axis_vals):
-    plt.plot(x_axis_vals,
-             vec_of_y_axis_vals[index],
-             colors[index],
-             linestyle=linestyle,
-             linewidth=linewidth,
-             marker=marker,
-             markeredgewidth=markeredgewidth,
-             markersize=markersize,
-             label=labels[index])
-
-
-def plot_vector3ds(vector3ds,
-                   times,
-                   label,
-                   colors=['r', 'g', 'b'],
-                   linewidth=1,
-                   linestyle='-',
-                   marker=None,
-                   markeredgewidth=None,
-                   markersize=1):
-  labels = [label + ' (X)', label + ' (Y)', label + ' (Z)']
-  plot_vals(times, [vector3ds.xs, vector3ds.ys, vector3ds.zs], labels, colors, linewidth, linestyle, marker,
-            markeredgewidth, markersize)
-
-
-def plot_positions(poses, colors, linewidth=1, linestyle='-', marker=None, markeredgewidth=None, markersize=1):
-  plot_vector3ds(poses.positions,
-                 poses.times,
-                 poses.pose_type + ' Pos.',
-                 linewidth=linewidth,
-                 linestyle=linestyle,
-                 marker=marker,
-                 markeredgewidth=markeredgewidth,
-                 markersize=markersize)
-
-
-def plot_orientations(poses, colors, linewidth=1, linestyle='-', marker=None, markeredgewidth=None, markersize=1):
-  labels = [
-    poses.pose_type + ' Orientation (Yaw)', poses.pose_type + ' Orientation (Roll)',
-    poses.pose_type + ' Orienation (Pitch)'
-  ]
-  plot_vals(poses.times, [poses.orientations.yaws, poses.orientations.rolls, poses.orientations.pitches], labels,
-            colors, linewidth, linestyle, marker, markeredgewidth, markersize)
-
-
 def add_pose_plots(pdf, sparse_mapping_poses, graph_localization_poses, imu_augmented_graph_localization_poses):
   colors = ['r', 'b', 'g']
   plt.figure()
-  plot_positions(sparse_mapping_poses, colors, linestyle='None', marker='o', markeredgewidth=0.1, markersize=1.5)
-  plot_positions(graph_localization_poses, colors, linewidth=0.5)
+  plot_helpers.plot_positions(sparse_mapping_poses, colors, linestyle='None', marker='o', markeredgewidth=0.1, markersize=1.5)
+  plot_helpers.plot_positions(graph_localization_poses, colors, linewidth=0.5)
   plt.xlabel('Time (s)')
   plt.ylabel('Position (m)')
   plt.title('Graph vs. Sparse Mapping Position')
@@ -104,8 +50,8 @@ def add_pose_plots(pdf, sparse_mapping_poses, graph_localization_poses, imu_augm
 
   # orientations
   plt.figure()
-  plot_orientations(sparse_mapping_poses, colors, linestyle='None', marker='o', markeredgewidth=0.1, markersize=1.5)
-  plot_orientations(graph_localization_poses, colors, linewidth=0.5)
+  plot_helpers.plot_orientations(sparse_mapping_poses, colors, linestyle='None', marker='o', markeredgewidth=0.1, markersize=1.5)
+  plot_helpers.plot_orientations(graph_localization_poses, colors, linewidth=0.5)
   plt.xlabel('Time (s)')
   plt.ylabel('Orienation (deg)')
   plt.title('Graph vs. Sparse Mapping Orientation')
@@ -115,8 +61,8 @@ def add_pose_plots(pdf, sparse_mapping_poses, graph_localization_poses, imu_augm
 
   # Imu Augmented Loc vs. Loc
   plt.figure()
-  plot_positions(graph_localization_poses, colors, marker='o', markeredgewidth=0.1, markersize=1.5)
-  plot_positions(imu_augmented_graph_localization_poses, colors, linewidth=0.5)
+  plot_helpers.plot_positions(graph_localization_poses, colors, marker='o', markeredgewidth=0.1, markersize=1.5)
+  plot_helpers.plot_positions(imu_augmented_graph_localization_poses, colors, linewidth=0.5)
   plt.xlabel('Time (s)')
   plt.ylabel('Position (m)')
   plt.title('Graph vs. Imu Augmented Graph Position')
@@ -126,8 +72,8 @@ def add_pose_plots(pdf, sparse_mapping_poses, graph_localization_poses, imu_augm
 
   # orientations
   plt.figure()
-  plot_orientations(graph_localization_poses, colors, marker='o', markeredgewidth=0.1, markersize=1.5)
-  plot_orientations(imu_augmented_graph_localization_poses, colors, linewidth=0.5)
+  plot_helpers.plot_orientations(graph_localization_poses, colors, marker='o', markeredgewidth=0.1, markersize=1.5)
+  plot_helpers.plot_orientations(imu_augmented_graph_localization_poses, colors, linewidth=0.5)
   plt.xlabel('Time (s)')
   plt.ylabel('Orienation (deg)')
   plt.title('Graph vs. Imu Augmented Graph Orientation')
@@ -181,7 +127,7 @@ def add_feature_count_plots(pdf, graph_localization_states):
 def add_other_vector3d_plots(pdf, imu_augmented_graph_localization_states):
   # Acceleration
   plt.figure()
-  plot_vector3ds(imu_augmented_graph_localization_states.accelerations, imu_augmented_graph_localization_states.times,
+  plot_helpers.plot_vector3ds(imu_augmented_graph_localization_states.accelerations, imu_augmented_graph_localization_states.times,
                  'Acc.')
   plt.xlabel('Time (s)')
   plt.ylabel('Acceleration (m/s^2)')
@@ -192,7 +138,7 @@ def add_other_vector3d_plots(pdf, imu_augmented_graph_localization_states):
 
   # Biases
   plt.figure()
-  plot_vector3ds(imu_augmented_graph_localization_states.accelerometer_biases,
+  plot_helpers.plot_vector3ds(imu_augmented_graph_localization_states.accelerometer_biases,
                  imu_augmented_graph_localization_states.times, 'Acc. Bias')
   plt.xlabel('Time (s)')
   plt.ylabel('Accelerometer Biases')
@@ -202,7 +148,7 @@ def add_other_vector3d_plots(pdf, imu_augmented_graph_localization_states):
   plt.close()
 
   plt.figure()
-  plot_vector3ds(imu_augmented_graph_localization_states.gyro_biases, imu_augmented_graph_localization_states.times,
+  plot_helpers.plot_vector3ds(imu_augmented_graph_localization_states.gyro_biases, imu_augmented_graph_localization_states.times,
                  'Gyro Bias')
   plt.xlabel('Time (s)')
   plt.ylabel('Gyro Biases')
@@ -213,7 +159,7 @@ def add_other_vector3d_plots(pdf, imu_augmented_graph_localization_states):
 
   # Angular Velocity
   plt.figure()
-  plot_vector3ds(imu_augmented_graph_localization_states.angular_velocities,
+  plot_helpers.plot_vector3ds(imu_augmented_graph_localization_states.angular_velocities,
                  imu_augmented_graph_localization_states.times, 'Ang. Vel.')
   plt.xlabel('Time (s)')
   plt.ylabel('Angular Velocities')
@@ -224,7 +170,7 @@ def add_other_vector3d_plots(pdf, imu_augmented_graph_localization_states):
 
   # Velocity
   plt.figure()
-  plot_vector3ds(imu_augmented_graph_localization_states.velocities, imu_augmented_graph_localization_states.times,
+  plot_helpers.plot_vector3ds(imu_augmented_graph_localization_states.velocities, imu_augmented_graph_localization_states.times,
                  'Vel.')
   plt.xlabel('Time (s)')
   plt.ylabel('Velocities')
@@ -288,8 +234,8 @@ def plot_stats(pdf, graph_localization_states, sparse_mapping_poses):
 def add_imu_bias_tester_poses(pdf, imu_bias_tester_poses, sparse_mapping_poses): 
   colors = ['r', 'b', 'g']
   plt.figure()
-  plot_positions(sparse_mapping_poses, colors, linestyle='None', marker='o', markeredgewidth=0.1, markersize=1.5)
-  plot_positions(imu_bias_tester_poses, colors, linewidth=0.5)
+  plot_helpers.plot_positions(sparse_mapping_poses, colors, linestyle='None', marker='o', markeredgewidth=0.1, markersize=1.5)
+  plot_helpers.plot_positions(imu_bias_tester_poses, colors, linewidth=0.5)
   plt.xlabel('Time (s)')
   plt.ylabel('Position (m)')
   plt.title('Imu Bias Tester vs. Sparse Mapping Position')
@@ -299,8 +245,8 @@ def add_imu_bias_tester_poses(pdf, imu_bias_tester_poses, sparse_mapping_poses):
 
   # orientations
   plt.figure()
-  plot_orientations(sparse_mapping_poses, colors, linestyle='None', marker='o', markeredgewidth=0.1, markersize=1.5)
-  plot_orientations(imu_bias_tester_poses, colors, linewidth=0.5)
+  plot_helpers.plot_orientations(sparse_mapping_poses, colors, linestyle='None', marker='o', markeredgewidth=0.1, markersize=1.5)
+  plot_helpers.plot_orientations(imu_bias_tester_poses, colors, linewidth=0.5)
   plt.xlabel('Time (s)')
   plt.ylabel('Orienation (deg)')
   plt.title('Imu Bias Tester vs. Sparse Mapping Orientation')
