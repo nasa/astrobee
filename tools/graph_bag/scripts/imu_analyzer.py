@@ -30,10 +30,12 @@ import numpy as np
 import rosbag
 import geometry_msgs
 
-def get_fft(imu_measurements):
-  magnitude = np.fft.rfft(imu_measurements.accelerations.xs)
-  freq = np.fft.rfftfreq(len(imu_measurements.times),np.diff(imu_measurements.times)[0])
-  return magnitude, freq
+
+def get_fft(values, times):
+  magnitudes = np.fft.rfft(values)
+  frequencies = np.fft.rfftfreq(len(times), np.diff(times)[0])
+  return magnitudes, frequencies
+
 
 def plot_imu_measurements(pdf, imu_measurements, prefix=''):
   # Acceleration
@@ -48,8 +50,7 @@ def plot_imu_measurements(pdf, imu_measurements, prefix=''):
 
   # Angular Velocity
   plt.figure()
-  plot_helpers.plot_vector3ds(imu_measurements.angular_velocities,
-               imu_measurements.times, 'Ang. Vel.')
+  plot_helpers.plot_vector3ds(imu_measurements.angular_velocities, imu_measurements.times, 'Ang. Vel.')
   plt.xlabel('Time (s)')
   plt.ylabel('Angular Velocities')
   plt.title(prefix + 'Angular Velocities')
@@ -57,9 +58,10 @@ def plot_imu_measurements(pdf, imu_measurements, prefix=''):
   pdf.savefig()
   plt.close()
 
+
 def plot_fft(pdf, magnitude, frequency, prefix=''):
   plt.figure()
-  plt.plot(frequency, np.absolute(magnitude), lw = 1)
+  plt.plot(frequency, np.absolute(magnitude), lw=1)
   plt.xlabel('Frequency')
   plt.ylabel('Magnitude')
   plt.title(prefix + 'Acceleration FFT')
@@ -78,9 +80,9 @@ def create_plots(bagfile, output_file):
   load_imu_msgs(measurements, '/hw/imu', bag)
   bag.close()
 
-  # TODO(rsoussan): add option to pass x,y,z!
-  magnitude, frequency = get_fft(measurements)
+  acceleration_x_fft_magnitudes, acceleration_x_fft_frequencies = get_fft(measurements.accelerations.xs,
+                                                                          measurements.times)
 
   with PdfPages(output_file) as pdf:
     plot_imu_measurements(pdf, measurements, 'Raw Imu ')
-    plot_fft(pdf, magnitude, frequency, 'Raw Imu x')
+    plot_fft(pdf, acceleration_x_fft_magnitudes, acceleration_x_fft_frequencies, 'Raw Imu FFT Accel x')
