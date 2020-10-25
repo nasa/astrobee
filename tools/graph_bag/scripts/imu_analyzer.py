@@ -103,7 +103,7 @@ def load_imu_msgs(imu_measurements, imu_topic, bag):
     imu_measurements.add_imu_measurement(msg)
 
 
-def create_plots(bagfile, output_file):
+def create_plots(bagfile, output_file, cutoff_frequency):
   bag = rosbag.Bag(bagfile)
   measurements = imu_measurements.ImuMeasurements()
   load_imu_msgs(measurements, '/hw/imu', bag)
@@ -123,7 +123,6 @@ def create_plots(bagfile, output_file):
                                                                           measurements.times, sample_spacing)
 
   # Filter data
-  cutoff_frequency = 5
   lowpass_filtered_acceleration_x = lowpass_filter(measurements.accelerations.xs, cutoff_frequency, sample_rate)
 
   with PdfPages(output_file) as pdf:

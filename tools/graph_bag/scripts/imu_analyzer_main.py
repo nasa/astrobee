@@ -28,8 +28,9 @@ if __name__ == '__main__':
   parser = argparse.ArgumentParser()
   parser.add_argument('bagfile')
   parser.add_argument('--output-file', default='imu_analyzer_output.pdf')
+  parser.add_argument('-c', '--cutoff-frequency', type=float, default=5.0)
   args = parser.parse_args()
   if not os.path.isfile(args.bagfile):
     print('Bag file ' + args.bagfile + ' does not exist.')
     sys.exit()
-  imu_analyzer.create_plots(args.bagfile, args.output_file)
+  imu_analyzer.create_plots(args.bagfile, args.output_file, args.cutoff_frequency)
