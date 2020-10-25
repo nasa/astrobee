@@ -26,15 +26,31 @@ matplotlib.use('pdf')
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 import numpy as np
+import scipy.signal
 
 import rosbag
 import geometry_msgs
 
 
-def get_fft(values, times):
-  magnitudes = np.fft.rfft(values)
-  frequencies = np.fft.rfftfreq(len(times), np.diff(times)[0])
+def get_fft(data, times, sample_spacing):
+  magnitudes = np.fft.rfft(data)
+  frequencies = np.fft.rfftfreq(len(times), sample_spacing)
   return magnitudes, frequencies
+
+
+def butter_lowpass_sos_representation(cutoff_frequency, sample_rate, order=5):
+  nyquist_rate = 0.5 * sample_rate
+  # From Python Cookbook
+  # TODO(rsoussan): Why is this necessary?
+  critical_frequency = cutoff_frequency / nyquist_rate
+  sos = scipy.signal.butter(order, critical_frequency, btype='low', output='sos', analog=False)
+  return sos
+
+
+def lowpass_filter(data, cutoff_frequency, sample_rate, order=5):
+  sos = butter_lowpass_sos_representation(cutoff_frequency, sample_rate, order=order)
+  filtered_data = scipy.signal.sosfilt(sos, data)
+  return filtered_data
 
 
 def plot_imu_measurements(pdf, imu_measurements, prefix=''):
@@ -61,10 +77,23 @@ def plot_imu_measurements(pdf, imu_measurements, prefix=''):
 
 def plot_fft(pdf, magnitude, frequency, prefix=''):
   plt.figure()
+  plt.ylim(top=100)
   plt.plot(frequency, np.absolute(magnitude), lw=1)
   plt.xlabel('Frequency')
   plt.ylabel('Magnitude')
-  plt.title(prefix + 'Acceleration FFT')
+  plt.title(prefix + ' FFT')
+  pdf.savefig()
+  plt.close()
+
+
+def plot_filtered_data(pdf, filtered_data, data, times, title):
+  plt.figure()
+  plt.plot(times, filtered_data, 'r', alpha=0.5, lw=1, label='Filtered')
+  plt.plot(times, data, 'g', alpha=0.5, lw=1, label='Raw')
+  plt.xlabel('Time (s)')
+  plt.ylabel('Acceleration (m/s^2)')
+  plt.title(title)
+  plt.legend(prop={'size': 6})
   pdf.savefig()
   plt.close()
 
@@ -80,9 +109,27 @@ def create_plots(bagfile, output_file):
   load_imu_msgs(measurements, '/hw/imu', bag)
   bag.close()
 
+  # Assumes samples are evenly spaced in time
+  # This is a fairly safe assumption for imu measurements
+  sample_spacing = np.diff(measurements.times)[0]
+  sample_rate = 1.0 / sample_spacing
+
+  # FFTs
   acceleration_x_fft_magnitudes, acceleration_x_fft_frequencies = get_fft(measurements.accelerations.xs,
-                                                                          measurements.times)
+                                                                          measurements.times, sample_spacing)
+  acceleration_y_fft_magnitudes, acceleration_y_fft_frequencies = get_fft(measurements.accelerations.ys,
+                                                                          measurements.times, sample_spacing)
+  acceleration_z_fft_magnitudes, acceleration_z_fft_frequencies = get_fft(measurements.accelerations.zs,
+                                                                          measurements.times, sample_spacing)
+
+  # Filter data
+  cutoff_frequency = 5
+  lowpass_filtered_acceleration_x = lowpass_filter(measurements.accelerations.xs, cutoff_frequency, sample_rate)
 
   with PdfPages(output_file) as pdf:
     plot_imu_measurements(pdf, measurements, 'Raw Imu ')
-    plot_fft(pdf, acceleration_x_fft_magnitudes, acceleration_x_fft_frequencies, 'Raw Imu FFT Accel x')
+    plot_fft(pdf, acceleration_x_fft_magnitudes, acceleration_x_fft_frequencies, 'Raw Imu FFT Accel x ')
+    plot_fft(pdf, acceleration_y_fft_magnitudes, acceleration_y_fft_frequencies, 'Raw Imu FFT Accel y ')
+    plot_fft(pdf, acceleration_z_fft_magnitudes, acceleration_z_fft_frequencies, 'Raw Imu FFT Accel z ')
+    plot_filtered_data(pdf, lowpass_filtered_acceleration_x, measurements.accelerations.xs, measurements.times,
+                       'Lowpass Filtered Accel x, Cutoff Freq: ' + str(cutoff_frequency) + ' Hz')
