@@ -124,6 +124,8 @@ def create_plots(bagfile, output_file, cutoff_frequency):
 
   # Filter data
   lowpass_filtered_acceleration_x = lowpass_filter(measurements.accelerations.xs, cutoff_frequency, sample_rate)
+  lowpass_filtered_acceleration_y = lowpass_filter(measurements.accelerations.ys, cutoff_frequency, sample_rate)
+  lowpass_filtered_acceleration_z = lowpass_filter(measurements.accelerations.zs, cutoff_frequency, sample_rate)
 
   with PdfPages(output_file) as pdf:
     plot_imu_measurements(pdf, measurements, 'Raw Imu ')
@@ -132,3 +134,7 @@ def create_plots(bagfile, output_file, cutoff_frequency):
     plot_fft(pdf, acceleration_z_fft_magnitudes, acceleration_z_fft_frequencies, 'Raw Imu FFT Accel z ')
     plot_filtered_data(pdf, lowpass_filtered_acceleration_x, measurements.accelerations.xs, measurements.times,
                        'Lowpass Filtered Accel x, Cutoff Freq: ' + str(cutoff_frequency) + ' Hz')
+    plot_filtered_data(pdf, lowpass_filtered_acceleration_y, measurements.accelerations.ys, measurements.times,
+                       'Lowpass Filtered Accel y, Cutoff Freq: ' + str(cutoff_frequency) + ' Hz')
+    plot_filtered_data(pdf, lowpass_filtered_acceleration_z, measurements.accelerations.zs, measurements.times,
+                       'Lowpass Filtered Accel z, Cutoff Freq: ' + str(cutoff_frequency) + ' Hz')
