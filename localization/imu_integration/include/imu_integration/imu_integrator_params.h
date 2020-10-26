@@ -27,7 +27,7 @@ namespace imu_integration {
 struct ImuIntegratorParams {
   gtsam::Vector3 gravity;
   gtsam::Pose3 body_T_imu;
-  // none, test
+  // none, butter
   std::string imu_filter;
   // From gtsam: Angular and velocity random walk expressed in degrees respectively m/s per sqrt(hr).
   double gyro_sigma;

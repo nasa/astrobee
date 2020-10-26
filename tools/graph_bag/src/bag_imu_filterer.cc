@@ -18,7 +18,7 @@
 
 #include <ff_util/ff_names.h>
 #include <graph_bag/bag_imu_filterer.h>
-#include <imu_integration/test_imu_filter.h>
+#include <imu_integration/butterworth_lowpass_imu_filter.h>
 #include <localization_common/utilities.h>
 #include <localization_measurements/imu_measurement.h>
 
@@ -44,8 +44,9 @@ namespace lm = localization_measurements;
 BagImuFilterer::BagImuFilterer(const std::string& bag_name, const std::string& filtered_bag,
                                const std::string& filter_name)
     : bag_(bag_name, rosbag::bagmode::Read), filtered_bag_(filtered_bag, rosbag::bagmode::Write) {
-  if (filter_name == "test") {
-    imu_filter_.reset(new ii::TestImuFilter());
+  if (filter_name == "butter") {
+    imu_filter_.reset(new ii::ButterworthLowpassImuFilter());
+    LOG(INFO) << "BagImuFilterer: Using Butterworth lowpass filter.";
   }
 }
 

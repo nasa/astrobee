@@ -16,8 +16,8 @@
  * under the License.
  */
 
+#include <imu_integration/butterworth_lowpass_imu_filter.h>
 #include <imu_integration/imu_integrator.h>
-#include <imu_integration/test_imu_filter.h>
 #include <imu_integration/utilities.h>
 #include <localization_common/utilities.h>
 
@@ -41,8 +41,9 @@ ImuIntegrator::ImuIntegrator(const ImuIntegratorParams& params) : params_(params
   // Set imu calibration relative pose
   pim_params_->setBodyPSensor(params_.body_T_imu);
 
-  if (params_.imu_filter == "test") {
-    imu_filter_.reset(new TestImuFilter());
+  if (params_.imu_filter == "butter") {
+    imu_filter_.reset(new ButterworthLowpassImuFilter());
+    LOG(INFO) << "ImuIntegrator: Using Butterworth lowpass filter.";
   }
 }
 
