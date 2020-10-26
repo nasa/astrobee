@@ -20,9 +20,9 @@
 #define GRAPH_BAG_BAG_IMU_FILTERER_H_
 
 #include <imu_integration/imu_filter.h>
-#include <imu_integration/test_imu_filter.h>
 
 #include <rosbag/bag.h>
+#include <rosbag/view.h>
 
 #include <string>
 
@@ -31,12 +31,12 @@ namespace graph_bag {
 // Saves output to a new bagfile.
 class BagImuFilterer {
  public:
-  BagImuFilterer(const std::string& bag_name, const std::string& imu_topic, const std::string& filtered_bag,
-                 const std::string& filter_name);
+  BagImuFilterer(const std::string& bag_name, const std::string& filtered_bag, const std::string& filter_name);
   void Convert();
 
  private:
   std::unique_ptr<imu_integration::ImuFilter> imu_filter_;
+  rosbag::Bag bag_;
   rosbag::Bag filtered_bag_;
 };
 }  // end namespace graph_bag

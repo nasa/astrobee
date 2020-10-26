@@ -16,20 +16,36 @@
  * under the License.
  */
 
+#include <ff_util/ff_names.h>
 #include <graph_bag/bag_imu_filterer.h>
+#include <imu_integration/test_imu_filter.h>
 #include <localization_common/utilities.h>
+#include <localization_measurements/imu_measurement.h>
 
 #include <sensor_msgs/Imu.h>
 
 #include <glog/logging.h>
 
+namespace {
+// TODO(rsoussan): Unify this with live measurement simulator, put in utilities
+bool string_ends_with(const std::string& str, const std::string& ending) {
+  if (str.length() >= ending.length()) {
+    return (0 == str.compare(str.length() - ending.length(), ending.length(), ending));
+  } else {
+    return false;
+  }
+}
+}  // namespace
+
 namespace graph_bag {
+namespace ii = imu_integration;
 namespace lc = localization_common;
-BagImuFilterer::BagImuFilterer(const std::string& bag_name, const std::string& imu_topic,
-                               const std::string& filtered_bag, const std::string& filter_name)
+namespace lm = localization_measurements;
+BagImuFilterer::BagImuFilterer(const std::string& bag_name, const std::string& filtered_bag,
+                               const std::string& filter_name)
     : bag_(bag_name, rosbag::bagmode::Read), filtered_bag_(filtered_bag, rosbag::bagmode::Write) {
   if (filter_name == "test") {
-    imu_filter_.reset(new TestImuFilter());
+    imu_filter_.reset(new ii::TestImuFilter());
   }
 }
 
@@ -42,6 +58,7 @@ void BagImuFilterer::Convert() {
       if (!imu_filter_) {
         filtered_bag_.write(m.getTopic(), m.getTime(), m);
       } else {
+        const lm::ImuMeasurement imu_measurement(*imu_msg);
         const auto filtered_imu_measurement = imu_filter_->AddMeasurement(imu_measurement);
         if (filtered_imu_measurement) {
           sensor_msgs::Imu filtered_imu_msg;
