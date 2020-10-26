@@ -53,6 +53,15 @@ def lowpass_filter(data, cutoff_frequency, sample_rate, order=5):
   return filtered_data
 
 
+def filter_imu_measurements(imu_measurements, filtered_imu_measurements, cutoff_frequency, sample_rate):
+  filtered_imu_measurements.accelerations.xs = lowpass_filter(measurements.accelerations.xs, cutoff_frequency,
+                                                              sample_rate)
+  filtered_imu_measurements.accelerations.ys = lowpass_filter(measurements.accelerations.ys, cutoff_frequency,
+                                                              sample_rate)
+  filtered_imu_measurements.accelerations.zs = lowpass_filter(measurements.accelerations.zs, cutoff_frequency,
+                                                              sample_rate)
+
+
 def plot_imu_measurements(pdf, imu_measurements, prefix=''):
   # Acceleration
   plt.figure()
@@ -86,9 +95,9 @@ def plot_fft(pdf, magnitude, frequency, prefix=''):
   plt.close()
 
 
-def plot_filtered_data(pdf, filtered_data, data, times, title):
+def plot_filtered_data(pdf, filtered_data, data, filtered_times, times, title):
   plt.figure()
-  plt.plot(times, filtered_data, 'r', alpha=0.5, lw=1, label='Filtered')
+  plt.plot(filtered_times, filtered_data, 'r', alpha=0.5, lw=1, label='Filtered')
   plt.plot(times, data, 'g', alpha=0.5, lw=1, label='Raw')
   plt.xlabel('Time (s)')
   plt.ylabel('Acceleration (m/s^2)')
@@ -103,7 +112,7 @@ def load_imu_msgs(imu_measurements, imu_topic, bag):
     imu_measurements.add_imu_measurement(msg)
 
 
-def create_plots(bagfile, output_file, cutoff_frequency):
+def create_plots(bagfile, filtered_bagfile, output_file, cutoff_frequency):
   bag = rosbag.Bag(bagfile)
   measurements = imu_measurements.ImuMeasurements()
   load_imu_msgs(measurements, '/hw/imu', bag)
@@ -114,6 +123,15 @@ def create_plots(bagfile, output_file, cutoff_frequency):
   sample_spacing = np.diff(measurements.times)[0]
   sample_rate = 1.0 / sample_spacing
 
+  # Use second bagfile as filtered measurements, otherwise filter with python filter
+  filtered_measurements = imu_measurements.ImuMeasurements()
+  if (filtered_bagfile):
+    filtered_bag = rosbag.Bag(filtered_bagfile)
+    load_imu_msgs(filtered_measurements, '/hw/imu', filtered_bag)
+    filtered_bag.close()
+  else:
+    filtered_measurements = filter_imu_measurements(measurements, cutoff_frequency, sample_rate)
+
   # FFTs
   acceleration_x_fft_magnitudes, acceleration_x_fft_frequencies = get_fft(measurements.accelerations.xs,
                                                                           measurements.times, sample_spacing)
@@ -121,20 +139,27 @@ def create_plots(bagfile, output_file, cutoff_frequency):
                                                                           measurements.times, sample_spacing)
   acceleration_z_fft_magnitudes, acceleration_z_fft_frequencies = get_fft(measurements.accelerations.zs,
                                                                           measurements.times, sample_spacing)
-
-  # Filter data
-  lowpass_filtered_acceleration_x = lowpass_filter(measurements.accelerations.xs, cutoff_frequency, sample_rate)
-  lowpass_filtered_acceleration_y = lowpass_filter(measurements.accelerations.ys, cutoff_frequency, sample_rate)
-  lowpass_filtered_acceleration_z = lowpass_filter(measurements.accelerations.zs, cutoff_frequency, sample_rate)
+  filtered_acceleration_x_fft_magnitudes, filtered_acceleration_x_fft_frequencies = get_fft(
+    filtered_measurements.accelerations.xs, filtered_measurements.times, sample_spacing)
+  filtered_acceleration_y_fft_magnitudes, filtered_acceleration_y_fft_frequencies = get_fft(
+    filtered_measurements.accelerations.ys, filtered_measurements.times, sample_spacing)
+  filtered_acceleration_z_fft_magnitudes, filtered_acceleration_z_fft_frequencies = get_fft(
+    filtered_measurements.accelerations.zs, filtered_measurements.times, sample_spacing)
 
   with PdfPages(output_file) as pdf:
     plot_imu_measurements(pdf, measurements, 'Raw Imu ')
     plot_fft(pdf, acceleration_x_fft_magnitudes, acceleration_x_fft_frequencies, 'Raw Imu FFT Accel x ')
     plot_fft(pdf, acceleration_y_fft_magnitudes, acceleration_y_fft_frequencies, 'Raw Imu FFT Accel y ')
     plot_fft(pdf, acceleration_z_fft_magnitudes, acceleration_z_fft_frequencies, 'Raw Imu FFT Accel z ')
-    plot_filtered_data(pdf, lowpass_filtered_acceleration_x, measurements.accelerations.xs, measurements.times,
-                       'Lowpass Filtered Accel x, Cutoff Freq: ' + str(cutoff_frequency) + ' Hz')
-    plot_filtered_data(pdf, lowpass_filtered_acceleration_y, measurements.accelerations.ys, measurements.times,
-                       'Lowpass Filtered Accel y, Cutoff Freq: ' + str(cutoff_frequency) + ' Hz')
-    plot_filtered_data(pdf, lowpass_filtered_acceleration_z, measurements.accelerations.zs, measurements.times,
-                       'Lowpass Filtered Accel z, Cutoff Freq: ' + str(cutoff_frequency) + ' Hz')
+    plot_filtered_data(pdf, filtered_measurements.accelerations.xs, measurements.accelerations.xs,
+                       filtered_measurements.times, measurements.times, 'Filtered Accel x')
+    plot_filtered_data(pdf, filtered_measurements.accelerations.ys, measurements.accelerations.ys,
+                       filtered_measurements.times, measurements.times, 'Filtered Accel y')
+    plot_filtered_data(pdf, filtered_measurements.accelerations.zs, measurements.accelerations.zs,
+                       filtered_measurements.times, measurements.times, 'Filtered Accel z')
+    plot_fft(pdf, filtered_acceleration_x_fft_magnitudes, filtered_acceleration_x_fft_frequencies,
+             'Filtered Imu FFT Accel x ')
+    plot_fft(pdf, filtered_acceleration_y_fft_magnitudes, filtered_acceleration_y_fft_frequencies,
+             'Filtered Imu FFT Accel y ')
+    plot_fft(pdf, filtered_acceleration_z_fft_magnitudes, filtered_acceleration_z_fft_frequencies,
+             'Filtered Imu FFT Accel z ')

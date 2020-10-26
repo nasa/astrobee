@@ -17,7 +17,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import imu_analyzer 
+import imu_analyzer
 
 import argparse
 
@@ -28,9 +28,14 @@ if __name__ == '__main__':
   parser = argparse.ArgumentParser()
   parser.add_argument('bagfile')
   parser.add_argument('--output-file', default='imu_analyzer_output.pdf')
+  parser.add_argument('-f', '--filtered-bagfile', default='')
+  # Only applicable if filtered_bagfile not provided, uses python filters
   parser.add_argument('-c', '--cutoff-frequency', type=float, default=5.0)
   args = parser.parse_args()
   if not os.path.isfile(args.bagfile):
     print('Bag file ' + args.bagfile + ' does not exist.')
     sys.exit()
-  imu_analyzer.create_plots(args.bagfile, args.output_file, args.cutoff_frequency)
+  if args.filtered_bagfile and not os.path.isfile(args.filtered_bagfile):
+    print('Bag file ' + args.filtered_bagfile + ' does not exist.')
+    sys.exit()
+  imu_analyzer.create_plots(args.bagfile, args.filtered_bagfile, args.output_file, args.cutoff_frequency)
