@@ -336,6 +336,7 @@ Customization: description/description/sensor_imu.urdf.xacro
 
 
 \subpage sim_overview
+
 \subpage sim_issues
+
 \subpage urdf
-\subpage media
