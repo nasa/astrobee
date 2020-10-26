@@ -40,7 +40,20 @@ if __name__ == '__main__':
     for topic, msg, t in bag.read_messages(topics):
       time = msg.header.stamp.secs + msg.header.stamp.nsecs * 1.0e-9
       if last_time != 0 and time - last_time > args.max_time_diff:
-        print('Gap: time: ' + str(time) + ', last_time: ' + str(last_time) + ', diff: ' + str(time - last_time))
+        print('Imu Gap: time: ' + str(time) + ', last_time: ' + str(last_time) + ', diff: ' + str(time - last_time))
         gaps += 1
       last_time = time
-    print('Found ' + str(gaps) + ' gaps.')
+    print('Found ' + str(gaps) + ' imu gaps.')
+
+  topics = ['/mgt/img_sampler/nav_cam/image_record']
+
+  with rosbag.Bag(args.bagfile, 'r') as bag:
+    last_time = 0.0
+    gaps = 0
+    for topic, msg, t in bag.read_messages(topics):
+      time = msg.header.stamp.secs + msg.header.stamp.nsecs * 1.0e-9
+      if last_time != 0 and time - last_time > args.max_time_diff:
+        print('Image Gap: time: ' + str(time) + ', last_time: ' + str(last_time) + ', diff: ' + str(time - last_time))
+        gaps += 1
+      last_time = time
+    print('Found ' + str(gaps) + ' image gaps.')
