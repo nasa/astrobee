@@ -54,12 +54,13 @@ def lowpass_filter(data, cutoff_frequency, sample_rate, order=5):
 
 
 def filter_imu_measurements(imu_measurements, filtered_imu_measurements, cutoff_frequency, sample_rate):
-  filtered_imu_measurements.accelerations.xs = lowpass_filter(measurements.accelerations.xs, cutoff_frequency,
+  filtered_imu_measurements.accelerations.xs = lowpass_filter(imu_measurements.accelerations.xs, cutoff_frequency,
                                                               sample_rate)
-  filtered_imu_measurements.accelerations.ys = lowpass_filter(measurements.accelerations.ys, cutoff_frequency,
+  filtered_imu_measurements.accelerations.ys = lowpass_filter(imu_measurements.accelerations.ys, cutoff_frequency,
                                                               sample_rate)
-  filtered_imu_measurements.accelerations.zs = lowpass_filter(measurements.accelerations.zs, cutoff_frequency,
+  filtered_imu_measurements.accelerations.zs = lowpass_filter(imu_measurements.accelerations.zs, cutoff_frequency,
                                                               sample_rate)
+  filtered_imu_measurements.times = imu_measurements.times
 
 
 def plot_imu_measurements(pdf, imu_measurements, prefix=''):
@@ -130,7 +131,7 @@ def create_plots(bagfile, filtered_bagfile, output_file, cutoff_frequency):
     load_imu_msgs(filtered_measurements, '/hw/imu', filtered_bag)
     filtered_bag.close()
   else:
-    filtered_measurements = filter_imu_measurements(measurements, cutoff_frequency, sample_rate)
+    filter_imu_measurements(measurements, filtered_measurements, cutoff_frequency, sample_rate)
 
   # FFTs
   acceleration_x_fft_magnitudes, acceleration_x_fft_frequencies = get_fft(measurements.accelerations.xs,
