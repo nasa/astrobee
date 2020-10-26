@@ -15,28 +15,23 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef IMU_INTEGRATION_IMU_INTEGRATOR_PARAMS_H_
-#define IMU_INTEGRATION_IMU_INTEGRATOR_PARAMS_H_
 
-#include <gtsam/base/Vector.h>
-#include <gtsam/geometry/Pose3.h>
+#ifndef IMU_INTEGRATION_TEST_IMU_FILTER_H_
+#define IMU_INTEGRATION_TEST_IMU_FILTER_H_
 
-#include <string>
+#include <imu_integration/imu_filter.h>
+#include <localization_measurements/imu_measurement.h>
+
+#include <glog/logging.h>
 
 namespace imu_integration {
-struct ImuIntegratorParams {
-  gtsam::Vector3 gravity;
-  gtsam::Pose3 body_T_imu;
-  // none, test
-  std::string imu_filter;
-  // From gtsam: Angular and velocity random walk expressed in degrees respectively m/s per sqrt(hr).
-  double gyro_sigma;
-  double accel_sigma;
-  double accel_bias_sigma;
-  double gyro_bias_sigma;
-  double integration_variance;
-  double bias_acc_omega_int;
+class TestImuFilter : public ImuFilter {
+ public:
+  TestImuFilter();
+  // Returns filtered measurement if one is available
+  boost::optional<localization_measurements::ImuMeasurement> AddMeasurement(
+      const localization_measurements::ImuMeasurement& imu_measurement) final;
 };
 }  // namespace imu_integration
 
-#endif  // IMU_INTEGRATION_IMU_INTEGRATOR_PARAMS_H_
+#endif  // IMU_INTEGRATION_TEST_IMU_FILTER_H_

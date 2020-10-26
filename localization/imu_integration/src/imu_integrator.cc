@@ -17,6 +17,7 @@
  */
 
 #include <imu_integration/imu_integrator.h>
+#include <imu_integration/test_imu_filter.h>
 #include <imu_integration/utilities.h>
 #include <localization_common/utilities.h>
 
@@ -39,10 +40,22 @@ ImuIntegrator::ImuIntegrator(const ImuIntegratorParams& params) : params_(params
   pim_params_->biasAccOmegaInt = params_.bias_acc_omega_int * gtsam::I_6x6;
   // Set imu calibration relative pose
   pim_params_->setBodyPSensor(params_.body_T_imu);
+
+  if (params_.imu_filter == "test") {
+    imu_filter_.reset(new TestImuFilter());
+  }
 }
 
 void ImuIntegrator::BufferImuMeasurement(const lm::ImuMeasurement& imu_measurement) {
-  measurements_.emplace(imu_measurement.timestamp, imu_measurement);
+  // TODO(rsoussan): Better way to check for imu filter?
+  if (!imu_filter_) {
+    measurements_.emplace(imu_measurement.timestamp, imu_measurement);
+  } else {
+    const auto filtered_imu_measurement = imu_filter_->AddMeasurement(imu_measurement);
+    if (filtered_imu_measurement) {
+      measurements_.emplace(filtered_imu_measurement->timestamp, *filtered_imu_measurement);
+    }
+  }
 }
 
 boost::optional<lc::Time> ImuIntegrator::IntegrateImuMeasurements(const lc::Time start_time, const lc::Time end_time,

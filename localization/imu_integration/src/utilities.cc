@@ -104,6 +104,7 @@ void LoadImuIntegratorParams(config_reader::ConfigReader& config, ImuIntegratorP
   const bool ignore_gravity = lc::LoadBool(config, "ignore_gravity");
   if (ignore_gravity) params.gravity = gtsam::Vector3::Zero();
   params.body_T_imu = lc::LoadTransform(config, "imu_transform");
+  params.imu_filter = lc::LoadString(config, "imu_filter");
   params.gyro_sigma = lc::LoadDouble(config, "gyro_sigma");
   params.accel_sigma = lc::LoadDouble(config, "accel_sigma");
   params.accel_bias_sigma = lc::LoadDouble(config, "accel_bias_sigma");

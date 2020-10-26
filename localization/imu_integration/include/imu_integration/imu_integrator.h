@@ -19,6 +19,7 @@
 #ifndef IMU_INTEGRATION_IMU_INTEGRATOR_H_
 #define IMU_INTEGRATION_IMU_INTEGRATOR_H_
 
+#include <imu_integration/imu_filter.h>
 #include <imu_integration/imu_integrator_params.h>
 
 #include <localization_common/combined_nav_state.h>
@@ -75,6 +76,7 @@ class ImuIntegrator {
   ImuIntegratorParams params_;
   boost::shared_ptr<gtsam::PreintegratedCombinedMeasurements::Params> pim_params_;
   std::map<localization_common::Time, localization_measurements::ImuMeasurement> measurements_;
+  std::unique_ptr<ImuFilter> imu_filter_;
 };
 }  // namespace imu_integration
 
