@@ -97,7 +97,7 @@ option(USE_CCACHE
   ON)
 option(USE_CTC
   "Use cross compile toolchain for making ARM binaries"
-  ON)
+  OFF)
 option(USE_ROS
   "Build the ROS-dependent functionality."
   ON)
