@@ -1,4 +1,4 @@
-\page adding_a_command.md Adding a ground command to the Astrobee FSW
+\page adding_a_command Adding a ground command to the Astrobee FSW
 
 # Introduction
 
@@ -51,6 +51,10 @@ The script will copy the generated files to the correct locations. Please make s
 
 Once everything compiles, make sure you commit and push your changes.
 
+
 # Add to Executive
 
 The last step is to add the command to the executive. Please make sure you have a full understanding of the executive and operating state classes before adding the command. If you have questions, please contact Katie Hamilton.
+
+
+
