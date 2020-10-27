@@ -3,8 +3,6 @@
 name: Build and Push Documentation to gh-pages Branch
 
 on:
-  pull_request:
-    branches: ['develop' ]
   push:
     branches: ['develop']
 
