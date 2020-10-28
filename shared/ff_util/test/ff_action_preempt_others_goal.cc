@@ -196,10 +196,3 @@ TEST(ff_action, preempt_others_goal) {
   client2.Initialize(&nh);
   ros::spin();
 }
-
-// Required for the test framework
-int main(int argc, char **argv) {
-  testing::InitGoogleTest(&argc, argv);
-  ros::init(argc, argv, "ff_action_preempt_others_goal");
-  return RUN_ALL_TESTS();
-}

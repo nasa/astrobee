@@ -155,10 +155,3 @@ TEST(ff_action, nominal_behaviour) {
   // Wait until shutdown is called
   ros::spin();
 }
-
-// Required for the test framework
-int main(int argc, char **argv) {
-  testing::InitGoogleTest(&argc, argv);
-  ros::init(argc, argv, "ff_action_nominal_behaviour");
-  return RUN_ALL_TESTS();
-}

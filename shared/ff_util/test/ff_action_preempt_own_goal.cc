@@ -156,10 +156,3 @@ TEST(ff_action, preempt_own_goal) {
   // Wait until shutdown is called
   ros::spin();
 }
-
-// Required for the test framework
-int main(int argc, char **argv) {
-  testing::InitGoogleTest(&argc, argv);
-  ros::init(argc, argv, "ff_action_preempt_own_goal");
-  return RUN_ALL_TESTS();
-}

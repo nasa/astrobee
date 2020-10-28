@@ -91,10 +91,3 @@ TEST(ff_action, connect_timeout) {
   client.Initialize(&nh);
   ros::spin();
 }
-
-// Required for the test framework
-int main(int argc, char **argv) {
-  testing::InitGoogleTest(&argc, argv);
-  ros::init(argc, argv, "ff_action_connect_timeout");
-  return RUN_ALL_TESTS();
-}
