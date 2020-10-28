@@ -33,6 +33,10 @@
 #include <functional>
 #include <memory>
 
+// Test action response timeout
+// This test sends a goal with a 4 second timeout result. The server does
+// nothing and if a timeout is triggered then the test passes.
+
 // SERVER CALLBACKS
 
 class Server : ff_util::FreeFlyerNodelet {
@@ -124,4 +128,11 @@ TEST(ff_action, response_timeout) {
   server.Initialize(&nh);
   client.Initialize(&nh);
   ros::spin();
+}
+
+// Required for the test framework
+int main(int argc, char **argv) {
+  testing::InitGoogleTest(&argc, argv);
+  ros::init(argc, argv, "ff_action_active_timeout");
+  return RUN_ALL_TESTS();
 }

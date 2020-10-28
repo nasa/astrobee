@@ -65,19 +65,46 @@ if (CATKIN_ENABLE_TESTING)
 
   # ff_action
 
-  add_rostest_gtest(ff_action
-    test/ff_action.test
-    test/ff_action.cc
-    test/ff_action_nominal_behaviour.cc
-    test/ff_action_active_timeout.cc
-    test/ff_action_cancel_own_goal.cc
-    test/ff_action_connect_timeout.cc
-    test/ff_action_deadline_timeout.cc
-    test/ff_action_preempt_others_goal.cc
-    test/ff_action_preempt_own_goal.cc
-    test/ff_action_response_timeout.cc)
+  add_rostest_gtest(ff_action_nominal_behaviour
+    test/ff_action_nominal_behaviour.test
+    test/ff_action_nominal_behaviour.cc)
+  target_link_libraries(ff_action_nominal_behaviour ff_nodelet ${catkin_LIBRARIES})
 
-  target_link_libraries(ff_action ff_nodelet ${catkin_LIBRARIES})
+  add_rostest_gtest(ff_action_active_timeout
+    test/ff_action_active_timeout.test
+    test/ff_action_active_timeout.cc)
+  target_link_libraries(ff_action_active_timeout ff_nodelet ${catkin_LIBRARIES})
+
+  add_rostest_gtest(ff_action_cancel_own_goal
+    test/ff_action_cancel_own_goal.test
+    test/ff_action_cancel_own_goal.cc)
+  target_link_libraries(ff_action_cancel_own_goal ff_nodelet ${catkin_LIBRARIES})
+
+  add_rostest_gtest(ff_action_connect_timeout
+    test/ff_action_connect_timeout.test
+    test/ff_action_connect_timeout.cc)
+  target_link_libraries(ff_action_connect_timeout ff_nodelet ${catkin_LIBRARIES})
+
+  add_rostest_gtest(ff_action_deadline_timeout
+    test/ff_action_deadline_timeout.test
+    test/ff_action_deadline_timeout.cc)
+  target_link_libraries(ff_action_deadline_timeout ff_nodelet ${catkin_LIBRARIES})
+
+  add_rostest_gtest(ff_action_preempt_others_goal
+    test/ff_action_preempt_others_goal.test
+    test/ff_action_preempt_others_goal.cc)
+  target_link_libraries(ff_action_preempt_others_goal ff_nodelet ${catkin_LIBRARIES})
+
+  add_rostest_gtest(ff_action_preempt_own_goal
+    test/ff_action_preempt_own_goal.test
+    test/ff_action_preempt_own_goal.cc)
+  target_link_libraries(ff_action_preempt_own_goal ff_nodelet ${catkin_LIBRARIES})
+
+  add_rostest_gtest(ff_action_response_timeout
+    test/ff_action_response_timeout.test
+    test/ff_action_response_timeout.cc)
+  target_link_libraries(ff_action_response_timeout ff_nodelet ${catkin_LIBRARIES})
+
 
 endif()
 

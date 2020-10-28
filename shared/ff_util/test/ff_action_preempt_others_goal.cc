@@ -16,6 +16,11 @@
  * under the License.
  */
 
+// Test action preempt others goal
+// Client #1 sends a goal on the server connected callback. Client #2 starts a timer
+// on the server connected callback. When the timer triggers, the action is preempted.
+// The test is successful if Client #1 receives the result that the action was preempted.
+
 // Required for the test framework
 #include <gtest/gtest.h>
 
@@ -195,4 +200,11 @@ TEST(ff_action, preempt_others_goal) {
   client1.Initialize(&nh);
   client2.Initialize(&nh);
   ros::spin();
+}
+
+// Required for the test framework
+int main(int argc, char **argv) {
+  testing::InitGoogleTest(&argc, argv);
+  ros::init(argc, argv, "ff_action_active_timeout");
+  return RUN_ALL_TESTS();
 }

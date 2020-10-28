@@ -16,6 +16,10 @@
  * under the License.
  */
 
+// Tests action connect timeout
+// In this test a server is not spawned, therefore the client can't connect.
+// This test passes if a timeout on connect result is issued.
+
 // Required for the test framework
 #include <gtest/gtest.h>
 
@@ -90,4 +94,11 @@ TEST(ff_action, connect_timeout) {
   ros::NodeHandle nh("~");
   client.Initialize(&nh);
   ros::spin();
+}
+
+// Required for the test framework
+int main(int argc, char **argv) {
+  testing::InitGoogleTest(&argc, argv);
+  ros::init(argc, argv, "ff_action_active_timeout");
+  return RUN_ALL_TESTS();
 }

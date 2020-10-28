@@ -16,6 +16,11 @@
  * under the License.
  */
 
+// Test action deadline timeout
+// In this test the client sends a goal when the server connects. The deadline
+// for the action is set to 10 seconds. After the 10 seconds, even if it receives
+// feedback, given that no result was issued, a deadline timeout is issued.
+
 // Required for the test framework
 #include <gtest/gtest.h>
 
@@ -134,4 +139,11 @@ TEST(ff_action, deadline_timeout) {
   server.Initialize(&nh);
   client.Initialize(&nh);
   ros::spin();
+}
+
+// Required for the test framework
+int main(int argc, char **argv) {
+  testing::InitGoogleTest(&argc, argv);
+  ros::init(argc, argv, "ff_action_active_timeout");
+  return RUN_ALL_TESTS();
 }

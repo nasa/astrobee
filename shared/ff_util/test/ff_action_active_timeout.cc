@@ -16,6 +16,11 @@
  * under the License.
  */
 
+// Tests action active timeout
+// This tests allows the client to connect to the server, and then kills the
+// server. When a goal is sent to the server, after 4 seconds, an active
+// timeout result should be triggered showing that it did not receive the goal.
+
 // Required for the test framework
 #include <gtest/gtest.h>
 
@@ -131,4 +136,11 @@ TEST(ff_action, active_timeout) {
   server->Initialize(&nh);
   client.Initialize(&nh);
   ros::spin();
+}
+
+// Required for the test framework
+int main(int argc, char **argv) {
+  testing::InitGoogleTest(&argc, argv);
+  ros::init(argc, argv, "ff_action_active_timeout");
+  return RUN_ALL_TESTS();
 }

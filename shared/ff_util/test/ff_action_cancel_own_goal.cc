@@ -16,6 +16,12 @@
  * under the License.
  */
 
+// Test action cancel own goal
+// In this test the client sends a goal when the server connects. After the
+// action is active (ActiveCallback) a timer starts, 2 seconds later it
+// sends a cancel goal. The test is successful if the server cancels the goal.
+// If 2 seconds pass and the action was not cancelled it fails.
+
 // Required for the test framework
 #include <gtest/gtest.h>
 
@@ -55,6 +61,8 @@ class Server : ff_util::FreeFlyerNodelet {
 
   void CancelCallback() {
     ROS_INFO("S:CancelCallback()");
+    // Success
+    ros::shutdown();
   }
 
   void PreemptCallback() {
@@ -132,8 +140,8 @@ class Client : ff_util::FreeFlyerNodelet {
 
   // Timer callback
   void TimerWaitCallback(ros::TimerEvent const& event) {
-    timer_wait_.stop();
-    ros::shutdown();
+    // It did not cancel the goal, ending the test
+    EXPECT_TRUE(false);
   }
 
  private:
@@ -154,4 +162,11 @@ TEST(ff_action, cancel_own_goal) {
   server.Initialize(&nh);
   // Wait until shutdown is called
   ros::spin();
+}
+
+// Required for the test framework
+int main(int argc, char **argv) {
+  testing::InitGoogleTest(&argc, argv);
+  ros::init(argc, argv, "ff_action_active_timeout");
+  return RUN_ALL_TESTS();
 }
