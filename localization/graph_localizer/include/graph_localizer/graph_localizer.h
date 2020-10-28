@@ -44,6 +44,7 @@
 #include <gtsam/nonlinear/Marginals.h>
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
 #include <gtsam/slam/SmartFactorParams.h>
+#include <gtsam/slam/SmartProjectionPoseFactor.h>
 
 #include <boost/serialization/serialization.hpp>
 
@@ -56,7 +57,8 @@ namespace graph_localizer {
 namespace sym = gtsam::symbol_shorthand;
 using Calibration = gtsam::Cal3_S2;
 using Camera = gtsam::PinholeCamera<Calibration>;
-using SmartFactor = gtsam::RobustSmartProjectionPoseFactor<Calibration>;
+using SmartFactor = gtsam::SmartProjectionPoseFactor<Calibration>;
+using RobustSmartFactor = gtsam::RobustSmartProjectionPoseFactor<Calibration>;
 using SharedSmartFactor = boost::shared_ptr<SmartFactor>;
 
 class GraphLocalizer {

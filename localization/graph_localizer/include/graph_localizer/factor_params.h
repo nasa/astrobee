@@ -33,6 +33,7 @@ struct FactorParams {
   std::string degeneracy_mode;
   std::string linearization_mode;
   bool verbose_cheirality;
+  bool robust_smart_factor;
   // Combined Imu factors
   bool bias_prior;
   // Loc factors
