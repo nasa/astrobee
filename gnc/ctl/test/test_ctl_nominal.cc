@@ -16,6 +16,11 @@
  * under the License.
  */
 
+// Test ctl nominal
+// This test starts the entire simulation stack. Once the ekf acquired position
+// and published, a goal is sent to the controller for 3 poses. When the goal
+// is executed and finished, the test passes if result is SUCCESS
+
 // Required for the test framework
 #include <gtest/gtest.h>
 
@@ -30,8 +35,8 @@
 #include <memory>
 
 // Publisher and subscribers
-ros::Subscriber sub;
-std::shared_ptr<actionlib::SimpleActionClient<ff_msgs::ControlAction>> ac;
+ros::Subscriber sub_;
+std::shared_ptr<actionlib::SimpleActionClient<ff_msgs::ControlAction>> ac_;
 
 // Called once when the goal completes
 void Done(const actionlib::SimpleClientGoalState& state,
@@ -49,7 +54,7 @@ void Feedback(const ff_msgs::ControlFeedbackConstPtr& feedback) {}
 // When new state info is available
 void StateCallback(const ff_msgs::EkfStateConstPtr& state) {
   // Only one message wanted
-  sub.shutdown();
+  sub_.shutdown();
   // Send the Goal
   ROS_INFO("Sending goal to move to a pose");
   ff_msgs::ControlGoal goal;
@@ -95,7 +100,7 @@ void StateCallback(const ff_msgs::EkfStateConstPtr& state) {
   t3.pose.orientation.w = 0.999983;
   goal.segment.push_back(t3);
   // Send the goal!
-  ac->sendGoal(goal, &Done, &Active, &Feedback);
+  ac_->sendGoal(goal, &Done, &Active, &Feedback);
 }
 
 // Holonomic test
@@ -103,15 +108,15 @@ TEST(ctl_nominal, Holonomic) {
   // The default namespace is given by the group hierarchy in the launch file
   ros::NodeHandle nh;
   // Wait for the servcer
-  ac = std::shared_ptr<actionlib::SimpleActionClient<ff_msgs::ControlAction>>(
+  ac_ = std::shared_ptr<actionlib::SimpleActionClient<ff_msgs::ControlAction>>(
     new actionlib::SimpleActionClient<ff_msgs::ControlAction>(
       nh, ACTION_GNC_CTL_CONTROL, true));
   ROS_INFO("Waiting for action server to start.");
-  ac->waitForServer();
+  ac_->waitForServer();
   ROS_INFO("Action server started, sending goal.");
   // Syaty the node handle and wait for the state
   ros::NodeHandle n;
-  sub = n.subscribe(TOPIC_GNC_EKF, 1000, &StateCallback);
+  sub_ = n.subscribe(TOPIC_GNC_EKF, 1000, &StateCallback);
   ros::spin();
 }
 
