@@ -71,6 +71,22 @@ class RobustSmartProjectionPoseFactor : public SmartProjectionPoseFactor<CALIBRA
     return createRegularJacobianFactorSVD<Dim, ZDim>(this->keys(), F, E0, b, n);
   }
 
+  double error(const Values& values) const override {
+    if (this->active(values)) {
+      try {
+        // Multiply by 2 since totalReporjectionError divides mahal distance by 2, and robust_model_->loss
+        // expects mahal distance
+        return robust_model_->loss(2.0 * this->totalReprojectionError(this->cameras(values)));
+      } catch (...) {
+        // Catch cheirality and other errors, zero on errors
+        // TODO(rsoussan): Make as inactive instead of zero?
+        return 0.0;
+      }
+    } else {  // else of active flag
+      return 0.0;
+    }
+  }
+
  private:
   template <size_t D, size_t ZDim>
   boost::shared_ptr<RegularJacobianFactor<D>> createRegularJacobianFactorSVD(
@@ -111,7 +127,6 @@ class RobustSmartProjectionPoseFactor : public SmartProjectionPoseFactor<CALIBRA
   SharedIsotropic noiseModel_;
   gtsam::noiseModel::Robust::shared_ptr robust_model_;
 };
-// TODO(rsoussan): catch errors!
 }  // namespace gtsam
 
 #endif  // GRAPH_LOCALIZER_ROBUST_SMART_PROJECTION_POSE_FACTOR_H_
