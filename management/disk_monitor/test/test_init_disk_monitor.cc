@@ -28,6 +28,14 @@
 
 #include <ros/ros.h>
 
+// Test initialization disk monitor llp
+// These initialization tests make sure the node is spawned. To do so,
+// it spawns the node and the system manager. The node uses the wrong folder
+// for the config files on purpose, which it will make it unable to read the
+// config files. Because the node can't read the config files it triggers the
+// initialization anomaly to the system monitor. Is this anomaly is issued
+// within 2 seconds, then the test passes.
+
 bool test_done = false;
 ff_msgs::FaultStateConstPtr fault_state;
 int init_fault_id = -1;
