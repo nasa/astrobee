@@ -52,6 +52,9 @@ class RobustSmartProjectionPoseFactor : public SmartProjectionPoseFactor<CALIBRA
     SharedIsotropic sharedIsotropic = boost::dynamic_pointer_cast<noiseModel::Isotropic>(sharedNoiseModel);
     if (!sharedIsotropic) throw std::runtime_error("RobustSmartProjectionPoseFactor: needs isotropic");
     noiseModel_ = sharedIsotropic;
+    // robust_model_ = graph_localizer::Robust(sharedNoiseModel);
+    robust_model_ = gtsam::noiseModel::Robust::Create(
+        gtsam::noiseModel::mEstimator::Huber::Create(1.345 /*Taken from gtsam*/), sharedNoiseModel);
   }
 
   boost::shared_ptr<GaussianFactor> linearize(const Values& values) const override {
@@ -65,7 +68,6 @@ class RobustSmartProjectionPoseFactor : public SmartProjectionPoseFactor<CALIBRA
     Matrix E0(M, M - 3);
     this->computeJacobiansSVD(F, E0, b, cameras, *(this->point()));
     SharedIsotropic n = noiseModel::Isotropic::Sigma(M - 3, noiseModel_->sigma());
-    // return boost::make_shared<RobustJacobianFactorSVD<Dim, ZDim> >(this->keys(), F, E0, b, n);
     return createRegularJacobianFactorSVD<Dim, ZDim>(this->keys(), F, E0, b, n);
   }
 
@@ -76,18 +78,26 @@ class RobustSmartProjectionPoseFactor : public SmartProjectionPoseFactor<CALIBRA
       const std::vector<Eigen::Matrix<double, ZDim, D>, Eigen::aligned_allocator<Eigen::Matrix<double, ZDim, D>>>&
           Fblocks,
       const Matrix& Enull, const Vector& b, const SharedDiagonal& model = SharedDiagonal()) const {
-    // typedef Eigen::Matrix<double, ZDim, D> MatrixZD;  // e.g 2 x 6 with Z=Point2
     typedef std::pair<Key, Matrix> KeyMatrix;
 
     size_t numKeys = Enull.rows() / ZDim;
     size_t m2 = ZDim * numKeys - 3;  // TODO(gtsam): is this not just Enull.rows()?
+    std::vector<Matrix> reduced_matrices;
+    reduced_matrices.reserve(numKeys);
+    for (size_t k = 0; k < Fblocks.size(); ++k) {
+      reduced_matrices.push_back((Enull.transpose()).block(0, ZDim * k, m2, ZDim) * Fblocks[k]);
+    }
+
+    Vector robust_reduced_error = Enull.transpose() * b;
+    robust_model_->WhitenSystem(reduced_matrices, robust_reduced_error);
+
     std::vector<KeyMatrix> QF;
     QF.reserve(numKeys);
     for (size_t k = 0; k < Fblocks.size(); ++k) {
       Key key = keys[k];
-      QF.push_back(KeyMatrix(key, (Enull.transpose()).block(0, ZDim * k, m2, ZDim) * Fblocks[k]));
+      QF.push_back(KeyMatrix(key, reduced_matrices[k]));
     }
-    return boost::make_shared<RegularJacobianFactor<D>>(QF, Enull.transpose() * b, model);
+    return boost::make_shared<RegularJacobianFactor<D>>(QF, robust_reduced_error, model);
   }
 
   /// Serialization function
@@ -99,6 +109,7 @@ class RobustSmartProjectionPoseFactor : public SmartProjectionPoseFactor<CALIBRA
   }
 
   SharedIsotropic noiseModel_;
+  gtsam::noiseModel::Robust::shared_ptr robust_model_;
 };
 // TODO(rsoussan): catch errors!
 }  // namespace gtsam
