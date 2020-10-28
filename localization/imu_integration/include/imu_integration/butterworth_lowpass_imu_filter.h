@@ -34,9 +34,14 @@ class ButterworthLowpassImuFilter : public ImuFilter {
       const localization_measurements::ImuMeasurement& imu_measurement) final;
 
  private:
-  ButterworthLowpassFilter accel_x_filter_;
-  ButterworthLowpassFilter accel_y_filter_;
-  ButterworthLowpassFilter accel_z_filter_;
+  // Acceleration Filters
+  ButterworthLowpassFilter acceleration_x_filter_;
+  ButterworthLowpassFilter acceleration_y_filter_;
+  ButterworthLowpassFilter acceleration_z_filter_;
+  // Angular Velocity Filters
+  ButterworthLowpassFilter angular_velocity_x_filter_;
+  ButterworthLowpassFilter angular_velocity_y_filter_;
+  ButterworthLowpassFilter angular_velocity_z_filter_;
 };
 }  // namespace imu_integration
 
