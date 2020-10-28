@@ -25,6 +25,7 @@
 #include <graph_localizer/graph_localizer_params.h>
 #include <graph_localizer/graph_values.h>
 #include <graph_localizer/key_info.h>
+#include <graph_localizer/robust_smart_projection_pose_factor.h>
 #include <imu_integration/latest_imu_integrator.h>
 #include <localization_common/combined_nav_state.h>
 #include <localization_common/combined_nav_state_covariances.h>
@@ -43,7 +44,6 @@
 #include <gtsam/nonlinear/Marginals.h>
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
 #include <gtsam/slam/SmartFactorParams.h>
-#include <gtsam/slam/SmartProjectionPoseFactor.h>
 
 #include <boost/serialization/serialization.hpp>
 
@@ -56,7 +56,7 @@ namespace graph_localizer {
 namespace sym = gtsam::symbol_shorthand;
 using Calibration = gtsam::Cal3_S2;
 using Camera = gtsam::PinholeCamera<Calibration>;
-using SmartFactor = gtsam::SmartProjectionPoseFactor<Calibration>;
+using SmartFactor = gtsam::RobustSmartProjectionPoseFactor<Calibration>;
 using SharedSmartFactor = boost::shared_ptr<SmartFactor>;
 
 class GraphLocalizer {
