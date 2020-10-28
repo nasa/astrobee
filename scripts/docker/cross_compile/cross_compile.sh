@@ -25,8 +25,11 @@
 
 # Base docker image copies over the toolchain and rootfs, resulting from
 # the NASA_INSTALL.md instructions. Also installs minimum dependencies
-echo "Build context for base: "${ARMHF_CHROOT_DIR/../}
-docker build $ARMHF_CHROOT_DIR/../ -f scripts/docker/cross_compile/astrobee_base_cross.Dockerfile -t astrobee/astrobee:base-cross
+# echo "Build context for base: "${ARMHF_TOOLCHAIN}
+# docker build $ARMHF_TOOLCHAIN -f scripts/docker/cross_compile/astrobee_base_toolchain.Dockerfile -t astrobee/astrobee:base-toolchain
+
+# echo "Build context for base: "${ARMHF_CHROOT_DIR}
+# docker build $ARMHF_CHROOT_DIR -f scripts/docker/cross_compile/astrobee_base_rootfs.Dockerfile -t astrobee/astrobee:base-cross
 
 # Cross-compiles the code
 thisdir=$(dirname "$(readlink -f "$0")")

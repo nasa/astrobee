@@ -1,7 +1,7 @@
 # This will set up an Astrobee docker container using the non-NASA install instructions.
 # You must set the docker context to be the repository root directory
 
-FROM ubuntu:16.04
+FROM astrobee/astrobee:base-toolchain
 
 # install of apt-utils suppresses bogus warnings later
 RUN apt-get update \
@@ -17,7 +17,5 @@ RUN apt-get update \
   && rm -rf /var/lib/apt/lists/*
 
 # Copy over the rootfs
-COPY rootfs /arm_cross/rootfs
+COPY . /arm_cross/rootfs
 
-# Copy over the toolchain
-COPY toolchain/gcc /arm_cross/toolchain/gcc
