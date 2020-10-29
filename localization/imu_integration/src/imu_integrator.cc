@@ -16,7 +16,6 @@
  * under the License.
  */
 
-#include <imu_integration/butterworth_lowpass_imu_filter.h>
 #include <imu_integration/imu_integrator.h>
 #include <imu_integration/utilities.h>
 #include <localization_common/utilities.h>
@@ -26,7 +25,8 @@
 namespace imu_integration {
 namespace lc = localization_common;
 namespace lm = localization_measurements;
-ImuIntegrator::ImuIntegrator(const ImuIntegratorParams& params) : params_(params) {
+ImuIntegrator::ImuIntegrator(const ImuIntegratorParams& params)
+    : params_(params), imu_filter_(new ImuFilter(params.filter)) {
   VLOG(2) << "ImuIntegrator: Gravity vector: " << std::endl << params_.gravity.matrix();
   pim_params_.reset(new gtsam::PreintegratedCombinedMeasurements::Params(params_.gravity));
   // Set sensor covariances
@@ -40,22 +40,12 @@ ImuIntegrator::ImuIntegrator(const ImuIntegratorParams& params) : params_(params
   pim_params_->biasAccOmegaInt = params_.bias_acc_omega_int * gtsam::I_6x6;
   // Set imu calibration relative pose
   pim_params_->setBodyPSensor(params_.body_T_imu);
-
-  if (params_.imu_filter == "butter") {
-    imu_filter_.reset(new ButterworthLowpassImuFilter());
-    LOG(INFO) << "ImuIntegrator: Using Butterworth lowpass filter.";
-  }
 }
 
 void ImuIntegrator::BufferImuMeasurement(const lm::ImuMeasurement& imu_measurement) {
-  // TODO(rsoussan): Better way to check for imu filter?
-  if (!imu_filter_) {
-    measurements_.emplace(imu_measurement.timestamp, imu_measurement);
-  } else {
-    const auto filtered_imu_measurement = imu_filter_->AddMeasurement(imu_measurement);
-    if (filtered_imu_measurement) {
-      measurements_.emplace(filtered_imu_measurement->timestamp, *filtered_imu_measurement);
-    }
+  const auto filtered_imu_measurement = imu_filter_->AddMeasurement(imu_measurement);
+  if (filtered_imu_measurement) {
+    measurements_.emplace(filtered_imu_measurement->timestamp, *filtered_imu_measurement);
   }
 }
 

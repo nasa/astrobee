@@ -18,7 +18,7 @@
 
 #include <ff_util/ff_names.h>
 #include <graph_bag/bag_imu_filterer.h>
-#include <imu_integration/butterworth_lowpass_imu_filter.h>
+#include <imu_integration/imu_filter_params.h>
 #include <localization_common/utilities.h>
 #include <localization_measurements/imu_measurement.h>
 
@@ -44,10 +44,9 @@ namespace lm = localization_measurements;
 BagImuFilterer::BagImuFilterer(const std::string& bag_name, const std::string& filtered_bag,
                                const std::string& filter_name)
     : bag_(bag_name, rosbag::bagmode::Read), filtered_bag_(filtered_bag, rosbag::bagmode::Write) {
-  if (filter_name == "butter") {
-    imu_filter_.reset(new ii::ButterworthLowpassImuFilter());
-    LOG(INFO) << "BagImuFilterer: Using Butterworth lowpass filter.";
-  }
+  ii::ImuFilterParams params;
+  params.type = filter_name;
+  imu_filter_.reset(new ii::ImuFilter(params));
 }
 
 void BagImuFilterer::Convert() {
@@ -56,19 +55,15 @@ void BagImuFilterer::Convert() {
     // Convert imu message to filtered imu message
     if (string_ends_with(m.getTopic(), TOPIC_HARDWARE_IMU)) {
       sensor_msgs::ImuConstPtr imu_msg = m.instantiate<sensor_msgs::Imu>();
-      if (!imu_filter_) {
-        filtered_bag_.write(m.getTopic(), m.getTime(), m);
-      } else {
-        const lm::ImuMeasurement imu_measurement(*imu_msg);
-        const auto filtered_imu_measurement = imu_filter_->AddMeasurement(imu_measurement);
-        if (filtered_imu_measurement) {
-          sensor_msgs::Imu filtered_imu_msg;
-          lc::VectorToMsg(filtered_imu_measurement->acceleration, filtered_imu_msg.linear_acceleration);
-          lc::VectorToMsg(filtered_imu_measurement->angular_velocity, filtered_imu_msg.angular_velocity);
-          lc::TimeToHeader(filtered_imu_measurement->timestamp, filtered_imu_msg.header);
-          // TODO(rsoussan): Change receive timestamp to account for filter delay?
-          filtered_bag_.write(m.getTopic(), m.getTime(), filtered_imu_msg);
-        }
+      const lm::ImuMeasurement imu_measurement(*imu_msg);
+      const auto filtered_imu_measurement = imu_filter_->AddMeasurement(imu_measurement);
+      if (filtered_imu_measurement) {
+        sensor_msgs::Imu filtered_imu_msg;
+        lc::VectorToMsg(filtered_imu_measurement->acceleration, filtered_imu_msg.linear_acceleration);
+        lc::VectorToMsg(filtered_imu_measurement->angular_velocity, filtered_imu_msg.angular_velocity);
+        lc::TimeToHeader(filtered_imu_measurement->timestamp, filtered_imu_msg.header);
+        // TODO(rsoussan): Change receive timestamp to account for filter delay?
+        filtered_bag_.write(m.getTopic(), m.getTime(), filtered_imu_msg);
       }
     } else {  // Don't change other msgs, write to filtered_bag
       filtered_bag_.write(m.getTopic(), m.getTime(), m);

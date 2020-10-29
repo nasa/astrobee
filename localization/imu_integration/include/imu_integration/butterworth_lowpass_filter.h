@@ -19,16 +19,18 @@
 #ifndef IMU_INTEGRATION_BUTTERWORTH_LOWPASS_FILTER_H_
 #define IMU_INTEGRATION_BUTTERWORTH_LOWPASS_FILTER_H_
 
+#include <imu_integration/filter.h>
+
 #include <glog/logging.h>
 
 #include <array>
 
 namespace imu_integration {
-class ButterworthLowpassFilter {
+class ButterworthLowpassFilter : public Filter {
  public:
   ButterworthLowpassFilter();
   // Returns filtered value and timestamp
-  double AddValue(const double value);
+  double AddValue(const double value) final;
 
  private:
   void Initialize(const double first_value, const double gain);

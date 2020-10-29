@@ -16,22 +16,12 @@
  * under the License.
  */
 
-#ifndef IMU_INTEGRATION_TEST_IMU_FILTER_H_
-#define IMU_INTEGRATION_TEST_IMU_FILTER_H_
-
-#include <imu_integration/imu_filter.h>
-#include <localization_measurements/imu_measurement.h>
+#include <imu_integration/identity_filter.h>
 
 #include <glog/logging.h>
 
 namespace imu_integration {
-class TestImuFilter : public ImuFilter {
- public:
-  TestImuFilter();
-  // Returns filtered measurement if one is available
-  boost::optional<localization_measurements::ImuMeasurement> AddMeasurement(
-      const localization_measurements::ImuMeasurement& imu_measurement) final;
-};
-}  // namespace imu_integration
+IdentityFilter::IdentityFilter() {}
 
-#endif  // IMU_INTEGRATION_TEST_IMU_FILTER_H_
+double IdentityFilter::AddValue(const double value) { return value; }
+}  // namespace imu_integration

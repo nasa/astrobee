@@ -19,18 +19,32 @@
 #ifndef IMU_INTEGRATION_IMU_FILTER_H_
 #define IMU_INTEGRATION_IMU_FILTER_H_
 
+#include <imu_integration/filter.h>
+#include <imu_integration/imu_filter.h>
+#include <imu_integration/imu_filter_params.h>
 #include <localization_measurements/imu_measurement.h>
 
 #include <glog/logging.h>
 
+#include <memory>
+
 namespace imu_integration {
 class ImuFilter {
  public:
-  ImuFilter() = default;
-  virtual ~ImuFilter() = default;
+  explicit ImuFilter(const ImuFilterParams& params);
   // Returns filtered measurement if one is available
-  virtual boost::optional<localization_measurements::ImuMeasurement> AddMeasurement(
-      const localization_measurements::ImuMeasurement& imu_measurement) = 0;
+  boost::optional<localization_measurements::ImuMeasurement> AddMeasurement(
+      const localization_measurements::ImuMeasurement& imu_measurement);
+
+ private:
+  // Acceleration Filters
+  std::unique_ptr<Filter> acceleration_x_filter_;
+  std::unique_ptr<Filter> acceleration_y_filter_;
+  std::unique_ptr<Filter> acceleration_z_filter_;
+  // Angular Velocity Filters
+  std::unique_ptr<Filter> angular_velocity_x_filter_;
+  std::unique_ptr<Filter> angular_velocity_y_filter_;
+  std::unique_ptr<Filter> angular_velocity_z_filter_;
 };
 }  // namespace imu_integration
 
