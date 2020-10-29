@@ -22,7 +22,7 @@
 shopt -s extglob
 
 # Check to see if there are arguments
-if [ $# -le 2 ]; then
+if [ $# -lt 2 ]; then
   echo "Please supply the armhf folder and target robot as arguments."
   echo "  e.g ./install_to_astrobee.sh ~/freeflyer_armhf_install p4d"
   exit 1
