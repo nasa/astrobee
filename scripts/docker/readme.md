@@ -49,3 +49,29 @@ Once inside the container, don't forget to source astrobee to have access to all
 To shutdown the docker container, run:
 
     ./shutdown.sh
+
+
+## Cross-compile Astrobee (NASA users only)
+
+To cross-compile Astrobee, you will need
+to install a cross-compile chroot and toolchain. Select two directories for
+these:
+
+    export ARMHF_CHROOT_DIR=$HOME/arm_cross/rootfs
+    export ARMHF_TOOLCHAIN=$HOME/arm_cross/toolchain/gcc
+
+Append these lines to your .bashrc file, as you will need these two variables
+every time you cross compile.
+
+Next, download the cross toolchain and install the chroot:
+
+    mkdir -p $ARMHF_TOOLCHAIN
+    cd $HOME/arm_cross
+    $SOURCE_PATH/submodules/platform/fetch_toolchain.sh
+    $SOURCE_PATH/submodules/platform/rootfs/make_xenial.sh dev $ARMHF_CHROOT_DIR
+
+From the source of the repository, run:
+
+	./scripts/docker/cross_compile/cross_compile.sh
+
+The code will be cross-compiles inside the docker container in /opt/astrobee, and can be copied to the robot.
