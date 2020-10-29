@@ -135,6 +135,7 @@ class CpuMemMonitor : public ff_util::FreeFlyerNodelet {
   std::string processor_name_;  // Processor running this monitor (mlp,llp)
 
   // Store PID values
+  std::string monitor_host_;     // Either mlp, llp, hlp
   std::map<std::string, int> nodes_pid_;
 
   // CPU Monitor Parameters

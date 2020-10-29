@@ -93,6 +93,18 @@ void CpuMemMonitor::Initialize(ros::NodeHandle *nh) {
                                  false,
                                  true);
 
+  // Initialize host name, get own URI
+  XmlRpc::XmlRpcValue args, result, payload;
+  args.setSize(2);
+  args[0] = ros::this_node::getName();
+  args[1] = ros::this_node::getName();
+  ros::master::execute("lookupNode", args, result, payload, true);
+  monitor_host_ = getHostfromURI(result[2]);
+  if (monitor_host_.empty()) {
+    ROS_ERROR_STREAM("URI of the memory monitor not valid");
+    return;
+  }
+
   // Find the number of CPUs available to query
   ncpus_ = get_nprocs_conf();
 
@@ -114,7 +126,7 @@ void CpuMemMonitor::Initialize(ros::NodeHandle *nh) {
   }
 
   // Intialize cpu state message
-  cpu_state_msg_.name = GetName();
+  cpu_state_msg_.name = monitor_host_;
 
   // Five load fields: nice, user, sys, virt, total
   cpu_state_msg_.load_fields.resize(5);
@@ -133,6 +145,10 @@ void CpuMemMonitor::Initialize(ros::NodeHandle *nh) {
     // Five load fields: nice, user, sys, virt, total
     cpu_state_msg_.cpus[i].loads.resize(5);
   }
+
+  // Initialize the memory state message
+  mem_state_msg_.name = monitor_host_;
+  mem_state_msg_.nodes.resize(nodes_pid_.size());
 }
 
 bool CpuMemMonitor::ReadParams() {
@@ -224,10 +240,16 @@ bool CpuMemMonitor::ReadParams() {
     FF_ERROR(err_msg);
     this->AssertFault(ff_util::INITIALIZATION_FAILED, err_msg);
   }
-  std::string name;
   for (int i = 0; i < nodes.GetSize(); i++) {
-    if (nodes.GetStr("name", &name)) {
-      nodes_pid_.insert(std::pair<std::string, int>(name, -1));
+    config_reader::ConfigReader::Table node;
+    if (!nodes.GetTable(i + 1, &node)) {
+      ROS_ERROR("Could not get node table");
+      return false;
+    }
+    std::string name;
+    if (node.GetStr("name", &name)) {
+      ROS_ERROR_STREAM("Read node " << name);
+      nodes_pid_.insert(std::pair<std::string, int>(name, 0));
     }
   }
   return true;
@@ -272,22 +294,8 @@ void CpuMemMonitor::ClearMemLoadHighFaultCallback(ros::TimerEvent const& te) {
 }
 
 int CpuMemMonitor::GetPIDs() {
-  // Get own URI
-  // Check if the node is being executed in this computer
-  // Get URI of the node
-  XmlRpc::XmlRpcValue args, result, payload;
-  args.setSize(2);
-  args[0] = ros::this_node::getName();
-  args[1] = ros::this_node::getName();
-  ros::master::execute("lookupNode", args, result, payload, true);
-  std::string monitor_host = getHostfromURI(result[2]);
-  if (monitor_host.empty()) {
-    ROS_ERROR_STREAM("URI of the memory monitor not valid");
-    return -1;
-  }
-  mem_state_msg_.name = monitor_host;
-  mem_state_msg_.nodes.clear();
   // Go through all the node list and get the PID
+  XmlRpc::XmlRpcValue args, result, payload;
   std::map<std::string, int>::iterator it;
   for ( it = nodes_pid_.begin(); it != nodes_pid_.end(); it++ ) {
     // Look for PID if not already on the list
@@ -305,11 +313,11 @@ int CpuMemMonitor::GetPIDs() {
       }
 
       // If it is not in the same cpu
-      if (node_host != monitor_host) {
+      if (node_host != monitor_host_) {
         // Insert it on the list
         it->second = -1;
-        std::string err_msg = "CPU Memory Monitor: Specified node " + it->first + "in" + monitor_host +
-                              " and not in the same cpu as manager " + monitor_host + ".";
+        std::string err_msg = "CPU Memory Monitor: Specified node " + it->first + "in" + monitor_host_ +
+                              " and not in the same cpu as manager " + monitor_host_ + ".";
         FF_WARN(err_msg);
         continue;
       }
@@ -544,15 +552,16 @@ int CpuMemMonitor::CollectMemStats() {
   mem_load_value_ = mem_state_msg_.ram_used / mem_state_msg_.ram_total * 1e+2;
 
   // Go through all the node list and
-  mem_state_msg_.nodes.clear();
+  int i = -1;
   std::map<std::string, int>::iterator it;
   for ( it = nodes_pid_.begin(); it != nodes_pid_.end(); it++ ) {
+    // Increment counter
+    i++;
     // Look if PID is invalid
     if (it->second == -1)
       continue;
     // Get Memory useage for individual nodes
-    ff_msgs::MemState mem_node;
-    mem_node.name = it->first;
+    mem_state_msg_.nodes[i].name = it->first;
     FILE* file = fopen(("/proc/" + std::to_string(it->second) + "/status").c_str(), "r");
     if (!file) {
       continue;
@@ -561,24 +570,24 @@ int CpuMemMonitor::CollectMemStats() {
     while (fgets(line, 128, file) != NULL) {
       // Get virtual memory in Mb
       if (strncmp(line, "VmSize:", 7) == 0) {
-        mem_node.virt = ParseLine(line) * 1e-03;       // Convert from Kb to Mb
+        mem_state_msg_.nodes[i].virt = ParseLine(line) * 1e-03;       // Convert from Kb to Mb
       }
       // Get peak virtual memory in Mb
       if (strncmp(line, "VmPeak:", 7) == 0) {
-        mem_node.virt_peak = ParseLine(line) * 1e-03;  // Convert from Kb to Mb
+        mem_state_msg_.nodes[i].virt_peak = ParseLine(line) * 1e-03;  // Convert from Kb to Mb
       }
       // Get physical memory in Mb
       if (strncmp(line, "VmRSS:", 6) == 0) {
-        mem_node.ram = ParseLine(line) * 1e-03;        // Convert from Kb to Mb
-        mem_node.ram_perc = static_cast<float>(mem_node.ram) / static_cast<float>(mem_state_msg_.ram_total) * 1e+02;
+        mem_state_msg_.nodes[i].ram = ParseLine(line) * 1e-03;        // Convert from Kb to Mb
+        mem_state_msg_.nodes[i].ram_perc =
+          static_cast<float>(mem_state_msg_.nodes[i].ram) / static_cast<float>(mem_state_msg_.ram_total) * 1e+02;
       }
       // Get physical memory in Mb
       if (strncmp(line, "VmHWM:", 6) == 0) {
-        mem_node.ram_peak = ParseLine(line) * 1e-03;  // Convert from Kb to Mb
+        mem_state_msg_.nodes[i].ram_peak = ParseLine(line) * 1e-03;  // Convert from Kb to Mb
       }
     }
     fclose(file);
-    mem_state_msg_.nodes.push_back(mem_node);
   }
 
   // Send mem stats
