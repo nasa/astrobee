@@ -22,7 +22,7 @@
 shopt -s extglob
 
 # Check to see if there are arguments
-if [ $# -ne 2 ]; then
+if [ $# -lt 2 ]; then
   echo "Please supply the armhf folder and target robot as arguments."
   echo "  e.g ./install_to_astrobee.sh ~/freeflyer_armhf_install p4d"
   exit 1
@@ -55,6 +55,28 @@ dirname=$(basename ${target})
 master_ip=${llp_ips[${robot_index}]}
 config_ver=${2:-p4}
 
+# Customize option for mlp and llp IP's
+usage()
+{
+    echo "usage: sysinfo_page [[[-mlp mlp_ip ] [-llp llp_ip]] | [-h]]"
+}
+while [ "$3" != "" ]; do
+    case $3 in
+        --mlp )   shift
+                 mlp_ip=$3
+                                    ;;
+        --llp )   shift
+                 llp_ip=$3
+                                    ;;
+        -h | --help )               usage
+                                    exit
+                                    ;;
+        * )                         usage
+                                    exit 1
+    esac
+    shift
+done
+
 # Some sanity check for the keyboard impaired...
 libfile=$target/lib/libexecutive.so
 if [ ! -f "$libfile" ]; then
@@ -82,7 +104,7 @@ FREEFLYER_INSTALL_DIR=/opt/astrobee
 
 if [[ ${FREEFLYER_TARGETS,,} =~ 'mlp' ]]; then
   echo "Copying files to MLP..."
-  if ! rsync -azh --delete --info=progress2 --exclude=/platform --exclude=/firmware --exclude=/avionics --exclude '*imu_bias.config' $target/ astrobee@${mlp_ips[${robot_index}]}:${FREEFLYER_INSTALL_DIR}
+  if ! rsync -azh --delete --info=progress2 --exclude=/platform --exclude=/firmware --exclude=/avionics --exclude '*imu_bias.config' --exclude=/ops $target/ astrobee@${mlp_ip:-${mlp_ips[${robot_index}]}}:${FREEFLYER_INSTALL_DIR}
   then
     exit 1
   fi
@@ -92,7 +114,7 @@ if [[ ${FREEFLYER_TARGETS,,} =~ 'llp' ]]; then
   # Install to LLP
   if [[ "${llp_ips[${robot_index}]}" != "0.0.0.0" ]]; then # for dock, skip this step
     echo "Copying files to LLP..."
-    if ! rsync -azh --delete --info=progress2 --exclude=/platform --exclude=/avionics --exclude '*imu_bias.config' $target/ astrobee@${llp_ips[${robot_index}]}:${FREEFLYER_INSTALL_DIR}
+    if ! rsync -azh --delete --info=progress2 --exclude=/platform --exclude=/avionics --exclude '*imu_bias.config' --exclude=/ops $target/ astrobee@${llp_ip:-${llp_ips[${robot_index}]}}:${FREEFLYER_INSTALL_DIR}
     then
       exit 1
     fi
