@@ -48,7 +48,7 @@ void FaultCheckTimeoutCallback(ros::TimerEvent const& te) {
   test_done = true;
 }
 
-TEST(init_mlp_cpu_monitor, MlpCpuMonitorInitFailed) {
+TEST(init_cpu_mem_monitor, CpuMemMonitorInitFailed) {
   config_reader::ConfigReader fault_config;
 
   fault_config.AddFile("faults.config");
@@ -61,15 +61,23 @@ TEST(init_mlp_cpu_monitor, MlpCpuMonitorInitFailed) {
     return;
   }
 
+  // LLP
+  if (!fault_config.CheckValExists("llp_cpu_mem_monitor")) {
+    ROS_ERROR("Couldn't extract cpu monitor fault. Need for init fault id");
+    // Cause test to fail
+    EXPECT_EQ(2, 1);
+    return;
+  }
+  // MLP
   if (!fault_config.CheckValExists("mlp_cpu_mem_monitor")) {
-    ROS_ERROR("Couldn't extract mlp cpu monitor fault. Need for init fault id");
+    ROS_ERROR("Couldn't extract cpu monitor fault. Need for init fault id");
     // Cause test to fail
     EXPECT_EQ(2, 1);
     return;
   }
 
   config_reader::ConfigReader::Table fault_table(&fault_config,
-                                                 "mlp_cpu_mem_monitor");
+                                                 "llp_cpu_mem_monitor");
   std::string fault_key;
   // Lua indices start at one
   for (int i = 1; i < (fault_table.GetSize() + 1); i++) {
@@ -77,7 +85,7 @@ TEST(init_mlp_cpu_monitor, MlpCpuMonitorInitFailed) {
 
     // Get fault key
     if (!fault_entry.GetStr("key", &fault_key)) {
-      ROS_ERROR("Fault key at index %i not in mlp cpu monitor fault table.", i);
+      ROS_ERROR("Fault key at index %i not in cpu memory monitor fault table.", i);
       // Cause test to fail
       EXPECT_EQ(2, 1);
       return;
@@ -85,7 +93,7 @@ TEST(init_mlp_cpu_monitor, MlpCpuMonitorInitFailed) {
 
     if (fault_key == "INITIALIZATION_FAILED") {
       if (!fault_entry.GetInt("id", &init_fault_id)) {
-        ROS_ERROR("Fault id for mlp cpu monitor init failed fault missing.");
+        ROS_ERROR("Fault id for cpu memory monitor init failed fault missing.");
         // Cause test to fail
         EXPECT_EQ(2, 1);
         return;
@@ -95,7 +103,7 @@ TEST(init_mlp_cpu_monitor, MlpCpuMonitorInitFailed) {
   }
 
   if (init_fault_id == -1) {
-    ROS_ERROR("Unable to extract init fault id for mlp cpu monitor.");
+    ROS_ERROR("Unable to extract init fault id for cpu memory monitor.");
     // Cause test to fail
     EXPECT_EQ(2, 1);
     return;
@@ -112,7 +120,7 @@ TEST(init_mlp_cpu_monitor, MlpCpuMonitorInitFailed) {
     ros::Duration(1.0).sleep();
   }
 
-  // Start timer to check of the mlp cpu monitor fault has been thrown.
+  // Start timer to check if the cpu memory monitor fault has been thrown.
   ros::Timer fault_timer = nh.createTimer(ros::Duration(2),
                                           &FaultCheckTimeoutCallback,
                                           true,
@@ -135,7 +143,7 @@ int main(int argc, char** argv) {
   // Initialize ROS
   ros::init(argc,
             argv,
-            "test_init_mlp_cpu_monitor",
+            "test_init_cpu_mem_monitor",
             ros::init_options::AnonymousName);
 
   // Run all test procedures

@@ -30,25 +30,16 @@ create_library(TARGET cpu_mem_monitor
 
 if(CATKIN_ENABLE_TESTING)
   find_package(rostest REQUIRED)
-  # LLP CPU monitor initialization fault tester
-  add_rostest_gtest(test_init_llp_cpu_monitor
-    test/test_init_llp_cpu_monitor.test
-    test/test_init_llp_cpu_monitor.cc
+  # CPU monitor initialization fault tester
+  add_rostest_gtest(test_init_cpu_monitor
+    test/test_init_cpu_monitor.test
+    test/test_init_cpu_monitor.cc
   )
 
-  target_link_libraries(test_init_llp_cpu_monitor
+  target_link_libraries(test_init_cpu_monitor
     ${catkin_LIBRARIES} config_reader ff_nodelet
   )
 
-  # MLP CPU monitor initialization fault tester
-  add_rostest_gtest(test_init_mlp_cpu_monitor
-    test/test_init_mlp_cpu_monitor.test
-    test/test_init_mlp_cpu_monitor.cc
-  )
-
-  target_link_libraries(test_init_mlp_cpu_monitor
-    ${catkin_LIBRARIES} config_reader ff_nodelet
-  )
 endif()
 
 install_launch_files()
