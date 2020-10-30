@@ -14,3 +14,7 @@
 \subpage doc
 
 \subpage conventions
+
+\subpage adding_a_command
+
+\subpage command_dictionary

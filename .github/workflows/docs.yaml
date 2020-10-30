@@ -26,13 +26,30 @@ jobs:
         sudo apt-get install flex
     - name: Install doxygen
       run: |
-        git clone https://github.com/doxygen/doxygen.git
-        cd doxygen
+        wget http://doxygen.nl/files/doxygen-1.8.20.src.tar.gz
+        tar -zxvf doxygen-1.8.20.src.tar.gz
+        cd doxygen-1.8.20
         mkdir build
         cd build
         cmake -G "Unix Makefiles" ..
         make
         sudo make install
+    - name: install xgds_planner2
+      run: |
+        sudo pip install iso8601
+        sudo pip install "django<2"
+        git clone https://github.com/geocam/geocamUtilWeb.git
+        cd geocamUtilWeb
+        sudo python setup.py install
+        cd ..
+        git clone https://github.com/xgds/xgds_planner2.git
+        cd xgds_planner2
+        sudo python setup.py install
+    - name: Generating command dictionary documentation
+      run: |
+        cd repo
+        mkdir doc/html
+        ./scripts/build/genCommandDictionary.py astrobee/commands/freeFlyerPlanSchema.json doc/html/AstrobeeCommandDictionary.html 
     - name: Build Documentation
       run: |
         cd repo
