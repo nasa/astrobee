@@ -16,6 +16,10 @@
  * under the License.
  */
 
+// Test validation
+// Tests the checks on the individual fields, aka maximum and minumum range,
+// field type and structure
+
 #include <jsonloader/validation.h>
 
 #include <json/json.h>

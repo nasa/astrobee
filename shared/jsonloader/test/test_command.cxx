@@ -16,6 +16,9 @@
  * under the License.
  */
 
+// Test commands
+// These tests check that commands are parsed correctly using the jsonloader
+
 #include <jsonloader/command.h>
 #include <jsonloader/command_repo.h>
 

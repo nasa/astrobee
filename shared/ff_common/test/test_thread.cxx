@@ -16,6 +16,10 @@
  * under the License.
  */
 
+// Test thread
+// Creates a thread pool and adds multiple tasks testing the
+// ff_common::ThreadPool class
+
 #include <ff_common/thread.h>
 
 #include <gtest/gtest.h>
