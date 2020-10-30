@@ -15,16 +15,31 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef IMU_INTEGRATION_IMU_FILTER_PARAMS_H_
-#define IMU_INTEGRATION_IMU_FILTER_PARAMS_H_
 
-#include <string>
+#ifndef IMU_INTEGRATION_BUTTERWORTH_LOWPASS_FILTER_3RD_ORDER_H_
+#define IMU_INTEGRATION_BUTTERWORTH_LOWPASS_FILTER_3RD_ORDER_H_
+
+#include <imu_integration/filter.h>
+
+#include <glog/logging.h>
+
+#include <array>
 
 namespace imu_integration {
-struct ImuFilterParams {
-  // none, butter, butter3, butter5
-  std::string type;
+class ButterworthLowpassFilter3rdOrder : public Filter {
+ public:
+  ButterworthLowpassFilter3rdOrder();
+  // Returns filtered value and timestamp
+  double AddValue(const double value) final;
+
+ private:
+  void Initialize(const double first_value, const double gain);
+  // Notation taken from mkfilter site
+  // /www/usr/fisher/helpers/mkfilter
+  std::array<double, 6> xv_;
+  std::array<double, 6> yv_;
+  bool initialized_;
 };
 }  // namespace imu_integration
 
-#endif  // IMU_INTEGRATION_IMU_FILTER_PARAMS_H_
+#endif  // IMU_INTEGRATION_BUTTERWORTH_LOWPASS_FILTER_3RD_ORDER_H_

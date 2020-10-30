@@ -16,6 +16,7 @@
  * under the License.
  */
 #include <imu_integration/butterworth_lowpass_filter.h>
+#include <imu_integration/butterworth_lowpass_filter_3rd_order.h>
 #include <imu_integration/butterworth_lowpass_filter_5th_order.h>
 #include <imu_integration/identity_filter.h>
 #include <imu_integration/imu_filter.h>
@@ -34,6 +35,15 @@ ImuFilter::ImuFilter(const ImuFilterParams& params) {
     angular_velocity_x_filter_.reset(new ButterworthLowpassFilter());
     angular_velocity_y_filter_.reset(new ButterworthLowpassFilter());
     angular_velocity_z_filter_.reset(new ButterworthLowpassFilter());
+  } else if (params.type == "butter3") {
+    LOG(INFO) << "ImuFilter: Using Butterworth lowpass 3rd order filter.";
+    // TODO(rsoussan): Do this more efficiently
+    acceleration_x_filter_.reset(new ButterworthLowpassFilter3rdOrder());
+    acceleration_y_filter_.reset(new ButterworthLowpassFilter3rdOrder());
+    acceleration_z_filter_.reset(new ButterworthLowpassFilter3rdOrder());
+    angular_velocity_x_filter_.reset(new ButterworthLowpassFilter3rdOrder());
+    angular_velocity_y_filter_.reset(new ButterworthLowpassFilter3rdOrder());
+    angular_velocity_z_filter_.reset(new ButterworthLowpassFilter3rdOrder());
   } else if (params.type == "butter5") {
     LOG(INFO) << "ImuFilter: Using Butterworth lowpass 5th order filter.";
     // TODO(rsoussan): Do this more efficiently
