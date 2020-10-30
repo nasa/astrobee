@@ -53,7 +53,7 @@ jobs:
         ./scripts/build/genCommandDictionary.py astrobee/commands/freeFlyerPlanSchema.json doc/html/AstrobeeCommandDictionary.html 
     - name: Build Documentation
       run: |
-        cd repo
+        cd repo/doc/diagrams/ && make && cd ../..
         doxygen astrobee.doxyfile
         cd ..
     - name: Replace old documentation with new
