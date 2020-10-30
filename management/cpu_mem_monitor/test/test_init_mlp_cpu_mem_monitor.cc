@@ -112,7 +112,7 @@ TEST(init_cpu_mem_monitor, CpuMemMonitorInitFailed) {
     ros::Duration(1.0).sleep();
   }
 
-  // Start timer to check if the cpu memory monitor fault has been thrown.
+  // Start timer to check if the cmlp pu memory monitor fault has been thrown.
   ros::Timer fault_timer = nh.createTimer(ros::Duration(2),
                                           &FaultCheckTimeoutCallback,
                                           true,
