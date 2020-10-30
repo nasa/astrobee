@@ -37,11 +37,11 @@ void ButterworthLowpassFilter5thOrder::Initialize(const double first_value, cons
 }
 
 double ButterworthLowpassFilter5thOrder::AddValue(const double value) {
-  // Corner frequency at 1Hz and notch filter at 29.16 Hz, 5th order
+  // Corner frequency at 3Hz and notch filter at 29.16 Hz, 5th order
   /* Digital filter designed by mkfilter/mkshape/gencode   A.J. Fisher
-     Command line: /www/usr/fisher/helpers/mkfilter -Bu -Lp -o 5 -a 1.6000000000e-02 0.0000000000e+00
-     -Z 4.6656000000e-01 -l */
-  static constexpr double GAIN = 1.444638217e+07;
+   Command line: /www/usr/fisher/helpers/mkfilter -Bu -Lp -o 5 -a 4.8000000000e-02 0.0000000000e+00 -Z 4.6656000000e-01
+   -l */
+  static constexpr double GAIN = 7.974174280e+04;
 
   if (!initialized_) Initialize(value, GAIN);
 
@@ -56,8 +56,8 @@ double ButterworthLowpassFilter5thOrder::AddValue(const double value) {
   // Generate new output
   yv_[last_index] = (xv_[0] + xv_[7]) + 6.9560160746 * (xv_[1] + xv_[6]) + 20.7800803730 * (xv_[2] + xv_[5]) +
                     34.5601607460 * (xv_[3] + xv_[4]) + (-0.0000000000 * yv_[0]) + (-0.0000000000 * yv_[1]) +
-                    (0.7221701429 * yv_[2]) + (-3.8457619644 * yv_[3]) + (8.2000057707 * yv_[4]) +
-                    (-8.7511375257 * yv_[5]) + (4.6747148135 * yv_[6]);
+                    (0.3750929134 * yv_[2]) + (-2.2411521809 * yv_[3]) + (5.3982113474 * yv_[4]) +
+                    (-6.5588143289 * yv_[5]) + (4.0250747177 * yv_[6]);
   // Return most recent output
   return yv_[last_index];
 }
