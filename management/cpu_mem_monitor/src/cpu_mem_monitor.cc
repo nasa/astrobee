@@ -305,7 +305,10 @@ int CpuMemMonitor::GetPIDs() {
       args.setSize(2);
       args[0] = ros::this_node::getName();
       args[1] = it->first;
-      ros::master::execute("lookupNode", args, result, payload, true);
+      if (!ros::master::execute("lookupNode", args, result, payload, true)) {
+        it->second = -1;
+        continue;
+      }
       std::string node_host = getHostfromURI(result[2]);
       if (node_host.empty()) {
         it->second = -1;
@@ -376,17 +379,19 @@ int CpuMemMonitor::CollectCPUStats() {
     }
 
     if (i == 0) {
-      sscanf(buffer, "cpu  %" SCNu64 " %" SCNu64 " %" SCNu64 " %" SCNu64 \
+      if (sscanf(buffer, "cpu  %" SCNu64 " %" SCNu64 " %" SCNu64 " %" SCNu64 \
                          " %" SCNu64 " %" SCNu64 " %" SCNu64 " %" SCNu64 \
                          " %" SCNu64 " %" SCNu64 "", &user, &nice, &system,
                          &idle, &iowait, &irq, &softirq, &steal, &guest,
-                          &guest_nice);
+                         &guest_nice) != 10)
+        return -1;
     } else {
-      sscanf(buffer, "cpu%" SCNu32 " %" SCNu64 " %" SCNu64 " %" SCNu64 \
-                       " %" SCNu64 " %" SCNu64 " %" SCNu64 " %" SCNu64 \
-                       " %" SCNu64 " %" SCNu64 " %" SCNu64 "", &cpuid, &user,
-                       &nice, &system, &idle, &iowait, &irq, &softirq, &steal,
-                       &guest, &guest_nice);
+      if (sscanf(buffer, "cpu%" SCNu32 " %" SCNu64 " %" SCNu64 " %" SCNu64 \
+                         " %" SCNu64 " %" SCNu64 " %" SCNu64 " %" SCNu64 \
+                         " %" SCNu64 " %" SCNu64 " %" SCNu64 "", &cpuid, &user,
+                         &nice, &system, &idle, &iowait, &irq, &softirq, &steal,
+                         &guest, &guest_nice) != 11)
+        break;
     }
 
     user -= guest;
@@ -531,7 +536,8 @@ int CpuMemMonitor::CollectMemStats() {
   // Update memory info
   // In the mem_info_ structure, sizes of the memory and swap
   // fields  are  given  as  multiples  of mem_unit bytes.
-  sysinfo(&mem_info_);
+  if (sysinfo(&mem_info_))
+    return -1;
   // Total Physical Memory (RAM)
   mem_state_msg_.ram_total = (mem_info_.totalram * 1e-06) * mem_info_.mem_unit;
   // Total Virtual Memory
