@@ -16,12 +16,13 @@
 <!-- permissions and limitations under the License.                          -->
 
 <launch>
+
   <env name="ASTROBEE_CONFIG_DIR" value="$(find astrobee)/config/tests" />
   <env name="ASTROBEE_RESOURCE_DIR" value="$(find astrobee)/resources" />
   <env name="ASTROBEE_ROBOT" value="p4d" />
   <env name="ASTROBEE_WORLD" value="iss" />
   <include file="$(find cpu_mem_monitor)/launch/cpu_mem_monitor.launch">
-    <arg name="name" value="llp_cpu_mem_monitor" />
+    <arg name="name" value="mlp_cpu_mem_monitor" />
   </include>
 
   <env name="ASTROBEE_CONFIG_DIR" value="$(find astrobee)/config" />
@@ -30,5 +31,5 @@
   <env name="ASTROBEE_WORLD" value="iss" />
   <include file="$(find sys_monitor)/launch/sys_monitor.launch" />
 
-  <test pkg="cpu_mem_monitor" type="test_init_llp_cpu_mem_monitor" test-name="test_init_llp_cpu_mem_monitor" />
+  <test pkg="cpu_mem_monitor" type="test_init_mlp_cpu_mem_monitor" test-name="test_init_mlp_cpu_mem_monitor" />
 </launch>
