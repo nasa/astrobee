@@ -62,7 +62,7 @@ TEST(init_cpu_mem_monitor, CpuMemMonitorInitFailed) {
   }
 
   if (!fault_config.CheckValExists("llp_cpu_mem_monitor")) {
-    ROS_ERROR("Couldn't extract cpu monitor fault. Need for init fault id");
+    ROS_ERROR("Couldn't extract llp cpu memory monitor fault. Need for init fault id");
     // Cause test to fail
     EXPECT_EQ(2, 1);
     return;
@@ -77,7 +77,7 @@ TEST(init_cpu_mem_monitor, CpuMemMonitorInitFailed) {
 
     // Get fault key
     if (!fault_entry.GetStr("key", &fault_key)) {
-      ROS_ERROR("Fault key at index %i not in cpu memory monitor fault table.", i);
+      ROS_ERROR("Fault key at index %i not in llp cpu memory monitor fault table.", i);
       // Cause test to fail
       EXPECT_EQ(2, 1);
       return;
@@ -85,7 +85,7 @@ TEST(init_cpu_mem_monitor, CpuMemMonitorInitFailed) {
 
     if (fault_key == "INITIALIZATION_FAILED") {
       if (!fault_entry.GetInt("id", &init_fault_id)) {
-        ROS_ERROR("Fault id for cpu memory monitor init failed fault missing.");
+        ROS_ERROR("Fault id for llp cpu memory monitor init failed fault missing.");
         // Cause test to fail
         EXPECT_EQ(2, 1);
         return;
@@ -95,7 +95,7 @@ TEST(init_cpu_mem_monitor, CpuMemMonitorInitFailed) {
   }
 
   if (init_fault_id == -1) {
-    ROS_ERROR("Unable to extract init fault id for cpu memory monitor.");
+    ROS_ERROR("Unable to extract init fault id for llp cpu memory monitor.");
     // Cause test to fail
     EXPECT_EQ(2, 1);
     return;
