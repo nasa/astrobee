@@ -39,7 +39,12 @@ def l2_map(vector3ds):
 def add_pose_plots(pdf, sparse_mapping_poses, graph_localization_poses, imu_augmented_graph_localization_poses):
   colors = ['r', 'b', 'g']
   plt.figure()
-  plot_helpers.plot_positions(sparse_mapping_poses, colors, linestyle='None', marker='o', markeredgewidth=0.1, markersize=1.5)
+  plot_helpers.plot_positions(sparse_mapping_poses,
+                              colors,
+                              linestyle='None',
+                              marker='o',
+                              markeredgewidth=0.1,
+                              markersize=1.5)
   plot_helpers.plot_positions(graph_localization_poses, colors, linewidth=0.5)
   plt.xlabel('Time (s)')
   plt.ylabel('Position (m)')
@@ -50,7 +55,12 @@ def add_pose_plots(pdf, sparse_mapping_poses, graph_localization_poses, imu_augm
 
   # orientations
   plt.figure()
-  plot_helpers.plot_orientations(sparse_mapping_poses, colors, linestyle='None', marker='o', markeredgewidth=0.1, markersize=1.5)
+  plot_helpers.plot_orientations(sparse_mapping_poses,
+                                 colors,
+                                 linestyle='None',
+                                 marker='o',
+                                 markeredgewidth=0.1,
+                                 markersize=1.5)
   plot_helpers.plot_orientations(graph_localization_poses, colors, linewidth=0.5)
   plt.xlabel('Time (s)')
   plt.ylabel('Orienation (deg)')
@@ -127,8 +137,8 @@ def add_feature_count_plots(pdf, graph_localization_states):
 def add_other_vector3d_plots(pdf, imu_augmented_graph_localization_states):
   # Acceleration
   plt.figure()
-  plot_helpers.plot_vector3ds(imu_augmented_graph_localization_states.accelerations, imu_augmented_graph_localization_states.times,
-                 'Acc.')
+  plot_helpers.plot_vector3ds(imu_augmented_graph_localization_states.accelerations,
+                              imu_augmented_graph_localization_states.times, 'Acc.')
   plt.xlabel('Time (s)')
   plt.ylabel('Acceleration (m/s^2)')
   plt.title('Acceleration')
@@ -137,19 +147,39 @@ def add_other_vector3d_plots(pdf, imu_augmented_graph_localization_states):
   plt.close()
 
   # Biases
+  # Plot Accelerometer Biases on different pages since they can start with quite different
+  # values, plotting on the same page will lead to a large y axis scale and hide subtle changes.
   plt.figure()
-  plot_helpers.plot_vector3ds(imu_augmented_graph_localization_states.accelerometer_biases,
-                 imu_augmented_graph_localization_states.times, 'Acc. Bias')
+  plt.plot(imu_augmented_graph_localization_states.times,
+           imu_augmented_graph_localization_states.accelerometer_biases.xs, 'r')
   plt.xlabel('Time (s)')
-  plt.ylabel('Accelerometer Biases')
-  plt.title('Accelerometer Biases')
-  plt.legend(prop={'size': 6})
+  plt.ylabel('Accelerometer Biases (X)')
+  plt.title('Accelerometer Biases (X)')
   pdf.savefig()
   plt.close()
 
   plt.figure()
-  plot_helpers.plot_vector3ds(imu_augmented_graph_localization_states.gyro_biases, imu_augmented_graph_localization_states.times,
-                 'Gyro Bias')
+  plt.plot(imu_augmented_graph_localization_states.times,
+           imu_augmented_graph_localization_states.accelerometer_biases.ys, 'r')
+  plt.xlabel('Time (s)')
+  plt.ylabel('Accelerometer Biases (Y)')
+  plt.title('Accelerometer Biases (Y)')
+  pdf.savefig()
+  plt.close()
+
+  plt.figure()
+  plt.plot(imu_augmented_graph_localization_states.times,
+           imu_augmented_graph_localization_states.accelerometer_biases.zs, 'r')
+  plt.xlabel('Time (s)')
+  plt.ylabel('Accelerometer Biases (Z)')
+  plt.title('Accelerometer Biases (Z)')
+  pdf.savefig()
+  plt.close()
+
+  # Gyro Biases
+  plt.figure()
+  plot_helpers.plot_vector3ds(imu_augmented_graph_localization_states.gyro_biases,
+                              imu_augmented_graph_localization_states.times, 'Gyro Bias')
   plt.xlabel('Time (s)')
   plt.ylabel('Gyro Biases')
   plt.title('Gyro Biases')
@@ -160,7 +190,7 @@ def add_other_vector3d_plots(pdf, imu_augmented_graph_localization_states):
   # Angular Velocity
   plt.figure()
   plot_helpers.plot_vector3ds(imu_augmented_graph_localization_states.angular_velocities,
-                 imu_augmented_graph_localization_states.times, 'Ang. Vel.')
+                              imu_augmented_graph_localization_states.times, 'Ang. Vel.')
   plt.xlabel('Time (s)')
   plt.ylabel('Angular Velocities')
   plt.title('Angular Velocities')
@@ -170,8 +200,8 @@ def add_other_vector3d_plots(pdf, imu_augmented_graph_localization_states):
 
   # Velocity
   plt.figure()
-  plot_helpers.plot_vector3ds(imu_augmented_graph_localization_states.velocities, imu_augmented_graph_localization_states.times,
-                 'Vel.')
+  plot_helpers.plot_vector3ds(imu_augmented_graph_localization_states.velocities,
+                              imu_augmented_graph_localization_states.times, 'Vel.')
   plt.xlabel('Time (s)')
   plt.ylabel('Velocities')
   plt.title('Velocities')
@@ -221,6 +251,7 @@ def add_other_vector3d_plots(pdf, imu_augmented_graph_localization_states):
   pdf.savefig()
   plt.close()
 
+
 def plot_stats(pdf, graph_localization_states, sparse_mapping_poses):
   stats = ''
   rmse = utilities.rmse_timestamped_poses(graph_localization_states, sparse_mapping_poses)
@@ -231,10 +262,15 @@ def plot_stats(pdf, graph_localization_states, sparse_mapping_poses):
   pdf.savefig()
 
 
-def add_imu_bias_tester_poses(pdf, imu_bias_tester_poses, sparse_mapping_poses): 
+def add_imu_bias_tester_poses(pdf, imu_bias_tester_poses, sparse_mapping_poses):
   colors = ['r', 'b', 'g']
   plt.figure()
-  plot_helpers.plot_positions(sparse_mapping_poses, colors, linestyle='None', marker='o', markeredgewidth=0.1, markersize=1.5)
+  plot_helpers.plot_positions(sparse_mapping_poses,
+                              colors,
+                              linestyle='None',
+                              marker='o',
+                              markeredgewidth=0.1,
+                              markersize=1.5)
   plot_helpers.plot_positions(imu_bias_tester_poses, colors, linewidth=0.5)
   plt.xlabel('Time (s)')
   plt.ylabel('Position (m)')
@@ -245,7 +281,12 @@ def add_imu_bias_tester_poses(pdf, imu_bias_tester_poses, sparse_mapping_poses):
 
   # orientations
   plt.figure()
-  plot_helpers.plot_orientations(sparse_mapping_poses, colors, linestyle='None', marker='o', markeredgewidth=0.1, markersize=1.5)
+  plot_helpers.plot_orientations(sparse_mapping_poses,
+                                 colors,
+                                 linestyle='None',
+                                 marker='o',
+                                 markeredgewidth=0.1,
+                                 markersize=1.5)
   plot_helpers.plot_orientations(imu_bias_tester_poses, colors, linewidth=0.5)
   plt.xlabel('Time (s)')
   plt.ylabel('Orienation (deg)')
@@ -303,7 +344,7 @@ def create_plots(bagfile, output_file):
   with PdfPages(output_file) as pdf:
     add_pose_plots(pdf, sparse_mapping_poses, graph_localization_states, imu_augmented_graph_localization_states)
     if has_imu_bias_tester_poses:
-      add_imu_bias_tester_poses(pdf, imu_bias_tester_poses, sparse_mapping_poses) 
+      add_imu_bias_tester_poses(pdf, imu_bias_tester_poses, sparse_mapping_poses)
     if has_imu_augmented_graph_localization_state:
       add_other_loc_plots(pdf, graph_localization_states, imu_augmented_graph_localization_states)
     else:
