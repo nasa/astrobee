@@ -93,7 +93,7 @@ def plot_imu_measurements(pdf, imu_measurements, prefix=''):
 
 def plot_fft(pdf, magnitude, frequency, prefix=''):
   plt.figure()
-  plt.ylim(top=100)
+  plt.ylim(top=1.5)
   plt.plot(frequency, np.absolute(magnitude), lw=1)
   plt.xlabel('Frequency')
   plt.ylabel('Magnitude')
