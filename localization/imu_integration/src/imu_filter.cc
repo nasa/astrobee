@@ -18,6 +18,8 @@
 #include <imu_integration/butterworth_lowpass_filter.h>
 #include <imu_integration/butterworth_lowpass_filter_3rd_order.h>
 #include <imu_integration/butterworth_lowpass_filter_5th_order.h>
+#include <imu_integration/butterworth_lowpass_filter_5th_order_05.h>
+#include <imu_integration/butterworth_lowpass_filter_5th_order_1.h>
 #include <imu_integration/identity_filter.h>
 #include <imu_integration/imu_filter.h>
 
@@ -37,7 +39,6 @@ ImuFilter::ImuFilter(const ImuFilterParams& params) {
     angular_velocity_z_filter_.reset(new ButterworthLowpassFilter());
   } else if (params.type == "butter3") {
     LOG(INFO) << "ImuFilter: Using Butterworth lowpass 3rd order filter.";
-    // TODO(rsoussan): Do this more efficiently
     acceleration_x_filter_.reset(new ButterworthLowpassFilter3rdOrder());
     acceleration_y_filter_.reset(new ButterworthLowpassFilter3rdOrder());
     acceleration_z_filter_.reset(new ButterworthLowpassFilter3rdOrder());
@@ -46,16 +47,30 @@ ImuFilter::ImuFilter(const ImuFilterParams& params) {
     angular_velocity_z_filter_.reset(new ButterworthLowpassFilter3rdOrder());
   } else if (params.type == "butter5") {
     LOG(INFO) << "ImuFilter: Using Butterworth lowpass 5th order filter.";
-    // TODO(rsoussan): Do this more efficiently
     acceleration_x_filter_.reset(new ButterworthLowpassFilter5thOrder());
     acceleration_y_filter_.reset(new ButterworthLowpassFilter5thOrder());
     acceleration_z_filter_.reset(new ButterworthLowpassFilter5thOrder());
     angular_velocity_x_filter_.reset(new ButterworthLowpassFilter5thOrder());
     angular_velocity_y_filter_.reset(new ButterworthLowpassFilter5thOrder());
     angular_velocity_z_filter_.reset(new ButterworthLowpassFilter5thOrder());
+  } else if (params.type == "butter5_1") {
+    LOG(INFO) << "ImuFilter: Using Butterworth lowpass 5th order 1Hz cutoff filter.";
+    acceleration_x_filter_.reset(new ButterworthLowpassFilter5thOrder1());
+    acceleration_y_filter_.reset(new ButterworthLowpassFilter5thOrder1());
+    acceleration_z_filter_.reset(new ButterworthLowpassFilter5thOrder1());
+    angular_velocity_x_filter_.reset(new ButterworthLowpassFilter5thOrder1());
+    angular_velocity_y_filter_.reset(new ButterworthLowpassFilter5thOrder1());
+    angular_velocity_z_filter_.reset(new ButterworthLowpassFilter5thOrder1());
+  } else if (params.type == "butter5_05") {
+    LOG(INFO) << "ImuFilter: Using Butterworth lowpass 5th order 0.5Hz cutoff filter.";
+    acceleration_x_filter_.reset(new ButterworthLowpassFilter5thOrder05());
+    acceleration_y_filter_.reset(new ButterworthLowpassFilter5thOrder05());
+    acceleration_z_filter_.reset(new ButterworthLowpassFilter5thOrder05());
+    angular_velocity_x_filter_.reset(new ButterworthLowpassFilter5thOrder05());
+    angular_velocity_y_filter_.reset(new ButterworthLowpassFilter5thOrder05());
+    angular_velocity_z_filter_.reset(new ButterworthLowpassFilter5thOrder05());
   } else if (params.type == "none") {
     LOG(INFO) << "ImuFilter: No filter.";
-    // TODO(rsoussan): Do this more efficiently
     acceleration_x_filter_.reset(new IdentityFilter());
     acceleration_y_filter_.reset(new IdentityFilter());
     acceleration_z_filter_.reset(new IdentityFilter());
