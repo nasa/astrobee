@@ -179,8 +179,8 @@ class GraphLocalizer {
   template <typename FactorType>
   int NumFactors() const {
     int num_factors = 0;
-    for (auto factor_it = graph_.begin(); factor_it != graph_.end(); ++factor_it) {
-      if (dynamic_cast<const FactorType*>(factor_it->get())) {
+    for (const auto& factor : graph_) {
+      if (dynamic_cast<const FactorType*>(factor.get())) {
         ++num_factors;
       }
     }

@@ -865,8 +865,8 @@ bool GraphLocalizer::MeasurementRecentEnough(const lc::Time timestamp) const {
 }
 
 void GraphLocalizer::PrintFactorDebugInfo() const {
-  for (auto factor_it = graph_.begin(); factor_it != graph_.end();) {
-    const auto smart_factor = dynamic_cast<const SmartFactor*>(factor_it->get());
+  for (const auto& factor : graph_) {
+    const auto smart_factor = dynamic_cast<const SmartFactor*>(factor.get());
     if (smart_factor) {
       smart_factor->print();
       // TODO(rsoussan): Add this, check if robust or non robust smart factor first
@@ -880,16 +880,22 @@ void GraphLocalizer::PrintFactorDebugInfo() const {
       if (smart_factor->isOutlier()) LOG(WARNING) << "PrintFactorDebugInfo: SmartFactor is outlier.";
       if (smart_factor->isFarPoint()) LOG(WARNING) << "PrintFactorDebugInfo: SmartFactor is far point.";
     }
-    const auto imu_factor = dynamic_cast<gtsam::CombinedImuFactor*>(factor_it->get());
+    const auto imu_factor = dynamic_cast<gtsam::CombinedImuFactor*>(factor.get());
     if (imu_factor) {
       LOG(INFO) << "PrintFactorDebugInfo: CombinedImuFactor: " << *imu_factor;
       LOG(INFO) << "PrintFactorDebugInfo: CombinedImuFactor PIM: " << imu_factor->preintegratedMeasurements();
     }
-    ++factor_it;
   }
 }
 
-int GraphLocalizer::NumOFFactors() const { return NumFactors<SmartFactor>(); }
+int GraphLocalizer::NumOFFactors() const {
+  int num_of_factors = 0;
+  for (const auto& factor : graph_) {
+    const auto smart_factor = dynamic_cast<const SmartFactor*>(factor.get());
+    if (smart_factor && smart_factor->isValid()) ++num_of_factors;
+  }
+  return num_of_factors;
+}
 
 int GraphLocalizer::NumVLFactors() const { return NumFactors<gtsam::LocProjectionFactor<>>(); }
 
