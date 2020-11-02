@@ -47,7 +47,7 @@ double ButterworthLowpassFilter3rdOrder::AddValue(const double value) {
 
   const int last_index = xv_.size() - 1;
   // Shift input and output vals
-  for (int i = 0; i < last_index - 1; ++i) {
+  for (int i = 0; i < last_index; ++i) {
     xv_[i] = xv_[i + 1];
     yv_[i] = yv_[i + 1];
   }
