@@ -60,6 +60,12 @@ def filter_imu_measurements(imu_measurements, filtered_imu_measurements, cutoff_
                                                               sample_rate)
   filtered_imu_measurements.accelerations.zs = lowpass_filter(imu_measurements.accelerations.zs, cutoff_frequency,
                                                               sample_rate)
+  filtered_imu_measurements.angular_velocities.xs = lowpass_filter(imu_measurements.angular_velocities.xs,
+                                                                   cutoff_frequency, sample_rate)
+  filtered_imu_measurements.angular_velocities.ys = lowpass_filter(imu_measurements.angular_velocities.ys,
+                                                                   cutoff_frequency, sample_rate)
+  filtered_imu_measurements.angular_velocities.zs = lowpass_filter(imu_measurements.angular_velocities.zs,
+                                                                   cutoff_frequency, sample_rate)
   filtered_imu_measurements.times = imu_measurements.times
 
 
@@ -140,27 +146,58 @@ def create_plots(bagfile, filtered_bagfile, output_file, cutoff_frequency):
                                                                           measurements.times, sample_spacing)
   acceleration_z_fft_magnitudes, acceleration_z_fft_frequencies = get_fft(measurements.accelerations.zs,
                                                                           measurements.times, sample_spacing)
+  angular_velocity_x_fft_magnitudes, angular_velocity_x_fft_frequencies = get_fft(measurements.angular_velocities.xs,
+                                                                                  measurements.times, sample_spacing)
+  angular_velocity_y_fft_magnitudes, angular_velocity_y_fft_frequencies = get_fft(measurements.angular_velocities.ys,
+                                                                                  measurements.times, sample_spacing)
+  angular_velocity_z_fft_magnitudes, angular_velocity_z_fft_frequencies = get_fft(measurements.angular_velocities.zs,
+                                                                                  measurements.times, sample_spacing)
+
   filtered_acceleration_x_fft_magnitudes, filtered_acceleration_x_fft_frequencies = get_fft(
     filtered_measurements.accelerations.xs, filtered_measurements.times, sample_spacing)
   filtered_acceleration_y_fft_magnitudes, filtered_acceleration_y_fft_frequencies = get_fft(
     filtered_measurements.accelerations.ys, filtered_measurements.times, sample_spacing)
   filtered_acceleration_z_fft_magnitudes, filtered_acceleration_z_fft_frequencies = get_fft(
     filtered_measurements.accelerations.zs, filtered_measurements.times, sample_spacing)
+  filtered_angular_velocity_x_fft_magnitudes, filtered_angular_velocity_x_fft_frequencies = get_fft(
+    filtered_measurements.angular_velocities.xs, filtered_measurements.times, sample_spacing)
+  filtered_angular_velocity_y_fft_magnitudes, filtered_angular_velocity_y_fft_frequencies = get_fft(
+    filtered_measurements.angular_velocities.ys, filtered_measurements.times, sample_spacing)
+  filtered_angular_velocity_z_fft_magnitudes, filtered_angular_velocity_z_fft_frequencies = get_fft(
+    filtered_measurements.angular_velocities.zs, filtered_measurements.times, sample_spacing)
 
   with PdfPages(output_file) as pdf:
     plot_imu_measurements(pdf, measurements, 'Raw Imu ')
+
     plot_fft(pdf, acceleration_x_fft_magnitudes, acceleration_x_fft_frequencies, 'Raw Imu FFT Accel x ')
     plot_fft(pdf, acceleration_y_fft_magnitudes, acceleration_y_fft_frequencies, 'Raw Imu FFT Accel y ')
     plot_fft(pdf, acceleration_z_fft_magnitudes, acceleration_z_fft_frequencies, 'Raw Imu FFT Accel z ')
+    plot_fft(pdf, angular_velocity_x_fft_magnitudes, angular_velocity_x_fft_frequencies, 'Raw Imu FFT Ang Vel x ')
+    plot_fft(pdf, angular_velocity_y_fft_magnitudes, angular_velocity_y_fft_frequencies, 'Raw Imu FFT Ang Vel y ')
+    plot_fft(pdf, angular_velocity_z_fft_magnitudes, angular_velocity_z_fft_frequencies, 'Raw Imu FFT Ang Vel z ')
+
     plot_filtered_data(pdf, filtered_measurements.accelerations.xs, measurements.accelerations.xs,
                        filtered_measurements.times, measurements.times, 'Filtered Accel x')
     plot_filtered_data(pdf, filtered_measurements.accelerations.ys, measurements.accelerations.ys,
                        filtered_measurements.times, measurements.times, 'Filtered Accel y')
     plot_filtered_data(pdf, filtered_measurements.accelerations.zs, measurements.accelerations.zs,
                        filtered_measurements.times, measurements.times, 'Filtered Accel z')
+    plot_filtered_data(pdf, filtered_measurements.angular_velocities.xs, measurements.angular_velocities.xs,
+                       filtered_measurements.times, measurements.times, 'Filtered Ang Vel x')
+    plot_filtered_data(pdf, filtered_measurements.angular_velocities.ys, measurements.angular_velocities.ys,
+                       filtered_measurements.times, measurements.times, 'Filtered Ang Vel y')
+    plot_filtered_data(pdf, filtered_measurements.angular_velocities.zs, measurements.angular_velocities.zs,
+                       filtered_measurements.times, measurements.times, 'Filtered Ang Vel z')
+
     plot_fft(pdf, filtered_acceleration_x_fft_magnitudes, filtered_acceleration_x_fft_frequencies,
              'Filtered Imu FFT Accel x ')
     plot_fft(pdf, filtered_acceleration_y_fft_magnitudes, filtered_acceleration_y_fft_frequencies,
              'Filtered Imu FFT Accel y ')
     plot_fft(pdf, filtered_acceleration_z_fft_magnitudes, filtered_acceleration_z_fft_frequencies,
              'Filtered Imu FFT Accel z ')
+    plot_fft(pdf, filtered_angular_velocity_x_fft_magnitudes, filtered_angular_velocity_x_fft_frequencies,
+             'Filtered Imu FFT Ang Vel x ')
+    plot_fft(pdf, filtered_angular_velocity_y_fft_magnitudes, filtered_angular_velocity_y_fft_frequencies,
+             'Filtered Imu FFT Ang Vel y ')
+    plot_fft(pdf, filtered_angular_velocity_z_fft_magnitudes, filtered_angular_velocity_z_fft_frequencies,
+             'Filtered Imu FFT Ang Vel z ')
