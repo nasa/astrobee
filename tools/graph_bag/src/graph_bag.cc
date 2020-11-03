@@ -170,7 +170,7 @@ void GraphBag::Run() {
       // are created when adding of features
       graph_localizer_wrapper_.OpticalFlowCallback(*of_msg);
       if (save_optical_flow_images_) {
-        const auto img_msg = live_measurement_simulator_->GetImageMessage(current_time);
+        const auto img_msg = live_measurement_simulator_->GetImageMessage(lc::TimeFromHeader(of_msg->header));
         if (img_msg) SaveOpticalFlowTracksImage(*img_msg, graph_localizer_wrapper_.feature_tracks());
       }
 
