@@ -873,7 +873,8 @@ EXCLUDE_PATTERNS       = */external/*/* \
                          */diagrams/nodes.puml \
                          */diagrams/colors.puml \
                          */diagrams/color_palettes.puml \
-                         */diagrams/common.puml
+                         */diagrams/common.puml \
+						 */test/*
 
 # The EXCLUDE_SYMBOLS tag can be used to specify one or more symbol names
 # (namespaces, classes, functions, etc.) that should be excluded from the
@@ -945,11 +946,11 @@ INPUT_FILTER           =
 # need to set EXTENSION_MAPPING for the extension otherwise the files are not
 # properly processed by doxygen.
 
-FILTER_PATTERNS        = "*.msg=$(SOURCE_PATH)/doc/scripts/msg2dox.py" \
-                         "*.srv=$(SOURCE_PATH)/doc/scripts/srv2dox.py" \
-                         "*.action=$(SOURCE_PATH)/doc/scripts/action2dox.py" \
-                         "*.csv=.$(SOURCE_PATH)/doc/scripts/csv2dox.py" \
-                         "*.puml=$(SOURCE_PATH)/doc/scripts/puml2dox.py"
+FILTER_PATTERNS        = "*.msg=doc/scripts/msg2dox.py" \
+                         "*.srv=doc/scripts/srv2dox.py" \
+                         "*.action=doc/scripts/action2dox.py" \
+                         "*.csv=doc/scripts/csv2dox.py" \
+                         "*.puml=doc/scripts/puml2dox.py"
 
 # If the FILTER_SOURCE_FILES tag is set to YES, the input filter (if set using
 # INPUT_FILTER) will also be used to filter the input files that are used for
@@ -1094,7 +1095,7 @@ ALPHABETICAL_INDEX     = YES
 # Minimum value: 1, maximum value: 20, default value: 5.
 # This tag requires that the tag ALPHABETICAL_INDEX is set to YES.
 
-COLS_IN_ALPHA_INDEX    = 5
+COLS_IN_ALPHA_INDEX    = 2
 
 # In case all classes in a project start with a common prefix, all classes will
 # be put under the same header in the alphabetical index. The IGNORE_PREFIX tag
@@ -2410,7 +2411,7 @@ DIAFILE_DIRS           =
 # generate a warning when it encounters a \startuml command in this case and
 # will not generate output for the diagram.
 
-PLANTUML_JAR_PATH      = $(SOURCE_PATH)/doc/diagrams/plantuml
+PLANTUML_JAR_PATH      = doc/diagrams/plantuml
 
 # When using plantuml, the specified paths are searched for files specified by
 # the !include statement in a plantuml block.

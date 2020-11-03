@@ -24,6 +24,7 @@ jobs:
       run: |
         sudo apt-get install python-bson
         sudo apt-get install flex
+        sudo apt-get install graphviz
     - name: Install doxygen
       run: |
         wget http://doxygen.nl/files/doxygen-1.8.20.src.tar.gz
@@ -52,7 +53,7 @@ jobs:
         ./scripts/build/genCommandDictionary.py astrobee/commands/freeFlyerPlanSchema.json doc/html/AstrobeeCommandDictionary.html 
     - name: Build Documentation
       run: |
-        cd repo
+        cd repo/doc/diagrams/ && make && cd ../..
         doxygen astrobee.doxyfile
         cd ..
     - name: Replace old documentation with new

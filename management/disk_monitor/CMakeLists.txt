@@ -39,7 +39,6 @@ if(CATKIN_ENABLE_TESTING)
   target_link_libraries(test_init_llp_disk_monitor
     ${catkin_LIBRARIES} config_reader ff_nodelet
   )
-
   # MLP disk monitor initialization fault tester
   add_rostest_gtest(test_init_mlp_disk_monitor
     test/test_init_mlp_disk_monitor.test
@@ -49,6 +48,7 @@ if(CATKIN_ENABLE_TESTING)
   target_link_libraries(test_init_mlp_disk_monitor
     ${catkin_LIBRARIES} config_reader ff_nodelet
   )
+
 endif()
 
 create_test_targets(DIR test
