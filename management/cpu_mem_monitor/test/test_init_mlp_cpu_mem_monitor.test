@@ -14,12 +14,22 @@
 <!-- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or         -->
 <!-- implied. See the License for the specific language governing            -->
 <!-- permissions and limitations under the License.                          -->
+
 <launch>
-  <arg name="name" default="cpu_monitor" />
-  <arg name="manager" default="" />
-  <include file="$(find ff_util)/launch/ff_nodelet.launch">
-    <arg name="name" value="$(arg name)" />
-    <arg name="manager" value="$(arg manager)" />
-    <arg name="class" value="cpu_monitor/CpuMonitor" />
+
+  <env name="ASTROBEE_CONFIG_DIR" value="$(find astrobee)/config/tests" />
+  <env name="ASTROBEE_RESOURCE_DIR" value="$(find astrobee)/resources" />
+  <env name="ASTROBEE_ROBOT" value="p4d" />
+  <env name="ASTROBEE_WORLD" value="iss" />
+  <include file="$(find cpu_mem_monitor)/launch/cpu_mem_monitor.launch">
+    <arg name="name" value="mlp_cpu_mem_monitor" />
   </include>
+
+  <env name="ASTROBEE_CONFIG_DIR" value="$(find astrobee)/config" />
+  <env name="ASTROBEE_RESOURCE_DIR" value="$(find astrobee)/resources" />
+  <env name="ASTROBEE_ROBOT" value="p4d" />
+  <env name="ASTROBEE_WORLD" value="iss" />
+  <include file="$(find sys_monitor)/launch/sys_monitor.launch" />
+
+  <test pkg="cpu_mem_monitor" type="test_init_mlp_cpu_mem_monitor" test-name="test_init_mlp_cpu_mem_monitor" />
 </launch>
