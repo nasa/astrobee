@@ -31,6 +31,8 @@
 
 #include <Eigen/Core>
 
+#include <opencv2/highgui/highgui_c.h>
+
 #include <glog/logging.h>
 
 #include <chrono>
@@ -69,41 +71,40 @@ GraphBag::GraphBag(const std::string& bag_name, const std::string& map_file, con
   nav_cam_params_.reset(new camera::CameraParameters(&config, "nav_cam"));
 }
 
-// TODO(rsoussan): remove this? cite leo?
-// TODO(rsoussan): draw latest tracks as circles?
-// TODO(rsoussan): draw larger arrow for most recent track
 void GraphBag::FeatureTrackImage(const graph_localizer::FeatureTrackMap& feature_tracks,
                                  cv::Mat& feature_track_image) const {
-  int num_feature_tracks = 0;
-  int longest_track = 0;
-
   for (const auto& feature_track : feature_tracks) {
     const auto& points = feature_track.second.points;
-    // change color based on track length
-    cv::Scalar color(255, 255, 0, 1);  // yellow
-    if (points.size() > 5) {
-      color = cv::Scalar(50, 255, 50, 1);  // green
+    cv::Scalar color;
+    if (points.size() <= 1) {
+      // Red for single point tracks
+      color = cv::Scalar(50, 255, 50, 1);
+    } else if (points.size() < 3) {
+      // Yellow for medium length tracks
+      color = cv::Scalar(255, 255, 0, 1);
     } else {
-      if (points.size() <= 1) {
-        color = cv::Scalar(255, 0, 0, 1);  // red
-        const auto distorted_point = Distort(points[0].image_point, *nav_cam_params_);
-        cv::circle(feature_track_image, distorted_point, 3, color);
-        continue;
-      }
+      // Green for long tracks
+      color = cv::Scalar(50, 255, 50, 1);
     }
 
-    for (int i = 1; i < points.size(); ++i) {
-      const auto distorted_current_point = Distort(points[i].image_point, *nav_cam_params_);
-      const auto distorted_previous_point = Distort(points[i - 1].image_point, *nav_cam_params_);
-      arrowedLine(feature_track_image, distorted_previous_point, distorted_current_point, color);
+    // Draw track history
+    for (int i = 0; i < points.size() - 1; ++i) {
+      const auto distorted_previous_point = Distort(points[i].image_point, *nav_cam_params_);
+      const auto distorted_current_point = Distort(points[i + 1].image_point, *nav_cam_params_);
+      cv::circle(feature_track_image, distorted_current_point, 2 /* Radius*/, cv::Scalar(0, 255, 255), -1 /*Filled*/,
+                 8);
+      cv::line(feature_track_image, distorted_current_point, distorted_previous_point, color, 2, 8, 0);
     }
-    if (points.size() > longest_track) {
-      longest_track = points.size();
+    // Account for single point tracks
+    if (points.size() == 1) {
+      cv::circle(feature_track_image, Distort(points[0].image_point, *nav_cam_params_), 2 /* Radius*/, color,
+                 -1 /*Filled*/, 8);
     }
-    ++num_feature_tracks;
+    // Draw feature id at most recent point
+    cv::putText(feature_track_image, std::to_string(points[points.size() - 1].feature_id),
+                Distort(points[points.size() - 1].image_point, *nav_cam_params_), CV_FONT_NORMAL, 0.4,
+                cv::Scalar(255, 0, 0));
   }
-
-  DLOG(INFO) << "FeatureTrackImage: Drew " << num_feature_tracks << " tracks, the longest was: " << longest_track;
 }
 
 void GraphBag::SaveSparseMappingPoseMsg(const geometry_msgs::PoseStamped& sparse_mapping_pose_msg) {
