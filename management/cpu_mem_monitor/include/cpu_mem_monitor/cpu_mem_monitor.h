@@ -164,7 +164,7 @@ int ParseLine(char* line) {
   // This assumes that a digit will be found and the line ends in " Kb".
   int i = strlen(line);
   const char* p = line;
-  for (uint j = 0; (*p < '0' || *p > '9') && j < strlen(line); ++p, ++j) {}
+  for (; (*p < '0' || *p > '9') && *p != '\0'; ++p) {}
   line[i - 3] = '\0';
   i = atoi(p);
   return i;
