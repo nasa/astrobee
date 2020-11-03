@@ -1,0 +1,9 @@
+<library path="lib/libcpu_mem_monitor">
+  <class name="cpu_mem_monitor/CpuMemMonitor"
+	 type="cpu_mem_monitor::CpuMemMonitor"
+	 base_class_type="nodelet::Nodelet">
+    <description>
+	  Nodelet to monitor CPU and Memory stats.
+    </description>
+  </class>
+</library>

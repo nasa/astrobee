@@ -16,13 +16,13 @@
  * under the License.
  */
 
-#ifndef CPU_MONITOR_CPU_H_
-#define CPU_MONITOR_CPU_H_
+#ifndef CPU_MEM_MONITOR_CPU_H_
+#define CPU_MEM_MONITOR_CPU_H_
 
 #include <string>
 #include <vector>
 
-namespace cpu_monitor {
+namespace cpu_mem_monitor {
 
 class Core {
  private:
@@ -80,6 +80,6 @@ class Cpu {
   double GetTemperature(double scale = 1.0);
 };
 
-}  // namespace cpu_monitor
+}  // namespace cpu_mem_monitor
 
-#endif  // CPU_MONITOR_CPU_H_
+#endif  // CPU_MEM_MONITOR_CPU_H_
