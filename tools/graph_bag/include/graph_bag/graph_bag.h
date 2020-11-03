@@ -40,7 +40,7 @@ namespace graph_bag {
 class GraphBag {
  public:
   GraphBag(const std::string& bag_name, const std::string& map_file, const std::string& image_topic,
-           const bool save_feature_track_image, const std::string& results_bag);
+           const std::string& results_bag);
   void Run();
 
  private:
@@ -60,7 +60,7 @@ class GraphBag {
   graph_localizer::GraphLocalizerWrapper graph_localizer_wrapper_;
   imu_augmentor::ImuAugmentorWrapper imu_augmentor_wrapper_;
   ImuBiasTesterWrapper imu_bias_tester_wrapper_;
-  const bool kSaveFeatureTrackImage_;
+  bool save_optical_flow_images_;
   const std::string kFeatureTracksImageTopic_ = "feature_track_image";
   const std::string kImuBiasTesterPoseTopic_ = "imu_bias_tester";
   std::unique_ptr<camera::CameraParameters> nav_cam_params_;

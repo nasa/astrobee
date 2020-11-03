@@ -120,6 +120,9 @@ bool LiveMeasurementSimulator::ProcessMessage() {
     }
   } else if (string_ends_with(msg.getTopic(), kImageTopic_)) {
     sensor_msgs::ImageConstPtr image_msg = msg.instantiate<sensor_msgs::Image>();
+    if (params_.save_optical_flow_images) {
+      img_buffer_.emplace(localization_common::TimeFromHeader(image_msg->header), image_msg);
+    }
     const ff_msgs::Feature2dArray of_features = GenerateOFFeatures(image_msg);
     of_buffer_.BufferMessage(of_features);
 
@@ -151,5 +154,13 @@ boost::optional<ff_msgs::VisualLandmarks> LiveMeasurementSimulator::GetVLMessage
 boost::optional<ff_msgs::VisualLandmarks> LiveMeasurementSimulator::GetARMessage(const lc::Time current_time) {
   return ar_buffer_.GetMessage(current_time);
 }
+boost::optional<sensor_msgs::ImageConstPtr> LiveMeasurementSimulator::GetImageMessage(const lc::Time current_time) {
+  // Clear buffer up to current time
+  for (auto img_it = img_buffer_.begin(); img_it != img_buffer_.end() && img_it->first < current_time;) {
+    img_it = img_buffer_.erase(img_it);
+  }
 
+  if (img_buffer_.empty() || img_buffer_.begin()->first != current_time) return boost::none;
+  return img_buffer_.begin()->second;
+}
 }  // namespace graph_bag

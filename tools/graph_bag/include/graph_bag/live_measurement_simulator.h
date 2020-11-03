@@ -34,7 +34,9 @@
 #include <sensor_msgs/Image.h>
 #include <sensor_msgs/Imu.h>
 
+#include <map>
 #include <string>
+#include <utility>
 
 namespace graph_bag {
 class LiveMeasurementSimulator {
@@ -45,6 +47,7 @@ class LiveMeasurementSimulator {
 
   localization_common::Time CurrentTime();
 
+  boost::optional<sensor_msgs::ImageConstPtr> GetImageMessage(const localization_common::Time current_time);
   boost::optional<sensor_msgs::Imu> GetImuMessage(const localization_common::Time current_time);
   boost::optional<ff_msgs::Feature2dArray> GetOFMessage(const localization_common::Time current_time);
   boost::optional<ff_msgs::VisualLandmarks> GetVLMessage(const localization_common::Time current_time);
@@ -64,6 +67,7 @@ class LiveMeasurementSimulator {
   const std::string kImageTopic_;
   std::unique_ptr<rosbag::View> view_;
   boost::optional<rosbag::View::iterator> view_it_;
+  std::map<localization_common::Time, sensor_msgs::ImageConstPtr> img_buffer_;
   MessageBuffer<sensor_msgs::Imu> imu_buffer_;
   MessageBuffer<ff_msgs::Feature2dArray> of_buffer_;
   MessageBuffer<ff_msgs::VisualLandmarks> vl_buffer_;

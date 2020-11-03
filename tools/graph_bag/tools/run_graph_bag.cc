@@ -48,8 +48,7 @@ int main(int argc, char** argv) {
                      "Config path")(
       "output-bagfile,o", po::value<std::string>(&output_bagfile)->default_value("results.bag"), "Output bagfile")(
       "robot-config-file,r", po::value<std::string>(&robot_config_file)->default_value("config/robots/bumble.config"),
-      "Robot config file")("world,w", po::value<std::string>(&world)->default_value("iss"), "World name")(
-      "feature-track-image,f", po::bool_switch()->default_value(false), "Save feature track image");
+      "Robot config file")("world,w", po::value<std::string>(&world)->default_value("iss"), "World name");
   po::positional_options_description p;
   p.add("bagfile", 1);
   p.add("map-file", 1);
@@ -69,7 +68,6 @@ int main(int argc, char** argv) {
 
   const std::string input_bag = vm["bagfile"].as<std::string>();
   const std::string map_file = vm["map-file"].as<std::string>();
-  const bool save_feature_track_image = vm["feature-track-image"].as<bool>();
 
   // Only pass program name to free flyer so that boost command line options
   // are ignored when parsing gflags.
@@ -95,7 +93,7 @@ int main(int argc, char** argv) {
   lc::SetEnvironmentConfigs(config_path, world, robot_config_file);
   config_reader::ConfigReader config;
 
-  graph_bag::GraphBag graph_bag(input_bag, map_file, image_topic, save_feature_track_image, output_bagfile);
+  graph_bag::GraphBag graph_bag(input_bag, map_file, image_topic, output_bagfile);
 #ifdef GOOGLE_PROFILER
   ProfilerStart(boost::filesystem::current_path() + "/graph_bag_prof.txt");
 #endif

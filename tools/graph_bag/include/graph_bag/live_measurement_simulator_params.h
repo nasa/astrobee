@@ -28,10 +28,12 @@ struct LiveMeasurementSimulatorParams {
   MessageBufferParams of;
   MessageBufferParams vl;
   MessageBufferParams ar;
+  MessageBufferParams img;
   std::string bag_name;
   std::string map_file;
   std::string image_topic;
   bool use_image_features;
+  bool save_optical_flow_images;
 };
 }  // namespace graph_bag
 

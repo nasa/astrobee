@@ -49,8 +49,8 @@ namespace graph_bag {
 namespace lc = localization_common;
 
 GraphBag::GraphBag(const std::string& bag_name, const std::string& map_file, const std::string& image_topic,
-                   const bool save_feature_track_image, const std::string& results_bag)
-    : kSaveFeatureTrackImage_(save_feature_track_image), results_bag_(results_bag, rosbag::bagmode::Write) {
+                   const std::string& results_bag)
+    : results_bag_(results_bag, rosbag::bagmode::Write) {
   config_reader::ConfigReader config;
   config.AddFile("cameras.config");
   config.AddFile("geometry.config");
@@ -64,6 +64,7 @@ GraphBag::GraphBag(const std::string& bag_name, const std::string& map_file, con
   LiveMeasurementSimulatorParams params;
   LoadLiveMeasurementSimulatorParams(config, bag_name, map_file, image_topic, params);
   live_measurement_simulator_.reset(new LiveMeasurementSimulator(params));
+  save_optical_flow_images_ = params.save_optical_flow_images;
   // Needed for feature tracks visualization
   nav_cam_params_.reset(new camera::CameraParameters(&config, "nav_cam"));
 }
@@ -168,8 +169,10 @@ void GraphBag::Run() {
       // exist at timestamp already when adding vl features, and these states
       // are created when adding of features
       graph_localizer_wrapper_.OpticalFlowCallback(*of_msg);
-      // TODO(rsoussan): save image msg for each of/vl msg
-      // if (kSaveFeatureTrackImage_) SaveOpticalFlowTracksImage(image_msg, graph_localizer_wrapper_.feature_tracks());
+      if (save_optical_flow_images_) {
+        const auto img_msg = live_measurement_simulator_->GetImageMessage(current_time);
+        if (img_msg) SaveOpticalFlowTracksImage(*img_msg, graph_localizer_wrapper_.feature_tracks());
+      }
 
       // Save latest graph localization msg, which should have just been optimized after adding of and/or vl features.
       // Pass latest loc state to imu augmentor if it is available.
