@@ -16,13 +16,19 @@
  * under the License.
  */
 
+// Test Visualeyez stream:
+// Sets up a fake client to send well-formed visualeyez messages at 1Hz
+// using TimerCallback, if they start being received using the VisualeyezCallback
+// within a 10 second timer the test passes, if 10 seconds passes and there is
+// no response, then TimeoutCallback is called and the test fails.
+
 // Required for the test framework
 #include <gtest/gtest.h>
 
 // Required for the test cases
 #include <ros/ros.h>
 
-// Rquired messahes
+// Required messages
 #include <ff_msgs/VisualeyezData.h>
 #include <ff_msgs/VisualeyezDataArray.h>
 
@@ -59,7 +65,7 @@ void VisualeyezCallback(const ff_msgs::VisualeyezDataArray::ConstPtr& msg) {
     EXPECT_EQ(msg->measurements[i].position.y, msg_.measurements[i].position.y);
     EXPECT_EQ(msg->measurements[i].position.z, msg_.measurements[i].position.z);
   }
-  // Shutdown ROS, for now :)
+  // Shutdown ROS, for now, test passed :)
   ros::shutdown();
 }
 

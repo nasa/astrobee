@@ -16,6 +16,11 @@
  * under the License.
  */
 
+// Tests action active timeout
+// This tests allows the client to connect to the server, and then kills the
+// server. When a goal is sent to the server, after 4 seconds, an active
+// timeout result should be triggered showing that it did not receive the goal.
+
 // Required for the test framework
 #include <gtest/gtest.h>
 

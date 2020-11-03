@@ -29,6 +29,16 @@
 #include <ff_util/ff_names.h>
 #include <vector>
 
+// Test access control
+// 1) Test Grab Control
+// 2) Test sending a command while having control
+// 3) Test sending a stop command without being the operator in control
+// 4) Test sending an idle propulsion command without being the operator in control
+// 5) Test sending a grab control command with an invalid cookie
+// 6) Test sending a grab control command with no arguements
+// 7) Test sending a grab control command with the wrong argument type
+// 8) Test sending a command without being the operator in control
+
 // Publisher and subscribers
 ros::Subscriber cmd_sub, ack_sub, state_sub;
 ros::Publisher cmd_pub;
@@ -310,7 +320,7 @@ TEST(access_control, GrabControlCommandInvalidCookie) {
   ack_sub.shutdown();
 }
 
-// Test sending a grab control command with no arguements
+// Test sending a grab control command with no arguments
 TEST(access_control, GrabControlNoArgs) {
   ros::NodeHandle n;
   ack_sub = n.subscribe<ff_msgs::AckStamped>(TOPIC_MANAGEMENT_ACK, 10,
