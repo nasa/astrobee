@@ -155,12 +155,12 @@ boost::optional<ff_msgs::VisualLandmarks> LiveMeasurementSimulator::GetARMessage
   return ar_buffer_.GetMessage(current_time);
 }
 boost::optional<sensor_msgs::ImageConstPtr> LiveMeasurementSimulator::GetImageMessage(const lc::Time current_time) {
+  const auto img_it = img_buffer_.find(current_time);
+  if (img_it == img_buffer_.end()) return boost::none;
+  const auto current_img = img_it->second;
   // Clear buffer up to current time
-  for (auto img_it = img_buffer_.begin(); img_it != img_buffer_.end() && img_it->first < current_time;) {
-    img_it = img_buffer_.erase(img_it);
-  }
+  img_buffer_.erase(img_buffer_.begin(), img_it);
 
-  if (img_buffer_.empty() || img_buffer_.begin()->first != current_time) return boost::none;
-  return img_buffer_.begin()->second;
+  return current_img;
 }
 }  // namespace graph_bag
