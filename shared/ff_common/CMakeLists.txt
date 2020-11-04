@@ -17,6 +17,12 @@
 
 project(ff_common)
 
+catkin_package(
+  INCLUDE_DIRS include
+  LIBRARIES ff_common
+  CATKIN_DEPENDS
+)
+
 create_library(TARGET ff_common
   INC ${GFLAGS_INCLUDE_DIRS} ${GLOG_INCLUDE_DIRS}
   ${CMAKE_CURRENT_BINARY_DIR}/include

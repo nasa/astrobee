@@ -36,6 +36,13 @@ set(INCLUDES
   ${Boost_INCLUDE_DIRS}
 )
 
+catkin_package(
+  INCLUDE_DIRS include
+  LIBRARIES camera
+  CATKIN_DEPENDS
+#  DEPENDS system_lib
+)
+
 create_library(TARGET camera
   LIBS ${LIBS}
   INC ${INCLUDES}
@@ -49,13 +56,6 @@ create_tool_targets(DIR tools
 create_test_targets(DIR test
   LIBS camera ${CERES_LIBRARIES}
   INC ${INCLUDES} ${CERES_INCLUDE_DIRS}
-)
-
-catkin_package(
-  INCLUDE_DIRS include
-  LIBRARIES camera
-  CATKIN_DEPENDS
-#  DEPENDS system_lib
 )
 
 set(CAMERA_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/include PARENT_SCOPE)

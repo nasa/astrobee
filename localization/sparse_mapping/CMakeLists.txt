@@ -46,6 +46,12 @@ set(INCLUDES
 )
 set(SPARSE_MAPPING_LIBRARIES sparse_mapping ${LIBS})
 
+catkin_package(
+  INCLUDE_DIRS include
+  LIBRARIES sparse_mapping
+  CATKIN_DEPENDS camera interest_point config_reader ff_common
+)
+
 create_library(TARGET sparse_mapping
   LIBS ${LIBS}
   INC include ${INCLUDES}
@@ -64,12 +70,6 @@ create_test_targets(DIR test
   LIBS ${LIBS} sparse_mapping
   INC ${INCLUDES}
   DEPS ${DEPS})
-
-catkin_package(
-  INCLUDE_DIRS include
-  LIBRARIES sparse_mapping
-  CATKIN_DEPENDS camera interest_point config_reader ff_common
-)
 
 set(SPARSE_MAPPING_INCLUDE_DIRS
   ${CMAKE_CURRENT_SOURCE_DIR}/include
