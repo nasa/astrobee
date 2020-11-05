@@ -16,7 +16,11 @@
  * under the License.
  */
 
+#include <ff_util/ff_names.h>
+#include <graph_bag/utilities.h>
 #include <localization_common/combined_nav_state.h>
+#include <localization_common/time.h>
+#include <localization_common/utilities.h>
 
 #include <gtsam/base/serialization.h>
 
@@ -43,6 +47,19 @@ LocalizationGraphDisplay::LocalizationGraphDisplay() {
       new rviz::BoolProperty("Show Imu Factor Arrows", true, "Show imu factors as arrows.", this));
   imu_factor_arrows_diameter_.reset(
       new rviz::FloatProperty("Imu Factor Arrows Diameter", 0.01, "Imu factor arrows diameter.", this));
+
+  image_transport::ImageTransport image_transport(nh_);
+  image_sub_ = image_transport.subscribe(TOPIC_HARDWARE_NAV_CAM, 1, &LocalizationGraphDisplay::imageCallback, this);
+  optical_flow_image_pub_ = image_transport.advertise("/graph_localizer/optical_flow_feature_tracks", 1);
+
+  config_reader::ConfigReader config;
+  config.AddFile("cameras.config");
+
+  if (!config.ReadFiles()) {
+    LOG(FATAL) << "Failed to read config files.";
+  }
+  // Needed for feature tracks visualization
+  nav_cam_params_.reset(new camera::CameraParameters(&config, "nav_cam"));
 }
 
 void LocalizationGraphDisplay::onInitialize() { MFDClass::onInitialize(); }
@@ -55,6 +72,24 @@ void LocalizationGraphDisplay::reset() {
 void LocalizationGraphDisplay::clearDisplay() {
   graph_pose_axes_.clear();
   imu_factor_arrows_.clear();
+}
+
+void LocalizationGraphDisplay::imageCallback(const sensor_msgs::ImageConstPtr& image_msg) {
+  img_buffer_.emplace(lc::TimeFromHeader(image_msg->header), image_msg);
+}
+
+void LocalizationGraphDisplay::addOpticalFlowVisual(const graph_localizer::FeatureTrackMap& feature_tracks,
+                                                    const localization_common::Time latest_graph_time) {
+  const auto img_it = img_buffer_.find(latest_graph_time);
+  if (img_it == img_buffer_.end()) return;
+  const auto img = img_it->second;
+  // Clear buffer up to current time
+  img_buffer_.erase(img_buffer_.begin(), img_it);
+
+  const auto feature_track_image = graph_bag::CreateFeatureTrackImage(img, feature_tracks, *nav_cam_params_);
+  if (!feature_track_image) return;
+  // TODO(rsoussan): set timestamp??
+  optical_flow_image_pub_.publish(*feature_track_image);
 }
 
 void LocalizationGraphDisplay::addImuVisual(const graph_localizer::GraphLocalizer& graph_localizer,
@@ -98,6 +133,8 @@ void LocalizationGraphDisplay::processMessage(const ff_msgs::LocalizationGraph::
   clearDisplay();
   graph_localizer::GraphLocalizer graph_localizer;
   gtsam::deserializeBinary(msg->serialized_graph, graph_localizer);
+  if (graph_localizer.graph_values().LatestTimestamp())
+    addOpticalFlowVisual(graph_localizer.feature_tracks(), *(graph_localizer.graph_values().LatestTimestamp()));
   for (const auto factor : graph_localizer.factor_graph()) {
     const auto smart_factor = dynamic_cast<const SmartFactor*>(factor.get());
     if (smart_factor) {

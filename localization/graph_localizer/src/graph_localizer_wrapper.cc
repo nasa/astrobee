@@ -184,9 +184,9 @@ void GraphLocalizerWrapper::InitializeGraph() {
   graph_localizer_.reset(new graph_localizer::GraphLocalizer(graph_localizer_initialization_.params()));
 }
 
-const FeatureTrackMap* const GraphLocalizerWrapper::feature_tracks() const {
-  if (!graph_localizer_) return nullptr;
-  return &(graph_localizer_->feature_tracks());
+boost::optional<const FeatureTrackMap&> GraphLocalizerWrapper::feature_tracks() const {
+  if (!graph_localizer_) return boost::none;
+  return graph_localizer_->feature_tracks();
 }
 
 boost::optional<std::pair<gtsam::Pose3, lc::Time>> GraphLocalizerWrapper::estimated_world_T_dock() const {

@@ -20,32 +20,22 @@
 #include <ff_util/ff_names.h>
 #include <graph_bag/graph_bag.h>
 #include <graph_bag/parameter_reader.h>
+#include <graph_bag/utilities.h>
 #include <graph_localizer/utilities.h>
 #include <localization_common/utilities.h>
 #include <msg_conversions/msg_conversions.h>
 
 #include <geometry_msgs/PoseStamped.h>
-#include <image_transport/image_transport.h>
 #include <ros/time.h>
 #include <sensor_msgs/Imu.h>
 
 #include <Eigen/Core>
-
-#include <opencv2/highgui/highgui_c.h>
 
 #include <glog/logging.h>
 
 #include <chrono>
 #include <cstdlib>
 #include <vector>
-
-namespace {
-cv::Point Distort(const Eigen::Vector2d& undistorted_point, const camera::CameraParameters& params) {
-  Eigen::Vector2d distorted_point;
-  params.Convert<camera::UNDISTORTED_C, camera::DISTORTED>(undistorted_point, &distorted_point);
-  return cv::Point(distorted_point.x(), distorted_point.y());
-}
-}  // namespace
 
 namespace graph_bag {
 namespace lc = localization_common;
@@ -59,8 +49,7 @@ GraphBag::GraphBag(const std::string& bag_name, const std::string& map_file, con
   config.AddFile("tools/graph_bag.config");
 
   if (!config.ReadFiles()) {
-    ROS_FATAL("Failed to read config files.");
-    exit(0);
+    LOG(FATAL) << "Failed to read config files.";
   }
 
   LiveMeasurementSimulatorParams params;
@@ -71,62 +60,17 @@ GraphBag::GraphBag(const std::string& bag_name, const std::string& map_file, con
   nav_cam_params_.reset(new camera::CameraParameters(&config, "nav_cam"));
 }
 
-void GraphBag::FeatureTrackImage(const graph_localizer::FeatureTrackMap& feature_tracks,
-                                 cv::Mat& feature_track_image) const {
-  for (const auto& feature_track : feature_tracks) {
-    const auto& points = feature_track.second.points;
-    cv::Scalar color;
-    if (points.size() <= 1) {
-      // Red for single point tracks
-      color = cv::Scalar(50, 255, 50, 1);
-    } else if (points.size() < 3) {
-      // Yellow for medium length tracks
-      color = cv::Scalar(255, 255, 0, 1);
-    } else {
-      // Green for long tracks
-      color = cv::Scalar(50, 255, 50, 1);
-    }
-
-    // Draw track history
-    for (int i = 0; i < points.size() - 1; ++i) {
-      const auto distorted_previous_point = Distort(points[i].image_point, *nav_cam_params_);
-      const auto distorted_current_point = Distort(points[i + 1].image_point, *nav_cam_params_);
-      cv::circle(feature_track_image, distorted_current_point, 2 /* Radius*/, cv::Scalar(0, 255, 255), -1 /*Filled*/,
-                 8);
-      cv::line(feature_track_image, distorted_current_point, distorted_previous_point, color, 2, 8, 0);
-    }
-    // Account for single point tracks
-    if (points.size() == 1) {
-      cv::circle(feature_track_image, Distort(points[0].image_point, *nav_cam_params_), 2 /* Radius*/, color,
-                 -1 /*Filled*/, 8);
-    }
-    // Draw feature id at most recent point
-    cv::putText(feature_track_image, std::to_string(points[points.size() - 1].feature_id),
-                Distort(points[points.size() - 1].image_point, *nav_cam_params_), CV_FONT_NORMAL, 0.4,
-                cv::Scalar(255, 0, 0));
-  }
-}
-
 void GraphBag::SaveSparseMappingPoseMsg(const geometry_msgs::PoseStamped& sparse_mapping_pose_msg) {
   const ros::Time timestamp = lc::RosTimeFromHeader(sparse_mapping_pose_msg.header);
   results_bag_.write("/" + std::string(TOPIC_SPARSE_MAPPING_POSE), timestamp, sparse_mapping_pose_msg);
 }
 
 void GraphBag::SaveOpticalFlowTracksImage(const sensor_msgs::ImageConstPtr& image_msg,
-                                          const graph_localizer::FeatureTrackMap* const feature_tracks) {
-  if (feature_tracks == nullptr) return;
-  cv_bridge::CvImagePtr feature_track_image;
-  try {
-    feature_track_image = cv_bridge::toCvCopy(image_msg, sensor_msgs::image_encodings::RGB8);
-  } catch (cv_bridge::Exception& e) {
-    ROS_ERROR("cv_bridge exception: %s", e.what());
-    return;
-  }
-
-  FeatureTrackImage(*feature_tracks, feature_track_image->image);
-  const auto feature_track_image_msg = feature_track_image->toImageMsg();
+                                          const graph_localizer::FeatureTrackMap& feature_tracks) {
+  const auto feature_track_image_msg = CreateFeatureTrackImage(image_msg, feature_tracks, *nav_cam_params_);
+  if (!feature_track_image_msg) return;
   const ros::Time timestamp = lc::RosTimeFromHeader(image_msg->header);
-  results_bag_.write("/" + kFeatureTracksImageTopic_, timestamp, *feature_track_image_msg);
+  results_bag_.write("/" + kFeatureTracksImageTopic_, timestamp, **feature_track_image_msg);
 }
 
 void GraphBag::SaveImuBiasTesterPredictedStates(
@@ -172,7 +116,8 @@ void GraphBag::Run() {
       graph_localizer_wrapper_.OpticalFlowCallback(*of_msg);
       if (save_optical_flow_images_) {
         const auto img_msg = live_measurement_simulator_->GetImageMessage(lc::TimeFromHeader(of_msg->header));
-        if (img_msg) SaveOpticalFlowTracksImage(*img_msg, graph_localizer_wrapper_.feature_tracks());
+        if (img_msg && graph_localizer_wrapper_.feature_tracks())
+          SaveOpticalFlowTracksImage(*img_msg, *(graph_localizer_wrapper_.feature_tracks()));
       }
 
       // Save latest graph localization msg, which should have just been optimized after adding of and/or vl features.

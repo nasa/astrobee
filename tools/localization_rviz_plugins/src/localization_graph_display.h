@@ -22,14 +22,19 @@
 
 // Required for Qt
 #ifndef Q_MOC_RUN
+#include <camera/camera_params.h>
 #include <ff_msgs/LocalizationGraph.h>
 #include <graph_localizer/graph_localizer.h>
 #include <gtsam/geometry/Pose3.h>
 #include <gtsam/navigation/CombinedImuFactor.h>
+#include <image_transport/image_transport.h>
+#include <ros/publisher.h>
+#include <ros/subscriber.h>
 #include <rviz/message_filter_display.h>
 #include <rviz/ogre_helpers/arrow.h>
 #include <rviz/ogre_helpers/axes.h>
 #include <rviz/properties/float_property.h>
+#include <map>
 #include <vector>
 #endif
 
@@ -55,9 +60,12 @@ class LocalizationGraphDisplay : public rviz::MessageFilterDisplay<ff_msgs::Loca
 
  private:
   void processMessage(const ff_msgs::LocalizationGraph::ConstPtr& graph_msg);
+  void imageCallback(const sensor_msgs::ImageConstPtr& image_msg);
   void clearDisplay();
   void addImuVisual(const graph_localizer::GraphLocalizer& graph_localizer,
                     const gtsam::CombinedImuFactor* const imu_factor);
+  void addOpticalFlowVisual(const graph_localizer::FeatureTrackMap& feature_tracks,
+                            const localization_common::Time latest_graph_time);
 
   std::vector<std::unique_ptr<rviz::Axes>> graph_pose_axes_;
   std::vector<std::unique_ptr<rviz::Arrow>> imu_factor_arrows_;
@@ -65,6 +73,11 @@ class LocalizationGraphDisplay : public rviz::MessageFilterDisplay<ff_msgs::Loca
   std::unique_ptr<rviz::FloatProperty> pose_axes_size_;
   std::unique_ptr<rviz::BoolProperty> show_imu_factor_arrows_;
   std::unique_ptr<rviz::FloatProperty> imu_factor_arrows_diameter_;
+  image_transport::Publisher optical_flow_image_pub_;
+  image_transport::Subscriber image_sub_;
+  ros::NodeHandle nh_;
+  std::map<localization_common::Time, sensor_msgs::ImageConstPtr> img_buffer_;
+  std::unique_ptr<camera::CameraParameters> nav_cam_params_;
 };
 }  // namespace localization_rviz_plugins
 #endif  // LOCALIZATION_RVIZ_PLUGINS_LOCALIZATION_GRAPH_DISPLAY_H_ NOLINT

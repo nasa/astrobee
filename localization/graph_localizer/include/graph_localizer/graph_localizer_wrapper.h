@@ -66,7 +66,7 @@ class GraphLocalizerWrapper {
 
   void ImuCallback(const sensor_msgs::Imu& imu_msg);
 
-  const FeatureTrackMap* const feature_tracks() const;
+  boost::optional<const FeatureTrackMap&> feature_tracks() const;
 
   boost::optional<std::pair<gtsam::Pose3, localization_common::Time>> estimated_world_T_dock() const;
 
