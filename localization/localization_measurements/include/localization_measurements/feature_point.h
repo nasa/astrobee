@@ -33,10 +33,22 @@ struct FeaturePoint {
   FeaturePoint(const double u, const double v, const ImageId image_id, const FeatureId feature_id,
                const localization_common::Time timestamp)
       : image_point(u, v), image_id(image_id), feature_id(feature_id), timestamp(timestamp) {}
+  FeaturePoint() {}
   gtsam::Point2 image_point;
   ImageId image_id;
   FeatureId feature_id;
   localization_common::Time timestamp;
+
+ private:
+  // Serialization function
+  friend class boost::serialization::access;
+  template <class ARCHIVE>
+  void serialize(ARCHIVE& ar, const unsigned int /*version*/) {
+    ar& BOOST_SERIALIZATION_NVP(image_point);
+    ar& BOOST_SERIALIZATION_NVP(image_id);
+    ar& BOOST_SERIALIZATION_NVP(feature_id);
+    ar& BOOST_SERIALIZATION_NVP(timestamp);
+  }
 };
 
 using FeaturePoints = std::vector<FeaturePoint>;

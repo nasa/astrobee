@@ -30,6 +30,16 @@ struct FeatureTrack {
   localization_measurements::FeatureId id;
   std::deque<localization_measurements::FeaturePoint> points;
   localization_measurements::ImageId latest_image_id;
+
+ private:
+  // Serialization function
+  friend class boost::serialization::access;
+  template <class ARCHIVE>
+  void serialize(ARCHIVE& ar, const unsigned int /*version*/) {
+    ar& BOOST_SERIALIZATION_NVP(id);
+    ar& BOOST_SERIALIZATION_NVP(latest_image_id);
+    ar& BOOST_SERIALIZATION_NVP(points);
+  }
 };
 
 using FeatureTracks = std::vector<FeatureTrack>;

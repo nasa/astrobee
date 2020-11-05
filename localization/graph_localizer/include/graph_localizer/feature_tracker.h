@@ -41,6 +41,13 @@ class FeatureTracker {
   void RemoveOldFeaturePoints(localization_common::Time oldest_allowed_time);
 
  private:
+  // Serialization function
+  friend class boost::serialization::access;
+  template <class ARCHIVE>
+  void serialize(ARCHIVE& ar, const unsigned int /*version*/) {
+    ar& BOOST_SERIALIZATION_NVP(feature_tracks_);
+  }
+
   FeatureTrackMap feature_tracks_;
   FeatureTrackerParams params_;
   boost::optional<localization_common::Time> latest_time_;
