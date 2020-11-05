@@ -32,6 +32,7 @@
 
 #include <glog/logging.h>
 
+#include <string>
 #include <utility>
 
 #include "localization_graph_display.h"  // NOLINT
@@ -51,6 +52,19 @@ LocalizationGraphDisplay::LocalizationGraphDisplay() {
   image_transport::ImageTransport image_transport(nh_);
   image_sub_ = image_transport.subscribe(TOPIC_HARDWARE_NAV_CAM, 1, &LocalizationGraphDisplay::imageCallback, this);
   optical_flow_image_pub_ = image_transport.advertise("/graph_localizer/optical_flow_feature_tracks", 1);
+
+  // TODO(rsoussan): avoid this and pass config path directly to config reader!!!!
+  // make sure body_T_nav cam is correct!!!! (bsharp not bumble)
+  // Only pass program name to free flyer so that boost command line options
+  // are ignored when parsing gflags.
+  int ff_argc = 1;
+  char* argv = "script";
+  char** argv_ptr = &argv;
+  ff_common::InitFreeFlyerApplication(&ff_argc, &argv_ptr);
+  const std::string config_path = "/home/rsoussan/astrobee/astrobee";
+  const std::string world = "granite";
+  const std::string robot_config_file = "config/robots/bsharp.config";
+  lc::SetEnvironmentConfigs(config_path, world, robot_config_file);
 
   config_reader::ConfigReader config;
   config.AddFile("cameras.config");

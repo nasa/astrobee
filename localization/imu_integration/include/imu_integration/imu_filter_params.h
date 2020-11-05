@@ -23,7 +23,7 @@
 namespace imu_integration {
 struct ImuFilterParams {
   // none, butter, butter3, butter5, butter5_1, butter5_05
-  std::string type;
+  std::string type = "none";
 };
 }  // namespace imu_integration
 
