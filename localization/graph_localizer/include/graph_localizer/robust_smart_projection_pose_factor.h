@@ -122,6 +122,7 @@ class RobustSmartProjectionPoseFactor : public SmartProjectionPoseFactor<CALIBRA
   void serialize(ARCHIVE& ar, const unsigned int /*version*/) {
     ar& BOOST_SERIALIZATION_BASE_OBJECT_NVP(SmartProjectionPoseFactor<CALIBRATION>);
     ar& BOOST_SERIALIZATION_NVP(noiseModel_);
+    ar& BOOST_SERIALIZATION_NVP(robust_model_);
   }
 
   SharedIsotropic noiseModel_;
