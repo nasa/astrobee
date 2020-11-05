@@ -160,7 +160,7 @@ void LocalizationGraphPanel::LocalizationGraphCallback(const ff_msgs::Localizati
   // TODO(rsoussan): put these somewhere else!
   using Calibration = gtsam::Cal3_S2;
   using Camera = gtsam::PinholeCamera<Calibration>;
-  using SmartFactor = gtsam::SmartProjectionPoseFactor<Calibration>;
+  using SmartFactor = gtsam::RobustSmartProjectionPoseFactor<Calibration>;
 
   gl::GraphLocalizer graph_localizer;
   gtsam::deserializeBinary(loc_msg->serialized_graph, graph_localizer);

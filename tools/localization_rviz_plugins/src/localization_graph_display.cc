@@ -102,7 +102,6 @@ void LocalizationGraphDisplay::addOpticalFlowVisual(const graph_localizer::Featu
 
   const auto feature_track_image = graph_bag::CreateFeatureTrackImage(img, feature_tracks, *nav_cam_params_);
   if (!feature_track_image) return;
-  // TODO(rsoussan): set timestamp??
   optical_flow_image_pub_.publish(*feature_track_image);
 }
 
@@ -142,7 +141,7 @@ void LocalizationGraphDisplay::processMessage(const ff_msgs::LocalizationGraph::
   // TODO(rsoussan): put these somewhere else!
   using Calibration = gtsam::Cal3_S2;
   using Camera = gtsam::PinholeCamera<Calibration>;
-  using SmartFactor = gtsam::SmartProjectionPoseFactor<Calibration>;
+  using SmartFactor = gtsam::RobustSmartProjectionPoseFactor<Calibration>;
 
   clearDisplay();
   graph_localizer::GraphLocalizer graph_localizer;
