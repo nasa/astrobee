@@ -16,7 +16,7 @@
  * under the License.
  */
 
-#include <cpu_monitor/cpu.h>
+#include <cpu_mem_monitor/cpu.h>
 
 #include <cerrno>
 #include <cstring>
@@ -24,7 +24,7 @@
 #include <iostream>
 #include <string>
 
-namespace cpu_monitor {
+namespace cpu_mem_monitor {
 
 Core::Core(const std::string sys_cpu_path, int id)
   : sys_cpu_path_(sys_cpu_path)
@@ -261,4 +261,4 @@ double Cpu::GetTemperature(double scale) {
   return temp * scale;
 }
 
-}  // namespace cpu_monitor
+}  // namespace cpu_mem_monitor

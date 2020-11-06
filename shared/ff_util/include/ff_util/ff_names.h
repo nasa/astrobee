@@ -165,6 +165,7 @@
 #define TOPIC_MANAGEMENT_ACCESS_CONTROL_STATE         "mgt/access_control/state"
 #define TOPIC_MANAGEMENT_CPU_MONITOR_STATE            "mgt/cpu_monitor/state"
 #define TOPIC_MANAGEMENT_DISK_MONITOR_STATE           "mgt/disk_monitor/state"
+#define TOPIC_MANAGEMENT_MEM_MONITOR_STATE            "mgt/mem_monitor/state"
 #define TOPIC_MANAGEMENT_EXEC_AGENT_STATE             "mgt/executive/agent_state"
 #define TOPIC_MANAGEMENT_EXEC_CF_ACK                  "mgt/executive/cf_ack"
 #define TOPIC_MANAGEMENT_EXEC_COMMAND                 "mgt/executive/command"

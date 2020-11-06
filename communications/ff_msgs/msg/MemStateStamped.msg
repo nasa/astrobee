@@ -14,12 +14,24 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
+#
+# Memory state message with timestamp.
 
-add_subdirectory(access_control)
-add_subdirectory(cpu_mem_monitor)
-add_subdirectory(disk_monitor)
-add_subdirectory(image_sampler)
-add_subdirectory(sys_monitor)
-add_subdirectory(executive)
-add_subdirectory(data_bagger)
-add_subdirectory(log_monitor)
+# Header with timestamp
+std_msgs/Header header
+
+# Machine name (llp, hlp, mlp, etc)
+string name
+
+# Physical Memory (RAM)
+uint32 ram_total   # total physical memeory in system Mb
+uint32 ram_used    # totalphysical memeory used in Mb
+
+# Virtual Memory
+uint32 virt_total  # total virtual memeory in system in Mb
+uint32 virt_used   # total virtual memeory used in Mb
+
+# Individual nodes
+ff_msgs/MemState[] nodes
+
+

@@ -16,6 +16,10 @@
  * under the License.
  */
 
+// Test plan
+// Tests that plan contruction elements are loaded correctly, detected and
+// asserted.
+
 #include <jsonloader/plan.h>
 #include <jsonloader/planio.h>
 

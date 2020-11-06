@@ -14,12 +14,17 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
+#
+# State of the Memory.
 
-add_subdirectory(access_control)
-add_subdirectory(cpu_mem_monitor)
-add_subdirectory(disk_monitor)
-add_subdirectory(image_sampler)
-add_subdirectory(sys_monitor)
-add_subdirectory(executive)
-add_subdirectory(data_bagger)
-add_subdirectory(log_monitor)
+# The memory load of the node, for the fields given in
+string name
+# Virtual Memory
+uint32 virt        # virtual memeory used in Mb
+uint32 virt_peak   # peak virtual memory used in Mb
+
+# Physical Memory
+uint32 ram        # physical memory used in Mb
+uint32 ram_peak   # peak physical memory used in Mb
+float32 ram_perc  # percentage of physical memory in %
+
