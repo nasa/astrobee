@@ -113,7 +113,7 @@ class RobustSmartProjectionPoseFactor : public SmartProjectionPoseFactor<CALIBRA
       Key key = keys[k];
       QF.push_back(KeyMatrix(key, reduced_matrices[k]));
     }
-    return boost::make_shared<RegularJacobianFactor<D>>(QF, robust_reduced_error, model);
+    return boost::make_shared<RegularJacobianFactor<D>>(QF, robust_reduced_error);
   }
 
   /// Serialization function
