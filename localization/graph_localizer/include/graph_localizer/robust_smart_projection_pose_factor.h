@@ -57,7 +57,7 @@ class RobustSmartProjectionPoseFactor : public SmartProjectionPoseFactor<CALIBRA
         gtsam::noiseModel::mEstimator::Huber::Create(1.345 /*Taken from gtsam*/), sharedNoiseModel);
   }
 
-  boost::shared_ptr<GaussianFactor> linearize(const Values& values) const override {
+  std::pair<std::vector<std::pair<Key, Matrix>>, Vector> linearize(const Values& values) const override {
     typename Base::Cameras cameras = this->cameras(values);
     if (!this->triangulateForLinearize(cameras)) return boost::make_shared<JacobianFactorSVD<Dim, 2>>(this->keys());
     // Adapted from SmartFactorBase::CreateJacobianSVDFactor
@@ -67,8 +67,7 @@ class RobustSmartProjectionPoseFactor : public SmartProjectionPoseFactor<CALIBRA
     const size_t M = ZDim * m;
     Matrix E0(M, M - 3);
     this->computeJacobiansSVD(F, E0, b, cameras, *(this->point()));
-    SharedIsotropic n = noiseModel::Isotropic::Sigma(M - 3, noiseModel_->sigma());
-    return createRegularJacobianFactorSVD<Dim, ZDim>(this->keys(), F, E0, b, n);
+    return createRegularJacobianFactorSVD<Dim, ZDim>(this->keys(), F, E0, b);
   }
 
   double error(const Values& values) const override {
@@ -89,31 +88,34 @@ class RobustSmartProjectionPoseFactor : public SmartProjectionPoseFactor<CALIBRA
 
  private:
   template <size_t D, size_t ZDim>
-  boost::shared_ptr<RegularJacobianFactor<D>> createRegularJacobianFactorSVD(
+  std::pair<std::vector<std::pair<Key, Matrix>>, Vector> createRegularJacobianFactorSVD(
       const KeyVector& keys,
       const std::vector<Eigen::Matrix<double, ZDim, D>, Eigen::aligned_allocator<Eigen::Matrix<double, ZDim, D>>>&
           Fblocks,
-      const Matrix& Enull, const Vector& b, const SharedDiagonal& model = SharedDiagonal()) const {
+      const Matrix& Enull, const Vector& b) const {
     typedef std::pair<Key, Matrix> KeyMatrix;
+
+    Vector robust_reduced_error = Enull.transpose() * b;
+    // Apply noise whitening and robust weighting manually to more efficiently robustify
+    // error vector and jacobians.  Equivalent to calling whitenSystem with a robust noise model.
+    // Assumes noise is diagonal (required for this factor anyway).
+    const double inv_sigma = 1.0 / noiseModel_->sigma();
+    robust_reduced_error *= inv_sigma;
+    const double weight = robust_model_->robust()->sqrtWeight(robust_reduced_error.norm());
+    robust_reduced_error *= weight;
+    const double robust_whiten_weight = weight * inv_sigma;
 
     size_t numKeys = Enull.rows() / ZDim;
     size_t m2 = ZDim * numKeys - 3;  // TODO(gtsam): is this not just Enull.rows()?
-    std::vector<Matrix> reduced_matrices;
-    reduced_matrices.reserve(numKeys);
-    for (size_t k = 0; k < Fblocks.size(); ++k) {
-      reduced_matrices.push_back((Enull.transpose()).block(0, ZDim * k, m2, ZDim) * Fblocks[k]);
-    }
-
-    Vector robust_reduced_error = Enull.transpose() * b;
-    robust_model_->WhitenSystem(reduced_matrices, robust_reduced_error);
-
-    std::vector<KeyMatrix> QF;
-    QF.reserve(numKeys);
+    std::vector<KeyMatrix> robust_reduced_matrices;
+    robust_reduced_matrices.reserve(numKeys);
     for (size_t k = 0; k < Fblocks.size(); ++k) {
       Key key = keys[k];
-      QF.push_back(KeyMatrix(key, reduced_matrices[k]));
+      robust_reduced_matrices.emplace_back(
+          KeyMatrix(key, (Enull.transpose()).block(0, ZDim * k, m2, ZDim) * Fblocks[k] * robust_whiten_weight));
     }
-    return boost::make_shared<RegularJacobianFactor<D>>(QF, robust_reduced_error);
+
+    return {robust_reduced_matrices, robust_reduced_error};
   }
 
   /// Serialization function
