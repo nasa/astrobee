@@ -28,15 +28,18 @@ create_library(TARGET ff_common
   ${CMAKE_CURRENT_BINARY_DIR}/include
   LIBS ${GFLAGS_LIBRARIES} ${GLOG_LIBRARIES})
 
-create_test_targets(DIR test
-  LIBS ff_common
-  DEPS ff_common)
+if(CATKIN_ENABLE_TESTING)
+  find_package(rostest REQUIRED)
 
-catkin_package(
-  INCLUDE_DIRS include
-  LIBRARIES ff_common
-  CATKIN_DEPENDS
-)
+  add_rostest_gtest(test_thread
+    test/test_thread.test
+    test/test_thread.cc
+  )
+  target_link_libraries(test_thread
+    ff_common
+  )
+
+endif()
 
 include_directories(
   include
