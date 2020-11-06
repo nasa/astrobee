@@ -15,7 +15,18 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+cmake_minimum_required(VERSION 2.8.3)
 project(arm)
+
+## Compile as C++11, supported in ROS Kinetic and newer
+add_compile_options(-std=c++11)
+
+find_package(catkin REQUIRED COMPONENTS
+  roscpp
+  std_msgs
+  nodelet
+  ff_util
+)
 
 catkin_package(
   LIBRARIES
@@ -30,30 +41,24 @@ catkin_package(
     ff_util
 )
 
-create_library(
-  TARGET
-    arm
-  LIBS
-    ${catkin_LIBRARIES}
-    ff_nodelet
-    config_server
-  INC
-    ${catkin_INCLUDE_DIRS}
-  DEPS
-    ff_msgs
+# Declare C++ libraries
+add_library(arm
+  src/arm_nodelet.cc
 )
+add_dependencies(arm ${catkin_EXPORTED_TARGETS})
+target_link_libraries(arm ${catkin_LIBRARIES})
 
-create_tool_targets(
-  DIR
-    tools
-  LIBS
-    ${catkin_LIBRARIES}
-    ff_common
-    ff_nodelet
-  INC
-    ${catkin_INCLUDE_DIRS}
-  DEPS
-    ff_msgs
-)
+## Declare a C++ executable: inspection_tool
+add_executable(arm_tool tools/arm_tool.cc)
+add_dependencies(arm_tool ${catkin_EXPORTED_TARGETS})
+target_link_libraries(arm_tool
+  arm gflags ${catkin_LIBRARIES})
 
-install_launch_files()
+#############
+## Install ##
+#############
+
+# Mark launch files for installation
+install(DIRECTORY launch/
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
+  PATTERN ".svn" EXCLUDE)

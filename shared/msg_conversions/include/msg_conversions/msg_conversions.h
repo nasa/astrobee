@@ -21,8 +21,8 @@
 
 #include <config_reader/config_reader.h>
 
-#include <Eigen/Core>
-#include <Eigen/Geometry>
+#include <eigen3/Eigen/Core>
+#include <eigen3/Eigen/Geometry>
 
 #include <geometry_msgs/Pose.h>
 #include <geometry_msgs/Point.h>

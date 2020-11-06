@@ -15,6 +15,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+cmake_minimum_required(VERSION 2.8.3)
 project(ff_msgs)
 
 find_package(catkin2 REQUIRED COMPONENTS
@@ -26,8 +27,125 @@ find_package(catkin2 REQUIRED COMPONENTS
   sensor_msgs
 )
 
-create_msg_targets(DIR msg SDIR srv ADIR action
-  DEPS std_msgs geometry_msgs actionlib_msgs trajectory_msgs sensor_msgs)
+
+# Generate messages in the 'msg' folder
+add_message_files(
+  FILES
+  AccessControlStateStamped.msg
+  AckCompletedStatus.msg
+  AckStamped.msg
+  AckStatus.msg
+  AgentStateStamped.msg
+  ArmGripperState.msg
+  ArmJointState.msg
+  ArmState.msg
+  ArmStateStamped.msg
+  AvailableRobots.msg
+  CameraRegistration.msg
+  CameraState.msg
+  CameraStatesStamped.msg
+  CommandArg.msg
+  CommandConstants.msg
+  CommandStamped.msg
+  CommStateStamped.msg
+  CompressedFile.msg
+  CompressedFileAck.msg
+  ControlCommand.msg
+  ControlState.msg
+  CpuState.msg
+  CpuStateStamped.msg
+  DataToDiskState.msg
+  DataTopicsList.msg
+  DepthLandmark.msg
+  DepthLandmarks.msg
+  DiskState.msg
+  DiskStateStamped.msg
+  DockState.msg
+  EkfState.msg
+  ExecState.msg
+  FamCommand.msg
+  Fault.msg
+  FaultConfig.msg
+  FaultData.msg
+  FaultInfo.msg
+  FaultState.msg
+  Feature2d.msg
+  Feature2dArray.msg
+  FlightMode.msg
+  GuestScienceApk.msg
+  GuestScienceCommand.msg
+  GuestScienceConfig.msg
+  GuestScienceData.msg
+  GuestScienceState.msg
+  Hazard.msg
+  Heartbeat.msg
+  JointSample.msg
+  JointSampleStamped.msg
+  LocalizationPipeline.msg
+  LocalizationState.msg
+  MemState.msg
+  MemStateStamped.msg
+  MobilityState.msg
+  MotionState.msg
+  OpState.msg
+  PerchState.msg
+  Performance.msg
+  PicoflexxIntermediateData.msg
+  PlanStatusStamped.msg
+  SaveSettings.msg
+  Segment.msg
+  SignalState.msg
+  Status.msg
+  TimeDiffStamped.msg
+  VisualeyezCalibration.msg
+  VisualeyezData.msg
+  VisualeyezDataArray.msg
+  VisualeyezFeedback.msg
+  VisualeyezFeedbackArray.msg
+  VisualLandmark.msg
+  VisualLandmarks.msg
+  Zone.msg
+)
+
+# Generate services in the 'srv' folder
+add_service_files(
+ FILES
+  ConfigureCamera.srv
+  EnableCamera.srv
+  EnableRecording.srv
+  GetMap.srv
+  GetPipelines.srv
+  GetZones.srv
+  RegisterPlanner.srv
+  SetBool.srv
+  SetDataToDisk.srv
+  SetEkfInput.srv
+  SetFloat.srv
+  SetInertia.srv
+  SetRate.srv
+  SetState.srv
+  SetStreamingLights.srv
+  SetZones.srv
+  Trigger.srv
+  UnloadLoadNodelet.srv
+  VisualeyezConfig.srv
+)
+
+# Generate actions in the 'action' folder
+add_action_files(
+  FILES
+  Arm.action
+  Control.action
+  Dock.action
+  Localization.action
+  Motion.action
+  Perch.action
+  Plan.action
+)
+
+generate_messages(
+  DEPENDENCIES std_msgs geometry_msgs actionlib_msgs trajectory_msgs sensor_msgs std_msgs
+)
 
 catkin_package(
  # INCLUDE_DIRS include

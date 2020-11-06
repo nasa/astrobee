@@ -15,16 +15,21 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+cmake_minimum_required(VERSION 2.8.3)
 project(ff_common)
 
-create_library(TARGET ff_common
-  INC ${GFLAGS_INCLUDE_DIRS} ${GLOG_INCLUDE_DIRS}
-  ${CMAKE_CURRENT_BINARY_DIR}/include
-  LIBS ${GFLAGS_LIBRARIES} ${GLOG_LIBRARIES})
+## Compile as C++11, supported in ROS Kinetic and newer
+add_compile_options(-std=c++11)
 
-create_test_targets(DIR test
-  LIBS ff_common
-  DEPS ff_common)
+## Find catkin macros and libraries
+find_package(catkin REQUIRED COMPONENTS
+  roscpp
+  std_msgs
+  nodelet
+)
+
+# ## System dependencies are found with CMake's conventions
+find_package(Gflags REQUIRED)
 
 catkin_package(
   INCLUDE_DIRS include
@@ -32,8 +37,26 @@ catkin_package(
   CATKIN_DEPENDS
 )
 
+###########
+## Build ##
+###########
+
+# Specify additional locations of header files
+# Your package locations should be listed before other locations
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
 )
 
+# Declare C++ libraries
+add_library(ff_common
+  src/init.cc
+  src/thread.cc
+  src/utils.cc
+)
+add_dependencies(ff_common ${catkin_EXPORTED_TARGETS} ${GFLAGS_INCLUDE_DIRS} ${GLOG_INCLUDE_DIRS})
+target_link_libraries(ff_common gflags ${catkin_LIBRARIES} ${GFLAGS_LIBRARIES} ${GLOG_LIBRARIES})
+
+# create_test_targets(DIR test
+#   LIBS ff_common
+#   DEPS ff_common)
