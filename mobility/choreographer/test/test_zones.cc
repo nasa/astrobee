@@ -64,12 +64,13 @@ void StateCallback(const ff_msgs::EkfStateConstPtr& state) {
   // Only one message wanted
   if (!client_t_.IsConnected()) return;  // Mobility
   else if (state->confidence != ff_msgs::EkfState::CONFIDENCE_GOOD) return;
-  else sub_ekf_.shutdown();
+  else
+    sub_ekf_.shutdown();
   sleep(3);
   ROS_ERROR("Got Ekf message");
   // // Configure the planner
   // ff_util::ConfigClient cfg(&nh_, NODE_CHOREOGRAPHER);
-    
+
   // cfg.Set<bool>("enable_collision_checking", true);
   // cfg.Set<bool>("enable_validation", true);
   // cfg.Set<bool>("enable_bootstrapping", true);
@@ -111,7 +112,6 @@ void StateCallback(const ff_msgs::EkfStateConstPtr& state) {
     std::cout << "Mobility client did not accept goal" << std::endl;
   else
     return;
-
 }
 
 // Keepout zone test
