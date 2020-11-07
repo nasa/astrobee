@@ -56,14 +56,27 @@ class RobustSmartProjectionPoseFactor : public SmartProjectionPoseFactor<CALIBRA
 
   boost::shared_ptr<GaussianFactor> linearize(const Values& values) const override {
     typename Base::Cameras cameras = this->cameras(values);
-    if (!this->triangulateForLinearize(cameras)) return boost::make_shared<JacobianFactorSVD<Dim, 2>>(this->keys());
+    // if (!this->triangulateForLinearize(cameras)) return boost::make_shared<JacobianFactorSVD<Dim, 2>>(this->keys());
+    const auto result = this->triangulateSafe(cameras);
     // Adapted from SmartFactorBase::CreateJacobianSVDFactor
     size_t m = this->keys().size();
     typename Base::FBlocks F;
     Vector b;
     const size_t M = ZDim * m;
     Matrix E0(M, M - 3);
-    this->computeJacobiansSVD(F, E0, b, cameras, *(this->point()));
+
+    // TODO(rsoussan): make this an option
+    // TODO(rsoussan): update total error projection to also return zero for everyting but behind cam and valid!!!
+    // Handle behind camera result with rotation only factors (see paper)
+    // Degenerate result tends to lead to solve failures, so return empty factor in this case
+    if (result.valid()) {
+      this->computeJacobiansSVD(F, E0, b, cameras, *(this->point()));
+    } else if (result.BehindCamera()) {
+      Unit3 backProjected = cameras[0].backprojectPointAtInfinity(this->measured().at(0));
+      this->computeJacobiansSVD(F, E0, b, cameras, backProjected);
+    } else {
+      return boost::make_shared<JacobianFactorSVD<Dim, 2>>(this->keys());
+    }
     return createRegularJacobianFactorSVD<Dim, ZDim>(this->keys(), F, E0, b);
   }
 
@@ -109,7 +122,7 @@ class RobustSmartProjectionPoseFactor : public SmartProjectionPoseFactor<CALIBRA
     for (size_t k = 0; k < Fblocks.size(); ++k) {
       Key key = keys[k];
       robust_reduced_matrices.emplace_back(
-          KeyMatrix(key, ((Enull.transpose()).block(0, ZDim * k, m2, ZDim) * Fblocks[k]) * robust_whiten_weight));
+          KeyMatrix(key, (Enull.transpose()).block(0, ZDim * k, m2, ZDim) * Fblocks[k] * robust_whiten_weight));
     }
 
     return boost::make_shared<RegularJacobianFactor<D>>(robust_reduced_matrices, robust_reduced_error);
