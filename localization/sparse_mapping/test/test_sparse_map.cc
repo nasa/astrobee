@@ -70,7 +70,7 @@ class SparseMapTest : public ::testing::TestWithParam<Parameters> {
   virtual ~SparseMapTest() = default;
   virtual void SetUp() {
     FLAGS_num_threads = 1;
-    std::string data_dir = std::string(TEST_DIR) + "/data";
+    std::string data_dir = std::string(std::getenv("DATA_DIR"));
     image_filenames.push_back(data_dir + "/m0004000.jpg");
     image_filenames.push_back(data_dir + "/m0004025.jpg");
     image_filenames.push_back(data_dir + "/m0004050.jpg");
@@ -190,7 +190,7 @@ TEST_P(SparseMapTest, MapBuilding) {
   }
 
   // Try localizing an image that wasn't in the map
-  EXPECT_TRUE(map_loopback.Localize(std::string(TEST_DIR) + "/data/m0004033.jpg", &guess));
+  EXPECT_TRUE(map_loopback.Localize(std::string(std::getenv("DATA_DIR")) + "m0004033.jpg", &guess));
   Eigen::Affine3d
     closest1 = map_loopback.GetFrameGlobalTransform(1),
     closest2 = map_loopback.GetFrameGlobalTransform(2);
