@@ -27,6 +27,7 @@
 #include <graph_localizer/key_info.h>
 #include <graph_localizer/robust_smart_projection_pose_factor.h>
 #include <imu_integration/latest_imu_integrator.h>
+#include <localization_common/averager.h>
 #include <localization_common/combined_nav_state.h>
 #include <localization_common/combined_nav_state_covariances.h>
 #include <localization_common/time.h>
@@ -209,6 +210,7 @@ class GraphLocalizer {
   std::multimap<localization_common::Time, FactorsToAdd> buffered_factors_to_add_;
   localization_common::Timer optimization_timer_;
   localization_common::Timer marginals_timer_;
+  localization_common::Averager iterations_averager_;
   gtsam::Marginals::Factorization marginals_factorization_;
 };
 }  // namespace graph_localizer

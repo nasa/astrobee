@@ -58,7 +58,8 @@ GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
       graph_values_(params.graph_values),
       params_(params),
       optimization_timer_("Optimization"),
-      marginals_timer_("Marginals") {
+      marginals_timer_("Marginals"),
+      iterations_averager_("Iterations") {
   // Assumes zero initial velocity
   const lc::CombinedNavState global_N_body_start(
       params_.graph_initialization.global_T_body_start, gtsam::Velocity3::Zero(),
@@ -934,7 +935,7 @@ bool GraphLocalizer::Update() {
     log(params_.fatal_failures, "Update: Graph optimization failed, keeping old values.");
   }
   optimization_timer_.StopAndLog();
-  LOG(INFO) << "Number of iterations: " << optimizer.iterations();
+  iterations_averager_.UpdateAndLog(optimizer.iterations());
 
   if (params_.print_factor_info) PrintFactorDebugInfo();
 
