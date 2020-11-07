@@ -17,6 +17,8 @@
 
 project(choreographer)
 
+find_package(ff_util REQUIRED)
+
 catkin_package(
   INCLUDE_DIRS
     include
@@ -25,8 +27,9 @@ catkin_package(
   CATKIN_DEPENDS
     roscpp
     nodelet
-    pluginlib
-    actionlib
+    mapper
+    ff_msgs
+    ff_util
     tf2
     tf2_ros
     nav_msgs
@@ -50,6 +53,15 @@ if(CATKIN_ENABLE_TESTING)
 
   target_link_libraries(test_init_choreographer
     ${catkin_LIBRARIES} config_reader ff_nodelet
+  )
+  # Choreographer test zones
+  add_rostest_gtest(test_zones
+    test/test_zones.test
+    test/test_zones.cc
+  )
+
+  target_link_libraries(test_zones
+    ${catkin_LIBRARIES} config_client ff_nodelet
   )
 endif()
 

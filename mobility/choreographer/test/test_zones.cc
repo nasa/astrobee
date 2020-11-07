@@ -43,10 +43,13 @@
 
 // Avoid sending the command multiple times
 bool sent_ = false;
+bool stable_ = false;
 
 // Subscriber Ekf
 ros::Subscriber sub_ekf_;
   ff_util::FreeFlyerActionClient<ff_msgs::MotionAction> client_t_;
+
+tf2_ros::Buffer tf_buffer_;
 
 // Called once when the goal completes
 void MResultCallback(ff_util::FreeFlyerActionState::Enum result_code,
@@ -61,32 +64,61 @@ void MFeedbackCallback(ff_msgs::MotionFeedbackConstPtr const& feedback) {}
 
 
 void StateCallback(const ff_msgs::EkfStateConstPtr& state) {
-  // Only one message wanted
-  if (!client_t_.IsConnected()) return;  // Mobility
+  if (!client_t_.IsConnected()) return;
   else if (state->confidence != ff_msgs::EkfState::CONFIDENCE_GOOD) return;
   else
     sub_ekf_.shutdown();
-  sleep(3);
+  sleep(1);
+  stable_ = true;
+
   ROS_ERROR("Got Ekf message");
-  // // Configure the planner
-  // ff_util::ConfigClient cfg(&nh_, NODE_CHOREOGRAPHER);
+  return;
+}
 
-  // cfg.Set<bool>("enable_collision_checking", true);
-  // cfg.Set<bool>("enable_validation", true);
-  // cfg.Set<bool>("enable_bootstrapping", true);
-  // cfg.Set<bool>("enable_immediate", true);
-  // cfg.Set<bool>("enable_timesync", false);
-  // cfg.Set<bool>("enable_replanning", true);
-  // cfg.Set<bool>("enable_faceforward", false);
-  // cfg.Set<std::string>("planner", "trapezoidal");
+// Keepout zone test
+TEST(choreographer_nominal, ZoneBreach) {
+  // Set the zones
+  // Get the node handle
+  ros::NodeHandle nh;
 
-  // if (!cfg.Reconfigure()) {
-  //   std::cout << "Could not reconfigure the choreographer node " << std::endl;
-  //   EXPECT_EQ(true, true);
-  // }
+  tf2_ros::TransformListener tfListener(tf_buffer_);
+  ROS_ERROR("Started Test");
 
-  // Send the Goal
-  ROS_ERROR("Sending goal to move to a pose");
+  // Setup MOBILITY action
+  client_t_.SetConnectedTimeout(30.0);
+  client_t_.SetActiveTimeout(30.0);
+  client_t_.SetResponseTimeout(30.0);
+  client_t_.SetFeedbackCallback(std::bind(
+    MFeedbackCallback, std::placeholders::_1));
+  client_t_.SetResultCallback(std::bind(
+    MResultCallback, std::placeholders::_1, std::placeholders::_2));
+  client_t_.Create(&nh, ACTION_MOBILITY_MOTION);
+
+  // Wait for Ekf to start publishing to send the motion goal
+  sub_ekf_ = nh.subscribe(TOPIC_GNC_EKF, 1000, &StateCallback);
+
+  // This waits until the simulation is in a stable status
+  while (!stable_) ros::spinOnce();  // Mobility
+  ROS_ERROR("IsConnected");
+
+  // Configure the planner
+  ff_util::ConfigClient cfg(&nh, NODE_CHOREOGRAPHER);
+
+  cfg.Set<bool>("enable_collision_checking", true);
+  cfg.Set<bool>("enable_validation", true);
+  cfg.Set<bool>("enable_bootstrapping", true);
+  cfg.Set<bool>("enable_immediate", true);
+  cfg.Set<bool>("enable_timesync", false);
+  cfg.Set<bool>("enable_replanning", true);
+  cfg.Set<bool>("enable_faceforward", false);
+  cfg.Set<std::string>("planner", "trapezoidal");
+
+  if (!cfg.Reconfigure()) {
+    std::cout << "Could not reconfigure the choreographer node " << std::endl;
+    EXPECT_EQ(true, true);
+  }
+  ROS_ERROR("Reconfigured");
+
   // Setup a new mobility goal
   ff_msgs::MotionGoal goal;
   goal.command = ff_msgs::MotionGoal::MOVE;
@@ -94,8 +126,12 @@ void StateCallback(const ff_msgs::EkfStateConstPtr& state) {
 
   // Pose that breaks the keepout/keepin zones condition
   geometry_msgs::PoseStamped pose;
-  pose.header.stamp = ros::Time::now();
-  pose.header.frame_id = "world";
+  geometry_msgs::TransformStamped tfs = tf_buffer_.lookupTransform(
+          std::string(FRAME_NAME_WORLD),
+          "body" ,
+          ros::Time(0));
+  pose.header = tfs.header;
+  // pose.header.frame_id = "world";
 
   pose.pose.position.x = 10.5;
   pose.pose.position.y = -7;
@@ -108,34 +144,13 @@ void StateCallback(const ff_msgs::EkfStateConstPtr& state) {
   // Package up and send the move goal
   goal.states.push_back(pose);
   // Try and send the goal
-  if (!client_t_.SendGoal(goal))
+  if (!client_t_.SendGoal(goal)) {
     std::cout << "Mobility client did not accept goal" << std::endl;
-  else
     return;
-}
+  }
 
-// Keepout zone test
-TEST(choreographer_nominal, ZoneBreach) {
-  // Set the zones
-  // Get the node handle
-  ros::NodeHandle nh;
-
-  ROS_ERROR("Started Test");
-  // Wait for Ekf to start publishing to send the motion goal
-  sub_ekf_ = nh.subscribe(TOPIC_GNC_EKF, 1000, &StateCallback);
-
-  tf2_ros::Buffer tf_buffer_;
-  tf2_ros::TransformListener tfListener(tf_buffer_);
-
-  // Setup MOBILITY action
-  client_t_.SetConnectedTimeout(30.0);
-  client_t_.SetActiveTimeout(30.0);
-  client_t_.SetResponseTimeout(30.0);
-  client_t_.SetFeedbackCallback(std::bind(
-    MFeedbackCallback, std::placeholders::_1));
-  client_t_.SetResultCallback(std::bind(
-    MResultCallback, std::placeholders::_1, std::placeholders::_2));
-  client_t_.Create(&nh, ACTION_MOBILITY_MOTION);
+  // Send the Goal
+  ROS_ERROR("Sent goal to move to a pose");
 
   ros::spin();
 }

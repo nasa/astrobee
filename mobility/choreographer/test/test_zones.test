@@ -19,8 +19,7 @@
   <!-- Start the entire simulation stack -->
   <include file="$(find astrobee)/launch/sim.launch">
     <arg name="dds" value="false"/>
-    <arg name="pose" default="10.5 -9 4.5 0 0 0 1" />
-    <arg name="rviz" default="true" />
+    <arg name="pose" default="10.5 -8 4.5 0 0 0 1" />
   </include>
   <test pkg="choreographer" type="test_zones" test-name="test_zones" />
 </launch>
