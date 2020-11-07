@@ -65,16 +65,14 @@ class RobustSmartProjectionPoseFactor : public SmartProjectionPoseFactor<CALIBRA
     const size_t M = ZDim * m;
     Matrix E0(M, M - 3);
 
-    // TODO(rsoussan): make this an option
-    // TODO(rsoussan): update total error projection to also return zero for everyting but behind cam and valid!!!
     // Handle behind camera result with rotation only factors (see paper)
     // Degenerate result tends to lead to solve failures, so return empty factor in this case
     if (result.valid()) {
       this->computeJacobiansSVD(F, E0, b, cameras, *(this->point()));
-    } else if (result.BehindCamera()) {
+    } else if (result.BehindCamera()) {  // Rotation only factor
       Unit3 backProjected = cameras[0].backprojectPointAtInfinity(this->measured().at(0));
       this->computeJacobiansSVD(F, E0, b, cameras, backProjected);
-    } else {
+    } else {  // Empty factor
       return boost::make_shared<JacobianFactorSVD<Dim, 2>>(this->keys());
     }
     return createRegularJacobianFactorSVD<Dim, ZDim>(this->keys(), F, E0, b);
@@ -86,13 +84,14 @@ class RobustSmartProjectionPoseFactor : public SmartProjectionPoseFactor<CALIBRA
         // Multiply by 2 since totalReporjectionError divides mahal distance by 2, and robust_model_->loss
         // expects mahal distance
         const double robust_loss = robustLoss(2.0 * this->totalReprojectionError(this->cameras(values)));
+        const auto result = this->point();
+        if (!result.valid() && !result.BehindCamera()) return 0;
         return robust_loss;
       } catch (...) {
         // Catch cheirality and other errors, zero on errors
-        // TODO(rsoussan): Make as inactive instead of zero?
         return 0.0;
       }
-    } else {  // else of active flag
+    } else {  // Inactive
       return 0.0;
     }
   }
