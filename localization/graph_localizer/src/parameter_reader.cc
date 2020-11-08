@@ -97,6 +97,7 @@ void LoadGraphLocalizerParams(config_reader::ConfigReader& config, GraphLocalize
   params.verbose = lc::LoadBool(config, "verbose");
   params.fatal_failures = lc::LoadBool(config, "fatal_failures");
   params.print_factor_info = lc::LoadBool(config, "print_factor_info");
+  params.use_ceres_params = lc::LoadBool(config, "use_ceres_params");
   params.max_iterations = lc::LoadInt(config, "max_iterations");
   params.marginals_factorization = lc::LoadString(config, "marginals_factorization");
   params.limit_imu_factor_spacing = lc::LoadBool(config, "limit_imu_factor_spacing");

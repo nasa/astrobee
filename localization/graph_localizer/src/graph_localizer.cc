@@ -99,6 +99,10 @@ GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
     levenberg_marquardt_params_.verbosityLM = gtsam::LevenbergMarquardtParams::VerbosityLM::TRYDELTA;
     levenberg_marquardt_params_.verbosity = gtsam::NonlinearOptimizerParams::Verbosity::LINEAR;
   }
+  if (params_.use_ceres_params) {
+    gtsam::LevenbergMarquardtParams::SetCeresDefaults(&levenberg_marquardt_params_);
+  }
+
   levenberg_marquardt_params_.maxIterations = params_.max_iterations;
 
   if (params_.marginals_factorization == "qr") {

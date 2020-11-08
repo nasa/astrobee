@@ -38,6 +38,7 @@ struct GraphLocalizerParams {
   bool verbose;
   bool fatal_failures;
   bool print_factor_info;
+  bool use_ceres_params;
   int max_iterations;
   std::string marginals_factorization;
   bool limit_imu_factor_spacing;
