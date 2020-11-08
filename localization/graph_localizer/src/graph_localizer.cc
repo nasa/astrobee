@@ -262,11 +262,14 @@ bool GraphLocalizer::AddOpticalFlowMeasurement(
   FactorsToAdd prior_factors_to_add;
   double total_average_distance_from_mean = 0;
   int num_feature_tracks = 0;
+  int num_added_smart_factors = 0;
   for (const auto& feature_track : feature_tracker_.feature_tracks()) {
     const double average_distance_from_mean = AverageDistanceFromMean(feature_track.second.points);
     if (ValidPointSet(feature_track.second.points, average_distance_from_mean,
-                      params_.factor.min_valid_feature_track_avg_distance_from_mean)) {
+                      params_.factor.min_valid_feature_track_avg_distance_from_mean) &&
+        num_added_smart_factors <= params_.factor.max_num_optical_flow_factors) {
       AddSmartFactor(feature_track.second, smart_factors_to_add);
+      ++num_added_smart_factors;
     }
     if (feature_track.second.points.size() > 5) {  // Only consider long enough feature tracks for standstill candidates
       total_average_distance_from_mean += average_distance_from_mean;

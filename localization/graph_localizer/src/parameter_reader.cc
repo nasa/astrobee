@@ -46,6 +46,7 @@ void LoadFactorParams(config_reader::ConfigReader& config, FactorParams& params)
   params.linearization_mode = lc::LoadString(config, "linearization_mode");
   params.verbose_cheirality = lc::LoadBool(config, "verbose_cheirality");
   params.robust_smart_factor = lc::LoadBool(config, "robust_smart_factor");
+  params.max_num_optical_flow_factors = lc::LoadInt(config, "max_num_optical_flow_factors");
   params.bias_prior = lc::LoadBool(config, "bias_prior");
   params.loc_pose_priors = lc::LoadBool(config, "loc_pose_priors");
   params.loc_projections = lc::LoadBool(config, "loc_projections");

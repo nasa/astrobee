@@ -34,6 +34,7 @@ struct FactorParams {
   std::string linearization_mode;
   bool verbose_cheirality;
   bool robust_smart_factor;
+  int max_num_optical_flow_factors;
   // Combined Imu factors
   bool bias_prior;
   // Loc factors
