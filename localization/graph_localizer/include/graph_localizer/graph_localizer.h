@@ -177,6 +177,8 @@ class GraphLocalizer {
 
   void PrintFactorDebugInfo() const;
 
+  void LogErrors();
+
   void LogStats();
 
   template <typename FactorType>
@@ -211,11 +213,21 @@ class GraphLocalizer {
   std::map<localization_common::Time, gtsam::Pose3> dock_cam_T_dock_estimates_;
   std::multimap<localization_common::Time, FactorsToAdd> buffered_factors_to_add_;
   localization_common::Timer optimization_timer_;
+  // Graph Stats Averagers
   localization_common::Averager iterations_averager_;
   localization_common::Averager num_states_averager_;
   localization_common::Averager duration_averager_;
   localization_common::Averager num_optical_flow_factors_averager_;
   localization_common::Averager num_factors_averager_;
+  // Factor Error Averagers
+  localization_common::Averager total_error_averager_ = localization_common::Averager("Total Factor Error");
+  localization_common::Averager of_error_averager_ = localization_common::Averager("OF Factor Error");
+  localization_common::Averager loc_proj_error_averager_ = localization_common::Averager("Loc Proj Factor Error");
+  localization_common::Averager imu_error_averager_ = localization_common::Averager("Imu Factor Error");
+  localization_common::Averager pose_prior_error_averager_ = localization_common::Averager("Pose Prior Error");
+  localization_common::Averager velocity_prior_error_averager_ = localization_common::Averager("Velocity Prior Error");
+  localization_common::Averager bias_prior_error_averager_ = localization_common::Averager("Bias Prior Error");
+
   gtsam::Marginals::Factorization marginals_factorization_;
 };
 }  // namespace graph_localizer

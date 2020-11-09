@@ -894,6 +894,51 @@ void GraphLocalizer::PrintFactorDebugInfo() const {
   }
 }
 
+void GraphLocalizer::LogErrors() {
+  double total_error = 0;
+  double smart_factor_error = 0;
+  double loc_proj_error = 0;
+  double imu_factor_error = 0;
+  double pose_prior_error = 0;
+  double velocity_prior_error = 0;
+  double bias_prior_error = 0;
+  for (const auto& factor : graph_) {
+    const double error = factor->error(graph_values_.values());
+    total_error += error;
+    const auto smart_factor = dynamic_cast<const SmartFactor*>(factor.get());
+    if (smart_factor) {
+      smart_factor_error += error;
+    }
+    const auto imu_factor = dynamic_cast<gtsam::CombinedImuFactor*>(factor.get());
+    if (imu_factor) {
+      imu_factor_error += error;
+    }
+    const auto loc_factor = dynamic_cast<gtsam::LocProjectionFactor<>*>(factor.get());
+    if (loc_factor) {
+      loc_proj_error += error;
+    }
+    // Prior Factors
+    const auto pose_prior_factor = dynamic_cast<gtsam::PriorFactor<gtsam::Pose3>*>(factor.get());
+    if (pose_prior_factor) {
+      pose_prior_error += error;
+    }
+    const auto velocity_prior_factor = dynamic_cast<gtsam::PriorFactor<gtsam::Velocity3>*>(factor.get());
+    if (velocity_prior_factor) {
+      velocity_prior_error += error;
+    }
+    const auto bias_prior_factor = dynamic_cast<gtsam::PriorFactor<gtsam::imuBias::ConstantBias>*>(factor.get());
+    if (bias_prior_factor) {
+      bias_prior_error += error;
+    }
+  }
+  total_error_averager_.UpdateAndLog(total_error);
+  of_error_averager_.UpdateAndLog(smart_factor_error);
+  loc_proj_error_averager_.UpdateAndLog(loc_proj_error);
+  pose_prior_error_averager_.UpdateAndLog(pose_prior_error);
+  velocity_prior_error_averager_.UpdateAndLog(velocity_prior_error);
+  bias_prior_error_averager_.UpdateAndLog(bias_prior_error);
+}
+
 void GraphLocalizer::LogStats() {
   num_states_averager_.UpdateAndLog(graph_values_.NumStates());
   duration_averager_.UpdateAndLog(graph_values_.Duration());
@@ -948,7 +993,9 @@ bool GraphLocalizer::Update() {
   }
   optimization_timer_.StopAndLog();
   iterations_averager_.UpdateAndLog(optimizer.iterations());
+  // TODO(rsoussan): Add options for these?
   LogStats();
+  LogErrors();
 
   if (params_.print_factor_info) PrintFactorDebugInfo();
 
