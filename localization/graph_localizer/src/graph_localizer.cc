@@ -899,6 +899,13 @@ void GraphLocalizer::PrintFactorDebugInfo() const {
   }
 }
 
+void GraphLocalizer::LogStats() {
+  num_states_averager_.UpdateAndLog(graph_values_.NumStates());
+  duration_averager_.UpdateAndLog(graph_values_.Duration());
+  num_optical_flow_factors_averager_.UpdateAndLog(NumOFFactors());
+  num_factors_averager_.UpdateAndLog(graph_.size());
+}
+
 int GraphLocalizer::NumOFFactors() const {
   int num_of_factors = 0;
   for (const auto& factor : graph_) {
@@ -945,13 +952,8 @@ bool GraphLocalizer::Update() {
     log(params_.fatal_failures, "Update: Graph optimization failed, keeping old values.");
   }
   optimization_timer_.StopAndLog();
-  // Log Stats
-  // TODO(rsoussan): Move this to a seperate function? Seperate Class?
   iterations_averager_.UpdateAndLog(optimizer.iterations());
-  num_states_averager_.UpdateAndLog(graph_values_.NumStates());
-  duration_averager_.UpdateAndLog(graph_values_.Duration());
-  num_optical_flow_factors_averager_.UpdateAndLog(NumOFFactors());
-  num_factors_averager_.UpdateAndLog(graph_.size());
+  LogStats();
 
   if (params_.print_factor_info) PrintFactorDebugInfo();
 

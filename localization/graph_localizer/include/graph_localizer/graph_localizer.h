@@ -177,6 +177,8 @@ class GraphLocalizer {
 
   void PrintFactorDebugInfo() const;
 
+  void LogStats();
+
   template <typename FactorType>
   int NumFactors() const {
     int num_factors = 0;
