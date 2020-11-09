@@ -301,11 +301,12 @@ bool GraphLocalizer::AddOpticalFlowMeasurement(
 void GraphLocalizer::AddSmartFactor(const FeatureTrack& feature_track, FactorsToAdd& smart_factors_to_add) {
   SharedSmartFactor smart_factor;
   if (params_.factor.robust_smart_factor) {
-    smart_factor =
-        boost::make_shared<RobustSmartFactor>(params_.noise.nav_cam_noise, params_.calibration.nav_cam_intrinsics,
-                                              params_.calibration.body_T_nav_cam, smart_projection_params_);
+    smart_factor = boost::make_shared<RobustSmartFactor>(params_.noise.optical_flow_nav_cam_noise,
+                                                         params_.calibration.nav_cam_intrinsics,
+                                                         params_.calibration.body_T_nav_cam, smart_projection_params_);
   } else {
-    smart_factor = boost::make_shared<SmartFactor>(params_.noise.nav_cam_noise, params_.calibration.nav_cam_intrinsics,
+    smart_factor = boost::make_shared<SmartFactor>(params_.noise.optical_flow_nav_cam_noise,
+                                                   params_.calibration.nav_cam_intrinsics,
                                                    params_.calibration.body_T_nav_cam, smart_projection_params_);
   }
 
@@ -350,7 +351,7 @@ void GraphLocalizer::AddARTagMeasurement(const lm::MatchedProjectionsMeasurement
   dock_cam_T_dock_estimates_.emplace(matched_projections_measurement.timestamp,
                                      matched_projections_measurement.global_T_cam.inverse());
   AddProjectionMeasurement(matched_projections_measurement, params_.calibration.body_T_dock_cam,
-                           params_.calibration.dock_cam_intrinsics, params_.noise.dock_cam_noise,
+                           params_.calibration.dock_cam_intrinsics, params_.noise.loc_dock_cam_noise,
                            GraphAction::kTransformARMeasurementAndUpdateDockTWorld);
 }
 
@@ -363,7 +364,7 @@ void GraphLocalizer::AddSparseMappingMeasurement(
 
   LOG(INFO) << "AddSparseMappingMeasurement: Adding sparse mapping measurement.";
   AddProjectionMeasurement(matched_projections_measurement, params_.calibration.body_T_nav_cam,
-                           params_.calibration.nav_cam_intrinsics, params_.noise.nav_cam_noise);
+                           params_.calibration.nav_cam_intrinsics, params_.noise.loc_nav_cam_noise);
 }
 
 void GraphLocalizer::AddProjectionMeasurement(const lm::MatchedProjectionsMeasurement& matched_projections_measurement,

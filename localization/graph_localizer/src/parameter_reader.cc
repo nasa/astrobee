@@ -64,8 +64,11 @@ void LoadGraphValuesParams(config_reader::ConfigReader& config, GraphValuesParam
 }
 
 void LoadNoiseParams(config_reader::ConfigReader& config, NoiseParams& params) {
-  params.dock_cam_noise = gtsam::noiseModel::Isotropic::Sigma(2, lc::LoadDouble(config, "dock_cam_noise_stddev"));
-  params.nav_cam_noise = gtsam::noiseModel::Isotropic::Sigma(2, lc::LoadDouble(config, "nav_cam_noise_stddev"));
+  params.loc_dock_cam_noise =
+      gtsam::noiseModel::Isotropic::Sigma(2, lc::LoadDouble(config, "loc_dock_cam_noise_stddev"));
+  params.loc_nav_cam_noise = gtsam::noiseModel::Isotropic::Sigma(2, lc::LoadDouble(config, "loc_nav_cam_noise_stddev"));
+  params.optical_flow_nav_cam_noise =
+      gtsam::noiseModel::Isotropic::Sigma(2, lc::LoadDouble(config, "optical_flow_nav_cam_noise_stddev"));
   params.optical_flow_prior_velocity_stddev = lc::LoadDouble(config, "optical_flow_prior_velocity_stddev");
   params.starting_prior_translation_stddev = lc::LoadDouble(config, "starting_prior_translation_stddev");
   params.starting_prior_quaternion_stddev = lc::LoadDouble(config, "starting_prior_quaternion_stddev");

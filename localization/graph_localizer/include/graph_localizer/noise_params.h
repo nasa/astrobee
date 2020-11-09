@@ -22,8 +22,9 @@
 
 namespace graph_localizer {
 struct NoiseParams {
-  gtsam::SharedIsotropic dock_cam_noise;
-  gtsam::SharedIsotropic nav_cam_noise;
+  gtsam::SharedIsotropic loc_dock_cam_noise;
+  gtsam::SharedIsotropic loc_nav_cam_noise;
+  gtsam::SharedIsotropic optical_flow_nav_cam_noise;
   double optical_flow_prior_velocity_stddev;
   double starting_prior_translation_stddev;
   double starting_prior_quaternion_stddev;
