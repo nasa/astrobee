@@ -270,7 +270,7 @@ bool GraphLocalizer::AddOpticalFlowMeasurement(
     const double average_distance_from_mean = AverageDistanceFromMean(feature_track.second.points);
     if (ValidPointSet(feature_track.second.points, average_distance_from_mean,
                       params_.factor.min_valid_feature_track_avg_distance_from_mean) &&
-        num_added_smart_factors <= params_.factor.max_num_optical_flow_factors) {
+        num_added_smart_factors < params_.factor.max_num_optical_flow_factors) {
       AddSmartFactor(feature_track.second, smart_factors_to_add);
       ++num_added_smart_factors;
     }
