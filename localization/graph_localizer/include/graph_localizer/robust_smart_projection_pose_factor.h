@@ -70,7 +70,7 @@ class RobustSmartProjectionPoseFactor : public SmartProjectionPoseFactor<CALIBRA
     // Degenerate result tends to lead to solve failures, so return empty factor in this case
     if (result.valid()) {
       this->computeJacobiansSVD(F, E0, b, cameras, *(this->point()));
-    } else if (result.BehindCamera()) {  // Rotation only factor
+    } else if (useForRotationOnly(result)) {  // Rotation only factor
       Unit3 backProjected = cameras[0].backprojectPointAtInfinity(this->measured().at(0));
       this->computeJacobiansSVD(F, E0, b, cameras, backProjected);
     } else {  // Empty factor
@@ -79,15 +79,21 @@ class RobustSmartProjectionPoseFactor : public SmartProjectionPoseFactor<CALIBRA
     return createRegularJacobianFactorSVD<Dim, ZDim>(this->keys(), F, E0, b);
   }
 
+  bool useForRotationOnly(const gtsam::TriangulationResult& result) const {
+    // Enable some 'invalid' results as these can still be useful for rotation errors
+    return (result.degenerate());
+  }
+
   double error(const Values& values) const override {
     if (this->active(values)) {
       try {
         const double total_reprojection_loss = this->totalReprojectionError(this->cameras(values));
         const auto result = this->point();
-        if (!result.valid() && !result.BehindCamera()) return 0;
         // Multiply by 2 since totalReporjectionError divides mahal distance by 2, and robust_model_->loss
         // expects mahal distance
         const double loss = robust_ ? robustLoss(2.0 * total_reprojection_loss) : total_reprojection_loss;
+        // LOG(ERROR) << "num measurements: " << this->keys().size();
+        // LOG(ERROR) << " smart factor loss: " << loss;
         return loss;
       } catch (...) {
         // Catch cheirality and other errors, zero on errors
