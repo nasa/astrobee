@@ -45,8 +45,9 @@ class RobustSmartProjectionPoseFactor : public SmartProjectionPoseFactor<CALIBRA
    */
   RobustSmartProjectionPoseFactor(const SharedNoiseModel& sharedNoiseModel, const boost::shared_ptr<CALIBRATION> K,
                                   const boost::optional<Pose3> body_P_sensor,
-                                  const SmartProjectionParams& params = SmartProjectionParams())
-      : SmartProjectionPoseFactor<CALIBRATION>(sharedNoiseModel, K, body_P_sensor, params) {
+                                  const SmartProjectionParams& params = SmartProjectionParams(),
+                                  const bool robust = true)
+      : SmartProjectionPoseFactor<CALIBRATION>(sharedNoiseModel, K, body_P_sensor, params), robust_(robust) {
     // From SmartFactorBase
     if (!sharedNoiseModel) throw std::runtime_error("RobustSmartProjectionPoseFactor: sharedNoiseModel is required");
     SharedIsotropic sharedIsotropic = boost::dynamic_pointer_cast<noiseModel::Isotropic>(sharedNoiseModel);
@@ -81,12 +82,13 @@ class RobustSmartProjectionPoseFactor : public SmartProjectionPoseFactor<CALIBRA
   double error(const Values& values) const override {
     if (this->active(values)) {
       try {
-        // Multiply by 2 since totalReporjectionError divides mahal distance by 2, and robust_model_->loss
-        // expects mahal distance
-        const double robust_loss = robustLoss(2.0 * this->totalReprojectionError(this->cameras(values)));
+        const double total_reprojection_loss = this->totalReprojectionError(this->cameras(values));
         const auto result = this->point();
         if (!result.valid() && !result.BehindCamera()) return 0;
-        return robust_loss;
+        // Multiply by 2 since totalReporjectionError divides mahal distance by 2, and robust_model_->loss
+        // expects mahal distance
+        const double loss = robust_ ? robustLoss(2.0 * total_reprojection_loss) : total_reprojection_loss;
+        return loss;
       } catch (...) {
         // Catch cheirality and other errors, zero on errors
         return 0.0;
@@ -105,26 +107,29 @@ class RobustSmartProjectionPoseFactor : public SmartProjectionPoseFactor<CALIBRA
       const Matrix& Enull, const Vector& b) const {
     typedef std::pair<Key, Matrix> KeyMatrix;
 
-    Vector robust_reduced_error = Enull.transpose() * b;
+    Vector reduced_error = Enull.transpose() * b;
     // Apply noise whitening and robust weighting manually to more efficiently robustify
     // error vector and jacobians.  Equivalent to calling whitenSystem with a robust noise model.
     // Assumes noise is diagonal (required for this factor anyway).
-    robust_reduced_error *= noise_inv_sigma_;
-    const double robust_weight = robustWeight(robust_reduced_error.norm());
-    robust_reduced_error *= robust_weight;
-    const double robust_whiten_weight = robust_weight * noise_inv_sigma_;
+    reduced_error *= noise_inv_sigma_;
+    double reduced_matrix_weight = noise_inv_sigma_;
+    if (robust_) {
+      const double robust_weight = robustWeight(reduced_error.norm());
+      reduced_error *= robust_weight;
+      reduced_matrix_weight *= robust_weight;
+    }
 
     size_t numKeys = Enull.rows() / ZDim;
     size_t m2 = ZDim * numKeys - 3;  // TODO(gtsam): is this not just Enull.rows()?
-    std::vector<KeyMatrix> robust_reduced_matrices;
-    robust_reduced_matrices.reserve(numKeys);
+    std::vector<KeyMatrix> reduced_matrices;
+    reduced_matrices.reserve(numKeys);
     for (size_t k = 0; k < Fblocks.size(); ++k) {
       Key key = keys[k];
-      robust_reduced_matrices.emplace_back(
-          KeyMatrix(key, (Enull.transpose()).block(0, ZDim * k, m2, ZDim) * Fblocks[k] * robust_whiten_weight));
+      reduced_matrices.emplace_back(
+          KeyMatrix(key, (Enull.transpose()).block(0, ZDim * k, m2, ZDim) * Fblocks[k] * reduced_matrix_weight));
     }
 
-    return boost::make_shared<RegularJacobianFactor<D>>(robust_reduced_matrices, robust_reduced_error);
+    return boost::make_shared<RegularJacobianFactor<D>>(reduced_matrices, reduced_error);
   }
 
   // TODO(rsoussan): profile these calls vs. gtsam better, is there a significant improvement?
@@ -151,11 +156,13 @@ class RobustSmartProjectionPoseFactor : public SmartProjectionPoseFactor<CALIBRA
   void serialize(ARCHIVE& ar, const unsigned int /*version*/) {
     ar& BOOST_SERIALIZATION_BASE_OBJECT_NVP(SmartProjectionPoseFactor<CALIBRATION>);
     ar& BOOST_SERIALIZATION_NVP(noise_inv_sigma_);
+    ar& BOOST_SERIALIZATION_NVP(robust_);
   }
 
   double noise_inv_sigma_;
   // From gtsam
   const double huber_k_ = 1.345;
+  double robust_;
 };
 }  // namespace gtsam
 
