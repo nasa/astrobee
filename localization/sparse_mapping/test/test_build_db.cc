@@ -41,7 +41,7 @@ void RunWithDB(std::string const& detector_name) {
   FLAGS_num_threads = 1;
 
   std::vector<std::string> img_files, local_imgs, feat_files;
-  std::string data_dir = std::string(TEST_DIR) + "/data/";
+  std::string data_dir = std::string(std::getenv("DATA_DIR"));
   std::string f;
   f = "m0004000.jpg"; img_files.push_back(data_dir + f); local_imgs.push_back(f);
   f = "m0004025.jpg"; img_files.push_back(data_dir + f); local_imgs.push_back(f);
