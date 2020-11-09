@@ -44,7 +44,6 @@ if(CATKIN_ENABLE_TESTING)
     marker_tracking
   )
 
-  find_package(rostest REQUIRED)
   add_rostest_gtest(test_marker_config_loader test/test_marker_config_loader.test
     test/test_marker_config_loader.cc
   )
@@ -52,7 +51,6 @@ if(CATKIN_ENABLE_TESTING)
     marker_tracking
   )
 
-  find_package(rostest REQUIRED)
   add_rostest_gtest(test_marker_detector test/test_marker_detector.test
     test/test_marker_detector.cc
   )

@@ -64,7 +64,6 @@ if(CATKIN_ENABLE_TESTING)
     camera
   )
 
-  find_package(rostest REQUIRED)
   add_rostest_gtest(test_camera_params
     test/test_camera_params.test
     test/test_camera_params.cc
