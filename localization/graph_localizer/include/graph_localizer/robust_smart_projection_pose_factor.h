@@ -46,8 +46,10 @@ class RobustSmartProjectionPoseFactor : public SmartProjectionPoseFactor<CALIBRA
   RobustSmartProjectionPoseFactor(const SharedNoiseModel& sharedNoiseModel, const boost::shared_ptr<CALIBRATION> K,
                                   const boost::optional<Pose3> body_P_sensor,
                                   const SmartProjectionParams& params = SmartProjectionParams(),
-                                  const bool robust = true)
-      : SmartProjectionPoseFactor<CALIBRATION>(sharedNoiseModel, K, body_P_sensor, params), robust_(robust) {
+                                  const bool robust = true, const bool rotation_only_fallback = false)
+      : SmartProjectionPoseFactor<CALIBRATION>(sharedNoiseModel, K, body_P_sensor, params),
+        robust_(robust),
+        rotation_only_fallback_(rotation_only_fallback) {
     // From SmartFactorBase
     if (!sharedNoiseModel) throw std::runtime_error("RobustSmartProjectionPoseFactor: sharedNoiseModel is required");
     SharedIsotropic sharedIsotropic = boost::dynamic_pointer_cast<noiseModel::Isotropic>(sharedNoiseModel);
@@ -80,6 +82,7 @@ class RobustSmartProjectionPoseFactor : public SmartProjectionPoseFactor<CALIBRA
   }
 
   bool useForRotationOnly(const gtsam::TriangulationResult& result) const {
+    if (!rotation_only_fallback_) return false;
     // Enable some 'invalid' results as these can still be useful for rotation errors
     return (result.degenerate());
   }
@@ -169,6 +172,7 @@ class RobustSmartProjectionPoseFactor : public SmartProjectionPoseFactor<CALIBRA
   // From gtsam
   const double huber_k_ = 1.345;
   double robust_;
+  bool rotation_only_fallback_;
 };
 }  // namespace gtsam
 

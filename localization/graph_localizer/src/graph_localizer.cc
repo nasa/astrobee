@@ -302,7 +302,8 @@ void GraphLocalizer::AddSmartFactor(const FeatureTrack& feature_track, FactorsTo
   SharedSmartFactor smart_factor;
   smart_factor = boost::make_shared<RobustSmartFactor>(
       params_.noise.optical_flow_nav_cam_noise, params_.calibration.nav_cam_intrinsics,
-      params_.calibration.body_T_nav_cam, smart_projection_params_, params_.factor.robust_smart_factor);
+      params_.calibration.body_T_nav_cam, smart_projection_params_, params_.factor.robust_smart_factor,
+      params_.factor.enable_rotation_only_fallback);
 
   KeyInfos key_infos;
   key_infos.reserve(feature_track.points.size());
