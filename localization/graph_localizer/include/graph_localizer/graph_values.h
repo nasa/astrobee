@@ -100,6 +100,10 @@ class GraphValues {
   boost::optional<localization_common::CombinedNavState> GetCombinedNavState(
       const localization_common::Time timestamp) const;
 
+  double Duration() const;
+
+  double NumStates() const;
+
   template <typename ValueType>
   boost::optional<ValueType> at(const gtsam::Key& key) const {
     if (!values_.exists(key)) {

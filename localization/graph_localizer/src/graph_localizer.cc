@@ -59,7 +59,9 @@ GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
       params_(params),
       optimization_timer_("Optimization"),
       marginals_timer_("Marginals"),
-      iterations_averager_("Iterations") {
+      iterations_averager_("Iterations"),
+      num_states_averager_("Num States"),
+      duration_averager_("Duration") {
   // Assumes zero initial velocity
   const lc::CombinedNavState global_N_body_start(
       params_.graph_initialization.global_T_body_start, gtsam::Velocity3::Zero(),
@@ -943,6 +945,8 @@ bool GraphLocalizer::Update() {
   }
   optimization_timer_.StopAndLog();
   iterations_averager_.UpdateAndLog(optimizer.iterations());
+  num_states_averager_.UpdateAndLog(graph_values_.NumStates());
+  duration_averager_.UpdateAndLog(graph_values_.Duration());
 
   if (params_.print_factor_info) PrintFactorDebugInfo();
 

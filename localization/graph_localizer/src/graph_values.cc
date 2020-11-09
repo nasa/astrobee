@@ -202,6 +202,13 @@ boost::optional<lc::CombinedNavState> GraphValues::GetCombinedNavState(const lc:
   return lc::CombinedNavState{*pose, *velocity, *bias, timestamp};
 }
 
+double GraphValues::Duration() const {
+  if (Empty()) return 0;
+  return (*LatestTimestamp() - *OldestTimestamp());
+}
+
+int GraphValues::NumStates() const { return timestamp_key_index_map_.size(); }
+
 boost::optional<int> GraphValues::LatestCombinedNavStateKeyIndex() const {
   if (Empty()) {
     LOG(ERROR) << "LatestCombinedNavStateKeyIndex: No combined nav states available.";

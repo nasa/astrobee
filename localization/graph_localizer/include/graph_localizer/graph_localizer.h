@@ -211,6 +211,8 @@ class GraphLocalizer {
   localization_common::Timer optimization_timer_;
   localization_common::Timer marginals_timer_;
   localization_common::Averager iterations_averager_;
+  localization_common::Averager num_states_averager_;
+  localization_common::Averager duration_averager_;
   gtsam::Marginals::Factorization marginals_factorization_;
 };
 }  // namespace graph_localizer
