@@ -102,7 +102,7 @@ class GraphValues {
 
   double Duration() const;
 
-  double NumStates() const;
+  int NumStates() const;
 
   template <typename ValueType>
   boost::optional<ValueType> at(const gtsam::Key& key) const {
