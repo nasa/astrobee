@@ -754,7 +754,7 @@ bool GraphLocalizer::DoGraphAction(FactorsToAdd& factors_to_add) {
       return true;
     case GraphAction::kDeleteExistingSmartFactors:
       VLOG(2) << "DoGraphAction: Deleting smart factors.";
-      DeleteFactors<SmartFactor>();
+      DeleteFactors<RobustSmartFactor>();
       return true;
     case GraphAction::kTransformARMeasurementAndUpdateDockTWorld:
       return TransformARMeasurementAndUpdateDockTWorld(factors_to_add);
@@ -872,11 +872,9 @@ bool GraphLocalizer::MeasurementRecentEnough(const lc::Time timestamp) const {
 
 void GraphLocalizer::PrintFactorDebugInfo() const {
   for (const auto& factor : graph_) {
-    const auto smart_factor = dynamic_cast<const SmartFactor*>(factor.get());
+    const auto smart_factor = dynamic_cast<const RobustSmartFactor*>(factor.get());
     if (smart_factor) {
       smart_factor->print();
-      // TODO(rsoussan): Add this, check if robust or non robust smart factor first
-      // LOG(INFO) << "PrintFactorDebugInfo: SmartFactor Error: " << smart_factor->error(graph_values_.values());
       if (smart_factor->isValid())
         LOG(WARNING) << "PrintFactorDebugInfo: SmartFactor valid.";
       else
@@ -905,7 +903,7 @@ void GraphLocalizer::LogErrors() {
   for (const auto& factor : graph_) {
     const double error = factor->error(graph_values_.values());
     total_error += error;
-    const auto smart_factor = dynamic_cast<const SmartFactor*>(factor.get());
+    const auto smart_factor = dynamic_cast<const RobustSmartFactor*>(factor.get());
     if (smart_factor) {
       smart_factor_error += error;
     }
@@ -949,7 +947,7 @@ void GraphLocalizer::LogStats() {
 int GraphLocalizer::NumOFFactors() const {
   int num_of_factors = 0;
   for (const auto& factor : graph_) {
-    const auto smart_factor = dynamic_cast<const SmartFactor*>(factor.get());
+    const auto smart_factor = dynamic_cast<const RobustSmartFactor*>(factor.get());
     if (smart_factor && (smart_factor->isValid() || smart_factor->isPointBehindCamera())) ++num_of_factors;
   }
   return num_of_factors;
