@@ -58,8 +58,9 @@ void LoadFeatureTrackerParams(config_reader::ConfigReader& config, FeatureTracke
 }
 
 void LoadGraphValuesParams(config_reader::ConfigReader& config, GraphValuesParams& params) {
-  params.sliding_window_duration = lc::LoadDouble(config, "sliding_window_duration");
-  params.min_num_sliding_window_states = lc::LoadInt(config, "min_num_sliding_window_states");
+  params.ideal_duration = lc::LoadDouble(config, "ideal_duration");
+  params.min_num_states = lc::LoadInt(config, "min_num_states");
+  params.max_num_states = lc::LoadInt(config, "max_num_states");
 }
 
 void LoadNoiseParams(config_reader::ConfigReader& config, NoiseParams& params) {

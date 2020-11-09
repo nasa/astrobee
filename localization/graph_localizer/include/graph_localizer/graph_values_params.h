@@ -22,9 +22,10 @@
 
 namespace graph_localizer {
 struct GraphValuesParams {
-  // Only kept if there are at least min_num_sliding_window_states
-  double sliding_window_duration;
-  int min_num_sliding_window_states;
+  // Only kept if there are at least min_num_states and not more than max_num_states
+  double ideal_duration;
+  int min_num_states;
+  int max_num_states;
 };
 }  // namespace graph_localizer
 
