@@ -58,10 +58,11 @@ GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
       graph_values_(params.graph_values),
       params_(params),
       optimization_timer_("Optimization"),
-      marginals_timer_("Marginals"),
       iterations_averager_("Iterations"),
       num_states_averager_("Num States"),
-      duration_averager_("Duration") {
+      duration_averager_("Duration"),
+      num_optical_flow_factors_averager_("Num Optical Flow Factors"),
+      num_factors_averager_("Num Factors") {
   // Assumes zero initial velocity
   const lc::CombinedNavState global_N_body_start(
       params_.graph_initialization.global_T_body_start, gtsam::Velocity3::Zero(),
@@ -902,7 +903,7 @@ int GraphLocalizer::NumOFFactors() const {
   int num_of_factors = 0;
   for (const auto& factor : graph_) {
     const auto smart_factor = dynamic_cast<const SmartFactor*>(factor.get());
-    if (smart_factor && smart_factor->isValid()) ++num_of_factors;
+    if (smart_factor && (smart_factor->isValid() || smart_factor->isPointBehindCamera())) ++num_of_factors;
   }
   return num_of_factors;
 }
@@ -944,9 +945,13 @@ bool GraphLocalizer::Update() {
     log(params_.fatal_failures, "Update: Graph optimization failed, keeping old values.");
   }
   optimization_timer_.StopAndLog();
+  // Log Stats
+  // TODO(rsoussan): Move this to a seperate function? Seperate Class?
   iterations_averager_.UpdateAndLog(optimizer.iterations());
   num_states_averager_.UpdateAndLog(graph_values_.NumStates());
   duration_averager_.UpdateAndLog(graph_values_.Duration());
+  num_optical_flow_factors_averager_.UpdateAndLog(NumOFFactors());
+  num_factors_averager_.UpdateAndLog(graph_.size());
 
   if (params_.print_factor_info) PrintFactorDebugInfo();
 
@@ -962,7 +967,6 @@ bool GraphLocalizer::Update() {
   // Calculate marginals before sliding window since this depends on values that
   // would be removed in SlideWindow()
 
-  marginals_timer_.Start();
   try {
     marginals_ = gtsam::Marginals(graph_, graph_values_.values(), marginals_factorization_);
   } catch (gtsam::IndeterminantLinearSystemException) {
@@ -972,7 +976,6 @@ bool GraphLocalizer::Update() {
     log(params_.fatal_failures, "Update: Computing marginals failed.");
     marginals_ = boost::none;
   }
-  marginals_timer_.StopAndLog();
 
   if (!SlideWindow(marginals_)) {
     LOG(ERROR) << "Update: Failed to slide window.";

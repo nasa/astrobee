@@ -209,10 +209,11 @@ class GraphLocalizer {
   std::map<localization_common::Time, gtsam::Pose3> dock_cam_T_dock_estimates_;
   std::multimap<localization_common::Time, FactorsToAdd> buffered_factors_to_add_;
   localization_common::Timer optimization_timer_;
-  localization_common::Timer marginals_timer_;
   localization_common::Averager iterations_averager_;
   localization_common::Averager num_states_averager_;
   localization_common::Averager duration_averager_;
+  localization_common::Averager num_optical_flow_factors_averager_;
+  localization_common::Averager num_factors_averager_;
   gtsam::Marginals::Factorization marginals_factorization_;
 };
 }  // namespace graph_localizer
