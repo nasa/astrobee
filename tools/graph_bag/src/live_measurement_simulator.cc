@@ -123,12 +123,14 @@ bool LiveMeasurementSimulator::ProcessMessage() {
     if (params_.save_optical_flow_images) {
       img_buffer_.emplace(localization_common::TimeFromHeader(image_msg->header), image_msg);
     }
-    const ff_msgs::Feature2dArray of_features = GenerateOFFeatures(image_msg);
-    of_buffer_.BufferMessage(of_features);
+    if (!params_.use_image_features) {
+      const ff_msgs::Feature2dArray of_features = GenerateOFFeatures(image_msg);
+      of_buffer_.BufferMessage(of_features);
 
-    ff_msgs::VisualLandmarks vl_features;
-    if (GenerateVLFeatures(image_msg, vl_features)) {
-      vl_buffer_.BufferMessage(vl_features);
+      ff_msgs::VisualLandmarks vl_features;
+      if (GenerateVLFeatures(image_msg, vl_features)) {
+        vl_buffer_.BufferMessage(vl_features);
+      }
     }
   } else if (string_ends_with(msg.getTopic(), TOPIC_LOCALIZATION_AR_FEATURES)) {
     // Always use ar features until have data with depth images
