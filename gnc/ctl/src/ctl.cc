@@ -136,6 +136,10 @@ Ctl::Ctl(ros::NodeHandle* nh, std::string const& name) :
   segment_pub_ = nh->advertise<ff_msgs::Segment>(
     TOPIC_GNC_CTL_SEGMENT, 5, true);
 
+  // Enable / Disable control module
+  enable_srv_ = nh->advertiseService(SERVICE_GNC_CTL_ENABLE,
+    &Ctl::EnableCtl, this);
+
   // Action client to accept control
   action_.SetGoalCallback(
       std::bind(&Ctl::GoalCallback, this, std::placeholders::_1));
@@ -187,6 +191,29 @@ FSM::State Ctl::Result(int32_t response) {
   mutex_segment_.unlock();
   // Always return to the waiting state
   return WAITING;
+}
+
+bool Ctl::EnableCtl(std_srvs::SetBoolRequest&req, std_srvs::SetBoolResponse &response) {
+  bool request = req.data;
+
+  // Check if we are asking for the current state
+  if (request == control_enabled_) {
+    response.success = false;
+    response.message = "Requested current state.";
+    return true;
+  }
+
+  // Check required action
+  response.success = true;
+  control_enabled_ = request;
+  if (control_enabled_ == false) {
+    response.message = "Onboard controller disabled.";
+    NODELET_DEBUG_STREAM("Onboard controller disabled.");
+  } else {
+    response.message = "Onboard controller enabled.";
+    NODELET_DEBUG_STREAM("Onboard controller enabled.");
+  }
+  return true;
 }
 
 void Ctl::UpdateCallback(FSM::State const& state, FSM::Event const& event) {
