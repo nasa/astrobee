@@ -16,6 +16,10 @@
  * under the License.
  */
 
+// Test action nominal behaviour
+// Client seds a goal, after 5 messages a SUCCESS result is issued.
+// Test succeeds if the client recieves the success response.
+
 // Required for the test framework
 #include <gtest/gtest.h>
 
@@ -159,6 +163,6 @@ TEST(ff_action, nominal_behaviour) {
 // Required for the test framework
 int main(int argc, char **argv) {
   testing::InitGoogleTest(&argc, argv);
-  ros::init(argc, argv, "ff_action_nominal_behaviour");
+  ros::init(argc, argv, "ff_action_active_timeout");
   return RUN_ALL_TESTS();
 }

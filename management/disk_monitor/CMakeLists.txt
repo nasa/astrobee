@@ -28,6 +28,29 @@ create_library(TARGET disk_monitor
   DEPS ff_msgs config_reader 
 )
 
+if(CATKIN_ENABLE_TESTING)
+  find_package(rostest REQUIRED)
+  # LLP disk monitor initialization fault tester
+  add_rostest_gtest(test_init_llp_disk_monitor
+    test/test_init_llp_disk_monitor.test
+    test/test_init_llp_disk_monitor.cc
+  )
+
+  target_link_libraries(test_init_llp_disk_monitor
+    ${catkin_LIBRARIES} config_reader ff_nodelet
+  )
+  # MLP disk monitor initialization fault tester
+  add_rostest_gtest(test_init_mlp_disk_monitor
+    test/test_init_mlp_disk_monitor.test
+    test/test_init_mlp_disk_monitor.cc
+  )
+
+  target_link_libraries(test_init_mlp_disk_monitor
+    ${catkin_LIBRARIES} config_reader ff_nodelet
+  )
+
+endif()
+
 create_test_targets(DIR test
   LIBS disk_monitor)
 

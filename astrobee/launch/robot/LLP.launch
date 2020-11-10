@@ -184,8 +184,8 @@
       <arg name="default" value="true" />
     </include>
     <include file="$(find ff_util)/launch/ff_nodelet.launch">
-      <arg name="class" value="cpu_monitor/CpuMonitor" />
-      <arg name="name" value="llp_cpu_monitor" />
+      <arg name="class" value="cpu_mem_monitor/CpuMemMonitor" />
+      <arg name="name" value="llp_cpu_mem_monitor" />
       <arg name="manager" value="llp_monitors" />
       <arg name="spurn" value="$(arg spurn)" />
       <arg name="nodes" value="$(arg nodes)" />

@@ -16,6 +16,10 @@
  * under the License.
  */
 
+// Test Visualeyez util:
+// Writes a calibration file, then opens and reads it. Check that the written
+// content matches the original content.
+
 // Required for the test framework
 #include <gtest/gtest.h>
 

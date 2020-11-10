@@ -16,6 +16,11 @@
 <!-- permissions and limitations under the License.                          -->
 
 <launch>
+  <!-- Context options (NB: THESE ARE OVERRIDDEN BY ENVIRONMENT VARIABLES)   -->
+  <!-- Set robot and world correctly; environment variable over rule default -->
+  <arg name="robot" default="$(optenv ASTROBEE_ROBOT sim)" />
+  <arg name="world" default="$(optenv ASTROBEE_WORLD iss)" />
+  
   <!-- Environmental variables -->
   <env if="$(eval optenv('ASTROBEE_ROBOT','')=='')" 
        name="ASTROBEE_ROBOT" value="$(arg robot)" />

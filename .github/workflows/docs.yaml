@@ -1,0 +1,72 @@
+# Build documentation and commit to gh-pages branch.
+
+name: Build and Push Documentation to gh-pages Branch
+
+on:
+  push:
+    branches: ['develop']
+
+jobs:
+  build_and_push_docs:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        path: repo/
+    - name: Checkout gh-pages
+      uses: actions/checkout@v2
+      with:
+        path: docs/
+        ref: gh-pages
+    - name: Install dependencies
+      run: |
+        sudo apt-get install python-bson
+        sudo apt-get install flex
+        sudo apt-get install graphviz
+    - name: Install doxygen
+      run: |
+        wget http://doxygen.nl/files/doxygen-1.8.20.src.tar.gz
+        tar -zxvf doxygen-1.8.20.src.tar.gz
+        cd doxygen-1.8.20
+        mkdir build
+        cd build
+        cmake -G "Unix Makefiles" ..
+        make
+        sudo make install
+    - name: install xgds_planner2
+      run: |
+        sudo pip install iso8601
+        sudo pip install "django<2"
+        git clone https://github.com/geocam/geocamUtilWeb.git
+        cd geocamUtilWeb
+        sudo python setup.py install
+        cd ..
+        git clone https://github.com/xgds/xgds_planner2.git
+        cd xgds_planner2
+        sudo python setup.py install
+    - name: Generating command dictionary documentation
+      run: |
+        cd repo
+        mkdir doc/html
+        ./scripts/build/genCommandDictionary.py astrobee/commands/freeFlyerPlanSchema.json doc/html/AstrobeeCommandDictionary.html 
+    - name: Build Documentation
+      run: |
+        cd repo/doc/diagrams/ && make && cd ../..
+        doxygen astrobee.doxyfile
+        cd ..
+    - name: Replace old documentation with new
+      run: |
+        rm -r docs/html
+        cp -r repo/doc/html docs
+    - name: Commit and Push
+      run: |
+        cd docs
+        git add --all html/
+        EMAIL=`git show -s --format='%ae' HEAD`
+        NAME=`git show -s --format='%an' HEAD`
+        git config user.email "$EMAIL"
+        git config user.name "$NAME"
+        { git commit -m "Automatic update for $GITHUB_SHA." || true; }
+        git push origin gh-pages

@@ -8,3 +8,4 @@ doxygen
 zlib1g-dev
 libjson0-dev
 libusb-1.0-0-dev
+clang-format-8
