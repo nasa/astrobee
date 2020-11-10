@@ -17,8 +17,6 @@
 
 project(choreographer)
 
-find_package(ff_util REQUIRED)
-
 catkin_package(
   INCLUDE_DIRS
     include
