@@ -170,6 +170,7 @@ class RobustSmartProjectionPoseFactor : public SmartProjectionPoseFactor<CALIBRA
     ar& BOOST_SERIALIZATION_BASE_OBJECT_NVP(SmartProjectionPoseFactor<CALIBRATION>);
     ar& BOOST_SERIALIZATION_NVP(noise_inv_sigma_);
     ar& BOOST_SERIALIZATION_NVP(robust_);
+    ar& BOOST_SERIALIZATION_NVP(rotation_only_fallback_);
   }
 
   double noise_inv_sigma_;
