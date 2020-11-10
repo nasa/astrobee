@@ -65,8 +65,8 @@ GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
       num_factors_averager_("Num Factors") {
   // Assumes zero initial velocity
   const lc::CombinedNavState global_N_body_start(
-      params_.graph_initialization.global_T_body_start, gtsam::Velocity3::Zero(),
-      params_.graph_initialization.initial_imu_bias, params_.graph_initialization.start_time);
+    params_.graph_initialization.global_T_body_start, gtsam::Velocity3::Zero(),
+    params_.graph_initialization.initial_imu_bias, params_.graph_initialization.start_time);
 
   // Add first nav state and priors to graph
   const int key_index = GenerateKeyIndex();
@@ -121,28 +121,27 @@ GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
 void GraphLocalizer::AddStartingPriors(const lc::CombinedNavState& global_N_body_start, const int key_index,
                                        const gtsam::Values& values, gtsam::NonlinearFactorGraph& graph) {
   const gtsam::Vector6 pose_prior_noise_sigmas(
-      (gtsam::Vector(6) << params_.noise.starting_prior_translation_stddev,
-       params_.noise.starting_prior_translation_stddev, params_.noise.starting_prior_translation_stddev,
-       params_.noise.starting_prior_quaternion_stddev, params_.noise.starting_prior_quaternion_stddev,
-       params_.noise.starting_prior_quaternion_stddev)
-          .finished());
+    (gtsam::Vector(6) << params_.noise.starting_prior_translation_stddev,
+     params_.noise.starting_prior_translation_stddev, params_.noise.starting_prior_translation_stddev,
+     params_.noise.starting_prior_quaternion_stddev, params_.noise.starting_prior_quaternion_stddev,
+     params_.noise.starting_prior_quaternion_stddev)
+      .finished());
   const gtsam::Vector3 velocity_prior_noise_sigmas((gtsam::Vector(3) << params_.noise.starting_prior_velocity_stddev,
                                                     params_.noise.starting_prior_velocity_stddev,
                                                     params_.noise.starting_prior_velocity_stddev)
-                                                       .finished());
+                                                     .finished());
   const gtsam::Vector6 bias_prior_noise_sigmas(
-      (gtsam::Vector(6) << params_.noise.starting_prior_accel_bias_stddev,
-       params_.noise.starting_prior_accel_bias_stddev, params_.noise.starting_prior_accel_bias_stddev,
-       params_.noise.starting_prior_gyro_bias_stddev, params_.noise.starting_prior_gyro_bias_stddev,
-       params_.noise.starting_prior_gyro_bias_stddev)
-          .finished());
+    (gtsam::Vector(6) << params_.noise.starting_prior_accel_bias_stddev, params_.noise.starting_prior_accel_bias_stddev,
+     params_.noise.starting_prior_accel_bias_stddev, params_.noise.starting_prior_gyro_bias_stddev,
+     params_.noise.starting_prior_gyro_bias_stddev, params_.noise.starting_prior_gyro_bias_stddev)
+      .finished());
   lc::CombinedNavStateNoise noise;
   noise.pose_noise =
-      Robust(gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(pose_prior_noise_sigmas)));
+    Robust(gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(pose_prior_noise_sigmas)));
   noise.velocity_noise =
-      Robust(gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(velocity_prior_noise_sigmas)));
+    Robust(gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(velocity_prior_noise_sigmas)));
   noise.bias_noise =
-      Robust(gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(bias_prior_noise_sigmas)));
+    Robust(gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(bias_prior_noise_sigmas)));
   AddPriors(global_N_body_start, noise, key_index, values, graph);
 }
 
@@ -244,7 +243,7 @@ void GraphLocalizer::AddImuMeasurement(const lm::ImuMeasurement& imu_measurement
 }
 
 bool GraphLocalizer::AddOpticalFlowMeasurement(
-    const lm::FeaturePointsMeasurement& optical_flow_feature_points_measurement) {
+  const lm::FeaturePointsMeasurement& optical_flow_feature_points_measurement) {
   if (!MeasurementRecentEnough(optical_flow_feature_points_measurement.timestamp)) {
     LOG(WARNING) << "AddOpticalFlowMeasurement: Measurement too old - discarding.";
     return false;
@@ -301,9 +300,9 @@ bool GraphLocalizer::AddOpticalFlowMeasurement(
 void GraphLocalizer::AddSmartFactor(const FeatureTrack& feature_track, FactorsToAdd& smart_factors_to_add) {
   SharedSmartFactor smart_factor;
   smart_factor = boost::make_shared<RobustSmartFactor>(
-      params_.noise.optical_flow_nav_cam_noise, params_.calibration.nav_cam_intrinsics,
-      params_.calibration.body_T_nav_cam, smart_projection_params_, params_.factor.robust_smart_factor,
-      params_.factor.enable_rotation_only_fallback);
+    params_.noise.optical_flow_nav_cam_noise, params_.calibration.nav_cam_intrinsics,
+    params_.calibration.body_T_nav_cam, smart_projection_params_, params_.factor.robust_smart_factor,
+    params_.factor.enable_rotation_only_fallback);
 
   KeyInfos key_infos;
   key_infos.reserve(feature_track.points.size());
@@ -322,15 +321,15 @@ void GraphLocalizer::AddSmartFactor(const FeatureTrack& feature_track, FactorsTo
 void GraphLocalizer::AddStandstillVelocityPriorFactor(const lc::Time timestamp,
                                                       FactorsToAdd& standstill_prior_factors_to_add) {
   const gtsam::Vector3 velocity_prior_noise_sigmas(
-      (gtsam::Vector(3) << params_.noise.optical_flow_prior_velocity_stddev,
-       params_.noise.optical_flow_prior_velocity_stddev, params_.noise.optical_flow_prior_velocity_stddev)
-          .finished());
+    (gtsam::Vector(3) << params_.noise.optical_flow_prior_velocity_stddev,
+     params_.noise.optical_flow_prior_velocity_stddev, params_.noise.optical_flow_prior_velocity_stddev)
+      .finished());
   const auto velocity_noise =
-      Robust(gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(velocity_prior_noise_sigmas)));
+    Robust(gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(velocity_prior_noise_sigmas)));
 
   const KeyInfo velocity_key_info(&sym::V, timestamp);
   gtsam::PriorFactor<gtsam::Velocity3>::shared_ptr velocity_prior_factor(new gtsam::PriorFactor<gtsam::Velocity3>(
-      velocity_key_info.UninitializedKey(), gtsam::Velocity3::Zero(), velocity_noise));
+    velocity_key_info.UninitializedKey(), gtsam::Velocity3::Zero(), velocity_noise));
   standstill_prior_factors_to_add.push_back({{velocity_key_info}, velocity_prior_factor});
   LOG_EVERY_N(INFO, 1) << "AddStandstillVelocityPriorFactor: Added velocity standstill prior.";
 }
@@ -351,7 +350,7 @@ void GraphLocalizer::AddARTagMeasurement(const lm::MatchedProjectionsMeasurement
 }
 
 void GraphLocalizer::AddSparseMappingMeasurement(
-    const lm::MatchedProjectionsMeasurement& matched_projections_measurement) {
+  const lm::MatchedProjectionsMeasurement& matched_projections_measurement) {
   if (!MeasurementRecentEnough(matched_projections_measurement.timestamp)) {
     LOG(WARNING) << "AddSparseMappingMeasurement: Measurement too old - discarding.";
     return;
@@ -382,16 +381,16 @@ void GraphLocalizer::AddProjectionMeasurement(const lm::MatchedProjectionsMeasur
     FactorsToAdd factors_to_add(graph_action);
     factors_to_add.reserve(1);
     const gtsam::Vector6 pose_prior_noise_sigmas(
-        (gtsam::Vector(6) << params_.noise.loc_prior_translation_stddev, params_.noise.loc_prior_translation_stddev,
-         params_.noise.loc_prior_translation_stddev, params_.noise.loc_prior_quaternion_stddev,
-         params_.noise.loc_prior_quaternion_stddev, params_.noise.loc_prior_quaternion_stddev)
-            .finished());
+      (gtsam::Vector(6) << params_.noise.loc_prior_translation_stddev, params_.noise.loc_prior_translation_stddev,
+       params_.noise.loc_prior_translation_stddev, params_.noise.loc_prior_quaternion_stddev,
+       params_.noise.loc_prior_quaternion_stddev, params_.noise.loc_prior_quaternion_stddev)
+        .finished());
     const auto pose_noise =
-        Robust(gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(pose_prior_noise_sigmas)));
+      Robust(gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(pose_prior_noise_sigmas)));
 
     const KeyInfo key_info(&sym::P, matched_projections_measurement.timestamp);
     gtsam::PriorFactor<gtsam::Pose3>::shared_ptr pose_prior_factor(new gtsam::PriorFactor<gtsam::Pose3>(
-        key_info.UninitializedKey(), matched_projections_measurement.global_T_cam * body_T_cam.inverse(), pose_noise));
+      key_info.UninitializedKey(), matched_projections_measurement.global_T_cam * body_T_cam.inverse(), pose_noise));
     factors_to_add.push_back({{key_info}, pose_prior_factor});
     factors_to_add.SetTimestamp(matched_projections_measurement.timestamp);
     BufferFactors(factors_to_add);
@@ -406,8 +405,8 @@ void GraphLocalizer::AddProjectionMeasurement(const lm::MatchedProjectionsMeasur
     for (const auto& matched_projection : matched_projections_measurement.matched_projections) {
       const KeyInfo key_info(&sym::P, matched_projections_measurement.timestamp);
       gtsam::LocProjectionFactor<>::shared_ptr loc_projection_factor(
-          new gtsam::LocProjectionFactor<>(matched_projection.image_point, matched_projection.map_point,
-                                           Robust(cam_noise), key_info.UninitializedKey(), cam_intrinsics, body_T_cam));
+        new gtsam::LocProjectionFactor<>(matched_projection.image_point, matched_projection.map_point,
+                                         Robust(cam_noise), key_info.UninitializedKey(), cam_intrinsics, body_T_cam));
       factors_to_add.push_back({{key_info}, loc_projection_factor});
       ++num_buffered_loc_projection_factors;
     }
@@ -551,7 +550,7 @@ bool GraphLocalizer::SplitOldImuFactorAndAddCombinedNavState(const lc::Time time
   }
 
   const auto combined_imu_factor =
-      ii::MakeCombinedImuFactor(*new_key_index, *upper_bound_key_index, *second_integrated_pim);
+    ii::MakeCombinedImuFactor(*new_key_index, *upper_bound_key_index, *second_integrated_pim);
   AddCombinedImuFactorAndBiasPrior(combined_imu_factor);
   return true;
 }
@@ -583,7 +582,7 @@ bool GraphLocalizer::CreateAndAddLatestImuFactorAndCombinedNavState(const lc::Ti
 }
 
 bool GraphLocalizer::CreateAndAddImuFactorAndPredictedCombinedNavState(
-    const lc::CombinedNavState& global_N_body, const gtsam::PreintegratedCombinedMeasurements& pim) {
+  const lc::CombinedNavState& global_N_body, const gtsam::PreintegratedCombinedMeasurements& pim) {
   const auto key_index_0 = graph_values_.KeyIndex(global_N_body.timestamp());
   if (!key_index_0) {
     LOG(ERROR) << "CreateAndAddImuFactorAndPredictedCombinedNavState: Failed to get first key index.";
@@ -638,11 +637,11 @@ bool GraphLocalizer::SlideWindow(const boost::optional<gtsam::Marginals>& margin
   if (marginals) {
     lc::CombinedNavStateNoise noise;
     noise.pose_noise =
-        Robust(gtsam::noiseModel::Gaussian::Covariance(marginals->marginalCovariance(sym::P(*key_index))));
+      Robust(gtsam::noiseModel::Gaussian::Covariance(marginals->marginalCovariance(sym::P(*key_index))));
     noise.velocity_noise =
-        Robust(gtsam::noiseModel::Gaussian::Covariance(marginals->marginalCovariance(sym::V(*key_index))));
+      Robust(gtsam::noiseModel::Gaussian::Covariance(marginals->marginalCovariance(sym::V(*key_index))));
     noise.bias_noise =
-        Robust(gtsam::noiseModel::Gaussian::Covariance(marginals->marginalCovariance(sym::B(*key_index))));
+      Robust(gtsam::noiseModel::Gaussian::Covariance(marginals->marginalCovariance(sym::B(*key_index))));
     AddPriors(*global_N_body_oldest, noise, *key_index, graph_values_.values(), graph_);
   } else {
     // TODO(rsoussan): Add seperate marginal fallback sigmas instead of relying on starting prior sigmas
@@ -808,19 +807,19 @@ bool GraphLocalizer::TransformARMeasurementAndUpdateDockTWorld(FactorsToAdd& fac
 
   const gtsam::Pose3 world_T_body = combined_nav_state->pose();
   estimated_world_T_dock_ =
-      std::make_pair(world_T_body * params_.calibration.body_T_dock_cam * estimated_dock_cam_T_dock_it->second,
-                     factors_to_add.timestamp());
+    std::make_pair(world_T_body * params_.calibration.body_T_dock_cam * estimated_dock_cam_T_dock_it->second,
+                   factors_to_add.timestamp());
 
   // Frame change dock frame of landmark point using updated estimate of world_T_dock_
   std::vector<FactorToAdd> frame_changed_pose_prior_factors;
   for (auto factor_to_add_it = factors_to_add.Get().begin(); factor_to_add_it != factors_to_add.Get().end();) {
     gtsam::LocProjectionFactor<>* loc_proj_factor =
-        dynamic_cast<gtsam::LocProjectionFactor<>*>(factor_to_add_it->factor.get());
+      dynamic_cast<gtsam::LocProjectionFactor<>*>(factor_to_add_it->factor.get());
     gtsam::PriorFactor<gtsam::Pose3>* loc_prior_factor =
-        dynamic_cast<gtsam::PriorFactor<gtsam::Pose3>*>(factor_to_add_it->factor.get());
+      dynamic_cast<gtsam::PriorFactor<gtsam::Pose3>*>(factor_to_add_it->factor.get());
     if (!loc_proj_factor && !loc_prior_factor) {
       LOG(ERROR)
-          << "TransformARMeasurementAndUpdateDockTWorld: Failed to cast factor to loc projection or prior factor.";
+        << "TransformARMeasurementAndUpdateDockTWorld: Failed to cast factor to loc projection or prior factor.";
       return false;
     }
     if (loc_proj_factor) {
@@ -829,8 +828,8 @@ bool GraphLocalizer::TransformARMeasurementAndUpdateDockTWorld(FactorsToAdd& fac
     } else {
       // Make new factor with changed frame and erase old one since gtsam doesn't allow modifying PriorFactor estimate
       gtsam::PriorFactor<gtsam::Pose3>::shared_ptr frame_changed_pose_prior_factor(new gtsam::PriorFactor<gtsam::Pose3>(
-          loc_prior_factor->key(), estimated_world_T_dock_->first * loc_prior_factor->prior(),
-          loc_prior_factor->noiseModel()));
+        loc_prior_factor->key(), estimated_world_T_dock_->first * loc_prior_factor->prior(),
+        loc_prior_factor->noiseModel()));
       frame_changed_pose_prior_factors.emplace_back(factor_to_add_it->key_infos, frame_changed_pose_prior_factor);
       factor_to_add_it = factors_to_add.Get().erase(factor_to_add_it);
     }
@@ -845,12 +844,12 @@ bool GraphLocalizer::TransformARMeasurementAndUpdateDockTWorld(FactorsToAdd& fac
 void GraphLocalizer::AddCombinedImuFactorAndBiasPrior(const gtsam::CombinedImuFactor::shared_ptr& combined_imu_factor) {
   if (params_.factor.bias_prior) {
     const gtsam::Vector6 bias_prior_noise_sigmas(
-        (gtsam::Vector(6) << params_.noise.prior_accel_bias_stddev, params_.noise.prior_accel_bias_stddev,
-         params_.noise.prior_accel_bias_stddev, params_.noise.prior_gyro_bias_stddev,
-         params_.noise.prior_gyro_bias_stddev, params_.noise.prior_gyro_bias_stddev)
-            .finished());
+      (gtsam::Vector(6) << params_.noise.prior_accel_bias_stddev, params_.noise.prior_accel_bias_stddev,
+       params_.noise.prior_accel_bias_stddev, params_.noise.prior_gyro_bias_stddev,
+       params_.noise.prior_gyro_bias_stddev, params_.noise.prior_gyro_bias_stddev)
+        .finished());
     const auto bias_noise =
-        Robust(gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(bias_prior_noise_sigmas)));
+      Robust(gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(bias_prior_noise_sigmas)));
     // key6 for the CombinedImuFactor is the current bias
     const auto key = combined_imu_factor->key6();
     // Use previous bias as a prior for new bias

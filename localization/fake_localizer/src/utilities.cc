@@ -25,7 +25,7 @@ Eigen::Isometry3d PoseFromMsg(const geometry_msgs::PoseStamped& pose_msg) {
   Eigen::Isometry3d pose = Eigen::Isometry3d::Identity();
   pose.translation() = lc::VectorFromMsg<Eigen::Vector3d, geometry_msgs::Point>(pose_msg.pose.position);
   pose.linear() =
-      lc::RotationFromMsg<Eigen::Quaterniond, geometry_msgs::Quaternion>(pose_msg.pose.orientation).toRotationMatrix();
+    lc::RotationFromMsg<Eigen::Quaterniond, geometry_msgs::Quaternion>(pose_msg.pose.orientation).toRotationMatrix();
   return pose;
 }
 

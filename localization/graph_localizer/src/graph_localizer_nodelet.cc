@@ -48,8 +48,8 @@ void GraphLocalizerNodelet::SubscribeAndAdvertise(ros::NodeHandle* nh) {
   graph_pub_ = nh->advertise<ff_msgs::LocalizationGraph>(TOPIC_GRAPH_LOC, 1);
   reset_pub_ = nh->advertise<std_msgs::Empty>(TOPIC_GNC_EKF_RESET, 1);
 
-  imu_sub_ = nh->subscribe(TOPIC_HARDWARE_IMU, 1, &GraphLocalizerNodelet::ImuCallback, this,
-                           ros::TransportHints().tcpNoDelay());
+  imu_sub_ =
+    nh->subscribe(TOPIC_HARDWARE_IMU, 1, &GraphLocalizerNodelet::ImuCallback, this, ros::TransportHints().tcpNoDelay());
   ar_sub_ = nh->subscribe(TOPIC_LOCALIZATION_AR_FEATURES, 1, &GraphLocalizerNodelet::ARVisualLandmarksCallback, this,
                           ros::TransportHints().tcpNoDelay());
   of_sub_ = nh->subscribe(TOPIC_LOCALIZATION_OF_FEATURES, 1, &GraphLocalizerNodelet::OpticalFlowCallback, this,
@@ -186,7 +186,7 @@ void GraphLocalizerNodelet::PublishWorldTDockTF() {
   }
 
   const auto world_T_dock_tf =
-      lc::PoseToTF(world_T_dock->first, "world", "dock/body", world_T_dock->second, platform_name_);
+    lc::PoseToTF(world_T_dock->first, "world", "dock/body", world_T_dock->second, platform_name_);
   transform_pub_.sendTransform(world_T_dock_tf);
 }
 

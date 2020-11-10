@@ -32,7 +32,7 @@ class ImuBiasTester : public imu_integration::ImuIntegrator {
   explicit ImuBiasTester(const imu_integration::ImuIntegratorParams& params);
 
   std::vector<localization_common::CombinedNavState> PimPredict(
-      const localization_common::CombinedNavState& combined_nav_state);
+    const localization_common::CombinedNavState& combined_nav_state);
 
  private:
   // Integrates imu measurements between lower and upper bound nav states using lower bound's biases

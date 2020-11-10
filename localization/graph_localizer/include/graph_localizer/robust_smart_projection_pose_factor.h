@@ -78,7 +78,7 @@ class RobustSmartProjectionPoseFactor : public SmartProjectionPoseFactor<CALIBRA
             // Unit3 backProjected = cameras[0].backprojectPointAtInfinity(this->measured().at(0));
             // this->computeJacobiansSVD(F, E0, b, cameras, backProjected);
             // }
-    else {  // Empty factor  // NOLINT 
+    else {  // Empty factor  // NOLINT
       return boost::make_shared<JacobianFactorSVD<Dim, 2>>(this->keys());
     }
     return createRegularJacobianFactorSVD<Dim, ZDim>(this->keys(), F, E0, b);
@@ -114,10 +114,10 @@ class RobustSmartProjectionPoseFactor : public SmartProjectionPoseFactor<CALIBRA
  private:
   template <size_t D, size_t ZDim>
   boost::shared_ptr<RegularJacobianFactor<D>> createRegularJacobianFactorSVD(
-      const KeyVector& keys,
-      const std::vector<Eigen::Matrix<double, ZDim, D>, Eigen::aligned_allocator<Eigen::Matrix<double, ZDim, D>>>&
-          Fblocks,
-      const Matrix& Enull, const Vector& b) const {
+    const KeyVector& keys,
+    const std::vector<Eigen::Matrix<double, ZDim, D>, Eigen::aligned_allocator<Eigen::Matrix<double, ZDim, D>>>&
+      Fblocks,
+    const Matrix& Enull, const Vector& b) const {
     typedef std::pair<Key, Matrix> KeyMatrix;
 
     Vector reduced_error = Enull.transpose() * b;
@@ -139,7 +139,7 @@ class RobustSmartProjectionPoseFactor : public SmartProjectionPoseFactor<CALIBRA
     for (size_t k = 0; k < Fblocks.size(); ++k) {
       Key key = keys[k];
       reduced_matrices.emplace_back(
-          KeyMatrix(key, (Enull.transpose()).block(0, ZDim * k, m2, ZDim) * Fblocks[k] * reduced_matrix_weight));
+        KeyMatrix(key, (Enull.transpose()).block(0, ZDim * k, m2, ZDim) * Fblocks[k] * reduced_matrix_weight));
     }
 
     return boost::make_shared<RegularJacobianFactor<D>>(reduced_matrices, reduced_error);

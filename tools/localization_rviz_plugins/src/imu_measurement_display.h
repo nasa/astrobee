@@ -40,9 +40,9 @@ class SceneNode;
 namespace localization_rviz_plugins {
 
 class ImuMeasurementDisplay : public rviz::MessageFilterDisplay<sensor_msgs::Imu> {
-  Q_OBJECT      // NOLINT
-      public :  // NOLINT
-                ImuMeasurementDisplay();
+  Q_OBJECT    // NOLINT
+    public :  // NOLINT
+              ImuMeasurementDisplay();
   ~ImuMeasurementDisplay() = default;
 
   // private:

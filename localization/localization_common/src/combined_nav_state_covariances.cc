@@ -50,9 +50,9 @@ Confidence CombinedNavStateCovariances::PoseConfidence(const double position_log
   const double orientation_log_det = std::log10(pose_covariance().block<3, 3>(3, 3).determinant());
 
   const Confidence position_confidence =
-      position_log_det < position_log_det_threshold ? Confidence::kGood : Confidence::kPoor;
+    position_log_det < position_log_det_threshold ? Confidence::kGood : Confidence::kPoor;
   const Confidence orientation_confidence =
-      orientation_log_det < orientation_log_det_threshold ? Confidence::kGood : Confidence::kPoor;
+    orientation_log_det < orientation_log_det_threshold ? Confidence::kGood : Confidence::kPoor;
 
   if (position_confidence == Confidence::kGood && orientation_confidence == Confidence::kGood) return Confidence::kGood;
   // Lost if both confidences are bad, poor if only 1 is bad

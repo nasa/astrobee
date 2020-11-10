@@ -40,9 +40,9 @@ class SceneNode;
 namespace localization_rviz_plugins {
 
 class ImuAugmentorDisplay : public rviz::MessageFilterDisplay<ff_msgs::EkfState> {
-  Q_OBJECT      // NOLINT
-      public :  // NOLINT
-                ImuAugmentorDisplay();
+  Q_OBJECT    // NOLINT
+    public :  // NOLINT
+              ImuAugmentorDisplay();
   ~ImuAugmentorDisplay() = default;
 
   // private:

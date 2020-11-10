@@ -124,7 +124,7 @@ boost::optional<lc::Time> GraphValues::ClosestPoseTimestamp(const lc::Time times
 }
 
 std::pair<boost::optional<lc::Time>, boost::optional<lc::Time>> GraphValues::LowerAndUpperBoundTimestamp(
-    const lc::Time timestamp) const {
+  const lc::Time timestamp) const {
   if (Empty()) {
     LOG(ERROR) << "LowerAndUpperBoundTimestamp: No states available.";
     return {boost::none, boost::none};
@@ -282,7 +282,7 @@ int GraphValues::SlideWindow(gtsam::NonlinearFactorGraph& graph) {
   VLOG(2) << "SlideWindow: Starting total num states: " << timestamp_key_index_map_.size();
   VLOG(2) << "SlideWindow: Starting total duration is " << total_duration;
   const lc::Time ideal_oldest_allowed_state =
-      std::max(0.0, timestamp_key_index_map_.crbegin()->first - params_.ideal_duration);
+    std::max(0.0, timestamp_key_index_map_.crbegin()->first - params_.ideal_duration);
   int num_states_removed = 0;
   // Remove states so that duration is small enough and num of states is not too small or too large
   while ((timestamp_key_index_map_.begin()->first < ideal_oldest_allowed_state ||
@@ -293,7 +293,7 @@ int GraphValues::SlideWindow(gtsam::NonlinearFactorGraph& graph) {
   }
   VLOG(2) << "SlideWindow: New total num states: " << timestamp_key_index_map_.size();
   const double new_total_duration =
-      timestamp_key_index_map_.crbegin()->first - timestamp_key_index_map_.cbegin()->first;
+    timestamp_key_index_map_.crbegin()->first - timestamp_key_index_map_.cbegin()->first;
   VLOG(2) << "SlideWindow: New total duration is " << new_total_duration;
   VLOG(2) << "SlideWindow: Num states removed: " << num_states_removed;
   return num_states_removed;

@@ -34,9 +34,9 @@ void LoadCalibrationParams(config_reader::ConfigReader& config, CalibrationParam
 
 void LoadFactorParams(config_reader::ConfigReader& config, FactorParams& params) {
   params.min_valid_feature_track_avg_distance_from_mean =
-      lc::LoadDouble(config, "min_valid_feature_track_avg_distance_from_mean");
+    lc::LoadDouble(config, "min_valid_feature_track_avg_distance_from_mean");
   params.max_standstill_feature_track_avg_distance_from_mean =
-      lc::LoadDouble(config, "max_standstill_feature_track_avg_distance_from_mean");
+    lc::LoadDouble(config, "max_standstill_feature_track_avg_distance_from_mean");
   params.optical_flow_standstill_velocity_prior = lc::LoadBool(config, "optical_flow_standstill_velocity_prior");
   params.enable_EPI = lc::LoadBool(config, "enable_EPI");
   params.landmark_distance_threshold = lc::LoadDouble(config, "landmark_distance_threshold");
@@ -66,10 +66,10 @@ void LoadGraphValuesParams(config_reader::ConfigReader& config, GraphValuesParam
 
 void LoadNoiseParams(config_reader::ConfigReader& config, NoiseParams& params) {
   params.loc_dock_cam_noise =
-      gtsam::noiseModel::Isotropic::Sigma(2, lc::LoadDouble(config, "loc_dock_cam_noise_stddev"));
+    gtsam::noiseModel::Isotropic::Sigma(2, lc::LoadDouble(config, "loc_dock_cam_noise_stddev"));
   params.loc_nav_cam_noise = gtsam::noiseModel::Isotropic::Sigma(2, lc::LoadDouble(config, "loc_nav_cam_noise_stddev"));
   params.optical_flow_nav_cam_noise =
-      gtsam::noiseModel::Isotropic::Sigma(2, lc::LoadDouble(config, "optical_flow_nav_cam_noise_stddev"));
+    gtsam::noiseModel::Isotropic::Sigma(2, lc::LoadDouble(config, "optical_flow_nav_cam_noise_stddev"));
   params.optical_flow_prior_velocity_stddev = lc::LoadDouble(config, "optical_flow_prior_velocity_stddev");
   params.starting_prior_translation_stddev = lc::LoadDouble(config, "starting_prior_translation_stddev");
   params.starting_prior_quaternion_stddev = lc::LoadDouble(config, "starting_prior_quaternion_stddev");
@@ -84,7 +84,7 @@ void LoadNoiseParams(config_reader::ConfigReader& config, NoiseParams& params) {
 
 void LoadSanityCheckerParams(config_reader::ConfigReader& config, SanityCheckerParams& params) {
   params.num_consecutive_pose_difference_failures_until_insane =
-      lc::LoadInt(config, "num_consecutive_pose_difference_failures_until_insane");
+    lc::LoadInt(config, "num_consecutive_pose_difference_failures_until_insane");
   params.max_sane_position_difference = lc::LoadDouble(config, "max_sane_position_difference");
   params.check_pose_difference = lc::LoadBool(config, "check_pose_difference");
   params.check_position_covariance = lc::LoadBool(config, "check_position_covariance");

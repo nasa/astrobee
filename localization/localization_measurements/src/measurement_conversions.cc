@@ -39,7 +39,7 @@ MatchedProjectionsMeasurement MakeMatchedProjectionsMeasurement(const ff_msgs::V
 }
 
 MatchedProjectionsMeasurement FrameChangeMatchedProjectionsMeasurement(
-    const MatchedProjectionsMeasurement& matched_projections_measurement, const gtsam::Pose3& b_T_a) {
+  const MatchedProjectionsMeasurement& matched_projections_measurement, const gtsam::Pose3& b_T_a) {
   auto frame_changed_measurement = matched_projections_measurement;
   for (auto& matched_projection : frame_changed_measurement.matched_projections) {
     matched_projection.map_point = b_T_a * matched_projection.map_point;
@@ -51,7 +51,7 @@ FeaturePointsMeasurement MakeFeaturePointsMeasurement(const ff_msgs::Feature2dAr
   FeaturePointsMeasurement feature_points_measurement;
   feature_points_measurement.feature_points.reserve(optical_flow_feature_points.feature_array.size());
   lc::Time timestamp =
-      lc::GetTime(optical_flow_feature_points.header.stamp.sec, optical_flow_feature_points.header.stamp.nsec);
+    lc::GetTime(optical_flow_feature_points.header.stamp.sec, optical_flow_feature_points.header.stamp.nsec);
   feature_points_measurement.timestamp = timestamp;
   // TODO(rsoussan): put this somewhere else?
   static int image_id = 0;
@@ -59,7 +59,7 @@ FeaturePointsMeasurement MakeFeaturePointsMeasurement(const ff_msgs::Feature2dAr
 
   for (const auto& feature : optical_flow_feature_points.feature_array) {
     feature_points_measurement.feature_points.emplace_back(
-        FeaturePoint(feature.x, feature.y, image_id, feature.id, timestamp));
+      FeaturePoint(feature.x, feature.y, image_id, feature.id, timestamp));
   }
 
   return feature_points_measurement;

@@ -31,11 +31,11 @@ int main(int argc, char** argv) {
   std::string output_bagfile;
   std::string filter_name;
   po::options_description desc(
-      "Reads through a bag file and filters imu measurements, replacing the old imu measurements with new filtered "
-      "ones.  Saves output to a new bagfile.");
+    "Reads through a bag file and filters imu measurements, replacing the old imu measurements with new filtered "
+    "ones.  Saves output to a new bagfile.");
   desc.add_options()("help", "produce help message")("bagfile", po::value<std::string>()->required(), "Input bagfile")(
-      "output-bagfile,o", po::value<std::string>(&output_bagfile)->default_value("filtered_imu.bag"), "Output bagfile")(
-      "filter-name,f", po::value<std::string>(&filter_name)->default_value("none"), "Imu filter name");
+    "output-bagfile,o", po::value<std::string>(&output_bagfile)->default_value("filtered_imu.bag"), "Output bagfile")(
+    "filter-name,f", po::value<std::string>(&filter_name)->default_value("none"), "Imu filter name");
   po::positional_options_description p;
   p.add("bagfile", 1);
   po::variables_map vm;

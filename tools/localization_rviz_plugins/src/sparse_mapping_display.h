@@ -41,9 +41,9 @@ class SceneNode;
 namespace localization_rviz_plugins {
 
 class SparseMappingDisplay : public rviz::MessageFilterDisplay<ff_msgs::VisualLandmarks> {
-  Q_OBJECT      // NOLINT
-      public :  // NOLINT
-                SparseMappingDisplay();
+  Q_OBJECT    // NOLINT
+    public :  // NOLINT
+              SparseMappingDisplay();
   ~SparseMappingDisplay() = default;
 
   // private:

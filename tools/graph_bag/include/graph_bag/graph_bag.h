@@ -51,7 +51,7 @@ class GraphBag {
 
   void SavePose(const geometry_msgs::PoseStamped& latest_pose_msg);
   void SaveImuBiasTesterPredictedStates(
-      const std::vector<localization_common::CombinedNavState>& imu_bias_tester_predicted_states);
+    const std::vector<localization_common::CombinedNavState>& imu_bias_tester_predicted_states);
   void SaveLocState(const ff_msgs::EkfState& loc_msg, const std::string& topic);
 
   std::unique_ptr<LiveMeasurementSimulator> live_measurement_simulator_;

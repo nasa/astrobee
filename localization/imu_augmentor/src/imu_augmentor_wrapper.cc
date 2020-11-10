@@ -63,7 +63,7 @@ boost::optional<std::pair<lc::CombinedNavState, lc::CombinedNavStateCovariances>
 ImuAugmentorWrapper::LatestImuAugmentedCombinedNavStateAndCovariances() {
   if (!latest_combined_nav_state_ || !latest_covariances_ || !imu_augmentor_) {
     LOG(ERROR)
-        << "LatestImuAugmentedCombinedNavStateAndCovariances: Not enough information available to create desired data.";
+      << "LatestImuAugmentedCombinedNavStateAndCovariances: Not enough information available to create desired data.";
     return boost::none;
   }
 
@@ -84,7 +84,7 @@ boost::optional<ff_msgs::EkfState> ImuAugmentorWrapper::LatestImuAugmentedLocali
   }
 
   const auto latest_imu_augmented_combined_nav_state_and_covariances =
-      LatestImuAugmentedCombinedNavStateAndCovariances();
+    LatestImuAugmentedCombinedNavStateAndCovariances();
   if (!latest_imu_augmented_combined_nav_state_and_covariances) {
     LOG(ERROR) << "LatestImuAugmentedLocalizationMsg: Failed to get latest imu augmented nav state and covariances.";
     return boost::none;
@@ -108,16 +108,16 @@ boost::optional<ff_msgs::EkfState> ImuAugmentorWrapper::LatestImuAugmentedLocali
   const auto& latest_bias = latest_imu_augmented_combined_nav_state_and_covariances->first.bias();
   auto latest_bias_corrected_acceleration = latest_bias.correctAccelerometer(latest_imu_measurement->acceleration);
   const auto latest_bias_corrected_angular_velocity =
-      latest_bias.correctGyroscope(latest_imu_measurement->angular_velocity);
+    latest_bias.correctGyroscope(latest_imu_measurement->angular_velocity);
   // Correct for gravity if needed
   if (!params_.gravity.isZero()) {
     const gtsam::Pose3& global_T_body_latest = latest_imu_augmented_combined_nav_state_and_covariances->first.pose();
     latest_bias_corrected_acceleration = lc::RemoveGravityFromAccelerometerMeasurement(
-        params_.gravity, params_.body_T_imu, global_T_body_latest, latest_bias_corrected_acceleration);
+      params_.gravity, params_.body_T_imu, global_T_body_latest, latest_bias_corrected_acceleration);
   }
   // Frame change measurements to body frame, correct for centripetal accel
   const auto corrected_measurements = preintegration_helper_->correctMeasurementsBySensorPose(
-      latest_bias_corrected_acceleration, latest_bias_corrected_angular_velocity);
+    latest_bias_corrected_acceleration, latest_bias_corrected_angular_velocity);
 
   lc::VectorToMsg(corrected_measurements.first, latest_imu_augmented_loc_msg.accel);
   lc::VectorToMsg(corrected_measurements.second, latest_imu_augmented_loc_msg.omega);

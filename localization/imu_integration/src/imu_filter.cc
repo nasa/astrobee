@@ -95,7 +95,7 @@ boost::optional<lm::ImuMeasurement> ImuFilter::AddMeasurement(const lm::ImuMeasu
   auto filtered_imu_measurement = imu_measurement;
   filtered_imu_measurement.acceleration << filtered_acceleration_x, filtered_acceleration_y, filtered_acceleration_z;
   filtered_imu_measurement.angular_velocity << filtered_angular_velocity_x, filtered_angular_velocity_y,
-      filtered_angular_velocity_z;
+    filtered_angular_velocity_z;
   return filtered_imu_measurement;
 }
 }  // namespace imu_integration

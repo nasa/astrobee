@@ -45,9 +45,9 @@ LocalizationGraphDisplay::LocalizationGraphDisplay() {
   show_pose_axes_.reset(new rviz::BoolProperty("Show Pose Axes", true, "Show graph poses as axes.", this));
   pose_axes_size_.reset(new rviz::FloatProperty("Pose Axes Size", 0.1, "Pose axes size.", this));
   show_imu_factor_arrows_.reset(
-      new rviz::BoolProperty("Show Imu Factor Arrows", true, "Show imu factors as arrows.", this));
+    new rviz::BoolProperty("Show Imu Factor Arrows", true, "Show imu factors as arrows.", this));
   imu_factor_arrows_diameter_.reset(
-      new rviz::FloatProperty("Imu Factor Arrows Diameter", 0.01, "Imu factor arrows diameter.", this));
+    new rviz::FloatProperty("Imu Factor Arrows Diameter", 0.01, "Imu factor arrows diameter.", this));
 
   image_transport::ImageTransport image_transport(nh_);
   image_sub_ = image_transport.subscribe(TOPIC_HARDWARE_NAV_CAM, 1, &LocalizationGraphDisplay::imageCallback, this);
@@ -127,7 +127,7 @@ void LocalizationGraphDisplay::addImuVisual(const graph_localizer::GraphLocalize
     auto imu_factor_arrow = std::unique_ptr<rviz::Arrow>(new rviz::Arrow(context_->getSceneManager(), scene_node_));
     imu_factor_arrow->setPosition(ogrePosition(*pose));
     const auto orientation_and_length =
-        getOrientationAndLength(pose->translation(), imu_predicted_combined_nav_state->pose().translation());
+      getOrientationAndLength(pose->translation(), imu_predicted_combined_nav_state->pose().translation());
     imu_factor_arrow->setOrientation(orientation_and_length.first);
     const float diameter = imu_factor_arrows_diameter_->getFloat();
     imu_factor_arrow->set(3.0 * orientation_and_length.second / 4.0, 0.5 * diameter,

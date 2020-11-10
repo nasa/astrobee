@@ -85,7 +85,7 @@ class GraphValues {
   LowerAndUpperBoundTimestamp(const localization_common::Time timestamp) const;
 
   boost::optional<localization_common::CombinedNavState> LowerBoundOrEqualCombinedNavState(
-      const localization_common::Time timestamp) const;
+    const localization_common::Time timestamp) const;
 
   bool HasKey(const localization_common::Time timestamp) const;
 
@@ -98,7 +98,7 @@ class GraphValues {
   }
 
   boost::optional<localization_common::CombinedNavState> GetCombinedNavState(
-      const localization_common::Time timestamp) const;
+    const localization_common::Time timestamp) const;
 
   double Duration() const;
 
@@ -121,7 +121,7 @@ class GraphValues {
   bool Empty() const;
 
   boost::optional<localization_common::Time> LowerBoundOrEqualTimestamp(
-      const localization_common::Time timestamp) const;
+    const localization_common::Time timestamp) const;
 
   // Serialization function
   friend class boost::serialization::access;

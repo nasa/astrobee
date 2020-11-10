@@ -46,9 +46,9 @@ class SceneNode;
 namespace localization_rviz_plugins {
 
 class LocalizationGraphDisplay : public rviz::MessageFilterDisplay<ff_msgs::LocalizationGraph> {
-  Q_OBJECT      // NOLINT
-      public :  // NOLINT
-                LocalizationGraphDisplay();
+  Q_OBJECT    // NOLINT
+    public :  // NOLINT
+              LocalizationGraphDisplay();
   ~LocalizationGraphDisplay() = default;
 
   // private:

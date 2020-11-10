@@ -82,7 +82,7 @@ boost::optional<lc::Time> ImuIntegrator::IntegrateImuMeasurements(const lc::Time
   // Add final interpolated measurement if necessary
   if (last_added_imu_measurement_time != end_time) {
     const auto interpolated_measurement =
-        Interpolate(std::prev(measurement_it)->second, measurement_it->second, end_time);
+      Interpolate(std::prev(measurement_it)->second, measurement_it->second, end_time);
     if (!interpolated_measurement) {
       LOG(ERROR) << "IntegrateImuMeasurements: Failed to interpolate final measurement.";
       return boost::none;
@@ -111,8 +111,8 @@ void ImuIntegrator::RemoveOldMeasurements(const lc::Time new_start_time) {
 }
 
 boost::optional<gtsam::PreintegratedCombinedMeasurements> ImuIntegrator::IntegratedPim(
-    const gtsam::imuBias::ConstantBias& bias, const lc::Time start_time, const lc::Time end_time,
-    boost::shared_ptr<gtsam::PreintegratedCombinedMeasurements::Params> params) const {
+  const gtsam::imuBias::ConstantBias& bias, const lc::Time start_time, const lc::Time end_time,
+  boost::shared_ptr<gtsam::PreintegratedCombinedMeasurements::Params> params) const {
   auto pim = Pim(bias, params);
   const auto last_integrated_measurement_time = IntegrateImuMeasurements(start_time, end_time, pim);
   if (!last_integrated_measurement_time) {
@@ -126,7 +126,7 @@ boost::shared_ptr<gtsam::PreintegratedCombinedMeasurements::Params> ImuIntegrato
   // Make a copy so internal params aren't exposed.  Gtsam expects a point to a
   // non const type, so can't pass a pointer to const.
   boost::shared_ptr<gtsam::PreintegratedCombinedMeasurements::Params> copied_params(
-      new gtsam::PreintegratedCombinedMeasurements::Params(*pim_params_));
+    new gtsam::PreintegratedCombinedMeasurements::Params(*pim_params_));
   return copied_params;
 }
 
@@ -169,7 +169,7 @@ bool ImuIntegrator::WithinBounds(const localization_common::Time timestamp) {
 }
 
 const std::map<localization_common::Time, localization_measurements::ImuMeasurement>& ImuIntegrator::measurements()
-    const {
+  const {
   return measurements_;
 }
 

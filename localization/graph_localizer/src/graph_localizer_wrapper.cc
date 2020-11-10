@@ -109,7 +109,7 @@ void GraphLocalizerWrapper::VLVisualLandmarksCallback(const ff_msgs::VisualLandm
   }
 
   const gtsam::Pose3 sparse_mapping_global_T_body =
-      lc::GtPose(visual_landmarks_msg, graph_localizer_initialization_.params().calibration.body_T_nav_cam.inverse());
+    lc::GtPose(visual_landmarks_msg, graph_localizer_initialization_.params().calibration.body_T_nav_cam.inverse());
   const lc::Time timestamp = lc::TimeFromHeader(visual_landmarks_msg.header);
   sparse_mapping_pose_ = std::make_pair(sparse_mapping_global_T_body, timestamp);
 
@@ -231,10 +231,10 @@ boost::optional<ff_msgs::EkfState> GraphLocalizerWrapper::LatestLocalizationStat
   }
   // Angular velocity and acceleration are added by imu integrator
   const auto ekf_state_msg =
-      EkfStateMsg(combined_nav_state_and_covariances->first, Eigen::Vector3d::Zero(), Eigen::Vector3d::Zero(),
-                  combined_nav_state_and_covariances->second, feature_counts_.of, feature_counts_.vl,
-                  graph_localizer_initialization_.EstimateBiases(), position_cov_log_det_lost_threshold_,
-                  orientation_cov_log_det_lost_threshold_);
+    EkfStateMsg(combined_nav_state_and_covariances->first, Eigen::Vector3d::Zero(), Eigen::Vector3d::Zero(),
+                combined_nav_state_and_covariances->second, feature_counts_.of, feature_counts_.vl,
+                graph_localizer_initialization_.EstimateBiases(), position_cov_log_det_lost_threshold_,
+                orientation_cov_log_det_lost_threshold_);
   feature_counts_.Reset();
   return ekf_state_msg;
 }

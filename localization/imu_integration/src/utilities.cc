@@ -25,8 +25,8 @@ namespace imu_integration {
 namespace lc = localization_common;
 namespace lm = localization_measurements;
 boost::optional<gtsam::imuBias::ConstantBias> EstimateAndSetImuBiases(
-    const lm::ImuMeasurement& imu_measurement, const int num_imu_measurements_per_bias_estimate,
-    std::vector<lm::ImuMeasurement>& imu_bias_measurements) {
+  const lm::ImuMeasurement& imu_measurement, const int num_imu_measurements_per_bias_estimate,
+  std::vector<lm::ImuMeasurement>& imu_bias_measurements) {
   imu_bias_measurements.emplace_back(imu_measurement);
   if (imu_bias_measurements.size() < num_imu_measurements_per_bias_estimate) return boost::none;
 
@@ -56,18 +56,18 @@ boost::optional<lm::ImuMeasurement> Interpolate(const lm::ImuMeasurement& imu_me
   }
 
   const double alpha =
-      (timestamp - imu_measurement_a.timestamp) / (imu_measurement_b.timestamp - imu_measurement_a.timestamp);
+    (timestamp - imu_measurement_a.timestamp) / (imu_measurement_b.timestamp - imu_measurement_a.timestamp);
   const Eigen::Vector3d interpolated_acceleration =
-      (1.0 - alpha) * imu_measurement_a.acceleration + alpha * imu_measurement_b.acceleration;
+    (1.0 - alpha) * imu_measurement_a.acceleration + alpha * imu_measurement_b.acceleration;
   const Eigen::Vector3d interpolated_angular_velocity =
-      (1.0 - alpha) * imu_measurement_a.angular_velocity + alpha * imu_measurement_b.angular_velocity;
+    (1.0 - alpha) * imu_measurement_a.angular_velocity + alpha * imu_measurement_b.angular_velocity;
 
   return lm::ImuMeasurement(interpolated_acceleration, interpolated_angular_velocity, timestamp);
 }
 
 gtsam::PreintegratedCombinedMeasurements Pim(
-    const gtsam::imuBias::ConstantBias& bias,
-    const boost::shared_ptr<gtsam::PreintegratedCombinedMeasurements::Params>& params) {
+  const gtsam::imuBias::ConstantBias& bias,
+  const boost::shared_ptr<gtsam::PreintegratedCombinedMeasurements::Params>& params) {
   gtsam::PreintegratedCombinedMeasurements pim(params);
   pim.resetIntegrationAndSetBias(bias);
   return pim;
@@ -95,8 +95,8 @@ lc::CombinedNavState PimPredict(const lc::CombinedNavState& combined_nav_state,
 gtsam::CombinedImuFactor::shared_ptr MakeCombinedImuFactor(const int key_index_0, const int key_index_1,
                                                            const gtsam::PreintegratedCombinedMeasurements& pim) {
   return gtsam::CombinedImuFactor::shared_ptr(
-      new gtsam::CombinedImuFactor(sym::P(key_index_0), sym::V(key_index_0), sym::P(key_index_1), sym::V(key_index_1),
-                                   sym::B(key_index_0), sym::B(key_index_1), pim));
+    new gtsam::CombinedImuFactor(sym::P(key_index_0), sym::V(key_index_0), sym::P(key_index_1), sym::V(key_index_1),
+                                 sym::B(key_index_0), sym::B(key_index_1), pim));
 }
 
 void LoadImuIntegratorParams(config_reader::ConfigReader& config, ImuIntegratorParams& params) {

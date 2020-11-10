@@ -41,14 +41,14 @@ int main(int argc, char** argv) {
   po::options_description desc("Runs graph localization on a bagfile and saves the results to a new bagfile.");
   // TODO(rsoussan): change config default path to not be hardcoded
   desc.add_options()("help", "produce help message")("bagfile", po::value<std::string>()->required(), "Input bagfile")(
-      "map-file", po::value<std::string>()->required(), "Map file")(
-      "image-topic,i", po::value<std::string>(&image_topic)->default_value("mgt/img_sampler/nav_cam/image_record"),
-      "Image topic")("config-path,c",
-                     po::value<std::string>(&config_path)->default_value("/home/rsoussan/astrobee/astrobee"),
-                     "Config path")(
-      "output-bagfile,o", po::value<std::string>(&output_bagfile)->default_value("results.bag"), "Output bagfile")(
-      "robot-config-file,r", po::value<std::string>(&robot_config_file)->default_value("config/robots/bumble.config"),
-      "Robot config file")("world,w", po::value<std::string>(&world)->default_value("iss"), "World name");
+    "map-file", po::value<std::string>()->required(), "Map file")(
+    "image-topic,i", po::value<std::string>(&image_topic)->default_value("mgt/img_sampler/nav_cam/image_record"),
+    "Image topic")("config-path,c",
+                   po::value<std::string>(&config_path)->default_value("/home/rsoussan/astrobee/astrobee"),
+                   "Config path")(
+    "output-bagfile,o", po::value<std::string>(&output_bagfile)->default_value("results.bag"), "Output bagfile")(
+    "robot-config-file,r", po::value<std::string>(&robot_config_file)->default_value("config/robots/bumble.config"),
+    "Robot config file")("world,w", po::value<std::string>(&world)->default_value("iss"), "World name");
   po::positional_options_description p;
   p.add("bagfile", 1);
   p.add("map-file", 1);

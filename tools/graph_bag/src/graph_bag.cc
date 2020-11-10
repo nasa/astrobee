@@ -74,7 +74,7 @@ void GraphBag::SaveOpticalFlowTracksImage(const sensor_msgs::ImageConstPtr& imag
 }
 
 void GraphBag::SaveImuBiasTesterPredictedStates(
-    const std::vector<lc::CombinedNavState>& imu_bias_tester_predicted_states) {
+  const std::vector<lc::CombinedNavState>& imu_bias_tester_predicted_states) {
   for (const auto state : imu_bias_tester_predicted_states) {
     geometry_msgs::PoseStamped pose_msg;
     lc::PoseToMsg(state.pose(), pose_msg.pose);
@@ -129,7 +129,7 @@ void GraphBag::Run() {
         imu_augmentor_wrapper_.LocalizationStateCallback(*localization_msg);
         SaveLocState(*localization_msg, TOPIC_GRAPH_LOC_STATE);
         const auto imu_bias_tester_predicted_states =
-            imu_bias_tester_wrapper_.LocalizationStateCallback(*localization_msg);
+          imu_bias_tester_wrapper_.LocalizationStateCallback(*localization_msg);
         SaveImuBiasTesterPredictedStates(imu_bias_tester_predicted_states);
       }
     }

@@ -52,7 +52,7 @@ void ImuMeasurementDisplay::processMessage(const sensor_msgs::Imu::ConstPtr& imu
   // TODO(rsoussan): use tf to get world_T_imu
   imu_acceleration_arrow_->setPosition(ogrePosition(gtsam::Pose3::identity()));
   const gtsam::Vector3 imu_F_acceleration =
-      lc::VectorFromMsg<gtsam::Vector3, geometry_msgs::Vector3>(imu_msg->linear_acceleration);
+    lc::VectorFromMsg<gtsam::Vector3, geometry_msgs::Vector3>(imu_msg->linear_acceleration);
   const float scale = imu_acceleration_arrow_scale_->getFloat();
   const auto orientation_and_length = getOrientationAndLength(gtsam::Vector3::Zero(), scale * imu_F_acceleration);
   const float diameter = scale / 50.0;

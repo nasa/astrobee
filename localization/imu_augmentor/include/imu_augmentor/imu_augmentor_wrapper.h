@@ -46,8 +46,8 @@ class ImuAugmentorWrapper {
 
  private:
   bool LatestImuAugmentedCombinedNavStateAndCovariances(
-      localization_common::CombinedNavState& latest_imu_augmented_combined_nav_state,
-      localization_common::CombinedNavStateCovariances& latest_imu_augmented_covariances);
+    localization_common::CombinedNavState& latest_imu_augmented_combined_nav_state,
+    localization_common::CombinedNavStateCovariances& latest_imu_augmented_covariances);
 
   bool LatestImuMeasurement(localization_measurements::ImuMeasurement& latest_imu_measurement);
 

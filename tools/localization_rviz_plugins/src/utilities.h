@@ -44,10 +44,10 @@ std::unique_ptr<rviz::Axes> axisFromPose(const gtsam::Pose3& pose, const double 
                                          Ogre::SceneManager* scene_manager, Ogre::SceneNode* scene_node);
 
 boost::optional<localization_common::CombinedNavState> firstCombinedNavState(
-    const graph_localizer::GraphLocalizer& graph_localizer, const gtsam::CombinedImuFactor* const imu_factor);
+  const graph_localizer::GraphLocalizer& graph_localizer, const gtsam::CombinedImuFactor* const imu_factor);
 
 boost::optional<localization_common::CombinedNavState> pimPredict(
-    const graph_localizer::GraphLocalizer& graph_localizer, const gtsam::CombinedImuFactor* const imu_factor);
+  const graph_localizer::GraphLocalizer& graph_localizer, const gtsam::CombinedImuFactor* const imu_factor);
 
 std::pair<Ogre::Quaternion, double> getOrientationAndLength(const gtsam::Point3& point_a, const gtsam::Point3& point_b);
 }  // namespace localization_rviz_plugins

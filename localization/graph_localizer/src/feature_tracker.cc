@@ -29,7 +29,7 @@ void FeatureTracker::UpdateFeatureTracks(const lm::FeaturePoints& feature_points
   // Feature points don't necessarily arrive in time order.
   if (!feature_points.empty()) {
     latest_time_ =
-        latest_time_ ? std::max(*latest_time_, feature_points.front().timestamp) : feature_points.front().timestamp;
+      latest_time_ ? std::max(*latest_time_, feature_points.front().timestamp) : feature_points.front().timestamp;
   }
 
   const int starting_num_feature_tracks = feature_tracks_.size();
@@ -62,8 +62,8 @@ void FeatureTracker::UpdateFeatureTracks(const lm::FeaturePoints& feature_points
 
 void FeatureTracker::RemoveOldFeaturePoints(lc::Time oldest_allowed_time) {
   // Remove any timestamp before oldest_allowed_time and before start of time window
-  oldest_allowed_time = latest_time_ ? std::max(*latest_time_ - params_.sliding_window_duration, oldest_allowed_time)
-                                     : oldest_allowed_time;
+  oldest_allowed_time =
+    latest_time_ ? std::max(*latest_time_ - params_.sliding_window_duration, oldest_allowed_time) : oldest_allowed_time;
 
   // Handle any out of order tracks that are too old. Split into two for loops
   // so ordered points can be removed in sub linear time (most measurements are ordered).

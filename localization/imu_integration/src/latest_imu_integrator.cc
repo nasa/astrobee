@@ -48,7 +48,7 @@ bool LatestImuIntegrator::IntegrateLatestImuMeasurements(const lc::Time end_time
   }
 
   const auto last_added_imu_measurement_time =
-      IntegrateImuMeasurements(last_added_imu_measurement_time_, end_time, *pim_);
+    IntegrateImuMeasurements(last_added_imu_measurement_time_, end_time, *pim_);
   if (!last_added_imu_measurement_time) {
     LOG(ERROR) << "IntegrateLatestImuMeasurements: Failed to integrate measurements.";
     return false;

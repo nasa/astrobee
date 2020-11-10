@@ -39,7 +39,7 @@ ImuAugmentorDisplay::ImuAugmentorDisplay() {
   pose_axes_size_.reset(new rviz::FloatProperty("Pose Axes Size", 0.1, "Pose axes size.", this));
   number_of_poses_.reset(new rviz::IntProperty("Number of Poses", 10, "Number of Poses.", this));
   show_imu_acceleration_arrow_.reset(
-      new rviz::BoolProperty("Show Imu Acceleration Arrow", true, "Show imu acceleration arrow.", this));
+    new rviz::BoolProperty("Show Imu Acceleration Arrow", true, "Show imu acceleration arrow.", this));
   imu_acceleration_arrow_scale_.reset(new rviz::FloatProperty("Imu Arrow Scale", 0.1, "Imu arrow scale.", this));
 }
 

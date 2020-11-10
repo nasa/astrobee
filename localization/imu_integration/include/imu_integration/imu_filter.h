@@ -34,7 +34,7 @@ class ImuFilter {
   explicit ImuFilter(const ImuFilterParams& params);
   // Returns filtered measurement if one is available
   boost::optional<localization_measurements::ImuMeasurement> AddMeasurement(
-      const localization_measurements::ImuMeasurement& imu_measurement);
+    const localization_measurements::ImuMeasurement& imu_measurement);
 
  private:
   // Acceleration Filters

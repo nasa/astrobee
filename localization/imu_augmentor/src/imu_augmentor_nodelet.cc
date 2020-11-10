@@ -37,7 +37,7 @@ void ImuAugmentorNodelet::SubscribeAndAdvertise(ros::NodeHandle* nh) {
   twist_pub_ = nh->advertise<geometry_msgs::TwistStamped>(TOPIC_LOCALIZATION_TWIST, 1);
 
   imu_sub_ =
-      nh->subscribe(TOPIC_HARDWARE_IMU, 1, &ImuAugmentorNodelet::ImuCallback, this, ros::TransportHints().tcpNoDelay());
+    nh->subscribe(TOPIC_HARDWARE_IMU, 1, &ImuAugmentorNodelet::ImuCallback, this, ros::TransportHints().tcpNoDelay());
   state_sub_ = nh->subscribe(TOPIC_GRAPH_LOC_STATE, 1, &ImuAugmentorNodelet::LocalizationStateCallback, this,
                              ros::TransportHints().tcpNoDelay());
 }
@@ -58,7 +58,7 @@ boost::optional<ff_msgs::EkfState> ImuAugmentorNodelet::PublishLatestImuAugmente
   const auto latest_imu_augmented_loc_msg = imu_augmentor_wrapper_.LatestImuAugmentedLocalizationMsg();
   if (!latest_imu_augmented_loc_msg) {
     LOG_EVERY_N(WARNING, 50)
-        << "PublishLatestImuAugmentedLocalizationState: Failed to get latest imu augmented loc msg.";
+      << "PublishLatestImuAugmentedLocalizationState: Failed to get latest imu augmented loc msg.";
     return boost::none;
   }
   state_pub_.publish(*latest_imu_augmented_loc_msg);
