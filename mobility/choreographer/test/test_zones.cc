@@ -134,7 +134,7 @@ TEST(choreographer_nominal, ZoneBreach) {
   // pose.header.frame_id = "world";
 
   pose.pose.position.x = 10.5;
-  pose.pose.position.y = -7;
+  pose.pose.position.y = -7.5;
   pose.pose.position.z = 4.5;
   pose.pose.orientation.x = 0;
   pose.pose.orientation.y = 0;
