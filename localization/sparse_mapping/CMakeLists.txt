@@ -77,7 +77,6 @@ if(CATKIN_ENABLE_TESTING)
     sparse_mapping
   )
 
-  find_package(rostest REQUIRED)
   add_rostest_gtest(test_nvm_fileio
     test/test_nvm_fileio.test
     test/test_nvm_fileio.cc
@@ -86,7 +85,6 @@ if(CATKIN_ENABLE_TESTING)
     sparse_mapping
   )
 
-  find_package(rostest REQUIRED)
   add_rostest_gtest(test_registration
     test/test_registration.test
     test/test_registration.cc
@@ -95,7 +93,6 @@ if(CATKIN_ENABLE_TESTING)
     sparse_mapping
   )
 
-  find_package(rostest REQUIRED)
   add_rostest_gtest(test_reprojection
     test/test_reprojection.test
     test/test_reprojection.cc
@@ -104,7 +101,6 @@ if(CATKIN_ENABLE_TESTING)
     sparse_mapping
   )
 
-  find_package(rostest REQUIRED)
   add_rostest_gtest(test_sparse_map
     test/test_sparse_map.test
     test/test_sparse_map.cc
