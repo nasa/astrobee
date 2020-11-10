@@ -60,6 +60,8 @@ if [ "$ASTROBEE_WORLD" == "iss" ]; then
 	exec ./AstroBeeWB -engineering -agent1 ${AGENT1} -agent2 ${AGENT2} -agent3 ${AGENT3} -noZoomToClick -precision 3 > /dev/null 2>&1
 elif [ "$ASTROBEE_WORLD" == "granite" ]; then
   exec ./AstroBeeWB -engineering -agent1 ${AGENT1} -agent2 ${AGENT2} -agent3 ${AGENT3} -noZoomToClick -precision 3 -world GraniteLab
+elif [ "$ASTROBEE_WORLD" == "r2" ]; then
+	exec ./AstroBeeWB -engineering -agent1 ${AGENT1} -agent2 ${AGENT2} -agent3 ${AGENT3} -noZoomToClick -precision 3 > /dev/null 2>&1
 elif [ "$ASTROBEE_WORLD" == "mgtf" ]; then
 	exec ./AstroBeeWB -engineering -agent1 ${AGENT1} -agent2 ${AGENT2} -agent3 ${AGENT3} -noZoomToClick -precision 3 -mgtfLab > /dev/null 2>&1
 fi

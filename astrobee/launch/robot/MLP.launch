@@ -246,6 +246,11 @@
       <arg name="default" value="$(arg dds)" />
     </include>
 
+
+  </group>
+
+  <!-- Drivers (optional) -->
+  <group if="$(arg drivers)">
     <!-- Perching arm -->
     <include file="$(find ff_util)/launch/ff_nodelet.launch">
       <arg name="class" value="perching_arm/PerchingArmNode" />
@@ -257,10 +262,6 @@
       <arg name="debug" value="$(arg debug)" />
       <arg name="default" value="true" />
     </include>
-  </group>
-
-  <!-- Drivers (optional) -->
-  <group if="$(arg drivers)">
 
     <!-- NavCam pipeline -->
     <include file="$(find ff_util)/launch/ff_nodelet.launch">

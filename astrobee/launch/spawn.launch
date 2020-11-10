@@ -44,6 +44,9 @@
   <arg if="$(eval arg('world')=='iss')"
        name="pose"
        default="9.92 -9.54 4.50 0 0 0 1" />     <!-- iss: docked in JPM      -->
+  <arg if="$(eval arg('world')=='r2')"
+       name="pose"
+       default="9.92 -9.54 4.50 0 0 0 1" />     <!-- iss: docked in JPM      -->
   <arg if="$(eval arg('world')=='granite')"
        name="pose"
        default="0 0 -0.7 0 0 0 1" /> <!-- granite: docked         -->

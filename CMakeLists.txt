@@ -112,7 +112,7 @@ option(TEST_COVERAGE
   OFF)
 option(USE_DRIVERS
   "Build the tools in the drivers directory."
-  ON)
+  OFF)
 option(IS_BAMBOO_BUILD
   "The code is being built under the bamboo CI system"
   OFF)
