@@ -99,6 +99,24 @@ LocalizationGraphPanel::LocalizationGraphPanel(QWidget* parent) : rviz::Panel(pa
   prior_count_layout->addWidget(velocity_prior_count_label_);
   prior_count_layout->addWidget(bias_prior_count_label_);
 
+  QHBoxLayout* error_layout = new QHBoxLayout;
+  total_error_label_ = new QLabel("Total Error:");
+  of_error_label_ = new QLabel("OF Error:");
+  imu_error_label_ = new QLabel("IMU Error:");
+  loc_error_label_ = new QLabel("Loc Error:");
+  error_layout->addWidget(total_error_label_);
+  error_layout->addWidget(of_error_label_);
+  error_layout->addWidget(imu_error_label_);
+  error_layout->addWidget(loc_error_label_);
+
+  QHBoxLayout* prior_error_layout = new QHBoxLayout;
+  pose_prior_error_label_ = new QLabel("Pose Prior Error:");
+  velocity_prior_error_label_ = new QLabel("Vel Prior Error:");
+  bias_prior_error_label_ = new QLabel("Bias Prior Error:");
+  prior_error_layout->addWidget(pose_prior_error_label_);
+  prior_error_layout->addWidget(velocity_prior_error_label_);
+  prior_error_layout->addWidget(bias_prior_error_label_);
+
   QHBoxLayout* of_result_layout = new QHBoxLayout;
   of_valid_label_ = new QLabel("OF Valid:");
   of_degenerate_label_ = new QLabel("OF Degenerate:");
@@ -142,6 +160,8 @@ LocalizationGraphPanel::LocalizationGraphPanel(QWidget* parent) : rviz::Panel(pa
   QVBoxLayout* layout = new QVBoxLayout;
   layout->addLayout(feature_count_layout);
   layout->addLayout(prior_count_layout);
+  layout->addLayout(error_layout);
+  layout->addLayout(prior_error_layout);
   layout->addLayout(of_result_layout);
   layout->addLayout(of_result2_layout);
   layout->addLayout(of_info_layout);
@@ -180,9 +200,19 @@ void LocalizationGraphPanel::LocalizationGraphCallback(const ff_msgs::Localizati
   double total_imu_dt = 0;
   gtsam::Vector3 total_imu_dp_dt = gtsam::Vector3::Zero();
   gtsam::Vector3 total_imu_dv_dt = gtsam::Vector3::Zero();
+  double total_error = 0;
+  double smart_factor_error = 0;
+  double loc_proj_error = 0;
+  double imu_factor_error = 0;
+  double pose_prior_error = 0;
+  double velocity_prior_error = 0;
+  double bias_prior_error = 0;
   for (const auto factor : graph_localizer.factor_graph()) {
+    const double error = factor->error(graph_localizer.graph_values().values());
+    total_error += error;
     const auto smart_factor = dynamic_cast<const SmartFactor*>(factor.get());
     if (smart_factor) {
+      smart_factor_error += error;
       ++of_factors;
       of_total_num_measurements += smart_factor->measured().size();
       if (smart_factor->isValid()) ++of_valid;
@@ -194,6 +224,7 @@ void LocalizationGraphPanel::LocalizationGraphCallback(const ff_msgs::Localizati
     }
     const auto imu_factor = dynamic_cast<gtsam::CombinedImuFactor*>(factor.get());
     if (imu_factor) {
+      imu_factor_error += error;
       ++imu_factors;
       const double dt = imu_factor->preintegratedMeasurements().deltaTij();
       total_imu_dt += dt;
@@ -203,7 +234,7 @@ void LocalizationGraphPanel::LocalizationGraphCallback(const ff_msgs::Localizati
         LOG(ERROR) << "LocalizationGraphCallback: Failed to get imu nav state and pim predicted nav state.";
       } else {
         const gtsam::Vector3 dp =
-            imu_predicted_combined_nav_state->pose().translation() - imu_combined_nav_state->pose().translation();
+          imu_predicted_combined_nav_state->pose().translation() - imu_combined_nav_state->pose().translation();
         total_imu_dp_dt += dp / dt;
         const gtsam::Vector3 dv = imu_predicted_combined_nav_state->velocity() - imu_combined_nav_state->velocity();
         total_imu_dv_dt += dv / dt;
@@ -211,19 +242,23 @@ void LocalizationGraphPanel::LocalizationGraphCallback(const ff_msgs::Localizati
     }
     const auto loc_factor = dynamic_cast<gtsam::LocProjectionFactor<>*>(factor.get());
     if (loc_factor) {
+      loc_proj_error += error;
       ++loc_factors;
     }
     // Prior Factors
     const auto pose_prior_factor = dynamic_cast<gtsam::PriorFactor<gtsam::Pose3>*>(factor.get());
     if (pose_prior_factor) {
+      pose_prior_error += error;
       ++pose_prior_factors;
     }
     const auto velocity_prior_factor = dynamic_cast<gtsam::PriorFactor<gtsam::Velocity3>*>(factor.get());
     if (velocity_prior_factor) {
+      velocity_prior_error += error;
       ++velocity_prior_factors;
     }
     const auto bias_prior_factor = dynamic_cast<gtsam::PriorFactor<gtsam::imuBias::ConstantBias>*>(factor.get());
     if (bias_prior_factor) {
+      bias_prior_error += error;
       ++bias_prior_factors;
     }
   }
@@ -258,6 +293,31 @@ void LocalizationGraphPanel::LocalizationGraphCallback(const ff_msgs::Localizati
   QString bias_prior_count;
   bias_prior_count.setNum(bias_prior_factors);
   bias_prior_count_label_->setText("Bias Priors: " + bias_prior_count);
+
+  // Errors
+  QString total_error_num;
+  total_error_num.setNum(total_error, 'g', 2);
+  total_error_label_->setText("Total Error: " + total_error_num);
+  highlightLabel<std::less_equal<double>>(total_error, 10, 50, *total_error_label_);
+  QString of_error;
+  of_error.setNum(smart_factor_error, 'g', 2);
+  of_error_label_->setText("OF Error: " + of_error);
+  highlightLabel<std::less_equal<double>>(smart_factor_error, 10, 50, *of_error_label_);
+  QString imu_error;
+  imu_error.setNum(imu_factor_error, 'g', 2);
+  imu_error_label_->setText("IMU Error: " + imu_error);
+  QString loc_error;
+  loc_error.setNum(loc_proj_error, 'g', 2);
+  loc_error_label_->setText("Loc Error: " + loc_error);
+  QString pose_prior_error_num;
+  pose_prior_error_num.setNum(pose_prior_error, 'g', 2);
+  pose_prior_error_label_->setText("Pose Priors Error: " + pose_prior_error_num);
+  QString velocity_prior_error_num;
+  velocity_prior_error_num.setNum(velocity_prior_error, 'g', 2);
+  velocity_prior_error_label_->setText("Vel Priors Error: " + velocity_prior_error_num);
+  QString bias_prior_error_num;
+  bias_prior_error_num.setNum(bias_prior_error, 'g', 2);
+  bias_prior_error_label_->setText("Bias Priors Error: " + bias_prior_error_num);
 
   // OF status
   if (of_factors > 0) {
