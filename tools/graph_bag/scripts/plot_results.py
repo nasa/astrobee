@@ -176,14 +176,30 @@ def add_other_vector3d_plots(pdf, imu_augmented_graph_localization_states):
   pdf.savefig()
   plt.close()
 
-  # Gyro Biases
   plt.figure()
-  plot_helpers.plot_vector3ds(imu_augmented_graph_localization_states.gyro_biases,
-                              imu_augmented_graph_localization_states.times, 'Gyro Bias')
+  plt.plot(imu_augmented_graph_localization_states.times,
+           imu_augmented_graph_localization_states.gyro_biases.xs, 'r')
   plt.xlabel('Time (s)')
-  plt.ylabel('Gyro Biases')
-  plt.title('Gyro Biases')
-  plt.legend(prop={'size': 6})
+  plt.ylabel('Gyro Biases (X)')
+  plt.title('Gyro Biases (X)')
+  pdf.savefig()
+  plt.close()
+
+  plt.figure()
+  plt.plot(imu_augmented_graph_localization_states.times,
+           imu_augmented_graph_localization_states.gyro_biases.ys, 'r')
+  plt.xlabel('Time (s)')
+  plt.ylabel('Gyro Biases (Y)')
+  plt.title('Gyro Biases (Y)')
+  pdf.savefig()
+  plt.close()
+
+  plt.figure()
+  plt.plot(imu_augmented_graph_localization_states.times,
+           imu_augmented_graph_localization_states.gyro_biases.zs, 'r')
+  plt.xlabel('Time (s)')
+  plt.ylabel('Gyro Biases (Z)')
+  plt.title('Gyro Biases (Z)')
   pdf.savefig()
   plt.close()
 
