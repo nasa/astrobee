@@ -139,6 +139,21 @@ class RobustSmartProjectionPoseFactor : public SmartProjectionPoseFactor<CALIBRA
     return gtsam::triangulateSafe(this->cameras(values), this->measured(), triangulation_params_);
   }
 
+  bool robust() const { return robust_; }
+
+  double noise_inv_sigma() const { return noise_inv_sigma_; }
+
+  // More efficient implementation of robust loss (also avoids inheritance calls)
+  double robustLoss(const double mahal_distance) const {
+    const double sqrt_mahal_distance = std::sqrt(mahal_distance);
+    const double absError = std::abs(sqrt_mahal_distance);
+    if (absError <= huber_k_) {  // |x| <= k
+      return mahal_distance / 2;
+    } else {  // |x| > k
+      return huber_k_ * (absError - (huber_k_ / 2));
+    }
+  }
+
  private:
   template <size_t D, size_t ZDim>
   boost::shared_ptr<RegularJacobianFactor<D>> createRegularJacobianFactorSVD(
@@ -178,17 +193,6 @@ class RobustSmartProjectionPoseFactor : public SmartProjectionPoseFactor<CALIBRA
   double robustWeight(const double error_norm) const {
     const double squared_weight = (error_norm <= huber_k_) ? (1.0) : (huber_k_ / error_norm);
     return std::sqrt(squared_weight);
-  }
-
-  // More efficient implementation of robust loss (also avoids inheritance calls)
-  double robustLoss(const double mahal_distance) const {
-    const double sqrt_mahal_distance = std::sqrt(mahal_distance);
-    const double absError = std::abs(sqrt_mahal_distance);
-    if (absError <= huber_k_) {  // |x| <= k
-      return mahal_distance / 2;
-    } else {  // |x| > k
-      return huber_k_ * (absError - (huber_k_ / 2));
-    }
   }
 
   /// Serialization function

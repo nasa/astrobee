@@ -174,9 +174,10 @@ void LocalizationGraphDisplay::addSmartFactorProjectionVisual(const SmartFactor&
   int destination_column = 0;
   const auto point = smart_factor.serialized_point(graph_values.values());
   const auto cameras = smart_factor.cameras(graph_values.values());
+
   // Cameras are in same order as keys
   const auto& measurements = smart_factor.measured();
-  double factor_error = 0;
+  double summed_error = 0;
   for (int i = 0; i < num_images && i < 16; ++i) {
     const auto distorted_measurement = graph_bag::Distort(measurements[i], *nav_cam_params_);
     cv::circle(images[i], distorted_measurement, 13 /* Radius*/, cv::Scalar(0, 255, 0), -1 /*Filled*/, 8);
@@ -187,11 +188,11 @@ void LocalizationGraphDisplay::addSmartFactorProjectionVisual(const SmartFactor&
       const auto projection = cameras[i].project2(*point);
       const auto distorted_projection = graph_bag::Distort(projection, *nav_cam_params_);
       cv::circle(images[i], distorted_projection, 7 /* Radius*/, cv::Scalar(255, 0, 0), -1 /*Filled*/, 8);
-      const double error = 0.5 * (measurements[i] - projection).norm();
+      const double error = 0.5 * (measurements[i] - projection).squaredNorm();
       const auto text_color = textColor(error, 1.0, 1.5);
       cv::putText(images[i], std::to_string(error), cv::Point(cols / 2 - 100, rows - 20), CV_FONT_NORMAL, 3, text_color,
                   4, cv::LINE_AA);
-      factor_error += error;
+      summed_error += error;
     }
     cv::resize(images[i], images[i], cv::Size(width, height));
     images[i].copyTo(smart_factor_projection_image.image(cv::Rect(destination_column, destination_row, width, height)));
@@ -203,9 +204,18 @@ void LocalizationGraphDisplay::addSmartFactorProjectionVisual(const SmartFactor&
       destination_row += height;
     }
   }
-  const std::string text = point ? std::to_string(factor_error) : "Invalid Point";
-  const auto text_color = textColor(factor_error, 1.0, 1.5);
-  cv::putText(smart_factor_projection_image.image, text, cv::Point(cols / 2 - 100, rows - 20), CV_FONT_NORMAL, 3,
+
+  std::string text;
+  if (!point) {
+    text = "Invalid Point";
+  } else {
+    text = std::to_string(summed_error);
+    const double whitened_error = std::pow(smart_factor.noise_inv_sigma(), 2) * summed_error;
+    text += ", " + std::to_string(whitened_error);
+    if (smart_factor.robust()) text += ",  " + std::to_string(smart_factor.robustLoss(2.0 * whitened_error));
+  }
+  const auto text_color = textColor(summed_error, 1.0, 1.5);
+  cv::putText(smart_factor_projection_image.image, text, cv::Point(cols / 2 - 100, rows - 20), CV_FONT_NORMAL, 1,
               text_color, 3, cv::LINE_AA);
   smart_factor_projection_image_pub_.publish(smart_factor_projection_image.toImageMsg());
 }
@@ -246,7 +256,7 @@ void LocalizationGraphDisplay::processMessage(const ff_msgs::LocalizationGraph::
   clearDisplay();
   graph_localizer::GraphLocalizer graph_localizer;
   gtsam::deserializeBinary(msg->serialized_graph, graph_localizer);
-  SmartFactor* largest_error_smart_factor;
+  SmartFactor* largest_error_smart_factor = nullptr;
   double largest_smart_factor_error = -1;
   if (graph_localizer.graph_values().LatestTimestamp())
     addOpticalFlowVisual(graph_localizer.feature_tracks(), *(graph_localizer.graph_values().LatestTimestamp()));
