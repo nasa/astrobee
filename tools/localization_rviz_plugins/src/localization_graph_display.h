@@ -74,8 +74,6 @@ class LocalizationGraphDisplay : public rviz::MessageFilterDisplay<ff_msgs::Loca
   sensor_msgs::ImageConstPtr getImage(const localization_common::Time time);
   void addSmartFactorProjectionVisual(const SmartFactor& smart_factor,
                                       const graph_localizer::GraphValues& graph_values);
-  boost::optional<std::vector<localization_common::Time>> getTimestamps(
-    const SmartFactor& smart_factor, const graph_localizer::GraphValues& graph_values);
 
   std::vector<std::unique_ptr<rviz::Axes>> graph_pose_axes_;
   std::vector<std::unique_ptr<rviz::Arrow>> imu_factor_arrows_;

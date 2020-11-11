@@ -27,6 +27,7 @@
 #include <OGRE/OgreSceneManager.h>
 #include <OGRE/OgreSceneNode.h>
 
+#include <cv_bridge/cv_bridge.h>
 #include <rviz/frame_manager.h>
 #include <rviz/visualization_manager.h>
 
@@ -116,34 +117,60 @@ void LocalizationGraphDisplay::clearImageBuffer(const localization_common::Time 
 
 void LocalizationGraphDisplay::addSmartFactorProjectionVisual(const SmartFactor& smart_factor,
                                                               const graph_localizer::GraphValues& graph_values) {
-  /* cv_bridge::CvImagePtr feature_track_image;
-    try {
-      feature_track_image = cv_bridge::toCvCopy(image_msg, sensor_msgs::image_encodings::RGB8);
-    } catch (cv_bridge::Exception& e) {
-      ROS_ERROR("cv_bridge exception: %s", e.what());
-      return boost::none;
-    }
-
-    const auto img = getImage(latest_graph_time);
-    if (!img) return;
-  */
-  const auto timestamps = getTimestamps(smart_factor, graph_values);
-  if (timestamps)
-    LOG(ERROR) << "got timestamps!!!!";
-  else
-    LOG(ERROR) << "no timestamps!!!";
-  // smart_factor_projection_image_pub_.publish(*feature_track_image);
-}
-
-boost::optional<std::vector<lc::Time>> LocalizationGraphDisplay::getTimestamps(
-  const SmartFactor& smart_factor, const graph_localizer::GraphValues& graph_values) {
-  std::vector<lc::Time> timestamps;
+  std::vector<cv::Mat> images;
   for (const auto& key : smart_factor.keys()) {
     const auto timestamp = graph_values.Timestamp(key);
-    if (!timestamp) return boost::none;
-    timestamps.emplace_back(*timestamp);
+    if (!timestamp) return;
+    const auto image = getImage(*timestamp);
+    if (!image) return;
+    cv_bridge::CvImagePtr cv_image;
+    try {
+      cv_image = cv_bridge::toCvCopy(image, sensor_msgs::image_encodings::RGB8);
+    } catch (cv_bridge::Exception& e) {
+      LOG(ERROR) << "cv_bridge exception: " << e.what();
+      return;
+    }
+
+    images.emplace_back(cv_image->image);
   }
-  return timestamps;
+
+  if (images.empty()) return;
+  const auto& image = images.front();
+  cv_bridge::CvImage smart_factor_projection_image;
+  // smart_factor_projection_image.header =
+  smart_factor_projection_image.encoding = sensor_msgs::image_encodings::RGB8;
+  smart_factor_projection_image.image = cv::Mat(image.rows, image.cols, CV_8UC3, cv::Scalar(0, 0, 0));
+
+  const int num_images = images.size();
+  int divisor;
+  // Always create square images (2x2, 3x3, or 4x4)
+  // Draw max 16 images
+  if (num_images <= 4) {
+    divisor = 2;
+  } else if (num_images <= 9) {
+    divisor = 3;
+  } else {
+    divisor = 4;
+  }
+
+  const int width = image.cols / divisor;
+  const int height = image.rows / divisor;
+
+  int destination_row = 0;
+  int destination_column = 0;
+  for (int i = 0; i < num_images && i < 16; ++i) {
+    // TODO(rsoussan): projection image measurement point and map projection onto image!!!!!!
+    cv::resize(images[i], images[i], cv::Size(width, height));
+    images[i].copyTo(smart_factor_projection_image.image(cv::Rect(destination_column, destination_row, width, height)));
+    destination_column += width;
+    // Move down a row when a row of images in the destination image is filled.
+    // Account for integer division (farthest column might not be equal to destination.cols)
+    if (std::abs(destination_column - smart_factor_projection_image.image.cols) < 10) {
+      destination_column = 0;
+      destination_row += height;
+    }
+  }
+  smart_factor_projection_image_pub_.publish(smart_factor_projection_image.toImageMsg());
 }
 
 void LocalizationGraphDisplay::addImuVisual(const graph_localizer::GraphLocalizer& graph_localizer,
