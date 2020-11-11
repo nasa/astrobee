@@ -264,7 +264,8 @@ void LocalizationGraphDisplay::processMessage(const ff_msgs::LocalizationGraph::
       addImuVisual(graph_localizer, imu_factor);
     }
   }
-  addSmartFactorProjectionVisual(*largest_error_smart_factor, graph_localizer.graph_values());
+  if (largest_error_smart_factor)
+    addSmartFactorProjectionVisual(*largest_error_smart_factor, graph_localizer.graph_values());
 
   const auto oldest_timestamp = graph_localizer.graph_values().OldestTimestamp();
   if (oldest_timestamp) clearImageBuffer(*oldest_timestamp);
