@@ -31,6 +31,8 @@
 #include <rviz/frame_manager.h>
 #include <rviz/visualization_manager.h>
 
+#include <opencv2/highgui/highgui_c.h>
+
 #include <glog/logging.h>
 
 #include <string>
@@ -115,6 +117,16 @@ void LocalizationGraphDisplay::clearImageBuffer(const localization_common::Time 
   img_buffer_.erase(img_buffer_.begin(), img_it);
 }
 
+cv::Scalar LocalizationGraphDisplay::textColor(const double val, const double green_threshold,
+                                               const double yellow_threshold) {
+  if (val < green_threshold)
+    return cv::Scalar(0, 255, 0);
+  else if (val < yellow_threshold)
+    return cv::Scalar(255, 255, 0);
+  else
+    return cv::Scalar(255, 0, 0);
+}
+
 void LocalizationGraphDisplay::addSmartFactorProjectionVisual(const SmartFactor& smart_factor,
                                                               const graph_localizer::GraphValues& graph_values) {
   std::vector<cv::Mat> images;
@@ -142,6 +154,8 @@ void LocalizationGraphDisplay::addSmartFactorProjectionVisual(const SmartFactor&
   smart_factor_projection_image.image = cv::Mat(image.rows, image.cols, CV_8UC3, cv::Scalar(0, 0, 0));
 
   const int num_images = images.size();
+  const int rows = image.rows;
+  const int cols = image.cols;
   int divisor;
   // Always create square images (2x2, 3x3, or 4x4)
   // Draw max 16 images
@@ -153,13 +167,32 @@ void LocalizationGraphDisplay::addSmartFactorProjectionVisual(const SmartFactor&
     divisor = 4;
   }
 
-  const int width = image.cols / divisor;
-  const int height = image.rows / divisor;
+  const int width = cols / divisor;
+  const int height = rows / divisor;
 
   int destination_row = 0;
   int destination_column = 0;
+  const auto point = smart_factor.serialized_point(graph_values.values());
+  const auto cameras = smart_factor.cameras(graph_values.values());
+  // Cameras are in same order as keys
+  const auto& measurements = smart_factor.measured();
+  double factor_error = 0;
   for (int i = 0; i < num_images && i < 16; ++i) {
-    // TODO(rsoussan): projection image measurement point and map projection onto image!!!!!!
+    const auto distorted_measurement = graph_bag::Distort(measurements[i], *nav_cam_params_);
+    cv::circle(images[i], distorted_measurement, 13 /* Radius*/, cv::Scalar(0, 255, 0), -1 /*Filled*/, 8);
+    const cv::Point rectangle_offset(40, 40);
+    cv::rectangle(images[i], distorted_measurement - rectangle_offset, distorted_measurement + rectangle_offset,
+                  cv::Scalar(0, 255, 0), 8);
+    if (point) {
+      const auto projection = cameras[i].project2(*point);
+      const auto distorted_projection = graph_bag::Distort(projection, *nav_cam_params_);
+      cv::circle(images[i], distorted_projection, 7 /* Radius*/, cv::Scalar(255, 0, 0), -1 /*Filled*/, 8);
+      const double error = 0.5 * (measurements[i] - projection).norm();
+      const auto text_color = textColor(error, 1.0, 1.5);
+      cv::putText(images[i], std::to_string(error), cv::Point(cols / 2 - 100, rows - 20), CV_FONT_NORMAL, 3, text_color,
+                  4, cv::LINE_AA);
+      factor_error += error;
+    }
     cv::resize(images[i], images[i], cv::Size(width, height));
     images[i].copyTo(smart_factor_projection_image.image(cv::Rect(destination_column, destination_row, width, height)));
     destination_column += width;
@@ -170,6 +203,10 @@ void LocalizationGraphDisplay::addSmartFactorProjectionVisual(const SmartFactor&
       destination_row += height;
     }
   }
+  const std::string text = point ? std::to_string(factor_error) : "Invalid Point";
+  const auto text_color = textColor(factor_error, 1.0, 1.5);
+  cv::putText(smart_factor_projection_image.image, text, cv::Point(cols / 2 - 100, rows - 20), CV_FONT_NORMAL, 3,
+              text_color, 3, cv::LINE_AA);
   smart_factor_projection_image_pub_.publish(smart_factor_projection_image.toImageMsg());
 }
 
@@ -216,7 +253,7 @@ void LocalizationGraphDisplay::processMessage(const ff_msgs::LocalizationGraph::
   for (const auto factor : graph_localizer.factor_graph()) {
     const auto smart_factor = dynamic_cast<SmartFactor*>(factor.get());
     if (smart_factor) {
-      const double smart_factor_error = smart_factor->error(graph_localizer.graph_values().values());
+      const double smart_factor_error = smart_factor->serialized_error(graph_localizer.graph_values().values());
       if (smart_factor_error > largest_smart_factor_error) {
         largest_smart_factor_error = smart_factor_error;
         largest_error_smart_factor = smart_factor;
@@ -227,9 +264,7 @@ void LocalizationGraphDisplay::processMessage(const ff_msgs::LocalizationGraph::
       addImuVisual(graph_localizer, imu_factor);
     }
   }
-  if (largest_error_smart_factor) {
-    addSmartFactorProjectionVisual(*largest_error_smart_factor, graph_localizer.graph_values());
-  }
+  addSmartFactorProjectionVisual(*largest_error_smart_factor, graph_localizer.graph_values());
 
   const auto oldest_timestamp = graph_localizer.graph_values().OldestTimestamp();
   if (oldest_timestamp) clearImageBuffer(*oldest_timestamp);

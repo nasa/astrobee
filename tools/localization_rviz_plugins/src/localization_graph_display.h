@@ -34,6 +34,7 @@
 #include <rviz/ogre_helpers/arrow.h>
 #include <rviz/ogre_helpers/axes.h>
 #include <rviz/properties/float_property.h>
+#include <opencv2/core/types.hpp>
 #include <map>
 #include <vector>
 #endif
@@ -74,6 +75,7 @@ class LocalizationGraphDisplay : public rviz::MessageFilterDisplay<ff_msgs::Loca
   sensor_msgs::ImageConstPtr getImage(const localization_common::Time time);
   void addSmartFactorProjectionVisual(const SmartFactor& smart_factor,
                                       const graph_localizer::GraphValues& graph_values);
+  cv::Scalar textColor(const double val, const double green_threshold, const double yellow_threshold);
 
   std::vector<std::unique_ptr<rviz::Axes>> graph_pose_axes_;
   std::vector<std::unique_ptr<rviz::Arrow>> imu_factor_arrows_;

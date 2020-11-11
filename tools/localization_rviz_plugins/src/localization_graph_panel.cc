@@ -212,7 +212,12 @@ void LocalizationGraphPanel::LocalizationGraphCallback(const ff_msgs::Localizati
     total_error += error;
     const auto smart_factor = dynamic_cast<const SmartFactor*>(factor.get());
     if (smart_factor) {
-      smart_factor_error += error;
+      // Using serialized error instead of error due to bug in gtsam serialization.
+      // TODO(rsoussan): Remove this when gtsam bug is fixed
+      const double serialized_error = smart_factor->serialized_error(graph_localizer.graph_values().values());
+      total_error -= error;
+      total_error += serialized_error;
+      smart_factor_error += serialized_error;
       ++of_factors;
       of_total_num_measurements += smart_factor->measured().size();
       if (smart_factor->isValid()) ++of_valid;

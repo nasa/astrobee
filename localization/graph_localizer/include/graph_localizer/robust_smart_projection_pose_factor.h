@@ -55,6 +55,7 @@ class RobustSmartProjectionPoseFactor : public SmartProjectionPoseFactor<CALIBRA
     SharedIsotropic sharedIsotropic = boost::dynamic_pointer_cast<noiseModel::Isotropic>(sharedNoiseModel);
     if (!sharedIsotropic) throw std::runtime_error("RobustSmartProjectionPoseFactor: needs isotropic");
     noise_inv_sigma_ = 1.0 / sharedIsotropic->sigma();
+    triangulation_params_ = params.triangulation;
   }
 
   boost::shared_ptr<GaussianFactor> linearize(const Values& values) const override {
@@ -109,6 +110,33 @@ class RobustSmartProjectionPoseFactor : public SmartProjectionPoseFactor<CALIBRA
     } else {  // Inactive
       return 0.0;
     }
+  }
+
+  // These "serialized" functions are only needed due to an error in gtsam for serializing result_.
+  // Call these instead of error() and point() for a smart factor that has been serialized.
+  // TODO(rsoussan): Remove these when gtsam bug fixed
+  double serialized_error(const Values& values) const {
+    if (this->active(values)) {
+      try {
+        const auto point = serialized_point(values);
+        const double total_reprojection_loss = this->totalReprojectionError(this->cameras(values), point);
+        // TODO(rsoussan): This should be here but leads to a degeneracy (see comment in linearize)
+        // if (!result.valid() && !useForRotationOnly(result)) return 0.0;
+        // Multiply by 2 since totalReporjectionError divides mahal distance by 2, and robust_model_->loss
+        // expects mahal distance
+        const double loss = robust_ ? robustLoss(2.0 * total_reprojection_loss) : total_reprojection_loss;
+        return loss;
+      } catch (...) {
+        // Catch cheirality and other errors, zero on errors
+        return 0.0;
+      }
+    } else {  // Inactive
+      return 0.0;
+    }
+  }
+
+  TriangulationResult serialized_point(const Values& values) const {
+    return gtsam::triangulateSafe(this->cameras(values), this->measured(), triangulation_params_);
   }
 
  private:
@@ -171,6 +199,7 @@ class RobustSmartProjectionPoseFactor : public SmartProjectionPoseFactor<CALIBRA
     ar& BOOST_SERIALIZATION_NVP(noise_inv_sigma_);
     ar& BOOST_SERIALIZATION_NVP(robust_);
     ar& BOOST_SERIALIZATION_NVP(rotation_only_fallback_);
+    ar& BOOST_SERIALIZATION_NVP(triangulation_params_);
   }
 
   double noise_inv_sigma_;
@@ -178,6 +207,8 @@ class RobustSmartProjectionPoseFactor : public SmartProjectionPoseFactor<CALIBRA
   const double huber_k_ = 1.345;
   double robust_;
   bool rotation_only_fallback_;
+  // TODO(rsoussan): Remove once result_ serialization bug in gtsam fixed
+  TriangulationParameters triangulation_params_;
 };
 }  // namespace gtsam
 
