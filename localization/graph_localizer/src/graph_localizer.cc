@@ -944,11 +944,17 @@ void GraphLocalizer::LogStats() {
   num_factors_averager_.UpdateAndLog(graph_.size());
 }
 
-int GraphLocalizer::NumOFFactors() const {
+int GraphLocalizer::NumOFFactors(const bool check_valid) const {
   int num_of_factors = 0;
   for (const auto& factor : graph_) {
     const auto smart_factor = dynamic_cast<const RobustSmartFactor*>(factor.get());
-    if (smart_factor && (smart_factor->isValid() || smart_factor->isPointBehindCamera())) ++num_of_factors;
+    if (smart_factor) {
+      if (check_valid) {
+        if (smart_factor->isValid()) ++num_of_factors;
+      } else {
+        ++num_of_factors;
+      }
+    }
   }
   return num_of_factors;
 }

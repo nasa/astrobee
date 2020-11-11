@@ -89,7 +89,7 @@ class GraphLocalizer {
 
   boost::optional<std::pair<gtsam::imuBias::ConstantBias, localization_common::Time>> LatestBiases() const;
 
-  int NumOFFactors() const;
+  int NumOFFactors(const bool check_valid = true) const;
 
   int NumVLFactors() const;
 
