@@ -52,6 +52,7 @@ LocalizationGraphDisplay::LocalizationGraphDisplay() {
   image_transport::ImageTransport image_transport(nh_);
   image_sub_ = image_transport.subscribe(TOPIC_HARDWARE_NAV_CAM, 1, &LocalizationGraphDisplay::imageCallback, this);
   optical_flow_image_pub_ = image_transport.advertise("/graph_localizer/optical_flow_feature_tracks", 1);
+  smart_factor_projection_image_pub_ = image_transport.advertise("/graph_localizer/smart_factor_projections", 1);
 
   // TODO(rsoussan): avoid this and pass config path directly to config reader!!!!
   // make sure body_T_nav cam is correct!!!! (bsharp not bumble)
@@ -94,15 +95,55 @@ void LocalizationGraphDisplay::imageCallback(const sensor_msgs::ImageConstPtr& i
 
 void LocalizationGraphDisplay::addOpticalFlowVisual(const graph_localizer::FeatureTrackMap& feature_tracks,
                                                     const localization_common::Time latest_graph_time) {
-  const auto img_it = img_buffer_.find(latest_graph_time);
-  if (img_it == img_buffer_.end()) return;
-  const auto img = img_it->second;
-  // Clear buffer up to current time
-  img_buffer_.erase(img_buffer_.begin(), img_it);
-
+  const auto img = getImage(latest_graph_time);
+  if (!img) return;
   const auto feature_track_image = graph_bag::CreateFeatureTrackImage(img, feature_tracks, *nav_cam_params_);
   if (!feature_track_image) return;
   optical_flow_image_pub_.publish(*feature_track_image);
+}
+
+sensor_msgs::ImageConstPtr LocalizationGraphDisplay::getImage(const localization_common::Time time) {
+  const auto img_it = img_buffer_.find(time);
+  if (img_it == img_buffer_.end()) return nullptr;
+  return img_it->second;
+}
+
+void LocalizationGraphDisplay::clearImageBuffer(const localization_common::Time oldest_graph_time) {
+  const auto img_it = img_buffer_.find(oldest_graph_time);
+  if (img_it == img_buffer_.end()) return;
+  img_buffer_.erase(img_buffer_.begin(), img_it);
+}
+
+void LocalizationGraphDisplay::addSmartFactorProjectionVisual(const SmartFactor& smart_factor,
+                                                              const graph_localizer::GraphValues& graph_values) {
+  /* cv_bridge::CvImagePtr feature_track_image;
+    try {
+      feature_track_image = cv_bridge::toCvCopy(image_msg, sensor_msgs::image_encodings::RGB8);
+    } catch (cv_bridge::Exception& e) {
+      ROS_ERROR("cv_bridge exception: %s", e.what());
+      return boost::none;
+    }
+
+    const auto img = getImage(latest_graph_time);
+    if (!img) return;
+  */
+  const auto timestamps = getTimestamps(smart_factor, graph_values);
+  if (timestamps)
+    LOG(ERROR) << "got timestamps!!!!";
+  else
+    LOG(ERROR) << "no timestamps!!!";
+  // smart_factor_projection_image_pub_.publish(*feature_track_image);
+}
+
+boost::optional<std::vector<lc::Time>> LocalizationGraphDisplay::getTimestamps(
+  const SmartFactor& smart_factor, const graph_localizer::GraphValues& graph_values) {
+  std::vector<lc::Time> timestamps;
+  for (const auto& key : smart_factor.keys()) {
+    const auto timestamp = graph_values.Timestamp(key);
+    if (!timestamp) return boost::none;
+    timestamps.emplace_back(*timestamp);
+  }
+  return timestamps;
 }
 
 void LocalizationGraphDisplay::addImuVisual(const graph_localizer::GraphLocalizer& graph_localizer,
@@ -138,25 +179,33 @@ void LocalizationGraphDisplay::addImuVisual(const graph_localizer::GraphLocalize
 }
 
 void LocalizationGraphDisplay::processMessage(const ff_msgs::LocalizationGraph::ConstPtr& msg) {
-  // TODO(rsoussan): put these somewhere else!
-  using Calibration = gtsam::Cal3_S2;
-  using Camera = gtsam::PinholeCamera<Calibration>;
-  using SmartFactor = gtsam::RobustSmartProjectionPoseFactor<Calibration>;
-
   clearDisplay();
   graph_localizer::GraphLocalizer graph_localizer;
   gtsam::deserializeBinary(msg->serialized_graph, graph_localizer);
+  SmartFactor* largest_error_smart_factor;
+  double largest_smart_factor_error = -1;
   if (graph_localizer.graph_values().LatestTimestamp())
     addOpticalFlowVisual(graph_localizer.feature_tracks(), *(graph_localizer.graph_values().LatestTimestamp()));
   for (const auto factor : graph_localizer.factor_graph()) {
-    const auto smart_factor = dynamic_cast<const SmartFactor*>(factor.get());
+    const auto smart_factor = dynamic_cast<SmartFactor*>(factor.get());
     if (smart_factor) {
+      const double smart_factor_error = smart_factor->error(graph_localizer.graph_values().values());
+      if (smart_factor_error > largest_smart_factor_error) {
+        largest_smart_factor_error = smart_factor_error;
+        largest_error_smart_factor = smart_factor;
+      }
     }
     const auto imu_factor = dynamic_cast<gtsam::CombinedImuFactor*>(factor.get());
     if (imu_factor) {
       addImuVisual(graph_localizer, imu_factor);
     }
   }
+  if (largest_error_smart_factor) {
+    addSmartFactorProjectionVisual(*largest_error_smart_factor, graph_localizer.graph_values());
+  }
+
+  const auto oldest_timestamp = graph_localizer.graph_values().OldestTimestamp();
+  if (oldest_timestamp) clearImageBuffer(*oldest_timestamp);
 }
 
 }  // namespace localization_rviz_plugins

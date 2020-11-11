@@ -44,6 +44,10 @@ class SceneNode;
 }
 
 namespace localization_rviz_plugins {
+// TODO(rsoussan): put these somewhere else!
+using Calibration = gtsam::Cal3_S2;
+using Camera = gtsam::PinholeCamera<Calibration>;
+using SmartFactor = gtsam::RobustSmartProjectionPoseFactor<Calibration>;
 
 class LocalizationGraphDisplay : public rviz::MessageFilterDisplay<ff_msgs::LocalizationGraph> {
   Q_OBJECT    // NOLINT
@@ -66,6 +70,12 @@ class LocalizationGraphDisplay : public rviz::MessageFilterDisplay<ff_msgs::Loca
                     const gtsam::CombinedImuFactor* const imu_factor);
   void addOpticalFlowVisual(const graph_localizer::FeatureTrackMap& feature_tracks,
                             const localization_common::Time latest_graph_time);
+  void clearImageBuffer(const localization_common::Time oldest_graph_time);
+  sensor_msgs::ImageConstPtr getImage(const localization_common::Time time);
+  void addSmartFactorProjectionVisual(const SmartFactor& smart_factor,
+                                      const graph_localizer::GraphValues& graph_values);
+  boost::optional<std::vector<localization_common::Time>> getTimestamps(
+    const SmartFactor& smart_factor, const graph_localizer::GraphValues& graph_values);
 
   std::vector<std::unique_ptr<rviz::Axes>> graph_pose_axes_;
   std::vector<std::unique_ptr<rviz::Arrow>> imu_factor_arrows_;
@@ -74,6 +84,7 @@ class LocalizationGraphDisplay : public rviz::MessageFilterDisplay<ff_msgs::Loca
   std::unique_ptr<rviz::BoolProperty> show_imu_factor_arrows_;
   std::unique_ptr<rviz::FloatProperty> imu_factor_arrows_diameter_;
   image_transport::Publisher optical_flow_image_pub_;
+  image_transport::Publisher smart_factor_projection_image_pub_;
   image_transport::Subscriber image_sub_;
   ros::NodeHandle nh_;
   std::map<localization_common::Time, sensor_msgs::ImageConstPtr> img_buffer_;

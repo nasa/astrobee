@@ -114,6 +114,8 @@ class GraphValues {
     return values_.at<ValueType>(key);
   }
 
+  boost::optional<localization_common::Time> Timestamp(const int key_index) const;
+
  private:
   // Removes keys from timestamp_key_index_map, values from values
   bool RemoveCombinedNavState(const localization_common::Time timestamp);

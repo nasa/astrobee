@@ -209,6 +209,13 @@ double GraphValues::Duration() const {
 
 int GraphValues::NumStates() const { return timestamp_key_index_map_.size(); }
 
+boost::optional<lc::Time> GraphValues::Timestamp(const int key_index) const {
+  for (const auto& timestamp_key_index_pair : timestamp_key_index_map_) {
+    if (timestamp_key_index_pair.second == key_index) return timestamp_key_index_pair.first;
+  }
+  return boost::none;
+}
+
 boost::optional<int> GraphValues::LatestCombinedNavStateKeyIndex() const {
   if (Empty()) {
     LOG(ERROR) << "LatestCombinedNavStateKeyIndex: No combined nav states available.";
