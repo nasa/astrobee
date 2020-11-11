@@ -54,7 +54,7 @@ tf2_ros::Buffer tf_buffer_;
 // Called once when the goal completes
 void MResultCallback(ff_util::FreeFlyerActionState::Enum result_code,
   ff_msgs::MotionResultConstPtr const& result) {
-  EXPECT_EQ(result->response, ff_msgs::MotionResult::SUCCESS);
+  EXPECT_EQ(result->response, ff_msgs::MotionResult::VIOLATES_KEEP_IN);
   ros::shutdown();
 }
 
@@ -133,7 +133,7 @@ TEST(choreographer_nominal, ZoneBreach) {
   pose.header = tfs.header;
   // pose.header.frame_id = "world";
 
-  pose.pose.position.x = 10.5;
+  pose.pose.position.x = 13.5;
   pose.pose.position.y = -7.5;
   pose.pose.position.z = 4.5;
   pose.pose.orientation.x = 0;
@@ -160,7 +160,7 @@ int main(int argc, char **argv) {
   // Initialize the gtesttest framework
   testing::InitGoogleTest(&argc, argv);
   // Initialize ROS
-  ros::init(argc, argv, "test_stop", ros::init_options::AnonymousName);
+  ros::init(argc, argv, "test_zones_keepin", ros::init_options::AnonymousName);
   // Run all test procedures
   return RUN_ALL_TESTS();
 }
