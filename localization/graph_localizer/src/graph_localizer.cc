@@ -959,7 +959,15 @@ int GraphLocalizer::NumOFFactors(const bool check_valid) const {
   return num_of_factors;
 }
 
-int GraphLocalizer::NumVLFactors() const { return NumFactors<gtsam::LocProjectionFactor<>>(); }
+int GraphLocalizer::NumVLFactors() const {
+  // Subtract one from priors for prior on first state
+  if (params_.factor.loc_pose_priors)
+    return (NumFactors<gtsam::Pose3>() - 1);
+  else if (params_.factor.loc_projections)
+    return NumFactors<gtsam::LocProjectionFactor<>>();
+  else
+    return 0;
+}
 
 const GraphValues& GraphLocalizer::graph_values() const { return graph_values_; }
 
