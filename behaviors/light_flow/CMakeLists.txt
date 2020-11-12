@@ -15,7 +15,18 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+cmake_minimum_required(VERSION 2.8.3)
 project(light_flow)
+
+## Compile as C++11, supported in ROS Kinetic and newer
+add_compile_options(-std=c++11)
+
+find_package(catkin REQUIRED COMPONENTS
+  roscpp
+  std_msgs
+  nodelet
+  ff_util
+)
 
 catkin_package(
   LIBRARIES
@@ -29,54 +40,94 @@ catkin_package(
     pluginlib
 )
 
-create_library(
-  DIR src/light_flow
-  TARGET light_flow
-  DEPS
-    ff_msgs
-    ff_hw_msgs
-  LIBS
-    ${catkin_LIBRARIES}
-    ff_nodelet
-    ${JSONCPP_LIBRARIES}
-  INC
-    ${catkin_INCLUDE_DIRS}
-    ${JSONCPP_INCLUDE_DIRS}
+###########
+## Build ##
+###########
+
+# Specify additional locations of header files
+include_directories(
+  include
+  ${catkin_INCLUDE_DIRS}
 )
 
-create_tool_targets(
-  DIR
-    tools
-  LIBS
-    ${catkin_LIBRARIES}
-    ff_nodelet
-    ${JSONCPP_LIBRARIES}
-    light_flow
-  INC
-    ${catkin_INCLUDE_DIRS}
-    ${JSONCPP_INCLUDE_DIRS}
-  DEPS
-    ff_msgs
-    ff_hw_msgs
-    light_flow
+# Declare C++ libraries
+add_library(light_flow
+  src/light_flow/light_flow.cc
 )
+add_dependencies(light_flow ${catkin_EXPORTED_TARGETS})
+target_link_libraries(light_flow ${catkin_LIBRARIES})
 
-create_library(
-  DIR src/light_flow_nodelet
-  TARGET light_flow_nodelet
-  LIBS 
-    ${catkin_LIBRARIES} 
-    ${JSONCPP_LIBRARIES}
-    config_reader 
-    ff_nodelet 
-    light_flow
-  INC 
-    ${catkin_INCLUDE_DIRS}
-    ${JSONCPP_INCLUDE_DIRS}
-  DEPS 
-    ff_msgs
-    ff_hw_msgs
-    light_flow
+# Declare C++ libraries
+add_library(light_flow_nodelet
+  src/light_flow_nodelet/light_flow_nodelet.cc
 )
+add_dependencies(light_flow_nodelet ${catkin_EXPORTED_TARGETS})
+target_link_libraries(light_flow light_flow_nodelet ${catkin_LIBRARIES})
 
-install_launch_files()
+## Declare a C++ executable: inspection_tool
+add_executable(light_flow_tool tools/light_flow_tool.cc)
+add_dependencies(light_flow_tool ${catkin_EXPORTED_TARGETS})
+target_link_libraries(light_flow_tool
+  light_flow gflags jsoncpp ${catkin_LIBRARIES})
+
+#############
+## Install ##
+#############
+
+# Mark launch files for installation
+install(DIRECTORY launch/
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
+  PATTERN ".svn" EXCLUDE)
+
+
+# create_library(
+#   DIR src/light_flow
+#   TARGET light_flow
+#   DEPS
+#     ff_msgs
+#     ff_hw_msgs
+#   LIBS
+#     ${catkin_LIBRARIES}
+#     ff_nodelet
+#     ${JSONCPP_LIBRARIES}
+#   INC
+#     ${catkin_INCLUDE_DIRS}
+#     ${JSONCPP_INCLUDE_DIRS}
+# )
+
+# create_tool_targets(
+#   DIR
+#     tools
+#   LIBS
+#     ${catkin_LIBRARIES}
+#     ff_nodelet
+#     ${JSONCPP_LIBRARIES}
+#     light_flow
+#   INC
+#     ${catkin_INCLUDE_DIRS}
+#     ${JSONCPP_INCLUDE_DIRS}
+#   DEPS
+#     ff_msgs
+#     ff_hw_msgs
+#     light_flow
+# )
+
+# create_library(
+#   DIR src/light_flow_nodelet
+#   TARGET light_flow_nodelet
+#   LIBS 
+#     ${catkin_LIBRARIES} 
+#     ${JSONCPP_LIBRARIES}
+#     config_reader 
+#     ff_nodelet 
+#     light_flow
+#   INC 
+#     ${catkin_INCLUDE_DIRS}
+#     ${JSONCPP_INCLUDE_DIRS}
+#   DEPS 
+#     ff_msgs
+#     ff_hw_msgs
+#     light_flow
+# )
+
+# install_launch_files()

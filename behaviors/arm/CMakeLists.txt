@@ -41,6 +41,16 @@ catkin_package(
     ff_util
 )
 
+###########
+## Build ##
+###########
+
+# Specify additional locations of header files
+include_directories(
+  include
+  ${catkin_INCLUDE_DIRS}
+)
+
 # Declare C++ libraries
 add_library(arm
   src/arm_nodelet.cc

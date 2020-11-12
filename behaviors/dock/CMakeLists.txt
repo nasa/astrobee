@@ -15,7 +15,22 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+cmake_minimum_required(VERSION 2.8.3)
 project(dock)
+
+## Compile as C++11, supported in ROS Kinetic and newer
+add_compile_options(-std=c++11)
+
+find_package(catkin REQUIRED COMPONENTS
+  roscpp
+  geometry_msgs
+  tf2
+  tf2_ros
+  tf2_geometry_msgs
+  ff_hw_msgs
+  ff_msgs
+  ff_util
+)
 
 catkin_package(
   LIBRARIES
@@ -31,34 +46,34 @@ catkin_package(
     ff_util
 )
 
-create_library(
-  TARGET
-    dock
-  LIBS
-    ${catkin_LIBRARIES}
-    ff_nodelet
-    config_reader
-    msg_conversions
-    config_server
-    config_client
-  INC
-    ${catkin_INCLUDE_DIRS}
-  DEPS
-    ff_msgs
-    ff_hw_msgs
+###########
+## Build ##
+###########
+
+# Specify additional locations of header files
+include_directories(
+  include
+  ${catkin_INCLUDE_DIRS}
 )
 
-create_tool_targets(
-  DIR
-    tools
-  LIBS
-    ${catkin_LIBRARIES}
-    ff_common
-    ff_nodelet
-  INC
-    ${catkin_INCLUDE_DIRS}
-  DEPS
-    ff_msgs
+# Declare C++ libraries
+add_library(dock
+  src/dock_nodelet.cc
 )
+add_dependencies(dock ${catkin_EXPORTED_TARGETS})
+target_link_libraries(dock ${catkin_LIBRARIES})
 
-install_launch_files()
+## Declare a C++ executable: inspection_tool
+add_executable(dock_tool tools/dock_tool.cc)
+add_dependencies(dock_tool ${catkin_EXPORTED_TARGETS})
+target_link_libraries(dock_tool
+  dock gflags ${catkin_LIBRARIES})
+
+#############
+## Install ##
+#############
+
+# Mark launch files for installation
+install(DIRECTORY launch/
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
+  PATTERN ".svn" EXCLUDE)

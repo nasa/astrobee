@@ -15,6 +15,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+cmake_minimum_required(VERSION 2.8.3)
 project(ff_hw_msgs)
 
 find_package(catkin2 REQUIRED COMPONENTS
@@ -24,7 +25,58 @@ find_package(catkin2 REQUIRED COMPONENTS
   sensor_msgs
 )
 
-create_msg_targets(DIR msg SDIR srv DEPS std_msgs sensor_msgs)
+# Generate messages in the 'msg' folder
+add_message_files(
+  FILES
+  ArmCommand.msg
+  ArmState.msg
+  ConfigureLED.msg
+  ConfigureLEDGroup.msg
+  EpsBatteryLocation.msg
+  EpsDockStateStamped.msg
+  EpsHousekeeping.msg
+  EpsHousekeepingValue.msg
+  EpsPowerState.msg
+  EpsPowerStateValue.msg
+  OpticalFlow.msg
+  PmcCommand.msg
+  PmcGoal.msg
+  PmcState.msg
+  PmcStatus.msg
+  PmcTelemetry.msg
+  ViveButton.msg
+  ViveLight.msg
+  ViveLighthouse.msg
+  ViveLighthouses.msg
+  ViveMotor.msg
+  VivePulse.msg
+  ViveSensor.msg
+  ViveTracker.msg
+  ViveTrackers.msg
+)
+
+# Generate services in the 'srv' folder
+add_service_files(
+ FILES
+  CalibrateGripper.srv
+  ClearTerminate.srv
+  ConfigureAdvancedPower.srv
+  ConfigurePayloadPower.srv
+  ConfigureSystemLeds.srv
+  GetBatteryStatus.srv
+  GetBoardInfo.srv
+  Reset.srv
+  RingBuzzer.srv
+  SetEnabled.srv
+  SetFlashlight.srv
+  SetJointMaxVelocity.srv
+  SetLedMatrix.srv
+  Undock.srv
+)
+
+generate_messages(
+  DEPENDENCIES std_msgs geometry_msgs sensor_msgs
+)
 
 catkin_package(
  # INCLUDE_DIRS include
