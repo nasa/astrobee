@@ -36,6 +36,13 @@ set(INCLUDES
   ${GLOG_INCLUDE_DIRS}
 )
 
+catkin_package(
+  INCLUDE_DIRS include
+  LIBRARIES interest_point
+  CATKIN_DEPENDS
+#  DEPENDS system_lib
+)
+
 create_library(TARGET interest_point
   LIBS ${LIBS}
   INC ${INCLUDES}
@@ -50,17 +57,19 @@ create_tool_targets(DIR tools
   LIBS ${INTEREST_LIBS}
   INC ${INCLUDES}
 )
-create_test_targets(DIR test
-  LIBS ${INTEREST_LIBS}
-  INC ${INCLUDES}
-)
 
-catkin_package(
-  INCLUDE_DIRS include
-  LIBRARIES interest_point
-  CATKIN_DEPENDS
-#  DEPENDS system_lib
-)
+if(CATKIN_ENABLE_TESTING)
+  find_package(rostest REQUIRED)
+
+  add_rostest_gtest(test_matching
+    test/test_matching.test
+    test/test_matching.cc
+  )
+  target_link_libraries(test_matching
+    interest_point
+  )
+
+endif()
 
 set(INTEREST_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/include PARENT_SCOPE)
 

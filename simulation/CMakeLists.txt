@@ -37,9 +37,9 @@ catkin_package(
     gazebo_model_plugin_flashlight_front
     gazebo_model_plugin_flashlight_aft
     gazebo_model_plugin_llp_disk_monitor
-    gazebo_model_plugin_llp_cpu_monitor
+    gazebo_model_plugin_llp_cpu_mem_monitor
     gazebo_model_plugin_mlp_disk_monitor
-    gazebo_model_plugin_mlp_cpu_monitor
+    gazebo_model_plugin_mlp_cpu_mem_monitor
     gazebo_model_plugin_speed_cam
     gazebo_model_plugin_signal_lights
     gazebo_sensor_plugin_imu
@@ -244,12 +244,12 @@ create_library(
     ff_hw_msgs
 )
 
-# Create a model plugin for the LLP CPU monitor
+# Create a model plugin for the LLP CPU mem monitor
 create_library(
   DIR
-    src/gazebo_model_plugin_llp_cpu_monitor
+    src/gazebo_model_plugin_llp_cpu_mem_monitor
   TARGET
-    gazebo_model_plugin_llp_cpu_monitor
+    gazebo_model_plugin_llp_cpu_mem_monitor
   LIBS
     ${GAZEBO_LIBRARIES}
     ${catkin_LIBRARIES}
@@ -280,12 +280,12 @@ create_library(
     ff_hw_msgs
 )
 
-# Create a model plugin for the MLP CPU monitor
+# Create a model plugin for the MLP CPU mem monitor
 create_library(
   DIR
-    src/gazebo_model_plugin_mlp_cpu_monitor
+    src/gazebo_model_plugin_mlp_cpu_mem_monitor
   TARGET
-    gazebo_model_plugin_mlp_cpu_monitor
+    gazebo_model_plugin_mlp_cpu_mem_monitor
   LIBS
     ${GAZEBO_LIBRARIES}
     ${catkin_LIBRARIES}
@@ -298,7 +298,7 @@ create_library(
     ff_hw_msgs
 )
 
-# Create a model plugin for the MMLP disk monitor
+# Create a model plugin for the MLP disk monitor
 create_library(
   DIR
     src/gazebo_model_plugin_mlp_disk_monitor

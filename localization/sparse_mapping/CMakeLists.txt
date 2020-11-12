@@ -46,6 +46,12 @@ set(INCLUDES
 )
 set(SPARSE_MAPPING_LIBRARIES sparse_mapping ${LIBS})
 
+catkin_package(
+  INCLUDE_DIRS include
+  LIBRARIES sparse_mapping
+  CATKIN_DEPENDS camera interest_point config_reader ff_common
+)
+
 create_library(TARGET sparse_mapping
   LIBS ${LIBS}
   INC include ${INCLUDES}
@@ -60,16 +66,50 @@ if (NOT USE_CTC)
     EXCLUDE ${EXCLUDE})
 endif (NOT USE_CTC)
 
-create_test_targets(DIR test
-  LIBS ${LIBS} sparse_mapping
-  INC ${INCLUDES}
-  DEPS ${DEPS})
+if(CATKIN_ENABLE_TESTING)
+  find_package(rostest REQUIRED)
 
-catkin_package(
-  INCLUDE_DIRS include
-  LIBRARIES sparse_mapping
-  CATKIN_DEPENDS camera interest_point config_reader ff_common
-)
+  add_rostest_gtest(test_build_db
+    test/test_build_db.test
+    test/test_build_db.cc
+  )
+  target_link_libraries(test_build_db
+    sparse_mapping
+  )
+
+  add_rostest_gtest(test_nvm_fileio
+    test/test_nvm_fileio.test
+    test/test_nvm_fileio.cc
+  )
+  target_link_libraries(test_nvm_fileio
+    sparse_mapping
+  )
+
+  add_rostest_gtest(test_registration
+    test/test_registration.test
+    test/test_registration.cc
+  )
+  target_link_libraries(test_registration
+    sparse_mapping
+  )
+
+  add_rostest_gtest(test_reprojection
+    test/test_reprojection.test
+    test/test_reprojection.cc
+  )
+  target_link_libraries(test_reprojection
+    sparse_mapping
+  )
+
+  add_rostest_gtest(test_sparse_map
+    test/test_sparse_map.test
+    test/test_sparse_map.cc
+  )
+  target_link_libraries(test_sparse_map
+    sparse_mapping
+  )
+
+endif()
 
 set(SPARSE_MAPPING_INCLUDE_DIRS
   ${CMAKE_CURRENT_SOURCE_DIR}/include

@@ -32,7 +32,7 @@ class MatchingTest : public ::testing::Test {
   virtual void SetUp() {
     // TEST_DIR is defined as this modules test directory. However
     // that is not where the test imagery is located.
-    std::string data_dir = std::string(TEST_DIR) + "/../../sparse_mapping/test/data";
+    std::string data_dir = std::string(std::getenv("DATA_DIR"));
     image1 = cv::imread(data_dir + "/m0004000.jpg",
                         CV_LOAD_IMAGE_GRAYSCALE);
     image2 = cv::imread(data_dir + "/m0004025.jpg",

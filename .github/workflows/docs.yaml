@@ -68,5 +68,5 @@ jobs:
         NAME=`git show -s --format='%an' HEAD`
         git config user.email "$EMAIL"
         git config user.name "$NAME"
-        git commit -m "Automatic update for $GITHUB_SHA."
-        { git push origin gh-pages || true; }
+        { git commit -m "Automatic update for $GITHUB_SHA." || true; }
+        git push origin gh-pages
