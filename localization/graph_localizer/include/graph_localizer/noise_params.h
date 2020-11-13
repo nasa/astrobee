@@ -31,8 +31,8 @@ struct NoiseParams {
   double starting_prior_velocity_stddev;
   double starting_prior_accel_bias_stddev;
   double starting_prior_gyro_bias_stddev;
-  double prior_accel_bias_stddev;
-  double prior_gyro_bias_stddev;
+  double bias_between_factor_accel_stddev;
+  double bias_between_factor_gyro_stddev;
   double loc_prior_translation_stddev;
   double loc_prior_quaternion_stddev;
 };

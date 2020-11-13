@@ -146,7 +146,7 @@ class GraphLocalizer {
   void AddStandstillVelocityPriorFactor(const localization_common::Time timestamp,
                                         FactorsToAdd& standstill_prior_factors_to_add);
 
-  void AddCombinedImuFactorAndBiasPrior(const gtsam::CombinedImuFactor::shared_ptr& combined_imu_factor);
+  void AddCombinedImuFactorAndBiasBetweenFactor(const gtsam::CombinedImuFactor::shared_ptr& combined_imu_factor);
 
   bool MeasurementRecentEnough(const localization_common::Time timestamp) const;
 
