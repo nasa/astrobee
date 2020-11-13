@@ -27,12 +27,12 @@
 
 namespace gazebo {
 
-class GazeboModelPluginLlpCpuMonitor : public FreeFlyerModelPlugin {
+class GazeboModelPluginLlpCpuMemMonitor : public FreeFlyerModelPlugin {
  public:
-  GazeboModelPluginLlpCpuMonitor() : FreeFlyerModelPlugin(
-    "llp_cpu_monitor", "llp_cpu_monitor", true) {}
+  GazeboModelPluginLlpCpuMemMonitor() : FreeFlyerModelPlugin(
+    "llp_cpu_mem_monitor", "llp_cpu_mem_monitor", true) {}
 
-  ~GazeboModelPluginLlpCpuMonitor() {}
+  ~GazeboModelPluginLlpCpuMemMonitor() {}
 
  protected:
   // Called when the plugin is loaded into the simulator
@@ -46,6 +46,6 @@ class GazeboModelPluginLlpCpuMonitor : public FreeFlyerModelPlugin {
 };
 
 // Register this plugin with the simulator
-GZ_REGISTER_MODEL_PLUGIN(GazeboModelPluginLlpCpuMonitor)
+GZ_REGISTER_MODEL_PLUGIN(GazeboModelPluginLlpCpuMemMonitor)
 
 }   // namespace gazebo

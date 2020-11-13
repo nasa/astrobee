@@ -32,7 +32,7 @@
 #define EXPECT_VECTOR3D_NEAR(p1, p2, t) EXPECT_NEAR(p1[0], p2[0], t); EXPECT_NEAR(p1[1], p2[1], t); \
   EXPECT_NEAR(p1[2], p2[2], t);
 
-const std::string DATA_DIR = std::string(TEST_DIR) + "/data/";
+const std::string DATA_DIR = std::string(std::getenv("DATA_DIR"));
 
 class SparseMapTest : public ::testing::Test {
  protected:

@@ -1,5 +1,3 @@
-<?xml version="1.0"?>
-
 <!-- Copyright (c) 2017, United States Government, as represented by the     -->
 <!-- Administrator of the National Aeronautics and Space Administration.     -->
 <!--                                                                         -->
@@ -17,19 +15,7 @@
 <!-- implied. See the License for the specific language governing            -->
 <!-- permissions and limitations under the License.                          -->
 
-<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
-  <gazebo>
-    <plugin name="llp_disk_monitor" filename="libgazebo_model_plugin_llp_disk_monitor.so">
-      <namespace>/${ns}/</namespace>
-    </plugin>
-    <plugin name="llp_cpu_mem_monitor" filename="libgazebo_model_plugin_llp_cpu_mem_monitor.so">
-      <namespace>/${ns}/</namespace>
-    </plugin>
-    <plugin name="mlp_disk_monitor" filename="libgazebo_model_plugin_mlp_disk_monitor.so">
-      <namespace>/${ns}/</namespace>
-    </plugin>
-    <plugin name="mlp_cpu_mem_monitor" filename="libgazebo_model_plugin_mlp_cpu_mem_monitor.so">
-      <namespace>/${ns}/</namespace>
-    </plugin>
-  </gazebo>
-</robot>
+<launch>
+  <env name="DATA_DIR" value="$(find sparse_mapping)/test/data/" />
+  <test pkg="sparse_mapping" type="test_registration" test-name="test_registration" />
+</launch>
