@@ -15,8 +15,45 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+cmake_minimum_required(VERSION 2.8.3)
 project(i2c)
 
-create_library(TARGET i2c
-    LIBS ${GLOG_LIBRARIES}
-    INC ${GLOG_INCLUDE_DIRS})
+## Compile as C++11, supported in ROS Kinetic and newer
+add_compile_options(-std=c++11)
+
+find_package(catkin REQUIRED COMPONENTS
+)
+
+catkin_package(
+  LIBRARIES i2c
+  INCLUDE_DIRS include
+)
+
+###########
+## Build ##
+###########
+
+# Specify additional locations of header files
+include_directories(
+  include
+  ${catkin_INCLUDE_DIRS}
+)
+
+# Declare C++ libraries
+add_library(i2c
+  src/i2c.cc
+  src/i2c_new.cc
+)
+add_dependencies(i2c ${catkin_EXPORTED_TARGETS})
+target_link_libraries(i2c glog ${catkin_LIBRARIES})
+
+#############
+## Install ##
+#############
+
+# Mark cpp header files for installation
+install(DIRECTORY include/${PROJECT_NAME}/
+  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+  FILES_MATCHING PATTERN "*.h"
+  PATTERN ".svn" EXCLUDE
+)

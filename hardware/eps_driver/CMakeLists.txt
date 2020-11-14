@@ -15,7 +15,20 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+cmake_minimum_required(VERSION 2.8.3)
 project(eps_driver)
+
+## Compile as C++11, supported in ROS Kinetic and newer
+add_compile_options(-std=c++11)
+
+find_package(catkin REQUIRED COMPONENTS
+  roscpp
+  nodelet
+  pluginlib
+  ff_util
+  ff_hw_msgs
+  i2c
+)
 
 catkin_package(
   LIBRARIES
@@ -26,41 +39,49 @@ catkin_package(
     pluginlib
     ff_util
     ff_hw_msgs
+    i2c
 )
 
-# ROS agnostic proxy library and tool
+###########
+## Build ##
+###########
 
-create_library(
-  DIR src/eps_driver
-  TARGET eps_driver
-  LIBS i2c
+# Specify additional locations of header files
+include_directories(
+  include
+  ${catkin_INCLUDE_DIRS}
 )
 
-create_tool_targets(
-  DIR tools/eps_driver_tool
-  LIBS eps_driver ff_common
+# Declare C++ libraries
+add_library(eps_driver
+  src/eps_driver/eps_driver.cc
 )
+add_dependencies(eps_driver ${catkin_EXPORTED_TARGETS})
+target_link_libraries(eps_driver ${catkin_LIBRARIES})
 
-# ROS node
+# # Declare C++ libraries
+# add_library(eps_driver_node
+#   src/eps_driver_node/eps_driver_node.cc
+# )
+# add_dependencies(eps_driver_node ${catkin_EXPORTED_TARGETS})
+# target_link_libraries(eps_driver_node eps_driver ${catkin_LIBRARIES})
 
-create_library(
-  DIR src/eps_driver_node
-  TARGET eps_driver_node
-  LIBS ${catkin_LIBRARIES} eps_driver config_reader ff_nodelet
-  INC ${catkin_INCLUDE_DIRS}
-  DEPS ff_hw_msgs
-)
 
-# Simulator
+# ## Declare a C++ executable: inspection_tool
+# add_executable(eps_driver_tool tools/eps_driver_tool/eps_driver_tool.cc)
+# add_dependencies(eps_driver_tool ${catkin_EXPORTED_TARGETS})
+# target_link_libraries(eps_driver_tool
+#   eps_driver gflags ${catkin_LIBRARIES})
 
-create_tool_targets(
-  DIR tools/eps_simulator
-  LIBS ${catkin_LIBRARIES} eps_driver ff_nodelet
-  INC ${catkin_INCLUDE_DIRS}
-  DEPS ff_hw_msgs
-)
+#############
+## Install ##
+#############
 
-install_launch_files()
+# Mark launch files for installation
+install(DIRECTORY launch/
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
+  PATTERN ".svn" EXCLUDE)
+
 install(FILES
   tools/eps_aux.py
   DESTINATION share/${PROJECT_NAME})

@@ -15,7 +15,23 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+cmake_minimum_required(VERSION 2.8.3)
 project(perch)
+
+## Compile as C++11, supported in ROS Kinetic and newer
+add_compile_options(-std=c++11)
+
+find_package(catkin REQUIRED COMPONENTS
+  roscpp
+  geometry_msgs
+  tf2
+  tf2_ros
+  tf2_geometry_msgs
+  ff_hw_msgs
+  ff_msgs
+  ff_util
+  localization_manager
+)
 
 catkin_package(
   LIBRARIES
@@ -32,34 +48,34 @@ catkin_package(
     localization_manager
 )
 
-create_library(
-  TARGET
-    perch
-  LIBS
-    ${catkin_LIBRARIES}
-    ff_nodelet
-    config_reader
-    msg_conversions
-    config_server
-    config_client
-  INC
-    ${catkin_INCLUDE_DIRS}
-  DEPS
-    ff_msgs
-    ff_hw_msgs
+###########
+## Build ##
+###########
+
+# Specify additional locations of header files
+include_directories(
+  include
+  ${catkin_INCLUDE_DIRS}
 )
 
-create_tool_targets(
-  DIR
-    tools
-  LIBS
-    ${catkin_LIBRARIES}
-    ff_common
-    ff_nodelet
-  INC
-    ${catkin_INCLUDE_DIRS}
-  DEPS
-    ff_msgs
+# Declare C++ libraries
+add_library(perch
+  src/perch_nodelet.cc
 )
+add_dependencies(perch ${catkin_EXPORTED_TARGETS})
+target_link_libraries(perch ${catkin_LIBRARIES})
 
-install_launch_files()
+## Declare a C++ executable: inspection_tool
+add_executable(perch_tool tools/perch_tool.cc)
+add_dependencies(perch_tool ${catkin_EXPORTED_TARGETS})
+target_link_libraries(perch_tool
+  perch gflags ${catkin_LIBRARIES})
+
+#############
+## Install ##
+#############
+
+# Mark launch files for installation
+install(DIRECTORY launch/
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
+  PATTERN ".svn" EXCLUDE)

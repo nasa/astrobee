@@ -73,14 +73,13 @@ add_dependencies(pose_stamped_msg_cnv ${catkin_EXPORTED_TARGETS})
 target_link_libraries(pose_stamped_msg_cnv
   msg_conversions gflags ${catkin_LIBRARIES})
 
-# create_library(TARGET msg_conversions
-#   LIBS ${catkin_LIBRARIES} config_reader
-#   DEPS ff_msgs eigen
-#   INC ${catkin_INCLUDE_DIRS} ${EIGEN3_INCLUDE_DIRS}
-# )
+#############
+## Install ##
+#############
 
-# create_tool_targets(DIR tools
-#   LIBS ${catkin_LIBRARIES} ${GFLAGS_LIBRARIES} ff_common
-#   INC ${catkin_INCLUDE_DIRS} ${GFLAGS_INCLUDE_DIRS}
-#   DEPS ff_msgs
-# )
+# Mark cpp header files for installation
+install(DIRECTORY include/${PROJECT_NAME}/
+  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+  FILES_MATCHING PATTERN "*.h"
+  PATTERN ".svn" EXCLUDE
+)

@@ -15,16 +15,52 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+cmake_minimum_required(VERSION 2.8.3)
 project(fam_cmd_i2c)
 
+## Compile as C++11, supported in ROS Kinetic and newer
+add_compile_options(-std=c++11)
+
+find_package(catkin REQUIRED COMPONENTS
+  roscpp
+  rospy
+  ff_msgs
+  std_msgs
+  i2c
+)
+
 catkin_package(
-  CATKIN_DEPENDS roscpp rospy ff_msgs std_msgs
+  CATKIN_DEPENDS roscpp rospy ff_msgs std_msgs i2c
 )
 
-create_tool_targets(DIR tools
-  LIBS ${catkin_LIBRARIES} i2c
-  INC ${catkin_INCLUDE_DIRS}
-  DEPS ff_msgs std_msgs
+###########
+## Build ##
+###########
+
+# Specify additional locations of header files
+include_directories(
+  include
+  ${catkin_INCLUDE_DIRS}
 )
 
-install_launch_files()
+## Declare a C++ executable: inspection_tool
+add_executable(fam_cmd_gen tools/fam_cmd_gen.cc)
+add_dependencies(fam_cmd_gen ${catkin_EXPORTED_TARGETS})
+target_link_libraries(fam_cmd_gen
+  ${catkin_LIBRARIES})
+
+## Declare a C++ executable: inspection_tool
+add_executable(fam_cmd_i2c_node tools/fam_cmd_i2c_node.cc)
+add_dependencies(fam_cmd_i2c_node ${catkin_EXPORTED_TARGETS})
+target_link_libraries(fam_cmd_i2c_node
+  ${catkin_LIBRARIES})
+
+#############
+## Install ##
+#############
+
+# Mark launch files for installation
+install(DIRECTORY launch/
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
+  PATTERN ".svn" EXCLUDE)
+

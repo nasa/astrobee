@@ -15,10 +15,44 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+cmake_minimum_required(VERSION 2.8.3)
 project(ff_serial)
 
-create_library(
-  TARGET ff_serial
-  DIR src
-  LIBS ${Boost_THREAD_LIBRARY} ${Boost_SYSTEM_LIBRARY}
+## Compile as C++11, supported in ROS Kinetic and newer
+add_compile_options(-std=c++11)
+
+find_package(catkin REQUIRED COMPONENTS
+)
+
+catkin_package(
+  LIBRARIES ff_serial
+  INCLUDE_DIRS include
+)
+
+###########
+## Build ##
+###########
+
+# Specify additional locations of header files
+include_directories(
+  include
+  ${catkin_INCLUDE_DIRS}
+)
+
+# Declare C++ libraries
+add_library(ff_serial
+  src/serial.cc
+)
+add_dependencies(ff_serial ${catkin_EXPORTED_TARGETS})
+target_link_libraries(ff_serial ${catkin_LIBRARIES})
+
+#############
+## Install ##
+#############
+
+# Mark cpp header files for installation
+install(DIRECTORY include/${PROJECT_NAME}/
+  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+  FILES_MATCHING PATTERN "*.h"
+  PATTERN ".svn" EXCLUDE
 )

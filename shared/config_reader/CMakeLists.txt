@@ -106,5 +106,16 @@ add_library(config_reader
   src/config_reader.cc
   src/watch_files.cc
 )
-add_dependencies(config_reader ${catkin_EXPORTED_TARGETS} ${GFLAGS_INCLUDE_DIRS} ${GLOG_INCLUDE_DIRS} ff_common)
-target_link_libraries(config_reader ${catkin_LIBRARIES} gflags glog)
+add_dependencies(config_reader ${catkin_EXPORTED_TARGETS})
+target_link_libraries(config_reader gflags glog ${catkin_LIBRARIES})
+
+#############
+## Install ##
+#############
+
+# Mark cpp header files for installation
+install(DIRECTORY include/${PROJECT_NAME}/
+  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+  FILES_MATCHING PATTERN "*.h"
+  PATTERN ".svn" EXCLUDE
+)

@@ -32,7 +32,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES ff_common
-  CATKIN_DEPENDS
+  CATKIN_DEPENDS roscpp std_msgs nodelet
 )
 
 ###########
@@ -68,3 +68,14 @@ if(CATKIN_ENABLE_TESTING)
   )
 
 endif()
+
+#############
+## Install ##
+#############
+
+# Mark cpp header files for installation
+install(DIRECTORY include/${PROJECT_NAME}/
+  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+  FILES_MATCHING PATTERN "*.h"
+  PATTERN ".svn" EXCLUDE
+)

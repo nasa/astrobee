@@ -15,7 +15,22 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+cmake_minimum_required(VERSION 2.8.3)
 project(localization_manager)
+
+## Compile as C++11, supported in ROS Kinetic and newer
+add_compile_options(-std=c++11)
+
+find_package(catkin REQUIRED COMPONENTS
+  roscpp
+  actionlib
+  nodelet
+  pluginlib
+  ff_msgs
+  std_msgs
+  std_srvs
+  ff_util
+)
 
 catkin_package(
   LIBRARIES
@@ -28,12 +43,32 @@ catkin_package(
     ff_msgs
     std_msgs
     std_srvs
+    ff_util
 )
 
-create_library(TARGET localization_manager
-  LIBS ${catkin_LIBRARIES} ff_common ff_nodelet config_server
-  INC  ${catkin_INCLUDE_DIRS}
-  DEPS ff_msgs
+###########
+## Build ##
+###########
+
+# Specify additional locations of header files
+include_directories(
+  include
+  ${catkin_INCLUDE_DIRS}
 )
 
-install_launch_files()
+# Declare C++ libraries
+add_library(localization_manager
+  src/localization_manager_nodelet.cc
+)
+add_dependencies(localization_manager ${catkin_EXPORTED_TARGETS})
+target_link_libraries(localization_manager ${catkin_LIBRARIES})
+
+
+#############
+## Install ##
+#############
+
+# Mark launch files for installation
+install(DIRECTORY launch/
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
+  PATTERN ".svn" EXCLUDE)

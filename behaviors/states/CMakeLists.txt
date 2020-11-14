@@ -15,7 +15,18 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+cmake_minimum_required(VERSION 2.8.3)
 project(states)
+
+## Compile as C++11, supported in ROS Kinetic and newer
+add_compile_options(-std=c++11)
+
+find_package(catkin REQUIRED COMPONENTS
+  roscpp
+  ff_hw_msgs
+  ff_msgs
+  ff_util
+)
 
 catkin_package(
   LIBRARIES
@@ -27,18 +38,28 @@ catkin_package(
     ff_util
 )
 
-create_library(
-  DIR src/states_nodelet
-  TARGET states_nodelet
-  LIBS
-    ${catkin_LIBRARIES}
-    config_reader
-    ff_nodelet
-  INC
-    ${catkin_INCLUDE_DIRS}
-  DEPS
-    ff_msgs
-    ff_hw_msgs
+###########
+## Build ##
+###########
+
+# Specify additional locations of header files
+include_directories(
+  include
+  ${catkin_INCLUDE_DIRS}
 )
 
-install_launch_files()
+# Declare C++ libraries
+add_library(states
+  src/states_nodelet/states_nodelet.cc
+)
+add_dependencies(states ${catkin_EXPORTED_TARGETS})
+target_link_libraries(states ${catkin_LIBRARIES})
+
+#############
+## Install ##
+#############
+
+# Mark launch files for installation
+install(DIRECTORY launch/
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
+  PATTERN ".svn" EXCLUDE)
