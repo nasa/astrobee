@@ -48,7 +48,6 @@ void LoadFactorParams(config_reader::ConfigReader& config, FactorParams& params)
   params.robust_smart_factor = lc::LoadBool(config, "robust_smart_factor");
   params.max_num_optical_flow_factors = lc::LoadInt(config, "max_num_optical_flow_factors");
   params.enable_rotation_only_fallback = lc::LoadBool(config, "enable_rotation_only_fallback");
-  params.bias_between_factor = lc::LoadBool(config, "bias_between_factor");
   params.loc_pose_priors = lc::LoadBool(config, "loc_pose_priors");
   params.loc_projections = lc::LoadBool(config, "loc_projections");
   params.min_num_matches = lc::LoadInt(config, "min_num_matches");
@@ -76,8 +75,6 @@ void LoadNoiseParams(config_reader::ConfigReader& config, NoiseParams& params) {
   params.starting_prior_velocity_stddev = lc::LoadDouble(config, "starting_prior_velocity_stddev");
   params.starting_prior_accel_bias_stddev = lc::LoadDouble(config, "starting_prior_accel_bias_stddev");
   params.starting_prior_gyro_bias_stddev = lc::LoadDouble(config, "starting_prior_gyro_bias_stddev");
-  params.bias_between_factor_accel_stddev = lc::LoadDouble(config, "bias_between_factor_accel_stddev");
-  params.bias_between_factor_gyro_stddev = lc::LoadDouble(config, "bias_between_factor_gyro_stddev");
   params.loc_prior_translation_stddev = lc::LoadDouble(config, "loc_prior_translation_stddev");
   params.loc_prior_quaternion_stddev = lc::LoadDouble(config, "loc_prior_quaternion_stddev");
 }

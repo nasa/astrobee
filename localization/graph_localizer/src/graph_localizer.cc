@@ -28,7 +28,6 @@
 #include <gtsam/linear/NoiseModel.h>
 #include <gtsam/navigation/ImuBias.h>
 #include <gtsam/navigation/NavState.h>
-#include <gtsam/slam/BetweenFactor.h>
 #include <gtsam/slam/PriorFactor.h>
 
 #include <glog/logging.h>
@@ -552,7 +551,7 @@ bool GraphLocalizer::SplitOldImuFactorAndAddCombinedNavState(const lc::Time time
 
   const auto combined_imu_factor =
     ii::MakeCombinedImuFactor(*new_key_index, *upper_bound_key_index, *second_integrated_pim);
-  AddCombinedImuFactorAndBiasBetweenFactor(combined_imu_factor);
+  graph_.push_back(combined_imu_factor);
   return true;
 }
 
@@ -593,7 +592,7 @@ bool GraphLocalizer::CreateAndAddImuFactorAndPredictedCombinedNavState(
   const lc::CombinedNavState global_N_body_predicted = ii::PimPredict(global_N_body, pim);
   const int key_index_1 = GenerateKeyIndex();
   const auto combined_imu_factor = ii::MakeCombinedImuFactor(*key_index_0, key_index_1, pim);
-  AddCombinedImuFactorAndBiasBetweenFactor(combined_imu_factor);
+  graph_.push_back(combined_imu_factor);
   graph_values_.AddCombinedNavState(global_N_body_predicted, key_index_1);
   return true;
 }
@@ -840,27 +839,6 @@ bool GraphLocalizer::TransformARMeasurementAndUpdateDockTWorld(FactorsToAdd& fac
   }
 
   return true;
-}
-
-void GraphLocalizer::AddCombinedImuFactorAndBiasBetweenFactor(
-  const gtsam::CombinedImuFactor::shared_ptr& combined_imu_factor) {
-  if (params_.factor.bias_between_factor) {
-    const gtsam::Vector6 bias_between_factor_noise_sigmas(
-      (gtsam::Vector(6) << params_.noise.bias_between_factor_accel_stddev,
-       params_.noise.bias_between_factor_accel_stddev, params_.noise.bias_between_factor_accel_stddev,
-       params_.noise.bias_between_factor_gyro_stddev, params_.noise.bias_between_factor_gyro_stddev,
-       params_.noise.bias_between_factor_gyro_stddev)
-        .finished());
-    const auto bias_noise =
-      Robust(gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(bias_between_factor_noise_sigmas)));
-    const auto previous_bias_key = combined_imu_factor->key5();
-    const auto current_bias_key = combined_imu_factor->key6();
-    const gtsam::imuBias::ConstantBias zero_bias_diff(gtsam::Vector3::Zero(), gtsam::Vector3::Zero());
-    gtsam::BetweenFactor<gtsam::imuBias::ConstantBias> bias_between_factor(previous_bias_key, current_bias_key,
-                                                                           zero_bias_diff, bias_noise);
-    graph_.push_back(bias_between_factor);
-  }
-  graph_.push_back(combined_imu_factor);
 }
 
 bool GraphLocalizer::MeasurementRecentEnough(const lc::Time timestamp) const {
