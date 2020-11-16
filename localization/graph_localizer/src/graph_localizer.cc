@@ -371,6 +371,7 @@ void GraphLocalizer::AddProjectionMeasurement(const lm::MatchedProjectionsMeasur
     return;
   }
 
+  // TODO(rsoussan): Unify his with ValidVLMsg call
   if (matched_projections_measurement.matched_projections.size() < params_.factor.min_num_matches) {
     LOG(WARNING) << "AddProjectionMeasurement: Not enough matches in projection measurement.";
     return;

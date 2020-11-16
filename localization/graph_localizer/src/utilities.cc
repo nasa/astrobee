@@ -64,7 +64,7 @@ double AverageDistanceFromMean(const std::deque<lm::FeaturePoint>& points) {
 }
 
 bool ValidVLMsg(const ff_msgs::VisualLandmarks& visual_landmarks_msg) {
-  return !visual_landmarks_msg.landmarks.empty();
+  return (visual_landmarks_msg.landmarks.size() >= 5);
 }
 
 ff_msgs::EkfState EkfStateMsg(const lc::CombinedNavState& combined_nav_state, const Eigen::Vector3d& acceleration,
