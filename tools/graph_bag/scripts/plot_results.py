@@ -17,9 +17,10 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import loc_states
+import ml_poses
 import plot_helpers
 import poses
-import loc_states
 import utilities
 
 import matplotlib
@@ -27,9 +28,9 @@ matplotlib.use('pdf')
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 
+import geometry_msgs
 import math
 import rosbag
-import geometry_msgs
 
 
 def l2_map(vector3ds):
@@ -177,8 +178,7 @@ def add_other_vector3d_plots(pdf, imu_augmented_graph_localization_states):
   plt.close()
 
   plt.figure()
-  plt.plot(imu_augmented_graph_localization_states.times,
-           imu_augmented_graph_localization_states.gyro_biases.xs, 'r')
+  plt.plot(imu_augmented_graph_localization_states.times, imu_augmented_graph_localization_states.gyro_biases.xs, 'r')
   plt.xlabel('Time (s)')
   plt.ylabel('Gyro Biases (X)')
   plt.title('Gyro Biases (X)')
@@ -186,8 +186,7 @@ def add_other_vector3d_plots(pdf, imu_augmented_graph_localization_states):
   plt.close()
 
   plt.figure()
-  plt.plot(imu_augmented_graph_localization_states.times,
-           imu_augmented_graph_localization_states.gyro_biases.ys, 'r')
+  plt.plot(imu_augmented_graph_localization_states.times, imu_augmented_graph_localization_states.gyro_biases.ys, 'r')
   plt.xlabel('Time (s)')
   plt.ylabel('Gyro Biases (Y)')
   plt.title('Gyro Biases (Y)')
@@ -195,8 +194,7 @@ def add_other_vector3d_plots(pdf, imu_augmented_graph_localization_states):
   plt.close()
 
   plt.figure()
-  plt.plot(imu_augmented_graph_localization_states.times,
-           imu_augmented_graph_localization_states.gyro_biases.zs, 'r')
+  plt.plot(imu_augmented_graph_localization_states.times, imu_augmented_graph_localization_states.gyro_biases.zs, 'r')
   plt.xlabel('Time (s)')
   plt.ylabel('Gyro Biases (Z)')
   plt.title('Gyro Biases (Z)')
@@ -322,7 +320,7 @@ def load_pose_msgs(vec_of_poses, bag):
   for topic, msg, t in bag.read_messages(topics):
     for poses in vec_of_poses:
       if poses.topic == topic:
-        poses.add_pose(msg.pose, msg.header.stamp)
+        poses.add_msg(msg, msg.header.stamp)
         break
 
 
@@ -340,12 +338,14 @@ def has_topic(bag, topic):
   return topic in topics
 
 
-def create_plots(bagfile, output_file):
+def create_plots(bagfile, output_file, use_ml_features_poses=False):
   bag = rosbag.Bag(bagfile)
 
   has_imu_augmented_graph_localization_state = has_topic(bag, '/gnc/ekf')
   has_imu_bias_tester_poses = has_topic(bag, '/imu_bias_tester/pose')
-  sparse_mapping_poses = poses.Poses('Sparse Mapping', '/sparse_mapping/pose')
+  sparse_mapping_poses = poses.Poses('Sparse Mapping',
+                                     '/sparse_mapping/pose') if not use_ml_features_poses else ml_poses.Poses(
+                                       'Sparse Mapping', '/loc/ml/features')
   imu_bias_tester_poses = poses.Poses('Imu Bias Tester', '/imu_bias_tester/pose')
   vec_of_poses = [sparse_mapping_poses, imu_bias_tester_poses]
   load_pose_msgs(vec_of_poses, bag)

@@ -17,20 +17,15 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import plot_results
+import poses
 
-import argparse
 
-import os
-import sys
+class Poses(poses.Poses):
 
-if __name__ == '__main__':
-  parser = argparse.ArgumentParser()
-  parser.add_argument('bagfile')
-  parser.add_argument('--output-file', default='output.pdf')
-  parser.add_argument('-m', '--use-ml-poses', default=False, action='store_true')
-  args = parser.parse_args()
-  if not os.path.isfile(args.bagfile):
-    print('Bag file ' + args.bagfile + ' does not exist.')
-    sys.exit()
-  plot_results.create_plots(args.bagfile, args.output_file, args.use_ml_poses)
+  def __init__(self, pose_type, topic):
+    super(Poses, self).__init__(pose_type, topic)
+
+  def add_msg(self, ml_feature_msg, timestamp):
+    if (len(ml_feature_msg.landmarks) < 5):
+      return 
+    super(Poses, self).add_pose(ml_feature_msg.pose, timestamp)
