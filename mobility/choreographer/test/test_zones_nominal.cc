@@ -49,7 +49,6 @@ bool stable_ = false;
 ros::Subscriber sub_ekf_;
   ff_util::FreeFlyerActionClient<ff_msgs::MotionAction> client_t_;
 
-tf2_ros::Buffer tf_buffer_;
 
 // Called once when the goal completes
 void MResultCallback(ff_util::FreeFlyerActionState::Enum result_code,
@@ -81,6 +80,7 @@ TEST(choreographer_nominal, ZoneBreach) {
   // Get the node handle
   ros::NodeHandle nh;
 
+  tf2_ros::Buffer tf_buffer_;
   tf2_ros::TransformListener tfListener(tf_buffer_);
   ROS_ERROR("Started Test");
 
@@ -124,15 +124,19 @@ TEST(choreographer_nominal, ZoneBreach) {
   goal.command = ff_msgs::MotionGoal::MOVE;
   goal.flight_mode = ff_msgs::MotionGoal::NOMINAL;
 
+  ROS_ERROR("Declare stuff");
   // Pose that breaks the keepout/keepin zones condition
   geometry_msgs::PoseStamped pose;
   geometry_msgs::TransformStamped tfs = tf_buffer_.lookupTransform(
           std::string(FRAME_NAME_WORLD),
           "body" ,
-          ros::Time(0));
+          ros::Time(0), ros::Duration(30));
   pose.header = tfs.header;
+  // pose.header.seq = 0;
+  // pose.header.stamp = ros::Time::now();
   // pose.header.frame_id = "world";
 
+  ROS_ERROR("Got tf");
   pose.pose.position.x = 10.5;
   pose.pose.position.y = -7.5;
   pose.pose.position.z = 4.5;
@@ -146,7 +150,7 @@ TEST(choreographer_nominal, ZoneBreach) {
   // Try and send the goal
   if (!client_t_.SendGoal(goal)) {
     std::cout << "Mobility client did not accept goal" << std::endl;
-    return;
+    EXPECT_EQ(true, false);
   }
 
   // Send the Goal
