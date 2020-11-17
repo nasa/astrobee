@@ -23,6 +23,7 @@ jobs:
 
     - name: Test code
       run: |
+        sudo ./scripts/setup/add_ros_repository.sh
         sudo apt-get install python3-rocker
         rocker --nvidia --x11 astrobee/astrobee:latest-kinetic /astrobee_init.sh rostest choreographer test_zones_nominal.test
 
