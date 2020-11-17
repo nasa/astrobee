@@ -22,7 +22,9 @@ jobs:
       run: docker build . -f ./scripts/docker/astrobee_kinetic.Dockerfile -t astrobee/astrobee:latest-kinetic
 
     - name: Test code
-      run: ./scripts/docker/test.sh
+      run: |
+        sudo apt-get install python3-rocker
+        rocker --nvidia --x11 astrobee/astrobee:latest-kinetic /astrobee_init.sh rostest choreographer test_zones_nominal.test
 
   build-melodic:
 
