@@ -249,6 +249,15 @@ bool GraphLocalizer::AddOpticalFlowMeasurement(
     return false;
   }
 
+  // TODO(rsoussan): This is a bug in optical flow node, fix there
+  static lc::Time last_time = optical_flow_feature_points_measurement.timestamp;
+  if (last_time == optical_flow_feature_points_measurement.timestamp) {
+    LOG(ERROR) << "AddOpticalFlowMeasurement: Same timestamp measurement, ignoring.";
+    last_time = optical_flow_feature_points_measurement.timestamp;
+    return false;
+  }
+  last_time = optical_flow_feature_points_measurement.timestamp;
+
   LOG(INFO) << "AddOpticalFlowMeasurement: Adding optical flow measurement.";
   feature_tracker_.UpdateFeatureTracks(optical_flow_feature_points_measurement.feature_points);
 
@@ -308,12 +317,10 @@ void GraphLocalizer::AddSmartFactor(const FeatureTrack& feature_track, FactorsTo
   key_infos.reserve(feature_track.points.size());
   // Gtsam requires unique key indices for each key, even though these will be replaced later
   int uninitialized_key_index = 0;
-
   for (const auto& feature_point : feature_track.points) {
     const KeyInfo key_info(&sym::P, feature_point.timestamp);
     key_infos.emplace_back(key_info);
     smart_factor->add(Camera::Measurement(feature_point.image_point), key_info.MakeKey(uninitialized_key_index++));
-    // if (feature_point.timestamp > latest_timestamp) latest_timestamp = feature_point.timestamp;
   }
   smart_factors_to_add.push_back({key_infos, smart_factor});
 }
@@ -359,6 +366,81 @@ void GraphLocalizer::AddSparseMappingMeasurement(
   LOG(INFO) << "AddSparseMappingMeasurement: Adding sparse mapping measurement.";
   AddProjectionMeasurement(matched_projections_measurement, params_.calibration.body_T_nav_cam,
                            params_.calibration.nav_cam_intrinsics, params_.noise.loc_nav_cam_noise);
+}
+
+// TODO(rsoussan): Clean this function up (duplicate code), address other todo's
+void GraphLocalizer::SplitSmartFactorsIfNeeded(FactorsToAdd& factors_to_add) {
+  for (auto factor_to_add : factors_to_add.Get()) {
+    auto smart_factor = dynamic_cast<RobustSmartFactor*>(factor_to_add.factor.get());
+    // TODO(rsoussan): 2 or 3?
+    constexpr int min_num_measurements = 3;
+    if (!smart_factor || smart_factor->measured().size() < min_num_measurements) continue;
+    // Triangulate smart factor, if fails remove measurements one by one and create new smart factors!
+    const auto point = smart_factor->triangulateSafe(smart_factor->cameras(graph_values_.values()));
+    if (point.valid()) continue;
+    // TODO(rsoussan): Make this more efficient by enabled removal of measurements and keys in smart factor
+    const auto original_measurements = smart_factor->measured();
+    const auto original_keys = smart_factor->keys();
+    int num_measurements_to_add = original_measurements.size() - 1;
+    // Try to remove min number of most recent measurements
+    while (num_measurements_to_add >= min_num_measurements) {
+      gtsam::PinholePose<gtsam::Cal3_S2>::MeasurementVector measurements_to_add;
+      gtsam::KeyVector keys_to_add;
+      for (int i = 0; i < num_measurements_to_add; ++i) {
+        measurements_to_add.emplace_back(original_measurements[i]);
+        keys_to_add.emplace_back(original_keys[i]);
+      }
+      auto new_smart_factor = boost::make_shared<RobustSmartFactor>(
+        params_.noise.optical_flow_nav_cam_noise, params_.calibration.nav_cam_intrinsics,
+        params_.calibration.body_T_nav_cam, smart_projection_params_, params_.factor.robust_smart_factor,
+        params_.factor.enable_rotation_only_fallback);
+      new_smart_factor->add(measurements_to_add, keys_to_add);
+      const auto new_point = new_smart_factor->triangulateSafe(new_smart_factor->cameras(graph_values_.values()));
+      if (new_point.valid()) {
+        // TODO(rsoussan): Update key infos?
+        factor_to_add.factor = new_smart_factor;
+        LOG(INFO) << "SplitSmartFactorsIfNeeded: Fixed smart factor by removing most recent measurements. Original "
+                     "measurement size: "
+                  << original_measurements.size() << ", new size: " << num_measurements_to_add;
+        break;
+      } else {
+        --num_measurements_to_add;
+      }
+    }
+    if (num_measurements_to_add < min_num_measurements) {
+      num_measurements_to_add = original_measurements.size() - 1;
+      // Try to remove min number of oldest measurements
+      while (num_measurements_to_add >= min_num_measurements) {
+        gtsam::PinholePose<gtsam::Cal3_S2>::MeasurementVector measurements_to_add;
+        gtsam::KeyVector keys_to_add;
+        for (int i = num_measurements_to_add; i >= original_measurements.size() - num_measurements_to_add; --i) {
+          measurements_to_add.emplace_back(original_measurements[i]);
+          keys_to_add.emplace_back(original_keys[i]);
+        }
+        auto new_smart_factor = boost::make_shared<RobustSmartFactor>(
+          params_.noise.optical_flow_nav_cam_noise, params_.calibration.nav_cam_intrinsics,
+          params_.calibration.body_T_nav_cam, smart_projection_params_, params_.factor.robust_smart_factor,
+          params_.factor.enable_rotation_only_fallback);
+        new_smart_factor->add(measurements_to_add, keys_to_add);
+        const auto new_point = new_smart_factor->triangulateSafe(new_smart_factor->cameras(graph_values_.values()));
+        if (new_point.valid()) {
+          // TODO(rsoussan): Update key infos?
+          factor_to_add.factor = new_smart_factor;
+          LOG(INFO) << "SplitSmartFactorsIfNeeded: Fixed smart factor by removing oldest measurements. Original "
+                       "measurement size: "
+                    << original_measurements.size() << ", new size: " << num_measurements_to_add;
+          break;
+        } else {
+          --num_measurements_to_add;
+        }
+      }
+    }
+    if (num_measurements_to_add < min_num_measurements) {
+      LOG(ERROR) << "SplitSmartFactorsIfNeeded: Failed to fix smart factor.";
+    }
+    // TODO(rsoussan): delete factor if fail to find acceptable new one?
+    // TODO(rsoussan): attempt to make a second factor with remaining measuremnts!!!
+  }
 }
 
 void GraphLocalizer::AddProjectionMeasurement(const lm::MatchedProjectionsMeasurement& matched_projections_measurement,
@@ -756,6 +838,7 @@ bool GraphLocalizer::DoGraphAction(FactorsToAdd& factors_to_add) {
     case GraphAction::kDeleteExistingSmartFactors:
       VLOG(2) << "DoGraphAction: Deleting smart factors.";
       DeleteFactors<RobustSmartFactor>();
+      SplitSmartFactorsIfNeeded(factors_to_add);
       return true;
     case GraphAction::kTransformARMeasurementAndUpdateDockTWorld:
       return TransformARMeasurementAndUpdateDockTWorld(factors_to_add);

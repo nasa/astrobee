@@ -83,6 +83,8 @@ class GraphLocalizer {
     const localization_measurements::MatchedProjectionsMeasurement& matched_projections_measurement,
     const gtsam::Pose3& body_T_cam, const boost::shared_ptr<gtsam::Cal3_S2>& cam_intrinsics,
     const gtsam::SharedNoiseModel& cam_noise, const GraphAction& graph_action = GraphAction::kNone);
+  // Attempts to remove most recent or oldest measurements to make and invalid smart factor valid
+  void SplitSmartFactorsIfNeeded(FactorsToAdd& factors_to_add);
 
   bool Update();
   const FeatureTrackMap& feature_tracks() const { return feature_tracker_.feature_tracks(); }
