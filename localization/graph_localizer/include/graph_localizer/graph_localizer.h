@@ -58,9 +58,8 @@ namespace graph_localizer {
 namespace sym = gtsam::symbol_shorthand;
 using Calibration = gtsam::Cal3_S2;
 using Camera = gtsam::PinholeCamera<Calibration>;
-using SmartFactor = gtsam::SmartProjectionPoseFactor<Calibration>;
 using RobustSmartFactor = gtsam::RobustSmartProjectionPoseFactor<Calibration>;
-using SharedSmartFactor = boost::shared_ptr<SmartFactor>;
+using SharedRobustSmartFactor = boost::shared_ptr<RobustSmartFactor>;
 
 class GraphLocalizer {
  public:

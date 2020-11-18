@@ -155,4 +155,34 @@ gtsam::noiseModel::Robust::shared_ptr Robust(const gtsam::SharedNoiseModel& nois
                                            noise);
 }
 
+boost::optional<SharedRobustSmartFactor> FixSmartFactorByRemovingIndividualMeasurements(
+  const GraphLocalizerParams& params, const RobustSmartFactor& smart_factor,
+  const gtsam::SmartProjectionParams& smart_projection_params, const GraphValues& graph_values) {
+  // TODO(rsoussan): Make this more efficient by enabled removal of measurements and keys in smart factor
+  const auto original_measurements = smart_factor.measured();
+  const auto original_keys = smart_factor.keys();
+  int measurement_index_to_remove;
+  // Start with latest measurement
+  for (measurement_index_to_remove = original_measurements.size() - 1; measurement_index_to_remove >= 0;
+       --measurement_index_to_remove) {
+    gtsam::PinholePose<gtsam::Cal3_S2>::MeasurementVector measurements_to_add;
+    gtsam::KeyVector keys_to_add;
+    for (int i = 0; i < original_measurements.size(); ++i) {
+      if (i == measurement_index_to_remove) continue;
+      measurements_to_add.emplace_back(original_measurements[i]);
+      keys_to_add.emplace_back(original_keys[i]);
+    }
+    auto new_smart_factor = boost::make_shared<RobustSmartFactor>(
+      params.noise.optical_flow_nav_cam_noise, params.calibration.nav_cam_intrinsics, params.calibration.body_T_nav_cam,
+      smart_projection_params, params.factor.robust_smart_factor, params.factor.enable_rotation_only_fallback);
+    new_smart_factor->add(measurements_to_add, keys_to_add);
+    const auto new_point = new_smart_factor->triangulateSafe(new_smart_factor->cameras(graph_values.values()));
+    if (new_point.valid()) {
+      LOG(INFO) << "FixSmartFactorByRemovingIndividualMeasurements: Fixed by removing measurement "
+                << measurement_index_to_remove << ", num original measurements: " << original_measurements.size();
+      return new_smart_factor;
+    }
+  }
+  return boost::none;
+}
 }  // namespace graph_localizer
