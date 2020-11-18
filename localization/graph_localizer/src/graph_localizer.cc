@@ -370,7 +370,7 @@ void GraphLocalizer::AddSparseMappingMeasurement(
 
 // TODO(rsoussan): Clean this function up (duplicate code), address other todo's
 void GraphLocalizer::SplitSmartFactorsIfNeeded(FactorsToAdd& factors_to_add) {
-  for (auto factor_to_add : factors_to_add.Get()) {
+  for (auto& factor_to_add : factors_to_add.Get()) {
     auto smart_factor = dynamic_cast<RobustSmartFactor*>(factor_to_add.factor.get());
     // TODO(rsoussan): 2 or 3?
     constexpr int min_num_measurements = 3;
