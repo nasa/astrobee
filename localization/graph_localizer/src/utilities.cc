@@ -185,4 +185,68 @@ boost::optional<SharedRobustSmartFactor> FixSmartFactorByRemovingIndividualMeasu
   }
   return boost::none;
 }
+
+boost::optional<SharedRobustSmartFactor> FixSmartFactorByRemovingMeasurementSequence(
+  const GraphLocalizerParams& params, const RobustSmartFactor& smart_factor,
+  const gtsam::SmartProjectionParams& smart_projection_params, const GraphValues& graph_values) {
+  constexpr int min_num_measurements = 2;
+  // TODO(rsoussan): Make this more efficient by enabled removal of measurements and keys in smart factor
+  const auto original_measurements = smart_factor.measured();
+  const auto original_keys = smart_factor.keys();
+  int num_measurements_to_add = original_measurements.size() - 1;
+  // Try to remove min number of most recent measurements
+  while (num_measurements_to_add >= min_num_measurements) {
+    gtsam::PinholePose<gtsam::Cal3_S2>::MeasurementVector measurements_to_add;
+    gtsam::KeyVector keys_to_add;
+    for (int i = 0; i < num_measurements_to_add; ++i) {
+      measurements_to_add.emplace_back(original_measurements[i]);
+      keys_to_add.emplace_back(original_keys[i]);
+    }
+    auto new_smart_factor = boost::make_shared<RobustSmartFactor>(
+      params.noise.optical_flow_nav_cam_noise, params.calibration.nav_cam_intrinsics, params.calibration.body_T_nav_cam,
+      smart_projection_params, params.factor.robust_smart_factor, params.factor.enable_rotation_only_fallback);
+    new_smart_factor->add(measurements_to_add, keys_to_add);
+    const auto new_point = new_smart_factor->triangulateSafe(new_smart_factor->cameras(graph_values.values()));
+    if (new_point.valid()) {
+      LOG(INFO) << "FixSmartFactorByRemovingMeasurementSequence: Fixed smart factor by removing most recent "
+                   "measurements. Original "
+                   "measurement size: "
+                << original_measurements.size() << ", new size: " << num_measurements_to_add;
+      return new_smart_factor;
+    } else {
+      --num_measurements_to_add;
+    }
+  }
+  if (num_measurements_to_add < min_num_measurements) {
+    num_measurements_to_add = original_measurements.size() - 1;
+    // Try to remove min number of oldest measurements
+    while (num_measurements_to_add >= min_num_measurements) {
+      gtsam::PinholePose<gtsam::Cal3_S2>::MeasurementVector measurements_to_add;
+      gtsam::KeyVector keys_to_add;
+      for (int i = num_measurements_to_add; i >= original_measurements.size() - num_measurements_to_add; --i) {
+        measurements_to_add.emplace_back(original_measurements[i]);
+        keys_to_add.emplace_back(original_keys[i]);
+      }
+      auto new_smart_factor = boost::make_shared<RobustSmartFactor>(
+        params.noise.optical_flow_nav_cam_noise, params.calibration.nav_cam_intrinsics,
+        params.calibration.body_T_nav_cam, smart_projection_params, params.factor.robust_smart_factor,
+        params.factor.enable_rotation_only_fallback);
+      new_smart_factor->add(measurements_to_add, keys_to_add);
+      const auto new_point = new_smart_factor->triangulateSafe(new_smart_factor->cameras(graph_values.values()));
+      if (new_point.valid()) {
+        LOG(INFO) << "FixSmartFactorByRemovingMeasurementSequence: Fixed smart factor by removing oldest measurements. "
+                     "Original "
+                     "measurement size: "
+                  << original_measurements.size() << ", new size: " << num_measurements_to_add;
+        return new_smart_factor;
+      } else {
+        --num_measurements_to_add;
+      }
+    }
+  }
+  // Failed to fix smart factor
+  return boost::none;
+  // TODO(rsoussan): delete factor if fail to find acceptable new one?
+  // TODO(rsoussan): attempt to make a second factor with remaining measuremnts!!!
+}
 }  // namespace graph_localizer

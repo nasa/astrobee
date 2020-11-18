@@ -83,6 +83,9 @@ boost::optional<SharedRobustSmartFactor> FixSmartFactorByRemovingIndividualMeasu
   const GraphLocalizerParams& params, const RobustSmartFactor& smart_factor,
   const gtsam::SmartProjectionParams& smart_projection_params, const GraphValues& graph_values);
 
+boost::optional<SharedRobustSmartFactor> FixSmartFactorByRemovingMeasurementSequence(
+  const GraphLocalizerParams& params, const RobustSmartFactor& smart_factor,
+  const gtsam::SmartProjectionParams& smart_projection_params, const GraphValues& graph_values);
 }  // namespace graph_localizer
 
 #endif  // GRAPH_LOCALIZER_UTILITIES_H_

@@ -377,15 +377,23 @@ void GraphLocalizer::SplitSmartFactorsIfNeeded(FactorsToAdd& factors_to_add) {
     if (smart_factor->measured().size() <= 2) continue;
     const auto point = smart_factor->triangulateSafe(smart_factor->cameras(graph_values_.values()));
     if (point.valid()) continue;
-    const auto fixed_smart_factor =
-      FixSmartFactorByRemovingIndividualMeasurements(params_, *smart_factor, smart_projection_params_, graph_values_);
-    if (fixed_smart_factor) {
-      factor_to_add.factor = *fixed_smart_factor;
-      continue;
-    } else {
-      LOG(ERROR) << "SplitSmartFactorsIfNeeded: Failed to fix smart factor";
+    {
+      const auto fixed_smart_factor =
+        FixSmartFactorByRemovingIndividualMeasurements(params_, *smart_factor, smart_projection_params_, graph_values_);
+      if (fixed_smart_factor) {
+        factor_to_add.factor = *fixed_smart_factor;
+        continue;
+      }
     }
-    // else if (FixSmartFactorByRemovingMeasurementSequence(*smart_factor)) continue;
+    {
+      const auto fixed_smart_factor =
+        FixSmartFactorByRemovingMeasurementSequence(params_, *smart_factor, smart_projection_params_, graph_values_);
+      if (fixed_smart_factor) {
+        factor_to_add.factor = *fixed_smart_factor;
+        continue;
+      }
+    }
+    LOG(ERROR) << "SplitSmartFactorsIfNeeded: Failed to fix smart factor";
   }
 }
 
