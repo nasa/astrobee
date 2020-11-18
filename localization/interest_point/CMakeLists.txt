@@ -18,23 +18,37 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(interest_point)
 
-set(LIBS
-  ${GLOG_LIBRARIES}
-  ${GFLAGS_LIBRARIES}
-  ${OpenCV_LIBRARIES}
-  ${OPENMVG_LIBRARIES}
-  ${CERES_LIBRARY}
-  )
-set(INCLUDES
-  ${CMAKE_CURRENT_SOURCE_DIR}/include
-  ${CMAKE_SOURCE_DIR}/common/include
-  ${CERES_INCLUDE_DIRS}
-  ${EIGEN3_INCLUDE_DIRS}
-  ${OpenCV_INCLUDE_DIRS}
-  ${OPENMVG_INCLUDE_DIRS}
-  ${GFLAGS_INCLUDE_DIRS}
-  ${GLOG_INCLUDE_DIRS}
+## Compile as C++11, supported in ROS Kinetic and newer
+add_compile_options(-std=c++11)
+
+find_package(catkin REQUIRED COMPONENTS
+  roscpp
 )
+
+# System dependencies are found with CMake's conventions
+find_package(cmake_modules REQUIRED)
+find_package(Eigen3 REQUIRED)
+find_package(OpenMVG QUIET REQUIRED)
+
+# Find OpenCV and fix a 3.3.1 bug
+find_package(OpenCV 3 REQUIRED)
+if (${OpenCV_VERSION} MATCHES "3.3.1")
+  foreach(__cvcomponent ${OpenCV_LIB_COMPONENTS})
+    set (__original_cvcomponent ${__cvcomponent})
+    if(NOT __cvcomponent MATCHES "^opencv_")
+      set(__cvcomponent opencv_${__cvcomponent})
+    endif()
+    if (TARGET ${__cvcomponent})
+      set_target_properties(${__cvcomponent} PROPERTIES
+          MAP_IMPORTED_CONFIG_DEBUG ""
+          MAP_IMPORTED_CONFIG_RELEASE ""
+          MAP_IMPORTED_CONFIG_RELWITHDEBINFO ""
+          MAP_IMPORTED_CONFIG_MINSIZEREL ""
+      )
+    endif()
+  endforeach(__cvcomponent)
+endif()
+set(OpenCV_LIBRARIES ${OpenCV_LIBS})
 
 catkin_package(
   INCLUDE_DIRS include
@@ -43,20 +57,29 @@ catkin_package(
 #  DEPENDS system_lib
 )
 
-create_library(TARGET interest_point
-  LIBS ${LIBS}
-  INC ${INCLUDES}
+###########
+## Build ##
+###########
+
+# Specify additional locations of header files
+include_directories(
+  include
+  ${catkin_INCLUDE_DIRS}
+  ${EIGEN3_INCLUDE_DIR}
+  ${OpenCV_INCLUDE_DIRS}
+  ${OPENMVG_INCLUDE_DIRS}
 )
 
-set(INTEREST_LIBS
-  interest_point
-  ff_common
-  ${LIBS})
-
-create_tool_targets(DIR tools
-  LIBS ${INTEREST_LIBS}
-  INC ${INCLUDES}
+# Declare C++ libraries
+add_library(interest_point
+  src/agast_score.cc
+  src/brisk.cc
+  src/essential.cc
+  src/matching.cc
 )
+add_dependencies(interest_point ${catkin_EXPORTED_TARGETS})
+target_link_libraries(interest_point ${catkin_LIBRARIES})
+
 
 if(CATKIN_ENABLE_TESTING)
   find_package(rostest REQUIRED)
@@ -70,6 +93,3 @@ if(CATKIN_ENABLE_TESTING)
   )
 
 endif()
-
-set(INTEREST_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/include PARENT_SCOPE)
-

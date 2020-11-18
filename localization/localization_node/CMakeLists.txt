@@ -15,23 +15,119 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+cmake_minimum_required(VERSION 2.8.3)
 project(localization_node)
 
+## Compile as C++11, supported in ROS Kinetic and newer
+add_compile_options(-std=c++11)
+
+find_package(catkin REQUIRED COMPONENTS
+  roscpp
+  cv_bridge
+  image_transport
+  nodelet
+  camera
+  ff_util
+  sparse_mapping
+  msg_conversions
+)
+
+# System dependencies are found with CMake's conventions
+find_package(OpenMVG QUIET REQUIRED)
+find_package(Eigen3 REQUIRED)
+# Find OpenCV and fix a 3.3.1 bug
+find_package(OpenCV 3 REQUIRED)
+if (${OpenCV_VERSION} MATCHES "3.3.1")
+  foreach(__cvcomponent ${OpenCV_LIB_COMPONENTS})
+    set (__original_cvcomponent ${__cvcomponent})
+    if(NOT __cvcomponent MATCHES "^opencv_")
+      set(__cvcomponent opencv_${__cvcomponent})
+    endif()
+    if (TARGET ${__cvcomponent})
+      set_target_properties(${__cvcomponent} PROPERTIES
+          MAP_IMPORTED_CONFIG_DEBUG ""
+          MAP_IMPORTED_CONFIG_RELEASE ""
+          MAP_IMPORTED_CONFIG_RELWITHDEBINFO ""
+          MAP_IMPORTED_CONFIG_MINSIZEREL ""
+      )
+    endif()
+  endforeach(__cvcomponent)
+endif()
+set(OpenCV_LIBRARIES ${OpenCV_LIBS})
+
 catkin_package(
+  INCLUDE_DIRS include
   LIBRARIES ${PROJECT_NAME}
-  CATKIN_DEPENDS roscpp message_runtime std_msgs sensor_msgs cv_bridge image_transport rosbag ff_msgs tf2 sparse_mapping
+  CATKIN_DEPENDS
+  	roscpp
+  	message_runtime
+  	std_msgs
+  	sensor_msgs
+  	cv_bridge
+  	image_transport
+  	rosbag
+  	ff_msgs
+  	tf2
+  	sparse_mapping
+    msg_conversions
 )
 
-create_library(TARGET localization_node
-  LIBS ${SPARSE_MAPPING_LIBRARIES} ff_nodelet msg_conversions ${catkin_LIBRARIES}
-  INC ${catkin_INCLUDE_DIRS}
-  DEPS sparse_mapping ff_msgs
+
+###########
+## Build ##
+###########
+
+# Specify additional locations of header files
+include_directories(
+  include
+  ${catkin_INCLUDE_DIRS}
 )
 
-create_tool_targets(DIR tools
-  LIBS ${SPARSE_MAPPING_LIBRARIES} localization_node ${catkin_LIBRARIES}
-  INC ${catkin_INCLUDE_DIRS}
-  DEPS localization_node
+# Declare C++ libraries
+add_library(localization_node
+  src/localization.cc
+  src/localization_nodelet.cc
+)
+add_dependencies(localization_node ${catkin_EXPORTED_TARGETS})
+target_link_libraries(localization_node
+  ${catkin_LIBRARIES}
+  ${OpenCV_LIBRARIES}
+  ${OPENMVG_LIBRARIES}
 )
 
-install_launch_files()
+
+## Declare a C++ executable: inspection_tool
+add_executable(extract_image_bag tools/extract_image_bag.cc)
+add_dependencies(extract_image_bag ${catkin_EXPORTED_TARGETS})
+target_link_libraries(extract_image_bag
+  localization_node gflags glog ${catkin_LIBRARIES})
+
+## Declare a C++ executable: inspection_tool
+add_executable(interest_points_test_bag tools/interest_points_test_bag.cc)
+add_dependencies(interest_points_test_bag ${catkin_EXPORTED_TARGETS})
+target_link_libraries(interest_points_test_bag
+  localization_node gflags glog ${catkin_LIBRARIES})
+
+
+
+
+# create_library(TARGET localization_node
+#   LIBS ${SPARSE_MAPPING_LIBRARIES} ff_nodelet msg_conversions ${catkin_LIBRARIES}
+#   INC ${catkin_INCLUDE_DIRS}
+#   DEPS sparse_mapping ff_msgs
+# )
+
+# create_tool_targets(DIR tools
+#   LIBS ${SPARSE_MAPPING_LIBRARIES} localization_node ${catkin_LIBRARIES}
+#   INC ${catkin_INCLUDE_DIRS}
+#   DEPS localization_node
+# )
+
+#############
+## Install ##
+#############
+
+# Mark launch files for installation
+install(DIRECTORY launch/
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
+  PATTERN ".svn" EXCLUDE)

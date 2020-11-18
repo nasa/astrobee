@@ -18,33 +18,44 @@
 cmake_minimum_required(VERSION 2.8.12) # Need get_filename_component DIRECTORY
 project(sparse_mapping)
 
-PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS protobuf/sparse_map.proto)
-get_filename_component(PROTO_HDR_DIR ${PROTO_HDRS} DIRECTORY)
+## Compile as C++11, supported in ROS Kinetic and newer
+add_compile_options(-std=c++11)
 
-set(LIBS
+find_package(catkin REQUIRED COMPONENTS
+  roscpp
   camera
-  ${DBOW2_LIBRARIES}
-  ${OpenCV_LIBRARIES}
-  ${OPENMVG_LIBRARIES}
-  ${CERES_LIBRARIES}
-  ${PROTOBUF_LIBRARIES}
   interest_point
   config_reader
   ff_common
 )
-set(INCLUDES
-  ${CERES_INCLUDE_DIRS}
-  ${EIGEN3_INCLUDE_DIRS}
-  ${GFLAGS_INCLUDE_DIRS}
-  ${GLOG_INCLUDE_DIRS}
-  ${NGRAPH_INCLUDE_DIRS}
-  ${OpenCV_INCLUDE_DIRS}
-  ${OPENMVG_INCLUDE_DIRS}
-  ${PROTOBUF_INCLUDE_DIRS}
-  ${PROTO_HDR_DIR}
-  ${DBOW2_INCLUDE_DIRS}
-)
-set(SPARSE_MAPPING_LIBRARIES sparse_mapping ${LIBS})
+
+# System dependencies are found with CMake's conventions
+find_package(cmake_modules REQUIRED)
+find_package(Eigen3 REQUIRED)
+find_package(OpenMVG QUIET REQUIRED)
+find_package(Protobuf REQUIRED)
+find_package(dbow2 REQUIRED)
+
+# Find OpenCV and fix a 3.3.1 bug
+find_package(OpenCV 3 REQUIRED)
+if (${OpenCV_VERSION} MATCHES "3.3.1")
+  foreach(__cvcomponent ${OpenCV_LIB_COMPONENTS})
+    set (__original_cvcomponent ${__cvcomponent})
+    if(NOT __cvcomponent MATCHES "^opencv_")
+      set(__cvcomponent opencv_${__cvcomponent})
+    endif()
+    if (TARGET ${__cvcomponent})
+      set_target_properties(${__cvcomponent} PROPERTIES
+          MAP_IMPORTED_CONFIG_DEBUG ""
+          MAP_IMPORTED_CONFIG_RELEASE ""
+          MAP_IMPORTED_CONFIG_RELWITHDEBINFO ""
+          MAP_IMPORTED_CONFIG_MINSIZEREL ""
+      )
+    endif()
+  endforeach(__cvcomponent)
+endif()
+set(OpenCV_LIBRARIES ${OpenCV_LIBS})
+
 
 catkin_package(
   INCLUDE_DIRS include
@@ -52,19 +63,127 @@ catkin_package(
   CATKIN_DEPENDS camera interest_point config_reader ff_common
 )
 
-create_library(TARGET sparse_mapping
-  LIBS ${LIBS}
-  INC include ${INCLUDES}
-  DEPS ${DEPS}
-  ADD_SRCS ${PROTO_SRCS} )
+###########
+## Build ##
+###########
+
+# Build the protobuf message
+PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS protobuf/sparse_map.proto)
+get_filename_component(PROTO_HDR_DIR ${PROTO_HDRS} DIRECTORY)
+
+# Specify additional locations of header files
+include_directories(
+  include
+  ${catkin_INCLUDE_DIRS}
+  ${EIGEN3_INCLUDE_DIR}
+  ${OpenCV_INCLUDE_DIRS}
+  ${OPENMVG_INCLUDE_DIRS}
+  ${PROTOBUF_INCLUDE_DIRS}
+  ${PROTO_HDR_DIR}
+  ${DBOW2_INCLUDE_DIRS}
+)
+
+# Declare C++ libraries
+add_library(sparse_mapping
+  src/ransac.cc
+  src/reprojection.cc
+  src/sparse_map.cc
+  src/sparse_mapping.cc
+  src/tensor.cc
+  src/vocab_tree.cc
+  ${PROTO_SRCS}
+)
+add_dependencies(sparse_mapping ${catkin_EXPORTED_TARGETS})
+target_link_libraries(sparse_mapping
+  ${catkin_LIBRARIES}
+  ${DBOW2_LIBRARIES}
+  ${OpenCV_LIBRARIES}
+  ${OPENMVG_LIBRARIES}
+  ${CERES_LIBRARIES}
+  ${PROTOBUF_LIBRARIES}
+)
+
 
 if (NOT USE_CTC)
-  create_tool_targets(DIR tools
-    LIBS ${LIBS} sparse_mapping
-    INC ${INCLUDES}
-    DEPS ${DEPS}
-    EXCLUDE ${EXCLUDE})
+## Declare a C++ executable: build_map
+add_executable(build_map tools/build_map.cc)
+add_dependencies(build_map ${catkin_EXPORTED_TARGETS})
+target_link_libraries(build_map
+  sparse_mapping gflags glog ${catkin_LIBRARIES})
+
+## Declare a C++ executable: evaluate_camera
+add_executable(evaluate_camera tools/evaluate_camera.cc)
+add_dependencies(evaluate_camera ${catkin_EXPORTED_TARGETS})
+target_link_libraries(evaluate_camera
+  sparse_mapping gflags glog ${catkin_LIBRARIES})
+
+## Declare a C++ executable: evaluate_localization
+add_executable(evaluate_localization tools/evaluate_localization.cc)
+add_dependencies(evaluate_localization ${catkin_EXPORTED_TARGETS})
+target_link_libraries(evaluate_localization
+  sparse_mapping gflags glog ${catkin_LIBRARIES})
+
+## Declare a C++ executable: extract_camera_info
+add_executable(extract_camera_info tools/extract_camera_info.cc)
+add_dependencies(extract_camera_info ${catkin_EXPORTED_TARGETS})
+target_link_libraries(extract_camera_info
+  sparse_mapping gflags glog ${catkin_LIBRARIES})
+
+## Declare a C++ executable: extract_submap
+add_executable(extract_submap tools/extract_submap.cc)
+add_dependencies(extract_submap ${catkin_EXPORTED_TARGETS})
+target_link_libraries(extract_submap
+  sparse_mapping gflags glog ${catkin_LIBRARIES})
+
+## Declare a C++ executable: generate_localization_test
+add_executable(generate_localization_test tools/generate_localization_test.cc)
+add_dependencies(generate_localization_test ${catkin_EXPORTED_TARGETS})
+target_link_libraries(generate_localization_test
+  sparse_mapping gflags glog ${catkin_LIBRARIES})
+
+## Declare a C++ executable: gen_trajectory
+add_executable(gen_trajectory tools/gen_trajectory.cc)
+add_dependencies(gen_trajectory ${catkin_EXPORTED_TARGETS})
+target_link_libraries(gen_trajectory
+  sparse_mapping gflags glog ${catkin_LIBRARIES})
+
+## Declare a C++ executable: import_map
+add_executable(import_map tools/import_map.cc)
+add_dependencies(import_map ${catkin_EXPORTED_TARGETS})
+target_link_libraries(import_map
+  sparse_mapping gflags glog ${catkin_LIBRARIES})
+
+## Declare a C++ executable: localize_cams
+add_executable(localize_cams tools/localize_cams.cc)
+add_dependencies(localize_cams ${catkin_EXPORTED_TARGETS})
+target_link_libraries(localize_cams
+  sparse_mapping gflags glog ${catkin_LIBRARIES})
+
+## Declare a C++ executable: localize
+add_executable(localize tools/localize.cc)
+add_dependencies(localize ${catkin_EXPORTED_TARGETS})
+target_link_libraries(localize
+  sparse_mapping gflags glog ${catkin_LIBRARIES})
+
+## Declare a C++ executable: nvm_visualize
+add_executable(nvm_visualize tools/nvm_visualize.cc)
+add_dependencies(nvm_visualize ${catkin_EXPORTED_TARGETS})
+target_link_libraries(nvm_visualize
+  sparse_mapping gflags glog ${catkin_LIBRARIES})
+
+## Declare a C++ executable: parse_cam
+add_executable(parse_cam tools/parse_cam.cc)
+add_dependencies(parse_cam ${catkin_EXPORTED_TARGETS})
+target_link_libraries(parse_cam
+  sparse_mapping gflags glog ${catkin_LIBRARIES})
+
+## Declare a C++ executable: select_images
+add_executable(select_images tools/select_images.cc)
+add_dependencies(select_images ${catkin_EXPORTED_TARGETS})
+target_link_libraries(select_images
+  sparse_mapping gflags glog ${catkin_LIBRARIES})
 endif (NOT USE_CTC)
+
 
 if(CATKIN_ENABLE_TESTING)
   find_package(rostest REQUIRED)
@@ -110,13 +229,3 @@ if(CATKIN_ENABLE_TESTING)
   )
 
 endif()
-
-set(SPARSE_MAPPING_INCLUDE_DIRS
-  ${CMAKE_CURRENT_SOURCE_DIR}/include
-  ${INTEREST_INCLUDE_DIRS}
-  ${CAMERA_INCLUDE_DIRS}
-  ${EIGEN3_INCLUDE_DIRS}
-  ${CERES_INCLUDE_DIRS})
-
-set(SPARSE_MAPPING_LIBRARIES ${SPARSE_MAPPING_LIBRARIES} PARENT_SCOPE)
-set(SPARSE_MAPPING_INCLUDE_DIRS ${SPARSE_MAPPING_INCLUDE_DIRS} PARENT_SCOPE)

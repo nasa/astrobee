@@ -15,34 +15,72 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+cmake_minimum_required(VERSION 2.8.3)
 project(flashlight)
 
-# Core library
-create_library(TARGET flashlight
-  INC ${GLOG_INCLUDE_DIRS}
-  LIBS ${GLOG_LIBRARIES} i2c
-)
+## Compile as C++11, supported in ROS Kinetic and newer
+add_compile_options(-std=c++11)
 
-# Standalone test programs
-create_tool_targets(DIR tools
-  INC ${GFLAGS_INCLUDE_DIRS}
-  LIBS ${GFLAGS_LIBRARIES} flashlight ff_common
+find_package(catkin REQUIRED COMPONENTS
+  roscpp
+  roslib
+  nodelet
+  ff_hw_msgs
+  i2c
+  ff_util
+  config_reader
 )
 
 # Create ROS nodes if we are using ROS
-if(USE_ROS)
+
   catkin_package(
-    LIBRARIES flashlight
-    CATKIN_DEPENDS roscpp roslib nodelet
-    DEPENDS ff_hw_msgs
+    LIBRARIES
+      flashlight
+    CATKIN_DEPENDS
+      roscpp
+      roslib
+      nodelet
+      ff_hw_msgs
+      i2c
+      ff_util
+      config_reader
   )
 
-  create_library(TARGET flashlight_nodelet
-    DIR src/ros
-    LIBS ${roscpp_LIBRARIES} ${nodelet_LIBRARIES} flashlight config_reader
-         ff_nodelet
-    INC ${catkin_INCLUDE_DIRS}
-    DEPS ff_hw_msgs
+###########
+## Build ##
+###########
+
+# Specify additional locations of header files
+include_directories(
+  include
+  ${catkin_INCLUDE_DIRS}
+)
+
+  # Declare C++ librarie - Core library
+  add_library(flashlight
+    src/flashlight.cc
   )
-  install_launch_files()
-endif(USE_ROS)
+  add_dependencies(flashlight ${catkin_EXPORTED_TARGETS})
+  target_link_libraries(flashlight glog ${catkin_LIBRARIES})
+
+  # Declare C++ librarie
+  add_library(flashlight_nodelet
+    src/ros/flashlight_nodelet.cc
+  )
+  add_dependencies(flashlight_nodelet ${catkin_EXPORTED_TARGETS})
+  target_link_libraries(flashlight_nodelet flashlight ${catkin_LIBRARIES})
+
+## Declare a C++ executable: flashlight_test
+add_executable(flashlight_test tools/flashlight_test.cc)
+add_dependencies(flashlight_test ${catkin_EXPORTED_TARGETS})
+target_link_libraries(flashlight_test
+  flashlight gflags ${catkin_LIBRARIES})
+
+#############
+## Install ##
+#############
+
+  # Mark launch files for installation
+  install(DIRECTORY launch/
+    DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
+    PATTERN ".svn" EXCLUDE)

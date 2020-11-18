@@ -11,13 +11,13 @@
 │   ├── ff_hw_msgs 				DONE
 │   ├── ff_msgs 				DONE
 ├── description
-│   ├── description				TODO
-│   └── media					TODO
+│   ├── description				DONE
+│   └── media					DONE
 ├── gnc
 │   ├── ctl						TODO
-│   ├── ekf						TODO
+│   ├── ekf						DONE
 │   ├── fam						TODO
-│   ├── gnc_autocode			TODO
+│   ├── gnc_autocode			DONE
 │   ├── matlab					TODO
 │   └── sim_wrapper				TODO
 ├── hardware
@@ -26,9 +26,9 @@
 │   ├── epson_imu				DONE
 │   ├── fam_cmd_i2c				DONE
 │   ├── ff_serial				DONE
-│   ├── flashlight				TODO
-│   ├── flycapture				TODO
-│   ├── gpio					TODO
+│   ├── flashlight				DONE
+│   ├── flycapture				DONE
+│   ├── gpio					DONE
 │   ├── i2c						DONE
 │   ├── is_camera				TODO
 │   ├── laser					TODO
@@ -41,14 +41,14 @@
 │   ├── temp_monitor			TODO
 │   └── vive					TODO
 ├── localization
-│   ├── camera					TODO
+│   ├── camera					DONE
 │   ├── handrail_detect			TODO
-│   ├── interest_point			TODO
-│   ├── lk_optical_flow			TODO
+│   ├── interest_point			DONE
+│   ├── lk_optical_flow			DONE
 │   ├── localization_manager	DONE
-│   ├── localization_node		TODO
+│   ├── localization_node		DONE
 │   ├── marker_tracking			TODO
-│   ├── sparse_mapping			TODO
+│   ├── sparse_mapping			DONE
 │   └── vive_localization		TODO
 ├── management
 │   ├── access_control			TODO

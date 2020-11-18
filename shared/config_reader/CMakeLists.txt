@@ -71,21 +71,19 @@ if(LUAJIT_INCLUDE_DIR AND EXISTS "${LUAJIT_INCLUDE_DIR}/luajit.h")
   string(REGEX REPLACE "^#define[ \t]+LUAJIT_VERSION[ \t]+\"LuaJIT ([^\"]+)\".*" "\\1" LUAJIT_VERSION_STRING "${luajit_version_str}")
   unset(luajit_version_str)
 endif()
-include(FindPackageHandleStandardArgs)
-# # handle the QUIETLY and REQUIRED arguments and set LUA_FOUND to TRUE if
-# # all listed variables are TRUE
-# FIND_PACKAGE_HANDLE_STANDARD_ARGS(Luajit20
-#                                   REQUIRED_VARS LUAJIT_LIBRARIES 
-#                                   LUAJIT_INCLUDE_DIR VERSION_VAR 
-#                                   LUAJIT_VERSION_STRING)
 
-# mark_as_advanced(LUAJIT_INCLUDE_DIR LUAJIT_LIBRARIES LUAJIT_LIBRARY 
-#                   LUAJIT_MATH_LIBRARY)
+# handle the QUIETLY and REQUIRED arguments and set LUA_FOUND to TRUE if
+# all listed variables are TRUE
+FIND_PACKAGE_HANDLE_STANDARD_ARGS(LuaJIT
+                                  REQUIRED_VARS LUAJIT_LIBRARIES LUAJIT_INCLUDE_DIR
+                                  VERSION_VAR LUAJIT_VERSION_STRING)
+
+mark_as_advanced(LUAJIT_INCLUDE_DIR LUAJIT_LIBRARY LUAJIT_MATH_LIBRARY)
 
 
 catkin_package(
   INCLUDE_DIRS include ${LUAJIT_INCLUDE_DIR}
-  LIBRARIES config_reader
+  LIBRARIES config_reader ${LUAJIT_LIBRARY} ${LUAJIT_MATH_LIBRARY}
   CATKIN_DEPENDS   roscpp nodelet ff_common
 )
 
@@ -112,6 +110,13 @@ target_link_libraries(config_reader gflags glog ${catkin_LIBRARIES})
 #############
 ## Install ##
 #############
+
+# Mark libraries for installation
+install(TARGETS ${PROJECT_NAME}
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
+)
 
 # Mark cpp header files for installation
 install(DIRECTORY include/${PROJECT_NAME}/

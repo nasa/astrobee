@@ -15,22 +15,50 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+cmake_minimum_required(VERSION 2.8.3)
 project(lk_optical_flow)
 
-if (USE_ROS)
+## Compile as C++11, supported in ROS Kinetic and newer
+add_compile_options(-std=c++11)
+
+find_package(catkin REQUIRED COMPONENTS
+  roscpp
+  cv_bridge
+  image_transport
+  nodelet
+  camera
+  ff_util
+)
 
 catkin_package(
+  INCLUDE_DIRS include
   LIBRARIES ${PROJECT_NAME}
-  CATKIN_DEPENDS roscpp cv_bridge image_transport nodelet
-  DEPENDS lk_optical_flow
+  CATKIN_DEPENDS roscpp cv_bridge image_transport nodelet camera ff_util
 )
 
-create_library(TARGET lk_optical_flow
-  LIBS ff_nodelet camera config_reader ${catkin_LIBRARIES}
-  INC ${catkin_INCLUDE_DIRS}
-  DEPS ff_msgs config_reader camera
+###########
+## Build ##
+###########
+
+# Specify additional locations of header files
+include_directories(
+  include
+  ${catkin_INCLUDE_DIRS}
 )
 
-install_launch_files()
+# Declare C++ libraries
+add_library(lk_optical_flow
+  src/lk_optical_flow.cc
+  src/lk_optical_flow_nodelet.cc
+)
+add_dependencies(lk_optical_flow ${catkin_EXPORTED_TARGETS})
+target_link_libraries(lk_optical_flow ${catkin_LIBRARIES})
 
-endif (USE_ROS)
+#############
+## Install ##
+#############
+
+# Mark launch files for installation
+install(DIRECTORY launch/
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
+  PATTERN ".svn" EXCLUDE)

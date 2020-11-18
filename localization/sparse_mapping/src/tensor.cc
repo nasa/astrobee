@@ -918,7 +918,7 @@ void findMatchingTracks(sparse_mapping::SparseMap * A_in,
 
   // Match features. Must set num_subsequent_images to not try to
   // match images in same map, that was done when each map was built.
-  FREEFLYER_GFLAGS_NAMESPACE::SetCommandLineOption("num_subsequent_images", "0");
+  google::SetCommandLineOption("num_subsequent_images", "0");
   sparse_mapping::MatchFeatures(sparse_mapping::EssentialFile(output_map),
                                 sparse_mapping::MatchesFile(output_map), &C);
 

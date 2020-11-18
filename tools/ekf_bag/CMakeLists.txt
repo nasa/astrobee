@@ -15,18 +15,61 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+cmake_minimum_required(VERSION 2.8.3)
 project(ekf_bag)
 
+## Compile as C++11, supported in ROS Kinetic and newer
+add_compile_options(-std=c++11)
+
+find_package(catkin REQUIRED COMPONENTS
+  roscpp
+  config_reader
+  camera
+  ekf
+  lk_optical_flow
+)
+
 catkin_package(
-  CATKIN_DEPENDS roscpp
+  CATKIN_DEPENDS roscpp config_reader camera ekf lk_optical_flow
 )
 
-create_library(TARGET ekf_bag 
-  LIBS ekf lk_optical_flow localization_node sparse_mapping interest_point camera ff_common config_reader ${OpenCV_LIBRARIES} ${catkin_LIBRARIES}
-  INC ${catkin_INCLUDE_DIRS}
+###########
+## Build ##
+###########
+
+# Specify additional locations of header files
+include_directories(
+  include
+  ${catkin_INCLUDE_DIRS}
 )
 
-create_tool_targets(DIR tools
-  LIBS ekf_bag
-  INC ${catkin_INCLUDE_DIRS}
+# Declare C++ libraries
+add_library(ekf_bag
+  src/ekf_bag.cc
+  src/ekf_bag_csv.cc
+  src/tracked_features.cc
 )
+add_dependencies(ekf_bag ${catkin_EXPORTED_TARGETS})
+target_link_libraries(ekf_bag ${catkin_LIBRARIES})
+
+## Declare a C++ executable: bag_to_csv
+add_executable(bag_to_csv tools/bag_to_csv.cc)
+add_dependencies(bag_to_csv ${catkin_EXPORTED_TARGETS})
+target_link_libraries(bag_to_csv
+  ekf_bag gflags ${catkin_LIBRARIES})
+
+## Declare a C++ executable: bag_to_csv
+add_executable(sparse_map_bag tools/sparse_map_bag.cc)
+add_dependencies(sparse_map_bag ${catkin_EXPORTED_TARGETS})
+target_link_libraries(sparse_map_bag
+  ekf_bag gflags ${catkin_LIBRARIES})
+
+# create_library(TARGET ekf_bag 
+#   LIBS ekf lk_optical_flow localization_node sparse_mapping interest_point camera ff_common config_reader ${OpenCV_LIBRARIES} ${catkin_LIBRARIES}
+#   INC ${catkin_INCLUDE_DIRS}
+# )
+
+# create_tool_targets(DIR tools
+#   LIBS ekf_bag
+#   INC ${catkin_INCLUDE_DIRS}
+# )
