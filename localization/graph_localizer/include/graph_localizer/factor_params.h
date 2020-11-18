@@ -36,6 +36,7 @@ struct FactorParams {
   bool robust_smart_factor;
   int max_num_optical_flow_factors;
   bool enable_rotation_only_fallback;
+  bool smart_factor_splitting;
   // Loc factors
   bool loc_pose_priors;
   bool loc_projections;

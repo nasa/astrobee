@@ -838,7 +838,8 @@ bool GraphLocalizer::DoGraphAction(FactorsToAdd& factors_to_add) {
     case GraphAction::kDeleteExistingSmartFactors:
       VLOG(2) << "DoGraphAction: Deleting smart factors.";
       DeleteFactors<RobustSmartFactor>();
-      SplitSmartFactorsIfNeeded(factors_to_add);
+      // TODO(rsoussan): rename this graph action to handle smart factors
+      if (params_.factor.smart_factor_splitting) SplitSmartFactorsIfNeeded(factors_to_add);
       return true;
     case GraphAction::kTransformARMeasurementAndUpdateDockTWorld:
       return TransformARMeasurementAndUpdateDockTWorld(factors_to_add);
