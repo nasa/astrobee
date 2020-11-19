@@ -44,10 +44,6 @@ class GraphValues {
   // Add timestamp and keys to timestamp_key_index_map, and values to values
   bool AddCombinedNavState(const localization_common::CombinedNavState& combined_nav_state, const int key_index);
 
-  // Removes keys from timestamp map, values from values.
-  // Also removes any factors using these keys from graph argument
-  bool RemoveCombinedNavStateAndFactors(const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& graph);
-
   boost::optional<localization_common::CombinedNavState> LatestCombinedNavState() const;
 
   boost::optional<localization_common::CombinedNavState> OldestCombinedNavState() const;
@@ -58,14 +54,20 @@ class GraphValues {
 
   boost::optional<std::pair<gtsam::imuBias::ConstantBias, localization_common::Time>> LatestBias() const;
 
-  // Removes keys and their values that are too old.
-  // Also removes any factors using these keys from graph argument.
-  // Returns number of states removed.
-  int SlideWindow(gtsam::NonlinearFactorGraph& graph);
+  // Returns the oldest time that will be in graph values once the window is slid using params
+  boost::optional<localization_common::Time> SlideWindowNewOldestTime() const;
 
   boost::optional<int> KeyIndex(const localization_common::Time timestamp) const;
 
   void UpdateValues(const gtsam::Values& new_values);
+
+  // TODO(rsoussan): Put this somewhere else?
+  static gtsam::NonlinearFactorGraph RemoveOldFactors(const gtsam::KeyVector& old_keys,
+                                                      gtsam::NonlinearFactorGraph& graph);
+
+  int RemoveOldCombinedNavStates(const localization_common::Time oldest_allowed_time);
+
+  gtsam::KeyVector OldKeys(const localization_common::Time oldest_allowed_time) const;
 
   const gtsam::Values& values() const { return values_; }
 

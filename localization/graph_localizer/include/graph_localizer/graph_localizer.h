@@ -103,11 +103,14 @@ class GraphLocalizer {
   void SaveGraphDotFile(const std::string& output_path = "graph.dot") const;
 
  private:
+  gtsam::NonlinearFactorGraph MarginalFactors(const gtsam::NonlinearFactorGraph& old_factors,
+                                              const gtsam::KeyVector& old_keys,
+                                              const gtsam::GaussianFactorGraph::Eliminate& eliminate_function) const;
+
   // Removes Keys and Values outside of sliding window.
   // Removes any factors depending on removed values
-  bool SlideWindow(const boost::optional<gtsam::Marginals>& marginals);
-
-  void RemovePriors(const int key_index);
+  // Adds marginalized factors encapsulating linearized error of removed factors
+  bool SlideWindow();
 
   // Integrates latest imu measurements up to timestamp and adds imu factor and
   // new combined nav state
