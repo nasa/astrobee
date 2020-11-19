@@ -63,7 +63,7 @@ add_library(dock
 add_dependencies(dock ${catkin_EXPORTED_TARGETS})
 target_link_libraries(dock ${catkin_LIBRARIES})
 
-## Declare a C++ executable: inspection_tool
+## Declare a C++ executable: dock_tool
 add_executable(dock_tool tools/dock_tool.cc)
 add_dependencies(dock_tool ${catkin_EXPORTED_TARGETS})
 target_link_libraries(dock_tool

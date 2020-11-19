@@ -15,17 +15,64 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+cmake_minimum_required(VERSION 2.8.3)
 project(fam)
 
-catkin_package(
- LIBRARIES fam
- CATKIN_DEPENDS roscpp sensor_msgs nav_msgs
- DEPENDS ff_msgs ff_hw_msgs ff_common
+## Compile as C++11, supported in ROS Kinetic and newer
+add_compile_options(-std=c++11)
+
+find_package(catkin REQUIRED COMPONENTS
+  roscpp
+  ff_msgs
+  ff_util
+  config_reader
+  gnc_autocode
 )
 
-create_library(TARGET fam
-  LIBS ${catkin_LIBRARIES} ${EIGEN_LIBRARIES} gnc_autocode msg_conversions ff_common config_reader ff_nodelet
-  INC ${catkin_INCLUDE_DIRS} ${EIGEN3_INCLUDE_DIRS}
-  DEPS ff_msgs ff_hw_msgs)
+# System dependencies are found with CMake's conventions
+find_package(Eigen3 REQUIRED)
 
-install_launch_files()
+catkin_package(
+  LIBRARIES
+    fam
+  CATKIN_DEPENDS
+    roscpp
+    ff_msgs
+    ff_util
+    config_reader
+    gnc_autocode
+)
+
+###########
+## Build ##
+###########
+
+# Specify additional locations of header files
+include_directories(
+  include
+  ${catkin_INCLUDE_DIRS}
+  ${EIGEN3_INCLUDE_DIR}
+)
+
+# Declare C++ libraries
+add_library(fam
+  src/fam.cc
+  src/fam_nodelet.cc
+)
+add_dependencies(fam ${catkin_EXPORTED_TARGETS})
+target_link_libraries(fam ${catkin_LIBRARIES})
+
+# create_library(TARGET fam
+#   LIBS ${catkin_LIBRARIES} ${EIGEN_LIBRARIES} gnc_autocode msg_conversions ff_common config_reader ff_nodelet
+#   INC ${catkin_INCLUDE_DIRS} ${EIGEN3_INCLUDE_DIRS}
+#   DEPS ff_msgs ff_hw_msgs)
+#############
+## Install ##
+#############
+
+# Mark launch files for installation
+install(DIRECTORY launch/
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
+  PATTERN ".svn" EXCLUDE)
+
+

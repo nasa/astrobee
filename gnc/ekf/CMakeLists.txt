@@ -24,17 +24,16 @@ add_compile_options(-std=c++11)
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   ff_msgs
-  ff_common
   ff_util
-  gnc_autocode
   config_reader
+  gnc_autocode
   camera
 )
 
 catkin_package(
  INCLUDE_DIRS include
  LIBRARIES ekf
- CATKIN_DEPENDS roscpp ff_msgs ff_common ff_util gnc_autocode config_reader camera
+ CATKIN_DEPENDS roscpp ff_msgs ff_util config_reader gnc_autocode camera
 )
 
 ###########
@@ -55,12 +54,6 @@ add_library(ekf
 )
 add_dependencies(ekf ${catkin_EXPORTED_TARGETS})
 target_link_libraries(ekf ${catkin_LIBRARIES})
-
-# create_library(TARGET ekf
-#   LIBS ${catkin_LIBRARIES} ${EIGEN_LIBRARIES} gnc_autocode msg_conversions camera ff_common config_reader ff_nodelet ff_flight
-#   INC ${catkin_INCLUDE_DIRS} ${EIGEN3_INCLUDE_DIRS}
-#   DEPS ff_msgs ff_hw_msgs)
-
 
 #############
 ## Install ##

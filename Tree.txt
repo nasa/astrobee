@@ -14,12 +14,11 @@
 │   ├── description				DONE
 │   └── media					DONE
 ├── gnc
-│   ├── ctl						TODO
+│   ├── ctl						DONE
 │   ├── ekf						DONE
-│   ├── fam						TODO
+│   ├── fam						DONE
 │   ├── gnc_autocode			DONE
-│   ├── matlab					TODO
-│   └── sim_wrapper				TODO
+│   └── sim_wrapper				DONE
 ├── hardware
 │   ├── embedded				TODO
 │   ├── eps_driver				DONE
