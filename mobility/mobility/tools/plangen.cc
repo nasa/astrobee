@@ -27,10 +27,12 @@
 #include <ff_util/ff_names.h>
 #include <ff_util/ff_flight.h>
 #include <ff_util/ff_action.h>
+#include <ff_util/ff_serialization.h>
 #include <jsonloader/planio.h>
 
 // Primitive actions
 #include <ff_msgs/PlanAction.h>
+#include <ff_msgs/MotionAction.h>
 
 // For the trapezoidal planner implementation
 #include <planner_trapezoidal/planner_trapezoidal.h>
@@ -46,9 +48,9 @@
 // DEFINE_string(planner, "trapezoidal", "Planner name (trapezoidal, qp)");
 DEFINE_string(input, "", "Input file with rows of type: x y z roll pitch yaw (in degrees).");
 DEFINE_string(output, "", "Output file.");
-DEFINE_string(output_type, "fplan", "Output file type. Options: fplan (default) and csv. "
-              "It will write either a JSON file with .fplan extension to be used in GDS, or a .csv file "
-              "with only accelerations to be used in MGTF.");
+DEFINE_string(output_type, "fplan", "Output file type. Options: fplan (default), csv and bin. "
+              "It will write either a JSON file with .fplan extension to be used in GDS, a .csv file "
+              "with only accelerations to be used in MGTF, or a bin file to be used with EXEC.");
 // DEFINE_bool(ff, false, "Plan in face-forward mode");
 // DEFINE_double(rate, 62.5, "Segment sampling rate");
 DEFINE_double(vel, 0.2, "Desired velocity in m/s");
@@ -93,17 +95,19 @@ int main(int argc, char *argv[]) {
   google::SetUsageMessage("Usage: plangen <options>\n");
   ff_common::InitFreeFlyerApplication(&argc, &argv);
 
+  // Make sure we specify correct parameters
+  // Input/Output files
   if (FLAGS_input == "" || FLAGS_output == "") {
     std::cout << "Must specify input and output files via -input and -output. "
               << "Also see: -help." << std::endl;
     return 1;
   }
-
-  if (FLAGS_output_type != "fplan" && FLAGS_output_type != "csv") {
-    std::cout << "The output type must be 'fplan' or 'csv'." << std::endl;
+  // Output file format
+  if (FLAGS_output_type != "fplan" && FLAGS_output_type != "csv" && FLAGS_output_type != "bin") {
+    std::cout << "The output type must be 'fplan', 'csv', or 'bin'." << std::endl;
     return 1;
   }
-
+  // Define multiplication order
   ROTATIONS_MULTIPLICATION_ORDER order;
   if (FLAGS_rotations_multiplication_order == "roll-pitch-yaw")
     order = ROLL_PITCH_YAW;
@@ -113,11 +117,10 @@ int main(int argc, char *argv[]) {
     LOG(FATAL) << "Unknown value for -rotations_multiplication_order: "
                << FLAGS_rotations_multiplication_order;
 
-  // Read the input file and create the affine transforms among which we will
-  // insert trapezoids.
-
+  // READING ----------------------------------------------------------------------
   std::cout << "Reading: " << FLAGS_input << std::endl;
   std::ifstream ifs(FLAGS_input.c_str());
+  // Open the input file
   if (!ifs.is_open()) {
     std::cout << "Could not open file: " << FLAGS_input << std::endl;
     return 1;
@@ -125,16 +128,29 @@ int main(int argc, char *argv[]) {
 
   std::vector<Eigen::Affine3d> Tf;
   std::vector<Eigen::VectorXd> Poses;
+  std::vector<Eigen::Vector3d> Arms;
   std::string line;
+  int arm_init = -1;
   while (getline(ifs, line)) {
     if (has_only_whitespace_or_comments(line)) continue;
 
+    // Arm commands
     std::istringstream is(line);
     Eigen::VectorXd Pose(6);
-    if (!(is >> Pose[0] >> Pose[1] >> Pose[2] >> Pose[3] >> Pose[4] >> Pose[5])) {
-      std::cout << "Ignoring invalid line: " << line  << std::endl;
-      continue;
+    bool arm_flag = true;
+    Eigen::Vector3d Arm = Eigen::Vector3d::Zero();
+    if (!(is >> Pose[0] >> Pose[1] >> Pose[2] >> Pose[3] >> Pose[4] >> Pose[5]
+                                                      >> Arm[0] >> Arm[1] >> Arm[2])) {
+      arm_flag = false;
+      // No arm commands
+      std::istringstream is(line);
+      if (!(is >> Pose[0] >> Pose[1] >> Pose[2] >> Pose[3] >> Pose[4] >> Pose[5])) {
+        std::cout << "Ignoring invalid line: " << line  << std::endl;
+        continue;
+      }
     }
+    // std::cout << Pose[0]  << " " << Pose[1]  << " " << Pose[2] << " " << Pose[3] <<
+    // " " << Pose[4] << " " << Pose[5] << " " << Arm[0] << " " << Arm[1] << std::endl;
 
     Eigen::Affine3d tf;
     tf.translation() = Eigen::Vector3d(Pose[0], Pose[1], Pose[2]);
@@ -142,15 +158,43 @@ int main(int argc, char *argv[]) {
                                                     Pose[4], Pose[5]).toRotationMatrix();
     Tf.push_back(tf);
     Poses.push_back(Pose);
+
+
+    // If the arm values were successfull read from the input file
+    if (arm_flag) {
+      Arms.push_back(Arm);                // Adds the last known Joint Values
+      if (arm_init == -1)
+        arm_init = Poses.size() - 1;
+    } else if (!Arms.empty()) {
+      Arms.push_back(Arms.back());        // Adds the last known Joint Values
+    }
   }
 
+  // WRITING ----------------------------------------------------------------------
   std::cout << "Writing: " << FLAGS_output << std::endl;
   std::ofstream ofs(FLAGS_output.c_str());
   ofs.precision(15);
   if (FLAGS_output_type == "fplan")
     jsonloader::WritePlanHeader(ofs, FLAGS_vel, FLAGS_accel, FLAGS_omega, FLAGS_alpha, FLAGS_creator);
 
+  // Create motion goal
+  ff_msgs::MotionGoal goal;
+  goal.command = ff_msgs::MotionGoal::EXEC;
+  sensor_msgs::JointState joint;
+
+  if (!Arms.empty()) {
+    joint.name.resize(3);
+    joint.name[0] = "pan";
+    joint.name[1] = "tilt";
+    joint.name[2] = "gripper";
+    joint.position.resize(3);
+  }
+
+  ros::Time station_time(0);  // Start at this time
+  ros::Time old_station_time(0);  // Start at this time
+  double time_percentage;
   for (size_t id = 0; id < Poses.size(); id++) {
+    old_station_time = station_time;
     if (FLAGS_output_type == "fplan")
       jsonloader::WriteStation(ofs, Poses[id], FLAGS_tolerance, id);
 
@@ -158,7 +202,8 @@ int main(int argc, char *argv[]) {
       break;  // Finished writing the last station
 
     // Write the segment connecting to the next station
-    ros::Time station_time(0);  // Start at this time
+    if (FLAGS_output_type == "fplan" || FLAGS_output_type == "csv")
+      station_time = ros::Time(0);  // Start at this time
     ff_util::Segment segment;
     double dt = 0, min_control_period = 1.0, epsilon = 0.001;
     planner_trapezoidal::InsertTrapezoid(segment,       // output
@@ -168,20 +213,20 @@ int main(int argc, char *argv[]) {
                                          min_control_period, epsilon);
 
     // Export the segment to a more plain format
-    std::vector<Eigen::VectorXd> SegVec;
     ff_util::Segment::const_iterator it;
-    for (it = segment.begin(); it != segment.end(); it++) {
-      Eigen::VectorXd S(20);
-      S << (it->when).toSec(), it->pose.position.x, it->pose.position.y, it->pose.position.z,
-        it->twist.linear.x, it->twist.linear.y, it->twist.linear.z,
-        it->accel.linear.x, it->accel.linear.y, it->accel.linear.z,
-        it->pose.orientation.x, it->pose.orientation.y,
-        it->pose.orientation.z, it->pose.orientation.w,
-        it->twist.angular.x, it->twist.angular.y, it->twist.angular.z,
-        it->accel.angular.x, it->accel.angular.y, it->accel.angular.z;
-      SegVec.push_back(S);
-    }
     if (FLAGS_output_type == "fplan") {
+      std::vector<Eigen::VectorXd> SegVec;
+      for (it = segment.begin(); it != segment.end(); it++) {
+        Eigen::VectorXd S(20);
+        S << (it->when).toSec(), it->pose.position.x, it->pose.position.y, it->pose.position.z,
+          it->twist.linear.x, it->twist.linear.y, it->twist.linear.z,
+          it->accel.linear.x, it->accel.linear.y, it->accel.linear.z,
+          it->pose.orientation.x, it->pose.orientation.y,
+          it->pose.orientation.z, it->pose.orientation.w,
+          it->twist.angular.x, it->twist.angular.y, it->twist.angular.z,
+          it->accel.angular.x, it->accel.angular.y, it->accel.angular.z;
+        SegVec.push_back(S);
+      }
       jsonloader::WriteSegment(ofs, SegVec, FLAGS_vel, FLAGS_accel, FLAGS_omega, FLAGS_alpha, id);
     } else if (FLAGS_output_type == "csv") {
       // Write accelerations only
@@ -195,6 +240,24 @@ int main(int argc, char *argv[]) {
             << "," << it->accel.angular.z
             << std::endl;
       }
+    } else if (FLAGS_output_type == "bin") {
+    std::cout << "SEGMENT " << id << std::endl;
+      // Add segment to plan
+      for (it = segment.begin(); it != segment.end(); it++) {
+        goal.segment.push_back(*it);
+        if ((!Arms.empty()) && (arm_init <= static_cast<int>(id))) {
+          time_percentage = (it->when.toSec() - old_station_time.toSec())/
+                                        (station_time.toSec() - old_station_time.toSec());
+          joint.header.stamp = it->when;
+          joint.position[0] = Arms[id-arm_init](0)-(time_percentage)*(Arms[id-arm_init](0) - Arms[id+1-arm_init](0));
+          joint.position[1] = Arms[id-arm_init](1)-(time_percentage)*(Arms[id-arm_init](1) - Arms[id+1-arm_init](1));
+          joint.position[2] = Arms[id-arm_init](2)-(time_percentage)*(Arms[id-arm_init](2) - Arms[id+1-arm_init](2));
+          goal.arm.push_back(joint);
+          // std::cout << it->when.toSec()  << "\t " << joint.position[0]  << "\t " << joint.position[1] << std::endl;
+        }
+      }
+      // Pause in between segments
+      station_time += ros::Duration(2);
     }
   }
 
@@ -217,6 +280,14 @@ int main(int argc, char *argv[]) {
     ofs.close();
   } else {
     std::cout << "Could not write: " << FLAGS_output << std::endl;
+  }
+
+  // Write ros message using the stadard function
+  if (FLAGS_output_type == "bin") {
+    if (ff_util::Serialization::WriteFile(FLAGS_output, goal))
+      std::cout << std::endl << "Segment saved to " << FLAGS_output << "\n";
+    else
+      std::cout << std::endl << "Segment not saved\n";
   }
 
   return 0;

@@ -24,6 +24,10 @@
 // Standard sensor messages
 #include <sensor_msgs/JointState.h>
 
+// Actions
+#include <ff_msgs/MotionAction.h>
+#include <ff_msgs/PlanAction.h>
+
 // FSW shared libraries
 #include <config_reader/config_reader.h>
 #include <ff_util/config_server.h>
@@ -516,6 +520,19 @@ class ArmNodelet : public ff_util::FreeFlyerNodelet {
     pub_joint_goals_ = nh->advertise<sensor_msgs::JointState>(
       TOPIC_JOINT_GOALS, 1, true);
 
+    // Subscriber for arm trajectories
+    motion_goal_ = nh->subscribe(ACTION_MOBILITY_MOTION + std::string("/goal"), 1,
+      &ArmNodelet::TrajectoryCallback, this);
+    // Choreographer state reader
+    choreographer_state_ = nh->subscribe(TOPIC_MOBILITY_MOTION_STATE, 1,
+      &ArmNodelet::ChoreographerCallback, this);
+    // Planner reader to get initiate time
+    planner_result_ = nh->subscribe("/mob/planner_trapezoidal/plan/result", 1,
+      &ArmNodelet::PlannerCallback, this);
+    // Arm trajectory timer
+    timer_ = nh->createTimer(ros::Duration(0),
+        &ArmNodelet::SetpointCallback, this, false, false);
+
     // Subscribe to Proximal Joint Servo Enabling service
     client_enable_prox_servo_ = nh->serviceClient<ff_hw_msgs::SetEnabled>(
       SERVICE_HARDWARE_PERCHING_ARM_PROX_SERVO);
@@ -554,6 +571,95 @@ class ArmNodelet : public ff_util::FreeFlyerNodelet {
     server_.SetCancelCallback(std::bind(
       &ArmNodelet::CancelCallback, this));
     server_.Create(nh, ACTION_BEHAVIORS_ARM);
+  }
+
+  // Callback to handle arm trajectories
+  void TrajectoryCallback(ff_msgs::MotionActionGoalConstPtr const& goal) {
+    // What we do now depends on the command that was sent
+    if (!(goal->goal.command == ff_msgs::MotionGoal::EXEC) || (goal->goal.arm.empty()))
+      return;
+
+    segment_arm_ = goal->goal.arm;
+  }
+  // Monitor choreographer state to check when to start controlling
+  void ChoreographerCallback(ff_msgs::MotionStateConstPtr const& state) {
+      ROS_ERROR("ChoreographerCallback");
+    if (segment_arm_.empty())
+      return;
+
+    if (state->state == ff_msgs::MotionState::CONTROLLING) {
+      // Start timer if trajectory is received, ONLY RUN ONCE
+      if (!segment_arm_.empty()) {
+        timer_.setPeriod(tdiff_ + ros::Duration(segment_arm_.front().header.stamp.toSec()));
+        timer_.start();
+      }
+    }
+  }
+
+  // If planning is underway, obtain the new tdiff
+  void PlannerCallback(ff_msgs::PlanActionResultConstPtr const& result) {
+      ROS_ERROR("PlannerCallback");
+    tdiff_ = result->result.segment.back().when - result->result.segment.front().when;
+  }
+
+  // Timer to synchronize arm movements
+  void SetpointCallback(const ros::TimerEvent& e) {
+      ROS_ERROR("SetpointCallback");
+    timer_.stop();
+    if (segment_arm_.size() > 1) {
+      timer_.setPeriod(segment_arm_[1].header.stamp - segment_arm_[0].header.stamp);
+      timer_.start();
+    } else {
+      tdiff_ = ros::Duration(0);
+    }
+
+    sensor_msgs::JointState command = segment_arm_.front();
+     // Simple bounds and self-collision checking
+    if (command.position[TILT] < K_TILT_MIN || command.position[TILT] > K_TILT_MAX) {
+      ROS_ERROR("BAD_TILT_VALUE ignoring MANUAL setpoint");
+      return;
+    }
+    if (command.position[PAN] < K_PAN_MIN || command.position[PAN] > K_PAN_MAX) {
+      ROS_ERROR("BAD_PAN_VALUE ignoring MANUAL setpoint");
+     return;
+    }
+    if (command.position[TILT] > K_TILT_SAFE && fabs(command.position[PAN] - K_PAN_STOW) > joints_[PAN].tol) {
+      ROS_ERROR("COLLISION_AVOIDED ignoring MANUAL setpoint");
+      return;
+    }
+    // Check that the gripper value is reasonable
+    if (command.position[GRIPPER] < K_GRIPPER_CLOSE || command.position[GRIPPER] > K_GRIPPER_OPEN) {
+      ROS_ERROR("BAD_GRIPPER_VALUE ignoring MANUAL setpoint");
+      return;
+    }
+    if (command.position[GRIPPER] > K_GRIPPER_CLOSE && fsm_.GetState() != STATE::DEPLOYED) {
+      ROS_ERROR("BAD_GRIPPER_VALUE ignoring MANUAL setpoint");
+      return;
+    }
+    // check gripper, to make sure if doesn't close with gripper opened
+    if ((command.position[TILT] > K_TILT_GRIP) && !Equal(GRIPPER, K_GRIPPER_STOW)) {
+      ROS_ERROR("COLLISION_AVOIDED ignoring MANUAL setpoint");
+      return;
+    }
+
+    // Save the values to joint structure
+    joints_[PAN].goal     = command.position[PAN];
+    joints_[TILT].goal    = command.position[TILT];
+    joints_[GRIPPER].goal = command.position[GRIPPER];
+
+    // Convert to HW readable
+    sensor_msgs::JointState  goal;
+    goal = command;
+    goal.name[PAN]     = joints_[PAN].name;
+    goal.name[TILT]    = joints_[TILT].name;
+    goal.name[GRIPPER] = joints_[GRIPPER].name;
+    goal.position[PAN]     = (command.position[PAN]     - joints_[PAN].offset)     / joints_[PAN].scale;
+    goal.position[TILT]    = (command.position[TILT]    - joints_[TILT].offset)    / joints_[TILT].scale;
+    goal.position[GRIPPER] = (command.position[GRIPPER] - joints_[GRIPPER].offset) / joints_[GRIPPER].scale - 100.0;
+
+    // Publish the new goal
+    segment_arm_.erase(segment_arm_.begin());
+    pub_joint_goals_.publish(goal);
   }
 
   // Callback to handle reconfiguration requests
@@ -1140,6 +1246,13 @@ class ArmNodelet : public ff_util::FreeFlyerNodelet {
   ros::ServiceClient client_enable_dist_servo_;
   ros::ServiceClient client_enable_grip_servo_;
   ros::ServiceClient client_calibrate_gripper_;
+  // Arm Trajectory
+  std::vector<sensor_msgs::JointState> segment_arm_;   // Arm Segment being executed
+  ros::Subscriber motion_goal_;
+  ros::Subscriber choreographer_state_;
+  ros::Subscriber planner_result_;
+  ros::Duration tdiff_ = ros::Duration(0);
+  ros::Timer timer_;
   // Constant vales
   static constexpr double K_PAN_OFFSET      =    0.0;
   static constexpr double K_PAN_MIN         =  -90.0;

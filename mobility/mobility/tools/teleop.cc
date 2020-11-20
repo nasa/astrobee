@@ -109,7 +109,7 @@ void MResultCallback(ff_util::FreeFlyerActionState::Enum result_code,
       msg.command = ff_msgs::MotionGoal::EXEC;
       msg.flight_mode = FLAGS_mode;
       msg.segment = result->segment;
-      if (!ff_util::Serialization::WriteFile(FLAGS_rec, msg))
+      if (ff_util::Serialization::WriteFile(FLAGS_rec, msg))
         std::cout << std::endl << "Segment saved to " << FLAGS_rec;
       else
         std::cout << std::endl << "Segment not saved";
@@ -253,6 +253,7 @@ void SResultCallback(ff_util::FreeFlyerActionState::Enum result_code,
       break;
     }
     // Try and send the goal
+    std::cout << "sent goal" << std::endl;
     if (!action->SendGoal(goal))
       std::cout << "Mobility client did not accept goal" << std::endl;
     else
