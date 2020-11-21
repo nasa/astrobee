@@ -134,6 +134,54 @@ void jsonloader::WriteSegment(std::ofstream & ofs, std::vector<Eigen::VectorXd> 
   ofs << "  }, {\n";
 }
 
+void jsonloader::WriteSegment(std::ofstream & ofs, std::vector<Eigen::VectorXd> const& SegVec,
+                               std::vector<Eigen::VectorXd> const& ArmVec, double vel,
+                               double accel, double omega, double alpha, int id) {
+  ofs << "  }, {\n";
+  ofs << "    \"type\" : \"Segment\",\n";
+  ofs << "    \"waypoints\" : [ ";
+  for (size_t row = 0; row < SegVec.size(); row++) {
+    std::string sep = ",";
+    if (row + 1 == SegVec.size())
+      sep = "";
+    ofs << "[ ";
+    for (int col = 0; col < SegVec[row].size(); col++) {
+      ofs << SegVec[row][col];
+      if (col + 1 != SegVec[row].size())
+        ofs << ", ";
+    }
+    ofs <<  " ]" << sep << " ";
+  }
+  ofs << "],\n";
+  ofs << "    \"arm_waypoints\" : [ ";
+  for (size_t row = 0; row < ArmVec.size(); row++) {
+    std::string sep = ",";
+    if (row + 1 == ArmVec.size())
+      sep = "";
+    ofs << "[ ";
+    for (int col = 0; col < ArmVec[row].size(); col++) {
+      ofs << ArmVec[row][col];
+      if (col + 1 != ArmVec[row].size())
+        ofs << ", ";
+    }
+    ofs <<  " ]" << sep << " ";
+  }
+  ofs << "],\n";
+  ofs << "    \"waypointType\" : \"ArmPoseVelAccel\",\n";
+  ofs << "    \"tolerance\" : 0.0,\n";
+  ofs << "    \"speed\" : " << vel << ",\n";
+  ofs << "    \"useCustomSpeed\" : true,\n";
+  ofs << "    \"maxAVel\" : " << omega << ",\n";
+  ofs << "    \"maxAccel\" : " << accel << ",\n";
+  ofs << "    \"maxAAccel\" : " << alpha << ",\n";
+  ofs << "    \"stopAtEnd\" : true,\n";
+  ofs << "    \"faceForward\" : false,\n";
+  ofs << "    \"name\" : \"" << id << "-" << id + 1 << "\",\n";
+  ofs << "    \"id\" : \"" << id << "\",\n";
+  ofs << "    \"sequence\" : [ ]\n";
+  ofs << "  }, {\n";
+}
+
 namespace {
   // A small local function
 

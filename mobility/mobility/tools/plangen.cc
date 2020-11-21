@@ -216,6 +216,7 @@ int main(int argc, char *argv[]) {
     ff_util::Segment::const_iterator it;
     if (FLAGS_output_type == "fplan") {
       std::vector<Eigen::VectorXd> SegVec;
+      std::vector<Eigen::VectorXd> ArmVec;
       for (it = segment.begin(); it != segment.end(); it++) {
         Eigen::VectorXd S(20);
         S << (it->when).toSec(), it->pose.position.x, it->pose.position.y, it->pose.position.z,
@@ -226,8 +227,22 @@ int main(int argc, char *argv[]) {
           it->twist.angular.x, it->twist.angular.y, it->twist.angular.z,
           it->accel.angular.x, it->accel.angular.y, it->accel.angular.z;
         SegVec.push_back(S);
+
+        // If there is an arm segment too
+        if ((!Arms.empty()) && (arm_init <= static_cast<int>(id))) {
+          Eigen::VectorXd A(3);
+          time_percentage = (it->when.toSec())/(station_time.toSec());
+          A <<  Arms[id-arm_init][0] - time_percentage * (Arms[id-arm_init][0] - Arms[id+1-arm_init][0]),
+                Arms[id-arm_init][1] - time_percentage * (Arms[id-arm_init][1] - Arms[id+1-arm_init][1]),
+                Arms[id-arm_init][2] - time_percentage * (Arms[id-arm_init][2] - Arms[id+1-arm_init][2]);
+          ArmVec.push_back(A);
+        }
       }
-      jsonloader::WriteSegment(ofs, SegVec, FLAGS_vel, FLAGS_accel, FLAGS_omega, FLAGS_alpha, id);
+      if ((!Arms.empty()) && (arm_init <= static_cast<int>(id)))
+        jsonloader::WriteSegment(ofs, SegVec, ArmVec, FLAGS_vel, FLAGS_accel, FLAGS_omega, FLAGS_alpha, id);
+      else
+        jsonloader::WriteSegment(ofs, SegVec, FLAGS_vel, FLAGS_accel, FLAGS_omega, FLAGS_alpha, id);
+
     } else if (FLAGS_output_type == "csv") {
       // Write accelerations only
       for (it = segment.begin(); it != segment.end(); it++) {
