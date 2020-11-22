@@ -19,14 +19,14 @@
 #ifndef IMU_AUGMENTOR_IMU_AUGMENTOR_H_
 #define IMU_AUGMENTOR_IMU_AUGMENTOR_H_
 
+#include <imu_augmentor/imu_augmentor_params.h>
 #include <imu_integration/imu_integrator.h>
-#include <imu_integration/imu_integrator_params.h>
 #include <localization_common/combined_nav_state.h>
 
 namespace imu_augmentor {
 class ImuAugmentor : public imu_integration::ImuIntegrator {
  public:
-  explicit ImuAugmentor(const imu_integration::ImuIntegratorParams& params);
+  explicit ImuAugmentor(const ImuAugmentorParams& params);
 
   boost::optional<localization_common::CombinedNavState> PimPredict(
     const localization_common::CombinedNavState& combined_nav_state);

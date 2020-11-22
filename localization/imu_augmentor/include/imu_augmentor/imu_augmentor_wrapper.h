@@ -58,7 +58,7 @@ class ImuAugmentorWrapper {
   boost::optional<localization_common::CombinedNavStateCovariances> latest_covariances_;
   boost::optional<ff_msgs::EkfState> latest_loc_msg_;
   std::unique_ptr<gtsam::TangentPreintegration> preintegration_helper_;
-  imu_integration::ImuIntegratorParams params_;
+  ImuAugmentorParams params_;
   boost::optional<bool> standstill_;
 };
 }  // namespace imu_augmentor

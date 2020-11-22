@@ -40,6 +40,7 @@ ImuAugmentorWrapper::ImuAugmentorWrapper() {
   }
 
   ii::LoadImuIntegratorParams(config, params_);
+  params_.standstill_enabled = lc::LoadBool(config, "imu_augmentor_standstill");
   imu_augmentor_.reset(new ImuAugmentor(params_));
 
   // Preintegration_helper_ is only being used to frame change and remove centrifugal acceleration, so body_T_imu is the
@@ -61,6 +62,7 @@ void ImuAugmentorWrapper::LocalizationStateCallback(const ff_msgs::EkfState& loc
 }
 
 bool ImuAugmentorWrapper::standstill() const {
+  if (!params_.standstill_enabled) return false;
   // If uninitialized, return not at standstill
   // TODO(rsoussan): Is this the appropriate behavior?
   if (!standstill_) return false;
