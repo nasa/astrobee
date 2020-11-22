@@ -53,6 +53,18 @@ void ImuAugmentorWrapper::LocalizationStateCallback(const ff_msgs::EkfState& loc
   latest_combined_nav_state_ = lc::CombinedNavStateFromMsg(loc_msg);
   latest_covariances_ = lc::CombinedNavStateCovariancesFromMsg(loc_msg);
   latest_loc_msg_ = loc_msg;
+  // TODO(rsoussan): Clean this up
+  if (loc_msg.aug_state_enum == 0)
+    standstill_ = false;
+  else
+    standstill_ = true;
+}
+
+bool ImuAugmentorWrapper::standstill() const {
+  // If uninitialized, return not at standstill
+  // TODO(rsoussan): Is this the appropriate behavior?
+  if (!standstill_) return false;
+  return *standstill_;
 }
 
 void ImuAugmentorWrapper::ImuCallback(const sensor_msgs::Imu& imu_msg) {
@@ -65,6 +77,12 @@ ImuAugmentorWrapper::LatestImuAugmentedCombinedNavStateAndCovariances() {
     LOG(ERROR)
       << "LatestImuAugmentedCombinedNavStateAndCovariances: Not enough information available to create desired data.";
     return boost::none;
+  }
+
+  if (standstill()) {
+    LOG(INFO) << "LatestImuAugmentedCombinedNavStateAndCovariances: Standstill.";
+    return std::pair<lc::CombinedNavState, lc::CombinedNavStateCovariances>{*latest_combined_nav_state_,
+                                                                            *latest_covariances_};
   }
 
   const auto latest_imu_augmented_combined_nav_state = imu_augmentor_->PimPredict(*latest_combined_nav_state_);

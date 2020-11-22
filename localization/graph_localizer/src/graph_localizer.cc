@@ -301,6 +301,9 @@ bool GraphLocalizer::AddOpticalFlowMeasurement(
     prior_factors_to_add.SetTimestamp(optical_flow_feature_points_measurement.timestamp);
     BufferFactors(prior_factors_to_add);
     VLOG(2) << "AddOpticalFLowMeasurement: Buffered a velocity prior factor.";
+    standstill_ = true;
+  } else {
+    standstill_ = false;
   }
 
   return true;
@@ -1004,6 +1007,13 @@ boost::optional<std::pair<gtsam::Pose3, lc::Time>> GraphLocalizer::estimated_wor
     return boost::none;
   }
   return std::make_pair(estimated_world_T_dock_->first, estimated_world_T_dock_->second);
+}
+
+bool GraphLocalizer::standstill() const {
+  // If uninitialized, return not at standstill
+  // TODO(rsoussan): Is this the appropriate behavior?
+  if (!standstill_) return false;
+  return *standstill_;
 }
 
 bool GraphLocalizer::Update() {

@@ -234,7 +234,7 @@ boost::optional<ff_msgs::EkfState> GraphLocalizerWrapper::LatestLocalizationStat
     EkfStateMsg(combined_nav_state_and_covariances->first, Eigen::Vector3d::Zero(), Eigen::Vector3d::Zero(),
                 combined_nav_state_and_covariances->second, feature_counts_.of, feature_counts_.vl,
                 graph_localizer_initialization_.EstimateBiases(), position_cov_log_det_lost_threshold_,
-                orientation_cov_log_det_lost_threshold_);
+                orientation_cov_log_det_lost_threshold_, graph_localizer_->standstill());
   feature_counts_.Reset();
   return ekf_state_msg;
 }
