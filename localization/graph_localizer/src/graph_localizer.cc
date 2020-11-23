@@ -676,12 +676,12 @@ bool GraphLocalizer::SlideWindow(const boost::optional<gtsam::Marginals>& margin
   RemovePriors(*key_index);
   if (marginals) {
     lc::CombinedNavStateNoise noise;
-    noise.pose_noise =
-      Robust(gtsam::noiseModel::Gaussian::Covariance(marginals->marginalCovariance(sym::P(*key_index))));
-    noise.velocity_noise =
-      Robust(gtsam::noiseModel::Gaussian::Covariance(marginals->marginalCovariance(sym::V(*key_index))));
-    noise.bias_noise =
-      Robust(gtsam::noiseModel::Gaussian::Covariance(marginals->marginalCovariance(sym::B(*key_index))));
+    noise.pose_noise = Robust(gtsam::noiseModel::Gaussian::Covariance(
+      params_.noise.priors_scale_factor * marginals->marginalCovariance(sym::P(*key_index))));
+    noise.velocity_noise = Robust(gtsam::noiseModel::Gaussian::Covariance(
+      params_.noise.priors_scale_factor * marginals->marginalCovariance(sym::V(*key_index))));
+    noise.bias_noise = Robust(gtsam::noiseModel::Gaussian::Covariance(
+      params_.noise.priors_scale_factor * marginals->marginalCovariance(sym::B(*key_index))));
     AddPriors(*global_N_body_oldest, noise, *key_index, graph_values_.values(), graph_);
   } else {
     // TODO(rsoussan): Add seperate marginal fallback sigmas instead of relying on starting prior sigmas
