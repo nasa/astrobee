@@ -26,8 +26,13 @@ namespace choreographer {
 bool Validator::PointInsideCuboid(geometry_msgs::Point const& x,
                                       geometry_msgs::Vector3 const& cubemin,
                                       geometry_msgs::Vector3 const& cubemax) {
-  if (x.x < cubemin.x || x.y < cubemin.y || x.z < cubemin.z ||
-      x.x > cubemax.x || x.y > cubemax.y || x.z > cubemax.z) return false;
+  if (x.x < std::min(cubemin.x, cubemax.x) ||
+      x.y < std::min(cubemin.y, cubemax.y) ||
+      x.z < std::min(cubemin.z, cubemax.z) ||
+      x.x > std::max(cubemin.x, cubemax.x) ||
+      x.y > std::max(cubemin.y, cubemax.y) ||
+      x.z > std::max(cubemin.z, cubemax.z))
+    return false;
   return true;
 }
 
