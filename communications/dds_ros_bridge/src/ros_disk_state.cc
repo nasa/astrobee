@@ -67,7 +67,7 @@ ff::RosDiskStateToRapid::RosDiskStateToRapid(const std::string& subscribe_topic,
                                false);
 }
 
-void ff::RosDiskStateToRapid::Callback(const ff_msgs::DiskStateStampedConstPtr&
+void ff::RosDiskStateToRapid::Callback(ff_msgs::DiskStateStampedConstPtr const&
                                                                         state) {
   unsigned int index = 0, length = 0;
   bool change_config = false;
