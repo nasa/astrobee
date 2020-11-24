@@ -115,6 +115,10 @@ class PositionPlot(GraphPlot):
         self.truth_x = self.plot(symbol='d', pen=None, symbolPen=None, symbolBrush=colors[0], symbolSize=5)
         self.truth_y = self.plot(symbol='d', pen=None, symbolPen=None, symbolBrush=colors[1], symbolSize=5)
         self.truth_z = self.plot(symbol='d', pen=None, symbolPen=None, symbolBrush=colors[2], symbolSize=5)
+        self.ml_pose_x = self.plot(symbol='d', pen=None, symbolPen=None, symbolBrush=colors[0], symbolSize=5)
+        self.ml_pose_y = self.plot(symbol='d', pen=None, symbolPen=None, symbolBrush=colors[1], symbolSize=5)
+        self.ml_pose_z = self.plot(symbol='d', pen=None, symbolPen=None, symbolBrush=colors[2], symbolSize=5)
+
 
     def update_plot(self, data):
         super(PositionPlot, self).update_plot(data)
@@ -126,6 +130,10 @@ class PositionPlot(GraphPlot):
         self.truth_x.setData(data[0]['truth_time'][:s], data[0]['truth_position_x'][:s])
         self.truth_y.setData(data[0]['truth_time'][:s], data[0]['truth_position_y'][:s])
         self.truth_z.setData(data[0]['truth_time'][:s], data[0]['truth_position_z'][:s])
+        s = data[1]['ml_pose_time']
+        self.ml_pose_x.setData(data[0]['ml_pose_time'][:s], data[0]['ml_pose_position_x'][:s])
+        self.ml_pose_y.setData(data[0]['ml_pose_time'][:s], data[0]['ml_pose_position_y'][:s])
+        self.ml_pose_z.setData(data[0]['ml_pose_time'][:s], data[0]['ml_pose_position_z'][:s])
 
 class VelocityPlot(VectorPlot):
     def __init__(self):
@@ -151,6 +159,10 @@ class OrientationPlot(GraphPlot):
         self.truth_x = self.plot(symbol='d', pen=None, symbolPen=None, symbolBrush=colors[0], symbolSize=5)
         self.truth_y = self.plot(symbol='d', pen=None, symbolPen=None, symbolBrush=colors[1], symbolSize=5)
         self.truth_z = self.plot(symbol='d', pen=None, symbolPen=None, symbolBrush=colors[2], symbolSize=5)
+        self.ml_pose_x = self.plot(symbol='d', pen=None, symbolPen=None, symbolBrush=colors[0], symbolSize=5)
+        self.ml_pose_y = self.plot(symbol='d', pen=None, symbolPen=None, symbolBrush=colors[1], symbolSize=5)
+        self.ml_pose_z = self.plot(symbol='d', pen=None, symbolPen=None, symbolBrush=colors[2], symbolSize=5)
+
 
     def update_plot(self, data):
         super(OrientationPlot, self).update_plot(data)
@@ -162,6 +174,11 @@ class OrientationPlot(GraphPlot):
         self.truth_x.setData(data[0]['truth_time'][:s], data[0]['truth_rot_x'][:s])
         self.truth_y.setData(data[0]['truth_time'][:s], data[0]['truth_rot_y'][:s])
         self.truth_z.setData(data[0]['truth_time'][:s], data[0]['truth_rot_z'][:s])
+        s = data[1]['ml_pose_time']
+        self.ml_pose_x.setData(data[0]['ml_pose_time'][:s], data[0]['ml_pose_rot_x'][:s])
+        self.ml_pose_y.setData(data[0]['ml_pose_time'][:s], data[0]['ml_pose_rot_y'][:s])
+        self.ml_pose_z.setData(data[0]['ml_pose_time'][:s], data[0]['ml_pose_rot_z'][:s])
+
 
 class OmegaPlot(VectorPlot):
     def __init__(self):

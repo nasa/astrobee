@@ -95,6 +95,7 @@ class EkfState(Common):
         #self.ml_mahal_dists = [0.0] * 50
         self.ml_mahal_dists = np.zeros(50)
 
+
 class PmcCommand(Common):
     def __init__(self, header = Header()):
         self.header = header
