@@ -30,6 +30,7 @@
 #include <gtsam/navigation/NavState.h>
 #include <gtsam/nonlinear/LinearContainerFactor.h>
 #include <gtsam/slam/PriorFactor.h>
+#include <gtsam/slam/ProjectionFactor.h>
 
 #include <glog/logging.h>
 
@@ -267,25 +268,50 @@ bool GraphLocalizer::AddOpticalFlowMeasurement(
     return false;
   }
 
+  // TODO(rsoussan) make option for projection factor!!!!!
   if (params_.factor.use_smart_factors)
     AddSmartFactors(optical_flow_feature_points_measurement);
   else
     AddProjectionFactorsAndPoints(optical_flow_feature_points_measurement);
+
+  CheckForStandstillAndAddStandstillFactorIfNecessary(optical_flow_feature_points_measurement);
 }
 
 bool GraphLocalizer::AddProjectionFactorsAndPoints(
   const lm::FeaturePointsMeasurement& optical_flow_feature_points_measurement) {
-  // triangulate points with > 2 measurements that haven't been added yet, added these to state
+  // Add projection factors for new measurements of already existing features
+  FactorsToAdd projection_factors_to_add;
+  for (const auto& feature_point : optical_flow_feature_points_measurement) {
+    if (graph_values_.HasFeature(feature_point.feature_id)) {
+      const KeyInfo pose_key_info(&sym::P, feature_point.timestamp);
+      const KeyInfo static_point_key_info(&sym::F);
+      const auto point_key = graph_values_.FeatureKey(feature_point.feature_id);
+      if (!point_key) {
+        LOG(ERROR) << "AddProjectionFactorsAndPoints: Failed to get point key.";
+        continue;
+      }
+      const auto projection_factor = boost::make_shared<ProjectionFactor>(
+        feature_point.image_point, Robust(params_.noise.optical_flow_nav_cam_noise), pose_key_info.UninitializedKey(),
+        *point_key, params_.calibration.nav_cam_intrinsics, params_.calibration.body_T_nav_cam);
+      projection_factors_to_add.push_back({{projection_key_info, static_point_key_info}, projection_factor});
+    }
+    // TODO(rsoussan): is this right??? use latest timestamp instead????
+    factors_to_add.SetTimestamp(optical_flow_feature_points_measurement.timestamp);
+    BufferFactors(projection_factors_to_add);
+  }
+
+  // Add new feature tracks and measurements if possible
+  FactorsToAdd projection_factors_with_new_points_to_add(GraphAction::kTriangulateNewPoint);
   // TODO(rsoussan): make this a param
-  // Add new feature track points to graph as state variables if possible
   constexpr int kMinNumMeasurementsForTriangulation = 3;
   for (const auto& feature_track : feature_tracker_.feature_tracks()) {
     if (feature_track.points >= kMinNumMeasurementsForTriangulation && !graph_values_.HasFeature(feature_track.id)) {
-      const auto world_t_triangulated_feature = Triangulate(feature_track);
-      graph_values_.AddFeature(feature_track.id, world_t_triangulated_feature);
+      // TODO(rsoussan): add projection measurements for each point in feature track!!!!!
+      // TODO(rsoussan): move these to graph action!
+      // const auto world_t_triangulated_feature = Triangulate(feature_track);
+      // graph_values_.AddFeature(feature_track.id, world_t_triangulated_feature);
     }
   }
-  // Add new factors for feature point measurements (DDDDD)
   // in slide window, remove feature tracks that have no measurements!!!! (EEEEE)
 }
 
@@ -295,38 +321,29 @@ gtsam::Point3 GraphLocalizer::Triangulate(const FeatureTrack& feature_track) con
   // TODO(rsoussan): make sure this is in world frame!!!!
 }
 
-bool GraphLocalizer::AddSmartFactors(const lm::FeaturePointsMeasurement& optical_flow_feature_points_measurement) {
-  // Add smart factor for each valid feature track
-  FactorsToAdd smart_factors_to_add(GraphAction::kDeleteExistingSmartFactors);
-  // Add standstill velocity prior factor if there is low disparity for all feature tracks, indicating standstill, since
-  // a smart factor in this case would not have enough disparity to estimate the 3d position of a feature
+bool GraphLocalizer::CheckForStandstillAndAddStandstillFactorIfNecessary(
+  const lm::FeaturePointsMeasurement& optical_flow_feature_points_measurement) {
+  // Add standstill velocity prior factor if there is low disparity for all feature tracks, indicating standstill
+  // Triangulation of other visual factors might fail if there isn't a long enough history of feature tracks and would
+  // fail to indicate a standstill event
   FactorsToAdd prior_factors_to_add;
   double total_average_distance_from_mean = 0;
-  int num_feature_tracks = 0;
-  int num_added_smart_factors = 0;
+  int num_valid_feature_tracks = 0;
   for (const auto& feature_track : feature_tracker_.feature_tracks()) {
     const double average_distance_from_mean = AverageDistanceFromMean(feature_track.second.points);
-    if (ValidPointSet(feature_track.second.points, average_distance_from_mean,
-                      params_.factor.min_valid_feature_track_avg_distance_from_mean) &&
-        num_added_smart_factors < params_.factor.max_num_optical_flow_factors) {
-      AddSmartFactor(feature_track.second, smart_factors_to_add);
-      ++num_added_smart_factors;
-    }
-    if (feature_track.second.points.size() > 5) {  // Only consider long enough feature tracks for standstill candidates
+    // Only consider long enough feature tracks for standstill candidates
+    if (feature_track.second.points.size() > 5) {
       total_average_distance_from_mean += average_distance_from_mean;
-      ++num_feature_tracks;
+      ++num_valid_feature_tracks;
     }
   }
 
   double average_distance_from_mean = 0;
-  if (num_feature_tracks > 0) average_distance_from_mean = total_average_distance_from_mean / num_feature_tracks;
+  if (num_valid_feature_tracks > 0)
+    average_distance_from_mean = total_average_distance_from_mean / num_valid_feature_tracks;
 
-  if (!smart_factors_to_add.empty()) {
-    smart_factors_to_add.SetTimestamp(optical_flow_feature_points_measurement.timestamp);
-    BufferFactors(smart_factors_to_add);
-    VLOG(2) << "AddOpticalFLowMeasurement: Buffered " << smart_factors_to_add.size() << " smart factors.";
-  }
-  if (ShouldAddStandstillPrior(average_distance_from_mean, num_feature_tracks, params_.factor)) {
+  // TODO(rsoussan): add standstill even if shouldn't add standstill prior!!!!
+  if (ShouldAddStandstillPrior(average_distance_from_mean, num_valid_feature_tracks, params_.factor)) {
     AddStandstillVelocityPriorFactor(optical_flow_feature_points_measurement.timestamp, prior_factors_to_add);
     prior_factors_to_add.SetTimestamp(optical_flow_feature_points_measurement.timestamp);
     BufferFactors(prior_factors_to_add);
@@ -336,6 +353,28 @@ bool GraphLocalizer::AddSmartFactors(const lm::FeaturePointsMeasurement& optical
     standstill_ = false;
   }
 
+  return true;
+}
+
+bool GraphLocalizer::AddSmartFactors(const lm::FeaturePointsMeasurement& optical_flow_feature_points_measurement) {
+  // Add smart factor for each valid feature track
+  FactorsToAdd smart_factors_to_add(GraphAction::kDeleteExistingSmartFactors);
+  int num_added_smart_factors = 0;
+  for (const auto& feature_track : feature_tracker_.feature_tracks()) {
+    const double average_distance_from_mean = AverageDistanceFromMean(feature_track.second.points);
+    if (ValidPointSet(feature_track.second.points, average_distance_from_mean,
+                      params_.factor.min_valid_feature_track_avg_distance_from_mean) &&
+        num_added_smart_factors < params_.factor.max_num_optical_flow_factors) {
+      AddSmartFactor(feature_track.second, smart_factors_to_add);
+      ++num_added_smart_factors;
+    }
+  }
+
+  if (!smart_factors_to_add.empty()) {
+    smart_factors_to_add.SetTimestamp(optical_flow_feature_points_measurement.timestamp);
+    BufferFactors(smart_factors_to_add);
+    VLOG(2) << "AddOpticalFLowMeasurement: Buffered " << smart_factors_to_add.size() << " smart factors.";
+  }
   return true;
 }
 
@@ -872,13 +911,20 @@ bool GraphLocalizer::DoGraphAction(FactorsToAdd& factors_to_add) {
 
 bool GraphLocalizer::Rekey(FactorToAdd& factor_to_add) {
   gtsam::KeyVector new_keys;
-  for (const auto& key_info : factor_to_add.key_infos) {
-    const auto new_key = graph_values_.GetKey(key_info.key_creator_function(), key_info.timestamp());
-    if (!new_key) {
-      LOG(ERROR) << "ReKey: Failed to find new key for timestamp.";
-      return false;
+  const auto& old_keys = factor_to_add.factor->keys();
+  for (int i = 0; i < factor_to_add.key_infos.size(); ++i) {
+    const auto& key_info = factor_to_add.key_infos[i];
+    if (key_info.is_static() {
+      // Don't change static keys. Assumes static key currently in factor is correct
+      new_keys.emplace_back(old_keys[i]);
+    } else {
+      const auto new_key = graph_values_.GetKey(key_info.key_creator_function(), key_info.timestamp());
+      if (!new_key) {
+        LOG(ERROR) << "ReKey: Failed to find new key for timestamp.";
+        return false;
+      }
+      new_keys.emplace_back(*new_key);
     }
-    new_keys.emplace_back(*new_key);
   }
   factor_to_add.factor->keys() = new_keys;
   return true;

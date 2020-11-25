@@ -60,6 +60,7 @@ using Calibration = gtsam::Cal3_S2;
 using Camera = gtsam::PinholeCamera<Calibration>;
 using RobustSmartFactor = gtsam::RobustSmartProjectionPoseFactor<Calibration>;
 using SharedRobustSmartFactor = boost::shared_ptr<RobustSmartFactor>;
+using ProjectionFactor = gtsam::GenericProjectionFactor<gtsam::Pose3, gtsam::Point3>;
 
 class GraphLocalizer {
  public:
@@ -77,6 +78,8 @@ class GraphLocalizer {
   bool AddProjectionFactorsAndPoints(
     const localization_measurements::FeaturePointsMeasurement& optical_flow_feature_points_measurement);
   gtsam::Point3 Triangulate(const FeatureTrack& feature_track) const;
+  bool CheckForStandstillAndAddStandstillFactorIfNecessary(
+    const lm::FeaturePointsMeasurement& optical_flow_feature_points_measurement);
   bool AddSmartFactors(
     const localization_measurements::FeaturePointsMeasurement& optical_flow_feature_points_measurement);
 
