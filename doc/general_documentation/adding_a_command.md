@@ -37,7 +37,7 @@ After running this script, please make sure your changes compile. To do this, na
 
 ## Generate Android files
 
-Make sure you have the Astrobee Android repo. If you don't, please see the install instructions on how to get. Navigate to the astrobee api scripts folder in the astrobee Android repo (astrobee_api/scripts). These scripts assume that the android repo is located in the fsw submodules folder. If it is located outside of the fsw, please set the $SOURCE_PATH environment variable to the fsw location. Also if you added a new enum command type, you will need to add an include line to both the genBaseRobot and genBaseRobotImpl scripts. To generate the android files, please run the following in the scripts folder:
+Make sure you have the Astrobee Android repo. If you don't, please see the install instructions on how to get it. Navigate to the astrobee api scripts folder in the astrobee Android repo (astrobee_api/scripts). These scripts assume that the android repo is located in the fsw submodules folder. If it is located outside of the fsw, please set the $SOURCE_PATH environment variable to the fsw location. Also if you added a new enum command type, you will need to add an include line to both the genBaseRobot and genBaseRobotImpl scripts. To generate the android files, please run the following in the scripts folder:
 
     cd astrobee_api/scripts
     # if needed, set the source path
