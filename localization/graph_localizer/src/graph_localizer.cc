@@ -28,6 +28,7 @@
 #include <gtsam/linear/NoiseModel.h>
 #include <gtsam/navigation/ImuBias.h>
 #include <gtsam/navigation/NavState.h>
+#include <gtsam/nonlinear/LinearContainerFactor.h>
 #include <gtsam/slam/PriorFactor.h>
 
 #include <glog/logging.h>
@@ -666,14 +667,45 @@ bool GraphLocalizer::CreateAndAddImuFactorAndPredictedCombinedNavState(
   return true;
 }
 
+// Adapted from gtsam::BatchFixedLagSmoother
+gtsam::NonlinearFactorGraph GraphLocalizer::MarginalFactors(
+  const gtsam::NonlinearFactorGraph& old_factors, const gtsam::KeyVector& old_keys,
+  const gtsam::GaussianFactorGraph::Eliminate& eliminate_function) const {
+  // Old keys not present in old factors.  This shouldn't occur.
+  if (old_keys.size() == 0) {
+    LOG(ERROR) << "MarginalFactors: Old keys not found in old factors.";
+    return old_factors;
+  }
+
+  // Linearize Graph
+  const auto linearized_graph = old_factors.linearize(graph_values_.values());
+  const auto linear_marginal_factors =
+    *(linearized_graph->eliminatePartialMultifrontal(old_keys, eliminate_function).second);
+  return gtsam::LinearContainerFactor::ConvertLinearGraph(linear_marginal_factors, graph_values_.values());
+}
+
 bool GraphLocalizer::SlideWindow(const boost::optional<gtsam::Marginals>& marginals) {
-  if (graph_values_.SlideWindow(graph_) == 0) {
+  const auto new_oldest_time = graph_values_.SlideWindowNewOldestTime();
+  if (!new_oldest_time) {
     VLOG(2) << "SlideWindow: No states removed. ";
     return true;
   }
 
+  // Add marginal factors for marginalized values
+  const auto old_keys = graph_values_.OldKeys(*new_oldest_time);
+  const auto old_factors = graph_values_.RemoveOldFactors(old_keys, graph_);
+  if (params_.add_marginal_factors) {
+    const auto marginal_factors = MarginalFactors(old_factors, old_keys, gtsam::EliminateQR);
+    for (const auto& marginal_factor : marginal_factors) {
+      graph_.push_back(marginal_factors);
+    }
+  }
+
+  graph_values_.RemoveOldCombinedNavStates(*new_oldest_time);
+
+  // Remove old data from other containers
   const auto oldest_timestamp = graph_values_.OldestTimestamp();
-  if (!oldest_timestamp) {
+  if (!oldest_timestamp || oldest_timestamp != *new_oldest_time) {
     LOG(ERROR) << "SlideWindow: Failed to get oldest timestamp.";
     return false;
   }
@@ -683,39 +715,42 @@ bool GraphLocalizer::SlideWindow(const boost::optional<gtsam::Marginals>& margin
   // Currently this only applies to optical flow smart factors.  Remove if no longer use these
   RemoveOldBufferedFactors(*oldest_timestamp);
 
-  // Add prior to oldest nav state using covariances from last round of
-  // optimization
-  const auto global_N_body_oldest = graph_values_.OldestCombinedNavState();
-  if (!global_N_body_oldest) {
-    LOG(ERROR) << "SlideWindow: Failed to get oldest combined nav state.";
-    return false;
+  if (params_.add_priors) {
+    // Add prior to oldest nav state using covariances from last round of
+    // optimization
+    const auto global_N_body_oldest = graph_values_.OldestCombinedNavState();
+    if (!global_N_body_oldest) {
+      LOG(ERROR) << "SlideWindow: Failed to get oldest combined nav state.";
+      return false;
+    }
+
+    VLOG(2) << "SlideWindow: Oldest state time: " << global_N_body_oldest->timestamp();
+
+    const auto key_index = graph_values_.OldestCombinedNavStateKeyIndex();
+    if (!key_index) {
+      LOG(ERROR) << "SlideWindow: Failed to get oldest combined nav state key index.";
+      return false;
+    }
+
+    VLOG(2) << "SlideWindow: key index: " << *key_index;
+
+    // Make sure priors are removed before adding new ones
+    RemovePriors(*key_index);
+    if (marginals) {
+      lc::CombinedNavStateNoise noise;
+      noise.pose_noise =
+        Robust(gtsam::noiseModel::Gaussian::Covariance(marginals->marginalCovariance(sym::P(*key_index))));
+      noise.velocity_noise =
+        Robust(gtsam::noiseModel::Gaussian::Covariance(marginals->marginalCovariance(sym::V(*key_index))));
+      noise.bias_noise =
+        Robust(gtsam::noiseModel::Gaussian::Covariance(marginals->marginalCovariance(sym::B(*key_index))));
+      AddPriors(*global_N_body_oldest, noise, *key_index, graph_values_.values(), graph_);
+    } else {
+      // TODO(rsoussan): Add seperate marginal fallback sigmas instead of relying on starting prior sigmas
+      AddStartingPriors(*global_N_body_oldest, *key_index, graph_values_.values(), graph_);
+    }
   }
 
-  VLOG(2) << "SlideWindow: Oldest state time: " << global_N_body_oldest->timestamp();
-
-  const auto key_index = graph_values_.OldestCombinedNavStateKeyIndex();
-  if (!key_index) {
-    LOG(ERROR) << "SlideWindow: Failed to get oldest combined nav state key index.";
-    return false;
-  }
-
-  VLOG(2) << "SlideWindow: key index: " << *key_index;
-
-  // Make sure priors are removed before adding new ones
-  RemovePriors(*key_index);
-  if (marginals) {
-    lc::CombinedNavStateNoise noise;
-    noise.pose_noise = Robust(gtsam::noiseModel::Gaussian::Covariance(
-      params_.noise.priors_scale_factor * marginals->marginalCovariance(sym::P(*key_index))));
-    noise.velocity_noise = Robust(gtsam::noiseModel::Gaussian::Covariance(
-      params_.noise.priors_scale_factor * marginals->marginalCovariance(sym::V(*key_index))));
-    noise.bias_noise = Robust(gtsam::noiseModel::Gaussian::Covariance(
-      params_.noise.priors_scale_factor * marginals->marginalCovariance(sym::B(*key_index))));
-    AddPriors(*global_N_body_oldest, noise, *key_index, graph_values_.values(), graph_);
-  } else {
-    // TODO(rsoussan): Add seperate marginal fallback sigmas instead of relying on starting prior sigmas
-    AddStartingPriors(*global_N_body_oldest, *key_index, graph_values_.values(), graph_);
-  }
   return true;
 }
 
@@ -996,6 +1031,7 @@ void GraphLocalizer::LogStats() {
   num_factors_averager_.UpdateAndLog(graph_.size());
 }
 
+// TODO(rsoussan): fix this call to happen before of factors are removed!
 int GraphLocalizer::NumOFFactors(const bool check_valid) const {
   int num_of_factors = 0;
   for (const auto& factor : graph_) {
@@ -1050,6 +1086,19 @@ bool GraphLocalizer::Update() {
 
   AddBufferedFactors();
 
+  // TODO(rsoussan): Is ordering required? if so clean these calls open and unify with marginalization
+  if (params_.add_marginal_factors) {
+    // Add graph ordering to place keys that will be marginalized in first group
+    const auto new_oldest_time = graph_values_.SlideWindowNewOldestTime();
+    if (new_oldest_time) {
+      const auto old_keys = graph_values_.OldKeys(*new_oldest_time);
+      const auto ordering = gtsam::Ordering::ColamdConstrainedFirst(graph_, old_keys);
+      levenberg_marquardt_params_.setOrdering(ordering);
+    } else {
+      levenberg_marquardt_params_.orderingType = gtsam::Ordering::COLAMD;
+    }
+  }
+
   // Optimize
   gtsam::LevenbergMarquardtOptimizer optimizer(graph_, graph_values_.values(), levenberg_marquardt_params_);
 
@@ -1079,9 +1128,7 @@ bool GraphLocalizer::Update() {
 
   latest_imu_integrator_.ResetPimIntegrationAndSetBias(latest_bias->first);
 
-  // Calculate marginals before sliding window since this depends on values that
-  // would be removed in SlideWindow()
-
+  // Calculate marginals for covariances
   try {
     marginals_ = gtsam::Marginals(graph_, graph_values_.values(), marginals_factorization_);
   } catch (gtsam::IndeterminantLinearSystemException) {

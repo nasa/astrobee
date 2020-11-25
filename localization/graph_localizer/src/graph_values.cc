@@ -35,30 +35,6 @@ GraphValues::GraphValues(const GraphValuesParams& params) : params_(params), fea
   VLOG(2) << "GraphValues: Window min num states: " << params_.min_num_states;
 }
 
-// Removes keys from timestamp map, values from values.
-// Also removes any factors using these keys from graph argument
-bool GraphValues::RemoveCombinedNavStateAndFactors(const lc::Time timestamp, gtsam::NonlinearFactorGraph& graph) {
-  if (!HasKey(timestamp)) {
-    LOG(WARNING) << "RemoveCombinedNavStateAndFactors: No key index for "
-                    "timestamp exists.";
-    return false;
-  }
-
-  const int key_index = timestamp_key_index_map_.at(timestamp);
-  bool successful = RemoveCombinedNavState(timestamp);
-  int removed_factors = 0;
-  for (auto factor_it = graph.begin(); factor_it != graph.end();) {
-    if (ContainsCombinedNavStateKey(**factor_it, key_index)) {
-      factor_it = graph.erase(factor_it);
-      ++removed_factors;
-      continue;
-    }
-    ++factor_it;
-  }
-  VLOG(2) << "RemoveCombinedNavStateAndFactors: Removed " << removed_factors << " factors.";
-  return successful;
-}
-
 boost::optional<lc::CombinedNavState> GraphValues::LatestCombinedNavState() const {
   if (Empty()) {
     LOG(ERROR) << "LatestCombinedNavState: No combined nav states available.";
@@ -300,30 +276,38 @@ boost::optional<lc::CombinedNavState> GraphValues::LowerBoundOrEqualCombinedNavS
   return GetCombinedNavState(*lower_bound_or_equal_timestamp);
 }
 
-int GraphValues::SlideWindow(gtsam::NonlinearFactorGraph& graph) {
+boost::optional<lc::Time> GraphValues::SlideWindowNewOldestTime() const {
   if (Empty()) {
-    LOG(WARNING) << "SlideWindow: No states in map.";
-    return 0;
+    LOG(WARNING) << "SlideWindowOldestTime: No states in map.";
+    return boost::none;
   }
+
+  if (NumStates() <= params_.min_num_states) {
+    LOG(WARNING) << "SlideWindowOldestTime: Not enough states to remove.";
+    return boost::none;
+  }
+
   const double total_duration = timestamp_key_index_map_.crbegin()->first - timestamp_key_index_map_.cbegin()->first;
-  VLOG(2) << "SlideWindow: Starting total num states: " << timestamp_key_index_map_.size();
-  VLOG(2) << "SlideWindow: Starting total duration is " << total_duration;
+  VLOG(2) << "SlideWindowOldestTime: Starting total num states: " << timestamp_key_index_map_.size();
+  VLOG(2) << "SlideWindowOldestTime: Starting total duration is " << total_duration;
   const lc::Time ideal_oldest_allowed_state =
     std::max(0.0, timestamp_key_index_map_.crbegin()->first - params_.ideal_duration);
-  int num_states_removed = 0;
-  // Remove states so that duration is small enough and num of states is not too small or too large
-  while ((timestamp_key_index_map_.begin()->first < ideal_oldest_allowed_state ||
-          timestamp_key_index_map_.size() > params_.max_num_states) &&
-         timestamp_key_index_map_.size() > params_.min_num_states) {
-    RemoveCombinedNavStateAndFactors(timestamp_key_index_map_.begin()->first, graph);
-    ++num_states_removed;
+
+  int num_states_to_be_removed = 0;
+  // Ensures that new oldest time is consistent with a number of states <= max_num_states
+  // and >= min_num_states.
+  // Assumes min_num_states < max_num_states.
+  for (const auto& timestamp_key_pair : timestamp_key_index_map_) {
+    ++num_states_to_be_removed;
+    const int new_num_states = NumStates() - num_states_to_be_removed;
+    if (new_num_states > params_.max_num_states) continue;
+    const auto& time = timestamp_key_pair.first;
+    if (new_num_states <= params_.min_num_states) return time;
+    if (time >= ideal_oldest_allowed_state) return time;
   }
-  VLOG(2) << "SlideWindow: New total num states: " << timestamp_key_index_map_.size();
-  const double new_total_duration =
-    timestamp_key_index_map_.crbegin()->first - timestamp_key_index_map_.cbegin()->first;
-  VLOG(2) << "SlideWindow: New total duration is " << new_total_duration;
-  VLOG(2) << "SlideWindow: Num states removed: " << num_states_removed;
-  return num_states_removed;
+
+  // Shouldn't occur
+  return boost::none;
 }
 
 // Add timestamp and keys to timestamp_key_index_map, and values to values
@@ -366,6 +350,55 @@ boost::optional<int> GraphValues::KeyIndex(const lc::Time timestamp) const {
 }
 
 void GraphValues::UpdateValues(const gtsam::Values& new_values) { values_ = new_values; }
+
+gtsam::NonlinearFactorGraph GraphValues::RemoveOldFactors(const gtsam::KeyVector& old_keys,
+                                                          gtsam::NonlinearFactorGraph& graph) {
+  gtsam::NonlinearFactorGraph removed_factors;
+  for (auto factor_it = graph.begin(); factor_it != graph.end();) {
+    bool found_key = false;
+    for (const auto& key : old_keys) {
+      if ((*factor_it)->find(key) != (*factor_it)->end()) {
+        found_key = true;
+        break;
+      }
+    }
+    if (found_key) {
+      removed_factors.push_back(*factor_it);
+      factor_it = graph.erase(factor_it);
+    } else {
+      ++factor_it;
+    }
+  }
+
+  return removed_factors;
+}
+
+int GraphValues::RemoveOldCombinedNavStates(const lc::Time oldest_allowed_time) {
+  int num_states_removed = 0;
+  while (timestamp_key_index_map_.begin()->first < oldest_allowed_time) {
+    RemoveCombinedNavState(timestamp_key_index_map_.begin()->first);
+    ++num_states_removed;
+  }
+  VLOG(2) << "RemoveOldCombinedNavStates: New total num states: " << timestamp_key_index_map_.size();
+  const double new_total_duration =
+    timestamp_key_index_map_.crbegin()->first - timestamp_key_index_map_.cbegin()->first;
+  VLOG(2) << "RemoveOldCombinedNavStates: New total duration is " << new_total_duration;
+  VLOG(2) << "RemoveOldCombinedNavStates: Num states removed: " << num_states_removed;
+  return num_states_removed;
+}
+
+gtsam::KeyVector GraphValues::OldKeys(const lc::Time oldest_allowed_time) const {
+  gtsam::KeyVector old_keys;
+  for (const auto& timestamp_key_index_pair : timestamp_key_index_map_) {
+    if (timestamp_key_index_pair.first >= oldest_allowed_time) break;
+    const auto& key_index = timestamp_key_index_pair.second;
+    old_keys.emplace_back(sym::P(key_index));
+    old_keys.emplace_back(sym::V(key_index));
+    old_keys.emplace_back(sym::B(key_index));
+  }
+
+  return old_keys;
+}
 
 // Removes keys from timestamp_key_index_map, values from values
 // Assumes for each stamped_key_index there is a Pose, Velocity, and Bias key

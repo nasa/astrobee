@@ -79,7 +79,6 @@ void LoadNoiseParams(config_reader::ConfigReader& config, NoiseParams& params) {
   params.starting_prior_gyro_bias_stddev = lc::LoadDouble(config, "starting_prior_gyro_bias_stddev");
   params.loc_prior_translation_stddev = lc::LoadDouble(config, "loc_prior_translation_stddev");
   params.loc_prior_quaternion_stddev = lc::LoadDouble(config, "loc_prior_quaternion_stddev");
-  params.priors_scale_factor = lc::LoadDouble(config, "priors_scale_factor");
 }
 
 void LoadSanityCheckerParams(config_reader::ConfigReader& config, SanityCheckerParams& params) {
@@ -108,5 +107,7 @@ void LoadGraphLocalizerParams(config_reader::ConfigReader& config, GraphLocalize
   params.marginals_factorization = lc::LoadString(config, "marginals_factorization");
   params.limit_imu_factor_spacing = lc::LoadBool(config, "limit_imu_factor_spacing");
   params.max_imu_factor_spacing = lc::LoadDouble(config, "max_imu_factor_spacing");
+  params.add_priors = lc::LoadBool(config, "add_priors");
+  params.add_marginal_factors = lc::LoadBool(config, "add_marginal_factors");
 }
 }  // namespace graph_localizer

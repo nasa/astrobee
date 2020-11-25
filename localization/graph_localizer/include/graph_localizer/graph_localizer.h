@@ -111,8 +111,14 @@ class GraphLocalizer {
   bool standstill() const;
 
  private:
+  gtsam::NonlinearFactorGraph MarginalFactors(const gtsam::NonlinearFactorGraph& old_factors,
+                                              const gtsam::KeyVector& old_keys,
+                                              const gtsam::GaussianFactorGraph::Eliminate& eliminate_function) const;
+
   // Removes Keys and Values outside of sliding window.
   // Removes any factors depending on removed values
+  // Optionally adds marginalized factors encapsulating linearized error of removed factors
+  // Optionally adds priors using marginalized covariances for new oldest states
   bool SlideWindow(const boost::optional<gtsam::Marginals>& marginals);
 
   void RemovePriors(const int key_index);
