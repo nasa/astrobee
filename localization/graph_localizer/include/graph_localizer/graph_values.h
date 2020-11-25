@@ -121,7 +121,12 @@ class GraphValues {
 
   bool HasFeature(const localization_measurements::FeatureId id) const;
 
-  bool AddFeature(const localization_measurements::FeatureId id, const gtsam::Point3& feature_point);
+  boost::optional<gtsam::Key> FeatureKey(const lm::FeatureId id) const;
+
+  gtsam::Key GraphValues::CreateFeatureKey();
+
+  bool AddFeature(const localization_measurements::FeatureId id, const gtsam::Point3& feature_point,
+                  const gtsam::Key& key);
 
  private:
   // Removes keys from timestamp_key_index_map, values from values

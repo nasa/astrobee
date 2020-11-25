@@ -295,24 +295,34 @@ bool GraphLocalizer::AddProjectionFactorsAndPoints(
         *point_key, params_.calibration.nav_cam_intrinsics, params_.calibration.body_T_nav_cam);
       projection_factors_to_add.push_back({{projection_key_info, static_point_key_info}, projection_factor});
     }
-    // TODO(rsoussan): is this right??? use latest timestamp instead????
-    factors_to_add.SetTimestamp(optical_flow_feature_points_measurement.timestamp);
+  }
+  if (!projection_factors_to_add.empty()) {
+    projection_factors_to_add.SetTimestamp(optical_flow_feature_points_measurement.timestamp);
     BufferFactors(projection_factors_to_add);
   }
 
   // Add new feature tracks and measurements if possible
-  FactorsToAdd projection_factors_with_new_points_to_add(GraphAction::kTriangulateNewPoint);
   // TODO(rsoussan): make this a param
   constexpr int kMinNumMeasurementsForTriangulation = 3;
   for (const auto& feature_track : feature_tracker_.feature_tracks()) {
     if (feature_track.points >= kMinNumMeasurementsForTriangulation && !graph_values_.HasFeature(feature_track.id)) {
-      // TODO(rsoussan): add projection measurements for each point in feature track!!!!!
-      // TODO(rsoussan): move these to graph action!
-      // const auto world_t_triangulated_feature = Triangulate(feature_track);
-      // graph_values_.AddFeature(feature_track.id, world_t_triangulated_feature);
+      // Create new factors to add for each feature track so the graph action can act on only that
+      // feature track to triangulate a new point
+      FactorsToAdd projection_factors_with_new_point_to_add(GraphAction::kTriangulateNewPoint);
+      for (const auto& feature_point : feature_track.points()) {
+        const KeyInfo pose_key_info(&sym::P, feature_point.timestamp);
+        const KeyInfo static_point_key_info(&sym::F);
+        const auto point_key = graph_values_.CreateFeatureKey();
+        const auto projection_factor = boost::make_shared<ProjectionFactor>(
+          feature_point.image_point, Robust(params_.noise.optical_flow_nav_cam_noise), pose_key_info.UninitializedKey(),
+          point_key, params_.calibration.nav_cam_intrinsics, params_.calibration.body_T_nav_cam);
+        projection_factors_with_new_point_to_add.push_back(
+          {{projection_key_info, static_point_key_info}, projection_factor});
+      }
+      projection_factors_with_new_point_to_add.SetTimestamp(optical_flow_feature_points_measurement.timestamp);
+      BufferFactors(projection_factors_with_new_point_to_add);
     }
   }
-  // in slide window, remove feature tracks that have no measurements!!!! (EEEEE)
 }
 
 gtsam::Point3 GraphLocalizer::Triangulate(const FeatureTrack& feature_track) const {
@@ -525,6 +535,11 @@ void GraphLocalizer::AddProjectionMeasurement(const lm::MatchedProjectionsMeasur
     VLOG(2) << "AddProjectionMeasurement: Buffered " << num_buffered_loc_projection_factors
             << " loc projection factors.";
   }
+}
+
+bool GraphLocalizer::TriangulateNewPoint(FactorsToAdd& factors_to_add) {
+  // const auto world_t_triangulated_feature = Triangulate(feature_track);
+  // graph_values_.AddFeature(feature_track.id, world_t_triangulated_feature);
 }
 
 bool GraphLocalizer::AddOrSplitImuFactorIfNeeded(const lc::Time timestamp) {
@@ -903,6 +918,8 @@ bool GraphLocalizer::DoGraphAction(FactorsToAdd& factors_to_add) {
       return true;
     case GraphAction::kTransformARMeasurementAndUpdateDockTWorld:
       return TransformARMeasurementAndUpdateDockTWorld(factors_to_add);
+    case GraphAction::kTriangulateNewPoint:
+      return TriangulateNewPoint(factors_to_add);
   }
 
   // Shouldn't occur

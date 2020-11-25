@@ -20,7 +20,12 @@
 #define GRAPH_LOCALIZER_GRAPH_ACTION_H_
 
 namespace graph_localizer {
-enum class GraphAction { kNone, kDeleteExistingSmartFactors, kTransformARMeasurementAndUpdateDockTWorld };
+enum class GraphAction {
+  kNone,
+  kDeleteExistingSmartFactors,
+  kTransformARMeasurementAndUpdateDockTWorld,
+  kTriangulateNewPoint
+};
 }  // namespace graph_localizer
 
 #endif  // GRAPH_LOCALIZER_GRAPH_ACTION_H_

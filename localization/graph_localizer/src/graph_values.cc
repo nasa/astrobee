@@ -30,6 +30,7 @@
 
 namespace graph_localizer {
 namespace lc = localization_common;
+namespace lm = localization_measurements;
 GraphValues::GraphValues(const GraphValuesParams& params) : params_(params), feature_key_index_(0) {
   VLOG(2) << "GraphValues: Window duration: " << params_.ideal_duration;
   VLOG(2) << "GraphValues: Window min num states: " << params_.min_num_states;
@@ -192,17 +193,21 @@ boost::optional<lc::Time> GraphValues::Timestamp(const int key_index) const {
   return boost::none;
 }
 
-bool GraphValues::HasFeature(const localization_measurements::FeatureId id) const {
-  return (feature_ids_.count(id) > 0);
+bool GraphValues::HasFeature(const lm::FeatureId id) const { return (feature_ids_.count(id) > 0); }
+
+boost::optional<gtsam::Key> GraphValues::FeatureKey(const lm::FeatureId id) const {
+  if (!HasFeature(id)) return boost::none;
+  return feature_id_key_map_.at(id);
 }
 
-bool GraphValues::AddFeature(const localization_measurements::FeatureId id, const gtsam::Point3& feature_point) {
+gtsam::Key GraphValues::CreateFeatureKey() { return sym::F(++feature_key_index); }
+
+bool GraphValues::AddFeature(const lm::FeatureId id, const gtsam::Point3& feature_point, const gtsam::Key& key) {
   if (HasFeature(id)) {
     LOG(ERROR) << "AddFeature: Feature already exists.";
     return false;
   }
 
-  const auto key = sym::F(feature_key_index_++);
   if (values_.exists(key)) {
     LOG(ERROR) << "AddFeature: Key already exists in values.";
   }
