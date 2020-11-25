@@ -652,7 +652,7 @@ gtsam::NonlinearFactorGraph GraphLocalizer::MarginalFactors(
   return gtsam::LinearContainerFactor::ConvertLinearGraph(linear_marginal_factors, graph_values_.values());
 }
 
-bool GraphLocalizer::SlideWindow() {
+bool GraphLocalizer::SlideWindow(const boost::optional<gtsam::Marginals>& marginals) {
   const auto new_oldest_time = graph_values_.SlideWindowNewOldestTime();
   if (!new_oldest_time) {
     VLOG(2) << "SlideWindow: No states removed. ";
@@ -661,12 +661,12 @@ bool GraphLocalizer::SlideWindow() {
 
   // Add marginal factors for marginalized values
   const auto old_keys = graph_values_.OldKeys(*new_oldest_time);
-  for (const auto key : old_keys) LOG(ERROR) << key;
   const auto old_factors = graph_values_.RemoveOldFactors(old_keys, graph_);
-  // for (const auto factor: old_factors) { std::cout << "new factor!!!!!!" << std::endl; factor->print();}
-  const auto marginal_factors = MarginalFactors(old_factors, old_keys, gtsam::EliminateQR);
-  for (const auto& marginal_factor : marginal_factors) {
-    graph_.push_back(marginal_factors);
+  if (params_.add_marginal_factors) {
+    const auto marginal_factors = MarginalFactors(old_factors, old_keys, gtsam::EliminateQR);
+    for (const auto& marginal_factor : marginal_factors) {
+      graph_.push_back(marginal_factors);
+    }
   }
 
   graph_values_.RemoveOldCombinedNavStates(*new_oldest_time);
@@ -682,7 +682,72 @@ bool GraphLocalizer::SlideWindow() {
   latest_imu_integrator_.RemoveOldMeasurements(*oldest_timestamp);
   // Currently this only applies to optical flow smart factors.  Remove if no longer use these
   RemoveOldBufferedFactors(*oldest_timestamp);
+
+  if (params_.add_priors) {
+    // Add prior to oldest nav state using covariances from last round of
+    // optimization
+    const auto global_N_body_oldest = graph_values_.OldestCombinedNavState();
+    if (!global_N_body_oldest) {
+      LOG(ERROR) << "SlideWindow: Failed to get oldest combined nav state.";
+      return false;
+    }
+
+    VLOG(2) << "SlideWindow: Oldest state time: " << global_N_body_oldest->timestamp();
+
+    const auto key_index = graph_values_.OldestCombinedNavStateKeyIndex();
+    if (!key_index) {
+      LOG(ERROR) << "SlideWindow: Failed to get oldest combined nav state key index.";
+      return false;
+    }
+
+    VLOG(2) << "SlideWindow: key index: " << *key_index;
+
+    // Make sure priors are removed before adding new ones
+    RemovePriors(*key_index);
+    if (marginals) {
+      lc::CombinedNavStateNoise noise;
+      noise.pose_noise =
+        Robust(gtsam::noiseModel::Gaussian::Covariance(marginals->marginalCovariance(sym::P(*key_index))));
+      noise.velocity_noise =
+        Robust(gtsam::noiseModel::Gaussian::Covariance(marginals->marginalCovariance(sym::V(*key_index))));
+      noise.bias_noise =
+        Robust(gtsam::noiseModel::Gaussian::Covariance(marginals->marginalCovariance(sym::B(*key_index))));
+      AddPriors(*global_N_body_oldest, noise, *key_index, graph_values_.values(), graph_);
+    } else {
+      // TODO(rsoussan): Add seperate marginal fallback sigmas instead of relying on starting prior sigmas
+      AddStartingPriors(*global_N_body_oldest, *key_index, graph_values_.values(), graph_);
+    }
+  }
+
   return true;
+}
+
+void GraphLocalizer::RemovePriors(const int key_index) {
+  int removed_factors = 0;
+  for (auto factor_it = graph_.begin(); factor_it != graph_.end();) {
+    bool erase_factor = false;
+    const auto pose_prior_factor = dynamic_cast<gtsam::PriorFactor<gtsam::Pose3>*>(factor_it->get());
+    if (pose_prior_factor && pose_prior_factor->key() == sym::P(key_index)) {
+      erase_factor = true;
+    }
+    const auto velocity_prior_factor = dynamic_cast<gtsam::PriorFactor<gtsam::Velocity3>*>(factor_it->get());
+    if (velocity_prior_factor && velocity_prior_factor->key() == sym::V(key_index)) {
+      erase_factor = true;
+    }
+    const auto bias_prior_factor = dynamic_cast<gtsam::PriorFactor<gtsam::imuBias::ConstantBias>*>(factor_it->get());
+    if (bias_prior_factor && bias_prior_factor->key() == sym::B(key_index)) {
+      erase_factor = true;
+    }
+
+    if (erase_factor) {
+      factor_it = graph_.erase(factor_it);
+      ++removed_factors;
+    } else {
+      ++factor_it;
+      continue;
+    }
+  }
+  VLOG(2) << "RemovePriors: Erase " << removed_factors << " factors.";
 }
 
 void GraphLocalizer::BufferFactors(const FactorsToAdd& factors_to_add) {
@@ -1033,7 +1098,7 @@ bool GraphLocalizer::Update() {
     marginals_ = boost::none;
   }
 
-  if (!SlideWindow()) {
+  if (!SlideWindow(marginals_)) {
     LOG(ERROR) << "Update: Failed to slide window.";
     return false;
   }

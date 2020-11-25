@@ -109,8 +109,11 @@ class GraphLocalizer {
 
   // Removes Keys and Values outside of sliding window.
   // Removes any factors depending on removed values
-  // Adds marginalized factors encapsulating linearized error of removed factors
-  bool SlideWindow();
+  // Optionally adds marginalized factors encapsulating linearized error of removed factors
+  // Optionally adds priors using marginalized covariances for new oldest states
+  bool SlideWindow(const boost::optional<gtsam::Marginals>& marginals);
+
+  void RemovePriors(const int key_index);
 
   // Integrates latest imu measurements up to timestamp and adds imu factor and
   // new combined nav state

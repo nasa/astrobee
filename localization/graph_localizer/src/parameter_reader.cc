@@ -106,5 +106,7 @@ void LoadGraphLocalizerParams(config_reader::ConfigReader& config, GraphLocalize
   params.marginals_factorization = lc::LoadString(config, "marginals_factorization");
   params.limit_imu_factor_spacing = lc::LoadBool(config, "limit_imu_factor_spacing");
   params.max_imu_factor_spacing = lc::LoadDouble(config, "max_imu_factor_spacing");
+  params.add_priors = lc::LoadBool(config, "add_priors");
+  params.add_marginal_factors = lc::LoadBool(config, "add_marginal_factors");
 }
 }  // namespace graph_localizer
