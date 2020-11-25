@@ -266,6 +266,35 @@ bool GraphLocalizer::AddOpticalFlowMeasurement(
     return false;
   }
 
+  if (params_.factor.use_smart_factors)
+    AddSmartFactors(optical_flow_feature_points_measurement);
+  else
+    AddProjectionFactorsAndPoints(optical_flow_feature_points_measurement);
+}
+
+bool GraphLocalizer::AddProjectionFactorsAndPoints(
+  const lm::FeaturePointsMeasurement& optical_flow_feature_points_measurement) {
+  // triangulate points with > 2 measurements that haven't been added yet, added these to state
+  // TODO(rsoussan): make this a param
+  // Add new feature track points to graph as state variables if possible
+  constexpr int kMinNumMeasurementsForTriangulation = 3;
+  for (const auto& feature_track : feature_tracker_.feature_tracks()) {
+    if (feature_track.points >= kMinNumMeasurementsForTriangulation && !graph_values_.HasFeature(feature_track.id)) {
+      const auto world_t_triangulated_feature = Triangulate(feature_track);
+      graph_values_.AddFeature(feature_track.id, world_t_triangulated_feature);
+    }
+  }
+  // Add new factors for feature point measurements (DDDDD)
+  // in slide window, remove feature tracks that have no measurements!!!! (EEEEE)
+}
+
+gtsam::Point3 GraphLocalizer::Triangulate(const FeatureTrack& feature_track) const {
+  // Add function to get poses for feature tracks, add option to extrapolate if needed!
+  // Convert poses to camera frame!!!! triangulate!!!!!
+  // TODO(rsoussan): make sure this is in world frame!!!!
+}
+
+bool GraphLocalizer::AddSmartFactors(const lm::FeaturePointsMeasurement& optical_flow_feature_points_measurement) {
   // Add smart factor for each valid feature track
   FactorsToAdd smart_factors_to_add(GraphAction::kDeleteExistingSmartFactors);
   // Add standstill velocity prior factor if there is low disparity for all feature tracks, indicating standstill, since

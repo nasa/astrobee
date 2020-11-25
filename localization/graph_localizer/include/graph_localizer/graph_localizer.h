@@ -74,6 +74,12 @@ class GraphLocalizer {
   LatestCombinedNavStateAndCovariances() const;
   bool AddOpticalFlowMeasurement(
     const localization_measurements::FeaturePointsMeasurement& optical_flow_feature_points_measurement);
+  bool AddProjectionFactorsAndPoints(
+    const localization_measurements::FeaturePointsMeasurement& optical_flow_feature_points_measurement);
+  gtsam::Point3 Triangulate(const FeatureTrack& feature_track) const;
+  bool AddSmartFactors(
+    const localization_measurements::FeaturePointsMeasurement& optical_flow_feature_points_measurement);
+
   void AddARTagMeasurement(
     const localization_measurements::MatchedProjectionsMeasurement& matched_projections_measurement);
   void AddSparseMappingMeasurement(
