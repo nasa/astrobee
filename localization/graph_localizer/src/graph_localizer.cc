@@ -1058,14 +1058,16 @@ bool GraphLocalizer::Update() {
   AddBufferedFactors();
 
   // TODO(rsoussan): Is ordering required? if so clean these calls open and unify with marginalization
-  // Add graph ordering to place keys that will be marginalized in first group
-  const auto new_oldest_time = graph_values_.SlideWindowNewOldestTime();
-  if (new_oldest_time) {
-    const auto old_keys = graph_values_.OldKeys(*new_oldest_time);
-    const auto ordering = gtsam::Ordering::ColamdConstrainedFirst(graph_, old_keys);
-    levenberg_marquardt_params_.setOrdering(ordering);
-  } else {
-    levenberg_marquardt_params_.orderingType = gtsam::Ordering::COLAMD;
+  if (params_.add_marginal_factors) {
+    // Add graph ordering to place keys that will be marginalized in first group
+    const auto new_oldest_time = graph_values_.SlideWindowNewOldestTime();
+    if (new_oldest_time) {
+      const auto old_keys = graph_values_.OldKeys(*new_oldest_time);
+      const auto ordering = gtsam::Ordering::ColamdConstrainedFirst(graph_, old_keys);
+      levenberg_marquardt_params_.setOrdering(ordering);
+    } else {
+      levenberg_marquardt_params_.orderingType = gtsam::Ordering::COLAMD;
+    }
   }
 
   // Optimize
