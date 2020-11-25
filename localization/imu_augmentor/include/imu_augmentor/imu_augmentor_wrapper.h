@@ -51,12 +51,15 @@ class ImuAugmentorWrapper {
 
   bool LatestImuMeasurement(localization_measurements::ImuMeasurement& latest_imu_measurement);
 
+  bool standstill() const;
+
   std::unique_ptr<ImuAugmentor> imu_augmentor_;
   boost::optional<localization_common::CombinedNavState> latest_combined_nav_state_;
   boost::optional<localization_common::CombinedNavStateCovariances> latest_covariances_;
   boost::optional<ff_msgs::EkfState> latest_loc_msg_;
   std::unique_ptr<gtsam::TangentPreintegration> preintegration_helper_;
-  imu_integration::ImuIntegratorParams params_;
+  ImuAugmentorParams params_;
+  boost::optional<bool> standstill_;
 };
 }  // namespace imu_augmentor
 #endif  // IMU_AUGMENTOR_IMU_AUGMENTOR_WRAPPER_H_

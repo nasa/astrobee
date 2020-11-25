@@ -102,6 +102,8 @@ class GraphLocalizer {
 
   void SaveGraphDotFile(const std::string& output_path = "graph.dot") const;
 
+  bool standstill() const;
+
  private:
   gtsam::NonlinearFactorGraph MarginalFactors(const gtsam::NonlinearFactorGraph& old_factors,
                                               const gtsam::KeyVector& old_keys,
@@ -234,6 +236,7 @@ class GraphLocalizer {
   localization_common::Averager bias_prior_error_averager_ = localization_common::Averager("Bias Prior Error");
 
   gtsam::Marginals::Factorization marginals_factorization_;
+  boost::optional<bool> standstill_;
 };
 }  // namespace graph_localizer
 

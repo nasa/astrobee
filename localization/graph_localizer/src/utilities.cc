@@ -72,7 +72,8 @@ ff_msgs::EkfState EkfStateMsg(const lc::CombinedNavState& combined_nav_state, co
                               const lc::CombinedNavStateCovariances& covariances,
                               const int num_optical_flow_features_in_last_measurement,
                               const int num_sparse_mapping_features_in_last_measurement, const bool estimating_bias,
-                              const double position_log_det_threshold, const double orientation_log_det_threshold) {
+                              const double position_log_det_threshold, const double orientation_log_det_threshold,
+                              const bool standstill) {
   ff_msgs::EkfState loc_msg;
 
   // Set Header Frames
@@ -98,6 +99,11 @@ ff_msgs::EkfState EkfStateMsg(const lc::CombinedNavState& combined_nav_state, co
   loc_msg.of_count = num_optical_flow_features_in_last_measurement;
   loc_msg.ml_count = num_sparse_mapping_features_in_last_measurement;
   loc_msg.estimating_bias = estimating_bias;
+
+  // Hack to write standstill in place of aug_state_enum which
+  // isn't applicable for graph
+  // TODO(rsoussan): Clean this up
+  loc_msg.aug_state_enum = static_cast<uint8_t>(standstill);
 
   return loc_msg;
 }

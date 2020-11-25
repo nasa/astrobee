@@ -25,7 +25,7 @@ namespace imu_augmentor {
 namespace ii = imu_integration;
 namespace lc = localization_common;
 namespace lm = localization_measurements;
-ImuAugmentor::ImuAugmentor(const ii::ImuIntegratorParams& params) : ii::ImuIntegrator(params) {}
+ImuAugmentor::ImuAugmentor(const ImuAugmentorParams& params) : ii::ImuIntegrator(params) {}
 
 boost::optional<lc::CombinedNavState> ImuAugmentor::PimPredict(const lc::CombinedNavState& combined_nav_state) {
   if (Empty()) return combined_nav_state;

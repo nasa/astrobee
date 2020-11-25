@@ -15,22 +15,15 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+#ifndef IMU_AUGMENTOR_IMU_AUGMENTOR_PARAMS_H_
+#define IMU_AUGMENTOR_IMU_AUGMENTOR_PARAMS_H_
 
-#ifndef IMU_AUGMENTOR_IMU_AUGMENTOR_H_
-#define IMU_AUGMENTOR_IMU_AUGMENTOR_H_
-
-#include <imu_augmentor/imu_augmentor_params.h>
-#include <imu_integration/imu_integrator.h>
-#include <localization_common/combined_nav_state.h>
+#include <imu_integration/imu_integrator_params.h>
 
 namespace imu_augmentor {
-class ImuAugmentor : public imu_integration::ImuIntegrator {
- public:
-  explicit ImuAugmentor(const ImuAugmentorParams& params);
-
-  boost::optional<localization_common::CombinedNavState> PimPredict(
-    const localization_common::CombinedNavState& combined_nav_state);
+struct ImuAugmentorParams : imu_integration::ImuIntegratorParams {
+  bool standstill_enabled;
 };
 }  // namespace imu_augmentor
 
-#endif  // IMU_AUGMENTOR_IMU_AUGMENTOR_H_
+#endif  // IMU_AUGMENTOR_IMU_AUGMENTOR_PARAMS_H_
