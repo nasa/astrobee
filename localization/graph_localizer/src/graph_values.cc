@@ -441,4 +441,23 @@ bool GraphValues::RemoveCombinedNavState(const lc::Time timestamp) {
   VLOG(2) << "RemoveCombinedNavState: Removed timestamp" << std::setprecision(15) << timestamp;
   return removed_values;
 }
+
+void GraphValues::RemoveOldFeatures(const gtsam::NonlinearFactorGraph& factors) {
+  for (auto feature_id_key_it = feature_id_key_map_.begin(); feature_id_key_it != feature_id_key_map_.end();) {
+    bool contains_feature = false;
+    for (const auto& factor : factors) {
+      if (factor->find(feature_id_key_it->second) != factor->end()) {
+        contains_feature = true;
+        break;
+      }
+    }
+
+    if (!contains_feature) {
+      values_.erase(feature_id_key_it->second);
+      feature_id_key_it = feature_id_key_map_.erase(feature_id_key_it);
+    } else {
+      ++feature_id_key_it;
+    }
+  }
+}
 }  // namespace graph_localizer

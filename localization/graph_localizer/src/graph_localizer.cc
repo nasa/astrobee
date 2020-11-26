@@ -783,6 +783,7 @@ bool GraphLocalizer::SlideWindow(const boost::optional<gtsam::Marginals>& margin
   }
 
   graph_values_.RemoveOldCombinedNavStates(*new_oldest_time);
+  graph_values_.RemoveOldFeatures(graph_);
 
   // Remove old data from other containers
   const auto oldest_timestamp = graph_values_.OldestTimestamp();
