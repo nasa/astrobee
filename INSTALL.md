@@ -8,7 +8,7 @@ Given that Docker (see note) is installed:
 
 	git clone https://github.com/nasa/astrobee.git
 	cd astrobee
-    ./scripts/docker/run.sh
+	./scripts/docker/run.sh
 
 *Note: Be aware that this only works on a native ubuntu install.*
 *Note: Make sure you have docker installed in your ubuntu system following the [installation instructions](https://docs.docker.com/engine/install/ubuntu/) and [post-installation steps for Linux](https://docs.docker.com/engine/install/linux-postinstall/).*
