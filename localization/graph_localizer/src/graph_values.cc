@@ -193,14 +193,14 @@ boost::optional<lc::Time> GraphValues::Timestamp(const int key_index) const {
   return boost::none;
 }
 
-bool GraphValues::HasFeature(const lm::FeatureId id) const { return (feature_ids_.count(id) > 0); }
+bool GraphValues::HasFeature(const lm::FeatureId id) const { return (feature_id_key_map_.count(id) > 0); }
 
 boost::optional<gtsam::Key> GraphValues::FeatureKey(const lm::FeatureId id) const {
   if (!HasFeature(id)) return boost::none;
   return feature_id_key_map_.at(id);
 }
 
-gtsam::Key GraphValues::CreateFeatureKey() { return sym::F(++feature_key_index); }
+gtsam::Key GraphValues::CreateFeatureKey() { return sym::F(++feature_key_index_); }
 
 bool GraphValues::AddFeature(const lm::FeatureId id, const gtsam::Point3& feature_point, const gtsam::Key& key) {
   if (HasFeature(id)) {
@@ -212,7 +212,7 @@ bool GraphValues::AddFeature(const lm::FeatureId id, const gtsam::Point3& featur
     LOG(ERROR) << "AddFeature: Key already exists in values.";
   }
 
-  feature_ids_.emplace(id, key);
+  feature_id_key_map_.emplace(id, key);
   values_.insert(key, feature_point);
   return true;
 }

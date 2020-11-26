@@ -44,6 +44,7 @@
 #include <gtsam/nonlinear/LevenbergMarquardtOptimizer.h>
 #include <gtsam/nonlinear/Marginals.h>
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
+#include <gtsam/slam/ProjectionFactor.h>
 #include <gtsam/slam/SmartFactorParams.h>
 #include <gtsam/slam/SmartProjectionPoseFactor.h>
 
@@ -78,9 +79,8 @@ class GraphLocalizer {
   bool AddProjectionFactorsAndPoints(
     const localization_measurements::FeaturePointsMeasurement& optical_flow_feature_points_measurement);
   bool TriangulateNewPoint(FactorsToAdd& factors_to_add);
-  gtsam::Point3 Triangulate(const FeatureTrack& feature_track) const;
   bool CheckForStandstillAndAddStandstillFactorIfNecessary(
-    const lm::FeaturePointsMeasurement& optical_flow_feature_points_measurement);
+    const localization_measurements::FeaturePointsMeasurement& optical_flow_feature_points_measurement);
   bool AddSmartFactors(
     const localization_measurements::FeaturePointsMeasurement& optical_flow_feature_points_measurement);
 

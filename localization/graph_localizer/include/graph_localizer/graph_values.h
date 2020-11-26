@@ -23,7 +23,7 @@
 #include <graph_localizer/key_info.h>
 #include <localization_common/combined_nav_state.h>
 #include <localization_common/time.h>
-#include <localization_measurements/feature_id.h>
+#include <localization_measurements/feature_point.h>
 
 #include <gtsam/inference/Symbol.h>
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
@@ -32,8 +32,10 @@
 #include <glog/logging.h>
 
 #include <boost/optional.hpp>
+#include <boost/serialization/unordered_map.hpp>
 
 #include <map>
+#include <unordered_map>
 #include <utility>
 
 namespace graph_localizer {
@@ -121,9 +123,9 @@ class GraphValues {
 
   bool HasFeature(const localization_measurements::FeatureId id) const;
 
-  boost::optional<gtsam::Key> FeatureKey(const lm::FeatureId id) const;
+  boost::optional<gtsam::Key> FeatureKey(const localization_measurements::FeatureId id) const;
 
-  gtsam::Key GraphValues::CreateFeatureKey();
+  gtsam::Key CreateFeatureKey();
 
   bool AddFeature(const localization_measurements::FeatureId id, const gtsam::Point3& feature_point,
                   const gtsam::Key& key);
@@ -143,14 +145,14 @@ class GraphValues {
   void serialize(ARCHIVE& ar, const unsigned int /*version*/) {
     ar& BOOST_SERIALIZATION_NVP(values_);
     ar& BOOST_SERIALIZATION_NVP(timestamp_key_index_map_);
-    ar& BOOST_SERIALIZATION_NVP(feature_ids_key_map_);
+    ar& BOOST_SERIALIZATION_NVP(feature_id_key_map_);
     ar& BOOST_SERIALIZATION_NVP(feature_key_index_);
   }
 
   GraphValuesParams params_;
   gtsam::Values values_;
   std::map<localization_common::Time, int> timestamp_key_index_map_;
-  std::unordered_map<localization_measurements::FeatureId, gtsam::Key> feature_ids_key_map_;
+  std::unordered_map<localization_measurements::FeatureId, gtsam::Key> feature_id_key_map_;
   std::uint64_t feature_key_index_;
 };
 }  // namespace graph_localizer

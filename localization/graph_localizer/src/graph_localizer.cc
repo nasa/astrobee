@@ -25,12 +25,12 @@
 
 #include <gtsam/base/Vector.h>
 #include <gtsam/geometry/Pose3.h>
+#include <gtsam/geometry/triangulation.h>
 #include <gtsam/linear/NoiseModel.h>
 #include <gtsam/navigation/ImuBias.h>
 #include <gtsam/navigation/NavState.h>
 #include <gtsam/nonlinear/LinearContainerFactor.h>
 #include <gtsam/slam/PriorFactor.h>
-#include <gtsam/slam/ProjectionFactor.h>
 
 #include <glog/logging.h>
 
@@ -275,16 +275,17 @@ bool GraphLocalizer::AddOpticalFlowMeasurement(
     AddProjectionFactorsAndPoints(optical_flow_feature_points_measurement);
 
   CheckForStandstillAndAddStandstillFactorIfNecessary(optical_flow_feature_points_measurement);
+  return true;
 }
 
 bool GraphLocalizer::AddProjectionFactorsAndPoints(
   const lm::FeaturePointsMeasurement& optical_flow_feature_points_measurement) {
   // Add projection factors for new measurements of already existing features
   FactorsToAdd projection_factors_to_add;
-  for (const auto& feature_point : optical_flow_feature_points_measurement) {
+  for (const auto& feature_point : optical_flow_feature_points_measurement.feature_points) {
     if (graph_values_.HasFeature(feature_point.feature_id)) {
       const KeyInfo pose_key_info(&sym::P, feature_point.timestamp);
-      const KeyInfo static_point_key_info(&sym::F);
+      const KeyInfo static_point_key_info(&sym::F, feature_point.feature_id);
       const auto point_key = graph_values_.FeatureKey(feature_point.feature_id);
       if (!point_key) {
         LOG(ERROR) << "AddProjectionFactorsAndPoints: Failed to get point key.";
@@ -293,7 +294,7 @@ bool GraphLocalizer::AddProjectionFactorsAndPoints(
       const auto projection_factor = boost::make_shared<ProjectionFactor>(
         feature_point.image_point, Robust(params_.noise.optical_flow_nav_cam_noise), pose_key_info.UninitializedKey(),
         *point_key, params_.calibration.nav_cam_intrinsics, params_.calibration.body_T_nav_cam);
-      projection_factors_to_add.push_back({{projection_key_info, static_point_key_info}, projection_factor});
+      projection_factors_to_add.push_back({{pose_key_info, static_point_key_info}, projection_factor});
     }
   }
   if (!projection_factors_to_add.empty()) {
@@ -304,31 +305,27 @@ bool GraphLocalizer::AddProjectionFactorsAndPoints(
   // Add new feature tracks and measurements if possible
   // TODO(rsoussan): make this a param
   constexpr int kMinNumMeasurementsForTriangulation = 3;
-  for (const auto& feature_track : feature_tracker_.feature_tracks()) {
-    if (feature_track.points >= kMinNumMeasurementsForTriangulation && !graph_values_.HasFeature(feature_track.id)) {
+  for (const auto& feature_track_pair : feature_tracker_.feature_tracks()) {
+    const auto& feature_track = feature_track_pair.second;
+    if (feature_track.points.size() >= kMinNumMeasurementsForTriangulation &&
+        !graph_values_.HasFeature(feature_track.id)) {
       // Create new factors to add for each feature track so the graph action can act on only that
       // feature track to triangulate a new point
       FactorsToAdd projection_factors_with_new_point_to_add(GraphAction::kTriangulateNewPoint);
-      for (const auto& feature_point : feature_track.points()) {
+      for (const auto& feature_point : feature_track.points) {
         const KeyInfo pose_key_info(&sym::P, feature_point.timestamp);
-        const KeyInfo static_point_key_info(&sym::F);
+        const KeyInfo static_point_key_info(&sym::F, feature_point.feature_id);
         const auto point_key = graph_values_.CreateFeatureKey();
         const auto projection_factor = boost::make_shared<ProjectionFactor>(
           feature_point.image_point, Robust(params_.noise.optical_flow_nav_cam_noise), pose_key_info.UninitializedKey(),
           point_key, params_.calibration.nav_cam_intrinsics, params_.calibration.body_T_nav_cam);
-        projection_factors_with_new_point_to_add.push_back(
-          {{projection_key_info, static_point_key_info}, projection_factor});
+        projection_factors_with_new_point_to_add.push_back({{pose_key_info, static_point_key_info}, projection_factor});
       }
       projection_factors_with_new_point_to_add.SetTimestamp(optical_flow_feature_points_measurement.timestamp);
       BufferFactors(projection_factors_with_new_point_to_add);
     }
   }
-}
-
-gtsam::Point3 GraphLocalizer::Triangulate(const FeatureTrack& feature_track) const {
-  // Add function to get poses for feature tracks, add option to extrapolate if needed!
-  // Convert poses to camera frame!!!! triangulate!!!!!
-  // TODO(rsoussan): make sure this is in world frame!!!!
+  return true;
 }
 
 bool GraphLocalizer::CheckForStandstillAndAddStandstillFactorIfNecessary(
@@ -538,8 +535,38 @@ void GraphLocalizer::AddProjectionMeasurement(const lm::MatchedProjectionsMeasur
 }
 
 bool GraphLocalizer::TriangulateNewPoint(FactorsToAdd& factors_to_add) {
-  // const auto world_t_triangulated_feature = Triangulate(feature_track);
-  // graph_values_.AddFeature(feature_track.id, world_t_triangulated_feature);
+  gtsam::CameraSet<Camera> camera_set;
+  Camera::MeasurementVector measurements;
+  gtsam::Key point_key;
+  for (const auto& factor_to_add : factors_to_add.Get()) {
+    const auto& factor = factor_to_add.factor;
+    const auto projection_factor = dynamic_cast<ProjectionFactor*>(factor.get());
+    if (!projection_factor) {
+      LOG(ERROR) << "TriangulateNewPoint: Failed to cast to projection factor.";
+      return false;
+    }
+    const auto world_T_body = graph_values_.at<gtsam::Pose3>(projection_factor->key1());
+    if (!world_T_body) {
+      LOG(ERROR) << "TriangulateNewPoint: Failed to get pose.";
+      return false;
+    }
+
+    const gtsam::Pose3 world_T_camera = *world_T_body * params_.calibration.body_T_nav_cam;
+    camera_set.emplace_back(world_T_camera, *params_.calibration.nav_cam_intrinsics);
+    measurements.emplace_back(projection_factor->measured());
+    point_key = projection_factor->key2();
+  }
+  // TODO(rsoussan): Make seperate triangulation params for this?
+  const auto world_t_triangulated_point =
+    gtsam::triangulateSafe(camera_set, measurements, smart_projection_params_.triangulation);
+  if (!world_t_triangulated_point.valid()) {
+    LOG(ERROR) << "TriangulateNewPoint: Failed to triangulate point";
+    return false;
+  }
+  // TODO(rsoussan): clean this up
+  const auto feature_id = factors_to_add.Get().front().key_infos[1].id();
+  graph_values_.AddFeature(feature_id, *world_t_triangulated_point, point_key);
+  return true;
 }
 
 bool GraphLocalizer::AddOrSplitImuFactorIfNeeded(const lc::Time timestamp) {
@@ -931,7 +958,7 @@ bool GraphLocalizer::Rekey(FactorToAdd& factor_to_add) {
   const auto& old_keys = factor_to_add.factor->keys();
   for (int i = 0; i < factor_to_add.key_infos.size(); ++i) {
     const auto& key_info = factor_to_add.key_infos[i];
-    if (key_info.is_static() {
+    if (key_info.is_static()) {
       // Don't change static keys. Assumes static key currently in factor is correct
       new_keys.emplace_back(old_keys[i]);
     } else {
