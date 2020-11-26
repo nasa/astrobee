@@ -34,6 +34,7 @@
 // Factors used in NonlinearFactorGraph
 #include <graph_localizer/loc_projection_factor.h>
 #include <graph_localizer/robust_smart_projection_pose_factor.h>
+#include <gtsam/nonlinear/LinearContainerFactor.h>
 #include <gtsam/nonlinear/NonlinearFactor.h>
 #include <gtsam/slam/PriorFactor.h>
 #include <gtsam/slam/ProjectionFactor.h>
@@ -61,6 +62,7 @@ BOOST_CLASS_EXPORT_GUID(gtsam::RobustSmartProjectionPoseFactor<gtsam::Cal3_S2>,
                         "gtsam::RobustSmartProjectionPoseFactorCal3_S2");
 BOOST_CLASS_EXPORT_GUID(gtsam::SmartProjectionPoseFactor<gtsam::Cal3_S2>, "gtsam::SmartProjectionPoseFactorCal3_S2");
 BOOST_CLASS_EXPORT_GUID(gtsam::CombinedImuFactor, "gtsam::CombinedImuFactor");
+BOOST_CLASS_EXPORT_GUID(gtsam::LinearContainerFactor, "gtsam::LinearContainerFactor");
 
 // Add all possible noise models used by factors
 BOOST_CLASS_EXPORT_GUID(gtsam::noiseModel::Constrained, "gtsam_noiseModel_Constrained");
