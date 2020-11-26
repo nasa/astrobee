@@ -303,12 +303,10 @@ bool GraphLocalizer::AddProjectionFactorsAndPoints(
   }
 
   // Add new feature tracks and measurements if possible
-  // TODO(rsoussan): make this a param
-  constexpr int kMinNumMeasurementsForTriangulation = 3;
   int new_features = 0;
   for (const auto& feature_track_pair : feature_tracker_.feature_tracks()) {
     const auto& feature_track = feature_track_pair.second;
-    if (feature_track.points.size() >= kMinNumMeasurementsForTriangulation &&
+    if (feature_track.points.size() >= params_.factor.min_num_measurements_for_triangulation &&
         !graph_values_.HasFeature(feature_track.id)) {
       // Create new factors to add for each feature track so the graph action can act on only that
       // feature track to triangulate a new point

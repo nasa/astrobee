@@ -38,7 +38,9 @@ struct FactorParams {
   bool enable_rotation_only_fallback;
   bool smart_factor_splitting;
   bool use_smart_factors;
+  // OF Projection Factors
   bool use_projection_factors;
+  int min_num_measurements_for_triangulation;
   // Loc factors
   bool loc_pose_priors;
   bool loc_projections;
