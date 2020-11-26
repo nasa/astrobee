@@ -64,6 +64,7 @@ GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
       num_states_averager_("Num States"),
       duration_averager_("Duration"),
       num_optical_flow_factors_averager_("Num Optical Flow Factors"),
+      num_marginal_factors_averager_("Num Marginal Factors"),
       num_factors_averager_("Num Factors"),
       num_features_averager_("Num Features") {
   // Assumes zero initial velocity
@@ -1125,6 +1126,7 @@ void GraphLocalizer::LogStats() {
   num_states_averager_.UpdateAndLog(graph_values_.NumStates());
   duration_averager_.UpdateAndLog(graph_values_.Duration());
   num_optical_flow_factors_averager_.UpdateAndLog(NumOFFactors());
+  num_marginal_factors_averager_.UpdateAndLog(NumFactors<gtsam::LinearContainerFactor>());
   num_features_averager_.UpdateAndLog(NumFeatures());
   num_factors_averager_.UpdateAndLog(graph_.size());
 }
@@ -1157,7 +1159,7 @@ int GraphLocalizer::NumProjectionFactors(const bool check_valid) const {
         const auto world_T_camera = *world_T_body * params_.calibration.body_T_nav_cam;
         const auto camera_t_point = world_T_camera.inverse() * *world_t_point;
         if (camera_t_point.z() <= 0) {
-          LOG(ERROR) << "NumProjectionFactors: Behind camera.";
+          VLOG(2) << "NumProjectionFactors: Behind camera.";
           continue;
         }
         ++num_factors;

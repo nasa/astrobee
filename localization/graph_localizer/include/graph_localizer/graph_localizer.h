@@ -241,6 +241,7 @@ class GraphLocalizer {
   localization_common::Averager num_states_averager_;
   localization_common::Averager duration_averager_;
   localization_common::Averager num_optical_flow_factors_averager_;
+  localization_common::Averager num_marginal_factors_averager_;
   localization_common::Averager num_factors_averager_;
   localization_common::Averager num_features_averager_;
   // Factor Error Averagers
