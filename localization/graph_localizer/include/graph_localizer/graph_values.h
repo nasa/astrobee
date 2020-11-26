@@ -133,6 +133,8 @@ class GraphValues {
   bool AddFeature(const localization_measurements::FeatureId id, const gtsam::Point3& feature_point,
                   const gtsam::Key& key);
 
+  int NumFeatures() const;
+
  private:
   // Removes keys from timestamp_key_index_map, values from values
   bool RemoveCombinedNavState(const localization_common::Time timestamp);

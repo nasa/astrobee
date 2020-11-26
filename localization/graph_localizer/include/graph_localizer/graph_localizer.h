@@ -100,7 +100,13 @@ class GraphLocalizer {
 
   boost::optional<std::pair<gtsam::imuBias::ConstantBias, localization_common::Time>> LatestBiases() const;
 
+  int NumFeatures() const;
+
   int NumOFFactors(const bool check_valid = true) const;
+
+  int NumSmartFactors(const bool check_valid = true) const;
+
+  int NumProjectionFactors(const bool check_valid = true) const;
 
   int NumVLFactors() const;
 
@@ -236,6 +242,7 @@ class GraphLocalizer {
   localization_common::Averager duration_averager_;
   localization_common::Averager num_optical_flow_factors_averager_;
   localization_common::Averager num_factors_averager_;
+  localization_common::Averager num_features_averager_;
   // Factor Error Averagers
   localization_common::Averager total_error_averager_ = localization_common::Averager("Total Factor Error");
   localization_common::Averager of_error_averager_ = localization_common::Averager("OF Factor Error");

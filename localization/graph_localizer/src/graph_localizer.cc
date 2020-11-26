@@ -64,7 +64,8 @@ GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
       num_states_averager_("Num States"),
       duration_averager_("Duration"),
       num_optical_flow_factors_averager_("Num Optical Flow Factors"),
-      num_factors_averager_("Num Factors") {
+      num_factors_averager_("Num Factors"),
+      num_features_averager_("Num Features") {
   // Assumes zero initial velocity
   const lc::CombinedNavState global_N_body_start(
     params_.graph_initialization.global_T_body_start, gtsam::Velocity3::Zero(),
@@ -268,11 +269,8 @@ bool GraphLocalizer::AddOpticalFlowMeasurement(
     return false;
   }
 
-  // TODO(rsoussan) make option for projection factor!!!!!
-  if (params_.factor.use_smart_factors)
-    AddSmartFactors(optical_flow_feature_points_measurement);
-  else
-    AddProjectionFactorsAndPoints(optical_flow_feature_points_measurement);
+  if (params_.factor.use_smart_factors) AddSmartFactors(optical_flow_feature_points_measurement);
+  if (params_.factor.use_projection_factors) AddProjectionFactorsAndPoints(optical_flow_feature_points_measurement);
 
   CheckForStandstillAndAddStandstillFactorIfNecessary(optical_flow_feature_points_measurement);
   return true;
@@ -565,7 +563,7 @@ bool GraphLocalizer::TriangulateNewPoint(FactorsToAdd& factors_to_add) {
   const auto world_t_triangulated_point =
     gtsam::triangulateSafe(camera_set, measurements, smart_projection_params_.triangulation);
   if (!world_t_triangulated_point.valid()) {
-    LOG(ERROR) << "TriangulateNewPoint: Failed to triangulate point";
+    VLOG(2) << "TriangulateNewPoint: Failed to triangulate point";
     return false;
   }
   // TODO(rsoussan): clean this up
@@ -929,7 +927,7 @@ void GraphLocalizer::AddBufferedFactors() {
 
     // Do graph action after adding necessary imu factors and nav states so these are available
     if (!DoGraphAction(factors_to_add)) {
-      LOG(ERROR) << "AddBufferedFactors: Failed to complete graph action.";
+      VLOG(2) << "AddBufferedFactors: Failed to complete graph action.";
       factors_to_add_it = buffered_factors_to_add_.erase(factors_to_add_it);
       continue;
     }
@@ -1129,11 +1127,51 @@ void GraphLocalizer::LogStats() {
   num_states_averager_.UpdateAndLog(graph_values_.NumStates());
   duration_averager_.UpdateAndLog(graph_values_.Duration());
   num_optical_flow_factors_averager_.UpdateAndLog(NumOFFactors());
+  num_features_averager_.UpdateAndLog(NumFeatures());
   num_factors_averager_.UpdateAndLog(graph_.size());
 }
 
+int GraphLocalizer::NumFeatures() const { return graph_values_.NumFeatures(); }
+
 // TODO(rsoussan): fix this call to happen before of factors are removed!
 int GraphLocalizer::NumOFFactors(const bool check_valid) const {
+  if (params_.factor.use_smart_factors) return NumSmartFactors(check_valid);
+  if (params_.factor.use_projection_factors) return NumProjectionFactors(check_valid);
+  return 0;
+}
+
+int GraphLocalizer::NumProjectionFactors(const bool check_valid) const {
+  int num_factors = 0;
+  for (const auto& factor : graph_) {
+    const auto projection_factor = dynamic_cast<const ProjectionFactor*>(factor.get());
+    if (projection_factor) {
+      if (check_valid) {
+        const auto world_t_point = graph_values_.at<gtsam::Point3>(projection_factor->key2());
+        if (!world_t_point) {
+          LOG(ERROR) << "NumProjectionFactors: Failed to get point.";
+          continue;
+        }
+        const auto world_T_body = graph_values_.at<gtsam::Pose3>(projection_factor->key1());
+        if (!world_T_body) {
+          LOG(ERROR) << "NumProjectionFactors: Failed to get pose.";
+          continue;
+        }
+        const auto world_T_camera = *world_T_body * params_.calibration.body_T_nav_cam;
+        const auto camera_t_point = world_T_camera.inverse() * *world_t_point;
+        if (camera_t_point.z() <= 0) {
+          LOG(ERROR) << "NumProjectionFactors: Behind camera.";
+          continue;
+        }
+        ++num_factors;
+      } else {
+        ++num_factors;
+      }
+    }
+  }
+  return num_factors;
+}
+
+int GraphLocalizer::NumSmartFactors(const bool check_valid) const {
   int num_of_factors = 0;
   for (const auto& factor : graph_) {
     const auto smart_factor = dynamic_cast<const RobustSmartFactor*>(factor.get());

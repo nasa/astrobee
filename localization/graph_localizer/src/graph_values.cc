@@ -225,6 +225,8 @@ boost::optional<int> GraphValues::LatestCombinedNavStateKeyIndex() const {
   return timestamp_key_index_map_.crbegin()->second;
 }
 
+int GraphValues::NumFeatures() const { return timestamp_key_index_map_.size(); }
+
 boost::optional<int> GraphValues::OldestCombinedNavStateKeyIndex() const {
   if (Empty()) {
     LOG(ERROR) << "OldestCombinedNavStateKeyIndex: No combined nav states available.";

@@ -50,6 +50,7 @@ void LoadFactorParams(config_reader::ConfigReader& config, FactorParams& params)
   params.enable_rotation_only_fallback = lc::LoadBool(config, "enable_rotation_only_fallback");
   params.smart_factor_splitting = lc::LoadBool(config, "smart_factor_splitting");
   params.use_smart_factors = lc::LoadBool(config, "use_smart_factors");
+  params.use_projection_factors = lc::LoadBool(config, "use_projection_factors");
   params.loc_pose_priors = lc::LoadBool(config, "loc_pose_priors");
   params.loc_projections = lc::LoadBool(config, "loc_projections");
   params.min_num_matches = lc::LoadInt(config, "min_num_matches");
