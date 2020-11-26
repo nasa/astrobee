@@ -96,8 +96,11 @@ ff_msgs::EkfState EkfStateMsg(const lc::CombinedNavState& combined_nav_state, co
   loc_msg.confidence = covariances.PoseConfidence(position_log_det_threshold, orientation_log_det_threshold);
 
   // Set Graph Feature Counts/Information
-  loc_msg.of_count = num_optical_flow_features_in_last_measurement;
-  loc_msg.ml_count = num_sparse_mapping_features_in_last_measurement;
+  // TODO(rsoussan): Change msg to use int instead of uint8_t to avoid this overflow issue
+  loc_msg.of_count =
+    num_optical_flow_features_in_last_measurement <= 255 ? num_optical_flow_features_in_last_measurement : 255;
+  loc_msg.ml_count =
+    num_sparse_mapping_features_in_last_measurement <= 255 ? num_sparse_mapping_features_in_last_measurement : 255;
   loc_msg.estimating_bias = estimating_bias;
 
   // Hack to write standstill in place of aug_state_enum which
