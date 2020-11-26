@@ -300,11 +300,14 @@ bool GraphLocalizer::AddProjectionFactorsAndPoints(
   if (!projection_factors_to_add.empty()) {
     projection_factors_to_add.SetTimestamp(optical_flow_feature_points_measurement.timestamp);
     BufferFactors(projection_factors_to_add);
+    VLOG(2) << "AddProjectionFactorsAndPoints: Buffered " << projection_factors_to_add.size()
+            << " projection factors for existing features.";
   }
 
   // Add new feature tracks and measurements if possible
   // TODO(rsoussan): make this a param
   constexpr int kMinNumMeasurementsForTriangulation = 3;
+  int new_features = 0;
   for (const auto& feature_track_pair : feature_tracker_.feature_tracks()) {
     const auto& feature_track = feature_track_pair.second;
     if (feature_track.points.size() >= kMinNumMeasurementsForTriangulation &&
@@ -323,8 +326,10 @@ bool GraphLocalizer::AddProjectionFactorsAndPoints(
       }
       projection_factors_with_new_point_to_add.SetTimestamp(optical_flow_feature_points_measurement.timestamp);
       BufferFactors(projection_factors_with_new_point_to_add);
+      ++new_features;
     }
   }
+  if (new_features > 0) VLOG(2) << "AddProjectionFactorsAndPoints: Buffered " << new_features << " new features.";
   return true;
 }
 
@@ -875,6 +880,8 @@ void GraphLocalizer::RemoveOldBufferedFactors(const lc::Time oldest_allowed_time
     for (auto factor_to_add_it = factors_to_add.begin(); factor_to_add_it != factors_to_add.end();) {
       bool removed_factor = false;
       for (const auto& key_info : factor_to_add_it->key_infos) {
+        // Ignore static keys
+        if (key_info.is_static()) continue;
         if (key_info.timestamp() < oldest_allowed_timestamp) {
           LOG(INFO) << "RemoveOldBufferedFactors: Removing old factor from buffered factors.";
           factor_to_add_it = factors_to_add.erase(factor_to_add_it);
@@ -906,6 +913,8 @@ void GraphLocalizer::AddBufferedFactors() {
       // Add combined nav states and connecting imu factors for each key in factor if necessary
       // TODO(rsoussan): make this more efficient for factors with multiple keys with the same timestamp?
       for (const auto& key_info : factor_to_add.key_infos) {
+        // Ignore static keys
+        if (key_info.is_static()) continue;
         if (!AddOrSplitImuFactorIfNeeded(key_info.timestamp())) {
           LOG(DFATAL) << "AddBufferedFactor: Failed to add or split imu factors necessary for adding factor.";
           continue;
