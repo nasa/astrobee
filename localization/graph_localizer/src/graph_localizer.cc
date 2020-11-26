@@ -315,10 +315,10 @@ bool GraphLocalizer::AddProjectionFactorsAndPoints(
       // Create new factors to add for each feature track so the graph action can act on only that
       // feature track to triangulate a new point
       FactorsToAdd projection_factors_with_new_point_to_add(GraphAction::kTriangulateNewPoint);
+      const auto point_key = graph_values_.CreateFeatureKey();
       for (const auto& feature_point : feature_track.points) {
         const KeyInfo pose_key_info(&sym::P, feature_point.timestamp);
         const KeyInfo static_point_key_info(&sym::F, feature_point.feature_id);
-        const auto point_key = graph_values_.CreateFeatureKey();
         const auto projection_factor = boost::make_shared<ProjectionFactor>(
           feature_point.image_point, Robust(params_.noise.optical_flow_nav_cam_noise), pose_key_info.UninitializedKey(),
           point_key, params_.calibration.nav_cam_intrinsics, params_.calibration.body_T_nav_cam);

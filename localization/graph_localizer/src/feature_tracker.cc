@@ -38,6 +38,7 @@ void FeatureTracker::UpdateFeatureTracks(const lm::FeaturePoints& feature_points
   // Update existing features or add new one
   for (const auto& feature_point : feature_points) {
     feature_tracks_[feature_point.feature_id].latest_image_id = feature_point.image_id;
+    feature_tracks_[feature_point.feature_id].id = feature_point.feature_id;
     feature_tracks_[feature_point.feature_id].points.emplace_back(feature_point);
   }
 
