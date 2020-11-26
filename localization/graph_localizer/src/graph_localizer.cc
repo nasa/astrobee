@@ -810,6 +810,7 @@ void GraphLocalizer::AddBufferedFactors() {
     // Do graph action after adding necessary imu factors and nav states so these are available
     if (!DoGraphAction(factors_to_add)) {
       LOG(ERROR) << "AddBufferedFactors: Failed to complete graph action.";
+      factors_to_add_it = buffered_factors_to_add_.erase(factors_to_add_it);
       continue;
     }
 
