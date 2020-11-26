@@ -68,8 +68,9 @@ class GraphValues {
   static gtsam::NonlinearFactorGraph RemoveOldFactors(const gtsam::KeyVector& old_keys,
                                                       gtsam::NonlinearFactorGraph& graph);
 
-  // Also removes attached factors when old features have less than the min number required
-  void RemoveOldFeatures(gtsam::NonlinearFactorGraph& factors);
+  gtsam::KeyVector OldFeatureKeys(const gtsam::NonlinearFactorGraph& factors) const;
+
+  void RemoveOldFeatures(const gtsam::KeyVector& old_feature_keys, gtsam::NonlinearFactorGraph& factors);
 
   int RemoveOldCombinedNavStates(const localization_common::Time oldest_allowed_time);
 

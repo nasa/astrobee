@@ -775,7 +775,9 @@ bool GraphLocalizer::SlideWindow(const boost::optional<gtsam::Marginals>& margin
   }
 
   // Add marginal factors for marginalized values
-  const auto old_keys = graph_values_.OldKeys(*new_oldest_time);
+  auto old_keys = graph_values_.OldKeys(*new_oldest_time);
+  const auto old_feature_keys = graph_values_.OldFeatureKeys(graph_);
+  old_keys.insert(old_keys.end(), old_feature_keys.begin(), old_feature_keys.end());
   const auto old_factors = graph_values_.RemoveOldFactors(old_keys, graph_);
   if (params_.add_marginal_factors) {
     const auto marginal_factors = MarginalFactors(old_factors, old_keys, gtsam::EliminateQR);
@@ -785,7 +787,7 @@ bool GraphLocalizer::SlideWindow(const boost::optional<gtsam::Marginals>& margin
   }
 
   graph_values_.RemoveOldCombinedNavStates(*new_oldest_time);
-  graph_values_.RemoveOldFeatures(graph_);
+  graph_values_.RemoveOldFeatures(old_feature_keys, graph_);
 
   // Remove old data from other containers
   const auto oldest_timestamp = graph_values_.OldestTimestamp();
