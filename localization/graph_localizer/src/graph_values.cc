@@ -445,25 +445,22 @@ bool GraphValues::RemoveCombinedNavState(const lc::Time timestamp) {
 }
 
 void GraphValues::RemoveOldFeatures(gtsam::NonlinearFactorGraph& factors) {
-  // Features with less than 2 factors are ill constrained.
-  // TODO(rsoussan): Change this if add proper marginalization or priors
-  constexpr int kMinNumFactors = 2;
   for (auto feature_id_key_it = feature_id_key_map_.begin(); feature_id_key_it != feature_id_key_map_.end();) {
     int num_factors = 0;
     for (const auto& factor : factors) {
       if (factor->find(feature_id_key_it->second) != factor->end()) {
         ++num_factors;
-        if (num_factors >= kMinNumFactors) break;
+        if (num_factors >= params_.min_num_factors_per_feature) break;
       }
     }
 
-    if (num_factors < kMinNumFactors) {
+    if (num_factors < params_.min_num_factors_per_feature) {
       int num_removed_factors = 0;
       // Remove factors associated with feature with too few factors
       for (auto factor_it = factors.begin(); factor_it != factors.end();) {
         if ((*factor_it)->find(feature_id_key_it->second) != (*factor_it)->end()) {
           factor_it = factors.erase(factor_it);
-          if (++num_removed_factors == kMinNumFactors - 1) break;
+          if (++num_removed_factors == params_.min_num_factors_per_feature - 1) break;
         } else {
           ++factor_it;
         }

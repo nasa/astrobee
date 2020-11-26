@@ -65,6 +65,7 @@ void LoadGraphValuesParams(config_reader::ConfigReader& config, GraphValuesParam
   params.ideal_duration = lc::LoadDouble(config, "ideal_duration");
   params.min_num_states = lc::LoadInt(config, "min_num_states");
   params.max_num_states = lc::LoadInt(config, "max_num_states");
+  params.min_num_factors_per_feature = lc::LoadInt(config, "min_num_factors_per_feature");
 }
 
 void LoadNoiseParams(config_reader::ConfigReader& config, NoiseParams& params) {
