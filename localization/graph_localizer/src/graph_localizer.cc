@@ -750,7 +750,7 @@ gtsam::NonlinearFactorGraph GraphLocalizer::MarginalFactors(
   const gtsam::GaussianFactorGraph::Eliminate& eliminate_function) const {
   // Old keys not present in old factors.  This shouldn't occur.
   if (old_keys.size() == 0) {
-    LOG(ERROR) << "MarginalFactors: Old keys not found in old factors.";
+    VLOG(2) << "MarginalFactors: No old keys provided.";
     return old_factors;
   }
 

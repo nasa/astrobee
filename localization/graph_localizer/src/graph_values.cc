@@ -359,12 +359,14 @@ boost::optional<int> GraphValues::KeyIndex(const lc::Time timestamp) const {
 
 void GraphValues::UpdateValues(const gtsam::Values& new_values) { values_ = new_values; }
 
-gtsam::NonlinearFactorGraph GraphValues::RemoveOldFactors(const gtsam::KeyVector& old_feature_keys,
+gtsam::NonlinearFactorGraph GraphValues::RemoveOldFactors(const gtsam::KeyVector& old_keys,
                                                           gtsam::NonlinearFactorGraph& graph) {
   gtsam::NonlinearFactorGraph removed_factors;
+  if (old_keys.empty()) return removed_factors;
+
   for (auto factor_it = graph.begin(); factor_it != graph.end();) {
     bool found_key = false;
-    for (const auto& key : old_feature_keys) {
+    for (const auto& key : old_keys) {
       if ((*factor_it)->find(key) != (*factor_it)->end()) {
         found_key = true;
         break;
