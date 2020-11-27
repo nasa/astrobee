@@ -559,8 +559,16 @@ bool GraphLocalizer::TriangulateNewPoint(FactorsToAdd& factors_to_add) {
     measurements.emplace_back(projection_factor->measured());
     point_key = projection_factor->key2();
   }
-  const auto world_t_triangulated_point =
-    gtsam::triangulateSafe(camera_set, measurements, projection_triangulation_params_);
+  gtsam::TriangulationResult world_t_triangulated_point;
+  // TODO(rsoussan): Gtsam shouldn't be throwing exceptions for this, but needed if enable_epi enabled.
+  // Is there a build setting that prevents cheirality from being thrown in this case?
+  try {
+    world_t_triangulated_point = gtsam::triangulateSafe(camera_set, measurements, projection_triangulation_params_);
+  } catch (...) {
+    VLOG(2) << "TriangulateNewPoint: Exception occurred during triangulation";
+    return false;
+  }
+
   if (!world_t_triangulated_point.valid()) {
     VLOG(2) << "TriangulateNewPoint: Failed to triangulate point";
     return false;
