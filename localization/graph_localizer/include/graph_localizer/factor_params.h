@@ -41,6 +41,7 @@ struct FactorParams {
   bool use_projection_factors;
   int min_num_measurements_for_triangulation;
   int max_num_optical_flow_features;
+  bool add_point_prior;
   // Loc factors
   bool loc_pose_priors;
   bool loc_projections;
