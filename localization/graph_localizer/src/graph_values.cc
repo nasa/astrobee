@@ -472,9 +472,7 @@ gtsam::KeyVector GraphValues::OldFeatureKeys(const gtsam::NonlinearFactorGraph& 
 
 void GraphValues::RemoveOldFeatures(const gtsam::KeyVector& old_keys, gtsam::NonlinearFactorGraph& factors) {
   for (const auto& key : old_keys) {
-    // Remove feature
     values_.erase(key);
-    // TODO(rsoussan): Do this more efficiently
     for (auto feature_id_key_it = feature_id_key_map_.begin(); feature_id_key_it != feature_id_key_map_.end();) {
       if (feature_id_key_it->second == key) {
         feature_id_key_it = feature_id_key_map_.erase(feature_id_key_it);
