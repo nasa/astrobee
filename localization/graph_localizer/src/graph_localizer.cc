@@ -273,7 +273,14 @@ bool GraphLocalizer::AddOpticalFlowMeasurement(
   if (params_.factor.use_smart_factors) AddSmartFactors(optical_flow_feature_points_measurement);
   if (params_.factor.use_projection_factors) AddProjectionFactorsAndPoints(optical_flow_feature_points_measurement);
 
-  CheckForStandstillAndAddStandstillFactorIfNecessary(optical_flow_feature_points_measurement);
+  CheckForStandstill(optical_flow_feature_points_measurement);
+  if (standstill() && params_.factor.optical_flow_standstill_velocity_prior) {
+    FactorsToAdd prior_factors_to_add;
+    AddStandstillVelocityPriorFactor(optical_flow_feature_points_measurement.timestamp, prior_factors_to_add);
+    prior_factors_to_add.SetTimestamp(optical_flow_feature_points_measurement.timestamp);
+    BufferFactors(prior_factors_to_add);
+    VLOG(2) << "AddOpticalFLowMeasurement: Buffered a velocity prior factor.";
+  }
   return true;
 }
 
@@ -330,12 +337,8 @@ bool GraphLocalizer::AddProjectionFactorsAndPoints(
   return true;
 }
 
-bool GraphLocalizer::CheckForStandstillAndAddStandstillFactorIfNecessary(
-  const lm::FeaturePointsMeasurement& optical_flow_feature_points_measurement) {
-  // Add standstill velocity prior factor if there is low disparity for all feature tracks, indicating standstill
-  // Triangulation of other visual factors might fail if there isn't a long enough history of feature tracks and would
-  // fail to indicate a standstill event
-  FactorsToAdd prior_factors_to_add;
+void GraphLocalizer::CheckForStandstill(const lm::FeaturePointsMeasurement& optical_flow_feature_points_measurement) {
+  // Check for standstill via low disparity for all feature tracks
   double total_average_distance_from_mean = 0;
   int num_valid_feature_tracks = 0;
   for (const auto& feature_track : feature_tracker_.feature_tracks()) {
@@ -351,18 +354,8 @@ bool GraphLocalizer::CheckForStandstillAndAddStandstillFactorIfNecessary(
   if (num_valid_feature_tracks > 0)
     average_distance_from_mean = total_average_distance_from_mean / num_valid_feature_tracks;
 
-  // TODO(rsoussan): add standstill even if shouldn't add standstill prior!!!!
-  if (ShouldAddStandstillPrior(average_distance_from_mean, num_valid_feature_tracks, params_.factor)) {
-    AddStandstillVelocityPriorFactor(optical_flow_feature_points_measurement.timestamp, prior_factors_to_add);
-    prior_factors_to_add.SetTimestamp(optical_flow_feature_points_measurement.timestamp);
-    BufferFactors(prior_factors_to_add);
-    VLOG(2) << "AddOpticalFLowMeasurement: Buffered a velocity prior factor.";
-    standstill_ = true;
-  } else {
-    standstill_ = false;
-  }
-
-  return true;
+  standstill_ = (num_valid_feature_tracks >= 5 &&
+                 average_distance_from_mean <= params_.max_standstill_feature_track_avg_distance_from_mean);
 }
 
 bool GraphLocalizer::AddSmartFactors(const lm::FeaturePointsMeasurement& optical_flow_feature_points_measurement) {

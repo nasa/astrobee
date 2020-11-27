@@ -37,15 +37,6 @@ bool ValidPointSet(const std::deque<lm::FeaturePoint>& points, const double aver
   return (average_distance_from_mean >= min_avg_distance_from_mean);
 }
 
-bool ShouldAddStandstillPrior(const double standstill_feature_tracks_average_distance_from_mean,
-                              const int num_standstill_feature_tracks, const FactorParams& params) {
-  if (!params.optical_flow_standstill_velocity_prior) return false;
-  // TODO(rsoussan): Make this a config variable
-  if (num_standstill_feature_tracks < 5) return false;
-  return standstill_feature_tracks_average_distance_from_mean <
-         params.max_standstill_feature_track_avg_distance_from_mean;
-}
-
 double AverageDistanceFromMean(const std::deque<lm::FeaturePoint>& points) {
   // Calculate mean point and avg distance from mean
   Eigen::Vector2d sum_of_points = Eigen::Vector2d::Zero();

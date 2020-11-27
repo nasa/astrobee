@@ -55,9 +55,6 @@ void RemoveGravityFromBias(const gtsam::Vector3& global_F_gravity, const gtsam::
 bool ValidPointSet(const std::deque<localization_measurements::FeaturePoint>& points,
                    const double average_distance_from_mean, const double min_avg_distance_from_mean);
 
-bool ShouldAddStandstillPrior(const double standstill_feature_tracks_average_distance_from_mean,
-                              const int num_standstill_feature_tracks, const FactorParams& params);
-
 double AverageDistanceFromMean(const std::deque<localization_measurements::FeaturePoint>& points);
 
 bool ValidVLMsg(const ff_msgs::VisualLandmarks& visual_landmarks_msg);

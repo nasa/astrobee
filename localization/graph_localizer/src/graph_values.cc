@@ -446,7 +446,7 @@ bool GraphValues::RemoveCombinedNavState(const lc::Time timestamp) {
 }
 
 gtsam::KeyVector GraphValues::OldFeatureKeys(const gtsam::NonlinearFactorGraph& factors) const {
-using ProjectionFactor = gtsam::GenericProjectionFactor<gtsam::Pose3, gtsam::Point3>;
+  using ProjectionFactor = gtsam::GenericProjectionFactor<gtsam::Pose3, gtsam::Point3>;
   gtsam::KeyVector old_features;
   for (const auto& feature_id_key_pair : feature_id_key_map_) {
     const auto& key = feature_id_key_pair.second;

@@ -35,8 +35,6 @@ void LoadCalibrationParams(config_reader::ConfigReader& config, CalibrationParam
 void LoadFactorParams(config_reader::ConfigReader& config, FactorParams& params) {
   params.min_valid_feature_track_avg_distance_from_mean =
     lc::LoadDouble(config, "min_valid_feature_track_avg_distance_from_mean");
-  params.max_standstill_feature_track_avg_distance_from_mean =
-    lc::LoadDouble(config, "max_standstill_feature_track_avg_distance_from_mean");
   params.optical_flow_standstill_velocity_prior = lc::LoadBool(config, "optical_flow_standstill_velocity_prior");
   params.enable_EPI = lc::LoadBool(config, "enable_EPI");
   params.landmark_distance_threshold = lc::LoadDouble(config, "landmark_distance_threshold");
@@ -112,5 +110,7 @@ void LoadGraphLocalizerParams(config_reader::ConfigReader& config, GraphLocalize
   params.max_imu_factor_spacing = lc::LoadDouble(config, "max_imu_factor_spacing");
   params.add_priors = lc::LoadBool(config, "add_priors");
   params.add_marginal_factors = lc::LoadBool(config, "add_marginal_factors");
+  params.max_standstill_feature_track_avg_distance_from_mean =
+    lc::LoadDouble(config, "max_standstill_feature_track_avg_distance_from_mean");
 }
 }  // namespace graph_localizer

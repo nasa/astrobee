@@ -79,7 +79,7 @@ class GraphLocalizer {
   bool AddProjectionFactorsAndPoints(
     const localization_measurements::FeaturePointsMeasurement& optical_flow_feature_points_measurement);
   bool TriangulateNewPoint(FactorsToAdd& factors_to_add);
-  bool CheckForStandstillAndAddStandstillFactorIfNecessary(
+  void CheckForStandstill(
     const localization_measurements::FeaturePointsMeasurement& optical_flow_feature_points_measurement);
   bool AddSmartFactors(
     const localization_measurements::FeaturePointsMeasurement& optical_flow_feature_points_measurement);
