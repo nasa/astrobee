@@ -315,7 +315,8 @@ bool GraphLocalizer::AddProjectionFactorsAndPoints(
   for (const auto& feature_track_pair : feature_tracker_.feature_tracks()) {
     const auto& feature_track = feature_track_pair.second;
     if (feature_track.points.size() >= params_.factor.min_num_measurements_for_triangulation &&
-        !graph_values_.HasFeature(feature_track.id)) {
+        !graph_values_.HasFeature(feature_track.id) &&
+        (new_features + graph_values_.NumFeatures()) < params_.factor.max_num_optical_flow_features) {
       // Create new factors to add for each feature track so the graph action can act on only that
       // feature track to triangulate a new point
       FactorsToAdd projection_factors_with_new_point_to_add(GraphAction::kTriangulateNewPoint);
