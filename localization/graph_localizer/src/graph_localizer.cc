@@ -562,6 +562,15 @@ bool GraphLocalizer::TriangulateNewPoint(FactorsToAdd& factors_to_add) {
   // TODO(rsoussan): clean this up
   const auto feature_id = factors_to_add.Get().front().key_infos[1].id();
   graph_values_.AddFeature(feature_id, *world_t_triangulated_point, point_key);
+  // Add prior
+  const gtsam::Vector3 point_prior_noise_sigmas((gtsam::Vector(3) << params_.noise.point_prior_translation_stddev,
+                                                 params_.noise.point_prior_translation_stddev,
+                                                 params_.noise.point_prior_translation_stddev)
+                                                  .finished());
+  const auto point_noise =
+    Robust(gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(point_prior_noise_sigmas)));
+  gtsam::PriorFactor<gtsam::Point3> point_prior_factor(point_key, *world_t_triangulated_point, point_noise);
+  graph_.push_back(point_prior_factor);
   return true;
 }
 

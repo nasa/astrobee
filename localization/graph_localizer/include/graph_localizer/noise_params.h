@@ -33,6 +33,7 @@ struct NoiseParams {
   double starting_prior_gyro_bias_stddev;
   double loc_prior_translation_stddev;
   double loc_prior_quaternion_stddev;
+  double point_prior_translation_stddev;
 };
 }  // namespace graph_localizer
 
