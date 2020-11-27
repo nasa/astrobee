@@ -776,9 +776,13 @@ bool GraphLocalizer::SlideWindow(const boost::optional<gtsam::Marginals>& margin
 
   // Add marginal factors for marginalized values
   auto old_keys = graph_values_.OldKeys(*new_oldest_time);
+  auto old_factors = graph_values_.RemoveOldFactors(old_keys, graph_);
+  // Call remove old factors before old feature keys, since old feature keys depend on
+  // number of factors per key remaining
   const auto old_feature_keys = graph_values_.OldFeatureKeys(graph_);
+  auto old_feature_factors = graph_values_.RemoveOldFactors(old_feature_keys, graph_);
   old_keys.insert(old_keys.end(), old_feature_keys.begin(), old_feature_keys.end());
-  const auto old_factors = graph_values_.RemoveOldFactors(old_keys, graph_);
+  old_factors.push_back(old_feature_factors);
   if (params_.add_marginal_factors) {
     const auto marginal_factors = MarginalFactors(old_factors, old_keys, gtsam::EliminateQR);
     for (const auto& marginal_factor : marginal_factors) {
