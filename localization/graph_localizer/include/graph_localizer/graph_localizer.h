@@ -226,12 +226,13 @@ class GraphLocalizer {
 
   GraphLocalizerParams params_;
   gtsam::LevenbergMarquardtParams levenberg_marquardt_params_;
+  gtsam::SmartProjectionParams smart_projection_params_;
+  gtsam::TriangulationParameters projection_triangulation_params_;
   imu_integration::LatestImuIntegrator latest_imu_integrator_;
   gtsam::NonlinearFactorGraph graph_;
   GraphValues graph_values_;
   FeatureTracker feature_tracker_;
   boost::optional<gtsam::Marginals> marginals_;
-  gtsam::SmartProjectionParams smart_projection_params_;
   boost::optional<std::pair<gtsam::Pose3, localization_common::Time>> estimated_world_T_dock_;
   std::map<localization_common::Time, gtsam::Pose3> dock_cam_T_dock_estimates_;
   std::multimap<localization_common::Time, FactorsToAdd> buffered_factors_to_add_;

@@ -22,9 +22,9 @@
 
 namespace graph_localizer {
 struct FactorParams {
+  bool optical_flow_standstill_velocity_prior;
   // Optical flow factors
   double min_valid_feature_track_avg_distance_from_mean;
-  bool optical_flow_standstill_velocity_prior;
   bool enable_EPI;
   double landmark_distance_threshold;
   double dynamic_outlier_rejection_threshold;
@@ -42,6 +42,9 @@ struct FactorParams {
   int min_num_measurements_for_triangulation;
   int max_num_optical_flow_features;
   bool add_point_prior;
+  bool triangulation_enable_EPI;
+  double triangulation_landmark_distance_threshold;
+  double triangulation_dynamic_outlier_rejection_threshold;
   // Loc factors
   bool loc_pose_priors;
   bool loc_projections;

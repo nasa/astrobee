@@ -46,6 +46,11 @@ void LoadFactorParams(config_reader::ConfigReader& config, FactorParams& params)
   params.robust_smart_factor = lc::LoadBool(config, "robust_smart_factor");
   params.max_num_optical_flow_factors = lc::LoadInt(config, "max_num_optical_flow_factors");
   params.add_point_prior = lc::LoadBool(config, "add_point_prior");
+  params.triangulation_enable_EPI = lc::LoadBool(config, "triangulation_enable_EPI");
+  params.triangulation_landmark_distance_threshold =
+    lc::LoadDouble(config, "triangulation_landmark_distance_threshold");
+  params.triangulation_dynamic_outlier_rejection_threshold =
+    lc::LoadDouble(config, "triangulation_dynamic_outlier_rejection_threshold");
   params.enable_rotation_only_fallback = lc::LoadBool(config, "enable_rotation_only_fallback");
   params.smart_factor_splitting = lc::LoadBool(config, "smart_factor_splitting");
   params.use_smart_factors = lc::LoadBool(config, "use_smart_factors");

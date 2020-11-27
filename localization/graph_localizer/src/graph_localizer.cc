@@ -101,6 +101,13 @@ GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
   smart_projection_params_.setRetriangulationThreshold(params_.factor.retriangulation_threshold);
   smart_projection_params_.setEnableEPI(params_.factor.enable_EPI);
 
+  // Initialize projection triangulation params
+  projection_triangulation_params_.rankTolerance = 1e-9;
+  projection_triangulation_params_.enableEPI = params_.factor.triangulation_enable_EPI;
+  projection_triangulation_params_.landmarkDistanceThreshold = params_.factor.triangulation_landmark_distance_threshold;
+  projection_triangulation_params_.dynamicOutlierRejectionThreshold =
+    params_.factor.triangulation_dynamic_outlier_rejection_threshold;
+
   // Initialize lm params
   if (params_.verbose) {
     levenberg_marquardt_params_.verbosityLM = gtsam::LevenbergMarquardtParams::VerbosityLM::TRYDELTA;
@@ -552,9 +559,8 @@ bool GraphLocalizer::TriangulateNewPoint(FactorsToAdd& factors_to_add) {
     measurements.emplace_back(projection_factor->measured());
     point_key = projection_factor->key2();
   }
-  // TODO(rsoussan): Make seperate triangulation params for this?
   const auto world_t_triangulated_point =
-    gtsam::triangulateSafe(camera_set, measurements, smart_projection_params_.triangulation);
+    gtsam::triangulateSafe(camera_set, measurements, projection_triangulation_params_);
   if (!world_t_triangulated_point.valid()) {
     VLOG(2) << "TriangulateNewPoint: Failed to triangulate point";
     return false;
@@ -1089,7 +1095,7 @@ void GraphLocalizer::PrintFactorDebugInfo() const {
 
 void GraphLocalizer::LogErrors() {
   double total_error = 0;
-  double smart_factor_error = 0;
+  double optical_flow_factor_error = 0;
   double loc_proj_error = 0;
   double imu_factor_error = 0;
   double pose_prior_error = 0;
@@ -1098,9 +1104,17 @@ void GraphLocalizer::LogErrors() {
   for (const auto& factor : graph_) {
     const double error = factor->error(graph_values_.values());
     total_error += error;
-    const auto smart_factor = dynamic_cast<const RobustSmartFactor*>(factor.get());
-    if (smart_factor) {
-      smart_factor_error += error;
+    if (params_.factor.use_smart_factors) {
+      const auto smart_factor = dynamic_cast<const RobustSmartFactor*>(factor.get());
+      if (smart_factor) {
+        optical_flow_factor_error += error;
+      }
+    }
+    if (params_.factor.use_projection_factors) {
+      const auto projection_factor = dynamic_cast<const ProjectionFactor*>(factor.get());
+      if (projection_factor) {
+        optical_flow_factor_error += error;
+      }
     }
     const auto imu_factor = dynamic_cast<gtsam::CombinedImuFactor*>(factor.get());
     if (imu_factor) {
@@ -1125,7 +1139,7 @@ void GraphLocalizer::LogErrors() {
     }
   }
   total_error_averager_.UpdateAndLog(total_error);
-  of_error_averager_.UpdateAndLog(smart_factor_error);
+  of_error_averager_.UpdateAndLog(optical_flow_factor_error);
   loc_proj_error_averager_.UpdateAndLog(loc_proj_error);
   pose_prior_error_averager_.UpdateAndLog(pose_prior_error);
   velocity_prior_error_averager_.UpdateAndLog(velocity_prior_error);
