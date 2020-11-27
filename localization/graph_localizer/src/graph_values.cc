@@ -23,6 +23,7 @@
 #include <gtsam/inference/Symbol.h>
 #include <gtsam/navigation/ImuBias.h>
 #include <gtsam/navigation/NavState.h>
+#include <gtsam/slam/ProjectionFactor.h>
 
 #include <glog/logging.h>
 
@@ -445,11 +446,15 @@ bool GraphValues::RemoveCombinedNavState(const lc::Time timestamp) {
 }
 
 gtsam::KeyVector GraphValues::OldFeatureKeys(const gtsam::NonlinearFactorGraph& factors) const {
+using ProjectionFactor = gtsam::GenericProjectionFactor<gtsam::Pose3, gtsam::Point3>;
   gtsam::KeyVector old_features;
   for (const auto& feature_id_key_pair : feature_id_key_map_) {
     const auto& key = feature_id_key_pair.second;
     int num_factors = 0;
     for (const auto& factor : factors) {
+      // Only consider projection factors for min num feature factors
+      const auto projection_factor = dynamic_cast<const ProjectionFactor*>(factor.get());
+      if (!projection_factor) continue;
       if (factor->find(key) != factor->end()) {
         ++num_factors;
         if (num_factors >= params_.min_num_factors_per_feature) break;
