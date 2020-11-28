@@ -823,6 +823,10 @@ bool GraphLocalizer::SlideWindow(const boost::optional<gtsam::Marginals>& margin
   // Currently this only applies to optical flow smart factors.  Remove if no longer use these
   RemoveOldBufferedFactors(*oldest_timestamp);
 
+  if (params_.factor.add_point_prior && marginals_) {
+    UpdatePointPriors(*marginals_);
+  }
+
   if (params_.add_priors) {
     // Add prior to oldest nav state using covariances from last round of
     // optimization
@@ -860,6 +864,33 @@ bool GraphLocalizer::SlideWindow(const boost::optional<gtsam::Marginals>& margin
   }
 
   return true;
+}
+
+void GraphLocalizer::UpdatePointPriors(const gtsam::Marginals& marginals) {
+  const auto feature_keys = graph_values_.FeatureKeys();
+  for (const auto& feature_key : feature_keys) {
+    const auto world_t_point = graph_values_.at<gtsam::Point3>(feature_key);
+    if (!world_t_point) {
+      LOG(ERROR) << "UpdatePointPriors: Failed to get world_t_point.";
+      continue;
+    }
+    for (auto factor_it = graph_.begin(); factor_it != graph_.end();) {
+      const auto point_prior_factor = dynamic_cast<gtsam::PriorFactor<gtsam::Point3>*>(factor_it->get());
+      if (point_prior_factor && (point_prior_factor->key() == feature_key)) {
+        // Erase old prior
+        factor_it = graph_.erase(factor_it);
+        // Add updated one
+        const auto point_prior_noise =
+          Robust(gtsam::noiseModel::Gaussian::Covariance(marginals.marginalCovariance(feature_key)));
+        const gtsam::PriorFactor<gtsam::Point3> point_prior_factor(feature_key, *world_t_point, point_prior_noise);
+        graph_.push_back(point_prior_factor);
+        // Only one point prior per feature
+        break;
+      } else {
+        ++factor_it;
+      }
+    }
+  }
 }
 
 void GraphLocalizer::RemovePriors(const int key_index) {

@@ -203,6 +203,14 @@ boost::optional<gtsam::Key> GraphValues::FeatureKey(const lm::FeatureId id) cons
 
 gtsam::Key GraphValues::CreateFeatureKey() { return sym::F(++feature_key_index_); }
 
+gtsam::KeyVector GraphValues::FeatureKeys() const {
+  gtsam::KeyVector feature_keys;
+  for (const auto& feature_id_key_pair : feature_id_key_map_) {
+    feature_keys.emplace_back(feature_id_key_pair.second);
+  }
+  return feature_keys;
+}
+
 bool GraphValues::AddFeature(const lm::FeatureId id, const gtsam::Point3& feature_point, const gtsam::Key& key) {
   if (HasFeature(id)) {
     LOG(ERROR) << "AddFeature: Feature already exists.";

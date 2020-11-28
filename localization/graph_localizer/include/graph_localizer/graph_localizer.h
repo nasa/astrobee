@@ -131,6 +131,8 @@ class GraphLocalizer {
   // Optionally adds priors using marginalized covariances for new oldest states
   bool SlideWindow(const boost::optional<gtsam::Marginals>& marginals);
 
+  void UpdatePointPriors(const gtsam::Marginals& marginals);
+
   void RemovePriors(const int key_index);
 
   // Integrates latest imu measurements up to timestamp and adds imu factor and

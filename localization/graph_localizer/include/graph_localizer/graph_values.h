@@ -134,6 +134,8 @@ class GraphValues {
   bool AddFeature(const localization_measurements::FeatureId id, const gtsam::Point3& feature_point,
                   const gtsam::Key& key);
 
+  gtsam::KeyVector FeatureKeys() const;
+
   int NumFeatures() const;
 
  private:
