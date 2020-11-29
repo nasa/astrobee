@@ -466,12 +466,15 @@ void GraphLocalizer::AddRotationFactor() {
   cv::eigen2cv(params_.calibration.nav_cam_intrinsics->K(), intrinsics);
   // TODO(rsoussan): is this the correct point 1 and point 2 order????
   const auto essential_matrix = cv::findEssentialMat(points_1, points_2, intrinsics);
-  cv::Mat cv_rotation;
+  cv::Mat cv_cam_1_R_cam_2;
   cv::Mat cv_translation;
-  cv::recoverPose(essential_matrix, points_1, points_2, intrinsics, cv_rotation, cv_translation);
-  Eigen::Matrix3d eigen_rotation;
-  cv::cv2eigen(cv_rotation, eigen_rotation);
-  const gtsam::Rot3 rotation(eigen_rotation);
+  cv::recoverPose(essential_matrix, points_1, points_2, intrinsics, cv_cam_1_R_cam_2, cv_translation);
+  Eigen::Matrix3d eigen_cam_1_R_cam_2;
+  cv::cv2eigen(cv_cam_1_R_cam_2, eigen_cam_1_R_cam_2);
+  const gtsam::Rot3& body_R_cam = params_.calibration.body_T_nav_cam.rotation();
+  // Put measurement in body frame since factor expects this
+  const gtsam::Rot3 cam_1_R_cam_2(eigen_cam_1_R_cam_2);
+  const gtsam::Rot3 body_1_R_body_2 = body_R_cam * cam_1_R_cam_2 * body_R_cam.inverse();
   // Create Rotation Factor
   const auto& points = feature_tracker_.feature_tracks().begin()->second.points;
   const KeyInfo pose_1_key_info(&sym::P, points[points.size() - 2].timestamp);
@@ -483,7 +486,7 @@ void GraphLocalizer::AddRotationFactor() {
   const auto rotation_noise =
     Robust(gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(rotation_noise_sigmas)));
   const auto rotation_factor = boost::make_shared<gtsam::PoseRotationFactor>(
-    rotation, rotation_noise, pose_1_key_info.UninitializedKey(), pose_2_key_info.UninitializedKey());
+    body_1_R_body_2, rotation_noise, pose_1_key_info.UninitializedKey(), pose_2_key_info.UninitializedKey());
   FactorsToAdd rotation_factors_to_add;
   rotation_factors_to_add.push_back({{pose_1_key_info, pose_2_key_info}, rotation_factor});
   rotation_factors_to_add.SetTimestamp(pose_2_key_info.timestamp());
