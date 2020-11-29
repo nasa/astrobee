@@ -76,6 +76,7 @@ class GraphLocalizer {
   LatestCombinedNavStateAndCovariances() const;
   bool AddOpticalFlowMeasurement(
     const localization_measurements::FeaturePointsMeasurement& optical_flow_feature_points_measurement);
+  void AddRotationFactor();
   bool AddProjectionFactorsAndPoints(
     const localization_measurements::FeaturePointsMeasurement& optical_flow_feature_points_measurement);
   bool TriangulateNewPoint(FactorsToAdd& factors_to_add);
@@ -237,6 +238,7 @@ class GraphLocalizer {
   boost::optional<gtsam::Marginals> marginals_;
   boost::optional<std::pair<gtsam::Pose3, localization_common::Time>> estimated_world_T_dock_;
   std::map<localization_common::Time, gtsam::Pose3> dock_cam_T_dock_estimates_;
+  boost::optional<localization_measurements::FeaturePointsMeasurement> last_optical_flow_measurement_;
   std::multimap<localization_common::Time, FactorsToAdd> buffered_factors_to_add_;
   localization_common::Timer optimization_timer_;
   // Graph Stats Averagers

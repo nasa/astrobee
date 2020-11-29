@@ -32,6 +32,10 @@
 #include <gtsam/nonlinear/LinearContainerFactor.h>
 #include <gtsam/slam/PriorFactor.h>
 
+#include <opencv2/calib3d.hpp>
+#include <opencv2/core/eigen.hpp>
+#include <opencv2/core/types.hpp>
+
 #include <glog/logging.h>
 
 #include <chrono>
@@ -279,6 +283,7 @@ bool GraphLocalizer::AddOpticalFlowMeasurement(
 
   if (params_.factor.use_smart_factors) AddSmartFactors(optical_flow_feature_points_measurement);
   if (params_.factor.use_projection_factors) AddProjectionFactorsAndPoints(optical_flow_feature_points_measurement);
+  if (params_.factor.add_rotation_factor) AddRotationFactor();
 
   CheckForStandstill(optical_flow_feature_points_measurement);
   if (standstill() && params_.factor.optical_flow_standstill_velocity_prior) {
@@ -436,6 +441,37 @@ void GraphLocalizer::AddARTagMeasurement(const lm::MatchedProjectionsMeasurement
   AddProjectionMeasurement(matched_projections_measurement, params_.calibration.body_T_dock_cam,
                            params_.calibration.dock_cam_intrinsics, params_.noise.loc_dock_cam_noise,
                            GraphAction::kTransformARMeasurementAndUpdateDockTWorld);
+}
+
+void GraphLocalizer::AddRotationFactor() {
+  std::vector<cv::Point2d> points_1;
+  std::vector<cv::Point2d> points_2;
+  for (const auto& feature_track_pair : feature_tracker_.feature_tracks()) {
+    const auto& feature_track = feature_track_pair.second;
+    if (feature_track.points.size() < 2) continue;
+    // Get points for most recent and second to most recent images
+    const auto& point_1 = feature_track.points[feature_track.points.size() - 2].image_point;
+    const auto& point_2 = feature_track.points.back().image_point;
+    points_1.emplace_back(cv::Point2d(point_1.x(), point_1.y()));
+    points_2.emplace_back(cv::Point2d(point_2.x(), point_2.y()));
+  }
+
+  if (points_1.size() < 5) {
+    LOG(WARNING) << "AddRotationFactor: Not enough corresponding points found.";
+    return;
+  }
+
+  cv::Mat intrinsics;
+  cv::eigen2cv(params_.calibration.nav_cam_intrinsics->K(), intrinsics);
+  // TODO(rsoussan): is this the correct point 1 and point 2 order????
+  const auto essential_matrix = cv::findEssentialMat(points_1, points_2, intrinsics);
+  cv::Mat cv_rotation;
+  cv::Mat cv_translation;
+  cv::recoverPose(essential_matrix, points_1, points_2, intrinsics, cv_rotation, cv_translation);
+  Eigen::Matrix3d eigen_rotation;
+  cv::cv2eigen(cv_rotation, eigen_rotation);
+  const gtsam::Rot3 rotation(eigen_rotation);
+  // TODO(rsoussan): make factor!!!
 }
 
 void GraphLocalizer::AddSparseMappingMeasurement(
