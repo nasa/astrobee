@@ -18,6 +18,7 @@
 
 #include <graph_localizer/graph_localizer.h>
 #include <graph_localizer/loc_projection_factor.h>
+#include <graph_localizer/pose_rotation_factor.h>
 #include <graph_localizer/utilities.h>
 #include <imu_integration/utilities.h>
 #include <localization_common/utilities.h>
@@ -471,7 +472,23 @@ void GraphLocalizer::AddRotationFactor() {
   Eigen::Matrix3d eigen_rotation;
   cv::cv2eigen(cv_rotation, eigen_rotation);
   const gtsam::Rot3 rotation(eigen_rotation);
-  // TODO(rsoussan): make factor!!!
+  // Create Rotation Factor
+  const auto& points = feature_tracker_.feature_tracks().begin()->second.points;
+  const KeyInfo pose_1_key_info(&sym::P, points[points.size() - 2].timestamp);
+  const KeyInfo pose_2_key_info(&sym::P, points.back().timestamp);
+  const gtsam::Vector3 rotation_noise_sigmas((gtsam::Vector(3) << params_.noise.rotation_factor_stddev,
+                                              params_.noise.rotation_factor_stddev,
+                                              params_.noise.rotation_factor_stddev)
+                                               .finished());
+  const auto rotation_noise =
+    Robust(gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(rotation_noise_sigmas)));
+  const auto rotation_factor = boost::make_shared<gtsam::PoseRotationFactor>(
+    rotation, rotation_noise, pose_1_key_info.UninitializedKey(), pose_2_key_info.UninitializedKey());
+  FactorsToAdd rotation_factors_to_add;
+  rotation_factors_to_add.push_back({{pose_1_key_info, pose_2_key_info}, rotation_factor});
+  rotation_factors_to_add.SetTimestamp(pose_2_key_info.timestamp());
+  BufferFactors(rotation_factors_to_add);
+  VLOG(2) << "AddRotationFactor: Buffered a rotation factor.";
 }
 
 void GraphLocalizer::AddSparseMappingMeasurement(

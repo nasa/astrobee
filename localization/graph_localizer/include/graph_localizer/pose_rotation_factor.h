@@ -25,20 +25,22 @@
 
 namespace gtsam {
 class PoseRotationFactor : public NoiseModelFactor2<gtsam::Pose3, gtsam::Pose3> {
+  typedef NoiseModelFactor2<Pose3, Pose3> Base;
+  typedef PoseRotationFactor This;
+
  public:
   PoseRotationFactor() {}
 
-  PoseRotationFactor(const Rot3& rotation, const SharedNoiseModel& model, Key pose_key1, Key pose_key2)
-      : Base(model, pose_key1, pose_key2), rotation_(rotation) {}
+  PoseRotationFactor(const Rot3& rotation, const SharedNoiseModel& model, Key pose_key_1, Key pose_key_2)
+      : Base(model, pose_key_1, pose_key_2), rotation_(rotation) {}
 
-  // TODO(rsoussan): Is this necessary?
   gtsam::NonlinearFactor::shared_ptr clone() const override {
     return boost::static_pointer_cast<gtsam::NonlinearFactor>(gtsam::NonlinearFactor::shared_ptr(new This(*this)));
   }
 
   void print(const std::string& s = "", const KeyFormatter& keyFormatter = DefaultKeyFormatter) const override {
     std::cout << s << "PoseRotationFactor, z = ";
-    traits<Point2>::Print(rotation_);
+    traits<Rot3>::Print(rotation_);
     Base::print("", keyFormatter);
   }
 
@@ -51,20 +53,26 @@ class PoseRotationFactor : public NoiseModelFactor2<gtsam::Pose3, gtsam::Pose3> 
                        boost::optional<Matrix&> H2 = boost::none) const override {
     const auto& rot1 = pose1.rotation(H1);
     const auto& rot2 = pose2.rotation(H2);
-    if (H1) LOG(ERROR) << "starting h1: " << H1->matrix();
-    if (H2) LOG(ERROR) << "starting h2: " << H2->matrix();
-    // TODO(rsoussan): are these references or copys?????
-    boost::optional<Rot3&> H1_rot = H1 ? H1.block<3, 3>(0, 0) : boost::none;
-    boost::optional<Rot3&> H2_rot = H2 ? H2.block<3, 3>(0, 0) : boost::none;
+    // TODO(rsoussan): How to use ref to block of H1 and H2 instead of making new matrices and copying?
+    Matrix H1_rot_matrix;
+    Matrix H2_rot_matrix;
+    boost::optional<Matrix&> H1_rot = H1_rot_matrix;
+    boost::optional<Matrix&> H2_rot = H2_rot_matrix;
+    if (!H1) H1_rot = boost::none;
+    if (!H2) H2_rot = boost::none;
     // Adapted from BetweenFactor.h
     const auto relative_rotation = traits<Rot3>::Between(rot1, rot2, H1_rot, H2_rot);
     // manifold equivalent of h(x)-z -> log(z,h(x))
     traits<Rot3>::ChartJacobian::Jacobian Hlocal;
     Vector error = traits<Rot3>::Local(rotation_, relative_rotation, boost::none, (H1_rot || H2_rot) ? &Hlocal : 0);
-    if (H1_rot) *H1_rot = Hlocal * (*H1_rot);
-    if (H2_rot) *H2_rot = Hlocal * (*H2_rot);
-    if (H1) LOG(ERROR) << "ending h1: " << H1->matrix();
-    if (H2) LOG(ERROR) << "ending h2: " << H2->matrix();
+    if (H1_rot) {
+      *H1_rot = Hlocal * (*H1_rot);
+      H1->block<3, 3>(0, 0) = H1_rot_matrix;
+    }
+    if (H2_rot) {
+      *H2_rot = Hlocal * (*H2_rot);
+      H2->block<3, 3>(0, 0) = H2_rot_matrix;
+    }
     return error;
   }
 

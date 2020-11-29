@@ -89,6 +89,7 @@ void LoadNoiseParams(config_reader::ConfigReader& config, NoiseParams& params) {
   params.loc_prior_translation_stddev = lc::LoadDouble(config, "loc_prior_translation_stddev");
   params.loc_prior_quaternion_stddev = lc::LoadDouble(config, "loc_prior_quaternion_stddev");
   params.point_prior_translation_stddev = lc::LoadDouble(config, "point_prior_translation_stddev");
+  params.rotation_factor_stddev = lc::LoadDouble(config, "rotation_factor_stddev");
 }
 
 void LoadSanityCheckerParams(config_reader::ConfigReader& config, SanityCheckerParams& params) {
