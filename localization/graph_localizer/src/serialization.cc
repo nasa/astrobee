@@ -32,6 +32,7 @@
 #include <gtsam/navigation/NavState.h>
 
 // Factors used in NonlinearFactorGraph
+#include <graph_localizer/loc_pose_factor.h>
 #include <graph_localizer/loc_projection_factor.h>
 #include <graph_localizer/robust_smart_projection_pose_factor.h>
 #include <gtsam/nonlinear/LinearContainerFactor.h>
@@ -56,6 +57,7 @@ BOOST_CLASS_EXPORT_GUID(gtsam::PriorFactor<gtsam::Pose3>, "gtsam::PriorFactorPos
 BOOST_CLASS_EXPORT_GUID(gtsam::PriorFactor<gtsam::Vector3>, "gtsam::PriorFactorVector3");
 BOOST_CLASS_EXPORT_GUID(gtsam::PriorFactor<gtsam::imuBias::ConstantBias>, "gtsam::PriorFactorConstantBias");
 BOOST_CLASS_EXPORT_GUID(LocProjectionFactor, "gtsam::LocProjectionFactor");
+BOOST_CLASS_EXPORT_GUID(gtsam::LocPoseFactor, "gtsam::LocPoseFactor");
 using ProjectionFactor = gtsam::GenericProjectionFactor<gtsam::Pose3, gtsam::Point3>;
 BOOST_CLASS_EXPORT_GUID(ProjectionFactor, "gtsam::GenericProjectionFactor");
 BOOST_CLASS_EXPORT_GUID(gtsam::RobustSmartProjectionPoseFactor<gtsam::Cal3_S2>,

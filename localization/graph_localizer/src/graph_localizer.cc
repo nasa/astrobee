@@ -18,6 +18,7 @@
 
 #include <graph_localizer/graph_localizer.h>
 #include <graph_localizer/loc_projection_factor.h>
+#include <graph_localizer/loc_pose_factor.h>
 #include <graph_localizer/pose_rotation_factor.h>
 #include <graph_localizer/utilities.h>
 #include <imu_integration/utilities.h>
@@ -556,7 +557,7 @@ void GraphLocalizer::AddProjectionMeasurement(const lm::MatchedProjectionsMeasur
       Robust(gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(pose_prior_noise_sigmas)));
 
     const KeyInfo key_info(&sym::P, matched_projections_measurement.timestamp);
-    gtsam::PriorFactor<gtsam::Pose3>::shared_ptr pose_prior_factor(new gtsam::PriorFactor<gtsam::Pose3>(
+    gtsam::LocPoseFactor::shared_ptr pose_prior_factor(new gtsam::LocPoseFactor(
       key_info.UninitializedKey(), matched_projections_measurement.global_T_cam * body_T_cam.inverse(), pose_noise));
     factors_to_add.push_back({{key_info}, pose_prior_factor});
     factors_to_add.SetTimestamp(matched_projections_measurement.timestamp);
@@ -949,7 +950,8 @@ void GraphLocalizer::RemovePriors(const int key_index) {
   for (auto factor_it = graph_.begin(); factor_it != graph_.end();) {
     bool erase_factor = false;
     const auto pose_prior_factor = dynamic_cast<gtsam::PriorFactor<gtsam::Pose3>*>(factor_it->get());
-    if (pose_prior_factor && pose_prior_factor->key() == sym::P(key_index)) {
+    const auto loc_pose_factor = dynamic_cast<gtsam::LocPoseFactor*>(factor_it->get());
+    if (pose_prior_factor && !loc_pose_factor && pose_prior_factor->key() == sym::P(key_index)) {
       erase_factor = true;
     }
     const auto velocity_prior_factor = dynamic_cast<gtsam::PriorFactor<gtsam::Velocity3>*>(factor_it->get());
@@ -1125,9 +1127,8 @@ bool GraphLocalizer::TransformARMeasurementAndUpdateDockTWorld(FactorsToAdd& fac
   for (auto factor_to_add_it = factors_to_add.Get().begin(); factor_to_add_it != factors_to_add.Get().end();) {
     gtsam::LocProjectionFactor<>* loc_proj_factor =
       dynamic_cast<gtsam::LocProjectionFactor<>*>(factor_to_add_it->factor.get());
-    gtsam::PriorFactor<gtsam::Pose3>* loc_prior_factor =
-      dynamic_cast<gtsam::PriorFactor<gtsam::Pose3>*>(factor_to_add_it->factor.get());
-    if (!loc_proj_factor && !loc_prior_factor) {
+    gtsam::LocPoseFactor* loc_pose_factor = dynamic_cast<gtsam::LocPoseFactor*>(factor_to_add_it->factor.get());
+    if (!loc_proj_factor && !loc_pose_factor) {
       LOG(ERROR)
         << "TransformARMeasurementAndUpdateDockTWorld: Failed to cast factor to loc projection or prior factor.";
       return false;
@@ -1137,9 +1138,9 @@ bool GraphLocalizer::TransformARMeasurementAndUpdateDockTWorld(FactorsToAdd& fac
       ++factor_to_add_it;
     } else {
       // Make new factor with changed frame and erase old one since gtsam doesn't allow modifying PriorFactor estimate
-      gtsam::PriorFactor<gtsam::Pose3>::shared_ptr frame_changed_pose_prior_factor(new gtsam::PriorFactor<gtsam::Pose3>(
-        loc_prior_factor->key(), estimated_world_T_dock_->first * loc_prior_factor->prior(),
-        loc_prior_factor->noiseModel()));
+      gtsam::LocPoseFactor::shared_ptr frame_changed_pose_prior_factor(
+        new gtsam::LocPoseFactor(loc_pose_factor->key(), estimated_world_T_dock_->first * loc_pose_factor->prior(),
+                                 loc_pose_factor->noiseModel()));
       frame_changed_pose_prior_factors.emplace_back(factor_to_add_it->key_infos, frame_changed_pose_prior_factor);
       factor_to_add_it = factors_to_add.Get().erase(factor_to_add_it);
     }
@@ -1212,7 +1213,8 @@ void GraphLocalizer::LogErrors() {
       imu_factor_error += error;
     }
     const auto loc_factor = dynamic_cast<gtsam::LocProjectionFactor<>*>(factor.get());
-    if (loc_factor) {
+    const auto loc_pose_factor = dynamic_cast<gtsam::LocPoseFactor*>(factor.get());
+    if (loc_factor || loc_pose_factor) {
       loc_proj_error += error;
     }
     const auto rotation_factor = dynamic_cast<gtsam::PoseRotationFactor*>(factor.get());
@@ -1221,7 +1223,7 @@ void GraphLocalizer::LogErrors() {
     }
     // Prior Factors
     const auto pose_prior_factor = dynamic_cast<gtsam::PriorFactor<gtsam::Pose3>*>(factor.get());
-    if (pose_prior_factor) {
+    if (pose_prior_factor && !loc_pose_factor) {
       pose_prior_error += error;
     }
     const auto velocity_prior_factor = dynamic_cast<gtsam::PriorFactor<gtsam::Velocity3>*>(factor.get());
@@ -1312,9 +1314,8 @@ int GraphLocalizer::NumSmartFactors(const bool check_valid) const {
 }
 
 int GraphLocalizer::NumVLFactors() const {
-  // Subtract one from priors for prior on first state
   if (params_.factor.loc_pose_priors)
-    return (NumFactors<gtsam::PriorFactor<gtsam::Pose3>>() - 1);
+    return NumFactors<gtsam::LocPoseFactor>();
   else if (params_.factor.loc_projections)
     return NumFactors<gtsam::LocProjectionFactor<>>();
   else
