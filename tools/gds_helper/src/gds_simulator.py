@@ -432,7 +432,7 @@ def main():
     clear()
 
     # Check ROS master presence
-    print ' > Waiting for ROS communications...\n'
+    print ' > Waiting for ROS communication...\n'
 
     while not is_ros_running():
         if timer == 0:
