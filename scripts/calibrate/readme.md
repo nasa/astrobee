@@ -14,11 +14,13 @@ sudo apt install libopencv-dev ros-kinetic-vision-opencv
 
 # Install pip and use it to install python packages
 
+We assume that Python 2 is used.
+
 curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
 sudo python get-pip.py
 sudo -H pip install testresources
-sudo -H pip install python-igraph --upgrade
-sudo -H pip install opencv-python
+sudo -H pip install python-igraph==0.8 --upgrade
+sudo -H pip install  numpy==1.15.0 opencv-python==4.2.0.32
 
 If necessary, pip and the other packages can be installed in user
 space. The PYTHONPATH may need to be set for such packages.
