@@ -332,7 +332,8 @@ def execute_action(selection):
     arg = CommandArg()
     arg.data_type = 5
     arg.s = apps[selection].apk_name
-    command_str = "" # For when the user enters the command by hand rather than selecting it
+    command     = "" # for when an the user supplies the command index
+    command_str = "" # For when the user enters the actual command
     
     if option == 'a':
         # List commands
@@ -363,21 +364,15 @@ def execute_action(selection):
             num_cmds = len(apps[selection].commands)
             print_app_cmd(selection)
             print str(num_cmds + 1) + ')  Exit program'
-            try:
-                command = raw_input('\nType the number of the command you wish to send or the command string: ')
-                if len(command) >= 1 and command[0] == '{':
-                    command_str = command # accept user's command string
-                else:
-                    # Convert to an integer, the number of the command
-                    command_str = ""
-                    command = int(command)
-            except:
-                print ' > Invalid entry'
-                time.sleep(1)
-                continue
 
-            if command_str != "":
-                break # got the command
+            command_str = raw_input('\nType the number of the command you wish to send or the command string: ')
+            try:
+                # Convert to an integer, the number of the command
+                command = int(command_str)
+                command_str = ""
+            except:
+                # Not an integer, so pass the full command and exit the loop
+                break
             
             if command == num_cmds + 1:
                 return ACTION_EXIT
