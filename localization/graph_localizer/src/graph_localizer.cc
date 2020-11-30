@@ -1188,6 +1188,7 @@ void GraphLocalizer::LogErrors() {
   double optical_flow_factor_error = 0;
   double loc_proj_error = 0;
   double imu_factor_error = 0;
+  double rotation_factor_error = 0;
   double pose_prior_error = 0;
   double velocity_prior_error = 0;
   double bias_prior_error = 0;
@@ -1214,6 +1215,10 @@ void GraphLocalizer::LogErrors() {
     if (loc_factor) {
       loc_proj_error += error;
     }
+    const auto rotation_factor = dynamic_cast<gtsam::PoseRotationFactor*>(factor.get());
+    if (rotation_factor) {
+      rotation_factor_error += error;
+    }
     // Prior Factors
     const auto pose_prior_factor = dynamic_cast<gtsam::PriorFactor<gtsam::Pose3>*>(factor.get());
     if (pose_prior_factor) {
@@ -1232,6 +1237,7 @@ void GraphLocalizer::LogErrors() {
   of_error_averager_.UpdateAndLog(optical_flow_factor_error);
   loc_proj_error_averager_.UpdateAndLog(loc_proj_error);
   imu_error_averager_.UpdateAndLog(imu_factor_error);
+  rotation_error_averager_.UpdateAndLog(rotation_factor_error);
   pose_prior_error_averager_.UpdateAndLog(pose_prior_error);
   velocity_prior_error_averager_.UpdateAndLog(velocity_prior_error);
   bias_prior_error_averager_.UpdateAndLog(bias_prior_error);
@@ -1243,6 +1249,7 @@ void GraphLocalizer::LogStats() {
   num_optical_flow_factors_averager_.UpdateAndLog(NumOFFactors());
   num_loc_factors_averager_.UpdateAndLog(NumVLFactors());
   num_imu_factors_averager_.UpdateAndLog(NumFactors<gtsam::CombinedImuFactor>());
+  num_rotation_factors_averager_.UpdateAndLog(NumFactors<gtsam::PoseRotationFactor>());
   num_vel_prior_factors_averager_.UpdateAndLog(NumFactors<gtsam::PriorFactor<gtsam::Velocity3>>());
   num_marginal_factors_averager_.UpdateAndLog(NumFactors<gtsam::LinearContainerFactor>());
   if (params_.factor.use_projection_factors) num_features_averager_.UpdateAndLog(NumFeatures());

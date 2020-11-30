@@ -249,6 +249,7 @@ class GraphLocalizer {
     localization_common::Averager("Num Optical Flow Factors");
   localization_common::Averager num_loc_factors_averager_ = localization_common::Averager("Num Loc Factors");
   localization_common::Averager num_imu_factors_averager_ = localization_common::Averager("Num Imu Factors");
+  localization_common::Averager num_rotation_factors_averager_ = localization_common::Averager("Num Rotation Factors");
   localization_common::Averager num_vel_prior_factors_averager_ =
     localization_common::Averager("Num Vel Prior Factors");
   localization_common::Averager num_marginal_factors_averager_ = localization_common::Averager("Num Marginal Factors");
@@ -259,6 +260,7 @@ class GraphLocalizer {
   localization_common::Averager of_error_averager_ = localization_common::Averager("OF Factor Error");
   localization_common::Averager loc_proj_error_averager_ = localization_common::Averager("Loc Proj Factor Error");
   localization_common::Averager imu_error_averager_ = localization_common::Averager("Imu Factor Error");
+  localization_common::Averager rotation_error_averager_ = localization_common::Averager("Rotation Factor Error");
   localization_common::Averager pose_prior_error_averager_ = localization_common::Averager("Pose Prior Error");
   localization_common::Averager velocity_prior_error_averager_ = localization_common::Averager("Velocity Prior Error");
   localization_common::Averager bias_prior_error_averager_ = localization_common::Averager("Bias Prior Error");
