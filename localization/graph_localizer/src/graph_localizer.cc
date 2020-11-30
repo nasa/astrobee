@@ -1307,7 +1307,7 @@ int GraphLocalizer::NumSmartFactors(const bool check_valid) const {
 int GraphLocalizer::NumVLFactors() const {
   // Subtract one from priors for prior on first state
   if (params_.factor.loc_pose_priors)
-    return (NumFactors<gtsam::Pose3>() - 1);
+    return (NumFactors<gtsam::PriorFactor<Pose3>> - 1);
   else if (params_.factor.loc_projections)
     return NumFactors<gtsam::LocProjectionFactor<>>();
   else

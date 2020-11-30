@@ -105,7 +105,7 @@ void GraphLocalizerWrapper::VLVisualLandmarksCallback(const ff_msgs::VisualLandm
   if (!ValidVLMsg(visual_landmarks_msg)) return;
   if (graph_localizer_) {
     graph_localizer_->AddSparseMappingMeasurement(lm::MakeMatchedProjectionsMeasurement(visual_landmarks_msg));
-    feature_counts_.vl = visual_landmarks_msg.landmarks.size();
+    feature_counts_.vl = graph_localizer_->NumVLFactors();
   }
 
   const gtsam::Pose3 sparse_mapping_global_T_body =
@@ -153,7 +153,7 @@ void GraphLocalizerWrapper::ARVisualLandmarksCallback(const ff_msgs::VisualLandm
   if (graph_localizer_) {
     graph_localizer_->AddARTagMeasurement(lm::MakeMatchedProjectionsMeasurement(visual_landmarks_msg));
     // TODO(rsoussan): Make seperate ar count, update EkfState
-    feature_counts_.vl = visual_landmarks_msg.landmarks.size();
+    feature_counts_.vl = graph_localizer_->NumVLFactors();
   }
 }
 
