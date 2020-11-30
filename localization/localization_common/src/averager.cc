@@ -29,8 +29,8 @@ void Averager::Update(const double value) {
   average_ += (value - average_) / num_events_;
 }
 void Averager::Log() {
-  LOG(INFO) << name_ + " value: " << last_value_;
-  LOG(INFO) << "Average " + name_ + " value: " << average_;
+  LOG(INFO) << name_ + ": " << last_value_;
+  LOG(INFO) << "Average " + name_ + ": " << average_;
 }
 void Averager::UpdateAndLog(const double value) {
   Update(value);
@@ -38,7 +38,7 @@ void Averager::UpdateAndLog(const double value) {
 }
 
 void Averager::Vlog(const int level) {
-  VLOG(level) << name_ + " value: " << last_value_;
-  VLOG(level) << "Average " + name_ + " value: " << average_;
+  VLOG(level) << name_ + ": " << last_value_;
+  VLOG(level) << "Average " + name_ + ": " << average_;
 }
 }  // namespace localization_common
