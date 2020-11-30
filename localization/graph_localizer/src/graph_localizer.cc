@@ -1236,6 +1236,7 @@ void GraphLocalizer::LogErrors() {
   total_error_averager_.UpdateAndLog(total_error);
   of_error_averager_.UpdateAndLog(optical_flow_factor_error);
   loc_proj_error_averager_.UpdateAndLog(loc_proj_error);
+  imu_error_averager_.UpdateAndLog(imu_factor_error);
   pose_prior_error_averager_.UpdateAndLog(pose_prior_error);
   velocity_prior_error_averager_.UpdateAndLog(velocity_prior_error);
   bias_prior_error_averager_.UpdateAndLog(bias_prior_error);
