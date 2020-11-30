@@ -15,26 +15,28 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef GRAPH_LOCALIZER_NOISE_PARAMS_H_
-#define GRAPH_LOCALIZER_NOISE_PARAMS_H_
 
-#include <gtsam/linear/NoiseModel.h>
+#ifndef GRAPH_LOCALIZER_FACTOR_ADDER_H_
+#define GRAPH_LOCALIZER_FACTOR_ADDER_H_
+
+#include <graph_localizer/factor_adder.h>
+#include <graph_localizer/factor_to_add.h>
 
 namespace graph_localizer {
-struct NoiseParams {
-  gtsam::SharedIsotropic loc_dock_cam_noise;
-  gtsam::SharedIsotropic loc_nav_cam_noise;
-  gtsam::SharedIsotropic optical_flow_nav_cam_noise;
-  double optical_flow_prior_velocity_stddev;
-  double starting_prior_translation_stddev;
-  double starting_prior_quaternion_stddev;
-  double starting_prior_velocity_stddev;
-  double starting_prior_accel_bias_stddev;
-  double starting_prior_gyro_bias_stddev;
-  double loc_prior_translation_stddev;
-  double loc_prior_quaternion_stddev;
-  double point_prior_translation_stddev;
+template <typename MEASUREMENT, typename PARAMS>
+class FactorAdder {
+ public:
+  explicit FactorAdder(const PARAMS& params) : params_(params) {}
+
+  virtual ~FactorAdder() {}
+
+  virtual boost::optional<FactorsToAdd> AddFactors(const MEASUREMENT& measurement) const = 0;
+
+  const PARAMS& params() const { return params_; }
+
+ private:
+  PARAMS params_;
 };
 }  // namespace graph_localizer
 
-#endif  // GRAPH_LOCALIZER_NOISE_PARAMS_H_
+#endif  // GRAPH_LOCALIZER_FACTOR_ADDER_H_

@@ -19,6 +19,8 @@
 #ifndef GRAPH_LOCALIZER_POSE_ROTATION_FACTOR_H_
 #define GRAPH_LOCALIZER_POSE_ROTATION_FACTOR_H_
 
+#include <gtsam/geometry/Pose3.h>
+#include <gtsam/geometry/Rot3.h>
 #include <gtsam/nonlinear/NonlinearFactor.h>
 
 #include <string>

@@ -34,10 +34,6 @@
 #include <gtsam/nonlinear/LinearContainerFactor.h>
 #include <gtsam/slam/PriorFactor.h>
 
-#include <opencv2/calib3d.hpp>
-#include <opencv2/core/eigen.hpp>
-#include <opencv2/core/types.hpp>
-
 #include <glog/logging.h>
 
 #include <chrono>
@@ -61,7 +57,7 @@ namespace lc = localization_common;
 namespace lm = localization_measurements;
 
 GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
-    : feature_tracker_(params.feature_tracker),
+    : feature_tracker_(new FeatureTracker(params.feature_tracker)),
       latest_imu_integrator_(params.graph_initialization),
       graph_values_(params.graph_values),
       params_(params) {
@@ -125,6 +121,9 @@ GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
     LOG(WARNING) << "GraphLocalizer: No marginals factorization entered, defaulting to qr.";
     marginals_factorization_ = gtsam::Marginals::Factorization::QR;
   }
+
+  // Initialize Factor Adders
+  rotation_factor_adder_.reset(new RotationFactorAdder(params_.factor.rotation_adder, feature_tracker_));
 }
 
 void GraphLocalizer::AddStartingPriors(const lc::CombinedNavState& global_N_body_start, const int key_index,
@@ -268,7 +267,7 @@ bool GraphLocalizer::AddOpticalFlowMeasurement(
   last_time = optical_flow_feature_points_measurement.timestamp;
 
   LOG(INFO) << "AddOpticalFlowMeasurement: Adding optical flow measurement.";
-  feature_tracker_.UpdateFeatureTracks(optical_flow_feature_points_measurement.feature_points);
+  feature_tracker_->UpdateFeatureTracks(optical_flow_feature_points_measurement.feature_points);
 
   if (optical_flow_feature_points_measurement.feature_points.empty()) {
     LOG(WARNING) << "AddOpticalFlowMeasurement: Empty measurement.";
@@ -277,7 +276,10 @@ bool GraphLocalizer::AddOpticalFlowMeasurement(
 
   if (params_.factor.add_smart_factors) AddSmartFactors(optical_flow_feature_points_measurement);
   if (params_.factor.add_projection_factors) AddProjectionFactorsAndPoints(optical_flow_feature_points_measurement);
-  if (params_.factor.add_rotation_factors) AddRotationFactor();
+  if (params_.factor.rotation_adder.enabled) {
+    const auto rotation_factors_to_add = rotation_factor_adder_->AddFactors(optical_flow_feature_points_measurement);
+    if (rotation_factors_to_add) BufferFactors(*rotation_factors_to_add);
+  }
 
   CheckForStandstill(optical_flow_feature_points_measurement);
   if (standstill() && params_.factor.optical_flow_standstill_velocity_prior) {
@@ -318,7 +320,7 @@ bool GraphLocalizer::AddProjectionFactorsAndPoints(
 
   // Add new feature tracks and measurements if possible
   int new_features = 0;
-  for (const auto& feature_track_pair : feature_tracker_.feature_tracks()) {
+  for (const auto& feature_track_pair : feature_tracker_->feature_tracks()) {
     const auto& feature_track = feature_track_pair.second;
     if (feature_track.points.size() >= params_.factor.min_num_measurements_for_triangulation &&
         !graph_values_.HasFeature(feature_track.id) &&
@@ -348,7 +350,7 @@ void GraphLocalizer::CheckForStandstill(const lm::FeaturePointsMeasurement& opti
   // Check for standstill via low disparity for all feature tracks
   double total_average_distance_from_mean = 0;
   int num_valid_feature_tracks = 0;
-  for (const auto& feature_track : feature_tracker_.feature_tracks()) {
+  for (const auto& feature_track : feature_tracker_->feature_tracks()) {
     const double average_distance_from_mean = AverageDistanceFromMean(feature_track.second.points);
     // Only consider long enough feature tracks for standstill candidates
     if (feature_track.second.points.size() > 5) {
@@ -369,7 +371,7 @@ bool GraphLocalizer::AddSmartFactors(const lm::FeaturePointsMeasurement& optical
   // Add smart factor for each valid feature track
   FactorsToAdd smart_factors_to_add(GraphAction::kDeleteExistingSmartFactors);
   int num_added_smart_factors = 0;
-  for (const auto& feature_track : feature_tracker_.feature_tracks()) {
+  for (const auto& feature_track : feature_tracker_->feature_tracks()) {
     const double average_distance_from_mean = AverageDistanceFromMean(feature_track.second.points);
     if (ValidPointSet(feature_track.second.points, average_distance_from_mean,
                       params_.factor.min_valid_feature_track_avg_distance_from_mean) &&
@@ -435,63 +437,6 @@ void GraphLocalizer::AddARTagMeasurement(const lm::MatchedProjectionsMeasurement
   AddProjectionMeasurement(matched_projections_measurement, params_.calibration.body_T_dock_cam,
                            params_.calibration.dock_cam_intrinsics, params_.noise.loc_dock_cam_noise,
                            GraphAction::kTransformARMeasurementAndUpdateDockTWorld);
-}
-
-void GraphLocalizer::AddRotationFactor() {
-  std::vector<cv::Point2d> points_1;
-  std::vector<cv::Point2d> points_2;
-  double total_disparity = 0;
-  for (const auto& feature_track_pair : feature_tracker_.feature_tracks()) {
-    const auto& feature_track = feature_track_pair.second;
-    if (feature_track.points.size() < 2) continue;
-    // Get points for most recent and second to most recent images
-    const auto& point_1 = feature_track.points[feature_track.points.size() - 2].image_point;
-    const auto& point_2 = feature_track.points.back().image_point;
-    points_1.emplace_back(cv::Point2d(point_1.x(), point_1.y()));
-    points_2.emplace_back(cv::Point2d(point_2.x(), point_2.y()));
-    total_disparity += (point_1 - point_2).norm();
-  }
-
-  if (points_1.size() < 5) {
-    LOG(WARNING) << "AddRotationFactor: Not enough corresponding points found.";
-    return;
-  }
-  const double average_disparity = total_disparity / points_1.size();
-  if (average_disparity < params_.factor.min_avg_disparity_for_rotation_factor) {
-    VLOG(2) << "AddRotationFactor: Disparity too low.";
-    return;
-  }
-
-  cv::Mat intrinsics;
-  cv::eigen2cv(params_.calibration.nav_cam_intrinsics->K(), intrinsics);
-  // TODO(rsoussan): is this the correct point 1 and point 2 order????
-  const auto essential_matrix = cv::findEssentialMat(points_1, points_2, intrinsics);
-  cv::Mat cv_cam_1_R_cam_2;
-  cv::Mat cv_translation;
-  cv::recoverPose(essential_matrix, points_1, points_2, intrinsics, cv_cam_1_R_cam_2, cv_translation);
-  Eigen::Matrix3d eigen_cam_1_R_cam_2;
-  cv::cv2eigen(cv_cam_1_R_cam_2, eigen_cam_1_R_cam_2);
-  const gtsam::Rot3& body_R_cam = params_.calibration.body_T_nav_cam.rotation();
-  // Put measurement in body frame since factor expects this
-  const gtsam::Rot3 cam_1_R_cam_2(eigen_cam_1_R_cam_2);
-  const gtsam::Rot3 body_1_R_body_2 = body_R_cam * cam_1_R_cam_2 * body_R_cam.inverse();
-  // Create Rotation Factor
-  const auto& points = feature_tracker_.feature_tracks().begin()->second.points;
-  const KeyInfo pose_1_key_info(&sym::P, points[points.size() - 2].timestamp);
-  const KeyInfo pose_2_key_info(&sym::P, points.back().timestamp);
-  const gtsam::Vector3 rotation_noise_sigmas((gtsam::Vector(3) << params_.noise.rotation_factor_stddev,
-                                              params_.noise.rotation_factor_stddev,
-                                              params_.noise.rotation_factor_stddev)
-                                               .finished());
-  const auto rotation_noise =
-    Robust(gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(rotation_noise_sigmas)));
-  const auto rotation_factor = boost::make_shared<gtsam::PoseRotationFactor>(
-    body_1_R_body_2, rotation_noise, pose_1_key_info.UninitializedKey(), pose_2_key_info.UninitializedKey());
-  FactorsToAdd rotation_factors_to_add;
-  rotation_factors_to_add.push_back({{pose_1_key_info, pose_2_key_info}, rotation_factor});
-  rotation_factors_to_add.SetTimestamp(pose_2_key_info.timestamp());
-  BufferFactors(rotation_factors_to_add);
-  VLOG(2) << "AddRotationFactor: Buffered a rotation factor.";
 }
 
 void GraphLocalizer::AddSparseMappingMeasurement(
@@ -877,7 +822,7 @@ bool GraphLocalizer::SlideWindow(const boost::optional<gtsam::Marginals>& margin
     return false;
   }
 
-  feature_tracker_.RemoveOldFeaturePoints(*oldest_timestamp);
+  feature_tracker_->RemoveOldFeaturePoints(*oldest_timestamp);
   latest_imu_integrator_.RemoveOldMeasurements(*oldest_timestamp);
   // Currently this only applies to optical flow smart factors.  Remove if no longer use these
   RemoveOldBufferedFactors(*oldest_timestamp);

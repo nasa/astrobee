@@ -26,6 +26,7 @@
 #include <graph_localizer/graph_values.h>
 #include <graph_localizer/key_info.h>
 #include <graph_localizer/robust_smart_projection_pose_factor.h>
+#include <graph_localizer/rotation_factor_adder.h>
 #include <imu_integration/latest_imu_integrator.h>
 #include <localization_common/averager.h>
 #include <localization_common/combined_nav_state.h>
@@ -76,7 +77,6 @@ class GraphLocalizer {
   LatestCombinedNavStateAndCovariances() const;
   bool AddOpticalFlowMeasurement(
     const localization_measurements::FeaturePointsMeasurement& optical_flow_feature_points_measurement);
-  void AddRotationFactor();
   bool AddProjectionFactorsAndPoints(
     const localization_measurements::FeaturePointsMeasurement& optical_flow_feature_points_measurement);
   bool TriangulateNewPoint(FactorsToAdd& factors_to_add);
@@ -97,7 +97,7 @@ class GraphLocalizer {
   void SplitSmartFactorsIfNeeded(FactorsToAdd& factors_to_add);
 
   bool Update();
-  const FeatureTrackMap& feature_tracks() const { return feature_tracker_.feature_tracks(); }
+  const FeatureTrackMap& feature_tracks() const { return feature_tracker_->feature_tracks(); }
 
   boost::optional<std::pair<gtsam::imuBias::ConstantBias, localization_common::Time>> LatestBiases() const;
 
@@ -234,12 +234,16 @@ class GraphLocalizer {
   imu_integration::LatestImuIntegrator latest_imu_integrator_;
   gtsam::NonlinearFactorGraph graph_;
   GraphValues graph_values_;
-  FeatureTracker feature_tracker_;
+  std::shared_ptr<FeatureTracker> feature_tracker_;
   boost::optional<gtsam::Marginals> marginals_;
   boost::optional<std::pair<gtsam::Pose3, localization_common::Time>> estimated_world_T_dock_;
   std::map<localization_common::Time, gtsam::Pose3> dock_cam_T_dock_estimates_;
   boost::optional<localization_measurements::FeaturePointsMeasurement> last_optical_flow_measurement_;
   std::multimap<localization_common::Time, FactorsToAdd> buffered_factors_to_add_;
+
+  // Factor Adders
+  std::unique_ptr<RotationFactorAdder> rotation_factor_adder_;
+
   localization_common::Timer optimization_timer_ = localization_common::Timer("Optimization");
   // Graph Stats Averagers
   localization_common::Averager iterations_averager_ = localization_common::Averager("Iterations");

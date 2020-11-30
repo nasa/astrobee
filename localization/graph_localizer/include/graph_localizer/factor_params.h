@@ -18,14 +18,14 @@
 #ifndef GRAPH_LOCALIZER_FACTOR_PARAMS_H_
 #define GRAPH_LOCALIZER_FACTOR_PARAMS_H_
 
+#include <graph_localizer/rotation_factor_adder_params.h>
+
 #include <string>
 
 namespace graph_localizer {
 struct FactorParams {
   bool optical_flow_standstill_velocity_prior;
-  // Rotation factors
-  bool add_rotation_factors;
-  double min_avg_disparity_for_rotation_factor;
+  RotationFactorAdderParams rotation_adder;
   // Optical flow factors
   double min_valid_feature_track_avg_distance_from_mean;
   bool enable_EPI;

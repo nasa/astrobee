@@ -60,8 +60,17 @@ void LoadFactorParams(config_reader::ConfigReader& config, FactorParams& params)
   params.add_loc_pose_priors = lc::LoadBool(config, "add_loc_pose_priors");
   params.add_loc_projections = lc::LoadBool(config, "add_loc_projections");
   params.min_num_loc_matches = lc::LoadInt(config, "min_num_loc_matches");
-  params.add_rotation_factors = lc::LoadBool(config, "add_rotation_factors");
-  params.min_avg_disparity_for_rotation_factor = lc::LoadDouble(config, "min_avg_disparity_for_rotation_factor");
+  LoadRotationFactorAdderParams(config, params.rotation_adder);
+  params.rotation_adder.enabled = lc::LoadBool(config, "rotation_adder_enabled");
+  params.rotation_adder.min_avg_disparity = lc::LoadDouble(config, "rotation_adder_min_avg_disparity");
+}
+
+void LoadRotationFactorAdderParams(config_reader::ConfigReader& config, RotationFactorAdderParams& params) {
+  params.enabled = lc::LoadBool(config, "rotation_adder_enabled");
+  params.min_avg_disparity = lc::LoadDouble(config, "rotation_adder_min_avg_disparity");
+  params.rotation_stddev = lc::LoadDouble(config, "rotation_adder_rotation_stddev");
+  params.body_T_nav_cam = lc::LoadTransform(config, "nav_cam_transform");
+  params.nav_cam_intrinsics = lc::LoadCameraIntrinsics(config, "nav_cam");
 }
 
 void LoadFeatureTrackerParams(config_reader::ConfigReader& config, FeatureTrackerParams& params) {
@@ -90,7 +99,6 @@ void LoadNoiseParams(config_reader::ConfigReader& config, NoiseParams& params) {
   params.loc_prior_translation_stddev = lc::LoadDouble(config, "loc_prior_translation_stddev");
   params.loc_prior_quaternion_stddev = lc::LoadDouble(config, "loc_prior_quaternion_stddev");
   params.point_prior_translation_stddev = lc::LoadDouble(config, "point_prior_translation_stddev");
-  params.rotation_factor_stddev = lc::LoadDouble(config, "rotation_factor_stddev");
 }
 
 void LoadSanityCheckerParams(config_reader::ConfigReader& config, SanityCheckerParams& params) {
