@@ -63,15 +63,7 @@ GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
     : feature_tracker_(params.feature_tracker),
       latest_imu_integrator_(params.graph_initialization),
       graph_values_(params.graph_values),
-      params_(params),
-      optimization_timer_("Optimization"),
-      iterations_averager_("Iterations"),
-      num_states_averager_("Num States"),
-      duration_averager_("Duration"),
-      num_optical_flow_factors_averager_("Num Optical Flow Factors"),
-      num_marginal_factors_averager_("Num Marginal Factors"),
-      num_factors_averager_("Num Factors"),
-      num_features_averager_("Num Features") {
+      params_(params) {
   // Assumes zero initial velocity
   const lc::CombinedNavState global_N_body_start(
     params_.graph_initialization.global_T_body_start, gtsam::Velocity3::Zero(),
@@ -851,12 +843,15 @@ bool GraphLocalizer::SlideWindow(const boost::optional<gtsam::Marginals>& margin
   // Add marginal factors for marginalized values
   auto old_keys = graph_values_.OldKeys(*new_oldest_time);
   auto old_factors = graph_values_.RemoveOldFactors(old_keys, graph_);
-  // Call remove old factors before old feature keys, since old feature keys depend on
-  // number of factors per key remaining
-  const auto old_feature_keys = graph_values_.OldFeatureKeys(graph_);
-  auto old_feature_factors = graph_values_.RemoveOldFactors(old_feature_keys, graph_);
-  old_keys.insert(old_keys.end(), old_feature_keys.begin(), old_feature_keys.end());
-  old_factors.push_back(old_feature_factors);
+  gtsam::KeyVector old_feature_keys;
+  if (params_.factor.use_projection_factors) {
+    // Call remove old factors before old feature keys, since old feature keys depend on
+    // number of factors per key remaining
+    old_feature_keys = graph_values_.OldFeatureKeys(graph_);
+    auto old_feature_factors = graph_values_.RemoveOldFactors(old_feature_keys, graph_);
+    old_keys.insert(old_keys.end(), old_feature_keys.begin(), old_feature_keys.end());
+    old_factors.push_back(old_feature_factors);
+  }
   if (params_.add_marginal_factors) {
     const auto marginal_factors = MarginalFactors(old_factors, old_keys, gtsam::EliminateQR);
     for (const auto& marginal_factor : marginal_factors) {
@@ -865,7 +860,7 @@ bool GraphLocalizer::SlideWindow(const boost::optional<gtsam::Marginals>& margin
   }
 
   graph_values_.RemoveOldCombinedNavStates(*new_oldest_time);
-  graph_values_.RemoveOldFeatures(old_feature_keys, graph_);
+  if (params_.factor.use_projection_factors) graph_values_.RemoveOldFeatures(old_feature_keys, graph_);
 
   // Remove old data from other containers
   const auto oldest_timestamp = graph_values_.OldestTimestamp();
@@ -879,7 +874,7 @@ bool GraphLocalizer::SlideWindow(const boost::optional<gtsam::Marginals>& margin
   // Currently this only applies to optical flow smart factors.  Remove if no longer use these
   RemoveOldBufferedFactors(*oldest_timestamp);
 
-  if (params_.factor.add_point_prior && marginals_) {
+  if (params_.factor.use_projection_factors && params_.factor.add_point_prior && marginals_) {
     UpdatePointPriors(*marginals_);
   }
 
@@ -1246,8 +1241,11 @@ void GraphLocalizer::LogStats() {
   num_states_averager_.UpdateAndLog(graph_values_.NumStates());
   duration_averager_.UpdateAndLog(graph_values_.Duration());
   num_optical_flow_factors_averager_.UpdateAndLog(NumOFFactors());
+  num_loc_factors_averager_.UpdateAndLog(NumVLFactors());
+  num_imu_factors_averager_.UpdateAndLog(NumFactors<gtsam::CombinedImuFactor>());
+  num_vel_prior_factors_averager_.UpdateAndLog(NumFactors<gtsam::PriorFactor<gtsam::Velocity3>>());
   num_marginal_factors_averager_.UpdateAndLog(NumFactors<gtsam::LinearContainerFactor>());
-  num_features_averager_.UpdateAndLog(NumFeatures());
+  if (params_.factor.use_projection_factors) num_features_averager_.UpdateAndLog(NumFeatures());
   num_factors_averager_.UpdateAndLog(graph_.size());
 }
 

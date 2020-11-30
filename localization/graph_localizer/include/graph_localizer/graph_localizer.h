@@ -240,15 +240,20 @@ class GraphLocalizer {
   std::map<localization_common::Time, gtsam::Pose3> dock_cam_T_dock_estimates_;
   boost::optional<localization_measurements::FeaturePointsMeasurement> last_optical_flow_measurement_;
   std::multimap<localization_common::Time, FactorsToAdd> buffered_factors_to_add_;
-  localization_common::Timer optimization_timer_;
+  localization_common::Timer optimization_timer_ = localization_common::Timer("Optimization");
   // Graph Stats Averagers
-  localization_common::Averager iterations_averager_;
-  localization_common::Averager num_states_averager_;
-  localization_common::Averager duration_averager_;
-  localization_common::Averager num_optical_flow_factors_averager_;
-  localization_common::Averager num_marginal_factors_averager_;
-  localization_common::Averager num_factors_averager_;
-  localization_common::Averager num_features_averager_;
+  localization_common::Averager iterations_averager_ = localization_common::Averager("Iterations");
+  localization_common::Averager num_states_averager_ = localization_common::Averager("Num States");
+  localization_common::Averager duration_averager_ = localization_common::Averager("Duration");
+  localization_common::Averager num_optical_flow_factors_averager_ =
+    localization_common::Averager("Num Optical Flow Factors");
+  localization_common::Averager num_loc_factors_averager_ = localization_common::Averager("Num Loc Factors");
+  localization_common::Averager num_imu_factors_averager_ = localization_common::Averager("Num Imu Factors");
+  localization_common::Averager num_vel_prior_factors_averager_ =
+    localization_common::Averager("Num Vel Prior Factors");
+  localization_common::Averager num_marginal_factors_averager_ = localization_common::Averager("Num Marginal Factors");
+  localization_common::Averager num_factors_averager_ = localization_common::Averager("Num Factors");
+  localization_common::Averager num_features_averager_ = localization_common::Averager("Num Features");
   // Factor Error Averagers
   localization_common::Averager total_error_averager_ = localization_common::Averager("Total Factor Error");
   localization_common::Averager of_error_averager_ = localization_common::Averager("OF Factor Error");
