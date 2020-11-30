@@ -61,6 +61,7 @@ void LoadFactorParams(config_reader::ConfigReader& config, FactorParams& params)
   params.loc_projections = lc::LoadBool(config, "loc_projections");
   params.min_num_matches = lc::LoadInt(config, "min_num_matches");
   params.add_rotation_factor = lc::LoadBool(config, "add_rotation_factor");
+  params.min_avg_disparity_for_rotation_factor = lc::LoadDouble(config, "min_avg_disparity_for_rotation_factor");
 }
 
 void LoadFeatureTrackerParams(config_reader::ConfigReader& config, FeatureTrackerParams& params) {

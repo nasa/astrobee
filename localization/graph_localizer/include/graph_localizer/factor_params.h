@@ -23,7 +23,9 @@
 namespace graph_localizer {
 struct FactorParams {
   bool optical_flow_standstill_velocity_prior;
+  // Rotation factors
   bool add_rotation_factor;
+  double min_avg_disparity_for_rotation_factor;
   // Optical flow factors
   double min_valid_feature_track_avg_distance_from_mean;
   bool enable_EPI;

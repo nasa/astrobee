@@ -440,6 +440,7 @@ void GraphLocalizer::AddARTagMeasurement(const lm::MatchedProjectionsMeasurement
 void GraphLocalizer::AddRotationFactor() {
   std::vector<cv::Point2d> points_1;
   std::vector<cv::Point2d> points_2;
+  double total_disparity = 0;
   for (const auto& feature_track_pair : feature_tracker_.feature_tracks()) {
     const auto& feature_track = feature_track_pair.second;
     if (feature_track.points.size() < 2) continue;
@@ -448,10 +449,16 @@ void GraphLocalizer::AddRotationFactor() {
     const auto& point_2 = feature_track.points.back().image_point;
     points_1.emplace_back(cv::Point2d(point_1.x(), point_1.y()));
     points_2.emplace_back(cv::Point2d(point_2.x(), point_2.y()));
+    total_disparity += (point_1 - point_2).norm();
   }
 
   if (points_1.size() < 5) {
     LOG(WARNING) << "AddRotationFactor: Not enough corresponding points found.";
+    return;
+  }
+  const double average_disparity = total_disparity / points_1.size();
+  if (average_disparity < params_.factor.min_avg_disparity_for_rotation_factor) {
+    VLOG(2) << "AddRotationFactor: Disparity too low.";
     return;
   }
 
