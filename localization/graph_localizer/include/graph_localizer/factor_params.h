@@ -24,7 +24,7 @@ namespace graph_localizer {
 struct FactorParams {
   bool optical_flow_standstill_velocity_prior;
   // Rotation factors
-  bool add_rotation_factor;
+  bool add_rotation_factors;
   double min_avg_disparity_for_rotation_factor;
   // Optical flow factors
   double min_valid_feature_track_avg_distance_from_mean;
@@ -39,19 +39,19 @@ struct FactorParams {
   int max_num_optical_flow_factors;
   bool enable_rotation_only_fallback;
   bool smart_factor_splitting;
-  bool use_smart_factors;
+  bool add_smart_factors;
   // OF Projection Factors
-  bool use_projection_factors;
+  bool add_projection_factors;
   int min_num_measurements_for_triangulation;
   int max_num_optical_flow_features;
-  bool add_point_prior;
+  bool add_point_priors;
   bool triangulation_enable_EPI;
   double triangulation_landmark_distance_threshold;
   double triangulation_dynamic_outlier_rejection_threshold;
   // Loc factors
-  bool loc_pose_priors;
-  bool loc_projections;
-  int min_num_matches;
+  bool add_loc_pose_priors;
+  bool add_loc_projections;
+  int min_num_loc_matches;
 };
 }  // namespace graph_localizer
 

@@ -275,9 +275,9 @@ bool GraphLocalizer::AddOpticalFlowMeasurement(
     return false;
   }
 
-  if (params_.factor.use_smart_factors) AddSmartFactors(optical_flow_feature_points_measurement);
-  if (params_.factor.use_projection_factors) AddProjectionFactorsAndPoints(optical_flow_feature_points_measurement);
-  if (params_.factor.add_rotation_factor) AddRotationFactor();
+  if (params_.factor.add_smart_factors) AddSmartFactors(optical_flow_feature_points_measurement);
+  if (params_.factor.add_projection_factors) AddProjectionFactorsAndPoints(optical_flow_feature_points_measurement);
+  if (params_.factor.add_rotation_factors) AddRotationFactor();
 
   CheckForStandstill(optical_flow_feature_points_measurement);
   if (standstill() && params_.factor.optical_flow_standstill_velocity_prior) {
@@ -546,12 +546,12 @@ void GraphLocalizer::AddProjectionMeasurement(const lm::MatchedProjectionsMeasur
   }
 
   // TODO(rsoussan): Unify his with ValidVLMsg call
-  if (matched_projections_measurement.matched_projections.size() < params_.factor.min_num_matches) {
+  if (matched_projections_measurement.matched_projections.size() < params_.factor.min_num_loc_matches) {
     LOG(WARNING) << "AddProjectionMeasurement: Not enough matches in projection measurement.";
     return;
   }
 
-  if (params_.factor.loc_pose_priors) {
+  if (params_.factor.add_loc_pose_priors) {
     int num_buffered_loc_pose_prior_factors = 0;
     FactorsToAdd factors_to_add(graph_action);
     factors_to_add.reserve(1);
@@ -573,7 +573,7 @@ void GraphLocalizer::AddProjectionMeasurement(const lm::MatchedProjectionsMeasur
             << " loc pose priors factors.";
   }
 
-  if (params_.factor.loc_projections) {
+  if (params_.factor.add_loc_projections) {
     int num_buffered_loc_projection_factors = 0;
     FactorsToAdd factors_to_add(graph_action);
     factors_to_add.reserve(matched_projections_measurement.matched_projections.size());
@@ -632,7 +632,7 @@ bool GraphLocalizer::TriangulateNewPoint(FactorsToAdd& factors_to_add) {
   // TODO(rsoussan): clean this up
   const auto feature_id = factors_to_add.Get().front().key_infos[1].id();
   graph_values_.AddFeature(feature_id, *world_t_triangulated_point, point_key);
-  if (params_.factor.add_point_prior) {
+  if (params_.factor.add_point_priors) {
     const gtsam::Vector3 point_prior_noise_sigmas((gtsam::Vector(3) << params_.noise.point_prior_translation_stddev,
                                                    params_.noise.point_prior_translation_stddev,
                                                    params_.noise.point_prior_translation_stddev)
@@ -852,7 +852,7 @@ bool GraphLocalizer::SlideWindow(const boost::optional<gtsam::Marginals>& margin
   auto old_keys = graph_values_.OldKeys(*new_oldest_time);
   auto old_factors = graph_values_.RemoveOldFactors(old_keys, graph_);
   gtsam::KeyVector old_feature_keys;
-  if (params_.factor.use_projection_factors) {
+  if (params_.factor.add_projection_factors) {
     // Call remove old factors before old feature keys, since old feature keys depend on
     // number of factors per key remaining
     old_feature_keys = graph_values_.OldFeatureKeys(graph_);
@@ -868,7 +868,7 @@ bool GraphLocalizer::SlideWindow(const boost::optional<gtsam::Marginals>& margin
   }
 
   graph_values_.RemoveOldCombinedNavStates(*new_oldest_time);
-  if (params_.factor.use_projection_factors) graph_values_.RemoveOldFeatures(old_feature_keys, graph_);
+  if (params_.factor.add_projection_factors) graph_values_.RemoveOldFeatures(old_feature_keys, graph_);
 
   // Remove old data from other containers
   const auto oldest_timestamp = graph_values_.OldestTimestamp();
@@ -882,7 +882,7 @@ bool GraphLocalizer::SlideWindow(const boost::optional<gtsam::Marginals>& margin
   // Currently this only applies to optical flow smart factors.  Remove if no longer use these
   RemoveOldBufferedFactors(*oldest_timestamp);
 
-  if (params_.factor.use_projection_factors && params_.factor.add_point_prior && marginals_) {
+  if (params_.factor.add_projection_factors && params_.factor.add_point_priors && marginals_) {
     UpdatePointPriors(*marginals_);
   }
 
@@ -1203,13 +1203,13 @@ void GraphLocalizer::LogErrors() {
   for (const auto& factor : graph_) {
     const double error = factor->error(graph_values_.values());
     total_error += error;
-    if (params_.factor.use_smart_factors) {
+    if (params_.factor.add_smart_factors) {
       const auto smart_factor = dynamic_cast<const RobustSmartFactor*>(factor.get());
       if (smart_factor) {
         optical_flow_factor_error += error;
       }
     }
-    if (params_.factor.use_projection_factors) {
+    if (params_.factor.add_projection_factors) {
       const auto projection_factor = dynamic_cast<const ProjectionFactor*>(factor.get());
       if (projection_factor) {
         optical_flow_factor_error += error;
@@ -1261,7 +1261,7 @@ void GraphLocalizer::LogStats() {
   num_rotation_factors_averager_.UpdateAndLog(NumFactors<gtsam::PoseRotationFactor>());
   num_vel_prior_factors_averager_.UpdateAndLog(NumFactors<gtsam::PriorFactor<gtsam::Velocity3>>());
   num_marginal_factors_averager_.UpdateAndLog(NumFactors<gtsam::LinearContainerFactor>());
-  if (params_.factor.use_projection_factors) num_features_averager_.UpdateAndLog(NumFeatures());
+  if (params_.factor.add_projection_factors) num_features_averager_.UpdateAndLog(NumFeatures());
   num_factors_averager_.UpdateAndLog(graph_.size());
 }
 
@@ -1269,8 +1269,8 @@ int GraphLocalizer::NumFeatures() const { return graph_values_.NumFeatures(); }
 
 // TODO(rsoussan): fix this call to happen before of factors are removed!
 int GraphLocalizer::NumOFFactors(const bool check_valid) const {
-  if (params_.factor.use_smart_factors) return NumSmartFactors(check_valid);
-  if (params_.factor.use_projection_factors) return NumProjectionFactors(check_valid);
+  if (params_.factor.add_smart_factors) return NumSmartFactors(check_valid);
+  if (params_.factor.add_projection_factors) return NumProjectionFactors(check_valid);
   return 0;
 }
 
@@ -1321,9 +1321,9 @@ int GraphLocalizer::NumSmartFactors(const bool check_valid) const {
 }
 
 int GraphLocalizer::NumVLFactors() const {
-  if (params_.factor.loc_pose_priors)
+  if (params_.factor.add_loc_pose_priors)
     return NumFactors<gtsam::LocPoseFactor>();
-  else if (params_.factor.loc_projections)
+  else if (params_.factor.add_loc_projections)
     return NumFactors<gtsam::LocProjectionFactor<>>();
   else
     return 0;

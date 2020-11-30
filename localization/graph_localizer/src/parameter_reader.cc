@@ -45,7 +45,7 @@ void LoadFactorParams(config_reader::ConfigReader& config, FactorParams& params)
   params.verbose_cheirality = lc::LoadBool(config, "verbose_cheirality");
   params.robust_smart_factor = lc::LoadBool(config, "robust_smart_factor");
   params.max_num_optical_flow_factors = lc::LoadInt(config, "max_num_optical_flow_factors");
-  params.add_point_prior = lc::LoadBool(config, "add_point_prior");
+  params.add_point_priors = lc::LoadBool(config, "add_point_priors");
   params.triangulation_enable_EPI = lc::LoadBool(config, "triangulation_enable_EPI");
   params.triangulation_landmark_distance_threshold =
     lc::LoadDouble(config, "triangulation_landmark_distance_threshold");
@@ -53,14 +53,14 @@ void LoadFactorParams(config_reader::ConfigReader& config, FactorParams& params)
     lc::LoadDouble(config, "triangulation_dynamic_outlier_rejection_threshold");
   params.enable_rotation_only_fallback = lc::LoadBool(config, "enable_rotation_only_fallback");
   params.smart_factor_splitting = lc::LoadBool(config, "smart_factor_splitting");
-  params.use_smart_factors = lc::LoadBool(config, "use_smart_factors");
-  params.use_projection_factors = lc::LoadBool(config, "use_projection_factors");
+  params.add_smart_factors = lc::LoadBool(config, "add_smart_factors");
+  params.add_projection_factors = lc::LoadBool(config, "add_projection_factors");
   params.min_num_measurements_for_triangulation = lc::LoadInt(config, "min_num_measurements_for_triangulation");
   params.max_num_optical_flow_features = lc::LoadInt(config, "max_num_optical_flow_features");
-  params.loc_pose_priors = lc::LoadBool(config, "loc_pose_priors");
-  params.loc_projections = lc::LoadBool(config, "loc_projections");
-  params.min_num_matches = lc::LoadInt(config, "min_num_matches");
-  params.add_rotation_factor = lc::LoadBool(config, "add_rotation_factor");
+  params.add_loc_pose_priors = lc::LoadBool(config, "add_loc_pose_priors");
+  params.add_loc_projections = lc::LoadBool(config, "add_loc_projections");
+  params.min_num_loc_matches = lc::LoadInt(config, "min_num_loc_matches");
+  params.add_rotation_factors = lc::LoadBool(config, "add_rotation_factors");
   params.min_avg_disparity_for_rotation_factor = lc::LoadDouble(config, "min_avg_disparity_for_rotation_factor");
 }
 
