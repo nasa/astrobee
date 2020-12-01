@@ -45,11 +45,11 @@ create_library(TARGET ${PROJECT_NAME}
 
 if(CATKIN_ENABLE_TESTING)
   find_package(rostest REQUIRED)
-  add_rostest_gtest(test_rotation_factor
-    test/test_rotation_factor.test
-    test/test_rotation_factor.cc
+  add_rostest_gtest(test_rotation_factor_adder
+    test/test_rotation_factor_adder.test
+    test/test_rotation_factor_adder.cc
   )
-  target_link_libraries(test_rotation_factor
+  target_link_libraries(test_rotation_factor_adder
     graph_localizer gtsam
   )
 endif()

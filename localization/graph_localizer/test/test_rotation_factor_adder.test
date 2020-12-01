@@ -16,5 +16,5 @@
 <!-- permissions and limitations under the License.                          -->
 
 <launch>
-  <test pkg="graph_localizer" type="test_rotation_factor" test-name="test_rotation_factor" />
+  <test pkg="graph_localizer" type="test_rotation_factor_adder" test-name="test_rotation_factor_adder" />
 </launch>
