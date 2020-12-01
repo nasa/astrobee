@@ -307,7 +307,7 @@ def print_gs_feedback():
     print ("Please note that some apps may send a confirmation when receiving"
             " a new command and then data feedback. Since we cannot know when"
             " the app will send feedback, we will listen until you manually"
-            "stop it.\n You can stop listening by pressing ENTER")
+            " stop it.\n You can stop listening by pressing ENTER")
 
     # Variable and thread used to stop the loop
     a_list = []
@@ -432,7 +432,7 @@ def main():
     clear()
 
     # Check ROS master presence
-    print ' > Waiting for ROS communications...\n'
+    print ' > Waiting for ROS communication...\n'
 
     while not is_ros_running():
         if timer == 0:
