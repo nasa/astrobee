@@ -15,22 +15,27 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef GRAPH_LOCALIZER_NOISE_PARAMS_H_
-#define GRAPH_LOCALIZER_NOISE_PARAMS_H_
 
+#ifndef GRAPH_LOCALIZER_LOC_FACTOR_ADDER_PARAMS_H_
+#define GRAPH_LOCALIZER_LOC_FACTOR_ADDER_PARAMS_H_
+
+#include <graph_localizer/factor_adder_params.h>
+
+#include <gtsam/geometry/Pose3.h>
+#include <gtsam/geometry/Cal3_S2.h>
 #include <gtsam/linear/NoiseModel.h>
 
 namespace graph_localizer {
-struct NoiseParams {
-  gtsam::SharedIsotropic optical_flow_nav_cam_noise;
-  double optical_flow_prior_velocity_stddev;
-  double starting_prior_translation_stddev;
-  double starting_prior_quaternion_stddev;
-  double starting_prior_velocity_stddev;
-  double starting_prior_accel_bias_stddev;
-  double starting_prior_gyro_bias_stddev;
-  double point_prior_translation_stddev;
+struct LocFactorAdderParams : public FactorAdderParams {
+  bool add_pose_priors;
+  bool add_projections;
+  double prior_translation_stddev;
+  double prior_quaternion_stddev;
+  int min_num_matches;
+  gtsam::Pose3 body_T_cam;
+  boost::shared_ptr<gtsam::Cal3_S2> cam_intrinsics;
+  gtsam::SharedIsotropic cam_noise;
 };
 }  // namespace graph_localizer
 
-#endif  // GRAPH_LOCALIZER_NOISE_PARAMS_H_
+#endif  // GRAPH_LOCALIZER_LOC_FACTOR_ADDER_PARAMS_H_

@@ -26,12 +26,15 @@
 #include <graph_localizer/graph_localizer_params.h>
 #include <graph_localizer/graph_values_params.h>
 #include <graph_localizer/noise_params.h>
+#include <graph_localizer/loc_factor_adder_params.h>
 #include <graph_localizer/rotation_factor_adder_params.h>
 #include <graph_localizer/sanity_checker_params.h>
 
 namespace graph_localizer {
 void LoadCalibrationParams(config_reader::ConfigReader& config, CalibrationParams& params);
 void LoadFactorParams(config_reader::ConfigReader& config, FactorParams& params);
+void LoadLocFactorAdderParams(config_reader::ConfigReader& config, LocFactorAdderParams& params);
+void LoadARTagLocFactorAdderParams(config_reader::ConfigReader& config, LocFactorAdderParams& params);
 void LoadRotationFactorAdderParams(config_reader::ConfigReader& config, RotationFactorAdderParams& params);
 void LoadFeatureTrackerParams(config_reader::ConfigReader& config, FeatureTrackerParams& params);
 void LoadGraphValuesParams(config_reader::ConfigReader& config, GraphValuesParams& params);

@@ -18,6 +18,7 @@
 #ifndef GRAPH_LOCALIZER_FACTOR_PARAMS_H_
 #define GRAPH_LOCALIZER_FACTOR_PARAMS_H_
 
+#include <graph_localizer/loc_factor_adder_params.h>
 #include <graph_localizer/rotation_factor_adder_params.h>
 
 #include <string>
@@ -48,10 +49,8 @@ struct FactorParams {
   bool triangulation_enable_EPI;
   double triangulation_landmark_distance_threshold;
   double triangulation_dynamic_outlier_rejection_threshold;
-  // Loc factors
-  bool add_loc_pose_priors;
-  bool add_loc_projections;
-  int min_num_loc_matches;
+  LocFactorAdderParams loc_adder;
+  LocFactorAdderParams ar_tag_loc_adder;
 };
 }  // namespace graph_localizer
 

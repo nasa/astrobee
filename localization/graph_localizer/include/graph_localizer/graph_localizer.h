@@ -26,6 +26,7 @@
 #include <graph_localizer/graph_values.h>
 #include <graph_localizer/key_info.h>
 #include <graph_localizer/robust_smart_projection_pose_factor.h>
+#include <graph_localizer/loc_factor_adder.h>
 #include <graph_localizer/rotation_factor_adder.h>
 #include <imu_integration/latest_imu_integrator.h>
 #include <localization_common/averager.h>
@@ -89,10 +90,6 @@ class GraphLocalizer {
     const localization_measurements::MatchedProjectionsMeasurement& matched_projections_measurement);
   void AddSparseMappingMeasurement(
     const localization_measurements::MatchedProjectionsMeasurement& matched_projections_measurement);
-  void AddProjectionMeasurement(
-    const localization_measurements::MatchedProjectionsMeasurement& matched_projections_measurement,
-    const gtsam::Pose3& body_T_cam, const boost::shared_ptr<gtsam::Cal3_S2>& cam_intrinsics,
-    const gtsam::SharedNoiseModel& cam_noise, const GraphAction& graph_action = GraphAction::kNone);
   // Attempts to remove most recent or oldest measurements to make and invalid smart factor valid
   void SplitSmartFactorsIfNeeded(FactorsToAdd& factors_to_add);
 
@@ -242,6 +239,8 @@ class GraphLocalizer {
   std::multimap<localization_common::Time, FactorsToAdd> buffered_factors_to_add_;
 
   // Factor Adders
+  std::unique_ptr<LocFactorAdder> ar_tag_loc_factor_adder_;
+  std::unique_ptr<LocFactorAdder> loc_factor_adder_;
   std::unique_ptr<RotationFactorAdder> rotation_factor_adder_;
 
   localization_common::Timer optimization_timer_ = localization_common::Timer("Optimization");

@@ -57,12 +57,35 @@ void LoadFactorParams(config_reader::ConfigReader& config, FactorParams& params)
   params.add_projection_factors = lc::LoadBool(config, "add_projection_factors");
   params.min_num_measurements_for_triangulation = lc::LoadInt(config, "min_num_measurements_for_triangulation");
   params.max_num_optical_flow_features = lc::LoadInt(config, "max_num_optical_flow_features");
-  params.add_loc_pose_priors = lc::LoadBool(config, "add_loc_pose_priors");
-  params.add_loc_projections = lc::LoadBool(config, "add_loc_projections");
-  params.min_num_loc_matches = lc::LoadInt(config, "min_num_loc_matches");
+  LoadLocFactorAdderParams(config, params.loc_adder);
+  LoadARTagLocFactorAdderParams(config, params.ar_tag_loc_adder);
   LoadRotationFactorAdderParams(config, params.rotation_adder);
   params.rotation_adder.enabled = lc::LoadBool(config, "rotation_adder_enabled");
   params.rotation_adder.min_avg_disparity = lc::LoadDouble(config, "rotation_adder_min_avg_disparity");
+}
+
+void LoadARTagLocFactorAdderParams(config_reader::ConfigReader& config, LocFactorAdderParams& params) {
+  params.add_pose_priors = lc::LoadBool(config, "loc_adder_add_pose_priors");
+  params.add_projections = lc::LoadBool(config, "loc_adder_add_projections");
+  params.enabled = params.add_pose_priors || params.add_projections ? true : false;
+  params.min_num_matches = lc::LoadInt(config, "loc_adder_min_num_matches");
+  params.prior_translation_stddev = lc::LoadDouble(config, "loc_adder_prior_translation_stddev");
+  params.prior_quaternion_stddev = lc::LoadDouble(config, "loc_adder_prior_quaternion_stddev");
+  params.body_T_cam = lc::LoadTransform(config, "dock_cam_transform");
+  params.cam_intrinsics.reset(new gtsam::Cal3_S2(lc::LoadCameraIntrinsics(config, "dock_cam")));
+  params.cam_noise = gtsam::noiseModel::Isotropic::Sigma(2, lc::LoadDouble(config, "loc_dock_cam_noise_stddev"));
+}
+
+void LoadLocFactorAdderParams(config_reader::ConfigReader& config, LocFactorAdderParams& params) {
+  params.add_pose_priors = lc::LoadBool(config, "loc_adder_add_pose_priors");
+  params.add_projections = lc::LoadBool(config, "loc_adder_add_projections");
+  params.enabled = params.add_pose_priors || params.add_projections ? true : false;
+  params.min_num_matches = lc::LoadInt(config, "loc_adder_min_num_matches");
+  params.prior_translation_stddev = lc::LoadDouble(config, "loc_adder_prior_translation_stddev");
+  params.prior_quaternion_stddev = lc::LoadDouble(config, "loc_adder_prior_quaternion_stddev");
+  params.body_T_cam = lc::LoadTransform(config, "nav_cam_transform");
+  params.cam_intrinsics.reset(new gtsam::Cal3_S2(lc::LoadCameraIntrinsics(config, "nav_cam")));
+  params.cam_noise = gtsam::noiseModel::Isotropic::Sigma(2, lc::LoadDouble(config, "loc_nav_cam_noise_stddev"));
 }
 
 void LoadRotationFactorAdderParams(config_reader::ConfigReader& config, RotationFactorAdderParams& params) {
@@ -85,9 +108,6 @@ void LoadGraphValuesParams(config_reader::ConfigReader& config, GraphValuesParam
 }
 
 void LoadNoiseParams(config_reader::ConfigReader& config, NoiseParams& params) {
-  params.loc_dock_cam_noise =
-    gtsam::noiseModel::Isotropic::Sigma(2, lc::LoadDouble(config, "loc_dock_cam_noise_stddev"));
-  params.loc_nav_cam_noise = gtsam::noiseModel::Isotropic::Sigma(2, lc::LoadDouble(config, "loc_nav_cam_noise_stddev"));
   params.optical_flow_nav_cam_noise =
     gtsam::noiseModel::Isotropic::Sigma(2, lc::LoadDouble(config, "optical_flow_nav_cam_noise_stddev"));
   params.optical_flow_prior_velocity_stddev = lc::LoadDouble(config, "optical_flow_prior_velocity_stddev");
@@ -96,8 +116,6 @@ void LoadNoiseParams(config_reader::ConfigReader& config, NoiseParams& params) {
   params.starting_prior_velocity_stddev = lc::LoadDouble(config, "starting_prior_velocity_stddev");
   params.starting_prior_accel_bias_stddev = lc::LoadDouble(config, "starting_prior_accel_bias_stddev");
   params.starting_prior_gyro_bias_stddev = lc::LoadDouble(config, "starting_prior_gyro_bias_stddev");
-  params.loc_prior_translation_stddev = lc::LoadDouble(config, "loc_prior_translation_stddev");
-  params.loc_prior_quaternion_stddev = lc::LoadDouble(config, "loc_prior_quaternion_stddev");
   params.point_prior_translation_stddev = lc::LoadDouble(config, "point_prior_translation_stddev");
 }
 
