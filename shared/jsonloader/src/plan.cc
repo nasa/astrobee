@@ -90,7 +90,6 @@ const Fields stationFields = {
   new Field("sequence", Json::arrayValue)
 };
 
-// TODO(tfmorse): Are speed/tolerance required?
 const Fields segmentFields = {
   new StringField("type", "Segment"),
   new RangeFieldF("speed", 0.0f, 1.0f),
@@ -99,9 +98,11 @@ const Fields segmentFields = {
   new EnumField("waypointType", {
     "ControlValues20",
     "PoseVelAccel",
+    "ArmPoseVelAccel",
     "NotUsed"
   }),
-  new Field("waypoints", Json::arrayValue)
+  new Field("waypoints", Json::arrayValue),
+  new Field("arm_waypoints", Json::arrayValue, false)
 };
 
 }  // end namespace
@@ -417,6 +418,18 @@ Eigen::VectorXf const& jsonloader::Waypoint::cwaypoint() const noexcept {
   return waypoint_;
 }
 
+jsonloader::ArmWaypoint::ArmWaypoint(const std::size_t size)
+  : arm_waypoint_(size) {
+}
+
+Eigen::VectorXf& jsonloader::ArmWaypoint::arm_waypoint() noexcept {
+  return arm_waypoint_;
+}
+
+Eigen::VectorXf const& jsonloader::ArmWaypoint::carm_waypoint() const noexcept {
+  return arm_waypoint_;
+}
+
 jsonloader::Segment::Segment(Json::Value const& obj)
   : valid_(false), waypoints_(0) {
   if (!Validate(obj, segmentFields)) {
@@ -446,6 +459,39 @@ jsonloader::Segment::Segment(Json::Value const& obj)
     }
 
     waypoints_.push_back(wpt);
+  }
+
+  // Load the arm waypoints if needed
+  if (waypoint_type_ == "ArmPoseVelAccel") {
+    // Check if arm waypoint is in the segment
+    if (!obj.isMember("arm_waypoints")) {
+      LOG(ERROR) << "invalid json: 'arm_waypoints' missing.";
+      return;
+    }
+
+    arm_waypoints_.reserve(obj["arm_waypoints"].size());
+    for (Json::Value const& aw : obj["arm_waypoints"]) {
+      if (!aw.isArray()) {
+        LOG(ERROR) << "invalid segment: arm_waypoints is not an array.";
+        return;
+      }
+
+      // Copy this array to an arm waypoint
+      ArmWaypoint awpt(aw.size());
+      Eigen::VectorXf &eaw = awpt.arm_waypoint();
+      for (size_t i = 0; i < aw.size(); i++) {
+        eaw[i] = aw[static_cast<int>(i)].asFloat();
+      }
+
+      arm_waypoints_.push_back(awpt);
+    }
+
+    // Check to make sure there are the same number of waypoints and the arm
+    // waypoints
+    if (waypoints_.size() != arm_waypoints_.size()) {
+      LOG(ERROR) << "The number of waypoints and arm waypoints do not match.";
+      return;
+    }
   }
 
   valid_ = true;
@@ -482,6 +528,11 @@ float jsonloader::Segment::tolerance() const noexcept {
 jsonloader::Segment::WaypointSeq const&
 jsonloader::Segment::waypoints() const noexcept {
   return waypoints_;
+}
+
+jsonloader::Segment::ArmWaypointSeq const&
+jsonloader::Segment::arm_waypoints() const noexcept {
+  return arm_waypoints_;
 }
 
 jsonloader::Station::Station(Json::Value const& obj)
