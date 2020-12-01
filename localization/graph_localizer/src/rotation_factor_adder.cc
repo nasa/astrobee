@@ -64,14 +64,14 @@ std::vector<FactorsToAdd> RotationFactorAdder::AddFactors(const lm::FeaturePoint
   cv::eigen2cv(params().nav_cam_intrinsics.K(), intrinsics);
   // TODO(rsoussan): is this the correct point 1 and point 2 order????
   const auto essential_matrix = cv::findEssentialMat(points_1, points_2, intrinsics);
-  cv::Mat cv_cam_1_R_cam_2;
+  cv::Mat cv_cam_2_R_cam_1;
   cv::Mat cv_translation;
-  cv::recoverPose(essential_matrix, points_1, points_2, intrinsics, cv_cam_1_R_cam_2, cv_translation);
-  Eigen::Matrix3d eigen_cam_1_R_cam_2;
-  cv::cv2eigen(cv_cam_1_R_cam_2, eigen_cam_1_R_cam_2);
+  cv::recoverPose(essential_matrix, points_1, points_2, intrinsics, cv_cam_2_R_cam_1, cv_translation);
+  Eigen::Matrix3d eigen_cam_2_R_cam_1;
+  cv::cv2eigen(cv_cam_2_R_cam_1, eigen_cam_2_R_cam_1);
   const gtsam::Rot3& body_R_cam = params().body_T_nav_cam.rotation();
   // Put measurement in body frame since factor expects this
-  const gtsam::Rot3 cam_1_R_cam_2(eigen_cam_1_R_cam_2);
+  const gtsam::Rot3 cam_1_R_cam_2(eigen_cam_2_R_cam_1.transpose());
   const gtsam::Rot3 body_1_R_body_2 = body_R_cam * cam_1_R_cam_2 * body_R_cam.inverse();
   // Create Rotation Factor
   const auto& points = feature_tracker_->feature_tracks().begin()->second.points;
