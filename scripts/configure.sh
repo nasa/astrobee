@@ -170,10 +170,6 @@ parse_args()
 		 ;;
 	    "V") extra_opts+=" -DENABLE_VIVE=off"
 		 ;;
-	    "m") extra_opts+=" -DENABLE_DENSE_MAPPER=on"
-		 ;;
-	    "M") extra_opts+=" -DENABLE_DENSE_MAPPER=off"
-		 ;;
 	    "g") debug_mode=1
 		 ;;
 	    *) print_usage
