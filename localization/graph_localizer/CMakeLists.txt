@@ -43,4 +43,16 @@ create_library(TARGET ${PROJECT_NAME}
   DEPS ff_msgs
 )
 
+if(CATKIN_ENABLE_TESTING)
+  find_package(rostest REQUIRED)
+  add_rostest_gtest(test_rotation_factor
+    test/test_rotation_factor.test
+    test/test_rotation_factor.cc
+  )
+  target_link_libraries(test_rotation_factor
+    graph_localizer gtsam
+  )
+endif()
+
+
 install_launch_files()
