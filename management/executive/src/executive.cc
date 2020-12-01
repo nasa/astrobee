@@ -652,8 +652,14 @@ bool Executive::FillMotionGoal(Action action,
 
       motion_goal_.command = ff_msgs::MotionGoal::EXEC;
       // Convert JSON to a segment type
-      motion_goal_.segment =
-                    sequencer::Segment2Trajectory(sequencer_.CurrentSegment());
+      motion_goal_.segment = sequencer::Segment2Trajectory(segment);
+      if (segment.waypoint_type() == "ArmPoseVelAccel") {
+        // Convert JSON to a arm type
+        motion_goal_.arm = sequencer::Segment2ArmTraj(segment);
+      } else {
+        // Clear arm goal in case the segment before had an arm goal
+        motion_goal_.arm.clear();
+      }
 
       motion_goal_.states.clear();
       break;
@@ -707,7 +713,9 @@ bool Executive::FillMotionGoal(Action action,
       motion_goal_.states[0].pose.orientation.z = cmd->args[3].mat33f[2];
       motion_goal_.states[0].pose.orientation.w = cmd->args[3].mat33f[3];
 
+      // Clear out the execute fields
       motion_goal_.segment.clear();
+      motion_goal_.arm.clear();
       break;
     default:
       if (cmd != nullptr) {
