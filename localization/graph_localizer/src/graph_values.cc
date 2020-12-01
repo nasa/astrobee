@@ -201,7 +201,7 @@ boost::optional<gtsam::Key> GraphValues::FeatureKey(const lm::FeatureId id) cons
   return feature_id_key_map_.at(id);
 }
 
-gtsam::Key GraphValues::CreateFeatureKey() { return sym::F(++feature_key_index_); }
+gtsam::Key GraphValues::CreateFeatureKey() const { return sym::F(++feature_key_index_); }
 
 gtsam::KeyVector GraphValues::FeatureKeys() const {
   gtsam::KeyVector feature_keys;

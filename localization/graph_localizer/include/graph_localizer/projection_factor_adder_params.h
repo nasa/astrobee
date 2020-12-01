@@ -15,23 +15,31 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef GRAPH_LOCALIZER_FACTOR_PARAMS_H_
-#define GRAPH_LOCALIZER_FACTOR_PARAMS_H_
 
-#include <graph_localizer/loc_factor_adder_params.h>
-#include <graph_localizer/rotation_factor_adder_params.h>
-#include <graph_localizer/projection_factor_adder_params.h>
-#include <graph_localizer/smart_projection_factor_adder_params.h>
+#ifndef GRAPH_LOCALIZER_PROJECTION_FACTOR_ADDER_PARAMS_H_
+#define GRAPH_LOCALIZER_PROJECTION_FACTOR_ADDER_PARAMS_H_
+
+#include <graph_localizer/factor_adder_params.h>
+
+#include <gtsam/geometry/Pose3.h>
+#include <gtsam/geometry/Cal3_S2.h>
+#include <gtsam/linear/NoiseModel.h>
+
+#include <string>
 
 namespace graph_localizer {
-struct FactorParams {
-  bool optical_flow_standstill_velocity_prior;
-  RotationFactorAdderParams rotation_adder;
-  SmartProjectionFactorAdderParams smart_projection_adder;
-  ProjectionFactorAdderParams projection_adder;
-  LocFactorAdderParams loc_adder;
-  LocFactorAdderParams ar_tag_loc_adder;
+struct ProjectionFactorAdderParams : public FactorAdderParams {
+  bool enable_EPI;
+  double landmark_distance_threshold;
+  double dynamic_outlier_rejection_threshold;
+  int max_num_features;
+  int min_num_measurements_for_triangulation;
+  bool add_point_priors;
+  double point_prior_translation_stddev;
+  gtsam::Pose3 body_T_cam;
+  boost::shared_ptr<gtsam::Cal3_S2> cam_intrinsics;
+  gtsam::SharedIsotropic cam_noise;
 };
 }  // namespace graph_localizer
 
-#endif  // GRAPH_LOCALIZER_FACTOR_PARAMS_H_
+#endif  // GRAPH_LOCALIZER_PROJECTION_FACTOR_ADDER_PARAMS_H_

@@ -39,7 +39,7 @@ SmartProjectionFactorAdder::SmartProjectionFactorAdder(const SmartProjectionFact
   smart_projection_params_.setEnableEPI(params.enable_EPI);
 }
 
-boost::optional<FactorsToAdd> SmartProjectionFactorAdder::AddFactors(
+std::vector<FactorsToAdd> SmartProjectionFactorAdder::AddFactors(
   const lm::FeaturePointsMeasurement& feature_points_measurement) const {
   // Add smart factor for each valid feature track
   FactorsToAdd smart_factors_to_add(GraphAction::kDeleteExistingSmartFactors);
@@ -53,10 +53,10 @@ boost::optional<FactorsToAdd> SmartProjectionFactorAdder::AddFactors(
     }
   }
 
-  if (smart_factors_to_add.empty()) return boost::none;
+  if (smart_factors_to_add.empty()) return {};
   smart_factors_to_add.SetTimestamp(feature_points_measurement.timestamp);
   VLOG(2) << "SmartProjectionFactorAdder::AddFactors: Added " << smart_factors_to_add.size() << " smart factors.";
-  return smart_factors_to_add;
+  return {smart_factors_to_add};
 }
 
 void SmartProjectionFactorAdder::AddSmartFactor(const FeatureTrack& feature_track,

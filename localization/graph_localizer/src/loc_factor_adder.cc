@@ -31,17 +31,17 @@ namespace sym = gtsam::symbol_shorthand;
 LocFactorAdder::LocFactorAdder(const LocFactorAdderParams& params, const GraphAction graph_action)
     : LocFactorAdder::Base(params), graph_action_(graph_action) {}
 
-boost::optional<FactorsToAdd> LocFactorAdder::AddFactors(
+std::vector<FactorsToAdd> LocFactorAdder::AddFactors(
   const lm::MatchedProjectionsMeasurement& matched_projections_measurement) const {
   if (matched_projections_measurement.matched_projections.empty()) {
     LOG(WARNING) << "LocFactorAdder::AddFactors: Empty measurement.";
-    return boost::none;
+    return {};
   }
 
   // TODO(rsoussan): Unify his with ValidVLMsg call
   if (matched_projections_measurement.matched_projections.size() < params().min_num_matches) {
     LOG(WARNING) << "LocFactorAdder::AddFactors: Not enough matches in projection measurement.";
-    return boost::none;
+    return {};
   }
 
   if (params().add_pose_priors) {
@@ -63,7 +63,7 @@ boost::optional<FactorsToAdd> LocFactorAdder::AddFactors(
     factors_to_add.push_back({{key_info}, pose_prior_factor});
     factors_to_add.SetTimestamp(matched_projections_measurement.timestamp);
     VLOG(2) << "LocFactorAdder::AddFactors: Added " << num_loc_pose_prior_factors << " loc pose priors factors.";
-    return factors_to_add;
+    return {factors_to_add};
   } else if (params().add_projections) {
     int num_loc_projection_factors = 0;
     FactorsToAdd factors_to_add(graph_action_);
@@ -78,10 +78,10 @@ boost::optional<FactorsToAdd> LocFactorAdder::AddFactors(
     }
     factors_to_add.SetTimestamp(matched_projections_measurement.timestamp);
     VLOG(2) << "LocFactorAdder::AddFactors: Added " << num_loc_projection_factors << " loc projection factors.";
-    return factors_to_add;
+    return {factors_to_add};
   } else {
     LOG(ERROR) << "LocFactorAdder::AddFactors: LocFactorAdder enabled but neither pose nor projection factors are.";
-    return boost::none;
+    return {};
   }
 }
 }  // namespace graph_localizer

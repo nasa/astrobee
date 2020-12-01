@@ -27,6 +27,7 @@
 #include <graph_localizer/graph_values_params.h>
 #include <graph_localizer/noise_params.h>
 #include <graph_localizer/loc_factor_adder_params.h>
+#include <graph_localizer/projection_factor_adder_params.h>
 #include <graph_localizer/rotation_factor_adder_params.h>
 #include <graph_localizer/sanity_checker_params.h>
 #include <graph_localizer/smart_projection_factor_adder_params.h>
@@ -36,6 +37,7 @@ void LoadCalibrationParams(config_reader::ConfigReader& config, CalibrationParam
 void LoadFactorParams(config_reader::ConfigReader& config, FactorParams& params);
 void LoadLocFactorAdderParams(config_reader::ConfigReader& config, LocFactorAdderParams& params);
 void LoadARTagLocFactorAdderParams(config_reader::ConfigReader& config, LocFactorAdderParams& params);
+void LoadProjectionFactorAdderParams(config_reader::ConfigReader& config, ProjectionFactorAdderParams& params);
 void LoadRotationFactorAdderParams(config_reader::ConfigReader& config, RotationFactorAdderParams& params);
 void LoadSmartProjectionFactorAdderParams(config_reader::ConfigReader& config,
                                           SmartProjectionFactorAdderParams& params);

@@ -27,6 +27,7 @@
 #include <graph_localizer/key_info.h>
 #include <graph_localizer/robust_smart_projection_pose_factor.h>
 #include <graph_localizer/loc_factor_adder.h>
+#include <graph_localizer/projection_factor_adder.h>
 #include <graph_localizer/rotation_factor_adder.h>
 #include <graph_localizer/smart_projection_factor_adder.h>
 #include <imu_integration/latest_imu_integrator.h>
@@ -78,8 +79,6 @@ class GraphLocalizer {
   boost::optional<std::pair<localization_common::CombinedNavState, localization_common::CombinedNavStateCovariances>>
   LatestCombinedNavStateAndCovariances() const;
   bool AddOpticalFlowMeasurement(
-    const localization_measurements::FeaturePointsMeasurement& optical_flow_feature_points_measurement);
-  bool AddProjectionFactorsAndPoints(
     const localization_measurements::FeaturePointsMeasurement& optical_flow_feature_points_measurement);
   bool TriangulateNewPoint(FactorsToAdd& factors_to_add);
   void CheckForStandstill(
@@ -153,7 +152,7 @@ class GraphLocalizer {
   bool CreateAndAddImuFactorAndPredictedCombinedNavState(const localization_common::CombinedNavState& global_N_body,
                                                          const gtsam::PreintegratedCombinedMeasurements& pim);
 
-  void BufferFactors(const FactorsToAdd& factors_to_add);
+  void BufferFactors(const std::vector<FactorsToAdd>& factors_to_add_vec);
 
   void AddBufferedFactors();
 
@@ -227,7 +226,7 @@ class GraphLocalizer {
   gtsam::SmartProjectionParams smart_projection_params_;
   imu_integration::LatestImuIntegrator latest_imu_integrator_;
   gtsam::NonlinearFactorGraph graph_;
-  GraphValues graph_values_;
+  std::shared_ptr<GraphValues> graph_values_;
   std::shared_ptr<FeatureTracker> feature_tracker_;
   boost::optional<gtsam::Marginals> marginals_;
   boost::optional<std::pair<gtsam::Pose3, localization_common::Time>> estimated_world_T_dock_;
@@ -238,6 +237,7 @@ class GraphLocalizer {
   // Factor Adders
   std::unique_ptr<LocFactorAdder> ar_tag_loc_factor_adder_;
   std::unique_ptr<LocFactorAdder> loc_factor_adder_;
+  std::unique_ptr<ProjectionFactorAdder> projection_factor_adder_;
   std::unique_ptr<RotationFactorAdder> rotation_factor_adder_;
   std::unique_ptr<SmartProjectionFactorAdder> smart_projection_factor_adder_;
 

@@ -26,6 +26,8 @@
 
 #include <gtsam/slam/SmartFactorParams.h>
 
+#include <vector>
+
 namespace graph_localizer {
 class SmartProjectionFactorAdder
     : public FactorAdder<localization_measurements::FeaturePointsMeasurement, SmartProjectionFactorAdderParams> {
@@ -35,7 +37,7 @@ class SmartProjectionFactorAdder
   SmartProjectionFactorAdder(const SmartProjectionFactorAdderParams& params,
                              std::shared_ptr<const FeatureTracker> feature_tracker);
 
-  boost::optional<FactorsToAdd> AddFactors(
+  std::vector<FactorsToAdd> AddFactors(
     const localization_measurements::FeaturePointsMeasurement& feature_points_measurement) const final;
 
  private:

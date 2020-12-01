@@ -22,6 +22,8 @@
 #include <graph_localizer/factor_adder.h>
 #include <graph_localizer/factor_to_add.h>
 
+#include <vector>
+
 namespace graph_localizer {
 template <typename MEASUREMENT, typename PARAMS>
 class FactorAdder {
@@ -30,7 +32,7 @@ class FactorAdder {
 
   virtual ~FactorAdder() {}
 
-  virtual boost::optional<FactorsToAdd> AddFactors(const MEASUREMENT& measurement) const = 0;
+  virtual std::vector<FactorsToAdd> AddFactors(const MEASUREMENT& measurement) const = 0;
 
   const PARAMS& params() const { return params_; }
 

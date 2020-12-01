@@ -129,7 +129,8 @@ class GraphValues {
 
   boost::optional<gtsam::Key> FeatureKey(const localization_measurements::FeatureId id) const;
 
-  gtsam::Key CreateFeatureKey();
+  // TODO(rsoussan): This shouldn't be const, modify when changes are made to projection factor adder
+  gtsam::Key CreateFeatureKey() const;
 
   bool AddFeature(const localization_measurements::FeatureId id, const gtsam::Point3& feature_point,
                   const gtsam::Key& key);
@@ -161,7 +162,8 @@ class GraphValues {
   gtsam::Values values_;
   std::map<localization_common::Time, int> timestamp_key_index_map_;
   std::unordered_map<localization_measurements::FeatureId, gtsam::Key> feature_id_key_map_;
-  std::uint64_t feature_key_index_;
+  // Modified by projection_factor_adder, remove mutable if this changes
+  mutable std::uint64_t feature_key_index_;
 };
 }  // namespace graph_localizer
 

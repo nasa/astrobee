@@ -24,6 +24,8 @@
 #include <graph_localizer/loc_factor_adder_params.h>
 #include <localization_measurements/matched_projections_measurement.h>
 
+#include <vector>
+
 namespace graph_localizer {
 class LocFactorAdder
     : public FactorAdder<localization_measurements::MatchedProjectionsMeasurement, LocFactorAdderParams> {
@@ -32,7 +34,7 @@ class LocFactorAdder
  public:
   explicit LocFactorAdder(const LocFactorAdderParams& params, const GraphAction graph_action = GraphAction::kNone);
 
-  boost::optional<FactorsToAdd> AddFactors(
+  std::vector<FactorsToAdd> AddFactors(
     const localization_measurements::MatchedProjectionsMeasurement& matched_projections_measurement) const final;
 
  private:

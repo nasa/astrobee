@@ -35,7 +35,7 @@ RotationFactorAdder::RotationFactorAdder(const RotationFactorAdderParams& params
                                          std::shared_ptr<const FeatureTracker> feature_tracker)
     : RotationFactorAdder::Base(params), feature_tracker_(feature_tracker) {}
 
-boost::optional<FactorsToAdd> RotationFactorAdder::AddFactors(const lm::FeaturePointsMeasurement& measurement) const {
+std::vector<FactorsToAdd> RotationFactorAdder::AddFactors(const lm::FeaturePointsMeasurement& measurement) const {
   std::vector<cv::Point2d> points_1;
   std::vector<cv::Point2d> points_2;
   double total_disparity = 0;
@@ -52,12 +52,12 @@ boost::optional<FactorsToAdd> RotationFactorAdder::AddFactors(const lm::FeatureP
 
   if (points_1.size() < 5) {
     LOG(WARNING) << "RotationFactorAdder::AddFactors: Not enough corresponding points found.";
-    return boost::none;
+    return {};
   }
   const double average_disparity = total_disparity / points_1.size();
   if (average_disparity < params().min_avg_disparity) {
     VLOG(2) << "RotationFactorAdder::AddFactors: Disparity too low.";
-    return boost::none;
+    return {};
   }
 
   cv::Mat intrinsics;
@@ -87,6 +87,6 @@ boost::optional<FactorsToAdd> RotationFactorAdder::AddFactors(const lm::FeatureP
   rotation_factors_to_add.push_back({{pose_1_key_info, pose_2_key_info}, rotation_factor});
   rotation_factors_to_add.SetTimestamp(pose_2_key_info.timestamp());
   VLOG(2) << "RotationFactorAdder::AddFactors: Added a rotation factor.";
-  return rotation_factors_to_add;
+  return {rotation_factors_to_add};
 }
 }  // namespace graph_localizer
