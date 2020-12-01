@@ -23,33 +23,35 @@ std_msgs/Header header
 # Feedback
 int8 state
 
-int8 RECOVERY_MOVING_TO_RECOVERY_POSE   = 20
-int8 RECOVERY_SWITCHING_TO_ML_LOC       = 19
-int8 RECOVERY_STOWING_ARM               = 18
-int8 RECOVERY_MOVING_TO_APPROACH_POSE   = 17
-int8 RECOVERY_OPENING_GRIPPER           = 16
-int8 INITIALIZING                       = 15
-int8 UNKNOWN                            = 14
-int8 PERCHING_MAX_STATE                 = 13
-int8 PERCHING_SWITCHING_TO_HR_LOC       = 12
-int8 PERCHING_MOVING_TO_APPROACH_POSE   = 11
-int8 PERCHING_ENSURING_APPROACH_POSE    = 10
-int8 PERCHING_DEPLOYING_ARM             = 9
-int8 PERCHING_OPENING_GRIPPER           = 8
-int8 PERCHING_MOVING_TO_COMPLETE_POSE   = 7
-int8 PERCHING_CLOSING_GRIPPER           = 6
-int8 PERCHING_CHECKING_ATTACHED         = 5
-int8 PERCHING_WAITING_FOR_SPIN_DOWN     = 4
-int8 PERCHING_SWITCHING_TO_PL_LOC       = 3
-int8 PERCHING_STOPPING                  = 2
-int8 PERCHED                            = 1
-int8 UNPERCHED                          = 0
-int8 UNPERCHING_SWITCHING_TO_HR_LOC     = -1
-int8 UNPERCHING_WAITING_FOR_SPIN_UP     = -2
-int8 UNPERCHING_OPENING_GRIPPER         = -3
-int8 UNPERCHING_MOVING_TO_APPROACH_POSE = -4
-int8 UNPERCHING_STOWING_ARM             = -5
-int8 UNPERCHING_SWITCHING_TO_ML_LOC     = -6
+int8 RECOVERY_MOVING_TO_RECOVERY_POSE   = 28
+int8 RECOVERY_SWITCHING_TO_ML_LOC       = 17
+int8 RECOVERY_STOWING_ARM               = 16
+int8 RECOVERY_MOVING_TO_APPROACH_POSE   = 15
+int8 RECOVERY_OPENING_GRIPPER           = 14
+int8 INITIALIZING                       = 13
+int8 UNKNOWN                            = 12
+# Used to check the perching/unperching ranges
+int8 PERCHING_MAX_STATE                 = 11
+int8 PERCHING_SWITCHING_TO_HR_LOC       = 11
+int8 PERCHING_MOVING_TO_APPROACH_POSE   = 10
+int8 PERCHING_ENSURING_APPROACH_POSE    = 9
+int8 PERCHING_DEPLOYING_ARM             = 8
+int8 PERCHING_OPENING_GRIPPER           = 7
+int8 PERCHING_MOVING_TO_COMPLETE_POSE   = 6
+int8 PERCHING_CLOSING_GRIPPER           = 5
+int8 PERCHING_CHECKING_ATTACHED         = 4
+int8 PERCHING_WAITING_FOR_SPIN_DOWN     = 3
+int8 PERCHING_SWITCHING_TO_PL_LOC       = 2
+int8 PERCHING_STOPPING                  = 1
+int8 PERCHED                            = 0
+int8 UNPERCHED                          = -1
+int8 UNPERCHING_SWITCHING_TO_HR_LOC     = -2
+int8 UNPERCHING_WAITING_FOR_SPIN_UP     = -3
+int8 UNPERCHING_OPENING_GRIPPER         = -4
+int8 UNPERCHING_MOVING_TO_APPROACH_POSE = -5
+int8 UNPERCHING_STOWING_ARM             = -6
+int8 UNPERCHING_SWITCHING_TO_ML_LOC     = -7
+# Used to check the perching/unperching ranges
 int8 UNPERCHING_MAX_STATE               = -7
 
 # A human readable version of the (event) -> [state] transition
