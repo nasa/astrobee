@@ -20,27 +20,13 @@
 
 #include <graph_localizer/loc_factor_adder_params.h>
 #include <graph_localizer/rotation_factor_adder_params.h>
-
-#include <string>
+#include <graph_localizer/smart_projection_factor_adder_params.h>
 
 namespace graph_localizer {
 struct FactorParams {
   bool optical_flow_standstill_velocity_prior;
   RotationFactorAdderParams rotation_adder;
-  // Optical flow factors
-  double min_valid_feature_track_avg_distance_from_mean;
-  bool enable_EPI;
-  double landmark_distance_threshold;
-  double dynamic_outlier_rejection_threshold;
-  double retriangulation_threshold;
-  std::string degeneracy_mode;
-  std::string linearization_mode;
-  bool verbose_cheirality;
-  bool robust_smart_factor;
-  int max_num_optical_flow_factors;
-  bool enable_rotation_only_fallback;
-  bool smart_factor_splitting;
-  bool add_smart_factors;
+  SmartProjectionFactorAdderParams smart_projection_adder;
   // OF Projection Factors
   bool add_projection_factors;
   int min_num_measurements_for_triangulation;

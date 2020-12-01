@@ -28,6 +28,7 @@
 #include <graph_localizer/robust_smart_projection_pose_factor.h>
 #include <graph_localizer/loc_factor_adder.h>
 #include <graph_localizer/rotation_factor_adder.h>
+#include <graph_localizer/smart_projection_factor_adder.h>
 #include <imu_integration/latest_imu_integrator.h>
 #include <localization_common/averager.h>
 #include <localization_common/combined_nav_state.h>
@@ -83,14 +84,12 @@ class GraphLocalizer {
   bool TriangulateNewPoint(FactorsToAdd& factors_to_add);
   void CheckForStandstill(
     const localization_measurements::FeaturePointsMeasurement& optical_flow_feature_points_measurement);
-  bool AddSmartFactors(
-    const localization_measurements::FeaturePointsMeasurement& optical_flow_feature_points_measurement);
-
   void AddARTagMeasurement(
     const localization_measurements::MatchedProjectionsMeasurement& matched_projections_measurement);
   void AddSparseMappingMeasurement(
     const localization_measurements::MatchedProjectionsMeasurement& matched_projections_measurement);
   // Attempts to remove most recent or oldest measurements to make and invalid smart factor valid
+  // TODO(rsoussan): Move this to SmartProjectionFactorAdder or utilities!
   void SplitSmartFactorsIfNeeded(FactorsToAdd& factors_to_add);
 
   bool Update();
@@ -147,8 +146,6 @@ class GraphLocalizer {
   void AddPriors(const localization_common::CombinedNavState& global_N_body,
                  const localization_common::CombinedNavStateNoise& noise, const int key_index,
                  const gtsam::Values& values, gtsam::NonlinearFactorGraph& graph);
-
-  void AddSmartFactor(const FeatureTrack& feature_track, FactorsToAdd& smart_factors_to_add);
 
   boost::optional<std::pair<localization_common::CombinedNavState, localization_common::CombinedNavStateCovariances>>
   LatestCombinedNavStateAndCovariances(const gtsam::Marginals& marginals) const;
@@ -226,8 +223,8 @@ class GraphLocalizer {
 
   GraphLocalizerParams params_;
   gtsam::LevenbergMarquardtParams levenberg_marquardt_params_;
-  gtsam::SmartProjectionParams smart_projection_params_;
   gtsam::TriangulationParameters projection_triangulation_params_;
+  gtsam::SmartProjectionParams smart_projection_params_;
   imu_integration::LatestImuIntegrator latest_imu_integrator_;
   gtsam::NonlinearFactorGraph graph_;
   GraphValues graph_values_;
@@ -242,6 +239,7 @@ class GraphLocalizer {
   std::unique_ptr<LocFactorAdder> ar_tag_loc_factor_adder_;
   std::unique_ptr<LocFactorAdder> loc_factor_adder_;
   std::unique_ptr<RotationFactorAdder> rotation_factor_adder_;
+  std::unique_ptr<SmartProjectionFactorAdder> smart_projection_factor_adder_;
 
   localization_common::Timer optimization_timer_ = localization_common::Timer("Optimization");
   // Graph Stats Averagers

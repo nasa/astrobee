@@ -72,28 +72,15 @@ GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
   AddStartingPriors(global_N_body_start, key_index, graph_values_.values(), graph_);
 
   // Initialize smart projection factor params
-  smart_projection_params_.verboseCheirality = params_.factor.verbose_cheirality;
-  if (params_.factor.degeneracy_mode == "zero_on_degeneracy") {
-    smart_projection_params_.setDegeneracyMode(gtsam::DegeneracyMode::ZERO_ON_DEGENERACY);
-  } else if (params_.factor.degeneracy_mode == "handle_infinity") {
-    smart_projection_params_.setDegeneracyMode(gtsam::DegeneracyMode::HANDLE_INFINITY);
-  } else {
-    LOG(WARNING) << "GraphLocalizer: No degeneracy mode entered, defaulting to zero on degeneracy.";
-    smart_projection_params_.setDegeneracyMode(gtsam::DegeneracyMode::ZERO_ON_DEGENERACY);
-  }
-  if (params_.factor.linearization_mode == "jacobian_svd") {
-    smart_projection_params_.setLinearizationMode(gtsam::LinearizationMode::JACOBIAN_SVD);
-  } else if (params_.factor.linearization_mode == "hessian") {
-    smart_projection_params_.setLinearizationMode(gtsam::LinearizationMode::HESSIAN);
-  } else {
-    LOG(WARNING) << "GraphLocalizer: No linearization mode entered, defaulting to jacobian svd.";
-    smart_projection_params_.setLinearizationMode(gtsam::LinearizationMode::JACOBIAN_SVD);
-  }
+  // TODO(rsoussan): Remove this once splitting function is moved, remove smart_projection_params_ from graph_localizer
+  smart_projection_params_.verboseCheirality = params_.factor.smart_projection_adder.verbose_cheirality;
   smart_projection_params_.setRankTolerance(1e-9);
-  smart_projection_params_.setLandmarkDistanceThreshold(params_.factor.landmark_distance_threshold);
-  smart_projection_params_.setDynamicOutlierRejectionThreshold(params_.factor.dynamic_outlier_rejection_threshold);
-  smart_projection_params_.setRetriangulationThreshold(params_.factor.retriangulation_threshold);
-  smart_projection_params_.setEnableEPI(params_.factor.enable_EPI);
+  smart_projection_params_.setLandmarkDistanceThreshold(
+    params_.factor.smart_projection_adder.landmark_distance_threshold);
+  smart_projection_params_.setDynamicOutlierRejectionThreshold(
+    params_.factor.smart_projection_adder.dynamic_outlier_rejection_threshold);
+  smart_projection_params_.setRetriangulationThreshold(params_.factor.smart_projection_adder.retriangulation_threshold);
+  smart_projection_params_.setEnableEPI(params_.factor.smart_projection_adder.enable_EPI);
 
   // Initialize projection triangulation params
   projection_triangulation_params_.rankTolerance = 1e-9;
@@ -127,6 +114,8 @@ GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
     new LocFactorAdder(params_.factor.loc_adder, GraphAction::kTransformARMeasurementAndUpdateDockTWorld));
   loc_factor_adder_.reset(new LocFactorAdder(params_.factor.loc_adder));
   rotation_factor_adder_.reset(new RotationFactorAdder(params_.factor.rotation_adder, feature_tracker_));
+  smart_projection_factor_adder_.reset(
+    new SmartProjectionFactorAdder(params_.factor.smart_projection_adder, feature_tracker_));
 }
 
 void GraphLocalizer::AddStartingPriors(const lc::CombinedNavState& global_N_body_start, const int key_index,
@@ -277,7 +266,11 @@ bool GraphLocalizer::AddOpticalFlowMeasurement(
     return false;
   }
 
-  if (params_.factor.add_smart_factors) AddSmartFactors(optical_flow_feature_points_measurement);
+  if (params_.factor.smart_projection_adder.enabled) {
+    const auto smart_projection_factors_to_add =
+      smart_projection_factor_adder_->AddFactors(optical_flow_feature_points_measurement);
+    if (smart_projection_factors_to_add) BufferFactors(*smart_projection_factors_to_add);
+  }
   if (params_.factor.add_projection_factors) AddProjectionFactorsAndPoints(optical_flow_feature_points_measurement);
   if (params_.factor.rotation_adder.enabled) {
     const auto rotation_factors_to_add = rotation_factor_adder_->AddFactors(optical_flow_feature_points_measurement);
@@ -368,47 +361,6 @@ void GraphLocalizer::CheckForStandstill(const lm::FeaturePointsMeasurement& opti
 
   standstill_ = (num_valid_feature_tracks >= 5 &&
                  average_distance_from_mean <= params_.max_standstill_feature_track_avg_distance_from_mean);
-}
-
-bool GraphLocalizer::AddSmartFactors(const lm::FeaturePointsMeasurement& optical_flow_feature_points_measurement) {
-  // Add smart factor for each valid feature track
-  FactorsToAdd smart_factors_to_add(GraphAction::kDeleteExistingSmartFactors);
-  int num_added_smart_factors = 0;
-  for (const auto& feature_track : feature_tracker_->feature_tracks()) {
-    const double average_distance_from_mean = AverageDistanceFromMean(feature_track.second.points);
-    if (ValidPointSet(feature_track.second.points, average_distance_from_mean,
-                      params_.factor.min_valid_feature_track_avg_distance_from_mean) &&
-        num_added_smart_factors < params_.factor.max_num_optical_flow_factors) {
-      AddSmartFactor(feature_track.second, smart_factors_to_add);
-      ++num_added_smart_factors;
-    }
-  }
-
-  if (!smart_factors_to_add.empty()) {
-    smart_factors_to_add.SetTimestamp(optical_flow_feature_points_measurement.timestamp);
-    BufferFactors(smart_factors_to_add);
-    VLOG(2) << "AddOpticalFLowMeasurement: Buffered " << smart_factors_to_add.size() << " smart factors.";
-  }
-  return true;
-}
-
-void GraphLocalizer::AddSmartFactor(const FeatureTrack& feature_track, FactorsToAdd& smart_factors_to_add) {
-  SharedRobustSmartFactor smart_factor;
-  smart_factor = boost::make_shared<RobustSmartFactor>(
-    params_.noise.optical_flow_nav_cam_noise, params_.calibration.nav_cam_intrinsics,
-    params_.calibration.body_T_nav_cam, smart_projection_params_, params_.factor.robust_smart_factor,
-    params_.factor.enable_rotation_only_fallback);
-
-  KeyInfos key_infos;
-  key_infos.reserve(feature_track.points.size());
-  // Gtsam requires unique key indices for each key, even though these will be replaced later
-  int uninitialized_key_index = 0;
-  for (const auto& feature_point : feature_track.points) {
-    const KeyInfo key_info(&sym::P, feature_point.timestamp);
-    key_infos.emplace_back(key_info);
-    smart_factor->add(Camera::Measurement(feature_point.image_point), key_info.MakeKey(uninitialized_key_index++));
-  }
-  smart_factors_to_add.push_back({key_infos, smart_factor});
 }
 
 void GraphLocalizer::AddStandstillVelocityPriorFactor(const lc::Time timestamp,
@@ -957,7 +909,7 @@ bool GraphLocalizer::DoGraphAction(FactorsToAdd& factors_to_add) {
       VLOG(2) << "DoGraphAction: Deleting smart factors.";
       DeleteFactors<RobustSmartFactor>();
       // TODO(rsoussan): rename this graph action to handle smart factors
-      if (params_.factor.smart_factor_splitting) SplitSmartFactorsIfNeeded(factors_to_add);
+      if (params_.factor.smart_projection_adder.splitting) SplitSmartFactorsIfNeeded(factors_to_add);
       return true;
     case GraphAction::kTransformARMeasurementAndUpdateDockTWorld:
       return TransformARMeasurementAndUpdateDockTWorld(factors_to_add);
@@ -1096,7 +1048,7 @@ void GraphLocalizer::LogErrors() {
   for (const auto& factor : graph_) {
     const double error = factor->error(graph_values_.values());
     total_error += error;
-    if (params_.factor.add_smart_factors) {
+    if (params_.factor.smart_projection_adder.enabled) {
       const auto smart_factor = dynamic_cast<const RobustSmartFactor*>(factor.get());
       if (smart_factor) {
         optical_flow_factor_error += error;
@@ -1162,7 +1114,7 @@ int GraphLocalizer::NumFeatures() const { return graph_values_.NumFeatures(); }
 
 // TODO(rsoussan): fix this call to happen before of factors are removed!
 int GraphLocalizer::NumOFFactors(const bool check_valid) const {
-  if (params_.factor.add_smart_factors) return NumSmartFactors(check_valid);
+  if (params_.factor.smart_projection_adder.enabled) return NumSmartFactors(check_valid);
   if (params_.factor.add_projection_factors) return NumProjectionFactors(check_valid);
   return 0;
 }

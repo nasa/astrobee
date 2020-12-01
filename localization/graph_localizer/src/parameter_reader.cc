@@ -33,33 +33,20 @@ void LoadCalibrationParams(config_reader::ConfigReader& config, CalibrationParam
 }
 
 void LoadFactorParams(config_reader::ConfigReader& config, FactorParams& params) {
-  params.min_valid_feature_track_avg_distance_from_mean =
-    lc::LoadDouble(config, "min_valid_feature_track_avg_distance_from_mean");
   params.optical_flow_standstill_velocity_prior = lc::LoadBool(config, "optical_flow_standstill_velocity_prior");
-  params.enable_EPI = lc::LoadBool(config, "enable_EPI");
-  params.landmark_distance_threshold = lc::LoadDouble(config, "landmark_distance_threshold");
-  params.dynamic_outlier_rejection_threshold = lc::LoadDouble(config, "dynamic_outlier_rejection_threshold");
-  params.retriangulation_threshold = lc::LoadDouble(config, "retriangulation_threshold");
-  params.degeneracy_mode = lc::LoadString(config, "degeneracy_mode");
-  params.linearization_mode = lc::LoadString(config, "linearization_mode");
-  params.verbose_cheirality = lc::LoadBool(config, "verbose_cheirality");
-  params.robust_smart_factor = lc::LoadBool(config, "robust_smart_factor");
-  params.max_num_optical_flow_factors = lc::LoadInt(config, "max_num_optical_flow_factors");
   params.add_point_priors = lc::LoadBool(config, "add_point_priors");
   params.triangulation_enable_EPI = lc::LoadBool(config, "triangulation_enable_EPI");
   params.triangulation_landmark_distance_threshold =
     lc::LoadDouble(config, "triangulation_landmark_distance_threshold");
   params.triangulation_dynamic_outlier_rejection_threshold =
     lc::LoadDouble(config, "triangulation_dynamic_outlier_rejection_threshold");
-  params.enable_rotation_only_fallback = lc::LoadBool(config, "enable_rotation_only_fallback");
-  params.smart_factor_splitting = lc::LoadBool(config, "smart_factor_splitting");
-  params.add_smart_factors = lc::LoadBool(config, "add_smart_factors");
   params.add_projection_factors = lc::LoadBool(config, "add_projection_factors");
   params.min_num_measurements_for_triangulation = lc::LoadInt(config, "min_num_measurements_for_triangulation");
   params.max_num_optical_flow_features = lc::LoadInt(config, "max_num_optical_flow_features");
   LoadLocFactorAdderParams(config, params.loc_adder);
   LoadARTagLocFactorAdderParams(config, params.ar_tag_loc_adder);
   LoadRotationFactorAdderParams(config, params.rotation_adder);
+  LoadSmartProjectionFactorAdderParams(config, params.smart_projection_adder);
   params.rotation_adder.enabled = lc::LoadBool(config, "rotation_adder_enabled");
   params.rotation_adder.min_avg_disparity = lc::LoadDouble(config, "rotation_adder_min_avg_disparity");
 }
@@ -94,6 +81,26 @@ void LoadRotationFactorAdderParams(config_reader::ConfigReader& config, Rotation
   params.rotation_stddev = lc::LoadDouble(config, "rotation_adder_rotation_stddev");
   params.body_T_nav_cam = lc::LoadTransform(config, "nav_cam_transform");
   params.nav_cam_intrinsics = lc::LoadCameraIntrinsics(config, "nav_cam");
+}
+
+void LoadSmartProjectionFactorAdderParams(config_reader::ConfigReader& config,
+                                          SmartProjectionFactorAdderParams& params) {
+  params.enabled = lc::LoadBool(config, "smart_projection_adder_enabled");
+  params.min_avg_distance_from_mean = lc::LoadDouble(config, "smart_projection_adder_min_avg_distance_from_mean");
+  params.enable_EPI = lc::LoadBool(config, "smart_projection_adder_enable_EPI");
+  params.landmark_distance_threshold = lc::LoadDouble(config, "smart_projection_adder_landmark_distance_threshold");
+  params.dynamic_outlier_rejection_threshold =
+    lc::LoadDouble(config, "smart_projection_adder_dynamic_outlier_rejection_threshold");
+  params.retriangulation_threshold = lc::LoadDouble(config, "smart_projection_adder_retriangulation_threshold");
+  params.verbose_cheirality = lc::LoadBool(config, "smart_projection_adder_verbose_cheirality");
+  params.robust = lc::LoadBool(config, "smart_projection_adder_robust");
+  params.max_num_factors = lc::LoadInt(config, "smart_projection_adder_max_num_factors");
+  params.rotation_only_fallback = lc::LoadBool(config, "smart_projection_adder_rotation_only_fallback");
+  params.splitting = lc::LoadBool(config, "smart_projection_adder_splitting");
+  params.body_T_cam = lc::LoadTransform(config, "nav_cam_transform");
+  params.cam_intrinsics.reset(new gtsam::Cal3_S2(lc::LoadCameraIntrinsics(config, "nav_cam")));
+  params.cam_noise =
+    gtsam::noiseModel::Isotropic::Sigma(2, lc::LoadDouble(config, "optical_flow_nav_cam_noise_stddev"));
 }
 
 void LoadFeatureTrackerParams(config_reader::ConfigReader& config, FeatureTrackerParams& params) {

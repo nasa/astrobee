@@ -173,8 +173,9 @@ boost::optional<SharedRobustSmartFactor> FixSmartFactorByRemovingIndividualMeasu
       keys_to_add.emplace_back(original_keys[i]);
     }
     auto new_smart_factor = boost::make_shared<RobustSmartFactor>(
-      params.noise.optical_flow_nav_cam_noise, params.calibration.nav_cam_intrinsics, params.calibration.body_T_nav_cam,
-      smart_projection_params, params.factor.robust_smart_factor, params.factor.enable_rotation_only_fallback);
+      params.factor.smart_projection_adder.cam_noise, params.factor.smart_projection_adder.cam_intrinsics,
+      params.factor.smart_projection_adder.body_T_cam, smart_projection_params,
+      params.factor.smart_projection_adder.robust, params.factor.smart_projection_adder.rotation_only_fallback);
     new_smart_factor->add(measurements_to_add, keys_to_add);
     const auto new_point = new_smart_factor->triangulateSafe(new_smart_factor->cameras(graph_values.values()));
     if (new_point.valid()) {
@@ -203,8 +204,9 @@ boost::optional<SharedRobustSmartFactor> FixSmartFactorByRemovingMeasurementSequ
       keys_to_add.emplace_back(original_keys[i]);
     }
     auto new_smart_factor = boost::make_shared<RobustSmartFactor>(
-      params.noise.optical_flow_nav_cam_noise, params.calibration.nav_cam_intrinsics, params.calibration.body_T_nav_cam,
-      smart_projection_params, params.factor.robust_smart_factor, params.factor.enable_rotation_only_fallback);
+      params.factor.smart_projection_adder.cam_noise, params.factor.smart_projection_adder.cam_intrinsics,
+      params.factor.smart_projection_adder.body_T_cam, smart_projection_params,
+      params.factor.smart_projection_adder.robust, params.factor.smart_projection_adder.rotation_only_fallback);
     new_smart_factor->add(measurements_to_add, keys_to_add);
     const auto new_point = new_smart_factor->triangulateSafe(new_smart_factor->cameras(graph_values.values()));
     if (new_point.valid()) {
@@ -228,9 +230,9 @@ boost::optional<SharedRobustSmartFactor> FixSmartFactorByRemovingMeasurementSequ
         keys_to_add.emplace_back(original_keys[i]);
       }
       auto new_smart_factor = boost::make_shared<RobustSmartFactor>(
-        params.noise.optical_flow_nav_cam_noise, params.calibration.nav_cam_intrinsics,
-        params.calibration.body_T_nav_cam, smart_projection_params, params.factor.robust_smart_factor,
-        params.factor.enable_rotation_only_fallback);
+        params.factor.smart_projection_adder.cam_noise, params.factor.smart_projection_adder.cam_intrinsics,
+        params.factor.smart_projection_adder.body_T_cam, smart_projection_params,
+        params.factor.smart_projection_adder.robust, params.factor.smart_projection_adder.rotation_only_fallback);
       new_smart_factor->add(measurements_to_add, keys_to_add);
       const auto new_point = new_smart_factor->triangulateSafe(new_smart_factor->cameras(graph_values.values()));
       if (new_point.valid()) {
