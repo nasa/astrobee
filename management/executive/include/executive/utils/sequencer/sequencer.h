@@ -31,6 +31,7 @@
 #include <ff_msgs/PlanStatusStamped.h>
 
 #include <geometry_msgs/InertiaStamped.h>
+#include <sensor_msgs/JointState.h>
 
 #include <jsonloader/command.h>
 #include <jsonloader/plan.h>
@@ -115,6 +116,9 @@ bool LoadPlan(ff_msgs::CompressedFile::ConstPtr const& cf, Sequencer *seq);
 
 std::vector<ff_msgs::ControlState>
 Segment2Trajectory(jsonloader::Segment const& segment);
+
+std::vector<sensor_msgs::JointState>
+Segment2ArmTraj(jsonloader::Segment const& segment);
 
 }  // end namespace sequencer
 
