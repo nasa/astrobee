@@ -45,7 +45,7 @@ TEST(RotationFactorTester, Jacobian) {
       boost::bind(&gtsam::PoseRotationFactor::evaluateError, rotation_factor, _1, _2, boost::none, boost::none)),
     world_T_body_1, world_T_perturbed_body_2, 1e-5);
   ASSERT_TRUE(numerical_H1.isApprox(factor_H1.matrix(), 1e-6));
-  const auto numerical_H2 = gtsam::numericalDerivative21<gtsam::Vector3, gtsam::Pose3, gtsam::Pose3>(
+  const auto numerical_H2 = gtsam::numericalDerivative22<gtsam::Vector3, gtsam::Pose3, gtsam::Pose3>(
     boost::function<gtsam::Vector(const gtsam::Pose3&, const gtsam::Pose3&)>(
       boost::bind(&gtsam::PoseRotationFactor::evaluateError, rotation_factor, _1, _2, boost::none, boost::none)),
     world_T_body_1, world_T_perturbed_body_2, 1e-5);
