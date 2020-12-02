@@ -45,6 +45,7 @@ class RotationFactorAdderTester : public ::testing::Test {
     feature_tracker_.reset(new gl::FeatureTracker(feature_tracker_params));
     rotation_factor_adder_params_.min_avg_disparity = 0.2;
     rotation_factor_adder_params_.rotation_stddev = 0.1;
+    rotation_factor_adder_params_.max_percent_outliers = 0.5;
     Eigen::Matrix<double, 4, 4> body_T_nav_cam;
     body_T_nav_cam << 0, 0, 1, 0.1177, 1, 0, 0, -0.0422, 0, 1, 0, -0.0826, 0, 0, 0, 1;
     rotation_factor_adder_params_.body_T_nav_cam = gtsam::Pose3(body_T_nav_cam.matrix());
@@ -111,7 +112,7 @@ TEST_F(RotationFactorAdderTester, CorrectRotation) {
   const auto world_T_body_1 = world_T_cam_1 * rotation_factor_adder_params_.body_T_nav_cam.inverse();
   const auto world_T_body_2 = world_T_cam_2 * rotation_factor_adder_params_.body_T_nav_cam.inverse();
   const auto body_1_R_body_2 = (world_T_body_1.inverse() * world_T_body_2).rotation();
-  ASSERT_TRUE(rotation.equals(body_1_R_body_2));
+  ASSERT_TRUE(rotation.equals(body_1_R_body_2, 1e-6));
 }
 
 TEST_F(RotationFactorAdderTester, CorrectOptimization) {

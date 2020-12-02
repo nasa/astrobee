@@ -62,21 +62,24 @@ std::vector<FactorsToAdd> RotationFactorAdder::AddFactors(const lm::FeaturePoint
 
   cv::Mat intrinsics;
   cv::eigen2cv(params().nav_cam_intrinsics.K(), intrinsics);
-  std::vector<uint8_t> outlier_results;
+  cv::Mat outlier_mask;
   const auto essential_matrix =
-    cv::findEssentialMat(points_1, points_2, intrinsics, cv::RANSAC, 0.999, 1e-3, outlier_results);
-  int num_outliers = 0;
-  for (const auto result : outlier_results) {
-    if (result == 1) ++num_outliers;
+    cv::findEssentialMat(points_1, points_2, intrinsics, cv::RANSAC, 0.999, 1e-3, outlier_mask);
+  int num_inliers_essential_matrix = 0;
+  for (int i = 0; i < outlier_mask.rows; ++i) {
+    if (outlier_mask.at<uint8_t>(i, 0) == 1) ++num_inliers_essential_matrix;
   }
-  const double percent_outliers = static_cast<double>(num_outliers) / outlier_results.size();
+  cv::Mat cv_cam_2_R_cam_1;
+  cv::Mat cv_translation;
+  const int num_inliers_pose_calculation =
+    cv::recoverPose(essential_matrix, points_1, points_2, intrinsics, cv_cam_2_R_cam_1, cv_translation, outlier_mask);
+  // Only consider outliers from recoverPose calculation, ignore already pruned outliers from findEssentialMat
+  const double percent_outliers =
+    static_cast<double>(num_inliers_essential_matrix - num_inliers_pose_calculation) / num_inliers_essential_matrix;
   if (percent_outliers > params().max_percent_outliers) {
     VLOG(2) << "RotationFactorAdder::AddFactors: Too many outliers, discarding result.";
     return {};
   }
-  cv::Mat cv_cam_2_R_cam_1;
-  cv::Mat cv_translation;
-  cv::recoverPose(essential_matrix, points_1, points_2, intrinsics, cv_cam_2_R_cam_1, cv_translation);
   Eigen::Matrix3d eigen_cam_2_R_cam_1;
   cv::cv2eigen(cv_cam_2_R_cam_1, eigen_cam_2_R_cam_1);
   const gtsam::Rot3& body_R_cam = params().body_T_nav_cam.rotation();
