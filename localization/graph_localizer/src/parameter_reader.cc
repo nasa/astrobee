@@ -69,6 +69,7 @@ void LoadRotationFactorAdderParams(config_reader::ConfigReader& config, Rotation
   params.enabled = lc::LoadBool(config, "rotation_adder_enabled");
   params.min_avg_disparity = lc::LoadDouble(config, "rotation_adder_min_avg_disparity");
   params.rotation_stddev = lc::LoadDouble(config, "rotation_adder_rotation_stddev");
+  params.max_percent_outliers = lc::LoadDouble(config, "rotation_adder_max_percent_outliers");
   params.body_T_nav_cam = lc::LoadTransform(config, "nav_cam_transform");
   params.nav_cam_intrinsics = lc::LoadCameraIntrinsics(config, "nav_cam");
 }

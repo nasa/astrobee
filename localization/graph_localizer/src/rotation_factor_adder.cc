@@ -56,14 +56,24 @@ std::vector<FactorsToAdd> RotationFactorAdder::AddFactors(const lm::FeaturePoint
   }
   const double average_disparity = total_disparity / points_1.size();
   if (average_disparity < params().min_avg_disparity) {
-    VLOG(2) << "RotationFactorAdder::AddFactors: Disparity too low.";
+    LOG(ERROR) << "RotationFactorAdder::AddFactors: Disparity too low.";
     return {};
   }
 
   cv::Mat intrinsics;
   cv::eigen2cv(params().nav_cam_intrinsics.K(), intrinsics);
-  // TODO(rsoussan): is this the correct point 1 and point 2 order????
-  const auto essential_matrix = cv::findEssentialMat(points_1, points_2, intrinsics);
+  std::vector<uint8_t> outlier_results;
+  const auto essential_matrix =
+    cv::findEssentialMat(points_1, points_2, intrinsics, cv::RANSAC, 0.999, 1e-3, outlier_results);
+  int num_outliers = 0;
+  for (const auto result : outlier_results) {
+    if (result == 1) ++num_outliers;
+  }
+  const double percent_outliers = static_cast<double>(num_outliers) / outlier_results.size();
+  if (percent_outliers > params().max_percent_outliers) {
+    VLOG(2) << "RotationFactorAdder::AddFactors: Too many outliers, discarding result.";
+    return {};
+  }
   cv::Mat cv_cam_2_R_cam_1;
   cv::Mat cv_translation;
   cv::recoverPose(essential_matrix, points_1, points_2, intrinsics, cv_cam_2_R_cam_1, cv_translation);

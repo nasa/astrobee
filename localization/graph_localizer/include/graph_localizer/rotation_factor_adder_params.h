@@ -28,6 +28,7 @@ namespace graph_localizer {
 struct RotationFactorAdderParams : public FactorAdderParams {
   double min_avg_disparity;
   double rotation_stddev;
+  double max_percent_outliers;
   gtsam::Pose3 body_T_nav_cam;
   gtsam::Cal3_S2 nav_cam_intrinsics;
 };
