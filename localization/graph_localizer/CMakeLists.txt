@@ -52,6 +52,14 @@ if(CATKIN_ENABLE_TESTING)
   target_link_libraries(test_rotation_factor_adder
     graph_localizer gtsam
   )
+  add_rostest_gtest(test_rotation_factor
+    test/test_rotation_factor.test
+    test/test_rotation_factor.cc
+  )
+  target_link_libraries(test_rotation_factor
+    graph_localizer gtsam
+  )
+
 endif()
 
 
