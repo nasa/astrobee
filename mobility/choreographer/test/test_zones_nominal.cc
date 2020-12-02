@@ -117,26 +117,20 @@ TEST(choreographer_nominal, ZoneBreach) {
     std::cout << "Could not reconfigure the choreographer node " << std::endl;
     EXPECT_EQ(true, true);
   }
-  ROS_ERROR("Reconfigured");
 
   // Setup a new mobility goal
   ff_msgs::MotionGoal goal;
   goal.command = ff_msgs::MotionGoal::MOVE;
   goal.flight_mode = ff_msgs::MotionGoal::NOMINAL;
 
-  ROS_ERROR("Declare stuff");
-  // Pose that breaks the keepout/keepin zones condition
+  // Pose that does not breaks the keepout/keepin zones condition
   geometry_msgs::PoseStamped pose;
   geometry_msgs::TransformStamped tfs = tf_buffer_.lookupTransform(
           std::string(FRAME_NAME_WORLD),
           "body" ,
           ros::Time(0), ros::Duration(30));
   pose.header = tfs.header;
-  // pose.header.seq = 0;
-  // pose.header.stamp = ros::Time::now();
-  // pose.header.frame_id = "world";
 
-  ROS_ERROR("Got tf");
   pose.pose.position.x = 10.5;
   pose.pose.position.y = -7.5;
   pose.pose.position.z = 4.5;

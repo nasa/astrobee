@@ -19,7 +19,14 @@
   <!-- Start the entire simulation stack -->
   <include file="$(find astrobee)/launch/sim.launch">
     <arg name="dds" value="false"/>
-    <arg name="pose" default="10.5 -8 4.5 0 0 0 1" />
+    <arg name="pose" default="10.5 -8.5 4.5 0 0 0 1" />
+    <arg name="rviz" default="true" />
   </include>
+
+  <!-- Spawn an obstacle -->
+	<!-- <param name="box_description" command="$(find xacro)/xacro.py $(find gazebo_worlds)/objects/box.urdf.xacro" /> -->
+	<!-- push table_description to factory and spawn robot in gazebo -->
+	<!-- <node name="spawn_box" pkg="gazebo" type="spawn_model" args="-urdf -param table_description -x 10.5 -y -7 -z 4.5 -model table_model" respawn="false" output="screen" /> -->
+
   <test pkg="choreographer" type="test_obstacle" test-name="test_obstacle" />
 </launch>

@@ -55,6 +55,7 @@ tf2_ros::Buffer tf_buffer_;
 void MResultCallback(ff_util::FreeFlyerActionState::Enum result_code,
   ff_msgs::MotionResultConstPtr const& result) {
   EXPECT_EQ(result->response, ff_msgs::MotionResult::SUCCESS);
+  ROS_ERROR("Passed the test");
   ros::shutdown();
 }
 
@@ -71,7 +72,6 @@ void StateCallback(const ff_msgs::EkfStateConstPtr& state) {
   sleep(1);
   stable_ = true;
 
-  ROS_ERROR("Got Ekf message");
   return;
 }
 
@@ -82,7 +82,6 @@ TEST(choreographer_nominal, ZoneBreach) {
   ros::NodeHandle nh;
 
   tf2_ros::TransformListener tfListener(tf_buffer_);
-  ROS_ERROR("Started Test");
 
   // Setup MOBILITY action
   client_t_.SetConnectedTimeout(30.0);
@@ -99,7 +98,6 @@ TEST(choreographer_nominal, ZoneBreach) {
 
   // This waits until the simulation is in a stable status
   while (!stable_) ros::spinOnce();  // Mobility
-  ROS_ERROR("IsConnected");
 
   // Configure the planner
   ff_util::ConfigClient cfg(&nh, NODE_CHOREOGRAPHER);
@@ -110,14 +108,13 @@ TEST(choreographer_nominal, ZoneBreach) {
   cfg.Set<bool>("enable_immediate", true);
   cfg.Set<bool>("enable_timesync", false);
   cfg.Set<bool>("enable_replanning", true);
-  cfg.Set<bool>("enable_faceforward", false);
+  cfg.Set<bool>("enable_faceforward", true);
   cfg.Set<std::string>("planner", "trapezoidal");
 
   if (!cfg.Reconfigure()) {
     std::cout << "Could not reconfigure the choreographer node " << std::endl;
     EXPECT_EQ(true, true);
   }
-  ROS_ERROR("Reconfigured");
 
   // Setup a new mobility goal
   ff_msgs::MotionGoal goal;
@@ -134,7 +131,7 @@ TEST(choreographer_nominal, ZoneBreach) {
   // pose.header.frame_id = "world";
 
   pose.pose.position.x = 10.5;
-  pose.pose.position.y = -7.5;
+  pose.pose.position.y = -10.5;
   pose.pose.position.z = 4.5;
   pose.pose.orientation.x = 0;
   pose.pose.orientation.y = 0;
@@ -148,9 +145,6 @@ TEST(choreographer_nominal, ZoneBreach) {
     std::cout << "Mobility client did not accept goal" << std::endl;
     return;
   }
-
-  // Send the Goal
-  ROS_ERROR("Sent goal to move to a pose");
 
   ros::spin();
 }

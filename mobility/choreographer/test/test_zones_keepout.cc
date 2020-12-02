@@ -54,7 +54,8 @@ tf2_ros::Buffer tf_buffer_;
 // Called once when the goal completes
 void MResultCallback(ff_util::FreeFlyerActionState::Enum result_code,
   ff_msgs::MotionResultConstPtr const& result) {
-  EXPECT_EQ(result->response, ff_msgs::MotionResult::SUCCESS);
+  EXPECT_EQ(result->response, ff_msgs::MotionResult::VIOLATES_KEEP_OUT);
+  ROS_ERROR("Test Passed");
   ros::shutdown();
 }
 
@@ -70,19 +71,15 @@ void StateCallback(const ff_msgs::EkfStateConstPtr& state) {
     sub_ekf_.shutdown();
   sleep(1);
   stable_ = true;
-
-  ROS_ERROR("Got Ekf message");
   return;
 }
 
 // Keepout zone test
 TEST(choreographer_nominal, ZoneBreach) {
-  // Set the zones
   // Get the node handle
   ros::NodeHandle nh;
 
   tf2_ros::TransformListener tfListener(tf_buffer_);
-  ROS_ERROR("Started Test");
 
   // Setup MOBILITY action
   client_t_.SetConnectedTimeout(30.0);
@@ -99,7 +96,6 @@ TEST(choreographer_nominal, ZoneBreach) {
 
   // This waits until the simulation is in a stable status
   while (!stable_) ros::spinOnce();  // Mobility
-  ROS_ERROR("IsConnected");
 
   // Configure the planner
   ff_util::ConfigClient cfg(&nh, NODE_CHOREOGRAPHER);
@@ -117,7 +113,6 @@ TEST(choreographer_nominal, ZoneBreach) {
     std::cout << "Could not reconfigure the choreographer node " << std::endl;
     EXPECT_EQ(true, true);
   }
-  ROS_ERROR("Reconfigured");
 
   // Setup a new mobility goal
   ff_msgs::MotionGoal goal;
@@ -134,8 +129,8 @@ TEST(choreographer_nominal, ZoneBreach) {
   // pose.header.frame_id = "world";
 
   pose.pose.position.x = 10.5;
-  pose.pose.position.y = -7.5;
-  pose.pose.position.z = 4.5;
+  pose.pose.position.y = -11.5;
+  pose.pose.position.z = 4.0;
   pose.pose.orientation.x = 0;
   pose.pose.orientation.y = 0;
   pose.pose.orientation.z = 0;
@@ -148,9 +143,6 @@ TEST(choreographer_nominal, ZoneBreach) {
     std::cout << "Mobility client did not accept goal" << std::endl;
     return;
   }
-
-  // Send the Goal
-  ROS_ERROR("Sent goal to move to a pose");
 
   ros::spin();
 }
