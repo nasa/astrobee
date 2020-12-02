@@ -18,7 +18,6 @@
 # under the License.
 
 import loc_states
-import ml_poses
 import plot_helpers
 import poses
 import utilities
@@ -338,14 +337,12 @@ def has_topic(bag, topic):
   return topic in topics
 
 
-def create_plots(bagfile, output_file, use_ml_features_poses=False):
+def create_plots(bagfile, output_file):
   bag = rosbag.Bag(bagfile)
 
   has_imu_augmented_graph_localization_state = has_topic(bag, '/gnc/ekf')
   has_imu_bias_tester_poses = has_topic(bag, '/imu_bias_tester/pose')
-  sparse_mapping_poses = poses.Poses('Sparse Mapping',
-                                     '/sparse_mapping/pose') if not use_ml_features_poses else ml_poses.Poses(
-                                       'Sparse Mapping', '/loc/ml/features')
+  sparse_mapping_poses = poses.Poses('Sparse Mapping', '/sparse_mapping/pose')
   imu_bias_tester_poses = poses.Poses('Imu Bias Tester', '/imu_bias_tester/pose')
   vec_of_poses = [sparse_mapping_poses, imu_bias_tester_poses]
   load_pose_msgs(vec_of_poses, bag)
