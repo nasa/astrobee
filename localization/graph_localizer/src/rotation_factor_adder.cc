@@ -56,7 +56,7 @@ std::vector<FactorsToAdd> RotationFactorAdder::AddFactors(const lm::FeaturePoint
   }
   const double average_disparity = total_disparity / points_1.size();
   if (average_disparity < params().min_avg_disparity) {
-    LOG(ERROR) << "RotationFactorAdder::AddFactors: Disparity too low.";
+    VLOG(2) << "RotationFactorAdder::AddFactors: Disparity too low.";
     return {};
   }
 
