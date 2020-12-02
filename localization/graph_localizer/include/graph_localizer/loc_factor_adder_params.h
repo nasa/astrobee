@@ -32,6 +32,8 @@ struct LocFactorAdderParams : public FactorAdderParams {
   double prior_translation_stddev;
   double prior_quaternion_stddev;
   int min_num_matches;
+  bool scale_noise_with_num_landmarks;
+  double noise_scale;
   gtsam::Pose3 body_T_cam;
   boost::shared_ptr<gtsam::Cal3_S2> cam_intrinsics;
   gtsam::SharedIsotropic cam_noise;

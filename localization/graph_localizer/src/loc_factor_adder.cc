@@ -44,6 +44,12 @@ std::vector<FactorsToAdd> LocFactorAdder::AddFactors(
     return {};
   }
 
+  double noise_scale = 1;
+  if (params().scale_noise_with_num_landmarks) {
+    noise_scale =
+      params().noise_scale / static_cast<double>(matched_projections_measurement.matched_projections.size());
+  }
+
   if (params().add_pose_priors) {
     int num_loc_pose_prior_factors = 0;
     FactorsToAdd factors_to_add(graph_action_);
@@ -53,8 +59,8 @@ std::vector<FactorsToAdd> LocFactorAdder::AddFactors(
                                                   params().prior_quaternion_stddev, params().prior_quaternion_stddev,
                                                   params().prior_quaternion_stddev)
                                                    .finished());
-    const auto pose_noise =
-      Robust(gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(pose_prior_noise_sigmas)));
+    const auto pose_noise = Robust(
+      gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(noise_scale * pose_prior_noise_sigmas)));
 
     const KeyInfo key_info(&sym::P, matched_projections_measurement.timestamp);
     gtsam::LocPoseFactor::shared_ptr pose_prior_factor(new gtsam::LocPoseFactor(
@@ -70,9 +76,12 @@ std::vector<FactorsToAdd> LocFactorAdder::AddFactors(
     factors_to_add.reserve(matched_projections_measurement.matched_projections.size());
     for (const auto& matched_projection : matched_projections_measurement.matched_projections) {
       const KeyInfo key_info(&sym::P, matched_projections_measurement.timestamp);
+      // TODO(rsoussan): Pass sigma insted of already constructed isotropic noise
+      const gtsam::SharedIsotropic scaled_noise(
+        gtsam::noiseModel::Isotropic::Sigma(2, noise_scale * params().cam_noise->sigma()));
       gtsam::LocProjectionFactor<>::shared_ptr loc_projection_factor(new gtsam::LocProjectionFactor<>(
-        matched_projection.image_point, matched_projection.map_point, Robust(params().cam_noise),
-        key_info.UninitializedKey(), params().cam_intrinsics, params().body_T_cam));
+        matched_projection.image_point, matched_projection.map_point, Robust(scaled_noise), key_info.UninitializedKey(),
+        params().cam_intrinsics, params().body_T_cam));
       factors_to_add.push_back({{key_info}, loc_projection_factor});
       ++num_loc_projection_factors;
     }

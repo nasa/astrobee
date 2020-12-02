@@ -60,6 +60,8 @@ void LoadLocFactorAdderParams(config_reader::ConfigReader& config, LocFactorAdde
   params.min_num_matches = lc::LoadInt(config, "loc_adder_min_num_matches");
   params.prior_translation_stddev = lc::LoadDouble(config, "loc_adder_prior_translation_stddev");
   params.prior_quaternion_stddev = lc::LoadDouble(config, "loc_adder_prior_quaternion_stddev");
+  params.scale_noise_with_num_landmarks = lc::LoadBool(config, "loc_adder_scale_noise_with_num_landmarks");
+  params.noise_scale = lc::LoadDouble(config, "loc_adder_noise_scale");
   params.body_T_cam = lc::LoadTransform(config, "nav_cam_transform");
   params.cam_intrinsics.reset(new gtsam::Cal3_S2(lc::LoadCameraIntrinsics(config, "nav_cam")));
   params.cam_noise = gtsam::noiseModel::Isotropic::Sigma(2, lc::LoadDouble(config, "loc_nav_cam_noise_stddev"));
