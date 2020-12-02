@@ -51,46 +51,47 @@ if(CATKIN_ENABLE_TESTING)
   target_link_libraries(test_init_choreographer
     ${catkin_LIBRARIES} config_reader ff_nodelet
   )
+  if(ENABLE_INTEGRATION_TESTING)
+    # Choreographer test obstacles
+    add_rostest_gtest(test_obstacle
+      test/test_obstacle.test
+      test/test_obstacle.cc
+    )
 
-  # Choreographer test obstacles
-  add_rostest_gtest(test_obstacle
-    test/test_obstacle.test
-    test/test_obstacle.cc
-  )
+    target_link_libraries(test_obstacle
+      ${catkin_LIBRARIES} config_client ff_nodelet
+    )
 
-  target_link_libraries(test_obstacle
-    ${catkin_LIBRARIES} config_client ff_nodelet
-  )
+    # Choreographer test zones keepin
+    add_rostest_gtest(test_zones_keepin
+      test/test_zones_keepin.test
+      test/test_zones_keepin.cc
+    )
 
-  # Choreographer test zones keepin
-  add_rostest_gtest(test_zones_keepin
-    test/test_zones_keepin.test
-    test/test_zones_keepin.cc
-  )
+    target_link_libraries(test_zones_keepin
+      ${catkin_LIBRARIES} config_client ff_nodelet
+    )
 
-  target_link_libraries(test_zones_keepin
-    ${catkin_LIBRARIES} config_client ff_nodelet
-  )
+    # Choreographer test zones keepout
+    add_rostest_gtest(test_zones_keepout
+      test/test_zones_keepout.test
+      test/test_zones_keepout.cc
+    )
 
-  # Choreographer test zones keepout
-  add_rostest_gtest(test_zones_keepout
-    test/test_zones_keepout.test
-    test/test_zones_keepout.cc
-  )
+    target_link_libraries(test_zones_keepout
+      ${catkin_LIBRARIES} config_client ff_nodelet
+    )
 
-  target_link_libraries(test_zones_keepout
-    ${catkin_LIBRARIES} config_client ff_nodelet
-  )
+    # Choreographer test zones nominal
+    add_rostest_gtest(test_zones_nominal
+      test/test_zones_nominal.test
+      test/test_zones_nominal.cc
+    )
 
-  # Choreographer test zones nominal
-  add_rostest_gtest(test_zones_nominal
-    test/test_zones_nominal.test
-    test/test_zones_nominal.cc
-  )
-
-  target_link_libraries(test_zones_nominal
-    ${catkin_LIBRARIES} config_client ff_nodelet
-  )
+    target_link_libraries(test_zones_nominal
+      ${catkin_LIBRARIES} config_client ff_nodelet
+    )
+  endif()
 endif()
 
 install_launch_files()

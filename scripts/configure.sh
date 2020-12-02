@@ -72,11 +72,12 @@ usage_string="$scriptname [-h] [-l <linux build>] [-a <arm build>]\
  [-f <with PicoFlexx driver>] [-F <without PicoFlexx driver>]\
  [-k <use ccache if available>] [-K <do not use ccache>]\
  [-v <with VIVE>] [-V <without VIVE>]\
+ [-t <with integration tests, requires gpu>] [-T <without integration test>]\
  [-g <print debug information only>]"
 #[-t make_target]
 
 # options to parse
-optstring="hlap:b:B:cCdDrRfFkKvVmMg"
+optstring="hlap:b:B:cCdDrRfFkKvVmTt"
 
 # Print the script usage
 print_usage()
@@ -110,6 +111,8 @@ print_help()
     echo -e "\t-F build without the PicoFlexx driver"
     echo -e "\t-v build with the VIVE (default)"
     echo -e "\t-V build without VIVE"
+    echo -e "\t-t build with the integration tests, if tests enabled, requires gpu (default)"
+    echo -e "\t-T build without integration tests, if tests enabled"
     #    echo -e "\t-t make_target  define the make build target"
     #    echo -e "\t   default (when ommited) is 'install'"
     echo -e "\t   when -t is specified, the configure processs is skipped!"
@@ -169,6 +172,10 @@ parse_args()
 	    "v") extra_opts+=" -DENABLE_VIVE=on"
 		 ;;
 	    "V") extra_opts+=" -DENABLE_VIVE=off"
+		 ;;
+	    "t") extra_opts+=" -DENABLE_INTEGRATION_TESTING=on"
+		 ;;
+	    "T") extra_opts+=" -DENABLE_INTEGRATION_TESTING=off"
 		 ;;
 	    "g") debug_mode=1
 		 ;;

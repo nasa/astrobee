@@ -6,6 +6,4 @@ FROM astrobee/astrobee:latest-kinetic
 # Run tests
 
 COPY . /src/astrobee
-RUN cd /build/astrobee && make -j6 && make -j6 tests
-RUN /bin/bash -c "source /build/astrobee/devel/setup.bash && rostest choreographer test_zones_nominal.test --text"
-# RUN cd /build/astrobee && make -j4 test
+RUN cd /build/astrobee && make -j6 && make -j6 tests && make -j6 test
