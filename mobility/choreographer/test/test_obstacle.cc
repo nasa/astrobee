@@ -54,7 +54,7 @@ tf2_ros::Buffer tf_buffer_;
 // Called once when the goal completes
 void MResultCallback(ff_util::FreeFlyerActionState::Enum result_code,
   ff_msgs::MotionResultConstPtr const& result) {
-  EXPECT_EQ(result->response, ff_msgs::MotionResult::SUCCESS);
+  EXPECT_EQ(result->response, ff_msgs::MotionResult::OBSTACLE_DETECTED);
   ROS_ERROR("Passed the test");
   ros::shutdown();
 }
@@ -107,7 +107,7 @@ TEST(choreographer_nominal, ZoneBreach) {
   cfg.Set<bool>("enable_bootstrapping", true);
   cfg.Set<bool>("enable_immediate", true);
   cfg.Set<bool>("enable_timesync", false);
-  cfg.Set<bool>("enable_replanning", true);
+  cfg.Set<bool>("enable_replanning", false);
   cfg.Set<bool>("enable_faceforward", true);
   cfg.Set<std::string>("planner", "trapezoidal");
 
@@ -131,7 +131,7 @@ TEST(choreographer_nominal, ZoneBreach) {
   // pose.header.frame_id = "world";
 
   pose.pose.position.x = 10.5;
-  pose.pose.position.y = -10.5;
+  pose.pose.position.y = -11;
   pose.pose.position.z = 4.5;
   pose.pose.orientation.x = 0;
   pose.pose.orientation.y = 0;
