@@ -22,7 +22,7 @@
 #include <imu_augmentor/imu_augmentor.h>
 #include <localization_common/combined_nav_state.h>
 #include <localization_common/combined_nav_state_covariances.h>
-#include <localization_common/ros_timer.h>
+#include <localization_common/rate_timer.h>
 #include <localization_measurements/imu_measurement.h>
 
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
@@ -61,7 +61,7 @@ class ImuAugmentorWrapper {
   std::unique_ptr<gtsam::TangentPreintegration> preintegration_helper_;
   ImuAugmentorParams params_;
   boost::optional<bool> standstill_;
-  localization_common::RosTimer loc_state_timer_ = localization_common::RosTimer("Loc State Msg");
+  localization_common::RateTimer loc_state_timer_ = localization_common::RateTimer("Loc State Msg");
 };
 }  // namespace imu_augmentor
 #endif  // IMU_AUGMENTOR_IMU_AUGMENTOR_WRAPPER_H_
