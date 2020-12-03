@@ -7,3 +7,4 @@ FROM astrobee/astrobee:latest-kinetic
 
 COPY . /src/astrobee
 RUN cd /build/astrobee && make -j`nproc` tests && make -j`nproc` test
+
