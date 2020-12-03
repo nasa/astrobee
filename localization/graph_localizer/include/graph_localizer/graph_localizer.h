@@ -241,10 +241,19 @@ class GraphLocalizer {
   std::unique_ptr<RotationFactorAdder> rotation_factor_adder_;
   std::unique_ptr<SmartProjectionFactorAdder> smart_projection_factor_adder_;
 
+  // Timers
   localization_common::Timer optimization_timer_ = localization_common::Timer("Optimization");
   localization_common::Timer update_timer_ = localization_common::Timer("Update");
   localization_common::Timer marginals_timer_ = localization_common::Timer("Marginals");
   localization_common::Timer slide_window_timer_ = localization_common::Timer("Slide Window");
+  // Factor Adder Timers
+  localization_common::Timer ar_tag_loc_factor_adder_timer_ = localization_common::Timer("AR Tag Loc Factor Adder");
+  localization_common::Timer loc_factor_adder_timer_ = localization_common::Timer("Loc Factor Adder");
+  localization_common::Timer projection_factor_adder_timer_ = localization_common::Timer("Projection Factor Adder");
+  localization_common::Timer rotation_factor_adder_timer_ = localization_common::Timer("Rotation Factor Adder");
+  localization_common::Timer smart_projection_factor_adder_timer_ =
+    localization_common::Timer("Smart Projection Factor Adder");
+
   // Graph Stats Averagers
   localization_common::Averager iterations_averager_ = localization_common::Averager("Iterations");
   localization_common::Averager num_states_averager_ = localization_common::Averager("Num States");

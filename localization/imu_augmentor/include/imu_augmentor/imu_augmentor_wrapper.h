@@ -22,6 +22,7 @@
 #include <imu_augmentor/imu_augmentor.h>
 #include <localization_common/combined_nav_state.h>
 #include <localization_common/combined_nav_state_covariances.h>
+#include <localization_common/ros_timer.h>
 #include <localization_measurements/imu_measurement.h>
 
 #include <geometry_msgs/PoseWithCovarianceStamped.h>

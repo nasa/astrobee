@@ -21,7 +21,6 @@
 #include <ff_msgs/EkfState.h>
 #include <ff_util/ff_nodelet.h>
 #include <imu_augmentor/imu_augmentor_wrapper.h>
-#include <localization_common/ros_timer.h>
 
 #include <ros/node_handle.h>
 #include <ros/publisher.h>

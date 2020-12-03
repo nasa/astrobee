@@ -272,13 +272,19 @@ bool GraphLocalizer::AddOpticalFlowMeasurement(
 
   // TODO(rsoussan): Enforce that projection and smart factor adders are not both enabled
   if (params_.factor.projection_adder.enabled) {
+    projection_factor_adder_timer_.Start();
     BufferFactors(projection_factor_adder_->AddFactors(optical_flow_feature_points_measurement));
+    projection_factor_adder_timer_.StopAndLog();
   }
   if (params_.factor.smart_projection_adder.enabled) {
+    smart_projection_factor_adder_timer_.Start();
     BufferFactors(smart_projection_factor_adder_->AddFactors(optical_flow_feature_points_measurement));
+    smart_projection_factor_adder_timer_.StopAndLog();
   }
   if (params_.factor.rotation_adder.enabled) {
+    rotation_factor_adder_timer_.Start();
     BufferFactors(rotation_factor_adder_->AddFactors(optical_flow_feature_points_measurement));
+    rotation_factor_adder_timer_.StopAndLog();
   }
 
   CheckForStandstill(optical_flow_feature_points_measurement);
@@ -337,11 +343,13 @@ void GraphLocalizer::AddARTagMeasurement(const lm::MatchedProjectionsMeasurement
   }
 
   if (params_.factor.ar_tag_loc_adder.enabled) {
+    ar_tag_loc_factor_adder_timer_.Start();
     LOG(INFO) << "AddARTagMeasurement: Adding AR tag measurement.";
     // AR projections measurement global frame is dock frame
     dock_cam_T_dock_estimates_.emplace(matched_projections_measurement.timestamp,
                                        matched_projections_measurement.global_T_cam.inverse());
     BufferFactors(ar_tag_loc_factor_adder_->AddFactors(matched_projections_measurement));
+    ar_tag_loc_factor_adder_timer_.StopAndLog();
   }
 }
 
@@ -353,8 +361,10 @@ void GraphLocalizer::AddSparseMappingMeasurement(
   }
 
   if (params_.factor.loc_adder.enabled) {
+    loc_factor_adder_timer_.Start();
     LOG(INFO) << "AddSparseMappingMeasurement: Adding sparse mapping measurement.";
     BufferFactors(loc_factor_adder_->AddFactors(matched_projections_measurement));
+    loc_factor_adder_timer_.StopAndLog();
   }
 }
 
