@@ -56,7 +56,6 @@ class ImuAugmentorNodelet : public ff_util::FreeFlyerNodelet {
   ros::Subscriber imu_sub_, state_sub_;
   ros::Publisher state_pub_, pose_pub_, twist_pub_;
   tf2_ros::TransformBroadcaster transform_pub_;
-  localization_common::RosTimer loc_state_timer_ = localization_common::RosTimer("Loc State Msg");
 };
 }  // namespace imu_augmentor
 

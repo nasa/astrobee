@@ -1197,6 +1197,7 @@ bool GraphLocalizer::Update() {
 
   latest_imu_integrator_.ResetPimIntegrationAndSetBias(latest_bias->first);
 
+  marginals_timer_.Start();
   // Calculate marginals for covariances
   try {
     marginals_ = gtsam::Marginals(graph_, graph_values_->values(), marginals_factorization_);
@@ -1207,11 +1208,14 @@ bool GraphLocalizer::Update() {
     log(params_.fatal_failures, "Update: Computing marginals failed.");
     marginals_ = boost::none;
   }
+  marginals_timer_.StopAndLog();
 
+  slide_window_timer_.Start();
   if (!SlideWindow(marginals_)) {
     LOG(ERROR) << "Update: Failed to slide window.";
     return false;
   }
+  slide_window_timer_.StopAndLog();
 
   update_timer_.StopAndLog();
   return true;

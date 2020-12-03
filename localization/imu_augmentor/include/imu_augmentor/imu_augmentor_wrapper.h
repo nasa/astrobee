@@ -60,6 +60,7 @@ class ImuAugmentorWrapper {
   std::unique_ptr<gtsam::TangentPreintegration> preintegration_helper_;
   ImuAugmentorParams params_;
   boost::optional<bool> standstill_;
+  localization_common::RosTimer loc_state_timer_ = localization_common::RosTimer("Loc State Msg");
 };
 }  // namespace imu_augmentor
 #endif  // IMU_AUGMENTOR_IMU_AUGMENTOR_WRAPPER_H_

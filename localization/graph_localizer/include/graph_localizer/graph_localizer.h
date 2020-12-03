@@ -243,6 +243,8 @@ class GraphLocalizer {
 
   localization_common::Timer optimization_timer_ = localization_common::Timer("Optimization");
   localization_common::Timer update_timer_ = localization_common::Timer("Update");
+  localization_common::Timer marginals_timer_ = localization_common::Timer("Marginals");
+  localization_common::Timer slide_window_timer_ = localization_common::Timer("Slide Window");
   // Graph Stats Averagers
   localization_common::Averager iterations_averager_ = localization_common::Averager("Iterations");
   localization_common::Averager num_states_averager_ = localization_common::Averager("Num States");
