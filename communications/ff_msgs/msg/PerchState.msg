@@ -44,13 +44,13 @@ int8 PERCHING_WAITING_FOR_SPIN_DOWN     = 3
 int8 PERCHING_SWITCHING_TO_PL_LOC       = 2
 int8 PERCHING_STOPPING                  = 1
 int8 PERCHED                            = 0
-int8 UNPERCHED                          = -1
-int8 UNPERCHING_SWITCHING_TO_HR_LOC     = -2
-int8 UNPERCHING_WAITING_FOR_SPIN_UP     = -3
-int8 UNPERCHING_OPENING_GRIPPER         = -4
-int8 UNPERCHING_MOVING_TO_APPROACH_POSE = -5
-int8 UNPERCHING_STOWING_ARM             = -6
-int8 UNPERCHING_SWITCHING_TO_ML_LOC     = -7
+int8 UNPERCHING_SWITCHING_TO_HR_LOC     = -1
+int8 UNPERCHING_WAITING_FOR_SPIN_UP     = -2
+int8 UNPERCHING_OPENING_GRIPPER         = -3
+int8 UNPERCHING_MOVING_TO_APPROACH_POSE = -4
+int8 UNPERCHING_STOWING_ARM             = -5
+int8 UNPERCHING_SWITCHING_TO_ML_LOC     = -6
+int8 UNPERCHED                          = -7
 # Used to check the perching/unperching ranges
 int8 UNPERCHING_MAX_STATE               = -7
 
