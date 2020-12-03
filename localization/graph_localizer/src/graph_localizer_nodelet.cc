@@ -101,7 +101,7 @@ void GraphLocalizerNodelet::ResetAndEnableLocalizer() {
 
 void GraphLocalizerNodelet::OpticalFlowCallback(const ff_msgs::Feature2dArray::ConstPtr& feature_array_msg) {
   of_timer_.HeaderDiff(feature_array_msg->header);
-  of_timer_.Vlog();
+  of_timer_.Log();
 
   if (!localizer_enabled()) return;
   graph_localizer_wrapper_.OpticalFlowCallback(*feature_array_msg);
@@ -116,7 +116,7 @@ void GraphLocalizerNodelet::OpticalFlowCallback(const ff_msgs::Feature2dArray::C
 
 void GraphLocalizerNodelet::VLVisualLandmarksCallback(const ff_msgs::VisualLandmarks::ConstPtr& visual_landmarks_msg) {
   vl_timer_.HeaderDiff(visual_landmarks_msg->header);
-  vl_timer_.Vlog();
+  vl_timer_.Log();
 
   if (!localizer_enabled()) return;
   graph_localizer_wrapper_.VLVisualLandmarksCallback(*visual_landmarks_msg);
@@ -125,7 +125,7 @@ void GraphLocalizerNodelet::VLVisualLandmarksCallback(const ff_msgs::VisualLandm
 
 void GraphLocalizerNodelet::ARVisualLandmarksCallback(const ff_msgs::VisualLandmarks::ConstPtr& visual_landmarks_msg) {
   ar_timer_.HeaderDiff(visual_landmarks_msg->header);
-  ar_timer_.Vlog();
+  ar_timer_.Log();
 
   if (!localizer_enabled()) return;
   graph_localizer_wrapper_.ARVisualLandmarksCallback(*visual_landmarks_msg);
@@ -133,7 +133,7 @@ void GraphLocalizerNodelet::ARVisualLandmarksCallback(const ff_msgs::VisualLandm
 
 void GraphLocalizerNodelet::ImuCallback(const sensor_msgs::Imu::ConstPtr& imu_msg) {
   imu_timer_.HeaderDiff(imu_msg->header);
-  imu_timer_.Vlog();
+  imu_timer_.LogEveryN(62);
 
   if (!localizer_enabled()) return;
   graph_localizer_wrapper_.ImuCallback(*imu_msg);

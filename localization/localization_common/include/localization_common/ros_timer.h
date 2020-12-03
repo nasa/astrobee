@@ -36,6 +36,8 @@ class RosTimer {
   void Stop();
   void Log() const;
   void Vlog(const int level = 2) const;
+  void LogEveryN(const int num_timing_events_per_log) const;
+  void VlogEveryN(const int num_timing_events_per_log, const int level = 2) const;
 
  private:
   std::string name_;

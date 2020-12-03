@@ -45,4 +45,14 @@ void RosTimer::Vlog(const int level) const {
   VLOG(level) << name_ + " time: " << last_elapsed_time_ << " seconds.";
   VLOG(level) << "Average " + name_ + " time: " << average_elapsed_time_ << " seconds.";
 }
+void RosTimer::LogEveryN(const int num_timing_events_per_log) const {
+  if (num_timing_events_ % num_timing_events_per_log == 0) {
+    Log();
+  }
+}
+void RosTimer::VlogEveryN(const int num_timing_events_per_log, const int level) const {
+  if (num_timing_events_ % num_timing_events_per_log == 0) {
+    Vlog(level);
+  }
+}
 }  // namespace localization_common
