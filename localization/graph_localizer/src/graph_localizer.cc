@@ -1148,6 +1148,7 @@ bool GraphLocalizer::standstill() const {
 
 bool GraphLocalizer::Update() {
   LOG(INFO) << "Update: Updating.";
+  update_timer_.Start();
 
   AddBufferedFactors();
 
@@ -1209,6 +1210,7 @@ bool GraphLocalizer::Update() {
     return false;
   }
 
+  update_timer_.StopAndLog();
   return true;
 }
 }  // namespace graph_localizer

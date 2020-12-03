@@ -242,6 +242,7 @@ class GraphLocalizer {
   std::unique_ptr<SmartProjectionFactorAdder> smart_projection_factor_adder_;
 
   localization_common::Timer optimization_timer_ = localization_common::Timer("Optimization");
+  localization_common::Timer update_timer_ = localization_common::Timer("Update");
   // Graph Stats Averagers
   localization_common::Averager iterations_averager_ = localization_common::Averager("Iterations");
   localization_common::Averager num_states_averager_ = localization_common::Averager("Num States");
