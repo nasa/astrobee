@@ -46,8 +46,8 @@ std::vector<FactorsToAdd> LocFactorAdder::AddFactors(
 
   double noise_scale = 1;
   if (params().scale_noise_with_num_landmarks) {
-    noise_scale =
-      params().noise_scale / static_cast<double>(matched_projections_measurement.matched_projections.size());
+    noise_scale = params().noise_scale /
+                  std::pow(static_cast<double>(matched_projections_measurement.matched_projections.size()), 2);
   }
 
   if (params().add_pose_priors) {
