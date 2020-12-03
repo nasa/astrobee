@@ -51,6 +51,9 @@ void ImuAugmentorNodelet::ImuCallback(const sensor_msgs::Imu::ConstPtr& imu_msg)
 }
 
 void ImuAugmentorNodelet::LocalizationStateCallback(const ff_msgs::EkfState::ConstPtr& loc_msg) {
+  loc_state_timer_.HeaderDiff(loc_msg->header);
+  loc_state_timer_.Log();
+
   imu_augmentor_wrapper_.LocalizationStateCallback(*loc_msg);
 }
 
