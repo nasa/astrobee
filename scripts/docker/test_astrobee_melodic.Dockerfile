@@ -4,4 +4,4 @@
 FROM astrobee/astrobee:latest-melodic
 
 # Run tests
-RUN cd /build/astrobee && make -j4 tests && make -j4 test
+RUN cd /build/astrobee && make -j`nproc` tests && make -j`nproc` test
