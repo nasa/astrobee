@@ -139,12 +139,13 @@ void GraphLocalizer::AddStartingPriors(const lc::CombinedNavState& global_N_body
      params_.noise.starting_prior_gyro_bias_stddev, params_.noise.starting_prior_gyro_bias_stddev)
       .finished());
   lc::CombinedNavStateNoise noise;
-  noise.pose_noise =
-    Robust(gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(pose_prior_noise_sigmas)));
+  noise.pose_noise = Robust(
+    gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(pose_prior_noise_sigmas)), params_.huber_k);
   noise.velocity_noise =
-    Robust(gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(velocity_prior_noise_sigmas)));
-  noise.bias_noise =
-    Robust(gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(bias_prior_noise_sigmas)));
+    Robust(gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(velocity_prior_noise_sigmas)),
+           params_.huber_k);
+  noise.bias_noise = Robust(
+    gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(bias_prior_noise_sigmas)), params_.huber_k);
   AddPriors(global_N_body_start, noise, key_index, values, graph);
 }
 
@@ -319,7 +320,8 @@ void GraphLocalizer::AddStandstillVelocityPriorFactor(const lc::Time timestamp,
      params_.noise.optical_flow_prior_velocity_stddev, params_.noise.optical_flow_prior_velocity_stddev)
       .finished());
   const auto velocity_noise =
-    Robust(gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(velocity_prior_noise_sigmas)));
+    Robust(gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(velocity_prior_noise_sigmas)),
+           params_.huber_k);
 
   const KeyInfo velocity_key_info(&sym::V, timestamp);
   gtsam::PriorFactor<gtsam::Velocity3>::shared_ptr velocity_prior_factor(new gtsam::PriorFactor<gtsam::Velocity3>(
@@ -430,7 +432,8 @@ bool GraphLocalizer::TriangulateNewPoint(FactorsToAdd& factors_to_add) {
                                                    params_.noise.point_prior_translation_stddev)
                                                     .finished());
     const auto point_noise =
-      Robust(gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(point_prior_noise_sigmas)));
+      Robust(gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(point_prior_noise_sigmas)),
+             params_.huber_k);
     gtsam::PriorFactor<gtsam::Point3> point_prior_factor(point_key, *world_t_triangulated_point, point_noise);
     graph_.push_back(point_prior_factor);
   }
@@ -701,12 +704,12 @@ bool GraphLocalizer::SlideWindow(const boost::optional<gtsam::Marginals>& margin
     RemovePriors(*key_index);
     if (marginals) {
       lc::CombinedNavStateNoise noise;
-      noise.pose_noise =
-        Robust(gtsam::noiseModel::Gaussian::Covariance(marginals->marginalCovariance(sym::P(*key_index))));
-      noise.velocity_noise =
-        Robust(gtsam::noiseModel::Gaussian::Covariance(marginals->marginalCovariance(sym::V(*key_index))));
-      noise.bias_noise =
-        Robust(gtsam::noiseModel::Gaussian::Covariance(marginals->marginalCovariance(sym::B(*key_index))));
+      noise.pose_noise = Robust(
+        gtsam::noiseModel::Gaussian::Covariance(marginals->marginalCovariance(sym::P(*key_index))), params_.huber_k);
+      noise.velocity_noise = Robust(
+        gtsam::noiseModel::Gaussian::Covariance(marginals->marginalCovariance(sym::V(*key_index))), params_.huber_k);
+      noise.bias_noise = Robust(
+        gtsam::noiseModel::Gaussian::Covariance(marginals->marginalCovariance(sym::B(*key_index))), params_.huber_k);
       AddPriors(*global_N_body_oldest, noise, *key_index, graph_values_->values(), graph_);
     } else {
       // TODO(rsoussan): Add seperate marginal fallback sigmas instead of relying on starting prior sigmas
@@ -732,7 +735,7 @@ void GraphLocalizer::UpdatePointPriors(const gtsam::Marginals& marginals) {
         factor_it = graph_.erase(factor_it);
         // Add updated one
         const auto point_prior_noise =
-          Robust(gtsam::noiseModel::Gaussian::Covariance(marginals.marginalCovariance(feature_key)));
+          Robust(gtsam::noiseModel::Gaussian::Covariance(marginals.marginalCovariance(feature_key)), params_.huber_k);
         const gtsam::PriorFactor<gtsam::Point3> point_prior_factor(feature_key, *world_t_point, point_prior_noise);
         graph_.push_back(point_prior_factor);
         // Only one point prior per feature

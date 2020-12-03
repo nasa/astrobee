@@ -92,8 +92,8 @@ std::vector<FactorsToAdd> RotationFactorAdder::AddFactors(const lm::FeaturePoint
   const KeyInfo pose_2_key_info(&sym::P, points.back().timestamp);
   const gtsam::Vector3 rotation_noise_sigmas(
     (gtsam::Vector(3) << params().rotation_stddev, params().rotation_stddev, params().rotation_stddev).finished());
-  const auto rotation_noise =
-    Robust(gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(rotation_noise_sigmas)));
+  const auto rotation_noise = Robust(
+    gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(rotation_noise_sigmas)), params().huber_k);
   const auto rotation_factor = boost::make_shared<gtsam::PoseRotationFactor>(
     body_1_R_body_2, rotation_noise, pose_1_key_info.UninitializedKey(), pose_2_key_info.UninitializedKey());
   FactorsToAdd rotation_factors_to_add;

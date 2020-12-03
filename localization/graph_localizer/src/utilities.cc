@@ -150,9 +150,8 @@ void RemoveGravityFromBias(const gtsam::Vector3& global_F_gravity, const gtsam::
   imu_bias = gtsam::imuBias::ConstantBias(gravity_corrected_accelerometer_bias, imu_bias.gyroscope());
 }
 
-gtsam::noiseModel::Robust::shared_ptr Robust(const gtsam::SharedNoiseModel& noise) {
-  return gtsam::noiseModel::Robust::Create(gtsam::noiseModel::mEstimator::Huber::Create(1.345 /*Taken from gtsam*/),
-                                           noise);
+gtsam::noiseModel::Robust::shared_ptr Robust(const gtsam::SharedNoiseModel& noise, const double huber_k) {
+  return gtsam::noiseModel::Robust::Create(gtsam::noiseModel::mEstimator::Huber::Create(huber_k), noise);
 }
 
 boost::optional<SharedRobustSmartFactor> FixSmartFactorByRemovingIndividualMeasurements(
@@ -175,7 +174,8 @@ boost::optional<SharedRobustSmartFactor> FixSmartFactorByRemovingIndividualMeasu
     auto new_smart_factor = boost::make_shared<RobustSmartFactor>(
       params.factor.smart_projection_adder.cam_noise, params.factor.smart_projection_adder.cam_intrinsics,
       params.factor.smart_projection_adder.body_T_cam, smart_projection_params,
-      params.factor.smart_projection_adder.robust, params.factor.smart_projection_adder.rotation_only_fallback);
+      params.factor.smart_projection_adder.rotation_only_fallback, params.factor.smart_projection_adder.robust,
+      params.factor.smart_projection_adder.huber_k);
     new_smart_factor->add(measurements_to_add, keys_to_add);
     const auto new_point = new_smart_factor->triangulateSafe(new_smart_factor->cameras(graph_values.values()));
     if (new_point.valid()) {
@@ -206,7 +206,8 @@ boost::optional<SharedRobustSmartFactor> FixSmartFactorByRemovingMeasurementSequ
     auto new_smart_factor = boost::make_shared<RobustSmartFactor>(
       params.factor.smart_projection_adder.cam_noise, params.factor.smart_projection_adder.cam_intrinsics,
       params.factor.smart_projection_adder.body_T_cam, smart_projection_params,
-      params.factor.smart_projection_adder.robust, params.factor.smart_projection_adder.rotation_only_fallback);
+      params.factor.smart_projection_adder.rotation_only_fallback, params.factor.smart_projection_adder.robust,
+      params.factor.smart_projection_adder.huber_k);
     new_smart_factor->add(measurements_to_add, keys_to_add);
     const auto new_point = new_smart_factor->triangulateSafe(new_smart_factor->cameras(graph_values.values()));
     if (new_point.valid()) {
@@ -232,7 +233,8 @@ boost::optional<SharedRobustSmartFactor> FixSmartFactorByRemovingMeasurementSequ
       auto new_smart_factor = boost::make_shared<RobustSmartFactor>(
         params.factor.smart_projection_adder.cam_noise, params.factor.smart_projection_adder.cam_intrinsics,
         params.factor.smart_projection_adder.body_T_cam, smart_projection_params,
-        params.factor.smart_projection_adder.robust, params.factor.smart_projection_adder.rotation_only_fallback);
+        params.factor.smart_projection_adder.rotation_only_fallback, params.factor.smart_projection_adder.robust,
+        params.factor.smart_projection_adder.huber_k);
       new_smart_factor->add(measurements_to_add, keys_to_add);
       const auto new_point = new_smart_factor->triangulateSafe(new_smart_factor->cameras(graph_values.values()));
       if (new_point.valid()) {

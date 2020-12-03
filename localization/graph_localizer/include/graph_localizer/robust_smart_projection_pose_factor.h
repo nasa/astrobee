@@ -46,10 +46,12 @@ class RobustSmartProjectionPoseFactor : public SmartProjectionPoseFactor<CALIBRA
   RobustSmartProjectionPoseFactor(const SharedNoiseModel& sharedNoiseModel, const boost::shared_ptr<CALIBRATION> K,
                                   const boost::optional<Pose3> body_P_sensor,
                                   const SmartProjectionParams& params = SmartProjectionParams(),
-                                  const bool robust = true, const bool rotation_only_fallback = false)
+                                  const bool rotation_only_fallback = false, const bool robust = true,
+                                  const double huber_k = 1.0)
       : SmartProjectionPoseFactor<CALIBRATION>(sharedNoiseModel, K, body_P_sensor, params),
+        rotation_only_fallback_(rotation_only_fallback),
         robust_(robust),
-        rotation_only_fallback_(rotation_only_fallback) {
+        huber_k_(huber_k) {
     // From SmartFactorBase
     if (!sharedNoiseModel) throw std::runtime_error("RobustSmartProjectionPoseFactor: sharedNoiseModel is required");
     SharedIsotropic sharedIsotropic = boost::dynamic_pointer_cast<noiseModel::Isotropic>(sharedNoiseModel);
@@ -201,14 +203,14 @@ class RobustSmartProjectionPoseFactor : public SmartProjectionPoseFactor<CALIBRA
   void serialize(ARCHIVE& ar, const unsigned int /*version*/) {
     ar& BOOST_SERIALIZATION_BASE_OBJECT_NVP(SmartProjectionPoseFactor<CALIBRATION>);
     ar& BOOST_SERIALIZATION_NVP(noise_inv_sigma_);
+    ar& BOOST_SERIALIZATION_NVP(huber_k_);
     ar& BOOST_SERIALIZATION_NVP(robust_);
     ar& BOOST_SERIALIZATION_NVP(rotation_only_fallback_);
     ar& BOOST_SERIALIZATION_NVP(triangulation_params_);
   }
 
   double noise_inv_sigma_;
-  // From gtsam
-  const double huber_k_ = 1.345;
+  double huber_k_;
   double robust_;
   bool rotation_only_fallback_;
   // TODO(rsoussan): Remove once result_ serialization bug in gtsam fixed

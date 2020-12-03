@@ -62,9 +62,9 @@ std::vector<FactorsToAdd> SmartProjectionFactorAdder::AddFactors(
 void SmartProjectionFactorAdder::AddSmartFactor(const FeatureTrack& feature_track,
                                                 FactorsToAdd& smart_factors_to_add) const {
   SharedRobustSmartFactor smart_factor;
-  smart_factor =
-    boost::make_shared<RobustSmartFactor>(params().cam_noise, params().cam_intrinsics, params().body_T_cam,
-                                          smart_projection_params_, params().robust, params().rotation_only_fallback);
+  smart_factor = boost::make_shared<RobustSmartFactor>(params().cam_noise, params().cam_intrinsics, params().body_T_cam,
+                                                       smart_projection_params_, params().rotation_only_fallback,
+                                                       params().robust, params().huber_k);
 
   KeyInfos key_infos;
   key_infos.reserve(feature_track.points.size());

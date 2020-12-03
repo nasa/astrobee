@@ -46,6 +46,7 @@ struct GraphLocalizerParams {
   bool add_priors;
   bool add_marginal_factors;
   double max_standstill_feature_track_avg_distance_from_mean;
+  double huber_k;
 };
 }  // namespace graph_localizer
 

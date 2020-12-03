@@ -45,6 +45,7 @@ void LoadARTagLocFactorAdderParams(config_reader::ConfigReader& config, LocFacto
   params.add_pose_priors = lc::LoadBool(config, "loc_adder_add_pose_priors");
   params.add_projections = lc::LoadBool(config, "loc_adder_add_projections");
   params.enabled = params.add_pose_priors || params.add_projections ? true : false;
+  params.huber_k = lc::LoadDouble(config, "huber_k");
   params.min_num_matches = lc::LoadInt(config, "loc_adder_min_num_matches");
   params.prior_translation_stddev = lc::LoadDouble(config, "loc_adder_prior_translation_stddev");
   params.prior_quaternion_stddev = lc::LoadDouble(config, "loc_adder_prior_quaternion_stddev");
@@ -57,6 +58,7 @@ void LoadLocFactorAdderParams(config_reader::ConfigReader& config, LocFactorAdde
   params.add_pose_priors = lc::LoadBool(config, "loc_adder_add_pose_priors");
   params.add_projections = lc::LoadBool(config, "loc_adder_add_projections");
   params.enabled = params.add_pose_priors || params.add_projections ? true : false;
+  params.huber_k = lc::LoadDouble(config, "huber_k");
   params.min_num_matches = lc::LoadInt(config, "loc_adder_min_num_matches");
   params.prior_translation_stddev = lc::LoadDouble(config, "loc_adder_prior_translation_stddev");
   params.prior_quaternion_stddev = lc::LoadDouble(config, "loc_adder_prior_quaternion_stddev");
@@ -69,6 +71,7 @@ void LoadLocFactorAdderParams(config_reader::ConfigReader& config, LocFactorAdde
 
 void LoadRotationFactorAdderParams(config_reader::ConfigReader& config, RotationFactorAdderParams& params) {
   params.enabled = lc::LoadBool(config, "rotation_adder_enabled");
+  params.huber_k = lc::LoadDouble(config, "huber_k");
   params.min_avg_disparity = lc::LoadDouble(config, "rotation_adder_min_avg_disparity");
   params.rotation_stddev = lc::LoadDouble(config, "rotation_adder_rotation_stddev");
   params.max_percent_outliers = lc::LoadDouble(config, "rotation_adder_max_percent_outliers");
@@ -78,6 +81,7 @@ void LoadRotationFactorAdderParams(config_reader::ConfigReader& config, Rotation
 
 void LoadProjectionFactorAdderParams(config_reader::ConfigReader& config, ProjectionFactorAdderParams& params) {
   params.enabled = lc::LoadBool(config, "projection_adder_enabled");
+  params.huber_k = lc::LoadDouble(config, "huber_k");
   params.enable_EPI = lc::LoadBool(config, "projection_adder_enable_EPI");
   params.landmark_distance_threshold = lc::LoadDouble(config, "projection_adder_landmark_distance_threshold");
   params.dynamic_outlier_rejection_threshold =
@@ -96,6 +100,7 @@ void LoadProjectionFactorAdderParams(config_reader::ConfigReader& config, Projec
 void LoadSmartProjectionFactorAdderParams(config_reader::ConfigReader& config,
                                           SmartProjectionFactorAdderParams& params) {
   params.enabled = lc::LoadBool(config, "smart_projection_adder_enabled");
+  params.huber_k = lc::LoadDouble(config, "huber_k");
   params.min_avg_distance_from_mean = lc::LoadDouble(config, "smart_projection_adder_min_avg_distance_from_mean");
   params.enable_EPI = lc::LoadBool(config, "smart_projection_adder_enable_EPI");
   params.landmark_distance_threshold = lc::LoadDouble(config, "smart_projection_adder_landmark_distance_threshold");
@@ -165,5 +170,6 @@ void LoadGraphLocalizerParams(config_reader::ConfigReader& config, GraphLocalize
   params.add_marginal_factors = lc::LoadBool(config, "add_marginal_factors");
   params.max_standstill_feature_track_avg_distance_from_mean =
     lc::LoadDouble(config, "max_standstill_feature_track_avg_distance_from_mean");
+  params.huber_k = lc::LoadDouble(config, "huber_k");
 }
 }  // namespace graph_localizer

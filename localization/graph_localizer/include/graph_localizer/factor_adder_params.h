@@ -22,6 +22,7 @@
 namespace graph_localizer {
 struct FactorAdderParams {
   bool enabled;
+  double huber_k;
 };
 }  // namespace graph_localizer
 

@@ -75,7 +75,7 @@ geometry_msgs::PoseStamped PoseMsg(const Eigen::Isometry3d& global_T_body, const
 
 geometry_msgs::PoseStamped PoseMsg(const gtsam::Pose3& global_T_body, const localization_common::Time time);
 
-gtsam::noiseModel::Robust::shared_ptr Robust(const gtsam::SharedNoiseModel& noise);
+gtsam::noiseModel::Robust::shared_ptr Robust(const gtsam::SharedNoiseModel& noise, const double huber_k);
 
 boost::optional<SharedRobustSmartFactor> FixSmartFactorByRemovingIndividualMeasurements(
   const GraphLocalizerParams& params, const RobustSmartFactor& smart_factor,

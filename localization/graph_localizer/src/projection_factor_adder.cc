@@ -48,8 +48,8 @@ std::vector<FactorsToAdd> ProjectionFactorAdder::AddFactors(
         continue;
       }
       const auto projection_factor = boost::make_shared<ProjectionFactor>(
-        feature_point.image_point, Robust(params().cam_noise), pose_key_info.UninitializedKey(), *point_key,
-        params().cam_intrinsics, params().body_T_cam);
+        feature_point.image_point, Robust(params().cam_noise, params().huber_k), pose_key_info.UninitializedKey(),
+        *point_key, params().cam_intrinsics, params().body_T_cam);
       projection_factors_to_add.push_back({{pose_key_info, static_point_key_info}, projection_factor});
     }
   }
@@ -75,8 +75,8 @@ std::vector<FactorsToAdd> ProjectionFactorAdder::AddFactors(
         const KeyInfo pose_key_info(&sym::P, feature_point.timestamp);
         const KeyInfo static_point_key_info(&sym::F, feature_point.feature_id);
         const auto projection_factor = boost::make_shared<ProjectionFactor>(
-          feature_point.image_point, Robust(params().cam_noise), pose_key_info.UninitializedKey(), point_key,
-          params().cam_intrinsics, params().body_T_cam);
+          feature_point.image_point, Robust(params().cam_noise, params().huber_k), pose_key_info.UninitializedKey(),
+          point_key, params().cam_intrinsics, params().body_T_cam);
         projection_factors_with_new_point_to_add.push_back({{pose_key_info, static_point_key_info}, projection_factor});
       }
       projection_factors_with_new_point_to_add.SetTimestamp(feature_points_measurement.timestamp);
