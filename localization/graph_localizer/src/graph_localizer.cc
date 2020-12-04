@@ -581,9 +581,8 @@ bool GraphLocalizer::SplitOldImuFactorAndAddCombinedNavState(const lc::Time time
     return false;
   }
 
-  // TODO(rsoussan): seperate graph initialization and imu integration params?
-  const auto combined_imu_factor = ii::MakeCombinedImuFactor(*new_key_index, *upper_bound_key_index,
-                                                             *second_integrated_pim, params_.graph_initialization);
+  const auto combined_imu_factor =
+    ii::MakeCombinedImuFactor(*new_key_index, *upper_bound_key_index, *second_integrated_pim);
   graph_.push_back(combined_imu_factor);
   return true;
 }
@@ -624,8 +623,7 @@ bool GraphLocalizer::CreateAndAddImuFactorAndPredictedCombinedNavState(
 
   const lc::CombinedNavState global_N_body_predicted = ii::PimPredict(global_N_body, pim);
   const int key_index_1 = GenerateKeyIndex();
-  const auto combined_imu_factor =
-    ii::MakeCombinedImuFactor(*key_index_0, key_index_1, pim, params_.graph_initialization);
+  const auto combined_imu_factor = ii::MakeCombinedImuFactor(*key_index_0, key_index_1, pim);
   graph_.push_back(combined_imu_factor);
   graph_values_->AddCombinedNavState(global_N_body_predicted, key_index_1);
   return true;

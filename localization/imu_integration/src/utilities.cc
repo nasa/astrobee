@@ -93,19 +93,10 @@ lc::CombinedNavState PimPredict(const lc::CombinedNavState& combined_nav_state,
 }
 
 gtsam::CombinedImuFactor::shared_ptr MakeCombinedImuFactor(const int key_index_0, const int key_index_1,
-                                                           const gtsam::PreintegratedCombinedMeasurements& pim,
-                                                           const ImuIntegratorParams& params) {
-  Eigen::DiagonalMatrix<double, 15> noise_scale_matrix;
-  noise_scale_matrix.diagonal() << params.noise_translation_scale, params.noise_translation_scale,
-    params.noise_translation_scale, params.noise_rotation_scale, params.noise_rotation_scale,
-    params.noise_rotation_scale, params.noise_velocity_scale, params.noise_velocity_scale, params.noise_velocity_scale,
-    1.0, 1.0, 1.0, 1.0, 1.0, 1.0;
-  const Eigen::Matrix<double, 15, 15> noisy_preintegrated_measurement_covariance =
-    noise_scale_matrix * pim.preintMeasCov();
-  const gtsam::PreintegratedCombinedMeasurements noisy_pim(pim, noisy_preintegrated_measurement_covariance);
+                                                           const gtsam::PreintegratedCombinedMeasurements& pim) {
   return gtsam::CombinedImuFactor::shared_ptr(
     new gtsam::CombinedImuFactor(sym::P(key_index_0), sym::V(key_index_0), sym::P(key_index_1), sym::V(key_index_1),
-                                 sym::B(key_index_0), sym::B(key_index_1), noisy_pim));
+                                 sym::B(key_index_0), sym::B(key_index_1), pim));
 }
 
 void LoadImuIntegratorParams(config_reader::ConfigReader& config, ImuIntegratorParams& params) {
@@ -120,9 +111,5 @@ void LoadImuIntegratorParams(config_reader::ConfigReader& config, ImuIntegratorP
   params.gyro_bias_sigma = lc::LoadDouble(config, "gyro_bias_sigma");
   params.integration_variance = lc::LoadDouble(config, "integration_variance");
   params.bias_acc_omega_int = lc::LoadDouble(config, "bias_acc_omega_int");
-  params.noise_translation_scale = lc::LoadDouble(config, "imu_noise_translation_scale");
-  params.noise_rotation_scale = lc::LoadDouble(config, "imu_noise_rotation_scale");
-  params.noise_velocity_scale = lc::LoadDouble(config, "imu_noise_velocity_scale");
 }
-
 }  // namespace imu_integration

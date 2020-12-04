@@ -54,8 +54,7 @@ localization_common::CombinedNavState PimPredict(const localization_common::Comb
                                                  const gtsam::PreintegratedCombinedMeasurements& pim);
 
 gtsam::CombinedImuFactor::shared_ptr MakeCombinedImuFactor(const int key_index_0, const int key_index_1,
-                                                           const gtsam::PreintegratedCombinedMeasurements& pim,
-                                                           const ImuIntegratorParams& params);
+                                                           const gtsam::PreintegratedCombinedMeasurements& pim);
 
 void LoadImuIntegratorParams(config_reader::ConfigReader& config, ImuIntegratorParams& params);
 }  // namespace imu_integration
