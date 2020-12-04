@@ -1193,8 +1193,12 @@ bool GraphLocalizer::Update() {
   optimization_timer_.StopAndLog();
   iterations_averager_.UpdateAndLog(optimizer.iterations());
   // TODO(rsoussan): Add options for these?
+  log_stats_timer_.Start();
   LogStats();
+  log_stats_timer_.StopAndLog();
+  log_error_timer_.Start();
   LogErrors();
+  log_error_timer_.StopAndLog();
 
   if (params_.print_factor_info) PrintFactorDebugInfo();
 

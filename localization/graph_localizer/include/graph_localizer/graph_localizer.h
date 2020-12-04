@@ -246,6 +246,8 @@ class GraphLocalizer {
   localization_common::Timer update_timer_ = localization_common::Timer("Update");
   localization_common::Timer marginals_timer_ = localization_common::Timer("Marginals");
   localization_common::Timer slide_window_timer_ = localization_common::Timer("Slide Window");
+  localization_common::Timer log_error_timer_ = localization_common::Timer("Log Error");
+  localization_common::Timer log_stats_timer_ = localization_common::Timer("Log Stats");
   // Factor Adder Timers
   localization_common::Timer ar_tag_loc_factor_adder_timer_ = localization_common::Timer("AR Tag Loc Factor Adder");
   localization_common::Timer loc_factor_adder_timer_ = localization_common::Timer("Loc Factor Adder");
