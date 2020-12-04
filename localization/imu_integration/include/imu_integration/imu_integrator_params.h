@@ -37,6 +37,10 @@ struct ImuIntegratorParams {
   double gyro_bias_sigma;
   double integration_variance;
   double bias_acc_omega_int;
+  // Scale Factors for Imu Factor Noise
+  double noise_translation_scale;
+  double noise_rotation_scale;
+  double noise_velocity_scale;
 };
 }  // namespace imu_integration
 
