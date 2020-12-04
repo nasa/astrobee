@@ -583,16 +583,20 @@ class ArmNodelet : public ff_util::FreeFlyerNodelet {
   }
   // Monitor choreographer state to check when to start controlling
   void ChoreographerCallback(ff_msgs::MotionStateConstPtr const& state) {
-      ROS_ERROR("ChoreographerCallback");
     if (segment_arm_.empty())
       return;
 
     if (state->state == ff_msgs::MotionState::CONTROLLING) {
       // Start timer if trajectory is received, ONLY RUN ONCE
-      if (!segment_arm_.empty()) {
-        timer_.setPeriod(tdiff_ + ros::Duration(segment_arm_.front().header.stamp.toSec()));
-        timer_.start();
-      }
+      ROS_ERROR("CHOREOGRAPHER START");
+      timer_.setPeriod(tdiff_ + ros::Duration(segment_arm_.front().header.stamp.toSec()));
+      timer_.start();
+
+    } else if (state->state == ff_msgs::MotionState::STOPPED ||
+               state->state == ff_msgs::MotionState::IDLE) {
+      ROS_ERROR("CHOREOGRAPHER STOP");
+      timer_.stop();
+      segment_arm_.clear();
     }
   }
 

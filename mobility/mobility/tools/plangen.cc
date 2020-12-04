@@ -56,7 +56,7 @@ DEFINE_string(output_type, "fplan", "Output file type. Options: fplan (default),
 DEFINE_double(vel, 0.2, "Desired velocity in m/s");
 DEFINE_double(accel, 0.0175, "Desired acceleration in m/s^2");
 DEFINE_double(omega, 0.1745, "Desired angular velocity in rad/s");
-DEFINE_double(alpha, 0.2, "Desired angular acceleration in rad/s^2");
+DEFINE_double(alpha, 0.1745, "Desired angular acceleration in rad/s^2");
 DEFINE_double(tolerance, 0.1, "When two points are close enough.");
 DEFINE_string(creator, "astrobee", "The name of the creator of the plan.");
 DEFINE_string(rotations_multiplication_order, "yaw-pitch-roll",

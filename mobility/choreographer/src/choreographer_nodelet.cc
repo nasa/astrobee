@@ -125,6 +125,7 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
     fsm_.Add(STATE::STOPPED, STATE::IDLE,
       GOAL_EXEC,
       [this](FSM::Event const& event) -> FSM::State {
+        ROS_ERROR_STREAM("Got goal");
         // Assemble a simple planning request
         geometry_msgs::PoseStamped pose;
         if (!GetRobotPose(pose))
@@ -150,6 +151,7 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
         }
         // We are not on the first pose, we need to plan to get there
         if (cfg_.Get<bool>("enable_bootstrapping")) {
+        ROS_ERROR_STREAM("We are not on the first pose, we need to plan to get there");
           // Assemble a simple plan
           std::vector<geometry_msgs::PoseStamped> states;
           geometry_msgs::PoseStamped pose;
@@ -162,6 +164,9 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
           pose.header.stamp = segment_.front().when;
           pose.pose = segment_.front().pose;
           states.push_back(pose);
+          ROS_ERROR_STREAM("Bootstrapping" << segment_.front().pose.position.x << " "
+                                           << segment_.front().pose.position.y << " "
+                                           << segment_.front().pose.position.z);
           // Now, query the planning subsystem to find a suitable segment
           if (!Plan(states))
             return Result(RESPONSE::PLAN_FAILED);
@@ -896,8 +901,8 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
     // Publish the state
     pub_state_.publish(msg);
     // Debug information for the nodelet
-    NODELET_DEBUG_STREAM("Received event " << msg.fsm_event);
-    NODELET_DEBUG_STREAM("State changed to " << msg.fsm_state);
+    ROS_ERROR_STREAM("Received event " << msg.fsm_event);
+    ROS_ERROR_STREAM("State changed to " << msg.fsm_state);
     // Send the feedback if needed
     switch (state) {
     case STATE::IDLING:
@@ -948,35 +953,35 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
     if (plan_goal.desired_vel < 0) {
       plan_goal.desired_vel = goal_flight_mode_.hard_limit_vel;
     } else if (plan_goal.desired_vel > goal_flight_mode_.hard_limit_vel) {
-      NODELET_WARN_STREAM("Velocity violated " << goal_flight_mode_.name);
+      ROS_ERROR_STREAM("Velocity violated " << goal_flight_mode_.name);
       return false;
     }
     // Check desired acceleration
     if (plan_goal.desired_accel < 0) {
       plan_goal.desired_accel = goal_flight_mode_.hard_limit_accel / divider;
     } else if (plan_goal.desired_accel > goal_flight_mode_.hard_limit_accel / divider) {
-      NODELET_WARN_STREAM("Accel violated " << goal_flight_mode_.name);
+      ROS_ERROR_STREAM("Accel violated " << goal_flight_mode_.name);
       return false;
     }
     // Check desired omega
     if (plan_goal.desired_omega < 0) {
       plan_goal.desired_omega = goal_flight_mode_.hard_limit_omega;
     } else if (plan_goal.desired_omega > goal_flight_mode_.hard_limit_omega) {
-      NODELET_WARN_STREAM("Omega violated " << goal_flight_mode_.name);
+      ROS_ERROR_STREAM("Omega violated " << goal_flight_mode_.name);
       return false;
     }
     // Check  desired alpha
     if (plan_goal.desired_alpha < 0) {
       plan_goal.desired_alpha = goal_flight_mode_.hard_limit_alpha / divider;
     } else if (plan_goal.desired_alpha > goal_flight_mode_.hard_limit_alpha / divider) {
-      NODELET_WARN_STREAM("Alpha violated " << goal_flight_mode_.name);
+      ROS_ERROR_STREAM("Alpha violated " << goal_flight_mode_.hard_limit_alpha / divider);
       return false;
     }
     // Check control frequency
     if (plan_goal.desired_rate < 0) {
       plan_goal.desired_rate = ff_util::FlightUtil::MIN_CONTROL_RATE;
     } else if (plan_goal.desired_rate < ff_util::FlightUtil::MIN_CONTROL_RATE) {
-      NODELET_WARN_STREAM("Rate violated " << goal_flight_mode_.name);
+      ROS_ERROR_STREAM("Rate violated " << goal_flight_mode_.name);
       return false;
     }
     // Make sure we communicate the maximum allowed time to the planner
@@ -990,13 +995,13 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
     if (planners_.find(planner) != planners_.end()) {
       planners_[planner].SetDeadlineTimeout(plan_goal.max_time.toSec());
       if (!planners_[planner].SendGoal(plan_goal)) {
-        NODELET_WARN_STREAM("Planner rejected goal");
+        ROS_ERROR_STREAM("Planner rejected goal");
         return false;
       }
       return true;
     }
     // Planner does not exist
-    NODELET_WARN_STREAM("Planner does not exist");
+    ROS_ERROR_STREAM("Planner does not exist");
     return false;
   }
 
