@@ -106,6 +106,23 @@ gtsam::Pose3 GtPose(const ff_msgs::VisualLandmarks& vl_features) {
   return gtsam::Pose3(vl_global_R_sensor, vl_global_t_sensor);
 }
 
+void LoadGraphLocalizerConfig(config_reader::ConfigReader& config) {
+  const auto world = std::getenv("ASTROBEE_WORLD");
+  if (!world) LOG(FATAL) << "LoadGraphLocalizerConfig: Failed to load ASTROBEE_WORLD environment variable.";
+  const std::string loaded_world(world);
+  if (loaded_world == "iss") {
+    config.AddFile("iss_graph_localizer.config");
+    LOG(INFO) << "LoadGraphLocalizerconfig: Loaded iss graph localizer config.";
+    return;
+  } else if (loaded_world == "granite") {
+    config.AddFile("granite_graph_localizer.config");
+    LOG(INFO) << "LoadGraphLocalizerconfig: Loaded granite graph localizer config.";
+    return;
+  } else {
+    LOG(FATAL) << "LoadGraphLocalizerConfig: ASTROBEE_WORLD environment variable not set to iss or granite.";
+  }
+}
+
 void SetEnvironmentConfigs(const std::string& astrobee_configs_path, const std::string& world,
                            const std::string& robot_config_file) {
   setenv("ASTROBEE_RESOURCE_DIR", (astrobee_configs_path + "/resources").c_str(), true);

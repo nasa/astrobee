@@ -33,7 +33,7 @@ namespace lc = localization_common;
 namespace lm = localization_measurements;
 GraphLocalizerWrapper::GraphLocalizerWrapper() {
   config_reader::ConfigReader config;
-  config.AddFile("graph_localizer.config");
+  lc::LoadGraphLocalizerConfig(config);
   config.AddFile("transforms.config");
   config.AddFile("cameras.config");
   config.AddFile("geometry.config");
