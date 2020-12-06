@@ -248,13 +248,6 @@ class GraphLocalizer {
   localization_common::Timer slide_window_timer_ = localization_common::Timer("Slide Window");
   localization_common::Timer log_error_timer_ = localization_common::Timer("Log Error");
   localization_common::Timer log_stats_timer_ = localization_common::Timer("Log Stats");
-  // Factor Adder Timers
-  localization_common::Timer ar_tag_loc_factor_adder_timer_ = localization_common::Timer("AR Tag Loc Factor Adder");
-  localization_common::Timer loc_factor_adder_timer_ = localization_common::Timer("Loc Factor Adder");
-  localization_common::Timer projection_factor_adder_timer_ = localization_common::Timer("Projection Factor Adder");
-  localization_common::Timer rotation_factor_adder_timer_ = localization_common::Timer("Rotation Factor Adder");
-  localization_common::Timer smart_projection_factor_adder_timer_ =
-    localization_common::Timer("Smart Projection Factor Adder");
 
   // Graph Stats Averagers
   localization_common::Averager iterations_averager_ = localization_common::Averager("Iterations");
