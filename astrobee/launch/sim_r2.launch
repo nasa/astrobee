@@ -257,8 +257,6 @@
 
   <!-- Load r2 -->
   <group ns= "r2">
-
-    <node pkg="rosservice" type="rosservice" name="set_r2_gazebo_log_level" args="call --wait /gazebo/set_logger_level 'ros.r2_gazebo_interface' 'debug'" />
     <!-- <rosparam file="$(find r2_gazebo)/config/controllers/r2sim_random_start_right.yaml" command="load" /> -->
     <!-- <rosparam file="$(find r2_gazebo)/config/controllers/r2sim_walking_full_params_random_start.yaml" command="load" /> -->
     <rosparam file="$(find r2_gazebo)/config/controllers/r2sim_walking_full_params.yaml" command="load" />

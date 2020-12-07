@@ -41,5 +41,7 @@ if ((NOT USE_CTC) AND (NOT IS_BAMBOO_BUILD))
     add_subdirectory(${media_SOURCE_DIR}/astrobee_handrail_30)
     add_subdirectory(${media_SOURCE_DIR}/astrobee_handrail_41_5)
     add_subdirectory(${media_SOURCE_DIR}/astrobee_freeflyer)
+    add_subdirectory(${media_SOURCE_DIR}/astrobee_r2)
   endif()
+
 endif ((NOT USE_CTC) AND (NOT IS_BAMBOO_BUILD))
