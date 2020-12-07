@@ -112,6 +112,7 @@ void LoadSmartProjectionFactorAdderParams(config_reader::ConfigReader& config,
   params.max_num_factors = lc::LoadInt(config, "smart_projection_adder_max_num_factors");
   params.rotation_only_fallback = lc::LoadBool(config, "smart_projection_adder_rotation_only_fallback");
   params.splitting = lc::LoadBool(config, "smart_projection_adder_splitting");
+  params.scale_noise_with_num_points = lc::LoadBool(config, "smart_projection_adder_scale_noise_with_num_points");
   params.body_T_cam = lc::LoadTransform(config, "nav_cam_transform");
   params.cam_intrinsics.reset(new gtsam::Cal3_S2(lc::LoadCameraIntrinsics(config, "nav_cam")));
   params.cam_noise =
