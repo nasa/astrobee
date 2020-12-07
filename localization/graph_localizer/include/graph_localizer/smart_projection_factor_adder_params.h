@@ -40,6 +40,7 @@ struct SmartProjectionFactorAdderParams : public FactorAdderParams {
   bool rotation_only_fallback;
   bool splitting;
   bool scale_noise_with_num_points;
+  double noise_scale;
   gtsam::Pose3 body_T_cam;
   boost::shared_ptr<gtsam::Cal3_S2> cam_intrinsics;
   gtsam::SharedIsotropic cam_noise;
