@@ -13,7 +13,7 @@ ssh llp /opt/astrobee/lib/astrobee/cpu_print_version.sh | sed 's/^/  /'
 
 echo "=================== HLP ==================="
 
-# TODO
+./apk_print_version.sh | sed 's/versionName=/  /'
   
 echo "=================== Map ==================="
 echo "Map: $(sha256sum /res/maps/iss.map)"
