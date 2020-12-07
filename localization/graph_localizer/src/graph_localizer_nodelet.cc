@@ -101,7 +101,7 @@ void GraphLocalizerNodelet::ResetAndEnableLocalizer() {
 
 void GraphLocalizerNodelet::OpticalFlowCallback(const ff_msgs::Feature2dArray::ConstPtr& feature_array_msg) {
   of_timer_.HeaderDiff(feature_array_msg->header);
-  of_timer_.Log();
+  of_timer_.LogEveryN(100);
 
   if (!localizer_enabled()) return;
   graph_localizer_wrapper_.OpticalFlowCallback(*feature_array_msg);
@@ -116,7 +116,7 @@ void GraphLocalizerNodelet::OpticalFlowCallback(const ff_msgs::Feature2dArray::C
 
 void GraphLocalizerNodelet::VLVisualLandmarksCallback(const ff_msgs::VisualLandmarks::ConstPtr& visual_landmarks_msg) {
   vl_timer_.HeaderDiff(visual_landmarks_msg->header);
-  vl_timer_.Log();
+  vl_timer_.LogEveryN(100);
 
   if (!localizer_enabled()) return;
   graph_localizer_wrapper_.VLVisualLandmarksCallback(*visual_landmarks_msg);
@@ -125,7 +125,7 @@ void GraphLocalizerNodelet::VLVisualLandmarksCallback(const ff_msgs::VisualLandm
 
 void GraphLocalizerNodelet::ARVisualLandmarksCallback(const ff_msgs::VisualLandmarks::ConstPtr& visual_landmarks_msg) {
   ar_timer_.HeaderDiff(visual_landmarks_msg->header);
-  ar_timer_.Log();
+  ar_timer_.LogEveryN(100);
 
   if (!localizer_enabled()) return;
   graph_localizer_wrapper_.ARVisualLandmarksCallback(*visual_landmarks_msg);
@@ -133,7 +133,7 @@ void GraphLocalizerNodelet::ARVisualLandmarksCallback(const ff_msgs::VisualLandm
 
 void GraphLocalizerNodelet::ImuCallback(const sensor_msgs::Imu::ConstPtr& imu_msg) {
   imu_timer_.HeaderDiff(imu_msg->header);
-  imu_timer_.LogEveryN(62);
+  imu_timer_.LogEveryN(100);
 
   if (!localizer_enabled()) return;
   graph_localizer_wrapper_.ImuCallback(*imu_msg);
@@ -142,7 +142,7 @@ void GraphLocalizerNodelet::ImuCallback(const sensor_msgs::Imu::ConstPtr& imu_ms
 void GraphLocalizerNodelet::PublishLocalizationState() {
   const auto latest_localization_state_msg = graph_localizer_wrapper_.LatestLocalizationStateMsg();
   if (!latest_localization_state_msg) {
-    LOG(WARNING) << "PublishLocalizationState: Failed to get latest localization state msg.";
+    LOG_EVERY_N(WARNING, 100) << "PublishLocalizationState: Failed to get latest localization state msg.";
     return;
   }
   state_pub_.publish(*latest_localization_state_msg);
@@ -151,7 +151,7 @@ void GraphLocalizerNodelet::PublishLocalizationState() {
 void GraphLocalizerNodelet::PublishLocalizationGraph() {
   const auto latest_localization_graph_msg = graph_localizer_wrapper_.LatestLocalizationGraphMsg();
   if (!latest_localization_graph_msg) {
-    LOG(WARNING) << "PublishLocalizationGraph: Failed to get latest localization graph msg.";
+    LOG_EVERY_N(WARNING, 100) << "PublishLocalizationGraph: Failed to get latest localization graph msg.";
     return;
   }
   graph_pub_.publish(*latest_localization_graph_msg);
@@ -169,7 +169,7 @@ void GraphLocalizerNodelet::PublishSparseMappingPose() const {
 void GraphLocalizerNodelet::PublishWorldTBodyTF() {
   const auto latest_combined_nav_state = graph_localizer_wrapper_.LatestCombinedNavState();
   if (!latest_combined_nav_state) {
-    LOG_EVERY_N(ERROR, 50) << "PublishWorldTBodyTF: Failed to get world_T_body.";
+    LOG_EVERY_N(ERROR, 100) << "PublishWorldTBodyTF: Failed to get world_T_body.";
     return;
   }
 
@@ -181,7 +181,7 @@ void GraphLocalizerNodelet::PublishWorldTBodyTF() {
 void GraphLocalizerNodelet::PublishWorldTDockTF() {
   const auto world_T_dock = graph_localizer_wrapper_.estimated_world_T_dock();
   if (!world_T_dock) {
-    LOG_EVERY_N(WARNING, 50) << "PublishWorldTDockTF: Failed to get world_T_dock.";
+    LOG_EVERY_N(WARNING, 100) << "PublishWorldTDockTF: Failed to get world_T_dock.";
     return;
   }
 
