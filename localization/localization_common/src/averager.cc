@@ -28,6 +28,9 @@ void Averager::Update(const double value) {
   // Compute moving average to avoid overflow
   average_ += (value - average_) / num_events_;
 }
+
+double Averager::average() const { return average_; }
+
 void Averager::Log() {
   LOG(INFO) << name_ + ": " << last_value_;
   LOG(INFO) << "Average " + name_ + ": " << average_;

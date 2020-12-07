@@ -34,7 +34,7 @@ ProjectionFactorAdder::ProjectionFactorAdder(const ProjectionFactorAdderParams& 
     : ProjectionFactorAdder::Base(params), feature_tracker_(feature_tracker), graph_values_(graph_values) {}
 
 std::vector<FactorsToAdd> ProjectionFactorAdder::AddFactors(
-  const lm::FeaturePointsMeasurement& feature_points_measurement) const {
+  const lm::FeaturePointsMeasurement& feature_points_measurement) {
   std::vector<FactorsToAdd> factors_to_add_vec;
   // Add projection factors for new measurements of already existing features
   FactorsToAdd projection_factors_to_add;

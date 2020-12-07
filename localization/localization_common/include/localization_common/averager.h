@@ -26,6 +26,7 @@ class Averager {
  public:
   explicit Averager(const std::string& averager_name = "");
   void Update(const double value);
+  double average() const;
   void Log();
   void UpdateAndLog(const double value);
   void Vlog(const int level = 2);

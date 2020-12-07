@@ -35,7 +35,7 @@ RotationFactorAdder::RotationFactorAdder(const RotationFactorAdderParams& params
                                          std::shared_ptr<const FeatureTracker> feature_tracker)
     : RotationFactorAdder::Base(params), feature_tracker_(feature_tracker) {}
 
-std::vector<FactorsToAdd> RotationFactorAdder::AddFactors(const lm::FeaturePointsMeasurement& measurement) const {
+std::vector<FactorsToAdd> RotationFactorAdder::AddFactors(const lm::FeaturePointsMeasurement& measurement) {
   std::vector<cv::Point2d> points_1;
   std::vector<cv::Point2d> points_2;
   double total_disparity = 0;

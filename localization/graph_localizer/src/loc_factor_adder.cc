@@ -32,7 +32,7 @@ LocFactorAdder::LocFactorAdder(const LocFactorAdderParams& params, const GraphAc
     : LocFactorAdder::Base(params), graph_action_(graph_action) {}
 
 std::vector<FactorsToAdd> LocFactorAdder::AddFactors(
-  const lm::MatchedProjectionsMeasurement& matched_projections_measurement) const {
+  const lm::MatchedProjectionsMeasurement& matched_projections_measurement) {
   if (matched_projections_measurement.matched_projections.empty()) {
     LOG(WARNING) << "LocFactorAdder::AddFactors: Empty measurement.";
     return {};
@@ -46,8 +46,10 @@ std::vector<FactorsToAdd> LocFactorAdder::AddFactors(
 
   double noise_scale = 1;
   if (params().scale_noise_with_num_landmarks) {
-    noise_scale = params().noise_scale /
-                  std::pow(static_cast<double>(matched_projections_measurement.matched_projections.size()), 2);
+    const int num_landmarks = matched_projections_measurement.matched_projections.size();
+    num_landmarks_averager_.Update(num_landmarks);
+    noise_scale =
+      params().noise_scale * std::pow((num_landmarks_averager_.average() / static_cast<double>(num_landmarks)), 2);
   }
 
   if (params().add_pose_priors) {

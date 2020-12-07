@@ -32,7 +32,7 @@ class FactorAdder {
 
   virtual ~FactorAdder() {}
 
-  virtual std::vector<FactorsToAdd> AddFactors(const MEASUREMENT& measurement) const = 0;
+  virtual std::vector<FactorsToAdd> AddFactors(const MEASUREMENT& measurement) = 0;
 
   const PARAMS& params() const { return params_; }
 

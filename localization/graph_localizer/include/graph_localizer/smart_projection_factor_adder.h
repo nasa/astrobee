@@ -38,7 +38,7 @@ class SmartProjectionFactorAdder
                              std::shared_ptr<const FeatureTracker> feature_tracker);
 
   std::vector<FactorsToAdd> AddFactors(
-    const localization_measurements::FeaturePointsMeasurement& feature_points_measurement) const final;
+    const localization_measurements::FeaturePointsMeasurement& feature_points_measurement) final;
 
  private:
   void AddSmartFactor(const FeatureTrack& feature_track, FactorsToAdd& smart_factors_to_add) const;

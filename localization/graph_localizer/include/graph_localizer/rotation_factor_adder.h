@@ -34,8 +34,7 @@ class RotationFactorAdder
  public:
   RotationFactorAdder(const RotationFactorAdderParams& params, std::shared_ptr<const FeatureTracker> feature_tracker);
 
-  std::vector<FactorsToAdd> AddFactors(
-    const localization_measurements::FeaturePointsMeasurement& measurement) const final;
+  std::vector<FactorsToAdd> AddFactors(const localization_measurements::FeaturePointsMeasurement& measurement) final;
 
  private:
   std::shared_ptr<const FeatureTracker> feature_tracker_;

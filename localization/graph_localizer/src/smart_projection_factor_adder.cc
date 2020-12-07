@@ -40,7 +40,7 @@ SmartProjectionFactorAdder::SmartProjectionFactorAdder(const SmartProjectionFact
 }
 
 std::vector<FactorsToAdd> SmartProjectionFactorAdder::AddFactors(
-  const lm::FeaturePointsMeasurement& feature_points_measurement) const {
+  const lm::FeaturePointsMeasurement& feature_points_measurement) {
   // Add smart factor for each valid feature track
   FactorsToAdd smart_factors_to_add(GraphAction::kDeleteExistingSmartFactors);
   int num_added_smart_factors = 0;

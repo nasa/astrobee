@@ -38,7 +38,7 @@ class ProjectionFactorAdder
                         std::shared_ptr<const GraphValues> graph_values);
 
   std::vector<FactorsToAdd> AddFactors(
-    const localization_measurements::FeaturePointsMeasurement& feature_points_measurement) const final;
+    const localization_measurements::FeaturePointsMeasurement& feature_points_measurement) final;
 
  private:
   std::shared_ptr<const FeatureTracker> feature_tracker_;
