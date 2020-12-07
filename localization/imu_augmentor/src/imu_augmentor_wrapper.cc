@@ -84,7 +84,7 @@ ImuAugmentorWrapper::LatestImuAugmentedCombinedNavStateAndCovariances() {
   }
 
   if (standstill()) {
-    LOG(INFO) << "LatestImuAugmentedCombinedNavStateAndCovariances: Standstill.";
+    LOG_EVERY_N(INFO, 100) << "LatestImuAugmentedCombinedNavStateAndCovariances: Standstill.";
     return std::pair<lc::CombinedNavState, lc::CombinedNavStateCovariances>{*latest_combined_nav_state_,
                                                                             *latest_covariances_};
   }
