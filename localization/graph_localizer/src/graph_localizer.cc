@@ -112,7 +112,7 @@ GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
 
   // Initialize Factor Adders
   ar_tag_loc_factor_adder_.reset(
-    new LocFactorAdder(params_.factor.loc_adder, GraphAction::kTransformARMeasurementAndUpdateDockTWorld));
+    new LocFactorAdder(params_.factor.ar_tag_loc_adder, GraphAction::kTransformARMeasurementAndUpdateDockTWorld));
   loc_factor_adder_.reset(new LocFactorAdder(params_.factor.loc_adder));
   projection_factor_adder_.reset(
     new ProjectionFactorAdder(params_.factor.projection_adder, feature_tracker_, graph_values_));
@@ -891,7 +891,7 @@ bool GraphLocalizer::TransformARMeasurementAndUpdateDockTWorld(FactorsToAdd& fac
   // TODO(rsoussan): Fix timestamp issue of ar tag measurements (uses ros::now instead of timestamp of measurement)
   const auto combined_nav_state = GetCombinedNavState(factors_to_add.timestamp());
   if (!combined_nav_state) {
-    LOG(ERROR) << "AddARTagMeasurement: Failed to get combined nav state.";
+    LOG(ERROR) << "TransformARMeasurementAndUpdateDockTWorld: Failed to get combined nav state.";
     return false;
   }
 
