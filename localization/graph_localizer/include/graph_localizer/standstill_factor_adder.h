@@ -20,6 +20,7 @@
 #define GRAPH_LOCALIZER_STANDSTILL_FACTOR_ADDER_H_
 
 #include <graph_localizer/factor_adder.h>
+#include <graph_localizer/feature_tracker.h>
 #include <graph_localizer/standstill_factor_adder_params.h>
 #include <localization_measurements/feature_points_measurement.h>
 
@@ -31,10 +32,14 @@ class StandstillFactorAdder
   using Base = FactorAdder<localization_measurements::FeaturePointsMeasurement, StandstillFactorAdderParams>;
 
  public:
-  explicit StandstillFactorAdder(const StandstillFactorAdderParams& params);
+  explicit StandstillFactorAdder(const StandstillFactorAdderParams& params,
+                                 std::shared_ptr<const FeatureTracker> feature_tracker);
 
   std::vector<FactorsToAdd> AddFactors(
     const localization_measurements::FeaturePointsMeasurement& feature_points_measurement) final;
+
+ private:
+  std::shared_ptr<const FeatureTracker> feature_tracker_;
 };
 }  // namespace graph_localizer
 

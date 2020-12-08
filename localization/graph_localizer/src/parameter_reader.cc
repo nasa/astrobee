@@ -122,9 +122,13 @@ void LoadSmartProjectionFactorAdderParams(config_reader::ConfigReader& config,
 
 void LoadStandstillFactorAdderParams(config_reader::ConfigReader& config, StandstillFactorAdderParams& params) {
   params.add_velocity_prior = lc::LoadBool(config, "standstill_adder_add_velocity_prior");
-  // TODO(rsoussan): or with add pose between factor
-  params.enabled = params.add_velocity_prior;
+  params.add_pose_between_factor = lc::LoadBool(config, "standstill_adder_add_pose_between_factor");
+  params.enabled = params.add_velocity_prior || params.add_pose_between_factor;
   params.prior_velocity_stddev = lc::LoadDouble(config, "standstill_adder_prior_velocity_stddev");
+  params.pose_between_factor_translation_stddev =
+    lc::LoadDouble(config, "standstill_adder_pose_between_factor_translation_stddev");
+  params.pose_between_factor_rotation_stddev =
+    lc::LoadDouble(config, "standstill_adder_pose_between_factor_rotation_stddev");
   params.huber_k = lc::LoadDouble(config, "huber_k");
 }
 

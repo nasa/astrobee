@@ -39,6 +39,7 @@ class FeatureTracker {
   void UpdateFeatureTracks(const localization_measurements::FeaturePoints& feature_points);
   const FeatureTrackMap& feature_tracks() const { return feature_tracks_; }
   void RemoveOldFeaturePoints(localization_common::Time oldest_allowed_time);
+  boost::optional<localization_common::Time> PreviousTimestamp() const;
 
  private:
   // Serialization function

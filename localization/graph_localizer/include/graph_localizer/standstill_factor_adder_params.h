@@ -24,7 +24,10 @@
 namespace graph_localizer {
 struct StandstillFactorAdderParams : public FactorAdderParams {
   bool add_velocity_prior;
+  bool add_pose_between_factor;
   double prior_velocity_stddev;
+  double pose_between_factor_translation_stddev;
+  double pose_between_factor_rotation_stddev;
 };
 }  // namespace graph_localizer
 

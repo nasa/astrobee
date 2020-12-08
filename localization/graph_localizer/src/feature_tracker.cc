@@ -87,4 +87,13 @@ void FeatureTracker::RemoveOldFeaturePoints(lc::Time oldest_allowed_time) {
     }
   }
 }
+
+boost::optional<lc::Time> FeatureTracker::PreviousTimestamp() const {
+  for (const auto& feature_track_pair : feature_tracks_) {
+    const auto& points = feature_track_pair.second.points;
+    if (points.size() < 2) continue;
+    return points[points.size() - 2].timestamp;
+  }
+  return boost::none;
+}
 }  // namespace graph_localizer

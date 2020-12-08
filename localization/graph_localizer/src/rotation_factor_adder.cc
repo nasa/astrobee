@@ -87,9 +87,8 @@ std::vector<FactorsToAdd> RotationFactorAdder::AddFactors(const lm::FeaturePoint
   const gtsam::Rot3 cam_1_R_cam_2(eigen_cam_2_R_cam_1.transpose());
   const gtsam::Rot3 body_1_R_body_2 = body_R_cam * cam_1_R_cam_2 * body_R_cam.inverse();
   // Create Rotation Factor
-  const auto& points = feature_tracker_->feature_tracks().begin()->second.points;
-  const KeyInfo pose_1_key_info(&sym::P, points[points.size() - 2].timestamp);
-  const KeyInfo pose_2_key_info(&sym::P, points.back().timestamp);
+  const KeyInfo pose_1_key_info(&sym::P, *(feature_tracker_->PreviousTimestamp()));
+  const KeyInfo pose_2_key_info(&sym::P, measurement.timestamp);
   const gtsam::Vector3 rotation_noise_sigmas(
     (gtsam::Vector(3) << params().rotation_stddev, params().rotation_stddev, params().rotation_stddev).finished());
   const auto rotation_noise = Robust(

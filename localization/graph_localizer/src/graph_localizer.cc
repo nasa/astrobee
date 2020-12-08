@@ -119,7 +119,7 @@ GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
   rotation_factor_adder_.reset(new RotationFactorAdder(params_.factor.rotation_adder, feature_tracker_));
   smart_projection_factor_adder_.reset(
     new SmartProjectionFactorAdder(params_.factor.smart_projection_adder, feature_tracker_));
-  standstill_factor_adder_.reset(new StandstillFactorAdder(params_.factor.standstill_adder));
+  standstill_factor_adder_.reset(new StandstillFactorAdder(params_.factor.standstill_adder, feature_tracker_));
 }
 
 void GraphLocalizer::AddStartingPriors(const lc::CombinedNavState& global_N_body_start, const int key_index,
