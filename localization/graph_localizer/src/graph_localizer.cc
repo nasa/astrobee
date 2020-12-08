@@ -317,7 +317,8 @@ void GraphLocalizer::AddARTagMeasurement(const lm::MatchedProjectionsMeasurement
     return;
   }
 
-  if (params_.factor.ar_tag_loc_adder.enabled) {
+  if (params_.factor.ar_tag_loc_adder.enabled &&
+      matched_projections_measurement.matched_projections.size() >= params_.factor.ar_tag_loc_adder.min_num_matches) {
     LOG(INFO) << "AddARTagMeasurement: Adding AR tag measurement.";
     // AR projections measurement global frame is dock frame
     dock_cam_T_dock_estimates_.emplace(matched_projections_measurement.timestamp,
