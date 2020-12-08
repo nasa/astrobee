@@ -55,7 +55,7 @@ std::vector<FactorsToAdd> SmartProjectionFactorAdder::AddFactors(
 
   if (smart_factors_to_add.empty()) return {};
   smart_factors_to_add.SetTimestamp(feature_points_measurement.timestamp);
-  VLOG(2) << "SmartProjectionFactorAdder::AddFactors: Added " << smart_factors_to_add.size() << " smart factors.";
+  VLOG(2) << "AddFactors: Added " << smart_factors_to_add.size() << " smart factors.";
   return {smart_factors_to_add};
 }
 

@@ -51,12 +51,12 @@ std::vector<FactorsToAdd> RotationFactorAdder::AddFactors(const lm::FeaturePoint
   }
 
   if (points_1.size() < 5) {
-    LOG(WARNING) << "RotationFactorAdder::AddFactors: Not enough corresponding points found.";
+    LOG(WARNING) << "AddFactors: Not enough corresponding points found.";
     return {};
   }
   const double average_disparity = total_disparity / points_1.size();
   if (average_disparity < params().min_avg_disparity) {
-    VLOG(2) << "RotationFactorAdder::AddFactors: Disparity too low.";
+    VLOG(2) << "AddFactors: Disparity too low.";
     return {};
   }
 
@@ -77,7 +77,7 @@ std::vector<FactorsToAdd> RotationFactorAdder::AddFactors(const lm::FeaturePoint
   const double percent_outliers =
     static_cast<double>(num_inliers_essential_matrix - num_inliers_pose_calculation) / num_inliers_essential_matrix;
   if (percent_outliers > params().max_percent_outliers) {
-    VLOG(2) << "RotationFactorAdder::AddFactors: Too many outliers, discarding result.";
+    VLOG(2) << "AddFactors: Too many outliers, discarding result.";
     return {};
   }
   Eigen::Matrix3d eigen_cam_2_R_cam_1;
@@ -99,7 +99,7 @@ std::vector<FactorsToAdd> RotationFactorAdder::AddFactors(const lm::FeaturePoint
   FactorsToAdd rotation_factors_to_add;
   rotation_factors_to_add.push_back({{pose_1_key_info, pose_2_key_info}, rotation_factor});
   rotation_factors_to_add.SetTimestamp(pose_2_key_info.timestamp());
-  VLOG(2) << "RotationFactorAdder::AddFactors: Added a rotation factor.";
+  VLOG(2) << "AddFactors: Added a rotation factor.";
   return {rotation_factors_to_add};
 }
 }  // namespace graph_localizer

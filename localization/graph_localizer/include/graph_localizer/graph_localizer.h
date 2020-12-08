@@ -30,6 +30,7 @@
 #include <graph_localizer/projection_factor_adder.h>
 #include <graph_localizer/rotation_factor_adder.h>
 #include <graph_localizer/smart_projection_factor_adder.h>
+#include <graph_localizer/standstill_factor_adder.h>
 #include <imu_integration/latest_imu_integrator.h>
 #include <localization_common/averager.h>
 #include <localization_common/combined_nav_state.h>
@@ -164,9 +165,6 @@ class GraphLocalizer {
 
   bool TransformARMeasurementAndUpdateDockTWorld(FactorsToAdd& factors_to_add);
 
-  void AddStandstillVelocityPriorFactor(const localization_common::Time timestamp,
-                                        FactorsToAdd& standstill_prior_factors_to_add);
-
   bool MeasurementRecentEnough(const localization_common::Time timestamp) const;
 
   void RemoveOldBufferedFactors(const localization_common::Time oldest_allowed_timestamp);
@@ -240,6 +238,7 @@ class GraphLocalizer {
   std::unique_ptr<ProjectionFactorAdder> projection_factor_adder_;
   std::unique_ptr<RotationFactorAdder> rotation_factor_adder_;
   std::unique_ptr<SmartProjectionFactorAdder> smart_projection_factor_adder_;
+  std::unique_ptr<StandstillFactorAdder> standstill_factor_adder_;
 
   // Timers
   localization_common::Timer optimization_timer_ = localization_common::Timer("Optimization");

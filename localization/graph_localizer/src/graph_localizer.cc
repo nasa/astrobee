@@ -119,6 +119,7 @@ GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
   rotation_factor_adder_.reset(new RotationFactorAdder(params_.factor.rotation_adder, feature_tracker_));
   smart_projection_factor_adder_.reset(
     new SmartProjectionFactorAdder(params_.factor.smart_projection_adder, feature_tracker_));
+  standstill_factor_adder_.reset(new StandstillFactorAdder(params_.factor.standstill_adder));
 }
 
 void GraphLocalizer::AddStartingPriors(const lc::CombinedNavState& global_N_body_start, const int key_index,
@@ -282,13 +283,10 @@ bool GraphLocalizer::AddOpticalFlowMeasurement(
   }
 
   CheckForStandstill(optical_flow_feature_points_measurement);
-  if (standstill() && params_.factor.optical_flow_standstill_velocity_prior) {
-    FactorsToAdd prior_factors_to_add;
-    AddStandstillVelocityPriorFactor(optical_flow_feature_points_measurement.timestamp, prior_factors_to_add);
-    prior_factors_to_add.SetTimestamp(optical_flow_feature_points_measurement.timestamp);
-    BufferFactors({prior_factors_to_add});
-    VLOG(2) << "AddOpticalFLowMeasurement: Buffered a velocity prior factor.";
+  if (standstill() && params_.factor.standstill_adder.enabled) {
+    BufferFactors(standstill_factor_adder_->AddFactors(optical_flow_feature_points_measurement));
   }
+
   return true;
 }
 
@@ -311,23 +309,6 @@ void GraphLocalizer::CheckForStandstill(const lm::FeaturePointsMeasurement& opti
 
   standstill_ = (num_valid_feature_tracks >= 5 &&
                  average_distance_from_mean <= params_.max_standstill_feature_track_avg_distance_from_mean);
-}
-
-void GraphLocalizer::AddStandstillVelocityPriorFactor(const lc::Time timestamp,
-                                                      FactorsToAdd& standstill_prior_factors_to_add) {
-  const gtsam::Vector3 velocity_prior_noise_sigmas(
-    (gtsam::Vector(3) << params_.noise.optical_flow_prior_velocity_stddev,
-     params_.noise.optical_flow_prior_velocity_stddev, params_.noise.optical_flow_prior_velocity_stddev)
-      .finished());
-  const auto velocity_noise =
-    Robust(gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(velocity_prior_noise_sigmas)),
-           params_.huber_k);
-
-  const KeyInfo velocity_key_info(&sym::V, timestamp);
-  gtsam::PriorFactor<gtsam::Velocity3>::shared_ptr velocity_prior_factor(new gtsam::PriorFactor<gtsam::Velocity3>(
-    velocity_key_info.UninitializedKey(), gtsam::Velocity3::Zero(), velocity_noise));
-  standstill_prior_factors_to_add.push_back({{velocity_key_info}, velocity_prior_factor});
-  LOG_EVERY_N(INFO, 1) << "AddStandstillVelocityPriorFactor: Added velocity standstill prior.";
 }
 
 void GraphLocalizer::AddARTagMeasurement(const lm::MatchedProjectionsMeasurement& matched_projections_measurement) {

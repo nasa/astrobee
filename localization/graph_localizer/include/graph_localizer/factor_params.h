@@ -22,12 +22,13 @@
 #include <graph_localizer/rotation_factor_adder_params.h>
 #include <graph_localizer/projection_factor_adder_params.h>
 #include <graph_localizer/smart_projection_factor_adder_params.h>
+#include <graph_localizer/standstill_factor_adder_params.h>
 
 namespace graph_localizer {
 struct FactorParams {
-  bool optical_flow_standstill_velocity_prior;
   RotationFactorAdderParams rotation_adder;
   SmartProjectionFactorAdderParams smart_projection_adder;
+  StandstillFactorAdderParams standstill_adder;
   ProjectionFactorAdderParams projection_adder;
   LocFactorAdderParams loc_adder;
   LocFactorAdderParams ar_tag_loc_adder;

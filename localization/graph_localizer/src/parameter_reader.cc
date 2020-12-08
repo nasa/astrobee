@@ -33,12 +33,12 @@ void LoadCalibrationParams(config_reader::ConfigReader& config, CalibrationParam
 }
 
 void LoadFactorParams(config_reader::ConfigReader& config, FactorParams& params) {
-  params.optical_flow_standstill_velocity_prior = lc::LoadBool(config, "optical_flow_standstill_velocity_prior");
   LoadLocFactorAdderParams(config, params.loc_adder);
   LoadARTagLocFactorAdderParams(config, params.ar_tag_loc_adder);
   LoadRotationFactorAdderParams(config, params.rotation_adder);
   LoadProjectionFactorAdderParams(config, params.projection_adder);
   LoadSmartProjectionFactorAdderParams(config, params.smart_projection_adder);
+  LoadStandstillFactorAdderParams(config, params.standstill_adder);
 }
 
 void LoadARTagLocFactorAdderParams(config_reader::ConfigReader& config, LocFactorAdderParams& params) {
@@ -120,6 +120,14 @@ void LoadSmartProjectionFactorAdderParams(config_reader::ConfigReader& config,
     gtsam::noiseModel::Isotropic::Sigma(2, lc::LoadDouble(config, "optical_flow_nav_cam_noise_stddev"));
 }
 
+void LoadStandstillFactorAdderParams(config_reader::ConfigReader& config, StandstillFactorAdderParams& params) {
+  params.add_velocity_prior = lc::LoadBool(config, "standstill_adder_add_velocity_prior");
+  // TODO(rsoussan): or with add pose between factor
+  params.enabled = params.add_velocity_prior;
+  params.prior_velocity_stddev = lc::LoadDouble(config, "standstill_adder_prior_velocity_stddev");
+  params.huber_k = lc::LoadDouble(config, "huber_k");
+}
+
 void LoadFeatureTrackerParams(config_reader::ConfigReader& config, FeatureTrackerParams& params) {
   params.sliding_window_duration = lc::LoadDouble(config, "feature_tracker_sliding_window_duration");
 }
@@ -132,9 +140,6 @@ void LoadGraphValuesParams(config_reader::ConfigReader& config, GraphValuesParam
 }
 
 void LoadNoiseParams(config_reader::ConfigReader& config, NoiseParams& params) {
-  params.optical_flow_nav_cam_noise =
-    gtsam::noiseModel::Isotropic::Sigma(2, lc::LoadDouble(config, "optical_flow_nav_cam_noise_stddev"));
-  params.optical_flow_prior_velocity_stddev = lc::LoadDouble(config, "optical_flow_prior_velocity_stddev");
   params.starting_prior_translation_stddev = lc::LoadDouble(config, "starting_prior_translation_stddev");
   params.starting_prior_quaternion_stddev = lc::LoadDouble(config, "starting_prior_quaternion_stddev");
   params.starting_prior_velocity_stddev = lc::LoadDouble(config, "starting_prior_velocity_stddev");
@@ -170,8 +175,8 @@ void LoadGraphLocalizerParams(config_reader::ConfigReader& config, GraphLocalize
   params.max_imu_factor_spacing = lc::LoadDouble(config, "max_imu_factor_spacing");
   params.add_priors = lc::LoadBool(config, "add_priors");
   params.add_marginal_factors = lc::LoadBool(config, "add_marginal_factors");
+  params.huber_k = lc::LoadDouble(config, "huber_k");
   params.max_standstill_feature_track_avg_distance_from_mean =
     lc::LoadDouble(config, "max_standstill_feature_track_avg_distance_from_mean");
-  params.huber_k = lc::LoadDouble(config, "huber_k");
 }
 }  // namespace graph_localizer
