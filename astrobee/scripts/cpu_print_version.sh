@@ -24,9 +24,3 @@ echo "Modified Files:"
 dpkg -V astrobee | sed 's/^/  /'
 dpkg -V astrobee-config | sed 's/^/  /'
 dpkg -V astrobee-avionics | sed 's/^/  /'
-#echo "  astrobee: $(dpkg -s astrobee | grep -oP 'Version: \K.+')"
-#echo "  astrobee-config: $(dpkg -s astrobee-config | grep -oP 'Version: \K.+')"
-#echo "  astrobee-avionics: $(dpkg -s astrobee-avionics | grep -oP 'Version: \K.+')"
-#echo ""
-#echo "Version:"
-#cat /opt/astrobee/version.txt

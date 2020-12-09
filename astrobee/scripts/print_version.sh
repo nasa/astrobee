@@ -7,15 +7,17 @@ if [ `hostname` != mlp ] ; then
     exit 1
 fi
 
+DIR=$(dirname "$(readlink -f "$0")")
+
 echo "=================== MLP ==================="
-./cpu_print_version.sh | sed 's/^/  /'
+$DIR/cpu_print_version.sh | sed 's/^/  /'
 
 echo "=================== LLP ==================="
 ssh llp /opt/astrobee/lib/astrobee/cpu_print_version.sh | sed 's/^/  /'
 
 echo "=================== HLP ==================="
 
-./apk_print_version.sh | sed 's/versionName=/  /'
+$DIR/apk_print_version.sh | sed 's/versionName=/  /'
   
 echo "=================== Map ==================="
 echo "Map: $(sha256sum /res/maps/iss.map)"
