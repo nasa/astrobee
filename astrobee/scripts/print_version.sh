@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Print the software versions on the MLP, LLP, and HLP.
+
 if [ `hostname` != mlp ] ; then
     echo "Must be run on mlp."
     exit 1
