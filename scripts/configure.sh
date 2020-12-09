@@ -77,7 +77,7 @@ usage_string="$scriptname [-h] [-l <linux build>] [-a <arm build>]\
 #[-t make_target]
 
 # options to parse
-optstring="hlap:b:B:cCdDrRfFkKvVmTt"
+optstring="hlap:b:B:cCdDrRfFkKvVtTg"
 
 # Print the script usage
 print_usage()

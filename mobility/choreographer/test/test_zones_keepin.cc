@@ -42,12 +42,11 @@
 #include <memory>
 
 // Avoid sending the command multiple times
-bool sent_ = false;
 bool stable_ = false;
 
 // Subscriber Ekf
 ros::Subscriber sub_ekf_;
-  ff_util::FreeFlyerActionClient<ff_msgs::MotionAction> client_t_;
+ff_util::FreeFlyerActionClient<ff_msgs::MotionAction> client_t_;
 
 tf2_ros::Buffer tf_buffer_;
 
