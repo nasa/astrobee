@@ -371,8 +371,15 @@ def execute_action(selection):
                 command = int(command_str)
                 command_str = ""
             except:
-                # Not an integer, so pass the full command and exit the loop
-                break
+                # Not an integer
+                if command_str is None or command_str == "":
+                    # The user did not enter anything at all, so try again
+                    print ' > Invalid entry'
+                    time.sleep(1)
+                    continue
+                else:
+                    # Pass the full command and exit the loop
+                    break
             
             if command == num_cmds + 1:
                 return ACTION_EXIT
