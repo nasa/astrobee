@@ -24,6 +24,7 @@
 
 // FSW includes
 #include <config_reader/config_reader.h>
+#include <msg_conversions/msg_conversions.h>
 
 // FSW messages
 #include <ff_msgs/VisualLandmarks.h>
@@ -64,6 +65,7 @@ class GazeboSensorPluginARTags : public FreeFlyerSensorPlugin {
 
     // Build the nav cam Camera Model
     config_.AddFile("cameras.config");
+    config_.AddFile("geometry.config");
     config_.AddFile("dock_markers_specs.config");
     config_.AddFile("dock_markers_world.config");
     config_.AddFile("simulation/ar_tags.config");
@@ -95,6 +97,14 @@ class GazeboSensorPluginARTags : public FreeFlyerSensorPlugin {
 
     if (!config_.GetTable("markers_world", &markers_))
       NODELET_ERROR("Could not read the markers_world parameter.");
+
+    Eigen::Vector3d world_t_dock;
+  Eigen::Quaterniond world_Q_dock;
+  if (!msg_conversions::config_read_transform(&config_, "world_dock_transform", &world_t_dock, &world_Q_dock))
+      NODELET_ERROR("Could not read world_T_dock transform.");
+  world_T_dock_ = Eigen::Isometry3d::Identity();
+  world_T_dock_.translation() = world_t_dock;
+  world_T_dock_.linear() = world_Q_dock.toRotationMatrix();
 
     for (int marker_i = 0; marker_i < markers_.GetSize(); marker_i++) {
       config_reader::ConfigReader::Table current_marker;
@@ -147,33 +157,6 @@ class GazeboSensorPluginARTags : public FreeFlyerSensorPlugin {
     return true;
   }
 
-  // Manage the extrinsics based on the sensor type
-  bool GetDockLocation(Eigen::Affine3d & wTd) {
-    // Create a buffer and listener for TF2 transforms
-    static tf2_ros::Buffer buffer;
-    static tf2_ros::TransformListener listener(buffer);
-    // Get extrinsics from framestore
-    try {
-      // Lookup the transform for this sensor
-      geometry_msgs::TransformStamped tf = buffer.lookupTransform(
-        "world", "dock/body", ros::Time(0));
-      // Handle the transform for all sensor types
-      wTd = (
-        Eigen::Translation3d(
-          tf.transform.translation.x,
-          tf.transform.translation.y,
-          tf.transform.translation.z) *
-        Eigen::Quaterniond(
-          tf.transform.rotation.w,
-          tf.transform.rotation.x,
-          tf.transform.rotation.y,
-          tf.transform.rotation.z));
-    } catch (tf2::TransformException &ex) {
-      return false;
-    }
-    return true;
-  }
-
   // Called when featured must be sent
   void SendRegistration(ros::TimerEvent const& event) {
     if (!active_) return;
@@ -191,15 +174,8 @@ class GazeboSensorPluginARTags : public FreeFlyerSensorPlugin {
     // Copy over the camera id to the feature message
     msg_feat_.camera_id = msg_reg_.camera_id;
 
-    // In order to get meaningful data we need a dock location
-    Eigen::Affine3d wTd;
-    if (!GetDockLocation(wTd)) {
-      timer_features_.stop();
-      return;
-    }
-
     // Handle the transform for all sensor types
-    Eigen::Affine3d wTb = (
+    Eigen::Isometry3d world_T_body = (
       #if GAZEBO_MAJOR_VERSION > 7
         Eigen::Translation3d(
           GetModel()->WorldPose().Pos().X(),
@@ -221,7 +197,7 @@ class GazeboSensorPluginARTags : public FreeFlyerSensorPlugin {
           GetModel()->GetWorldPose().rot.y,
           GetModel()->GetWorldPose().rot.z));
       #endif
-    Eigen::Affine3d bTs = (
+    Eigen::Isometry3d body_T_dock_cam = (
         Eigen::Translation3d(
           sensor_->Pose().Pos().X(),
           sensor_->Pose().Pos().Y(),
@@ -231,7 +207,7 @@ class GazeboSensorPluginARTags : public FreeFlyerSensorPlugin {
           sensor_->Pose().Rot().X(),
           sensor_->Pose().Rot().Y(),
           sensor_->Pose().Rot().Z()));
-    Eigen::Affine3d dTs = wTd.inverse() * wTb * bTs;
+    Eigen::Isometry3d dock_T_dock_cam = world_T_dock_.inverse() * world_T_body * body_T_dock_cam;
 
     // Initialize the camera paremeters
     static camera::CameraParameters cam_params(&config_, "dock_cam");
@@ -239,10 +215,10 @@ class GazeboSensorPluginARTags : public FreeFlyerSensorPlugin {
       Eigen::Matrix3d::Identity(), cam_params);
 
     // Assemble the feature message
-    msg_feat_.pose.position.x = dTs.translation().x();
-    msg_feat_.pose.position.y = dTs.translation().y();
-    msg_feat_.pose.position.z = dTs.translation().z();
-    Eigen::Quaterniond q(dTs.rotation());
+    msg_feat_.pose.position.x = dock_T_dock_cam.translation().x();
+    msg_feat_.pose.position.y = dock_T_dock_cam.translation().y();
+    msg_feat_.pose.position.z = dock_T_dock_cam.translation().z();
+    Eigen::Quaterniond q(dock_T_dock_cam.rotation());
     msg_feat_.pose.orientation.w = q.w();
     msg_feat_.pose.orientation.x = q.x();
     msg_feat_.pose.orientation.y = q.y();
@@ -256,7 +232,7 @@ class GazeboSensorPluginARTags : public FreeFlyerSensorPlugin {
       // using PnP on the points themselves. However, it's easier to just pull
       // this information from the simulation ground truth.
       Eigen::Vector3d pt_d = marker_positions_[i];
-      Eigen::Vector3d pt_c = dTs.inverse() * pt_d;
+      Eigen::Vector3d pt_c = dock_T_dock_cam.inverse() * pt_d;
 
       // Check if the feature is in the field of view
       if (!camera.IsInFov(pt_c))
@@ -301,6 +277,7 @@ class GazeboSensorPluginARTags : public FreeFlyerSensorPlugin {
   unsigned int num_samp_;
   config_reader::ConfigReader::Table markers_;
   std::vector<Eigen::Vector3d> marker_positions_;
+  Eigen::Isometry3d world_T_dock_;
 };
 
 GZ_REGISTER_SENSOR_PLUGIN(GazeboSensorPluginARTags)
