@@ -27,7 +27,8 @@
   <build_depend>visualization_msgs</build_depend>
   <run_depend>roscpp</run_depend>
   <run_depend>nodelet</run_depend>
-  <run_depend>mapper</run_depend>  <run_depend>tf2</run_depend>
+  <run_depend>mapper</run_depend>
+  <run_depend>tf2</run_depend>
   <run_depend>tf2_ros</run_depend>
   <run_depend>ff_msgs</run_depend>
   <run_depend>ff_util</run_depend>
