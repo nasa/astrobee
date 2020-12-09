@@ -53,7 +53,7 @@ tf2_ros::Buffer tf_buffer_;
 // Called once when the goal completes
 void MResultCallback(ff_util::FreeFlyerActionState::Enum result_code,
   ff_msgs::MotionResultConstPtr const& result) {
-  EXPECT_EQ(result->response, ff_msgs::MotionResult::VIOLATES_KEEP_OUT);
+  ASSERT_EQ(result->response, ff_msgs::MotionResult::VIOLATES_KEEP_OUT);
   ROS_DEBUG("Test Completed");
   ros::shutdown();
 }
@@ -110,7 +110,7 @@ TEST(choreographer_nominal, ZoneBreach) {
 
   if (!cfg.Reconfigure()) {
     std::cout << "Could not reconfigure the choreographer node " << std::endl;
-    EXPECT_EQ(true, false);
+    ASSERT_EQ(true, false);
   }
 
   // Setup a new mobility goal
@@ -140,7 +140,7 @@ TEST(choreographer_nominal, ZoneBreach) {
   // Try and send the goal
   if (!client_t_.SendGoal(goal)) {
     std::cout << "Mobility client did not accept goal" << std::endl;
-    EXPECT_EQ(true, false);
+    ASSERT_EQ(true, false);
   }
 
   ros::spin();
