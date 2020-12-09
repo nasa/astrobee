@@ -307,7 +307,7 @@ def print_gs_feedback():
     print ("Please note that some apps may send a confirmation when receiving"
             " a new command and then data feedback. Since we cannot know when"
             " the app will send feedback, we will listen until you manually"
-            "stop it.\n You can stop listening by pressing ENTER")
+            " stop it.\n You can stop listening by pressing ENTER")
 
     # Variable and thread used to stop the loop
     a_list = []
@@ -332,7 +332,9 @@ def execute_action(selection):
     arg = CommandArg()
     arg.data_type = 5
     arg.s = apps[selection].apk_name
-
+    command     = "" # for when an the user supplies the command index
+    command_str = "" # For when the user enters the actual command
+    
     if option == 'a':
         # List commands
         clear()
@@ -362,13 +364,16 @@ def execute_action(selection):
             num_cmds = len(apps[selection].commands)
             print_app_cmd(selection)
             print str(num_cmds + 1) + ')  Exit program'
-            try:
-                command = input('\nType the number of the command you wish to send: ')
-            except:
-                print ' > Invalid entry'
-                time.sleep(1)
-                continue
 
+            command_str = raw_input('\nType the number of the command you wish to send or the command string: ')
+            try:
+                # Convert to an integer, the number of the command
+                command = int(command_str)
+                command_str = ""
+            except:
+                # Not an integer, so pass the full command and exit the loop
+                break
+            
             if command == num_cmds + 1:
                 return ACTION_EXIT
 
@@ -381,7 +386,12 @@ def execute_action(selection):
 
         arg2 = CommandArg()
         arg2.data_type = 5
-        arg2.s = apps[selection].commands[command].command
+        if command_str == "":
+            # find the command based on its number
+            arg2.s = apps[selection].commands[command].command
+        else:
+            arg2.s = command_str
+            
         clear()
         send_command('customGuestScience', [arg, arg2])
         print_gs_feedback()
@@ -422,7 +432,7 @@ def main():
     clear()
 
     # Check ROS master presence
-    print ' > Waiting for ROS communications...\n'
+    print ' > Waiting for ROS communication...\n'
 
     while not is_ros_running():
         if timer == 0:

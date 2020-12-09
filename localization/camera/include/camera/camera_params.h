@@ -104,9 +104,11 @@ namespace camera {
     void SetOpticalOffset(Eigen::Vector2d const& offset);
     const Eigen::Vector2d& GetOpticalOffset() const;
 
-    // Helper function that approximates the focal length as a single value.
-    // Will produce wrong results if pixels are not square. Should be exactly
-    // correct if image is UNDISTORTED.
+    // Helper functions for focal length. Unless pixels are square,
+    // the focal length in x may differ than the one in y. Note that
+    // they are equal for undistorted images. Note that
+    // GetFocalLength() returns the mean of the two focal lengths
+    // while GetFocalVector() returns the vector.
     void SetFocalLength(Eigen::Vector2d const&);
     double GetFocalLength() const;
     const Eigen::Vector2d& GetFocalVector() const;
