@@ -63,7 +63,7 @@ void MFeedbackCallback(ff_msgs::MotionFeedbackConstPtr const& feedback) {}
 
 
 void StateCallback(const ff_msgs::EkfStateConstPtr& state) {
-  if (!client_t_.IsConnected()) return;
+  if (!client_m_.IsConnected()) return;
   else if (state->confidence != ff_msgs::EkfState::CONFIDENCE_GOOD) return;
   else
     sub_ekf_.shutdown();
@@ -139,7 +139,7 @@ TEST(choreographer_nominal, ZoneBreach) {
   // Package up and send the move goal
   goal.states.push_back(pose);
   // Try and send the goal
-  if (!client_t_.SendGoal(goal)) {
+  if (!client_m_.SendGoal(goal)) {
     std::cout << "Mobility client did not accept goal" << std::endl;
     ASSERT_EQ(true, false);
   }

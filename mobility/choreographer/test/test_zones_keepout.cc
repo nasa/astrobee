@@ -46,7 +46,7 @@ bool stable_ = false;
 
 // Subscriber Ekf
 ros::Subscriber sub_ekf_;
-ff_util::FreeFlyerActionClient<ff_msgs::MotionAction> client_t_;
+ff_util::FreeFlyerActionClient<ff_msgs::MotionAction> client_m_;
 
 tf2_ros::Buffer tf_buffer_;
 
@@ -64,7 +64,7 @@ void MFeedbackCallback(ff_msgs::MotionFeedbackConstPtr const& feedback) {}
 
 
 void StateCallback(const ff_msgs::EkfStateConstPtr& state) {
-  if (!client_t_.IsConnected()) return;
+  if (!client_m_.IsConnected()) return;
   else if (state->confidence != ff_msgs::EkfState::CONFIDENCE_GOOD) return;
   else
     sub_ekf_.shutdown();
@@ -81,14 +81,14 @@ TEST(choreographer_nominal, ZoneBreach) {
   tf2_ros::TransformListener tfListener(tf_buffer_);
 
   // Setup MOBILITY action
-  client_t_.SetConnectedTimeout(30.0);
-  client_t_.SetActiveTimeout(30.0);
-  client_t_.SetResponseTimeout(30.0);
-  client_t_.SetFeedbackCallback(std::bind(
+  client_m_.SetConnectedTimeout(30.0);
+  client_m_.SetActiveTimeout(30.0);
+  client_m_.SetResponseTimeout(30.0);
+  client_m_.SetFeedbackCallback(std::bind(
     MFeedbackCallback, std::placeholders::_1));
-  client_t_.SetResultCallback(std::bind(
+  client_m_.SetResultCallback(std::bind(
     MResultCallback, std::placeholders::_1, std::placeholders::_2));
-  client_t_.Create(&nh, ACTION_MOBILITY_MOTION);
+  client_m_.Create(&nh, ACTION_MOBILITY_MOTION);
 
   // Wait for Ekf to start publishing to send the motion goal
   sub_ekf_ = nh.subscribe(TOPIC_GNC_EKF, 1000, &StateCallback);
@@ -138,7 +138,7 @@ TEST(choreographer_nominal, ZoneBreach) {
   // Package up and send the move goal
   goal.states.push_back(pose);
   // Try and send the goal
-  if (!client_t_.SendGoal(goal)) {
+  if (!client_m_.SendGoal(goal)) {
     std::cout << "Mobility client did not accept goal" << std::endl;
     ASSERT_EQ(true, false);
   }
