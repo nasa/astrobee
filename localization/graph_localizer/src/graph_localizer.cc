@@ -889,7 +889,6 @@ bool GraphLocalizer::TransformARMeasurementAndUpdateDockTWorld(FactorsToAdd& fac
   // Get world_T_dock using current loc estimate since dock can be moved on the ISS.
   // TODO(rsoussan): Optimize this online using config value as a prior, update this
   // config value periodically after running localizer.
-  // TODO(rsoussan): Fix timestamp issue of ar tag measurements (uses ros::now instead of timestamp of measurement)
   const auto combined_nav_state = GetCombinedNavState(factors_to_add.timestamp());
   if (!combined_nav_state) {
     LOG(ERROR) << "TransformARMeasurementAndUpdateDockTWorld: Failed to get combined nav state.";
