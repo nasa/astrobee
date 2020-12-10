@@ -53,7 +53,6 @@ std::vector<FactorsToAdd> LocFactorAdder::AddFactors(
   }
 
   if (params().add_pose_priors) {
-    int num_loc_pose_prior_factors = 0;
     FactorsToAdd factors_to_add(graph_action_);
     factors_to_add.reserve(1);
     const gtsam::Vector6 pose_prior_noise_sigmas((gtsam::Vector(6) << params().prior_translation_stddev,
@@ -71,7 +70,7 @@ std::vector<FactorsToAdd> LocFactorAdder::AddFactors(
       pose_noise));
     factors_to_add.push_back({{key_info}, pose_prior_factor});
     factors_to_add.SetTimestamp(matched_projections_measurement.timestamp);
-    VLOG(2) << "AddFactors: Added " << num_loc_pose_prior_factors << " loc pose priors factors.";
+    VLOG(2) << "AddFactors: Added 1 loc pose prior factor.";
     return {factors_to_add};
   } else if (params().add_projections) {
     int num_loc_projection_factors = 0;
