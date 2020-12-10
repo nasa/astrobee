@@ -586,6 +586,8 @@
         </liveliness>
       </datawriter_qos>
     </qos_profile>
+    <!-- ASTROBEE Extension: PoseStamped ================================== -->
+    <qos_profile base_name="RapidStateQos" name="AstrobeePoseStampedProfile"/>
     <!-- ASTROBEE Extension: EkfState ================================== -->
     <qos_profile base_name="RapidStateQos" name="AstrobeeEkfStateProfile"/>
     <!-- ASTROBEE Extension: Eps ================================== -->
@@ -952,6 +954,18 @@
 <!-- Participant library -->
 <domain_participant_library name="MyParticipantLibrary">
   <domain_participant domain_ref="MyDomainLibrary::MyDomain" name="Zero">
+    <subscriber name="PoseStampedSubscriber">
+      <data_reader name="PoseStampedReader" topic_ref="astrobee_pose_stamped">
+        <datareader_qos base_name="RapidQosLibrary::AstrobeePoseStampedProfile"/>
+      </data_reader>
+      <subscriber_qos base_name="RapidQosLibrary::RapidDefaultQos">
+        <partition>
+          <name>
+            <element>Bumble</element>
+          </name>
+        </partition>
+      </subscriber_qos>
+    </subscriber>
     <subscriber name="EkfSubscriber">
       <data_reader name="EkfReader" topic_ref="astrobee_ekf_state">
         <datareader_qos base_name="RapidQosLibrary::AstrobeeEkfStateProfile"/>

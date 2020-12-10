@@ -74,6 +74,11 @@ class Twist(Common):
         self.linear = linear
         self.angular = angular
 
+class PoseStamped(Common):
+    def __init__(self):
+        self.header = Header()
+        self.pose = Pose()
+
 class EkfState(Common):
     def __init__(self):
         self.header = Header()

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<types xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://community.rti.com/schema/5.1.0/rti_dds_profiles.xsd">
+<include file="Message.xml"/>
+<module name="rapid">
+<module name="ext">
+<module name="astrobee">
+<directive kind="copyCDeclaration">class PoseStampedTypeSupport;</directive>
+<directive kind="copyCDeclaration">class PoseStampedDataWriter;</directive>
+<directive kind="copyCDeclaration">class PoseStampedDataReader;</directive>
+<directive kind="copyCDeclaration">struct PoseStampedSeq;</directive>
+<directive kind="copyDeclaration">/**</directive>
+<directive kind="copyDeclaration">  * Pose with timestamp.</directive>
+<directive kind="copyDeclaration">  */</directive>
+<valuetype name="PoseStamped" baseClass="rapid::Message" typeModifier="none">
+<directive kind="copyCDeclaration">#if RTI_DDS_VERSION_MAJOR &lt; 4 || (RTI_DDS_VERSION_MAJOR == 4  &amp;&amp; RTI_DDS_VERSION_MINOR &lt; 5) || (RTI_DDS_VERSION_MAJOR == 4  &amp;&amp; RTI_DDS_VERSION_MINOR  == 5 &amp;&amp; RTI_DDS_VERSION_RELEASE != 'f' )</directive>
+<directive kind="copyCDeclaration">typedef PoseStampedTypeSupport TypeSupport;</directive>
+<directive kind="copyCDeclaration">typedef PoseStampedDataWriter DataWriter;</directive>
+<directive kind="copyCDeclaration">typedef PoseStampedDataReader DataReader;</directive>
+<directive kind="copyCDeclaration">typedef PoseStampedSeq Seq;</directive>
+<directive kind="copyCDeclaration">#endif</directive>
+<directive kind="copyCDeclaration">typedef PoseStamped Type;</directive>
+<directive kind="copyDeclaration">/** robot body pose */</directive>
+<member name="pose" type="nonBasic" nonBasicTypeName="rapid::Transform3D" visibility="public"/>
+</valuetype>
+</module>
+</module>
+</module>
+</types>
