@@ -16,16 +16,30 @@
  * under the License.
  */
 
+// ROS includes
 #include <ros/ros.h>
+
+// FSW includes
 #include <config_reader/config_reader.h>
+
+// Sensor plugin interface
 #include <astrobee_gazebo/astrobee_gazebo.h>
+
+// Sensor and fsw messages
 #include <sensor_msgs/Image.h>
+#include <sensor_msgs/CompressedImage.h>
 #include <sensor_msgs/image_encodings.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <sensor_msgs/CameraInfo.h>
 #include <ff_msgs/CommandStamped.h>
 #include <ff_msgs/CommandConstants.h>
 
+// Open CV Includes
+#include <cv_bridge/cv_bridge.h>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgcodecs.hpp>
+
+// STL includes
 #include <Eigen/Geometry>
 #include <Eigen/Core>
 #include <string>
@@ -64,16 +78,23 @@ class GazeboSensorPluginSciCam : public FreeFlyerSensorPlugin {
       ROS_FATAL_STREAM("Camera format must be B8G8R8");
 
     // Set image constants
-    sci_cam_image_msg_.is_bigendian = false;
     sci_cam_image_msg_.header.frame_id = GetFrame();
     sci_cam_image_msg_.encoding = sensor_msgs::image_encodings::BGR8;
+    sci_cam_image_msg_compressed_.format = sci_cam_image_msg_.encoding;
+    sci_cam_image_msg_compressed_.format += "; png compressed ";
+    sci_cam_image_msg_compressed_.format += "bgr8";
+
+    // Compression settings
+    compression_params_.resize(3, 0);
+    compression_params_[0] = cv::IMWRITE_PNG_COMPRESSION;      // Specify PNG compression, lossless
+    compression_params_[1] = 9;                                // PNG compression level 1-9
 
     // Create subscriber to DDS commands though which the sci cam will be controlled
-    dds_cmd_sub_ = nh->subscribe(TOPIC_COMMUNICATIONS_DDS_COMMAND, 10,
-                                 &GazeboSensorPluginSciCam::DdsCmdCallback, this);
+    dds_cmd_sub_ = nh->subscribe(TOPIC_COMMAND, 10,
+                                 &GazeboSensorPluginSciCam::CmdCallback, this);
 
     // Create publishers for sci cam image, pose, and camera info
-    pub_sci_cam_image_ = nh->advertise<sensor_msgs::Image>(TOPIC_HARDWARE_SCI_CAM, 2,
+    pub_sci_cam_image_ = nh->advertise<sensor_msgs::CompressedImage>(TOPIC_HARDWARE_SCI_CAM, 2,
       boost::bind(&GazeboSensorPluginSciCam::ToggleCallback, this),
       boost::bind(&GazeboSensorPluginSciCam::ToggleCallback, this));
     pub_sci_cam_pose_ = nh->advertise<geometry_msgs::PoseStamped>(TOPIC_SCI_CAM_SIM_POSE, 10);
@@ -151,7 +172,7 @@ class GazeboSensorPluginSciCam : public FreeFlyerSensorPlugin {
 
   // Called when a dds command is received. Process only guest science
   // sci cam control commands.
-  void DdsCmdCallback(ff_msgs::CommandStamped const& cmd) {
+  void CmdCallback(ff_msgs::CommandStamped const& cmd) {
     // Process only guest science commands
     if (cmd.cmd_name != ff_msgs::CommandConstants::CMD_NAME_CUSTOM_GUEST_SCIENCE) {
       // Only process custom sci cam commands
@@ -237,7 +258,7 @@ class GazeboSensorPluginSciCam : public FreeFlyerSensorPlugin {
       return;
     }
 
-    // Publish the sci cam image
+    // Make sci cam image topic
     // Record not the current time, but the time when the image was acquired
     sci_cam_image_msg_.header.stamp.sec = sensor_->LastMeasurementTime().sec;
     sci_cam_image_msg_.header.stamp.nsec = sensor_->LastMeasurementTime().nsec;
@@ -248,12 +269,36 @@ class GazeboSensorPluginSciCam : public FreeFlyerSensorPlugin {
     const uint8_t* data_start = reinterpret_cast<const uint8_t*>(sensor_->ImageData());
     std::copy(data_start, data_start + sci_cam_image_msg_.step * sci_cam_image_msg_.height,
               sci_cam_image_msg_.data.begin());
-    pub_sci_cam_image_.publish(sci_cam_image_msg_);
 
-    if (takeSinglePicture_) {
-      // Done taking a single picture. Use a lock to change this flag.
-      const std::lock_guard<std::mutex> lock(sci_cam_image_lock);
-      takeSinglePicture_ = false;
+    // Make sci cam image compressed topic
+    // Record not the current time, but the time when the image was acquired
+    sci_cam_image_msg_compressed_.header.stamp.sec = sensor_->LastMeasurementTime().sec;
+    sci_cam_image_msg_compressed_.header.stamp.nsec = sensor_->LastMeasurementTime().nsec;
+
+    // OpenCV-ros bridge
+    try {
+      cv_bridge::CvImagePtr cv_ptr = cv_bridge::toCvCopy(sci_cam_image_msg_, sensor_msgs::image_encodings::BGR8);
+
+      // Compress image
+      if (cv::imencode(".png", cv_ptr->image, sci_cam_image_msg_compressed_.data, compression_params_)) {
+        // Publish the compressed message
+        pub_sci_cam_image_.publish(sci_cam_image_msg_compressed_);
+        // Done taking a single picture. Use a lock to change this flag.
+        if (takeSinglePicture_) {
+          const std::lock_guard<std::mutex> lock(sci_cam_image_lock);
+          takeSinglePicture_ = false;
+        }
+      } else {
+        ROS_ERROR("cv::imencode (png) failed on input image");
+      }
+    }
+    catch (cv_bridge::Exception& e) {
+      ROS_ERROR("%s", e.what());
+      return;
+    }
+    catch (cv::Exception& e) {
+      ROS_ERROR("%s", e.what());
+      return;
     }
 
     return;
@@ -261,8 +306,11 @@ class GazeboSensorPluginSciCam : public FreeFlyerSensorPlugin {
 
  private:
   sensor_msgs::Image sci_cam_image_msg_;
+  sensor_msgs::CompressedImage sci_cam_image_msg_compressed_;
   geometry_msgs::PoseStamped sci_cam_pose_msg_;
   sensor_msgs::CameraInfo sci_cam_info_msg_;
+
+  std::vector<int> compression_params_;
 
   bool continuousPictureTaking_;
   bool takeSinglePicture_;
