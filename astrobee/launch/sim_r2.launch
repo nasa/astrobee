@@ -240,25 +240,26 @@
       <arg name="dds" value="$(arg dds)" />          <!-- Enable DDS         -->
     </include>
   </group>
-
+  
+  <!-- Create static world frame  -->
     <node pkg="tf2_ros" type="static_transform_publisher" name="octomap_odom_broadcaster" args="0 0 0 0 0 0 1 map world" />
     <node pkg="octomap_server" type="octomap_server_node" name="octomap_server" args="cloud_in:=/r2/asus/depth/points _resolution:=0.02" if="$(arg octomap)"/>
 
-  <!-- load ISS for R2-->
-  <group ns="iss_r2">
-
-    <param name="tf_prefix" value="iss_r2" />
-    <param name="robot_description" command="$(find xacro)/xacro.py '$(find iss_internal_description)/urdf/thirdmodel.urdf.xacro'"/>
+  <!-- Load US_lab for R2-->
+  <group ns="us_lab">
+    <param name="tf_prefix" value="us_lab" />
+    <param name="robot_description" command="$(find xacro)/xacro.py '$(find iss_internal_description)/urdf/iss_w_rails.urdf.xacro'"/>
     <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" respawn="false" output="screen"/>
-    <node name="spawn_iss" pkg="gazebo_ros" type="spawn_model" args="-urdf -param robot_description -model iss_r2 -paused=true -x -0.45 -y 0 -z 4.84 -R 3.1415 -P 0 -Y 0" respawn="false" output="screen" />
+    <node name="spawn_us_lab" pkg="gazebo_ros" type="spawn_model" args="-urdf -param robot_description -model us_lab -paused=true -x -0.45 -y 0 -z 4.84 -R 3.1415 -P 0 -Y 0" respawn="false" output="screen" />
+  </group>
     <node pkg="robot_localizer" type="iss_localizer" name="iss_localizer"/>
 
+  <!-- Load cargo-bag description -->
+  <group ns="ctb">
+    <param name="robot_description" command="$(find xacro)/xacro.py '$(find iss_internal_description)/urdf/ctb.urdf.xacro'"/>
   </group>
-
-  <!-- Load r2 -->
-  <group ns= "r2">
-    <!-- <rosparam file="$(find r2_gazebo)/config/controllers/r2sim_random_start_right.yaml" command="load" /> -->
-    <!-- <rosparam file="$(find r2_gazebo)/config/controllers/r2sim_walking_full_params_random_start.yaml" command="load" /> -->
+ 
+  <!-- Load R2 -->
     <rosparam file="$(find r2_gazebo)/config/controllers/r2sim_walking_full_params.yaml" command="load" />
     <param name="robot_description" command="$(find xacro)/xacro.py '$(find r2_gazebo)/xacro/r2c_full.urdf.xacro'" />
 
@@ -285,6 +286,6 @@
       <include file="$(find r2_supervisors_control)/launch/r2_legs_control.launch"/>
     </group>
 
-  </group>
+
 
 </launch>
