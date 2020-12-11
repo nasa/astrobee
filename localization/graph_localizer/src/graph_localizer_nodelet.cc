@@ -202,6 +202,7 @@ void GraphLocalizerNodelet::Run() {
     private_queue_.callAvailable();
     callbacks_timer_.StopAndLog();
     graph_localizer_wrapper_.Update();
+    ros::spinOnce();
     rate.sleep();
   }
 }
