@@ -201,10 +201,10 @@ void GraphLocalizerNodelet::PublishReset() const {
 }
 
 void GraphLocalizerNodelet::Run() {
-  ros::Rate rate(15);
+  ros::Rate rate(100);
   while (ros::ok()) {
     private_queue_.callAvailable();
-    // TODO(rsoussan): call update here! make wrapper in graph_localizer_wrapper!
+    graph_localizer_wrapper_.Update();
     rate.sleep();
   }
 }
