@@ -62,6 +62,9 @@
   <arg if="$(eval arg('world')=='granite' and arg('perch'))"
        name="pose"
        default="0 0 -0.7 0 0 0 1" />                         <!-- granite: perch position -->
+  <arg if="$(eval arg('world')=='r2')"
+       name="pose"
+       default="10.05 -9.245 4.406 0 0 0 1" />     <!-- r2: docked in JPM      -->
 
   <arg name="bumble_pose" default="" />         <!-- Use to overide bumble's pose -->
   <arg name="loc_only" default="false"/> <!-- Only running localization nodes for visualization purposes -->

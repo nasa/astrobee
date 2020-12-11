@@ -23,7 +23,7 @@
   <param if="$(eval arg('world')=='iss')" name="/iss/robot_description"
     textfile="$(find astrobee_iss)/urdf/model.urdf" />
   <param if="$(eval arg('world')=='r2')" name="/iss/robot_description"
-    textfile="$(find astrobee_r2)/urdf/model.urdf" />
+    textfile="$(find astrobee_iss)/urdf/model.urdf" />
   <param name="/dock/robot_description"
     textfile="$(find astrobee_dock)/urdf/model.urdf" />
   <param name="/handrail_8_5/robot_description"

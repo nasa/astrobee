@@ -51,7 +51,7 @@
     </spherical_coordinates>
 
     <include>
-      <uri>model://astrobee_r2</uri>
+      <uri>model://astrobee_iss</uri>
     </include>
 
     <include>
