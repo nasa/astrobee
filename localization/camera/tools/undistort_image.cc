@@ -136,7 +136,8 @@ int main(int argc, char ** argv) {
   min_y = floor(min_y); max_y = ceil(max_y);
 
   // The image dimensions
-  Eigen::Vector2i dims = FLAGS_scale*cam_params.GetDistortedSize();
+  Eigen::Vector2i dims(round(FLAGS_scale*cam_params.GetDistortedSize()[0]),
+                       round(FLAGS_scale*cam_params.GetDistortedSize()[1]));
   int img_cols = dims[0], img_rows = dims[1];
 
   // Ensure that the expanded image is not smaller than the old one,
@@ -168,8 +169,10 @@ int main(int argc, char ** argv) {
   // Convert the map for speed
   cv::convertMaps(floating_remap, cv::Mat(), fixed_map, interp_map, CV_16SC2);
 
-  Eigen::Vector2i dist_size      = FLAGS_scale*cam_params.GetDistortedSize();
-  Eigen::Vector2i undist_size    = FLAGS_scale*cam_params.GetUndistortedSize();
+  Eigen::Vector2i dist_size(round(FLAGS_scale*cam_params.GetDistortedSize()[0]),
+                            round(FLAGS_scale*cam_params.GetDistortedSize()[1]));
+  Eigen::Vector2i undist_size(round(FLAGS_scale*cam_params.GetUndistortedSize()[0]),
+                              round(FLAGS_scale*cam_params.GetUndistortedSize()[1]));
   double focal_length            = FLAGS_scale*cam_params.GetFocalLength();
   Eigen::Vector2d optical_center = FLAGS_scale*cam_params.GetUndistortedHalfSize();
 
