@@ -58,6 +58,8 @@ class GraphLocalizerWrapper {
 
   boost::optional<ff_msgs::LocalizationGraph> LatestLocalizationGraphMsg() const;
 
+  void Update();
+
   void OpticalFlowCallback(const ff_msgs::Feature2dArray& feature_array_msg);
 
   void VLVisualLandmarksCallback(const ff_msgs::VisualLandmarks& visual_landmarks_msg);

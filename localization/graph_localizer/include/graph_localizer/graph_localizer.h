@@ -155,7 +155,7 @@ class GraphLocalizer {
 
   void BufferFactors(const std::vector<FactorsToAdd>& factors_to_add_vec);
 
-  void AddBufferedFactors();
+  int AddBufferedFactors();
 
   bool DoGraphAction(FactorsToAdd& factors_to_add);
 

@@ -63,6 +63,18 @@ GraphLocalizerWrapper::GraphLocalizerWrapper() {
   sanity_checker_.reset(new SanityChecker(sanity_checker_params));
 }
 
+void GraphLocalizerWrapper::Update() {
+  if (graph_localizer_) {
+    graph_localizer_->Update();
+    // Sanity check covariances after updates
+    if (!CheckCovarianceSanity()) {
+      LOG(INFO) << "OpticalFlowCallback: Covariance sanity check failed, resetting localizer.";
+      ResetLocalizer();
+      return;
+    }
+  }
+}
+
 void GraphLocalizerWrapper::OpticalFlowCallback(const ff_msgs::Feature2dArray& feature_array_msg) {
   if (graph_localizer_) {
     if (graph_localizer_->AddOpticalFlowMeasurement(lm::MakeFeaturePointsMeasurement(feature_array_msg))) {

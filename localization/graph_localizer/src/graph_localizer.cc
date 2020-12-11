@@ -790,7 +790,7 @@ void GraphLocalizer::RemoveOldBufferedFactors(const lc::Time oldest_allowed_time
   }
 }
 
-void GraphLocalizer::AddBufferedFactors() {
+int GraphLocalizer::AddBufferedFactors() {
   LOG(INFO) << "AddBufferedfactors: Adding buffered factors.";
   VLOG(2) << "AddBufferedFactors: Num buffered factors to add: " << buffered_factors_to_add_.size();
 
@@ -832,6 +832,7 @@ void GraphLocalizer::AddBufferedFactors() {
   }
 
   LOG(INFO) << "AddBufferedFactors: Added " << num_added_factors << " factors.";
+  return num_added_factors;
 }
 
 bool GraphLocalizer::DoGraphAction(FactorsToAdd& factors_to_add) {
@@ -1134,7 +1135,11 @@ bool GraphLocalizer::Update() {
   LOG(INFO) << "Update: Updating.";
   update_timer_.Start();
 
-  AddBufferedFactors();
+  const int num_added_factors = AddBufferedFactors();
+  if (num_added_factors <= 0) {
+    LOG(WARNING) << "Update: No factors added.";
+    return false;
+  }
 
   // TODO(rsoussan): Is ordering required? if so clean these calls open and unify with marginalization
   if (params_.add_marginal_factors) {

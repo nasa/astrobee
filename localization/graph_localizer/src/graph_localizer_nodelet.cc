@@ -42,6 +42,7 @@ GraphLocalizerNodelet::GraphLocalizerNodelet()
 void GraphLocalizerNodelet::Initialize(ros::NodeHandle* nh) {
   ff_common::InitFreeFlyerApplication(getMyArgv());
   SubscribeAndAdvertise(nh);
+  Run();
 }
 
 void GraphLocalizerNodelet::SubscribeAndAdvertise(ros::NodeHandle* nh) {
