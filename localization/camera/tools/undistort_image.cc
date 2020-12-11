@@ -51,8 +51,12 @@ DEFINE_string(image_list, "", "The list of images to undistort, one per line. If
 DEFINE_string(output_directory, "", "If not specified, undistorted images will "
               "saved in the same directory as the inputs.");
 
+DEFINE_double(scale, 1.0, "Undistort images at different resolution, with their width "
+              "being a multiple of this scale compared to the camera model.");
+
 DEFINE_string(undistorted_crop_win, "",
-              "After undistorting, crop this many pixels from all 4 sides. The adjusted "
+              "After undistorting, apply a crop window of these dimensions "
+              "centered at the undistorted image center. The adjusted "
               "dimensions and optical center will be displayed below. "
               "Specify as: 'crop_x crop_y'.");
 
@@ -105,7 +109,7 @@ int main(int argc, char ** argv) {
 
   // Create the undistortion map
   cv::Mat floating_remap, fixed_map, interp_map;
-  cam_params.GenerateRemapMaps(&floating_remap);
+  cam_params.GenerateRemapMaps(&floating_remap, FLAGS_scale);
 
   // Deal with the fact that this map may request pixels from the
   // image that are out of bounds. Hence we will need to grow the
@@ -132,7 +136,7 @@ int main(int argc, char ** argv) {
   min_y = floor(min_y); max_y = ceil(max_y);
 
   // The image dimensions
-  Eigen::Vector2i dims = cam_params.GetDistortedSize();
+  Eigen::Vector2i dims = FLAGS_scale*cam_params.GetDistortedSize();
   int img_cols = dims[0], img_rows = dims[1];
 
   // Ensure that the expanded image is not smaller than the old one,
@@ -164,10 +168,10 @@ int main(int argc, char ** argv) {
   // Convert the map for speed
   cv::convertMaps(floating_remap, cv::Mat(), fixed_map, interp_map, CV_16SC2);
 
-  Eigen::Vector2i dist_size      = cam_params.GetDistortedSize();
-  Eigen::Vector2i undist_size    = cam_params.GetUndistortedSize();
-  double focal_length            = cam_params.GetFocalLength();
-  Eigen::Vector2d optical_center = cam_params.GetUndistortedHalfSize();
+  Eigen::Vector2i dist_size      = FLAGS_scale*cam_params.GetDistortedSize();
+  Eigen::Vector2i undist_size    = FLAGS_scale*cam_params.GetUndistortedSize();
+  double focal_length            = FLAGS_scale*cam_params.GetFocalLength();
+  Eigen::Vector2d optical_center = FLAGS_scale*cam_params.GetUndistortedHalfSize();
 
   // Handle the cropping
   cv::Rect cropROI;
