@@ -182,5 +182,6 @@ void LoadGraphLocalizerParams(config_reader::ConfigReader& config, GraphLocalize
   params.huber_k = lc::LoadDouble(config, "huber_k");
   params.max_standstill_feature_track_avg_distance_from_mean =
     lc::LoadDouble(config, "max_standstill_feature_track_avg_distance_from_mean");
+  params.standstill_min_num_points_per_track = lc::LoadInt(config, "standstill_min_num_points_per_track");
 }
 }  // namespace graph_localizer

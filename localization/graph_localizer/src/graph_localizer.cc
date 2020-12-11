@@ -297,7 +297,7 @@ void GraphLocalizer::CheckForStandstill(const lm::FeaturePointsMeasurement& opti
   for (const auto& feature_track : feature_tracker_->feature_tracks()) {
     const double average_distance_from_mean = AverageDistanceFromMean(feature_track.second.points);
     // Only consider long enough feature tracks for standstill candidates
-    if (feature_track.second.points.size() > 5) {
+    if (feature_track.second.points.size() >= params_.standstill_min_num_points_per_track) {
       total_average_distance_from_mean += average_distance_from_mean;
       ++num_valid_feature_tracks;
     }
@@ -309,6 +309,7 @@ void GraphLocalizer::CheckForStandstill(const lm::FeaturePointsMeasurement& opti
 
   standstill_ = (num_valid_feature_tracks >= 5 &&
                  average_distance_from_mean <= params_.max_standstill_feature_track_avg_distance_from_mean);
+  if (*standstill_) LOG(INFO) << "CheckForStandstill: Standstill.";
 }
 
 void GraphLocalizer::AddARTagMeasurement(const lm::MatchedProjectionsMeasurement& matched_projections_measurement) {
