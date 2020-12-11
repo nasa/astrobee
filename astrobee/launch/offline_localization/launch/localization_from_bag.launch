@@ -31,7 +31,8 @@
   <arg name="service_calls" default="true" unless="$(arg localization_manager)"/>     
   <arg name="service_calls" value="false" if="$(arg localization_manager)" />   
   <arg name="image_features" default="false" />
-  <arg name="image" default="true" />
+  <arg name="image" default="true" unless="$(arg image_features)"/>     
+  <arg name="image" value="false" if="$(arg image_features)" />   
 
 
   <!-- Set environment configs that are required to run nodes -->
