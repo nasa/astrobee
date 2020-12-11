@@ -17,6 +17,8 @@ to examine the 'launch' directory in this folder for a XML file called
    the system. Additional files might be needed depending on the context.
 6. `scripts` - A simple bash script to print out the environment variables,
    which can be used to check the context at any point in the launch sequence.
+   A second script to print out the relevant software versions installed on the
+   MLP, LLP, and HLP.
 
 # Environment variables
 
