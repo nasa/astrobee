@@ -366,7 +366,7 @@ void GraphLocalizer::SplitSmartFactorsIfNeeded(FactorsToAdd& factors_to_add) {
         continue;
       }
     }
-    LOG(ERROR) << "SplitSmartFactorsIfNeeded: Failed to fix smart factor";
+    LOG(WARNING) << "SplitSmartFactorsIfNeeded: Failed to fix smart factor";
   }
 }
 
