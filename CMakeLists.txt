@@ -20,6 +20,53 @@ project(Astrobee)
 
 set(ASTROBEE_VERSION 0.12.0)
 
+# Define our options
+option(USE_CCACHE
+  "Use ccache to speed up compiling, at the cost of optimization"
+  ON)
+option(USE_CTC
+  "Use cross compile toolchain for making ARM binaries"
+  OFF)
+option(USE_ROS
+  "Build the ROS-dependent functionality."
+  ON)
+option(USE_DDS
+  "Build the DDS-dependent functionality."
+  ON)
+option(USE_STATIC_LIBS
+  "Build using static libraries. Will use lots of drive space."
+  OFF)
+option(TEST_COVERAGE
+  "Build the code with code coverage options. Not compatible with USE_CTC."
+  OFF)
+option(USE_DRIVERS
+  "Build the tools in the drivers directory."
+  ON)
+option(IS_BAMBOO_BUILD
+  "The code is being built under the bamboo CI system"
+  OFF)
+option(ENABLE_GPROF
+  "Enable compling with support for profiling wih gprof (the GNU Profiler)."
+  OFF)
+option(ENABLE_GOOGLE_PROF
+  "Enable support for profiling wih pprof (the Google Profiler)."
+  OFF)
+option(ENABLE_QP
+  "Enable support for the QP planner."
+  ON)
+option(ENABLE_PICOFLEXX
+  "Enable support for building the PicoFlexx driver"
+  ON)
+option(ENABLE_GAZEBO
+  "Enable support for building the Gazebo simulator"
+  ON)
+option(ENABLE_VIVE
+  "Enable support for building the Vive drivers"
+  ON)
+option(ENABLE_VIVE_SOLVER
+  "Enable support for building the Vive offline solver"
+  ON)
+
 if ( "${CMAKE_VERSION}" VERSION_GREATER 3.0.0 )
   cmake_policy(SET CMP0045 OLD)
   cmake_policy(SET CMP0046 OLD)
@@ -90,53 +137,6 @@ else (USE_CTC)
   set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
   list(APPEND CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 endif (USE_CTC)
-
-# Define our options
-option(USE_CCACHE
-  "Use ccache to speed up compiling, at the cost of optimization"
-  ON)
-option(USE_CTC
-  "Use cross compile toolchain for making ARM binaries"
-  OFF)
-option(USE_ROS
-  "Build the ROS-dependent functionality."
-  ON)
-option(USE_DDS
-  "Build the DDS-dependent functionality."
-  ON)
-option(USE_STATIC_LIBS
-  "Build using static libraries. Will use lots of drive space."
-  OFF)
-option(TEST_COVERAGE
-  "Build the code with code coverage options. Not compatible with USE_CTC."
-  OFF)
-option(USE_DRIVERS
-  "Build the tools in the drivers directory."
-  OFF)
-option(IS_BAMBOO_BUILD
-  "The code is being built under the bamboo CI system"
-  OFF)
-option(ENABLE_GPROF
-  "Enable compling with support for profiling wih gprof (the GNU Profiler)."
-  OFF)
-option(ENABLE_GOOGLE_PROF
-  "Enable support for profiling wih pprof (the Google Profiler)."
-  OFF)
-option(ENABLE_QP
-  "Enable support for the QP planner."
-  ON)
-option(ENABLE_PICOFLEXX
-  "Enable support for building the PicoFlexx driver"
-  ON)
-option(ENABLE_GAZEBO
-  "Enable support for building the Gazebo simulator"
-  ON)
-option(ENABLE_VIVE
-  "Enable support for building the Vive drivers"
-  ON)
-option(ENABLE_VIVE_SOLVER
-  "Enable support for building the Vive offline solver"
-  ON)
 
 # If the user selected static libs .. set BUILD_SHARED_LIBS accordingly
 if(USE_STATIC_LIBS)
@@ -282,14 +282,12 @@ else (USE_CTC)
 endif (USE_CTC)
 
 # Bring in catkin
-set(CATKIN_SKIP_TESTING ON CACHE BOOL "NO")
 if (USE_CTC)
   # Catkin brings in GTest as a dependency. We don't want it because
   # we have our own ... on top of that it doesn't build correctly for
   # ARM. Our own unit tests however will continue to
   # work. (non-catkin)
-  set(CATKIN_ENABLE_TESTING OFF)
-  set(CATKIN_SKIP_TESTING OFF)
+set(CATKIN_SKIP_TESTING ON)
 endif (USE_CTC)
 if (USE_ROS)
   set(ENV{ROS_LANG_DISABLE} "genlisp:gennodejs:geneus:$ENV{ROS_LANG_DISABLE}")

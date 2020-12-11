@@ -1,0 +1,55 @@
+#include "Message.idl"
+
+module rapid
+{
+  module ext
+  {
+    module astrobee
+    {
+      //@copy-declaration /**
+      //@copy-declaration  * Compression format used for file
+      //@copy-declaration  * <ul>
+      //@copy-declaration  *   <li>COMPRESSION_TYPE_NONE: no compression
+      //@copy-declaration  *   <li>COMPRESSION_TYPE_DEFLATE: zlib deflate compression
+      //@copy-declaration  *   <li>COMPRESSION_TYPE_BZ2: bzip2
+      //@copy-declaration  *   <li>COMPRESSION_TYPE_GZ:  GNU Zip
+      //@copy-declaration  *   <li>COMPRESSION_TYPE_ZIP: ZIP
+      //@copy-declaration  * </ul>
+      //@copy-declaration  */
+      enum FileCompressionType{
+        COMPRESSION_TYPE_NONE,
+        COMPRESSION_TYPE_DEFLATE,
+        COMPRESSION_TYPE_BZ2,
+        COMPRESSION_TYPE_GZ,
+        COMPRESSION_TYPE_ZIP
+      };
+
+      //@copy-c-declaration class CompressedFileTypeSupport;
+      //@copy-c-declaration class CompressedFileDataWriter;
+      //@copy-c-declaration class CompressedFileDataReader;
+      //@copy-c-declaration struct CompressedFileSeq;
+
+      //@copy-declaration /**
+      //@copy-declaration  * CompressedFile message delivers a compressed file, with the compression format used
+      //@copy-declaration  */
+      valuetype CompressedFile : Message {
+        //@copy-c-declaration #if RTI_DDS_VERSION_MAJOR < 4 || (RTI_DDS_VERSION_MAJOR == 4  && RTI_DDS_VERSION_MINOR < 5) || (RTI_DDS_VERSION_MAJOR == 4  && RTI_DDS_VERSION_MINOR  == 5 && RTI_DDS_VERSION_RELEASE != 'f' )
+        //@copy-c-declaration typedef CompressedFileTypeSupport TypeSupport;
+        //@copy-c-declaration typedef CompressedFileDataWriter DataWriter;
+        //@copy-c-declaration typedef CompressedFileDataReader DataReader;
+        //@copy-c-declaration typedef CompressedFileSeq Seq;
+        //@copy-c-declaration #endif
+        //@copy-c-declaration typedef CompressedFile Type;
+
+        //@copy-declaration /** ID of this compressed file. See CompressedFileAck.idl */
+        public long id;
+
+        //@copy-declaration /** Store binary data of compressed file */
+        public OctetSequence128K compressedFile;
+
+        //@copy-declaration /** Compression format used on file, to allow proper decompression on receiving end */
+        public FileCompressionType compressionType;
+      };
+    };
+  };
+};

@@ -17,11 +17,20 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-SCHEMA=../../submodules/common/plans/freeFlyerPlanSchema.json
-BUILD_DIR=../../build
+SCHEMA=../../astrobee/commands/freeFlyerPlanSchema.json
+CONFIG_DIR=../../astrobee/config
+MSG_DIR=../../communications/ff_msgs/msg
+IDL_DIR=../../communications/dds_msgs/idl
+DOC_DIR=../../doc
+
+# Allow selecting the python shell to use, but default to 'python'.
+# For example: 'PYTHON=python2.7 processCommandSchema.sh'
+PYTHON=${PYTHON:=python}
 
 cd "$( dirname "${BASH_SOURCE[0]}" )"
-echo cd `pwd`
-[ -d $BUILD_DIR ] || mkdir -p $BUILD_DIR
-./genCommandConfigLua.py $SCHEMA $BUILD_DIR/commands.config
-./genCommandConstants.py $SCHEMA $BUILD_DIR/CommandConstants.msg
+
+set -x
+$PYTHON ./genCommandConfigLua.py $SCHEMA $CONFIG_DIR/commands.config
+$PYTHON ./genRosMsgCommandConstants.py $SCHEMA $MSG_DIR/CommandConstants.msg
+$PYTHON ./genCommandConstantsIdl.py $SCHEMA $IDL_DIR/AstrobeeCommandConstants.idl
+$PYTHON ./genCommandDictionary.py $SCHEMA $DOC_DIR/AstrobeeCommandDictionary.html

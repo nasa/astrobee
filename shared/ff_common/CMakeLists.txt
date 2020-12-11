@@ -23,16 +23,26 @@ catkin_package(
   CATKIN_DEPENDS
 )
 
-include_directories(
-  include
-  ${catkin_INCLUDE_DIRS}
-)
-
 create_library(TARGET ff_common
   INC ${GFLAGS_INCLUDE_DIRS} ${GLOG_INCLUDE_DIRS}
   ${CMAKE_CURRENT_BINARY_DIR}/include
   LIBS ${GFLAGS_LIBRARIES} ${GLOG_LIBRARIES})
 
-create_test_targets(DIR test
-  LIBS ff_common
-  DEPS ff_common)
+if(CATKIN_ENABLE_TESTING)
+  find_package(rostest REQUIRED)
+
+  add_rostest_gtest(test_thread
+    test/test_thread.test
+    test/test_thread.cc
+  )
+  target_link_libraries(test_thread
+    ff_common
+  )
+
+endif()
+
+include_directories(
+  include
+  ${catkin_INCLUDE_DIRS}
+)
+
