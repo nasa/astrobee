@@ -47,18 +47,18 @@ void GraphLocalizerNodelet::Initialize(ros::NodeHandle* nh) {
 
 void GraphLocalizerNodelet::SubscribeAndAdvertise(ros::NodeHandle* nh) {
   // TODO(Rsoussan): should these use private nh as well??
-  state_pub_ = nh->advertise<ff_msgs::EkfState>(TOPIC_GRAPH_LOC_STATE, 1);
-  sparse_mapping_pose_pub_ = nh->advertise<geometry_msgs::PoseStamped>(TOPIC_SPARSE_MAPPING_POSE, 1);
-  graph_pub_ = nh->advertise<ff_msgs::LocalizationGraph>(TOPIC_GRAPH_LOC, 1);
-  reset_pub_ = nh->advertise<std_msgs::Empty>(TOPIC_GNC_EKF_RESET, 1);
+  state_pub_ = nh->advertise<ff_msgs::EkfState>(TOPIC_GRAPH_LOC_STATE, 10);
+  sparse_mapping_pose_pub_ = nh->advertise<geometry_msgs::PoseStamped>(TOPIC_SPARSE_MAPPING_POSE, 10);
+  graph_pub_ = nh->advertise<ff_msgs::LocalizationGraph>(TOPIC_GRAPH_LOC, 10);
+  reset_pub_ = nh->advertise<std_msgs::Empty>(TOPIC_GNC_EKF_RESET, 10);
 
-  imu_sub_ = private_nh_.subscribe(TOPIC_HARDWARE_IMU, 1, &GraphLocalizerNodelet::ImuCallback, this,
+  imu_sub_ = private_nh_.subscribe(TOPIC_HARDWARE_IMU, 0, &GraphLocalizerNodelet::ImuCallback, this,
                                    ros::TransportHints().tcpNoDelay());
-  ar_sub_ = private_nh_.subscribe(TOPIC_LOCALIZATION_AR_FEATURES, 1, &GraphLocalizerNodelet::ARVisualLandmarksCallback,
+  ar_sub_ = private_nh_.subscribe(TOPIC_LOCALIZATION_AR_FEATURES, 0, &GraphLocalizerNodelet::ARVisualLandmarksCallback,
                                   this, ros::TransportHints().tcpNoDelay());
-  of_sub_ = private_nh_.subscribe(TOPIC_LOCALIZATION_OF_FEATURES, 1, &GraphLocalizerNodelet::OpticalFlowCallback, this,
+  of_sub_ = private_nh_.subscribe(TOPIC_LOCALIZATION_OF_FEATURES, 0, &GraphLocalizerNodelet::OpticalFlowCallback, this,
                                   ros::TransportHints().tcpNoDelay());
-  vl_sub_ = private_nh_.subscribe(TOPIC_LOCALIZATION_ML_FEATURES, 1, &GraphLocalizerNodelet::VLVisualLandmarksCallback,
+  vl_sub_ = private_nh_.subscribe(TOPIC_LOCALIZATION_ML_FEATURES, 0, &GraphLocalizerNodelet::VLVisualLandmarksCallback,
                                   this, ros::TransportHints().tcpNoDelay());
   bias_srv_ =
     private_nh_.advertiseService(SERVICE_GNC_EKF_INIT_BIAS, &GraphLocalizerNodelet::ResetBiasesAndLocalizer, this);
