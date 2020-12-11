@@ -1135,7 +1135,9 @@ bool GraphLocalizer::Update() {
   LOG(INFO) << "Update: Updating.";
   update_timer_.Start();
 
+  add_buffered_factors_timer_.Start();
   const int num_added_factors = AddBufferedFactors();
+  add_buffered_factors_timer_.StopAndLog();
   if (num_added_factors <= 0) {
     LOG(WARNING) << "Update: No factors added.";
     return false;

@@ -30,12 +30,7 @@
 namespace graph_localizer {
 namespace lc = localization_common;
 GraphLocalizerNodelet::GraphLocalizerNodelet()
-    : ff_util::FreeFlyerNodelet(NODE_GRAPH_LOC, true),
-      platform_name_(GetPlatform()),
-      vl_timer_("VL msg"),
-      of_timer_("OF msg"),
-      ar_timer_("AR msg"),
-      imu_timer_("Imu msg") {
+    : ff_util::FreeFlyerNodelet(NODE_GRAPH_LOC, true), platform_name_(GetPlatform()) {
   private_nh_.setCallbackQueue(&private_queue_);
 }
 
@@ -203,7 +198,9 @@ void GraphLocalizerNodelet::PublishReset() const {
 void GraphLocalizerNodelet::Run() {
   ros::Rate rate(100);
   while (ros::ok()) {
+    callbacks_timer_.Start();
     private_queue_.callAvailable();
+    callbacks_timer_.StopAndLog();
     graph_localizer_wrapper_.Update();
     rate.sleep();
   }
