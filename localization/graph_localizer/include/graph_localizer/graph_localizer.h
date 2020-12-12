@@ -126,7 +126,8 @@ class GraphLocalizer {
   // Removes any factors depending on removed values
   // Optionally adds marginalized factors encapsulating linearized error of removed factors
   // Optionally adds priors using marginalized covariances for new oldest states
-  bool SlideWindow(const boost::optional<gtsam::Marginals>& marginals);
+  bool SlideWindow(const boost::optional<gtsam::Marginals>& marginals,
+                   const localization_common::Time last_latest_time);
 
   void UpdatePointPriors(const gtsam::Marginals& marginals);
 
@@ -275,6 +276,7 @@ class GraphLocalizer {
 
   gtsam::Marginals::Factorization marginals_factorization_;
   boost::optional<bool> standstill_;
+  boost::optional<localization_common::Time> last_latest_time_;
 };
 }  // namespace graph_localizer
 

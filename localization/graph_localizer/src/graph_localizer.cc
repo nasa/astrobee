@@ -36,8 +36,11 @@
 
 #include <glog/logging.h>
 
+#include <unistd.h>
+
 #include <chrono>
 #include <iomanip>
+
 
 namespace {
 // TODO(rsoussan): Is this necessary? Just use DFATAL and compile with debug?
@@ -619,15 +622,20 @@ gtsam::NonlinearFactorGraph GraphLocalizer::MarginalFactors(
   return gtsam::LinearContainerFactor::ConvertLinearGraph(linear_marginal_factors, graph_values_->values());
 }
 
-bool GraphLocalizer::SlideWindow(const boost::optional<gtsam::Marginals>& marginals) {
-  const auto new_oldest_time = graph_values_->SlideWindowNewOldestTime();
-  if (!new_oldest_time) {
+bool GraphLocalizer::SlideWindow(const boost::optional<gtsam::Marginals>& marginals, const lc::Time last_latest_time) {
+  const auto graph_values_ideal_new_oldest_time = graph_values_->SlideWindowNewOldestTime();
+  if (!graph_values_ideal_new_oldest_time) {
     VLOG(2) << "SlideWindow: No states removed. ";
     return true;
   }
+  // Ensure that new oldest time isn't more recent than last latest time
+  // since then priors couldn't be added for the new oldest state
+  if (last_latest_time < *graph_values_ideal_new_oldest_time)
+    LOG(WARNING) << "SlideWindow: Ideal oldest time is more recent than last latest time.";
+  const auto new_oldest_time = std::min(last_latest_time, *graph_values_ideal_new_oldest_time);
 
   // Add marginal factors for marginalized values
-  auto old_keys = graph_values_->OldKeys(*new_oldest_time);
+  auto old_keys = graph_values_->OldKeys(new_oldest_time);
   auto old_factors = graph_values_->RemoveOldFactors(old_keys, graph_);
   gtsam::KeyVector old_feature_keys;
   if (params_.factor.projection_adder.enabled) {
@@ -645,12 +653,13 @@ bool GraphLocalizer::SlideWindow(const boost::optional<gtsam::Marginals>& margin
     }
   }
 
-  graph_values_->RemoveOldCombinedNavStates(*new_oldest_time);
+  graph_values_->RemoveOldCombinedNavStates(new_oldest_time);
   if (params_.factor.projection_adder.enabled) graph_values_->RemoveOldFeatures(old_feature_keys, graph_);
 
   // Remove old data from other containers
+  // TODO(rsoussan): Just use new_oldest_time and don't bother getting oldest timestamp here?
   const auto oldest_timestamp = graph_values_->OldestTimestamp();
-  if (!oldest_timestamp || oldest_timestamp != *new_oldest_time) {
+  if (!oldest_timestamp || *oldest_timestamp != new_oldest_time) {
     LOG(ERROR) << "SlideWindow: Failed to get oldest timestamp.";
     return false;
   }
@@ -1144,7 +1153,32 @@ bool GraphLocalizer::Update() {
     return false;
   }
 
+  // Only get marginals and slide window if optimization has already occured
+  // TODO(rsoussan): Make cleaner way to check for this
+  if (last_latest_time_) {
+    marginals_timer_.Start();
+    // Calculate marginals for covariances
+    try {
+      marginals_ = gtsam::Marginals(graph_, graph_values_->values(), marginals_factorization_);
+    } catch (gtsam::IndeterminantLinearSystemException) {
+      log(params_.fatal_failures, "Update: Indeterminant linear system error during computation of marginals.");
+      marginals_ = boost::none;
+    } catch (...) {
+      log(params_.fatal_failures, "Update: Computing marginals failed.");
+      marginals_ = boost::none;
+    }
+    marginals_timer_.StopAndLog();
+
+    slide_window_timer_.Start();
+    if (!SlideWindow(marginals_, *last_latest_time_)) {
+      LOG(ERROR) << "Update: Failed to slide window.";
+      return false;
+    }
+    slide_window_timer_.StopAndLog();
+  }
+
   // TODO(rsoussan): Is ordering required? if so clean these calls open and unify with marginalization
+  // TODO(rsoussan): Remove this now that marginalization occurs before optimization?
   if (params_.add_marginal_factors) {
     // Add graph ordering to place keys that will be marginalized in first group
     const auto new_oldest_time = graph_values_->SlideWindowNewOldestTime();
@@ -1170,6 +1204,7 @@ bool GraphLocalizer::Update() {
     log(params_.fatal_failures, "Update: Graph optimization failed, keeping old values.");
   }
   optimization_timer_.StopAndLog();
+  last_latest_time_ = graph_values_->LatestTimestamp();
   iterations_averager_.UpdateAndLog(optimizer.iterations());
   // TODO(rsoussan): Add options for these?
   log_stats_timer_.Start();
@@ -1189,27 +1224,7 @@ bool GraphLocalizer::Update() {
   }
 
   latest_imu_integrator_.ResetPimIntegrationAndSetBias(latest_bias->first);
-
-  marginals_timer_.Start();
-  // Calculate marginals for covariances
-  try {
-    marginals_ = gtsam::Marginals(graph_, graph_values_->values(), marginals_factorization_);
-  } catch (gtsam::IndeterminantLinearSystemException) {
-    log(params_.fatal_failures, "Update: Indeterminant linear system error during computation of marginals.");
-    marginals_ = boost::none;
-  } catch (...) {
-    log(params_.fatal_failures, "Update: Computing marginals failed.");
-    marginals_ = boost::none;
-  }
-  marginals_timer_.StopAndLog();
-
-  slide_window_timer_.Start();
-  if (!SlideWindow(marginals_)) {
-    LOG(ERROR) << "Update: Failed to slide window.";
-    return false;
-  }
-  slide_window_timer_.StopAndLog();
-
+  // usleep(3e5);
   update_timer_.StopAndLog();
   return true;
 }
