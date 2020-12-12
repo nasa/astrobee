@@ -75,6 +75,8 @@ class GraphLocalizerNodelet : public ff_util::FreeFlyerNodelet {
 
   void PublishReset() const;
 
+  void PublishGraphMessages();
+
   void PublishHeartbeat();
 
   void OpticalFlowCallback(const ff_msgs::Feature2dArray::ConstPtr& feature_array_msg);

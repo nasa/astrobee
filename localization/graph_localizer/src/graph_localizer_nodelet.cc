@@ -109,13 +109,6 @@ void GraphLocalizerNodelet::OpticalFlowCallback(const ff_msgs::Feature2dArray::C
 
   if (!localizer_enabled()) return;
   graph_localizer_wrapper_.OpticalFlowCallback(*feature_array_msg);
-
-  // Publish loc information here since graph updates occur on optical flow updates
-  PublishLocalizationState();
-  PublishWorldTDockTF();
-  if (graph_localizer_wrapper_.publish_localization_graph()) PublishLocalizationGraph();
-  if (graph_localizer_wrapper_.save_localization_graph_dot_file())
-    graph_localizer_wrapper_.SaveLocalizationGraphDotFile();
 }
 
 void GraphLocalizerNodelet::VLVisualLandmarksCallback(const ff_msgs::VisualLandmarks::ConstPtr& visual_landmarks_msg) {
@@ -204,6 +197,17 @@ void GraphLocalizerNodelet::PublishHeartbeat() {
   heartbeat_pub_.publish(heartbeat_);
 }
 
+void GraphLocalizerNodelet::PublishGraphMessages() {
+  if (!localizer_enabled()) return;
+
+  // Publish loc information here since graph updates occur on optical flow updates
+  PublishLocalizationState();
+  PublishWorldTDockTF();
+  if (graph_localizer_wrapper_.publish_localization_graph()) PublishLocalizationGraph();
+  if (graph_localizer_wrapper_.save_localization_graph_dot_file())
+    graph_localizer_wrapper_.SaveLocalizationGraphDotFile();
+}
+
 void GraphLocalizerNodelet::Run() {
   ros::Rate rate(100);
   while (ros::ok()) {
@@ -211,6 +215,7 @@ void GraphLocalizerNodelet::Run() {
     private_queue_.callAvailable();
     callbacks_timer_.StopAndLog();
     graph_localizer_wrapper_.Update();
+    PublishGraphMessages();
     PublishHeartbeat();
     rate.sleep();
   }
