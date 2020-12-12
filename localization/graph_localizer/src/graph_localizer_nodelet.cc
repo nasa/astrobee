@@ -32,6 +32,9 @@ namespace lc = localization_common;
 GraphLocalizerNodelet::GraphLocalizerNodelet()
     : ff_util::FreeFlyerNodelet(NODE_GRAPH_LOC, true), platform_name_(GetPlatform()) {
   private_nh_.setCallbackQueue(&private_queue_);
+  heartbeat_.node = GetName();
+  // TODO(rsoussan): is this the correct name?
+  heartbeat_.nodelet_manager = ros::this_node::getName();
 }
 
 void GraphLocalizerNodelet::Initialize(ros::NodeHandle* nh) {
@@ -46,6 +49,7 @@ void GraphLocalizerNodelet::SubscribeAndAdvertise(ros::NodeHandle* nh) {
   sparse_mapping_pose_pub_ = nh->advertise<geometry_msgs::PoseStamped>(TOPIC_SPARSE_MAPPING_POSE, 10);
   graph_pub_ = nh->advertise<ff_msgs::LocalizationGraph>(TOPIC_GRAPH_LOC, 10);
   reset_pub_ = nh->advertise<std_msgs::Empty>(TOPIC_GNC_EKF_RESET, 10);
+  heartbeat_pub_ = nh->advertise<ff_msgs::Heartbeat>(TOPIC_HEARTBEAT, 5, true);
 
   imu_sub_ = private_nh_.subscribe(TOPIC_HARDWARE_IMU, 0, &GraphLocalizerNodelet::ImuCallback, this,
                                    ros::TransportHints().tcpNoDelay());
@@ -195,6 +199,11 @@ void GraphLocalizerNodelet::PublishReset() const {
   reset_pub_.publish(msg);
 }
 
+void GraphLocalizerNodelet::PublishHeartbeat() {
+  heartbeat_.header.stamp = ros::Time::now();
+  heartbeat_pub_.publish(heartbeat_);
+}
+
 void GraphLocalizerNodelet::Run() {
   ros::Rate rate(100);
   while (ros::ok()) {
@@ -202,7 +211,7 @@ void GraphLocalizerNodelet::Run() {
     private_queue_.callAvailable();
     callbacks_timer_.StopAndLog();
     graph_localizer_wrapper_.Update();
-    //    ros::spinOnce();
+    PublishHeartbeat();
     rate.sleep();
   }
 }
