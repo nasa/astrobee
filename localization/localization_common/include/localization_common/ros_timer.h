@@ -19,6 +19,7 @@
 #ifndef LOCALIZATION_COMMON_ROS_TIMER_H_
 #define LOCALIZATION_COMMON_ROS_TIMER_H_
 
+#include <localization_common/averager.h>
 #include <localization_common/time.h>
 
 #include <ros/time.h>
@@ -42,9 +43,7 @@ class RosTimer {
  private:
   std::string name_;
   ros::Time start_time_;
-  double last_elapsed_time_;
-  double average_elapsed_time_;
-  int num_timing_events_;
+  Averager averager_;
 };
 }  // namespace localization_common
 

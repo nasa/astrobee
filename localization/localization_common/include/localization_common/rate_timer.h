@@ -19,6 +19,7 @@
 #ifndef LOCALIZATION_COMMON_RATE_TIMER_H_
 #define LOCALIZATION_COMMON_RATE_TIMER_H_
 
+#include <localization_common/averager.h>
 #include <localization_common/time.h>
 
 #include <chrono>
@@ -29,16 +30,14 @@ class RateTimer {
  public:
   explicit RateTimer(const std::string& timer_name = "");
   void Record();
-  void Log();
+  void Log() const;
   void RecordAndLog();
-  void Vlog(const int level = 2);
+  void Vlog(const int level = 2) const;
 
  private:
-  std::string name_;
   std::chrono::time_point<std::chrono::steady_clock> start_time_;
-  double last_elapsed_time_;
-  double average_elapsed_time_;
-  int num_timing_events_;
+  int num_events_;
+  Averager averager_;
 };
 }  // namespace localization_common
 

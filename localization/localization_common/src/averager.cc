@@ -21,27 +21,59 @@
 #include <glog/logging.h>
 
 namespace localization_common {
-Averager::Averager(const std::string& name) : name_(name), last_value_(0), average_(0), num_events_(0) {}
+Averager::Averager(const std::string& name, const std::string& type_name, const std::string& units)
+    : name_(name), type_name_(type_name), units_(units), last_value_(0) {
+  // Don't add a space if type name isn't specified
+  spacer_ = type_name_ == "" ? "" : " ";
+}
 void Averager::Update(const double value) {
+  accumulator_(value);
   last_value_ = value;
-  ++num_events_;
-  // Compute moving average to avoid overflow
-  average_ += (value - average_) / num_events_;
 }
 
-double Averager::average() const { return average_; }
+double Averager::average() const { return boost::accumulators::mean(accumulator_); }
 
-void Averager::Log() {
-  LOG(INFO) << name_ + ": " << last_value_;
-  LOG(INFO) << "Average " + name_ + ": " << average_;
+int Averager::count() const { return boost::accumulators::count(accumulator_); }
+
+std::string Averager::LastValueString() const {
+  std::stringstream ss;
+  ss << name_ + spacer_ + type_name_ + ": " << last_value_ << spacer_ + units_;
+  return ss.str();
 }
+
+std::string Averager::StatsString() const {
+  std::stringstream ss;
+  ss << "Average " + name_ + spacer_ + type_name_ + ": " << average() << spacer_ + units_
+     << ", min: " << boost::accumulators::min(accumulator_) << ", max: " << boost::accumulators::max(accumulator_)
+     << ", stddev: " << std::sqrt(boost::accumulators::variance(accumulator_));
+  return ss.str();
+}
+
+void Averager::Log() const {
+  LOG(INFO) << LastValueString();
+  LOG(INFO) << StatsString();
+}
+
 void Averager::UpdateAndLog(const double value) {
   Update(value);
   Log();
 }
 
-void Averager::Vlog(const int level) {
-  VLOG(level) << name_ + ": " << last_value_;
-  VLOG(level) << "Average " + name_ + ": " << average_;
+void Averager::Vlog(const int level) const {
+  VLOG(level) << LastValueString();
+  VLOG(level) << StatsString();
 }
+
+void Averager::LogEveryN(const int num_events_per_log) const {
+  if (count() % num_events_per_log == 0) {
+    Log();
+  }
+}
+
+void Averager::VlogEveryN(const int num_events_per_log, const int level) const {
+  if (count() % num_events_per_log == 0) {
+    Vlog(level);
+  }
+}
+
 }  // namespace localization_common
