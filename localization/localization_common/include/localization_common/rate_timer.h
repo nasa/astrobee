@@ -31,7 +31,9 @@ class RateTimer {
   explicit RateTimer(const std::string& timer_name = "");
   void Record();
   void Log() const;
+  void LogEveryN(const int num_events_per_log) const;
   void RecordAndLog();
+  void RecordAndLogEveryN(const int num_events_per_log);
   void Vlog(const int level = 2) const;
 
  private:

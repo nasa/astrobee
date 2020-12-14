@@ -51,7 +51,7 @@ ImuAugmentorWrapper::ImuAugmentorWrapper() {
 }
 
 void ImuAugmentorWrapper::LocalizationStateCallback(const ff_msgs::EkfState& loc_msg) {
-  loc_state_timer_.RecordAndLog();
+  loc_state_timer_.RecordAndLogEveryN(10);
 
   latest_combined_nav_state_ = lc::CombinedNavStateFromMsg(loc_msg);
   latest_covariances_ = lc::CombinedNavStateCovariancesFromMsg(loc_msg);
