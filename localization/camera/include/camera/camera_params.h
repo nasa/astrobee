@@ -71,7 +71,7 @@ namespace camera {
     // Used to create a remap table. This table is the same size as the
     // UNDISTORTED image, where every pixel's value is the cooresponding pixel
     // location in the DISTORTED image.
-    void GenerateRemapMaps(cv::Mat* remap_map);
+    void GenerateRemapMaps(cv::Mat* remap_map, double scale = 1.0);
 
     // Conversion utilities
     template <int SRC, int DEST>
