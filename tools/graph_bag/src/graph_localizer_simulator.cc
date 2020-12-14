@@ -46,22 +46,22 @@ bool GraphLocalizerSimulator::AddMeasurementsAndUpdateIfReady(const lc::Time& cu
 
   // Add measurements
   for (const auto& imu_msg : imu_msg_buffer_) {
-    graph_localizer_wrapper_.ImuCallback(imu_msg);
+    ImuCallback(imu_msg);
   }
   imu_msg_buffer_.clear();
 
   for (const auto& of_msg : of_msg_buffer_) {
-    graph_localizer_wrapper_.OpticalFlowCallback(of_msg);
+    OpticalFlowCallback(of_msg);
   }
   of_msg_buffer_.clear();
 
   for (const auto& vl_msg : vl_msg_buffer_) {
-    graph_localizer_wrapper_.VLVisualLandmarksCallback(vl_msg);
+    VLVisualLandmarksCallback(vl_msg);
   }
   vl_msg_buffer_.clear();
 
   for (const auto& ar_msg : ar_msg_buffer_) {
-    graph_localizer_wrapper_.ARVisualLandmarksCallback(ar_msg);
+    ARVisualLandmarksCallback(ar_msg);
   }
   ar_msg_buffer_.clear();
 

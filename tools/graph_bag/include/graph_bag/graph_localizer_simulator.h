@@ -48,7 +48,6 @@ class GraphLocalizerSimulator : public graph_localizer::GraphLocalizerWrapper {
   std::vector<ff_msgs::VisualLandmarks> vl_msg_buffer_;
   std::vector<ff_msgs::VisualLandmarks> ar_msg_buffer_;
   std::vector<sensor_msgs::Imu> imu_msg_buffer_;
-  graph_localizer::GraphLocalizerWrapper graph_localizer_wrapper_;
   boost::optional<localization_common::Time> last_update_time_;
   static constexpr double kOptimizationTime_ = 0.3;
 };
