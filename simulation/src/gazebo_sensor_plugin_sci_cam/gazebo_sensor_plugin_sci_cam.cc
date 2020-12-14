@@ -80,14 +80,19 @@ class GazeboSensorPluginSciCam : public FreeFlyerSensorPlugin {
     // Set image constants
     sci_cam_image_msg_.header.frame_id = GetFrame();
     sci_cam_image_msg_.encoding = sensor_msgs::image_encodings::BGR8;
-    sci_cam_image_msg_compressed_.format = sci_cam_image_msg_.encoding;
-    sci_cam_image_msg_compressed_.format += "; png compressed ";
-    sci_cam_image_msg_compressed_.format += "bgr8";
+    sci_cam_image_msg_.header.frame_id = "camera";
+    sci_cam_image_msg_compressed_.format = "jpeg";
 
     // Compression settings
-    compression_params_.resize(3, 0);
-    compression_params_[0] = cv::IMWRITE_PNG_COMPRESSION;      // Specify PNG compression, lossless
-    compression_params_[1] = 9;                                // PNG compression level 1-9
+    compression_params_.resize(9, 0);
+    compression_params_[0] = cv::IMWRITE_JPEG_QUALITY;
+    compression_params_[1] = 80;                             // JPEG quality percentile (1-100)
+    compression_params_[2] = cv::IMWRITE_JPEG_PROGRESSIVE;
+    compression_params_[3] = 0;                              // Enable compression to progressive JPEG
+    compression_params_[4] = cv::IMWRITE_JPEG_OPTIMIZE;
+    compression_params_[5] = 0;                              // Enable JPEG compress optimization
+    compression_params_[6] = cv::IMWRITE_JPEG_RST_INTERVAL;
+    compression_params_[7] = 0;                              // JPEG restart interval (0-65535)
 
     // Create subscriber to DDS commands though which the sci cam will be controlled
     dds_cmd_sub_ = nh->subscribe(TOPIC_COMMAND, 10,
@@ -280,7 +285,7 @@ class GazeboSensorPluginSciCam : public FreeFlyerSensorPlugin {
       cv_bridge::CvImagePtr cv_ptr = cv_bridge::toCvCopy(sci_cam_image_msg_, sensor_msgs::image_encodings::BGR8);
 
       // Compress image
-      if (cv::imencode(".png", cv_ptr->image, sci_cam_image_msg_compressed_.data, compression_params_)) {
+      if (cv::imencode(".jpg", cv_ptr->image, sci_cam_image_msg_compressed_.data, compression_params_)) {
         // Publish the compressed message
         pub_sci_cam_image_.publish(sci_cam_image_msg_compressed_);
         // Done taking a single picture. Use a lock to change this flag.
