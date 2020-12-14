@@ -59,6 +59,11 @@ void Averager::UpdateAndLog(const double value) {
   Log();
 }
 
+void Averager::UpdateAndLogEveryN(const double value, const int num_events_per_log) {
+  Update(value);
+  LogEveryN(num_events_per_log);
+}
+
 void Averager::Vlog(const int level) const {
   VLOG(level) << LastValueString();
   VLOG(level) << StatsString();

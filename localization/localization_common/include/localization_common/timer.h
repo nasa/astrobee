@@ -32,7 +32,9 @@ class Timer {
   void Start();
   void Stop();
   void Log() const;
+  void LogEveryN(const int num_events_per_log) const;
   void StopAndLog();
+  void StopAndLogEveryN(const int num_events_per_log);
   void Vlog(const int level = 2) const;
 
  private:

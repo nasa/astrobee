@@ -30,9 +30,17 @@ void Timer::Stop() {
 }
 
 void Timer::Log() const { averager_.Log(); }
+
+void Timer::LogEveryN(const int num_events_per_log) const { averager_.LogEveryN(num_events_per_log); }
+
 void Timer::StopAndLog() {
   Stop();
   Log();
+}
+
+void Timer::StopAndLogEveryN(const int num_events_per_log) {
+  Stop();
+  Log(num_events_per_log);
 }
 
 void Timer::Vlog(const int level) const { averager_.Vlog(level); }

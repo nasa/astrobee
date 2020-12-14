@@ -40,6 +40,7 @@ class Averager {
   void Log() const;
   void LogEveryN(const int num_events_per_log) const;
   void UpdateAndLog(const double value);
+  void UpdateAndLogEveryN(const double value, const int num_events_per_log);
   void Vlog(const int level = 2) const;
   void VlogEveryN(const int num_events_per_log, const int level) const;
 
