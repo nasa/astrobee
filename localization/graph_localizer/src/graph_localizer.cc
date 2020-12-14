@@ -1213,7 +1213,6 @@ bool GraphLocalizer::Update() {
     return false;
   }
   slide_window_timer_.StopAndLog();
-
   update_timer_.StopAndLog();
   return true;
 }

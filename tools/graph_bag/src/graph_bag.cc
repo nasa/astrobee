@@ -58,6 +58,7 @@ GraphBag::GraphBag(const std::string& bag_name, const std::string& map_file, con
   save_optical_flow_images_ = params.save_optical_flow_images;
   // Needed for feature tracks visualization
   nav_cam_params_.reset(new camera::CameraParameters(&config, "nav_cam"));
+  body_T_nav_cam_ = lc::LoadTransform(config, "nav_cam_transform");
 }
 
 void GraphBag::SaveSparseMappingPoseMsg(const geometry_msgs::PoseStamped& sparse_mapping_pose_msg) {
@@ -90,13 +91,13 @@ void GraphBag::SaveLocState(const ff_msgs::EkfState& loc_msg, const std::string&
 
 void GraphBag::Run() {
   // Required to start bias estimation
-  graph_localizer_wrapper_.ResetBiasesAndLocalizer();
+  graph_localizer_simulator_.ResetBiasesAndLocalizer();
   const auto start_time = std::chrono::steady_clock::now();
   while (live_measurement_simulator_->ProcessMessage()) {
     const lc::Time current_time = live_measurement_simulator_->CurrentTime();
     const auto imu_msg = live_measurement_simulator_->GetImuMessage(current_time);
     if (imu_msg) {
-      graph_localizer_wrapper_.ImuCallback(*imu_msg);
+      graph_localizer_simulator_.BufferImuMsg(*imu_msg);
       imu_augmentor_wrapper_.ImuCallback(*imu_msg);
       imu_bias_tester_wrapper_.ImuCallback(*imu_msg);
 
@@ -110,19 +111,30 @@ void GraphBag::Run() {
     }
     const auto of_msg = live_measurement_simulator_->GetOFMessage(current_time);
     if (of_msg) {
-      // Handle of features before vl features since graph requires states to
-      // exist at timestamp already when adding vl features, and these states
-      // are created when adding of features
-      graph_localizer_wrapper_.OpticalFlowCallback(*of_msg);
+      graph_localizer_simulator_.BufferOpticalFlowMsg(*of_msg);
       if (save_optical_flow_images_) {
         const auto img_msg = live_measurement_simulator_->GetImageMessage(lc::TimeFromHeader(of_msg->header));
-        if (img_msg && graph_localizer_wrapper_.feature_tracks())
-          SaveOpticalFlowTracksImage(*img_msg, *(graph_localizer_wrapper_.feature_tracks()));
+        if (img_msg && graph_localizer_simulator_.feature_tracks())
+          SaveOpticalFlowTracksImage(*img_msg, *(graph_localizer_simulator_.feature_tracks()));
       }
+    }
+    const auto vl_msg = live_measurement_simulator_->GetVLMessage(current_time);
+    if (vl_msg) {
+      graph_localizer_simulator_.BufferVLVisualLandmarksMsg(*vl_msg);
+      const gtsam::Pose3 sparse_mapping_global_T_body = lc::GtPose(*vl_msg, body_T_nav_cam_.inverse());
+      const lc::Time timestamp = lc::TimeFromHeader(vl_msg->header);
+      SaveSparseMappingPoseMsg(graph_localizer::PoseMsg(sparse_mapping_global_T_body, timestamp));
+    }
+    const auto ar_msg = live_measurement_simulator_->GetARMessage(current_time);
+    if (ar_msg) {
+      graph_localizer_simulator_.BufferARVisualLandmarksMsg(*ar_msg);
+    }
 
-      // Save latest graph localization msg, which should have just been optimized after adding of and/or vl features.
+    const bool updated_graph = graph_localizer_simulator_.AddMeasurementsAndUpdateIfReady(current_time);
+    if (updated_graph) {
+      // Save latest graph localization msg
       // Pass latest loc state to imu augmentor if it is available.
-      const auto localization_msg = graph_localizer_wrapper_.LatestLocalizationStateMsg();
+      const auto localization_msg = graph_localizer_simulator_.LatestLocalizationStateMsg();
       if (!localization_msg) {
         LOG_EVERY_N(WARNING, 50) << "Run: Failed to get localization msg.";
       } else {
@@ -132,18 +144,6 @@ void GraphBag::Run() {
           imu_bias_tester_wrapper_.LocalizationStateCallback(*localization_msg);
         SaveImuBiasTesterPredictedStates(imu_bias_tester_predicted_states);
       }
-    }
-    const auto vl_msg = live_measurement_simulator_->GetVLMessage(current_time);
-    if (vl_msg) {
-      graph_localizer_wrapper_.VLVisualLandmarksCallback(*vl_msg);
-      const auto sparse_mapping_pose_msg = graph_localizer_wrapper_.LatestSparseMappingPoseMsg();
-      if (sparse_mapping_pose_msg) {
-        SaveSparseMappingPoseMsg(*sparse_mapping_pose_msg);
-      }
-    }
-    const auto ar_msg = live_measurement_simulator_->GetARMessage(current_time);
-    if (ar_msg) {
-      graph_localizer_wrapper_.ARVisualLandmarksCallback(*ar_msg);
     }
   }
   const auto end_time = std::chrono::steady_clock::now();
