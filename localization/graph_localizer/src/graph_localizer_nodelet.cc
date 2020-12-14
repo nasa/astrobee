@@ -213,7 +213,7 @@ void GraphLocalizerNodelet::Run() {
   while (ros::ok()) {
     callbacks_timer_.Start();
     private_queue_.callAvailable();
-    callbacks_timer_.StopAndLog();
+    callbacks_timer_.StopAndLogEveryN(10);
     graph_localizer_wrapper_.Update();
     PublishGraphMessages();
     PublishHeartbeat();

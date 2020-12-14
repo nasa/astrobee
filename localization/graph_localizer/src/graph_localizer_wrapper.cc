@@ -137,7 +137,7 @@ bool GraphLocalizerWrapper::CheckPoseSanity(const gtsam::Pose3& sparse_mapping_p
   if (!graph_localizer_) return true;
   const auto combined_nav_state = graph_localizer_->GetCombinedNavState(timestamp);
   if (!combined_nav_state) {
-    LOG(INFO) << "CheckPoseSanity: Failed to get combined nav state.";
+    LOG_EVERY_N(INFO, 50) << "CheckPoseSanity: Failed to get combined nav state.";
     return true;
   }
   return sanity_checker_->CheckPoseSanity(sparse_mapping_pose, combined_nav_state->pose());
@@ -147,7 +147,7 @@ bool GraphLocalizerWrapper::CheckCovarianceSanity() const {
   if (!graph_localizer_) return true;
   const auto combined_nav_state_and_covariances = graph_localizer_->LatestCombinedNavStateAndCovariances();
   if (!combined_nav_state_and_covariances) {
-    LOG(INFO) << "CheckCovarianceSanity: No combined nav state and covariances available.";
+    LOG_EVERY_N(INFO, 50) << "CheckCovarianceSanity: No combined nav state and covariances available.";
     return true;
   }
 
@@ -232,7 +232,7 @@ boost::optional<ff_msgs::EkfState> GraphLocalizerWrapper::LatestLocalizationStat
   }
   const auto combined_nav_state_and_covariances = graph_localizer_->LatestCombinedNavStateAndCovariances();
   if (!combined_nav_state_and_covariances) {
-    LOG(ERROR) << "LatestLocalizationMsg: No combined nav state and covariances available.";
+    LOG_EVERY_N(ERROR, 50) << "LatestLocalizationMsg: No combined nav state and covariances available.";
     return boost::none;
   }
   // Angular velocity and acceleration are added by imu integrator
