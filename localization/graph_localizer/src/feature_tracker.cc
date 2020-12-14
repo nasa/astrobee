@@ -61,6 +61,13 @@ void FeatureTracker::UpdateFeatureTracks(const lm::FeaturePoints& feature_points
   VLOG(2) << "UpdateFeatureTracks: Final total num feature tracks: " << feature_tracks_.size();
 }
 
+void FeatureTracker::RemovePointsOutsideWindow() {
+  if (!latest_time_) return;
+  const lc::Time oldest_allowed_time = *latest_time_ - params_.sliding_window_duration;
+  if (oldest_allowed_time <= 0) return;
+  RemoveOldFeaturePoints(oldest_allowed_time);
+}
+
 void FeatureTracker::RemoveOldFeaturePoints(lc::Time oldest_allowed_time) {
   // Remove any timestamp before oldest_allowed_time and before start of time window
   oldest_allowed_time =

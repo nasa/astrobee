@@ -757,6 +757,9 @@ void GraphLocalizer::RemovePriors(const int key_index) {
 }
 
 void GraphLocalizer::BufferCumulativeFactors() {
+  // Remove measurements here so they don't grow too large before adding to graph
+  // TODO(rsoussan): Clean this up, slide window before optimizing?
+  feature_tracker_->RemovePointsOutsideWindow();
   if (params_.factor.smart_projection_adder.enabled) {
     BufferFactors(smart_projection_cumulative_factor_adder_->AddFactors());
   }
