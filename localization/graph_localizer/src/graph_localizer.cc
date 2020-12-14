@@ -1024,27 +1024,29 @@ void GraphLocalizer::LogErrors() {
       bias_prior_error += error;
     }
   }
-  total_error_averager_.UpdateAndLog(total_error);
-  of_error_averager_.UpdateAndLog(optical_flow_factor_error);
-  loc_proj_error_averager_.UpdateAndLog(loc_proj_error);
-  imu_error_averager_.UpdateAndLog(imu_factor_error);
-  rotation_error_averager_.UpdateAndLog(rotation_factor_error);
-  pose_prior_error_averager_.UpdateAndLog(pose_prior_error);
-  velocity_prior_error_averager_.UpdateAndLog(velocity_prior_error);
-  bias_prior_error_averager_.UpdateAndLog(bias_prior_error);
+  total_error_averager_.UpdateAndLogEveryN(total_error, params_.log_rate);
+  of_error_averager_.UpdateAndLogEveryN(optical_flow_factor_error, params_.log_rate);
+  loc_proj_error_averager_.UpdateAndLogEveryN(loc_proj_error, params_.log_rate);
+  imu_error_averager_.UpdateAndLogEveryN(imu_factor_error, params_.log_rate);
+  rotation_error_averager_.UpdateAndLogEveryN(rotation_factor_error, params_.log_rate);
+  pose_prior_error_averager_.UpdateAndLogEveryN(pose_prior_error, params_.log_rate);
+  velocity_prior_error_averager_.UpdateAndLogEveryN(velocity_prior_error, params_.log_rate);
+  bias_prior_error_averager_.UpdateAndLogEveryN(bias_prior_error, params_.log_rate);
 }
 
 void GraphLocalizer::LogStats() {
-  num_states_averager_.UpdateAndLog(graph_values_->NumStates());
-  duration_averager_.UpdateAndLog(graph_values_->Duration());
-  num_optical_flow_factors_averager_.UpdateAndLog(NumOFFactors());
-  num_loc_factors_averager_.UpdateAndLog(NumVLFactors());
-  num_imu_factors_averager_.UpdateAndLog(NumFactors<gtsam::CombinedImuFactor>());
-  num_rotation_factors_averager_.UpdateAndLog(NumFactors<gtsam::PoseRotationFactor>());
-  num_vel_prior_factors_averager_.UpdateAndLog(NumFactors<gtsam::PriorFactor<gtsam::Velocity3>>());
-  num_marginal_factors_averager_.UpdateAndLog(NumFactors<gtsam::LinearContainerFactor>());
-  if (params_.factor.projection_adder.enabled) num_features_averager_.UpdateAndLog(NumFeatures());
-  num_factors_averager_.UpdateAndLog(graph_.size());
+  num_states_averager_.UpdateAndLogEveryN(graph_values_->NumStates(), params_.log_rate);
+  duration_averager_.UpdateAndLogEveryN(graph_values_->Duration(), params_.log_rate);
+  num_optical_flow_factors_averager_.UpdateAndLogEveryN(NumOFFactors(), params_.log_rate);
+  num_loc_factors_averager_.UpdateAndLogEveryN(NumVLFactors(), params_.log_rate);
+  num_imu_factors_averager_.UpdateAndLogEveryN(NumFactors<gtsam::CombinedImuFactor>(), params_.log_rate);
+  num_rotation_factors_averager_.UpdateAndLogEveryN(NumFactors<gtsam::PoseRotationFactor>(), params_.log_rate);
+  num_vel_prior_factors_averager_.UpdateAndLogEveryN(NumFactors<gtsam::PriorFactor<gtsam::Velocity3>>(),
+                                                     params_.log_rate);
+  num_marginal_factors_averager_.UpdateAndLogEveryN(NumFactors<gtsam::LinearContainerFactor>(), params_.log_rate);
+  if (params_.factor.projection_adder.enabled)
+    num_features_averager_.UpdateAndLogEveryN(NumFeatures(), params_.log_rate);
+  num_factors_averager_.UpdateAndLogEveryN(graph_.size(), params_.log_rate);
 }
 
 int GraphLocalizer::NumFeatures() const { return graph_values_->NumFeatures(); }
@@ -1142,7 +1144,7 @@ bool GraphLocalizer::Update() {
   add_buffered_factors_timer_.Start();
   BufferCumulativeFactors();
   const int num_added_factors = AddBufferedFactors();
-  add_buffered_factors_timer_.StopAndLog();
+  add_buffered_factors_timer_.StopAndLogEveryN(params_.log_rate);
   if (num_added_factors <= 0) {
     LOG(WARNING) << "Update: No factors added.";
     return false;
@@ -1173,15 +1175,15 @@ bool GraphLocalizer::Update() {
   } catch (...) {
     log(params_.fatal_failures, "Update: Graph optimization failed, keeping old values.");
   }
-  optimization_timer_.StopAndLog();
-  iterations_averager_.UpdateAndLog(optimizer.iterations());
+  optimization_timer_.StopAndLogEveryN(params_.log_rate);
+  iterations_averager_.UpdateAndLogEveryN(optimizer.iterations(), params_.log_rate);
   // TODO(rsoussan): Add options for these?
   log_stats_timer_.Start();
   LogStats();
-  log_stats_timer_.StopAndLog();
+  log_stats_timer_.StopAndLogEveryN(params_.log_rate);
   log_error_timer_.Start();
   LogErrors();
-  log_error_timer_.StopAndLog();
+  log_error_timer_.StopAndLogEveryN(params_.log_rate);
 
   if (params_.print_factor_info) PrintFactorDebugInfo();
 
@@ -1205,15 +1207,15 @@ bool GraphLocalizer::Update() {
     log(params_.fatal_failures, "Update: Computing marginals failed.");
     marginals_ = boost::none;
   }
-  marginals_timer_.StopAndLog();
+  marginals_timer_.StopAndLogEveryN(params_.log_rate);
 
   slide_window_timer_.Start();
   if (!SlideWindow(marginals_)) {
     LOG(ERROR) << "Update: Failed to slide window.";
     return false;
   }
-  slide_window_timer_.StopAndLog();
-  update_timer_.StopAndLog();
+  slide_window_timer_.StopAndLogEveryN(params_.log_rate);
+  update_timer_.StopAndLogEveryN(params_.log_rate);
   return true;
 }
 }  // namespace graph_localizer
