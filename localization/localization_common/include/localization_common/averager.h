@@ -33,7 +33,8 @@ namespace localization_common {
 class Averager {
  public:
   explicit Averager(const std::string& averager_name = "", const std::string& type_name = "",
-                    const std::string& units = "");
+                    const std::string& units = "", const bool log_on_destruction = true);
+  ~Averager();
   void Update(const double value);
   double average() const;
   int count() const;
@@ -53,6 +54,7 @@ class Averager {
   std::string units_;
   std::string spacer_;
   double last_value_;
+  bool log_on_destruction_;
   boost::accumulators::accumulator_set<
     double, boost::accumulators::stats<boost::accumulators::tag::mean(boost::accumulators::immediate),
                                        boost::accumulators::tag::variance(boost::accumulators::immediate),

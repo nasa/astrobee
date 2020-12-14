@@ -21,11 +21,17 @@
 #include <glog/logging.h>
 
 namespace localization_common {
-Averager::Averager(const std::string& name, const std::string& type_name, const std::string& units)
-    : name_(name), type_name_(type_name), units_(units), last_value_(0) {
+Averager::Averager(const std::string& name, const std::string& type_name, const std::string& units,
+                   const bool log_on_destruction)
+    : name_(name), type_name_(type_name), units_(units), last_value_(0), log_on_destruction_(log_on_destruction) {
   // Don't add a space if type name isn't specified
   spacer_ = type_name_ == "" ? "" : " ";
 }
+
+Averager::~Averager() {
+  if (log_on_destruction_) Log();
+}
+
 void Averager::Update(const double value) {
   accumulator_(value);
   last_value_ = value;
