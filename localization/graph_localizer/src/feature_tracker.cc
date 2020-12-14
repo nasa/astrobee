@@ -88,6 +88,8 @@ void FeatureTracker::RemoveOldFeaturePoints(lc::Time oldest_allowed_time) {
   }
 }
 
+boost::optional<lc::Time> FeatureTracker::latest_timestamp() const { return latest_time_; }
+
 boost::optional<lc::Time> FeatureTracker::PreviousTimestamp() const {
   for (const auto& feature_track_pair : feature_tracks_) {
     const auto& points = feature_track_pair.second.points;

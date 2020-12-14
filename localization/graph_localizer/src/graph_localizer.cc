@@ -117,8 +117,8 @@ GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
   projection_factor_adder_.reset(
     new ProjectionFactorAdder(params_.factor.projection_adder, feature_tracker_, graph_values_));
   rotation_factor_adder_.reset(new RotationFactorAdder(params_.factor.rotation_adder, feature_tracker_));
-  smart_projection_factor_adder_.reset(
-    new SmartProjectionFactorAdder(params_.factor.smart_projection_adder, feature_tracker_));
+  smart_projection_cumulative_factor_adder_.reset(
+    new SmartProjectionCumulativeFactorAdder(params_.factor.smart_projection_adder, feature_tracker_));
   standstill_factor_adder_.reset(new StandstillFactorAdder(params_.factor.standstill_adder, feature_tracker_));
 }
 
@@ -274,9 +274,6 @@ bool GraphLocalizer::AddOpticalFlowMeasurement(
   // TODO(rsoussan): Enforce that projection and smart factor adders are not both enabled
   if (params_.factor.projection_adder.enabled) {
     BufferFactors(projection_factor_adder_->AddFactors(optical_flow_feature_points_measurement));
-  }
-  if (params_.factor.smart_projection_adder.enabled) {
-    BufferFactors(smart_projection_factor_adder_->AddFactors(optical_flow_feature_points_measurement));
   }
   if (params_.factor.rotation_adder.enabled) {
     BufferFactors(rotation_factor_adder_->AddFactors(optical_flow_feature_points_measurement));
@@ -759,6 +756,12 @@ void GraphLocalizer::RemovePriors(const int key_index) {
   VLOG(2) << "RemovePriors: Erase " << removed_factors << " factors.";
 }
 
+void GraphLocalizer::BufferCumulativeFactors() {
+  if (params_.factor.smart_projection_adder.enabled) {
+    BufferFactors(smart_projection_cumulative_factor_adder_->AddFactors());
+  }
+}
+
 void GraphLocalizer::BufferFactors(const std::vector<FactorsToAdd>& factors_to_add_vec) {
   for (const auto& factors_to_add : factors_to_add_vec)
     buffered_factors_to_add_.emplace(factors_to_add.timestamp(), factors_to_add);
@@ -1137,6 +1140,7 @@ bool GraphLocalizer::Update() {
   update_timer_.Start();
 
   add_buffered_factors_timer_.Start();
+  BufferCumulativeFactors();
   const int num_added_factors = AddBufferedFactors();
   add_buffered_factors_timer_.StopAndLog();
   if (num_added_factors <= 0) {

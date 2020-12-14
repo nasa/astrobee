@@ -17,7 +17,7 @@
  */
 
 #include <graph_localizer/graph_action.h>
-#include <graph_localizer/smart_projection_factor_adder.h>
+#include <graph_localizer/smart_projection_cumulative_factor_adder.h>
 #include <graph_localizer/utilities.h>
 
 #include <gtsam/base/Vector.h>
@@ -28,9 +28,9 @@
 namespace graph_localizer {
 namespace lm = localization_measurements;
 namespace sym = gtsam::symbol_shorthand;
-SmartProjectionFactorAdder::SmartProjectionFactorAdder(const SmartProjectionFactorAdderParams& params,
-                                                       std::shared_ptr<const FeatureTracker> feature_tracker)
-    : SmartProjectionFactorAdder::Base(params), feature_tracker_(feature_tracker) {
+SmartProjectionCumulativeFactorAdder::SmartProjectionCumulativeFactorAdder(
+  const SmartProjectionFactorAdderParams& params, std::shared_ptr<const FeatureTracker> feature_tracker)
+    : SmartProjectionCumulativeFactorAdder::Base(params), feature_tracker_(feature_tracker) {
   smart_projection_params_.verboseCheirality = params.verbose_cheirality;
   smart_projection_params_.setRankTolerance(1e-9);
   smart_projection_params_.setLandmarkDistanceThreshold(params.landmark_distance_threshold);
@@ -39,8 +39,7 @@ SmartProjectionFactorAdder::SmartProjectionFactorAdder(const SmartProjectionFact
   smart_projection_params_.setEnableEPI(params.enable_EPI);
 }
 
-std::vector<FactorsToAdd> SmartProjectionFactorAdder::AddFactors(
-  const lm::FeaturePointsMeasurement& feature_points_measurement) {
+std::vector<FactorsToAdd> SmartProjectionCumulativeFactorAdder::AddFactors() {
   // Add smart factor for each valid feature track
   FactorsToAdd smart_factors_to_add(GraphAction::kDeleteExistingSmartFactors);
   int num_added_smart_factors = 0;
@@ -54,13 +53,18 @@ std::vector<FactorsToAdd> SmartProjectionFactorAdder::AddFactors(
   }
 
   if (smart_factors_to_add.empty()) return {};
-  smart_factors_to_add.SetTimestamp(feature_points_measurement.timestamp);
+  const auto latest_timestamp = feature_tracker_->latest_timestamp();
+  if (!latest_timestamp) {
+    LOG(ERROR) << "AddFactors: Failed to get latest timestamp.";
+    return {};
+  }
+  smart_factors_to_add.SetTimestamp(*latest_timestamp);
   VLOG(2) << "AddFactors: Added " << smart_factors_to_add.size() << " smart factors.";
   return {smart_factors_to_add};
 }
 
-void SmartProjectionFactorAdder::AddSmartFactor(const FeatureTrack& feature_track,
-                                                FactorsToAdd& smart_factors_to_add) const {
+void SmartProjectionCumulativeFactorAdder::AddSmartFactor(const FeatureTrack& feature_track,
+                                                          FactorsToAdd& smart_factors_to_add) const {
   SharedRobustSmartFactor smart_factor;
   const int num_feature_track_points = feature_track.points.size();
   const auto noise = params().scale_noise_with_num_points

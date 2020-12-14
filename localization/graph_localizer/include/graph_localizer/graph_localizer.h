@@ -29,7 +29,7 @@
 #include <graph_localizer/loc_factor_adder.h>
 #include <graph_localizer/projection_factor_adder.h>
 #include <graph_localizer/rotation_factor_adder.h>
-#include <graph_localizer/smart_projection_factor_adder.h>
+#include <graph_localizer/smart_projection_cumulative_factor_adder.h>
 #include <graph_localizer/standstill_factor_adder.h>
 #include <imu_integration/latest_imu_integrator.h>
 #include <localization_common/averager.h>
@@ -155,6 +155,8 @@ class GraphLocalizer {
 
   void BufferFactors(const std::vector<FactorsToAdd>& factors_to_add_vec);
 
+  void BufferCumulativeFactors();
+
   int AddBufferedFactors();
 
   bool DoGraphAction(FactorsToAdd& factors_to_add);
@@ -237,7 +239,7 @@ class GraphLocalizer {
   std::unique_ptr<LocFactorAdder> loc_factor_adder_;
   std::unique_ptr<ProjectionFactorAdder> projection_factor_adder_;
   std::unique_ptr<RotationFactorAdder> rotation_factor_adder_;
-  std::unique_ptr<SmartProjectionFactorAdder> smart_projection_factor_adder_;
+  std::unique_ptr<SmartProjectionCumulativeFactorAdder> smart_projection_cumulative_factor_adder_;
   std::unique_ptr<StandstillFactorAdder> standstill_factor_adder_;
 
   // Timers

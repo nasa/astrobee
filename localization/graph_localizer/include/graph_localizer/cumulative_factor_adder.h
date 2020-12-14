@@ -16,22 +16,22 @@
  * under the License.
  */
 
-#ifndef GRAPH_LOCALIZER_FACTOR_ADDER_H_
-#define GRAPH_LOCALIZER_FACTOR_ADDER_H_
+#ifndef GRAPH_LOCALIZER_CUMULATIVE_FACTOR_ADDER_H_
+#define GRAPH_LOCALIZER_CUMULATIVE_FACTOR_ADDER_H_
 
 #include <graph_localizer/factor_to_add.h>
 
 #include <vector>
 
 namespace graph_localizer {
-template <typename MEASUREMENT, typename PARAMS>
-class FactorAdder {
+template <typename PARAMS>
+class CumulativeFactorAdder {
  public:
-  explicit FactorAdder(const PARAMS& params) : params_(params) {}
+  explicit CumulativeFactorAdder(const PARAMS& params) : params_(params) {}
 
-  virtual ~FactorAdder() {}
+  virtual ~CumulativeFactorAdder() {}
 
-  virtual std::vector<FactorsToAdd> AddFactors(const MEASUREMENT& measurement) = 0;
+  virtual std::vector<FactorsToAdd> AddFactors() = 0;
 
   const PARAMS& params() const { return params_; }
 
@@ -40,4 +40,4 @@ class FactorAdder {
 };
 }  // namespace graph_localizer
 
-#endif  // GRAPH_LOCALIZER_FACTOR_ADDER_H_
+#endif  // GRAPH_LOCALIZER_CUMULATIVE_FACTOR_ADDER_H_
