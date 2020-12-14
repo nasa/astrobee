@@ -37,7 +37,10 @@ void GraphLocalizerSimulator::BufferARVisualLandmarksMsg(const ff_msgs::VisualLa
 void GraphLocalizerSimulator::BufferImuMsg(const sensor_msgs::Imu& imu_msg) { imu_msg_buffer_.emplace_back(imu_msg); }
 
 bool GraphLocalizerSimulator::AddMeasurementsAndUpdateIfReady(const lc::Time& current_time) {
-  if (last_update_time_ && (current_time - *last_update_time_) < kOptimizationTime_) {
+  // If not initialized, add measurements as these are required for initialization.
+  // Otherwise add measurements if enough time has passed since last optimization, simulating
+  // optimization delay.
+  if (Initialized() && last_update_time_ && (current_time - *last_update_time_) < kOptimizationTime_) {
     return false;
   }
 

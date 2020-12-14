@@ -63,6 +63,8 @@ GraphLocalizerWrapper::GraphLocalizerWrapper() {
   sanity_checker_.reset(new SanityChecker(sanity_checker_params));
 }
 
+bool GraphLocalizerWrapper::Initialized() const { return (graph_localizer_.get() != nullptr); }
+
 void GraphLocalizerWrapper::Update() {
   if (graph_localizer_) {
     graph_localizer_->Update();
