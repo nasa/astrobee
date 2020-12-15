@@ -17,8 +17,8 @@
  */
 
 // Header file must go in src directory for Qt/Rviz plugin
-#ifndef LOCALIZATION_RVIZ_PLUGINS_SPARSE_MAPPING_DISPLAY_H_  // NOLINT
-#define LOCALIZATION_RVIZ_PLUGINS_SPARSE_MAPPING_DISPLAY_H_  // NOLINT
+#ifndef LOCALIZATION_RVIZ_PLUGINS_SPARSE_MAPPING_POSE_DISPLAY_H_  // NOLINT
+#define LOCALIZATION_RVIZ_PLUGINS_SPARSE_MAPPING_POSE_DISPLAY_H_  // NOLINT
 
 // Required for Qt
 #ifndef Q_MOC_RUN
@@ -40,11 +40,11 @@ class SceneNode;
 
 namespace localization_rviz_plugins {
 
-class SparseMappingDisplay : public rviz::MessageFilterDisplay<ff_msgs::VisualLandmarks> {
+class SparseMappingPoseDisplay : public rviz::MessageFilterDisplay<ff_msgs::VisualLandmarks> {
   Q_OBJECT    // NOLINT
     public :  // NOLINT
-              SparseMappingDisplay();
-  ~SparseMappingDisplay() = default;
+              SparseMappingPoseDisplay();
+  ~SparseMappingPoseDisplay() = default;
 
   // private:
  protected:
@@ -63,4 +63,4 @@ class SparseMappingDisplay : public rviz::MessageFilterDisplay<ff_msgs::VisualLa
   gtsam::Pose3 nav_cam_T_body_;
 };
 }  // namespace localization_rviz_plugins
-#endif  // LOCALIZATION_RVIZ_PLUGINS_SPARSE_MAPPING_DISPLAY_H_ NOLINT
+#endif  // LOCALIZATION_RVIZ_PLUGINS_SPARSE_MAPPING_POSE_DISPLAY_H_ NOLINT

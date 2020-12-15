@@ -31,14 +31,14 @@
 
 #include <string>
 
-#include "sparse_mapping_display.h"  // NOLINT
-#include "utilities.h"               // NOLINT
+#include "sparse_mapping_pose_display.h"  // NOLINT
+#include "utilities.h"                    // NOLINT
 
 namespace localization_rviz_plugins {
 namespace lc = localization_common;
 namespace lm = localization_measurements;
 
-SparseMappingDisplay::SparseMappingDisplay() {
+SparseMappingPoseDisplay::SparseMappingPoseDisplay() {
   pose_axes_size_.reset(new rviz::FloatProperty("Pose Axes Size", 0.1, "Pose axes size.", this));
   number_of_poses_.reset(new rviz::IntProperty("Number of Poses", 10, "Number of poses to display.", this));
 
@@ -64,16 +64,16 @@ SparseMappingDisplay::SparseMappingDisplay() {
   nav_cam_T_body_ = (lc::LoadTransform(config, "nav_cam_transform")).inverse();
 }
 
-void SparseMappingDisplay::onInitialize() { MFDClass::onInitialize(); }
+void SparseMappingPoseDisplay::onInitialize() { MFDClass::onInitialize(); }
 
-void SparseMappingDisplay::reset() {
+void SparseMappingPoseDisplay::reset() {
   MFDClass::reset();
   clearDisplay();
 }
 
-void SparseMappingDisplay::clearDisplay() { sparse_mapping_pose_axes_.clear(); }
+void SparseMappingPoseDisplay::clearDisplay() { sparse_mapping_pose_axes_.clear(); }
 
-void SparseMappingDisplay::processMessage(const ff_msgs::VisualLandmarks::ConstPtr& msg) {
+void SparseMappingPoseDisplay::processMessage(const ff_msgs::VisualLandmarks::ConstPtr& msg) {
   sparse_mapping_pose_axes_.set_capacity(number_of_poses_->getInt());
   const auto projections_measurement = lm::MakeMatchedProjectionsMeasurement(*msg);
   const float scale = pose_axes_size_->getFloat();
@@ -88,4 +88,4 @@ void SparseMappingDisplay::processMessage(const ff_msgs::VisualLandmarks::ConstP
 }  // namespace localization_rviz_plugins
 
 #include <pluginlib/class_list_macros.h>  // NOLINT
-PLUGINLIB_EXPORT_CLASS(localization_rviz_plugins::SparseMappingDisplay, rviz::Display)
+PLUGINLIB_EXPORT_CLASS(localization_rviz_plugins::SparseMappingPoseDisplay, rviz::Display)
