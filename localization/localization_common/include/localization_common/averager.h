@@ -33,7 +33,7 @@ namespace localization_common {
 class Averager {
  public:
   explicit Averager(const std::string& averager_name = "", const std::string& type_name = "",
-                    const std::string& units = "", const bool log_on_destruction = true);
+                    const std::string& units = "", const bool log_on_destruction = false);
   ~Averager();
   void Update(const double value);
   double average() const;
