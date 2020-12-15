@@ -34,7 +34,6 @@
 #include <rviz/ogre_helpers/arrow.h>
 #include <rviz/ogre_helpers/axes.h>
 #include <rviz/properties/float_property.h>
-#include <rviz/properties/editable_enum_property.h>
 #include <opencv2/core/types.hpp>
 #include <map>
 #include <string>
@@ -78,8 +77,6 @@ class LocalizationGraphDisplay : public rviz::MessageFilterDisplay<ff_msgs::Loca
   void addSmartFactorProjectionVisual(const SmartFactor& smart_factor,
                                       const graph_localizer::GraphValues& graph_values);
   cv::Scalar textColor(const double val, const double green_threshold, const double yellow_threshold);
-  void loadConfigs(const std::string& world, const std::string& robot_name, const std::string& config_path);
-  void reloadConfigsIfNecessary();
 
   std::vector<std::unique_ptr<rviz::Axes>> graph_pose_axes_;
   std::vector<std::unique_ptr<rviz::Arrow>> imu_factor_arrows_;
@@ -87,11 +84,6 @@ class LocalizationGraphDisplay : public rviz::MessageFilterDisplay<ff_msgs::Loca
   std::unique_ptr<rviz::FloatProperty> pose_axes_size_;
   std::unique_ptr<rviz::BoolProperty> show_imu_factor_arrows_;
   std::unique_ptr<rviz::FloatProperty> imu_factor_arrows_diameter_;
-  std::unique_ptr<rviz::EditableEnumProperty> selected_world_;
-  std::unique_ptr<rviz::EditableEnumProperty> selected_robot_name_;
-  std::string world_;
-  std::string robot_name_;
-  std::string config_path_;
   image_transport::Publisher optical_flow_image_pub_;
   image_transport::Publisher smart_factor_projection_image_pub_;
   image_transport::Subscriber image_sub_;

@@ -52,15 +52,6 @@ LocalizationGraphDisplay::LocalizationGraphDisplay() {
     new rviz::BoolProperty("Show Imu Factor Arrows", true, "Show imu factors as arrows.", this));
   imu_factor_arrows_diameter_.reset(
     new rviz::FloatProperty("Imu Factor Arrows Diameter", 0.01, "Imu factor arrows diameter.", this));
-  selected_world_.reset(
-    new rviz::EditableEnumProperty("World", "granite", "Granite or ISS world to use for config loading.", this));
-  selected_world_->addOptionStd("granite");
-  selected_world_->addOptionStd("iss");
-  selected_robot_name_.reset(
-    new rviz::EditableEnumProperty("Robot Name", "bsharp", "Robot name to use for config loading.", this));
-  selected_robot_name_->addOptionStd("bsharp");
-  selected_robot_name_->addOptionStd("bumble");
-  selected_robot_name_->addOptionStd("honey");
 
   image_transport::ImageTransport image_transport(nh_);
   image_sub_ = image_transport.subscribe(TOPIC_HARDWARE_NAV_CAM, 1, &LocalizationGraphDisplay::imageCallback, this);
@@ -73,25 +64,6 @@ LocalizationGraphDisplay::LocalizationGraphDisplay() {
   char* argv = "script";
   char** argv_ptr = &argv;
   ff_common::InitFreeFlyerApplication(&ff_argc, &argv_ptr);
-  config_path_ = ros::package::getPath("astrobee");
-  // Defaults, set as user in plugin to change
-  world_ = "granite";
-  robot_name_ = "bsharp";
-  loadConfigs(world_, robot_name_, config_path_);
-}
-
-void LocalizationGraphDisplay::onInitialize() { MFDClass::onInitialize(); }
-
-void LocalizationGraphDisplay::reset() {
-  MFDClass::reset();
-  clearDisplay();
-}
-
-void LocalizationGraphDisplay::loadConfigs(const std::string& world, const std::string& robot_name,
-                                           const std::string& config_path) {
-  const std::string robot_config_file = "config/robots/" + robot_name + ".config";
-  lc::SetEnvironmentConfigs(config_path, world, robot_config_file);
-
   config_reader::ConfigReader config;
   config.AddFile("cameras.config");
 
@@ -102,14 +74,11 @@ void LocalizationGraphDisplay::loadConfigs(const std::string& world, const std::
   nav_cam_params_.reset(new camera::CameraParameters(&config, "nav_cam"));
 }
 
-void LocalizationGraphDisplay::reloadConfigsIfNecessary() {
-  const std::string selected_world = selected_world_->getStdString();
-  const std::string selected_robot_name = selected_robot_name_->getStdString();
-  if (selected_world != world_ || selected_robot_name != robot_name_) {
-    world_ = selected_world;
-    robot_name_ = selected_robot_name;
-    loadConfigs(world_, robot_name_, config_path_);
-  }
+void LocalizationGraphDisplay::onInitialize() { MFDClass::onInitialize(); }
+
+void LocalizationGraphDisplay::reset() {
+  MFDClass::reset();
+  clearDisplay();
 }
 
 void LocalizationGraphDisplay::clearDisplay() {
@@ -279,7 +248,6 @@ void LocalizationGraphDisplay::addImuVisual(const graph_localizer::GraphLocalize
 
 void LocalizationGraphDisplay::processMessage(const ff_msgs::LocalizationGraph::ConstPtr& msg) {
   clearDisplay();
-  reloadConfigsIfNecessary();
   graph_localizer::GraphLocalizer graph_localizer;
   gtsam::deserializeBinary(msg->serialized_graph, graph_localizer);
   SmartFactor* largest_error_smart_factor = nullptr;
