@@ -471,12 +471,19 @@ To test how the map may perform on the robot, do the following:
 
 ### Launch the localization node on LLP
 
+You will have to edit the file 
+    
+    /etc/robotname
+
+on MLP and LLP to replace the robot name with the robot you want to
+test. Plese don't forget to undo your changes at the end, as otherwise
+this robot will give wrong results for other users.
+
+Then launch localization:
+
     ssh llp
     roslaunch astrobee astrobee.launch llp:=disabled mlp:=mlp nodes:=framestore,dds_ros_bridge,localization_node
 
-(TODO(oalexan1): Not sure if to set the robot name above. We are using
-one robot to localize with the data and map for another one.)
- 
 ### Enable localization and the mapped landmark production (on MLP)
 
     export ROS_MASTER_URI=http://llp:11311
@@ -551,7 +558,9 @@ Sym link the map to test:
 Start the localization node:
 
     roslaunch astrobee astrobee.launch mlp:=local llp:=disabled \
-      nodes:=framestore,localization_node
+      nodes:=framestore,localization_node robot:=$ASTROBEE_ROBOT
+
+Note how we specify the robot name at the end. 
 
 Enable localization:
 
