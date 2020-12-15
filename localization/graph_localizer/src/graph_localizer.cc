@@ -982,6 +982,7 @@ void GraphLocalizer::LogErrors() {
   double loc_proj_error = 0;
   double imu_factor_error = 0;
   double rotation_factor_error = 0;
+  double standstill_between_factor_error = 0;
   double pose_prior_error = 0;
   double velocity_prior_error = 0;
   double bias_prior_error = 0;
@@ -1013,6 +1014,11 @@ void GraphLocalizer::LogErrors() {
     if (rotation_factor) {
       rotation_factor_error += error;
     }
+    const auto standstill_between_factor = dynamic_cast<gtsam::BetweenFactor<gtsam::Pose3>*>(factor.get());
+    if (standstill_between_factor) {
+      standstill_between_factor_error += error;
+    }
+
     // Prior Factors
     const auto pose_prior_factor = dynamic_cast<gtsam::PriorFactor<gtsam::Pose3>*>(factor.get());
     if (pose_prior_factor && !loc_pose_factor) {
@@ -1032,6 +1038,7 @@ void GraphLocalizer::LogErrors() {
   loc_proj_error_averager_.UpdateAndLogEveryN(loc_proj_error, params_.log_rate);
   imu_error_averager_.UpdateAndLogEveryN(imu_factor_error, params_.log_rate);
   rotation_error_averager_.UpdateAndLogEveryN(rotation_factor_error, params_.log_rate);
+  standstill_between_error_averager_.UpdateAndLogEveryN(standstill_between_factor_error, params_.log_rate);
   pose_prior_error_averager_.UpdateAndLogEveryN(pose_prior_error, params_.log_rate);
   velocity_prior_error_averager_.UpdateAndLogEveryN(velocity_prior_error, params_.log_rate);
   bias_prior_error_averager_.UpdateAndLogEveryN(bias_prior_error, params_.log_rate);
@@ -1044,6 +1051,8 @@ void GraphLocalizer::LogStats() {
   num_loc_factors_averager_.UpdateAndLogEveryN(NumVLFactors(), params_.log_rate);
   num_imu_factors_averager_.UpdateAndLogEveryN(NumFactors<gtsam::CombinedImuFactor>(), params_.log_rate);
   num_rotation_factors_averager_.UpdateAndLogEveryN(NumFactors<gtsam::PoseRotationFactor>(), params_.log_rate);
+  num_standstill_between_factors_averager_.UpdateAndLogEveryN(NumFactors<gtsam::BetweenFactor<gtsam::Pose3>>(),
+                                                              params_.log_rate);
   num_vel_prior_factors_averager_.UpdateAndLogEveryN(NumFactors<gtsam::PriorFactor<gtsam::Velocity3>>(),
                                                      params_.log_rate);
   num_marginal_factors_averager_.UpdateAndLogEveryN(NumFactors<gtsam::LinearContainerFactor>(), params_.log_rate);
