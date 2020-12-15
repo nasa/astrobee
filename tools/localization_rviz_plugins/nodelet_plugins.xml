@@ -13,8 +13,8 @@
       Localization Graph Panel 
     </description>
   </class>
-  <class name="localization_rviz_plugins/SparseMapping"
-         type="localization_rviz_plugins::SparseMappingDisplay"
+  <class name="localization_rviz_plugins/SparseMappingPose"
+         type="localization_rviz_plugins::SparseMappingPoseDisplay"
          base_class_type="rviz::Display">
     <description>
       Sparse Mapping Pose Display
