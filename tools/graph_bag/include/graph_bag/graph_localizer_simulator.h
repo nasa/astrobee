@@ -21,6 +21,7 @@
 
 #include <ff_msgs/Feature2dArray.h>
 #include <ff_msgs/VisualLandmarks.h>
+#include <graph_bag/graph_localizer_simulator_params.h>
 #include <graph_localizer/graph_localizer_wrapper.h>
 #include <localization_common/time.h>
 
@@ -31,7 +32,7 @@
 namespace graph_bag {
 class GraphLocalizerSimulator : public graph_localizer::GraphLocalizerWrapper {
  public:
-  GraphLocalizerSimulator();
+  explicit GraphLocalizerSimulator(const GraphLocalizerSimulatorParams& params);
 
   void BufferOpticalFlowMsg(const ff_msgs::Feature2dArray& feature_array_msg);
 
@@ -49,7 +50,7 @@ class GraphLocalizerSimulator : public graph_localizer::GraphLocalizerWrapper {
   std::vector<ff_msgs::VisualLandmarks> ar_msg_buffer_;
   std::vector<sensor_msgs::Imu> imu_msg_buffer_;
   boost::optional<localization_common::Time> last_update_time_;
-  static constexpr double kOptimizationTime_ = 0.3;
+  GraphLocalizerSimulatorParams params_;
 };
 }  // namespace graph_bag
 

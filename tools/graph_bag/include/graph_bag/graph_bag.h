@@ -54,9 +54,9 @@ class GraphBag {
     const std::vector<localization_common::CombinedNavState>& imu_bias_tester_predicted_states);
   void SaveLocState(const ff_msgs::EkfState& loc_msg, const std::string& topic);
 
+  std::unique_ptr<GraphLocalizerSimulator> graph_localizer_simulator_;
   std::unique_ptr<LiveMeasurementSimulator> live_measurement_simulator_;
   rosbag::Bag results_bag_;
-  GraphLocalizerSimulator graph_localizer_simulator_;
   imu_augmentor::ImuAugmentorWrapper imu_augmentor_wrapper_;
   ImuBiasTesterWrapper imu_bias_tester_wrapper_;
   bool save_optical_flow_images_;

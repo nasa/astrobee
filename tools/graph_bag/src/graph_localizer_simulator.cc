@@ -20,7 +20,7 @@
 
 namespace graph_bag {
 namespace lc = localization_common;
-GraphLocalizerSimulator::GraphLocalizerSimulator() {}
+GraphLocalizerSimulator::GraphLocalizerSimulator(const GraphLocalizerSimulatorParams& params) : params_(params) {}
 
 void GraphLocalizerSimulator::BufferOpticalFlowMsg(const ff_msgs::Feature2dArray& feature_array_msg) {
   of_msg_buffer_.emplace_back(feature_array_msg);
@@ -40,7 +40,7 @@ bool GraphLocalizerSimulator::AddMeasurementsAndUpdateIfReady(const lc::Time& cu
   // If not initialized, add measurements as these are required for initialization.
   // Otherwise add measurements if enough time has passed since last optimization, simulating
   // optimization delay.
-  if (Initialized() && last_update_time_ && (current_time - *last_update_time_) < kOptimizationTime_) {
+  if (Initialized() && last_update_time_ && (current_time - *last_update_time_) < params_.optimization_time) {
     return false;
   }
 
