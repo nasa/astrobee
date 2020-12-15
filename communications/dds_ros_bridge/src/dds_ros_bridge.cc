@@ -1203,6 +1203,11 @@ bool DdsRosBridge::ReadParams() {
     return false;
   }
 
+  // ros_compressed_science_cam_image_rapid_image => RCSCIRI
+  if (!BuildCompressedImageToImage(TOPIC_HARDWARE_SCI_CAM, "RCSCIRI")) {
+    return false;
+  }
+
   // ros_cpu_state_rapid_cpu_state => RCSRCS
   if (!BuildCpuStateToRapid(TOPIC_MANAGEMENT_CPU_MONITOR_STATE, "RCSRCS")) {
     return false;
