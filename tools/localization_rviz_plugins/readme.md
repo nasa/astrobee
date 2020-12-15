@@ -14,8 +14,5 @@ The localization graph panel displays lots of information about the most recent 
 ## Imu Augmentor Display
 The imu augmentor display draws imu augmentor poses.  This is useful when comparing with graph localizer poses and sparse mapping poses, as ideally these are all alligned.
 
-## Sparse Mapping Pose Display
-The sparse mapping pose display draws sparse mapping poses. These are useful as a groundtruth indicate to see when localization drift occurs.
-
-## Imu Measurement Display
-This draws imu acceleration measurements as arrows.
+## Pose Display
+The pose display draws a history of poses. This is useful when comparing a pose topic such as sparse mapping poses or groundtruth poses with localization.
