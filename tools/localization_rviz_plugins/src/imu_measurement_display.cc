@@ -49,7 +49,7 @@ void ImuMeasurementDisplay::clearDisplay() { imu_acceleration_arrow_.reset(); }
 
 void ImuMeasurementDisplay::processMessage(const sensor_msgs::Imu::ConstPtr& imu_msg) {
   imu_acceleration_arrow_.reset(new rviz::Arrow(context_->getSceneManager(), scene_node_));
-  // TODO(rsoussan): use tf to get world_T_imu
+  // TODO(rsoussan): use tf to get world_T_body, use user defined inputs to get body_T_imu
   imu_acceleration_arrow_->setPosition(ogrePosition(gtsam::Pose3::identity()));
   const gtsam::Vector3 imu_F_acceleration =
     lc::VectorFromMsg<gtsam::Vector3, geometry_msgs::Vector3>(imu_msg->linear_acceleration);

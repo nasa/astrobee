@@ -28,6 +28,7 @@
 #include <OGRE/OgreSceneNode.h>
 
 #include <cv_bridge/cv_bridge.h>
+#include <ros/package.h>
 #include <rviz/frame_manager.h>
 #include <rviz/visualization_manager.h>
 
@@ -51,23 +52,44 @@ LocalizationGraphDisplay::LocalizationGraphDisplay() {
     new rviz::BoolProperty("Show Imu Factor Arrows", true, "Show imu factors as arrows.", this));
   imu_factor_arrows_diameter_.reset(
     new rviz::FloatProperty("Imu Factor Arrows Diameter", 0.01, "Imu factor arrows diameter.", this));
+  selected_world_.reset(
+    new rviz::EditableEnumProperty("World", "granite", "Granite or ISS world to use for config loading.", this));
+  selected_world_->addOptionStd("granite");
+  selected_world_->addOptionStd("iss");
+  selected_robot_name_.reset(
+    new rviz::EditableEnumProperty("Robot Name", "bsharp", "Robot name to use for config loading.", this));
+  selected_robot_name_->addOptionStd("bsharp");
+  selected_robot_name_->addOptionStd("bumble");
+  selected_robot_name_->addOptionStd("honey");
 
   image_transport::ImageTransport image_transport(nh_);
   image_sub_ = image_transport.subscribe(TOPIC_HARDWARE_NAV_CAM, 1, &LocalizationGraphDisplay::imageCallback, this);
   optical_flow_image_pub_ = image_transport.advertise("/graph_localizer/optical_flow_feature_tracks", 1);
   smart_factor_projection_image_pub_ = image_transport.advertise("/graph_localizer/smart_factor_projections", 1);
 
-  // TODO(rsoussan): avoid this and pass config path directly to config reader!!!!
-  // make sure body_T_nav cam is correct!!!! (bsharp not bumble)
   // Only pass program name to free flyer so that boost command line options
   // are ignored when parsing gflags.
   int ff_argc = 1;
   char* argv = "script";
   char** argv_ptr = &argv;
   ff_common::InitFreeFlyerApplication(&ff_argc, &argv_ptr);
-  const std::string config_path = "/home/rsoussan/astrobee/astrobee";
-  const std::string world = "granite";
-  const std::string robot_config_file = "config/robots/bsharp.config";
+  config_path_ = ros::package::getPath("astrobee");
+  // Defaults, set as user in plugin to change
+  world_ = "granite";
+  robot_name_ = "bsharp";
+  loadConfigs(world_, robot_name_, config_path_);
+}
+
+void LocalizationGraphDisplay::onInitialize() { MFDClass::onInitialize(); }
+
+void LocalizationGraphDisplay::reset() {
+  MFDClass::reset();
+  clearDisplay();
+}
+
+void LocalizationGraphDisplay::loadConfigs(const std::string& world, const std::string& robot_name,
+                                           const std::string& config_path) {
+  const std::string robot_config_file = "config/robots/" + robot_name + ".config";
   lc::SetEnvironmentConfigs(config_path, world, robot_config_file);
 
   config_reader::ConfigReader config;
@@ -80,11 +102,14 @@ LocalizationGraphDisplay::LocalizationGraphDisplay() {
   nav_cam_params_.reset(new camera::CameraParameters(&config, "nav_cam"));
 }
 
-void LocalizationGraphDisplay::onInitialize() { MFDClass::onInitialize(); }
-
-void LocalizationGraphDisplay::reset() {
-  MFDClass::reset();
-  clearDisplay();
+void LocalizationGraphDisplay::reloadConfigsIfNecessary() {
+  const std::string selected_world = selected_world_->getStdString();
+  const std::string selected_robot_name = selected_robot_name_->getStdString();
+  if (selected_world != world_ || selected_robot_name != robot_name_) {
+    world_ = selected_world;
+    robot_name_ = selected_robot_name;
+    loadConfigs(world_, robot_name_, config_path_);
+  }
 }
 
 void LocalizationGraphDisplay::clearDisplay() {
@@ -254,6 +279,7 @@ void LocalizationGraphDisplay::addImuVisual(const graph_localizer::GraphLocalize
 
 void LocalizationGraphDisplay::processMessage(const ff_msgs::LocalizationGraph::ConstPtr& msg) {
   clearDisplay();
+  reloadConfigsIfNecessary();
   graph_localizer::GraphLocalizer graph_localizer;
   gtsam::deserializeBinary(msg->serialized_graph, graph_localizer);
   SmartFactor* largest_error_smart_factor = nullptr;
