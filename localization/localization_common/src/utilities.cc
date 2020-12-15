@@ -143,6 +143,8 @@ void TimeToHeader(const Time timestamp, std_msgs::Header& header) {
   header.stamp.nsec = ros_time.nsec;
 }
 
+gtsam::Pose3 PoseFromMsg(const geometry_msgs::PoseStamped& msg) { return PoseFromMsg(msg.pose); }
+
 gtsam::Pose3 PoseFromMsg(const geometry_msgs::Pose& msg_pose) {
   return gtsam::Pose3(RotationFromMsg<gtsam::Rot3, geometry_msgs::Quaternion>(msg_pose.orientation),
                       VectorFromMsg<gtsam::Point3, geometry_msgs::Point>(msg_pose.position));

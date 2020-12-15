@@ -126,6 +126,7 @@ geometry_msgs::PoseStamped PoseMsg(const Eigen::Isometry3d& global_T_body, const
 geometry_msgs::PoseStamped PoseMsg(const Eigen::Isometry3d& global_T_body, const lc::Time time) {
   std_msgs::Header header;
   lc::TimeToHeader(time, header);
+  header.frame_id = "world";
   return PoseMsg(global_T_body, header);
 }
 

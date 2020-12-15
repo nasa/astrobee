@@ -17,13 +17,12 @@
  */
 
 // Header file must go in src directory for Qt/Rviz plugin
-#ifndef LOCALIZATION_RVIZ_PLUGINS_SPARSE_MAPPING_POSE_DISPLAY_H_  // NOLINT
-#define LOCALIZATION_RVIZ_PLUGINS_SPARSE_MAPPING_POSE_DISPLAY_H_  // NOLINT
+#ifndef LOCALIZATION_RVIZ_PLUGINS_POSE_DISPLAY_H_  // NOLINT
+#define LOCALIZATION_RVIZ_PLUGINS_POSE_DISPLAY_H_  // NOLINT
 
 // Required for Qt
 #ifndef Q_MOC_RUN
-#include <ff_msgs/VisualLandmarks.h>
-#include <gtsam/geometry/Pose3.h>
+#include <geometry_msgs/PoseStamped.h>
 #include <rviz/message_filter_display.h>
 #include <rviz/ogre_helpers/axes.h>
 #include <rviz/properties/float_property.h>
@@ -40,13 +39,12 @@ class SceneNode;
 
 namespace localization_rviz_plugins {
 
-class SparseMappingPoseDisplay : public rviz::MessageFilterDisplay<ff_msgs::VisualLandmarks> {
+class PoseDisplay : public rviz::MessageFilterDisplay<geometry_msgs::PoseStamped> {
   Q_OBJECT    // NOLINT
     public :  // NOLINT
-              SparseMappingPoseDisplay();
-  ~SparseMappingPoseDisplay() = default;
+              PoseDisplay();
+  ~PoseDisplay() = default;
 
-  // private:
  protected:
   void onInitialize() final;
   void reset() final;
@@ -54,13 +52,12 @@ class SparseMappingPoseDisplay : public rviz::MessageFilterDisplay<ff_msgs::Visu
  private Q_SLOTS:  // NOLINT
 
  private:
-  void processMessage(const ff_msgs::VisualLandmarks::ConstPtr& graph_msg);
+  void processMessage(const geometry_msgs::PoseStamped::ConstPtr& msg);
   void clearDisplay();
 
-  boost::circular_buffer<std::unique_ptr<rviz::Axes>> sparse_mapping_pose_axes_;
+  boost::circular_buffer<std::unique_ptr<rviz::Axes>> pose_axes_;
   std::unique_ptr<rviz::FloatProperty> pose_axes_size_;
   std::unique_ptr<rviz::IntProperty> number_of_poses_;
-  gtsam::Pose3 nav_cam_T_body_;
 };
 }  // namespace localization_rviz_plugins
-#endif  // LOCALIZATION_RVIZ_PLUGINS_SPARSE_MAPPING_POSE_DISPLAY_H_ NOLINT
+#endif  // LOCALIZATION_RVIZ_PLUGINS_POSE_DISPLAY_H_ NOLINT
