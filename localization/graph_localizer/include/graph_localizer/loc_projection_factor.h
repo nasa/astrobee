@@ -185,6 +185,8 @@ class LocProjectionFactor : public NoiseModelFactor1<POSE> {
   /** return flag for throwing cheirality exceptions */
   inline bool throwCheirality() const { return throwCheirality_; }
 
+  boost::optional<POSE> body_P_sensor() const { return body_P_sensor_; }
+
  private:
   /// Serialization function
   friend class boost::serialization::access;

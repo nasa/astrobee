@@ -25,6 +25,7 @@
 #include <camera/camera_params.h>
 #include <ff_msgs/LocalizationGraph.h>
 #include <graph_localizer/graph_localizer.h>
+#include <graph_localizer/loc_projection_factor.h>
 #include <gtsam/geometry/Pose3.h>
 #include <gtsam/navigation/CombinedImuFactor.h>
 #include <image_transport/image_transport.h>
@@ -70,6 +71,8 @@ class LocalizationGraphDisplay : public rviz::MessageFilterDisplay<ff_msgs::Loca
   void clearDisplay();
   void addImuVisual(const graph_localizer::GraphLocalizer& graph_localizer,
                     const gtsam::CombinedImuFactor* const imu_factor);
+  void addLocProjectionVisual(const gtsam::LocProjectionFactor<>& loc_projection_factor,
+                              const graph_localizer::GraphValues& graph_values);
   void addOpticalFlowVisual(const graph_localizer::FeatureTrackMap& feature_tracks,
                             const localization_common::Time latest_graph_time);
   void clearImageBuffer(const localization_common::Time oldest_graph_time);
@@ -86,6 +89,7 @@ class LocalizationGraphDisplay : public rviz::MessageFilterDisplay<ff_msgs::Loca
   std::unique_ptr<rviz::FloatProperty> imu_factor_arrows_diameter_;
   image_transport::Publisher optical_flow_image_pub_;
   image_transport::Publisher smart_factor_projection_image_pub_;
+  image_transport::Publisher loc_projection_factor_image_pub_;
   image_transport::Subscriber image_sub_;
   ros::NodeHandle nh_;
   std::map<localization_common::Time, sensor_msgs::ImageConstPtr> img_buffer_;
