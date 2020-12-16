@@ -54,7 +54,13 @@ void PoseDisplay::processMessage(const geometry_msgs::PoseStamped::ConstPtr& msg
   pose_axes_.set_capacity(number_of_poses_->getInt());
   const float scale = pose_axes_size_->getFloat();
   const gtsam::Pose3 world_T_body = lc::PoseFromMsg(*msg);
-  auto axis = axisFromPose(world_T_body, scale, context_->getSceneManager(), scene_node_);
+  const auto timestamp = lc::RosTimeFromHeader(msg->header);
+  const auto current_frame_T_world = currentFrameTFrame("world", timestamp, *context_);
+  if (!current_frame_T_world) {
+    LOG(ERROR) << "processMessage: Failed to get current_frame_T_world.";
+    return;
+  }
+  auto axis = axisFromPose((*current_frame_T_world) * world_T_body, scale, context_->getSceneManager(), scene_node_);
   axis->setXColor(Ogre::ColourValue(0.5, 0, 0, 0.3));
   axis->setYColor(Ogre::ColourValue(0, 0.5, 0, 0.3));
   axis->setZColor(Ogre::ColourValue(0, 0, 0.5, 0.3));
