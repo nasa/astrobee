@@ -25,6 +25,8 @@
 
 #include <glog/logging.h>
 
+#include <string>
+
 #include "sparse_mapping_display.h"  // NOLINT
 
 namespace localization_rviz_plugins {
