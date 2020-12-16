@@ -587,6 +587,27 @@ bool DdsRosBridge::BuildPmcCmdStateToRapid(const std::string& sub_topic,
   return true;
 }
 
+bool DdsRosBridge::BuildPoseToPosition(const std::string& sub_topic,
+                                       const std::string& name) {
+  std::string pub_topic;
+  bool use;
+
+  if (ReadTopicInfo(name, "pub", pub_topic, use)) {
+    if (use) {
+      ff::RosSubRapidPubPtr pose_to_position(
+                                        new ff::RosPoseRapidPosition(sub_topic,
+                                                                     pub_topic,
+                                                                     nh_));
+      components_++;
+      ros_sub_rapid_pubs_[name] = pose_to_position;
+    }
+  } else {
+    return false;
+  }
+
+  return true;
+}
+
 bool DdsRosBridge::BuildStringToTextMessage(const std::string& name) {
   std::string pub_topic, sub_topic;
   bool use;
@@ -1283,6 +1304,16 @@ bool DdsRosBridge::ReadParams() {
 
   // ros_pmc_cmd_state_rapid_pmc_cmd_state => RPCSRPCS
   if (!BuildPmcCmdStateToRapid(TOPIC_HARDWARE_PMC_COMMAND, "RPCSRPCS")) {
+    return false;
+  }
+
+  // ros_sparse_mapping_pose_rapid_position => RSMPRP
+  if (!BuildPoseToPosition(TOPIC_SPARSE_MAPPING_POSE, "RSMPRP")) {
+    return false;
+  }
+
+  // ros_vive_pose_rapid_position => RVPRP
+  if (!BuildPoseToPosition("loc/truth", "RVPRP")) {
     return false;
   }
 
