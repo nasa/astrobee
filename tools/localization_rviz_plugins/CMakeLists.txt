@@ -27,13 +27,14 @@ if(BUILD_LOC_RVIZ_PLUGINS)
  # For Qt
  set(CMAKE_AUTOMOC ON)
  
- find_package(catkin COMPONENTS rviz QUIET)
+ find_package(catkin REQUIRED COMPONENTS rviz)
  
  find_package(Qt5 ${rviz_QT_VERSION} REQUIRED Core Widgets)
  set(QT_LIBRARIES Qt5::Widgets)
+
  
  catkin_package(
-   LIBRARIES ${PROJECT_NAME} ${GLOG_LIBRARIES} ${GTSAM_LIBRARIES} ${QT_LIBRARIES} camera config_reader graph_bag graph_localizer imu_integration localization_common localization_measurements
+   LIBRARIES ${PROJECT_NAME} ${catkin_LIBRARIES} ${GLOG_LIBRARIES} ${GTSAM_LIBRARIES} ${QT_LIBRARIES} camera config_reader graph_bag graph_localizer imu_integration localization_common localization_measurements 
    INCLUDE_DIRS ${GTSAM_INCLUDE_DIR} ${GLOG_INCLUDE_DIRS} ${Qt5Core_INCLUDE_DIRS} ${Qt5Gui_INCLUDE_DIRS} 
    CATKIN_DEPENDS rviz 
    DEPENDS gtsam 
@@ -42,7 +43,8 @@ if(BUILD_LOC_RVIZ_PLUGINS)
  create_library(TARGET ${PROJECT_NAME} 
    LIBS ${catkin_LIBRARIES} ${GLOG_LIBRARIES} ${QT_LIBRARIES} camera config_reader graph_bag graph_localizer imu_integration localization_common localization_measurements 
    INC ${catkin_INCLUDE_DIRS} ${GLOG_INCLUDE_DIRS} ${Qt5Core_INCLUDE_DIRS} ${Qt5Gui_INCLUDE_DIRS} 
-   ADD_SRCS src/localization_graph_display.cc src/localization_graph_panel.cc src/pose_display.cc src/utilities.cc src/imu_augmentor_display.cc ${MOC_FILES}
+   ADD_SRCS src/localization_graph_display.cc src/localization_graph_panel.cc src/pose_display.cc src/utilities.cc src/imu_augmentor_display.cc src/sparse_mapping_display.cc ${MOC_FILES}
    DEPS gtsam rviz 
  )
+
 endif()
