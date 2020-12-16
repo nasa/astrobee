@@ -36,8 +36,8 @@ SparseMappingDisplay::SparseMappingDisplay() {
   char** argv_ptr = &argv;
   ff_common::InitFreeFlyerApplication(&ff_argc, &argv_ptr);
   config_reader::ConfigReader config;
-  config.AddFile("cameras.config");
-//  config.AddFile("localization.config");
+  // TODO(rsoussan): Config reader fails to load map string unless a file is added (doesn't matter which one).
+  config.AddFile("geometry.config");
   if (!config.ReadFiles()) {
     LOG(FATAL) << "Failed to read config files.";
   }
