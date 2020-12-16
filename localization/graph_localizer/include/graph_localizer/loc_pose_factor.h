@@ -38,6 +38,14 @@ class LocPoseFactor : public PriorFactor<Pose3> {
   LocPoseFactor(Key key, const Pose3& prior, const SharedNoiseModel& model = nullptr) : Base(key, prior, model) {}
 
   LocPoseFactor(Key key, const Pose3& prior, const Matrix& covariance) : Base(key, prior, covariance) {}
+
+ private:
+  /// Serialization function
+  friend class boost::serialization::access;
+  template <class ARCHIVE>
+  void serialize(ARCHIVE& ar, const unsigned int /*version*/) {
+    ar& BOOST_SERIALIZATION_BASE_OBJECT_NVP(Base);
+  }
 };
 }  // namespace gtsam
 

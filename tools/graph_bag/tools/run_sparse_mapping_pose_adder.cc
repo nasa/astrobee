@@ -31,19 +31,17 @@ namespace po = boost::program_options;
 namespace lc = localization_common;
 
 int main(int argc, char** argv) {
-  std::string config_path;
   std::string robot_config_file;
   std::string world;
-  // TODO(rsoussan): Don't hardcode config path default arg
   po::options_description desc(
     "Adds sparse mapping poses to a new bag file using sparse mapping feature messages and body_T_nav_cam extrinsics.");
   desc.add_options()("help", "produce help message")("bagfile", po::value<std::string>()->required(), "Bagfile")(
-    "config-path,c", po::value<std::string>(&config_path)->default_value("/home/rsoussan/astrobee/astrobee"),
-    "Config path")("robot-config-file,r",
-                   po::value<std::string>(&robot_config_file)->default_value("config/robots/bumble.config"),
-                   "Robot config file")("world,w", po::value<std::string>(&world)->default_value("iss"), "World name");
+    "config-path,c", po::value<std::string>()->required(), "Config path")(
+    "robot-config-file,r", po::value<std::string>(&robot_config_file)->default_value("config/robots/bumble.config"),
+    "Robot config file")("world,w", po::value<std::string>(&world)->default_value("iss"), "World name");
   po::positional_options_description p;
   p.add("bagfile", 1);
+  p.add("config-path", 1);
   po::variables_map vm;
   try {
     po::store(po::command_line_parser(argc, argv).options(desc).positional(p).run(), vm);
@@ -59,6 +57,7 @@ int main(int argc, char** argv) {
   }
 
   const std::string input_bag = vm["bagfile"].as<std::string>();
+  const std::string config_path = vm["config-path"].as<std::string>();
 
   // Only pass program name to free flyer so that boost command line options
   // are ignored when parsing gflags.

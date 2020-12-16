@@ -36,6 +36,7 @@
 #include <rviz/properties/float_property.h>
 #include <opencv2/core/types.hpp>
 #include <map>
+#include <string>
 #include <vector>
 #endif
 

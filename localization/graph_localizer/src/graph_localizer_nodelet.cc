@@ -30,35 +30,39 @@
 namespace graph_localizer {
 namespace lc = localization_common;
 GraphLocalizerNodelet::GraphLocalizerNodelet()
-    : ff_util::FreeFlyerNodelet(NODE_GRAPH_LOC, true),
-      platform_name_(GetPlatform()),
-      vl_timer_("VL msg"),
-      of_timer_("OF msg"),
-      ar_timer_("AR msg"),
-      imu_timer_("Imu msg") {}
+    : ff_util::FreeFlyerNodelet(NODE_GRAPH_LOC, true), platform_name_(GetPlatform()) {
+  private_nh_.setCallbackQueue(&private_queue_);
+  heartbeat_.node = GetName();
+  // TODO(rsoussan): is this the correct name?
+  heartbeat_.nodelet_manager = ros::this_node::getName();
+}
 
 void GraphLocalizerNodelet::Initialize(ros::NodeHandle* nh) {
   ff_common::InitFreeFlyerApplication(getMyArgv());
   SubscribeAndAdvertise(nh);
+  Run();
 }
 
 void GraphLocalizerNodelet::SubscribeAndAdvertise(ros::NodeHandle* nh) {
-  state_pub_ = nh->advertise<ff_msgs::EkfState>(TOPIC_GRAPH_LOC_STATE, 1);
-  sparse_mapping_pose_pub_ = nh->advertise<geometry_msgs::PoseStamped>(TOPIC_SPARSE_MAPPING_POSE, 1);
-  graph_pub_ = nh->advertise<ff_msgs::LocalizationGraph>(TOPIC_GRAPH_LOC, 1);
-  reset_pub_ = nh->advertise<std_msgs::Empty>(TOPIC_GNC_EKF_RESET, 1);
+  // TODO(Rsoussan): should these use private nh as well??
+  state_pub_ = nh->advertise<ff_msgs::EkfState>(TOPIC_GRAPH_LOC_STATE, 10);
+  sparse_mapping_pose_pub_ = nh->advertise<geometry_msgs::PoseStamped>(TOPIC_SPARSE_MAPPING_POSE, 10);
+  graph_pub_ = nh->advertise<ff_msgs::LocalizationGraph>(TOPIC_GRAPH_LOC, 10);
+  reset_pub_ = nh->advertise<std_msgs::Empty>(TOPIC_GNC_EKF_RESET, 10);
+  heartbeat_pub_ = nh->advertise<ff_msgs::Heartbeat>(TOPIC_HEARTBEAT, 5, true);
 
-  imu_sub_ =
-    nh->subscribe(TOPIC_HARDWARE_IMU, 1, &GraphLocalizerNodelet::ImuCallback, this, ros::TransportHints().tcpNoDelay());
-  ar_sub_ = nh->subscribe(TOPIC_LOCALIZATION_AR_FEATURES, 1, &GraphLocalizerNodelet::ARVisualLandmarksCallback, this,
-                          ros::TransportHints().tcpNoDelay());
-  of_sub_ = nh->subscribe(TOPIC_LOCALIZATION_OF_FEATURES, 1, &GraphLocalizerNodelet::OpticalFlowCallback, this,
-                          ros::TransportHints().tcpNoDelay());
-  vl_sub_ = nh->subscribe(TOPIC_LOCALIZATION_ML_FEATURES, 1, &GraphLocalizerNodelet::VLVisualLandmarksCallback, this,
-                          ros::TransportHints().tcpNoDelay());
-  bias_srv_ = nh->advertiseService(SERVICE_GNC_EKF_INIT_BIAS, &GraphLocalizerNodelet::ResetBiasesAndLocalizer, this);
-  reset_srv_ = nh->advertiseService(SERVICE_GNC_EKF_RESET, &GraphLocalizerNodelet::ResetLocalizer, this);
-  input_mode_srv_ = nh->advertiseService(SERVICE_GNC_EKF_SET_INPUT, &GraphLocalizerNodelet::SetMode, this);
+  imu_sub_ = private_nh_.subscribe(TOPIC_HARDWARE_IMU, 0, &GraphLocalizerNodelet::ImuCallback, this,
+                                   ros::TransportHints().tcpNoDelay());
+  ar_sub_ = private_nh_.subscribe(TOPIC_LOCALIZATION_AR_FEATURES, 0, &GraphLocalizerNodelet::ARVisualLandmarksCallback,
+                                  this, ros::TransportHints().tcpNoDelay());
+  of_sub_ = private_nh_.subscribe(TOPIC_LOCALIZATION_OF_FEATURES, 0, &GraphLocalizerNodelet::OpticalFlowCallback, this,
+                                  ros::TransportHints().tcpNoDelay());
+  vl_sub_ = private_nh_.subscribe(TOPIC_LOCALIZATION_ML_FEATURES, 0, &GraphLocalizerNodelet::VLVisualLandmarksCallback,
+                                  this, ros::TransportHints().tcpNoDelay());
+  bias_srv_ =
+    private_nh_.advertiseService(SERVICE_GNC_EKF_INIT_BIAS, &GraphLocalizerNodelet::ResetBiasesAndLocalizer, this);
+  reset_srv_ = private_nh_.advertiseService(SERVICE_GNC_EKF_RESET, &GraphLocalizerNodelet::ResetLocalizer, this);
+  input_mode_srv_ = private_nh_.advertiseService(SERVICE_GNC_EKF_SET_INPUT, &GraphLocalizerNodelet::SetMode, this);
 }
 
 bool GraphLocalizerNodelet::SetMode(ff_msgs::SetEkfInput::Request& req, ff_msgs::SetEkfInput::Response& res) {
@@ -105,13 +109,6 @@ void GraphLocalizerNodelet::OpticalFlowCallback(const ff_msgs::Feature2dArray::C
 
   if (!localizer_enabled()) return;
   graph_localizer_wrapper_.OpticalFlowCallback(*feature_array_msg);
-
-  // Publish loc information here since graph updates occur on optical flow updates
-  PublishLocalizationState();
-  PublishWorldTDockTF();
-  if (graph_localizer_wrapper_.publish_localization_graph()) PublishLocalizationGraph();
-  if (graph_localizer_wrapper_.save_localization_graph_dot_file())
-    graph_localizer_wrapper_.SaveLocalizationGraphDotFile();
 }
 
 void GraphLocalizerNodelet::VLVisualLandmarksCallback(const ff_msgs::VisualLandmarks::ConstPtr& visual_landmarks_msg) {
@@ -193,6 +190,35 @@ void GraphLocalizerNodelet::PublishWorldTDockTF() {
 void GraphLocalizerNodelet::PublishReset() const {
   std_msgs::Empty msg;
   reset_pub_.publish(msg);
+}
+
+void GraphLocalizerNodelet::PublishHeartbeat() {
+  heartbeat_.header.stamp = ros::Time::now();
+  heartbeat_pub_.publish(heartbeat_);
+}
+
+void GraphLocalizerNodelet::PublishGraphMessages() {
+  if (!localizer_enabled()) return;
+
+  // Publish loc information here since graph updates occur on optical flow updates
+  PublishLocalizationState();
+  PublishWorldTDockTF();
+  if (graph_localizer_wrapper_.publish_localization_graph()) PublishLocalizationGraph();
+  if (graph_localizer_wrapper_.save_localization_graph_dot_file())
+    graph_localizer_wrapper_.SaveLocalizationGraphDotFile();
+}
+
+void GraphLocalizerNodelet::Run() {
+  ros::Rate rate(100);
+  while (ros::ok()) {
+    callbacks_timer_.Start();
+    private_queue_.callAvailable();
+    callbacks_timer_.StopAndLogEveryN(100);
+    graph_localizer_wrapper_.Update();
+    PublishGraphMessages();
+    PublishHeartbeat();
+    rate.sleep();
+  }
 }
 }  // namespace graph_localizer
 

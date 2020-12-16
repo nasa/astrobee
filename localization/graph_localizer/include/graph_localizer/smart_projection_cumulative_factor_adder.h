@@ -16,29 +16,26 @@
  * under the License.
  */
 
-#ifndef GRAPH_LOCALIZER_SMART_PROJECTION_FACTOR_ADDER_H_
-#define GRAPH_LOCALIZER_SMART_PROJECTION_FACTOR_ADDER_H_
+#ifndef GRAPH_LOCALIZER_SMART_PROJECTION_CUMULATIVE_FACTOR_ADDER_H_
+#define GRAPH_LOCALIZER_SMART_PROJECTION_CUMULATIVE_FACTOR_ADDER_H_
 
-#include <graph_localizer/factor_adder.h>
+#include <graph_localizer/cumulative_factor_adder.h>
 #include <graph_localizer/feature_tracker.h>
 #include <graph_localizer/smart_projection_factor_adder_params.h>
-#include <localization_measurements/feature_points_measurement.h>
 
 #include <gtsam/slam/SmartFactorParams.h>
 
 #include <vector>
 
 namespace graph_localizer {
-class SmartProjectionFactorAdder
-    : public FactorAdder<localization_measurements::FeaturePointsMeasurement, SmartProjectionFactorAdderParams> {
-  using Base = FactorAdder<localization_measurements::FeaturePointsMeasurement, SmartProjectionFactorAdderParams>;
+class SmartProjectionCumulativeFactorAdder : public CumulativeFactorAdder<SmartProjectionFactorAdderParams> {
+  using Base = CumulativeFactorAdder<SmartProjectionFactorAdderParams>;
 
  public:
-  SmartProjectionFactorAdder(const SmartProjectionFactorAdderParams& params,
-                             std::shared_ptr<const FeatureTracker> feature_tracker);
+  SmartProjectionCumulativeFactorAdder(const SmartProjectionFactorAdderParams& params,
+                                       std::shared_ptr<const FeatureTracker> feature_tracker);
 
-  std::vector<FactorsToAdd> AddFactors(
-    const localization_measurements::FeaturePointsMeasurement& feature_points_measurement) final;
+  std::vector<FactorsToAdd> AddFactors() final;
 
  private:
   void AddSmartFactor(const FeatureTrack& feature_track, FactorsToAdd& smart_factors_to_add) const;
@@ -48,4 +45,4 @@ class SmartProjectionFactorAdder
 };
 }  // namespace graph_localizer
 
-#endif  // GRAPH_LOCALIZER_SMART_PROJECTION_FACTOR_ADDER_H_
+#endif  // GRAPH_LOCALIZER_SMART_PROJECTION_CUMULATIVE_FACTOR_ADDER_H_

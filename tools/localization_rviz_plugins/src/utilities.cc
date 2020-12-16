@@ -16,6 +16,8 @@
  * under the License.
  */
 
+#include <rviz/frame_manager.h>
+
 #include "utilities.h"  // NOLINT
 
 namespace localization_rviz_plugins {
@@ -29,6 +31,18 @@ Ogre::Vector3 ogrePosition(const gtsam::Pose3& pose) {
 Ogre::Quaternion ogreQuaternion(const gtsam::Pose3& pose) {
   const auto quaternion = pose.rotation().toQuaternion();
   return Ogre::Quaternion(quaternion.w(), quaternion.x(), quaternion.y(), quaternion.z());
+}
+
+boost::optional<gtsam::Pose3> currentFrameTFrame(const std::string& frame_id, const ros::Time timestamp,
+                                                 const rviz::DisplayContext& context) {
+  Ogre::Quaternion orientation;
+  Ogre::Vector3 position;
+  if (!context.getFrameManager()->getTransform(frame_id, timestamp, position, orientation)) {
+    LOG(ERROR) << "currentFrameTFrame: Failed to get transform for " << frame_id;
+    return boost::none;
+  }
+  return gtsam::Pose3(gtsam::Rot3(orientation.w, orientation.x, orientation.y, orientation.z),
+                      gtsam::Point3(position.x, position.y, position.z));
 }
 
 std::unique_ptr<rviz::Axes> axisFromPose(const gtsam::Pose3& pose, const double scale,

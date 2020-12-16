@@ -19,11 +19,13 @@
 #define GRAPH_LOCALIZER_GRAPH_LOCALIZER_NODELET_H_
 
 #include <ff_msgs/Feature2dArray.h>
+#include <ff_msgs/Heartbeat.h>
 #include <ff_msgs/SetEkfInput.h>
 #include <ff_msgs/VisualLandmarks.h>
 #include <ff_util/ff_nodelet.h>
 #include <graph_localizer/graph_localizer_wrapper.h>
 #include <localization_common/ros_timer.h>
+#include <localization_common/timer.h>
 
 #include <ros/node_handle.h>
 #include <ros/publisher.h>
@@ -73,6 +75,10 @@ class GraphLocalizerNodelet : public ff_util::FreeFlyerNodelet {
 
   void PublishReset() const;
 
+  void PublishGraphMessages();
+
+  void PublishHeartbeat();
+
   void OpticalFlowCallback(const ff_msgs::Feature2dArray::ConstPtr& feature_array_msg);
 
   void VLVisualLandmarksCallback(const ff_msgs::VisualLandmarks::ConstPtr& visual_landmarks_msg);
@@ -81,17 +87,25 @@ class GraphLocalizerNodelet : public ff_util::FreeFlyerNodelet {
 
   void ImuCallback(const sensor_msgs::Imu::ConstPtr& imu_msg);
 
+  void Run();
+
   graph_localizer::GraphLocalizerWrapper graph_localizer_wrapper_;
+  ros::NodeHandle private_nh_;
+  ros::CallbackQueue private_queue_;
   bool localizer_enabled_ = true;
   ros::Subscriber imu_sub_, of_sub_, vl_sub_, ar_sub_;
-  ros::Publisher state_pub_, graph_pub_, sparse_mapping_pose_pub_, reset_pub_;
+  ros::Publisher state_pub_, graph_pub_, sparse_mapping_pose_pub_, reset_pub_, heartbeat_pub_;
   ros::ServiceServer reset_srv_, bias_srv_, input_mode_srv_;
   tf2_ros::TransformBroadcaster transform_pub_;
   std::string platform_name_;
-  localization_common::RosTimer vl_timer_;
-  localization_common::RosTimer of_timer_;
-  localization_common::RosTimer ar_timer_;
-  localization_common::RosTimer imu_timer_;
+  ff_msgs::Heartbeat heartbeat_;
+
+  // Timers
+  localization_common::RosTimer vl_timer_ = localization_common::RosTimer("VL msg");
+  localization_common::RosTimer of_timer_ = localization_common::RosTimer("OF msg");
+  localization_common::RosTimer ar_timer_ = localization_common::RosTimer("AR msg");
+  localization_common::RosTimer imu_timer_ = localization_common::RosTimer("Imu msg");
+  localization_common::Timer callbacks_timer_ = localization_common::Timer("Callbacks");
 };
 }  // namespace graph_localizer
 

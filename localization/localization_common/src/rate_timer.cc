@@ -21,36 +21,43 @@
 #include <glog/logging.h>
 
 namespace localization_common {
-RateTimer::RateTimer(const std::string& timer_name)
-    : name_(timer_name), last_elapsed_time_(0), average_elapsed_time_(0), num_timing_events_(0) {}
+RateTimer::RateTimer(const std::string& timer_name) : averager_(timer_name, "rate", "seconds"), num_events_(0) {}
 void RateTimer::Record() {
   const auto end_time = std::chrono::steady_clock::now();
-  ++num_timing_events_;
+  ++num_events_;
   // First Recording, nothing to compare to yet
-  if (num_timing_events_ == 1) {
+  if (num_events_ == 1) {
     start_time_ = end_time;
     return;
   }
 
-  last_elapsed_time_ = std::chrono::duration<double>(end_time - start_time_).count();
-  // Compute moving average to avoid overflow
-  // Subtract one since first timing event starts the timing
-  average_elapsed_time_ += (last_elapsed_time_ - average_elapsed_time_) / (num_timing_events_ - 1);
+  const double elapsed_time = std::chrono::duration<double>(end_time - start_time_).count();
+  averager_.Update(elapsed_time);
   start_time_ = end_time;
 }
+
 void RateTimer::RecordAndLog() {
   Record();
   Log();
 }
-void RateTimer::Log() {
-  if (num_timing_events_ <= 1) return;
-  LOG(INFO) << name_ + " rate: " << last_elapsed_time_ << " seconds.";
-  LOG(INFO) << "Average " + name_ + " rate: " << average_elapsed_time_ << " seconds.";
+
+void RateTimer::RecordAndLogEveryN(const int num_events_per_log) {
+  Record();
+  LogEveryN(num_events_per_log);
 }
 
-void RateTimer::Vlog(const int level) {
-  if (num_timing_events_ <= 1) return;
-  VLOG(level) << name_ + " rate: " << last_elapsed_time_ << " seconds.";
-  VLOG(level) << "Average " + name_ + " rate: " << average_elapsed_time_ << " seconds.";
+void RateTimer::Log() const {
+  if (num_events_ <= 1) return;
+  averager_.Log();
+}
+
+void RateTimer::LogEveryN(const int num_events_per_log) const {
+  if (num_events_ <= 1) return;
+  averager_.LogEveryN(num_events_per_log);
+}
+
+void RateTimer::Vlog(const int level) const {
+  if (num_events_ <= 1) return;
+  averager_.Vlog(level);
 }
 }  // namespace localization_common

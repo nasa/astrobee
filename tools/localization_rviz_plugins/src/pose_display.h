@@ -17,35 +17,34 @@
  */
 
 // Header file must go in src directory for Qt/Rviz plugin
-#ifndef LOCALIZATION_RVIZ_PLUGINS_IMU_MEASUREMENT_DISPLAY_H_  // NOLINT
-#define LOCALIZATION_RVIZ_PLUGINS_IMU_MEASUREMENT_DISPLAY_H_  // NOLINT
+#ifndef LOCALIZATION_RVIZ_PLUGINS_POSE_DISPLAY_H_  // NOLINT
+#define LOCALIZATION_RVIZ_PLUGINS_POSE_DISPLAY_H_  // NOLINT
 
 // Required for Qt
 #ifndef Q_MOC_RUN
-#include <gtsam/geometry/Pose3.h>
+#include <geometry_msgs/PoseStamped.h>
 #include <rviz/message_filter_display.h>
-#include <rviz/ogre_helpers/arrow.h>
 #include <rviz/ogre_helpers/axes.h>
 #include <rviz/properties/float_property.h>
 #include <rviz/properties/int_property.h>
-#include <sensor_msgs/Imu.h>
 #include <boost/circular_buffer.hpp>
-#include <vector>
 #endif
 
+#include <vector>
+
+// Forward declarations for ogre and rviz
 namespace Ogre {
 class SceneNode;
 }
 
 namespace localization_rviz_plugins {
 
-class ImuMeasurementDisplay : public rviz::MessageFilterDisplay<sensor_msgs::Imu> {
+class PoseDisplay : public rviz::MessageFilterDisplay<geometry_msgs::PoseStamped> {
   Q_OBJECT    // NOLINT
     public :  // NOLINT
-              ImuMeasurementDisplay();
-  ~ImuMeasurementDisplay() = default;
+              PoseDisplay();
+  ~PoseDisplay() = default;
 
-  // private:
  protected:
   void onInitialize() final;
   void reset() final;
@@ -53,11 +52,12 @@ class ImuMeasurementDisplay : public rviz::MessageFilterDisplay<sensor_msgs::Imu
  private Q_SLOTS:  // NOLINT
 
  private:
-  void processMessage(const sensor_msgs::Imu::ConstPtr& imu_msg);
+  void processMessage(const geometry_msgs::PoseStamped::ConstPtr& msg);
   void clearDisplay();
 
-  std::unique_ptr<rviz::Arrow> imu_acceleration_arrow_;
-  std::unique_ptr<rviz::FloatProperty> imu_acceleration_arrow_scale_;
+  boost::circular_buffer<std::unique_ptr<rviz::Axes>> pose_axes_;
+  std::unique_ptr<rviz::FloatProperty> pose_axes_size_;
+  std::unique_ptr<rviz::IntProperty> number_of_poses_;
 };
 }  // namespace localization_rviz_plugins
-#endif  // LOCALIZATION_RVIZ_PLUGINS_IMU_MEASUREMENT_DISPLAY_H_ NOLINT
+#endif  // LOCALIZATION_RVIZ_PLUGINS_POSE_DISPLAY_H_ NOLINT

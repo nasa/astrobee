@@ -57,10 +57,18 @@ void ImuAugmentorDisplay::clearDisplay() {
 
 void ImuAugmentorDisplay::processMessage(const ff_msgs::EkfState::ConstPtr& msg) {
   const auto world_T_body = lc::PoseFromMsg(msg->pose);
+  const auto timestamp = lc::RosTimeFromHeader(msg->header);
+  const auto current_frame_T_world = currentFrameTFrame("world", timestamp, *context_);
+  if (!current_frame_T_world) {
+    LOG(ERROR) << "processMessage: Failed to get current_frame_T_world.";
+    return;
+  }
+  const gtsam::Pose3 current_frame_T_body = *current_frame_T_world * world_T_body;
+
   if (show_pose_axes_->getBool()) {
     imu_augmentor_pose_axes_.set_capacity(number_of_poses_->getInt());
     const float scale = pose_axes_size_->getFloat();
-    auto axis = axisFromPose(world_T_body, scale, context_->getSceneManager(), scene_node_);
+    auto axis = axisFromPose(current_frame_T_body, scale, context_->getSceneManager(), scene_node_);
     axis->setXColor(Ogre::ColourValue(0.5, 0, 0, 0.3));
     axis->setYColor(Ogre::ColourValue(0, 0.5, 0, 0.3));
     axis->setZColor(Ogre::ColourValue(0, 0, 0.5, 0.3));
@@ -71,11 +79,12 @@ void ImuAugmentorDisplay::processMessage(const ff_msgs::EkfState::ConstPtr& msg)
 
   if (show_imu_acceleration_arrow_->getBool()) {
     imu_acceleration_arrow_.reset(new rviz::Arrow(context_->getSceneManager(), scene_node_));
-    imu_acceleration_arrow_->setPosition(ogrePosition(world_T_body));
+    imu_acceleration_arrow_->setPosition(ogrePosition(current_frame_T_body));
     const gtsam::Vector3 body_F_acceleration = lc::VectorFromMsg<gtsam::Vector3, geometry_msgs::Vector3>(msg->accel);
-    const gtsam::Vector3 world_F_acceleration = world_T_body.rotation() * body_F_acceleration;
+    const gtsam::Vector3 current_frame_F_acceleration = current_frame_T_body.rotation() * body_F_acceleration;
     const float scale = imu_acceleration_arrow_scale_->getFloat();
-    const auto orientation_and_length = getOrientationAndLength(gtsam::Vector3::Zero(), scale * world_F_acceleration);
+    const auto orientation_and_length =
+      getOrientationAndLength(gtsam::Vector3::Zero(), scale * current_frame_F_acceleration);
     const float diameter = scale / 50.0;
     imu_acceleration_arrow_->setOrientation(orientation_and_length.first);
     imu_acceleration_arrow_->set(3.0 * orientation_and_length.second / 4.0, 0.5 * diameter,

@@ -22,8 +22,7 @@
 #include <glog/logging.h>
 
 namespace localization_common {
-RosTimer::RosTimer(const std::string& timer_name)
-    : name_(timer_name), start_time_(0), last_elapsed_time_(0), average_elapsed_time_(0), num_timing_events_(0) {}
+RosTimer::RosTimer(const std::string& timer_name) : averager_(timer_name, "time", "seconds"), start_time_(0) {}
 void RosTimer::Start() { start_time_ = ros::Time::now(); }
 void RosTimer::HeaderDiff(const std_msgs::Header& header) {
   start_time_ = RosTimeFromHeader(header);
@@ -32,27 +31,13 @@ void RosTimer::HeaderDiff(const std_msgs::Header& header) {
 
 void RosTimer::Stop() {
   const auto end_time = ros::Time::now();
-  last_elapsed_time_ = (end_time - start_time_).toSec();
-  ++num_timing_events_;
-  // Compute moving average to avoid overflow
-  average_elapsed_time_ += (last_elapsed_time_ - average_elapsed_time_) / num_timing_events_;
+  const double elapsed_time = (end_time - start_time_).toSec();
+  averager_.Update(elapsed_time);
 }
-void RosTimer::Log() const {
-  LOG(INFO) << name_ + " time: " << last_elapsed_time_ << " seconds.";
-  LOG(INFO) << "Average " + name_ + " time: " << average_elapsed_time_ << " seconds.";
-}
-void RosTimer::Vlog(const int level) const {
-  VLOG(level) << name_ + " time: " << last_elapsed_time_ << " seconds.";
-  VLOG(level) << "Average " + name_ + " time: " << average_elapsed_time_ << " seconds.";
-}
-void RosTimer::LogEveryN(const int num_timing_events_per_log) const {
-  if (num_timing_events_ % num_timing_events_per_log == 0) {
-    Log();
-  }
-}
+void RosTimer::Log() const { averager_.Log(); }
+void RosTimer::Vlog(const int level) const { averager_.Vlog(); }
+void RosTimer::LogEveryN(const int num_timing_events_per_log) const { averager_.LogEveryN(num_timing_events_per_log); }
 void RosTimer::VlogEveryN(const int num_timing_events_per_log, const int level) const {
-  if (num_timing_events_ % num_timing_events_per_log == 0) {
-    Vlog(level);
-  }
+  averager_.VlogEveryN(num_timing_events_per_log, level);
 }
 }  // namespace localization_common

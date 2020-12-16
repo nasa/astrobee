@@ -29,7 +29,7 @@
 #include <graph_localizer/loc_factor_adder.h>
 #include <graph_localizer/projection_factor_adder.h>
 #include <graph_localizer/rotation_factor_adder.h>
-#include <graph_localizer/smart_projection_factor_adder.h>
+#include <graph_localizer/smart_projection_cumulative_factor_adder.h>
 #include <graph_localizer/standstill_factor_adder.h>
 #include <imu_integration/latest_imu_integrator.h>
 #include <localization_common/averager.h>
@@ -155,7 +155,9 @@ class GraphLocalizer {
 
   void BufferFactors(const std::vector<FactorsToAdd>& factors_to_add_vec);
 
-  void AddBufferedFactors();
+  void BufferCumulativeFactors();
+
+  int AddBufferedFactors();
 
   bool DoGraphAction(FactorsToAdd& factors_to_add);
 
@@ -237,7 +239,7 @@ class GraphLocalizer {
   std::unique_ptr<LocFactorAdder> loc_factor_adder_;
   std::unique_ptr<ProjectionFactorAdder> projection_factor_adder_;
   std::unique_ptr<RotationFactorAdder> rotation_factor_adder_;
-  std::unique_ptr<SmartProjectionFactorAdder> smart_projection_factor_adder_;
+  std::unique_ptr<SmartProjectionCumulativeFactorAdder> smart_projection_cumulative_factor_adder_;
   std::unique_ptr<StandstillFactorAdder> standstill_factor_adder_;
 
   // Timers
@@ -245,6 +247,7 @@ class GraphLocalizer {
   localization_common::Timer update_timer_ = localization_common::Timer("Update");
   localization_common::Timer marginals_timer_ = localization_common::Timer("Marginals");
   localization_common::Timer slide_window_timer_ = localization_common::Timer("Slide Window");
+  localization_common::Timer add_buffered_factors_timer_ = localization_common::Timer("Add Buffered Factors");
   localization_common::Timer log_error_timer_ = localization_common::Timer("Log Error");
   localization_common::Timer log_stats_timer_ = localization_common::Timer("Log Stats");
 
@@ -257,6 +260,8 @@ class GraphLocalizer {
   localization_common::Averager num_loc_factors_averager_ = localization_common::Averager("Num Loc Factors");
   localization_common::Averager num_imu_factors_averager_ = localization_common::Averager("Num Imu Factors");
   localization_common::Averager num_rotation_factors_averager_ = localization_common::Averager("Num Rotation Factors");
+  localization_common::Averager num_standstill_between_factors_averager_ =
+    localization_common::Averager("Num Standstill Between Factors");
   localization_common::Averager num_vel_prior_factors_averager_ =
     localization_common::Averager("Num Vel Prior Factors");
   localization_common::Averager num_marginal_factors_averager_ = localization_common::Averager("Num Marginal Factors");
@@ -268,6 +273,8 @@ class GraphLocalizer {
   localization_common::Averager loc_proj_error_averager_ = localization_common::Averager("Loc Proj Factor Error");
   localization_common::Averager imu_error_averager_ = localization_common::Averager("Imu Factor Error");
   localization_common::Averager rotation_error_averager_ = localization_common::Averager("Rotation Factor Error");
+  localization_common::Averager standstill_between_error_averager_ =
+    localization_common::Averager("Standstill Between Error");
   localization_common::Averager pose_prior_error_averager_ = localization_common::Averager("Pose Prior Error");
   localization_common::Averager velocity_prior_error_averager_ = localization_common::Averager("Velocity Prior Error");
   localization_common::Averager bias_prior_error_averager_ = localization_common::Averager("Bias Prior Error");

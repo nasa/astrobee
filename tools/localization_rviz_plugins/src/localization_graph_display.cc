@@ -28,6 +28,7 @@
 #include <OGRE/OgreSceneNode.h>
 
 #include <cv_bridge/cv_bridge.h>
+#include <ros/package.h>
 #include <rviz/frame_manager.h>
 #include <rviz/visualization_manager.h>
 
@@ -57,19 +58,12 @@ LocalizationGraphDisplay::LocalizationGraphDisplay() {
   optical_flow_image_pub_ = image_transport.advertise("/graph_localizer/optical_flow_feature_tracks", 1);
   smart_factor_projection_image_pub_ = image_transport.advertise("/graph_localizer/smart_factor_projections", 1);
 
-  // TODO(rsoussan): avoid this and pass config path directly to config reader!!!!
-  // make sure body_T_nav cam is correct!!!! (bsharp not bumble)
   // Only pass program name to free flyer so that boost command line options
   // are ignored when parsing gflags.
   int ff_argc = 1;
   char* argv = "script";
   char** argv_ptr = &argv;
   ff_common::InitFreeFlyerApplication(&ff_argc, &argv_ptr);
-  const std::string config_path = "/home/rsoussan/astrobee/astrobee";
-  const std::string world = "granite";
-  const std::string robot_config_file = "config/robots/bsharp.config";
-  lc::SetEnvironmentConfigs(config_path, world, robot_config_file);
-
   config_reader::ConfigReader config;
   config.AddFile("cameras.config");
 
@@ -222,14 +216,24 @@ void LocalizationGraphDisplay::addSmartFactorProjectionVisual(const SmartFactor&
 
 void LocalizationGraphDisplay::addImuVisual(const graph_localizer::GraphLocalizer& graph_localizer,
                                             const gtsam::CombinedImuFactor* const imu_factor) {
-  const auto pose = graph_localizer.graph_values().at<gtsam::Pose3>(imu_factor->key1());
-  if (!pose) {
-    LOG(ERROR) << "ProcessMessage: Failed to get pose.";
+  const auto world_T_body = graph_localizer.graph_values().at<gtsam::Pose3>(imu_factor->key1());
+  if (!world_T_body) {
+    LOG(ERROR) << "ProcessMessage: Failed to get world_T_body.";
     return;
   }
+  // TODO(rsoussan): This should use pose timestamp.  Replace when can get this from graph values, otherwise
+  // this will render wrong in a non static frame.
+  const auto timestamp = ros::Time::now();
+  const auto current_frame_T_world = currentFrameTFrame("world", timestamp, *context_);
+  if (!current_frame_T_world) {
+    LOG(ERROR) << "processMessage: Failed to get current_frame_T_world.";
+    return;
+  }
+  const gtsam::Pose3 current_frame_T_body = *current_frame_T_world * *world_T_body;
+
   if (show_pose_axes_->getBool()) {
     const float scale = pose_axes_size_->getFloat();
-    auto axis = axisFromPose(*pose, scale, context_->getSceneManager(), scene_node_);
+    auto axis = axisFromPose(current_frame_T_body, scale, context_->getSceneManager(), scene_node_);
     graph_pose_axes_.emplace_back(std::move(axis));
   }
 
@@ -240,9 +244,9 @@ void LocalizationGraphDisplay::addImuVisual(const graph_localizer::GraphLocalize
       return;
     }
     auto imu_factor_arrow = std::unique_ptr<rviz::Arrow>(new rviz::Arrow(context_->getSceneManager(), scene_node_));
-    imu_factor_arrow->setPosition(ogrePosition(*pose));
+    imu_factor_arrow->setPosition(ogrePosition(current_frame_T_body));
     const auto orientation_and_length =
-      getOrientationAndLength(pose->translation(), imu_predicted_combined_nav_state->pose().translation());
+      getOrientationAndLength(world_T_body->translation(), imu_predicted_combined_nav_state->pose().translation());
     imu_factor_arrow->setOrientation(orientation_and_length.first);
     const float diameter = imu_factor_arrows_diameter_->getFloat();
     imu_factor_arrow->set(3.0 * orientation_and_length.second / 4.0, 0.5 * diameter,
