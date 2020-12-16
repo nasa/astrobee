@@ -31,7 +31,14 @@
   <env name="ASTROBEE_CONFIG_DIR" value="$(find astrobee)/config" />
   <env name="ASTROBEE_RESOURCE_DIR" value="$(find astrobee)/resources" />
 
-  <node type="rviz" name="rviz" pkg="rviz" args="-d $(find astrobee)/launch/offline_localization/rviz/localization.rviz" />
+  <group if="$(eval arg('world') == 'iss')">
+    <node type="rviz" name="rviz" pkg="rviz" args="-d $(find astrobee)/launch/offline_localization/rviz/loc_iss.rviz" />
+  </group>
+
+  <group if="$(eval arg('world') == 'granite')">
+    <node type="rviz" name="rviz" pkg="rviz" args="-d $(find astrobee)/launch/offline_localization/rviz/loc_granite.rviz" />
+  </group>
+
   <!-- Publish Static TFs-->
   <include file="$(find framestore)/launch/framestore.launch">
   </include>
