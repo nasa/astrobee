@@ -122,7 +122,7 @@ class ComManager:
         self.subs_manager = com.DdsSubscriberManager()
         self.subs_manager.add_subscriber(
                 "sparse_mapping_pose_sub", com.DdsSubscriber(
-                    "PoseStampedSubscriber::PoseStampedReader", self.viz.ml_pose_callback, com.PoseStamped), True)
+                    "SparseMappingPoseStampedSubscriber::SparseMappingPoseStampedReader", self.viz.ml_pose_callback, com.PoseStamped), True)
         self.subs_manager.add_subscriber(
                 "ekf_sub", com.DdsSubscriber(
                     "EkfSubscriber::EkfReader", self.viz.ekf_callback, com.EkfState), True)
