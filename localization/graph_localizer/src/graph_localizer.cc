@@ -61,6 +61,7 @@ GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
     : feature_tracker_(new FeatureTracker(params.feature_tracker)),
       latest_imu_integrator_(params.graph_initialization),
       graph_values_(new GraphValues(params.graph_values)),
+      log_on_destruction_(true),
       params_(params) {
   // Assumes zero initial velocity
   const lc::CombinedNavState global_N_body_start(
@@ -121,6 +122,10 @@ GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
   smart_projection_cumulative_factor_adder_.reset(
     new SmartProjectionCumulativeFactorAdder(params_.factor.smart_projection_adder, feature_tracker_));
   standstill_factor_adder_.reset(new StandstillFactorAdder(params_.factor.standstill_adder, feature_tracker_));
+}
+
+GraphLocalizer::~GraphLocalizer() {
+  if (log_on_destruction_) graph_logger_.Log();
 }
 
 void GraphLocalizer::AddStartingPriors(const lc::CombinedNavState& global_N_body_start, const int key_index,
@@ -992,90 +997,7 @@ void GraphLocalizer::PrintFactorDebugInfo() const {
   }
 }
 
-void GraphLocalizer::LogErrors() {
-  double total_error = 0;
-  double optical_flow_factor_error = 0;
-  double loc_proj_error = 0;
-  double imu_factor_error = 0;
-  double rotation_factor_error = 0;
-  double standstill_between_factor_error = 0;
-  double pose_prior_error = 0;
-  double velocity_prior_error = 0;
-  double bias_prior_error = 0;
-  for (const auto& factor : graph_) {
-    const double error = factor->error(graph_values_->values());
-    total_error += error;
-    if (params_.factor.smart_projection_adder.enabled) {
-      const auto smart_factor = dynamic_cast<const RobustSmartFactor*>(factor.get());
-      if (smart_factor) {
-        optical_flow_factor_error += error;
-      }
-    }
-    if (params_.factor.projection_adder.enabled) {
-      const auto projection_factor = dynamic_cast<const ProjectionFactor*>(factor.get());
-      if (projection_factor) {
-        optical_flow_factor_error += error;
-      }
-    }
-    const auto imu_factor = dynamic_cast<gtsam::CombinedImuFactor*>(factor.get());
-    if (imu_factor) {
-      imu_factor_error += error;
-    }
-    const auto loc_factor = dynamic_cast<gtsam::LocProjectionFactor<>*>(factor.get());
-    const auto loc_pose_factor = dynamic_cast<gtsam::LocPoseFactor*>(factor.get());
-    if (loc_factor || loc_pose_factor) {
-      loc_proj_error += error;
-    }
-    const auto rotation_factor = dynamic_cast<gtsam::PoseRotationFactor*>(factor.get());
-    if (rotation_factor) {
-      rotation_factor_error += error;
-    }
-    const auto standstill_between_factor = dynamic_cast<gtsam::BetweenFactor<gtsam::Pose3>*>(factor.get());
-    if (standstill_between_factor) {
-      standstill_between_factor_error += error;
-    }
-
-    // Prior Factors
-    const auto pose_prior_factor = dynamic_cast<gtsam::PriorFactor<gtsam::Pose3>*>(factor.get());
-    if (pose_prior_factor && !loc_pose_factor) {
-      pose_prior_error += error;
-    }
-    const auto velocity_prior_factor = dynamic_cast<gtsam::PriorFactor<gtsam::Velocity3>*>(factor.get());
-    if (velocity_prior_factor) {
-      velocity_prior_error += error;
-    }
-    const auto bias_prior_factor = dynamic_cast<gtsam::PriorFactor<gtsam::imuBias::ConstantBias>*>(factor.get());
-    if (bias_prior_factor) {
-      bias_prior_error += error;
-    }
-  }
-  total_error_averager_.UpdateAndLogEveryN(total_error, params_.log_rate);
-  of_error_averager_.UpdateAndLogEveryN(optical_flow_factor_error, params_.log_rate);
-  loc_proj_error_averager_.UpdateAndLogEveryN(loc_proj_error, params_.log_rate);
-  imu_error_averager_.UpdateAndLogEveryN(imu_factor_error, params_.log_rate);
-  rotation_error_averager_.UpdateAndLogEveryN(rotation_factor_error, params_.log_rate);
-  standstill_between_error_averager_.UpdateAndLogEveryN(standstill_between_factor_error, params_.log_rate);
-  pose_prior_error_averager_.UpdateAndLogEveryN(pose_prior_error, params_.log_rate);
-  velocity_prior_error_averager_.UpdateAndLogEveryN(velocity_prior_error, params_.log_rate);
-  bias_prior_error_averager_.UpdateAndLogEveryN(bias_prior_error, params_.log_rate);
-}
-
-void GraphLocalizer::LogStats() {
-  num_states_averager_.UpdateAndLogEveryN(graph_values_->NumStates(), params_.log_rate);
-  duration_averager_.UpdateAndLogEveryN(graph_values_->Duration(), params_.log_rate);
-  num_optical_flow_factors_averager_.UpdateAndLogEveryN(NumOFFactors(), params_.log_rate);
-  num_loc_factors_averager_.UpdateAndLogEveryN(NumVLFactors(), params_.log_rate);
-  num_imu_factors_averager_.UpdateAndLogEveryN(NumFactors<gtsam::CombinedImuFactor>(), params_.log_rate);
-  num_rotation_factors_averager_.UpdateAndLogEveryN(NumFactors<gtsam::PoseRotationFactor>(), params_.log_rate);
-  num_standstill_between_factors_averager_.UpdateAndLogEveryN(NumFactors<gtsam::BetweenFactor<gtsam::Pose3>>(),
-                                                              params_.log_rate);
-  num_vel_prior_factors_averager_.UpdateAndLogEveryN(NumFactors<gtsam::PriorFactor<gtsam::Velocity3>>(),
-                                                     params_.log_rate);
-  num_marginal_factors_averager_.UpdateAndLogEveryN(NumFactors<gtsam::LinearContainerFactor>(), params_.log_rate);
-  if (params_.factor.projection_adder.enabled)
-    num_features_averager_.UpdateAndLogEveryN(NumFeatures(), params_.log_rate);
-  num_factors_averager_.UpdateAndLogEveryN(graph_.size(), params_.log_rate);
-}
+const GraphLocalizerParams& GraphLocalizer::params() const { return params_; }
 
 int GraphLocalizer::NumFeatures() const { return graph_values_->NumFeatures(); }
 
@@ -1158,6 +1080,8 @@ boost::optional<std::pair<gtsam::Pose3, lc::Time>> GraphLocalizer::estimated_wor
   return std::make_pair(estimated_world_T_dock_->first, estimated_world_T_dock_->second);
 }
 
+void GraphLocalizer::LogOnDestruction(const bool log_on_destruction) { log_on_destruction_ = log_on_destruction; }
+
 bool GraphLocalizer::standstill() const {
   // If uninitialized, return not at standstill
   // TODO(rsoussan): Is this the appropriate behavior?
@@ -1167,12 +1091,12 @@ bool GraphLocalizer::standstill() const {
 
 bool GraphLocalizer::Update() {
   LOG(INFO) << "Update: Updating.";
-  update_timer_.Start();
+  graph_logger_.update_timer_.Start();
 
-  add_buffered_factors_timer_.Start();
+  graph_logger_.add_buffered_factors_timer_.Start();
   BufferCumulativeFactors();
   const int num_added_factors = AddBufferedFactors();
-  add_buffered_factors_timer_.StopAndLogEveryN(params_.log_rate);
+  graph_logger_.add_buffered_factors_timer_.Stop();
   if (num_added_factors <= 0) {
     LOG(WARNING) << "Update: No factors added.";
     return false;
@@ -1181,7 +1105,7 @@ bool GraphLocalizer::Update() {
   // Only get marginals and slide window if optimization has already occured
   // TODO(rsoussan): Make cleaner way to check for this
   if (last_latest_time_) {
-    marginals_timer_.Start();
+    graph_logger_.marginals_timer_.Start();
     // Calculate marginals for covariances
     try {
       marginals_ = gtsam::Marginals(graph_, graph_values_->values(), marginals_factorization_);
@@ -1192,14 +1116,14 @@ bool GraphLocalizer::Update() {
       log(params_.fatal_failures, "Update: Computing marginals failed.");
       marginals_ = boost::none;
     }
-    marginals_timer_.StopAndLogEveryN(params_.log_rate);
+    graph_logger_.marginals_timer_.Stop();
 
-    slide_window_timer_.Start();
+    graph_logger_.slide_window_timer_.Start();
     if (!SlideWindow(marginals_, *last_latest_time_)) {
       LOG(ERROR) << "Update: Failed to slide window.";
       return false;
     }
-    slide_window_timer_.StopAndLogEveryN(params_.log_rate);
+    graph_logger_.slide_window_timer_.Stop();
   }
 
   // TODO(rsoussan): Is ordering required? if so clean these calls open and unify with marginalization
@@ -1219,7 +1143,7 @@ bool GraphLocalizer::Update() {
   // Optimize
   gtsam::LevenbergMarquardtOptimizer optimizer(graph_, graph_values_->values(), levenberg_marquardt_params_);
 
-  optimization_timer_.Start();
+  graph_logger_.optimization_timer_.Start();
   // TODO(rsoussan): Indicate if failure occurs in state msg, perhaps using confidence value for localizer
   try {
     graph_values_->UpdateValues(optimizer.optimize());
@@ -1228,16 +1152,11 @@ bool GraphLocalizer::Update() {
   } catch (...) {
     log(params_.fatal_failures, "Update: Graph optimization failed, keeping old values.");
   }
-  optimization_timer_.StopAndLogEveryN(params_.log_rate);
+  graph_logger_.optimization_timer_.Stop();
   last_latest_time_ = graph_values_->LatestTimestamp();
-  iterations_averager_.UpdateAndLog(optimizer.iterations());
-  // TODO(rsoussan): Add options for these?
-  log_stats_timer_.Start();
-  LogStats();
-  log_stats_timer_.StopAndLogEveryN(params_.log_rate);
-  log_error_timer_.Start();
-  LogErrors();
-  log_error_timer_.StopAndLogEveryN(params_.log_rate);
+  graph_logger_.iterations_averager_.Update(optimizer.iterations());
+  graph_logger_.UpdateStats(*this);
+  graph_logger_.UpdateErrors(*this);
 
   if (params_.print_factor_info) PrintFactorDebugInfo();
 
@@ -1249,7 +1168,7 @@ bool GraphLocalizer::Update() {
   }
 
   latest_imu_integrator_.ResetPimIntegrationAndSetBias(latest_bias->first);
-  update_timer_.StopAndLogEveryN(params_.log_rate);
+  graph_logger_.update_timer_.Stop();
   return true;
 }
 }  // namespace graph_localizer
