@@ -316,6 +316,7 @@ void LocalizationGraphDisplay::processMessage(const ff_msgs::LocalizationGraph::
   clearDisplay();
   graph_localizer::GraphLocalizer graph_localizer;
   gtsam::deserializeBinary(msg->serialized_graph, graph_localizer);
+  graph_localizer.LogOnDestruction(false);
   std::vector<gtsam::LocProjectionFactor<>*> loc_projection_factors;
   SmartFactor* largest_error_smart_factor = nullptr;
   double largest_smart_factor_error = -1;

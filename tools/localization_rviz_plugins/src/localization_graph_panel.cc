@@ -184,6 +184,7 @@ void LocalizationGraphPanel::LocalizationGraphCallback(const ff_msgs::Localizati
 
   gl::GraphLocalizer graph_localizer;
   gtsam::deserializeBinary(loc_msg->serialized_graph, graph_localizer);
+  graph_localizer.LogOnDestruction(false);
   int of_factors = 0;
   int imu_factors = 0;
   int loc_factors = 0;
