@@ -671,7 +671,6 @@ bool GraphLocalizer::SlideWindow(const boost::optional<gtsam::Marginals>& margin
 
   feature_tracker_->RemoveOldFeaturePoints(*oldest_timestamp);
   latest_imu_integrator_.RemoveOldMeasurements(*oldest_timestamp);
-  // Currently this only applies to optical flow smart factors.  Remove if no longer use these
   RemoveOldBufferedFactors(*oldest_timestamp);
 
   if (params_.factor.projection_adder.enabled && params_.factor.projection_adder.add_point_priors && marginals_) {
