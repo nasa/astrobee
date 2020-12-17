@@ -10,4 +10,5 @@
 [submodule "description/media"]
 	path = description/media
 	url = https://github.com/nicole-j-ortega/astrobee_media.git
+	branch = feature/AAHS-513_r2_astrobee_simulation
 	shallow = true
