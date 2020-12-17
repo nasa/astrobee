@@ -32,6 +32,7 @@
 #include <Eigen/Core>
 
 #include <geometry_msgs/Pose.h>
+#include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/TransformStamped.h>
 #include <std_msgs/Header.h>
 
@@ -105,6 +106,8 @@ void RotationToMsg(const RotationType& rotation, MsgRotationType& msg_rotation) 
   msg_rotation.z = rotation.z();
 }
 
+gtsam::Pose3 PoseFromMsg(const geometry_msgs::PoseStamped& msg);
+
 gtsam::Pose3 PoseFromMsg(const geometry_msgs::Pose& msg_pose);
 
 void PoseToMsg(const gtsam::Pose3& pose, geometry_msgs::Pose& msg_pose);
@@ -115,7 +118,7 @@ geometry_msgs::TransformStamped PoseToTF(const Eigen::Isometry3d& pose, const st
 
 geometry_msgs::TransformStamped PoseToTF(const gtsam::Pose3& pose, const std::string& parent_frame,
                                          const std::string& child_frame, const Time timestamp,
-                                         const std::string& platform_name);
+                                         const std::string& platform_name = "");
 
 void EigenPoseToMsg(const Eigen::Isometry3d& pose, geometry_msgs::Pose& msg_pose);
 

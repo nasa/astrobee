@@ -16,75 +16,79 @@
  * under the License.
  */
 
-#include <config_reader/config_reader.h>
-#include <localization_common/utilities.h>
-#include <localization_measurements/matched_projections_measurement.h>
-#include <localization_measurements/measurement_conversions.h>
-
 #include <OGRE/OgreSceneManager.h>
 #include <OGRE/OgreSceneNode.h>
 
 #include <rviz/frame_manager.h>
 #include <rviz/visualization_manager.h>
+#include <sensor_msgs/PointCloud2.h>
 
 #include <glog/logging.h>
 
 #include <string>
 
 #include "sparse_mapping_display.h"  // NOLINT
-#include "utilities.h"               // NOLINT
 
 namespace localization_rviz_plugins {
-namespace lc = localization_common;
-namespace lm = localization_measurements;
-
 SparseMappingDisplay::SparseMappingDisplay() {
-  pose_axes_size_.reset(new rviz::FloatProperty("Pose Axes Size", 0.1, "Pose axes size.", this));
-  number_of_poses_.reset(new rviz::IntProperty("Number of Poses", 10, "Number of poses to display.", this));
-
-  // TODO(rsoussan): avoid this and pass config path directly to config reader!!!!
-  // make sure body_T_nav cam is correct!!!! (bsharp not bumble)
-  // Only pass program name to free flyer so that boost command line options
-  // are ignored when parsing gflags.
   int ff_argc = 1;
-  char* argv = "script";
+  char* argv = "sparse_mapping_display";
   char** argv_ptr = &argv;
   ff_common::InitFreeFlyerApplication(&ff_argc, &argv_ptr);
-  const std::string config_path = "/home/rsoussan/astrobee/astrobee";
-  const std::string world = "granite";
-  const std::string robot_config_file = "config/robots/bsharp.config";
-  lc::SetEnvironmentConfigs(config_path, world, robot_config_file);
   config_reader::ConfigReader config;
+  // TODO(rsoussan): Config reader fails to load map string unless a file is added (doesn't matter which one).
   config.AddFile("geometry.config");
   if (!config.ReadFiles()) {
     LOG(FATAL) << "Failed to read config files.";
-    exit(0);
+  }
+  std::string map_file;
+  if (!config.GetStr("world_vision_map_filename", &map_file))
+    LOG(FATAL) << "SparseMappingDisplay: Failed to load map file.";
+  map_.reset(new sparse_mapping::SparseMap(map_file, true));
+  map_cloud_publisher_ = nh_.advertise<sensor_msgs::PointCloud2>("sparse_mapping/map_cloud", 1, true);
+}
+
+void SparseMappingDisplay::onInitialize() { drawMap(); }
+
+void SparseMappingDisplay::drawMap() {
+  // TODO(rsoussan): Use pcl point cloud when pcl_ros dependency added
+  sensor_msgs::PointCloud2 map_cloud;
+  map_cloud.header = std_msgs::Header();
+  map_cloud.header.frame_id = "world";
+  map_cloud.height = 1;
+  map_cloud.width = (map_.get())->GetNumLandmarks();
+  map_cloud.fields.resize(3);
+  map_cloud.fields[0].name = "x";
+  map_cloud.fields[0].offset = 0;
+  map_cloud.fields[0].datatype = 7;
+  map_cloud.fields[0].count = 1;
+  map_cloud.fields[1].name = "y";
+  map_cloud.fields[1].offset = 4;
+  map_cloud.fields[1].datatype = 7;
+  map_cloud.fields[1].count = 1;
+  map_cloud.fields[2].name = "z";
+  map_cloud.fields[2].offset = 8;
+  map_cloud.fields[2].datatype = 7;
+  map_cloud.fields[2].count = 1;
+  map_cloud.is_bigendian = false;
+  map_cloud.point_step = 12;
+  map_cloud.row_step = map_cloud.point_step * map_cloud.width;
+  map_cloud.is_dense = true;
+  map_cloud.data.resize(map_cloud.row_step);
+
+  for (int i = 0; i < static_cast<int>(map_cloud.width); ++i) {
+    const Eigen::Vector3f point = ((map_.get())->GetLandmarkPosition(i).cast<float>());
+    memcpy(&map_cloud.data[map_cloud.point_step * i + 0], &point.x(), 4);
+    memcpy(&map_cloud.data[map_cloud.point_step * i + 4], &point.y(), 4);
+    memcpy(&map_cloud.data[map_cloud.point_step * i + 8], &point.z(), 4);
   }
 
-  nav_cam_T_body_ = (lc::LoadTransform(config, "nav_cam_transform")).inverse();
+  map_cloud.header.stamp = ros::Time::now();
+  // TODO(rsoussan): Use ros point_cloud_common instead of publishing when rviz_default_plugin linker issue fixed
+  map_cloud_publisher_.publish(map_cloud);
 }
 
-void SparseMappingDisplay::onInitialize() { MFDClass::onInitialize(); }
-
-void SparseMappingDisplay::reset() {
-  MFDClass::reset();
-  clearDisplay();
-}
-
-void SparseMappingDisplay::clearDisplay() { sparse_mapping_pose_axes_.clear(); }
-
-void SparseMappingDisplay::processMessage(const ff_msgs::VisualLandmarks::ConstPtr& msg) {
-  sparse_mapping_pose_axes_.set_capacity(number_of_poses_->getInt());
-  const auto projections_measurement = lm::MakeMatchedProjectionsMeasurement(*msg);
-  const float scale = pose_axes_size_->getFloat();
-  const gtsam::Pose3 global_T_body = projections_measurement.global_T_cam * nav_cam_T_body_;
-  auto axis = axisFromPose(global_T_body, scale, context_->getSceneManager(), scene_node_);
-  // TODO(rsoussan): pass these to addposeasaxis???
-  axis->setXColor(Ogre::ColourValue(0.5, 0, 0, 0.3));
-  axis->setYColor(Ogre::ColourValue(0, 0.5, 0, 0.3));
-  axis->setZColor(Ogre::ColourValue(0, 0, 0.5, 0.3));
-  sparse_mapping_pose_axes_.push_back(std::move(axis));
-}
+void SparseMappingDisplay::reset() {}
 }  // namespace localization_rviz_plugins
 
 #include <pluginlib/class_list_macros.h>  // NOLINT

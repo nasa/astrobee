@@ -59,7 +59,7 @@ def check_params(graph_bag_params_list):
 def run_graph_bag(params, output_dir): 
   bag_name = os.path.splitext(os.path.basename(params.bagfile))[0]
   output_bag_path = os.path.join(output_dir, bag_name + '_results.bag')
-  run_command = 'rosrun graph_bag run_graph_bag ' + params.bagfile + ' ' + params.map_file + ' -i ' + params.image_topic + ' -o ' + output_bag_path + ' -c ' + params.config_path + ' -r ' + params.robot_config_file + ' -w ' + params.world
+  run_command = 'rosrun graph_bag run_graph_bag ' + params.bagfile + ' ' + params.map_file + ' ' + params.config_path + ' -i ' + params.image_topic + ' -o ' + output_bag_path + ' -r ' + params.robot_config_file + ' -w ' + params.world
   os.system(run_command)
   output_file = os.path.join(output_dir, bag_name + '_output.pdf')
   plot_command = 'rosrun graph_bag plot_results_main.py ' + output_bag_path + ' --output-file ' + output_file 

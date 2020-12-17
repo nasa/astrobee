@@ -22,16 +22,11 @@
 
 // Required for Qt
 #ifndef Q_MOC_RUN
-#include <ff_msgs/VisualLandmarks.h>
-#include <gtsam/geometry/Pose3.h>
-#include <rviz/message_filter_display.h>
-#include <rviz/ogre_helpers/axes.h>
-#include <rviz/properties/float_property.h>
-#include <rviz/properties/int_property.h>
-#include <boost/circular_buffer.hpp>
+#include <sparse_mapping/sparse_map.h>
+#include <ros/node_handle.h>
+#include <ros/publisher.h>
+#include <rviz/display.h>
 #endif
-
-#include <vector>
 
 // Forward declarations for ogre and rviz
 namespace Ogre {
@@ -40,27 +35,24 @@ class SceneNode;
 
 namespace localization_rviz_plugins {
 
-class SparseMappingDisplay : public rviz::MessageFilterDisplay<ff_msgs::VisualLandmarks> {
+class SparseMappingDisplay : public rviz::Display {
   Q_OBJECT    // NOLINT
     public :  // NOLINT
               SparseMappingDisplay();
   ~SparseMappingDisplay() = default;
 
-  // private:
  protected:
   void onInitialize() final;
   void reset() final;
 
- private Q_SLOTS:  // NOLINT
-
  private:
-  void processMessage(const ff_msgs::VisualLandmarks::ConstPtr& graph_msg);
-  void clearDisplay();
+  void drawMap();
 
-  boost::circular_buffer<std::unique_ptr<rviz::Axes>> sparse_mapping_pose_axes_;
-  std::unique_ptr<rviz::FloatProperty> pose_axes_size_;
-  std::unique_ptr<rviz::IntProperty> number_of_poses_;
-  gtsam::Pose3 nav_cam_T_body_;
+  std::unique_ptr<sparse_mapping::SparseMap> map_;
+  // TODO(rosussan): Remove publishing and use point_cloud_common from rviz/default_plugins
+  // when linking error is fixed
+  ros::Publisher map_cloud_publisher_;
+  ros::NodeHandle nh_;
 };
 }  // namespace localization_rviz_plugins
 #endif  // LOCALIZATION_RVIZ_PLUGINS_SPARSE_MAPPING_DISPLAY_H_ NOLINT

@@ -40,4 +40,8 @@ void LoadLiveMeasurementSimulatorParams(config_reader::ConfigReader& config, con
   params.map_file = map_file;
   params.image_topic = image_topic;
 }
+
+void LoadGraphLocalizerSimulatorParams(config_reader::ConfigReader& config, GraphLocalizerSimulatorParams& params) {
+  params.optimization_time = lc::LoadDouble(config, "optimization_time");
+}
 }  // namespace graph_bag

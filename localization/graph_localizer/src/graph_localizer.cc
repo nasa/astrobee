@@ -39,8 +39,6 @@
 #include <unistd.h>
 
 #include <chrono>
-#include <iomanip>
-
 
 namespace {
 // TODO(rsoussan): Is this necessary? Just use DFATAL and compile with debug?
@@ -120,8 +118,8 @@ GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
   projection_factor_adder_.reset(
     new ProjectionFactorAdder(params_.factor.projection_adder, feature_tracker_, graph_values_));
   rotation_factor_adder_.reset(new RotationFactorAdder(params_.factor.rotation_adder, feature_tracker_));
-  smart_projection_factor_adder_.reset(
-    new SmartProjectionFactorAdder(params_.factor.smart_projection_adder, feature_tracker_));
+  smart_projection_cumulative_factor_adder_.reset(
+    new SmartProjectionCumulativeFactorAdder(params_.factor.smart_projection_adder, feature_tracker_));
   standstill_factor_adder_.reset(new StandstillFactorAdder(params_.factor.standstill_adder, feature_tracker_));
 }
 
@@ -168,7 +166,7 @@ void GraphLocalizer::AddPriors(const lc::CombinedNavState& global_N_body, const 
 boost::optional<std::pair<lc::CombinedNavState, lc::CombinedNavStateCovariances>>
 GraphLocalizer::LatestCombinedNavStateAndCovariances() const {
   if (!marginals_) {
-    LOG(ERROR) << "LatestCombinedNavStateAndCovariances: No marginals available.";
+    LOG_EVERY_N(ERROR, 50) << "LatestCombinedNavStateAndCovariances: No marginals available.";
     return boost::none;
   }
   const auto state_covariance_pair = LatestCombinedNavStateAndCovariances(*marginals_);
@@ -278,9 +276,6 @@ bool GraphLocalizer::AddOpticalFlowMeasurement(
   if (params_.factor.projection_adder.enabled) {
     BufferFactors(projection_factor_adder_->AddFactors(optical_flow_feature_points_measurement));
   }
-  if (params_.factor.smart_projection_adder.enabled) {
-    BufferFactors(smart_projection_factor_adder_->AddFactors(optical_flow_feature_points_measurement));
-  }
   if (params_.factor.rotation_adder.enabled) {
     BufferFactors(rotation_factor_adder_->AddFactors(optical_flow_feature_points_measurement));
   }
@@ -369,7 +364,7 @@ void GraphLocalizer::SplitSmartFactorsIfNeeded(FactorsToAdd& factors_to_add) {
         continue;
       }
     }
-    LOG(WARNING) << "SplitSmartFactorsIfNeeded: Failed to fix smart factor";
+    VLOG(2) << "SplitSmartFactorsIfNeeded: Failed to fix smart factor";
   }
 }
 
@@ -768,6 +763,15 @@ void GraphLocalizer::RemovePriors(const int key_index) {
   VLOG(2) << "RemovePriors: Erase " << removed_factors << " factors.";
 }
 
+void GraphLocalizer::BufferCumulativeFactors() {
+  // Remove measurements here so they don't grow too large before adding to graph
+  // TODO(rsoussan): Clean this up, slide window before optimizing?
+  feature_tracker_->RemovePointsOutsideWindow();
+  if (params_.factor.smart_projection_adder.enabled) {
+    BufferFactors(smart_projection_cumulative_factor_adder_->AddFactors());
+  }
+}
+
 void GraphLocalizer::BufferFactors(const std::vector<FactorsToAdd>& factors_to_add_vec) {
   for (const auto& factors_to_add : factors_to_add_vec)
     buffered_factors_to_add_.emplace(factors_to_add.timestamp(), factors_to_add);
@@ -985,6 +989,7 @@ void GraphLocalizer::LogErrors() {
   double loc_proj_error = 0;
   double imu_factor_error = 0;
   double rotation_factor_error = 0;
+  double standstill_between_factor_error = 0;
   double pose_prior_error = 0;
   double velocity_prior_error = 0;
   double bias_prior_error = 0;
@@ -1016,6 +1021,11 @@ void GraphLocalizer::LogErrors() {
     if (rotation_factor) {
       rotation_factor_error += error;
     }
+    const auto standstill_between_factor = dynamic_cast<gtsam::BetweenFactor<gtsam::Pose3>*>(factor.get());
+    if (standstill_between_factor) {
+      standstill_between_factor_error += error;
+    }
+
     // Prior Factors
     const auto pose_prior_factor = dynamic_cast<gtsam::PriorFactor<gtsam::Pose3>*>(factor.get());
     if (pose_prior_factor && !loc_pose_factor) {
@@ -1030,27 +1040,32 @@ void GraphLocalizer::LogErrors() {
       bias_prior_error += error;
     }
   }
-  total_error_averager_.UpdateAndLog(total_error);
-  of_error_averager_.UpdateAndLog(optical_flow_factor_error);
-  loc_proj_error_averager_.UpdateAndLog(loc_proj_error);
-  imu_error_averager_.UpdateAndLog(imu_factor_error);
-  rotation_error_averager_.UpdateAndLog(rotation_factor_error);
-  pose_prior_error_averager_.UpdateAndLog(pose_prior_error);
-  velocity_prior_error_averager_.UpdateAndLog(velocity_prior_error);
-  bias_prior_error_averager_.UpdateAndLog(bias_prior_error);
+  total_error_averager_.UpdateAndLogEveryN(total_error, params_.log_rate);
+  of_error_averager_.UpdateAndLogEveryN(optical_flow_factor_error, params_.log_rate);
+  loc_proj_error_averager_.UpdateAndLogEveryN(loc_proj_error, params_.log_rate);
+  imu_error_averager_.UpdateAndLogEveryN(imu_factor_error, params_.log_rate);
+  rotation_error_averager_.UpdateAndLogEveryN(rotation_factor_error, params_.log_rate);
+  standstill_between_error_averager_.UpdateAndLogEveryN(standstill_between_factor_error, params_.log_rate);
+  pose_prior_error_averager_.UpdateAndLogEveryN(pose_prior_error, params_.log_rate);
+  velocity_prior_error_averager_.UpdateAndLogEveryN(velocity_prior_error, params_.log_rate);
+  bias_prior_error_averager_.UpdateAndLogEveryN(bias_prior_error, params_.log_rate);
 }
 
 void GraphLocalizer::LogStats() {
-  num_states_averager_.UpdateAndLog(graph_values_->NumStates());
-  duration_averager_.UpdateAndLog(graph_values_->Duration());
-  num_optical_flow_factors_averager_.UpdateAndLog(NumOFFactors());
-  num_loc_factors_averager_.UpdateAndLog(NumVLFactors());
-  num_imu_factors_averager_.UpdateAndLog(NumFactors<gtsam::CombinedImuFactor>());
-  num_rotation_factors_averager_.UpdateAndLog(NumFactors<gtsam::PoseRotationFactor>());
-  num_vel_prior_factors_averager_.UpdateAndLog(NumFactors<gtsam::PriorFactor<gtsam::Velocity3>>());
-  num_marginal_factors_averager_.UpdateAndLog(NumFactors<gtsam::LinearContainerFactor>());
-  if (params_.factor.projection_adder.enabled) num_features_averager_.UpdateAndLog(NumFeatures());
-  num_factors_averager_.UpdateAndLog(graph_.size());
+  num_states_averager_.UpdateAndLogEveryN(graph_values_->NumStates(), params_.log_rate);
+  duration_averager_.UpdateAndLogEveryN(graph_values_->Duration(), params_.log_rate);
+  num_optical_flow_factors_averager_.UpdateAndLogEveryN(NumOFFactors(), params_.log_rate);
+  num_loc_factors_averager_.UpdateAndLogEveryN(NumVLFactors(), params_.log_rate);
+  num_imu_factors_averager_.UpdateAndLogEveryN(NumFactors<gtsam::CombinedImuFactor>(), params_.log_rate);
+  num_rotation_factors_averager_.UpdateAndLogEveryN(NumFactors<gtsam::PoseRotationFactor>(), params_.log_rate);
+  num_standstill_between_factors_averager_.UpdateAndLogEveryN(NumFactors<gtsam::BetweenFactor<gtsam::Pose3>>(),
+                                                              params_.log_rate);
+  num_vel_prior_factors_averager_.UpdateAndLogEveryN(NumFactors<gtsam::PriorFactor<gtsam::Velocity3>>(),
+                                                     params_.log_rate);
+  num_marginal_factors_averager_.UpdateAndLogEveryN(NumFactors<gtsam::LinearContainerFactor>(), params_.log_rate);
+  if (params_.factor.projection_adder.enabled)
+    num_features_averager_.UpdateAndLogEveryN(NumFeatures(), params_.log_rate);
+  num_factors_averager_.UpdateAndLogEveryN(graph_.size(), params_.log_rate);
 }
 
 int GraphLocalizer::NumFeatures() const { return graph_values_->NumFeatures(); }
@@ -1146,8 +1161,9 @@ bool GraphLocalizer::Update() {
   update_timer_.Start();
 
   add_buffered_factors_timer_.Start();
+  BufferCumulativeFactors();
   const int num_added_factors = AddBufferedFactors();
-  add_buffered_factors_timer_.StopAndLog();
+  add_buffered_factors_timer_.StopAndLogEveryN(params_.log_rate);
   if (num_added_factors <= 0) {
     LOG(WARNING) << "Update: No factors added.";
     return false;
@@ -1167,14 +1183,14 @@ bool GraphLocalizer::Update() {
       log(params_.fatal_failures, "Update: Computing marginals failed.");
       marginals_ = boost::none;
     }
-    marginals_timer_.StopAndLog();
+    marginals_timer_.StopAndLogEveryN(params_.log_rate);
 
     slide_window_timer_.Start();
     if (!SlideWindow(marginals_, *last_latest_time_)) {
       LOG(ERROR) << "Update: Failed to slide window.";
       return false;
     }
-    slide_window_timer_.StopAndLog();
+    slide_window_timer_.StopAndLogEveryN(params_.log_rate);
   }
 
   // TODO(rsoussan): Is ordering required? if so clean these calls open and unify with marginalization
@@ -1203,16 +1219,16 @@ bool GraphLocalizer::Update() {
   } catch (...) {
     log(params_.fatal_failures, "Update: Graph optimization failed, keeping old values.");
   }
-  optimization_timer_.StopAndLog();
+  optimization_timer_.StopAndLogEveryN(params_.log_rate);
   last_latest_time_ = graph_values_->LatestTimestamp();
   iterations_averager_.UpdateAndLog(optimizer.iterations());
   // TODO(rsoussan): Add options for these?
   log_stats_timer_.Start();
   LogStats();
-  log_stats_timer_.StopAndLog();
+  log_stats_timer_.StopAndLogEveryN(params_.log_rate);
   log_error_timer_.Start();
   LogErrors();
-  log_error_timer_.StopAndLog();
+  log_error_timer_.StopAndLogEveryN(params_.log_rate);
 
   if (params_.print_factor_info) PrintFactorDebugInfo();
 
@@ -1224,8 +1240,7 @@ bool GraphLocalizer::Update() {
   }
 
   latest_imu_integrator_.ResetPimIntegrationAndSetBias(latest_bias->first);
-  // usleep(3e5);
-  update_timer_.StopAndLog();
+  update_timer_.StopAndLogEveryN(params_.log_rate);
   return true;
 }
 }  // namespace graph_localizer

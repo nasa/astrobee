@@ -22,10 +22,12 @@
 #include <graph_localizer/graph_localizer.h>
 #include <imu_integration/utilities.h>
 #include <localization_common/combined_nav_state.h>
+#include <localization_common/time.h>
 
 #include <gtsam/geometry/Pose3.h>
 #include <gtsam/navigation/CombinedImuFactor.h>
 
+#include <rviz/display_context.h>
 #include <rviz/ogre_helpers/axes.h>
 
 #include <OgreQuaternion.h>
@@ -33,12 +35,16 @@
 
 #include <memory>
 #include <utility>
+#include <string>
 #include <vector>
 
 namespace localization_rviz_plugins {
 Ogre::Vector3 ogrePosition(const gtsam::Pose3& pose);
 
 Ogre::Quaternion ogreQuaternion(const gtsam::Pose3& pose);
+
+boost::optional<gtsam::Pose3> currentFrameTFrame(const std::string& frame_id, const ros::Time timestamp,
+                                                 const rviz::DisplayContext& context);
 
 std::unique_ptr<rviz::Axes> axisFromPose(const gtsam::Pose3& pose, const double scale,
                                          Ogre::SceneManager* scene_manager, Ogre::SceneNode* scene_node);

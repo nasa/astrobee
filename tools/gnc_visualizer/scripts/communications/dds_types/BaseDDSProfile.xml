@@ -929,23 +929,24 @@
 </qos_library>
 <!-- types -->
 <types>
-  <include file="PoseStamped.xml"/>
   <include file="EkfState.xml"/>
   <include file="GncFamCmdState.xml"/>
   <include file="GncControlState.xml"/>
   <include file="PmcCmdState.xml"/>
+  <include file="PositionSample.xml"/>
   <include file="LogSample.xml"/>
 </types>
 <!-- Domain Library -->
 <domain_library name="MyDomainLibrary">
   <domain domain_id="37" name="MyDomain">
-    <register_type name="rapid::ext::astrobee::PoseStamped" type_ref="rapid::ext::astrobee::PoseStamped"/>
+    <register_type name="rapid::PositionSample" type_ref="rapid::PositionSample"/>
     <register_type name="rapid::ext::astrobee::EkfState" type_ref="rapid::ext::astrobee::EkfState"/>
     <register_type name="rapid::ext::astrobee::GncFamCmdState" type_ref="rapid::ext::astrobee::GncFamCmdState"/>
     <register_type name="rapid::ext::astrobee::GncControlState" type_ref="rapid::ext::astrobee::GncControlState"/>
     <register_type name="rapid::ext::astrobee::PmcCmdState" type_ref="rapid::ext::astrobee::PmcCmdState"/>
     <register_type name="rapid::ext::astrobee::LogSample" type_ref="rapid::ext::astrobee::LogSample"/>
-    <topic name="astrobee_pose_stamped" register_type_ref="rapid::ext::astrobee::PoseStamped"/>
+    <topic name="rapid_position_sample-sparse" register_type_ref="rapid::PositionSample"/>
+    <topic name="rapid_position_sample-vive" register_type_ref="rapid::PositionSample"/>
     <topic name="astrobee_ekf_state" register_type_ref="rapid::ext::astrobee::EkfState"/>
     <topic name="astrobee_gnc_fam_cmd_state" register_type_ref="rapid::ext::astrobee::GncFamCmdState"/>
     <topic name="astrobee_gnc_control_state-shaper" register_type_ref="rapid::ext::astrobee::GncControlState"/>
@@ -957,9 +958,21 @@
 <!-- Participant library -->
 <domain_participant_library name="MyParticipantLibrary">
   <domain_participant domain_ref="MyDomainLibrary::MyDomain" name="Zero">
-    <subscriber name="PoseStampedSubscriber">
-      <data_reader name="PoseStampedReader" topic_ref="astrobee_pose_stamped">
-        <datareader_qos base_name="RapidQosLibrary::AstrobeePoseStampedProfile"/>
+    <subscriber name="SparseMappingPoseStampedSubscriber">
+      <data_reader name="SparseMappingPoseStampedReader" topic_ref="rapid_position_sample-sparse">
+        <datareader_qos base_name="RapidQosLibrary::RapidPositionSampleProfile"/>
+      </data_reader>
+      <subscriber_qos base_name="RapidQosLibrary::RapidDefaultQos">
+        <partition>
+          <name>
+            <element>Bumble</element>
+          </name>
+        </partition>
+      </subscriber_qos>
+    </subscriber>
+    <subscriber name="VivePoseStampedSubscriber">
+      <data_reader name="VivePoseStampedReader" topic_ref="rapid_position_sample-vive">
+        <datareader_qos base_name="RapidQosLibrary::RapidPositionSampleProfile"/>
       </data_reader>
       <subscriber_qos base_name="RapidQosLibrary::RapidDefaultQos">
         <partition>

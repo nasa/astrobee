@@ -48,6 +48,7 @@ struct GraphLocalizerParams {
   double max_standstill_feature_track_avg_distance_from_mean;
   int standstill_min_num_points_per_track;
   double huber_k;
+  int log_rate;
 };
 }  // namespace graph_localizer
 

@@ -13,8 +13,8 @@
       Localization Graph Panel 
     </description>
   </class>
-  <class name="localization_rviz_plugins/SparseMapping"
-         type="localization_rviz_plugins::SparseMappingDisplay"
+  <class name="localization_rviz_plugins/PoseDisplay"
+         type="localization_rviz_plugins::PoseDisplay"
          base_class_type="rviz::Display">
     <description>
       Sparse Mapping Pose Display
@@ -27,11 +27,11 @@
       Imu Augmentor Display
     </description>
   </class>
- <class name="localization_rviz_plugins/ImuMeasurement"
-         type="localization_rviz_plugins::ImuMeasurementDisplay"
+ <class name="localization_rviz_plugins/SparseMappingDisplay"
+         type="localization_rviz_plugins::SparseMappingDisplay"
          base_class_type="rviz::Display">
     <description>
-      Imu Measurement Display
+      Sparse Mapping Display
     </description>
   </class>
 

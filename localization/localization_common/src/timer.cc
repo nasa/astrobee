@@ -21,27 +21,27 @@
 #include <glog/logging.h>
 
 namespace localization_common {
-Timer::Timer(const std::string& timer_name)
-    : name_(timer_name), last_elapsed_time_(0), average_elapsed_time_(0), num_timing_events_(0) {}
+Timer::Timer(const std::string& timer_name) : averager_(timer_name, "time", "seconds") {}
 void Timer::Start() { start_time_ = std::chrono::steady_clock::now(); }
 void Timer::Stop() {
   const auto end_time = std::chrono::steady_clock::now();
-  last_elapsed_time_ = std::chrono::duration<double>(end_time - start_time_).count();
-  ++num_timing_events_;
-  // Compute moving average to avoid overflow
-  average_elapsed_time_ += (last_elapsed_time_ - average_elapsed_time_) / num_timing_events_;
+  const double elapsed_time = std::chrono::duration<double>(end_time - start_time_).count();
+  averager_.Update(elapsed_time);
 }
-void Timer::Log() {
-  LOG(INFO) << name_ + " time: " << last_elapsed_time_ << " seconds.";
-  LOG(INFO) << "Average " + name_ + " time: " << average_elapsed_time_ << " seconds.";
-}
+
+void Timer::Log() const { averager_.Log(); }
+
+void Timer::LogEveryN(const int num_events_per_log) const { averager_.LogEveryN(num_events_per_log); }
+
 void Timer::StopAndLog() {
   Stop();
   Log();
 }
 
-void Timer::Vlog(const int level) {
-  VLOG(level) << name_ + " time: " << last_elapsed_time_ << " seconds.";
-  VLOG(level) << "Average " + name_ + " time: " << average_elapsed_time_ << " seconds.";
+void Timer::StopAndLogEveryN(const int num_events_per_log) {
+  Stop();
+  LogEveryN(num_events_per_log);
 }
+
+void Timer::Vlog(const int level) const { averager_.Vlog(level); }
 }  // namespace localization_common

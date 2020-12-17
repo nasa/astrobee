@@ -19,6 +19,7 @@
 #ifndef LOCALIZATION_COMMON_TIMER_H_
 #define LOCALIZATION_COMMON_TIMER_H_
 
+#include <localization_common/averager.h>
 #include <localization_common/time.h>
 
 #include <chrono>
@@ -30,16 +31,15 @@ class Timer {
   explicit Timer(const std::string& timer_name = "");
   void Start();
   void Stop();
-  void Log();
+  void Log() const;
+  void LogEveryN(const int num_events_per_log) const;
   void StopAndLog();
-  void Vlog(const int level = 2);
+  void StopAndLogEveryN(const int num_events_per_log);
+  void Vlog(const int level = 2) const;
 
  private:
-  std::string name_;
   std::chrono::time_point<std::chrono::steady_clock> start_time_;
-  double last_elapsed_time_;
-  double average_elapsed_time_;
-  int num_timing_events_;
+  Averager averager_;
 };
 }  // namespace localization_common
 

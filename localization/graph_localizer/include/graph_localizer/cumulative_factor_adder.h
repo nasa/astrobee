@@ -16,31 +16,28 @@
  * under the License.
  */
 
-#ifndef LOCALIZATION_COMMON_RATE_TIMER_H_
-#define LOCALIZATION_COMMON_RATE_TIMER_H_
+#ifndef GRAPH_LOCALIZER_CUMULATIVE_FACTOR_ADDER_H_
+#define GRAPH_LOCALIZER_CUMULATIVE_FACTOR_ADDER_H_
 
-#include <localization_common/averager.h>
-#include <localization_common/time.h>
+#include <graph_localizer/factor_to_add.h>
 
-#include <chrono>
-#include <string>
+#include <vector>
 
-namespace localization_common {
-class RateTimer {
+namespace graph_localizer {
+template <typename PARAMS>
+class CumulativeFactorAdder {
  public:
-  explicit RateTimer(const std::string& timer_name = "");
-  void Record();
-  void Log() const;
-  void LogEveryN(const int num_events_per_log) const;
-  void RecordAndLog();
-  void RecordAndLogEveryN(const int num_events_per_log);
-  void Vlog(const int level = 2) const;
+  explicit CumulativeFactorAdder(const PARAMS& params) : params_(params) {}
+
+  virtual ~CumulativeFactorAdder() {}
+
+  virtual std::vector<FactorsToAdd> AddFactors() = 0;
+
+  const PARAMS& params() const { return params_; }
 
  private:
-  std::chrono::time_point<std::chrono::steady_clock> start_time_;
-  int num_events_;
-  Averager averager_;
+  PARAMS params_;
 };
-}  // namespace localization_common
+}  // namespace graph_localizer
 
-#endif  // LOCALIZATION_COMMON_RATE_TIMER_H_
+#endif  // GRAPH_LOCALIZER_CUMULATIVE_FACTOR_ADDER_H_

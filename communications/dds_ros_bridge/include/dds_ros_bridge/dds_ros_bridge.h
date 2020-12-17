@@ -57,6 +57,7 @@
 #include "dds_ros_bridge/ros_payload_state.h"
 #include "dds_ros_bridge/ros_plan_status_rapid_plan_status.h"
 #include "dds_ros_bridge/ros_pmc_cmd_state.h"
+#include "dds_ros_bridge/ros_pose_rapid_position.h"
 #include "dds_ros_bridge/ros_string_rapid_text_message.h"
 #include "dds_ros_bridge/ros_sub_rapid_pub.h"
 #include "dds_ros_bridge/ros_telemetry_rapid_telemetry.h"
@@ -167,6 +168,8 @@ class DdsRosBridge : public ff_util::FreeFlyerNodelet {
                                    const std::string& name);
   bool BuildPmcCmdStateToRapid(const std::string& sub_topic,
                                const std::string& name);
+  bool BuildPoseToPosition(const std::string& sub_topic,
+                           const std::string& name);
   bool BuildStringToTextMessage(const std::string& name);
   bool BuildTelemetryToRapid(const std::string& sub_topic,
                              const std::string& name);

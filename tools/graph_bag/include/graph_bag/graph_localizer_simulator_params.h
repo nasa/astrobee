@@ -15,32 +15,13 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+#ifndef GRAPH_BAG_GRAPH_LOCALIZER_SIMULATOR_PARAMS_H_
+#define GRAPH_BAG_GRAPH_LOCALIZER_SIMULATOR_PARAMS_H_
 
-#ifndef LOCALIZATION_COMMON_RATE_TIMER_H_
-#define LOCALIZATION_COMMON_RATE_TIMER_H_
-
-#include <localization_common/averager.h>
-#include <localization_common/time.h>
-
-#include <chrono>
-#include <string>
-
-namespace localization_common {
-class RateTimer {
- public:
-  explicit RateTimer(const std::string& timer_name = "");
-  void Record();
-  void Log() const;
-  void LogEveryN(const int num_events_per_log) const;
-  void RecordAndLog();
-  void RecordAndLogEveryN(const int num_events_per_log);
-  void Vlog(const int level = 2) const;
-
- private:
-  std::chrono::time_point<std::chrono::steady_clock> start_time_;
-  int num_events_;
-  Averager averager_;
+namespace graph_bag {
+struct GraphLocalizerSimulatorParams {
+  double optimization_time;
 };
-}  // namespace localization_common
+}  // namespace graph_bag
 
-#endif  // LOCALIZATION_COMMON_RATE_TIMER_H_
+#endif  // GRAPH_BAG_GRAPH_LOCALIZER_SIMULATOR_PARAMS_H_

@@ -28,6 +28,7 @@
 #include <OGRE/OgreSceneNode.h>
 
 #include <cv_bridge/cv_bridge.h>
+#include <ros/package.h>
 #include <rviz/frame_manager.h>
 #include <rviz/visualization_manager.h>
 
@@ -35,6 +36,7 @@
 
 #include <glog/logging.h>
 
+#include <limits>
 #include <string>
 #include <utility>
 
@@ -56,20 +58,14 @@ LocalizationGraphDisplay::LocalizationGraphDisplay() {
   image_sub_ = image_transport.subscribe(TOPIC_HARDWARE_NAV_CAM, 1, &LocalizationGraphDisplay::imageCallback, this);
   optical_flow_image_pub_ = image_transport.advertise("/graph_localizer/optical_flow_feature_tracks", 1);
   smart_factor_projection_image_pub_ = image_transport.advertise("/graph_localizer/smart_factor_projections", 1);
+  loc_projection_factor_image_pub_ = image_transport.advertise("/graph_localizer/loc_projection_factor", 1);
 
-  // TODO(rsoussan): avoid this and pass config path directly to config reader!!!!
-  // make sure body_T_nav cam is correct!!!! (bsharp not bumble)
   // Only pass program name to free flyer so that boost command line options
   // are ignored when parsing gflags.
   int ff_argc = 1;
   char* argv = "script";
   char** argv_ptr = &argv;
   ff_common::InitFreeFlyerApplication(&ff_argc, &argv_ptr);
-  const std::string config_path = "/home/rsoussan/astrobee/astrobee";
-  const std::string world = "granite";
-  const std::string robot_config_file = "config/robots/bsharp.config";
-  lc::SetEnvironmentConfigs(config_path, world, robot_config_file);
-
   config_reader::ConfigReader config;
   config.AddFile("cameras.config");
 
@@ -125,6 +121,58 @@ cv::Scalar LocalizationGraphDisplay::textColor(const double val, const double gr
     return cv::Scalar(255, 255, 0);
   else
     return cv::Scalar(255, 0, 0);
+}
+
+void LocalizationGraphDisplay::addLocProjectionVisual(
+  const std::vector<gtsam::LocProjectionFactor<>*> loc_projection_factors,
+  const graph_localizer::GraphValues& graph_values) {
+  lc::Time latest_timestamp = std::numeric_limits<double>::lowest();
+  for (const auto loc_projection_factor : loc_projection_factors) {
+    const auto timestamp = graph_values.Timestamp(loc_projection_factor->key());
+    if (!timestamp) continue;
+    if (*timestamp > latest_timestamp) latest_timestamp = *timestamp;
+  }
+
+  std::vector<gtsam::LocProjectionFactor<>*> latest_loc_projection_factors;
+  for (const auto loc_projection_factor : loc_projection_factors) {
+    const auto timestamp = graph_values.Timestamp(loc_projection_factor->key());
+    if (!timestamp) continue;
+    if (*timestamp == latest_timestamp) latest_loc_projection_factors.emplace_back(loc_projection_factor);
+  }
+
+  const auto image_msg = getImage(latest_timestamp);
+  if (!image_msg) return;
+  cv_bridge::CvImagePtr cv_image;
+  try {
+    cv_image = cv_bridge::toCvCopy(image_msg, sensor_msgs::image_encodings::RGB8);
+  } catch (cv_bridge::Exception& e) {
+    LOG(ERROR) << "cv_bridge exception: " << e.what();
+    return;
+  }
+  const cv::Mat image = cv_image->image;
+
+  cv_bridge::CvImage loc_projection_factor_image;
+  loc_projection_factor_image.encoding = sensor_msgs::image_encodings::RGB8;
+  loc_projection_factor_image.image = image.clone();  // cv::Mat(image.rows, image.cols, CV_8UC3, cv::Scalar(0, 0, 0));
+  const auto world_T_body = graph_values.at<gtsam::Pose3>(latest_loc_projection_factors.front()->key());
+  if (!world_T_body) {
+    LOG(ERROR) << "addLocProjectionVisual: Failed to get world_T_body.";
+    return;
+  }
+  const gtsam::PinholeCamera<gtsam::Cal3_S2> camera(
+    world_T_body->compose(*(latest_loc_projection_factors.front()->body_P_sensor())),
+    *(latest_loc_projection_factors.front()->calibration()));
+
+  for (const auto loc_projection_factor : latest_loc_projection_factors) {
+    const auto projected_point = camera.project(loc_projection_factor->landmark_point());
+    const auto distorted_measurement = graph_bag::Distort(loc_projection_factor->measured(), *nav_cam_params_);
+    cv::circle(loc_projection_factor_image.image, distorted_measurement, 13 /* Radius*/, cv::Scalar(0, 255, 0),
+               -1 /*Filled*/, 8);
+    const auto distorted_projected_point = graph_bag::Distort(projected_point, *nav_cam_params_);
+    cv::circle(loc_projection_factor_image.image, distorted_projected_point, 7 /* Radius*/, cv::Scalar(255, 0, 0),
+               -1 /*Filled*/, 8);
+  }
+  loc_projection_factor_image_pub_.publish(loc_projection_factor_image.toImageMsg());
 }
 
 void LocalizationGraphDisplay::addSmartFactorProjectionVisual(const SmartFactor& smart_factor,
@@ -222,14 +270,26 @@ void LocalizationGraphDisplay::addSmartFactorProjectionVisual(const SmartFactor&
 
 void LocalizationGraphDisplay::addImuVisual(const graph_localizer::GraphLocalizer& graph_localizer,
                                             const gtsam::CombinedImuFactor* const imu_factor) {
-  const auto pose = graph_localizer.graph_values().at<gtsam::Pose3>(imu_factor->key1());
-  if (!pose) {
-    LOG(ERROR) << "ProcessMessage: Failed to get pose.";
+  const auto world_T_body = graph_localizer.graph_values().at<gtsam::Pose3>(imu_factor->key1());
+  if (!world_T_body) {
+    LOG(ERROR) << "addImuVisual: Failed to get world_T_body.";
     return;
   }
+
+  const auto timestamp = graph_localizer.graph_values().Timestamp(imu_factor->key1());
+  if (!timestamp) {
+    LOG(ERROR) << "addImuVisual: Failed to get timestamp.";
+  }
+  const auto current_frame_T_world = currentFrameTFrame("world", ros::Time(*timestamp), *context_);
+  if (!current_frame_T_world) {
+    LOG(ERROR) << "addImuVisual: Failed to get current_frame_T_world.";
+    return;
+  }
+  const gtsam::Pose3 current_frame_T_body = *current_frame_T_world * *world_T_body;
+
   if (show_pose_axes_->getBool()) {
     const float scale = pose_axes_size_->getFloat();
-    auto axis = axisFromPose(*pose, scale, context_->getSceneManager(), scene_node_);
+    auto axis = axisFromPose(current_frame_T_body, scale, context_->getSceneManager(), scene_node_);
     graph_pose_axes_.emplace_back(std::move(axis));
   }
 
@@ -240,9 +300,9 @@ void LocalizationGraphDisplay::addImuVisual(const graph_localizer::GraphLocalize
       return;
     }
     auto imu_factor_arrow = std::unique_ptr<rviz::Arrow>(new rviz::Arrow(context_->getSceneManager(), scene_node_));
-    imu_factor_arrow->setPosition(ogrePosition(*pose));
+    imu_factor_arrow->setPosition(ogrePosition(current_frame_T_body));
     const auto orientation_and_length =
-      getOrientationAndLength(pose->translation(), imu_predicted_combined_nav_state->pose().translation());
+      getOrientationAndLength(world_T_body->translation(), imu_predicted_combined_nav_state->pose().translation());
     imu_factor_arrow->setOrientation(orientation_and_length.first);
     const float diameter = imu_factor_arrows_diameter_->getFloat();
     imu_factor_arrow->set(3.0 * orientation_and_length.second / 4.0, 0.5 * diameter,
@@ -256,6 +316,7 @@ void LocalizationGraphDisplay::processMessage(const ff_msgs::LocalizationGraph::
   clearDisplay();
   graph_localizer::GraphLocalizer graph_localizer;
   gtsam::deserializeBinary(msg->serialized_graph, graph_localizer);
+  std::vector<gtsam::LocProjectionFactor<>*> loc_projection_factors;
   SmartFactor* largest_error_smart_factor = nullptr;
   double largest_smart_factor_error = -1;
   if (graph_localizer.graph_values().LatestTimestamp())
@@ -273,9 +334,15 @@ void LocalizationGraphDisplay::processMessage(const ff_msgs::LocalizationGraph::
     if (imu_factor) {
       addImuVisual(graph_localizer, imu_factor);
     }
+    const auto loc_projection_factor = dynamic_cast<gtsam::LocProjectionFactor<>*>(factor.get());
+    if (loc_projection_factor) {
+      loc_projection_factors.emplace_back(loc_projection_factor);
+    }
   }
   if (largest_error_smart_factor)
     addSmartFactorProjectionVisual(*largest_error_smart_factor, graph_localizer.graph_values());
+
+  if (!loc_projection_factors.empty()) addLocProjectionVisual(loc_projection_factors, graph_localizer.graph_values());
 
   const auto oldest_timestamp = graph_localizer.graph_values().OldestTimestamp();
   if (oldest_timestamp) clearImageBuffer(*oldest_timestamp);

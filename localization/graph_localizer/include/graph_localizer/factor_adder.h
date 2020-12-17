@@ -19,7 +19,6 @@
 #ifndef GRAPH_LOCALIZER_FACTOR_ADDER_H_
 #define GRAPH_LOCALIZER_FACTOR_ADDER_H_
 
-#include <graph_localizer/factor_adder.h>
 #include <graph_localizer/factor_to_add.h>
 
 #include <vector>
