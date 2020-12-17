@@ -105,4 +105,16 @@ boost::optional<lc::Time> FeatureTracker::PreviousTimestamp() const {
   }
   return boost::none;
 }
+
+// TODO(rsoussan): Store points in sorted order to make this and PreviousTimestamp more efficient
+boost::optional<localization_common::Time> FeatureTracker::OldestTimestamp() const {
+  boost::optional<localization_common::Time> oldest_timestamp;
+  for (const auto& feature_track_pair : feature_tracks_) {
+    for (const auto& point : feature_track_pair.second.points) {
+      if (!oldest_timestamp || point.timestamp < *oldest_timestamp) oldest_timestamp = point.timestamp;
+    }
+  }
+  return oldest_timestamp;
+}
+
 }  // namespace graph_localizer

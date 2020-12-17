@@ -627,7 +627,17 @@ bool GraphLocalizer::SlideWindow(const boost::optional<gtsam::Marginals>& margin
   // since then priors couldn't be added for the new oldest state
   if (last_latest_time < *graph_values_ideal_new_oldest_time)
     LOG(WARNING) << "SlideWindow: Ideal oldest time is more recent than last latest time.";
-  const auto new_oldest_time = std::min(last_latest_time, *graph_values_ideal_new_oldest_time);
+  auto new_oldest_time = std::min(last_latest_time, *graph_values_ideal_new_oldest_time);
+  // Ensure that new oldest time isn't more recent than oldest feature track time
+  // since these are included in smart factors
+  const auto feature_tracker_oldest_time = feature_tracker_->OldestTimestamp();
+  if (!feature_tracker_oldest_time) {
+    LOG(ERROR) << "SlideWindow: Failed to get feature tracker oldest time.";
+    return false;
+  }
+  if (new_oldest_time > *feature_tracker_oldest_time)
+    LOG(WARNING) << "SlideWindow: Ideal oldest time is more recent than oldest feature track time.";
+  new_oldest_time = std::min(new_oldest_time, *feature_tracker_oldest_time);
 
   // Add marginal factors for marginalized values
   auto old_keys = graph_values_->OldKeys(new_oldest_time);
