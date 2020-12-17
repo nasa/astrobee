@@ -71,7 +71,7 @@ class LocalizationGraphDisplay : public rviz::MessageFilterDisplay<ff_msgs::Loca
   void clearDisplay();
   void addImuVisual(const graph_localizer::GraphLocalizer& graph_localizer,
                     const gtsam::CombinedImuFactor* const imu_factor);
-  void addLocProjectionVisual(const gtsam::LocProjectionFactor<>& loc_projection_factor,
+  void addLocProjectionVisual(const std::vector<gtsam::LocProjectionFactor<>*> loc_projection_factors,
                               const graph_localizer::GraphValues& graph_values);
   void addOpticalFlowVisual(const graph_localizer::FeatureTrackMap& feature_tracks,
                             const localization_common::Time latest_graph_time);

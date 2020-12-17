@@ -36,6 +36,7 @@
 
 #include <glog/logging.h>
 
+#include <limits>
 #include <string>
 #include <utility>
 
@@ -122,11 +123,24 @@ cv::Scalar LocalizationGraphDisplay::textColor(const double val, const double gr
     return cv::Scalar(255, 0, 0);
 }
 
-void LocalizationGraphDisplay::addLocProjectionVisual(const gtsam::LocProjectionFactor<>& loc_projection_factor,
-                                                      const graph_localizer::GraphValues& graph_values) {
-  const auto timestamp = graph_values.Timestamp(loc_projection_factor.key());
-  if (!timestamp) return;
-  const auto image_msg = getImage(*timestamp);
+void LocalizationGraphDisplay::addLocProjectionVisual(
+  const std::vector<gtsam::LocProjectionFactor<>*> loc_projection_factors,
+  const graph_localizer::GraphValues& graph_values) {
+  lc::Time latest_timestamp = std::numeric_limits<double>::lowest();
+  for (const auto loc_projection_factor : loc_projection_factors) {
+    const auto timestamp = graph_values.Timestamp(loc_projection_factor->key());
+    if (!timestamp) continue;
+    if (*timestamp > latest_timestamp) latest_timestamp = *timestamp;
+  }
+
+  std::vector<gtsam::LocProjectionFactor<>*> latest_loc_projection_factors;
+  for (const auto loc_projection_factor : loc_projection_factors) {
+    const auto timestamp = graph_values.Timestamp(loc_projection_factor->key());
+    if (!timestamp) continue;
+    if (*timestamp == latest_timestamp) latest_loc_projection_factors.emplace_back(loc_projection_factor);
+  }
+
+  const auto image_msg = getImage(latest_timestamp);
   if (!image_msg) return;
   cv_bridge::CvImagePtr cv_image;
   try {
@@ -140,26 +154,24 @@ void LocalizationGraphDisplay::addLocProjectionVisual(const gtsam::LocProjection
   cv_bridge::CvImage loc_projection_factor_image;
   loc_projection_factor_image.encoding = sensor_msgs::image_encodings::RGB8;
   loc_projection_factor_image.image = image.clone();  // cv::Mat(image.rows, image.cols, CV_8UC3, cv::Scalar(0, 0, 0));
-  const auto world_T_body = graph_values.at<gtsam::Pose3>(loc_projection_factor.key());
+  const auto world_T_body = graph_values.at<gtsam::Pose3>(latest_loc_projection_factors.front()->key());
   if (!world_T_body) {
     LOG(ERROR) << "addLocProjectionVisual: Failed to get world_T_body.";
     return;
   }
-  const gtsam::PinholeCamera<gtsam::Cal3_S2> camera(world_T_body->compose(*(loc_projection_factor.body_P_sensor())),
-                                                    *(loc_projection_factor.calibration()));
-  const auto projected_point = camera.project(loc_projection_factor.landmark_point());
-  const auto distorted_measurement = graph_bag::Distort(loc_projection_factor.measured(), *nav_cam_params_);
-  cv::circle(loc_projection_factor_image.image, distorted_measurement, 13 /* Radius*/, cv::Scalar(0, 255, 0),
-             -1 /*Filled*/, 8);
-  const auto distorted_projected_point = graph_bag::Distort(projected_point, *nav_cam_params_);
-  cv::circle(loc_projection_factor_image.image, distorted_projected_point, 7 /* Radius*/, cv::Scalar(255, 0, 0),
-             -1 /*Filled*/, 8);
-  // const double error = 0.5 * (measurements[i] - projection).squaredNorm();
-  // const auto text_color = textColor(error, 1.0, 1.5);
-  // cv::putText(images[i], std::to_string(error), cv::Point(cols / 2 - 100, rows - 20), CV_FONT_NORMAL, 3, text_color,
-  //          4, cv::LINE_AA);
-  // summed_error += error;
-  // }
+  const gtsam::PinholeCamera<gtsam::Cal3_S2> camera(
+    world_T_body->compose(*(latest_loc_projection_factors.front()->body_P_sensor())),
+    *(latest_loc_projection_factors.front()->calibration()));
+
+  for (const auto loc_projection_factor : latest_loc_projection_factors) {
+    const auto projected_point = camera.project(loc_projection_factor->landmark_point());
+    const auto distorted_measurement = graph_bag::Distort(loc_projection_factor->measured(), *nav_cam_params_);
+    cv::circle(loc_projection_factor_image.image, distorted_measurement, 13 /* Radius*/, cv::Scalar(0, 255, 0),
+               -1 /*Filled*/, 8);
+    const auto distorted_projected_point = graph_bag::Distort(projected_point, *nav_cam_params_);
+    cv::circle(loc_projection_factor_image.image, distorted_projected_point, 7 /* Radius*/, cv::Scalar(255, 0, 0),
+               -1 /*Filled*/, 8);
+  }
   loc_projection_factor_image_pub_.publish(loc_projection_factor_image.toImageMsg());
 }
 
@@ -304,6 +316,7 @@ void LocalizationGraphDisplay::processMessage(const ff_msgs::LocalizationGraph::
   clearDisplay();
   graph_localizer::GraphLocalizer graph_localizer;
   gtsam::deserializeBinary(msg->serialized_graph, graph_localizer);
+  std::vector<gtsam::LocProjectionFactor<>*> loc_projection_factors;
   SmartFactor* largest_error_smart_factor = nullptr;
   double largest_smart_factor_error = -1;
   if (graph_localizer.graph_values().LatestTimestamp())
@@ -323,11 +336,13 @@ void LocalizationGraphDisplay::processMessage(const ff_msgs::LocalizationGraph::
     }
     const auto loc_projection_factor = dynamic_cast<gtsam::LocProjectionFactor<>*>(factor.get());
     if (loc_projection_factor) {
-      addLocProjectionVisual(*loc_projection_factor, graph_localizer.graph_values());
+      loc_projection_factors.emplace_back(loc_projection_factor);
     }
   }
   if (largest_error_smart_factor)
     addSmartFactorProjectionVisual(*largest_error_smart_factor, graph_localizer.graph_values());
+
+  if (!loc_projection_factors.empty()) addLocProjectionVisual(loc_projection_factors, graph_localizer.graph_values());
 
   const auto oldest_timestamp = graph_localizer.graph_values().OldestTimestamp();
   if (oldest_timestamp) clearImageBuffer(*oldest_timestamp);
