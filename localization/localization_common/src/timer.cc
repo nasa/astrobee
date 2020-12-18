@@ -18,8 +18,6 @@
 
 #include <localization_common/timer.h>
 
-#include <glog/logging.h>
-
 namespace localization_common {
 Timer::Timer(const std::string& timer_name) : averager_(timer_name, "time", "seconds") {}
 void Timer::Start() { start_time_ = std::chrono::steady_clock::now(); }

@@ -19,8 +19,6 @@
 #include <localization_common/ros_timer.h>
 #include <localization_common/utilities.h>
 
-#include <glog/logging.h>
-
 namespace localization_common {
 RosTimer::RosTimer(const std::string& timer_name) : averager_(timer_name, "time", "seconds"), start_time_(0) {}
 void RosTimer::Start() { start_time_ = ros::Time::now(); }

@@ -17,8 +17,7 @@
  */
 
 #include <localization_common/averager.h>
-
-#include <glog/logging.h>
+#include <localization_common/logger.h>
 
 namespace localization_common {
 Averager::Averager(const std::string& name, const std::string& type_name, const std::string& units,
@@ -56,8 +55,8 @@ std::string Averager::StatsString() const {
 }
 
 void Averager::Log() const {
-  LOG(INFO) << LastValueString();
-  LOG(INFO) << StatsString();
+  LogInfo(LastValueString());
+  LogInfo(StatsString());
 }
 
 void Averager::UpdateAndLog(const double value) {

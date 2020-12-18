@@ -18,13 +18,12 @@
 
 #include <camera/camera_params.h>
 #include <ff_msgs/EkfState.h>
+#include <localization_common/logger.h>
 #include <localization_common/utilities.h>
 #include <msg_conversions/msg_conversions.h>
 
 #include <geometry_msgs/Point.h>
 #include <geometry_msgs/Quaternion.h>
-
-#include <glog/logging.h>
 
 #include <cstdlib>
 #include <string>
@@ -39,7 +38,7 @@ Eigen::Isometry3d LoadEigenTransform(config_reader::ConfigReader& config, const 
   Eigen::Vector3d body_t_sensor;
   Eigen::Quaterniond body_Q_sensor;
   if (!msg_conversions::config_read_transform(&config, transform_config_name.c_str(), &body_t_sensor, &body_Q_sensor))
-    LOG(FATAL) << "Unspecified transform config: " << transform_config_name;
+    LogFatal("Unspecified transform config: " << transform_config_name);
   Eigen::Isometry3d body_T_sensor = Eigen::Isometry3d::Identity();
   body_T_sensor.translation() = body_t_sensor;
   body_T_sensor.linear() = body_Q_sensor.toRotationMatrix();
@@ -48,25 +47,25 @@ Eigen::Isometry3d LoadEigenTransform(config_reader::ConfigReader& config, const 
 
 double LoadDouble(config_reader::ConfigReader& config, const std::string& config_name) {
   double val;
-  if (!config.GetReal(config_name.c_str(), &val)) LOG(FATAL) << "Failed to load " << config_name;
+  if (!config.GetReal(config_name.c_str(), &val)) LogFatal("Failed to load " << config_name);
   return val;
 }
 
 int LoadInt(config_reader::ConfigReader& config, const std::string& config_name) {
   int val;
-  if (!config.GetInt(config_name.c_str(), &val)) LOG(FATAL) << "Failed to load " << config_name;
+  if (!config.GetInt(config_name.c_str(), &val)) LogFatal("Failed to load " << config_name);
   return val;
 }
 
 bool LoadBool(config_reader::ConfigReader& config, const std::string& config_name) {
   bool val;
-  if (!config.GetBool(config_name.c_str(), &val)) LOG(FATAL) << "Failed to load " << config_name;
+  if (!config.GetBool(config_name.c_str(), &val)) LogFatal("Failed to load " << config_name);
   return val;
 }
 
 std::string LoadString(config_reader::ConfigReader& config, const std::string& config_name) {
   std::string val;
-  if (!config.GetStr(config_name.c_str(), &val)) LOG(FATAL) << "Failed to load " << config_name;
+  if (!config.GetStr(config_name.c_str(), &val)) LogFatal("Failed to load " << config_name);
   return val;
 }
 
@@ -108,18 +107,18 @@ gtsam::Pose3 GtPose(const ff_msgs::VisualLandmarks& vl_features) {
 
 void LoadGraphLocalizerConfig(config_reader::ConfigReader& config) {
   const auto world = std::getenv("ASTROBEE_WORLD");
-  if (!world) LOG(FATAL) << "LoadGraphLocalizerConfig: Failed to load ASTROBEE_WORLD environment variable.";
+  if (!world) LogFatal("LoadGraphLocalizerConfig: Failed to load ASTROBEE_WORLD environment variable.");
   const std::string loaded_world(world);
   if (loaded_world == "iss") {
     config.AddFile("iss_graph_localizer.config");
-    LOG(INFO) << "LoadGraphLocalizerconfig: Loaded iss graph localizer config.";
+    LogInfo("LoadGraphLocalizerconfig: Loaded iss graph localizer config.");
     return;
   } else if (loaded_world == "granite") {
     config.AddFile("granite_graph_localizer.config");
-    LOG(INFO) << "LoadGraphLocalizerconfig: Loaded granite graph localizer config.";
+    LogInfo("LoadGraphLocalizerconfig: Loaded granite graph localizer config.");
     return;
   } else {
-    LOG(FATAL) << "LoadGraphLocalizerConfig: ASTROBEE_WORLD environment variable not set to iss or granite.";
+    LogFatal("LoadGraphLocalizerConfig: ASTROBEE_WORLD environment variable not set to iss or granite.");
   }
 }
 
