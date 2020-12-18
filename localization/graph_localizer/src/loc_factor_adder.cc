@@ -20,10 +20,9 @@
 #include <graph_localizer/loc_pose_factor.h>
 #include <graph_localizer/loc_projection_factor.h>
 #include <graph_localizer/utilities.h>
+#include <localization_common/logger.h>
 
 #include <gtsam/base/Vector.h>
-
-#include <glog/logging.h>
 
 namespace graph_localizer {
 namespace lm = localization_measurements;
@@ -34,13 +33,13 @@ LocFactorAdder::LocFactorAdder(const LocFactorAdderParams& params, const GraphAc
 std::vector<FactorsToAdd> LocFactorAdder::AddFactors(
   const lm::MatchedProjectionsMeasurement& matched_projections_measurement) {
   if (matched_projections_measurement.matched_projections.empty()) {
-    LOG(WARNING) << "AddFactors: Empty measurement.";
+    LogWarning("AddFactors: Empty measurement.");
     return {};
   }
 
   // TODO(rsoussan): Unify his with ValidVLMsg call
   if (matched_projections_measurement.matched_projections.size() < params().min_num_matches) {
-    LOG(WARNING) << "AddFactors: Not enough matches in projection measurement.";
+    LogWarning("AddFactors: Not enough matches in projection measurement.");
     return {};
   }
 
@@ -70,7 +69,7 @@ std::vector<FactorsToAdd> LocFactorAdder::AddFactors(
       pose_noise));
     factors_to_add.push_back({{key_info}, pose_prior_factor});
     factors_to_add.SetTimestamp(matched_projections_measurement.timestamp);
-    VLOG(2) << "AddFactors: Added 1 loc pose prior factor.";
+    LogDebug("AddFactors: Added 1 loc pose prior factor.");
     return {factors_to_add};
   } else if (params().add_projections) {
     int num_loc_projection_factors = 0;
@@ -88,10 +87,10 @@ std::vector<FactorsToAdd> LocFactorAdder::AddFactors(
       ++num_loc_projection_factors;
     }
     factors_to_add.SetTimestamp(matched_projections_measurement.timestamp);
-    VLOG(2) << "AddFactors: Added " << num_loc_projection_factors << " loc projection factors.";
+    LogDebug("AddFactors: Added " << num_loc_projection_factors << " loc projection factors.");
     return {factors_to_add};
   } else {
-    LOG(ERROR) << "AddFactors: LocFactorAdder enabled but neither pose nor projection factors are.";
+    LogError("AddFactors: LocFactorAdder enabled but neither pose nor projection factors are.");
     return {};
   }
 }

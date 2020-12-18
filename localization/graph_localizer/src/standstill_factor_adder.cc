@@ -18,12 +18,11 @@
 
 #include <graph_localizer/standstill_factor_adder.h>
 #include <graph_localizer/utilities.h>
+#include <localization_common/logger.h>
 
 #include <gtsam/inference/Symbol.h>
 #include <gtsam/navigation/NavState.h>
 #include <gtsam/nonlinear/PriorFactor.h>
-
-#include <glog/logging.h>
 
 namespace graph_localizer {
 namespace lm = localization_measurements;
@@ -49,7 +48,7 @@ std::vector<FactorsToAdd> StandstillFactorAdder::AddFactors(
       velocity_key_info.UninitializedKey(), gtsam::Velocity3::Zero(), velocity_noise));
     standstill_prior_factors_to_add.push_back({{velocity_key_info}, velocity_prior_factor});
     standstill_prior_factors_to_add.SetTimestamp(feature_points_measurement.timestamp);
-    VLOG(2) << "AddFactors: Added " << standstill_prior_factors_to_add.size() << " standstill velocity prior factors.";
+    LogDebug("AddFactors: Added " << standstill_prior_factors_to_add.size() << " standstill velocity prior factors.");
     factors_to_add.emplace_back(standstill_prior_factors_to_add);
   }
   if (params().add_pose_between_factor) {
@@ -72,7 +71,7 @@ std::vector<FactorsToAdd> StandstillFactorAdder::AddFactors(
       pose_between_factors_to_add.push_back(
         {{previous_between_key_info, current_between_key_info}, pose_between_factor});
       pose_between_factors_to_add.SetTimestamp(feature_points_measurement.timestamp);
-      VLOG(2) << "AddFactors: Added " << pose_between_factors_to_add.size() << " standstill pose between factors.";
+      LogDebug("AddFactors: Added " << pose_between_factors_to_add.size() << " standstill pose between factors.");
       factors_to_add.emplace_back(pose_between_factors_to_add);
     }
   }

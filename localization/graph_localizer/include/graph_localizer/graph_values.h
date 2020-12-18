@@ -22,14 +22,13 @@
 #include <graph_localizer/graph_values_params.h>
 #include <graph_localizer/key_info.h>
 #include <localization_common/combined_nav_state.h>
+#include <localization_common/logger.h>
 #include <localization_common/time.h>
 #include <localization_measurements/feature_point.h>
 
 #include <gtsam/inference/Symbol.h>
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
 #include <gtsam/nonlinear/Values.h>
-
-#include <glog/logging.h>
 
 #include <boost/optional.hpp>
 #include <boost/serialization/unordered_map.hpp>
@@ -116,7 +115,7 @@ class GraphValues {
   template <typename ValueType>
   boost::optional<ValueType> at(const gtsam::Key& key) const {
     if (!values_.exists(key)) {
-      LOG(ERROR) << "at: Key not present in values.";
+      LogError("at: Key not present in values.");
       return boost::none;
     }
 

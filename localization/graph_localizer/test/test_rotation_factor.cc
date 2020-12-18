@@ -17,13 +17,13 @@
  */
 
 #include <graph_localizer/pose_rotation_factor.h>
+#include <localization_common/logger.h>
 
 #include <gtsam/base/numericalDerivative.h>
 #include <gtsam/inference/Symbol.h>
 #include <gtsam/linear/NoiseModel.h>
 #include <gtsam/slam/PoseTranslationPrior.h>
 
-#include <glog/logging.h>
 #include <gtest/gtest.h>
 
 namespace sym = gtsam::symbol_shorthand;

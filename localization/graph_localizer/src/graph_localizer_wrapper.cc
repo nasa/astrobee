@@ -21,12 +21,11 @@
 #include <graph_localizer/parameter_reader.h>
 #include <graph_localizer/utilities.h>
 #include <imu_integration/utilities.h>
+#include <localization_common/logger.h>
 #include <localization_common/utilities.h>
 #include <localization_measurements/measurement_conversions.h>
 
 #include <Eigen/Core>
-
-#include <glog/logging.h>
 
 namespace graph_localizer {
 namespace lc = localization_common;
@@ -39,19 +38,19 @@ GraphLocalizerWrapper::GraphLocalizerWrapper() {
   config.AddFile("geometry.config");
 
   if (!config.ReadFiles()) {
-    LOG(FATAL) << "Failed to read config files.";
+    LogFatal("Failed to read config files.");
   }
 
   if (!config.GetInt("num_bias_estimation_measurements", &num_bias_estimation_measurements_)) {
-    LOG(FATAL) << "Failed to load num_bias_estimation_measurements.";
+    LogFatal("Failed to load num_bias_estimation_measurements.");
   }
 
   if (!config.GetBool("publish_localization_graph", &publish_localization_graph_)) {
-    LOG(FATAL) << "Failed to load publish_localization_graph.";
+    LogFatal("Failed to load publish_localization_graph.");
   }
 
   if (!config.GetBool("save_localization_graph_dot_file", &save_localization_graph_dot_file_)) {
-    LOG(FATAL) << "Failed to load save_localization_graph_dot_file.";
+    LogFatal("Failed to load save_localization_graph_dot_file.");
   }
 
   position_cov_log_det_lost_threshold_ = lc::LoadDouble(config, "position_cov_log_det_lost_threshold");
@@ -70,7 +69,7 @@ void GraphLocalizerWrapper::Update() {
     graph_localizer_->Update();
     // Sanity check covariances after updates
     if (!CheckCovarianceSanity()) {
-      LOG(INFO) << "OpticalFlowCallback: Covariance sanity check failed, resetting localizer.";
+      LogInfo("OpticalFlowCallback: Covariance sanity check failed, resetting localizer.");
       ResetLocalizer();
       return;
     }
@@ -86,11 +85,12 @@ void GraphLocalizerWrapper::OpticalFlowCallback(const ff_msgs::Feature2dArray& f
 }
 
 void GraphLocalizerWrapper::ResetLocalizer() {
-  LOG(INFO) << "ResetLocalizer: Resetting localizer.";
+  LogInfo("ResetLocalizer: Resetting localizer.");
   graph_localizer_initialization_.ResetStartPose();
   if (!latest_biases_) {
-    LOG(DFATAL) << "ResetLocalizer: Trying to reset localizer when no biases "
-                   "are available.";
+    LogError(
+      "ResetLocalizer: Trying to reset localizer when no biases "
+      "are available.");
     return;
   }
   // TODO(rsoussan): compare current time with latest bias timestamp and print
@@ -101,7 +101,7 @@ void GraphLocalizerWrapper::ResetLocalizer() {
 }
 
 void GraphLocalizerWrapper::ResetBiasesAndLocalizer() {
-  LOG(INFO) << "ResetBiasAndLocalizer: Resetting biases and localizer.";
+  LogInfo("ResetBiasAndLocalizer: Resetting biases and localizer.");
   graph_localizer_initialization_.ResetBiasesAndStartPose();
   graph_localizer_.reset();
   sanity_checker_->Reset();
@@ -121,7 +121,7 @@ void GraphLocalizerWrapper::VLVisualLandmarksCallback(const ff_msgs::VisualLandm
 
   // Sanity Check
   if (graph_localizer_ && !CheckPoseSanity(sparse_mapping_global_T_body, timestamp)) {
-    LOG(INFO) << "VLVisualLandmarksCallback: Sanity check failed, resetting localizer.";
+    LogInfo("VLVisualLandmarksCallback: Sanity check failed, resetting localizer.");
     ResetLocalizer();
     return;
   }
@@ -168,7 +168,7 @@ void GraphLocalizerWrapper::ImuCallback(const sensor_msgs::Imu& imu_msg) {
     graph_localizer_->AddImuMeasurement(lm::ImuMeasurement(imu_msg));
     latest_biases_ = graph_localizer_->LatestBiases();
     if (!latest_biases_) {
-      LOG(WARNING) << "ImuCallback: Failed to get latest biases.";
+      LogWarning("ImuCallback: Failed to get latest biases.");
     }
   } else if (graph_localizer_initialization_.EstimateBiases()) {
     EstimateAndSetImuBiases(lm::ImuMeasurement(imu_msg), num_bias_estimation_measurements_, imu_bias_measurements_,
@@ -177,13 +177,13 @@ void GraphLocalizerWrapper::ImuCallback(const sensor_msgs::Imu& imu_msg) {
 
   if (!graph_localizer_ && graph_localizer_initialization_.ReadyToInitialize()) {
     InitializeGraph();
-    LOG(INFO) << "ImuCallback: Initialized Graph.";
+    LogInfo("ImuCallback: Initialized Graph.");
   }
 }
 
 void GraphLocalizerWrapper::InitializeGraph() {
   if (!graph_localizer_initialization_.ReadyToInitialize()) {
-    LOG(ERROR) << "InitializeGraph: Trying to initialize graph when not ready.";
+    LogError("InitializeGraph: Trying to initialize graph when not ready.");
     return;
   }
 

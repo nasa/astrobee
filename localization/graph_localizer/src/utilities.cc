@@ -19,9 +19,8 @@
 #include <graph_localizer/serialization.h>
 #include <graph_localizer/utilities.h>
 #include <imu_integration/utilities.h>
+#include <localization_common/logger.h>
 #include <localization_common/utilities.h>
-
-#include <glog/logging.h>
 
 #include <cstdlib>
 #include <string>
@@ -180,8 +179,8 @@ boost::optional<SharedRobustSmartFactor> FixSmartFactorByRemovingIndividualMeasu
     new_smart_factor->add(measurements_to_add, keys_to_add);
     const auto new_point = new_smart_factor->triangulateSafe(new_smart_factor->cameras(graph_values.values()));
     if (new_point.valid()) {
-      VLOG(2) << "FixSmartFactorByRemovingIndividualMeasurements: Fixed by removing measurement "
-              << measurement_index_to_remove << ", num original measurements: " << original_measurements.size();
+      LogDebug("FixSmartFactorByRemovingIndividualMeasurements: Fixed by removing measurement "
+               << measurement_index_to_remove << ", num original measurements: " << original_measurements.size());
       return new_smart_factor;
     }
   }
@@ -212,10 +211,11 @@ boost::optional<SharedRobustSmartFactor> FixSmartFactorByRemovingMeasurementSequ
     new_smart_factor->add(measurements_to_add, keys_to_add);
     const auto new_point = new_smart_factor->triangulateSafe(new_smart_factor->cameras(graph_values.values()));
     if (new_point.valid()) {
-      VLOG(2) << "FixSmartFactorByRemovingMeasurementSequence: Fixed smart factor by removing most recent "
-                 "measurements. Original "
-                 "measurement size: "
-              << original_measurements.size() << ", new size: " << num_measurements_to_add;
+      LogDebug(
+        "FixSmartFactorByRemovingMeasurementSequence: Fixed smart factor by removing most recent "
+        "measurements. Original "
+        "measurement size: "
+        << original_measurements.size() << ", new size: " << num_measurements_to_add);
       return new_smart_factor;
     } else {
       --num_measurements_to_add;
@@ -239,10 +239,11 @@ boost::optional<SharedRobustSmartFactor> FixSmartFactorByRemovingMeasurementSequ
       new_smart_factor->add(measurements_to_add, keys_to_add);
       const auto new_point = new_smart_factor->triangulateSafe(new_smart_factor->cameras(graph_values.values()));
       if (new_point.valid()) {
-        VLOG(2) << "FixSmartFactorByRemovingMeasurementSequence: Fixed smart factor by removing oldest measurements. "
-                   "Original "
-                   "measurement size: "
-                << original_measurements.size() << ", new size: " << num_measurements_to_add;
+        LogDebug(
+          "FixSmartFactorByRemovingMeasurementSequence: Fixed smart factor by removing oldest measurements. "
+          "Original "
+          "measurement size: "
+          << original_measurements.size() << ", new size: " << num_measurements_to_add);
         return new_smart_factor;
       } else {
         --num_measurements_to_add;

@@ -19,11 +19,10 @@
 #include <graph_localizer/graph_action.h>
 #include <graph_localizer/projection_factor_adder.h>
 #include <graph_localizer/utilities.h>
+#include <localization_common/logger.h>
 
 #include <gtsam/base/Vector.h>
 #include <gtsam/slam/ProjectionFactor.h>
-
-#include <glog/logging.h>
 
 namespace graph_localizer {
 namespace lm = localization_measurements;
@@ -44,7 +43,7 @@ std::vector<FactorsToAdd> ProjectionFactorAdder::AddFactors(
       const KeyInfo static_point_key_info(&sym::F, feature_point.feature_id);
       const auto point_key = graph_values_->FeatureKey(feature_point.feature_id);
       if (!point_key) {
-        LOG(ERROR) << "AddFactors: Failed to get point key.";
+        LogError("AddFactors: Failed to get point key.");
         continue;
       }
       const auto projection_factor = boost::make_shared<ProjectionFactor>(
@@ -56,7 +55,7 @@ std::vector<FactorsToAdd> ProjectionFactorAdder::AddFactors(
   if (!projection_factors_to_add.empty()) {
     projection_factors_to_add.SetTimestamp(feature_points_measurement.timestamp);
     factors_to_add_vec.emplace_back(projection_factors_to_add);
-    VLOG(2) << "AddFactors: Added " << projection_factors_to_add.size() << " projection factors for existing features.";
+    LogDebug("AddFactors: Added " << projection_factors_to_add.size() << " projection factors for existing features.");
   }
 
   // Add new feature tracks and measurements if possible
@@ -83,7 +82,7 @@ std::vector<FactorsToAdd> ProjectionFactorAdder::AddFactors(
       ++new_features;
     }
   }
-  if (new_features > 0) VLOG(2) << "AddFactors: Added " << new_features << " new features.";
+  if (new_features > 0) LogDebug("AddFactors: Added " << new_features << " new features.");
   if (factors_to_add_vec.empty()) return {};
   return factors_to_add_vec;
 }

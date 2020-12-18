@@ -21,11 +21,10 @@
 #include <ff_util/ff_names.h>
 #include <graph_localizer/graph_localizer_nodelet.h>
 #include <graph_localizer/utilities.h>
+#include <localization_common/logger.h>
 #include <localization_common/utilities.h>
 
 #include <std_msgs/Empty.h>
-
-#include <glog/logging.h>
 
 namespace graph_localizer {
 namespace lc = localization_common;
@@ -82,11 +81,12 @@ bool GraphLocalizerNodelet::SetMode(ff_msgs::SetEkfInput::Request& req, ff_msgs:
   const auto input_mode = req.mode;
   static int last_mode = -1;
   if (input_mode == ff_msgs::SetEkfInputRequest::MODE_NONE) {
-    LOG(INFO) << "Received Mode None request, turning off localizer.";
+    LogInfo("Received Mode None request, turning off localizer.");
     DisableLocalizer();
   } else if (last_mode == ff_msgs::SetEkfInputRequest::MODE_NONE) {
-    LOG(INFO) << "Received Mode request that is not None and current mode is "
-                 "None, resetting localizer.";
+    LogInfo(
+      "Received Mode request that is not None and current mode is "
+      "None, resetting localizer.");
     ResetAndEnableLocalizer();
   }
   return true;
@@ -170,7 +170,7 @@ void GraphLocalizerNodelet::PublishLocalizationGraph() {
 void GraphLocalizerNodelet::PublishSparseMappingPose() const {
   const auto latest_sparse_mapping_pose_msg = graph_localizer_wrapper_.LatestSparseMappingPoseMsg();
   if (!latest_sparse_mapping_pose_msg) {
-    LOG(WARNING) << "PublishSparseMappingPose: Failed to get latest sparse mapping pose msg.";
+    LogWarning("PublishSparseMappingPose: Failed to get latest sparse mapping pose msg.");
     return;
   }
   sparse_mapping_pose_pub_.publish(*latest_sparse_mapping_pose_msg);

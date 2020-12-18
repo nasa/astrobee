@@ -201,7 +201,7 @@ class GraphLocalizer {
       }
       ++factor_it;
     }
-    VLOG(2) << "DeleteFactors: Num removed factors: " << num_removed_factors;
+    LogDebug("DeleteFactors: Num removed factors: " << num_removed_factors);
   }
 
   // TODO(rsoussan): make a static and dynamic key index?
