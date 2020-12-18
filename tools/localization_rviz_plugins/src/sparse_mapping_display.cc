@@ -16,14 +16,14 @@
  * under the License.
  */
 
+#include <localization_common/logger.h>
+
 #include <OGRE/OgreSceneManager.h>
 #include <OGRE/OgreSceneNode.h>
 
 #include <rviz/frame_manager.h>
 #include <rviz/visualization_manager.h>
 #include <sensor_msgs/PointCloud2.h>
-
-#include <glog/logging.h>
 
 #include <string>
 
@@ -39,11 +39,11 @@ SparseMappingDisplay::SparseMappingDisplay() {
   // TODO(rsoussan): Config reader fails to load map string unless a file is added (doesn't matter which one).
   config.AddFile("geometry.config");
   if (!config.ReadFiles()) {
-    LOG(FATAL) << "Failed to read config files.";
+    LogFatal("Failed to read config files.");
   }
   std::string map_file;
   if (!config.GetStr("world_vision_map_filename", &map_file))
-    LOG(FATAL) << "SparseMappingDisplay: Failed to load map file.";
+    LogFatal("SparseMappingDisplay: Failed to load map file.");
   map_.reset(new sparse_mapping::SparseMap(map_file, true));
   map_cloud_publisher_ = nh_.advertise<sensor_msgs::PointCloud2>("sparse_mapping/map_cloud", 1, true);
 }

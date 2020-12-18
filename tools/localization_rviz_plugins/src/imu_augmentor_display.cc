@@ -16,6 +16,7 @@
  * under the License.
  */
 
+#include <localization_common/logger.h>
 #include <localization_common/utilities.h>
 
 #include <OGRE/OgreSceneManager.h>
@@ -23,8 +24,6 @@
 
 #include <rviz/frame_manager.h>
 #include <rviz/visualization_manager.h>
-
-#include <glog/logging.h>
 
 #include <utility>
 
@@ -60,7 +59,7 @@ void ImuAugmentorDisplay::processMessage(const ff_msgs::EkfState::ConstPtr& msg)
   const auto timestamp = lc::RosTimeFromHeader(msg->header);
   const auto current_frame_T_world = currentFrameTFrame("world", timestamp, *context_);
   if (!current_frame_T_world) {
-    LOG(ERROR) << "processMessage: Failed to get current_frame_T_world.";
+    LogError("processMessage: Failed to get current_frame_T_world.");
     return;
   }
   const gtsam::Pose3 current_frame_T_body = *current_frame_T_world * world_T_body;

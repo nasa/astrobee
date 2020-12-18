@@ -16,6 +16,7 @@
  * under the License.
  */
 
+#include <localization_common/logger.h>
 #include <localization_common/utilities.h>
 
 #include <geometry_msgs/PoseStamped.h>
@@ -25,8 +26,6 @@
 
 #include <rviz/frame_manager.h>
 #include <rviz/visualization_manager.h>
-
-#include <glog/logging.h>
 
 #include <string>
 
@@ -57,7 +56,7 @@ void PoseDisplay::processMessage(const geometry_msgs::PoseStamped::ConstPtr& msg
   const auto timestamp = lc::RosTimeFromHeader(msg->header);
   const auto current_frame_T_world = currentFrameTFrame("world", timestamp, *context_);
   if (!current_frame_T_world) {
-    LOG(ERROR) << "processMessage: Failed to get current_frame_T_world.";
+    LogError("processMessage: Failed to get current_frame_T_world.");
     return;
   }
   auto axis = axisFromPose((*current_frame_T_world) * world_T_body, scale, context_->getSceneManager(), scene_node_);

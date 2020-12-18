@@ -19,6 +19,7 @@
 #include <ff_util/ff_names.h>
 #include <graph_bag/utilities.h>
 #include <localization_common/combined_nav_state.h>
+#include <localization_common/logger.h>
 #include <localization_common/time.h>
 #include <localization_common/utilities.h>
 
@@ -33,8 +34,6 @@
 #include <rviz/visualization_manager.h>
 
 #include <opencv2/highgui/highgui_c.h>
-
-#include <glog/logging.h>
 
 #include <limits>
 #include <string>
@@ -70,7 +69,7 @@ LocalizationGraphDisplay::LocalizationGraphDisplay() {
   config.AddFile("cameras.config");
 
   if (!config.ReadFiles()) {
-    LOG(FATAL) << "Failed to read config files.";
+    LogFatal("Failed to read config files.");
   }
   // Needed for feature tracks visualization
   nav_cam_params_.reset(new camera::CameraParameters(&config, "nav_cam"));
@@ -146,7 +145,7 @@ void LocalizationGraphDisplay::addLocProjectionVisual(
   try {
     cv_image = cv_bridge::toCvCopy(image_msg, sensor_msgs::image_encodings::RGB8);
   } catch (cv_bridge::Exception& e) {
-    LOG(ERROR) << "cv_bridge exception: " << e.what();
+    LogError("cv_bridge exception: " << e.what());
     return;
   }
   const cv::Mat image = cv_image->image;
@@ -156,7 +155,7 @@ void LocalizationGraphDisplay::addLocProjectionVisual(
   loc_projection_factor_image.image = image.clone();  // cv::Mat(image.rows, image.cols, CV_8UC3, cv::Scalar(0, 0, 0));
   const auto world_T_body = graph_values.at<gtsam::Pose3>(latest_loc_projection_factors.front()->key());
   if (!world_T_body) {
-    LOG(ERROR) << "addLocProjectionVisual: Failed to get world_T_body.";
+    LogError("addLocProjectionVisual: Failed to get world_T_body.");
     return;
   }
   const gtsam::PinholeCamera<gtsam::Cal3_S2> camera(
@@ -187,7 +186,7 @@ void LocalizationGraphDisplay::addSmartFactorProjectionVisual(const SmartFactor&
     try {
       cv_image = cv_bridge::toCvCopy(image, sensor_msgs::image_encodings::RGB8);
     } catch (cv_bridge::Exception& e) {
-      LOG(ERROR) << "cv_bridge exception: " << e.what();
+      LogError("cv_bridge exception: " << e.what());
       return;
     }
 
@@ -272,17 +271,17 @@ void LocalizationGraphDisplay::addImuVisual(const graph_localizer::GraphLocalize
                                             const gtsam::CombinedImuFactor* const imu_factor) {
   const auto world_T_body = graph_localizer.graph_values().at<gtsam::Pose3>(imu_factor->key1());
   if (!world_T_body) {
-    LOG(ERROR) << "addImuVisual: Failed to get world_T_body.";
+    LogError("addImuVisual: Failed to get world_T_body.");
     return;
   }
 
   const auto timestamp = graph_localizer.graph_values().Timestamp(imu_factor->key1());
   if (!timestamp) {
-    LOG(ERROR) << "addImuVisual: Failed to get timestamp.";
+    LogError("addImuVisual: Failed to get timestamp.");
   }
   const auto current_frame_T_world = currentFrameTFrame("world", ros::Time(*timestamp), *context_);
   if (!current_frame_T_world) {
-    LOG(ERROR) << "addImuVisual: Failed to get current_frame_T_world.";
+    LogError("addImuVisual: Failed to get current_frame_T_world.");
     return;
   }
   const gtsam::Pose3 current_frame_T_body = *current_frame_T_world * *world_T_body;
@@ -296,7 +295,7 @@ void LocalizationGraphDisplay::addImuVisual(const graph_localizer::GraphLocalize
   if (show_imu_factor_arrows_->getBool()) {
     const auto imu_predicted_combined_nav_state = pimPredict(graph_localizer, imu_factor);
     if (!imu_predicted_combined_nav_state) {
-      LOG(ERROR) << "AddImuVisual: Failed to get pim predicted nav state.";
+      LogError("AddImuVisual: Failed to get pim predicted nav state.");
       return;
     }
     auto imu_factor_arrow = std::unique_ptr<rviz::Arrow>(new rviz::Arrow(context_->getSceneManager(), scene_node_));
