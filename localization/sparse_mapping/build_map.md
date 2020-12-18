@@ -531,7 +531,7 @@ computations may differ.
 Set up the environment in every terminal that is used. Ensure that you
 use the correct robot name below.
 
-    source ~/astrobee_build/native/devel/setup.bash
+    source $BUILD_PATH/devel/setup.bash
     export ASTROBEE_RESOURCE_DIR=$SOURCE_PATH/astrobee/resources
     export ASTROBEE_CONFIG_DIR=$SOURCE_PATH/astrobee/config
     export ASTROBEE_WORLD=iss
@@ -544,6 +544,7 @@ Examine the localization configuration file:
 
 Sym link the map to test:
 
+    mkdir -p $SOURCE_PATH/astrobee/resources/maps
     rm -fv $SOURCE_PATH/astrobee/resources/maps/iss.map
     ln -s $(pwd)/mymap.map $SOURCE_PATH/astrobee/resources/maps/iss.map
 

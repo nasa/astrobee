@@ -66,6 +66,9 @@ option(ENABLE_VIVE
 option(ENABLE_VIVE_SOLVER
   "Enable support for building the Vive offline solver"
   ON)
+option(ENABLE_INTEGRATION_TESTING
+  "Build the integration tests if tests are active."
+  ON)
 
 if ( "${CMAKE_VERSION}" VERSION_GREATER 3.0.0 )
   cmake_policy(SET CMP0045 OLD)
@@ -287,7 +290,7 @@ if (USE_CTC)
   # we have our own ... on top of that it doesn't build correctly for
   # ARM. Our own unit tests however will continue to
   # work. (non-catkin)
-set(CATKIN_SKIP_TESTING ON)
+  set(CATKIN_SKIP_TESTING ON)
 endif (USE_CTC)
 if (USE_ROS)
   set(ENV{ROS_LANG_DISABLE} "genlisp:gennodejs:geneus:$ENV{ROS_LANG_DISABLE}")

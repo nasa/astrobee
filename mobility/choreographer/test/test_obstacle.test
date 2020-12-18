@@ -1,5 +1,3 @@
-<?xml version="1.0"?>
-
 <!-- Copyright (c) 2017, United States Government, as represented by the     -->
 <!-- Administrator of the National Aeronautics and Space Administration.     -->
 <!--                                                                         -->
@@ -17,30 +15,12 @@
 <!-- implied. See the License for the specific language governing            -->
 <!-- permissions and limitations under the License.                          -->
 
-<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
-  <gazebo reference="body">
-    <sensor name="sci_cam" type="camera">
-      <pose>0 0 0 0 0 0</pose>
-      <always_on>true</always_on>
-      <update_rate>0.0001</update_rate>
-      <camera>
-        <horizontal_fov>1.0821</horizontal_fov> <!-- 62 degrees -->
-        <image>
-          <width>5344</width>
-          <height>4008</height>
-          <format>B8G8R8</format>
-        </image>
-        <clip>
-          <near>0.1</near>
-          <far>20</far>
-        </clip>
-        <distortion>
-          <k1>0.0</k1>
-        </distortion>
-      </camera>
-      <plugin name="sci_cam_ros" filename="libgazebo_sensor_plugin_sci_cam.so">
-        <namespace>/${ns}/</namespace>
-      </plugin>
-    </sensor>
-  </gazebo>
-</robot>
+<launch>
+  <!-- Start the entire simulation stack -->
+  <include file="$(find astrobee)/launch/sim.launch">
+    <arg name="dds" value="false"/>
+    <arg name="pose" default="10.5 -8.5 4.5 0 0 0 1" />
+  </include>
+
+  <test pkg="choreographer" type="test_obstacle" test-name="test_obstacle" />
+</launch>
