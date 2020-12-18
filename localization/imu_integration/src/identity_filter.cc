@@ -17,8 +17,7 @@
  */
 
 #include <imu_integration/identity_filter.h>
-
-#include <glog/logging.h>
+#include <localization_common/logger.h>
 
 namespace imu_integration {
 IdentityFilter::IdentityFilter() {}

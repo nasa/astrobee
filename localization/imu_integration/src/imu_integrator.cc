@@ -18,16 +18,15 @@
 
 #include <imu_integration/imu_integrator.h>
 #include <imu_integration/utilities.h>
+#include <localization_common/logger.h>
 #include <localization_common/utilities.h>
-
-#include <glog/logging.h>
 
 namespace imu_integration {
 namespace lc = localization_common;
 namespace lm = localization_measurements;
 ImuIntegrator::ImuIntegrator(const ImuIntegratorParams& params)
     : params_(params), imu_filter_(new ImuFilter(params.filter)) {
-  VLOG(2) << "ImuIntegrator: Gravity vector: " << std::endl << params_.gravity.matrix();
+  LogDebug("ImuIntegrator: Gravity vector: " << std::endl << params_.gravity.matrix());
   pim_params_.reset(new gtsam::PreintegratedCombinedMeasurements::Params(params_.gravity));
   // Set sensor covariances
   pim_params_->gyroscopeCovariance = params_.gyro_sigma * params_.gyro_sigma * gtsam::I_3x3;
@@ -52,19 +51,19 @@ void ImuIntegrator::BufferImuMeasurement(const lm::ImuMeasurement& imu_measureme
 boost::optional<lc::Time> ImuIntegrator::IntegrateImuMeasurements(const lc::Time start_time, const lc::Time end_time,
                                                                   gtsam::PreintegratedCombinedMeasurements& pim) const {
   if (measurements_.size() < 2) {
-    LOG(ERROR) << "IntegrateImuMeasurements: Less than 2 measurements available.";
+    LogError("IntegrateImuMeasurements: Less than 2 measurements available.");
     return boost::none;
   }
   if (end_time < measurements_.cbegin()->first) {
-    LOG(ERROR) << "IntegrateImuMeasurements: End time occurs before first measurement.";
+    LogError("IntegrateImuMeasurements: End time occurs before first measurement.");
     return boost::none;
   }
   if (end_time > measurements_.crbegin()->first) {
-    LOG(ERROR) << "IntegrateImuMeasurements: End time occurs after last measurement.";
+    LogError("IntegrateImuMeasurements: End time occurs after last measurement.");
     return boost::none;
   }
   if (start_time > end_time) {
-    LOG(ERROR) << "IntegrateImuMeasurements: Start time occurs after end time.";
+    LogError("IntegrateImuMeasurements: Start time occurs after end time.");
     return boost::none;
   }
 
@@ -84,7 +83,7 @@ boost::optional<lc::Time> ImuIntegrator::IntegrateImuMeasurements(const lc::Time
     const auto interpolated_measurement =
       Interpolate(std::prev(measurement_it)->second, measurement_it->second, end_time);
     if (!interpolated_measurement) {
-      LOG(ERROR) << "IntegrateImuMeasurements: Failed to interpolate final measurement.";
+      LogError("IntegrateImuMeasurements: Failed to interpolate final measurement.");
       return boost::none;
     }
     AddMeasurement(*interpolated_measurement, last_added_imu_measurement_time, pim);
@@ -92,14 +91,15 @@ boost::optional<lc::Time> ImuIntegrator::IntegrateImuMeasurements(const lc::Time
   }
 
   if (last_added_imu_measurement_time != end_time) {
-    LOG(ERROR) << "IntegrateImuMeasurements: Last added time not equal to end time.";
+    LogError("IntegrateImuMeasurements: Last added time not equal to end time.");
     return boost::none;
   }
 
-  VLOG(2) << "IntegrateImuMeasurements: Num imu measurements integrated: " << num_measurements_added;
-  VLOG(2) << "IntegrateImuMeasurements: Total Num Imu Measurements after "
-             "integrating: "
-          << measurements_.size();
+  LogDebug("IntegrateImuMeasurements: Num imu measurements integrated: " << num_measurements_added);
+  LogDebug(
+    "IntegrateImuMeasurements: Total Num Imu Measurements after "
+    "integrating: "
+    << measurements_.size());
   return last_added_imu_measurement_time;
 }
 
@@ -116,7 +116,7 @@ boost::optional<gtsam::PreintegratedCombinedMeasurements> ImuIntegrator::Integra
   auto pim = Pim(bias, params);
   const auto last_integrated_measurement_time = IntegrateImuMeasurements(start_time, end_time, pim);
   if (!last_integrated_measurement_time) {
-    LOG(ERROR) << "IntegratedPim: Failed to integrate imu measurments.";
+    LogError("IntegratedPim: Failed to integrate imu measurments.");
     return boost::none;
   }
   return pim;
@@ -132,7 +132,7 @@ boost::shared_ptr<gtsam::PreintegratedCombinedMeasurements::Params> ImuIntegrato
 
 boost::optional<lc::Time> ImuIntegrator::OldestTime() const {
   if (Empty()) {
-    LOG(ERROR) << "OldestTime: No measurements available.";
+    LogError("OldestTime: No measurements available.");
     return boost::none;
   }
   return measurements_.cbegin()->first;
@@ -140,7 +140,7 @@ boost::optional<lc::Time> ImuIntegrator::OldestTime() const {
 
 boost::optional<lc::Time> ImuIntegrator::LatestTime() const {
   if (Empty()) {
-    LOG(ERROR) << "LatestTime: No measurements available.";
+    LogError("LatestTime: No measurements available.");
     return boost::none;
   }
   return measurements_.crbegin()->first;
@@ -148,7 +148,7 @@ boost::optional<lc::Time> ImuIntegrator::LatestTime() const {
 
 boost::optional<lm::ImuMeasurement> ImuIntegrator::LatestMeasurement() const {
   if (Empty()) {
-    LOG(ERROR) << "LatestTime: No measurements available.";
+    LogError("LatestTime: No measurements available.");
     return boost::none;
   }
   return measurements_.crbegin()->second;
@@ -162,7 +162,7 @@ bool ImuIntegrator::WithinBounds(const localization_common::Time timestamp) {
   const auto oldest_time = OldestTime();
   const auto latest_time = LatestTime();
   if (!oldest_time || !latest_time) {
-    LOG(ERROR) << "WithinBounds: Failed to get time bounds.";
+    LogError("WithinBounds: Failed to get time bounds.");
     return false;
   }
   return (timestamp >= *oldest_time && timestamp <= *latest_time);

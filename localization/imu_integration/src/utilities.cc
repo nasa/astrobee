@@ -17,9 +17,8 @@
  */
 
 #include <imu_integration/utilities.h>
+#include <localization_common/logger.h>
 #include <localization_common/utilities.h>
-
-#include <glog/logging.h>
 
 namespace imu_integration {
 namespace lc = localization_common;
@@ -37,11 +36,11 @@ boost::optional<gtsam::imuBias::ConstantBias> EstimateAndSetImuBiases(
     sum_of_angular_velocity_measurements += imu_measurement.angular_velocity;
   }
 
-  VLOG(2) << "Number of imu measurements per bias estimate: " << num_imu_measurements_per_bias_estimate;
+  LogDebug("Number of imu measurements per bias estimate: " << num_imu_measurements_per_bias_estimate);
   const Eigen::Vector3d accelerometer_bias = sum_of_acceleration_measurements / imu_bias_measurements.size();
   const Eigen::Vector3d gyro_bias = sum_of_angular_velocity_measurements / imu_bias_measurements.size();
-  LOG(INFO) << "Accelerometer bias: " << std::endl << accelerometer_bias.matrix();
-  LOG(INFO) << "Gyro bias: " << std::endl << gyro_bias.matrix();
+  LogInfo("Accelerometer bias: " << std::endl << accelerometer_bias.matrix());
+  LogInfo("Gyro bias: " << std::endl << gyro_bias.matrix());
 
   imu_bias_measurements.clear();
   return gtsam::imuBias::ConstantBias(accelerometer_bias, gyro_bias);
@@ -50,8 +49,9 @@ boost::optional<gtsam::imuBias::ConstantBias> EstimateAndSetImuBiases(
 boost::optional<lm::ImuMeasurement> Interpolate(const lm::ImuMeasurement& imu_measurement_a,
                                                 const lm::ImuMeasurement& imu_measurement_b, const lc::Time timestamp) {
   if (timestamp < imu_measurement_a.timestamp || timestamp > imu_measurement_b.timestamp) {
-    LOG(ERROR) << "Interpolate: Interpolation timestamp out of range of imu "
-                  "measurements.";
+    LogError(
+      "Interpolate: Interpolation timestamp out of range of imu "
+      "measurements.");
     return boost::none;
   }
 
@@ -78,7 +78,7 @@ void AddMeasurement(const lm::ImuMeasurement& imu_measurement, lc::Time& last_ad
   const double dt = imu_measurement.timestamp - last_added_imu_measurement_time;
   // TODO(rsoussan): check if dt too large? Pass threshold param?
   if (dt == 0) {
-    LOG(DFATAL) << "AddMeasurement: Timestamp difference 0, failed to add measurement.";
+    LogError("AddMeasurement: Timestamp difference 0, failed to add measurement.");
     return;
   }
   pim.integrateMeasurement(imu_measurement.acceleration, imu_measurement.angular_velocity, dt);

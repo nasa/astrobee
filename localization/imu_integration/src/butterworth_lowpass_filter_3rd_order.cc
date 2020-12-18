@@ -17,8 +17,7 @@
  */
 
 #include <imu_integration/butterworth_lowpass_filter_3rd_order.h>
-
-#include <glog/logging.h>
+#include <localization_common/logger.h>
 
 namespace imu_integration {
 ButterworthLowpassFilter3rdOrder::ButterworthLowpassFilter3rdOrder() : initialized_(false) {}

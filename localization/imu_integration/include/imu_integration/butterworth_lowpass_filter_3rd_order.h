@@ -21,7 +21,7 @@
 
 #include <imu_integration/filter.h>
 
-#include <glog/logging.h>
+#include <localization_common/logger.h>
 
 #include <array>
 

@@ -17,8 +17,7 @@
  */
 
 #include <imu_integration/latest_imu_integrator.h>
-
-#include <glog/logging.h>
+#include <localization_common/logger.h>
 
 namespace imu_integration {
 namespace lc = localization_common;
@@ -37,20 +36,21 @@ void LatestImuIntegrator::ResetPimIntegrationAndSetBias(const gtsam::imuBias::Co
 
 bool LatestImuIntegrator::IntegrateLatestImuMeasurements(const lc::Time end_time) {
   if (Size() < 2) {
-    LOG(ERROR) << "IntegrateLatestImuMeasurements: Less than 2 measurements "
-                  "available.";
+    LogError(
+      "IntegrateLatestImuMeasurements: Less than 2 measurements "
+      "available.");
     return false;
   }
 
   if (last_added_imu_measurement_time_ == 0) {
-    VLOG(2) << "IntegrateLatestImuMeasurements: Adding first imu measurement.";
+    LogDebug("IntegrateLatestImuMeasurements: Adding first imu measurement.");
     last_added_imu_measurement_time_ = params_.start_time;
   }
 
   const auto last_added_imu_measurement_time =
     IntegrateImuMeasurements(last_added_imu_measurement_time_, end_time, *pim_);
   if (!last_added_imu_measurement_time) {
-    LOG(ERROR) << "IntegrateLatestImuMeasurements: Failed to integrate measurements.";
+    LogError("IntegrateLatestImuMeasurements: Failed to integrate measurements.");
     return false;
   }
 

@@ -22,15 +22,14 @@
 #include <imu_integration/butterworth_lowpass_filter_5th_order_1.h>
 #include <imu_integration/identity_filter.h>
 #include <imu_integration/imu_filter.h>
-
-#include <glog/logging.h>
+#include <localization_common/logger.h>
 
 namespace imu_integration {
 namespace lm = localization_measurements;
 ImuFilter::ImuFilter(const ImuFilterParams& params) {
   // TODO(rsoussan): Do this more efficiently
   if (params.type == "butter") {
-    VLOG(2) << "ImuFilter: Using Butterworth lowpass filter.";
+    LogDebug("ImuFilter: Using Butterworth lowpass filter.");
     acceleration_x_filter_.reset(new ButterworthLowpassFilter());
     acceleration_y_filter_.reset(new ButterworthLowpassFilter());
     acceleration_z_filter_.reset(new ButterworthLowpassFilter());
@@ -38,7 +37,7 @@ ImuFilter::ImuFilter(const ImuFilterParams& params) {
     angular_velocity_y_filter_.reset(new ButterworthLowpassFilter());
     angular_velocity_z_filter_.reset(new ButterworthLowpassFilter());
   } else if (params.type == "butter3") {
-    VLOG(2) << "ImuFilter: Using Butterworth lowpass 3rd order filter.";
+    LogDebug("ImuFilter: Using Butterworth lowpass 3rd order filter.");
     acceleration_x_filter_.reset(new ButterworthLowpassFilter3rdOrder());
     acceleration_y_filter_.reset(new ButterworthLowpassFilter3rdOrder());
     acceleration_z_filter_.reset(new ButterworthLowpassFilter3rdOrder());
@@ -46,7 +45,7 @@ ImuFilter::ImuFilter(const ImuFilterParams& params) {
     angular_velocity_y_filter_.reset(new ButterworthLowpassFilter3rdOrder());
     angular_velocity_z_filter_.reset(new ButterworthLowpassFilter3rdOrder());
   } else if (params.type == "butter5") {
-    VLOG(2) << "ImuFilter: Using Butterworth lowpass 5th order filter.";
+    LogDebug("ImuFilter: Using Butterworth lowpass 5th order filter.");
     acceleration_x_filter_.reset(new ButterworthLowpassFilter5thOrder());
     acceleration_y_filter_.reset(new ButterworthLowpassFilter5thOrder());
     acceleration_z_filter_.reset(new ButterworthLowpassFilter5thOrder());
@@ -54,7 +53,7 @@ ImuFilter::ImuFilter(const ImuFilterParams& params) {
     angular_velocity_y_filter_.reset(new ButterworthLowpassFilter5thOrder());
     angular_velocity_z_filter_.reset(new ButterworthLowpassFilter5thOrder());
   } else if (params.type == "butter5_1") {
-    VLOG(2) << "ImuFilter: Using Butterworth lowpass 5th order 1Hz cutoff filter.";
+    LogDebug("ImuFilter: Using Butterworth lowpass 5th order 1Hz cutoff filter.");
     acceleration_x_filter_.reset(new ButterworthLowpassFilter5thOrder1());
     acceleration_y_filter_.reset(new ButterworthLowpassFilter5thOrder1());
     acceleration_z_filter_.reset(new ButterworthLowpassFilter5thOrder1());
@@ -62,7 +61,7 @@ ImuFilter::ImuFilter(const ImuFilterParams& params) {
     angular_velocity_y_filter_.reset(new ButterworthLowpassFilter5thOrder1());
     angular_velocity_z_filter_.reset(new ButterworthLowpassFilter5thOrder1());
   } else if (params.type == "butter5_05") {
-    VLOG(2) << "ImuFilter: Using Butterworth lowpass 5th order 0.5Hz cutoff filter.";
+    LogDebug("ImuFilter: Using Butterworth lowpass 5th order 0.5Hz cutoff filter.");
     acceleration_x_filter_.reset(new ButterworthLowpassFilter5thOrder05());
     acceleration_y_filter_.reset(new ButterworthLowpassFilter5thOrder05());
     acceleration_z_filter_.reset(new ButterworthLowpassFilter5thOrder05());
@@ -70,7 +69,7 @@ ImuFilter::ImuFilter(const ImuFilterParams& params) {
     angular_velocity_y_filter_.reset(new ButterworthLowpassFilter5thOrder05());
     angular_velocity_z_filter_.reset(new ButterworthLowpassFilter5thOrder05());
   } else if (params.type == "none") {
-    VLOG(2) << "ImuFilter: No filter.";
+    LogDebug("ImuFilter: No filter.");
     acceleration_x_filter_.reset(new IdentityFilter());
     acceleration_y_filter_.reset(new IdentityFilter());
     acceleration_z_filter_.reset(new IdentityFilter());
@@ -78,7 +77,7 @@ ImuFilter::ImuFilter(const ImuFilterParams& params) {
     angular_velocity_y_filter_.reset(new IdentityFilter());
     angular_velocity_z_filter_.reset(new IdentityFilter());
   } else {
-    LOG(FATAL) << "ImuFilter: Invalid filter selection.";
+    LogFatal("ImuFilter: Invalid filter selection.");
   }
 }
 

@@ -21,8 +21,6 @@
 
 #include <imu_integration/filter.h>
 
-#include <glog/logging.h>
-
 #include <array>
 
 namespace imu_integration {
