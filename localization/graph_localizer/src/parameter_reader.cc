@@ -184,5 +184,6 @@ void LoadGraphLocalizerParams(config_reader::ConfigReader& config, GraphLocalize
     lc::LoadDouble(config, "max_standstill_feature_track_avg_distance_from_mean");
   params.standstill_min_num_points_per_track = lc::LoadInt(config, "standstill_min_num_points_per_track");
   params.log_rate = lc::LoadInt(config, "log_rate");
+  params.estimate_world_T_dock_using_loc = lc::LoadBool(config, "estimate_world_T_dock_using_loc");
 }
 }  // namespace graph_localizer

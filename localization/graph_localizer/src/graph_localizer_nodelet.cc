@@ -89,6 +89,13 @@ bool GraphLocalizerNodelet::SetMode(ff_msgs::SetEkfInput::Request& req, ff_msgs:
       "None, resetting localizer.");
     ResetAndEnableLocalizer();
   }
+
+  // Might need to resestimate world_T_dock on ar mode switch
+  if (input_mode == ff_msgs::SetEkfInputRequest::MODE_AR_TAGS &&
+      last_mode != ff_msgs::SetEkfInputRequest::MODE_AR_TAGS) {
+    LogInfo("SetMode: Switching to AR_TAG mode.");
+    graph_localizer_wrapper_.MarkWorldTDockForResettingIfNecessary();
+  }
   return true;
 }
 
@@ -139,6 +146,7 @@ void GraphLocalizerNodelet::ARVisualLandmarksCallback(const ff_msgs::VisualLandm
 
   if (!localizer_enabled()) return;
   graph_localizer_wrapper_.ARVisualLandmarksCallback(*visual_landmarks_msg);
+  PublishWorldTDockTF();
 }
 
 void GraphLocalizerNodelet::ImuCallback(const sensor_msgs::Imu::ConstPtr& imu_msg) {
@@ -190,13 +198,8 @@ void GraphLocalizerNodelet::PublishWorldTBodyTF() {
 
 void GraphLocalizerNodelet::PublishWorldTDockTF() {
   const auto world_T_dock = graph_localizer_wrapper_.estimated_world_T_dock();
-  if (!world_T_dock) {
-    LOG_EVERY_N(WARNING, 100) << "PublishWorldTDockTF: Failed to get world_T_dock.";
-    return;
-  }
-
   const auto world_T_dock_tf =
-    lc::PoseToTF(world_T_dock->first, "world", "dock/body", world_T_dock->second, platform_name_);
+    lc::PoseToTF(world_T_dock, "world", "dock/body", lc::TimeFromRosTime(ros::Time::now()), platform_name_);
   transform_pub_.sendTransform(world_T_dock_tf);
 }
 
@@ -215,7 +218,6 @@ void GraphLocalizerNodelet::PublishGraphMessages() {
 
   // Publish loc information here since graph updates occur on optical flow updates
   PublishLocalizationState();
-  PublishWorldTDockTF();
   if (graph_localizer_wrapper_.publish_localization_graph()) PublishLocalizationGraph();
   if (graph_localizer_wrapper_.save_localization_graph_dot_file())
     graph_localizer_wrapper_.SaveLocalizationGraphDotFile();

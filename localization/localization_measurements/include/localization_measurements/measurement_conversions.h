@@ -33,7 +33,8 @@ namespace localization_measurements {
 MatchedProjectionsMeasurement MakeMatchedProjectionsMeasurement(const ff_msgs::VisualLandmarks& visual_landmarks);
 
 MatchedProjectionsMeasurement FrameChangeMatchedProjectionsMeasurement(
-  const MatchedProjectionsMeasurement& matched_projections_measurement, const gtsam::Pose3& b_T_a);
+  const MatchedProjectionsMeasurement& matched_projections_measurement,
+  const gtsam::Pose3& new_frame_T_measurement_origin);
 
 FeaturePointsMeasurement MakeFeaturePointsMeasurement(const ff_msgs::Feature2dArray& optical_flow_tracks);
 }  // namespace localization_measurements

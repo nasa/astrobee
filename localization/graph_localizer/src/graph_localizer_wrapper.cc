@@ -30,7 +30,7 @@
 namespace graph_localizer {
 namespace lc = localization_common;
 namespace lm = localization_measurements;
-GraphLocalizerWrapper::GraphLocalizerWrapper() {
+GraphLocalizerWrapper::GraphLocalizerWrapper() : reset_world_T_dock_(false) {
   config_reader::ConfigReader config;
   lc::LoadGraphLocalizerConfig(config);
   config.AddFile("transforms.config");
@@ -60,6 +60,10 @@ GraphLocalizerWrapper::GraphLocalizerWrapper() {
   SanityCheckerParams sanity_checker_params;
   LoadSanityCheckerParams(config, sanity_checker_params);
   sanity_checker_.reset(new SanityChecker(sanity_checker_params));
+  // Initialize with config.  Optionally update during localization
+  // TODO(rsoussan): Make graph localizer wrapper config file and load fcn in parameter reader
+  estimated_world_T_dock_ = lc::LoadTransform(config, "world_dock_transform");
+  estimate_world_T_dock_using_loc_ = lc::LoadBool(config, "estimate_world_T_dock_using_loc");
 }
 
 bool GraphLocalizerWrapper::Initialized() const { return (graph_localizer_.get() != nullptr); }
@@ -157,7 +161,13 @@ bool GraphLocalizerWrapper::CheckCovarianceSanity() const {
 void GraphLocalizerWrapper::ARVisualLandmarksCallback(const ff_msgs::VisualLandmarks& visual_landmarks_msg) {
   if (!ValidVLMsg(visual_landmarks_msg)) return;
   if (graph_localizer_) {
-    graph_localizer_->AddARTagMeasurement(lm::MakeMatchedProjectionsMeasurement(visual_landmarks_msg));
+    if (reset_world_T_dock_) {
+      ResetWorldTDockUsingLoc(visual_landmarks_msg);
+      reset_world_T_dock_ = false;
+    }
+    const auto frame_changed_ar_measurements = lm::FrameChangeMatchedProjectionsMeasurement(
+      lm::MakeMatchedProjectionsMeasurement(visual_landmarks_msg), estimated_world_T_dock_);
+    graph_localizer_->AddARTagMeasurement(frame_changed_ar_measurements);
     // TODO(rsoussan): Make seperate ar count, update EkfState
     feature_counts_.vl = visual_landmarks_msg.landmarks.size();
   }
@@ -195,13 +205,23 @@ boost::optional<const FeatureTrackMap&> GraphLocalizerWrapper::feature_tracks() 
   return graph_localizer_->feature_tracks();
 }
 
-boost::optional<std::pair<gtsam::Pose3, lc::Time>> GraphLocalizerWrapper::estimated_world_T_dock() const {
-  if (!graph_localizer_ || !graph_localizer_->estimated_world_T_dock()) {
-    LOG_EVERY_N(WARNING, 50) << "estimated_world_T_dock: Failed to get world_T_dock";
-    return boost::none;
-  }
-  return graph_localizer_->estimated_world_T_dock();
+void GraphLocalizerWrapper::MarkWorldTDockForResettingIfNecessary() {
+  if (estimate_world_T_dock_using_loc_) reset_world_T_dock_ = true;
 }
+
+void GraphLocalizerWrapper::ResetWorldTDockUsingLoc(const ff_msgs::VisualLandmarks& visual_landmarks_msg) {
+  const auto latest_combined_nav_state = LatestCombinedNavState();
+  if (!latest_combined_nav_state) {
+    LogError("ResetWorldTDockIfNecessary: Failed to get latest combined nav state.");
+    return;
+  }
+  // TODO(rsoussan): Extrapolate latest world_T_body loc estimate with imu data?
+  const gtsam::Pose3 dock_T_body =
+    lc::GtPose(visual_landmarks_msg, graph_localizer_initialization_.params().calibration.body_T_dock_cam.inverse());
+  estimated_world_T_dock_ = latest_combined_nav_state->pose() * dock_T_body.inverse();
+}
+
+gtsam::Pose3 GraphLocalizerWrapper::estimated_world_T_dock() const { return estimated_world_T_dock_; }
 
 boost::optional<geometry_msgs::PoseStamped> GraphLocalizerWrapper::LatestSparseMappingPoseMsg() const {
   if (!sparse_mapping_pose_) {

@@ -49,6 +49,7 @@ struct GraphLocalizerParams {
   int standstill_min_num_points_per_track;
   double huber_k;
   int log_rate;
+  bool estimate_world_T_dock_using_loc;
 };
 }  // namespace graph_localizer
 

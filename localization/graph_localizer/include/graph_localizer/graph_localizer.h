@@ -107,8 +107,6 @@ class GraphLocalizer {
 
   int NumVLFactors() const;
 
-  boost::optional<std::pair<gtsam::Pose3, localization_common::Time>> estimated_world_T_dock() const;
-
   const GraphValues& graph_values() const;
 
   const gtsam::NonlinearFactorGraph& factor_graph() const;
@@ -181,8 +179,6 @@ class GraphLocalizer {
 
   bool ReadyToAddMeasurement(const localization_common::Time timestamp) const;
 
-  bool TransformARMeasurementAndUpdateDockTWorld(FactorsToAdd& factors_to_add);
-
   bool MeasurementRecentEnough(const localization_common::Time timestamp) const;
 
   void RemoveOldBufferedFactors(const localization_common::Time oldest_allowed_timestamp);
@@ -230,8 +226,6 @@ class GraphLocalizer {
   std::shared_ptr<GraphValues> graph_values_;
   std::shared_ptr<FeatureTracker> feature_tracker_;
   boost::optional<gtsam::Marginals> marginals_;
-  boost::optional<std::pair<gtsam::Pose3, localization_common::Time>> estimated_world_T_dock_;
-  std::map<localization_common::Time, gtsam::Pose3> dock_cam_T_dock_estimates_;
   boost::optional<localization_measurements::FeaturePointsMeasurement> last_optical_flow_measurement_;
   std::multimap<localization_common::Time, FactorsToAdd> buffered_factors_to_add_;
 

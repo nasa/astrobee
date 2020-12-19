@@ -72,7 +72,11 @@ class GraphLocalizerWrapper {
 
   boost::optional<const FeatureTrackMap&> feature_tracks() const;
 
-  boost::optional<std::pair<gtsam::Pose3, localization_common::Time>> estimated_world_T_dock() const;
+  void MarkWorldTDockForResettingIfNecessary();
+
+  void ResetWorldTDockUsingLoc(const ff_msgs::VisualLandmarks& visual_landmarks_msg);
+
+  gtsam::Pose3 estimated_world_T_dock() const;
 
   void SaveLocalizationGraphDotFile() const;
 
@@ -99,6 +103,9 @@ class GraphLocalizerWrapper {
   std::unique_ptr<SanityChecker> sanity_checker_;
   double position_cov_log_det_lost_threshold_;
   double orientation_cov_log_det_lost_threshold_;
+  gtsam::Pose3 estimated_world_T_dock_;
+  bool reset_world_T_dock_;
+  bool estimate_world_T_dock_using_loc_;
 };
 }  // namespace graph_localizer
 

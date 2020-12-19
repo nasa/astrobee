@@ -27,8 +27,7 @@
 namespace graph_localizer {
 namespace lm = localization_measurements;
 namespace sym = gtsam::symbol_shorthand;
-LocFactorAdder::LocFactorAdder(const LocFactorAdderParams& params, const GraphAction graph_action)
-    : LocFactorAdder::Base(params), graph_action_(graph_action) {}
+LocFactorAdder::LocFactorAdder(const LocFactorAdderParams& params) : LocFactorAdder::Base(params) {}
 
 std::vector<FactorsToAdd> LocFactorAdder::AddFactors(
   const lm::MatchedProjectionsMeasurement& matched_projections_measurement) {
@@ -52,7 +51,7 @@ std::vector<FactorsToAdd> LocFactorAdder::AddFactors(
   }
 
   if (params().add_pose_priors) {
-    FactorsToAdd factors_to_add(graph_action_);
+    FactorsToAdd factors_to_add;
     factors_to_add.reserve(1);
     const gtsam::Vector6 pose_prior_noise_sigmas((gtsam::Vector(6) << params().prior_translation_stddev,
                                                   params().prior_translation_stddev, params().prior_translation_stddev,
@@ -73,7 +72,7 @@ std::vector<FactorsToAdd> LocFactorAdder::AddFactors(
     return {factors_to_add};
   } else if (params().add_projections) {
     int num_loc_projection_factors = 0;
-    FactorsToAdd factors_to_add(graph_action_);
+    FactorsToAdd factors_to_add;
     factors_to_add.reserve(matched_projections_measurement.matched_projections.size());
     for (const auto& matched_projection : matched_projections_measurement.matched_projections) {
       const KeyInfo key_info(&sym::P, matched_projections_measurement.timestamp);
