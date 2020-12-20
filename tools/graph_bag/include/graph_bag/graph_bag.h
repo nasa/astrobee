@@ -63,6 +63,8 @@ class GraphBag {
   const std::string kImuBiasTesterPoseTopic_ = "imu_bias_tester";
   std::unique_ptr<camera::CameraParameters> nav_cam_params_;
   gtsam::Pose3 body_T_nav_cam_;
+  int ar_min_num_landmarks_;
+  int sparse_mapping_min_num_landmarks_;
 };
 }  // end namespace graph_bag
 

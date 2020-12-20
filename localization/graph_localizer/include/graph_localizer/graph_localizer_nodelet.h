@@ -101,6 +101,8 @@ class GraphLocalizerNodelet : public ff_util::FreeFlyerNodelet {
   tf2_ros::TransformBroadcaster transform_pub_;
   std::string platform_name_;
   ff_msgs::Heartbeat heartbeat_;
+  int ar_min_num_landmarks_;
+  int sparse_mapping_min_num_landmarks_;
 
   // Timers
   localization_common::RosTimer vl_timer_ = localization_common::RosTimer("VL msg");

@@ -38,6 +38,7 @@
 #include <vector>
 
 namespace graph_bag {
+namespace gl = graph_localizer;
 namespace lc = localization_common;
 
 GraphBag::GraphBag(const std::string& bag_name, const std::string& map_file, const std::string& image_topic,
@@ -47,6 +48,7 @@ GraphBag::GraphBag(const std::string& bag_name, const std::string& map_file, con
   config.AddFile("cameras.config");
   config.AddFile("geometry.config");
   config.AddFile("tools/graph_bag.config");
+  lc::LoadGraphLocalizerConfig(config);
 
   if (!config.ReadFiles()) {
     LOG(FATAL) << "Failed to read config files.";
@@ -64,6 +66,8 @@ GraphBag::GraphBag(const std::string& bag_name, const std::string& map_file, con
   // Needed for feature tracks visualization
   nav_cam_params_.reset(new camera::CameraParameters(&config, "nav_cam"));
   body_T_nav_cam_ = lc::LoadTransform(config, "nav_cam_transform");
+  sparse_mapping_min_num_landmarks_ = lc::LoadInt(config, "loc_adder_min_num_matches");
+  ar_min_num_landmarks_ = lc::LoadInt(config, "ar_tag_loc_adder_min_num_matches");
 }
 
 void GraphBag::SavePoseMsg(const geometry_msgs::PoseStamped& pose_msg, const std::string& pose_topic) {
@@ -126,7 +130,7 @@ void GraphBag::Run() {
     const auto vl_msg = live_measurement_simulator_->GetVLMessage(current_time);
     if (vl_msg) {
       graph_localizer_simulator_->BufferVLVisualLandmarksMsg(*vl_msg);
-      if (vl_msg->landmarks.size() >= 5) {
+      if (gl::ValidVLMsg(*vl_msg, sparse_mapping_min_num_landmarks_)) {
         const gtsam::Pose3 sparse_mapping_global_T_body = lc::GtPose(*vl_msg, body_T_nav_cam_.inverse());
         const lc::Time timestamp = lc::TimeFromHeader(vl_msg->header);
         SavePoseMsg(graph_localizer::PoseMsg(sparse_mapping_global_T_body, timestamp), TOPIC_SPARSE_MAPPING_POSE);
@@ -142,7 +146,7 @@ void GraphBag::Run() {
         marked_world_T_dock_for_resetting_if_necessary = true;
       }
       graph_localizer_simulator_->BufferARVisualLandmarksMsg(*ar_msg);
-      if (ar_msg->landmarks.size() >= 4) {
+      if (gl::ValidVLMsg(*ar_msg, ar_min_num_landmarks_)) {
         const auto ar_tag_pose_msg = graph_localizer_simulator_->LatestARTagPoseMsg();
         if (!ar_tag_pose_msg) {
           LogWarning("Run: Failed to get ar tag pose msg");

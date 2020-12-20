@@ -34,6 +34,14 @@ GraphLocalizerNodelet::GraphLocalizerNodelet()
   heartbeat_.node = GetName();
   // TODO(rsoussan): is this the correct name?
   heartbeat_.nodelet_manager = ros::this_node::getName();
+
+  config_reader::ConfigReader config;
+  lc::LoadGraphLocalizerConfig(config);
+  if (!config.ReadFiles()) {
+    LOG(FATAL) << "Failed to read config files.";
+  }
+  sparse_mapping_min_num_landmarks_ = lc::LoadInt(config, "loc_adder_min_num_matches");
+  ar_min_num_landmarks_ = lc::LoadInt(config, "ar_tag_loc_adder_min_num_matches");
 }
 
 void GraphLocalizerNodelet::Initialize(ros::NodeHandle* nh) {
@@ -138,8 +146,7 @@ void GraphLocalizerNodelet::VLVisualLandmarksCallback(const ff_msgs::VisualLandm
 
   if (!localizer_enabled()) return;
   graph_localizer_wrapper_.VLVisualLandmarksCallback(*visual_landmarks_msg);
-  // TODO(rsoussan): Load this from config file
-  if (ValidVLMsg(*visual_landmarks_msg, 5)) PublishSparseMappingPose();
+  if (ValidVLMsg(*visual_landmarks_msg, sparse_mapping_min_num_landmarks_)) PublishSparseMappingPose();
 }
 
 void GraphLocalizerNodelet::ARVisualLandmarksCallback(const ff_msgs::VisualLandmarks::ConstPtr& visual_landmarks_msg) {
@@ -149,8 +156,7 @@ void GraphLocalizerNodelet::ARVisualLandmarksCallback(const ff_msgs::VisualLandm
   if (!localizer_enabled()) return;
   graph_localizer_wrapper_.ARVisualLandmarksCallback(*visual_landmarks_msg);
   PublishWorldTDockTF();
-  // TODO(rsoussan): Load this from config file
-  if (ValidVLMsg(*visual_landmarks_msg, 4)) PublishARTagPose();
+  if (ValidVLMsg(*visual_landmarks_msg, ar_min_num_landmarks_)) PublishARTagPose();
 }
 
 void GraphLocalizerNodelet::ImuCallback(const sensor_msgs::Imu::ConstPtr& imu_msg) {
