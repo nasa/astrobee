@@ -64,6 +64,8 @@ GraphLocalizerWrapper::GraphLocalizerWrapper() : reset_world_T_dock_(false) {
   // TODO(rsoussan): Make graph localizer wrapper config file and load fcn in parameter reader
   estimated_world_T_dock_ = lc::LoadTransform(config, "world_dock_transform");
   estimate_world_T_dock_using_loc_ = lc::LoadBool(config, "estimate_world_T_dock_using_loc");
+  sparse_mapping_min_num_landmarks_ = lc::LoadInt(config, "loc_adder_min_num_matches");
+  ar_min_num_landmarks_ = lc::LoadInt(config, "ar_tag_loc_adder_min_num_matches");
 }
 
 bool GraphLocalizerWrapper::Initialized() const { return (graph_localizer_.get() != nullptr); }
@@ -112,7 +114,7 @@ void GraphLocalizerWrapper::ResetBiasesAndLocalizer() {
 }
 
 void GraphLocalizerWrapper::VLVisualLandmarksCallback(const ff_msgs::VisualLandmarks& visual_landmarks_msg) {
-  if (!ValidVLMsg(visual_landmarks_msg)) return;
+  if (!ValidVLMsg(visual_landmarks_msg, sparse_mapping_min_num_landmarks_)) return;
   if (graph_localizer_) {
     graph_localizer_->AddSparseMappingMeasurement(lm::MakeMatchedProjectionsMeasurement(visual_landmarks_msg));
     feature_counts_.vl = visual_landmarks_msg.landmarks.size();
@@ -159,7 +161,7 @@ bool GraphLocalizerWrapper::CheckCovarianceSanity() const {
 }
 
 void GraphLocalizerWrapper::ARVisualLandmarksCallback(const ff_msgs::VisualLandmarks& visual_landmarks_msg) {
-  if (!ValidVLMsg(visual_landmarks_msg)) return;
+  if (!ValidVLMsg(visual_landmarks_msg, ar_min_num_landmarks_)) return;
   if (graph_localizer_) {
     if (reset_world_T_dock_) {
       ResetWorldTDockUsingLoc(visual_landmarks_msg);

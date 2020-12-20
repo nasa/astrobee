@@ -57,7 +57,7 @@ bool ValidPointSet(const std::deque<localization_measurements::FeaturePoint>& po
 
 double AverageDistanceFromMean(const std::deque<localization_measurements::FeaturePoint>& points);
 
-bool ValidVLMsg(const ff_msgs::VisualLandmarks& visual_landmarks_msg);
+bool ValidVLMsg(const ff_msgs::VisualLandmarks& visual_landmarks_msg, const int min_num_landmarks);
 
 ff_msgs::EkfState EkfStateMsg(const localization_common::CombinedNavState& combined_nav_state,
                               const Eigen::Vector3d& acceleration, const Eigen::Vector3d& angular_velocity,

@@ -94,6 +94,7 @@ class GraphLocalizerWrapper {
   std::unique_ptr<GraphLocalizer> graph_localizer_;
   std::vector<localization_measurements::ImuMeasurement> imu_bias_measurements_;
   int num_bias_estimation_measurements_;
+  // TODO(rsoussan): Make graph localizer wrapper params
   bool publish_localization_graph_;
   bool save_localization_graph_dot_file_;
   boost::optional<std::pair<gtsam::imuBias::ConstantBias, localization_common::Time>> latest_biases_;
@@ -106,6 +107,8 @@ class GraphLocalizerWrapper {
   gtsam::Pose3 estimated_world_T_dock_;
   bool reset_world_T_dock_;
   bool estimate_world_T_dock_using_loc_;
+  int ar_min_num_landmarks_;
+  int sparse_mapping_min_num_landmarks_;
 };
 }  // namespace graph_localizer
 

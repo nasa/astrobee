@@ -137,7 +137,8 @@ void GraphLocalizerNodelet::VLVisualLandmarksCallback(const ff_msgs::VisualLandm
 
   if (!localizer_enabled()) return;
   graph_localizer_wrapper_.VLVisualLandmarksCallback(*visual_landmarks_msg);
-  if (ValidVLMsg(*visual_landmarks_msg)) PublishSparseMappingPose();
+  // TODO(rsoussan): Load this from config file
+  if (ValidVLMsg(*visual_landmarks_msg, 5)) PublishSparseMappingPose();
 }
 
 void GraphLocalizerNodelet::ARVisualLandmarksCallback(const ff_msgs::VisualLandmarks::ConstPtr& visual_landmarks_msg) {
