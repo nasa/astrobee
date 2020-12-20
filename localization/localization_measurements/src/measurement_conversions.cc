@@ -45,6 +45,7 @@ MatchedProjectionsMeasurement FrameChangeMatchedProjectionsMeasurement(
   for (auto& matched_projection : frame_changed_measurement.matched_projections) {
     matched_projection.map_point = new_frame_T_measurement_origin * matched_projection.map_point;
   }
+  frame_changed_measurement.global_T_cam = new_frame_T_measurement_origin * frame_changed_measurement.global_T_cam;
   return frame_changed_measurement;
 }
 
