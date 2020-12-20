@@ -66,9 +66,9 @@ GraphBag::GraphBag(const std::string& bag_name, const std::string& map_file, con
   body_T_nav_cam_ = lc::LoadTransform(config, "nav_cam_transform");
 }
 
-void GraphBag::SaveSparseMappingPoseMsg(const geometry_msgs::PoseStamped& sparse_mapping_pose_msg) {
-  const ros::Time timestamp = lc::RosTimeFromHeader(sparse_mapping_pose_msg.header);
-  results_bag_.write("/" + std::string(TOPIC_SPARSE_MAPPING_POSE), timestamp, sparse_mapping_pose_msg);
+void GraphBag::SavePoseMsg(const geometry_msgs::PoseStamped& pose_msg, const std::string& pose_topic) {
+  const ros::Time timestamp = lc::RosTimeFromHeader(pose_msg.header);
+  results_bag_.write("/" + pose_topic, timestamp, pose_msg);
 }
 
 void GraphBag::SaveOpticalFlowTracksImage(const sensor_msgs::ImageConstPtr& image_msg,
@@ -129,12 +129,28 @@ void GraphBag::Run() {
       if (vl_msg->landmarks.size() >= 5) {
         const gtsam::Pose3 sparse_mapping_global_T_body = lc::GtPose(*vl_msg, body_T_nav_cam_.inverse());
         const lc::Time timestamp = lc::TimeFromHeader(vl_msg->header);
-        SaveSparseMappingPoseMsg(graph_localizer::PoseMsg(sparse_mapping_global_T_body, timestamp));
+        SavePoseMsg(graph_localizer::PoseMsg(sparse_mapping_global_T_body, timestamp), TOPIC_SPARSE_MAPPING_POSE);
       }
     }
     const auto ar_msg = live_measurement_simulator_->GetARMessage(current_time);
     if (ar_msg) {
       graph_localizer_simulator_->BufferARVisualLandmarksMsg(*ar_msg);
+      if (ar_msg->landmarks.size() >= 4) {
+        const auto ar_tag_pose_msg = graph_localizer_simulator_->LatestARTagPoseMsg();
+        if (!ar_tag_pose_msg) {
+          LogWarning("Run: Failed to get ar tag pose msg");
+        } else {
+          static lc::Time last_added_timestamp = 0;
+          const auto timestamp = lc::TimeFromHeader(ar_tag_pose_msg->header);
+          // Prevent adding the same pose twice, since the pose is buffered before adding to the graph localizer
+          // wrapper in the graph localizer simulator and LatestARTagPoseMsg returns
+          // the last pose that has already been added to the graph localizer wrapper.
+          if (last_added_timestamp != timestamp) {
+            SavePoseMsg(*ar_tag_pose_msg, TOPIC_AR_TAG_POSE);
+            last_added_timestamp = timestamp;
+          }
+        }
+      }
     }
 
     const bool updated_graph = graph_localizer_simulator_->AddMeasurementsAndUpdateIfReady(current_time);

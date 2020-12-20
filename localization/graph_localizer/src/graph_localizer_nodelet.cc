@@ -46,6 +46,7 @@ void GraphLocalizerNodelet::SubscribeAndAdvertise(ros::NodeHandle* nh) {
   // TODO(Rsoussan): should these use private nh as well??
   state_pub_ = nh->advertise<ff_msgs::EkfState>(TOPIC_GRAPH_LOC_STATE, 10);
   sparse_mapping_pose_pub_ = nh->advertise<geometry_msgs::PoseStamped>(TOPIC_SPARSE_MAPPING_POSE, 10);
+  ar_tag_pose_pub_ = nh->advertise<geometry_msgs::PoseStamped>(TOPIC_AR_TAG_POSE, 10);
   graph_pub_ = nh->advertise<ff_msgs::LocalizationGraph>(TOPIC_GRAPH_LOC, 10);
   reset_pub_ = nh->advertise<std_msgs::Empty>(TOPIC_GNC_EKF_RESET, 10);
   heartbeat_pub_ = nh->advertise<ff_msgs::Heartbeat>(TOPIC_HEARTBEAT, 5, true);
@@ -148,6 +149,8 @@ void GraphLocalizerNodelet::ARVisualLandmarksCallback(const ff_msgs::VisualLandm
   if (!localizer_enabled()) return;
   graph_localizer_wrapper_.ARVisualLandmarksCallback(*visual_landmarks_msg);
   PublishWorldTDockTF();
+  // TODO(rsoussan): Load this from config file
+  if (ValidVLMsg(*visual_landmarks_msg, 4)) PublishARTagPose();
 }
 
 void GraphLocalizerNodelet::ImuCallback(const sensor_msgs::Imu::ConstPtr& imu_msg) {
@@ -183,6 +186,15 @@ void GraphLocalizerNodelet::PublishSparseMappingPose() const {
     return;
   }
   sparse_mapping_pose_pub_.publish(*latest_sparse_mapping_pose_msg);
+}
+
+void GraphLocalizerNodelet::PublishARTagPose() const {
+  const auto latest_ar_tag_pose_msg = graph_localizer_wrapper_.LatestARTagPoseMsg();
+  if (!latest_ar_tag_pose_msg) {
+    LogWarning("PublishARTagPose: Failed to get latest ar tag pose msg.");
+    return;
+  }
+  ar_tag_pose_pub_.publish(*latest_ar_tag_pose_msg);
 }
 
 void GraphLocalizerNodelet::PublishWorldTBodyTF() {

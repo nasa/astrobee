@@ -170,6 +170,9 @@ void GraphLocalizerWrapper::ARVisualLandmarksCallback(const ff_msgs::VisualLandm
     const auto frame_changed_ar_measurements = lm::FrameChangeMatchedProjectionsMeasurement(
       lm::MakeMatchedProjectionsMeasurement(visual_landmarks_msg), estimated_world_T_dock_);
     graph_localizer_->AddARTagMeasurement(frame_changed_ar_measurements);
+    ar_tag_pose_ = std::make_pair(frame_changed_ar_measurements.global_T_cam *
+                                    graph_localizer_initialization_.params().calibration.body_T_dock_cam.inverse(),
+                                  frame_changed_ar_measurements.timestamp);
     // TODO(rsoussan): Make seperate ar count, update EkfState
     feature_counts_.vl = visual_landmarks_msg.landmarks.size();
   }
@@ -232,6 +235,15 @@ boost::optional<geometry_msgs::PoseStamped> GraphLocalizerWrapper::LatestSparseM
   }
 
   return PoseMsg(sparse_mapping_pose_->first, sparse_mapping_pose_->second);
+}
+
+boost::optional<geometry_msgs::PoseStamped> GraphLocalizerWrapper::LatestARTagPoseMsg() const {
+  if (!ar_tag_pose_) {
+    LOG_EVERY_N(WARNING, 50) << "LatestARTagPoseMsg: Failed to get latest ar tag pose msg.";
+    return boost::none;
+  }
+
+  return PoseMsg(ar_tag_pose_->first, ar_tag_pose_->second);
 }
 
 boost::optional<lc::CombinedNavState> GraphLocalizerWrapper::LatestCombinedNavState() const {
