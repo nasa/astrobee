@@ -134,6 +134,13 @@ void GraphBag::Run() {
     }
     const auto ar_msg = live_measurement_simulator_->GetARMessage(current_time);
     if (ar_msg) {
+      static bool marked_world_T_dock_for_resetting_if_necessary = false;
+      // In lieu of doing this on a mode switch to AR_MODE, reset world_T_dock using loc if necessary when receive first
+      // ar msg
+      if (!marked_world_T_dock_for_resetting_if_necessary) {
+        graph_localizer_simulator_->MarkWorldTDockForResettingIfNecessary();
+        marked_world_T_dock_for_resetting_if_necessary = true;
+      }
       graph_localizer_simulator_->BufferARVisualLandmarksMsg(*ar_msg);
       if (ar_msg->landmarks.size() >= 4) {
         const auto ar_tag_pose_msg = graph_localizer_simulator_->LatestARTagPoseMsg();
