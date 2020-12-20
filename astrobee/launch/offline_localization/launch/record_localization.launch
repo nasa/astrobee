@@ -18,5 +18,5 @@
 <launch>
   <arg name="output_bagfile"/>             
   <arg name="terminal" default="" />
-  <node pkg="rosbag" type="record" name="recorder" output="screen" launch-prefix="$(arg terminal)" args="/graph_loc/state /graph_loc/graph /sparse_mapping/pose /gnc/ekf -O $(arg output_bagfile)"/>
+  <node pkg="rosbag" type="record" name="recorder" output="screen" launch-prefix="$(arg terminal)" args="/graph_loc/state /graph_loc/graph /sparse_mapping/pose /ar_tag/pose /gnc/ekf -O $(arg output_bagfile)"/>
 </launch>
