@@ -448,7 +448,16 @@ bool GraphLocalizer::MapProjectionNoiseScaling(const double max_inlier_weighted_
     if (error > max_inlier_weighted_projection_norm) {
       factor_it = factors.erase(factor_it);
     } else {
-      // TODO(rsoussan): check for noise scaling!!!!
+      if (weight_with_mahal_distance) {
+        // TODO(rsoussan): Get noise sigma from original factor?
+        // TODO(rsoussan): Enable this for loc or ar scale factor
+        const gtsam::SharedIsotropic scaled_noise(
+          gtsam::noiseModel::Isotropic::Sigma(2, params_.factor.loc_adder.noise_scale * error));
+        gtsam::LocProjectionFactor<>::shared_ptr loc_projection_factor(new gtsam::LocProjectionFactor<>(
+          projection_factor->measured(), projection_factor->landmark_point(), Robust(scaled_noise, params_.huber_k),
+          projection_factor->key(), projection_factor->calibration(), *(projection_factor->body_P_sensor())));
+        factor_it->factor = loc_projection_factor;
+      }
       ++factor_it;
     }
   }
