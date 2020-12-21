@@ -14,21 +14,57 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
+if (ENABLE_PICOFLEXX)
 
+cmake_minimum_required(VERSION 2.8.3)
 project(pico_driver)
+
+## Compile as C++11, supported in ROS Kinetic and newer
+add_compile_options(-std=c++11)
+
+find_package(catkin REQUIRED COMPONENTS
+  roscpp
+  nodelet
+  ff_msgs
+)
+
+# System dependencies are found with CMake's conventions
+find_package(royale REQUIRED)
 
 catkin_package(
   LIBRARIES ${PROJECT_NAME}
   CATKIN_DEPENDS roscpp nodelet ff_msgs
-  DEPENDS ${PROJECT_NAME}
 )
 
-link_directories(${royale_LIB_DIR})
+###########
+## Build ##
+###########
 
-create_library(TARGET ${PROJECT_NAME}
-  LIBS ${catkin_LIBRARIES} ${royale_LIBRARIES} config_reader ff_nodelet
-  INC  ${catkin_INCLUDE_DIRS} ${royale_INCLUDE_DIRS}
+# Specify additional locations of header files
+include_directories(
+  include
+  ${catkin_INCLUDE_DIRS}
+  ${EIGEN3_INCLUDE_DIR}
 )
+
+# Declare C++ libraries
+add_library(pico_driver
+  src/pico_driver.cc
+)
+add_dependencies(pico_driver ${catkin_EXPORTED_TARGETS})
+target_link_libraries(pico_driver ${catkin_LIBRARIES} ${EIGEN_LIBRARIES})
+
+## Declare a C++ executable: bag_to_csv
+add_executable(pico_proxy tools/pico_proxy.cc)
+add_dependencies(pico_proxy ${catkin_EXPORTED_TARGETS})
+target_link_libraries(pico_proxy
+  pico_driver gflags glog ${catkin_LIBRARIES})
+
+## Declare a C++ executable: bag_to_csv
+add_executable(pico_tool tools/pico_tool.cc)
+add_dependencies(pico_tool ${catkin_EXPORTED_TARGETS})
+target_link_libraries(pico_tool
+  pico_driver gflags glog ${catkin_LIBRARIES})
 
 if(CATKIN_ENABLE_TESTING)
   # Pico flexx initialization fault tester
@@ -42,10 +78,13 @@ if(CATKIN_ENABLE_TESTING)
   )
 endif()
 
-create_tool_targets(DIR tools
-  LIBS ${catkin_LIBRARIES} ${royale_LIBRARIES} uvc
-  INC ${catkin_INCLUDE_DIRS} ${royale_INCLUDE_DIRS}
-  DEPS ff_msgs opencv
-)
+#############
+## Install ##
+#############
 
-install_launch_files()
+# Mark launch files for installation
+install(DIRECTORY launch/
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
+  PATTERN ".svn" EXCLUDE)
+
+endif (ENABLE_PICOFLEXX)

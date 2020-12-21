@@ -15,7 +15,18 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+cmake_minimum_required(VERSION 2.8.3)
 project(smart_dock)
+
+## Compile as C++11, supported in ROS Kinetic and newer
+add_compile_options(-std=c++11)
+
+find_package(catkin REQUIRED COMPONENTS
+  roscpp
+  nodelet
+  i2c
+  eps_driver
+)
 
 set(DEPS
   rapidExtAstrobee
@@ -32,20 +43,53 @@ set(INCLUDES
   ${SORACORE_INCLUDE_DIRS}
 )
 
-create_library(TARGET smart_dock
-  LIBS ${LIBS} i2c eps_driver
-  INC ${INCLUDES}
-  DEPS ${DEPS}
+catkin_package(
+  LIBRARIES
+    signal_lights
+  CATKIN_DEPENDS
+    roscpp
+    nodelet
+    i2c
+    eps_driver
 )
 
-create_tool_targets(DIR tools
-  LIBS ${LIBS} smart_dock config_reader
-  INC ${INCLUDES}
-  DEPS ${DEPS}
+###########
+## Build ##
+###########
+
+# Specify additional locations of header files
+include_directories(
+  include
+  ${catkin_INCLUDE_DIRS}
 )
+
+
+# Declare C++ libraries
+add_library(smart_dock
+  src/smart_dock.cc
+  src/smart_dock_node.cc
+)
+add_dependencies(smart_dock ${catkin_EXPORTED_TARGETS})
+target_link_libraries(smart_dock ${catkin_LIBRARIES})
+
+## Declare a C++ executable: inspection_tool
+add_executable(smart_dock_service tools/smart_dock_service.cc)
+add_dependencies(smart_dock_service ${catkin_EXPORTED_TARGETS})
+target_link_libraries(smart_dock_service
+  smart_dock gflags ${catkin_LIBRARIES})
+
+## Declare a C++ executable: inspection_tool
+add_executable(smart_dock_tool tools/smart_dock_tool.cc)
+add_dependencies(smart_dock_tool ${catkin_EXPORTED_TARGETS})
+target_link_libraries(smart_dock_tool
+  smart_dock gflags ${catkin_LIBRARIES})
 
 # Determine our module name
 get_filename_component(MODULE_NAME ${CMAKE_CURRENT_SOURCE_DIR} NAME)
+
+#############
+## Install ##
+#############
 
 install(CODE "execute_process(
   COMMAND mkdir -p share/${MODULE_NAME}

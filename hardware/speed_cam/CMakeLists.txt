@@ -15,7 +15,20 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+cmake_minimum_required(VERSION 2.8.3)
 project(speed_cam)
+
+## Compile as C++11, supported in ROS Kinetic and newer
+add_compile_options(-std=c++11)
+
+find_package(catkin REQUIRED COMPONENTS
+  roscpp
+  nodelet
+  ff_util
+  ff_hw_msgs
+  ff_serial
+  mavlink
+)
 
 catkin_package(
   LIBRARIES
@@ -23,20 +36,36 @@ catkin_package(
   CATKIN_DEPENDS
     roscpp
     nodelet
-    pluginlib
-    sensor_msgs
-    geometry_msgs
     ff_util
     ff_hw_msgs
-    mavlink
+    ff_serial
 )
 
-create_library(
-  TARGET speed_cam
-  LIBS ${catkin_LIBRARIES} ff_serial config_reader ff_nodelet
-  INC ${catkin_INCLUDE_DIRS}
-  DEPS mavlink speed_cam_gencpp
+###########
+## Build ##
+###########
+
+# Specify additional locations of header files
+include_directories(
+  include
+  ${catkin_INCLUDE_DIRS}
 )
+
+# Declare C++ libraries
+# Declare C++ libraries
+add_library(speed_cam
+  src/speed_cam.cc
+  src/speed_cam_node.cc
+)
+add_dependencies(speed_cam ${catkin_EXPORTED_TARGETS})
+target_link_libraries(speed_cam ${catkin_LIBRARIES})
+
+## Declare a C++ executable: speed_cam_tool
+add_executable(speed_cam_tool tools/speed_cam_tool.cc)
+add_dependencies(speed_cam_tool ${catkin_EXPORTED_TARGETS})
+target_link_libraries(speed_cam_tool
+  speed_cam gflags ${catkin_LIBRARIES})
+
 
 if(CATKIN_ENABLE_TESTING)
   find_package(rostest REQUIRED)
@@ -51,9 +80,12 @@ if(CATKIN_ENABLE_TESTING)
   )
 endif()
 
-create_tool_targets(DIR tools
-  LIBS ${catkin_LIBRARIES} speed_cam
-  INC ${catkin_INCLUDE_DIRS}
-)
+#############
+## Install ##
+#############
 
-install_launch_files()
+# Mark launch files for installation
+install(DIRECTORY launch/
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
+  PATTERN ".svn" EXCLUDE)
+

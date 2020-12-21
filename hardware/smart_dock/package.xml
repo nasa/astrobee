@@ -1,9 +1,8 @@
-<?xml version="1.0"?>
 <package>
-  <name>temp_monitor</name>
-  <version>0.0.0</version>
+  <name>smart_dock</name>
+  <version>0.0.1</version>
   <description>
-    The temperature monitoring package
+    Package to control the signal lights
   </description>
   <license>
     Apache License, Version 2.0
@@ -18,16 +17,15 @@
   <build_depend>roscpp</build_depend>
   <build_depend>nodelet</build_depend>
   <build_depend>i2c</build_depend>
+  <build_depend>eps_driver</build_depend>
   <build_depend>ff_util</build_depend>
+  <build_depend>ff_msgs</build_depend>
   <build_depend>ff_hw_msgs</build_depend>
-  <build_depend>config_reader</build_depend>
   <run_depend>roscpp</run_depend>
   <run_depend>nodelet</run_depend>
   <run_depend>i2c</run_depend>
+  <run_depend>eps_driver</run_depend>
   <run_depend>ff_util</run_depend>
+  <run_depend>ff_msgs</run_depend>
   <run_depend>ff_hw_msgs</run_depend>
-  <run_depend>config_reader</run_depend>
-  <export>
-    <nodelet plugin="${prefix}/nodelet_plugins.xml" />
-  </export>
 </package>

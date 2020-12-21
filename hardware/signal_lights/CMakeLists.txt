@@ -90,32 +90,3 @@ target_link_libraries(signal_lights_tool
 install(DIRECTORY launch/
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
   PATTERN ".svn" EXCLUDE)
-
-
-# create_library(
-#   DIR src/custom_i2c
-#   TARGET custom_i2c
-# )
-
-# create_library(
-#   DIR src/signal_lights
-#   TARGET signal_lights
-#   LIBS custom_i2c
-# )
-
-# create_tool_targets(
-#   DIR tools
-#   LIBS signal_lights ff_common custom_i2c
-# )
-
-# # ROS nodelet and tools
-
-# create_library(
-#   DIR src/signal_lights_node
-#   TARGET signal_lights_nodelet
-#   LIBS ${catkin_LIBRARIES} signal_lights config_reader ff_nodelet custom_i2c
-#   INC ${catkin_INCLUDE_DIRS}
-#   DEPS ff_hw_msgs
-# )
-
-# install_launch_files()

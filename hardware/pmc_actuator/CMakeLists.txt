@@ -15,7 +15,22 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+cmake_minimum_required(VERSION 2.8.3)
 project(pmc_actuator)
+
+## Compile as C++11, supported in ROS Kinetic and newer
+add_compile_options(-std=c++11)
+
+find_package(catkin REQUIRED COMPONENTS
+  roscpp
+  nodelet
+  pluginlib
+  ff_util
+  std_msgs
+  ff_msgs
+  ff_hw_msgs
+  i2c
+)
 
 catkin_package(
   LIBRARIES
@@ -28,36 +43,71 @@ catkin_package(
     std_msgs
     ff_msgs
     ff_hw_msgs
+    i2c
+)
+
+###########
+## Build ##
+###########
+
+# Specify additional locations of header files
+include_directories(
+  include
+  ${catkin_INCLUDE_DIRS}
+  ${EIGEN3_INCLUDE_DIR}
 )
 
 # ROS agnostic driver and tool
 
-create_library(
-  DIR src/pmc_actuator
-  TARGET pmc_actuator
-  LIBS i2c
+# Declare C++ libraries
+add_library(pmc_actuator
+  src/pmc_actuator/pmc_actuator.cc
 )
+add_dependencies(pmc_actuator ${catkin_EXPORTED_TARGETS})
+target_link_libraries(pmc_actuator ${catkin_LIBRARIES} ${EIGEN_LIBRARIES})
 
-create_tool_targets(DIR tools/pmc_actuator_tool
-  LIBS pmc_actuator
-)
+## Declare a C++ executable: bag_to_csv
+add_executable(pmc_actuator_tool tools/pmc_actuator_tool/pmc_actuator_tool.cc)
+add_dependencies(pmc_actuator_tool ${catkin_EXPORTED_TARGETS})
+target_link_libraries(pmc_actuator_tool
+  pmc_actuator gflags glog ${catkin_LIBRARIES})
 
 # ROS nodelet and tools
 
-create_library(
-  DIR src/pmc_actuator_nodelet
-  TARGET pmc_actuator_nodelet
-  LIBS ${catkin_LIBRARIES} pmc_actuator config_reader ff_nodelet
-  INC ${catkin_INCLUDE_DIRS}
-  DEPS ff_hw_msgs
+# Declare C++ libraries
+add_library(pmc_actuator_nodelet
+  src/pmc_actuator_nodelet/pmc_actuator_nodelet.cc
 )
+add_dependencies(pmc_actuator_nodelet ${catkin_EXPORTED_TARGETS})
+target_link_libraries(pmc_actuator_nodelet ${catkin_LIBRARIES} ${EIGEN_LIBRARIES})
 
-create_tool_targets(DIR tools
-  LIBS ${catkin_LIBRARIES} pmc_actuator ff_nodelet
-  INC ${catkin_INCLUDE_DIRS}
-)
+## Declare a C++ executable: bag_to_csv
+add_executable(pmc_actuator_cmd_test tools/pmc_actuator_cmd_test.cc)
+add_dependencies(pmc_actuator_cmd_test ${catkin_EXPORTED_TARGETS})
+target_link_libraries(pmc_actuator_cmd_test
+  pmc_actuator gflags glog ${catkin_LIBRARIES})
 
-install_launch_files()
+## Declare a C++ executable: bag_to_csv
+add_executable(pmc_actuator_feeder tools/pmc_actuator_feeder.cc)
+add_dependencies(pmc_actuator_feeder ${catkin_EXPORTED_TARGETS})
+target_link_libraries(pmc_actuator_feeder
+  pmc_actuator gflags glog ${catkin_LIBRARIES})
+
+## Declare a C++ executable: bag_to_csv
+add_executable(pmc_autotrim_node tools/pmc_autotrim_node.cc)
+add_dependencies(pmc_autotrim_node ${catkin_EXPORTED_TARGETS})
+target_link_libraries(pmc_autotrim_node
+  pmc_actuator gflags glog ${catkin_LIBRARIES})
+
+#############
+## Install ##
+#############
+
+# Mark launch files for installation
+install(DIRECTORY launch/
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
+  PATTERN ".svn" EXCLUDE)
+
 install(FILES
   tools/pmc_currents.py
   tools/pmc_status.py

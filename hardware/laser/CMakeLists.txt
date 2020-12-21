@@ -15,33 +15,96 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+cmake_minimum_required(VERSION 2.8.3)
 project(laser)
 
-# Core library
-create_library(TARGET laser
-  INC ${GLOG_INCLUDE_DIRS}
-  LIBS ${GLOG_LIBRARIES} i2c
-  DEPS i2c)
+## Compile as C++11, supported in ROS Kinetic and newer
+add_compile_options(-std=c++11)
 
-# Standalone test programs
-create_tool_targets(DIR tools
-  INC ${GFLAGS_INCLUDE_DIRS}
-  LIBS ${GFLAGS_LIBRARIES} laser ff_common
-  DEPS laser)
+find_package(catkin REQUIRED COMPONENTS
+  roscpp
+  roslib
+  nodelet
+  cv_bridge
+  ff_util
+  ff_common
+  ff_hw_msgs
+  i2c
+  config_reader
+)
 
-# Create ROS nodes if we are using ROS
-if(USE_ROS)
-  catkin_package(
-    LIBRARIES laser
-    CATKIN_DEPENDS roscpp roslib nodelet
-    DEPENDS ff_hw_msgs
-  )
+catkin_package(
+  INCLUDE_DIRS include
+  LIBRARIES laser
+  CATKIN_DEPENDS
+    roscpp
+    roslib
+    nodelet
+    cv_bridge
+    ff_util
+    ff_common
+    ff_hw_msgs
+    i2c
+    config_reader
+)
 
-  create_library(TARGET laser_nodelet
-    DIR src/ros
-    LIBS ${catkin_LIBRARIES} laser config_reader ff_nodelet
-    INC ${catkin_INCLUDE_DIRS}
-    DEPS ff_hw_msgs
-  )
-  install_launch_files()
-endif(USE_ROS)
+###########
+## Build ##
+###########
+
+# Specify additional locations of header files
+include_directories(
+  include
+  ${catkin_INCLUDE_DIRS}
+  ${EIGEN3_INCLUDE_DIR}
+)
+
+# Declare C++ libraries
+add_library(laser
+  src/laser.cc
+)
+add_dependencies(laser ${catkin_EXPORTED_TARGETS})
+target_link_libraries(laser ${catkin_LIBRARIES} ${EIGEN_LIBRARIES})
+
+# Declare C++ libraries
+add_library(laser_nodelet
+  src/ros/laser_nodelet.cc
+)
+add_dependencies(laser_nodelet ${catkin_EXPORTED_TARGETS})
+target_link_libraries(laser_nodelet ${catkin_LIBRARIES} ${EIGEN_LIBRARIES})
+
+## Declare a C++ executable: bag_to_csv
+add_executable(laser_test tools/laser_test.cc)
+add_dependencies(laser_test ${catkin_EXPORTED_TARGETS})
+target_link_libraries(laser_test
+  laser gflags glog ${catkin_LIBRARIES})
+
+
+# # Core library
+# create_library(TARGET laser
+#   INC ${GLOG_INCLUDE_DIRS}
+#   LIBS ${GLOG_LIBRARIES} i2c
+#   DEPS i2c)
+
+# # Standalone test programs
+# create_tool_targets(DIR tools
+#   INC ${GFLAGS_INCLUDE_DIRS}
+#   LIBS ${GFLAGS_LIBRARIES} laser ff_common
+#   DEPS laser)
+
+
+# create_library(TARGET laser_nodelet
+#   DIR src/ros
+#   LIBS ${catkin_LIBRARIES} laser config_reader ff_nodelet
+#   INC ${catkin_INCLUDE_DIRS}
+#   DEPS ff_hw_msgs
+# )
+
+#############
+## Install ##
+#############
+
+# Mark launch files for installation
+install(DIRECTORY launch/
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
+  PATTERN ".svn" EXCLUDE)

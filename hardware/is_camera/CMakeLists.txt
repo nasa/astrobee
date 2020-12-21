@@ -15,7 +15,19 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+cmake_minimum_required(VERSION 2.8.3)
 project(is_camera)
+
+## Compile as C++11, supported in ROS Kinetic and newer
+add_compile_options(-std=c++11)
+
+find_package(catkin REQUIRED COMPONENTS
+  roscpp
+  image_transport
+  nodelet
+  ff_util
+  config_reader
+)
 
 # Need to find libv4l2
 find_path(V4L2_INCLUDE_DIR libv4l2.h linux/videodev2.h
@@ -25,22 +37,59 @@ find_library(V4L2_LIBRARY NAMES libv4l2 v4l2
 find_package_handle_standard_args(V4L2 DEFAULT_MSG
   V4L2_INCLUDE_DIR V4L2_LIBRARY)
 
+# Find OpenCV and fix a 3.3.1 bug
+find_package(OpenCV 3 REQUIRED)
+if (${OpenCV_VERSION} MATCHES "3.3.1")
+  foreach(__cvcomponent ${OpenCV_LIB_COMPONENTS})
+    set (__original_cvcomponent ${__cvcomponent})
+    if(NOT __cvcomponent MATCHES "^opencv_")
+      set(__cvcomponent opencv_${__cvcomponent})
+    endif()
+    if (TARGET ${__cvcomponent})
+      set_target_properties(${__cvcomponent} PROPERTIES
+          MAP_IMPORTED_CONFIG_DEBUG ""
+          MAP_IMPORTED_CONFIG_RELEASE ""
+          MAP_IMPORTED_CONFIG_RELWITHDEBINFO ""
+          MAP_IMPORTED_CONFIG_MINSIZEREL ""
+      )
+    endif()
+  endforeach(__cvcomponent)
+endif()
+set(OpenCV_LIBRARIES ${OpenCV_LIBS})
+
 catkin_package(
   LIBRARIES is_camera
-  CATKIN_DEPENDS roscpp image_transport nodelet
+  CATKIN_DEPENDS
+    roscpp
+    image_transport
+    nodelet
+    ff_util
+    config_reader
   )
 
-create_library(TARGET is_camera
-  LIBS ${catkin_LIBRARIES} ${V4L2_LIBRARY} config_reader ff_nodelet
-  INC ${catkin_INCLUDE_DIRS} ${V4L2_INCLUDE_DIR}
-  DEPS ff_msgs)
+###########
+## Build ##
+###########
 
-create_tool_targets(DIR tools
-  LIBS is_camera
-  )
+# Specify additional locations of header files
+include_directories(
+  include
+  ${catkin_INCLUDE_DIRS}
+  ${OpenCV_INCLUDE_DIRS}
+)
 
-# I'm not sure who installed package.xml for us, but we should do the same for
-# nodelet_plugins.xml
-install(FILES nodelet_plugins.xml DESTINATION share/is_camera)
+# Declare C++ libraries
+add_library(is_camera
+  src/camera.cc
+)
+add_dependencies(is_camera ${catkin_EXPORTED_TARGETS})
+target_link_libraries(is_camera ${catkin_LIBRARIES})
 
-install_launch_files()
+#############
+## Install ##
+#############
+
+# Mark launch files for installation
+install(DIRECTORY launch/
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
+  PATTERN ".svn" EXCLUDE)

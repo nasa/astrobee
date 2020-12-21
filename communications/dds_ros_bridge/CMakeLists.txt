@@ -14,46 +14,58 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
-
+# if (USE_DDS)
+cmake_minimum_required(VERSION 2.8.3)
 project(dds_ros_bridge)
+
+## Compile as C++11, supported in ROS Kinetic and newer
+add_compile_options(-std=c++11)
+
+find_package(catkin REQUIRED COMPONENTS
+  config_reader
+  ff_util
+  ff_msgs
+)
+
+# System dependencies are found with CMake's conventions
+find_package(Eigen3 REQUIRED)
+
 catkin_package(
   LIBRARIES dds_ros_bridge
   CATKIN_DEPENDS roscpp message_runtime std_msgs nav_msgs
 )
 
-set(DEPS
-  ff_msgs
-  )
-
 set(LIBS
-  config_reader
-  ff_nodelet
   Qt4::QtXml
   rapidIo
   rapidExtAstrobee
   )
 
-set(INCLUDES
-  ${CMAKE_CURRENT_SOURCE_DIR}/include
+###########
+## Build ##
+###########
+
+# Specify additional locations of header files
+include_directories(
+  include
   ${catkin_INCLUDE_DIRS}
   ${EIGEN3_INCLUDE_DIRS}
   ${SORACORE_INCLUDE_DIRS}
 )
-
-create_library(TARGET dds_ros_bridge
-  LIBS ${LIBS}
-  INC ${INCLUDES}
-  DEPS ${DEPS}
+file(GLOB cc_files
+     "src/*.cc"
 )
 
-create_tool_targets(DIR tools
-  LIBS dds_ros_bridge
-  INC ${INCLUDES}
-  DEPS ${DEPS} dds_ros_bridge
+add_library(dds_ros_bridge
+  ${cc_files}
 )
 
 # Determine our module name
 get_filename_component(MODULE_NAME ${CMAKE_CURRENT_SOURCE_DIR} NAME)
+
+#############
+## Install ##
+#############
 
 install(CODE "execute_process(
   COMMAND mkdir -p share/${MODULE_NAME}
@@ -63,4 +75,8 @@ install(CODE "execute_process(
   ERROR_QUIET
   )")
 
-install_launch_files()
+# Mark launch files for installation
+install(DIRECTORY launch/
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
+  PATTERN ".svn" EXCLUDE)
+# endif (USE_DDS)
