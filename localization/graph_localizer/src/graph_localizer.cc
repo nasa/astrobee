@@ -424,18 +424,14 @@ bool GraphLocalizer::TriangulateNewPoint(FactorsToAdd& factors_to_add) {
 }
 
 bool GraphLocalizer::LocProjectionNoiseScaling(FactorsToAdd& factors_to_add) {
-  return MapProjectionNoiseScaling(params_.factor.loc_adder.max_inlier_weighted_projection_norm,
-                                   params_.factor.loc_adder.weight_projections_with_mahal_distance, factors_to_add);
+  return MapProjectionNoiseScaling(params_.factor.loc_adder, factors_to_add);
 }
 
 bool GraphLocalizer::ARProjectionNoiseScaling(FactorsToAdd& factors_to_add) {
-  return MapProjectionNoiseScaling(params_.factor.ar_tag_loc_adder.max_inlier_weighted_projection_norm,
-                                   params_.factor.ar_tag_loc_adder.weight_projections_with_mahal_distance,
-                                   factors_to_add);
+  return MapProjectionNoiseScaling(params_.factor.ar_tag_loc_adder, factors_to_add);
 }
 
-bool GraphLocalizer::MapProjectionNoiseScaling(const double max_inlier_weighted_projection_norm,
-                                               const bool weight_with_mahal_distance, FactorsToAdd& factors_to_add) {
+bool GraphLocalizer::MapProjectionNoiseScaling(const LocFactorAdderParams& params, FactorsToAdd& factors_to_add) {
   auto& factors = factors_to_add.Get();
   for (auto factor_it = factors.begin(); factor_it != factors.end();) {
     auto& factor = factor_it->factor;
@@ -444,17 +440,20 @@ bool GraphLocalizer::MapProjectionNoiseScaling(const double max_inlier_weighted_
       LogError("MapProjectionNoiseScaling: Failed to cast to projection factor.");
       return false;
     }
-    const auto error = projection_factor->error(graph_values_->values());
-    if (error > max_inlier_weighted_projection_norm) {
+    const auto world_T_body = graph_values_->at<gtsam::Pose3>(projection_factor->key());
+    if (!world_T_body) {
+      LogError("MapProjectionNoiseScaling: Failed to get pose.");
+      return false;
+    }
+    const auto error = (projection_factor->evaluateError(*world_T_body)).norm();
+    if (error > params.max_inlier_weighted_projection_norm) {
       factor_it = factors.erase(factor_it);
     } else {
-      if (weight_with_mahal_distance) {
-        // TODO(rsoussan): Get noise sigma from original factor?
-        // TODO(rsoussan): Enable this for loc or ar scale factor
-        const gtsam::SharedIsotropic scaled_noise(
-          gtsam::noiseModel::Isotropic::Sigma(2, params_.factor.loc_adder.noise_scale * error));
+      if (params.weight_projections_with_mahal_distance) {
+        // TODO(rsoussan): rename mahal_distance to error since this uses evaluateError??
+        const gtsam::SharedIsotropic scaled_noise(gtsam::noiseModel::Isotropic::Sigma(2, params.noise_scale * error));
         gtsam::LocProjectionFactor<>::shared_ptr loc_projection_factor(new gtsam::LocProjectionFactor<>(
-          projection_factor->measured(), projection_factor->landmark_point(), Robust(scaled_noise, params_.huber_k),
+          projection_factor->measured(), projection_factor->landmark_point(), Robust(scaled_noise, params.huber_k),
           projection_factor->key(), projection_factor->calibration(), *(projection_factor->body_P_sensor())));
         factor_it->factor = loc_projection_factor;
       }
