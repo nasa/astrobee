@@ -42,12 +42,11 @@ std::vector<FactorsToAdd> LocFactorAdder::AddFactors(
     return {};
   }
 
-  double noise_scale = 1;
+  double noise_scale = params().noise_scale;
   if (params().scale_noise_with_num_landmarks) {
     const int num_landmarks = matched_projections_measurement.matched_projections.size();
     num_landmarks_averager_.Update(num_landmarks);
-    noise_scale =
-      params().noise_scale * std::pow((num_landmarks_averager_.average() / static_cast<double>(num_landmarks)), 2);
+    noise_scale *= std::pow((num_landmarks_averager_.average() / static_cast<double>(num_landmarks)), 2);
   }
 
   if (params().add_pose_priors) {
