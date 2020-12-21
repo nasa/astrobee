@@ -82,6 +82,10 @@ class GraphLocalizer {
   bool AddOpticalFlowMeasurement(
     const localization_measurements::FeaturePointsMeasurement& optical_flow_feature_points_measurement);
   bool TriangulateNewPoint(FactorsToAdd& factors_to_add);
+  bool LocProjectionNoiseScaling(FactorsToAdd& factors_to_add);
+  bool ARProjectionNoiseScaling(FactorsToAdd& factors_to_add);
+  bool MapProjectionNoiseScaling(const double max_inlier_weighted_projection_norm,
+                                 const bool weight_with_mahal_distance, FactorsToAdd& factors_to_add);
   void CheckForStandstill(
     const localization_measurements::FeaturePointsMeasurement& optical_flow_feature_points_measurement);
   void AddARTagMeasurement(

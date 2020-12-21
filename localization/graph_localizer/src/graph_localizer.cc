@@ -112,8 +112,9 @@ GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
   }
 
   // Initialize Factor Adders
-  ar_tag_loc_factor_adder_.reset(new LocFactorAdder(params_.factor.ar_tag_loc_adder));
-  loc_factor_adder_.reset(new LocFactorAdder(params_.factor.loc_adder));
+  ar_tag_loc_factor_adder_.reset(
+    new LocFactorAdder(params_.factor.ar_tag_loc_adder, GraphAction::kARTagProjectionNoiseScaling));
+  loc_factor_adder_.reset(new LocFactorAdder(params_.factor.loc_adder, GraphAction::kLocProjectionNoiseScaling));
   projection_factor_adder_.reset(
     new ProjectionFactorAdder(params_.factor.projection_adder, feature_tracker_, graph_values_));
   rotation_factor_adder_.reset(new RotationFactorAdder(params_.factor.rotation_adder, feature_tracker_));
@@ -418,6 +419,38 @@ bool GraphLocalizer::TriangulateNewPoint(FactorsToAdd& factors_to_add) {
              params_.huber_k);
     gtsam::PriorFactor<gtsam::Point3> point_prior_factor(point_key, *world_t_triangulated_point, point_noise);
     graph_.push_back(point_prior_factor);
+  }
+  return true;
+}
+
+bool GraphLocalizer::LocProjectionNoiseScaling(FactorsToAdd& factors_to_add) {
+  return MapProjectionNoiseScaling(params_.factor.loc_adder.max_inlier_weighted_projection_norm,
+                                   params_.factor.loc_adder.weight_projections_with_mahal_distance, factors_to_add);
+}
+
+bool GraphLocalizer::ARProjectionNoiseScaling(FactorsToAdd& factors_to_add) {
+  return MapProjectionNoiseScaling(params_.factor.ar_tag_loc_adder.max_inlier_weighted_projection_norm,
+                                   params_.factor.ar_tag_loc_adder.weight_projections_with_mahal_distance,
+                                   factors_to_add);
+}
+
+bool GraphLocalizer::MapProjectionNoiseScaling(const double max_inlier_weighted_projection_norm,
+                                               const bool weight_with_mahal_distance, FactorsToAdd& factors_to_add) {
+  auto& factors = factors_to_add.Get();
+  for (auto factor_it = factors.begin(); factor_it != factors.end();) {
+    auto& factor = factor_it->factor;
+    auto projection_factor = dynamic_cast<gtsam::LocProjectionFactor<>*>(factor.get());
+    if (!projection_factor) {
+      LogError("MapProjectionNoiseScaling: Failed to cast to projection factor.");
+      return false;
+    }
+    const auto error = projection_factor->error(graph_values_->values());
+    if (error > max_inlier_weighted_projection_norm) {
+      factor_it = factors.erase(factor_it);
+    } else {
+      // TODO(rsoussan): check for noise scaling!!!!
+      ++factor_it;
+    }
   }
   return true;
 }
@@ -874,6 +907,10 @@ bool GraphLocalizer::DoGraphAction(FactorsToAdd& factors_to_add) {
       return true;
     case GraphAction::kTriangulateNewPoint:
       return TriangulateNewPoint(factors_to_add);
+    case GraphAction::kLocProjectionNoiseScaling:
+      return LocProjectionNoiseScaling(factors_to_add);
+    case GraphAction::kARTagProjectionNoiseScaling:
+      return ARProjectionNoiseScaling(factors_to_add);
   }
 
   // Shouldn't occur
