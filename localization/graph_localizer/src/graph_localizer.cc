@@ -451,7 +451,8 @@ bool GraphLocalizer::MapProjectionNoiseScaling(const LocFactorAdderParams& param
     } else {
       if (params.weight_projections_with_mahal_distance) {
         // TODO(rsoussan): rename mahal_distance to error since this uses evaluateError??
-        const gtsam::SharedIsotropic scaled_noise(gtsam::noiseModel::Isotropic::Sigma(2, params.noise_scale * error));
+        const gtsam::SharedIsotropic scaled_noise(
+          gtsam::noiseModel::Isotropic::Sigma(2, params.projection_noise_scale * error));
         gtsam::LocProjectionFactor<>::shared_ptr loc_projection_factor(new gtsam::LocProjectionFactor<>(
           projection_factor->measured(), projection_factor->landmark_point(), Robust(scaled_noise, params.huber_k),
           projection_factor->key(), projection_factor->calibration(), *(projection_factor->body_P_sensor())));
