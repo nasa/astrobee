@@ -19,11 +19,10 @@
 #include <graph_localizer/graph_action.h>
 #include <graph_localizer/smart_projection_cumulative_factor_adder.h>
 #include <graph_localizer/utilities.h>
+#include <localization_common/logger.h>
 
 #include <gtsam/base/Vector.h>
 #include <gtsam/slam/SmartProjectionPoseFactor.h>
-
-#include <glog/logging.h>
 
 namespace graph_localizer {
 namespace lm = localization_measurements;
@@ -55,11 +54,11 @@ std::vector<FactorsToAdd> SmartProjectionCumulativeFactorAdder::AddFactors() {
   if (smart_factors_to_add.empty()) return {};
   const auto latest_timestamp = feature_tracker_->latest_timestamp();
   if (!latest_timestamp) {
-    LOG(ERROR) << "AddFactors: Failed to get latest timestamp.";
+    LogError("AddFactors: Failed to get latest timestamp.");
     return {};
   }
   smart_factors_to_add.SetTimestamp(*latest_timestamp);
-  VLOG(2) << "AddFactors: Added " << smart_factors_to_add.size() << " smart factors.";
+  LogDebug("AddFactors: Added " << smart_factors_to_add.size() << " smart factors.");
   return {smart_factors_to_add};
 }
 

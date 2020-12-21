@@ -47,8 +47,7 @@ class GraphBag {
   void InitializeGraph();
   void SaveOpticalFlowTracksImage(const sensor_msgs::ImageConstPtr& image_msg,
                                   const graph_localizer::FeatureTrackMap& feature_tracks);
-  void SaveSparseMappingPoseMsg(const geometry_msgs::PoseStamped& sparse_mapping_pose_msg);
-
+  void SavePoseMsg(const geometry_msgs::PoseStamped& pose_msg, const std::string& pose_topic);
   void SavePose(const geometry_msgs::PoseStamped& latest_pose_msg);
   void SaveImuBiasTesterPredictedStates(
     const std::vector<localization_common::CombinedNavState>& imu_bias_tester_predicted_states);
@@ -64,6 +63,8 @@ class GraphBag {
   const std::string kImuBiasTesterPoseTopic_ = "imu_bias_tester";
   std::unique_ptr<camera::CameraParameters> nav_cam_params_;
   gtsam::Pose3 body_T_nav_cam_;
+  int ar_min_num_landmarks_;
+  int sparse_mapping_min_num_landmarks_;
 };
 }  // end namespace graph_bag
 

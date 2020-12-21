@@ -38,6 +38,7 @@
 #include <vector>
 
 namespace graph_bag {
+namespace gl = graph_localizer;
 namespace lc = localization_common;
 
 GraphBag::GraphBag(const std::string& bag_name, const std::string& map_file, const std::string& image_topic,
@@ -47,6 +48,7 @@ GraphBag::GraphBag(const std::string& bag_name, const std::string& map_file, con
   config.AddFile("cameras.config");
   config.AddFile("geometry.config");
   config.AddFile("tools/graph_bag.config");
+  lc::LoadGraphLocalizerConfig(config);
 
   if (!config.ReadFiles()) {
     LOG(FATAL) << "Failed to read config files.";
@@ -64,11 +66,13 @@ GraphBag::GraphBag(const std::string& bag_name, const std::string& map_file, con
   // Needed for feature tracks visualization
   nav_cam_params_.reset(new camera::CameraParameters(&config, "nav_cam"));
   body_T_nav_cam_ = lc::LoadTransform(config, "nav_cam_transform");
+  sparse_mapping_min_num_landmarks_ = lc::LoadInt(config, "loc_adder_min_num_matches");
+  ar_min_num_landmarks_ = lc::LoadInt(config, "ar_tag_loc_adder_min_num_matches");
 }
 
-void GraphBag::SaveSparseMappingPoseMsg(const geometry_msgs::PoseStamped& sparse_mapping_pose_msg) {
-  const ros::Time timestamp = lc::RosTimeFromHeader(sparse_mapping_pose_msg.header);
-  results_bag_.write("/" + std::string(TOPIC_SPARSE_MAPPING_POSE), timestamp, sparse_mapping_pose_msg);
+void GraphBag::SavePoseMsg(const geometry_msgs::PoseStamped& pose_msg, const std::string& pose_topic) {
+  const ros::Time timestamp = lc::RosTimeFromHeader(pose_msg.header);
+  results_bag_.write("/" + pose_topic, timestamp, pose_msg);
 }
 
 void GraphBag::SaveOpticalFlowTracksImage(const sensor_msgs::ImageConstPtr& image_msg,
@@ -126,15 +130,38 @@ void GraphBag::Run() {
     const auto vl_msg = live_measurement_simulator_->GetVLMessage(current_time);
     if (vl_msg) {
       graph_localizer_simulator_->BufferVLVisualLandmarksMsg(*vl_msg);
-      if (vl_msg->landmarks.size() >= 5) {
+      if (gl::ValidVLMsg(*vl_msg, sparse_mapping_min_num_landmarks_)) {
         const gtsam::Pose3 sparse_mapping_global_T_body = lc::GtPose(*vl_msg, body_T_nav_cam_.inverse());
         const lc::Time timestamp = lc::TimeFromHeader(vl_msg->header);
-        SaveSparseMappingPoseMsg(graph_localizer::PoseMsg(sparse_mapping_global_T_body, timestamp));
+        SavePoseMsg(graph_localizer::PoseMsg(sparse_mapping_global_T_body, timestamp), TOPIC_SPARSE_MAPPING_POSE);
       }
     }
     const auto ar_msg = live_measurement_simulator_->GetARMessage(current_time);
     if (ar_msg) {
+      static bool marked_world_T_dock_for_resetting_if_necessary = false;
+      // In lieu of doing this on a mode switch to AR_MODE, reset world_T_dock using loc if necessary when receive first
+      // ar msg
+      if (!marked_world_T_dock_for_resetting_if_necessary) {
+        graph_localizer_simulator_->MarkWorldTDockForResettingIfNecessary();
+        marked_world_T_dock_for_resetting_if_necessary = true;
+      }
       graph_localizer_simulator_->BufferARVisualLandmarksMsg(*ar_msg);
+      if (gl::ValidVLMsg(*ar_msg, ar_min_num_landmarks_)) {
+        const auto ar_tag_pose_msg = graph_localizer_simulator_->LatestARTagPoseMsg();
+        if (!ar_tag_pose_msg) {
+          LogWarning("Run: Failed to get ar tag pose msg");
+        } else {
+          static lc::Time last_added_timestamp = 0;
+          const auto timestamp = lc::TimeFromHeader(ar_tag_pose_msg->header);
+          // Prevent adding the same pose twice, since the pose is buffered before adding to the graph localizer
+          // wrapper in the graph localizer simulator and LatestARTagPoseMsg returns
+          // the last pose that has already been added to the graph localizer wrapper.
+          if (last_added_timestamp != timestamp) {
+            SavePoseMsg(*ar_tag_pose_msg, TOPIC_AR_TAG_POSE);
+            last_added_timestamp = timestamp;
+          }
+        }
+      }
     }
 
     const bool updated_graph = graph_localizer_simulator_->AddMeasurementsAndUpdateIfReady(current_time);

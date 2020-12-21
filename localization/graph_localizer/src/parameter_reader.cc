@@ -42,13 +42,23 @@ void LoadFactorParams(config_reader::ConfigReader& config, FactorParams& params)
 }
 
 void LoadARTagLocFactorAdderParams(config_reader::ConfigReader& config, LocFactorAdderParams& params) {
-  params.add_pose_priors = lc::LoadBool(config, "loc_adder_add_pose_priors");
-  params.add_projections = lc::LoadBool(config, "loc_adder_add_projections");
+  params.add_pose_priors = lc::LoadBool(config, "ar_tag_loc_adder_add_pose_priors");
+  params.add_projections = lc::LoadBool(config, "ar_tag_loc_adder_add_projections");
   params.enabled = params.add_pose_priors || params.add_projections ? true : false;
   params.huber_k = lc::LoadDouble(config, "huber_k");
-  params.min_num_matches = lc::LoadInt(config, "loc_adder_min_num_matches");
-  params.prior_translation_stddev = lc::LoadDouble(config, "loc_adder_prior_translation_stddev");
-  params.prior_quaternion_stddev = lc::LoadDouble(config, "loc_adder_prior_quaternion_stddev");
+  params.min_num_matches = lc::LoadInt(config, "ar_tag_loc_adder_min_num_matches");
+  params.prior_translation_stddev = lc::LoadDouble(config, "ar_tag_loc_adder_prior_translation_stddev");
+  params.prior_quaternion_stddev = lc::LoadDouble(config, "ar_tag_loc_adder_prior_quaternion_stddev");
+  params.scale_pose_noise_with_num_landmarks =
+    lc::LoadBool(config, "ar_tag_loc_adder_scale_pose_noise_with_num_landmarks");
+  params.scale_projection_noise_with_num_landmarks =
+    lc::LoadBool(config, "ar_tag_loc_adder_scale_projection_noise_with_num_landmarks");
+  params.pose_noise_scale = lc::LoadDouble(config, "ar_tag_loc_adder_pose_noise_scale");
+  params.projection_noise_scale = lc::LoadDouble(config, "ar_tag_loc_adder_projection_noise_scale");
+  params.max_inlier_weighted_projection_norm =
+    lc::LoadDouble(config, "ar_tag_loc_adder_max_inlier_weighted_projection_norm");
+  params.weight_projections_with_mahal_distance =
+    lc::LoadBool(config, "ar_tag_loc_adder_weight_projections_with_mahal_distance");
   params.body_T_cam = lc::LoadTransform(config, "dock_cam_transform");
   params.cam_intrinsics.reset(new gtsam::Cal3_S2(lc::LoadCameraIntrinsics(config, "dock_cam")));
   params.cam_noise = gtsam::noiseModel::Isotropic::Sigma(2, lc::LoadDouble(config, "loc_dock_cam_noise_stddev"));
@@ -62,8 +72,14 @@ void LoadLocFactorAdderParams(config_reader::ConfigReader& config, LocFactorAdde
   params.min_num_matches = lc::LoadInt(config, "loc_adder_min_num_matches");
   params.prior_translation_stddev = lc::LoadDouble(config, "loc_adder_prior_translation_stddev");
   params.prior_quaternion_stddev = lc::LoadDouble(config, "loc_adder_prior_quaternion_stddev");
-  params.scale_noise_with_num_landmarks = lc::LoadBool(config, "loc_adder_scale_noise_with_num_landmarks");
-  params.noise_scale = lc::LoadDouble(config, "loc_adder_noise_scale");
+  params.scale_pose_noise_with_num_landmarks = lc::LoadBool(config, "loc_adder_scale_pose_noise_with_num_landmarks");
+  params.scale_projection_noise_with_num_landmarks =
+    lc::LoadBool(config, "loc_adder_scale_projection_noise_with_num_landmarks");
+  params.pose_noise_scale = lc::LoadDouble(config, "loc_adder_pose_noise_scale");
+  params.projection_noise_scale = lc::LoadDouble(config, "loc_adder_projection_noise_scale");
+  params.max_inlier_weighted_projection_norm = lc::LoadDouble(config, "loc_adder_max_inlier_weighted_projection_norm");
+  params.weight_projections_with_mahal_distance =
+    lc::LoadBool(config, "loc_adder_weight_projections_with_mahal_distance");
   params.body_T_cam = lc::LoadTransform(config, "nav_cam_transform");
   params.cam_intrinsics.reset(new gtsam::Cal3_S2(lc::LoadCameraIntrinsics(config, "nav_cam")));
   params.cam_noise = gtsam::noiseModel::Isotropic::Sigma(2, lc::LoadDouble(config, "loc_nav_cam_noise_stddev"));
@@ -184,5 +200,6 @@ void LoadGraphLocalizerParams(config_reader::ConfigReader& config, GraphLocalize
     lc::LoadDouble(config, "max_standstill_feature_track_avg_distance_from_mean");
   params.standstill_min_num_points_per_track = lc::LoadInt(config, "standstill_min_num_points_per_track");
   params.log_rate = lc::LoadInt(config, "log_rate");
+  params.estimate_world_T_dock_using_loc = lc::LoadBool(config, "estimate_world_T_dock_using_loc");
 }
 }  // namespace graph_localizer

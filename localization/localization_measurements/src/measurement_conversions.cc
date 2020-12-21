@@ -39,11 +39,13 @@ MatchedProjectionsMeasurement MakeMatchedProjectionsMeasurement(const ff_msgs::V
 }
 
 MatchedProjectionsMeasurement FrameChangeMatchedProjectionsMeasurement(
-  const MatchedProjectionsMeasurement& matched_projections_measurement, const gtsam::Pose3& b_T_a) {
+  const MatchedProjectionsMeasurement& matched_projections_measurement,
+  const gtsam::Pose3& new_frame_T_measurement_origin) {
   auto frame_changed_measurement = matched_projections_measurement;
   for (auto& matched_projection : frame_changed_measurement.matched_projections) {
-    matched_projection.map_point = b_T_a * matched_projection.map_point;
+    matched_projection.map_point = new_frame_T_measurement_origin * matched_projection.map_point;
   }
+  frame_changed_measurement.global_T_cam = new_frame_T_measurement_origin * frame_changed_measurement.global_T_cam;
   return frame_changed_measurement;
 }
 

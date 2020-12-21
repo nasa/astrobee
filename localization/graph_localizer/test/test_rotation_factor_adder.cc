@@ -18,6 +18,7 @@
 
 #include <graph_localizer/pose_rotation_factor.h>
 #include <graph_localizer/rotation_factor_adder.h>
+#include <localization_common/logger.h>
 #include <localization_measurements/feature_point.h>
 
 #include <gtsam/geometry/PinholePose.h>
@@ -31,7 +32,6 @@
 
 #include <boost/make_shared.hpp>
 
-#include <glog/logging.h>
 #include <gtest/gtest.h>
 
 namespace gl = graph_localizer;

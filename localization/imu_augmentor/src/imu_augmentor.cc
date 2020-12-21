@@ -18,8 +18,7 @@
 
 #include <imu_augmentor/imu_augmentor.h>
 #include <imu_integration/utilities.h>
-
-#include <glog/logging.h>
+#include <localization_common/logger.h>
 
 namespace imu_augmentor {
 namespace ii = imu_integration;
@@ -48,7 +47,7 @@ boost::optional<lc::CombinedNavState> ImuAugmentor::PimPredict(const lc::Combine
   }
 
   RemoveOldMeasurements(combined_nav_state.timestamp());
-  VLOG(2) << "PimPredict: Added " << num_measurements_added << " measurements.";
+  LogDebug("PimPredict: Added " << num_measurements_added << " measurements.");
   return last_predicted_combined_nav_state;
 }
 }  // namespace imu_augmentor

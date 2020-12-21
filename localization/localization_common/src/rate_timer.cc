@@ -18,8 +18,6 @@
 
 #include <localization_common/rate_timer.h>
 
-#include <glog/logging.h>
-
 namespace localization_common {
 RateTimer::RateTimer(const std::string& timer_name) : averager_(timer_name, "rate", "seconds"), num_events_(0) {}
 void RateTimer::Record() {

@@ -22,5 +22,5 @@ Usage:
      --robot_camera nav_cam
 
 Other options, useful with the dense mapper, are --save_bgr,
---undistorted_crop_win, and --image_list. See undistort_image.cc for
-more information.
+--undistorted_crop_win, -scale, and --image_list. See
+undistort_image.cc for more information.

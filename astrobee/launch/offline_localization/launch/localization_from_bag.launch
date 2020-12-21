@@ -31,8 +31,6 @@
   <arg name="service_calls" default="true" unless="$(arg localization_manager)"/>     
   <arg name="service_calls" value="false" if="$(arg localization_manager)" />   
   <arg name="image_features" default="false" />
-  <arg name="image" default="true" unless="$(arg image_features)"/>     
-  <arg name="image" value="false" if="$(arg image_features)" />   
 
 
   <!-- Set environment configs that are required to run nodes -->
@@ -60,12 +58,14 @@
   </group>
 
   <!-- Nodes to run -->
-  <include file="$(find lk_optical_flow)/launch/lk_optical_flow.launch">
-    <arg name="terminal" value="terminator -x"/>
-  </include>
-  <include file="$(find localization_node)/launch/localization_node.launch">
-    <arg name="terminal" value="terminator -x"/>
-  </include>
+  <group unless="$(arg image_features)">
+    <include file="$(find lk_optical_flow)/launch/lk_optical_flow.launch">
+      <arg name="terminal" value="terminator -x"/>
+    </include>
+    <include file="$(find localization_node)/launch/localization_node.launch">
+      <arg name="terminal" value="terminator -x"/>
+    </include>
+  </group>
   <include file="$(find graph_localizer)/launch/graph_localizer.launch">
     <arg name="terminal" value="terminator -x"/>
   </include>
@@ -80,7 +80,6 @@
     <arg name="bagfile" value="$(arg bagfile)"/>
     <arg name="terminal" value="terminator -x"/>
     <arg name="image_features" value="$(arg image_features)"/>
-    <arg name="image" value="$(arg image)"/>
   </include>
 
   <!-- Service calls -->

@@ -184,6 +184,7 @@ void LocalizationGraphPanel::LocalizationGraphCallback(const ff_msgs::Localizati
 
   gl::GraphLocalizer graph_localizer;
   gtsam::deserializeBinary(loc_msg->serialized_graph, graph_localizer);
+  graph_localizer.LogOnDestruction(false);
   int of_factors = 0;
   int imu_factors = 0;
   int loc_factors = 0;
@@ -236,7 +237,7 @@ void LocalizationGraphPanel::LocalizationGraphCallback(const ff_msgs::Localizati
       const auto imu_combined_nav_state = firstCombinedNavState(graph_localizer, imu_factor);
       const auto imu_predicted_combined_nav_state = pimPredict(graph_localizer, imu_factor);
       if (!imu_predicted_combined_nav_state || !imu_combined_nav_state) {
-        LOG(ERROR) << "LocalizationGraphCallback: Failed to get imu nav state and pim predicted nav state.";
+        LogError("LocalizationGraphCallback: Failed to get imu nav state and pim predicted nav state.");
       } else {
         const gtsam::Vector3 dp =
           imu_predicted_combined_nav_state->pose().translation() - imu_combined_nav_state->pose().translation();

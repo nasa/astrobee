@@ -121,7 +121,8 @@
 
 #define TOPIC_GRAPH_LOC                             "graph_loc/graph"
 #define TOPIC_GRAPH_LOC_STATE                       "graph_loc/state"
-#define TOPIC_SPARSE_MAPPING_POSE                    "sparse_mapping/pose"
+#define TOPIC_AR_TAG_POSE                           "ar_tag/pose"
+#define TOPIC_SPARSE_MAPPING_POSE                   "sparse_mapping/pose"
 
 #define ACTION_GNC_CTL_CONTROL                      "gnc/control"
 
@@ -367,7 +368,7 @@
 #define TOPIC_HARDWARE_IMU                          "hw/imu"
 #define TOPIC_HARDWARE_NAV_CAM                      "hw/cam_nav"
 #define TOPIC_HARDWARE_DOCK_CAM                     "hw/cam_dock"
-#define TOPIC_HARDWARE_SCI_CAM                      "hw/cam_sci"
+#define TOPIC_HARDWARE_SCI_CAM                      "hw/cam_sci/compressed"
 #define TOPIC_HARDWARE_LIGHT_FRONT                  "hw/light_front"
 #define TOPIC_HARDWARE_LIGHT_AFT                    "hw/light_aft"
 #define TOPIC_HARDWARE_LASER                        "hw/laser"

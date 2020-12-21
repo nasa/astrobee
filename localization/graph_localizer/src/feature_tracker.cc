@@ -17,8 +17,7 @@
  */
 
 #include <graph_localizer/feature_tracker.h>
-
-#include <glog/logging.h>
+#include <localization_common/logger.h>
 
 namespace graph_localizer {
 namespace lc = localization_common;
@@ -34,7 +33,7 @@ void FeatureTracker::UpdateFeatureTracks(const lm::FeaturePoints& feature_points
 
   const int starting_num_feature_tracks = feature_tracks_.size();
 
-  VLOG(2) << "UpdateFeatureTracks: Starting num feature tracks: " << starting_num_feature_tracks;
+  LogDebug("UpdateFeatureTracks: Starting num feature tracks: " << starting_num_feature_tracks);
   // Update existing features or add new one
   for (const auto& feature_point : feature_points) {
     feature_tracks_[feature_point.feature_id].latest_image_id = feature_point.image_id;
@@ -43,7 +42,7 @@ void FeatureTracker::UpdateFeatureTracks(const lm::FeaturePoints& feature_points
   }
 
   const int post_add_num_feature_tracks = feature_tracks_.size();
-  VLOG(2) << "UpdateFeatureTracks: Added feature tracks: " << post_add_num_feature_tracks - starting_num_feature_tracks;
+  LogDebug("UpdateFeatureTracks: Added feature tracks: " << post_add_num_feature_tracks - starting_num_feature_tracks);
 
   // Remove features that weren't detected
   const auto image_id = feature_points.empty() ? 0 : feature_points.front().image_id;
@@ -57,8 +56,8 @@ void FeatureTracker::UpdateFeatureTracks(const lm::FeaturePoints& feature_points
   }
 
   const int removed_num_feature_tracks = post_add_num_feature_tracks - feature_tracks_.size();
-  VLOG(2) << "UpdateFeatureTracks: Removed feature tracks: " << removed_num_feature_tracks;
-  VLOG(2) << "UpdateFeatureTracks: Final total num feature tracks: " << feature_tracks_.size();
+  LogDebug("UpdateFeatureTracks: Removed feature tracks: " << removed_num_feature_tracks);
+  LogDebug("UpdateFeatureTracks: Final total num feature tracks: " << feature_tracks_.size());
 }
 
 void FeatureTracker::RemovePointsOutsideWindow() {
@@ -105,4 +104,16 @@ boost::optional<lc::Time> FeatureTracker::PreviousTimestamp() const {
   }
   return boost::none;
 }
+
+// TODO(rsoussan): Store points in sorted order to make this and PreviousTimestamp more efficient
+boost::optional<localization_common::Time> FeatureTracker::OldestTimestamp() const {
+  boost::optional<localization_common::Time> oldest_timestamp;
+  for (const auto& feature_track_pair : feature_tracks_) {
+    for (const auto& point : feature_track_pair.second.points) {
+      if (!oldest_timestamp || point.timestamp < *oldest_timestamp) oldest_timestamp = point.timestamp;
+    }
+  }
+  return oldest_timestamp;
+}
+
 }  // namespace graph_localizer

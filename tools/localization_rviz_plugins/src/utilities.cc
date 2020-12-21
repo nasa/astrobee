@@ -38,7 +38,7 @@ boost::optional<gtsam::Pose3> currentFrameTFrame(const std::string& frame_id, co
   Ogre::Quaternion orientation;
   Ogre::Vector3 position;
   if (!context.getFrameManager()->getTransform(frame_id, timestamp, position, orientation)) {
-    LOG(ERROR) << "currentFrameTFrame: Failed to get transform for " << frame_id;
+    LogError("currentFrameTFrame: Failed to get transform for " << frame_id);
     return boost::none;
   }
   return gtsam::Pose3(gtsam::Rot3(orientation.w, orientation.x, orientation.y, orientation.z),
@@ -58,20 +58,20 @@ boost::optional<lc::CombinedNavState> firstCombinedNavState(const graph_localize
                                                             const gtsam::CombinedImuFactor* const imu_factor) {
   const auto pose = graph_localizer.graph_values().at<gtsam::Pose3>(imu_factor->key1());
   if (!pose) {
-    LOG(ERROR) << "pimPredict: Failed to get pose.";
+    LogError("pimPredict: Failed to get pose.");
     return boost::none;
   }
 
   const auto velocity = graph_localizer.graph_values().at<gtsam::Velocity3>(imu_factor->key2());
   if (!velocity) {
-    LOG(ERROR) << "pimPredict: Failed to get velocity.";
+    LogError("pimPredict: Failed to get velocity.");
     return boost::none;
   }
 
   // TODO(rsoussan): is this correct bias to use???
   const auto bias = graph_localizer.graph_values().at<gtsam::imuBias::ConstantBias>(imu_factor->key5());
   if (!bias) {
-    LOG(ERROR) << "pimPredict: Failed to get bias.";
+    LogError("pimPredict: Failed to get bias.");
     return boost::none;
   }
 

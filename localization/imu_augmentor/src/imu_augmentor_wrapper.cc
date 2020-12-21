@@ -19,11 +19,10 @@
 #include <config_reader/config_reader.h>
 #include <imu_augmentor/imu_augmentor_wrapper.h>
 #include <imu_integration/utilities.h>
+#include <localization_common/logger.h>
 #include <localization_common/utilities.h>
 #include <localization_measurements/imu_measurement.h>
 #include <msg_conversions/msg_conversions.h>
-
-#include <glog/logging.h>
 
 namespace imu_augmentor {
 namespace ii = imu_integration;
@@ -36,7 +35,7 @@ ImuAugmentorWrapper::ImuAugmentorWrapper() {
   lc::LoadGraphLocalizerConfig(config);
 
   if (!config.ReadFiles()) {
-    LOG(FATAL) << "Failed to read config files.";
+    LogFatal("Failed to read config files.");
   }
 
   ii::LoadImuIntegratorParams(config, params_);
@@ -78,8 +77,8 @@ void ImuAugmentorWrapper::ImuCallback(const sensor_msgs::Imu& imu_msg) {
 boost::optional<std::pair<lc::CombinedNavState, lc::CombinedNavStateCovariances>>
 ImuAugmentorWrapper::LatestImuAugmentedCombinedNavStateAndCovariances() {
   if (!latest_combined_nav_state_ || !latest_covariances_ || !imu_augmentor_) {
-    LOG(ERROR)
-      << "LatestImuAugmentedCombinedNavStateAndCovariances: Not enough information available to create desired data.";
+    LogError(
+      "LatestImuAugmentedCombinedNavStateAndCovariances: Not enough information available to create desired data.");
     return boost::none;
   }
 
@@ -91,7 +90,7 @@ ImuAugmentorWrapper::LatestImuAugmentedCombinedNavStateAndCovariances() {
 
   const auto latest_imu_augmented_combined_nav_state = imu_augmentor_->PimPredict(*latest_combined_nav_state_);
   if (!latest_imu_augmented_combined_nav_state) {
-    LOG(ERROR) << "LatestImuAugmentedCombinedNavSTateAndCovariances: Failed to pim predict combined nav state.";
+    LogError("LatestImuAugmentedCombinedNavSTateAndCovariances: Failed to pim predict combined nav state.");
     return boost::none;
   }
   // TODO(rsoussan): propogate uncertainties from imu augmentor
@@ -108,7 +107,7 @@ boost::optional<ff_msgs::EkfState> ImuAugmentorWrapper::LatestImuAugmentedLocali
   const auto latest_imu_augmented_combined_nav_state_and_covariances =
     LatestImuAugmentedCombinedNavStateAndCovariances();
   if (!latest_imu_augmented_combined_nav_state_and_covariances) {
-    LOG(ERROR) << "LatestImuAugmentedLocalizationMsg: Failed to get latest imu augmented nav state and covariances.";
+    LogError("LatestImuAugmentedLocalizationMsg: Failed to get latest imu augmented nav state and covariances.");
     return boost::none;
   }
 
@@ -124,7 +123,7 @@ boost::optional<ff_msgs::EkfState> ImuAugmentorWrapper::LatestImuAugmentedLocali
   // Add latest bias corrected acceleration and angular velocity to loc msg
   const auto latest_imu_measurement = imu_augmentor_->LatestMeasurement();
   if (!latest_imu_measurement) {
-    LOG(ERROR) << "LatestImuAugmentedLocalizationMsg: Failed to get latest measurement.";
+    LogError("LatestImuAugmentedLocalizationMsg: Failed to get latest measurement.");
     return boost::none;
   }
   const auto& latest_bias = latest_imu_augmented_combined_nav_state_and_covariances->first.bias();

@@ -52,6 +52,8 @@ class GraphLocalizerWrapper {
 
   boost::optional<geometry_msgs::PoseStamped> LatestSparseMappingPoseMsg() const;
 
+  boost::optional<geometry_msgs::PoseStamped> LatestARTagPoseMsg() const;
+
   boost::optional<localization_common::CombinedNavState> LatestCombinedNavState() const;
 
   boost::optional<ff_msgs::EkfState> LatestLocalizationStateMsg();
@@ -72,7 +74,11 @@ class GraphLocalizerWrapper {
 
   boost::optional<const FeatureTrackMap&> feature_tracks() const;
 
-  boost::optional<std::pair<gtsam::Pose3, localization_common::Time>> estimated_world_T_dock() const;
+  void MarkWorldTDockForResettingIfNecessary();
+
+  void ResetWorldTDockUsingLoc(const ff_msgs::VisualLandmarks& visual_landmarks_msg);
+
+  gtsam::Pose3 estimated_world_T_dock() const;
 
   void SaveLocalizationGraphDotFile() const;
 
@@ -90,15 +96,22 @@ class GraphLocalizerWrapper {
   std::unique_ptr<GraphLocalizer> graph_localizer_;
   std::vector<localization_measurements::ImuMeasurement> imu_bias_measurements_;
   int num_bias_estimation_measurements_;
+  // TODO(rsoussan): Make graph localizer wrapper params
   bool publish_localization_graph_;
   bool save_localization_graph_dot_file_;
   boost::optional<std::pair<gtsam::imuBias::ConstantBias, localization_common::Time>> latest_biases_;
   GraphLocalizerInitialization graph_localizer_initialization_;
   FeatureCounts feature_counts_;
   boost::optional<std::pair<gtsam::Pose3, localization_common::Time>> sparse_mapping_pose_;
+  boost::optional<std::pair<gtsam::Pose3, localization_common::Time>> ar_tag_pose_;
   std::unique_ptr<SanityChecker> sanity_checker_;
   double position_cov_log_det_lost_threshold_;
   double orientation_cov_log_det_lost_threshold_;
+  gtsam::Pose3 estimated_world_T_dock_;
+  bool reset_world_T_dock_;
+  bool estimate_world_T_dock_using_loc_;
+  int ar_min_num_landmarks_;
+  int sparse_mapping_min_num_landmarks_;
 };
 }  // namespace graph_localizer
 

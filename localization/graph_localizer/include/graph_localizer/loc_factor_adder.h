@@ -33,14 +33,14 @@ class LocFactorAdder
   using Base = FactorAdder<localization_measurements::MatchedProjectionsMeasurement, LocFactorAdderParams>;
 
  public:
-  explicit LocFactorAdder(const LocFactorAdderParams& params, const GraphAction graph_action = GraphAction::kNone);
+  LocFactorAdder(const LocFactorAdderParams& params, const GraphAction projection_graph_action);
 
   std::vector<FactorsToAdd> AddFactors(
     const localization_measurements::MatchedProjectionsMeasurement& matched_projections_measurement) final;
 
  private:
-  GraphAction graph_action_;
   localization_common::Averager num_landmarks_averager_ = localization_common::Averager("Num Landmarks");
+  GraphAction projection_graph_action_;
 };
 }  // namespace graph_localizer
 

@@ -21,11 +21,10 @@
 #include <ff_util/ff_names.h>
 #include <graph_localizer/graph_localizer_nodelet.h>
 #include <graph_localizer/utilities.h>
+#include <localization_common/logger.h>
 #include <localization_common/utilities.h>
 
 #include <std_msgs/Empty.h>
-
-#include <glog/logging.h>
 
 namespace graph_localizer {
 namespace lc = localization_common;
@@ -35,6 +34,14 @@ GraphLocalizerNodelet::GraphLocalizerNodelet()
   heartbeat_.node = GetName();
   // TODO(rsoussan): is this the correct name?
   heartbeat_.nodelet_manager = ros::this_node::getName();
+
+  config_reader::ConfigReader config;
+  lc::LoadGraphLocalizerConfig(config);
+  if (!config.ReadFiles()) {
+    LOG(FATAL) << "Failed to read config files.";
+  }
+  sparse_mapping_min_num_landmarks_ = lc::LoadInt(config, "loc_adder_min_num_matches");
+  ar_min_num_landmarks_ = lc::LoadInt(config, "ar_tag_loc_adder_min_num_matches");
 }
 
 void GraphLocalizerNodelet::Initialize(ros::NodeHandle* nh) {
@@ -47,18 +54,32 @@ void GraphLocalizerNodelet::SubscribeAndAdvertise(ros::NodeHandle* nh) {
   // TODO(Rsoussan): should these use private nh as well??
   state_pub_ = nh->advertise<ff_msgs::EkfState>(TOPIC_GRAPH_LOC_STATE, 10);
   sparse_mapping_pose_pub_ = nh->advertise<geometry_msgs::PoseStamped>(TOPIC_SPARSE_MAPPING_POSE, 10);
+  ar_tag_pose_pub_ = nh->advertise<geometry_msgs::PoseStamped>(TOPIC_AR_TAG_POSE, 10);
   graph_pub_ = nh->advertise<ff_msgs::LocalizationGraph>(TOPIC_GRAPH_LOC, 10);
   reset_pub_ = nh->advertise<std_msgs::Empty>(TOPIC_GNC_EKF_RESET, 10);
   heartbeat_pub_ = nh->advertise<ff_msgs::Heartbeat>(TOPIC_HEARTBEAT, 5, true);
 
-  imu_sub_ = private_nh_.subscribe(TOPIC_HARDWARE_IMU, 0, &GraphLocalizerNodelet::ImuCallback, this,
+  // Buffer max should be at least 10 and a max of 2 seconds of data
+  // Imu freq: ~62.5
+  constexpr int kMaxNumImuMsgs = 125;
+  // AR freq: ~1
+  constexpr int kMaxNumARMsgs = 10;
+  // VL freq: ~1
+  constexpr int kMaxNumVLMsgs = 10;
+  // OF freq: ~10
+  constexpr int kMaxNumOFMsgs = 20;
+
+  imu_sub_ = private_nh_.subscribe(TOPIC_HARDWARE_IMU, kMaxNumImuMsgs, &GraphLocalizerNodelet::ImuCallback, this,
                                    ros::TransportHints().tcpNoDelay());
-  ar_sub_ = private_nh_.subscribe(TOPIC_LOCALIZATION_AR_FEATURES, 0, &GraphLocalizerNodelet::ARVisualLandmarksCallback,
-                                  this, ros::TransportHints().tcpNoDelay());
-  of_sub_ = private_nh_.subscribe(TOPIC_LOCALIZATION_OF_FEATURES, 0, &GraphLocalizerNodelet::OpticalFlowCallback, this,
-                                  ros::TransportHints().tcpNoDelay());
-  vl_sub_ = private_nh_.subscribe(TOPIC_LOCALIZATION_ML_FEATURES, 0, &GraphLocalizerNodelet::VLVisualLandmarksCallback,
-                                  this, ros::TransportHints().tcpNoDelay());
+  ar_sub_ =
+    private_nh_.subscribe(TOPIC_LOCALIZATION_AR_FEATURES, kMaxNumARMsgs,
+                          &GraphLocalizerNodelet::ARVisualLandmarksCallback, this, ros::TransportHints().tcpNoDelay());
+  of_sub_ =
+    private_nh_.subscribe(TOPIC_LOCALIZATION_OF_FEATURES, kMaxNumOFMsgs, &GraphLocalizerNodelet::OpticalFlowCallback,
+                          this, ros::TransportHints().tcpNoDelay());
+  vl_sub_ =
+    private_nh_.subscribe(TOPIC_LOCALIZATION_ML_FEATURES, kMaxNumVLMsgs,
+                          &GraphLocalizerNodelet::VLVisualLandmarksCallback, this, ros::TransportHints().tcpNoDelay());
   bias_srv_ =
     private_nh_.advertiseService(SERVICE_GNC_EKF_INIT_BIAS, &GraphLocalizerNodelet::ResetBiasesAndLocalizer, this);
   reset_srv_ = private_nh_.advertiseService(SERVICE_GNC_EKF_RESET, &GraphLocalizerNodelet::ResetLocalizer, this);
@@ -69,12 +90,20 @@ bool GraphLocalizerNodelet::SetMode(ff_msgs::SetEkfInput::Request& req, ff_msgs:
   const auto input_mode = req.mode;
   static int last_mode = -1;
   if (input_mode == ff_msgs::SetEkfInputRequest::MODE_NONE) {
-    LOG(INFO) << "Received Mode None request, turning off localizer.";
+    LogInfo("Received Mode None request, turning off localizer.");
     DisableLocalizer();
   } else if (last_mode == ff_msgs::SetEkfInputRequest::MODE_NONE) {
-    LOG(INFO) << "Received Mode request that is not None and current mode is "
-                 "None, resetting localizer.";
+    LogInfo(
+      "Received Mode request that is not None and current mode is "
+      "None, resetting localizer.");
     ResetAndEnableLocalizer();
+  }
+
+  // Might need to resestimate world_T_dock on ar mode switch
+  if (input_mode == ff_msgs::SetEkfInputRequest::MODE_AR_TAGS &&
+      last_mode != ff_msgs::SetEkfInputRequest::MODE_AR_TAGS) {
+    LogInfo("SetMode: Switching to AR_TAG mode.");
+    graph_localizer_wrapper_.MarkWorldTDockForResettingIfNecessary();
   }
   return true;
 }
@@ -117,7 +146,7 @@ void GraphLocalizerNodelet::VLVisualLandmarksCallback(const ff_msgs::VisualLandm
 
   if (!localizer_enabled()) return;
   graph_localizer_wrapper_.VLVisualLandmarksCallback(*visual_landmarks_msg);
-  if (ValidVLMsg(*visual_landmarks_msg)) PublishSparseMappingPose();
+  if (ValidVLMsg(*visual_landmarks_msg, sparse_mapping_min_num_landmarks_)) PublishSparseMappingPose();
 }
 
 void GraphLocalizerNodelet::ARVisualLandmarksCallback(const ff_msgs::VisualLandmarks::ConstPtr& visual_landmarks_msg) {
@@ -126,6 +155,8 @@ void GraphLocalizerNodelet::ARVisualLandmarksCallback(const ff_msgs::VisualLandm
 
   if (!localizer_enabled()) return;
   graph_localizer_wrapper_.ARVisualLandmarksCallback(*visual_landmarks_msg);
+  PublishWorldTDockTF();
+  if (ValidVLMsg(*visual_landmarks_msg, ar_min_num_landmarks_)) PublishARTagPose();
 }
 
 void GraphLocalizerNodelet::ImuCallback(const sensor_msgs::Imu::ConstPtr& imu_msg) {
@@ -157,10 +188,19 @@ void GraphLocalizerNodelet::PublishLocalizationGraph() {
 void GraphLocalizerNodelet::PublishSparseMappingPose() const {
   const auto latest_sparse_mapping_pose_msg = graph_localizer_wrapper_.LatestSparseMappingPoseMsg();
   if (!latest_sparse_mapping_pose_msg) {
-    LOG(WARNING) << "PublishSparseMappingPose: Failed to get latest sparse mapping pose msg.";
+    LogWarning("PublishSparseMappingPose: Failed to get latest sparse mapping pose msg.");
     return;
   }
   sparse_mapping_pose_pub_.publish(*latest_sparse_mapping_pose_msg);
+}
+
+void GraphLocalizerNodelet::PublishARTagPose() const {
+  const auto latest_ar_tag_pose_msg = graph_localizer_wrapper_.LatestARTagPoseMsg();
+  if (!latest_ar_tag_pose_msg) {
+    LogWarning("PublishARTagPose: Failed to get latest ar tag pose msg.");
+    return;
+  }
+  ar_tag_pose_pub_.publish(*latest_ar_tag_pose_msg);
 }
 
 void GraphLocalizerNodelet::PublishWorldTBodyTF() {
@@ -177,13 +217,8 @@ void GraphLocalizerNodelet::PublishWorldTBodyTF() {
 
 void GraphLocalizerNodelet::PublishWorldTDockTF() {
   const auto world_T_dock = graph_localizer_wrapper_.estimated_world_T_dock();
-  if (!world_T_dock) {
-    LOG_EVERY_N(WARNING, 100) << "PublishWorldTDockTF: Failed to get world_T_dock.";
-    return;
-  }
-
   const auto world_T_dock_tf =
-    lc::PoseToTF(world_T_dock->first, "world", "dock/body", world_T_dock->second, platform_name_);
+    lc::PoseToTF(world_T_dock, "world", "dock/body", lc::TimeFromRosTime(ros::Time::now()), platform_name_);
   transform_pub_.sendTransform(world_T_dock_tf);
 }
 
@@ -202,7 +237,6 @@ void GraphLocalizerNodelet::PublishGraphMessages() {
 
   // Publish loc information here since graph updates occur on optical flow updates
   PublishLocalizationState();
-  PublishWorldTDockTF();
   if (graph_localizer_wrapper_.publish_localization_graph()) PublishLocalizationGraph();
   if (graph_localizer_wrapper_.save_localization_graph_dot_file())
     graph_localizer_wrapper_.SaveLocalizationGraphDotFile();

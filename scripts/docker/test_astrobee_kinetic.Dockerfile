@@ -4,4 +4,6 @@
 FROM astrobee/astrobee:latest-kinetic
 
 # Run tests
-RUN cd /build/astrobee && make -j4 tests && make -j4 test
+
+COPY . /src/astrobee
+RUN cd /build/astrobee && make -j`nproc` tests && make -j`nproc` test

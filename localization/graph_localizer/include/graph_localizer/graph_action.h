@@ -23,7 +23,8 @@ namespace graph_localizer {
 enum class GraphAction {
   kNone,
   kDeleteExistingSmartFactors,
-  kTransformARMeasurementAndUpdateDockTWorld,
+  kLocProjectionNoiseScaling,
+  kARTagProjectionNoiseScaling,
   kTriangulateNewPoint
 };
 }  // namespace graph_localizer

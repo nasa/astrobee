@@ -18,11 +18,10 @@
 
 #include <ff_util/ff_names.h>
 #include <imu_augmentor/imu_augmentor_nodelet.h>
+#include <localization_common/logger.h>
 
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/TwistStamped.h>
-
-#include <glog/logging.h>
 
 namespace imu_augmentor {
 

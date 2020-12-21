@@ -17,10 +17,9 @@
  */
 
 #include <graph_bag/live_measurement_simulator.h>
+#include <localization_common/logger.h>
 
 #include <image_transport/image_transport.h>
-
-#include <glog/logging.h>
 
 #include <vector>
 
@@ -110,6 +109,10 @@ bool LiveMeasurementSimulator::ProcessMessage() {
   if (string_ends_with(msg.getTopic(), TOPIC_HARDWARE_IMU)) {
     sensor_msgs::ImuConstPtr imu_msg = msg.instantiate<sensor_msgs::Imu>();
     imu_buffer_.BufferMessage(*imu_msg);
+  } else if (string_ends_with(msg.getTopic(), TOPIC_LOCALIZATION_AR_FEATURES)) {
+    // Always use ar features until have data with dock cam images
+    const ff_msgs::VisualLandmarksConstPtr ar_features = msg.instantiate<ff_msgs::VisualLandmarks>();
+    ar_buffer_.BufferMessage(*ar_features);
   } else if (params_.use_image_features) {
     if (string_ends_with(msg.getTopic(), TOPIC_LOCALIZATION_OF_FEATURES)) {
       const ff_msgs::Feature2dArrayConstPtr of_features = msg.instantiate<ff_msgs::Feature2dArray>();
@@ -132,10 +135,6 @@ bool LiveMeasurementSimulator::ProcessMessage() {
         vl_buffer_.BufferMessage(vl_features);
       }
     }
-  } else if (string_ends_with(msg.getTopic(), TOPIC_LOCALIZATION_AR_FEATURES)) {
-    // Always use ar features until have data with depth images
-    const ff_msgs::VisualLandmarksConstPtr ar_features = msg.instantiate<ff_msgs::VisualLandmarks>();
-    ar_buffer_.BufferMessage(*ar_features);
   } else {
     return true;
   }

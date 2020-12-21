@@ -36,7 +36,7 @@ def l2_map(vector3ds):
   return map(lambda (x, y, z): math.sqrt(x + y + z), zip(vector3ds.xs, vector3ds.ys, vector3ds.zs))
 
 
-def add_pose_plots(pdf, sparse_mapping_poses, graph_localization_poses, imu_augmented_graph_localization_poses):
+def add_pose_plots(pdf, sparse_mapping_poses, ar_tag_poses, graph_localization_poses, imu_augmented_graph_localization_poses):
   colors = ['r', 'b', 'g']
   plt.figure()
   plot_helpers.plot_positions(sparse_mapping_poses,
@@ -45,6 +45,13 @@ def add_pose_plots(pdf, sparse_mapping_poses, graph_localization_poses, imu_augm
                               marker='o',
                               markeredgewidth=0.1,
                               markersize=1.5)
+  if ar_tag_poses.times:
+    plot_helpers.plot_positions(ar_tag_poses,
+                                colors,
+                                linestyle='None',
+                                marker='x',
+                                markeredgewidth=0.1,
+                                markersize=1.5)
   plot_helpers.plot_positions(graph_localization_poses, colors, linewidth=0.5)
   plt.xlabel('Time (s)')
   plt.ylabel('Position (m)')
@@ -61,6 +68,13 @@ def add_pose_plots(pdf, sparse_mapping_poses, graph_localization_poses, imu_augm
                                  marker='o',
                                  markeredgewidth=0.1,
                                  markersize=1.5)
+  if ar_tag_poses.times:
+    plot_helpers.plot_orientations(ar_tag_poses,
+                                colors,
+                                linestyle='None',
+                                marker='x',
+                                markeredgewidth=0.1,
+                                markersize=1.5)
   plot_helpers.plot_orientations(graph_localization_poses, colors, linewidth=0.5)
   plt.xlabel('Time (s)')
   plt.ylabel('Orienation (deg)')
@@ -343,8 +357,9 @@ def create_plots(bagfile, output_file):
   has_imu_augmented_graph_localization_state = has_topic(bag, '/gnc/ekf')
   has_imu_bias_tester_poses = has_topic(bag, '/imu_bias_tester/pose')
   sparse_mapping_poses = poses.Poses('Sparse Mapping', '/sparse_mapping/pose')
+  ar_tag_poses = poses.Poses('AR Tag', '/ar_tag/pose')
   imu_bias_tester_poses = poses.Poses('Imu Bias Tester', '/imu_bias_tester/pose')
-  vec_of_poses = [sparse_mapping_poses, imu_bias_tester_poses]
+  vec_of_poses = [sparse_mapping_poses, ar_tag_poses, imu_bias_tester_poses]
   load_pose_msgs(vec_of_poses, bag)
 
   graph_localization_states = loc_states.LocStates('Graph Localization', '/graph_loc/state')
@@ -355,7 +370,7 @@ def create_plots(bagfile, output_file):
   bag.close()
 
   with PdfPages(output_file) as pdf:
-    add_pose_plots(pdf, sparse_mapping_poses, graph_localization_states, imu_augmented_graph_localization_states)
+    add_pose_plots(pdf, sparse_mapping_poses, ar_tag_poses, graph_localization_states, imu_augmented_graph_localization_states)
     if has_imu_bias_tester_poses:
       add_imu_bias_tester_poses(pdf, imu_bias_tester_poses, sparse_mapping_poses)
     if has_imu_augmented_graph_localization_state:
