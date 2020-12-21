@@ -1091,6 +1091,25 @@ bool GraphLocalizer::Update() {
     log(params_.fatal_failures, "Update: Graph optimization failed, keeping old values.");
   }
   graph_logger_.optimization_timer_.Stop();
+
+  // Calculate marginals after the first optimization iteration so covariances
+  // can be used for first loc msg
+  // TODO(rsoussan): Clean this up
+  if (!last_latest_time_) {
+    graph_logger_.marginals_timer_.Start();
+    // Calculate marginals for covariances
+    try {
+      marginals_ = gtsam::Marginals(graph_, graph_values_->values(), marginals_factorization_);
+    } catch (gtsam::IndeterminantLinearSystemException) {
+      log(params_.fatal_failures, "Update: Indeterminant linear system error during computation of marginals.");
+      marginals_ = boost::none;
+    } catch (...) {
+      log(params_.fatal_failures, "Update: Computing marginals failed.");
+      marginals_ = boost::none;
+    }
+    graph_logger_.marginals_timer_.Stop();
+  }
+
   last_latest_time_ = graph_values_->LatestTimestamp();
   graph_logger_.iterations_averager_.Update(optimizer.iterations());
   graph_logger_.UpdateStats(*this);
