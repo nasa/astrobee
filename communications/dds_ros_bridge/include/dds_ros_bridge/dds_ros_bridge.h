@@ -93,7 +93,8 @@ enum RateType {
   EKF_STATE,
   GNC_STATE,
   PMC_CMD_STATE,
-  POSITION
+  POSITION,
+  SPARSE_MAPPING_POSE
 };
 
 class RosSubRapidPub;
@@ -200,6 +201,7 @@ class DdsRosBridge : public ff_util::FreeFlyerNodelet {
   bool SetEkfPositionRate(float rate, std::string &err_msg, RateType type);
   bool SetGncStateRate(float rate, std::string &err_msg);
   bool SetPmcStateRate(float rate, std::string &err_msg);
+  bool SetSparseMappingPoseRate(float rate, std::string &err_msg);
 
   bool SetTelemRateCallback(ff_msgs::SetRate::Request &req,
                             ff_msgs::SetRate::Response &res);
