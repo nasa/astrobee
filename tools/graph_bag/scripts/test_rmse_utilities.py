@@ -18,7 +18,7 @@
 # under the License.
 
 import poses
-import utilities 
+import rmse_utilities 
 
 import math
 import numpy as np
@@ -43,7 +43,7 @@ class TestRMSESequence(unittest.TestCase):
     poses_a = make_poses(a_times, xs, ys, zs) 
     poses_b = make_poses(b_times, xs, ys, zs) 
     
-    trimmed_a, trimmed_b = utilities.get_same_timestamp_poses(poses_a, poses_b)
+    trimmed_a, trimmed_b = rmse_utilities.get_same_timestamp_poses(poses_a, poses_b)
     self.assertEqual(len(trimmed_a.times), len(trimmed_b.times))
     self.assertEqual(len(trimmed_a.times), 5)
     self.assertTrue(np.allclose(trimmed_a.times, b_times, rtol=0))
@@ -60,7 +60,7 @@ class TestRMSESequence(unittest.TestCase):
     poses_a = make_poses(a_times, xs, ys, zs) 
     poses_b = make_poses(b_times, xs, ys, zs) 
     
-    trimmed_a, trimmed_b = utilities.get_same_timestamp_poses(poses_a, poses_b)
+    trimmed_a, trimmed_b = rmse_utilities.get_same_timestamp_poses(poses_a, poses_b)
     self.assertEqual(len(trimmed_a.times), len(trimmed_b.times))
     self.assertEqual(len(trimmed_a.times), 4)
     self.assertTrue(np.allclose(trimmed_a.times, b_times, rtol=0))
@@ -78,7 +78,7 @@ class TestRMSESequence(unittest.TestCase):
     poses_a = make_poses(a_times, xs, ys, zs) 
     poses_b = make_poses(b_times, xs, ys, zs) 
     
-    trimmed_a, trimmed_b = utilities.get_same_timestamp_poses(poses_a, poses_b)
+    trimmed_a, trimmed_b = rmse_utilities.get_same_timestamp_poses(poses_a, poses_b)
     self.assertEqual(len(trimmed_a.times), len(trimmed_b.times))
     self.assertEqual(len(trimmed_a.times), 3)
     self.assertTrue(np.allclose(trimmed_a.times, b_times, rtol=0))
@@ -95,7 +95,7 @@ class TestRMSESequence(unittest.TestCase):
     poses_a = make_poses(a_times, xs, ys, zs) 
     poses_b = make_poses(b_times, xs, ys, zs) 
     
-    trimmed_a, trimmed_b = utilities.get_same_timestamp_poses(poses_a, poses_b)
+    trimmed_a, trimmed_b = rmse_utilities.get_same_timestamp_poses(poses_a, poses_b)
     self.assertEqual(len(trimmed_a.times), len(trimmed_b.times))
     self.assertTrue(np.allclose(trimmed_a.times, b_times, rtol=0))
     self.assertTrue(np.allclose(trimmed_a.positions.xs, b_times, rtol=0))
@@ -111,7 +111,7 @@ class TestRMSESequence(unittest.TestCase):
     poses_a = make_poses(a_times, xs, ys, zs) 
     poses_b = make_poses(b_times, xs, ys, zs) 
     
-    trimmed_a, trimmed_b = utilities.get_same_timestamp_poses(poses_a, poses_b)
+    trimmed_a, trimmed_b = rmse_utilities.get_same_timestamp_poses(poses_a, poses_b)
     self.assertEqual(len(trimmed_a.times), 0)
     self.assertEqual(len(trimmed_b.times), 0)
 
@@ -126,7 +126,7 @@ class TestRMSESequence(unittest.TestCase):
     poses_b = make_poses(b_times, xs, ys, zs) 
    
     expected_time_range = np.arange(8.0, 10.0) 
-    trimmed_a, trimmed_b = utilities.get_same_timestamp_poses(poses_a, poses_b)
+    trimmed_a, trimmed_b = rmse_utilities.get_same_timestamp_poses(poses_a, poses_b)
     self.assertEqual(len(trimmed_a.times), len(trimmed_b.times))
     self.assertTrue(np.allclose(trimmed_a.times, trimmed_b.times, rtol=0))
     self.assertTrue(np.allclose(trimmed_a.times, expected_time_range, rtol=0))
@@ -143,7 +143,7 @@ class TestRMSESequence(unittest.TestCase):
     poses_a = make_poses(a_times, xs, ys, zs) 
     poses_b = make_poses(a_times, xs, ys, zs) 
   
-    rmse = utilities.rmse_timestamped_poses(poses_a, poses_b)
+    rmse = rmse_utilities.rmse_timestamped_poses(poses_a, poses_b)
     self.assertTrue(np.isclose(rmse, 0, rtol=0))
 
   def test_rmse_off_by_one(self):
@@ -154,7 +154,7 @@ class TestRMSESequence(unittest.TestCase):
     poses_a = make_poses(a_times, xs, ys, zs) 
     poses_b = make_poses(a_times, xs + 1, ys, zs) 
   
-    rmse = utilities.rmse_timestamped_poses(poses_a, poses_b)
+    rmse = rmse_utilities.rmse_timestamped_poses(poses_a, poses_b)
     self.assertTrue(np.isclose(rmse, 1.0, rtol=0))
 
   def test_rmse_all_off_by_one(self):
@@ -165,7 +165,7 @@ class TestRMSESequence(unittest.TestCase):
     poses_a = make_poses(a_times, xs, ys, zs) 
     poses_b = make_poses(a_times, xs + 1, ys + 1, zs + 1) 
   
-    rmse = utilities.rmse_timestamped_poses(poses_a, poses_b)
+    rmse = rmse_utilities.rmse_timestamped_poses(poses_a, poses_b)
     self.assertTrue(np.isclose(rmse, math.sqrt(3.0), rtol=0))
     
 if __name__ == '__main__':

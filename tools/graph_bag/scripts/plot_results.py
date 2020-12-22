@@ -20,7 +20,7 @@
 import loc_states
 import plot_helpers
 import poses
-import utilities
+import rmse_utilities
 
 import matplotlib
 matplotlib.use('pdf')
@@ -281,7 +281,7 @@ def add_other_vector3d_plots(pdf, imu_augmented_graph_localization_states):
 
 def plot_stats(pdf, graph_localization_states, sparse_mapping_poses):
   stats = ''
-  rmse = utilities.rmse_timestamped_poses(graph_localization_states, sparse_mapping_poses)
+  rmse = rmse_utilities.rmse_timestamped_poses(graph_localization_states, sparse_mapping_poses)
   stats += 'rmse: ' + str(rmse)
   plt.figure()
   plt.axis('off')
