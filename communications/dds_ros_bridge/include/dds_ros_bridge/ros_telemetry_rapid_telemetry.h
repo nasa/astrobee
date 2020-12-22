@@ -56,6 +56,7 @@ class RosTelemetryRapidTelemetry : public RosSubRapidPub {
   void SetGncStateRate(float rate);
   void SetPmcCmdStateRate(float rate);
   void SetPositionRate(float rate);
+  void SetSparseMappingPoseRate(float rate);
 
  protected:
   bool AssembleConfig(config_reader::ConfigReader& config_params);

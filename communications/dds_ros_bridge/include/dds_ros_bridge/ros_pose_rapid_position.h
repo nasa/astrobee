@@ -41,14 +41,23 @@ class RosPoseRapidPosition : public RosSubRapidPub {
  public:
   RosPoseRapidPosition(const std::string& subscribe_topic,
                        const std::string& pub_topic,
+                       bool use_rate,
                        const ros::NodeHandle& nh,
                        const unsigned int queue_size = 10);
 
   void DataCallback(geometry_msgs::PoseStampedConstPtr const& data);
+  void PubPosition(const ros::TimerEvent& event);
+  void SetPositionPublishRate(float rate);
 
  private:
   rapid::PositionTopicPairParameters params_;
   std::shared_ptr<rapid::PositionProviderRosPoseHelper> provider_;
+
+  geometry_msgs::PoseStampedConstPtr pose_msg_;
+
+  bool use_rate_;
+
+  ros::Timer position_timer_;
 };
 
 }  // end namespace ff
