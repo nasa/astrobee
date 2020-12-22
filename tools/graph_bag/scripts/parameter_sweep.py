@@ -84,51 +84,12 @@ def make_value_ranges():
   value_ranges.append(list(np.linspace(10, 80, steps, endpoint=True)))
   value_names.append('smart_projection_adder_max_num_factors')
 
-  #tune_ase_Q_imu
-
   #q_gyro
   # .001 -> 2 deg
   #q_gyro_degrees_range = np.logspace(-3, .3, steps, endpoint=True)
   #q_gyro_squared_rads_range = [math.radians(deg)**2 for deg in q_gyro_degrees_range]
   #value_ranges.append(q_gyro_squared_rads_range)
   #value_names.append('q_gyro')
-
-  #q_gyro_bias
-  #q_gyro_bias_degrees_range = np.logspace(-8, 0, steps, endpoint=True)
-  #q_gyro_bias_squared_rads_range = [math.radians(bias)**2 for bias in q_gyro_bias_degrees_range]
-  #value_ranges.append(q_gyro_bias_squared_rads_range)
-  #value_names.append('q_gyro_bias')
-
-  #q_accel (logspace)
-  #value_ranges.append(list(np.logspace(-9, -5, steps, endpoint=True)))
-  #value_names.append('q_accel')
-
-  #q_accel_bias
-  #value_ranges.append(list(np.logspace(-11, -5, steps, endpoint=True)))
-  #value_names.append('q_accel_bias')
-
-  #Tune Image Params
-
-  #tun_ase_map_error
-  #value_ranges.append(list(np.linspace(0, 0.1, steps, endpoint=True)))
-  #value_names.append('tun_ase_map_error')
-
-  #tun_ase_vis_r_mag
-  #value_ranges.append(list(np.linspace(2, 6, steps, endpoint=True)))
-  #value_names.append('tun_ase_vis_r_mag')
-  #tun_ase_of_r_mag
-  #value_ranges.append(list(np.linspace(0, 3, steps, endpoint=True)))
-  #value_names.append('tun_ase_of_r_mag')
-
-  #tun_ase_dock_r_mag
-  #value_ranges.append(list(np.linspace(1, 3, steps, endpoint=True)))
-  #value_names.append('tun_ase_dock_r_mag')
-
-  # Other Options
-
-  # tun_ase_mahal_distance_max
-  #value_ranges.append(list(np.linspace(0, 40, steps, endpoint=True)))
-  #value_names.append('tun_ase_mahal_distance_max')
 
   return value_ranges, value_names
 
