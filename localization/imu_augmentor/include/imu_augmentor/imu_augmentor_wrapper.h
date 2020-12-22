@@ -29,12 +29,13 @@
 #include <sensor_msgs/Imu.h>
 
 #include <memory>
+#include <string>
 #include <utility>
 
 namespace imu_augmentor {
 class ImuAugmentorWrapper {
  public:
-  ImuAugmentorWrapper();
+  explicit ImuAugmentorWrapper(const std::string& graph_config_path_prefix = "");
 
   void LocalizationStateCallback(const ff_msgs::EkfState& loc_msg);
 

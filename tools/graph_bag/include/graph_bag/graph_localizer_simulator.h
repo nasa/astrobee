@@ -27,12 +27,13 @@
 
 #include <sensor_msgs/Imu.h>
 
+#include <string>
 #include <vector>
 
 namespace graph_bag {
 class GraphLocalizerSimulator : public graph_localizer::GraphLocalizerWrapper {
  public:
-  explicit GraphLocalizerSimulator(const GraphLocalizerSimulatorParams& params);
+  GraphLocalizerSimulator(const GraphLocalizerSimulatorParams& params, const std::string& graph_config_path_prefix);
 
   void BufferOpticalFlowMsg(const ff_msgs::Feature2dArray& feature_array_msg);
 

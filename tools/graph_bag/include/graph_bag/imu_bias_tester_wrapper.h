@@ -26,12 +26,13 @@
 #include <sensor_msgs/Imu.h>
 
 #include <memory>
+#include <string>
 #include <vector>
 
 namespace graph_bag {
 class ImuBiasTesterWrapper {
  public:
-  ImuBiasTesterWrapper();
+  explicit ImuBiasTesterWrapper(const std::string& graph_config_path_prefix = "");
   // Returns predicted nav states
   std::vector<localization_common::CombinedNavState> LocalizationStateCallback(const ff_msgs::EkfState& loc_msg);
   void ImuCallback(const sensor_msgs::Imu& imu_msg);

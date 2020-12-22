@@ -20,7 +20,9 @@
 
 namespace graph_bag {
 namespace lc = localization_common;
-GraphLocalizerSimulator::GraphLocalizerSimulator(const GraphLocalizerSimulatorParams& params) : params_(params) {}
+GraphLocalizerSimulator::GraphLocalizerSimulator(const GraphLocalizerSimulatorParams& params,
+                                                 const std::string& graph_config_path_prefix)
+    : params_(params), GraphLocalizerWrapper(graph_config_path_prefix) {}
 
 void GraphLocalizerSimulator::BufferOpticalFlowMsg(const ff_msgs::Feature2dArray& feature_array_msg) {
   of_msg_buffer_.emplace_back(feature_array_msg);

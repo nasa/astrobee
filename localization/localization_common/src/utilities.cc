@@ -105,16 +105,16 @@ gtsam::Pose3 GtPose(const ff_msgs::VisualLandmarks& vl_features) {
   return gtsam::Pose3(vl_global_R_sensor, vl_global_t_sensor);
 }
 
-void LoadGraphLocalizerConfig(config_reader::ConfigReader& config) {
+void LoadGraphLocalizerConfig(config_reader::ConfigReader& config, const std::string& path_prefix) {
   const auto world = std::getenv("ASTROBEE_WORLD");
   if (!world) LogFatal("LoadGraphLocalizerConfig: Failed to load ASTROBEE_WORLD environment variable.");
   const std::string loaded_world(world);
   if (loaded_world == "iss") {
-    config.AddFile("iss_graph_localizer.config");
+    config.AddFile((path_prefix + "iss_graph_localizer.config").c_str());
     LogInfo("LoadGraphLocalizerconfig: Loaded iss graph localizer config.");
     return;
   } else if (loaded_world == "granite") {
-    config.AddFile("granite_graph_localizer.config");
+    config.AddFile((path_prefix + "granite_graph_localizer.config").c_str());
     LogInfo("LoadGraphLocalizerconfig: Loaded granite graph localizer config.");
     return;
   } else {

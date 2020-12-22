@@ -39,8 +39,8 @@ namespace graph_bag {
 // wrapper so this does not require a ROS core and can parse bags more quickly. Saves output to a new bagfile.
 class GraphBag {
  public:
-  GraphBag(const std::string& bag_name, const std::string& map_file, const std::string& image_topic,
-           const std::string& results_bag);
+  explicit GraphBag(const std::string& bag_name, const std::string& map_file, const std::string& image_topic,
+                    const std::string& results_bag, const std::string& graph_config_path_prefix = "");
   void Run();
 
  private:

@@ -23,6 +23,8 @@
 #include <imu_integration/imu_integrator.h>
 #include <localization_common/combined_nav_state.h>
 
+#include <string>
+
 namespace imu_augmentor {
 class ImuAugmentor : public imu_integration::ImuIntegrator {
  public:

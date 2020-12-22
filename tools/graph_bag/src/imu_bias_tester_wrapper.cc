@@ -28,11 +28,11 @@ namespace graph_bag {
 namespace ii = imu_integration;
 namespace lc = localization_common;
 namespace lm = localization_measurements;
-ImuBiasTesterWrapper::ImuBiasTesterWrapper() {
+ImuBiasTesterWrapper::ImuBiasTesterWrapper(const std::string& graph_config_path_prefix) {
   config_reader::ConfigReader config;
   config.AddFile("transforms.config");
   config.AddFile("geometry.config");
-  lc::LoadGraphLocalizerConfig(config);
+  lc::LoadGraphLocalizerConfig(config, graph_config_path_prefix);
 
   if (!config.ReadFiles()) {
     LOG(FATAL) << "Failed to read config files.";

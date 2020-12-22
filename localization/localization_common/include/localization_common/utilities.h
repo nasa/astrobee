@@ -68,7 +68,7 @@ gtsam::Pose3 GtPose(const ff_msgs::VisualLandmarks& vl_features, const gtsam::Po
 gtsam::Pose3 GtPose(const ff_msgs::VisualLandmarks& vl_features);
 
 // Load either iss or granite graph localizer config depending on environment variable for ASTROBEE_WORLD
-void LoadGraphLocalizerConfig(config_reader::ConfigReader& config);
+void LoadGraphLocalizerConfig(config_reader::ConfigReader& config, const std::string& path_prefix = "");
 
 void SetEnvironmentConfigs(const std::string& astrobee_configs_path, const std::string& world,
                            const std::string& robot_config_file);

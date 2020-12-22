@@ -42,13 +42,15 @@ namespace gl = graph_localizer;
 namespace lc = localization_common;
 
 GraphBag::GraphBag(const std::string& bag_name, const std::string& map_file, const std::string& image_topic,
-                   const std::string& results_bag)
-    : results_bag_(results_bag, rosbag::bagmode::Write) {
+                   const std::string& results_bag, const std::string& graph_config_path_prefix)
+    : results_bag_(results_bag, rosbag::bagmode::Write),
+      imu_bias_tester_wrapper_(graph_config_path_prefix),
+      imu_augmentor_wrapper_(graph_config_path_prefix) {
   config_reader::ConfigReader config;
   config.AddFile("cameras.config");
   config.AddFile("geometry.config");
   config.AddFile("tools/graph_bag.config");
-  lc::LoadGraphLocalizerConfig(config);
+  lc::LoadGraphLocalizerConfig(config, graph_config_path_prefix);
 
   if (!config.ReadFiles()) {
     LOG(FATAL) << "Failed to read config files.";
@@ -60,7 +62,7 @@ GraphBag::GraphBag(const std::string& bag_name, const std::string& map_file, con
 
   GraphLocalizerSimulatorParams graph_params;
   LoadGraphLocalizerSimulatorParams(config, graph_params);
-  graph_localizer_simulator_.reset(new GraphLocalizerSimulator(graph_params));
+  graph_localizer_simulator_.reset(new GraphLocalizerSimulator(graph_params, graph_config_path_prefix));
 
   save_optical_flow_images_ = params.save_optical_flow_images;
   // Needed for feature tracks visualization

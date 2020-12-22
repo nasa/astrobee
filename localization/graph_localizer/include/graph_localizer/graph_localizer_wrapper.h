@@ -43,7 +43,7 @@ namespace graph_localizer {
 // which is used when running live).
 class GraphLocalizerWrapper {
  public:
-  GraphLocalizerWrapper();
+  explicit GraphLocalizerWrapper(const std::string& graph_config_path_prefix = "");
 
   // Assumes previous bias estimates are available and uses these.
   void ResetLocalizer();
