@@ -438,9 +438,6 @@ module rapid {
       //@copy-declaration /** Loads the most recently uplinked keepout zones file.<p/>The Astrobee control station implements the protocol for managing keepout zones:<ol><li>Uplink a new keepout zone file using the RAPID compressed file protocol over DDS. (File uplink is not considered a command, so it does not appear in this command dictionary).</li><li>Send this Settings.setZones command to load the uplinked zones file. Any errors in the file will be reported at this time.</li><li>Use the Settings.setCheckZones command to enable/disable keepout zone checking.</li></ol> */
       const rapid::String32 SETTINGS_METHOD_SET_ZONES = "setZones";
 
-      const rapid::String32 ADMIN_BERTH_NUMBER_1 = "1";
-      const rapid::String32 ADMIN_BERTH_NUMBER_2 = "2";
-
       const rapid::String32 ADMIN_LOCALIZATION_MODE_NONE = "None";
       const rapid::String32 ADMIN_LOCALIZATION_MODE_MAPPED_LANDMARKS = "MappedLandmarks";
       const rapid::String32 ADMIN_LOCALIZATION_MODE_ARTAGS = "ARTags";

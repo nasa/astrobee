@@ -2,8 +2,6 @@
 # Administrator of the National Aeronautics and Space Administration.
 # All Rights Reserved.
 
-string PARAM_NAME_BERTH_NUMBER_1 = 1
-string PARAM_NAME_BERTH_NUMBER_2 = 2
 string PARAM_NAME_LOCALIZATION_MODE_NONE = None
 string PARAM_NAME_LOCALIZATION_MODE_MAPPED_LANDMARKS = MappedLandmarks
 string PARAM_NAME_LOCALIZATION_MODE_ARTAGS = ARTags
