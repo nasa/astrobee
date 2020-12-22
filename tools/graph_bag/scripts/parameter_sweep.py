@@ -40,9 +40,10 @@ def test_values(values, job_id, value_names, output_dir, bag_file, map_file, ima
   new_graph_config_filepath = os.path.join(new_output_dir, world + "_graph_localizer.config")
   config_creator.make_config(values, value_names, graph_config_filepath, new_graph_config_filepath)
   output_bag = os.path.join(new_output_dir, "results.bag")
+  output_stats_file = os.path.join(new_output_dir, "graph_stats.txt")
   graph_config_prefix = new_output_dir + '/'
 
-  run_command = 'rosrun graph_bag run_graph_bag ' + bag_file + ' ' + map_file + ' ' + config_path  + ' -o ' + output_bag + ' -r ' + robot_config + ' -w ' + world + ' -g ' + graph_config_prefix 
+  run_command = 'rosrun graph_bag run_graph_bag ' + bag_file + ' ' + map_file + ' ' + config_path  + ' -o ' + output_bag + ' -s ' + output_stats_file + ' -r ' + robot_config + ' -w ' + world + ' -g ' + graph_config_prefix 
   if image_topic is not None:
     run_commond += ' -i ' + image_topic
   os.system(run_command)

@@ -42,10 +42,12 @@ namespace gl = graph_localizer;
 namespace lc = localization_common;
 
 GraphBag::GraphBag(const std::string& bag_name, const std::string& map_file, const std::string& image_topic,
-                   const std::string& results_bag, const std::string& graph_config_path_prefix)
+                   const std::string& results_bag, const std::string& output_stats_file,
+                   const std::string& graph_config_path_prefix)
     : results_bag_(results_bag, rosbag::bagmode::Write),
       imu_bias_tester_wrapper_(graph_config_path_prefix),
-      imu_augmentor_wrapper_(graph_config_path_prefix) {
+      imu_augmentor_wrapper_(graph_config_path_prefix),
+      output_stats_file_(output_stats_file) {
   config_reader::ConfigReader config;
   config.AddFile("cameras.config");
   config.AddFile("geometry.config");
@@ -190,7 +192,7 @@ void GraphBag::Run() {
     LogError("Run: Failed to get graph stats");
   } else {
     std::ofstream log_file;
-    log_file.open("graph_stats.txt");
+    log_file.open(output_stats_file_);
     graph_bag_timer.LogToFile(log_file);
     graph_stats->LogToFile(log_file);
   }

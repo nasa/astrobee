@@ -39,8 +39,9 @@ namespace graph_bag {
 // wrapper so this does not require a ROS core and can parse bags more quickly. Saves output to a new bagfile.
 class GraphBag {
  public:
-  explicit GraphBag(const std::string& bag_name, const std::string& map_file, const std::string& image_topic,
-                    const std::string& results_bag, const std::string& graph_config_path_prefix = "");
+  GraphBag(const std::string& bag_name, const std::string& map_file, const std::string& image_topic,
+           const std::string& results_bag, const std::string& output_stats_file,
+           const std::string& graph_config_path_prefix = "");
   void Run();
 
  private:
@@ -56,6 +57,7 @@ class GraphBag {
   std::unique_ptr<GraphLocalizerSimulator> graph_localizer_simulator_;
   std::unique_ptr<LiveMeasurementSimulator> live_measurement_simulator_;
   rosbag::Bag results_bag_;
+  std::string output_stats_file_;
   imu_augmentor::ImuAugmentorWrapper imu_augmentor_wrapper_;
   ImuBiasTesterWrapper imu_bias_tester_wrapper_;
   bool save_optical_flow_images_;

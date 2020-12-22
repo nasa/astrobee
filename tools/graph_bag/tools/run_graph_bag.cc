@@ -35,6 +35,7 @@ namespace lc = localization_common;
 int main(int argc, char** argv) {
   std::string image_topic;
   std::string output_bagfile;
+  std::string output_stats_file;
   std::string robot_config_file;
   std::string world;
   std::string graph_config_path_prefix;
@@ -44,7 +45,9 @@ int main(int argc, char** argv) {
                                                                   "Config path")(
     "image-topic,i", po::value<std::string>(&image_topic)->default_value("mgt/img_sampler/nav_cam/image_record"),
     "Image topic")("output-bagfile,o", po::value<std::string>(&output_bagfile)->default_value("results.bag"),
-                   "Output bagfile")(
+                   "Output bagfile")("output-stats-file,s",
+                                     po::value<std::string>(&output_stats_file)->default_value("graph_stats.txt"),
+                                     "Output stats file")(
     "robot-config-file,r", po::value<std::string>(&robot_config_file)->default_value("config/robots/bumble.config"),
     "Robot config file")("world,w", po::value<std::string>(&world)->default_value("iss"), "World name")(
     "graph-config-path-prefix,g", po::value<std::string>(&graph_config_path_prefix)->default_value(""),
@@ -91,11 +94,19 @@ int main(int argc, char** argv) {
     output_bagfile = output_bagfile_full_path.string();
   }
 
+  if (vm["output-stats-file"].defaulted()) {
+    const auto current_path = boost::filesystem::current_path();
+    boost::filesystem::path output_stats_path(output_stats_file);
+    const auto output_stats_full_path = current_path / output_stats_path;
+    output_stats_file = output_stats_full_path.string();
+  }
+
   // Set environment configs
   lc::SetEnvironmentConfigs(config_path, world, robot_config_file);
   config_reader::ConfigReader config;
 
-  graph_bag::GraphBag graph_bag(input_bag, map_file, image_topic, output_bagfile, graph_config_path_prefix);
+  graph_bag::GraphBag graph_bag(input_bag, map_file, image_topic, output_bagfile, output_stats_file,
+                                graph_config_path_prefix);
 #ifdef GOOGLE_PROFILER
   ProfilerStart(boost::filesystem::current_path() + "/graph_bag_prof.txt");
 #endif
