@@ -124,7 +124,7 @@ GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
 }
 
 GraphLocalizer::~GraphLocalizer() {
-  if (log_on_destruction_) graph_logger_.Log();
+  if (log_on_destruction_) graph_stats_.Log();
 }
 
 void GraphLocalizer::AddStartingPriors(const lc::CombinedNavState& global_N_body_start, const int key_index,
@@ -1064,6 +1064,8 @@ void GraphLocalizer::SaveGraphDotFile(const std::string& output_path) const {
   graph_.saveGraph(of, graph_values_->values());
 }
 
+const GraphStats& GraphLocalizer::graph_stats() const { return graph_stats_; }
+
 void GraphLocalizer::LogOnDestruction(const bool log_on_destruction) { log_on_destruction_ = log_on_destruction; }
 
 bool GraphLocalizer::standstill() const {
@@ -1075,12 +1077,12 @@ bool GraphLocalizer::standstill() const {
 
 bool GraphLocalizer::Update() {
   LogInfo("Update: Updating.");
-  graph_logger_.update_timer_.Start();
+  graph_stats_.update_timer_.Start();
 
-  graph_logger_.add_buffered_factors_timer_.Start();
+  graph_stats_.add_buffered_factors_timer_.Start();
   BufferCumulativeFactors();
   const int num_added_factors = AddBufferedFactors();
-  graph_logger_.add_buffered_factors_timer_.Stop();
+  graph_stats_.add_buffered_factors_timer_.Stop();
   if (num_added_factors <= 0) {
     LogWarning("Update: No factors added.");
     return false;
@@ -1089,7 +1091,7 @@ bool GraphLocalizer::Update() {
   // Only get marginals and slide window if optimization has already occured
   // TODO(rsoussan): Make cleaner way to check for this
   if (last_latest_time_) {
-    graph_logger_.marginals_timer_.Start();
+    graph_stats_.marginals_timer_.Start();
     // Calculate marginals for covariances
     try {
       marginals_ = gtsam::Marginals(graph_, graph_values_->values(), marginals_factorization_);
@@ -1100,14 +1102,14 @@ bool GraphLocalizer::Update() {
       log(params_.fatal_failures, "Update: Computing marginals failed.");
       marginals_ = boost::none;
     }
-    graph_logger_.marginals_timer_.Stop();
+    graph_stats_.marginals_timer_.Stop();
 
-    graph_logger_.slide_window_timer_.Start();
+    graph_stats_.slide_window_timer_.Start();
     if (!SlideWindow(marginals_, *last_latest_time_)) {
       LogError("Update: Failed to slide window.");
       return false;
     }
-    graph_logger_.slide_window_timer_.Stop();
+    graph_stats_.slide_window_timer_.Stop();
   }
 
   // TODO(rsoussan): Is ordering required? if so clean these calls open and unify with marginalization
@@ -1127,7 +1129,7 @@ bool GraphLocalizer::Update() {
   // Optimize
   gtsam::LevenbergMarquardtOptimizer optimizer(graph_, graph_values_->values(), levenberg_marquardt_params_);
 
-  graph_logger_.optimization_timer_.Start();
+  graph_stats_.optimization_timer_.Start();
   // TODO(rsoussan): Indicate if failure occurs in state msg, perhaps using confidence value for localizer
   try {
     graph_values_->UpdateValues(optimizer.optimize());
@@ -1136,13 +1138,13 @@ bool GraphLocalizer::Update() {
   } catch (...) {
     log(params_.fatal_failures, "Update: Graph optimization failed, keeping old values.");
   }
-  graph_logger_.optimization_timer_.Stop();
+  graph_stats_.optimization_timer_.Stop();
 
   // Calculate marginals after the first optimization iteration so covariances
   // can be used for first loc msg
   // TODO(rsoussan): Clean this up
   if (!last_latest_time_) {
-    graph_logger_.marginals_timer_.Start();
+    graph_stats_.marginals_timer_.Start();
     // Calculate marginals for covariances
     try {
       marginals_ = gtsam::Marginals(graph_, graph_values_->values(), marginals_factorization_);
@@ -1153,13 +1155,13 @@ bool GraphLocalizer::Update() {
       log(params_.fatal_failures, "Update: Computing marginals failed.");
       marginals_ = boost::none;
     }
-    graph_logger_.marginals_timer_.Stop();
+    graph_stats_.marginals_timer_.Stop();
   }
 
   last_latest_time_ = graph_values_->LatestTimestamp();
-  graph_logger_.iterations_averager_.Update(optimizer.iterations());
-  graph_logger_.UpdateStats(*this);
-  graph_logger_.UpdateErrors(*this);
+  graph_stats_.iterations_averager_.Update(optimizer.iterations());
+  graph_stats_.UpdateStats(*this);
+  graph_stats_.UpdateErrors(*this);
 
   if (params_.print_factor_info) PrintFactorDebugInfo();
 
@@ -1171,7 +1173,7 @@ bool GraphLocalizer::Update() {
   }
 
   latest_imu_integrator_.ResetPimIntegrationAndSetBias(latest_bias->first);
-  graph_logger_.update_timer_.Stop();
+  graph_stats_.update_timer_.Stop();
   return true;
 }
 }  // namespace graph_localizer

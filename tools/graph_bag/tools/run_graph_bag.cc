@@ -46,9 +46,9 @@ int main(int argc, char** argv) {
     "Image topic")("output-bagfile,o", po::value<std::string>(&output_bagfile)->default_value("results.bag"),
                    "Output bagfile")(
     "robot-config-file,r", po::value<std::string>(&robot_config_file)->default_value("config/robots/bumble.config"),
-    "Robot config file")("world,w", po::value<std::string>(&world)->default_value("iss"), "World name")
-    ("graph-config-path-prefix,g", po::value<std::string>(&graph_config_path_prefix)->default_value(""),
-     "Graph config path prefix");
+    "Robot config file")("world,w", po::value<std::string>(&world)->default_value("iss"), "World name")(
+    "graph-config-path-prefix,g", po::value<std::string>(&graph_config_path_prefix)->default_value(""),
+    "Graph config path prefix");
   po::positional_options_description p;
   p.add("bagfile", 1);
   p.add("map-file", 1);

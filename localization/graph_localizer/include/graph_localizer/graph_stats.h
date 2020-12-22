@@ -15,17 +15,17 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef GRAPH_LOCALIZER_GRAPH_LOGGER_H_
-#define GRAPH_LOCALIZER_GRAPH_LOGGER_H_
+#ifndef GRAPH_LOCALIZER_GRAPH_STATS_H_
+#define GRAPH_LOCALIZER_GRAPH_STATS_H_
 
 #include <localization_common/averager.h>
 #include <localization_common/timer.h>
 
 namespace graph_localizer {
-// Forward declaration since GraphLocalizer will have a GraphLogger
+// Forward declaration since GraphLocalizer will have a GraphStats object
 class GraphLocalizer;
 
-class GraphLogger {
+class GraphStats {
  public:
   void UpdateErrors(const GraphLocalizer& graph);
   void UpdateStats(const GraphLocalizer& graph);
@@ -74,4 +74,4 @@ class GraphLogger {
 };
 }  // namespace graph_localizer
 
-#endif  // GRAPH_LOCALIZER_GRAPH_LOGGER_H_
+#endif  // GRAPH_LOCALIZER_GRAPH_STATS_H_

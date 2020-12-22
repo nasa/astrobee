@@ -291,6 +291,14 @@ void GraphLocalizerWrapper::SaveLocalizationGraphDotFile() const {
   if (graph_localizer_) graph_localizer_->SaveGraphDotFile();
 }
 
+boost::optional<const GraphStats&> GraphLocalizerWrapper::graph_stats() const {
+  if (!graph_localizer_) {
+    LogWarning("GraphStats: Failed to get graph stats.");
+    return boost::none;
+  }
+  return graph_localizer_->graph_stats();
+}
+
 bool GraphLocalizerWrapper::publish_localization_graph() const { return publish_localization_graph_; }
 
 bool GraphLocalizerWrapper::save_localization_graph_dot_file() const { return save_localization_graph_dot_file_; }

@@ -16,7 +16,7 @@
  * under the License.
  */
 #include <graph_localizer/graph_localizer.h>
-#include <graph_localizer/graph_logger.h>
+#include <graph_localizer/graph_stats.h>
 #include <graph_localizer/loc_projection_factor.h>
 #include <graph_localizer/loc_pose_factor.h>
 #include <graph_localizer/pose_rotation_factor.h>
@@ -25,7 +25,7 @@
 #include <gtsam/slam/PriorFactor.h>
 
 namespace graph_localizer {
-void GraphLogger::UpdateErrors(const GraphLocalizer& graph) {
+void GraphStats::UpdateErrors(const GraphLocalizer& graph) {
   log_error_timer_.Start();
   double total_error = 0;
   double optical_flow_factor_error = 0;
@@ -95,7 +95,7 @@ void GraphLogger::UpdateErrors(const GraphLocalizer& graph) {
   log_error_timer_.Stop();
 }
 
-void GraphLogger::UpdateStats(const GraphLocalizer& graph) {
+void GraphStats::UpdateStats(const GraphLocalizer& graph) {
   log_stats_timer_.Start();
   num_states_averager_.Update(graph.graph_values().NumStates());
   duration_averager_.Update(graph.graph_values().Duration());
@@ -111,13 +111,13 @@ void GraphLogger::UpdateStats(const GraphLocalizer& graph) {
   log_stats_timer_.Stop();
 }
 
-void GraphLogger::Log() {
+void GraphStats::Log() {
   LogTimers();
   LogStatsAveragers();
   LogErrorAveragers();
 }
 
-void GraphLogger::LogTimers() {
+void GraphStats::LogTimers() {
   optimization_timer_.Log();
   update_timer_.Log();
   marginals_timer_.Log();
@@ -127,7 +127,7 @@ void GraphLogger::LogTimers() {
   log_stats_timer_.Log();
 }
 
-void GraphLogger::LogStatsAveragers() {
+void GraphStats::LogStatsAveragers() {
   iterations_averager_.Log();
   num_states_averager_.Log();
   duration_averager_.Log();
@@ -142,7 +142,7 @@ void GraphLogger::LogStatsAveragers() {
   num_features_averager_.Log();
 }
 
-void GraphLogger::LogErrorAveragers() {
+void GraphStats::LogErrorAveragers() {
   total_error_averager_.Log();
   of_error_averager_.Log();
   loc_proj_error_averager_.Log();

@@ -23,7 +23,7 @@
 #include <graph_localizer/feature_tracker.h>
 #include <graph_localizer/graph_action.h>
 #include <graph_localizer/graph_localizer_params.h>
-#include <graph_localizer/graph_logger.h>
+#include <graph_localizer/graph_stats.h>
 #include <graph_localizer/graph_values.h>
 #include <graph_localizer/key_info.h>
 #include <graph_localizer/robust_smart_projection_pose_factor.h>
@@ -132,6 +132,8 @@ class GraphLocalizer {
   }
 
   void LogOnDestruction(const bool log_on_destruction);
+
+  const GraphStats& graph_stats() const;
 
  private:
   gtsam::NonlinearFactorGraph MarginalFactors(const gtsam::NonlinearFactorGraph& old_factors,
@@ -243,7 +245,7 @@ class GraphLocalizer {
   gtsam::Marginals::Factorization marginals_factorization_;
   boost::optional<bool> standstill_;
   boost::optional<localization_common::Time> last_latest_time_;
-  GraphLogger graph_logger_;
+  GraphStats graph_stats_;
   bool log_on_destruction_;
 };
 }  // namespace graph_localizer

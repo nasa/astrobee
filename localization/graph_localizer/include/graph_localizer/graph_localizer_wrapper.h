@@ -25,6 +25,7 @@
 #include <graph_localizer/feature_counts.h>
 #include <graph_localizer/graph_localizer.h>
 #include <graph_localizer/graph_localizer_initialization.h>
+#include <graph_localizer/graph_stats.h>
 #include <graph_localizer/sanity_checker.h>
 #include <localization_measurements/imu_measurement.h>
 #include <localization_measurements/matched_projections_measurement.h>
@@ -81,6 +82,8 @@ class GraphLocalizerWrapper {
   gtsam::Pose3 estimated_world_T_dock() const;
 
   void SaveLocalizationGraphDotFile() const;
+
+  boost::optional<const GraphStats&> graph_stats() const;
 
   bool publish_localization_graph() const;
 
