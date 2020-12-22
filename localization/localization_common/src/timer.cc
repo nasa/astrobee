@@ -29,6 +29,8 @@ void Timer::Stop() {
 
 void Timer::Log() const { averager_.Log(); }
 
+void Timer::LogToFile(std::ofstream& ofstream) const { averager_.LogToFile(ofstream); }
+
 void Timer::LogEveryN(const int num_events_per_log) const { averager_.LogEveryN(num_events_per_log); }
 
 void Timer::StopAndLog() {

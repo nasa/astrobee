@@ -59,6 +59,8 @@ void Averager::Log() const {
   LogInfo(StatsString());
 }
 
+void Averager::LogToFile(std::ofstream& ofstream) const { ofstream << StatsString() << std::endl; }
+
 void Averager::UpdateAndLog(const double value) {
   Update(value);
   Log();

@@ -103,7 +103,8 @@ void GraphBag::SaveLocState(const ff_msgs::EkfState& loc_msg, const std::string&
 void GraphBag::Run() {
   // Required to start bias estimation
   graph_localizer_simulator_->ResetBiasesAndLocalizer();
-  const auto start_time = std::chrono::steady_clock::now();
+  lc::Timer graph_bag_timer("Graph Bag Timer");
+  graph_bag_timer.Start();
   while (live_measurement_simulator_->ProcessMessage()) {
     const lc::Time current_time = live_measurement_simulator_->CurrentTime();
     const auto imu_msg = live_measurement_simulator_->GetImuMessage(current_time);
@@ -182,7 +183,16 @@ void GraphBag::Run() {
       }
     }
   }
-  const auto end_time = std::chrono::steady_clock::now();
-  LOG(INFO) << "Total run time: " << std::chrono::duration<double>(end_time - start_time).count() << " seconds.";
+  graph_bag_timer.Stop();
+  graph_bag_timer.Log();
+  const auto graph_stats = graph_localizer_simulator_->graph_stats();
+  if (!graph_stats) {
+    LogError("Run: Failed to get graph stats");
+  } else {
+    std::ofstream log_file;
+    log_file.open("graph_stats.txt");
+    graph_bag_timer.LogToFile(log_file);
+    graph_stats->LogToFile(log_file);
+  }
 }
 }  // namespace graph_bag

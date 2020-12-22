@@ -30,10 +30,11 @@ class GraphStats {
   void UpdateErrors(const GraphLocalizer& graph);
   void UpdateStats(const GraphLocalizer& graph);
   // Log everything
-  void Log();
-  void LogTimers();
-  void LogStatsAveragers();
-  void LogErrorAveragers();
+  void Log() const;
+  void LogToFile(std::ofstream& ofstream) const;
+  void LogTimers() const;
+  void LogStatsAveragers() const;
+  void LogErrorAveragers() const;
 
   // Timers
   localization_common::Timer optimization_timer_ = localization_common::Timer("Optimization");

@@ -111,13 +111,48 @@ void GraphStats::UpdateStats(const GraphLocalizer& graph) {
   log_stats_timer_.Stop();
 }
 
-void GraphStats::Log() {
+void GraphStats::Log() const {
   LogTimers();
   LogStatsAveragers();
   LogErrorAveragers();
 }
 
-void GraphStats::LogTimers() {
+// TODO(rsoussan): Unify this with other log calls
+void GraphStats::LogToFile(std::ofstream& ofstream) const {
+  // Timers
+  optimization_timer_.LogToFile(ofstream);
+  update_timer_.LogToFile(ofstream);
+  marginals_timer_.LogToFile(ofstream);
+  slide_window_timer_.LogToFile(ofstream);
+  add_buffered_factors_timer_.LogToFile(ofstream);
+  log_error_timer_.LogToFile(ofstream);
+  log_stats_timer_.LogToFile(ofstream);
+  // Averagers
+  iterations_averager_.LogToFile(ofstream);
+  num_states_averager_.LogToFile(ofstream);
+  duration_averager_.LogToFile(ofstream);
+  num_optical_flow_factors_averager_.LogToFile(ofstream);
+  num_loc_factors_averager_.LogToFile(ofstream);
+  num_imu_factors_averager_.LogToFile(ofstream);
+  num_rotation_factors_averager_.LogToFile(ofstream);
+  num_standstill_between_factors_averager_.LogToFile(ofstream);
+  num_vel_prior_factors_averager_.LogToFile(ofstream);
+  num_marginal_factors_averager_.LogToFile(ofstream);
+  num_factors_averager_.LogToFile(ofstream);
+  num_features_averager_.LogToFile(ofstream);
+  // Error Averagers
+  total_error_averager_.LogToFile(ofstream);
+  of_error_averager_.LogToFile(ofstream);
+  loc_proj_error_averager_.LogToFile(ofstream);
+  imu_error_averager_.LogToFile(ofstream);
+  rotation_error_averager_.LogToFile(ofstream);
+  standstill_between_error_averager_.LogToFile(ofstream);
+  pose_prior_error_averager_.LogToFile(ofstream);
+  velocity_prior_error_averager_.LogToFile(ofstream);
+  bias_prior_error_averager_.LogToFile(ofstream);
+}
+
+void GraphStats::LogTimers() const {
   optimization_timer_.Log();
   update_timer_.Log();
   marginals_timer_.Log();
@@ -127,7 +162,7 @@ void GraphStats::LogTimers() {
   log_stats_timer_.Log();
 }
 
-void GraphStats::LogStatsAveragers() {
+void GraphStats::LogStatsAveragers() const {
   iterations_averager_.Log();
   num_states_averager_.Log();
   duration_averager_.Log();
@@ -142,7 +177,7 @@ void GraphStats::LogStatsAveragers() {
   num_features_averager_.Log();
 }
 
-void GraphStats::LogErrorAveragers() {
+void GraphStats::LogErrorAveragers() const {
   total_error_averager_.Log();
   of_error_averager_.Log();
   loc_proj_error_averager_.Log();

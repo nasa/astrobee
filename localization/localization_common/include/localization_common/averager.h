@@ -27,6 +27,7 @@
 #include <boost/accumulators/statistics/stats.hpp>
 #include <boost/accumulators/statistics/variance.hpp>
 
+#include <fstream>
 #include <string>
 
 namespace localization_common {
@@ -39,6 +40,7 @@ class Averager {
   double average() const;
   int count() const;
   void Log() const;
+  void LogToFile(std::ofstream& ofstream) const;
   void LogEveryN(const int num_events_per_log) const;
   void UpdateAndLog(const double value);
   void UpdateAndLogEveryN(const double value, const int num_events_per_log);
