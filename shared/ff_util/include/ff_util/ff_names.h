@@ -360,7 +360,7 @@
 #define TOPIC_HARDWARE_IMU                          "hw/imu"
 #define TOPIC_HARDWARE_NAV_CAM                      "hw/cam_nav"
 #define TOPIC_HARDWARE_DOCK_CAM                     "hw/cam_dock"
-#define TOPIC_HARDWARE_SCI_CAM                      "hw/cam_sci"
+#define TOPIC_HARDWARE_SCI_CAM                      "hw/cam_sci/compressed"
 #define TOPIC_HARDWARE_LIGHT_FRONT                  "hw/light_front"
 #define TOPIC_HARDWARE_LIGHT_AFT                    "hw/light_aft"
 #define TOPIC_HARDWARE_LASER                        "hw/laser"

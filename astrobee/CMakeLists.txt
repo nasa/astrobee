@@ -28,4 +28,6 @@ install(DIRECTORY config/ DESTINATION config)
 install_launch_files()
 
 install(PROGRAMS scripts/check_env.sh
+                 scripts/print_version.sh
+                 scripts/cpu_print_version.sh
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
