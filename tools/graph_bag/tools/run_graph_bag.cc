@@ -37,6 +37,7 @@ int main(int argc, char** argv) {
   std::string output_bagfile;
   std::string robot_config_file;
   std::string world;
+  std::string graph_config_path_prefix;
   po::options_description desc("Runs graph localization on a bagfile and saves the results to a new bagfile.");
   desc.add_options()("help", "produce help message")("bagfile", po::value<std::string>()->required(), "Input bagfile")(
     "map-file", po::value<std::string>()->required(), "Map file")("config-path,c", po::value<std::string>()->required(),
@@ -45,7 +46,9 @@ int main(int argc, char** argv) {
     "Image topic")("output-bagfile,o", po::value<std::string>(&output_bagfile)->default_value("results.bag"),
                    "Output bagfile")(
     "robot-config-file,r", po::value<std::string>(&robot_config_file)->default_value("config/robots/bumble.config"),
-    "Robot config file")("world,w", po::value<std::string>(&world)->default_value("iss"), "World name");
+    "Robot config file")("world,w", po::value<std::string>(&world)->default_value("iss"), "World name"),
+    ("graph-config-path-prefix,g", po::value<std::string>(&graph_config_path_prefix)->default_value(""),
+     "Graph config path prefix");
   po::positional_options_description p;
   p.add("bagfile", 1);
   p.add("map-file", 1);
@@ -92,7 +95,7 @@ int main(int argc, char** argv) {
   lc::SetEnvironmentConfigs(config_path, world, robot_config_file);
   config_reader::ConfigReader config;
 
-  graph_bag::GraphBag graph_bag(input_bag, map_file, image_topic, output_bagfile);
+  graph_bag::GraphBag graph_bag(input_bag, map_file, image_topic, output_bagfile, graph_config_path_prefix);
 #ifdef GOOGLE_PROFILER
   ProfilerStart(boost::filesystem::current_path() + "/graph_bag_prof.txt");
 #endif
