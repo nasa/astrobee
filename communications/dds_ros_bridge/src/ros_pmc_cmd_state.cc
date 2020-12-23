@@ -68,8 +68,7 @@ void RosPmcCmdStateToRapid::MsgCallback(
   pmc_msg_ = msg;
 }
 
-void RosPmcCmdStateToRapid::PubPmcCmdState(
-                                                const ros::TimerEvent& event) {
+void RosPmcCmdStateToRapid::PubPmcCmdState(const ros::TimerEvent& event) {
   if (pmc_msg_ == NULL) {
     return;
   }
