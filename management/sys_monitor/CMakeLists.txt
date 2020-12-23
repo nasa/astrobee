@@ -15,18 +15,47 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+cmake_minimum_required(VERSION 2.8.12) # Need get_filename_component DIRECTORY
 project(sys_monitor)
+
+## Compile as C++11, supported in ROS Kinetic and newer
+add_compile_options(-std=c++11)
+
+find_package(catkin REQUIRED COMPONENTS
+  roscpp
+  ff_util
+  ff_msgs
+  nodelet
+  config_reader
+)
 
 catkin_package(
   LIBRARIES sys_monitor
-  DEPENDS roscpp ff_msgs nodelet
+  DEPENDS roscpp ff_util ff_msgs nodelet config_reader
 )
 
-create_library(TARGET sys_monitor
-  LIBS ${catkin_LIBRARIES} config_reader ff_nodelet
-  INC ${catkin_INCLUDE_DIRS}
-  DEPS ff_msgs config_reader
+###########
+## Build ##
+###########
+
+# Specify additional locations of header files
+include_directories(
+  include
+  ${catkin_INCLUDE_DIRS}
 )
+
+# Declare C++ libraries
+add_library(sys_monitor
+  src/sys_monitor.cc
+)
+add_dependencies(sys_monitor ${catkin_EXPORTED_TARGETS})
+target_link_libraries(sys_monitor ${catkin_LIBRARIES})
+
+## Declare a C++ executable: fault_tester
+add_executable(fault_tester tools/fault_tester.cc)
+add_dependencies(fault_tester ${catkin_EXPORTED_TARGETS})
+target_link_libraries(fault_tester
+  sys_monitor gflags glog ${catkin_LIBRARIES})
 
 if(CATKIN_ENABLE_TESTING)
   find_package(rostest REQUIRED)
@@ -50,9 +79,11 @@ if(CATKIN_ENABLE_TESTING)
   )
 endif()
 
-create_tool_targets(DIR tools
-  LIBS sys_monitor
-  DEPS sys_monitor
-)
+#############
+## Install ##
+#############
 
-install_launch_files()
+# Mark launch files for installation
+install(DIRECTORY launch/
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
+  PATTERN ".svn" EXCLUDE)

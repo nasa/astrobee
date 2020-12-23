@@ -15,30 +15,53 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+cmake_minimum_required(VERSION 2.8.12) # Need get_filename_component DIRECTORY
 project(handrail_detect)
 
-if (USE_ROS)
+## Compile as C++11, supported in ROS Kinetic and newer
+add_compile_options(-std=c++11)
+
+find_package(catkin REQUIRED COMPONENTS
+  roscpp
+  tf2
+  nodelet
+  visualization_msgs
+  ff_msgs
+  ff_util
+)
+
+# Find OpenCV3
+find_package(OpenCV 3 REQUIRED)
 
 catkin_package(
   LIBRARIES ${PROJECT_NAME}
-  CATKIN_DEPENDS tf2 visualization_msgs roscpp ff_msgs nodelet
-  DEPENDS ${PROJECT_NAME}
+  CATKIN_DEPENDS roscpp tf2 nodelet visualization_msgs ff_msgs ff_util
 )
 
-set(CMAKE_CXX_FLAGS_HACKY "${CMAKE_CXX_FLAGS} -Wno-return-type")
+###########
+## Build ##
+###########
 
-create_library(TARGET ${PROJECT_NAME}
-  LIBS ${catkin_LIBRARIES} ${OROCOS_KDL_LIBRARIES} ff_common config_reader msg_conversions ff_nodelet
-  INC ${catkin_INCLUDE_DIRS} ${EIGEN3_INCLUDE_DIRS}
-  DEPS ff_msgs
+# Specify additional locations of header files
+include_directories(
+  ${catkin_INCLUDE_DIRS}
+  ${OpenCV_INCLUDE_DIRS}
 )
 
-set_target_properties(${PROJECT_NAME} PROPERTIES COMPILE_FLAGS ${CMAKE_CXX_FLAGS_HACKY})
-
-create_tool_targets(DIR tools
-  LIBS ${PROJECT_NAME}
+# Declare C++ libraries
+add_library(handrail_detect
+  src/handrail_detect.cc
 )
+add_dependencies(handrail_detect ${catkin_EXPORTED_TARGETS})
+target_link_libraries(handrail_detect ${catkin_LIBRARIES})
 
-install_launch_files()
+#############
+## Install ##
+#############
 
-endif (USE_ROS)
+# Mark launch files for installation
+install(DIRECTORY launch/
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
+  PATTERN ".svn" EXCLUDE)
+
+install(DIRECTORY config/ DESTINATION config)

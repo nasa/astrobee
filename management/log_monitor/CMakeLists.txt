@@ -15,29 +15,34 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+cmake_minimum_required(VERSION 2.8.12) # Need get_filename_component DIRECTORY
 project(log_monitor)
+
+## Compile as C++11, supported in ROS Kinetic and newer
+add_compile_options(-std=c++11)
+
+find_package(catkin REQUIRED COMPONENTS
+  roscpp
+)
 
 catkin_package(
   LIBRARIES
     log_monitor
   CATKIN_DEPENDS
     roscpp
-    roslib
-    nodelet
-    ff_hw_msgs
-    ff_msgs
-    std_msgs
 )
 
-create_tool_targets(
-  DIR
-    tools
-  LIBS
-    ${catkin_LIBRARIES}
-    ff_common
-    ff_nodelet
-  INC
-    ${catkin_INCLUDE_DIRS}
-  DEPS
-    ff_msgs
+###########
+## Build ##
+###########
+
+# Specify additional locations of header files
+include_directories(
+  ${catkin_INCLUDE_DIRS}
 )
+
+## Declare a C++ executable: undistort_image
+add_executable(log_tool tools/log_tool.cc)
+add_dependencies(log_tool ${catkin_EXPORTED_TARGETS})
+target_link_libraries(log_tool
+  gflags glog ${catkin_LIBRARIES})

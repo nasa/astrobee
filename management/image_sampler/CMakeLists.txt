@@ -15,17 +15,59 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+cmake_minimum_required(VERSION 2.8.12) # Need get_filename_component DIRECTORY
 project(image_sampler)
+
+## Compile as C++11, supported in ROS Kinetic and newer
+add_compile_options(-std=c++11)
+
+find_package(catkin REQUIRED COMPONENTS
+  roscpp
+  ff_msgs
+  nodelet
+  config_reader
+  ff_util
+)
+
+# Find OpenCV3
+find_package(OpenCV 3 REQUIRED)
 
 catkin_package(
   LIBRARIES image_sampler
-  DEPENDS roscpp ff_msgs nodelet
+  DEPENDS roscpp ff_msgs nodelet config_reader ff_util
 )
 
-create_library(TARGET image_sampler
-  LIBS ${catkin_LIBRARIES} config_reader ff_nodelet ${OpenCV_LIBRARIES}
-  INC ${catkin_INCLUDE_DIRS} ${OpenCV_INCLUDE_DIRS}
-  DEPS ff_msgs config_reader opencv
+###########
+## Build ##
+###########
+
+# Specify additional locations of header files
+include_directories(
+  include
+  ${catkin_INCLUDE_DIRS}
+  ${OpenCV_INCLUDE_DIRS}
 )
 
-install_launch_files()
+# create_library(TARGET image_sampler
+#   LIBS ${catkin_LIBRARIES} config_reader ff_nodelet ${OpenCV_LIBRARIES}
+#   INC ${catkin_INCLUDE_DIRS} ${OpenCV_INCLUDE_DIRS}
+#   DEPS ff_msgs config_reader opencv
+# )
+
+# Declare C++ libraries
+add_library(image_sampler
+  src/image_sampler.cc
+)
+add_dependencies(image_sampler ${catkin_EXPORTED_TARGETS})
+target_link_libraries(image_sampler ${catkin_LIBRARIES})
+
+#############
+## Install ##
+#############
+
+# Mark launch files for installation
+install(DIRECTORY launch/
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
+  PATTERN ".svn" EXCLUDE)
+
+install(DIRECTORY config/ DESTINATION config)

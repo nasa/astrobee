@@ -15,36 +15,67 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+cmake_minimum_required(VERSION 2.8.12) # Need get_filename_component DIRECTORY
 project(mapper)
 
+## Compile as C++11, supported in ROS Kinetic and newer
+add_compile_options(-std=c++11)
+
+find_package(catkin REQUIRED COMPONENTS
+  roscpp
+  nodelet
+  pluginlib
+  ff_util
+  ff_msgs
+  message_runtime
+  cmake_modules
+)
+
+# Find Eigen3
+find_package(Eigen3 REQUIRED)
+# Find PCL
+find_package(PCL REQUIRED COMPONENTS common)
+
 catkin_package(
-  DEPENDS 
-    Eigen
-  INCLUDE_DIRS
-    include
-    ${EIGEN3_INCLUDE_DIRS}
-    ${PCL_INCLUDE_DIRS}
+  INCLUDE_DIRS include
   LIBRARIES
     mapper
   CATKIN_DEPENDS
     roscpp
     nodelet
     pluginlib
+    ff_util
     ff_msgs
     message_runtime
     cmake_modules
 )
 
-set(INCLUDES
-  ${EIGEN3_INCLUDE_DIRS}
+###########
+## Build ##
+###########
+
+# Specify additional locations of header files
+include_directories(
+  include
+  ${catkin_INCLUDE_DIRS}
+  ${EIGEN3_INCLUDE_DIR}
   ${PCL_INCLUDE_DIRS}
-  src
 )
 
-create_library(TARGET mapper
-  LIBS ${catkin_LIBRARIES} ff_nodelet ff_flight config_server  ${PCL_LIBRARIES} ${OCTOMAP_LIBRARIES}
-  INC  ${catkin_INCLUDE_DIRS} ${INCLUDES} ${OCTOMAP_INCLUDE_DIRS}
+# Declare C++ libraries
+add_library(mapper
+  src/callbacks.cc
+  src/mapper_nodelet.cc
+  src/octoclass.cc
+  src/polynomials.cc
+  src/sampled_trajectory.cc
+  src/services.cc
+  src/threads.cc
+  src/visualization_functions.cc
 )
+add_dependencies(mapper ${catkin_EXPORTED_TARGETS})
+target_link_libraries(mapper ${catkin_LIBRARIES})
+
 
 if(CATKIN_ENABLE_TESTING)
   find_package(rostest REQUIRED)
@@ -59,4 +90,12 @@ if(CATKIN_ENABLE_TESTING)
   )
 endif()
 
-install_launch_files()
+#############
+## Install ##
+#############
+
+# Mark launch files for installation
+install(DIRECTORY launch/
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
+  PATTERN ".svn" EXCLUDE)
+

@@ -33,6 +33,17 @@ find_package(catkin REQUIRED COMPONENTS
   msg_conversions
 )
 
+# Find jsoncpp
+find_package(jsoncpp REQUIRED)
+find_path(
+  JSONCPP_INCLUDE_DIR 
+  NAMES jsoncpp/json/json.h json/json.h
+  DOC "jsoncpp include dir"
+)
+if (EXISTS "${JSONCPP_INCLUDE_DIR}/jsoncpp/json/json.h" )
+  set (JSONCPP_INCLUDE_DIR "${JSONCPP_INCLUDE_DIR}/jsoncpp")
+endif ()
+
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES ff_nodelet config_server config_client perf_timer
@@ -48,6 +59,7 @@ catkin_package(
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
+  ${JSONCPP_INCLUDE_DIR}
 )
 
 # Declare C++ libraries
@@ -85,40 +97,19 @@ add_library(perf_timer
 add_dependencies(perf_timer ${catkin_EXPORTED_TARGETS})
 target_link_libraries(perf_timer ${catkin_LIBRARIES})
 
+# Declare C++ libraries
+add_library(jsonloader
+  src/jsonloader/command.cc
+  src/jsonloader/command_repo.cc
+  src/jsonloader/keepout.cc
+  src/jsonloader/keepoutio.cc
+  src/jsonloader/plan.cc
+  src/jsonloader/planio.cc
+  src/jsonloader/validation.cc
+)
+add_dependencies(jsonloader ${catkin_EXPORTED_TARGETS})
+target_link_libraries(jsonloader ${catkin_LIBRARIES})
 
-# create_library(TARGET ff_nodelet
-#   DIR src/ff_nodelet
-#   LIBS ${roscpp_LIBRARIES} ${nodelet_LIBRARIES} config_reader
-#   INC ${catkin_INCLUDE_DIRS}
-#   DEPS ff_msgs
-# )
-
-# create_library(TARGET ff_flight
-#   DIR src/ff_flight
-#   LIBS ${catkin_LIBRARIES} ${EIGEN3_LIBRARIES} config_reader msg_conversions
-#   INC ${catkin_INCLUDE_DIRS} ${EIGEN3_INCLUDE_DIRS}
-#   DEPS ff_msgs
-# )
-
-# create_library(TARGET config_server
-#   DIR src/config_server
-#   LIBS ${catkin_LIBRARIES} config_reader
-#   INC ${catkin_INCLUDE_DIRS}
-#   DEPS config_reader diagnostic_msgs
-# )
-
-# create_library(TARGET config_client
-#   DIR src/ff_nodelet
-#   LIBS ${roscpp_LIBRARIES} ${nodelet_LIBRARIES} config_reader
-#   INC ${catkin_INCLUDE_DIRS}
-#   DEPS ff_msgs
-# )
-
-# create_library(TARGET perf_timer
-#   DIR src/perf_timer
-#   LIBS ${catkin_LIBRARIES}
-#   INC ${catkin_INCLUDE_DIRS}
-# )
 
 ##########
 ## Test ##
@@ -184,3 +175,5 @@ endif()
 install(DIRECTORY launch/
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
   PATTERN ".svn" EXCLUDE)
+
+install(DIRECTORY config/ DESTINATION config)

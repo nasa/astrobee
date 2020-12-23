@@ -15,7 +15,20 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+cmake_minimum_required(VERSION 2.8.12) # Need get_filename_component DIRECTORY
 project(choreographer)
+
+## Compile as C++11, supported in ROS Kinetic and newer
+add_compile_options(-std=c++11)
+
+find_package(catkin REQUIRED COMPONENTS
+  roscpp
+  nodelet
+  ff_util
+  ff_msgs
+  ff_hw_msgs
+  tf2_ros
+)
 
 catkin_package(
   INCLUDE_DIRS
@@ -25,20 +38,29 @@ catkin_package(
   CATKIN_DEPENDS
     roscpp
     nodelet
-    pluginlib
-    actionlib
-    tf2
+    ff_util
+    ff_msgs
+    ff_hw_msgs
     tf2_ros
-    nav_msgs
-    geometry_msgs
-    visualization_msgs
 )
 
-create_library(TARGET choreographer
-  LIBS ${catkin_LIBRARIES} ff_common ff_nodelet ff_flight config_server mapper
-  INC  ${catkin_INCLUDE_DIRS}
-  DEPS ff_common nav_msgs geometry_msgs ff_msgs ff_util mapper
+###########
+## Build ##
+###########
+
+# Specify additional locations of header files
+include_directories(
+  include
+  ${catkin_INCLUDE_DIRS}
 )
+
+# Declare C++ libraries
+add_library(choreographer
+  src/choreographer_nodelet.cc
+  src/validator.cc
+)
+add_dependencies(choreographer ${catkin_EXPORTED_TARGETS})
+target_link_libraries(choreographer ${catkin_LIBRARIES})
 
 if(CATKIN_ENABLE_TESTING)
   find_package(rostest REQUIRED)
@@ -53,4 +75,11 @@ if(CATKIN_ENABLE_TESTING)
   )
 endif()
 
-install_launch_files()
+#############
+## Install ##
+#############
+
+# Mark launch files for installation
+install(DIRECTORY launch/
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
+  PATTERN ".svn" EXCLUDE)

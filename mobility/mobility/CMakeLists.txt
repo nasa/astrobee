@@ -15,25 +15,48 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-# Subsystem matapackage
+cmake_minimum_required(VERSION 2.8.12) # Need get_filename_component DIRECTORY
 project(mobility)
 
+## Compile as C++11, supported in ROS Kinetic and newer
+add_compile_options(-std=c++11)
+
+find_package(catkin REQUIRED COMPONENTS
+  choreographer
+  mapper
+  planner_trapezoidal
+  planner_qp
+  ff_msgs
+  ff_util
+)
 catkin_package(
   CATKIN_DEPENDS
     choreographer
     mapper
-    sentinel
     planner_trapezoidal
     planner_qp
-    docker
     ff_msgs
     ff_util
 )
 
-create_tool_targets(
-  DIR tools
-  LIBS ${catkin_LIBRARIES} ${EIGEN3_LIBRARIES} config_client ff_common ff_flight planner_trapezoidal
-  INC  ${catkin_INCLUDE_DIRS} ${EIGEN3_INCLUDE_DIRS}
-  DEPS ff_msgs ff_common
+###########
+## Build ##
+###########
+
+# Specify additional locations of header files
+include_directories(
+  include
+  ${catkin_INCLUDE_DIRS}
 )
 
+## Declare a C++ executable: plangen
+add_executable(plangen tools/plangen.cc)
+add_dependencies(plangen ${catkin_EXPORTED_TARGETS})
+target_link_libraries(plangen
+  gflags glog ${catkin_LIBRARIES})
+
+## Declare a C++ executable: teleop
+add_executable(teleop tools/teleop.cc)
+add_dependencies(teleop ${catkin_EXPORTED_TARGETS})
+target_link_libraries(teleop
+  gflags glog ${catkin_LIBRARIES})

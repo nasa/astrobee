@@ -15,15 +15,108 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-# this flag is needed by CGAL
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -frounding-math")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -frounding-math")
-set(NASA ON CACHE BOOL "Use NASA's wonderful build system on all traj_opt packages" FORCE)
+cmake_minimum_required(VERSION 2.8.12) # Need get_filename_component DIRECTORY
+project(planner_qp)
 
-# QP planner
-add_subdirectory(traj_opt_basic)
-add_subdirectory(traj_opt_pro)
-add_subdirectory(traj_opt_msgs)
-add_subdirectory(traj_opt_ros)
+## Compile as C++11, supported in ROS Kinetic and newer
+add_compile_options(-std=c++11)
 
-add_subdirectory(planner_qp)
+find_package(catkin REQUIRED COMPONENTS
+  mapper
+  planner_trapezoidal
+  ff_msgs
+  ff_util
+)
+
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
+## System dependencies are found with CMake's conventions
+find_package(cmake_modules REQUIRED)
+# Find OpenCV3
+find_package(OpenCV 3 REQUIRED)
+
+find_package(JPS3D REQUIRED)
+# find_package(GUROBI REQUIRED)
+find_package(IntelMKL REQUIRED)
+find_package(DecompUtil REQUIRED)
+
+
+# Generate messages in the 'msg' folder
+add_message_files(
+  FILES
+  Polynomial.msg
+  SolverInfo.msg
+  Spline.msg
+  Trajectory.msg
+)
+
+catkin_package(
+  LIBRARIES
+    planner_qp
+  DEPENDS
+  CATKIN_DEPENDS
+    roscpp
+    nodelet
+    pluginlib
+    actionlib
+    tf
+    ff_util
+)
+
+###########
+## Build ##
+###########
+
+# Specify additional locations of header files
+include_directories(
+  include
+  ${catkin_INCLUDE_DIRS}
+  ${OpenCV_INCLUDE_DIRS}
+  ${JPS3D_INCLUDE_DIR}
+  ${DECOMP_UTIL_INCLUDE_DIR}
+)
+
+# Declare C++ libraries
+add_library(traj_opt_basic
+  src/traj_opt_basic/msg_traj.cpp
+  src/traj_opt_basic/polynomial_basis.cpp
+  src/traj_opt_basic/trajectory.cpp
+)
+add_dependencies(traj_opt_basic ${catkin_EXPORTED_TARGETS})
+target_link_libraries(traj_opt_basic ${catkin_LIBRARIES})
+
+# Declare C++ libraries
+add_library(traj_opt_pro
+  src/traj_opt_pro/nonlinear_polynomial.cpp
+  src/traj_opt_pro/nonlinear_solver.cpp
+  src/traj_opt_pro/nonlinear_trajectory.cpp
+  src/traj_opt_pro/polynomial_basis.cpp
+  src/traj_opt_pro/trajectory_solver.cpp
+)
+add_dependencies(traj_opt_pro ${catkin_EXPORTED_TARGETS})
+target_link_libraries(traj_opt_pro traj_opt_basic ${catkin_LIBRARIES})
+
+# Declare C++ libraries
+add_library(traj_opt_ros
+  src/traj_opt_ros/ros_bridge.cpp
+  # src/traj_opt_ros/trajectory_display.cpp
+  # src/traj_opt_ros/trajectory_visual.cpp
+)
+add_dependencies(traj_opt_ros ${catkin_EXPORTED_TARGETS})
+target_link_libraries(traj_opt_ros traj_opt_basic ${catkin_LIBRARIES})
+
+
+# Declare C++ libraries
+add_library(planner_qp
+  src/planner_qp.cc
+)
+add_dependencies(planner_qp ${catkin_EXPORTED_TARGETS})
+target_link_libraries(planner_qp traj_opt_basic traj_opt_pro traj_opt_ros ${catkin_LIBRARIES})
+
+#############
+## Install ##
+#############
+
+# Mark launch files for installation
+install(DIRECTORY launch/
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
+  PATTERN ".svn" EXCLUDE)

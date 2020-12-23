@@ -66,7 +66,6 @@ add_library(vive_driver
 add_dependencies(vive_driver ${catkin_EXPORTED_TARGETS})
 target_link_libraries(vive_driver json-c usb-1.0 z ${catkin_LIBRARIES})
 
-
 ## Declare a C++ executable: vive_tool
 add_executable(vive_tool tools/vive_tool/vive_tool.c)
 add_dependencies(vive_tool ${catkin_EXPORTED_TARGETS})

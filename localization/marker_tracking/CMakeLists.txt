@@ -15,35 +15,160 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-set(LIBS
-  ${ALVAR_LIBRARIES}
-  ${OpenCV_LIBRARIES}
-  camera
-  ff_common
+cmake_minimum_required(VERSION 2.8.3)
+project(marker_tracking)
+
+## Compile as C++11, supported in ROS Kinetic and newer
+add_compile_options(-std=c++11)
+
+find_package(catkin REQUIRED COMPONENTS
+  roscpp
+  nodelet
+  ff_util
+  ff_hw_msgs
   config_reader
-  ${GLOG_LIBRARIES}
-  ${GFLAGS_LIBRARIES}
-  )
-set(INCLUDES
+  camera
+  msg_conversions
+)
+
+# System dependencies are found with CMake's conventions
+find_package(cmake_modules REQUIRED)
+find_package(Eigen3 REQUIRED)
+find_package(Alvar REQUIRED)
+find_package(Alvar REQUIRED)
+
+# Find OpenCV and fix a 3.3.1 bug
+find_package(OpenCV 3 REQUIRED)
+if (${OpenCV_VERSION} MATCHES "3.3.1")
+  foreach(__cvcomponent ${OpenCV_LIB_COMPONENTS})
+    set (__original_cvcomponent ${__cvcomponent})
+    if(NOT __cvcomponent MATCHES "^opencv_")
+      set(__cvcomponent opencv_${__cvcomponent})
+    endif()
+    if (TARGET ${__cvcomponent})
+      set_target_properties(${__cvcomponent} PROPERTIES
+          MAP_IMPORTED_CONFIG_DEBUG ""
+          MAP_IMPORTED_CONFIG_RELEASE ""
+          MAP_IMPORTED_CONFIG_RELWITHDEBINFO ""
+          MAP_IMPORTED_CONFIG_MINSIZEREL ""
+      )
+    endif()
+  endforeach(__cvcomponent)
+endif()
+set(OpenCV_LIBRARIES ${OpenCV_LIBS})
+
+catkin_package(
+  LIBRARIES ${PROJECT_NAME}
+  CATKIN_DEPENDS roscpp message_runtime std_msgs geometry_msgs cv_bridge image_transport camera msg_conversions
+)
+
+###########
+## Build ##
+###########
+
+# Specify additional locations of header files
+include_directories(
+  include
+  ${catkin_INCLUDE_DIRS}
   ${ALVAR_INCLUDE_DIRS}
   ${EIGEN3_INCLUDE_DIRS}
-  ${GLOG_INCLUDE_DIRS}
-  ${GFLAGS_INCLUDE_DIRS}
+  ${OpenCV_INCLUDE_DIRS}
+)
+
+# Declare C++ libraries
+add_library(marker_tracking
+  src/marker_tracking/arconfigio.cc
+  src/marker_tracking/arxmlio.cc
+  src/marker_tracking/labelling_method.cc
+  src/marker_tracking/marker_detector.cc
+)
+add_dependencies(marker_tracking ${catkin_EXPORTED_TARGETS})
+target_link_libraries(marker_tracking ${catkin_LIBRARIES} ${ALVAR_LIBRARIES})
+
+## Declare a C++ executable: generate_ar_target
+add_executable(generate_ar_target tools/marker_tracking/generate_ar_target.cc)
+add_dependencies(generate_ar_target ${catkin_EXPORTED_TARGETS})
+target_link_libraries(generate_ar_target
+  marker_tracking gflags glog ${catkin_LIBRARIES})
+
+## Declare a C++ executable: generate_multiscale_target
+add_executable(generate_multiscale_target tools/marker_tracking/generate_multiscale_target.cc)
+add_dependencies(generate_multiscale_target ${catkin_EXPORTED_TARGETS})
+target_link_libraries(generate_multiscale_target
+  marker_tracking gflags glog ${catkin_LIBRARIES})
+
+## Declare a C++ executable: generate_svg_markers
+add_executable(generate_svg_markers tools/marker_tracking/generate_svg_markers.cc)
+add_dependencies(generate_svg_markers ${catkin_EXPORTED_TARGETS})
+target_link_libraries(generate_svg_markers
+  marker_tracking gflags glog ${catkin_LIBRARIES})
+
+## Declare a C++ executable: identify_marker_in_image
+add_executable(identify_marker_in_image tools/marker_tracking/identify_marker_in_image.cc)
+add_dependencies(identify_marker_in_image ${catkin_EXPORTED_TARGETS})
+target_link_libraries(identify_marker_in_image
+  marker_tracking gflags glog ${catkin_LIBRARIES})
+
+## Declare a C++ executable: marker_config2xml
+add_executable(marker_config2xml tools/marker_tracking/marker_config2xml.cc)
+add_dependencies(marker_config2xml ${catkin_EXPORTED_TARGETS})
+target_link_libraries(marker_config2xml
+  marker_tracking gflags glog ${catkin_LIBRARIES})
+
+## Declare a C++ executable: markers_to_Kalibr
+add_executable(markers_to_Kalibr tools/marker_tracking/markers_to_Kalibr.cc)
+add_dependencies(markers_to_Kalibr ${catkin_EXPORTED_TARGETS})
+target_link_libraries(markers_to_Kalibr
+  marker_tracking gflags glog yaml-cpp ${catkin_LIBRARIES})
+
+# Declare C++ libraries
+add_library(marker_tracking_node
+  src/marker_tracking_node/marker_tracker.cc
+  src/marker_tracking_node/marker_tracking_nodelet.cc
+)
+add_dependencies(marker_tracking_node ${catkin_EXPORTED_TARGETS})
+target_link_libraries(marker_tracking_node marker_tracking ${catkin_LIBRARIES})
+
+## Declare a C++ executable: overhead_tracking_node
+add_executable(overhead_tracking_node tools/marker_tracking_node/overhead_tracking_node.cc)
+add_dependencies(overhead_tracking_node ${catkin_EXPORTED_TARGETS})
+target_link_libraries(overhead_tracking_node
+  marker_tracking_node gflags glog ${catkin_LIBRARIES})
+
+if(CATKIN_ENABLE_TESTING)
+  find_package(rostest REQUIRED)
+  add_rostest_gtest(test_arxmlio test/test_arxmlio.test
+    test/test_arxmlio.cc
+  )
+  target_link_libraries(test_arxmlio
+    marker_tracking
   )
 
-set(MARKER_TRACKING_LIBRARIES marker_tracking ${LIBS})
+  add_rostest_gtest(test_marker_config_loader test/test_marker_config_loader.test
+    test/test_marker_config_loader.cc
+  )
+  target_link_libraries(test_marker_config_loader
+    marker_tracking
+  )
 
-create_library(TARGET marker_tracking
-  LIBS ${LIBS}
-  INC ${INCLUDES}
-  DEPS camera)
+  add_rostest_gtest(test_marker_detector test/test_marker_detector.test
+    test/test_marker_detector.cc
+  )
+  target_link_libraries(test_marker_detector
+    marker_tracking
+  )
+endif()
 
-if (YAMLCPP_FOUND)
-  create_tool_targets(DIR tools
-    LIBS marker_tracking ${YAMLCPP_LIBRARIES}
-    INC ${INCLUDES})
-endif (YAMLCPP_FOUND)
+#############
+## Install ##
+#############
 
-if (USE_ROS)
-  add_subdirectory(ros)
-endif (USE_ROS)
+# Mark launch files for installation
+install(DIRECTORY launch/
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
+  PATTERN ".svn" EXCLUDE)
+
+install(FILES
+  tools/features_counter.py
+  DESTINATION share/${PROJECT_NAME})
+

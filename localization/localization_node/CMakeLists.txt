@@ -108,21 +108,6 @@ add_dependencies(interest_points_test_bag ${catkin_EXPORTED_TARGETS})
 target_link_libraries(interest_points_test_bag
   localization_node gflags glog ${catkin_LIBRARIES})
 
-
-
-
-# create_library(TARGET localization_node
-#   LIBS ${SPARSE_MAPPING_LIBRARIES} ff_nodelet msg_conversions ${catkin_LIBRARIES}
-#   INC ${catkin_INCLUDE_DIRS}
-#   DEPS sparse_mapping ff_msgs
-# )
-
-# create_tool_targets(DIR tools
-#   LIBS ${SPARSE_MAPPING_LIBRARIES} localization_node ${catkin_LIBRARIES}
-#   INC ${catkin_INCLUDE_DIRS}
-#   DEPS localization_node
-# )
-
 #############
 ## Install ##
 #############

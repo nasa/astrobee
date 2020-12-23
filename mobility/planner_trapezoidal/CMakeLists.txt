@@ -15,11 +15,27 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+cmake_minimum_required(VERSION 2.8.12) # Need get_filename_component DIRECTORY
 project(planner_trapezoidal)
 
+## Compile as C++11, supported in ROS Kinetic and newer
+add_compile_options(-std=c++11)
+
+find_package(catkin REQUIRED COMPONENTS
+  roscpp
+  nodelet
+  pluginlib
+  actionlib
+  choreographer
+  tf2_geometry_msgs
+  ff_msgs
+  mapper
+)
+
+## System dependencies are found with CMake's conventions
+find_package(PCL REQUIRED COMPONENTS common)
+
 catkin_package(
-  INCLUDE_DIRS 
-    include
   LIBRARIES
     planner_trapezoidal
   CATKIN_DEPENDS
@@ -30,12 +46,33 @@ catkin_package(
     choreographer
     tf2_geometry_msgs
     ff_msgs
+    mapper
 )
 
-create_library(TARGET planner_trapezoidal
-  LIBS ${catkin_LIBRARIES} ff_nodelet msg_conversions ff_flight config_server config_client jsonloader choreographer
-  INC  ${catkin_INCLUDE_DIRS} 
-  DEPS choreographer
+###########
+## Build ##
+###########
+
+# Specify additional locations of header files
+include_directories(
+  include
+  ${catkin_INCLUDE_DIRS}
+  ${PCL_INCLUDE_DIRS}
 )
 
-install_launch_files()
+# Declare C++ libraries
+add_library(planner_trapezoidal
+  src/planner_trapezoidal.cc
+  src/planner_trapezoidal_nodelet.cc
+)
+add_dependencies(planner_trapezoidal ${catkin_EXPORTED_TARGETS})
+target_link_libraries(planner_trapezoidal ${catkin_LIBRARIES})
+
+#############
+## Install ##
+#############
+
+# Mark launch files for installation
+install(DIRECTORY launch/
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
+  PATTERN ".svn" EXCLUDE)

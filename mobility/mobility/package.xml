@@ -24,5 +24,4 @@
   <run_depend>sentinel</run_depend>
   <run_depend>planner_trapezoidal</run_depend>
   <run_depend>planner_qp</run_depend>
-  <run_depend>docker</run_depend>
 </package>

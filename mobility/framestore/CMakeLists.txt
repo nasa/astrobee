@@ -15,27 +15,57 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+cmake_minimum_required(VERSION 2.8.12) # Need get_filename_component DIRECTORY
 project(framestore)
+
+## Compile as C++11, supported in ROS Kinetic and newer
+add_compile_options(-std=c++11)
+
+find_package(catkin REQUIRED COMPONENTS
+  roscpp
+  nodelet
+  pluginlib
+  ff_util
+  tf2_ros
+  geometry_msgs
+  config_reader
+)
 
 # Call catkin
 catkin_package(
   CATKIN_DEPENDS
-    roscpp roscpp tf2 tf2_ros geometry_msgs
+    roscpp nodelet pluginlib ff_util tf2_ros geometry_msgs config_reader
 )
 
-# Create global_transforms
-create_tool_targets(DIR tools
-  LIBS ${catkin_LIBRARIES} ff_common msg_conversions config_reader
-  INC ${catkin_INCLUDE_DIRS}
-  DEPS ff_common msg_conversions config_reader tf2 tf2_ros geometry_msgs
+###########
+## Build ##
+###########
+
+# Specify additional locations of header files
+include_directories(
+  include
+  ${catkin_INCLUDE_DIRS}
 )
 
-# Create framestore
-create_library(TARGET framestore
-  LIBS ${catkin_LIBRARIES} ff_common ff_nodelet msg_conversions
-  INC  ${catkin_INCLUDE_DIRS}
-  DEPS ff_common msg_conversions roscpp nodelet pluginlib tf2 tf2_ros geometry_msgs
+# Declare C++ libraries
+add_library(framestore
+  src/framestore.cc
 )
+add_dependencies(framestore ${catkin_EXPORTED_TARGETS})
+target_link_libraries(framestore ${catkin_LIBRARIES})
 
-# Install our launch file
-install_launch_files()
+
+## Declare a C++ executable: global_transforms
+add_executable(global_transforms tools/global_transforms.cc)
+add_dependencies(global_transforms ${catkin_EXPORTED_TARGETS})
+target_link_libraries(global_transforms
+  framestore gflags glog ${catkin_LIBRARIES})
+
+#############
+## Install ##
+#############
+
+# Mark launch files for installation
+install(DIRECTORY launch/
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
+  PATTERN ".svn" EXCLUDE)

@@ -15,17 +15,56 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+cmake_minimum_required(VERSION 2.8.12) # Need get_filename_component DIRECTORY
 project(data_bagger)
+
+## Compile as C++11, supported in ROS Kinetic and newer
+add_compile_options(-std=c++11)
+
+find_package(catkin REQUIRED COMPONENTS
+  roscpp
+  ff_msgs
+  nodelet
+  ff_util
+  config_reader
+)
 
 catkin_package(
   LIBRARIES data_bagger astrobee_recorder
-  DEPENDS roscpp ff_msgs nodelet
+  DEPENDS roscpp ff_msgs nodelet ff_util config_reader
 )
 
-create_library(TARGET data_bagger
-  LIBS ${catkin_LIBRARIES} ${GLOG_LIBRARIES} config_reader ff_nodelet
-  INC ${catkin_INCLUDES} ${GLOG_INCLUDE_DIRS}
-  DEPS ff_msgs config_reader
+###########
+## Build ##
+###########
+
+# Specify additional locations of header files
+include_directories(
+  include
+  ${catkin_INCLUDE_DIRS}
 )
 
-install_launch_files()
+# Declare C++ libraries
+add_library(data_bagger
+  src/data_bagger.cc
+)
+add_dependencies(data_bagger ${catkin_EXPORTED_TARGETS})
+target_link_libraries(data_bagger ${catkin_LIBRARIES})
+
+# Declare C++ libraries
+add_library(astrobee_recorder
+  src/astrobee_recorder.cc
+)
+add_dependencies(astrobee_recorder ${catkin_EXPORTED_TARGETS})
+target_link_libraries(astrobee_recorder ${catkin_LIBRARIES})
+
+#############
+## Install ##
+#############
+
+# Mark launch files for installation
+install(DIRECTORY launch/
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
+  PATTERN ".svn" EXCLUDE)
+
+install(DIRECTORY config/ DESTINATION config)

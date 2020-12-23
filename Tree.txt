@@ -41,42 +41,42 @@
 │   └── vive					DONE
 ├── localization
 │   ├── camera					DONE
-│   ├── handrail_detect			TODO
+│   ├── handrail_detect			DONR
 │   ├── interest_point			DONE
 │   ├── lk_optical_flow			DONE
 │   ├── localization_manager	DONE
 │   ├── localization_node		DONE
-│   ├── marker_tracking			TODO
+│   ├── marker_tracking			DONE
 │   ├── sparse_mapping			DONE
-│   └── vive_localization		TODO
+│   └── vive_localization		DONE
 ├── management
-│   ├── access_control			TODO
-│   ├── cpu_mem_monitor			TODO
-│   ├── data_bagger				TODO
-│   ├── disk_monitor			TODO
-│   ├── executive				TODO
-│   ├── image_sampler			TODO
-│   ├── log_monitor				TODO
-│   └── sys_monitor				TODO
+│   ├── access_control			DONE
+│   ├── cpu_mem_monitor			DONE
+│   ├── data_bagger				DONE
+│   ├── disk_monitor			DONE
+│   ├── executive				DONE
+│   ├── image_sampler			DONE
+│   ├── log_monitor				DONE
+│   └── sys_monitor				DONE
 ├── mobility
-│   ├── choreographer			TODO
-│   ├── framestore				TODO
-│   ├── mapper					TODO
-│   ├── mobility				TODO
-│   ├── planner_qp				TODO
-│   ├── planner_trapezoidal		TODO
+│   ├── choreographer			DONE
+│   ├── framestore				DONE
+│   ├── mapper					DONE
+│   ├── mobility				DONE
+│   ├── planner_qp				DONE
+│   ├── planner_trapezoidal		DONE
 ├── shared
 │   ├── config_reader 			DONE
 │   ├── ff_common 				DONE
 │   ├── ff_util 				DONE
-│   ├── jsonloader				TODO
+│   ├── jsonloader				DONE
 │   ├── msg_conversions 		DONE
 ├── simulation					TODO
 ├── tools
-│   ├── ekf_bag					TODO
-│   ├── ekf_video				TODO
-│   ├── gds_helper				TODO
-│   ├── gnc_visualizer			TODO
+│   ├── ekf_bag					DONE
+│   ├── ekf_video				DONE
+│   ├── gds_helper				DONE
+│   ├── gnc_visualizer			DONE
 │   ├── rviz_visualizer			TODO
 │   ├── simulator
 │   │   ├── arm_sim				TODO

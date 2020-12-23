@@ -15,24 +15,50 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+cmake_minimum_required(VERSION 2.8.3)
 project(ekf_video)
 
-catkin_package(
-  CATKIN_DEPENDS roscpp
+## Compile as C++11, supported in ROS Kinetic and newer
+add_compile_options(-std=c++11)
+
+find_package(catkin REQUIRED COMPONENTS
+  roscpp
+  ekf_bag
 )
 
-# copied this from qp planner
-find_package(catkin COMPONENTS rviz QUIET)
-if(rviz_QT_VERSION)
-  find_package(Qt5 ${rviz_QT_VERSION} REQUIRED Gui)
+# System dependencies are found with CMake's conventions
+find_package(Qt5 ${rviz_QT_VERSION} REQUIRED Gui)
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
+find_package(FFMPEG REQUIRED )
 
-  create_library(TARGET ekf_video
-    LIBS ekf_bag ${FFMPEG_LIBRARIES} ${catkin_LIBRARIES} ${Qt5Gui_LIBRARIES}
-    INC ${catkin_INCLUDE_DIRS} ${FFMPEG_INCLUDE_DIRS} ${Qt5Gui_INCLUDE_DIRS}
-  )
+catkin_package(
+  CATKIN_DEPENDS roscpp ekf_bag
+)
 
-  create_tool_targets(DIR tools
-    LIBS ekf_video ${Qt5Gui_LIBRARIES}
-    INC ${catkin_INCLUDE_DIRS} ${Qt5Gui_INCLUDE_DIRS}
-  )
-endif(rviz_QT_VERSION)
+###########
+## Build ##
+###########
+
+# Specify additional locations of header files
+include_directories(
+  include
+  ${catkin_INCLUDE_DIRS}
+  ${Qt5Gui_INCLUDE_DIRS}
+  ${FFMPEG_INCLUDE_DIRS}
+)
+
+# Declare C++ libraries
+add_library(ekf_video
+  src/ekf_bag_video.cc
+  src/video_writer.cc
+)
+add_dependencies(ekf_video ${catkin_EXPORTED_TARGETS})
+target_link_libraries(ekf_video ${catkin_LIBRARIES} ${Qt5Gui_LIBRARIES} ${FFMPEG_LIBRARIES}
+)
+
+
+## Declare a C++ executable: inspection_tool
+add_executable(ekf_to_video tools/ekf_to_video.cc)
+add_dependencies(ekf_to_video ${catkin_EXPORTED_TARGETS})
+target_link_libraries(ekf_to_video
+  ekf_video gflags glog ${catkin_LIBRARIES})

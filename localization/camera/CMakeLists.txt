@@ -72,7 +72,7 @@ add_library(camera
 add_dependencies(camera ${catkin_EXPORTED_TARGETS})
 target_link_libraries(camera ${catkin_LIBRARIES} ${EIGEN_LIBRARIES})
 
-## Declare a C++ executable: bag_to_csv
+## Declare a C++ executable: undistort_image
 add_executable(undistort_image tools/undistort_image.cc)
 add_dependencies(undistort_image ${catkin_EXPORTED_TARGETS})
 target_link_libraries(undistort_image

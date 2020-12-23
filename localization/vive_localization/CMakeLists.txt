@@ -15,7 +15,22 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+cmake_minimum_required(VERSION 2.8.12) # Need get_filename_component DIRECTORY
 project(vive_localization)
+
+## Compile as C++11, supported in ROS Kinetic and newer
+add_compile_options(-std=c++11)
+
+find_package(catkin REQUIRED COMPONENTS
+  roscpp
+  rosbag
+  nodelet
+  geometry_msgs
+  ff_hw_msgs
+  ff_util
+  msg_conversions
+  config_reader
+)
 
 # Find Eigen3
 find_package(Eigen3 REQUIRED)
@@ -34,25 +49,41 @@ catkin_package(
     roscpp
     rosbag
     nodelet
-    pluginlib
-    sensor_msgs
-    geometry_msgs
-    nav_msgs
     ff_hw_msgs
-    tf2_ros)
+    ff_util
+    msg_conversions
+    config_reader
+)
 
-create_library(TARGET vive_localization
-  DIR src
-  LIBS ${catkin_LIBRARIES} ${OpenCV_LIBS} ${CERES_LIBRARIES} ff_common config_reader msg_conversions ff_nodelet
-  INC  ${catkin_INCLUDE_DIRS} ${CERES_INCLUDE_DIRS} ${OpenCV_INCLUDE_DIRS} ${EIGEN3_INCLUDE_DIRS}
-  DEPS ff_common geometry_msgs sensor_msgs ff_hw_msgs)
+###########
+## Build ##
+###########
 
-create_tool_targets(
-  DIR src/tool
-  LIBS ${catkin_LIBRARIES} ${EIGEN3_LIBRARIES} vive_localization ff_common config_reader
-  INC  ${catkin_INCLUDE_DIRS} ${EIGEN3_INCLUDE_DIRS}
-DEPS ff_common geometry_msgs sensor_msgs ff_hw_msgs)
+# Specify additional locations of header files
+include_directories(
+  include
+  ${catkin_INCLUDE_DIRS}
+  ${EIGEN3_INCLUDE_DIR}
+  ${OpenCV_INCLUDE_DIRS}
+  ${CERES_INCLUDE_DIRS}
+)
 
-install_launch_files()
+# Declare C++ libraries
+add_library(vive_localization
+  src/vive.cc
+  src/vive_solver.cc
+  src/tool/vive_offline.cc
+)
+add_dependencies(vive_localization ${catkin_EXPORTED_TARGETS})
+target_link_libraries(vive_localization json-c usb-1.0 z ${catkin_LIBRARIES})
+
+#############
+## Install ##
+#############
+
+# Mark launch files for installation
+install(DIRECTORY launch/
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
+  PATTERN ".svn" EXCLUDE)
 
 install(DIRECTORY config/ DESTINATION config)

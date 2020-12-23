@@ -15,10 +15,20 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+cmake_minimum_required(VERSION 2.8.3)
 project(gnc_visualizer)
+
+## Compile as C++11, supported in ROS Kinetic and newer
+add_compile_options(-std=c++11)
+
+find_package(catkin REQUIRED COMPONENTS
+  rospy
+  std_msgs
+  ff_msgs
+)
 
 catkin_package(
  LIBRARIES
- DEPENDS rospy std_msgs vpp_msgs ff_msgs geometry_msgs
+ DEPENDS rospy std_msgs ff_msgs
 )
 
