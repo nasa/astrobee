@@ -34,19 +34,13 @@ find_package(catkin REQUIRED COMPONENTS
 )
 
 # Find jsoncpp
-find_package(jsoncpp REQUIRED)
-find_path(
-  JSONCPP_INCLUDE_DIR 
-  NAMES jsoncpp/json/json.h json/json.h
-  DOC "jsoncpp include dir"
-)
-if (EXISTS "${JSONCPP_INCLUDE_DIR}/jsoncpp/json/json.h" )
-  set (JSONCPP_INCLUDE_DIR "${JSONCPP_INCLUDE_DIR}/jsoncpp")
-endif ()
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
+find_package(JsonCpp REQUIRED)
+
 
 catkin_package(
   INCLUDE_DIRS include
-  LIBRARIES ff_nodelet config_server config_client perf_timer
+  LIBRARIES ff_nodelet config_server config_client perf_timer jsonloader
   CATKIN_DEPENDS config_reader roscpp nodelet dynamic_reconfigure ff_msgs diagnostic_msgs tf2_geometry_msgs actionlib msg_conversions
 )
 
@@ -59,7 +53,7 @@ catkin_package(
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
-  ${JSONCPP_INCLUDE_DIR}
+  ${JSONCPP_INCLUDE_DIRS}
 )
 
 # Declare C++ libraries
@@ -108,7 +102,7 @@ add_library(jsonloader
   src/jsonloader/validation.cc
 )
 add_dependencies(jsonloader ${catkin_EXPORTED_TARGETS})
-target_link_libraries(jsonloader ${catkin_LIBRARIES})
+target_link_libraries(jsonloader ${catkin_LIBRARIES} ${JSONCPP_LIBRARIES})
 
 
 ##########

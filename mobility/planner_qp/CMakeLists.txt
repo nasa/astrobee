@@ -33,6 +33,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 find_package(cmake_modules REQUIRED)
 # Find OpenCV3
 find_package(OpenCV 3 REQUIRED)
+find_package(PCL REQUIRED COMPONENTS common)
 
 find_package(JPS3D REQUIRED)
 # find_package(GUROBI REQUIRED)
@@ -73,6 +74,7 @@ include_directories(
   ${OpenCV_INCLUDE_DIRS}
   ${JPS3D_INCLUDE_DIR}
   ${DECOMP_UTIL_INCLUDE_DIR}
+  ${PCL_INCLUDE_DIRS}
 )
 
 # Declare C++ libraries

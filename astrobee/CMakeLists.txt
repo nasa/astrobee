@@ -15,17 +15,32 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+cmake_minimum_required(VERSION 2.8.3)
 project(astrobee)
+
+## Compile as C++11, supported in ROS Kinetic and newer
+add_compile_options(-std=c++11)
+
+find_package(catkin REQUIRED COMPONENTS
+  roscpp
+)
 
 catkin_package(
     CATKIN_DEPENDS roscpp
 )
 
+#############
+## Install ##
+#############
+
 install(DIRECTORY config/ DESTINATION config)
 # resources will be installed separately
 # install(DIRECTORY resources/ DESTINATION resources)
 
-install_launch_files()
+# Mark launch files for installation
+install(DIRECTORY launch/
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
+  PATTERN ".svn" EXCLUDE)
 
 install(PROGRAMS scripts/check_env.sh
                  scripts/print_version.sh

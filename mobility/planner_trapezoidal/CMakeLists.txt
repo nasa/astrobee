@@ -28,6 +28,7 @@ find_package(catkin REQUIRED COMPONENTS
   actionlib
   choreographer
   tf2_geometry_msgs
+  ff_util
   ff_msgs
   mapper
 )
@@ -36,6 +37,7 @@ find_package(catkin REQUIRED COMPONENTS
 find_package(PCL REQUIRED COMPONENTS common)
 
 catkin_package(
+  INCLUDE_DIRS include
   LIBRARIES
     planner_trapezoidal
   CATKIN_DEPENDS
@@ -45,6 +47,7 @@ catkin_package(
     actionlib
     choreographer
     tf2_geometry_msgs
+    ff_util
     ff_msgs
     mapper
 )
