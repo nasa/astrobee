@@ -85,7 +85,7 @@ def add_pose_plots(pdf, sparse_mapping_poses, ar_tag_poses, graph_localization_p
 
   # Imu Augmented Loc vs. Loc
   plt.figure()
-  plot_helpers.plot_positions(graph_localization_poses, colors, marker='o', markeredgewidth=0.1, markersize=1.5)
+  plot_helpers.plot_positions(graph_localization_poses, colors, linestyle='None', marker='o', markeredgewidth=0.1, markersize=1.5)
   plot_helpers.plot_positions(imu_augmented_graph_localization_poses, colors, linewidth=0.5)
   plt.xlabel('Time (s)')
   plt.ylabel('Position (m)')
