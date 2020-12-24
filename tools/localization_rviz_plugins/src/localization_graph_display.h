@@ -87,6 +87,9 @@ class LocalizationGraphDisplay : public rviz::MessageFilterDisplay<ff_msgs::Loca
   std::unique_ptr<rviz::FloatProperty> pose_axes_size_;
   std::unique_ptr<rviz::BoolProperty> show_imu_factor_arrows_;
   std::unique_ptr<rviz::FloatProperty> imu_factor_arrows_diameter_;
+  std::unique_ptr<rviz::BoolProperty> publish_optical_flow_images_;
+  std::unique_ptr<rviz::BoolProperty> publish_smart_factor_images_;
+  std::unique_ptr<rviz::BoolProperty> publish_loc_projection_factor_images_;
   image_transport::Publisher optical_flow_image_pub_;
   image_transport::Publisher smart_factor_projection_image_pub_;
   image_transport::Publisher loc_projection_factor_image_pub_;

@@ -52,9 +52,15 @@ LocalizationGraphDisplay::LocalizationGraphDisplay() {
     new rviz::BoolProperty("Show Imu Factor Arrows", true, "Show imu factors as arrows.", this));
   imu_factor_arrows_diameter_.reset(
     new rviz::FloatProperty("Imu Factor Arrows Diameter", 0.01, "Imu factor arrows diameter.", this));
+  publish_optical_flow_images_.reset(
+    new rviz::BoolProperty("Publish Optical Flow Images", true, "Publish Optical Flow feature tracks image.", this));
+  publish_smart_factor_images_.reset(
+    new rviz::BoolProperty("Publish Smart Factor Images", true, "Publish Smart factor projection image.", this));
+  publish_loc_projection_factor_images_.reset(
+    new rviz::BoolProperty("Publish Loc Projection Factor Images", true, "Publish loc projection factor image.", this));
 
   image_transport::ImageTransport image_transport(nh_);
-  image_sub_ = image_transport.subscribe(TOPIC_HARDWARE_NAV_CAM, 1, &LocalizationGraphDisplay::imageCallback, this);
+  image_sub_ = image_transport.subscribe(TOPIC_HARDWARE_NAV_CAM, 10, &LocalizationGraphDisplay::imageCallback, this);
   optical_flow_image_pub_ = image_transport.advertise("/graph_localizer/optical_flow_feature_tracks", 1);
   smart_factor_projection_image_pub_ = image_transport.advertise("/graph_localizer/smart_factor_projections", 1);
   loc_projection_factor_image_pub_ = image_transport.advertise("/graph_localizer/loc_projection_factor", 1);
@@ -93,6 +99,7 @@ void LocalizationGraphDisplay::imageCallback(const sensor_msgs::ImageConstPtr& i
 
 void LocalizationGraphDisplay::addOpticalFlowVisual(const graph_localizer::FeatureTrackMap& feature_tracks,
                                                     const localization_common::Time latest_graph_time) {
+  if (!publish_optical_flow_images_->getBool()) return;
   const auto img = getImage(latest_graph_time);
   if (!img) return;
   const auto feature_track_image = graph_bag::CreateFeatureTrackImage(img, feature_tracks, *nav_cam_params_);
@@ -125,6 +132,7 @@ cv::Scalar LocalizationGraphDisplay::textColor(const double val, const double gr
 void LocalizationGraphDisplay::addLocProjectionVisual(
   const std::vector<gtsam::LocProjectionFactor<>*> loc_projection_factors,
   const graph_localizer::GraphValues& graph_values) {
+  if (!publish_loc_projection_factor_images_->getBool()) return;
   lc::Time latest_timestamp = std::numeric_limits<double>::lowest();
   for (const auto loc_projection_factor : loc_projection_factors) {
     const auto timestamp = graph_values.Timestamp(loc_projection_factor->key());
@@ -176,6 +184,7 @@ void LocalizationGraphDisplay::addLocProjectionVisual(
 
 void LocalizationGraphDisplay::addSmartFactorProjectionVisual(const SmartFactor& smart_factor,
                                                               const graph_localizer::GraphValues& graph_values) {
+  if (!publish_smart_factor_images_->getBool()) return;
   std::vector<cv::Mat> images;
   for (const auto& key : smart_factor.keys()) {
     const auto timestamp = graph_values.Timestamp(key);
