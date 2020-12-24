@@ -19,6 +19,7 @@
 #define IMU_AUGMENTOR_IMU_AUGMENTOR_NODELET_H_
 
 #include <ff_msgs/EkfState.h>
+#include <ff_msgs/Heartbeat.h>
 #include <ff_util/ff_nodelet.h>
 #include <imu_augmentor/imu_augmentor_wrapper.h>
 
@@ -50,10 +51,15 @@ class ImuAugmentorNodelet : public ff_util::FreeFlyerNodelet {
 
   void PublishPoseAndTwistAndTransform(const ff_msgs::EkfState& loc_msg);
 
+  void Run();
+
   imu_augmentor::ImuAugmentorWrapper imu_augmentor_wrapper_;
   std::string platform_name_;
+  ros::NodeHandle imu_nh_, loc_nh_;
+  ros::CallbackQueue imu_queue_, loc_queue_;
   ros::Subscriber imu_sub_, state_sub_;
   ros::Publisher state_pub_, pose_pub_, twist_pub_;
+  ff_msgs::Heartbeat heartbeat_;
   tf2_ros::TransformBroadcaster transform_pub_;
 };
 }  // namespace imu_augmentor

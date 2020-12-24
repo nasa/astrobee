@@ -32,7 +32,6 @@ GraphLocalizerNodelet::GraphLocalizerNodelet()
     : ff_util::FreeFlyerNodelet(NODE_GRAPH_LOC, true), platform_name_(GetPlatform()) {
   private_nh_.setCallbackQueue(&private_queue_);
   heartbeat_.node = GetName();
-  // TODO(rsoussan): is this the correct name?
   heartbeat_.nodelet_manager = ros::this_node::getName();
 
   config_reader::ConfigReader config;

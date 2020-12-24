@@ -26,27 +26,31 @@
 namespace imu_augmentor {
 
 ImuAugmentorNodelet::ImuAugmentorNodelet()
-    : ff_util::FreeFlyerNodelet(NODE_IMU_AUG, true), platform_name_(GetPlatform()) {}
+    : ff_util::FreeFlyerNodelet(NODE_IMU_AUG, true), platform_name_(GetPlatform()) {
+  imu_nh_.setCallbackQueue(&imu_queue_);
+  loc_nh_.setCallbackQueue(&loc_queue_);
+  heartbeat_.node = GetName();
+  heartbeat_.nodelet_manager = ros::this_node::getName();
+}
 
-void ImuAugmentorNodelet::Initialize(ros::NodeHandle* nh) { SubscribeAndAdvertise(nh); }
+void ImuAugmentorNodelet::Initialize(ros::NodeHandle* nh) {
+  SubscribeAndAdvertise(nh);
+  Run();
+}
 
 void ImuAugmentorNodelet::SubscribeAndAdvertise(ros::NodeHandle* nh) {
   state_pub_ = nh->advertise<ff_msgs::EkfState>(TOPIC_GNC_EKF, 1);
   pose_pub_ = nh->advertise<geometry_msgs::PoseStamped>(TOPIC_LOCALIZATION_POSE, 1);
   twist_pub_ = nh->advertise<geometry_msgs::TwistStamped>(TOPIC_LOCALIZATION_TWIST, 1);
 
-  imu_sub_ =
-    nh->subscribe(TOPIC_HARDWARE_IMU, 1, &ImuAugmentorNodelet::ImuCallback, this, ros::TransportHints().tcpNoDelay());
-  state_sub_ = nh->subscribe(TOPIC_GRAPH_LOC_STATE, 1, &ImuAugmentorNodelet::LocalizationStateCallback, this,
-                             ros::TransportHints().tcpNoDelay());
+  imu_sub_ = imu_nh_.subscribe(TOPIC_HARDWARE_IMU, 100, &ImuAugmentorNodelet::ImuCallback, this,
+                               ros::TransportHints().tcpNoDelay());
+  state_sub_ = loc_nh_.subscribe(TOPIC_GRAPH_LOC_STATE, 1, &ImuAugmentorNodelet::LocalizationStateCallback, this,
+                                 ros::TransportHints().tcpNoDelay());
 }
 
 void ImuAugmentorNodelet::ImuCallback(const sensor_msgs::Imu::ConstPtr& imu_msg) {
   imu_augmentor_wrapper_.ImuCallback(*imu_msg);
-  const auto loc_msg = PublishLatestImuAugmentedLocalizationState();
-  if (loc_msg) {
-    PublishPoseAndTwistAndTransform(*loc_msg);
-  }
 }
 
 void ImuAugmentorNodelet::LocalizationStateCallback(const ff_msgs::EkfState::ConstPtr& loc_msg) {
@@ -87,6 +91,19 @@ void ImuAugmentorNodelet::PublishPoseAndTwistAndTransform(const ff_msgs::EkfStat
   transform_msg.transform.translation.z = loc_msg.pose.position.z;
   transform_msg.transform.rotation = loc_msg.pose.orientation;
   transform_pub_.sendTransform(transform_msg);
+}
+
+void ImuAugmentorNodelet::Run() {
+  ros::Rate rate(100);
+  while (ros::ok()) {
+    imu_queue_.callAvailable();
+    loc_queue_.callAvailable();
+    const auto loc_msg = PublishLatestImuAugmentedLocalizationState();
+    if (loc_msg) {
+      PublishPoseAndTwistAndTransform(*loc_msg);
+    }
+    rate.sleep();
+  }
 }
 }  // namespace imu_augmentor
 

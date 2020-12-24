@@ -44,6 +44,7 @@ ImuIntegrator::ImuIntegrator(const ImuIntegratorParams& params)
 void ImuIntegrator::BufferImuMeasurement(const lm::ImuMeasurement& imu_measurement) {
   const auto filtered_imu_measurement = imu_filter_->AddMeasurement(imu_measurement);
   if (filtered_imu_measurement) {
+    // TODO(rsoussan): Prevent measurements_ from growing too large, add optional window size
     measurements_.emplace(filtered_imu_measurement->timestamp, *filtered_imu_measurement);
   }
 }
