@@ -27,7 +27,7 @@ boost::optional<gtsam::imuBias::ConstantBias> EstimateAndSetImuBiases(
   const lm::ImuMeasurement& imu_measurement, const int num_imu_measurements_per_bias_estimate,
   std::vector<lm::ImuMeasurement>& imu_bias_measurements) {
   imu_bias_measurements.emplace_back(imu_measurement);
-  if (imu_bias_measurements.size() < num_imu_measurements_per_bias_estimate) return boost::none;
+  if (static_cast<int>(imu_bias_measurements.size()) < num_imu_measurements_per_bias_estimate) return boost::none;
 
   Eigen::Vector3d sum_of_acceleration_measurements = Eigen::Vector3d::Zero();
   Eigen::Vector3d sum_of_angular_velocity_measurements = Eigen::Vector3d::Zero();
