@@ -33,7 +33,7 @@ void RosTimer::Stop() {
   averager_.Update(elapsed_time);
 }
 void RosTimer::Log() const { averager_.Log(); }
-void RosTimer::Vlog(const int level) const { averager_.Vlog(); }
+void RosTimer::Vlog(const int level) const { averager_.Vlog(level); }
 void RosTimer::LogEveryN(const int num_timing_events_per_log) const { averager_.LogEveryN(num_timing_events_per_log); }
 void RosTimer::VlogEveryN(const int num_timing_events_per_log, const int level) const {
   averager_.VlogEveryN(num_timing_events_per_log, level);

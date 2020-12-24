@@ -41,9 +41,8 @@ class RosTimer {
   void VlogEveryN(const int num_timing_events_per_log, const int level = 2) const;
 
  private:
-  std::string name_;
-  ros::Time start_time_;
   Averager averager_;
+  ros::Time start_time_;
 };
 }  // namespace localization_common
 

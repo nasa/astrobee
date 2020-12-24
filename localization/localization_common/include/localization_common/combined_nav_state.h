@@ -48,9 +48,9 @@ class CombinedNavState {
   const gtsam::imuBias::ConstantBias& bias() const { return bias_; }
 
  private:
-  Time timestamp_;
   gtsam::NavState nav_state_;
   gtsam::imuBias::ConstantBias bias_;
+  Time timestamp_;
 };
 
 }  // namespace localization_common

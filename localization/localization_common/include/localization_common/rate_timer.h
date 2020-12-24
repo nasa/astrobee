@@ -38,8 +38,8 @@ class RateTimer {
 
  private:
   std::chrono::time_point<std::chrono::steady_clock> start_time_;
-  int num_events_;
   Averager averager_;
+  int num_events_;
 };
 }  // namespace localization_common
 
