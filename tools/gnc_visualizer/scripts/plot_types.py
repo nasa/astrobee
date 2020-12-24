@@ -329,8 +329,6 @@ class FeatureCountPlot(GraphPlot):
                 cur_ml -= 1
             else:
                 cur_of -= 1
-        self.disableAutoRange()
-        self.setYRange(0, 50)
 
 class MLMahalPlot(GraphPlot):
     def __init__(self):
