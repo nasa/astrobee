@@ -44,7 +44,7 @@ void FeatureTrackImage(const graph_localizer::FeatureTrackMap& feature_tracks,
     }
 
     // Draw track history
-    for (int i = 0; i < points.size() - 1; ++i) {
+    for (int i = 0; i < static_cast<int>(points.size()) - 1; ++i) {
       const auto distorted_previous_point = Distort(points[i].image_point, camera_params);
       const auto distorted_current_point = Distort(points[i + 1].image_point, camera_params);
       cv::circle(feature_track_image, distorted_current_point, 2 /* Radius*/, cv::Scalar(0, 255, 255), -1 /*Filled*/,

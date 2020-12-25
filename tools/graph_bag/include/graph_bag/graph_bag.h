@@ -57,9 +57,9 @@ class GraphBag {
   std::unique_ptr<GraphLocalizerSimulator> graph_localizer_simulator_;
   std::unique_ptr<LiveMeasurementSimulator> live_measurement_simulator_;
   rosbag::Bag results_bag_;
-  std::string output_stats_file_;
-  imu_augmentor::ImuAugmentorWrapper imu_augmentor_wrapper_;
   ImuBiasTesterWrapper imu_bias_tester_wrapper_;
+  imu_augmentor::ImuAugmentorWrapper imu_augmentor_wrapper_;
+  std::string output_stats_file_;
   bool save_optical_flow_images_;
   const std::string kFeatureTracksImageTopic_ = "feature_track_image";
   const std::string kImuBiasTesterPoseTopic_ = "imu_bias_tester";

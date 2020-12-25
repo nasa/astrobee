@@ -61,9 +61,10 @@ class LiveMeasurementSimulator {
   bool GenerateVLFeatures(const sensor_msgs::ImageConstPtr& image_msg, ff_msgs::VisualLandmarks& vl_features);
 
   rosbag::Bag bag_;
-  lk_optical_flow::LKOpticalFlow optical_flow_tracker_;
   sparse_mapping::SparseMap map_;
   localization_node::Localizer map_feature_matcher_;
+  LiveMeasurementSimulatorParams params_;
+  lk_optical_flow::LKOpticalFlow optical_flow_tracker_;
   const std::string kImageTopic_;
   std::unique_ptr<rosbag::View> view_;
   boost::optional<rosbag::View::iterator> view_it_;
@@ -73,7 +74,6 @@ class LiveMeasurementSimulator {
   MessageBuffer<ff_msgs::VisualLandmarks> vl_buffer_;
   MessageBuffer<ff_msgs::VisualLandmarks> ar_buffer_;
   localization_common::Time current_time_;
-  LiveMeasurementSimulatorParams params_;
 };
 }  // namespace graph_bag
 
