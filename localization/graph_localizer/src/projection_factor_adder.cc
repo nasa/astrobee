@@ -62,7 +62,7 @@ std::vector<FactorsToAdd> ProjectionFactorAdder::AddFactors(
   int new_features = 0;
   for (const auto& feature_track_pair : feature_tracker_->feature_tracks()) {
     const auto& feature_track = feature_track_pair.second;
-    if (feature_track.points.size() >= params().min_num_measurements_for_triangulation &&
+    if (static_cast<int>(feature_track.points.size()) >= params().min_num_measurements_for_triangulation &&
         !graph_values_->HasFeature(feature_track.id) &&
         (new_features + graph_values_->NumFeatures()) < params().max_num_features) {
       // Create new factors to add for each feature track so the graph action can act on only that

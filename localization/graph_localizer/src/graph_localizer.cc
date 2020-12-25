@@ -70,7 +70,7 @@ GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
   // Add first nav state and priors to graph
   const int key_index = GenerateKeyIndex();
   graph_values_->AddCombinedNavState(global_N_body_start, key_index);
-  AddStartingPriors(global_N_body_start, key_index, graph_values_->values(), graph_);
+  AddStartingPriors(global_N_body_start, key_index, graph_);
 
   // Initialize smart projection factor params
   // TODO(rsoussan): Remove this once splitting function is moved, remove smart_projection_params_ from graph_localizer
@@ -128,7 +128,7 @@ GraphLocalizer::~GraphLocalizer() {
 }
 
 void GraphLocalizer::AddStartingPriors(const lc::CombinedNavState& global_N_body_start, const int key_index,
-                                       const gtsam::Values& values, gtsam::NonlinearFactorGraph& graph) {
+                                       gtsam::NonlinearFactorGraph& graph) {
   const gtsam::Vector6 pose_prior_noise_sigmas(
     (gtsam::Vector(6) << params_.noise.starting_prior_translation_stddev,
      params_.noise.starting_prior_translation_stddev, params_.noise.starting_prior_translation_stddev,
@@ -152,11 +152,11 @@ void GraphLocalizer::AddStartingPriors(const lc::CombinedNavState& global_N_body
            params_.huber_k);
   noise.bias_noise = Robust(
     gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(bias_prior_noise_sigmas)), params_.huber_k);
-  AddPriors(global_N_body_start, noise, key_index, values, graph);
+  AddPriors(global_N_body_start, noise, key_index, graph);
 }
 
 void GraphLocalizer::AddPriors(const lc::CombinedNavState& global_N_body, const lc::CombinedNavStateNoise& noise,
-                               const int key_index, const gtsam::Values& values, gtsam::NonlinearFactorGraph& graph) {
+                               const int key_index, gtsam::NonlinearFactorGraph& graph) {
   gtsam::PriorFactor<gtsam::Pose3> pose_prior_factor(sym::P(key_index), global_N_body.pose(), noise.pose_noise);
   graph.push_back(pose_prior_factor);
   gtsam::PriorFactor<gtsam::Velocity3> velocity_prior_factor(sym::V(key_index), global_N_body.velocity(),
@@ -285,7 +285,7 @@ bool GraphLocalizer::AddOpticalFlowMeasurement(
     BufferFactors(rotation_factor_adder_->AddFactors(optical_flow_feature_points_measurement));
   }
 
-  CheckForStandstill(optical_flow_feature_points_measurement);
+  CheckForStandstill();
   if (standstill() && params_.factor.standstill_adder.enabled) {
     BufferFactors(standstill_factor_adder_->AddFactors(optical_flow_feature_points_measurement));
   }
@@ -293,14 +293,14 @@ bool GraphLocalizer::AddOpticalFlowMeasurement(
   return true;
 }
 
-void GraphLocalizer::CheckForStandstill(const lm::FeaturePointsMeasurement& optical_flow_feature_points_measurement) {
+void GraphLocalizer::CheckForStandstill() {
   // Check for standstill via low disparity for all feature tracks
   double total_average_distance_from_mean = 0;
   int num_valid_feature_tracks = 0;
   for (const auto& feature_track : feature_tracker_->feature_tracks()) {
     const double average_distance_from_mean = AverageDistanceFromMean(feature_track.second.points);
     // Only consider long enough feature tracks for standstill candidates
-    if (feature_track.second.points.size() >= params_.standstill_min_num_points_per_track) {
+    if (static_cast<int>(feature_track.second.points.size()) >= params_.standstill_min_num_points_per_track) {
       total_average_distance_from_mean += average_distance_from_mean;
       ++num_valid_feature_tracks;
     }
@@ -322,7 +322,8 @@ void GraphLocalizer::AddARTagMeasurement(const lm::MatchedProjectionsMeasurement
   }
 
   if (params_.factor.ar_tag_loc_adder.enabled &&
-      matched_projections_measurement.matched_projections.size() >= params_.factor.ar_tag_loc_adder.min_num_matches) {
+      static_cast<int>(matched_projections_measurement.matched_projections.size()) >=
+        params_.factor.ar_tag_loc_adder.min_num_matches) {
     LogInfo("AddARTagMeasurement: Adding AR tag measurement.");
     BufferFactors(ar_tag_loc_factor_adder_->AddFactors(matched_projections_measurement));
   }
@@ -701,12 +702,12 @@ bool GraphLocalizer::SlideWindow(const boost::optional<gtsam::Marginals>& margin
   if (params_.add_marginal_factors) {
     const auto marginal_factors = MarginalFactors(old_factors, old_keys, gtsam::EliminateQR);
     for (const auto& marginal_factor : marginal_factors) {
-      graph_.push_back(marginal_factors);
+      graph_.push_back(marginal_factor);
     }
   }
 
   graph_values_->RemoveOldCombinedNavStates(new_oldest_time);
-  if (params_.factor.projection_adder.enabled) graph_values_->RemoveOldFeatures(old_feature_keys, graph_);
+  if (params_.factor.projection_adder.enabled) graph_values_->RemoveOldFeatures(old_feature_keys);
 
   // Remove old data from other containers
   // TODO(rsoussan): Just use new_oldest_time and don't bother getting oldest timestamp here?
@@ -753,10 +754,10 @@ bool GraphLocalizer::SlideWindow(const boost::optional<gtsam::Marginals>& margin
         gtsam::noiseModel::Gaussian::Covariance(marginals->marginalCovariance(sym::V(*key_index))), params_.huber_k);
       noise.bias_noise = Robust(
         gtsam::noiseModel::Gaussian::Covariance(marginals->marginalCovariance(sym::B(*key_index))), params_.huber_k);
-      AddPriors(*global_N_body_oldest, noise, *key_index, graph_values_->values(), graph_);
+      AddPriors(*global_N_body_oldest, noise, *key_index, graph_);
     } else {
       // TODO(rsoussan): Add seperate marginal fallback sigmas instead of relying on starting prior sigmas
-      AddStartingPriors(*global_N_body_oldest, *key_index, graph_values_->values(), graph_);
+      AddStartingPriors(*global_N_body_oldest, *key_index, graph_);
     }
   }
 
@@ -930,7 +931,7 @@ bool GraphLocalizer::DoGraphAction(FactorsToAdd& factors_to_add) {
 bool GraphLocalizer::Rekey(FactorToAdd& factor_to_add) {
   gtsam::KeyVector new_keys;
   const auto& old_keys = factor_to_add.factor->keys();
-  for (int i = 0; i < factor_to_add.key_infos.size(); ++i) {
+  for (int i = 0; i < static_cast<int>(factor_to_add.key_infos.size()); ++i) {
     const auto& key_info = factor_to_add.key_infos[i];
     if (key_info.is_static()) {
       // Don't change static keys. Assumes static key currently in factor is correct

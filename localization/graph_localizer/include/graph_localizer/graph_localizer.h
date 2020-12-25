@@ -85,8 +85,7 @@ class GraphLocalizer {
   bool LocProjectionNoiseScaling(FactorsToAdd& factors_to_add);
   bool ARProjectionNoiseScaling(FactorsToAdd& factors_to_add);
   bool MapProjectionNoiseScaling(const LocFactorAdderParams& params, FactorsToAdd& factors_to_add);
-  void CheckForStandstill(
-    const localization_measurements::FeaturePointsMeasurement& optical_flow_feature_points_measurement);
+  void CheckForStandstill();
   void AddARTagMeasurement(
     const localization_measurements::MatchedProjectionsMeasurement& matched_projections_measurement);
   void AddSparseMappingMeasurement(
@@ -160,11 +159,11 @@ class GraphLocalizer {
   bool SplitOldImuFactorAndAddCombinedNavState(const localization_common::Time timestamp);
 
   void AddStartingPriors(const localization_common::CombinedNavState& global_N_body_start, const int key_index,
-                         const gtsam::Values& values, gtsam::NonlinearFactorGraph& graph);
+                         gtsam::NonlinearFactorGraph& graph);
 
   void AddPriors(const localization_common::CombinedNavState& global_N_body,
                  const localization_common::CombinedNavStateNoise& noise, const int key_index,
-                 const gtsam::Values& values, gtsam::NonlinearFactorGraph& graph);
+                 gtsam::NonlinearFactorGraph& graph);
 
   boost::optional<std::pair<localization_common::CombinedNavState, localization_common::CombinedNavStateCovariances>>
   LatestCombinedNavStateAndCovariances(const gtsam::Marginals& marginals) const;
@@ -222,14 +221,15 @@ class GraphLocalizer {
     ar& BOOST_SERIALIZATION_NVP(graph_values_);
   }
 
+  std::shared_ptr<FeatureTracker> feature_tracker_;
+  imu_integration::LatestImuIntegrator latest_imu_integrator_;
+  std::shared_ptr<GraphValues> graph_values_;
+  bool log_on_destruction_;
   GraphLocalizerParams params_;
   gtsam::LevenbergMarquardtParams levenberg_marquardt_params_;
   gtsam::TriangulationParameters projection_triangulation_params_;
   gtsam::SmartProjectionParams smart_projection_params_;
-  imu_integration::LatestImuIntegrator latest_imu_integrator_;
   gtsam::NonlinearFactorGraph graph_;
-  std::shared_ptr<GraphValues> graph_values_;
-  std::shared_ptr<FeatureTracker> feature_tracker_;
   boost::optional<gtsam::Marginals> marginals_;
   boost::optional<localization_measurements::FeaturePointsMeasurement> last_optical_flow_measurement_;
   std::multimap<localization_common::Time, FactorsToAdd> buffered_factors_to_add_;
@@ -246,7 +246,6 @@ class GraphLocalizer {
   boost::optional<bool> standstill_;
   boost::optional<localization_common::Time> last_latest_time_;
   GraphStats graph_stats_;
-  bool log_on_destruction_;
 };
 }  // namespace graph_localizer
 

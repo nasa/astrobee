@@ -209,10 +209,10 @@ class RobustSmartProjectionPoseFactor : public SmartProjectionPoseFactor<CALIBRA
     ar& BOOST_SERIALIZATION_NVP(triangulation_params_);
   }
 
-  double noise_inv_sigma_;
-  double huber_k_;
-  double robust_;
   bool rotation_only_fallback_;
+  double robust_;
+  double huber_k_;
+  double noise_inv_sigma_;
   // TODO(rsoussan): Remove once result_ serialization bug in gtsam fixed
   TriangulationParameters triangulation_params_;
 };

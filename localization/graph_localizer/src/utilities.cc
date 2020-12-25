@@ -54,7 +54,7 @@ double AverageDistanceFromMean(const std::deque<lm::FeaturePoint>& points) {
 }
 
 bool ValidVLMsg(const ff_msgs::VisualLandmarks& visual_landmarks_msg, const int min_num_landmarks) {
-  return (visual_landmarks_msg.landmarks.size() >= min_num_landmarks);
+  return (static_cast<int>(visual_landmarks_msg.landmarks.size()) >= min_num_landmarks);
 }
 
 ff_msgs::EkfState EkfStateMsg(const lc::CombinedNavState& combined_nav_state, const Eigen::Vector3d& acceleration,
@@ -166,7 +166,7 @@ boost::optional<SharedRobustSmartFactor> FixSmartFactorByRemovingIndividualMeasu
        --measurement_index_to_remove) {
     gtsam::PinholePose<gtsam::Cal3_S2>::MeasurementVector measurements_to_add;
     gtsam::KeyVector keys_to_add;
-    for (int i = 0; i < original_measurements.size(); ++i) {
+    for (int i = 0; i < static_cast<int>(original_measurements.size()); ++i) {
       if (i == measurement_index_to_remove) continue;
       measurements_to_add.emplace_back(original_measurements[i]);
       keys_to_add.emplace_back(original_keys[i]);
@@ -227,7 +227,8 @@ boost::optional<SharedRobustSmartFactor> FixSmartFactorByRemovingMeasurementSequ
     while (num_measurements_to_add >= min_num_measurements) {
       gtsam::PinholePose<gtsam::Cal3_S2>::MeasurementVector measurements_to_add;
       gtsam::KeyVector keys_to_add;
-      for (int i = num_measurements_to_add; i >= original_measurements.size() - num_measurements_to_add; --i) {
+      for (int i = num_measurements_to_add;
+           i >= static_cast<int>(original_measurements.size()) - num_measurements_to_add; --i) {
         measurements_to_add.emplace_back(original_measurements[i]);
         keys_to_add.emplace_back(original_keys[i]);
       }

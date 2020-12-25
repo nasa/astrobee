@@ -38,7 +38,7 @@ std::vector<FactorsToAdd> LocFactorAdder::AddFactors(
     return {};
   }
 
-  if (matched_projections_measurement.matched_projections.size() < params().min_num_matches) {
+  if (static_cast<int>(matched_projections_measurement.matched_projections.size()) < params().min_num_matches) {
     LogWarning("AddFactors: Not enough matches in projection measurement.");
     return {};
   }

@@ -69,7 +69,7 @@ class GraphValues {
 
   gtsam::KeyVector OldFeatureKeys(const gtsam::NonlinearFactorGraph& factors) const;
 
-  void RemoveOldFeatures(const gtsam::KeyVector& old_feature_keys, gtsam::NonlinearFactorGraph& factors);
+  void RemoveOldFeatures(const gtsam::KeyVector& old_feature_keys);
 
   int RemoveOldCombinedNavStates(const localization_common::Time oldest_allowed_time);
 

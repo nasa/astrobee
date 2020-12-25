@@ -479,7 +479,7 @@ gtsam::KeyVector GraphValues::OldFeatureKeys(const gtsam::NonlinearFactorGraph& 
   return old_features;
 }
 
-void GraphValues::RemoveOldFeatures(const gtsam::KeyVector& old_keys, gtsam::NonlinearFactorGraph& factors) {
+void GraphValues::RemoveOldFeatures(const gtsam::KeyVector& old_keys) {
   for (const auto& key : old_keys) {
     values_.erase(key);
     for (auto feature_id_key_it = feature_id_key_map_.begin(); feature_id_key_it != feature_id_key_map_.end();) {
