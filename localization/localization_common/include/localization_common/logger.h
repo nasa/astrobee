@@ -70,6 +70,40 @@
     ROS_DEBUG_STREAM(ss.str()); \
   } while (0)
 
+#define LogInfoEveryN(n, msg) \
+  do { \
+    static int count = 0; \
+    ++count; \
+    if (count % n == 0) { \
+      std::stringstream ss; \
+      ss << __FILENAME__ << ":" << __LINE__ << ": " << msg << std::endl; \
+      ROS_INFO_STREAM(ss.str()); \
+    } \
+  } while (0)
+
+#define LogWarningEveryN(n, msg) \
+  do { \
+    static int count = 0; \
+    ++count; \
+    if (count % n == 0) { \
+      std::stringstream ss; \
+      ss << __FILENAME__ << ":" << __LINE__ << ": " << msg << std::endl; \
+      ROS_WARN_STREAM(ss.str()); \
+    } \
+  } while (0)
+
+#define LogErrorEveryN(n, msg) \
+  do { \
+    static int count = 0; \
+    ++count; \
+    if (count % n == 0) { \
+      std::stringstream ss; \
+      ss << __FILENAME__ << ":" << __LINE__ << ": " << msg << std::endl; \
+      ROS_ERROR_STREAM(ss.str()); \
+    } \
+  } while (0)
+
+
 #elif defined(USE_GLOG_LOGGING)
 #define LogInfo(msg) \
   do { \
@@ -94,6 +128,22 @@
   do { \
   VLOG(2) << msg; \
   } while (0)
+
+#define LogInfoEveryN(n, msg) \
+  do { \
+  LOG_EVERY_N(INFO, n) << msg; \
+  } while (0)
+
+#define LogWarningEveryN(n, msg) \
+  do { \
+  LOG_EVERY_N(WARNING, n) << msg; \
+  } while (0)
+
+#define LogErrorEveryN(n, msg) \
+  do { \
+  LOG_EVERY_N(ERROR, n) << msg; \
+  } while (0)
+
 
 #endif
 // clang-format on

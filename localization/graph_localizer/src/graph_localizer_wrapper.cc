@@ -143,7 +143,7 @@ bool GraphLocalizerWrapper::CheckPoseSanity(const gtsam::Pose3& sparse_mapping_p
   if (!graph_localizer_) return true;
   const auto combined_nav_state = graph_localizer_->GetCombinedNavState(timestamp);
   if (!combined_nav_state) {
-    LOG_EVERY_N(INFO, 50) << "CheckPoseSanity: Failed to get combined nav state.";
+    LogInfoEveryN(50, "CheckPoseSanity: Failed to get combined nav state.");
     return true;
   }
   return sanity_checker_->CheckPoseSanity(sparse_mapping_pose, combined_nav_state->pose());
@@ -153,7 +153,7 @@ bool GraphLocalizerWrapper::CheckCovarianceSanity() const {
   if (!graph_localizer_) return true;
   const auto combined_nav_state_and_covariances = graph_localizer_->LatestCombinedNavStateAndCovariances();
   if (!combined_nav_state_and_covariances) {
-    LOG_EVERY_N(INFO, 50) << "CheckCovarianceSanity: No combined nav state and covariances available.";
+    LogInfoEveryN(50, "CheckCovarianceSanity: No combined nav state and covariances available.");
     return true;
   }
 
@@ -230,7 +230,7 @@ gtsam::Pose3 GraphLocalizerWrapper::estimated_world_T_dock() const { return esti
 
 boost::optional<geometry_msgs::PoseStamped> GraphLocalizerWrapper::LatestSparseMappingPoseMsg() const {
   if (!sparse_mapping_pose_) {
-    LOG_EVERY_N(WARNING, 50) << "LatestSparseMappingPoseMsg: Failed to get latest sparse mapping pose msg.";
+    LogWarningEveryN(50, "LatestSparseMappingPoseMsg: Failed to get latest sparse mapping pose msg.");
     return boost::none;
   }
 
@@ -239,7 +239,7 @@ boost::optional<geometry_msgs::PoseStamped> GraphLocalizerWrapper::LatestSparseM
 
 boost::optional<geometry_msgs::PoseStamped> GraphLocalizerWrapper::LatestARTagPoseMsg() const {
   if (!ar_tag_pose_) {
-    LOG_EVERY_N(WARNING, 50) << "LatestARTagPoseMsg: Failed to get latest ar tag pose msg.";
+    LogWarningEveryN(50, "LatestARTagPoseMsg: Failed to get latest ar tag pose msg.");
     return boost::none;
   }
 
@@ -248,12 +248,12 @@ boost::optional<geometry_msgs::PoseStamped> GraphLocalizerWrapper::LatestARTagPo
 
 boost::optional<lc::CombinedNavState> GraphLocalizerWrapper::LatestCombinedNavState() const {
   if (!graph_localizer_) {
-    LOG_EVERY_N(WARNING, 50) << "LatestCombinedNavState: Graph localizater not initialized yet.";
+    LogWarningEveryN(50, "LatestCombinedNavState: Graph localizater not initialized yet.");
     return boost::none;
   }
   const auto latest_combined_nav_state = graph_localizer_->LatestCombinedNavState();
   if (!latest_combined_nav_state) {
-    LOG_EVERY_N(WARNING, 50) << "LatestCombinedNavState: No combined nav state available.";
+    LogWarningEveryN(50, "LatestCombinedNavState: No combined nav state available.");
     return boost::none;
   }
   return latest_combined_nav_state;
@@ -261,12 +261,12 @@ boost::optional<lc::CombinedNavState> GraphLocalizerWrapper::LatestCombinedNavSt
 
 boost::optional<ff_msgs::EkfState> GraphLocalizerWrapper::LatestLocalizationStateMsg() {
   if (!graph_localizer_) {
-    LOG_EVERY_N(WARNING, 50) << "LatestLocalizationMsg: Graph localizater not initialized yet.";
+    LogWarningEveryN(50, "LatestLocalizationMsg: Graph localizater not initialized yet.");
     return boost::none;
   }
   const auto combined_nav_state_and_covariances = graph_localizer_->LatestCombinedNavStateAndCovariances();
   if (!combined_nav_state_and_covariances) {
-    LOG_EVERY_N(ERROR, 50) << "LatestLocalizationMsg: No combined nav state and covariances available.";
+    LogErrorEveryN(50, "LatestLocalizationMsg: No combined nav state and covariances available.");
     return boost::none;
   }
   // Angular velocity and acceleration are added by imu integrator
@@ -281,7 +281,7 @@ boost::optional<ff_msgs::EkfState> GraphLocalizerWrapper::LatestLocalizationStat
 
 boost::optional<ff_msgs::LocalizationGraph> GraphLocalizerWrapper::LatestLocalizationGraphMsg() const {
   if (!graph_localizer_) {
-    LOG_EVERY_N(WARNING, 50) << "LatestGraphMsg: Graph localizater not initialized yet.";
+    LogWarningEveryN(50, "LatestGraphMsg: Graph localizater not initialized yet.");
     return boost::none;
   }
   return GraphMsg(*graph_localizer_);

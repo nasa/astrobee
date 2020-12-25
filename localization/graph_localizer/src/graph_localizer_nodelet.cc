@@ -169,7 +169,7 @@ void GraphLocalizerNodelet::ImuCallback(const sensor_msgs::Imu::ConstPtr& imu_ms
 void GraphLocalizerNodelet::PublishLocalizationState() {
   const auto latest_localization_state_msg = graph_localizer_wrapper_.LatestLocalizationStateMsg();
   if (!latest_localization_state_msg) {
-    LOG_EVERY_N(WARNING, 100) << "PublishLocalizationState: Failed to get latest localization state msg.";
+    LogWarningEveryN(100, "PublishLocalizationState: Failed to get latest localization state msg.");
     return;
   }
   state_pub_.publish(*latest_localization_state_msg);
@@ -178,7 +178,7 @@ void GraphLocalizerNodelet::PublishLocalizationState() {
 void GraphLocalizerNodelet::PublishLocalizationGraph() {
   const auto latest_localization_graph_msg = graph_localizer_wrapper_.LatestLocalizationGraphMsg();
   if (!latest_localization_graph_msg) {
-    LOG_EVERY_N(WARNING, 100) << "PublishLocalizationGraph: Failed to get latest localization graph msg.";
+    LogWarningEveryN(100, "PublishLocalizationGraph: Failed to get latest localization graph msg.");
     return;
   }
   graph_pub_.publish(*latest_localization_graph_msg);
@@ -205,7 +205,7 @@ void GraphLocalizerNodelet::PublishARTagPose() const {
 void GraphLocalizerNodelet::PublishWorldTBodyTF() {
   const auto latest_combined_nav_state = graph_localizer_wrapper_.LatestCombinedNavState();
   if (!latest_combined_nav_state) {
-    LOG_EVERY_N(ERROR, 100) << "PublishWorldTBodyTF: Failed to get world_T_body.";
+    LogErrorEveryN(100, "PublishWorldTBodyTF: Failed to get world_T_body.");
     return;
   }
 
