@@ -278,6 +278,34 @@ def add_other_vector3d_plots(pdf, imu_augmented_graph_localization_states):
   pdf.savefig()
   plt.close()
 
+  # Accel Bias covariance
+  plt.figure()
+  plt.plot(imu_augmented_graph_localization_states.times,
+           l2_map(imu_augmented_graph_localization_states.accelerometer_bias_covariances),
+           'r',
+           linewidth=0.5,
+           label='Accelerometer Bias Covariance')
+  plt.title('Accelerometer Bias Covariance')
+  plt.xlabel('Time (s)')
+  plt.ylabel('Accelerometer Bias Covariance')
+  plt.legend(prop={'size': 6})
+  pdf.savefig()
+  plt.close()
+
+  # Gyro Bias covariance
+  plt.figure()
+  plt.plot(imu_augmented_graph_localization_states.times,
+           l2_map(imu_augmented_graph_localization_states.gyro_bias_covariances),
+           'r',
+           linewidth=0.5,
+           label='Gyro Bias Covariance')
+  plt.title('Gyro Bias Covariance')
+  plt.xlabel('Time (s)')
+  plt.ylabel('Gyro Bias Covariance')
+  plt.legend(prop={'size': 6})
+  pdf.savefig()
+  plt.close()
+
 
 def plot_stats(pdf, graph_localization_states, sparse_mapping_poses):
   stats = ''
