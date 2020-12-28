@@ -143,6 +143,7 @@ class LocProjectionFactor : public NoiseModelFactor1<POSE> {
   }
 
   /// Evaluate error h(x)-z and optionally derivatives
+  // TODO(rsoussan): Replace PinholeCamera with PinholePose?
   Vector evaluateError(const Pose3& pose, boost::optional<Matrix&> H1 = boost::none) const {
     try {
       if (body_P_sensor_) {

@@ -63,6 +63,7 @@ LocalizationGraphDisplay::LocalizationGraphDisplay() {
   image_sub_ = image_transport.subscribe(TOPIC_HARDWARE_NAV_CAM, 10, &LocalizationGraphDisplay::imageCallback, this);
   optical_flow_image_pub_ = image_transport.advertise("/graph_localizer/optical_flow_feature_tracks", 1);
   smart_factor_projection_image_pub_ = image_transport.advertise("/graph_localizer/smart_factor_projections", 1);
+  projection_image_pub_ = image_transport.advertise("/graph_localizer/visual_odometry_projections", 1);
   loc_projection_factor_image_pub_ = image_transport.advertise("/graph_localizer/loc_projection_factor", 1);
 
   // Only pass program name to free flyer so that boost command line options
@@ -129,6 +130,95 @@ cv::Scalar LocalizationGraphDisplay::textColor(const double val, const double gr
     return cv::Scalar(255, 0, 0);
 }
 
+void LocalizationGraphDisplay::addProjectionVisual(const gtsam::CameraSet<Camera>& cameras,
+                                                   const Camera::MeasurementVector& measurements,
+                                                   const gtsam::Point3& world_t_landmark,
+                                                   std::vector<cv::Mat>& images) {
+  // TODO(rsoussan): get timestamp from somewhere else?
+  const auto current_frame_T_world = currentFrameTFrame("world", ros::Time::now(), *context_);
+  if (!current_frame_T_world) {
+    LogError("addProjectionVisual: Failed to get current_frame_T_world.");
+    return;
+  }
+
+  // publish image with projected images
+  // (D) add options for each of these (E), add option to select which projection factor to visualize (F)
+  // how to select whihc features to add projection visual for???
+
+  std::unique_ptr<rviz::Shape> landmark_point(
+    new rviz::Shape(rviz::Shape::Type::Sphere, context_->getSceneManager(), scene_node_));
+  landmark_point->setColor(Ogre::ColourValue(1, 0, 0, 1));
+  landmark_point->setPosition(ogrePosition(*current_frame_T_world * world_t_landmark));
+  landmark_point->setScale(Ogre::Vector3(0.1, 0.1, 0.1));
+  landmark_points_.push_back(std::move(landmark_point));
+
+  for (const auto& camera : cameras) {
+    auto axis = axisFromPose(*current_frame_T_world * camera.pose(), 0.1, context_->getSceneManager(), scene_node_);
+    // TODO(rsoussan): change colors?
+    axis->setXColor(Ogre::ColourValue(0.5, 0, 0, 0.3));
+    axis->setYColor(Ogre::ColourValue(0, 0.5, 0, 0.3));
+    axis->setZColor(Ogre::ColourValue(0, 0, 0.5, 0.3));
+    camera_pose_axes_.push_back(std::move(axis));
+
+    std::unique_ptr<rviz::Line> camera_t_landmark_line(new rviz::Line(context_->getSceneManager(), scene_node_));
+    camera_t_landmark_line->setPoints(ogrePosition(*current_frame_T_world * camera.pose()),
+                                      ogrePosition(*current_frame_T_world * world_t_landmark));
+    camera_t_landmark_line->setColor(1.0, 0, 0, 1.0);
+    camera_t_landmark_lines_.emplace_back(std::move(camera_t_landmark_line));
+  }
+
+  // Create Projection Image
+  // TODO(rsoussan): unify this with smart projection visual
+  const auto& image = images.front();
+  cv_bridge::CvImage projection_image;
+  projection_image.encoding = sensor_msgs::image_encodings::RGB8;
+  projection_image.image = cv::Mat(image.rows, image.cols, CV_8UC3, cv::Scalar(0, 0, 0));
+
+  const int num_images = images.size();
+  const int rows = image.rows;
+  const int cols = image.cols;
+  int divisor;
+  // Always create square images (2x2, 3x3, or 4x4)
+  // Draw max 16 images
+  if (num_images <= 4) {
+    divisor = 2;
+  } else if (num_images <= 9) {
+    divisor = 3;
+  } else {
+    divisor = 4;
+  }
+
+  const int width = cols / divisor;
+  const int height = rows / divisor;
+
+  int destination_row = 0;
+  int destination_column = 0;
+  // Cameras are in same order as images and measurements
+  for (int i = 0; i < num_images && i < 16; ++i) {
+    const auto distorted_measurement = graph_bag::Distort(measurements[i], *nav_cam_params_);
+    cv::circle(images[i], distorted_measurement, 13 /* Radius*/, cv::Scalar(0, 255, 0), -1 /*Filled*/, 8);
+    const cv::Point rectangle_offset(40, 40);
+    cv::rectangle(images[i], distorted_measurement - rectangle_offset, distorted_measurement + rectangle_offset,
+                  cv::Scalar(0, 255, 0), 8);
+    // TODO(rsoussan): account for case where triangulation fails
+    if (true) {
+      const auto projection = cameras[i].project2(world_t_landmark);
+      const auto distorted_projection = graph_bag::Distort(projection, *nav_cam_params_);
+      cv::circle(images[i], distorted_projection, 7 /* Radius*/, cv::Scalar(255, 0, 0), -1 /*Filled*/, 8);
+    }
+    cv::resize(images[i], images[i], cv::Size(width, height));
+    images[i].copyTo(projection_image.image(cv::Rect(destination_column, destination_row, width, height)));
+    destination_column += width;
+    // Move down a row when a row of images in the destination image is filled.
+    // Account for integer division (farthest column might not be equal to destination.cols)
+    if (std::abs(destination_column - projection_image.image.cols) < 10) {
+      destination_column = 0;
+      destination_row += height;
+    }
+  }
+  projection_image_pub_.publish(projection_image.toImageMsg());
+}
+
 void LocalizationGraphDisplay::addLocProjectionVisual(
   const std::vector<gtsam::LocProjectionFactor<>*> loc_projection_factors,
   const graph_localizer::GraphValues& graph_values) {
@@ -182,6 +272,44 @@ void LocalizationGraphDisplay::addLocProjectionVisual(
   loc_projection_factor_image_pub_.publish(loc_projection_factor_image.toImageMsg());
 }
 
+void LocalizationGraphDisplay::addSmartFactorsProjectionVisual(const std::vector<SmartFactor*>& smart_factors,
+                                                               const graph_localizer::GraphValues& graph_values) {
+  landmark_points_.clear();
+  camera_pose_axes_.clear();
+  camera_t_landmark_lines_.clear();
+  for (const auto smart_factor : smart_factors) {
+    const auto landmark_point = smart_factor->serialized_point(graph_values.values());
+    // TODO(rsoussan): if calc fails, call custom method and draw it anyway!!! (A)
+    if (!landmark_point) continue;
+    const auto cameras = smart_factor->cameras(graph_values.values());
+    std::vector<cv::Mat> images;
+    for (const auto& key : smart_factor->keys()) {
+      const auto timestamp = graph_values.Timestamp(key);
+      if (!timestamp) {
+        LogError("addSmartFactorsProjectionVisual: Failed to get timestamp.");
+        return;
+      }
+      const auto image = getImage(*timestamp);
+      if (!image) {
+        LogError("addSmartFactorsProjectionVisual: Failed to get image.");
+        return;
+      }
+      cv_bridge::CvImagePtr cv_image;
+      try {
+        cv_image = cv_bridge::toCvCopy(image, sensor_msgs::image_encodings::RGB8);
+      } catch (cv_bridge::Exception& e) {
+        LogError("cv_bridge exception: " << e.what());
+        return;
+      }
+
+      images.emplace_back(cv_image->image);
+    }
+    addProjectionVisual(cameras, smart_factor->measured(), *landmark_point, images);
+    // TODO(rsoussan): more inteligent way to select this
+    break;
+  }
+}
+
 void LocalizationGraphDisplay::addSmartFactorProjectionVisual(const SmartFactor& smart_factor,
                                                               const graph_localizer::GraphValues& graph_values) {
   if (!publish_smart_factor_images_->getBool()) return;
@@ -190,7 +318,10 @@ void LocalizationGraphDisplay::addSmartFactorProjectionVisual(const SmartFactor&
     const auto timestamp = graph_values.Timestamp(key);
     if (!timestamp) return;
     const auto image = getImage(*timestamp);
-    if (!image) return;
+    if (!image) {
+      LogError("addSmartFactorProjectionVisual: Failed to get image.");
+      return;
+    }
     cv_bridge::CvImagePtr cv_image;
     try {
       cv_image = cv_bridge::toCvCopy(image, sensor_msgs::image_encodings::RGB8);
@@ -288,11 +419,13 @@ void LocalizationGraphDisplay::addImuVisual(const graph_localizer::GraphLocalize
   if (!timestamp) {
     LogError("addImuVisual: Failed to get timestamp.");
   }
+
   const auto current_frame_T_world = currentFrameTFrame("world", ros::Time(*timestamp), *context_);
   if (!current_frame_T_world) {
     LogError("addImuVisual: Failed to get current_frame_T_world.");
     return;
   }
+
   const gtsam::Pose3 current_frame_T_body = *current_frame_T_world * *world_T_body;
 
   if (show_pose_axes_->getBool()) {
@@ -326,6 +459,7 @@ void LocalizationGraphDisplay::processMessage(const ff_msgs::LocalizationGraph::
   gtsam::deserializeBinary(msg->serialized_graph, graph_localizer);
   graph_localizer.LogOnDestruction(false);
   std::vector<gtsam::LocProjectionFactor<>*> loc_projection_factors;
+  std::vector<SmartFactor*> smart_factors;
   SmartFactor* largest_error_smart_factor = nullptr;
   double largest_smart_factor_error = -1;
   if (graph_localizer.graph_values().LatestTimestamp())
@@ -333,6 +467,7 @@ void LocalizationGraphDisplay::processMessage(const ff_msgs::LocalizationGraph::
   for (const auto factor : graph_localizer.factor_graph()) {
     const auto smart_factor = dynamic_cast<SmartFactor*>(factor.get());
     if (smart_factor) {
+      smart_factors.emplace_back(smart_factor);
       const double smart_factor_error = smart_factor->serialized_error(graph_localizer.graph_values().values());
       if (smart_factor_error > largest_smart_factor_error) {
         largest_smart_factor_error = smart_factor_error;
@@ -352,6 +487,8 @@ void LocalizationGraphDisplay::processMessage(const ff_msgs::LocalizationGraph::
     addSmartFactorProjectionVisual(*largest_error_smart_factor, graph_localizer.graph_values());
 
   if (!loc_projection_factors.empty()) addLocProjectionVisual(loc_projection_factors, graph_localizer.graph_values());
+  // TODO(rsoussan): rename this
+  if (!smart_factors.empty()) addSmartFactorsProjectionVisual(smart_factors, graph_localizer.graph_values());
 
   const auto oldest_timestamp = graph_localizer.graph_values().OldestTimestamp();
   if (oldest_timestamp) clearImageBuffer(*oldest_timestamp);

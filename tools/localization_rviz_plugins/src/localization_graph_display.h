@@ -34,6 +34,8 @@
 #include <rviz/message_filter_display.h>
 #include <rviz/ogre_helpers/arrow.h>
 #include <rviz/ogre_helpers/axes.h>
+#include <rviz/ogre_helpers/line.h>
+#include <rviz/ogre_helpers/shape.h>
 #include <rviz/properties/float_property.h>
 #include <opencv2/core/types.hpp>
 #include <map>
@@ -49,7 +51,7 @@ class SceneNode;
 namespace localization_rviz_plugins {
 // TODO(rsoussan): put these somewhere else!
 using Calibration = gtsam::Cal3_S2;
-using Camera = gtsam::PinholeCamera<Calibration>;
+using Camera = gtsam::PinholePose<Calibration>;
 using SmartFactor = gtsam::RobustSmartProjectionPoseFactor<Calibration>;
 
 class LocalizationGraphDisplay : public rviz::MessageFilterDisplay<ff_msgs::LocalizationGraph> {
@@ -71,6 +73,8 @@ class LocalizationGraphDisplay : public rviz::MessageFilterDisplay<ff_msgs::Loca
   void clearDisplay();
   void addImuVisual(const graph_localizer::GraphLocalizer& graph_localizer,
                     const gtsam::CombinedImuFactor* const imu_factor);
+  void addProjectionVisual(const gtsam::CameraSet<Camera>& cameras, const Camera::MeasurementVector& measurements,
+                           const gtsam::Point3& world_t_landmark, std::vector<cv::Mat>& images);
   void addLocProjectionVisual(const std::vector<gtsam::LocProjectionFactor<>*> loc_projection_factors,
                               const graph_localizer::GraphValues& graph_values);
   void addOpticalFlowVisual(const graph_localizer::FeatureTrackMap& feature_tracks,
@@ -79,6 +83,8 @@ class LocalizationGraphDisplay : public rviz::MessageFilterDisplay<ff_msgs::Loca
   sensor_msgs::ImageConstPtr getImage(const localization_common::Time time);
   void addSmartFactorProjectionVisual(const SmartFactor& smart_factor,
                                       const graph_localizer::GraphValues& graph_values);
+  void addSmartFactorsProjectionVisual(const std::vector<SmartFactor*>& smart_factors,
+                                       const graph_localizer::GraphValues& graph_values);
   cv::Scalar textColor(const double val, const double green_threshold, const double yellow_threshold);
 
   std::vector<std::unique_ptr<rviz::Axes>> graph_pose_axes_;
@@ -92,11 +98,15 @@ class LocalizationGraphDisplay : public rviz::MessageFilterDisplay<ff_msgs::Loca
   std::unique_ptr<rviz::BoolProperty> publish_loc_projection_factor_images_;
   image_transport::Publisher optical_flow_image_pub_;
   image_transport::Publisher smart_factor_projection_image_pub_;
+  image_transport::Publisher projection_image_pub_;
   image_transport::Publisher loc_projection_factor_image_pub_;
   image_transport::Subscriber image_sub_;
   ros::NodeHandle nh_;
   std::map<localization_common::Time, sensor_msgs::ImageConstPtr> img_buffer_;
   std::unique_ptr<camera::CameraParameters> nav_cam_params_;
+  std::vector<std::unique_ptr<rviz::Shape>> landmark_points_;
+  std::vector<std::unique_ptr<rviz::Axes>> camera_pose_axes_;
+  std::vector<std::unique_ptr<rviz::Line>> camera_t_landmark_lines_;
 };
 }  // namespace localization_rviz_plugins
 #endif  // LOCALIZATION_RVIZ_PLUGINS_LOCALIZATION_GRAPH_DISPLAY_H_ NOLINT

@@ -28,6 +28,8 @@ Ogre::Vector3 ogrePosition(const gtsam::Pose3& pose) {
   return Ogre::Vector3(pose.translation().x(), pose.translation().y(), pose.translation().z());
 }
 
+Ogre::Vector3 ogrePosition(const gtsam::Point3& point) { return Ogre::Vector3(point.x(), point.y(), point.z()); }
+
 Ogre::Quaternion ogreQuaternion(const gtsam::Pose3& pose) {
   const auto quaternion = pose.rotation().toQuaternion();
   return Ogre::Quaternion(quaternion.w(), quaternion.x(), quaternion.y(), quaternion.z());

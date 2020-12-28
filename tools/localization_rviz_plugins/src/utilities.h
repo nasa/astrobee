@@ -41,6 +41,8 @@
 namespace localization_rviz_plugins {
 Ogre::Vector3 ogrePosition(const gtsam::Pose3& pose);
 
+Ogre::Vector3 ogrePosition(const gtsam::Point3& point);
+
 Ogre::Quaternion ogreQuaternion(const gtsam::Pose3& pose);
 
 boost::optional<gtsam::Pose3> currentFrameTFrame(const std::string& frame_id, const ros::Time timestamp,
