@@ -845,7 +845,7 @@ void GraphLocalizer::RemoveOldMeasurementsFromCumulativeFactors(const gtsam::Key
       ++factor_it;
       continue;
     } else {
-      if (factor_keys.size() - factor_key_indices_to_remove.size() <
+      if (static_cast<int>(factor_keys.size() - factor_key_indices_to_remove.size()) <
           params_.factor.smart_projection_adder.min_num_points) {
         factor_it = graph_.erase(factor_it);
         continue;

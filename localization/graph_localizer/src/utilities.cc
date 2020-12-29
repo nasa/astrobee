@@ -32,7 +32,7 @@ namespace lm = localization_measurements;
 
 bool ValidPointSet(const std::deque<lm::FeaturePoint>& points, const double average_distance_from_mean,
                    const double min_avg_distance_from_mean, const int min_num_points) {
-  if (points.size() < min_num_points) return false;
+  if (static_cast<int>(points.size()) < min_num_points) return false;
   return (average_distance_from_mean >= min_avg_distance_from_mean);
 }
 
@@ -264,7 +264,7 @@ SharedRobustSmartFactor RemoveSmartFactorMeasurements(const RobustSmartFactor& s
   auto new_smart_factor = boost::make_shared<RobustSmartFactor>(
     params.cam_noise, params.cam_intrinsics, params.body_T_cam, smart_projection_params, params.rotation_only_fallback,
     params.robust, params.huber_k);
-  for (int i = 0; i < smart_factor.keys().size(); ++i) {
+  for (int i = 0; i < static_cast<int>(smart_factor.keys().size()); ++i) {
     if (factor_key_indices_to_remove.count(i) == 0)
       new_smart_factor->add(smart_factor.measured()[i], smart_factor.keys()[i]);
   }
