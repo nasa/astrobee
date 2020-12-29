@@ -175,6 +175,8 @@ class GraphLocalizer {
 
   void BufferCumulativeFactors();
 
+  void RemoveOldMeasurementsFromCumulativeFactors(const gtsam::KeyVector& old_keys);
+
   int AddBufferedFactors();
 
   bool DoGraphAction(FactorsToAdd& factors_to_add);

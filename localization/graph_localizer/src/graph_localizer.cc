@@ -38,6 +38,7 @@
 #include <unistd.h>
 
 #include <chrono>
+#include <unordered_set>
 
 namespace {
 // TODO(rsoussan): Is this necessary? Just use DFATAL and compile with debug?
@@ -675,20 +676,24 @@ bool GraphLocalizer::SlideWindow(const boost::optional<gtsam::Marginals>& margin
   // since then priors couldn't be added for the new oldest state
   if (last_latest_time < *graph_values_ideal_new_oldest_time)
     LogWarning("SlideWindow: Ideal oldest time is more recent than last latest time.");
-  auto new_oldest_time = std::min(last_latest_time, *graph_values_ideal_new_oldest_time);
-  // Ensure that new oldest time isn't more recent than oldest feature track time
-  // since these are included in smart factors
-  const auto feature_tracker_oldest_time = feature_tracker_->OldestTimestamp();
-  if (!feature_tracker_oldest_time) {
-    LogError("SlideWindow: Failed to get feature tracker oldest time.");
-    return false;
-  }
-  if (new_oldest_time > *feature_tracker_oldest_time)
-    LogWarning("SlideWindow: Ideal oldest time is more recent than oldest feature track time.");
-  new_oldest_time = std::min(new_oldest_time, *feature_tracker_oldest_time);
+  const auto new_oldest_time = std::min(last_latest_time, *graph_values_ideal_new_oldest_time);
+
+  /*  // Ensure that new oldest time isn't more recent than oldest feature track time
+    // since these are included in smart factors
+    const auto feature_tracker_oldest_time = feature_tracker_->OldestTimestamp();
+    if (!feature_tracker_oldest_time) {
+      LogError("SlideWindow: Failed to get feature tracker oldest time.");
+      return false;
+    }
+    if (new_oldest_time > *feature_tracker_oldest_time)
+      LogWarning("SlideWindow: Ideal oldest time is more recent than oldest feature track time.");
+    new_oldest_time = std::min(new_oldest_time, *feature_tracker_oldest_time);*/
 
   // Add marginal factors for marginalized values
   auto old_keys = graph_values_->OldKeys(new_oldest_time);
+  // Since cumlative factors have many keys and shouldn't be marginalized, need to remove old measurements depending on
+  // old keys before marginalizing and sliding window
+  RemoveOldMeasurementsFromCumulativeFactors(old_keys);
   auto old_factors = graph_values_->RemoveOldFactors(old_keys, graph_);
   gtsam::KeyVector old_feature_keys;
   if (params_.factor.projection_adder.enabled) {
@@ -821,11 +826,47 @@ void GraphLocalizer::RemovePriors(const int key_index) {
 }
 
 void GraphLocalizer::BufferCumulativeFactors() {
-  // Remove measurements here so they don't grow too large before adding to graph
-  // TODO(rsoussan): Clean this up, slide window before optimizing?
+  // Remove measurements here so they are more likely to fit in sliding window duration when optimized
   feature_tracker_->RemovePointsOutsideWindow();
   if (params_.factor.smart_projection_adder.enabled) {
     BufferFactors(smart_projection_cumulative_factor_adder_->AddFactors());
+  }
+}
+
+void GraphLocalizer::RemoveOldMeasurementsFromCumulativeFactors(const gtsam::KeyVector& old_keys) {
+  for (auto factor_it = graph_.begin(); factor_it != graph_.end();) {
+    const auto smart_factor = dynamic_cast<const RobustSmartFactor*>(factor_it->get());
+    // Currently the only cumulative factors are smart factors
+    // TODO(rsoussan): Generalize this
+    if (!smart_factor) {
+      ++factor_it;
+      continue;
+    }
+    const auto& factor_keys = (*factor_it)->keys();
+    std::unordered_set<int> factor_key_indices_to_remove;
+    for (int i = 0; i < static_cast<int>(factor_keys.size()); ++i) {
+      for (const auto& old_key : old_keys) {
+        if (factor_keys[i] == old_key) {
+          factor_key_indices_to_remove.emplace(i);
+          break;
+        }
+      }
+    }
+    if (factor_key_indices_to_remove.empty()) {
+      ++factor_it;
+      continue;
+    } else {
+      if (factor_keys.size() - factor_key_indices_to_remove.size() <
+          params_.factor.smart_projection_adder.min_num_points) {
+        factor_it = graph_.erase(factor_it);
+        continue;
+      } else {
+        const auto new_smart_factor = RemoveSmartFactorMeasurements(
+          *smart_factor, factor_key_indices_to_remove, params_.factor.smart_projection_adder, smart_projection_params_);
+        *factor_it = new_smart_factor;
+        continue;
+      }
+    }
   }
 }
 

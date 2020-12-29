@@ -256,4 +256,18 @@ boost::optional<SharedRobustSmartFactor> FixSmartFactorByRemovingMeasurementSequ
   // TODO(rsoussan): delete factor if fail to find acceptable new one?
   // TODO(rsoussan): attempt to make a second factor with remaining measuremnts!!!
 }
+
+SharedRobustSmartFactor RemoveSmartFactorMeasurements(const RobustSmartFactor& smart_factor,
+                                                      const std::unordered_set<int>& factor_key_indices_to_remove,
+                                                      const SmartProjectionFactorAdderParams& params,
+                                                      const gtsam::SmartProjectionParams& smart_projection_params) {
+  auto new_smart_factor = boost::make_shared<RobustSmartFactor>(
+    params.cam_noise, params.cam_intrinsics, params.body_T_cam, smart_projection_params, params.rotation_only_fallback,
+    params.robust, params.huber_k);
+  for (int i = 0; i < smart_factor.keys().size(); ++i) {
+    if (factor_key_indices_to_remove.count(i) == 0)
+      new_smart_factor->add(smart_factor.measured()[i], smart_factor.keys()[i]);
+  }
+  return new_smart_factor;
+}
 }  // namespace graph_localizer

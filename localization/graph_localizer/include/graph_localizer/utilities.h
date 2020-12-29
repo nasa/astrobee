@@ -41,6 +41,7 @@
 
 #include <deque>
 #include <string>
+#include <unordered_set>
 #include <vector>
 
 namespace graph_localizer {
@@ -85,6 +86,11 @@ boost::optional<SharedRobustSmartFactor> FixSmartFactorByRemovingIndividualMeasu
 boost::optional<SharedRobustSmartFactor> FixSmartFactorByRemovingMeasurementSequence(
   const GraphLocalizerParams& params, const RobustSmartFactor& smart_factor,
   const gtsam::SmartProjectionParams& smart_projection_params, const GraphValues& graph_values);
+
+SharedRobustSmartFactor RemoveSmartFactorMeasurements(const RobustSmartFactor& smart_factor,
+                                                      const std::unordered_set<int>& factor_key_indices_to_remove,
+                                                      const SmartProjectionFactorAdderParams& params,
+                                                      const gtsam::SmartProjectionParams& smart_projection_params);
 }  // namespace graph_localizer
 
 #endif  // GRAPH_LOCALIZER_UTILITIES_H_
