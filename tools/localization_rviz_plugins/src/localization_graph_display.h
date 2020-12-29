@@ -41,6 +41,7 @@
 #include <map>
 #include <string>
 #include <vector>
+#include "slider_property.h" // NOLINT
 #endif
 
 // Forward declarations for ogre and rviz
@@ -66,6 +67,7 @@ class LocalizationGraphDisplay : public rviz::MessageFilterDisplay<ff_msgs::Loca
   void reset() final;
 
  private Q_SLOTS:  // NOLINT
+  void addSmartFactorsProjectionVisual();
 
  private:
   void processMessage(const ff_msgs::LocalizationGraph::ConstPtr& graph_msg);
@@ -83,8 +85,6 @@ class LocalizationGraphDisplay : public rviz::MessageFilterDisplay<ff_msgs::Loca
   sensor_msgs::ImageConstPtr getImage(const localization_common::Time time);
   void addSmartFactorProjectionVisual(const SmartFactor& smart_factor,
                                       const graph_localizer::GraphValues& graph_values);
-  void addSmartFactorsProjectionVisual(const std::vector<SmartFactor*>& smart_factors,
-                                       const graph_localizer::GraphValues& graph_values);
   cv::Scalar textColor(const double val, const double green_threshold, const double yellow_threshold);
 
   std::vector<std::unique_ptr<rviz::Axes>> graph_pose_axes_;
@@ -96,6 +96,9 @@ class LocalizationGraphDisplay : public rviz::MessageFilterDisplay<ff_msgs::Loca
   std::unique_ptr<rviz::BoolProperty> publish_optical_flow_images_;
   std::unique_ptr<rviz::BoolProperty> publish_smart_factor_images_;
   std::unique_ptr<rviz::BoolProperty> publish_loc_projection_factor_images_;
+  std::unique_ptr<rviz::BoolProperty> publish_projection_factor_images_;
+  std::unique_ptr<rviz::BoolProperty> show_projection_factor_visual_;
+  std::unique_ptr<rviz::SliderProperty> projection_factor_slider_;
   image_transport::Publisher optical_flow_image_pub_;
   image_transport::Publisher smart_factor_projection_image_pub_;
   image_transport::Publisher projection_image_pub_;
@@ -107,6 +110,8 @@ class LocalizationGraphDisplay : public rviz::MessageFilterDisplay<ff_msgs::Loca
   std::vector<std::unique_ptr<rviz::Shape>> landmark_points_;
   std::vector<std::unique_ptr<rviz::Axes>> camera_pose_axes_;
   std::vector<std::unique_ptr<rviz::Line>> camera_t_landmark_lines_;
+  std::unique_ptr<graph_localizer::GraphLocalizer> latest_graph_localizer_;
+  std::vector<SmartFactor*> latest_smart_factors_;
 };
 }  // namespace localization_rviz_plugins
 #endif  // LOCALIZATION_RVIZ_PLUGINS_LOCALIZATION_GRAPH_DISPLAY_H_ NOLINT
