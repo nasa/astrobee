@@ -53,12 +53,14 @@ class ImuAugmentorNodelet : public ff_util::FreeFlyerNodelet {
 
   void Run();
 
+  void PublishHeartbeat();
+
   imu_augmentor::ImuAugmentorWrapper imu_augmentor_wrapper_;
   std::string platform_name_;
   ros::NodeHandle imu_nh_, loc_nh_;
   ros::CallbackQueue imu_queue_, loc_queue_;
   ros::Subscriber imu_sub_, state_sub_;
-  ros::Publisher state_pub_, pose_pub_, twist_pub_;
+  ros::Publisher state_pub_, pose_pub_, twist_pub_, heartbeat_pub_;
   ff_msgs::Heartbeat heartbeat_;
   tf2_ros::TransformBroadcaster transform_pub_;
 };

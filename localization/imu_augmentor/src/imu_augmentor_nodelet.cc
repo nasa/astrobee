@@ -42,6 +42,7 @@ void ImuAugmentorNodelet::SubscribeAndAdvertise(ros::NodeHandle* nh) {
   state_pub_ = nh->advertise<ff_msgs::EkfState>(TOPIC_GNC_EKF, 1);
   pose_pub_ = nh->advertise<geometry_msgs::PoseStamped>(TOPIC_LOCALIZATION_POSE, 1);
   twist_pub_ = nh->advertise<geometry_msgs::TwistStamped>(TOPIC_LOCALIZATION_TWIST, 1);
+  heartbeat_pub_ = nh->advertise<ff_msgs::Heartbeat>(TOPIC_HEARTBEAT, 5, true);
 
   imu_sub_ = imu_nh_.subscribe(TOPIC_HARDWARE_IMU, 100, &ImuAugmentorNodelet::ImuCallback, this,
                                ros::TransportHints().tcpNoDelay());
@@ -92,6 +93,11 @@ void ImuAugmentorNodelet::PublishPoseAndTwistAndTransform(const ff_msgs::EkfStat
   transform_pub_.sendTransform(transform_msg);
 }
 
+void ImuAugmentorNodelet::PublishHeartbeat() {
+  heartbeat_.header.stamp = ros::Time::now();
+  heartbeat_pub_.publish(heartbeat_);
+}
+
 void ImuAugmentorNodelet::Run() {
   ros::Rate rate(100);
   while (ros::ok()) {
@@ -101,6 +107,7 @@ void ImuAugmentorNodelet::Run() {
     if (loc_msg) {
       PublishPoseAndTwistAndTransform(*loc_msg);
     }
+    PublishHeartbeat();
     rate.sleep();
   }
 }
