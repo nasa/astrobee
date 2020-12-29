@@ -41,7 +41,7 @@
 #include <map>
 #include <string>
 #include <vector>
-#include "slider_property.h" // NOLINT
+#include "slider_property.h"  // NOLINT
 #endif
 
 // Forward declarations for ogre and rviz

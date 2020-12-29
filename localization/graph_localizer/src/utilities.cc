@@ -31,8 +31,8 @@ namespace lc = localization_common;
 namespace lm = localization_measurements;
 
 bool ValidPointSet(const std::deque<lm::FeaturePoint>& points, const double average_distance_from_mean,
-                   const double min_avg_distance_from_mean) {
-  if (points.size() < 2) return false;
+                   const double min_avg_distance_from_mean, const int min_num_points) {
+  if (points.size() < min_num_points) return false;
   return (average_distance_from_mean >= min_avg_distance_from_mean);
 }
 

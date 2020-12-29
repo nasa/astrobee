@@ -15,8 +15,8 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef LOCALIZATION_RVIZ_PLUGINS_SLIDER_PROPERTY_H // NOLINT
-#define LOCALIZATION_RVIZ_PLUGINS_SLIDER_PROPERTY_H // NOLINT
+#ifndef LOCALIZATION_RVIZ_PLUGINS_SLIDER_PROPERTY_H  // NOLINT
+#define LOCALIZATION_RVIZ_PLUGINS_SLIDER_PROPERTY_H  // NOLINT
 
 #include <rviz/properties/property.h>
 
@@ -37,7 +37,7 @@ class SliderProperty : public Property {
 
   int getInt() const;
 
- public Q_SLOTS: // NOLINT
+ public Q_SLOTS:  // NOLINT
   void setValue(const int value);
 
  Q_SIGNALS:

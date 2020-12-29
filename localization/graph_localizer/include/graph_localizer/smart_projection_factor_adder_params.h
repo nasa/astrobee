@@ -37,6 +37,7 @@ struct SmartProjectionFactorAdderParams : public FactorAdderParams {
   bool verbose_cheirality;
   bool robust;
   int max_num_factors;
+  int min_num_points;
   bool rotation_only_fallback;
   bool splitting;
   bool scale_noise_with_num_points;

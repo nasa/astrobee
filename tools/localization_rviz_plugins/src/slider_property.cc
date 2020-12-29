@@ -15,7 +15,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#include "slider_property.h" // NOLINT
+#include "slider_property.h"  // NOLINT
 
 namespace rviz {
 SliderProperty::SliderProperty(const QString& name, const int default_value, const QString& description,

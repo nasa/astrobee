@@ -53,7 +53,8 @@ void RemoveGravityFromBias(const gtsam::Vector3& global_F_gravity, const gtsam::
                            const gtsam::Pose3& global_T_body, gtsam::imuBias::ConstantBias& imu_bias);
 
 bool ValidPointSet(const std::deque<localization_measurements::FeaturePoint>& points,
-                   const double average_distance_from_mean, const double min_avg_distance_from_mean);
+                   const double average_distance_from_mean, const double min_avg_distance_from_mean,
+                   const int min_num_points);
 
 double AverageDistanceFromMean(const std::deque<localization_measurements::FeaturePoint>& points);
 
