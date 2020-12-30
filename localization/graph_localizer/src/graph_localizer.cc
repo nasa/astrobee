@@ -440,6 +440,9 @@ bool GraphLocalizer::ARProjectionNoiseScaling(FactorsToAdd& factors_to_add) {
 
 bool GraphLocalizer::MapProjectionNoiseScaling(const LocFactorAdderParams& params, FactorsToAdd& factors_to_add) {
   auto& factors = factors_to_add.Get();
+  const int original_num_factors = factors.size();
+  gtsam::Key pose_key;
+  gtsam::Pose3 world_T_cam;
   for (auto factor_it = factors.begin(); factor_it != factors.end();) {
     auto& factor = factor_it->factor;
     auto projection_factor = dynamic_cast<gtsam::LocProjectionFactor<>*>(factor.get());
@@ -447,13 +450,21 @@ bool GraphLocalizer::MapProjectionNoiseScaling(const LocFactorAdderParams& param
       LogError("MapProjectionNoiseScaling: Failed to cast to projection factor.");
       return false;
     }
+
+    // Save pose and pose key in case need to make loc prior
+    pose_key = projection_factor->key();
+    world_T_cam = projection_factor->world_T_cam();
+
     const auto world_T_body = graph_values_->at<gtsam::Pose3>(projection_factor->key());
     if (!world_T_body) {
       LogError("MapProjectionNoiseScaling: Failed to get pose.");
       return false;
     }
     const auto error = (projection_factor->evaluateError(*world_T_body)).norm();
-    if (error > params.max_inlier_weighted_projection_norm) {
+    const auto cheirality_error = projection_factor->cheiralityError(*world_T_body);
+    if (cheirality_error) {
+      factor_it = factors.erase(factor_it);
+    } else if (error > params.max_inlier_weighted_projection_norm) {
       factor_it = factors.erase(factor_it);
     } else {
       if (params.weight_projections_with_distance) {
@@ -468,6 +479,22 @@ bool GraphLocalizer::MapProjectionNoiseScaling(const LocFactorAdderParams& param
       }
       ++factor_it;
     }
+  }
+  // All factors have been removed due to errors, use loc pose prior instead
+  if (factors.empty() && params.add_prior_if_projections_fail) {
+    const gtsam::Vector6 pose_prior_noise_sigmas((gtsam::Vector(6) << params.prior_translation_stddev,
+                                                  params.prior_translation_stddev, params.prior_translation_stddev,
+                                                  params.prior_quaternion_stddev, params.prior_quaternion_stddev,
+                                                  params.prior_quaternion_stddev)
+                                                   .finished());
+    // TODO(rsoussan): enable scaling with num landmarks
+    const int noise_scale = 1;
+    const auto pose_noise = Robust(
+      gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(noise_scale * pose_prior_noise_sigmas)),
+      params.huber_k);
+    gtsam::LocPoseFactor::shared_ptr pose_prior_factor(
+      new gtsam::LocPoseFactor(pose_key, world_T_cam * params.body_T_cam.inverse(), pose_noise));
+    graph_.push_back(pose_prior_factor);
   }
   return true;
 }

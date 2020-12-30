@@ -40,6 +40,7 @@ class LocProjectionFactor : public NoiseModelFactor1<POSE> {
   // Keep a copy of measurement and calibration for I/O
   Point2 measured_;                      ///< 2D measurement
   LANDMARK landmark_point_;              ///< Landmark point
+  Pose3 world_T_cam_;                    ///< world_T_cam estimate if available
   boost::shared_ptr<CALIBRATION> K_;     ///< shared pointer to calibration object
   boost::optional<POSE> body_P_sensor_;  ///< The pose of the sensor in the body frame
 
@@ -170,10 +171,29 @@ class LocProjectionFactor : public NoiseModelFactor1<POSE> {
     return Vector2::Constant(0.0);
   }
 
+  bool cheiralityError(const Pose3& pose) const {
+    try {
+      if (body_P_sensor_) {
+        PinholeCamera<CALIBRATION> camera(pose.compose(*body_P_sensor_), *K_);
+        camera.project(landmark_point_) - measured_;
+      } else {
+        PinholeCamera<CALIBRATION> camera(pose, *K_);
+        camera.project(landmark_point_) - measured_;
+      }
+    } catch (CheiralityException& e) {
+      return true;
+    }
+    return false;
+  }
+
+  void setWorldTCam(const gtsam::Pose3& world_T_cam) { world_T_cam_ = world_T_cam; }
+
   /** return the measurement */
   const Point2& measured() const { return measured_; }
 
   const LANDMARK& landmark_point() const { return landmark_point_; }
+
+  const Pose3& world_T_cam() const { return world_T_cam_; }
 
   LANDMARK& landmark_point() { return landmark_point_; }
 
@@ -196,6 +216,7 @@ class LocProjectionFactor : public NoiseModelFactor1<POSE> {
     ar& BOOST_SERIALIZATION_BASE_OBJECT_NVP(Base);
     ar& BOOST_SERIALIZATION_NVP(measured_);
     ar& BOOST_SERIALIZATION_NVP(landmark_point_);
+    ar& BOOST_SERIALIZATION_NVP(world_T_cam_);
     ar& BOOST_SERIALIZATION_NVP(K_);
     ar& BOOST_SERIALIZATION_NVP(body_P_sensor_);
     ar& BOOST_SERIALIZATION_NVP(throwCheirality_);

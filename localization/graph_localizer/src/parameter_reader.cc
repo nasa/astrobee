@@ -58,6 +58,7 @@ void LoadARTagLocFactorAdderParams(config_reader::ConfigReader& config, LocFacto
   params.max_inlier_weighted_projection_norm =
     lc::LoadDouble(config, "ar_tag_loc_adder_max_inlier_weighted_projection_norm");
   params.weight_projections_with_distance = lc::LoadBool(config, "ar_tag_loc_adder_weight_projections_with_distance");
+  params.add_prior_if_projections_fail = lc::LoadBool(config, "ar_tag_loc_adder_add_prior_if_projections_fail");
   params.body_T_cam = lc::LoadTransform(config, "dock_cam_transform");
   params.cam_intrinsics.reset(new gtsam::Cal3_S2(lc::LoadCameraIntrinsics(config, "dock_cam")));
   params.cam_noise = gtsam::noiseModel::Isotropic::Sigma(2, lc::LoadDouble(config, "loc_dock_cam_noise_stddev"));
@@ -78,6 +79,7 @@ void LoadLocFactorAdderParams(config_reader::ConfigReader& config, LocFactorAdde
   params.projection_noise_scale = lc::LoadDouble(config, "loc_adder_projection_noise_scale");
   params.max_inlier_weighted_projection_norm = lc::LoadDouble(config, "loc_adder_max_inlier_weighted_projection_norm");
   params.weight_projections_with_distance = lc::LoadBool(config, "loc_adder_weight_projections_with_distance");
+  params.add_prior_if_projections_fail = lc::LoadBool(config, "loc_adder_add_prior_if_projections_fail");
   params.body_T_cam = lc::LoadTransform(config, "nav_cam_transform");
   params.cam_intrinsics.reset(new gtsam::Cal3_S2(lc::LoadCameraIntrinsics(config, "nav_cam")));
   params.cam_noise = gtsam::noiseModel::Isotropic::Sigma(2, lc::LoadDouble(config, "loc_nav_cam_noise_stddev"));

@@ -89,6 +89,8 @@ std::vector<FactorsToAdd> LocFactorAdder::AddFactors(
       gtsam::LocProjectionFactor<>::shared_ptr loc_projection_factor(new gtsam::LocProjectionFactor<>(
         matched_projection.image_point, matched_projection.map_point, Robust(scaled_noise, params().huber_k),
         key_info.UninitializedKey(), params().cam_intrinsics, params().body_T_cam));
+      // Set world_T_cam estimate in case need to use it as a fallback
+      loc_projection_factor->setWorldTCam(matched_projections_measurement.global_T_cam);
       projection_factors_to_add.push_back({{key_info}, loc_projection_factor});
       ++num_loc_projection_factors;
     }

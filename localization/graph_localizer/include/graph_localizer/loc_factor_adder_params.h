@@ -38,6 +38,7 @@ struct LocFactorAdderParams : public FactorAdderParams {
   double projection_noise_scale;
   double max_inlier_weighted_projection_norm;
   bool weight_projections_with_distance;
+  bool add_prior_if_projections_fail;
   gtsam::Pose3 body_T_cam;
   boost::shared_ptr<gtsam::Cal3_S2> cam_intrinsics;
   gtsam::SharedIsotropic cam_noise;
