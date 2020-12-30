@@ -109,8 +109,6 @@ class GraphLocalizer {
 
   int NumProjectionFactors(const bool check_valid = true) const;
 
-  int NumVLFactors() const;
-
   const GraphValues& graph_values() const;
 
   const gtsam::NonlinearFactorGraph& factor_graph() const;

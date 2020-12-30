@@ -30,6 +30,7 @@ void GraphStats::UpdateErrors(const GraphLocalizer& graph) {
   double total_error = 0;
   double optical_flow_factor_error = 0;
   double loc_proj_error = 0;
+  double loc_pose_error = 0;
   double imu_factor_error = 0;
   double rotation_factor_error = 0;
   double standstill_between_factor_error = 0;
@@ -39,26 +40,25 @@ void GraphStats::UpdateErrors(const GraphLocalizer& graph) {
   for (const auto& factor : graph.factor_graph()) {
     const double error = factor->error(graph.graph_values().values());
     total_error += error;
-    if (graph.params().factor.smart_projection_adder.enabled) {
-      const auto smart_factor = dynamic_cast<const RobustSmartFactor*>(factor.get());
-      if (smart_factor) {
-        optical_flow_factor_error += error;
-      }
+    const auto smart_factor = dynamic_cast<const RobustSmartFactor*>(factor.get());
+    if (smart_factor) {
+      optical_flow_factor_error += error;
     }
-    if (graph.params().factor.projection_adder.enabled) {
-      const auto projection_factor = dynamic_cast<const ProjectionFactor*>(factor.get());
-      if (projection_factor) {
-        optical_flow_factor_error += error;
-      }
+    const auto projection_factor = dynamic_cast<const ProjectionFactor*>(factor.get());
+    if (projection_factor) {
+      optical_flow_factor_error += error;
     }
     const auto imu_factor = dynamic_cast<gtsam::CombinedImuFactor*>(factor.get());
     if (imu_factor) {
       imu_factor_error += error;
     }
     const auto loc_factor = dynamic_cast<gtsam::LocProjectionFactor<>*>(factor.get());
-    const auto loc_pose_factor = dynamic_cast<gtsam::LocPoseFactor*>(factor.get());
-    if (loc_factor || loc_pose_factor) {
+    if (loc_factor) {
       loc_proj_error += error;
+    }
+    const auto loc_pose_factor = dynamic_cast<gtsam::LocPoseFactor*>(factor.get());
+    if (loc_pose_factor) {
+      loc_pose_error += error;
     }
     const auto rotation_factor = dynamic_cast<gtsam::PoseRotationFactor*>(factor.get());
     if (rotation_factor) {
@@ -86,6 +86,7 @@ void GraphStats::UpdateErrors(const GraphLocalizer& graph) {
   total_error_averager_.Update(total_error);
   of_error_averager_.Update(optical_flow_factor_error);
   loc_proj_error_averager_.Update(loc_proj_error);
+  loc_pose_error_averager_.Update(loc_pose_error);
   imu_error_averager_.Update(imu_factor_error);
   rotation_error_averager_.Update(rotation_factor_error);
   standstill_between_error_averager_.Update(standstill_between_factor_error);
@@ -100,7 +101,8 @@ void GraphStats::UpdateStats(const GraphLocalizer& graph) {
   num_states_averager_.Update(graph.graph_values().NumStates());
   duration_averager_.Update(graph.graph_values().Duration());
   num_optical_flow_factors_averager_.Update(graph.NumOFFactors());
-  num_loc_factors_averager_.Update(graph.NumVLFactors());
+  num_loc_pose_factors_averager_.Update(graph.NumFactors<gtsam::LocPoseFactor>());
+  num_loc_proj_factors_averager_.Update(graph.NumFactors<gtsam::LocProjectionFactor<>>());
   num_imu_factors_averager_.Update(graph.NumFactors<gtsam::CombinedImuFactor>());
   num_rotation_factors_averager_.Update(graph.NumFactors<gtsam::PoseRotationFactor>());
   num_standstill_between_factors_averager_.Update(graph.NumFactors<gtsam::BetweenFactor<gtsam::Pose3>>());
@@ -132,7 +134,8 @@ void GraphStats::LogToFile(std::ofstream& ofstream) const {
   num_states_averager_.LogToFile(ofstream);
   duration_averager_.LogToFile(ofstream);
   num_optical_flow_factors_averager_.LogToFile(ofstream);
-  num_loc_factors_averager_.LogToFile(ofstream);
+  num_loc_pose_factors_averager_.LogToFile(ofstream);
+  num_loc_proj_factors_averager_.LogToFile(ofstream);
   num_imu_factors_averager_.LogToFile(ofstream);
   num_rotation_factors_averager_.LogToFile(ofstream);
   num_standstill_between_factors_averager_.LogToFile(ofstream);
@@ -144,6 +147,7 @@ void GraphStats::LogToFile(std::ofstream& ofstream) const {
   total_error_averager_.LogToFile(ofstream);
   of_error_averager_.LogToFile(ofstream);
   loc_proj_error_averager_.LogToFile(ofstream);
+  loc_pose_error_averager_.LogToFile(ofstream);
   imu_error_averager_.LogToFile(ofstream);
   rotation_error_averager_.LogToFile(ofstream);
   standstill_between_error_averager_.LogToFile(ofstream);
@@ -167,7 +171,8 @@ void GraphStats::LogStatsAveragers() const {
   num_states_averager_.Log();
   duration_averager_.Log();
   num_optical_flow_factors_averager_.Log();
-  num_loc_factors_averager_.Log();
+  num_loc_pose_factors_averager_.Log();
+  num_loc_proj_factors_averager_.Log();
   num_imu_factors_averager_.Log();
   num_rotation_factors_averager_.Log();
   num_standstill_between_factors_averager_.Log();
@@ -181,6 +186,7 @@ void GraphStats::LogErrorAveragers() const {
   total_error_averager_.Log();
   of_error_averager_.Log();
   loc_proj_error_averager_.Log();
+  loc_pose_error_averager_.Log();
   imu_error_averager_.Log();
   rotation_error_averager_.Log();
   standstill_between_error_averager_.Log();

@@ -51,7 +51,8 @@ class GraphStats {
   localization_common::Averager duration_averager_ = localization_common::Averager("Duration");
   localization_common::Averager num_optical_flow_factors_averager_ =
     localization_common::Averager("Num Optical Flow Factors");
-  localization_common::Averager num_loc_factors_averager_ = localization_common::Averager("Num Loc Factors");
+  localization_common::Averager num_loc_proj_factors_averager_ = localization_common::Averager("Num Loc Proj Factors");
+  localization_common::Averager num_loc_pose_factors_averager_ = localization_common::Averager("Num Loc Pose Factors");
   localization_common::Averager num_imu_factors_averager_ = localization_common::Averager("Num Imu Factors");
   localization_common::Averager num_rotation_factors_averager_ = localization_common::Averager("Num Rotation Factors");
   localization_common::Averager num_standstill_between_factors_averager_ =
@@ -65,6 +66,7 @@ class GraphStats {
   localization_common::Averager total_error_averager_ = localization_common::Averager("Total Factor Error");
   localization_common::Averager of_error_averager_ = localization_common::Averager("OF Factor Error");
   localization_common::Averager loc_proj_error_averager_ = localization_common::Averager("Loc Proj Factor Error");
+  localization_common::Averager loc_pose_error_averager_ = localization_common::Averager("Loc Pose Factor Error");
   localization_common::Averager imu_error_averager_ = localization_common::Averager("Imu Factor Error");
   localization_common::Averager rotation_error_averager_ = localization_common::Averager("Rotation Factor Error");
   localization_common::Averager standstill_between_error_averager_ =

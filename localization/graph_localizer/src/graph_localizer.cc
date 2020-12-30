@@ -1110,15 +1110,6 @@ int GraphLocalizer::NumSmartFactors(const bool check_valid) const {
   return num_of_factors;
 }
 
-int GraphLocalizer::NumVLFactors() const {
-  if (params_.factor.loc_adder.add_pose_priors)
-    return NumFactors<gtsam::LocPoseFactor>();
-  else if (params_.factor.loc_adder.add_projections)
-    return NumFactors<gtsam::LocProjectionFactor<>>();
-  else
-    return 0;
-}
-
 const GraphValues& GraphLocalizer::graph_values() const { return *graph_values_; }
 
 const gtsam::NonlinearFactorGraph& GraphLocalizer::factor_graph() const { return graph_; }
