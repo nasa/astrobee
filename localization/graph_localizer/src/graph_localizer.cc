@@ -250,6 +250,11 @@ boost::optional<std::pair<gtsam::imuBias::ConstantBias, lc::Time>> GraphLocalize
   return latest_bias;
 }
 
+// Latest extrapolated pose time is limited by latest imu time
+boost::optional<lc::Time> GraphLocalizer::LatestExtrapolatedPoseTime() const {
+  return latest_imu_integrator_.LatestTime();
+}
+
 void GraphLocalizer::AddImuMeasurement(const lm::ImuMeasurement& imu_measurement) {
   latest_imu_integrator_.BufferImuMeasurement(imu_measurement);
 }
@@ -264,7 +269,7 @@ bool GraphLocalizer::AddOpticalFlowMeasurement(
   // TODO(rsoussan): This is a bug in optical flow node, fix there
   static lc::Time last_time = optical_flow_feature_points_measurement.timestamp;
   if (last_time == optical_flow_feature_points_measurement.timestamp) {
-    LogError("AddOpticalFlowMeasurement: Same timestamp measurement, ignoring.");
+    LogWarning("AddOpticalFlowMeasurement: Same timestamp measurement, ignoring.");
     last_time = optical_flow_feature_points_measurement.timestamp;
     return false;
   }

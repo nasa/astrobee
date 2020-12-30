@@ -141,6 +141,15 @@ void GraphLocalizerWrapper::VLVisualLandmarksCallback(const ff_msgs::VisualLandm
 
 bool GraphLocalizerWrapper::CheckPoseSanity(const gtsam::Pose3& sparse_mapping_pose, const lc::Time timestamp) const {
   if (!graph_localizer_) return true;
+  const auto latest_extrapolated_pose_time = graph_localizer_->LatestExtrapolatedPoseTime();
+  if (!latest_extrapolated_pose_time) {
+    LogWarning("CheckPoseSanity: Failed to get latest extrapolated pose time.");
+    return true;
+  }
+  if (timestamp > *latest_extrapolated_pose_time) {
+    LogWarning("CheckPoseSanity: Timestamp occurs after latest extrapolated pose time");
+    return true;
+  }
   const auto combined_nav_state = graph_localizer_->GetCombinedNavState(timestamp);
   if (!combined_nav_state) {
     LogInfoEveryN(50, "CheckPoseSanity: Failed to get combined nav state.");
