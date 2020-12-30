@@ -38,6 +38,7 @@ void FakeLocalizerNodelet::SubscribeAndAdvertise(ros::NodeHandle* nh) {
   pose_pub_ = nh->advertise<geometry_msgs::PoseStamped>(TOPIC_LOCALIZATION_POSE, 1);
   twist_pub_ = nh->advertise<geometry_msgs::TwistStamped>(TOPIC_LOCALIZATION_TWIST, 1);
   state_pub_ = nh->advertise<ff_msgs::EkfState>(TOPIC_GNC_EKF, 1);
+  heartbeat_pub_ = nh->advertise<ff_msgs::Heartbeat>(TOPIC_HEARTBEAT, 5, true);
 
   pose_sub_ = nh->subscribe(TOPIC_LOCALIZATION_TRUTH, 1, &FakeLocalizerNodelet::PoseCallback, this,
                             ros::TransportHints().tcpNoDelay());
@@ -58,6 +59,13 @@ void FakeLocalizerNodelet::PoseCallback(geometry_msgs::PoseStamped::ConstPtr con
   pose_pub_.publish(pose);
   const lc::Time timestamp = lc::TimeFromHeader(pose->header);
   PublishLocState(timestamp);
+  heartbeat_.header.stamp = ros::Time::now();
+  // Publish heartbeat for graph localizer and imu augmentor since flight software expects this
+  // and this runs in place of them
+  heartbeat_.node = NODE_GRAPH_LOC;
+  heartbeat_pub_.publish(heartbeat_);
+  heartbeat_.node = NODE_IMU_AUG;
+  heartbeat_pub_.publish(heartbeat_);
 }
 
 void FakeLocalizerNodelet::TwistCallback(geometry_msgs::TwistStamped::ConstPtr const& twist) {

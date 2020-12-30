@@ -19,6 +19,7 @@
 #define FAKE_LOCALIZER_FAKE_LOCALIZER_NODELET_H_
 
 #include <fake_localizer/twist.h>
+#include <ff_msgs/Heartbeat.h>
 #include <ff_msgs/SetEkfInput.h>
 #include <ff_util/ff_nodelet.h>
 #include <localization_common/time.h>
@@ -61,7 +62,8 @@ class FakeLocalizerNodelet : public ff_util::FreeFlyerNodelet {
   boost::optional<Twist> twist_;
   int input_mode_ = ff_msgs::SetEkfInputRequest::MODE_TRUTH;
   ros::Subscriber pose_sub_, twist_sub_;
-  ros::Publisher state_pub_, pose_pub_, twist_pub_;
+  ros::Publisher state_pub_, pose_pub_, twist_pub_, heartbeat_pub_;
+  ff_msgs::Heartbeat heartbeat_;
   tf2_ros::TransformBroadcaster transform_pub_;
   ros::ServiceServer input_mode_srv_;
 };
