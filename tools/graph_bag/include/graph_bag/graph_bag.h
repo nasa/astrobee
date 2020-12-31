@@ -21,7 +21,7 @@
 
 #include <camera/camera_params.h>
 #include <graph_bag/graph_localizer_simulator.h>
-#include <graph_bag/imu_bias_tester_wrapper.h>
+#include <imu_bias_tester/imu_bias_tester_wrapper.h>
 #include <graph_bag/live_measurement_simulator.h>
 #include <imu_augmentor/imu_augmentor_wrapper.h>
 
@@ -57,12 +57,11 @@ class GraphBag {
   std::unique_ptr<GraphLocalizerSimulator> graph_localizer_simulator_;
   std::unique_ptr<LiveMeasurementSimulator> live_measurement_simulator_;
   rosbag::Bag results_bag_;
-  ImuBiasTesterWrapper imu_bias_tester_wrapper_;
+  imu_bias_tester::ImuBiasTesterWrapper imu_bias_tester_wrapper_;
   imu_augmentor::ImuAugmentorWrapper imu_augmentor_wrapper_;
   std::string output_stats_file_;
   bool save_optical_flow_images_;
   const std::string kFeatureTracksImageTopic_ = "feature_track_image";
-  const std::string kImuBiasTesterPoseTopic_ = "imu_bias_tester";
   std::unique_ptr<camera::CameraParameters> nav_cam_params_;
   gtsam::Pose3 body_T_nav_cam_;
   int ar_min_num_landmarks_;

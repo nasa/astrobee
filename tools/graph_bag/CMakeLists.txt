@@ -33,7 +33,7 @@ catkin_package(
 
 # include ff_nodelet to get ff_util header files since these aren't exposed elsewhere
 create_library(TARGET ${PROJECT_NAME} 
-  LIBS ff_common ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} camera ff_nodelet graph_localizer imu_augmentor imu_integration lk_optical_flow localization_common localization_measurements localization_node sparse_mapping msg_conversions 
+  LIBS ff_common ${OpenCV_LIBRARIES} ${catkin_LIBRARIES} camera ff_nodelet graph_localizer imu_augmentor imu_bias_tester imu_integration lk_optical_flow localization_common localization_measurements localization_node sparse_mapping msg_conversions 
   INC ${catkin_INCLUDE_DIRS}
 )
 

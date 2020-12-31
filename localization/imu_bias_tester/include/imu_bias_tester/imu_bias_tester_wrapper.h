@@ -15,11 +15,11 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef GRAPH_BAG_IMU_BIAS_TESTER_WRAPPER_H_
-#define GRAPH_BAG_IMU_BIAS_TESTER_WRAPPER_H_
+#ifndef IMU_BIAS_TESTER_IMU_BIAS_TESTER_WRAPPER_H_
+#define IMU_BIAS_TESTER_IMU_BIAS_TESTER_WRAPPER_H_
 
 #include <ff_msgs/EkfState.h>
-#include <graph_bag/imu_bias_tester.h>
+#include <imu_bias_tester/imu_bias_tester.h>
 #include <localization_common/combined_nav_state.h>
 
 #include <geometry_msgs/PoseStamped.h>
@@ -29,7 +29,7 @@
 #include <string>
 #include <vector>
 
-namespace graph_bag {
+namespace imu_bias_tester {
 class ImuBiasTesterWrapper {
  public:
   explicit ImuBiasTesterWrapper(const std::string& graph_config_path_prefix = "");
@@ -40,5 +40,5 @@ class ImuBiasTesterWrapper {
  private:
   std::unique_ptr<ImuBiasTester> imu_bias_tester_;
 };
-}  // namespace graph_bag
-#endif  // GRAPH_BAG_IMU_BIAS_TESTER_WRAPPER_H_
+}  // namespace imu_bias_tester
+#endif  // IMU_BIAS_TESTER_IMU_BIAS_TESTER_WRAPPER_H_

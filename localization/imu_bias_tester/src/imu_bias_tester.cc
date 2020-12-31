@@ -16,12 +16,12 @@
  * under the License.
  */
 
-#include <graph_bag/imu_bias_tester.h>
+#include <imu_bias_tester/imu_bias_tester.h>
 #include <imu_integration/utilities.h>
 
 #include <glog/logging.h>
 
-namespace graph_bag {
+namespace imu_bias_tester {
 namespace ii = imu_integration;
 namespace lc = localization_common;
 namespace lm = localization_measurements;
@@ -37,7 +37,7 @@ std::vector<lc::CombinedNavState> ImuBiasTester::PimPredict(const lc::CombinedNa
   while (combined_nav_states_.size() >= 2) {
     auto lower_bound_state_it = combined_nav_states_.begin();
     const auto upper_bound_timestamp = std::next(lower_bound_state_it)->first;
-    if (LatestTime() < upper_bound_timestamp) break;
+    if (*LatestTime() < upper_bound_timestamp) break;
     if (!Initialized()) Initialize(lower_bound_state_it->second);
     IntegrateAndRemoveMeasurements(lower_bound_state_it->second, upper_bound_timestamp, predicted_states);
     combined_nav_states_.erase(lower_bound_state_it);
@@ -79,4 +79,4 @@ void ImuBiasTester::RemoveOldCombinedNavStatesIfNeeded() {
     oldest_state_it = combined_nav_states_.erase(oldest_state_it);
   }
 }
-}  // namespace graph_bag
+}  // namespace imu_bias_tester

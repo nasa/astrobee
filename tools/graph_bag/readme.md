@@ -7,9 +7,6 @@ The graph bag package provides several tools for measuring localization performa
 ## GraphBag
 Graph bag simulates localization using a saved bagfile.  Rather than relying on rosbag play, it loads measurements directly and greatly decreases runtime.  To accurately simulate measurement delays and drops, the LiveMeasurementSimulator class is provided along with a config file to provide delays and minimum spacing between measurements.  Graph bag saves results to a new bag file that can be processed by the plot\_results\_main.py script into a pdf showing information such as poses estiamtes, velocity estimates, bias estiates, covariances, and more.
 
-## ImuBiasTester
-The imu bias tester provides a way to evaluate the accuracy of imu biases without having bias groundtruth.  It works by relying on some sort of localization groundtruth instead.  The bias tester integrates imu measurements but updates biases as localization estimates are provided.  Thus, if the biases are perfectly estimated by the localizer, the integrated imu measurements should perfectly match localization groundtruth.  
-
 ## BagImuFilterer
 The bag imu filterer enables the testing of imu filters written in c++.  It parses a bag file and loads a c++ imu filter, then saves the filtered data to a new bag file.  The filtered data can be plotted and analyzed by the imu\_analyzer script.
 

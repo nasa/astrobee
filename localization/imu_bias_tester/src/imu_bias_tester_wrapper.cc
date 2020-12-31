@@ -17,14 +17,14 @@
  */
 
 #include <config_reader/config_reader.h>
-#include <graph_bag/imu_bias_tester_wrapper.h>
+#include <imu_bias_tester/imu_bias_tester_wrapper.h>
 #include <imu_integration/utilities.h>
 #include <localization_common/utilities.h>
 #include <localization_measurements/imu_measurement.h>
 
-#include <glog/logging.h>
+#include <localization_common/logger.h>
 
-namespace graph_bag {
+namespace imu_bias_tester {
 namespace ii = imu_integration;
 namespace lc = localization_common;
 namespace lm = localization_measurements;
@@ -35,7 +35,7 @@ ImuBiasTesterWrapper::ImuBiasTesterWrapper(const std::string& graph_config_path_
   lc::LoadGraphLocalizerConfig(config, graph_config_path_prefix);
 
   if (!config.ReadFiles()) {
-    LOG(FATAL) << "Failed to read config files.";
+    LogFatal("Failed to read config files.");
   }
 
   imu_integration::ImuIntegratorParams params;
@@ -51,4 +51,4 @@ std::vector<lc::CombinedNavState> ImuBiasTesterWrapper::LocalizationStateCallbac
 void ImuBiasTesterWrapper::ImuCallback(const sensor_msgs::Imu& imu_msg) {
   imu_bias_tester_->BufferImuMeasurement(lm::ImuMeasurement(imu_msg));
 }
-}  // namespace graph_bag
+}  // namespace imu_bias_tester

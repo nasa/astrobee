@@ -89,11 +89,11 @@ void GraphBag::SaveOpticalFlowTracksImage(const sensor_msgs::ImageConstPtr& imag
 
 void GraphBag::SaveImuBiasTesterPredictedStates(
   const std::vector<lc::CombinedNavState>& imu_bias_tester_predicted_states) {
-  for (const auto state : imu_bias_tester_predicted_states) {
+  for (const auto& state : imu_bias_tester_predicted_states) {
     geometry_msgs::PoseStamped pose_msg;
     lc::PoseToMsg(state.pose(), pose_msg.pose);
     lc::TimeToHeader(state.timestamp(), pose_msg.header);
-    results_bag_.write("/" + kImuBiasTesterPoseTopic_ + "/pose", ros::Time(state.timestamp()), pose_msg);
+    results_bag_.write("/" + std::string(TOPIC_IMU_BIAS_TESTER_POSE), ros::Time(state.timestamp()), pose_msg);
   }
 }
 

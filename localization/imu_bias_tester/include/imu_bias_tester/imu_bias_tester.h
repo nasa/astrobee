@@ -16,8 +16,8 @@
  * under the License.
  */
 
-#ifndef GRAPH_BAG_IMU_BIAS_TESTER_H_
-#define GRAPH_BAG_IMU_BIAS_TESTER_H_
+#ifndef IMU_BIAS_TESTER_IMU_BIAS_TESTER_H_
+#define IMU_BIAS_TESTER_IMU_BIAS_TESTER_H_
 
 #include <imu_integration/imu_integrator.h>
 #include <imu_integration/imu_integrator_params.h>
@@ -26,7 +26,7 @@
 #include <map>
 #include <vector>
 
-namespace graph_bag {
+namespace imu_bias_tester {
 class ImuBiasTester : public imu_integration::ImuIntegrator {
  public:
   explicit ImuBiasTester(const imu_integration::ImuIntegratorParams& params);
@@ -47,6 +47,6 @@ class ImuBiasTester : public imu_integration::ImuIntegrator {
   bool initialized_;
   boost::optional<localization_common::CombinedNavState> last_predicted_combined_nav_state_;
 };
-}  // namespace graph_bag
+}  // namespace imu_bias_tester
 
-#endif  // GRAPH_BAG_IMU_BIAS_TESTER_H_
+#endif  // IMU_BIAS_TESTER_IMU_BIAS_TESTER_H_
