@@ -18,8 +18,16 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(dds_msgs)
 
+## Compile as C++11, supported in ROS Kinetic and newer
+add_compile_options(-std=c++11)
+
 find_package(catkin REQUIRED COMPONENTS
 )
+
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
+find_package(Miro REQUIRED )
+find_package(RtiDds REQUIRED )
+find_package(Soracore REQUIRED )
 
 catkin_package(
   LIBRARIES
@@ -30,19 +38,24 @@ catkin_package(
 ## Build ##
 ###########
 
-message(STATUS "Copying IDL files")
+# message(STATUS "Copying IDL files")
 file(GLOB DDS_IDL_FILES
-  "${CMAKE_SOURCE_DIR}/communications/dds_msgs/idl/*.idl")
+  "idl/*.idl")
 
 file(COPY ${DDS_IDL_FILES} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
 set(LIB_NAME "rapidExtAstrobee")
 
+include(CreateDdsMsgTargets)
+
 set(EXTRA_RTIDDS_IDL_ARGS -I${SORACORE_IDL_DIR}/rapidDds)
 create_dds_msg_targets(
   NAME ${LIB_NAME}
   DIR ${CMAKE_CURRENT_BINARY_DIR}
-  INCLUDES "-I${SORACORE_IDL_DIR}/rapidDds")
+  INCLUDES "-I${CMAKE_SOURCE_DIR}/rapidDds")
+
+# message(-I${DDS_IDL_FILES}/rapidDds)
+
 
 add_library(${LIB_NAME} ${rapidExtAstrobee_GENERATED})
 target_link_libraries(${LIB_NAME}
