@@ -57,6 +57,10 @@
     </include>
   </group>
 
+  <include file="$(find imu_bias_tester)/launch/imu_bias_tester.launch">
+    <arg name="terminal" value="terminator -x"/>
+  </include>
+
   <!-- Nodes to run -->
   <group unless="$(arg image_features)">
     <include file="$(find lk_optical_flow)/launch/lk_optical_flow.launch">
