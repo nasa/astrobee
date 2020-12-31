@@ -40,7 +40,7 @@ find_package(JsonCpp REQUIRED)
 
 catkin_package(
   INCLUDE_DIRS include
-  LIBRARIES ff_nodelet config_server config_client perf_timer jsonloader
+  LIBRARIES ff_nodelet ff_flight config_server config_client perf_timer jsonloader
   CATKIN_DEPENDS config_reader roscpp nodelet dynamic_reconfigure ff_msgs diagnostic_msgs tf2_geometry_msgs actionlib msg_conversions
 )
 

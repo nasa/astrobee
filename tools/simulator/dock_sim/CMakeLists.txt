@@ -15,17 +15,46 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+cmake_minimum_required(VERSION 2.8.3)
 project(dock_sim)
+
+## Compile as C++11, supported in ROS Kinetic and newer
+add_compile_options(-std=c++11)
+
+find_package(catkin REQUIRED COMPONENTS
+  roscpp
+  ff_util
+  ff_msgs
+  nodelet
+)
 
 catkin_package(
   LIBRARIES dock_sim
-  DEPENDS roscpp ff_msgs nodelet
+  DEPENDS roscpp ff_util ff_msgs nodelet
 )
 
-create_library(TARGET dock_sim
-  LIBS ${catkin_LIBRARIES} ${GLOG_LIBRARIES} ff_nodelet
-  INC ${catkin_INCLUDES} ${GLOG_INCLUDE_DIRS}
-  DEPS ff_msgs
+###########
+## Build ##
+###########
+
+# Specify additional locations of header files
+include_directories(
+  include
+  ${catkin_INCLUDE_DIRS}
 )
 
-install_launch_files()
+# Declare C++ libraries
+add_library(dock_sim
+  src/dock_sim.cc
+)
+add_dependencies(dock_sim ${catkin_EXPORTED_TARGETS})
+target_link_libraries(dock_sim ${catkin_LIBRARIES})
+
+#############
+## Install ##
+#############
+
+# Mark launch files for installation
+install(DIRECTORY launch/
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
+  PATTERN ".svn" EXCLUDE)

@@ -15,9 +15,16 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+cmake_minimum_required(VERSION 2.8.3)
 project(eps_sim)
 
-find_package(catkin2 REQUIRED COMPONENTS
+## Compile as C++11, supported in ROS Kinetic and newer
+add_compile_options(-std=c++11)
+
+find_package(catkin REQUIRED COMPONENTS
+  roscpp
+  ff_util
+  ff_msgs
   sensor_msgs
   message_generation
 )
@@ -31,19 +38,34 @@ generate_messages(
   DEPENDENCIES sensor_msgs
 )
 
-#create_msg_targets(SDIR srv
-#  DEPS sensor_msgs
-#)
 
 catkin_package(
   LIBRARIES eps_sim
-  DEPENDS roscpp ff_msgs ff_nodelet
+  DEPENDS roscpp ff_util ff_msgs
 )
 
-create_library(TARGET eps_sim
-  LIBS ${catkin_LIBRARIES} ${GLOG_LIBRARIES} ff_nodelet
-  INC ${catkin_INCLUDES} ${GLOG_INCLUDE_DIRS}
-  DEPS ff_msgs eps_sim_generate_messages_cpp
+###########
+## Build ##
+###########
+
+# Specify additional locations of header files
+include_directories(
+  include
+  ${catkin_INCLUDE_DIRS}
 )
 
-install_launch_files()
+# Declare C++ libraries
+add_library(eps_sim
+  src/eps_sim.cc
+)
+add_dependencies(eps_sim ${catkin_EXPORTED_TARGETS})
+target_link_libraries(eps_sim glog ${catkin_LIBRARIES})
+
+#############
+## Install ##
+#############
+
+# Mark launch files for installation
+install(DIRECTORY launch/
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
+  PATTERN ".svn" EXCLUDE)

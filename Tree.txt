@@ -71,18 +71,18 @@
 │   ├── ff_util 				DONE
 │   ├── jsonloader				DONE
 │   ├── msg_conversions 		DONE
-├── simulation					TODO
+├── simulation					DONE
 ├── tools
 │   ├── ekf_bag					DONE
 │   ├── ekf_video				DONE
 │   ├── gds_helper				DONE
 │   ├── gnc_visualizer			DONE
-│   ├── rviz_visualizer			TODO
+│   ├── rviz_visualizer			DONE
 │   ├── simulator
-│   │   ├── arm_sim				TODO
-│   │   ├── dock_sim			TODO
-│   │   ├── eps_sim				TODO
-│   └── visualeyez				TODO
-└── wdock						TODO
+│   │   ├── arm_sim				DONE
+│   │   ├── dock_sim			DONE
+│   │   ├── eps_sim				DONE
+│   └── visualeyez				DONE
+└── wdock						DONE
 
 644 directories, 2725 files

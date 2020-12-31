@@ -15,15 +15,45 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+cmake_minimum_required(VERSION 2.8.3)
 project(rviz_visualizer)
 
+## Compile as C++11, supported in ROS Kinetic and newer
+add_compile_options(-std=c++11)
+
+find_package(catkin REQUIRED COMPONENTS
+  roscpp
+  visualization_msgs
+  ff_util
+  config_reader
+)
 catkin_package(
-  CATKIN_DEPENDS roscpp visualization_msgs
+  CATKIN_DEPENDS roscpp visualization_msgs ff_util config_reader
 )
 
-create_tool_targets(DIR tools
-  LIBS ${catkin_LIBRARIES} msg_conversions ff_common config_reader
-  INC ${catkin_INCLUDE_DIRS}
+###########
+## Build ##
+###########
+
+# Specify additional locations of header files
+include_directories(
+  include
+  ${catkin_INCLUDE_DIRS}
 )
 
-install_launch_files()
+## Declare a C++ executable: overhead_info
+add_executable(overhead_info tools/overhead_info.cc)
+add_dependencies(overhead_info ${catkin_EXPORTED_TARGETS})
+target_link_libraries(overhead_info
+  gflags ${catkin_LIBRARIES})
+
+## Declare a C++ executable: visualization_node
+add_executable(visualization_node tools/visualization_node.cc)
+add_dependencies(visualization_node ${catkin_EXPORTED_TARGETS})
+target_link_libraries(visualization_node
+  gflags ${catkin_LIBRARIES})
+
+# Mark launch files for installation
+install(DIRECTORY launch/
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
+  PATTERN ".svn" EXCLUDE)

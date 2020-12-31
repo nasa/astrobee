@@ -15,7 +15,27 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+cmake_minimum_required(VERSION 2.8.3)
 project(visualeyez)
+
+## Compile as C++11, supported in ROS Kinetic and newer
+add_compile_options(-std=c++11)
+
+find_package(catkin REQUIRED COMPONENTS
+  roscpp
+  nodelet
+  pluginlib
+  tf2
+  tf2_ros
+  geometry_msgs
+  visualization_msgs
+  std_srvs
+  ff_util
+  config_reader
+)
+
+# System dependencies are found with CMake's conventions
+find_package(Eigen3 REQUIRED)
 
 catkin_package(
   CATKIN_DEPENDS
@@ -27,17 +47,35 @@ catkin_package(
     geometry_msgs
     visualization_msgs
     std_srvs
+    ff_util
+    config_reader
 )
 
-create_library(TARGET visualeyez
-  LIBS ${catkin_LIBRARIES} ${EIGEN3_LIBRARIES} ${CERES_LIBRARIES} config_reader ff_nodelet
-  INC ${catkin_INCLUDE_DIRS} ${EIGEN3_INCLUDE_DIRS} ${CERES_INCLUDE_DIRS}
+###########
+## Build ##
+###########
+
+# Specify additional locations of header files
+include_directories(
+  include
+  ${catkin_INCLUDE_DIRS}
+  ${EIGEN3_INCLUDE_DIR}
 )
 
-create_tool_targets(
-  DIR tools
-  LIBS visualeyez
+# Declare C++ libraries
+add_library(visualeyez
+  src/visualeyez.cc
+  src/visualeyez_bridge.cc
+  src/visualeyez_server.cc
 )
+add_dependencies(visualeyez ${catkin_EXPORTED_TARGETS})
+target_link_libraries(visualeyez ${catkin_LIBRARIES})
+
+## Declare a C++ executable: visualeyez_tool
+add_executable(visualeyez_tool tools/visualeyez_tool.cc)
+add_dependencies(visualeyez_tool ${catkin_EXPORTED_TARGETS})
+target_link_libraries(visualeyez_tool
+  visualeyez gflags ${catkin_LIBRARIES})
 
 # Only test if it is enabled
 if (CATKIN_ENABLE_TESTING)
@@ -62,4 +100,11 @@ if (CATKIN_ENABLE_TESTING)
 
 endif()
 
-install_launch_files()
+#############
+## Install ##
+#############
+
+# Mark launch files for installation
+install(DIRECTORY launch/
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
+  PATTERN ".svn" EXCLUDE)
