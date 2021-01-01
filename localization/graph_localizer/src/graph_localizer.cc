@@ -395,7 +395,7 @@ bool GraphLocalizer::TriangulateNewPoint(FactorsToAdd& factors_to_add) {
     }
 
     const gtsam::Pose3 world_T_camera = *world_T_body * params_.calibration.body_T_nav_cam;
-    camera_set.emplace_back(world_T_camera, *params_.calibration.nav_cam_intrinsics);
+    camera_set.emplace_back(world_T_camera, params_.calibration.nav_cam_intrinsics);
     measurements.emplace_back(projection_factor->measured());
     point_key = projection_factor->key2();
   }
