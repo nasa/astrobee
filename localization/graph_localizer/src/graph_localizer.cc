@@ -472,9 +472,10 @@ bool GraphLocalizer::MapProjectionNoiseScaling(const LocFactorAdderParams& param
           (*world_T_body * *(projection_factor->body_P_sensor())).inverse() * projection_factor->landmark_point();
         const gtsam::SharedIsotropic scaled_noise(
           gtsam::noiseModel::Isotropic::Sigma(2, params.projection_noise_scale * 1.0 / nav_cam_t_landmark.z()));
+        // Don't use robust cost here to more effectively correct a drift occurance
         gtsam::LocProjectionFactor<>::shared_ptr loc_projection_factor(new gtsam::LocProjectionFactor<>(
-          projection_factor->measured(), projection_factor->landmark_point(), Robust(scaled_noise, params.huber_k),
-          projection_factor->key(), projection_factor->calibration(), *(projection_factor->body_P_sensor())));
+          projection_factor->measured(), projection_factor->landmark_point(), scaled_noise, projection_factor->key(),
+          projection_factor->calibration(), *(projection_factor->body_P_sensor())));
         factor_it->factor = loc_projection_factor;
       }
       ++factor_it;
