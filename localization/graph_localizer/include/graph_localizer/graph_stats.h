@@ -21,20 +21,23 @@
 #include <localization_common/averager.h>
 #include <localization_common/timer.h>
 
+#include <vector>
+
 namespace graph_localizer {
 // Forward declaration since GraphLocalizer will have a GraphStats object
 class GraphLocalizer;
 
 class GraphStats {
  public:
+  GraphStats();
   void UpdateErrors(const GraphLocalizer& graph);
   void UpdateStats(const GraphLocalizer& graph);
-  // Log everything
   void Log() const;
   void LogToFile(std::ofstream& ofstream) const;
-  void LogTimers() const;
-  void LogStatsAveragers() const;
-  void LogErrorAveragers() const;
+
+  std::vector<std::reference_wrapper<localization_common::Timer>> timers_;
+  std::vector<std::reference_wrapper<localization_common::Averager>> stats_averagers_;
+  std::vector<std::reference_wrapper<localization_common::Averager>> error_averagers_;
 
   // Timers
   localization_common::Timer optimization_timer_ = localization_common::Timer("Optimization");
@@ -74,6 +77,17 @@ class GraphStats {
   localization_common::Averager pose_prior_error_averager_ = localization_common::Averager("Pose Prior Error");
   localization_common::Averager velocity_prior_error_averager_ = localization_common::Averager("Velocity Prior Error");
   localization_common::Averager bias_prior_error_averager_ = localization_common::Averager("Bias Prior Error");
+
+ private:
+  template <typename Logger>
+  void LogToFile(const std::vector<std::reference_wrapper<Logger>>& loggers, std::ofstream& ofstream) const {
+    for (const auto& logger : loggers) logger.get().LogToFile(ofstream);
+  }
+
+  template <typename Logger>
+  void Log(const std::vector<std::reference_wrapper<Logger>>& loggers) const {
+    for (const auto& logger : loggers) logger.get().Log();
+  }
 };
 }  // namespace graph_localizer
 

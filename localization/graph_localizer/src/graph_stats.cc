@@ -25,6 +25,41 @@
 #include <gtsam/slam/PriorFactor.h>
 
 namespace graph_localizer {
+GraphStats::GraphStats() {
+  timers_.emplace_back(optimization_timer_);
+  timers_.emplace_back(update_timer_);
+  timers_.emplace_back(marginals_timer_);
+  timers_.emplace_back(slide_window_timer_);
+  timers_.emplace_back(add_buffered_factors_timer_);
+  timers_.emplace_back(log_error_timer_);
+  timers_.emplace_back(log_stats_timer_);
+
+  stats_averagers_.emplace_back(iterations_averager_);
+  stats_averagers_.emplace_back(num_states_averager_);
+  stats_averagers_.emplace_back(duration_averager_);
+  stats_averagers_.emplace_back(num_optical_flow_factors_averager_);
+  stats_averagers_.emplace_back(num_loc_pose_factors_averager_);
+  stats_averagers_.emplace_back(num_loc_proj_factors_averager_);
+  stats_averagers_.emplace_back(num_imu_factors_averager_);
+  stats_averagers_.emplace_back(num_rotation_factors_averager_);
+  stats_averagers_.emplace_back(num_standstill_between_factors_averager_);
+  stats_averagers_.emplace_back(num_vel_prior_factors_averager_);
+  stats_averagers_.emplace_back(num_marginal_factors_averager_);
+  stats_averagers_.emplace_back(num_factors_averager_);
+  stats_averagers_.emplace_back(num_features_averager_);
+
+  error_averagers_.emplace_back(total_error_averager_);
+  error_averagers_.emplace_back(of_error_averager_);
+  error_averagers_.emplace_back(loc_proj_error_averager_);
+  error_averagers_.emplace_back(loc_pose_error_averager_);
+  error_averagers_.emplace_back(imu_error_averager_);
+  error_averagers_.emplace_back(rotation_error_averager_);
+  error_averagers_.emplace_back(standstill_between_error_averager_);
+  error_averagers_.emplace_back(pose_prior_error_averager_);
+  error_averagers_.emplace_back(velocity_prior_error_averager_);
+  error_averagers_.emplace_back(bias_prior_error_averager_);
+}
+
 void GraphStats::UpdateErrors(const GraphLocalizer& graph) {
   log_error_timer_.Start();
   double total_error = 0;
@@ -114,84 +149,14 @@ void GraphStats::UpdateStats(const GraphLocalizer& graph) {
 }
 
 void GraphStats::Log() const {
-  LogTimers();
-  LogStatsAveragers();
-  LogErrorAveragers();
+  Log(timers_);
+  Log(stats_averagers_);
+  Log(error_averagers_);
 }
 
-// TODO(rsoussan): Unify this with other log calls
 void GraphStats::LogToFile(std::ofstream& ofstream) const {
-  // Timers
-  optimization_timer_.LogToFile(ofstream);
-  update_timer_.LogToFile(ofstream);
-  marginals_timer_.LogToFile(ofstream);
-  slide_window_timer_.LogToFile(ofstream);
-  add_buffered_factors_timer_.LogToFile(ofstream);
-  log_error_timer_.LogToFile(ofstream);
-  log_stats_timer_.LogToFile(ofstream);
-  // Averagers
-  iterations_averager_.LogToFile(ofstream);
-  num_states_averager_.LogToFile(ofstream);
-  duration_averager_.LogToFile(ofstream);
-  num_optical_flow_factors_averager_.LogToFile(ofstream);
-  num_loc_pose_factors_averager_.LogToFile(ofstream);
-  num_loc_proj_factors_averager_.LogToFile(ofstream);
-  num_imu_factors_averager_.LogToFile(ofstream);
-  num_rotation_factors_averager_.LogToFile(ofstream);
-  num_standstill_between_factors_averager_.LogToFile(ofstream);
-  num_vel_prior_factors_averager_.LogToFile(ofstream);
-  num_marginal_factors_averager_.LogToFile(ofstream);
-  num_factors_averager_.LogToFile(ofstream);
-  num_features_averager_.LogToFile(ofstream);
-  // Error Averagers
-  total_error_averager_.LogToFile(ofstream);
-  of_error_averager_.LogToFile(ofstream);
-  loc_proj_error_averager_.LogToFile(ofstream);
-  loc_pose_error_averager_.LogToFile(ofstream);
-  imu_error_averager_.LogToFile(ofstream);
-  rotation_error_averager_.LogToFile(ofstream);
-  standstill_between_error_averager_.LogToFile(ofstream);
-  pose_prior_error_averager_.LogToFile(ofstream);
-  velocity_prior_error_averager_.LogToFile(ofstream);
-  bias_prior_error_averager_.LogToFile(ofstream);
-}
-
-void GraphStats::LogTimers() const {
-  optimization_timer_.Log();
-  update_timer_.Log();
-  marginals_timer_.Log();
-  slide_window_timer_.Log();
-  add_buffered_factors_timer_.Log();
-  log_error_timer_.Log();
-  log_stats_timer_.Log();
-}
-
-void GraphStats::LogStatsAveragers() const {
-  iterations_averager_.Log();
-  num_states_averager_.Log();
-  duration_averager_.Log();
-  num_optical_flow_factors_averager_.Log();
-  num_loc_pose_factors_averager_.Log();
-  num_loc_proj_factors_averager_.Log();
-  num_imu_factors_averager_.Log();
-  num_rotation_factors_averager_.Log();
-  num_standstill_between_factors_averager_.Log();
-  num_vel_prior_factors_averager_.Log();
-  num_marginal_factors_averager_.Log();
-  num_factors_averager_.Log();
-  num_features_averager_.Log();
-}
-
-void GraphStats::LogErrorAveragers() const {
-  total_error_averager_.Log();
-  of_error_averager_.Log();
-  loc_proj_error_averager_.Log();
-  loc_pose_error_averager_.Log();
-  imu_error_averager_.Log();
-  rotation_error_averager_.Log();
-  standstill_between_error_averager_.Log();
-  pose_prior_error_averager_.Log();
-  velocity_prior_error_averager_.Log();
-  bias_prior_error_averager_.Log();
+  LogToFile(timers_, ofstream);
+  LogToFile(stats_averagers_, ofstream);
+  LogToFile(error_averagers_, ofstream);
 }
 }  // namespace graph_localizer
