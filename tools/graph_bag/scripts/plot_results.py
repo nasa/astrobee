@@ -312,8 +312,8 @@ def plot_stats(pdf, graph_localization_states, sparse_mapping_poses, output_csv_
   stats = ''
   rmse = rmse_utilities.rmse_timestamped_poses(graph_localization_states, sparse_mapping_poses)
   stats += 'rmse: ' + str(rmse)
-  with open(output_csv_file, 'w') as output_csv:
-    csv_writer = csv.writer(output_csv)
+  with open(output_csv_file, 'a') as output_csv:
+    csv_writer = csv.writer(output_csv, lineterminator='\n')
     csv_writer.writerow(['rmse', str(rmse)])
   plt.figure()
   plt.axis('off')

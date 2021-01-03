@@ -68,8 +68,7 @@ def run_graph_bag(params, output_dir):
   run_command = 'rosrun graph_bag run_graph_bag ' + params.bagfile + ' ' + params.map_file + ' ' + params.config_path + ' -i ' + params.image_topic + ' -o ' + output_bag_path + ' -r ' + params.robot_config_file + ' -w ' + params.world + ' -s ' + output_csv_file
   os.system(run_command)
   output_pdf_file = os.path.join(output_dir, bag_name + '_output.pdf')
-  plot_command = 'rosrun graph_bag plot_results_main.py ' + output_bag_path + ' --output-file ' 
-    + output_pdf_file + ' --output-csv-file ' + output_csv_file
+  plot_command = 'rosrun graph_bag plot_results_main.py ' + output_bag_path + ' --output-file ' + output_pdf_file + ' --output-csv-file ' + output_csv_file
   os.system(plot_command)
 
 
