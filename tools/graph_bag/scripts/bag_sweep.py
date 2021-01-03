@@ -28,13 +28,14 @@ import sys
 
 class GraphBagParams(object):
 
-  def __init__(self, bagfile, map_file, image_topic, config_path, robot_config_file, world):
+  def __init__(self, bagfile, map_file, image_topic, config_path, robot_config_file, world, use_image_features):
     self.bagfile = bagfile
     self.map_file = map_file
     self.image_topic = image_topic
     self.config_path = config_path
     self.robot_config_file = robot_config_file
     self.world = world
+    self.use_image_features = use_image_features
 
 
 def load_params(param_file):
@@ -42,7 +43,7 @@ def load_params(param_file):
   with open(param_file) as param_csvfile:
     reader = csv.reader(param_csvfile, delimiter=' ')
     for row in reader:
-      graph_bag_params_list.append(GraphBagParams(row[0], row[1], row[2], row[3], row[4], row[5]))
+      graph_bag_params_list.append(GraphBagParams(row[0], row[1], row[2], row[3], row[4], row[5], row[6]))
 
   return graph_bag_params_list
 
@@ -65,7 +66,7 @@ def run_graph_bag(params, output_dir):
   bag_name = os.path.splitext(os.path.basename(params.bagfile))[0]
   output_bag_path = os.path.join(output_dir, bag_name + '_results.bag')
   output_csv_file = os.path.join(output_dir, bag_name + '_stats.csv')
-  run_command = 'rosrun graph_bag run_graph_bag ' + params.bagfile + ' ' + params.map_file + ' ' + params.config_path + ' -i ' + params.image_topic + ' -o ' + output_bag_path + ' -r ' + params.robot_config_file + ' -w ' + params.world + ' -s ' + output_csv_file
+  run_command = 'rosrun graph_bag run_graph_bag ' + params.bagfile + ' ' + params.map_file + ' ' + params.config_path + ' -i ' + params.image_topic + ' -o ' + output_bag_path + ' -r ' + params.robot_config_file + ' -w ' + params.world + ' -s ' + output_csv_file + ' -f ' + params.use_image_features
   os.system(run_command)
   output_pdf_file = os.path.join(output_dir, bag_name + '_output.pdf')
   plot_command = 'rosrun graph_bag plot_results_main.py ' + output_bag_path + ' --output-file ' + output_pdf_file + ' --output-csv-file ' + output_csv_file
