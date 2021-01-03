@@ -17,6 +17,7 @@
 
 import datetime
 import glob
+import pandas as pd
 import os
 
 # Forward errors so we can recover failures
@@ -46,3 +47,8 @@ def create_directory(directory=None):
     exit()
   os.makedirs(directory)
   return directory
+
+def load_dataframe(files):
+  dataframes = [pd.read_csv(file) for file in files]
+  dataframe = pd.concat(dataframes)
+  return dataframe
