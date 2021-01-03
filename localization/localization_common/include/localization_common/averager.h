@@ -41,6 +41,7 @@ class Averager {
   int count() const;
   void Log() const;
   void LogToFile(std::ofstream& ofstream) const;
+  void LogToCsv(std::ofstream& ofstream) const;
   void LogEveryN(const int num_events_per_log) const;
   void UpdateAndLog(const double value);
   void UpdateAndLogEveryN(const double value, const int num_events_per_log);
@@ -49,6 +50,7 @@ class Averager {
 
  private:
   std::string StatsString() const;
+  std::string CsvStatsString() const;
   std::string LastValueString() const;
 
   std::string name_;

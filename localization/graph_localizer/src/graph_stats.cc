@@ -159,4 +159,11 @@ void GraphStats::LogToFile(std::ofstream& ofstream) const {
   LogToFile(stats_averagers_, ofstream);
   LogToFile(error_averagers_, ofstream);
 }
+
+void GraphStats::LogToCsv(std::ofstream& ofstream) const {
+  ofstream << "name, avg, min, max, stddev" << std::endl;
+  LogToCsv(timers_, ofstream);
+  LogToCsv(stats_averagers_, ofstream);
+  LogToCsv(error_averagers_, ofstream);
+}
 }  // namespace graph_localizer

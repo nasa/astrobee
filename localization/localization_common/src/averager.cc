@@ -54,12 +54,25 @@ std::string Averager::StatsString() const {
   return ss.str();
 }
 
+std::string Averager::CsvStatsString() const {
+  std::stringstream ss;
+  // Format is average, min, max, stddev
+  // Spaces removed from name and replaced with underscores
+  std::string name = name_ + spacer_ + type_name_;
+  std::replace(name.begin(), name.end(), ' ', '_');
+  ss << name << ", " << average() << ", " << boost::accumulators::min(accumulator_) << ", "
+     << boost::accumulators::max(accumulator_) << ", " << std::sqrt(boost::accumulators::variance(accumulator_));
+  return ss.str();
+}
+
 void Averager::Log() const {
   LogInfo(LastValueString());
   LogInfo(StatsString());
 }
 
 void Averager::LogToFile(std::ofstream& ofstream) const { ofstream << StatsString() << std::endl; }
+
+void Averager::LogToCsv(std::ofstream& ofstream) const { ofstream << CsvStatsString() << std::endl; }
 
 void Averager::UpdateAndLog(const double value) {
   Update(value);

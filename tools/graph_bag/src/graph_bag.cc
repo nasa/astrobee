@@ -193,8 +193,8 @@ void GraphBag::Run() {
   } else {
     std::ofstream log_file;
     log_file.open(output_stats_file_);
-    graph_bag_timer.LogToFile(log_file);
-    graph_stats->LogToFile(log_file);
+    graph_stats->LogToCsv(log_file);
+    graph_bag_timer.LogToCsv(log_file);
   }
 }
 }  // namespace graph_bag

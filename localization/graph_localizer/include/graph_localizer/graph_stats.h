@@ -34,6 +34,7 @@ class GraphStats {
   void UpdateStats(const GraphLocalizer& graph);
   void Log() const;
   void LogToFile(std::ofstream& ofstream) const;
+  void LogToCsv(std::ofstream& ofstream) const;
 
   std::vector<std::reference_wrapper<localization_common::Timer>> timers_;
   std::vector<std::reference_wrapper<localization_common::Averager>> stats_averagers_;
@@ -82,6 +83,11 @@ class GraphStats {
   template <typename Logger>
   void LogToFile(const std::vector<std::reference_wrapper<Logger>>& loggers, std::ofstream& ofstream) const {
     for (const auto& logger : loggers) logger.get().LogToFile(ofstream);
+  }
+
+  template <typename Logger>
+  void LogToCsv(const std::vector<std::reference_wrapper<Logger>>& loggers, std::ofstream& ofstream) const {
+    for (const auto& logger : loggers) logger.get().LogToCsv(ofstream);
   }
 
   template <typename Logger>
