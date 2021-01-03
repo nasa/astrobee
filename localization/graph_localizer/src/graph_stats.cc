@@ -161,7 +161,7 @@ void GraphStats::LogToFile(std::ofstream& ofstream) const {
 }
 
 void GraphStats::LogToCsv(std::ofstream& ofstream) const {
-  ofstream << "name, avg, min, max, stddev" << std::endl;
+  ofstream << "name,avg,min,max,stddev" << std::endl;
   LogToCsv(timers_, ofstream);
   LogToCsv(stats_averagers_, ofstream);
   LogToCsv(error_averagers_, ofstream);

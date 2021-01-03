@@ -60,8 +60,8 @@ std::string Averager::CsvStatsString() const {
   // Spaces removed from name and replaced with underscores
   std::string name = name_ + spacer_ + type_name_;
   std::replace(name.begin(), name.end(), ' ', '_');
-  ss << name << ", " << average() << ", " << boost::accumulators::min(accumulator_) << ", "
-     << boost::accumulators::max(accumulator_) << ", " << std::sqrt(boost::accumulators::variance(accumulator_));
+  ss << name << "," << average() << "," << boost::accumulators::min(accumulator_) << ","
+     << boost::accumulators::max(accumulator_) << "," << std::sqrt(boost::accumulators::variance(accumulator_));
   return ss.str();
 }
 
