@@ -28,8 +28,9 @@ if __name__ == '__main__':
   parser = argparse.ArgumentParser()
   parser.add_argument('bagfile')
   parser.add_argument('--output-file', default='output.pdf')
+  parser.add_argument('--output-csv-file', default='results.csv')
   args = parser.parse_args()
   if not os.path.isfile(args.bagfile):
     print('Bag file ' + args.bagfile + ' does not exist.')
     sys.exit()
-  plot_results.create_plots(args.bagfile, args.output_file)
+  plot_results.create_plots(args.bagfile, args.output_file, args.output_csv_file)

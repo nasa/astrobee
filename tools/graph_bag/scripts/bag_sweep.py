@@ -17,15 +17,17 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import multiprocessing_helpers 
+import multiprocessing_helpers
 
-import csv 
+import csv
 import itertools
 import multiprocessing
 import os
 import sys
- 
+
+
 class GraphBagParams(object):
+
   def __init__(self, bagfile, map_file, image_topic, config_path, robot_config_file, world):
     self.bagfile = bagfile
     self.map_file = map_file
@@ -34,14 +36,16 @@ class GraphBagParams(object):
     self.robot_config_file = robot_config_file
     self.world = world
 
+
 def load_params(param_file):
   graph_bag_params_list = []
   with open(param_file) as param_csvfile:
     reader = csv.reader(param_csvfile, delimiter=' ')
     for row in reader:
       graph_bag_params_list.append(GraphBagParams(row[0], row[1], row[2], row[3], row[4], row[5]))
-      
+
   return graph_bag_params_list
+
 
 def check_params(graph_bag_params_list):
   for params in graph_bag_params_list:
@@ -52,18 +56,20 @@ def check_params(graph_bag_params_list):
       print('Map file ' + params.map_file + ' does not exist.')
       sys.exit()
 
+
 # Add traceback so errors are forwarded, otherwise
 # some errors are suppressed due to the multiprocessing
 # library call
 @multiprocessing_helpers.full_traceback
-def run_graph_bag(params, output_dir): 
+def run_graph_bag(params, output_dir):
   bag_name = os.path.splitext(os.path.basename(params.bagfile))[0]
   output_bag_path = os.path.join(output_dir, bag_name + '_results.bag')
   output_csv_file = os.path.join(output_dir, bag_name + '_stats.csv')
   run_command = 'rosrun graph_bag run_graph_bag ' + params.bagfile + ' ' + params.map_file + ' ' + params.config_path + ' -i ' + params.image_topic + ' -o ' + output_bag_path + ' -r ' + params.robot_config_file + ' -w ' + params.world + ' -s ' + output_csv_file
   os.system(run_command)
   output_pdf_file = os.path.join(output_dir, bag_name + '_output.pdf')
-  plot_command = 'rosrun graph_bag plot_results_main.py ' + output_bag_path + ' --output-file ' + output_pdf_file 
+  plot_command = 'rosrun graph_bag plot_results_main.py ' + output_bag_path + ' --output-file ' 
+    + output_pdf_file + ' --output-csv-file ' + output_csv_file
   os.system(plot_command)
 
 

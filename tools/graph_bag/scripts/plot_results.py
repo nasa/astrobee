@@ -31,6 +31,7 @@ import geometry_msgs
 import math
 import rosbag
 
+import csv
 
 def l2_map(vector3ds):
   return map(lambda (x, y, z): math.sqrt(x + y + z), zip(vector3ds.xs, vector3ds.ys, vector3ds.zs))
@@ -307,10 +308,13 @@ def add_other_vector3d_plots(pdf, imu_augmented_graph_localization_states):
   plt.close()
 
 
-def plot_stats(pdf, graph_localization_states, sparse_mapping_poses):
+def plot_stats(pdf, graph_localization_states, sparse_mapping_poses, output_csv_file):
   stats = ''
   rmse = rmse_utilities.rmse_timestamped_poses(graph_localization_states, sparse_mapping_poses)
   stats += 'rmse: ' + str(rmse)
+  with open(output_csv_file, 'w') as output_csv:
+    csv_writer = csv.writer(output_csv)
+    csv_writer.writerow(['rmse', str(rmse)])
   plt.figure()
   plt.axis('off')
   plt.text(0.0, 0.5, stats)
@@ -379,7 +383,7 @@ def has_topic(bag, topic):
   return topic in topics
 
 
-def create_plots(bagfile, output_file):
+def create_plots(bagfile, output_pdf_file, output_csv_file='results.csv'):
   bag = rosbag.Bag(bagfile)
 
   has_imu_augmented_graph_localization_state = has_topic(bag, '/gnc/ekf')
@@ -397,7 +401,7 @@ def create_plots(bagfile, output_file):
 
   bag.close()
 
-  with PdfPages(output_file) as pdf:
+  with PdfPages(output_pdf_file) as pdf:
     add_pose_plots(pdf, sparse_mapping_poses, ar_tag_poses, graph_localization_states, imu_augmented_graph_localization_states)
     if has_imu_bias_tester_poses:
       add_imu_bias_tester_poses(pdf, imu_bias_tester_poses, sparse_mapping_poses)
@@ -405,4 +409,4 @@ def create_plots(bagfile, output_file):
       add_other_loc_plots(pdf, graph_localization_states, imu_augmented_graph_localization_states)
     else:
       add_other_loc_plots(pdf, graph_localization_states, graph_localization_states)
-    plot_stats(pdf, graph_localization_states, sparse_mapping_poses)
+    plot_stats(pdf, graph_localization_states, sparse_mapping_poses, output_csv_file)
