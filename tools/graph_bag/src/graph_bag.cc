@@ -42,7 +42,7 @@ namespace gl = graph_localizer;
 namespace lc = localization_common;
 
 GraphBag::GraphBag(const std::string& bag_name, const std::string& map_file, const std::string& image_topic,
-                   const std::string& results_bag, const std::string& output_stats_file,
+                   const std::string& results_bag, const std::string& output_stats_file, const bool use_image_features,
                    const std::string& graph_config_path_prefix)
     : results_bag_(results_bag, rosbag::bagmode::Write),
       imu_bias_tester_wrapper_(graph_config_path_prefix),
@@ -60,6 +60,10 @@ GraphBag::GraphBag(const std::string& bag_name, const std::string& map_file, con
 
   LiveMeasurementSimulatorParams params;
   LoadLiveMeasurementSimulatorParams(config, bag_name, map_file, image_topic, params);
+  // Load this seperately so this can be set independently of config file,
+  // i.e. when running a bag sweep or param sweep
+  // TODO(rsoussan): clean this up
+  params.use_image_features = use_image_features;
   live_measurement_simulator_.reset(new LiveMeasurementSimulator(params));
 
   GraphLocalizerSimulatorParams graph_params;

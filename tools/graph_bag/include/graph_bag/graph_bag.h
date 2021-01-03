@@ -40,7 +40,7 @@ namespace graph_bag {
 class GraphBag {
  public:
   GraphBag(const std::string& bag_name, const std::string& map_file, const std::string& image_topic,
-           const std::string& results_bag, const std::string& output_stats_file,
+           const std::string& results_bag, const std::string& output_stats_file, const bool use_image_features = true,
            const std::string& graph_config_path_prefix = "");
   void Run();
 
