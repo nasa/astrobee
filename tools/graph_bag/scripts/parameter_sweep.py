@@ -25,6 +25,7 @@ import multiprocessing
 import numpy as np
 import os
 
+import average_results
 import config_creator
 import utilities
 
@@ -61,6 +62,15 @@ def test_values(values, job_id, value_names, output_dir, bag_file, map_file, ima
 def test_values_helper(zipped_vals):
   return test_values(*zipped_vals)
 
+def concat_results(job_ids, directory):
+  results_csv_files = []
+  for job_id in job_ids:
+    results_csv_files.append(os.path.join(directory, str(job_id), 'graph_stats.csv'))
+  # Results are written in job id order
+  combined_results = average_results.combined_results(results_csv_files)
+  combined_results_file = os.path.join(directory, 'param_sweep_combined_results.csv')
+  combined_results.to_csv(combined_results_file, index=False)
+
 
 def parameter_sweep(all_value_combos, value_names, output_dir, bag_file, map_file, image_topic, config_path,
                     robot_config, world, use_image_features):
@@ -74,6 +84,7 @@ def parameter_sweep(all_value_combos, value_names, output_dir, bag_file, map_fil
                    itertools.repeat(bag_file), itertools.repeat(map_file), itertools.repeat(image_topic),
                    itertools.repeat(config_path), itertools.repeat(robot_config), itertools.repeat(world),
                    itertools.repeat(use_image_features)))
+  concat_results(job_ids, output_dir)
 
 
 def make_all_value_combinations(value_ranges):

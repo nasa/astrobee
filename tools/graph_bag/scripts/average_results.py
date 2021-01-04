@@ -23,14 +23,8 @@ import os
 
 import utilities
 
-
-def average_results(directory):
-  dataframes = []
-  results_csv_files = utilities.get_files_recursive(directory, '*stats.csv')
-  if not results_csv_files:
-    print('Failed to find stats.csv files')
-    exit()
-  dataframes = [pd.read_csv(file) for file in results_csv_files]
+def combined_results(csv_files):
+  dataframes = [pd.read_csv(file) for file in csv_files]
   if not dataframes:
     print('Failed to create dataframes')
     exit()
@@ -39,6 +33,11 @@ def average_results(directory):
   for dataframe in dataframes:
     trimmed_dataframe = pd.DataFrame(dataframe.transpose().values[1:2], columns=names)
     combined_dataframes = combined_dataframes.append(trimmed_dataframe, ignore_index=True)
+  return combined_dataframes
+ 
+
+def average_results(directory, csv_files):
+  combined_dataframes = combined_results(csv_files)
   mean_dataframe = pd.DataFrame()
   for name in names:
     mean_dataframe[name] = [combined_dataframes[name].mean()]
@@ -51,4 +50,8 @@ if __name__ == '__main__':
   parser = argparse.ArgumentParser()
   parser.add_argument('directory', help='Full path to directory where results files are.')
   args = parser.parse_args()
-  average_results(args.directory)
+  results_csv_files = utilities.get_files_recursive(directory, '*stats.csv')
+  if not results_csv_files:
+    print('Failed to find stats.csv files')
+    exit()
+  average_results(args.directory, results_csv_files)
