@@ -39,6 +39,15 @@ def full_traceback(func):
 def get_files(directory, file_string):
   return glob.glob(os.path.join(directory, file_string))
 
+def get_files_recursive(directory, file_string):
+  subdirectory_csv_files = []
+  _, subdirectories, _ = os.walk(directory).next()
+  for subdirectory in subdirectories:
+    subdirectory_path = os.path.join(directory, subdirectory)
+    for subdirectory_csv_file in get_files(subdirectory_path, file_string):
+      subdirectory_csv_files.append(subdirectory_csv_file)
+  return subdirectory_csv_files
+
 def create_directory(directory=None):
   if directory == None:
     directory = os.path.join(os.getcwd(), datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S'))

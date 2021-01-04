@@ -47,7 +47,7 @@ int main(int argc, char** argv) {
     "image-topic,i", po::value<std::string>(&image_topic)->default_value("mgt/img_sampler/nav_cam/image_record"),
     "Image topic")("output-bagfile,o", po::value<std::string>(&output_bagfile)->default_value("results.bag"),
                    "Output bagfile")("output-stats-file,s",
-                                     po::value<std::string>(&output_stats_file)->default_value("graph_stats.txt"),
+                                     po::value<std::string>(&output_stats_file)->default_value("graph_stats.csv"),
                                      "Output stats file")(
     "robot-config-file,r", po::value<std::string>(&robot_config_file)->default_value("config/robots/bumble.config"),
     "Robot config file")("world,w", po::value<std::string>(&world)->default_value("iss"), "World name")(

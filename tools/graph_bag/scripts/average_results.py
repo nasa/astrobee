@@ -16,16 +16,17 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
+
+import argparse
 import pandas as pd
 import os
 
 import utilities
 
-# Averages results from all *stats.csv files in a directory.
-if __name__ == '__main__':
-  dataframes = []
 
-  results_csv_files = utilities.get_files(os.getcwd(), '*stats.csv')
+def average_results(directory):
+  dataframes = []
+  results_csv_files = utilities.get_files_recursive(directory, '*stats.csv')
   if not results_csv_files:
     print('Failed to find stats.csv files')
     exit()
@@ -41,4 +42,13 @@ if __name__ == '__main__':
   mean_dataframe = pd.DataFrame()
   for name in names:
     mean_dataframe[name] = [combined_dataframes[name].mean()]
-  mean_dataframe.to_csv('averaged_results.csv', index=False)
+  averaged_results_file = os.path.join(directory, 'averaged_results.csv')
+  mean_dataframe.to_csv(averaged_results_file, index=False)
+
+
+# Averages results from all *stats.csv files in a directory (including subdirectories).
+if __name__ == '__main__':
+  parser = argparse.ArgumentParser()
+  parser.add_argument('directory', help='Full path to directory where results files are.')
+  args = parser.parse_args()
+  average_results(args.directory)
