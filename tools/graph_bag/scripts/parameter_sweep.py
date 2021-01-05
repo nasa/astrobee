@@ -63,6 +63,7 @@ def test_values(values, job_id, value_names, output_dir, bag_file, map_file, ima
 def test_values_helper(zipped_vals):
   return test_values(*zipped_vals)
 
+
 def concat_results(job_ids, directory):
   results_csv_files = []
   for job_id in job_ids:
@@ -131,6 +132,7 @@ def make_values_and_parameter_sweep(output_dir, bag_file, map_file, image_topic,
 
   parameter_sweep(all_value_combos, value_names, output_dir, bag_file, map_file, image_topic, config_path, robot_config,
                   world, use_image_features)
+  return output_dir
 
 
 if __name__ == '__main__':
