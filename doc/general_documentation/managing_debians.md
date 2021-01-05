@@ -26,27 +26,9 @@ Your environment needs to be configured properly to cross-compile Astrobee
 Robot Software for the `armhf` architecture:
 [see NASA Install documentation](../NASA_INSTALL.md)
 
-### Update the release version
+### Creating a release
 
-    cd $FF_SOURCE
-    ./scripts/setup/debians/update_release.sh
-
-*Note: make sure that your EDITOR variable is set to your preferred editor
-before invoking this script*
-
-### Push the changelog
-
-    git commit -m "meaningful message" files_that_changed
-    git push
-
-### Create an official release
-
-If creating a Debian for deployment on a flight robot, or a public release,
-make sure to create a git release following the process described in
-`./gitrelease.md`
-
-*It is required that all Debians deployed on space have an associated
-release branch*
+Please see the [flight release documentation](flight_release.md) for informationon how to create a release and update the release version.
 
 ### Create the Debian package
 
