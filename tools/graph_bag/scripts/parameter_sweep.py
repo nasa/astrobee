@@ -51,8 +51,9 @@ def test_values(values, job_id, value_names, output_dir, bag_file, map_file, ima
   if image_topic is not None:
     run_command += ' -i ' + image_topic
   os.system(run_command)
-  output_file = os.path.join(new_output_dir, str(job_id) + '_output.pdf')
-  plot_command = 'rosrun graph_bag plot_results_main.py ' + output_bag + ' --output-file ' + output_file
+  output_pdf_file = os.path.join(new_output_dir, str(job_id) + '_output.pdf')
+  output_csv_file = os.path.join(new_output_dir, 'graph_stats.csv')
+  plot_command = 'rosrun graph_bag plot_results_main.py ' + output_bag + ' --output-file ' + output_pdf_file + ' --output-csv-file ' + output_csv_file
   os.system(plot_command)
 
 
