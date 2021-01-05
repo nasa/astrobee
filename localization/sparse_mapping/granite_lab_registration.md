@@ -8,13 +8,13 @@ The pictures below show the locations of those points. Look at the
 center of the cross next to the number "0" in a rectangle.
 
 ## Point 1
-![Point 1](./images/Point1.png)
+![Point 1](./images/Point1.jpg)
 
 ## Point 2
-![Point 2](./images/Point2.png)
+![Point 2](./images/Point2.jpg)
 
 ## Point 3
-![Point 3](./images/Point3.png)
+![Point 3](./images/Point3.jpg)
 
 ## Point 4
-![Point 4](./images/Point4.png)
+![Point 4](./images/Point4.jpg)
