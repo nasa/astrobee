@@ -38,6 +38,7 @@ def combined_results(csv_files):
 
 def average_results(directory, csv_files):
   combined_dataframes = combined_results(csv_files)
+  # TODO(rsoussan): fix this, get names 
   mean_dataframe = pd.DataFrame()
   for name in names:
     mean_dataframe[name] = [combined_dataframes[name].mean()]
