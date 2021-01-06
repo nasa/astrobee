@@ -332,10 +332,16 @@ class EkfLog(object):
 
     return stats, stat_names
 
-  def write_results_to_csv(self, job_id, results_csv_output_file):
+  def write_results_to_csv(self, job_id, results_csv_output_file, bagfile):
     with open(results_csv_output_file, 'w') as results_file:
       writer = csv.writer(results_file)
       stats, stat_names = self.get_stats(job_id)
+      bag_name = os.path.splitext(os.path.basename(bagfile))[0]
+      # TODO(rsoussan): better way to do this
+      stats.append(stats[-2])
+      stat_names.append('rmse')
+      stats.append(bag_name)
+      stat_names.append('Bag')
       writer.writerow(stat_names)
       writer.writerow(stats)
 
@@ -607,7 +613,7 @@ def run_ekf_and_save_stats(options):
   log = EkfLog(options.ekf_output_file, options.start_time, options.end_time)
 
   if options.save_stats:
-    log.write_results_to_csv(options.job_id, options.results_csv_output_file)
+    log.write_results_to_csv(options.job_id, options.results_csv_output_file, astrobee_bag)
     print("Printed csv reults for job_id: " + str(options.job_id))
 
   if options.make_plots: 
