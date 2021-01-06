@@ -53,11 +53,15 @@ def combine_results_in_csv_file(graph_bag_params, output_dir):
   # Don't save this as *stats.csv otherwise it will be including when averaging bag results in average_results.py
   combined_results_csv_file = os.path.join(output_dir, 'bag_sweep_stats_combined.csv')
   output_csv_files = []
+  bag_names = []
   for params in graph_bag_params:
     bag_name = os.path.splitext(os.path.basename(params.bagfile))[0]
+    bag_names.append(bag_name)
     output_csv_files.append(os.path.join(output_dir, bag_name + '_stats.csv'))
   combined_dataframe = average_results.combined_results(output_csv_files)
+  combined_dataframe.insert(0, 'Bag', bag_names)
   combined_dataframe.to_csv(combined_results_csv_file, index=False)
+
 
 def check_params(graph_bag_params_list):
   for params in graph_bag_params_list:
