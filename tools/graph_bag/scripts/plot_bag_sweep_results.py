@@ -28,6 +28,32 @@ import os
 import sys
 
 
+def save_rmse_results_to_csv(rmses, rmses_2=None, label_1=None, label_2=None):
+  mean_rmses_dataframe = pd.DataFrame()
+  labels = []
+  if label_1 and label_2:
+    labels.append(label_1)
+    labels.append(label_2)
+  if labels:
+    mean_rmses_dataframe['Label'] = labels
+  mean_rmses_list = []
+  mean_rmses_list.append(rmses.mean())
+  relative_rmses = []
+  relative_change_in_rmses = []
+  if rmses_2 is not None:
+    mean_rmses_list.append(rmses_2.mean())
+    relative_rmses.append(mean_rmses_list[0] / mean_rmses_list[1])
+    relative_rmses.append(mean_rmses_list[1] / mean_rmses_list[0])
+    relative_change_in_rmses.append(mean_rmses_list[0] / mean_rmses_list[1] - 1.0)
+    relative_change_in_rmses.append(mean_rmses_list[1] / mean_rmses_list[0] - 1.0)
+    mean_rmses_dataframe['rel_rmse_%'] = relative_rmses
+    mean_rmses_dataframe['rel_rmse_delta_%'] = relative_change_in_rmses
+  mean_rmses_dataframe['mean_rmse'] = mean_rmses_list
+  mean_rmses_csv_file = 'mean_rmses.csv'
+  mean_rmses_dataframe.to_csv(mean_rmses_csv_file, index=False)
+  return mean_rmses_list, labels, relative_rmses, relative_change_in_rmses
+
+
 def create_plot(output_file, csv_file, label_1='', csv_file_2=None, label_2=''):
   dataframe = pd.read_csv(csv_file)
   dataframe.sort_values(by=['Bag'], inplace=True)
@@ -70,6 +96,26 @@ def create_plot(output_file, csv_file, label_1='', csv_file_2=None, label_2=''):
     plt.tight_layout()
     pdf.savefig()
     plt.close()
+
+    # Plot mean rmses
+    mean_rmses, labels, relative_rmses, relative_change_in_rmses = save_rmse_results_to_csv(
+      rmses, rmses_2, label_1, label_2)
+    mean_rmses_1_string = 'rmse: ' + str(mean_rmses[0])
+    if labels:
+      mean_rmses_1_string += ', label: ' + labels[0]
+    plt.figure()
+    plt.axis('off')
+    plt.text(0.0, 0.5, mean_rmses_1_string)
+    if len(mean_rmses) > 1:
+      mean_rmses_2_string = 'rmse: ' + str(mean_rmses[1])
+      if labels:
+        mean_rmses_2_string += ', label: ' + labels[1]
+        plt.text(0.0, 0.4, mean_rmses_2_string)
+      relative_rmses_string = 'rel rmse %: ' + str(relative_rmses[0])
+      plt.text(0.0, 0.3, relative_rmses_string)
+      relative_rmses_change_string = 'rel change in rmse %: ' + str(relative_change_in_rmses[0])
+      plt.text(0.0, 0.2, relative_rmses_change_string)
+    pdf.savefig()
 
 
 if __name__ == '__main__':
