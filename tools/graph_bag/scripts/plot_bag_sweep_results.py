@@ -28,7 +28,7 @@ import os
 import sys
 
 
-def create_plot(output_file, csv_file):
+def create_plot(output_file, csv_file, label_1='', csv_file_2=None, label_2=''):
   dataframe = pd.read_csv(csv_file)
   rmses = dataframe['rmse']
   bag_names = dataframe['Bag']
@@ -37,9 +37,27 @@ def create_plot(output_file, csv_file):
     bag_name[-1 * max_name_length:] if len(bag_name) > max_name_length else bag_name for bag_name in bag_names
   ]
   x_axis_vals = range(len(shortened_bag_names))
+  rmses_2 = None
+  if (csv_file_2):
+    dataframe_2 = pd.read_csv(csv_file_2)
+    rmses_2 = dataframe_2['rmse']
+    bag_names_2 = dataframe_2['Bag']
+    if not bag_names.equals(bag_names_2):
+      print('Bag names for first and second csv file are not the same')
+      exit()
   with PdfPages(output_file) as pdf:
     plt.figure()
-    plt.plot(x_axis_vals, rmses, linestyle='None', marker='o', markeredgewidth=0.1, markersize=10.5)
+    plt.plot(x_axis_vals, rmses, 'b', label=label_1, linestyle='None', marker='o', markeredgewidth=0.1, markersize=10.5)
+    if (csv_file_2):
+      plt.plot(x_axis_vals,
+               rmses_2,
+               'r',
+               label=label_2,
+               linestyle='None',
+               marker='o',
+               markeredgewidth=0.1,
+               markersize=10.5)
+      plt.legend(prop={'size': 8}, bbox_to_anchor=(1.05, 1))
     plt.xticks(x_axis_vals, shortened_bag_names, fontsize=7, rotation=20)
     plt.ylabel('RMSE')
     plt.title('RMSE vs. Bag')
@@ -57,5 +75,8 @@ if __name__ == '__main__':
   # Combined csv results, where each row is the result from a bag file
   parser.add_argument('csv_file')
   parser.add_argument('--output-file', default='bag_sweep_results.pdf')
+  parser.add_argument('--csv-file2', help='Optional second csv file to plot')
+  parser.add_argument('--label1', default='', help='Optional label for first csv file')
+  parser.add_argument('--label2', default='', help='Optional label for second csv file')
   args = parser.parse_args()
-  create_plot(args.output_file, args.csv_file)
+  create_plot(args.output_file, args.csv_file, args.label1, args.csv_file2, args.label2)
