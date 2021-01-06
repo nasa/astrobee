@@ -32,11 +32,15 @@ def create_plot(output_file, csv_file):
   dataframe = pd.read_csv(csv_file)
   rmses = dataframe['rmse']
   bag_names = dataframe['Bag']
-  x_axis_vals = range(len(bag_names))
+  max_name_length = 45
+  shortened_bag_names = [
+    bag_name[-1 * max_name_length:] if len(bag_name) > max_name_length else bag_name for bag_name in bag_names
+  ]
+  x_axis_vals = range(len(shortened_bag_names))
   with PdfPages(output_file) as pdf:
     plt.figure()
     plt.plot(x_axis_vals, rmses, linestyle='None', marker='o', markeredgewidth=0.1, markersize=10.5)
-    plt.xticks(x_axis_vals, bag_names)
+    plt.xticks(x_axis_vals, shortened_bag_names, fontsize=7, rotation=20)
     plt.ylabel('RMSE')
     plt.title('RMSE vs. Bag')
     x_range = x_axis_vals[len(x_axis_vals) - 1] - x_axis_vals[0]
