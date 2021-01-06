@@ -30,8 +30,9 @@ import sys
 
 def create_plot(output_file, csv_file, label_1='', csv_file_2=None, label_2=''):
   dataframe = pd.read_csv(csv_file)
+  dataframe.sort_values(by=['Bag'], inplace=True)
   rmses = dataframe['rmse']
-  bag_names = dataframe['Bag']
+  bag_names = dataframe['Bag'].tolist()
   max_name_length = 45
   shortened_bag_names = [
     bag_name[-1 * max_name_length:] if len(bag_name) > max_name_length else bag_name for bag_name in bag_names
@@ -40,9 +41,10 @@ def create_plot(output_file, csv_file, label_1='', csv_file_2=None, label_2=''):
   rmses_2 = None
   if (csv_file_2):
     dataframe_2 = pd.read_csv(csv_file_2)
+    dataframe_2.sort_values(by=['Bag'], inplace=True)
     rmses_2 = dataframe_2['rmse']
-    bag_names_2 = dataframe_2['Bag']
-    if not bag_names.equals(bag_names_2):
+    bag_names_2 = dataframe_2['Bag'].tolist()
+    if bag_names != bag_names_2:
       print('Bag names for first and second csv file are not the same')
       exit()
   with PdfPages(output_file) as pdf:
