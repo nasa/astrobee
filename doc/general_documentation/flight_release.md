@@ -9,13 +9,19 @@ architecture.
 ## Create a Release Branch
 
 Release branches will be created on a user's fork. To make a release branch,
-checkout and update develop. Then make a release branch off of develop.
+checkout and update develop. Then make a release branch off of develop. Please
+name the branch release-0.x.x.
 
-    git checkout develop
-    git fetch upstream
-    git merge upstream/develop
-    git checkout -b release-0.x.x
 
+Please note that creating a release branch and specifying a version number
+indicates that the code on the branch is frozen with respect to further
+feature changes. However, as you identify bugs during lab testing before
+deployment to the ISS, you can still apply bug fixes on that release branch
+without incrementing the version number. Of course, that means that as you
+iterate, you might end up generating multiple debs with the same version number.
+For configuration management purposes, when checking whether two deployments
+used identical debs, you should always compare their git commit hashes rather
+than their version numbers.
 
 ## Update the Release Version
 
@@ -23,7 +29,8 @@ The release version must be updated before creating the Debian. Please use
 the update release script to do this. Before running the script, get a list of
 features that have been added since the last release. This list will need to be
 added to the change log that gets edited when the script is run. Also, in the
-change log, change UNRELEASED to testing.
+change log, change UNRELEASED to testing and change the email address to the
+astrobee fsw email address as in previous log entries.
 
     ./scripts/setup/debians/update_release.md 0.x.x
 
@@ -35,12 +42,12 @@ before invoking this script. Using vim seems to generate an unimportant error.*
 
 Please make sure to commit and push all the files that were changed.
 
-    git commit -m "meaninful message" files_that_changed
-    git push -u origin release-0.x.x
 
+## Create the Debians
 
-## Create the Debian package
-
+Your environment needs to be configured properly to cross-compile Astrobee
+Robot Software for the `armf` architecture. See
+[NASA Install documentation](NASA_INSTALL.md).
 
     ./scripts/build/build_debian.sh
 
@@ -63,20 +70,23 @@ your results in the
 ## Fix Bugs
 
 If there are bugs that arise during testing, please fix the bugs, push the
-fixes, recreate the debian, and repeat the release testing procedure.
+fixes, recreate the debians, and repeat the release testing procedure.
 
 ## Finish Release
 
-Once the debian passes all the required testing, it is ready to become an
+Once the debians pass all the required testing, it is ready to become an
 official flight release. Please make a pull request on astrobee develop and set
 Brian, Katie, or Marina as the reviewer. They will review the request and merge
-it into develop and master. You will also need to copy the debian to a temporary
-location on volar.
+it into develop and master. You will also need to copy the debians to a
+temporary location on volar.
 
     scp astrobee0_0.x.x_armhf.deb \
       <ndc_username>@volar:/home/p-free-flyer/free-flyer/FSW/ars_debs/dists/xenial/main/release_candidate/
+    scp astrobee-config_0.x.x_all.deb \
+      <ndc_username>@volar:/home/p-free-flyer/free-flyer/FSW/ars_debs/dists/xenial/main/release_candidate/
 
-After the debian has been copied to volar, make sure the group permissions are
+
+After the debians have been copied to volar, make sure the group permissions are
 set to read and right. Finally, please email Ruben Garcia Ruiz so that he can
 sign it and stage it.
 
@@ -85,5 +95,5 @@ sign it and stage it.
 This section is for reviewers only! After reviewing the pull request and
 verifying that the release passed all sections of the release testing procedure,
 please merge the pull request into develop. You will then need to merge the
-release branch into master as well. After this merge, on master, please create
-an annotated tag with a descriptive message of the most noteable new features.
+release branch into master as well. After this merge, please create a github
+release.

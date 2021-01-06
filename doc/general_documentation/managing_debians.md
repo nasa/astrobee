@@ -24,7 +24,7 @@ More information on how Astrobee is using
 
 Your environment needs to be configured properly to cross-compile Astrobee
 Robot Software for the `armhf` architecture:
-[see NASA Install documentation](../NASA_INSTALL.md)
+[see NASA Install documentation](NASA_INSTALL.md)
 
 ### Creating a release
 
