@@ -62,7 +62,7 @@ In the popup, in the 'Parent page' text box, please enter 'Executed Procedure'
 and click 'Copy'. Remove 'Copy of' from the title and add the version and date
 after the test number such that it looks like
 'IRG-FFTEST302 - 0.x.x -YYYY-MM-DD - Astrobee Release Testing'. Be sure to fill
-out the 'CAs-Ran Summary' table and the 'Result' and 'Notes' column for every
+out the 'As-Ran Summary' table and the 'Result' and 'Notes' column for every
 step. After running through the procedure, please provide a brief summary of
 your results in the
 [release testing results table](https://babelfish.arc.nasa.gov/confluence/display/FFFSW/Release+Testing+Results).
