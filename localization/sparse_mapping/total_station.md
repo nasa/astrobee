@@ -1,4 +1,4 @@
-\page total_station Survey with Total Station
+# Doing a Survey with the Total Station
 
 This will tell you how to just operate the Total Station device. When
 you use it in practice, you'll want to set your reference to the -1,
