@@ -24,6 +24,7 @@ import csv
 import itertools
 import multiprocessing
 import os
+import plot_bag_sweep_results
 import sys
 
 
@@ -61,6 +62,7 @@ def combine_results_in_csv_file(graph_bag_params, output_dir):
   combined_dataframe = average_results.combined_results(output_csv_files)
   combined_dataframe.insert(0, 'Bag', bag_names)
   combined_dataframe.to_csv(combined_results_csv_file, index=False)
+  return combined_results_csv_file
 
 
 def check_params(graph_bag_params_list):
@@ -102,4 +104,6 @@ def bag_sweep(config_file, output_dir):
   pool = multiprocessing.Pool(num_processes)
   # izip arguments so we can pass as one argument to pool worker
   pool.map(run_graph_bag_helper, itertools.izip(graph_bag_params_list, itertools.repeat(output_dir)))
-  combine_results_in_csv_file(graph_bag_params_list, output_dir)
+  combined_results_csv_file = combine_results_in_csv_file(graph_bag_params_list, output_dir)
+  output_file = os.path.join(output_dir, 'bag_sweep_results.pdf')
+  plot_bag_sweep_results.create_plot(output_file, combined_results_csv_file)
