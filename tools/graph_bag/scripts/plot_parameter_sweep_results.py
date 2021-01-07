@@ -24,6 +24,7 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 import pandas as pd
 
+import math
 import os
 import sys
 
@@ -47,15 +48,26 @@ def create_plot(output_file, csv_file, value_combos_file):
   with PdfPages(output_file) as pdf:
     plt.figure()
     plt.plot(x_axis_vals, rmses, linestyle='None', marker='o', markeredgewidth=0.1, markersize=10.5)
-    plt.xlabel(x_axis_label)
     plt.ylabel('RMSE')
     plt.title('RMSE vs. ' + x_axis_label)
     x_range = x_axis_vals[len(x_axis_vals) - 1] - x_axis_vals[0]
-    x_buffer = x_range * 0.1
-    # Extend x axis on either side to make data more visible
-    plt.xlim([x_axis_vals[0] - x_buffer, x_axis_vals[len(x_axis_vals) - 1] + x_buffer])
-    plt.ticklabel_format(useOffset=False)
+    # Use log scale if min and max x vals are more than 3 orders of magnitude apart
+    if (abs(math.log10(x_axis_vals[len(x_axis_vals) - 1]) - math.log10(x_axis_vals[0])) > 3):
+      plt.xscale('log', base=10)
+      # Extend x axis on either side using a log scale to make data more visible
+      first_val = x_axis_vals[0]
+      last_val = x_axis_vals[len(x_axis_vals) - 1]
+      if (first_val < last_val):
+        plt.xlim([first_val * 0.1, last_val * 10.0])
+      else:
+        plt.xlim([last_val * 0.1, first_val * 10.0])
+    else:
+      # Extend x axis on either side to make data more visible
+      x_buffer = x_range * 0.1
+      plt.xlim([x_axis_vals[0] - x_buffer, x_axis_vals[len(x_axis_vals) - 1] + x_buffer])
+      plt.ticklabel_format(useOffset=False)
     plt.tight_layout()
+    plt.xlabel(x_axis_label)
     pdf.savefig()
     plt.close()
 
