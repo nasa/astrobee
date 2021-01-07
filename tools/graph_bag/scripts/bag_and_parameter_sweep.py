@@ -19,6 +19,7 @@
 
 import bag_sweep
 import parameter_sweep
+import plot_parameter_sweep_results
 import utilities
 
 import argparse
@@ -97,3 +98,7 @@ if __name__ == '__main__':
 
   graph_bag_params_list = bag_sweep.load_params(args.config_file)
   bag_and_parameter_sweep(graph_bag_params_list, output_dir)
+  combined_results_file = os.path.join(output_dir, 'bag_and_param_sweep_stats.csv')
+  value_combos_file = os.path.join(output_dir, 'all_value_combos.csv')
+  results_pdf_file = os.path.join(output_dir, 'bag_and_param_sweep_results.pdf')
+  plot_parameter_sweep_results.create_plot(results_pdf_file, combined_results_file, value_combos_file)
