@@ -19,6 +19,7 @@
 #define GRAPH_BAG_PARAMETER_READER_H_
 
 #include <config_reader/config_reader.h>
+#include <graph_bag/graph_bag_params.h>
 #include <graph_bag/graph_localizer_simulator_params.h>
 #include <graph_bag/live_measurement_simulator_params.h>
 #include <graph_bag/message_buffer_params.h>
@@ -31,6 +32,7 @@ void LoadLiveMeasurementSimulatorParams(config_reader::ConfigReader& config, con
                                         const std::string& map_file, const std::string& image_topic,
                                         LiveMeasurementSimulatorParams& params);
 void LoadGraphLocalizerSimulatorParams(config_reader::ConfigReader& config, GraphLocalizerSimulatorParams& params);
+void LoadGraphBagParams(config_reader::ConfigReader& config, GraphBagParams& params);
 }  // namespace graph_bag
 
 #endif  // GRAPH_BAG_PARAMETER_READER_H_

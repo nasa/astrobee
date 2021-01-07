@@ -70,12 +70,7 @@ GraphBag::GraphBag(const std::string& bag_name, const std::string& map_file, con
   LoadGraphLocalizerSimulatorParams(config, graph_params);
   graph_localizer_simulator_.reset(new GraphLocalizerSimulator(graph_params, graph_config_path_prefix));
 
-  save_optical_flow_images_ = params.save_optical_flow_images;
-  // Needed for feature tracks visualization
-  nav_cam_params_.reset(new camera::CameraParameters(&config, "nav_cam"));
-  body_T_nav_cam_ = lc::LoadTransform(config, "nav_cam_transform");
-  sparse_mapping_min_num_landmarks_ = lc::LoadInt(config, "loc_adder_min_num_matches");
-  ar_min_num_landmarks_ = lc::LoadInt(config, "ar_tag_loc_adder_min_num_matches");
+  LoadGraphBagParams(config, params_);
 }
 
 void GraphBag::SavePoseMsg(const geometry_msgs::PoseStamped& pose_msg, const std::string& pose_topic) {
@@ -85,7 +80,7 @@ void GraphBag::SavePoseMsg(const geometry_msgs::PoseStamped& pose_msg, const std
 
 void GraphBag::SaveOpticalFlowTracksImage(const sensor_msgs::ImageConstPtr& image_msg,
                                           const graph_localizer::FeatureTrackMap& feature_tracks) {
-  const auto feature_track_image_msg = CreateFeatureTrackImage(image_msg, feature_tracks, *nav_cam_params_);
+  const auto feature_track_image_msg = CreateFeatureTrackImage(image_msg, feature_tracks, *params_.nav_cam_params);
   if (!feature_track_image_msg) return;
   const ros::Time timestamp = lc::RosTimeFromHeader(image_msg->header);
   results_bag_.write("/" + kFeatureTracksImageTopic_, timestamp, **feature_track_image_msg);
@@ -130,7 +125,7 @@ void GraphBag::Run() {
     const auto of_msg = live_measurement_simulator_->GetOFMessage(current_time);
     if (of_msg) {
       graph_localizer_simulator_->BufferOpticalFlowMsg(*of_msg);
-      if (save_optical_flow_images_) {
+      if (params_.save_optical_flow_images) {
         const auto img_msg = live_measurement_simulator_->GetImageMessage(lc::TimeFromHeader(of_msg->header));
         if (img_msg && graph_localizer_simulator_->feature_tracks())
           SaveOpticalFlowTracksImage(*img_msg, *(graph_localizer_simulator_->feature_tracks()));
@@ -139,8 +134,8 @@ void GraphBag::Run() {
     const auto vl_msg = live_measurement_simulator_->GetVLMessage(current_time);
     if (vl_msg) {
       graph_localizer_simulator_->BufferVLVisualLandmarksMsg(*vl_msg);
-      if (gl::ValidVLMsg(*vl_msg, sparse_mapping_min_num_landmarks_)) {
-        const gtsam::Pose3 sparse_mapping_global_T_body = lc::GtPose(*vl_msg, body_T_nav_cam_.inverse());
+      if (gl::ValidVLMsg(*vl_msg, params_.sparse_mapping_min_num_landmarks)) {
+        const gtsam::Pose3 sparse_mapping_global_T_body = lc::GtPose(*vl_msg, params_.body_T_nav_cam.inverse());
         const lc::Time timestamp = lc::TimeFromHeader(vl_msg->header);
         SavePoseMsg(graph_localizer::PoseMsg(sparse_mapping_global_T_body, timestamp), TOPIC_SPARSE_MAPPING_POSE);
       }
@@ -155,7 +150,7 @@ void GraphBag::Run() {
         marked_world_T_dock_for_resetting_if_necessary = true;
       }
       graph_localizer_simulator_->BufferARVisualLandmarksMsg(*ar_msg);
-      if (gl::ValidVLMsg(*ar_msg, ar_min_num_landmarks_)) {
+      if (gl::ValidVLMsg(*ar_msg, params_.ar_min_num_landmarks)) {
         const auto ar_tag_pose_msg = graph_localizer_simulator_->LatestARTagPoseMsg();
         if (!ar_tag_pose_msg) {
           LogWarning("Run: Failed to get ar tag pose msg");

@@ -43,4 +43,13 @@ void LoadLiveMeasurementSimulatorParams(config_reader::ConfigReader& config, con
 void LoadGraphLocalizerSimulatorParams(config_reader::ConfigReader& config, GraphLocalizerSimulatorParams& params) {
   params.optimization_time = lc::LoadDouble(config, "optimization_time");
 }
+
+void LoadGraphBagParams(config_reader::ConfigReader& config, GraphBagParams& params) {
+  params.initialize_biases_without_advancing_bag = lc::LoadBool(config, "initialize_biases_without_advancing_bag");
+  params.save_optical_flow_images = lc::LoadBool(config, "save_optical_flow_images");
+  params.nav_cam_params.reset(new camera::CameraParameters(&config, "nav_cam"));
+  params.body_T_nav_cam = lc::LoadTransform(config, "nav_cam_transform");
+  params.sparse_mapping_min_num_landmarks = lc::LoadInt(config, "loc_adder_min_num_matches");
+  params.ar_min_num_landmarks = lc::LoadInt(config, "ar_tag_loc_adder_min_num_matches");
+}
 }  // namespace graph_bag
