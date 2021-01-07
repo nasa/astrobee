@@ -26,7 +26,6 @@
 
 namespace graph_bag {
 struct GraphBagParams {
-  bool initialize_biases_without_advancing_bag;
   bool save_optical_flow_images;
   std::unique_ptr<camera::CameraParameters> nav_cam_params;
   gtsam::Pose3 body_T_nav_cam;

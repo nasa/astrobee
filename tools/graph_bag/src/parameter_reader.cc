@@ -45,7 +45,6 @@ void LoadGraphLocalizerSimulatorParams(config_reader::ConfigReader& config, Grap
 }
 
 void LoadGraphBagParams(config_reader::ConfigReader& config, GraphBagParams& params) {
-  params.initialize_biases_without_advancing_bag = lc::LoadBool(config, "initialize_biases_without_advancing_bag");
   params.save_optical_flow_images = lc::LoadBool(config, "save_optical_flow_images");
   params.nav_cam_params.reset(new camera::CameraParameters(&config, "nav_cam"));
   params.body_T_nav_cam = lc::LoadTransform(config, "nav_cam_transform");
