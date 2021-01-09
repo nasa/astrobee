@@ -1,8 +1,8 @@
-\page buildmap Map building
+# Map building
 
 Here we describe how to build a map.
 
-# Summary {#buildmap}
+## Summary
 
 1. Reduce the number of images.
 
@@ -14,16 +14,14 @@ Here we describe how to build a map.
 
 5. Register the map.
 
-# Map building
-
-We go through how a map is made.
+# Detailed explanation
 
 ## Reduce the number of images
 
 Here, we delete the images that overlap highly. (This tool is, like all
 others, in astrobee_build/native.)
 
-  select_images -density_factor 1.4 <image dir>/*.jpg
+    select_images -density_factor 1.4 <image dir>/*.jpg
 
 This is a non-reversible operation, so it should be invoked on a copy
 of the images.
@@ -33,7 +31,7 @@ kept. Some experimentation with this number is necessary. A value of
 1.4 seems to work well. It may be needed to decrease this to 1.0 if
 images appear to be too dense. Ideally the images should have perhaps
 on the order of 2/3 to 3/4 of overlap. This tool is not perfect. One
-should inspect the images in the 'eog' viewer, and delete redundant
+should inspect the images in the `eog` viewer, and delete redundant
 ones from it manually, using the Delete key.
 
 The images can also be inspected and deleted with nvm_visualize, a
@@ -48,7 +46,7 @@ images must be added back manually.
 Alternatively, one can simply first pick every 10th or 20th image,
 such as:
 
-  ls <image dir>/*.jpg
+    ls <image dir>/*.jpg
 
 then copy these to a new directory.
 
@@ -62,21 +60,21 @@ the data is acquired.
 In the first step, one needs to set some environmental variables, as
 follows:
 
-export ASTROBEE_RESOURCE_DIR=$SOURCE_PATH/astrobee/resources
-export ASTROBEE_CONFIG_DIR=$SOURCE_PATH/astrobee/config
-export ASTROBEE_ROBOT=p4d
-export ASTROBEE_WORLD=granite
+    export ASTROBEE_RESOURCE_DIR=$SOURCE_PATH/astrobee/resources
+    export ASTROBEE_CONFIG_DIR=$SOURCE_PATH/astrobee/config
+    export ASTROBEE_ROBOT=p4d
+    export ASTROBEE_WORLD=granite
 
-Here, p4d is the robot being used to take pictures, and the world is
+Here, `p4d` is the robot being used to take pictures, and the world is
 the granite table. These may need to change, depending on your
 goals. Under the hood, the following configuration files will be read:
 
-  $ASTROBEE_CONFIG_DIR/cameras.config
+    $ASTROBEE_CONFIG_DIR/cameras.config
 
 which contains the image width and height (the camera we use is
 the nav cam) and
 
-  $ASTROBEE_CONFIG_DIR/robots/$ASTROBEE_ROBOT.config
+    $ASTROBEE_CONFIG_DIR/robots/$ASTROBEE_ROBOT.config
 
 having nav cam's intrinsics. If your camera is not the nav cam on p4d,
 and none of the other available config files apply, you can just
@@ -85,14 +83,14 @@ temporarily modify the above files to reflect your camera's parameters
 
 More details on these and other environmental variables can be found in
 
-  astrobee/astrobee/readme.md
+    $SOURCE_PATH/astrobee/readme.md
 
 ## Building a map
 
 Execute this command to construct a complete map:
 
-  build_map <image dir>/*.jpg [ -num_subsequent_images <val> ] \
-    -histogram_equalization -output_map <output.map>
+    build_map <image dir>/*.jpg [ -num_subsequent_images <val> ] \
+      -histogram_equalization -output_map <output.map>
 
 During map building, every image will be matched against every
 subsequent image in the sequence. To use only a limited number of
@@ -120,7 +118,7 @@ for how this approach should go.
 The `build_map` command runs a number of steps, which can also be invoked
 individually for further control.
 
-1. **Detect interest points**
+#### Detect interest points
 
     build_map <image dir>/*.jpg -feature_detection [ -sample_rate <N> ]
       -histogram_equalization [ -detector <detector> ] [ -descriptor <descriptor> ]
@@ -132,9 +130,9 @@ feature descriptor can be specified. The default is ORGBRISK.
 
 Here and below we omitted for brevity the -output_map option that is
 needed for the tool to run. The images need to be specified only at
-step 1 above, and not below, as by then they are rememberd by the map.
+step 1 above, and not below, as by then they are remembered by the map.
 
-2. **Match images**
+#### Match images
 
     build_map -feature_matching -histogram_equalization [ -num_subsequent_images <val> ]
 
@@ -143,33 +141,32 @@ that appear in multiple images. The number of subsequent images to
 match against can be specified, otherwise all pairwise matches are
 evaluated.
 
-3. **Build tracks**
+#### Build tracks
 
     build_map -track_building -histogram_equalization
 
 Take the feature matches and form "tracks" of features seen
 consistently across multiple frames.
 
-4. **Incremental bundle adjustment**
+#### Incremental bundle adjustment
 
     build_map -incremental_ba -histogram_equalization
 
-  Incremental bundle adjustment for transform initialization.
 
-5. **Bundle adjustment**
+#### Bundle adjustment
 
     build_map -bundle_adjustment -histogram_equalization
 
   Adjust the initial transformations to minimize error with bundle adjustment.
 
-If the options 
+If the options: 
 
-  -first_ba_index and -last_ba_index 
+    -first_ba_index and -last_ba_index 
 
 are specified, only cameras with indices between these (including both
 endpoints) will be optimized during bundle adjustment.
 
-6. **Map rebuilding**
+#### Map rebuilding
 
     build_map -rebuild -histogram_equalization
 
@@ -204,7 +201,7 @@ this stage, before the vocabulary database and pruning happens at the
 next step. See readme.md when it comes to such operations, where the
 script grow_map.py is used.
 
-7. **Vocabulary database**
+#### Vocabulary database
 
     build_map -vocab_db
 
@@ -253,10 +250,10 @@ building process. These include:
 
 The following options can be used to create more interest point features:
 
-  -min_surf_features, -max_surf_features, -min_surf_threshold,
-  -default_surf_threshold, -max_surf_threshold, -min_brisk_features,
-  -max_brisk_features, -min_brisk_threshold, -default_brisk_threshold,
-  -max_brisk_threshold, -histogram_equalization
+    -min_surf_features, -max_surf_features, -min_surf_threshold,
+    -default_surf_threshold, -max_surf_threshold, -min_brisk_features,
+    -max_brisk_features, -min_brisk_threshold, -default_brisk_threshold,
+    -max_brisk_threshold, -histogram_equalization
 
 The `build_map` command uses the file `output.map` as both input and output
 unless the flag `-output_map` is specified.
@@ -270,7 +267,7 @@ control points.
 To accomplish this, first open a subset of the images used to build
 the map in Hugin, such as:
 
-  hugin <image dir>/*.jpg
+    hugin <image dir>/*.jpg
 
 It will ask to enter a value for the FoV (field of view). That value
 is not important since we won't use it. One can input 10 degrees,
@@ -289,22 +286,12 @@ times in the text file. In the xyz text file all lines starting with
 the pound sign (#) are ignored, as well as all entries on any line
 beyond three numerical values.
 
-The xyz locations of the control points for the granite lab can be
-found in 
+The xyz locations of the control points for the granite lab, the 
+ISS and MGTF are mentioned below.
 
-  astrobee/localization/sparse_mapping/granite_xyz_controlPoints.txt
-
-and the control points for the AR tags on the dock station can be
-found in
-
-  localization/marker_tracking/ros/launch/granite_lab_tags.xml
-
-If a new set of world coordinates needs to be acquired, one can use
-the Total Station, as described in total_station.md, which is in the
-same directory as this file.
-
-How to create xyz coordinates for the JPM module of ISS and information
-about control points in the MGTF is described later in this document.
+If a set of world coordinates needs to be acquired, one can use the
+Total Station, as described in the [total station](total_station.md)
+documentation.
 
 Register the map with the command:
     
@@ -326,9 +313,9 @@ After registration is done, it will print each transformed coordinate
 point from the map and its corresponding measured point, as well as the 
 error among the two. That will look as follows:
 
-transformed computed xyz -- measured xyz -- error norm (meters)
--0.0149 -0.0539  0.0120 --  0.0000  0.0000  0.0000 --  0.0472 img1.jpg img2.jpg
- 1.8587  0.9533  0.1531 --  1.8710  0.9330  0.1620 --  0.0254 img3.jpg img4.jpg
+    transformed computed xyz -- measured xyz -- error norm (meters)
+    -0.0149 -0.0539  0.0120 --  0.0000  0.0000  0.0000 --  0.0472 img1.jpg img2.jpg
+     1.8587  0.9533  0.1531 --  1.8710  0.9330  0.1620 --  0.0254 img3.jpg img4.jpg
 
 The error norm should be no more than 3-5 cm. If for a point the error
 is too large, perhaps something went wrong in picking the points. That
@@ -338,8 +325,8 @@ pair.
 If all errors are large, that may mean the camera calibration is wrong
 and needs to be redone, and the map rebuilt, using
 
-  build_map -rebuild -rebuild_refloat_cameras -rebuild_replace_camera \
-    -histogram_equalization
+    build_map -rebuild -rebuild_refloat_cameras -rebuild_replace_camera \
+      -histogram_equalization
 
 or one should create images that are closer to the points used in
 registration.
@@ -362,6 +349,11 @@ to the registered map while doing bundle adjustment, re-register
 the merged map, and extract from it the submap corresponding to the
 new image set. 
 
+### Registration in the granite lab
+
+See the xyz coordinates of the control points used for registration in
+[granite_lab_registration.md](granite_lab_registration.md)
+
 ### Registration on the ISS
 
 No xyz coordinate measurements exist for the ISS. Instead, 3D points
@@ -371,23 +363,23 @@ be visualized in the ISS as follows:
 
 Open two terminals, and in each one type:
 
-  export BUILD_PATH=$HOME/astrobee_build/native
-  source $BUILD_PATH/devel/setup.bash
+    export BUILD_PATH=$HOME/astrobee_build/native
+    source $BUILD_PATH/devel/setup.bash
 
 In the first terminal start the simulator:
 
-  roslaunch astrobee sim.launch speed:=0.75 rviz:=true  
+    roslaunch astrobee sim.launch speed:=0.75 rviz:=true  
  
 In the second, run:
 
-  python $SOURCE_PATH/localization/sparse_mapping/tools/view_control_points.py \
-    $SOURCE_PATH/localization/sparse_mapping/iss_registration.txt
+    python $SOURCE_PATH/localization/sparse_mapping/tools/view_control_points.py \
+      $SOURCE_PATH/localization/sparse_mapping/iss_registration.txt
 
 Go back to the simulated ISS and examine the registration points.
 If the Rviz display looks too cluttered, most topics can be turned off.
 The registration points will be shown in Rviz under 
 
-  Debug/Sensors/Localization/Registration
+    Debug/Sensors/Localization/Registration
 
 If this topic is unchecked, it should be checked and one should
 run the Python script above again.
@@ -403,7 +395,7 @@ shown to be not accurate and should not be used.
 To create new points in this file, one runs in a terminal (after
 setting up the environment as above):
 
-  rostopic echo /clicked_point
+    rostopic echo /clicked_point
 
 then goes to RViz, clicks on the toolbar on "Publish Point", and
 clicks on a point on the ISS body. Its coordinates will be echoed in
@@ -419,7 +411,7 @@ Python command will refresh them.
 A set of 10 registration points were measured in the MGTF with the
 Total Station. They are in the file
 
-  $SOURCE_PATH/localization/sparse_mapping/mgtf_registration.txt
+    $SOURCE_PATH/localization/sparse_mapping/mgtf_registration.txt
 
 Two of these are on the back wall, and the rest are on the metal
 columns on the side walls, with four on each wall. Half of the points
@@ -427,7 +419,8 @@ are at eye level, and half at about knee-level.
 
 Each such point is a corner of a portion of a checkerboard pattern, 
 and it has a number written on the paper it is printed on, which is
-the id from the above file. 
+the id from the above file. A careful inspection of the MGTF may 
+be needed to identify them.
 
 ## Map verification
 
@@ -446,37 +439,43 @@ To test how the map may perform on the robot, do the following:
 
 ### Stage the new map
 
-1. Copy the new map on the robot MLP (preference in /data)
-```
+#### Copy the new map on the robot MLP (preferably in /data):
+
     scp <map2test.map> mlp:/data
- ```   
-2. On the MLP, move the current map aside
-```
+
+#### On the MLP, move the current map aside:
+
     ssh mlp
     cd /res/maps
     mv granite.map _granite.map
-```
-3. On the MLP, create a symlink to the new map
-```
-    ln -s /data/<map2test.map /res/maps/granite.map
-```
 
-### Stage the bag with images
+##### On the MLP, create a symlink to the new map:
+
+    ln -s /data/<map2test.map /res/maps/granite.map
+
+### Stage the bag with images:
 
     rsync --archive --partial --progress directory_of_bags mlp:/data/bags
 
-### Stage the feature counter utility (should be added to the install at one point)
+### Stage the feature counter utility (should be added to the install at one point):
 
     scp $SOURCE_PATH/localization/marker_tracking/ros/tools/features_counter.py mlp:
 
 ### Launch the localization node on LLP
 
+You will have to edit the file:
+    
+    /etc/robotname
+
+on MLP and LLP to replace the robot name with the robot you want to
+test. Please don't forget to undo your changes at the end, as otherwise
+this robot will give wrong results for other users.
+
+Then launch localization:
+
     ssh llp
     roslaunch astrobee astrobee.launch llp:=disabled mlp:=mlp nodes:=framestore,dds_ros_bridge,localization_node
 
-(TODO(oalexan1): Not sure if to set the robot name above. We are using
-one robot to localize with the data and map for another one.)
- 
 ### Enable localization and the mapped landmark production (on MLP)
 
     export ROS_MASTER_URI=http://llp:11311
@@ -506,20 +505,19 @@ created based on the images in the bag.
 
 ### Examine the performance and features on MLP
 
-1. Look at the load with htop
+#### Look at the load with htop
 
-2. Watch the frequency of feature production
-```
+#### Watch the frequency of feature production
+
     rostopic hz -w 5 /loc/ml/features
-```
+
 and echo the pose being output with the features:
-```
+
     rostopic echo /loc/ml/features | grep -A 17 header:
-```
-3. Watch the number of features being produced
-```
-    ~/features_counter.py ml
-```
+
+#### Watch the number of features being produced:
+
+  ~/features_counter.py ml
 
 ## Verify localization against a sparse map on a local machine
 
@@ -551,7 +549,9 @@ Sym link the map to test:
 Start the localization node:
 
     roslaunch astrobee astrobee.launch mlp:=local llp:=disabled \
-      nodes:=framestore,localization_node
+      nodes:=framestore,localization_node robot:=$ASTROBEE_ROBOT
+
+Note how we specify the robot name at the end. 
 
 Enable localization:
 
@@ -562,11 +562,11 @@ Then, as above, one must play a bag while redirecting the existing
 
 The poses of the newly localized camera images can be displayed as:
 
-  rostopic echo /loc/ml/features | grep -A 17 header:
+    rostopic echo /loc/ml/features | grep -A 17 header:
 
 and compared to the old ones via:
 
-  rostopic echo /loc/ml/old_features | grep -A 17 header:
+    rostopic echo /loc/ml/old_features | grep -A 17 header:
 
 ## Evaluating the map without running the localization node
 
@@ -583,5 +583,5 @@ robot is the same as for the real robot on the space station, if the
 goal is to prepare a map for an actual flight. The software version on
 the robot can be found using:
 
-cat /opt/astrobee/version.txt 
+    cat /opt/astrobee/version.txt 
 

@@ -620,21 +620,30 @@ class DockNodelet : public ff_util::FreeFlyerNodelet {
   }
 
   bool CheckBerth() {
-      // Look for the berth and confirm localization is working
+    // Look for the berth and confirm localization is working
     std::map<uint8_t, std::string>::iterator it;
-    for (it = berths_.begin(); it != berths_.end(); it++) {
-      try {
-        // Look up the body frame in the berth frame
-        geometry_msgs::TransformStamped tf = tf_buffer_.lookupTransform(
-          it->second + "/complete", GetTransform(FRAME_NAME_BODY), ros::Time(0));
-        // Copy the transform
-        double d = tf.transform.translation.x * tf.transform.translation.x
-                 + tf.transform.translation.y * tf.transform.translation.y
-                 + tf.transform.translation.z * tf.transform.translation.z;
-        // If we are within some delta of the origin, then we are at this berth
-        if (sqrt(d) < cfg_.Get<double>("detection_tolerance"))
-          break;
-      } catch (tf2::TransformException &ex) {}
+    ros::Time begin = ros::Time::now();
+    // Some number bigger than the tolerance
+    double d = cfg_.Get<double>("detection_tolerance") * 2;
+    // Give localization time to stabilize if berth not detected within detection_timeout
+    while (((ros::Time::now() - begin).toSec() < cfg_.Get<double>("detection_timeout"))
+          && sqrt(d) > cfg_.Get<double>("detection_tolerance")) {
+      for (it = berths_.begin(); it != berths_.end(); it++) {
+        try {
+          // Look up the body frame in the berth frame
+          geometry_msgs::TransformStamped tf = tf_buffer_.lookupTransform(
+            it->second + "/complete", GetTransform(FRAME_NAME_BODY), ros::Time(0));
+          // Copy the transform
+          d = tf.transform.translation.x * tf.transform.translation.x
+            + tf.transform.translation.y * tf.transform.translation.y
+            + tf.transform.translation.z * tf.transform.translation.z;
+          // If we are within some delta of the origin, then we are at this berth
+          if (sqrt(d) < cfg_.Get<double>("detection_tolerance"))
+            break;
+          else
+            ros::Duration(0.5).sleep();            // sleep for half a second
+        } catch (tf2::TransformException &ex) {}
+      }
     }
     // Let the use know what's happening
     if (it == berths_.end()) {

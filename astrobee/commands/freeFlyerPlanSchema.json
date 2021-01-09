@@ -152,17 +152,6 @@
         ["Perch", "Perch"],
         ["Truth", "Truth"]
       ]
-    },
-
-    {
-      "type": "ParamSpec",
-      "id": "Admin.BerthNumber",
-      "valueType": "long",
-      "notes": "Which berth the Astrobee is using. 1=left, 2=right.",
-      "choices": [
-        [1, "1"],
-        [2, "2"]
-      ]
     }
   ],
   "commandSpecs": [
@@ -177,7 +166,8 @@
         {
           "type": "ParamSpec",
           "id": "berthNumber",
-          "parent": "Admin.BerthNumber"
+          "valueType": "long",
+          "notes": "Which berth the Astrobee is using. 1=left, 2=right."
         }
       ]
     },
@@ -192,7 +182,8 @@
         {
           "type": "ParamSpec",
           "id": "berthNumber",
-          "parent": "Admin.BerthNumber"
+          "valueType": "long",
+          "notes": "Which berth the Astrobee is using. 1=left, 2=right."
         }
       ]
     },
@@ -465,7 +456,8 @@
         {
           "type": "ParamSpec",
           "id": "berthNumber",
-          "parent": "Admin.BerthNumber"
+          "valueType": "long",
+          "notes": "Which berth the Astrobee is using. 1=left, 2=right."
         }
       ]
     },
