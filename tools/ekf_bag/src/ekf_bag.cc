@@ -38,17 +38,6 @@ EkfBag::EkfBag(const char* bagfile, const char* mapfile, bool run_ekf, bool gen_
       image_topic_(image_topic),
       gnc_config_(gnc_config) {
   bag_.open(bagfile, rosbag::bagmode::Read);
-  // If bag contains image features, use these and don't generate new ones
-  // TODO(rsoussan): remove this or remove gen_features option
-  rosbag::View view(bag_);
-  std::vector<const rosbag::ConnectionInfo*> connection_infos = view.getConnections();
-  bool has_of_features = false;
-  bool has_ml_features = false;
-  for (const auto info : connection_infos) {
-    if (info->topic == (std::string("/") + TOPIC_LOCALIZATION_OF_FEATURES)) has_of_features = true;
-    if (info->topic == (std::string("/") + TOPIC_LOCALIZATION_ML_FEATURES)) has_ml_features = true;
-  }
-  gen_features_ = (has_of_features && has_ml_features) ? false : true;
 }
 
 EkfBag::~EkfBag(void) { bag_.close(); }
