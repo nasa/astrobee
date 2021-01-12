@@ -27,7 +27,7 @@ jobs:
         sudo apt-get install graphviz
     - name: Install doxygen
       run: |
-        wget http://doxygen.nl/files/doxygen-1.8.20.src.tar.gz
+        wget 'https://sourceforge.net/projects/doxygen/files/rel-1.8.20/doxygen-1.8.20.src.tar.gz'
         tar -zxvf doxygen-1.8.20.src.tar.gz
         cd doxygen-1.8.20
         mkdir build
