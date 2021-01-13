@@ -216,7 +216,7 @@ endif (NOT PROTOBUF_PROTOC_EXECUTABLE)
 
 find_package(Ceres REQUIRED)
 
-find_package(Boost 1.54.0 QUIET REQUIRED COMPONENTS filesystem system iostreams thread program_options)
+find_package(Boost 1.54.0 QUIET REQUIRED COMPONENTS filesystem system iostreams thread program_options timer)
 find_package(Eigen3 REQUIRED)
 find_package(ZLIB)
 find_package(Luajit20 REQUIRED)

@@ -24,6 +24,8 @@
 #include <imu_integration/imu_filter_params.h>
 #include <localization_measurements/imu_measurement.h>
 
+#include <boost/optional.hpp>
+
 #include <memory>
 
 namespace imu_integration {
