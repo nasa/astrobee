@@ -43,6 +43,8 @@ class RotationFactorAdderTester : public ::testing::Test {
     gl::FeatureTrackerParams feature_tracker_params;
     feature_tracker_params.sliding_window_duration = 2.0;
     feature_tracker_.reset(new gl::FeatureTracker(feature_tracker_params));
+    rotation_factor_adder_params_.enabled = true;
+    rotation_factor_adder_params_.huber_k = 1.345;
     rotation_factor_adder_params_.min_avg_disparity = 0.2;
     rotation_factor_adder_params_.rotation_stddev = 0.1;
     rotation_factor_adder_params_.max_percent_outliers = 0.5;
