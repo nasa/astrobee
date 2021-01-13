@@ -15,11 +15,9 @@
 #License for the specific language governing permissions and limitations
 #under the License.
 
-cmake_minimum_required(VERSION 2.8.3)
-
 project(imu_augmentor)
 
-find_package(catkin REQUIRED COMPONENTS roscpp)
+if (USE_ROS)
 
 catkin_package(
   LIBRARIES ${PROJECT_NAME} ${GLOG_LIBRARIES} ${GTSAM_LIBRARIES} ff_nodelet imu_integration localization_common localization_measurements
@@ -35,3 +33,5 @@ create_library(TARGET ${PROJECT_NAME}
 )
 
 install_launch_files()
+
+endif (USE_ROS)

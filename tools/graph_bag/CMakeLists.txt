@@ -19,6 +19,8 @@ cmake_minimum_required(VERSION 2.8.3)
 
 project(graph_bag)
 
+if (USE_ROS)
+
 catkin_package(
   CATKIN_DEPENDS roscpp rosbag
 )
@@ -33,3 +35,5 @@ create_tool_targets(DIR tools
   LIBS ${PROJECT_NAME} # profiler
   INC ${catkin_INCLUDE_DIRS}
 )
+
+endif (USE_ROS)

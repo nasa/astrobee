@@ -15,9 +15,9 @@
 #License for the specific language governing permissions and limitations
 #under the License.
 
-cmake_minimum_required(VERSION 2.8.3)
-
 project(localization_rviz_plugins)
+
+if (USE_ROS)
 
 set(BUILD_LOC_RVIZ_PLUGINS ON CACHE BOOL "Ignore loc rviz plugins due to cross compile error" FORCE)
 
@@ -47,3 +47,5 @@ if(BUILD_LOC_RVIZ_PLUGINS)
  )
 
 endif()
+
+endif (USE_ROS)

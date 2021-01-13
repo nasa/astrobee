@@ -15,11 +15,9 @@
 #License for the specific language governing permissions and limitations
 #under the License.
 
-cmake_minimum_required(VERSION 2.8.3)
-
 project(graph_localizer)
 
-find_package(catkin REQUIRED COMPONENTS roscpp)
+if (USE_ROS)
 
 # include ff_nodelet to get ff_util header files since these aren't exposed elsewhere
 catkin_package(
@@ -54,5 +52,6 @@ if(CATKIN_ENABLE_TESTING)
 
 endif()
 
-
 install_launch_files()
+
+endif (USE_ROS)
