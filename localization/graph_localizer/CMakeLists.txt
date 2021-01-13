@@ -19,7 +19,6 @@ cmake_minimum_required(VERSION 2.8.3)
 
 project(graph_localizer)
 
-#TODO(rsoussan): Is this needed here and in graph_bag?
 if(USE_GOOGLE_PROFILER)
   SET(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--no-as-needed -lprofiler -Wl,--as-needed")
   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDEBUG")
@@ -34,11 +33,11 @@ catkin_package(
   LIBRARIES ${PROJECT_NAME} ${GLOG_LIBRARIES} ${GTSAM_LIBRARIES} camera config_reader ff_nodelet imu_integration localization_common localization_measurements msg_conversions
   INCLUDE_DIRS include ${GLOG_INCLUDE_DIRS} ${GTSAM_INCLUDE_DIR} 
   CATKIN_DEPENDS roscpp 
-  DEPENDS gtsam ff_msgs #gtsam_unstable  
+  DEPENDS gtsam ff_msgs 
 )
 
 create_library(TARGET ${PROJECT_NAME} 
-  LIBS ${catkin_LIBRARIES} ${GLOG_LIBRARIES} gtsam camera config_reader ff_nodelet imu_integration localization_common localization_measurements msg_conversions #gtsam_unstable  
+  LIBS ${catkin_LIBRARIES} ${GLOG_LIBRARIES} gtsam camera config_reader ff_nodelet imu_integration localization_common localization_measurements msg_conversions 
   INC ${catkin_INCLUDE_DIRS} ${GLOG_INCLUDE_DIRS} 
   DEPS ff_msgs
 )
