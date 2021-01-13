@@ -440,7 +440,6 @@ bool GraphLocalizer::ARProjectionNoiseScaling(FactorsToAdd& factors_to_add) {
 
 bool GraphLocalizer::MapProjectionNoiseScaling(const LocFactorAdderParams& params, FactorsToAdd& factors_to_add) {
   auto& factors = factors_to_add.Get();
-  const int original_num_factors = factors.size();
   gtsam::Key pose_key;
   gtsam::Pose3 world_T_cam;
   for (auto factor_it = factors.begin(); factor_it != factors.end();) {
