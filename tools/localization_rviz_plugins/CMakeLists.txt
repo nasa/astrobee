@@ -17,21 +17,12 @@
 
 project(localization_rviz_plugins)
 
-if (USE_ROS)
-
-set(BUILD_LOC_RVIZ_PLUGINS ON CACHE BOOL "Ignore loc rviz plugins due to cross compile error" FORCE)
-
-if(BUILD_LOC_RVIZ_PLUGINS)
+if (USE_ROS AND BUILD_LOC_RVIZ_PLUGINS)
  
  # For Qt
  set(CMAKE_AUTOMOC ON)
- 
- find_package(catkin REQUIRED COMPONENTS rviz)
- 
- find_package(Qt5 ${rviz_QT_VERSION} REQUIRED Core Widgets)
  set(QT_LIBRARIES Qt5::Widgets)
 
- 
  catkin_package(
    LIBRARIES ${PROJECT_NAME} ${catkin_LIBRARIES} ${GLOG_LIBRARIES} ${GTSAM_LIBRARIES} ${QT_LIBRARIES} camera config_reader graph_bag graph_localizer imu_integration localization_common localization_measurements 
    INCLUDE_DIRS ${GTSAM_INCLUDE_DIR} ${GLOG_INCLUDE_DIRS} ${Qt5Core_INCLUDE_DIRS} ${Qt5Gui_INCLUDE_DIRS} 
@@ -46,6 +37,4 @@ if(BUILD_LOC_RVIZ_PLUGINS)
    DEPS gtsam rviz 
  )
 
-endif()
-
-endif (USE_ROS)
+endif (USE_ROS AND BUILD_LOC_RVIZ_PLUGINS)

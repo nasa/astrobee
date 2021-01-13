@@ -69,6 +69,10 @@ option(ENABLE_VIVE_SOLVER
 option(ENABLE_INTEGRATION_TESTING
   "Build the integration tests if tests are active."
   ON)
+option(BUILD_LOC_RVIZ_PLUGINS
+  "Build the localization rviz plugins."
+  ON)
+
 
 if ( "${CMAKE_VERSION}" VERSION_GREATER 3.0.0 )
   cmake_policy(SET CMP0045 OLD)
@@ -267,6 +271,10 @@ if(ENABLE_GOOGLE_PROF)
   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDEBUG")
 endif()
 
+if(USE_CTC) 
+  set(BUILD_LOC_RVIZ_PLUGINS OFF)
+endif()
+
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wno-unused-local-typedefs -Wno-packed-bitfield-compat -std=c++11")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-unused-local-typedefs -Wno-packed-bitfield-compat -std=c++11")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--no-undefined")
@@ -300,7 +308,8 @@ if (USE_CTC)
 endif (USE_CTC)
 if (USE_ROS)
   set(ENV{ROS_LANG_DISABLE} "genlisp:gennodejs:geneus:$ENV{ROS_LANG_DISABLE}")
-  find_package(catkin2 COMPONENTS roscpp message_generation std_msgs geometry_msgs sensor_msgs cv_bridge image_transport tf tf2 tf2_ros rosbag nodelet)
+  find_package(catkin2 COMPONENTS roscpp message_generation std_msgs geometry_msgs sensor_msgs cv_bridge image_transport tf tf2 tf2_ros rosbag nodelet rviz)
+  find_package(Qt5 ${rviz_QT_VERSION} REQUIRED Core Widgets)
 
   if (IS_BAMBOO_BUILD)
     include(BambooFix)
