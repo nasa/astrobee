@@ -19,13 +19,6 @@ cmake_minimum_required(VERSION 2.8.3)
 
 project(graph_localizer)
 
-if(USE_GOOGLE_PROFILER)
-  SET(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--no-as-needed -lprofiler -Wl,--as-needed")
-  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDEBUG")
-endif()
-
-find_package(GTSAM REQUIRED)
-
 find_package(catkin REQUIRED COMPONENTS roscpp)
 
 # include ff_nodelet to get ff_util header files since these aren't exposed elsewhere

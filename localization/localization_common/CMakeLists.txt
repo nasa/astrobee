@@ -19,9 +19,6 @@ cmake_minimum_required(VERSION 2.8.3)
 
 project(localization_common)
 
-find_package(Boost REQUIRED)
-find_package(GTSAM REQUIRED)
-
 catkin_package(
   LIBRARIES ${PROJECT_NAME} ${GTSAM_LIBRARIES} camera config_reader msg_conversions 
   INCLUDE_DIRS include ${GTSAM_INCLUDE_DIR} ${Boost_INCLUDE_DIRS}  

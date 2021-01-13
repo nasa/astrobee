@@ -19,14 +19,6 @@ cmake_minimum_required(VERSION 2.8.3)
 
 project(graph_bag)
 
-SET(USE_GOOGLE_PROFILER OFF CACHE BOOL "Profile performance with google profiler tool")
-
-if(USE_GOOGLE_PROFILER)
-  SET(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--no-as-needed -lprofiler -Wl,--as-needed")
-  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDEBUG")
-  add_compile_definitions(GOOGLE_PROFILER)
-endif()
-
 catkin_package(
   CATKIN_DEPENDS roscpp rosbag
 )

@@ -19,8 +19,6 @@ cmake_minimum_required(VERSION 2.8.3)
 
 project(localization_measurements)
 
-find_package(GTSAM REQUIRED)
-
 catkin_package(
   LIBRARIES ${PROJECT_NAME} ${GTSAM_LIBRARIES}  localization_common
   INCLUDE_DIRS include ${GTSAM_INCLUDE_DIR} 

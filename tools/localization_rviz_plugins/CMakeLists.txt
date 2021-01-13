@@ -22,7 +22,6 @@ project(localization_rviz_plugins)
 set(BUILD_LOC_RVIZ_PLUGINS ON CACHE BOOL "Ignore loc rviz plugins due to cross compile error" FORCE)
 
 if(BUILD_LOC_RVIZ_PLUGINS)
- find_package(GTSAM REQUIRED)
  
  # For Qt
  set(CMAKE_AUTOMOC ON)

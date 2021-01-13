@@ -19,8 +19,6 @@ cmake_minimum_required(VERSION 2.8.3)
 
 project(imu_integration)
 
-find_package(GTSAM REQUIRED)
-
 catkin_package(
   LIBRARIES ${PROJECT_NAME} ${GLOG_LIBRARIES} ${GTSAM_LIBRARIES} config_reader localization_common localization_measurements
   INCLUDE_DIRS include ${GTSAM_INCLUDE_DIR} ${GLOG_INCLUDE_DIRS} 

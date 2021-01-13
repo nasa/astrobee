@@ -239,6 +239,7 @@ set(OpenCV_LIBRARIES ${OpenCV_LIBS})
 
 find_package(dbow2 REQUIRED)
 find_package(Alvar REQUIRED)
+find_package(GTSAM REQUIRED)
 find_package(OpenMVG QUIET REQUIRED)
 find_package(JsonCpp REQUIRED)
 find_package(FFMPEG QUIET)    # Optional
@@ -260,6 +261,11 @@ if (NOT USE_CTC)  # pkg-config needs extra work to be used for cross compile
     set (YAMLCPP_INCLUDE_DIRS ${YAMLCPP_INCLUDEDIR})
   endif (YAMLCPP_FOUND)
 endif (NOT USE_CTC)
+
+if(ENABLE_GOOGLE_PROF)
+  SET(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--no-as-needed -lprofiler -Wl,--as-needed")
+  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDEBUG")
+endif()
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wno-unused-local-typedefs -Wno-packed-bitfield-compat -std=c++11")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-unused-local-typedefs -Wno-packed-bitfield-compat -std=c++11")
