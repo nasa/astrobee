@@ -75,9 +75,10 @@ LocalizationGraphDisplay::LocalizationGraphDisplay() {
   // Only pass program name to free flyer so that boost command line options
   // are ignored when parsing gflags.
   int ff_argc = 1;
-  char* argv = "script";
-  char** argv_ptr = &argv;
-  ff_common::InitFreeFlyerApplication(&ff_argc, &argv_ptr);
+  char argv[] = "script";
+  char* argv_ptr = &argv[0];
+  char** argv_ptr_ptr = &argv_ptr;
+  ff_common::InitFreeFlyerApplication(&ff_argc, &argv_ptr_ptr);
   config_reader::ConfigReader config;
   config.AddFile("cameras.config");
 
@@ -282,7 +283,7 @@ void LocalizationGraphDisplay::addSmartFactorsProjectionVisual() {
   if (latest_smart_factors_.empty()) return;
 
   const int smart_factor_index = projection_factor_slider_->getInt();
-  if (smart_factor_index >= latest_smart_factors_.size()) {
+  if (smart_factor_index >= static_cast<int>(latest_smart_factors_.size())) {
     LogError("addSmartFactorsProjectionVisual: Invalid smart factor index.");
     return;
   }
