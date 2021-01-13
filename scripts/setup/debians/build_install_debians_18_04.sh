@@ -51,8 +51,6 @@ cd ${DEBIAN_LOC}
 ./build_dbow2.sh || exit 1
 sudo dpkg -i libdbow*_amd64.deb || exit 1
 
-cp ${DEBIAN_LOC}/files_18_04/gtsam_rules ${DEBIAN_LOC}/gtsam/rules
-cp ${DEBIAN_LOC}/files_18_04/gtsam_control ${DEBIAN_LOC}/gtsam/control
 cd ${DEBIAN_LOC}/gtsam
 sudo mk-build-deps -i -r -t "apt-get --no-install-recommends -y" control
 cd ${DEBIAN_LOC}
