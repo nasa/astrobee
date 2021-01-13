@@ -198,13 +198,18 @@ GraphLocalizer::LatestCombinedNavStateAndCovariances(const gtsam::Marginals& mar
     return boost::none;
   }
 
-  const auto pose_covariance = marginals.marginalCovariance(sym::P(*latest_combined_nav_state_key_index));
-  const auto velocity_covariance = marginals.marginalCovariance(sym::V(*latest_combined_nav_state_key_index));
-  const auto bias_covariance = marginals.marginalCovariance(sym::B(*latest_combined_nav_state_key_index));
-  const lc::CombinedNavStateCovariances latest_combined_nav_state_covariances(pose_covariance, velocity_covariance,
-                                                                              bias_covariance);
-  return std::pair<lc::CombinedNavState, lc::CombinedNavStateCovariances>{*global_N_body_latest,
-                                                                          latest_combined_nav_state_covariances};
+  try {
+    const auto pose_covariance = marginals.marginalCovariance(sym::P(*latest_combined_nav_state_key_index));
+    const auto velocity_covariance = marginals.marginalCovariance(sym::V(*latest_combined_nav_state_key_index));
+    const auto bias_covariance = marginals.marginalCovariance(sym::B(*latest_combined_nav_state_key_index));
+    const lc::CombinedNavStateCovariances latest_combined_nav_state_covariances(pose_covariance, velocity_covariance,
+                                                                                bias_covariance);
+    return std::pair<lc::CombinedNavState, lc::CombinedNavStateCovariances>{*global_N_body_latest,
+                                                                            latest_combined_nav_state_covariances};
+  } catch (...) {
+    LogError("LatestCombinedNavStateAndCovariances: Failed to get marginal covariances.");
+    return boost::none;
+  }
 }
 
 boost::optional<lc::CombinedNavState> GraphLocalizer::LatestCombinedNavState() const {
