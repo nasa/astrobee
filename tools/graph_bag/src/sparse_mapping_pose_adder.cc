@@ -23,8 +23,6 @@
 
 #include <ff_msgs/VisualLandmarks.h>
 
-#include <glog/logging.h>
-
 namespace {
 // TODO(rsoussan): Unify this with live measurement simulator, put in utilities
 bool string_ends_with(const std::string& str, const std::string& ending) {

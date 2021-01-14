@@ -18,14 +18,13 @@
 
 #include <ff_common/init.h>
 #include <graph_bag/sparse_mapping_pose_adder.h>
+#include <localization_common/logger.h>
 #include <localization_common/utilities.h>
 
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 
 #include <gtsam/geometry/Pose3.h>
-
-#include <glog/logging.h>
 
 namespace po = boost::program_options;
 namespace lc = localization_common;
@@ -65,7 +64,7 @@ int main(int argc, char** argv) {
   ff_common::InitFreeFlyerApplication(&ff_argc, &argv);
 
   if (!boost::filesystem::exists(input_bag)) {
-    LOG(FATAL) << "Bagfile " << input_bag << " not found.";
+    LogFatal("Bagfile " << input_bag << " not found.");
   }
 
   boost::filesystem::path input_bag_path(input_bag);
@@ -76,7 +75,7 @@ int main(int argc, char** argv) {
   config_reader::ConfigReader config;
   config.AddFile("geometry.config");
   if (!config.ReadFiles()) {
-    LOG(FATAL) << "Failed to read config files.";
+    LogFatal("Failed to read config files.");
   }
 
   const gtsam::Pose3 body_T_nav_cam = lc::LoadTransform(config, "nav_cam_transform");

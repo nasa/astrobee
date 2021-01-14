@@ -24,8 +24,6 @@
 
 #include <sensor_msgs/Imu.h>
 
-#include <glog/logging.h>
-
 namespace {
 // TODO(rsoussan): Unify this with live measurement simulator, put in utilities
 bool string_ends_with(const std::string& str, const std::string& ending) {

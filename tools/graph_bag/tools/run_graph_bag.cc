@@ -18,12 +18,11 @@
 
 #include <ff_common/init.h>
 #include <graph_bag/graph_bag.h>
+#include <localization_common/logger.h>
 #include <localization_common/utilities.h>
 
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
-
-#include <glog/logging.h>
 
 #ifdef GOOGLE_PROFILER
 #include <gperftools/profiler.h>
@@ -82,11 +81,11 @@ int main(int argc, char** argv) {
   ff_common::InitFreeFlyerApplication(&ff_argc, &argv);
 
   if (!boost::filesystem::exists(input_bag)) {
-    LOG(FATAL) << "Bagfile " << input_bag << " not found.";
+    LogFatal("Bagfile " << input_bag << " not found.");
   }
 
   if (!boost::filesystem::exists(map_file)) {
-    LOG(FATAL) << "Map file " << map_file << " not found.";
+    LogFatal("Map file " << map_file << " not found.");
   }
 
   if (vm["output-bagfile"].defaulted()) {

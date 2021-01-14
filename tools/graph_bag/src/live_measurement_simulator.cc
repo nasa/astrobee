@@ -42,7 +42,7 @@ LiveMeasurementSimulator::LiveMeasurementSimulator(const LiveMeasurementSimulato
   config.AddFile("optical_flow.config");
 
   if (!config.ReadFiles()) {
-    LOG(ERROR) << "Failed to read config files.";
+    LogError("Failed to read config files.");
     exit(0);
   }
 

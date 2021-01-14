@@ -17,12 +17,11 @@
  */
 
 #include <graph_bag/bag_imu_filterer.h>
+#include <localization_common/logger.h>
 #include <localization_common/utilities.h>
 
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
-
-#include <glog/logging.h>
 
 namespace po = boost::program_options;
 namespace lc = localization_common;
@@ -55,7 +54,7 @@ int main(int argc, char** argv) {
   const std::string input_bag = vm["bagfile"].as<std::string>();
 
   if (!boost::filesystem::exists(input_bag)) {
-    LOG(FATAL) << "Bagfile " << input_bag << " not found.";
+    LogFatal("Bagfile " << input_bag << " not found.");
   }
 
   if (vm["output-bagfile"].defaulted()) {

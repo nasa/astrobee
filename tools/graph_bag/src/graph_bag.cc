@@ -22,6 +22,7 @@
 #include <graph_bag/parameter_reader.h>
 #include <graph_bag/utilities.h>
 #include <graph_localizer/utilities.h>
+#include <localization_common/logger.h>
 #include <localization_common/utilities.h>
 #include <msg_conversions/msg_conversions.h>
 
@@ -30,8 +31,6 @@
 #include <sensor_msgs/Imu.h>
 
 #include <Eigen/Core>
-
-#include <glog/logging.h>
 
 #include <chrono>
 #include <cstdlib>
@@ -55,7 +54,7 @@ GraphBag::GraphBag(const std::string& bag_name, const std::string& map_file, con
   lc::LoadGraphLocalizerConfig(config, graph_config_path_prefix);
 
   if (!config.ReadFiles()) {
-    LOG(FATAL) << "Failed to read config files.";
+    LogFatal("Failed to read config files.");
   }
 
   LiveMeasurementSimulatorParams params;
@@ -117,7 +116,7 @@ void GraphBag::Run() {
       // Save imu augmented loc msg if available
       const auto imu_augmented_loc_msg = imu_augmentor_wrapper_.LatestImuAugmentedLocalizationMsg();
       if (!imu_augmented_loc_msg) {
-        LOG_EVERY_N(WARNING, 50) << "Run: Failed to get latest imu augmented loc msg.";
+        LogWarningEveryN(50, "Run: Failed to get latest imu augmented loc msg.");
       } else {
         SaveLocState(*imu_augmented_loc_msg, TOPIC_GNC_EKF);
       }
@@ -174,7 +173,7 @@ void GraphBag::Run() {
       // Pass latest loc state to imu augmentor if it is available.
       const auto localization_msg = graph_localizer_simulator_->LatestLocalizationStateMsg();
       if (!localization_msg) {
-        LOG_EVERY_N(WARNING, 50) << "Run: Failed to get localization msg.";
+        LogWarningEveryN(50, "Run: Failed to get localization msg.");
       } else {
         imu_augmentor_wrapper_.LocalizationStateCallback(*localization_msg);
         SaveLocState(*localization_msg, TOPIC_GRAPH_LOC_STATE);
