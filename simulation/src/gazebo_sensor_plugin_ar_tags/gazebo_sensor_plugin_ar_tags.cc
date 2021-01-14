@@ -172,6 +172,8 @@ class GazeboSensorPluginARTags : public FreeFlyerSensorPlugin {
       Eigen::Quaterniond(GetModel()->GetWorldPose().rot.w, GetModel()->GetWorldPose().rot.x,
                          GetModel()->GetWorldPose().rot.y, GetModel()->GetWorldPose().rot.z));
 #endif
+    msg_feat_.header.stamp = ros::Time::now();
+
     Eigen::Isometry3d body_T_dock_cam =
       (Eigen::Translation3d(sensor_->Pose().Pos().X(), sensor_->Pose().Pos().Y(), sensor_->Pose().Pos().Z()) *
        Eigen::Quaterniond(sensor_->Pose().Rot().W(), sensor_->Pose().Rot().X(), sensor_->Pose().Rot().Y(),
@@ -222,7 +224,6 @@ class GazeboSensorPluginARTags : public FreeFlyerSensorPlugin {
   // Send features
   void SendFeatures(ros::TimerEvent const& event) {
     if (!active_) return;
-    msg_feat_.header.stamp = ros::Time::now();
     pub_feat_.publish(msg_feat_);
   }
 
