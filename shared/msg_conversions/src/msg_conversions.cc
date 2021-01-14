@@ -258,4 +258,38 @@ Eigen::Affine3d ros_to_eigen_transform(const geometry_msgs::Transform & p) {
   return transform;
 }
 
+Eigen::Isometry3d LoadEigenTransform(config_reader::ConfigReader& config, const std::string& transform_config_name) {
+  Eigen::Vector3d body_t_sensor;
+  Eigen::Quaterniond body_Q_sensor;
+  if (!msg_conversions::config_read_transform(&config, transform_config_name.c_str(), &body_t_sensor, &body_Q_sensor))
+    LogFatal("Unspecified transform config: " << transform_config_name);
+  Eigen::Isometry3d body_T_sensor = Eigen::Isometry3d::Identity();
+  body_T_sensor.translation() = body_t_sensor;
+  body_T_sensor.linear() = body_Q_sensor.toRotationMatrix();
+  return body_T_sensor;
+}
+
+double LoadDouble(config_reader::ConfigReader& config, const std::string& config_name) {
+  double val;
+  if (!config.GetReal(config_name.c_str(), &val)) LogFatal("Failed to load " << config_name);
+  return val;
+}
+
+int LoadInt(config_reader::ConfigReader& config, const std::string& config_name) {
+  int val;
+  if (!config.GetInt(config_name.c_str(), &val)) LogFatal("Failed to load " << config_name);
+  return val;
+}
+
+bool LoadBool(config_reader::ConfigReader& config, const std::string& config_name) {
+  bool val;
+  if (!config.GetBool(config_name.c_str(), &val)) LogFatal("Failed to load " << config_name);
+  return val;
+}
+
+std::string LoadString(config_reader::ConfigReader& config, const std::string& config_name) {
+  std::string val;
+  if (!config.GetStr(config_name.c_str(), &val)) LogFatal("Failed to load " << config_name);
+  return val;
+}
 }  // end namespace msg_conversions

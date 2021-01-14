@@ -41,19 +41,7 @@
 namespace localization_common {
 gtsam::Pose3 LoadTransform(config_reader::ConfigReader& config, const std::string& transform_config_name);
 
-Eigen::Isometry3d LoadEigenTransform(config_reader::ConfigReader& config, const std::string& transform_config_name);
-
 gtsam::Cal3_S2 LoadCameraIntrinsics(config_reader::ConfigReader& config, const std::string& intrinsics_config_name);
-
-gtsam::Vector3 LoadVector3(config_reader::ConfigReader& config, const std::string& config_name);
-
-double LoadDouble(config_reader::ConfigReader& config, const std::string& config_name);
-
-int LoadInt(config_reader::ConfigReader& config, const std::string& config_name);
-
-bool LoadBool(config_reader::ConfigReader& config, const std::string& config_name);
-
-std::string LoadString(config_reader::ConfigReader& config, const std::string& config_name);
 
 gtsam::Pose3 GtPose(const Eigen::Isometry3d& eigen_pose);
 
