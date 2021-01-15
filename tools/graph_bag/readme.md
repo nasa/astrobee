@@ -10,15 +10,18 @@ Graph bag simulates localization using a saved bagfile.  Rather than relying on 
 ## BagImuFilterer
 The bag imu filterer enables the testing of imu filters written in c++.  It parses a bag file and loads a c++ imu filter, then saves the filtered data to a new bag file.  The filtered data can be plotted and analyzed by the imu\_analyzer script.
 
-#Scripts
+# Scripts
 ## bag\_sweep
 The bag sweep tool runs the graph bag tool in parallel on multiple bag files.  It takes config file with bagnames, map names, and robot configs and produces pdfs and result bagfiles for each entry.
-Example config file:
-/home/bag\_name.bag /home/map\_name.map /mgt/img\_sampler/nav\_cam/image\_record /home/astrobee/astrobee config/robots/bumble.config iss false
-/home/bag\_name\_2.bag /home/map\_name.map /mgt/img\_sampler/nav\_cam/image\_record /home/astrobee/astrobee config/robots/bumble.config iss false
-
-Example bag sweep command:
-rosrun graph\_bag bag\_sweep.py /home/bag\_sweep\_config.csv /home/output\_dir 
+Example config file:   
+```
+/home/bag_name.bag /home/map_name.map /mgt/img_sampler/nav_cam/image_record /home/astrobee/astrobee config/robots/bumble.config iss false  
+/home/bag_name_2.bag /home/map_name.map /mgt/img_sampler/nav_cam/image_record /home/astrobee/astrobee config/robots/bumble.config iss false
+```
+Example bag sweep command:  
+```
+rosrun graph_bag bag_sweep.py /home/bag_sweep_config.csv /home/output_dir
+``` 
 
 ## check\_bags\_for\_gaps
 This is a simple tool to check for large gaps in imu or image data in a bagfile.
