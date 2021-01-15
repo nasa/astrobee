@@ -15,13 +15,13 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef FAKE_LOCALIZER_FAKE_LOCALIZER_NODELET_H_
-#define FAKE_LOCALIZER_FAKE_LOCALIZER_NODELET_H_
+#ifndef GROUND_TRUTH_LOCALIZER_GROUND_TRUTH_LOCALIZER_NODELET_H_
+#define GROUND_TRUTH_LOCALIZER_GROUND_TRUTH_LOCALIZER_NODELET_H_
 
-#include <fake_localizer/twist.h>
 #include <ff_msgs/Heartbeat.h>
 #include <ff_msgs/SetEkfInput.h>
 #include <ff_util/ff_nodelet.h>
+#include <ground_truth_localizer/twist.h>
 #include <localization_common/time.h>
 
 #include <geometry_msgs/PoseStamped.h>
@@ -39,10 +39,10 @@
 
 #include <string>
 
-namespace fake_localizer {
-class FakeLocalizerNodelet : public ff_util::FreeFlyerNodelet {
+namespace ground_truth_localizer {
+class GroundTruthLocalizerNodelet : public ff_util::FreeFlyerNodelet {
  public:
-  FakeLocalizerNodelet();
+  GroundTruthLocalizerNodelet();
 
  private:
   void Initialize(ros::NodeHandle* nh);
@@ -67,6 +67,6 @@ class FakeLocalizerNodelet : public ff_util::FreeFlyerNodelet {
   tf2_ros::TransformBroadcaster transform_pub_;
   ros::ServiceServer input_mode_srv_;
 };
-}  // namespace fake_localizer
+}  // namespace ground_truth_localizer
 
-#endif  // FAKE_LOCALIZER_FAKE_LOCALIZER_NODELET_H_
+#endif  // GROUND_TRUTH_LOCALIZER_GROUND_TRUTH_LOCALIZER_NODELET_H_

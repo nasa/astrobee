@@ -15,7 +15,7 @@
 #License for the specific language governing permissions and limitations
 #under the License.
 
-project(fake_localizer)
+project(ground_truth_localizer)
 
 if (USE_ROS)
 

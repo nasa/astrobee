@@ -15,13 +15,13 @@
 <!-- implied. See the License for the specific language governing            -->
 <!-- permissions and limitations under the License.                          -->
 <launch>
-  <arg name="name" default="fake_localizer" />
+  <arg name="name" default="ground_truth_localizer" />
   <arg name="manager" default="" />
   <arg name="terminal" default="" />
   <include file="$(find ff_util)/launch/ff_nodelet.launch">
     <arg name="name" value="$(arg name)" />
     <arg name="manager" value="$(arg manager)" />
     <arg name="terminal" value="$(arg terminal)" />
-    <arg name="class" value="fake_localizer/FakeLocalizerNodelet" />
+    <arg name="class" value="ground_truth_localizer/GroundTruthLocalizerNodelet" />
   </include>
 </launch>

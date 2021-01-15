@@ -25,7 +25,7 @@
   <arg name="debug" default=""/>                 <!-- Debug a node set          -->
   <arg name="dds" default="true"/>               <!-- Should DDS be started     -->
   <arg name="output" default="log"/>             <!-- Where nodes should log    -->
-  <arg name="fake_localizer" default="false"/>   <!-- Runs fake localizer -->
+  <arg name="ground_truth_localizer" default="false"/>   <!-- Runs ground_truth localizer -->
 
   <!-- Setup nodelet managers -->
   <group if="$(eval optenv('ASTROBEE_NODEGRAPH','')=='')">
@@ -79,8 +79,8 @@
     <arg name="default" value="true" />
   </include>
 
-  <!-- Run fake_localizer, otherwise run graph localizer -->
-  <group unless="$(arg fake_localizer)">
+  <!-- Run ground_truth_localizer, otherwise run graph localizer -->
+  <group unless="$(arg ground_truth_localizer)">
     <include file="$(find ff_util)/launch/ff_nodelet.launch">
       <arg name="class" value="graph_localizer/GraphLocalizerNodelet" />
       <arg name="name" value="graph_localizer" />
@@ -93,10 +93,10 @@
     </include>
   </group>
  
-  <group if="$(arg fake_localizer)">
+  <group if="$(arg ground_truth_localizer)">
     <include file="$(find ff_util)/launch/ff_nodelet.launch">
-      <arg name="class" value="fake_localizer/FakeLocalizerNodelet" />
-      <arg name="name" value="fake_localizer" />
+      <arg name="class" value="ground_truth_localizer/GroundTruthLocalizerNodelet" />
+      <arg name="name" value="ground_truth_localizer" />
       <arg name="manager" value="mlp_localization" />
       <arg name="spurn" value="$(arg spurn)" />
       <arg name="nodes" value="$(arg nodes)" />

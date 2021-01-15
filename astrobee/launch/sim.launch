@@ -33,7 +33,7 @@
   <arg name="mlp" default="local" />            <!-- MLP IP address          -->
   <arg name="rec" default="" />                 <!-- Record local data       -->
   <arg name="dds" default="true" />             <!-- Enable DDS              -->
-  <arg name="fake_localizer" default="false" />  <!-- Use Fake Localizer      -->
+  <arg name="ground_truth_localizer" default="false" />  <!-- Use Ground Truth Localizer      -->
 
   <!-- General options -->
   <arg name="gviz" default="false" />           <!-- Start GNC visualizer    -->
@@ -157,7 +157,7 @@
       <arg name="llp" value="$(arg llp)" />          <!-- LLP IP address     -->
       <arg name="mlp" value="$(arg mlp)" />          <!-- MLP IP address     -->
       <arg name="dds" value="$(arg dds)" />          <!-- Enable DDS         -->
-      <arg name="fake_localizer" value="$(arg fake_localizer)" /> <!-- Use Fake Localizer    -->
+      <arg name="ground_truth_localizer" value="$(arg ground_truth_localizer)" /> <!-- Use Ground Truth Localizer    -->
     </include>
   </group>
 

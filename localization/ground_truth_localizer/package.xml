@@ -1,8 +1,8 @@
 <package>
-  <name>fake_localizer</name>
+  <name>ground_truth_localizer</name>
   <version>1.0.0</version>
   <description>
-    The fake localizer package
+    The ground_truth localizer package
   </description>
   <license>
     Apache License, Version 2.0
