@@ -1,3 +1,15 @@
+astrobee (0.13.0) testing; urgency=medium
+
+  * Multiple updates to documentation, doxygen is exported to github pages
+  * Adding Github actions to build and test the code and generate documentation
+  * astrobee_media now a submodule
+  * SciCam now generates compressed images
+  * Added memory monitor
+  * Cross compiling with docker
+  * Various other minor fixes
+
+ -- Astrobee Flight Software <astrobee-fsw@nx.arc.nasa.gov>   Fri, 15 Jan 2021 10:37:25 -0800
+
 astrobee (0.12.0) testing; urgency=medium
 
   * Localization visualization improvements
