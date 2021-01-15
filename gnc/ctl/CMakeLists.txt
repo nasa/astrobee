@@ -28,7 +28,7 @@ create_library(TARGET ctl
   INC ${catkin_INCLUDE_DIRS} ${EIGEN3_INCLUDE_DIRS}
   DEPS ff_msgs ff_hw_msgs)
 
-if(CATKIN_ENABLE_TESTING and ENABLE_INTEGRATION_TESTING)
+if(CATKIN_ENABLE_TESTING AND ENABLE_INTEGRATION_TESTING)
   find_package(rostest REQUIRED)
   add_rostest_gtest(test_ctl test/test_ctl.test
     test/test_ctl_nominal.cc
