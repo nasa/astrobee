@@ -32,7 +32,7 @@ added to the change log that gets edited when the script is run. Also, in the
 change log, change UNRELEASED to testing and change the email address to the
 astrobee fsw email address as in previous log entries.
 
-    ./scripts/setup/debians/update_release.md 0.x.x
+    ./scripts/setup/debians/update_release.sh 0.x.x
 
 
 *Note: Make sure that your EDITOR variable is set to your preferred editor
@@ -58,7 +58,7 @@ On confluence, there is a [release testing procedure](https://babelfish.arc.nasa
 This procedure will walk you through all the testing that needs to be done to
 make sure the debian is flight ready. Please create a copy of the procedure by
 clicking on the ellipsis at the top right corner of the page and selecting copy.
-In the popup, in the 'Parent page' text box, please enter 'Executed Procedure'
+In the popup, in the 'Parent page' text box, please enter 'Executed Procedures'
 and click 'Copy'. Remove 'Copy of' from the title and add the version and date
 after the test number such that it looks like
 'IRG-FFTEST302 - 0.x.x -YYYY-MM-DD - Astrobee Release Testing'. Be sure to fill
