@@ -44,7 +44,7 @@
   <!-- Record output if required -->
   <group if="$(arg record)">
     <arg name="output_bagfile"/>             
-    <include file="$(find astrobee)/launch/offline_localization/launch/record_localization.launch">
+    <include file="$(find astrobee)/launch/offline_localization/record_localization.launch">
       <arg name="terminal" value="terminator -x"/>
       <arg name="output_bagfile" value="$(arg output_bagfile)"/>
     </include>
@@ -80,7 +80,7 @@
   </group>
 
   <!-- Play bagfile -->
-  <include file="$(find astrobee)/launch/offline_localization/launch/replay_localization.launch">
+  <include file="$(find astrobee)/launch/offline_localization/replay_localization.launch">
     <arg name="bagfile" value="$(arg bagfile)"/>
     <arg name="terminal" value="terminator -x"/>
     <arg name="image_features" value="$(arg image_features)"/>
@@ -89,13 +89,8 @@
   <!-- Service calls -->
   <group if="$(arg service_calls)">
     <!-- Add 'wait' here so nodes are running before the service calls are made -->
-    <include file="$(find astrobee)/launch/offline_localization/service_calls/enable_lk_optical_flow_srv.launch">
-    </include>
-    <include file="$(find astrobee)/launch/offline_localization/service_calls/estimate_bias_srv.launch">
-    </include>
+    <node pkg="rosservice" type="rosservice" name="enable_lk_optical_flow" args="call --wait /loc/of/enable true" /> 
+    <node pkg="rosservice" type="rosservice" name="enable_sparse_mapping" args="call --wait /loc/ml/enable true" />
+    <node pkg="rosservice" type="rosservice" name="imu_calibration" args="call --wait /gnc/ekf/init_bias" />
   </group>
-  <!-- Localization manager doesn't enable sparse mapping so always manually call enable -->
-  <include file="$(find astrobee)/launch/offline_localization/service_calls/enable_sparse_mapping_srv.launch">
-  </include>
-
 </launch>
