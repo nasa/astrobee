@@ -63,7 +63,7 @@ RUN apt-get update && apt-get install -y \
   && rm -rf /var/lib/apt/lists/*
 
 # Downloading OpenCV repo & switching to 3.3.1 branch,
-#Building OpenCV
+# Building OpenCV
 RUN mkdir /opencv_build && cd /opencv_build && \
     git clone https://github.com/opencv/opencv.git && \
     cd opencv && git checkout 3.3.1 && cd .. && \
