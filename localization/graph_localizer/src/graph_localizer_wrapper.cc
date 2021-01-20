@@ -24,12 +24,15 @@
 #include <localization_common/logger.h>
 #include <localization_common/utilities.h>
 #include <localization_measurements/measurement_conversions.h>
+#include <msg_conversions/msg_conversions.h>
 
 #include <Eigen/Core>
 
 namespace graph_localizer {
 namespace lc = localization_common;
 namespace lm = localization_measurements;
+namespace mc = msg_conversions;
+
 GraphLocalizerWrapper::GraphLocalizerWrapper(const std::string& graph_config_path_prefix) : reset_world_T_dock_(false) {
   config_reader::ConfigReader config;
   lc::LoadGraphLocalizerConfig(config, graph_config_path_prefix);
@@ -53,8 +56,8 @@ GraphLocalizerWrapper::GraphLocalizerWrapper(const std::string& graph_config_pat
     LogFatal("Failed to load save_localization_graph_dot_file.");
   }
 
-  position_cov_log_det_lost_threshold_ = lc::LoadDouble(config, "position_cov_log_det_lost_threshold");
-  orientation_cov_log_det_lost_threshold_ = lc::LoadDouble(config, "orientation_cov_log_det_lost_threshold");
+  position_cov_log_det_lost_threshold_ = mc::LoadDouble(config, "position_cov_log_det_lost_threshold");
+  orientation_cov_log_det_lost_threshold_ = mc::LoadDouble(config, "orientation_cov_log_det_lost_threshold");
 
   graph_localizer_initialization_.LoadGraphLocalizerParams(config);
   SanityCheckerParams sanity_checker_params;
@@ -63,9 +66,9 @@ GraphLocalizerWrapper::GraphLocalizerWrapper(const std::string& graph_config_pat
   // Initialize with config.  Optionally update during localization
   // TODO(rsoussan): Make graph localizer wrapper config file and load fcn in parameter reader
   estimated_world_T_dock_ = lc::LoadTransform(config, "world_dock_transform");
-  estimate_world_T_dock_using_loc_ = lc::LoadBool(config, "estimate_world_T_dock_using_loc");
-  sparse_mapping_min_num_landmarks_ = lc::LoadInt(config, "loc_adder_min_num_matches");
-  ar_min_num_landmarks_ = lc::LoadInt(config, "ar_tag_loc_adder_min_num_matches");
+  estimate_world_T_dock_using_loc_ = mc::LoadBool(config, "estimate_world_T_dock_using_loc");
+  sparse_mapping_min_num_landmarks_ = mc::LoadInt(config, "loc_adder_min_num_matches");
+  ar_min_num_landmarks_ = mc::LoadInt(config, "ar_tag_loc_adder_min_num_matches");
 }
 
 bool GraphLocalizerWrapper::Initialized() const { return (graph_localizer_.get() != nullptr); }

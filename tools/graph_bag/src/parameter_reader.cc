@@ -18,13 +18,16 @@
 
 #include <graph_bag/parameter_reader.h>
 #include <localization_common/utilities.h>
+#include <msg_conversions/msg_conversions.h>
 
 namespace graph_bag {
 namespace lc = localization_common;
+namespace mc = msg_conversions;
+
 void LoadMessageBufferParams(const std::string& message_type, config_reader::ConfigReader& config,
                              MessageBufferParams& params) {
-  params.msg_delay = lc::LoadDouble(config, message_type + "_msg_delay");
-  params.min_msg_spacing = lc::LoadDouble(config, message_type + "_min_msg_spacing");
+  params.msg_delay = mc::LoadDouble(config, message_type + "_msg_delay");
+  params.min_msg_spacing = mc::LoadDouble(config, message_type + "_min_msg_spacing");
 }
 
 void LoadLiveMeasurementSimulatorParams(config_reader::ConfigReader& config, const std::string& bag_name,
@@ -34,21 +37,21 @@ void LoadLiveMeasurementSimulatorParams(config_reader::ConfigReader& config, con
   LoadMessageBufferParams("of", config, params.of);
   LoadMessageBufferParams("vl", config, params.vl);
   LoadMessageBufferParams("ar", config, params.ar);
-  params.save_optical_flow_images = lc::LoadBool(config, "save_optical_flow_images");
+  params.save_optical_flow_images = mc::LoadBool(config, "save_optical_flow_images");
   params.bag_name = bag_name;
   params.map_file = map_file;
   params.image_topic = image_topic;
 }
 
 void LoadGraphLocalizerSimulatorParams(config_reader::ConfigReader& config, GraphLocalizerSimulatorParams& params) {
-  params.optimization_time = lc::LoadDouble(config, "optimization_time");
+  params.optimization_time = mc::LoadDouble(config, "optimization_time");
 }
 
 void LoadGraphBagParams(config_reader::ConfigReader& config, GraphBagParams& params) {
-  params.save_optical_flow_images = lc::LoadBool(config, "save_optical_flow_images");
+  params.save_optical_flow_images = mc::LoadBool(config, "save_optical_flow_images");
   params.nav_cam_params.reset(new camera::CameraParameters(&config, "nav_cam"));
   params.body_T_nav_cam = lc::LoadTransform(config, "nav_cam_transform");
-  params.sparse_mapping_min_num_landmarks = lc::LoadInt(config, "loc_adder_min_num_matches");
-  params.ar_min_num_landmarks = lc::LoadInt(config, "ar_tag_loc_adder_min_num_matches");
+  params.sparse_mapping_min_num_landmarks = mc::LoadInt(config, "loc_adder_min_num_matches");
+  params.ar_min_num_landmarks = mc::LoadInt(config, "ar_tag_loc_adder_min_num_matches");
 }
 }  // namespace graph_bag

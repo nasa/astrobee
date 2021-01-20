@@ -41,6 +41,8 @@
 namespace localization_common {
 gtsam::Pose3 LoadTransform(config_reader::ConfigReader& config, const std::string& transform_config_name);
 
+gtsam::Vector3 LoadVector3(config_reader::ConfigReader& config, const std::string& config_name);
+
 gtsam::Cal3_S2 LoadCameraIntrinsics(config_reader::ConfigReader& config, const std::string& intrinsics_config_name);
 
 gtsam::Pose3 GtPose(const Eigen::Isometry3d& eigen_pose);
@@ -69,31 +71,6 @@ Time TimeFromRosTime(const ros::Time& time);
 
 void TimeToHeader(const Time timestamp, std_msgs::Header& header);
 
-template <typename VectorType, typename MsgVectorType>
-VectorType VectorFromMsg(const MsgVectorType& msg_vector) {
-  return VectorType(msg_vector.x, msg_vector.y, msg_vector.z);
-}
-
-template <typename VectorType, typename MsgVectorType>
-void VectorToMsg(const VectorType& vector, MsgVectorType& msg_vector) {
-  msg_vector.x = vector.x();
-  msg_vector.y = vector.y();
-  msg_vector.z = vector.z();
-}
-
-template <typename RotationType, typename MsgRotationType>
-RotationType RotationFromMsg(const MsgRotationType& msg_rotation) {
-  return RotationType(msg_rotation.w, msg_rotation.x, msg_rotation.y, msg_rotation.z);
-}
-
-template <typename RotationType, typename MsgRotationType>
-void RotationToMsg(const RotationType& rotation, MsgRotationType& msg_rotation) {
-  msg_rotation.w = rotation.w();
-  msg_rotation.x = rotation.x();
-  msg_rotation.y = rotation.y();
-  msg_rotation.z = rotation.z();
-}
-
 gtsam::Pose3 PoseFromMsg(const geometry_msgs::PoseStamped& msg);
 
 gtsam::Pose3 PoseFromMsg(const geometry_msgs::Pose& msg_pose);
@@ -107,14 +84,6 @@ geometry_msgs::TransformStamped PoseToTF(const Eigen::Isometry3d& pose, const st
 geometry_msgs::TransformStamped PoseToTF(const gtsam::Pose3& pose, const std::string& parent_frame,
                                          const std::string& child_frame, const Time timestamp,
                                          const std::string& platform_name = "");
-
-void EigenPoseToMsg(const Eigen::Isometry3d& pose, geometry_msgs::Pose& msg_pose);
-
-void EigenPoseToMsg(const Eigen::Isometry3d& pose, geometry_msgs::Transform& msg_transform);
-
-void VariancesToCovDiag(const Eigen::Vector3d& variances, float* const cov_diag);
-
-Eigen::Vector3d CovDiagToVariances(const float* const cov_diag);
 
 CombinedNavState CombinedNavStateFromMsg(const ff_msgs::EkfState& loc_msg);
 

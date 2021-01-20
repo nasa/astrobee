@@ -29,14 +29,16 @@
 #include <string>
 
 namespace localization_common {
+namespace mc = msg_conversions;
+
 gtsam::Pose3 LoadTransform(config_reader::ConfigReader& config, const std::string& transform_config_name) {
-  const auto body_T_sensor = LoadEigenTransform(config, transform_config_name);
+  const auto body_T_sensor = mc::LoadEigenTransform(config, transform_config_name);
   return GtPose(body_T_sensor);
 }
 
 gtsam::Vector3 LoadVector3(config_reader::ConfigReader& config, const std::string& config_name) {
   Eigen::Vector3d vec;
-  msg_conversions::config_read_vector(&config, config_name.c_str(), &vec);
+  mc::config_read_vector(&config, config_name.c_str(), &vec);
   return vec;
 }
 
@@ -110,14 +112,14 @@ void TimeToHeader(const Time timestamp, std_msgs::Header& header) {
 gtsam::Pose3 PoseFromMsg(const geometry_msgs::PoseStamped& msg) { return PoseFromMsg(msg.pose); }
 
 gtsam::Pose3 PoseFromMsg(const geometry_msgs::Pose& msg_pose) {
-  return gtsam::Pose3(RotationFromMsg<gtsam::Rot3, geometry_msgs::Quaternion>(msg_pose.orientation),
-                      VectorFromMsg<gtsam::Point3, geometry_msgs::Point>(msg_pose.position));
+  return gtsam::Pose3(mc::RotationFromMsg<gtsam::Rot3, geometry_msgs::Quaternion>(msg_pose.orientation),
+                      mc::VectorFromMsg<gtsam::Point3, geometry_msgs::Point>(msg_pose.position));
 }
 
 void PoseToMsg(const gtsam::Pose3& pose, geometry_msgs::Pose& msg_pose) {
   const gtsam::Quaternion quaternion = pose.rotation().toQuaternion();
-  RotationToMsg(quaternion, msg_pose.orientation);
-  VectorToMsg(pose.translation(), msg_pose.position);
+  mc::RotationToMsg(quaternion, msg_pose.orientation);
+  mc::VectorToMsg(pose.translation(), msg_pose.position);
 }
 
 geometry_msgs::TransformStamped PoseToTF(const gtsam::Pose3& pose, const std::string& parent_frame,
@@ -133,72 +135,52 @@ geometry_msgs::TransformStamped PoseToTF(const Eigen::Isometry3d& pose, const st
   TimeToHeader(timestamp, transform.header);
   transform.header.frame_id = parent_frame;
   transform.child_frame_id = platform_name + child_frame;
-  EigenPoseToMsg(pose, transform.transform);
+  mc::EigenPoseToMsg(pose, transform.transform);
   return transform;
-}
-
-void EigenPoseToMsg(const Eigen::Isometry3d& pose, geometry_msgs::Pose& msg_pose) {
-  RotationToMsg(Eigen::Quaterniond(pose.linear()), msg_pose.orientation);
-  VectorToMsg(pose.translation(), msg_pose.position);
-}
-
-void EigenPoseToMsg(const Eigen::Isometry3d& pose, geometry_msgs::Transform& msg_transform) {
-  RotationToMsg(Eigen::Quaterniond(pose.linear()), msg_transform.rotation);
-  VectorToMsg(pose.translation(), msg_transform.translation);
-}
-
-void VariancesToCovDiag(const Eigen::Vector3d& variances, float* const cov_diag) {
-  cov_diag[0] = variances.x();
-  cov_diag[1] = variances.y();
-  cov_diag[2] = variances.z();
-}
-
-Eigen::Vector3d CovDiagToVariances(const float* const cov_diag) {
-  return Eigen::Vector3d(cov_diag[0], cov_diag[1], cov_diag[2]);
 }
 
 CombinedNavState CombinedNavStateFromMsg(const ff_msgs::EkfState& loc_msg) {
   const auto pose = PoseFromMsg(loc_msg.pose);
-  const auto velocity = VectorFromMsg<gtsam::Velocity3, geometry_msgs::Vector3>(loc_msg.velocity);
-  const auto accel_bias = VectorFromMsg<gtsam::Vector3, geometry_msgs::Vector3>(loc_msg.accel_bias);
-  const auto gyro_bias = VectorFromMsg<gtsam::Vector3, geometry_msgs::Vector3>(loc_msg.gyro_bias);
+  const auto velocity = mc::VectorFromMsg<gtsam::Velocity3, geometry_msgs::Vector3>(loc_msg.velocity);
+  const auto accel_bias = mc::VectorFromMsg<gtsam::Vector3, geometry_msgs::Vector3>(loc_msg.accel_bias);
+  const auto gyro_bias = mc::VectorFromMsg<gtsam::Vector3, geometry_msgs::Vector3>(loc_msg.gyro_bias);
   const auto timestamp = TimeFromHeader(loc_msg.header);
   return CombinedNavState(pose, velocity, gtsam::imuBias::ConstantBias(accel_bias, gyro_bias), timestamp);
 }
 
 void CombinedNavStateToMsg(const CombinedNavState& combined_nav_state, ff_msgs::EkfState& loc_msg) {
   PoseToMsg(combined_nav_state.pose(), loc_msg.pose);
-  VectorToMsg(combined_nav_state.velocity(), loc_msg.velocity);
-  VectorToMsg(combined_nav_state.bias().accelerometer(), loc_msg.accel_bias);
-  VectorToMsg(combined_nav_state.bias().gyroscope(), loc_msg.gyro_bias);
+  mc::VectorToMsg(combined_nav_state.velocity(), loc_msg.velocity);
+  mc::VectorToMsg(combined_nav_state.bias().accelerometer(), loc_msg.accel_bias);
+  mc::VectorToMsg(combined_nav_state.bias().gyroscope(), loc_msg.gyro_bias);
   TimeToHeader(combined_nav_state.timestamp(), loc_msg.header);
 }
 
 CombinedNavStateCovariances CombinedNavStateCovariancesFromMsg(const ff_msgs::EkfState& loc_msg) {
-  const Eigen::Vector3d orientation_variances = CovDiagToVariances(&loc_msg.cov_diag[0]);
-  const Eigen::Vector3d gyro_bias_variances = CovDiagToVariances(&loc_msg.cov_diag[3]);
-  const Eigen::Vector3d velocity_variances = CovDiagToVariances(&loc_msg.cov_diag[6]);
-  const Eigen::Vector3d accelerometer_bias_variances = CovDiagToVariances(&loc_msg.cov_diag[9]);
-  const Eigen::Vector3d position_variances = CovDiagToVariances(&loc_msg.cov_diag[12]);
+  const Eigen::Vector3d orientation_variances = mc::CovDiagToVariances(&loc_msg.cov_diag[0]);
+  const Eigen::Vector3d gyro_bias_variances = mc::CovDiagToVariances(&loc_msg.cov_diag[3]);
+  const Eigen::Vector3d velocity_variances = mc::CovDiagToVariances(&loc_msg.cov_diag[6]);
+  const Eigen::Vector3d accelerometer_bias_variances = mc::CovDiagToVariances(&loc_msg.cov_diag[9]);
+  const Eigen::Vector3d position_variances = mc::CovDiagToVariances(&loc_msg.cov_diag[12]);
   return CombinedNavStateCovariances(position_variances, orientation_variances, velocity_variances,
                                      accelerometer_bias_variances, gyro_bias_variances);
 }
 
 void CombinedNavStateCovariancesToMsg(const CombinedNavStateCovariances& covariances, ff_msgs::EkfState& loc_msg) {
   // Orientation (0-2)
-  VariancesToCovDiag(covariances.orientation_variances(), &loc_msg.cov_diag[0]);
+  mc::VariancesToCovDiag(covariances.orientation_variances(), &loc_msg.cov_diag[0]);
 
   // Gyro Bias (3-5)
-  VariancesToCovDiag(covariances.gyro_bias_variances(), &loc_msg.cov_diag[3]);
+  mc::VariancesToCovDiag(covariances.gyro_bias_variances(), &loc_msg.cov_diag[3]);
 
   // Velocity (6-8)
-  VariancesToCovDiag(covariances.velocity_variances(), &loc_msg.cov_diag[6]);
+  mc::VariancesToCovDiag(covariances.velocity_variances(), &loc_msg.cov_diag[6]);
 
   // Accel Bias (9-11)
-  VariancesToCovDiag(covariances.accel_bias_variances(), &loc_msg.cov_diag[9]);
+  mc::VariancesToCovDiag(covariances.accel_bias_variances(), &loc_msg.cov_diag[9]);
 
   // Position (12-14)
-  VariancesToCovDiag(covariances.position_variances(), &loc_msg.cov_diag[12]);
+  mc::VariancesToCovDiag(covariances.position_variances(), &loc_msg.cov_diag[12]);
 }
 
 gtsam::Vector3 RemoveGravityFromAccelerometerMeasurement(const gtsam::Vector3& global_F_gravity,

@@ -23,11 +23,14 @@
 #include <graph_localizer/utilities.h>
 #include <localization_common/logger.h>
 #include <localization_common/utilities.h>
+#include <msg_conversions/msg_conversions.h>
 
 #include <std_msgs/Empty.h>
 
 namespace graph_localizer {
 namespace lc = localization_common;
+namespace mc = msg_conversions;
+
 GraphLocalizerNodelet::GraphLocalizerNodelet()
     : ff_util::FreeFlyerNodelet(NODE_GRAPH_LOC, true), platform_name_(GetPlatform()) {
   private_nh_.setCallbackQueue(&private_queue_);
@@ -39,8 +42,8 @@ GraphLocalizerNodelet::GraphLocalizerNodelet()
   if (!config.ReadFiles()) {
     LOG(FATAL) << "Failed to read config files.";
   }
-  sparse_mapping_min_num_landmarks_ = lc::LoadInt(config, "loc_adder_min_num_matches");
-  ar_min_num_landmarks_ = lc::LoadInt(config, "ar_tag_loc_adder_min_num_matches");
+  sparse_mapping_min_num_landmarks_ = mc::LoadInt(config, "loc_adder_min_num_matches");
+  ar_min_num_landmarks_ = mc::LoadInt(config, "ar_tag_loc_adder_min_num_matches");
 }
 
 void GraphLocalizerNodelet::Initialize(ros::NodeHandle* nh) {

@@ -28,6 +28,8 @@ namespace imu_augmentor {
 namespace ii = imu_integration;
 namespace lc = localization_common;
 namespace lm = localization_measurements;
+namespace mc = msg_conversions;
+
 ImuAugmentorWrapper::ImuAugmentorWrapper(const std::string& graph_config_path_prefix) {
   config_reader::ConfigReader config;
   config.AddFile("transforms.config");
@@ -39,7 +41,7 @@ ImuAugmentorWrapper::ImuAugmentorWrapper(const std::string& graph_config_path_pr
   }
 
   ii::LoadImuIntegratorParams(config, params_);
-  params_.standstill_enabled = lc::LoadBool(config, "imu_augmentor_standstill");
+  params_.standstill_enabled = mc::LoadBool(config, "imu_augmentor_standstill");
   imu_augmentor_.reset(new ImuAugmentor(params_));
 
   // Preintegration_helper_ is only being used to frame change and remove centrifugal acceleration, so body_T_imu is the
@@ -140,8 +142,8 @@ boost::optional<ff_msgs::EkfState> ImuAugmentorWrapper::LatestImuAugmentedLocali
   const auto corrected_measurements = preintegration_helper_->correctMeasurementsBySensorPose(
     latest_bias_corrected_acceleration, latest_bias_corrected_angular_velocity);
 
-  lc::VectorToMsg(corrected_measurements.first, latest_imu_augmented_loc_msg.accel);
-  lc::VectorToMsg(corrected_measurements.second, latest_imu_augmented_loc_msg.omega);
+  mc::VectorToMsg(corrected_measurements.first, latest_imu_augmented_loc_msg.accel);
+  mc::VectorToMsg(corrected_measurements.second, latest_imu_augmented_loc_msg.omega);
   return latest_imu_augmented_loc_msg;
 }
 }  // namespace imu_augmentor

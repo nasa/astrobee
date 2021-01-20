@@ -21,6 +21,7 @@
 #include <imu_integration/imu_filter_params.h>
 #include <localization_common/utilities.h>
 #include <localization_measurements/imu_measurement.h>
+#include <msg_conversions/msg_conversions.h>
 
 #include <sensor_msgs/Imu.h>
 
@@ -39,6 +40,8 @@ namespace graph_bag {
 namespace ii = imu_integration;
 namespace lc = localization_common;
 namespace lm = localization_measurements;
+namespace mc = msg_conversions;
+
 BagImuFilterer::BagImuFilterer(const std::string& bag_name, const std::string& filtered_bag,
                                const std::string& filter_name)
     : bag_(bag_name, rosbag::bagmode::Read), filtered_bag_(filtered_bag, rosbag::bagmode::Write) {
@@ -57,8 +60,8 @@ void BagImuFilterer::Convert() {
       const auto filtered_imu_measurement = imu_filter_->AddMeasurement(imu_measurement);
       if (filtered_imu_measurement) {
         sensor_msgs::Imu filtered_imu_msg;
-        lc::VectorToMsg(filtered_imu_measurement->acceleration, filtered_imu_msg.linear_acceleration);
-        lc::VectorToMsg(filtered_imu_measurement->angular_velocity, filtered_imu_msg.angular_velocity);
+        mc::VectorToMsg(filtered_imu_measurement->acceleration, filtered_imu_msg.linear_acceleration);
+        mc::VectorToMsg(filtered_imu_measurement->angular_velocity, filtered_imu_msg.angular_velocity);
         lc::TimeToHeader(filtered_imu_measurement->timestamp, filtered_imu_msg.header);
         // TODO(rsoussan): Change receive timestamp to account for filter delay?
         filtered_bag_.write(m.getTopic(), m.getTime(), filtered_imu_msg);

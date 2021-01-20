@@ -21,6 +21,7 @@
 #include <imu_integration/utilities.h>
 #include <localization_common/logger.h>
 #include <localization_common/utilities.h>
+#include <msg_conversions/msg_conversions.h>
 
 #include <cstdlib>
 #include <string>
@@ -29,6 +30,7 @@ namespace graph_localizer {
 namespace ii = imu_integration;
 namespace lc = localization_common;
 namespace lm = localization_measurements;
+namespace mc = msg_conversions;
 
 bool ValidPointSet(const std::deque<lm::FeaturePoint>& points, const double average_distance_from_mean,
                    const double min_avg_distance_from_mean, const int min_num_points) {
@@ -74,10 +76,10 @@ ff_msgs::EkfState EkfStateMsg(const lc::CombinedNavState& combined_nav_state, co
   lc::CombinedNavStateToMsg(combined_nav_state, loc_msg);
 
   // Set Acceleration
-  lc::VectorToMsg(acceleration, loc_msg.accel);
+  mc::VectorToMsg(acceleration, loc_msg.accel);
 
   // Set Angular Velocity
-  lc::VectorToMsg(angular_velocity, loc_msg.omega);
+  mc::VectorToMsg(angular_velocity, loc_msg.omega);
 
   // Set Variances
   lc::CombinedNavStateCovariancesToMsg(covariances, loc_msg);
@@ -118,7 +120,7 @@ ff_msgs::LocalizationGraph GraphMsg(const GraphLocalizer& graph_localizer) {
 geometry_msgs::PoseStamped PoseMsg(const Eigen::Isometry3d& global_T_body, const std_msgs::Header& header) {
   geometry_msgs::PoseStamped pose_msg;
   pose_msg.header = header;
-  lc::EigenPoseToMsg(global_T_body, pose_msg.pose);
+  mc::EigenPoseToMsg(global_T_body, pose_msg.pose);
   return pose_msg;
 }
 

@@ -19,10 +19,13 @@
 #include <imu_integration/utilities.h>
 #include <localization_common/logger.h>
 #include <localization_common/utilities.h>
+#include <msg_conversions/msg_conversions.h>
 
 namespace imu_integration {
 namespace lc = localization_common;
 namespace lm = localization_measurements;
+namespace mc = msg_conversions;
+
 boost::optional<gtsam::imuBias::ConstantBias> EstimateAndSetImuBiases(
   const lm::ImuMeasurement& imu_measurement, const int num_imu_measurements_per_bias_estimate,
   std::vector<lm::ImuMeasurement>& imu_bias_measurements) {
@@ -101,15 +104,15 @@ gtsam::CombinedImuFactor::shared_ptr MakeCombinedImuFactor(const int key_index_0
 
 void LoadImuIntegratorParams(config_reader::ConfigReader& config, ImuIntegratorParams& params) {
   params.gravity = lc::LoadVector3(config, "world_gravity_vector");
-  const bool ignore_gravity = lc::LoadBool(config, "ignore_gravity");
+  const bool ignore_gravity = mc::LoadBool(config, "ignore_gravity");
   if (ignore_gravity) params.gravity = gtsam::Vector3::Zero();
   params.body_T_imu = lc::LoadTransform(config, "imu_transform");
-  params.filter.type = lc::LoadString(config, "imu_filter");
-  params.gyro_sigma = lc::LoadDouble(config, "gyro_sigma");
-  params.accel_sigma = lc::LoadDouble(config, "accel_sigma");
-  params.accel_bias_sigma = lc::LoadDouble(config, "accel_bias_sigma");
-  params.gyro_bias_sigma = lc::LoadDouble(config, "gyro_bias_sigma");
-  params.integration_variance = lc::LoadDouble(config, "integration_variance");
-  params.bias_acc_omega_int = lc::LoadDouble(config, "bias_acc_omega_int");
+  params.filter.type = mc::LoadString(config, "imu_filter");
+  params.gyro_sigma = mc::LoadDouble(config, "gyro_sigma");
+  params.accel_sigma = mc::LoadDouble(config, "accel_sigma");
+  params.accel_bias_sigma = mc::LoadDouble(config, "accel_bias_sigma");
+  params.gyro_bias_sigma = mc::LoadDouble(config, "gyro_bias_sigma");
+  params.integration_variance = mc::LoadDouble(config, "integration_variance");
+  params.bias_acc_omega_int = mc::LoadDouble(config, "bias_acc_omega_int");
 }
 }  // namespace imu_integration
