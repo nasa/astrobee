@@ -32,7 +32,7 @@ added to the change log that gets edited when the script is run. Also, in the
 change log, change UNRELEASED to testing and change the email address to the
 astrobee fsw email address as in previous log entries.
 
-    ./scripts/setup/debians/update_release.md 0.x.x
+    ./scripts/setup/debians/update_release.sh 0.x.x
 
 
 *Note: Make sure that your EDITOR variable is set to your preferred editor
