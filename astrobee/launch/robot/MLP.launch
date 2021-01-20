@@ -39,6 +39,8 @@
       <node pkg="nodelet" type="nodelet" args="manager"
           name="mlp_management" output="$(arg output)"/>
       <node pkg="nodelet" type="nodelet" args="manager"
+          name="mlp_recording" output="$(arg output)"/>
+      <node pkg="nodelet" type="nodelet" args="manager"
           name="mlp_monitors" output="$(arg output)"/>
       <node pkg="nodelet" type="nodelet" args="manager"
           name="mlp_communications" output="$(arg output)"/>
@@ -214,7 +216,7 @@
     <include file="$(find ff_util)/launch/ff_nodelet.launch">
       <arg name="class" value="data_bagger/DataBagger" />
       <arg name="name" value="data_bagger" />
-      <arg name="manager" value="mlp_management" />
+      <arg name="manager" value="mlp_recording" />
       <arg name="spurn" value="$(arg spurn)" />
       <arg name="nodes" value="$(arg nodes)" />
       <arg name="extra" value="$(arg extra)" />
