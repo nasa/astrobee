@@ -75,7 +75,7 @@ LocalizationGraphDisplay::LocalizationGraphDisplay() {
   // Only pass program name to free flyer so that boost command line options
   // are ignored when parsing gflags.
   int ff_argc = 1;
-  char argv[] = "script";
+  char argv[] = "localization_graph_display";
   char* argv_ptr = &argv[0];
   char** argv_ptr_ptr = &argv_ptr;
   ff_common::InitFreeFlyerApplication(&ff_argc, &argv_ptr_ptr);

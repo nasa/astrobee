@@ -32,9 +32,10 @@
 namespace localization_rviz_plugins {
 SparseMappingDisplay::SparseMappingDisplay() {
   int ff_argc = 1;
-  char* argv = "sparse_mapping_display";
-  char** argv_ptr = &argv;
-  ff_common::InitFreeFlyerApplication(&ff_argc, &argv_ptr);
+  char argv[] = "sparse_mapping_display";
+  char* argv_ptr = &argv[0];
+  char** argv_ptr_ptr = &argv_ptr;
+  ff_common::InitFreeFlyerApplication(&ff_argc, &argv_ptr_ptr);
   config_reader::ConfigReader config;
   // TODO(rsoussan): Config reader fails to load map string unless a file is added (doesn't matter which one).
   config.AddFile("geometry.config");

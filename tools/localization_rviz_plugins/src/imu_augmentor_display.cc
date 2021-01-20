@@ -18,6 +18,7 @@
 
 #include <localization_common/logger.h>
 #include <localization_common/utilities.h>
+#include <msg_conversions/msg_conversions.h>
 
 #include <OGRE/OgreSceneManager.h>
 #include <OGRE/OgreSceneNode.h>
@@ -32,6 +33,7 @@
 
 namespace localization_rviz_plugins {
 namespace lc = localization_common;
+namespace mc = msg_conversions;
 
 ImuAugmentorDisplay::ImuAugmentorDisplay() {
   show_pose_axes_.reset(new rviz::BoolProperty("Show Pose Axes", true, "Show graph poses as axes.", this));
@@ -79,7 +81,7 @@ void ImuAugmentorDisplay::processMessage(const ff_msgs::EkfState::ConstPtr& msg)
   if (show_imu_acceleration_arrow_->getBool()) {
     imu_acceleration_arrow_.reset(new rviz::Arrow(context_->getSceneManager(), scene_node_));
     imu_acceleration_arrow_->setPosition(ogrePosition(current_frame_T_body));
-    const gtsam::Vector3 body_F_acceleration = lc::VectorFromMsg<gtsam::Vector3, geometry_msgs::Vector3>(msg->accel);
+    const gtsam::Vector3 body_F_acceleration = mc::VectorFromMsg<gtsam::Vector3, geometry_msgs::Vector3>(msg->accel);
     const gtsam::Vector3 current_frame_F_acceleration = current_frame_T_body.rotation() * body_F_acceleration;
     const float scale = imu_acceleration_arrow_scale_->getFloat();
     const auto orientation_and_length =
