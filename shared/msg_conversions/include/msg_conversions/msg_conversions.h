@@ -30,6 +30,8 @@
 #include <geometry_msgs/Transform.h>
 #include <geometry_msgs/Vector3.h>
 
+#include <string>
+
 namespace msg_conversions {
 
   Eigen::Vector3d        ros_point_to_eigen_vector(const geometry_msgs::Point & p);
@@ -75,6 +77,12 @@ namespace msg_conversions {
   bool config_read_quat(config_reader::ConfigReader::Table* t, geometry_msgs::Quaternion* quat);
   bool config_read_vector(config_reader::ConfigReader::Table* t, geometry_msgs::Vector3* vec);
   bool config_read_vector(config_reader::ConfigReader::Table* t, geometry_msgs::Point* point);
+  // Alternative format for loading configs
+  Eigen::Isometry3d LoadEigenTransform(config_reader::ConfigReader& config, const std::string& transform_config_name);
+  double LoadDouble(config_reader::ConfigReader& config, const std::string& config_name);
+  int LoadInt(config_reader::ConfigReader& config, const std::string& config_name);
+  bool LoadBool(config_reader::ConfigReader& config, const std::string& config_name);
+  std::string LoadString(config_reader::ConfigReader& config, const std::string& config_name);
 }  // namespace msg_conversions
 
 #endif  // MSG_CONVERSIONS_MSG_CONVERSIONS_H_
