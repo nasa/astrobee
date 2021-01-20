@@ -445,8 +445,8 @@ bool GraphLocalizer::ARProjectionNoiseScaling(FactorsToAdd& factors_to_add) {
 
 bool GraphLocalizer::MapProjectionNoiseScaling(const LocFactorAdderParams& params, FactorsToAdd& factors_to_add) {
   auto& factors = factors_to_add.Get();
-  gtsam::Key pose_key;
-  gtsam::Pose3 world_T_cam;
+  boost::optional<gtsam::Key> pose_key;
+  boost::optional<gtsam::Pose3> world_T_cam;
   for (auto factor_it = factors.begin(); factor_it != factors.end();) {
     auto& factor = factor_it->factor;
     auto projection_factor = dynamic_cast<gtsam::LocProjectionFactor<>*>(factor.get());
@@ -487,6 +487,10 @@ bool GraphLocalizer::MapProjectionNoiseScaling(const LocFactorAdderParams& param
   }
   // All factors have been removed due to errors, use loc pose prior instead
   if (factors.empty() && params.add_prior_if_projections_fail) {
+    if (!pose_key || !world_T_cam) {
+      LogError("MapProjectionNoiseScaling: Failed to get pose key and world_T_cam");
+      return false;
+    }
     const gtsam::Vector6 pose_prior_noise_sigmas((gtsam::Vector(6) << params.prior_translation_stddev,
                                                   params.prior_translation_stddev, params.prior_translation_stddev,
                                                   params.prior_quaternion_stddev, params.prior_quaternion_stddev,
@@ -498,7 +502,7 @@ bool GraphLocalizer::MapProjectionNoiseScaling(const LocFactorAdderParams& param
       gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(noise_scale * pose_prior_noise_sigmas)),
       params.huber_k);
     gtsam::LocPoseFactor::shared_ptr pose_prior_factor(
-      new gtsam::LocPoseFactor(pose_key, world_T_cam * params.body_T_cam.inverse(), pose_noise));
+      new gtsam::LocPoseFactor(*pose_key, *world_T_cam * params.body_T_cam.inverse(), pose_noise));
     factors_to_add.push_back(FactorToAdd({KeyInfo(&sym::P, factors_to_add.timestamp())}, pose_prior_factor));
   }
   return true;
