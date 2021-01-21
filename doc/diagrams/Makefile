@@ -13,12 +13,14 @@ pdf_dir = $(gen_dir)/pdf
 
 #uml_src = $(wildcard *.puml)
 uml_src = OperatingState.puml MobilityState.puml PlanExecutionState.puml \
-		EpsState.puml FaultSequences.puml overview-horizontal.puml \
+		EpsState.puml FaultSequences.puml \
 		nodes_overview.puml nodes_interactions.puml \
 		deployment.puml network.puml architecture.puml gnc_overview.puml \
 		sim_concepts_robot.puml sim_concepts_simulator.puml ars_overview.puml\
 		notations.puml llp_nodes.puml mlp_nodes.puml hlp_nodes.puml \
 		packages_linux.puml packages_android.puml color_palettes.puml
+# Missing from list in forlder
+# nodes_helper.puml colors.puml common.puml plantuml nodes.puml
 
 uml_svg = $(uml_src:%.puml=$(svg_dir)/%.svg)
 uml_png = $(uml_src:%.puml=$(png_dir)/%.png)

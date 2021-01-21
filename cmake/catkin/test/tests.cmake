@@ -1,5 +1,8 @@
 option(CATKIN_ENABLE_TESTING "Catkin enable testing" ON)
-option(CATKIN_SKIP_TESTING "Catkin skip testing" OFF)
+
+if(NOT DEFINED CATKIN_SKIP_TESTING)
+  option(CATKIN_SKIP_TESTING "Catkin skip testing" OFF)
+endif()
 
 # check if testing is explicity skipped
 if(CATKIN_SKIP_TESTING)

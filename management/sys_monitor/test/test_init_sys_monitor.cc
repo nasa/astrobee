@@ -16,6 +16,13 @@
  * under the License.
  */
 
+// Test initialization sys monitor
+// These initialization tests make sure the system manager is correctly is
+// spawned. To do so, the launch file contains uses the wrong folder
+// for the faults.config config file on purpose. Because the system moniotr
+// can't read the config files it triggers a faulty state. If this anomaly is issued
+// within 2 seconds of initialization, then the test passes.
+
 // Required for the test cases
 #include <ff_msgs/AgentStateStamped.h>
 #include <ff_util/ff_names.h>

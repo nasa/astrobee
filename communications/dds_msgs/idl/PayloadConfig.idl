@@ -1,0 +1,35 @@
+/*
+ * Copyright 2015 (c) 2015 Intelligent Robotics Group, NASA ARC
+ */
+
+#include "Message.idl"
+
+module rapid {
+  module ext {
+    module astrobee {
+   
+      typedef sequence<String32,4> String32Sequence4;
+
+      //@copy-c-declaration class PayloadConfigTypeSupport;
+      //@copy-c-declaration class PayloadConfigDataWriter;
+      //@copy-c-declaration class PayloadConfigDataReader;
+      //@copy-c-declaration struct PayloadConfigSeq;
+
+      //@copy-declaration /**
+      //@copy-declaration   * Configuration message for a PayloadState message
+      //@copy-declaration   */
+      valuetype PayloadConfig : Message {
+        //@copy-c-declaration #if RTI_DDS_VERSION_MAJOR < 4 || (RTI_DDS_VERSION_MAJOR == 4  && RTI_DDS_VERSION_MINOR < 5) || (RTI_DDS_VERSION_MAJOR == 4  && RTI_DDS_VERSION_MINOR  == 5 && RTI_DDS_VERSION_RELEASE != 'f' )
+        //@copy-c-declaration typedef PayloadConfigTypeSupport TypeSupport;
+        //@copy-c-declaration typedef PayloadConfigDataWriter DataWriter;
+        //@copy-c-declaration typedef PayloadConfigDataReader DataReader;
+        //@copy-c-declaration typedef PayloadConfigSeq Seq;
+        //@copy-c-declaration #endif
+        //@copy-c-declaration typedef PayloadConfig Type;
+
+        public String32Sequence4 payloadNames;
+      };
+    };
+  };
+
+};

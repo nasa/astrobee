@@ -1,4 +1,14 @@
-# Astrobee Robot Software v1
+# Releases
+
+## Release 0.13.0
+
+  * Multiple updates to documentation, doxygen is exported to github pages
+  * Adding Github actions to build and test the code and generate documentation
+  * astrobee_media now a submodule
+  * SciCam now generates compressed images
+  * Added memory monitor
+  * Cross compiling with docker
+  * Other fixes
 
 ## Release 0.12.0
 

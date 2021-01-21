@@ -80,7 +80,6 @@ astrobee/config/dds
 #zones bin
 astrobee/zones/*.bin
 /description/*.tar.gz
-/description/media
 /localization/vive_localization/src/ukf
 
 # catkin

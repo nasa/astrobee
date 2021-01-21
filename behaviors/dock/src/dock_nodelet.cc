@@ -166,7 +166,7 @@ class DockNodelet : public ff_util::FreeFlyerNodelet {
     // [31]
     fsm_.Add(STATE::DOCKING_SWITCHING_TO_AR_LOC,
       SWITCH_SUCCESS, [this](FSM::Event const& event) -> FSM::State {
-        Move(BERTHING_POSE, ff_msgs::MotionGoal::DOCKING);
+        Move(BERTHING_POSE, ff_msgs::MotionGoal::PRECISION);
         return STATE::DOCKING_MOVING_TO_COMPLETE_POSE;
       });
     // [32]
@@ -179,7 +179,7 @@ class DockNodelet : public ff_util::FreeFlyerNodelet {
     // [8]
     fsm_.Add(STATE::DOCKING_MOVING_TO_COMPLETE_POSE,
       EPS_DOCKED, [this](FSM::Event const& event) -> FSM::State {
-        Move(APPROACH_POSE, ff_msgs::MotionGoal::DOCKING);
+        Move(APPROACH_POSE, ff_msgs::MotionGoal::PRECISION);
         return STATE::DOCKING_CHECKING_ATTACHED;
       });
     // [9]
@@ -194,7 +194,7 @@ class DockNodelet : public ff_util::FreeFlyerNodelet {
           err_ = RESPONSE::MOTION_COMPLETE_FAILED;
           err_msg_ = "Motion failed trying to go to complete pose";
         }
-        Move(APPROACH_POSE, ff_msgs::MotionGoal::DOCKING);
+        Move(APPROACH_POSE, ff_msgs::MotionGoal::PRECISION);
         return STATE::RECOVERY_MOVING_TO_APPROACH_POSE;
       });
     // [10]
@@ -208,7 +208,7 @@ class DockNodelet : public ff_util::FreeFlyerNodelet {
       MOTION_SUCCESS, [this](FSM::Event const& event) -> FSM::State {
         err_ = RESPONSE::MOTION_ATTACHED_FAILED;
         err_msg_ = "Check attached failed, magnets didn't stop robot's movement";
-        Move(APPROACH_POSE, ff_msgs::MotionGoal::DOCKING);
+        Move(APPROACH_POSE, ff_msgs::MotionGoal::PRECISION);
         return STATE::RECOVERY_MOVING_TO_APPROACH_POSE;
       });
     // [12]
@@ -600,11 +600,11 @@ class DockNodelet : public ff_util::FreeFlyerNodelet {
   }
 
   // Check that we are close enough to the approach pose
-  bool CloseEnoughToApproach(uint32_t berth) {
+  bool CloseEnoughToApproach(std::string berth) {
     try {
       // Look up the body frame in the berth frame
       geometry_msgs::TransformStamped tf = tf_buffer_.lookupTransform(
-        berths_[berth] + "/approach", GetTransform(FRAME_NAME_BODY),
+        berth + "/approach", GetTransform(FRAME_NAME_BODY),
           ros::Time(0));
       // Copy the transform
       double d = tf.transform.translation.x * tf.transform.translation.x
@@ -620,21 +620,30 @@ class DockNodelet : public ff_util::FreeFlyerNodelet {
   }
 
   bool CheckBerth() {
-      // Look for the berth and confirm localization is working
+    // Look for the berth and confirm localization is working
     std::map<uint8_t, std::string>::iterator it;
-    for (it = berths_.begin(); it != berths_.end(); it++) {
-      try {
-        // Look up the body frame in the berth frame
-        geometry_msgs::TransformStamped tf = tf_buffer_.lookupTransform(
-          it->second + "/complete", GetTransform(FRAME_NAME_BODY), ros::Time(0));
-        // Copy the transform
-        double d = tf.transform.translation.x * tf.transform.translation.x
-                 + tf.transform.translation.y * tf.transform.translation.y
-                 + tf.transform.translation.z * tf.transform.translation.z;
-        // If we are within some delta of the origin, then we are at this berth
-        if (sqrt(d) < cfg_.Get<double>("detection_tolerance"))
-          break;
-      } catch (tf2::TransformException &ex) {}
+    ros::Time begin = ros::Time::now();
+    // Some number bigger than the tolerance
+    double d = cfg_.Get<double>("detection_tolerance") * 2;
+    // Give localization time to stabilize if berth not detected within detection_timeout
+    while (((ros::Time::now() - begin).toSec() < cfg_.Get<double>("detection_timeout"))
+          && sqrt(d) > cfg_.Get<double>("detection_tolerance")) {
+      for (it = berths_.begin(); it != berths_.end(); it++) {
+        try {
+          // Look up the body frame in the berth frame
+          geometry_msgs::TransformStamped tf = tf_buffer_.lookupTransform(
+            it->second + "/complete", GetTransform(FRAME_NAME_BODY), ros::Time(0));
+          // Copy the transform
+          d = tf.transform.translation.x * tf.transform.translation.x
+            + tf.transform.translation.y * tf.transform.translation.y
+            + tf.transform.translation.z * tf.transform.translation.z;
+          // If we are within some delta of the origin, then we are at this berth
+          if (sqrt(d) < cfg_.Get<double>("detection_tolerance"))
+            break;
+          else
+            ros::Duration(0.5).sleep();            // sleep for half a second
+        } catch (tf2::TransformException &ex) {}
+      }
     }
     // Let the use know what's happening
     if (it == berths_.end()) {
@@ -763,8 +772,9 @@ class DockNodelet : public ff_util::FreeFlyerNodelet {
       msg.header.frame_id = frame_ + "/approach";
       goal.states.push_back(msg);
 
-      // if docking
-      if (fsm_.GetState() == STATE::DOCKING_SWITCHING_TO_ML_LOC) {
+      // if docking and return to dock enabled
+      if (!CloseEnoughToApproach(frame_) &&
+          fsm_.GetState() == STATE::DOCKING_SWITCHING_TO_ML_LOC) {
         // Load parameters from config file
         std::string planner = cfg_.Get<std::string>("planner");
         bool coll_check = cfg_.Get<bool>("enable_collision_checking");
@@ -856,7 +866,7 @@ class DockNodelet : public ff_util::FreeFlyerNodelet {
           return;
         }
         // Check that we are close enough to the approach pose
-        if (!CloseEnoughToApproach(goal->berth) && cfg_.Get<std::string>("planner") != "qp") {
+        if (!CloseEnoughToApproach(berths_[goal->berth]) && !goal->return_dock) {
           result.fsm_result = "Too far from dock";
           result.response = RESPONSE::TOO_FAR_AWAY_FROM_APPROACH;
           server_.SendResult(ff_util::FreeFlyerActionState::ABORTED, result);

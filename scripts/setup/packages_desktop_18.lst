@@ -7,3 +7,4 @@ python-pyqtgraph
 doxygen
 zlib1g-dev
 libusb-1.0-0-dev
+clang-format-8

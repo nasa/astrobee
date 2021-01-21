@@ -16,6 +16,8 @@
 #include <map>
 #include <string>
 
+// Test system monitor
+
 ros::Subscriber cmd_sub;
 ros::Publisher hb_pub;
 
