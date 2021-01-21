@@ -20,8 +20,6 @@ RUN apt-get update && apt-get install -y \
     qt4-default \
     devscripts \
     debhelper \
-    lintian \
-    dh-make \
   && rm -rf /var/lib/apt/lists/*
 
 # Copy astrobee code
