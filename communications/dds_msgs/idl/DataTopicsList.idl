@@ -1,0 +1,35 @@
+/*
+ * Copyright 2015 (c) 2015 Intelligent Robotics Group, NASA ARC
+ */
+
+#include "Message.idl"
+
+module rapid {
+  module ext {
+    module astrobee {
+
+      typedef sequence<String128, 256> String128Sequence256;
+
+      //@copy-c-declaration class DataTopicsListTypeSupport;
+      //@copy-c-declaration class DataTopicsListDataWriter;
+      //@copy-c-declaration class DataTopicsListDataReader;
+      //@copy-c-declaration struct DataTopicsListSeq;
+
+      //@copy-declaration /**
+      //@copy-declaration   * Lists rostopics available to save to disk.
+      //@copy-declaration   */
+      valuetype DataTopicsList : Message {
+        //@copy-c-declaration #if RTI_DDS_VERSION_MAJOR < 4 || (RTI_DDS_VERSION_MAJOR == 4  && RTI_DDS_VERSION_MINOR < 5) || (RTI_DDS_VERSION_MAJOR == 4  && RTI_DDS_VERSION_MINOR  == 5 && RTI_DDS_VERSION_RELEASE != 'f' )
+        //@copy-c-declaration typedef DataTopicsListTypeSupport TypeSupport;
+        //@copy-c-declaration typedef DataTopicsListDataWriter DataWriter;
+        //@copy-c-declaration typedef DataTopicsListDataReader DataReader;
+        //@copy-c-declaration typedef DataTopicsListSeq Seq;
+        //@copy-c-declaration #endif
+        //@copy-c-declaration typedef DataTopicsList Type;
+
+        public String128Sequence256 topics;
+      };
+
+    };
+  };
+};

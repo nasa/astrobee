@@ -331,14 +331,18 @@ void camera::CameraParameters::UndistortCentered(Eigen::Vector2d const& distorte
   }
 }
 
-void camera::CameraParameters::GenerateRemapMaps(cv::Mat* remap_map) {
-  remap_map->create(undistorted_image_size_[1], undistorted_image_size_[0], CV_32FC2);
+// The 'scale' variable is useful when we have the distortion model for a given
+// image, and want to apply it to a version of that image at a different resolution,
+// with 'scale' being the ratio of the width of the image at different resolution
+// and the one at the resolution at which the distortion model is computed.
+void camera::CameraParameters::GenerateRemapMaps(cv::Mat* remap_map, double scale) {
+  remap_map->create(scale*undistorted_image_size_[1], scale*undistorted_image_size_[0], CV_32FC2);
   Eigen::Vector2d undistorted, distorted;
-  for (undistorted[1] = 0; undistorted[1] < undistorted_image_size_[1]; undistorted[1]++) {
-    for (undistorted[0] = 0; undistorted[0] < undistorted_image_size_[0]; undistorted[0]++) {
-      Convert<UNDISTORTED, DISTORTED>(undistorted, &distorted);
-      remap_map->at<cv::Vec2f>(undistorted[1], undistorted[0])[0] = distorted[0];
-      remap_map->at<cv::Vec2f>(undistorted[1], undistorted[0])[1] = distorted[1];
+  for (undistorted[1] = 0; undistorted[1] < scale*undistorted_image_size_[1]; undistorted[1]++) {
+    for (undistorted[0] = 0; undistorted[0] < scale*undistorted_image_size_[0]; undistorted[0]++) {
+      Convert<UNDISTORTED, DISTORTED>(undistorted/scale, &distorted);
+      remap_map->at<cv::Vec2f>(undistorted[1], undistorted[0])[0] = scale*distorted[0];
+      remap_map->at<cv::Vec2f>(undistorted[1], undistorted[0])[1] = scale*distorted[1];
     }
   }
 }

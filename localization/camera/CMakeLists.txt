@@ -53,9 +53,25 @@ create_tool_targets(DIR tools
   INC ${INCLUDES}
 )
 
-create_test_targets(DIR test
-  LIBS camera ${CERES_LIBRARIES}
-  INC ${INCLUDES} ${CERES_INCLUDE_DIRS}
-)
+if(CATKIN_ENABLE_TESTING)
+  find_package(rostest REQUIRED)
+
+  add_rostest_gtest(test_camera_model
+    test/test_camera_model.test
+    test/test_camera_model.cc
+  )
+  target_link_libraries(test_camera_model
+    camera
+  )
+
+  add_rostest_gtest(test_camera_params
+    test/test_camera_params.test
+    test/test_camera_params.cc
+  )
+  target_link_libraries(test_camera_params
+    camera
+  )
+
+endif()
 
 set(CAMERA_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/include PARENT_SCOPE)

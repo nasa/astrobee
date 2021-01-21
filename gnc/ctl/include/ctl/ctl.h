@@ -30,6 +30,9 @@
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/TwistStamped.h>
 
+// Service message
+#include <std_srvs/SetBool.h>
+
 // FSW actions
 #include <ff_msgs/ControlAction.h>
 
@@ -92,6 +95,11 @@ class Ctl {
 
   // Terminate execution in either IDLE or STOP mode
   FSM::State Result(int32_t response);
+
+  // SERVICE CALLBACKS
+
+  // Enable/Disable Onboard Controller
+  bool EnableCtl(std_srvs::SetBoolRequest&req, std_srvs::SetBoolResponse &response);
 
   // GENERAL MESSAGE CALLBACKS
 
@@ -160,6 +168,7 @@ class Ctl {
   ros::Subscriber truth_pose_sub_, inertia_sub_, flight_mode_sub_;
   ros::Subscriber twist_sub_, pose_sub_, ekf_sub_, command_sub_;
   ros::Publisher ctl_pub_, traj_pub_, segment_pub_, progress_pub_;
+  ros::ServiceServer enable_srv_;
   ros::Timer timer_;
 
   ff_util::FreeFlyerActionServer<ff_msgs::ControlAction> action_;

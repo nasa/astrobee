@@ -16,6 +16,9 @@
  * under the License.
  */
 
+// Test keepoutio
+// Loads a good and a faulty keepout descriptor file and asserts result
+
 #include <jsonloader/keepoutio.h>
 
 #include <glog/logging.h>

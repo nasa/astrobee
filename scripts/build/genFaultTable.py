@@ -115,7 +115,6 @@ def main():
     file.close()
 
     faults_config_file_name = sys.argv[2] + "/faults.config"
-    faults_test_config_file_name = sys.argv[2] + "tests/faults.config"
     fault_table_config_file_name = sys.argv[2] + \
                                                 "/management/fault_table.config"
     sys_monitor_faults_file_name = sys.argv[2] + \
@@ -431,23 +430,6 @@ def main():
         fc_file.close()
         ftc_file.close()
         smf_file.close()
-
-        # Need to copy the fault config to the test folder for fault testing
-        try:
-            file = open(faults_config_file_name, 'r')
-        except IOError:
-            print "Couldn't open file " + faults_config_file_name
-            return
-
-        lines = file.readlines()
-
-        file.close()
-
-        fc_file = open(faults_test_config_file_name, 'w')
-        for line in lines:
-            fc_file.write(line)
-        
-        fc_file.close()
 
         # Need to generate the enum values file
         fk_file = open(fault_keys_file_name, 'w')

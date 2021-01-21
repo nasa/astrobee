@@ -1,0 +1,44 @@
+/*
+ * Copyright 2015 (c) 2015 Intelligent Robotics Group, NASA ARC
+ */
+
+#include "Message.idl"
+
+module rapid {
+  module ext {
+    module astrobee {
+
+      //@copy-declaration /** The configuation of a disk
+      //@copy-declaration   * - name: displayable name for the filesystem
+      //@copy-declaration   * - capacity: total capacity in bytes of the disk
+      //@copy-declaration   */
+      struct DiskInfoConfig {
+        String32 name;
+        long long capacity;
+      };
+
+      typedef sequence<DiskInfoConfig, 8> DiskInfoConfigSequence8;
+
+      //@copy-c-declaration class DiskConfigTypeSupport;
+      //@copy-c-declaration class DiskConfigDataWriter;
+      //@copy-c-declaration class DiskConfigDataReader;
+      //@copy-c-declaration struct DiskConfigSeq;
+
+      //@copy-declaration /**
+      //@copy-declaration   * Config for the DiskState message.
+      //@copy-declaration   */
+      valuetype DiskConfig : Message {
+        //@copy-c-declaration #if RTI_DDS_VERSION_MAJOR < 4 || (RTI_DDS_VERSION_MAJOR == 4  && RTI_DDS_VERSION_MINOR < 5) || (RTI_DDS_VERSION_MAJOR == 4  && RTI_DDS_VERSION_MINOR  == 5 && RTI_DDS_VERSION_RELEASE != 'f' )
+        //@copy-c-declaration typedef DiskConfigTypeSupport TypeSupport;
+        //@copy-c-declaration typedef DiskConfigDataWriter DataWriter;
+        //@copy-c-declaration typedef DiskConfigDataReader DataReader;
+        //@copy-c-declaration typedef DiskConfigSeq Seq;
+        //@copy-c-declaration #endif
+        //@copy-c-declaration typedef DiskConfig Type;
+
+        public DiskInfoConfigSequence8 filesystems;
+      };
+
+    };
+  };
+};

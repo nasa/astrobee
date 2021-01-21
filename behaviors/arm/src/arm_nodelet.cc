@@ -945,9 +945,6 @@ class ArmNodelet : public ff_util::FreeFlyerNodelet {
     // Deploy the arm
     case ff_msgs::ArmGoal::ARM_DEPLOY:
       NODELET_DEBUG_STREAM("Received a new ARM_DEPLOY command");
-      if (fsm_.GetState() == STATE::DEPLOYED) {
-        Result(RESPONSE::SUCCESS, true);
-      }
       joints_[PAN].goal = K_PAN_DEPLOY;
       joints_[TILT].goal = K_TILT_DEPLOY;
       joints_[GRIPPER].goal = K_GRIPPER_DEPLOY;
@@ -989,7 +986,10 @@ class ArmNodelet : public ff_util::FreeFlyerNodelet {
           Result(RESPONSE::BAD_PAN_VALUE, true);
           return;
         }
-        if (new_t > K_TILT_SAFE && fabs(new_p - K_PAN_STOW) > joints_[PAN].tol) {
+        // Check current and goal tilt, and if close to stowed, make
+        // sure the pan value is zero within tolerance
+        if ((joints_[TILT].goal > K_TILT_SAFE || new_t > K_TILT_SAFE)
+          && fabs(new_p - K_PAN_STOW) > joints_[PAN].tol) {
           Result(RESPONSE::COLLISION_AVOIDED, true);
           return;
         }
