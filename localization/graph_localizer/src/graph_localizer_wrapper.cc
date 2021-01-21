@@ -104,7 +104,7 @@ void GraphLocalizerWrapper::ResetLocalizer() {
   }
   // TODO(rsoussan): compare current time with latest bias timestamp and print
   // warning if it is too old
-  graph_localizer_initialization_.SetBiases(latest_biases_->first);
+  graph_localizer_initialization_.SetBiases(latest_biases_->first, true);
   graph_localizer_.reset();
   sanity_checker_->Reset();
 }

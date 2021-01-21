@@ -48,6 +48,7 @@ void LoadGraphValuesParams(config_reader::ConfigReader& config, GraphValuesParam
 void LoadImuIntegrationParams(config_reader::ConfigReader& config, GraphInitializationParams& params);
 void LoadNoiseParams(config_reader::ConfigReader& config, NoiseParams& params);
 void LoadSanityCheckerParams(config_reader::ConfigReader& config, SanityCheckerParams& params);
+void LoadGraphInitializationParams(config_reader::ConfigReader& config, GraphInitializationParams& params);
 // Loads all params except some in graph_initialization_params (biases and start pose) that are
 // not loaded from config files
 void LoadGraphLocalizerParams(config_reader::ConfigReader& config, GraphLocalizerParams& params);

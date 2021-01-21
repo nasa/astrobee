@@ -27,12 +27,24 @@
 namespace graph_localizer {
 namespace lc = localization_common;
 void GraphLocalizerInitialization::SetBiases(const gtsam::imuBias::ConstantBias& imu_bias,
-                                             const bool loaded_from_file) {
+                                             const bool loaded_from_previous_estimate, const bool save_to_file) {
   params_.graph_initialization.initial_imu_bias = imu_bias;
   has_biases_ = true;
   estimate_biases_ = false;
-  // Assumes bias in file is already gravity compensated if neccessary
-  if (!loaded_from_file) RemoveGravityFromBiasIfPossibleAndNecessary();
+  // Assumes previous bias is already gravity compensated if neccessary
+  if (!loaded_from_previous_estimate) RemoveGravityFromBiasIfPossibleAndNecessary();
+  if (save_to_file) {
+    std::ofstream imu_bias_file(params_.graph_initialization.imu_bias_filename);
+    if (!imu_bias_file.is_open()) {
+      LogError("SetBiases: Failed to create imu bias output file.");
+      return;
+    }
+    const auto& accel_bias = params_.graph_initialization.initial_imu_bias.accelerometer();
+    imu_bias_file << accel_bias.x() << "," << accel_bias.y() << "," << accel_bias.z() << std::endl;
+    const auto& gyro_bias = params_.graph_initialization.initial_imu_bias.gyroscope();
+    imu_bias_file << gyro_bias.x() << "," << gyro_bias.y() << "," << gyro_bias.z() << std::endl;
+    imu_bias_file.close();
+  }
 }
 
 void GraphLocalizerInitialization::SetStartPose(const gtsam::Pose3& global_T_body_start, const double timestamp) {
@@ -80,7 +92,7 @@ void GraphLocalizerInitialization::ResetBiases() {
 }
 
 void GraphLocalizerInitialization::ResetBiasesFromFile() {
-  std::ifstream imu_bias_file("test.csv");
+  std::ifstream imu_bias_file(params_.graph_initialization.imu_bias_filename);
   if (!imu_bias_file.is_open()) {
     LogError("ResetBiasesFromFile: Failed to read imu bias file.");
     return;

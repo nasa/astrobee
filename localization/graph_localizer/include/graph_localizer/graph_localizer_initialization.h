@@ -31,7 +31,8 @@
 namespace graph_localizer {
 class GraphLocalizerInitialization {
  public:
-  void SetBiases(const gtsam::imuBias::ConstantBias& imu_bias, const bool loaded_from_file = false);
+  void SetBiases(const gtsam::imuBias::ConstantBias& imu_bias, const bool loaded_from_previous_estimate = false,
+                 const bool save_to_file = false);
   void SetStartPose(const gtsam::Pose3& global_T_body_start, const double timestamp);
   void RemoveGravityFromBiasIfPossibleAndNecessary();
   bool ReadyToInitialize() const;

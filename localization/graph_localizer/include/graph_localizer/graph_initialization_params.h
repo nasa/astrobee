@@ -22,10 +22,13 @@
 
 #include <gtsam/geometry/Pose3.h>
 
+#include <string>
+
 namespace graph_localizer {
 // TODO(rsoussan): Clean this up, only use what is needed from imu integration params
 struct GraphInitializationParams : public imu_integration::LatestImuIntegratorParams {
   gtsam::Pose3 global_T_body_start;
+  std::string imu_bias_filename;
 };
 }  // namespace graph_localizer
 

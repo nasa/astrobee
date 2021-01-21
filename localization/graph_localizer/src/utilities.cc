@@ -142,7 +142,7 @@ void EstimateAndSetImuBiases(const lm::ImuMeasurement& imu_measurement,
   const auto biases =
     ii::EstimateAndSetImuBiases(imu_measurement, num_imu_measurements_per_bias_estimate, imu_bias_measurements);
   if (!biases) return;
-  graph_localizer_initialization.SetBiases(*biases);
+  graph_localizer_initialization.SetBiases(*biases, false, true);
 }
 
 void RemoveGravityFromBias(const gtsam::Vector3& global_F_gravity, const gtsam::Pose3& body_T_imu,
