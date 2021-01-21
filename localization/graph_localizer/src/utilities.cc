@@ -135,16 +135,6 @@ geometry_msgs::PoseStamped PoseMsg(const gtsam::Pose3& global_T_body, const lc::
   return PoseMsg(lc::EigenPose(global_T_body), time);
 }
 
-void EstimateAndSetImuBiases(const lm::ImuMeasurement& imu_measurement,
-                             const int num_imu_measurements_per_bias_estimate,
-                             std::vector<lm::ImuMeasurement>& imu_bias_measurements,
-                             GraphLocalizerInitialization& graph_localizer_initialization) {
-  const auto biases =
-    ii::EstimateAndSetImuBiases(imu_measurement, num_imu_measurements_per_bias_estimate, imu_bias_measurements);
-  if (!biases) return;
-  graph_localizer_initialization.SetBiases(*biases, false, true);
-}
-
 void RemoveGravityFromBias(const gtsam::Vector3& global_F_gravity, const gtsam::Pose3& body_T_imu,
                            const gtsam::Pose3& global_T_body, gtsam::imuBias::ConstantBias& imu_bias) {
   const gtsam::Vector3 gravity_corrected_accelerometer_bias = lc::RemoveGravityFromAccelerometerMeasurement(

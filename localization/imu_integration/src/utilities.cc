@@ -26,29 +26,6 @@ namespace lc = localization_common;
 namespace lm = localization_measurements;
 namespace mc = msg_conversions;
 
-boost::optional<gtsam::imuBias::ConstantBias> EstimateAndSetImuBiases(
-  const lm::ImuMeasurement& imu_measurement, const int num_imu_measurements_per_bias_estimate,
-  std::vector<lm::ImuMeasurement>& imu_bias_measurements) {
-  imu_bias_measurements.emplace_back(imu_measurement);
-  if (static_cast<int>(imu_bias_measurements.size()) < num_imu_measurements_per_bias_estimate) return boost::none;
-
-  Eigen::Vector3d sum_of_acceleration_measurements = Eigen::Vector3d::Zero();
-  Eigen::Vector3d sum_of_angular_velocity_measurements = Eigen::Vector3d::Zero();
-  for (const auto& imu_measurement : imu_bias_measurements) {
-    sum_of_acceleration_measurements += imu_measurement.acceleration;
-    sum_of_angular_velocity_measurements += imu_measurement.angular_velocity;
-  }
-
-  LogDebug("Number of imu measurements per bias estimate: " << num_imu_measurements_per_bias_estimate);
-  const Eigen::Vector3d accelerometer_bias = sum_of_acceleration_measurements / imu_bias_measurements.size();
-  const Eigen::Vector3d gyro_bias = sum_of_angular_velocity_measurements / imu_bias_measurements.size();
-  LogInfo("Accelerometer bias: " << std::endl << accelerometer_bias.matrix());
-  LogInfo("Gyro bias: " << std::endl << gyro_bias.matrix());
-
-  imu_bias_measurements.clear();
-  return gtsam::imuBias::ConstantBias(accelerometer_bias, gyro_bias);
-}
-
 boost::optional<lm::ImuMeasurement> Interpolate(const lm::ImuMeasurement& imu_measurement_a,
                                                 const lm::ImuMeasurement& imu_measurement_b, const lc::Time timestamp) {
   if (timestamp < imu_measurement_a.timestamp || timestamp > imu_measurement_b.timestamp) {

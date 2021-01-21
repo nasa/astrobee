@@ -21,12 +21,15 @@
 #include <camera/camera_params.h>
 #include <config_reader/config_reader.h>
 #include <graph_localizer/graph_localizer_params.h>
+#include <imu_integration/imu_filter.h>
+#include <localization_measurements/imu_measurement.h>
 #include <msg_conversions/msg_conversions.h>
 
 #include <gtsam/geometry/Pose3.h>
 #include <gtsam/navigation/ImuBias.h>
 
 #include <string>
+#include <vector>
 
 namespace graph_localizer {
 class GraphLocalizerInitialization {
@@ -49,6 +52,7 @@ class GraphLocalizerInitialization {
   const GraphLocalizerParams& params() const;
   void LoadGraphLocalizerParams(config_reader::ConfigReader& config);
   bool RemovedGravityFromBiasIfNecessary() const;
+  void EstimateAndSetImuBiases(const localization_measurements::ImuMeasurement& imu_measurement);
 
  private:
   bool has_biases_ = false;
@@ -57,6 +61,8 @@ class GraphLocalizerInitialization {
   bool estimate_biases_ = false;
   bool removed_gravity_from_bias_if_necessary_ = false;
   graph_localizer::GraphLocalizerParams params_;
+  std::unique_ptr<imu_integration::ImuFilter> imu_bias_filter_;
+  std::vector<localization_measurements::ImuMeasurement> imu_bias_measurements_;
 };
 }  // namespace graph_localizer
 

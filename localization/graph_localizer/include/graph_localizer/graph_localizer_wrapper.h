@@ -99,8 +99,6 @@ class GraphLocalizerWrapper {
   bool CheckCovarianceSanity() const;
 
   std::unique_ptr<GraphLocalizer> graph_localizer_;
-  std::vector<localization_measurements::ImuMeasurement> imu_bias_measurements_;
-  int num_bias_estimation_measurements_;
   // TODO(rsoussan): Make graph localizer wrapper params
   bool publish_localization_graph_;
   bool save_localization_graph_dot_file_;

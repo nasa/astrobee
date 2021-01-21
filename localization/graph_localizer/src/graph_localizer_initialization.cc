@@ -88,7 +88,39 @@ void GraphLocalizerInitialization::ResetStartPose() { has_start_pose_ = false; }
 
 void GraphLocalizerInitialization::ResetBiases() {
   has_biases_ = false;
+  // Use same filter for biases as used for imu integration
+  imu_bias_filter_.reset(new imu_integration::ImuFilter(params_.graph_initialization.filter));
+  imu_bias_measurements_.clear();
   StartBiasEstimation();
+}
+
+void GraphLocalizerInitialization::EstimateAndSetImuBiases(
+  const localization_measurements::ImuMeasurement& imu_measurement) {
+  const auto filtered_imu_measurement = imu_bias_filter_->AddMeasurement(imu_measurement);
+  if (filtered_imu_measurement) {
+    imu_bias_measurements_.emplace_back(*filtered_imu_measurement);
+  }
+  if (static_cast<int>(imu_bias_measurements_.size()) < params_.graph_initialization.num_bias_estimation_measurements)
+    return;
+
+  Eigen::Vector3d sum_of_acceleration_measurements = Eigen::Vector3d::Zero();
+  Eigen::Vector3d sum_of_angular_velocity_measurements = Eigen::Vector3d::Zero();
+  for (const auto& imu_measurement : imu_bias_measurements_) {
+    sum_of_acceleration_measurements += imu_measurement.acceleration;
+    sum_of_angular_velocity_measurements += imu_measurement.angular_velocity;
+  }
+
+  LogDebug(
+    "Number of imu measurements per bias estimate: " << params_.graph_initialization.num_bias_estimation_measurements);
+  const Eigen::Vector3d accelerometer_bias = sum_of_acceleration_measurements / imu_bias_measurements_.size();
+  const Eigen::Vector3d gyro_bias = sum_of_angular_velocity_measurements / imu_bias_measurements_.size();
+  LogInfo("Accelerometer bias: " << std::endl << accelerometer_bias.matrix());
+  LogInfo("Gyro bias: " << std::endl << gyro_bias.matrix());
+
+  gtsam::imuBias::ConstantBias biases(accelerometer_bias, gyro_bias);
+  SetBiases(biases, false, true);
+  imu_bias_filter_.reset(new imu_integration::ImuFilter(params_.graph_initialization.filter));
+  imu_bias_measurements_.clear();
 }
 
 void GraphLocalizerInitialization::ResetBiasesFromFile() {

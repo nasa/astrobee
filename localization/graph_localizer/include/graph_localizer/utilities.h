@@ -45,11 +45,6 @@
 #include <vector>
 
 namespace graph_localizer {
-void EstimateAndSetImuBiases(const localization_measurements::ImuMeasurement& imu_measurement,
-                             const int num_imu_measurements_per_bias_estimate,
-                             std::vector<localization_measurements::ImuMeasurement>& imu_bias_measurements,
-                             GraphLocalizerInitialization& graph_localizer_initialization);
-
 void RemoveGravityFromBias(const gtsam::Vector3& global_F_gravity, const gtsam::Pose3& body_T_imu,
                            const gtsam::Pose3& global_T_body, gtsam::imuBias::ConstantBias& imu_bias);
 
