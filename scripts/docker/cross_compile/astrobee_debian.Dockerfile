@@ -33,20 +33,9 @@ ARG ARMHF_TOOLCHAIN=/arm_cross/toolchain/gcc
 ARG FF_SOURCE=/home/astrobee/astrobee
 
 # Cross-compile
-RUN cd /home/astrobee/astrobee && ./scripts/build/build_debian.sh
+RUN ln -s /arm_cross/toolchain/gcc/bin/arm-linux-gnueabihf-strip "/usr/bin/arm-linux-gnueabihf-strip" \
+    && cd /home/astrobee/astrobee && ./scripts/build/build_debian.sh
 
-#Add new sudo user
-ENV USERNAME astrobee
-RUN useradd -m $USERNAME && \
-        echo "$USERNAME:$USERNAME" | chpasswd && \
-        usermod --shell /bin/bash $USERNAME && \
-        usermod -aG sudo $USERNAME && \
-        echo "$USERNAME ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers.d/$USERNAME && \
-        chmod 0440 /etc/sudoers.d/$USERNAME && \
-        # Replace 1000 with your user/group id
-        usermod  --uid 1000 $USERNAME && \
-        groupmod --gid 1000 $USERNAME
-
-#Add the entrypoint for docker
-RUN echo "#!/bin/bash\nset -e\n\nsource \"/opt/ros/kinetic/setup.bash\"\nsource \"/build/astrobee/devel/setup.bash\"\nexport ASTROBEE_CONFIG_DIR=\"/src/astrobee/astrobee/config\"\nexec \"\$@\"" > /astrobee_init.sh && \
-  chmod +x /astrobee_init.sh
+# Move resulting files to a folder
+RUN mkdir /home/astrobee/debians \
+ && mv -t /home/astrobee/debians /home/astrobee/*.deb /home/astrobee/*.build /home/astrobee/*.changes

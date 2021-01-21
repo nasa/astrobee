@@ -35,11 +35,11 @@ echo "Build context for armhf base: "${ARMHF_CHROOT_DIR}
 if [ -z "${ARMHF_CHROOT_DIR}" ]; then echo ARMHF_CHROOT_DIR is not set, please check armhf instructions; exit -1; fi
 echo "Build context for cross: "${DIR}/../../..
 
-if [ -z "${INSTALL_PATH}" ]
+if [ -z "${DEBIAN_PATH}" ]
 then
   if [ -d "${DIR}/../../../../astrobee_install/armhf/" ] # Checks if this folder is defined otherwise defaults to standard
-  then export INSTALL_PATH=${DIR}/../../../../astrobee_install/armhf/
-  else export INSTALL_PATH=$HOME/astrobee_build/armhf
+  then export DEBIAN_PATH=${DIR}/../../../../
+  else export DEBIAN_PATH=$HOME/
   fi
 fi
 echo "Saving the cross-compiled code in: "${INSTALL_PATH}
@@ -52,4 +52,4 @@ docker build $ARMHF_CHROOT_DIR -f scripts/docker/cross_compile/astrobee_base_roo
 docker build ${DIR}/../../.. -f scripts/docker/cross_compile/astrobee_debian.Dockerfile -t astrobee/astrobee:debian
 
 # Save the code
-# docker run --rm --entrypoint tar astrobee/astrobee:cross cC /opt/astrobee . | tar xvC ${INSTALL_PATH}
+docker cp $(docker create --rm astrobee/astrobee:debian):/home/astrobee/debians/. $DEBIAN_PATH
