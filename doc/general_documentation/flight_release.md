@@ -81,10 +81,11 @@ will review the request and do the merging into develop and master. You will
 also need to copy the debians to a temporary location on volar.
 
     scp astrobee0_0.x.x_armhf.deb \
-      <ndc_username>@volar:/home/p-free-flyer/free-flyer/FSW/ars_debs/dists/xenial/main/release_candidate/
+      <ndc_username>@volar:/home/p-free-flyer/free-flyer/FSW/ars_debs/release_candidate/
     scp astrobee-config_0.x.x_all.deb \
-      <ndc_username>@volar:/home/p-free-flyer/free-flyer/FSW/ars_debs/dists/xenial/main/release_candidate/
-
+      <ndc_username>@volar:/home/p-free-flyer/free-flyer/FSW/ars_debs/release_candidate/
+    scp astrobee-dev_0.x.x_armhf.deb \
+      <ndc_username>@volar:/home/p-free-flyer/free-flyer/FSW/ars_debs/release_candidate/
 
 After the debians have been copied to volar, make sure the group permissions are
 set to read and right. Finally, please email Ruben Garcia Ruiz so that he can
