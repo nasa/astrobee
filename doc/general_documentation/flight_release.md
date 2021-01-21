@@ -75,10 +75,10 @@ fixes, recreate the debians, and repeat the release testing procedure.
 ## Finish Release
 
 Once the debians pass all the required testing, it is ready to become an
-official flight release. Please make a pull request on astrobee develop and set
-Brian, Katie, or Marina as the reviewer. They will review the request and merge
-it into develop and master. You will also need to copy the debians to a
-temporary location on volar.
+official flight release. Please make two pull requests; one on astrobee develop
+and one on astrobee master. Set Brian, Katie, or Marina as the reviewer. They
+will review the request and do the merging into develop and master. You will
+also need to copy the debians to a temporary location on volar.
 
     scp astrobee0_0.x.x_armhf.deb \
       <ndc_username>@volar:/home/p-free-flyer/free-flyer/FSW/ars_debs/dists/xenial/main/release_candidate/
