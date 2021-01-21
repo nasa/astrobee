@@ -25,8 +25,9 @@ catkin_package(
   CATKIN_DEPENDS
     roscpp
     nodelet
-    pluginlib
-    actionlib
+    mapper
+    ff_msgs
+    ff_util
     tf2
     tf2_ros
     nav_msgs
@@ -39,5 +40,58 @@ create_library(TARGET choreographer
   INC  ${catkin_INCLUDE_DIRS}
   DEPS ff_common nav_msgs geometry_msgs ff_msgs ff_util mapper
 )
+
+if(CATKIN_ENABLE_TESTING)
+  find_package(rostest REQUIRED)
+  # Choreographer initialization fault tester
+  add_rostest_gtest(test_init_choreographer
+    test/test_init_choreographer.test
+    test/test_init_choreographer.cc
+  )
+  target_link_libraries(test_init_choreographer
+    ${catkin_LIBRARIES} config_reader ff_nodelet
+  )
+  if(ENABLE_INTEGRATION_TESTING)
+    # Choreographer test obstacles
+    add_rostest_gtest(test_obstacle
+      test/test_obstacle.test
+      test/test_obstacle.cc
+    )
+
+    target_link_libraries(test_obstacle
+      ${catkin_LIBRARIES} config_client ff_nodelet
+    )
+
+    # Choreographer test zones keepin
+    add_rostest_gtest(test_zones_keepin
+      test/test_zones_keepin.test
+      test/test_zones_keepin.cc
+    )
+
+    target_link_libraries(test_zones_keepin
+      ${catkin_LIBRARIES} config_client ff_nodelet
+    )
+
+    # Choreographer test zones keepout
+    add_rostest_gtest(test_zones_keepout
+      test/test_zones_keepout.test
+      test/test_zones_keepout.cc
+    )
+
+    target_link_libraries(test_zones_keepout
+      ${catkin_LIBRARIES} config_client ff_nodelet
+    )
+
+    # Choreographer test zones nominal
+    add_rostest_gtest(test_zones_nominal
+      test/test_zones_nominal.test
+      test/test_zones_nominal.cc
+    )
+
+    target_link_libraries(test_zones_nominal
+      ${catkin_LIBRARIES} config_client ff_nodelet
+    )
+  endif()
+endif()
 
 install_launch_files()

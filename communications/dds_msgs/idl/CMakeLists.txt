@@ -15,9 +15,9 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-message(STATUS "Copying IDL files out of astrobee_common")
+message(STATUS "Copying IDL files")
 file(GLOB DDS_IDL_FILES
-  "${CMAKE_SOURCE_DIR}/submodules/common/communications/dds/idl/*.idl")
+  "${CMAKE_SOURCE_DIR}/communications/dds_msgs/idl/*.idl")
 
 file(COPY ${DDS_IDL_FILES} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 

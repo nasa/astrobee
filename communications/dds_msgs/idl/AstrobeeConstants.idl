@@ -1,0 +1,54 @@
+/*
+ * Copyright 2015 (c) 2015 Intelligent Robotics Group, NASA ARC
+ */
+
+#include "BaseTypes.idl"
+
+module rapid {
+  module ext {
+    module astrobee {
+
+      //@copy-declaration /**
+      //@copy-declaration  * A list of commonly used topic names. If an Agent has multiple of the same message type, the topics
+      //@copy-declaration  * should be named accordingly and listed in the AgentConfig topics. Custom topic names should
+      //@copy-declaration  * have the standard name as the root, separated from the specialization by the "-" character, e.g.
+      //@copy-declaration  * <code>rapid_position_sample-relative<code>
+      //@copy-declaration  */
+
+      const String64 AGENT_STATE_TOPIC = "astrobee_agent_state";
+      const String64 ARM_STATE_TOPIC = "astrobee_arm_state";
+      const String64 COMM_STATE_TOPIC = "astrobee_comm_state";
+      const String64 COMPONENT_CONFIG_TOPIC = "astrobee_component_config";
+      const String64 COMPONENT_STATE_TOPIC = "astrobee_component_state";
+      const String64 COMPRESSED_FILE_TOPIC = "astrobee_compressed_file";
+      const String64 COMPRESSED_FILE_ACK_TOPIC = "astrobee_compressed_file_ack";
+      const String64 CPU_CONFIG_TOPIC = "astrobee_cpu_config";
+      const String64 CPU_STATE_TOPIC = "astrobee_cpu_state";
+      const String64 DATA_TO_DISK_STATE_TOPIC = "astrobee_data_to disk_state";
+      const String64 DATA_TOPICS_LIST_TOPIC = "astrobee_data_topics_list";
+      const String64 DISK_CONFIG_TOPIC = "astrobee_disk_config";
+      const String64 DISK_STATE_TOPIC = "astrobee_disk_state";
+      const String64 DOCK_STATE_TOPIC = "astrobee_dock_state";
+      const String64 EKF_STATE_TOPIC = "astrobee_ekf_state";
+      const String64 EPS_CONFIG_TOPIC = "astrobee_eps_config";
+      const String64 EPS_STATE_TOPIC = "astrobee_eps_state";
+      const String64 FAULT_CONFIG_TOPIC = "astrobee_fault_config";
+      const String64 FAULT_STATE_TOPIC = "astrobee_fault_state";
+      const String64 GNC_CONTROL_STATE_TOPIC = "astrobee_gnc_control_state";
+      const String64 GNC_FAM_CMD_STATE_TOPIC = "astrobee_gnc_fam_cmd_state";
+      const String64 GUEST_SCIENCE_CONFIG_TOPIC = "astrobee_guest_science_config";
+      const String64 GUEST_SCIENCE_DATA_TOPIC = "astrobee_guest_science_data";
+      const String64 GUEST_SCIENCE_STATE_TOPIC = "astrobee_guest_science_state";
+      const String64 INERTIAL_PROPERTIES_TOPIC = "astrobee_inertial_properties";
+      const String64 LOG_SAMPLE_TOPIC = "astrobee_log_sample";
+      const String64 MOBILITY_SETTINGS_STATE_TOPIC = "astrobee_mobility_settings_state";
+      const String64 PAYLOAD_CONFIG_TOPIC = "astrobee_payload_config";
+      const String64 PAYLOAD_STATE_TOPIC = "astrobee_payload_state";
+      const String64 PLAN_STATUS_TOPIC = "astrobee_plan_status";
+      const String64 PMC_CMD_STATE_TOPIC = "astrobee_pmc_cmd_state";
+      const String64 TELEMETRY_CONFIG_TOPIC = "astrobee_telemetry_config";
+      const String64 TELEMETRY_STATE_TOPIC = "astrobee_telemetry_state";
+
+    };
+  };
+};

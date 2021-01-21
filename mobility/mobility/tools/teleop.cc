@@ -52,7 +52,7 @@
 DEFINE_string(ns, "", "Robot namespace");
 DEFINE_bool(reset, false, "Reset localization pipeline");
 DEFINE_bool(bias, false, "Estimate bias for the localization pipeline");
-DEFINE_string(loc, "", "Localization pipeline (none, ml, ar, hr)");
+DEFINE_string(loc, "", "Localization pipeline (no, ml, ar, hr)");
 DEFINE_string(mode, "nominal", "Flight mode");
 DEFINE_string(planner, "trapezoidal", "Path planning algorithm");
 DEFINE_bool(ff, false, "Plan in face-forward mode");

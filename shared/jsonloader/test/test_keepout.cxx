@@ -16,6 +16,10 @@
  * under the License.
  */
 
+// Test keepout
+// This test tests the creation of keepout zones using bounding boxes, the
+// isSafe condition and that merging bouding boxes gives expected result.
+
 #include <jsonloader/keepout.h>
 
 #include <Eigen/Geometry>

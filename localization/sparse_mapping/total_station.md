@@ -1,4 +1,4 @@
-\page total_station Survey with Total Station
+# Doing a Survey with the Total Station
 
 This will tell you how to just operate the Total Station device. When
 you use it in practice, you'll want to set your reference to the -1,
@@ -44,7 +44,7 @@ granite lab.
  9. Now you are ready to survey the Y axis reference. Z axis will be aligned with gravity, pointing towards the sky.
    a. Select "Point ID", enter the value "YREF" (or some other value).
    a. Move the sights to look at the opposite corner bolt of the aluminum frame.
-   a. Once aligned correctly, use "F1" to record distance and save the point. If you get an error about point distribution, you will have to redo the ORGIN and YREF points as further apart (use at least a few meters among them).
+   a. Once aligned correctly, use "F1" to record distance and save the point. If you get an error about point distribution, you will have to redo the ORIGIN and YREF points as further apart (use at least a few meters among them).
  10. Press "F1" to set.
  11. Press "F4" ok.
  12. You are now ready to survey things. Keep on centering the cross-hairs on new points and pressing F3 to record it. Survey a well-distributed set of AR tag corners on room walls and survey for example the top left, top right, bot left corners of each of them. Each AR tag has an ID printed on it, that can be associated with each measurement.
@@ -66,7 +66,7 @@ Turn the nob on the side of the station where it says "CF Card" and pull the car
 *110002+000000000000YREF 81...0+0000000000000000 82...0+0000000000006417 83...0-0000000000000022 
 *110003+0000000000000003 81...0+0000000000000004 82...0+0000000000006535 83...0-0000000000000786 
 
-What this means is that the points are in Cartesian coordinates with x,y,z measured in meters (note that some values are negative):
+What this means is that the points are in Cartesian coordinates with x,y,z measured in millimeters (note that some values are negative). After removing the redundant text and converting to meters, this looks like:
 
 Point 1 (Origin): 0.0    0.0      0.0
 Point 2 (YREF)  : 0.0    6.417    -0.022

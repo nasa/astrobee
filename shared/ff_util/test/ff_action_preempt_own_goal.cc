@@ -16,6 +16,13 @@
  * under the License.
  */
 
+// Test action preempt own goal
+// In this test the client sends a goal when the server connects. After the
+// action is active (ActiveCallback) a timer starts, 2 seconds later it
+// sends another goal. The test is successful if the new goal starts and
+// another active callback is triggered, showing that it started a new action.
+// If 2 seconds pass and the action was not preempted it fails.
+
 // Required for the test framework
 #include <gtest/gtest.h>
 
@@ -95,9 +102,9 @@ class Client : ff_util::FreeFlyerNodelet {
     action_.SetDeadlineTimeout(10.0);
     // Call connect
     action_.Create(nh, "two_ints_action");
-    // Cancel the goal after 3 seconds
-    timer_cancel_ = nh->createTimer(ros::Duration(2.0),
-      &Client::TimerCancelCallback, this, true, false);
+    // Preempt the goal after 2 seconds
+    timer_preempt_ = nh->createTimer(ros::Duration(2.0),
+      &Client::TimerPreemptCallback, this, true, false);
     timer_wait_ = nh->createTimer(ros::Duration(2.0),
       &Client::TimerWaitCallback, this, true, false);
   }
@@ -120,12 +127,19 @@ class Client : ff_util::FreeFlyerNodelet {
 
   void ActiveCallback() {
     ROS_INFO("C:ActiveCallback()");
-    timer_cancel_.start();
+    // In 2 seconds it will issue a preempt command
+    if (preemted_ == false) {
+      timer_preempt_.start();
+      preemted_ = true;
+    } else {
+      // It preempted and has the other goal active
+      ros::shutdown();
+    }
   }
 
   // Timer callback
-  void TimerCancelCallback(ros::TimerEvent const& event) {
-    timer_cancel_.stop();
+  void TimerPreemptCallback(ros::TimerEvent const& event) {
+    timer_preempt_.stop();
     actionlib::TwoIntsGoal goal;
     action_.SendGoal(goal);
     timer_wait_.start();
@@ -133,14 +147,15 @@ class Client : ff_util::FreeFlyerNodelet {
 
   // Timer callback
   void TimerWaitCallback(ros::TimerEvent const& event) {
-    timer_wait_.stop();
-    ros::shutdown();
+    // It did not preempt the goal, ending the test
+    EXPECT_TRUE(false);
   }
 
  private:
   ff_util::FreeFlyerActionClient < actionlib::TwoIntsAction > action_;
-  ros::Timer timer_cancel_;
+  ros::Timer timer_preempt_;
   ros::Timer timer_wait_;
+  bool preemted_ =  false;
 };
 
 // Perform a test of the simple action client
@@ -160,6 +175,6 @@ TEST(ff_action, preempt_own_goal) {
 // Required for the test framework
 int main(int argc, char **argv) {
   testing::InitGoogleTest(&argc, argv);
-  ros::init(argc, argv, "ff_action_preempt_own_goal");
+  ros::init(argc, argv, "ff_action_active_timeout");
   return RUN_ALL_TESTS();
 }

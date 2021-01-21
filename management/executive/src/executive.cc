@@ -597,9 +597,14 @@ bool Executive::FillArmGoal(ff_msgs::CommandStampedPtr const& cmd) {
   return successful;
 }
 
-bool Executive::FillDockGoal(ff_msgs::CommandStampedPtr const& cmd) {
+bool Executive::FillDockGoal(ff_msgs::CommandStampedPtr const& cmd,
+                             bool return_to_dock) {
   bool successful = true;
   std::string err_msg;
+
+  // Set return dock first as it is the same for dock and undock
+  dock_goal_.return_dock = return_to_dock;
+
   if (cmd->cmd_name == CommandConstants::CMD_NAME_DOCK) {
     if (cmd->args.size() != 1 ||
         cmd->args[0].data_type != ff_msgs::CommandArg::DATA_TYPE_INT) {
@@ -1517,33 +1522,39 @@ bool Executive::ArmPanAndTilt(ff_msgs::CommandStampedPtr const& cmd) {
 
 bool Executive::AutoReturn(ff_msgs::CommandStampedPtr const& cmd) {
   NODELET_INFO("Executive executing auto return command!");
+  bool successful = false;
+  std::string err_msg;
+
   // Astrobee needs to be either stopped or drifting
   if (agent_state_.mobility_state.state == ff_msgs::MobilityState::DOCKING) {
-    state_->AckCmd(cmd->cmd_id,
-                   ff_msgs::AckCompletedStatus::EXEC_FAILED,
-                   "Already docked!");
-    return false;
+    err_msg = "Already docked!";
   } else if (agent_state_.mobility_state.state ==
                                             ff_msgs::MobilityState::PERCHING) {
-      state_->AckCmd(cmd->cmd_id,
-                     ff_msgs::AckCompletedStatus::EXEC_FAILED,
-                     "Astrobee cannot attempt to dock while it is perched.");
-    return false;
+    err_msg = "Astrobee cannot attempt to dock while it is perched(ing).";
+  } else {
+    // TODO(Katie) Currently this is just the dock 1 command with return to dock
+    // set to true! Change to be actual code
+    successful = true;
+    cmd->cmd_name = "dock";
+    cmd->args.resize(1);
+    cmd->args[0].data_type = ff_msgs::CommandArg::DATA_TYPE_INT;
+    cmd->args[0].i = 1;
+    if (!FillDockGoal(cmd, true)) {
+      return false;
+    }
+
+    if (!StartAction(DOCK, cmd->cmd_id)) {
+      return false;
+    }
   }
 
-  // TODO(Katie) Current this is just the dock 1 command! Change to be actual
-  // code
-
-  cmd->cmd_name = "dock";
-  cmd->args.resize(1);
-  cmd->args[0].data_type = ff_msgs::CommandArg::DATA_TYPE_INT;
-  cmd->args[0].i = 1;
-
-  if (!Dock(cmd)) {
-    return false;
+  // Ack command as failed if we are already docked or perched
+  if (!successful) {
+    state_->AckCmd(cmd->cmd_id,
+                   ff_msgs::AckCompletedStatus::EXEC_FAILED,
+                   err_msg);
   }
-
-  return true;
+  return successful;
 }
 
 bool Executive::ClearData(ff_msgs::CommandStampedPtr const& cmd) {
@@ -1624,7 +1635,7 @@ bool Executive::Dock(ff_msgs::CommandStampedPtr const& cmd) {
     err_msg = "Astrobee cannot attempt to dock while it is perched.";
   } else {
     successful = true;
-    if (!FillDockGoal(cmd)) {
+    if (!FillDockGoal(cmd, false)) {
       return false;
     }
 
@@ -3442,7 +3453,7 @@ bool Executive::Undock(ff_msgs::CommandStampedPtr const& cmd) {
     err_msg = "Can't undock when not docked. Astrobee is currently stopped.";
   } else {
     docked = true;
-    if (!FillDockGoal(cmd)) {
+    if (!FillDockGoal(cmd, false)) {
       return false;
     }
 
