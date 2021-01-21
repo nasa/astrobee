@@ -116,6 +116,13 @@ void GraphLocalizerWrapper::ResetBiasesAndLocalizer() {
   sanity_checker_->Reset();
 }
 
+void GraphLocalizerWrapper::ResetBiasesFromFileAndResetLocalizer() {
+  LogInfo("ResetBiasAndLocalizer: Resetting biases from file and reset localizer.");
+  graph_localizer_initialization_.ResetBiasesFromFileAndResetStartPose();
+  graph_localizer_.reset();
+  sanity_checker_->Reset();
+}
+
 void GraphLocalizerWrapper::VLVisualLandmarksCallback(const ff_msgs::VisualLandmarks& visual_landmarks_msg) {
   if (!ValidVLMsg(visual_landmarks_msg, sparse_mapping_min_num_landmarks_)) return;
   if (graph_localizer_) {

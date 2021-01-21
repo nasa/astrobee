@@ -22,14 +22,17 @@
 #include <localization_common/utilities.h>
 
 #include <iostream>
+#include <string>
 
 namespace graph_localizer {
 namespace lc = localization_common;
-void GraphLocalizerInitialization::SetBiases(const gtsam::imuBias::ConstantBias& imu_bias) {
+void GraphLocalizerInitialization::SetBiases(const gtsam::imuBias::ConstantBias& imu_bias,
+                                             const bool loaded_from_file) {
   params_.graph_initialization.initial_imu_bias = imu_bias;
   has_biases_ = true;
   estimate_biases_ = false;
-  RemoveGravityFromBiasIfPossibleAndNecessary();
+  // Assumes bias in file is already gravity compensated if neccessary
+  if (!loaded_from_file) RemoveGravityFromBiasIfPossibleAndNecessary();
 }
 
 void GraphLocalizerInitialization::SetStartPose(const gtsam::Pose3& global_T_body_start, const double timestamp) {
@@ -64,11 +67,48 @@ void GraphLocalizerInitialization::ResetBiasesAndStartPose() {
   ResetStartPose();
 }
 
+void GraphLocalizerInitialization::ResetBiasesFromFileAndResetStartPose() {
+  ResetBiasesFromFile();
+  ResetStartPose();
+}
+
 void GraphLocalizerInitialization::ResetStartPose() { has_start_pose_ = false; }
 
 void GraphLocalizerInitialization::ResetBiases() {
   has_biases_ = false;
   StartBiasEstimation();
+}
+
+void GraphLocalizerInitialization::ResetBiasesFromFile() {
+  std::ifstream imu_bias_file("test.csv");
+  if (!imu_bias_file.is_open()) {
+    LogError("ResetBiasesFromFile: Failed to read imu bias file.");
+    return;
+  }
+
+  gtsam::Vector3 accelerometer_bias;
+  gtsam::Vector3 gyro_bias;
+  for (int line_num = 0; line_num < 2; ++line_num) {
+    std::string line;
+    if (!std::getline(imu_bias_file, line)) {
+      LogError("ResetBiasesFromFile: Failed to get line from imu bias file.");
+      return;
+    }
+    std::istringstream line_stream(line);
+    std::string val;
+    for (int val_index = 0; val_index < 3; ++val_index) {
+      if (!std::getline(line_stream, val, ',')) {
+        LogError("ResetBiasesFromFile: Failed to get value from imu bias file.");
+        return;
+      }
+      if (line_num == 0) {
+        accelerometer_bias[val_index] = std::stold(val);
+      } else {
+        gyro_bias[val_index] = std::stold(val);
+      }
+    }
+  }
+  SetBiases(gtsam::imuBias::ConstantBias(accelerometer_bias, gyro_bias), true);
 }
 
 void GraphLocalizerInitialization::LoadGraphLocalizerParams(config_reader::ConfigReader& config) {

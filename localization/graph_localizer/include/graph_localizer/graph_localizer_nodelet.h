@@ -55,6 +55,8 @@ class GraphLocalizerNodelet : public ff_util::FreeFlyerNodelet {
 
   bool ResetBiasesAndLocalizer(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res);
 
+  bool ResetBiasesFromFileAndResetLocalizer(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res);
+
   bool ResetLocalizer(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res);
 
   void ResetAndEnableLocalizer();
@@ -97,7 +99,7 @@ class GraphLocalizerNodelet : public ff_util::FreeFlyerNodelet {
   bool localizer_enabled_ = true;
   ros::Subscriber imu_sub_, of_sub_, vl_sub_, ar_sub_;
   ros::Publisher state_pub_, graph_pub_, ar_tag_pose_pub_, sparse_mapping_pose_pub_, reset_pub_, heartbeat_pub_;
-  ros::ServiceServer reset_srv_, bias_srv_, input_mode_srv_;
+  ros::ServiceServer reset_srv_, bias_srv_, bias_from_file_srv_, input_mode_srv_;
   tf2_ros::TransformBroadcaster transform_pub_;
   std::string platform_name_;
   ff_msgs::Heartbeat heartbeat_;

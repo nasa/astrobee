@@ -141,6 +141,7 @@
 #define SERVICE_GNC_EKF_RESET                       "gnc/ekf/reset"
 #define SERVICE_GNC_EKF_RESET_HR                    "gnc/ekf/reset_hr"
 #define SERVICE_GNC_EKF_INIT_BIAS                   "gnc/ekf/init_bias"
+#define SERVICE_GNC_EKF_INIT_BIAS_FROM_FILE         "gnc/ekf/init_bias_from_file"
 #define SERVICE_GNC_EKF_SET_INPUT                   "gnc/ekf/set_input"
 #define SERVICE_GNC_CTL_ENABLE                      "gnc/ctl/enable"
 

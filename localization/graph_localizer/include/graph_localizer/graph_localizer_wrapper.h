@@ -51,6 +51,8 @@ class GraphLocalizerWrapper {
 
   void ResetBiasesAndLocalizer();
 
+  void ResetBiasesFromFileAndResetLocalizer();
+
   boost::optional<geometry_msgs::PoseStamped> LatestSparseMappingPoseMsg() const;
 
   boost::optional<geometry_msgs::PoseStamped> LatestARTagPoseMsg() const;
