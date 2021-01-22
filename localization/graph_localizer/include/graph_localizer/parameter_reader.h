@@ -22,7 +22,7 @@
 #include <graph_localizer/calibration_params.h>
 #include <graph_localizer/factor_params.h>
 #include <graph_localizer/feature_tracker_params.h>
-#include <graph_localizer/graph_initialization_params.h>
+#include <graph_localizer/graph_initializer_params.h>
 #include <graph_localizer/graph_localizer_params.h>
 #include <graph_localizer/graph_values_params.h>
 #include <graph_localizer/noise_params.h>
@@ -45,12 +45,12 @@ void LoadSmartProjectionFactorAdderParams(config_reader::ConfigReader& config,
 void LoadStandstillFactorAdderParams(config_reader::ConfigReader& config, StandstillFactorAdderParams& params);
 void LoadFeatureTrackerParams(config_reader::ConfigReader& config, FeatureTrackerParams& params);
 void LoadGraphValuesParams(config_reader::ConfigReader& config, GraphValuesParams& params);
-void LoadImuIntegrationParams(config_reader::ConfigReader& config, GraphInitializationParams& params);
+void LoadImuIntegrationParams(config_reader::ConfigReader& config, GraphInitializerParams& params);
 void LoadNoiseParams(config_reader::ConfigReader& config, NoiseParams& params);
 void LoadSanityCheckerParams(config_reader::ConfigReader& config, SanityCheckerParams& params);
-void LoadGraphInitializationParams(config_reader::ConfigReader& config, GraphInitializationParams& params);
-// Loads all params except some in graph_initialization_params (biases and start pose) that are
+// Loads all params except some (biases and start pose) that are
 // not loaded from config files
+void LoadGraphInitializerParams(config_reader::ConfigReader& config, GraphInitializerParams& params);
 void LoadGraphLocalizerParams(config_reader::ConfigReader& config, GraphLocalizerParams& params);
 }  // namespace graph_localizer
 

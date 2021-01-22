@@ -182,14 +182,14 @@ void LoadSanityCheckerParams(config_reader::ConfigReader& config, SanityCheckerP
   params.orientation_covariance_threshold = mc::LoadDouble(config, "orientation_covariance_threshold");
 }
 
-void LoadGraphInitializationParams(config_reader::ConfigReader& config, GraphInitializationParams& params) {
+void LoadGraphInitializerParams(config_reader::ConfigReader& config, GraphInitializerParams& params) {
   ii::LoadImuIntegratorParams(config, params);
   params.imu_bias_filename = mc::LoadString(config, "imu_bias_file");
 }
 
 void LoadGraphLocalizerParams(config_reader::ConfigReader& config, GraphLocalizerParams& params) {
   LoadCalibrationParams(config, params.calibration);
-  LoadGraphInitializationParams(config, params.graph_initialization);
+  LoadGraphInitializerParams(config, params.graph_initializer);
   LoadFactorParams(config, params.factor);
   LoadFeatureTrackerParams(config, params.feature_tracker);
   LoadGraphValuesParams(config, params.graph_values);

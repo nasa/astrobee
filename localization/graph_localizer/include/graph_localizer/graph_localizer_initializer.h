@@ -15,8 +15,8 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef GRAPH_LOCALIZER_GRAPH_LOCALIZER_INITIALIZATION_H_
-#define GRAPH_LOCALIZER_GRAPH_LOCALIZER_INITIALIZATION_H_
+#ifndef GRAPH_LOCALIZER_GRAPH_LOCALIZER_INITIALIZER_H_
+#define GRAPH_LOCALIZER_GRAPH_LOCALIZER_INITIALIZER_H_
 
 #include <camera/camera_params.h>
 #include <config_reader/config_reader.h>
@@ -29,7 +29,7 @@
 #include <string>
 
 namespace graph_localizer {
-class GraphLocalizerInitialization {
+class GraphLocalizerInitializer {
  public:
   void SetBiases(const gtsam::imuBias::ConstantBias& imu_bias, const bool loaded_from_previous_estimate = false,
                  const bool save_to_file = false);
@@ -60,4 +60,4 @@ class GraphLocalizerInitialization {
 };
 }  // namespace graph_localizer
 
-#endif  // GRAPH_LOCALIZER_GRAPH_LOCALIZER_INITIALIZATION_H_
+#endif  // GRAPH_LOCALIZER_GRAPH_LOCALIZER_INITIALIZER_H_

@@ -16,7 +16,7 @@
  * under the License.
  */
 
-#include <graph_localizer/graph_localizer_initialization.h>
+#include <graph_localizer/graph_localizer_initializer.h>
 #include <graph_localizer/parameter_reader.h>
 #include <graph_localizer/utilities.h>
 #include <localization_common/utilities.h>
@@ -26,37 +26,37 @@
 
 namespace graph_localizer {
 namespace lc = localization_common;
-void GraphLocalizerInitialization::SetBiases(const gtsam::imuBias::ConstantBias& imu_bias,
-                                             const bool loaded_from_previous_estimate, const bool save_to_file) {
-  params_.graph_initialization.initial_imu_bias = imu_bias;
+void GraphLocalizerInitializer::SetBiases(const gtsam::imuBias::ConstantBias& imu_bias,
+                                          const bool loaded_from_previous_estimate, const bool save_to_file) {
+  params_.graph_initializer.initial_imu_bias = imu_bias;
   has_biases_ = true;
   estimate_biases_ = false;
   // Assumes previous bias is already gravity compensated if neccessary
   if (!loaded_from_previous_estimate) RemoveGravityFromBiasIfPossibleAndNecessary();
   if (save_to_file) {
-    std::ofstream imu_bias_file(params_.graph_initialization.imu_bias_filename);
+    std::ofstream imu_bias_file(params_.graph_initializer.imu_bias_filename);
     if (!imu_bias_file.is_open()) {
       LogError("SetBiases: Failed to create imu bias output file.");
       return;
     }
-    const auto& accel_bias = params_.graph_initialization.initial_imu_bias.accelerometer();
+    const auto& accel_bias = params_.graph_initializer.initial_imu_bias.accelerometer();
     imu_bias_file << accel_bias.x() << "," << accel_bias.y() << "," << accel_bias.z() << std::endl;
-    const auto& gyro_bias = params_.graph_initialization.initial_imu_bias.gyroscope();
+    const auto& gyro_bias = params_.graph_initializer.initial_imu_bias.gyroscope();
     imu_bias_file << gyro_bias.x() << "," << gyro_bias.y() << "," << gyro_bias.z() << std::endl;
     imu_bias_file.close();
   }
 }
 
-void GraphLocalizerInitialization::SetStartPose(const gtsam::Pose3& global_T_body_start, const double timestamp) {
-  params_.graph_initialization.start_time = timestamp;
-  params_.graph_initialization.global_T_body_start = global_T_body_start;
+void GraphLocalizerInitializer::SetStartPose(const gtsam::Pose3& global_T_body_start, const double timestamp) {
+  params_.graph_initializer.start_time = timestamp;
+  params_.graph_initializer.global_T_body_start = global_T_body_start;
   has_start_pose_ = true;
   RemoveGravityFromBiasIfPossibleAndNecessary();
 }
 
-void GraphLocalizerInitialization::RemoveGravityFromBiasIfPossibleAndNecessary() {
+void GraphLocalizerInitializer::RemoveGravityFromBiasIfPossibleAndNecessary() {
   if (RemovedGravityFromBiasIfNecessary() || !HasParams()) return;
-  if (params_.graph_initialization.gravity.isZero()) {
+  if (params_.graph_initializer.gravity.isZero()) {
     removed_gravity_from_bias_if_necessary_ = true;
     return;
   }
@@ -64,35 +64,34 @@ void GraphLocalizerInitialization::RemoveGravityFromBiasIfPossibleAndNecessary()
   // Biases, start pose and params are available and gravity is non zero, gravity can and should now be removed
   // from the initial bias estimates.
   LogInfo("RemoveGravityFromBiasIfPossibleAndNecessary: Removing gravity from initial biases.");
-  RemoveGravityFromBias(params_.graph_initialization.gravity, params_.graph_initialization.body_T_imu,
-                        params_.graph_initialization.global_T_body_start,
-                        params_.graph_initialization.initial_imu_bias);
+  RemoveGravityFromBias(params_.graph_initializer.gravity, params_.graph_initializer.body_T_imu,
+                        params_.graph_initializer.global_T_body_start, params_.graph_initializer.initial_imu_bias);
 
   LogInfo("RemoveGravityFromBiasIfPossibleAndNecessary: New gravity corrected accelerometer bias: "
-          << params_.graph_initialization.initial_imu_bias.accelerometer().matrix());
+          << params_.graph_initializer.initial_imu_bias.accelerometer().matrix());
   removed_gravity_from_bias_if_necessary_ = true;
   return;
 }
 
-void GraphLocalizerInitialization::ResetBiasesAndStartPose() {
+void GraphLocalizerInitializer::ResetBiasesAndStartPose() {
   ResetBiases();
   ResetStartPose();
 }
 
-void GraphLocalizerInitialization::ResetBiasesFromFileAndResetStartPose() {
+void GraphLocalizerInitializer::ResetBiasesFromFileAndResetStartPose() {
   ResetBiasesFromFile();
   ResetStartPose();
 }
 
-void GraphLocalizerInitialization::ResetStartPose() { has_start_pose_ = false; }
+void GraphLocalizerInitializer::ResetStartPose() { has_start_pose_ = false; }
 
-void GraphLocalizerInitialization::ResetBiases() {
+void GraphLocalizerInitializer::ResetBiases() {
   has_biases_ = false;
   StartBiasEstimation();
 }
 
-void GraphLocalizerInitialization::ResetBiasesFromFile() {
-  std::ifstream imu_bias_file(params_.graph_initialization.imu_bias_filename);
+void GraphLocalizerInitializer::ResetBiasesFromFile() {
+  std::ifstream imu_bias_file(params_.graph_initializer.imu_bias_filename);
   if (!imu_bias_file.is_open()) {
     LogError("ResetBiasesFromFile: Failed to read imu bias file.");
     return;
@@ -123,25 +122,25 @@ void GraphLocalizerInitialization::ResetBiasesFromFile() {
   SetBiases(gtsam::imuBias::ConstantBias(accelerometer_bias, gyro_bias), true);
 }
 
-void GraphLocalizerInitialization::LoadGraphLocalizerParams(config_reader::ConfigReader& config) {
+void GraphLocalizerInitializer::LoadGraphLocalizerParams(config_reader::ConfigReader& config) {
   graph_localizer::LoadGraphLocalizerParams(config, params_);
   has_params_ = true;
 }
 
-bool GraphLocalizerInitialization::ReadyToInitialize() const {
+bool GraphLocalizerInitializer::ReadyToInitialize() const {
   return HasBiases() && HasStartPose() && HasParams() && RemovedGravityFromBiasIfNecessary();
 }
 
-void GraphLocalizerInitialization::StartBiasEstimation() { estimate_biases_ = true; }
+void GraphLocalizerInitializer::StartBiasEstimation() { estimate_biases_ = true; }
 
-bool GraphLocalizerInitialization::HasBiases() const { return has_biases_; }
-bool GraphLocalizerInitialization::HasStartPose() const { return has_start_pose_; }
-bool GraphLocalizerInitialization::HasParams() const { return has_params_; }
-bool GraphLocalizerInitialization::EstimateBiases() const { return estimate_biases_; }
-bool GraphLocalizerInitialization::RemovedGravityFromBiasIfNecessary() const {
+bool GraphLocalizerInitializer::HasBiases() const { return has_biases_; }
+bool GraphLocalizerInitializer::HasStartPose() const { return has_start_pose_; }
+bool GraphLocalizerInitializer::HasParams() const { return has_params_; }
+bool GraphLocalizerInitializer::EstimateBiases() const { return estimate_biases_; }
+bool GraphLocalizerInitializer::RemovedGravityFromBiasIfNecessary() const {
   return removed_gravity_from_bias_if_necessary_;
 }
 
-const GraphLocalizerParams& GraphLocalizerInitialization::params() const { return params_; }
+const GraphLocalizerParams& GraphLocalizerInitializer::params() const { return params_; }
 
 }  // namespace graph_localizer

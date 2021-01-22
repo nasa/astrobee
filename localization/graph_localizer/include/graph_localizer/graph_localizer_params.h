@@ -21,7 +21,7 @@
 #include <graph_localizer/calibration_params.h>
 #include <graph_localizer/factor_params.h>
 #include <graph_localizer/feature_tracker_params.h>
-#include <graph_localizer/graph_initialization_params.h>
+#include <graph_localizer/graph_initializer_params.h>
 #include <graph_localizer/graph_values_params.h>
 #include <graph_localizer/noise_params.h>
 
@@ -34,7 +34,7 @@ struct GraphLocalizerParams {
   FeatureTrackerParams feature_tracker;
   GraphValuesParams graph_values;
   NoiseParams noise;
-  GraphInitializationParams graph_initialization;
+  GraphInitializerParams graph_initializer;
   bool verbose;
   bool fatal_failures;
   bool print_factor_info;

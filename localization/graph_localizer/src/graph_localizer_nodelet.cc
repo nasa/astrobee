@@ -126,6 +126,10 @@ bool GraphLocalizerNodelet::ResetBiasesAndLocalizer(std_srvs::Empty::Request& re
 
 bool GraphLocalizerNodelet::ResetBiasesFromFileAndResetLocalizer(std_srvs::Empty::Request& req,
                                                                  std_srvs::Empty::Response& res) {
+  return ResetBiasesFromFileAndResetLocalizer();
+}
+
+bool GraphLocalizerNodelet::ResetBiasesFromFileAndResetLocalizer() {
   graph_localizer_wrapper_.ResetBiasesFromFileAndResetLocalizer();
   PublishReset();
   EnableLocalizer();
@@ -255,6 +259,9 @@ void GraphLocalizerNodelet::PublishGraphMessages() {
 
 void GraphLocalizerNodelet::Run() {
   ros::Rate rate(100);
+  // Load Biases from file by default
+  // Biases reestimated if a intialize bias service call is received
+  ResetBiasesFromFileAndResetLocalizer();
   while (ros::ok()) {
     callbacks_timer_.Start();
     private_queue_.callAvailable();

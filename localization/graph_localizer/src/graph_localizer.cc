@@ -59,14 +59,14 @@ namespace lm = localization_measurements;
 
 GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
     : feature_tracker_(new FeatureTracker(params.feature_tracker)),
-      latest_imu_integrator_(params.graph_initialization),
+      latest_imu_integrator_(params.graph_initializer),
       graph_values_(new GraphValues(params.graph_values)),
       log_on_destruction_(true),
       params_(params) {
   // Assumes zero initial velocity
-  const lc::CombinedNavState global_N_body_start(
-    params_.graph_initialization.global_T_body_start, gtsam::Velocity3::Zero(),
-    params_.graph_initialization.initial_imu_bias, params_.graph_initialization.start_time);
+  const lc::CombinedNavState global_N_body_start(params_.graph_initializer.global_T_body_start,
+                                                 gtsam::Velocity3::Zero(), params_.graph_initializer.initial_imu_bias,
+                                                 params_.graph_initializer.start_time);
 
   // Add first nav state and priors to graph
   const int key_index = GenerateKeyIndex();

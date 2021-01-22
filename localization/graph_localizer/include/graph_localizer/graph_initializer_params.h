@@ -15,8 +15,8 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef GRAPH_LOCALIZER_GRAPH_INITIALIZATION_PARAMS_H_
-#define GRAPH_LOCALIZER_GRAPH_INITIALIZATION_PARAMS_H_
+#ifndef GRAPH_LOCALIZER_GRAPH_INITIALIZER_PARAMS_H_
+#define GRAPH_LOCALIZER_GRAPH_INITIALIZER_PARAMS_H_
 
 #include <imu_integration/latest_imu_integrator_params.h>
 
@@ -26,10 +26,10 @@
 
 namespace graph_localizer {
 // TODO(rsoussan): Clean this up, only use what is needed from imu integration params
-struct GraphInitializationParams : public imu_integration::LatestImuIntegratorParams {
+struct GraphInitializerParams : public imu_integration::LatestImuIntegratorParams {
   gtsam::Pose3 global_T_body_start;
   std::string imu_bias_filename;
 };
 }  // namespace graph_localizer
 
-#endif  // GRAPH_LOCALIZER_GRAPH_INITIALIZATION_PARAMS_H_
+#endif  // GRAPH_LOCALIZER_GRAPH_INITIALIZER_PARAMS_H_
