@@ -27,7 +27,7 @@ if __name__ == '__main__':
   parser = argparse.ArgumentParser()
   parser.add_argument('bagfile')
   parser.add_argument('topic')
-  parser.add_argument('-m', '--max-time-diff', default=0.5)
+  parser.add_argument('-m', '--max-time-diff', type=float, default=0.5)
   args = parser.parse_args()
   if not os.path.isfile(args.bagfile):
     print('Bag file ' + args.bagfile + ' does not exist.')
