@@ -135,23 +135,6 @@ geometry_msgs::PoseStamped PoseMsg(const gtsam::Pose3& global_T_body, const lc::
   return PoseMsg(lc::EigenPose(global_T_body), time);
 }
 
-void EstimateAndSetImuBiases(const lm::ImuMeasurement& imu_measurement,
-                             const int num_imu_measurements_per_bias_estimate,
-                             std::vector<lm::ImuMeasurement>& imu_bias_measurements,
-                             GraphLocalizerInitializer& graph_localizer_initializer) {
-  const auto biases =
-    ii::EstimateAndSetImuBiases(imu_measurement, num_imu_measurements_per_bias_estimate, imu_bias_measurements);
-  if (!biases) return;
-  graph_localizer_initializer.SetBiases(*biases, false, true);
-}
-
-void RemoveGravityFromBias(const gtsam::Vector3& global_F_gravity, const gtsam::Pose3& body_T_imu,
-                           const gtsam::Pose3& global_T_body, gtsam::imuBias::ConstantBias& imu_bias) {
-  const gtsam::Vector3 gravity_corrected_accelerometer_bias = lc::RemoveGravityFromAccelerometerMeasurement(
-    global_F_gravity, body_T_imu, global_T_body, imu_bias.accelerometer());
-  imu_bias = gtsam::imuBias::ConstantBias(gravity_corrected_accelerometer_bias, imu_bias.gyroscope());
-}
-
 gtsam::noiseModel::Robust::shared_ptr Robust(const gtsam::SharedNoiseModel& noise, const double huber_k) {
   return gtsam::noiseModel::Robust::Create(gtsam::noiseModel::mEstimator::Huber::Create(huber_k), noise);
 }

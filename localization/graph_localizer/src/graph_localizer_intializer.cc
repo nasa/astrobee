@@ -87,6 +87,9 @@ void GraphLocalizerInitializer::ResetStartPose() { has_start_pose_ = false; }
 
 void GraphLocalizerInitializer::ResetBiases() {
   has_biases_ = false;
+  // Use same filter for biases as used for imu integration
+  imu_bias_filter_.reset(new imu_integration::ImuFilter(params_.graph_initializer.filter));
+  imu_bias_measurements_.clear();
   StartBiasEstimation();
 }
 
@@ -120,6 +123,43 @@ void GraphLocalizerInitializer::ResetBiasesFromFile() {
     }
   }
   SetBiases(gtsam::imuBias::ConstantBias(accelerometer_bias, gyro_bias), true);
+}
+
+void GraphLocalizerInitializer::EstimateAndSetImuBiases(
+  const localization_measurements::ImuMeasurement& imu_measurement) {
+  const auto filtered_imu_measurement = imu_bias_filter_->AddMeasurement(imu_measurement);
+  if (filtered_imu_measurement) {
+    imu_bias_measurements_.emplace_back(*filtered_imu_measurement);
+  }
+  if (static_cast<int>(imu_bias_measurements_.size()) < params_.graph_initializer.num_bias_estimation_measurements)
+    return;
+
+  Eigen::Vector3d sum_of_acceleration_measurements = Eigen::Vector3d::Zero();
+  Eigen::Vector3d sum_of_angular_velocity_measurements = Eigen::Vector3d::Zero();
+  for (const auto& imu_measurement : imu_bias_measurements_) {
+    sum_of_acceleration_measurements += imu_measurement.acceleration;
+    sum_of_angular_velocity_measurements += imu_measurement.angular_velocity;
+  }
+
+  LogDebug(
+    "Number of imu measurements per bias estimate: " << params_.graph_initializer.num_bias_estimation_measurements);
+  const Eigen::Vector3d accelerometer_bias = sum_of_acceleration_measurements / imu_bias_measurements_.size();
+  const Eigen::Vector3d gyro_bias = sum_of_angular_velocity_measurements / imu_bias_measurements_.size();
+  LogInfo("Accelerometer bias: " << std::endl << accelerometer_bias.matrix());
+  LogInfo("Gyro bias: " << std::endl << gyro_bias.matrix());
+
+  gtsam::imuBias::ConstantBias biases(accelerometer_bias, gyro_bias);
+  SetBiases(biases, false, true);
+  imu_bias_filter_.reset(new imu_integration::ImuFilter(params_.graph_initializer.filter));
+  imu_bias_measurements_.clear();
+}
+
+void GraphLocalizerInitializer::RemoveGravityFromBias(const gtsam::Vector3& global_F_gravity,
+                                                      const gtsam::Pose3& body_T_imu, const gtsam::Pose3& global_T_body,
+                                                      gtsam::imuBias::ConstantBias& imu_bias) {
+  const gtsam::Vector3 gravity_corrected_accelerometer_bias = lc::RemoveGravityFromAccelerometerMeasurement(
+    global_F_gravity, body_T_imu, global_T_body, imu_bias.accelerometer());
+  imu_bias = gtsam::imuBias::ConstantBias(gravity_corrected_accelerometer_bias, imu_bias.gyroscope());
 }
 
 void GraphLocalizerInitializer::LoadGraphLocalizerParams(config_reader::ConfigReader& config) {

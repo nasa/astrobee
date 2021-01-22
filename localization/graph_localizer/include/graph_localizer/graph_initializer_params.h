@@ -29,6 +29,7 @@ namespace graph_localizer {
 struct GraphInitializerParams : public imu_integration::LatestImuIntegratorParams {
   gtsam::Pose3 global_T_body_start;
   std::string imu_bias_filename;
+  int num_bias_estimation_measurements;
 };
 }  // namespace graph_localizer
 

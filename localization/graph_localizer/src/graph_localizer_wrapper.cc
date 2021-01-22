@@ -44,10 +44,6 @@ GraphLocalizerWrapper::GraphLocalizerWrapper(const std::string& graph_config_pat
     LogFatal("Failed to read config files.");
   }
 
-  if (!config.GetInt("num_bias_estimation_measurements", &num_bias_estimation_measurements_)) {
-    LogFatal("Failed to load num_bias_estimation_measurements.");
-  }
-
   if (!config.GetBool("publish_localization_graph", &publish_localization_graph_)) {
     LogFatal("Failed to load publish_localization_graph.");
   }
@@ -205,8 +201,7 @@ void GraphLocalizerWrapper::ImuCallback(const sensor_msgs::Imu& imu_msg) {
       LogWarning("ImuCallback: Failed to get latest biases.");
     }
   } else if (graph_localizer_initializer_.EstimateBiases()) {
-    EstimateAndSetImuBiases(lm::ImuMeasurement(imu_msg), num_bias_estimation_measurements_, imu_bias_measurements_,
-                            graph_localizer_initializer_);
+    graph_localizer_initializer_.EstimateAndSetImuBiases(lm::ImuMeasurement(imu_msg));
   }
 
   if (!graph_localizer_ && graph_localizer_initializer_.ReadyToInitialize()) {

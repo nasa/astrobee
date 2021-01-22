@@ -185,6 +185,7 @@ void LoadSanityCheckerParams(config_reader::ConfigReader& config, SanityCheckerP
 void LoadGraphInitializerParams(config_reader::ConfigReader& config, GraphInitializerParams& params) {
   ii::LoadImuIntegratorParams(config, params);
   params.imu_bias_filename = mc::LoadString(config, "imu_bias_file");
+  params.num_bias_estimation_measurements = mc::LoadInt(config, "num_bias_estimation_measurements");
 }
 
 void LoadGraphLocalizerParams(config_reader::ConfigReader& config, GraphLocalizerParams& params) {
