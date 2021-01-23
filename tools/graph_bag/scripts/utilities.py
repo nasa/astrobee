@@ -71,13 +71,18 @@ def load_dataframe(files):
   return dataframe
 
 
-def get_topic_rates(bag_name, topic, min_time_diff_for_gap, verbose=False, ignore_zero_time_diffs=True):
+def get_topic_rates(bag_name,
+                    topic,
+                    min_time_diff_for_gap,
+                    use_header_time=True,
+                    verbose=False,
+                    ignore_zero_time_diffs=True):
   with rosbag.Bag(bag_name, 'r') as bag:
     last_time = 0.0
     gaps = 0
     time_diffs = []
-    for _, msg, _ in bag.read_messages([topic]):
-      time = msg.header.stamp.secs + msg.header.stamp.nsecs * 1.0e-9
+    for _, msg, t in bag.read_messages([topic]):
+      time = msg.header.stamp.secs + msg.header.stamp.nsecs * 1.0e-9 if use_header_time else t.secs + t.nsecs * 1.0e-9
       time_diff = time - last_time
       if last_time != 0 and time_diff >= min_time_diff_for_gap:
         if verbose:
@@ -92,6 +97,10 @@ def get_topic_rates(bag_name, topic, min_time_diff_for_gap, verbose=False, ignor
     max_time_diff = np.max(time_diffs)
     stddev_time_diff = np.std(time_diffs)
     if verbose:
+      if use_header_time:
+        print('Using Header time.')
+      else:
+        print('Using Receive time.')
       print('Found ' + str(gaps) + ' time diffs >= ' + str(min_time_diff_for_gap) + ' secs.')
       print('Mean time diff: ' + str(mean_time_diff))
       print('Min time diff: ' + str(min_time_diff))
