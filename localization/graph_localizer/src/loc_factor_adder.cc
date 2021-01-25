@@ -34,12 +34,12 @@ LocFactorAdder::LocFactorAdder(const LocFactorAdderParams& params, const GraphAc
 std::vector<FactorsToAdd> LocFactorAdder::AddFactors(
   const lm::MatchedProjectionsMeasurement& matched_projections_measurement) {
   if (matched_projections_measurement.matched_projections.empty()) {
-    LogWarning("AddFactors: Empty measurement.");
+    LogDebug("AddFactors: Empty measurement.");
     return {};
   }
 
   if (static_cast<int>(matched_projections_measurement.matched_projections.size()) < params().min_num_matches) {
-    LogWarning("AddFactors: Not enough matches in projection measurement.");
+    LogDebug("AddFactors: Not enough matches in projection measurement.");
     return {};
   }
 

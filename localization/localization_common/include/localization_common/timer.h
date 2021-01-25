@@ -36,8 +36,10 @@ class Timer {
   void LogToFile(std::ofstream& ofstream) const;
   void LogToCsv(std::ofstream& ofstream) const;
   void LogEveryN(const int num_events_per_log) const;
+  void VlogEveryN(const int num_events_per_log, const int level) const;
   void StopAndLog();
   void StopAndLogEveryN(const int num_events_per_log);
+  void StopAndVlogEveryN(const int num_events_per_log, const int level);
   void Vlog(const int level = 2) const;
 
  private:

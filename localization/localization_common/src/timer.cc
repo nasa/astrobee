@@ -35,6 +35,10 @@ void Timer::LogToCsv(std::ofstream& ofstream) const { averager_.LogToCsv(ofstrea
 
 void Timer::LogEveryN(const int num_events_per_log) const { averager_.LogEveryN(num_events_per_log); }
 
+void Timer::VlogEveryN(const int num_events_per_log, const int level) const {
+  averager_.VlogEveryN(num_events_per_log, level);
+}
+
 void Timer::StopAndLog() {
   Stop();
   Log();
@@ -43,6 +47,11 @@ void Timer::StopAndLog() {
 void Timer::StopAndLogEveryN(const int num_events_per_log) {
   Stop();
   LogEveryN(num_events_per_log);
+}
+
+void Timer::StopAndVlogEveryN(const int num_events_per_log, const int level) {
+  Stop();
+  VlogEveryN(num_events_per_log, level);
 }
 
 void Timer::Vlog(const int level) const { averager_.Vlog(level); }

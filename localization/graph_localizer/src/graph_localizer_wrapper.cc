@@ -74,7 +74,7 @@ void GraphLocalizerWrapper::Update() {
     graph_localizer_->Update();
     // Sanity check covariances after updates
     if (!CheckCovarianceSanity()) {
-      LogInfo("OpticalFlowCallback: Covariance sanity check failed, resetting localizer.");
+      LogError("OpticalFlowCallback: Covariance sanity check failed, resetting localizer.");
       ResetLocalizer();
       return;
     }
@@ -133,7 +133,7 @@ void GraphLocalizerWrapper::VLVisualLandmarksCallback(const ff_msgs::VisualLandm
 
   // Sanity Check
   if (graph_localizer_ && !CheckPoseSanity(sparse_mapping_global_T_body, timestamp)) {
-    LogInfo("VLVisualLandmarksCallback: Sanity check failed, resetting localizer.");
+    LogError("VLVisualLandmarksCallback: Sanity check failed, resetting localizer.");
     ResetLocalizer();
     return;
   }
@@ -149,16 +149,16 @@ bool GraphLocalizerWrapper::CheckPoseSanity(const gtsam::Pose3& sparse_mapping_p
   if (!graph_localizer_) return true;
   const auto latest_extrapolated_pose_time = graph_localizer_->LatestExtrapolatedPoseTime();
   if (!latest_extrapolated_pose_time) {
-    LogWarning("CheckPoseSanity: Failed to get latest extrapolated pose time.");
+    LogDebug("CheckPoseSanity: Failed to get latest extrapolated pose time.");
     return true;
   }
   if (timestamp > *latest_extrapolated_pose_time) {
-    LogWarning("CheckPoseSanity: Timestamp occurs after latest extrapolated pose time");
+    LogDebug("CheckPoseSanity: Timestamp occurs after latest extrapolated pose time");
     return true;
   }
   const auto combined_nav_state = graph_localizer_->GetCombinedNavState(timestamp);
   if (!combined_nav_state) {
-    LogInfoEveryN(50, "CheckPoseSanity: Failed to get combined nav state.");
+    LogDebugEveryN(50, "CheckPoseSanity: Failed to get combined nav state.");
     return true;
   }
   return sanity_checker_->CheckPoseSanity(sparse_mapping_pose, combined_nav_state->pose());
@@ -168,7 +168,7 @@ bool GraphLocalizerWrapper::CheckCovarianceSanity() const {
   if (!graph_localizer_) return true;
   const auto combined_nav_state_and_covariances = graph_localizer_->LatestCombinedNavStateAndCovariances();
   if (!combined_nav_state_and_covariances) {
-    LogInfoEveryN(50, "CheckCovarianceSanity: No combined nav state and covariances available.");
+    LogDebugEveryN(50, "CheckCovarianceSanity: No combined nav state and covariances available.");
     return true;
   }
 
@@ -198,7 +198,7 @@ void GraphLocalizerWrapper::ImuCallback(const sensor_msgs::Imu& imu_msg) {
     graph_localizer_->AddImuMeasurement(lm::ImuMeasurement(imu_msg));
     latest_biases_ = graph_localizer_->LatestBiases();
     if (!latest_biases_) {
-      LogWarning("ImuCallback: Failed to get latest biases.");
+      LogError("ImuCallback: Failed to get latest biases.");
     }
   } else if (graph_localizer_initializer_.EstimateBiases()) {
     graph_localizer_initializer_.EstimateAndSetImuBiases(lm::ImuMeasurement(imu_msg));
@@ -206,13 +206,13 @@ void GraphLocalizerWrapper::ImuCallback(const sensor_msgs::Imu& imu_msg) {
 
   if (!graph_localizer_ && graph_localizer_initializer_.ReadyToInitialize()) {
     InitializeGraph();
-    LogInfo("ImuCallback: Initialized Graph.");
+    LogDebug("ImuCallback: Initialized Graph.");
   }
 }
 
 void GraphLocalizerWrapper::InitializeGraph() {
   if (!graph_localizer_initializer_.ReadyToInitialize()) {
-    LogError("InitializeGraph: Trying to initialize graph when not ready.");
+    LogDebug("InitializeGraph: Trying to initialize graph when not ready.");
     return;
   }
 
@@ -275,12 +275,12 @@ boost::optional<lc::CombinedNavState> GraphLocalizerWrapper::LatestCombinedNavSt
 
 boost::optional<ff_msgs::EkfState> GraphLocalizerWrapper::LatestLocalizationStateMsg() {
   if (!graph_localizer_) {
-    LogWarningEveryN(50, "LatestLocalizationMsg: Graph localizater not initialized yet.");
+    LogDebugEveryN(50, "LatestLocalizationMsg: Graph localizater not initialized yet.");
     return boost::none;
   }
   const auto combined_nav_state_and_covariances = graph_localizer_->LatestCombinedNavStateAndCovariances();
   if (!combined_nav_state_and_covariances) {
-    LogErrorEveryN(50, "LatestLocalizationMsg: No combined nav state and covariances available.");
+    LogDebugEveryN(50, "LatestLocalizationMsg: No combined nav state and covariances available.");
     return boost::none;
   }
   // Angular velocity and acceleration are added by imu integrator
@@ -307,7 +307,7 @@ void GraphLocalizerWrapper::SaveLocalizationGraphDotFile() const {
 
 boost::optional<const GraphStats&> GraphLocalizerWrapper::graph_stats() const {
   if (!graph_localizer_) {
-    LogWarning("GraphStats: Failed to get graph stats.");
+    LogDebug("GraphStats: Failed to get graph stats.");
     return boost::none;
   }
   return graph_localizer_->graph_stats();

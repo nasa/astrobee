@@ -50,7 +50,7 @@ std::vector<FactorsToAdd> RotationFactorAdder::AddFactors(const lm::FeaturePoint
   }
 
   if (points_1.size() < 5) {
-    LogWarning("AddFactors: Not enough corresponding points found.");
+    LogDebug("AddFactors: Not enough corresponding points found.");
     return {};
   }
   const double average_disparity = total_disparity / points_1.size();

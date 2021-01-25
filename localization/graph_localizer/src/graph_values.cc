@@ -284,7 +284,7 @@ boost::optional<lc::Time> GraphValues::LowerBoundOrEqualTimestamp(const lc::Time
 boost::optional<lc::CombinedNavState> GraphValues::LowerBoundOrEqualCombinedNavState(const lc::Time timestamp) const {
   const auto lower_bound_or_equal_timestamp = LowerBoundOrEqualTimestamp(timestamp);
   if (!lower_bound_or_equal_timestamp) {
-    LogError("LowerBoundOrEqualCombinedNavState: Failed to get lower bound or equal timestamp.");
+    LogDebug("LowerBoundOrEqualCombinedNavState: Failed to get lower bound or equal timestamp.");
     return boost::none;
   }
 
@@ -293,12 +293,12 @@ boost::optional<lc::CombinedNavState> GraphValues::LowerBoundOrEqualCombinedNavS
 
 boost::optional<lc::Time> GraphValues::SlideWindowNewOldestTime() const {
   if (Empty()) {
-    LogWarning("SlideWindowOldestTime: No states in map.");
+    LogDebug("SlideWindowOldestTime: No states in map.");
     return boost::none;
   }
 
   if (NumStates() <= params_.min_num_states) {
-    LogWarning("SlideWindowOldestTime: Not enough states to remove.");
+    LogDebug("SlideWindowOldestTime: Not enough states to remove.");
     return boost::none;
   }
 

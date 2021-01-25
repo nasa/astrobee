@@ -103,6 +103,16 @@
     } \
   } while (0)
 
+#define LogDebugEveryN(n, msg) \
+  do { \
+    static int count = 0; \
+    ++count; \
+    if (count % n == 0) { \
+      std::stringstream ss; \
+      ss << __FILENAME__ << ":" << __LINE__ << ": " << msg << std::endl; \
+      ROS_DEBUG_STREAM(ss.str()); \
+    } \
+  } while (0)
 
 #elif defined(USE_GLOG_LOGGING)
 #define LogInfo(msg) \
@@ -144,6 +154,10 @@
   LOG_EVERY_N(ERROR, n) << msg; \
   } while (0)
 
+#define LogDebugEveryN(n, msg) \
+  do { \
+  DLOG_EVERY_N(INFO, n) << msg; \
+  } while (0)
 
 #endif
 // clang-format on

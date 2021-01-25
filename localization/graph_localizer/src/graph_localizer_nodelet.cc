@@ -40,7 +40,7 @@ GraphLocalizerNodelet::GraphLocalizerNodelet()
   config_reader::ConfigReader config;
   lc::LoadGraphLocalizerConfig(config);
   if (!config.ReadFiles()) {
-    LOG(FATAL) << "Failed to read config files.";
+    LogFatal("Failed to read config files.");
   }
   sparse_mapping_min_num_landmarks_ = mc::LoadInt(config, "loc_adder_min_num_matches");
   ar_min_num_landmarks_ = mc::LoadInt(config, "ar_tag_loc_adder_min_num_matches");
@@ -93,10 +93,10 @@ bool GraphLocalizerNodelet::SetMode(ff_msgs::SetEkfInput::Request& req, ff_msgs:
   const auto input_mode = req.mode;
   static int last_mode = -1;
   if (input_mode == ff_msgs::SetEkfInputRequest::MODE_NONE) {
-    LogInfo("Received Mode None request, turning off localizer.");
+    LogDebug("Received Mode None request, turning off localizer.");
     DisableLocalizer();
   } else if (last_mode == ff_msgs::SetEkfInputRequest::MODE_NONE) {
-    LogInfo(
+    LogDebug(
       "Received Mode request that is not None and current mode is "
       "None, resetting localizer.");
     ResetAndEnableLocalizer();
@@ -105,7 +105,7 @@ bool GraphLocalizerNodelet::SetMode(ff_msgs::SetEkfInput::Request& req, ff_msgs:
   // Might need to resestimate world_T_dock on ar mode switch
   if (input_mode == ff_msgs::SetEkfInputRequest::MODE_AR_TAGS &&
       last_mode != ff_msgs::SetEkfInputRequest::MODE_AR_TAGS) {
-    LogInfo("SetMode: Switching to AR_TAG mode.");
+    LogDebug("SetMode: Switching to AR_TAG mode.");
     graph_localizer_wrapper_.MarkWorldTDockForResettingIfNecessary();
   }
   return true;
@@ -149,7 +149,7 @@ void GraphLocalizerNodelet::ResetAndEnableLocalizer() {
 
 void GraphLocalizerNodelet::OpticalFlowCallback(const ff_msgs::Feature2dArray::ConstPtr& feature_array_msg) {
   of_timer_.HeaderDiff(feature_array_msg->header);
-  of_timer_.LogEveryN(100);
+  of_timer_.VlogEveryN(100, 2);
 
   if (!localizer_enabled()) return;
   graph_localizer_wrapper_.OpticalFlowCallback(*feature_array_msg);
@@ -157,7 +157,7 @@ void GraphLocalizerNodelet::OpticalFlowCallback(const ff_msgs::Feature2dArray::C
 
 void GraphLocalizerNodelet::VLVisualLandmarksCallback(const ff_msgs::VisualLandmarks::ConstPtr& visual_landmarks_msg) {
   vl_timer_.HeaderDiff(visual_landmarks_msg->header);
-  vl_timer_.LogEveryN(100);
+  vl_timer_.VlogEveryN(100, 2);
 
   if (!localizer_enabled()) return;
   graph_localizer_wrapper_.VLVisualLandmarksCallback(*visual_landmarks_msg);
@@ -166,7 +166,7 @@ void GraphLocalizerNodelet::VLVisualLandmarksCallback(const ff_msgs::VisualLandm
 
 void GraphLocalizerNodelet::ARVisualLandmarksCallback(const ff_msgs::VisualLandmarks::ConstPtr& visual_landmarks_msg) {
   ar_timer_.HeaderDiff(visual_landmarks_msg->header);
-  ar_timer_.LogEveryN(100);
+  ar_timer_.VlogEveryN(100, 2);
 
   if (!localizer_enabled()) return;
   graph_localizer_wrapper_.ARVisualLandmarksCallback(*visual_landmarks_msg);
@@ -176,7 +176,7 @@ void GraphLocalizerNodelet::ARVisualLandmarksCallback(const ff_msgs::VisualLandm
 
 void GraphLocalizerNodelet::ImuCallback(const sensor_msgs::Imu::ConstPtr& imu_msg) {
   imu_timer_.HeaderDiff(imu_msg->header);
-  imu_timer_.LogEveryN(100);
+  imu_timer_.VlogEveryN(100, 2);
 
   if (!localizer_enabled()) return;
   graph_localizer_wrapper_.ImuCallback(*imu_msg);
@@ -185,7 +185,7 @@ void GraphLocalizerNodelet::ImuCallback(const sensor_msgs::Imu::ConstPtr& imu_ms
 void GraphLocalizerNodelet::PublishLocalizationState() {
   const auto latest_localization_state_msg = graph_localizer_wrapper_.LatestLocalizationStateMsg();
   if (!latest_localization_state_msg) {
-    LogWarningEveryN(100, "PublishLocalizationState: Failed to get latest localization state msg.");
+    LogDebugEveryN(100, "PublishLocalizationState: Failed to get latest localization state msg.");
     return;
   }
   state_pub_.publish(*latest_localization_state_msg);
@@ -194,7 +194,7 @@ void GraphLocalizerNodelet::PublishLocalizationState() {
 void GraphLocalizerNodelet::PublishLocalizationGraph() {
   const auto latest_localization_graph_msg = graph_localizer_wrapper_.LatestLocalizationGraphMsg();
   if (!latest_localization_graph_msg) {
-    LogWarningEveryN(100, "PublishLocalizationGraph: Failed to get latest localization graph msg.");
+    LogDebugEveryN(100, "PublishLocalizationGraph: Failed to get latest localization graph msg.");
     return;
   }
   graph_pub_.publish(*latest_localization_graph_msg);
@@ -265,7 +265,7 @@ void GraphLocalizerNodelet::Run() {
   while (ros::ok()) {
     callbacks_timer_.Start();
     private_queue_.callAvailable();
-    callbacks_timer_.StopAndLogEveryN(100);
+    callbacks_timer_.StopAndVlogEveryN(100, 2);
     graph_localizer_wrapper_.Update();
     PublishGraphMessages();
     PublishHeartbeat();

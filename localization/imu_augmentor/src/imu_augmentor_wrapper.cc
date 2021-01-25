@@ -52,7 +52,7 @@ ImuAugmentorWrapper::ImuAugmentorWrapper(const std::string& graph_config_path_pr
 }
 
 void ImuAugmentorWrapper::LocalizationStateCallback(const ff_msgs::EkfState& loc_msg) {
-  loc_state_timer_.RecordAndLogEveryN(10);
+  loc_state_timer_.RecordAndVlogEveryN(10, 2);
 
   latest_combined_nav_state_ = lc::CombinedNavStateFromMsg(loc_msg);
   latest_covariances_ = lc::CombinedNavStateCovariancesFromMsg(loc_msg);
@@ -85,7 +85,7 @@ ImuAugmentorWrapper::LatestImuAugmentedCombinedNavStateAndCovariances() {
   }
 
   if (standstill()) {
-    LogInfoEveryN(100, "LatestImuAugmentedCombinedNavStateAndCovariances: Standstill.");
+    LogDebugEveryN(100, "LatestImuAugmentedCombinedNavStateAndCovariances: Standstill.");
     return std::pair<lc::CombinedNavState, lc::CombinedNavStateCovariances>{*latest_combined_nav_state_,
                                                                             *latest_covariances_};
   }
@@ -102,7 +102,7 @@ ImuAugmentorWrapper::LatestImuAugmentedCombinedNavStateAndCovariances() {
 
 boost::optional<ff_msgs::EkfState> ImuAugmentorWrapper::LatestImuAugmentedLocalizationMsg() {
   if (!latest_loc_msg_) {
-    LogWarningEveryN(50, "LatestImuAugmentedLocalizationMsg: No latest loc msg available.");
+    LogDebugEveryN(50, "LatestImuAugmentedLocalizationMsg: No latest loc msg available.");
     return boost::none;
   }
 

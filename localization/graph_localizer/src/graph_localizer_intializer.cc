@@ -63,12 +63,12 @@ void GraphLocalizerInitializer::RemoveGravityFromBiasIfPossibleAndNecessary() {
   if (!HasStartPose() || !HasBiases()) return;
   // Biases, start pose and params are available and gravity is non zero, gravity can and should now be removed
   // from the initial bias estimates.
-  LogInfo("RemoveGravityFromBiasIfPossibleAndNecessary: Removing gravity from initial biases.");
+  LogDebug("RemoveGravityFromBiasIfPossibleAndNecessary: Removing gravity from initial biases.");
   RemoveGravityFromBias(params_.graph_initializer.gravity, params_.graph_initializer.body_T_imu,
                         params_.graph_initializer.global_T_body_start, params_.graph_initializer.initial_imu_bias);
 
-  LogInfo("RemoveGravityFromBiasIfPossibleAndNecessary: New gravity corrected accelerometer bias: "
-          << params_.graph_initializer.initial_imu_bias.accelerometer().matrix());
+  LogDebug("RemoveGravityFromBiasIfPossibleAndNecessary: New gravity corrected accelerometer bias: "
+           << params_.graph_initializer.initial_imu_bias.accelerometer().matrix());
   removed_gravity_from_bias_if_necessary_ = true;
   return;
 }
@@ -145,8 +145,8 @@ void GraphLocalizerInitializer::EstimateAndSetImuBiases(
     "Number of imu measurements per bias estimate: " << params_.graph_initializer.num_bias_estimation_measurements);
   const Eigen::Vector3d accelerometer_bias = sum_of_acceleration_measurements / imu_bias_measurements_.size();
   const Eigen::Vector3d gyro_bias = sum_of_angular_velocity_measurements / imu_bias_measurements_.size();
-  LogInfo("Accelerometer bias: " << std::endl << accelerometer_bias.matrix());
-  LogInfo("Gyro bias: " << std::endl << gyro_bias.matrix());
+  LogDebug("Accelerometer bias: " << std::endl << accelerometer_bias.matrix());
+  LogDebug("Gyro bias: " << std::endl << gyro_bias.matrix());
 
   gtsam::imuBias::ConstantBias biases(accelerometer_bias, gyro_bias);
   SetBiases(biases, false, true);

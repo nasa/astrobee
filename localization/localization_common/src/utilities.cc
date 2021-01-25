@@ -78,11 +78,11 @@ void LoadGraphLocalizerConfig(config_reader::ConfigReader& config, const std::st
   const std::string loaded_world(world);
   if (loaded_world == "iss") {
     config.AddFile((path_prefix + "iss_graph_localizer.config").c_str());
-    LogInfo("LoadGraphLocalizerconfig: Loaded iss graph localizer config.");
+    LogDebug("LoadGraphLocalizerconfig: Loaded iss graph localizer config.");
     return;
   } else if (loaded_world == "granite") {
     config.AddFile((path_prefix + "granite_graph_localizer.config").c_str());
-    LogInfo("LoadGraphLocalizerconfig: Loaded granite graph localizer config.");
+    LogDebug("LoadGraphLocalizerconfig: Loaded granite graph localizer config.");
     return;
   } else {
     LogFatal("LoadGraphLocalizerConfig: ASTROBEE_WORLD environment variable not set to iss or granite.");

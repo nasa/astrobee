@@ -108,7 +108,7 @@ GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
   } else if (params_.marginals_factorization == "cholesky") {
     marginals_factorization_ = gtsam::Marginals::Factorization::CHOLESKY;
   } else {
-    LogWarning("GraphLocalizer: No marginals factorization entered, defaulting to qr.");
+    LogError("GraphLocalizer: No marginals factorization entered, defaulting to qr.");
     marginals_factorization_ = gtsam::Marginals::Factorization::QR;
   }
 
@@ -171,12 +171,12 @@ void GraphLocalizer::AddPriors(const lc::CombinedNavState& global_N_body, const 
 boost::optional<std::pair<lc::CombinedNavState, lc::CombinedNavStateCovariances>>
 GraphLocalizer::LatestCombinedNavStateAndCovariances() const {
   if (!marginals_) {
-    LogErrorEveryN(50, "LatestCombinedNavStateAndCovariances: No marginals available.");
+    LogDebugEveryN(50, "LatestCombinedNavStateAndCovariances: No marginals available.");
     return boost::none;
   }
   const auto state_covariance_pair = LatestCombinedNavStateAndCovariances(*marginals_);
   if (!state_covariance_pair) {
-    LogError(
+    LogDebug(
       "LatestCombinedNavStateAndCovariances: Failed to get latest combined nav state and "
       "covariances.");
     return boost::none;
@@ -225,7 +225,7 @@ boost::optional<lc::CombinedNavState> GraphLocalizer::LatestCombinedNavState() c
 boost::optional<lc::CombinedNavState> GraphLocalizer::GetCombinedNavState(const lc::Time time) const {
   const auto lower_bound_or_equal_combined_nav_state = graph_values_->LowerBoundOrEqualCombinedNavState(time);
   if (!lower_bound_or_equal_combined_nav_state) {
-    LogError("GetCombinedNavState: Failed to get lower bound or equal combined nav state.");
+    LogDebug("GetCombinedNavState: Failed to get lower bound or equal combined nav state.");
     return boost::none;
   }
 
@@ -267,24 +267,24 @@ void GraphLocalizer::AddImuMeasurement(const lm::ImuMeasurement& imu_measurement
 bool GraphLocalizer::AddOpticalFlowMeasurement(
   const lm::FeaturePointsMeasurement& optical_flow_feature_points_measurement) {
   if (!MeasurementRecentEnough(optical_flow_feature_points_measurement.timestamp)) {
-    LogWarning("AddOpticalFlowMeasurement: Measurement too old - discarding.");
+    LogDebug("AddOpticalFlowMeasurement: Measurement too old - discarding.");
     return false;
   }
 
   // TODO(rsoussan): This is a bug in optical flow node, fix there
   static lc::Time last_time = optical_flow_feature_points_measurement.timestamp;
   if (last_time == optical_flow_feature_points_measurement.timestamp) {
-    LogWarning("AddOpticalFlowMeasurement: Same timestamp measurement, ignoring.");
+    LogDebug("AddOpticalFlowMeasurement: Same timestamp measurement, ignoring.");
     last_time = optical_flow_feature_points_measurement.timestamp;
     return false;
   }
   last_time = optical_flow_feature_points_measurement.timestamp;
 
-  LogInfo("AddOpticalFlowMeasurement: Adding optical flow measurement.");
+  LogDebug("AddOpticalFlowMeasurement: Adding optical flow measurement.");
   feature_tracker_->UpdateFeatureTracks(optical_flow_feature_points_measurement.feature_points);
 
   if (optical_flow_feature_points_measurement.feature_points.empty()) {
-    LogWarning("AddOpticalFlowMeasurement: Empty measurement.");
+    LogDebug("AddOpticalFlowMeasurement: Empty measurement.");
     return false;
   }
 
@@ -323,19 +323,19 @@ void GraphLocalizer::CheckForStandstill() {
 
   standstill_ = (num_valid_feature_tracks >= 5 &&
                  average_distance_from_mean <= params_.max_standstill_feature_track_avg_distance_from_mean);
-  if (*standstill_) LogInfo("CheckForStandstill: Standstill.");
+  if (*standstill_) LogDebug("CheckForStandstill: Standstill.");
 }
 
 void GraphLocalizer::AddARTagMeasurement(const lm::MatchedProjectionsMeasurement& matched_projections_measurement) {
   if (!MeasurementRecentEnough(matched_projections_measurement.timestamp)) {
-    LogWarning("AddARTagMeasurement: Measurement too old - discarding.");
+    LogDebug("AddARTagMeasurement: Measurement too old - discarding.");
     return;
   }
 
   if (params_.factor.ar_tag_loc_adder.enabled &&
       static_cast<int>(matched_projections_measurement.matched_projections.size()) >=
         params_.factor.ar_tag_loc_adder.min_num_matches) {
-    LogInfo("AddARTagMeasurement: Adding AR tag measurement.");
+    LogDebug("AddARTagMeasurement: Adding AR tag measurement.");
     BufferFactors(ar_tag_loc_factor_adder_->AddFactors(matched_projections_measurement));
   }
 }
@@ -343,12 +343,12 @@ void GraphLocalizer::AddARTagMeasurement(const lm::MatchedProjectionsMeasurement
 void GraphLocalizer::AddSparseMappingMeasurement(
   const lm::MatchedProjectionsMeasurement& matched_projections_measurement) {
   if (!MeasurementRecentEnough(matched_projections_measurement.timestamp)) {
-    LogWarning("AddSparseMappingMeasurement: Measurement too old - discarding.");
+    LogDebug("AddSparseMappingMeasurement: Measurement too old - discarding.");
     return;
   }
 
   if (params_.factor.loc_adder.enabled) {
-    LogInfo("AddSparseMappingMeasurement: Adding sparse mapping measurement.");
+    LogDebug("AddSparseMappingMeasurement: Adding sparse mapping measurement.");
     BufferFactors(loc_factor_adder_->AddFactors(matched_projections_measurement));
   }
 }
@@ -716,7 +716,7 @@ bool GraphLocalizer::SlideWindow(const boost::optional<gtsam::Marginals>& margin
   // Ensure that new oldest time isn't more recent than last latest time
   // since then priors couldn't be added for the new oldest state
   if (last_latest_time < *graph_values_ideal_new_oldest_time)
-    LogWarning("SlideWindow: Ideal oldest time is more recent than last latest time.");
+    LogError("SlideWindow: Ideal oldest time is more recent than last latest time.");
   const auto new_oldest_time = std::min(last_latest_time, *graph_values_ideal_new_oldest_time);
 
   // Add marginal factors for marginalized values
@@ -915,7 +915,7 @@ void GraphLocalizer::RemoveOldBufferedFactors(const lc::Time oldest_allowed_time
         // Ignore static keys
         if (key_info.is_static()) continue;
         if (key_info.timestamp() < oldest_allowed_timestamp) {
-          LogInfo("RemoveOldBufferedFactors: Removing old factor from buffered factors.");
+          LogDebug("RemoveOldBufferedFactors: Removing old factor from buffered factors.");
           factor_to_add_it = factors_to_add.erase(factor_to_add_it);
           removed_factor = true;
           break;
@@ -924,7 +924,7 @@ void GraphLocalizer::RemoveOldBufferedFactors(const lc::Time oldest_allowed_time
       if (!removed_factor) ++factor_to_add_it;
     }
     if (factors_to_add_it->second.Get().empty()) {
-      LogInfo("RemoveOldBufferedFactors: Removing old factors from buffered factors.");
+      LogDebug("RemoveOldBufferedFactors: Removing old factors from buffered factors.");
       factors_to_add_it = buffered_factors_to_add_.erase(factors_to_add_it);
     } else {
       ++factors_to_add_it;
@@ -933,7 +933,7 @@ void GraphLocalizer::RemoveOldBufferedFactors(const lc::Time oldest_allowed_time
 }
 
 int GraphLocalizer::AddBufferedFactors() {
-  LogInfo("AddBufferedfactors: Adding buffered factors.");
+  LogDebug("AddBufferedfactors: Adding buffered factors.");
   LogDebug("AddBufferedFactors: Num buffered factors to add: " << buffered_factors_to_add_.size());
 
   int num_added_factors = 0;
@@ -973,7 +973,7 @@ int GraphLocalizer::AddBufferedFactors() {
     factors_to_add_it = buffered_factors_to_add_.erase(factors_to_add_it);
   }
 
-  LogInfo("AddBufferedFactors: Added " << num_added_factors << " factors.");
+  LogDebug("AddBufferedFactors: Added " << num_added_factors << " factors.");
   return num_added_factors;
 }
 
@@ -1032,7 +1032,7 @@ bool GraphLocalizer::ReadyToAddMeasurement(const localization_common::Time times
 
 bool GraphLocalizer::MeasurementRecentEnough(const lc::Time timestamp) const {
   if (!latest_imu_integrator_.OldestTime()) {
-    LogWarning("MeasurementRecentEnough: Waiting until imu measurements have been received.");
+    LogDebug("MeasurementRecentEnough: Waiting until imu measurements have been received.");
     return false;
   }
   if (timestamp < graph_values_->OldestTimestamp()) return false;
@@ -1046,18 +1046,18 @@ void GraphLocalizer::PrintFactorDebugInfo() const {
     if (smart_factor) {
       smart_factor->print();
       if (smart_factor->isValid())
-        LogWarning("PrintFactorDebugInfo: SmartFactor valid.");
+        LogDebug("PrintFactorDebugInfo: SmartFactor valid.");
       else
-        LogWarning("PrintFactorDebugInfo: SmartFactor invalid.");
-      if (smart_factor->isDegenerate()) LogWarning("PrintFactorDebugInfo: SmartFactor degenerate.");
-      if (smart_factor->isPointBehindCamera()) LogWarning("PrintFactorDebugInfo: SmartFactor point behind camera.");
-      if (smart_factor->isOutlier()) LogWarning("PrintFactorDebugInfo: SmartFactor is outlier.");
-      if (smart_factor->isFarPoint()) LogWarning("PrintFactorDebugInfo: SmartFactor is far point.");
+        LogDebug("PrintFactorDebugInfo: SmartFactor invalid.");
+      if (smart_factor->isDegenerate()) LogDebug("PrintFactorDebugInfo: SmartFactor degenerate.");
+      if (smart_factor->isPointBehindCamera()) LogDebug("PrintFactorDebugInfo: SmartFactor point behind camera.");
+      if (smart_factor->isOutlier()) LogDebug("PrintFactorDebugInfo: SmartFactor is outlier.");
+      if (smart_factor->isFarPoint()) LogDebug("PrintFactorDebugInfo: SmartFactor is far point.");
     }
     const auto imu_factor = dynamic_cast<gtsam::CombinedImuFactor*>(factor.get());
     if (imu_factor) {
-      LogInfo("PrintFactorDebugInfo: CombinedImuFactor: " << *imu_factor);
-      LogInfo("PrintFactorDebugInfo: CombinedImuFactor PIM: " << imu_factor->preintegratedMeasurements());
+      LogDebug("PrintFactorDebugInfo: CombinedImuFactor: " << *imu_factor);
+      LogDebug("PrintFactorDebugInfo: CombinedImuFactor PIM: " << imu_factor->preintegratedMeasurements());
     }
   }
 }
@@ -1140,7 +1140,7 @@ bool GraphLocalizer::standstill() const {
 }
 
 bool GraphLocalizer::Update() {
-  LogInfo("Update: Updating.");
+  LogDebug("Update: Updating.");
   graph_stats_.update_timer_.Start();
 
   graph_stats_.add_buffered_factors_timer_.Start();
@@ -1148,7 +1148,7 @@ bool GraphLocalizer::Update() {
   const int num_added_factors = AddBufferedFactors();
   graph_stats_.add_buffered_factors_timer_.Stop();
   if (num_added_factors <= 0) {
-    LogWarning("Update: No factors added.");
+    LogDebug("Update: No factors added.");
     return false;
   }
 

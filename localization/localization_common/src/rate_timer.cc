@@ -44,6 +44,11 @@ void RateTimer::RecordAndLogEveryN(const int num_events_per_log) {
   LogEveryN(num_events_per_log);
 }
 
+void RateTimer::RecordAndVlogEveryN(const int num_events_per_log, const int level) {
+  Record();
+  VlogEveryN(num_events_per_log, level);
+}
+
 void RateTimer::Log() const {
   if (num_events_ <= 1) return;
   averager_.Log();
@@ -52,6 +57,11 @@ void RateTimer::Log() const {
 void RateTimer::LogEveryN(const int num_events_per_log) const {
   if (num_events_ <= 1) return;
   averager_.LogEveryN(num_events_per_log);
+}
+
+void RateTimer::VlogEveryN(const int num_events_per_log, const int level) const {
+  if (num_events_ <= 1) return;
+  averager_.VlogEveryN(num_events_per_log, level);
 }
 
 void RateTimer::Vlog(const int level) const {
