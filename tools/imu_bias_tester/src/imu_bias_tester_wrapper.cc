@@ -32,7 +32,7 @@ ImuBiasTesterWrapper::ImuBiasTesterWrapper(const std::string& graph_config_path_
   config_reader::ConfigReader config;
   config.AddFile("transforms.config");
   config.AddFile("geometry.config");
-  lc::LoadGraphLocalizerConfig(config, graph_config_path_prefix);
+  config.AddFile("graph_localizer.config");
 
   if (!config.ReadFiles()) {
     LogFatal("Failed to read config files.");
