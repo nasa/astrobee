@@ -35,7 +35,7 @@ namespace mc = msg_conversions;
 
 GraphLocalizerWrapper::GraphLocalizerWrapper(const std::string& graph_config_path_prefix) : reset_world_T_dock_(false) {
   config_reader::ConfigReader config;
-  config.AddFile("graph_localizer.config");
+  lc::LoadGraphLocalizerConfig(config, graph_config_path_prefix);
   config.AddFile("transforms.config");
   config.AddFile("cameras.config");
   config.AddFile("geometry.config");

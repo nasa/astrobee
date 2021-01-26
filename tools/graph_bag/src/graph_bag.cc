@@ -51,7 +51,7 @@ GraphBag::GraphBag(const std::string& bag_name, const std::string& map_file, con
   config.AddFile("cameras.config");
   config.AddFile("geometry.config");
   config.AddFile("tools/graph_bag.config");
-  config.AddFile("graph_localizer.config");
+  lc::LoadGraphLocalizerConfig(config, graph_config_path_prefix);
 
   if (!config.ReadFiles()) {
     LogFatal("Failed to read config files.");

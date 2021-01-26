@@ -38,7 +38,7 @@ GraphLocalizerNodelet::GraphLocalizerNodelet()
   heartbeat_.nodelet_manager = ros::this_node::getName();
 
   config_reader::ConfigReader config;
-  config.AddFile("graph_localizer.config");
+  lc::LoadGraphLocalizerConfig(config);
   if (!config.ReadFiles()) {
     LogFatal("Failed to read config files.");
   }
