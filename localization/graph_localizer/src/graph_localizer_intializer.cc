@@ -87,8 +87,7 @@ void GraphLocalizerInitializer::ResetStartPose() { has_start_pose_ = false; }
 
 void GraphLocalizerInitializer::ResetBiases() {
   has_biases_ = false;
-  // TODO(rsoussan): Use same filter for biases as used for imu integration?
-  imu_bias_filter_.reset(new imu_integration::ImuFilter(params_.graph_initializer.imu_bias_filter));
+  imu_bias_filter_.reset(new imu_integration::ImuFilter(params_.graph_initializer.filter));
   imu_bias_measurements_.clear();
   StartBiasEstimation();
 }
@@ -150,7 +149,7 @@ void GraphLocalizerInitializer::EstimateAndSetImuBiases(
 
   gtsam::imuBias::ConstantBias biases(accelerometer_bias, gyro_bias);
   SetBiases(biases, false, true);
-  imu_bias_filter_.reset(new imu_integration::ImuFilter(params_.graph_initializer.imu_bias_filter));
+  imu_bias_filter_.reset(new imu_integration::ImuFilter(params_.graph_initializer.filter));
   imu_bias_measurements_.clear();
 }
 

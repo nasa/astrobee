@@ -31,8 +31,6 @@ struct GraphInitializerParams : public imu_integration::LatestImuIntegratorParam
   gtsam::Pose3 global_T_body_start;
   std::string imu_bias_filename;
   int num_bias_estimation_measurements;
-  // TODO(rsoussan): Just use filter params from graph localizer?
-  imu_integration::ImuFilterParams imu_bias_filter;
 };
 }  // namespace graph_localizer
 

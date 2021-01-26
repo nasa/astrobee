@@ -186,7 +186,6 @@ void LoadGraphInitializerParams(config_reader::ConfigReader& config, GraphInitia
   ii::LoadImuIntegratorParams(config, params);
   params.imu_bias_filename = mc::LoadString(config, "imu_bias_file");
   params.num_bias_estimation_measurements = mc::LoadInt(config, "num_bias_estimation_measurements");
-  params.imu_bias_filter.type = mc::LoadString(config, "imu_bias_filter");
 }
 
 void LoadGraphLocalizerParams(config_reader::ConfigReader& config, GraphLocalizerParams& params) {
