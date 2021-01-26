@@ -59,14 +59,13 @@ bool ValidVLMsg(const ff_msgs::VisualLandmarks& visual_landmarks_msg, const int 
   return (static_cast<int>(visual_landmarks_msg.landmarks.size()) >= min_num_landmarks);
 }
 
-ff_msgs::EkfState EkfStateMsg(const lc::CombinedNavState& combined_nav_state, const Eigen::Vector3d& acceleration,
-                              const Eigen::Vector3d& angular_velocity,
-                              const lc::CombinedNavStateCovariances& covariances,
-                              const int num_optical_flow_features_in_last_measurement,
-                              const int num_sparse_mapping_features_in_last_measurement, const bool estimating_bias,
-                              const double position_log_det_threshold, const double orientation_log_det_threshold,
-                              const bool standstill) {
-  ff_msgs::EkfState loc_msg;
+ff_msgs::GraphState GraphStateMsg(const lc::CombinedNavState& combined_nav_state,
+                                  const lc::CombinedNavStateCovariances& covariances,
+                                  const int num_optical_flow_features_in_last_measurement,
+                                  const int num_sparse_mapping_features_in_last_measurement, const bool estimating_bias,
+                                  const double position_log_det_threshold, const double orientation_log_det_threshold,
+                                  const bool standstill, const GraphStats& graph_stats) {
+  ff_msgs::GraphState loc_msg;
 
   // Set Header Frames
   loc_msg.header.frame_id = "world";
@@ -74,12 +73,6 @@ ff_msgs::EkfState EkfStateMsg(const lc::CombinedNavState& combined_nav_state, co
 
   // Set CombinedNavState
   lc::CombinedNavStateToMsg(combined_nav_state, loc_msg);
-
-  // Set Acceleration
-  mc::VectorToMsg(acceleration, loc_msg.accel);
-
-  // Set Angular Velocity
-  mc::VectorToMsg(angular_velocity, loc_msg.omega);
 
   // Set Variances
   lc::CombinedNavStateCovariancesToMsg(covariances, loc_msg);
@@ -95,11 +88,13 @@ ff_msgs::EkfState EkfStateMsg(const lc::CombinedNavState& combined_nav_state, co
     num_sparse_mapping_features_in_last_measurement <= 255 ? num_sparse_mapping_features_in_last_measurement : 255;
   loc_msg.estimating_bias = estimating_bias;
 
-  // Hack to write standstill in place of aug_state_enum which
-  // isn't applicable for graph
-  // TODO(rsoussan): Clean this up
-  loc_msg.aug_state_enum = static_cast<uint8_t>(standstill);
-
+  // Set Graph Stats
+  loc_msg.iterations = graph_stats.iterations_averager_.last_value();
+  loc_msg.optimization_time = graph_stats.optimization_timer_.last_value();
+  loc_msg.update_time = graph_stats.update_timer_.last_value();
+  loc_msg.num_factors = graph_stats.num_factors_averager_.last_value();
+  loc_msg.num_states = graph_stats.num_states_averager_.last_value();
+  loc_msg.standstill = standstill;
   return loc_msg;
 }
 

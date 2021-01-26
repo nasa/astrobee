@@ -42,12 +42,14 @@ class LocStates(poses.Poses):
     self.add_pose(msg.pose, msg.header.stamp)
     self.of_counts.append(msg.of_count)
     self.vl_counts.append(msg.ml_count)
-    self.accelerations.add_vector3d(msg.accel)
+    if hasattr(msg, 'accel'):
+      self.accelerations.add_vector3d(msg.accel)
     self.velocities.add_vector3d(msg.velocity)
-    self.angular_velocities.add_vector3d(msg.omega)
+    if hasattr(msg, 'omega'):
+      self.angular_velocities.add_vector3d(msg.omega)
     self.accelerometer_biases.add_vector3d(msg.accel_bias)
     self.gyro_biases.add_vector3d(msg.gyro_bias)
-    # See EkfState.msg for cov_diag offsets
+    # See GraphState.msg or EkfState.msg for cov_diag offsets
     self.position_covariances.add(msg.cov_diag[12], msg.cov_diag[13], msg.cov_diag[14])
     self.orientation_covariances.add(msg.cov_diag[0], msg.cov_diag[1], msg.cov_diag[2])
     self.velocity_covariances.add(msg.cov_diag[6], msg.cov_diag[7], msg.cov_diag[8])

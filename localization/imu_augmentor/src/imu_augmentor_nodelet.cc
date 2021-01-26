@@ -54,7 +54,7 @@ void ImuAugmentorNodelet::ImuCallback(const sensor_msgs::Imu::ConstPtr& imu_msg)
   imu_augmentor_wrapper_.ImuCallback(*imu_msg);
 }
 
-void ImuAugmentorNodelet::LocalizationStateCallback(const ff_msgs::EkfState::ConstPtr& loc_msg) {
+void ImuAugmentorNodelet::LocalizationStateCallback(const ff_msgs::GraphState::ConstPtr& loc_msg) {
   imu_augmentor_wrapper_.LocalizationStateCallback(*loc_msg);
 }
 

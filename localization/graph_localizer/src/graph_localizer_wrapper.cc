@@ -188,7 +188,7 @@ void GraphLocalizerWrapper::ARVisualLandmarksCallback(const ff_msgs::VisualLandm
     ar_tag_pose_ = std::make_pair(frame_changed_ar_measurements.global_T_cam *
                                     graph_localizer_initializer_.params().calibration.body_T_dock_cam.inverse(),
                                   frame_changed_ar_measurements.timestamp);
-    // TODO(rsoussan): Make seperate ar count, update EkfState
+    // TODO(rsoussan): Make seperate ar count, update GraphState and EkfState
     feature_counts_.vl = visual_landmarks_msg.landmarks.size();
   }
 }
@@ -273,7 +273,7 @@ boost::optional<lc::CombinedNavState> GraphLocalizerWrapper::LatestCombinedNavSt
   return latest_combined_nav_state;
 }
 
-boost::optional<ff_msgs::EkfState> GraphLocalizerWrapper::LatestLocalizationStateMsg() {
+boost::optional<ff_msgs::GraphState> GraphLocalizerWrapper::LatestLocalizationStateMsg() {
   if (!graph_localizer_) {
     LogDebugEveryN(50, "LatestLocalizationMsg: Graph localizater not initialized yet.");
     return boost::none;
@@ -283,14 +283,12 @@ boost::optional<ff_msgs::EkfState> GraphLocalizerWrapper::LatestLocalizationStat
     LogDebugEveryN(50, "LatestLocalizationMsg: No combined nav state and covariances available.");
     return boost::none;
   }
-  // Angular velocity and acceleration are added by imu integrator
-  const auto ekf_state_msg =
-    EkfStateMsg(combined_nav_state_and_covariances->first, Eigen::Vector3d::Zero(), Eigen::Vector3d::Zero(),
-                combined_nav_state_and_covariances->second, feature_counts_.of, feature_counts_.vl,
-                graph_localizer_initializer_.EstimateBiases(), position_cov_log_det_lost_threshold_,
-                orientation_cov_log_det_lost_threshold_, graph_localizer_->standstill());
+  const auto graph_state_msg = GraphStateMsg(
+    combined_nav_state_and_covariances->first, combined_nav_state_and_covariances->second, feature_counts_.of,
+    feature_counts_.vl, graph_localizer_initializer_.EstimateBiases(), position_cov_log_det_lost_threshold_,
+    orientation_cov_log_det_lost_threshold_, graph_localizer_->standstill(), graph_localizer_->graph_stats());
   feature_counts_.Reset();
-  return ekf_state_msg;
+  return graph_state_msg;
 }
 
 boost::optional<ff_msgs::LocalizationGraph> GraphLocalizerWrapper::LatestLocalizationGraphMsg() const {

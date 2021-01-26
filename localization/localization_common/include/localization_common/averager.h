@@ -39,6 +39,7 @@ class Averager {
   void Update(const double value);
   double average() const;
   int count() const;
+  double last_value() const;
   void Log() const;
   void LogToFile(std::ofstream& ofstream) const;
   void LogToCsv(std::ofstream& ofstream) const;

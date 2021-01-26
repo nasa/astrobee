@@ -49,11 +49,13 @@ class GraphBag {
   void InitializeGraph();
   void SaveOpticalFlowTracksImage(const sensor_msgs::ImageConstPtr& image_msg,
                                   const graph_localizer::FeatureTrackMap& feature_tracks);
-  void SavePoseMsg(const geometry_msgs::PoseStamped& pose_msg, const std::string& pose_topic);
-  void SavePose(const geometry_msgs::PoseStamped& latest_pose_msg);
   void SaveImuBiasTesterPredictedStates(
     const std::vector<localization_common::CombinedNavState>& imu_bias_tester_predicted_states);
-  void SaveLocState(const ff_msgs::EkfState& loc_msg, const std::string& topic);
+  template <typename MsgType>
+  void SaveMsg(const MsgType& msg, const std::string& topic) {
+    const ros::Time timestamp = localization_common::RosTimeFromHeader(msg.header);
+    results_bag_.write("/" + topic, timestamp, msg);
+  }
 
   std::unique_ptr<GraphLocalizerSimulator> graph_localizer_simulator_;
   std::unique_ptr<LiveMeasurementSimulator> live_measurement_simulator_;

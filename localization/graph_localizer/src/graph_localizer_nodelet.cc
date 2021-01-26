@@ -16,7 +16,7 @@
  * under the License.
  */
 
-#include <ff_msgs/EkfState.h>
+#include <ff_msgs/GraphState.h>
 #include <ff_msgs/LocalizationGraph.h>
 #include <ff_util/ff_names.h>
 #include <graph_localizer/graph_localizer_nodelet.h>
@@ -53,7 +53,7 @@ void GraphLocalizerNodelet::Initialize(ros::NodeHandle* nh) {
 }
 
 void GraphLocalizerNodelet::SubscribeAndAdvertise(ros::NodeHandle* nh) {
-  state_pub_ = nh->advertise<ff_msgs::EkfState>(TOPIC_GRAPH_LOC_STATE, 10);
+  state_pub_ = nh->advertise<ff_msgs::GraphState>(TOPIC_GRAPH_LOC_STATE, 10);
   sparse_mapping_pose_pub_ = nh->advertise<geometry_msgs::PoseStamped>(TOPIC_SPARSE_MAPPING_POSE, 10);
   ar_tag_pose_pub_ = nh->advertise<geometry_msgs::PoseStamped>(TOPIC_AR_TAG_POSE, 10);
   graph_pub_ = nh->advertise<ff_msgs::LocalizationGraph>(TOPIC_GRAPH_LOC, 10);

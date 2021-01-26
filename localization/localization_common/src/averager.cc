@@ -40,6 +40,8 @@ double Averager::average() const { return boost::accumulators::mean(accumulator_
 
 int Averager::count() const { return boost::accumulators::count(accumulator_); }
 
+double Averager::last_value() const { return last_value_; }
+
 std::string Averager::LastValueString() const {
   std::stringstream ss;
   ss << name_ + spacer_ + type_name_ + ": " << last_value_ << spacer_ + units_;

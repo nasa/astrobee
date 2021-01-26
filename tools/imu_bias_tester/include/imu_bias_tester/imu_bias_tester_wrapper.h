@@ -18,7 +18,7 @@
 #ifndef IMU_BIAS_TESTER_IMU_BIAS_TESTER_WRAPPER_H_
 #define IMU_BIAS_TESTER_IMU_BIAS_TESTER_WRAPPER_H_
 
-#include <ff_msgs/EkfState.h>
+#include <ff_msgs/GraphState.h>
 #include <imu_bias_tester/imu_bias_tester.h>
 #include <localization_common/combined_nav_state.h>
 
@@ -34,7 +34,7 @@ class ImuBiasTesterWrapper {
  public:
   explicit ImuBiasTesterWrapper(const std::string& graph_config_path_prefix = "");
   // Returns predicted nav states
-  std::vector<localization_common::CombinedNavState> LocalizationStateCallback(const ff_msgs::EkfState& loc_msg);
+  std::vector<localization_common::CombinedNavState> LocalizationStateCallback(const ff_msgs::GraphState& loc_msg);
   void ImuCallback(const sensor_msgs::Imu& imu_msg);
 
  private:

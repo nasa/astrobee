@@ -55,4 +55,6 @@ void Timer::StopAndVlogEveryN(const int num_events_per_log, const int level) {
 }
 
 void Timer::Vlog(const int level) const { averager_.Vlog(level); }
+
+double Timer::last_value() const { return averager_.last_value(); }
 }  // namespace localization_common

@@ -43,7 +43,7 @@ ImuBiasTesterWrapper::ImuBiasTesterWrapper(const std::string& graph_config_path_
   imu_bias_tester_.reset(new ImuBiasTester(params));
 }
 
-std::vector<lc::CombinedNavState> ImuBiasTesterWrapper::LocalizationStateCallback(const ff_msgs::EkfState& loc_msg) {
+std::vector<lc::CombinedNavState> ImuBiasTesterWrapper::LocalizationStateCallback(const ff_msgs::GraphState& loc_msg) {
   const auto combined_nav_state = lc::CombinedNavStateFromMsg(loc_msg);
   return imu_bias_tester_->PimPredict(combined_nav_state);
 }

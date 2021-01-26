@@ -19,11 +19,12 @@
 #ifndef GRAPH_LOCALIZER_UTILITIES_H_
 #define GRAPH_LOCALIZER_UTILITIES_H_
 
-#include <ff_msgs/EkfState.h>
+#include <ff_msgs/GraphState.h>
 #include <ff_msgs/LocalizationGraph.h>
 #include <ff_msgs/VisualLandmarks.h>
 #include <graph_localizer/graph_localizer.h>
 #include <graph_localizer/graph_localizer_initializer.h>
+#include <graph_localizer/graph_stats.h>
 #include <localization_common/combined_nav_state.h>
 #include <localization_common/combined_nav_state_covariances.h>
 #include <localization_measurements/feature_point.h>
@@ -53,13 +54,12 @@ double AverageDistanceFromMean(const std::deque<localization_measurements::Featu
 
 bool ValidVLMsg(const ff_msgs::VisualLandmarks& visual_landmarks_msg, const int min_num_landmarks);
 
-ff_msgs::EkfState EkfStateMsg(const localization_common::CombinedNavState& combined_nav_state,
-                              const Eigen::Vector3d& acceleration, const Eigen::Vector3d& angular_velocity,
-                              const localization_common::CombinedNavStateCovariances& covariances,
-                              const int num_optical_flow_features_in_last_measurement,
-                              const int num_sparse_mapping_features_in_last_measurement, const bool estimating_bias,
-                              const double position_log_det_threshold, const double orientation_log_det_threshold,
-                              const bool standstill);
+ff_msgs::GraphState GraphStateMsg(const localization_common::CombinedNavState& combined_nav_state,
+                                  const localization_common::CombinedNavStateCovariances& covariances,
+                                  const int num_optical_flow_features_in_last_measurement,
+                                  const int num_sparse_mapping_features_in_last_measurement, const bool estimating_bias,
+                                  const double position_log_det_threshold, const double orientation_log_det_threshold,
+                                  const bool standstill, const GraphStats& graph_stats);
 
 ff_msgs::LocalizationGraph GraphMsg(const GraphLocalizer& graph_localizer);
 

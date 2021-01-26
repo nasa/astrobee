@@ -18,7 +18,7 @@
 #ifndef GRAPH_LOCALIZER_GRAPH_LOCALIZER_WRAPPER_H_
 #define GRAPH_LOCALIZER_GRAPH_LOCALIZER_WRAPPER_H_
 
-#include <ff_msgs/EkfState.h>
+#include <ff_msgs/GraphState.h>
 #include <ff_msgs/Feature2dArray.h>
 #include <ff_msgs/LocalizationGraph.h>
 #include <ff_msgs/VisualLandmarks.h>
@@ -59,7 +59,7 @@ class GraphLocalizerWrapper {
 
   boost::optional<localization_common::CombinedNavState> LatestCombinedNavState() const;
 
-  boost::optional<ff_msgs::EkfState> LatestLocalizationStateMsg();
+  boost::optional<ff_msgs::GraphState> LatestLocalizationStateMsg();
 
   boost::optional<ff_msgs::LocalizationGraph> LatestLocalizationGraphMsg() const;
 

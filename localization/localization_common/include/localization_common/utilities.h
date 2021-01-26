@@ -20,11 +20,12 @@
 #define LOCALIZATION_COMMON_UTILITIES_H_
 
 #include <config_reader/config_reader.h>
-#include <ff_msgs/EkfState.h>
+#include <ff_msgs/GraphState.h>
 #include <ff_msgs/VisualLandmarks.h>
 #include <localization_common/combined_nav_state.h>
 #include <localization_common/combined_nav_state_covariances.h>
 #include <localization_common/time.h>
+#include <msg_conversions/msg_conversions.h>
 
 #include <gtsam/geometry/Cal3_S2.h>
 #include <gtsam/geometry/Pose3.h>
@@ -85,19 +86,43 @@ geometry_msgs::TransformStamped PoseToTF(const gtsam::Pose3& pose, const std::st
                                          const std::string& child_frame, const Time timestamp,
                                          const std::string& platform_name = "");
 
-CombinedNavState CombinedNavStateFromMsg(const ff_msgs::EkfState& loc_msg);
+CombinedNavState CombinedNavStateFromMsg(const ff_msgs::GraphState& loc_msg);
 
-void CombinedNavStateToMsg(const CombinedNavState& combined_nav_state, ff_msgs::EkfState& loc_msg);
-
-CombinedNavStateCovariances CombinedNavStateCovariancesFromMsg(const ff_msgs::EkfState& loc_msg);
-
-void CombinedNavStateCovariancesToMsg(const CombinedNavStateCovariances& covariances, ff_msgs::EkfState& loc_msg);
+CombinedNavStateCovariances CombinedNavStateCovariancesFromMsg(const ff_msgs::GraphState& loc_msg);
 
 // Returns gravity corrected accelerometer measurement
 gtsam::Vector3 RemoveGravityFromAccelerometerMeasurement(const gtsam::Vector3& global_F_gravity,
                                                          const gtsam::Pose3& body_T_imu,
                                                          const gtsam::Pose3& global_T_body,
                                                          const gtsam::Vector3& uncorrected_accelerometer_measurement);
+
+template <class LocMsgType>
+void CombinedNavStateToMsg(const CombinedNavState& combined_nav_state, LocMsgType& loc_msg) {
+  PoseToMsg(combined_nav_state.pose(), loc_msg.pose);
+  msg_conversions::VectorToMsg(combined_nav_state.velocity(), loc_msg.velocity);
+  msg_conversions::VectorToMsg(combined_nav_state.bias().accelerometer(), loc_msg.accel_bias);
+  msg_conversions::VectorToMsg(combined_nav_state.bias().gyroscope(), loc_msg.gyro_bias);
+  TimeToHeader(combined_nav_state.timestamp(), loc_msg.header);
+}
+
+template <class LocMsgType>
+void CombinedNavStateCovariancesToMsg(const CombinedNavStateCovariances& covariances, LocMsgType& loc_msg) {
+  // Orientation (0-2)
+  msg_conversions::VariancesToCovDiag(covariances.orientation_variances(), &loc_msg.cov_diag[0]);
+
+  // Gyro Bias (3-5)
+  msg_conversions::VariancesToCovDiag(covariances.gyro_bias_variances(), &loc_msg.cov_diag[3]);
+
+  // Velocity (6-8)
+  msg_conversions::VariancesToCovDiag(covariances.velocity_variances(), &loc_msg.cov_diag[6]);
+
+  // Accel Bias (9-11)
+  msg_conversions::VariancesToCovDiag(covariances.accel_bias_variances(), &loc_msg.cov_diag[9]);
+
+  // Position (12-14)
+  msg_conversions::VariancesToCovDiag(covariances.position_variances(), &loc_msg.cov_diag[12]);
+}
+
 }  // namespace localization_common
 
 #endif  // LOCALIZATION_COMMON_UTILITIES_H_

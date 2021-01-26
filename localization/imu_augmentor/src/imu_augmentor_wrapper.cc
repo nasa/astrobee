@@ -51,17 +51,13 @@ ImuAugmentorWrapper::ImuAugmentorWrapper(const std::string& graph_config_path_pr
   preintegration_helper_.reset(new gtsam::TangentPreintegration(preintegration_params, gtsam::imuBias::ConstantBias()));
 }
 
-void ImuAugmentorWrapper::LocalizationStateCallback(const ff_msgs::EkfState& loc_msg) {
+void ImuAugmentorWrapper::LocalizationStateCallback(const ff_msgs::GraphState& loc_msg) {
   loc_state_timer_.RecordAndVlogEveryN(10, 2);
 
   latest_combined_nav_state_ = lc::CombinedNavStateFromMsg(loc_msg);
   latest_covariances_ = lc::CombinedNavStateCovariancesFromMsg(loc_msg);
   latest_loc_msg_ = loc_msg;
-  // TODO(rsoussan): Clean this up
-  if (loc_msg.aug_state_enum == 0)
-    standstill_ = false;
-  else
-    standstill_ = true;
+  standstill_ = loc_msg.standstill;
 }
 
 bool ImuAugmentorWrapper::standstill() const {
@@ -114,7 +110,13 @@ boost::optional<ff_msgs::EkfState> ImuAugmentorWrapper::LatestImuAugmentedLocali
   }
 
   // Get feature counts and other info from latest_loc_msg
-  auto latest_imu_augmented_loc_msg = *latest_loc_msg_;
+  ff_msgs::EkfState latest_imu_augmented_loc_msg;
+  latest_imu_augmented_loc_msg.header = latest_loc_msg_->header;
+  latest_imu_augmented_loc_msg.child_frame_id = latest_loc_msg_->child_frame_id;
+  latest_imu_augmented_loc_msg.confidence = latest_loc_msg_->confidence;
+  latest_imu_augmented_loc_msg.of_count = latest_loc_msg_->of_count;
+  latest_imu_augmented_loc_msg.ml_count = latest_loc_msg_->ml_count;
+  latest_imu_augmented_loc_msg.estimating_bias = latest_loc_msg_->estimating_bias;
 
   // Update nav state and covariances with latest imu measurements
   lc::CombinedNavStateToMsg(latest_imu_augmented_combined_nav_state_and_covariances->first,

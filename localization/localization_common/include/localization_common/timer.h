@@ -41,6 +41,7 @@ class Timer {
   void StopAndLogEveryN(const int num_events_per_log);
   void StopAndVlogEveryN(const int num_events_per_log, const int level);
   void Vlog(const int level = 2) const;
+  double last_value() const;
 
  private:
   std::chrono::time_point<std::chrono::steady_clock> start_time_;
