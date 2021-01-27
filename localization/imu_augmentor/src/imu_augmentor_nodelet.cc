@@ -19,11 +19,13 @@
 #include <ff_util/ff_names.h>
 #include <imu_augmentor/imu_augmentor_nodelet.h>
 #include <localization_common/logger.h>
+#include <localization_common/utilities.h>
 
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/TwistStamped.h>
 
 namespace imu_augmentor {
+namespace lc = localization_common;
 
 ImuAugmentorNodelet::ImuAugmentorNodelet()
     : ff_util::FreeFlyerNodelet(NODE_IMU_AUG, true), platform_name_(GetPlatform()) {
@@ -64,7 +66,11 @@ boost::optional<ff_msgs::EkfState> ImuAugmentorNodelet::PublishLatestImuAugmente
     LogDebugEveryN(100, "PublishLatestImuAugmentedLocalizationState: Failed to get latest imu augmented loc msg.");
     return boost::none;
   }
+  const auto timestamp = lc::TimeFromHeader(latest_imu_augmented_loc_msg->header);
+  // Avoid sending repeat msgs
+  if (timestamp == last_imu_augmented_loc_msg_timestamp_) return boost::none;
   state_pub_.publish(*latest_imu_augmented_loc_msg);
+  last_imu_augmented_loc_msg_timestamp_ = timestamp;
   return latest_imu_augmented_loc_msg;
 }
 
