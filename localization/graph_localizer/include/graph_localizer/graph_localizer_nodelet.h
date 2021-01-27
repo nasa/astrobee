@@ -107,6 +107,7 @@ class GraphLocalizerNodelet : public ff_util::FreeFlyerNodelet {
   ff_msgs::Heartbeat heartbeat_;
   int ar_min_num_landmarks_;
   int sparse_mapping_min_num_landmarks_;
+  int last_mode_ = -1;
 
   // Timers
   localization_common::RosTimer vl_timer_ = localization_common::RosTimer("VL msg");

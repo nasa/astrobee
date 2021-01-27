@@ -91,12 +91,11 @@ void GraphLocalizerNodelet::SubscribeAndAdvertise(ros::NodeHandle* nh) {
 
 bool GraphLocalizerNodelet::SetMode(ff_msgs::SetEkfInput::Request& req, ff_msgs::SetEkfInput::Response& res) {
   const auto input_mode = req.mode;
-  static int last_mode = -1;
   if (input_mode == ff_msgs::SetEkfInputRequest::MODE_NONE) {
-    LogDebug("Received Mode None request, turning off localizer.");
+    LogInfo("Received Mode None request, turning off localizer.");
     DisableLocalizer();
-  } else if (last_mode == ff_msgs::SetEkfInputRequest::MODE_NONE) {
-    LogDebug(
+  } else if (last_mode_ == ff_msgs::SetEkfInputRequest::MODE_NONE) {
+    LogInfo(
       "Received Mode request that is not None and current mode is "
       "None, resetting localizer.");
     ResetAndEnableLocalizer();
@@ -104,10 +103,11 @@ bool GraphLocalizerNodelet::SetMode(ff_msgs::SetEkfInput::Request& req, ff_msgs:
 
   // Might need to resestimate world_T_dock on ar mode switch
   if (input_mode == ff_msgs::SetEkfInputRequest::MODE_AR_TAGS &&
-      last_mode != ff_msgs::SetEkfInputRequest::MODE_AR_TAGS) {
-    LogDebug("SetMode: Switching to AR_TAG mode.");
+      last_mode_ != ff_msgs::SetEkfInputRequest::MODE_AR_TAGS) {
+    LogInfo("SetMode: Switching to AR_TAG mode.");
     graph_localizer_wrapper_.MarkWorldTDockForResettingIfNecessary();
   }
+  last_mode_ = input_mode;
   return true;
 }
 
