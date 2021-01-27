@@ -40,8 +40,8 @@ def test_values(values, job_id, value_names, output_dir, bag_file, map_file, ima
                 world, use_image_features):
   new_output_dir = os.path.join(output_dir, str(job_id))
   os.mkdir(new_output_dir)
-  graph_config_filepath = os.path.join(config_path, "config", world + "_graph_localizer.config")
-  new_graph_config_filepath = os.path.join(new_output_dir, world + "_graph_localizer.config")
+  graph_config_filepath = os.path.join(config_path, "config", "graph_localizer.config")
+  new_graph_config_filepath = os.path.join(new_output_dir, "graph_localizer.config")
   config_creator.make_config(values, value_names, graph_config_filepath, new_graph_config_filepath)
   output_bag = os.path.join(new_output_dir, "results.bag")
   output_stats_file = os.path.join(new_output_dir, "graph_stats.csv")
@@ -97,12 +97,17 @@ def make_all_value_combinations(value_ranges):
 def make_value_ranges():
   value_ranges = []
   value_names = []
-  steps = 10
+  steps = 6
 
   # tune num smart factors
-  value_ranges.append(list(np.linspace(1, 100, steps, endpoint=True)))
-  #value_ranges.append(np.logspace(-1, -8, steps, endpoint=True))
-  value_names.append('num_bias_estimation_measurements')
+  value_ranges.append(np.logspace(-1, -6, steps, endpoint=True))
+  value_names.append('accel_sigma')
+  value_ranges.append(np.logspace(-1, -6, steps, endpoint=True))
+  value_names.append('accel_bias_sigma')
+  value_ranges.append(np.logspace(-1, -6, steps, endpoint=True))
+  value_names.append('integration_variance')
+  value_ranges.append(np.logspace(-1, -6, steps, endpoint=True))
+  value_names.append('bias_acc_omega_int')
 
   #q_gyro
   # .001 -> 2 deg
