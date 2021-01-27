@@ -1,5 +1,13 @@
 # Releases
 
+## Release 0.14.0
+
+  * Added graph_localizer package
+  * Added supporting packages for graph localizer including imu_augmetor, imu_integation, localization_common, localization_measurements
+  * Added tools for graph localizer including graph_bag and imu_bias_tester
+  * Added rviz plugins for graph localizer and associated packages in localization_rviz_plugins
+  * Added gtsam debian
+
 ## Release 0.13.0
 
   * Multiple updates to documentation, doxygen is exported to github pages

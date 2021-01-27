@@ -18,7 +18,7 @@
 cmake_minimum_required(VERSION 3.0)
 project(Astrobee)
 
-set(ASTROBEE_VERSION 0.13.0)
+set(ASTROBEE_VERSION 0.14.0)
 
 # Define our options
 option(USE_CCACHE
