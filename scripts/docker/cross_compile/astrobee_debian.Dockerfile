@@ -18,15 +18,22 @@ RUN apt-get update && apt-get install -y \
     python2.7-empy \
     python-nose \
     qt4-default \
+    devscripts \
+    debhelper \
   && rm -rf /var/lib/apt/lists/*
 
 # Copy astrobee code
-COPY . /src/astrobee
+COPY . /home/astrobee/astrobee
 
 # Define the appropriate environment variables
 ARG ARMHF_CHROOT_DIR=/arm_cross/rootfs
 ARG ARMHF_TOOLCHAIN=/arm_cross/toolchain/gcc
+ARG FF_SOURCE=/home/astrobee/astrobee
 
 # Cross-compile
-RUN ./src/astrobee/scripts/configure.sh -a -p /opt/astrobee -b /build
-RUN cd /build && make -j4 install
+RUN ln -s /arm_cross/toolchain/gcc/bin/arm-linux-gnueabihf-strip "/usr/bin/arm-linux-gnueabihf-strip" \
+    && cd /home/astrobee/astrobee && ./scripts/build/build_debian.sh
+
+# Move resulting files to a folder
+RUN mkdir /home/astrobee/debians \
+ && mv -t /home/astrobee/debians /home/astrobee/*.deb /home/astrobee/*.build /home/astrobee/*.changes

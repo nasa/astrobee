@@ -32,7 +32,7 @@ added to the change log that gets edited when the script is run. Also, in the
 change log, change UNRELEASED to testing and change the email address to the
 astrobee fsw email address as in previous log entries.
 
-    ./scripts/setup/debians/update_release.md 0.x.x
+    ./scripts/setup/debians/update_release.sh 0.x.x
 
 
 *Note: Make sure that your EDITOR variable is set to your preferred editor
@@ -58,7 +58,7 @@ On confluence, there is a [release testing procedure](https://babelfish.arc.nasa
 This procedure will walk you through all the testing that needs to be done to
 make sure the debian is flight ready. Please create a copy of the procedure by
 clicking on the ellipsis at the top right corner of the page and selecting copy.
-In the popup, in the 'Parent page' text box, please enter 'Executed Procedure'
+In the popup, in the 'Parent page' text box, please enter 'Executed Procedures'
 and click 'Copy'. Remove 'Copy of' from the title and add the version and date
 after the test number such that it looks like
 'IRG-FFTEST302 - 0.x.x -YYYY-MM-DD - Astrobee Release Testing'. Be sure to fill
@@ -75,16 +75,17 @@ fixes, recreate the debians, and repeat the release testing procedure.
 ## Finish Release
 
 Once the debians pass all the required testing, it is ready to become an
-official flight release. Please make a pull request on astrobee develop and set
-Brian, Katie, or Marina as the reviewer. They will review the request and merge
-it into develop and master. You will also need to copy the debians to a
-temporary location on volar.
+official flight release. Please make two pull requests; one on astrobee develop
+and one on astrobee master. Set Brian, Katie, or Marina as the reviewer. They
+will review the request and do the merging into develop and master. You will
+also need to copy the debians to a temporary location on volar.
 
     scp astrobee0_0.x.x_armhf.deb \
-      <ndc_username>@volar:/home/p-free-flyer/free-flyer/FSW/ars_debs/dists/xenial/main/release_candidate/
+      <ndc_username>@volar:/home/p-free-flyer/free-flyer/FSW/ars_debs/release_candidate/
     scp astrobee-config_0.x.x_all.deb \
-      <ndc_username>@volar:/home/p-free-flyer/free-flyer/FSW/ars_debs/dists/xenial/main/release_candidate/
-
+      <ndc_username>@volar:/home/p-free-flyer/free-flyer/FSW/ars_debs/release_candidate/
+    scp astrobee-dev_0.x.x_armhf.deb \
+      <ndc_username>@volar:/home/p-free-flyer/free-flyer/FSW/ars_debs/release_candidate/
 
 After the debians have been copied to volar, make sure the group permissions are
 set to read and right. Finally, please email Ruben Garcia Ruiz so that he can
