@@ -20,6 +20,7 @@
 #include <ff_msgs/LocalizationGraph.h>
 #include <ff_util/ff_names.h>
 #include <graph_localizer/graph_localizer_nodelet.h>
+#include <graph_localizer/parameter_reader.h>
 #include <graph_localizer/utilities.h>
 #include <localization_common/logger.h>
 #include <localization_common/utilities.h>
@@ -42,8 +43,7 @@ GraphLocalizerNodelet::GraphLocalizerNodelet()
   if (!config.ReadFiles()) {
     LogFatal("Failed to read config files.");
   }
-  sparse_mapping_min_num_landmarks_ = mc::LoadInt(config, "loc_adder_min_num_matches");
-  ar_min_num_landmarks_ = mc::LoadInt(config, "ar_tag_loc_adder_min_num_matches");
+  LoadGraphLocalizerNodeletParams(config, params_);
 }
 
 void GraphLocalizerNodelet::Initialize(ros::NodeHandle* nh) {
@@ -161,7 +161,7 @@ void GraphLocalizerNodelet::VLVisualLandmarksCallback(const ff_msgs::VisualLandm
 
   if (!localizer_enabled()) return;
   graph_localizer_wrapper_.VLVisualLandmarksCallback(*visual_landmarks_msg);
-  if (ValidVLMsg(*visual_landmarks_msg, sparse_mapping_min_num_landmarks_)) PublishSparseMappingPose();
+  if (ValidVLMsg(*visual_landmarks_msg, params_.loc_adder_min_num_matches)) PublishSparseMappingPose();
 }
 
 void GraphLocalizerNodelet::ARVisualLandmarksCallback(const ff_msgs::VisualLandmarks::ConstPtr& visual_landmarks_msg) {
@@ -171,7 +171,7 @@ void GraphLocalizerNodelet::ARVisualLandmarksCallback(const ff_msgs::VisualLandm
   if (!localizer_enabled()) return;
   graph_localizer_wrapper_.ARVisualLandmarksCallback(*visual_landmarks_msg);
   PublishWorldTDockTF();
-  if (ValidVLMsg(*visual_landmarks_msg, ar_min_num_landmarks_)) PublishARTagPose();
+  if (ValidVLMsg(*visual_landmarks_msg, params_.ar_tag_loc_adder_min_num_matches)) PublishARTagPose();
 }
 
 void GraphLocalizerNodelet::ImuCallback(const sensor_msgs::Imu::ConstPtr& imu_msg) {

@@ -214,4 +214,9 @@ void LoadGraphLocalizerParams(config_reader::ConfigReader& config, GraphLocalize
   params.log_rate = mc::LoadInt(config, "log_rate");
   params.estimate_world_T_dock_using_loc = mc::LoadBool(config, "estimate_world_T_dock_using_loc");
 }
+
+void LoadGraphLocalizerNodeletParams(config_reader::ConfigReader& config, GraphLocalizerNodeletParams& params) {
+  params.loc_adder_min_num_matches = mc::LoadInt(config, "loc_adder_min_num_matches");
+  params.ar_tag_loc_adder_min_num_matches = mc::LoadInt(config, "ar_tag_loc_adder_min_num_matches");
+}
 }  // namespace graph_localizer

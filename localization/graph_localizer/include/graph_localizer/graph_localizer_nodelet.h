@@ -23,6 +23,7 @@
 #include <ff_msgs/SetEkfInput.h>
 #include <ff_msgs/VisualLandmarks.h>
 #include <ff_util/ff_nodelet.h>
+#include <graph_localizer/graph_localizer_nodelet_params.h>
 #include <graph_localizer/graph_localizer_wrapper.h>
 #include <localization_common/ros_timer.h>
 #include <localization_common/timer.h>
@@ -105,8 +106,7 @@ class GraphLocalizerNodelet : public ff_util::FreeFlyerNodelet {
   tf2_ros::TransformBroadcaster transform_pub_;
   std::string platform_name_;
   ff_msgs::Heartbeat heartbeat_;
-  int ar_min_num_landmarks_;
-  int sparse_mapping_min_num_landmarks_;
+  GraphLocalizerNodeletParams params_;
   int last_mode_ = -1;
 
   // Timers

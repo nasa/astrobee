@@ -97,17 +97,11 @@ def make_all_value_combinations(value_ranges):
 def make_value_ranges():
   value_ranges = []
   value_names = []
-  steps = 6
+  steps = 5
 
   # tune num smart factors
-  value_ranges.append(np.logspace(-1, -6, steps, endpoint=True))
-  value_names.append('accel_sigma')
-  value_ranges.append(np.logspace(-1, -6, steps, endpoint=True))
-  value_names.append('accel_bias_sigma')
-  value_ranges.append(np.logspace(-1, -6, steps, endpoint=True))
-  value_names.append('integration_variance')
-  value_ranges.append(np.logspace(-1, -6, steps, endpoint=True))
-  value_names.append('bias_acc_omega_int')
+  value_ranges.append(np.logspace(-1, -5))
+  value_names.append('standstill_adder_prior_velocity_stddev')
 
   #q_gyro
   # .001 -> 2 deg
