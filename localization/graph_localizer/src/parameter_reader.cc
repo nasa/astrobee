@@ -50,6 +50,7 @@ void LoadARTagLocFactorAdderParams(config_reader::ConfigReader& config, LocFacto
   params.enabled = params.add_pose_priors || params.add_projections ? true : false;
   params.huber_k = mc::LoadDouble(config, "huber_k");
   params.min_num_matches = mc::LoadInt(config, "ar_tag_loc_adder_min_num_matches");
+  params.max_num_factors = mc::LoadInt(config, "ar_tag_loc_adder_max_num_factors");
   params.prior_translation_stddev = mc::LoadDouble(config, "ar_tag_loc_adder_prior_translation_stddev");
   params.prior_quaternion_stddev = mc::LoadDouble(config, "ar_tag_loc_adder_prior_quaternion_stddev");
   params.scale_pose_noise_with_num_landmarks =
@@ -73,6 +74,7 @@ void LoadLocFactorAdderParams(config_reader::ConfigReader& config, LocFactorAdde
   params.enabled = params.add_pose_priors || params.add_projections ? true : false;
   params.huber_k = mc::LoadDouble(config, "huber_k");
   params.min_num_matches = mc::LoadInt(config, "loc_adder_min_num_matches");
+  params.max_num_factors = mc::LoadInt(config, "loc_adder_max_num_factors");
   params.prior_translation_stddev = mc::LoadDouble(config, "loc_adder_prior_translation_stddev");
   params.prior_quaternion_stddev = mc::LoadDouble(config, "loc_adder_prior_quaternion_stddev");
   params.scale_pose_noise_with_num_landmarks = mc::LoadBool(config, "loc_adder_scale_pose_noise_with_num_landmarks");
