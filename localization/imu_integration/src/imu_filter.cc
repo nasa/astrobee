@@ -16,6 +16,7 @@
  * under the License.
  */
 #include <imu_integration/butterworth_lowpass_filter.h>
+#include <imu_integration/butterworth_lowpass_filter_20_83_notch.h>
 #include <imu_integration/butterworth_lowpass_filter_3rd_order.h>
 #include <imu_integration/butterworth_lowpass_filter_5th_order.h>
 #include <imu_integration/butterworth_lowpass_filter_5th_order_05.h>
@@ -36,6 +37,14 @@ ImuFilter::ImuFilter(const ImuFilterParams& params) {
     angular_velocity_x_filter_.reset(new ButterworthLowpassFilter());
     angular_velocity_y_filter_.reset(new ButterworthLowpassFilter());
     angular_velocity_z_filter_.reset(new ButterworthLowpassFilter());
+  } else if (params.type == "butter20_83_notch") {
+    LogDebug("ImuFilter: Using Butterworth lowpass 20.83 notch filter.");
+    acceleration_x_filter_.reset(new ButterworthLowpassFilter20_83_Notch());
+    acceleration_y_filter_.reset(new ButterworthLowpassFilter20_83_Notch());
+    acceleration_z_filter_.reset(new ButterworthLowpassFilter20_83_Notch());
+    angular_velocity_x_filter_.reset(new ButterworthLowpassFilter20_83_Notch());
+    angular_velocity_y_filter_.reset(new ButterworthLowpassFilter20_83_Notch());
+    angular_velocity_z_filter_.reset(new ButterworthLowpassFilter20_83_Notch());
   } else if (params.type == "butter3") {
     LogDebug("ImuFilter: Using Butterworth lowpass 3rd order filter.");
     acceleration_x_filter_.reset(new ButterworthLowpassFilter3rdOrder());
