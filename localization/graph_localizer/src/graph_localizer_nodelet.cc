@@ -173,11 +173,13 @@ void GraphLocalizerNodelet::ImuCallback(const sensor_msgs::Imu::ConstPtr& imu_ms
 }
 
 void GraphLocalizerNodelet::PublishLocalizationState() {
-  const auto latest_localization_state_msg = graph_localizer_wrapper_.LatestLocalizationStateMsg();
+  auto latest_localization_state_msg = graph_localizer_wrapper_.LatestLocalizationStateMsg();
   if (!latest_localization_state_msg) {
     LogDebugEveryN(100, "PublishLocalizationState: Failed to get latest localization state msg.");
     return;
   }
+  latest_localization_state_msg->callbacks_time = callbacks_timer_.last_value();
+  latest_localization_state_msg->nodelet_runtime = nodelet_runtime_timer_.last_value();
   state_pub_.publish(*latest_localization_state_msg);
 }
 
@@ -253,10 +255,12 @@ void GraphLocalizerNodelet::Run() {
   // Biases reestimated if a intialize bias service call is received
   ResetBiasesFromFileAndResetLocalizer();
   while (ros::ok()) {
+    nodelet_runtime_timer_.Start();
     callbacks_timer_.Start();
     private_queue_.callAvailable();
-    callbacks_timer_.StopAndVlogEveryN(100, 2);
+    callbacks_timer_.Stop();
     graph_localizer_wrapper_.Update();
+    nodelet_runtime_timer_.Stop();
     PublishGraphMessages();
     PublishHeartbeat();
     rate.sleep();

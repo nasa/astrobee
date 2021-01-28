@@ -115,6 +115,7 @@ class GraphLocalizerNodelet : public ff_util::FreeFlyerNodelet {
   localization_common::RosTimer ar_timer_ = localization_common::RosTimer("AR msg");
   localization_common::RosTimer imu_timer_ = localization_common::RosTimer("Imu msg");
   localization_common::Timer callbacks_timer_ = localization_common::Timer("Callbacks");
+  localization_common::Timer nodelet_runtime_timer_ = localization_common::Timer("Nodelet Runtime");
 };
 }  // namespace graph_localizer
 
