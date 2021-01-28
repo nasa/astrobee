@@ -60,26 +60,16 @@ void GraphLocalizerNodelet::SubscribeAndAdvertise(ros::NodeHandle* nh) {
   reset_pub_ = nh->advertise<std_msgs::Empty>(TOPIC_GNC_EKF_RESET, 10);
   heartbeat_pub_ = nh->advertise<ff_msgs::Heartbeat>(TOPIC_HEARTBEAT, 5, true);
 
-  // Buffer max should be at least 10 and a max of 2 seconds of data
-  // Imu freq: ~62.5
-  constexpr int kMaxNumImuMsgs = 125;
-  // AR freq: ~1
-  constexpr int kMaxNumARMsgs = 10;
-  // VL freq: ~1
-  constexpr int kMaxNumVLMsgs = 10;
-  // OF freq: ~10
-  constexpr int kMaxNumOFMsgs = 20;
-
-  imu_sub_ = private_nh_.subscribe(TOPIC_HARDWARE_IMU, kMaxNumImuMsgs, &GraphLocalizerNodelet::ImuCallback, this,
-                                   ros::TransportHints().tcpNoDelay());
+  imu_sub_ = private_nh_.subscribe(TOPIC_HARDWARE_IMU, params_.max_imu_buffer_size, &GraphLocalizerNodelet::ImuCallback,
+                                   this, ros::TransportHints().tcpNoDelay());
   ar_sub_ =
-    private_nh_.subscribe(TOPIC_LOCALIZATION_AR_FEATURES, kMaxNumARMsgs,
+    private_nh_.subscribe(TOPIC_LOCALIZATION_AR_FEATURES, params_.max_ar_buffer_size,
                           &GraphLocalizerNodelet::ARVisualLandmarksCallback, this, ros::TransportHints().tcpNoDelay());
   of_sub_ =
-    private_nh_.subscribe(TOPIC_LOCALIZATION_OF_FEATURES, kMaxNumOFMsgs, &GraphLocalizerNodelet::OpticalFlowCallback,
-                          this, ros::TransportHints().tcpNoDelay());
+    private_nh_.subscribe(TOPIC_LOCALIZATION_OF_FEATURES, params_.max_optical_flow_buffer_size,
+                          &GraphLocalizerNodelet::OpticalFlowCallback, this, ros::TransportHints().tcpNoDelay());
   vl_sub_ =
-    private_nh_.subscribe(TOPIC_LOCALIZATION_ML_FEATURES, kMaxNumVLMsgs,
+    private_nh_.subscribe(TOPIC_LOCALIZATION_ML_FEATURES, params_.max_vl_buffer_size,
                           &GraphLocalizerNodelet::VLVisualLandmarksCallback, this, ros::TransportHints().tcpNoDelay());
   bias_srv_ =
     private_nh_.advertiseService(SERVICE_GNC_EKF_INIT_BIAS, &GraphLocalizerNodelet::ResetBiasesAndLocalizer, this);

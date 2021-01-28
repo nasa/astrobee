@@ -218,5 +218,9 @@ void LoadGraphLocalizerParams(config_reader::ConfigReader& config, GraphLocalize
 void LoadGraphLocalizerNodeletParams(config_reader::ConfigReader& config, GraphLocalizerNodeletParams& params) {
   params.loc_adder_min_num_matches = mc::LoadInt(config, "loc_adder_min_num_matches");
   params.ar_tag_loc_adder_min_num_matches = mc::LoadInt(config, "ar_tag_loc_adder_min_num_matches");
+  params.max_imu_buffer_size = mc::LoadInt(config, "max_imu_buffer_size");
+  params.max_optical_flow_buffer_size = mc::LoadInt(config, "max_optical_flow_buffer_size");
+  params.max_vl_buffer_size = mc::LoadInt(config, "max_vl_buffer_size");
+  params.max_ar_buffer_size = mc::LoadInt(config, "max_ar_buffer_size");
 }
 }  // namespace graph_localizer
