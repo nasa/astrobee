@@ -102,7 +102,9 @@ class GazeboSensorPluginSciCam : public FreeFlyerSensorPlugin {
     pub_sci_cam_ack_ = nh->advertise<ff_msgs::AckStamped>(TOPIC_GUEST_SCIENCE_MANAGER_ACK, 10);
 
     // Create publishers for sci cam image, pose, and camera info
-    pub_sci_cam_image_ = nh->advertise<sensor_msgs::CompressedImage>(TOPIC_HARDWARE_SCI_CAM, 2,
+    std::string compressed_topic = TOPIC_HARDWARE_SCI_CAM;
+    compressed_topic += "/compressed";
+    pub_sci_cam_image_ = nh->advertise<sensor_msgs::CompressedImage>(compressed_topic, 2,
       boost::bind(&GazeboSensorPluginSciCam::ToggleCallback, this),
       boost::bind(&GazeboSensorPluginSciCam::ToggleCallback, this));
     pub_sci_cam_pose_ = nh->advertise<geometry_msgs::PoseStamped>(TOPIC_SCI_CAM_SIM_POSE, 10);
