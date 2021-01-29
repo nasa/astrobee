@@ -64,7 +64,6 @@ class ImuAugmentorNodelet : public ff_util::FreeFlyerNodelet {
   ros::Publisher state_pub_, pose_pub_, twist_pub_, heartbeat_pub_;
   ff_msgs::Heartbeat heartbeat_;
   tf2_ros::TransformBroadcaster transform_pub_;
-  localization_common::Time last_imu_augmented_loc_msg_timestamp_ = 0;
 };
 }  // namespace imu_augmentor
 
