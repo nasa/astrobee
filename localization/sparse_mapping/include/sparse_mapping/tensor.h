@@ -122,7 +122,7 @@ namespace sparse_mapping {
    * Register the map to the world coordinate system or verify
    * how well registration did.
    **/
-  void RegistrationOrVerification(std::vector<std::string> const& data_files,
+  double RegistrationOrVerification(std::vector<std::string> const& data_files,
                                   bool verification,
                                   sparse_mapping::SparseMap * s);
 
