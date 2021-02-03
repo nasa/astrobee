@@ -31,7 +31,7 @@
 namespace ekf {
 
 EkfWrapper::EkfWrapper(ros::NodeHandle* nh, std::string const& platform_name) :
-          ekf_initialized_(false), imus_dropped_(0), have_imu_(false),
+          ekf_initialized_(false), sim_(false), imus_dropped_(0), have_imu_(false),
           input_mode_(ff_msgs::SetEkfInputRequest::MODE_NONE), nh_(nh),
           estimating_bias_(false), disp_features_(false), killed_(false) {
   platform_name_ = (platform_name.empty() ? "" : platform_name + "/");
@@ -50,6 +50,8 @@ EkfWrapper::EkfWrapper(ros::NodeHandle* nh, std::string const& platform_name) :
   // this is so localization manager doesn't timeout
   imu_sub_    = nh_->subscribe(TOPIC_HARDWARE_IMU, 5, &EkfWrapper::ImuCallBack, this,
                               ros::TransportHints().tcpNoDelay());
+
+  if (nh_->getParam("use_sim_time", sim_)) {}
 }
 
 EkfWrapper::~EkfWrapper() {
@@ -368,7 +370,7 @@ int EkfWrapper::Step() {
     if (!have_imu_) {
       imus_dropped_++;
       // publish a failure if we stop getting imu messages
-      if (imus_dropped_ > 10 && ekf_initialized_) {
+      if (imus_dropped_ > 10 && ekf_initialized_ && !sim_) {
         state_.header.stamp = ros::Time::now();
         state_.confidence = 2;  // lost
         state_pub_.publish<ff_msgs::EkfState>(state_);

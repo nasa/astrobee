@@ -145,6 +145,7 @@ class EkfWrapper {
   ff_msgs::EkfState state_;
 
   bool ekf_initialized_;
+  bool sim_;
 
   // most recent imu message
   sensor_msgs::Imu imu_;
