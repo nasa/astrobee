@@ -32,6 +32,8 @@
     <node pkg="nodelet" type="nodelet" args="manager"
           name="mlp_localization" output="$(arg output)"/>
     <node pkg="nodelet" type="nodelet" args="manager"
+          name="mlp_graph_localization" output="$(arg output)"/>
+    <node pkg="nodelet" type="nodelet" args="manager"
           name="mlp_vision" output="$(arg output)"/>
     <node pkg="nodelet" type="nodelet" args="manager"
           name="mlp_depth_cam" output="$(arg output)"/>
@@ -86,7 +88,7 @@
     <include file="$(find ff_util)/launch/ff_nodelet.launch">
       <arg name="class" value="graph_localizer/GraphLocalizerNodelet" />
       <arg name="name" value="graph_localizer" />
-      <arg name="manager" value="mlp_localization" />
+      <arg name="manager" value="mlp_graph_localization" />
       <arg name="spurn" value="$(arg spurn)" />
       <arg name="nodes" value="$(arg nodes)" />
       <arg name="extra" value="$(arg extra)" />
