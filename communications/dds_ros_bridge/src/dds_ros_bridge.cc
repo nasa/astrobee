@@ -587,6 +587,34 @@ bool DdsRosBridge::BuildPmcCmdStateToRapid(const std::string& sub_topic,
   return true;
 }
 
+bool DdsRosBridge::BuildPoseToPosition(const std::string& sub_topic,
+                                       const std::string& name) {
+  std::string pub_topic;
+  bool use, use_rate;
+  std::string use_exp = "use_rate_" + name;
+
+  if (ReadTopicInfo(name, "pub", pub_topic, use)) {
+    if (use) {
+      if (!config_params_.GetBool(use_exp.c_str(), &use_rate)) {
+        ROS_FATAL("DDS Bridge: use rate %s not specified!", name.c_str());
+        return false;
+      }
+
+      ff::RosSubRapidPubPtr pose_to_position(
+                                        new ff::RosPoseRapidPosition(sub_topic,
+                                                                     pub_topic,
+                                                                     use_rate,
+                                                                     nh_));
+      components_++;
+      ros_sub_rapid_pubs_[name] = pose_to_position;
+    }
+  } else {
+    return false;
+  }
+
+  return true;
+}
+
 bool DdsRosBridge::BuildStringToTextMessage(const std::string& name) {
   std::string pub_topic, sub_topic;
   bool use;
@@ -726,6 +754,9 @@ bool DdsRosBridge::SetTelem(float rate, std::string &err_msg, RateType type) {
     case POSITION:
       RTRT->SetPositionRate(rate);
       break;
+    case SPARSE_MAPPING_POSE:
+      RTRT->SetSparseMappingPoseRate(rate);
+      break;
     default:
       err_msg = "DDS Bridge: Unknown type when setting telemetry rate!";
       return false;
@@ -858,6 +889,23 @@ bool DdsRosBridge::SetPmcStateRate(float rate, std::string &err_msg) {
   return true;
 }
 
+bool DdsRosBridge::SetSparseMappingPoseRate(float rate, std::string &err_msg) {
+  if (ros_sub_rapid_pubs_.count("RSMPRP") == 0) {
+    err_msg = "DDS Bridge: Sparse mapping pose message not add but needed.";
+    return false;
+  }
+
+  if (!SetTelem(rate, err_msg, SPARSE_MAPPING_POSE)) {
+    return false;
+  }
+
+  ff::RosPoseRapidPosition *RSMP = static_cast<ff::RosPoseRapidPosition *>
+                                          (ros_sub_rapid_pubs_["RSMPRP"].get());
+
+  RSMP->SetPositionPublishRate(rate);
+  return true;
+}
+
 bool DdsRosBridge::SetTelemRateCallback(ff_msgs::SetRate::Request &req,
                                         ff_msgs::SetRate::Response &res) {
   std::string err_msg;
@@ -882,6 +930,9 @@ bool DdsRosBridge::SetTelemRateCallback(ff_msgs::SetRate::Request &req,
       break;
     case ff_msgs::SetRate::Request::POSITION:
       res.success = SetEkfPositionRate(req.rate, err_msg, POSITION);
+      break;
+    case ff_msgs::SetRate::Request::SPARSE_MAPPING_POSE:
+      res.success = SetSparseMappingPoseRate(req.rate, err_msg);
       break;
     default:
       res.success = false;
@@ -1291,6 +1342,16 @@ bool DdsRosBridge::ReadParams() {
     return false;
   }
 
+  // ros_sparse_mapping_pose_rapid_position => RSMPRP
+  if (!BuildPoseToPosition(TOPIC_SPARSE_MAPPING_POSE, "RSMPRP")) {
+    return false;
+  }
+
+  // ros_vive_pose_rapid_position => RVPRP
+  if (!BuildPoseToPosition("loc/truth", "RVPRP")) {
+    return false;
+  }
+
   // ros_string_rapid_text_message => RSRTM
   if (!BuildStringToTextMessage("RSRTM")) {
     return false;
@@ -1334,6 +1395,7 @@ bool DdsRosBridge::ReadRateParams() {
   float temp_rate;
   std::string err_msg;
 
+  // Get comm status pub rate
   if (!config_params_.GetReal("comm_status_rate", &temp_rate)) {
     ROS_FATAL("DDS Bridge: comm state rate not specified!");
     return false;
@@ -1344,6 +1406,7 @@ bool DdsRosBridge::ReadRateParams() {
     return false;
   }
 
+  // Get cpu state pub rate
   if (!config_params_.GetReal("cpu_state_rate", &temp_rate)) {
     ROS_FATAL("DDS Bridge: cpu state rate not specified!");
     return false;
@@ -1354,6 +1417,7 @@ bool DdsRosBridge::ReadRateParams() {
     return false;
   }
 
+  // Get disk state pub rate
   if (!config_params_.GetReal("disk_state_rate", &temp_rate)) {
     ROS_FATAL("DDS Bridge: disk state rate not specified!");
     return false;
@@ -1364,6 +1428,7 @@ bool DdsRosBridge::ReadRateParams() {
     return false;
   }
 
+  // Get ekf state pub rate
   if (!config_params_.GetReal("ekf_state_rate", &temp_rate)) {
     ROS_FATAL("DDS Bridge: ekf state rate not specified!");
     return false;
@@ -1374,6 +1439,7 @@ bool DdsRosBridge::ReadRateParams() {
     return false;
   }
 
+  // Get gnc state pub rate
   if (!config_params_.GetReal("gnc_state_rate", &temp_rate)) {
     ROS_FATAL("DDS Bridge: gnc state rate not specified!");
     return false;
@@ -1384,6 +1450,7 @@ bool DdsRosBridge::ReadRateParams() {
     return false;
   }
 
+  // Get pmc command pub rate
   if (!config_params_.GetReal("pmc_command_rate", &temp_rate)) {
     ROS_FATAL("DDS Bridge: pmc command rate not specified!");
     return false;
@@ -1394,12 +1461,24 @@ bool DdsRosBridge::ReadRateParams() {
     return false;
   }
 
+  // Get position pub rate
   if (!config_params_.GetReal("position_rate", &temp_rate)) {
     ROS_FATAL("DDS Bridge: position rate not specified!");
     return false;
   }
 
   if (!SetEkfPositionRate(temp_rate, err_msg, POSITION)) {
+    ROS_FATAL("%s", err_msg.c_str());
+    return false;
+  }
+
+  // Get sparse mapping pose pub rate
+  if (!config_params_.GetReal("sparse_mapping_pose_rate", &temp_rate)) {
+    ROS_FATAL("DDS Bridge: sparse mapping pose rate not specified!");
+    return false;
+  }
+
+  if (!SetSparseMappingPoseRate(temp_rate, err_msg)) {
     ROS_FATAL("%s", err_msg.c_str());
     return false;
   }

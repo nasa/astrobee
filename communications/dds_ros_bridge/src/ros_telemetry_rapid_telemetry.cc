@@ -59,6 +59,7 @@ RosTelemetryRapidTelemetry::RosTelemetryRapidTelemetry(
   state_supplier_->event().ekfStateRate = 0;
   state_supplier_->event().gncStateRate = 0;
   state_supplier_->event().positionRate = 0;
+  state_supplier_->event().sparseMappingPoseRate = 0;
 
   if (AssembleConfig(config_params)) {
     config_supplier_->sendEvent();
@@ -161,6 +162,15 @@ void RosTelemetryRapidTelemetry::SetPositionRate(float rate) {
     state_supplier_->event().positionRate = 0;
   } else {
     state_supplier_->event().positionRate = rate;
+  }
+  state_supplier_->sendEvent();
+}
+
+void RosTelemetryRapidTelemetry::SetSparseMappingPoseRate(float rate) {
+  if (rate < 0) {
+    state_supplier_->event().sparseMappingPoseRate = 0;
+  } else {
+    state_supplier_->event().sparseMappingPoseRate = rate;
   }
   state_supplier_->sendEvent();
 }

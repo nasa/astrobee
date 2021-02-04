@@ -17,9 +17,11 @@
 <launch>
   <arg name="name" default="lk_optical_flow" />
   <arg name="manager" default="" />
+  <arg name="terminal" default="" />
   <include file="$(find ff_util)/launch/ff_nodelet.launch">
     <arg name="name" value="$(arg name)" />
     <arg name="manager" value="$(arg manager)" />
+    <arg name="terminal" value="$(arg terminal)" />
     <arg name="class" value="lk_optical_flow/LKOpticalFlowNodelet" />
   </include>
 </launch>

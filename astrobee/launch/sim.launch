@@ -33,6 +33,7 @@
   <arg name="mlp" default="local" />            <!-- MLP IP address          -->
   <arg name="rec" default="" />                 <!-- Record local data       -->
   <arg name="dds" default="true" />             <!-- Enable DDS              -->
+  <arg name="ground_truth_localizer" default="false" />  <!-- Use Ground Truth Localizer      -->
 
   <!-- General options -->
   <arg name="gviz" default="false" />           <!-- Start GNC visualizer    -->
@@ -65,7 +66,6 @@
        default="0 0 -0.7 0 0 0 1" />                         <!-- granite: perch position -->
 
   <arg name="bumble_pose" default="" />         <!-- Use to overide bumble's pose -->
-  <arg name="loc_only" default="false"/> <!-- Only running localization nodes for visualization purposes -->
 
   <!-- Multi-robot simulation -->
   <arg name="honey" default="false" />          <!-- Insert a honey robot    -->
@@ -90,9 +90,6 @@
   <!-- Declare our global logging format -->
   <env name="ROSCONSOLE_FORMAT" value="[${severity}] [${time}] : (${logger}) ${message}"/>
 
-  <!-- Use time from bag file, not system time -->
-  <param name="use_sim_time" value="true" if="$(arg loc_only)"/>
-
   <!-- Always launch on the local machine -->
   <group>
     <machine name ="local" address="localhost" default="true"/>
@@ -111,8 +108,7 @@
     </include>
     <include if="$(arg rqt)" file="$(find astrobee)/launch/controller/rqt.launch"/>
     <include if="$(arg rviz)" file="$(find astrobee)/launch/controller/rviz.launch">
-      <arg name="world" value="$(arg world)" unless="$(arg loc_only)"/>
-      <arg name="world" value="$(arg world)_viz" if="$(arg loc_only)"/>
+      <arg name="world" value="$(arg world)"/>
     </include>
     <!-- Launch a recorder for this robot-->
     <include unless="$(eval arg('rec')=='')"
@@ -122,30 +118,28 @@
   </group>
 
   <!-- Allow the simulator to be optionally launched remotely-->
-  <group unless="$(arg loc_only)">
-    <!-- Connect and update environment variables if required -->
-    <machine unless="$(eval arg('sim')=='local')" name="sim_server" default="true"
-             address="$(arg sim)" user="astrobee" password="astrobee" timeout="10"/>
-    <!-- Update the environment variables relating to absolute paths -->
-    <env unless="$(eval arg('sim')=='local')"
-         name="ASTROBEE_CONFIG_DIR" value="/home/astrobee/native/config" />
-    <env unless="$(eval arg('sim')=='local')"
-         name="ASTROBEE_RESOURCE_DIR" value="home/astrobee/native/resources" />
-    <env unless="$(eval arg('sim')=='local')"
-         name="ROSCONSOLE_CONFIG_FILE" value="/home/astrobee/native/resources/logging.config"/>
-    <env unless="$(eval arg('sim')=='local')"
-         name="DISPLAY" value=":0"/>
-    <env unless="$(eval arg('sim')=='local')"
-         name="ROS_IP" value="$(arg sim)"/>
-    <!-- Start the simulator -->
-    <include file="$(find astrobee)/launch/controller/sim_start.launch">
-      <arg name="world" value="$(arg world)" />
-      <arg name="sviz" value="$(arg sviz)" />
-      <arg name="vmware" value="$(arg vmware)" />
-      <arg name="speed" value="$(arg speed)" />
-      <arg name="debug" value="$(arg sdebug)" />
-    </include>
-  </group>
+  <!-- Connect and update environment variables if required -->
+  <machine unless="$(eval arg('sim')=='local')" name="sim_server" default="true"
+           address="$(arg sim)" user="astrobee" password="astrobee" timeout="10"/>
+  <!-- Update the environment variables relating to absolute paths -->
+  <env unless="$(eval arg('sim')=='local')"
+       name="ASTROBEE_CONFIG_DIR" value="/home/astrobee/native/config" />
+  <env unless="$(eval arg('sim')=='local')"
+       name="ASTROBEE_RESOURCE_DIR" value="home/astrobee/native/resources" />
+  <env unless="$(eval arg('sim')=='local')"
+       name="ROSCONSOLE_CONFIG_FILE" value="/home/astrobee/native/resources/logging.config"/>
+  <env unless="$(eval arg('sim')=='local')"
+       name="DISPLAY" value=":0"/>
+  <env unless="$(eval arg('sim')=='local')"
+       name="ROS_IP" value="$(arg sim)"/>
+  <!-- Start the simulator -->
+  <include file="$(find astrobee)/launch/controller/sim_start.launch">
+    <arg name="world" value="$(arg world)" />
+    <arg name="sviz" value="$(arg sviz)" />
+    <arg name="vmware" value="$(arg vmware)" />
+    <arg name="speed" value="$(arg speed)" />
+    <arg name="debug" value="$(arg sdebug)" />
+  </include>
 
   <!-- Auto-inert platform #1 at a desired initial location -->
   <group if="$(arg default)">
@@ -163,6 +157,7 @@
       <arg name="llp" value="$(arg llp)" />          <!-- LLP IP address     -->
       <arg name="mlp" value="$(arg mlp)" />          <!-- MLP IP address     -->
       <arg name="dds" value="$(arg dds)" />          <!-- Enable DDS         -->
+      <arg name="ground_truth_localizer" value="$(arg ground_truth_localizer)" /> <!-- Use Ground Truth Localizer    -->
     </include>
   </group>
 

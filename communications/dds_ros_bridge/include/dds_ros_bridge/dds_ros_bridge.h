@@ -57,6 +57,7 @@
 #include "dds_ros_bridge/ros_payload_state.h"
 #include "dds_ros_bridge/ros_plan_status_rapid_plan_status.h"
 #include "dds_ros_bridge/ros_pmc_cmd_state.h"
+#include "dds_ros_bridge/ros_pose_rapid_position.h"
 #include "dds_ros_bridge/ros_string_rapid_text_message.h"
 #include "dds_ros_bridge/ros_sub_rapid_pub.h"
 #include "dds_ros_bridge/ros_telemetry_rapid_telemetry.h"
@@ -92,7 +93,8 @@ enum RateType {
   EKF_STATE,
   GNC_STATE,
   PMC_CMD_STATE,
-  POSITION
+  POSITION,
+  SPARSE_MAPPING_POSE
 };
 
 class RosSubRapidPub;
@@ -167,6 +169,8 @@ class DdsRosBridge : public ff_util::FreeFlyerNodelet {
                                    const std::string& name);
   bool BuildPmcCmdStateToRapid(const std::string& sub_topic,
                                const std::string& name);
+  bool BuildPoseToPosition(const std::string& sub_topic,
+                           const std::string& name);
   bool BuildStringToTextMessage(const std::string& name);
   bool BuildTelemetryToRapid(const std::string& sub_topic,
                              const std::string& name);
@@ -197,6 +201,7 @@ class DdsRosBridge : public ff_util::FreeFlyerNodelet {
   bool SetEkfPositionRate(float rate, std::string &err_msg, RateType type);
   bool SetGncStateRate(float rate, std::string &err_msg);
   bool SetPmcStateRate(float rate, std::string &err_msg);
+  bool SetSparseMappingPoseRate(float rate, std::string &err_msg);
 
   bool SetTelemRateCallback(ff_msgs::SetRate::Request &req,
                             ff_msgs::SetRate::Response &res);
