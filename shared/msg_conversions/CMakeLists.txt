@@ -16,6 +16,9 @@
 # under the License.
 
 project(msg_conversions)
+
+if (USE_ROS)
+
 catkin_package(
   LIBRARIES ${PROJECT_NAME}
   INCLUDE_DIRS include
@@ -34,3 +37,5 @@ create_tool_targets(DIR tools
   INC ${catkin_INCLUDE_DIRS} ${GFLAGS_INCLUDE_DIRS}
   DEPS ff_msgs
 )
+
+endif (USE_ROS)

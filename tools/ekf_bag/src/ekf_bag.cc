@@ -28,8 +28,8 @@
 
 namespace ekf_bag {
 
-EkfBag::EkfBag(const char* bagfile, const char* mapfile, bool run_ekf,
-               bool gen_features, const char* biasfile, std::string image_topic, const std::string& gnc_config)
+EkfBag::EkfBag(const char* bagfile, const char* mapfile, bool run_ekf, bool gen_features, const char* biasfile,
+               std::string image_topic, const std::string& gnc_config)
     : map_(mapfile, true),
       loc_(&map_),
       run_ekf_(run_ekf),
@@ -55,10 +55,8 @@ void EkfBag::ReadParams(config_reader::ConfigReader* config) {
     return;
   }
 
-  if (!config->GetReal("sparse_map_delay", &sparse_map_delay_))
-    ROS_FATAL("sparse_map_delay not specified.");
-  if (!config->GetReal("of_delay", &of_delay_))
-    ROS_FATAL("of_delay not specified.");
+  if (!config->GetReal("sparse_map_delay", &sparse_map_delay_)) ROS_FATAL("sparse_map_delay not specified.");
+  if (!config->GetReal("of_delay", &of_delay_)) ROS_FATAL("of_delay not specified.");
 
   ekf_.ReadParams(config);
   of_.ReadParams(config);
@@ -96,8 +94,7 @@ void EkfBag::EstimateBias(void) {
     ros::Time start = temp.getBeginTime();
 
     // look in only the first few seconds
-    rosbag::View early_imu(bag_, rosbag::TopicQuery(topics), start,
-                           start + ros::Duration(5.0));
+    rosbag::View early_imu(bag_, rosbag::TopicQuery(topics), start, start + ros::Duration(5.0));
 
     int count = 0;
     for (rosbag::MessageInstance const m : early_imu) {
@@ -141,8 +138,7 @@ void EkfBag::UpdateImu(const ros::Time& time, const sensor_msgs::Imu& imu) {
   if (ret) UpdateEKF(state);
 }
 
-void EkfBag::UpdateImage(const ros::Time& time,
-                         const sensor_msgs::ImageConstPtr& image_msg) {
+void EkfBag::UpdateImage(const ros::Time& time, const sensor_msgs::ImageConstPtr& image_msg) {
   if (!run_ekf_) return;
   if (!gen_features_) return;
   if (!processing_of_) {
@@ -170,8 +166,7 @@ void EkfBag::UpdateImage(const ros::Time& time,
     // do processing now, but send it later
     cv_bridge::CvImageConstPtr image;
     try {
-      image =
-          cv_bridge::toCvShare(image_msg, sensor_msgs::image_encodings::MONO8);
+      image = cv_bridge::toCvShare(image_msg, sensor_msgs::image_encodings::MONO8);
     } catch (cv_bridge::Exception& e) {
       ROS_ERROR("cv_bridge exception: %s", e.what());
       return;
@@ -206,8 +201,7 @@ void EkfBag::UpdateSparseMapReg(const ff_msgs::CameraRegistration& reg) {
 
 bool string_ends_with(const std::string& str, const std::string& ending) {
   if (str.length() >= ending.length()) {
-    return (0 == str.compare(str.length() - ending.length(), ending.length(),
-                             ending));
+    return (0 == str.compare(str.length() - ending.length(), ending.length(), ending));
   } else {
     return false;
   }
@@ -253,8 +247,7 @@ void EkfBag::Run(void) {
     progress++;
 
     if (string_ends_with(m.getTopic(), image_topic_)) {
-      sensor_msgs::ImageConstPtr image_msg =
-          m.instantiate<sensor_msgs::Image>();
+      sensor_msgs::ImageConstPtr image_msg = m.instantiate<sensor_msgs::Image>();
       UpdateImage(m.getTime(), image_msg);
       // TODO(rsoussan): making print this optional
       /*ff_common::PrintProgressBar(stdout,
@@ -263,26 +256,19 @@ void EkfBag::Run(void) {
       sensor_msgs::ImuConstPtr imu_msg = m.instantiate<sensor_msgs::Imu>();
       UpdateImu(m.getTime(), *imu_msg.get());
     } else if (string_ends_with(m.getTopic(), TOPIC_LOCALIZATION_TRUTH)) {
-      geometry_msgs::PoseStampedConstPtr gt_msg =
-          m.instantiate<geometry_msgs::PoseStamped>();
+      geometry_msgs::PoseStampedConstPtr gt_msg = m.instantiate<geometry_msgs::PoseStamped>();
       UpdateGroundTruth(*gt_msg.get());
     } else if (string_ends_with(m.getTopic(), TOPIC_LOCALIZATION_ML_FEATURES)) {
-      ff_msgs::VisualLandmarksConstPtr vl_msg =
-          m.instantiate<ff_msgs::VisualLandmarks>();
+      ff_msgs::VisualLandmarksConstPtr vl_msg = m.instantiate<ff_msgs::VisualLandmarks>();
       UpdateSparseMap(*vl_msg.get());
-    } else if (string_ends_with(m.getTopic(),
-                                TOPIC_LOCALIZATION_ML_REGISTRATION)) {
-      ff_msgs::CameraRegistrationConstPtr reg_msg =
-          m.instantiate<ff_msgs::CameraRegistration>();
+    } else if (string_ends_with(m.getTopic(), TOPIC_LOCALIZATION_ML_REGISTRATION)) {
+      ff_msgs::CameraRegistrationConstPtr reg_msg = m.instantiate<ff_msgs::CameraRegistration>();
       UpdateSparseMapReg(*reg_msg.get());
     } else if (string_ends_with(m.getTopic(), TOPIC_LOCALIZATION_OF_FEATURES)) {
-      ff_msgs::Feature2dArrayConstPtr of_msg =
-          m.instantiate<ff_msgs::Feature2dArray>();
+      ff_msgs::Feature2dArrayConstPtr of_msg = m.instantiate<ff_msgs::Feature2dArray>();
       UpdateOpticalFlow(*of_msg.get());
-    } else if (string_ends_with(m.getTopic(),
-                                TOPIC_LOCALIZATION_OF_REGISTRATION)) {
-      ff_msgs::CameraRegistrationConstPtr reg_msg =
-          m.instantiate<ff_msgs::CameraRegistration>();
+    } else if (string_ends_with(m.getTopic(), TOPIC_LOCALIZATION_OF_REGISTRATION)) {
+      ff_msgs::CameraRegistrationConstPtr reg_msg = m.instantiate<ff_msgs::CameraRegistration>();
       UpdateOpticalFlowReg(*reg_msg.get());
     } else if (string_ends_with(m.getTopic(), TOPIC_GNC_EKF)) {
       ff_msgs::EkfStateConstPtr ekf_msg = m.instantiate<ff_msgs::EkfState>();

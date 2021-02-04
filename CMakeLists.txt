@@ -18,7 +18,7 @@
 cmake_minimum_required(VERSION 3.0)
 project(Astrobee)
 
-set(ASTROBEE_VERSION 0.13.0)
+set(ASTROBEE_VERSION 0.14.0)
 
 # Define our options
 option(USE_CCACHE
@@ -69,6 +69,10 @@ option(ENABLE_VIVE_SOLVER
 option(ENABLE_INTEGRATION_TESTING
   "Build the integration tests if tests are active."
   ON)
+option(BUILD_LOC_RVIZ_PLUGINS
+  "Build the localization rviz plugins."
+  ON)
+
 
 if ( "${CMAKE_VERSION}" VERSION_GREATER 3.0.0 )
   cmake_policy(SET CMP0045 OLD)
@@ -212,7 +216,7 @@ endif (NOT PROTOBUF_PROTOC_EXECUTABLE)
 
 find_package(Ceres REQUIRED)
 
-find_package(Boost 1.54.0 QUIET REQUIRED COMPONENTS filesystem system iostreams thread program_options)
+find_package(Boost 1.54.0 QUIET REQUIRED COMPONENTS filesystem system iostreams thread program_options timer)
 find_package(Eigen3 REQUIRED)
 find_package(ZLIB)
 find_package(Luajit20 REQUIRED)
@@ -239,6 +243,7 @@ set(OpenCV_LIBRARIES ${OpenCV_LIBS})
 
 find_package(dbow2 REQUIRED)
 find_package(Alvar REQUIRED)
+find_package(GTSAM REQUIRED)
 find_package(OpenMVG QUIET REQUIRED)
 find_package(JsonCpp REQUIRED)
 find_package(FFMPEG QUIET)    # Optional
@@ -260,6 +265,15 @@ if (NOT USE_CTC)  # pkg-config needs extra work to be used for cross compile
     set (YAMLCPP_INCLUDE_DIRS ${YAMLCPP_INCLUDEDIR})
   endif (YAMLCPP_FOUND)
 endif (NOT USE_CTC)
+
+if(ENABLE_GOOGLE_PROF)
+  SET(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--no-as-needed -lprofiler -Wl,--as-needed")
+  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDEBUG")
+endif()
+
+if(USE_CTC) 
+  set(BUILD_LOC_RVIZ_PLUGINS OFF)
+endif()
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wno-unused-local-typedefs -Wno-packed-bitfield-compat -std=c++11")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-unused-local-typedefs -Wno-packed-bitfield-compat -std=c++11")
@@ -294,7 +308,8 @@ if (USE_CTC)
 endif (USE_CTC)
 if (USE_ROS)
   set(ENV{ROS_LANG_DISABLE} "genlisp:gennodejs:geneus:$ENV{ROS_LANG_DISABLE}")
-  find_package(catkin2 COMPONENTS roscpp message_generation std_msgs geometry_msgs sensor_msgs cv_bridge image_transport tf tf2 tf2_ros rosbag nodelet)
+  find_package(catkin2 COMPONENTS roscpp message_generation std_msgs geometry_msgs sensor_msgs cv_bridge image_transport tf tf2 tf2_ros rosbag nodelet rviz)
+  find_package(Qt5 ${rviz_QT_VERSION} REQUIRED Core Widgets)
 
   if (IS_BAMBOO_BUILD)
     include(BambooFix)

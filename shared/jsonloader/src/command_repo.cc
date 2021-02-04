@@ -184,7 +184,8 @@ const Fields telemetryRateFields {
     "EkfState",
     "GncState",
     "PmcCmdState",
-    "Position"
+    "Position",
+    "SparseMappingPose"
   }),
   new Field("rate", Json::realValue)
 };

@@ -99,6 +99,8 @@ class Ekf {
 
   Eigen::Affine3d GetNavCamToBody(void) const {return nav_cam_to_body_;}
 
+  bool HasPoseEstimate() const { return has_pose_estimate_; }
+
  protected:
   /** Functions **/
   /**
@@ -159,7 +161,7 @@ class Ekf {
 
   // only save this for writing to a file later
   geometry_msgs::Pose last_estimate_pose_;
-
+  bool has_pose_estimate_ = false;
 
   /** Configuration Constants **/
 
