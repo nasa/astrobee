@@ -195,9 +195,8 @@ bool MarkerTracker::IsMarkerValid(const alvar::MarkerData & marker) {
 */
 void MarkerTracker::VideoCallback(const sensor_msgs::ImageConstPtr& image_msg) {
   ff_msgs::CameraRegistration r;
-  ros::Time timestamp = ros::Time::now();
   r.header = std_msgs::Header();
-  r.header.stamp = timestamp;
+  r.header.stamp = image_msg->header.stamp;
   r.camera_id = 0;
   reg_publisher_.publish(r);
   ros::spinOnce();
@@ -225,7 +224,7 @@ void MarkerTracker::VideoCallback(const sensor_msgs::ImageConstPtr& image_msg) {
   // Identify the AR tags that we have seen and transmit their positions.
   ff_msgs::VisualLandmarks msg;
   msg.header = std_msgs::Header();
-  msg.header.stamp = ros::Time::now();
+  msg.header.stamp = image_msg->header.stamp;
   msg.header.frame_id = "dock/body";
   msg.camera_id = 0;
   msg.landmarks.resize(4 * valid_marker_count);

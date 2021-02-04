@@ -17,7 +17,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from data_support import PmcCommand, EkfState, FamCommand, ControlState, Quaternion, Vector3, Log
+from data_support import PmcCommand, PoseStamped, EkfState, FamCommand, ControlState, Quaternion, Vector3, Log
 
 from sys import path as sysPath
 from os import path as osPath
@@ -127,6 +127,7 @@ class DdsSubscriber(threading.Thread):
 class Dict2RosMsgTranslator:
 
     supported_ros_types = {
+	   PoseStamped:	lambda self, data: self.__dictionary_to_pose_stamped_msg(data),
 	   EkfState:	lambda self, data: self.__dictionary_to_ekf_msg(data),
 	   FamCommand:	lambda self, data: self.__dictionary_to_fam_msg(data),
 	   ControlState:	lambda self, data: self.__dictionary_to_control_msg(data),
@@ -194,6 +195,15 @@ class Dict2RosMsgTranslator:
 
         #print msg.asDict()
         return msg
+
+
+    def __dictionary_to_pose_stamped_msg(self, dic):
+        msg = PoseStamped()
+        msg.header.stamp = dic['hdr']['timeStamp']
+        msg.pose.position = self.__array_to_vector3d(dic['pose']['xyz'])
+        msg.pose.orientation = self.__array_to_quaternion(dic['pose']['rot'])
+        return msg
+
 
     def __dictionary_to_ekf_msg(self, dic):
         #print dic

@@ -17,13 +17,14 @@
 #
 # This message sets the rates at which certain messages are published.
 
-uint8 COMM_STATUS   = 0 # Set the communication status message rate
-uint8 CPU_STATE     = 1 # Set the cpu state message rate
-uint8 DISK_STATE    = 2 # Set the disk state message rate
-uint8 EKF_STATE     = 3 # Set the ekf state message rate
-uint8 GNC_STATE     = 4 # Set the gnc state message rate
-uint8 PMC_CMD_STATE = 5 # Set the pmc command state message rate
-uint8 POSITION      = 6 # Set the position message rate
+uint8 COMM_STATUS         = 0 # Set the communication status message rate
+uint8 CPU_STATE           = 1 # Set the cpu state message rate
+uint8 DISK_STATE          = 2 # Set the disk state message rate
+uint8 EKF_STATE           = 3 # Set the ekf state message rate
+uint8 GNC_STATE           = 4 # Set the gnc state message rate
+uint8 PMC_CMD_STATE       = 5 # Set the pmc command state message rate
+uint8 POSITION            = 6 # Set the position message rate
+uint8 SPARSE_MAPPING_POSE = 7 # Set the sparse mapping pose message rate
 
 uint8 which  # which message we are setting the rate for
 float32 rate # the rate

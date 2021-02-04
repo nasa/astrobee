@@ -56,8 +56,8 @@ def quat_to_euler(q):
   return (x, y, z)
 
 # RMSE of matrix interpreted as n (dim(rows) vectors of dim(col) 
-def rmse_matrix(x):
-  return np.mean(np.sqrt(np.sum(np.square(x), axis=1)))
+def rmse_matrix(error_matrix):
+  return np.sqrt(np.mean(np.sum(np.square(error_matrix), axis=1)))
 
 # Removes the ith entry of a_xs, a_ys, and a_zs if a_times[i] is 
 # not in b_times[i].  Assumes timestamp vectors are sorted
@@ -65,8 +65,10 @@ def prune_missing_timestamps(a_xs, a_ys, a_zs, a_times, b_times):
   a_index = 0
   pruned_a_matrix = np.empty(shape=(len(b_times), 3)) 
   for b_index, b_time in enumerate(b_times):
-    while not np.isclose(a_times[a_index], b_time) and a_times[a_index] < b_time and a_index < len(a_times):
+    while not np.isclose(a_times[a_index], b_time, rtol=0) and a_times[a_index] < b_time and a_index < len(a_times):
       a_index += 1 
+    if not np.isclose(a_times[a_index], b_time, rtol=0, atol=0.02):
+      print('Failed to find a time close to b time.')
     pruned_a_matrix[b_index] = np.array([a_xs[a_index], a_ys[a_index], a_zs[a_index]])
   return pruned_a_matrix
 
@@ -330,10 +332,16 @@ class EkfLog(object):
 
     return stats, stat_names
 
-  def write_results_to_csv(self, job_id, results_csv_output_file):
+  def write_results_to_csv(self, job_id, results_csv_output_file, bagfile):
     with open(results_csv_output_file, 'w') as results_file:
       writer = csv.writer(results_file)
       stats, stat_names = self.get_stats(job_id)
+      bag_name = os.path.splitext(os.path.basename(bagfile))[0]
+      # TODO(rsoussan): better way to do this
+      stats.append(stats[-2])
+      stat_names.append('rmse')
+      stats.append(bag_name)
+      stat_names.append('Bag')
       writer.writerow(stat_names)
       writer.writerow(stats)
 
@@ -605,7 +613,7 @@ def run_ekf_and_save_stats(options):
   log = EkfLog(options.ekf_output_file, options.start_time, options.end_time)
 
   if options.save_stats:
-    log.write_results_to_csv(options.job_id, options.results_csv_output_file)
+    log.write_results_to_csv(options.job_id, options.results_csv_output_file, astrobee_bag)
     print("Printed csv reults for job_id: " + str(options.job_id))
 
   if options.make_plots: 
