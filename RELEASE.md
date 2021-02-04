@@ -7,6 +7,7 @@
   * Added tools for graph localizer including graph_bag and imu_bias_tester
   * Added rviz plugins for graph localizer and associated packages in localization_rviz_plugins
   * Added gtsam debian
+  Note: Perching does not work in this release, use another version for this.
 
 ## Release 0.13.0
 
