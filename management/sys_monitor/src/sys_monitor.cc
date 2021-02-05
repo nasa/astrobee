@@ -21,7 +21,7 @@
 namespace sys_monitor {
 SysMonitor::SysMonitor() :
   ff_util::FreeFlyerNodelet(NODE_SYS_MONITOR, false),
-  time_diff_node_("ekf"),
+  time_diff_node_("imu_aug"),
   time_diff_fault_triggered_(false),
   pub_queue_size_(10),
   sub_queue_size_(100),
@@ -170,7 +170,7 @@ void SysMonitor::HeartbeatCallback(ff_msgs::HeartbeatConstPtr const& hb) {
       RemoveFault(wd->fault_id());
     }
 
-    // Check time drift, use time in ekf heartbeat
+    // Check time drift, use time in imu_aug heartbeat
     if (hb->node == time_diff_node_) {
       float time_diff_sec = (ros::Time::now() - hb->header.stamp).toSec();
       PublishTimeDiff(time_diff_sec);
@@ -544,7 +544,7 @@ bool SysMonitor::ReadParams() {
 
   if (!config_params_.GetStr("time_diff_node", &time_diff_node_)) {
     NODELET_WARN("Unable to read time diff node name.");
-    time_diff_node_ = "ekf";
+    time_diff_node_ = "imu_aug";
   }
 
   if (!config_params_.GetPosReal("time_drift_thres_sec",

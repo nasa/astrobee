@@ -31,6 +31,7 @@
   <arg name="manager" default="" />                <!-- Nodelet manager name -->
   <arg name="arguments" default="" />              <!-- Arguments to nodelet -->
   <arg name="output" default="screen" />
+  <arg name="terminal" default="" />               <!-- Output to terminal   -->
 
   <!-- String search -->
   <arg name="b_limited" value="$(eval arg('nodes') != '')" />
@@ -62,7 +63,7 @@
     <!-- Start a nodelet manager, if needed -->
     <node if="$(arg standalone)"
           pkg="nodelet" type="nodelet" name="$(arg nodelet_manager)"
-          args="manager" launch-prefix="$(arg prefix)" output="$(arg output)"/>
+          args="manager" launch-prefix="$(arg prefix) $(arg terminal)" output="$(arg output)"/>
 
     <!-- Now inject the nodelet into the nodelet manager -->
     <node pkg="nodelet" type="nodelet" name="$(arg name)"
