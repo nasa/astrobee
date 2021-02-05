@@ -74,6 +74,11 @@ class Twist(Common):
         self.linear = linear
         self.angular = angular
 
+class PoseStamped(Common):
+    def __init__(self):
+        self.header = Header()
+        self.pose = Pose()
+
 class EkfState(Common):
     def __init__(self):
         self.header = Header()
@@ -94,6 +99,7 @@ class EkfState(Common):
         self.hr_global_pose = Pose()
         #self.ml_mahal_dists = [0.0] * 50
         self.ml_mahal_dists = np.zeros(50)
+
 
 class PmcCommand(Common):
     def __init__(self, header = Header()):

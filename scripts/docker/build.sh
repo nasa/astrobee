@@ -29,9 +29,6 @@ ubuntu18=0
 
 while [ "$1" != "" ]; do
     case $1 in
-        -a | --astrobee_source_dir )   shift
-                                		astrobee_source=$1
-                                		;;
         -n | --ubuntu18 )               ubuntu18=1
                                         ;;
         -h | --help )           		usage
@@ -46,20 +43,20 @@ done
 
 thisdir=$(dirname "$(readlink -f "$0")")
 rootdir=${thisdir}/../..
-echo "Astrobee path: "${astrobee_source:-${rootdir}/}
+echo "Astrobee path: "${${rootdir}/}
 if [ $ubuntu18 == 0 ]; then
-    docker build ${astrobee_source:-${rootdir}/} \
-                -f ${astrobee_source:-${rootdir}/}scripts/docker/astrobee_base_kinetic.Dockerfile \
+    docker build ${${rootdir}/} \
+                -f ${${rootdir}/}scripts/docker/astrobee_base_kinetic.Dockerfile \
                 -t astrobee/astrobee:base-latest-kinetic
-    docker build ${astrobee_source:-${rootdir}/} \
-                -f ${astrobee_source:-${rootdir}/}scripts/docker/astrobee_kinetic.Dockerfile \
+    docker build ${${rootdir}/} \
+                -f ${${rootdir}/}scripts/docker/astrobee_kinetic.Dockerfile \
                 -t astrobee/astrobee:latest-kinetic
 else
-    docker build ${astrobee_source:-${rootdir}/} \
-                -f ${astrobee_source:-${rootdir}/}scripts/docker/astrobee_base_melodic.Dockerfile \
+    docker build ${${rootdir}/} \
+                -f ${${rootdir}/}scripts/docker/astrobee_base_melodic.Dockerfile \
                 -t astrobee/astrobee:base-latest-melodic
-    docker build ${astrobee_source:-${rootdir}/} \
-                -f ${astrobee_source:-${rootdir}/}scripts/docker/astrobee_melodic.Dockerfile \
+    docker build ${${rootdir}/} \
+                -f ${${rootdir}/}scripts/docker/astrobee_melodic.Dockerfile \
                 -t astrobee/astrobee:latest-melodic
 fi
 

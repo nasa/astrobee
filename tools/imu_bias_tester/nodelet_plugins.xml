@@ -1,0 +1,11 @@
+<library path="lib/libimu_bias_tester">
+  <class name="imu_bias_tester/ImuBiasTesterNodelet"
+	 type="imu_bias_tester::ImuBiasTesterNodelet"
+	 base_class_type="nodelet::Nodelet">
+    <description>
+      This nodelet wraps the imu_bias_tester 
+    </description>
+  </class>
+</library>
+
+

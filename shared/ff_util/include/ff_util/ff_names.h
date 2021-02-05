@@ -113,8 +113,18 @@
 #define NODE_CTL                                    "ctl"
 #define NODE_PERCH_CTL                              "perch_ctl"
 #define NODE_EKF                                    "ekf"
+#define NODE_GRAPH_LOC                              "graph_loc"
+#define NODE_IMU_AUG                                "imu_aug"
+#define NODE_IMU_BIAS_TESTER                        "imu_bias_tester"
+#define NODE_SIM_LOC                                "sim_loc"
 #define NODE_FAM                                    "fam"
 #define NODE_SIM_WRAPPER                            "sim_wrapper"
+
+#define TOPIC_GRAPH_LOC                             "graph_loc/graph"
+#define TOPIC_GRAPH_LOC_STATE                       "graph_loc/state"
+#define TOPIC_AR_TAG_POSE                           "ar_tag/pose"
+#define TOPIC_SPARSE_MAPPING_POSE                   "sparse_mapping/pose"
+#define TOPIC_IMU_BIAS_TESTER_POSE                  "imu_bias_tester/pose"
 
 #define ACTION_GNC_CTL_CONTROL                      "gnc/control"
 
@@ -131,6 +141,7 @@
 #define SERVICE_GNC_EKF_RESET                       "gnc/ekf/reset"
 #define SERVICE_GNC_EKF_RESET_HR                    "gnc/ekf/reset_hr"
 #define SERVICE_GNC_EKF_INIT_BIAS                   "gnc/ekf/init_bias"
+#define SERVICE_GNC_EKF_INIT_BIAS_FROM_FILE         "gnc/ekf/init_bias_from_file"
 #define SERVICE_GNC_EKF_SET_INPUT                   "gnc/ekf/set_input"
 #define SERVICE_GNC_CTL_ENABLE                      "gnc/ctl/enable"
 
@@ -360,7 +371,7 @@
 #define TOPIC_HARDWARE_IMU                          "hw/imu"
 #define TOPIC_HARDWARE_NAV_CAM                      "hw/cam_nav"
 #define TOPIC_HARDWARE_DOCK_CAM                     "hw/cam_dock"
-#define TOPIC_HARDWARE_SCI_CAM                      "hw/cam_sci/compressed"
+#define TOPIC_HARDWARE_SCI_CAM                      "hw/cam_sci"
 #define TOPIC_HARDWARE_LIGHT_FRONT                  "hw/light_front"
 #define TOPIC_HARDWARE_LIGHT_AFT                    "hw/light_aft"
 #define TOPIC_HARDWARE_LASER                        "hw/laser"

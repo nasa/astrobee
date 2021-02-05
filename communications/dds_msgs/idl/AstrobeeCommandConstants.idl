@@ -497,6 +497,7 @@ module rapid {
       const rapid::String32 SETTINGS_TELEMETRY_TYPE_GNC_STATE = "GncState";
       const rapid::String32 SETTINGS_TELEMETRY_TYPE_PMC_CMD_STATE = "PmcCmdState";
       const rapid::String32 SETTINGS_TELEMETRY_TYPE_POSITION = "Position";
+      const rapid::String32 SETTINGS_TELEMETRY_TYPE_SPARSE_MAPPING_POSE = "SparseMappingPose";
 
 
     };
