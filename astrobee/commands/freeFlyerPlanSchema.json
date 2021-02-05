@@ -112,7 +112,8 @@
         ["EkfState", "EkfState"],
         ["GncState", "GncState"],
         ["PmcCmdState", "PmcCmdState"],
-        ["Position", "Position"]
+        ["Position", "Position"],
+        ["SparseMappingPose", "SparseMappingPose"]
       ]
     },
 

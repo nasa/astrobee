@@ -134,6 +134,15 @@ truth_data = {'truth_time':        lambda x: time.time() - start_time,
               'truth_rot_z':       lambda x: quat_to_eulers(x.pose.orientation)[2] * 180 / pi}
 truth_callbacks = VisualizerCallback('truth_time', truth_data)
 
+ml_pose_data = {'ml_pose_time':      lambda x: time.time() - start_time,
+              'ml_pose_position_x':  lambda x: x.pose.position.x,
+              'ml_pose_position_y':  lambda x: x.pose.position.y,
+              'ml_pose_position_z':  lambda x: x.pose.position.z,
+              'ml_pose_rot_x':       lambda x: quat_to_eulers(x.pose.orientation)[0] * 180 / pi,
+              'ml_pose_rot_y':       lambda x: quat_to_eulers(x.pose.orientation)[1] * 180 / pi,
+              'ml_pose_rot_z':       lambda x: quat_to_eulers(x.pose.orientation)[2] * 180 / pi}
+ml_pose_callbacks = VisualizerCallback('ml_pose_time', ml_pose_data)
+
 command_data = {'command_time':        lambda x: time.time() - start_time,
               'command_status':        lambda x: x.status,
               'command_control_mode':  lambda x: x.control_mode,
@@ -192,7 +201,7 @@ pmc_data = {'pmc_time':        lambda x: time.time() - start_time,
             'pmc_2_nozzle_6':  lambda x: ord(x.goals[1].nozzle_positions[5]) }
 pmc_callbacks = VisualizerCallback('pmc_time', pmc_data)
 
-callbacks_list = [ekf_callbacks, ml_callbacks, of_callbacks, truth_callbacks, command_callbacks, traj_callbacks, shaper_callbacks, pmc_callbacks]
+callbacks_list = [ekf_callbacks, ml_callbacks, of_callbacks, truth_callbacks, ml_pose_callbacks, command_callbacks, traj_callbacks, shaper_callbacks, pmc_callbacks]
 
 class TerminalView(QtGui.QGraphicsTextItem):
     def __init__(self, graphics_view):
@@ -253,8 +262,8 @@ class Visualizer(QtGui.QMainWindow):
             for k in d.callbacks.keys():
                 self.data[k] = np.full(ARRAY_SIZE, 1e-10)
 
-        self.columns = [[plot_types.CtlPosPlot, plot_types.FeatureCountPlot, plot_types.ConfidencePlot, \
-                         plot_types.CommandStatusPlot], [plot_types.CtlRotPlot, plot_types.CovPlot]]
+        self.columns = [[plot_types.CtlPosPlot, plot_types.PositionPlot, plot_types.FeatureCountPlot, plot_types.ConfidencePlot, \
+                         plot_types.CommandStatusPlot], [plot_types.CtlRotPlot, plot_types.OrientationPlot, plot_types.CovPlot]]
 
         self.graphics_view = ParentGraphicsView()
         self.terminal_graphics_view = TerminalGraphicsView(self.graphics_view)
@@ -566,6 +575,9 @@ class Visualizer(QtGui.QMainWindow):
 
     def ground_truth_callback(self, data):
         self.add_data(truth_callbacks, data)
+
+    def ml_pose_callback(self, data):
+        self.add_data(ml_pose_callbacks, data)
 
     def command_callback(self, data):
         self.add_data(command_callbacks, data)

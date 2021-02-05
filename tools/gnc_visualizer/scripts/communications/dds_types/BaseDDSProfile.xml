@@ -586,6 +586,8 @@
         </liveliness>
       </datawriter_qos>
     </qos_profile>
+    <!-- ASTROBEE Extension: PoseStamped ================================== -->
+    <qos_profile base_name="RapidStateQos" name="AstrobeePoseStampedProfile"/>
     <!-- ASTROBEE Extension: EkfState ================================== -->
     <qos_profile base_name="RapidStateQos" name="AstrobeeEkfStateProfile"/>
     <!-- ASTROBEE Extension: Eps ================================== -->
@@ -931,16 +933,20 @@
   <include file="GncFamCmdState.xml"/>
   <include file="GncControlState.xml"/>
   <include file="PmcCmdState.xml"/>
+  <include file="PositionSample.xml"/>
   <include file="LogSample.xml"/>
 </types>
 <!-- Domain Library -->
 <domain_library name="MyDomainLibrary">
   <domain domain_id="37" name="MyDomain">
+    <register_type name="rapid::PositionSample" type_ref="rapid::PositionSample"/>
     <register_type name="rapid::ext::astrobee::EkfState" type_ref="rapid::ext::astrobee::EkfState"/>
     <register_type name="rapid::ext::astrobee::GncFamCmdState" type_ref="rapid::ext::astrobee::GncFamCmdState"/>
     <register_type name="rapid::ext::astrobee::GncControlState" type_ref="rapid::ext::astrobee::GncControlState"/>
     <register_type name="rapid::ext::astrobee::PmcCmdState" type_ref="rapid::ext::astrobee::PmcCmdState"/>
     <register_type name="rapid::ext::astrobee::LogSample" type_ref="rapid::ext::astrobee::LogSample"/>
+    <topic name="rapid_position_sample-sparse" register_type_ref="rapid::PositionSample"/>
+    <topic name="rapid_position_sample-vive" register_type_ref="rapid::PositionSample"/>
     <topic name="astrobee_ekf_state" register_type_ref="rapid::ext::astrobee::EkfState"/>
     <topic name="astrobee_gnc_fam_cmd_state" register_type_ref="rapid::ext::astrobee::GncFamCmdState"/>
     <topic name="astrobee_gnc_control_state-shaper" register_type_ref="rapid::ext::astrobee::GncControlState"/>
@@ -952,6 +958,30 @@
 <!-- Participant library -->
 <domain_participant_library name="MyParticipantLibrary">
   <domain_participant domain_ref="MyDomainLibrary::MyDomain" name="Zero">
+    <subscriber name="SparseMappingPoseStampedSubscriber">
+      <data_reader name="SparseMappingPoseStampedReader" topic_ref="rapid_position_sample-sparse">
+        <datareader_qos base_name="RapidQosLibrary::RapidPositionSampleProfile"/>
+      </data_reader>
+      <subscriber_qos base_name="RapidQosLibrary::RapidDefaultQos">
+        <partition>
+          <name>
+            <element>Bumble</element>
+          </name>
+        </partition>
+      </subscriber_qos>
+    </subscriber>
+    <subscriber name="VivePoseStampedSubscriber">
+      <data_reader name="VivePoseStampedReader" topic_ref="rapid_position_sample-vive">
+        <datareader_qos base_name="RapidQosLibrary::RapidPositionSampleProfile"/>
+      </data_reader>
+      <subscriber_qos base_name="RapidQosLibrary::RapidDefaultQos">
+        <partition>
+          <name>
+            <element>Bumble</element>
+          </name>
+        </partition>
+      </subscriber_qos>
+    </subscriber>
     <subscriber name="EkfSubscriber">
       <data_reader name="EkfReader" topic_ref="astrobee_ekf_state">
         <datareader_qos base_name="RapidQosLibrary::AstrobeeEkfStateProfile"/>

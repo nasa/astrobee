@@ -1529,7 +1529,7 @@ void ExtractSubmap(std::vector<std::string> * keep_ptr,
 
 // Register a map to world coordinates from user-supplied data, or simply
 // verify how well the map performs with this data.
-void RegistrationOrVerification(std::vector<std::string> const& data_files,
+double RegistrationOrVerification(std::vector<std::string> const& data_files,
                                 bool verification,
                                 sparse_mapping::SparseMap * map) {
   // Get the interest points in the images, and their positions in
@@ -1725,7 +1725,7 @@ void RegistrationOrVerification(std::vector<std::string> const& data_files,
   }
 
   if (verification)
-    return;
+    return 0;
 
   // Find the transform from the computed map coordinate system
   // to the world coordinate system.
@@ -1771,6 +1771,7 @@ void RegistrationOrVerification(std::vector<std::string> const& data_files,
               << images[id1] << ' '
               << images[id2] << std::endl;
   }
+  return scale;
 }
 
 void PrintTrackStats(std::vector<std::map<int, int> >const& pid_to_cid_fid,

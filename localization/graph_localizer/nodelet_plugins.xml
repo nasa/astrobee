@@ -1,0 +1,11 @@
+<library path="lib/libgraph_localizer">
+  <class name="graph_localizer/GraphLocalizerNodelet"
+	 type="graph_localizer::GraphLocalizerNodelet"
+	 base_class_type="nodelet::Nodelet">
+    <description>
+      This nodelet wraps graph localizer 
+    </description>
+  </class>
+</library>
+
+

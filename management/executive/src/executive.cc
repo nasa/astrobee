@@ -2761,6 +2761,9 @@ bool Executive::SetTelemetryRate(ff_msgs::CommandStampedPtr const& cmd) {
   } else if (cmd->args[0].s ==
                         CommandConstants::PARAM_NAME_TELEMETRY_TYPE_POSITION) {
     set_rate_srv.request.which = ff_msgs::SetRate::Request::POSITION;
+  } else if (cmd->args[0].s ==
+              CommandConstants::PARAM_NAME_TELEMETRY_TYPE_SPARSE_MAPPING_POSE) {
+    set_rate_srv.request.which = ff_msgs::SetRate::Request::SPARSE_MAPPING_POSE;
   } else {
     state_->AckCmd(cmd->cmd_id,
                   ff_msgs::AckCompletedStatus::BAD_SYNTAX,

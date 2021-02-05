@@ -22,35 +22,46 @@
   <arg name="spurn" default=""/>              <!-- PRevent a specific node   -->
   <arg name="nodes" default=""/>              <!-- Launch specific nodes     -->
   <arg name="extra" default=""/>              <!-- Inject an additional node -->
-  <arg name="debug" default=""/>                 <!-- Debug a node set          -->
+  <arg name="debug" default=""/>              <!-- Debug a node set          -->
   <arg name="output" default="log"/>          <!-- Where to log              -->
-  <arg name="loc_only" default="false"/>           <!-- Only run localization     -->
-
+  <arg name="ground_truth_localizer" default="false"/>    <!-- Runs ground_truth_localizer -->
 
   <!-- Launch all nodelet managers -->
   <group if="$(eval optenv('ASTROBEE_NODEGRAPH','')=='')">
     <node pkg="nodelet" type="nodelet" args="manager"
           name="llp_gnc" output="$(arg output)"/>
-    <group unless="$(arg loc_only)">
-      <node pkg="nodelet" type="nodelet" args="manager"
-          name="llp_monitors" output="$(arg output)"/>
-      <node pkg="nodelet" type="nodelet" args="manager"
-          name="llp_i2c" output="$(arg output)"/>
-      <node pkg="nodelet" type="nodelet" args="manager"
-          name="llp_serial" output="$(arg output)"/>
-      <node pkg="nodelet" type="nodelet" args="manager"
-          name="llp_pmc" output="$(arg output)"/>
-      <node pkg="nodelet" type="nodelet" args="manager"
-          name="llp_imu" output="$(arg output)"/>
-      <node pkg="nodelet" type="nodelet" args="manager"
-          name="llp_lights" output="$(arg output)"/>
-    </group>
+    <node pkg="nodelet" type="nodelet" args="manager"
+          name="llp_imu_aug" output="$(arg output)"/>
+    <node pkg="nodelet" type="nodelet" args="manager"
+        name="llp_monitors" output="$(arg output)"/>
+    <node pkg="nodelet" type="nodelet" args="manager"
+        name="llp_i2c" output="$(arg output)"/>
+    <node pkg="nodelet" type="nodelet" args="manager"
+        name="llp_serial" output="$(arg output)"/>
+    <node pkg="nodelet" type="nodelet" args="manager"
+        name="llp_pmc" output="$(arg output)"/>
+    <node pkg="nodelet" type="nodelet" args="manager"
+        name="llp_imu" output="$(arg output)"/>
+    <node pkg="nodelet" type="nodelet" args="manager"
+        name="llp_lights" output="$(arg output)"/>
   </group>
 
   <!-- Launch GNC nodes -->
+  <group unless="$(arg ground_truth_localizer)">
+    <include file="$(find ff_util)/launch/ff_nodelet.launch">
+      <arg name="class" value="imu_augmentor/ImuAugmentorNodelet" />
+      <arg name="name" value="imu_augmentor_nodelet" />
+      <arg name="manager" value="llp_imu_aug" />
+      <arg name="spurn" value="$(arg spurn)" />
+      <arg name="nodes" value="$(arg nodes)" />
+      <arg name="extra" value="$(arg extra)" />
+      <arg name="debug" value="$(arg debug)" />
+      <arg name="default" value="true" />
+    </include>
+  </group>
   <include file="$(find ff_util)/launch/ff_nodelet.launch">
-    <arg name="class" value="ekf/ekf" />
-    <arg name="name" value="ekf_node" />
+    <arg name="class" value="ctl/ctl" />
+    <arg name="name" value="ctl_node" />
     <arg name="manager" value="llp_gnc" />
     <arg name="spurn" value="$(arg spurn)" />
     <arg name="nodes" value="$(arg nodes)" />
@@ -58,28 +69,16 @@
     <arg name="debug" value="$(arg debug)" />
     <arg name="default" value="true" />
   </include>
-  <group unless="$(arg loc_only)">
-    <include file="$(find ff_util)/launch/ff_nodelet.launch">
-      <arg name="class" value="ctl/ctl" />
-      <arg name="name" value="ctl_node" />
-      <arg name="manager" value="llp_gnc" />
-      <arg name="spurn" value="$(arg spurn)" />
-      <arg name="nodes" value="$(arg nodes)" />
-      <arg name="extra" value="$(arg extra)" />
-      <arg name="debug" value="$(arg debug)" />
-      <arg name="default" value="true" />
-    </include>
-    <include file="$(find ff_util)/launch/ff_nodelet.launch">
-      <arg name="class" value="fam/fam" />
-      <arg name="name" value="fam_node" />
-      <arg name="manager" value="llp_gnc" />
-      <arg name="spurn" value="$(arg spurn)" />
-      <arg name="nodes" value="$(arg nodes)" />
-      <arg name="extra" value="$(arg extra)" />
-      <arg name="debug" value="$(arg debug)" />
-      <arg name="default" value="true" />
-    </include>
-  </group>
+  <include file="$(find ff_util)/launch/ff_nodelet.launch">
+    <arg name="class" value="fam/fam" />
+    <arg name="name" value="fam_node" />
+    <arg name="manager" value="llp_gnc" />
+    <arg name="spurn" value="$(arg spurn)" />
+    <arg name="nodes" value="$(arg nodes)" />
+    <arg name="extra" value="$(arg extra)" />
+    <arg name="debug" value="$(arg debug)" />
+    <arg name="default" value="true" />
+  </include>
 
   <!-- Launch driver nodes, if required -->
   <group if="$(arg drivers)">
