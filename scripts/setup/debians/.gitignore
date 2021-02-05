@@ -9,6 +9,8 @@
 libalvar
 libdeepdive
 libdbow2
+libgtsam
+libgtsamlib
 libdbowdlib
 libopenmvg
 libdecomputil

@@ -507,6 +507,7 @@ create_library(
     ${catkin_LIBRARIES}
     astrobee_gazebo
     camera
+    msg_conversions
   INC
     ${GAZEBO_INCLUDE_DIRS}
     ${EIGEN3_INCLUDE_DIRS}

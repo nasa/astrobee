@@ -9,10 +9,16 @@ but are not run on the robot.
 
 \subpage gncvisualizer
 
+\subpage graphbag
+
+\subpage imubiastester
+
+\subpage localizationrvizplugins
+
 \subpage rvizvisualizer
 
-\subpage visualeyez
-
 \subpage simulator
+
+\subpage visualeyez
 
 \subpage dds_profile

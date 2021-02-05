@@ -16,6 +16,9 @@
 # under the License.
 
 add_subdirectory(ekf_bag)
+add_subdirectory(graph_bag)
+add_subdirectory(imu_bias_tester)
+add_subdirectory(localization_rviz_plugins)
 add_subdirectory(rviz_visualizer)
 add_subdirectory(visualeyez)
 add_subdirectory(simulator)

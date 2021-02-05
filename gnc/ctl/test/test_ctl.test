@@ -19,5 +19,6 @@
   <include file="$(find astrobee)/launch/sim.launch">
     <arg name="dds" value="false"/>
   </include>
+  <node pkg="rosservice" type="rosservice" name="imu_calibration" args="call --wait /gnc/ekf/init_bias" />
   <test pkg="ctl" type="test_ctl" test-name="test_ctl" />
 </launch>

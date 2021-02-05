@@ -16,7 +16,7 @@ Depends: astrobee0 (= ${binary:Version}), ${misc:Depends}
   libace-dev, libqt4-dev,
   protobuf-compiler, libv4l-dev, libeigen3-dev, libluajit-5.1-dev,
   libjsoncpp-dev, libtinyxml-dev, libyaml-cpp-dev, libusb-1.0-0-dev,
-  libalvar-dev, libdbow2-dev, libopenmvg-dev, libroyale-dev, libceres-dev, rti-dev,
+  libalvar-dev, libdbow2-dev, libgtsam-dev, libopenmvg-dev, libroyale-dev, libceres-dev, rti-dev,
   libsoracore-dev, libmiro-dev, libdecomputil-dev, libjps3d-dev
 Description: Astrobee flight software development files.
  The Astrobee flight software development files.
@@ -32,7 +32,7 @@ Package: astrobee0
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
   astrobee-config (>= ${binary:Version}),
-  libalvar2 (>=2.0), libdbow21 (>=0.1), libopenmvg1 (>=1.0), libroyale1 (>=1.0),
+  libalvar2 (>=2.0), libdbow21 (>=0.1), libgtsam (>=4.0), libopenmvg1 (>=1.0), libroyale1 (>=1.0),
   libceres1 (>=1.0), rti (>=1.0), libmiro0 (>=0.1), libsoracore1 (>=1.0),
   libdecomputil0 (>=0.1), libjps3d0 (>=0.1),
   libluajit-5.1-2,
