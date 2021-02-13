@@ -18,19 +18,20 @@
 #include <imu_integration/butterworth_lowpass_filter.h>
 #include <imu_integration/butterworth_lowpass_filter_20_83_notch.h>
 #include <imu_integration/dynamic_imu_filter.h>
+#include <imu_integration/utilities.h>
 #include <localization_common/logger.h>
 
 namespace imu_integration {
 namespace lm = localization_measurements;
-DynamicImuFilter::DynamicImuFilter() {
-  // Default to 20.83 Hz Notch Filter (Nominal Fan Speed)
-  acceleration_x_filter_.reset(new ButterworthLowpassFilter20_83_Notch());
-  acceleration_y_filter_.reset(new ButterworthLowpassFilter20_83_Notch());
-  acceleration_z_filter_.reset(new ButterworthLowpassFilter20_83_Notch());
-  angular_velocity_x_filter_.reset(new ButterworthLowpassFilter20_83_Notch());
-  angular_velocity_y_filter_.reset(new ButterworthLowpassFilter20_83_Notch());
-  angular_velocity_z_filter_.reset(new ButterworthLowpassFilter20_83_Notch());
-  fan_speed_mode_ = FanSpeedMode::kNominal;
+DynamicImuFilter::DynamicImuFilter(const ImuFilterParams& params)
+    : params_(params), fan_speed_mode_(FanSpeedMode::kNominal) {
+  // Default to nominal filters
+  acceleration_x_filter_ = LoadFilter(params_.nominal_accel);
+  acceleration_y_filter_ = LoadFilter(params_.nominal_accel);
+  acceleration_z_filter_ = LoadFilter(params_.nominal_accel);
+  angular_velocity_x_filter_ = LoadFilter(params_.nominal_ang_vel);
+  angular_velocity_y_filter_ = LoadFilter(params_.nominal_ang_vel);
+  angular_velocity_z_filter_ = LoadFilter(params_.nominal_ang_vel);
 }
 
 boost::optional<lm::ImuMeasurement> DynamicImuFilter::AddMeasurement(const lm::ImuMeasurement& imu_measurement) {
@@ -54,31 +55,30 @@ void DynamicImuFilter::SetMode(const FanSpeedMode fan_speed_mode) {
   if (fan_speed_mode != fan_speed_mode_) {
     switch (fan_speed_mode) {
       case FanSpeedMode::kQuiet: {
-        acceleration_x_filter_.reset(new ButterworthLowpassFilter());
-        acceleration_y_filter_.reset(new ButterworthLowpassFilter());
-        acceleration_z_filter_.reset(new ButterworthLowpassFilter());
-        angular_velocity_x_filter_.reset(new ButterworthLowpassFilter());
-        angular_velocity_y_filter_.reset(new ButterworthLowpassFilter());
-        angular_velocity_z_filter_.reset(new ButterworthLowpassFilter());
+        acceleration_x_filter_ = LoadFilter(params_.quiet_accel);
+        acceleration_y_filter_ = LoadFilter(params_.quiet_accel);
+        acceleration_z_filter_ = LoadFilter(params_.quiet_accel);
+        angular_velocity_x_filter_ = LoadFilter(params_.quiet_ang_vel);
+        angular_velocity_y_filter_ = LoadFilter(params_.quiet_ang_vel);
+        angular_velocity_z_filter_ = LoadFilter(params_.quiet_ang_vel);
         break;
       }
       case FanSpeedMode::kNominal: {
-        acceleration_x_filter_.reset(new ButterworthLowpassFilter20_83_Notch());
-        acceleration_y_filter_.reset(new ButterworthLowpassFilter20_83_Notch());
-        acceleration_z_filter_.reset(new ButterworthLowpassFilter20_83_Notch());
-        angular_velocity_x_filter_.reset(new ButterworthLowpassFilter20_83_Notch());
-        angular_velocity_y_filter_.reset(new ButterworthLowpassFilter20_83_Notch());
-        angular_velocity_z_filter_.reset(new ButterworthLowpassFilter20_83_Notch());
+        acceleration_x_filter_ = LoadFilter(params_.nominal_accel);
+        acceleration_y_filter_ = LoadFilter(params_.nominal_accel);
+        acceleration_z_filter_ = LoadFilter(params_.nominal_accel);
+        angular_velocity_x_filter_ = LoadFilter(params_.nominal_ang_vel);
+        angular_velocity_y_filter_ = LoadFilter(params_.nominal_ang_vel);
+        angular_velocity_z_filter_ = LoadFilter(params_.nominal_ang_vel);
         break;
       }
       case FanSpeedMode::kFast: {
-        // TODO(rsoussan): make filter for fast mode
-        acceleration_x_filter_.reset(new ButterworthLowpassFilter20_83_Notch());
-        acceleration_y_filter_.reset(new ButterworthLowpassFilter20_83_Notch());
-        acceleration_z_filter_.reset(new ButterworthLowpassFilter20_83_Notch());
-        angular_velocity_x_filter_.reset(new ButterworthLowpassFilter20_83_Notch());
-        angular_velocity_y_filter_.reset(new ButterworthLowpassFilter20_83_Notch());
-        angular_velocity_z_filter_.reset(new ButterworthLowpassFilter20_83_Notch());
+        acceleration_x_filter_ = LoadFilter(params_.fast_accel);
+        acceleration_y_filter_ = LoadFilter(params_.fast_accel);
+        acceleration_z_filter_ = LoadFilter(params_.fast_accel);
+        angular_velocity_x_filter_ = LoadFilter(params_.fast_ang_vel);
+        angular_velocity_y_filter_ = LoadFilter(params_.fast_ang_vel);
+        angular_velocity_z_filter_ = LoadFilter(params_.fast_ang_vel);
         break;
       }
       default: {

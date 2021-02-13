@@ -76,7 +76,7 @@ class ImuIntegrator {
   ImuIntegratorParams params_;
   boost::shared_ptr<gtsam::PreintegratedCombinedMeasurements::Params> pim_params_;
   std::map<localization_common::Time, localization_measurements::ImuMeasurement> measurements_;
-  DynamicImuFilter imu_filter_;
+  std::unique_ptr<DynamicImuFilter> imu_filter_;
 };
 }  // namespace imu_integration
 

@@ -37,7 +37,7 @@ enum class FanSpeedMode {
 
 class DynamicImuFilter {
  public:
-  DynamicImuFilter();
+  explicit DynamicImuFilter(const ImuFilterParams& params);
   // Returns filtered measurement if one is available
   boost::optional<localization_measurements::ImuMeasurement> AddMeasurement(
     const localization_measurements::ImuMeasurement& imu_measurement);
@@ -54,6 +54,7 @@ class DynamicImuFilter {
   std::unique_ptr<Filter> angular_velocity_x_filter_;
   std::unique_ptr<Filter> angular_velocity_y_filter_;
   std::unique_ptr<Filter> angular_velocity_z_filter_;
+  ImuFilterParams params_;
   FanSpeedMode fan_speed_mode_;
 };
 }  // namespace imu_integration

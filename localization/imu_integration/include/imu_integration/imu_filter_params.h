@@ -22,8 +22,14 @@
 
 namespace imu_integration {
 struct ImuFilterParams {
-  // none, butter, butter3, butter5, butter5_1, butter5_05
-  std::string type = "none";
+  // Filter for fan speed modes (quiet = 2000 rpm, nominal = 2500 rpm, fast = 2800 rpm)
+  // none, butter, butter20_83, butter3, butter5, butter5_1, butter5_05
+  std::string quiet_accel = "none";
+  std::string quiet_ang_vel = "none";
+  std::string nominal_accel = "none";
+  std::string nominal_ang_vel = "none";
+  std::string fast_accel = "none";
+  std::string fast_ang_vel = "none";
 };
 }  // namespace imu_integration
 

@@ -17,6 +17,13 @@
  */
 
 #include <imu_integration/utilities.h>
+#include <imu_integration/butterworth_lowpass_filter.h>
+#include <imu_integration/butterworth_lowpass_filter_20_83_notch.h>
+#include <imu_integration/butterworth_lowpass_filter_3rd_order.h>
+#include <imu_integration/butterworth_lowpass_filter_5th_order.h>
+#include <imu_integration/butterworth_lowpass_filter_5th_order_05.h>
+#include <imu_integration/butterworth_lowpass_filter_5th_order_1.h>
+#include <imu_integration/identity_filter.h>
 #include <localization_common/logger.h>
 #include <localization_common/utilities.h>
 #include <msg_conversions/msg_conversions.h>
@@ -84,12 +91,42 @@ void LoadImuIntegratorParams(config_reader::ConfigReader& config, ImuIntegratorP
   const bool ignore_gravity = mc::LoadBool(config, "ignore_gravity");
   if (ignore_gravity) params.gravity = gtsam::Vector3::Zero();
   params.body_T_imu = lc::LoadTransform(config, "imu_transform");
-  params.filter.type = mc::LoadString(config, "imu_filter");
+  LoadImuFilterParams(config, params.filter);
   params.gyro_sigma = mc::LoadDouble(config, "gyro_sigma");
   params.accel_sigma = mc::LoadDouble(config, "accel_sigma");
   params.accel_bias_sigma = mc::LoadDouble(config, "accel_bias_sigma");
   params.gyro_bias_sigma = mc::LoadDouble(config, "gyro_bias_sigma");
   params.integration_variance = mc::LoadDouble(config, "integration_variance");
   params.bias_acc_omega_int = mc::LoadDouble(config, "bias_acc_omega_int");
+}
+
+void LoadImuFilterParams(config_reader::ConfigReader& config, ImuFilterParams& params) {
+  params.quiet_accel = mc::LoadString(config, "imu_filter_quiet_accel");
+  params.quiet_ang_vel = mc::LoadString(config, "imu_filter_quiet_ang_vel");
+  params.nominal_accel = mc::LoadString(config, "imu_filter_nominal_accel");
+  params.nominal_ang_vel = mc::LoadString(config, "imu_filter_nominal_ang_vel");
+  params.fast_accel = mc::LoadString(config, "imu_filter_fast_accel");
+  params.fast_ang_vel = mc::LoadString(config, "imu_filter_fast_ang_vel");
+}
+
+std::unique_ptr<Filter> LoadFilter(const std::string& filter_type) {
+  if (filter_type == "butter") {
+    return std::unique_ptr<Filter>(new ButterworthLowpassFilter());
+  } else if (filter_type == "butter20_83_notch") {
+    return std::unique_ptr<Filter>(new ButterworthLowpassFilter20_83_Notch());
+  } else if (filter_type == "butter3") {
+    return std::unique_ptr<Filter>(new ButterworthLowpassFilter3rdOrder());
+  } else if (filter_type == "butter5") {
+    return std::unique_ptr<Filter>(new ButterworthLowpassFilter5thOrder());
+  } else if (filter_type == "butter5_1") {
+    return std::unique_ptr<Filter>(new ButterworthLowpassFilter5thOrder1());
+  } else if (filter_type == "butter5_05") {
+    return std::unique_ptr<Filter>(new ButterworthLowpassFilter5thOrder05());
+  } else if (filter_type == "none") {
+    return std::unique_ptr<Filter>(new IdentityFilter());
+  } else {
+    LogFatal("LoadFilter: Invalid filter selection.");
+    return std::unique_ptr<Filter>(new IdentityFilter());
+  }
 }
 }  // namespace imu_integration
