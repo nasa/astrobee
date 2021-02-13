@@ -24,8 +24,7 @@
 namespace imu_integration {
 namespace lc = localization_common;
 namespace lm = localization_measurements;
-ImuIntegrator::ImuIntegrator(const ImuIntegratorParams& params)
-    : params_(params), imu_filter_(new ImuFilter(params.filter)) {
+ImuIntegrator::ImuIntegrator(const ImuIntegratorParams& params) : params_(params) {
   LogDebug("ImuIntegrator: Gravity vector: " << std::endl << params_.gravity.matrix());
   pim_params_.reset(new gtsam::PreintegratedCombinedMeasurements::Params(params_.gravity));
   // Set sensor covariances
@@ -42,7 +41,7 @@ ImuIntegrator::ImuIntegrator(const ImuIntegratorParams& params)
 }
 
 void ImuIntegrator::BufferImuMeasurement(const lm::ImuMeasurement& imu_measurement) {
-  const auto filtered_imu_measurement = imu_filter_->AddMeasurement(imu_measurement);
+  const auto filtered_imu_measurement = imu_filter_.AddMeasurement(imu_measurement);
   if (filtered_imu_measurement) {
     // TODO(rsoussan): Prevent measurements_ from growing too large, add optional window size
     measurements_.emplace(filtered_imu_measurement->timestamp, *filtered_imu_measurement);
