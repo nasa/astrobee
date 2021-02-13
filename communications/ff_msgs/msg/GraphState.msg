@@ -37,6 +37,8 @@ uint8 ml_count # ml feature count
 uint32 iterations # Optimization iterations
 float32 optimization_time
 float32 update_time # Include optimization_time and other operations to add data to graph
+float32 callbacks_time # Includes processing msgs and their callbacks
+float32 nodelet_runtime # Total runtime of nodelet iteration.  Includes update and callback time
 uint32 num_factors
 uint32 num_states
 # Status
