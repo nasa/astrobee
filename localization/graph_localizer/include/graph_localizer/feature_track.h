@@ -21,15 +21,17 @@
 
 #include <localization_measurements/feature_point.h>
 
-#include <deque>
+#include <map>
 #include <vector>
 
 namespace graph_localizer {
 
-struct FeatureTrack {
-  localization_measurements::FeatureId id;
-  std::deque<localization_measurements::FeaturePoint> points;
-  localization_measurements::ImageId latest_image_id;
+class FeatureTrack {
+  void AddMeasurement(const localization_common::Time timestamp, const gtsam::Point2& measurement);
+  void RemoveOldMeasurements(const localization_common::Time oldest_allowed_timestamp);
+  bool HasMeasurement(const localization_common::Time timestamp);
+  // std::vector<std::pair<localization_common::Time, gtsam::Point2>> EvenlySpacedMeasurements(const int
+  // num_measurements);
 
  private:
   // Serialization function
@@ -37,12 +39,12 @@ struct FeatureTrack {
   template <class ARCHIVE>
   void serialize(ARCHIVE& ar, const unsigned int /*version*/) {
     ar& BOOST_SERIALIZATION_NVP(id);
-    ar& BOOST_SERIALIZATION_NVP(latest_image_id);
     ar& BOOST_SERIALIZATION_NVP(points);
   }
-};
 
-using FeatureTracks = std::vector<FeatureTrack>;
+  localization_measurements::FeatureId id;
+  std::map<localization_common::Time, localization_measurements::FeaturePoint> points;
+};
 }  // namespace graph_localizer
 
 #endif  // GRAPH_LOCALIZER_FEATURE_TRACK_H_
