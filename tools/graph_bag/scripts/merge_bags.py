@@ -55,7 +55,7 @@ if __name__ == '__main__':
   sorted_bag_names = natural_sort(bag_names)
 
   topics = [
-    '/hw/imu', '/loc/of/features', '/loc/ml/features', '/loc/ar/features', '/mgt/img_sampler/nav_cam/image_record'
+    '/hw/imu', '/loc/of/features', '/loc/ml/features', '/loc/ar/features', '/mob/flight_mode', '/mgt/img_sampler/nav_cam/image_record'
   ]
 
   with rosbag.Bag(merged_bag_name, 'w') as merged_bag:

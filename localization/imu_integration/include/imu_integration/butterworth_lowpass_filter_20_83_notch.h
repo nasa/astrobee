@@ -15,27 +15,29 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef GRAPH_BAG_LIVE_MEASUREMENT_SIMULATOR_PARAMS_H_
-#define GRAPH_BAG_LIVE_MEASUREMENT_SIMULATOR_PARAMS_H_
 
-#include <graph_bag/message_buffer_params.h>
+#ifndef IMU_INTEGRATION_BUTTERWORTH_LOWPASS_FILTER_20_83_NOTCH_H_
+#define IMU_INTEGRATION_BUTTERWORTH_LOWPASS_FILTER_20_83_NOTCH_H_
 
-#include <string>
+#include <imu_integration/filter.h>
 
-namespace graph_bag {
-struct LiveMeasurementSimulatorParams {
-  MessageBufferParams imu;
-  MessageBufferParams flight_mode;
-  MessageBufferParams of;
-  MessageBufferParams vl;
-  MessageBufferParams ar;
-  MessageBufferParams img;
-  std::string bag_name;
-  std::string map_file;
-  std::string image_topic;
-  bool use_image_features;
-  bool save_optical_flow_images;
+#include <array>
+
+namespace imu_integration {
+class ButterworthLowpassFilter20_83_Notch : public Filter {
+ public:
+  ButterworthLowpassFilter20_83_Notch();
+  // Returns filtered value and timestamp
+  double AddValue(const double value) final;
+
+ private:
+  void Initialize(const double first_value, const double gain);
+  // Notation taken from mkfilter site
+  // /www/usr/fisher/helpers/mkfilter
+  std::array<double, 4> xv_;
+  std::array<double, 4> yv_;
+  bool initialized_;
 };
-}  // namespace graph_bag
+}  // namespace imu_integration
 
-#endif  // GRAPH_BAG_LIVE_MEASUREMENT_SIMULATOR_PARAMS_H_
+#endif  // IMU_INTEGRATION_BUTTERWORTH_LOWPASS_FILTER_20_83_NOTCH_H_

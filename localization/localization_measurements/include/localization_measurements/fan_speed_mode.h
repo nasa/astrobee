@@ -15,27 +15,16 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef GRAPH_BAG_LIVE_MEASUREMENT_SIMULATOR_PARAMS_H_
-#define GRAPH_BAG_LIVE_MEASUREMENT_SIMULATOR_PARAMS_H_
 
-#include <graph_bag/message_buffer_params.h>
+#ifndef LOCALIZATION_MEASUREMENTS_FAN_SPEED_MODE_H_
+#define LOCALIZATION_MEASUREMENTS_FAN_SPEED_MODE_H_
 
-#include <string>
-
-namespace graph_bag {
-struct LiveMeasurementSimulatorParams {
-  MessageBufferParams imu;
-  MessageBufferParams flight_mode;
-  MessageBufferParams of;
-  MessageBufferParams vl;
-  MessageBufferParams ar;
-  MessageBufferParams img;
-  std::string bag_name;
-  std::string map_file;
-  std::string image_topic;
-  bool use_image_features;
-  bool save_optical_flow_images;
+namespace localization_measurements {
+enum class FanSpeedMode {
+  kOff,        // 0 rpm
+  kQuiet,      // 2000 rpm
+  kNominal,    // 2500 rpm
+  kAggressive  // 2800 rpm
 };
-}  // namespace graph_bag
-
-#endif  // GRAPH_BAG_LIVE_MEASUREMENT_SIMULATOR_PARAMS_H_
+}  // namespace localization_measurements
+#endif  // LOCALIZATION_MEASUREMENTS_FAN_SPEED_MODE_H_

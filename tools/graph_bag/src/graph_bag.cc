@@ -96,6 +96,11 @@ void GraphBag::Run() {
   graph_bag_timer.Start();
   while (live_measurement_simulator_->ProcessMessage()) {
     const lc::Time current_time = live_measurement_simulator_->CurrentTime();
+    const auto flight_mode_msg = live_measurement_simulator_->GetFlightModeMessage(current_time);
+    if (flight_mode_msg) {
+      graph_localizer_simulator_->BufferFlightModeMsg(*flight_mode_msg);
+      imu_augmentor_wrapper_.FlightModeCallback(*flight_mode_msg);
+    }
     const auto imu_msg = live_measurement_simulator_->GetImuMessage(current_time);
     if (imu_msg) {
       graph_localizer_simulator_->BufferImuMsg(*imu_msg);

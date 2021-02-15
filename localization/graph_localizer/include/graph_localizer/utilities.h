@@ -59,7 +59,8 @@ ff_msgs::GraphState GraphStateMsg(const localization_common::CombinedNavState& c
                                   const int num_optical_flow_features_in_last_measurement,
                                   const int num_sparse_mapping_features_in_last_measurement, const bool estimating_bias,
                                   const double position_log_det_threshold, const double orientation_log_det_threshold,
-                                  const bool standstill, const GraphStats& graph_stats);
+                                  const bool standstill, const GraphStats& graph_stats,
+                                  const localization_measurements::FanSpeedMode fan_speed_mode);
 
 ff_msgs::LocalizationGraph GraphMsg(const GraphLocalizer& graph_localizer);
 

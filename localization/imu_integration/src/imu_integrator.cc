@@ -24,8 +24,8 @@
 namespace imu_integration {
 namespace lc = localization_common;
 namespace lm = localization_measurements;
-ImuIntegrator::ImuIntegrator(const ImuIntegratorParams& params)
-    : params_(params), imu_filter_(new ImuFilter(params.filter)) {
+ImuIntegrator::ImuIntegrator(const ImuIntegratorParams& params) : params_(params) {
+  imu_filter_.reset(new DynamicImuFilter(params_.filter));
   LogDebug("ImuIntegrator: Gravity vector: " << std::endl << params_.gravity.matrix());
   pim_params_.reset(new gtsam::PreintegratedCombinedMeasurements::Params(params_.gravity));
   // Set sensor covariances
@@ -122,6 +122,12 @@ boost::optional<gtsam::PreintegratedCombinedMeasurements> ImuIntegrator::Integra
   }
   return pim;
 }
+
+void ImuIntegrator::SetFanSpeedMode(const lm::FanSpeedMode fan_speed_mode) {
+  imu_filter_->SetFanSpeedMode(fan_speed_mode);
+}
+
+lm::FanSpeedMode ImuIntegrator::fan_speed_mode() const { return imu_filter_->fan_speed_mode(); }
 
 boost::shared_ptr<gtsam::PreintegratedCombinedMeasurements::Params> ImuIntegrator::pim_params() const {
   // Make a copy so internal params aren't exposed.  Gtsam expects a point to a

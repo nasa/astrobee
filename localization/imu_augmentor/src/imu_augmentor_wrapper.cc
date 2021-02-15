@@ -22,6 +22,7 @@
 #include <localization_common/logger.h>
 #include <localization_common/utilities.h>
 #include <localization_measurements/imu_measurement.h>
+#include <localization_measurements/measurement_conversions.h>
 #include <msg_conversions/msg_conversions.h>
 
 namespace imu_augmentor {
@@ -70,6 +71,10 @@ bool ImuAugmentorWrapper::standstill() const {
 
 void ImuAugmentorWrapper::ImuCallback(const sensor_msgs::Imu& imu_msg) {
   imu_augmentor_->BufferImuMeasurement(lm::ImuMeasurement(imu_msg));
+}
+
+void ImuAugmentorWrapper::FlightModeCallback(const ff_msgs::FlightMode& flight_mode) {
+  imu_augmentor_->SetFanSpeedMode(lm::ConvertFanSpeedMode(flight_mode.speed));
 }
 
 boost::optional<std::pair<lc::CombinedNavState, lc::CombinedNavStateCovariances>>

@@ -24,6 +24,7 @@
 #include <graph_localizer/graph_initializer_params.h>
 #include <graph_localizer/graph_values_params.h>
 #include <graph_localizer/noise_params.h>
+#include <localization_measurements/fan_speed_mode.h>
 
 #include <string>
 
@@ -50,6 +51,7 @@ struct GraphLocalizerParams {
   double huber_k;
   int log_rate;
   bool estimate_world_T_dock_using_loc;
+  localization_measurements::FanSpeedMode initial_fan_speed_mode;
 };
 }  // namespace graph_localizer
 

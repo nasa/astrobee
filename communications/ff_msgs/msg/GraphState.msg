@@ -44,3 +44,4 @@ uint32 num_states
 # Status
 bool standstill
 bool estimating_bias # Are we busy estimating the bias?
+uint8 fan_speed_mode # Used for imu filtering

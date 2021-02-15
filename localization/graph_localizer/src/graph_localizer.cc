@@ -63,6 +63,7 @@ GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
       graph_values_(new GraphValues(params.graph_values)),
       log_on_destruction_(true),
       params_(params) {
+  latest_imu_integrator_.SetFanSpeedMode(params_.initial_fan_speed_mode);
   // Assumes zero initial velocity
   const lc::CombinedNavState global_N_body_start(params_.graph_initializer.global_T_body_start,
                                                  gtsam::Velocity3::Zero(), params_.graph_initializer.initial_imu_bias,
@@ -1061,6 +1062,12 @@ void GraphLocalizer::PrintFactorDebugInfo() const {
     }
   }
 }
+
+void GraphLocalizer::SetFanSpeedMode(const lm::FanSpeedMode fan_speed_mode) {
+  latest_imu_integrator_.SetFanSpeedMode(fan_speed_mode);
+}
+
+const lm::FanSpeedMode GraphLocalizer::fan_speed_mode() const { return latest_imu_integrator_.fan_speed_mode(); }
 
 const GraphLocalizerParams& GraphLocalizer::params() const { return params_; }
 

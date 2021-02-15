@@ -64,7 +64,8 @@ ff_msgs::GraphState GraphStateMsg(const lc::CombinedNavState& combined_nav_state
                                   const int num_optical_flow_features_in_last_measurement,
                                   const int num_sparse_mapping_features_in_last_measurement, const bool estimating_bias,
                                   const double position_log_det_threshold, const double orientation_log_det_threshold,
-                                  const bool standstill, const GraphStats& graph_stats) {
+                                  const bool standstill, const GraphStats& graph_stats,
+                                  const lm::FanSpeedMode fan_speed_mode) {
   ff_msgs::GraphState loc_msg;
 
   // Set Header Frames
@@ -94,7 +95,9 @@ ff_msgs::GraphState GraphStateMsg(const lc::CombinedNavState& combined_nav_state
   loc_msg.update_time = graph_stats.update_timer_.last_value();
   loc_msg.num_factors = graph_stats.num_factors_averager_.last_value();
   loc_msg.num_states = graph_stats.num_states_averager_.last_value();
+  // Other
   loc_msg.standstill = standstill;
+  loc_msg.fan_speed_mode = static_cast<uint8_t>(fan_speed_mode);
   return loc_msg;
 }
 
