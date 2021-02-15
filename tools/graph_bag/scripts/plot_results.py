@@ -127,23 +127,45 @@ def plot_features(feature_counts,
 
 def add_feature_count_plots(pdf, graph_localization_states):
   plt.figure()
-  plot_features(graph_localization_states.of_counts,
+  plot_features(graph_localization_states.num_detected_ml_features,
                 graph_localization_states.times,
-                'OF',
-                'r',
-                marker='x',
-                markeredgewidth=0.1,
-                markersize=1.5)
-  plot_features(graph_localization_states.vl_counts,
-                graph_localization_states.times,
-                'VL',
+                'Det. VL',
                 'b',
                 marker='o',
                 markeredgewidth=0.1,
                 markersize=1.5)
+  plot_features(graph_localization_states.num_ml_projection_factors,
+                graph_localization_states.times,
+                'VL Proj Factors',
+                'r',
+                marker='x',
+                markeredgewidth=0.1,
+                markersize=1.5)
   plt.xlabel('Time (s)')
-  plt.ylabel('Feature Counts (num features in graph)')
-  plt.title('Feature Counts')
+  plt.ylabel('ML Feature Counts') 
+  plt.title('ML Feature Counts')
+  plt.legend(prop={'size': 6})
+  pdf.savefig()
+  plt.close()
+
+  plt.figure()
+  plot_features(graph_localization_states.num_detected_of_features,
+                graph_localization_states.times,
+                'Det. OF',
+                'b',
+                marker='o',
+                markeredgewidth=0.1,
+                markersize=1.5)
+  plot_features(graph_localization_states.num_of_factors,
+                graph_localization_states.times,
+                'OF Factors',
+                'r',
+                marker='x',
+                markeredgewidth=0.1,
+                markersize=1.5)
+  plt.xlabel('Time (s)')
+  plt.ylabel('Optical Flow Feature Counts') 
+  plt.title('Optical Flow Feature Counts')
   plt.legend(prop={'size': 6})
   pdf.savefig()
   plt.close()

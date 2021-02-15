@@ -61,8 +61,7 @@ bool ValidVLMsg(const ff_msgs::VisualLandmarks& visual_landmarks_msg, const int 
 
 ff_msgs::GraphState GraphStateMsg(const lc::CombinedNavState& combined_nav_state,
                                   const lc::CombinedNavStateCovariances& covariances,
-                                  const int num_optical_flow_features_in_last_measurement,
-                                  const int num_sparse_mapping_features_in_last_measurement, const bool estimating_bias,
+                                  const FeatureCounts& detected_feature_counts, const bool estimating_bias,
                                   const double position_log_det_threshold, const double orientation_log_det_threshold,
                                   const bool standstill, const GraphStats& graph_stats,
                                   const lm::FanSpeedMode fan_speed_mode) {
@@ -82,11 +81,9 @@ ff_msgs::GraphState GraphStateMsg(const lc::CombinedNavState& combined_nav_state
   loc_msg.confidence = covariances.PoseConfidence(position_log_det_threshold, orientation_log_det_threshold);
 
   // Set Graph Feature Counts/Information
-  // TODO(rsoussan): Change msg to use int instead of uint8_t to avoid this overflow issue
-  loc_msg.of_count =
-    num_optical_flow_features_in_last_measurement <= 255 ? num_optical_flow_features_in_last_measurement : 255;
-  loc_msg.ml_count =
-    num_sparse_mapping_features_in_last_measurement <= 255 ? num_sparse_mapping_features_in_last_measurement : 255;
+  loc_msg.num_detected_of_features = detected_feature_counts.of;
+  loc_msg.num_detected_ml_features = detected_feature_counts.vl;
+  loc_msg.num_detected_ar_features = detected_feature_counts.ar;
   loc_msg.estimating_bias = estimating_bias;
 
   // Set Graph Stats
@@ -94,6 +91,9 @@ ff_msgs::GraphState GraphStateMsg(const lc::CombinedNavState& combined_nav_state
   loc_msg.optimization_time = graph_stats.optimization_timer_.last_value();
   loc_msg.update_time = graph_stats.update_timer_.last_value();
   loc_msg.num_factors = graph_stats.num_factors_averager_.last_value();
+  loc_msg.num_of_factors = graph_stats.num_optical_flow_factors_averager_.last_value();
+  loc_msg.num_ml_projection_factors = graph_stats.num_loc_proj_factors_averager_.last_value();
+  loc_msg.num_ml_pose_factors = graph_stats.num_loc_pose_factors_averager_.last_value();
   loc_msg.num_states = graph_stats.num_states_averager_.last_value();
   // Other
   loc_msg.standstill = standstill;

@@ -22,6 +22,7 @@
 #include <ff_msgs/GraphState.h>
 #include <ff_msgs/LocalizationGraph.h>
 #include <ff_msgs/VisualLandmarks.h>
+#include <graph_localizer/feature_counts.h>
 #include <graph_localizer/graph_localizer.h>
 #include <graph_localizer/graph_localizer_initializer.h>
 #include <graph_localizer/graph_stats.h>
@@ -56,8 +57,7 @@ bool ValidVLMsg(const ff_msgs::VisualLandmarks& visual_landmarks_msg, const int 
 
 ff_msgs::GraphState GraphStateMsg(const localization_common::CombinedNavState& combined_nav_state,
                                   const localization_common::CombinedNavStateCovariances& covariances,
-                                  const int num_optical_flow_features_in_last_measurement,
-                                  const int num_sparse_mapping_features_in_last_measurement, const bool estimating_bias,
+                                  const FeatureCounts& detected_feature_counts, const bool estimating_bias,
                                   const double position_log_det_threshold, const double orientation_log_det_threshold,
                                   const bool standstill, const GraphStats& graph_stats,
                                   const localization_measurements::FanSpeedMode fan_speed_mode);

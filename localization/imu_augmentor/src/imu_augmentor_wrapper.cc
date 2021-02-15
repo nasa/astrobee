@@ -119,8 +119,11 @@ boost::optional<ff_msgs::EkfState> ImuAugmentorWrapper::LatestImuAugmentedLocali
   latest_imu_augmented_loc_msg.header = latest_loc_msg_->header;
   latest_imu_augmented_loc_msg.child_frame_id = latest_loc_msg_->child_frame_id;
   latest_imu_augmented_loc_msg.confidence = latest_loc_msg_->confidence;
-  latest_imu_augmented_loc_msg.of_count = latest_loc_msg_->of_count;
-  latest_imu_augmented_loc_msg.ml_count = latest_loc_msg_->ml_count;
+  // Prevent overflow of uin8_t
+  latest_imu_augmented_loc_msg.of_count =
+    latest_loc_msg_->num_of_factors <= 255 ? latest_loc_msg_->num_of_factors : 255;
+  latest_imu_augmented_loc_msg.ml_count =
+    latest_loc_msg_->num_ml_projection_factors <= 255 ? latest_loc_msg_->num_ml_projection_factors : 255;
   latest_imu_augmented_loc_msg.estimating_bias = latest_loc_msg_->estimating_bias;
 
   // Update nav state and covariances with latest imu measurements
