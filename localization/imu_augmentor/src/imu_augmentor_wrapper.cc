@@ -54,6 +54,10 @@ ImuAugmentorWrapper::ImuAugmentorWrapper(const std::string& graph_config_path_pr
 
 void ImuAugmentorWrapper::LocalizationStateCallback(const ff_msgs::GraphState& loc_msg) {
   loc_state_timer_.RecordAndVlogEveryN(10, 2);
+  const auto loc_state_elapsed_time = loc_state_timer_.LastValue();
+  if (loc_state_elapsed_time && *loc_state_elapsed_time >= 2) {
+    LogError("LocalizationStateCallback: More than 2 seconds elapsed between loc state msgs.");
+  }
 
   latest_combined_nav_state_ = lc::CombinedNavStateFromMsg(loc_msg);
   latest_covariances_ = lc::CombinedNavStateCovariancesFromMsg(loc_msg);
