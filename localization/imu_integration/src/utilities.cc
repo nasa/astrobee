@@ -19,7 +19,7 @@
 #include <imu_integration/utilities.h>
 #include <imu_integration/butterO1.h>
 #include <imu_integration/butterO3.h>
-#include <imu_integration/butterworth_lowpass_filter_5th_order.h>
+#include <imu_integration/butterO5.h>
 #include <imu_integration/butterworth_lowpass_filter_5th_order_05.h>
 #include <imu_integration/butterworth_lowpass_filter_5th_order_1.h>
 #include <imu_integration/identity_filter.h>
@@ -118,8 +118,8 @@ std::unique_ptr<Filter> LoadFilter(const std::string& filter_type) {
     return std::unique_ptr<Filter>(new ButterO1S62_5Lp3N15_83());
   } else if (filter_type == "ButterO3S62_5Lp3N29_16") {  // 3rd Order
     return std::unique_ptr<Filter>(new ButterO3S62_5Lp3N29_16());
-  } else if (filter_type == "butter5") {
-    return std::unique_ptr<Filter>(new ButterworthLowpassFilter5thOrder());
+  } else if (filter_type == "ButterO5S62_5Lp3N29_16") {  // 5th Order
+    return std::unique_ptr<Filter>(new ButterO5S62_5Lp3N29_16());
   } else if (filter_type == "butter5_1") {
     return std::unique_ptr<Filter>(new ButterworthLowpassFilter5thOrder1());
   } else if (filter_type == "butter5_05") {
