@@ -20,8 +20,6 @@
 #include <imu_integration/butterO1.h>
 #include <imu_integration/butterO3.h>
 #include <imu_integration/butterO5.h>
-#include <imu_integration/butterworth_lowpass_filter_5th_order_05.h>
-#include <imu_integration/butterworth_lowpass_filter_5th_order_1.h>
 #include <imu_integration/identity_filter.h>
 #include <localization_common/logger.h>
 #include <localization_common/utilities.h>
@@ -120,10 +118,10 @@ std::unique_ptr<Filter> LoadFilter(const std::string& filter_type) {
     return std::unique_ptr<Filter>(new ButterO3S62_5Lp3N29_16());
   } else if (filter_type == "ButterO5S62_5Lp3N29_16") {  // 5th Order
     return std::unique_ptr<Filter>(new ButterO5S62_5Lp3N29_16());
-  } else if (filter_type == "butter5_1") {
-    return std::unique_ptr<Filter>(new ButterworthLowpassFilter5thOrder1());
-  } else if (filter_type == "butter5_05") {
-    return std::unique_ptr<Filter>(new ButterworthLowpassFilter5thOrder05());
+  } else if (filter_type == "ButterO5S62_5Lp1N29_16") {
+    return std::unique_ptr<Filter>(new ButterO5S62_5Lp1N29_16());
+  } else if (filter_type == "ButterO5S62_5Lp0_5N29_16") {
+    return std::unique_ptr<Filter>(new ButterO5S62_5Lp0_5N29_16());
   } else if (filter_type == "none") {
     return std::unique_ptr<Filter>(new IdentityFilter());
   } else {
