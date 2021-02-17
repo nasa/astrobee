@@ -15,8 +15,6 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#include <imu_integration/butterworth_lowpass_filter.h>
-#include <imu_integration/butterworth_lowpass_filter_20_83_notch.h>
 #include <imu_integration/butterworth_lowpass_filter_3rd_order.h>
 #include <imu_integration/butterworth_lowpass_filter_5th_order.h>
 #include <imu_integration/butterworth_lowpass_filter_5th_order_05.h>

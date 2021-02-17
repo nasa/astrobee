@@ -15,8 +15,6 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#include <imu_integration/butterworth_lowpass_filter.h>
-#include <imu_integration/butterworth_lowpass_filter_20_83_notch.h>
 #include <imu_integration/dynamic_imu_filter.h>
 #include <imu_integration/utilities.h>
 #include <localization_common/logger.h>
