@@ -31,16 +31,10 @@ def natural_sort(l):
   return sorted(l, key=alphanum_key)
 
 
-if __name__ == '__main__':
-  parser = argparse.ArgumentParser()
-  parser.add_argument('input_bag_prefix')
-  parser.add_argument('--merged-bag', default='')
-  args = parser.parse_args()
-
+def merge_bag(input_bag_prefix, merged_bag):
   # Find bagfiles with bag prefix in current directory, fail if none found
   bag_names = [
-    bag for bag in os.listdir('.')
-    if os.path.isfile(bag) and bag.startswith(args.input_bag_prefix) and bag.endswith('.bag')
+    bag for bag in os.listdir('.') if os.path.isfile(bag) and bag.startswith(input_bag_prefix) and bag.endswith('.bag')
   ]
   if (len(bag_names) == 0):
     print('No bag files found')
@@ -49,13 +43,14 @@ if __name__ == '__main__':
     print('Found ' + str(len(bag_names)) + ' bag files.')
 
   merged_bag_name = ''
-  if not args.merged_bag:
-    merged_bag_name = 'merged_' + args.input_bag_prefix + '.bag'
+  if not merged_bag:
+    merged_bag_name = 'merged_' + input_bag_prefix + '.bag'
 
   sorted_bag_names = natural_sort(bag_names)
 
   topics = [
-    '/hw/imu', '/loc/of/features', '/loc/ml/features', '/loc/ar/features', '/mob/flight_mode', '/mgt/img_sampler/nav_cam/image_record'
+    '/hw/imu', '/loc/of/features', '/loc/ml/features', '/loc/ar/features', '/mgt/img_sampler/nav_cam/image_record',
+    '/graph_loc/state', '/gnc/ekf', '/sparse_mapping/pose'
   ]
 
   with rosbag.Bag(merged_bag_name, 'w') as merged_bag:
@@ -63,3 +58,11 @@ if __name__ == '__main__':
       with rosbag.Bag(sorted_bag_name, 'r') as sorted_bag:
         for topic, msg, t in sorted_bag.read_messages(topics):
           merged_bag.write(topic, msg, t)
+
+
+if __name__ == '__main__':
+  parser = argparse.ArgumentParser()
+  parser.add_argument('input_bag_prefix')
+  parser.add_argument('--merged-bag', default='')
+  args = parser.parse_args()
+  merge_bag(args.input_bag_prefix, args.merged_bag)
