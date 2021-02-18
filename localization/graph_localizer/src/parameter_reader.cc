@@ -132,6 +132,7 @@ void LoadSmartProjectionFactorAdderParams(config_reader::ConfigReader& config,
   params.robust = mc::LoadBool(config, "smart_projection_adder_robust");
   params.max_num_factors = mc::LoadInt(config, "smart_projection_adder_max_num_factors");
   params.min_num_points = mc::LoadInt(config, "smart_projection_adder_min_num_points");
+  params.max_num_points_per_factor = mc::LoadInt(config, "smart_projection_adder_max_num_points_per_factor");
   params.rotation_only_fallback = mc::LoadBool(config, "smart_projection_adder_rotation_only_fallback");
   params.splitting = mc::LoadBool(config, "smart_projection_adder_splitting");
   params.scale_noise_with_num_points = mc::LoadBool(config, "smart_projection_adder_scale_noise_with_num_points");
