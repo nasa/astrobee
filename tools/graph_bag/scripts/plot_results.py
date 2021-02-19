@@ -396,28 +396,28 @@ def add_other_loc_plots(pdf, graph_localization_states, imu_augmented_graph_loca
   add_other_vector3d_plots(pdf, imu_augmented_graph_localization_states)
 
 
-def load_pose_msgs(vec_of_poses, bag):
+def load_pose_msgs(vec_of_poses, bag, bag_start_time):
   topics = [poses.topic for poses in vec_of_poses]
   for topic, msg, t in bag.read_messages(topics):
     for poses in vec_of_poses:
       if poses.topic == topic:
-        poses.add_msg(msg, msg.header.stamp)
+        poses.add_msg(msg, msg.header.stamp, bag_start_time)
         break
 
 
-def load_loc_state_msgs(vec_of_loc_states, bag):
+def load_loc_state_msgs(vec_of_loc_states, bag, bag_start_time):
   topics = [loc_states.topic for loc_states in vec_of_loc_states]
   for topic, msg, t in bag.read_messages(topics):
     for loc_states in vec_of_loc_states:
       if loc_states.topic == topic:
-        loc_states.add_loc_state(msg)
+        loc_states.add_loc_state(msg, bag_start_time)
         break
 
 
-def load_velocity_msgs(velocities, bag):
+def load_velocity_msgs(velocities, bag, bag_start_time):
   topics = [velocities.topic]
   for topic, msg, t in bag.read_messages(topics):
-    velocities.add_msg(msg, msg.header.stamp)
+    velocities.add_msg(msg, msg.header.stamp, bag_start_time)
 
 
 def has_topic(bag, topic):
@@ -427,6 +427,7 @@ def has_topic(bag, topic):
 
 def create_plots(bagfile, output_pdf_file, output_csv_file='results.csv'):
   bag = rosbag.Bag(bagfile)
+  bag_start_time = bag.get_start_time()
 
   has_imu_augmented_graph_localization_state = has_topic(bag, '/gnc/ekf')
   has_imu_bias_tester_poses = has_topic(bag, '/imu_bias_tester/pose')
@@ -434,15 +435,15 @@ def create_plots(bagfile, output_pdf_file, output_csv_file='results.csv'):
   ar_tag_poses = poses.Poses('AR Tag', '/ar_tag/pose')
   imu_bias_tester_poses = poses.Poses('Imu Bias Tester', '/imu_bias_tester/pose')
   vec_of_poses = [sparse_mapping_poses, ar_tag_poses, imu_bias_tester_poses]
-  load_pose_msgs(vec_of_poses, bag)
+  load_pose_msgs(vec_of_poses, bag, bag_start_time)
 
   graph_localization_states = loc_states.LocStates('Graph Localization', '/graph_loc/state')
   imu_augmented_graph_localization_states = loc_states.LocStates('Imu Augmented Graph Localization', '/gnc/ekf')
   vec_of_loc_states = [graph_localization_states, imu_augmented_graph_localization_states]
-  load_loc_state_msgs(vec_of_loc_states, bag)
+  load_loc_state_msgs(vec_of_loc_states, bag, bag_start_time)
 
   imu_bias_tester_velocities = velocities.Velocities('Imu Bias Tester', '/imu_bias_tester/velocity')
-  load_velocity_msgs(imu_bias_tester_velocities, bag)
+  load_velocity_msgs(imu_bias_tester_velocities, bag, bag_start_time)
 
   bag.close()
 
