@@ -78,6 +78,26 @@ struct ParamsButterO3S62_5Lp3N29_16 {
 };
 using ButterO3S62_5Lp3N29_16 = ButterO3<ParamsButterO3S62_5Lp3N29_16>;
 
+struct ParamsButterO3S62_5Lp3N20_83 {
+  static constexpr double kGain = 1.1572342485e+03;
+  static constexpr double kX14 = 3.9994195281;
+  static constexpr double kX23 = 6.9982585842;
+  static constexpr double kY2 = 5.4578683446e-01;
+  static constexpr double kY3 = -1.9654812209e+00;
+  static constexpr double kY4 = 2.3989592965e+00;
+};
+using ButterO3S62_5Lp3N20_83 = ButterO3<ParamsButterO3S62_5Lp3N20_83>;
+
+struct ParamsButterO3S62_5Lp3N15_83 {
+  static constexpr double kGain = 7.8754026491e+02;
+  static constexpr double kX14 = 3.0412147780e+00;
+  static constexpr double kX23 = 4.1236443339e+00;
+  static constexpr double kY2 = 5.4578683446e-01;
+  static constexpr double kY3 = -1.9654812209e+00;
+  static constexpr double kY4 = 2.3989592965e+00;
+};
+using ButterO3S62_5Lp3N15_83 = ButterO3<ParamsButterO3S62_5Lp3N15_83>;
+
 }  // namespace imu_integration
 
 #endif  // IMU_INTEGRATION_BUTTERO3_H_

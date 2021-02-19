@@ -108,6 +108,33 @@ struct ParamsButterO5S62_5Lp0_5N29_16 {
   static constexpr double kY6 = 4.8373424748;
 };
 using ButterO5S62_5Lp0_5N29_16 = ButterO5<ParamsButterO5S62_5Lp0_5N29_16>;
+
+struct ParamsButterO5S62_5Lp3N20_83 {
+  static constexpr double kGain = 6.0459547194e+04;
+  static constexpr double kX16 = 5.9994195281e+00;
+  static constexpr double kX25 = 1.5997097640e+01;
+  static constexpr double kX34 = 2.4994195281e+01;
+  static constexpr double kY2 = 3.7509291343e-01;
+  static constexpr double kY3 = -2.2411521809e+00;
+  static constexpr double kY4 = 5.3982113474e+00;
+  static constexpr double kY5 = -6.5588143289e+00;
+  static constexpr double kY6 = 4.0250747177e+00;
+};
+using ButterO5S62_5Lp3N20_83 = ButterO5<ParamsButterO5S62_5Lp3N20_83>;
+
+struct ParamsButterO5S62_5Lp3N15_83 {
+  static constexpr double kGain = 4.1144934894e+04;
+  static constexpr double kX16 = 5.0412147780e+00;
+  static constexpr double kX25 = 1.1206073890e+01;
+  static constexpr double kX34 = 1.5412147780e+01;
+  static constexpr double kY2 = 3.7509291343e-01;
+  static constexpr double kY3 = -2.2411521809e+00;
+  static constexpr double kY4 = 5.3982113474e+00;
+  static constexpr double kY5 = -6.5588143289e+00;
+  static constexpr double kY6 = 4.0250747177e+00;
+};
+using ButterO5S62_5Lp3N15_83 = ButterO5<ParamsButterO5S62_5Lp3N15_83>;
+
 }  // namespace imu_integration
 
 #endif  // IMU_INTEGRATION_BUTTERO5_H_
