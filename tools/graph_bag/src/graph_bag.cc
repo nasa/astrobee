@@ -27,6 +27,7 @@
 #include <msg_conversions/msg_conversions.h>
 
 #include <geometry_msgs/PoseStamped.h>
+#include <geometry_msgs/Vector3Stamped.h>
 #include <ros/time.h>
 #include <sensor_msgs/Imu.h>
 
@@ -39,6 +40,7 @@
 namespace graph_bag {
 namespace gl = graph_localizer;
 namespace lc = localization_common;
+namespace mc = msg_conversions;
 
 GraphBag::GraphBag(const std::string& bag_name, const std::string& map_file, const std::string& image_topic,
                    const std::string& results_bag, const std::string& output_stats_file, const bool use_image_features,
@@ -86,6 +88,10 @@ void GraphBag::SaveImuBiasTesterPredictedStates(
     lc::PoseToMsg(state.pose(), pose_msg.pose);
     lc::TimeToHeader(state.timestamp(), pose_msg.header);
     SaveMsg(pose_msg, TOPIC_IMU_BIAS_TESTER_POSE);
+    geometry_msgs::Vector3Stamped velocity_msg;
+    mc::VectorToMsg(state.velocity(), velocity_msg.vector);
+    lc::TimeToHeader(state.timestamp(), velocity_msg.header);
+    SaveMsg(velocity_msg, TOPIC_IMU_BIAS_TESTER_VELOCITY);
   }
 }
 

@@ -20,6 +20,7 @@
 import loc_states
 import plot_helpers
 import poses
+import velocities
 import rmse_utilities
 
 import matplotlib
@@ -33,11 +34,13 @@ import rosbag
 
 import csv
 
+
 def l2_map(vector3ds):
   return map(lambda (x, y, z): math.sqrt(x + y + z), zip(vector3ds.xs, vector3ds.ys, vector3ds.zs))
 
 
-def add_pose_plots(pdf, sparse_mapping_poses, ar_tag_poses, graph_localization_poses, imu_augmented_graph_localization_poses):
+def add_pose_plots(pdf, sparse_mapping_poses, ar_tag_poses, graph_localization_poses,
+                   imu_augmented_graph_localization_poses):
   colors = ['r', 'b', 'g']
   plt.figure()
   plot_helpers.plot_positions(sparse_mapping_poses,
@@ -47,12 +50,7 @@ def add_pose_plots(pdf, sparse_mapping_poses, ar_tag_poses, graph_localization_p
                               markeredgewidth=0.1,
                               markersize=1.5)
   if ar_tag_poses.times:
-    plot_helpers.plot_positions(ar_tag_poses,
-                                colors,
-                                linestyle='None',
-                                marker='x',
-                                markeredgewidth=0.1,
-                                markersize=1.5)
+    plot_helpers.plot_positions(ar_tag_poses, colors, linestyle='None', marker='x', markeredgewidth=0.1, markersize=1.5)
   plot_helpers.plot_positions(graph_localization_poses, colors, linewidth=0.5)
   plt.xlabel('Time (s)')
   plt.ylabel('Position (m)')
@@ -71,11 +69,11 @@ def add_pose_plots(pdf, sparse_mapping_poses, ar_tag_poses, graph_localization_p
                                  markersize=1.5)
   if ar_tag_poses.times:
     plot_helpers.plot_orientations(ar_tag_poses,
-                                colors,
-                                linestyle='None',
-                                marker='x',
-                                markeredgewidth=0.1,
-                                markersize=1.5)
+                                   colors,
+                                   linestyle='None',
+                                   marker='x',
+                                   markeredgewidth=0.1,
+                                   markersize=1.5)
   plot_helpers.plot_orientations(graph_localization_poses, colors, linewidth=0.5)
   plt.xlabel('Time (s)')
   plt.ylabel('Orienation (deg)')
@@ -86,7 +84,12 @@ def add_pose_plots(pdf, sparse_mapping_poses, ar_tag_poses, graph_localization_p
 
   # Imu Augmented Loc vs. Loc
   plt.figure()
-  plot_helpers.plot_positions(graph_localization_poses, colors, linestyle='None', marker='o', markeredgewidth=0.1, markersize=1.5)
+  plot_helpers.plot_positions(graph_localization_poses,
+                              colors,
+                              linestyle='None',
+                              marker='o',
+                              markeredgewidth=0.1,
+                              markersize=1.5)
   plot_helpers.plot_positions(imu_augmented_graph_localization_poses, colors, linewidth=0.5)
   plt.xlabel('Time (s)')
   plt.ylabel('Position (m)')
@@ -142,7 +145,7 @@ def add_feature_count_plots(pdf, graph_localization_states):
                 markeredgewidth=0.1,
                 markersize=1.5)
   plt.xlabel('Time (s)')
-  plt.ylabel('ML Feature Counts') 
+  plt.ylabel('ML Feature Counts')
   plt.title('ML Feature Counts')
   plt.legend(prop={'size': 6})
   pdf.savefig()
@@ -164,7 +167,7 @@ def add_feature_count_plots(pdf, graph_localization_states):
                 markeredgewidth=0.1,
                 markersize=1.5)
   plt.xlabel('Time (s)')
-  plt.ylabel('Optical Flow Feature Counts') 
+  plt.ylabel('Optical Flow Feature Counts')
   plt.title('Optical Flow Feature Counts')
   plt.legend(prop={'size': 6})
   pdf.savefig()
@@ -254,7 +257,7 @@ def add_other_vector3d_plots(pdf, imu_augmented_graph_localization_states):
                               imu_augmented_graph_localization_states.times, 'Vel.')
   plt.xlabel('Time (s)')
   plt.ylabel('Velocities')
-  plt.title('Velocities')
+  plt.title('IMU Augmented Graph Velocities')
   plt.legend(prop={'size': 6})
   pdf.savefig()
   plt.close()
@@ -377,6 +380,17 @@ def add_imu_bias_tester_poses(pdf, imu_bias_tester_poses, sparse_mapping_poses):
   plt.close()
 
 
+def add_imu_bias_tester_velocities(pdf, imu_bias_tester_velocities):
+  plt.figure()
+  plot_helpers.plot_vector3ds(imu_bias_tester_velocities.velocities, imu_bias_tester_velocities.times, 'Vel.')
+  plt.xlabel('Time (s)')
+  plt.ylabel('Velocities')
+  plt.title('IMU Bias Tester Velocities')
+  plt.legend(prop={'size': 6})
+  pdf.savefig()
+  plt.close()
+
+
 def add_other_loc_plots(pdf, graph_localization_states, imu_augmented_graph_localization_states):
   add_feature_count_plots(pdf, graph_localization_states)
   add_other_vector3d_plots(pdf, imu_augmented_graph_localization_states)
@@ -400,6 +414,12 @@ def load_loc_state_msgs(vec_of_loc_states, bag):
         break
 
 
+def load_velocity_msgs(velocities, bag):
+  topics = [velocities.topic]
+  for topic, msg, t in bag.read_messages(topics):
+    velocities.add_msg(msg, msg.header.stamp)
+
+
 def has_topic(bag, topic):
   topics = bag.get_type_and_topic_info().topics
   return topic in topics
@@ -421,12 +441,17 @@ def create_plots(bagfile, output_pdf_file, output_csv_file='results.csv'):
   vec_of_loc_states = [graph_localization_states, imu_augmented_graph_localization_states]
   load_loc_state_msgs(vec_of_loc_states, bag)
 
+  imu_bias_tester_velocities = velocities.Velocities('Imu Bias Tester', '/imu_bias_tester/velocity')
+  load_velocity_msgs(imu_bias_tester_velocities, bag)
+
   bag.close()
 
   with PdfPages(output_pdf_file) as pdf:
-    add_pose_plots(pdf, sparse_mapping_poses, ar_tag_poses, graph_localization_states, imu_augmented_graph_localization_states)
+    add_pose_plots(pdf, sparse_mapping_poses, ar_tag_poses, graph_localization_states,
+                   imu_augmented_graph_localization_states)
     if has_imu_bias_tester_poses:
       add_imu_bias_tester_poses(pdf, imu_bias_tester_poses, sparse_mapping_poses)
+      add_imu_bias_tester_velocities(pdf, imu_bias_tester_velocities)
     if has_imu_augmented_graph_localization_state:
       add_other_loc_plots(pdf, graph_localization_states, imu_augmented_graph_localization_states)
     else:
