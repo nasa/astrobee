@@ -148,6 +148,7 @@ def add_feature_count_plots(pdf, graph_localization_states):
   plt.ylabel('ML Feature Counts')
   plt.title('ML Feature Counts')
   plt.legend(prop={'size': 6})
+  plt.ylim(ymin=-1)
   pdf.savefig()
   plt.close()
 
@@ -170,6 +171,7 @@ def add_feature_count_plots(pdf, graph_localization_states):
   plt.ylabel('Optical Flow Feature Counts')
   plt.title('Optical Flow Feature Counts')
   plt.legend(prop={'size': 6})
+  plt.ylim(ymin=-1)
   pdf.savefig()
   plt.close()
 
