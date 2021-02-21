@@ -22,6 +22,7 @@ import plot_helpers
 import poses
 import velocities
 import rmse_utilities
+import utilities
 
 import matplotlib
 matplotlib.use('pdf')
@@ -39,8 +40,8 @@ def l2_map(vector3ds):
   return map(lambda (x, y, z): math.sqrt(x + y + z), zip(vector3ds.xs, vector3ds.ys, vector3ds.zs))
 
 
-def add_pose_plots(pdf, sparse_mapping_poses, ar_tag_poses, graph_localization_poses,
-                   imu_augmented_graph_localization_poses):
+def add_graph_plots(pdf, sparse_mapping_poses, ar_tag_poses, graph_localization_states,
+                    imu_augmented_graph_localization_poses):
   colors = ['r', 'b', 'g']
   plt.figure()
   plot_helpers.plot_positions(sparse_mapping_poses,
@@ -51,7 +52,7 @@ def add_pose_plots(pdf, sparse_mapping_poses, ar_tag_poses, graph_localization_p
                               markersize=1.5)
   if ar_tag_poses.times:
     plot_helpers.plot_positions(ar_tag_poses, colors, linestyle='None', marker='x', markeredgewidth=0.1, markersize=1.5)
-  plot_helpers.plot_positions(graph_localization_poses, colors, linewidth=0.5)
+  plot_helpers.plot_positions(graph_localization_states, colors, linewidth=0.5)
   plt.xlabel('Time (s)')
   plt.ylabel('Position (m)')
   plt.title('Graph vs. Sparse Mapping Position')
@@ -74,7 +75,7 @@ def add_pose_plots(pdf, sparse_mapping_poses, ar_tag_poses, graph_localization_p
                                    marker='x',
                                    markeredgewidth=0.1,
                                    markersize=1.5)
-  plot_helpers.plot_orientations(graph_localization_poses, colors, linewidth=0.5)
+  plot_helpers.plot_orientations(graph_localization_states, colors, linewidth=0.5)
   plt.xlabel('Time (s)')
   plt.ylabel('Orienation (deg)')
   plt.title('Graph vs. Sparse Mapping Orientation')
@@ -84,7 +85,7 @@ def add_pose_plots(pdf, sparse_mapping_poses, ar_tag_poses, graph_localization_p
 
   # Imu Augmented Loc vs. Loc
   plt.figure()
-  plot_helpers.plot_positions(graph_localization_poses,
+  plot_helpers.plot_positions(graph_localization_states,
                               colors,
                               linestyle='None',
                               marker='o',
@@ -100,11 +101,40 @@ def add_pose_plots(pdf, sparse_mapping_poses, ar_tag_poses, graph_localization_p
 
   # orientations
   plt.figure()
-  plot_helpers.plot_orientations(graph_localization_poses, colors, marker='o', markeredgewidth=0.1, markersize=1.5)
+  plot_helpers.plot_orientations(graph_localization_states, colors, marker='o', markeredgewidth=0.1, markersize=1.5)
   plot_helpers.plot_orientations(imu_augmented_graph_localization_poses, colors, linewidth=0.5)
   plt.xlabel('Time (s)')
   plt.ylabel('Orienation (deg)')
   plt.title('Graph vs. Imu Augmented Graph Orientation')
+  plt.legend(prop={'size': 6})
+  pdf.savefig()
+  plt.close()
+
+  # Velocity
+  plt.figure()
+  plot_helpers.plot_vector3ds(graph_localization_states.velocities, graph_localization_states.times, 'Vel.')
+  plt.xlabel('Time (s)')
+  plt.ylabel('Velocities')
+  plt.title('Graph Velocities')
+  plt.legend(prop={'size': 6})
+  pdf.savefig()
+  plt.close()
+
+  # Integrated Velocities
+  plt.figure()
+  plot_helpers.plot_positions(sparse_mapping_poses,
+                              colors,
+                              linestyle='None',
+                              marker='o',
+                              markeredgewidth=0.1,
+                              markersize=1.5)
+  if ar_tag_poses.times:
+    plot_helpers.plot_positions(ar_tag_poses, colors, linestyle='None', marker='x', markeredgewidth=0.1, markersize=1.5)
+  integrated_graph_localization_states = utilities.integrate_velocities(graph_localization_states)
+  plot_helpers.plot_positions(integrated_graph_localization_states, colors, linewidth=0.5)
+  plt.xlabel('Time (s)')
+  plt.ylabel('Position (m)')
+  plt.title('Integrated Graph Velocities vs. Sparse Mapping Position')
   plt.legend(prop={'size': 6})
   pdf.savefig()
   plt.close()
@@ -450,8 +480,8 @@ def create_plots(bagfile, output_pdf_file, output_csv_file='results.csv'):
   bag.close()
 
   with PdfPages(output_pdf_file) as pdf:
-    add_pose_plots(pdf, sparse_mapping_poses, ar_tag_poses, graph_localization_states,
-                   imu_augmented_graph_localization_states)
+    add_graph_plots(pdf, sparse_mapping_poses, ar_tag_poses, graph_localization_states,
+                    imu_augmented_graph_localization_states)
     if has_imu_bias_tester_poses:
       add_imu_bias_tester_poses(pdf, imu_bias_tester_poses, sparse_mapping_poses)
       add_imu_bias_tester_velocities(pdf, imu_bias_tester_velocities)
