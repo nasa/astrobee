@@ -43,6 +43,7 @@
 // Services
 #include <ff_hw_msgs/Undock.h>
 #include <ff_msgs/SetState.h>
+#include <ff_msgs/GetPipelines.h>
 
 // Actions
 #include <ff_msgs/MotionAction.h>
@@ -133,6 +134,14 @@ class DockNodelet : public ff_util::FreeFlyerNodelet {
     // [3]
     fsm_.Add(STATE::UNDOCKED,
       GOAL_DOCK, [this](FSM::Event const& event) -> FSM::State {
+        ff_msgs::GetPipelines srv;
+        if (client_l_.Call(srv)) {
+          if (!srv.response.pipelines.empty() && srv.response.pipelines[0].id == "ar") {
+            // Move to the approach pose using AR localization
+            Move(APPROACH_POSE, ff_msgs::MotionGoal::NOMINAL);
+            return STATE::DOCKING_MOVING_TO_APPROACH_POSE;
+          }
+        }
         Switch(LOCALIZATION_MAPPED_LANDMARKS);
         return STATE::DOCKING_SWITCHING_TO_ML_LOC;
       });
@@ -421,6 +430,9 @@ class DockNodelet : public ff_util::FreeFlyerNodelet {
     // Allow the state to be manually set
     server_set_state_ = nh->advertiseService(SERVICE_BEHAVIORS_DOCK_SET_STATE,
       &DockNodelet::SetStateCallback, this);
+
+    // Query the current localization pipeline
+    client_l_.Create(nh, SERVICE_LOCALIZATION_MANAGER_GET_CURR_PIPELINE);
 
     // Contact EPS service for undocking
     client_u_.SetConnectedTimeout(cfg_.Get<double>("timeout_undock_connected"));
@@ -941,6 +953,7 @@ class DockNodelet : public ff_util::FreeFlyerNodelet {
   ff_util::FSM fsm_;
   ff_util::FreeFlyerActionClient<ff_msgs::MotionAction> client_m_;
   ff_util::FreeFlyerActionClient<ff_msgs::LocalizationAction> client_s_;
+  ff_util::FreeFlyerServiceClient<ff_msgs::GetPipelines>  client_l_;
   ff_util::FreeFlyerServiceClient<ff_hw_msgs::Undock> client_u_;
   ff_util::FreeFlyerActionServer<ff_msgs::DockAction> server_;
   ff_util::ConfigServer cfg_;
