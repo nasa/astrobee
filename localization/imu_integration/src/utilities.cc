@@ -20,6 +20,7 @@
 #include <imu_integration/butterO1.h>
 #include <imu_integration/butterO3.h>
 #include <imu_integration/butterO5.h>
+#include <imu_integration/butterO7.h>
 #include <imu_integration/identity_filter.h>
 #include <localization_common/logger.h>
 #include <localization_common/utilities.h>
@@ -126,6 +127,8 @@ std::unique_ptr<Filter> LoadFilter(const std::string& filter_type) {
     return std::unique_ptr<Filter>(new ButterO5S62_5Lp3N20_83());
   } else if (filter_type == "ButterO5S62_5Lp3N15_83") {
     return std::unique_ptr<Filter>(new ButterO5S62_5Lp3N15_83());
+  } else if (filter_type == "ButterO7S62_5Lp3N20_83") {  // 7th Order
+    return std::unique_ptr<Filter>(new ButterO7S62_5Lp3N20_83());
   } else if (filter_type == "ButterO5S62_5Lp1N29_16") {  // Lower pass band
     return std::unique_ptr<Filter>(new ButterO5S62_5Lp1N29_16());
   } else if (filter_type == "ButterO5S62_5Lp0_5N29_16") {
