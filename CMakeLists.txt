@@ -403,5 +403,6 @@ add_subdirectory(shared)
 add_subdirectory(localization)
 
 if (USE_DDS)
+  add_subdirectory(ground_dds_ros_bridge)
   add_subdirectory(wdock)
 endif (USE_DDS)
