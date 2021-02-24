@@ -100,9 +100,10 @@ void GraphLocalizerWrapper::ResetLocalizer() {
       "are available.");
     return;
   }
+
   // TODO(rsoussan): compare current time with latest bias timestamp and print
   // warning if it is too old
-  graph_localizer_initializer_.SetBiases(latest_biases_->first, true);
+  graph_localizer_initializer_.SetBiases(*latest_biases_, true);
   graph_localizer_.reset();
   sanity_checker_->Reset();
 }
@@ -117,6 +118,8 @@ void GraphLocalizerWrapper::ResetBiasesAndLocalizer() {
 void GraphLocalizerWrapper::ResetBiasesFromFileAndResetLocalizer() {
   LogInfo("ResetBiasAndLocalizer: Resetting biases from file and resetting localizer.");
   graph_localizer_initializer_.ResetBiasesFromFileAndResetStartPose();
+  if (graph_localizer_initializer_.HasBiases())
+    latest_biases_ = graph_localizer_initializer_.params().graph_initializer.initial_imu_bias;
   graph_localizer_.reset();
   sanity_checker_->Reset();
 }
@@ -200,12 +203,16 @@ void GraphLocalizerWrapper::ARVisualLandmarksCallback(const ff_msgs::VisualLandm
 void GraphLocalizerWrapper::ImuCallback(const sensor_msgs::Imu& imu_msg) {
   if (graph_localizer_) {
     graph_localizer_->AddImuMeasurement(lm::ImuMeasurement(imu_msg));
-    latest_biases_ = graph_localizer_->LatestBiases();
-    if (!latest_biases_) {
+    const auto latest_biases = graph_localizer_->LatestBiases();
+    if (!latest_biases) {
       LogError("ImuCallback: Failed to get latest biases.");
+    } else {
+      latest_biases_ = latest_biases->first;
     }
   } else if (graph_localizer_initializer_.EstimateBiases()) {
     graph_localizer_initializer_.EstimateAndSetImuBiases(lm::ImuMeasurement(imu_msg), fan_speed_mode_);
+    if (graph_localizer_initializer_.HasBiases())
+      latest_biases_ = graph_localizer_initializer_.params().graph_initializer.initial_imu_bias;
   }
 
   if (!graph_localizer_ && graph_localizer_initializer_.ReadyToInitialize()) {

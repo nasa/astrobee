@@ -106,7 +106,7 @@ class GraphLocalizerWrapper {
   // TODO(rsoussan): Make graph localizer wrapper params
   bool publish_localization_graph_;
   bool save_localization_graph_dot_file_;
-  boost::optional<std::pair<gtsam::imuBias::ConstantBias, localization_common::Time>> latest_biases_;
+  boost::optional<gtsam::imuBias::ConstantBias> latest_biases_;
   GraphLocalizerInitializer graph_localizer_initializer_;
   FeatureCounts feature_counts_;
   boost::optional<std::pair<gtsam::Pose3, localization_common::Time>> sparse_mapping_pose_;
