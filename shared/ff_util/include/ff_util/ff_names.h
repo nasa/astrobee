@@ -310,6 +310,7 @@
 #define ACTION_LOCALIZATION_MANAGER_LOCALIZATION    "loc/manager/localization"
 #define SERVICE_LOCALIZATION_MANAGER_SET_STATE      "loc/manager/set_state"
 #define SERVICE_LOCALIZATION_MANAGER_GET_PIPELINES  "loc/manager/get_pipelines"
+#define SERVICE_LOCALIZATION_MANAGER_GET_CURR_PIPELINE "loc/manager/get_curr_pipeline"
 
 // Poses and camera info as output by the simulator
 #define TOPIC_NAV_CAM_SIM_POSE                     "sim/nav_cam/pose"

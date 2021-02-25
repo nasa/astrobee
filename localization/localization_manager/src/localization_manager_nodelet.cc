@@ -592,10 +592,15 @@ class LocalizationManagerNodelet : public ff_util::FreeFlyerNodelet {
       SERVICE_LOCALIZATION_MANAGER_SET_STATE,
         &LocalizationManagerNodelet::SetStateCallback, this);
 
-    // Allow the state to be manually set
+    // Allow the possible pipelines to be queried
     server_get_pipelines_ = nh->advertiseService(
       SERVICE_LOCALIZATION_MANAGER_GET_PIPELINES,
         &LocalizationManagerNodelet::GetPipelinesCallback, this);
+
+    // Allow the current pipeline to be queried
+    server_get_pipelines_ = nh->advertiseService(
+      SERVICE_LOCALIZATION_MANAGER_GET_CURR_PIPELINE,
+        &LocalizationManagerNodelet::GetCurrentPipelineCallback, this);
 
     // Create the switch action
     action_.SetGoalCallback(std::bind(&LocalizationManagerNodelet::GoalCallback, this, std::placeholders::_1));
@@ -653,6 +658,20 @@ class LocalizationManagerNodelet : public ff_util::FreeFlyerNodelet {
     fsm_.SetState(req.state);
     res.success = true;
     UpdateCallback(fsm_.GetState(), MANUAL_STATE_SET);
+    return true;
+  }
+
+  // Called when a user requests the internal state
+  bool GetCurrentPipelineCallback(ff_msgs::GetPipelines::Request& req,
+                            ff_msgs::GetPipelines::Response& res) {
+    NODELET_DEBUG_STREAM("GetPipelinesCallback()");
+    ff_msgs::LocalizationPipeline msg;
+    msg.id = curr_->first;
+    msg.mode = curr_->second.GetMode();
+    msg.name = curr_->second.GetName();
+    msg.requires_optical_flow = curr_->second.RequiresOpticalFlow();
+    msg.requires_filter = curr_->second.RequiresFilter();
+    res.pipelines.push_back(msg);
     return true;
   }
 
