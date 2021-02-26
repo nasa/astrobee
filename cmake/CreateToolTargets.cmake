@@ -66,16 +66,6 @@ function(create_tool_targets)
     if (tool_DEPS)
       add_dependencies(${execname} ${tool_DEPS})
     endif (tool_DEPS)
-    install(TARGETS ${execname} DESTINATION bin)
-
-    # Create symlinks so our executables can be found with rosrun. This is done
-    # inside an 'install' so that it happens after the installation.
-    install(CODE "execute_process(
-      COMMAND mkdir -p share/${PROJECT_NAME}
-      COMMAND ln -s ../../bin/${execname} share/${PROJECT_NAME}/${execname}
-      WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}
-      OUTPUT_QUIET
-      ERROR_QUIET
-      )")
+    install(TARGETS ${execname} DESTINATION share/${PROJECT_NAME})
   endforeach()
 endfunction()
