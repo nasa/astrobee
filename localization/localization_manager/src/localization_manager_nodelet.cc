@@ -292,18 +292,7 @@ class LocalizationManagerNodelet : public ff_util::FreeFlyerNodelet {
     //  BIAS ESTIMATION PATTERN
 
     // Localizing normally and bias estimate command is called
-    fsm_.Add(STATE::LOCALIZING,
-      GOAL_ESTIMATE_BIAS, [this](FSM::Event const& event) -> FSM::State {
-        if (!EstimateBias())
-          return Result(RESPONSE::ESTIMATE_BIAS_FAILED, "Could not call bias estimation service");
-        ResetTimer(timer_stability_);
-        ResetTimer(timer_deadline_);
-        return STATE::BIAS_WAITING_FOR_FILTER;
-      });
-
-    // We don't need to localize normally to reset the bias and bias estimate
-    // command is called
-    fsm_.Add(STATE::UNSTABLE,
+    fsm_.Add(STATE::LOCALIZING, STATE::DISABLED, STATE::UNSTABLE,
       GOAL_ESTIMATE_BIAS, [this](FSM::Event const& event) -> FSM::State {
         if (!EstimateBias())
           return Result(RESPONSE::ESTIMATE_BIAS_FAILED, "Could not call bias estimation service");
@@ -334,7 +323,7 @@ class LocalizationManagerNodelet : public ff_util::FreeFlyerNodelet {
     // FILTER RESET PATTERN
 
     // Busy localizing and a filter reset command is called
-    fsm_.Add(STATE::LOCALIZING,
+    fsm_.Add(STATE::LOCALIZING, STATE::UNSTABLE,
       GOAL_RESET_FILTER, [this](FSM::Event const& event) -> FSM::State {
         if (!ResetFilter())
           return Result(RESPONSE::RESET_FAILED, "Could not call filter reset service");
@@ -842,8 +831,7 @@ class LocalizationManagerNodelet : public ff_util::FreeFlyerNodelet {
       return fsm_.Update(GOAL_SWITCH_PIPELINE);
     }
     case ff_msgs::LocalizationGoal::COMMAND_ESTIMATE_BIAS:
-      if (curr_->second.RequiresFilter())
-        return fsm_.Update(GOAL_ESTIMATE_BIAS);
+      return fsm_.Update(GOAL_ESTIMATE_BIAS);
       break;
     case ff_msgs::LocalizationGoal::COMMAND_RESET_FILTER:
       if (curr_->second.RequiresFilter())
@@ -856,7 +844,7 @@ class LocalizationManagerNodelet : public ff_util::FreeFlyerNodelet {
       return;
     }
     // Catch-all for filter actions in a non-filtering state
-    result.fsm_result = "Cannot reset or initialize bias filter when not in use";
+    result.fsm_result = "Cannot reset filter when not in use";
     result.response = RESPONSE::FILTER_NOT_IN_USE;
     action_.SendResult(ff_util::FreeFlyerActionState::ABORTED, result);
   }
