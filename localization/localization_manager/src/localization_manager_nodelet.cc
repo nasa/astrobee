@@ -259,8 +259,9 @@ class LocalizationManagerNodelet : public ff_util::FreeFlyerNodelet {
           return Result(RESPONSE::OPTICAL_FLOW_FAILED, "Could not toggle optical flow");
         // Return the goal pipeline to the current pipeline
         curr_ = goal_;
+        std::string msg = "Switched to pipeline: " + curr_->first;
         // Return the error
-        return Result(RESPONSE::SUCCESS, "Switched to new pipeline");
+        return Result(RESPONSE::SUCCESS, msg);
       });
 
     // Waiting for the reset and the watchdog fires
@@ -682,7 +683,8 @@ class LocalizationManagerNodelet : public ff_util::FreeFlyerNodelet {
 
   // Complete the current dock or undock action
   FSM::State Result(int32_t response, std::string const& msg = "") {
-    NODELET_DEBUG_STREAM("Result(" << response << ")");
+    NODELET_DEBUG_STREAM("Result(" << response << "): " << msg);
+    NODELET_DEBUG_STREAM("Current pipeline is " << curr_->first);
     // Always return the goal pipeline to the current pipeline
     goal_ = curr_;
     // Send the feedback if needed
@@ -810,10 +812,10 @@ class LocalizationManagerNodelet : public ff_util::FreeFlyerNodelet {
 
   // Called when the localization mode must be switched
   void GoalCallback(ff_msgs::LocalizationGoalConstPtr const& goal) {
-    NODELET_DEBUG_STREAM("GoalCallback()");
     ff_msgs::LocalizationResult result;
     switch (goal->command) {
     case ff_msgs::LocalizationGoal::COMMAND_SWITCH_PIPELINE: {
+      NODELET_DEBUG_STREAM("GoalCallback Switch pipeline: " << goal->pipeline);
       PipelineMap::iterator arg = pipelines_.find(goal->pipeline);
       if (arg == pipelines_.end()) {
         result.fsm_result = "Invalid pipeline in request";
@@ -831,13 +833,16 @@ class LocalizationManagerNodelet : public ff_util::FreeFlyerNodelet {
       return fsm_.Update(GOAL_SWITCH_PIPELINE);
     }
     case ff_msgs::LocalizationGoal::COMMAND_ESTIMATE_BIAS:
+      NODELET_DEBUG_STREAM("GoalCallback estimate bias.");
       return fsm_.Update(GOAL_ESTIMATE_BIAS);
       break;
     case ff_msgs::LocalizationGoal::COMMAND_RESET_FILTER:
+      NODELET_DEBUG_STREAM("GoalCallback reset filter.");
       if (curr_->second.RequiresFilter())
         return fsm_.Update(GOAL_RESET_FILTER);
       break;
     default:
+      NODELET_DEBUG_STREAM("GoalCallback invalid localization goal.");
       result.fsm_result = "Invalid command";
       result.response = RESPONSE::INVALID_COMMAND;
       action_.SendResult(ff_util::FreeFlyerActionState::ABORTED, result);
