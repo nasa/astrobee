@@ -67,6 +67,7 @@ class ButterO1 : public Filter {
   bool initialized_;
 };
 
+// 62.5 Hz
 struct ParamsButterO1S62_5Lp3N29_16 {
   static constexpr double kGain = 2.999100930e+01;
   static constexpr double kX12 = 2.9560160746;
@@ -87,6 +88,34 @@ struct ParamsButterO1S62_5Lp3N15_83 {
   static constexpr double kY2 = 0.7361865327;
 };
 using ButterO1S62_5Lp3N15_83 = ButterO1<ParamsButterO1S62_5Lp3N15_83>;
+
+// 125Hz
+// 2500 rpm: 41.666Hz
+struct ParamsButterO1S125Lp3N41_66 {
+  static constexpr double kGain = 4.270814376e+01;
+  static constexpr double kX12 = 1.9996372182;
+  static constexpr double kY2 = 0.8595285604;
+};
+using ButterO1S125Lp3N41_66 = ButterO1<ParamsButterO1S125Lp3N41_66>;
+
+// 2000 rpm: 33.333Hz
+struct ParamsButterO1S125Lp3N33_33 {
+  static constexpr double kGain = 3.144018095e+01;
+  static constexpr double kX12 = 1.2082237395;
+  static constexpr double kY2 = 0.8595285604;
+};
+using ButterO1S125Lp3N33_33 = ButterO1<ParamsButterO1S125Lp3N33_33>;
+
+// 2800 rpm: 46.666Hz
+struct ParamsButterO1S125Lp3N46_66{
+  static constexpr double kGain = 4.839840415e+01;
+  static constexpr double kX12 = 2.3992967530;
+  static constexpr double kY2 = 0.8595285604;
+};
+using ButterO1S125Lp3N46_66 = ButterO1<ParamsButterO1S125Lp3N46_66>;
+
+
+
 }  // namespace imu_integration
 
 #endif  // IMU_INTEGRATION_BUTTERO1_H_

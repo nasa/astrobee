@@ -29,6 +29,7 @@ if __name__ == '__main__':
   parser.add_argument('bagfile')
   parser.add_argument('--output-file', default='imu_analyzer_output.pdf')
   parser.add_argument('-f', '--filtered-bagfile', default='')
+  parser.add_argument('-s', '--sample-rate', type=float, default=62.5)
   # Only applicable if filtered_bagfile not provided, uses python filters
   parser.add_argument('-c', '--cutoff-frequency', type=float, default=5.0)
   args = parser.parse_args()
@@ -38,4 +39,4 @@ if __name__ == '__main__':
   if args.filtered_bagfile and not os.path.isfile(args.filtered_bagfile):
     print('Bag file ' + args.filtered_bagfile + ' does not exist.')
     sys.exit()
-  imu_analyzer.create_plots(args.bagfile, args.filtered_bagfile, args.output_file, args.cutoff_frequency)
+  imu_analyzer.create_plots(args.bagfile, args.filtered_bagfile, args.output_file, args.cutoff_frequency, args.sample_rate)
