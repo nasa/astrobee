@@ -16,6 +16,7 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
+import scipy.spatial.transform
 
 
 class Orientations:
@@ -24,6 +25,15 @@ class Orientations:
     self.yaws = []
     self.pitches = []
     self.rolls = []
+
+  def get_euler(self, index):
+    return [self.yaws[index], self.pitches[index], self.rolls[index]]
+
+  def get_rotation(self, index):
+    return scipy.spatial.transform.Rotation.from_euler('ZYX', self.get_euler(index), degrees=True)
+
+  def add_euler(self, euler_angles):
+    self.add(euler_angles[0], euler_angles[1], euler_angles[2])
 
   def add(self, yaw, pitch, roll):
     self.yaws.append(yaw)
