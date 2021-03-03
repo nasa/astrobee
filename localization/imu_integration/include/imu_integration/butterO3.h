@@ -98,6 +98,37 @@ struct ParamsButterO3S62_5Lp3N15_83 {
 };
 using ButterO3S62_5Lp3N15_83 = ButterO3<ParamsButterO3S62_5Lp3N15_83>;
 
+// 125Hz
+struct ParamsButterO3S125Lp3N41_66 {
+  static constexpr double kGain = 8.092181701e+03;
+  static constexpr double kX14 = 3.9996372182;
+  static constexpr double kX23 = 6.9989116546;
+  static constexpr double kY2 = 0.7394265720;
+  static constexpr double kY3 = -2.4410797085;
+  static constexpr double kY4 = 2.6986876695;
+};
+using ButterO3S125Lp3N41_66 = ButterO3<ParamsButterO3S125Lp3N41_66>;
+
+struct ParamsButterO3S125Lp3N46_66 {
+  static constexpr double kGain = 9.170351272e+03;
+  static constexpr double kX14 = 4.3992967530;
+  static constexpr double kX23 = 8.1978902589;
+  static constexpr double kY2 = 0.7394265720;
+  static constexpr double kY3 = -2.4410797085;
+  static constexpr double kY4 = 2.6986876695;
+};
+using ButterO3S125Lp3N46_66 = ButterO3<ParamsButterO3S125Lp3N46_66>;
+
+struct ParamsButterO3S125Lp3N33_33 {
+  static constexpr double kGain = 5.957169629e+03;
+  static constexpr double kX14 = 3.2082237395;
+  static constexpr double kX23 = 4.6246712185;
+  static constexpr double kY2 = 0.7394265720;
+  static constexpr double kY3 = -2.4410797085;
+  static constexpr double kY4 = 2.6986876695;
+};
+using ButterO3S125Lp3N33_33 = ButterO3<ParamsButterO3S125Lp3N33_33>;
+
 }  // namespace imu_integration
 
 #endif  // IMU_INTEGRATION_BUTTERO3_H_

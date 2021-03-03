@@ -128,6 +128,12 @@ std::unique_ptr<Filter> LoadFilter(const std::string& filter_type) {
     return std::unique_ptr<Filter>(new ButterO3S62_5Lp3N20_83());
   } else if (filter_type == "ButterO3S62_5Lp3N15_83") {
     return std::unique_ptr<Filter>(new ButterO3S62_5Lp3N15_83());
+  } else if (filter_type == "ButterO3S125Lp3N33_33") {  // 125Hz 3rd Order
+    return std::unique_ptr<Filter>(new ButterO3S125Lp3N33_33());
+  } else if (filter_type == "ButterO3S125Lp3N41_66") {
+    return std::unique_ptr<Filter>(new ButterO3S125Lp3N41_66());
+  } else if (filter_type == "ButterO3S125Lp3N46_66") {
+    return std::unique_ptr<Filter>(new ButterO3S125Lp3N46_66());
   } else if (filter_type == "ButterO5S62_5Lp3N29_16") {  // 5th Order
     return std::unique_ptr<Filter>(new ButterO5S62_5Lp3N29_16());
   } else if (filter_type == "ButterO5S62_5Lp3N20_83") {
@@ -136,6 +142,10 @@ std::unique_ptr<Filter> LoadFilter(const std::string& filter_type) {
     return std::unique_ptr<Filter>(new ButterO5S62_5Lp3N15_83());
   } else if (filter_type == "ButterO5S125Lp3N41_66") {  // 125Hz
     return std::unique_ptr<Filter>(new ButterO5S125Lp3N41_66());
+  } else if (filter_type == "ButterO5S125Lp3N46_66") {
+    return std::unique_ptr<Filter>(new ButterO5S125Lp3N46_66());
+  } else if (filter_type == "ButterO5S125Lp3N33_33") {
+    return std::unique_ptr<Filter>(new ButterO5S125Lp3N33_33());
   } else if (filter_type == "ButterO7S62_5Lp3N20_83") {  // 7th Order
     return std::unique_ptr<Filter>(new ButterO7S62_5Lp3N20_83());
   } else if (filter_type == "ButterO10S62_5Lp3N20_83") {  // 10th Order
