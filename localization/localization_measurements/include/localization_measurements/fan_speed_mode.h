@@ -16,28 +16,15 @@
  * under the License.
  */
 
-#ifndef IMU_INTEGRATION_BUTTERWORTH_LOWPASS_FILTER_5TH_ORDER_05_H_
-#define IMU_INTEGRATION_BUTTERWORTH_LOWPASS_FILTER_5TH_ORDER_05_H_
+#ifndef LOCALIZATION_MEASUREMENTS_FAN_SPEED_MODE_H_
+#define LOCALIZATION_MEASUREMENTS_FAN_SPEED_MODE_H_
 
-#include <imu_integration/filter.h>
-
-#include <array>
-
-namespace imu_integration {
-class ButterworthLowpassFilter5thOrder05 : public Filter {
- public:
-  ButterworthLowpassFilter5thOrder05();
-  // Returns filtered value and timestamp
-  double AddValue(const double value) final;
-
- private:
-  void Initialize(const double first_value, const double gain);
-  // Notation taken from mkfilter site
-  // /www/usr/fisher/helpers/mkfilter
-  std::array<double, 8> xv_;
-  std::array<double, 8> yv_;
-  bool initialized_;
+namespace localization_measurements {
+enum class FanSpeedMode {
+  kOff,        // 0 rpm
+  kQuiet,      // 2000 rpm
+  kNominal,    // 2500 rpm
+  kAggressive  // 2800 rpm
 };
-}  // namespace imu_integration
-
-#endif  // IMU_INTEGRATION_BUTTERWORTH_LOWPASS_FILTER_5TH_ORDER_05_H_
+}  // namespace localization_measurements
+#endif  // LOCALIZATION_MEASUREMENTS_FAN_SPEED_MODE_H_

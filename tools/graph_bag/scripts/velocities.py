@@ -16,26 +16,21 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
-import scipy.spatial.transform
+
+import vector3ds
 
 
-class Orientations:
+class Velocities(object):
 
-  def __init__(self):
-    self.yaws = []
-    self.pitches = []
-    self.rolls = []
+  def __init__(self, velocity_type, topic):
+    self.velocities = vector3ds.Vector3ds()
+    self.times = []
+    self.velocity_type = velocity_type
+    self.topic = topic
 
-  def get_euler(self, index):
-    return [self.yaws[index], self.pitches[index], self.rolls[index]]
+  def add_velocity(self, velocity_msg, timestamp, bag_start_time=0):
+    self.velocities.add(velocity_msg.x, velocity_msg.y, velocity_msg.z)
+    self.times.append(timestamp.secs + 1e-9 * timestamp.nsecs - bag_start_time)
 
-  def get_rotation(self, index):
-    return scipy.spatial.transform.Rotation.from_euler('ZYX', self.get_euler(index), degrees=True)
-
-  def add_euler(self, euler_angles):
-    self.add(euler_angles[0], euler_angles[1], euler_angles[2])
-
-  def add(self, yaw, pitch, roll):
-    self.yaws.append(yaw)
-    self.pitches.append(pitch)
-    self.rolls.append(roll)
+  def add_msg(self, msg, timestamp, bag_start_time=0):
+    self.add_velocity(msg.vector, timestamp, bag_start_time)

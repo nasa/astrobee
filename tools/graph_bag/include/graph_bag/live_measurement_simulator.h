@@ -21,6 +21,7 @@
 
 #include <ff_common/utils.h>
 #include <ff_msgs/Feature2dArray.h>
+#include <ff_msgs/FlightMode.h>
 #include <ff_msgs/VisualLandmarks.h>
 #include <ff_util/ff_names.h>
 #include <graph_bag/live_measurement_simulator_params.h>
@@ -52,6 +53,7 @@ class LiveMeasurementSimulator {
   boost::optional<ff_msgs::Feature2dArray> GetOFMessage(const localization_common::Time current_time);
   boost::optional<ff_msgs::VisualLandmarks> GetVLMessage(const localization_common::Time current_time);
   boost::optional<ff_msgs::VisualLandmarks> GetARMessage(const localization_common::Time current_time);
+  boost::optional<ff_msgs::FlightMode> GetFlightModeMessage(const localization_common::Time current_time);
 
  private:
   bool string_ends_with(const std::string& str, const std::string& ending);
@@ -70,6 +72,7 @@ class LiveMeasurementSimulator {
   boost::optional<rosbag::View::iterator> view_it_;
   std::map<localization_common::Time, sensor_msgs::ImageConstPtr> img_buffer_;
   MessageBuffer<sensor_msgs::Imu> imu_buffer_;
+  MessageBuffer<ff_msgs::FlightMode> flight_mode_buffer_;
   MessageBuffer<ff_msgs::Feature2dArray> of_buffer_;
   MessageBuffer<ff_msgs::VisualLandmarks> vl_buffer_;
   MessageBuffer<ff_msgs::VisualLandmarks> ar_buffer_;

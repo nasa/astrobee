@@ -49,7 +49,7 @@ class ImuBiasTesterNodelet : public ff_util::FreeFlyerNodelet {
   ros::NodeHandle imu_nh_, loc_nh_;
   ros::CallbackQueue imu_queue_, loc_queue_;
   ros::Subscriber imu_sub_, state_sub_;
-  ros::Publisher pose_pub_;
+  ros::Publisher pose_pub_, velocity_pub_;
 };
 }  // namespace imu_bias_tester
 
