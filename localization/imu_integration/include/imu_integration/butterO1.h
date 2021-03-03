@@ -107,14 +107,12 @@ struct ParamsButterO1S125Lp3N33_33 {
 using ButterO1S125Lp3N33_33 = ButterO1<ParamsButterO1S125Lp3N33_33>;
 
 // 2800 rpm: 46.666Hz
-struct ParamsButterO1S125Lp3N46_66{
+struct ParamsButterO1S125Lp3N46_66 {
   static constexpr double kGain = 4.839840415e+01;
   static constexpr double kX12 = 2.3992967530;
   static constexpr double kY2 = 0.8595285604;
 };
 using ButterO1S125Lp3N46_66 = ButterO1<ParamsButterO1S125Lp3N46_66>;
-
-
 
 }  // namespace imu_integration
 

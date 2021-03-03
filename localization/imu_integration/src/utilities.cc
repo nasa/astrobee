@@ -134,6 +134,8 @@ std::unique_ptr<Filter> LoadFilter(const std::string& filter_type) {
     return std::unique_ptr<Filter>(new ButterO5S62_5Lp3N20_83());
   } else if (filter_type == "ButterO5S62_5Lp3N15_83") {
     return std::unique_ptr<Filter>(new ButterO5S62_5Lp3N15_83());
+  } else if (filter_type == "ButterO5S125Lp3N41_66") {  // 125Hz
+    return std::unique_ptr<Filter>(new ButterO5S125Lp3N41_66());
   } else if (filter_type == "ButterO7S62_5Lp3N20_83") {  // 7th Order
     return std::unique_ptr<Filter>(new ButterO7S62_5Lp3N20_83());
   } else if (filter_type == "ButterO10S62_5Lp3N20_83") {  // 10th Order
