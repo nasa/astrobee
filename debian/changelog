@@ -1,3 +1,13 @@
+astrobee (0.14.1) testing; urgency=medium
+
+  * Dynamic IMU Filtering
+  * Added measurement spacing for visual odometry
+  * Tuning configurations
+  * Bug fixes
+  * Note, Perching does not work in this release, use another version for this.
+
+  -- Astrobee Flight Software <astrobee-fsw@nx.arc.nasa.gov>  Wed, 03 Mar 2021 14:55:02 -0800
+
 astrobee (0.14.0) testing; urgency=medium
 
   * Added graph_localizer package
