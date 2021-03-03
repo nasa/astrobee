@@ -66,4 +66,19 @@ FeaturePointsMeasurement MakeFeaturePointsMeasurement(const ff_msgs::Feature2dAr
 
   return feature_points_measurement;
 }
+
+FanSpeedMode ConvertFanSpeedMode(const uint8_t speed) {
+  switch (speed) {
+    case 0:
+      return FanSpeedMode::kOff;
+    case 1:
+      return FanSpeedMode::kQuiet;
+    case 2:
+      return FanSpeedMode::kNominal;
+    case 3:
+      return FanSpeedMode::kAggressive;
+  }
+  // Shouldn't get here
+  return FanSpeedMode::kOff;
+}
 }  // namespace localization_measurements

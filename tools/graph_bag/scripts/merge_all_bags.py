@@ -1,5 +1,4 @@
-#!/usr/bin/python
-#
+#!/usr/bin/env python
 # Copyright (c) 2017, United States Government, as represented by the
 # Administrator of the National Aeronautics and Space Administration.
 #
@@ -17,26 +16,32 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import imu_analyzer
+import merge_bags
 
 import argparse
-
 import os
+import re
+import string
 import sys
+
+import rosbag
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
-  parser.add_argument('bagfile')
-  parser.add_argument('--output-file', default='imu_analyzer_output.pdf')
-  parser.add_argument('-f', '--filtered-bagfile', default='')
-  parser.add_argument('-s', '--sample-rate', type=float, default=62.5)
-  # Only applicable if filtered_bagfile not provided, uses python filters
-  parser.add_argument('-c', '--cutoff-frequency', type=float, default=5.0)
+  parser.add_argument('--merged-bag', default='')
   args = parser.parse_args()
-  if not os.path.isfile(args.bagfile):
-    print('Bag file ' + args.bagfile + ' does not exist.')
+
+  # Find bagfiles with bag prefix in current directory, fail if none found
+  bag_names = [(os.path.splitext(bag)[0]).rstrip(string.digits)
+               for bag in os.listdir('.')
+               if os.path.isfile(bag) and bag.endswith('.bag')]
+  # Remove duplicates
+  bag_names = sorted(set(bag_names))
+  if (len(bag_names) == 0):
+    print('No bag files found')
     sys.exit()
-  if args.filtered_bagfile and not os.path.isfile(args.filtered_bagfile):
-    print('Bag file ' + args.filtered_bagfile + ' does not exist.')
-    sys.exit()
-  imu_analyzer.create_plots(args.bagfile, args.filtered_bagfile, args.output_file, args.cutoff_frequency, args.sample_rate)
+  else:
+    print('Found ' + str(len(bag_names)) + ' bag file prefixes.')
+
+  for bag_name in bag_names:
+    merge_bags.merge_bag(bag_name, args.merged_bag)

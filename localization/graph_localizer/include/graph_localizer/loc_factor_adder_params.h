@@ -31,6 +31,7 @@ struct LocFactorAdderParams : public FactorAdderParams {
   bool add_projections;
   double prior_translation_stddev;
   double prior_quaternion_stddev;
+  int max_num_factors;
   int min_num_matches;
   bool scale_pose_noise_with_num_landmarks;
   bool scale_projection_noise_with_num_landmarks;

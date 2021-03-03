@@ -21,6 +21,7 @@
 
 #include <config_reader/config_reader.h>
 #include <imu_integration/imu_integrator_params.h>
+#include <imu_integration/filter.h>
 #include <localization_common/combined_nav_state.h>
 #include <localization_measurements/imu_measurement.h>
 
@@ -30,6 +31,7 @@
 
 #include <Eigen/Core>
 
+#include <string>
 #include <vector>
 
 namespace imu_integration {
@@ -53,6 +55,10 @@ gtsam::CombinedImuFactor::shared_ptr MakeCombinedImuFactor(const int key_index_0
                                                            const gtsam::PreintegratedCombinedMeasurements& pim);
 
 void LoadImuIntegratorParams(config_reader::ConfigReader& config, ImuIntegratorParams& params);
+
+void LoadImuFilterParams(config_reader::ConfigReader& config, ImuFilterParams& params);
+
+std::unique_ptr<Filter> LoadFilter(const std::string& filter_type);
 }  // namespace imu_integration
 
 #endif  // IMU_INTEGRATION_UTILITIES_H_

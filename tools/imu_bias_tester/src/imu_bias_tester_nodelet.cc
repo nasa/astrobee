@@ -20,11 +20,14 @@
 #include <imu_bias_tester/imu_bias_tester_nodelet.h>
 #include <localization_common/logger.h>
 #include <localization_common/utilities.h>
+#include <msg_conversions/msg_conversions.h>
 
 #include <geometry_msgs/PoseStamped.h>
+#include <geometry_msgs/Vector3Stamped.h>
 
 namespace imu_bias_tester {
 namespace lc = localization_common;
+namespace mc = msg_conversions;
 
 ImuBiasTesterNodelet::ImuBiasTesterNodelet() : ff_util::FreeFlyerNodelet(NODE_IMU_AUG, true) {
   imu_nh_.setCallbackQueue(&imu_queue_);
@@ -38,6 +41,7 @@ void ImuBiasTesterNodelet::Initialize(ros::NodeHandle* nh) {
 
 void ImuBiasTesterNodelet::SubscribeAndAdvertise(ros::NodeHandle* nh) {
   pose_pub_ = nh->advertise<geometry_msgs::PoseStamped>(TOPIC_IMU_BIAS_TESTER_POSE, 1);
+  velocity_pub_ = nh->advertise<geometry_msgs::Vector3Stamped>(TOPIC_IMU_BIAS_TESTER_VELOCITY, 1);
 
   imu_sub_ = imu_nh_.subscribe(TOPIC_HARDWARE_IMU, 100, &ImuBiasTesterNodelet::ImuCallback, this,
                                ros::TransportHints().tcpNoDelay());
@@ -56,6 +60,10 @@ void ImuBiasTesterNodelet::LocalizationStateCallback(const ff_msgs::GraphState::
     lc::PoseToMsg(state.pose(), pose_msg.pose);
     lc::TimeToHeader(state.timestamp(), pose_msg.header);
     pose_pub_.publish(pose_msg);
+    geometry_msgs::Vector3Stamped velocity_msg;
+    mc::VectorToMsg(state.velocity(), velocity_msg.vector);
+    lc::TimeToHeader(state.timestamp(), velocity_msg.header);
+    velocity_pub_.publish(velocity_msg);
   }
 }
 

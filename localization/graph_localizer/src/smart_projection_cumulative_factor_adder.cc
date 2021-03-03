@@ -79,7 +79,9 @@ void SmartProjectionCumulativeFactorAdder::AddSmartFactor(const FeatureTrack& fe
   key_infos.reserve(feature_track.points.size());
   // Gtsam requires unique key indices for each key, even though these will be replaced later
   int uninitialized_key_index = 0;
-  for (const auto& feature_point : feature_track.points) {
+  for (int i = 0; i < feature_track.points.size(); ++i) {
+    const auto& feature_point = feature_track.points[i];
+    if (i >= params().max_num_points_per_factor) break;
     const KeyInfo key_info(&sym::P, feature_point.timestamp);
     key_infos.emplace_back(key_info);
     smart_factor->add(Camera::Measurement(feature_point.image_point), key_info.MakeKey(uninitialized_key_index++));

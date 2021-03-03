@@ -38,6 +38,10 @@ void GraphLocalizerSimulator::BufferARVisualLandmarksMsg(const ff_msgs::VisualLa
 
 void GraphLocalizerSimulator::BufferImuMsg(const sensor_msgs::Imu& imu_msg) { imu_msg_buffer_.emplace_back(imu_msg); }
 
+void GraphLocalizerSimulator::BufferFlightModeMsg(const ff_msgs::FlightMode& flight_mode_msg) {
+  flight_mode_msg_buffer_.emplace_back(flight_mode_msg);
+}
+
 bool GraphLocalizerSimulator::AddMeasurementsAndUpdateIfReady(const lc::Time& current_time) {
   // If not initialized, add measurements as these are required for initialization.
   // Otherwise add measurements if enough time has passed since last optimization, simulating
@@ -47,6 +51,12 @@ bool GraphLocalizerSimulator::AddMeasurementsAndUpdateIfReady(const lc::Time& cu
   }
 
   // Add measurements
+  // Add Flight Mode msgs before IMU so imu filters can be set
+  for (const auto& flight_mode_msg : flight_mode_msg_buffer_) {
+    FlightModeCallback(flight_mode_msg);
+  }
+  flight_mode_msg_buffer_.clear();
+
   for (const auto& imu_msg : imu_msg_buffer_) {
     ImuCallback(imu_msg);
   }
