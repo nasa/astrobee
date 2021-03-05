@@ -163,6 +163,8 @@ class GazeboSensorPluginSparseMap : public FreeFlyerSensorPlugin {
       Eigen::Affine3d sensor_to_world = SensorToWorld(GetModel()->GetWorldPose(), sensor_->Pose());
     #endif
 
+    msg_feat_.header.stamp = ros::Time::now();
+
     // Initialize the camera parameters
     static camera::CameraParameters cam_params(&config_, "nav_cam");
     static camera::CameraModel camera(Eigen::Vector3d(0, 0, 0),
@@ -241,7 +243,6 @@ class GazeboSensorPluginSparseMap : public FreeFlyerSensorPlugin {
   // Send off the features
   void SendFeatures(ros::TimerEvent const& event) {
     if (!active_) return;
-    msg_feat_.header.stamp = ros::Time::now();
     pub_feat_.publish(msg_feat_);
   }
 

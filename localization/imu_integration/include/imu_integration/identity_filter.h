@@ -16,34 +16,18 @@
  * under the License.
  */
 
-// ROS includes
-#include <ros/ros.h>
+#ifndef IMU_INTEGRATION_IDENTITY_FILTER_H_
+#define IMU_INTEGRATION_IDENTITY_FILTER_H_
 
-// Gazebo includes
-#include <astrobee_gazebo/astrobee_gazebo.h>
+#include <imu_integration/filter.h>
 
-namespace gazebo {
-
-// This class is a plugin that calls the GNC autocode to predict
-// the forced to be applied to the rigid body
-class GazeboModelPluginDock : public FreeFlyerModelPlugin {
+namespace imu_integration {
+class IdentityFilter : public Filter {
  public:
-  GazeboModelPluginDock() : FreeFlyerModelPlugin("gazebo_dock", "body") {
-    SetParentFrame(FRAME_NAME_WORLD);
-  }
-
-  ~GazeboModelPluginDock() {}
-
- protected:
-  // Called when the plugin is loaded into the simulator
-  void LoadCallback(
-    ros::NodeHandle *nh, physics::ModelPtr model, sdf::ElementPtr sdf) {}
-
-  // Called on simulation reset
-  void Reset() {}
+  IdentityFilter();
+  // Returns filtered value and timestamp
+  double AddValue(const double value) final;
 };
+}  // namespace imu_integration
 
-// Register this plugin with the simulator
-GZ_REGISTER_MODEL_PLUGIN(GazeboModelPluginDock)
-
-}   // namespace gazebo
+#endif  // IMU_INTEGRATION_IDENTITY_FILTER_H_

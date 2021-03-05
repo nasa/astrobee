@@ -1,0 +1,49 @@
+<!-- Copyright (c) 2017, United States Government, as represented by the     -->
+<!-- Administrator of the National Aeronautics and Space Administration.     -->
+<!--                                                                         -->
+<!-- All rights reserved.                                                    -->
+<!--                                                                         -->
+<!-- The Astrobee platform is licensed under the Apache License, Version 2.0 -->
+<!-- (the "License"); you may not use this file except in compliance with    -->
+<!-- the License. You may obtain a copy of the License at                    -->
+<!--                                                                         -->
+<!--     http://www.apache.org/licenses/LICENSE-2.0                          -->
+<!--                                                                         -->
+<!-- Unless required by applicable law or agreed to in writing, software     -->
+<!-- distributed under the License is distributed on an "AS IS" BASIS,       -->
+<!-- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or         -->
+<!-- implied. See the License for the specific language governing            -->
+<!-- permissions and limitations under the License.                          -->
+
+
+<!-- Runs required nodes for localization and the provided bag.  Remaps      -->
+<!-- topics and sets necessary params and configs. Optionally save output to -->
+<!-- a bagfile.                                                              -->
+
+<launch>
+  <!-- Command line arguments -->
+  <arg name="robot" default="bumble" />
+  <arg name="world" default="iss" />
+
+  <!-- Set environment configs that are required to run nodes -->
+  <env name="ASTROBEE_ROBOT" value="$(arg robot)" />
+  <env name="ASTROBEE_WORLD" value="$(arg world)" />
+  <env name="ASTROBEE_CONFIG_DIR" value="$(find astrobee)/config" />
+  <env name="ASTROBEE_RESOURCE_DIR" value="$(find astrobee)/resources" />
+
+  <param name="robot_description" command="$(find xacro)/xacro --inorder $(find rviz_visualizer)/model/astrobee_model.urdf" />  
+
+  <group if="$(eval arg('world') == 'iss')">
+    <node type="rviz" name="rviz" pkg="rviz" args="-d $(find astrobee)/resources/rviz/loc_iss.rviz" />
+    <param name="/iss/robot_description" textfile="$(find astrobee_iss)/urdf/model.urdf" />
+  </group>
+
+  <group if="$(eval arg('world') == 'granite')">
+    <node type="rviz" name="rviz" pkg="rviz" args="-d $(find astrobee)/resources/rviz/loc_granite.rviz" />
+    <param name="/granite/robot_description" textfile="$(find astrobee_granite)/urdf/model.urdf" />
+  </group>
+
+  <!-- Publish Static TFs-->
+  <include file="$(find framestore)/launch/framestore.launch">
+  </include>
+</launch>

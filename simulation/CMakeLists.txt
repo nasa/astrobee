@@ -28,7 +28,6 @@ catkin_package(
   INCLUDE_DIRS
     include
   LIBRARIES
-    gazebo_model_plugin_dock
     gazebo_model_plugin_truth
     gazebo_model_plugin_eps
     gazebo_model_plugin_pmc
@@ -101,23 +100,6 @@ create_library(
   DEPS
     ff_util
     ff_hw_msgs
-)
-
-# Create a model plugin for the dock
-create_library(
-  DIR
-    src/gazebo_model_plugin_dock
-  TARGET
-    gazebo_model_plugin_dock
-  LIBS
-    ${GAZEBO_LIBRARIES}
-    ${catkin_LIBRARIES}
-    astrobee_gazebo
-  INC
-    ${GAZEBO_INCLUDE_DIRS}
-    ${catkin_INCLUDE_DIRS}
-  DEPS
-    ff_util
 )
 
 # Create a model plugin for aerodynamic drag
@@ -507,6 +489,7 @@ create_library(
     ${catkin_LIBRARIES}
     astrobee_gazebo
     camera
+    msg_conversions
   INC
     ${GAZEBO_INCLUDE_DIRS}
     ${EIGEN3_INCLUDE_DIRS}

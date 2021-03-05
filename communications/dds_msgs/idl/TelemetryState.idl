@@ -42,6 +42,7 @@ module rapid {
         public float gncStateRate;
         public float pmcCmdStateRate;
         public float positionRate;
+        public float sparseMappingPoseRate;
 
         public CameraInfoSequence8 cameras;
       };
