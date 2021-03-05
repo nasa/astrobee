@@ -75,7 +75,7 @@ def bag_and_parameter_sweep(graph_bag_params_list, output_dir):
     param_range_directory_for_bag = parameter_sweep.make_values_and_parameter_sweep(
       bag_output_dir, graph_bag_params.bagfile, graph_bag_params.map_file, graph_bag_params.image_topic,
       graph_bag_params.config_path, graph_bag_params.robot_config_file, graph_bag_params.world,
-      graph_bag_params.use_image_features)
+      graph_bag_params.use_image_features, graph_bag_params.groundtruth_bagfile)
     if not param_range_directory:
       param_range_directory = param_range_directory_for_bag
     combined_results_csv_files.append(os.path.join(bag_output_dir, 'param_sweep_combined_results.csv'))

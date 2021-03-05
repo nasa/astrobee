@@ -29,8 +29,12 @@ if __name__ == '__main__':
   parser.add_argument('bagfile')
   parser.add_argument('--output-file', default='output.pdf')
   parser.add_argument('--output-csv-file', default='results.csv')
+  parser.add_argument('-g', '--groundtruth-bagfile', default=None)
   args = parser.parse_args()
   if not os.path.isfile(args.bagfile):
     print('Bag file ' + args.bagfile + ' does not exist.')
     sys.exit()
-  plot_results.create_plots(args.bagfile, args.output_file, args.output_csv_file)
+  if args.groundtruth_bagfile and not os.path.isfile(args.groundtruth_bagfile):
+    print('Groundtruth Bag file ' + args.groundtruth_bagfile + ' does not exist.')
+    sys.exit()
+  plot_results.create_plots(args.bagfile, args.output_file, args.output_csv_file, args.groundtruth_bagfile)

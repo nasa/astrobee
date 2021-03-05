@@ -480,9 +480,10 @@ def has_topic(bag, topic):
   topics = bag.get_type_and_topic_info().topics
   return topic in topics
 
-
-def create_plots(bagfile, output_pdf_file, output_csv_file='results.csv'):
-  bag = rosbag.Bag(bagfile)
+# Groundtruth bag must have the same start time as other bagfile, otherwise RMSE calculations will be flawed
+def create_plots(bagfile, output_pdf_file, output_csv_file='results.csv', groundtruth_bagfile=None):
+  bag = rosbag.Bag(bagfile) 
+  groundtruth_bag = rosbag.Bag(groundtruth_bagfile) if groundtruth_bagfile else bag
   bag_start_time = bag.get_start_time()
 
   has_imu_augmented_graph_localization_state = has_topic(bag, '/gnc/ekf')
@@ -490,8 +491,10 @@ def create_plots(bagfile, output_pdf_file, output_csv_file='results.csv'):
   sparse_mapping_poses = poses.Poses('Sparse Mapping', '/sparse_mapping/pose')
   ar_tag_poses = poses.Poses('AR Tag', '/ar_tag/pose')
   imu_bias_tester_poses = poses.Poses('Imu Bias Tester', '/imu_bias_tester/pose')
-  vec_of_poses = [sparse_mapping_poses, ar_tag_poses, imu_bias_tester_poses]
+  vec_of_poses = [ar_tag_poses, imu_bias_tester_poses]
   load_pose_msgs(vec_of_poses, bag, bag_start_time)
+  groundtruth_vec_of_poses = [sparse_mapping_poses]
+  load_pose_msgs(groundtruth_vec_of_poses, groundtruth_bag, bag_start_time)
 
   graph_localization_states = loc_states.LocStates('Graph Localization', '/graph_loc/state')
   imu_augmented_graph_localization_states = loc_states.LocStates('Imu Augmented Graph Localization', '/gnc/ekf')
