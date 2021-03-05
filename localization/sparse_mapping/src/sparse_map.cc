@@ -391,6 +391,14 @@ void SparseMap::Load(const std::string & protobuf_file, bool localization) {
          histogram_equalization_ == 1 ||
          histogram_equalization_ == 2);
 
+  // For backward compatibility with old maps, allow a map to have its
+  // histogram_equalization flag unspecified, but it is best to avoid
+  // that situation, and rebuild the map if necessary.
+  if (histogram_equalization_ == 2)
+    std::cout << "Warning: Unknown value of histogram_equalization! "
+              << "It is strongly suggested to rebuild this map to avoid "
+              << "poor quality results." << std::endl;
+
   delete input;
   close(input_fd);
 }
@@ -402,6 +410,14 @@ void SparseMap::SetDetectorParams(int min_features, int max_features, int retrie
 }
 
 void SparseMap::Save(const std::string & protobuf_file) const {
+  // For backward compatibility with old maps, allow a map to have its
+  // histogram_equalization flag unspecified, but it is best to avoid
+  // that situation, and rebuild the map if necessary.
+  if (histogram_equalization_ == 2)
+    std::cout << "Warning: Unknown value of histogram_equalization! "
+              << "It is strongly suggested to rebuild this map to avoid "
+              << "poor quality results." << std::endl;
+
   sparse_mapping_protobuf::Map map;
   map.set_detector_name(detector_.GetDetectorName());
   if (!cid_to_descriptor_map_.empty())
