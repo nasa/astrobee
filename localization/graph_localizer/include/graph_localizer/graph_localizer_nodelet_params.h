@@ -15,29 +15,19 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+#ifndef GRAPH_LOCALIZER_GRAPH_LOCALIZER_NODELET_PARAMS_H_
+#define GRAPH_LOCALIZER_GRAPH_LOCALIZER_NODELET_PARAMS_H_
 
-#ifndef IMU_INTEGRATION_BUTTERWORTH_LOWPASS_FILTER_5TH_ORDER_1_H_
-#define IMU_INTEGRATION_BUTTERWORTH_LOWPASS_FILTER_5TH_ORDER_1_H_
-
-#include <imu_integration/filter.h>
-
-#include <array>
-
-namespace imu_integration {
-class ButterworthLowpassFilter5thOrder1 : public Filter {
- public:
-  ButterworthLowpassFilter5thOrder1();
-  // Returns filtered value and timestamp
-  double AddValue(const double value) final;
-
- private:
-  void Initialize(const double first_value, const double gain);
-  // Notation taken from mkfilter site
-  // /www/usr/fisher/helpers/mkfilter
-  std::array<double, 8> xv_;
-  std::array<double, 8> yv_;
-  bool initialized_;
+namespace graph_localizer {
+struct GraphLocalizerNodeletParams {
+  int max_imu_buffer_size;
+  int max_optical_flow_buffer_size;
+  int max_vl_buffer_size;
+  int max_ar_buffer_size;
+  // Used to avoid saving ml/ar poses with too few landmark detections
+  int loc_adder_min_num_matches;
+  int ar_tag_loc_adder_min_num_matches;
 };
-}  // namespace imu_integration
+}  // namespace graph_localizer
 
-#endif  // IMU_INTEGRATION_BUTTERWORTH_LOWPASS_FILTER_5TH_ORDER_1_H_
+#endif  // GRAPH_LOCALIZER_GRAPH_LOCALIZER_NODELET_PARAMS_H_

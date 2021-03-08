@@ -259,8 +259,9 @@ class LocalizationManagerNodelet : public ff_util::FreeFlyerNodelet {
           return Result(RESPONSE::OPTICAL_FLOW_FAILED, "Could not toggle optical flow");
         // Return the goal pipeline to the current pipeline
         curr_ = goal_;
+        std::string msg = "Switched to pipeline: " + curr_->first;
         // Return the error
-        return Result(RESPONSE::SUCCESS, "Switched to new pipeline");
+        return Result(RESPONSE::SUCCESS, msg);
       });
 
     // Waiting for the reset and the watchdog fires
@@ -292,18 +293,7 @@ class LocalizationManagerNodelet : public ff_util::FreeFlyerNodelet {
     //  BIAS ESTIMATION PATTERN
 
     // Localizing normally and bias estimate command is called
-    fsm_.Add(STATE::LOCALIZING,
-      GOAL_ESTIMATE_BIAS, [this](FSM::Event const& event) -> FSM::State {
-        if (!EstimateBias())
-          return Result(RESPONSE::ESTIMATE_BIAS_FAILED, "Could not call bias estimation service");
-        ResetTimer(timer_stability_);
-        ResetTimer(timer_deadline_);
-        return STATE::BIAS_WAITING_FOR_FILTER;
-      });
-
-    // We don't need to localize normally to reset the bias and bias estimate
-    // command is called
-    fsm_.Add(STATE::UNSTABLE,
+    fsm_.Add(STATE::LOCALIZING, STATE::DISABLED, STATE::UNSTABLE,
       GOAL_ESTIMATE_BIAS, [this](FSM::Event const& event) -> FSM::State {
         if (!EstimateBias())
           return Result(RESPONSE::ESTIMATE_BIAS_FAILED, "Could not call bias estimation service");
@@ -334,7 +324,7 @@ class LocalizationManagerNodelet : public ff_util::FreeFlyerNodelet {
     // FILTER RESET PATTERN
 
     // Busy localizing and a filter reset command is called
-    fsm_.Add(STATE::LOCALIZING,
+    fsm_.Add(STATE::LOCALIZING, STATE::UNSTABLE,
       GOAL_RESET_FILTER, [this](FSM::Event const& event) -> FSM::State {
         if (!ResetFilter())
           return Result(RESPONSE::RESET_FAILED, "Could not call filter reset service");
@@ -592,10 +582,15 @@ class LocalizationManagerNodelet : public ff_util::FreeFlyerNodelet {
       SERVICE_LOCALIZATION_MANAGER_SET_STATE,
         &LocalizationManagerNodelet::SetStateCallback, this);
 
-    // Allow the state to be manually set
+    // Allow the possible pipelines to be queried
     server_get_pipelines_ = nh->advertiseService(
       SERVICE_LOCALIZATION_MANAGER_GET_PIPELINES,
         &LocalizationManagerNodelet::GetPipelinesCallback, this);
+
+    // Allow the current pipeline to be queried
+    server_get_pipelines_ = nh->advertiseService(
+      SERVICE_LOCALIZATION_MANAGER_GET_CURR_PIPELINE,
+        &LocalizationManagerNodelet::GetCurrentPipelineCallback, this);
 
     // Create the switch action
     action_.SetGoalCallback(std::bind(&LocalizationManagerNodelet::GoalCallback, this, std::placeholders::_1));
@@ -656,6 +651,20 @@ class LocalizationManagerNodelet : public ff_util::FreeFlyerNodelet {
     return true;
   }
 
+  // Called when a user requests the internal state
+  bool GetCurrentPipelineCallback(ff_msgs::GetPipelines::Request& req,
+                            ff_msgs::GetPipelines::Response& res) {
+    NODELET_DEBUG_STREAM("GetPipelinesCallback()");
+    ff_msgs::LocalizationPipeline msg;
+    msg.id = curr_->first;
+    msg.mode = curr_->second.GetMode();
+    msg.name = curr_->second.GetName();
+    msg.requires_optical_flow = curr_->second.RequiresOpticalFlow();
+    msg.requires_filter = curr_->second.RequiresFilter();
+    res.pipelines.push_back(msg);
+    return true;
+  }
+
   // Called when a user manually updates the internal state
   bool GetPipelinesCallback(ff_msgs::GetPipelines::Request& req,
                             ff_msgs::GetPipelines::Response& res) {
@@ -674,7 +683,8 @@ class LocalizationManagerNodelet : public ff_util::FreeFlyerNodelet {
 
   // Complete the current dock or undock action
   FSM::State Result(int32_t response, std::string const& msg = "") {
-    NODELET_DEBUG_STREAM("Result(" << response << ")");
+    NODELET_DEBUG_STREAM("Result(" << response << "): " << msg);
+    NODELET_DEBUG_STREAM("Current pipeline is " << curr_->first);
     // Always return the goal pipeline to the current pipeline
     goal_ = curr_;
     // Send the feedback if needed
@@ -802,10 +812,10 @@ class LocalizationManagerNodelet : public ff_util::FreeFlyerNodelet {
 
   // Called when the localization mode must be switched
   void GoalCallback(ff_msgs::LocalizationGoalConstPtr const& goal) {
-    NODELET_DEBUG_STREAM("GoalCallback()");
     ff_msgs::LocalizationResult result;
     switch (goal->command) {
     case ff_msgs::LocalizationGoal::COMMAND_SWITCH_PIPELINE: {
+      NODELET_DEBUG_STREAM("GoalCallback Switch pipeline: " << goal->pipeline);
       PipelineMap::iterator arg = pipelines_.find(goal->pipeline);
       if (arg == pipelines_.end()) {
         result.fsm_result = "Invalid pipeline in request";
@@ -823,21 +833,23 @@ class LocalizationManagerNodelet : public ff_util::FreeFlyerNodelet {
       return fsm_.Update(GOAL_SWITCH_PIPELINE);
     }
     case ff_msgs::LocalizationGoal::COMMAND_ESTIMATE_BIAS:
-      if (curr_->second.RequiresFilter())
-        return fsm_.Update(GOAL_ESTIMATE_BIAS);
+      NODELET_DEBUG_STREAM("GoalCallback estimate bias.");
+      return fsm_.Update(GOAL_ESTIMATE_BIAS);
       break;
     case ff_msgs::LocalizationGoal::COMMAND_RESET_FILTER:
+      NODELET_DEBUG_STREAM("GoalCallback reset filter.");
       if (curr_->second.RequiresFilter())
         return fsm_.Update(GOAL_RESET_FILTER);
       break;
     default:
+      NODELET_DEBUG_STREAM("GoalCallback invalid localization goal.");
       result.fsm_result = "Invalid command";
       result.response = RESPONSE::INVALID_COMMAND;
       action_.SendResult(ff_util::FreeFlyerActionState::ABORTED, result);
       return;
     }
     // Catch-all for filter actions in a non-filtering state
-    result.fsm_result = "Cannot reset or initialize bias filter when not in use";
+    result.fsm_result = "Cannot reset filter when not in use";
     result.response = RESPONSE::FILTER_NOT_IN_USE;
     action_.SendResult(ff_util::FreeFlyerActionState::ABORTED, result);
   }

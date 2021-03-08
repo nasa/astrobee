@@ -46,7 +46,13 @@ BagImuFilterer::BagImuFilterer(const std::string& bag_name, const std::string& f
                                const std::string& filter_name)
     : bag_(bag_name, rosbag::bagmode::Read), filtered_bag_(filtered_bag, rosbag::bagmode::Write) {
   ii::ImuFilterParams params;
-  params.type = filter_name;
+  // TODO(rsoussan): Allow for different accel and ang vel filters
+  params.quiet_accel = filter_name;
+  params.quiet_ang_vel = filter_name;
+  params.nominal_accel = filter_name;
+  params.nominal_ang_vel = filter_name;
+  params.aggressive_accel = filter_name;
+  params.aggressive_ang_vel = filter_name;
   imu_filter_.reset(new ii::ImuFilter(params));
 }
 

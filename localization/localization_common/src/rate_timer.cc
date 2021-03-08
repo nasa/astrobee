@@ -34,6 +34,11 @@ void RateTimer::Record() {
   start_time_ = end_time;
 }
 
+boost::optional<double> RateTimer::LastValue() {
+  if (num_events_ <= 1) return boost::none;
+  return averager_.last_value();
+}
+
 void RateTimer::RecordAndLog() {
   Record();
   Log();

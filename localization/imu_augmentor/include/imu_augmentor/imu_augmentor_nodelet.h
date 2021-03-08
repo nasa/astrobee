@@ -19,6 +19,7 @@
 #define IMU_AUGMENTOR_IMU_AUGMENTOR_NODELET_H_
 
 #include <ff_msgs/EkfState.h>
+#include <ff_msgs/FlightMode.h>
 #include <ff_msgs/GraphState.h>
 #include <ff_msgs/Heartbeat.h>
 #include <ff_util/ff_nodelet.h>
@@ -46,6 +47,8 @@ class ImuAugmentorNodelet : public ff_util::FreeFlyerNodelet {
 
   void ImuCallback(const sensor_msgs::Imu::ConstPtr& imu_msg);
 
+  void FlightModeCallback(ff_msgs::FlightMode::ConstPtr const& mode);
+
   void LocalizationStateCallback(const ff_msgs::GraphState::ConstPtr& loc_msg);
 
   boost::optional<ff_msgs::EkfState> PublishLatestImuAugmentedLocalizationState();
@@ -60,7 +63,7 @@ class ImuAugmentorNodelet : public ff_util::FreeFlyerNodelet {
   std::string platform_name_;
   ros::NodeHandle imu_nh_, loc_nh_;
   ros::CallbackQueue imu_queue_, loc_queue_;
-  ros::Subscriber imu_sub_, state_sub_;
+  ros::Subscriber imu_sub_, flight_mode_sub_, state_sub_;
   ros::Publisher state_pub_, pose_pub_, twist_pub_, heartbeat_pub_;
   ff_msgs::Heartbeat heartbeat_;
   tf2_ros::TransformBroadcaster transform_pub_;

@@ -97,17 +97,15 @@ def make_all_value_combinations(value_ranges):
 def make_value_ranges():
   value_ranges = []
   value_names = []
-  steps = 6
+  steps = 10 
 
   # tune num smart factors
   value_ranges.append(np.logspace(-1, -6, steps, endpoint=True))
-  value_names.append('accel_sigma')
-  value_ranges.append(np.logspace(-1, -6, steps, endpoint=True))
   value_names.append('accel_bias_sigma')
   value_ranges.append(np.logspace(-1, -6, steps, endpoint=True))
-  value_names.append('integration_variance')
-  value_ranges.append(np.logspace(-1, -6, steps, endpoint=True))
-  value_names.append('bias_acc_omega_int')
+  value_names.append('accel_sigma')
+
+
 
   #q_gyro
   # .001 -> 2 deg
@@ -142,7 +140,7 @@ def make_values_and_parameter_sweep(output_dir, bag_file, map_file, image_topic,
   combined_results_file = os.path.join(output_dir, 'param_sweep_combined_results.csv')
   value_combos_file = os.path.join(output_dir, 'all_value_combos.csv')
   results_pdf_file = os.path.join(output_dir, 'param_sweep_results.pdf')
-  plot_parameter_sweep_results.create_plot(results_pdf_file, combined_results_file, value_combos_file)
+  plot_parameter_sweep_results.create_plots(results_pdf_file, combined_results_file, value_combos_file)
   return output_dir
 
 
@@ -154,8 +152,9 @@ if __name__ == '__main__':
   parser.add_argument('config_path', help='Full path to config path.')
   parser.add_argument('robot_config', help='Relative path to robot config.')
   parser.add_argument('world', help='World being used.')
-  parser.add_argument('use_image_features',
-                      type=bool,
+  parser.add_argument('--generate-image-features',
+                      dest='use_image_features',
+                      action='store_false',
                       help='Use image features msgs from bagfile or generate features from images.')
 
   parser.add_argument(
