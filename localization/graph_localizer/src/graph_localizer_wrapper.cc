@@ -29,11 +29,13 @@
 #include <Eigen/Core>
 
 namespace graph_localizer {
+namespace ii = imu_integration;
 namespace lc = localization_common;
 namespace lm = localization_measurements;
 namespace mc = msg_conversions;
 
-GraphLocalizerWrapper::GraphLocalizerWrapper(const std::string& graph_config_path_prefix) : reset_world_T_dock_(false) {
+GraphLocalizerWrapper::GraphLocalizerWrapper(const std::string& graph_config_path_prefix)
+    : reset_world_T_dock_(false), fan_speed_mode_(lm::FanSpeedMode::kNominal) {
   config_reader::ConfigReader config;
   lc::LoadGraphLocalizerConfig(config, graph_config_path_prefix);
   config.AddFile("transforms.config");
@@ -82,9 +84,9 @@ void GraphLocalizerWrapper::Update() {
 }
 
 void GraphLocalizerWrapper::OpticalFlowCallback(const ff_msgs::Feature2dArray& feature_array_msg) {
+  feature_counts_.of = feature_array_msg.feature_array.size();
   if (graph_localizer_) {
     if (graph_localizer_->AddOpticalFlowMeasurement(lm::MakeFeaturePointsMeasurement(feature_array_msg))) {
-      feature_counts_.of = graph_localizer_->NumOFFactors();
     }
   }
 }
@@ -98,9 +100,10 @@ void GraphLocalizerWrapper::ResetLocalizer() {
       "are available.");
     return;
   }
+
   // TODO(rsoussan): compare current time with latest bias timestamp and print
   // warning if it is too old
-  graph_localizer_initializer_.SetBiases(latest_biases_->first, true);
+  graph_localizer_initializer_.SetBiases(*latest_biases_, true);
   graph_localizer_.reset();
   sanity_checker_->Reset();
 }
@@ -115,15 +118,17 @@ void GraphLocalizerWrapper::ResetBiasesAndLocalizer() {
 void GraphLocalizerWrapper::ResetBiasesFromFileAndResetLocalizer() {
   LogInfo("ResetBiasAndLocalizer: Resetting biases from file and resetting localizer.");
   graph_localizer_initializer_.ResetBiasesFromFileAndResetStartPose();
+  if (graph_localizer_initializer_.HasBiases())
+    latest_biases_ = graph_localizer_initializer_.params().graph_initializer.initial_imu_bias;
   graph_localizer_.reset();
   sanity_checker_->Reset();
 }
 
 void GraphLocalizerWrapper::VLVisualLandmarksCallback(const ff_msgs::VisualLandmarks& visual_landmarks_msg) {
+  feature_counts_.vl = visual_landmarks_msg.landmarks.size();
   if (!ValidVLMsg(visual_landmarks_msg, sparse_mapping_min_num_landmarks_)) return;
   if (graph_localizer_) {
     graph_localizer_->AddSparseMappingMeasurement(lm::MakeMatchedProjectionsMeasurement(visual_landmarks_msg));
-    feature_counts_.vl = visual_landmarks_msg.landmarks.size();
   }
 
   const gtsam::Pose3 sparse_mapping_global_T_body =
@@ -142,6 +147,9 @@ void GraphLocalizerWrapper::VLVisualLandmarksCallback(const ff_msgs::VisualLandm
     // Set or update initial pose if a new one is available before the localizer
     // has started running.
     graph_localizer_initializer_.SetStartPose(sparse_mapping_pose_->first, sparse_mapping_pose_->second);
+    // Set fan speed mode as well in case this hasn't been set yet
+    // TODO(rsoussan): Do this in a cleaner way
+    graph_localizer_initializer_.SetFanSpeedMode(fan_speed_mode_);
   }
 }
 
@@ -176,6 +184,7 @@ bool GraphLocalizerWrapper::CheckCovarianceSanity() const {
 }
 
 void GraphLocalizerWrapper::ARVisualLandmarksCallback(const ff_msgs::VisualLandmarks& visual_landmarks_msg) {
+  feature_counts_.ar = visual_landmarks_msg.landmarks.size();
   if (!ValidVLMsg(visual_landmarks_msg, ar_min_num_landmarks_)) return;
   if (graph_localizer_) {
     if (reset_world_T_dock_) {
@@ -188,26 +197,34 @@ void GraphLocalizerWrapper::ARVisualLandmarksCallback(const ff_msgs::VisualLandm
     ar_tag_pose_ = std::make_pair(frame_changed_ar_measurements.global_T_cam *
                                     graph_localizer_initializer_.params().calibration.body_T_dock_cam.inverse(),
                                   frame_changed_ar_measurements.timestamp);
-    // TODO(rsoussan): Make seperate ar count, update GraphState and EkfState
-    feature_counts_.vl = visual_landmarks_msg.landmarks.size();
   }
 }
 
 void GraphLocalizerWrapper::ImuCallback(const sensor_msgs::Imu& imu_msg) {
   if (graph_localizer_) {
     graph_localizer_->AddImuMeasurement(lm::ImuMeasurement(imu_msg));
-    latest_biases_ = graph_localizer_->LatestBiases();
-    if (!latest_biases_) {
+    const auto latest_biases = graph_localizer_->LatestBiases();
+    if (!latest_biases) {
       LogError("ImuCallback: Failed to get latest biases.");
+    } else {
+      latest_biases_ = latest_biases->first;
     }
   } else if (graph_localizer_initializer_.EstimateBiases()) {
-    graph_localizer_initializer_.EstimateAndSetImuBiases(lm::ImuMeasurement(imu_msg));
+    graph_localizer_initializer_.EstimateAndSetImuBiases(lm::ImuMeasurement(imu_msg), fan_speed_mode_);
+    if (graph_localizer_initializer_.HasBiases())
+      latest_biases_ = graph_localizer_initializer_.params().graph_initializer.initial_imu_bias;
   }
 
   if (!graph_localizer_ && graph_localizer_initializer_.ReadyToInitialize()) {
     InitializeGraph();
     LogDebug("ImuCallback: Initialized Graph.");
   }
+}
+
+void GraphLocalizerWrapper::FlightModeCallback(const ff_msgs::FlightMode& flight_mode) {
+  fan_speed_mode_ = lm::ConvertFanSpeedMode(flight_mode.speed);
+  if (graph_localizer_) graph_localizer_->SetFanSpeedMode(fan_speed_mode_);
+  graph_localizer_initializer_.SetFanSpeedMode(fan_speed_mode_);
 }
 
 void GraphLocalizerWrapper::InitializeGraph() {
@@ -283,10 +300,11 @@ boost::optional<ff_msgs::GraphState> GraphLocalizerWrapper::LatestLocalizationSt
     LogDebugEveryN(50, "LatestLocalizationMsg: No combined nav state and covariances available.");
     return boost::none;
   }
-  const auto graph_state_msg = GraphStateMsg(
-    combined_nav_state_and_covariances->first, combined_nav_state_and_covariances->second, feature_counts_.of,
-    feature_counts_.vl, graph_localizer_initializer_.EstimateBiases(), position_cov_log_det_lost_threshold_,
-    orientation_cov_log_det_lost_threshold_, graph_localizer_->standstill(), graph_localizer_->graph_stats());
+  const auto graph_state_msg =
+    GraphStateMsg(combined_nav_state_and_covariances->first, combined_nav_state_and_covariances->second,
+                  feature_counts_, graph_localizer_initializer_.EstimateBiases(), position_cov_log_det_lost_threshold_,
+                  orientation_cov_log_det_lost_threshold_, graph_localizer_->standstill(),
+                  graph_localizer_->graph_stats(), graph_localizer_->fan_speed_mode());
   feature_counts_.Reset();
   return graph_state_msg;
 }

@@ -22,6 +22,7 @@
 #include <localization_common/logger.h>
 #include <localization_common/utilities.h>
 #include <localization_measurements/imu_measurement.h>
+#include <localization_measurements/measurement_conversions.h>
 #include <msg_conversions/msg_conversions.h>
 
 namespace imu_augmentor {
@@ -53,6 +54,10 @@ ImuAugmentorWrapper::ImuAugmentorWrapper(const std::string& graph_config_path_pr
 
 void ImuAugmentorWrapper::LocalizationStateCallback(const ff_msgs::GraphState& loc_msg) {
   loc_state_timer_.RecordAndVlogEveryN(10, 2);
+  const auto loc_state_elapsed_time = loc_state_timer_.LastValue();
+  if (loc_state_elapsed_time && *loc_state_elapsed_time >= 2) {
+    LogError("LocalizationStateCallback: More than 2 seconds elapsed between loc state msgs.");
+  }
 
   latest_combined_nav_state_ = lc::CombinedNavStateFromMsg(loc_msg);
   latest_covariances_ = lc::CombinedNavStateCovariancesFromMsg(loc_msg);
@@ -70,6 +75,10 @@ bool ImuAugmentorWrapper::standstill() const {
 
 void ImuAugmentorWrapper::ImuCallback(const sensor_msgs::Imu& imu_msg) {
   imu_augmentor_->BufferImuMeasurement(lm::ImuMeasurement(imu_msg));
+}
+
+void ImuAugmentorWrapper::FlightModeCallback(const ff_msgs::FlightMode& flight_mode) {
+  imu_augmentor_->SetFanSpeedMode(lm::ConvertFanSpeedMode(flight_mode.speed));
 }
 
 boost::optional<std::pair<lc::CombinedNavState, lc::CombinedNavStateCovariances>>
@@ -114,8 +123,11 @@ boost::optional<ff_msgs::EkfState> ImuAugmentorWrapper::LatestImuAugmentedLocali
   latest_imu_augmented_loc_msg.header = latest_loc_msg_->header;
   latest_imu_augmented_loc_msg.child_frame_id = latest_loc_msg_->child_frame_id;
   latest_imu_augmented_loc_msg.confidence = latest_loc_msg_->confidence;
-  latest_imu_augmented_loc_msg.of_count = latest_loc_msg_->of_count;
-  latest_imu_augmented_loc_msg.ml_count = latest_loc_msg_->ml_count;
+  // Prevent overflow of uin8_t
+  latest_imu_augmented_loc_msg.of_count =
+    latest_loc_msg_->num_of_factors <= 255 ? latest_loc_msg_->num_of_factors : 255;
+  latest_imu_augmented_loc_msg.ml_count =
+    latest_loc_msg_->num_ml_projection_factors <= 255 ? latest_loc_msg_->num_ml_projection_factors : 255;
   latest_imu_augmented_loc_msg.estimating_bias = latest_loc_msg_->estimating_bias;
 
   // Update nav state and covariances with latest imu measurements
