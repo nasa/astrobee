@@ -36,6 +36,7 @@
 #include <localization_common/combined_nav_state.h>
 #include <localization_common/combined_nav_state_covariances.h>
 #include <localization_common/time.h>
+#include <localization_measurements/fan_speed_mode.h>
 #include <localization_measurements/feature_points_measurement.h>
 #include <localization_measurements/matched_projections_measurement.h>
 
@@ -85,7 +86,8 @@ class GraphLocalizer {
   bool LocProjectionNoiseScaling(FactorsToAdd& factors_to_add);
   bool ARProjectionNoiseScaling(FactorsToAdd& factors_to_add);
   bool MapProjectionNoiseScaling(const LocFactorAdderParams& params, FactorsToAdd& factors_to_add);
-  void CheckForStandstill();
+  void CheckForStandstill(
+    const localization_measurements::FeaturePointsMeasurement& optical_flow_feature_points_measurement);
   void AddARTagMeasurement(
     const localization_measurements::MatchedProjectionsMeasurement& matched_projections_measurement);
   void AddSparseMappingMeasurement(
@@ -133,6 +135,10 @@ class GraphLocalizer {
   void LogOnDestruction(const bool log_on_destruction);
 
   const GraphStats& graph_stats() const;
+
+  void SetFanSpeedMode(const localization_measurements::FanSpeedMode fan_speed_mode);
+
+  const localization_measurements::FanSpeedMode fan_speed_mode() const;
 
  private:
   gtsam::NonlinearFactorGraph MarginalFactors(const gtsam::NonlinearFactorGraph& old_factors,
@@ -224,6 +230,7 @@ class GraphLocalizer {
   }
 
   std::shared_ptr<FeatureTracker> feature_tracker_;
+  std::shared_ptr<FeatureTracker> standstill_feature_tracker_;
   imu_integration::LatestImuIntegrator latest_imu_integrator_;
   std::shared_ptr<GraphValues> graph_values_;
   bool log_on_destruction_;

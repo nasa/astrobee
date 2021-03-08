@@ -3,6 +3,10 @@
 # Usage instructions for Docker
 
 Here there are instructions on how to build and run the FSW using Docker.
+First, clone the flight software repository and media:
+
+    git clone https://github.com/nasa/astrobee.git $SOURCE_PATH
+    git submodule update --init --depth 1 description/media
 
 The docker image for the astrobee FSW is divided throughout 2 docker files. 
 
@@ -13,9 +17,6 @@ Available docker files:
 
 	astrobee_kinetic - Builds the astrobee FSW code on top of astrobee_base_kinetic.
 	astrobee_melodic - Builds the astrobee FSW code on top of astrobee_base_melodic.
-
-	rebuild_and_test_astrobee_kinetic - Rebuilds the astrobee FSW code on top of astrobee_kinetic and performs the unit tests. This makes for a faster rebuild leveraging the cached data and rebuilding only the nodes that were changed, for testing purposes only.
-	rebuild_and_test_astrobee_melodic - Rebuilds the astrobee FSW code on top of astrobee_melodic and performs the unit tests. This makes for a faster rebuild leveraging the cached data and rebuilding only the nodes that were changed, for testing purposes only.
 
 
 ## Building the docker images

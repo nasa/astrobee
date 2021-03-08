@@ -25,10 +25,12 @@ struct FeatureCounts {
   void Reset() {
     vl = 0;
     of = 0;
+    ar = 0;
   }
 
   int vl = 0;
   int of = 0;
+  int ar = 0;
 };
 }  // namespace graph_localizer
 
