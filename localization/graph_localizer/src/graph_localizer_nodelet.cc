@@ -33,7 +33,7 @@ namespace lc = localization_common;
 namespace mc = msg_conversions;
 
 GraphLocalizerNodelet::GraphLocalizerNodelet()
-    : ff_util::FreeFlyerNodelet(NODE_GRAPH_LOC, true), platform_name_(GetPlatform()) {
+    : ff_util::FreeFlyerNodelet(NODE_GRAPH_LOC, true) {
   private_nh_.setCallbackQueue(&private_queue_);
   heartbeat_.node = GetName();
   heartbeat_.nodelet_manager = ros::this_node::getName();
@@ -46,7 +46,10 @@ GraphLocalizerNodelet::GraphLocalizerNodelet()
   LoadGraphLocalizerNodeletParams(config, params_);
 }
 
-void GraphLocalizerNodelet::Initialize(ros::NodeHandle* nh) {
+void GraphLocalizerNodelet::Initialize(ros::NodeHandle* nh) {  // Setup the platform name
+  platform_name_ = GetPlatform();
+  platform_name_ = (platform_name_.empty() ? "" : platform_name_ + "/");
+
   ff_common::InitFreeFlyerApplication(getMyArgv());
   SubscribeAndAdvertise(nh);
   Run();
