@@ -46,7 +46,8 @@ GraphLocalizerNodelet::GraphLocalizerNodelet()
   LoadGraphLocalizerNodeletParams(config, params_);
 }
 
-void GraphLocalizerNodelet::Initialize(ros::NodeHandle* nh) {  // Setup the platform name
+void GraphLocalizerNodelet::Initialize(ros::NodeHandle* nh) {
+  // Setup the platform name
   platform_name_ = GetPlatform();
   platform_name_ = (platform_name_.empty() ? "" : platform_name_ + "/");
 
