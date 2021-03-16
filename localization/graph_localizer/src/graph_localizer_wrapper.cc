@@ -86,8 +86,7 @@ void GraphLocalizerWrapper::Update() {
 void GraphLocalizerWrapper::OpticalFlowCallback(const ff_msgs::Feature2dArray& feature_array_msg) {
   feature_counts_.of = feature_array_msg.feature_array.size();
   if (graph_localizer_) {
-    if (graph_localizer_->AddOpticalFlowMeasurement(lm::MakeFeaturePointsMeasurement(feature_array_msg))) {
-    }
+    graph_localizer_->AddOpticalFlowMeasurement(lm::MakeFeaturePointsMeasurement(feature_array_msg));
   }
 }
 
