@@ -8,7 +8,7 @@ on:
 
 jobs:
   build_and_push_docs:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
 
     steps:
     - name: Checkout
@@ -22,7 +22,7 @@ jobs:
         ref: gh-pages
     - name: Install dependencies
       run: |
-        sudo apt-get install python-bson
+        sudo apt-get install bison
         sudo apt-get install flex
         sudo apt-get install graphviz
     - name: Install doxygen
@@ -37,8 +37,8 @@ jobs:
         sudo make install
     - name: install xgds_planner2
       run: |
-        sudo pip install iso8601
-        sudo pip install "django<2"
+        sudo pip3 install iso8601
+        sudo pip3 install "django<2"
         git clone https://github.com/geocam/geocamUtilWeb.git
         cd geocamUtilWeb
         sudo python setup.py install
