@@ -37,8 +37,8 @@ jobs:
         sudo make install
     - name: install xgds_planner2
       run: |
-        sudo pip3 install iso8601
-        sudo pip3 install "django<2"
+        sudo pip install iso8601
+        sudo pip install "django<2"
         git clone https://github.com/geocam/geocamUtilWeb.git
         cd geocamUtilWeb
         sudo python setup.py install
