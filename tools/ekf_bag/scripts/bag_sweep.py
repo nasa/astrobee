@@ -40,6 +40,7 @@ def test_on_bag(bag_file, output_dir, args):
   results_csv_output_file = os.path.join(output_dir, name_prefix + '_results.csv')
   options = ekf_graph.RunEKFOptions(bag_file, args.map_file, ekf_output_file, pdf_output_file, results_csv_output_file)
   options.set_bag_sweep_params(args)
+  options.features_in_bag = True
   ekf_graph.run_ekf_and_save_stats(options)
 
 

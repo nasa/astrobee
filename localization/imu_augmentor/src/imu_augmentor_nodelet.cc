@@ -28,7 +28,7 @@ namespace imu_augmentor {
 namespace lc = localization_common;
 
 ImuAugmentorNodelet::ImuAugmentorNodelet()
-    : ff_util::FreeFlyerNodelet(NODE_IMU_AUG, true), platform_name_(GetPlatform()) {
+    : ff_util::FreeFlyerNodelet(NODE_IMU_AUG, true) {
   imu_nh_.setCallbackQueue(&imu_queue_);
   loc_nh_.setCallbackQueue(&loc_queue_);
   heartbeat_.node = GetName();
@@ -36,6 +36,10 @@ ImuAugmentorNodelet::ImuAugmentorNodelet()
 }
 
 void ImuAugmentorNodelet::Initialize(ros::NodeHandle* nh) {
+  // Setup the platform name
+  platform_name_ = GetPlatform();
+  platform_name_ = (platform_name_.empty() ? "" : platform_name_ + "/");
+
   SubscribeAndAdvertise(nh);
   Run();
 }
@@ -48,12 +52,18 @@ void ImuAugmentorNodelet::SubscribeAndAdvertise(ros::NodeHandle* nh) {
 
   imu_sub_ = imu_nh_.subscribe(TOPIC_HARDWARE_IMU, 100, &ImuAugmentorNodelet::ImuCallback, this,
                                ros::TransportHints().tcpNoDelay());
+  // Use the imu nh so that speed mode changes arrive in order wrt IMU msgs
+  flight_mode_sub_ = imu_nh_.subscribe(TOPIC_MOBILITY_FLIGHT_MODE, 10, &ImuAugmentorNodelet::FlightModeCallback, this);
   state_sub_ = loc_nh_.subscribe(TOPIC_GRAPH_LOC_STATE, 1, &ImuAugmentorNodelet::LocalizationStateCallback, this,
                                  ros::TransportHints().tcpNoDelay());
 }
 
 void ImuAugmentorNodelet::ImuCallback(const sensor_msgs::Imu::ConstPtr& imu_msg) {
   imu_augmentor_wrapper_.ImuCallback(*imu_msg);
+}
+
+void ImuAugmentorNodelet::FlightModeCallback(ff_msgs::FlightMode::ConstPtr const& mode) {
+  imu_augmentor_wrapper_.FlightModeCallback(*mode);
 }
 
 void ImuAugmentorNodelet::LocalizationStateCallback(const ff_msgs::GraphState::ConstPtr& loc_msg) {

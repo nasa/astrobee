@@ -20,6 +20,7 @@
 #include <ff_msgs/LocalizationGraph.h>
 #include <ff_util/ff_names.h>
 #include <graph_localizer/graph_localizer_nodelet.h>
+#include <graph_localizer/parameter_reader.h>
 #include <graph_localizer/utilities.h>
 #include <localization_common/logger.h>
 #include <localization_common/utilities.h>
@@ -32,7 +33,7 @@ namespace lc = localization_common;
 namespace mc = msg_conversions;
 
 GraphLocalizerNodelet::GraphLocalizerNodelet()
-    : ff_util::FreeFlyerNodelet(NODE_GRAPH_LOC, true), platform_name_(GetPlatform()) {
+    : ff_util::FreeFlyerNodelet(NODE_GRAPH_LOC, true) {
   private_nh_.setCallbackQueue(&private_queue_);
   heartbeat_.node = GetName();
   heartbeat_.nodelet_manager = ros::this_node::getName();
@@ -42,11 +43,14 @@ GraphLocalizerNodelet::GraphLocalizerNodelet()
   if (!config.ReadFiles()) {
     LogFatal("Failed to read config files.");
   }
-  sparse_mapping_min_num_landmarks_ = mc::LoadInt(config, "loc_adder_min_num_matches");
-  ar_min_num_landmarks_ = mc::LoadInt(config, "ar_tag_loc_adder_min_num_matches");
+  LoadGraphLocalizerNodeletParams(config, params_);
 }
 
 void GraphLocalizerNodelet::Initialize(ros::NodeHandle* nh) {
+  // Setup the platform name
+  platform_name_ = GetPlatform();
+  platform_name_ = (platform_name_.empty() ? "" : platform_name_ + "/");
+
   ff_common::InitFreeFlyerApplication(getMyArgv());
   SubscribeAndAdvertise(nh);
   Run();
@@ -60,27 +64,19 @@ void GraphLocalizerNodelet::SubscribeAndAdvertise(ros::NodeHandle* nh) {
   reset_pub_ = nh->advertise<std_msgs::Empty>(TOPIC_GNC_EKF_RESET, 10);
   heartbeat_pub_ = nh->advertise<ff_msgs::Heartbeat>(TOPIC_HEARTBEAT, 5, true);
 
-  // Buffer max should be at least 10 and a max of 2 seconds of data
-  // Imu freq: ~62.5
-  constexpr int kMaxNumImuMsgs = 125;
-  // AR freq: ~1
-  constexpr int kMaxNumARMsgs = 10;
-  // VL freq: ~1
-  constexpr int kMaxNumVLMsgs = 10;
-  // OF freq: ~10
-  constexpr int kMaxNumOFMsgs = 20;
-
-  imu_sub_ = private_nh_.subscribe(TOPIC_HARDWARE_IMU, kMaxNumImuMsgs, &GraphLocalizerNodelet::ImuCallback, this,
-                                   ros::TransportHints().tcpNoDelay());
+  imu_sub_ = private_nh_.subscribe(TOPIC_HARDWARE_IMU, params_.max_imu_buffer_size, &GraphLocalizerNodelet::ImuCallback,
+                                   this, ros::TransportHints().tcpNoDelay());
   ar_sub_ =
-    private_nh_.subscribe(TOPIC_LOCALIZATION_AR_FEATURES, kMaxNumARMsgs,
+    private_nh_.subscribe(TOPIC_LOCALIZATION_AR_FEATURES, params_.max_ar_buffer_size,
                           &GraphLocalizerNodelet::ARVisualLandmarksCallback, this, ros::TransportHints().tcpNoDelay());
   of_sub_ =
-    private_nh_.subscribe(TOPIC_LOCALIZATION_OF_FEATURES, kMaxNumOFMsgs, &GraphLocalizerNodelet::OpticalFlowCallback,
-                          this, ros::TransportHints().tcpNoDelay());
+    private_nh_.subscribe(TOPIC_LOCALIZATION_OF_FEATURES, params_.max_optical_flow_buffer_size,
+                          &GraphLocalizerNodelet::OpticalFlowCallback, this, ros::TransportHints().tcpNoDelay());
   vl_sub_ =
-    private_nh_.subscribe(TOPIC_LOCALIZATION_ML_FEATURES, kMaxNumVLMsgs,
+    private_nh_.subscribe(TOPIC_LOCALIZATION_ML_FEATURES, params_.max_vl_buffer_size,
                           &GraphLocalizerNodelet::VLVisualLandmarksCallback, this, ros::TransportHints().tcpNoDelay());
+  flight_mode_sub_ =
+    private_nh_.subscribe(TOPIC_MOBILITY_FLIGHT_MODE, 10, &GraphLocalizerNodelet::FlightModeCallback, this);
   bias_srv_ =
     private_nh_.advertiseService(SERVICE_GNC_EKF_INIT_BIAS, &GraphLocalizerNodelet::ResetBiasesAndLocalizer, this);
   bias_from_file_srv_ = private_nh_.advertiseService(
@@ -161,7 +157,7 @@ void GraphLocalizerNodelet::VLVisualLandmarksCallback(const ff_msgs::VisualLandm
 
   if (!localizer_enabled()) return;
   graph_localizer_wrapper_.VLVisualLandmarksCallback(*visual_landmarks_msg);
-  if (ValidVLMsg(*visual_landmarks_msg, sparse_mapping_min_num_landmarks_)) PublishSparseMappingPose();
+  if (ValidVLMsg(*visual_landmarks_msg, params_.loc_adder_min_num_matches)) PublishSparseMappingPose();
 }
 
 void GraphLocalizerNodelet::ARVisualLandmarksCallback(const ff_msgs::VisualLandmarks::ConstPtr& visual_landmarks_msg) {
@@ -171,7 +167,7 @@ void GraphLocalizerNodelet::ARVisualLandmarksCallback(const ff_msgs::VisualLandm
   if (!localizer_enabled()) return;
   graph_localizer_wrapper_.ARVisualLandmarksCallback(*visual_landmarks_msg);
   PublishWorldTDockTF();
-  if (ValidVLMsg(*visual_landmarks_msg, ar_min_num_landmarks_)) PublishARTagPose();
+  if (ValidVLMsg(*visual_landmarks_msg, params_.ar_tag_loc_adder_min_num_matches)) PublishARTagPose();
 }
 
 void GraphLocalizerNodelet::ImuCallback(const sensor_msgs::Imu::ConstPtr& imu_msg) {
@@ -182,12 +178,18 @@ void GraphLocalizerNodelet::ImuCallback(const sensor_msgs::Imu::ConstPtr& imu_ms
   graph_localizer_wrapper_.ImuCallback(*imu_msg);
 }
 
+void GraphLocalizerNodelet::FlightModeCallback(ff_msgs::FlightMode::ConstPtr const& mode) {
+  graph_localizer_wrapper_.FlightModeCallback(*mode);
+}
+
 void GraphLocalizerNodelet::PublishLocalizationState() {
-  const auto latest_localization_state_msg = graph_localizer_wrapper_.LatestLocalizationStateMsg();
+  auto latest_localization_state_msg = graph_localizer_wrapper_.LatestLocalizationStateMsg();
   if (!latest_localization_state_msg) {
     LogDebugEveryN(100, "PublishLocalizationState: Failed to get latest localization state msg.");
     return;
   }
+  latest_localization_state_msg->callbacks_time = callbacks_timer_.last_value();
+  latest_localization_state_msg->nodelet_runtime = nodelet_runtime_timer_.last_value();
   state_pub_.publish(*latest_localization_state_msg);
 }
 
@@ -263,10 +265,12 @@ void GraphLocalizerNodelet::Run() {
   // Biases reestimated if a intialize bias service call is received
   ResetBiasesFromFileAndResetLocalizer();
   while (ros::ok()) {
+    nodelet_runtime_timer_.Start();
     callbacks_timer_.Start();
     private_queue_.callAvailable();
-    callbacks_timer_.StopAndVlogEveryN(100, 2);
+    callbacks_timer_.Stop();
     graph_localizer_wrapper_.Update();
+    nodelet_runtime_timer_.Stop();
     PublishGraphMessages();
     PublishHeartbeat();
     rate.sleep();

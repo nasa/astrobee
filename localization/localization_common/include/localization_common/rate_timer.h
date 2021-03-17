@@ -22,6 +22,8 @@
 #include <localization_common/averager.h>
 #include <localization_common/time.h>
 
+#include <boost/optional.hpp>
+
 #include <chrono>
 #include <string>
 
@@ -29,6 +31,7 @@ namespace localization_common {
 class RateTimer {
  public:
   explicit RateTimer(const std::string& timer_name = "");
+  boost::optional<double> LastValue();
   void Record();
   void Log() const;
   void LogEveryN(const int num_events_per_log) const;

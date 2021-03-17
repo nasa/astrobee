@@ -125,6 +125,7 @@
 #define TOPIC_AR_TAG_POSE                           "ar_tag/pose"
 #define TOPIC_SPARSE_MAPPING_POSE                   "sparse_mapping/pose"
 #define TOPIC_IMU_BIAS_TESTER_POSE                  "imu_bias_tester/pose"
+#define TOPIC_IMU_BIAS_TESTER_VELOCITY              "imu_bias_tester/velocity"
 
 #define ACTION_GNC_CTL_CONTROL                      "gnc/control"
 

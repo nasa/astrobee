@@ -93,6 +93,7 @@ std::vector<FactorsToAdd> LocFactorAdder::AddFactors(
       loc_projection_factor->setWorldTCam(matched_projections_measurement.global_T_cam);
       projection_factors_to_add.push_back({{key_info}, loc_projection_factor});
       ++num_loc_projection_factors;
+      if (num_loc_projection_factors >= params().max_num_factors) break;
     }
     projection_factors_to_add.SetTimestamp(matched_projections_measurement.timestamp);
     LogDebug("AddFactors: Added " << num_loc_projection_factors << " loc projection factors.");

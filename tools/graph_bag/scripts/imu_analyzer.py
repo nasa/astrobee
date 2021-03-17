@@ -92,7 +92,7 @@ def plot_imu_measurements(pdf, imu_measurements, prefix=''):
 
 def plot_fft(pdf, magnitude, frequency, prefix=''):
   plt.figure()
-  plt.ylim(top=1.5)
+  plt.ylim(top=100)
   plt.plot(frequency, np.absolute(magnitude), lw=1)
   plt.xlabel('Frequency')
   plt.ylabel('Magnitude')
@@ -118,16 +118,13 @@ def load_imu_msgs(imu_measurements, imu_topic, bag):
     imu_measurements.add_imu_measurement(msg)
 
 
-def create_plots(bagfile, filtered_bagfile, output_file, cutoff_frequency):
+def create_plots(bagfile, filtered_bagfile, output_file, cutoff_frequency, sample_rate):
   bag = rosbag.Bag(bagfile)
   measurements = imu_measurements.ImuMeasurements()
   load_imu_msgs(measurements, '/hw/imu', bag)
   bag.close()
 
-  # Assumes samples are evenly spaced in time
-  # This is a fairly safe assumption for imu measurements
-  sample_spacing = np.diff(measurements.times)[0]
-  sample_rate = 1.0 / sample_spacing
+  sample_spacing = 1.0/sample_rate 
 
   # Use second bagfile as filtered measurements, otherwise filter with python filter
   filtered_measurements = imu_measurements.ImuMeasurements()
