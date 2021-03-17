@@ -8,7 +8,7 @@ on:
 
 jobs:
   build_and_push_docs:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
 
     steps:
     - name: Checkout
@@ -22,7 +22,7 @@ jobs:
         ref: gh-pages
     - name: Install dependencies
       run: |
-        sudo apt-get install python-bson
+        sudo apt-get install bison
         sudo apt-get install flex
         sudo apt-get install graphviz
     - name: Install doxygen
