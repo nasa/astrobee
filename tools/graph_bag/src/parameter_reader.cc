@@ -34,6 +34,7 @@ void LoadLiveMeasurementSimulatorParams(config_reader::ConfigReader& config, con
                                         const std::string& map_file, const std::string& image_topic,
                                         LiveMeasurementSimulatorParams& params) {
   LoadMessageBufferParams("imu", config, params.imu);
+  LoadMessageBufferParams("flight_mode", config, params.flight_mode);
   LoadMessageBufferParams("of", config, params.of);
   LoadMessageBufferParams("vl", config, params.vl);
   LoadMessageBufferParams("ar", config, params.ar);

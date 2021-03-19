@@ -19,6 +19,7 @@
 #define GRAPH_LOCALIZER_GRAPH_LOCALIZER_NODELET_H_
 
 #include <ff_msgs/Feature2dArray.h>
+#include <ff_msgs/FlightMode.h>
 #include <ff_msgs/Heartbeat.h>
 #include <ff_msgs/SetEkfInput.h>
 #include <ff_msgs/VisualLandmarks.h>
@@ -94,13 +95,15 @@ class GraphLocalizerNodelet : public ff_util::FreeFlyerNodelet {
 
   void ImuCallback(const sensor_msgs::Imu::ConstPtr& imu_msg);
 
+  void FlightModeCallback(ff_msgs::FlightMode::ConstPtr const& mode);
+
   void Run();
 
   graph_localizer::GraphLocalizerWrapper graph_localizer_wrapper_;
   ros::NodeHandle private_nh_;
   ros::CallbackQueue private_queue_;
   bool localizer_enabled_ = true;
-  ros::Subscriber imu_sub_, of_sub_, vl_sub_, ar_sub_;
+  ros::Subscriber imu_sub_, of_sub_, vl_sub_, ar_sub_, flight_mode_sub_;
   ros::Publisher state_pub_, graph_pub_, ar_tag_pose_pub_, sparse_mapping_pose_pub_, reset_pub_, heartbeat_pub_;
   ros::ServiceServer reset_srv_, bias_srv_, bias_from_file_srv_, input_mode_srv_;
   tf2_ros::TransformBroadcaster transform_pub_;

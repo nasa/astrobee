@@ -32,15 +32,20 @@ uint8 CONFIDENCE_GOOD = 0	# Tracking well
 uint8 CONFIDENCE_POOR = 1	# Tracking poorly
 uint8 CONFIDENCE_LOST = 2	# We are lost
 # Stats
-uint8 of_count # optical flow feature count  
-uint8 ml_count # ml feature count 
+uint32 num_detected_of_features  
+uint32 num_detected_ar_features 
+uint32 num_detected_ml_features 
 uint32 iterations # Optimization iterations
 float32 optimization_time
 float32 update_time # Include optimization_time and other operations to add data to graph
 float32 callbacks_time # Includes processing msgs and their callbacks
 float32 nodelet_runtime # Total runtime of nodelet iteration.  Includes update and callback time
 uint32 num_factors
+uint32 num_of_factors
+uint32 num_ml_projection_factors
+uint32 num_ml_pose_factors
 uint32 num_states
 # Status
 bool standstill
 bool estimating_bias # Are we busy estimating the bias?
+uint8 fan_speed_mode # Used for imu filtering

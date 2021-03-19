@@ -17,12 +17,11 @@
  */
 
 #include <imu_integration/utilities.h>
-#include <imu_integration/butterworth_lowpass_filter.h>
-#include <imu_integration/butterworth_lowpass_filter_20_83_notch.h>
-#include <imu_integration/butterworth_lowpass_filter_3rd_order.h>
-#include <imu_integration/butterworth_lowpass_filter_5th_order.h>
-#include <imu_integration/butterworth_lowpass_filter_5th_order_05.h>
-#include <imu_integration/butterworth_lowpass_filter_5th_order_1.h>
+#include <imu_integration/butterO1.h>
+#include <imu_integration/butterO3.h>
+#include <imu_integration/butterO5.h>
+#include <imu_integration/butterO7.h>
+#include <imu_integration/butterO10.h>
 #include <imu_integration/identity_filter.h>
 #include <localization_common/logger.h>
 #include <localization_common/utilities.h>
@@ -105,23 +104,56 @@ void LoadImuFilterParams(config_reader::ConfigReader& config, ImuFilterParams& p
   params.quiet_ang_vel = mc::LoadString(config, "imu_filter_quiet_ang_vel");
   params.nominal_accel = mc::LoadString(config, "imu_filter_nominal_accel");
   params.nominal_ang_vel = mc::LoadString(config, "imu_filter_nominal_ang_vel");
-  params.fast_accel = mc::LoadString(config, "imu_filter_fast_accel");
-  params.fast_ang_vel = mc::LoadString(config, "imu_filter_fast_ang_vel");
+  params.aggressive_accel = mc::LoadString(config, "imu_filter_aggressive_accel");
+  params.aggressive_ang_vel = mc::LoadString(config, "imu_filter_aggressive_ang_vel");
 }
 
 std::unique_ptr<Filter> LoadFilter(const std::string& filter_type) {
-  if (filter_type == "butter") {
-    return std::unique_ptr<Filter>(new ButterworthLowpassFilter());
-  } else if (filter_type == "butter20_83_notch") {
-    return std::unique_ptr<Filter>(new ButterworthLowpassFilter20_83_Notch());
-  } else if (filter_type == "butter3") {
-    return std::unique_ptr<Filter>(new ButterworthLowpassFilter3rdOrder());
-  } else if (filter_type == "butter5") {
-    return std::unique_ptr<Filter>(new ButterworthLowpassFilter5thOrder());
-  } else if (filter_type == "butter5_1") {
-    return std::unique_ptr<Filter>(new ButterworthLowpassFilter5thOrder1());
-  } else if (filter_type == "butter5_05") {
-    return std::unique_ptr<Filter>(new ButterworthLowpassFilter5thOrder05());
+  // 1st Order
+  if (filter_type == "ButterO1S62_5Lp3N29_16") {
+    return std::unique_ptr<Filter>(new ButterO1S62_5Lp3N29_16());
+  } else if (filter_type == "ButterO1S62_5Lp3N20_83") {
+    return std::unique_ptr<Filter>(new ButterO1S62_5Lp3N20_83());
+  } else if (filter_type == "ButterO1S62_5Lp3N15_83") {
+    return std::unique_ptr<Filter>(new ButterO1S62_5Lp3N15_83());
+  } else if (filter_type == "ButterO1S125Lp3N33_33") {  // 125Hz 1st Order
+    return std::unique_ptr<Filter>(new ButterO1S125Lp3N33_33());
+  } else if (filter_type == "ButterO1S125Lp3N41_66") {
+    return std::unique_ptr<Filter>(new ButterO1S125Lp3N41_66());
+  } else if (filter_type == "ButterO1S125Lp3N46_66") {
+    return std::unique_ptr<Filter>(new ButterO1S125Lp3N46_66());
+  } else if (filter_type == "ButterO3S62_5Lp3N29_16") {  // 3rd Order
+    return std::unique_ptr<Filter>(new ButterO3S62_5Lp3N29_16());
+  } else if (filter_type == "ButterO3S62_5Lp3N20_83") {
+    return std::unique_ptr<Filter>(new ButterO3S62_5Lp3N20_83());
+  } else if (filter_type == "ButterO3S62_5Lp3N15_83") {
+    return std::unique_ptr<Filter>(new ButterO3S62_5Lp3N15_83());
+  } else if (filter_type == "ButterO3S125Lp3N33_33") {  // 125Hz 3rd Order
+    return std::unique_ptr<Filter>(new ButterO3S125Lp3N33_33());
+  } else if (filter_type == "ButterO3S125Lp3N41_66") {
+    return std::unique_ptr<Filter>(new ButterO3S125Lp3N41_66());
+  } else if (filter_type == "ButterO3S125Lp3N46_66") {
+    return std::unique_ptr<Filter>(new ButterO3S125Lp3N46_66());
+  } else if (filter_type == "ButterO5S62_5Lp3N29_16") {  // 5th Order
+    return std::unique_ptr<Filter>(new ButterO5S62_5Lp3N29_16());
+  } else if (filter_type == "ButterO5S62_5Lp3N20_83") {
+    return std::unique_ptr<Filter>(new ButterO5S62_5Lp3N20_83());
+  } else if (filter_type == "ButterO5S62_5Lp3N15_83") {
+    return std::unique_ptr<Filter>(new ButterO5S62_5Lp3N15_83());
+  } else if (filter_type == "ButterO5S125Lp3N41_66") {  // 125Hz
+    return std::unique_ptr<Filter>(new ButterO5S125Lp3N41_66());
+  } else if (filter_type == "ButterO5S125Lp3N46_66") {
+    return std::unique_ptr<Filter>(new ButterO5S125Lp3N46_66());
+  } else if (filter_type == "ButterO5S125Lp3N33_33") {
+    return std::unique_ptr<Filter>(new ButterO5S125Lp3N33_33());
+  } else if (filter_type == "ButterO7S62_5Lp3N20_83") {  // 7th Order
+    return std::unique_ptr<Filter>(new ButterO7S62_5Lp3N20_83());
+  } else if (filter_type == "ButterO10S62_5Lp3N20_83") {  // 10th Order
+    return std::unique_ptr<Filter>(new ButterO10S62_5Lp3N20_83());
+  } else if (filter_type == "ButterO5S62_5Lp1N29_16") {  // Lower pass band
+    return std::unique_ptr<Filter>(new ButterO5S62_5Lp1N29_16());
+  } else if (filter_type == "ButterO5S62_5Lp0_5N29_16") {
+    return std::unique_ptr<Filter>(new ButterO5S62_5Lp0_5N29_16());
   } else if (filter_type == "none") {
     return std::unique_ptr<Filter>(new IdentityFilter());
   } else {

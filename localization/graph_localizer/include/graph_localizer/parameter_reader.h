@@ -45,6 +45,7 @@ void LoadSmartProjectionFactorAdderParams(config_reader::ConfigReader& config,
                                           SmartProjectionFactorAdderParams& params);
 void LoadStandstillFactorAdderParams(config_reader::ConfigReader& config, StandstillFactorAdderParams& params);
 void LoadFeatureTrackerParams(config_reader::ConfigReader& config, FeatureTrackerParams& params);
+void LoadStandstillFeatureTrackerParams(config_reader::ConfigReader& config, FeatureTrackerParams& params);
 void LoadGraphValuesParams(config_reader::ConfigReader& config, GraphValuesParams& params);
 void LoadImuIntegrationParams(config_reader::ConfigReader& config, GraphInitializerParams& params);
 void LoadNoiseParams(config_reader::ConfigReader& config, NoiseParams& params);

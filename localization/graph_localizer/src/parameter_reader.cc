@@ -132,6 +132,7 @@ void LoadSmartProjectionFactorAdderParams(config_reader::ConfigReader& config,
   params.robust = mc::LoadBool(config, "smart_projection_adder_robust");
   params.max_num_factors = mc::LoadInt(config, "smart_projection_adder_max_num_factors");
   params.min_num_points = mc::LoadInt(config, "smart_projection_adder_min_num_points");
+  params.max_num_points_per_factor = mc::LoadInt(config, "smart_projection_adder_max_num_points_per_factor");
   params.rotation_only_fallback = mc::LoadBool(config, "smart_projection_adder_rotation_only_fallback");
   params.splitting = mc::LoadBool(config, "smart_projection_adder_splitting");
   params.scale_noise_with_num_points = mc::LoadBool(config, "smart_projection_adder_scale_noise_with_num_points");
@@ -156,6 +157,10 @@ void LoadStandstillFactorAdderParams(config_reader::ConfigReader& config, Stands
 
 void LoadFeatureTrackerParams(config_reader::ConfigReader& config, FeatureTrackerParams& params) {
   params.sliding_window_duration = mc::LoadDouble(config, "feature_tracker_sliding_window_duration");
+}
+
+void LoadStandstillFeatureTrackerParams(config_reader::ConfigReader& config, FeatureTrackerParams& params) {
+  params.sliding_window_duration = mc::LoadDouble(config, "standstill_feature_tracker_sliding_window_duration");
 }
 
 void LoadGraphValuesParams(config_reader::ConfigReader& config, GraphValuesParams& params) {
@@ -195,6 +200,7 @@ void LoadGraphLocalizerParams(config_reader::ConfigReader& config, GraphLocalize
   LoadGraphInitializerParams(config, params.graph_initializer);
   LoadFactorParams(config, params.factor);
   LoadFeatureTrackerParams(config, params.feature_tracker);
+  LoadStandstillFeatureTrackerParams(config, params.standstill_feature_tracker);
   LoadGraphValuesParams(config, params.graph_values);
   LoadNoiseParams(config, params.noise);
   params.verbose = mc::LoadBool(config, "verbose");
@@ -212,6 +218,7 @@ void LoadGraphLocalizerParams(config_reader::ConfigReader& config, GraphLocalize
     mc::LoadDouble(config, "max_standstill_feature_track_avg_distance_from_mean");
   params.standstill_min_num_points_per_track = mc::LoadInt(config, "standstill_min_num_points_per_track");
   params.log_rate = mc::LoadInt(config, "log_rate");
+  params.optical_flow_measurement_spacing = mc::LoadInt(config, "optical_flow_measurement_spacing");
   params.estimate_world_T_dock_using_loc = mc::LoadBool(config, "estimate_world_T_dock_using_loc");
 }
 

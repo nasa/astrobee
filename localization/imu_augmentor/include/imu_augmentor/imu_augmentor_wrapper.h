@@ -19,6 +19,7 @@
 #define IMU_AUGMENTOR_IMU_AUGMENTOR_WRAPPER_H_
 
 #include <ff_msgs/EkfState.h>
+#include <ff_msgs/FlightMode.h>
 #include <ff_msgs/GraphState.h>
 #include <imu_augmentor/imu_augmentor.h>
 #include <localization_common/combined_nav_state.h>
@@ -41,6 +42,8 @@ class ImuAugmentorWrapper {
   void LocalizationStateCallback(const ff_msgs::GraphState& loc_msg);
 
   void ImuCallback(const sensor_msgs::Imu& imu_msg);
+
+  void FlightModeCallback(const ff_msgs::FlightMode& flight_mode);
 
   boost::optional<std::pair<localization_common::CombinedNavState, localization_common::CombinedNavStateCovariances>>
   LatestImuAugmentedCombinedNavStateAndCovariances();

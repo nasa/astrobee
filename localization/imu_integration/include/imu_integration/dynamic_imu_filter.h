@@ -22,6 +22,7 @@
 #include <imu_integration/filter.h>
 #include <imu_integration/imu_filter.h>
 #include <imu_integration/imu_filter_params.h>
+#include <localization_measurements/fan_speed_mode.h>
 #include <localization_measurements/imu_measurement.h>
 
 #include <boost/optional.hpp>
@@ -29,21 +30,19 @@
 #include <memory>
 
 namespace imu_integration {
-enum class FanSpeedMode {
-  kQuiet,    // 2000 rpm
-  kNominal,  // 2500 rpm
-  kFast      // 2800 rpm
-};
-
 class DynamicImuFilter {
  public:
-  explicit DynamicImuFilter(const ImuFilterParams& params);
+  DynamicImuFilter(const ImuFilterParams& params, const localization_measurements::FanSpeedMode initial_fan_speed_mode =
+                                                    localization_measurements::FanSpeedMode::kNominal);
   // Returns filtered measurement if one is available
   boost::optional<localization_measurements::ImuMeasurement> AddMeasurement(
     const localization_measurements::ImuMeasurement& imu_measurement);
 
   // Notch filter depends on fan speed, change filter as fan speed changes
-  void SetMode(const FanSpeedMode fan_speed_mode);
+  void SetFanSpeedMode(const localization_measurements::FanSpeedMode fan_speed_mode,
+                       const bool ignore_saved_fan_speed_mode = false);
+
+  localization_measurements::FanSpeedMode fan_speed_mode() const;
 
  private:
   // Acceleration Filters
@@ -55,7 +54,7 @@ class DynamicImuFilter {
   std::unique_ptr<Filter> angular_velocity_y_filter_;
   std::unique_ptr<Filter> angular_velocity_z_filter_;
   ImuFilterParams params_;
-  FanSpeedMode fan_speed_mode_;
+  localization_measurements::FanSpeedMode fan_speed_mode_;
 };
 }  // namespace imu_integration
 

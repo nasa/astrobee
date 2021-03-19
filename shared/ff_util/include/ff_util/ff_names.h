@@ -125,6 +125,7 @@
 #define TOPIC_AR_TAG_POSE                           "ar_tag/pose"
 #define TOPIC_SPARSE_MAPPING_POSE                   "sparse_mapping/pose"
 #define TOPIC_IMU_BIAS_TESTER_POSE                  "imu_bias_tester/pose"
+#define TOPIC_IMU_BIAS_TESTER_VELOCITY              "imu_bias_tester/velocity"
 
 #define ACTION_GNC_CTL_CONTROL                      "gnc/control"
 
@@ -309,6 +310,7 @@
 #define ACTION_LOCALIZATION_MANAGER_LOCALIZATION    "loc/manager/localization"
 #define SERVICE_LOCALIZATION_MANAGER_SET_STATE      "loc/manager/set_state"
 #define SERVICE_LOCALIZATION_MANAGER_GET_PIPELINES  "loc/manager/get_pipelines"
+#define SERVICE_LOCALIZATION_MANAGER_GET_CURR_PIPELINE "loc/manager/get_curr_pipeline"
 
 // Poses and camera info as output by the simulator
 #define TOPIC_NAV_CAM_SIM_POSE                     "sim/nav_cam/pose"

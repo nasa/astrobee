@@ -51,8 +51,8 @@ BagImuFilterer::BagImuFilterer(const std::string& bag_name, const std::string& f
   params.quiet_ang_vel = filter_name;
   params.nominal_accel = filter_name;
   params.nominal_ang_vel = filter_name;
-  params.fast_accel = filter_name;
-  params.fast_ang_vel = filter_name;
+  params.aggressive_accel = filter_name;
+  params.aggressive_ang_vel = filter_name;
   imu_filter_.reset(new ii::ImuFilter(params));
 }
 

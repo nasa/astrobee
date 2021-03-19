@@ -24,6 +24,7 @@
 #include <graph_localizer/graph_initializer_params.h>
 #include <graph_localizer/graph_values_params.h>
 #include <graph_localizer/noise_params.h>
+#include <localization_measurements/fan_speed_mode.h>
 
 #include <string>
 
@@ -32,6 +33,7 @@ struct GraphLocalizerParams {
   CalibrationParams calibration;
   FactorParams factor;
   FeatureTrackerParams feature_tracker;
+  FeatureTrackerParams standstill_feature_tracker;
   GraphValuesParams graph_values;
   NoiseParams noise;
   GraphInitializerParams graph_initializer;
@@ -49,7 +51,9 @@ struct GraphLocalizerParams {
   int standstill_min_num_points_per_track;
   double huber_k;
   int log_rate;
+  int optical_flow_measurement_spacing;
   bool estimate_world_T_dock_using_loc;
+  localization_measurements::FanSpeedMode initial_fan_speed_mode;
 };
 }  // namespace graph_localizer
 
