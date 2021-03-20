@@ -772,7 +772,7 @@
           "type": "ParamSpec",
           "id": "targetAngularVelocity",
           "valueType": "float",
-          "unit": "deg/s",
+          "unit": "rad/s",
           "minimum": 0,
           "notes": "The maximum angular velocity to target while rotating"
         },
@@ -780,7 +780,7 @@
           "type": "ParamSpec",
           "id": "targetAngularAcceleration",
           "valueType": "float",
-          "unit": "deg/s^2",
+          "unit": "rad/s^2",
           "minimum": 0,
           "notes": "The maximum angular acceleration to target while rotating"
         },
