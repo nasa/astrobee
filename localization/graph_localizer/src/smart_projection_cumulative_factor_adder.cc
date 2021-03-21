@@ -44,11 +44,11 @@ std::vector<FactorsToAdd> SmartProjectionCumulativeFactorAdder::AddFactors() {
   int num_added_smart_factors = 0;
   for (const auto& feature_track : feature_tracker_->feature_tracks()) {
     const double average_distance_from_mean = AverageDistanceFromMean(feature_track.second->points);
-    // TODO(rsoussan): Remove size check since may use every nth point?
-    if (ValidPointSet(feature_track.second->size(), average_distance_from_mean, params().min_avg_distance_from_mean,
+    const auto points = feature_track.second->LatestPoints(params().measurement_spacing);
+    if (ValidPointSet(points.size(), average_distance_from_mean, params().min_avg_distance_from_mean,
                       params().min_num_points) &&
         num_added_smart_factors < params().max_num_factors) {
-      AddSmartFactor(feature_track.second, smart_factors_to_add);
+      AddSmartFactor(points, smart_factors_to_add);
       ++num_added_smart_factors;
     }
   }
@@ -64,10 +64,10 @@ std::vector<FactorsToAdd> SmartProjectionCumulativeFactorAdder::AddFactors() {
   return {smart_factors_to_add};
 }
 
-void SmartProjectionCumulativeFactorAdder::AddSmartFactor(const FeatureTrack& feature_track,
+void SmartProjectionCumulativeFactorAdder::AddSmartFactor(const std::vector<lm::FeaturePoint>& feature_track_points,
                                                           FactorsToAdd& smart_factors_to_add) const {
   SharedRobustSmartFactor smart_factor;
-  // TODO(rsoussan): get every nth point! get num here!
+  const int num_feature_track_points = feature_track_points.size();
   const auto noise = params().scale_noise_with_num_points
                        ? gtsam::noiseModel::Isotropic::Sigma(
                            2, params().noise_scale * num_feature_track_points * params().cam_noise->sigma())
@@ -80,8 +80,8 @@ void SmartProjectionCumulativeFactorAdder::AddSmartFactor(const FeatureTrack& fe
   key_infos.reserve(feature_track.points.size());
   // Gtsam requires unique key indices for each key, even though these will be replaced later
   int uninitialized_key_index = 0;
-  for (int i = 0; i < feature_track.points.size(); ++i) {
-    const auto& feature_point = feature_track.points[i];
+  for (int i = 0; i < feature_track_points.size(); ++i) {
+    const auto& feature_point = feature_track_points[i];
     if (i >= params().max_num_points_per_factor) break;
     const KeyInfo key_info(&sym::P, feature_point.timestamp);
     key_infos.emplace_back(key_info);
