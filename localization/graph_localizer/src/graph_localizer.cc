@@ -759,8 +759,8 @@ bool GraphLocalizer::SlideWindow(const boost::optional<gtsam::Marginals>& margin
     return false;
   }
 
-  feature_tracker_->RemoveOldFeaturePoints(*oldest_timestamp);
-  standstill_feature_tracker_->RemoveOldFeaturePoints(*oldest_timestamp);
+  feature_tracker_->RemoveOldFeaturePointsAndSlideWindow(*oldest_timestamp);
+  standstill_feature_tracker_->RemoveOldFeaturePointsAndSlideWindow(*oldest_timestamp);
   latest_imu_integrator_.RemoveOldMeasurements(*oldest_timestamp);
   RemoveOldBufferedFactors(*oldest_timestamp);
 
@@ -865,7 +865,7 @@ void GraphLocalizer::RemovePriors(const int key_index) {
 
 void GraphLocalizer::BufferCumulativeFactors() {
   // Remove measurements here so they are more likely to fit in sliding window duration when optimized
-  feature_tracker_->RemovePointsOutsideWindow();
+  feature_tracker_->RemoveOldFeaturePointsAndSlideWindow();
   if (params_.factor.smart_projection_adder.enabled) {
     BufferFactors(smart_projection_cumulative_factor_adder_->AddFactors());
   }

@@ -40,10 +40,9 @@ class FeatureTracker {
   void UpdateFeatureTracks(const localization_measurements::FeaturePoints& feature_points);
   const FeatureTrackIdMap& feature_tracks() const { return feature_tracks_; }
   void RemoveUndetectedFeatures(const localization_measurements::Time& feature_point);
-  void RemovePointsOutsideWindow();
-  void RemoveOldFeaturePoints(localization_common::Time oldest_allowed_time);
-  void UpdateTrack(const localization_measurements::FeaturePoint& feature_point);
-  void UpdateTrackLengths();
+  void RemoveOldFeaturePointsAndSlideWindow(boost::optional<localization_common::Time> oldest_allowed_time);
+  void AddOrUpdateTrack(const localization_measurements::FeaturePoint& feature_point);
+  void UpdateLengthMap();
   size_t size() const;
   bool empty() const;
   void Clear();
