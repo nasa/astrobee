@@ -235,7 +235,7 @@ void GraphLocalizerWrapper::InitializeGraph() {
   graph_localizer_.reset(new graph_localizer::GraphLocalizer(graph_localizer_initializer_.params()));
 }
 
-boost::optional<const FeatureTrackMap&> GraphLocalizerWrapper::feature_tracks() const {
+boost::optional<const FeatureTrackIdMap&> GraphLocalizerWrapper::feature_tracks() const {
   if (!graph_localizer_) return boost::none;
   return graph_localizer_->feature_tracks();
 }

@@ -38,7 +38,7 @@ class SmartProjectionCumulativeFactorAdder : public CumulativeFactorAdder<SmartP
   std::vector<FactorsToAdd> AddFactors() final;
 
  private:
-  void AddSmartFactor(const std::vector<lm::FeaturePoint>& feature_track_points,
+  void AddSmartFactor(const std::vector<localization_measurements::FeaturePoint>& feature_track_points,
                       FactorsToAdd& smart_factors_to_add) const;
 
   std::shared_ptr<const FeatureTracker> feature_tracker_;

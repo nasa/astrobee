@@ -96,7 +96,7 @@ class GraphLocalizer {
   void SplitSmartFactorsIfNeeded(FactorsToAdd& factors_to_add);
 
   bool Update();
-  const FeatureTrackMap& feature_tracks() const { return feature_tracker_->feature_tracks(); }
+  const FeatureTrackIdMap& feature_tracks() const { return feature_tracker_->feature_tracks(); }
 
   boost::optional<std::pair<gtsam::imuBias::ConstantBias, localization_common::Time>> LatestBiases() const;
 

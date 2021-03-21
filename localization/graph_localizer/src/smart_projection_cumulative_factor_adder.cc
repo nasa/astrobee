@@ -43,7 +43,7 @@ std::vector<FactorsToAdd> SmartProjectionCumulativeFactorAdder::AddFactors() {
   FactorsToAdd smart_factors_to_add(GraphAction::kDeleteExistingSmartFactors);
   int num_added_smart_factors = 0;
   for (const auto& feature_track : feature_tracker_->feature_tracks()) {
-    const double average_distance_from_mean = AverageDistanceFromMean(feature_track.second->points);
+    const double average_distance_from_mean = AverageDistanceFromMean(feature_track.second->points());
     const auto points = feature_track.second->LatestPoints(params().measurement_spacing);
     if (ValidPointSet(points.size(), average_distance_from_mean, params().min_avg_distance_from_mean,
                       params().min_num_points) &&
@@ -54,7 +54,7 @@ std::vector<FactorsToAdd> SmartProjectionCumulativeFactorAdder::AddFactors() {
   }
 
   if (smart_factors_to_add.empty()) return {};
-  const auto latest_timestamp = feature_tracker_->latest_timestamp();
+  const auto latest_timestamp = feature_tracker_->LatestTimestamp();
   if (!latest_timestamp) {
     LogError("AddFactors: Failed to get latest timestamp.");
     return {};
@@ -77,7 +77,7 @@ void SmartProjectionCumulativeFactorAdder::AddSmartFactor(const std::vector<lm::
                                           params().rotation_only_fallback, params().robust, params().huber_k);
 
   KeyInfos key_infos;
-  key_infos.reserve(feature_track.points.size());
+  key_infos.reserve(feature_track_points.size());
   // Gtsam requires unique key indices for each key, even though these will be replaced later
   int uninitialized_key_index = 0;
   for (int i = 0; i < feature_track_points.size(); ++i) {
