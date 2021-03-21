@@ -33,7 +33,9 @@ class FeatureTrack {
   void RemoveOldMeasurements(const localization_common::Time oldest_allowed_timestamp);
   bool HasMeasurement(const localization_common::Time timestamp);
   const Points& points() const;
+  const localization_measurements::FeatureId& id() const;
   size_t size() const;
+  std::vector<lm::FeaturePoint> LatestPoints(const int spacing = 0) const;
   boost::optional<localization_common::Time> PreviousTimestamp() const;
   boost::optional<localization_common::Time> LatestTimestamp() const;
   boost::optional<localization_common::Time> OldestTimestamp() const;
@@ -49,8 +51,8 @@ class FeatureTrack {
     ar& BOOST_SERIALIZATION_NVP(points);
   }
 
-  localization_measurements::FeatureId id;
-  Points points;
+  localization_measurements::FeatureId id_;
+  Points points_;
 };
 }  // namespace graph_localizer
 

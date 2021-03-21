@@ -24,33 +24,45 @@ namespace lc = localization_common;
 FeatureTrack::FeatureTrack(const localization_measurements::FeatureId id) : id_(id) {}
 
 void FeatureTrack::AddMeasurement(const lc::Time timestamp, const gtsam::Point2& measurement) {
-  points.emplace(timestamp, measurement);
+  points_.emplace(timestamp, measurement);
 }
 
 void FeatureTrack::RemoveOldMeasurements(const lc::Time oldest_allowed_timestamp) {
-  points.erase(points.begin(), points.lower_bound(oldest_allowed_timestamp));
+  points_.erase(points_.begin(), points_.lower_bound(oldest_allowed_timestamp));
 }
 
-bool FeatureTrack::HasMeasurement(const lc::Time timestamp) { return (points.count(timestamp) > 0); }
+bool FeatureTrack::HasMeasurement(const lc::Time timestamp) { return (points_.count(timestamp) > 0); }
 
-const Points& FeatureTrack::points() const { return points; }
+const Points& FeatureTrack::points() const { return points_; }
 
-size_t FeatureTrack::size() const { return points.size(); }
+const localization_measurements::FeatureId& FeatureTrackid() const { return id_; }
 
-bool FeatureTrack::empty() const { return points.empty(); }
+size_t FeatureTrack::size() const { return points_.size(); }
+
+bool FeatureTrack::empty() const { return points_.empty(); }
+
+std::vector<lm::FeaturePoint> FeatureTrack::LatestPoints(const int spacing) const {
+  std::vector<lm::FeaturePoint> latest_points;
+  int i = 0;
+  for (auto point_it = points_.crbegin(); point_it != points_.crend(); ++point_it) {
+    if (i++ % (spacing + 1) != 0) continue;
+    latest_points.emplace(point_it->second);
+  }
+  return latest_points;
+}
 
 boost::optional<lc::Time> FeatureTrack::PreviousTimestamp() const {
   if (size() < 2) return boost::none;
-  return std::next(points.crbegin())->first;
+  return std::next(points_.crbegin())->first;
 }
 
 boost::optional<lc::Time> FeatureTrack::LatestTimestamp() const {
   if (empty()) return boost::none;
-  return points.crbegin()->first;
+  return points_.crbegin()->first;
 }
 
 boost::optional<lc::Time> FeatureTrack::OldestTimestamp() const {
   if (empty()) return boost::none;
-  return points.cbegin()->first;
+  return points_.cbegin()->first;
 }
 }  // namespace graph_localizer
