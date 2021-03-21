@@ -21,6 +21,7 @@
 
 namespace graph_localizer {
 namespace lc = localization_common;
+namespace lm = localization_measurements;
 FeatureTrack::FeatureTrack(const localization_measurements::FeatureId id) : id_(id) {}
 
 void FeatureTrack::AddMeasurement(const lc::Time timestamp, const gtsam::Point2& measurement) {
@@ -33,9 +34,9 @@ void FeatureTrack::RemoveOldMeasurements(const lc::Time oldest_allowed_timestamp
 
 bool FeatureTrack::HasMeasurement(const lc::Time timestamp) { return (points_.count(timestamp) > 0); }
 
-const Points& FeatureTrack::points() const { return points_; }
+const FeatureTrack::Points& FeatureTrack::points() const { return points_; }
 
-const localization_measurements::FeatureId& FeatureTrackid() const { return id_; }
+const localization_measurements::FeatureId& FeatureTrack::id() const { return id_; }
 
 size_t FeatureTrack::size() const { return points_.size(); }
 
@@ -44,7 +45,7 @@ bool FeatureTrack::empty() const { return points_.empty(); }
 std::vector<lm::FeaturePoint> FeatureTrack::LatestPoints(const int spacing) const {
   std::vector<lm::FeaturePoint> latest_points;
   int i = 0;
-  for (auto point_it = points_.crbegin(); point_it != points_.crend(); ++point_it) {
+  for (auto point_it = points_.rbegin(); point_it != points_.rend(); ++point_it) {
     if (i++ % (spacing + 1) != 0) continue;
     latest_points.emplace(point_it->second);
   }
