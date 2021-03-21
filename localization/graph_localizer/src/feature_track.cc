@@ -24,8 +24,8 @@ namespace lc = localization_common;
 namespace lm = localization_measurements;
 FeatureTrack::FeatureTrack(const localization_measurements::FeatureId id) : id_(id) {}
 
-void FeatureTrack::AddMeasurement(const lc::Time timestamp, const gtsam::Point2& measurement) {
-  points_.emplace(timestamp, measurement);
+void FeatureTrack::AddMeasurement(const lc::Time timestamp, const lm::FeaturePoint& feature_point) {
+  points_.emplace(timestamp, feature_point);
 }
 
 void FeatureTrack::RemoveOldMeasurements(const lc::Time oldest_allowed_timestamp) {
@@ -47,7 +47,7 @@ std::vector<lm::FeaturePoint> FeatureTrack::LatestPoints(const int spacing) cons
   int i = 0;
   for (auto point_it = points_.rbegin(); point_it != points_.rend(); ++point_it) {
     if (i++ % (spacing + 1) != 0) continue;
-    latest_points.emplace(point_it->second);
+    latest_points.push_back(point_it->second);
   }
   return latest_points;
 }

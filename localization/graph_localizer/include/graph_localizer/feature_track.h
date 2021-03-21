@@ -29,7 +29,8 @@ class FeatureTrack {
  public:
   using Points = std::map<localization_common::Time, localization_measurements::FeaturePoint>;
   explicit FeatureTrack(const localization_measurements::FeatureId id);
-  void AddMeasurement(const localization_common::Time timestamp, const gtsam::Point2& measurement);
+  void AddMeasurement(const localization_common::Time timestamp,
+                      const localization_measurements::FeaturePoint& feature_point);
   void RemoveOldMeasurements(const localization_common::Time oldest_allowed_timestamp);
   bool HasMeasurement(const localization_common::Time timestamp);
   const Points& points() const;

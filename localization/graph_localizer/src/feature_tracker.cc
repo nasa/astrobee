@@ -75,7 +75,7 @@ void FeatureTracker::AddOrUpdateTrack(const lm::FeaturePoint& feature_point) {
   if (feature_track_id_map_.count(feature_point.feature_id) == 0) {
     feature_track_id_map_[feature_point.feature_id] = std::make_shared<FeatureTrack>(feature_point.feature_id);
   }
-  feature_track_id_map_[feature_point.feature_id]->AddMeasurement(feature_point.timestamp, feature_point.image_point);
+  feature_track_id_map_[feature_point.feature_id]->AddMeasurement(feature_point.timestamp, feature_point);
 }
 
 void FeatureTracker::UpdateLengthMap() {
