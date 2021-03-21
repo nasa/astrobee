@@ -27,10 +27,12 @@
 namespace graph_localizer {
 
 class FeatureTrack {
+  using Points = std::map<localization_common::Time, localization_measurements::FeaturePoint>;
   explicit FeatureTrack(const localization_measurements::FeatureId id);
   void AddMeasurement(const localization_common::Time timestamp, const gtsam::Point2& measurement);
   void RemoveOldMeasurements(const localization_common::Time oldest_allowed_timestamp);
   bool HasMeasurement(const localization_common::Time timestamp);
+  const Points& points() const;
   size_t size() const;
   boost::optional<localization_common::Time> PreviousTimestamp() const;
   boost::optional<localization_common::Time> LatestTimestamp() const;
@@ -48,7 +50,7 @@ class FeatureTrack {
   }
 
   localization_measurements::FeatureId id;
-  std::map<localization_common::Time, localization_measurements::FeaturePoint> points;
+  Points points;
 };
 }  // namespace graph_localizer
 

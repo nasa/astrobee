@@ -33,6 +33,8 @@ void FeatureTrack::RemoveOldMeasurements(const lc::Time oldest_allowed_timestamp
 
 bool FeatureTrack::HasMeasurement(const lc::Time timestamp) { return (points.count(timestamp) > 0); }
 
+const Points& FeatureTrack::points() const { return points; }
+
 size_t FeatureTrack::size() const { return points.size(); }
 
 bool FeatureTrack::empty() const { return points.empty(); }

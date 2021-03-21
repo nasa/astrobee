@@ -23,6 +23,7 @@
 #include <ff_msgs/LocalizationGraph.h>
 #include <ff_msgs/VisualLandmarks.h>
 #include <graph_localizer/feature_counts.h>
+#include <graph_localizer/feature_track.h>
 #include <graph_localizer/graph_localizer.h>
 #include <graph_localizer/graph_localizer_initializer.h>
 #include <graph_localizer/graph_stats.h>
@@ -47,11 +48,10 @@
 #include <vector>
 
 namespace graph_localizer {
-bool ValidPointSet(const std::deque<localization_measurements::FeaturePoint>& points,
-                   const double average_distance_from_mean, const double min_avg_distance_from_mean,
-                   const int min_num_points);
+bool ValidPointSet(const int num_points, const double average_distance_from_mean,
+                   const double min_avg_distance_from_mean, const int min_num_points);
 
-double AverageDistanceFromMean(const std::deque<localization_measurements::FeaturePoint>& points);
+double AverageDistanceFromMean(const FeatureTrack::Points& points);
 
 bool ValidVLMsg(const ff_msgs::VisualLandmarks& visual_landmarks_msg, const int min_num_landmarks);
 
