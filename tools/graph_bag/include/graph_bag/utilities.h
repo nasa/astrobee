@@ -26,10 +26,10 @@
 #include <sensor_msgs/Image.h>
 
 namespace graph_bag {
-void FeatureTrackImage(const graph_localizer::FeatureTrackMap& feature_tracks,
+void FeatureTrackImage(const graph_localizer::FeatureTrackIdMap& feature_tracks,
                        const camera::CameraParameters& camera_params, cv::Mat& feature_track_image);
 boost::optional<sensor_msgs::ImagePtr> CreateFeatureTrackImage(const sensor_msgs::ImageConstPtr& image_msg,
-                                                               const graph_localizer::FeatureTrackMap& feature_tracks,
+                                                               const graph_localizer::FeatureTrackIdMap& feature_tracks,
                                                                const camera::CameraParameters& camera_params);
 
 cv::Point Distort(const Eigen::Vector2d& undistorted_point, const camera::CameraParameters& params);

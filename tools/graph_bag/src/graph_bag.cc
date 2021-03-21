@@ -75,7 +75,7 @@ GraphBag::GraphBag(const std::string& bag_name, const std::string& map_file, con
 }
 
 void GraphBag::SaveOpticalFlowTracksImage(const sensor_msgs::ImageConstPtr& image_msg,
-                                          const graph_localizer::FeatureTrackMap& feature_tracks) {
+                                          const graph_localizer::FeatureTrackIdMap& feature_tracks) {
   const auto feature_track_image_msg = CreateFeatureTrackImage(image_msg, feature_tracks, *params_.nav_cam_params);
   if (!feature_track_image_msg) return;
   SaveMsg(*image_msg, kFeatureTracksImageTopic_);

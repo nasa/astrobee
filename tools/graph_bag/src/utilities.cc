@@ -27,10 +27,10 @@
 #include <opencv2/imgproc.hpp>
 
 namespace graph_bag {
-void FeatureTrackImage(const graph_localizer::FeatureTrackMap& feature_tracks,
+void FeatureTrackImage(const graph_localizer::FeatureTrackIdMap& feature_tracks,
                        const camera::CameraParameters& camera_params, cv::Mat& feature_track_image) {
   for (const auto& feature_track : feature_tracks) {
-    const auto& points = feature_track.second.points;
+    const auto& points = feature_track.second->points();
     cv::Scalar color;
     if (points.size() <= 1) {
       // Red for single point tracks
@@ -44,27 +44,29 @@ void FeatureTrackImage(const graph_localizer::FeatureTrackMap& feature_tracks,
     }
 
     // Draw track history
-    for (int i = 0; i < static_cast<int>(points.size()) - 1; ++i) {
-      const auto distorted_previous_point = Distort(points[i].image_point, camera_params);
-      const auto distorted_current_point = Distort(points[i + 1].image_point, camera_params);
-      cv::circle(feature_track_image, distorted_current_point, 2 /* Radius*/, cv::Scalar(0, 255, 255), -1 /*Filled*/,
-                 8);
-      cv::line(feature_track_image, distorted_current_point, distorted_previous_point, color, 2, 8, 0);
-    }
-    // Account for single point tracks
-    if (points.size() == 1) {
-      cv::circle(feature_track_image, Distort(points[0].image_point, camera_params), 2 /* Radius*/, color,
+    if (points.size() > 1) {
+      for (auto point_it = points.begin(); point_it != std::prev(points.end()); ++point_it) {
+        const auto& point1 = point_it->second.image_point;
+        const auto& point2 = std::next(point_it)->second.image_point;
+        const auto distorted_previous_point = Distort(point1, camera_params);
+        const auto distorted_current_point = Distort(point2, camera_params);
+        cv::circle(feature_track_image, distorted_current_point, 2 /* Radius*/, cv::Scalar(0, 255, 255), -1 /*Filled*/,
+                   8);
+        cv::line(feature_track_image, distorted_current_point, distorted_previous_point, color, 2, 8, 0);
+      }
+    } else {
+      cv::circle(feature_track_image, Distort(points.cbegin()->second.image_point, camera_params), 2 /* Radius*/, color,
                  -1 /*Filled*/, 8);
     }
     // Draw feature id at most recent point
-    cv::putText(feature_track_image, std::to_string(points[points.size() - 1].feature_id),
-                Distort(points[points.size() - 1].image_point, camera_params), CV_FONT_NORMAL, 0.4,
+    cv::putText(feature_track_image, std::to_string(points.crbegin()->second.feature_id),
+                Distort(points.crbegin()->second.image_point, camera_params), CV_FONT_NORMAL, 0.4,
                 cv::Scalar(255, 0, 0));
   }
 }
 
 boost::optional<sensor_msgs::ImagePtr> CreateFeatureTrackImage(const sensor_msgs::ImageConstPtr& image_msg,
-                                                               const graph_localizer::FeatureTrackMap& feature_tracks,
+                                                               const graph_localizer::FeatureTrackIdMap& feature_tracks,
                                                                const camera::CameraParameters& camera_params) {
   cv_bridge::CvImagePtr feature_track_image;
   try {
