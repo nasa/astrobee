@@ -55,15 +55,15 @@ void FeatureTracker::RemoveOldFeaturePointsAndSlideWindow(boost::optional<lc::Ti
   oldest_allowed_time = oldest_allowed_time ? std::max(*oldest_allowed_time, window_start) : window_start;
 
   for (auto feature_track : feature_track_id_map_) {
-    feature_track.RemoveOldMeasurements(*oldest_allowed_time);
+    feature_track.second->RemoveOldMeasurements(*oldest_allowed_time);
   }
 
   UpdateLengthMap();
 }
 
-void FeatureTracker::RemoveUndetectedFeatures(const lm::Time& feature_point_timestamp) {
+void FeatureTracker::RemoveUndetectedFeatures(const lc::Time& feature_point_timestamp) {
   for (auto feature_it = feature_track_id_map_.cbegin(); feature_it != feature_track_id_map_.cend();) {
-    if (!feature_it->second.HasMeasurement(feature_points_timestamp)) {
+    if (!feature_it->second->HasMeasurement(feature_point_timestamp)) {
       feature_it = feature_track_id_map_.erase(feature_it);
     } else {
       ++feature_it;
@@ -75,7 +75,7 @@ void FeatureTracker::AddOrUpdateTrack(const lm::FeaturePoint& feature_point) {
   if (feature_track_id_map_.count(feature_point.feature_id) == 0) {
     feature_track_id_map_[feature_point.feature_id] = std::make_shared<FeatureTrack>(feature_point.feature_id);
   }
-  feature_track_id_map_[feature_point.feature_id]->AddMeasurement(feature_points_timestamp, feature_point.image_point);
+  feature_track_id_map_[feature_point.feature_id]->AddMeasurement(feature_point.timestamp, feature_point.image_point);
 }
 
 void FeatureTracker::UpdateLengthMap() {
@@ -85,6 +85,7 @@ void FeatureTracker::UpdateLengthMap() {
   }
 }
 
+const FeatureTrackIdMap& FeatureTracker::feature_tracks() const { return feature_track_id_map_; }
 size_t FeatureTracker::size() const { return feature_track_id_map_.size(); }
 
 bool FeatureTracker::empty() const { return feature_track_id_map_.empty(); }
@@ -97,24 +98,24 @@ void FeatureTracker::Clear() {
 boost::optional<lc::Time> FeatureTracker::LatestTimestamp() const {
   if (empty()) return boost::none;
   // Since Feature Tracks without latest timestamp are erased on updates, each track contains the latest timestamp
-  return feature_track_id_map_.cbegin().second->LatestTimestamp();
+  return feature_track_id_map_.cbegin()->second->LatestTimestamp();
 }
 
 boost::optional<lc::Time> FeatureTracker::PreviousTimestamp() const {
-  const auto longest_feature_track = LongestFeatureTrack();
+  const auto& longest_feature_track = LongestFeatureTrack();
   if (!longest_feature_track) return boost::none;
   // TODO(rsoussan): Need to check this before returning? If boost::none, is this cast correctly when returned here?
   return longest_feature_track->PreviousTimestamp();
 }
 
 boost::optional<localization_common::Time> FeatureTracker::OldestTimestamp() const {
-  const auto longest_feature_track = LongestFeatureTrack();
+  const auto& longest_feature_track = LongestFeatureTrack();
   if (!longest_feature_track) return boost::none;
   return longest_feature_track->OldestTimestamp();
 }
 
-boost::optional<std::shared<FeatureTrack>> LongestFeatureTrack() {
+boost::optional<const FeatureTrack&> FeatureTracker::LongestFeatureTrack() const {
   if (empty()) return boost::none;
-  return feature_track_length_map_.rbegin().second;
+  return *(feature_track_length_map_.rbegin()->second.get());
 }
 }  // namespace graph_localizer

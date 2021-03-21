@@ -25,8 +25,8 @@
 #include <vector>
 
 namespace graph_localizer {
-
 class FeatureTrack {
+ public:
   using Points = std::map<localization_common::Time, localization_measurements::FeaturePoint>;
   explicit FeatureTrack(const localization_measurements::FeatureId id);
   void AddMeasurement(const localization_common::Time timestamp, const gtsam::Point2& measurement);
@@ -35,20 +35,18 @@ class FeatureTrack {
   const Points& points() const;
   const localization_measurements::FeatureId& id() const;
   size_t size() const;
-  std::vector<lm::FeaturePoint> LatestPoints(const int spacing = 0) const;
+  std::vector<localization_measurements::FeaturePoint> LatestPoints(const int spacing = 0) const;
   boost::optional<localization_common::Time> PreviousTimestamp() const;
   boost::optional<localization_common::Time> LatestTimestamp() const;
   boost::optional<localization_common::Time> OldestTimestamp() const;
-  // std::vector<std::pair<localization_common::Time, gtsam::Point2>> EvenlySpacedMeasurements(const int
-  // num_measurements);
 
  private:
   // Serialization function
   friend class boost::serialization::access;
   template <class ARCHIVE>
   void serialize(ARCHIVE& ar, const unsigned int /*version*/) {
-    ar& BOOST_SERIALIZATION_NVP(id);
-    ar& BOOST_SERIALIZATION_NVP(points);
+    ar& BOOST_SERIALIZATION_NVP(id_);
+    ar& BOOST_SERIALIZATION_NVP(points_);
   }
 
   localization_measurements::FeatureId id_;
