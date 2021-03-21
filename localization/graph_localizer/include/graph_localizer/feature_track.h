@@ -27,9 +27,14 @@
 namespace graph_localizer {
 
 class FeatureTrack {
+  explicit FeatureTrack(const localization_measurements::FeatureId id);
   void AddMeasurement(const localization_common::Time timestamp, const gtsam::Point2& measurement);
   void RemoveOldMeasurements(const localization_common::Time oldest_allowed_timestamp);
   bool HasMeasurement(const localization_common::Time timestamp);
+  size_t size() const;
+  boost::optional<localization_common::Time> PreviousTimestamp() const;
+  boost::optional<localization_common::Time> LatestTimestamp() const;
+  boost::optional<localization_common::Time> OldestTimestamp() const;
   // std::vector<std::pair<localization_common::Time, gtsam::Point2>> EvenlySpacedMeasurements(const int
   // num_measurements);
 

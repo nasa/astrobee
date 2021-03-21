@@ -21,11 +21,34 @@
 
 namespace graph_localizer {
 namespace lc = localization_common;
+FeatureTrack::FeatureTrack(const localization_measurements::FeatureId id) : id_(id) {}
+
 void FeatureTrack::AddMeasurement(const lc::Time timestamp, const gtsam::Point2& measurement) {
   points.emplace(timestamp, measurement);
 }
+
 void FeatureTrack::RemoveOldMeasurements(const lc::Time oldest_allowed_timestamp) {
   points.erase(points.begin(), points.lower_bound(oldest_allowed_timestamp));
 }
+
 bool FeatureTrack::HasMeasurement(const lc::Time timestamp) { return (points.count(timestamp) > 0); }
+
+size_t FeatureTrack::size() const { return points.size(); }
+
+bool FeatureTrack::empty() const { return points.empty(); }
+
+boost::optional<lc::Time> FeatureTrack::PreviousTimestamp() const {
+  if (size() < 2) return boost::none;
+  return std::next(points.crbegin())->first;
+}
+
+boost::optional<lc::Time> FeatureTrack::LatestTimestamp() const {
+  if (empty()) return boost::none;
+  return points.crbegin()->first;
+}
+
+boost::optional<lc::Time> FeatureTrack::OldestTimestamp() const {
+  if (empty()) return boost::none;
+  return points.cbegin()->first;
+}
 }  // namespace graph_localizer

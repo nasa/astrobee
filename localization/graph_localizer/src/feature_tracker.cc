@@ -25,60 +25,48 @@ namespace lm = localization_measurements;
 FeatureTracker::FeatureTracker(const FeatureTrackerParams& params) : params_(params) {}
 void FeatureTracker::UpdateFeatureTracks(const lm::FeaturePoints& feature_points) {
   if (feature_points.empty()) {
-    feature_tracks_.clear();
-    latest_time_ = boost::none;
+    Clear();
     LogDebug("UpdateFeatureTracks: Removed all feature tracks.");
     return;
   }
 
-  // Feature points don't necessarily arrive in time order.
-  const auto feature_points_timestamp = feature_points.front().timestamp;
-  latest_time_ = latest_time_ ? std::max(*latest_time_, feature_points_timestamp) : feature_points_timestamp;
-
-  const int starting_num_feature_tracks = feature_tracks_.size();
-
+  const int starting_num_feature_tracks = size();
   LogDebug("UpdateFeatureTracks: Starting num feature tracks: " << starting_num_feature_tracks);
-  // Update existing features or add new one
   for (const auto& feature_point : feature_points) {
-    feature_tracks_[feature_point.feature_id].id = feature_point.feature_id;
-    feature_tracks_[feature_point.feature_id].AddMeasurement(feature_points_timestamp, feature_point.image_point);
+    UpdateTrack(feature_point);
   }
-
-  const int post_add_num_feature_tracks = feature_tracks_.size();
+  const int post_add_num_feature_tracks = size();
   LogDebug("UpdateFeatureTracks: Added feature tracks: " << post_add_num_feature_tracks - starting_num_feature_tracks);
 
   // Remove features that weren't detected
-  for (auto feature_it = feature_tracks_.cbegin(); feature_it != feature_tracks_.cend();) {
-    if (!feature_it->second.HasMeasurement(feature_points_timestamp)) {
-      feature_it = feature_tracks_.erase(feature_it);
-    } else {
-      ++feature_it;
-    }
-  }
-
-  const int removed_num_feature_tracks = post_add_num_feature_tracks - feature_tracks_.size();
+  const auto feature_points_timestamp = feature_points.front().timestamp;
+  RemoveUndetectedFeatures(feature_points_timestamp);
+  UpdateTrackLengths();
+  const int removed_num_feature_tracks = post_add_num_feature_tracks - size();
   LogDebug("UpdateFeatureTracks: Removed feature tracks: " << removed_num_feature_tracks);
-  LogDebug("UpdateFeatureTracks: Final total num feature tracks: " << feature_tracks_.size());
+  LogDebug("UpdateFeatureTracks: Final total num feature tracks: " << size());
 }
 
 void FeatureTracker::RemovePointsOutsideWindow() {
-  if (!latest_time_) return;
-  const lc::Time oldest_allowed_time = *latest_time_ - params_.sliding_window_duration;
+  const auto latest_time = LatestTimestamp();
+  if (!latest_time) return;
+  const lc::Time oldest_allowed_time = *latest_time - params_.sliding_window_duration;
   if (oldest_allowed_time <= 0) return;
   RemoveOldFeaturePoints(oldest_allowed_time);
 }
 
 void FeatureTracker::RemoveOldFeaturePoints(lc::Time oldest_allowed_time) {
   // Remove any timestamp before oldest_allowed_time and before start of time window
+  const auto latest_time = LatestTimestamp();
   oldest_allowed_time =
-    latest_time_ ? std::max(*latest_time_ - params_.sliding_window_duration, oldest_allowed_time) : oldest_allowed_time;
+    latest_time ? std::max(*latest_time - params_.sliding_window_duration, oldest_allowed_time) : oldest_allowed_time;
 
   // iterate through feature tracks, remove old measurements, remove feature track if nothing left
 
   /*  // Handle any out of order tracks that are too old. Split into two for loops
     // so ordered points can be removed in sub linear time (most measurements are ordered).
     // TODO(rsoussan): Do this more efficiently
-    for (auto& feature : feature_tracks_) {
+    for (auto& feature : feature_track_id_map_) {
       auto point_it = feature.second.points.cbegin();
       while (point_it != feature.second.points.cend() && point_it->timestamp < oldest_allowed_time) {
         ++point_it;
@@ -86,7 +74,7 @@ void FeatureTracker::RemoveOldFeaturePoints(lc::Time oldest_allowed_time) {
       feature.second.points.erase(feature.second.points.begin(), point_it);
     }
 
-    for (auto& feature : feature_tracks_) {
+    for (auto& feature : feature_track_id_map_) {
       auto point_it = feature.second.points.cbegin();
       while (point_it != feature.second.points.cend()) {
         if (point_it->timestamp < oldest_allowed_time)
@@ -97,26 +85,60 @@ void FeatureTracker::RemoveOldFeaturePoints(lc::Time oldest_allowed_time) {
     }*/
 }
 
-boost::optional<lc::Time> FeatureTracker::latest_timestamp() const { return latest_time_; }
-
-boost::optional<lc::Time> FeatureTracker::PreviousTimestamp() const {
-  for (const auto& feature_track_pair : feature_tracks_) {
-    const auto& points = feature_track_pair.second.points;
-    if (points.size() < 2) continue;
-    return points[points.size() - 2].timestamp;
-  }
-  return boost::none;
-}
-
-// TODO(rsoussan): Store points in sorted order to make this and PreviousTimestamp more efficient
-boost::optional<localization_common::Time> FeatureTracker::OldestTimestamp() const {
-  boost::optional<localization_common::Time> oldest_timestamp;
-  for (const auto& feature_track_pair : feature_tracks_) {
-    for (const auto& point : feature_track_pair.second.points) {
-      if (!oldest_timestamp || point.timestamp < *oldest_timestamp) oldest_timestamp = point.timestamp;
+void FeatureTracker::RemoveUndetectedFeatures(const lm::Time& feature_point_timestamp) {
+  for (auto feature_it = feature_track_id_map_.cbegin(); feature_it != feature_track_id_map_.cend();) {
+    if (!feature_it->second.HasMeasurement(feature_points_timestamp)) {
+      feature_it = feature_track_id_map_.erase(feature_it);
+    } else {
+      ++feature_it;
     }
   }
-  return oldest_timestamp;
 }
 
+void FeatureTracker::UpdateTrack(const lm::FeaturePoint& feature_point) {
+  if (feature_track_id_map_.count(feature_point.feature_id) == 0) {
+    feature_track_id_map_[feature_point.feature_id] = std::make_shared<FeatureTrack>(feature_point.feature_id);
+  }
+  feature_track_id_map_[feature_point.feature_id]->AddMeasurement(feature_points_timestamp, feature_point.image_point);
+}
+
+void FeatureTracker::UpdateTrackLengths() {
+  feature_track_length_map_.clear();
+  for (const auto& feature_track : feature_track_id_map_) {
+    feature_track_length_map_.emplace(feature_track.second->size(), feature_track.second);
+  }
+}
+
+size_t FeatureTracker::size() const { return feature_track_id_map_.size(); }
+
+bool FeatureTracker::empty() const { return feature_track_id_map_.empty(); }
+
+void FeatureTracker::Clear() {
+  feature_track_id_map_.clear();
+  feature_track_length_map_.clear();
+}
+
+boost::optional<lc::Time> FeatureTracker::LatestTimestamp() const {
+  if (empty()) return boost::none;
+  // Since Feature Tracks without latest timestamp are erased on updates, each track contains the latest timestamp
+  return feature_track_id_map_.cbegin().second->LatestTimestamp();
+}
+
+boost::optional<lc::Time> FeatureTracker::PreviousTimestamp() const {
+  const auto longest_feature_track = LongestFeatureTrack();
+  if (!longest_feature_track) return boost::none;
+  // TODO(rsoussan): Need to check this before returning? If boost::none, is this cast correctly when returned here?
+  return longest_feature_track->PreviousTimestamp();
+}
+
+boost::optional<localization_common::Time> FeatureTracker::OldestTimestamp() const {
+  const auto longest_feature_track = LongestFeatureTrack();
+  if (!longest_feature_track) return boost::none;
+  return longest_feature_track->OldestTimestamp();
+}
+
+boost::optional<std::shared<FeatureTrack>> LongestFeatureTrack() {
+  if (empty()) return boost::none;
+  return feature_track_length_map_.rbegin().second;
+}
 }  // namespace graph_localizer
