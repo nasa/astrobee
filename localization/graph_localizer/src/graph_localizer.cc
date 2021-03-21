@@ -59,7 +59,6 @@ namespace lm = localization_measurements;
 
 GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
     : feature_tracker_(new FeatureTracker(params.feature_tracker)),
-      standstill_feature_tracker_(new FeatureTracker(params.standstill_feature_tracker)),
       latest_imu_integrator_(params.graph_initializer),
       graph_values_(new GraphValues(params.graph_values)),
       log_on_destruction_(true),
@@ -282,11 +281,6 @@ bool GraphLocalizer::AddOpticalFlowMeasurement(
   }
   last_time = optical_flow_feature_points_measurement.timestamp;
 
-  CheckForStandstill(optical_flow_feature_points_measurement);
-  if (standstill() && params_.factor.standstill_adder.enabled) {
-    BufferFactors(standstill_factor_adder_->AddFactors(optical_flow_feature_points_measurement));
-  }
-
   LogDebug("AddOpticalFlowMeasurement: Adding optical flow measurement.");
   feature_tracker_->UpdateFeatureTracks(optical_flow_feature_points_measurement.feature_points);
 
@@ -303,18 +297,22 @@ bool GraphLocalizer::AddOpticalFlowMeasurement(
     BufferFactors(rotation_factor_adder_->AddFactors(optical_flow_feature_points_measurement));
   }
 
+  CheckForStandstill();
+  if (standstill() && params_.factor.standstill_adder.enabled) {
+    BufferFactors(standstill_factor_adder_->AddFactors(optical_flow_feature_points_measurement));
+  }
+
   return true;
 }
 
-void GraphLocalizer::CheckForStandstill(const lm::FeaturePointsMeasurement& optical_flow_feature_points_measurement) {
-  standstill_feature_tracker_->UpdateFeatureTracks(optical_flow_feature_points_measurement.feature_points);
+void GraphLocalizer::CheckForStandstill() {
   // Check for standstill via low disparity for all feature tracks
   double total_average_distance_from_mean = 0;
   int num_valid_feature_tracks = 0;
-  for (const auto& feature_track : standstill_feature_tracker_->feature_tracks()) {
-    const double average_distance_from_mean = AverageDistanceFromMean(feature_track.second.points);
+  for (const auto& feature_track : feature_tracker_->feature_tracks()) {
+    const double average_distance_from_mean = AverageDistanceFromMean(feature_track.second->points);
     // Only consider long enough feature tracks for standstill candidates
-    if (static_cast<int>(feature_track.second.points.size()) >= params_.standstill_min_num_points_per_track) {
+    if (static_cast<int>(feature_track.second->size()) >= params_.standstill_min_num_points_per_track) {
       total_average_distance_from_mean += average_distance_from_mean;
       ++num_valid_feature_tracks;
     }
@@ -756,7 +754,6 @@ bool GraphLocalizer::SlideWindow(const boost::optional<gtsam::Marginals>& margin
   }
 
   feature_tracker_->RemoveOldFeaturePointsAndSlideWindow(*oldest_timestamp);
-  standstill_feature_tracker_->RemoveOldFeaturePointsAndSlideWindow(*oldest_timestamp);
   latest_imu_integrator_.RemoveOldMeasurements(*oldest_timestamp);
   RemoveOldBufferedFactors(*oldest_timestamp);
 
