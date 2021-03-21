@@ -287,10 +287,6 @@ bool GraphLocalizer::AddOpticalFlowMeasurement(
     BufferFactors(standstill_factor_adder_->AddFactors(optical_flow_feature_points_measurement));
   }
 
-  // Skip optical flow measurements if necessary
-  static int optical_flow_measurement_count = 0;
-  if (optical_flow_measurement_count++ % (params_.optical_flow_measurement_spacing + 1) != 0) return false;
-
   LogDebug("AddOpticalFlowMeasurement: Adding optical flow measurement.");
   feature_tracker_->UpdateFeatureTracks(optical_flow_feature_points_measurement.feature_points);
 
