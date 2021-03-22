@@ -39,6 +39,8 @@ class FeatureTracker {
   // detections.
   void UpdateFeatureTracks(const localization_measurements::FeaturePoints& feature_points);
   const FeatureTrackIdMap& feature_tracks() const;
+  const FeatureTrackLengthMap& feature_tracks_length_ordered() const;
+  int NumTracksWithAtLeastNPoints(int n) const;
   void RemoveUndetectedFeatures(const localization_common::Time& feature_point);
   void RemoveOldFeaturePointsAndSlideWindow(
     boost::optional<localization_common::Time> oldest_allowed_time = boost::none);
