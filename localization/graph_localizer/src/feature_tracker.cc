@@ -91,7 +91,7 @@ const FeatureTrackLengthMap& FeatureTracker::feature_tracks_length_ordered() con
 
 int FeatureTracker::NumTracksWithAtLeastNPoints(int n) const {
   const auto lower_bound_it = feature_track_length_map_.lower_bound(n);
-  return std::distance(feature_track_length_map_.begin(), lower_bound_it);
+  return std::distance(lower_bound_it, feature_track_length_map_.end());
 }
 
 size_t FeatureTracker::size() const { return feature_track_id_map_.size(); }
