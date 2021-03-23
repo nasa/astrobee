@@ -52,7 +52,7 @@ void ImuBiasTester::IntegrateAndRemoveMeasurements(const lc::CombinedNavState& l
   auto pim = ii::Pim(lower_bound_state.bias(), pim_params());
   // Reset pim after each integration since pim uses beginning orientation and velocity for
   // gravity integration and initial velocity integration.
-  for (auto measurement_it = measurements().cbegin();
+  for (auto measurement_it = measurements().upper_bound(last_predicted_combined_nav_state_->timestamp());
        measurement_it != measurements().cend() && measurement_it->first < upper_bound_timestamp; ++measurement_it) {
     pim.resetIntegrationAndSetBias(lower_bound_state.bias());
     auto time = last_predicted_combined_nav_state_->timestamp();
