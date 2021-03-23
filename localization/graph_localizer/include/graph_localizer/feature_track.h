@@ -39,6 +39,8 @@ class FeatureTrack {
   size_t size() const;
   bool empty() const;
   std::vector<localization_measurements::FeaturePoint> LatestPoints(const int spacing = 0) const;
+  bool SpacingFits(const int spacing, const int max_num_points) const;
+  int BestSpacing(const int ideal_spacing, const int ideal_max_num_points) const;
   boost::optional<localization_common::Time> PreviousTimestamp() const;
   boost::optional<localization_common::Time> LatestTimestamp() const;
   boost::optional<localization_common::Time> OldestTimestamp() const;

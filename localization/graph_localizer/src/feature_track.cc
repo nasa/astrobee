@@ -52,6 +52,27 @@ std::vector<lm::FeaturePoint> FeatureTrack::LatestPoints(const int spacing) cons
   return latest_points;
 }
 
+bool FeatureTrack::SpacingFits(const int spacing, const int max_num_points) const {
+  // Since we include the latest point, the points included for spacing and max_num_points
+  // is 1 for the latest point plus a point at intervals of spacing + 1 for max_num_points - 1 (excludes latest point).
+  // 1 0 0 1 0 0 1 0 0 -> here a 1 indicates a point used, the first 1 is the latest point, and the spacing is 2.
+  // In this case if max_num_points <= 3 this suceeds and otherwise this fails as fewer than 3 points would be included
+  // with the desired spacing.
+  return ((spacing + 1) * (max_num_points - 1) + 1) <= static_cast<int>(size());
+}
+
+int FeatureTrack::BestSpacing(const int ideal_spacing, const int ideal_max_num_points) const {
+  // Check Ideal Case
+  if (SpacingFits(ideal_spacing, ideal_max_num_points)) return ideal_spacing;
+  // Check too few points case
+  if (static_cast<int>(size()) <= ideal_max_num_points) return 0;
+  // Derive new optimal spacing for ideal_max_num_points
+  for (int spacing = ideal_spacing - 1; spacing >= 0; --spacing) {
+    if (SpacingFits(spacing, ideal_max_num_points)) return spacing;
+  }
+  return 0;
+}
+
 boost::optional<lc::Time> FeatureTrack::PreviousTimestamp() const {
   if (size() < 2) return boost::none;
   return std::next(points_.crbegin())->first;
