@@ -73,6 +73,11 @@ int FeatureTrack::BestSpacing(const int ideal_spacing, const int ideal_max_num_p
   return 0;
 }
 
+boost::optional<lm::FeaturePoint> FeatureTrack::LatestPoint() const {
+  if (empty()) return boost::none;
+  return points_.crbegin()->second;
+}
+
 boost::optional<lc::Time> FeatureTrack::PreviousTimestamp() const {
   if (size() < 2) return boost::none;
   return std::next(points_.crbegin())->first;

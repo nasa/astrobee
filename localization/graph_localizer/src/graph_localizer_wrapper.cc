@@ -240,6 +240,11 @@ boost::optional<const FeatureTrackIdMap&> GraphLocalizerWrapper::feature_tracks(
   return graph_localizer_->feature_tracks();
 }
 
+boost::optional<const GraphLocalizer&> GraphLocalizerWrapper::graph_localizer() const {
+  if (!graph_localizer_) return boost::none;
+  return *graph_localizer_;
+}
+
 void GraphLocalizerWrapper::MarkWorldTDockForResettingIfNecessary() {
   if (estimate_world_T_dock_using_loc_) reset_world_T_dock_ = true;
 }

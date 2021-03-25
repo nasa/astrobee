@@ -81,6 +81,8 @@ class GraphLocalizerWrapper {
 
   boost::optional<const FeatureTrackIdMap&> feature_tracks() const;
 
+  boost::optional<const GraphLocalizer&> graph_localizer() const;
+
   void MarkWorldTDockForResettingIfNecessary();
 
   void ResetWorldTDockUsingLoc(const ff_msgs::VisualLandmarks& visual_landmarks_msg);

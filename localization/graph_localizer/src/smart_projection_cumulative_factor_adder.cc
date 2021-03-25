@@ -48,6 +48,7 @@ std::vector<FactorsToAdd> SmartProjectionCumulativeFactorAdder::AddFactors() {
     LogDebug("AddFactors: Failed to get longest feature track.");
     return {};
   }
+  std::vector<lm::FeaturePoint> added_points;
   const int spacing =
     longest_feature_track->BestSpacing(params().measurement_spacing, params().max_num_points_per_factor);
   // Iterate in reverse order so longer feature tracks are prioritized
@@ -58,8 +59,11 @@ std::vector<FactorsToAdd> SmartProjectionCumulativeFactorAdder::AddFactors() {
     const double average_distance_from_mean = AverageDistanceFromMean(feature_track.points());
     const auto points = feature_track.LatestPoints(spacing);
     if (ValidPointSet(points.size(), average_distance_from_mean, params().min_avg_distance_from_mean,
-                      params().min_num_points)) {
+                      params().min_num_points) &&
+        !TooClose(added_points, points.front())) {
       AddSmartFactor(points, smart_factors_to_add);
+      // Use latest point
+      added_points.emplace_back(points.front());
       ++num_added_smart_factors;
     }
   }
@@ -99,5 +103,15 @@ void SmartProjectionCumulativeFactorAdder::AddSmartFactor(const std::vector<lm::
     smart_factor->add(Camera::Measurement(feature_point.image_point), key_info.MakeKey(uninitialized_key_index++));
   }
   smart_factors_to_add.push_back({key_infos, smart_factor});
+}
+
+bool SmartProjectionCumulativeFactorAdder::TooClose(const std::vector<lm::FeaturePoint>& added_points,
+                                                    const lm::FeaturePoint& point) const {
+  for (const auto& added_point : added_points) {
+    if (((added_point.image_point - point.image_point).norm()) < params().feature_track_min_separation) {
+      return true;
+    }
+  }
+  return false;
 }
 }  // namespace graph_localizer

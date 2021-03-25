@@ -65,9 +65,19 @@ void FeatureTrackImage(const graph_localizer::FeatureTrackIdMap& feature_tracks,
   }
 }
 
+void MarkSmartFactorPoints(const std::vector<const SmartFactor*> smart_factors,
+                           const camera::CameraParameters& camera_params, cv::Mat& feature_track_image) {
+  for (const auto smart_factor : smart_factors) {
+    const auto& point = smart_factor->measured().front();
+    const auto distorted_point = Distort(point, camera_params);
+    cv::circle(feature_track_image, distorted_point, 15 /* Radius*/, cv::Scalar(200, 100, 0), -1 /*Filled*/, 8);
+  }
+}
+
 boost::optional<sensor_msgs::ImagePtr> CreateFeatureTrackImage(const sensor_msgs::ImageConstPtr& image_msg,
                                                                const graph_localizer::FeatureTrackIdMap& feature_tracks,
-                                                               const camera::CameraParameters& camera_params) {
+                                                               const camera::CameraParameters& camera_params,
+                                                               const std::vector<const SmartFactor*>& smart_factors) {
   cv_bridge::CvImagePtr feature_track_image;
   try {
     feature_track_image = cv_bridge::toCvCopy(image_msg, sensor_msgs::image_encodings::RGB8);
@@ -77,6 +87,7 @@ boost::optional<sensor_msgs::ImagePtr> CreateFeatureTrackImage(const sensor_msgs
   }
 
   FeatureTrackImage(feature_tracks, camera_params, feature_track_image->image);
+  MarkSmartFactorPoints(smart_factors, camera_params, feature_track_image->image);
   return feature_track_image->toImageMsg();
 }
 
@@ -84,5 +95,16 @@ cv::Point Distort(const Eigen::Vector2d& undistorted_point, const camera::Camera
   Eigen::Vector2d distorted_point;
   params.Convert<camera::UNDISTORTED_C, camera::DISTORTED>(undistorted_point, &distorted_point);
   return cv::Point(distorted_point.x(), distorted_point.y());
+}
+
+std::vector<const SmartFactor*> SmartFactors(const graph_localizer::GraphLocalizer& graph) {
+  std::vector<const SmartFactor*> smart_factors;
+  for (const auto factor : graph.factor_graph()) {
+    const auto smart_factor = dynamic_cast<const SmartFactor*>(factor.get());
+    if (smart_factor) {
+      smart_factors.emplace_back(smart_factor);
+    }
+  }
+  return smart_factors;
 }
 }  // namespace graph_bag
