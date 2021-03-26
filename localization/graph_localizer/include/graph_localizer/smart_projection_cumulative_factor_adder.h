@@ -25,6 +25,7 @@
 
 #include <gtsam/slam/SmartFactorParams.h>
 
+#include <unordered_map>
 #include <vector>
 
 namespace graph_localizer {
@@ -36,12 +37,16 @@ class SmartProjectionCumulativeFactorAdder : public CumulativeFactorAdder<SmartP
                                        std::shared_ptr<const FeatureTracker> feature_tracker);
 
   std::vector<FactorsToAdd> AddFactors() final;
+  void AddFactors(
+    const FeatureTrackLengthMap& feature_tracks, const int spacing, FactorsToAdd& smart_factors_to_add,
+    std::unordered_map<localization_measurements::FeatureId, localization_measurements::FeaturePoint>& added_points);
 
  private:
   void AddSmartFactor(const std::vector<localization_measurements::FeaturePoint>& feature_track_points,
                       FactorsToAdd& smart_factors_to_add) const;
 
-  bool TooClose(const std::vector<localization_measurements::FeaturePoint>& added_points,
+  bool TooClose(const std::unordered_map<localization_measurements::FeatureId, localization_measurements::FeaturePoint>&
+                  added_points,
                 const localization_measurements::FeaturePoint& point) const;
 
   std::shared_ptr<const FeatureTracker> feature_tracker_;

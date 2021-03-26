@@ -38,37 +38,46 @@ SmartProjectionCumulativeFactorAdder::SmartProjectionCumulativeFactorAdder(
   smart_projection_params_.setEnableEPI(params.enable_EPI);
 }
 
+void SmartProjectionCumulativeFactorAdder::AddFactors(
+  const FeatureTrackLengthMap& feature_tracks, const int spacing, FactorsToAdd& smart_factors_to_add,
+  std::unordered_map<lm::FeatureId, lm::FeaturePoint>& added_points) {
+  // Iterate in reverse order so longer feature tracks are prioritized
+  for (auto feature_track_it = feature_tracks.crbegin(); feature_track_it != feature_tracks.crend();
+       ++feature_track_it) {
+    if (static_cast<int>(smart_factors_to_add.size()) >= params().max_num_factors) break;
+    const auto& feature_track = *(feature_track_it->second);
+    const auto points = feature_track.LatestPoints(spacing);
+    // Skip already added tracks
+    if (added_points.count(points.front().feature_id) > 0) continue;
+    const double average_distance_from_mean = AverageDistanceFromMean(feature_track.points());
+    if (ValidPointSet(points.size(), average_distance_from_mean, params().min_avg_distance_from_mean,
+                      params().min_num_points) &&
+        !TooClose(added_points, points.front())) {
+      AddSmartFactor(points, smart_factors_to_add);
+      // Use latest point
+      added_points.emplace(points.front().feature_id, points.front());
+    }
+  }
+}
+
 std::vector<FactorsToAdd> SmartProjectionCumulativeFactorAdder::AddFactors() {
   // Add smart factor for each valid feature track
   FactorsToAdd smart_factors_to_add(GraphAction::kDeleteExistingSmartFactors);
-  int num_added_smart_factors = 0;
   const auto& feature_tracks = feature_tracker_->feature_tracks_length_ordered();
   const auto& longest_feature_track = feature_tracker_->LongestFeatureTrack();
   if (!longest_feature_track) {
     LogDebug("AddFactors: Failed to get longest feature track.");
     return {};
   }
-  std::vector<lm::FeaturePoint> added_points;
+
+  std::unordered_map<lm::FeatureId, lm::FeaturePoint> added_points;
   const int spacing =
     longest_feature_track->BestSpacing(params().measurement_spacing, params().max_num_points_per_factor);
-  // Iterate in reverse order so longer feature tracks are prioritized
-  for (auto feature_track_it = feature_tracks.crbegin(); feature_track_it != feature_tracks.crend();
-       ++feature_track_it) {
-    if (num_added_smart_factors >= params().max_num_factors) break;
-    const auto& feature_track = *(feature_track_it->second);
-    const double average_distance_from_mean = AverageDistanceFromMean(feature_track.points());
-    const auto points = feature_track.LatestPoints(spacing);
-    if (ValidPointSet(points.size(), average_distance_from_mean, params().min_avg_distance_from_mean,
-                      params().min_num_points) &&
-        !TooClose(added_points, points.front())) {
-      AddSmartFactor(points, smart_factors_to_add);
-      // Use latest point
-      added_points.emplace_back(points.front());
-      ++num_added_smart_factors;
-    }
+  AddFactors(feature_tracks, spacing, smart_factors_to_add, added_points);
+  if (static_cast<int>(smart_factors_to_add.size()) < params().max_num_factors) {
+    // Zero spacing so any valid feature track is added
+    AddFactors(feature_tracks, 0, smart_factors_to_add, added_points);
   }
-
-  if (smart_factors_to_add.empty()) return {};
   const auto latest_timestamp = feature_tracker_->LatestTimestamp();
   if (!latest_timestamp) {
     LogError("AddFactors: Failed to get latest timestamp.");
@@ -105,9 +114,10 @@ void SmartProjectionCumulativeFactorAdder::AddSmartFactor(const std::vector<lm::
   smart_factors_to_add.push_back({key_infos, smart_factor});
 }
 
-bool SmartProjectionCumulativeFactorAdder::TooClose(const std::vector<lm::FeaturePoint>& added_points,
-                                                    const lm::FeaturePoint& point) const {
-  for (const auto& added_point : added_points) {
+bool SmartProjectionCumulativeFactorAdder::TooClose(
+  const std::unordered_map<lm::FeatureId, lm::FeaturePoint>& added_points, const lm::FeaturePoint& point) const {
+  for (const auto& added_point_pair : added_points) {
+    const auto& added_point = added_point_pair.second;
     if (((added_point.image_point - point.image_point).norm()) < params().feature_track_min_separation) {
       return true;
     }
