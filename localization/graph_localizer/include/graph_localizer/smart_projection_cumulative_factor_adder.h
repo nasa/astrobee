@@ -38,7 +38,8 @@ class SmartProjectionCumulativeFactorAdder : public CumulativeFactorAdder<SmartP
 
   std::vector<FactorsToAdd> AddFactors() final;
   void AddFactors(
-    const FeatureTrackLengthMap& feature_tracks, const int spacing, FactorsToAdd& smart_factors_to_add,
+    const FeatureTrackLengthMap& feature_tracks, const int spacing, const double feature_track_min_separation,
+    FactorsToAdd& smart_factors_to_add,
     std::unordered_map<localization_measurements::FeatureId, localization_measurements::FeaturePoint>& added_points);
 
  private:
@@ -47,7 +48,7 @@ class SmartProjectionCumulativeFactorAdder : public CumulativeFactorAdder<SmartP
 
   bool TooClose(const std::unordered_map<localization_measurements::FeatureId, localization_measurements::FeaturePoint>&
                   added_points,
-                const localization_measurements::FeaturePoint& point) const;
+                const localization_measurements::FeaturePoint& point, const double feature_track_min_separation) const;
 
   std::shared_ptr<const FeatureTracker> feature_tracker_;
   gtsam::SmartProjectionParams smart_projection_params_;
