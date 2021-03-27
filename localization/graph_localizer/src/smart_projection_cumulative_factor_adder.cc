@@ -69,8 +69,7 @@ std::vector<FactorsToAdd> SmartProjectionCumulativeFactorAdder::AddFactors() {
     LogDebug("AddFactors: Failed to get longest feature track.");
     return {};
   }
-  const int spacing =
-    longest_feature_track->BestSpacing(params().measurement_spacing, params().max_num_points_per_factor);
+  const int spacing = longest_feature_track->MaxSpacing(params().max_num_points_per_factor);
 
   std::unordered_map<lm::FeatureId, lm::FeaturePoint> added_points;
   AddFactors(feature_tracks, spacing, params().feature_track_min_separation, smart_factors_to_add, added_points);

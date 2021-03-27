@@ -70,7 +70,7 @@ int FeatureTrack::MaxSpacing(const int max_num_points) const {
   return std::max(0, (static_cast<int>(size()) - max_num_points) / (max_num_points - 1));
 }
 
-int FeatureTrack::BestSpacing(const int ideal_spacing, const int ideal_max_num_points) const {
+int FeatureTrack::ClosestSpacing(const int ideal_spacing, const int ideal_max_num_points) const {
   // Check Ideal Case
   if (SpacingFits(ideal_spacing, ideal_max_num_points)) return ideal_spacing;
   // Check too few points case
