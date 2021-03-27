@@ -61,6 +61,15 @@ bool FeatureTrack::SpacingFits(const int spacing, const int max_num_points) cons
   return ((spacing + 1) * (max_num_points - 1) + 1) <= static_cast<int>(size());
 }
 
+int FeatureTrack::MaxSpacing(const int max_num_points) const {
+  // Avoid divide by zero and other corner cases
+  if (max_num_points <= 1 || static_cast<int>(size()) <= 0) return 0;
+  // Derived using equation from SpacingFits
+  // (spacing + 1 ) * (max_num_points - 1) + 1 = size
+  // -> spacing = (size - max_num_points)/(max_num_points - 1)
+  return std::max(0, (static_cast<int>(size()) - max_num_points) / (max_num_points - 1));
+}
+
 int FeatureTrack::BestSpacing(const int ideal_spacing, const int ideal_max_num_points) const {
   // Check Ideal Case
   if (SpacingFits(ideal_spacing, ideal_max_num_points)) return ideal_spacing;
