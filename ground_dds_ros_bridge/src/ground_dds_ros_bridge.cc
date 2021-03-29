@@ -56,6 +56,8 @@ GroundDdsRosBridge::GroundDdsRosBridge() {
   components_ = 0;
 
   agent_name_ = "ISAAC Ground Bridge";
+
+  connecting_robot_ = "";
 }
 
 GroundDdsRosBridge::~GroundDdsRosBridge() {
@@ -66,6 +68,8 @@ bool GroundDdsRosBridge::BuildSensorImageToCompressedImage(
                                                   const std::string& name) {
   std::string sub_topic;
   bool use;
+
+  ROS_ERROR("In build sensor image to compressed image.");
 
   if (ReadTopicInfo(name, "sub", sub_topic, use)) {
     if (use) {
@@ -91,11 +95,25 @@ bool GroundDdsRosBridge::Initialize(ros::NodeHandle *nh) {
     return false;
   }
 
+  // Need to get the connecting robot name and domain id first for the dds setup
+  // All other configuration parameters will be read in after dds is setup.
+  // Get the name of the robot the ground bridge is trying to connect to.
+  if (!config_params_.GetStr("connecting_robot", &connecting_robot_)) {
+    ROS_FATAL("Ground bridge: connecting robot not specified!");
+    return false;
+  }
+
+  // Get the domain id which will be different in space than on the ground
+  if (!config_params_.GetInt("domain_id", &domain_id_)) {
+    ROS_FATAL("Ground bridge: domain id not specified!");
+    return false;
+  }
+
   nh_ = *nh;
 
   int fake_argc = 1;
 
-  // TODO(kmhamil1): make hardcoded values configurable
+  // TODO(kmhamil1): change this to not use freeflyer tools
 
   // Make path to QOS and NDDS files
   std::string config_path = ff_common::GetConfigDir();
@@ -129,68 +147,39 @@ bool GroundDdsRosBridge::Initialize(ros::NodeHandle *nh) {
   ground_params->name = agent_name_;
   ground_params->namingContextName = ground_params->name;
 
+  // Add robot that we need to listen to
+  ground_params->teamMembers.push_back(connecting_robot_);
+
   SubstituteROBOT_NAME(dds_params);
+  
+  // Set values for default publisher and subscriber
+/*  dds_params->publishers[0].name = agent_name_;
+  dds_params->publishers[0].partition = agent_name_;
+  dds_params->publishers[0].participant = participant_name_;
+
+  dds_params->subscribers[0].name = connecting_robot_;
+  dds_params->subscribers[0].partition = connecting_robot_;
+  dds_params->subscribers[0].participant = participant_name_;
+
+
+  kn::DdsNodeParameters *subscriber = new kn::DdsNodeParameters();
+  subscriber->name = connecting_robot_;
+  subscriber->partition = connecting_robot_;
+  subscriber->participant = participant_name_;
+  dds_params->subscribers.push_back(*subscriber);
+*/
 
   // Clear config files so that dds only looks for the files we add
   dds_params->participants[0].discoveryPeersFiles.clear();
   dds_params->configFiles.clear();
 
   dds_params->participants[0].participantName = participant_name_;
-  dds_params->participants[0].domainId = 37;
+  dds_params->participants[0].domainId = domain_id_;
   dds_params->participants[0].discoveryPeersFiles.push_back(
       (config_path + "NDDS_DISCOVERY_PEERS"));
   dds_params->configFiles.push_back((config_path + "RAPID_QOS_PROFILES.xml"));
 
-  /**
-   * Facade to initialize basic system
-   * get instance to RobotParameters
-   * init Miro::Log
-   * init Miro::Configuration
-   *    load doc given my -MCF  MiroConfigFile
-   * get reference to Miro::Configuration::document()
-   * set RobotParameters from ConfigDocument
-   *
-   * parse options and set RobotParameters
-   *    -MRN  MiroRobotName
-   *    -MNC  MiroNamingContext
-   *    -MNT  MiroNamingTimeout
-   *    -MDR  MiroDataRoot
-   *    -MEC  MiroEventChannel
-   *    -MNN  MiroNoNaming
-   *    -?    MiroHelp
-   Miro::Robot::init(argc, argv);
-   */
-
-  /**
-   * Facade to initialize basic dds-related parameters
-   * get instance to DdsEntitiesFactorySvcParameters
-   * get reference to Miro::Configuration::document()
-   * set DdsEntitiesFactorySvcParameters from ConfigDocument
-   *
-   * parse options and set DdsEntitiesFactorySvcParameters
-   *    -MDC  MiroDdsConfig
-   *    -MDI  MiroDdsDomainId
-   *    -MDP  MiroDiscoverPeers
-   *    -MDM  MiroDdsMonitor
-   *    -MDPN MiroDdsParticipantName
-   *    -MDDL MiroDdsDefaultLibrary
-   *    -MDED MiroDdsEndpointDiscover
-   kn::DdsSupport::init(argc, argv);
-   */
-
-  /**
-   * get instance to DdsEntitiesFactorySvcParameters
-   *
-   * the following are default values in knDdsParameters.xml
-   * configFiles.push_back(RAPID_QOS_PROFILES.xml)
-   * defaultLibrary = "RapidQosLibrary"
-   * defaultProfile = "RapidDefaultQos"
-   */
-
-  /**
-   * Hardcode participant name
-   entityParams->participants[0].participantName = argv[0];
-   */
+  dds_params->subscribers[0].partition = "<TEAM>";
 
   /**
    * Use DdsEntitiesFactorySvc to create a new DdsEntitiesFactory
@@ -208,6 +197,8 @@ bool GroundDdsRosBridge::Initialize(ros::NodeHandle *nh) {
   if (!ReadParams()) {
     return false;
   }
+
+  return true;
 }
 
 bool GroundDdsRosBridge::ReadTopicInfo(const std::string& topic_abbr,
@@ -218,13 +209,14 @@ bool GroundDdsRosBridge::ReadTopicInfo(const std::string& topic_abbr,
   std::string topic_exp = sub_or_pub + "_topic_" + topic_abbr;
 
   if (!config_params_.GetBool(use_exp.c_str(), &use)) {
-    ROS_FATAL("DDS Bridge: use %s not specified!", topic_abbr.c_str());
+    ROS_FATAL("Ground bridge: use %s not specified!", topic_abbr.c_str());
     return false;
   }
 
   if (use) {
     if (!config_params_.GetStr(topic_exp.c_str(), &topic)) {
-      ROS_FATAL("DDS Bridge: sub topic %s not specified!", topic_abbr.c_str());
+      ROS_FATAL("Ground bridge: sub topic %s not specified!",
+                                                            topic_abbr.c_str());
       return false;
     }
   }
@@ -233,10 +225,34 @@ bool GroundDdsRosBridge::ReadTopicInfo(const std::string& topic_abbr,
 }
 
 bool GroundDdsRosBridge::ReadParams() {
+  std::string ns = "/";
+  bool use_namespace = false;
   components_ = 0;
 
+  // Get boolean that signifies if the namespace needs to be the robot name
+  config_params_.GetBool("use_namespace", &use_namespace);
+  if (use_namespace) {
+    // First character needs to be uppercase for dds but lower case for fsw
+    std::string lowercase_robot = connecting_robot_;
+    lowercase_robot[0] = std::tolower(lowercase_robot[0]);
+    ns += lowercase_robot + "/";
+  }
+
   // rapid_image_ros_compressed_science_cam_image => RIRCSCI
-  if (!BuildCompressedImageToImage(TOPIC_HARDWARE_SCI_CAM, "RIRCSCI")) {
+  if (!BuildSensorImageToCompressedImage((ns + TOPIC_HARDWARE_SCI_CAM),
+                                                                  "RIRCSCI")) {
+    return false;
+  }
+
+  // rapid_image_ros_compressed_nav_cam_image => RIRCNCI
+  if (!BuildSensorImageToCompressedImage((ns + TOPIC_HARDWARE_NAV_CAM),
+                                                                  "RIRCNCI")) {
+    return false;
+  }
+
+  // rapid_image_ros_compressed_dock_cam_image => RIRCDCI
+  if (!BuildSensorImageToCompressedImage((ns + TOPIC_HARDWARE_DOCK_CAM),
+                                                                  "RIRCDCI")) {
     return false;
   }
 

@@ -25,9 +25,10 @@
 #include "ground_dds_ros_bridge/util.h"
 
 #include "rapidDds/MIMETypesConstants.h"
+#include "rapidDds/ImageSensorSample.h"
+#include "rapidDds/ImageSensorSampleSupport.h"
 #include "rapidDds/RapidConstants.h"
 
-#include "rapidIo/ImageSensorProvider.h"
 #include "rapidIo/RapidIoParameters.h"
 
 #include "sensor_msgs/CompressedImage.h"
@@ -42,7 +43,7 @@ class RapidImageRosCompressedImage : public RapidSubRosPub {
                                const unsigned int queue_size = 10);
 
   // Callback for ddsEventLoop
-  void operator() (rapid::ImageSensorSample const* image);
+  void operator() (rapid::ImageSensorSample const* rapid_img);
 };
 
 }  // end namespace ff

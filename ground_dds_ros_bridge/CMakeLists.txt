@@ -18,7 +18,7 @@
 project(ground_dds_ros_bridge)
 catkin_package(
   LIBRARIES ground_dds_ros_bridge
-  CATKIN_DEPENDS roscpp message_runtime std_msgs nav_msgs
+  CATKIN_DEPENDS roscpp message_runtime std_msgs
 )
 
 set(DEPS

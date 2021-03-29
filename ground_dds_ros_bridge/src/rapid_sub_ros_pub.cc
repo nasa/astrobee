@@ -16,7 +16,7 @@
  * under the License.
  */
 
-#include "dds_ros_bridge/rapid_sub_ros_pub.h"
+#include "ground_dds_ros_bridge/rapid_sub_ros_pub.h"
 
 namespace ff {
 

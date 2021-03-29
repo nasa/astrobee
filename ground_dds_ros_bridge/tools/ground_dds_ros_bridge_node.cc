@@ -23,7 +23,7 @@ int main(int argc, char **argv) {
 
   ros::NodeHandle nh("~");
   ground_dds_ros_bridge::GroundDdsRosBridge gdrb;
-  if (gdrb.Initialize(nh)) {
+  if (gdrb.Initialize(&nh)) {
     ros::spin();
   }
 

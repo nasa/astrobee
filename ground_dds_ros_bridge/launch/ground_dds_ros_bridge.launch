@@ -16,12 +16,6 @@
 <!-- permissions and limitations under the License.                          -->
 
 <launch>
-  <arg name="name" default="dds_ros_bridge" />
-  <arg name="manager" default="" />
-  <include file="$(find ff_util)/launch/ff_nodelet.launch">
-    <arg name="name" value="$(arg name)"/>
-    <arg name="manager" value="$(arg manager)" />
-    <arg name="class" value="dds_ros_bridge/DdsRosBridge" />
-  </include>
+  <node name="ground_dds_ros_bridge" pkg="ground_dds_ros_bridge" type="ground_dds_ros_bridge_node" />
 </launch>
 

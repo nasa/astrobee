@@ -16,7 +16,7 @@
  * under the License.
  */
 
-#include <dds_ros_bridge/util.h>
+#include <ground_dds_ros_bridge/util.h>
 
 ros::Time util::RapidTime2RosTime(const int64_t dds_time) {
   ros::Time t;

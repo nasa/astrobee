@@ -72,8 +72,9 @@ class GroundDdsRosBridge {
   bool BuildSensorImageToCompressedImage(const std::string& pub_topic,
                                          const std::string& name);
 
- protected:
   bool Initialize(ros::NodeHandle *nh);
+
+ protected:
   bool ReadTopicInfo(const std::string& topic_abbr,
                     const std::string& sub_or_pub,
                     std::string& sub_topic,
@@ -83,14 +84,14 @@ class GroundDdsRosBridge {
  private:
   config_reader::ConfigReader config_params_;
 
-  int components_;
+  int components_, domain_id_;
 
   ros::NodeHandle nh_;
 
   std::vector<ff::RapidSubRosPubPtr> rapid_sub_ros_pubs_;
   std::vector<ff::RosSubRapidPubPtr> ros_sub_rapid_pubs_;
   std::shared_ptr<kn::DdsEntitiesFactorySvc> dds_entities_factory_;
-  std::string participant_name_, agent_name_;
+  std::string participant_name_, agent_name_, connecting_robot_;
 };
 
 }  // end namespace ground_dds_ros_bridge
