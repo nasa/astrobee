@@ -35,10 +35,6 @@ RapidImageRosCompressedImage::RapidImageRosCompressedImage(
   pub_ =
         nh_.advertise<sensor_msgs::CompressedImage>(publish_topic_, queue_size);
 
-
-  ROS_ERROR_STREAM("In image constructor. pub topic: " << publish_topic_);
-  ROS_ERROR_STREAM("sub topic: " << rapid::IMAGESENSOR_SAMPLE_TOPIC + subscribe_topic);
-
   // connect to ddsEventLoop
   try {
     dds_event_loop_.connect<rapid::ImageSensorSample>(this,
@@ -62,8 +58,6 @@ void RapidImageRosCompressedImage::operator() (
                                     rapid::ImageSensorSample const* rapid_img) {
   sensor_msgs::CompressedImage img;
   util::RapidHeader2Ros(rapid_img->hdr, &img.header);
-
-  ROS_ERROR("Got rapid image.");
 
   // only accept 2 values; jpeg or png
   if (rapid_img->mimeType == rapid::MIME_IMAGE_JPEG) {
