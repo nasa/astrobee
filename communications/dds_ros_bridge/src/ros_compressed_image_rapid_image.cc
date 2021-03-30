@@ -30,6 +30,10 @@ RosCompressedImageRapidImage::RosCompressedImageRapidImage(
   // TODO(all): confirm topic suffix has '-'
   params_.topicSuffix += pub_topic;
 
+  ROS_DEBUG("RosImageRapidImage publishing %s%s",
+            rapid::IMAGESENSOR_SAMPLE_TOPIC,
+            params_.topicSuffix.c_str());
+
   // instantiate provider
   provider_.reset(new rapid::ImageSensorProvider(params_,
                                               "RosCompressedImageRapidImage"));
@@ -45,7 +49,6 @@ void RosCompressedImageRapidImage::CallBack(
                             const sensor_msgs::CompressedImage::ConstPtr& msg) {
   provider_->setMimeType(GetRapidMimeType(msg->format).c_str());
   if (msg->data.size() > 0 && msg->data.size() < MB_) {
-    ROS_ERROR_STREAM("Publishing image. size is " << msg->data.size() << " MB: " << MB_);
     provider_->publishData(&msg->data.front(), msg->data.size());
   } else {
     int size = msg->data.size();
