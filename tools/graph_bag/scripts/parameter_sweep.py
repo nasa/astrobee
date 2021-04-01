@@ -89,7 +89,7 @@ def parameter_sweep(all_value_combos,
                     rmse_rel_start_time=0,
                     rmse_rel_end_time=-1):
   job_ids = list(range(len(all_value_combos)))
-  num_processes = 6
+  num_processes = 15 
   pool = multiprocessing.Pool(num_processes)
   # izip arguments so we can pass as one argument to pool worker
   pool.map(

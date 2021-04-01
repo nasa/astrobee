@@ -108,7 +108,7 @@ def run_graph_bag_helper(zipped_vals):
 def bag_sweep(config_file, output_dir):
   graph_bag_params_list = load_params(config_file)
   check_params(graph_bag_params_list)
-  num_processes = 6
+  num_processes = 15 
   pool = multiprocessing.Pool(num_processes)
   # izip arguments so we can pass as one argument to pool worker
   pool.map(run_graph_bag_helper, itertools.izip(graph_bag_params_list, itertools.repeat(output_dir)))
