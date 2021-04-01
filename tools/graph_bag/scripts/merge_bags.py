@@ -50,7 +50,7 @@ def merge_bag(input_bag_prefix, merged_bag):
 
   topics = [
     '/hw/imu', '/loc/of/features', '/loc/ml/features', '/loc/ar/features', '/mgt/img_sampler/nav_cam/image_record',
-    '/graph_loc/state', '/gnc/ekf', '/sparse_mapping/pose'
+    '/graph_loc/state', '/gnc/ekf', '/sparse_mapping/pose', '/mob/flight_mode'
   ]
 
   with rosbag.Bag(merged_bag_name, 'w') as merged_bag:
