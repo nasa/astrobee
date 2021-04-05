@@ -16,10 +16,12 @@
  * under the License.
  */
 
-#ifndef GROUND_DDS_ROS_BRIDGE_RAPID_IMAGE_ROS_COMPRESSED_IMAGE_H_
-#define GROUND_DDS_ROS_BRIDGE_RAPID_IMAGE_ROS_COMPRESSED_IMAGE_H_
+#ifndef GROUND_DDS_ROS_BRIDGE_RAPID_IMAGE_H_
+#define GROUND_DDS_ROS_BRIDGE_RAPID_IMAGE_H_
 
 #include <string>
+#include <cstring>
+#include <memory>
 
 #include "ground_dds_ros_bridge/rapid_sub_ros_pub.h"
 #include "ground_dds_ros_bridge/util.h"
@@ -35,12 +37,12 @@
 
 namespace ff {
 
-class RapidImageRosCompressedImage : public RapidSubRosPub {
+class RapidImageToRos : public RapidSubRosPub {
  public:
-  RapidImageRosCompressedImage(const std::string& subscribe_topic,
-                               const std::string& pub_topic,
-                               const ros::NodeHandle &nh,
-                               const unsigned int queue_size = 10);
+  RapidImageToRos(const std::string& subscribe_topic,
+                  const std::string& pub_topic,
+                  const ros::NodeHandle &nh,
+                  const unsigned int queue_size = 10);
 
   // Callback for ddsEventLoop
   void operator() (rapid::ImageSensorSample const* rapid_img);
@@ -48,4 +50,4 @@ class RapidImageRosCompressedImage : public RapidSubRosPub {
 
 }  // end namespace ff
 
-#endif  // GROUND_DDS_ROS_BRIDGE_RAPID_IMAGE_ROS_COMPRESSED_IMAGE_H_
+#endif  // GROUND_DDS_ROS_BRIDGE_RAPID_IMAGE_H_

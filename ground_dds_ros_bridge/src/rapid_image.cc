@@ -16,19 +16,18 @@
  * under the License.
  */
 
-#include "ground_dds_ros_bridge/rapid_image_ros_compressed_image.h"
+#include "ground_dds_ros_bridge/rapid_image.h"
 
 namespace ff {
 
-RapidImageRosCompressedImage::RapidImageRosCompressedImage(
-                                            const std::string& subscribe_topic,
-                                            const std::string& pub_topic,
-                                            const ros::NodeHandle &nh,
-                                            const unsigned int queue_size)
+RapidImageToRos::RapidImageToRos(const std::string& subscribe_topic,
+                                 const std::string& pub_topic,
+                                 const ros::NodeHandle &nh,
+                                 const unsigned int queue_size)
   : RapidSubRosPub(subscribe_topic,
                    pub_topic,
                    nh,
-                   "RapidImageRosCompressedImage",
+                   "RapidImageToRos",
                    queue_size) {
   // advertise ros topic
   publish_topic_ = pub_topic + "/compressed";
@@ -43,10 +42,10 @@ RapidImageRosCompressedImage::RapidImageRosCompressedImage(
                   "RapidImageSensorSampleProfile",                   // profile
                   "");                                               // library
   } catch (std::exception& e) {
-    ROS_ERROR_STREAM("RapidImageRosCompressedImage exception: " << e.what());
+    ROS_ERROR_STREAM("RapidImageToRos exception: " << e.what());
     throw; 
   } catch (...) {
-    ROS_ERROR("RapidImageRosCompressedImage exception unknown");
+    ROS_ERROR("RapidImageToRos exception unknown");
     throw;
   }
  
@@ -54,15 +53,14 @@ RapidImageRosCompressedImage::RapidImageRosCompressedImage(
   StartThread(); 
 }
 
-void RapidImageRosCompressedImage::operator() (
-                                    rapid::ImageSensorSample const* rapid_img) {
+void RapidImageToRos::operator() (rapid::ImageSensorSample const* rapid_img) {
   sensor_msgs::CompressedImage img;
   util::RapidHeader2Ros(rapid_img->hdr, &img.header);
 
   // only accept 2 values; jpeg or png
-  if (rapid_img->mimeType == rapid::MIME_IMAGE_JPEG) {
+  if (std::strcmp(rapid_img->mimeType, rapid::MIME_IMAGE_JPEG) == 0) {
     img.format = "jpeg";
-  } else if (rapid_img->mimeType == rapid::MIME_IMAGE_PNG) {
+  } else if (std::strcmp(rapid_img->mimeType, rapid::MIME_IMAGE_PNG) == 0) {
     img.format = "png";
   } else {
     ROS_ERROR_STREAM("Unknown image format in ground bridge. Type sent is " << rapid_img->mimeType);

@@ -63,18 +63,61 @@ GroundDdsRosBridge::GroundDdsRosBridge() {
 GroundDdsRosBridge::~GroundDdsRosBridge() {
 }
 
-bool GroundDdsRosBridge::BuildSensorImageToCompressedImage(
+/********************** Rapid Sub Ros Pub Functions ***************************/
+bool GroundDdsRosBridge::BuildAccessControlStateToRos(
                                                   const std::string& pub_topic,
                                                   const std::string& name) {
   std::string sub_topic;
   bool use;
 
-  ROS_ERROR("In build sensor image to compressed image.");
+  if (ReadTopicInfo(name, "sub", sub_topic, use)) {
+    if (use) {
+      ff::RapidSubRosPubPtr access_control_state_to_access_control_state(
+                                new ff::RapidAccessControlStateToRos(sub_topic,
+                                                                     pub_topic,
+                                                                     nh_));
+      components_++;
+      rapid_sub_ros_pubs_.push_back(access_control_state_to_access_control_state);
+    }
+  } else {
+    return false;
+  }
+
+  return true;
+}
+
+bool GroundDdsRosBridge::BuildGuestScienceDataToRos(
+                                                  const std::string& pub_topic,
+                                                  const std::string& name) {
+  std::string sub_topic;
+  bool use;
+
+  if (ReadTopicInfo(name, "sub", sub_topic, use)) {
+    if (use) {
+      ff::RapidSubRosPubPtr guest_science_data_to_guest_science_data(
+                                  new ff::RapidGuestScienceDataToRos(sub_topic,
+                                                                     pub_topic,
+                                                                     nh_));
+      components_++;
+      rapid_sub_ros_pubs_.push_back(guest_science_data_to_guest_science_data);
+    }
+  } else {
+    return false;
+  }
+
+  return true;
+}
+
+
+bool GroundDdsRosBridge::BuildSensorImageToRos(const std::string& pub_topic,
+                                               const std::string& name) {
+  std::string sub_topic;
+  bool use;
 
   if (ReadTopicInfo(name, "sub", sub_topic, use)) {
     if (use) {
       ff::RapidSubRosPubPtr sensor_image_to_compressed_image(
-                                new ff::RapidImageRosCompressedImage(sub_topic,
+                                             new ff::RapidImageToRos(sub_topic,
                                                                      pub_topic,
                                                                      nh_));
       components_++;
@@ -86,6 +129,30 @@ bool GroundDdsRosBridge::BuildSensorImageToCompressedImage(
 
   return true;
 }
+
+/********************* Ros Sub Rapid Pub Functions ****************************/
+bool GroundDdsRosBridge::BuildCommandToRapid(const std::string& sub_topic,
+                                             const std::string& name) {
+  std::string pub_topic;
+  bool use;
+
+  if (ReadTopicInfo(name, "pub", pub_topic, use)) {
+    if (use) {
+      ff::RosSubRapidPubPtr command_to_command(
+                                    new ff::RosCommandToRapid(sub_topic,
+                                                              pub_topic,
+                                                              connecting_robot_,
+                                                              nh_));
+      components_++;
+      ros_sub_rapid_pubs_.push_back(command_to_command);
+    }
+  } else {
+    return false;
+  }
+
+  return true;
+}
+
 
 bool GroundDdsRosBridge::Initialize(ros::NodeHandle *nh) {
   config_params_.AddFile("communications/ground_dds_ros_bridge.config");
@@ -179,7 +246,8 @@ bool GroundDdsRosBridge::Initialize(ros::NodeHandle *nh) {
       (config_path + "NDDS_DISCOVERY_PEERS"));
   dds_params->configFiles.push_back((config_path + "RAPID_QOS_PROFILES.xml"));
 
-  dds_params->subscribers[0].partition = "<TEAM>";
+  dds_params->subscribers[0].partition = connecting_robot_;
+  dds_params->publishers[0].partition = connecting_robot_;
 
   /**
    * Use DdsEntitiesFactorySvc to create a new DdsEntitiesFactory
@@ -238,21 +306,36 @@ bool GroundDdsRosBridge::ReadParams() {
     ns += lowercase_robot + "/";
   }
 
+  // rapid_access_control_state_ros_access_control_state = RACSRACS
+  if (!BuildAccessControlStateToRos(
+                                  (ns + TOPIC_MANAGEMENT_ACCESS_CONTROL_STATE),
+                                  "RACSRACS")) {
+    return false;
+  }
+
+  // rapid_guest_science_data_ros_guest_science_data => RGSDRGSD
+  if (!BuildGuestScienceDataToRos((ns + TOPIC_GUEST_SCIENCE_DATA),
+                                  "RGSDRGSD")) {
+    return false;
+  }
+
   // rapid_image_ros_compressed_science_cam_image => RIRCSCI
-  if (!BuildSensorImageToCompressedImage((ns + TOPIC_HARDWARE_SCI_CAM),
-                                                                  "RIRCSCI")) {
+  if (!BuildSensorImageToRos((ns + TOPIC_HARDWARE_SCI_CAM), "RIRCSCI")) {
     return false;
   }
 
   // rapid_image_ros_compressed_nav_cam_image => RIRCNCI
-  if (!BuildSensorImageToCompressedImage((ns + TOPIC_HARDWARE_NAV_CAM),
-                                                                  "RIRCNCI")) {
+  if (!BuildSensorImageToRos((ns + TOPIC_HARDWARE_NAV_CAM), "RIRCNCI")) {
     return false;
   }
 
   // rapid_image_ros_compressed_dock_cam_image => RIRCDCI
-  if (!BuildSensorImageToCompressedImage((ns + TOPIC_HARDWARE_DOCK_CAM),
-                                                                  "RIRCDCI")) {
+  if (!BuildSensorImageToRos((ns + TOPIC_HARDWARE_DOCK_CAM), "RIRCDCI")) {
+    return false;
+  }
+
+  // ros_command_rapid_command => RCRC
+  if (!BuildCommandToRapid((ns + TOPIC_COMMAND), "RCRC")) {
     return false;
   }
 

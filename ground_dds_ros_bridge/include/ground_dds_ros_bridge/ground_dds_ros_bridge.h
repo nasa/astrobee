@@ -28,8 +28,11 @@
 
 #include "config_reader/config_reader.h"
 
-#include "ground_dds_ros_bridge/rapid_image_ros_compressed_image.h"
+#include "ground_dds_ros_bridge/rapid_access_control_state.h"
+#include "ground_dds_ros_bridge/rapid_guest_science_data.h"
+#include "ground_dds_ros_bridge/rapid_image.h"
 #include "ground_dds_ros_bridge/rapid_sub_ros_pub.h"
+#include "ground_dds_ros_bridge/ros_command.h"
 #include "ground_dds_ros_bridge/ros_sub_rapid_pub.h"
 
 #include "ff_util/ff_names.h"
@@ -58,19 +61,25 @@ class GroundDdsRosBridge {
   ~GroundDdsRosBridge();
 
   /**
-   * Build Ros subscribers to Rapid publishers
-   * @param  subTopic       topic to subscribe to  ex: "/camera/image"
-   * @return                successful
-   */
-
-  /**
    * Build Rapid subscribers to Ros publishers
    * @param pubTopic topic to publish to
    *
    * @return successful
    */
-  bool BuildSensorImageToCompressedImage(const std::string& pub_topic,
-                                         const std::string& name);
+  bool BuildAccessControlStateToRos(const std::string& pub_topic,
+                                    const std::string& name);
+  bool BuildGuestScienceDataToRos(const std::string& pub_topic,
+                                  const std::string& name);
+  bool BuildSensorImageToRos(const std::string& pub_topic,
+                             const std::string& name);
+
+  /**
+   * Build Ros subscribers to Rapid publishers
+   * @param  subTopic       topic to subscribe to  ex: "/camera/image"
+   * @return                successful
+   */
+  bool BuildCommandToRapid(const std::string& sub_topic,
+                           const std::string& name);
 
   bool Initialize(ros::NodeHandle *nh);
 
