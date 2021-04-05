@@ -1,5 +1,13 @@
 # Releases
 
+## Release 0.14.1
+
+  * Dynamic IMU Filtering
+  * Added measurement spacing for visual odometry
+  * Tuning configurations
+  * Bug fixes
+  Note: Perching does not work in this release, use another version for this.
+
 ## Release 0.14.0
 
   * Added graph_localizer package
