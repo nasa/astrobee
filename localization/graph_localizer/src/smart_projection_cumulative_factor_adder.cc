@@ -38,22 +38,46 @@ SmartProjectionCumulativeFactorAdder::SmartProjectionCumulativeFactorAdder(
   smart_projection_params_.setEnableEPI(params.enable_EPI);
 }
 
+void SmartProjectionCumulativeFactorAdder::AddFactors(
+  const FeatureTrackLengthMap& feature_tracks, const int spacing, const double feature_track_min_separation,
+  FactorsToAdd& smart_factors_to_add, std::unordered_map<lm::FeatureId, lm::FeaturePoint>& added_points) {
+  // Iterate in reverse order so longer feature tracks are prioritized
+  for (auto feature_track_it = feature_tracks.crbegin(); feature_track_it != feature_tracks.crend();
+       ++feature_track_it) {
+    if (static_cast<int>(smart_factors_to_add.size()) >= params().max_num_factors) break;
+    const auto& feature_track = *(feature_track_it->second);
+    const auto points = feature_track.LatestPoints(spacing);
+    // Skip already added tracks
+    if (added_points.count(points.front().feature_id) > 0) continue;
+    const double average_distance_from_mean = AverageDistanceFromMean(feature_track.points());
+    if (ValidPointSet(points.size(), average_distance_from_mean, params().min_avg_distance_from_mean,
+                      params().min_num_points) &&
+        !TooClose(added_points, points.front(), feature_track_min_separation)) {
+      AddSmartFactor(points, smart_factors_to_add);
+      // Use latest point
+      added_points.emplace(points.front().feature_id, points.front());
+    }
+  }
+}
+
 std::vector<FactorsToAdd> SmartProjectionCumulativeFactorAdder::AddFactors() {
   // Add smart factor for each valid feature track
   FactorsToAdd smart_factors_to_add(GraphAction::kDeleteExistingSmartFactors);
-  int num_added_smart_factors = 0;
-  for (const auto& feature_track : feature_tracker_->feature_tracks()) {
-    const double average_distance_from_mean = AverageDistanceFromMean(feature_track.second.points);
-    if (ValidPointSet(feature_track.second.points, average_distance_from_mean, params().min_avg_distance_from_mean,
-                      params().min_num_points) &&
-        num_added_smart_factors < params().max_num_factors) {
-      AddSmartFactor(feature_track.second, smart_factors_to_add);
-      ++num_added_smart_factors;
-    }
+  const auto& feature_tracks = feature_tracker_->feature_tracks_length_ordered();
+  const auto& longest_feature_track = feature_tracker_->LongestFeatureTrack();
+  if (!longest_feature_track) {
+    LogDebug("AddFactors: Failed to get longest feature track.");
+    return {};
   }
+  const int spacing = longest_feature_track->MaxSpacing(params().max_num_points_per_factor);
 
-  if (smart_factors_to_add.empty()) return {};
-  const auto latest_timestamp = feature_tracker_->latest_timestamp();
+  std::unordered_map<lm::FeatureId, lm::FeaturePoint> added_points;
+  AddFactors(feature_tracks, spacing, params().feature_track_min_separation, smart_factors_to_add, added_points);
+  if (static_cast<int>(smart_factors_to_add.size()) < params().max_num_factors) {
+    // Zero min separation so any valid feature track is added as a fallback to try to add up to max_num_factors
+    AddFactors(feature_tracks, spacing, 0, smart_factors_to_add, added_points);
+  }
+  const auto latest_timestamp = feature_tracker_->LatestTimestamp();
   if (!latest_timestamp) {
     LogError("AddFactors: Failed to get latest timestamp.");
     return {};
@@ -63,29 +87,40 @@ std::vector<FactorsToAdd> SmartProjectionCumulativeFactorAdder::AddFactors() {
   return {smart_factors_to_add};
 }
 
-void SmartProjectionCumulativeFactorAdder::AddSmartFactor(const FeatureTrack& feature_track,
+void SmartProjectionCumulativeFactorAdder::AddSmartFactor(const std::vector<lm::FeaturePoint>& feature_track_points,
                                                           FactorsToAdd& smart_factors_to_add) const {
   SharedRobustSmartFactor smart_factor;
-  const int num_feature_track_points = feature_track.points.size();
-  const auto noise = params().scale_noise_with_num_points
-                       ? gtsam::noiseModel::Isotropic::Sigma(
-                           2, params().noise_scale * num_feature_track_points * params().cam_noise->sigma())
-                       : params().cam_noise;
+  const int num_feature_track_points = feature_track_points.size();
+  const double noise_scale =
+    params().scale_noise_with_num_points ? params().noise_scale * num_feature_track_points : params().noise_scale;
+  const auto noise = gtsam::noiseModel::Isotropic::Sigma(2, noise_scale * params().cam_noise->sigma());
   smart_factor =
     boost::make_shared<RobustSmartFactor>(noise, params().cam_intrinsics, params().body_T_cam, smart_projection_params_,
                                           params().rotation_only_fallback, params().robust, params().huber_k);
 
   KeyInfos key_infos;
-  key_infos.reserve(feature_track.points.size());
+  key_infos.reserve(feature_track_points.size());
   // Gtsam requires unique key indices for each key, even though these will be replaced later
   int uninitialized_key_index = 0;
-  for (int i = 0; i < feature_track.points.size(); ++i) {
-    const auto& feature_point = feature_track.points[i];
+  for (int i = 0; i < static_cast<int>(feature_track_points.size()); ++i) {
+    const auto& feature_point = feature_track_points[i];
     if (i >= params().max_num_points_per_factor) break;
     const KeyInfo key_info(&sym::P, feature_point.timestamp);
     key_infos.emplace_back(key_info);
     smart_factor->add(Camera::Measurement(feature_point.image_point), key_info.MakeKey(uninitialized_key_index++));
   }
   smart_factors_to_add.push_back({key_infos, smart_factor});
+}
+
+bool SmartProjectionCumulativeFactorAdder::TooClose(
+  const std::unordered_map<lm::FeatureId, lm::FeaturePoint>& added_points, const lm::FeaturePoint& point,
+  const double feature_track_min_separation) const {
+  for (const auto& added_point_pair : added_points) {
+    const auto& added_point = added_point_pair.second;
+    if (((added_point.image_point - point.image_point).norm()) < feature_track_min_separation) {
+      return true;
+    }
+  }
+  return false;
 }
 }  // namespace graph_localizer

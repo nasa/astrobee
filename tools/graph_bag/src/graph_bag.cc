@@ -75,10 +75,13 @@ GraphBag::GraphBag(const std::string& bag_name, const std::string& map_file, con
 }
 
 void GraphBag::SaveOpticalFlowTracksImage(const sensor_msgs::ImageConstPtr& image_msg,
-                                          const graph_localizer::FeatureTrackMap& feature_tracks) {
-  const auto feature_track_image_msg = CreateFeatureTrackImage(image_msg, feature_tracks, *params_.nav_cam_params);
+                                          const GraphLocalizerSimulator& graph_localizer) {
+  std::vector<const SmartFactor*> smart_factors;
+  if (graph_localizer.graph_localizer()) smart_factors = SmartFactors(*(graph_localizer.graph_localizer()));
+  const auto feature_track_image_msg =
+    CreateFeatureTrackImage(image_msg, *(graph_localizer.feature_tracks()), *params_.nav_cam_params, smart_factors);
   if (!feature_track_image_msg) return;
-  SaveMsg(*image_msg, kFeatureTracksImageTopic_);
+  SaveMsg(**feature_track_image_msg, kFeatureTracksImageTopic_);
 }
 
 void GraphBag::SaveImuBiasTesterPredictedStates(
@@ -127,7 +130,7 @@ void GraphBag::Run() {
       if (params_.save_optical_flow_images) {
         const auto img_msg = live_measurement_simulator_->GetImageMessage(lc::TimeFromHeader(of_msg->header));
         if (img_msg && graph_localizer_simulator_->feature_tracks())
-          SaveOpticalFlowTracksImage(*img_msg, *(graph_localizer_simulator_->feature_tracks()));
+          SaveOpticalFlowTracksImage(*img_msg, *graph_localizer_simulator_);
       }
     }
     const auto vl_msg = live_measurement_simulator_->GetVLMessage(current_time);
