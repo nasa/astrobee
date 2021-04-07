@@ -61,15 +61,16 @@ std::vector<FactorsToAdd> ProjectionFactorAdder::AddFactors(
   // Add new feature tracks and measurements if possible
   int new_features = 0;
   for (const auto& feature_track_pair : feature_tracker_->feature_tracks()) {
-    const auto& feature_track = feature_track_pair.second;
-    if (static_cast<int>(feature_track.points.size()) >= params().min_num_measurements_for_triangulation &&
-        !graph_values_->HasFeature(feature_track.id) &&
+    const auto& feature_track = *(feature_track_pair.second);
+    if (static_cast<int>(feature_track.size()) >= params().min_num_measurements_for_triangulation &&
+        !graph_values_->HasFeature(feature_track.id()) &&
         (new_features + graph_values_->NumFeatures()) < params().max_num_features) {
       // Create new factors to add for each feature track so the graph action can act on only that
       // feature track to triangulate a new point
       FactorsToAdd projection_factors_with_new_point_to_add(GraphAction::kTriangulateNewPoint);
       const auto point_key = graph_values_->CreateFeatureKey();
-      for (const auto& feature_point : feature_track.points) {
+      for (const auto& feature_point_pair : feature_track.points()) {
+        const auto& feature_point = feature_point_pair.second;
         const KeyInfo pose_key_info(&sym::P, feature_point.timestamp);
         const KeyInfo static_point_key_info(&sym::F, feature_point.feature_id);
         const auto projection_factor = boost::make_shared<ProjectionFactor>(

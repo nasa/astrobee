@@ -21,28 +21,44 @@
 
 #include <localization_measurements/feature_point.h>
 
-#include <deque>
+#include <map>
 #include <vector>
 
 namespace graph_localizer {
-
-struct FeatureTrack {
-  localization_measurements::FeatureId id;
-  std::deque<localization_measurements::FeaturePoint> points;
-  localization_measurements::ImageId latest_image_id;
+class FeatureTrack {
+ public:
+  using Points = std::map<localization_common::Time, localization_measurements::FeaturePoint>;
+  explicit FeatureTrack(const localization_measurements::FeatureId id);
+  FeatureTrack() {}
+  void AddMeasurement(const localization_common::Time timestamp,
+                      const localization_measurements::FeaturePoint& feature_point);
+  void RemoveOldMeasurements(const localization_common::Time oldest_allowed_timestamp);
+  bool HasMeasurement(const localization_common::Time timestamp);
+  const Points& points() const;
+  const localization_measurements::FeatureId& id() const;
+  size_t size() const;
+  bool empty() const;
+  std::vector<localization_measurements::FeaturePoint> LatestPoints(const int spacing = 0) const;
+  bool SpacingFits(const int spacing, const int max_num_points) const;
+  int MaxSpacing(const int max_num_points) const;
+  int ClosestSpacing(const int ideal_spacing, const int ideal_max_num_points) const;
+  boost::optional<localization_measurements::FeaturePoint> LatestPoint() const;
+  boost::optional<localization_common::Time> PreviousTimestamp() const;
+  boost::optional<localization_common::Time> LatestTimestamp() const;
+  boost::optional<localization_common::Time> OldestTimestamp() const;
 
  private:
   // Serialization function
   friend class boost::serialization::access;
   template <class ARCHIVE>
   void serialize(ARCHIVE& ar, const unsigned int /*version*/) {
-    ar& BOOST_SERIALIZATION_NVP(id);
-    ar& BOOST_SERIALIZATION_NVP(latest_image_id);
-    ar& BOOST_SERIALIZATION_NVP(points);
+    ar& BOOST_SERIALIZATION_NVP(id_);
+    ar& BOOST_SERIALIZATION_NVP(points_);
   }
-};
 
-using FeatureTracks = std::vector<FeatureTrack>;
+  localization_measurements::FeatureId id_;
+  Points points_;
+};
 }  // namespace graph_localizer
 
 #endif  // GRAPH_LOCALIZER_FEATURE_TRACK_H_

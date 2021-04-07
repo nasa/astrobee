@@ -39,6 +39,8 @@ struct SmartProjectionFactorAdderParams : public FactorAdderParams {
   int max_num_factors;
   int min_num_points;
   int max_num_points_per_factor;
+  int measurement_spacing;
+  double feature_track_min_separation;
   bool rotation_only_fallback;
   bool splitting;
   bool scale_noise_with_num_points;

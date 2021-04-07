@@ -79,7 +79,9 @@ class GraphLocalizerWrapper {
 
   void FlightModeCallback(const ff_msgs::FlightMode& flight_mode);
 
-  boost::optional<const FeatureTrackMap&> feature_tracks() const;
+  boost::optional<const FeatureTrackIdMap&> feature_tracks() const;
+
+  boost::optional<const GraphLocalizer&> graph_localizer() const;
 
   void MarkWorldTDockForResettingIfNecessary();
 
