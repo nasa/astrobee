@@ -196,7 +196,7 @@ class PmcActuatorNodelet : public ff_util::FreeFlyerNodelet {
 
     // get minimum allowed control rate
     if (!config_params.GetPosReal("control_min_rate_hz", &control_min_rate_hz_)) {
-      ROS_FATAL("PMC Actuator: control rate not specified!");
+      ROS_FATAL("PMC Actuator: minimum control rate not specified!");
       return false;
     }
 
