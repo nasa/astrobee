@@ -37,6 +37,7 @@
 
 // Services
 #include <ff_msgs/SetBool.h>
+#include <ff_msgs/SetFloat.h>
 
 #include <cerrno>
 #include <cstring>
@@ -105,6 +106,10 @@ class PmcActuatorNodelet : public ff_util::FreeFlyerNodelet {
     // PMC enable/disable service
     srv_ = nh->advertiseService(
       SERVICE_HARDWARE_PMC_ENABLE, &PmcActuatorNodelet::EnableService, this);
+
+    // Update PMC watchdog timer timeout
+    srv_ = nh->advertiseService(
+      SERVICE_HARDWARE_PMC_MIN_RATE, &PmcActuatorNodelet::MinRateService, this);
 
     // Watchdog timer
     timer_ = nh->createTimer(
@@ -185,6 +190,12 @@ class PmcActuatorNodelet : public ff_util::FreeFlyerNodelet {
 
     // get control rate
     if (!config_params.GetPosReal("control_rate_hz", &control_rate_hz_)) {
+      ROS_FATAL("PMC Actuator: control rate not specified!");
+      return false;
+    }
+
+    // get minimum allowed control rate
+    if (!config_params.GetPosReal("control_min_rate_hz", &control_min_rate_hz_)) {
       ROS_FATAL("PMC Actuator: control rate not specified!");
       return false;
     }
@@ -468,15 +479,33 @@ class PmcActuatorNodelet : public ff_util::FreeFlyerNodelet {
     return true;
   }
 
+  // Update Minimum Control Frequency (and cutoff time)
+  bool MinRateService(ff_msgs::SetFloat::Request &req,
+                      ff_msgs::SetFloat::Response &res) {  // NOLINT
+    double new_min_rate = req.data;
+    // Check if the new rate is within the safe and default limits
+    if (new_min_rate > control_min_rate_hz_ && new_min_rate <= control_rate_hz_) {
+      watchdog_period_ = ros::Duration(20.0 / new_min_rate);  // TODO(@bcoltin): why 20.0 ?
+      timer_.setPeriod(watchdog_period_);
+      ROS_INFO("New minimum rate UPDATED.");
+      res.success = true;
+    } else {
+      ROS_INFO("Minimum rate not within the safe and default bounds.");
+      res.success = false;
+    }
+    return true;
+  }
+
  private:
   config_reader::ConfigReader config_params;       // LUA configuration reader
   ros::Subscriber sub_command_;                    // Command  flight mode sub
   ros::Publisher pub_telemetry_, pub_state_;       // Telemetry publisher
   ros::ServiceServer srv_;                         // Enable / disable service
+  ros::ServiceServer update_rate_srv_;             // Update minimum control rate service
   ros::Timer timer_;                               // Watchdog timer
   ros::Duration watchdog_period_;                  // Watchdog period
   ff_hw_msgs::PmcTelemetry telemetry_vector_;      // Telemetry message
-  uint32_t num_pmcs_;                                // Number of PMCs to control
+  uint32_t num_pmcs_;                              // Number of PMCs to control
   int sub_queue_size_;                             // Subscriber queue size
   int pub_queue_size_;                             // Publisher queue size
   std::string frame_id_;                           // Frame ID
@@ -484,6 +513,7 @@ class PmcActuatorNodelet : public ff_util::FreeFlyerNodelet {
   std::vector<int> i2c_addrs_;                     // 7-bit I2C addresses
   int i2c_retries_;                                // Number of I2C bus retries
   double control_rate_hz_;                         // Control rate in Hz.
+  double control_min_rate_hz_;                     // Control minimum allowed rate.
   int null_fan_speed_;                             // Initial fan speed.
   std::vector<int> null_nozzle_positions_;         // Initial nozzle positions
   uint8_t trims_[NUM_PMC][NUM_TRIM][NUM_NOZZLE];   // Trims for each nozzle
