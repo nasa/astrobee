@@ -56,8 +56,6 @@ class LiveMeasurementSimulator {
   boost::optional<ff_msgs::FlightMode> GetFlightModeMessage(const localization_common::Time current_time);
 
  private:
-  bool string_ends_with(const std::string& str, const std::string& ending);
-
   ff_msgs::Feature2dArray GenerateOFFeatures(const sensor_msgs::ImageConstPtr& image_msg);
 
   bool GenerateVLFeatures(const sensor_msgs::ImageConstPtr& image_msg, ff_msgs::VisualLandmarks& vl_features);
