@@ -108,7 +108,7 @@ class PmcActuatorNodelet : public ff_util::FreeFlyerNodelet {
       SERVICE_HARDWARE_PMC_ENABLE, &PmcActuatorNodelet::EnableService, this);
 
     // Update PMC watchdog timer timeout
-    srv_ = nh->advertiseService(
+    update_timeout_srv_ = nh->advertiseService(
       SERVICE_HARDWARE_PMC_TIMOUT, &PmcActuatorNodelet::IdlingTimoutService, this);
 
     // Watchdog timer
@@ -501,7 +501,7 @@ class PmcActuatorNodelet : public ff_util::FreeFlyerNodelet {
   ros::Subscriber sub_command_;                    // Command  flight mode sub
   ros::Publisher pub_telemetry_, pub_state_;       // Telemetry publisher
   ros::ServiceServer srv_;                         // Enable / disable service
-  ros::ServiceServer update_rate_srv_;             // Update minimum control rate service
+  ros::ServiceServer update_timeout_srv_;             // Update minimum control rate service
   ros::Timer timer_;                               // Watchdog timer
   ros::Duration watchdog_period_;                  // Watchdog period
   ff_hw_msgs::PmcTelemetry telemetry_vector_;      // Telemetry message
