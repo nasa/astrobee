@@ -109,7 +109,7 @@ class PmcActuatorNodelet : public ff_util::FreeFlyerNodelet {
 
     // Update PMC watchdog timer timeout
     srv_ = nh->advertiseService(
-      SERVICE_HARDWARE_PMC_MIN_RATE, &PmcActuatorNodelet::MinRateService, this);
+      SERVICE_HARDWARE_PMC_TIMOUT, &PmcActuatorNodelet::IdlingTimoutService, this);
 
     // Watchdog timer
     timer_ = nh->createTimer(
@@ -195,7 +195,7 @@ class PmcActuatorNodelet : public ff_util::FreeFlyerNodelet {
     }
 
     // get minimum allowed control rate
-    if (!config_params.GetPosReal("control_min_rate_hz", &control_min_rate_hz_)) {
+    if (!config_params.GetPosReal("max_timeout", &max_timeout_)) {
       ROS_FATAL("PMC Actuator: minimum control rate not specified!");
       return false;
     }
@@ -480,17 +480,17 @@ class PmcActuatorNodelet : public ff_util::FreeFlyerNodelet {
   }
 
   // Update Minimum Control Frequency (and cutoff time)
-  bool MinRateService(ff_msgs::SetFloat::Request &req,
+  bool IdlingTimoutService(ff_msgs::SetFloat::Request &req,
                       ff_msgs::SetFloat::Response &res) {  // NOLINT
-    double new_min_rate = req.data;
+    double new_timeout = req.data;
     // Check if the new rate is within the safe and default limits
-    if (new_min_rate > control_min_rate_hz_ && new_min_rate <= (20.0/control_rate_hz_) ) {
-      watchdog_period_ = ros::Duration(1.0/new_min_rate);
+    if (new_timeout < max_timeout_ && new_timeout => (20.0/control_rate_hz_)) {
+      watchdog_period_ = ros::Duration(new_timeout);
       timer_.setPeriod(watchdog_period_);
-      ROS_INFO("New minimum rate UPDATED.");
+      ROS_INFO("PMC idling timeout updated.");
       res.success = true;
     } else {
-      ROS_INFO("Minimum rate not within the safe and default bounds.");
+      ROS_INFO("Selected timeout is not within the safe timeout bounds.");
       res.success = false;
     }
     return true;
@@ -513,7 +513,7 @@ class PmcActuatorNodelet : public ff_util::FreeFlyerNodelet {
   std::vector<int> i2c_addrs_;                     // 7-bit I2C addresses
   int i2c_retries_;                                // Number of I2C bus retries
   double control_rate_hz_;                         // Control rate in Hz.
-  double control_min_rate_hz_;                     // Control minimum allowed rate.
+  double max_timeout_;                              // Maximum idling timeout allowed
   int null_fan_speed_;                             // Initial fan speed.
   std::vector<int> null_nozzle_positions_;         // Initial nozzle positions
   uint8_t trims_[NUM_PMC][NUM_TRIM][NUM_NOZZLE];   // Trims for each nozzle
