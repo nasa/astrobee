@@ -484,8 +484,8 @@ class PmcActuatorNodelet : public ff_util::FreeFlyerNodelet {
                       ff_msgs::SetFloat::Response &res) {  // NOLINT
     double new_min_rate = req.data;
     // Check if the new rate is within the safe and default limits
-    if (new_min_rate > control_min_rate_hz_ && new_min_rate <= control_rate_hz_) {
-      watchdog_period_ = ros::Duration(20.0 / new_min_rate);  // TODO(@bcoltin): why 20.0 ?
+    if (new_min_rate > control_min_rate_hz_ && new_min_rate <= (20.0/control_rate_hz_) ) {
+      watchdog_period_ = ros::Duration(1.0/new_min_rate);
       timer_.setPeriod(watchdog_period_);
       ROS_INFO("New minimum rate UPDATED.");
       res.success = true;
