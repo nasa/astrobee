@@ -484,7 +484,7 @@ class PmcActuatorNodelet : public ff_util::FreeFlyerNodelet {
                       ff_msgs::SetFloat::Response &res) {  // NOLINT
     double new_timeout = req.data;
     // Check if the new rate is within the safe and default limits
-    if (new_timeout < max_timeout_ && new_timeout => (20.0/control_rate_hz_)) {
+    if (new_timeout < max_timeout_ && new_timeout >= (20.0/control_rate_hz_)) {
       watchdog_period_ = ros::Duration(new_timeout);
       timer_.setPeriod(watchdog_period_);
       ROS_INFO("PMC idling timeout updated.");
