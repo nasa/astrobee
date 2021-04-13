@@ -55,7 +55,8 @@ std::vector<lm::FeaturePoint> FeatureTrack::AllowedPoints(const std::set<lc::Tim
 std::vector<lm::FeaturePoint> FeatureTrack::LatestPoints(const int spacing) const {
   std::vector<lm::FeaturePoint> latest_points;
   int i = 0;
-  for (auto point_it = points_.rbegin(); point_it != points_.rend(); ++point_it) {
+  // Start with latest points
+  for (auto point_it = points_.begin(); point_it != points_.end(); ++point_it) {
     if (i++ % (spacing + 1) != 0) continue;
     latest_points.push_back(point_it->second);
   }
