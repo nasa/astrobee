@@ -39,6 +39,7 @@ class FeatureTracker {
   // detections.
   void UpdateFeatureTracks(const localization_measurements::FeaturePoints& feature_points);
   const FeatureTrackIdMap& feature_tracks() const;
+  const std::set<localization_common::Time>& smart_factor_timestamp_allow_list() const;
   const FeatureTrackLengthMap& feature_tracks_length_ordered() const;
   int NumTracksWithAtLeastNPoints(int n) const;
   void RemoveUndetectedFeatures(const localization_common::Time& feature_point);
@@ -46,6 +47,8 @@ class FeatureTracker {
     boost::optional<localization_common::Time> oldest_allowed_time = boost::none);
   void AddOrUpdateTrack(const localization_measurements::FeaturePoint& feature_point);
   void UpdateLengthMap();
+  void UpdateAllowList(const localization_common::Time& timestamp);
+  void SlideAllowList(const localization_common::Time& oldest_allowed_time);
   boost::optional<const FeatureTrack&> LongestFeatureTrack() const;
   size_t size() const;
   bool empty() const;
@@ -66,6 +69,8 @@ class FeatureTracker {
   FeatureTrackIdMap feature_track_id_map_;
   FeatureTrackLengthMap feature_track_length_map_;
   FeatureTrackerParams params_;
+  // TODO(rsoussan): Move ths somewhere else?
+  std::set<localization_common::Time> smart_factor_timestamp_allow_list_;
 };
 }  // namespace graph_localizer
 

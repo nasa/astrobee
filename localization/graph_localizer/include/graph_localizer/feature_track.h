@@ -22,6 +22,7 @@
 #include <localization_measurements/feature_point.h>
 
 #include <map>
+#include <set>
 #include <vector>
 
 namespace graph_localizer {
@@ -38,6 +39,8 @@ class FeatureTrack {
   const localization_measurements::FeatureId& id() const;
   size_t size() const;
   bool empty() const;
+  std::vector<localization_measurements::FeaturePoint> AllowedPoints(
+    const std::set<localization_common::Time>& allowed_timestamps) const;
   std::vector<localization_measurements::FeaturePoint> LatestPoints(const int spacing = 0) const;
   bool SpacingFits(const int spacing, const int max_num_points) const;
   int MaxSpacing(const int max_num_points) const;

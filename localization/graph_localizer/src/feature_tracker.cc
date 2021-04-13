@@ -45,6 +45,19 @@ void FeatureTracker::UpdateFeatureTracks(const lm::FeaturePoints& feature_points
   const int removed_num_feature_tracks = post_add_num_feature_tracks - size();
   LogDebug("UpdateFeatureTracks: Removed feature tracks: " << removed_num_feature_tracks);
   LogDebug("UpdateFeatureTracks: Final total num feature tracks: " << size());
+  UpdateAllowList(feature_points.front().feature_id);
+}
+
+void FeatureTracker::UpdateAllowList(const lc::Time& timestamp) {
+  // Space out optical flow measurements for smart factor adder if necessary
+  static int measurement_count = 0;
+  if (measurement_count++ % (params_.smart_projection_adder_measurement_spacing + 1) != 0) return;
+  smart_factor_timestamp_allow_list_.emplace(timestamp);
+}
+
+void FeatureTracker::SlideAllowList(const lc::Time& oldest_allowed_time) {
+  smart_factor_timestamp_allow_list_.erase(smart_factor_timestamp_allow_list_.begin(),
+                                           smart_factor_timestamp_allow_list_.lower_bound(oldest_allowed_time));
 }
 
 void FeatureTracker::RemoveOldFeaturePointsAndSlideWindow(boost::optional<lc::Time> oldest_allowed_time) {
@@ -58,6 +71,7 @@ void FeatureTracker::RemoveOldFeaturePointsAndSlideWindow(boost::optional<lc::Ti
     feature_track.second->RemoveOldMeasurements(*oldest_allowed_time);
   }
 
+  SlideAllowList(*oldest_allowed_time);
   UpdateLengthMap();
 }
 
@@ -87,6 +101,10 @@ void FeatureTracker::UpdateLengthMap() {
 
 const FeatureTrackIdMap& FeatureTracker::feature_tracks() const { return feature_track_id_map_; }
 
+const std::set<lc::Time>& FeatureTracker::smart_factor_timestamp_allow_list() const {
+  return smart_factor_timestamp_allow_list_;
+}
+
 const FeatureTrackLengthMap& FeatureTracker::feature_tracks_length_ordered() const { return feature_track_length_map_; }
 
 int FeatureTracker::NumTracksWithAtLeastNPoints(int n) const {
@@ -101,6 +119,7 @@ bool FeatureTracker::empty() const { return feature_track_id_map_.empty(); }
 void FeatureTracker::Clear() {
   feature_track_id_map_.clear();
   feature_track_length_map_.clear();
+  smart_factor_timestamp_allow_list_.clear();
 }
 
 boost::optional<lc::Time> FeatureTracker::LatestTimestamp() const {

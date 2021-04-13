@@ -80,7 +80,7 @@ ff_msgs::GraphState GraphStateMsg(const lc::CombinedNavState& combined_nav_state
 
   // Set Confidence
   // Controller can't handle a confidence other than 0.  TODO(rsoussan): switch back when this is fixed.
-  loc_msg.confidence = 0; //covariances.PoseConfidence(position_log_det_threshold, orientation_log_det_threshold);
+  loc_msg.confidence = 0;  // covariances.PoseConfidence(position_log_det_threshold, orientation_log_det_threshold);
 
   // Set Graph Feature Counts/Information
   loc_msg.num_detected_of_features = detected_feature_counts.of;
