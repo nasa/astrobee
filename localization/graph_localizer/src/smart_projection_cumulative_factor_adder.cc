@@ -69,7 +69,7 @@ std::vector<FactorsToAdd> SmartProjectionCumulativeFactorAdder::AddFactors() {
       const double average_distance_from_mean = AverageDistanceFromMean(feature_track.second->points());
       if (ValidPointSet(points.size(), average_distance_from_mean, params().min_avg_distance_from_mean,
                         params().min_num_points) &&
-          smart_factors_to_add.size() < params().max_num_factors) {
+          static_cast<int>(smart_factors_to_add.size()) < params().max_num_factors) {
         AddSmartFactor(points, smart_factors_to_add);
       }
     }

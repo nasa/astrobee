@@ -42,10 +42,10 @@ void FeatureTracker::UpdateFeatureTracks(const lm::FeaturePoints& feature_points
   const auto feature_points_timestamp = feature_points.front().timestamp;
   RemoveUndetectedFeatures(feature_points_timestamp);
   UpdateLengthMap();
+  UpdateAllowList(feature_points.front().timestamp);
   const int removed_num_feature_tracks = post_add_num_feature_tracks - size();
   LogDebug("UpdateFeatureTracks: Removed feature tracks: " << removed_num_feature_tracks);
   LogDebug("UpdateFeatureTracks: Final total num feature tracks: " << size());
-  UpdateAllowList(feature_points.front().feature_id);
 }
 
 void FeatureTracker::UpdateAllowList(const lc::Time& timestamp) {
