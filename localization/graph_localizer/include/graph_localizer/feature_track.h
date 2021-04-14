@@ -41,6 +41,7 @@ class FeatureTrack {
   bool empty() const;
   std::vector<localization_measurements::FeaturePoint> AllowedPoints(
     const std::set<localization_common::Time>& allowed_timestamps) const;
+  std::vector<localization_measurements::FeaturePoint> LatestPointsInWindow(const double duration) const;
   std::vector<localization_measurements::FeaturePoint> LatestPoints(const int spacing = 0) const;
   bool SpacingFits(const int spacing, const int max_num_points) const;
   int MaxSpacing(const int max_num_points) const;
