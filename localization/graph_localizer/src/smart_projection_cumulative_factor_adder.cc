@@ -89,6 +89,7 @@ std::vector<FactorsToAdd> SmartProjectionCumulativeFactorAdder::AddFactors() {
       AddFactors(feature_tracks, spacing, 0, smart_factors_to_add, added_points);
     }
   }
+  if (smart_factors_to_add.empty()) return {};
   const auto latest_timestamp = feature_tracker_->LatestTimestamp();
   if (!latest_timestamp) {
     LogError("AddFactors: Failed to get latest timestamp.");
