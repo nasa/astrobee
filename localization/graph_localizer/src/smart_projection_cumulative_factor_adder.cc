@@ -49,7 +49,7 @@ void SmartProjectionCumulativeFactorAdder::AddFactors(
     const auto points = feature_track.LatestPoints(spacing);
     // Skip already added tracks
     if (added_points.count(points.front().feature_id) > 0) continue;
-    const double average_distance_from_mean = AverageDistanceFromMean(feature_track.points());
+    const double average_distance_from_mean = AverageDistanceFromMean(points);
     if (ValidPointSet(points.size(), average_distance_from_mean, params().min_avg_distance_from_mean,
                       params().min_num_points) &&
         !TooClose(added_points, points.front(), feature_track_min_separation)) {
@@ -66,7 +66,7 @@ std::vector<FactorsToAdd> SmartProjectionCumulativeFactorAdder::AddFactors() {
   if (params().use_allowed_timestamps) {
     for (const auto& feature_track : feature_tracker_->feature_tracks()) {
       const auto points = feature_track.second->AllowedPoints(feature_tracker_->smart_factor_timestamp_allow_list());
-      const double average_distance_from_mean = AverageDistanceFromMean(feature_track.second->points());
+      const double average_distance_from_mean = AverageDistanceFromMean(points);
       if (ValidPointSet(points.size(), average_distance_from_mean, params().min_avg_distance_from_mean,
                         params().min_num_points) &&
           static_cast<int>(smart_factors_to_add.size()) < params().max_num_factors) {

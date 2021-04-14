@@ -51,7 +51,7 @@ namespace graph_localizer {
 bool ValidPointSet(const int num_points, const double average_distance_from_mean,
                    const double min_avg_distance_from_mean, const int min_num_points);
 
-double AverageDistanceFromMean(const FeatureTrack::Points& points);
+double AverageDistanceFromMean(const std::vector<localization_measurements::FeaturePoint>& points);
 
 bool ValidVLMsg(const ff_msgs::VisualLandmarks& visual_landmarks_msg, const int min_num_landmarks);
 

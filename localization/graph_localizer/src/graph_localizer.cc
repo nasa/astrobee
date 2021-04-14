@@ -310,7 +310,9 @@ void GraphLocalizer::CheckForStandstill() {
   double total_average_distance_from_mean = 0;
   int num_valid_feature_tracks = 0;
   for (const auto& feature_track : feature_tracker_->feature_tracks()) {
-    const double average_distance_from_mean = AverageDistanceFromMean(feature_track.second->points());
+    // TODO(rsoussan): Use allowed points or all points?
+    const double average_distance_from_mean = AverageDistanceFromMean(
+      feature_track.second->AllowedPoints(feature_tracker_->smart_factor_timestamp_allow_list()));
     // Only consider long enough feature tracks for standstill candidates
     if (static_cast<int>(feature_track.second->size()) >= params_.standstill_min_num_points_per_track) {
       total_average_distance_from_mean += average_distance_from_mean;
