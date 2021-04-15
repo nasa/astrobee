@@ -28,6 +28,7 @@
 #include <rosbag/bag.h>
 #include <sensor_msgs/Image.h>
 
+#include <string>
 #include <vector>
 
 namespace graph_bag {

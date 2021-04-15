@@ -28,6 +28,7 @@
 
 #include <deque>
 #include <map>
+#include <set>
 
 namespace graph_localizer {
 using FeatureTrackIdMap = std::map<localization_measurements::FeatureId, std::shared_ptr<FeatureTrack>>;
