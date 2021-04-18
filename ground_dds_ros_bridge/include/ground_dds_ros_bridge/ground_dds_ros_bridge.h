@@ -31,6 +31,7 @@
 #include "ground_dds_ros_bridge/rapid_access_control_state.h"
 #include "ground_dds_ros_bridge/rapid_guest_science_data.h"
 #include "ground_dds_ros_bridge/rapid_image.h"
+#include "ground_dds_ros_bridge/rapid_position.h"
 #include "ground_dds_ros_bridge/rapid_sub_ros_pub.h"
 #include "ground_dds_ros_bridge/ros_command.h"
 #include "ground_dds_ros_bridge/ros_sub_rapid_pub.h"
@@ -70,6 +71,8 @@ class GroundDdsRosBridge {
                                     const std::string& name);
   bool BuildGuestScienceDataToRos(const std::string& pub_topic,
                                   const std::string& name);
+  bool BuildPositionToOdom(const std::string& pub_topic,
+                           const std::string& name);
   bool BuildSensorImageToRos(const std::string& pub_topic,
                              const std::string& name);
 

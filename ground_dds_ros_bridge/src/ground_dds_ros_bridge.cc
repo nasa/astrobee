@@ -108,6 +108,26 @@ bool GroundDdsRosBridge::BuildGuestScienceDataToRos(
   return true;
 }
 
+bool GroundDdsRosBridge::BuildPositionToOdom(const std::string& pub_topic,
+                                             const std::string& name) {
+  std::string sub_topic;
+  bool use;
+
+  if (ReadTopicInfo(name, "sub", sub_topic, use)) {
+    if (use) {
+      ff::RapidSubRosPubPtr position_to_odom(
+                                          new ff::RapidPositionToRos(sub_topic,
+                                                                     pub_topic,
+                                                                     nh_));
+      components_++;
+      rapid_sub_ros_pubs_.push_back(position_to_odom);
+    }
+  } else {
+    return false;
+  }
+
+  return true;
+}
 
 bool GroundDdsRosBridge::BuildSensorImageToRos(const std::string& pub_topic,
                                                const std::string& name) {
@@ -331,6 +351,11 @@ bool GroundDdsRosBridge::ReadParams() {
 
   // rapid_image_ros_compressed_dock_cam_image => RIRCDCI
   if (!BuildSensorImageToRos((ns + TOPIC_HARDWARE_DOCK_CAM), "RIRCDCI")) {
+    return false;
+  }
+
+  // rapid_position_ros_odom => RPRO
+  if (!BuildPositionToOdom((ns + TOPIC_GNC_EKF), "RPRO")) {
     return false;
   }
 
