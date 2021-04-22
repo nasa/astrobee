@@ -24,12 +24,15 @@
 
 #include <glog/logging.h>
 
+#include <std_msgs/Empty.h>
+
 namespace ground_truth_localizer {
 namespace lc = localization_common;
-GroundTruthLocalizerNodelet::GroundTruthLocalizerNodelet()
-    : ff_util::FreeFlyerNodelet(NODE_SIM_LOC, true), platform_name_(GetPlatform()) {}
+GroundTruthLocalizerNodelet::GroundTruthLocalizerNodelet() : ff_util::FreeFlyerNodelet(NODE_SIM_LOC, true) {}
 
 void GroundTruthLocalizerNodelet::Initialize(ros::NodeHandle* nh) {
+  platform_name_ = GetPlatform();
+  platform_name_ = (platform_name_.empty() ? "" : platform_name_ + "/");
   ff_common::InitFreeFlyerApplication(getMyArgv());
   SubscribeAndAdvertise(nh);
 }
@@ -39,6 +42,7 @@ void GroundTruthLocalizerNodelet::SubscribeAndAdvertise(ros::NodeHandle* nh) {
   twist_pub_ = nh->advertise<geometry_msgs::TwistStamped>(TOPIC_LOCALIZATION_TWIST, 1);
   state_pub_ = nh->advertise<ff_msgs::EkfState>(TOPIC_GNC_EKF, 1);
   heartbeat_pub_ = nh->advertise<ff_msgs::Heartbeat>(TOPIC_HEARTBEAT, 5, true);
+  reset_pub_ = nh->advertise<std_msgs::Empty>(TOPIC_GNC_EKF_RESET, 10);
 
   pose_sub_ = nh->subscribe(TOPIC_LOCALIZATION_TRUTH, 1, &GroundTruthLocalizerNodelet::PoseCallback, this,
                             ros::TransportHints().tcpNoDelay());
@@ -46,10 +50,20 @@ void GroundTruthLocalizerNodelet::SubscribeAndAdvertise(ros::NodeHandle* nh) {
                              ros::TransportHints().tcpNoDelay());
 
   input_mode_srv_ = nh->advertiseService(SERVICE_GNC_EKF_SET_INPUT, &GroundTruthLocalizerNodelet::SetMode, this);
+  bias_srv_ =
+    nh->advertiseService(SERVICE_GNC_EKF_INIT_BIAS, &GroundTruthLocalizerNodelet::DefaultServiceResponse, this);
+  bias_from_file_srv_ = nh->advertiseService(SERVICE_GNC_EKF_INIT_BIAS_FROM_FILE,
+                                             &GroundTruthLocalizerNodelet::DefaultServiceResponse, this);
+  reset_srv_ = nh->advertiseService(SERVICE_GNC_EKF_RESET, &GroundTruthLocalizerNodelet::DefaultServiceResponse, this);
 }
 
 bool GroundTruthLocalizerNodelet::SetMode(ff_msgs::SetEkfInput::Request& req, ff_msgs::SetEkfInput::Response& res) {
   input_mode_ = req.mode;
+  return true;
+}
+
+bool GroundTruthLocalizerNodelet::DefaultServiceResponse(std_srvs::Empty::Request& req,
+                                                         std_srvs::Empty::Response& res) {
   return true;
 }
 
