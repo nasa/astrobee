@@ -32,8 +32,7 @@ namespace graph_localizer {
 namespace lc = localization_common;
 namespace mc = msg_conversions;
 
-GraphLocalizerNodelet::GraphLocalizerNodelet()
-    : ff_util::FreeFlyerNodelet(NODE_GRAPH_LOC, true) {
+GraphLocalizerNodelet::GraphLocalizerNodelet() : ff_util::FreeFlyerNodelet(NODE_GRAPH_LOC, true) {
   private_nh_.setCallbackQueue(&private_queue_);
   heartbeat_.node = GetName();
   heartbeat_.nodelet_manager = ros::this_node::getName();

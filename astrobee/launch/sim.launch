@@ -221,4 +221,7 @@
     </include>
   </group>
 
+  <!-- Default call initialize bias so config file is created if not already present -->
+  <node pkg="rosservice" type="rosservice" name="imu_calibration" args="call --wait /gnc/ekf/init_bias" />
+
 </launch>
