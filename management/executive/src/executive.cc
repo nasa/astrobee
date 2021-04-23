@@ -1243,7 +1243,7 @@ bool Executive::ConfigureMobility(std::string const& cmd_id) {
   // This function is not used for the first segment of a plan so always disable
   // move to start
   choreographer_cfg_->Set<bool>("enable_bootstrapping", false);
-  choreographer_cfg_->Set<bool>("enable_replanning", false);
+  choreographer_cfg_->Set<bool>("enable_replanning", true);
 
   // Mapper
   mapper_cfg_->Set<double>("inflate_radius", agent_state_.collision_distance);
@@ -1308,7 +1308,7 @@ bool Executive::ConfigureMobility(bool move_to_start,
                                                 agent_state_.immediate_enabled);
   choreographer_cfg_->Set<std::string>("planner", agent_state_.planner);
   choreographer_cfg_->Set<bool>("enable_bootstrapping", move_to_start);
-  choreographer_cfg_->Set<bool>("enable_replanning", false);
+  choreographer_cfg_->Set<bool>("enable_replanning", true);
 
   // Mapper
   mapper_cfg_->Set<double>("inflate_radius", agent_state_.collision_distance);

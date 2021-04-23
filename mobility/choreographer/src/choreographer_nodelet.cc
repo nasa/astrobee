@@ -279,7 +279,7 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
         if (event == GOAL_CANCEL)
           return Result(RESPONSE::CANCELLED);
         int max_attempts = cfg_.Get<int>("max_replanning_attempts");
-        NODELET_INFO_STREAM("State Replanning: Replanning failed %i / %i times" <<
+        NODELET_DEBUG_STREAM("State Replanning: Replanning failed %i / %i times" <<
           replan_attempts_ << max_attempts);
         if (replan_attempts_ >= max_attempts) {
           return Result(RESPONSE::REPLAN_FAILED);
@@ -291,6 +291,7 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
         }
         states_.insert(states_.begin(), current_pose);
         replan_attempts_++;
+        ros::Duration(1).sleep(); // sleep for a second
         if (!Plan(states_)) {
           return Result(RESPONSE::PLAN_FAILED);
         }
