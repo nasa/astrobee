@@ -35,7 +35,8 @@ class TimestampedNodeUpdater {
   virtual void AddInitialValuesAndPriors(const NodeType& node, const NoiseType& noise,
                                          gtsam::NonlinearFactorGraph& graph, GraphValues& graph_values) = 0;
 
-  virtual void AddPriors(const NodeType& node, const NoiseType& noise, gtsam::NonlinearFactorGraph& factors) = 0;
+  virtual void AddPriors(const NodeType& node, const NoiseType& noise, const GraphValues& graph_values,
+                         gtsam::NonlinearFactorGraph& factors) = 0;
 
   virtual void AddFactors(const FactorToAdd& measurement, gtsam::NonlinearFactorGraph& graph,
                           GraphValues& graph_values) = 0;

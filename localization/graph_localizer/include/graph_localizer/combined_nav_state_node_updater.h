@@ -28,12 +28,12 @@ class CombinedNavStateNodeUpdater
  public:
   explicit CombinedNavStateNodeUpdater(const CombinedNavStateNodeUpdaterParams& params);
 
-  void AddInitialValuesAndPriors(const localization_common::CombinedNavState& combined_nav_state,
-                                 const localization_common::CombinedNavStateNoise& combined_nav_state_noise,
+  void AddInitialValuesAndPriors(const localization_common::CombinedNavState& global_N_body,
+                                 const localization_common::CombinedNavStateNoise& noise,
                                  gtsam::NonlinearFactorGraph& graph, GraphValues& graph_values) final;
 
-  void AddPriors(const localization_common::CombinedNavState& combined_nav_state,
-                 const localization_common::CombinedNavStateNoise& combined_nav_state_noise,
+  void AddPriors(const localization_common::CombinedNavState& global_N_body,
+                 const localization_common::CombinedNavStateNoise& noise, const GraphValues& graph_values,
                  gtsam::NonlinearFactorGraph& factors) final;
 
   void AddFactors(const FactorToAdd& measurement, gtsam::NonlinearFactorGraph& graph, GraphValues& graph_values) final;
@@ -42,6 +42,9 @@ class CombinedNavStateNodeUpdater
                    GraphValues& graph_values) final;
 
  private:
+  int GenerateKeyIndex();
+
+  int key_index_;
   Params params_;
 }
 };  // namespace graph_localizer
