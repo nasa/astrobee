@@ -153,28 +153,8 @@ class GraphLocalizer {
 
   void UpdatePointPriors(const gtsam::Marginals& marginals);
 
-  void RemovePriors(const int key_index);
-
-  // Integrates latest imu measurements up to timestamp and adds imu factor and
-  // new combined nav state
-  bool CreateAndAddLatestImuFactorAndCombinedNavState(const localization_common::Time timestamp);
-
-  bool AddOrSplitImuFactorIfNeeded(const localization_common::Time timestamp);
-
-  bool SplitOldImuFactorAndAddCombinedNavState(const localization_common::Time timestamp);
-
-  void AddStartingPriors(const localization_common::CombinedNavState& global_N_body_start, const int key_index,
-                         gtsam::NonlinearFactorGraph& graph);
-
-  void AddPriors(const localization_common::CombinedNavState& global_N_body,
-                 const localization_common::CombinedNavStateNoise& noise, const int key_index,
-                 gtsam::NonlinearFactorGraph& graph);
-
   boost::optional<std::pair<localization_common::CombinedNavState, localization_common::CombinedNavStateCovariances>>
   LatestCombinedNavStateAndCovariances(const gtsam::Marginals& marginals) const;
-
-  bool CreateAndAddImuFactorAndPredictedCombinedNavState(const localization_common::CombinedNavState& global_N_body,
-                                                         const gtsam::PreintegratedCombinedMeasurements& pim);
 
   void BufferFactors(const std::vector<FactorsToAdd>& factors_to_add_vec);
 
@@ -193,9 +173,6 @@ class GraphLocalizer {
   bool MeasurementRecentEnough(const localization_common::Time timestamp) const;
 
   void RemoveOldBufferedFactors(const localization_common::Time oldest_allowed_timestamp);
-
-  std::vector<localization_common::Time> TimestampsToAdd(const localization_common::Time timestamp,
-                                                         const localization_common::Time last_added_timestamp);
 
   template <typename FactorType>
   void DeleteFactors() {
