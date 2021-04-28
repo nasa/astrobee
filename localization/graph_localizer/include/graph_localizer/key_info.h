@@ -27,30 +27,34 @@
 #include <vector>
 
 namespace graph_localizer {
+
+// TODO(rsoussan): Generalize this better
+enum class NodeUpdater { CombinedNavState, FeaturePoint };
+
 using KeyCreatorFunction = std::function<gtsam::Key(std::uint64_t)>;
 class KeyInfo {
  public:
-  KeyInfo(KeyCreatorFunction key_creator_function, const localization_common::Time timestamp)
-      : key_creator_function_(key_creator_function), timestamp_(timestamp), static_(false) {}
+  KeyInfo(KeyCreatorFunction key_creator_function, const NodeUpdater node_updater,
+          const localization_common::Time timestamp)
+      : key_creator_function_(key_creator_function), node_updater_(node_updater), timestamp_(timestamp) {}
   // Use for static keys
   // TODO(rsoussan): Clean up this interface, use inheritance instead?
-  KeyInfo(KeyCreatorFunction key_creator_function, const int id)
-      : key_creator_function_(key_creator_function), timestamp_(0), id_(id), static_(true) {}
+  KeyInfo(KeyCreatorFunction key_creator_function, const NodeUpdater node_updater, const int id)
+      : key_creator_function_(key_creator_function), node_updater_(node_updater), timestamp_(0), id_(id) {}
   gtsam::Key UninitializedKey() const { return key_creator_function_(0); }
   gtsam::Key MakeKey(const std::uint64_t key_index) const { return key_creator_function_(key_index); }
   static gtsam::Key UninitializedKey(KeyCreatorFunction key_creator_function) { return key_creator_function(0); }
   KeyCreatorFunction key_creator_function() const { return key_creator_function_; }
   localization_common::Time timestamp() const { return timestamp_; }
-  bool is_static() const { return static_; }
-  // TODO(rsoussan): This is only available for static keys, clean this up
+  // TODO(rsoussan): This is only available for non-timestamped keys, clean this up
   int id() const { return id_; }
+  NodeUpdater node_updater() const { return node_updater_; }
 
  private:
   KeyCreatorFunction key_creator_function_;
+  NodeUpdater node_updater_;
   localization_common::Time timestamp_;
   int id_;
-  // Static (not changing with time) key
-  bool static_;
 };
 
 using KeyInfos = std::vector<KeyInfo>;

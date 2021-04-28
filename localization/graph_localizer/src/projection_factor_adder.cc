@@ -39,8 +39,8 @@ std::vector<FactorsToAdd> ProjectionFactorAdder::AddFactors(
   FactorsToAdd projection_factors_to_add;
   for (const auto& feature_point : feature_points_measurement.feature_points) {
     if (graph_values_->HasFeature(feature_point.feature_id)) {
-      const KeyInfo pose_key_info(&sym::P, feature_point.timestamp);
-      const KeyInfo static_point_key_info(&sym::F, feature_point.feature_id);
+      const KeyInfo pose_key_info(&sym::P, NodeUpdater::CombinedNavState, feature_point.timestamp);
+      const KeyInfo static_point_key_info(&sym::F, NodeUpdater::FeaturePoint, feature_point.feature_id);
       const auto point_key = graph_values_->FeatureKey(feature_point.feature_id);
       if (!point_key) {
         LogError("AddFactors: Failed to get point key.");
@@ -71,8 +71,8 @@ std::vector<FactorsToAdd> ProjectionFactorAdder::AddFactors(
       const auto point_key = graph_values_->CreateFeatureKey();
       for (const auto& feature_point_pair : feature_track.points()) {
         const auto& feature_point = feature_point_pair.second;
-        const KeyInfo pose_key_info(&sym::P, feature_point.timestamp);
-        const KeyInfo static_point_key_info(&sym::F, feature_point.feature_id);
+        const KeyInfo pose_key_info(&sym::P, NodeUpdater::CombinedNavState, feature_point.timestamp);
+        const KeyInfo static_point_key_info(&sym::F, NodeUpdater::FeaturePoint, feature_point.feature_id);
         const auto projection_factor = boost::make_shared<ProjectionFactor>(
           feature_point.image_point, Robust(params().cam_noise, params().huber_k), pose_key_info.UninitializedKey(),
           point_key, params().cam_intrinsics, params().body_T_cam);
