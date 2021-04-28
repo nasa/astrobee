@@ -26,8 +26,10 @@
 
 namespace graph_localizer {
 namespace sym = gtsam::symbol_shorthand;
-explicit CombinedNavStateNodeUpdater::CombinedNavStateNodeUpdater(const CombinedNavStateNodeUpdaterParams& params)
-    : params_(params) {}
+explicit CombinedNavStateNodeUpdater::CombinedNavStateNodeUpdater(
+  const CombinedNavStateNodeUpdaterParams& params,
+  std::shared_ptr<imu_integration::LatestImuIntegrator> latest_imu_integrator)
+    : params_(params), latest_imu_integrator_(std::move(latest_imu_integrator)) {}
 
 void CombinedNavStateNodeUpdater::AddInitialValuesAndPriors(gtsam::NonlinearFactorGraph& graph,
                                                             GraphValues& graph_values) {
@@ -99,7 +101,7 @@ bool CombinedNavStateNodeUpdater::AddOrSplitImuFactorIfNeeded(const lc::Time tim
 bool CombinedNavStateNodeUpdater::CreateAndAddLatestImuFactorAndCombinedNavState(const lc::Time timestamp,
                                                                                  gtsam::NonlinearFactorGraph& factors,
                                                                                  GraphValues& graph_values) {
-  if (!latest_imu_integrator_.IntegrateLatestImuMeasurements(timestamp)) {
+  if (!latest_imu_integrator_->IntegrateLatestImuMeasurements(timestamp)) {
     LogError("CreateAndAddLatestImuFactorAndCombinedNavState: Failed to integrate latest imu measurements.");
     return false;
   }
@@ -109,7 +111,7 @@ bool CombinedNavStateNodeUpdater::CreateAndAddLatestImuFactorAndCombinedNavState
     LogError("CreateAndAddLatestImuFactorAndCombinedNavState: Failed to get latest combined nav state.");
     return false;
   }
-  if (!CreateAndAddImuFactorAndPredictedCombinedNavState(*latest_combined_nav_state, latest_imu_integrator_.pim(),
+  if (!CreateAndAddImuFactorAndPredictedCombinedNavState(*latest_combined_nav_state, latest_imu_integrator_->pim(),
                                                          factors, graph_values)) {
     LogError("CreateAndAddLatestImuFactorAndCombinedNavState: Failed to create and add imu factor.");
     return false;
@@ -121,7 +123,7 @@ bool CombinedNavStateNodeUpdater::CreateAndAddLatestImuFactorAndCombinedNavState
     return false;
   }
 
-  latest_imu_integrator_.ResetPimIntegrationAndSetBias(latest_bias->first);
+  latest_imu_integrator_->ResetPimIntegrationAndSetBias(latest_bias->first);
   return true;
 }
 
@@ -192,8 +194,8 @@ bool CombinedNavStateUpdater::SplitOldImuFactorAndAddCombinedNavState(const lc::
   }
 
   // Add first factor and new nav state at timestamp
-  auto first_integrated_pim = latest_imu_integrator_.IntegratedPim(*lower_bound_bias, lower_bound_time, timestamp,
-                                                                   latest_imu_integrator_.pim_params());
+  auto first_integrated_pim = latest_imu_integrator_->IntegratedPim(*lower_bound_bias, lower_bound_time, timestamp,
+                                                                    latest_imu_integrator_->pim_params());
   if (!first_integrated_pim) {
     LogError("SplitOldImuFactorAndAddCombinedNavState: Failed to create first integrated pim.");
     return false;
@@ -212,8 +214,8 @@ bool CombinedNavStateUpdater::SplitOldImuFactorAndAddCombinedNavState(const lc::
 
   // Add second factor, use lower_bound_bias as starting bias since that is the
   // best estimate available
-  auto second_integrated_pim = latest_imu_integrator_.IntegratedPim(*lower_bound_bias, timestamp, upper_bound_time,
-                                                                    latest_imu_integrator_.pim_params());
+  auto second_integrated_pim = latest_imu_integrator_->IntegratedPim(*lower_bound_bias, timestamp, upper_bound_time,
+                                                                     latest_imu_integrator_->pim_params());
   if (!second_integrated_pim) {
     LogError("SplitOldImuFactorAndAddCombinedNavState: Failed to create second integrated pim.");
     return false;

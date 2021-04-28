@@ -20,13 +20,15 @@
 #define GRAPH_LOCALIZER_COMBINED_NAV_STATE_NODE_UPDATER_H_
 
 #include <graph_localizer/timestamped_node_updater.h>
+#include <imu_integration/latest_imu_integrator.h>
 #include <localization_common/combined_nav_state.h>
 
 namespace graph_localizer {
 class CombinedNavStateNodeUpdater
     : public TimestampedNodeUpdater<localization_common::CombinedNavState, localization_common::CombinedNavStateNoise> {
  public:
-  explicit CombinedNavStateNodeUpdater(const CombinedNavStateNodeUpdaterParams& params);
+  CombinedNavStateNodeUpdater(const CombinedNavStateNodeUpdaterParams& params,
+                              std::shared_ptr<imu_integration::LatestImuIntegrator> latest_imu_integrator);
 
   void AddInitialValuesAndPriors(gtsam::NonlinearFactorGraph& graph, GraphValues& graph_values);
 
@@ -58,6 +60,7 @@ class CombinedNavStateNodeUpdater
  private:
   int GenerateKeyIndex();
 
+  std::shared_ptr<imu_integration::LatestImuIntegrator> latest_imu_integrator_;
   int key_index_;
   Params params_;
 }
