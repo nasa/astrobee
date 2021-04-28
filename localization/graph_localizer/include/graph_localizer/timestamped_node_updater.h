@@ -22,14 +22,13 @@
 #include <graph_localizer/factor_to_add.h>
 #include <graph_localizer/graph_values.h>
 
+#include <gtsam/nonlinear/Marginals.h>
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
 
 namespace graph_localizer {
-template <typename NodeType, typename NoiseType, typename Params>
+template <typename NodeType, typename NoiseType>
 class TimestampedNodeUpdater {
  public:
-  explicit TimestampedNodeUpdater(const Params& params) : params_(params) {}
-
   virtual ~TimestampedNodeUpdater() {}
 
   virtual void AddInitialValuesAndPriors(const NodeType& node, const NoiseType& noise,
@@ -41,12 +40,9 @@ class TimestampedNodeUpdater {
   virtual bool Update(const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors,
                       GraphValues& graph_values) = 0;
 
-  virtual void SlideWindow(const localization_common::Timestamp oldest_allowed_timestamp,
+  virtual bool SlideWindow(const localization_common::Time oldest_allowed_timestamp,
                            const boost::optional<gtsam::Marginals>& marginals, const double huber_k,
                            gtsam::NonlinearFactorGraph& factors, GraphValues& graph_values) = 0;
-
- private:
-  Params params_;
 };
 }  // namespace graph_localizer
 

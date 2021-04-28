@@ -17,6 +17,9 @@
  */
 
 #include <graph_localizer/combined_nav_state_node_updater.h>
+#include <graph_localizer/loc_pose_factor.h>
+#include <graph_localizer/utilities.h>
+#include <imu_integration/utilities.h>
 
 #include <gtsam/geometry/Pose3.h>
 #include <gtsam/inference/Symbol.h>
@@ -25,30 +28,32 @@
 #include <gtsam/slam/PriorFactor.h>
 
 namespace graph_localizer {
+namespace ii = imu_integration;
+namespace lc = localization_common;
 namespace sym = gtsam::symbol_shorthand;
-explicit CombinedNavStateNodeUpdater::CombinedNavStateNodeUpdater(
+CombinedNavStateNodeUpdater::CombinedNavStateNodeUpdater(
   const CombinedNavStateNodeUpdaterParams& params,
   std::shared_ptr<imu_integration::LatestImuIntegrator> latest_imu_integrator)
-    : params_(params), latest_imu_integrator_(std::move(latest_imu_integrator)) {}
+    : params_(params), latest_imu_integrator_(std::move(latest_imu_integrator)), key_index_(0) {}
 
-void CombinedNavStateNodeUpdater::AddInitialValuesAndPriors(gtsam::NonlinearFactorGraph& graph,
+void CombinedNavStateNodeUpdater::AddInitialValuesAndPriors(gtsam::NonlinearFactorGraph& factors,
                                                             GraphValues& graph_values) {
-  AddInitialValuesAndPriors(params_.global_N_body_start, params_.global_N_body_start_noise, graph, graph_values);
+  AddInitialValuesAndPriors(params_.global_N_body_start, params_.global_N_body_start_noise, factors, graph_values);
 }
 
 void CombinedNavStateNodeUpdater::AddInitialValuesAndPriors(const localization_common::CombinedNavState& global_N_body,
                                                             const localization_common::CombinedNavStateNoise& noise,
-                                                            gtsam::NonlinearFactorGraph& graph,
+                                                            gtsam::NonlinearFactorGraph& factors,
                                                             GraphValues& graph_values) {
   const int key_index = GenerateKeyIndex();
-  graph_values_->AddCombinedNavState(global_N_body, key_index);
-  AddPriors(global_N_body, noise, graph_values, graph);
+  graph_values.AddCombinedNavState(global_N_body, key_index);
+  AddPriors(global_N_body, noise, graph_values, factors);
 }
 
 void CombinedNavStateNodeUpdater::AddPriors(const localization_common::CombinedNavState& global_N_body,
                                             const localization_common::CombinedNavStateNoise& noise,
                                             const GraphValues& graph_values, gtsam::NonlinearFactorGraph& factors) {
-  const auto key_index = graph_values_.KeyIndex(global_N_body.timestamp());
+  const auto key_index = graph_values.KeyIndex(global_N_body.timestamp());
   if (!key_index) {
     LogError("AddPriors: Failed to get key index.");
     return;
@@ -64,10 +69,10 @@ void CombinedNavStateNodeUpdater::AddPriors(const localization_common::CombinedN
   factors.push_back(bias_prior_factor);
 }
 
-void CombinedNavStateNodeUpdater::SlideWindow(const localization_common::Timestamp oldest_allowed_timestamp,
+bool CombinedNavStateNodeUpdater::SlideWindow(const localization_common::Time oldest_allowed_timestamp,
                                               const boost::optional<gtsam::Marginals>& marginals, const double huber_k,
                                               gtsam::NonlinearFactorGraph& factors, GraphValues& graph_values) {
-  graph_values.RemoveOldCombinedNavStates(oldest_allowed_time);
+  graph_values.RemoveOldCombinedNavStates(oldest_allowed_timestamp);
   if (params_.add_priors) {
     // Add prior to oldest nav state using covariances from last round of
     // optimization
@@ -79,7 +84,7 @@ void CombinedNavStateNodeUpdater::SlideWindow(const localization_common::Timesta
 
     LogDebug("SlideWindow: Oldest state time: " << global_N_body_oldest->timestamp());
 
-    const auto key_index = graph_values_->OldestCombinedNavStateKeyIndex();
+    const auto key_index = graph_values.OldestCombinedNavStateKeyIndex();
     if (!key_index) {
       LogError("SlideWindow: Failed to get oldest combined nav state key index.");
       return false;
@@ -97,17 +102,17 @@ void CombinedNavStateNodeUpdater::SlideWindow(const localization_common::Timesta
         Robust(gtsam::noiseModel::Gaussian::Covariance(marginals->marginalCovariance(sym::V(*key_index))), huber_k);
       noise.bias_noise =
         Robust(gtsam::noiseModel::Gaussian::Covariance(marginals->marginalCovariance(sym::B(*key_index))), huber_k);
-      AddPriors(*global_N_body_oldest, noise, *key_index, graph_);
+      AddPriors(*global_N_body_oldest, noise, graph_values, factors);
     } else {
       // TODO(rsoussan): Add seperate marginal fallback sigmas instead of relying on starting prior sigmas
-      AddPriors(params_.global_N_body_start, params_.global_N_body_start_noise, graph_values, graph);
+      AddPriors(params_.global_N_body_start, params_.global_N_body_start_noise, graph_values, factors);
     }
   }
 
   return true;
 }
 
-void CombinedNavStateUpdater::RemovePriors(const int key_index, gtsam::NonlinearFactorGraph& factors) {
+void CombinedNavStateNodeUpdater::RemovePriors(const int key_index, gtsam::NonlinearFactorGraph& factors) {
   int removed_factors = 0;
   for (auto factor_it = factors.begin(); factor_it != factors.end();) {
     bool erase_factor = false;
@@ -136,11 +141,11 @@ void CombinedNavStateUpdater::RemovePriors(const int key_index, gtsam::Nonlinear
   LogDebug("RemovePriors: Erase " << removed_factors << " factors.");
 }
 
-int CombinedNavStateNodeUpdater::GenerateKeyIndex() { return key_index++; }
+int CombinedNavStateNodeUpdater::GenerateKeyIndex() { return key_index_++; }
 
 bool CombinedNavStateNodeUpdater::Update(const lc::Time timestamp, gtsam::NonlinearFactorGraph& factors,
                                          GraphValues& graph_values) {
-  AddOrSplitImuFactorIfNeeded(timestamp, factors, graph_values);
+  return AddOrSplitImuFactorIfNeeded(timestamp, factors, graph_values);
 }
 
 bool CombinedNavStateNodeUpdater::AddOrSplitImuFactorIfNeeded(const lc::Time timestamp,
@@ -199,7 +204,7 @@ bool CombinedNavStateNodeUpdater::CreateAndAddLatestImuFactorAndCombinedNavState
   return true;
 }
 
-bool CombinedNavStateUpdater::CreateAndAddImuFactorAndPredictedCombinedNavState(
+bool CombinedNavStateNodeUpdater::CreateAndAddImuFactorAndPredictedCombinedNavState(
   const lc::CombinedNavState& global_N_body, const gtsam::PreintegratedCombinedMeasurements& pim,
   gtsam::NonlinearFactorGraph& factors, GraphValues& graph_values) {
   const auto key_index_0 = graph_values.KeyIndex(global_N_body.timestamp());
@@ -216,9 +221,9 @@ bool CombinedNavStateUpdater::CreateAndAddImuFactorAndPredictedCombinedNavState(
   return true;
 }
 
-bool CombinedNavStateUpdater::SplitOldImuFactorAndAddCombinedNavState(const lc::Time timestamp,
-                                                                      gtsam::NonlinearFactorGraph& factors,
-                                                                      GraphValues& graph_values) {
+bool CombinedNavStateNodeUpdater::SplitOldImuFactorAndAddCombinedNavState(const lc::Time timestamp,
+                                                                          gtsam::NonlinearFactorGraph& factors,
+                                                                          GraphValues& graph_values) {
   const auto timestamp_bounds = graph_values.LowerAndUpperBoundTimestamp(timestamp);
   if (!timestamp_bounds.first || !timestamp_bounds.second) {
     LogError("SplitOldImuFactorAndAddCombinedNavState: Failed to get upper and lower bound timestamp.");
@@ -279,7 +284,8 @@ bool CombinedNavStateUpdater::SplitOldImuFactorAndAddCombinedNavState(const lc::
     return false;
   }
 
-  if (!CreateAndAddImuFactorAndPredictedCombinedNavState(*lower_bound_combined_nav_state, *first_integrated_pim)) {
+  if (!CreateAndAddImuFactorAndPredictedCombinedNavState(*lower_bound_combined_nav_state, *first_integrated_pim,
+                                                         factors, graph_values)) {
     LogError("SplitOldImuFactorAndAddCombinedNavState: Failed to create and add imu factor.");
     return false;
   }
