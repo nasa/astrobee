@@ -59,7 +59,7 @@ namespace lm = localization_measurements;
 
 GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
     : feature_tracker_(new FeatureTracker(params.feature_tracker)),
-      latest_imu_integrator_(new LatestImuIntegrator(params.graph_initializer)),
+      latest_imu_integrator_(new ii::LatestImuIntegrator(params.graph_initializer)),
       graph_values_(new GraphValues(params.graph_values)),
       log_on_destruction_(true),
       params_(params) {
@@ -717,6 +717,8 @@ int GraphLocalizer::AddBufferedFactors() {
 }
 
 bool GraphLocalizer::UpdateNodes(const KeyInfo& key_info) {
+  // Do nothing for static nodes
+  if (key_info.is_static()) return true;
   switch (key_info.node_updater()) {
     case NodeUpdater::CombinedNavState:
       return combined_nav_state_node_updater_->Update(key_info.timestamp(), graph_, *graph_values_);
