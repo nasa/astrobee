@@ -433,6 +433,7 @@
 #define SERVICE_HARDWARE_LIGHT_AFT_CONTROL          "hw/light_aft/control"
 #define SERVICE_HARDWARE_LASER_ENABLE               "hw/laser/enable"
 #define SERVICE_HARDWARE_PMC_ENABLE                 "hw/pmc/enable"
+#define SERVICE_HARDWARE_PMC_TIMOUT                 "hw/pmc/set_timeout"
 
 #define SERVICE_STREAMING_LIGHTS                    "hw/signal_lights/streaming"
 

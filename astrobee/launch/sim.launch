@@ -50,7 +50,7 @@
   <arg name="stats" default="false" />          <!-- Message statistics      -->
 
   <!-- Debug-specific options -->
-  <arg name="default" default="true" />         <!-- Insert default robot    -->
+  <arg name="default_robot" default="true" />   <!-- Insert default robot    -->
   <arg if="$(eval arg('world')=='iss' and arg('perch')==0)"
        name="pose"
        default="9.816 -9.806 4.293 0 0 0 1" />    <!-- iss: docked in JPM berth 1 --> 
@@ -142,7 +142,7 @@
   </include>
 
   <!-- Auto-inert platform #1 at a desired initial location -->
-  <group if="$(arg default)">
+  <group if="$(arg default_robot)">
     <include file="$(find astrobee)/launch/spawn.launch">
       <arg name="robot" value="$(arg robot)" />      <!-- Type of robot      -->
       <arg name="world" value="$(arg world)" />      <!-- Execution context  -->
@@ -220,5 +220,8 @@
       <arg name="dds" value="$(arg dds)" />          <!-- Enable DDS         -->
     </include>
   </group>
+
+  <!-- Default call initialize bias so config file is created if not already present -->
+  <node pkg="rosservice" type="rosservice" name="imu_calibration" args="call --wait /gnc/ekf/init_bias" />
 
 </launch>

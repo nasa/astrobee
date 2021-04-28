@@ -51,6 +51,8 @@ class GroundTruthLocalizerNodelet : public ff_util::FreeFlyerNodelet {
 
   bool SetMode(ff_msgs::SetEkfInput::Request& req, ff_msgs::SetEkfInput::Response& res);
 
+  bool DefaultServiceResponse(std_srvs::Empty::Request& req, std_srvs::Empty::Response& res);
+
   void PoseCallback(geometry_msgs::PoseStamped::ConstPtr const& pose);
 
   void TwistCallback(geometry_msgs::TwistStamped::ConstPtr const& twist);
@@ -62,10 +64,10 @@ class GroundTruthLocalizerNodelet : public ff_util::FreeFlyerNodelet {
   boost::optional<Twist> twist_;
   int input_mode_ = ff_msgs::SetEkfInputRequest::MODE_TRUTH;
   ros::Subscriber pose_sub_, twist_sub_;
-  ros::Publisher state_pub_, pose_pub_, twist_pub_, heartbeat_pub_;
+  ros::Publisher state_pub_, pose_pub_, twist_pub_, heartbeat_pub_, reset_pub_;
   ff_msgs::Heartbeat heartbeat_;
   tf2_ros::TransformBroadcaster transform_pub_;
-  ros::ServiceServer input_mode_srv_;
+  ros::ServiceServer input_mode_srv_, bias_srv_, bias_from_file_srv_, reset_srv_;
 };
 }  // namespace ground_truth_localizer
 

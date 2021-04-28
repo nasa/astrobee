@@ -48,7 +48,7 @@ class GraphBag {
  private:
   void InitializeGraph();
   void SaveOpticalFlowTracksImage(const sensor_msgs::ImageConstPtr& image_msg,
-                                  const graph_localizer::FeatureTrackMap& feature_tracks);
+                                  const GraphLocalizerSimulator& graph_localizer);
   void SaveImuBiasTesterPredictedStates(
     const std::vector<localization_common::CombinedNavState>& imu_bias_tester_predicted_states);
   template <typename MsgType>

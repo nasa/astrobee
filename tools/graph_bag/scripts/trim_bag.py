@@ -1,5 +1,4 @@
-#!/usr/bin/python
-#
+#!/usr/bin/env python
 # Copyright (c) 2017, United States Government, as represented by the
 # Administrator of the National Aeronautics and Space Administration.
 #
@@ -16,28 +15,35 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
-
-import plot_results
+import utilities
 
 import argparse
-
 import os
 import sys
+
+import rosbag
+
+
+def trim_bag(bag_name, start_time_to_trim, end_time_to_trim):
+  with rosbag.Bag(bag_name, 'r') as bag:
+    start_time = bag.get_start_time()
+    new_start_time = start_time + start_time_to_trim
+    end_time = bag.get_end_time()
+    new_end_time = end_time - end_time_to_trim
+    output_bag_name = os.path.splitext(bag_name)[0] + '_trimmed.bag'
+    run_command = 'rosbag filter ' + bag_name + ' ' + output_bag_name + ' \"t.secs >= ' + str(
+      new_start_time) + ' and t.secs <= ' + str(new_end_time) + '\"'
+    os.system(run_command)
+
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
   parser.add_argument('bagfile')
-  parser.add_argument('--output-file', default='output.pdf')
-  parser.add_argument('--output-csv-file', default='results.csv')
-  parser.add_argument('-g', '--groundtruth-bagfile', default=None)
-  parser.add_argument('--rmse-rel-start-time', type=float, default=0)
-  parser.add_argument('--rmse-rel-end-time', type=float, default=-1)
+  parser.add_argument('-s', '--start-time-to-trim', type=float, default=0)
+  parser.add_argument('-e', '--end-time-to-trim', type=float, default=0)
   args = parser.parse_args()
   if not os.path.isfile(args.bagfile):
     print('Bag file ' + args.bagfile + ' does not exist.')
     sys.exit()
-  if args.groundtruth_bagfile and not os.path.isfile(args.groundtruth_bagfile):
-    print('Groundtruth Bag file ' + args.groundtruth_bagfile + ' does not exist.')
-    sys.exit()
-  plot_results.create_plots(args.bagfile, args.output_file, args.output_csv_file, args.groundtruth_bagfile,
-                            args.rmse_rel_start_time, args.rmse_rel_end_time)
+
+  trim_bag(args.bagfile, args.start_time_to_trim, args.end_time_to_trim)

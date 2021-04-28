@@ -86,8 +86,7 @@ void GraphLocalizerWrapper::Update() {
 void GraphLocalizerWrapper::OpticalFlowCallback(const ff_msgs::Feature2dArray& feature_array_msg) {
   feature_counts_.of = feature_array_msg.feature_array.size();
   if (graph_localizer_) {
-    if (graph_localizer_->AddOpticalFlowMeasurement(lm::MakeFeaturePointsMeasurement(feature_array_msg))) {
-    }
+    graph_localizer_->AddOpticalFlowMeasurement(lm::MakeFeaturePointsMeasurement(feature_array_msg));
   }
 }
 
@@ -236,9 +235,14 @@ void GraphLocalizerWrapper::InitializeGraph() {
   graph_localizer_.reset(new graph_localizer::GraphLocalizer(graph_localizer_initializer_.params()));
 }
 
-boost::optional<const FeatureTrackMap&> GraphLocalizerWrapper::feature_tracks() const {
+boost::optional<const FeatureTrackIdMap&> GraphLocalizerWrapper::feature_tracks() const {
   if (!graph_localizer_) return boost::none;
   return graph_localizer_->feature_tracks();
+}
+
+boost::optional<const GraphLocalizer&> GraphLocalizerWrapper::graph_localizer() const {
+  if (!graph_localizer_) return boost::none;
+  return *graph_localizer_;
 }
 
 void GraphLocalizerWrapper::MarkWorldTDockForResettingIfNecessary() {

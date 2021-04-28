@@ -105,7 +105,7 @@ void LocalizationGraphDisplay::imageCallback(const sensor_msgs::ImageConstPtr& i
   img_buffer_.emplace(lc::TimeFromHeader(image_msg->header), image_msg);
 }
 
-void LocalizationGraphDisplay::addOpticalFlowVisual(const graph_localizer::FeatureTrackMap& feature_tracks,
+void LocalizationGraphDisplay::addOpticalFlowVisual(const graph_localizer::FeatureTrackIdMap& feature_tracks,
                                                     const localization_common::Time latest_graph_time) {
   if (!publish_optical_flow_images_->getBool()) return;
   const auto img = getImage(latest_graph_time);

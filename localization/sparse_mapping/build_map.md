@@ -1,4 +1,4 @@
-# Map building
+\page map_building Map building
 
 Here we describe how to build a map.
 
