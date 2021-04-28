@@ -43,9 +43,13 @@ class CombinedNavStateNodeUpdater
   bool Update(const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors,
               GraphValues& graph_values) final;
 
-  void SlideWindow(const localization_common::Timestamp oldest_allowed_timestamp, gtsam::NonlinearFactorGraph& factors,
-                   GraphValues& graph_values) final;
+  void SlideWindow(const localization_common::Timestamp oldest_allowed_timestamp,
+                   const boost::optional<gtsam::Marginals>& marginals, const double huber_k,
+                   gtsam::NonlinearFactorGraph& factors, GraphValues& graph_values) final;
 
+ private:
+  void RemovePriors(const int key_index, gtsam::NonlinearFactorGraph& factors);
+  int GenerateKeyIndex();
   bool AddOrSplitImuFactorIfNeeded(const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors,
                                    GraphValues& graph_values);
   bool CreateAndAddLatestImuFactorAndCombinedNavState(const localization_common::Time timestamp,
@@ -54,12 +58,8 @@ class CombinedNavStateNodeUpdater
                                                          const gtsam::PreintegratedCombinedMeasurements& pim,
                                                          gtsam::NonlinearFactorGraph& factors,
                                                          GraphValues& graph_values);
-
   bool SplitOldImuFactorAndAddCombinedNavState(const localization_common::Time timestamp,
                                                gtsam::NonlinearFactorGraph& factors, GraphValues& graph_values);
-
- private:
-  int GenerateKeyIndex();
 
   std::shared_ptr<imu_integration::LatestImuIntegrator> latest_imu_integrator_;
   int key_index_;

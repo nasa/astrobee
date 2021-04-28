@@ -64,11 +64,78 @@ void CombinedNavStateNodeUpdater::AddPriors(const localization_common::CombinedN
   factors.push_back(bias_prior_factor);
 }
 
-void CombinedNavStateNodeUpdater::AddFactors(const FactorToAdd& measurement, gtsam::NonlinearFactorGraph& graph,
-                                             GraphValues& graph_values);
-
 void CombinedNavStateNodeUpdater::SlideWindow(const localization_common::Timestamp oldest_allowed_timestamp,
-                                              gtsam::NonlinearFactorGraph& factors, GraphValues& graph_values);
+                                              const boost::optional<gtsam::Marginals>& marginals, const double huber_k,
+                                              gtsam::NonlinearFactorGraph& factors, GraphValues& graph_values) {
+  graph_values.RemoveOldCombinedNavStates(oldest_allowed_time);
+  if (params_.add_priors) {
+    // Add prior to oldest nav state using covariances from last round of
+    // optimization
+    const auto global_N_body_oldest = graph_values.OldestCombinedNavState();
+    if (!global_N_body_oldest) {
+      LogError("SlideWindow: Failed to get oldest combined nav state.");
+      return false;
+    }
+
+    LogDebug("SlideWindow: Oldest state time: " << global_N_body_oldest->timestamp());
+
+    const auto key_index = graph_values_->OldestCombinedNavStateKeyIndex();
+    if (!key_index) {
+      LogError("SlideWindow: Failed to get oldest combined nav state key index.");
+      return false;
+    }
+
+    LogDebug("SlideWindow: key index: " << *key_index);
+
+    // Make sure priors are removed before adding new ones
+    RemovePriors(*key_index, factors);
+    if (marginals) {
+      lc::CombinedNavStateNoise noise;
+      noise.pose_noise =
+        Robust(gtsam::noiseModel::Gaussian::Covariance(marginals->marginalCovariance(sym::P(*key_index))), huber_k);
+      noise.velocity_noise =
+        Robust(gtsam::noiseModel::Gaussian::Covariance(marginals->marginalCovariance(sym::V(*key_index))), huber_k);
+      noise.bias_noise =
+        Robust(gtsam::noiseModel::Gaussian::Covariance(marginals->marginalCovariance(sym::B(*key_index))), huber_k);
+      AddPriors(*global_N_body_oldest, noise, *key_index, graph_);
+    } else {
+      // TODO(rsoussan): Add seperate marginal fallback sigmas instead of relying on starting prior sigmas
+      AddPriors(params_.global_N_body_start, params_.global_N_body_start_noise, graph_values, graph);
+    }
+  }
+
+  return true;
+}
+
+void CombinedNavStateUpdater::RemovePriors(const int key_index, gtsam::NonlinearFactorGraph& factors) {
+  int removed_factors = 0;
+  for (auto factor_it = factors.begin(); factor_it != factors.end();) {
+    bool erase_factor = false;
+    const auto pose_prior_factor = dynamic_cast<gtsam::PriorFactor<gtsam::Pose3>*>(factor_it->get());
+    const auto loc_pose_factor = dynamic_cast<gtsam::LocPoseFactor*>(factor_it->get());
+    if (pose_prior_factor && !loc_pose_factor && pose_prior_factor->key() == sym::P(key_index)) {
+      erase_factor = true;
+    }
+    const auto velocity_prior_factor = dynamic_cast<gtsam::PriorFactor<gtsam::Velocity3>*>(factor_it->get());
+    if (velocity_prior_factor && velocity_prior_factor->key() == sym::V(key_index)) {
+      erase_factor = true;
+    }
+    const auto bias_prior_factor = dynamic_cast<gtsam::PriorFactor<gtsam::imuBias::ConstantBias>*>(factor_it->get());
+    if (bias_prior_factor && bias_prior_factor->key() == sym::B(key_index)) {
+      erase_factor = true;
+    }
+
+    if (erase_factor) {
+      factor_it = factors.erase(factor_it);
+      ++removed_factors;
+    } else {
+      ++factor_it;
+      continue;
+    }
+  }
+  LogDebug("RemovePriors: Erase " << removed_factors << " factors.");
+}
+
 int CombinedNavStateNodeUpdater::GenerateKeyIndex() { return key_index++; }
 
 bool CombinedNavStateNodeUpdater::Update(const lc::Time timestamp, gtsam::NonlinearFactorGraph& factors,

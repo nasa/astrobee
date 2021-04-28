@@ -42,6 +42,7 @@ class TimestampedNodeUpdater {
                       GraphValues& graph_values) = 0;
 
   virtual void SlideWindow(const localization_common::Timestamp oldest_allowed_timestamp,
+                           const boost::optional<gtsam::Marginals>& marginals, const double huber_k,
                            gtsam::NonlinearFactorGraph& factors, GraphValues& graph_values) = 0;
 
  private:

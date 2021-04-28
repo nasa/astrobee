@@ -24,6 +24,7 @@ namespace graph_localizer {
 struct CombinedNavStateNodeUpdaterParams {
   localization_common::CombinedNavState global_N_body_start;
   localization_common::CombinedNavStateNoise global_N_body_start_noise;
+  bool add_priors;
 };
 }  // namespace graph_localizer
 
