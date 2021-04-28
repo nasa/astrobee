@@ -178,20 +178,6 @@ class GraphLocalizer {
 
   void RemoveOldBufferedFactors(const localization_common::Time oldest_allowed_timestamp);
 
-  template <typename FactorType>
-  void DeleteFactors() {
-    int num_removed_factors = 0;
-    for (auto factor_it = graph_.begin(); factor_it != graph_.end();) {
-      if (dynamic_cast<FactorType*>(factor_it->get())) {
-        factor_it = graph_.erase(factor_it);
-        ++num_removed_factors;
-        continue;
-      }
-      ++factor_it;
-    }
-    LogDebug("DeleteFactors: Num removed factors: " << num_removed_factors);
-  }
-
   // TODO(rsoussan): make a static and dynamic key index?
   static int GenerateKeyIndex() {
     static int key_index = 0;

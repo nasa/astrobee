@@ -735,7 +735,7 @@ bool GraphLocalizer::DoGraphAction(FactorsToAdd& factors_to_add) {
       return true;
     case GraphAction::kDeleteExistingSmartFactors:
       LogDebug("DoGraphAction: Deleting smart factors.");
-      DeleteFactors<RobustSmartFactor>();
+      DeleteFactors<RobustSmartFactor>(graph_);
       // TODO(rsoussan): rename this graph action to handle smart factors
       if (params_.factor.smart_projection_adder.splitting) SplitSmartFactorsIfNeeded(factors_to_add);
       return true;
