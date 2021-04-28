@@ -28,6 +28,8 @@ class CombinedNavStateNodeUpdater
  public:
   explicit CombinedNavStateNodeUpdater(const CombinedNavStateNodeUpdaterParams& params);
 
+  void AddInitialValuesAndPriors(gtsam::NonlinearFactorGraph& graph, GraphValues& graph_values);
+
   void AddInitialValuesAndPriors(const localization_common::CombinedNavState& global_N_body,
                                  const localization_common::CombinedNavStateNoise& noise,
                                  gtsam::NonlinearFactorGraph& graph, GraphValues& graph_values) final;

@@ -29,43 +29,18 @@ namespace sym = gtsam::symbol_shorthand;
 explicit CombinedNavStateNodeUpdater::CombinedNavStateNodeUpdater(const CombinedNavStateNodeUpdaterParams& params)
     : params_(params) {}
 
+void CombinedNavStateNodeUpdater::AddInitialValuesAndPriors(gtsam::NonlinearFactorGraph& graph,
+                                                            GraphValues& graph_values) {
+  AddInitialValuesAndPriors(params_.global_N_body_start, params_.global_N_body_start_noise, graph, graph_values);
+}
+
 void CombinedNavStateNodeUpdater::AddInitialValuesAndPriors(const localization_common::CombinedNavState& global_N_body,
                                                             const localization_common::CombinedNavStateNoise& noise,
                                                             gtsam::NonlinearFactorGraph& graph,
                                                             GraphValues& graph_values) {
-  // Assumes zero initial velocity
-  const lc::CombinedNavState global_N_body_start(params_.graph_initializer.global_T_body_start,
-                                                 gtsam::Velocity3::Zero(), params_.graph_initializer.initial_imu_bias,
-                                                 params_.graph_initializer.start_time);
-
-  // Add first nav state and priors to graph
   const int key_index = GenerateKeyIndex();
-  graph_values_->AddCombinedNavState(global_N_body_start, key_index);
-
-  const gtsam::Vector6 pose_prior_noise_sigmas(
-    (gtsam::Vector(6) << params_.noise.starting_prior_translation_stddev,
-     params_.noise.starting_prior_translation_stddev, params_.noise.starting_prior_translation_stddev,
-     params_.noise.starting_prior_quaternion_stddev, params_.noise.starting_prior_quaternion_stddev,
-     params_.noise.starting_prior_quaternion_stddev)
-      .finished());
-  const gtsam::Vector3 velocity_prior_noise_sigmas((gtsam::Vector(3) << params_.noise.starting_prior_velocity_stddev,
-                                                    params_.noise.starting_prior_velocity_stddev,
-                                                    params_.noise.starting_prior_velocity_stddev)
-                                                     .finished());
-  const gtsam::Vector6 bias_prior_noise_sigmas(
-    (gtsam::Vector(6) << params_.noise.starting_prior_accel_bias_stddev, params_.noise.starting_prior_accel_bias_stddev,
-     params_.noise.starting_prior_accel_bias_stddev, params_.noise.starting_prior_gyro_bias_stddev,
-     params_.noise.starting_prior_gyro_bias_stddev, params_.noise.starting_prior_gyro_bias_stddev)
-      .finished());
-  lc::CombinedNavStateNoise noise;
-  noise.pose_noise = Robust(
-    gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(pose_prior_noise_sigmas)), params_.huber_k);
-  noise.velocity_noise =
-    Robust(gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(velocity_prior_noise_sigmas)),
-           params_.huber_k);
-  noise.bias_noise = Robust(
-    gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(bias_prior_noise_sigmas)), params_.huber_k);
-  AddPriors(global_N_body_start, noise, key_index, graph);
+  graph_values_->AddCombinedNavState(global_N_body, key_index);
+  AddPriors(global_N_body, noise, graph_values, graph);
 }
 
 void CombinedNavStateNodeUpdater::AddPriors(const localization_common::CombinedNavState& global_N_body,
