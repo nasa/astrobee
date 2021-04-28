@@ -19,6 +19,8 @@
 #ifndef GRAPH_LOCALIZER_GRAPH_LOCALIZER_H_
 #define GRAPH_LOCALIZER_GRAPH_LOCALIZER_H_
 
+#include <graph_localizer/combined_nav_state_node_updater.h>
+#include <graph_localizer/combined_nav_state_node_updater_params.h>
 #include <graph_localizer/factor_to_add.h>
 #include <graph_localizer/feature_tracker.h>
 #include <graph_localizer/graph_action.h>
@@ -206,7 +208,7 @@ class GraphLocalizer {
   }
 
   std::shared_ptr<FeatureTracker> feature_tracker_;
-  imu_integration::LatestImuIntegrator latest_imu_integrator_;
+  std::shared_ptr<imu_integration::LatestImuIntegrator> latest_imu_integrator_;
   std::shared_ptr<GraphValues> graph_values_;
   bool log_on_destruction_;
   GraphLocalizerParams params_;
@@ -225,6 +227,9 @@ class GraphLocalizer {
   std::unique_ptr<RotationFactorAdder> rotation_factor_adder_;
   std::unique_ptr<SmartProjectionCumulativeFactorAdder> smart_projection_cumulative_factor_adder_;
   std::unique_ptr<StandstillFactorAdder> standstill_factor_adder_;
+
+  // Node Updaters
+  std::unique_ptr<CombinedNavStateNodeUpdater> combined_nav_state_node_updater_;
 
   gtsam::Marginals::Factorization marginals_factorization_;
   boost::optional<bool> standstill_;

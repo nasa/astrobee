@@ -59,20 +59,11 @@ namespace lm = localization_measurements;
 
 GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
     : feature_tracker_(new FeatureTracker(params.feature_tracker)),
-      latest_imu_integrator_(params.graph_initializer),
+      latest_imu_integrator_(new LatestImuIntegrator(params.graph_initializer)),
       graph_values_(new GraphValues(params.graph_values)),
       log_on_destruction_(true),
       params_(params) {
-  latest_imu_integrator_.SetFanSpeedMode(params_.initial_fan_speed_mode);
-  // Assumes zero initial velocity
-  const lc::CombinedNavState global_N_body_start(params_.graph_initializer.global_T_body_start,
-                                                 gtsam::Velocity3::Zero(), params_.graph_initializer.initial_imu_bias,
-                                                 params_.graph_initializer.start_time);
-
-  // Add first nav state and priors to graph
-  const int key_index = GenerateKeyIndex();
-  graph_values_->AddCombinedNavState(global_N_body_start, key_index);
-  AddStartingPriors(global_N_body_start, key_index, graph_);
+  latest_imu_integrator_->SetFanSpeedMode(params_.initial_fan_speed_mode);
 
   // Initialize smart projection factor params
   // TODO(rsoussan): Remove this once splitting function is moved, remove smart_projection_params_ from graph_localizer
@@ -123,14 +114,14 @@ GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
   smart_projection_cumulative_factor_adder_.reset(
     new SmartProjectionCumulativeFactorAdder(params_.factor.smart_projection_adder, feature_tracker_));
   standstill_factor_adder_.reset(new StandstillFactorAdder(params_.factor.standstill_adder, feature_tracker_));
-}
 
-GraphLocalizer::~GraphLocalizer() {
-  if (log_on_destruction_) graph_stats_.Log();
-}
-
-void GraphLocalizer::AddStartingPriors(const lc::CombinedNavState& global_N_body_start, const int key_index,
-                                       gtsam::NonlinearFactorGraph& graph) {
+  // Initialize Node Updaters
+  CombinedNavStateNodeUpdaterParams combined_nav_state_node_updater_params;
+  // Assumes zero initial velocity
+  const lc::CombinedNavState global_N_body_start(params_.graph_initializer.global_T_body_start,
+                                                 gtsam::Velocity3::Zero(), params_.graph_initializer.initial_imu_bias,
+                                                 params_.graph_initializer.start_time);
+  combined_nav_state_node_updater_params.global_N_body_start = global_N_body_start;
   const gtsam::Vector6 pose_prior_noise_sigmas(
     (gtsam::Vector(6) << params_.noise.starting_prior_translation_stddev,
      params_.noise.starting_prior_translation_stddev, params_.noise.starting_prior_translation_stddev,
@@ -146,15 +137,23 @@ void GraphLocalizer::AddStartingPriors(const lc::CombinedNavState& global_N_body
      params_.noise.starting_prior_accel_bias_stddev, params_.noise.starting_prior_gyro_bias_stddev,
      params_.noise.starting_prior_gyro_bias_stddev, params_.noise.starting_prior_gyro_bias_stddev)
       .finished());
-  lc::CombinedNavStateNoise noise;
-  noise.pose_noise = Robust(
+  lc::CombinedNavStateNoise global_N_body_start_noise;
+  global_N_body_start_noise.pose_noise = Robust(
     gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(pose_prior_noise_sigmas)), params_.huber_k);
-  noise.velocity_noise =
+  global_N_body_start_noise.velocity_noise =
     Robust(gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(velocity_prior_noise_sigmas)),
            params_.huber_k);
-  noise.bias_noise = Robust(
+  global_N_body_start_noise.bias_noise = Robust(
     gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(bias_prior_noise_sigmas)), params_.huber_k);
-  AddPriors(global_N_body_start, noise, key_index, graph);
+  combined_nav_state_node_updater_params.global_N_body_start_noise = global_N_body_start_noise;
+  combined_nav_state_node_updater_params.add_priors = params_.add_priors;
+  combined_nav_state_node_updater_.reset(
+    new CombinedNavStateNodeUpdater(combined_nav_state_node_updater_params, latest_imu_integrator_));
+  combined_nav_state_node_updater_->AddInitialValuesAndPriors(graph_, *graph_values_);
+}
+
+GraphLocalizer::~GraphLocalizer() {
+  if (log_on_destruction_) graph_stats_.Log();
 }
 
 boost::optional<std::pair<lc::CombinedNavState, lc::CombinedNavStateCovariances>>
@@ -224,9 +223,9 @@ boost::optional<lc::CombinedNavState> GraphLocalizer::GetCombinedNavState(const 
 
   // Pim predict from lower bound state rather than closest state so there is no
   // need to reverse predict (going backwards in time) using a pim prediction which is not yet supported in gtsam.
-  auto integrated_pim = latest_imu_integrator_.IntegratedPim(lower_bound_or_equal_combined_nav_state->bias(),
-                                                             lower_bound_or_equal_combined_nav_state->timestamp(), time,
-                                                             latest_imu_integrator_.pim_params());
+  auto integrated_pim = latest_imu_integrator_->IntegratedPim(lower_bound_or_equal_combined_nav_state->bias(),
+                                                              lower_bound_or_equal_combined_nav_state->timestamp(),
+                                                              time, latest_imu_integrator_->pim_params());
   if (!integrated_pim) {
     LogError("GetCombinedNavState: Failed to create integrated pim.");
     return boost::none;
@@ -246,11 +245,11 @@ boost::optional<std::pair<gtsam::imuBias::ConstantBias, lc::Time>> GraphLocalize
 
 // Latest extrapolated pose time is limited by latest imu time
 boost::optional<lc::Time> GraphLocalizer::LatestExtrapolatedPoseTime() const {
-  return latest_imu_integrator_.LatestTime();
+  return latest_imu_integrator_->LatestTime();
 }
 
 void GraphLocalizer::AddImuMeasurement(const lm::ImuMeasurement& imu_measurement) {
-  latest_imu_integrator_.BufferImuMeasurement(imu_measurement);
+  latest_imu_integrator_->BufferImuMeasurement(imu_measurement);
 }
 
 bool GraphLocalizer::AddOpticalFlowMeasurement(
@@ -561,7 +560,7 @@ bool GraphLocalizer::SlideWindow(const boost::optional<gtsam::Marginals>& margin
   }
 
   feature_tracker_->RemoveOldFeaturePointsAndSlideWindow(*oldest_timestamp);
-  latest_imu_integrator_.RemoveOldMeasurements(*oldest_timestamp);
+  latest_imu_integrator_->RemoveOldMeasurements(*oldest_timestamp);
   RemoveOldBufferedFactors(*oldest_timestamp);
 
   if (params_.factor.projection_adder.enabled && params_.factor.projection_adder.add_point_priors && marginals_) {
@@ -717,8 +716,8 @@ int GraphLocalizer::AddBufferedFactors() {
 
   int num_added_factors = 0;
   for (auto factors_to_add_it = buffered_factors_to_add_.begin();
-       factors_to_add_it != buffered_factors_to_add_.end() && latest_imu_integrator_.LatestTime() &&
-       factors_to_add_it->first <= *(latest_imu_integrator_.LatestTime());) {
+       factors_to_add_it != buffered_factors_to_add_.end() && latest_imu_integrator_->LatestTime() &&
+       factors_to_add_it->first <= *(latest_imu_integrator_->LatestTime());) {
     auto& factors_to_add = factors_to_add_it->second;
     for (auto& factor_to_add : factors_to_add.Get()) {
       // Add combined nav states and connecting imu factors for each key in factor if necessary
@@ -800,7 +799,7 @@ bool GraphLocalizer::Rekey(FactorToAdd& factor_to_add) {
 }
 
 bool GraphLocalizer::ReadyToAddMeasurement(const localization_common::Time timestamp) const {
-  const auto latest_time = latest_imu_integrator_.LatestTime();
+  const auto latest_time = latest_imu_integrator_->LatestTime();
   if (!latest_time) {
     LogError("ReadyToAddMeasurement: Failed to get latet imu time.");
     return false;
@@ -810,12 +809,12 @@ bool GraphLocalizer::ReadyToAddMeasurement(const localization_common::Time times
 }
 
 bool GraphLocalizer::MeasurementRecentEnough(const lc::Time timestamp) const {
-  if (!latest_imu_integrator_.OldestTime()) {
+  if (!latest_imu_integrator_->OldestTime()) {
     LogDebug("MeasurementRecentEnough: Waiting until imu measurements have been received.");
     return false;
   }
   if (timestamp < graph_values_->OldestTimestamp()) return false;
-  if (timestamp < latest_imu_integrator_.OldestTime()) return false;
+  if (timestamp < latest_imu_integrator_->OldestTime()) return false;
   return true;
 }
 
@@ -842,10 +841,10 @@ void GraphLocalizer::PrintFactorDebugInfo() const {
 }
 
 void GraphLocalizer::SetFanSpeedMode(const lm::FanSpeedMode fan_speed_mode) {
-  latest_imu_integrator_.SetFanSpeedMode(fan_speed_mode);
+  latest_imu_integrator_->SetFanSpeedMode(fan_speed_mode);
 }
 
-const lm::FanSpeedMode GraphLocalizer::fan_speed_mode() const { return latest_imu_integrator_.fan_speed_mode(); }
+const lm::FanSpeedMode GraphLocalizer::fan_speed_mode() const { return latest_imu_integrator_->fan_speed_mode(); }
 
 const GraphLocalizerParams& GraphLocalizer::params() const { return params_; }
 
@@ -1021,7 +1020,7 @@ bool GraphLocalizer::Update() {
     return false;
   }
 
-  latest_imu_integrator_.ResetPimIntegrationAndSetBias(latest_bias->first);
+  latest_imu_integrator_->ResetPimIntegrationAndSetBias(latest_bias->first);
   graph_stats_.update_timer_.Stop();
   return true;
 }
