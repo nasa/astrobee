@@ -40,7 +40,8 @@ class CombinedNavStateNodeUpdater
                  const localization_common::CombinedNavStateNoise& noise, const GraphValues& graph_values,
                  gtsam::NonlinearFactorGraph& factors) final;
 
-  void AddFactors(const FactorToAdd& measurement, gtsam::NonlinearFactorGraph& graph, GraphValues& graph_values) final;
+  bool Update(const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors,
+              GraphValues& graph_values) final;
 
   void SlideWindow(const localization_common::Timestamp oldest_allowed_timestamp, gtsam::NonlinearFactorGraph& factors,
                    GraphValues& graph_values) final;

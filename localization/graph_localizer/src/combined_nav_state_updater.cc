@@ -71,6 +71,11 @@ void CombinedNavStateNodeUpdater::SlideWindow(const localization_common::Timesta
                                               gtsam::NonlinearFactorGraph& factors, GraphValues& graph_values);
 int CombinedNavStateNodeUpdater::GenerateKeyIndex() { return key_index++; }
 
+bool CombinedNavStateNodeUpdater::Update(const lc::Time timestamp, gtsam::NonlinearFactorGraph& factors,
+                                         GraphValues& graph_values) {
+  AddOrSplitImuFactorIfNeeded(timestamp, factors, graph_values);
+}
+
 bool CombinedNavStateNodeUpdater::AddOrSplitImuFactorIfNeeded(const lc::Time timestamp,
                                                               gtsam::NonlinearFactorGraph& factors,
                                                               GraphValues& graph_values) {

@@ -38,8 +38,8 @@ class TimestampedNodeUpdater {
   virtual void AddPriors(const NodeType& node, const NoiseType& noise, const GraphValues& graph_values,
                          gtsam::NonlinearFactorGraph& factors) = 0;
 
-  virtual void AddFactors(const FactorToAdd& measurement, gtsam::NonlinearFactorGraph& graph,
-                          GraphValues& graph_values) = 0;
+  virtual bool Update(const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors,
+                      GraphValues& graph_values) = 0;
 
   virtual void SlideWindow(const localization_common::Timestamp oldest_allowed_timestamp,
                            gtsam::NonlinearFactorGraph& factors, GraphValues& graph_values) = 0;
