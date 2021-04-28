@@ -43,6 +43,18 @@ class CombinedNavStateNodeUpdater
   void SlideWindow(const localization_common::Timestamp oldest_allowed_timestamp, gtsam::NonlinearFactorGraph& factors,
                    GraphValues& graph_values) final;
 
+  bool AddOrSplitImuFactorIfNeeded(const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors,
+                                   GraphValues& graph_values);
+  bool CreateAndAddLatestImuFactorAndCombinedNavState(const localization_common::Time timestamp,
+                                                      gtsam::NonlinearFactorGraph& factors, GraphValues& graph_values);
+  bool CreateAndAddImuFactorAndPredictedCombinedNavState(const localization_common::CombinedNavState& global_N_body,
+                                                         const gtsam::PreintegratedCombinedMeasurements& pim,
+                                                         gtsam::NonlinearFactorGraph& factors,
+                                                         GraphValues& graph_values);
+
+  bool SplitOldImuFactorAndAddCombinedNavState(const localization_common::Time timestamp,
+                                               gtsam::NonlinearFactorGraph& factors, GraphValues& graph_values);
+
  private:
   int GenerateKeyIndex();
 

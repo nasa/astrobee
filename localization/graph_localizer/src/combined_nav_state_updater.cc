@@ -68,4 +68,167 @@ void CombinedNavStateNodeUpdater::AddFactors(const FactorToAdd& measurement, gts
 void CombinedNavStateNodeUpdater::SlideWindow(const localization_common::Timestamp oldest_allowed_timestamp,
                                               gtsam::NonlinearFactorGraph& factors, GraphValues& graph_values);
 int CombinedNavStateNodeUpdater::GenerateKeyIndex() { return key_index++; }
+
+bool CombinedNavStateNodeUpdater::AddOrSplitImuFactorIfNeeded(const lc::Time timestamp,
+                                                              gtsam::NonlinearFactorGraph& factors,
+                                                              GraphValues& graph_values) {
+  if (graph_values.HasKey(timestamp)) {
+    LogDebug(
+      "AddOrSplitImuFactorIfNeeded: CombinedNavState exists at "
+      "timestamp, nothing to do.");
+    return true;
+  }
+
+  const auto latest_timestamp = graph_values.LatestTimestamp();
+  if (!latest_timestamp) {
+    LogError("AddOrSplitImuFactorIfNeeded: Failed to get latest timestamp.");
+    return false;
+  }
+
+  if (timestamp > *latest_timestamp) {
+    LogDebug(
+      "AddOrSplitImuFactorIfNeeded: Creating and adding latest imu "
+      "factor and nav state.");
+    return CreateAndAddLatestImuFactorAndCombinedNavState(timestamp, factors, graph_values);
+  } else {
+    LogDebug("AddOrSplitImuFactorIfNeeded: Splitting old imu factor.");
+    return SplitOldImuFactorAndAddCombinedNavState(timestamp, factors, graph_values);
+  }
+}
+
+bool CombinedNavStateNodeUpdater::CreateAndAddLatestImuFactorAndCombinedNavState(const lc::Time timestamp,
+                                                                                 gtsam::NonlinearFactorGraph& factors,
+                                                                                 GraphValues& graph_values) {
+  if (!latest_imu_integrator_.IntegrateLatestImuMeasurements(timestamp)) {
+    LogError("CreateAndAddLatestImuFactorAndCombinedNavState: Failed to integrate latest imu measurements.");
+    return false;
+  }
+
+  const auto latest_combined_nav_state = graph_values.LatestCombinedNavState();
+  if (!latest_combined_nav_state) {
+    LogError("CreateAndAddLatestImuFactorAndCombinedNavState: Failed to get latest combined nav state.");
+    return false;
+  }
+  if (!CreateAndAddImuFactorAndPredictedCombinedNavState(*latest_combined_nav_state, latest_imu_integrator_.pim(),
+                                                         factors, graph_values)) {
+    LogError("CreateAndAddLatestImuFactorAndCombinedNavState: Failed to create and add imu factor.");
+    return false;
+  }
+
+  const auto latest_bias = graph_values.LatestBias();
+  if (!latest_bias) {
+    LogError("CreateAndAddLatestImuFactorAndCombinedNavState: Failed to get latest bias.");
+    return false;
+  }
+
+  latest_imu_integrator_.ResetPimIntegrationAndSetBias(latest_bias->first);
+  return true;
+}
+
+bool CombinedNavStateUpdater::CreateAndAddImuFactorAndPredictedCombinedNavState(
+  const lc::CombinedNavState& global_N_body, const gtsam::PreintegratedCombinedMeasurements& pim,
+  gtsam::NonlinearFactorGraph& factors, GraphValues& graph_values) {
+  const auto key_index_0 = graph_values.KeyIndex(global_N_body.timestamp());
+  if (!key_index_0) {
+    LogError("CreateAndAddImuFactorAndPredictedCombinedNavState: Failed to get first key index.");
+    return false;
+  }
+
+  const lc::CombinedNavState global_N_body_predicted = ii::PimPredict(global_N_body, pim);
+  const int key_index_1 = GenerateKeyIndex();
+  const auto combined_imu_factor = ii::MakeCombinedImuFactor(*key_index_0, key_index_1, pim);
+  factors.push_back(combined_imu_factor);
+  graph_values.AddCombinedNavState(global_N_body_predicted, key_index_1);
+  return true;
+}
+
+bool CombinedNavStateUpdater::SplitOldImuFactorAndAddCombinedNavState(const lc::Time timestamp,
+                                                                      gtsam::NonlinearFactorGraph& factors,
+                                                                      GraphValues& graph_values) {
+  const auto timestamp_bounds = graph_values.LowerAndUpperBoundTimestamp(timestamp);
+  if (!timestamp_bounds.first || !timestamp_bounds.second) {
+    LogError("SplitOldImuFactorAndAddCombinedNavState: Failed to get upper and lower bound timestamp.");
+    return false;
+  }
+
+  const lc::Time lower_bound_time = *(timestamp_bounds.first);
+  const lc::Time upper_bound_time = *(timestamp_bounds.second);
+
+  if (timestamp < lower_bound_time || timestamp > upper_bound_time) {
+    LogError("SplitOldImuFactorAndAddCombinedNavState: Timestamp is not within bounds of existing timestamps.");
+    return false;
+  }
+
+  const auto lower_bound_key_index = graph_values.KeyIndex(lower_bound_time);
+  const auto upper_bound_key_index = graph_values.KeyIndex(upper_bound_time);
+  if (!lower_bound_key_index || !upper_bound_key_index) {
+    LogError("SplitOldImuFactorAndAddCombinedNavState: Failed to get lower and upper bound key indices.");
+    return false;
+  }
+
+  // get old imu factor, delete it
+  bool removed_old_imu_factor = false;
+  for (auto factor_it = factors.begin(); factor_it != factors.end();) {
+    if (dynamic_cast<gtsam::CombinedImuFactor*>(factor_it->get()) &&
+        graph_values.ContainsCombinedNavStateKey(**factor_it, *lower_bound_key_index) &&
+        graph_values.ContainsCombinedNavStateKey(**factor_it, *upper_bound_key_index)) {
+      factors.erase(factor_it);
+      removed_old_imu_factor = true;
+      break;
+    }
+    ++factor_it;
+  }
+  if (!removed_old_imu_factor) {
+    LogError(
+      "SplitOldImuFactorAndAddCombinedNavState: Failed to remove "
+      "old imu factor.");
+    return false;
+  }
+
+  const auto lower_bound_bias = graph_values.at<gtsam::imuBias::ConstantBias>(sym::B(*lower_bound_key_index));
+  if (!lower_bound_bias) {
+    LogError("SplitOldImuFactorAndAddCombinedNavState: Failed to get lower bound bias.");
+    return false;
+  }
+
+  // Add first factor and new nav state at timestamp
+  auto first_integrated_pim = latest_imu_integrator_.IntegratedPim(*lower_bound_bias, lower_bound_time, timestamp,
+                                                                   latest_imu_integrator_.pim_params());
+  if (!first_integrated_pim) {
+    LogError("SplitOldImuFactorAndAddCombinedNavState: Failed to create first integrated pim.");
+    return false;
+  }
+
+  const auto lower_bound_combined_nav_state = graph_values.GetCombinedNavState(lower_bound_time);
+  if (!lower_bound_combined_nav_state) {
+    LogError("SplitOldImuFactorAndAddCombinedNavState: Failed to get lower bound combined nav state.");
+    return false;
+  }
+
+  if (!CreateAndAddImuFactorAndPredictedCombinedNavState(*lower_bound_combined_nav_state, *first_integrated_pim)) {
+    LogError("SplitOldImuFactorAndAddCombinedNavState: Failed to create and add imu factor.");
+    return false;
+  }
+
+  // Add second factor, use lower_bound_bias as starting bias since that is the
+  // best estimate available
+  auto second_integrated_pim = latest_imu_integrator_.IntegratedPim(*lower_bound_bias, timestamp, upper_bound_time,
+                                                                    latest_imu_integrator_.pim_params());
+  if (!second_integrated_pim) {
+    LogError("SplitOldImuFactorAndAddCombinedNavState: Failed to create second integrated pim.");
+    return false;
+  }
+
+  // New nav state already added so just get its key index
+  const auto new_key_index = graph_values.KeyIndex(timestamp);
+  if (!new_key_index) {
+    LogError("SplitOldImuFactorAndAddCombinedNavState: Failed to get new key index.");
+    return false;
+  }
+
+  const auto combined_imu_factor =
+    ii::MakeCombinedImuFactor(*new_key_index, *upper_bound_key_index, *second_integrated_pim);
+  factors.push_back(combined_imu_factor);
+  return true;
+}
 }  // namespace graph_localizer
