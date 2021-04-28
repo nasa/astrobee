@@ -548,7 +548,7 @@ bool GraphLocalizer::SlideWindow(const boost::optional<gtsam::Marginals>& margin
     }
   }
 
-  graph_values_->RemoveOldCombinedNavStates(new_oldest_time);
+  combined_nav_state_node_updater_->SlideWindow(new_oldest_time, marginals, params_.huber_k, graph_, *graph_values_);
   if (params_.factor.projection_adder.enabled) graph_values_->RemoveOldFeatures(old_feature_keys);
 
   // Remove old data from other containers
@@ -566,43 +566,6 @@ bool GraphLocalizer::SlideWindow(const boost::optional<gtsam::Marginals>& margin
   if (params_.factor.projection_adder.enabled && params_.factor.projection_adder.add_point_priors && marginals_) {
     UpdatePointPriors(*marginals_);
   }
-
-  if (params_.add_priors) {
-    // Add prior to oldest nav state using covariances from last round of
-    // optimization
-    const auto global_N_body_oldest = graph_values_->OldestCombinedNavState();
-    if (!global_N_body_oldest) {
-      LogError("SlideWindow: Failed to get oldest combined nav state.");
-      return false;
-    }
-
-    LogDebug("SlideWindow: Oldest state time: " << global_N_body_oldest->timestamp());
-
-    const auto key_index = graph_values_->OldestCombinedNavStateKeyIndex();
-    if (!key_index) {
-      LogError("SlideWindow: Failed to get oldest combined nav state key index.");
-      return false;
-    }
-
-    LogDebug("SlideWindow: key index: " << *key_index);
-
-    // Make sure priors are removed before adding new ones
-    RemovePriors(*key_index);
-    if (marginals) {
-      lc::CombinedNavStateNoise noise;
-      noise.pose_noise = Robust(
-        gtsam::noiseModel::Gaussian::Covariance(marginals->marginalCovariance(sym::P(*key_index))), params_.huber_k);
-      noise.velocity_noise = Robust(
-        gtsam::noiseModel::Gaussian::Covariance(marginals->marginalCovariance(sym::V(*key_index))), params_.huber_k);
-      noise.bias_noise = Robust(
-        gtsam::noiseModel::Gaussian::Covariance(marginals->marginalCovariance(sym::B(*key_index))), params_.huber_k);
-      AddPriors(*global_N_body_oldest, noise, *key_index, graph_);
-    } else {
-      // TODO(rsoussan): Add seperate marginal fallback sigmas instead of relying on starting prior sigmas
-      AddStartingPriors(*global_N_body_oldest, *key_index, graph_);
-    }
-  }
-
   return true;
 }
 
