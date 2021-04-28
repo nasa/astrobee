@@ -331,15 +331,10 @@ bool SendMobilityCommand() {
         cmd.args[3].mat33f[2] = qd.z();
         cmd.args[3].mat33f[3] = qd.w();
       } else if (vec_att.size() == 4) {
-        aa.angle() = vec_att[0];
-        aa.axis().x() = vec_att[1];
-        aa.axis().y() = vec_att[2];
-        aa.axis().z() = vec_att[3];
-        Eigen::Quaterniond q(aa);
-        cmd.args[3].mat33f[0] = q.x();
-        cmd.args[3].mat33f[1] = q.y();
-        cmd.args[3].mat33f[2] = q.z();
-        cmd.args[3].mat33f[3] = q.w();
+        cmd.args[3].mat33f[0] = vec_att[0];
+        cmd.args[3].mat33f[1] = vec_att[1];
+        cmd.args[3].mat33f[2] = vec_att[2];
+        cmd.args[3].mat33f[3] = vec_att[3];
       } else {
         std::cout << "\nInvalid axis-angle format pass to -att. One or four ";
         std::cout << "elements required. Aborting!\n";
