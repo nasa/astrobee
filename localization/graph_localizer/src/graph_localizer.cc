@@ -687,11 +687,8 @@ int GraphLocalizer::AddBufferedFactors() {
       // Add combined nav states and connecting imu factors for each key in factor if necessary
       // TODO(rsoussan): make this more efficient for factors with multiple keys with the same timestamp?
       for (const auto& key_info : factor_to_add.key_infos) {
-        // Ignore static keys
-        if (key_info.is_static()) continue;
-        if (!AddOrSplitImuFactorIfNeeded(key_info.timestamp())) {
-          LogError("AddBufferedFactor: Failed to add or split imu factors necessary for adding factor.");
-          continue;
+        if (!UpdateNodes(key_info)) {
+          LogError("AddBufferedFactors: Failed to update nodes.");
         }
       }
 
@@ -717,6 +714,17 @@ int GraphLocalizer::AddBufferedFactors() {
 
   LogDebug("AddBufferedFactors: Added " << num_added_factors << " factors.");
   return num_added_factors;
+}
+
+bool GraphLocalizer::UpdateNodes(const KeyInfo& key_info) {
+  switch (key_info.node_updater()) {
+    case NodeUpdater::CombinedNavState:
+      return combined_nav_state_node_updater_->Update(key_info.timestamp(), graph_, *graph_values_);
+    case NodeUpdater::FeaturePoint:
+      return true;
+  }
+  // Shouldn't occur
+  return true;
 }
 
 bool GraphLocalizer::DoGraphAction(FactorsToAdd& factors_to_add) {

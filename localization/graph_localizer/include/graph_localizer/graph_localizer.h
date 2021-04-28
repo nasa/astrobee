@@ -166,6 +166,8 @@ class GraphLocalizer {
 
   int AddBufferedFactors();
 
+  bool UpdateNodes(const KeyInfo& key_info);
+
   bool DoGraphAction(FactorsToAdd& factors_to_add);
 
   bool Rekey(FactorToAdd& factor_to_add);
