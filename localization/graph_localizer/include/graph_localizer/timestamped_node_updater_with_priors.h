@@ -16,27 +16,26 @@
  * under the License.
  */
 
-#ifndef GRAPH_LOCALIZER_TIMESTAMPED_NODE_UPDATER_H_
-#define GRAPH_LOCALIZER_TIMESTAMPED_NODE_UPDATER_H_
+#ifndef GRAPH_LOCALIZER_TIMESTAMPED_NODE_UPDATER_WITH_PRIORS_H_
+#define GRAPH_LOCALIZER_TIMESTAMPED_NODE_UPDATER_WITH_PRIORS_H_
 
+#include <graph_localizer/timestamped_node_updater.h>
 #include <graph_localizer/graph_values.h>
-#include <localization_common/time.h>
 
-#include <gtsam/nonlinear/Marginals.h>
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
 
 namespace graph_localizer {
-class TimestampedNodeUpdater {
+template <typename NodeType, typename NoiseType>
+class TimestampedNodeUpdaterWithPriors : public TimestampedNodeUpdater {
  public:
-  virtual ~TimestampedNodeUpdater() {}
+  virtual ~TimestampedNodeUpdaterWithPriors() {}
 
-  virtual bool Update(const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors,
-                      GraphValues& graph_values) = 0;
+  virtual void AddInitialValuesAndPriors(const NodeType& node, const NoiseType& noise,
+                                         gtsam::NonlinearFactorGraph& graph, GraphValues& graph_values) = 0;
 
-  virtual bool SlideWindow(const localization_common::Time oldest_allowed_timestamp,
-                           const boost::optional<gtsam::Marginals>& marginals, const double huber_k,
-                           gtsam::NonlinearFactorGraph& factors, GraphValues& graph_values) = 0;
+  virtual void AddPriors(const NodeType& node, const NoiseType& noise, const GraphValues& graph_values,
+                         gtsam::NonlinearFactorGraph& factors) = 0;
 };
 }  // namespace graph_localizer
 
-#endif  // GRAPH_LOCALIZER_TIMESTAMPED_NODE_UPDATER_H_
+#endif  // GRAPH_LOCALIZER_TIMESTAMPED_NODE_UPDATER_WITH_PRIORS_H_
