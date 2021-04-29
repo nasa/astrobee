@@ -136,4 +136,11 @@ bool SmartProjectionCumulativeFactorAdder::TooClose(
   }
   return false;
 }
+
+GraphActionCompleterType SmartProjectionCumulativeFactorAdder::type() const { return GraphActionCompleterType::SmartFactor; }
+
+bool SmartProjectionCumulativeFactorAdder::DoAction(gtsam::NonlinearFactorGraph& factors, GraphValues& graph_values) {
+  DeleteFactors<RobustSmartFactor>(factors);
+  return true;
+}
 }  // namespace graph_localizer

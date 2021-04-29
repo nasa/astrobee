@@ -16,21 +16,12 @@
  * under the License.
  */
 
-#ifndef GRAPH_LOCALIZER_GRAPH_ACTION_COMPLETER_H_
-#define GRAPH_LOCALIZER_GRAPH_ACTION_COMPLETER_H_
-
-#include <graph_localizer/graph_action_completer_type.h>
-#include <graph_localizer/graph_values.h>
-
-#include <gtsam/nonlinear/NonlinearFactorGraph.h>
+#ifndef GRAPH_LOCALIZER_GRAPH_ACTION_COMPLETER_TYPE_H_
+#define GRAPH_LOCALIZER_GRAPH_ACTION_COMPLETER_TYPE_H_
 
 namespace graph_localizer {
-class GraphActionCompleter {
- public:
-  virtual ~GraphActionCompleter() {}
-  virtual bool DoAction(gtsam::NonlinearFactorGraph& factors, GraphValues& graph_values) = 0;
-  virtual GraphActionCompleterType type() const = 0;
-};
+// TODO(rsoussan): Generalize this better
+enum class GraphActionCompleterType { ARProjectionFactor, LocProjectionFactor, ProjectionFactor, SmartFactor };
 }  // namespace graph_localizer
 
-#endif  // GRAPH_LOCALIZER_GRAPH_ACTION_COMPLETER_H_
+#endif  // GRAPH_LOCALIZER_GRAPH_ACTION_COMPLETER_TYPE_H_

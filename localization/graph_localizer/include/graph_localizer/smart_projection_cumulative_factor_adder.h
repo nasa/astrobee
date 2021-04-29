@@ -21,6 +21,7 @@
 
 #include <graph_localizer/cumulative_factor_adder.h>
 #include <graph_localizer/feature_tracker.h>
+#include <graph_localizer/graph_action_completer.h>
 #include <graph_localizer/smart_projection_factor_adder_params.h>
 
 #include <gtsam/slam/SmartFactorParams.h>
@@ -29,7 +30,8 @@
 #include <vector>
 
 namespace graph_localizer {
-class SmartProjectionCumulativeFactorAdder : public CumulativeFactorAdder<SmartProjectionFactorAdderParams> {
+class SmartProjectionCumulativeFactorAdder : public CumulativeFactorAdder<SmartProjectionFactorAdderParams>,
+                                             public GraphActionCompleter {
   using Base = CumulativeFactorAdder<SmartProjectionFactorAdderParams>;
 
  public:
@@ -45,6 +47,10 @@ class SmartProjectionCumulativeFactorAdder : public CumulativeFactorAdder<SmartP
     const FeatureTrackLengthMap& feature_tracks, const double feature_track_min_separation,
     FactorsToAdd& smart_factors_to_add,
     std::unordered_map<localization_measurements::FeatureId, localization_measurements::FeaturePoint>& added_points);
+
+  bool DoAction(gtsam::NonlinearFactorGraph& factors, GraphValues& graph_values) final;
+
+  GraphActionCompleterType type() const final;
 
  private:
   void AddSmartFactor(const std::vector<localization_measurements::FeaturePoint>& feature_track_points,
