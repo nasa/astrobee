@@ -140,7 +140,7 @@ gtsam::noiseModel::Robust::shared_ptr Robust(const gtsam::SharedNoiseModel& nois
 }
 
 boost::optional<SharedRobustSmartFactor> FixSmartFactorByRemovingIndividualMeasurements(
-  const GraphLocalizerParams& params, const RobustSmartFactor& smart_factor,
+  const SmartProjectionFactorAdderParams& params, const RobustSmartFactor& smart_factor,
   const gtsam::SmartProjectionParams& smart_projection_params, const GraphValues& graph_values) {
   // TODO(rsoussan): Make this more efficient by enabled removal of measurements and keys in smart factor
   const auto original_measurements = smart_factor.measured();
@@ -157,10 +157,8 @@ boost::optional<SharedRobustSmartFactor> FixSmartFactorByRemovingIndividualMeasu
       keys_to_add.emplace_back(original_keys[i]);
     }
     auto new_smart_factor = boost::make_shared<RobustSmartFactor>(
-      params.factor.smart_projection_adder.cam_noise, params.factor.smart_projection_adder.cam_intrinsics,
-      params.factor.smart_projection_adder.body_T_cam, smart_projection_params,
-      params.factor.smart_projection_adder.rotation_only_fallback, params.factor.smart_projection_adder.robust,
-      params.factor.smart_projection_adder.huber_k);
+      params.cam_noise, params.cam_intrinsics, params.body_T_cam, smart_projection_params,
+      params.rotation_only_fallback, params.robust, params.huber_k);
     new_smart_factor->add(measurements_to_add, keys_to_add);
     const auto new_point = new_smart_factor->triangulateSafe(new_smart_factor->cameras(graph_values.values()));
     if (new_point.valid()) {
@@ -173,7 +171,7 @@ boost::optional<SharedRobustSmartFactor> FixSmartFactorByRemovingIndividualMeasu
 }
 
 boost::optional<SharedRobustSmartFactor> FixSmartFactorByRemovingMeasurementSequence(
-  const GraphLocalizerParams& params, const RobustSmartFactor& smart_factor,
+  const SmartProjectionFactorAdderParams& params, const RobustSmartFactor& smart_factor,
   const gtsam::SmartProjectionParams& smart_projection_params, const GraphValues& graph_values) {
   constexpr int min_num_measurements = 2;
   // TODO(rsoussan): Make this more efficient by enabled removal of measurements and keys in smart factor
@@ -189,10 +187,8 @@ boost::optional<SharedRobustSmartFactor> FixSmartFactorByRemovingMeasurementSequ
       keys_to_add.emplace_back(original_keys[i]);
     }
     auto new_smart_factor = boost::make_shared<RobustSmartFactor>(
-      params.factor.smart_projection_adder.cam_noise, params.factor.smart_projection_adder.cam_intrinsics,
-      params.factor.smart_projection_adder.body_T_cam, smart_projection_params,
-      params.factor.smart_projection_adder.rotation_only_fallback, params.factor.smart_projection_adder.robust,
-      params.factor.smart_projection_adder.huber_k);
+      params.cam_noise, params.cam_intrinsics, params.body_T_cam, smart_projection_params,
+      params.rotation_only_fallback, params.robust, params.huber_k);
     new_smart_factor->add(measurements_to_add, keys_to_add);
     const auto new_point = new_smart_factor->triangulateSafe(new_smart_factor->cameras(graph_values.values()));
     if (new_point.valid()) {
@@ -218,10 +214,8 @@ boost::optional<SharedRobustSmartFactor> FixSmartFactorByRemovingMeasurementSequ
         keys_to_add.emplace_back(original_keys[i]);
       }
       auto new_smart_factor = boost::make_shared<RobustSmartFactor>(
-        params.factor.smart_projection_adder.cam_noise, params.factor.smart_projection_adder.cam_intrinsics,
-        params.factor.smart_projection_adder.body_T_cam, smart_projection_params,
-        params.factor.smart_projection_adder.rotation_only_fallback, params.factor.smart_projection_adder.robust,
-        params.factor.smart_projection_adder.huber_k);
+        params.cam_noise, params.cam_intrinsics, params.body_T_cam, smart_projection_params,
+        params.rotation_only_fallback, params.robust, params.huber_k);
       new_smart_factor->add(measurements_to_add, keys_to_add);
       const auto new_point = new_smart_factor->triangulateSafe(new_smart_factor->cameras(graph_values.values()));
       if (new_point.valid()) {

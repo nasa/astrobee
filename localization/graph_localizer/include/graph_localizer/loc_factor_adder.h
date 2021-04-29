@@ -21,6 +21,7 @@
 
 #include <graph_localizer/factor_adder.h>
 #include <graph_localizer/graph_action.h>
+#include <graph_localizer/graph_action_completer.h>
 #include <graph_localizer/loc_factor_adder_params.h>
 #include <localization_common/averager.h>
 #include <localization_measurements/matched_projections_measurement.h>
@@ -29,7 +30,8 @@
 
 namespace graph_localizer {
 class LocFactorAdder
-    : public FactorAdder<localization_measurements::MatchedProjectionsMeasurement, LocFactorAdderParams> {
+    : public FactorAdder<localization_measurements::MatchedProjectionsMeasurement, LocFactorAdderParams>,
+      public GraphActionCompleter {
   using Base = FactorAdder<localization_measurements::MatchedProjectionsMeasurement, LocFactorAdderParams>;
 
  public:
@@ -37,6 +39,11 @@ class LocFactorAdder
 
   std::vector<FactorsToAdd> AddFactors(
     const localization_measurements::MatchedProjectionsMeasurement& matched_projections_measurement) final;
+
+  bool DoAction(FactorsToAdd& factors_to_add, gtsam::NonlinearFactorGraph& graph_factors,
+                GraphValues& graph_values) final;
+
+  GraphActionCompleterType type() const final;
 
  private:
   localization_common::Averager num_landmarks_averager_ = localization_common::Averager("Num Landmarks");

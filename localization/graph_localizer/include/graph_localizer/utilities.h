@@ -73,11 +73,11 @@ geometry_msgs::PoseStamped PoseMsg(const gtsam::Pose3& global_T_body, const loca
 gtsam::noiseModel::Robust::shared_ptr Robust(const gtsam::SharedNoiseModel& noise, const double huber_k);
 
 boost::optional<SharedRobustSmartFactor> FixSmartFactorByRemovingIndividualMeasurements(
-  const GraphLocalizerParams& params, const RobustSmartFactor& smart_factor,
+  const SmartProjectionFactorAdderParams& params, const RobustSmartFactor& smart_factor,
   const gtsam::SmartProjectionParams& smart_projection_params, const GraphValues& graph_values);
 
 boost::optional<SharedRobustSmartFactor> FixSmartFactorByRemovingMeasurementSequence(
-  const GraphLocalizerParams& params, const RobustSmartFactor& smart_factor,
+  const SmartProjectionFactorAdderParams& params, const RobustSmartFactor& smart_factor,
   const gtsam::SmartProjectionParams& smart_projection_params, const GraphValues& graph_values);
 
 SharedRobustSmartFactor RemoveSmartFactorMeasurements(const RobustSmartFactor& smart_factor,

@@ -137,10 +137,45 @@ bool SmartProjectionCumulativeFactorAdder::TooClose(
   return false;
 }
 
-GraphActionCompleterType SmartProjectionCumulativeFactorAdder::type() const { return GraphActionCompleterType::SmartFactor; }
+GraphActionCompleterType SmartProjectionCumulativeFactorAdder::type() const {
+  return GraphActionCompleterType::SmartFactor;
+}
 
-bool SmartProjectionCumulativeFactorAdder::DoAction(gtsam::NonlinearFactorGraph& factors, GraphValues& graph_values) {
-  DeleteFactors<RobustSmartFactor>(factors);
+bool SmartProjectionCumulativeFactorAdder::DoAction(FactorsToAdd& factors_to_add,
+                                                    gtsam::NonlinearFactorGraph& graph_factors,
+                                                    GraphValues& graph_values) {
+  DeleteFactors<RobustSmartFactor>(graph_factors);
+  if (params().splitting) SplitSmartFactorsIfNeeded(graph_values, factors_to_add);
   return true;
+}
+
+// TODO(rsoussan): Clean this function up (duplicate code), address other todo's
+void SmartProjectionCumulativeFactorAdder::SplitSmartFactorsIfNeeded(const GraphValues& graph_values,
+                                                                     FactorsToAdd& factors_to_add) {
+  for (auto& factor_to_add : factors_to_add.Get()) {
+    auto smart_factor = dynamic_cast<RobustSmartFactor*>(factor_to_add.factor.get());
+    if (!smart_factor) continue;
+    // Can't remove measurements if there are only 2 or fewer
+    if (smart_factor->measured().size() <= 2) continue;
+    const auto point = smart_factor->triangulateSafe(smart_factor->cameras(graph_values.values()));
+    if (point.valid()) continue;
+    {
+      const auto fixed_smart_factor =
+        FixSmartFactorByRemovingIndividualMeasurements(params(), *smart_factor, smart_projection_params_, graph_values);
+      if (fixed_smart_factor) {
+        factor_to_add.factor = *fixed_smart_factor;
+        continue;
+      }
+    }
+    {
+      const auto fixed_smart_factor =
+        FixSmartFactorByRemovingMeasurementSequence(params(), *smart_factor, smart_projection_params_, graph_values);
+      if (fixed_smart_factor) {
+        factor_to_add.factor = *fixed_smart_factor;
+        continue;
+      }
+    }
+    LogDebug("SplitSmartFactorsIfNeeded: Failed to fix smart factor");
+  }
 }
 }  // namespace graph_localizer

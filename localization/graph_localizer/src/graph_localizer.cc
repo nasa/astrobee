@@ -354,15 +354,15 @@ void GraphLocalizer::SplitSmartFactorsIfNeeded(FactorsToAdd& factors_to_add) {
     if (point.valid()) continue;
     {
       const auto fixed_smart_factor = FixSmartFactorByRemovingIndividualMeasurements(
-        params_, *smart_factor, smart_projection_params_, *graph_values_);
+        params_.factor.smart_projection_adder, *smart_factor, smart_projection_params_, *graph_values_);
       if (fixed_smart_factor) {
         factor_to_add.factor = *fixed_smart_factor;
         continue;
       }
     }
     {
-      const auto fixed_smart_factor =
-        FixSmartFactorByRemovingMeasurementSequence(params_, *smart_factor, smart_projection_params_, *graph_values_);
+      const auto fixed_smart_factor = FixSmartFactorByRemovingMeasurementSequence(
+        params_.factor.smart_projection_adder, *smart_factor, smart_projection_params_, *graph_values_);
       if (fixed_smart_factor) {
         factor_to_add.factor = *fixed_smart_factor;
         continue;

@@ -28,7 +28,8 @@ namespace graph_localizer {
 class GraphActionCompleter {
  public:
   virtual ~GraphActionCompleter() {}
-  virtual bool DoAction(gtsam::NonlinearFactorGraph& factors, GraphValues& graph_values) = 0;
+  virtual bool DoAction(FactorsToAdd& factors_to_add, gtsam::NonlinearFactorGraph& graph_factors,
+                        GraphValues& graph_values) = 0;
   virtual GraphActionCompleterType type() const = 0;
 };
 }  // namespace graph_localizer
