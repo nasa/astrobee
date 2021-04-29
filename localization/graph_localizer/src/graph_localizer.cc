@@ -736,7 +736,7 @@ bool GraphLocalizer::DoGraphAction(FactorsToAdd& factors_to_add) {
   if (factors_to_add.graph_action_completer_type() == GraphActionCompleterType::None) return true;
   for (auto& graph_action_completer : graph_action_completers_) {
     if (graph_action_completer->type() == factors_to_add.graph_action_completer_type())
-      graph_action_completer->DoAction(factors_to_add, graph_, *graph_values_);
+      return graph_action_completer->DoAction(factors_to_add, graph_, *graph_values_);
   }
 
   LogError("DoGraphAction: No graph action completer found for factors to add.");
