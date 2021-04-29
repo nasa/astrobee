@@ -16,7 +16,6 @@
  * under the License.
  */
 
-#include <graph_localizer/graph_action.h>
 #include <graph_localizer/projection_factor_adder.h>
 #include <graph_localizer/utilities.h>
 #include <localization_common/logger.h>
@@ -74,7 +73,7 @@ std::vector<FactorsToAdd> ProjectionFactorAdder::AddFactors(
         (new_features + graph_values_->NumFeatures()) < params().max_num_features) {
       // Create new factors to add for each feature track so the graph action can act on only that
       // feature track to triangulate a new point
-      FactorsToAdd projection_factors_with_new_point_to_add(GraphAction::kTriangulateNewPoint);
+      FactorsToAdd projection_factors_with_new_point_to_add(type());
       const auto point_key = graph_values_->CreateFeatureKey();
       for (const auto& feature_point_pair : feature_track.points()) {
         const auto& feature_point = feature_point_pair.second;

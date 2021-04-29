@@ -21,7 +21,7 @@
 
 namespace graph_localizer {
 // TODO(rsoussan): Generalize this better
-enum class GraphActionCompleterType { LocProjectionFactor, ProjectionFactor, SmartFactor };
+enum class GraphActionCompleterType { LocProjectionFactor, None, ProjectionFactor, SmartFactor };
 }  // namespace graph_localizer
 
 #endif  // GRAPH_LOCALIZER_GRAPH_ACTION_COMPLETER_TYPE_H_

@@ -105,14 +105,17 @@ GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
   }
 
   // Initialize Factor Adders
-  ar_tag_loc_factor_adder_.reset(
-    new LocFactorAdder(params_.factor.ar_tag_loc_adder, GraphAction::kARTagProjectionNoiseScaling));
-  loc_factor_adder_.reset(new LocFactorAdder(params_.factor.loc_adder, GraphAction::kLocProjectionNoiseScaling));
+  ar_tag_loc_factor_adder_.reset(new LocFactorAdder(params_.factor.ar_tag_loc_adder));
+  graph_action_completers_.emplace_back(ar_tag_loc_factor_adder_);
+  loc_factor_adder_.reset(new LocFactorAdder(params_.factor.loc_adder));
+  graph_action_completers_.emplace_back(loc_factor_adder_);
   projection_factor_adder_.reset(
     new ProjectionFactorAdder(params_.factor.projection_adder, feature_tracker_, graph_values_));
+  graph_action_completers_.emplace_back(projection_factor_adder_);
   rotation_factor_adder_.reset(new RotationFactorAdder(params_.factor.rotation_adder, feature_tracker_));
   smart_projection_cumulative_factor_adder_.reset(
     new SmartProjectionCumulativeFactorAdder(params_.factor.smart_projection_adder, feature_tracker_));
+  graph_action_completers_.emplace_back(smart_projection_cumulative_factor_adder_);
   standstill_factor_adder_.reset(new StandstillFactorAdder(params_.factor.standstill_adder, feature_tracker_));
 
   // Initialize Node Updaters
@@ -730,25 +733,14 @@ bool GraphLocalizer::UpdateNodes(const KeyInfo& key_info) {
 }
 
 bool GraphLocalizer::DoGraphAction(FactorsToAdd& factors_to_add) {
-  switch (factors_to_add.graph_action()) {
-    case GraphAction::kNone:
-      return true;
-    case GraphAction::kDeleteExistingSmartFactors:
-      LogDebug("DoGraphAction: Deleting smart factors.");
-      DeleteFactors<RobustSmartFactor>(graph_);
-      // TODO(rsoussan): rename this graph action to handle smart factors
-      if (params_.factor.smart_projection_adder.splitting) SplitSmartFactorsIfNeeded(factors_to_add);
-      return true;
-    case GraphAction::kTriangulateNewPoint:
-      return TriangulateNewPoint(factors_to_add);
-    case GraphAction::kLocProjectionNoiseScaling:
-      return LocProjectionNoiseScaling(factors_to_add);
-    case GraphAction::kARTagProjectionNoiseScaling:
-      return ARProjectionNoiseScaling(factors_to_add);
+  if (factors_to_add.graph_action_completer_type() == GraphActionCompleterType::None) return true;
+  for (auto& graph_action_completer : graph_action_completers_) {
+    if (graph_action_completer->type() == factors_to_add.graph_action_completer_type())
+      graph_action_completer->DoAction(factors_to_add, graph_, *graph_values_);
   }
 
-  // Shouldn't occur
-  return true;
+  LogError("DoGraphAction: No graph action completer found for factors to add.");
+  return false;
 }
 
 bool GraphLocalizer::Rekey(FactorToAdd& factor_to_add) {

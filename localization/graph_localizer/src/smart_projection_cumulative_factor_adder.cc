@@ -16,7 +16,6 @@
  * under the License.
  */
 
-#include <graph_localizer/graph_action.h>
 #include <graph_localizer/smart_projection_cumulative_factor_adder.h>
 #include <graph_localizer/utilities.h>
 #include <localization_common/logger.h>
@@ -62,7 +61,7 @@ void SmartProjectionCumulativeFactorAdder::AddFactors(
 
 std::vector<FactorsToAdd> SmartProjectionCumulativeFactorAdder::AddFactors() {
   // Add smart factor for each valid feature track
-  FactorsToAdd smart_factors_to_add(GraphAction::kDeleteExistingSmartFactors);
+  FactorsToAdd smart_factors_to_add(type());
   if (params().use_allowed_timestamps) {
     for (const auto& feature_track : feature_tracker_->feature_tracks()) {
       const auto points = feature_track.second->AllowedPoints(feature_tracker_->smart_factor_timestamp_allow_list());

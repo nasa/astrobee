@@ -16,7 +16,6 @@
  * under the License.
  */
 
-#include <graph_localizer/graph_action.h>
 #include <graph_localizer/loc_factor_adder.h>
 #include <graph_localizer/loc_pose_factor.h>
 #include <graph_localizer/loc_projection_factor.h>
@@ -28,8 +27,7 @@
 namespace graph_localizer {
 namespace lm = localization_measurements;
 namespace sym = gtsam::symbol_shorthand;
-LocFactorAdder::LocFactorAdder(const LocFactorAdderParams& params, const GraphAction projection_graph_action)
-    : LocFactorAdder::Base(params), projection_graph_action_(projection_graph_action) {}
+LocFactorAdder::LocFactorAdder(const LocFactorAdderParams& params) : LocFactorAdder::Base(params) {}
 
 std::vector<FactorsToAdd> LocFactorAdder::AddFactors(
   const lm::MatchedProjectionsMeasurement& matched_projections_measurement) {
@@ -79,7 +77,7 @@ std::vector<FactorsToAdd> LocFactorAdder::AddFactors(
     }
 
     int num_loc_projection_factors = 0;
-    FactorsToAdd projection_factors_to_add(projection_graph_action_);
+    FactorsToAdd projection_factors_to_add(type());
     projection_factors_to_add.reserve(matched_projections_measurement.matched_projections.size());
     for (const auto& matched_projection : matched_projections_measurement.matched_projections) {
       const KeyInfo key_info(&sym::P, NodeUpdaterType::CombinedNavState, matched_projections_measurement.timestamp);

@@ -23,7 +23,7 @@
 #include <graph_localizer/combined_nav_state_node_updater_params.h>
 #include <graph_localizer/factor_to_add.h>
 #include <graph_localizer/feature_tracker.h>
-#include <graph_localizer/graph_action.h>
+#include <graph_localizer/graph_action_completer.h>
 #include <graph_localizer/graph_localizer_params.h>
 #include <graph_localizer/graph_stats.h>
 #include <graph_localizer/graph_values.h>
@@ -210,17 +210,18 @@ class GraphLocalizer {
   std::multimap<localization_common::Time, FactorsToAdd> buffered_factors_to_add_;
 
   // Factor Adders
-  std::unique_ptr<LocFactorAdder> ar_tag_loc_factor_adder_;
-  std::unique_ptr<LocFactorAdder> loc_factor_adder_;
-  std::unique_ptr<ProjectionFactorAdder> projection_factor_adder_;
-  std::unique_ptr<RotationFactorAdder> rotation_factor_adder_;
-  std::unique_ptr<SmartProjectionCumulativeFactorAdder> smart_projection_cumulative_factor_adder_;
-  std::unique_ptr<StandstillFactorAdder> standstill_factor_adder_;
+  std::shared_ptr<LocFactorAdder> ar_tag_loc_factor_adder_;
+  std::shared_ptr<LocFactorAdder> loc_factor_adder_;
+  std::shared_ptr<ProjectionFactorAdder> projection_factor_adder_;
+  std::shared_ptr<RotationFactorAdder> rotation_factor_adder_;
+  std::shared_ptr<SmartProjectionCumulativeFactorAdder> smart_projection_cumulative_factor_adder_;
+  std::shared_ptr<StandstillFactorAdder> standstill_factor_adder_;
 
   // Node Updaters
   std::shared_ptr<CombinedNavStateNodeUpdater> combined_nav_state_node_updater_;
 
   std::vector<std::shared_ptr<TimestampedNodeUpdater>> timestamped_node_updaters_;
+  std::vector<std::shared_ptr<GraphActionCompleter>> graph_action_completers_;
   gtsam::Marginals::Factorization marginals_factorization_;
   boost::optional<bool> standstill_;
   boost::optional<localization_common::Time> last_latest_time_;
