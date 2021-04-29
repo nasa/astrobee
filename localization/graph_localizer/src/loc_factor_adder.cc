@@ -27,7 +27,9 @@
 namespace graph_localizer {
 namespace lm = localization_measurements;
 namespace sym = gtsam::symbol_shorthand;
-LocFactorAdder::LocFactorAdder(const LocFactorAdderParams& params) : LocFactorAdder::Base(params) {}
+LocFactorAdder::LocFactorAdder(const LocFactorAdderParams& params,
+                               const GraphActionCompleterType graph_action_completer_type)
+    : LocFactorAdder::Base(params), graph_action_completer_type_(graph_action_completer_type) {}
 
 std::vector<FactorsToAdd> LocFactorAdder::AddFactors(
   const lm::MatchedProjectionsMeasurement& matched_projections_measurement) {
@@ -100,7 +102,7 @@ std::vector<FactorsToAdd> LocFactorAdder::AddFactors(
   return factors_to_add;
 }
 
-GraphActionCompleterType LocFactorAdder::type() const { return GraphActionCompleterType::LocProjectionFactor; }
+GraphActionCompleterType LocFactorAdder::type() const { return graph_action_completer_type_; }
 
 bool LocFactorAdder::DoAction(FactorsToAdd& factors_to_add, gtsam::NonlinearFactorGraph& graph_factors,
                               GraphValues& graph_values) {

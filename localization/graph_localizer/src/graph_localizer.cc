@@ -105,9 +105,10 @@ GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
   }
 
   // Initialize Factor Adders
-  ar_tag_loc_factor_adder_.reset(new LocFactorAdder(params_.factor.ar_tag_loc_adder));
+  ar_tag_loc_factor_adder_.reset(
+    new LocFactorAdder(params_.factor.ar_tag_loc_adder, GraphActionCompleterType::ARTagLocProjectionFactor));
   graph_action_completers_.emplace_back(ar_tag_loc_factor_adder_);
-  loc_factor_adder_.reset(new LocFactorAdder(params_.factor.loc_adder));
+  loc_factor_adder_.reset(new LocFactorAdder(params_.factor.loc_adder, GraphActionCompleterType::LocProjectionFactor));
   graph_action_completers_.emplace_back(loc_factor_adder_);
   projection_factor_adder_.reset(
     new ProjectionFactorAdder(params_.factor.projection_adder, feature_tracker_, graph_values_));
