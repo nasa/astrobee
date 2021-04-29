@@ -85,19 +85,11 @@ class GraphLocalizer {
   LatestCombinedNavStateAndCovariances() const;
   bool AddOpticalFlowMeasurement(
     const localization_measurements::FeaturePointsMeasurement& optical_flow_feature_points_measurement);
-  bool TriangulateNewPoint(FactorsToAdd& factors_to_add);
-  bool LocProjectionNoiseScaling(FactorsToAdd& factors_to_add);
-  bool ARProjectionNoiseScaling(FactorsToAdd& factors_to_add);
-  bool MapProjectionNoiseScaling(const LocFactorAdderParams& params, FactorsToAdd& factors_to_add);
   void CheckForStandstill();
   void AddARTagMeasurement(
     const localization_measurements::MatchedProjectionsMeasurement& matched_projections_measurement);
   void AddSparseMappingMeasurement(
     const localization_measurements::MatchedProjectionsMeasurement& matched_projections_measurement);
-  // Attempts to remove most recent or oldest measurements to make and invalid smart factor valid
-  // TODO(rsoussan): Move this to SmartProjectionFactorAdder or utilities!
-  void SplitSmartFactorsIfNeeded(FactorsToAdd& factors_to_add);
-
   bool Update();
   const FeatureTrackIdMap& feature_tracks() const { return feature_tracker_->feature_tracks(); }
 
@@ -202,7 +194,6 @@ class GraphLocalizer {
   bool log_on_destruction_;
   GraphLocalizerParams params_;
   gtsam::LevenbergMarquardtParams levenberg_marquardt_params_;
-  gtsam::TriangulationParameters projection_triangulation_params_;
   gtsam::SmartProjectionParams smart_projection_params_;
   gtsam::NonlinearFactorGraph graph_;
   boost::optional<gtsam::Marginals> marginals_;
