@@ -34,6 +34,7 @@
 #include <graph_localizer/rotation_factor_adder.h>
 #include <graph_localizer/smart_projection_cumulative_factor_adder.h>
 #include <graph_localizer/standstill_factor_adder.h>
+#include <graph_localizer/timestamped_node_updater.h>
 #include <imu_integration/latest_imu_integrator.h>
 #include <localization_common/combined_nav_state.h>
 #include <localization_common/combined_nav_state_covariances.h>
@@ -217,8 +218,9 @@ class GraphLocalizer {
   std::unique_ptr<StandstillFactorAdder> standstill_factor_adder_;
 
   // Node Updaters
-  std::unique_ptr<CombinedNavStateNodeUpdater> combined_nav_state_node_updater_;
+  std::shared_ptr<CombinedNavStateNodeUpdater> combined_nav_state_node_updater_;
 
+  std::vector<std::shared_ptr<TimestampedNodeUpdater>> timestamped_node_updaters_;
   gtsam::Marginals::Factorization marginals_factorization_;
   boost::optional<bool> standstill_;
   boost::optional<localization_common::Time> last_latest_time_;

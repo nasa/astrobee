@@ -118,7 +118,7 @@ void SmartProjectionCumulativeFactorAdder::AddSmartFactor(const std::vector<lm::
   for (int i = 0; i < static_cast<int>(feature_track_points.size()); ++i) {
     const auto& feature_point = feature_track_points[i];
     if (i >= params().max_num_points_per_factor) break;
-    const KeyInfo key_info(&sym::P, NodeUpdater::CombinedNavState, feature_point.timestamp);
+    const KeyInfo key_info(&sym::P, NodeUpdaterType::CombinedNavState, feature_point.timestamp);
     key_infos.emplace_back(key_info);
     smart_factor->add(Camera::Measurement(feature_point.image_point), key_info.MakeKey(uninitialized_key_index++));
   }

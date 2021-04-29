@@ -150,6 +150,7 @@ GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
   combined_nav_state_node_updater_.reset(
     new CombinedNavStateNodeUpdater(combined_nav_state_node_updater_params, latest_imu_integrator_));
   combined_nav_state_node_updater_->AddInitialValuesAndPriors(graph_, *graph_values_);
+  timestamped_node_updaters_.emplace_back(combined_nav_state_node_updater_);
 }
 
 GraphLocalizer::~GraphLocalizer() {
@@ -492,8 +493,8 @@ bool GraphLocalizer::MapProjectionNoiseScaling(const LocFactorAdderParams& param
       params.huber_k);
     gtsam::LocPoseFactor::shared_ptr pose_prior_factor(
       new gtsam::LocPoseFactor(*pose_key, *world_T_cam * params.body_T_cam.inverse(), pose_noise));
-    factors_to_add.push_back(
-      FactorToAdd({KeyInfo(&sym::P, NodeUpdater::CombinedNavState, factors_to_add.timestamp())}, pose_prior_factor));
+    factors_to_add.push_back(FactorToAdd(
+      {KeyInfo(&sym::P, NodeUpdaterType::CombinedNavState, factors_to_add.timestamp())}, pose_prior_factor));
   }
   return true;
 }
@@ -549,7 +550,8 @@ bool GraphLocalizer::SlideWindow(const boost::optional<gtsam::Marginals>& margin
     }
   }
 
-  combined_nav_state_node_updater_->SlideWindow(new_oldest_time, marginals, params_.huber_k, graph_, *graph_values_);
+  for (auto& node_updater : timestamped_node_updaters_)
+    node_updater->SlideWindow(new_oldest_time, marginals, params_.huber_k, graph_, *graph_values_);
   if (params_.factor.projection_adder.enabled) graph_values_->RemoveOldFeatures(old_feature_keys);
 
   // Remove old data from other containers
@@ -719,14 +721,12 @@ int GraphLocalizer::AddBufferedFactors() {
 bool GraphLocalizer::UpdateNodes(const KeyInfo& key_info) {
   // Do nothing for static nodes
   if (key_info.is_static()) return true;
-  switch (key_info.node_updater()) {
-    case NodeUpdater::CombinedNavState:
-      return combined_nav_state_node_updater_->Update(key_info.timestamp(), graph_, *graph_values_);
-    case NodeUpdater::FeaturePoint:
-      return true;
+  for (auto& node_updater : timestamped_node_updaters_) {
+    if (node_updater->type() == key_info.node_updater_type())
+      return node_updater->Update(key_info.timestamp(), graph_, *graph_values_);
   }
-  // Shouldn't occur
-  return true;
+  LogError("UpdateNodes: No node updater found for key info.");
+  return false;
 }
 
 bool GraphLocalizer::DoGraphAction(FactorsToAdd& factors_to_add) {

@@ -49,6 +49,8 @@ class CombinedNavStateNodeUpdater
                    const boost::optional<gtsam::Marginals>& marginals, const double huber_k,
                    gtsam::NonlinearFactorGraph& factors, GraphValues& graph_values) final;
 
+  NodeUpdaterType type() const final;
+
  private:
   void RemovePriors(const int key_index, gtsam::NonlinearFactorGraph& factors);
   int GenerateKeyIndex();

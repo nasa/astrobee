@@ -19,6 +19,7 @@
 #ifndef GRAPH_LOCALIZER_KEY_INFO_H_
 #define GRAPH_LOCALIZER_KEY_INFO_H_
 
+#include <graph_localizer/node_updater_type.h>
 #include <localization_common/time.h>
 
 #include <gtsam/inference/Key.h>
@@ -28,23 +29,20 @@
 
 namespace graph_localizer {
 
-// TODO(rsoussan): Generalize this better
-enum class NodeUpdater { CombinedNavState, FeaturePoint };
-
 using KeyCreatorFunction = std::function<gtsam::Key(std::uint64_t)>;
 class KeyInfo {
  public:
-  KeyInfo(KeyCreatorFunction key_creator_function, const NodeUpdater node_updater,
+  KeyInfo(KeyCreatorFunction key_creator_function, const NodeUpdaterType node_updater_type,
           const localization_common::Time timestamp)
       : key_creator_function_(key_creator_function),
-        node_updater_(node_updater),
+        node_updater_type_(node_updater_type),
         timestamp_(timestamp),
         static_(false) {}
   // Use for static keys
   // TODO(rsoussan): Clean up this interface, use inheritance instead?
-  KeyInfo(KeyCreatorFunction key_creator_function, const NodeUpdater node_updater, const int id)
+  KeyInfo(KeyCreatorFunction key_creator_function, const NodeUpdaterType node_updater_type, const int id)
       : key_creator_function_(key_creator_function),
-        node_updater_(node_updater),
+        node_updater_type_(node_updater_type),
         timestamp_(0),
         id_(id),
         static_(true) {}
@@ -56,11 +54,11 @@ class KeyInfo {
   bool is_static() const { return static_; }
   // TODO(rsoussan): This is only available for static keys, clean this up
   int id() const { return id_; }
-  NodeUpdater node_updater() const { return node_updater_; }
+  NodeUpdaterType node_updater_type() const { return node_updater_type_; }
 
  private:
   KeyCreatorFunction key_creator_function_;
-  NodeUpdater node_updater_;
+  NodeUpdaterType node_updater_type_;
   localization_common::Time timestamp_;
   int id_;
   // Static (not changing with time) key

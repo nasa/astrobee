@@ -112,6 +112,8 @@ bool CombinedNavStateNodeUpdater::SlideWindow(const localization_common::Time ol
   return true;
 }
 
+NodeUpdaterType CombinedNavStateNodeUpdater::type() const { return NodeUpdaterType::CombinedNavState; }
+
 void CombinedNavStateNodeUpdater::RemovePriors(const int key_index, gtsam::NonlinearFactorGraph& factors) {
   int removed_factors = 0;
   for (auto factor_it = factors.begin(); factor_it != factors.end();) {

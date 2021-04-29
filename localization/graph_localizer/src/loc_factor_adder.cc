@@ -63,7 +63,7 @@ std::vector<FactorsToAdd> LocFactorAdder::AddFactors(
       gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(noise_scale * pose_prior_noise_sigmas)),
       params().huber_k);
 
-    const KeyInfo key_info(&sym::P, NodeUpdater::CombinedNavState, matched_projections_measurement.timestamp);
+    const KeyInfo key_info(&sym::P, NodeUpdaterType::CombinedNavState, matched_projections_measurement.timestamp);
     gtsam::LocPoseFactor::shared_ptr pose_prior_factor(new gtsam::LocPoseFactor(
       key_info.UninitializedKey(), matched_projections_measurement.global_T_cam * params().body_T_cam.inverse(),
       pose_noise));
@@ -82,7 +82,7 @@ std::vector<FactorsToAdd> LocFactorAdder::AddFactors(
     FactorsToAdd projection_factors_to_add(projection_graph_action_);
     projection_factors_to_add.reserve(matched_projections_measurement.matched_projections.size());
     for (const auto& matched_projection : matched_projections_measurement.matched_projections) {
-      const KeyInfo key_info(&sym::P, NodeUpdater::CombinedNavState, matched_projections_measurement.timestamp);
+      const KeyInfo key_info(&sym::P, NodeUpdaterType::CombinedNavState, matched_projections_measurement.timestamp);
       // TODO(rsoussan): Pass sigma insted of already constructed isotropic noise
       const gtsam::SharedIsotropic scaled_noise(
         gtsam::noiseModel::Isotropic::Sigma(2, noise_scale * params().cam_noise->sigma()));
