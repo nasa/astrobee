@@ -21,15 +21,19 @@
 
 #include <graph_localizer/factor_adder.h>
 #include <graph_localizer/feature_tracker.h>
+#include <graph_localizer/graph_action_completer.h>
 #include <graph_localizer/projection_factor_adder_params.h>
 #include <graph_localizer/graph_values.h>
 #include <localization_measurements/feature_points_measurement.h>
+
+#include <gtsam/geometry/triangulation.h>
 
 #include <vector>
 
 namespace graph_localizer {
 class ProjectionFactorAdder
-    : public FactorAdder<localization_measurements::FeaturePointsMeasurement, ProjectionFactorAdderParams> {
+    : public FactorAdder<localization_measurements::FeaturePointsMeasurement, ProjectionFactorAdderParams>,
+      public GraphActionCompleter {
   using Base = FactorAdder<localization_measurements::FeaturePointsMeasurement, ProjectionFactorAdderParams>;
 
  public:
@@ -40,9 +44,18 @@ class ProjectionFactorAdder
   std::vector<FactorsToAdd> AddFactors(
     const localization_measurements::FeaturePointsMeasurement& feature_points_measurement) final;
 
+  bool DoAction(FactorsToAdd& factors_to_add, gtsam::NonlinearFactorGraph& graph_factors,
+                GraphValues& graph_values) final;
+
+  GraphActionCompleterType type() const final;
+
  private:
+  bool TriangulateNewPoint(FactorsToAdd& factors_to_add, gtsam::NonlinearFactorGraph& graph_factors,
+                           GraphValues& graph_values);
+
   std::shared_ptr<const FeatureTracker> feature_tracker_;
   std::shared_ptr<const GraphValues> graph_values_;
+  gtsam::TriangulationParameters projection_triangulation_params_;
 };
 }  // namespace graph_localizer
 
