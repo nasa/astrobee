@@ -15,8 +15,8 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef GRAPH_LOCALIZER_GRAPH_OPTIMIZER_PARAMS_H_
-#define GRAPH_LOCALIZER_GRAPH_OPTIMIZER_PARAMS_H_
+#ifndef GRAPH_OPTIMIZER_GRAPH_OPTIMIZER_PARAMS_H_
+#define GRAPH_OPTIMIZER_GRAPH_OPTIMIZER_PARAMS_H_
 
 #include <graph_localizer/graph_values_params.h>
 
@@ -37,4 +37,4 @@ struct GraphOptimizerParams {
 };
 }  // namespace graph_localizer
 
-#endif  // GRAPH_LOCALIZER_GRAPH_OPTIMIZER_PARAMS_H_
+#endif  // GRAPH_OPTIMIZER_GRAPH_OPTIMIZER_PARAMS_H_

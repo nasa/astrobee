@@ -16,8 +16,8 @@
  * under the License.
  */
 
-#ifndef GRAPH_LOCALIZER_FACTOR_ADDER_PARAMS_H_
-#define GRAPH_LOCALIZER_FACTOR_ADDER_PARAMS_H_
+#ifndef GRAPH_OPTIMIZER_FACTOR_ADDER_PARAMS_H_
+#define GRAPH_OPTIMIZER_FACTOR_ADDER_PARAMS_H_
 
 namespace graph_localizer {
 struct FactorAdderParams {
@@ -26,4 +26,4 @@ struct FactorAdderParams {
 };
 }  // namespace graph_localizer
 
-#endif  // GRAPH_LOCALIZER_FACTOR_ADDER_PARAMS_H_
+#endif  // GRAPH_OPTIMIZER_FACTOR_ADDER_PARAMS_H_

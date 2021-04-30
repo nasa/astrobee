@@ -16,8 +16,8 @@
  * under the License.
  */
 
-#ifndef GRAPH_LOCALIZER_GRAPH_ACTION_COMPLETER_H_
-#define GRAPH_LOCALIZER_GRAPH_ACTION_COMPLETER_H_
+#ifndef GRAPH_OPTIMIZER_GRAPH_ACTION_COMPLETER_H_
+#define GRAPH_OPTIMIZER_GRAPH_ACTION_COMPLETER_H_
 
 #include <graph_localizer/graph_action_completer_type.h>
 #include <graph_localizer/graph_values.h>
@@ -34,4 +34,4 @@ class GraphActionCompleter {
 };
 }  // namespace graph_localizer
 
-#endif  // GRAPH_LOCALIZER_GRAPH_ACTION_COMPLETER_H_
+#endif  // GRAPH_OPTIMIZER_GRAPH_ACTION_COMPLETER_H_

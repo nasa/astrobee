@@ -16,8 +16,8 @@
  * under the License.
  */
 
-#ifndef GRAPH_LOCALIZER_GRAPH_ACTION_COMPLETER_TYPE_H_
-#define GRAPH_LOCALIZER_GRAPH_ACTION_COMPLETER_TYPE_H_
+#ifndef GRAPH_OPTIMIZER_GRAPH_ACTION_COMPLETER_TYPE_H_
+#define GRAPH_OPTIMIZER_GRAPH_ACTION_COMPLETER_TYPE_H_
 
 namespace graph_localizer {
 // TODO(rsoussan): Generalize this better
@@ -30,4 +30,4 @@ enum class GraphActionCompleterType {
 };
 }  // namespace graph_localizer
 
-#endif  // GRAPH_LOCALIZER_GRAPH_ACTION_COMPLETER_TYPE_H_
+#endif  // GRAPH_OPTIMIZER_GRAPH_ACTION_COMPLETER_TYPE_H_

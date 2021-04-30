@@ -16,8 +16,8 @@
  * under the License.
  */
 
-#ifndef GRAPH_LOCALIZER_GRAPH_VALUES_H_
-#define GRAPH_LOCALIZER_GRAPH_VALUES_H_
+#ifndef GRAPH_OPTIMIZER_GRAPH_VALUES_H_
+#define GRAPH_OPTIMIZER_GRAPH_VALUES_H_
 
 #include <graph_localizer/graph_values_params.h>
 #include <graph_localizer/key_info.h>
@@ -166,4 +166,4 @@ class GraphValues {
 };
 }  // namespace graph_localizer
 
-#endif  // GRAPH_LOCALIZER_GRAPH_VALUES_H_
+#endif  // GRAPH_OPTIMIZER_GRAPH_VALUES_H_

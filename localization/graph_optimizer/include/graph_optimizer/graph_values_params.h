@@ -15,8 +15,8 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef GRAPH_LOCALIZER_GRAPH_VALUES_PARAMS_H_
-#define GRAPH_LOCALIZER_GRAPH_VALUES_PARAMS_H_
+#ifndef GRAPH_OPTIMIZER_GRAPH_VALUES_PARAMS_H_
+#define GRAPH_OPTIMIZER_GRAPH_VALUES_PARAMS_H_
 
 #include <gtsam/geometry/Pose3.h>
 
@@ -31,4 +31,4 @@ struct GraphValuesParams {
 };
 }  // namespace graph_localizer
 
-#endif  // GRAPH_LOCALIZER_GRAPH_VALUES_PARAMS_H_
+#endif  // GRAPH_OPTIMIZER_GRAPH_VALUES_PARAMS_H_

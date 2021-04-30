@@ -16,14 +16,14 @@
  * under the License.
  */
 
-#ifndef GRAPH_LOCALIZER_CUMULATIVE_FACTOR_ADDER_H_
-#define GRAPH_LOCALIZER_CUMULATIVE_FACTOR_ADDER_H_
+#ifndef GRAPH_OPTIMIZER_CUMULATIVE_FACTOR_ADDER_H_
+#define GRAPH_OPTIMIZER_CUMULATIVE_FACTOR_ADDER_H_
 
-#include <graph_localizer/factor_to_add.h>
+#include <graph_optimizer/factor_to_add.h>
 
 #include <vector>
 
-namespace graph_localizer {
+namespace graph_optimizer {
 template <typename PARAMS>
 class CumulativeFactorAdder {
  public:
@@ -38,6 +38,6 @@ class CumulativeFactorAdder {
  private:
   PARAMS params_;
 };
-}  // namespace graph_localizer
+}  // namespace graph_optimizer
 
-#endif  // GRAPH_LOCALIZER_CUMULATIVE_FACTOR_ADDER_H_
+#endif  // GRAPH_OPTIMIZER_CUMULATIVE_FACTOR_ADDER_H_

@@ -16,8 +16,8 @@
  * under the License.
  */
 
-#ifndef GRAPH_LOCALIZER_SERIALIZATION_H_
-#define GRAPH_LOCALIZER_SERIALIZATION_H_
+#ifndef GRAPH_OPTIMIZER_SERIALIZATION_H_
+#define GRAPH_OPTIMIZER_SERIALIZATION_H_
 
 #include <graph_localizer/graph_localizer.h>
 
@@ -27,4 +27,4 @@ namespace graph_localizer {
 std::string SerializeBinary(const GraphLocalizer& graph_localizer);
 }  // namespace graph_localizer
 
-#endif  // GRAPH_LOCALIZER_SERIALIZATION_H_
+#endif  // GRAPH_OPTIMIZER_SERIALIZATION_H_

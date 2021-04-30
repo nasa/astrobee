@@ -16,8 +16,8 @@
  * under the License.
  */
 
-#ifndef GRAPH_LOCALIZER_GRAPH_OPTIMIZER_H_
-#define GRAPH_LOCALIZER_GRAPH_OPTIMIZER_H_
+#ifndef GRAPH_OPTIMIZER_GRAPH_OPTIMIZER_H_
+#define GRAPH_OPTIMIZER_GRAPH_OPTIMIZER_H_
 
 #include <graph_localizer/factor_to_add.h>
 #include <graph_localizer/graph_action_completer.h>
@@ -135,4 +135,4 @@ class GraphOptimizer {
 };
 }  // namespace graph_localizer
 
-#endif  // GRAPH_LOCALIZER_GRAPH_OPTIMIZER_H_
+#endif  // GRAPH_OPTIMIZER_GRAPH_OPTIMIZER_H_

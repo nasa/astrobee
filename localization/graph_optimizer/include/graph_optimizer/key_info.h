@@ -16,8 +16,8 @@
  * under the License.
  */
 
-#ifndef GRAPH_LOCALIZER_KEY_INFO_H_
-#define GRAPH_LOCALIZER_KEY_INFO_H_
+#ifndef GRAPH_OPTIMIZER_KEY_INFO_H_
+#define GRAPH_OPTIMIZER_KEY_INFO_H_
 
 #include <graph_localizer/node_updater_type.h>
 #include <localization_common/time.h>
@@ -68,4 +68,4 @@ class KeyInfo {
 using KeyInfos = std::vector<KeyInfo>;
 }  // namespace graph_localizer
 
-#endif  // GRAPH_LOCALIZER_KEY_INFO_H_
+#endif  // GRAPH_OPTIMIZER_KEY_INFO_H_

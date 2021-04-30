@@ -16,8 +16,8 @@
  * under the License.
  */
 
-#ifndef GRAPH_LOCALIZER_FACTOR_ADDER_H_
-#define GRAPH_LOCALIZER_FACTOR_ADDER_H_
+#ifndef GRAPH_OPTIMIZER_FACTOR_ADDER_H_
+#define GRAPH_OPTIMIZER_FACTOR_ADDER_H_
 
 #include <graph_localizer/factor_to_add.h>
 
@@ -40,4 +40,4 @@ class FactorAdder {
 };
 }  // namespace graph_localizer
 
-#endif  // GRAPH_LOCALIZER_FACTOR_ADDER_H_
+#endif  // GRAPH_OPTIMIZER_FACTOR_ADDER_H_
