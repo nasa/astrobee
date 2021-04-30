@@ -115,7 +115,6 @@ class GraphOptimizer {
   friend class boost::serialization::access;
   template <class Archive>
   void serialize(Archive& ar, const unsigned int file_version) {
-    // ar& BOOST_SERIALIZATION_NVP(feature_tracker_);
     ar& BOOST_SERIALIZATION_NVP(graph_);
     ar& BOOST_SERIALIZATION_NVP(graph_values_);
   }

@@ -184,8 +184,7 @@ class GraphLocalizer {
   template <class Archive>
   void serialize(Archive& ar, const unsigned int file_version) {
     ar& BOOST_SERIALIZATION_NVP(feature_tracker_);
-    ar& BOOST_SERIALIZATION_NVP(graph_);
-    ar& BOOST_SERIALIZATION_NVP(graph_values_);
+    ar& BOOST_SERIALIZATION_NVP(graph_optimizer_);
   }
 
   std::shared_ptr<FeatureTracker> feature_tracker_;
