@@ -30,15 +30,19 @@ GraphStats::GraphStats() {
   timers_.emplace_back(log_error_timer_);
   timers_.emplace_back(log_stats_timer_);
 
-  stats_averagers_.emplace_back(iterations_averager_);
-  stats_averagers_.emplace_back(num_states_averager_);
-  stats_averagers_.emplace_back(duration_averager_);
-  stats_averagers_.emplace_back(num_marginal_factors_averager_);
-  stats_averagers_.emplace_back(num_factors_averager_);
-  stats_averagers_.emplace_back(num_features_averager_);
+  AddStatsAverager(iterations_averager_);
+  AddStatsAverager(num_states_averager_);
+  AddStatsAverager(duration_averager_);
+  AddStatsAverager(num_marginal_factors_averager_);
+  AddStatsAverager(num_factors_averager_);
+  AddStatsAverager(num_features_averager_);
 
-  error_averagers_.emplace_back(total_error_averager_);
+  AddErrorAverager(total_error_averager_);
 }
+
+void GraphStats::AddStatsAverager(localization_common::Averager& stats_averager) { stats_averagers_.emplace_back(stats_averager); }
+
+void GraphStats::AddErrorAverager(localization_common::Averager& error_averager) { error_averagers_.emplace_back(error_averager); }
 
 void GraphStats::UpdateErrors(const gtsam::NonlinearFactorGraph& graph_factors, const GraphValues& graph_values) {}
 
