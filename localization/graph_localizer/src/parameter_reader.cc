@@ -195,6 +195,19 @@ void LoadGraphInitializerParams(config_reader::ConfigReader& config, GraphInitia
   params.num_bias_estimation_measurements = mc::LoadInt(config, "num_bias_estimation_measurements");
 }
 
+void LoadGraphOptimizerParams(config_reader::ConfigReader& config, GraphOptimizerParams& params) {
+  LoadGraphValuesParams(config, params.graph_values);
+  params.verbose = mc::LoadBool(config, "verbose");
+  params.fatal_failures = mc::LoadBool(config, "fatal_failures");
+  params.print_factor_info = mc::LoadBool(config, "print_factor_info");
+  params.use_ceres_params = mc::LoadBool(config, "use_ceres_params");
+  params.max_iterations = mc::LoadInt(config, "max_iterations");
+  params.marginals_factorization = mc::LoadString(config, "marginals_factorization");
+  params.add_marginal_factors = mc::LoadBool(config, "add_marginal_factors");
+  params.huber_k = mc::LoadDouble(config, "huber_k");
+  params.log_rate = mc::LoadInt(config, "log_rate");
+}
+
 void LoadGraphLocalizerParams(config_reader::ConfigReader& config, GraphLocalizerParams& params) {
   LoadCalibrationParams(config, params.calibration);
   LoadGraphInitializerParams(config, params.graph_initializer);

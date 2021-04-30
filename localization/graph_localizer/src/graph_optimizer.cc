@@ -108,6 +108,7 @@ bool GraphOptimizer::SlideWindow(const boost::optional<gtsam::Marginals>& margin
   gtsam::KeyVector old_feature_keys;
   // Call remove old factors before old feature keys, since old feature keys depend on
   // number of factors per key remaining
+  // TODO(rsoussan): Generalize this better
   old_feature_keys = graph_values_->OldFeatureKeys(graph_);
   auto old_feature_factors = graph_values_->RemoveOldFactors(old_feature_keys, graph_);
   old_keys.insert(old_keys.end(), old_feature_keys.begin(), old_feature_keys.end());

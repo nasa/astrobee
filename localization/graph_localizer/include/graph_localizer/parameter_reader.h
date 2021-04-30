@@ -25,6 +25,7 @@
 #include <graph_localizer/graph_initializer_params.h>
 #include <graph_localizer/graph_localizer_nodelet_params.h>
 #include <graph_localizer/graph_localizer_params.h>
+#include <graph_localizer/graph_optimizer_params.h>
 #include <graph_localizer/graph_values_params.h>
 #include <graph_localizer/noise_params.h>
 #include <graph_localizer/loc_factor_adder_params.h>
@@ -53,6 +54,7 @@ void LoadSanityCheckerParams(config_reader::ConfigReader& config, SanityCheckerP
 // not loaded from config files
 void LoadGraphInitializerParams(config_reader::ConfigReader& config, GraphInitializerParams& params);
 void LoadGraphLocalizerParams(config_reader::ConfigReader& config, GraphLocalizerParams& params);
+void LoadGraphOptimizerParams(config_reader::ConfigReader& config, GraphOptimizerParams& params);
 void LoadGraphLocalizerNodeletParams(config_reader::ConfigReader& config, GraphLocalizerNodeletParams& params);
 }  // namespace graph_localizer
 
