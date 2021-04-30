@@ -88,16 +88,16 @@ GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
   // Initialize Factor Adders
   ar_tag_loc_factor_adder_.reset(
     new LocFactorAdder(params_.factor.ar_tag_loc_adder, GraphActionCompleterType::ARTagLocProjectionFactor));
-  graph_action_completers_.emplace_back(ar_tag_loc_factor_adder_);
+  AddGraphActionCompleter(ar_tag_loc_factor_adder_);
   loc_factor_adder_.reset(new LocFactorAdder(params_.factor.loc_adder, GraphActionCompleterType::LocProjectionFactor));
-  graph_action_completers_.emplace_back(loc_factor_adder_);
+  AddGraphActionCompleter(loc_factor_adder_);
   projection_factor_adder_.reset(
     new ProjectionFactorAdder(params_.factor.projection_adder, feature_tracker_, graph_values_));
-  graph_action_completers_.emplace_back(projection_factor_adder_);
+  AddGraphActionCompleter(projection_factor_adder_);
   rotation_factor_adder_.reset(new RotationFactorAdder(params_.factor.rotation_adder, feature_tracker_));
   smart_projection_cumulative_factor_adder_.reset(
     new SmartProjectionCumulativeFactorAdder(params_.factor.smart_projection_adder, feature_tracker_));
-  graph_action_completers_.emplace_back(smart_projection_cumulative_factor_adder_);
+  AddGraphActionCompleter(smart_projection_cumulative_factor_adder_);
   standstill_factor_adder_.reset(new StandstillFactorAdder(params_.factor.standstill_adder, feature_tracker_));
 
   // Initialize Node Updaters
@@ -135,7 +135,7 @@ GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
   combined_nav_state_node_updater_.reset(
     new CombinedNavStateNodeUpdater(combined_nav_state_node_updater_params, latest_imu_integrator_));
   combined_nav_state_node_updater_->AddInitialValuesAndPriors(graph_, *graph_values_);
-  timestamped_node_updaters_.emplace_back(combined_nav_state_node_updater_);
+  AddTimestampedNodeUpdater(combined_nav_state_node_updater_);
 }
 
 GraphLocalizer::~GraphLocalizer() {
