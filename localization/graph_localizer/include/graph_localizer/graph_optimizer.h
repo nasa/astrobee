@@ -47,9 +47,12 @@ class GraphOptimizer {
   GraphOptimizer() {}
   ~GraphOptimizer();
 
-  bool Update();
+  // Registers graph action completer.  Called after adding buffered factors and updating nodes
   void AddGraphActionCompleter(std::shared_ptr<GraphActionCompleter> graph_action_completer);
+  // Registers timestamped node updater. Called when adding buffered factors
   void AddTimestampedNodeUpdater(std::shared_ptr<TimestampedNodeUpdater> timestamped_node_updater);
+  // Adds buffered factors and optimizes graph.  Calls PostOptimizeActions afterwards
+  bool Update();
   const GraphValues& graph_values() const;
   const gtsam::NonlinearFactorGraph& factor_graph() const;
   void SaveGraphDotFile(const std::string& output_path = "graph.dot") const;
