@@ -53,6 +53,8 @@ class SmartProjectionCumulativeFactorAdder : public CumulativeFactorAdder<SmartP
 
   GraphActionCompleterType type() const final;
 
+  const gtsam::SmartProjectionParams& smart_projection_params() const;
+
  private:
   void AddSmartFactor(const std::vector<localization_measurements::FeaturePoint>& feature_track_points,
                       FactorsToAdd& smart_factors_to_add) const;

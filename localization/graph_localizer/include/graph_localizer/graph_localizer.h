@@ -148,7 +148,6 @@ class GraphLocalizer : public graph_optimizer::GraphOptimizer {
   std::shared_ptr<imu_integration::LatestImuIntegrator> latest_imu_integrator_;
   bool log_on_destruction_;
   GraphLocalizerParams params_;
-  gtsam::SmartProjectionParams smart_projection_params_;
   boost::optional<localization_measurements::FeaturePointsMeasurement> last_optical_flow_measurement_;
 
   // Factor Adders

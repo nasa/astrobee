@@ -54,17 +54,6 @@ GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
       params_(params) {
   latest_imu_integrator_->SetFanSpeedMode(params_.initial_fan_speed_mode);
 
-  // Initialize smart projection factor params
-  // TODO(rsoussan): access this from smart cumulative adder?
-  smart_projection_params_.verboseCheirality = params_.factor.smart_projection_adder.verbose_cheirality;
-  smart_projection_params_.setRankTolerance(1e-9);
-  smart_projection_params_.setLandmarkDistanceThreshold(
-    params_.factor.smart_projection_adder.landmark_distance_threshold);
-  smart_projection_params_.setDynamicOutlierRejectionThreshold(
-    params_.factor.smart_projection_adder.dynamic_outlier_rejection_threshold);
-  smart_projection_params_.setRetriangulationThreshold(params_.factor.smart_projection_adder.retriangulation_threshold);
-  smart_projection_params_.setEnableEPI(params_.factor.smart_projection_adder.enable_EPI);
-
   // Initialize Factor Adders
   ar_tag_loc_factor_adder_.reset(
     new LocFactorAdder(params_.factor.ar_tag_loc_adder, GraphActionCompleterType::ARTagLocProjectionFactor));
@@ -81,6 +70,8 @@ GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
   standstill_factor_adder_.reset(new StandstillFactorAdder(params_.factor.standstill_adder, feature_tracker_));
 
   // Initialize Node Updaters
+  // TODO(rsoussan): Move these params from graph initializer to combined nav state node updater params, move this code
+  // to combinednavstateupdater constructor
   CombinedNavStateNodeUpdaterParams combined_nav_state_node_updater_params;
   // Assumes zero initial velocity
   const lc::CombinedNavState global_N_body_start(params_.graph_initializer.global_T_body_start,
@@ -381,7 +372,8 @@ void GraphLocalizer::RemoveOldMeasurementsFromCumulativeFactors(const gtsam::Key
         continue;
       } else {
         const auto new_smart_factor = RemoveSmartFactorMeasurements(
-          *smart_factor, factor_key_indices_to_remove, params_.factor.smart_projection_adder, smart_projection_params_);
+          *smart_factor, factor_key_indices_to_remove, params_.factor.smart_projection_adder,
+          smart_projection_cumulative_factor_adder_->smart_projection_params());
         *factor_it = new_smart_factor;
         continue;
       }

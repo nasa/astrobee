@@ -142,6 +142,10 @@ GraphActionCompleterType SmartProjectionCumulativeFactorAdder::type() const {
   return GraphActionCompleterType::SmartFactor;
 }
 
+const gtsam::SmartProjectionParams& SmartProjectionCumulativeFactorAdder::smart_projection_params() const {
+  return smart_projection_params_;
+}
+
 bool SmartProjectionCumulativeFactorAdder::DoAction(FactorsToAdd& factors_to_add,
                                                     gtsam::NonlinearFactorGraph& graph_factors,
                                                     GraphValues& graph_values) {
