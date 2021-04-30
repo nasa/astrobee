@@ -48,6 +48,8 @@ class GraphOptimizer {
   ~GraphOptimizer();
 
   bool Update();
+  void AddGraphActionCompleter(std::shared_ptr<GraphActionCompleter> graph_action_completer);
+  void AddTimestampedNodeUpdater(std::shared_ptr<TimestampedNodeUpdater> timestamped_node_updater);
   const GraphValues& graph_values() const;
   const gtsam::NonlinearFactorGraph& factor_graph() const;
   void SaveGraphDotFile(const std::string& output_path = "graph.dot") const;

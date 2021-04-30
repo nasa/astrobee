@@ -70,6 +70,14 @@ GraphOptimizer::~GraphOptimizer() {
   if (log_on_destruction_) graph_stats_.Log();
 }
 
+void GraphOptimizer::AddGraphActionCompleter(std::shared_ptr<GraphActionCompleter> graph_action_completer) {
+  graph_action_completers_.emplace_back(std::move(graph_action_completer));
+}
+
+void GraphOptimizer::AddTimestampedNodeUpdater(std::shared_ptr<TimestampedNodeUpdater> timestamped_node_updater) {
+  timestamped_node_updaters_.emplace_back(std::move(timestamped_node_updater));
+}
+
 // Adapted from gtsam::BatchFixedLagSmoother
 gtsam::NonlinearFactorGraph GraphOptimizer::MarginalFactors(
   const gtsam::NonlinearFactorGraph& old_factors, const gtsam::KeyVector& old_keys,
