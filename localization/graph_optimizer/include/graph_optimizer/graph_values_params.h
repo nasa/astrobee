@@ -20,7 +20,7 @@
 
 #include <gtsam/geometry/Pose3.h>
 
-namespace graph_localizer {
+namespace graph_optimizer {
 struct GraphValuesParams {
   // Only kept if there are at least min_num_states and not more than max_num_states
   double ideal_duration;
@@ -29,6 +29,6 @@ struct GraphValuesParams {
   // If storing 3d features as states (i.e. bundle adjustment type problems)
   int min_num_factors_per_feature;
 };
-}  // namespace graph_localizer
+}  // namespace graph_optimizer
 
 #endif  // GRAPH_OPTIMIZER_GRAPH_VALUES_PARAMS_H_

@@ -19,15 +19,15 @@
 #ifndef GRAPH_OPTIMIZER_FACTOR_TO_ADD_H_
 #define GRAPH_OPTIMIZER_FACTOR_TO_ADD_H_
 
-#include <graph_localizer/graph_action_completer_type.h>
-#include <graph_localizer/key_info.h>
+#include <graph_optimizer/graph_action_completer_type.h>
+#include <graph_optimizer/key_info.h>
 #include <localization_common/time.h>
 
 #include <gtsam/nonlinear/NonlinearFactor.h>
 
 #include <vector>
 
-namespace graph_localizer {
+namespace graph_optimizer {
 struct FactorToAdd {
   FactorToAdd(const KeyInfos& key_infos, boost::shared_ptr<gtsam::NonlinearFactor> factor)
       : factor(factor), key_infos(key_infos) {}
@@ -65,6 +65,6 @@ class FactorsToAdd {
   std::vector<FactorToAdd> factors_to_add_;
   GraphActionCompleterType graph_action_completer_type_;
 };
-}  // namespace graph_localizer
+}  // namespace graph_optimizer
 
 #endif  // GRAPH_OPTIMIZER_FACTOR_TO_ADD_H_

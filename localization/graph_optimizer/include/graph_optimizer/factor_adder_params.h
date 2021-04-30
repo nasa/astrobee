@@ -19,11 +19,11 @@
 #ifndef GRAPH_OPTIMIZER_FACTOR_ADDER_PARAMS_H_
 #define GRAPH_OPTIMIZER_FACTOR_ADDER_PARAMS_H_
 
-namespace graph_localizer {
+namespace graph_optimizer {
 struct FactorAdderParams {
   bool enabled;
   double huber_k;
 };
-}  // namespace graph_localizer
+}  // namespace graph_optimizer
 
 #endif  // GRAPH_OPTIMIZER_FACTOR_ADDER_PARAMS_H_

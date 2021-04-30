@@ -19,8 +19,8 @@
 #ifndef GRAPH_OPTIMIZER_GRAPH_VALUES_H_
 #define GRAPH_OPTIMIZER_GRAPH_VALUES_H_
 
-#include <graph_localizer/graph_values_params.h>
-#include <graph_localizer/key_info.h>
+#include <graph_optimizer/graph_values_params.h>
+#include <graph_optimizer/key_info.h>
 #include <localization_common/combined_nav_state.h>
 #include <localization_common/logger.h>
 #include <localization_common/time.h>
@@ -37,7 +37,7 @@
 #include <unordered_map>
 #include <utility>
 
-namespace graph_localizer {
+namespace graph_optimizer {
 namespace sym = gtsam::symbol_shorthand;
 class GraphValues {
  public:
@@ -164,6 +164,6 @@ class GraphValues {
   // Modified by projection_factor_adder, remove mutable if this changes
   mutable std::uint64_t feature_key_index_;
 };
-}  // namespace graph_localizer
+}  // namespace graph_optimizer
 
 #endif  // GRAPH_OPTIMIZER_GRAPH_VALUES_H_

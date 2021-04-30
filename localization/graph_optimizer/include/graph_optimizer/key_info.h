@@ -19,7 +19,7 @@
 #ifndef GRAPH_OPTIMIZER_KEY_INFO_H_
 #define GRAPH_OPTIMIZER_KEY_INFO_H_
 
-#include <graph_localizer/node_updater_type.h>
+#include <graph_optimizer/node_updater_type.h>
 #include <localization_common/time.h>
 
 #include <gtsam/inference/Key.h>
@@ -27,7 +27,7 @@
 #include <functional>
 #include <vector>
 
-namespace graph_localizer {
+namespace graph_optimizer {
 
 using KeyCreatorFunction = std::function<gtsam::Key(std::uint64_t)>;
 class KeyInfo {
@@ -66,6 +66,6 @@ class KeyInfo {
 };
 
 using KeyInfos = std::vector<KeyInfo>;
-}  // namespace graph_localizer
+}  // namespace graph_optimizer
 
 #endif  // GRAPH_OPTIMIZER_KEY_INFO_H_

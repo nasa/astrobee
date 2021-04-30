@@ -19,11 +19,11 @@
 #ifndef GRAPH_OPTIMIZER_FACTOR_ADDER_H_
 #define GRAPH_OPTIMIZER_FACTOR_ADDER_H_
 
-#include <graph_localizer/factor_to_add.h>
+#include <graph_optimizer/factor_to_add.h>
 
 #include <vector>
 
-namespace graph_localizer {
+namespace graph_optimizer {
 template <typename MEASUREMENT, typename PARAMS>
 class FactorAdder {
  public:
@@ -38,6 +38,6 @@ class FactorAdder {
  private:
   PARAMS params_;
 };
-}  // namespace graph_localizer
+}  // namespace graph_optimizer
 
 #endif  // GRAPH_OPTIMIZER_FACTOR_ADDER_H_

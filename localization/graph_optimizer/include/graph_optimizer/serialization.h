@@ -19,12 +19,12 @@
 #ifndef GRAPH_OPTIMIZER_SERIALIZATION_H_
 #define GRAPH_OPTIMIZER_SERIALIZATION_H_
 
-#include <graph_localizer/graph_localizer.h>
+#include <graph_optimizer/graph_optimizer.h>
 
 #include <string>
 
-namespace graph_localizer {
-std::string SerializeBinary(const GraphLocalizer& graph_localizer);
-}  // namespace graph_localizer
+namespace graph_optimizer {
+std::string SerializeBinary(const GraphLocalizer& graph_optimizer);
+}  // namespace graph_optimizer
 
 #endif  // GRAPH_OPTIMIZER_SERIALIZATION_H_

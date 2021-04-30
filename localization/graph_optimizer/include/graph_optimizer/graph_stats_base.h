@@ -18,7 +18,7 @@
 #ifndef GRAPH_OPTIMIZER_GRAPH_STATS_BASE_H_
 #define GRAPH_OPTIMIZER_GRAPH_STATS_BASE_H_
 
-#include <graph_localizer/graph_values.h>
+#include <graph_optimizer/graph_values.h>
 #include <localization_common/averager.h>
 #include <localization_common/timer.h>
 
@@ -26,7 +26,7 @@
 
 #include <vector>
 
-namespace graph_localizer {
+namespace graph_optimizer {
 class GraphStatsBase {
  public:
   GraphStatsBase();
@@ -75,6 +75,6 @@ class GraphStatsBase {
     for (const auto& logger : loggers) logger.get().Log();
   }
 };
-}  // namespace graph_localizer
+}  // namespace graph_optimizer
 
 #endif  // GRAPH_OPTIMIZER_GRAPH_STATS_BASE_H_

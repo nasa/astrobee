@@ -21,7 +21,7 @@
 
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
 
-namespace graph_localizer {
+namespace graph_optimizer {
 template <typename FactorType>
 void DeleteFactors(gtsam::NonlinearFactorGraph& graph) {
   int num_removed_factors = 0;
@@ -47,6 +47,6 @@ int NumFactors(const gtsam::NonlinearFactorGraph& graph) {
   return num_factors;
 }
 
-}  // namespace graph_localizer
+}  // namespace graph_optimizer
 
 #endif  // GRAPH_OPTIMIZER_UTILITIES_H_

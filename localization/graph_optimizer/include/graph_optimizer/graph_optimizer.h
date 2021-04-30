@@ -19,13 +19,13 @@
 #ifndef GRAPH_OPTIMIZER_GRAPH_OPTIMIZER_H_
 #define GRAPH_OPTIMIZER_GRAPH_OPTIMIZER_H_
 
-#include <graph_localizer/factor_to_add.h>
-#include <graph_localizer/graph_action_completer.h>
-#include <graph_localizer/graph_optimizer_params.h>
-#include <graph_localizer/graph_stats_base.h>
-#include <graph_localizer/graph_values.h>
-#include <graph_localizer/key_info.h>
-#include <graph_localizer/timestamped_node_updater.h>
+#include <graph_optimizer/factor_to_add.h>
+#include <graph_optimizer/graph_action_completer.h>
+#include <graph_optimizer/graph_optimizer_params.h>
+#include <graph_optimizer/graph_stats_base.h>
+#include <graph_optimizer/graph_values.h>
+#include <graph_optimizer/key_info.h>
+#include <graph_optimizer/timestamped_node_updater.h>
 #include <localization_common/time.h>
 
 #include <gtsam/nonlinear/LevenbergMarquardtOptimizer.h>
@@ -39,7 +39,7 @@
 #include <utility>
 #include <vector>
 
-namespace graph_localizer {
+namespace graph_optimizer {
 class GraphOptimizer {
  public:
   explicit GraphOptimizer(const GraphOptimizerParams& params);
@@ -133,6 +133,6 @@ class GraphOptimizer {
   boost::optional<localization_common::Time> last_latest_time_;
   GraphStatsBase graph_stats_;
 };
-}  // namespace graph_localizer
+}  // namespace graph_optimizer
 
 #endif  // GRAPH_OPTIMIZER_GRAPH_OPTIMIZER_H_

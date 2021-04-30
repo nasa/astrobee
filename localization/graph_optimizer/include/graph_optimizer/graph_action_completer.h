@@ -19,12 +19,12 @@
 #ifndef GRAPH_OPTIMIZER_GRAPH_ACTION_COMPLETER_H_
 #define GRAPH_OPTIMIZER_GRAPH_ACTION_COMPLETER_H_
 
-#include <graph_localizer/graph_action_completer_type.h>
-#include <graph_localizer/graph_values.h>
+#include <graph_optimizer/graph_action_completer_type.h>
+#include <graph_optimizer/graph_values.h>
 
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
 
-namespace graph_localizer {
+namespace graph_optimizer {
 class GraphActionCompleter {
  public:
   virtual ~GraphActionCompleter() {}
@@ -32,6 +32,6 @@ class GraphActionCompleter {
                         GraphValues& graph_values) = 0;
   virtual GraphActionCompleterType type() const = 0;
 };
-}  // namespace graph_localizer
+}  // namespace graph_optimizer
 
 #endif  // GRAPH_OPTIMIZER_GRAPH_ACTION_COMPLETER_H_

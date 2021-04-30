@@ -19,7 +19,7 @@
 #ifndef GRAPH_OPTIMIZER_GRAPH_ACTION_COMPLETER_TYPE_H_
 #define GRAPH_OPTIMIZER_GRAPH_ACTION_COMPLETER_TYPE_H_
 
-namespace graph_localizer {
+namespace graph_optimizer {
 // TODO(rsoussan): Generalize this better
 enum class GraphActionCompleterType {
   ARTagLocProjectionFactor,
@@ -28,6 +28,6 @@ enum class GraphActionCompleterType {
   ProjectionFactor,
   SmartFactor
 };
-}  // namespace graph_localizer
+}  // namespace graph_optimizer
 
 #endif  // GRAPH_OPTIMIZER_GRAPH_ACTION_COMPLETER_TYPE_H_

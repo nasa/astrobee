@@ -18,11 +18,11 @@
 #ifndef GRAPH_OPTIMIZER_GRAPH_OPTIMIZER_PARAMS_H_
 #define GRAPH_OPTIMIZER_GRAPH_OPTIMIZER_PARAMS_H_
 
-#include <graph_localizer/graph_values_params.h>
+#include <graph_optimizer/graph_values_params.h>
 
 #include <string>
 
-namespace graph_localizer {
+namespace graph_optimizer {
 struct GraphOptimizerParams {
   GraphValuesParams graph_values;
   bool verbose;
@@ -35,6 +35,6 @@ struct GraphOptimizerParams {
   double huber_k;
   int log_rate;
 };
-}  // namespace graph_localizer
+}  // namespace graph_optimizer
 
 #endif  // GRAPH_OPTIMIZER_GRAPH_OPTIMIZER_PARAMS_H_
