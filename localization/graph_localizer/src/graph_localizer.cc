@@ -65,26 +65,6 @@ GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
   smart_projection_params_.setRetriangulationThreshold(params_.factor.smart_projection_adder.retriangulation_threshold);
   smart_projection_params_.setEnableEPI(params_.factor.smart_projection_adder.enable_EPI);
 
-  // Initialize lm params
-  if (params_.verbose) {
-    levenberg_marquardt_params_.verbosityLM = gtsam::LevenbergMarquardtParams::VerbosityLM::TRYDELTA;
-    levenberg_marquardt_params_.verbosity = gtsam::NonlinearOptimizerParams::Verbosity::LINEAR;
-  }
-  if (params_.use_ceres_params) {
-    gtsam::LevenbergMarquardtParams::SetCeresDefaults(&levenberg_marquardt_params_);
-  }
-
-  levenberg_marquardt_params_.maxIterations = params_.max_iterations;
-
-  if (params_.marginals_factorization == "qr") {
-    marginals_factorization_ = gtsam::Marginals::Factorization::QR;
-  } else if (params_.marginals_factorization == "cholesky") {
-    marginals_factorization_ = gtsam::Marginals::Factorization::CHOLESKY;
-  } else {
-    LogError("GraphLocalizer: No marginals factorization entered, defaulting to qr.");
-    marginals_factorization_ = gtsam::Marginals::Factorization::QR;
-  }
-
   // Initialize Factor Adders
   ar_tag_loc_factor_adder_.reset(
     new LocFactorAdder(params_.factor.ar_tag_loc_adder, GraphActionCompleterType::ARTagLocProjectionFactor));

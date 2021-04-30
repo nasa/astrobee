@@ -22,7 +22,6 @@
 #include <graph_localizer/factor_params.h>
 #include <graph_localizer/feature_tracker_params.h>
 #include <graph_localizer/graph_initializer_params.h>
-#include <graph_localizer/graph_values_params.h>
 #include <graph_localizer/noise_params.h>
 #include <graph_optimizer/graph_optimizer_params.h>
 #include <localization_measurements/fan_speed_mode.h>
@@ -35,23 +34,12 @@ struct GraphLocalizerParams {
   FactorParams factor;
   FeatureTrackerParams feature_tracker;
   graph_optimizer::GraphOptimizerParams graph_optimizer;
-  GraphValuesParams graph_values;
   NoiseParams noise;
   GraphInitializerParams graph_initializer;
-  bool verbose;
-  bool fatal_failures;
-  bool print_factor_info;
-  bool use_ceres_params;
-  int max_iterations;
-  std::string marginals_factorization;
-  bool limit_imu_factor_spacing;
-  double max_imu_factor_spacing;
   bool add_priors;
-  bool add_marginal_factors;
   double max_standstill_feature_track_avg_distance_from_mean;
   int standstill_min_num_points_per_track;
   double huber_k;
-  int log_rate;
   bool estimate_world_T_dock_using_loc;
   double standstill_feature_track_duration;
   localization_measurements::FanSpeedMode initial_fan_speed_mode;
