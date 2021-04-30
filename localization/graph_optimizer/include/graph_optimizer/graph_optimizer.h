@@ -62,6 +62,7 @@ class GraphOptimizer {
   const GraphOptimizerParams& params() const;
   void LogOnDestruction(const bool log_on_destruction);
   const GraphStatsBase& graph_stats() const;
+  const boost::optional<const gtsam::Marginals>& marginals() const;
 
  private:
   gtsam::NonlinearFactorGraph MarginalFactors(const gtsam::NonlinearFactorGraph& old_factors,

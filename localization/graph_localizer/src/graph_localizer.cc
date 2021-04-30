@@ -144,11 +144,11 @@ GraphLocalizer::~GraphLocalizer() {
 
 boost::optional<std::pair<lc::CombinedNavState, lc::CombinedNavStateCovariances>>
 GraphLocalizer::LatestCombinedNavStateAndCovariances() const {
-  if (!marginals_) {
+  if (!marginals()) {
     LogDebugEveryN(50, "LatestCombinedNavStateAndCovariances: No marginals available.");
     return boost::none;
   }
-  const auto state_covariance_pair = LatestCombinedNavStateAndCovariances(*marginals_);
+  const auto state_covariance_pair = LatestCombinedNavStateAndCovariances(*marginals());
   if (!state_covariance_pair) {
     LogDebug(
       "LatestCombinedNavStateAndCovariances: Failed to get latest combined nav state and "

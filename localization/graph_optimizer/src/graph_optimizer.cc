@@ -285,6 +285,8 @@ const gtsam::NonlinearFactorGraph& GraphOptimizer::graph_factors() const { retur
 
 gtsam::NonlinearFactorGraph& GraphOptimizer::graph_factors() { return graph_; }
 
+const boost::optional<const gtsam::Marginals>& marginals() const {return marginals_; }
+
 void GraphOptimizer::SaveGraphDotFile(const std::string& output_path) const {
   std::ofstream of(output_path.c_str());
   graph_.saveGraph(of, graph_values_->values());
