@@ -86,7 +86,7 @@ class GraphLocalizer : public graph_optimizer::GraphOptimizer {
     const localization_measurements::MatchedProjectionsMeasurement& matched_projections_measurement);
   void AddSparseMappingMeasurement(
     const localization_measurements::MatchedProjectionsMeasurement& matched_projections_measurement);
-  void PostOptimizeActions() final;
+  void DoPostOptimizeActions() final;
   const FeatureTrackIdMap& feature_tracks() const { return feature_tracker_->feature_tracks(); }
 
   boost::optional<std::pair<gtsam::imuBias::ConstantBias, localization_common::Time>> LatestBiases() const;

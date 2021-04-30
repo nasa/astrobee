@@ -572,7 +572,7 @@ bool GraphLocalizer::standstill() const {
   return *standstill_;
 }
 
-void PostOptimizeActions() {
+void DoPostOptimizeActions() {
   // Update imu integrator bias
   const auto latest_bias = graph_values_->LatestBias();
   if (!latest_bias) {
