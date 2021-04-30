@@ -134,7 +134,7 @@ GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
   combined_nav_state_node_updater_params.add_priors = params_.add_priors;
   combined_nav_state_node_updater_.reset(
     new CombinedNavStateNodeUpdater(combined_nav_state_node_updater_params, latest_imu_integrator_));
-  combined_nav_state_node_updater_->AddInitialValuesAndPriors(graph_, graph_values());
+  combined_nav_state_node_updater_->AddInitialValuesAndPriors(graph_factors(), graph_values());
   AddTimestampedNodeUpdater(combined_nav_state_node_updater_);
 }
 
@@ -470,7 +470,7 @@ int GraphLocalizer::NumOFFactors(const bool check_valid) const {
 
 int GraphLocalizer::NumProjectionFactors(const bool check_valid) const {
   int num_factors = 0;
-  for (const auto& factor : graph_) {
+  for (const auto& factor : graph_factors()) {
     const auto projection_factor = dynamic_cast<const ProjectionFactor*>(factor.get());
     if (projection_factor) {
       if (check_valid) {
@@ -501,7 +501,7 @@ int GraphLocalizer::NumProjectionFactors(const bool check_valid) const {
 
 int GraphLocalizer::NumSmartFactors(const bool check_valid) const {
   int num_of_factors = 0;
-  for (const auto& factor : graph_) {
+  for (const auto& factor : graph_factors()) {
     const auto smart_factor = dynamic_cast<const RobustSmartFactor*>(factor.get());
     if (smart_factor) {
       if (check_valid) {
