@@ -43,7 +43,8 @@
 namespace graph_optimizer {
 class GraphOptimizer {
  public:
-  GraphOptimizer(const GraphOptimizerParams& params, std::unique_ptr<GraphStats> graph_stats = std::unique_ptr<GraphStats>(new GraphStats()));
+  GraphOptimizer(const GraphOptimizerParams& params,
+                 std::unique_ptr<GraphStats> graph_stats = std::unique_ptr<GraphStats>(new GraphStats()));
   // Default constructor/destructor for serialization only
   GraphOptimizer() {}
   ~GraphOptimizer();
@@ -62,7 +63,7 @@ class GraphOptimizer {
   void SaveGraphDotFile(const std::string& output_path = "graph.dot") const;
   const GraphOptimizerParams& params() const;
   void LogOnDestruction(const bool log_on_destruction);
-  const GraphStats * const graph_stats() const;
+  const GraphStats* const graph_stats() const;
   const boost::optional<const gtsam::Marginals>& marginals() const;
 
  private:
@@ -77,8 +78,9 @@ class GraphOptimizer {
   bool SlideWindow(const boost::optional<gtsam::Marginals>& marginals,
                    const localization_common::Time last_latest_time);
 
-  // Called after SlideWindow 
-  virtual void DoPostSlideWindowActions(const localization_common::Time oldest_allowed_time, const boost::optional<gtsam::Marginals>& marginals);
+  // Called after SlideWindow
+  virtual void DoPostSlideWindowActions(const localization_common::Time oldest_allowed_time,
+                                        const boost::optional<gtsam::Marginals>& marginals);
 
   // void UpdatePointPriors(const gtsam::Marginals& marginals);
 

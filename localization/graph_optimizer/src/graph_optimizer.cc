@@ -44,7 +44,10 @@ namespace graph_optimizer {
 namespace lc = localization_common;
 
 GraphOptimizer::GraphOptimizer(const GraphOptimizerParams& params, std::unique_ptr<GraphStats> graph_stats)
-    : graph_values_(new GraphValues(params.graph_values)), graph_stats_(std::move(graph_stats)), log_on_destruction_(true), params_(params) {
+    : graph_values_(new GraphValues(params.graph_values)),
+      graph_stats_(std::move(graph_stats)),
+      log_on_destruction_(true),
+      params_(params) {
   // Initialize lm params
   if (params_.verbose) {
     levenberg_marquardt_params_.verbosityLM = gtsam::LevenbergMarquardtParams::VerbosityLM::TRYDELTA;
@@ -145,7 +148,8 @@ bool GraphOptimizer::SlideWindow(const boost::optional<gtsam::Marginals>& margin
   return true;
 }
 
-void GraphOptimizer::DoPostSlideWindowActions(const localization_common::Time oldest_allowed_time, const boost::optional<gtsam::Marginals>& marginals) {}
+void GraphOptimizer::DoPostSlideWindowActions(const localization_common::Time oldest_allowed_time,
+                                              const boost::optional<gtsam::Marginals>& marginals) {}
 
 void GraphOptimizer::BufferCumulativeFactors() {}
 
@@ -285,14 +289,14 @@ const gtsam::NonlinearFactorGraph& GraphOptimizer::graph_factors() const { retur
 
 gtsam::NonlinearFactorGraph& GraphOptimizer::graph_factors() { return graph_; }
 
-const boost::optional<const gtsam::Marginals>& marginals() const {return marginals_; }
+const boost::optional<const gtsam::Marginals>& marginals() const { return marginals_; }
 
 void GraphOptimizer::SaveGraphDotFile(const std::string& output_path) const {
   std::ofstream of(output_path.c_str());
   graph_.saveGraph(of, graph_values_->values());
 }
 
-const GraphStats * const GraphOptimizer::graph_stats() const { return graph_stats_.get(); }
+const GraphStats* const GraphOptimizer::graph_stats() const { return graph_stats_.get(); }
 
 void GraphOptimizer::LogOnDestruction(const bool log_on_destruction) { log_on_destruction_ = log_on_destruction; }
 
@@ -353,7 +357,7 @@ bool GraphOptimizer::Update() {
   gtsam::LevenbergMarquardtOptimizer optimizer(graph_, graph_values_->values(), levenberg_marquardt_params_);
 
   graph_stats_->optimization_timer_.Start();
-  // TODO(rsoussan): Indicate if failure occurs in state msg, perhaps using confidence value in msg 
+  // TODO(rsoussan): Indicate if failure occurs in state msg, perhaps using confidence value in msg
   try {
     graph_values_->UpdateValues(optimizer.optimize());
   } catch (gtsam::IndeterminantLinearSystemException) {

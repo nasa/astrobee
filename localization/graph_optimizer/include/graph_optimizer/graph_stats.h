@@ -30,8 +30,8 @@ namespace graph_optimizer {
 class GraphStats {
  public:
   GraphStats();
-void AddStatsAverager(localization_common::Averager& stats_averager); 
-void AddErrorAverager(localization_common::Averager& error_averager);
+  void AddStatsAverager(localization_common::Averager& stats_averager);
+  void AddErrorAverager(localization_common::Averager& error_averager);
   virtual void UpdateErrors(const gtsam::NonlinearFactorGraph& graph_factors, const GraphValues& graph_values);
   virtual void UpdateStats(const gtsam::NonlinearFactorGraph& graph_factors, const GraphValues& graph_values);
   void Log() const;
