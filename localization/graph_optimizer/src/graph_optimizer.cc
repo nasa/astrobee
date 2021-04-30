@@ -16,8 +16,8 @@
  * under the License.
  */
 
-#include <graph_localizer/graph_optimizer.h>
-#include <graph_localizer/utilities.h>
+#include <graph_optimizer/graph_optimizer.h>
+#include <graph_optimizer/utilities.h>
 #include <localization_common/logger.h>
 #include <localization_common/utilities.h>
 
@@ -40,7 +40,7 @@ void log(const bool fatal_failure, const std::string& description) {
 }
 }  // namespace
 
-namespace graph_localizer {
+namespace graph_optimizer {
 namespace lc = localization_common;
 
 GraphOptimizer::GraphOptimizer(const GraphOptimizerParams& params)
@@ -342,7 +342,7 @@ bool GraphOptimizer::Update() {
   gtsam::LevenbergMarquardtOptimizer optimizer(graph_, graph_values_->values(), levenberg_marquardt_params_);
 
   graph_stats_.optimization_timer_.Start();
-  // TODO(rsoussan): Indicate if failure occurs in state msg, perhaps using confidence value for localizer
+  // TODO(rsoussan): Indicate if failure occurs in state msg, perhaps using confidence value in msg 
   try {
     graph_values_->UpdateValues(optimizer.optimize());
   } catch (gtsam::IndeterminantLinearSystemException) {
@@ -385,4 +385,4 @@ bool GraphOptimizer::Update() {
   graph_stats_.update_timer_.Stop();
   return true;
 }
-}  // namespace graph_localizer
+}  // namespace graph_optimizer

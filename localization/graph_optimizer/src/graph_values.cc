@@ -16,7 +16,7 @@
  * under the License.
  */
 
-#include <graph_localizer/graph_values.h>
+#include <graph_optimizer/graph_values.h>
 #include <localization_common/logger.h>
 
 #include <gtsam/base/Vector.h>
@@ -28,7 +28,7 @@
 
 #include <iomanip>
 
-namespace graph_localizer {
+namespace graph_optimizer {
 namespace lc = localization_common;
 namespace lm = localization_measurements;
 GraphValues::GraphValues(const GraphValuesParams& params) : params_(params), feature_key_index_(0) {
@@ -491,4 +491,4 @@ void GraphValues::RemoveOldFeatures(const gtsam::KeyVector& old_keys) {
     }
   }
 }
-}  // namespace graph_localizer
+}  // namespace graph_optimizer

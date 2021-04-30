@@ -15,12 +15,12 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#include <graph_localizer/graph_stats_base.h>
-#include <graph_localizer/utilities.h>
+#include <graph_optimizer/graph_stats_base.h>
+#include <graph_optimizer/utilities.h>
 
 #include <gtsam/nonlinear/LinearContainerFactor.h>
 
-namespace graph_localizer {
+namespace graph_optimizer {
 GraphStatsBase::GraphStatsBase() {
   timers_.emplace_back(optimization_timer_);
   timers_.emplace_back(update_timer_);
@@ -67,4 +67,4 @@ void GraphStatsBase::LogToCsv(std::ofstream& ofstream) const {
   LogToCsv(stats_averagers_, ofstream);
   LogToCsv(error_averagers_, ofstream);
 }
-}  // namespace graph_localizer
+}  // namespace graph_optimizer
