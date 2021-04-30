@@ -24,6 +24,7 @@
 #include <graph_localizer/graph_initializer_params.h>
 #include <graph_localizer/graph_values_params.h>
 #include <graph_localizer/noise_params.h>
+#include <graph_optimizer/graph_optimizer_params.h>
 #include <localization_measurements/fan_speed_mode.h>
 
 #include <string>
@@ -33,6 +34,7 @@ struct GraphLocalizerParams {
   CalibrationParams calibration;
   FactorParams factor;
   FeatureTrackerParams feature_tracker;
+  graph_optimizer::GraphOptimizerParams graph_optimizer;
   GraphValuesParams graph_values;
   NoiseParams noise;
   GraphInitializerParams graph_initializer;

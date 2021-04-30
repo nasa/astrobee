@@ -18,11 +18,13 @@
 
 #include <graph_localizer/parameter_reader.h>
 #include <graph_localizer/utilities.h>
+#include <graph_optimizer/parameter_reader.h>
 #include <imu_integration/utilities.h>
 #include <localization_common/utilities.h>
 #include <msg_conversions/msg_conversions.h>
 
 namespace graph_localizer {
+namespace go = graph_optimizer;
 namespace ii = imu_integration;
 namespace lc = localization_common;
 namespace mc = msg_conversions;
@@ -163,13 +165,6 @@ void LoadFeatureTrackerParams(config_reader::ConfigReader& config, FeatureTracke
   params.smart_projection_adder_measurement_spacing = mc::LoadInt(config, "smart_projection_adder_measurement_spacing");
 }
 
-void LoadGraphValuesParams(config_reader::ConfigReader& config, GraphValuesParams& params) {
-  params.ideal_duration = mc::LoadDouble(config, "ideal_duration");
-  params.min_num_states = mc::LoadInt(config, "min_num_states");
-  params.max_num_states = mc::LoadInt(config, "max_num_states");
-  params.min_num_factors_per_feature = mc::LoadInt(config, "min_num_factors_per_feature");
-}
-
 void LoadNoiseParams(config_reader::ConfigReader& config, NoiseParams& params) {
   params.starting_prior_translation_stddev = mc::LoadDouble(config, "starting_prior_translation_stddev");
   params.starting_prior_quaternion_stddev = mc::LoadDouble(config, "starting_prior_quaternion_stddev");
@@ -195,25 +190,12 @@ void LoadGraphInitializerParams(config_reader::ConfigReader& config, GraphInitia
   params.num_bias_estimation_measurements = mc::LoadInt(config, "num_bias_estimation_measurements");
 }
 
-void LoadGraphOptimizerParams(config_reader::ConfigReader& config, GraphOptimizerParams& params) {
-  LoadGraphValuesParams(config, params.graph_values);
-  params.verbose = mc::LoadBool(config, "verbose");
-  params.fatal_failures = mc::LoadBool(config, "fatal_failures");
-  params.print_factor_info = mc::LoadBool(config, "print_factor_info");
-  params.use_ceres_params = mc::LoadBool(config, "use_ceres_params");
-  params.max_iterations = mc::LoadInt(config, "max_iterations");
-  params.marginals_factorization = mc::LoadString(config, "marginals_factorization");
-  params.add_marginal_factors = mc::LoadBool(config, "add_marginal_factors");
-  params.huber_k = mc::LoadDouble(config, "huber_k");
-  params.log_rate = mc::LoadInt(config, "log_rate");
-}
-
 void LoadGraphLocalizerParams(config_reader::ConfigReader& config, GraphLocalizerParams& params) {
   LoadCalibrationParams(config, params.calibration);
   LoadGraphInitializerParams(config, params.graph_initializer);
   LoadFactorParams(config, params.factor);
   LoadFeatureTrackerParams(config, params.feature_tracker);
-  LoadGraphValuesParams(config, params.graph_values);
+  go::LoadGraphOptimizerParams(config, params.graph_optimizer);
   LoadNoiseParams(config, params.noise);
   params.verbose = mc::LoadBool(config, "verbose");
   params.fatal_failures = mc::LoadBool(config, "fatal_failures");
