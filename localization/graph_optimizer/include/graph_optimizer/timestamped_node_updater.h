@@ -16,17 +16,17 @@
  * under the License.
  */
 
-#ifndef GRAPH_LOCALIZER_TIMESTAMPED_NODE_UPDATER_H_
-#define GRAPH_LOCALIZER_TIMESTAMPED_NODE_UPDATER_H_
+#ifndef GRAPH_OPTIMIZER_TIMESTAMPED_NODE_UPDATER_H_
+#define GRAPH_OPTIMIZER_TIMESTAMPED_NODE_UPDATER_H_
 
-#include <graph_localizer/graph_values.h>
-#include <graph_localizer/node_updater_type.h>
+#include <graph_optimizer/graph_values.h>
+#include <graph_optimizer/node_updater_type.h>
 #include <localization_common/time.h>
 
 #include <gtsam/nonlinear/Marginals.h>
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
 
-namespace graph_localizer {
+namespace graph_optimizer {
 class TimestampedNodeUpdater {
  public:
   virtual ~TimestampedNodeUpdater() {}
@@ -40,6 +40,6 @@ class TimestampedNodeUpdater {
 
   virtual NodeUpdaterType type() const = 0;
 };
-}  // namespace graph_localizer
+}  // namespace graph_optimizer
 
-#endif  // GRAPH_LOCALIZER_TIMESTAMPED_NODE_UPDATER_H_
+#endif  // GRAPH_OPTIMIZER_TIMESTAMPED_NODE_UPDATER_H_

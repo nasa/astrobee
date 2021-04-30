@@ -16,15 +16,15 @@
  * under the License.
  */
 
-#ifndef GRAPH_LOCALIZER_TIMESTAMPED_NODE_UPDATER_WITH_PRIORS_H_
-#define GRAPH_LOCALIZER_TIMESTAMPED_NODE_UPDATER_WITH_PRIORS_H_
+#ifndef GRAPH_OPTIMIZER_TIMESTAMPED_NODE_UPDATER_WITH_PRIORS_H_
+#define GRAPH_OPTIMIZER_TIMESTAMPED_NODE_UPDATER_WITH_PRIORS_H_
 
-#include <graph_localizer/timestamped_node_updater.h>
-#include <graph_localizer/graph_values.h>
+#include <graph_optimizer/timestamped_node_updater.h>
+#include <graph_optimizer/graph_values.h>
 
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
 
-namespace graph_localizer {
+namespace graph_optimizer {
 template <typename NodeType, typename NoiseType>
 class TimestampedNodeUpdaterWithPriors : public TimestampedNodeUpdater {
  public:
@@ -36,6 +36,6 @@ class TimestampedNodeUpdaterWithPriors : public TimestampedNodeUpdater {
   virtual void AddPriors(const NodeType& node, const NoiseType& noise, const GraphValues& graph_values,
                          gtsam::NonlinearFactorGraph& factors) = 0;
 };
-}  // namespace graph_localizer
+}  // namespace graph_optimizer
 
-#endif  // GRAPH_LOCALIZER_TIMESTAMPED_NODE_UPDATER_WITH_PRIORS_H_
+#endif  // GRAPH_OPTIMIZER_TIMESTAMPED_NODE_UPDATER_WITH_PRIORS_H_

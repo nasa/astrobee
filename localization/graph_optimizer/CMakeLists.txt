@@ -15,43 +15,18 @@
 #License for the specific language governing permissions and limitations
 #under the License.
 
-project(graph_localizer)
-
-if (USE_ROS)
+project(graph_optimizer)
 
 # include ff_nodelet to get ff_util header files since these aren't exposed elsewhere
 catkin_package(
-  LIBRARIES ${PROJECT_NAME} ${GLOG_LIBRARIES} ${GTSAM_LIBRARIES} camera config_reader ff_nodelet imu_integration localization_common localization_measurements msg_conversions
+  LIBRARIES ${PROJECT_NAME} ${GLOG_LIBRARIES} ${GTSAM_LIBRARIES} config_reader localization_common localization_measurements msg_conversions
   INCLUDE_DIRS include ${GLOG_INCLUDE_DIRS} ${GTSAM_INCLUDE_DIR} 
-  CATKIN_DEPENDS roscpp 
-  DEPENDS gtsam ff_msgs 
+  CATKIN_DEPENDS 
+  DEPENDS gtsam 
 )
 
 create_library(TARGET ${PROJECT_NAME} 
-  LIBS ${catkin_LIBRARIES} ${GLOG_LIBRARIES} gtsam camera config_reader ff_nodelet imu_integration localization_common localization_measurements msg_conversions 
+  LIBS ${catkin_LIBRARIES} ${GLOG_LIBRARIES} gtsam config_reader localization_common localization_measurements msg_conversions 
   INC ${catkin_INCLUDE_DIRS} ${GLOG_INCLUDE_DIRS} 
-  DEPS ff_msgs
+  DEPS 
 )
-
-if(CATKIN_ENABLE_TESTING)
-  find_package(rostest REQUIRED)
-  add_rostest_gtest(test_rotation_factor_adder
-    test/test_rotation_factor_adder.test
-    test/test_rotation_factor_adder.cc
-  )
-  target_link_libraries(test_rotation_factor_adder
-    graph_localizer gtsam
-  )
-  add_rostest_gtest(test_rotation_factor
-    test/test_rotation_factor.test
-    test/test_rotation_factor.cc
-  )
-  target_link_libraries(test_rotation_factor
-    graph_localizer gtsam
-  )
-
-endif()
-
-install_launch_files()
-
-endif (USE_ROS)
