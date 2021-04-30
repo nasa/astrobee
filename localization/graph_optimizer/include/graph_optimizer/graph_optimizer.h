@@ -51,7 +51,7 @@ class GraphOptimizer {
   void AddGraphActionCompleter(std::shared_ptr<GraphActionCompleter> graph_action_completer);
   // Registers timestamped node updater. Called when adding buffered factors
   void AddTimestampedNodeUpdater(std::shared_ptr<TimestampedNodeUpdater> timestamped_node_updater);
-  // Adds buffered factors and optimizes graph.  Calls PostOptimizeActions afterwards
+  // Adds buffered factors and optimizes graph.  Calls DoPostOptimizeActions afterwards
   bool Update();
   const GraphValues& graph_values() const;
   const gtsam::NonlinearFactorGraph& graph_factors() const;
@@ -73,8 +73,8 @@ class GraphOptimizer {
   bool SlideWindow(const boost::optional<gtsam::Marginals>& marginals,
                    const localization_common::Time last_latest_time);
 
-  // Called after SlideWindow to adjust other structures' window sizes
-  virtual void SlideOtherWindows();
+  // Called after SlideWindow 
+  virtual void DoPostSlideWindowActions();
 
   // void UpdatePointPriors(const gtsam::Marginals& marginals);
 
@@ -113,7 +113,7 @@ class GraphOptimizer {
   virtual void PrintFactorDebugInfo() const;
 
   // Called after optimizing graph
-  virtual void PostOptimizeActions();
+  virtual void DoPostOptimizeActions();
 
   // Serialization function
   friend class boost::serialization::access;

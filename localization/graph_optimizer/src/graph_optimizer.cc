@@ -141,11 +141,11 @@ bool GraphOptimizer::SlideWindow(const boost::optional<gtsam::Marginals>& margin
   }
 
   RemoveOldBufferedFactors(*oldest_timestamp);
-  SlideOtherWindows();
+  DoPostSlideWindowActions();
   return true;
 }
 
-void GraphOptimizer::SlideOtherWindows() {}
+void GraphOptimizer::DoPostSlideWindowActions() {}
 
 void GraphOptimizer::BufferCumulativeFactors() {}
 
@@ -290,7 +290,7 @@ const GraphStatsBase& GraphOptimizer::graph_stats() const { return graph_stats_;
 
 void GraphOptimizer::LogOnDestruction(const bool log_on_destruction) { log_on_destruction_ = log_on_destruction; }
 
-void GraphOptimizer::PostOptimizeActions() {}
+void GraphOptimizer::DoPostOptimizeActions() {}
 
 bool GraphOptimizer::Update() {
   LogDebug("Update: Updating.");
@@ -386,7 +386,7 @@ bool GraphOptimizer::Update() {
   graph_stats_.log_error_timer_.Stop();
 
   if (params_.print_factor_info) PrintFactorDebugInfo();
-  PostOptimizeActions();
+  DoPostOptimizeActions();
   graph_stats_.update_timer_.Stop();
   return true;
 }
