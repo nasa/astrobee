@@ -80,7 +80,7 @@ class GraphOptimizer {
   virtual void RemoveOldMeasurementsFromCumulativeFactors(const gtsam::KeyVector& old_keys);
 
   // Adds buffered factors to graph_factors for future optimization
-  // Only adds factors that pass ReadyToAddMeasurement(timestamp) check
+  // Only adds factors that pass ReadyToAddFactors(timestamp) check
   int AddBufferedFactors();
 
   // Calls Update for each registered NodeUpdater to create required nodes while inserting new factors
@@ -93,7 +93,7 @@ class GraphOptimizer {
   bool Rekey(FactorToAdd& factor_to_add);
 
   // Checks whether the graph is ready for insertion of a factor with timestamp
-  virtual bool ReadyToAddMeasurement(const localization_common::Time timestamp) const;
+  virtual bool ReadyToAddFactors(const localization_common::Time timestamp) const;
 
   // Checks whether a measurement is too old to be inserted into graph
   virtual bool MeasurementRecentEnough(const localization_common::Time timestamp) const;

@@ -178,12 +178,9 @@ int GraphOptimizer::AddBufferedFactors() {
 
   int num_added_factors = 0;
   for (auto factors_to_add_it = buffered_factors_to_add_.begin();
-       factors_to_add_it != buffered_factors_to_add_.end() && latest_imu_integrator_->LatestTime() &&
-       factors_to_add_it->first <= *(latest_imu_integrator_->LatestTime());) {
+       factors_to_add_it != buffered_factors_to_add_.end() && ReadyToFactors(factors_to_add_it->first);) {
     auto& factors_to_add = factors_to_add_it->second;
     for (auto& factor_to_add : factors_to_add.Get()) {
-      // Add combined nav states and connecting imu factors for each key in factor if necessary
-      // TODO(rsoussan): make this more efficient for factors with multiple keys with the same timestamp?
       for (const auto& key_info : factor_to_add.key_infos) {
         if (!UpdateNodes(key_info)) {
           LogError("AddBufferedFactors: Failed to update nodes.");
@@ -196,7 +193,6 @@ int GraphOptimizer::AddBufferedFactors() {
       }
     }
 
-    // Do graph action after adding necessary imu factors and nav states so these are available
     if (!DoGraphAction(factors_to_add)) {
       LogDebug("AddBufferedFactors: Failed to complete graph action.");
       factors_to_add_it = buffered_factors_to_add_.erase(factors_to_add_it);
@@ -257,7 +253,7 @@ bool GraphOptimizer::Rekey(FactorToAdd& factor_to_add) {
   return true;
 }
 
-bool GraphOptimizer::ReadyToAddMeasurement(const localization_common::Time timestamp) const { return true; }
+bool GraphOptimizer::ReadyToAddFactors(const localization_common::Time timestamp) const { return true; }
 
 bool GraphOptimizer::MeasurementRecentEnough(const lc::Time timestamp) const {
   if (timestamp < graph_values_->OldestTimestamp()) return false;
