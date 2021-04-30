@@ -277,6 +277,10 @@ const GraphOptimizerParams& GraphOptimizer::params() const { return params_; }
 
 const GraphValues& GraphOptimizer::graph_values() const { return *graph_values_; }
 
+GraphValues& GraphOptimizer::graph_values() { return *graph_values_; }
+
+std::shared_ptr<const GraphValues> GraphOptimizer::shared_graph_values() { return graph_values_; }
+
 const gtsam::NonlinearFactorGraph& GraphOptimizer::graph_factors() const { return graph_; }
 
 gtsam::NonlinearFactorGraph& GraphOptimizer::graph_factors() { return graph_; }
