@@ -40,33 +40,19 @@
 #include <vector>
 
 namespace graph_localizer {
-// namespace sym = gtsam::symbol_shorthand;
-
 class GraphOptimizer {
  public:
   explicit GraphOptimizer(const GraphOptimizerParams& params);
-  // For Serialization Only
+  // Default constructor/destructor for serialization only
   GraphOptimizer() {}
   ~GraphOptimizer();
+
   bool Update();
   const GraphValues& graph_values() const;
   const gtsam::NonlinearFactorGraph& factor_graph() const;
   void SaveGraphDotFile(const std::string& output_path = "graph.dot") const;
   const GraphOptimizerParams& params() const;
-
-  template <typename FactorType>
-  int NumFactors() const {
-    int num_factors = 0;
-    for (const auto& factor : graph_) {
-      if (dynamic_cast<const FactorType*>(factor.get())) {
-        ++num_factors;
-      }
-    }
-    return num_factors;
-  }
-
   void LogOnDestruction(const bool log_on_destruction);
-
   const GraphStatsBase& graph_stats() const;
 
  private:
@@ -83,28 +69,41 @@ class GraphOptimizer {
 
   // void UpdatePointPriors(const gtsam::Marginals& marginals);
 
+  // Adds factors to buffered list which is sorted by time
   void BufferFactors(const std::vector<FactorsToAdd>& factors_to_add_vec);
 
+  // Creates factors for cumulative factor adders and adds them to buffered list
   virtual void BufferCumulativeFactors();
 
+  // Removes old measurements from cumulative factors that do not fit in sliding window so cumulative factors are still
+  // valid after the SlideWindow call
   virtual void RemoveOldMeasurementsFromCumulativeFactors(const gtsam::KeyVector& old_keys);
 
+  // Adds buffered factors to graph_factors for future optimization
+  // Only adds factors that pass ReadyToAddMeasurement(timestamp) check
   int AddBufferedFactors();
 
+  // Calls Update for each registered NodeUpdater to create required nodes while inserting new factors
   bool UpdateNodes(const KeyInfo& key_info);
 
+  // Calls DoAction for each registered GraphActionCompleter after inserting new factors
   bool DoGraphAction(FactorsToAdd& factors_to_add);
 
+  // Updates keys in factors after new nodes are created/updated as required by registered NodeUpdater
   bool Rekey(FactorToAdd& factor_to_add);
 
+  // Checks whether the graph is ready for insertion of a factor with timestamp
   virtual bool ReadyToAddMeasurement(const localization_common::Time timestamp) const;
 
+  // Checks whether a measurement is too old to be inserted into graph
   virtual bool MeasurementRecentEnough(const localization_common::Time timestamp) const;
 
+  // Removes buffered factors that are too old for insertion into graph
   void RemoveOldBufferedFactors(const localization_common::Time oldest_allowed_timestamp);
 
   virtual void PrintFactorDebugInfo() const;
 
+  // Called after optimizing graph
   virtual void PostOptimizeActions();
 
   // Serialization function
