@@ -328,60 +328,13 @@ void GraphLocalizer::AddSparseMappingMeasurement(
   }
 }
 
-bool GraphLocalizer::SlideWindow(const boost::optional<gtsam::Marginals>& marginals, const lc::Time last_latest_time) {
-  const auto graph_values_ideal_new_oldest_time = graph_values_->SlideWindowNewOldestTime();
-  if (!graph_values_ideal_new_oldest_time) {
-    LogDebug("SlideWindow: No states removed. ");
-    return true;
+void GraphLocalizer::DoPostSlideWindowActions(const localization_common::Time oldest_allowed_time,
+                                              const boost::optional<gtsam::Marginals>& marginals) {
+  feature_tracker_->RemoveOldFeaturePointsAndSlideWindow(oldest_allowed_time);
+  latest_imu_integrator_->RemoveOldMeasurements(oldest_allowed_time);
+  if (params_.factor.projection_adder.enabled && params_.factor.projection_adder.add_point_priors && marginals) {
+    UpdatePointPriors(*marginals);
   }
-  // Ensure that new oldest time isn't more recent than last latest time
-  // since then priors couldn't be added for the new oldest state
-  if (last_latest_time < *graph_values_ideal_new_oldest_time)
-    LogError("SlideWindow: Ideal oldest time is more recent than last latest time.");
-  const auto new_oldest_time = std::min(last_latest_time, *graph_values_ideal_new_oldest_time);
-
-  // Add marginal factors for marginalized values
-  auto old_keys = graph_values_->OldKeys(new_oldest_time);
-  // Since cumlative factors have many keys and shouldn't be marginalized, need to remove old measurements depending on
-  // old keys before marginalizing and sliding window
-  RemoveOldMeasurementsFromCumulativeFactors(old_keys);
-  auto old_factors = graph_values_->RemoveOldFactors(old_keys, graph_);
-  gtsam::KeyVector old_feature_keys;
-  if (params_.factor.projection_adder.enabled) {
-    // Call remove old factors before old feature keys, since old feature keys depend on
-    // number of factors per key remaining
-    old_feature_keys = graph_values_->OldFeatureKeys(graph_);
-    auto old_feature_factors = graph_values_->RemoveOldFactors(old_feature_keys, graph_);
-    old_keys.insert(old_keys.end(), old_feature_keys.begin(), old_feature_keys.end());
-    old_factors.push_back(old_feature_factors);
-  }
-  if (params_.add_marginal_factors) {
-    const auto marginal_factors = MarginalFactors(old_factors, old_keys, gtsam::EliminateQR);
-    for (const auto& marginal_factor : marginal_factors) {
-      graph_factors().push_back(marginal_factor);
-    }
-  }
-
-  for (auto& node_updater : timestamped_node_updaters_)
-    node_updater->SlideWindow(new_oldest_time, marginals, params_.huber_k, graph_, *graph_values_);
-  if (params_.factor.projection_adder.enabled) graph_values_->RemoveOldFeatures(old_feature_keys);
-
-  // Remove old data from other containers
-  // TODO(rsoussan): Just use new_oldest_time and don't bother getting oldest timestamp here?
-  const auto oldest_timestamp = graph_values_->OldestTimestamp();
-  if (!oldest_timestamp || *oldest_timestamp != new_oldest_time) {
-    LogError("SlideWindow: Failed to get oldest timestamp.");
-    return false;
-  }
-
-  feature_tracker_->RemoveOldFeaturePointsAndSlideWindow(*oldest_timestamp);
-  latest_imu_integrator_->RemoveOldMeasurements(*oldest_timestamp);
-  RemoveOldBufferedFactors(*oldest_timestamp);
-
-  if (params_.factor.projection_adder.enabled && params_.factor.projection_adder.add_point_priors && marginals_) {
-    UpdatePointPriors(*marginals_);
-  }
-  return true;
 }
 
 void GraphLocalizer::UpdatePointPriors(const gtsam::Marginals& marginals) {

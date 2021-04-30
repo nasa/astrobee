@@ -118,12 +118,8 @@ class GraphLocalizer : public graph_optimizer::GraphOptimizer {
                                               const gtsam::KeyVector& old_keys,
                                               const gtsam::GaussianFactorGraph::Eliminate& eliminate_function) const;
 
-  // Removes Keys and Values outside of sliding window.
-  // Removes any factors depending on removed values
-  // Optionally adds marginalized factors encapsulating linearized error of removed factors
-  // Optionally adds priors using marginalized covariances for new oldest states
-  bool SlideWindow(const boost::optional<gtsam::Marginals>& marginals,
-                   const localization_common::Time last_latest_time);
+  void DoPostSlideWindowActions(const localization_common::Time oldest_allowed_time,
+                                const boost::optional<gtsam::Marginals>& marginals) final;
 
   void UpdatePointPriors(const gtsam::Marginals& marginals);
 

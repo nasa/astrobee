@@ -74,7 +74,7 @@ class GraphOptimizer {
                    const localization_common::Time last_latest_time);
 
   // Called after SlideWindow 
-  virtual void DoPostSlideWindowActions();
+  virtual void DoPostSlideWindowActions(const localization_common::Time oldest_allowed_time, const boost::optional<gtsam::Marginals>& marginals);
 
   // void UpdatePointPriors(const gtsam::Marginals& marginals);
 

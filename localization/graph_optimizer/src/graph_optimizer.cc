@@ -141,11 +141,11 @@ bool GraphOptimizer::SlideWindow(const boost::optional<gtsam::Marginals>& margin
   }
 
   RemoveOldBufferedFactors(*oldest_timestamp);
-  DoPostSlideWindowActions();
+  DoPostSlideWindowActions(*oldest_timestamp, marginals);
   return true;
 }
 
-void GraphOptimizer::DoPostSlideWindowActions() {}
+void GraphOptimizer::DoPostSlideWindowActions(const localization_common::Time oldest_allowed_time, const boost::optional<gtsam::Marginals>& marginals) {}
 
 void GraphOptimizer::BufferCumulativeFactors() {}
 
