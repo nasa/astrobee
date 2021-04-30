@@ -22,7 +22,7 @@
 #include <graph_optimizer/factor_to_add.h>
 #include <graph_optimizer/graph_action_completer.h>
 #include <graph_optimizer/graph_optimizer_params.h>
-#include <graph_optimizer/graph_stats_base.h>
+#include <graph_optimizer/graph_stats.h>
 #include <graph_optimizer/graph_values.h>
 #include <graph_optimizer/key_info.h>
 #include <graph_optimizer/timestamped_node_updater.h>
@@ -61,7 +61,7 @@ class GraphOptimizer {
   void SaveGraphDotFile(const std::string& output_path = "graph.dot") const;
   const GraphOptimizerParams& params() const;
   void LogOnDestruction(const bool log_on_destruction);
-  const GraphStatsBase& graph_stats() const;
+  const GraphStats& graph_stats() const;
   const boost::optional<const gtsam::Marginals>& marginals() const;
 
  private:
@@ -138,7 +138,7 @@ class GraphOptimizer {
   std::vector<std::shared_ptr<GraphActionCompleter>> graph_action_completers_;
   gtsam::Marginals::Factorization marginals_factorization_;
   boost::optional<localization_common::Time> last_latest_time_;
-  GraphStatsBase graph_stats_;
+  GraphStats graph_stats_;
 };
 }  // namespace graph_optimizer
 

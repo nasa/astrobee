@@ -15,13 +15,13 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#include <graph_optimizer/graph_stats_base.h>
+#include <graph_optimizer/graph_stats.h>
 #include <graph_optimizer/utilities.h>
 
 #include <gtsam/nonlinear/LinearContainerFactor.h>
 
 namespace graph_optimizer {
-GraphStatsBase::GraphStatsBase() {
+GraphStats::GraphStats() {
   timers_.emplace_back(optimization_timer_);
   timers_.emplace_back(update_timer_);
   timers_.emplace_back(marginals_timer_);
@@ -40,28 +40,28 @@ GraphStatsBase::GraphStatsBase() {
   error_averagers_.emplace_back(total_error_averager_);
 }
 
-void GraphStatsBase::UpdateErrors(const gtsam::NonlinearFactorGraph& graph_factors, const GraphValues& graph_values) {}
+void GraphStats::UpdateErrors(const gtsam::NonlinearFactorGraph& graph_factors, const GraphValues& graph_values) {}
 
-void GraphStatsBase::UpdateStats(const gtsam::NonlinearFactorGraph& graph_factors, const GraphValues& graph_values) {
+void GraphStats::UpdateStats(const gtsam::NonlinearFactorGraph& graph_factors, const GraphValues& graph_values) {
   num_states_averager_.Update(graph_values.NumStates());
   duration_averager_.Update(graph_values.Duration());
   num_marginal_factors_averager_.Update(NumFactors<gtsam::LinearContainerFactor>(graph_factors));
   num_factors_averager_.Update(graph_factors.size());
 }
 
-void GraphStatsBase::Log() const {
+void GraphStats::Log() const {
   Log(timers_);
   Log(stats_averagers_);
   Log(error_averagers_);
 }
 
-void GraphStatsBase::LogToFile(std::ofstream& ofstream) const {
+void GraphStats::LogToFile(std::ofstream& ofstream) const {
   LogToFile(timers_, ofstream);
   LogToFile(stats_averagers_, ofstream);
   LogToFile(error_averagers_, ofstream);
 }
 
-void GraphStatsBase::LogToCsv(std::ofstream& ofstream) const {
+void GraphStats::LogToCsv(std::ofstream& ofstream) const {
   ofstream << "name,avg,min,max,stddev" << std::endl;
   LogToCsv(timers_, ofstream);
   LogToCsv(stats_averagers_, ofstream);

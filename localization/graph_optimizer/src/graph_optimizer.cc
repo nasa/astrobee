@@ -292,7 +292,7 @@ void GraphOptimizer::SaveGraphDotFile(const std::string& output_path) const {
   graph_.saveGraph(of, graph_values_->values());
 }
 
-const GraphStatsBase& GraphOptimizer::graph_stats() const { return graph_stats_; }
+const GraphStats& GraphOptimizer::graph_stats() const { return graph_stats_; }
 
 void GraphOptimizer::LogOnDestruction(const bool log_on_destruction) { log_on_destruction_ = log_on_destruction; }
 

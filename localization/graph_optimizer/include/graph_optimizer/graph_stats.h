@@ -15,8 +15,8 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef GRAPH_OPTIMIZER_GRAPH_STATS_BASE_H_
-#define GRAPH_OPTIMIZER_GRAPH_STATS_BASE_H_
+#ifndef GRAPH_OPTIMIZER_GRAPH_STATS_H_
+#define GRAPH_OPTIMIZER_GRAPH_STATS_H_
 
 #include <graph_optimizer/graph_values.h>
 #include <localization_common/averager.h>
@@ -27,9 +27,9 @@
 #include <vector>
 
 namespace graph_optimizer {
-class GraphStatsBase {
+class GraphStats {
  public:
-  GraphStatsBase();
+  GraphStats();
   virtual void UpdateErrors(const gtsam::NonlinearFactorGraph& graph_factors, const GraphValues& graph_values);
   virtual void UpdateStats(const gtsam::NonlinearFactorGraph& graph_factors, const GraphValues& graph_values);
   void Log() const;
@@ -77,4 +77,4 @@ class GraphStatsBase {
 };
 }  // namespace graph_optimizer
 
-#endif  // GRAPH_OPTIMIZER_GRAPH_STATS_BASE_H_
+#endif  // GRAPH_OPTIMIZER_GRAPH_STATS_H_
