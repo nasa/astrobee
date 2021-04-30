@@ -141,8 +141,11 @@ bool GraphOptimizer::SlideWindow(const boost::optional<gtsam::Marginals>& margin
   }
 
   RemoveOldBufferedFactors(*oldest_timestamp);
+  SlideOtherWindows();
   return true;
 }
+
+void GraphOptimizer::SlideOtherWindows() {}
 
 void GraphOptimizer::BufferCumulativeFactors() {}
 

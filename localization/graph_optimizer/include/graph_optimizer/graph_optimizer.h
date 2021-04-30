@@ -73,6 +73,9 @@ class GraphOptimizer {
   bool SlideWindow(const boost::optional<gtsam::Marginals>& marginals,
                    const localization_common::Time last_latest_time);
 
+  // Called after SlideWindow to adjust other structures' window sizes
+  virtual void SlideOtherWindows();
+
   // void UpdatePointPriors(const gtsam::Marginals& marginals);
 
   // Adds factors to buffered list which is sorted by time
