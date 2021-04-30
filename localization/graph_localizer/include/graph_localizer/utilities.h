@@ -100,7 +100,7 @@ void DeleteFactors(gtsam::NonlinearFactorGraph& graph) {
 }
 
 template <typename FactorType>
-int NumFactors(const gtsam::NonlinearFactorGraph& graph) const {
+int NumFactors(const gtsam::NonlinearFactorGraph& graph) {
   int num_factors = 0;
   for (const auto& factor : graph) {
     if (dynamic_cast<const FactorType*>(factor.get())) {

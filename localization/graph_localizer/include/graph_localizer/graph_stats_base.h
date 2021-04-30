@@ -18,15 +18,18 @@
 #ifndef GRAPH_LOCALIZER_GRAPH_STATS_BASE_H_
 #define GRAPH_LOCALIZER_GRAPH_STATS_BASE_H_
 
+#include <graph_localizer/graph_values.h>
 #include <localization_common/averager.h>
 #include <localization_common/timer.h>
+
+#include <gtsam/nonlinear/NonlinearFactorGraph.h>
 
 #include <vector>
 
 namespace graph_localizer {
 class GraphStatsBase {
  public:
-  virtual GraphStatsBase();
+  GraphStatsBase();
   virtual void UpdateErrors(const gtsam::NonlinearFactorGraph& graph_factors, const GraphValues& graph_values);
   virtual void UpdateStats(const gtsam::NonlinearFactorGraph& graph_factors, const GraphValues& graph_values);
   void Log() const;

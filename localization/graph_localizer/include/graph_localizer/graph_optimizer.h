@@ -22,7 +22,7 @@
 #include <graph_localizer/factor_to_add.h>
 #include <graph_localizer/graph_action_completer.h>
 #include <graph_localizer/graph_optimizer_params.h>
-#include <graph_localizer/graph_stats.h>
+#include <graph_localizer/graph_stats_base.h>
 #include <graph_localizer/graph_values.h>
 #include <graph_localizer/key_info.h>
 #include <graph_localizer/timestamped_node_updater.h>

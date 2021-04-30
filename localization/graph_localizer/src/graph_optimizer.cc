@@ -178,7 +178,7 @@ int GraphOptimizer::AddBufferedFactors() {
 
   int num_added_factors = 0;
   for (auto factors_to_add_it = buffered_factors_to_add_.begin();
-       factors_to_add_it != buffered_factors_to_add_.end() && ReadyToFactors(factors_to_add_it->first);) {
+       factors_to_add_it != buffered_factors_to_add_.end() && ReadyToAddFactors(factors_to_add_it->first);) {
     auto& factors_to_add = factors_to_add_it->second;
     for (auto& factor_to_add : factors_to_add.Get()) {
       for (const auto& key_info : factor_to_add.key_infos) {

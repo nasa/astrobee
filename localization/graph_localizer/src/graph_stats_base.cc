@@ -16,6 +16,7 @@
  * under the License.
  */
 #include <graph_localizer/graph_stats_base.h>
+#include <graph_localizer/utilities.h>
 
 #include <gtsam/nonlinear/LinearContainerFactor.h>
 
