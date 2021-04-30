@@ -43,8 +43,8 @@ void log(const bool fatal_failure, const std::string& description) {
 namespace graph_optimizer {
 namespace lc = localization_common;
 
-GraphOptimizer::GraphOptimizer(const GraphOptimizerParams& params)
-    : graph_values_(new GraphValues(params.graph_values)), log_on_destruction_(true), params_(params) {
+GraphOptimizer::GraphOptimizer(const GraphOptimizerParams& params, std::unique_ptr<GraphStats> graph_stats)
+    : graph_values_(new GraphValues(params.graph_values)), graph_stats_(std::move(graph_stats)), log_on_destruction_(true), params_(params) {
   // Initialize lm params
   if (params_.verbose) {
     levenberg_marquardt_params_.verbosityLM = gtsam::LevenbergMarquardtParams::VerbosityLM::TRYDELTA;
@@ -67,7 +67,7 @@ GraphOptimizer::GraphOptimizer(const GraphOptimizerParams& params)
 }
 
 GraphOptimizer::~GraphOptimizer() {
-  if (log_on_destruction_) graph_stats_.Log();
+  if (log_on_destruction_) graph_stats_->Log();
 }
 
 void GraphOptimizer::AddGraphActionCompleter(std::shared_ptr<GraphActionCompleter> graph_action_completer) {
@@ -292,7 +292,7 @@ void GraphOptimizer::SaveGraphDotFile(const std::string& output_path) const {
   graph_.saveGraph(of, graph_values_->values());
 }
 
-const GraphStats& GraphOptimizer::graph_stats() const { return graph_stats_; }
+const GraphStats * const GraphOptimizer::graph_stats() const { return graph_stats_.get(); }
 
 void GraphOptimizer::LogOnDestruction(const bool log_on_destruction) { log_on_destruction_ = log_on_destruction; }
 
@@ -300,12 +300,12 @@ void GraphOptimizer::DoPostOptimizeActions() {}
 
 bool GraphOptimizer::Update() {
   LogDebug("Update: Updating.");
-  graph_stats_.update_timer_.Start();
+  graph_stats_->update_timer_.Start();
 
-  graph_stats_.add_buffered_factors_timer_.Start();
+  graph_stats_->add_buffered_factors_timer_.Start();
   BufferCumulativeFactors();
   const int num_added_factors = AddBufferedFactors();
-  graph_stats_.add_buffered_factors_timer_.Stop();
+  graph_stats_->add_buffered_factors_timer_.Stop();
   if (num_added_factors <= 0) {
     LogDebug("Update: No factors added.");
     return false;
@@ -314,7 +314,7 @@ bool GraphOptimizer::Update() {
   // Only get marginals and slide window if optimization has already occured
   // TODO(rsoussan): Make cleaner way to check for this
   if (last_latest_time_) {
-    graph_stats_.marginals_timer_.Start();
+    graph_stats_->marginals_timer_.Start();
     // Calculate marginals for covariances
     try {
       marginals_ = gtsam::Marginals(graph_, graph_values_->values(), marginals_factorization_);
@@ -325,14 +325,14 @@ bool GraphOptimizer::Update() {
       log(params_.fatal_failures, "Update: Computing marginals failed.");
       marginals_ = boost::none;
     }
-    graph_stats_.marginals_timer_.Stop();
+    graph_stats_->marginals_timer_.Stop();
 
-    graph_stats_.slide_window_timer_.Start();
+    graph_stats_->slide_window_timer_.Start();
     if (!SlideWindow(marginals_, *last_latest_time_)) {
       LogError("Update: Failed to slide window.");
       return false;
     }
-    graph_stats_.slide_window_timer_.Stop();
+    graph_stats_->slide_window_timer_.Stop();
   }
 
   // TODO(rsoussan): Is ordering required? if so clean these calls open and unify with marginalization
@@ -352,7 +352,7 @@ bool GraphOptimizer::Update() {
   // Optimize
   gtsam::LevenbergMarquardtOptimizer optimizer(graph_, graph_values_->values(), levenberg_marquardt_params_);
 
-  graph_stats_.optimization_timer_.Start();
+  graph_stats_->optimization_timer_.Start();
   // TODO(rsoussan): Indicate if failure occurs in state msg, perhaps using confidence value in msg 
   try {
     graph_values_->UpdateValues(optimizer.optimize());
@@ -361,13 +361,13 @@ bool GraphOptimizer::Update() {
   } catch (...) {
     log(params_.fatal_failures, "Update: Graph optimization failed, keeping old values.");
   }
-  graph_stats_.optimization_timer_.Stop();
+  graph_stats_->optimization_timer_.Stop();
 
   // Calculate marginals after the first optimization iteration so covariances
   // can be used for first loc msg
   // TODO(rsoussan): Clean this up
   if (!last_latest_time_) {
-    graph_stats_.marginals_timer_.Start();
+    graph_stats_->marginals_timer_.Start();
     // Calculate marginals for covariances
     try {
       marginals_ = gtsam::Marginals(graph_, graph_values_->values(), marginals_factorization_);
@@ -378,22 +378,22 @@ bool GraphOptimizer::Update() {
       log(params_.fatal_failures, "Update: Computing marginals failed.");
       marginals_ = boost::none;
     }
-    graph_stats_.marginals_timer_.Stop();
+    graph_stats_->marginals_timer_.Stop();
   }
 
   last_latest_time_ = graph_values_->LatestTimestamp();
 
-  graph_stats_.log_stats_timer_.Start();
-  graph_stats_.iterations_averager_.Update(optimizer.iterations());
-  graph_stats_.UpdateStats(graph_, *graph_values_);
-  graph_stats_.log_stats_timer_.Stop();
-  graph_stats_.log_error_timer_.Start();
-  graph_stats_.UpdateErrors(graph_, *graph_values_);
-  graph_stats_.log_error_timer_.Stop();
+  graph_stats_->log_stats_timer_.Start();
+  graph_stats_->iterations_averager_.Update(optimizer.iterations());
+  graph_stats_->UpdateStats(graph_, *graph_values_);
+  graph_stats_->log_stats_timer_.Stop();
+  graph_stats_->log_error_timer_.Start();
+  graph_stats_->UpdateErrors(graph_, *graph_values_);
+  graph_stats_->log_error_timer_.Stop();
 
   if (params_.print_factor_info) PrintFactorDebugInfo();
   DoPostOptimizeActions();
-  graph_stats_.update_timer_.Stop();
+  graph_stats_->update_timer_.Stop();
   return true;
 }
 }  // namespace graph_optimizer

@@ -35,6 +35,7 @@
 #include <boost/serialization/serialization.hpp>
 
 #include <map>
+#include <memory>
 #include <string>
 #include <utility>
 #include <vector>
@@ -42,7 +43,7 @@
 namespace graph_optimizer {
 class GraphOptimizer {
  public:
-  explicit GraphOptimizer(const GraphOptimizerParams& params);
+  GraphOptimizer(const GraphOptimizerParams& params, std::unique_ptr<GraphStats> graph_stats = std::unique_ptr<GraphStats>(new GraphStats()));
   // Default constructor/destructor for serialization only
   GraphOptimizer() {}
   ~GraphOptimizer();
@@ -61,7 +62,7 @@ class GraphOptimizer {
   void SaveGraphDotFile(const std::string& output_path = "graph.dot") const;
   const GraphOptimizerParams& params() const;
   void LogOnDestruction(const bool log_on_destruction);
-  const GraphStats& graph_stats() const;
+  const GraphStats * const graph_stats() const;
   const boost::optional<const gtsam::Marginals>& marginals() const;
 
  private:
@@ -127,6 +128,7 @@ class GraphOptimizer {
   }
 
   std::shared_ptr<GraphValues> graph_values_;
+  std::unique_ptr<GraphStats> graph_stats_;
   bool log_on_destruction_;
   GraphOptimizerParams params_;
   gtsam::LevenbergMarquardtParams levenberg_marquardt_params_;
@@ -138,7 +140,6 @@ class GraphOptimizer {
   std::vector<std::shared_ptr<GraphActionCompleter>> graph_action_completers_;
   gtsam::Marginals::Factorization marginals_factorization_;
   boost::optional<localization_common::Time> last_latest_time_;
-  GraphStats graph_stats_;
 };
 }  // namespace graph_optimizer
 
