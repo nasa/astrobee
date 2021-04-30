@@ -67,7 +67,7 @@ class GraphOptimizer {
 
   void LogOnDestruction(const bool log_on_destruction);
 
-  const GraphStats& graph_stats() const;
+  const GraphStatsBase& graph_stats() const;
 
  private:
   gtsam::NonlinearFactorGraph MarginalFactors(const gtsam::NonlinearFactorGraph& old_factors,
@@ -128,7 +128,7 @@ class GraphOptimizer {
   std::vector<std::shared_ptr<GraphActionCompleter>> graph_action_completers_;
   gtsam::Marginals::Factorization marginals_factorization_;
   boost::optional<localization_common::Time> last_latest_time_;
-  GraphStats graph_stats_;
+  GraphStatsBase graph_stats_;
 };
 }  // namespace graph_localizer
 

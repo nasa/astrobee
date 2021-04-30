@@ -98,6 +98,18 @@ void DeleteFactors(gtsam::NonlinearFactorGraph& graph) {
   }
   LogDebug("DeleteFactors: Num removed factors: " << num_removed_factors);
 }
+
+template <typename FactorType>
+int NumFactors(const gtsam::NonlinearFactorGraph& graph) const {
+  int num_factors = 0;
+  for (const auto& factor : graph) {
+    if (dynamic_cast<const FactorType*>(factor.get())) {
+      ++num_factors;
+    }
+  }
+  return num_factors;
+}
+
 }  // namespace graph_localizer
 
 #endif  // GRAPH_LOCALIZER_UTILITIES_H_

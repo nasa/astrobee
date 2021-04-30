@@ -277,7 +277,7 @@ void GraphOptimizer::SaveGraphDotFile(const std::string& output_path) const {
   graph_.saveGraph(of, graph_values_->values());
 }
 
-const GraphStats& GraphOptimizer::graph_stats() const { return graph_stats_; }
+const GraphStatsBase& GraphOptimizer::graph_stats() const { return graph_stats_; }
 
 void GraphOptimizer::LogOnDestruction(const bool log_on_destruction) { log_on_destruction_ = log_on_destruction; }
 
@@ -367,9 +367,14 @@ bool GraphOptimizer::Update() {
   }
 
   last_latest_time_ = graph_values_->LatestTimestamp();
+
+  graph_stats_.log_stats_timer_.Start();
   graph_stats_.iterations_averager_.Update(optimizer.iterations());
-  graph_stats_.UpdateStats(*this);
-  graph_stats_.UpdateErrors(*this);
+  graph_stats_.UpdateStats(graph_, *graph_values_);
+  graph_stats_.log_stats_timer_.Stop();
+  graph_stats_.log_error_timer_.Start();
+  graph_stats_.UpdateErrors(graph_, *graph_values_);
+  graph_stats_.log_error_timer_.Stop();
 
   if (params_.print_factor_info) PrintFactorDebugInfo();
   PostOptimizeActions();
