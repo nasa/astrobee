@@ -291,7 +291,7 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
         }
         states_.insert(states_.begin(), current_pose);
         replan_attempts_++;
-        ros::Duration(1).sleep(); // sleep for a second
+        ros::Duration(1).sleep();  // sleep for a second
         if (!Plan(states_)) {
           return Result(RESPONSE::PLAN_FAILED);
         }
