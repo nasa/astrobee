@@ -54,7 +54,8 @@ class GraphOptimizer {
   // Adds buffered factors and optimizes graph.  Calls PostOptimizeActions afterwards
   bool Update();
   const GraphValues& graph_values() const;
-  const gtsam::NonlinearFactorGraph& factor_graph() const;
+  const gtsam::NonlinearFactorGraph& graph_factors() const;
+  gtsam::NonlinearFactorGraph& graph_factors();
   void SaveGraphDotFile(const std::string& output_path = "graph.dot") const;
   const GraphOptimizerParams& params() const;
   void LogOnDestruction(const bool log_on_destruction);

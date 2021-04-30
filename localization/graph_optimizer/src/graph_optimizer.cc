@@ -274,7 +274,9 @@ const GraphOptimizerParams& GraphOptimizer::params() const { return params_; }
 
 const GraphValues& GraphOptimizer::graph_values() const { return *graph_values_; }
 
-const gtsam::NonlinearFactorGraph& GraphOptimizer::factor_graph() const { return graph_; }
+const gtsam::NonlinearFactorGraph& GraphOptimizer::graph_factors() const { return graph_; }
+
+gtsam::NonlinearFactorGraph& GraphOptimizer::graph_factors() { return graph_; }
 
 void GraphOptimizer::SaveGraphDotFile(const std::string& output_path) const {
   std::ofstream of(output_path.c_str());

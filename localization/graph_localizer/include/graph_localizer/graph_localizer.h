@@ -21,20 +21,16 @@
 
 #include <graph_localizer/combined_nav_state_node_updater.h>
 #include <graph_localizer/combined_nav_state_node_updater_params.h>
-#include <graph_localizer/factor_to_add.h>
 #include <graph_localizer/feature_tracker.h>
-#include <graph_localizer/graph_action_completer.h>
 #include <graph_localizer/graph_localizer_params.h>
 #include <graph_localizer/graph_stats.h>
-#include <graph_localizer/graph_values.h>
-#include <graph_localizer/key_info.h>
 #include <graph_localizer/robust_smart_projection_pose_factor.h>
 #include <graph_localizer/loc_factor_adder.h>
 #include <graph_localizer/projection_factor_adder.h>
 #include <graph_localizer/rotation_factor_adder.h>
 #include <graph_localizer/smart_projection_cumulative_factor_adder.h>
 #include <graph_localizer/standstill_factor_adder.h>
-#include <graph_localizer/timestamped_node_updater.h>
+#include <graph_optimizer/graph_optimizer.h>
 #include <imu_integration/latest_imu_integrator.h>
 #include <localization_common/combined_nav_state.h>
 #include <localization_common/combined_nav_state_covariances.h>
@@ -71,7 +67,7 @@ using RobustSmartFactor = gtsam::RobustSmartProjectionPoseFactor<Calibration>;
 using SharedRobustSmartFactor = boost::shared_ptr<RobustSmartFactor>;
 using ProjectionFactor = gtsam::GenericProjectionFactor<gtsam::Pose3, gtsam::Point3>;
 
-class GraphLocalizer {
+class GraphLocalizer : public graph_optimizer::GraphOptimizer {
  public:
   explicit GraphLocalizer(const GraphLocalizerParams& params);
   // For Serialization Only
@@ -90,7 +86,7 @@ class GraphLocalizer {
     const localization_measurements::MatchedProjectionsMeasurement& matched_projections_measurement);
   void AddSparseMappingMeasurement(
     const localization_measurements::MatchedProjectionsMeasurement& matched_projections_measurement);
-  bool Update();
+  void PostOptimizeActions() final;
   const FeatureTrackIdMap& feature_tracks() const { return feature_tracker_->feature_tracks(); }
 
   boost::optional<std::pair<gtsam::imuBias::ConstantBias, localization_common::Time>> LatestBiases() const;
@@ -105,26 +101,9 @@ class GraphLocalizer {
 
   int NumProjectionFactors(const bool check_valid = true) const;
 
-  const GraphValues& graph_values() const;
-
-  const gtsam::NonlinearFactorGraph& factor_graph() const;
-
-  void SaveGraphDotFile(const std::string& output_path = "graph.dot") const;
-
   bool standstill() const;
 
   const GraphLocalizerParams& params() const;
-
-  template <typename FactorType>
-  int NumFactors() const {
-    int num_factors = 0;
-    for (const auto& factor : graph_) {
-      if (dynamic_cast<const FactorType*>(factor.get())) {
-        ++num_factors;
-      }
-    }
-    return num_factors;
-  }
 
   void LogOnDestruction(const bool log_on_destruction);
 
@@ -151,53 +130,30 @@ class GraphLocalizer {
   boost::optional<std::pair<localization_common::CombinedNavState, localization_common::CombinedNavStateCovariances>>
   LatestCombinedNavStateAndCovariances(const gtsam::Marginals& marginals) const;
 
-  void BufferFactors(const std::vector<FactorsToAdd>& factors_to_add_vec);
-
-  void BufferCumulativeFactors();
+  void BufferCumulativeFactors() final;
 
   void RemoveOldMeasurementsFromCumulativeFactors(const gtsam::KeyVector& old_keys);
 
-  int AddBufferedFactors();
+  bool ReadyToAddFactors(const localization_common::Time timestamp) const final;
 
-  bool UpdateNodes(const KeyInfo& key_info);
+  bool MeasurementRecentEnough(const localization_common::Time timestamp) const final;
 
-  bool DoGraphAction(FactorsToAdd& factors_to_add);
-
-  bool Rekey(FactorToAdd& factor_to_add);
-
-  bool ReadyToAddMeasurement(const localization_common::Time timestamp) const;
-
-  bool MeasurementRecentEnough(const localization_common::Time timestamp) const;
-
-  void RemoveOldBufferedFactors(const localization_common::Time oldest_allowed_timestamp);
-
-  // TODO(rsoussan): make a static and dynamic key index?
-  static int GenerateKeyIndex() {
-    static int key_index = 0;
-    return key_index++;
-  }
-
-  void PrintFactorDebugInfo() const;
+  void PrintFactorDebugInfo() const final;
 
   // Serialization function
   friend class boost::serialization::access;
   template <class Archive>
   void serialize(Archive& ar, const unsigned int file_version) {
+    ar& BOOST_SERIALIZATION_BASE_OBJECT_NVP(go::GraphOptimizer);
     ar& BOOST_SERIALIZATION_NVP(feature_tracker_);
-    ar& BOOST_SERIALIZATION_NVP(graph_optimizer_);
   }
 
   std::shared_ptr<FeatureTracker> feature_tracker_;
   std::shared_ptr<imu_integration::LatestImuIntegrator> latest_imu_integrator_;
-  std::shared_ptr<GraphValues> graph_values_;
   bool log_on_destruction_;
   GraphLocalizerParams params_;
-  gtsam::LevenbergMarquardtParams levenberg_marquardt_params_;
   gtsam::SmartProjectionParams smart_projection_params_;
-  gtsam::NonlinearFactorGraph graph_;
-  boost::optional<gtsam::Marginals> marginals_;
   boost::optional<localization_measurements::FeaturePointsMeasurement> last_optical_flow_measurement_;
-  std::multimap<localization_common::Time, FactorsToAdd> buffered_factors_to_add_;
 
   // Factor Adders
   std::shared_ptr<LocFactorAdder> ar_tag_loc_factor_adder_;
@@ -210,9 +166,6 @@ class GraphLocalizer {
   // Node Updaters
   std::shared_ptr<CombinedNavStateNodeUpdater> combined_nav_state_node_updater_;
 
-  std::vector<std::shared_ptr<TimestampedNodeUpdater>> timestamped_node_updaters_;
-  std::vector<std::shared_ptr<GraphActionCompleter>> graph_action_completers_;
-  gtsam::Marginals::Factorization marginals_factorization_;
   boost::optional<bool> standstill_;
   boost::optional<localization_common::Time> last_latest_time_;
   GraphStats graph_stats_;
