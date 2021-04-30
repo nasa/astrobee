@@ -18,12 +18,14 @@
 
 #include <graph_localizer/smart_projection_cumulative_factor_adder.h>
 #include <graph_localizer/utilities.h>
+#include <graph_optimizer/utilities.h>
 #include <localization_common/logger.h>
 
 #include <gtsam/base/Vector.h>
 #include <gtsam/slam/SmartProjectionPoseFactor.h>
 
 namespace graph_localizer {
+namespace go = graph_optimizer;
 namespace lm = localization_measurements;
 namespace sym = gtsam::symbol_shorthand;
 SmartProjectionCumulativeFactorAdder::SmartProjectionCumulativeFactorAdder(
@@ -143,7 +145,7 @@ GraphActionCompleterType SmartProjectionCumulativeFactorAdder::type() const {
 bool SmartProjectionCumulativeFactorAdder::DoAction(FactorsToAdd& factors_to_add,
                                                     gtsam::NonlinearFactorGraph& graph_factors,
                                                     GraphValues& graph_values) {
-  DeleteFactors<RobustSmartFactor>(graph_factors);
+  go::DeleteFactors<RobustSmartFactor>(graph_factors);
   if (params().splitting) SplitSmartFactorsIfNeeded(graph_values, factors_to_add);
   return true;
 }

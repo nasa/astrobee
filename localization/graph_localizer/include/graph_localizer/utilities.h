@@ -84,32 +84,6 @@ SharedRobustSmartFactor RemoveSmartFactorMeasurements(const RobustSmartFactor& s
                                                       const std::unordered_set<int>& factor_key_indices_to_remove,
                                                       const SmartProjectionFactorAdderParams& params,
                                                       const gtsam::SmartProjectionParams& smart_projection_params);
-
-template <typename FactorType>
-void DeleteFactors(gtsam::NonlinearFactorGraph& graph) {
-  int num_removed_factors = 0;
-  for (auto factor_it = graph.begin(); factor_it != graph.end();) {
-    if (dynamic_cast<FactorType*>(factor_it->get())) {
-      factor_it = graph.erase(factor_it);
-      ++num_removed_factors;
-      continue;
-    }
-    ++factor_it;
-  }
-  LogDebug("DeleteFactors: Num removed factors: " << num_removed_factors);
-}
-
-template <typename FactorType>
-int NumFactors(const gtsam::NonlinearFactorGraph& graph) {
-  int num_factors = 0;
-  for (const auto& factor : graph) {
-    if (dynamic_cast<const FactorType*>(factor.get())) {
-      ++num_factors;
-    }
-  }
-  return num_factors;
-}
-
 }  // namespace graph_localizer
 
 #endif  // GRAPH_LOCALIZER_UTILITIES_H_
