@@ -468,7 +468,7 @@ int GraphLocalizer::NumProjectionFactors(const bool check_valid) const {
 }
 
 const GraphLocalizerStats& GraphLocalizer::graph_localizer_stats() const {
-  return *(static_cast<GraphLocalizerStats*>(graph_stats()));
+  return *(static_cast<const GraphLocalizerStats*>(graph_stats()));
 }
 
 bool GraphLocalizer::standstill() const {
@@ -478,7 +478,7 @@ bool GraphLocalizer::standstill() const {
   return *standstill_;
 }
 
-void DoPostOptimizeActions() {
+bool GraphLocalizer::DoPostOptimizeActions() {
   // Update imu integrator bias
   const auto latest_bias = graph_values().LatestBias();
   if (!latest_bias) {
@@ -487,5 +487,6 @@ void DoPostOptimizeActions() {
   }
 
   latest_imu_integrator_->ResetPimIntegrationAndSetBias(latest_bias->first);
+  return true;
 }
 }  // namespace graph_localizer

@@ -19,9 +19,15 @@
 #include <graph_localizer/loc_projection_factor.h>
 #include <graph_localizer/loc_pose_factor.h>
 #include <graph_localizer/pose_rotation_factor.h>
+#include <graph_localizer/robust_smart_projection_pose_factor.h>
+#include <graph_localizer/utilities.h>
 #include <graph_optimizer/utilities.h>
 
+#include <gtsam/geometry/Cal3_S2.h>
+#include <gtsam/geometry/PinholePose.h>
 #include <gtsam/nonlinear/LinearContainerFactor.h>
+#include <gtsam/slam/BetweenFactor.h>
+#include <gtsam/slam/ProjectionFactor.h>
 #include <gtsam/slam/PriorFactor.h>
 
 namespace graph_localizer {
@@ -47,7 +53,12 @@ GraphLocalizerStats::GraphLocalizerStats() {
 }
 
 void GraphLocalizerStats::UpdateErrors(const gtsam::NonlinearFactorGraph& graph_factors,
-                                       const GraphValues& graph_values) {
+                                       const go::GraphValues& graph_values) {
+  using Calibration = gtsam::Cal3_S2;
+  using Camera = gtsam::PinholePose<Calibration>;
+  using RobustSmartFactor = gtsam::RobustSmartProjectionPoseFactor<Calibration>;
+  using ProjectionFactor = gtsam::GenericProjectionFactor<gtsam::Pose3, gtsam::Point3>;
+
   double total_error = 0;
   double optical_flow_factor_error = 0;
   double loc_proj_error = 0;
@@ -117,7 +128,7 @@ void GraphLocalizerStats::UpdateErrors(const gtsam::NonlinearFactorGraph& graph_
 }
 
 void GraphLocalizerStats::UpdateStats(const gtsam::NonlinearFactorGraph& graph_factors,
-                                      const GraphValues& graph_values) {
+                                      const go::GraphValues& graph_values) {
   num_optical_flow_factors_averager_.Update(NumSmartFactors(graph_factors, true));
   num_loc_pose_factors_averager_.Update(go::NumFactors<gtsam::LocPoseFactor>(graph_factors));
   num_loc_proj_factors_averager_.Update(go::NumFactors<gtsam::LocProjectionFactor<>>(graph_factors));

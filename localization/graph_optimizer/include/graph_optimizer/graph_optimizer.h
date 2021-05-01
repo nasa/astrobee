@@ -118,7 +118,7 @@ class GraphOptimizer {
   virtual void PrintFactorDebugInfo() const;
 
   // Called after optimizing graph
-  virtual void DoPostOptimizeActions();
+  virtual bool DoPostOptimizeActions();
 
   // Serialization function
   friend class boost::serialization::access;

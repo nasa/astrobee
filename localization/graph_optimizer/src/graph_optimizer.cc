@@ -300,7 +300,7 @@ const GraphStats* const GraphOptimizer::graph_stats() const { return graph_stats
 
 void GraphOptimizer::LogOnDestruction(const bool log_on_destruction) { log_on_destruction_ = log_on_destruction; }
 
-void GraphOptimizer::DoPostOptimizeActions() {}
+bool GraphOptimizer::DoPostOptimizeActions() { return true; }
 
 bool GraphOptimizer::Update() {
   LogDebug("Update: Updating.");
@@ -396,7 +396,10 @@ bool GraphOptimizer::Update() {
   graph_stats_->log_error_timer_.Stop();
 
   if (params_.print_factor_info) PrintFactorDebugInfo();
-  DoPostOptimizeActions();
+  if (!DoPostOptimizeActions()) {
+    LogError("Update: Failed to complete post optimize actions.");
+    return false;
+  }
   graph_stats_->update_timer_.Stop();
   return true;
 }
