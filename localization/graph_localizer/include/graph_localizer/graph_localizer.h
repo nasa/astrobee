@@ -72,7 +72,7 @@ class GraphLocalizer : public graph_optimizer::GraphOptimizer {
   explicit GraphLocalizer(const GraphLocalizerParams& params);
   // For Serialization Only
   GraphLocalizer() {}
-  ~GraphLocalizer();
+  ~GraphLocalizer() = default;
   void AddImuMeasurement(const localization_measurements::ImuMeasurement& imu_measurement);
   boost::optional<localization_common::CombinedNavState> LatestCombinedNavState() const;
   boost::optional<localization_common::CombinedNavState> GetCombinedNavState(
@@ -103,8 +103,6 @@ class GraphLocalizer : public graph_optimizer::GraphOptimizer {
 
   const GraphLocalizerParams& params() const;
 
-  void LogOnDestruction(const bool log_on_destruction);
-
   const GraphLocalizerStats& graph_localizer_stats() const;
 
   void SetFanSpeedMode(const localization_measurements::FanSpeedMode fan_speed_mode);
@@ -112,10 +110,6 @@ class GraphLocalizer : public graph_optimizer::GraphOptimizer {
   const localization_measurements::FanSpeedMode fan_speed_mode() const;
 
  private:
-  gtsam::NonlinearFactorGraph MarginalFactors(const gtsam::NonlinearFactorGraph& old_factors,
-                                              const gtsam::KeyVector& old_keys,
-                                              const gtsam::GaussianFactorGraph::Eliminate& eliminate_function) const;
-
   void DoPostSlideWindowActions(const localization_common::Time oldest_allowed_time,
                                 const boost::optional<gtsam::Marginals>& marginals) final;
 
@@ -144,7 +138,6 @@ class GraphLocalizer : public graph_optimizer::GraphOptimizer {
 
   std::shared_ptr<FeatureTracker> feature_tracker_;
   std::shared_ptr<imu_integration::LatestImuIntegrator> latest_imu_integrator_;
-  bool log_on_destruction_;
   GraphLocalizerParams params_;
   boost::optional<localization_measurements::FeaturePointsMeasurement> last_optical_flow_measurement_;
 
@@ -160,7 +153,6 @@ class GraphLocalizer : public graph_optimizer::GraphOptimizer {
   std::shared_ptr<CombinedNavStateNodeUpdater> combined_nav_state_node_updater_;
 
   boost::optional<bool> standstill_;
-  boost::optional<localization_common::Time> last_latest_time_;
 };
 }  // namespace graph_localizer
 

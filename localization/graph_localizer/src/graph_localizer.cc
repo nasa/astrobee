@@ -50,7 +50,6 @@ GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
     : GraphOptimizer(params.graph_optimizer),
       feature_tracker_(new FeatureTracker(params.feature_tracker)),
       latest_imu_integrator_(new ii::LatestImuIntegrator(params.graph_initializer)),
-      log_on_destruction_(true),
       params_(params) {
   latest_imu_integrator_->SetFanSpeedMode(params_.initial_fan_speed_mode);
 
@@ -107,10 +106,6 @@ GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
     new CombinedNavStateNodeUpdater(combined_nav_state_node_updater_params, latest_imu_integrator_));
   combined_nav_state_node_updater_->AddInitialValuesAndPriors(graph_factors(), graph_values());
   AddTimestampedNodeUpdater(combined_nav_state_node_updater_);
-}
-
-GraphLocalizer::~GraphLocalizer() {
-  if (log_on_destruction_) graph_stats_->Log();
 }
 
 boost::optional<std::pair<lc::CombinedNavState, lc::CombinedNavStateCovariances>>
@@ -474,8 +469,6 @@ int GraphLocalizer::NumProjectionFactors(const bool check_valid) const {
 const GraphLocalizerStats& GraphLocalizer::graph_localizer_stats() const {
   return *(static_cast<GraphLocalizerStats*>(graph_stats()));
 }
-
-void GraphLocalizer::LogOnDestruction(const bool log_on_destruction) { log_on_destruction_ = log_on_destruction; }
 
 bool GraphLocalizer::standstill() const {
   // If uninitialized, return not at standstill
