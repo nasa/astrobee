@@ -435,7 +435,7 @@ int GraphLocalizer::NumFeatures() const { return graph_values().NumFeatures(); }
 
 // TODO(rsoussan): fix this call to happen before of factors are removed!
 int GraphLocalizer::NumOFFactors(const bool check_valid) const {
-  if (params_.factor.smart_projection_adder.enabled) return NumSmartFactors(check_valid);
+  if (params_.factor.smart_projection_adder.enabled) return NumSmartFactors(graph_factors(), check_valid);
   if (params_.factor.projection_adder.enabled) return NumProjectionFactors(check_valid);
   return 0;
 }
@@ -469,21 +469,6 @@ int GraphLocalizer::NumProjectionFactors(const bool check_valid) const {
     }
   }
   return num_factors;
-}
-
-int GraphLocalizer::NumSmartFactors(const bool check_valid) const {
-  int num_of_factors = 0;
-  for (const auto& factor : graph_factors()) {
-    const auto smart_factor = dynamic_cast<const RobustSmartFactor*>(factor.get());
-    if (smart_factor) {
-      if (check_valid) {
-        if (smart_factor->isValid()) ++num_of_factors;
-      } else {
-        ++num_of_factors;
-      }
-    }
-  }
-  return num_of_factors;
 }
 
 const GraphStats& GraphLocalizer::graph_stats() const { return graph_stats_; }

@@ -97,8 +97,6 @@ class GraphLocalizer : public graph_optimizer::GraphOptimizer {
 
   int NumOFFactors(const bool check_valid = true) const;
 
-  int NumSmartFactors(const bool check_valid = true) const;
-
   int NumProjectionFactors(const bool check_valid = true) const;
 
   bool standstill() const;
