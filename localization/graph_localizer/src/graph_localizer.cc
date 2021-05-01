@@ -47,7 +47,7 @@ namespace lc = localization_common;
 namespace lm = localization_measurements;
 
 GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
-    : GraphOptimizer(params.graph_optimizer),
+    : GraphOptimizer(params.graph_optimizer, std::unique_ptr<GraphLocalizerStats>(new GraphLocalizerStats())),
       feature_tracker_(new FeatureTracker(params.feature_tracker)),
       latest_imu_integrator_(new ii::LatestImuIntegrator(params.graph_initializer)),
       params_(params) {

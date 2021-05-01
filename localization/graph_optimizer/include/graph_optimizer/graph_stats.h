@@ -33,7 +33,8 @@ class GraphStats {
   void AddStatsAverager(localization_common::Averager& stats_averager);
   void AddErrorAverager(localization_common::Averager& error_averager);
   virtual void UpdateErrors(const gtsam::NonlinearFactorGraph& graph_factors, const GraphValues& graph_values);
-  virtual void UpdateStats(const gtsam::NonlinearFactorGraph& graph_factors, const GraphValues& graph_values);
+  virtual void UpdateSpecificStats(const gtsam::NonlinearFactorGraph& graph_factors, const GraphValues& graph_values);
+  void UpdateStats(const gtsam::NonlinearFactorGraph& graph_factors, const GraphValues& graph_values);
   void Log() const;
   void LogToFile(std::ofstream& ofstream) const;
   void LogToCsv(std::ofstream& ofstream) const;

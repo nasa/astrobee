@@ -26,8 +26,8 @@ class GraphLocalizerStats : public graph_optimizer::GraphStats {
   GraphLocalizerStats();
   void UpdateErrors(const gtsam::NonlinearFactorGraph& graph_factors,
                     const graph_optimizer::GraphValues& graph_values) final;
-  void UpdateStats(const gtsam::NonlinearFactorGraph& graph_factors,
-                   const graph_optimizer::GraphValues& graph_values) final;
+  void UpdateSpecificStats(const gtsam::NonlinearFactorGraph& graph_factors,
+                           const graph_optimizer::GraphValues& graph_values) final;
 
   // Graph Stats Averagers
   localization_common::Averager num_optical_flow_factors_averager_ =

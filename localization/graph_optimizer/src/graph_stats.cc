@@ -56,7 +56,11 @@ void GraphStats::UpdateStats(const gtsam::NonlinearFactorGraph& graph_factors, c
   num_marginal_factors_averager_.Update(NumFactors<gtsam::LinearContainerFactor>(graph_factors));
   num_factors_averager_.Update(graph_factors.size());
   num_features_averager_.Update(graph_values.NumFeatures());
+  UpdateSpecificStats(graph_factors, graph_values);
 }
+
+void GraphStats::UpdateSpecificStats(const gtsam::NonlinearFactorGraph& graph_factors,
+                                     const GraphValues& graph_values) {}
 
 void GraphStats::Log() const {
   Log(timers_);
