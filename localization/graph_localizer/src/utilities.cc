@@ -64,7 +64,7 @@ ff_msgs::GraphState GraphStateMsg(const lc::CombinedNavState& combined_nav_state
                                   const lc::CombinedNavStateCovariances& covariances,
                                   const FeatureCounts& detected_feature_counts, const bool estimating_bias,
                                   const double position_log_det_threshold, const double orientation_log_det_threshold,
-                                  const bool standstill, const GraphStats& graph_stats,
+                                  const bool standstill, const GraphLocalizerStats& graph_stats,
                                   const lm::FanSpeedMode fan_speed_mode) {
   ff_msgs::GraphState loc_msg;
 

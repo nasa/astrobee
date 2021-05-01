@@ -132,7 +132,7 @@ class GraphLocalizer : public graph_optimizer::GraphOptimizer {
   friend class boost::serialization::access;
   template <class Archive>
   void serialize(Archive& ar, const unsigned int file_version) {
-    ar& BOOST_SERIALIZATION_BASE_OBJECT_NVP(go::GraphOptimizer);
+    ar& BOOST_SERIALIZATION_BASE_OBJECT_NVP(graph_optimizer::GraphOptimizer);
     ar& BOOST_SERIALIZATION_NVP(feature_tracker_);
   }
 

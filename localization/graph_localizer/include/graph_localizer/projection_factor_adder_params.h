@@ -19,7 +19,7 @@
 #ifndef GRAPH_LOCALIZER_PROJECTION_FACTOR_ADDER_PARAMS_H_
 #define GRAPH_LOCALIZER_PROJECTION_FACTOR_ADDER_PARAMS_H_
 
-#include <graph_localizer/factor_adder_params.h>
+#include <graph_optimizer/factor_adder_params.h>
 
 #include <gtsam/geometry/Pose3.h>
 #include <gtsam/geometry/Cal3_S2.h>
@@ -28,7 +28,7 @@
 #include <string>
 
 namespace graph_localizer {
-struct ProjectionFactorAdderParams : public FactorAdderParams {
+struct ProjectionFactorAdderParams : public graph_optimizer::FactorAdderParams {
   bool enable_EPI;
   double landmark_distance_threshold;
   double dynamic_outlier_rejection_threshold;

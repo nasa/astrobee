@@ -20,50 +20,53 @@
 #define GRAPH_LOCALIZER_COMBINED_NAV_STATE_NODE_UPDATER_H_
 
 #include <graph_localizer/combined_nav_state_node_updater_params.h>
-#include <graph_localizer/timestamped_node_updater_with_priors.h>
+#include <graph_optimizer/timestamped_node_updater_with_priors.h>
 #include <imu_integration/latest_imu_integrator.h>
 #include <localization_common/combined_nav_state.h>
 
 namespace graph_localizer {
 class CombinedNavStateNodeUpdater
-    : public TimestampedNodeUpdaterWithPriors<localization_common::CombinedNavState,
-                                              localization_common::CombinedNavStateNoise> {
+    : public graph_optimizer::TimestampedNodeUpdaterWithPriors<localization_common::CombinedNavState,
+                                                               localization_common::CombinedNavStateNoise> {
  public:
   CombinedNavStateNodeUpdater(const CombinedNavStateNodeUpdaterParams& params,
                               std::shared_ptr<imu_integration::LatestImuIntegrator> latest_imu_integrator);
 
-  void AddInitialValuesAndPriors(gtsam::NonlinearFactorGraph& factors, GraphValues& graph_values);
+  void AddInitialValuesAndPriors(gtsam::NonlinearFactorGraph& factors, graph_optimizer::GraphValues& graph_values);
 
   void AddInitialValuesAndPriors(const localization_common::CombinedNavState& global_N_body,
                                  const localization_common::CombinedNavStateNoise& noise,
-                                 gtsam::NonlinearFactorGraph& factors, GraphValues& graph_values) final;
+                                 gtsam::NonlinearFactorGraph& factors,
+                                 graph_optimizer::GraphValues& graph_values) final;
 
   void AddPriors(const localization_common::CombinedNavState& global_N_body,
-                 const localization_common::CombinedNavStateNoise& noise, const GraphValues& graph_values,
-                 gtsam::NonlinearFactorGraph& factors) final;
+                 const localization_common::CombinedNavStateNoise& noise,
+                 const graph_optimizer::GraphValues& graph_values, gtsam::NonlinearFactorGraph& factors) final;
 
   bool Update(const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors,
-              GraphValues& graph_values) final;
+              graph_optimizer::GraphValues& graph_values) final;
 
   bool SlideWindow(const localization_common::Time oldest_allowed_timestamp,
                    const boost::optional<gtsam::Marginals>& marginals, const double huber_k,
-                   gtsam::NonlinearFactorGraph& factors, GraphValues& graph_values) final;
+                   gtsam::NonlinearFactorGraph& factors, graph_optimizer::GraphValues& graph_values) final;
 
-  NodeUpdaterType type() const final;
+  graph_optimizer::NodeUpdaterType type() const final;
 
  private:
   void RemovePriors(const int key_index, gtsam::NonlinearFactorGraph& factors);
   int GenerateKeyIndex();
   bool AddOrSplitImuFactorIfNeeded(const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors,
-                                   GraphValues& graph_values);
+                                   graph_optimizer::GraphValues& graph_values);
   bool CreateAndAddLatestImuFactorAndCombinedNavState(const localization_common::Time timestamp,
-                                                      gtsam::NonlinearFactorGraph& factors, GraphValues& graph_values);
+                                                      gtsam::NonlinearFactorGraph& factors,
+                                                      graph_optimizer::GraphValues& graph_values);
   bool CreateAndAddImuFactorAndPredictedCombinedNavState(const localization_common::CombinedNavState& global_N_body,
                                                          const gtsam::PreintegratedCombinedMeasurements& pim,
                                                          gtsam::NonlinearFactorGraph& factors,
-                                                         GraphValues& graph_values);
+                                                         graph_optimizer::GraphValues& graph_values);
   bool SplitOldImuFactorAndAddCombinedNavState(const localization_common::Time timestamp,
-                                               gtsam::NonlinearFactorGraph& factors, GraphValues& graph_values);
+                                               gtsam::NonlinearFactorGraph& factors,
+                                               graph_optimizer::GraphValues& graph_values);
 
   CombinedNavStateNodeUpdaterParams params_;
   std::shared_ptr<imu_integration::LatestImuIntegrator> latest_imu_integrator_;

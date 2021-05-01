@@ -26,7 +26,7 @@
 #include <graph_localizer/feature_track.h>
 #include <graph_localizer/graph_localizer.h>
 #include <graph_localizer/graph_localizer_initializer.h>
-#include <graph_localizer/graph_stats.h>
+#include <graph_localizer/graph_localizer_stats.h>
 #include <localization_common/combined_nav_state.h>
 #include <localization_common/combined_nav_state_covariances.h>
 #include <localization_measurements/feature_point.h>
@@ -59,7 +59,7 @@ ff_msgs::GraphState GraphStateMsg(const localization_common::CombinedNavState& c
                                   const localization_common::CombinedNavStateCovariances& covariances,
                                   const FeatureCounts& detected_feature_counts, const bool estimating_bias,
                                   const double position_log_det_threshold, const double orientation_log_det_threshold,
-                                  const bool standstill, const GraphStats& graph_stats,
+                                  const bool standstill, const GraphLocalizerStats& graph_stats,
                                   const localization_measurements::FanSpeedMode fan_speed_mode);
 
 ff_msgs::LocalizationGraph GraphMsg(const GraphLocalizer& graph_localizer);
@@ -74,18 +74,18 @@ gtsam::noiseModel::Robust::shared_ptr Robust(const gtsam::SharedNoiseModel& nois
 
 boost::optional<SharedRobustSmartFactor> FixSmartFactorByRemovingIndividualMeasurements(
   const SmartProjectionFactorAdderParams& params, const RobustSmartFactor& smart_factor,
-  const gtsam::SmartProjectionParams& smart_projection_params, const GraphValues& graph_values);
+  const gtsam::SmartProjectionParams& smart_projection_params, const graph_optimizer::GraphValues& graph_values);
 
 boost::optional<SharedRobustSmartFactor> FixSmartFactorByRemovingMeasurementSequence(
   const SmartProjectionFactorAdderParams& params, const RobustSmartFactor& smart_factor,
-  const gtsam::SmartProjectionParams& smart_projection_params, const GraphValues& graph_values);
+  const gtsam::SmartProjectionParams& smart_projection_params, const graph_optimizer::GraphValues& graph_values);
 
 SharedRobustSmartFactor RemoveSmartFactorMeasurements(const RobustSmartFactor& smart_factor,
                                                       const std::unordered_set<int>& factor_key_indices_to_remove,
                                                       const SmartProjectionFactorAdderParams& params,
                                                       const gtsam::SmartProjectionParams& smart_projection_params);
 
-int NumSmartFactors(const gtsam::NonlinearFactorGraph& graph_factors, const const bool check_valid);
+int NumSmartFactors(const gtsam::NonlinearFactorGraph& graph_factors, const bool check_valid);
 }  // namespace graph_localizer
 
 #endif  // GRAPH_LOCALIZER_UTILITIES_H_

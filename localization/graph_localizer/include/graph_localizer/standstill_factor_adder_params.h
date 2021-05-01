@@ -19,10 +19,10 @@
 #ifndef GRAPH_LOCALIZER_STANDSTILL_FACTOR_ADDER_PARAMS_H_
 #define GRAPH_LOCALIZER_STANDSTILL_FACTOR_ADDER_PARAMS_H_
 
-#include <graph_localizer/factor_adder_params.h>
+#include <graph_optimizer/factor_adder_params.h>
 
 namespace graph_localizer {
-struct StandstillFactorAdderParams : public FactorAdderParams {
+struct StandstillFactorAdderParams : public graph_optimizer::FactorAdderParams {
   bool add_velocity_prior;
   bool add_pose_between_factor;
   double prior_velocity_stddev;

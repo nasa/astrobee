@@ -19,35 +19,37 @@
 #ifndef GRAPH_LOCALIZER_LOC_FACTOR_ADDER_H_
 #define GRAPH_LOCALIZER_LOC_FACTOR_ADDER_H_
 
-#include <graph_localizer/factor_adder.h>
-#include <graph_localizer/graph_action_completer.h>
-#include <graph_localizer/graph_action_completer_type.h>
 #include <graph_localizer/loc_factor_adder_params.h>
+#include <graph_optimizer/factor_adder.h>
+#include <graph_optimizer/graph_action_completer.h>
+#include <graph_optimizer/graph_action_completer_type.h>
 #include <localization_common/averager.h>
 #include <localization_measurements/matched_projections_measurement.h>
 
 #include <vector>
 
 namespace graph_localizer {
-class LocFactorAdder
-    : public FactorAdder<localization_measurements::MatchedProjectionsMeasurement, LocFactorAdderParams>,
-      public GraphActionCompleter {
-  using Base = FactorAdder<localization_measurements::MatchedProjectionsMeasurement, LocFactorAdderParams>;
+class LocFactorAdder : public graph_optimizer::FactorAdder<localization_measurements::MatchedProjectionsMeasurement,
+                                                           LocFactorAdderParams>,
+                       public graph_optimizer::GraphActionCompleter {
+  using Base =
+    graph_optimizer::FactorAdder<localization_measurements::MatchedProjectionsMeasurement, LocFactorAdderParams>;
 
  public:
-  LocFactorAdder(const LocFactorAdderParams& params, const GraphActionCompleterType graph_action_completer_type);
+  LocFactorAdder(const LocFactorAdderParams& params,
+                 const graph_optimizer::GraphActionCompleterType graph_action_completer_type);
 
-  std::vector<FactorsToAdd> AddFactors(
+  std::vector<graph_optimizer::FactorsToAdd> AddFactors(
     const localization_measurements::MatchedProjectionsMeasurement& matched_projections_measurement) final;
 
-  bool DoAction(FactorsToAdd& factors_to_add, gtsam::NonlinearFactorGraph& graph_factors,
-                GraphValues& graph_values) final;
+  bool DoAction(graph_optimizer::FactorsToAdd& factors_to_add, gtsam::NonlinearFactorGraph& graph_factors,
+                graph_optimizer::GraphValues& graph_values) final;
 
-  GraphActionCompleterType type() const final;
+  graph_optimizer::GraphActionCompleterType type() const final;
 
  private:
   localization_common::Averager num_landmarks_averager_ = localization_common::Averager("Num Landmarks");
-  GraphActionCompleterType graph_action_completer_type_;
+  graph_optimizer::GraphActionCompleterType graph_action_completer_type_;
 };
 }  // namespace graph_localizer
 
