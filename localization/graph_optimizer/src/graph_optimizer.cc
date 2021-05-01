@@ -283,13 +283,13 @@ const GraphValues& GraphOptimizer::graph_values() const { return *graph_values_;
 
 GraphValues& GraphOptimizer::graph_values() { return *graph_values_; }
 
-std::shared_ptr<const GraphValues> GraphOptimizer::shared_graph_values() { return graph_values_; }
+std::shared_ptr<const GraphValues> GraphOptimizer::shared_graph_values() const { return graph_values_; }
 
 const gtsam::NonlinearFactorGraph& GraphOptimizer::graph_factors() const { return graph_; }
 
 gtsam::NonlinearFactorGraph& GraphOptimizer::graph_factors() { return graph_; }
 
-const boost::optional<const gtsam::Marginals>& marginals() const { return marginals_; }
+const boost::optional<gtsam::Marginals>& GraphOptimizer::marginals() const { return marginals_; }
 
 void GraphOptimizer::SaveGraphDotFile(const std::string& output_path) const {
   std::ofstream of(output_path.c_str());

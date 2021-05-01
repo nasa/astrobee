@@ -57,14 +57,14 @@ class GraphOptimizer {
   bool Update();
   const GraphValues& graph_values() const;
   GraphValues& graph_values();
-  const std::shared_ptr<const GraphValues> shared_graph_values() const;
+  std::shared_ptr<const GraphValues> shared_graph_values() const;
   const gtsam::NonlinearFactorGraph& graph_factors() const;
   gtsam::NonlinearFactorGraph& graph_factors();
   void SaveGraphDotFile(const std::string& output_path = "graph.dot") const;
   const GraphOptimizerParams& params() const;
   void LogOnDestruction(const bool log_on_destruction);
   const GraphStats* const graph_stats() const;
-  const boost::optional<const gtsam::Marginals>& marginals() const;
+  const boost::optional<gtsam::Marginals>& marginals() const;
 
  private:
   gtsam::NonlinearFactorGraph MarginalFactors(const gtsam::NonlinearFactorGraph& old_factors,
