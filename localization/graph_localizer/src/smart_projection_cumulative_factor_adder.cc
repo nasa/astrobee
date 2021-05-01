@@ -41,7 +41,7 @@ SmartProjectionCumulativeFactorAdder::SmartProjectionCumulativeFactorAdder(
 
 void SmartProjectionCumulativeFactorAdder::AddFactors(
   const FeatureTrackLengthMap& feature_tracks, const int spacing, const double feature_track_min_separation,
-  FactorsToAdd& smart_factors_to_add, std::unordered_map<lm::FeatureId, lm::FeaturePoint>& added_points) {
+  go::FactorsToAdd& smart_factors_to_add, std::unordered_map<lm::FeatureId, lm::FeaturePoint>& added_points) {
   // Iterate in reverse order so longer feature tracks are prioritized
   for (auto feature_track_it = feature_tracks.crbegin(); feature_track_it != feature_tracks.crend();
        ++feature_track_it) {
@@ -61,9 +61,9 @@ void SmartProjectionCumulativeFactorAdder::AddFactors(
   }
 }
 
-std::vector<FactorsToAdd> SmartProjectionCumulativeFactorAdder::AddFactors() {
+std::vector<go::FactorsToAdd> SmartProjectionCumulativeFactorAdder::AddFactors() {
   // Add smart factor for each valid feature track
-  FactorsToAdd smart_factors_to_add(type());
+  go::FactorsToAdd smart_factors_to_add(type());
   if (params().use_allowed_timestamps) {
     for (const auto& feature_track : feature_tracker_->feature_tracks()) {
       const auto points = feature_track.second->AllowedPoints(feature_tracker_->smart_factor_timestamp_allow_list());
@@ -102,7 +102,7 @@ std::vector<FactorsToAdd> SmartProjectionCumulativeFactorAdder::AddFactors() {
 }
 
 void SmartProjectionCumulativeFactorAdder::AddSmartFactor(const std::vector<lm::FeaturePoint>& feature_track_points,
-                                                          FactorsToAdd& smart_factors_to_add) const {
+                                                          go::FactorsToAdd& smart_factors_to_add) const {
   SharedRobustSmartFactor smart_factor;
   const int num_feature_track_points = feature_track_points.size();
   const double noise_scale =
@@ -112,14 +112,14 @@ void SmartProjectionCumulativeFactorAdder::AddSmartFactor(const std::vector<lm::
     boost::make_shared<RobustSmartFactor>(noise, params().cam_intrinsics, params().body_T_cam, smart_projection_params_,
                                           params().rotation_only_fallback, params().robust, params().huber_k);
 
-  KeyInfos key_infos;
+  go::KeyInfos key_infos;
   key_infos.reserve(feature_track_points.size());
   // Gtsam requires unique key indices for each key, even though these will be replaced later
   int uninitialized_key_index = 0;
   for (int i = 0; i < static_cast<int>(feature_track_points.size()); ++i) {
     const auto& feature_point = feature_track_points[i];
     if (i >= params().max_num_points_per_factor) break;
-    const KeyInfo key_info(&sym::P, NodeUpdaterType::CombinedNavState, feature_point.timestamp);
+    const go::KeyInfo key_info(&sym::P, go::NodeUpdaterType::CombinedNavState, feature_point.timestamp);
     key_infos.emplace_back(key_info);
     smart_factor->add(Camera::Measurement(feature_point.image_point), key_info.MakeKey(uninitialized_key_index++));
   }
@@ -138,25 +138,25 @@ bool SmartProjectionCumulativeFactorAdder::TooClose(
   return false;
 }
 
-GraphActionCompleterType SmartProjectionCumulativeFactorAdder::type() const {
-  return GraphActionCompleterType::SmartFactor;
+go::GraphActionCompleterType SmartProjectionCumulativeFactorAdder::type() const {
+  return go::GraphActionCompleterType::SmartFactor;
 }
 
 const gtsam::SmartProjectionParams& SmartProjectionCumulativeFactorAdder::smart_projection_params() const {
   return smart_projection_params_;
 }
 
-bool SmartProjectionCumulativeFactorAdder::DoAction(FactorsToAdd& factors_to_add,
+bool SmartProjectionCumulativeFactorAdder::DoAction(go::FactorsToAdd& factors_to_add,
                                                     gtsam::NonlinearFactorGraph& graph_factors,
-                                                    GraphValues& graph_values) {
+                                                    go::GraphValues& graph_values) {
   go::DeleteFactors<RobustSmartFactor>(graph_factors);
   if (params().splitting) SplitSmartFactorsIfNeeded(graph_values, factors_to_add);
   return true;
 }
 
 // TODO(rsoussan): Clean this function up (duplicate code), address other todo's
-void SmartProjectionCumulativeFactorAdder::SplitSmartFactorsIfNeeded(const GraphValues& graph_values,
-                                                                     FactorsToAdd& factors_to_add) {
+void SmartProjectionCumulativeFactorAdder::SplitSmartFactorsIfNeeded(const go::GraphValues& graph_values,
+                                                                     go::FactorsToAdd& factors_to_add) {
   for (auto& factor_to_add : factors_to_add.Get()) {
     auto smart_factor = dynamic_cast<RobustSmartFactor*>(factor_to_add.factor.get());
     if (!smart_factor) continue;

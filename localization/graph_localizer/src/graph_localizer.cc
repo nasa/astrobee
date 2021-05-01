@@ -55,9 +55,10 @@ GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
 
   // Initialize Factor Adders
   ar_tag_loc_factor_adder_.reset(
-    new LocFactorAdder(params_.factor.ar_tag_loc_adder, GraphActionCompleterType::ARTagLocProjectionFactor));
+    new LocFactorAdder(params_.factor.ar_tag_loc_adder, go::GraphActionCompleterType::ARTagLocProjectionFactor));
   AddGraphActionCompleter(ar_tag_loc_factor_adder_);
-  loc_factor_adder_.reset(new LocFactorAdder(params_.factor.loc_adder, GraphActionCompleterType::LocProjectionFactor));
+  loc_factor_adder_.reset(
+    new LocFactorAdder(params_.factor.loc_adder, go::GraphActionCompleterType::LocProjectionFactor));
   AddGraphActionCompleter(loc_factor_adder_);
   projection_factor_adder_.reset(
     new ProjectionFactorAdder(params_.factor.projection_adder, feature_tracker_, shared_graph_values()));

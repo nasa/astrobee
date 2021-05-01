@@ -28,6 +28,7 @@
 #include <gtsam/slam/PriorFactor.h>
 
 namespace graph_localizer {
+namespace go = graph_optimizer;
 namespace ii = imu_integration;
 namespace lc = localization_common;
 namespace sym = gtsam::symbol_shorthand;
@@ -37,14 +38,14 @@ CombinedNavStateNodeUpdater::CombinedNavStateNodeUpdater(
     : params_(params), latest_imu_integrator_(std::move(latest_imu_integrator)), key_index_(0) {}
 
 void CombinedNavStateNodeUpdater::AddInitialValuesAndPriors(gtsam::NonlinearFactorGraph& factors,
-                                                            GraphValues& graph_values) {
+                                                            go::GraphValues& graph_values) {
   AddInitialValuesAndPriors(params_.global_N_body_start, params_.global_N_body_start_noise, factors, graph_values);
 }
 
 void CombinedNavStateNodeUpdater::AddInitialValuesAndPriors(const localization_common::CombinedNavState& global_N_body,
                                                             const localization_common::CombinedNavStateNoise& noise,
                                                             gtsam::NonlinearFactorGraph& factors,
-                                                            GraphValues& graph_values) {
+                                                            go::GraphValues& graph_values) {
   const int key_index = GenerateKeyIndex();
   graph_values.AddCombinedNavState(global_N_body, key_index);
   AddPriors(global_N_body, noise, graph_values, factors);
@@ -52,7 +53,7 @@ void CombinedNavStateNodeUpdater::AddInitialValuesAndPriors(const localization_c
 
 void CombinedNavStateNodeUpdater::AddPriors(const localization_common::CombinedNavState& global_N_body,
                                             const localization_common::CombinedNavStateNoise& noise,
-                                            const GraphValues& graph_values, gtsam::NonlinearFactorGraph& factors) {
+                                            const go::GraphValues& graph_values, gtsam::NonlinearFactorGraph& factors) {
   const auto key_index = graph_values.KeyIndex(global_N_body.timestamp());
   if (!key_index) {
     LogError("AddPriors: Failed to get key index.");
@@ -71,7 +72,7 @@ void CombinedNavStateNodeUpdater::AddPriors(const localization_common::CombinedN
 
 bool CombinedNavStateNodeUpdater::SlideWindow(const localization_common::Time oldest_allowed_timestamp,
                                               const boost::optional<gtsam::Marginals>& marginals, const double huber_k,
-                                              gtsam::NonlinearFactorGraph& factors, GraphValues& graph_values) {
+                                              gtsam::NonlinearFactorGraph& factors, go::GraphValues& graph_values) {
   graph_values.RemoveOldCombinedNavStates(oldest_allowed_timestamp);
   if (params_.add_priors) {
     // Add prior to oldest nav state using covariances from last round of
@@ -112,7 +113,7 @@ bool CombinedNavStateNodeUpdater::SlideWindow(const localization_common::Time ol
   return true;
 }
 
-NodeUpdaterType CombinedNavStateNodeUpdater::type() const { return NodeUpdaterType::CombinedNavState; }
+go::NodeUpdaterType CombinedNavStateNodeUpdater::type() const { return go::NodeUpdaterType::CombinedNavState; }
 
 void CombinedNavStateNodeUpdater::RemovePriors(const int key_index, gtsam::NonlinearFactorGraph& factors) {
   int removed_factors = 0;
@@ -146,13 +147,13 @@ void CombinedNavStateNodeUpdater::RemovePriors(const int key_index, gtsam::Nonli
 int CombinedNavStateNodeUpdater::GenerateKeyIndex() { return key_index_++; }
 
 bool CombinedNavStateNodeUpdater::Update(const lc::Time timestamp, gtsam::NonlinearFactorGraph& factors,
-                                         GraphValues& graph_values) {
+                                         go::GraphValues& graph_values) {
   return AddOrSplitImuFactorIfNeeded(timestamp, factors, graph_values);
 }
 
 bool CombinedNavStateNodeUpdater::AddOrSplitImuFactorIfNeeded(const lc::Time timestamp,
                                                               gtsam::NonlinearFactorGraph& factors,
-                                                              GraphValues& graph_values) {
+                                                              go::GraphValues& graph_values) {
   if (graph_values.HasKey(timestamp)) {
     LogDebug(
       "AddOrSplitImuFactorIfNeeded: CombinedNavState exists at "
@@ -179,7 +180,7 @@ bool CombinedNavStateNodeUpdater::AddOrSplitImuFactorIfNeeded(const lc::Time tim
 
 bool CombinedNavStateNodeUpdater::CreateAndAddLatestImuFactorAndCombinedNavState(const lc::Time timestamp,
                                                                                  gtsam::NonlinearFactorGraph& factors,
-                                                                                 GraphValues& graph_values) {
+                                                                                 go::GraphValues& graph_values) {
   if (!latest_imu_integrator_->IntegrateLatestImuMeasurements(timestamp)) {
     LogError("CreateAndAddLatestImuFactorAndCombinedNavState: Failed to integrate latest imu measurements.");
     return false;
@@ -208,7 +209,7 @@ bool CombinedNavStateNodeUpdater::CreateAndAddLatestImuFactorAndCombinedNavState
 
 bool CombinedNavStateNodeUpdater::CreateAndAddImuFactorAndPredictedCombinedNavState(
   const lc::CombinedNavState& global_N_body, const gtsam::PreintegratedCombinedMeasurements& pim,
-  gtsam::NonlinearFactorGraph& factors, GraphValues& graph_values) {
+  gtsam::NonlinearFactorGraph& factors, go::GraphValues& graph_values) {
   const auto key_index_0 = graph_values.KeyIndex(global_N_body.timestamp());
   if (!key_index_0) {
     LogError("CreateAndAddImuFactorAndPredictedCombinedNavState: Failed to get first key index.");
@@ -225,7 +226,7 @@ bool CombinedNavStateNodeUpdater::CreateAndAddImuFactorAndPredictedCombinedNavSt
 
 bool CombinedNavStateNodeUpdater::SplitOldImuFactorAndAddCombinedNavState(const lc::Time timestamp,
                                                                           gtsam::NonlinearFactorGraph& factors,
-                                                                          GraphValues& graph_values) {
+                                                                          go::GraphValues& graph_values) {
   const auto timestamp_bounds = graph_values.LowerAndUpperBoundTimestamp(timestamp);
   if (!timestamp_bounds.first || !timestamp_bounds.second) {
     LogError("SplitOldImuFactorAndAddCombinedNavState: Failed to get upper and lower bound timestamp.");

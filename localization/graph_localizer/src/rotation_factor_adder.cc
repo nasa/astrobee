@@ -28,13 +28,14 @@
 #include <opencv2/core/types.hpp>
 
 namespace graph_localizer {
+namespace go = graph_optimizer;
 namespace lm = localization_measurements;
 namespace sym = gtsam::symbol_shorthand;
 RotationFactorAdder::RotationFactorAdder(const RotationFactorAdderParams& params,
                                          std::shared_ptr<const FeatureTracker> feature_tracker)
     : RotationFactorAdder::Base(params), feature_tracker_(feature_tracker) {}
 
-std::vector<FactorsToAdd> RotationFactorAdder::AddFactors(const lm::FeaturePointsMeasurement& measurement) {
+std::vector<go::FactorsToAdd> RotationFactorAdder::AddFactors(const lm::FeaturePointsMeasurement& measurement) {
   std::vector<cv::Point2d> points_1;
   std::vector<cv::Point2d> points_2;
   double total_disparity = 0;
@@ -86,15 +87,16 @@ std::vector<FactorsToAdd> RotationFactorAdder::AddFactors(const lm::FeaturePoint
   const gtsam::Rot3 cam_1_R_cam_2(eigen_cam_2_R_cam_1.transpose());
   const gtsam::Rot3 body_1_R_body_2 = body_R_cam * cam_1_R_cam_2 * body_R_cam.inverse();
   // Create Rotation Factor
-  const KeyInfo pose_1_key_info(&sym::P, NodeUpdaterType::CombinedNavState, *(feature_tracker_->PreviousTimestamp()));
-  const KeyInfo pose_2_key_info(&sym::P, NodeUpdaterType::CombinedNavState, measurement.timestamp);
+  const go::KeyInfo pose_1_key_info(&sym::P, go::NodeUpdaterType::CombinedNavState,
+                                    *(feature_tracker_->PreviousTimestamp()));
+  const go::KeyInfo pose_2_key_info(&sym::P, go::NodeUpdaterType::CombinedNavState, measurement.timestamp);
   const gtsam::Vector3 rotation_noise_sigmas(
     (gtsam::Vector(3) << params().rotation_stddev, params().rotation_stddev, params().rotation_stddev).finished());
   const auto rotation_noise = Robust(
     gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(rotation_noise_sigmas)), params().huber_k);
   const auto rotation_factor = boost::make_shared<gtsam::PoseRotationFactor>(
     body_1_R_body_2, rotation_noise, pose_1_key_info.UninitializedKey(), pose_2_key_info.UninitializedKey());
-  FactorsToAdd rotation_factors_to_add;
+  go::FactorsToAdd rotation_factors_to_add;
   rotation_factors_to_add.push_back({{pose_1_key_info, pose_2_key_info}, rotation_factor});
   rotation_factors_to_add.SetTimestamp(pose_2_key_info.timestamp());
   LogDebug("AddFactors: Added a rotation factor.");

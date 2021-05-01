@@ -24,11 +24,12 @@
 #include <gtsam/slam/ProjectionFactor.h>
 
 namespace graph_localizer {
+namespace go = graph_optimizer;
 namespace lm = localization_measurements;
 namespace sym = gtsam::symbol_shorthand;
 ProjectionFactorAdder::ProjectionFactorAdder(const ProjectionFactorAdderParams& params,
                                              std::shared_ptr<const FeatureTracker> feature_tracker,
-                                             std::shared_ptr<const GraphValues> graph_values)
+                                             std::shared_ptr<const go::GraphValues> graph_values)
     : ProjectionFactorAdder::Base(params), feature_tracker_(feature_tracker), graph_values_(graph_values) {
   projection_triangulation_params_.rankTolerance = 1e-9;
   // TODO(rsoussan): why is Base necessary for these?
@@ -38,15 +39,15 @@ ProjectionFactorAdder::ProjectionFactorAdder(const ProjectionFactorAdderParams& 
     Base::params().dynamic_outlier_rejection_threshold;
 }
 
-std::vector<FactorsToAdd> ProjectionFactorAdder::AddFactors(
+std::vector<go::FactorsToAdd> ProjectionFactorAdder::AddFactors(
   const lm::FeaturePointsMeasurement& feature_points_measurement) {
-  std::vector<FactorsToAdd> factors_to_add_vec;
+  std::vector<go::FactorsToAdd> factors_to_add_vec;
   // Add projection factors for new measurements of already existing features
-  FactorsToAdd projection_factors_to_add;
+  go::FactorsToAdd projection_factors_to_add;
   for (const auto& feature_point : feature_points_measurement.feature_points) {
     if (graph_values_->HasFeature(feature_point.feature_id)) {
-      const KeyInfo pose_key_info(&sym::P, NodeUpdaterType::CombinedNavState, feature_point.timestamp);
-      const KeyInfo static_point_key_info(&sym::F, NodeUpdaterType::FeaturePoint, feature_point.feature_id);
+      const go::KeyInfo pose_key_info(&sym::P, go::NodeUpdaterType::CombinedNavState, feature_point.timestamp);
+      const go::KeyInfo static_point_key_info(&sym::F, go::NodeUpdaterType::FeaturePoint, feature_point.feature_id);
       const auto point_key = graph_values_->FeatureKey(feature_point.feature_id);
       if (!point_key) {
         LogError("AddFactors: Failed to get point key.");
@@ -73,12 +74,12 @@ std::vector<FactorsToAdd> ProjectionFactorAdder::AddFactors(
         (new_features + graph_values_->NumFeatures()) < params().max_num_features) {
       // Create new factors to add for each feature track so the graph action can act on only that
       // feature track to triangulate a new point
-      FactorsToAdd projection_factors_with_new_point_to_add(type());
+      go::FactorsToAdd projection_factors_with_new_point_to_add(type());
       const auto point_key = graph_values_->CreateFeatureKey();
       for (const auto& feature_point_pair : feature_track.points()) {
         const auto& feature_point = feature_point_pair.second;
-        const KeyInfo pose_key_info(&sym::P, NodeUpdaterType::CombinedNavState, feature_point.timestamp);
-        const KeyInfo static_point_key_info(&sym::F, NodeUpdaterType::FeaturePoint, feature_point.feature_id);
+        const go::KeyInfo pose_key_info(&sym::P, go::NodeUpdaterType::CombinedNavState, feature_point.timestamp);
+        const go::KeyInfo static_point_key_info(&sym::F, go::NodeUpdaterType::FeaturePoint, feature_point.feature_id);
         const auto projection_factor = boost::make_shared<ProjectionFactor>(
           feature_point.image_point, Robust(params().cam_noise, params().huber_k), pose_key_info.UninitializedKey(),
           point_key, params().cam_intrinsics, params().body_T_cam);
@@ -94,15 +95,18 @@ std::vector<FactorsToAdd> ProjectionFactorAdder::AddFactors(
   return factors_to_add_vec;
 }
 
-GraphActionCompleterType ProjectionFactorAdder::type() const { return GraphActionCompleterType::ProjectionFactor; }
+go::GraphActionCompleterType ProjectionFactorAdder::type() const {
+  return go::GraphActionCompleterType::ProjectionFactor;
+}
 
-bool ProjectionFactorAdder::DoAction(FactorsToAdd& factors_to_add, gtsam::NonlinearFactorGraph& graph_factors,
-                                     GraphValues& graph_values) {
+bool ProjectionFactorAdder::DoAction(go::FactorsToAdd& factors_to_add, gtsam::NonlinearFactorGraph& graph_factors,
+                                     go::GraphValues& graph_values) {
   return TriangulateNewPoint(factors_to_add, graph_factors, graph_values);
 }
 
-bool ProjectionFactorAdder::TriangulateNewPoint(FactorsToAdd& factors_to_add,
-                                                gtsam::NonlinearFactorGraph& graph_factors, GraphValues& graph_values) {
+bool ProjectionFactorAdder::TriangulateNewPoint(go::FactorsToAdd& factors_to_add,
+                                                gtsam::NonlinearFactorGraph& graph_factors,
+                                                go::GraphValues& graph_values) {
   gtsam::CameraSet<Camera> camera_set;
   Camera::MeasurementVector measurements;
   gtsam::Key point_key;

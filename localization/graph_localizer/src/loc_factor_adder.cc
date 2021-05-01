@@ -25,13 +25,14 @@
 #include <gtsam/base/Vector.h>
 
 namespace graph_localizer {
+namespace go = graph_optimizer;
 namespace lm = localization_measurements;
 namespace sym = gtsam::symbol_shorthand;
 LocFactorAdder::LocFactorAdder(const LocFactorAdderParams& params,
-                               const GraphActionCompleterType graph_action_completer_type)
+                               const go::GraphActionCompleterType graph_action_completer_type)
     : LocFactorAdder::Base(params), graph_action_completer_type_(graph_action_completer_type) {}
 
-std::vector<FactorsToAdd> LocFactorAdder::AddFactors(
+std::vector<go::FactorsToAdd> LocFactorAdder::AddFactors(
   const lm::MatchedProjectionsMeasurement& matched_projections_measurement) {
   if (matched_projections_measurement.matched_projections.empty()) {
     LogDebug("AddFactors: Empty measurement.");
@@ -45,14 +46,14 @@ std::vector<FactorsToAdd> LocFactorAdder::AddFactors(
 
   const int num_landmarks = matched_projections_measurement.matched_projections.size();
   num_landmarks_averager_.Update(num_landmarks);
-  std::vector<FactorsToAdd> factors_to_add;
+  std::vector<go::FactorsToAdd> factors_to_add;
   if (params().add_pose_priors) {
     double noise_scale = params().pose_noise_scale;
     if (params().scale_pose_noise_with_num_landmarks) {
       noise_scale *= std::pow((num_landmarks_averager_.average() / static_cast<double>(num_landmarks)), 2);
     }
 
-    FactorsToAdd pose_factors_to_add;
+    go::FactorsToAdd pose_factors_to_add;
     pose_factors_to_add.reserve(1);
     const gtsam::Vector6 pose_prior_noise_sigmas((gtsam::Vector(6) << params().prior_translation_stddev,
                                                   params().prior_translation_stddev, params().prior_translation_stddev,
@@ -63,7 +64,8 @@ std::vector<FactorsToAdd> LocFactorAdder::AddFactors(
       gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(noise_scale * pose_prior_noise_sigmas)),
       params().huber_k);
 
-    const KeyInfo key_info(&sym::P, NodeUpdaterType::CombinedNavState, matched_projections_measurement.timestamp);
+    const go::KeyInfo key_info(&sym::P, go::NodeUpdaterType::CombinedNavState,
+                               matched_projections_measurement.timestamp);
     gtsam::LocPoseFactor::shared_ptr pose_prior_factor(new gtsam::LocPoseFactor(
       key_info.UninitializedKey(), matched_projections_measurement.global_T_cam * params().body_T_cam.inverse(),
       pose_noise));
@@ -79,10 +81,11 @@ std::vector<FactorsToAdd> LocFactorAdder::AddFactors(
     }
 
     int num_loc_projection_factors = 0;
-    FactorsToAdd projection_factors_to_add(type());
+    go::FactorsToAdd projection_factors_to_add(type());
     projection_factors_to_add.reserve(matched_projections_measurement.matched_projections.size());
     for (const auto& matched_projection : matched_projections_measurement.matched_projections) {
-      const KeyInfo key_info(&sym::P, NodeUpdaterType::CombinedNavState, matched_projections_measurement.timestamp);
+      const go::KeyInfo key_info(&sym::P, go::NodeUpdaterType::CombinedNavState,
+                                 matched_projections_measurement.timestamp);
       // TODO(rsoussan): Pass sigma insted of already constructed isotropic noise
       const gtsam::SharedIsotropic scaled_noise(
         gtsam::noiseModel::Isotropic::Sigma(2, noise_scale * params().cam_noise->sigma()));
@@ -102,10 +105,10 @@ std::vector<FactorsToAdd> LocFactorAdder::AddFactors(
   return factors_to_add;
 }
 
-GraphActionCompleterType LocFactorAdder::type() const { return graph_action_completer_type_; }
+go::GraphActionCompleterType LocFactorAdder::type() const { return graph_action_completer_type_; }
 
-bool LocFactorAdder::DoAction(FactorsToAdd& factors_to_add, gtsam::NonlinearFactorGraph& graph_factors,
-                              GraphValues& graph_values) {
+bool LocFactorAdder::DoAction(go::FactorsToAdd& factors_to_add, gtsam::NonlinearFactorGraph& graph_factors,
+                              go::GraphValues& graph_values) {
   auto& factors = factors_to_add.Get();
   boost::optional<gtsam::Key> pose_key;
   boost::optional<gtsam::Pose3> world_T_cam;
@@ -166,7 +169,7 @@ bool LocFactorAdder::DoAction(FactorsToAdd& factors_to_add, gtsam::NonlinearFact
     gtsam::LocPoseFactor::shared_ptr pose_prior_factor(
       new gtsam::LocPoseFactor(*pose_key, *world_T_cam * params().body_T_cam.inverse(), pose_noise));
     factors_to_add.push_back(FactorToAdd(
-      {KeyInfo(&sym::P, NodeUpdaterType::CombinedNavState, factors_to_add.timestamp())}, pose_prior_factor));
+      {go::KeyInfo(&sym::P, go::NodeUpdaterType::CombinedNavState, factors_to_add.timestamp())}, pose_prior_factor));
   }
   return true;
 }
