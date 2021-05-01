@@ -53,6 +53,8 @@ class GraphOptimizer {
   void AddGraphActionCompleter(std::shared_ptr<GraphActionCompleter> graph_action_completer);
   // Registers timestamped node updater. Called when adding buffered factors
   void AddTimestampedNodeUpdater(std::shared_ptr<TimestampedNodeUpdater> timestamped_node_updater);
+  // Adds factors to buffered list which is sorted by time
+  void BufferFactors(const std::vector<FactorsToAdd>& factors_to_add_vec);
   // Adds buffered factors and optimizes graph.  Calls DoPostOptimizeActions afterwards
   bool Update();
   const GraphValues& graph_values() const;
@@ -83,9 +85,6 @@ class GraphOptimizer {
                                         const boost::optional<gtsam::Marginals>& marginals);
 
   // void UpdatePointPriors(const gtsam::Marginals& marginals);
-
-  // Adds factors to buffered list which is sorted by time
-  void BufferFactors(const std::vector<FactorsToAdd>& factors_to_add_vec);
 
   // Creates factors for cumulative factor adders and adds them to buffered list
   virtual void BufferCumulativeFactors();
