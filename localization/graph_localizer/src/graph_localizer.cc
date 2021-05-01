@@ -110,7 +110,7 @@ GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
 }
 
 GraphLocalizer::~GraphLocalizer() {
-  if (log_on_destruction_) graph_stats_.Log();
+  if (log_on_destruction_) graph_stats_->Log();
 }
 
 boost::optional<std::pair<lc::CombinedNavState, lc::CombinedNavStateCovariances>>
@@ -471,7 +471,9 @@ int GraphLocalizer::NumProjectionFactors(const bool check_valid) const {
   return num_factors;
 }
 
-const GraphStats& GraphLocalizer::graph_stats() const { return graph_stats_; }
+const GraphLocalizerStats& GraphLocalizer::graph_localizer_stats() const {
+  return *(static_cast<GraphLocalizerStats*>(graph_stats()));
+}
 
 void GraphLocalizer::LogOnDestruction(const bool log_on_destruction) { log_on_destruction_ = log_on_destruction; }
 

@@ -23,7 +23,7 @@
 #include <graph_localizer/combined_nav_state_node_updater_params.h>
 #include <graph_localizer/feature_tracker.h>
 #include <graph_localizer/graph_localizer_params.h>
-#include <graph_localizer/graph_stats.h>
+#include <graph_localizer/graph_localizer_stats.h>
 #include <graph_localizer/robust_smart_projection_pose_factor.h>
 #include <graph_localizer/loc_factor_adder.h>
 #include <graph_localizer/projection_factor_adder.h>
@@ -105,7 +105,7 @@ class GraphLocalizer : public graph_optimizer::GraphOptimizer {
 
   void LogOnDestruction(const bool log_on_destruction);
 
-  const GraphStats& graph_stats() const;
+  const GraphLocalizerStats& graph_localizer_stats() const;
 
   void SetFanSpeedMode(const localization_measurements::FanSpeedMode fan_speed_mode);
 
@@ -161,7 +161,6 @@ class GraphLocalizer : public graph_optimizer::GraphOptimizer {
 
   boost::optional<bool> standstill_;
   boost::optional<localization_common::Time> last_latest_time_;
-  GraphStats graph_stats_;
 };
 }  // namespace graph_localizer
 
