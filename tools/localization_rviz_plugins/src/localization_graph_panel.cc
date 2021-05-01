@@ -208,7 +208,7 @@ void LocalizationGraphPanel::LocalizationGraphCallback(const ff_msgs::Localizati
   double pose_prior_error = 0;
   double velocity_prior_error = 0;
   double bias_prior_error = 0;
-  for (const auto factor : graph_localizer.factor_graph()) {
+  for (const auto factor : graph_localizer.graph_factors()) {
     const double error = factor->error(graph_localizer.graph_values().values());
     total_error += error;
     const auto smart_factor = dynamic_cast<const SmartFactor*>(factor.get());
