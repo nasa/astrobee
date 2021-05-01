@@ -19,11 +19,13 @@
 #include <graph_localizer/loc_projection_factor.h>
 #include <graph_localizer/loc_pose_factor.h>
 #include <graph_localizer/pose_rotation_factor.h>
+#include <graph_optimizer/utilities.h>
 
 #include <gtsam/nonlinear/LinearContainerFactor.h>
 #include <gtsam/slam/PriorFactor.h>
 
 namespace graph_localizer {
+namespace go = graph_optimizer;
 GraphLocalizerStats::GraphLocalizerStats() {
   AddStatsAverager(num_optical_flow_factors_averager_);
   AddStatsAverager(num_loc_pose_factors_averager_);
@@ -117,11 +119,11 @@ void GraphLocalizerStats::UpdateErrors(const gtsam::NonlinearFactorGraph& graph_
 void GraphLocalizerStats::UpdateStats(const gtsam::NonlinearFactorGraph& graph_factors,
                                       const GraphValues& graph_values) {
   num_optical_flow_factors_averager_.Update(graph.NumOFFactors());
-  num_loc_pose_factors_averager_.Update(graph.NumFactors<gtsam::LocPoseFactor>());
-  num_loc_proj_factors_averager_.Update(graph.NumFactors<gtsam::LocProjectionFactor<>>());
-  num_imu_factors_averager_.Update(graph.NumFactors<gtsam::CombinedImuFactor>());
-  num_rotation_factors_averager_.Update(graph.NumFactors<gtsam::PoseRotationFactor>());
-  num_standstill_between_factors_averager_.Update(graph.NumFactors<gtsam::BetweenFactor<gtsam::Pose3>>());
-  num_vel_prior_factors_averager_.Update(graph.NumFactors<gtsam::PriorFactor<gtsam::Velocity3>>());
+  num_loc_pose_factors_averager_.Update(go::NumFactors<gtsam::LocPoseFactor>(graph_factors));
+  num_loc_proj_factors_averager_.Update(go::NumFactors<gtsam::LocProjectionFactor<>>(graph_factors));
+  num_imu_factors_averager_.Update(go::NumFactors<gtsam::CombinedImuFactor>(graph_factors));
+  num_rotation_factors_averager_.Update(go::NumFactors<gtsam::PoseRotationFactor>(graph_factors));
+  num_standstill_between_factors_averager_.Update(go::NumFactors<gtsam::BetweenFactor<gtsam::Pose3>>(graph_factors));
+  num_vel_prior_factors_averager_.Update(go::NumFactors<gtsam::PriorFactor<gtsam::Velocity3>>(graph_factors));
 }
 }  // namespace graph_localizer
