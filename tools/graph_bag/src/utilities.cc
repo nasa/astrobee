@@ -104,7 +104,7 @@ cv::Point Distort(const Eigen::Vector2d& undistorted_point, const camera::Camera
 
 std::vector<const SmartFactor*> SmartFactors(const graph_localizer::GraphLocalizer& graph) {
   std::vector<const SmartFactor*> smart_factors;
-  for (const auto factor : graph.factor_graph()) {
+  for (const auto factor : graph.graph_factors()) {
     const auto smart_factor = dynamic_cast<const SmartFactor*>(factor.get());
     if (smart_factor) {
       smart_factors.emplace_back(smart_factor);
