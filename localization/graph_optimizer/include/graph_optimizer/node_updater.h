@@ -16,8 +16,8 @@
  * under the License.
  */
 
-#ifndef GRAPH_OPTIMIZER_TIMESTAMPED_NODE_UPDATER_H_
-#define GRAPH_OPTIMIZER_TIMESTAMPED_NODE_UPDATER_H_
+#ifndef GRAPH_OPTIMIZER_NODE_UPDATER_H_
+#define GRAPH_OPTIMIZER_NODE_UPDATER_H_
 
 #include <graph_optimizer/graph_values.h>
 #include <graph_optimizer/node_updater_type.h>
@@ -27,9 +27,9 @@
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
 
 namespace graph_optimizer {
-class TimestampedNodeUpdater {
+class NodeUpdater {
  public:
-  virtual ~TimestampedNodeUpdater() {}
+  virtual ~NodeUpdater() {}
 
   virtual bool Update(const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors,
                       GraphValues& graph_values) = 0;
@@ -42,4 +42,4 @@ class TimestampedNodeUpdater {
 };
 }  // namespace graph_optimizer
 
-#endif  // GRAPH_OPTIMIZER_TIMESTAMPED_NODE_UPDATER_H_
+#endif  // GRAPH_OPTIMIZER_NODE_UPDATER_H_

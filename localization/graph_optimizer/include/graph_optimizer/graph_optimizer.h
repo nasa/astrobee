@@ -25,7 +25,7 @@
 #include <graph_optimizer/graph_stats.h>
 #include <graph_optimizer/graph_values.h>
 #include <graph_optimizer/key_info.h>
-#include <graph_optimizer/timestamped_node_updater.h>
+#include <graph_optimizer/node_updater.h>
 #include <localization_common/time.h>
 
 #include <gtsam/nonlinear/LevenbergMarquardtOptimizer.h>
@@ -51,8 +51,8 @@ class GraphOptimizer {
 
   // Registers graph action completer.  Called after adding buffered factors and updating nodes
   void AddGraphActionCompleter(std::shared_ptr<GraphActionCompleter> graph_action_completer);
-  // Registers timestamped node updater. Called when adding buffered factors
-  void AddTimestampedNodeUpdater(std::shared_ptr<TimestampedNodeUpdater> timestamped_node_updater);
+  // Registers node updater. Called when adding buffered factors
+  void AddNodeUpdater(std::shared_ptr<NodeUpdater> node_updater);
   // Adds factors to buffered list which is sorted by time
   void BufferFactors(const std::vector<FactorsToAdd>& factors_to_add_vec);
   // Adds buffered factors and optimizes graph.  Calls DoPostOptimizeActions afterwards
@@ -137,7 +137,7 @@ class GraphOptimizer {
   boost::optional<gtsam::Marginals> marginals_;
   std::multimap<localization_common::Time, FactorsToAdd> buffered_factors_to_add_;
 
-  std::vector<std::shared_ptr<TimestampedNodeUpdater>> timestamped_node_updaters_;
+  std::vector<std::shared_ptr<NodeUpdater>> node_updaters_;
   std::vector<std::shared_ptr<GraphActionCompleter>> graph_action_completers_;
   gtsam::Marginals::Factorization marginals_factorization_;
   boost::optional<localization_common::Time> last_latest_time_;

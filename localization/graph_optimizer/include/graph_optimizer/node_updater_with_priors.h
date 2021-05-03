@@ -16,19 +16,19 @@
  * under the License.
  */
 
-#ifndef GRAPH_OPTIMIZER_TIMESTAMPED_NODE_UPDATER_WITH_PRIORS_H_
-#define GRAPH_OPTIMIZER_TIMESTAMPED_NODE_UPDATER_WITH_PRIORS_H_
+#ifndef GRAPH_OPTIMIZER_NODE_UPDATER_WITH_PRIORS_H_
+#define GRAPH_OPTIMIZER_NODE_UPDATER_WITH_PRIORS_H_
 
-#include <graph_optimizer/timestamped_node_updater.h>
+#include <graph_optimizer/node_updater.h>
 #include <graph_optimizer/graph_values.h>
 
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
 
 namespace graph_optimizer {
 template <typename NodeType, typename NoiseType>
-class TimestampedNodeUpdaterWithPriors : public TimestampedNodeUpdater {
+class NodeUpdaterWithPriors : public NodeUpdater {
  public:
-  virtual ~TimestampedNodeUpdaterWithPriors() {}
+  virtual ~NodeUpdaterWithPriors() {}
 
   virtual void AddInitialValuesAndPriors(const NodeType& node, const NoiseType& noise,
                                          gtsam::NonlinearFactorGraph& graph, GraphValues& graph_values) = 0;
@@ -38,4 +38,4 @@ class TimestampedNodeUpdaterWithPriors : public TimestampedNodeUpdater {
 };
 }  // namespace graph_optimizer
 
-#endif  // GRAPH_OPTIMIZER_TIMESTAMPED_NODE_UPDATER_WITH_PRIORS_H_
+#endif  // GRAPH_OPTIMIZER_NODE_UPDATER_WITH_PRIORS_H_

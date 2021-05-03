@@ -106,7 +106,7 @@ GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
   combined_nav_state_node_updater_.reset(
     new CombinedNavStateNodeUpdater(combined_nav_state_node_updater_params, latest_imu_integrator_));
   combined_nav_state_node_updater_->AddInitialValuesAndPriors(graph_factors(), graph_values());
-  AddTimestampedNodeUpdater(combined_nav_state_node_updater_);
+  AddNodeUpdater(combined_nav_state_node_updater_);
 }
 
 boost::optional<std::pair<lc::CombinedNavState, lc::CombinedNavStateCovariances>>

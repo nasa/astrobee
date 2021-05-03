@@ -77,8 +77,8 @@ void GraphOptimizer::AddGraphActionCompleter(std::shared_ptr<GraphActionComplete
   graph_action_completers_.emplace_back(std::move(graph_action_completer));
 }
 
-void GraphOptimizer::AddTimestampedNodeUpdater(std::shared_ptr<TimestampedNodeUpdater> timestamped_node_updater) {
-  timestamped_node_updaters_.emplace_back(std::move(timestamped_node_updater));
+void GraphOptimizer::AddNodeUpdater(std::shared_ptr<NodeUpdater> node_updater) {
+  node_updaters_.emplace_back(std::move(node_updater));
 }
 
 // Adapted from gtsam::BatchFixedLagSmoother
@@ -131,7 +131,7 @@ bool GraphOptimizer::SlideWindow(const boost::optional<gtsam::Marginals>& margin
     }
   }
 
-  for (auto& node_updater : timestamped_node_updaters_)
+  for (auto& node_updater : node_updaters_)
     node_updater->SlideWindow(new_oldest_time, marginals, params_.huber_k, graph_, *graph_values_);
   graph_values_->RemoveOldFeatures(old_feature_keys);
 
@@ -228,7 +228,7 @@ int GraphOptimizer::AddBufferedFactors() {
 bool GraphOptimizer::UpdateNodes(const KeyInfo& key_info) {
   // Do nothing for static nodes
   if (key_info.is_static()) return true;
-  for (auto& node_updater : timestamped_node_updaters_) {
+  for (auto& node_updater : node_updaters_) {
     if (node_updater->type() == key_info.node_updater_type())
       return node_updater->Update(key_info.timestamp(), graph_, *graph_values_);
   }
