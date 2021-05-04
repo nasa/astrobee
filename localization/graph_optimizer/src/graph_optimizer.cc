@@ -132,7 +132,7 @@ bool GraphOptimizer::SlideWindow(const boost::optional<gtsam::Marginals>& margin
   }
 
   for (auto& node_updater : node_updaters_)
-    node_updater->SlideWindow(new_oldest_time, marginals, params_.huber_k, graph_, *graph_values_);
+    node_updater->SlideWindow(new_oldest_time, marginals, params_.huber_k, graph_);
   graph_values_->RemoveOldFeatures(old_feature_keys);
 
   // Remove old data from other containers
@@ -229,8 +229,7 @@ bool GraphOptimizer::UpdateNodes(const KeyInfo& key_info) {
   // Do nothing for static nodes
   if (key_info.is_static()) return true;
   for (auto& node_updater : node_updaters_) {
-    if (node_updater->type() == key_info.node_updater_type())
-      return node_updater->Update(key_info.timestamp(), graph_, *graph_values_);
+    if (node_updater->type() == key_info.node_updater_type()) return node_updater->Update(key_info.timestamp(), graph_);
   }
   LogError("UpdateNodes: No node updater found for key info.");
   return false;
@@ -284,6 +283,8 @@ const GraphValues& GraphOptimizer::graph_values() const { return *graph_values_;
 GraphValues& GraphOptimizer::graph_values() { return *graph_values_; }
 
 std::shared_ptr<const GraphValues> GraphOptimizer::shared_graph_values() const { return graph_values_; }
+
+std::shared_ptr<GraphValues> GraphOptimizer::shared_graph_values() { return graph_values_; }
 
 const gtsam::NonlinearFactorGraph& GraphOptimizer::graph_factors() const { return graph_; }
 

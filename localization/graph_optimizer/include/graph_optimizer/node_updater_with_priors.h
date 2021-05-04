@@ -20,7 +20,6 @@
 #define GRAPH_OPTIMIZER_NODE_UPDATER_WITH_PRIORS_H_
 
 #include <graph_optimizer/node_updater.h>
-#include <graph_optimizer/graph_values.h>
 
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
 
@@ -31,10 +30,9 @@ class NodeUpdaterWithPriors : public NodeUpdater {
   virtual ~NodeUpdaterWithPriors() {}
 
   virtual void AddInitialValuesAndPriors(const NodeType& node, const NoiseType& noise,
-                                         gtsam::NonlinearFactorGraph& graph, GraphValues& graph_values) = 0;
+                                         gtsam::NonlinearFactorGraph& graph) = 0;
 
-  virtual void AddPriors(const NodeType& node, const NoiseType& noise, const GraphValues& graph_values,
-                         gtsam::NonlinearFactorGraph& factors) = 0;
+  virtual void AddPriors(const NodeType& node, const NoiseType& noise, gtsam::NonlinearFactorGraph& factors) = 0;
 };
 }  // namespace graph_optimizer
 

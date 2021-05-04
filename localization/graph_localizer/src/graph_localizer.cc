@@ -103,9 +103,9 @@ GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
     gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(bias_prior_noise_sigmas)), params_.huber_k);
   combined_nav_state_node_updater_params.global_N_body_start_noise = global_N_body_start_noise;
   combined_nav_state_node_updater_params.add_priors = params_.add_priors;
-  combined_nav_state_node_updater_.reset(
-    new CombinedNavStateNodeUpdater(combined_nav_state_node_updater_params, latest_imu_integrator_));
-  combined_nav_state_node_updater_->AddInitialValuesAndPriors(graph_factors(), graph_values());
+  combined_nav_state_node_updater_.reset(new CombinedNavStateNodeUpdater(
+    combined_nav_state_node_updater_params, latest_imu_integrator_, shared_graph_values()));
+  combined_nav_state_node_updater_->AddInitialValuesAndPriors(graph_factors());
   AddNodeUpdater(combined_nav_state_node_updater_);
 }
 

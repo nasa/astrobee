@@ -34,27 +34,29 @@ namespace lc = localization_common;
 namespace sym = gtsam::symbol_shorthand;
 CombinedNavStateNodeUpdater::CombinedNavStateNodeUpdater(
   const CombinedNavStateNodeUpdaterParams& params,
-  std::shared_ptr<imu_integration::LatestImuIntegrator> latest_imu_integrator)
-    : params_(params), latest_imu_integrator_(std::move(latest_imu_integrator)), key_index_(0) {}
+  std::shared_ptr<imu_integration::LatestImuIntegrator> latest_imu_integrator,
+  std::shared_ptr<graph_optimizer::GraphValues> graph_values)
+    : params_(params),
+      latest_imu_integrator_(std::move(latest_imu_integrator)),
+      graph_values_(std::move(graph_values)),
+      key_index_(0) {}
 
-void CombinedNavStateNodeUpdater::AddInitialValuesAndPriors(gtsam::NonlinearFactorGraph& factors,
-                                                            go::GraphValues& graph_values) {
-  AddInitialValuesAndPriors(params_.global_N_body_start, params_.global_N_body_start_noise, factors, graph_values);
+void CombinedNavStateNodeUpdater::AddInitialValuesAndPriors(gtsam::NonlinearFactorGraph& factors) {
+  AddInitialValuesAndPriors(params_.global_N_body_start, params_.global_N_body_start_noise, factors);
 }
 
 void CombinedNavStateNodeUpdater::AddInitialValuesAndPriors(const localization_common::CombinedNavState& global_N_body,
                                                             const localization_common::CombinedNavStateNoise& noise,
-                                                            gtsam::NonlinearFactorGraph& factors,
-                                                            go::GraphValues& graph_values) {
+                                                            gtsam::NonlinearFactorGraph& factors) {
   const int key_index = GenerateKeyIndex();
-  graph_values.AddCombinedNavState(global_N_body, key_index);
-  AddPriors(global_N_body, noise, graph_values, factors);
+  graph_values_->AddCombinedNavState(global_N_body, key_index);
+  AddPriors(global_N_body, noise, factors);
 }
 
 void CombinedNavStateNodeUpdater::AddPriors(const localization_common::CombinedNavState& global_N_body,
                                             const localization_common::CombinedNavStateNoise& noise,
-                                            const go::GraphValues& graph_values, gtsam::NonlinearFactorGraph& factors) {
-  const auto key_index = graph_values.KeyIndex(global_N_body.timestamp());
+                                            gtsam::NonlinearFactorGraph& factors) {
+  const auto key_index = graph_values_->KeyIndex(global_N_body.timestamp());
   if (!key_index) {
     LogError("AddPriors: Failed to get key index.");
     return;
@@ -72,12 +74,12 @@ void CombinedNavStateNodeUpdater::AddPriors(const localization_common::CombinedN
 
 bool CombinedNavStateNodeUpdater::SlideWindow(const localization_common::Time oldest_allowed_timestamp,
                                               const boost::optional<gtsam::Marginals>& marginals, const double huber_k,
-                                              gtsam::NonlinearFactorGraph& factors, go::GraphValues& graph_values) {
-  graph_values.RemoveOldCombinedNavStates(oldest_allowed_timestamp);
+                                              gtsam::NonlinearFactorGraph& factors) {
+  graph_values_->RemoveOldCombinedNavStates(oldest_allowed_timestamp);
   if (params_.add_priors) {
     // Add prior to oldest nav state using covariances from last round of
     // optimization
-    const auto global_N_body_oldest = graph_values.OldestCombinedNavState();
+    const auto global_N_body_oldest = graph_values_->OldestCombinedNavState();
     if (!global_N_body_oldest) {
       LogError("SlideWindow: Failed to get oldest combined nav state.");
       return false;
@@ -85,7 +87,7 @@ bool CombinedNavStateNodeUpdater::SlideWindow(const localization_common::Time ol
 
     LogDebug("SlideWindow: Oldest state time: " << global_N_body_oldest->timestamp());
 
-    const auto key_index = graph_values.OldestCombinedNavStateKeyIndex();
+    const auto key_index = graph_values_->OldestCombinedNavStateKeyIndex();
     if (!key_index) {
       LogError("SlideWindow: Failed to get oldest combined nav state key index.");
       return false;
@@ -103,10 +105,10 @@ bool CombinedNavStateNodeUpdater::SlideWindow(const localization_common::Time ol
         Robust(gtsam::noiseModel::Gaussian::Covariance(marginals->marginalCovariance(sym::V(*key_index))), huber_k);
       noise.bias_noise =
         Robust(gtsam::noiseModel::Gaussian::Covariance(marginals->marginalCovariance(sym::B(*key_index))), huber_k);
-      AddPriors(*global_N_body_oldest, noise, graph_values, factors);
+      AddPriors(*global_N_body_oldest, noise, factors);
     } else {
       // TODO(rsoussan): Add seperate marginal fallback sigmas instead of relying on starting prior sigmas
-      AddPriors(params_.global_N_body_start, params_.global_N_body_start_noise, graph_values, factors);
+      AddPriors(params_.global_N_body_start, params_.global_N_body_start_noise, factors);
     }
   }
 
@@ -146,9 +148,8 @@ void CombinedNavStateNodeUpdater::RemovePriors(const int key_index, gtsam::Nonli
 
 int CombinedNavStateNodeUpdater::GenerateKeyIndex() { return key_index_++; }
 
-bool CombinedNavStateNodeUpdater::Update(const lc::Time timestamp, gtsam::NonlinearFactorGraph& factors,
-                                         go::GraphValues& graph_values) {
-  return AddOrSplitImuFactorIfNeeded(timestamp, factors, graph_values);
+bool CombinedNavStateNodeUpdater::Update(const lc::Time timestamp, gtsam::NonlinearFactorGraph& factors) {
+  return AddOrSplitImuFactorIfNeeded(timestamp, factors, *graph_values_);
 }
 
 bool CombinedNavStateNodeUpdater::AddOrSplitImuFactorIfNeeded(const lc::Time timestamp,

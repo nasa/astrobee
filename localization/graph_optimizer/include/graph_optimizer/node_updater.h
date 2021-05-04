@@ -19,7 +19,6 @@
 #ifndef GRAPH_OPTIMIZER_NODE_UPDATER_H_
 #define GRAPH_OPTIMIZER_NODE_UPDATER_H_
 
-#include <graph_optimizer/graph_values.h>
 #include <graph_optimizer/node_updater_type.h>
 #include <localization_common/time.h>
 
@@ -31,12 +30,11 @@ class NodeUpdater {
  public:
   virtual ~NodeUpdater() {}
 
-  virtual bool Update(const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors,
-                      GraphValues& graph_values) = 0;
+  virtual bool Update(const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors) = 0;
 
   virtual bool SlideWindow(const localization_common::Time oldest_allowed_timestamp,
                            const boost::optional<gtsam::Marginals>& marginals, const double huber_k,
-                           gtsam::NonlinearFactorGraph& factors, GraphValues& graph_values) = 0;
+                           gtsam::NonlinearFactorGraph& factors) = 0;
 
   virtual NodeUpdaterType type() const = 0;
 };
