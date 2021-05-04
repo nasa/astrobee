@@ -31,10 +31,7 @@
 namespace graph_optimizer {
 namespace lc = localization_common;
 namespace lm = localization_measurements;
-GraphValues::GraphValues(const GraphValuesParams& params) : params_(params), feature_key_index_(0) {
-  LogDebug("GraphValues: Window duration: " << params_.ideal_duration);
-  LogDebug("GraphValues: Window min num states: " << params_.min_num_states);
-}
+GraphValues::GraphValues(const GraphValuesParams& params) : GraphValuesBase(params) {}
 
 boost::optional<lc::CombinedNavState> GraphValues::LatestCombinedNavState() const {
   if (Empty()) {
@@ -193,38 +190,6 @@ boost::optional<lc::Time> GraphValues::Timestamp(const int key_index) const {
   return boost::none;
 }
 
-bool GraphValues::HasFeature(const lm::FeatureId id) const { return (feature_id_key_map_.count(id) > 0); }
-
-boost::optional<gtsam::Key> GraphValues::FeatureKey(const lm::FeatureId id) const {
-  if (!HasFeature(id)) return boost::none;
-  return feature_id_key_map_.at(id);
-}
-
-gtsam::Key GraphValues::CreateFeatureKey() const { return sym::F(++feature_key_index_); }
-
-gtsam::KeyVector GraphValues::FeatureKeys() const {
-  gtsam::KeyVector feature_keys;
-  for (const auto& feature_id_key_pair : feature_id_key_map_) {
-    feature_keys.emplace_back(feature_id_key_pair.second);
-  }
-  return feature_keys;
-}
-
-bool GraphValues::AddFeature(const lm::FeatureId id, const gtsam::Point3& feature_point, const gtsam::Key& key) {
-  if (HasFeature(id)) {
-    LogError("AddFeature: Feature already exists.");
-    return false;
-  }
-
-  if (values_.exists(key)) {
-    LogError("AddFeature: Key already exists in values.");
-  }
-
-  feature_id_key_map_.emplace(id, key);
-  values_.insert(key, feature_point);
-  return true;
-}
-
 boost::optional<int> GraphValues::LatestCombinedNavStateKeyIndex() const {
   if (Empty()) {
     LogError("LatestCombinedNavStateKeyIndex: No combined nav states available.");
@@ -232,8 +197,6 @@ boost::optional<int> GraphValues::LatestCombinedNavStateKeyIndex() const {
   }
   return timestamp_key_index_map_.crbegin()->second;
 }
-
-int GraphValues::NumFeatures() const { return feature_id_key_map_.size(); }
 
 boost::optional<int> GraphValues::OldestCombinedNavStateKeyIndex() const {
   if (Empty()) {
@@ -365,32 +328,6 @@ boost::optional<int> GraphValues::KeyIndex(const lc::Time timestamp) const {
   return timestamp_key_index_map_.at(timestamp);
 }
 
-void GraphValues::UpdateValues(const gtsam::Values& new_values) { values_ = new_values; }
-
-gtsam::NonlinearFactorGraph GraphValues::RemoveOldFactors(const gtsam::KeyVector& old_keys,
-                                                          gtsam::NonlinearFactorGraph& graph) {
-  gtsam::NonlinearFactorGraph removed_factors;
-  if (old_keys.empty()) return removed_factors;
-
-  for (auto factor_it = graph.begin(); factor_it != graph.end();) {
-    bool found_key = false;
-    for (const auto& key : old_keys) {
-      if ((*factor_it)->find(key) != (*factor_it)->end()) {
-        found_key = true;
-        break;
-      }
-    }
-    if (found_key) {
-      removed_factors.push_back(*factor_it);
-      factor_it = graph.erase(factor_it);
-    } else {
-      ++factor_it;
-    }
-  }
-
-  return removed_factors;
-}
-
 int GraphValues::RemoveOldCombinedNavStates(const lc::Time oldest_allowed_time) {
   int num_states_removed = 0;
   while (timestamp_key_index_map_.begin()->first < oldest_allowed_time) {
@@ -454,41 +391,5 @@ bool GraphValues::RemoveCombinedNavState(const lc::Time timestamp) {
   LogDebug("RemoveCombinedNavState: Removed key index " << key_index);
   LogDebug("RemoveCombinedNavState: Removed timestamp" << std::setprecision(15) << timestamp);
   return removed_values;
-}
-
-gtsam::KeyVector GraphValues::OldFeatureKeys(const gtsam::NonlinearFactorGraph& factors) const {
-  using ProjectionFactor = gtsam::GenericProjectionFactor<gtsam::Pose3, gtsam::Point3>;
-  gtsam::KeyVector old_features;
-  for (const auto& feature_id_key_pair : feature_id_key_map_) {
-    const auto& key = feature_id_key_pair.second;
-    int num_factors = 0;
-    for (const auto& factor : factors) {
-      // Only consider projection factors for min num feature factors
-      const auto projection_factor = dynamic_cast<const ProjectionFactor*>(factor.get());
-      if (!projection_factor) continue;
-      if (factor->find(key) != factor->end()) {
-        ++num_factors;
-        if (num_factors >= params_.min_num_factors_per_feature) break;
-      }
-    }
-
-    if (num_factors < params_.min_num_factors_per_feature) {
-      old_features.emplace_back(key);
-    }
-  }
-  return old_features;
-}
-
-void GraphValues::RemoveOldFeatures(const gtsam::KeyVector& old_keys) {
-  for (const auto& key : old_keys) {
-    values_.erase(key);
-    for (auto feature_id_key_it = feature_id_key_map_.begin(); feature_id_key_it != feature_id_key_map_.end();) {
-      if (feature_id_key_it->second == key) {
-        feature_id_key_it = feature_id_key_map_.erase(feature_id_key_it);
-      } else {
-        ++feature_id_key_it;
-      }
-    }
-  }
 }
 }  // namespace graph_optimizer

@@ -27,7 +27,7 @@
 namespace graph_localizer {
 class CombinedNavStateNodeUpdater
     : public graph_optimizer::NodeUpdaterWithPriors<localization_common::CombinedNavState,
-                                                               localization_common::CombinedNavStateNoise> {
+                                                    localization_common::CombinedNavStateNoise> {
  public:
   CombinedNavStateNodeUpdater(const CombinedNavStateNodeUpdaterParams& params,
                               std::shared_ptr<imu_integration::LatestImuIntegrator> latest_imu_integrator);

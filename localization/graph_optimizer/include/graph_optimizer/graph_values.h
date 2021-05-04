@@ -19,8 +19,7 @@
 #ifndef GRAPH_OPTIMIZER_GRAPH_VALUES_H_
 #define GRAPH_OPTIMIZER_GRAPH_VALUES_H_
 
-#include <graph_optimizer/graph_values_params.h>
-#include <graph_optimizer/key_info.h>
+#include <graph_optimizer/graph_values_base.h>
 #include <localization_common/combined_nav_state.h>
 #include <localization_common/logger.h>
 #include <localization_common/time.h>
@@ -39,7 +38,7 @@
 
 namespace graph_optimizer {
 namespace sym = gtsam::symbol_shorthand;
-class GraphValues {
+class GraphValues : public GraphValuesBase {
  public:
   explicit GraphValues(const GraphValuesParams& params = GraphValuesParams());
 
@@ -57,34 +56,22 @@ class GraphValues {
   boost::optional<std::pair<gtsam::imuBias::ConstantBias, localization_common::Time>> LatestBias() const;
 
   // Returns the oldest time that will be in graph values once the window is slid using params
-  boost::optional<localization_common::Time> SlideWindowNewOldestTime() const;
+  boost::optional<localization_common::Time> SlideWindowNewOldestTime() const final;
 
   boost::optional<int> KeyIndex(const localization_common::Time timestamp) const;
 
-  void UpdateValues(const gtsam::Values& new_values);
-
-  // TODO(rsoussan): Put this somewhere else?
-  static gtsam::NonlinearFactorGraph RemoveOldFactors(const gtsam::KeyVector& old_keys,
-                                                      gtsam::NonlinearFactorGraph& graph);
-
-  gtsam::KeyVector OldFeatureKeys(const gtsam::NonlinearFactorGraph& factors) const;
-
-  void RemoveOldFeatures(const gtsam::KeyVector& old_feature_keys);
-
   int RemoveOldCombinedNavStates(const localization_common::Time oldest_allowed_time);
 
-  gtsam::KeyVector OldKeys(const localization_common::Time oldest_allowed_time) const;
-
-  const gtsam::Values& values() const { return values_; }
+  gtsam::KeyVector OldKeys(const localization_common::Time oldest_allowed_time) const final;
 
   boost::optional<gtsam::Key> PoseKey(const localization_common::Time timestamp) const;
 
   boost::optional<gtsam::Key> GetKey(KeyCreatorFunction key_creator_function,
-                                     const localization_common::Time timestamp) const;
+                                     const localization_common::Time timestamp) const final;
 
-  boost::optional<localization_common::Time> OldestTimestamp() const;
+  boost::optional<localization_common::Time> OldestTimestamp() const final;
 
-  boost::optional<localization_common::Time> LatestTimestamp() const;
+  boost::optional<localization_common::Time> LatestTimestamp() const final;
 
   boost::optional<localization_common::Time> ClosestPoseTimestamp(const localization_common::Time timestamp) const;
 
@@ -112,31 +99,7 @@ class GraphValues {
 
   int NumStates() const;
 
-  template <typename ValueType>
-  boost::optional<ValueType> at(const gtsam::Key& key) const {
-    if (!values_.exists(key)) {
-      LogError("at: Key not present in values.");
-      return boost::none;
-    }
-
-    return values_.at<ValueType>(key);
-  }
-
   boost::optional<localization_common::Time> Timestamp(const int key_index) const;
-
-  bool HasFeature(const localization_measurements::FeatureId id) const;
-
-  boost::optional<gtsam::Key> FeatureKey(const localization_measurements::FeatureId id) const;
-
-  // TODO(rsoussan): This shouldn't be const, modify when changes are made to projection factor adder
-  gtsam::Key CreateFeatureKey() const;
-
-  bool AddFeature(const localization_measurements::FeatureId id, const gtsam::Point3& feature_point,
-                  const gtsam::Key& key);
-
-  gtsam::KeyVector FeatureKeys() const;
-
-  int NumFeatures() const;
 
  private:
   // Removes keys from timestamp_key_index_map, values from values
@@ -151,18 +114,12 @@ class GraphValues {
   friend class boost::serialization::access;
   template <class ARCHIVE>
   void serialize(ARCHIVE& ar, const unsigned int /*version*/) {
-    ar& BOOST_SERIALIZATION_NVP(values_);
+    ar& BOOST_SERIALIZATION_BASE_OBJECT_NVP(GraphValuesBase);
     ar& BOOST_SERIALIZATION_NVP(timestamp_key_index_map_);
-    ar& BOOST_SERIALIZATION_NVP(feature_id_key_map_);
-    ar& BOOST_SERIALIZATION_NVP(feature_key_index_);
   }
 
   GraphValuesParams params_;
-  gtsam::Values values_;
   std::map<localization_common::Time, int> timestamp_key_index_map_;
-  std::unordered_map<localization_measurements::FeatureId, gtsam::Key> feature_id_key_map_;
-  // Modified by projection_factor_adder, remove mutable if this changes
-  mutable std::uint64_t feature_key_index_;
 };
 }  // namespace graph_optimizer
 
