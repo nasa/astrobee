@@ -260,7 +260,7 @@ boost::optional<lc::Time> GraphValues::SlideWindowNewOldestTime() const {
     return boost::none;
   }
 
-  if (NumStates() <= params_.min_num_states) {
+  if (NumStates() <= params().min_num_states) {
     LogDebug("SlideWindowOldestTime: Not enough states to remove.");
     return boost::none;
   }
@@ -269,7 +269,7 @@ boost::optional<lc::Time> GraphValues::SlideWindowNewOldestTime() const {
   LogDebug("SlideWindowOldestTime: Starting total num states: " << timestamp_key_index_map_.size());
   LogDebug("SlideWindowOldestTime: Starting total duration is " << total_duration);
   const lc::Time ideal_oldest_allowed_state =
-    std::max(0.0, timestamp_key_index_map_.crbegin()->first - params_.ideal_duration);
+    std::max(0.0, timestamp_key_index_map_.crbegin()->first - params().ideal_duration);
 
   int num_states_to_be_removed = 0;
   // Ensures that new oldest time is consistent with a number of states <= max_num_states
@@ -278,9 +278,9 @@ boost::optional<lc::Time> GraphValues::SlideWindowNewOldestTime() const {
   for (const auto& timestamp_key_pair : timestamp_key_index_map_) {
     ++num_states_to_be_removed;
     const int new_num_states = NumStates() - num_states_to_be_removed;
-    if (new_num_states > params_.max_num_states) continue;
+    if (new_num_states > params().max_num_states) continue;
     const auto& time = timestamp_key_pair.first;
-    if (new_num_states <= params_.min_num_states) return time;
+    if (new_num_states <= params().min_num_states) return time;
     if (time >= ideal_oldest_allowed_state) return time;
   }
 

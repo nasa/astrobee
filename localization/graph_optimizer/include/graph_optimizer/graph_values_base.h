@@ -90,6 +90,8 @@ class GraphValuesBase {
 
   int NumFeatures() const;
 
+  const GraphValuesParams& params() const;
+
   // TODO(rsoussan): Make this shared_ptr, private?
   gtsam::Values values_;
 

@@ -70,6 +70,8 @@ bool GraphValuesBase::AddFeature(const lm::FeatureId id, const gtsam::Point3& fe
 
 int GraphValuesBase::NumFeatures() const { return feature_id_key_map_.size(); }
 
+const GraphValuesParams& GraphValuesBase::params() const { return params_; }
+
 void GraphValuesBase::UpdateValues(const gtsam::Values& new_values) { values_ = new_values; }
 
 gtsam::NonlinearFactorGraph GraphValuesBase::RemoveOldFactors(const gtsam::KeyVector& old_keys,

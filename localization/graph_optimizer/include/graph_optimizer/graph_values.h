@@ -118,7 +118,6 @@ class GraphValues : public GraphValuesBase {
     ar& BOOST_SERIALIZATION_NVP(timestamp_key_index_map_);
   }
 
-  GraphValuesParams params_;
   std::map<localization_common::Time, int> timestamp_key_index_map_;
 };
 }  // namespace graph_optimizer
