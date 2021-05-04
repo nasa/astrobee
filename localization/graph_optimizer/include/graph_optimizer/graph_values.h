@@ -40,7 +40,8 @@ namespace graph_optimizer {
 namespace sym = gtsam::symbol_shorthand;
 class GraphValues : public GraphValuesBase {
  public:
-  explicit GraphValues(const GraphValuesParams& params = GraphValuesParams());
+  GraphValues(const GraphValuesParams& params = GraphValuesParams(),
+              std::shared_ptr<gtsam::Values> values = std::shared_ptr<gtsam::Values>(new gtsam::Values()));
 
   // Add timestamp and keys to timestamp_key_index_map, and values to values
   bool AddCombinedNavState(const localization_common::CombinedNavState& combined_nav_state, const int key_index);

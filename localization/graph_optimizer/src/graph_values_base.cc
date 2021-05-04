@@ -31,7 +31,8 @@
 namespace graph_optimizer {
 namespace lc = localization_common;
 namespace lm = localization_measurements;
-GraphValuesBase::GraphValuesBase(const GraphValuesParams& params) : params_(params), feature_key_index_(0) {
+GraphValuesBase::GraphValuesBase(const GraphValuesParams& params, std::shared_ptr<gtsam::Values> values)
+    : params_(params), values_(std::move(values)), feature_key_index_(0) {
   LogDebug("GraphValuesBase: Window duration: " << params_.ideal_duration);
   LogDebug("GraphValuesBase: Window min num states: " << params_.min_num_states);
 }
@@ -59,12 +60,12 @@ bool GraphValuesBase::AddFeature(const lm::FeatureId id, const gtsam::Point3& fe
     return false;
   }
 
-  if (values_.exists(key)) {
+  if (values_->exists(key)) {
     LogError("AddFeature: Key already exists in values.");
   }
 
   feature_id_key_map_.emplace(id, key);
-  values_.insert(key, feature_point);
+  values_->insert(key, feature_point);
   return true;
 }
 
@@ -72,7 +73,11 @@ int GraphValuesBase::NumFeatures() const { return feature_id_key_map_.size(); }
 
 const GraphValuesParams& GraphValuesBase::params() const { return params_; }
 
-void GraphValuesBase::UpdateValues(const gtsam::Values& new_values) { values_ = new_values; }
+const gtsam::Values& GraphValuesBase::values() const { return *values_; }
+
+gtsam::Values& GraphValuesBase::values() { return *values_; }
+
+void GraphValuesBase::UpdateValues(const gtsam::Values& new_values) { *values_ = new_values; }
 
 gtsam::NonlinearFactorGraph GraphValuesBase::RemoveOldFactors(const gtsam::KeyVector& old_keys,
                                                               gtsam::NonlinearFactorGraph& graph) {
@@ -123,7 +128,7 @@ gtsam::KeyVector GraphValuesBase::OldFeatureKeys(const gtsam::NonlinearFactorGra
 
 void GraphValuesBase::RemoveOldFeatures(const gtsam::KeyVector& old_keys) {
   for (const auto& key : old_keys) {
-    values_.erase(key);
+    values_->erase(key);
     for (auto feature_id_key_it = feature_id_key_map_.begin(); feature_id_key_it != feature_id_key_map_.end();) {
       if (feature_id_key_it->second == key) {
         feature_id_key_it = feature_id_key_map_.erase(feature_id_key_it);

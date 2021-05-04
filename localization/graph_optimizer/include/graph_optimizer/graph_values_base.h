@@ -40,7 +40,8 @@ namespace graph_optimizer {
 namespace sym = gtsam::symbol_shorthand;
 class GraphValuesBase {
  public:
-  explicit GraphValuesBase(const GraphValuesParams& params = GraphValuesParams());
+  GraphValuesBase(const GraphValuesParams& params = GraphValuesParams(),
+                  std::shared_ptr<gtsam::Values> values = std::shared_ptr<gtsam::Values>(new gtsam::Values()));
 
   // Returns the oldest time that will be in graph values once the window is slid using params
   virtual boost::optional<localization_common::Time> SlideWindowNewOldestTime() const = 0;
@@ -57,8 +58,6 @@ class GraphValuesBase {
 
   virtual gtsam::KeyVector OldKeys(const localization_common::Time oldest_allowed_time) const = 0;
 
-  const gtsam::Values& values() const { return values_; }
-
   virtual boost::optional<gtsam::Key> GetKey(KeyCreatorFunction key_creator_function,
                                              const localization_common::Time timestamp) const = 0;
 
@@ -68,12 +67,12 @@ class GraphValuesBase {
 
   template <typename ValueType>
   boost::optional<ValueType> at(const gtsam::Key& key) const {
-    if (!values_.exists(key)) {
+    if (!values_->exists(key)) {
       LogError("at: Key not present in values.");
       return boost::none;
     }
 
-    return values_.at<ValueType>(key);
+    return values_->at<ValueType>(key);
   }
 
   bool HasFeature(const localization_measurements::FeatureId id) const;
@@ -92,8 +91,9 @@ class GraphValuesBase {
 
   const GraphValuesParams& params() const;
 
-  // TODO(rsoussan): Make this shared_ptr, private?
-  gtsam::Values values_;
+  const gtsam::Values& values() const;
+
+  gtsam::Values& values();
 
  private:
   // Serialization function
@@ -106,6 +106,7 @@ class GraphValuesBase {
   }
 
   GraphValuesParams params_;
+  std::shared_ptr<gtsam::Values> values_;
   std::unordered_map<localization_measurements::FeatureId, gtsam::Key> feature_id_key_map_;
   // Modified by projection_factor_adder, remove mutable if this changes
   mutable std::uint64_t feature_key_index_;

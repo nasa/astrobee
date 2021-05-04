@@ -31,7 +31,8 @@
 namespace graph_optimizer {
 namespace lc = localization_common;
 namespace lm = localization_measurements;
-GraphValues::GraphValues(const GraphValuesParams& params) : GraphValuesBase(params) {}
+GraphValues::GraphValues(const GraphValuesParams& params, std::shared_ptr<gtsam::Values> values)
+    : GraphValuesBase(params, std::move(values)) {}
 
 boost::optional<lc::CombinedNavState> GraphValues::LatestCombinedNavState() const {
   if (Empty()) {
@@ -129,7 +130,7 @@ boost::optional<gtsam::Key> GraphValues::GetKey(KeyCreatorFunction key_creator_f
   const int key_index = timestamp_key_index_map_.at(timestamp);
 
   const auto key = key_creator_function(key_index);
-  if (!values_.exists(key)) {
+  if (!values().exists(key)) {
     LogError("GetKey: Key not present in values.");
     return boost::none;
   }
@@ -215,7 +216,7 @@ boost::optional<std::pair<gtsam::imuBias::ConstantBias, lc::Time>> GraphValues::
   const lc::Time timestamp = timestamp_key_index_map_.crbegin()->first;
   const int key_index = timestamp_key_index_map_.crbegin()->second;
 
-  if (!values_.exists(sym::B(key_index))) {
+  if (!values().exists(sym::B(key_index))) {
     LogError("LatestBias: Bias key not present in values.");
     return boost::none;
   }
@@ -297,22 +298,22 @@ bool GraphValues::AddCombinedNavState(const lc::CombinedNavState& combined_nav_s
     return false;
   }
   timestamp_key_index_map_.emplace(combined_nav_state.timestamp(), key_index);
-  if (values_.exists(sym::P(key_index))) {
+  if (values().exists(sym::P(key_index))) {
     LogError("AddCombinedNavState: Pose key already in values.");
     return false;
   }
-  if (values_.exists(sym::V(key_index))) {
+  if (values().exists(sym::V(key_index))) {
     LogError("AddCombinedNavState: Velocity key already in values.");
     return false;
   }
-  if (values_.exists(sym::B(key_index))) {
+  if (values().exists(sym::B(key_index))) {
     LogError("AddCombinedNavState: Bias key already in values.");
     return false;
   }
 
-  values_.insert(sym::P(key_index), combined_nav_state.pose());
-  values_.insert(sym::V(key_index), combined_nav_state.velocity());
-  values_.insert(sym::B(key_index), combined_nav_state.bias());
+  values().insert(sym::P(key_index), combined_nav_state.pose());
+  values().insert(sym::V(key_index), combined_nav_state.velocity());
+  values().insert(sym::B(key_index), combined_nav_state.bias());
 
   LogDebug("AddCombinedNavState: Added key_index " << key_index);
   LogDebug("AddCombinedNavState: Added timestamp " << std::setprecision(15) << combined_nav_state.timestamp());
@@ -369,20 +370,20 @@ bool GraphValues::RemoveCombinedNavState(const lc::Time timestamp) {
   bool removed_values = true;
 
   // Remove key/value pairs from values
-  if (values_.exists(sym::P(key_index))) {
-    values_.erase(sym::P(key_index));
+  if (values().exists(sym::P(key_index))) {
+    values().erase(sym::P(key_index));
   } else {
     LogError("RemoveCombinedNavState: Pose key not present in values.");
     removed_values = false;
   }
-  if (values_.exists(sym::V(key_index))) {
-    values_.erase(sym::V(key_index));
+  if (values().exists(sym::V(key_index))) {
+    values().erase(sym::V(key_index));
   } else {
     LogError("RemoveCombinedNavState: Velocity key not present in values.");
     removed_values = false;
   }
-  if (values_.exists(sym::B(key_index))) {
-    values_.erase(sym::B(key_index));
+  if (values().exists(sym::B(key_index))) {
+    values().erase(sym::B(key_index));
   } else {
     LogError("RemoveCombinedNavState: Bias key not present in values.");
     removed_values = false;
