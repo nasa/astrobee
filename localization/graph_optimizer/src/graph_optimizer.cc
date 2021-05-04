@@ -98,22 +98,17 @@ gtsam::NonlinearFactorGraph GraphOptimizer::MarginalFactors(
   return gtsam::LinearContainerFactor::ConvertLinearGraph(linear_marginal_factors, graph_values_->values());
 }
 
-bool GraphOptimizer::SlideWindow(const boost::optional<gtsam::Marginals>& marginals, const lc::Time last_latest_time) {
-  const auto graph_values_ideal_new_oldest_time = graph_values_->SlideWindowNewOldestTime();
-  if (!graph_values_ideal_new_oldest_time) {
-    LogDebug("SlideWindow: No states removed. ");
-    return true;
-  }
-  // Ensure that new oldest time isn't more recent than last latest time
-  // since then priors couldn't be added for the new oldest state
-  if (last_latest_time < *graph_values_ideal_new_oldest_time)
-    LogError("SlideWindow: Ideal oldest time is more recent than last latest time.");
-  const auto new_oldest_time = std::min(last_latest_time, *graph_values_ideal_new_oldest_time);
+boost::optional<lc::Time> GraphOptimizer::SlideWindowNewOldestTime() const {
+  return graph_values_->SlideWindowNewOldestTime();
+}
 
+std::pair<gtsam::KeyVector, gtsam::NonlinearFactorGraph> GraphOptimizer::OldKeysAndFactors(
+  const lc::Time oldest_allowed_time) {
   // Add marginal factors for marginalized values
-  auto old_keys = graph_values_->OldKeys(new_oldest_time);
+  auto old_keys = graph_values_->OldKeys(oldest_allowed_time);
   // Since cumlative factors have many keys and shouldn't be marginalized, need to remove old measurements depending on
   // old keys before marginalizing and sliding window
+  // TODO(rsousan): put this somewhere else?
   RemoveOldMeasurementsFromCumulativeFactors(old_keys);
   auto old_factors = graph_values_->RemoveOldFactors(old_keys, graph_);
   gtsam::KeyVector old_feature_keys;
@@ -124,8 +119,25 @@ bool GraphOptimizer::SlideWindow(const boost::optional<gtsam::Marginals>& margin
   auto old_feature_factors = graph_values_->RemoveOldFactors(old_feature_keys, graph_);
   old_keys.insert(old_keys.end(), old_feature_keys.begin(), old_feature_keys.end());
   old_factors.push_back(old_feature_factors);
+  return std::make_pair(old_keys, old_factors);
+}
+
+bool GraphOptimizer::SlideWindow(const boost::optional<gtsam::Marginals>& marginals, const lc::Time last_latest_time) {
+  const auto ideal_new_oldest_time = SlideWindowNewOldestTime();
+  if (!ideal_new_oldest_time) {
+    LogDebug("SlideWindow: No states removed. ");
+    return true;
+  }
+  // Ensure that new oldest time isn't more recent than last latest time
+  // since then priors couldn't be added for the new oldest state
+  if (last_latest_time < *ideal_new_oldest_time)
+    LogError("SlideWindow: Ideal oldest time is more recent than last latest time.");
+  const auto new_oldest_time = std::min(last_latest_time, *ideal_new_oldest_time);
+
+  const auto old_keys_and_factors = OldKeysAndFactors(new_oldest_time);
   if (params_.add_marginal_factors) {
-    const auto marginal_factors = MarginalFactors(old_factors, old_keys, gtsam::EliminateQR);
+    const auto marginal_factors =
+      MarginalFactors(old_keys_and_factors.second, old_keys_and_factors.first, gtsam::EliminateQR);
     for (const auto& marginal_factor : marginal_factors) {
       graph_.push_back(marginal_factor);
     }
@@ -133,18 +145,10 @@ bool GraphOptimizer::SlideWindow(const boost::optional<gtsam::Marginals>& margin
 
   for (auto& node_updater : node_updaters_)
     node_updater->SlideWindow(new_oldest_time, marginals, params_.huber_k, graph_);
-  graph_values_->RemoveOldFeatures(old_feature_keys);
+  graph_values_->RemoveOldFeatures(old_keys_and_factors.first);
 
-  // Remove old data from other containers
-  // TODO(rsoussan): Just use new_oldest_time and don't bother getting oldest timestamp here?
-  const auto oldest_timestamp = graph_values_->OldestTimestamp();
-  if (!oldest_timestamp || *oldest_timestamp != new_oldest_time) {
-    LogError("SlideWindow: Failed to get oldest timestamp.");
-    return false;
-  }
-
-  RemoveOldBufferedFactors(*oldest_timestamp);
-  DoPostSlideWindowActions(*oldest_timestamp, marginals);
+  RemoveOldBufferedFactors(new_oldest_time);
+  DoPostSlideWindowActions(new_oldest_time, marginals);
   return true;
 }
 

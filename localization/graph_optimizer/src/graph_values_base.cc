@@ -128,6 +128,8 @@ gtsam::KeyVector GraphValuesBase::OldFeatureKeys(const gtsam::NonlinearFactorGra
 
 void GraphValuesBase::RemoveOldFeatures(const gtsam::KeyVector& old_keys) {
   for (const auto& key : old_keys) {
+    // TODO(rsoussan): test this
+    if (gtsam::Symbol(key).chr() != 'F') continue;
     values_->erase(key);
     for (auto feature_id_key_it = feature_id_key_map_.begin(); feature_id_key_it != feature_id_key_map_.end();) {
       if (feature_id_key_it->second == key) {

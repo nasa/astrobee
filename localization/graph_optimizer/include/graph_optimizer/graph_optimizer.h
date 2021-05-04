@@ -81,6 +81,11 @@ class GraphOptimizer {
   bool SlideWindow(const boost::optional<gtsam::Marginals>& marginals,
                    const localization_common::Time last_latest_time);
 
+  boost::optional<localization_common::Time> SlideWindowNewOldestTime() const;
+
+  std::pair<gtsam::KeyVector, gtsam::NonlinearFactorGraph> OldKeysAndFactors(
+    const localization_common::Time oldest_allowed_time);
+
   // Called after SlideWindow
   virtual void DoPostSlideWindowActions(const localization_common::Time oldest_allowed_time,
                                         const boost::optional<gtsam::Marginals>& marginals);
