@@ -28,6 +28,7 @@
 #include <graph_localizer/robust_smart_projection_pose_factor.h>
 #include <graph_localizer/loc_factor_adder.h>
 #include <graph_localizer/loc_graph_action_completer.h>
+#include <graph_localizer/projection_graph_action_completer.h>
 #include <graph_localizer/projection_factor_adder.h>
 #include <graph_localizer/rotation_factor_adder.h>
 #include <graph_localizer/smart_projection_cumulative_factor_adder.h>
@@ -157,6 +158,7 @@ class GraphLocalizer : public graph_optimizer::GraphOptimizer {
   // Graph Action Completers
   std::shared_ptr<LocGraphActionCompleter> ar_tag_loc_graph_action_completer_;
   std::shared_ptr<LocGraphActionCompleter> loc_graph_action_completer_;
+  std::shared_ptr<ProjectionGraphActionCompleter> projection_graph_action_completer_;
   std::shared_ptr<SmartProjectionGraphActionCompleter> smart_projection_graph_action_completer_;
 
   boost::optional<bool> standstill_;

@@ -24,9 +24,9 @@
 #include <localization_common/feature_point_3d.h>
 
 namespace graph_localizer {
-class FeaturePointNodeUpdater : public graph_optimizer::NodeUpdaterWithPriors<localization_common::FeaturePoint3d,
-                                                                              localization_common::FeaturePoint3dNoise>,
-{
+class FeaturePointNodeUpdater
+    : public graph_optimizer::NodeUpdaterWithPriors<localization_common::FeaturePoint3d,
+                                                    localization_common::FeaturePoint3dNoise> {
  public:
   FeaturePointNodeUpdater(std::shared_ptr<gtsam::Values> values);
   void AddInitialValuesAndPriors(const localization_common::FeaturePoint3d& global_N_body,
@@ -51,7 +51,7 @@ class FeaturePointNodeUpdater : public graph_optimizer::NodeUpdaterWithPriors<lo
   gtsam::KeyVector OldKeys(const localization_common::Time oldest_allowed_time,
                            const gtsam::NonlinearFactorGraph& graph) const final;
 
-  boost::optional<gtsam::Key> GetKey(KeyCreatorFunction key_creator_function,
+  boost::optional<gtsam::Key> GetKey(graph_optimizer::KeyCreatorFunction key_creator_function,
                                      const localization_common::Time timestamp) const final;
 
   boost::optional<localization_common::Time> OldestTimestamp() const final;
@@ -60,8 +60,10 @@ class FeaturePointNodeUpdater : public graph_optimizer::NodeUpdaterWithPriors<lo
 
   int NumFeatures() const;
 
+  std::shared_ptr<graph_optimizer::FeaturePointGraphValues> feature_point_graph_values();
+
  private:
-  std::shared_ptr<FeaturePointGraphValues> feature_point_graph_values_;
+  std::shared_ptr<graph_optimizer::FeaturePointGraphValues> feature_point_graph_values_;
 };
 }  // namespace graph_localizer
 

@@ -16,7 +16,7 @@
  * under the License.
  */
 
-#include <graph_localizer/projection_factor_adder.h>
+#include <graph_localizer/projection_graph_action_completer.h>
 #include <graph_localizer/utilities.h>
 #include <localization_common/logger.h>
 
@@ -25,11 +25,11 @@
 
 namespace graph_localizer {
 namespace go = graph_optimizer;
-namespace lm = localization_measurements;
 namespace sym = gtsam::symbol_shorthand;
-ProjectionGraphActionCompleter::ProjectionGraphActionCompleter(const ProjectionFactorAdderParams& params,
-                                                               std::shared_ptr<const go::GraphValues> graph_values)
-    : params_(params), graph_values_(graph_values) {
+ProjectionGraphActionCompleter::ProjectionGraphActionCompleter(
+  const ProjectionFactorAdderParams& params, std::shared_ptr<const go::GraphValues> graph_values,
+  std::shared_ptr<go::FeaturePointGraphValues> feature_point_graph_values)
+    : params_(params), graph_values_(graph_values), feature_point_graph_values_(std::move(feature_point_graph_values)) {
   projection_triangulation_params_.rankTolerance = 1e-9;
   // TODO(rsoussan): why is Base necessary for these?
   projection_triangulation_params_.enableEPI = params_.enable_EPI;
@@ -43,12 +43,11 @@ go::GraphActionCompleterType ProjectionGraphActionCompleter::type() const {
 
 bool ProjectionGraphActionCompleter::DoAction(go::FactorsToAdd& factors_to_add,
                                               gtsam::NonlinearFactorGraph& graph_factors) {
-  return TriangulateNewPoint(factors_to_add, graph_factors, *graph_values_);
+  return TriangulateNewPoint(factors_to_add, graph_factors);
 }
 
 bool ProjectionGraphActionCompleter::TriangulateNewPoint(go::FactorsToAdd& factors_to_add,
-                                                         gtsam::NonlinearFactorGraph& graph_factors,
-                                                         go::GraphValues& graph_values) {
+                                                         gtsam::NonlinearFactorGraph& graph_factors) {
   gtsam::CameraSet<Camera> camera_set;
   Camera::MeasurementVector measurements;
   gtsam::Key point_key;
@@ -59,7 +58,7 @@ bool ProjectionGraphActionCompleter::TriangulateNewPoint(go::FactorsToAdd& facto
       LogError("TriangulateNewPoint: Failed to cast to projection factor.");
       return false;
     }
-    const auto world_T_body = graph_values.at<gtsam::Pose3>(projection_factor->key1());
+    const auto world_T_body = graph_values_->at<gtsam::Pose3>(projection_factor->key1());
     if (!world_T_body) {
       LogError("TriangulateNewPoint: Failed to get pose.");
       return false;
@@ -86,7 +85,7 @@ bool ProjectionGraphActionCompleter::TriangulateNewPoint(go::FactorsToAdd& facto
   }
   // TODO(rsoussan): clean this up
   const auto feature_id = factors_to_add.Get().front().key_infos[1].id();
-  graph_values.AddFeature(feature_id, *world_t_triangulated_point, point_key);
+  feature_point_graph_values_->AddFeature(feature_id, *world_t_triangulated_point, point_key);
   if (params_.add_point_priors) {
     const gtsam::Vector3 point_prior_noise_sigmas((gtsam::Vector(3) << params_.point_prior_translation_stddev,
                                                    params_.point_prior_translation_stddev,

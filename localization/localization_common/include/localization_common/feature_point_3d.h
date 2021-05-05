@@ -32,7 +32,7 @@ struct FeaturePoint3dNoise {
 
 struct FeaturePoint3d {
   FeaturePoint3d(const gtsam::Point3& global_t_point, const FeatureId feature_id)
-      : global_t_point(global_t_point), feature_id(feature_id), {}
+      : global_t_point(global_t_point), feature_id(feature_id) {}
   FeaturePoint3d() {}
   gtsam::Point3 global_t_point;
   FeatureId feature_id;

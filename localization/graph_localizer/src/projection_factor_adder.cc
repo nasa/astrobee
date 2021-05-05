@@ -67,7 +67,7 @@ std::vector<go::FactorsToAdd> ProjectionFactorAdder::AddFactors(
         (new_features + graph_values_->NumFeatures()) < params().max_num_features) {
       // Create new factors to add for each feature track so the graph action can act on only that
       // feature track to triangulate a new point
-      go::FactorsToAdd projection_factors_with_new_point_to_add(type());
+      go::FactorsToAdd projection_factors_with_new_point_to_add(go::GraphActionCompleterType::ProjectionFactor);
       const auto point_key = graph_values_->CreateFeatureKey();
       for (const auto& feature_point_pair : feature_track.points()) {
         const auto& feature_point = feature_point_pair.second;

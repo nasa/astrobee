@@ -22,6 +22,7 @@
 #include <graph_localizer/loc_factor_adder_params.h>
 #include <graph_optimizer/graph_action_completer.h>
 #include <graph_optimizer/graph_action_completer_type.h>
+#include <graph_optimizer/graph_values.h>
 
 namespace graph_localizer {
 class LocGraphActionCompleter : public graph_optimizer::GraphActionCompleter {

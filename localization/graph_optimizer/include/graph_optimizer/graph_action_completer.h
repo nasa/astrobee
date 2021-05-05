@@ -20,6 +20,7 @@
 #define GRAPH_OPTIMIZER_GRAPH_ACTION_COMPLETER_H_
 
 #include <graph_optimizer/graph_action_completer_type.h>
+#include <graph_optimizer/factor_to_add.h>
 
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
 

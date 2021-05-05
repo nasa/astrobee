@@ -29,19 +29,19 @@ namespace graph_localizer {
 class ProjectionGraphActionCompleter : public graph_optimizer::GraphActionCompleter {
  public:
   ProjectionGraphActionCompleter(const ProjectionFactorAdderParams& params,
-                                 std::shared_ptr<const FeatureTracker> feature_tracker,
-                                 std::shared_ptr<const graph_optimizer::GraphValues> graph_values);
+                                 std::shared_ptr<const graph_optimizer::GraphValues> graph_values,
+                                 std::shared_ptr<graph_optimizer::FeaturePointGraphValues> feature_point_graph_values);
 
   bool DoAction(graph_optimizer::FactorsToAdd& factors_to_add, gtsam::NonlinearFactorGraph& graph_factors) final;
 
   graph_optimizer::GraphActionCompleterType type() const final;
 
  private:
-  bool TriangulateNewPoint(graph_optimizer::FactorsToAdd& factors_to_add, gtsam::NonlinearFactorGraph& graph_factors,
-                           graph_optimizer::GraphValues& graph_values);
+  bool TriangulateNewPoint(graph_optimizer::FactorsToAdd& factors_to_add, gtsam::NonlinearFactorGraph& graph_factors);
 
   ProjectionFactorAdderParams params_;
   std::shared_ptr<const graph_optimizer::GraphValues> graph_values_;
+  std::shared_ptr<graph_optimizer::FeaturePointGraphValues> feature_point_graph_values_;
   gtsam::TriangulationParameters projection_triangulation_params_;
 };
 }  // namespace graph_localizer

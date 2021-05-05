@@ -63,7 +63,7 @@ void SmartProjectionCumulativeFactorAdder::AddFactors(
 
 std::vector<go::FactorsToAdd> SmartProjectionCumulativeFactorAdder::AddFactors() {
   // Add smart factor for each valid feature track
-  go::FactorsToAdd smart_factors_to_add(type());
+  go::FactorsToAdd smart_factors_to_add(go::GraphActionCompleterType::SmartFactor);
   if (params().use_allowed_timestamps) {
     for (const auto& feature_track : feature_tracker_->feature_tracks()) {
       const auto points = feature_track.second->AllowedPoints(feature_tracker_->smart_factor_timestamp_allow_list());

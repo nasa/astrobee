@@ -28,9 +28,7 @@ namespace sym = gtsam::symbol_shorthand;
 
 // TODO(rsoussan): Make new node updater base class that doesn't have functions left empty here?
 FeaturePointNodeUpdater::FeaturePointNodeUpdater(std::shared_ptr<gtsam::Values> values)
-    : feature_point_graph_values_(new FeaturePointGraphValues(std::move(values))) {}
-
-void FeaturePointNodeUpdater::AddInitialValuesAndPriors(gtsam::NonlinearFactorGraph& factors) {}
+    : feature_point_graph_values_(new go::FeaturePointGraphValues(std::move(values))) {}
 
 void FeaturePointNodeUpdater::AddInitialValuesAndPriors(const lc::FeaturePoint3d& global_t_point,
                                                         const lc::FeaturePoint3dNoise& noise,
@@ -88,7 +86,7 @@ gtsam::KeyVector FeaturePointNodeUpdater::OldKeys(const localization_common::Tim
   return feature_point_graph_values_->OldKeys(oldest_allowed_time, graph);
 }
 
-boost::optional<gtsam::Key> FeaturePointNodeUpdater::GetKey(KeyCreatorFunction key_creator_function,
+boost::optional<gtsam::Key> FeaturePointNodeUpdater::GetKey(go::KeyCreatorFunction key_creator_function,
                                                             const localization_common::Time timestamp) const {
   return feature_point_graph_values_->GetKey(key_creator_function, timestamp);
 }
@@ -103,4 +101,7 @@ boost::optional<localization_common::Time> FeaturePointNodeUpdater::LatestTimest
 
 int FeaturePointNodeUpdater::NumFeatures() const { return feature_point_graph_values_->NumFeatures(); }
 
+std::shared_ptr<go::FeaturePointGraphValues> FeaturePointNodeUpdater::feature_point_graph_values() {
+  return feature_point_graph_values_;
+}
 }  // namespace graph_localizer

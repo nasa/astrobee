@@ -33,12 +33,16 @@ class LocFactorAdder : public graph_optimizer::FactorAdder<localization_measurem
     graph_optimizer::FactorAdder<localization_measurements::MatchedProjectionsMeasurement, LocFactorAdderParams>;
 
  public:
-  LocFactorAdder(const LocFactorAdderParams& params);
+  LocFactorAdder(const LocFactorAdderParams& params,
+                 const graph_optimizer::GraphActionCompleterType graph_action_completer_type);
 
   std::vector<graph_optimizer::FactorsToAdd> AddFactors(
     const localization_measurements::MatchedProjectionsMeasurement& matched_projections_measurement) final;
 
  private:
+  graph_optimizer::GraphActionCompleterType type() const;
+
+  graph_optimizer::GraphActionCompleterType graph_action_completer_type_;
   localization_common::Averager num_landmarks_averager_ = localization_common::Averager("Num Landmarks");
 };
 }  // namespace graph_localizer
