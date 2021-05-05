@@ -32,9 +32,8 @@ class GraphStats {
   GraphStats();
   void AddStatsAverager(localization_common::Averager& stats_averager);
   void AddErrorAverager(localization_common::Averager& error_averager);
-  virtual void UpdateErrors(const gtsam::NonlinearFactorGraph& graph_factors, const GraphValues& graph_values);
-  virtual void UpdateSpecificStats(const gtsam::NonlinearFactorGraph& graph_factors, const GraphValues& graph_values);
-  void UpdateStats(const gtsam::NonlinearFactorGraph& graph_factors, const GraphValues& graph_values);
+  virtual void UpdateErrors(const gtsam::NonlinearFactorGraph& graph_factors);
+  virtual void UpdateStats(const gtsam::NonlinearFactorGraph& graph_factors);
   void Log() const;
   void LogToFile(std::ofstream& ofstream) const;
   void LogToCsv(std::ofstream& ofstream) const;
@@ -54,11 +53,6 @@ class GraphStats {
 
   // Graph Stats Averagers
   localization_common::Averager iterations_averager_ = localization_common::Averager("Iterations");
-  localization_common::Averager num_states_averager_ = localization_common::Averager("Num States");
-  localization_common::Averager duration_averager_ = localization_common::Averager("Duration");
-  localization_common::Averager num_marginal_factors_averager_ = localization_common::Averager("Num Marginal Factors");
-  localization_common::Averager num_factors_averager_ = localization_common::Averager("Num Factors");
-  localization_common::Averager num_features_averager_ = localization_common::Averager("Num Features");
   // Factor Error Averagers
   localization_common::Averager total_error_averager_ = localization_common::Averager("Total Factor Error");
 

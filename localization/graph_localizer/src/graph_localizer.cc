@@ -103,10 +103,13 @@ GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
     gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(bias_prior_noise_sigmas)), params_.huber_k);
   combined_nav_state_node_updater_params.global_N_body_start_noise = global_N_body_start_noise;
   combined_nav_state_node_updater_params.add_priors = params_.add_priors;
-  combined_nav_state_node_updater_.reset(new CombinedNavStateNodeUpdater(
-    combined_nav_state_node_updater_params, latest_imu_integrator_, shared_graph_values()));
+  combined_nav_state_node_updater_.reset(
+    new CombinedNavStateNodeUpdater(combined_nav_state_node_updater_params, latest_imu_integrator_, values()));
   combined_nav_state_node_updater_->AddInitialValuesAndPriors(graph_factors());
   AddNodeUpdater(combined_nav_state_node_updater_);
+  // TODO(rsoussan): Clean this up
+  dynamic_cast<GraphLocalizerStats*>(graph_stats())
+    ->SetCombinedNavStateGraphValues(combined_nav_state_node_updater_->graph_values());
 }
 
 boost::optional<std::pair<lc::CombinedNavState, lc::CombinedNavStateCovariances>>
@@ -128,12 +131,12 @@ GraphLocalizer::LatestCombinedNavStateAndCovariances() const {
 
 boost::optional<std::pair<lc::CombinedNavState, lc::CombinedNavStateCovariances>>
 GraphLocalizer::LatestCombinedNavStateAndCovariances(const gtsam::Marginals& marginals) const {
-  const auto global_N_body_latest = graph_values().LatestCombinedNavState();
+  const auto global_N_body_latest = combined_nav_state_updater_->LatestCombinedNavState();
   if (!global_N_body_latest) {
     LogError("LatestCombinedNavStateAndCovariance: Failed to get latest combined nav state.");
     return boost::none;
   }
-  const auto latest_combined_nav_state_key_index = graph_values().LatestCombinedNavStateKeyIndex();
+  const auto latest_combined_nav_state_key_index = combined_nav_state_updater_->LatestCombinedNavStateKeyIndex();
   if (!latest_combined_nav_state_key_index) {
     LogError("LatestCombinedNavStateAndCovariance: Failed to get latest combined nav state.");
     return boost::none;
@@ -154,7 +157,7 @@ GraphLocalizer::LatestCombinedNavStateAndCovariances(const gtsam::Marginals& mar
 }
 
 boost::optional<lc::CombinedNavState> GraphLocalizer::LatestCombinedNavState() const {
-  const auto global_N_body_latest = graph_values().LatestCombinedNavState();
+  const auto global_N_body_latest = combined_nav_state_updater_->LatestCombinedNavState();
   if (!global_N_body_latest) {
     LogError("LatestCombinedNavState: Failed to get latest combined nav state.");
     return boost::none;
@@ -164,7 +167,8 @@ boost::optional<lc::CombinedNavState> GraphLocalizer::LatestCombinedNavState() c
 }
 
 boost::optional<lc::CombinedNavState> GraphLocalizer::GetCombinedNavState(const lc::Time time) const {
-  const auto lower_bound_or_equal_combined_nav_state = graph_values().LowerBoundOrEqualCombinedNavState(time);
+  const auto lower_bound_or_equal_combined_nav_state =
+    combined_nav_state_updater_->LowerBoundOrEqualCombinedNavState(time);
   if (!lower_bound_or_equal_combined_nav_state) {
     LogDebug("GetCombinedNavState: Failed to get lower bound or equal combined nav state.");
     return boost::none;
@@ -188,7 +192,7 @@ boost::optional<lc::CombinedNavState> GraphLocalizer::GetCombinedNavState(const 
 }
 
 boost::optional<std::pair<gtsam::imuBias::ConstantBias, lc::Time>> GraphLocalizer::LatestBiases() const {
-  const auto latest_bias = graph_values().LatestBias();
+  const auto latest_bias = combined_nav_state_updater_->LatestBias();
   if (!latest_bias) {
     LogError("LatestBiases: Failed to get latest biases.");
     return boost::none;
@@ -305,9 +309,9 @@ void GraphLocalizer::DoPostSlideWindowActions(const localization_common::Time ol
 }
 
 void GraphLocalizer::UpdatePointPriors(const gtsam::Marginals& marginals) {
-  const auto feature_keys = graph_values().FeatureKeys();
+  const auto feature_keys = feature_point_node_updater_->FeatureKeys();
   for (const auto& feature_key : feature_keys) {
-    const auto world_t_point = graph_values().at<gtsam::Point3>(feature_key);
+    const auto world_t_point = feature_point_node_updater_->at<gtsam::Point3>(feature_key);
     if (!world_t_point) {
       LogError("UpdatePointPriors: Failed to get world_t_point.");
       continue;
@@ -392,7 +396,7 @@ bool GraphLocalizer::MeasurementRecentEnough(const lc::Time timestamp) const {
     LogDebug("MeasurementRecentEnough: Waiting until imu measurements have been received.");
     return false;
   }
-  if (timestamp < graph_values().OldestTimestamp()) return false;
+  if (timestamp < combined_nav_state_updater_->OldestTimestamp()) return false;
   if (timestamp < latest_imu_integrator_->OldestTime()) return false;
   return true;
 }
@@ -427,7 +431,7 @@ const lm::FanSpeedMode GraphLocalizer::fan_speed_mode() const { return latest_im
 
 const GraphLocalizerParams& GraphLocalizer::params() const { return params_; }
 
-int GraphLocalizer::NumFeatures() const { return graph_values().NumFeatures(); }
+int GraphLocalizer::NumFeatures() const { return feature_point_node_updater_->NumFeatures(); }
 
 // TODO(rsoussan): fix this call to happen before of factors are removed!
 int GraphLocalizer::NumOFFactors(const bool check_valid) const {
@@ -442,12 +446,12 @@ int GraphLocalizer::NumProjectionFactors(const bool check_valid) const {
     const auto projection_factor = dynamic_cast<const ProjectionFactor*>(factor.get());
     if (projection_factor) {
       if (check_valid) {
-        const auto world_t_point = graph_values().at<gtsam::Point3>(projection_factor->key2());
+        const auto world_t_point = feature_point_node_updater_->at<gtsam::Point3>(projection_factor->key2());
         if (!world_t_point) {
           LogError("NumProjectionFactors: Failed to get point.");
           continue;
         }
-        const auto world_T_body = graph_values().at<gtsam::Pose3>(projection_factor->key1());
+        const auto world_T_body = combined_nav_state_updater_->at<gtsam::Pose3>(projection_factor->key1());
         if (!world_T_body) {
           LogError("NumProjectionFactors: Failed to get pose.");
           continue;
@@ -480,7 +484,7 @@ bool GraphLocalizer::standstill() const {
 
 bool GraphLocalizer::DoPostOptimizeActions() {
   // Update imu integrator bias
-  const auto latest_bias = graph_values().LatestBias();
+  const auto latest_bias = combined_nav_state_updater_->LatestBias();
   if (!latest_bias) {
     LogError("Update: Failed to get latest bias.");
     return false;

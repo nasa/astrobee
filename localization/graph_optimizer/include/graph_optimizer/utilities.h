@@ -22,6 +22,8 @@
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
 
 namespace graph_optimizer {
+gtsam::NonlinearFactorGraph RemoveOldFactors(const gtsam::KeyVector& old_keys, gtsam::NonlinearFactorGraph& graph);
+
 template <typename FactorType>
 void DeleteFactors(gtsam::NonlinearFactorGraph& graph) {
   int num_removed_factors = 0;

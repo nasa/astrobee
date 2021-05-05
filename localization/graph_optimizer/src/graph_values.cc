@@ -32,7 +32,12 @@ namespace graph_optimizer {
 namespace lc = localization_common;
 namespace lm = localization_measurements;
 GraphValues::GraphValues(const GraphValuesParams& params, std::shared_ptr<gtsam::Values> values)
-    : GraphValuesBase(params, std::move(values)) {}
+    : GraphValuesBase(std::move(values)), params_(params) {
+  LogDebug("GraphValuesBase: Window duration: " << params_.ideal_duration);
+  LogDebug("GraphValuesBase: Window min num states: " << params_.min_num_states);
+}
+
+const GraphValuesParams& GraphValues::params() const { return params_; }
 
 boost::optional<lc::CombinedNavState> GraphValues::LatestCombinedNavState() const {
   if (Empty()) {
@@ -343,7 +348,8 @@ int GraphValues::RemoveOldCombinedNavStates(const lc::Time oldest_allowed_time) 
   return num_states_removed;
 }
 
-gtsam::KeyVector GraphValues::OldKeys(const lc::Time oldest_allowed_time) const {
+gtsam::KeyVector GraphValues::OldKeys(const lc::Time oldest_allowed_time,
+                                      const gtsam::NonlinearFactorGraph& graph) const {
   gtsam::KeyVector old_keys;
   for (const auto& timestamp_key_index_pair : timestamp_key_index_map_) {
     if (timestamp_key_index_pair.first >= oldest_allowed_time) break;

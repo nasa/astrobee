@@ -44,10 +44,7 @@ namespace graph_optimizer {
 namespace lc = localization_common;
 
 GraphOptimizer::GraphOptimizer(const GraphOptimizerParams& params, std::unique_ptr<GraphStats> graph_stats)
-    : graph_values_(new GraphValues(params.graph_values)),
-      graph_stats_(std::move(graph_stats)),
-      log_on_destruction_(true),
-      params_(params) {
+    : graph_stats_(std::move(graph_stats)), values_(new gtsam::Values()), log_on_destruction_(true), params_(params) {
   // Initialize lm params
   if (params_.verbose) {
     levenberg_marquardt_params_.verbosityLM = gtsam::LevenbergMarquardtParams::VerbosityLM::TRYDELTA;
@@ -92,33 +89,40 @@ gtsam::NonlinearFactorGraph GraphOptimizer::MarginalFactors(
   }
 
   // Linearize Graph
-  const auto linearized_graph = old_factors.linearize(graph_values_->values());
+  const auto linearized_graph = old_factors.linearize(*values_);
   const auto linear_marginal_factors =
     *(linearized_graph->eliminatePartialMultifrontal(old_keys, eliminate_function).second);
-  return gtsam::LinearContainerFactor::ConvertLinearGraph(linear_marginal_factors, graph_values_->values());
+  return gtsam::LinearContainerFactor::ConvertLinearGraph(linear_marginal_factors, *values_);
 }
 
 boost::optional<lc::Time> GraphOptimizer::SlideWindowNewOldestTime() const {
-  return graph_values_->SlideWindowNewOldestTime();
+  boost::optional<lc::Time> new_oldest_time;
+  for (const auto& node_updater : node_updaters_) {
+    const auto node_new_oldest_time = node_updater->SlideWindowNewOldestTime();
+    if (node_new_oldest_time) {
+      new_oldest_time = new_oldest_time ? std::min(*node_new_oldest_time, *new_oldest_time) : *node_new_oldest_time;
+    }
+  }
+
+  return new_oldest_time;
+}
+
+gtsam::KeyVector GraphOptimizer::OldKeys(const localization_common::Time oldest_allowed_time) const {
+  gtsam::KeyVector all_old_keys;
+  for (const auto& node_updater : node_updaters_) {
+    const auto old_keys = node_updater->OldKeys(oldest_allowed_time, graph_);
+    all_old_keys.insert(all_old_keys.end(), old_keys.begin(), old_keys.end());
+  }
+  return all_old_keys;
 }
 
 std::pair<gtsam::KeyVector, gtsam::NonlinearFactorGraph> GraphOptimizer::OldKeysAndFactors(
   const lc::Time oldest_allowed_time) {
-  // Add marginal factors for marginalized values
-  auto old_keys = graph_values_->OldKeys(oldest_allowed_time);
+  const auto old_keys = OldKeys(oldest_allowed_time);
   // Since cumlative factors have many keys and shouldn't be marginalized, need to remove old measurements depending on
   // old keys before marginalizing and sliding window
-  // TODO(rsousan): put this somewhere else?
   RemoveOldMeasurementsFromCumulativeFactors(old_keys);
-  auto old_factors = graph_values_->RemoveOldFactors(old_keys, graph_);
-  gtsam::KeyVector old_feature_keys;
-  // Call remove old factors before old feature keys, since old feature keys depend on
-  // number of factors per key remaining
-  // TODO(rsoussan): Generalize this better
-  old_feature_keys = graph_values_->OldFeatureKeys(graph_);
-  auto old_feature_factors = graph_values_->RemoveOldFactors(old_feature_keys, graph_);
-  old_keys.insert(old_keys.end(), old_feature_keys.begin(), old_feature_keys.end());
-  old_factors.push_back(old_feature_factors);
+  const auto old_factors = RemoveOldFactors(old_keys, graph_);
   return std::make_pair(old_keys, old_factors);
 }
 
@@ -144,8 +148,7 @@ bool GraphOptimizer::SlideWindow(const boost::optional<gtsam::Marginals>& margin
   }
 
   for (auto& node_updater : node_updaters_)
-    node_updater->SlideWindow(new_oldest_time, marginals, params_.huber_k, graph_);
-  graph_values_->RemoveOldFeatures(old_keys_and_factors.first);
+    node_updater->SlideWindow(new_oldest_time, marginals, old_keys_and_factors.first, params_.huber_k, graph_);
 
   RemoveOldBufferedFactors(new_oldest_time);
   DoPostSlideWindowActions(new_oldest_time, marginals);
@@ -250,6 +253,23 @@ bool GraphOptimizer::DoGraphAction(FactorsToAdd& factors_to_add) {
   return false;
 }
 
+boost::optional<gtsam::Key> GraphOptimizer::GetKey(KeyCreatorFunction key_creator_function,
+                                                   const localization_common::Time timestamp) const {
+  boost::optional<gtsam::Key> key;
+  for (const auto& node_updater : node_updaters_) {
+    const auto node_key = node_updater->GetKey(key_creator_function, timestamp);
+    if (node_key) {
+      if (!key)
+        key = node_key;
+      else {
+        LogError("GetKey: Found key in multiple node updators.");
+        return boost::none;
+      }
+    }
+  }
+  return key;
+}
+
 bool GraphOptimizer::Rekey(FactorToAdd& factor_to_add) {
   gtsam::KeyVector new_keys;
   const auto& old_keys = factor_to_add.factor->keys();
@@ -259,7 +279,7 @@ bool GraphOptimizer::Rekey(FactorToAdd& factor_to_add) {
       // Don't change static keys. Assumes static key currently in factor is correct
       new_keys.emplace_back(old_keys[i]);
     } else {
-      const auto new_key = graph_values_->GetKey(key_info.key_creator_function(), key_info.timestamp());
+      const auto new_key = GetKey(key_info.key_creator_function(), key_info.timestamp());
       if (!new_key) {
         LogError("ReKey: Failed to find new key for timestamp.");
         return false;
@@ -273,8 +293,37 @@ bool GraphOptimizer::Rekey(FactorToAdd& factor_to_add) {
 
 bool GraphOptimizer::ReadyToAddFactors(const localization_common::Time timestamp) const { return true; }
 
+boost::optional<lc::Time> GraphOptimizer::OldestTimestamp() const {
+  boost::optional<lc::Time> oldest_timestamp;
+  for (const auto& node_updater : node_updaters_) {
+    const auto node_oldest_timestamp = node_updater->OldestTimestamp();
+    if (node_oldest_timestamp) {
+      oldest_timestamp =
+        oldest_timestamp ? std::min(*oldest_timestamp, *node_oldest_timestamp) : *node_oldest_timestamp;
+    }
+  }
+  return oldest_timestamp;
+}
+
+boost::optional<lc::Time> GraphOptimizer::LatestTimestamp() const {
+  boost::optional<lc::Time> latest_timestamp;
+  for (const auto& node_updater : node_updaters_) {
+    const auto node_latest_timestamp = node_updater->LatestTimestamp();
+    if (node_latest_timestamp) {
+      latest_timestamp =
+        latest_timestamp ? std::max(*latest_timestamp, *node_latest_timestamp) : *node_latest_timestamp;
+    }
+  }
+  return latest_timestamp;
+}
+
 bool GraphOptimizer::MeasurementRecentEnough(const lc::Time timestamp) const {
-  if (timestamp < graph_values_->OldestTimestamp()) return false;
+  const auto oldest_timestamp = OldestTimestamp();
+  if (!oldest_timestamp) {
+    LogError("MeasurementRecentEnough: Failed to get oldest timestamp.");
+    return false;
+  }
+  if (timestamp < *oldest_timestamp) return false;
   return true;
 }
 
@@ -282,26 +331,22 @@ void GraphOptimizer::PrintFactorDebugInfo() const {}
 
 const GraphOptimizerParams& GraphOptimizer::params() const { return params_; }
 
-const GraphValues& GraphOptimizer::graph_values() const { return *graph_values_; }
-
-GraphValues& GraphOptimizer::graph_values() { return *graph_values_; }
-
-std::shared_ptr<const GraphValues> GraphOptimizer::shared_graph_values() const { return graph_values_; }
-
-std::shared_ptr<GraphValues> GraphOptimizer::shared_graph_values() { return graph_values_; }
-
 const gtsam::NonlinearFactorGraph& GraphOptimizer::graph_factors() const { return graph_; }
 
 gtsam::NonlinearFactorGraph& GraphOptimizer::graph_factors() { return graph_; }
 
 const boost::optional<gtsam::Marginals>& GraphOptimizer::marginals() const { return marginals_; }
 
+std::shared_ptr<gtsam::Values> GraphOptimizer::values() { return values_; }
+
 void GraphOptimizer::SaveGraphDotFile(const std::string& output_path) const {
   std::ofstream of(output_path.c_str());
-  graph_.saveGraph(of, graph_values_->values());
+  graph_.saveGraph(of, *values_);
 }
 
 const GraphStats* const GraphOptimizer::graph_stats() const { return graph_stats_.get(); }
+
+GraphStats* GraphOptimizer::graph_stats() { return graph_stats_.get(); }
 
 void GraphOptimizer::LogOnDestruction(const bool log_on_destruction) { log_on_destruction_ = log_on_destruction; }
 
@@ -326,7 +371,7 @@ bool GraphOptimizer::Update() {
     graph_stats_->marginals_timer_.Start();
     // Calculate marginals for covariances
     try {
-      marginals_ = gtsam::Marginals(graph_, graph_values_->values(), marginals_factorization_);
+      marginals_ = gtsam::Marginals(graph_, *values_, marginals_factorization_);
     } catch (gtsam::IndeterminantLinearSystemException) {
       log(params_.fatal_failures, "Update: Indeterminant linear system error during computation of marginals.");
       marginals_ = boost::none;
@@ -350,7 +395,7 @@ bool GraphOptimizer::Update() {
     // Add graph ordering to place keys that will be marginalized in first group
     const auto new_oldest_time = SlideWindowNewOldestTime();
     if (new_oldest_time) {
-      const auto old_keys = graph_values_->OldKeys(*new_oldest_time);
+      const auto old_keys = OldKeys(*new_oldest_time);
       const auto ordering = gtsam::Ordering::ColamdConstrainedFirst(graph_, old_keys);
       levenberg_marquardt_params_.setOrdering(ordering);
     } else {
@@ -359,12 +404,12 @@ bool GraphOptimizer::Update() {
   }
 
   // Optimize
-  gtsam::LevenbergMarquardtOptimizer optimizer(graph_, graph_values_->values(), levenberg_marquardt_params_);
+  gtsam::LevenbergMarquardtOptimizer optimizer(graph_, *values_, levenberg_marquardt_params_);
 
   graph_stats_->optimization_timer_.Start();
   // TODO(rsoussan): Indicate if failure occurs in state msg, perhaps using confidence value in msg
   try {
-    graph_values_->UpdateValues(optimizer.optimize());
+    *values_ = optimizer.optimize();
   } catch (gtsam::IndeterminantLinearSystemException) {
     log(params_.fatal_failures, "Update: Indeterminant linear system error during optimization, keeping old values.");
   } catch (...) {
@@ -379,7 +424,7 @@ bool GraphOptimizer::Update() {
     graph_stats_->marginals_timer_.Start();
     // Calculate marginals for covariances
     try {
-      marginals_ = gtsam::Marginals(graph_, graph_values_->values(), marginals_factorization_);
+      marginals_ = gtsam::Marginals(graph_, *values_, marginals_factorization_);
     } catch (gtsam::IndeterminantLinearSystemException) {
       log(params_.fatal_failures, "Update: Indeterminant linear system error during computation of marginals.");
       marginals_ = boost::none;
@@ -390,14 +435,14 @@ bool GraphOptimizer::Update() {
     graph_stats_->marginals_timer_.Stop();
   }
 
-  last_latest_time_ = graph_values_->LatestTimestamp();
+  last_latest_time_ = LatestTimestamp();
 
   graph_stats_->log_stats_timer_.Start();
   graph_stats_->iterations_averager_.Update(optimizer.iterations());
-  graph_stats_->UpdateStats(graph_, *graph_values_);
+  graph_stats_->UpdateStats(graph_);
   graph_stats_->log_stats_timer_.Stop();
   graph_stats_->log_error_timer_.Start();
-  graph_stats_->UpdateErrors(graph_, *graph_values_);
+  graph_stats_->UpdateErrors(graph_);
   graph_stats_->log_error_timer_.Stop();
 
   if (params_.print_factor_info) PrintFactorDebugInfo();

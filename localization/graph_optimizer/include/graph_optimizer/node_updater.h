@@ -20,6 +20,7 @@
 #define GRAPH_OPTIMIZER_NODE_UPDATER_H_
 
 #include <graph_optimizer/node_updater_type.h>
+#include <graph_optimizer/graph_values_base.h>
 #include <localization_common/time.h>
 
 #include <gtsam/nonlinear/Marginals.h>
@@ -33,8 +34,22 @@ class NodeUpdater {
   virtual bool Update(const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors) = 0;
 
   virtual bool SlideWindow(const localization_common::Time oldest_allowed_timestamp,
-                           const boost::optional<gtsam::Marginals>& marginals, const double huber_k,
-                           gtsam::NonlinearFactorGraph& factors) = 0;
+                           const boost::optional<gtsam::Marginals>& marginals, const gtsam::KeyVector& old_keys,
+                           const double huber_k, gtsam::NonlinearFactorGraph& factors) = 0;
+
+  // Returns the oldest time that will be in graph values once the window is slid using params
+  virtual boost::optional<localization_common::Time> SlideWindowNewOldestTime() const = 0;
+
+  // TODO(rsoussan): consolidate these with graph values base?
+  virtual gtsam::KeyVector OldKeys(const localization_common::Time oldest_allowed_time,
+                                   const gtsam::NonlinearFactorGraph& graph) const = 0;
+
+  virtual boost::optional<gtsam::Key> GetKey(KeyCreatorFunction key_creator_function,
+                                             const localization_common::Time timestamp) const = 0;
+
+  virtual boost::optional<localization_common::Time> OldestTimestamp() const = 0;
+
+  virtual boost::optional<localization_common::Time> LatestTimestamp() const = 0;
 
   virtual NodeUpdaterType type() const = 0;
 };

@@ -26,7 +26,6 @@ void LoadGraphValuesParams(config_reader::ConfigReader& config, GraphValuesParam
   params.ideal_duration = mc::LoadDouble(config, "ideal_duration");
   params.min_num_states = mc::LoadInt(config, "min_num_states");
   params.max_num_states = mc::LoadInt(config, "max_num_states");
-  params.min_num_factors_per_feature = mc::LoadInt(config, "min_num_factors_per_feature");
 }
 
 void LoadGraphOptimizerParams(config_reader::ConfigReader& config, GraphOptimizerParams& params) {

@@ -31,12 +31,6 @@ GraphStats::GraphStats() {
   timers_.emplace_back(log_stats_timer_);
 
   AddStatsAverager(iterations_averager_);
-  AddStatsAverager(num_states_averager_);
-  AddStatsAverager(duration_averager_);
-  AddStatsAverager(num_marginal_factors_averager_);
-  AddStatsAverager(num_factors_averager_);
-  AddStatsAverager(num_features_averager_);
-
   AddErrorAverager(total_error_averager_);
 }
 
@@ -48,19 +42,9 @@ void GraphStats::AddErrorAverager(localization_common::Averager& error_averager)
   error_averagers_.emplace_back(error_averager);
 }
 
-void GraphStats::UpdateErrors(const gtsam::NonlinearFactorGraph& graph_factors, const GraphValues& graph_values) {}
+void GraphStats::UpdateErrors(const gtsam::NonlinearFactorGraph& graph_factors) {}
 
-void GraphStats::UpdateStats(const gtsam::NonlinearFactorGraph& graph_factors, const GraphValues& graph_values) {
-  num_states_averager_.Update(graph_values.NumStates());
-  duration_averager_.Update(graph_values.Duration());
-  num_marginal_factors_averager_.Update(NumFactors<gtsam::LinearContainerFactor>(graph_factors));
-  num_factors_averager_.Update(graph_factors.size());
-  num_features_averager_.Update(graph_values.NumFeatures());
-  UpdateSpecificStats(graph_factors, graph_values);
-}
-
-void GraphStats::UpdateSpecificStats(const gtsam::NonlinearFactorGraph& graph_factors,
-                                     const GraphValues& graph_values) {}
+void GraphStats::UpdateStats(const gtsam::NonlinearFactorGraph& graph_factors) {}
 
 void GraphStats::Log() const {
   Log(timers_);

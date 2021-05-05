@@ -26,8 +26,6 @@ struct GraphValuesParams {
   double ideal_duration;
   int min_num_states;
   int max_num_states;
-  // If storing 3d features as states (i.e. bundle adjustment type problems)
-  int min_num_factors_per_feature;
 };
 }  // namespace graph_optimizer
 

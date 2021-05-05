@@ -32,7 +32,7 @@ class CombinedNavStateNodeUpdater
  public:
   CombinedNavStateNodeUpdater(const CombinedNavStateNodeUpdaterParams& params,
                               std::shared_ptr<imu_integration::LatestImuIntegrator> latest_imu_integrator,
-                              std::shared_ptr<graph_optimizer::GraphValues> graph_values);
+                              std::shared_ptr<gtsam::Values> values);
 
   void AddInitialValuesAndPriors(gtsam::NonlinearFactorGraph& factors);
 
@@ -46,10 +46,24 @@ class CombinedNavStateNodeUpdater
   bool Update(const localization_common::Time timestamp, gtsam::NonlinearFactorGraph& factors) final;
 
   bool SlideWindow(const localization_common::Time oldest_allowed_timestamp,
-                   const boost::optional<gtsam::Marginals>& marginals, const double huber_k,
-                   gtsam::NonlinearFactorGraph& factors) final;
+                   const boost::optional<gtsam::Marginals>& marginals, const gtsam::KeyVector& old_keys,
+                   const double huber_k, gtsam::NonlinearFactorGraph& factors) final;
 
   graph_optimizer::NodeUpdaterType type() const final;
+
+  boost::optional<localization_common::Time> SlideWindowNewOldestTime() const final;
+
+  gtsam::KeyVector OldKeys(const localization_common::Time oldest_allowed_time,
+                           const gtsam::NonlinearFactorGraph& graph) const final;
+
+  boost::optional<gtsam::Key> GetKey(KeyCreatorFunction key_creator_function,
+                                     const localization_common::Time timestamp) const final;
+
+  boost::optional<localization_common::Time> OldestTimestamp() const final;
+
+  boost::optional<localization_common::Time> LatestTimestamp() const final;
+
+  std::shared_ptr<const graph_optimizer::GraphValues> graph_values() const;
 
  private:
   void RemovePriors(const int key_index, gtsam::NonlinearFactorGraph& factors);

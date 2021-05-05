@@ -19,17 +19,22 @@
 #define GRAPH_LOCALIZER_GRAPH_LOCALIZER_STATS_H_
 
 #include <graph_optimizer/graph_stats.h>
+#include <graph_optimizer/graph_values.h>
 
 namespace graph_localizer {
 class GraphLocalizerStats : public graph_optimizer::GraphStats {
  public:
   GraphLocalizerStats();
-  void UpdateErrors(const gtsam::NonlinearFactorGraph& graph_factors,
-                    const graph_optimizer::GraphValues& graph_values) final;
-  void UpdateSpecificStats(const gtsam::NonlinearFactorGraph& graph_factors,
-                           const graph_optimizer::GraphValues& graph_values) final;
+  SetCombinedNavStateGraphValues(std::shared_ptr<const GraphValues> combined_nav_state_graph_values);
+  void UpdateErrors(const gtsam::NonlinearFactorGraph& graph_factors) final;
+  void UpdateStats(const gtsam::NonlinearFactorGraph& graph_factors) final;
 
   // Graph Stats Averagers
+  localization_common::Averager num_states_averager_ = localization_common::Averager("Num States");
+  localization_common::Averager duration_averager_ = localization_common::Averager("Duration");
+  localization_common::Averager num_marginal_factors_averager_ = localization_common::Averager("Num Marginal Factors");
+  localization_common::Averager num_factors_averager_ = localization_common::Averager("Num Factors");
+  localization_common::Averager num_features_averager_ = localization_common::Averager("Num Features");
   localization_common::Averager num_optical_flow_factors_averager_ =
     localization_common::Averager("Num Optical Flow Factors");
   localization_common::Averager num_loc_proj_factors_averager_ = localization_common::Averager("Num Loc Proj Factors");
@@ -51,6 +56,9 @@ class GraphLocalizerStats : public graph_optimizer::GraphStats {
   localization_common::Averager pose_prior_error_averager_ = localization_common::Averager("Pose Prior Error");
   localization_common::Averager velocity_prior_error_averager_ = localization_common::Averager("Velocity Prior Error");
   localization_common::Averager bias_prior_error_averager_ = localization_common::Averager("Bias Prior Error");
+
+ private:
+  std::shared_ptr<const GraphValues> combined_nav_state_graph_values_;
 };
 }  // namespace graph_localizer
 

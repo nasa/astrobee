@@ -33,6 +33,11 @@
 namespace graph_localizer {
 namespace go = graph_optimizer;
 GraphLocalizerStats::GraphLocalizerStats() {
+  AddStatsAverager(num_states_averager_);
+  AddStatsAverager(duration_averager_);
+  AddStatsAverager(num_marginal_factors_averager_);
+  AddStatsAverager(num_factors_averager_);
+  // AddStatsAverager(num_features_averager_);
   AddStatsAverager(num_optical_flow_factors_averager_);
   AddStatsAverager(num_loc_pose_factors_averager_);
   AddStatsAverager(num_loc_proj_factors_averager_);
@@ -52,8 +57,12 @@ GraphLocalizerStats::GraphLocalizerStats() {
   AddErrorAverager(bias_prior_error_averager_);
 }
 
-void GraphLocalizerStats::UpdateErrors(const gtsam::NonlinearFactorGraph& graph_factors,
-                                       const go::GraphValues& graph_values) {
+void GraphLocalizerStats::SetCombinedNavStateGraphValues(
+  std::shared_ptr<const GraphValues> combined_nav_state_graph_values) {
+  combined_nav_state_graph_values_ = std::move(combined_nav_state_graph_values);
+}
+
+void GraphLocalizerStats::UpdateErrors(const gtsam::NonlinearFactorGraph& graph_factors) {
   using Calibration = gtsam::Cal3_S2;
   using Camera = gtsam::PinholePose<Calibration>;
   using RobustSmartFactor = gtsam::RobustSmartProjectionPoseFactor<Calibration>;
@@ -70,7 +79,7 @@ void GraphLocalizerStats::UpdateErrors(const gtsam::NonlinearFactorGraph& graph_
   double velocity_prior_error = 0;
   double bias_prior_error = 0;
   for (const auto& factor : graph_factors) {
-    const double error = factor->error(graph_values.values());
+    const double error = factor->error(combined_nav_state_graph_values_->values());
     total_error += error;
     const auto smart_factor = dynamic_cast<const RobustSmartFactor*>(factor.get());
     if (smart_factor) {
@@ -127,8 +136,11 @@ void GraphLocalizerStats::UpdateErrors(const gtsam::NonlinearFactorGraph& graph_
   bias_prior_error_averager_.Update(bias_prior_error);
 }
 
-void GraphLocalizerStats::UpdateSpecificStats(const gtsam::NonlinearFactorGraph& graph_factors,
-                                              const go::GraphValues& graph_values) {
+void GraphLocalizerStats::UpdateStats(const gtsam::NonlinearFactorGraph& graph_factors) {
+  num_states_averager_.Update(combined_nav_state_graph_values_->NumStates());
+  duration_averager_.Update(combined_nav_state_graph_values_->Duration());
+  num_marginal_factors_averager_.Update(NumFactors<gtsam::LinearContainerFactor>(graph_factors));
+  num_factors_averager_.Update(graph_factors.size());
   num_optical_flow_factors_averager_.Update(NumSmartFactors(graph_factors, true));
   num_loc_pose_factors_averager_.Update(go::NumFactors<gtsam::LocPoseFactor>(graph_factors));
   num_loc_proj_factors_averager_.Update(go::NumFactors<gtsam::LocProjectionFactor<>>(graph_factors));

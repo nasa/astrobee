@@ -26,6 +26,10 @@
 namespace localization_common {
 using FeatureId = int;
 
+struct FeaturePoint3dNoise {
+  gtsam::SharedNoiseModel noise;
+};
+
 struct FeaturePoint3d {
   FeaturePoint3d(const gtsam::Point3& global_t_point, const FeatureId feature_id)
       : global_t_point(global_t_point), feature_id(feature_id), {}

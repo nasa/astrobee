@@ -20,6 +20,7 @@
 #define GRAPH_OPTIMIZER_GRAPH_VALUES_H_
 
 #include <graph_optimizer/graph_values_base.h>
+#include <graph_optimizer/graph_values_params.h>
 #include <localization_common/combined_nav_state.h>
 #include <localization_common/logger.h>
 #include <localization_common/time.h>
@@ -63,7 +64,8 @@ class GraphValues : public GraphValuesBase {
 
   int RemoveOldCombinedNavStates(const localization_common::Time oldest_allowed_time);
 
-  gtsam::KeyVector OldKeys(const localization_common::Time oldest_allowed_time) const final;
+  gtsam::KeyVector OldKeys(const localization_common::Time oldest_allowed_time,
+                           const gtsam::NonlinearFactorGraph& graph) const final;
 
   boost::optional<gtsam::Key> PoseKey(const localization_common::Time timestamp) const;
 
@@ -102,6 +104,8 @@ class GraphValues : public GraphValuesBase {
 
   boost::optional<localization_common::Time> Timestamp(const int key_index) const;
 
+  const GraphValuesParams& params() const;
+
  private:
   // Removes keys from timestamp_key_index_map, values from values
   bool RemoveCombinedNavState(const localization_common::Time timestamp);
@@ -119,6 +123,7 @@ class GraphValues : public GraphValuesBase {
     ar& BOOST_SERIALIZATION_NVP(timestamp_key_index_map_);
   }
 
+  GraphValuesParams params_;
   std::map<localization_common::Time, int> timestamp_key_index_map_;
 };
 }  // namespace graph_optimizer

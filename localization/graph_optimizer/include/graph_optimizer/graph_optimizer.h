@@ -23,7 +23,6 @@
 #include <graph_optimizer/graph_action_completer.h>
 #include <graph_optimizer/graph_optimizer_params.h>
 #include <graph_optimizer/graph_stats.h>
-#include <graph_optimizer/graph_values.h>
 #include <graph_optimizer/key_info.h>
 #include <graph_optimizer/node_updater.h>
 #include <localization_common/time.h>
@@ -57,17 +56,16 @@ class GraphOptimizer {
   void BufferFactors(const std::vector<FactorsToAdd>& factors_to_add_vec);
   // Adds buffered factors and optimizes graph.  Calls DoPostOptimizeActions afterwards
   bool Update();
-  const GraphValues& graph_values() const;
-  GraphValues& graph_values();
-  std::shared_ptr<const GraphValues> shared_graph_values() const;
-  std::shared_ptr<GraphValues> shared_graph_values();
   const gtsam::NonlinearFactorGraph& graph_factors() const;
   gtsam::NonlinearFactorGraph& graph_factors();
   void SaveGraphDotFile(const std::string& output_path = "graph.dot") const;
   const GraphOptimizerParams& params() const;
   void LogOnDestruction(const bool log_on_destruction);
   const GraphStats* const graph_stats() const;
+  GraphStats* graph_stats();
   const boost::optional<gtsam::Marginals>& marginals() const;
+
+  std::shared_ptr<gtsam::Values> values();
 
  private:
   gtsam::NonlinearFactorGraph MarginalFactors(const gtsam::NonlinearFactorGraph& old_factors,
@@ -82,6 +80,8 @@ class GraphOptimizer {
                    const localization_common::Time last_latest_time);
 
   boost::optional<localization_common::Time> SlideWindowNewOldestTime() const;
+
+  gtsam::KeyVector OldKeys(const localization_common::Time oldest_allowed_time) const;
 
   std::pair<gtsam::KeyVector, gtsam::NonlinearFactorGraph> OldKeysAndFactors(
     const localization_common::Time oldest_allowed_time);
@@ -109,11 +109,18 @@ class GraphOptimizer {
   // Calls DoAction for each registered GraphActionCompleter after inserting new factors
   bool DoGraphAction(FactorsToAdd& factors_to_add);
 
+  boost::optional<gtsam::Key> GetKey(KeyCreatorFunction key_creator_function,
+                                     const localization_common::Time timestamp) const;
+
   // Updates keys in factors after new nodes are created/updated as required by registered NodeUpdater
   bool Rekey(FactorToAdd& factor_to_add);
 
   // Checks whether the graph is ready for insertion of a factor with timestamp
   virtual bool ReadyToAddFactors(const localization_common::Time timestamp) const;
+
+  boost::optional<localization_common::Time> OldestTimestamp() const;
+
+  boost::optional<localization_common::Time> LatestTimestamp() const;
 
   // Checks whether a measurement is too old to be inserted into graph
   virtual bool MeasurementRecentEnough(const localization_common::Time timestamp) const;
@@ -131,11 +138,10 @@ class GraphOptimizer {
   template <class Archive>
   void serialize(Archive& ar, const unsigned int file_version) {
     ar& BOOST_SERIALIZATION_NVP(graph_);
-    ar& BOOST_SERIALIZATION_NVP(graph_values_);
   }
 
-  std::shared_ptr<GraphValues> graph_values_;
   std::unique_ptr<GraphStats> graph_stats_;
+  std::shared_ptr<gtsam::Values> values_;
   bool log_on_destruction_;
   GraphOptimizerParams params_;
   gtsam::LevenbergMarquardtParams levenberg_marquardt_params_;
