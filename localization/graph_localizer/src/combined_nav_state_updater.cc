@@ -126,7 +126,7 @@ gtsam::KeyVector CombinedNavStateNodeUpdater::OldKeys(const lc::Time oldest_allo
   return graph_values_->OldKeys(oldest_allowed_time, graph);
 }
 
-boost::optional<gtsam::Key> CombinedNavStateNodeUpdater::GetKey(KeyCreatorFunction key_creator_function,
+boost::optional<gtsam::Key> CombinedNavStateNodeUpdater::GetKey(go::KeyCreatorFunction key_creator_function,
                                                                 const lc::Time timestamp) const {
   return graph_values_->GetKey(key_creator_function, timestamp);
 }

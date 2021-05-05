@@ -17,6 +17,7 @@
  */
 
 #include <graph_localizer/smart_projection_cumulative_factor_adder.h>
+#include <graph_localizer/utilities.h>
 #include <graph_optimizer/utilities.h>
 #include <localization_common/logger.h>
 

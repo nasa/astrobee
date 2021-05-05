@@ -28,7 +28,7 @@ namespace graph_localizer {
 namespace go = graph_optimizer;
 namespace lm = localization_measurements;
 namespace sym = gtsam::symbol_shorthand;
-SmartProjectionCumulativeFactorAdder::SmartProjectionCumulativeFactorAdder(
+SmartProjectionGraphActionCompleter::SmartProjectionGraphActionCompleter(
   const SmartProjectionFactorAdderParams& params, std::shared_ptr<const go::GraphValues> graph_values)
     : graph_values_(std::move(graph_values)) {
   smart_projection_params_.verboseCheirality = params.verbose_cheirality;
@@ -39,20 +39,20 @@ SmartProjectionCumulativeFactorAdder::SmartProjectionCumulativeFactorAdder(
   smart_projection_params_.setEnableEPI(params.enable_EPI);
 }
 
-go::GraphActionCompleterType SmartProjectionCumulativeFactorAdder::type() const {
+go::GraphActionCompleterType SmartProjectionGraphActionCompleter::type() const {
   return go::GraphActionCompleterType::SmartFactor;
 }
 
-bool SmartProjectionCumulativeFactorAdder::DoAction(go::FactorsToAdd& factors_to_add,
-                                                    gtsam::NonlinearFactorGraph& graph_factors) {
+bool SmartProjectionGraphActionCompleter::DoAction(go::FactorsToAdd& factors_to_add,
+                                                   gtsam::NonlinearFactorGraph& graph_factors) {
   go::DeleteFactors<RobustSmartFactor>(graph_factors);
   if (params().splitting) SplitSmartFactorsIfNeeded(*graph_values_, factors_to_add);
   return true;
 }
 
 // TODO(rsoussan): Clean this function up (duplicate code), address other todo's
-void SmartProjectionCumulativeFactorAdder::SplitSmartFactorsIfNeeded(const go::GraphValues& graph_values,
-                                                                     go::FactorsToAdd& factors_to_add) {
+void SmartProjectionGraphActionCompleter::SplitSmartFactorsIfNeeded(const go::GraphValues& graph_values,
+                                                                    go::FactorsToAdd& factors_to_add) {
   for (auto& factor_to_add : factors_to_add.Get()) {
     auto smart_factor = dynamic_cast<RobustSmartFactor*>(factor_to_add.factor.get());
     if (!smart_factor) continue;

@@ -58,7 +58,7 @@ GraphLocalizerStats::GraphLocalizerStats() {
 }
 
 void GraphLocalizerStats::SetCombinedNavStateGraphValues(
-  std::shared_ptr<const GraphValues> combined_nav_state_graph_values) {
+  std::shared_ptr<const go::GraphValues> combined_nav_state_graph_values) {
   combined_nav_state_graph_values_ = std::move(combined_nav_state_graph_values);
 }
 

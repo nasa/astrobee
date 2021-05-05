@@ -24,10 +24,10 @@
 #include <graph_optimizer/graph_values.h>
 
 namespace graph_localizer {
-class SmartProjectionCumulativeFactorAdder : public graph_optimizer::GraphActionCompleter {
+class SmartProjectionGraphActionCompleter : public graph_optimizer::GraphActionCompleter {
  public:
-  SmartProjectionCumulativeFactorAdder(const SmartProjectionFactorAdderParams& params,
-                                       std::shared_ptr<const graph_optimizer::GraphValues> graph_values);
+  SmartProjectionGraphActionCompleter(const SmartProjectionFactorAdderParams& params,
+                                      std::shared_ptr<const graph_optimizer::GraphValues> graph_values);
 
   bool DoAction(graph_optimizer::FactorsToAdd& factors_to_add, gtsam::NonlinearFactorGraph& graph_factors) final;
 

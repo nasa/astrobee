@@ -21,6 +21,7 @@
 
 #include <graph_localizer/combined_nav_state_node_updater_params.h>
 #include <graph_optimizer/graph_values.h>
+#include <graph_optimizer/key_info.h>
 #include <graph_optimizer/node_updater_with_priors.h>
 #include <imu_integration/latest_imu_integrator.h>
 #include <localization_common/combined_nav_state.h>
@@ -56,7 +57,7 @@ class CombinedNavStateNodeUpdater
   gtsam::KeyVector OldKeys(const localization_common::Time oldest_allowed_time,
                            const gtsam::NonlinearFactorGraph& graph) const final;
 
-  boost::optional<gtsam::Key> GetKey(KeyCreatorFunction key_creator_function,
+  boost::optional<gtsam::Key> GetKey(graph_optimizer::KeyCreatorFunction key_creator_function,
                                      const localization_common::Time timestamp) const final;
 
   boost::optional<localization_common::Time> OldestTimestamp() const final;
