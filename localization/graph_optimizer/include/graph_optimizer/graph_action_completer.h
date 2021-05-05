@@ -20,7 +20,6 @@
 #define GRAPH_OPTIMIZER_GRAPH_ACTION_COMPLETER_H_
 
 #include <graph_optimizer/graph_action_completer_type.h>
-#include <graph_optimizer/graph_values.h>
 
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
 
@@ -28,8 +27,7 @@ namespace graph_optimizer {
 class GraphActionCompleter {
  public:
   virtual ~GraphActionCompleter() {}
-  virtual bool DoAction(FactorsToAdd& factors_to_add, gtsam::NonlinearFactorGraph& graph_factors,
-                        GraphValues& graph_values) = 0;
+  virtual bool DoAction(FactorsToAdd& factors_to_add, gtsam::NonlinearFactorGraph& graph_factors) = 0;
   virtual GraphActionCompleterType type() const = 0;
 };
 }  // namespace graph_optimizer

@@ -246,7 +246,7 @@ bool GraphOptimizer::DoGraphAction(FactorsToAdd& factors_to_add) {
   if (factors_to_add.graph_action_completer_type() == GraphActionCompleterType::None) return true;
   for (auto& graph_action_completer : graph_action_completers_) {
     if (graph_action_completer->type() == factors_to_add.graph_action_completer_type())
-      return graph_action_completer->DoAction(factors_to_add, graph_, *graph_values_);
+      return graph_action_completer->DoAction(factors_to_add, graph_);
   }
 
   LogError("DoGraphAction: No graph action completer found for factors to add.");
@@ -255,7 +255,8 @@ bool GraphOptimizer::DoGraphAction(FactorsToAdd& factors_to_add) {
 
 boost::optional<gtsam::Key> GraphOptimizer::GetKey(KeyCreatorFunction key_creator_function,
                                                    const localization_common::Time timestamp) const {
-  boost::optional<gtsam::Key> key;
+  // This avoids a bug in the compiler that produces a false warning that key may be uninitialized
+  boost::optional<gtsam::Key> key = boost::make_optional(false, gtsam::Key());
   for (const auto& node_updater : node_updaters_) {
     const auto node_key = node_updater->GetKey(key_creator_function, timestamp);
     if (node_key) {

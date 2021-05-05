@@ -138,6 +138,7 @@ class GraphOptimizer {
   template <class Archive>
   void serialize(Archive& ar, const unsigned int file_version) {
     ar& BOOST_SERIALIZATION_NVP(graph_);
+    ar& BOOST_SERIALIZATION_NVP(values_);
   }
 
   std::unique_ptr<GraphStats> graph_stats_;

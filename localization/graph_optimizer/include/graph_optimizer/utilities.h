@@ -19,6 +19,8 @@
 #ifndef GRAPH_OPTIMIZER_UTILITIES_H_
 #define GRAPH_OPTIMIZER_UTILITIES_H_
 
+#include <localization_common/logger.h>
+
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
 
 namespace graph_optimizer {

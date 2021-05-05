@@ -56,17 +56,14 @@ GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
   // Initialize Factor Adders
   ar_tag_loc_factor_adder_.reset(
     new LocFactorAdder(params_.factor.ar_tag_loc_adder, go::GraphActionCompleterType::ARTagLocProjectionFactor));
-  AddGraphActionCompleter(ar_tag_loc_factor_adder_);
   loc_factor_adder_.reset(
     new LocFactorAdder(params_.factor.loc_adder, go::GraphActionCompleterType::LocProjectionFactor));
-  AddGraphActionCompleter(loc_factor_adder_);
   projection_factor_adder_.reset(
     new ProjectionFactorAdder(params_.factor.projection_adder, feature_tracker_, shared_graph_values()));
   AddGraphActionCompleter(projection_factor_adder_);
   rotation_factor_adder_.reset(new RotationFactorAdder(params_.factor.rotation_adder, feature_tracker_));
   smart_projection_cumulative_factor_adder_.reset(
     new SmartProjectionCumulativeFactorAdder(params_.factor.smart_projection_adder, feature_tracker_));
-  AddGraphActionCompleter(smart_projection_cumulative_factor_adder_);
   standstill_factor_adder_.reset(new StandstillFactorAdder(params_.factor.standstill_adder, feature_tracker_));
 
   // Initialize Node Updaters
@@ -110,6 +107,21 @@ GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
   // TODO(rsoussan): Clean this up
   dynamic_cast<GraphLocalizerStats*>(graph_stats())
     ->SetCombinedNavStateGraphValues(combined_nav_state_node_updater_->graph_values());
+
+  // Initialize Graph Action Completers
+  ar_tag_loc_graph_action_completer_.reset(
+    new LocGraphActionCompleter(params_.factor.loc_adder, go::GraphActionCompleterType::ARTagLocProjectionFactor,
+                                combined_nav_state_node_updater_->graph_values()));
+  AddGraphActionCompleter(ar_tag_loc_graph_action_completer_);
+
+  loc_graph_action_completer_.reset(new LocGraphActionCompleter(params_.factor.loc_adder,
+                                                                go::GraphActionCompleterType::LocProjectionFactor,
+                                                                combined_nav_state_node_updater_->graph_values()));
+  AddGraphActionCompleter(loc_graph_action_completer_);
+  smart_projection_graph_action_completer_.reset(new SmartProjectionGraphActionCompleter(
+    params_.factor.smart_projection_adder, go::GraphActionCompleterType::SmartProjectionFactor,
+    combined_nav_state_node_updater_->graph_values()));
+  AddGraphActionCompleter(smart_projection_cumulative_factor_adder_);
 }
 
 boost::optional<std::pair<lc::CombinedNavState, lc::CombinedNavStateCovariances>>

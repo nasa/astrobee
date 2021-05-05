@@ -22,7 +22,6 @@
 #include <graph_localizer/feature_tracker.h>
 #include <graph_localizer/smart_projection_factor_adder_params.h>
 #include <graph_optimizer/cumulative_factor_adder.h>
-#include <graph_optimizer/graph_action_completer.h>
 
 #include <gtsam/slam/SmartFactorParams.h>
 
@@ -31,8 +30,7 @@
 
 namespace graph_localizer {
 class SmartProjectionCumulativeFactorAdder
-    : public graph_optimizer::CumulativeFactorAdder<SmartProjectionFactorAdderParams>,
-      public graph_optimizer::GraphActionCompleter {
+    : public graph_optimizer::CumulativeFactorAdder<SmartProjectionFactorAdderParams> {
   using Base = graph_optimizer::CumulativeFactorAdder<SmartProjectionFactorAdderParams>;
 
  public:
@@ -49,11 +47,6 @@ class SmartProjectionCumulativeFactorAdder
     graph_optimizer::FactorsToAdd& smart_factors_to_add,
     std::unordered_map<localization_measurements::FeatureId, localization_measurements::FeaturePoint>& added_points);
 
-  bool DoAction(graph_optimizer::FactorsToAdd& factors_to_add, gtsam::NonlinearFactorGraph& graph_factors,
-                graph_optimizer::GraphValues& graph_values) final;
-
-  graph_optimizer::GraphActionCompleterType type() const final;
-
   const gtsam::SmartProjectionParams& smart_projection_params() const;
 
  private:
@@ -63,8 +56,6 @@ class SmartProjectionCumulativeFactorAdder
   bool TooClose(const std::unordered_map<localization_measurements::FeatureId, localization_measurements::FeaturePoint>&
                   added_points,
                 const localization_measurements::FeaturePoint& point, const double feature_track_min_separation) const;
-  void SplitSmartFactorsIfNeeded(const graph_optimizer::GraphValues& graph_values,
-                                 graph_optimizer::FactorsToAdd& factors_to_add);
 
   std::shared_ptr<const FeatureTracker> feature_tracker_;
   gtsam::SmartProjectionParams smart_projection_params_;

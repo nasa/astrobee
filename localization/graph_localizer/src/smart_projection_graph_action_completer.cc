@@ -1,0 +1,82 @@
+/* Copyright (c) 2017, United States Government, as represented by the
+ * Administrator of the National Aeronautics and Space Administration.
+ *
+ * All rights reserved.
+ *
+ * The Astrobee platform is licensed under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with the
+ * License. You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+
+#include <graph_localizer/smart_projection_graph_action_completer.h>
+#include <graph_localizer/utilities.h>
+#include <graph_optimizer/utilities.h>
+#include <localization_common/logger.h>
+
+#include <gtsam/base/Vector.h>
+#include <gtsam/slam/SmartProjectionPoseFactor.h>
+
+namespace graph_localizer {
+namespace go = graph_optimizer;
+namespace lm = localization_measurements;
+namespace sym = gtsam::symbol_shorthand;
+SmartProjectionCumulativeFactorAdder::SmartProjectionCumulativeFactorAdder(
+  const SmartProjectionFactorAdderParams& params, std::shared_ptr<const go::GraphValues> graph_values)
+    : graph_values_(std::move(graph_values)) {
+  smart_projection_params_.verboseCheirality = params.verbose_cheirality;
+  smart_projection_params_.setRankTolerance(1e-9);
+  smart_projection_params_.setLandmarkDistanceThreshold(params.landmark_distance_threshold);
+  smart_projection_params_.setDynamicOutlierRejectionThreshold(params.dynamic_outlier_rejection_threshold);
+  smart_projection_params_.setRetriangulationThreshold(params.retriangulation_threshold);
+  smart_projection_params_.setEnableEPI(params.enable_EPI);
+}
+
+go::GraphActionCompleterType SmartProjectionCumulativeFactorAdder::type() const {
+  return go::GraphActionCompleterType::SmartFactor;
+}
+
+bool SmartProjectionCumulativeFactorAdder::DoAction(go::FactorsToAdd& factors_to_add,
+                                                    gtsam::NonlinearFactorGraph& graph_factors) {
+  go::DeleteFactors<RobustSmartFactor>(graph_factors);
+  if (params().splitting) SplitSmartFactorsIfNeeded(*graph_values_, factors_to_add);
+  return true;
+}
+
+// TODO(rsoussan): Clean this function up (duplicate code), address other todo's
+void SmartProjectionCumulativeFactorAdder::SplitSmartFactorsIfNeeded(const go::GraphValues& graph_values,
+                                                                     go::FactorsToAdd& factors_to_add) {
+  for (auto& factor_to_add : factors_to_add.Get()) {
+    auto smart_factor = dynamic_cast<RobustSmartFactor*>(factor_to_add.factor.get());
+    if (!smart_factor) continue;
+    // Can't remove measurements if there are only 2 or fewer
+    if (smart_factor->measured().size() <= 2) continue;
+    const auto point = smart_factor->triangulateSafe(smart_factor->cameras(graph_values.values()));
+    if (point.valid()) continue;
+    {
+      const auto fixed_smart_factor =
+        FixSmartFactorByRemovingIndividualMeasurements(params(), *smart_factor, smart_projection_params_, graph_values);
+      if (fixed_smart_factor) {
+        factor_to_add.factor = *fixed_smart_factor;
+        continue;
+      }
+    }
+    {
+      const auto fixed_smart_factor =
+        FixSmartFactorByRemovingMeasurementSequence(params(), *smart_factor, smart_projection_params_, graph_values);
+      if (fixed_smart_factor) {
+        factor_to_add.factor = *fixed_smart_factor;
+        continue;
+      }
+    }
+    LogDebug("SplitSmartFactorsIfNeeded: Failed to fix smart factor");
+  }
+}
+}  // namespace graph_localizer
