@@ -42,6 +42,8 @@ class FeaturePointNodeUpdater : public graph_optimizer::NodeUpdaterWithPriors<lo
                    const boost::optional<gtsam::Marginals>& marginals, const gtsam::KeyVector& old_keys,
                    const double huber_k, gtsam::NonlinearFactorGraph& factors) final;
 
+  void UpdatePointPriors(const gtsam::Marginals& marginals, gtsam::NonlinearFactorGraph& factors);
+
   graph_optimizer::NodeUpdaterType type() const final;
 
   boost::optional<localization_common::Time> SlideWindowNewOldestTime() const final;
@@ -55,6 +57,8 @@ class FeaturePointNodeUpdater : public graph_optimizer::NodeUpdaterWithPriors<lo
   boost::optional<localization_common::Time> OldestTimestamp() const final;
 
   boost::optional<localization_common::Time> LatestTimestamp() const final;
+
+  int NumFeatures() const;
 
  private:
   std::shared_ptr<FeaturePointGraphValues> feature_point_graph_values_;

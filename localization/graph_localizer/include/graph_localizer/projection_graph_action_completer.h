@@ -16,40 +16,34 @@
  * under the License.
  */
 
-#ifndef GRAPH_LOCALIZER_PROJECTION_FACTOR_ADDER_H_
-#define GRAPH_LOCALIZER_PROJECTION_FACTOR_ADDER_H_
+#ifndef GRAPH_LOCALIZER_PROJECTION_GRAPH_ACTION_COMPLETER_H_
+#define GRAPH_LOCALIZER_PROJECTION_GRAPH_ACTION_COMPLETER_H_
 
-#include <graph_localizer/feature_tracker.h>
 #include <graph_localizer/projection_factor_adder_params.h>
-#include <graph_optimizer/factor_adder.h>
+#include <graph_optimizer/graph_action_completer.h>
 #include <graph_optimizer/graph_values.h>
-#include <localization_measurements/feature_points_measurement.h>
 
 #include <gtsam/geometry/triangulation.h>
 
-#include <vector>
-
 namespace graph_localizer {
-class ProjectionFactorAdder : public graph_optimizer::FactorAdder<localization_measurements::FeaturePointsMeasurement,
-                                                                  ProjectionFactorAdderParams> {
-  using Base =
-    graph_optimizer::FactorAdder<localization_measurements::FeaturePointsMeasurement, ProjectionFactorAdderParams>;
-
+class ProjectionGraphActionCompleter : public graph_optimizer::GraphActionCompleter {
  public:
-  ProjectionFactorAdder(const ProjectionFactorAdderParams& params,
-                        std::shared_ptr<const FeatureTracker> feature_tracker,
-                        std::shared_ptr<const graph_optimizer::GraphValues> graph_values);
+  ProjectionGraphActionCompleter(const ProjectionFactorAdderParams& params,
+                                 std::shared_ptr<const FeatureTracker> feature_tracker,
+                                 std::shared_ptr<const graph_optimizer::GraphValues> graph_values);
 
-  std::vector<graph_optimizer::FactorsToAdd> AddFactors(
-    const localization_measurements::FeaturePointsMeasurement& feature_points_measurement) final;
+  bool DoAction(graph_optimizer::FactorsToAdd& factors_to_add, gtsam::NonlinearFactorGraph& graph_factors) final;
+
+  graph_optimizer::GraphActionCompleterType type() const final;
 
  private:
   bool TriangulateNewPoint(graph_optimizer::FactorsToAdd& factors_to_add, gtsam::NonlinearFactorGraph& graph_factors,
                            graph_optimizer::GraphValues& graph_values);
 
-  std::shared_ptr<const FeatureTracker> feature_tracker_;
+  ProjectionFactorAdderParams params_;
   std::shared_ptr<const graph_optimizer::GraphValues> graph_values_;
+  gtsam::TriangulationParameters projection_triangulation_params_;
 };
 }  // namespace graph_localizer
 
-#endif  // GRAPH_LOCALIZER_PROJECTION_FACTOR_ADDER_H_
+#endif  // GRAPH_LOCALIZER_PROJECTION_GRAPH_ACTION_COMPLETER_H_

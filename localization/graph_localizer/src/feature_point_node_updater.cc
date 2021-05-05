@@ -26,6 +26,7 @@ namespace go = graph_optimizer;
 namespace lc = localization_common;
 namespace sym = gtsam::symbol_shorthand;
 
+// TODO(rsoussan): Make new node updater base class that doesn't have functions left empty here?
 FeaturePointNodeUpdater::FeaturePointNodeUpdater(std::shared_ptr<gtsam::Values> values)
     : feature_point_graph_values_(new FeaturePointGraphValues(std::move(values))) {}
 
@@ -41,7 +42,38 @@ void FeaturePointNodeUpdater::AddPriors(const lc::FeaturePoint3d& global_t_point
 bool FeaturePointNodeUpdater::SlideWindow(const lc::Time oldest_allowed_timestamp,
                                           const boost::optional<gtsam::Marginals>& marginals,
                                           const gtsam::KeyVector& old_keys, const double huber_k,
-                                          gtsam::NonlinearFactorGraph& factors) {}
+                                          gtsam::NonlinearFactorGraph& factors) {
+  feature_point_graph_values_->RemoveOldFeatures(old_keys);
+  UpdatePointPriors(marginals, factors);
+}
+
+void FeaturePointNodeUpdater::UpdatePointPriors(const gtsam::Marginals& marginals,
+                                                gtsam::NonlinearFactorGraph& factors) {
+  const auto feature_keys = feature_point_graph_values_->FeatureKeys();
+  for (const auto& feature_key : feature_keys) {
+    const auto world_t_point = at<gtsam::Point3>(feature_key);
+    if (!world_t_point) {
+      LogError("UpdatePointPriors: Failed to get world_t_point.");
+      continue;
+    }
+    for (auto factor_it = factors.begin(); factor_it != factors.end();) {
+      const auto point_prior_factor = dynamic_cast<gtsam::PriorFactor<gtsam::Point3>*>(factor_it->get());
+      if (point_prior_factor && (point_prior_factor->key() == feature_key)) {
+        // Erase old prior
+        factor_it = factors.erase(factor_it);
+        // Add updated one
+        const auto point_prior_noise =
+          Robust(gtsam::noiseModel::Gaussian::Covariance(marginals.marginalCovariance(feature_key)), params_.huber_k);
+        const gtsam::PriorFactor<gtsam::Point3> point_prior_factor(feature_key, *world_t_point, point_prior_noise);
+        factors.push_back(point_prior_factor);
+        // Only one point prior per feature
+        break;
+      } else {
+        ++factor_it;
+      }
+    }
+  }
+}
 
 go::NodeUpdaterType FeaturePointNodeUpdater::type() const { return go::NodeUpdaterType::FeaturePoint3d; }
 
@@ -68,5 +100,7 @@ boost::optional<localization_common::Time> FeaturePointNodeUpdater::OldestTimest
 boost::optional<localization_common::Time> FeaturePointNodeUpdater::LatestTimestamp() const {
   return feature_point_graph_values_->LatestTimestamp();
 }
+
+int FeaturePointNodeUpdater::NumFeatures() const { return feature_point_graph_values_->NumFeatures(); }
 
 }  // namespace graph_localizer

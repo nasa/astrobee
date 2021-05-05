@@ -30,14 +30,7 @@ namespace sym = gtsam::symbol_shorthand;
 ProjectionFactorAdder::ProjectionFactorAdder(const ProjectionFactorAdderParams& params,
                                              std::shared_ptr<const FeatureTracker> feature_tracker,
                                              std::shared_ptr<const go::GraphValues> graph_values)
-    : ProjectionFactorAdder::Base(params), feature_tracker_(feature_tracker), graph_values_(graph_values) {
-  projection_triangulation_params_.rankTolerance = 1e-9;
-  // TODO(rsoussan): why is Base necessary for these?
-  projection_triangulation_params_.enableEPI = Base::params().enable_EPI;
-  projection_triangulation_params_.landmarkDistanceThreshold = Base::params().landmark_distance_threshold;
-  projection_triangulation_params_.dynamicOutlierRejectionThreshold =
-    Base::params().dynamic_outlier_rejection_threshold;
-}
+    : ProjectionFactorAdder::Base(params), feature_tracker_(feature_tracker), graph_values_(graph_values) {}
 
 std::vector<go::FactorsToAdd> ProjectionFactorAdder::AddFactors(
   const lm::FeaturePointsMeasurement& feature_points_measurement) {
@@ -93,69 +86,5 @@ std::vector<go::FactorsToAdd> ProjectionFactorAdder::AddFactors(
   if (new_features > 0) LogDebug("AddFactors: Added " << new_features << " new features.");
   if (factors_to_add_vec.empty()) return {};
   return factors_to_add_vec;
-}
-
-go::GraphActionCompleterType ProjectionFactorAdder::type() const {
-  return go::GraphActionCompleterType::ProjectionFactor;
-}
-
-bool ProjectionFactorAdder::DoAction(go::FactorsToAdd& factors_to_add, gtsam::NonlinearFactorGraph& graph_factors,
-                                     go::GraphValues& graph_values) {
-  return TriangulateNewPoint(factors_to_add, graph_factors, graph_values);
-}
-
-bool ProjectionFactorAdder::TriangulateNewPoint(go::FactorsToAdd& factors_to_add,
-                                                gtsam::NonlinearFactorGraph& graph_factors,
-                                                go::GraphValues& graph_values) {
-  gtsam::CameraSet<Camera> camera_set;
-  Camera::MeasurementVector measurements;
-  gtsam::Key point_key;
-  for (const auto& factor_to_add : factors_to_add.Get()) {
-    const auto& factor = factor_to_add.factor;
-    const auto projection_factor = dynamic_cast<ProjectionFactor*>(factor.get());
-    if (!projection_factor) {
-      LogError("TriangulateNewPoint: Failed to cast to projection factor.");
-      return false;
-    }
-    const auto world_T_body = graph_values.at<gtsam::Pose3>(projection_factor->key1());
-    if (!world_T_body) {
-      LogError("TriangulateNewPoint: Failed to get pose.");
-      return false;
-    }
-
-    const gtsam::Pose3 world_T_camera = *world_T_body * params().body_T_cam;
-    camera_set.emplace_back(world_T_camera, params().cam_intrinsics);
-    measurements.emplace_back(projection_factor->measured());
-    point_key = projection_factor->key2();
-  }
-  gtsam::TriangulationResult world_t_triangulated_point;
-  // TODO(rsoussan): Gtsam shouldn't be throwing exceptions for this, but needed if enable_epi enabled.
-  // Is there a build setting that prevents cheirality from being thrown in this case?
-  try {
-    world_t_triangulated_point = gtsam::triangulateSafe(camera_set, measurements, projection_triangulation_params_);
-  } catch (...) {
-    LogDebug("TriangulateNewPoint: Exception occurred during triangulation");
-    return false;
-  }
-
-  if (!world_t_triangulated_point.valid()) {
-    LogDebug("TriangulateNewPoint: Failed to triangulate point");
-    return false;
-  }
-  // TODO(rsoussan): clean this up
-  const auto feature_id = factors_to_add.Get().front().key_infos[1].id();
-  graph_values.AddFeature(feature_id, *world_t_triangulated_point, point_key);
-  if (params().add_point_priors) {
-    const gtsam::Vector3 point_prior_noise_sigmas((gtsam::Vector(3) << params().point_prior_translation_stddev,
-                                                   params().point_prior_translation_stddev,
-                                                   params().point_prior_translation_stddev)
-                                                    .finished());
-    const auto point_noise =
-      Robust(gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(point_prior_noise_sigmas)),
-             params().huber_k);
-    gtsam::PriorFactor<gtsam::Point3> point_prior_factor(point_key, *world_t_triangulated_point, point_noise);
-    graph_factors.push_back(point_prior_factor);
-  }
-  return true;
 }
 }  // namespace graph_localizer

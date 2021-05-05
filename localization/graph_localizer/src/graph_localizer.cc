@@ -108,6 +108,9 @@ GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
   dynamic_cast<GraphLocalizerStats*>(graph_stats())
     ->SetCombinedNavStateGraphValues(combined_nav_state_node_updater_->graph_values());
 
+  feature_point_node_updater_.reset(new FeaturePointNodeUpdater(values()));
+  AddNodeUpdater(feature_point_node_updater_);
+
   // Initialize Graph Action Completers
   ar_tag_loc_graph_action_completer_.reset(
     new LocGraphActionCompleter(params_.factor.loc_adder, go::GraphActionCompleterType::ARTagLocProjectionFactor,
@@ -315,36 +318,6 @@ void GraphLocalizer::DoPostSlideWindowActions(const localization_common::Time ol
                                               const boost::optional<gtsam::Marginals>& marginals) {
   feature_tracker_->RemoveOldFeaturePointsAndSlideWindow(oldest_allowed_time);
   latest_imu_integrator_->RemoveOldMeasurements(oldest_allowed_time);
-  if (params_.factor.projection_adder.enabled && params_.factor.projection_adder.add_point_priors && marginals) {
-    UpdatePointPriors(*marginals);
-  }
-}
-
-void GraphLocalizer::UpdatePointPriors(const gtsam::Marginals& marginals) {
-  const auto feature_keys = feature_point_node_updater_->FeatureKeys();
-  for (const auto& feature_key : feature_keys) {
-    const auto world_t_point = feature_point_node_updater_->at<gtsam::Point3>(feature_key);
-    if (!world_t_point) {
-      LogError("UpdatePointPriors: Failed to get world_t_point.");
-      continue;
-    }
-    for (auto factor_it = graph_factors().begin(); factor_it != graph_factors().end();) {
-      const auto point_prior_factor = dynamic_cast<gtsam::PriorFactor<gtsam::Point3>*>(factor_it->get());
-      if (point_prior_factor && (point_prior_factor->key() == feature_key)) {
-        // Erase old prior
-        factor_it = graph_factors().erase(factor_it);
-        // Add updated one
-        const auto point_prior_noise =
-          Robust(gtsam::noiseModel::Gaussian::Covariance(marginals.marginalCovariance(feature_key)), params_.huber_k);
-        const gtsam::PriorFactor<gtsam::Point3> point_prior_factor(feature_key, *world_t_point, point_prior_noise);
-        graph_factors().push_back(point_prior_factor);
-        // Only one point prior per feature
-        break;
-      } else {
-        ++factor_it;
-      }
-    }
-  }
 }
 
 void GraphLocalizer::BufferCumulativeFactors() {
@@ -404,11 +377,11 @@ bool GraphLocalizer::ReadyToAddFactors(const localization_common::Time timestamp
 }
 
 bool GraphLocalizer::MeasurementRecentEnough(const lc::Time timestamp) const {
+  if (!GraphOptimizer::MeasurementRecentEnough(timestamp)) return false;
   if (!latest_imu_integrator_->OldestTime()) {
     LogDebug("MeasurementRecentEnough: Waiting until imu measurements have been received.");
     return false;
   }
-  if (timestamp < combined_nav_state_updater_->OldestTimestamp()) return false;
   if (timestamp < latest_imu_integrator_->OldestTime()) return false;
   return true;
 }

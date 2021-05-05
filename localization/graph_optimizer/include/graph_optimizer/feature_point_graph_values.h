@@ -61,6 +61,10 @@ class FeaturePointGraphValues : public GraphValuesBase {
 
   void RemoveOldFeatures(const gtsam::KeyVector& old_feature_keys);
 
+  gtsam::KeyVector FeatureKeys() const;
+
+  int NumFeatures() const;
+
  private:
   bool HasFeature(const localization_measurements::FeatureId id) const;
 
@@ -71,10 +75,6 @@ class FeaturePointGraphValues : public GraphValuesBase {
 
   bool AddFeature(const localization_measurements::FeatureId id, const gtsam::Point3& feature_point,
                   const gtsam::Key& key);
-
-  gtsam::KeyVector FeatureKeys() const;
-
-  int NumFeatures() const;
 
   // Serialization function
   friend class boost::serialization::access;

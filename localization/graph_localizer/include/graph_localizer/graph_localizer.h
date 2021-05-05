@@ -22,6 +22,7 @@
 #include <graph_localizer/combined_nav_state_node_updater.h>
 #include <graph_localizer/combined_nav_state_node_updater_params.h>
 #include <graph_localizer/feature_tracker.h>
+#include <graph_localizer/feature_point_node_updater.h>
 #include <graph_localizer/graph_localizer_params.h>
 #include <graph_localizer/graph_localizer_stats.h>
 #include <graph_localizer/robust_smart_projection_pose_factor.h>
@@ -115,8 +116,6 @@ class GraphLocalizer : public graph_optimizer::GraphOptimizer {
   void DoPostSlideWindowActions(const localization_common::Time oldest_allowed_time,
                                 const boost::optional<gtsam::Marginals>& marginals) final;
 
-  void UpdatePointPriors(const gtsam::Marginals& marginals);
-
   boost::optional<std::pair<localization_common::CombinedNavState, localization_common::CombinedNavStateCovariances>>
   LatestCombinedNavStateAndCovariances(const gtsam::Marginals& marginals) const;
 
@@ -153,6 +152,7 @@ class GraphLocalizer : public graph_optimizer::GraphOptimizer {
 
   // Node Updaters
   std::shared_ptr<CombinedNavStateNodeUpdater> combined_nav_state_node_updater_;
+  std::shared_ptr<FeaturePointNodeUpdater> feature_point_node_updater_;
 
   // Graph Action Completers
   std::shared_ptr<LocGraphActionCompleter> ar_tag_loc_graph_action_completer_;
