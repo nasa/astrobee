@@ -59,7 +59,7 @@ GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
   loc_factor_adder_.reset(
     new LocFactorAdder(params_.factor.loc_adder, go::GraphActionCompleterType::LocProjectionFactor));
   projection_factor_adder_.reset(new ProjectionFactorAdder(params_.factor.projection_adder, feature_tracker_,
-                                                           combined_nav_state_node_updater_->graph_values()));
+                                                           feature_point_node_updater_->feature_point_graph_values()));
   rotation_factor_adder_.reset(new RotationFactorAdder(params_.factor.rotation_adder, feature_tracker_));
   smart_projection_cumulative_factor_adder_.reset(
     new SmartProjectionCumulativeFactorAdder(params_.factor.smart_projection_adder, feature_tracker_));
