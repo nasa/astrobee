@@ -308,7 +308,13 @@ if (USE_CTC)
 endif (USE_CTC)
 if (USE_ROS)
   set(ENV{ROS_LANG_DISABLE} "genlisp:gennodejs:geneus:$ENV{ROS_LANG_DISABLE}")
-  find_package(catkin2 COMPONENTS roscpp message_generation std_msgs geometry_msgs sensor_msgs cv_bridge image_transport tf tf2 tf2_ros rosbag nodelet rviz)
+
+  if (USE_CTC)
+    find_package(catkin2 COMPONENTS roscpp message_generation std_msgs geometry_msgs sensor_msgs cv_bridge image_transport tf tf2 tf2_ros rosbag nodelet)
+  else ()
+    find_package(catkin2 COMPONENTS roscpp message_generation std_msgs geometry_msgs sensor_msgs cv_bridge image_transport tf tf2 tf2_ros rosbag nodelet rviz)
+  endif (USE_CTC)
+
   find_package(Qt5 ${rviz_QT_VERSION} REQUIRED Core Widgets)
 
   if (IS_BAMBOO_BUILD)

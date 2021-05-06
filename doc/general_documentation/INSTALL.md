@@ -116,7 +116,6 @@ Install Luajit, it will be installed in /usr/local
     E: Unable to locate package libsoracore-dev
     E: Unable to locate package libmiro-dev
 
-
 ## Configuring the build
 
 ### Note for the build setup
@@ -168,6 +167,11 @@ rebuilt, and not the entire code base.
 
 If you configured your virtual machine with more than the baseline resources,
 you can adjust the number of threads (eg. -j4) to speed up the build.
+
+## Cross Compiling
+
+Please contact your Astrobee point of contact if you need to cross compile the
+code.
 
 For more information on running the simulator and moving the robot, please see
 the [simulation instructions](simulation/sim_overview.md).
