@@ -86,6 +86,7 @@ class CombinedNavStateNodeUpdater
   std::shared_ptr<imu_integration::LatestImuIntegrator> latest_imu_integrator_;
   std::shared_ptr<graph_optimizer::GraphValues> graph_values_;
   int key_index_;
+  localization_common::CombinedNavStateNoise global_N_body_start_noise_;
 };
 }  // namespace graph_localizer
 

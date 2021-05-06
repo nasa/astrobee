@@ -18,13 +18,19 @@
 #ifndef GRAPH_LOCALIZER_COMBINED_NAV_STATE_NODE_UPDATER_PARAMS_H_
 #define GRAPH_LOCALIZER_COMBINED_NAV_STATE_NODE_UPDATER_PARAMS_H_
 
+#include <graph_optimizer/graph_values_params.h>
 #include <localization_common/combined_nav_state.h>
 
 namespace graph_localizer {
 struct CombinedNavStateNodeUpdaterParams {
+  double starting_prior_translation_stddev;
+  double starting_prior_quaternion_stddev;
+  double starting_prior_velocity_stddev;
+  double starting_prior_accel_bias_stddev;
+  double starting_prior_gyro_bias_stddev;
   localization_common::CombinedNavState global_N_body_start;
-  localization_common::CombinedNavStateNoise global_N_body_start_noise;
   bool add_priors;
+  graph_optimizer::GraphValuesParams graph_values;
 };
 }  // namespace graph_localizer
 

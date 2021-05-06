@@ -38,10 +38,33 @@ CombinedNavStateNodeUpdater::CombinedNavStateNodeUpdater(
     : params_(params),
       latest_imu_integrator_(std::move(latest_imu_integrator)),
       graph_values_(new graph_optimizer::GraphValues(std::move(values))),
-      key_index_(0) {}
+      key_index_(0) {
+  const gtsam::Vector6 pose_prior_noise_sigmas(
+    (gtsam::Vector(6) << params_.noise.starting_prior_translation_stddev,
+     params_.noise.starting_prior_translation_stddev, params_.noise.starting_prior_translation_stddev,
+     params_.noise.starting_prior_quaternion_stddev, params_.noise.starting_prior_quaternion_stddev,
+     params_.noise.starting_prior_quaternion_stddev)
+      .finished());
+  const gtsam::Vector3 velocity_prior_noise_sigmas((gtsam::Vector(3) << params_.noise.starting_prior_velocity_stddev,
+                                                    params_.noise.starting_prior_velocity_stddev,
+                                                    params_.noise.starting_prior_velocity_stddev)
+                                                     .finished());
+  const gtsam::Vector6 bias_prior_noise_sigmas(
+    (gtsam::Vector(6) << params_.noise.starting_prior_accel_bias_stddev, params_.noise.starting_prior_accel_bias_stddev,
+     params_.noise.starting_prior_accel_bias_stddev, params_.noise.starting_prior_gyro_bias_stddev,
+     params_.noise.starting_prior_gyro_bias_stddev, params_.noise.starting_prior_gyro_bias_stddev)
+      .finished());
+  global_N_body_start_noise_.pose_noise = Robust(
+    gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(pose_prior_noise_sigmas)), params_.huber_k);
+  global_N_body_start_noise_.velocity_noise =
+    Robust(gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(velocity_prior_noise_sigmas)),
+           params_.huber_k);
+  global_N_body_start_noise_.bias_noise = Robust(
+    gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(bias_prior_noise_sigmas)), params_.huber_k);
+}
 
 void CombinedNavStateNodeUpdater::AddInitialValuesAndPriors(gtsam::NonlinearFactorGraph& factors) {
-  AddInitialValuesAndPriors(params_.global_N_body_start, params_.global_N_body_start_noise, factors);
+  AddInitialValuesAndPriors(params_.global_N_body_start, global_N_body_start_noise_, factors);
 }
 
 void CombinedNavStateNodeUpdater::AddInitialValuesAndPriors(const lc::CombinedNavState& global_N_body,
@@ -108,7 +131,7 @@ bool CombinedNavStateNodeUpdater::SlideWindow(const lc::Time oldest_allowed_time
       AddPriors(*global_N_body_oldest, noise, factors);
     } else {
       // TODO(rsoussan): Add seperate marginal fallback sigmas instead of relying on starting prior sigmas
-      AddPriors(params_.global_N_body_start, params_.global_N_body_start_noise, factors);
+      AddPriors(*global_N_body_oldest, global_N_body_start_noise_, factors);
     }
   }
 

@@ -66,39 +66,11 @@ GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
   standstill_factor_adder_.reset(new StandstillFactorAdder(params_.factor.standstill_adder, feature_tracker_));
 
   // Initialize Node Updaters
-  // TODO(rsoussan): Move these params from graph initializer to combined nav state node updater params, move this code
-  // to combinednavstateupdater constructor
-  CombinedNavStateNodeUpdaterParams combined_nav_state_node_updater_params;
   // Assumes zero initial velocity
   const lc::CombinedNavState global_N_body_start(params_.graph_initializer.global_T_body_start,
                                                  gtsam::Velocity3::Zero(), params_.graph_initializer.initial_imu_bias,
                                                  params_.graph_initializer.start_time);
-  combined_nav_state_node_updater_params.global_N_body_start = global_N_body_start;
-  const gtsam::Vector6 pose_prior_noise_sigmas(
-    (gtsam::Vector(6) << params_.noise.starting_prior_translation_stddev,
-     params_.noise.starting_prior_translation_stddev, params_.noise.starting_prior_translation_stddev,
-     params_.noise.starting_prior_quaternion_stddev, params_.noise.starting_prior_quaternion_stddev,
-     params_.noise.starting_prior_quaternion_stddev)
-      .finished());
-  const gtsam::Vector3 velocity_prior_noise_sigmas((gtsam::Vector(3) << params_.noise.starting_prior_velocity_stddev,
-                                                    params_.noise.starting_prior_velocity_stddev,
-                                                    params_.noise.starting_prior_velocity_stddev)
-                                                     .finished());
-  const gtsam::Vector6 bias_prior_noise_sigmas(
-    (gtsam::Vector(6) << params_.noise.starting_prior_accel_bias_stddev, params_.noise.starting_prior_accel_bias_stddev,
-     params_.noise.starting_prior_accel_bias_stddev, params_.noise.starting_prior_gyro_bias_stddev,
-     params_.noise.starting_prior_gyro_bias_stddev, params_.noise.starting_prior_gyro_bias_stddev)
-      .finished());
-  lc::CombinedNavStateNoise global_N_body_start_noise;
-  global_N_body_start_noise.pose_noise = Robust(
-    gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(pose_prior_noise_sigmas)), params_.huber_k);
-  global_N_body_start_noise.velocity_noise =
-    Robust(gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(velocity_prior_noise_sigmas)),
-           params_.huber_k);
-  global_N_body_start_noise.bias_noise = Robust(
-    gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(bias_prior_noise_sigmas)), params_.huber_k);
-  combined_nav_state_node_updater_params.global_N_body_start_noise = global_N_body_start_noise;
-  combined_nav_state_node_updater_params.add_priors = params_.add_priors;
+  params_.combined_nav_state_node_updater.global_N_body_start = global_N_body_start;
   combined_nav_state_node_updater_.reset(
     new CombinedNavStateNodeUpdater(combined_nav_state_node_updater_params, latest_imu_integrator_, values()));
   combined_nav_state_node_updater_->AddInitialValuesAndPriors(graph_factors());

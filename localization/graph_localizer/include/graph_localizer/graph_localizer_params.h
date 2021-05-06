@@ -19,10 +19,10 @@
 #define GRAPH_LOCALIZER_GRAPH_LOCALIZER_PARAMS_H_
 
 #include <graph_localizer/calibration_params.h>
+#include <graph_localizer/combined_nav_state_node_updater_params.h>
 #include <graph_localizer/factor_params.h>
 #include <graph_localizer/feature_tracker_params.h>
 #include <graph_localizer/graph_initializer_params.h>
-#include <graph_localizer/noise_params.h>
 #include <graph_optimizer/graph_optimizer_params.h>
 #include <localization_measurements/fan_speed_mode.h>
 
@@ -30,13 +30,12 @@
 
 namespace graph_localizer {
 struct GraphLocalizerParams {
+  CombinedNavStateNodeUpdaterParams combined_nav_state_node_updater;
   CalibrationParams calibration;
   FactorParams factor;
   FeatureTrackerParams feature_tracker;
   graph_optimizer::GraphOptimizerParams graph_optimizer;
-  NoiseParams noise;
   GraphInitializerParams graph_initializer;
-  bool add_priors;
   double max_standstill_feature_track_avg_distance_from_mean;
   int standstill_min_num_points_per_track;
   double huber_k;
