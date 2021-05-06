@@ -64,9 +64,11 @@ class CombinedNavStateNodeUpdater
 
   boost::optional<localization_common::Time> LatestTimestamp() const final;
 
-  std::shared_ptr<const graph_optimizer::GraphValues> graph_values() const;
+  std::shared_ptr<const graph_optimizer::GraphValues> shared_graph_values() const;
 
-  std::shared_ptr<graph_optimizer::GraphValues> graph_values();
+  std::shared_ptr<graph_optimizer::GraphValues> shared_graph_values();
+
+  const graph_optimizer::GraphValues& graph_values() const;
 
  private:
   void RemovePriors(const int key_index, gtsam::NonlinearFactorGraph& factors);

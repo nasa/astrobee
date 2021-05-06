@@ -161,11 +161,15 @@ boost::optional<lc::Time> CombinedNavStateNodeUpdater::LatestTimestamp() const {
   return graph_values_->LatestTimestamp();
 }
 
-std::shared_ptr<const graph_optimizer::GraphValues> CombinedNavStateNodeUpdater::graph_values() const {
+std::shared_ptr<const graph_optimizer::GraphValues> CombinedNavStateNodeUpdater::shared_graph_values() const {
   return graph_values_;
 }
 
-std::shared_ptr<graph_optimizer::GraphValues> CombinedNavStateNodeUpdater::graph_values() { return graph_values_; }
+std::shared_ptr<graph_optimizer::GraphValues> CombinedNavStateNodeUpdater::shared_graph_values() {
+  return graph_values_;
+}
+
+const graph_optimizer::GraphValues& CombinedNavStateNodeUpdater::graph_values() const { return *graph_values_; }
 
 void CombinedNavStateNodeUpdater::RemovePriors(const int key_index, gtsam::NonlinearFactorGraph& factors) {
   int removed_factors = 0;

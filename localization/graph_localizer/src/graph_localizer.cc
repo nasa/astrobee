@@ -77,7 +77,7 @@ GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
   AddNodeUpdater(combined_nav_state_node_updater_);
   // TODO(rsoussan): Clean this up
   dynamic_cast<GraphLocalizerStats*>(graph_stats())
-    ->SetCombinedNavStateGraphValues(combined_nav_state_node_updater_->graph_values());
+    ->SetCombinedNavStateGraphValues(combined_nav_state_node_updater_->shared_graph_values());
 
   feature_point_node_updater_.reset(new FeaturePointNodeUpdater(params.feature_point_node_updater, values()));
   AddNodeUpdater(feature_point_node_updater_);
@@ -85,19 +85,19 @@ GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
   // Initialize Graph Action Completers
   ar_tag_loc_graph_action_completer_.reset(
     new LocGraphActionCompleter(params_.factor.ar_tag_loc_adder, go::GraphActionCompleterType::ARTagLocProjectionFactor,
-                                combined_nav_state_node_updater_->graph_values()));
+                                combined_nav_state_node_updater_->shared_graph_values()));
   AddGraphActionCompleter(ar_tag_loc_graph_action_completer_);
 
-  loc_graph_action_completer_.reset(new LocGraphActionCompleter(params_.factor.loc_adder,
-                                                                go::GraphActionCompleterType::LocProjectionFactor,
-                                                                combined_nav_state_node_updater_->graph_values()));
+  loc_graph_action_completer_.reset(
+    new LocGraphActionCompleter(params_.factor.loc_adder, go::GraphActionCompleterType::LocProjectionFactor,
+                                combined_nav_state_node_updater_->shared_graph_values()));
   AddGraphActionCompleter(loc_graph_action_completer_);
   projection_graph_action_completer_.reset(new ProjectionGraphActionCompleter(
-    params_.factor.projection_adder, combined_nav_state_node_updater_->graph_values(),
+    params_.factor.projection_adder, combined_nav_state_node_updater_->shared_graph_values(),
     feature_point_node_updater_->feature_point_graph_values()));
   AddGraphActionCompleter(projection_graph_action_completer_);
   smart_projection_graph_action_completer_.reset(new SmartProjectionGraphActionCompleter(
-    params_.factor.smart_projection_adder, combined_nav_state_node_updater_->graph_values()));
+    params_.factor.smart_projection_adder, combined_nav_state_node_updater_->shared_graph_values()));
   AddGraphActionCompleter(smart_projection_graph_action_completer_);
 }
 
@@ -120,12 +120,13 @@ GraphLocalizer::LatestCombinedNavStateAndCovariances() const {
 
 boost::optional<std::pair<lc::CombinedNavState, lc::CombinedNavStateCovariances>>
 GraphLocalizer::LatestCombinedNavStateAndCovariances(const gtsam::Marginals& marginals) const {
-  const auto global_N_body_latest = combined_nav_state_updater_->LatestCombinedNavState();
+  const auto global_N_body_latest = combined_nav_state_node_updater_->graph_values().LatestCombinedNavState();
   if (!global_N_body_latest) {
     LogError("LatestCombinedNavStateAndCovariance: Failed to get latest combined nav state.");
     return boost::none;
   }
-  const auto latest_combined_nav_state_key_index = combined_nav_state_updater_->LatestCombinedNavStateKeyIndex();
+  const auto latest_combined_nav_state_key_index =
+    combined_nav_state_node_updater_->graph_values().LatestCombinedNavStateKeyIndex();
   if (!latest_combined_nav_state_key_index) {
     LogError("LatestCombinedNavStateAndCovariance: Failed to get latest combined nav state.");
     return boost::none;
@@ -146,7 +147,7 @@ GraphLocalizer::LatestCombinedNavStateAndCovariances(const gtsam::Marginals& mar
 }
 
 boost::optional<lc::CombinedNavState> GraphLocalizer::LatestCombinedNavState() const {
-  const auto global_N_body_latest = combined_nav_state_updater_->LatestCombinedNavState();
+  const auto global_N_body_latest = combined_nav_state_node_updater_->graph_values().LatestCombinedNavState();
   if (!global_N_body_latest) {
     LogError("LatestCombinedNavState: Failed to get latest combined nav state.");
     return boost::none;
@@ -157,7 +158,7 @@ boost::optional<lc::CombinedNavState> GraphLocalizer::LatestCombinedNavState() c
 
 boost::optional<lc::CombinedNavState> GraphLocalizer::GetCombinedNavState(const lc::Time time) const {
   const auto lower_bound_or_equal_combined_nav_state =
-    combined_nav_state_updater_->LowerBoundOrEqualCombinedNavState(time);
+    combined_nav_state_node_updater_->graph_values().LowerBoundOrEqualCombinedNavState(time);
   if (!lower_bound_or_equal_combined_nav_state) {
     LogDebug("GetCombinedNavState: Failed to get lower bound or equal combined nav state.");
     return boost::none;
@@ -181,7 +182,7 @@ boost::optional<lc::CombinedNavState> GraphLocalizer::GetCombinedNavState(const 
 }
 
 boost::optional<std::pair<gtsam::imuBias::ConstantBias, lc::Time>> GraphLocalizer::LatestBiases() const {
-  const auto latest_bias = combined_nav_state_updater_->LatestBias();
+  const auto latest_bias = combined_nav_state_node_updater_->graph_values().LatestBias();
   if (!latest_bias) {
     LogError("LatestBiases: Failed to get latest biases.");
     return boost::none;
@@ -410,7 +411,8 @@ int GraphLocalizer::NumProjectionFactors(const bool check_valid) const {
           LogError("NumProjectionFactors: Failed to get point.");
           continue;
         }
-        const auto world_T_body = combined_nav_state_updater_->at<gtsam::Pose3>(projection_factor->key1());
+        const auto world_T_body =
+          combined_nav_state_node_updater_->graph_values().at<gtsam::Pose3>(projection_factor->key1());
         if (!world_T_body) {
           LogError("NumProjectionFactors: Failed to get pose.");
           continue;
@@ -443,7 +445,7 @@ bool GraphLocalizer::standstill() const {
 
 bool GraphLocalizer::DoPostOptimizeActions() {
   // Update imu integrator bias
-  const auto latest_bias = combined_nav_state_updater_->LatestBias();
+  const auto latest_bias = combined_nav_state_node_updater_->graph_values().LatestBias();
   if (!latest_bias) {
     LogError("Update: Failed to get latest bias.");
     return false;
