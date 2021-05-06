@@ -53,19 +53,6 @@ GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
       params_(params) {
   latest_imu_integrator_->SetFanSpeedMode(params_.initial_fan_speed_mode);
 
-  // Initialize Factor Adders
-  ar_tag_loc_factor_adder_.reset(
-    new LocFactorAdder(params_.factor.ar_tag_loc_adder, go::GraphActionCompleterType::ARTagLocProjectionFactor));
-  loc_factor_adder_.reset(
-    new LocFactorAdder(params_.factor.loc_adder, go::GraphActionCompleterType::LocProjectionFactor));
-  projection_factor_adder_.reset(
-    new ProjectionFactorAdder(params_.factor.projection_adder, feature_tracker_,
-                              feature_point_node_updater_->shared_feature_point_graph_values()));
-  rotation_factor_adder_.reset(new RotationFactorAdder(params_.factor.rotation_adder, feature_tracker_));
-  smart_projection_cumulative_factor_adder_.reset(
-    new SmartProjectionCumulativeFactorAdder(params_.factor.smart_projection_adder, feature_tracker_));
-  standstill_factor_adder_.reset(new StandstillFactorAdder(params_.factor.standstill_adder, feature_tracker_));
-
   // Initialize Node Updaters
   // Assumes zero initial velocity
   const lc::CombinedNavState global_N_body_start(params_.graph_initializer.global_T_body_start,
@@ -82,6 +69,19 @@ GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
 
   feature_point_node_updater_.reset(new FeaturePointNodeUpdater(params.feature_point_node_updater, values()));
   AddNodeUpdater(feature_point_node_updater_);
+
+  // Initialize Factor Adders
+  ar_tag_loc_factor_adder_.reset(
+    new LocFactorAdder(params_.factor.ar_tag_loc_adder, go::GraphActionCompleterType::ARTagLocProjectionFactor));
+  loc_factor_adder_.reset(
+    new LocFactorAdder(params_.factor.loc_adder, go::GraphActionCompleterType::LocProjectionFactor));
+  projection_factor_adder_.reset(
+    new ProjectionFactorAdder(params_.factor.projection_adder, feature_tracker_,
+                              feature_point_node_updater_->shared_feature_point_graph_values()));
+  rotation_factor_adder_.reset(new RotationFactorAdder(params_.factor.rotation_adder, feature_tracker_));
+  smart_projection_cumulative_factor_adder_.reset(
+    new SmartProjectionCumulativeFactorAdder(params_.factor.smart_projection_adder, feature_tracker_));
+  standstill_factor_adder_.reset(new StandstillFactorAdder(params_.factor.standstill_adder, feature_tracker_));
 
   // Initialize Graph Action Completers
   ar_tag_loc_graph_action_completer_.reset(
