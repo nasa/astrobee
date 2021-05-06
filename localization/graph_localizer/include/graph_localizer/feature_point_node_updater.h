@@ -21,6 +21,7 @@
 
 #include <graph_optimizer/node_updater_with_priors.h>
 #include <graph_optimizer/feature_point_graph_values.h>
+#include <graph_localizer/feature_point_node_updater_params.h>
 #include <localization_common/feature_point_3d.h>
 
 namespace graph_localizer {
@@ -28,7 +29,7 @@ class FeaturePointNodeUpdater
     : public graph_optimizer::NodeUpdaterWithPriors<localization_common::FeaturePoint3d,
                                                     localization_common::FeaturePoint3dNoise> {
  public:
-  FeaturePointNodeUpdater(std::shared_ptr<gtsam::Values> values);
+  FeaturePointNodeUpdater(const FeaturePointNodeUpdaterParams& params, std::shared_ptr<gtsam::Values> values);
   void AddInitialValuesAndPriors(const localization_common::FeaturePoint3d& global_N_body,
                                  const localization_common::FeaturePoint3dNoise& noise,
                                  gtsam::NonlinearFactorGraph& factors) final;
@@ -63,6 +64,7 @@ class FeaturePointNodeUpdater
   std::shared_ptr<graph_optimizer::FeaturePointGraphValues> feature_point_graph_values();
 
  private:
+  FeaturePointNodeUpdaterParams params_;
   std::shared_ptr<graph_optimizer::FeaturePointGraphValues> feature_point_graph_values_;
 };
 }  // namespace graph_localizer

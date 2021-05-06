@@ -27,8 +27,9 @@ namespace lc = localization_common;
 namespace sym = gtsam::symbol_shorthand;
 
 // TODO(rsoussan): Make new node updater base class that doesn't have functions left empty here?
-FeaturePointNodeUpdater::FeaturePointNodeUpdater(std::shared_ptr<gtsam::Values> values)
-    : feature_point_graph_values_(new go::FeaturePointGraphValues(std::move(values))) {}
+FeaturePointNodeUpdater::FeaturePointNodeUpdater(const FeaturePointNodeUpdaterParams& params,
+                                                 std::shared_ptr<gtsam::Values> values)
+    : params_(params), feature_point_graph_values_(new go::FeaturePointGraphValues(std::move(values))) {}
 
 void FeaturePointNodeUpdater::AddInitialValuesAndPriors(const lc::FeaturePoint3d& global_t_point,
                                                         const lc::FeaturePoint3dNoise& noise,

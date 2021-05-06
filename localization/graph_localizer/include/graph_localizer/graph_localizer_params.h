@@ -21,6 +21,7 @@
 #include <graph_localizer/calibration_params.h>
 #include <graph_localizer/combined_nav_state_node_updater_params.h>
 #include <graph_localizer/factor_params.h>
+#include <graph_localizer/feature_point_node_updater_params.h>
 #include <graph_localizer/feature_tracker_params.h>
 #include <graph_localizer/graph_initializer_params.h>
 #include <graph_optimizer/graph_optimizer_params.h>
@@ -33,6 +34,7 @@ struct GraphLocalizerParams {
   CombinedNavStateNodeUpdaterParams combined_nav_state_node_updater;
   CalibrationParams calibration;
   FactorParams factor;
+  FeaturePointNodeUpdaterParams feature_point_node_updater;
   FeatureTrackerParams feature_tracker;
   graph_optimizer::GraphOptimizerParams graph_optimizer;
   GraphInitializerParams graph_initializer;

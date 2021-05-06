@@ -182,7 +182,8 @@ void LoadGraphInitializerParams(config_reader::ConfigReader& config, GraphInitia
   params.num_bias_estimation_measurements = mc::LoadInt(config, "num_bias_estimation_measurements");
 }
 
-void LoadCombinedNavStateNodeUpdaterParams(config_reader::ConfigReader& config, CombinedNavStateNodeUpdater& params) {
+void LoadCombinedNavStateNodeUpdaterParams(config_reader::ConfigReader& config,
+                                           CombinedNavStateNodeUpdaterParams& params) {
   params.starting_prior_translation_stddev = mc::LoadDouble(config, "starting_prior_translation_stddev");
   params.starting_prior_quaternion_stddev = mc::LoadDouble(config, "starting_prior_quaternion_stddev");
   params.starting_prior_velocity_stddev = mc::LoadDouble(config, "starting_prior_velocity_stddev");
@@ -193,11 +194,16 @@ void LoadCombinedNavStateNodeUpdaterParams(config_reader::ConfigReader& config, 
   go::LoadGraphValuesParams(params.graph_values);
 }
 
+void LoadFeaturePointNodeUpdaterParams(config_reader::ConfigReader& config, FeaturePointNodeUpdaterParams& params) {
+  params.huber_k = mc::LoadDouble(config, "huber_k");
+}
+
 void LoadGraphLocalizerParams(config_reader::ConfigReader& config, GraphLocalizerParams& params) {
   LoadCalibrationParams(config, params.calibration);
   LoadCombinedNavStateNodeUpdaterParams(config, params.combined_nav_state_node_updater);
   LoadGraphInitializerParams(config, params.graph_initializer);
   LoadFactorParams(config, params.factor);
+  LoadFeaturePointNodeUpdaterParams(config, params.feature_point_node_updater);
   LoadFeatureTrackerParams(config, params.feature_tracker);
   go::LoadGraphOptimizerParams(config, params.graph_optimizer);
   params.huber_k = mc::LoadDouble(config, "huber_k");

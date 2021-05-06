@@ -22,6 +22,7 @@
 #include <graph_localizer/calibration_params.h>
 #include <graph_localizer/combined_nav_state_node_updater_params.h>
 #include <graph_localizer/factor_params.h>
+#include <graph_localizer/feature_point_node_updater_params.h>
 #include <graph_localizer/feature_tracker_params.h>
 #include <graph_localizer/graph_initializer_params.h>
 #include <graph_localizer/graph_localizer_nodelet_params.h>
@@ -49,7 +50,9 @@ void LoadSanityCheckerParams(config_reader::ConfigReader& config, SanityCheckerP
 // Loads all params except some (biases and start pose) that are
 // not loaded from config files
 void LoadGraphInitializerParams(config_reader::ConfigReader& config, GraphInitializerParams& params);
-void LoadCombinedNavStateNodeUpdaterParams(config_reader::ConfigReader& config, CombinedNavStateNodeUpdater& params);
+void LoadCombinedNavStateNodeUpdaterParams(config_reader::ConfigReader& config,
+                                           CombinedNavStateNodeUpdaterParams& params);
+void LoadFeaturePointNodeUpdaterParams(config_reader::ConfigReader& config, FeaturePointNodeUpdaterParams& params);
 void LoadGraphLocalizerParams(config_reader::ConfigReader& config, GraphLocalizerParams& params);
 void LoadGraphLocalizerNodeletParams(config_reader::ConfigReader& config, GraphLocalizerNodeletParams& params);
 }  // namespace graph_localizer
