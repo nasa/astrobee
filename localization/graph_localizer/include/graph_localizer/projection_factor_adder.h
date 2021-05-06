@@ -44,9 +44,6 @@ class ProjectionFactorAdder : public graph_optimizer::FactorAdder<localization_m
     const localization_measurements::FeaturePointsMeasurement& feature_points_measurement) final;
 
  private:
-  bool TriangulateNewPoint(graph_optimizer::FactorsToAdd& factors_to_add, gtsam::NonlinearFactorGraph& graph_factors,
-                           graph_optimizer::GraphValues& graph_values);
-
   std::shared_ptr<const FeatureTracker> feature_tracker_;
   std::shared_ptr<const graph_optimizer::FeaturePointGraphValues> feature_point_graph_values_;
 };
