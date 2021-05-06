@@ -188,6 +188,7 @@ void LoadCombinedNavStateNodeUpdaterParams(config_reader::ConfigReader& config, 
   params.starting_prior_velocity_stddev = mc::LoadDouble(config, "starting_prior_velocity_stddev");
   params.starting_prior_accel_bias_stddev = mc::LoadDouble(config, "starting_prior_accel_bias_stddev");
   params.starting_prior_gyro_bias_stddev = mc::LoadDouble(config, "starting_prior_gyro_bias_stddev");
+  params.huber_k = mc::LoadDouble(config, "huber_k");
   params.add_priors = mc::LoadBool(config, "add_priors");
   go::LoadGraphValuesParams(params.graph_values);
 }

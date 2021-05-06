@@ -28,6 +28,7 @@ struct CombinedNavStateNodeUpdaterParams {
   double starting_prior_velocity_stddev;
   double starting_prior_accel_bias_stddev;
   double starting_prior_gyro_bias_stddev;
+  double huber_k;
   localization_common::CombinedNavState global_N_body_start;
   bool add_priors;
   graph_optimizer::GraphValuesParams graph_values;

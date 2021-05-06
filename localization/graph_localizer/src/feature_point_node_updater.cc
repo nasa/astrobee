@@ -42,14 +42,15 @@ bool FeaturePointNodeUpdater::SlideWindow(const lc::Time oldest_allowed_timestam
                                           const gtsam::KeyVector& old_keys, const double huber_k,
                                           gtsam::NonlinearFactorGraph& factors) {
   feature_point_graph_values_->RemoveOldFeatures(old_keys);
-  UpdatePointPriors(marginals, factors);
+  if (marginals) UpdatePointPriors(*marginals, factors);
+  return true;
 }
 
 void FeaturePointNodeUpdater::UpdatePointPriors(const gtsam::Marginals& marginals,
                                                 gtsam::NonlinearFactorGraph& factors) {
   const auto feature_keys = feature_point_graph_values_->FeatureKeys();
   for (const auto& feature_key : feature_keys) {
-    const auto world_t_point = at<gtsam::Point3>(feature_key);
+    const auto world_t_point = feature_point_graph_values_->at<gtsam::Point3>(feature_key);
     if (!world_t_point) {
       LogError("UpdatePointPriors: Failed to get world_t_point.");
       continue;
