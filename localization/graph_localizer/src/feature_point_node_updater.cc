@@ -81,7 +81,7 @@ go::NodeUpdaterType FeaturePointNodeUpdater::type() const { return go::NodeUpdat
 bool FeaturePointNodeUpdater::Update(const lc::Time timestamp, gtsam::NonlinearFactorGraph& factors) { return true; }
 
 boost::optional<lc::Time> FeaturePointNodeUpdater::SlideWindowNewOldestTime() const {
-  return feature_point_graph_values_->SlideWindowOldestTime();
+  return feature_point_graph_values_->SlideWindowNewOldestTime();
 }
 
 gtsam::KeyVector FeaturePointNodeUpdater::OldKeys(const localization_common::Time oldest_allowed_time,

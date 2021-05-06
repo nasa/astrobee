@@ -56,6 +56,8 @@ class GraphOptimizer {
   void BufferFactors(const std::vector<FactorsToAdd>& factors_to_add_vec);
   // Adds buffered factors and optimizes graph.  Calls DoPostOptimizeActions afterwards
   bool Update();
+  // Checks whether a measurement is too old to be inserted into graph
+  virtual bool MeasurementRecentEnough(const localization_common::Time timestamp) const;
   const gtsam::NonlinearFactorGraph& graph_factors() const;
   gtsam::NonlinearFactorGraph& graph_factors();
   void SaveGraphDotFile(const std::string& output_path = "graph.dot") const;
@@ -64,7 +66,6 @@ class GraphOptimizer {
   const GraphStats* const graph_stats() const;
   GraphStats* graph_stats();
   const boost::optional<gtsam::Marginals>& marginals() const;
-
   std::shared_ptr<gtsam::Values> values();
 
  private:
@@ -121,9 +122,6 @@ class GraphOptimizer {
   boost::optional<localization_common::Time> OldestTimestamp() const;
 
   boost::optional<localization_common::Time> LatestTimestamp() const;
-
-  // Checks whether a measurement is too old to be inserted into graph
-  virtual bool MeasurementRecentEnough(const localization_common::Time timestamp) const;
 
   // Removes buffered factors that are too old for insertion into graph
   void RemoveOldBufferedFactors(const localization_common::Time oldest_allowed_timestamp);
