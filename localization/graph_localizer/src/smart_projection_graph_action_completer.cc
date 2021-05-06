@@ -30,13 +30,13 @@ namespace lm = localization_measurements;
 namespace sym = gtsam::symbol_shorthand;
 SmartProjectionGraphActionCompleter::SmartProjectionGraphActionCompleter(
   const SmartProjectionFactorAdderParams& params, std::shared_ptr<const go::GraphValues> graph_values)
-    : graph_values_(std::move(graph_values)) {
-  smart_projection_params_.verboseCheirality = params.verbose_cheirality;
+    : params_(params), graph_values_(std::move(graph_values)) {
+  smart_projection_params_.verboseCheirality = params_.verbose_cheirality;
   smart_projection_params_.setRankTolerance(1e-9);
-  smart_projection_params_.setLandmarkDistanceThreshold(params.landmark_distance_threshold);
-  smart_projection_params_.setDynamicOutlierRejectionThreshold(params.dynamic_outlier_rejection_threshold);
-  smart_projection_params_.setRetriangulationThreshold(params.retriangulation_threshold);
-  smart_projection_params_.setEnableEPI(params.enable_EPI);
+  smart_projection_params_.setLandmarkDistanceThreshold(params_.landmark_distance_threshold);
+  smart_projection_params_.setDynamicOutlierRejectionThreshold(params_.dynamic_outlier_rejection_threshold);
+  smart_projection_params_.setRetriangulationThreshold(params_.retriangulation_threshold);
+  smart_projection_params_.setEnableEPI(params_.enable_EPI);
 }
 
 go::GraphActionCompleterType SmartProjectionGraphActionCompleter::type() const {
@@ -46,7 +46,7 @@ go::GraphActionCompleterType SmartProjectionGraphActionCompleter::type() const {
 bool SmartProjectionGraphActionCompleter::DoAction(go::FactorsToAdd& factors_to_add,
                                                    gtsam::NonlinearFactorGraph& graph_factors) {
   go::DeleteFactors<RobustSmartFactor>(graph_factors);
-  if (params().splitting) SplitSmartFactorsIfNeeded(*graph_values_, factors_to_add);
+  if (params_.splitting) SplitSmartFactorsIfNeeded(*graph_values_, factors_to_add);
   return true;
 }
 
@@ -62,7 +62,7 @@ void SmartProjectionGraphActionCompleter::SplitSmartFactorsIfNeeded(const go::Gr
     if (point.valid()) continue;
     {
       const auto fixed_smart_factor =
-        FixSmartFactorByRemovingIndividualMeasurements(params(), *smart_factor, smart_projection_params_, graph_values);
+        FixSmartFactorByRemovingIndividualMeasurements(params_, *smart_factor, smart_projection_params_, graph_values);
       if (fixed_smart_factor) {
         factor_to_add.factor = *fixed_smart_factor;
         continue;
@@ -70,7 +70,7 @@ void SmartProjectionGraphActionCompleter::SplitSmartFactorsIfNeeded(const go::Gr
     }
     {
       const auto fixed_smart_factor =
-        FixSmartFactorByRemovingMeasurementSequence(params(), *smart_factor, smart_projection_params_, graph_values);
+        FixSmartFactorByRemovingMeasurementSequence(params_, *smart_factor, smart_projection_params_, graph_values);
       if (fixed_smart_factor) {
         factor_to_add.factor = *fixed_smart_factor;
         continue;

@@ -191,7 +191,7 @@ void LoadCombinedNavStateNodeUpdaterParams(config_reader::ConfigReader& config,
   params.starting_prior_gyro_bias_stddev = mc::LoadDouble(config, "starting_prior_gyro_bias_stddev");
   params.huber_k = mc::LoadDouble(config, "huber_k");
   params.add_priors = mc::LoadBool(config, "add_priors");
-  go::LoadGraphValuesParams(params.graph_values);
+  go::LoadGraphValuesParams(config, params.graph_values);
 }
 
 void LoadFeaturePointNodeUpdaterParams(config_reader::ConfigReader& config, FeaturePointNodeUpdaterParams& params) {

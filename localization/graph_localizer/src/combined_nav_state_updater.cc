@@ -37,22 +37,21 @@ CombinedNavStateNodeUpdater::CombinedNavStateNodeUpdater(
   std::shared_ptr<imu_integration::LatestImuIntegrator> latest_imu_integrator, std::shared_ptr<gtsam::Values> values)
     : params_(params),
       latest_imu_integrator_(std::move(latest_imu_integrator)),
-      graph_values_(new graph_optimizer::GraphValues(std::move(values))),
+      graph_values_(new graph_optimizer::GraphValues(params.graph_values, std::move(values))),
       key_index_(0) {
   const gtsam::Vector6 pose_prior_noise_sigmas(
-    (gtsam::Vector(6) << params_.noise.starting_prior_translation_stddev,
-     params_.noise.starting_prior_translation_stddev, params_.noise.starting_prior_translation_stddev,
-     params_.noise.starting_prior_quaternion_stddev, params_.noise.starting_prior_quaternion_stddev,
-     params_.noise.starting_prior_quaternion_stddev)
+    (gtsam::Vector(6) << params_.starting_prior_translation_stddev, params_.starting_prior_translation_stddev,
+     params_.starting_prior_translation_stddev, params_.starting_prior_quaternion_stddev,
+     params_.starting_prior_quaternion_stddev, params_.starting_prior_quaternion_stddev)
       .finished());
-  const gtsam::Vector3 velocity_prior_noise_sigmas((gtsam::Vector(3) << params_.noise.starting_prior_velocity_stddev,
-                                                    params_.noise.starting_prior_velocity_stddev,
-                                                    params_.noise.starting_prior_velocity_stddev)
+  const gtsam::Vector3 velocity_prior_noise_sigmas((gtsam::Vector(3) << params_.starting_prior_velocity_stddev,
+                                                    params_.starting_prior_velocity_stddev,
+                                                    params_.starting_prior_velocity_stddev)
                                                      .finished());
   const gtsam::Vector6 bias_prior_noise_sigmas(
-    (gtsam::Vector(6) << params_.noise.starting_prior_accel_bias_stddev, params_.noise.starting_prior_accel_bias_stddev,
-     params_.noise.starting_prior_accel_bias_stddev, params_.noise.starting_prior_gyro_bias_stddev,
-     params_.noise.starting_prior_gyro_bias_stddev, params_.noise.starting_prior_gyro_bias_stddev)
+    (gtsam::Vector(6) << params_.starting_prior_accel_bias_stddev, params_.starting_prior_accel_bias_stddev,
+     params_.starting_prior_accel_bias_stddev, params_.starting_prior_gyro_bias_stddev,
+     params_.starting_prior_gyro_bias_stddev, params_.starting_prior_gyro_bias_stddev)
       .finished());
   global_N_body_start_noise_.pose_noise = Robust(
     gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(pose_prior_noise_sigmas)), params_.huber_k);
@@ -78,7 +77,7 @@ void CombinedNavStateNodeUpdater::AddInitialValuesAndPriors(const lc::CombinedNa
 void CombinedNavStateNodeUpdater::AddPriors(const lc::CombinedNavState& global_N_body,
                                             const lc::CombinedNavStateNoise& noise,
                                             gtsam::NonlinearFactorGraph& factors) {
-  const auto key_index = KeyIndex(global_N_body.timestamp());
+  const auto key_index = graph_values_->KeyIndex(global_N_body.timestamp());
   if (!key_index) {
     LogError("AddPriors: Failed to get key index.");
     return;
@@ -141,7 +140,7 @@ bool CombinedNavStateNodeUpdater::SlideWindow(const lc::Time oldest_allowed_time
 go::NodeUpdaterType CombinedNavStateNodeUpdater::type() const { return go::NodeUpdaterType::CombinedNavState; }
 
 boost::optional<lc::Time> CombinedNavStateNodeUpdater::SlideWindowNewOldestTime() const {
-  return graph_values_->SlideWindowOldestTime();
+  return graph_values_->SlideWindowNewOldestTime();
 }
 
 gtsam::KeyVector CombinedNavStateNodeUpdater::OldKeys(const lc::Time oldest_allowed_time,
@@ -165,6 +164,8 @@ boost::optional<lc::Time> CombinedNavStateNodeUpdater::LatestTimestamp() const {
 std::shared_ptr<const graph_optimizer::GraphValues> CombinedNavStateNodeUpdater::graph_values() const {
   return graph_values_;
 }
+
+std::shared_ptr<graph_optimizer::GraphValues> CombinedNavStateNodeUpdater::graph_values() { return graph_values_; }
 
 void CombinedNavStateNodeUpdater::RemovePriors(const int key_index, gtsam::NonlinearFactorGraph& factors) {
   int removed_factors = 0;

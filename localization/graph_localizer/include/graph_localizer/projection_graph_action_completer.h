@@ -20,6 +20,7 @@
 #define GRAPH_LOCALIZER_PROJECTION_GRAPH_ACTION_COMPLETER_H_
 
 #include <graph_localizer/projection_factor_adder_params.h>
+#include <graph_optimizer/feature_point_graph_values.h>
 #include <graph_optimizer/graph_action_completer.h>
 #include <graph_optimizer/graph_values.h>
 

@@ -23,6 +23,8 @@
 #include <graph_optimizer/graph_action_completer.h>
 #include <graph_optimizer/graph_values.h>
 
+#include <gtsam/slam/SmartFactorParams.h>
+
 namespace graph_localizer {
 class SmartProjectionGraphActionCompleter : public graph_optimizer::GraphActionCompleter {
  public:
@@ -39,8 +41,9 @@ class SmartProjectionGraphActionCompleter : public graph_optimizer::GraphActionC
   void SplitSmartFactorsIfNeeded(const graph_optimizer::GraphValues& graph_values,
                                  graph_optimizer::FactorsToAdd& factors_to_add);
 
-  gtsam::SmartProjectionParams smart_projection_params_;
+  SmartProjectionFactorAdderParams params_;
   std::shared_ptr<const graph_optimizer::GraphValues> graph_values_;
+  gtsam::SmartProjectionParams smart_projection_params_;
 };
 }  // namespace graph_localizer
 

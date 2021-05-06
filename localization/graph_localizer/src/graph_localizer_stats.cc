@@ -139,7 +139,7 @@ void GraphLocalizerStats::UpdateErrors(const gtsam::NonlinearFactorGraph& graph_
 void GraphLocalizerStats::UpdateStats(const gtsam::NonlinearFactorGraph& graph_factors) {
   num_states_averager_.Update(combined_nav_state_graph_values_->NumStates());
   duration_averager_.Update(combined_nav_state_graph_values_->Duration());
-  num_marginal_factors_averager_.Update(NumFactors<gtsam::LinearContainerFactor>(graph_factors));
+  num_marginal_factors_averager_.Update(go::NumFactors<gtsam::LinearContainerFactor>(graph_factors));
   num_factors_averager_.Update(graph_factors.size());
   num_optical_flow_factors_averager_.Update(NumSmartFactors(graph_factors, true));
   num_loc_pose_factors_averager_.Update(go::NumFactors<gtsam::LocPoseFactor>(graph_factors));

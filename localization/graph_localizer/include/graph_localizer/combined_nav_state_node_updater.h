@@ -66,6 +66,8 @@ class CombinedNavStateNodeUpdater
 
   std::shared_ptr<const graph_optimizer::GraphValues> graph_values() const;
 
+  std::shared_ptr<graph_optimizer::GraphValues> graph_values();
+
  private:
   void RemovePriors(const int key_index, gtsam::NonlinearFactorGraph& factors);
   int GenerateKeyIndex();

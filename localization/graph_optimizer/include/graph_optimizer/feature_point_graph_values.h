@@ -65,6 +65,9 @@ class FeaturePointGraphValues : public GraphValuesBase {
 
   int NumFeatures() const;
 
+  bool AddFeature(const localization_measurements::FeatureId id, const gtsam::Point3& feature_point,
+                  const gtsam::Key& key);
+
  private:
   bool HasFeature(const localization_measurements::FeatureId id) const;
 
@@ -72,9 +75,6 @@ class FeaturePointGraphValues : public GraphValuesBase {
 
   // TODO(rsoussan): This shouldn't be const, modify when changes are made to projection factor adder
   gtsam::Key CreateFeatureKey() const;
-
-  bool AddFeature(const localization_measurements::FeatureId id, const gtsam::Point3& feature_point,
-                  const gtsam::Key& key);
 
   // Serialization function
   friend class boost::serialization::access;

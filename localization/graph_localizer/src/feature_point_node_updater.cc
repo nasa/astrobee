@@ -17,6 +17,7 @@
  */
 
 #include <graph_localizer/feature_point_node_updater.h>
+#include <graph_localizer/utilities.h>
 
 #include <gtsam/inference/Symbol.h>
 #include <gtsam/slam/PriorFactor.h>
@@ -75,9 +76,9 @@ void FeaturePointNodeUpdater::UpdatePointPriors(const gtsam::Marginals& marginal
   }
 }
 
-go::NodeUpdaterType FeaturePointNodeUpdater::type() const { return go::NodeUpdaterType::FeaturePoint3d; }
+go::NodeUpdaterType FeaturePointNodeUpdater::type() const { return go::NodeUpdaterType::FeaturePoint; }
 
-bool FeaturePointNodeUpdater::Update(const lc::Time timestamp, gtsam::NonlinearFactorGraph& factors) {}
+bool FeaturePointNodeUpdater::Update(const lc::Time timestamp, gtsam::NonlinearFactorGraph& factors) { return true; }
 
 boost::optional<lc::Time> FeaturePointNodeUpdater::SlideWindowNewOldestTime() const {
   return feature_point_graph_values_->SlideWindowOldestTime();

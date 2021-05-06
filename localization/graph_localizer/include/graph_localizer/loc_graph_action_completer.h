@@ -36,6 +36,7 @@ class LocGraphActionCompleter : public graph_optimizer::GraphActionCompleter {
   graph_optimizer::GraphActionCompleterType type() const final;
 
  private:
+  LocFactorAdderParams params_;
   graph_optimizer::GraphActionCompleterType graph_action_completer_type_;
   std::shared_ptr<graph_optimizer::GraphValues> graph_values_;
 };

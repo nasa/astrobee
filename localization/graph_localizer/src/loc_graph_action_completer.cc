@@ -31,7 +31,9 @@ namespace sym = gtsam::symbol_shorthand;
 LocGraphActionCompleter::LocGraphActionCompleter(const LocFactorAdderParams& params,
                                                  const go::GraphActionCompleterType graph_action_completer_type,
                                                  std::shared_ptr<graph_optimizer::GraphValues> graph_values)
-    : graph_action_completer_type_(graph_action_completer_type), graph_values_(std::move(graph_values)) {}
+    : params_(params),
+      graph_action_completer_type_(graph_action_completer_type),
+      graph_values_(std::move(graph_values)) {}
 
 go::GraphActionCompleterType LocGraphActionCompleter::type() const { return graph_action_completer_type_; }
 
@@ -60,14 +62,14 @@ bool LocGraphActionCompleter::DoAction(go::FactorsToAdd& factors_to_add, gtsam::
     const auto cheirality_error = projection_factor->cheiralityError(*world_T_body);
     if (cheirality_error) {
       factor_it = factors.erase(factor_it);
-    } else if (error > params().max_inlier_weighted_projection_norm) {
+    } else if (error > params_.max_inlier_weighted_projection_norm) {
       factor_it = factors.erase(factor_it);
     } else {
-      if (params().weight_projections_with_distance) {
+      if (params_.weight_projections_with_distance) {
         const gtsam::Point3 nav_cam_t_landmark =
           (*world_T_body * *(projection_factor->body_P_sensor())).inverse() * projection_factor->landmark_point();
         const gtsam::SharedIsotropic scaled_noise(
-          gtsam::noiseModel::Isotropic::Sigma(2, params().projection_noise_scale * 1.0 / nav_cam_t_landmark.z()));
+          gtsam::noiseModel::Isotropic::Sigma(2, params_.projection_noise_scale * 1.0 / nav_cam_t_landmark.z()));
         // Don't use robust cost here to more effectively correct a drift occurance
         gtsam::LocProjectionFactor<>::shared_ptr loc_projection_factor(new gtsam::LocProjectionFactor<>(
           projection_factor->measured(), projection_factor->landmark_point(), scaled_noise, projection_factor->key(),
@@ -78,23 +80,23 @@ bool LocGraphActionCompleter::DoAction(go::FactorsToAdd& factors_to_add, gtsam::
     }
   }
   // All factors have been removed due to errors, use loc pose prior instead
-  if (factors.empty() && params().add_prior_if_projections_fail) {
+  if (factors.empty() && params_.add_prior_if_projections_fail) {
     if (!pose_key || !world_T_cam) {
       LogError("MapProjectionNoiseScaling: Failed to get pose key and world_T_cam");
       return false;
     }
-    const gtsam::Vector6 pose_prior_noise_sigmas((gtsam::Vector(6) << params().prior_translation_stddev,
-                                                  params().prior_translation_stddev, params().prior_translation_stddev,
-                                                  params().prior_quaternion_stddev, params().prior_quaternion_stddev,
-                                                  params().prior_quaternion_stddev)
+    const gtsam::Vector6 pose_prior_noise_sigmas((gtsam::Vector(6) << params_.prior_translation_stddev,
+                                                  params_.prior_translation_stddev, params_.prior_translation_stddev,
+                                                  params_.prior_quaternion_stddev, params_.prior_quaternion_stddev,
+                                                  params_.prior_quaternion_stddev)
                                                    .finished());
     // TODO(rsoussan): enable scaling with num landmarks
     const int noise_scale = 1;
     const auto pose_noise = Robust(
       gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(noise_scale * pose_prior_noise_sigmas)),
-      params().huber_k);
+      params_.huber_k);
     gtsam::LocPoseFactor::shared_ptr pose_prior_factor(
-      new gtsam::LocPoseFactor(*pose_key, *world_T_cam * params().body_T_cam.inverse(), pose_noise));
+      new gtsam::LocPoseFactor(*pose_key, *world_T_cam * params_.body_T_cam.inverse(), pose_noise));
     factors_to_add.push_back(go::FactorToAdd(
       {go::KeyInfo(&sym::P, go::NodeUpdaterType::CombinedNavState, factors_to_add.timestamp())}, pose_prior_factor));
   }
