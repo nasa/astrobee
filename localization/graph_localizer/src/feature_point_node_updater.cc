@@ -104,7 +104,11 @@ boost::optional<localization_common::Time> FeaturePointNodeUpdater::LatestTimest
 
 int FeaturePointNodeUpdater::NumFeatures() const { return feature_point_graph_values_->NumFeatures(); }
 
-std::shared_ptr<go::FeaturePointGraphValues> FeaturePointNodeUpdater::feature_point_graph_values() {
+std::shared_ptr<go::FeaturePointGraphValues> FeaturePointNodeUpdater::shared_feature_point_graph_values() {
   return feature_point_graph_values_;
+}
+
+const go::FeaturePointGraphValues& FeaturePointNodeUpdater::feature_point_graph_values() const {
+  return *feature_point_graph_values_;
 }
 }  // namespace graph_localizer

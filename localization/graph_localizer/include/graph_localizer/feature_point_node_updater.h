@@ -61,7 +61,9 @@ class FeaturePointNodeUpdater
 
   int NumFeatures() const;
 
-  std::shared_ptr<graph_optimizer::FeaturePointGraphValues> feature_point_graph_values();
+  std::shared_ptr<graph_optimizer::FeaturePointGraphValues> shared_feature_point_graph_values();
+
+  const graph_optimizer::FeaturePointGraphValues& feature_point_graph_values() const;
 
  private:
   FeaturePointNodeUpdaterParams params_;
