@@ -15,18 +15,18 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef GRAPH_OPTIMIZER_GRAPH_VALUES_PARAMS_H_
-#define GRAPH_OPTIMIZER_GRAPH_VALUES_PARAMS_H_
+#ifndef GRAPH_LOCALIZER_COMBINED_NAV_STATE_GRAPH_VALUES_PARAMS_H_
+#define GRAPH_LOCALIZER_COMBINED_NAV_STATE_GRAPH_VALUES_PARAMS_H_
 
 #include <gtsam/geometry/Pose3.h>
 
-namespace graph_optimizer {
-struct GraphValuesParams {
+namespace graph_localizer {
+struct CombinedNavStateGraphValuesParams {
   // Only kept if there are at least min_num_states and not more than max_num_states
   double ideal_duration;
   int min_num_states;
   int max_num_states;
 };
-}  // namespace graph_optimizer
+}  // namespace graph_localizer
 
-#endif  // GRAPH_OPTIMIZER_GRAPH_VALUES_PARAMS_H_
+#endif  // GRAPH_LOCALIZER_COMBINED_NAV_STATE_GRAPH_VALUES_PARAMS_H_

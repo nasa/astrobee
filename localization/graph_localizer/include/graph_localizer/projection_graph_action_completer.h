@@ -19,10 +19,10 @@
 #ifndef GRAPH_LOCALIZER_PROJECTION_GRAPH_ACTION_COMPLETER_H_
 #define GRAPH_LOCALIZER_PROJECTION_GRAPH_ACTION_COMPLETER_H_
 
+#include <graph_localizer/combined_nav_state_graph_values.h>
 #include <graph_localizer/projection_factor_adder_params.h>
 #include <graph_optimizer/feature_point_graph_values.h>
 #include <graph_optimizer/graph_action_completer.h>
-#include <graph_optimizer/graph_values.h>
 
 #include <gtsam/geometry/triangulation.h>
 
@@ -30,7 +30,7 @@ namespace graph_localizer {
 class ProjectionGraphActionCompleter : public graph_optimizer::GraphActionCompleter {
  public:
   ProjectionGraphActionCompleter(const ProjectionFactorAdderParams& params,
-                                 std::shared_ptr<const graph_optimizer::GraphValues> graph_values,
+                                 std::shared_ptr<const CombinedNavStateGraphValues> graph_values,
                                  std::shared_ptr<graph_optimizer::FeaturePointGraphValues> feature_point_graph_values);
 
   bool DoAction(graph_optimizer::FactorsToAdd& factors_to_add, gtsam::NonlinearFactorGraph& graph_factors) final;
@@ -41,7 +41,7 @@ class ProjectionGraphActionCompleter : public graph_optimizer::GraphActionComple
   bool TriangulateNewPoint(graph_optimizer::FactorsToAdd& factors_to_add, gtsam::NonlinearFactorGraph& graph_factors);
 
   ProjectionFactorAdderParams params_;
-  std::shared_ptr<const graph_optimizer::GraphValues> graph_values_;
+  std::shared_ptr<const CombinedNavStateGraphValues> graph_values_;
   std::shared_ptr<graph_optimizer::FeaturePointGraphValues> feature_point_graph_values_;
   gtsam::TriangulationParameters projection_triangulation_params_;
 };

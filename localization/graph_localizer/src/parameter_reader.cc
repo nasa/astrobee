@@ -191,7 +191,14 @@ void LoadCombinedNavStateNodeUpdaterParams(config_reader::ConfigReader& config,
   params.starting_prior_gyro_bias_stddev = mc::LoadDouble(config, "starting_prior_gyro_bias_stddev");
   params.huber_k = mc::LoadDouble(config, "huber_k");
   params.add_priors = mc::LoadBool(config, "add_priors");
-  go::LoadGraphValuesParams(config, params.graph_values);
+  LoadCombinedNavStateGraphValuesParams(config, params.graph_values);
+}
+
+void LoadCombinedNavStateGraphValuesParams(config_reader::ConfigReader& config,
+                                           CombinedNavStateGraphValuesParams& params) {
+  params.ideal_duration = mc::LoadDouble(config, "ideal_duration");
+  params.min_num_states = mc::LoadInt(config, "min_num_states");
+  params.max_num_states = mc::LoadInt(config, "max_num_states");
 }
 
 void LoadFeaturePointNodeUpdaterParams(config_reader::ConfigReader& config, FeaturePointNodeUpdaterParams& params) {

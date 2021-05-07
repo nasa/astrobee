@@ -22,14 +22,7 @@
 namespace graph_optimizer {
 namespace mc = msg_conversions;
 
-void LoadGraphValuesParams(config_reader::ConfigReader& config, GraphValuesParams& params) {
-  params.ideal_duration = mc::LoadDouble(config, "ideal_duration");
-  params.min_num_states = mc::LoadInt(config, "min_num_states");
-  params.max_num_states = mc::LoadInt(config, "max_num_states");
-}
-
 void LoadGraphOptimizerParams(config_reader::ConfigReader& config, GraphOptimizerParams& params) {
-  LoadGraphValuesParams(config, params.graph_values);
   params.verbose = mc::LoadBool(config, "verbose");
   params.fatal_failures = mc::LoadBool(config, "fatal_failures");
   params.print_factor_info = mc::LoadBool(config, "print_factor_info");

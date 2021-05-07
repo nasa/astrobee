@@ -16,11 +16,11 @@
  * under the License.
  */
 
-#ifndef GRAPH_OPTIMIZER_GRAPH_VALUES_H_
-#define GRAPH_OPTIMIZER_GRAPH_VALUES_H_
+#ifndef GRAPH_LOCALIZER_COMBINED_NAV_STATE_GRAPH_VALUES_H_
+#define GRAPH_LOCALIZER_COMBINED_NAV_STATE_GRAPH_VALUES_H_
 
 #include <graph_optimizer/graph_values_base.h>
-#include <graph_optimizer/graph_values_params.h>
+#include <graph_localizer/combined_nav_state_graph_values_params.h>
 #include <localization_common/combined_nav_state.h>
 #include <localization_common/logger.h>
 #include <localization_common/time.h>
@@ -37,12 +37,13 @@
 #include <unordered_map>
 #include <utility>
 
-namespace graph_optimizer {
+namespace graph_localizer {
 namespace sym = gtsam::symbol_shorthand;
-class GraphValues : public GraphValuesBase {
+class CombinedNavStateGraphValues : public graph_optimizer::GraphValuesBase {
  public:
-  GraphValues(const GraphValuesParams& params = GraphValuesParams(),
-              std::shared_ptr<gtsam::Values> values = std::shared_ptr<gtsam::Values>(new gtsam::Values()));
+  CombinedNavStateGraphValues(
+    const CombinedNavStateGraphValuesParams& params = CombinedNavStateGraphValuesParams(),
+    std::shared_ptr<gtsam::Values> values = std::shared_ptr<gtsam::Values>(new gtsam::Values()));
 
   // Add timestamp and keys to timestamp_key_index_map, and values to values
   bool AddCombinedNavState(const localization_common::CombinedNavState& combined_nav_state, const int key_index);
@@ -69,7 +70,7 @@ class GraphValues : public GraphValuesBase {
 
   boost::optional<gtsam::Key> PoseKey(const localization_common::Time timestamp) const;
 
-  boost::optional<gtsam::Key> GetKey(KeyCreatorFunction key_creator_function,
+  boost::optional<gtsam::Key> GetKey(graph_optimizer::KeyCreatorFunction key_creator_function,
                                      const localization_common::Time timestamp) const final;
 
   boost::optional<localization_common::Time> OldestTimestamp() const final;
@@ -104,7 +105,7 @@ class GraphValues : public GraphValuesBase {
 
   boost::optional<localization_common::Time> Timestamp(const int key_index) const;
 
-  const GraphValuesParams& params() const;
+  const CombinedNavStateGraphValuesParams& params() const;
 
  private:
   // Removes keys from timestamp_key_index_map, values from values
@@ -119,13 +120,13 @@ class GraphValues : public GraphValuesBase {
   friend class boost::serialization::access;
   template <class ARCHIVE>
   void serialize(ARCHIVE& ar, const unsigned int /*version*/) {
-    ar& BOOST_SERIALIZATION_BASE_OBJECT_NVP(GraphValuesBase);
+    ar& BOOST_SERIALIZATION_BASE_OBJECT_NVP(graph_optimizer::GraphValuesBase);
     ar& BOOST_SERIALIZATION_NVP(timestamp_key_index_map_);
   }
 
-  GraphValuesParams params_;
+  CombinedNavStateGraphValuesParams params_;
   std::map<localization_common::Time, int> timestamp_key_index_map_;
 };
-}  // namespace graph_optimizer
+}  // namespace graph_localizer
 
-#endif  // GRAPH_OPTIMIZER_GRAPH_VALUES_H_
+#endif  // GRAPH_LOCALIZER_COMBINED_NAV_STATE_GRAPH_VALUES_H_

@@ -22,6 +22,7 @@
 #include <ff_msgs/GraphState.h>
 #include <ff_msgs/LocalizationGraph.h>
 #include <ff_msgs/VisualLandmarks.h>
+#include <graph_localizer/combined_nav_state_graph_values.h>
 #include <graph_localizer/feature_counts.h>
 #include <graph_localizer/feature_track.h>
 #include <graph_localizer/graph_localizer.h>
@@ -74,11 +75,11 @@ gtsam::noiseModel::Robust::shared_ptr Robust(const gtsam::SharedNoiseModel& nois
 
 boost::optional<SharedRobustSmartFactor> FixSmartFactorByRemovingIndividualMeasurements(
   const SmartProjectionFactorAdderParams& params, const RobustSmartFactor& smart_factor,
-  const gtsam::SmartProjectionParams& smart_projection_params, const graph_optimizer::GraphValues& graph_values);
+  const gtsam::SmartProjectionParams& smart_projection_params, const CombinedNavStateGraphValues& graph_values);
 
 boost::optional<SharedRobustSmartFactor> FixSmartFactorByRemovingMeasurementSequence(
   const SmartProjectionFactorAdderParams& params, const RobustSmartFactor& smart_factor,
-  const gtsam::SmartProjectionParams& smart_projection_params, const graph_optimizer::GraphValues& graph_values);
+  const gtsam::SmartProjectionParams& smart_projection_params, const CombinedNavStateGraphValues& graph_values);
 
 SharedRobustSmartFactor RemoveSmartFactorMeasurements(const RobustSmartFactor& smart_factor,
                                                       const std::unordered_set<int>& factor_key_indices_to_remove,

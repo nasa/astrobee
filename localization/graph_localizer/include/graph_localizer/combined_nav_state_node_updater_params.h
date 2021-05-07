@@ -18,7 +18,7 @@
 #ifndef GRAPH_LOCALIZER_COMBINED_NAV_STATE_NODE_UPDATER_PARAMS_H_
 #define GRAPH_LOCALIZER_COMBINED_NAV_STATE_NODE_UPDATER_PARAMS_H_
 
-#include <graph_optimizer/graph_values_params.h>
+#include <graph_localizer/combined_nav_state_graph_values_params.h>
 #include <localization_common/combined_nav_state.h>
 
 namespace graph_localizer {
@@ -31,7 +31,7 @@ struct CombinedNavStateNodeUpdaterParams {
   double huber_k;
   localization_common::CombinedNavState global_N_body_start;
   bool add_priors;
-  graph_optimizer::GraphValuesParams graph_values;
+  CombinedNavStateGraphValuesParams graph_values;
 };
 }  // namespace graph_localizer
 

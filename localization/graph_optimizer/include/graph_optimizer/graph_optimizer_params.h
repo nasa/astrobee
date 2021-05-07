@@ -18,13 +18,10 @@
 #ifndef GRAPH_OPTIMIZER_GRAPH_OPTIMIZER_PARAMS_H_
 #define GRAPH_OPTIMIZER_GRAPH_OPTIMIZER_PARAMS_H_
 
-#include <graph_optimizer/graph_values_params.h>
-
 #include <string>
 
 namespace graph_optimizer {
 struct GraphOptimizerParams {
-  GraphValuesParams graph_values;
   bool verbose;
   bool fatal_failures;
   bool print_factor_info;

@@ -30,7 +30,7 @@ namespace lm = localization_measurements;
 namespace sym = gtsam::symbol_shorthand;
 LocGraphActionCompleter::LocGraphActionCompleter(const LocFactorAdderParams& params,
                                                  const go::GraphActionCompleterType graph_action_completer_type,
-                                                 std::shared_ptr<graph_optimizer::GraphValues> graph_values)
+                                                 std::shared_ptr<CombinedNavStateGraphValues> graph_values)
     : params_(params),
       graph_action_completer_type_(graph_action_completer_type),
       graph_values_(std::move(graph_values)) {}

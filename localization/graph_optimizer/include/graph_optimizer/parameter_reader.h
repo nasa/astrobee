@@ -20,10 +20,8 @@
 
 #include <config_reader/config_reader.h>
 #include <graph_optimizer/graph_optimizer_params.h>
-#include <graph_optimizer/graph_values_params.h>
 
 namespace graph_optimizer {
-void LoadGraphValuesParams(config_reader::ConfigReader& config, GraphValuesParams& params);
 void LoadGraphOptimizerParams(config_reader::ConfigReader& config, GraphOptimizerParams& params);
 }  // namespace graph_optimizer
 

@@ -29,7 +29,7 @@ namespace go = graph_optimizer;
 namespace lm = localization_measurements;
 namespace sym = gtsam::symbol_shorthand;
 SmartProjectionGraphActionCompleter::SmartProjectionGraphActionCompleter(
-  const SmartProjectionFactorAdderParams& params, std::shared_ptr<const go::GraphValues> graph_values)
+  const SmartProjectionFactorAdderParams& params, std::shared_ptr<const CombinedNavStateGraphValues> graph_values)
     : params_(params), graph_values_(std::move(graph_values)) {
   smart_projection_params_.verboseCheirality = params_.verbose_cheirality;
   smart_projection_params_.setRankTolerance(1e-9);
@@ -51,7 +51,7 @@ bool SmartProjectionGraphActionCompleter::DoAction(go::FactorsToAdd& factors_to_
 }
 
 // TODO(rsoussan): Clean this function up (duplicate code), address other todo's
-void SmartProjectionGraphActionCompleter::SplitSmartFactorsIfNeeded(const go::GraphValues& graph_values,
+void SmartProjectionGraphActionCompleter::SplitSmartFactorsIfNeeded(const CombinedNavStateGraphValues& graph_values,
                                                                     go::FactorsToAdd& factors_to_add) {
   for (auto& factor_to_add : factors_to_add.Get()) {
     auto smart_factor = dynamic_cast<RobustSmartFactor*>(factor_to_add.factor.get());

@@ -18,7 +18,6 @@
 #ifndef GRAPH_OPTIMIZER_GRAPH_STATS_H_
 #define GRAPH_OPTIMIZER_GRAPH_STATS_H_
 
-#include <graph_optimizer/graph_values.h>
 #include <localization_common/averager.h>
 #include <localization_common/timer.h>
 

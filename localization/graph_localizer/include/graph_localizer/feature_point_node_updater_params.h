@@ -18,7 +18,6 @@
 #ifndef GRAPH_LOCALIZER_FEATURE_POINT_NODE_UPDATER_PARAMS_H_
 #define GRAPH_LOCALIZER_FEATURE_POINT_NODE_UPDATER_PARAMS_H_
 
-#include <graph_optimizer/graph_values_params.h>
 #include <localization_common/combined_nav_state.h>
 
 namespace graph_localizer {

@@ -37,7 +37,7 @@ CombinedNavStateNodeUpdater::CombinedNavStateNodeUpdater(
   std::shared_ptr<imu_integration::LatestImuIntegrator> latest_imu_integrator, std::shared_ptr<gtsam::Values> values)
     : params_(params),
       latest_imu_integrator_(std::move(latest_imu_integrator)),
-      graph_values_(new graph_optimizer::GraphValues(params.graph_values, std::move(values))),
+      graph_values_(new CombinedNavStateGraphValues(params.graph_values, std::move(values))),
       key_index_(0) {
   const gtsam::Vector6 pose_prior_noise_sigmas(
     (gtsam::Vector(6) << params_.starting_prior_translation_stddev, params_.starting_prior_translation_stddev,
@@ -161,15 +161,15 @@ boost::optional<lc::Time> CombinedNavStateNodeUpdater::LatestTimestamp() const {
   return graph_values_->LatestTimestamp();
 }
 
-std::shared_ptr<const graph_optimizer::GraphValues> CombinedNavStateNodeUpdater::shared_graph_values() const {
+std::shared_ptr<const CombinedNavStateGraphValues> CombinedNavStateNodeUpdater::shared_graph_values() const {
   return graph_values_;
 }
 
-std::shared_ptr<graph_optimizer::GraphValues> CombinedNavStateNodeUpdater::shared_graph_values() {
+std::shared_ptr<CombinedNavStateGraphValues> CombinedNavStateNodeUpdater::shared_graph_values() {
   return graph_values_;
 }
 
-const graph_optimizer::GraphValues& CombinedNavStateNodeUpdater::graph_values() const { return *graph_values_; }
+const CombinedNavStateGraphValues& CombinedNavStateNodeUpdater::graph_values() const { return *graph_values_; }
 
 void CombinedNavStateNodeUpdater::RemovePriors(const int key_index, gtsam::NonlinearFactorGraph& factors) {
   int removed_factors = 0;
@@ -208,7 +208,7 @@ bool CombinedNavStateNodeUpdater::Update(const lc::Time timestamp, gtsam::Nonlin
 
 bool CombinedNavStateNodeUpdater::AddOrSplitImuFactorIfNeeded(const lc::Time timestamp,
                                                               gtsam::NonlinearFactorGraph& factors,
-                                                              go::GraphValues& graph_values) {
+                                                              CombinedNavStateGraphValues& graph_values) {
   if (graph_values.HasKey(timestamp)) {
     LogDebug(
       "AddOrSplitImuFactorIfNeeded: CombinedNavState exists at "
@@ -233,9 +233,8 @@ bool CombinedNavStateNodeUpdater::AddOrSplitImuFactorIfNeeded(const lc::Time tim
   }
 }
 
-bool CombinedNavStateNodeUpdater::CreateAndAddLatestImuFactorAndCombinedNavState(const lc::Time timestamp,
-                                                                                 gtsam::NonlinearFactorGraph& factors,
-                                                                                 go::GraphValues& graph_values) {
+bool CombinedNavStateNodeUpdater::CreateAndAddLatestImuFactorAndCombinedNavState(
+  const lc::Time timestamp, gtsam::NonlinearFactorGraph& factors, CombinedNavStateGraphValues& graph_values) {
   if (!latest_imu_integrator_->IntegrateLatestImuMeasurements(timestamp)) {
     LogError("CreateAndAddLatestImuFactorAndCombinedNavState: Failed to integrate latest imu measurements.");
     return false;
@@ -264,7 +263,7 @@ bool CombinedNavStateNodeUpdater::CreateAndAddLatestImuFactorAndCombinedNavState
 
 bool CombinedNavStateNodeUpdater::CreateAndAddImuFactorAndPredictedCombinedNavState(
   const lc::CombinedNavState& global_N_body, const gtsam::PreintegratedCombinedMeasurements& pim,
-  gtsam::NonlinearFactorGraph& factors, go::GraphValues& graph_values) {
+  gtsam::NonlinearFactorGraph& factors, CombinedNavStateGraphValues& graph_values) {
   const auto key_index_0 = graph_values.KeyIndex(global_N_body.timestamp());
   if (!key_index_0) {
     LogError("CreateAndAddImuFactorAndPredictedCombinedNavState: Failed to get first key index.");
@@ -281,7 +280,7 @@ bool CombinedNavStateNodeUpdater::CreateAndAddImuFactorAndPredictedCombinedNavSt
 
 bool CombinedNavStateNodeUpdater::SplitOldImuFactorAndAddCombinedNavState(const lc::Time timestamp,
                                                                           gtsam::NonlinearFactorGraph& factors,
-                                                                          go::GraphValues& graph_values) {
+                                                                          CombinedNavStateGraphValues& graph_values) {
   const auto timestamp_bounds = graph_values.LowerAndUpperBoundTimestamp(timestamp);
   if (!timestamp_bounds.first || !timestamp_bounds.second) {
     LogError("SplitOldImuFactorAndAddCombinedNavState: Failed to get upper and lower bound timestamp.");

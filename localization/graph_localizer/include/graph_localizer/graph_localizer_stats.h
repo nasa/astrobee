@@ -18,15 +18,15 @@
 #ifndef GRAPH_LOCALIZER_GRAPH_LOCALIZER_STATS_H_
 #define GRAPH_LOCALIZER_GRAPH_LOCALIZER_STATS_H_
 
+#include <graph_localizer/combined_nav_state_graph_values.h>
 #include <graph_optimizer/graph_stats.h>
-#include <graph_optimizer/graph_values.h>
 
 namespace graph_localizer {
 class GraphLocalizerStats : public graph_optimizer::GraphStats {
  public:
   GraphLocalizerStats();
   void SetCombinedNavStateGraphValues(
-    std::shared_ptr<const graph_optimizer::GraphValues> combined_nav_state_graph_values);
+    std::shared_ptr<const CombinedNavStateGraphValues> combined_nav_state_graph_values);
   void UpdateErrors(const gtsam::NonlinearFactorGraph& graph_factors) final;
   void UpdateStats(const gtsam::NonlinearFactorGraph& graph_factors) final;
 
@@ -59,7 +59,7 @@ class GraphLocalizerStats : public graph_optimizer::GraphStats {
   localization_common::Averager bias_prior_error_averager_ = localization_common::Averager("Bias Prior Error");
 
  private:
-  std::shared_ptr<const graph_optimizer::GraphValues> combined_nav_state_graph_values_;
+  std::shared_ptr<const CombinedNavStateGraphValues> combined_nav_state_graph_values_;
 };
 }  // namespace graph_localizer
 

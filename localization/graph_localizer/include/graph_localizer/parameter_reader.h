@@ -20,6 +20,7 @@
 
 #include <config_reader/config_reader.h>
 #include <graph_localizer/calibration_params.h>
+#include <graph_localizer/combined_nav_state_graph_values_params.h>
 #include <graph_localizer/combined_nav_state_node_updater_params.h>
 #include <graph_localizer/factor_params.h>
 #include <graph_localizer/feature_point_node_updater_params.h>
@@ -50,6 +51,8 @@ void LoadSanityCheckerParams(config_reader::ConfigReader& config, SanityCheckerP
 // Loads all params except some (biases and start pose) that are
 // not loaded from config files
 void LoadGraphInitializerParams(config_reader::ConfigReader& config, GraphInitializerParams& params);
+void LoadCombinedNavStateGraphValuesParams(config_reader::ConfigReader& config,
+                                           CombinedNavStateGraphValuesParams& params);
 void LoadCombinedNavStateNodeUpdaterParams(config_reader::ConfigReader& config,
                                            CombinedNavStateNodeUpdaterParams& params);
 void LoadFeaturePointNodeUpdaterParams(config_reader::ConfigReader& config, FeaturePointNodeUpdaterParams& params);
