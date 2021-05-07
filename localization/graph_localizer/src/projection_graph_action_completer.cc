@@ -28,7 +28,7 @@ namespace go = graph_optimizer;
 namespace sym = gtsam::symbol_shorthand;
 ProjectionGraphActionCompleter::ProjectionGraphActionCompleter(
   const ProjectionFactorAdderParams& params, std::shared_ptr<const CombinedNavStateGraphValues> graph_values,
-  std::shared_ptr<go::FeaturePointGraphValues> feature_point_graph_values)
+  std::shared_ptr<FeaturePointGraphValues> feature_point_graph_values)
     : params_(params), graph_values_(graph_values), feature_point_graph_values_(std::move(feature_point_graph_values)) {
   projection_triangulation_params_.rankTolerance = 1e-9;
   // TODO(rsoussan): why is Base necessary for these?

@@ -16,7 +16,7 @@
  * under the License.
  */
 
-#include <graph_optimizer/feature_point_graph_values.h>
+#include <graph_localizer/feature_point_graph_values.h>
 #include <localization_common/logger.h>
 
 #include <gtsam/base/Vector.h>
@@ -25,13 +25,14 @@
 
 #include <iomanip>
 
-namespace graph_optimizer {
+namespace graph_localizer {
+namespace go = graph_optimizer;
 namespace lc = localization_common;
 namespace lm = localization_measurements;
 FeaturePointGraphValues::FeaturePointGraphValues(std::shared_ptr<gtsam::Values> values)
-    : GraphValues(std::move(values)), feature_key_index_(0) {}
+    : go::GraphValues(std::move(values)), feature_key_index_(0) {}
 
-boost::optional<gtsam::Key> FeaturePointGraphValues::GetKey(KeyCreatorFunction key_creator_function,
+boost::optional<gtsam::Key> FeaturePointGraphValues::GetKey(go::KeyCreatorFunction key_creator_function,
                                                             const localization_common::Time timestamp) const {
   return boost::none;
 }
@@ -117,4 +118,4 @@ void FeaturePointGraphValues::RemoveOldFeatures(const gtsam::KeyVector& old_keys
   }
 }
 
-}  // namespace graph_optimizer
+}  // namespace graph_localizer

@@ -27,9 +27,9 @@ namespace graph_localizer {
 namespace go = graph_optimizer;
 namespace lm = localization_measurements;
 namespace sym = gtsam::symbol_shorthand;
-ProjectionFactorAdder::ProjectionFactorAdder(
-  const ProjectionFactorAdderParams& params, std::shared_ptr<const FeatureTracker> feature_tracker,
-  std::shared_ptr<const go::FeaturePointGraphValues> feature_point_graph_values)
+ProjectionFactorAdder::ProjectionFactorAdder(const ProjectionFactorAdderParams& params,
+                                             std::shared_ptr<const FeatureTracker> feature_tracker,
+                                             std::shared_ptr<const FeaturePointGraphValues> feature_point_graph_values)
     : ProjectionFactorAdder::Base(params),
       feature_tracker_(feature_tracker),
       feature_point_graph_values_(std::move(feature_point_graph_values)) {}

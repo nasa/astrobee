@@ -16,8 +16,8 @@
  * under the License.
  */
 
-#ifndef GRAPH_OPTIMIZER_FEATURE_POINT_GRAPH_VALUES_H_
-#define GRAPH_OPTIMIZER_FEATURE_POINT_GRAPH_VALUES_H_
+#ifndef GRAPH_LOCALIZER_FEATURE_POINT_GRAPH_VALUES_H_
+#define GRAPH_LOCALIZER_FEATURE_POINT_GRAPH_VALUES_H_
 
 #include <graph_optimizer/graph_values.h>
 #include <localization_common/logger.h>
@@ -36,11 +36,11 @@
 #include <unordered_map>
 #include <utility>
 
-namespace graph_optimizer {
+namespace graph_localizer {
 namespace sym = gtsam::symbol_shorthand;
 // TODO(rsoussan): Make seperate base class for static graph values so don't have to return boost::none
 // for so many virtual fcns
-class FeaturePointGraphValues : public GraphValues {
+class FeaturePointGraphValues : public graph_optimizer::GraphValues {
  public:
   FeaturePointGraphValues(std::shared_ptr<gtsam::Values> values = std::shared_ptr<gtsam::Values>(new gtsam::Values()));
 
@@ -50,7 +50,7 @@ class FeaturePointGraphValues : public GraphValues {
   gtsam::KeyVector OldKeys(const localization_common::Time oldest_allowed_time,
                            const gtsam::NonlinearFactorGraph& graph) const final;
 
-  boost::optional<gtsam::Key> GetKey(KeyCreatorFunction key_creator_function,
+  boost::optional<gtsam::Key> GetKey(graph_optimizer::KeyCreatorFunction key_creator_function,
                                      const localization_common::Time timestamp) const final;
 
   boost::optional<localization_common::Time> OldestTimestamp() const final;
@@ -88,6 +88,6 @@ class FeaturePointGraphValues : public GraphValues {
   // Modified by projection_factor_adder, remove mutable if this changes
   mutable std::uint64_t feature_key_index_;
 };
-}  // namespace graph_optimizer
+}  // namespace graph_localizer
 
-#endif  // GRAPH_OPTIMIZER_FEATURE_POINT_GRAPH_VALUES_H_
+#endif  // GRAPH_LOCALIZER_FEATURE_POINT_GRAPH_VALUES_H_

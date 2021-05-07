@@ -20,7 +20,7 @@
 #define GRAPH_LOCALIZER_FEATURE_POINT_NODE_UPDATER_H_
 
 #include <graph_optimizer/node_updater_with_priors.h>
-#include <graph_optimizer/feature_point_graph_values.h>
+#include <graph_localizer/feature_point_graph_values.h>
 #include <graph_localizer/feature_point_node_updater_params.h>
 #include <localization_common/feature_point_3d.h>
 
@@ -61,13 +61,13 @@ class FeaturePointNodeUpdater
 
   int NumFeatures() const;
 
-  std::shared_ptr<graph_optimizer::FeaturePointGraphValues> shared_feature_point_graph_values();
+  std::shared_ptr<FeaturePointGraphValues> shared_feature_point_graph_values();
 
-  const graph_optimizer::FeaturePointGraphValues& feature_point_graph_values() const;
+  const FeaturePointGraphValues& feature_point_graph_values() const;
 
  private:
   FeaturePointNodeUpdaterParams params_;
-  std::shared_ptr<graph_optimizer::FeaturePointGraphValues> feature_point_graph_values_;
+  std::shared_ptr<FeaturePointGraphValues> feature_point_graph_values_;
 };
 }  // namespace graph_localizer
 
