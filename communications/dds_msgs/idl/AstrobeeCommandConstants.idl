@@ -342,10 +342,10 @@ module rapid {
       const rapid::String32 SETTINGS_METHOD_SET_ENABLE_IMMEDIATE_PARAM_ENABLE_IMMEDIATE = "enableImmediate";
       const rapid::DataType SETTINGS_METHOD_SET_ENABLE_IMMEDIATE_DTYPE_ENABLE_IMMEDIATE = rapid::RAPID_BOOL;
 
-      //@copy-declaration /** Allows the QP planner to re-plan a trajectory if Astrobee encounters an obstacle. */
+      //@copy-declaration /** Allows Astrobee to re-plan if it detects an obstacle too close to its forward trajectory. Enabling replanning only makes sense when you are using a planner that is able to plan around obstacles. (See Setting.setPlanner. As of 5/2021, only the QP planner can plan around obstacles). */
       const rapid::String32 SETTINGS_METHOD_SET_ENABLE_REPLAN = "setEnableReplan";
 
-      //@copy-declaration /** Set to true/false to enable/disable re-planning. */
+      //@copy-declaration /** If true, when Astrobee detects an obstacle too close to its forward trajectory, after the robot comes to a stop, the choreographer will automatically request a new trajectory from the current configured planner. If false, the robot will stop and wait for operator assistance. */
       const rapid::String32 SETTINGS_METHOD_SET_ENABLE_REPLAN_PARAM_ENABLE_REPLAN = "enableReplan";
       const rapid::DataType SETTINGS_METHOD_SET_ENABLE_REPLAN_DTYPE_ENABLE_REPLAN = rapid::RAPID_BOOL;
 
