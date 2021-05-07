@@ -16,14 +16,14 @@
  * under the License.
  */
 
-#include <graph_optimizer/graph_values_base.h>
+#include <graph_optimizer/graph_values.h>
 
 namespace graph_optimizer {
 namespace lc = localization_common;
 namespace lm = localization_measurements;
-GraphValuesBase::GraphValuesBase(std::shared_ptr<gtsam::Values> values) : values_(std::move(values)) {}
+GraphValues::GraphValues(std::shared_ptr<gtsam::Values> values) : values_(std::move(values)) {}
 
-const gtsam::Values& GraphValuesBase::values() const { return *values_; }
+const gtsam::Values& GraphValues::values() const { return *values_; }
 
-gtsam::Values& GraphValuesBase::values() { return *values_; }
+gtsam::Values& GraphValues::values() { return *values_; }
 }  // namespace graph_optimizer

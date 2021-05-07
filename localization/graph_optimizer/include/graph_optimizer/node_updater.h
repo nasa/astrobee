@@ -19,8 +19,8 @@
 #ifndef GRAPH_OPTIMIZER_NODE_UPDATER_H_
 #define GRAPH_OPTIMIZER_NODE_UPDATER_H_
 
+#include <graph_optimizer/key_info.h>
 #include <graph_optimizer/node_updater_type.h>
-#include <graph_optimizer/graph_values_base.h>
 #include <localization_common/time.h>
 
 #include <gtsam/nonlinear/Marginals.h>

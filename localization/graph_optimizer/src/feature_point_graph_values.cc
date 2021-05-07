@@ -29,7 +29,7 @@ namespace graph_optimizer {
 namespace lc = localization_common;
 namespace lm = localization_measurements;
 FeaturePointGraphValues::FeaturePointGraphValues(std::shared_ptr<gtsam::Values> values)
-    : GraphValuesBase(std::move(values)), feature_key_index_(0) {}
+    : GraphValues(std::move(values)), feature_key_index_(0) {}
 
 boost::optional<gtsam::Key> FeaturePointGraphValues::GetKey(KeyCreatorFunction key_creator_function,
                                                             const localization_common::Time timestamp) const {

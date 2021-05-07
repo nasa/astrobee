@@ -16,8 +16,8 @@
  * under the License.
  */
 
-#ifndef GRAPH_OPTIMIZER_GRAPH_VALUES_BASE_H_
-#define GRAPH_OPTIMIZER_GRAPH_VALUES_BASE_H_
+#ifndef GRAPH_OPTIMIZER_GRAPH_VALUES_H_
+#define GRAPH_OPTIMIZER_GRAPH_VALUES_H_
 
 #include <graph_optimizer/key_info.h>
 #include <localization_common/logger.h>
@@ -37,9 +37,9 @@
 
 namespace graph_optimizer {
 namespace sym = gtsam::symbol_shorthand;
-class GraphValuesBase {
+class GraphValues {
  public:
-  GraphValuesBase(std::shared_ptr<gtsam::Values> values = std::shared_ptr<gtsam::Values>(new gtsam::Values()));
+  GraphValues(std::shared_ptr<gtsam::Values> values = std::shared_ptr<gtsam::Values>(new gtsam::Values()));
 
   // Returns the oldest time that will be in graph values once the window is slid using params
   virtual boost::optional<localization_common::Time> SlideWindowNewOldestTime() const = 0;
@@ -80,4 +80,4 @@ class GraphValuesBase {
 };
 }  // namespace graph_optimizer
 
-#endif  // GRAPH_OPTIMIZER_GRAPH_VALUES_BASE_H_
+#endif  // GRAPH_OPTIMIZER_GRAPH_VALUES_H_

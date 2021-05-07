@@ -34,9 +34,9 @@ namespace lc = localization_common;
 namespace lm = localization_measurements;
 CombinedNavStateGraphValues::CombinedNavStateGraphValues(const CombinedNavStateGraphValuesParams& params,
                                                          std::shared_ptr<gtsam::Values> values)
-    : GraphValuesBase(std::move(values)), params_(params) {
-  LogDebug("GraphValuesBase: Window duration: " << params_.ideal_duration);
-  LogDebug("GraphValuesBase: Window min num states: " << params_.min_num_states);
+    : GraphValues(std::move(values)), params_(params) {
+  LogDebug("CombinedNavStateGraphValues: Window duration: " << params_.ideal_duration);
+  LogDebug("CombinedNavStateGraphValues: Window min num states: " << params_.min_num_states);
 }
 
 const CombinedNavStateGraphValuesParams& CombinedNavStateGraphValues::params() const { return params_; }
