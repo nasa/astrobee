@@ -209,9 +209,17 @@ find_package(Gflags REQUIRED)
 ADD_DEFINITIONS(-DFREEFLYER_GFLAGS_NAMESPACE=${GFLAGS_NAMESPACE})
 enable_testing()
 
+if (USE_CTC)
+  find_program(LSB_RELEASE_EXEC lsb_release)
+  execute_process(COMMAND "${LSB_RELEASE_EXEC}" --short --codename OUTPUT_VARIABLE LSB_RELEASE_VERSION_SHORT OUTPUT_STRIP_TRAILING_WHITESPACE)
+  if("${LSB_RELEASE_VERSION_SHORT}" STREQUAL "bionic")
+    set(Protobuf_PROTOC_EXECUTABLE /usr/local/bin/protoc)
+  endif()
+endif (USE_CTC)
+
 find_package(Protobuf REQUIRED)
 if (NOT PROTOBUF_PROTOC_EXECUTABLE)
-  message(FATAL_ERROR "Could not find system's protoc execuable")
+  message(FATAL_ERROR "Could not find system's protoc executable")
 endif (NOT PROTOBUF_PROTOC_EXECUTABLE)
 
 find_package(Ceres REQUIRED)
@@ -221,24 +229,11 @@ find_package(Eigen3 REQUIRED)
 find_package(ZLIB)
 find_package(Luajit20 REQUIRED)
 
-# Find OpenCV and fix a 3.3.1 bug
+# Find OpenCV
 find_package(OpenCV 3 REQUIRED)
-if (${OpenCV_VERSION} MATCHES "3.3.1")
-  foreach(__cvcomponent ${OpenCV_LIB_COMPONENTS})
-    set (__original_cvcomponent ${__cvcomponent})
-    if(NOT __cvcomponent MATCHES "^opencv_")
-      set(__cvcomponent opencv_${__cvcomponent})
-    endif()
-    if (TARGET ${__cvcomponent})
-      set_target_properties(${__cvcomponent} PROPERTIES
-          MAP_IMPORTED_CONFIG_DEBUG ""
-          MAP_IMPORTED_CONFIG_RELEASE ""
-          MAP_IMPORTED_CONFIG_RELWITHDEBINFO ""
-          MAP_IMPORTED_CONFIG_MINSIZEREL ""
-      )
-    endif()
-  endforeach(__cvcomponent)
-endif()
+foreach(__cvcomponent ${OpenCV_LIB_COMPONENTS})
+  set(OpenCV_LIBS ${OpenCV_LIBS} "${OpenCV_INSTALL_PATH}/lib/arm-linux-gnueabihf/lib${__cvcomponent}3.so")
+endforeach(__cvcomponent)
 set(OpenCV_LIBRARIES ${OpenCV_LIBS})
 
 find_package(dbow2 REQUIRED)
@@ -405,3 +400,5 @@ add_subdirectory(localization)
 if (USE_DDS)
   add_subdirectory(wdock)
 endif (USE_DDS)
+
+message("GTEST_LIBRARIES  ${GTEST_LIBRARIES}\n")
