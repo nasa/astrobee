@@ -225,6 +225,7 @@ class Executive : public ff_util::FreeFlyerNodelet {
   bool SetDataToDisk(ff_msgs::CommandStampedPtr const& cmd);
   bool SetEnableAutoReturn(ff_msgs::CommandStampedPtr const& cmd);
   bool SetEnableImmediate(ff_msgs::CommandStampedPtr const& cmd);
+  bool SetEnableReplan(ff_msgs::CommandStampedPtr const& cmd);
   bool SetFlashlightBrightness(ff_msgs::CommandStampedPtr const& cmd);
   bool SetHolonomicMode(ff_msgs::CommandStampedPtr const& cmd);
   bool SetInertia(ff_msgs::CommandStampedPtr const& cmd);

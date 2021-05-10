@@ -87,6 +87,9 @@ bool immediate_enabled
 # Specifies the current planner being used
 string planner
 
+# Specifies whether re-planning is allowed
+bool replanning_enabled
+
 # Specifies the current world being used
 string world
 

@@ -1243,7 +1243,8 @@ bool Executive::ConfigureMobility(std::string const& cmd_id) {
   // This function is not used for the first segment of a plan so always disable
   // move to start
   choreographer_cfg_->Set<bool>("enable_bootstrapping", false);
-  choreographer_cfg_->Set<bool>("enable_replanning", false);
+  choreographer_cfg_->Set<bool>("enable_replanning",
+                                              agent_state_.replanning_enabled);
 
   // Mapper
   mapper_cfg_->Set<double>("inflate_radius", agent_state_.collision_distance);
@@ -1308,7 +1309,8 @@ bool Executive::ConfigureMobility(bool move_to_start,
                                                 agent_state_.immediate_enabled);
   choreographer_cfg_->Set<std::string>("planner", agent_state_.planner);
   choreographer_cfg_->Set<bool>("enable_bootstrapping", move_to_start);
-  choreographer_cfg_->Set<bool>("enable_replanning", false);
+  choreographer_cfg_->Set<bool>("enable_replanning",
+                                              agent_state_.replanning_enabled);
 
   // Mapper
   mapper_cfg_->Set<double>("inflate_radius", agent_state_.collision_distance);
@@ -2455,6 +2457,26 @@ bool Executive::SetEnableImmediate(ff_msgs::CommandStampedPtr const& cmd) {
     }
 
     agent_state_.immediate_enabled = cmd->args[0].b;
+    PublishAgentState();
+    state_->AckCmd(cmd->cmd_id);
+    return true;
+  }
+  return false;
+}
+
+bool Executive::SetEnableReplan(ff_msgs::CommandStampedPtr const& cmd) {
+  NODELET_INFO("Executive executing set enable replan command!");
+  if (CheckNotMoving(cmd)) {
+    if (cmd->args.size() != 1 ||
+        cmd->args[0].data_type != ff_msgs::CommandArg::DATA_TYPE_BOOL) {
+      NODELET_ERROR("Malformed arguments for enable replan command!");
+      state_->AckCmd(cmd->cmd_id,
+                     ff_msgs::AckCompletedStatus::BAD_SYNTAX,
+                     "Malformed arguments for enable replan command!");
+      return false;
+    }
+
+    agent_state_.replanning_enabled = cmd->args[0].b;
     PublishAgentState();
     state_->AckCmd(cmd->cmd_id);
     return true;
@@ -3829,6 +3851,7 @@ void Executive::Initialize(ros::NodeHandle *nh) {
   agent_state_.auto_return_enabled = true;
   agent_state_.immediate_enabled = true;
   agent_state_.time_sync_enabled = false;
+  agent_state_.replanning_enabled = false;
   agent_state_.boot_time = ros::Time::now().sec;
 
   PublishAgentState();

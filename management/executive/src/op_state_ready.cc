@@ -98,6 +98,8 @@ OpState* OpStateReady::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
     exec_->SetCheckZones(cmd);
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_SET_ENABLE_IMMEDIATE) {
     exec_->SetEnableImmediate(cmd);
+  } else if (cmd->cmd_name == CommandConstants::CMD_NAME_SET_ENABLE_REPLAN) {
+    exec_->SetEnableReplan(cmd);
   } else if (cmd->cmd_name ==
                         CommandConstants::CMD_NAME_SET_FLASHLIGHT_BRIGHTNESS) {
     exec_->SetFlashlightBrightness(cmd);
