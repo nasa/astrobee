@@ -88,15 +88,6 @@ Next, install all required dependencies:
     cd scripts/setup
     ./add_ros_repository.sh
     sudo apt-get update
-
-Install OpenCV 3.3.1, you can parse the argument -p to change install directory. By default, install directory is in /usr/local. If you do so, make sure CMake can find it.
-
-    ./install_opencv.sh
-
-Install Luajit, it will be installed in /usr/local
-
-    ./install_luajit.sh
-
     cd debians
     ./build_install_debians_18_04.sh
     cd ../

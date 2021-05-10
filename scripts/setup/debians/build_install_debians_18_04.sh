@@ -22,6 +22,10 @@
 
 DEBIAN_LOC=$(dirname "$(readlink -f "$0")")
 
+# Install dependencies
+./install_opencv.sh
+./install_luajit.sh
+
 sudo apt-get install -y devscripts equivs libproj-dev
 
 # delete old debians (-f avoids 'no such file' warning on first run)

@@ -23,9 +23,10 @@ echo ${CURRENT_LOC}
 PACKAGE_NAME=luajit-2.0
 
 if [ -d $PACKAGE_NAME ]; then
-  sudo rm -rf $PACKAGE_NAME
+  rm -rf $PACKAGE_NAME
 fi
-sudo git clone --quiet https://luajit.org/git/luajit-2.0.git $PACKAGE_NAME 2>&1 || exit 1
+git clone --quiet https://luajit.org/git/luajit-2.0.git $PACKAGE_NAME 2>&1 || exit 1
 cd $PACKAGE_NAME
-make && sudo make install
+make
+sudo make install
 # cd ${CURRENT_LOC}
