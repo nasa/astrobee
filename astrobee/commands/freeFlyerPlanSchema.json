@@ -1295,6 +1295,26 @@
 
     {
       "type": "CommandSpec",
+      "id": "Settings.setEnableReplan",
+      "isRapidNative": false,
+      "notes": "Allows Astrobee to re-plan if it detects an obstacle too close to its forward trajectory. Enabling replanning only makes sense when you are using a planner that is able to plan around obstacles. (See Setting.setPlanner. As of 5/2021, only the QP planner can plan around obstacles).",
+      "availableContext": [
+        "teleop",
+        "planner"
+      ],
+      "parent": "Command",
+      "params": [
+        {
+          "type": "ParamSpec",
+          "id": "enableReplan",
+          "valueType": "boolean",
+          "notes": "If true, when Astrobee detects an obstacle too close to its forward trajectory, after the robot comes to a stop, the choreographer will automatically request a new trajectory from the current configured planner. If false, the robot will stop and wait for operator assistance."
+        }
+      ]
+    },
+
+    {
+      "type": "CommandSpec",
       "id": "Admin.initializeBias",
       "isRapidNative": false,
       "notes": "Calibrates the bias parameters of Astrobee's IMU.<p/>Astrobee's IMU biases slowly drift over time. While Astrobee is actively running its localization system and maintaining a position fix, its EKF automatically corrects for bias drift under the assumption that the local environment is inertially fixed. If the localization system is turned off or loses its fix for an extended period, this command should be used to explicitly calibrate the biases prior to restarting motion. It works by integrating the robot's linear acceleration and angular velocity for about five seconds, and taking the resulting average values as the new zero. During the calibration period, the robot must remain stationary (e.g. docked or perched on a handrail, not held by an astronaut).",

@@ -105,6 +105,7 @@ string CMD_NAME_SET_CHECK_OBSTACLES = setCheckObstacles
 string CMD_NAME_SET_CHECK_ZONES = setCheckZones
 string CMD_NAME_SET_ENABLE_AUTO_RETURN = setEnableAutoReturn
 string CMD_NAME_SET_ENABLE_IMMEDIATE = setEnableImmediate
+string CMD_NAME_SET_ENABLE_REPLAN = setEnableReplan
 string CMD_NAME_SET_FLASHLIGHT_BRIGHTNESS = setFlashlightBrightness
 string CMD_NAME_SET_HOLONOMIC_MODE = setHolonomicMode
 string CMD_NAME_SET_INERTIA = setInertia
