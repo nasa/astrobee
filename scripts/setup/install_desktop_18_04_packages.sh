@@ -26,7 +26,7 @@
 scriptdir=$(dirname "$(readlink -f "$0")")
 arssrc=/etc/apt/sources.list.d/astrobee-latest.list
 
-pkg_files=${1:-$scriptdir/packages_base_18.lst $scriptdir/packages_desktop_18.lst}
+pkg_files=${1:-$scriptdir/package.lst}
 echo $pkg_files
 
 pkgs=''
@@ -64,7 +64,7 @@ fi
 
 sudo apt-get update || exit 1
 
-if ! sudo apt-get install -m -y $pkgs; then
+if ! sudo apt-get download -m -y $pkgs; then
   filter_pkgs="libroyale-dev rti-dev libsoracore-dev libmiro-dev libroyale1 rti libmiro0 libsoracore1"
   for p in $filter_pkgs; do
     pkgs=${pkgs//$p/}
