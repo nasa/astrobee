@@ -76,10 +76,6 @@ bool check_zones
 # it will auto return without checking this flag
 bool auto_return_enabled
 
-# Specifies whether timesync is enabled. Hopefully this will be used to
-# synchronize movements between Astrobees.
-bool time_sync_enabled
-
 # Specifies whether the choreographer should execute a segment immediately or
 # based on the time stamp in the segement
 bool immediate_enabled

@@ -129,17 +129,6 @@ bool GenGuestScience(const jsonloader::Command *plan_cmd,
   return true;
 }
 
-bool GenData(const jsonloader::Command *plan_cmd,
-             ff_msgs::CommandStamped *dds_cmd) {
-  const jsonloader::DataCommand *d_cmd =
-      dynamic_cast<const jsonloader::DataCommand *>(plan_cmd);
-  ff_msgs::CommandArg arg;
-  arg.data_type = ff_msgs::CommandArg::DATA_TYPE_STRING;
-  arg.s = d_cmd->data_method();
-  dds_cmd->args.push_back(arg);
-  return true;
-}
-
 bool GenCustomScience(const jsonloader::Command *plan_cmd,
                       ff_msgs::CommandStamped *dds_cmd) {
   const jsonloader::CustomGuestScienceCommand *g_cmd =
@@ -152,22 +141,6 @@ bool GenCustomScience(const jsonloader::Command *plan_cmd,
   ff_msgs::CommandArg arg2;
   arg2.data_type = ff_msgs::CommandArg::DATA_TYPE_STRING;
   arg2.s = g_cmd->command();
-  dds_cmd->args.push_back(arg2);
-  return true;
-}
-
-bool GenGeneric(const jsonloader::Command *plan_cmd,
-                ff_msgs::CommandStamped *dds_cmd) {
-  const jsonloader::GenericCommand *g_cmd =
-      dynamic_cast<const jsonloader::GenericCommand *>(plan_cmd);
-  ff_msgs::CommandArg arg;
-  arg.data_type = ff_msgs::CommandArg::DATA_TYPE_STRING;
-  arg.s = g_cmd->name();
-  dds_cmd->args.push_back(arg);
-
-  ff_msgs::CommandArg arg2;
-  arg2.data_type = ff_msgs::CommandArg::DATA_TYPE_STRING;
-  arg2.s = g_cmd->param();
   dds_cmd->args.push_back(arg2);
   return true;
 }
@@ -338,8 +311,6 @@ extern const std::unordered_map<std::string, CommandInfo> kCmdGenMap = {
   { jl::kCmdPowerOff, { cc::CMD_NAME_POWER_OFF_ITEM, cc::CMD_SUBSYS_POWER, GenPower } },
   { jl::kCmdArmPanTilt, { cc::CMD_NAME_ARM_PAN_AND_TILT, cc::CMD_SUBSYS_ARM, GenArm } },
   { jl::kCmdGripper, { cc::CMD_NAME_GRIPPER_CONTROL, cc::CMD_SUBSYS_ARM, GenGripper } },
-  { jl::kCmdClearData, { cc::CMD_NAME_CLEAR_DATA, cc::CMD_SUBSYS_DATA, GenData } },
-  { jl::kCmdDownload, { cc::CMD_NAME_DOWNLOAD_DATA, cc::CMD_SUBSYS_DATA, GenData } },
   { jl::kCmdStartGuest,
     { cc::CMD_NAME_START_GUEST_SCIENCE, cc::CMD_SUBSYS_GUEST_SCIENCE, GenGuestScience } },
   { jl::kCmdStopGuest,
@@ -348,8 +319,6 @@ extern const std::unordered_map<std::string, CommandInfo> kCmdGenMap = {
     { cc::CMD_NAME_CUSTOM_GUEST_SCIENCE, cc::CMD_SUBSYS_GUEST_SCIENCE, GenCustomScience } },
   { jl::kCmdFlashlight,
     { cc::CMD_NAME_SET_FLASHLIGHT_BRIGHTNESS, cc::CMD_SUBSYS_POWER, GenFlashlight } },
-  { jl::kCmdGenericCmd,
-    { cc::CMD_NAME_GENERIC_COMMAND, cc::CMD_SUBSYS_SETTINGS, GenGeneric } },
   { jl::kCmdIdleProp,
     { cc::CMD_NAME_IDLE_PROPULSION, cc::CMD_SUBSYS_MOBILITY, GenNoop } },
   { jl::kCmdSetCamera,
