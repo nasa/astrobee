@@ -1,0 +1,25 @@
+Source: libsoracore
+Priority: optional
+Maintainer: Brian Coltin <brian.j.coltin@nasa.gov>
+Build-Depends: debhelper (>=9), rti-dev (>=5.1), libmiro-dev (>=0.3), libeigen3-dev (>=3.0)
+Standards-Version: 3.9.6
+Section: libs
+Homepage: https://github.com/mallanmba/soraCore/
+
+Package: libsoracore-dev
+Section: libdevel
+Architecture: any
+Depends: rti-dev (>=5.1),
+         libmiro-dev (>=0.3),
+         libeigen3-dev (>=3.0),
+         libsoracore1 (= ${binary:Version}), ${misc:Depends}
+Description: Soracore rover software.
+ Rover software core libraries.
+
+Package: libsoracore1
+Architecture: any
+Depends: rti (>=5.1),
+         libmiro0 (>=0.3),
+         ${shlibs:Depends}, ${misc:Depends}
+Description: Soracore rover software.
+ Rover software core libraries.

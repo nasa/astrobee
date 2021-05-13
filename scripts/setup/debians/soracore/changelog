@@ -1,0 +1,11 @@
+libsoracore (2.0-1) unstable; urgency=medium
+
+  * Ubuntu 18 compatible.
+
+ -- Brian Coltin <brian.j.coltin@nasa.gov>  Tue, 09 May 2017 10:23:43 -0700
+
+libsoracore (1.0-1) unstable; urgency=medium
+
+  * Initial release.
+
+ -- Brian Coltin <brian.j.coltin@nasa.gov>  Tue, 09 May 2017 10:23:43 -0700
