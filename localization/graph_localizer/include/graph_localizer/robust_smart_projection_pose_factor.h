@@ -77,10 +77,11 @@ class RobustSmartProjectionPoseFactor : public SmartProjectionPoseFactor<CALIBRA
       this->computeJacobiansSVD(F, E0, b, cameras, *(this->point()));
       // TODO(rsoussan): This should be here but leads to a degeneracy.  It is done like this in gtsam
       // for the jacobiansvd factorization but not the hessian factorization -> why?
-    }       // else if (useForRotationOnly(result)) {  // Rotation only factor
-            // Unit3 backProjected = cameras[0].backprojectPointAtInfinity(this->measured().at(0));
+    }       else if (useForRotationOnly(result)) {  // Rotation only factor
+             Unit3 backProjected = cameras[0].backprojectPointAtInfinity(this->measured().at(0));
+            this->computeJacobiansSVD(F, E0, b, cameras, backProjected);
             // this->computeJacobiansSVD(F, E0, b, cameras, backProjected);
-            // }
+             }
     else {  // Empty factor  // NOLINT
       return boost::make_shared<JacobianFactorSVD<Dim, 2>>(this->keys());
     }
@@ -99,8 +100,8 @@ class RobustSmartProjectionPoseFactor : public SmartProjectionPoseFactor<CALIBRA
       try {
         const double total_reprojection_loss = this->totalReprojectionError(this->cameras(values));
         const auto result = this->point();
+        if (!result.valid() && !useForRotationOnly(result)) return 0.0;
         // TODO(rsoussan): This should be here but leads to a degeneracy (see comment in linearize)
-        // if (!result.valid() && !useForRotationOnly(result)) return 0.0;
         // Multiply by 2 since totalReporjectionError divides mahal distance by 2, and robust_model_->loss
         // expects mahal distance
         const double loss = robust_ ? robustLoss(2.0 * total_reprojection_loss) : total_reprojection_loss;

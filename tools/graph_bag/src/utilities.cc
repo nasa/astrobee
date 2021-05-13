@@ -73,7 +73,7 @@ void FeatureTrackImage(const graph_localizer::FeatureTrackIdMap& feature_tracks,
 void MarkSmartFactorPoints(const std::vector<const SmartFactor*> smart_factors,
                            const camera::CameraParameters& camera_params, cv::Mat& feature_track_image) {
   for (const auto smart_factor : smart_factors) {
-    const auto& point = smart_factor->measured().front();
+    const auto& point = smart_factor->measured().back();
     const auto distorted_point = Distort(point, camera_params);
     cv::circle(feature_track_image, distorted_point, 15 /* Radius*/, cv::Scalar(200, 100, 0), -1 /*Filled*/, 8);
   }

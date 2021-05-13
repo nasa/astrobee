@@ -46,9 +46,10 @@ namespace lc = localization_common;
 GraphOptimizer::GraphOptimizer(const GraphOptimizerParams& params, std::unique_ptr<GraphStats> graph_stats)
     : graph_stats_(std::move(graph_stats)), values_(new gtsam::Values()), log_on_destruction_(true), params_(params) {
   // Initialize lm params
+//levenberg_marquardt_params_.setLinearSolverType("CHOLMOD");
   if (params_.verbose) {
-    levenberg_marquardt_params_.verbosityLM = gtsam::LevenbergMarquardtParams::VerbosityLM::TRYDELTA;
-    levenberg_marquardt_params_.verbosity = gtsam::NonlinearOptimizerParams::Verbosity::LINEAR;
+    levenberg_marquardt_params_.verbosityLM = gtsam::LevenbergMarquardtParams::VerbosityLM::TERMINATION;
+    levenberg_marquardt_params_.verbosity = gtsam::NonlinearOptimizerParams::Verbosity::ERROR;
   }
   if (params_.use_ceres_params) {
     gtsam::LevenbergMarquardtParams::SetCeresDefaults(&levenberg_marquardt_params_);
@@ -413,10 +414,19 @@ bool GraphOptimizer::Update() {
     *values_ = optimizer.optimize();
   } catch (gtsam::IndeterminantLinearSystemException) {
     log(params_.fatal_failures, "Update: Indeterminant linear system error during optimization, keeping old values.");
+} catch (gtsam::InvalidNoiseModel) {
+    log(params_.fatal_failures, "Update: bad noise model!");
+} catch (gtsam::InvalidMatrixBlock) {
+    log(params_.fatal_failures, "Update: invalid matrix block!");
+} catch (gtsam::InvalidDenseElimination) {
+    log(params_.fatal_failures, "Update: invalid dense elimination!");
+
   } catch (...) {
     log(params_.fatal_failures, "Update: Graph optimization failed, keeping old values.");
+    SaveGraphDotFile("/home/rsoussan/dot_fails/bad_graph.dot");
   }
   graph_stats_->optimization_timer_.Stop();
+    SaveGraphDotFile("/home/rsoussan/dot_fails/ok_graph.dot");
 
   // Calculate marginals after the first optimization iteration so covariances
   // can be used for first loc msg
