@@ -200,10 +200,8 @@ class Executive : public ff_util::FreeFlyerNodelet {
   // Commands
   bool ArmPanAndTilt(ff_msgs::CommandStampedPtr const& cmd);
   bool AutoReturn(ff_msgs::CommandStampedPtr const& cmd);
-  bool ClearData(ff_msgs::CommandStampedPtr const& cmd);
   bool CustomGuestScience(ff_msgs::CommandStampedPtr const& cmd);
   bool Dock(ff_msgs::CommandStampedPtr const& cmd);
-  bool DownloadData(ff_msgs::CommandStampedPtr const& cmd);
   bool Fault(ff_msgs::CommandStampedPtr const& cmd);
   bool GripperControl(ff_msgs::CommandStampedPtr const& cmd);
   bool IdlePropulsion(ff_msgs::CommandStampedPtr const& cmd);
@@ -233,15 +231,12 @@ class Executive : public ff_util::FreeFlyerNodelet {
   bool SetPlan(ff_msgs::CommandStampedPtr const& cmd);
   bool SetPlanner(ff_msgs::CommandStampedPtr const& cmd);
   bool SetTelemetryRate(ff_msgs::CommandStampedPtr const& cmd);
-  bool SetTimeSync(ff_msgs::CommandStampedPtr const& cmd);
   bool SetZones(ff_msgs::CommandStampedPtr const& cmd);
-  bool Shutdown(ff_msgs::CommandStampedPtr const& cmd);
   bool SkipPlanStep(ff_msgs::CommandStampedPtr const& cmd);
   bool StartGuestScience(ff_msgs::CommandStampedPtr const& cmd);
   bool StartRecording(ff_msgs::CommandStampedPtr const& cmd);
   bool StopAllMotion(ff_msgs::CommandStampedPtr const& cmd);
   bool StopArm(ff_msgs::CommandStampedPtr const& cmd);
-  bool StopDownload(ff_msgs::CommandStampedPtr const& cmd);
   bool StopRecording(ff_msgs::CommandStampedPtr const& cmd);
   bool StopGuestScience(ff_msgs::CommandStampedPtr const& cmd);
   bool StowArm(ff_msgs::CommandStampedPtr const& cmd);
@@ -250,7 +245,6 @@ class Executive : public ff_util::FreeFlyerNodelet {
   bool Unperch(ff_msgs::CommandStampedPtr const& cmd);
   bool Unterminate(ff_msgs::CommandStampedPtr const& cmd);
   bool Wait(ff_msgs::CommandStampedPtr const& cmd);
-  bool WipeHlp(ff_msgs::CommandStampedPtr const& cmd);
 
  protected:
   virtual void Initialize(ros::NodeHandle *nh);

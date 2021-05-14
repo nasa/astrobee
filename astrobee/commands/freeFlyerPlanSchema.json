@@ -52,17 +52,6 @@
 
     {
       "type": "ParamSpec",
-      "id": "Data.DownloadMethod",
-      "valueType": "string",
-      "notes": "Specifies which log to operate on. Typically, the \"Immediate\" log is for high-priority telemetry that should be downloaded immediately after the activity, and the \"Delayed\" log is for other telemetry.",
-      "choices": [
-        ["Immediate", "Immediate"],
-        ["Delayed", "Delayed"]
-      ]
-    },
-
-    {
-      "type": "ParamSpec",
       "id": "Settings.FlightMode",
       "valueType": "string",
       "notes": "Setting the flight mode updates the GN&C gains, hard limits, tolerances, etc., as specified in the world config file. See e.g. astrobee/astrobee/config/worlds/iss.config. Note that executing certain operations, such as docking, automatically switches the flight mode as needed. Values:<ul><li>Off: Turns off propulsion.</li><li>Quiet: Sets propulsion impeller speed to QUIET (low speed) with gains and limits tuned to safely fly within the reduced performance.</li><li>Nominal: Sets propulsion impeller speed to NOMINAL (medium speed), with gains and limits tuned for typical utility flying.</li><li>Difficult: Sets propulsion impeller speed to AGGRESSIVE (high speed), with gains and limits tuned for maximum performance.</li><li>Precision: Sets propulsion impeller speed to AGGRESSIVE, with gains and limits tuned for precise motion (slow speed, tight position and attitude tolerances).</li></ul>",
@@ -358,19 +347,6 @@
 
     {
       "type": "CommandSpec",
-      "id": "Admin.wipeHlp",
-      "isRapidNative": false,
-      "notes": "Not implemented. This command is intended to erase certain data on the Astrobee HLP's local storage.",
-      "javaNotes": "Do not use this command. It will erase your running APK.",
-      "availableContexts": [
-        "teleop"
-      ],
-      "parent": "Command",
-      "params": []
-    },
-
-    {
-      "type": "CommandSpec",
       "id": "Mobility.idlePropulsion",
       "isRapidNative": false,
       "notes": "Idles the propulsion impeller motors.<p/>Astrobee will lose control authority. If it is not grounded in some way (docked or perched), it will drift uncontrolled. Note that the impellers have significant inertia, and may take several seconds to spin down.<p/>This command is usually invoked automatically (e.g., at the end of successful docking or perching). It can also be used as a fault response (e.g., responding to an overspeed fault).",
@@ -380,66 +356,6 @@
       ],
       "parent": "Command",
       "params": []
-    },
-
-    {
-      "type": "CommandSpec",
-      "id": "Data.downloadData",
-      "isRapidNative": false,
-      "oldFswAlias": "startDownload",
-      "notes": "Not implemented. This command is intended to start downloading certain data logs stored onboard the robot.<p/>Currently, downlink is initiated manually via SSH and rsync, managed by a terminal menu configured in the astrobee_ops repo. See also IRG-FFTEST217 Astrobee Wrap-Up and Shutdown.",
-      "javaNotes": "Data can only be downloaded when docked.",
-      "availableContexts": [
-        "teleop",
-        "planner"
-      ],
-      "parent": "Command",
-      "params": [
-        {
-          "type": "ParamSpec",
-          "id": "dataMethod",
-          "parent": "Data.DownloadMethod"
-        }
-      ]
-    },
-
-    {
-      "type": "CommandSpec",
-      "id": "Data.stopDownload",
-      "isRapidNative": false,
-      "isStopCommand": true,
-      "stopCommandType": "Data.downloadData",
-      "notes": "Not implemented. This command is intended to stop downloading data. See Data.downloadData.",
-      "availableContexts": [
-        "teleop"
-      ],
-      "parent": "Command",
-      "params": [
-        {
-          "type": "ParamSpec",
-          "id": "dataMethod",
-          "parent": "Data.DownloadMethod"
-        }
-      ]
-    },
-
-    {
-      "type": "CommandSpec",
-      "id": "Data.clearData",
-      "isRapidNative": false,
-      "notes": "Not implemented. This command is intended to clear certain data logs onboard the robot after they have been downloaded, in order to free storage space.<p/>Currently, onboard storage is managed as follows:<ol><li>Prior to an activity, review what files have been downloaded after previous activities, and specify which files are ready be deleted from onboard storage in the Test Readiness Review notes on the FFFSW Confluence wiki.</li><li>Manually delete those files (via SSH session) at the start of the commanding window, before executing the activity.</li></ol><p/>See also IRG-FFTEST207a Astrobee Quick Wakeup and Checkout.",
-      "availableContexts": [
-        "teleop",
-        "planner"
-      ],
-      "parent": "Command",
-      "params": [
-        {
-          "type": "ParamSpec",
-          "id": "dataMethod",
-          "parent": "Data.DownloadMethod"
-        }
-      ]
     },
 
     {
@@ -988,18 +904,6 @@
 
     {
       "type": "CommandSpec",
-      "id": "Admin.shutdown",
-      "isRapidNative": true,
-      "notes": "Not implemented. This command is intended to put Astrobee in hibernate power mode.<p/>An Astrobee that is hibernating can't receive Astrobee API commands. However, it can later be remotely awakened, if it is on the dock and not physically switched off. See the procedure IRG-FFTEST217 Astrobee Wrap-Up and Shutdown for current instructions on how to shut down an Astrobee, using a terminal session.",
-      "availableContexts": [
-        "teleop"
-      ],
-      "parent": "Command",
-      "params": []
-    },
-
-    {
-      "type": "CommandSpec",
       "id": "Mobility.stopAllMotion",
       "isRapidNative": true,
       "notes": "Stops motion of the mobility system and the arm.<p/>Stopping the mobility system means transitioning to active station keeping (the propulsion system is activated if needed). The arm is stopped as in Arm.stopArm (the joints are commanded to maintain their current position, and the gripper is not affected).<p/>Note that there is special behavior when this command is issued by the system monitor as a fault response: in that case, idled propulsion will not be activated. The special behavior ensures that when responding to multiple faults with different responses configured (stopAllMotion vs. idlePropulsion), the idlePropulsion response takes priority.",
@@ -1134,32 +1038,6 @@
 
     {
       "type": "CommandSpec",
-      "id": "Settings.genericCommand",
-      "isRapidNative": false,
-      "notes": "Invokes a 'generic' command, i.e., one that was added to the Astrobee API after the Astrobee control station code freeze. At present, no such commands are defined.",
-      "availableContexts": [
-        "teleop",
-        "planner"
-      ],
-      "parent": "Command",
-      "params": [
-        {
-          "type": "ParamSpec",
-          "id": "commandName",
-          "valueType": "string",
-          "notes": "Which generic command to invoke."
-        },
-        {
-          "type": "ParamSpec",
-          "id": "param",
-          "valueType": "string",
-          "notes": "The parameters for the generic command, usually formatted as a JSON dictionary. This allows any number of parameters, with arbitrary types."
-        }
-      ]
-    },
-
-    {
-      "type": "CommandSpec",
       "id": "Admin.loadNodelet",
       "isRapidNative": false,
       "notes": "Not implemented. This command is intended to load a ROS nodelet in the Astrobee flight software.<p/>There is an internal service advertised by the system monitor that provides a method very similar to this command, but as of Oct 2020, there is no way to invoke it through a standard Astrobee API call. Also note, the underlying system monitor service can't load nodelets that run on the HLP.",
@@ -1240,7 +1118,7 @@
       "type": "CommandSpec",
       "id": "Settings.setEnableImmediate",
       "isRapidNative": false,
-      "notes": "For expert use only. Changes the semantics of how Astrobee executes fplan trajectory segments.<p/>A segment specifies the motion trajectory between stations in the plan. Within the segment, desired pose and velocity are smoothly interpolated functions of time over a time interval [t0, t1]. Plans created by the Astrobee control station plan editor always specify each segment's time values relative to the start of that segment's execution (i.e. t0 = 0). These plans must be executed in immediate mode, so called because when execution reaches a new segment, the executive and choreographer immediately 'start the clock' on executing the timed trajectory. In principle, if you want to synchronize motion of multiple robots, it could be useful to have the interval [t0, t1] specified using absolute timestamps. That is the behavior when immediate mode is disabled. The timestamp t0 is interpreted as absolute time using ROS conventions (usually UNIX epoch when running on real hardware, but could be any arbitrary time scale when running in simulation), and the start of motion on the segment would be delayed until the current time t = t0.<p/>At this time, we cannot recommend disabling immediate mode to achieve synchronization, due to the following concerns: (1) execution with absolute timestamps has never really been tested, and may be buggy, (2) the control station plan editor doesn't provide any way to generate segments with absolute timestamps, (3) since it is seldom possible to predict exactly when ISS conditions will be right to begin a multi-robot activity, it would be awkward in practice to have the exact absolute timing of segments hard-coded into the plans.<p/>As an alternative way to synchronize motion, you can execute with immediate mode enabled as usual, but take special care to minimize any skew in start time. Upload the plans in advance, use the Mobility.prepare command to get the robots ready to move, and then run the plans simultaneously. There could be up to a half a second of delay between the robots starting their plans. See also Settings.setTimeSync. Astrobee to Astrobee communication is also in the works, and may eventually enable synchronizing Astrobees in a better way.<p/>Note: Immediate mode motion control is not related to immediate download (as in Data.setDataToDisk).",
+      "notes": "For expert use only. Changes the semantics of how Astrobee executes fplan trajectory segments.<p/>A segment specifies the motion trajectory between stations in the plan. Within the segment, desired pose and velocity are smoothly interpolated functions of time over a time interval [t0, t1]. Plans created by the Astrobee control station plan editor always specify each segment's time values relative to the start of that segment's execution (i.e. t0 = 0). These plans must be executed in immediate mode, so called because when execution reaches a new segment, the executive and choreographer immediately 'start the clock' on executing the timed trajectory. In principle, if you want to synchronize motion of multiple robots, it could be useful to have the interval [t0, t1] specified using absolute timestamps. That is the behavior when immediate mode is disabled. The timestamp t0 is interpreted as absolute time using ROS conventions (usually UNIX epoch when running on real hardware, but could be any arbitrary time scale when running in simulation), and the start of motion on the segment would be delayed until the current time t = t0.<p/>At this time, we cannot recommend disabling immediate mode to achieve synchronization, due to the following concerns: (1) execution with absolute timestamps has never really been tested, and may be buggy, (2) the control station plan editor doesn't provide any way to generate segments with absolute timestamps, (3) since it is seldom possible to predict exactly when ISS conditions will be right to begin a multi-robot activity, it would be awkward in practice to have the exact absolute timing of segments hard-coded into the plans.<p/>As an alternative way to synchronize motion, you can execute with immediate mode enabled as usual, but take special care to minimize any skew in start time. Upload the plans in advance, use the Mobility.prepare command to get the robots ready to move, and then run the plans simultaneously. Astrobee to Astrobee communication is in the works, and may eventually enable synchronizing Astrobees in a better way.",
       "availableContext": [
         "teleop"
       ],
@@ -1251,25 +1129,6 @@
           "id": "enableImmediate",
           "valueType": "boolean",
           "notes": "Set to true/false to enable/disable immediate mode motion control."
-        }
-      ]
-    },
-
-    {
-      "type": "CommandSpec",
-      "id": "Settings.setTimeSync",
-      "isRapidNative": false,
-      "notes": "For expert use only. Enables 'discrete time unit' synchronization for multiple Astrobees.<p/>Enabling time sync changes how Astrobee initiates motion along each trajectory segment. It delays the start of motion until the time is an integer multiple of the discrete time unit, a configurable value that is currently set to five seconds. The idea is that if an operator tries to start two robots moving at the same time, even if there is some differential delay in how long the command takes to arrive at each robot, as long as both robots receive the command within the same discrete time unit window, they will start at the same moment (i.e., the beginning of the next window).<p/>However, we can not recommend enabling time sync to achieve synchronization at this time, due to the following concerns: (1) execution with time sync has never really been tested, and may be buggy, (2) the synchronization protocol is not robust: one can not guarantee that the different robots will receive the command within the same discrete time unit window.",
-      "availableContext": [
-        "teleop"
-      ],
-      "parent": "Command",
-      "params": [
-        {
-          "type": "ParamSpec",
-          "id": "setTimeSync",
-          "valueType": "boolean",
-          "notes": "Set to true/false to enable/disable discrete time unit synchronization."
         }
       ]
     },
