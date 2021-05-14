@@ -25,6 +25,8 @@
 #include <opencv2/video/tracking.hpp>
 #include <ros/ros.h>
 
+#define CV_FONT_NORMAL CV_RAND_NORMAL
+
 namespace lk_optical_flow {
 
 LKOpticalFlow::LKOpticalFlow(void) :

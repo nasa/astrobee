@@ -47,7 +47,7 @@ namespace cv {
 namespace sparse_mapping {
 
   typedef std::map<std::pair<int, int>, Eigen::Affine3d, std::less<std::pair<int, int> >,
-                   Eigen::aligned_allocator<std::pair<std::pair<const int, const int>, Eigen::Affine3d> > >
+                   std::allocator<std::pair<std::pair<int , int > const, Eigen::Affine3d> > >
                    CIDPairAffineMap;
   typedef std::array<std::pair<std::pair<int, int>, Eigen::Affine3d>, 3> CIDAffineTuple;
   typedef std::vector<CIDAffineTuple, Eigen::aligned_allocator<CIDAffineTuple> > CIDAffineTupleVec;
