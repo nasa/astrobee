@@ -1235,8 +1235,7 @@ bool Executive::ConfigureMobility(std::string const& cmd_id) {
   choreographer_cfg_->Set<bool>("enable_collision_checking",
                                                   agent_state_.check_obstacles);
   choreographer_cfg_->Set<bool>("enable_validation", agent_state_.check_zones);
-  choreographer_cfg_->Set<bool>("enable_timesync",
-                                                agent_state_.time_sync_enabled);
+  choreographer_cfg_->Set<bool>("enable_timesync", false);
   choreographer_cfg_->Set<bool>("enable_immediate",
                                                 agent_state_.immediate_enabled);
   choreographer_cfg_->Set<std::string>("planner", agent_state_.planner);
@@ -1303,8 +1302,7 @@ bool Executive::ConfigureMobility(bool move_to_start,
   choreographer_cfg_->Set<bool>("enable_collision_checking",
                                                   agent_state_.check_obstacles);
   choreographer_cfg_->Set<bool>("enable_validation", agent_state_.check_zones);
-  choreographer_cfg_->Set<bool>("enable_timesync",
-                                                agent_state_.time_sync_enabled);
+  choreographer_cfg_->Set<bool>("enable_timesync", false);
   choreographer_cfg_->Set<bool>("enable_immediate",
                                                 agent_state_.immediate_enabled);
   choreographer_cfg_->Set<std::string>("planner", agent_state_.planner);
@@ -1559,42 +1557,6 @@ bool Executive::AutoReturn(ff_msgs::CommandStampedPtr const& cmd) {
   return successful;
 }
 
-bool Executive::ClearData(ff_msgs::CommandStampedPtr const& cmd) {
-  NODELET_INFO("Executive executing clear data command!");
-  bool successful = true;
-  uint8_t completed_status = ff_msgs::AckCompletedStatus::OK;
-  std::string err_msg = "";
-
-  // Don't clear data when flying, docking, perching, or trying to stop
-  if (!CheckNotMoving(cmd)) {
-    return false;
-  }
-
-  // Check to make sure command is formatted as expected
-  if (cmd->args.size() != 1 ||
-      cmd->args[0].data_type != ff_msgs::CommandArg::DATA_TYPE_STRING) {
-    successful = false;
-    err_msg = "Malformed arguments for clear data command!";
-  } else if (cmd->args[0].s !=
-                          CommandConstants::PARAM_NAME_DOWNLOAD_METHOD_IMMEDIATE
-      && cmd->args[0].s !=
-                        CommandConstants::PARAM_NAME_DOWNLOAD_METHOD_DELAYED) {
-    successful = false;
-    err_msg = "Data method not recognized. Needs to be immediate or delay.";
-    completed_status = ff_msgs::AckCompletedStatus::BAD_SYNTAX;
-  } else {
-    // TODO(Katie) Stub, change to be actual code, including setting a class
-    // variable to tell if we are downloading data, cannot clear data if
-    // downloading data
-    successful = true;
-    NODELET_ERROR("Clear data not implemented yet!");
-  }
-
-  state_->AckCmd(cmd->cmd_id, completed_status, err_msg);
-
-  return successful;
-}
-
 bool Executive::CustomGuestScience(ff_msgs::CommandStampedPtr const& cmd) {
   NODELET_INFO("Executive executing custom guest science command!");
   // Check command arguments are correcy before sending to the guest science
@@ -1653,46 +1615,6 @@ bool Executive::Dock(ff_msgs::CommandStampedPtr const& cmd) {
                    ff_msgs::AckCompletedStatus::EXEC_FAILED,
                    err_msg);
   }
-  return successful;
-}
-
-bool Executive::DownloadData(ff_msgs::CommandStampedPtr const& cmd) {
-  NODELET_INFO("Executive executing download data command!");
-  bool successful = true;
-  std::string err_msg = "";
-  uint8_t completed_status;
-
-  // Check to make sure command is formatted as expected
-  if (cmd->args.size() != 1 ||
-      cmd->args[0].data_type != ff_msgs::CommandArg::DATA_TYPE_STRING) {
-    successful = false;
-    err_msg = "Malformed arguments for download data command!";
-    completed_status = ff_msgs::AckCompletedStatus::BAD_SYNTAX;
-  } else if (cmd->args[0].s !=
-                          CommandConstants::PARAM_NAME_DOWNLOAD_METHOD_IMMEDIATE
-      && cmd->args[0].s !=
-                        CommandConstants::PARAM_NAME_DOWNLOAD_METHOD_DELAYED) {
-    successful = false;
-    err_msg = "Download method not recognized. Needs to be immediate or delay.";
-    completed_status = ff_msgs::AckCompletedStatus::BAD_SYNTAX;
-  } else if (agent_state_.mobility_state.state !=
-                                              ff_msgs::MobilityState::DOCKING ||
-            (agent_state_.mobility_state.state ==
-                                              ff_msgs::MobilityState::DOCKING &&
-             agent_state_.mobility_state.sub_state != 0)) {
-    // Can only download data when docked
-    successful = false;
-    err_msg = "Not docked! Need to be docked in order to download data.";
-    completed_status = ff_msgs::AckCompletedStatus::EXEC_FAILED;
-  } else {
-    // TODO(Katie) Stub, change to be actual code, including setting a class
-    // variable to tell if we are downloading data and what kind of data
-    successful = true;
-    NODELET_ERROR("Download data not implemented yet!");
-    completed_status = ff_msgs::AckCompletedStatus::OK;
-  }
-
-  state_->AckCmd(cmd->cmd_id, completed_status, err_msg);
   return successful;
 }
 
@@ -2816,26 +2738,6 @@ bool Executive::SetTelemetryRate(ff_msgs::CommandStampedPtr const& cmd) {
   return true;
 }
 
-bool Executive::SetTimeSync(ff_msgs::CommandStampedPtr const& cmd) {
-  NODELET_INFO("Executive executing set time sync command!");
-  // Don't set time sync when moving
-  if (CheckNotMoving(cmd)) {
-    if (cmd->args.size() != 1 ||
-        cmd->args[0].data_type != ff_msgs::CommandArg::DATA_TYPE_BOOL) {
-      state_->AckCmd(cmd->cmd_id,
-                     ff_msgs::AckCompletedStatus::BAD_SYNTAX,
-                     "Malformed arguments for enable time sync command!");
-      return false;
-    }
-
-    agent_state_.time_sync_enabled = cmd->args[0].b;
-    PublishAgentState();
-    state_->AckCmd(cmd->cmd_id);
-    return true;
-  }
-  return false;
-}
-
 bool Executive::SetZones(ff_msgs::CommandStampedPtr const& cmd) {
   NODELET_INFO("Executive executing set zones command!");
   if (CheckNotMoving(cmd)) {
@@ -2984,20 +2886,6 @@ bool Executive::SetZones(ff_msgs::CommandStampedPtr const& cmd) {
     state_->AckCmd(cmd->cmd_id,
                    ff_msgs::AckCompletedStatus::EXEC_FAILED,
                    "No zones file found.");
-    return false;
-  }
-  return false;
-}
-
-bool Executive::Shutdown(ff_msgs::CommandStampedPtr const& cmd) {
-  NODELET_INFO("Executive executing shutdown command!");
-  // Don't want to shutdown when flying, docking, perching, or trying to stop
-  if (CheckNotMoving(cmd)) {
-    // TODO(Katie) Stub, change to be actual code, ack complete immediately
-    // TODO(Katie) Add code to shutdown the robot
-    state_->AckCmd(cmd->cmd_id,
-                   ff_msgs::AckCompletedStatus::EXEC_FAILED,
-                   "Shutdown not implemented yet! Stay tune!");
     return false;
   }
   return false;
@@ -3315,43 +3203,6 @@ bool Executive::StopArm(ff_msgs::CommandStampedPtr const& cmd) {
   return true;
 }
 
-bool Executive::StopDownload(ff_msgs::CommandStampedPtr const& cmd) {
-  NODELET_INFO("Executive executing stop download command!");
-  std::string err_msg;
-  // Check to make sure command is formatted as expected
-  if (cmd->args.size() != 1 ||
-      cmd->args[0].data_type != ff_msgs::CommandArg::DATA_TYPE_STRING) {
-    err_msg = "Malformed arguments for stop download command!";
-    NODELET_ERROR("%s", err_msg.c_str());
-    state_->AckCmd(cmd->cmd_id,
-                   ff_msgs::AckCompletedStatus::BAD_SYNTAX,
-                   err_msg);
-    return false;
-  }
-
-  if (cmd->args[0].s != CommandConstants::PARAM_NAME_DOWNLOAD_METHOD_IMMEDIATE
-      && cmd->args[0].s !=
-                        CommandConstants::PARAM_NAME_DOWNLOAD_METHOD_DELAYED) {
-    err_msg = "Download method not recognized. Needs to be immediate or delay.";
-    NODELET_ERROR("%s", err_msg.c_str());
-    state_->AckCmd(cmd->cmd_id,
-                   ff_msgs::AckCompletedStatus::BAD_SYNTAX,
-                   err_msg);
-    return false;
-  }
-
-  // TODO(Katie) Can only stop download if download occurring, check class
-  // variables to see if a download is in progress and what kind of data
-  // TODO(Katie) Stub, change to be actual code
-  err_msg = "Stop download not implemented yet!";
-  NODELET_ERROR("%s", err_msg.c_str());
-  state_->AckCmd(cmd->cmd_id,
-                 ff_msgs::AckCompletedStatus::EXEC_FAILED,
-                 err_msg);
-  // err_msg = "Not downloading data! No download to stop.";
-  return false;
-}
-
 bool Executive::StopGuestScience(ff_msgs::CommandStampedPtr const& cmd) {
   NODELET_INFO("Executive executing stop guest science command!");
   // Check command arguments are correct before sending to the guest science
@@ -3572,15 +3423,6 @@ bool Executive::Wait(ff_msgs::CommandStampedPtr const& cmd) {
 
   StartWaitTimer(cmd->args[0].f);
   return true;
-}
-
-bool Executive::WipeHlp(ff_msgs::CommandStampedPtr const& cmd) {
-  NODELET_INFO("Executive executing wipe hlp command!");
-  // TODO(Katie) Check if guest science apk is running. If so, don't wipe hlp.
-  state_->AckCmd(cmd->cmd_id,
-                 ff_msgs::AckCompletedStatus::EXEC_FAILED,
-                 "Wipe hlp not implemented yet! Stay tune!");
-  return false;
 }
 
 /************************ Protected *******************************************/
@@ -3850,7 +3692,6 @@ void Executive::Initialize(ros::NodeHandle *nh) {
   agent_state_.check_zones = true;
   agent_state_.auto_return_enabled = true;
   agent_state_.immediate_enabled = true;
-  agent_state_.time_sync_enabled = false;
   agent_state_.replanning_enabled = false;
   agent_state_.boot_time = ros::Time::now().sec;
 
