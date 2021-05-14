@@ -60,10 +60,6 @@ module rapid {
         //@copy-declaration   * a LOS. */
         public boolean enableAutoReturn;
 
-        //@copy-declaration /** Set this to true to allow mobility to possibly
-        //@copy-declaration   * help sync moves between multiple Astrobees. */
-        public boolean timeSyncEnabled;
-
         //@copy-declaration /** Set this to false if mobility should start the
         //@copy-declaration   * a segment based on its time stamp. */
         public boolean immediateEnabled;

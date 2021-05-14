@@ -15,16 +15,28 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef GRAPH_LOCALIZER_FEATURE_TRACKER_PARAMS_H_
-#define GRAPH_LOCALIZER_FEATURE_TRACKER_PARAMS_H_
 
-namespace graph_localizer {
-struct FeatureTrackerParams {
-  // Max duration, feature tracker trims measurements outside of this window or outside of graph window
-  double sliding_window_duration;
-  int smart_projection_adder_measurement_spacing;
-  bool use_allowed_timestamps;
+#ifndef GRAPH_BAG_IMU_BIAS_TESTER_ADDER_H_
+#define GRAPH_BAG_IMU_BIAS_TESTER_ADDER_H_
+
+#include <imu_bias_tester/imu_bias_tester_wrapper.h>
+
+#include <rosbag/bag.h>
+#include <rosbag/view.h>
+
+#include <string>
+
+namespace graph_bag {
+class ImuBiasTesterAdder {
+ public:
+  ImuBiasTesterAdder(const std::string& input_bag_name, const std::string& output_bag_name);
+  void AddPredictions();
+
+ private:
+  imu_bias_tester::ImuBiasTesterWrapper imu_bias_tester_wrapper_;
+  rosbag::Bag input_bag_;
+  rosbag::Bag output_bag_;
 };
-}  // namespace graph_localizer
+}  // end namespace graph_bag
 
-#endif  // GRAPH_LOCALIZER_FEATURE_TRACKER_PARAMS_H_
+#endif  // GRAPH_BAG_IMU_BIAS_TESTER_ADDER_H_

@@ -49,7 +49,7 @@ void SmartProjectionCumulativeFactorAdder::AddFactors(
     const auto points = feature_track.LatestPoints(spacing);
     // Skip already added tracks
     if (added_points.count(points.front().feature_id) > 0) continue;
-    const double average_distance_from_mean = AverageDistanceFromMean(feature_track.points());
+    const double average_distance_from_mean = AverageDistanceFromMean(points);
     if (ValidPointSet(points.size(), average_distance_from_mean, params().min_avg_distance_from_mean,
                       params().min_num_points) &&
         !TooClose(added_points, points.front(), feature_track_min_separation)) {
@@ -63,20 +63,33 @@ void SmartProjectionCumulativeFactorAdder::AddFactors(
 std::vector<FactorsToAdd> SmartProjectionCumulativeFactorAdder::AddFactors() {
   // Add smart factor for each valid feature track
   FactorsToAdd smart_factors_to_add(GraphAction::kDeleteExistingSmartFactors);
-  const auto& feature_tracks = feature_tracker_->feature_tracks_length_ordered();
-  const auto& longest_feature_track = feature_tracker_->LongestFeatureTrack();
-  if (!longest_feature_track) {
-    LogDebug("AddFactors: Failed to get longest feature track.");
-    return {};
-  }
-  const int spacing = longest_feature_track->MaxSpacing(params().max_num_points_per_factor);
+  if (params().use_allowed_timestamps) {
+    for (const auto& feature_track : feature_tracker_->feature_tracks()) {
+      const auto points = feature_track.second->AllowedPoints(feature_tracker_->smart_factor_timestamp_allow_list());
+      const double average_distance_from_mean = AverageDistanceFromMean(points);
+      if (ValidPointSet(points.size(), average_distance_from_mean, params().min_avg_distance_from_mean,
+                        params().min_num_points) &&
+          static_cast<int>(smart_factors_to_add.size()) < params().max_num_factors) {
+        AddSmartFactor(points, smart_factors_to_add);
+      }
+    }
+  } else {
+    const auto& feature_tracks = feature_tracker_->feature_tracks_length_ordered();
+    const auto& longest_feature_track = feature_tracker_->LongestFeatureTrack();
+    if (!longest_feature_track) {
+      LogDebug("AddFactors: Failed to get longest feature track.");
+      return {};
+    }
+    const int spacing = longest_feature_track->MaxSpacing(params().max_num_points_per_factor);
 
-  std::unordered_map<lm::FeatureId, lm::FeaturePoint> added_points;
-  AddFactors(feature_tracks, spacing, params().feature_track_min_separation, smart_factors_to_add, added_points);
-  if (static_cast<int>(smart_factors_to_add.size()) < params().max_num_factors) {
-    // Zero min separation so any valid feature track is added as a fallback to try to add up to max_num_factors
-    AddFactors(feature_tracks, spacing, 0, smart_factors_to_add, added_points);
+    std::unordered_map<lm::FeatureId, lm::FeaturePoint> added_points;
+    AddFactors(feature_tracks, spacing, params().feature_track_min_separation, smart_factors_to_add, added_points);
+    if (static_cast<int>(smart_factors_to_add.size()) < params().max_num_factors) {
+      // Zero min separation so any valid feature track is added as a fallback to try to add up to max_num_factors
+      AddFactors(feature_tracks, spacing, 0, smart_factors_to_add, added_points);
+    }
   }
+  if (smart_factors_to_add.empty()) return {};
   const auto latest_timestamp = feature_tracker_->LatestTimestamp();
   if (!latest_timestamp) {
     LogError("AddFactors: Failed to get latest timestamp.");
