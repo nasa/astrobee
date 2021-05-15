@@ -36,8 +36,8 @@ SmartProjectionCumulativeFactorAdder::SmartProjectionCumulativeFactorAdder(
   smart_projection_params_.setLandmarkDistanceThreshold(params.landmark_distance_threshold);
   smart_projection_params_.setDynamicOutlierRejectionThreshold(params.dynamic_outlier_rejection_threshold);
   smart_projection_params_.setRetriangulationThreshold(params.retriangulation_threshold);
-  smart_projection_params_.setRetriangulationThreshold(params.retriangulation_threshold);
-  smart_projection_params_.setDegeneracyMode(gtsam::DegeneracyMode::HANDLE_INFINITY);
+  if (params.smart_projection_adder_rotation_only_fallback)
+    smart_projection_params_.setDegeneracyMode(gtsam::DegeneracyMode::HANDLE_INFINITY);
   smart_projection_params_.setEnableEPI(params.enable_EPI);
 }
 
