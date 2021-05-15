@@ -114,7 +114,7 @@ class RobustSmartProjectionPoseFactor : public SmartProjectionPoseFactor<CALIBRA
       try {
         const auto point = serialized_point(values);
         const double total_reprojection_loss = this->totalReprojectionError(this->cameras(values), point);
-        if (!result.valid() && !useForRotationOnly(result)) return 0.0;
+        if (!point.valid() && !useForRotationOnly(point)) return 0.0;
         const double loss = robust_ ? robustLoss(2.0 * total_reprojection_loss) : total_reprojection_loss;
         return loss;
       } catch (...) {
