@@ -47,8 +47,8 @@ GraphOptimizer::GraphOptimizer(const GraphOptimizerParams& params, std::unique_p
     : graph_stats_(std::move(graph_stats)), values_(new gtsam::Values()), log_on_destruction_(true), params_(params) {
   // Initialize lm params
   if (params_.verbose) {
-    levenberg_marquardt_params_.verbosityLM = gtsam::LevenbergMarquardtParams::VerbosityLM::TERMINATION;
-    levenberg_marquardt_params_.verbosity = gtsam::NonlinearOptimizerParams::Verbosity::ERROR;
+    levenberg_marquardt_params_.verbosityLM = gtsam::LevenbergMarquardtParams::VerbosityLM::TRYDELTA;
+    levenberg_marquardt_params_.verbosity = gtsam::NonlinearOptimizerParams::Verbosity::LINEAR;
   }
   if (params_.use_ceres_params) {
     gtsam::LevenbergMarquardtParams::SetCeresDefaults(&levenberg_marquardt_params_);
