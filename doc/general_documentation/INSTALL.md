@@ -31,6 +31,7 @@ At this point you need to decide where you'd like to put the source code
 First, clone the flight software repository and media:
 
     git clone https://github.com/nasa/astrobee.git $SOURCE_PATH
+    pushd $SOURCE_PATH
     git submodule update --init --depth 1 description/media
 
 
