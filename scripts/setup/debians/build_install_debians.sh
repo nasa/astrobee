@@ -27,42 +27,74 @@ sudo apt-get install -y devscripts equivs libproj-dev
 # delete old debians (-f avoids 'no such file' warning on first run)
 rm -f *_amd64.deb
 
+DIST=cat /etc/os-release | grep -oP "(?<=VERSION_CODENAME=).*"
+
+if (DIST = "bionic")
+  # Install dependencies
+  ./install_opencv.sh
+  ./install_luajit.sh
+
+  # alvar
+  cp ${DEBIAN_LOC}/files_18_04/alvar_rules ${DEBIAN_LOC}/alvar/rules
+  cp ${DEBIAN_LOC}/files_18_04/alvar_control ${DEBIAN_LOC}/alvar/control
+  # dlib
+  cp ${DEBIAN_LOC}/files_18_04/dlib_rules ${DEBIAN_LOC}/dlib/rules
+  cp ${DEBIAN_LOC}/files_18_04/dlib_control ${DEBIAN_LOC}/dlib/control
+  # dbow2
+  cp ${DEBIAN_LOC}/files_18_04/dbow2_rules ${DEBIAN_LOC}/dbow2/rules
+  cp ${DEBIAN_LOC}/files_18_04/dbow2_control ${DEBIAN_LOC}/dbow2/control
+  # gtsam
+  # decomputil
+  #jps3d
+  sudo apt-get install -y libvtk6.3 libboost-filesystem1.62.0 libboost-system1.62.0
+  # openmvg
+elif (DIST = "focal")
+  # In progress
+fi
+
+# alvar
 cd ${DEBIAN_LOC}/alvar
 sudo mk-build-deps -i -r -t "apt-get --no-install-recommends -y" control
 cd ${DEBIAN_LOC}
 ./build_alvar.sh || exit 1
 sudo dpkg -i libalvar*_amd64.deb || exit 1
 
+# dlib
 cd ${DEBIAN_LOC}/dlib
 sudo mk-build-deps -i -r -t "apt-get --no-install-recommends -y" control
 cd ${DEBIAN_LOC}
 ./build_dlib.sh || exit 1
 sudo dpkg -i libdbowdlib*_amd64.deb || exit 1
 
+# dbow2
 cd ${DEBIAN_LOC}/dbow2
 sudo mk-build-deps -i -r -t "apt-get --no-install-recommends -y" control
 cd ${DEBIAN_LOC}
 ./build_dbow2.sh || exit 1
 sudo dpkg -i libdbow*_amd64.deb || exit 1
 
+# gtsam
 cd ${DEBIAN_LOC}/gtsam
 sudo mk-build-deps -i -r -t "apt-get --no-install-recommends -y" control
 cd ${DEBIAN_LOC}
 ./build_gtsam.sh || exit 1
 sudo dpkg -i libgtsam*_amd64.deb || exit 1
 
+# decomputil
 cd ${DEBIAN_LOC}/decomputil
 sudo mk-build-deps -i -r -t "apt-get --no-install-recommends -y" control
 cd ${DEBIAN_LOC}
 ./build_decomputil.sh || exit 1
 sudo dpkg -i libdecomputil*_amd64.deb || exit 1
 
+# jps3d
 cd ${DEBIAN_LOC}/jps3d
 sudo mk-build-deps -i -r -t "apt-get --no-install-recommends -y" control
 cd ${DEBIAN_LOC}
 ./build_jps3d.sh || exit 1
 sudo dpkg -i libjps3d*_amd64.deb || exit 1
 
+# openmvg
 cd ${DEBIAN_LOC}/openmvg
 sudo mk-build-deps -i -r -t "apt-get --no-install-recommends -y" control
 cd ${DEBIAN_LOC}
