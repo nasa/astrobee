@@ -1,0 +1,35 @@
+libalvar (2.0-5) unstable; urgency=medium
+
+  * Compatible with ubuntu 18, dropped ros-opencv dependency.
+
+ -- Brian Coltin <brian.j.coltin@nasa.gov>  Tue, 15 May 2021 13:05:46 -0700
+
+libalvar (2.0-4) unstable; urgency=medium
+
+  * Ros updated opencv, changed path, needs updated rpath.
+
+ -- Brian Coltin <brian.j.coltin@nasa.gov>  Mon, 30 Apr 2018 13:05:46 -0700
+
+libalvar (2.0-3) unstable; urgency=medium
+
+  * Bump ros-kinetic-opencv version.
+
+ -- Brian Coltin <brian.j.coltin@nasa.gov>  Mon, 11 Dec 2017 17:35:08 -0800
+
+libalvar (2.0-2) unstable; urgency=medium
+
+  * Build from original tarball now.
+
+ -- Brian Coltin <nospam@nospam.org>  Tue, 01 Aug 2017 15:31:34 -0700
+
+libalvar (2.0-1) stable; urgency=medium
+
+  * Changed to the correct version number.
+
+ -- Brian Coltin <nospam@nospam.org>  Fri, 05 May 2017 14:25:42 -0700
+
+libalvar (0.1-1) unstable; urgency=medium
+
+  * Initial release.
+
+ -- Brian Coltin <nospam@nospam.org>  Wed, 18 Jan 2017 13:43:06 -0800
