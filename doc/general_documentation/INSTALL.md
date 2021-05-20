@@ -50,9 +50,11 @@ Clone the android repository:
 ### Dependencies
 
 Next, install all required dependencies:
+
 *Note: `root` access is necessary to install the compiled debian packages below*
+
 *Note: Before running this please ensure that your system is completely updated
-    by running 'sudo apt-get update' and then 'sudo apt-get upgrade'*
+by running 'sudo apt-get update' and then 'sudo apt-get upgrade'*
 
     pushd $SOURCE_PATH
     cd scripts/setup
@@ -65,6 +67,7 @@ Next, install all required dependencies:
     sudo rosdep init
     rosdep update
     popd
+
 
 **Important**: you can safely ignore the following error messages, as they are simply letting you know that certain libraries cannot be found. These libraries are for internal NASA use only, and are not required by public users provided that software is launched with DDS disabled.
 
