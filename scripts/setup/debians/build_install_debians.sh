@@ -36,8 +36,8 @@ if [ "$DIST" = "xenial" ]; then
 elif [ "$DIST" = "$bionic" ]; then
   echo "Ubuntu 18 detected"
   # Install dependencies
-  # ./install_opencv.sh
-  # ./install_luajit.sh
+  ${DEBIAN_LOC}/install_opencv.sh
+  ${DEBIAN_LOC}/install_luajit.sh
 
   # alvar
   cp ${DEBIAN_LOC}/files_18_04/alvar_rules ${DEBIAN_LOC}/alvar/rules
@@ -91,11 +91,11 @@ cd ${DEBIAN_LOC}
 sudo dpkg -i libgtsam*_amd64.deb || exit 1
 
 # decomputil
-# cd ${DEBIAN_LOC}/decomputil
-# sudo mk-build-deps -i -r -t "apt-get --no-install-recommends -y" control
-# cd ${DEBIAN_LOC}
-# ./build_decomputil.sh || exit 1
-# sudo dpkg -i libdecomputil*_amd64.deb || exit 1
+cd ${DEBIAN_LOC}/decomputil
+sudo mk-build-deps -i -r -t "apt-get --no-install-recommends -y" control
+cd ${DEBIAN_LOC}
+./build_decomputil.sh || exit 1
+sudo dpkg -i libdecomputil*_amd64.deb || exit 1
 
 # jps3d
 cd ${DEBIAN_LOC}/jps3d
@@ -105,9 +105,9 @@ cd ${DEBIAN_LOC}
 sudo dpkg -i libjps3d*_amd64.deb || exit 1
 
 # openmvg
-# cd ${DEBIAN_LOC}/openmvg
-# sudo mk-build-deps -i -r -t "apt-get --no-install-recommends -y" control
-# cd ${DEBIAN_LOC}
-# ./build_openmvg.sh || exit 1
-# sudo dpkg -i libopenmvg*_amd64.deb || exit 1
+cd ${DEBIAN_LOC}/openmvg
+sudo mk-build-deps -i -r -t "apt-get --no-install-recommends -y" control
+cd ${DEBIAN_LOC}
+./build_openmvg.sh || exit 1
+sudo dpkg -i libopenmvg*_amd64.deb || exit 1
 
