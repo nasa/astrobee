@@ -36,8 +36,14 @@ if [ "$DIST" = "xenial" ]; then
 elif [ "$DIST" = "$bionic" ]; then
   echo "Ubuntu 18 detected"
   # Install dependencies
-  # ./install_opencv.sh
   # ./install_luajit.sh
+  #luajit
+  cd ${DEBIAN_LOC}/luajit
+  sudo mk-build-deps -i -r -t "apt-get --no-install-recommends -y" control
+  cd ${DEBIAN_LOC}
+  ./build_luajit.sh || exit 1
+  sudo dpkg -i libluajit*_amd64.deb || exit 1
+
 
   # alvar
   cp ${DEBIAN_LOC}/files_18_04/alvar_rules ${DEBIAN_LOC}/alvar/rules

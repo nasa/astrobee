@@ -15,9 +15,6 @@ libdbowdlib
 libopenmvg
 libdecomputil
 libjps3d
-<<<<<<< HEAD
 libmiro
 libsoracore
-=======
 luajit-2.0
->>>>>>> 0de1fcf7a4cd87cd4c75ff8600a29e5f83b5d52c
