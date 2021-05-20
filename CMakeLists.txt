@@ -418,5 +418,3 @@ add_subdirectory(localization)
 if (USE_DDS)
   add_subdirectory(wdock)
 endif (USE_DDS)
-
-message("GTEST_LIBRARIES  ${GTEST_LIBRARIES}\n")
