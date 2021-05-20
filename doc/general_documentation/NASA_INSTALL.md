@@ -83,12 +83,12 @@ First, clone the flight software repository:
 
     git clone https://github.com/nasa/astrobee.git --branch develop $SOURCE_PATH
     git submodule update --init --depth 1 description/media
+    git submodule update --init --depth 1 submodules/platform
 
 You can either choose which optional submodules to clone and log depth with:
 
     git submodule update --init --depth 1 submodules/android
     git submodule update --init --depth 1 submodules/avionics
-    git submodule update --init --depth 1 submodules/platform
 
 Or checkout all the submodules as:
 
@@ -99,14 +99,20 @@ The android module is necessary for guest science code; the avionics and platfor
 module is used when cross-compiling to test on the robot hardware.
 
 ### Dependencies
+For *Ubuntu 18 only*: install openCV and Luajit beforehand with:
 
-Next, install all required dependencies:
+    pushd $SOURCE_PATH
+    cd scripts/setup
+    ./debians/install_luajit.sh
+    ./debians/install_opencv.sh
+
+Next, install all remaining dependencies dependencies:
 
     pushd $SOURCE_PATH
     cd scripts/setup
     ./add_local_repository.sh
     ./add_ros_repository.sh
-    ./install_desktop_16_04_packages.sh
+    ./install_desktop_packages.sh
     popd
 
 #### Extra options to install the dependencies
