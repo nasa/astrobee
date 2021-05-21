@@ -1,3 +1,9 @@
+libdbowdlib (0.1-4) unstable; urgency=medium
+
+  * Compatible with ubuntu 18, dropped ros-opencv dependency.
+
+ -- Brian Coltin <nospam@nospam.org>  Tue, 15 May 2021 13:05:46 -0700
+
 libdbowdlib (0.1-3) unstable; urgency=medium
 
   * Ros moved opencv library which broke build, fixed it.

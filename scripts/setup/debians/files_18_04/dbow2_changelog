@@ -1,3 +1,9 @@
+libdbow2 (0.1-6) unstable; urgency=medium
+
+  * Compatible with ubuntu 18, dropped ros-opencv dependency.
+
+ -- Brian Coltin <nospam@nospam.org>  Tue, 15 May 2021 13:05:46 -0700
+
 libdbow2 (0.1-5) unstable; urgency=medium
 
   * Ros moved opencv library which broke build, fixed it.

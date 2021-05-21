@@ -17,15 +17,21 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-CURRENT_LOC=$(dirname "$(readlink -f "$0")")
-echo ${CURRENT_LOC}
-# cd /usr/local/lib
-PACKAGE_NAME=luajit-2.0
+
+# This package depends on rti which is a proprietary package and therefore
+# cannot be shared. It is not necessary for running the astrobee simulation.
+# This debian build is only useful for NASA maintenence of this repo.
+
+PACKAGE_NAME=libsoracore
+ORIG_TAR=libsoracore_2.0.orig.tar.gz
+DEB_DIR=soracore
 
 if [ -d $PACKAGE_NAME ]; then
-  sudo rm -rf $PACKAGE_NAME
+  rm -rf $PACKAGE_NAME
 fi
-sudo git clone --quiet https://luajit.org/git/luajit-2.0.git $PACKAGE_NAME 2>&1 || exit 1
+git clone https://github.com/marinagmoreira/soraCore.git --branch catkin_build $PACKAGE_NAME 2>&1 || exit 1
 cd $PACKAGE_NAME
-make && sudo make install
-# cd ${CURRENT_LOC}
+git archive --prefix=$PACKAGE_NAME/ --output=../$ORIG_TAR --format tar.gz HEAD || exit 1
+cp -r ../$DEB_DIR debian
+debuild -us -uc || exit 1
+cd ..

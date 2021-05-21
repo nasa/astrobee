@@ -1,0 +1,4 @@
+libsoracore-dev_2.0-1_amd64.deb libdevel optional
+libsoracore1-dbgsym_2.0-1_amd64.ddeb debug optional
+libsoracore1_2.0-1_amd64.deb libs optional
+libsoracore_2.0-1_amd64.buildinfo libs optional
