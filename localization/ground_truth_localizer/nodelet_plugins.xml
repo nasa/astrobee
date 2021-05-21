@@ -1,0 +1,11 @@
+<library path="lib/libground_truth_localizer">
+  <class name="ground_truth_localizer/GroundTruthLocalizerNodelet"
+	 type="ground_truth_localizer::GroundTruthLocalizerNodelet"
+	 base_class_type="nodelet::Nodelet">
+    <description>
+      This nodelet wraps ground truth localizer 
+    </description>
+  </class>
+</library>
+
+

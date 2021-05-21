@@ -60,59 +60,110 @@ DdsRosBridge::DdsRosBridge() :
 DdsRosBridge::~DdsRosBridge() {
 }
 
-int DdsRosBridge::BuildAccessControlStateToRapid(const std::string& sub_topic,
-                                                 const std::string& pub_topic,
-                                                 const std::string& name) {
-  ff::RosSubRapidPubPtr acs_to_acs(
+bool DdsRosBridge::BuildAccessControlStateToRapid(const std::string& sub_topic,
+                                                  const std::string& name) {
+  std::string pub_topic;
+  bool use;
+
+  if (ReadTopicInfo(name, "pub", pub_topic, use)) {
+    if (use) {
+      ff::RosSubRapidPubPtr acs_to_acs(
                                 new ff::RosAccessControlStateToRapid(sub_topic,
                                                                      pub_topic,
                                                                      nh_));
-  ros_sub_rapid_pubs_[name] = acs_to_acs;
-  return ros_sub_rapid_pubs_.size();
+      components_++;
+      ros_sub_rapid_pubs_[name] = acs_to_acs;
+    }
+  } else {
+    return false;
+  }
+
+  return true;
 }
 
-int DdsRosBridge::BuildAckToRapid(const std::string& sub_topic,
-                                  const std::string& pub_topic,
-                                  const std::string& name) {
-  ff::RosSubRapidPubPtr ack_to_ack(new ff::RosAckToRapid(sub_topic,
-                                                         pub_topic,
-                                                         nh_));
-  ros_sub_rapid_pubs_[name] = ack_to_ack;
-  return ros_sub_rapid_pubs_.size();
+bool DdsRosBridge::BuildAckToRapid(const std::string& sub_topic,
+                                   const std::string& name) {
+  std::string pub_topic;
+  bool use;
+
+  if (ReadTopicInfo(name, "pub", pub_topic, use)) {
+    if (use) {
+      ff::RosSubRapidPubPtr ack_to_ack(new ff::RosAckToRapid(sub_topic,
+                                                             pub_topic,
+                                                             nh_));
+      components_++;
+      ros_sub_rapid_pubs_[name] = ack_to_ack;
+    }
+  } else {
+    return false;
+  }
+
+  return true;
 }
 
-int DdsRosBridge::BuildAgentStateToRapid(const std::string& sub_topic,
-                                         const std::string& pub_topic,
-                                         const std::string& name) {
-  ff::RosSubRapidPubPtr agent_to_agent(new ff::RosAgentStateToRapid(sub_topic,
-                                                                    pub_topic,
-                                                                    nh_));
-  ros_sub_rapid_pubs_[name] = agent_to_agent;
-  return ros_sub_rapid_pubs_.size();
+bool DdsRosBridge::BuildAgentStateToRapid(const std::string& sub_topic,
+                                          const std::string& name) {
+  std::string pub_topic;
+  bool use;
+
+  if (ReadTopicInfo(name, "pub", pub_topic, use)) {
+    if (use) {
+      ff::RosSubRapidPubPtr agent_to_agent(
+                                        new ff::RosAgentStateToRapid(sub_topic,
+                                                                     pub_topic,
+                                                                     nh_));
+      components_++;
+      ros_sub_rapid_pubs_[name] = agent_to_agent;
+    }
+  } else {
+    return false;
+  }
+
+  return true;
 }
 
-int DdsRosBridge::BuildArmJointSampleToRapid(const std::string& sub_topic,
-                                             const std::string& pub_topic,
-                                             const std::string& name) {
-  ff::RosSubRapidPubPtr joint_to_joint(
+bool DdsRosBridge::BuildArmJointSampleToRapid(const std::string& sub_topic,
+                                              const std::string& name) {
+  std::string pub_topic;
+  bool use;
+
+  if (ReadTopicInfo(name, "pub", pub_topic, use)) {
+    if (use) {
+      ff::RosSubRapidPubPtr joint_to_joint(
                                     new ff::RosArmJointSampleToRapid(sub_topic,
                                                                      pub_topic,
                                                                      nh_));
-  ros_sub_rapid_pubs_[name] = joint_to_joint;
-  return ros_sub_rapid_pubs_.size();
+      components_++;
+      ros_sub_rapid_pubs_[name] = joint_to_joint;
+    }
+  } else {
+    return false;
+  }
+
+  return true;
 }
 
-int DdsRosBridge::BuildArmStateToRapid(const std::string& sub_topic,
-                                       const std::string& pub_topic,
-                                       const std::string& name) {
-  ff::RosSubRapidPubPtr arm_to_arm(new ff::RosArmStateToRapid(sub_topic,
-                                                              pub_topic,
-                                                              nh_));
-  ros_sub_rapid_pubs_[name] = arm_to_arm;
-  return ros_sub_rapid_pubs_.size();
+bool DdsRosBridge::BuildArmStateToRapid(const std::string& sub_topic,
+                                        const std::string& name) {
+  std::string pub_topic;
+  bool use;
+
+  if (ReadTopicInfo(name, "pub", pub_topic, use)) {
+    if (use) {
+      ff::RosSubRapidPubPtr arm_to_arm(new ff::RosArmStateToRapid(sub_topic,
+                                                                  pub_topic,
+                                                                  nh_));
+      components_++;
+      ros_sub_rapid_pubs_[name] = arm_to_arm;
+    }
+  } else {
+    return false;
+  }
+
+  return true;
 }
 
-int DdsRosBridge::BuildBatteryStateToRapid(
+bool DdsRosBridge::BuildBatteryStateToRapid(
                                   const std::string& sub_topic_battery_state_TL,
                                   const std::string& sub_topic_battery_state_TR,
                                   const std::string& sub_topic_battery_state_BL,
@@ -121,9 +172,13 @@ int DdsRosBridge::BuildBatteryStateToRapid(
                                   const std::string& sub_topic_battery_temp_TR,
                                   const std::string& sub_topic_battery_temp_BL,
                                   const std::string& sub_topic_battery_temp_BR,
-                                  const std::string& pub_topic,
                                   const std::string& name) {
-  ff::RosSubRapidPubPtr battery_to_battery(
+  std::string pub_topic;
+  bool use;
+
+  if (ReadTopicInfo(name, "pub", pub_topic, use)) {
+    if (use) {
+      ff::RosSubRapidPubPtr battery_to_battery(
                       new ff::RosBatteryStateToRapid(sub_topic_battery_state_TL,
                                                      sub_topic_battery_state_TR,
                                                      sub_topic_battery_state_BL,
@@ -134,258 +189,537 @@ int DdsRosBridge::BuildBatteryStateToRapid(
                                                      sub_topic_battery_temp_BR,
                                                      pub_topic,
                                                      nh_));
-  ros_sub_rapid_pubs_[name] = battery_to_battery;
-  return ros_sub_rapid_pubs_.size();
+      components_++;
+      ros_sub_rapid_pubs_[name] = battery_to_battery;
+    }
+  } else {
+    return false;
+  }
+
+  return true;
 }
 
-int DdsRosBridge::BuildCommandToRapid(const std::string& sub_topic,
-                                      const std::string& ac_sub_topic,
-                                      const std::string& failed_cmd_sub_topic,
-                                      const std::string& pub_topic,
-                                      const std::string& name) {
-  ff::RosSubRapidPubPtr command_to_command(new ff::RosCommandToRapid(
-                                                          sub_topic,
+bool DdsRosBridge::BuildCommandToRapid(const std::string& sub_topic,
+                                       const std::string& ac_sub_topic,
+                                       const std::string& failed_cmd_sub_topic,
+                                       const std::string& name) {
+  std::string pub_topic;
+  bool use;
+
+  if (ReadTopicInfo(name, "pub", pub_topic, use)) {
+    if (use) {
+      ff::RosSubRapidPubPtr command_to_command(
+                                new ff::RosCommandToRapid(sub_topic,
                                                           ac_sub_topic,
                                                           failed_cmd_sub_topic,
                                                           pub_topic,
                                                           nh_,
                                                           agent_name_));
-  ros_sub_rapid_pubs_[name] = command_to_command;
-  return ros_sub_rapid_pubs_.size();
+      components_++;
+      ros_sub_rapid_pubs_[name] = command_to_command;
+    }
+  } else {
+    return false;
+  }
+
+  return true;
 }
 
-int DdsRosBridge::BuildCompressedImageToImage(const std::string& sub_topic,
-                                              const std::string& pub_topic,
+bool DdsRosBridge::BuildCompressedFileToRapid(const std::string& sub_topic,
                                               const std::string& name) {
-  ff::RosSubRapidPubPtr compressed_image_to_image(
+  std::string pub_topic;
+  bool use;
+
+  if (ReadTopicInfo(name, "pub", pub_topic, use)) {
+    if (use) {
+      ff::RosSubRapidPubPtr compressed_file_to_rapid(
+                                    new ff::RosCompressedFileToRapid(sub_topic,
+                                                                     pub_topic,
+                                                                     nh_));
+      components_++;
+      ros_sub_rapid_pubs_[name] = compressed_file_to_rapid;
+    }
+  } else {
+    return false;
+  }
+
+  return true;
+}
+
+bool DdsRosBridge::BuildCompressedFileAckToRapid(const std::string& sub_topic,
+                                                 const std::string& name) {
+  std::string pub_topic;
+  bool use;
+
+  if (ReadTopicInfo(name, "pub", pub_topic, use)) {
+    if (use) {
+      ff::RosSubRapidPubPtr compressed_file_ack_to_rapid(
+                                  new ff::RosCompressedFileAckToRapid(sub_topic,
+                                                                      pub_topic,
+                                                                      nh_));
+      components_++;
+      ros_sub_rapid_pubs_[name] = compressed_file_ack_to_rapid;
+    }
+  } else {
+    return false;
+  }
+
+  return true;
+}
+
+bool DdsRosBridge::BuildCompressedImageToImage(const std::string& sub_topic,
+                                               const std::string& name) {
+  std::string pub_topic;
+  bool use;
+
+  if (ReadTopicInfo(name, "pub", pub_topic, use)) {
+    if (use) {
+      ff::RosSubRapidPubPtr compressed_image_to_image(
                                 new ff::RosCompressedImageRapidImage(sub_topic,
                                                                      pub_topic,
                                                                      nh_));
-  ros_sub_rapid_pubs_[name] = compressed_image_to_image;
-  return ros_sub_rapid_pubs_.size();
+      components_++;
+      ros_sub_rapid_pubs_[name] = compressed_image_to_image;
+    }
+  } else {
+    return false;
+  }
+
+  return true;
 }
 
-int DdsRosBridge::BuildCpuStateToRapid(const std::string& sub_topic,
-                                       const std::string& pub_topic,
-                                       const std::string& name) {
-  ff::RosSubRapidPubPtr cpu_to_cpu(new ff::RosCpuStateToRapid(sub_topic,
-                                                              pub_topic,
-                                                              nh_));
-  ros_sub_rapid_pubs_[name] = cpu_to_cpu;
-  return ros_sub_rapid_pubs_.size();
+bool DdsRosBridge::BuildCpuStateToRapid(const std::string& sub_topic,
+                                        const std::string& name) {
+  std::string pub_topic;
+  bool use;
+
+  if (ReadTopicInfo(name, "pub", pub_topic, use)) {
+    if (use) {
+      ff::RosSubRapidPubPtr cpu_to_cpu(new ff::RosCpuStateToRapid(sub_topic,
+                                                                  pub_topic,
+                                                                  nh_));
+      components_++;
+      ros_sub_rapid_pubs_[name] = cpu_to_cpu;
+    }
+  } else {
+    return false;
+  }
+
+  return true;
 }
 
-int DdsRosBridge::BuildDataToDiskStateToRapid(
+bool DdsRosBridge::BuildDataToDiskStateToRapid(
                                             const std::string& state_sub_topic,
                                             const std::string& topics_sub_topic,
-                                            const std::string& pub_topic,
                                             const std::string& name) {
-  ff::RosSubRapidPubPtr data_to_disk_to_data_to_disk(
+  std::string pub_topic;
+  bool use;
+
+  if (ReadTopicInfo(name, "pub", pub_topic, use)) {
+    if (use) {
+      ff::RosSubRapidPubPtr data_to_disk_to_data_to_disk(
                                   new ff::RosDataToDiskToRapid(state_sub_topic,
                                                                topics_sub_topic,
                                                                pub_topic,
                                                                nh_));
-  ros_sub_rapid_pubs_[name] = data_to_disk_to_data_to_disk;
-  return ros_sub_rapid_pubs_.size();
+      components_++;
+      ros_sub_rapid_pubs_[name] = data_to_disk_to_data_to_disk;
+    }
+  } else {
+    return false;
+  }
+
+  return true;
 }
 
-int DdsRosBridge::BuildDiskStateToRapid(const std::string& sub_topic,
-                                        const std::string& pub_topic,
-                                        const std::string& name) {
-  ff::RosSubRapidPubPtr disk_to_disk(new ff::RosDiskStateToRapid(sub_topic,
-                                                                 pub_topic,
-                                                                 nh_));
-  ros_sub_rapid_pubs_[name] = disk_to_disk;
-  return ros_sub_rapid_pubs_.size();
-}
+bool DdsRosBridge::BuildDiskStateToRapid(const std::string& sub_topic,
+                                         const std::string& name) {
+  std::string pub_topic;
+  bool use;
 
-int DdsRosBridge::BuildFaultConfigToRapid(const std::string& sub_topic,
-                                          const std::string& pub_topic,
-                                          const std::string& name) {
-  ff::RosSubRapidPubPtr fault_to_fault(new ff::RosFaultConfigToRapid(sub_topic,
+  if (ReadTopicInfo(name, "pub", pub_topic, use)) {
+    if (use) {
+      ff::RosSubRapidPubPtr disk_to_disk(new ff::RosDiskStateToRapid(sub_topic,
                                                                      pub_topic,
                                                                      nh_));
-  ros_sub_rapid_pubs_[name] = fault_to_fault;
-  return ros_sub_rapid_pubs_.size();
+      components_++;
+      ros_sub_rapid_pubs_[name] = disk_to_disk;
+    }
+  } else {
+    return false;
+  }
+
+  return true;
 }
 
-int DdsRosBridge::BuildFaultStateToRapid(const std::string& sub_topic,
-                                         const std::string& pub_topic,
-                                         const std::string& name) {
-  ff::RosSubRapidPubPtr fault_to_fault(new ff::RosFaultStateToRapid(sub_topic,
-                                                                    pub_topic,
-                                                                    nh_));
-  ros_sub_rapid_pubs_[name] = fault_to_fault;
-  return ros_sub_rapid_pubs_.size();
+bool DdsRosBridge::BuildFaultConfigToRapid(const std::string& sub_topic,
+                                           const std::string& name) {
+  std::string pub_topic;
+  bool use;
+
+  if (ReadTopicInfo(name, "pub", pub_topic, use)) {
+    if (use) {
+      ff::RosSubRapidPubPtr fault_to_fault(
+                                        new ff::RosFaultConfigToRapid(sub_topic,
+                                                                      pub_topic,
+                                                                      nh_));
+      components_++;
+      ros_sub_rapid_pubs_[name] = fault_to_fault;
+    }
+  } else {
+    return false;
+  }
+
+  return true;
 }
 
-int DdsRosBridge::BuildGncFamCmdStateToRapid(const std::string& sub_topic,
-                                             const std::string& pub_topic,
-                                             const std::string& name) {
-  ff::RosSubRapidPubPtr gnc_fam_cmd_to_gnc_fam_cmd(
+bool DdsRosBridge::BuildFaultStateToRapid(const std::string& sub_topic,
+                                          const std::string& name) {
+  std::string pub_topic;
+  bool use;
+
+  if (ReadTopicInfo(name, "pub", pub_topic, use)) {
+    if (use) {
+      ff::RosSubRapidPubPtr fault_to_fault(
+                                        new ff::RosFaultStateToRapid(sub_topic,
+                                                                     pub_topic,
+                                                                     nh_));
+    components_++;
+    ros_sub_rapid_pubs_[name] = fault_to_fault;
+    }
+  } else {
+    return false;
+  }
+
+  return true;
+}
+
+bool DdsRosBridge::BuildGncFamCmdStateToRapid(const std::string& sub_topic,
+                                              const std::string& name) {
+  std::string pub_topic;
+  bool use;
+
+  if (ReadTopicInfo(name, "pub", pub_topic, use)) {
+    if (use) {
+      ff::RosSubRapidPubPtr gnc_fam_cmd_to_gnc_fam_cmd(
                                     new ff::RosGncFamCmdStateToRapid(sub_topic,
                                                                      pub_topic,
                                                                      nh_));
-  ros_sub_rapid_pubs_[name] = gnc_fam_cmd_to_gnc_fam_cmd;
-  return ros_sub_rapid_pubs_.size();
+      components_++;
+      ros_sub_rapid_pubs_[name] = gnc_fam_cmd_to_gnc_fam_cmd;
+    }
+  } else {
+    return false;
+  }
+
+  return true;
 }
 
-int DdsRosBridge::BuildGncControlStateToRapid(const std::string& sub_topic,
-                                              const std::string& pub_topic,
-                                              const std::string& name) {
-  ff::RosSubRapidPubPtr gnc_control_to_gnc_control(
+bool DdsRosBridge::BuildGncControlStateToRapid(const std::string& sub_topic,
+                                               const std::string& name) {
+  std::string pub_topic;
+  bool use;
+
+  if (ReadTopicInfo(name, "pub", pub_topic, use)) {
+    if (use) {
+      ff::RosSubRapidPubPtr gnc_control_to_gnc_control(
                                     new ff::RosGncControlStateToRapid(sub_topic,
                                                                       pub_topic,
                                                                       nh_));
-  ros_sub_rapid_pubs_[name] = gnc_control_to_gnc_control;
-  return ros_sub_rapid_pubs_.size();
+      components_++;
+      ros_sub_rapid_pubs_[name] = gnc_control_to_gnc_control;
+    }
+  } else {
+    return false;
+  }
+
+  return true;
 }
 
-int DdsRosBridge::BuildGuestScienceToRapid(const std::string& state_sub_topic,
-                                           const std::string& config_sub_topic,
-                                           const std::string& data_sub_topic,
-                                           const std::string& pub_topic,
-                                           const std::string& name) {
-  ff::RosSubRapidPubPtr guest_science_to_guest_science(
+bool DdsRosBridge::BuildGuestScienceToRapid(const std::string& state_sub_topic,
+                                            const std::string& config_sub_topic,
+                                            const std::string& data_sub_topic,
+                                            const std::string& name) {
+  std::string pub_topic;
+  bool use;
+
+  if (ReadTopicInfo(name, "pub", pub_topic, use)) {
+    if (use) {
+      ff::RosSubRapidPubPtr guest_science_to_guest_science(
                                 new ff::RosGuestScienceToRapid(state_sub_topic,
                                                                config_sub_topic,
                                                                data_sub_topic,
                                                                pub_topic,
                                                                nh_));
-  ros_sub_rapid_pubs_[name] = guest_science_to_guest_science;
-  return ros_sub_rapid_pubs_.size();
+      components_++;
+      ros_sub_rapid_pubs_[name] = guest_science_to_guest_science;
+    }
+  } else {
+    return false;
+  }
+
+  return true;
 }
 
-int DdsRosBridge::BuildInertiaDataToRapid(const std::string& sub_topic,
-                                          const std::string& pub_topic,
-                                          const std::string& name) {
-  ff::RosSubRapidPubPtr inertia_to_inertia(new ff::RosInertiaToRapid(sub_topic,
-                                                                     pub_topic,
-                                                                     nh_));
+bool DdsRosBridge::BuildInertiaDataToRapid(const std::string& sub_topic,
+                                           const std::string& name) {
+  std::string pub_topic;
+  bool use;
 
-  ros_sub_rapid_pubs_[name] = inertia_to_inertia;
-  return ros_sub_rapid_pubs_.size();
-}
-
-int DdsRosBridge::BuildLogSampleToRapid(const std::string& sub_topic,
-                                         const std::string& pub_topic,
-                                         const std::string& name) {
-  ff::RosSubRapidPubPtr log_to_log(new ff::RosLogSampleToRapid(sub_topic,
-                                                               pub_topic,
-                                                               nh_));
-  ros_sub_rapid_pubs_[name] = log_to_log;
-  return ros_sub_rapid_pubs_.size();
-}
-
-int DdsRosBridge::BuildOdomToPosition(const std::string& sub_topic,
-                                      const std::string& pub_topic,
-                                      const std::string& name) {
-  ff::RosSubRapidPubPtr odom_to_position(new ff::RosOdomRapidPosition(sub_topic,
+  if (ReadTopicInfo(name, "pub", pub_topic, use)) {
+    if (use) {
+      ff::RosSubRapidPubPtr inertia_to_inertia(
+                                            new ff::RosInertiaToRapid(sub_topic,
                                                                       pub_topic,
                                                                       nh_));
-  ros_sub_rapid_pubs_[name] = odom_to_position;
-  return ros_sub_rapid_pubs_.size();
+      components_++;
+      ros_sub_rapid_pubs_[name] = inertia_to_inertia;
+    }
+  } else {
+    return false;
+  }
+
+  return true;
 }
 
-int DdsRosBridge::BuildPlanStatusToPlanStatus(const std::string& sub_topic,
-                                              const std::string& pub_topic,
-                                              const std::string& name) {
-  ff::RosSubRapidPubPtr plan_status_to_plan_status(
+bool DdsRosBridge::BuildLogSampleToRapid(const std::string& sub_topic,
+                                         const std::string& name) {
+  std::string pub_topic;
+  bool use;
+
+  if (ReadTopicInfo(name, "pub", pub_topic, use)) {
+    if (use) {
+      ff::RosSubRapidPubPtr log_to_log(new ff::RosLogSampleToRapid(sub_topic,
+                                                                   pub_topic,
+                                                                   nh_));
+      components_++;
+      ros_sub_rapid_pubs_[name] = log_to_log;
+    }
+  } else {
+    return false;
+  }
+
+  return true;
+}
+
+bool DdsRosBridge::BuildOdomToPosition(const std::string& sub_topic,
+                                       const std::string& name) {
+  std::string pub_topic;
+  bool use;
+
+  if (ReadTopicInfo(name, "pub", pub_topic, use)) {
+    if (use) {
+      ff::RosSubRapidPubPtr odom_to_position(
+                                        new ff::RosOdomRapidPosition(sub_topic,
+                                                                     pub_topic,
+                                                                     nh_));
+      components_++;
+      ros_sub_rapid_pubs_[name] = odom_to_position;
+    }
+  } else {
+    return false;
+  }
+
+  return true;
+}
+
+
+bool DdsRosBridge::BuildPayloadStateToPayloadState(const std::string& sub_topic,
+                                                   const std::string& name) {
+  std::string pub_topic;
+  bool use;
+
+  if (ReadTopicInfo(name, "pub", pub_topic, use)) {
+    if (use) {
+      ff::RosSubRapidPubPtr payload_state_to_payload_state(
+                                      new ff::RosPayloadStateToRapid(sub_topic,
+                                                                     pub_topic,
+                                                                     nh_));
+      components_++;
+      ros_sub_rapid_pubs_[name] = payload_state_to_payload_state;
+    }
+  } else {
+    return false;
+  }
+
+  return true;
+}
+
+bool DdsRosBridge::BuildPlanStatusToPlanStatus(const std::string& sub_topic,
+                                               const std::string& name) {
+  std::string pub_topic;
+  bool use;
+
+  if (ReadTopicInfo(name, "pub", pub_topic, use)) {
+    if (use) {
+      ff::RosSubRapidPubPtr plan_status_to_plan_status(
                                 new ff::RosPlanStatusRapidPlanStatus(sub_topic,
                                                                      pub_topic,
                                                                      nh_));
-  ros_sub_rapid_pubs_[name] = plan_status_to_plan_status;
-  return ros_sub_rapid_pubs_.size();
+      components_++;
+      ros_sub_rapid_pubs_[name] = plan_status_to_plan_status;
+    }
+  } else {
+    return false;
+  }
+
+  return true;
 }
 
-int DdsRosBridge::BuildPmcCmdStateToRapid(const std::string& sub_topic,
-                                              const std::string& pub_topic,
-                                              const std::string& name) {
-  ff::RosSubRapidPubPtr pmc_command_to_pmc_command(
-                                    new ff::RosPmcCmdStateToRapid(sub_topic,
-                                                                      pub_topic,
-                                                                      nh_));
-  ros_sub_rapid_pubs_[name] = pmc_command_to_pmc_command;
-  return ros_sub_rapid_pubs_.size();
-}
-
-int DdsRosBridge::BuildStringToTextMessage(const std::string& sub_topic,
-                                           const std::string& pub_topic,
+bool DdsRosBridge::BuildPmcCmdStateToRapid(const std::string& sub_topic,
                                            const std::string& name) {
-  ff::RosSubRapidPubPtr str_to_text(new ff::RosStringRapidTextMessage(sub_topic,
+  std::string pub_topic;
+  bool use;
+
+  if (ReadTopicInfo(name, "pub", pub_topic, use)) {
+    if (use) {
+      ff::RosSubRapidPubPtr pmc_command_to_pmc_command(
+                                        new ff::RosPmcCmdStateToRapid(sub_topic,
                                                                       pub_topic,
                                                                       nh_));
-  ros_sub_rapid_pubs_[name] = str_to_text;
-  return ros_sub_rapid_pubs_.size();
+      components_++;
+      ros_sub_rapid_pubs_[name] = pmc_command_to_pmc_command;
+    }
+  } else {
+    return false;
+  }
+
+  return true;
 }
 
-int DdsRosBridge::BuildTelemetryToRapid(const std::string& sub_topic,
-                                        const std::string& pub_topic,
-                                        const std::string& name) {
-  ff::RosSubRapidPubPtr telemetry_to_telemetry(
+bool DdsRosBridge::BuildPoseToPosition(const std::string& sub_topic,
+                                       const std::string& name) {
+  std::string pub_topic;
+  bool use, use_rate;
+  std::string use_exp = "use_rate_" + name;
+
+  if (ReadTopicInfo(name, "pub", pub_topic, use)) {
+    if (use) {
+      if (!config_params_.GetBool(use_exp.c_str(), &use_rate)) {
+        ROS_FATAL("DDS Bridge: use rate %s not specified!", name.c_str());
+        return false;
+      }
+
+      ff::RosSubRapidPubPtr pose_to_position(
+                                        new ff::RosPoseRapidPosition(sub_topic,
+                                                                     pub_topic,
+                                                                     use_rate,
+                                                                     nh_));
+      components_++;
+      ros_sub_rapid_pubs_[name] = pose_to_position;
+    }
+  } else {
+    return false;
+  }
+
+  return true;
+}
+
+bool DdsRosBridge::BuildStringToTextMessage(const std::string& name) {
+  std::string pub_topic, sub_topic;
+  bool use;
+
+  if (ReadTopicInfo(name, "pub", pub_topic, use) &&
+      ReadTopicInfo(name, "sub", sub_topic, use)) {
+    if (use) {
+      ff::RosSubRapidPubPtr str_to_text(
+                                    new ff::RosStringRapidTextMessage(sub_topic,
+                                                                      pub_topic,
+                                                                      nh_));
+      components_++;
+      ros_sub_rapid_pubs_[name] = str_to_text;
+    }
+  } else {
+    return false;
+  }
+
+  return true;
+}
+
+bool DdsRosBridge::BuildTelemetryToRapid(const std::string& sub_topic,
+                                         const std::string& name) {
+  std::string pub_topic;
+  bool use;
+
+  if (ReadTopicInfo(name, "pub", pub_topic, use)) {
+    if (use) {
+      ff::RosSubRapidPubPtr telemetry_to_telemetry(
                             new ff::RosTelemetryRapidTelemetry(sub_topic,
                                                                pub_topic,
                                                                nh_,
                                                                config_params_));
-  ros_sub_rapid_pubs_[name] = telemetry_to_telemetry;
-  return ros_sub_rapid_pubs_.size();
+      components_++;
+      ros_sub_rapid_pubs_[name] = telemetry_to_telemetry;
+    }
+  } else {
+    return false;
+  }
+
+  return true;
 }
 
-int DdsRosBridge::BuildCommandToCommand(const std::string& sub_topic,
-                                        const std::string& pub_topic,
-                                        const std::string& name) {
-  ff::RapidSubRosPubPtr command_to_command(
+bool DdsRosBridge::BuildCommandToCommand(const std::string& pub_topic,
+                                         const std::string& name) {
+  std::string sub_topic;
+  bool use;
+
+  if (ReadTopicInfo(name, "sub", sub_topic, use)) {
+    if (use) {
+      ff::RapidSubRosPubPtr command_to_command(
                                       new ff::RapidCommandRosCommand(sub_topic,
                                                                      pub_topic,
                                                                      nh_));
-  rapid_sub_ros_pubs_.push_back(command_to_command);
-  return rapid_sub_ros_pubs_.size();
+      components_++;
+      rapid_sub_ros_pubs_.push_back(command_to_command);
+    }
+  } else {
+    return false;
+  }
+
+  return true;
 }
 
-int DdsRosBridge::BuildCompressedFileToCompressedFile(
-                                                  const std::string& sub_topic,
+bool DdsRosBridge::BuildCompressedFileToCompressedFile(
                                                   const std::string& pub_topic,
                                                   const std::string& name) {
-  ff::RapidSubRosPubPtr compressed_file_to_compressed_file(
+  std::string sub_topic;
+  bool use;
+
+  if (ReadTopicInfo(name, "sub", sub_topic, use)) {
+    if (use) {
+      ff::RapidSubRosPubPtr compressed_file_to_compressed_file(
                         new ff::RapidCompressedFileRosCompressedFile(sub_topic,
                                                                      pub_topic,
                                                                      nh_));
-  rapid_sub_ros_pubs_.push_back(compressed_file_to_compressed_file);
-  return rapid_sub_ros_pubs_.size();
+      components_++;
+      rapid_sub_ros_pubs_.push_back(compressed_file_to_compressed_file);
+    }
+  } else {
+    return false;
+  }
+
+  return true;
 }
 
-int DdsRosBridge::BuildCompressedFileToRapid(const std::string& sub_topic,
-                                             const std::string& pub_topic,
-                                             const std::string& name) {
-  ff::RosSubRapidPubPtr compressed_file_to_rapid(
-                                    new ff::RosCompressedFileToRapid(sub_topic,
-                                                                     pub_topic,
-                                                                     nh_));
-  ros_sub_rapid_pubs_[name] = compressed_file_to_rapid;
-  return ros_sub_rapid_pubs_.size();
-}
+bool DdsRosBridge::BuildCommandConfigToCommandConfig(const std::string& name) {
+  std::string pub_topic;
+  bool use;
 
-int DdsRosBridge::BuildCompressedFileAckToRapid(const std::string& sub_topic,
-                                                const std::string& pub_topic,
-                                                const std::string& name) {
-  ff::RosSubRapidPubPtr compressed_file_ack_to_rapid(
-                                  new ff::RosCompressedFileAckToRapid(sub_topic,
-                                                                      pub_topic,
-                                                                      nh_));
-  ros_sub_rapid_pubs_[name] = compressed_file_ack_to_rapid;
-  return ros_sub_rapid_pubs_.size();
-}
-
-int DdsRosBridge::BuildCommandConfigToCommandConfig(
-                                                  const std::string& pub_topic,
-                                                  const std::string& name) {
-  // keep in scope to retain reliable durable
-  ff::RapidPubPtr command_config_to_command_config(
+  if (ReadTopicInfo(name, "pub", pub_topic, use)) {
+    if (use) {
+      // keep in scope to retain reliable durable
+      ff::RapidPubPtr command_config_to_command_config(
                     new ff::RosCommandConfigRapidCommandConfig(pub_topic,
                                                                nh_,
                                                                config_params_));
-  rapid_pubs_.push_back(command_config_to_command_config);
-  return rapid_pubs_.size();
+      components_++;
+      rapid_pubs_.push_back(command_config_to_command_config);
+    }
+  } else {
+    return false;
+  }
+
+  return true;
 }
 
 bool DdsRosBridge::SetTelem(float rate, std::string &err_msg, RateType type) {
@@ -419,6 +753,9 @@ bool DdsRosBridge::SetTelem(float rate, std::string &err_msg, RateType type) {
       break;
     case POSITION:
       RTRT->SetPositionRate(rate);
+      break;
+    case SPARSE_MAPPING_POSE:
+      RTRT->SetSparseMappingPoseRate(rate);
       break;
     default:
       err_msg = "DDS Bridge: Unknown type when setting telemetry rate!";
@@ -552,6 +889,23 @@ bool DdsRosBridge::SetPmcStateRate(float rate, std::string &err_msg) {
   return true;
 }
 
+bool DdsRosBridge::SetSparseMappingPoseRate(float rate, std::string &err_msg) {
+  if (ros_sub_rapid_pubs_.count("RSMPRP") == 0) {
+    err_msg = "DDS Bridge: Sparse mapping pose message not add but needed.";
+    return false;
+  }
+
+  if (!SetTelem(rate, err_msg, SPARSE_MAPPING_POSE)) {
+    return false;
+  }
+
+  ff::RosPoseRapidPosition *RSMP = static_cast<ff::RosPoseRapidPosition *>
+                                          (ros_sub_rapid_pubs_["RSMPRP"].get());
+
+  RSMP->SetPositionPublishRate(rate);
+  return true;
+}
+
 bool DdsRosBridge::SetTelemRateCallback(ff_msgs::SetRate::Request &req,
                                         ff_msgs::SetRate::Response &res) {
   std::string err_msg;
@@ -576,6 +930,9 @@ bool DdsRosBridge::SetTelemRateCallback(ff_msgs::SetRate::Request &req,
       break;
     case ff_msgs::SetRate::Request::POSITION:
       res.success = SetEkfPositionRate(req.rate, err_msg, POSITION);
+      break;
+    case ff_msgs::SetRate::Request::SPARSE_MAPPING_POSE:
+      res.success = SetSparseMappingPoseRate(req.rate, err_msg);
       break;
     default:
       res.success = false;
@@ -757,626 +1114,252 @@ void DdsRosBridge::Initialize(ros::NodeHandle *nh) {
                                     this);
 }
 
+bool DdsRosBridge::ReadTopicInfo(const std::string& topic_abbr,
+                                 const std::string& sub_or_pub,
+                                 std::string& topic,
+                                 bool& use) {
+  std::string use_exp = "use_" + topic_abbr;
+  std::string topic_exp = sub_or_pub + "_topic_" + topic_abbr;
+
+  if (!config_params_.GetBool(use_exp.c_str(), &use)) {
+    ROS_FATAL("DDS Bridge: use %s not specified!", topic_abbr.c_str());
+    return false;
+  }
+
+  if (use) {
+    if (!config_params_.GetStr(topic_exp.c_str(), &topic)) {
+      ROS_FATAL("DDS Bridge: sub topic %s not specified!", topic_abbr.c_str());
+      return false;
+    }
+  }
+
+  return true;
+}
+
 bool DdsRosBridge::ReadParams() {
-  std::string sub_topic, sub_topic2;
+  std::string sub_topic;
   std::string pub_topic;
-  bool use;
   components_ = 0;
 
   // rapid_command_ros_command => RCRC
-  if (!config_params_.GetBool("use_RCRC", &use)) {
-    ROS_FATAL("DDS Bridge: use RCRC not specified");
+  if (!BuildCommandToCommand(TOPIC_COMMUNICATIONS_DDS_COMMAND, "RCRC")) {
     return false;
-  }
-
-  if (use) {
-    if (!config_params_.GetStr("sub_topic_RCRC", &sub_topic)) {
-      ROS_FATAL("DDS Bridge: sub topic RCRC not specified!");
-      return false;
-    }
-
-    BuildCommandToCommand(sub_topic, TOPIC_COMMUNICATIONS_DDS_COMMAND, "RCRC");
-    components_++;
   }
 
   // rapid_compressed_file_data_ros_compressed_file_data => RCFDRCFD
-  if (!config_params_.GetBool("use_RCFDRCFD", &use)) {
-    ROS_FATAL("DDS Bridge: use RCFDRCFD not specified!");
+  if (!BuildCompressedFileToCompressedFile(TOPIC_COMMUNICATIONS_DDS_DATA,
+                                           "RCFDRCFD")) {
     return false;
-  }
-
-  if (use) {
-    if (!config_params_.GetStr("sub_topic_RCFDRCFD", &sub_topic)) {
-      ROS_FATAL("DDS Bridge: sub topic RCFDRCFD not specified!");
-      return false;
-    }
-
-    BuildCompressedFileToCompressedFile(sub_topic,
-                                        TOPIC_COMMUNICATIONS_DDS_DATA,
-                                        "RCFDRCFD");
-    components_++;
-  } else {
-    ROS_WARN("Not bridging data to disk compressed files!");
   }
 
   // rapid_compressed_file_plan_ros_compressed_file_plan => RCFPRCFP
-  if (!config_params_.GetBool("use_RCFPRCFP", &use)) {
-    ROS_FATAL("DDS Bridge: use RCFPRCFP not specified!");
+  if (!BuildCompressedFileToCompressedFile(TOPIC_COMMUNICATIONS_DDS_PLAN,
+                                           "RCFPRCFP")) {
     return false;
-  }
-
-  if (use) {
-    if (!config_params_.GetStr("sub_topic_RCFPRCFP", &sub_topic)) {
-      ROS_FATAL("DDS Bridge: sub topic RCFPRCFP not specified!");
-      return false;
-    }
-
-    BuildCompressedFileToCompressedFile(sub_topic,
-                                        TOPIC_COMMUNICATIONS_DDS_PLAN,
-                                        "RCFPRCFP");
-    components_++;
-  } else {
-    ROS_WARN("Not bridging plan compressed files!");
   }
 
   // rapid_compressed_file_zones_ros_compressed_file_zones => RCFZRCFZ
-  if (!config_params_.GetBool("use_RCFZRCFZ", &use)) {
-    ROS_FATAL("DDS Bridge: use RCFZRCF not specified!");
+  if (!BuildCompressedFileToCompressedFile(TOPIC_COMMUNICATIONS_DDS_ZONES,
+                                           "RCFZRCFZ")) {
     return false;
-  }
-
-  if (use) {
-    if (!config_params_.GetStr("sub_topic_RCFZRCFZ", &sub_topic)) {
-      ROS_FATAL("DDS Bridge: sub topic RCFZRCFZ not specified!");
-      return false;
-    }
-
-    BuildCompressedFileToCompressedFile(sub_topic,
-                                        TOPIC_COMMUNICATIONS_DDS_ZONES,
-                                        "RCFZRCFZ");
-    components_++;
-  } else {
-    ROS_WARN("Not bridging zone compressed files!");
   }
 
   // ros_access_control_rapid_state => RACS
-  if (!config_params_.GetBool("use_RACS", &use)) {
-    ROS_FATAL("DDS Bridge: use RACS not specified!");
+  if (!BuildAccessControlStateToRapid(TOPIC_MANAGEMENT_ACCESS_CONTROL_STATE,
+                                      "RACS")) {
     return false;
-  }
-
-  if (use) {
-    if (!config_params_.GetStr("pub_topic_RACS", &pub_topic)) {
-      ROS_FATAL("DDS Bridge: pub topic RACS not specified!");
-      return false;
-    }
-
-    BuildAccessControlStateToRapid(TOPIC_MANAGEMENT_ACCESS_CONTROL_STATE,
-                                   pub_topic,
-                                   "RACS");
-    components_++;
   }
 
   // ros_ack_rapid_ack => RARA
-  if (!config_params_.GetBool("use_RARA", &use)) {
-    ROS_FATAL("DDS Bridge: use RARA not specified!");
+  if (!BuildAckToRapid(TOPIC_MANAGEMENT_ACK, "RARA")) {
     return false;
-  }
-
-  if (use) {
-    if (!config_params_.GetStr("pub_topic_RARA", &pub_topic)) {
-      ROS_FATAL("DDS Bridge: pub topic RARA not specified!");
-      return false;
-    }
-
-    BuildAckToRapid(TOPIC_MANAGEMENT_ACK, pub_topic, "RARA");
-    components_++;
   }
 
   // ros_agent_state_rapid_agent_state => RASRAS
-  if (!config_params_.GetBool("use_RASRAS", &use)) {
-    ROS_FATAL("DDS Bridge: use RASRAS not specified!");
+  if (!BuildAgentStateToRapid(TOPIC_MANAGEMENT_EXEC_AGENT_STATE, "RASRAS")) {
     return false;
-  }
-
-  if (use) {
-    if (!config_params_.GetStr("pub_topic_RASRAS", &pub_topic)) {
-      ROS_FATAL("DDS Bridge: pub topic RASRAS not specified!");
-      return false;
-    }
-
-    BuildAgentStateToRapid(TOPIC_MANAGEMENT_EXEC_AGENT_STATE,
-                           pub_topic,
-                           "RASRAS");
-    components_++;
   }
 
   // ros_arm_joint_sample_rapid_arm_joint_sample => RAJSRAJS
-  if (!config_params_.GetBool("use_RAJSRAJS", &use)) {
-    ROS_FATAL("DDS Bridge: use RAJSRAJS not specified!");
+  if (!BuildArmJointSampleToRapid(TOPIC_BEHAVIORS_ARM_JOINT_SAMPLE,
+                                  "RAJSRAJS")) {
     return false;
-  }
-
-  if (use) {
-    if (!config_params_.GetStr("pub_topic_RAJSRAJS", &pub_topic)) {
-      ROS_FATAL("DDS Bridge: pub topic RAJSRAJS not specified!");
-      return false;
-    }
-
-    BuildArmJointSampleToRapid(TOPIC_BEHAVIORS_ARM_JOINT_SAMPLE,
-                               pub_topic,
-                               "RAJSRAJS");
-    components_++;
   }
 
   // ros_arm_state_rapid_arm_state => RARMRARM
-  if (!config_params_.GetBool("use_RARMRARM", &use)) {
-    ROS_FATAL("DDS Bridge: use RARMRARM not specified!");
+  if (!BuildArmStateToRapid(TOPIC_BEHAVIORS_ARM_ARM_STATE, "RARMRARM")) {
     return false;
-  }
-
-  if (use) {
-    if (!config_params_.GetStr("pub_topic_RARMRARM", &pub_topic)) {
-      ROS_FATAL("DDS_Bridge: pub topic RARMRARM not specified!");
-      return false;
-    }
-
-    BuildArmStateToRapid(TOPIC_BEHAVIORS_ARM_ARM_STATE,
-                         pub_topic,
-                         "RARMRARM");
-    components_++;
   }
 
   // ros_battery_state_rapid_battery_config => RBSRBS
-  if (!config_params_.GetBool("use_RBSRBS", &use)) {
-    ROS_FATAL("DDS Bridge: pub topic RBSRBS not specified!");
+  if (!BuildBatteryStateToRapid(TOPIC_HARDWARE_EPS_BATTERY_STATE_TL,
+                                TOPIC_HARDWARE_EPS_BATTERY_STATE_TR,
+                                TOPIC_HARDWARE_EPS_BATTERY_STATE_BL,
+                                TOPIC_HARDWARE_EPS_BATTERY_STATE_BR,
+                                TOPIC_HARDWARE_EPS_BATTERY_TEMP_TL,
+                                TOPIC_HARDWARE_EPS_BATTERY_TEMP_TR,
+                                TOPIC_HARDWARE_EPS_BATTERY_TEMP_BL,
+                                TOPIC_HARDWARE_EPS_BATTERY_TEMP_BR,
+                                "RBSRBS")) {
     return false;
-  }
-
-  if (use) {
-    if (!config_params_.GetStr("pub_topic_RBSRBS", &pub_topic)) {
-      ROS_FATAL("DDS Bridge: pub topic RBSRBS not specified!");
-      return false;
-    }
-
-    BuildBatteryStateToRapid(TOPIC_HARDWARE_EPS_BATTERY_STATE_TL,
-                             TOPIC_HARDWARE_EPS_BATTERY_STATE_TR,
-                             TOPIC_HARDWARE_EPS_BATTERY_STATE_BL,
-                             TOPIC_HARDWARE_EPS_BATTERY_STATE_BR,
-                             TOPIC_HARDWARE_EPS_BATTERY_TEMP_TL,
-                             TOPIC_HARDWARE_EPS_BATTERY_TEMP_TR,
-                             TOPIC_HARDWARE_EPS_BATTERY_TEMP_BL,
-                             TOPIC_HARDWARE_EPS_BATTERY_TEMP_BR,
-                             pub_topic,
-                             "RBSRBS");
-    components_++;
   }
 
   // ros_command_rapid_command => RosCRapC
-  if (!config_params_.GetBool("use_ROSCRAPC", &use)) {
-    ROS_FATAL("DDS Bridge: use ROSCRAPC not specified!");
+  if (!BuildCommandToRapid(TOPIC_COMMAND,
+                           TOPIC_COMMUNICATIONS_DDS_COMMAND,
+                           TOPIC_MANAGEMENT_ACCESS_CONTROL_CMD,
+                           "ROSCRAPC")) {
     return false;
-  }
-
-  if (use) {
-    if (!config_params_.GetStr("pub_topic_ROSCRAPC", &pub_topic)) {
-      ROS_FATAL("DDS Bridge: pub topic ROSCRAPC not specified!");
-      return false;
-    }
-
-    BuildCommandToRapid(TOPIC_COMMAND,
-                        TOPIC_COMMUNICATIONS_DDS_COMMAND,
-                        TOPIC_MANAGEMENT_ACCESS_CONTROL_CMD,
-                        pub_topic,
-                        "ROSCRAPC");
-    components_++;
   }
 
   // ros_command_config_rapid_command_config => RCCRCC
-  if (!config_params_.GetBool("use_RCCRCC", &use)) {
-    ROS_FATAL("DDS Bridge: use RCCRCC not specified!");
+  if (!BuildCommandConfigToCommandConfig("RCCRCC")) {
     return false;
-  }
-
-  if (use) {
-    if (!config_params_.GetStr("pub_topic_RCCRCC", &pub_topic)) {
-      ROS_FATAL("DDS Bridge: pub topic RCCRCC not specified!");
-      return false;
-    }
-
-    BuildCommandConfigToCommandConfig(pub_topic, "RCCRCC");
-    components_++;
   }
 
   // ros_compressed_file_rapid_compressed_file => RosCFRapCF
-  if (!config_params_.GetBool("use_ROSCFRAPCF", &use)) {
-    ROS_FATAL("DDS Bridge: use ROSCFRAPCF not specified!");
+  if (!BuildCompressedFileToRapid(TOPIC_MANAGEMENT_EXEC_PLAN,
+                                  "ROSCFRAPCF")) {
     return false;
-  }
-
-  if (use) {
-    if (!config_params_.GetStr("pub_topic_ROSCFRAPCF", &pub_topic)) {
-      ROS_FATAL("DDS Bridge: pub topic ROSCFRAPCF not specified!");
-      return false;
-    }
-
-    BuildCompressedFileToRapid(TOPIC_MANAGEMENT_EXEC_PLAN,
-                               pub_topic,
-                               "ROSCFRAPCF");
-    components_++;
   }
 
   // ros_compressed_file_ack_rapid_compressed_file_ack => RCFARCFA
-  if (!config_params_.GetBool("use_RCFARCFA", &use)) {
-    ROS_FATAL("DDS Bridge: use RCFARCFA not specified!");
+  if (!BuildCompressedFileAckToRapid(TOPIC_MANAGEMENT_EXEC_CF_ACK,
+                                     "RCFARCFA")) {
     return false;
-  }
-
-  if (use) {
-    if (!config_params_.GetStr("pub_topic_RCFARCFA", &pub_topic)) {
-      ROS_FATAL("DDS Bridge: pub topic RCFARCFA not specified!");
-      return false;
-    }
-
-    BuildCompressedFileAckToRapid(TOPIC_MANAGEMENT_EXEC_CF_ACK,
-                                  pub_topic,
-                                  "RCFARCFA");
-    components_++;
   }
 
   // ros_compressed_dock_cam_image_rapid_image => RCDCIRI
-  if (!config_params_.GetBool("use_RCDCIRI", &use)) {
-    ROS_FATAL("DDS Bridge: use RCDCIRI not specified!");
+  if (!BuildCompressedImageToImage(TOPIC_MANAGEMENT_IMG_SAMPLER_DOCK_CAM_STREAM,
+                                   "RCDCIRI")) {
     return false;
-  }
-
-  if (use) {
-    if (!config_params_.GetStr("pub_topic_RCDCIRI", &pub_topic)) {
-      ROS_FATAL("DDS Bridge: pub topic RCDCIRI not specified!");
-      return false;
-    }
-
-    BuildCompressedImageToImage(TOPIC_MANAGEMENT_IMG_SAMPLER_DOCK_CAM_STREAM,
-                                pub_topic,
-                                "RCDCIRI");
-    components_++;
   }
 
   // ros_compressed_haz_cam_image_rapid_image => RCHCIRI
-  if (!config_params_.GetBool("use_RCHCIRI", &use)) {
-    ROS_FATAL("DDS Bridge: use RCHCIRI not specified!");
+  if (!BuildCompressedImageToImage(TOPIC_MANAGEMENT_IMG_SAMPLER_HAZ_CAM_STREAM,
+                                   "RCHCIRI")) {
     return false;
-  }
-
-  if (use) {
-    if (!config_params_.GetStr("pub_topic_RCHCIRI", &pub_topic)) {
-      ROS_FATAL("DDS Bridge: pub topic RCHCIRI not specified.");
-      return false;
-    }
-
-    BuildCompressedImageToImage(TOPIC_MANAGEMENT_IMG_SAMPLER_HAZ_CAM_STREAM,
-                                pub_topic,
-                                "RCHCIRI");
-    components_++;
   }
 
   // ros_compressed_nav_cam_image_rapid_image => RCNCIRI
-  if (!config_params_.GetBool("use_RCNCIRI", &use)) {
-    ROS_FATAL("DDS Bridge: use RCNCIRI not specified!");
+  if (!BuildCompressedImageToImage(TOPIC_MANAGEMENT_IMG_SAMPLER_NAV_CAM_STREAM,
+                                   "RCNCIRI")) {
     return false;
-  }
-
-  if (use) {
-    if (!config_params_.GetStr("pub_topic_RCNCIRI", &pub_topic)) {
-      ROS_FATAL("DDS Bridge: pub topic RCNCIRI not specified!");
-      return false;
-    }
-
-    BuildCompressedImageToImage(TOPIC_MANAGEMENT_IMG_SAMPLER_NAV_CAM_STREAM,
-                                pub_topic,
-                                "RCNCIRI");
-    components_++;
   }
 
   // ros_compressed_perch_cam_image_rapid_image => RCPCIRI
-  if (!config_params_.GetBool("use_RCPCIRI", &use)) {
-    ROS_FATAL("DDS Bridge: use RCPCIRI not specified!");
+  if (!BuildCompressedImageToImage(
+                                  TOPIC_MANAGEMENT_IMG_SAMPLER_PERCH_CAM_STREAM,
+                                  "RCPCIRI")) {
     return false;
   }
 
-  if (use) {
-    if (!config_params_.GetStr("pub_topic_RCPCIRI", &pub_topic)) {
-      ROS_FATAL("DDS Bridge: pub topic RCPCIRI not specified!");
-      return false;
-    }
-
-    BuildCompressedImageToImage(TOPIC_MANAGEMENT_IMG_SAMPLER_PERCH_CAM_STREAM,
-                                pub_topic,
-                                "RCPCIRI");
-    components_++;
+  // ros_compressed_science_cam_image_rapid_image => RCSCIRI
+  if (!BuildCompressedImageToImage(TOPIC_HARDWARE_SCI_CAM, "RCSCIRI")) {
+    return false;
   }
 
   // ros_cpu_state_rapid_cpu_state => RCSRCS
-  if (!config_params_.GetBool("use_RCSRCS", &use)) {
-    ROS_FATAL("DDS Bridge: use RCSRCS not specified!");
+  if (!BuildCpuStateToRapid(TOPIC_MANAGEMENT_CPU_MONITOR_STATE, "RCSRCS")) {
     return false;
-  }
-
-  if (use) {
-    if (!config_params_.GetStr("pub_topic_RCSRCS", &pub_topic)) {
-      ROS_FATAL("DDS Bridge: pub topic RCSRCS not specified!");
-      return false;
-    }
-
-    BuildCpuStateToRapid(TOPIC_MANAGEMENT_CPU_MONITOR_STATE,
-                         pub_topic,
-                         "RCSRCS");
-    components_++;
   }
 
   // ros_data_to_disk_rapid_data_to_disk => RDTDRDTD
-  if (!config_params_.GetBool("use_RDTDRDTD", &use)) {
-    ROS_FATAL("DDS Bridge: use RDTDRDTD not specified!");
+  if (!BuildDataToDiskStateToRapid(TOPIC_MANAGEMENT_DATA_BAGGER_STATE,
+                                   TOPIC_MANAGEMENT_DATA_BAGGER_TOPICS,
+                                   "RDTDRDTD")) {
     return false;
-  }
-
-  if (use) {
-    if (!config_params_.GetStr("pub_topic_RDTDRDTD", &pub_topic)) {
-      ROS_FATAL("DDS Bridge: pub topic RDTDRDTD not specified!");
-      return false;
-    }
-
-    BuildDataToDiskStateToRapid(TOPIC_MANAGEMENT_DATA_BAGGER_STATE,
-                                TOPIC_MANAGEMENT_DATA_BAGGER_TOPICS,
-                                pub_topic,
-                                "RDTDRDTD");
-
-    components_++;
   }
 
   // ros_disk_state_rapid_disk_state => RDSRDS
-  if (!config_params_.GetBool("use_RDSRDS", &use)) {
-    ROS_FATAL("DDS Bridge: use RDSRDS not specified!");
+  if (!BuildDiskStateToRapid(TOPIC_MANAGEMENT_DISK_MONITOR_STATE, "RDSRDS")) {
     return false;
-  }
-
-  if (use) {
-    if (!config_params_.GetStr("pub_topic_RDSRDS", &pub_topic)) {
-      ROS_FATAL("DDS Bridge: pub topic RDSRDS not specified!");
-      return false;
-    }
-
-    BuildDiskStateToRapid(TOPIC_MANAGEMENT_DISK_MONITOR_STATE,
-                          pub_topic,
-                          "RDSRDS");
-    components_++;
   }
 
   // ros_fault_config_rapid_fault_config => RFCRFC
-  if (!config_params_.GetBool("use_RFCRFC", &use)) {
-    ROS_FATAL("DDS Bridge: use RFCRFC not specified!");
+  if (!BuildFaultConfigToRapid(TOPIC_MANAGEMENT_SYS_MONITOR_CONFIG, "RFCRFC")) {
     return false;
-  }
-
-  if (use) {
-    if (!config_params_.GetStr("pub_topic_RFCRFC", &pub_topic)) {
-      ROS_FATAL("DDS Bridge: pub topic RFCRFC not specified!");
-      return false;
-    }
-
-    BuildFaultConfigToRapid(TOPIC_MANAGEMENT_SYS_MONITOR_CONFIG,
-                            pub_topic,
-                            "RFCRFC");
-    components_++;
   }
 
   // ros_fault_state_rapid_fault_state => RFSRFS
-  if (!config_params_.GetBool("use_RFSRFS", &use)) {
-    ROS_FATAL("DDS Bridge: use RFSRFS not specified!");
+  if (!BuildFaultStateToRapid(TOPIC_MANAGEMENT_SYS_MONITOR_STATE, "RFSRFS")) {
     return false;
-  }
-
-  if (use) {
-    if (!config_params_.GetStr("pub_topic_RFSRFS", &pub_topic)) {
-      ROS_FATAL("DDS Bridge: pub topic RFSRFS not specified!");
-      return false;
-    }
-
-    BuildFaultStateToRapid(TOPIC_MANAGEMENT_SYS_MONITOR_STATE,
-                           pub_topic,
-                           "RFSRFS");
-    components_++;
   }
 
   // ros_gnc_control_command_rapid_gnc_control_command => RGCCRGCC
-  if (!config_params_.GetBool("use_RGCCRGCC", &use)) {
-    ROS_FATAL("DDS Bridge: use RGCCRGCC not specified!");
+  if (!BuildGncFamCmdStateToRapid(TOPIC_GNC_CTL_COMMAND, "RGCCRGCC")) {
     return false;
-  }
-
-  if (use) {
-    if (!config_params_.GetStr("pub_topic_RGCCRGCC", &pub_topic)) {
-      ROS_FATAL("DDS Bridge: pub topic RGCCRGCC not specified!");
-      return false;
-    }
-
-    BuildGncFamCmdStateToRapid(TOPIC_GNC_CTL_COMMAND, pub_topic, "RGCCRGCC");
-    components_++;
   }
 
   // ros_gnc_control_shaper_rapid_gnc_control_shaper => RGCSRGCS
-  if (!config_params_.GetBool("use_RGCSRGCS", &use)) {
-    ROS_FATAL("DDS Bridge: use RGCSRGCS not specified!");
+  if (!BuildGncControlStateToRapid(TOPIC_GNC_CTL_SHAPER, "RGCSRGCS")) {
     return false;
-  }
-
-  if (use) {
-    if (!config_params_.GetStr("pub_topic_RGCSRGCS", &pub_topic)) {
-      ROS_FATAL("DDS Bridge: pub topic RGCSRGCS not specified!");
-      return false;
-    }
-
-    BuildGncControlStateToRapid(TOPIC_GNC_CTL_SHAPER, pub_topic, "RGCSRGCS");
-    components_++;
   }
 
   // ros_gnc_control_trajectory_rapid_gnc_control_trajectory => RGCTRGCT
-  if (!config_params_.GetBool("use_RGCTRGCT", &use)) {
-    ROS_FATAL("DDS Bridge: use RGCTRGCT not specified!");
+  if (!BuildGncControlStateToRapid(TOPIC_GNC_CTL_TRAJ, "RGCTRGCT")) {
     return false;
-  }
-
-  if (use) {
-    if (!config_params_.GetStr("pub_topic_RGCTRGCT", &pub_topic)) {
-      ROS_FATAL("DDS Bridge: pub topic RGCTRGCT not specified!");
-      return false;
-    }
-
-    BuildGncControlStateToRapid(TOPIC_GNC_CTL_TRAJ, pub_topic, "RGCTRGCT");
-    components_++;
   }
 
   // ros_guest_science_rapid_guest_science => RGSRGS
-  if (!config_params_.GetBool("use_RGSRGS", &use)) {
-    ROS_FATAL("DDS Bridge: use RGSRGS not specified!");
+  if (!BuildGuestScienceToRapid(TOPIC_GUEST_SCIENCE_MANAGER_STATE,
+                                TOPIC_GUEST_SCIENCE_MANAGER_CONFIG,
+                                TOPIC_GUEST_SCIENCE_DATA,
+                                "RGSRGS")) {
     return false;
-  }
-
-  if (use) {
-    if (!config_params_.GetStr("pub_topic_RGSRGS", &pub_topic)) {
-      ROS_FATAL("DDS Bridge: pub topic RGSRGS not specified!");
-      return false;
-    }
-
-    BuildGuestScienceToRapid(TOPIC_GUEST_SCIENCE_MANAGER_STATE,
-                             TOPIC_GUEST_SCIENCE_MANAGER_CONFIG,
-                             TOPIC_GUEST_SCIENCE_DATA,
-                             pub_topic,
-                             "RGSRGS");
-    components_++;
   }
 
   // ros_inertia_rapid_inertia => RIRI
-  if (!config_params_.GetBool("use_RIRI", &use)) {
-    ROS_FATAL("DDS Bridge: use RIRI not specified!");
+  if (!BuildInertiaDataToRapid(TOPIC_MOBILITY_INERTIA, "RIRI")) {
     return false;
-  }
-
-  if (use) {
-    if (!config_params_.GetStr("pub_topic_RIRI", &pub_topic)) {
-      ROS_FATAL("DDS Bridge: pub topic RIRI not specified!");
-      return false;
-    }
-
-    BuildInertiaDataToRapid(TOPIC_MOBILITY_INERTIA, pub_topic, "RIRI");
-
-    components_++;
   }
 
   // ros_log_rapid_log_sample => RLRLS
-  if (!config_params_.GetBool("use_RLRLS", &use)) {
-    ROS_FATAL("DDS Bridge: use RLRLS not specified!");
+  // TODO(rgarciar): Change topic name for a constant
+  if (!BuildLogSampleToRapid("/rosout", "RLRLS")) {
     return false;
-  }
-
-  if (use) {
-    if (!config_params_.GetStr("pub_topic_RLRLS", &pub_topic)) {
-      ROS_FATAL("DDS Bridge: pub topic RLSLS not specified!");
-      return false;
-    }
-
-    // TODO(rgarciar): Change topic name for a constant
-    BuildLogSampleToRapid("/rosout",
-                           pub_topic,
-                           "RLRLS");
-    components_++;
   }
 
   // ros_odom_rapid_position => RORP
-  if (!config_params_.GetBool("use_RORP", &use)) {
-    ROS_FATAL("DDS Bridge: use RORP not specified!");
+  if (!BuildOdomToPosition(TOPIC_GNC_EKF, "RORP")) {
     return false;
   }
 
-  if (use) {
-    if (!config_params_.GetStr("pub_topic_RORP", &pub_topic)) {
-      ROS_FATAL("DDS Bridge: pub topic RORP not specified!");
-      return false;
-    }
-
-    BuildOdomToPosition(TOPIC_GNC_EKF, pub_topic, "RORP");
-    components_++;
+  // ros_payload_power_state_rapid_payload_power_state => RPPSRPPS
+  if (!BuildPayloadStateToPayloadState(TOPIC_HARDWARE_EPS_POWER_STATE,
+                                       "RPPSRPPS")) {
+    return false;
   }
 
   // ros_plan_status_rapid_plan_status => RPSRPS
-  if (!config_params_.GetBool("use_RPSRPS", &use)) {
-    ROS_FATAL("DDS Bridge: use RPSRPS not specified!");
+  if (!BuildPlanStatusToPlanStatus(TOPIC_MANAGEMENT_EXEC_PLAN_STATUS,
+                                   "RPSRPS")) {
     return false;
-  }
-
-  if (use) {
-    if (!config_params_.GetStr("pub_topic_RPSRPS", &pub_topic)) {
-      ROS_FATAL("DDS Bridge: pub topic RPSRPS not specified!");
-      return false;
-    }
-
-    BuildPlanStatusToPlanStatus(TOPIC_MANAGEMENT_EXEC_PLAN_STATUS,
-                                pub_topic,
-                                "RPSRPS");
-    components_++;
   }
 
   // ros_pmc_cmd_state_rapid_pmc_cmd_state => RPCSRPCS
-  if (!config_params_.GetBool("use_RPCSRPCS", &use)) {
-    ROS_FATAL("DDS Bridge: use RPCSRPCS not specified!");
+  if (!BuildPmcCmdStateToRapid(TOPIC_HARDWARE_PMC_COMMAND, "RPCSRPCS")) {
     return false;
   }
 
-  if (use) {
-    if (!config_params_.GetStr("pub_topic_RPCSRPCS", &pub_topic)) {
-      ROS_FATAL("DDS Bridge: pub topic RPCSRPCS not specified!");
-      return false;
-    }
+  // ros_sparse_mapping_pose_rapid_position => RSMPRP
+  if (!BuildPoseToPosition(TOPIC_SPARSE_MAPPING_POSE, "RSMPRP")) {
+    return false;
+  }
 
-    BuildPmcCmdStateToRapid(TOPIC_HARDWARE_PMC_COMMAND, pub_topic, "RPCSRPCS");
-    components_++;
+  // ros_vive_pose_rapid_position => RVPRP
+  if (!BuildPoseToPosition("loc/truth", "RVPRP")) {
+    return false;
   }
 
   // ros_string_rapid_text_message => RSRTM
-  if (!config_params_.GetBool("use_RSRTM", &use)) {
-    ROS_FATAL("DDS Bridge: use RSRTM not specified!");
+  if (!BuildStringToTextMessage("RSRTM")) {
     return false;
-  }
-
-  if (use) {
-    if (!config_params_.GetStr("sub_topic_RSRTM", &sub_topic)) {
-      ROS_FATAL("DDS Bridge: sub topic RSRTM not specified!");
-      return false;
-    }
-
-    if (!config_params_.GetStr("pub_topic_RSRTM", &pub_topic)) {
-      ROS_FATAL("DDS Bridge: pub topic RSRTM not specified!");
-      return false;
-    }
-
-    BuildStringToTextMessage(sub_topic, pub_topic, "RSRTM");
-    components_++;
   }
 
   // ros_telemetry_rapid_telemetry => RTRT
-  if (!config_params_.GetBool("use_RTRT", &use)) {
-    ROS_FATAL("DDS Bridge: use RTRT not specified!");
+  if (!BuildTelemetryToRapid(TOPIC_MANAGEMENT_CAMERA_STATE, "RTRT")) {
     return false;
-  }
-
-  if (use) {
-    if (!config_params_.GetStr("pub_topic_RTRT", &pub_topic)) {
-      ROS_FATAL("DDS Bridge: pub topic RTRT not specified!");
-      return false;
-    }
-
-    BuildTelemetryToRapid(TOPIC_MANAGEMENT_CAMERA_STATE, pub_topic, "RTRT");
-    components_++;
   }
 
   // Read and set the publishing rates
@@ -1412,6 +1395,7 @@ bool DdsRosBridge::ReadRateParams() {
   float temp_rate;
   std::string err_msg;
 
+  // Get comm status pub rate
   if (!config_params_.GetReal("comm_status_rate", &temp_rate)) {
     ROS_FATAL("DDS Bridge: comm state rate not specified!");
     return false;
@@ -1422,6 +1406,7 @@ bool DdsRosBridge::ReadRateParams() {
     return false;
   }
 
+  // Get cpu state pub rate
   if (!config_params_.GetReal("cpu_state_rate", &temp_rate)) {
     ROS_FATAL("DDS Bridge: cpu state rate not specified!");
     return false;
@@ -1432,6 +1417,7 @@ bool DdsRosBridge::ReadRateParams() {
     return false;
   }
 
+  // Get disk state pub rate
   if (!config_params_.GetReal("disk_state_rate", &temp_rate)) {
     ROS_FATAL("DDS Bridge: disk state rate not specified!");
     return false;
@@ -1442,6 +1428,7 @@ bool DdsRosBridge::ReadRateParams() {
     return false;
   }
 
+  // Get ekf state pub rate
   if (!config_params_.GetReal("ekf_state_rate", &temp_rate)) {
     ROS_FATAL("DDS Bridge: ekf state rate not specified!");
     return false;
@@ -1452,6 +1439,7 @@ bool DdsRosBridge::ReadRateParams() {
     return false;
   }
 
+  // Get gnc state pub rate
   if (!config_params_.GetReal("gnc_state_rate", &temp_rate)) {
     ROS_FATAL("DDS Bridge: gnc state rate not specified!");
     return false;
@@ -1462,6 +1450,7 @@ bool DdsRosBridge::ReadRateParams() {
     return false;
   }
 
+  // Get pmc command pub rate
   if (!config_params_.GetReal("pmc_command_rate", &temp_rate)) {
     ROS_FATAL("DDS Bridge: pmc command rate not specified!");
     return false;
@@ -1472,12 +1461,24 @@ bool DdsRosBridge::ReadRateParams() {
     return false;
   }
 
+  // Get position pub rate
   if (!config_params_.GetReal("position_rate", &temp_rate)) {
     ROS_FATAL("DDS Bridge: position rate not specified!");
     return false;
   }
 
   if (!SetEkfPositionRate(temp_rate, err_msg, POSITION)) {
+    ROS_FATAL("%s", err_msg.c_str());
+    return false;
+  }
+
+  // Get sparse mapping pose pub rate
+  if (!config_params_.GetReal("sparse_mapping_pose_rate", &temp_rate)) {
+    ROS_FATAL("DDS Bridge: sparse mapping pose rate not specified!");
+    return false;
+  }
+
+  if (!SetSparseMappingPoseRate(temp_rate, err_msg)) {
     ROS_FATAL("%s", err_msg.c_str());
     return false;
   }

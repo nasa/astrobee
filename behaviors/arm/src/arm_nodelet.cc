@@ -1055,9 +1055,6 @@ class ArmNodelet : public ff_util::FreeFlyerNodelet {
     // Deploy the arm
     case ff_msgs::ArmGoal::ARM_DEPLOY:
       NODELET_DEBUG_STREAM("Received a new ARM_DEPLOY command");
-      if (fsm_.GetState() == STATE::DEPLOYED) {
-        Result(RESPONSE::SUCCESS, true);
-      }
       joints_[PAN].goal = K_PAN_DEPLOY;
       joints_[TILT].goal = K_TILT_DEPLOY;
       joints_[GRIPPER].goal = K_GRIPPER_DEPLOY;

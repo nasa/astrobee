@@ -96,9 +96,6 @@ module rapid {
       const rapid::String32 ADMIN_METHOD_WAKE_SAFE_PARAM_BERTH_NUMBER = "berthNumber";
       const rapid::DataType ADMIN_METHOD_WAKE_SAFE_DTYPE_BERTH_NUMBER = rapid::RAPID_INT;
 
-      //@copy-declaration /** Not implemented. This command is intended to erase certain data on the Astrobee HLP's local storage. */
-      const rapid::String32 ADMIN_METHOD_WIPE_HLP = "wipeHlp";
-
       const rapid::String32 ARM = "Arm";
 
       //@copy-declaration /** Moves Astrobee's arm.<p/>The arm has two joints. The tilt joint is used to deploy/stow the arm and adjust the SciCam tilt angle while perched. The pitch joint is used to adjust the SciCam pan angle while perched.<p/>The (pan, tilt) = (0, 0) reference position is defined to have the arm fully deployed and aligned with the robot's -X axis. If perched on a handrail on an ISS wall, this position should nominally make the SciCam camera axis point directly toward the opposite wall. Increasing the tilt angle tilts the SciCam up, and increasing the pan angle pans the SciCam to the right. The arm's stowed position is (pan, tilt) = (0, 180).<p/>The arm joints will be moved sequentially:<ol><li>Pan: If which is "Pan" or "Both", pan to the specified pan angle.</li><li>Tilt: If which is "Tilt" or "Both", tilt to the specified tilt angle.</li></ol><p/>Naturally, if you prefer to tilt first, you can issue a tilt-only move, followed by a pan-only move.<p/>Some mistakes to avoid include:<ul><li>While the arm is partially within its payload bay (tilt > 90), the pan angle must be 0 to avoid the arm colliding with its payload bay.</li><li>While the arm is close to its fully stowed state (tilt > 160), the gripper must be closed to avoid colliding with the arm's payload bay.</li><li>While perched, the nominal tilt range of motion is restricted to -20 .. +90.</li><li>While perched, the arm may not be able to realize its full nominal range of motion without causing Astrobee's body to collide with the wall. The actual range of motion depends on clutter and how far the handrail projects from the wall.</li></ul> */
@@ -131,20 +128,6 @@ module rapid {
 
       const rapid::String32 DATA = "Data";
 
-      //@copy-declaration /** Not implemented. This command is intended to clear certain data logs onboard the robot after they have been downloaded, in order to free storage space.<p/>Currently, onboard storage is managed as follows:<ol><li>Prior to an activity, review what files have been downloaded after previous activities, and specify which files are ready be deleted from onboard storage in the Test Readiness Review notes on the FFFSW Confluence wiki.</li><li>Manually delete those files (via SSH session) at the start of the commanding window, before executing the activity.</li></ol><p/>See also IRG-FFTEST207a Astrobee Quick Wakeup and Checkout. */
-      const rapid::String32 DATA_METHOD_CLEAR_DATA = "clearData";
-
-      //@copy-declaration /** Specifies which log to operate on. Typically, the "Immediate" log is for high-priority telemetry that should be downloaded immediately after the activity, and the "Delayed" log is for other telemetry. */
-      const rapid::String32 DATA_METHOD_CLEAR_DATA_PARAM_DATA_METHOD = "dataMethod";
-      const rapid::DataType DATA_METHOD_CLEAR_DATA_DTYPE_DATA_METHOD = rapid::RAPID_STRING;
-
-      //@copy-declaration /** Not implemented. This command is intended to start downloading certain data logs stored onboard the robot.<p/>Currently, downlink is initiated manually via SSH and rsync, managed by a terminal menu configured in the astrobee_ops repo. See also IRG-FFTEST217 Astrobee Wrap-Up and Shutdown. */
-      const rapid::String32 DATA_METHOD_DOWNLOAD_DATA = "downloadData";
-
-      //@copy-declaration /** Specifies which log to operate on. Typically, the "Immediate" log is for high-priority telemetry that should be downloaded immediately after the activity, and the "Delayed" log is for other telemetry. */
-      const rapid::String32 DATA_METHOD_DOWNLOAD_DATA_PARAM_DATA_METHOD = "dataMethod";
-      const rapid::DataType DATA_METHOD_DOWNLOAD_DATA_DTYPE_DATA_METHOD = rapid::RAPID_STRING;
-
       //@copy-declaration /** Sets the data-to-disk configuration, which specifies how to log ROS telemetry topics to the robot's onboard storage.<p/>The configuration is specified in a JSON-formatted file that contains a list of topic entries. For each logged topic, one specifies:<ul><li>frequency: Throttles the maximum rate at which to record messages on the topic. Specify -1 to disable throttling. Note: Currently, throttling is not implemented. You must specify -1.</li><li>downlinkOption: Which log to store messages in, which must be "Immediate" or "Delayed". The intent is that the "Immediate" log is for high-priority data, which can then be prioritized for downlink after the activity. Note: Currently, you must specify "Delayed" ("Immediate" downlink is currently reserved for internal use by the flight software stack).</li></ul>Sample data-to-disk configuration files can be found in astrobee_ops/gds/ControlStationConfig.<p/>The Astrobee control station implements the protocol for managing onboard telemetry recording:<ol><li>Uplink a new data-to-disk file using the RAPID compressed file protocol over DDS. (File uplink is not considered a command, so it does not appear in this command dictionary).</li><li>Send this Data.setDataToDisk command to load the uplinked file. Any errors in the file will be reported at this time.</li><li>Use the Data.startRecording / Data.stopRecording commands to start / stop onboard telemetry logging.</li></ol> */
       const rapid::String32 DATA_METHOD_SET_DATA_TO_DISK = "setDataToDisk";
 
@@ -154,13 +137,6 @@ module rapid {
       //@copy-declaration /** An optional short description string to include in the filename of the stored telemetry file (ROS bag). Note that the filename always includes a timestamp, which ensures uniqueness. */
       const rapid::String32 DATA_METHOD_START_RECORDING_PARAM_DESCRIPTION = "description";
       const rapid::DataType DATA_METHOD_START_RECORDING_DTYPE_DESCRIPTION = rapid::RAPID_STRING;
-
-      //@copy-declaration /** Not implemented. This command is intended to stop downloading data. See Data.downloadData. */
-      const rapid::String32 DATA_METHOD_STOP_DOWNLOAD = "stopDownload";
-
-      //@copy-declaration /** Specifies which log to operate on. Typically, the "Immediate" log is for high-priority telemetry that should be downloaded immediately after the activity, and the "Delayed" log is for other telemetry. */
-      const rapid::String32 DATA_METHOD_STOP_DOWNLOAD_PARAM_DATA_METHOD = "dataMethod";
-      const rapid::DataType DATA_METHOD_STOP_DOWNLOAD_DTYPE_DATA_METHOD = rapid::RAPID_STRING;
 
       //@copy-declaration /** Stops logging ROS telemetry to onboard storage, as initiated by Data.startRecording. See also Data.setDataToDisk. */
       const rapid::String32 DATA_METHOD_STOP_RECORDING = "stopRecording";
@@ -258,17 +234,6 @@ module rapid {
 
       const rapid::String32 SETTINGS = "Settings";
 
-      //@copy-declaration /** Invokes a 'generic' command, i.e., one that was added to the Astrobee API after the Astrobee control station code freeze. At present, no such commands are defined. */
-      const rapid::String32 SETTINGS_METHOD_GENERIC_COMMAND = "genericCommand";
-
-      //@copy-declaration /** Which generic command to invoke. */
-      const rapid::String32 SETTINGS_METHOD_GENERIC_COMMAND_PARAM_COMMAND_NAME = "commandName";
-      const rapid::DataType SETTINGS_METHOD_GENERIC_COMMAND_DTYPE_COMMAND_NAME = rapid::RAPID_STRING;
-
-      //@copy-declaration /** The parameters for the generic command, usually formatted as a JSON dictionary. This allows any number of parameters, with arbitrary types. */
-      const rapid::String32 SETTINGS_METHOD_GENERIC_COMMAND_PARAM_PARAM = "param";
-      const rapid::DataType SETTINGS_METHOD_GENERIC_COMMAND_DTYPE_PARAM = rapid::RAPID_STRING;
-
       //@copy-declaration /** Sets camera parameters.<p/>The Astrobee camera control life cycle is as follows:<ul><li>When the Astrobee flight software stack is started, recording and streaming are initially disabled for all cameras, and the default camera parameters are as specified in the astrobee/config/cameras.config file.</li><li>For each camera, while recording and streaming are disabled, you may use this Settings.setCamera command to adjust its parameters.</li><li>For each camera, you may enable/disable recording imagery to onboard storage using Settings.setCameraRecording.</li><li>For each camera, you may enable/disable live imagery downlink using Settings.setCameraStreaming.</li></ul> */
       const rapid::String32 SETTINGS_METHOD_SET_CAMERA = "setCamera";
 
@@ -335,12 +300,19 @@ module rapid {
       const rapid::String32 SETTINGS_METHOD_SET_ENABLE_AUTO_RETURN_PARAM_ENABLE_AUTO_RETURN = "enableAutoReturn";
       const rapid::DataType SETTINGS_METHOD_SET_ENABLE_AUTO_RETURN_DTYPE_ENABLE_AUTO_RETURN = rapid::RAPID_BOOL;
 
-      //@copy-declaration /** For expert use only. Changes the semantics of how Astrobee executes fplan trajectory segments.<p/>A segment specifies the motion trajectory between stations in the plan. Within the segment, desired pose and velocity are smoothly interpolated functions of time over a time interval [t0, t1]. Plans created by the Astrobee control station plan editor always specify each segment's time values relative to the start of that segment's execution (i.e. t0 = 0). These plans must be executed in immediate mode, so called because when execution reaches a new segment, the executive and choreographer immediately 'start the clock' on executing the timed trajectory. In principle, if you want to synchronize motion of multiple robots, it could be useful to have the interval [t0, t1] specified using absolute timestamps. That is the behavior when immediate mode is disabled. The timestamp t0 is interpreted as absolute time using ROS conventions (usually UNIX epoch when running on real hardware, but could be any arbitrary time scale when running in simulation), and the start of motion on the segment would be delayed until the current time t = t0.<p/>At this time, we cannot recommend disabling immediate mode to achieve synchronization, due to the following concerns: (1) execution with absolute timestamps has never really been tested, and may be buggy, (2) the control station plan editor doesn't provide any way to generate segments with absolute timestamps, (3) since it is seldom possible to predict exactly when ISS conditions will be right to begin a multi-robot activity, it would be awkward in practice to have the exact absolute timing of segments hard-coded into the plans.<p/>As an alternative way to synchronize motion, you can execute with immediate mode enabled as usual, but take special care to minimize any skew in start time. Upload the plans in advance, use the Mobility.prepare command to get the robots ready to move, and then run the plans simultaneously. There could be up to a half a second of delay between the robots starting their plans. See also Settings.setTimeSync. Astrobee to Astrobee communication is also in the works, and may eventually enable synchronizing Astrobees in a better way.<p/>Note: Immediate mode motion control is not related to immediate download (as in Data.setDataToDisk). */
+      //@copy-declaration /** For expert use only. Changes the semantics of how Astrobee executes fplan trajectory segments.<p/>A segment specifies the motion trajectory between stations in the plan. Within the segment, desired pose and velocity are smoothly interpolated functions of time over a time interval [t0, t1]. Plans created by the Astrobee control station plan editor always specify each segment's time values relative to the start of that segment's execution (i.e. t0 = 0). These plans must be executed in immediate mode, so called because when execution reaches a new segment, the executive and choreographer immediately 'start the clock' on executing the timed trajectory. In principle, if you want to synchronize motion of multiple robots, it could be useful to have the interval [t0, t1] specified using absolute timestamps. That is the behavior when immediate mode is disabled. The timestamp t0 is interpreted as absolute time using ROS conventions (usually UNIX epoch when running on real hardware, but could be any arbitrary time scale when running in simulation), and the start of motion on the segment would be delayed until the current time t = t0.<p/>At this time, we cannot recommend disabling immediate mode to achieve synchronization, due to the following concerns: (1) execution with absolute timestamps has never really been tested, and may be buggy, (2) the control station plan editor doesn't provide any way to generate segments with absolute timestamps, (3) since it is seldom possible to predict exactly when ISS conditions will be right to begin a multi-robot activity, it would be awkward in practice to have the exact absolute timing of segments hard-coded into the plans.<p/>As an alternative way to synchronize motion, you can execute with immediate mode enabled as usual, but take special care to minimize any skew in start time. Upload the plans in advance, use the Mobility.prepare command to get the robots ready to move, and then run the plans simultaneously. Astrobee to Astrobee communication is in the works, and may eventually enable synchronizing Astrobees in a better way. */
       const rapid::String32 SETTINGS_METHOD_SET_ENABLE_IMMEDIATE = "setEnableImmediate";
 
       //@copy-declaration /** Set to true/false to enable/disable immediate mode motion control. */
       const rapid::String32 SETTINGS_METHOD_SET_ENABLE_IMMEDIATE_PARAM_ENABLE_IMMEDIATE = "enableImmediate";
       const rapid::DataType SETTINGS_METHOD_SET_ENABLE_IMMEDIATE_DTYPE_ENABLE_IMMEDIATE = rapid::RAPID_BOOL;
+
+      //@copy-declaration /** Allows Astrobee to re-plan if it detects an obstacle too close to its forward trajectory. Enabling replanning only makes sense when you are using a planner that is able to plan around obstacles. (See Setting.setPlanner. As of 5/2021, only the QP planner can plan around obstacles). */
+      const rapid::String32 SETTINGS_METHOD_SET_ENABLE_REPLAN = "setEnableReplan";
+
+      //@copy-declaration /** If true, when Astrobee detects an obstacle too close to its forward trajectory, after the robot comes to a stop, the choreographer will automatically request a new trajectory from the current configured planner. If false, the robot will stop and wait for operator assistance. */
+      const rapid::String32 SETTINGS_METHOD_SET_ENABLE_REPLAN_PARAM_ENABLE_REPLAN = "enableReplan";
+      const rapid::DataType SETTINGS_METHOD_SET_ENABLE_REPLAN_DTYPE_ENABLE_REPLAN = rapid::RAPID_BOOL;
 
       //@copy-declaration /** Sets flashlight brightness. */
       const rapid::String32 SETTINGS_METHOD_SET_FLASHLIGHT_BRIGHTNESS = "setFlashlightBrightness";
@@ -353,7 +325,7 @@ module rapid {
       const rapid::String32 SETTINGS_METHOD_SET_FLASHLIGHT_BRIGHTNESS_PARAM_BRIGHTNESS = "brightness";
       const rapid::DataType SETTINGS_METHOD_SET_FLASHLIGHT_BRIGHTNESS_DTYPE_BRIGHTNESS = rapid::RAPID_FLOAT;
 
-      //@copy-declaration /** Enables/disables holonomic mode.<p/>Holonomic mode is sometimes called 'blind flying' because it relaxes the constraint to always point the HazCam forward in order to enable obstacle detection. When in holonomic mode, the default trapezoidal planner will skip its usual first step of slewing attitude to face toward the target position. Instead, it will generate a trajectory that maintains the robot's previous attitude during translation to the target position. */
+      //@copy-declaration /** Enables/disables holonomic mode.<p/>Holonomic mode is sometimes called 'blind flying' because it relaxes the constraint to always point the HazCam in the direction of motion while translating in order to enable obstacle detection. When holonomic mode is enabled, the default trapezoidal planner will simultaneously translate to the target position and rotate to the target attitude. */
       const rapid::String32 SETTINGS_METHOD_SET_HOLONOMIC_MODE = "setHolonomicMode";
 
       //@copy-declaration /** Set to true/false to enable/disable holonomic mode. */
@@ -413,7 +385,7 @@ module rapid {
       //@copy-declaration /** Switches which trajectory planner is used when Astrobee needs to generate a trajectory to reach a target pose. Astrobee uses its trajectory planner when it receives a teleoperation motion command. However, when an fplan is generated by the Astrobee control station plan editor, it normally contains pre-computed trajectories for its motion segments; when Astrobee executes these fplans, the onboard trajectory planner is not used. */
       const rapid::String32 SETTINGS_METHOD_SET_PLANNER = "setPlanner";
 
-      //@copy-declaration /** Which planner to use:<ul><li>Trapezoidal planner: Generates a straight-line trajectory from the start position to the target position, with a trapezoidal velocity profile. If not in holonomic mode, the robot will rotate to face the target position before beginning to translate. After translating to the target position, the robot will turn to face the target attitude.</li><li>QP planner: An experimental planner that generates a curved trajectory from start to target, avoiding intervening obstacles. As of 10/2020, using the QP planner is not recommended, because it has not yet been tested on the ISS.</li></ul> */
+      //@copy-declaration /** Which planner to use:<ul><li>Trapezoidal planner: Generates a straight-line trajectory from the start position to the target position, using trapezoidal velocity profiles for translation and rotation. If holonomic mode is disabled (usual case), the robot will (1) rotate to face the target position, (2) translate to the target position while facing forward, (3) rotate to the target attitude. If holonomic mode is enabled, the robot will simultaneously translate along a straight line to the target position while rotating to the target attitude.</li><li>QP planner: An experimental planner that generates a curved trajectory from start to target, avoiding intervening obstacles. As of 10/2020, using the QP planner is not recommended, because it has not yet been tested on the ISS.</li></ul> */
       const rapid::String32 SETTINGS_METHOD_SET_PLANNER_PARAM_PLANNER = "planner";
       const rapid::DataType SETTINGS_METHOD_SET_PLANNER_DTYPE_PLANNER = rapid::RAPID_STRING;
 
@@ -428,18 +400,8 @@ module rapid {
       const rapid::String32 SETTINGS_METHOD_SET_TELEMETRY_RATE_PARAM_RATE = "rate";
       const rapid::DataType SETTINGS_METHOD_SET_TELEMETRY_RATE_DTYPE_RATE = rapid::RAPID_FLOAT;
 
-      //@copy-declaration /** For expert use only. Enables 'discrete time unit' synchronization for multiple Astrobees.<p/>Enabling time sync changes how Astrobee initiates motion along each trajectory segment. It delays the start of motion until the time is an integer multiple of the discrete time unit, a configurable value that is currently set to five seconds. The idea is that if an operator tries to start two robots moving at the same time, even if there is some differential delay in how long the command takes to arrive at each robot, as long as both robots receive the command within the same discrete time unit window, they will start at the same moment (i.e., the beginning of the next window).<p/>However, we can not recommend enabling time sync to achieve synchronization at this time, due to the following concerns: (1) execution with time sync has never really been tested, and may be buggy, (2) the synchronization protocol is not robust: one can not guarantee that the different robots will receive the command within the same discrete time unit window. */
-      const rapid::String32 SETTINGS_METHOD_SET_TIME_SYNC = "setTimeSync";
-
-      //@copy-declaration /** Set to true/false to enable/disable discrete time unit synchronization. */
-      const rapid::String32 SETTINGS_METHOD_SET_TIME_SYNC_PARAM_SET_TIME_SYNC = "setTimeSync";
-      const rapid::DataType SETTINGS_METHOD_SET_TIME_SYNC_DTYPE_SET_TIME_SYNC = rapid::RAPID_BOOL;
-
       //@copy-declaration /** Loads the most recently uplinked keepout zones file.<p/>The Astrobee control station implements the protocol for managing keepout zones:<ol><li>Uplink a new keepout zone file using the RAPID compressed file protocol over DDS. (File uplink is not considered a command, so it does not appear in this command dictionary).</li><li>Send this Settings.setZones command to load the uplinked zones file. Any errors in the file will be reported at this time.</li><li>Use the Settings.setCheckZones command to enable/disable keepout zone checking.</li></ol> */
       const rapid::String32 SETTINGS_METHOD_SET_ZONES = "setZones";
-
-      const rapid::String32 ADMIN_BERTH_NUMBER_1 = "1";
-      const rapid::String32 ADMIN_BERTH_NUMBER_2 = "2";
 
       const rapid::String32 ADMIN_LOCALIZATION_MODE_NONE = "None";
       const rapid::String32 ADMIN_LOCALIZATION_MODE_MAPPED_LANDMARKS = "MappedLandmarks";
@@ -451,9 +413,6 @@ module rapid {
       const rapid::String32 ARM_ACTION_TYPE_PAN = "Pan";
       const rapid::String32 ARM_ACTION_TYPE_TILT = "Tilt";
       const rapid::String32 ARM_ACTION_TYPE_BOTH = "Both";
-
-      const rapid::String32 DATA_DOWNLOAD_METHOD_IMMEDIATE = "Immediate";
-      const rapid::String32 DATA_DOWNLOAD_METHOD_DELAYED = "Delayed";
 
       const rapid::String32 POWER_POWERED_COMPONENT_LASER_POINTER = "Laser Pointer";
       const rapid::String32 POWER_POWERED_COMPONENT_PAYLOAD_TOP_AFT = "Payload Top Aft";
@@ -500,6 +459,7 @@ module rapid {
       const rapid::String32 SETTINGS_TELEMETRY_TYPE_GNC_STATE = "GncState";
       const rapid::String32 SETTINGS_TELEMETRY_TYPE_PMC_CMD_STATE = "PmcCmdState";
       const rapid::String32 SETTINGS_TELEMETRY_TYPE_POSITION = "Position";
+      const rapid::String32 SETTINGS_TELEMETRY_TYPE_SPARSE_MAPPING_POSE = "SparseMappingPose";
 
 
     };

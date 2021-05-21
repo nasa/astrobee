@@ -47,14 +47,11 @@ extern const InsensitiveMap<CommandCreateFn> kCommandMap = {
   { kCmdPayloadOff,  &CreateCommand<PowerItemCommand> },
   { kCmdPowerOff,    &CreateCommand<PowerItemCommand> },
   { kCmdGripper,     &CreateCommand<GripperCommand> },
-  { kCmdClearData,   &CreateCommand<DataCommand> },
-  { kCmdDownload,    &CreateCommand<DataCommand> },
   { kCmdStartGuest,  &CreateCommand<GuestScienceCommand> },
   { kCmdCustomGuest, &CreateCommand<CustomGuestScienceCommand> },
   { kCmdGuestCmd,    &CreateCommand<CustomGuestScienceCommand> },
   { kCmdStopGuest,   &CreateCommand<GuestScienceCommand> },
   { kCmdFlashlight,  &CreateCommand<FlashlightCommand> },
-  { kCmdGenericCmd,  &CreateCommand<GenericCommand> },
   { kCmdSetCamera,   &CreateCommand<SetCameraCommand> },
   { kCmdStreamCamera, &CreateCommand<StreamCameraCommand> },
   { kCmdRecordCamera, &CreateCommand<RecordCameraCommand> },
@@ -105,10 +102,6 @@ const Fields powerFields {
   new Field("which", Json::stringValue)
 };
 
-const Fields dataFields {
-  new Field("dataMethod", Json::stringValue)
-};
-
 const Fields guestScienceFields {
   new Field("apkName", Json::stringValue),
 };
@@ -121,11 +114,6 @@ const Fields guestCommandFields {
 const Fields flashlightFields {
   new Field("which", Json::stringValue),
   new Field("brightness", Json::realValue)
-};
-
-const Fields genericCommandFields {
-  new Field("commandName", Json::stringValue),
-  new Field("param", Json::stringValue)
 };
 
 const Fields cameraFields {
@@ -184,7 +172,8 @@ const Fields telemetryRateFields {
     "EkfState",
     "GncState",
     "PmcCmdState",
-    "Position"
+    "Position",
+    "SparseMappingPose"
   }),
   new Field("rate", Json::realValue)
 };
@@ -317,23 +306,6 @@ std::string const& PowerItemCommand::which() const noexcept {
   return which_;
 }
 
-DataCommand::DataCommand(Json::Value const& obj)
-  : Command(obj), data_method_("") {
-  set_valid(true);
-  if (!Validate(obj, dataFields)) {
-    LOG(ERROR) << "invalid DataCommand.";
-    return;
-  }
-
-  data_method_ = obj["dataMethod"].asString();
-
-  set_valid(true);
-}
-
-std::string const& DataCommand::data_method() const noexcept {
-  return data_method_;
-}
-
 GuestScienceCommand::GuestScienceCommand(Json::Value const& obj)
   : Command(obj), apk_("") {
   if (!Validate(obj, guestScienceFields)) {
@@ -390,27 +362,6 @@ std::string const& FlashlightCommand::which() const noexcept {
 
 float FlashlightCommand::brightness() const noexcept {
   return brightness_;
-}
-
-GenericCommand::GenericCommand(Json::Value const& obj)
-  : Command(obj), name_(""), param_("") {
-  if (!Validate(obj, genericCommandFields)) {
-    LOG(ERROR) << "invalid GenericCommand.";
-    return;
-  }
-
-  name_ = obj["commandName"].asString();
-  param_ = obj["param"].asString();
-
-  set_valid(true);
-}
-
-std::string const& GenericCommand::name() const noexcept {
-  return name_;
-}
-
-std::string const& GenericCommand::param() const noexcept {
-  return param_;
 }
 
 IdlePropulsionCommand::IdlePropulsionCommand(Json::Value const& obj)

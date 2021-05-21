@@ -1,0 +1,22 @@
+<package format="2">
+  <name>localization_rviz_plugins</name>
+  <version>1.0.0</version>
+  <description>
+    Localization rviz plugins package
+  </description>
+  <license>
+    Apache License, Version 2.0
+  </license>
+  <author email="astrobee-fsw@nx.arc.nasa.gov">
+    Astrobee Flight Software
+  </author>
+  <maintainer email="astrobee-fsw@nx.arc.nasa.gov">
+    Astrobee Flight Software
+  </maintainer>
+  <buildtool_depend>catkin</buildtool_depend>
+  <depend>roscpp</depend>
+  <depend>rviz</depend>
+  <export>
+    <rviz plugin="${prefix}/nodelet_plugins.xml"/>
+  </export> 
+</package>

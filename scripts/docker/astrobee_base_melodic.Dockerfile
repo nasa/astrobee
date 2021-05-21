@@ -1,4 +1,7 @@
-# This will set up an Astrobee docker container using the non-NASA install instructions.
+# This will set up an Astrobee melodic docker container using the non-NASA install
+# instructions.
+# This image is the base, meaning that it contains all the installation context,
+# but it doesn't copy or build the entire code.
 # You must set the docker context to be the repository root directory
 
 FROM nvidia/opengl:1.0-glvnd-runtime-ubuntu18.04
@@ -63,7 +66,7 @@ RUN apt-get update && apt-get install -y \
   && rm -rf /var/lib/apt/lists/*
 
 # Downloading OpenCV repo & switching to 3.3.1 branch,
-#Building OpenCV
+# Building OpenCV
 RUN mkdir /opencv_build && cd /opencv_build && \
     git clone https://github.com/opencv/opencv.git && \
     cd opencv && git checkout 3.3.1 && cd .. && \

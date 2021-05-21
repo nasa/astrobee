@@ -1,3 +1,36 @@
+astrobee (0.14.1) testing; urgency=medium
+
+  * Dynamic IMU Filtering
+  * Added measurement spacing for visual odometry
+  * Tuning configurations
+  * Bug fixes
+  * Note, Perching does not work in this release, use another version for this.
+
+  -- Astrobee Flight Software <astrobee-fsw@nx.arc.nasa.gov>  Wed, 03 Mar 2021 14:55:02 -0800
+
+astrobee (0.14.0) testing; urgency=medium
+
+  * Added graph_localizer package
+  * Added supporting packages for graph localizer including imu_augmetor, imu_integation, localization_common, localization_measurements
+  * Added tools for graph localizer including graph_bag and imu_bias_tester
+  * Added rviz plugins for graph localizer and associated packages in localization_rviz_plugins
+  * Added gtsam debian
+  * Note, Perching does not work in this release, use another version for this.
+
+ -- Astrobee Flight Software <astrobee-fsw@nx.arc.nasa.gov>  Wed, 27 Jan 2021 13:43:11 -0800
+
+astrobee (0.13.0) testing; urgency=medium
+
+  * Multiple updates to documentation, doxygen is exported to github pages
+  * Adding Github actions to build and test the code and generate documentation
+  * astrobee_media now a submodule
+  * SciCam now generates compressed images
+  * Added memory monitor
+  * Cross compiling with docker
+  * Various other minor fixes
+
+ -- Astrobee Flight Software <astrobee-fsw@nx.arc.nasa.gov>   Fri, 15 Jan 2021 10:37:25 -0800
+
 astrobee (0.12.0) testing; urgency=medium
 
   * Localization visualization improvements

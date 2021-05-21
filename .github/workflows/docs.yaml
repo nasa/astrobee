@@ -8,7 +8,7 @@ on:
 
 jobs:
   build_and_push_docs:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
 
     steps:
     - name: Checkout
@@ -22,12 +22,13 @@ jobs:
         ref: gh-pages
     - name: Install dependencies
       run: |
-        sudo apt-get install python-bson
-        sudo apt-get install flex
-        sudo apt-get install graphviz
+        sudo apt-get install -y bison
+        sudo apt-get install -y flex
+        sudo apt-get install -y graphviz
+        sudo apt-get install -y python-setuptools
     - name: Install doxygen
       run: |
-        wget http://doxygen.nl/files/doxygen-1.8.20.src.tar.gz
+        wget 'https://sourceforge.net/projects/doxygen/files/rel-1.8.20/doxygen-1.8.20.src.tar.gz'
         tar -zxvf doxygen-1.8.20.src.tar.gz
         cd doxygen-1.8.20
         mkdir build

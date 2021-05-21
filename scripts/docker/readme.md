@@ -1,8 +1,12 @@
 \page install-docker Docker build
 
-# Usage instructions for NASA users
+# Usage instructions for Docker
 
 Here there are instructions on how to build and run the FSW using Docker.
+First, clone the flight software repository and media:
+
+    git clone https://github.com/nasa/astrobee.git $SOURCE_PATH
+    git submodule update --init --depth 1 description/media
 
 The docker image for the astrobee FSW is divided throughout 2 docker files. 
 
@@ -14,22 +18,13 @@ Available docker files:
 	astrobee_kinetic - Builds the astrobee FSW code on top of astrobee_base_kinetic.
 	astrobee_melodic - Builds the astrobee FSW code on top of astrobee_base_melodic.
 
-	rebuild_and_test_astrobee_kinetic - Rebuilds the astrobee FSW code on top of astrobee_kinetic and performs the unit tests. This makes for a faster rebuild leveraging the cached data and rebuilding only the nodes that were changed, for testing purposes only.
-	rebuild_and_test_astrobee_melodic - Rebuilds the astrobee FSW code on top of astrobee_melodic and performs the unit tests. This makes for a faster rebuild leveraging the cached data and rebuilding only the nodes that were changed, for testing purposes only.
-
 
 ## Building the docker images
 
 To build the docker images, run:
     
     ./build.sh
-The option -a is used to select the location of the astrobee source code, otherwise it is assumed we are in the scripts/docker folder.
 The option -n is used for ubuntu 18 docker images
-
-To rebuild the docker image, use:
-
-	./rebuild-and-test.sh
-The extra options are the same as the build command. The resulting image will overwrite the previous image and can be used for testing purposes. Do not upload this image to the docker hub, instead use the build.sh command for size purposes, no need to have an extra layer.
 
 ## Run the container
 
@@ -70,8 +65,28 @@ Next, download the cross toolchain and install the chroot:
     $SOURCE_PATH/submodules/platform/fetch_toolchain.sh
     $SOURCE_PATH/submodules/platform/rootfs/make_xenial.sh dev $ARMHF_CHROOT_DIR
 
-From the source of the repository, run:
+From the root of the repository, run:
 
 	./scripts/docker/cross_compile/cross_compile.sh
 
-The code will be cross-compiles inside the docker container in /opt/astrobee, and can be copied to the robot.
+The code will be cross-compiles inside the docker container in /opt/astrobee, and
+can be copied to the robot.
+
+After the debian files are generated inside the docker image, they are copied to
+in order of priority:
+1) To the INSTALL_PATH, if defined
+2) To ${DIR}/../../../../astrobee_install/armhf/, if the directoy already exists,
+where $DIR is the directory where the cross_compile.sh script is located.
+3) To $HOME/astrobee_build/armhf otherwise
+
+## Building an Astrobee Debian (NASA users only)
+
+This step assumes that the cross compile setup was successful and that ARMHF_CHROOT_DIR
+and ARMHF_TOOLCHAIN are defined. If not, please follow the cross-compile instructions.
+
+To generate the debians, from the root of the repository, run:
+
+    ./scripts/docker/cross_compile/debian_compile.sh
+
+After the debian files are generated inside the docker image, they are copied to the
+folder before the root of the repository, ${DIR}/../../../../, where $DIR is the directory where the debian_compile.sh script is located.

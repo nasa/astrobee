@@ -54,8 +54,10 @@
 #include "dds_ros_bridge/ros_inertia.h"
 #include "dds_ros_bridge/ros_log_sample.h"
 #include "dds_ros_bridge/ros_odom_rapid_position.h"
+#include "dds_ros_bridge/ros_payload_state.h"
 #include "dds_ros_bridge/ros_plan_status_rapid_plan_status.h"
 #include "dds_ros_bridge/ros_pmc_cmd_state.h"
+#include "dds_ros_bridge/ros_pose_rapid_position.h"
 #include "dds_ros_bridge/ros_string_rapid_text_message.h"
 #include "dds_ros_bridge/ros_sub_rapid_pub.h"
 #include "dds_ros_bridge/ros_telemetry_rapid_telemetry.h"
@@ -91,7 +93,8 @@ enum RateType {
   EKF_STATE,
   GNC_STATE,
   PMC_CMD_STATE,
-  POSITION
+  POSITION,
+  SPARSE_MAPPING_POSE
 };
 
 class RosSubRapidPub;
@@ -104,117 +107,91 @@ class DdsRosBridge : public ff_util::FreeFlyerNodelet {
   /**
    * Build Ros subscribers to Rapid publishers
    * @param  subTopic       topic to subscribe to  ex: "/camera/image"
-   * @param  pubTopic       topic suffix for RAPID ex: "-debug"
-   * @return                number of RosSubRapidPubs
+   * @return                successful
    */
-  int BuildAccessControlStateToRapid(const std::string& sub_topic,
-                                     const std::string& pub_topic,
+  bool BuildAccessControlStateToRapid(const std::string& sub_topic,
+                                      const std::string& name);
+  bool BuildAckToRapid(const std::string& sub_topic,
+                       const std::string& name);
+  bool BuildAgentStateToRapid(const std::string& sub_topic,
+                              const std::string& name);
+  bool BuildArmJointSampleToRapid(const std::string& sub_topic,
+                                  const std::string& name);
+  bool BuildArmStateToRapid(const std::string& sub_topic,
+                            const std::string& name);
+  bool BuildBatteryStateToRapid(const std::string& sub_topic_battery_state_TL,
+                                const std::string& sub_topic_battery_state_TR,
+                                const std::string& sub_topic_battery_state_BL,
+                                const std::string& sub_topic_battery_state_BR,
+                                const std::string& sub_topic_battery_temp_TL,
+                                const std::string& sub_topic_battery_temp_TR,
+                                const std::string& sub_topic_battery_temp_BL,
+                                const std::string& sub_topic_battery_temp_BR,
+                                const std::string& name);
+  bool BuildCommandToRapid(const std::string& sub_topic,
+                           const std::string& ac_sub_topic,
+                           const std::string& failed_cmd_sub_topic,
+                           const std::string& name);
+  bool BuildCompressedFileToRapid(const std::string& sub_topic,
+                                  const std::string& name);
+  bool BuildCompressedFileAckToRapid(const std::string& sub_topic,
                                      const std::string& name);
-  int BuildAckToRapid(const std::string& sub_topic,
-                      const std::string& pub_topic,
-                      const std::string& name);
-  int BuildAgentStateToRapid(const std::string& sub_topic,
-                             const std::string& pub_topic,
-                             const std::string& name);
-  int BuildArmJointSampleToRapid(const std::string& sub_topic,
-                                 const std::string& pub_topic,
-                                 const std::string& name);
-  int BuildArmStateToRapid(const std::string& sub_topic,
-                           const std::string& pub_topic,
-                           const std::string& name);
-  int BuildBatteryStateToRapid(const std::string& sub_topic_battery_state_TL,
-                               const std::string& sub_topic_battery_state_TR,
-                               const std::string& sub_topic_battery_state_BL,
-                               const std::string& sub_topic_battery_state_BR,
-                               const std::string& sub_topic_battery_temp_TL,
-                               const std::string& sub_topic_battery_temp_TR,
-                               const std::string& sub_topic_battery_temp_BL,
-                               const std::string& sub_topic_battery_temp_BR,
-                               const std::string& pub_topic,
-                               const std::string& name);
-  int BuildCommandToRapid(const std::string& sub_topic,
-                          const std::string& ac_sub_topic,
-                          const std::string& failed_cmd_sub_topic,
-                          const std::string& pub_topic,
-                          const std::string& name);
-  int BuildCompressedImageToImage(const std::string& sub_topic,
-                                  const std::string& pub_topic,
-                                  const std::string& name);
-  int BuildCompressedFileToRapid(const std::string& sub_topic,
-                                  const std::string& pub_topic,
-                                  const std::string& name);
-  int BuildCompressedFileAckToRapid(const std::string& sub_topic,
-                                    const std::string& pub_topic,
-                                    const std::string& name);
-  int BuildCpuStateToRapid(const std::string& sub_topic,
-                           const std::string& pub_topic,
-                           const std::string& name);
-  int BuildDataToDiskStateToRapid(const std::string& state_sub_topic,
-                                  const std::string& topics_sub_topic,
-                                  const std::string& pub_topic,
-                                  const std::string& name);
-  int BuildDiskStateToRapid(const std::string& sub_topic,
-                            const std::string& pub_topic,
+  bool BuildCompressedImageToImage(const std::string& sub_topic,
+                                   const std::string& name);
+  bool BuildCpuStateToRapid(const std::string& sub_topic,
                             const std::string& name);
-  int BuildFaultConfigToRapid(const std::string& sub_topic,
-                              const std::string& pub_topic,
-                              const std::string& name);
-  int BuildFaultStateToRapid(const std::string& sub_topic,
-                             const std::string& pub_topic,
+  bool BuildDataToDiskStateToRapid(const std::string& state_sub_topic,
+                                   const std::string& topics_sub_topic,
+                                   const std::string& name);
+  bool BuildDiskStateToRapid(const std::string& sub_topic,
                              const std::string& name);
-  int BuildGncFamCmdStateToRapid(const std::string& sub_topic,
-                                 const std::string& pub_topic,
-                                 const std::string& name);
-  int BuildGncControlStateToRapid(const std::string& sub_topic,
-                                  const std::string& pub_topic,
-                                  const std::string& name);
-  int BuildGuestScienceToRapid(const std::string& state_sub_topic,
-                               const std::string& config_sub_topic,
-                               const std::string& data_sub_topic,
-                               const std::string& pub_topic,
+  bool BuildFaultConfigToRapid(const std::string& sub_topic,
                                const std::string& name);
-  int BuildInertiaDataToRapid(const std::string& sub_topic,
-                              const std::string& pub_topic,
+  bool BuildFaultStateToRapid(const std::string& sub_topic,
                               const std::string& name);
-  int BuildLogSampleToRapid(const std::string& sub_topic,
-                             const std::string& pub_topic,
-                             const std::string& name);
-  int BuildOdomToPosition(const std::string& sub_topic,
-                          const std::string& pub_topic,
-                          const std::string& name);
-  int BuildPlanStatusToPlanStatus(const std::string& sub_topic,
-                                  const std::string& pub_topic,
+  bool BuildGncFamCmdStateToRapid(const std::string& sub_topic,
                                   const std::string& name);
-  int BuildPmcCmdStateToRapid(const std::string& sub_topic,
-                                  const std::string& pub_topic,
-                                  const std::string& name);
-  int BuildStringToTextMessage(const std::string& sub_topic,
-                               const std::string& pub_topic,
+  bool BuildGncControlStateToRapid(const std::string& sub_topic,
+                                   const std::string& name);
+  bool BuildGuestScienceToRapid(const std::string& state_sub_topic,
+                                const std::string& config_sub_topic,
+                                const std::string& data_sub_topic,
+                                const std::string& name);
+  bool BuildInertiaDataToRapid(const std::string& sub_topic,
                                const std::string& name);
-  int BuildTelemetryToRapid(const std::string& sub_topic,
-                            const std::string& pub_topic,
-                            const std::string& name);
+  bool BuildLogSampleToRapid(const std::string& sub_topic,
+                             const std::string& name);
+  bool BuildOdomToPosition(const std::string& sub_topic,
+                           const std::string& name);
+  bool BuildPayloadStateToPayloadState(const std::string& sub_topic,
+                                       const std::string& name);
+  bool BuildPlanStatusToPlanStatus(const std::string& sub_topic,
+                                   const std::string& name);
+  bool BuildPmcCmdStateToRapid(const std::string& sub_topic,
+                               const std::string& name);
+  bool BuildPoseToPosition(const std::string& sub_topic,
+                           const std::string& name);
+  bool BuildStringToTextMessage(const std::string& name);
+  bool BuildTelemetryToRapid(const std::string& sub_topic,
+                             const std::string& name);
 
   /**
    * Build Rapid subscribers to Ros publishers
    * @param subscribeTopic topix suffix for RAPID ex : "-debug"
    * @param pubTopic topic to publish to
    *
-   * @return number of RapidPubRosSubs
+   * @return successful
    */
-  int BuildCommandToCommand(const std::string& sub_topic,
-                            const std::string& pub_topic,
-                            const std::string& name);
-  int BuildCompressedFileToCompressedFile(const std::string& sub_topic,
-                                          const std::string& pub_topic,
-                                          const std::string& name);
+  bool BuildCommandToCommand(const std::string& pub_topic,
+                             const std::string& name);
+  bool BuildCompressedFileToCompressedFile(const std::string& pub_topic,
+                                           const std::string& name);
 
 
   /**
    * Build Rapid publisher for one time message
    */
-  int BuildCommandConfigToCommandConfig(const std::string& pub_topic,
-                                        const std::string& name);
+  bool BuildCommandConfigToCommandConfig(const std::string& name);
 
   bool SetTelem(float rate, std::string &err_msg, RateType type);
 
@@ -224,12 +201,17 @@ class DdsRosBridge : public ff_util::FreeFlyerNodelet {
   bool SetEkfPositionRate(float rate, std::string &err_msg, RateType type);
   bool SetGncStateRate(float rate, std::string &err_msg);
   bool SetPmcStateRate(float rate, std::string &err_msg);
+  bool SetSparseMappingPoseRate(float rate, std::string &err_msg);
 
   bool SetTelemRateCallback(ff_msgs::SetRate::Request &req,
                             ff_msgs::SetRate::Response &res);
 
  protected:
   virtual void Initialize(ros::NodeHandle *nh);
+  bool ReadTopicInfo(const std::string& topic_abbr,
+                    const std::string& sub_or_pub,
+                    std::string& sub_topic,
+                    bool& use);
   bool ReadParams();
   bool ReadRateParams();
 

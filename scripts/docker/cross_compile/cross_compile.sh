@@ -25,13 +25,32 @@
 
 # Base docker image copies over the toolchain and rootfs, resulting from
 # the NASA_INSTALL.md instructions. Also installs minimum dependencies
-echo "Build context for base: "${ARMHF_TOOLCHAIN}
-docker build $ARMHF_TOOLCHAIN -f scripts/docker/cross_compile/astrobee_base_toolchain.Dockerfile -t astrobee/astrobee:base-toolchain
+set -e
 
-echo "Build context for base: "${ARMHF_CHROOT_DIR}
+# Check that the paths are defined
+DIR=$(dirname "$(readlink -f "$0")")
+
+echo "Build context for toolchain base: "${ARMHF_TOOLCHAIN}
+if [ -z "${ARMHF_TOOLCHAIN}" ]; then echo ARMHF_TOOLCHAIN is not set, please check armhf instructions; exit -1; fi
+echo "Build context for armhf base: "${ARMHF_CHROOT_DIR}
+if [ -z "${ARMHF_CHROOT_DIR}" ]; then echo ARMHF_CHROOT_DIR is not set, please check armhf instructions; exit -1; fi
+echo "Build context for cross: "${DIR}/../../..
+
+if [ -z "${INSTALL_PATH}" ]
+then
+  if [ -d "${DIR}/../../../../astrobee_install/armhf/" ] # Checks if this folder is defined otherwise defaults to standard
+  then export INSTALL_PATH=${DIR}/../../../../astrobee_install/armhf/
+  else export INSTALL_PATH=$HOME/astrobee_build/armhf
+  fi
+fi
+echo "Saving the cross-compiled code in: "${INSTALL_PATH}
+
+# Setup the build context
+docker build $ARMHF_TOOLCHAIN -f scripts/docker/cross_compile/astrobee_base_toolchain.Dockerfile -t astrobee/astrobee:base-toolchain
 docker build $ARMHF_CHROOT_DIR -f scripts/docker/cross_compile/astrobee_base_rootfs.Dockerfile -t astrobee/astrobee:base-cross
 
 # Cross-compiles the code
-thisdir=$(dirname "$(readlink -f "$0")")
-echo "Build context for cross: "${thisdir}
-docker build . -f scripts/docker/cross_compile/astrobee_cross.Dockerfile -t astrobee/astrobee:cross
+docker build ${DIR}/../../.. -f scripts/docker/cross_compile/astrobee_cross.Dockerfile -t astrobee/astrobee:cross
+
+# Save the code
+docker run --rm --entrypoint tar astrobee/astrobee:cross cC /opt/astrobee . | tar xvC ${INSTALL_PATH}

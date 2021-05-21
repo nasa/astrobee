@@ -1,4 +1,9 @@
-# This will set up an Astrobee docker container using the non-NASA install instructions.
+# This will set up an Astrobee kinetic docker container using the non-NASA install
+# instructions.
+# This image is the base, meaning that it contains all the installation context,
+# but it doesn't copy or build the entire code.
+# This image builds on top of the base kinetic image building the code.
+
 # You must set the docker context to be the repository root directory
 
 FROM nvidia/opengl:1.0-glvnd-runtime-ubuntu16.04

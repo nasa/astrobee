@@ -108,6 +108,7 @@ class ComManager:
         self.subs_manager = com.RosSubscriberManager('gnc_visualizer', self.viz.print_to_log)
         self.subs_manager.add_subscriber('rosout', "/rosout", self.viz.log_callback, com.Log)
         self.subs_manager.add_subscriber('truth', "/loc/truth", self.viz.ground_truth_callback, com.PoseStamped)
+        self.subs_manager.add_subscriber('ml_pose', "/sparse_mapping/pose", self.viz.ml_pose_callback, com.PoseStamped)
         self.subs_manager.add_subscriber('ekf', "/gnc/ekf", self.viz.ekf_callback, com.EkfState)
         self.subs_manager.add_subscriber('ctl_cmd', "/gnc/ctl/command", self.viz.command_callback, com.FamCommand)
         self.subs_manager.add_subscriber('ctl_traj', "/gnc/ctl/traj", self.viz.traj_callback, com.ControlState)
@@ -119,6 +120,9 @@ class ComManager:
 
     def __start_dds_com(self):
         self.subs_manager = com.DdsSubscriberManager()
+        self.subs_manager.add_subscriber(
+                "sparse_mapping_pose_sub", com.DdsSubscriber(
+                    "SparseMappingPoseStampedSubscriber::SparseMappingPoseStampedReader", self.viz.ml_pose_callback, com.PoseStamped), True)
         self.subs_manager.add_subscriber(
                 "ekf_sub", com.DdsSubscriber(
                     "EkfSubscriber::EkfReader", self.viz.ekf_callback, com.EkfState), True)
