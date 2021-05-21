@@ -27,10 +27,8 @@ sudo apt-get install -y devscripts equivs libproj-dev
 # delete old debians (-f avoids 'no such file' warning on first run)
 rm -f *_amd64.deb
 
-# DIST=`cat /etc/os-release | grep -oP "(?<=VERSION_CODENAME=).*"`
-DIST="bionic"
-bionic="bionic"
-echo "$DIST"
+DIST=`cat /etc/os-release | grep -oP "(?<=VERSION_CODENAME=).*"`
+
 if [ "$DIST" = "xenial" ]; then
   echo "Ubuntu 16 detected"
 elif [ "$DIST" = "$bionic" ]; then

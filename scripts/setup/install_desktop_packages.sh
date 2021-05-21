@@ -25,7 +25,7 @@
 
 scriptdir=$(dirname "$(readlink -f "$0")")
 arssrc=/etc/apt/sources.list.d/astrobee-latest.list
-export DIST=`cat /etc/os-release | grep -oP "(?<=VERSION_CODENAME=).*"`
+DIST=`cat /etc/os-release | grep -oP "(?<=VERSION_CODENAME=).*"`
 
 pkg_files=${1:-$scriptdir/packages_base_"${DIST}".lst $scriptdir/packages_desktop_${DIST}.lst}
 echo "$pkg_files ${DIST}"
