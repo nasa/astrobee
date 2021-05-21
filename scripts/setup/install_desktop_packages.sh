@@ -25,9 +25,10 @@
 
 scriptdir=$(dirname "$(readlink -f "$0")")
 arssrc=/etc/apt/sources.list.d/astrobee-latest.list
+DIST=`cat /etc/os-release | grep -oP "(?<=VERSION_CODENAME=).*"`
 
-pkg_files=${1:-$scriptdir/packages_base.lst $scriptdir/packages_desktop.lst}
-echo $pkg_files
+pkg_files=${1:-$scriptdir/packages_base_"${DIST}".lst $scriptdir/packages_desktop_${DIST}.lst}
+echo "$pkg_files ${DIST}"
 
 pkgs=''
 for i in $pkg_files; do
@@ -49,12 +50,12 @@ then
  
   if [ "${NO_TUNNEL}" -eq 1 ]; then
       echo "Getting the custom Debian without tunnel"
-      sudo /bin/bash -c "echo \"deb [arch=amd64] http://astrobee.ndc.nasa.gov/software xenial main\" > $arssrc" || exit 1
-      sudo /bin/bash -c "echo \"deb-src http://astrobee.ndc.nasa.gov/software xenial main\" >> $arssrc" || exit 1
+      sudo /bin/bash -c "echo \"deb [arch=amd64] http://astrobee.ndc.nasa.gov/software ${DIST} main\" > $arssrc" || exit 1
+      sudo /bin/bash -c "echo \"deb-src http://astrobee.ndc.nasa.gov/software ${DIST} main\" >> $arssrc" || exit 1
   else
       echo "Tunnelling to get the custom Debian"
-      sudo /bin/bash -c "echo \"deb [arch=amd64] http://127.0.0.1:8765/software xenial main\" > $arssrc" || exit 1
-      sudo /bin/bash -c "echo \"deb-src http://127.0.0.1:8765/software xenial main\" >> $arssrc" || exit 1
+      sudo /bin/bash -c "echo \"deb [arch=amd64] http://127.0.0.1:8765/software ${DIST} main\" > $arssrc" || exit 1
+      sudo /bin/bash -c "echo \"deb-src http://127.0.0.1:8765/software ${DIST} main\" >> $arssrc" || exit 1
       ssh -N -L 8765:astrobee.ndc.nasa.gov:80 ${username}m.ndc.nasa.gov &
   fi
   
