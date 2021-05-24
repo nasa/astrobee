@@ -1,6 +1,5 @@
-luajit (2.0-1) UNRELEASED; urgency=low
+luajit (2.0-1) unstable; urgency=low
 
-  * Initial release. Closes: #nnnn
-    <nnnn is the bug number of your ITP>
+  * Initial release.
 
- -- mgouveia <mgouveia@localhost>  Thu, 20 May 2021 11:59:18 -0700
+ -- Marina Moreira nospam@nospam.org>  Thu, 20 May 2021 11:59:18 -0700
