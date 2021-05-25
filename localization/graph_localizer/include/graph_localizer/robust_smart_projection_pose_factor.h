@@ -95,6 +95,8 @@ class RobustSmartProjectionPoseFactor : public SmartProjectionPoseFactor<CALIBRA
         const double total_reprojection_loss = this->totalReprojectionError(this->cameras(values));
         const auto result = this->point();
         if (!result.valid() && !useForRotationOnly(result)) return 0.0;
+        // Multiply by 2 since totalReporjectionError divides mahal distance by 2, and robust_model_->loss
+        // expects mahal distance
         const double loss = robust_ ? robustLoss(2.0 * total_reprojection_loss) : total_reprojection_loss;
         return loss;
       } catch (...) {
@@ -115,6 +117,8 @@ class RobustSmartProjectionPoseFactor : public SmartProjectionPoseFactor<CALIBRA
         const auto point = serialized_point(values);
         const double total_reprojection_loss = this->totalReprojectionError(this->cameras(values), point);
         if (!point.valid() && !useForRotationOnly(point)) return 0.0;
+        // Multiply by 2 since totalReporjectionError divides mahal distance by 2, and robust_model_->loss
+        // expects mahal distance
         const double loss = robust_ ? robustLoss(2.0 * total_reprojection_loss) : total_reprojection_loss;
         return loss;
       } catch (...) {
