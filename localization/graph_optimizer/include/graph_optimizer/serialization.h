@@ -15,20 +15,16 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef GRAPH_LOCALIZER_GRAPH_VALUES_PARAMS_H_
-#define GRAPH_LOCALIZER_GRAPH_VALUES_PARAMS_H_
 
-#include <gtsam/geometry/Pose3.h>
+#ifndef GRAPH_OPTIMIZER_SERIALIZATION_H_
+#define GRAPH_OPTIMIZER_SERIALIZATION_H_
 
-namespace graph_localizer {
-struct GraphValuesParams {
-  // Only kept if there are at least min_num_states and not more than max_num_states
-  double ideal_duration;
-  int min_num_states;
-  int max_num_states;
-  // If storing 3d features as states (i.e. bundle adjustment type problems)
-  int min_num_factors_per_feature;
-};
-}  // namespace graph_localizer
+#include <graph_optimizer/graph_optimizer.h>
 
-#endif  // GRAPH_LOCALIZER_GRAPH_VALUES_PARAMS_H_
+#include <string>
+
+namespace graph_optimizer {
+std::string SerializeBinary(const GraphLocalizer& graph_optimizer);
+}  // namespace graph_optimizer
+
+#endif  // GRAPH_OPTIMIZER_SERIALIZATION_H_

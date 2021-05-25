@@ -16,18 +16,18 @@
  * under the License.
  */
 
-#ifndef GRAPH_LOCALIZER_FACTOR_TO_ADD_H_
-#define GRAPH_LOCALIZER_FACTOR_TO_ADD_H_
+#ifndef GRAPH_OPTIMIZER_FACTOR_TO_ADD_H_
+#define GRAPH_OPTIMIZER_FACTOR_TO_ADD_H_
 
-#include <graph_localizer/graph_action.h>
-#include <graph_localizer/key_info.h>
+#include <graph_optimizer/graph_action_completer_type.h>
+#include <graph_optimizer/key_info.h>
 #include <localization_common/time.h>
 
 #include <gtsam/nonlinear/NonlinearFactor.h>
 
 #include <vector>
 
-namespace graph_localizer {
+namespace graph_optimizer {
 struct FactorToAdd {
   FactorToAdd(const KeyInfos& key_infos, boost::shared_ptr<gtsam::NonlinearFactor> factor)
       : factor(factor), key_infos(key_infos) {}
@@ -39,10 +39,13 @@ struct FactorToAdd {
 class FactorsToAdd {
  public:
   FactorsToAdd(const localization_common::Time timestamp, const std::vector<FactorToAdd>& factors_to_add,
-               const GraphAction graph_action = GraphAction::kNone)
-      : timestamp_(timestamp), factors_to_add_(factors_to_add), graph_action_(graph_action) {}
+               const GraphActionCompleterType graph_action_completer_type = GraphActionCompleterType::None)
+      : timestamp_(timestamp),
+        factors_to_add_(factors_to_add),
+        graph_action_completer_type_(graph_action_completer_type) {}
 
-  explicit FactorsToAdd(const GraphAction graph_action = GraphAction::kNone) : graph_action_(graph_action) {}
+  explicit FactorsToAdd(const GraphActionCompleterType graph_action_completer_type = GraphActionCompleterType::None)
+      : graph_action_completer_type_(graph_action_completer_type) {}
 
   void reserve(const int size) { factors_to_add_.reserve(size); }
   size_t size() const { return factors_to_add_.size(); }
@@ -54,14 +57,14 @@ class FactorsToAdd {
   localization_common::Time timestamp() const { return timestamp_; }
   const std::vector<FactorToAdd>& Get() const { return factors_to_add_; }
   std::vector<FactorToAdd>& Get() { return factors_to_add_; }
-  GraphAction graph_action() const { return graph_action_; }
+  GraphActionCompleterType graph_action_completer_type() const { return graph_action_completer_type_; }
 
  private:
   // Timestamp used to sort factors when adding to graph.
   localization_common::Time timestamp_;
   std::vector<FactorToAdd> factors_to_add_;
-  GraphAction graph_action_;
+  GraphActionCompleterType graph_action_completer_type_;
 };
-}  // namespace graph_localizer
+}  // namespace graph_optimizer
 
-#endif  // GRAPH_LOCALIZER_FACTOR_TO_ADD_H_
+#endif  // GRAPH_OPTIMIZER_FACTOR_TO_ADD_H_

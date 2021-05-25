@@ -175,7 +175,7 @@ void GraphBag::Run() {
   }
   graph_bag_timer.Stop();
   graph_bag_timer.Log();
-  const auto graph_stats = graph_localizer_simulator_->graph_stats();
+  const auto graph_stats = graph_localizer_simulator_->graph_localizer_stats();
   if (!graph_stats) {
     LogError("Run: Failed to get graph stats");
   } else {

@@ -15,20 +15,15 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef GRAPH_LOCALIZER_NOISE_PARAMS_H_
-#define GRAPH_LOCALIZER_NOISE_PARAMS_H_
+#ifndef GRAPH_LOCALIZER_FEATURE_POINT_NODE_UPDATER_PARAMS_H_
+#define GRAPH_LOCALIZER_FEATURE_POINT_NODE_UPDATER_PARAMS_H_
 
-#include <gtsam/linear/NoiseModel.h>
+#include <localization_common/combined_nav_state.h>
 
 namespace graph_localizer {
-struct NoiseParams {
-  double starting_prior_translation_stddev;
-  double starting_prior_quaternion_stddev;
-  double starting_prior_velocity_stddev;
-  double starting_prior_accel_bias_stddev;
-  double starting_prior_gyro_bias_stddev;
-  double point_prior_translation_stddev;
+struct FeaturePointNodeUpdaterParams {
+  double huber_k;
 };
 }  // namespace graph_localizer
 
-#endif  // GRAPH_LOCALIZER_NOISE_PARAMS_H_
+#endif  // GRAPH_LOCALIZER_FEATURE_POINT_NODE_UPDATER_PARAMS_H_

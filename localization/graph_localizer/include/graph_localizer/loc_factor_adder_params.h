@@ -19,14 +19,14 @@
 #ifndef GRAPH_LOCALIZER_LOC_FACTOR_ADDER_PARAMS_H_
 #define GRAPH_LOCALIZER_LOC_FACTOR_ADDER_PARAMS_H_
 
-#include <graph_localizer/factor_adder_params.h>
+#include <graph_optimizer/factor_adder_params.h>
 
 #include <gtsam/geometry/Pose3.h>
 #include <gtsam/geometry/Cal3_S2.h>
 #include <gtsam/linear/NoiseModel.h>
 
 namespace graph_localizer {
-struct LocFactorAdderParams : public FactorAdderParams {
+struct LocFactorAdderParams : public graph_optimizer::FactorAdderParams {
   bool add_pose_priors;
   bool add_projections;
   double prior_translation_stddev;

@@ -308,7 +308,7 @@ boost::optional<ff_msgs::GraphState> GraphLocalizerWrapper::LatestLocalizationSt
     GraphStateMsg(combined_nav_state_and_covariances->first, combined_nav_state_and_covariances->second,
                   feature_counts_, graph_localizer_initializer_.EstimateBiases(), position_cov_log_det_lost_threshold_,
                   orientation_cov_log_det_lost_threshold_, graph_localizer_->standstill(),
-                  graph_localizer_->graph_stats(), graph_localizer_->fan_speed_mode());
+                  graph_localizer_->graph_localizer_stats(), graph_localizer_->fan_speed_mode());
   feature_counts_.Reset();
   return graph_state_msg;
 }
@@ -325,12 +325,12 @@ void GraphLocalizerWrapper::SaveLocalizationGraphDotFile() const {
   if (graph_localizer_) graph_localizer_->SaveGraphDotFile();
 }
 
-boost::optional<const GraphStats&> GraphLocalizerWrapper::graph_stats() const {
+boost::optional<const GraphLocalizerStats&> GraphLocalizerWrapper::graph_localizer_stats() const {
   if (!graph_localizer_) {
     LogDebug("GraphStats: Failed to get graph stats.");
     return boost::none;
   }
-  return graph_localizer_->graph_stats();
+  return graph_localizer_->graph_localizer_stats();
 }
 
 bool GraphLocalizerWrapper::publish_localization_graph() const { return publish_localization_graph_; }
