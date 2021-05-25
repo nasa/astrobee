@@ -16,8 +16,8 @@
  * under the License.
  */
 
-#ifndef LOCALIZATION_COMMON_FEATURE_POINT3D_H_
-#define LOCALIZATION_COMMON_FEATURE_POINT3D_H_
+#ifndef LOCALIZATION_COMMON_FEATURE_POINT_3D_H_
+#define LOCALIZATION_COMMON_FEATURE_POINT_3D_H_
 
 #include <gtsam/geometry/Point3.h>
 
@@ -50,4 +50,4 @@ struct FeaturePoint3d {
 using FeaturePoint3ds = std::vector<FeaturePoint3d>;
 }  // namespace localization_common
 
-#endif  // LOCALIZATION_COMMON_FEATURE_POINT3D_H_
+#endif  // LOCALIZATION_COMMON_FEATURE_POINT_3D_H_
