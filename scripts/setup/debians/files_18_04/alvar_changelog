@@ -1,3 +1,9 @@
+libalvar (2.0-5) unstable; urgency=medium
+
+  * Compatible with ubuntu 18, dropped ros-opencv dependency.
+
+ -- Brian Coltin <nospam@nospam.org>  Tue, 15 May 2021 13:05:46 -0700
+
 libalvar (2.0-4) unstable; urgency=medium
 
   * Ros updated opencv, changed path, needs updated rpath.
