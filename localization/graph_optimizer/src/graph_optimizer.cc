@@ -260,9 +260,9 @@ boost::optional<gtsam::Key> GraphOptimizer::GetKey(KeyCreatorFunction key_creato
   for (const auto& node_updater : node_updaters_) {
     const auto node_key = node_updater->GetKey(key_creator_function, timestamp);
     if (node_key) {
-      if (!key)
+      if (!key) {
         key = node_key;
-      else {
+      } else {
         LogError("GetKey: Found key in multiple node updators.");
         return boost::none;
       }
