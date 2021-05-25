@@ -53,9 +53,9 @@ DEFINE_string(output_type, "fplan", "Output file type. Options: fplan (default),
               "with only accelerations to be used in MGTF, or a bin file to be used with EXEC.");
 // DEFINE_bool(ff, false, "Plan in face-forward mode");
 // DEFINE_double(rate, 62.5, "Segment sampling rate");
-DEFINE_double(vel, 0.2, "Desired velocity in m/s");
+DEFINE_double(vel, 0.15, "Desired velocity in m/s");
 DEFINE_double(accel, 0.0175, "Desired acceleration in m/s^2");
-DEFINE_double(omega, 0.1745, "Desired angular velocity in rad/s");
+DEFINE_double(omega, 0.0873, "Desired angular velocity in rad/s");
 DEFINE_double(alpha, 0.1745, "Desired angular acceleration in rad/s^2");
 DEFINE_double(tolerance, 0.1, "When two points are close enough.");
 DEFINE_string(creator, "astrobee", "The name of the creator of the plan.");
@@ -268,7 +268,6 @@ int main(int argc, char *argv[]) {
           joint.position[1] = Arms[id-arm_init](1)-(time_percentage)*(Arms[id-arm_init](1) - Arms[id+1-arm_init](1));
           joint.position[2] = Arms[id-arm_init](2)-(time_percentage)*(Arms[id-arm_init](2) - Arms[id+1-arm_init](2));
           goal.arm.push_back(joint);
-          // std::cout << it->when.toSec()  << "\t " << joint.position[0]  << "\t " << joint.position[1] << std::endl;
         }
       }
       // Pause in between segments
