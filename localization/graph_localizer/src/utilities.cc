@@ -28,6 +28,7 @@
 #include <string>
 
 namespace graph_localizer {
+namespace go = graph_optimizer;
 namespace ii = imu_integration;
 namespace lc = localization_common;
 namespace lm = localization_measurements;
@@ -64,7 +65,7 @@ ff_msgs::GraphState GraphStateMsg(const lc::CombinedNavState& combined_nav_state
                                   const lc::CombinedNavStateCovariances& covariances,
                                   const FeatureCounts& detected_feature_counts, const bool estimating_bias,
                                   const double position_log_det_threshold, const double orientation_log_det_threshold,
-                                  const bool standstill, const GraphStats& graph_stats,
+                                  const bool standstill, const GraphLocalizerStats& graph_stats,
                                   const lm::FanSpeedMode fan_speed_mode) {
   ff_msgs::GraphState loc_msg;
 
@@ -140,8 +141,8 @@ gtsam::noiseModel::Robust::shared_ptr Robust(const gtsam::SharedNoiseModel& nois
 }
 
 boost::optional<SharedRobustSmartFactor> FixSmartFactorByRemovingIndividualMeasurements(
-  const GraphLocalizerParams& params, const RobustSmartFactor& smart_factor,
-  const gtsam::SmartProjectionParams& smart_projection_params, const GraphValues& graph_values) {
+  const SmartProjectionFactorAdderParams& params, const RobustSmartFactor& smart_factor,
+  const gtsam::SmartProjectionParams& smart_projection_params, const CombinedNavStateGraphValues& graph_values) {
   // TODO(rsoussan): Make this more efficient by enabled removal of measurements and keys in smart factor
   const auto original_measurements = smart_factor.measured();
   const auto original_keys = smart_factor.keys();
@@ -157,10 +158,8 @@ boost::optional<SharedRobustSmartFactor> FixSmartFactorByRemovingIndividualMeasu
       keys_to_add.emplace_back(original_keys[i]);
     }
     auto new_smart_factor = boost::make_shared<RobustSmartFactor>(
-      params.factor.smart_projection_adder.cam_noise, params.factor.smart_projection_adder.cam_intrinsics,
-      params.factor.smart_projection_adder.body_T_cam, smart_projection_params,
-      params.factor.smart_projection_adder.rotation_only_fallback, params.factor.smart_projection_adder.robust,
-      params.factor.smart_projection_adder.huber_k);
+      params.cam_noise, params.cam_intrinsics, params.body_T_cam, smart_projection_params,
+      params.rotation_only_fallback, params.robust, params.huber_k);
     new_smart_factor->add(measurements_to_add, keys_to_add);
     const auto new_point = new_smart_factor->triangulateSafe(new_smart_factor->cameras(graph_values.values()));
     if (new_point.valid()) {
@@ -173,8 +172,8 @@ boost::optional<SharedRobustSmartFactor> FixSmartFactorByRemovingIndividualMeasu
 }
 
 boost::optional<SharedRobustSmartFactor> FixSmartFactorByRemovingMeasurementSequence(
-  const GraphLocalizerParams& params, const RobustSmartFactor& smart_factor,
-  const gtsam::SmartProjectionParams& smart_projection_params, const GraphValues& graph_values) {
+  const SmartProjectionFactorAdderParams& params, const RobustSmartFactor& smart_factor,
+  const gtsam::SmartProjectionParams& smart_projection_params, const CombinedNavStateGraphValues& graph_values) {
   constexpr int min_num_measurements = 2;
   // TODO(rsoussan): Make this more efficient by enabled removal of measurements and keys in smart factor
   const auto original_measurements = smart_factor.measured();
@@ -189,10 +188,8 @@ boost::optional<SharedRobustSmartFactor> FixSmartFactorByRemovingMeasurementSequ
       keys_to_add.emplace_back(original_keys[i]);
     }
     auto new_smart_factor = boost::make_shared<RobustSmartFactor>(
-      params.factor.smart_projection_adder.cam_noise, params.factor.smart_projection_adder.cam_intrinsics,
-      params.factor.smart_projection_adder.body_T_cam, smart_projection_params,
-      params.factor.smart_projection_adder.rotation_only_fallback, params.factor.smart_projection_adder.robust,
-      params.factor.smart_projection_adder.huber_k);
+      params.cam_noise, params.cam_intrinsics, params.body_T_cam, smart_projection_params,
+      params.rotation_only_fallback, params.robust, params.huber_k);
     new_smart_factor->add(measurements_to_add, keys_to_add);
     const auto new_point = new_smart_factor->triangulateSafe(new_smart_factor->cameras(graph_values.values()));
     if (new_point.valid()) {
@@ -218,10 +215,8 @@ boost::optional<SharedRobustSmartFactor> FixSmartFactorByRemovingMeasurementSequ
         keys_to_add.emplace_back(original_keys[i]);
       }
       auto new_smart_factor = boost::make_shared<RobustSmartFactor>(
-        params.factor.smart_projection_adder.cam_noise, params.factor.smart_projection_adder.cam_intrinsics,
-        params.factor.smart_projection_adder.body_T_cam, smart_projection_params,
-        params.factor.smart_projection_adder.rotation_only_fallback, params.factor.smart_projection_adder.robust,
-        params.factor.smart_projection_adder.huber_k);
+        params.cam_noise, params.cam_intrinsics, params.body_T_cam, smart_projection_params,
+        params.rotation_only_fallback, params.robust, params.huber_k);
       new_smart_factor->add(measurements_to_add, keys_to_add);
       const auto new_point = new_smart_factor->triangulateSafe(new_smart_factor->cameras(graph_values.values()));
       if (new_point.valid()) {
@@ -254,5 +249,20 @@ SharedRobustSmartFactor RemoveSmartFactorMeasurements(const RobustSmartFactor& s
       new_smart_factor->add(smart_factor.measured()[i], smart_factor.keys()[i]);
   }
   return new_smart_factor;
+}
+
+int NumSmartFactors(const gtsam::NonlinearFactorGraph& graph_factors, const bool check_valid) {
+  int num_of_factors = 0;
+  for (const auto& factor : graph_factors) {
+    const auto smart_factor = dynamic_cast<const RobustSmartFactor*>(factor.get());
+    if (smart_factor) {
+      if (check_valid) {
+        if (smart_factor->isValid()) ++num_of_factors;
+      } else {
+        ++num_of_factors;
+      }
+    }
+  }
+  return num_of_factors;
 }
 }  // namespace graph_localizer

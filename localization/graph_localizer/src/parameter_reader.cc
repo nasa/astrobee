@@ -18,11 +18,13 @@
 
 #include <graph_localizer/parameter_reader.h>
 #include <graph_localizer/utilities.h>
+#include <graph_optimizer/parameter_reader.h>
 #include <imu_integration/utilities.h>
 #include <localization_common/utilities.h>
 #include <msg_conversions/msg_conversions.h>
 
 namespace graph_localizer {
+namespace go = graph_optimizer;
 namespace ii = imu_integration;
 namespace lc = localization_common;
 namespace mc = msg_conversions;
@@ -163,21 +165,6 @@ void LoadFeatureTrackerParams(config_reader::ConfigReader& config, FeatureTracke
   params.smart_projection_adder_measurement_spacing = mc::LoadInt(config, "smart_projection_adder_measurement_spacing");
 }
 
-void LoadGraphValuesParams(config_reader::ConfigReader& config, GraphValuesParams& params) {
-  params.ideal_duration = mc::LoadDouble(config, "ideal_duration");
-  params.min_num_states = mc::LoadInt(config, "min_num_states");
-  params.max_num_states = mc::LoadInt(config, "max_num_states");
-  params.min_num_factors_per_feature = mc::LoadInt(config, "min_num_factors_per_feature");
-}
-
-void LoadNoiseParams(config_reader::ConfigReader& config, NoiseParams& params) {
-  params.starting_prior_translation_stddev = mc::LoadDouble(config, "starting_prior_translation_stddev");
-  params.starting_prior_quaternion_stddev = mc::LoadDouble(config, "starting_prior_quaternion_stddev");
-  params.starting_prior_velocity_stddev = mc::LoadDouble(config, "starting_prior_velocity_stddev");
-  params.starting_prior_accel_bias_stddev = mc::LoadDouble(config, "starting_prior_accel_bias_stddev");
-  params.starting_prior_gyro_bias_stddev = mc::LoadDouble(config, "starting_prior_gyro_bias_stddev");
-}
-
 void LoadSanityCheckerParams(config_reader::ConfigReader& config, SanityCheckerParams& params) {
   params.num_consecutive_pose_difference_failures_until_insane =
     mc::LoadInt(config, "num_consecutive_pose_difference_failures_until_insane");
@@ -195,28 +182,41 @@ void LoadGraphInitializerParams(config_reader::ConfigReader& config, GraphInitia
   params.num_bias_estimation_measurements = mc::LoadInt(config, "num_bias_estimation_measurements");
 }
 
+void LoadCombinedNavStateNodeUpdaterParams(config_reader::ConfigReader& config,
+                                           CombinedNavStateNodeUpdaterParams& params) {
+  params.starting_prior_translation_stddev = mc::LoadDouble(config, "starting_prior_translation_stddev");
+  params.starting_prior_quaternion_stddev = mc::LoadDouble(config, "starting_prior_quaternion_stddev");
+  params.starting_prior_velocity_stddev = mc::LoadDouble(config, "starting_prior_velocity_stddev");
+  params.starting_prior_accel_bias_stddev = mc::LoadDouble(config, "starting_prior_accel_bias_stddev");
+  params.starting_prior_gyro_bias_stddev = mc::LoadDouble(config, "starting_prior_gyro_bias_stddev");
+  params.huber_k = mc::LoadDouble(config, "huber_k");
+  params.add_priors = mc::LoadBool(config, "add_priors");
+  LoadCombinedNavStateGraphValuesParams(config, params.graph_values);
+}
+
+void LoadCombinedNavStateGraphValuesParams(config_reader::ConfigReader& config,
+                                           CombinedNavStateGraphValuesParams& params) {
+  params.ideal_duration = mc::LoadDouble(config, "ideal_duration");
+  params.min_num_states = mc::LoadInt(config, "min_num_states");
+  params.max_num_states = mc::LoadInt(config, "max_num_states");
+}
+
+void LoadFeaturePointNodeUpdaterParams(config_reader::ConfigReader& config, FeaturePointNodeUpdaterParams& params) {
+  params.huber_k = mc::LoadDouble(config, "huber_k");
+}
+
 void LoadGraphLocalizerParams(config_reader::ConfigReader& config, GraphLocalizerParams& params) {
   LoadCalibrationParams(config, params.calibration);
+  LoadCombinedNavStateNodeUpdaterParams(config, params.combined_nav_state_node_updater);
   LoadGraphInitializerParams(config, params.graph_initializer);
   LoadFactorParams(config, params.factor);
+  LoadFeaturePointNodeUpdaterParams(config, params.feature_point_node_updater);
   LoadFeatureTrackerParams(config, params.feature_tracker);
-  LoadGraphValuesParams(config, params.graph_values);
-  LoadNoiseParams(config, params.noise);
-  params.verbose = mc::LoadBool(config, "verbose");
-  params.fatal_failures = mc::LoadBool(config, "fatal_failures");
-  params.print_factor_info = mc::LoadBool(config, "print_factor_info");
-  params.use_ceres_params = mc::LoadBool(config, "use_ceres_params");
-  params.max_iterations = mc::LoadInt(config, "max_iterations");
-  params.marginals_factorization = mc::LoadString(config, "marginals_factorization");
-  params.limit_imu_factor_spacing = mc::LoadBool(config, "limit_imu_factor_spacing");
-  params.max_imu_factor_spacing = mc::LoadDouble(config, "max_imu_factor_spacing");
-  params.add_priors = mc::LoadBool(config, "add_priors");
-  params.add_marginal_factors = mc::LoadBool(config, "add_marginal_factors");
+  go::LoadGraphOptimizerParams(config, params.graph_optimizer);
   params.huber_k = mc::LoadDouble(config, "huber_k");
   params.max_standstill_feature_track_avg_distance_from_mean =
     mc::LoadDouble(config, "max_standstill_feature_track_avg_distance_from_mean");
   params.standstill_min_num_points_per_track = mc::LoadInt(config, "standstill_min_num_points_per_track");
-  params.log_rate = mc::LoadInt(config, "log_rate");
   params.standstill_feature_track_duration = mc::LoadDouble(config, "standstill_feature_track_duration");
   params.estimate_world_T_dock_using_loc = mc::LoadBool(config, "estimate_world_T_dock_using_loc");
 }

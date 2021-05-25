@@ -16,17 +16,12 @@
  * under the License.
  */
 
-#ifndef GRAPH_LOCALIZER_GRAPH_ACTION_H_
-#define GRAPH_LOCALIZER_GRAPH_ACTION_H_
+#ifndef GRAPH_OPTIMIZER_NODE_UPDATER_TYPE_H_
+#define GRAPH_OPTIMIZER_NODE_UPDATER_TYPE_H_
 
-namespace graph_localizer {
-enum class GraphAction {
-  kNone,
-  kDeleteExistingSmartFactors,
-  kLocProjectionNoiseScaling,
-  kARTagProjectionNoiseScaling,
-  kTriangulateNewPoint
-};
-}  // namespace graph_localizer
+namespace graph_optimizer {
+// TODO(rsoussan): Generalize this better
+enum class NodeUpdaterType { CombinedNavState, FeaturePoint };
+}  // namespace graph_optimizer
 
-#endif  // GRAPH_LOCALIZER_GRAPH_ACTION_H_
+#endif  // GRAPH_OPTIMIZER_NODE_UPDATER_TYPE_H_
