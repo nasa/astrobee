@@ -66,6 +66,11 @@ module rapid {
 
         //@copy-declaration /** Sets the planner mobility uses. */
         public string planner;
+
+        //@copy-declaration /** Setting this to true allows Astrobee to re-plan
+        //@copy-declaration   * if there is an obstacle to close to the robot's
+        //@copy-declaration   * forward trajectory. */
+        public boolean replanningEnabled;
       };
     };
   };
