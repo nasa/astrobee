@@ -62,29 +62,27 @@ class PointToLineFactor : public NoiseModelFactor1<gtsam::Pose3> {
   }
 
   Vector evaluateError(const Pose3& world_T_body, boost::optional<Matrix&> H = boost::none) const override {
-    // TODO: store line_T_world instead of world_T_line?
+    // TODO: store line_T_world in cache
     const Point3 line_t_point = world_T_line_.inverse() * world_T_body * body_T_sensor_ * sensor_t_point_;
     if (H) {
       // TODO: store this as well
       const Pose3 sensor_T_body = body_T_sensor_.inverse();
       const Pose3 line_T_sensor = world_T_line_.inverse() * world_T_body * body_T_sensor_;
-      const Rot3& line_R_sensor = line_T_sensor.rotation();
-      const Rot3& sensor_R_body = sensor_T_body.rotation();
+      const Matrix3 line_R_sensor = line_T_sensor.rotation().matrix();
+      const Matrix3 sensor_R_body = sensor_T_body.rotation().matrix();
       const Point3& body_t_sensor = body_T_sensor_.translation();
-      //const Matrix A = line_R_sensor * (-1.0 * skewSymmetric(sensor_t_point_)) * sensor_R_body;
-      const Matrix3 s = skewSymmetric(sensor_t_point_);
-      const Matrix3 test = s* sensor_R_body;
-      const Matrix A = line_R_sensor * s * sensor_R_body;
-      const Matrix B = line_R_sensor * (I_3x3 + -1.0*skewSymmetric(sensor_R_body * body_t_sensor) * sensor_R_body);
+      const Matrix A = -1.0 * line_R_sensor * skewSymmetric(sensor_t_point_) * sensor_R_body;
+      const Matrix B = line_R_sensor * (I_3x3 + -1.0 * skewSymmetric(sensor_R_body * body_t_sensor) * sensor_R_body);
       // Remove last row as error does not account for z value in line_t_point
-      H << A.sub(0, 2, 0, 6), B.sub(0, 2, 0, 6);
+      H->leftCols<3>() = Matrix(A.block<2, 3>(0, 0));
+      H->rightCols<3>() = B.block<2, 3>(0, 0);
     }
     return line_t_point.head<2>();
   }
- 
+
   const Point3& sensor_t_point() const { return sensor_t_point_; }
-  const Pose3& world_T_line() const {return world_T_line_; }
-  const Pose3& body_T_sensor() const { return body_T_sensor_;}
+  const Pose3& world_T_line() const { return world_T_line_; }
+  const Pose3& body_T_sensor() const { return body_T_sensor_; }
 
  private:
   friend class boost::serialization::access;
