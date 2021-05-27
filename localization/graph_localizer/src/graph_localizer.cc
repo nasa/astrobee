@@ -408,7 +408,8 @@ int GraphLocalizer::NumFeatures() const { return feature_point_node_updater_->Nu
 
 // TODO(rsoussan): fix this call to happen before of factors are removed!
 int GraphLocalizer::NumOFFactors(const bool check_valid) const {
-  if (params_.factor.smart_projection_adder.enabled) return NumSmartFactors(graph_factors(), check_valid);
+  if (params_.factor.smart_projection_adder.enabled)
+    return NumSmartFactors(graph_factors(), combined_nav_state_node_updater_->graph_values().values(), check_valid);
   if (params_.factor.projection_adder.enabled) return NumProjectionFactors(check_valid);
   return 0;
 }
