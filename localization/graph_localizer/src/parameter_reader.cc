@@ -191,6 +191,9 @@ void LoadCombinedNavStateNodeUpdaterParams(config_reader::ConfigReader& config,
   params.starting_prior_gyro_bias_stddev = mc::LoadDouble(config, "starting_prior_gyro_bias_stddev");
   params.huber_k = mc::LoadDouble(config, "huber_k");
   params.add_priors = mc::LoadBool(config, "add_priors");
+  params.threshold_bias_uncertainty = mc::LoadBool(config, "threshold_bias_uncertainty");
+  params.accel_bias_stddev_threshold = mc::LoadDouble(config, "accel_bias_stddev_threshold");
+  params.gyro_bias_stddev_threshold = mc::LoadDouble(config, "gyro_bias_stddev_threshold");
   LoadCombinedNavStateGraphValuesParams(config, params.graph_values);
 }
 
