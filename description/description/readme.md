@@ -5,16 +5,16 @@ The Universal Robot Description Format (URDF) is a language for describing a rob
 This folder contains only the Xacro files for the free-flyer model. The dock, ISS and granite models are static URDFs that are included in the media distribution. This design choice enables us to load these entities from a world file, preventing race conditions in loading environmental elements with free-flyers in a simulated context.
 
 The way URDF works is best illustrated by this example, which is actually loosely representative of how the project's launch files actually work:
-
-    <arg name="ns" value="honey"/>
-    <group ns="$(arg ns)">
-      <param name="robot_description" command="$(find xacro)/xacro --inorder $(find description)/urdf/astrobee.urdf.xacro" />
-      <node name="spawn_astrobee" pkg="astrobee_gazebo" type="spawn_model"
-            args="-param robot_description -urdf -model $(arg ns)" />
-      <node pkg="robot_state_publisher" type="robot_state_publisher"
-            name="astrobee_state_publisher" />
-    </group>
-
+```xml
+<arg name="ns" value="honey"/>
+<group ns="$(arg ns)">
+  <param name="robot_description" command="$(find xacro)/xacro --inorder $(find description)/urdf/astrobee.urdf.xacro" />
+  <node name="spawn_astrobee" pkg="astrobee_gazebo" type="spawn_model"
+        args="-param robot_description -urdf -model $(arg ns)" />
+  <node pkg="robot_state_publisher" type="robot_state_publisher"
+        name="astrobee_state_publisher" />
+</group>
+```
 Line (1) specifies the namespace on which the robot will operate.
 Line (2) creates the namespace.
 Line (3) invokes xacro to write URDF to parameter /honey/robot_description.
