@@ -50,7 +50,7 @@ class CombinedNavStateNodeUpdater
                    const boost::optional<gtsam::Marginals>& marginals, const gtsam::KeyVector& old_keys,
                    const double huber_k, gtsam::NonlinearFactorGraph& factors) final;
 
-  void ThresholdBiasUncertainty(localization_common::CombinedNavStateNoise& noise) const;
+  void ThresholdBiasUncertainty(gtsam::Matrix& bias_covariance) const;
 
   graph_optimizer::NodeUpdaterType type() const final;
 
