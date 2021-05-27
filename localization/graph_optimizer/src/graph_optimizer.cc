@@ -162,6 +162,8 @@ void GraphOptimizer::BufferCumulativeFactors() {}
 
 void GraphOptimizer::RemoveOldMeasurementsFromCumulativeFactors(const gtsam::KeyVector& old_keys) {}
 
+bool GraphOptimizer::ValidGraph() const { return true; }
+
 void GraphOptimizer::BufferFactors(const std::vector<FactorsToAdd>& factors_to_add_vec) {
   for (const auto& factors_to_add : factors_to_add_vec)
     buffered_factors_to_add_.emplace(factors_to_add.timestamp(), factors_to_add);
@@ -405,6 +407,11 @@ bool GraphOptimizer::Update() {
     } else {
       levenberg_marquardt_params_.orderingType = gtsam::Ordering::COLAMD;
     }
+  }
+
+  if (!ValidGraph()) {
+    LogError("Update: Invalid graph, not optimizing.");
+    return false;
   }
 
   // Optimize

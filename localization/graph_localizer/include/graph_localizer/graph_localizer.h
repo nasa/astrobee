@@ -122,7 +122,9 @@ class GraphLocalizer : public graph_optimizer::GraphOptimizer {
 
   void BufferCumulativeFactors() final;
 
-  void RemoveOldMeasurementsFromCumulativeFactors(const gtsam::KeyVector& old_keys);
+  void RemoveOldMeasurementsFromCumulativeFactors(const gtsam::KeyVector& old_keys) final;
+
+  bool ValidGraph() const final;
 
   bool ReadyToAddFactors(const localization_common::Time timestamp) const final;
 

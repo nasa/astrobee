@@ -89,8 +89,10 @@ void GraphBag::Run() {
   graph_localizer_simulator_->ResetBiasesAndLocalizer();
   lc::Timer graph_bag_timer("Graph Bag Timer");
   graph_bag_timer.Start();
+  const double start_time = live_measurement_simulator_->CurrentTime();
   while (live_measurement_simulator_->ProcessMessage()) {
     const lc::Time current_time = live_measurement_simulator_->CurrentTime();
+    LogError("rt: " << current_time - start_time);
     const auto flight_mode_msg = live_measurement_simulator_->GetFlightModeMessage(current_time);
     if (flight_mode_msg) {
       graph_localizer_simulator_->BufferFlightModeMsg(*flight_mode_msg);

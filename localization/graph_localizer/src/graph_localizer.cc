@@ -21,6 +21,7 @@
 #include <graph_localizer/loc_pose_factor.h>
 #include <graph_localizer/pose_rotation_factor.h>
 #include <graph_localizer/utilities.h>
+#include <graph_optimizer/utilities.h>
 #include <imu_integration/utilities.h>
 #include <localization_common/logger.h>
 #include <localization_common/utilities.h>
@@ -340,6 +341,17 @@ void GraphLocalizer::RemoveOldMeasurementsFromCumulativeFactors(const gtsam::Key
       }
     }
   }
+}
+
+bool GraphLocalizer::ValidGraph() const {
+  // If graph consists of only priors and imu factors, consider it invalid and don't optimize.
+  // Make sure smart factors are valid before including them.
+  const int num_valid_non_imu_measurement_factors = NumOFFactors(graph_factors(), true) +
+                                                    go::NumFactors<gtsam::LocPoseFactor>(graph_factors()) +
+                                                    go::NumFactors<gtsam::LocProjectionFactor<>>(graph_factors()) +
+                                                    go::NumFactors<gtsam::PoseRotationFactor>(graph_factors()) +
+                                                    go::NumFactors<gtsam::BetweenFactor<gtsam::Pose3>>(graph_factors());
+  return num_valid_non_imu_measurement_factors > 0;
 }
 
 bool GraphLocalizer::ReadyToAddFactors(const localization_common::Time timestamp) const {
