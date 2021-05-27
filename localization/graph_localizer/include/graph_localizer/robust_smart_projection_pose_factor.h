@@ -77,7 +77,12 @@ class RobustSmartProjectionPoseFactor : public SmartProjectionPoseFactor<CALIBRA
       this->computeJacobiansSVD(F, E0, b, cameras, *(this->point()));
     } else if (useForRotationOnly(result)) {  // Rotation only factor
       Unit3 backProjected = cameras[0].backprojectPointAtInfinity(this->measured().at(0));
-      this->computeJacobiansSVD(F, E0, b, cameras, backProjected);
+      // Cheirality error can still occur with backprojection
+      try {
+        this->computeJacobiansSVD(F, E0, b, cameras, backProjected);
+      } catch (...) {
+        return boost::make_shared<JacobianFactorSVD<Dim, 2>>(this->keys());
+      }
     } else {  // Empty factor  // NOLINT
       return boost::make_shared<JacobianFactorSVD<Dim, 2>>(this->keys());
     }

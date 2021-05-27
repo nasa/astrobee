@@ -376,6 +376,9 @@ bool GraphOptimizer::Update() {
     } catch (gtsam::IndeterminantLinearSystemException) {
       log(params_.fatal_failures, "Update: Indeterminant linear system error during computation of marginals.");
       marginals_ = boost::none;
+    } catch (const std::exception& exception) {
+      log(params_.fatal_failures, "Update: Computing marginals failed. " + std::string(exception.what()));
+      marginals_ = boost::none;
     } catch (...) {
       log(params_.fatal_failures, "Update: Computing marginals failed.");
       marginals_ = boost::none;
