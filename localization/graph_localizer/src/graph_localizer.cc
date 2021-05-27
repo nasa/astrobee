@@ -346,7 +346,7 @@ void GraphLocalizer::RemoveOldMeasurementsFromCumulativeFactors(const gtsam::Key
 bool GraphLocalizer::ValidGraph() const {
   // If graph consists of only priors and imu factors, consider it invalid and don't optimize.
   // Make sure smart factors are valid before including them.
-  const int num_valid_non_imu_measurement_factors = NumOFFactors(graph_factors(), true) +
+  const int num_valid_non_imu_measurement_factors = NumOFFactors(true) +
                                                     go::NumFactors<gtsam::LocPoseFactor>(graph_factors()) +
                                                     go::NumFactors<gtsam::LocProjectionFactor<>>(graph_factors()) +
                                                     go::NumFactors<gtsam::PoseRotationFactor>(graph_factors()) +
