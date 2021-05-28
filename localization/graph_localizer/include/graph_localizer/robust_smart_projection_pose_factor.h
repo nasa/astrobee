@@ -157,9 +157,9 @@ class RobustSmartProjectionPoseFactor : public SmartProjectionPoseFactor<CALIBRA
   bool valid(const Values& values) const {
     typename Base::Cameras cameras = this->cameras(values);
     const auto point = this->triangulateSafe(cameras);
-    if (point.valid())
+    if (point.valid()) {
       return true;
-    else if (useForRotationOnly(point)) {
+    } else if (useForRotationOnly(point)) {
       Unit3 backProjected = cameras[0].backprojectPointAtInfinity(this->measured().at(0));
       try {
         cameras.reprojectionError(backProjected, this->measured());
@@ -167,8 +167,9 @@ class RobustSmartProjectionPoseFactor : public SmartProjectionPoseFactor<CALIBRA
         return false;
       }
       return true;
-    } else
+    } else {
       return false;
+    }
     // Shouldn't get here
     return false;
   }
