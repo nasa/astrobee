@@ -72,8 +72,6 @@ OpState* OpStateTeleop::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
     exec_->SetPlan(cmd);
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_SET_PLANNER) {
     exec_->SetPlanner(cmd);
-  } else if (cmd->cmd_name == CommandConstants::CMD_NAME_SET_TIME_SYNC) {
-    exec_->SetTimeSync(cmd);
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_SET_ZONES) {
     exec_->SetZones(cmd);
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_SIMPLE_MOVE6DOF) {
@@ -114,16 +112,12 @@ OpState* OpStateTeleop::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
     exec_->StopAllMotion(cmd);
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_STOP_ARM) {
     exec_->StopArm(cmd);
-  } else if (cmd->cmd_name == CommandConstants::CMD_NAME_STOP_DOWNLOAD) {
-    exec_->StopDownload(cmd);
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_STOP_GUEST_SCIENCE) {
     exec_->StopGuestScience(cmd);
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_STOW_ARM) {
     exec_->StowArm(cmd);
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_SWITCH_LOCALIZATION) {
     exec_->SwitchLocalization(cmd);
-  } else if (cmd->cmd_name == CommandConstants::CMD_NAME_WIPE_HLP) {
-    exec_->WipeHlp(cmd);
   } else {
     err_msg = "Command " + cmd->cmd_name + " not accepted in op state" +
                                                                     " teleop.";

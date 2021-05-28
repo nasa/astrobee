@@ -172,8 +172,8 @@ void ff::RosAgentStateToRapid::Callback(
   mob_msg.checkObstacles = status->check_obstacles;
   mob_msg.checkKeepouts = status->check_zones;
   mob_msg.enableAutoReturn = status->auto_return_enabled;
-  mob_msg.timeSyncEnabled = status->time_sync_enabled;
   mob_msg.immediateEnabled = status->immediate_enabled;
+  mob_msg.replanningEnabled = status->replanning_enabled;
 
   // Currently the code only supports planners 32 characters long
   if (status->planner.size() > 32) {

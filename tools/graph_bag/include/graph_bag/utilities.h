@@ -21,11 +21,14 @@
 #include <camera/camera_params.h>
 #include <graph_localizer/feature_tracker.h>
 #include <graph_localizer/graph_localizer.h>
+#include <localization_common/utilities.h>
 
 #include <opencv2/core/mat.hpp>
 
+#include <rosbag/bag.h>
 #include <sensor_msgs/Image.h>
 
+#include <string>
 #include <vector>
 
 namespace graph_bag {
@@ -46,6 +49,17 @@ boost::optional<sensor_msgs::ImagePtr> CreateFeatureTrackImage(
 cv::Point Distort(const Eigen::Vector2d& undistorted_point, const camera::CameraParameters& params);
 
 std::vector<const SmartFactor*> SmartFactors(const graph_localizer::GraphLocalizer& graph);
+
+bool string_ends_with(const std::string& str, const std::string& ending);
+
+void SaveImuBiasTesterPredictedStates(
+  const std::vector<localization_common::CombinedNavState>& imu_bias_tester_predicted_states, rosbag::Bag& bag);
+
+template <typename MsgType>
+void SaveMsg(const MsgType& msg, const std::string& topic, rosbag::Bag& bag) {
+  const ros::Time timestamp = localization_common::RosTimeFromHeader(msg.header);
+  bag.write("/" + topic, timestamp, msg);
+}
 }  // namespace graph_bag
 
 #endif  // GRAPH_BAG_UTILITIES_H_
