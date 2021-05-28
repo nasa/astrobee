@@ -260,7 +260,6 @@ bool AstrobeeAstrobeeBridge::ReadParams() {
                                             TOPIC_GUEST_SCIENCE_MANAGER_STATE,
                                             TOPIC_GUEST_SCIENCE_MANAGER_CONFIG,
                                             TOPIC_GUEST_SCIENCE_DATA, "", nh_);
-      //agent_name_ + std::string("multi-bridge")
     }
 
     // Additional topics here...
@@ -357,16 +356,16 @@ bool AstrobeeAstrobeeBridge::ReadSharedItemConf(
 
 template<typename T, typename... Args>
 int AstrobeeAstrobeeBridge::BuildRosToRapid(const std::string& name,
-                                                              Args&&... args) {
-  ff::RosSubRapidPubPtr topic_to_rapid(new T(std::forward<Args>(args)...));
+                                                              Args&&... args) {  // NOLINT
+  ff::RosSubRapidPubPtr topic_to_rapid(new T(std::forward<Args>(args)...));  // NOLINT
   components_++;
   ros_sub_rapid_pubs_[name] = topic_to_rapid;
   return ros_sub_rapid_pubs_.size();
 }
 
 template<typename T, typename ... Args>
-int AstrobeeAstrobeeBridge::BuildRapidToRos(Args&& ... args) {
-  ff::RapidSubRosPubPtr topic_to_ros(new T(std::forward<Args>(args)...));
+int AstrobeeAstrobeeBridge::BuildRapidToRos(Args&& ... args) {  // NOLINT
+  ff::RapidSubRosPubPtr topic_to_ros(new T(std::forward<Args>(args)...));  // NOLINT
   components_++;
   rapid_sub_ros_pubs_.push_back(topic_to_ros);
   return rapid_sub_ros_pubs_.size();

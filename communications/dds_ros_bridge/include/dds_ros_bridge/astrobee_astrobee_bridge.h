@@ -20,13 +20,12 @@
 #define DDS_ROS_BRIDGE_ASTROBEE_ASTROBEE_BRIDGE_H_
 
 #include <pluginlib/class_list_macros.h>
+#include <std_srvs/Empty.h>
 
 #include <map>
 #include <memory>
 #include <string>
 #include <vector>
-
-#include <std_srvs/Empty.h>
 
 #include "config_reader/config_reader.h"
 
@@ -66,10 +65,10 @@ class AstrobeeAstrobeeBridge : public ff_util::FreeFlyerNodelet {
   ~AstrobeeAstrobeeBridge();
 
   template<typename T, typename ... Args>
-  int BuildRosToRapid(const std::string& name, Args&& ... args);
+  int BuildRosToRapid(const std::string& name, Args&& ... args);  // NOLINT
 
   template<typename T, typename ... Args>
-  int BuildRapidToRos(Args&& ... args);
+  int BuildRapidToRos(Args&& ... args);  // NOLINT
 
  protected:
   virtual void Initialize(ros::NodeHandle *nh);

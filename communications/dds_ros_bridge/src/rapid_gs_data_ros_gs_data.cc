@@ -38,7 +38,7 @@ uint8_t ConvertType(rapid::ext::astrobee::GuestScienceDataType type) {
   }
 }
 
-} // end namespace
+}  // end namespace
 
 namespace ff {
 
