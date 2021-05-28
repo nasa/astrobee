@@ -22,36 +22,11 @@ namespace dds_ros_bridge {
 AstrobeeAstrobeeBridge::AstrobeeAstrobeeBridge() :
   ff_util::FreeFlyerNodelet(NODE_ASTROBEE_ASTROBEE_BRIDGE, true),
   components_(0),
+  started_(false),
   agent_name_("Bumble") {
 }
 
 AstrobeeAstrobeeBridge::~AstrobeeAstrobeeBridge() {
-}
-
-
-int AstrobeeAstrobeeBridge::BuildEkfToRapid(const std::string& sub_topic,
-                                      const std::string& pub_topic,
-                                      const std::string& rapid_pub_name,
-                                      const std::string& name) {
-  ff::RosSubRapidPubPtr ekf_to_rapid(new ff::RosEkfToRapid(sub_topic,
-                                                           pub_topic,
-                                                           rapid_pub_name,
-                                                           nh_));
-  ros_sub_rapid_pubs_[name] = ekf_to_rapid;
-  return ros_sub_rapid_pubs_.size();
-}
-
-int AstrobeeAstrobeeBridge::BuildEkfToRos(const std::string& sub_topic,
-                    const std::string& sub_partition,
-                    const std::string& pub_topic,
-                    const std::string& name) {
-  ff::RapidSubRosPubPtr rapid_ekf_to_ros(new ff::RapidEkfToRos(sub_topic,
-                                                                        sub_partition,
-                                                                        pub_topic,
-                                                                        nh_));
-
-  rapid_sub_ros_pubs_.push_back(rapid_ekf_to_ros);
-  return rapid_sub_ros_pubs_.size();
 }
 
 void AstrobeeAstrobeeBridge::Initialize(ros::NodeHandle *nh) {
@@ -63,13 +38,19 @@ void AstrobeeAstrobeeBridge::Initialize(ros::NodeHandle *nh) {
   config_params_.AddFile("communications/astrobee_astrobee_bridge.config");
 
   if (!config_params_.ReadFiles()) {
-    ROS_FATAL("Multi-Astrobee Bridge: Error reading config files.");
+    ROS_FATAL("AstrobeeAstrobeeBridge: Error reading config files.");
+    exit(EXIT_FAILURE);
+    return;
+  }
+
+  if (!config_params_.GetBool("started", &run_on_start_)) {
+    ROS_FATAL("AstrobeeAstrobeeBridge: Could not read started value.");
     exit(EXIT_FAILURE);
     return;
   }
 
   if (!config_params_.GetStr("agent_name", &agent_name_)) {
-    ROS_FATAL("Multi-Astrobee Bridge: Could not read robot name.");
+    ROS_FATAL("AstrobeeAstrobeeBridge: Could not read robot name.");
     exit(EXIT_FAILURE);
     return;
   }
@@ -131,7 +112,7 @@ void AstrobeeAstrobeeBridge::Initialize(ros::NodeHandle *nh) {
   robot_params->namingContextName = robot_params->name;
 
   // Set values for default publisher and susbcriber
-  dds_params->publishers[0].name = agent_name_ + std::string("multi-bridge");
+  dds_params->publishers[0].name = agent_name_;
   dds_params->publishers[0].partition = agent_name_;
   dds_params->publishers[0].participant = participant_name_;
   dds_params->subscribers[0].participant = participant_name_;
@@ -188,107 +169,207 @@ void AstrobeeAstrobeeBridge::Initialize(ros::NodeHandle *nh) {
   dds_entities_factory_.reset(new kn::DdsEntitiesFactorySvc());
   dds_entities_factory_->init(dds_params);
 
-  if (!ReadParams()) {
-    exit(EXIT_FAILURE);
-    return;
+  trigger_srv_ = nh->advertiseService(
+                      SERVICE_COMMUNICATIONS_ASTROBEE_ASTROBEE_BRIDGE_TRIGGER,
+                      &AstrobeeAstrobeeBridge::Trigger, this);
+
+  if (run_on_start_) {
+    Run();
   }
 }
 
+bool AstrobeeAstrobeeBridge::Trigger(std_srvs::Empty::Request& req,
+                                            std_srvs::Empty::Response & res) {
+  Run();
+  return true;
+}
+
+void AstrobeeAstrobeeBridge::Run() {
+  if (!started_ && !ReadParams()) {
+    exit(EXIT_FAILURE);
+  }
+  started_ = true;
+}
+
 bool AstrobeeAstrobeeBridge::ReadParams() {
-  config_reader::ConfigReader::Table share_topics, agents, agent, topics, topic;
-  std::string name, foreign_name, topic_name;
+  config_reader::ConfigReader::Table share_topics, share_topic_groups, agents;
+  config_reader::ConfigReader::Table item_conf, agent, topics;
+  std::string item_name, topic_name, name, external_name;
   bool enable, topic_enable;
   float rate;
 
   components_ = 0;
 
+  // ROS -> RAPID
+  // -----------------------------
+  // Load individual shared topics
   if (!config_params_.GetTable("share_topics", &share_topics)) {
-    ROS_FATAL("Multi-Astrobee Bridge: share topics not specified!");
+    ROS_FATAL("AstrobeeAstrobeeBridge: share_topics table not specified!");
     return false;
   }
 
   for (int i = 1; i <= share_topics.GetSize(); i++) {
-    share_topics.GetTable(i, &topic);
-    if (!topic.GetStr("name", &topic_name)) {
-      ROS_FATAL("Multi-Astrobee Bridge: share topic name not specified!");
-      return false;
-    }
-    if (!topic.GetBool("enable", &enable)) {
-      ROS_FATAL("Multi-Astrobee Bridge: share topic enable not specified!");
-      return false;
-    }
-    if (!topic.GetReal("rate", &rate)) {
-      ROS_FATAL("Multi-Astrobee Bridge: ekf state rate not specified!");
+    share_topics.GetTable(i, &item_conf);
+    if (!ReadSharedItemConf(item_conf, item_name, enable, rate)) {
       return false;
     }
 
-    if (enable) {
-      BuildEkfToRapid(TOPIC_GNC_EKF, "", agent_name_
-        + std::string("multi-bridge"), "GNC_EKF");
-      components_++;
+    // GNC_EKF configuration
+    // ---------------------
+    if (item_name == "TOPIC_GNC_EKF" && enable) {
+      BuildRosToRapid<ff::RosEkfToRapid>(item_name, TOPIC_GNC_EKF,
+                            "", "", nh_);
 
-      if (ros_sub_rapid_pubs_.count("GNC_EKF") == 0) {
-        ROS_ERROR("Multi-Astrobee Bridge: Ekf stuff not added and it is needed!");
+      if (ros_sub_rapid_pubs_.count(item_name) == 0) {
+        ROS_ERROR("AstrobeeAstrobeeBridge: %s not added and it is needed",
+                                                            item_name.c_str());
         return false;
       }
-      ff::RosEkfToRapid *RERE = static_cast<ff::RosEkfToRapid *>
-                                        (ros_sub_rapid_pubs_["GNC_EKF"].get());
 
-      RERE->SetEkfPublishRate(rate);
+      if (rate < 0) {
+        ROS_ERROR("AstrobeeAstrobeeBridge: %s requires a non-negative rate",
+                                                            item_name.c_str());
+        return false;
+      }
 
-      // Add additional topics here...
+      ff::RosEkfToRapid *ekf_to_rapid = static_cast<ff::RosEkfToRapid *>
+                                        (ros_sub_rapid_pubs_[item_name].get());
+      ekf_to_rapid->SetEkfPublishRate(rate);
     }
+
+    // Additional topics here...
+    // -------------------------
   }
 
+  // Load shared topic groups
+  if (!config_params_.GetTable("share_topic_groups", &share_topic_groups)) {
+    ROS_FATAL("AstrobeeAstrobeeBridge: share_topic_groups table not specified!");
+    return false;
+  }
+
+  for (int i = 1; i <= share_topic_groups.GetSize(); i++) {
+    share_topic_groups.GetTable(i, &item_conf);
+    if (!ReadSharedItemConf(item_conf, item_name, enable, rate)) {
+      return false;
+    }
+
+    // Guest Sciece GROUP
+    // ------------------
+    if (item_name == "TOPIC_GROUP_GS" && enable) {
+      BuildRosToRapid<ff::RosGuestScienceToRapid>(item_name,
+                                            TOPIC_GUEST_SCIENCE_MANAGER_STATE,
+                                            TOPIC_GUEST_SCIENCE_MANAGER_CONFIG,
+                                            TOPIC_GUEST_SCIENCE_DATA, "", nh_);
+      //agent_name_ + std::string("multi-bridge")
+    }
+
+    // Additional topics here...
+    // -------------------------
+  }
+
+  // RAPID -> ROS
+  // ----------------------
   // Read listeners options
   if (!config_params_.GetTable("agents", &agents)) {
-    ROS_FATAL("Multi-Astrobee Bridge: agents not specified!");
+    ROS_FATAL("AstrobeeAstrobeeBridge: agents not specified!");
     return false;
   }
 
   for (int i = 1; i <= agents.GetSize(); i++) {
-    agents.GetTable(i, &agent);
-
-    if (!agent.GetStr("name", &name)) {
-      ROS_FATAL("Multi-Astrobee Bridge: agent name not specified!");
+    // Agent configuration
+    agents.GetTable(i, &item_conf);
+    if (!item_conf.GetStr("name", &item_name)) {
+      ROS_FATAL("AstrobeeAstrobeeBridge: agent name not specified!");
       return false;
     }
-    if (!agent.GetBool("enable", &enable)) {
-      ROS_FATAL("Multi-Astrobee Bridge: agent enable not specified!");
+    if (!item_conf.GetBool("enable", &enable)) {
+      ROS_FATAL("AstrobeeAstrobeeBridge: agent enable not specified!");
       return false;
     }
-    if (!agent.GetTable("topics", &topics)) {
-      ROS_FATAL("Multi-Astrobee Bridge: agent topics not specified!");
+    if (!item_conf.GetTable("topics", &topics)) {
+      ROS_FATAL("AstrobeeAstrobeeBridge: agent topics not specified!");
       return false;
     }
-    if (enable) {
-      for (int j = 1; j <= topics.GetSize(); j++) {
-        topics.GetTable(j, &topic);
-        if (!topic.GetStr("name", &topic_name)) {
-          ROS_FATAL("Multi-Astrobee Bridge: agent topic name not specified!");
-          return false;
-        }
-        if (!topic.GetBool("enable", &topic_enable)) {
-          ROS_FATAL("Multi-Astrobee Bridge: agent topic enable not specified!");
-          return false;
-        }
 
-        foreign_name = name;
-        foreign_name[0] = tolower(foreign_name[0]);
+    // Skip if the configuration is for this agent.
+    // We don't want to translate topics coming from this robot already
+    // Also ignore if the agent is disabled
+    if (agent_name_ == item_name || !enable) {
+      continue;
+    }
 
-        if (topic_name == "GNC_EKF" && topic_enable && agent_name_ != name) {
-          BuildEkfToRos(rapid::ext::astrobee::EKF_STATE_TOPIC,
-                                            name,
-                                            foreign_name + '/' + std::string(TOPIC_GNC_EKF),
-                                            foreign_name + std::string("_GNC_EKF"));
-        }
-        components_++;
+    // Lower case the external agent name to use it like a namespace
+    external_name = item_name;
+    external_name[0] = tolower(external_name[0]);
 
-        // Add additional topics here...
+    for (int j = 1; j <= topics.GetSize(); j++) {
+      // Agent topic configuration
+      topics.GetTable(j, &item_conf);
+      if (!item_conf.GetStr("name", &topic_name)) {
+        ROS_FATAL("AstrobeeAstrobeeBridge: agent topic name not specified!");
+        return false;
       }
+      if (!item_conf.GetBool("enable", &topic_enable)) {
+        ROS_FATAL("AstrobeeAstrobeeBridge: agent topic enable not specified!");
+        return false;
+      }
+
+      if (topic_name == "TOPIC_GNC_EKF" && topic_enable) {
+        BuildRapidToRos<ff::RapidEkfToRos>(
+                            rapid::ext::astrobee::EKF_STATE_TOPIC,
+                            item_name,
+                            external_name + '/' + std::string(TOPIC_GNC_EKF),
+                            nh_);
+      }
+
+      if (topic_name == "TOPIC_GUEST_SCIENCE_DATA" && topic_enable) {
+        BuildRapidToRos<ff::RapidGuestScienceDataToRos>(
+                    rapid::ext::astrobee::GUEST_SCIENCE_DATA_TOPIC,
+                    item_name,
+                    external_name + '/' + std::string(TOPIC_GUEST_SCIENCE_DATA),
+                    nh_);
+      }
+
+      // Additional topics here...
     }
   }
   return true;
+}
+
+bool AstrobeeAstrobeeBridge::ReadSharedItemConf(
+                          config_reader::ConfigReader::Table &conf,
+                          std::string &topic_name, bool &enable, float &rate) {
+  if (!conf.GetStr("name", &topic_name)) {
+    ROS_FATAL("AstrobeeAstrobeeBridge: share topic name not specified!");
+    return false;
+  }
+  if (!conf.GetBool("enable", &enable)) {
+    ROS_FATAL("AstrobeeAstrobeeBridge: share topic enable not specified!");
+    return false;
+  }
+  if (!conf.GetReal("rate", &rate)) {
+    ROS_FATAL("AstrobeeAstrobeeBridge: ekf state rate not specified!");
+    return false;
+  }
+
+  return true;
+}
+
+template<typename T, typename... Args>
+int AstrobeeAstrobeeBridge::BuildRosToRapid(const std::string& name,
+                                                              Args&&... args) {
+  ff::RosSubRapidPubPtr topic_to_rapid(new T(std::forward<Args>(args)...));
+  components_++;
+  ros_sub_rapid_pubs_[name] = topic_to_rapid;
+  return ros_sub_rapid_pubs_.size();
+}
+
+template<typename T, typename ... Args>
+int AstrobeeAstrobeeBridge::BuildRapidToRos(Args&& ... args) {
+  ff::RapidSubRosPubPtr topic_to_ros(new T(std::forward<Args>(args)...));
+  components_++;
+  rapid_sub_ros_pubs_.push_back(topic_to_ros);
+  return rapid_sub_ros_pubs_.size();
 }
 
 }   // end namespace dds_ros_bridge

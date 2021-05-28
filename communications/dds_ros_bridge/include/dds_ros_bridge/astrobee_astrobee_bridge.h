@@ -26,13 +26,18 @@
 #include <string>
 #include <vector>
 
+#include <std_srvs/Empty.h>
+
 #include "config_reader/config_reader.h"
 
 #include "dds_ros_bridge/rapid_pub.h"
 #include "dds_ros_bridge/rapid_sub_ros_pub.h"
 #include "dds_ros_bridge/ros_sub_rapid_pub.h"
-#include "dds_ros_bridge/ros_ekf_rapid_ekf.h"
+
 #include "dds_ros_bridge/rapid_ekf_ros_ekf.h"
+#include "dds_ros_bridge/rapid_gs_data_ros_gs_data.h"
+#include "dds_ros_bridge/ros_ekf_rapid_ekf.h"
+#include "dds_ros_bridge/ros_guest_science.h"
 
 #include "ff_util/ff_names.h"
 #include "ff_util/ff_nodelet.h"
@@ -60,38 +65,30 @@ class AstrobeeAstrobeeBridge : public ff_util::FreeFlyerNodelet {
   AstrobeeAstrobeeBridge();
   ~AstrobeeAstrobeeBridge();
 
-  /**
-   * Build Ros subscribers to Rapid publishers
-   * @param  subTopic       topic to subscribe to  ex: "/camera/image"
-   * @param  pubTopic       topic suffix for RAPID ex: "-debug"
-   * @return                number of RosSubRapidPubs
-   */
-  int BuildEkfToRapid(const std::string& sub_topic,
-                          const std::string& pub_topic,
-                          const std::string& rapid_pub_name,
-                          const std::string& name);
-  /**
-   * Build Rapid subscribers to Ros publishers
-   * @param subscribeTopic topix suffix for RAPID ex : "-debug"
-   * @param pubTopic topic to publish to
-   *
-   * @return number of RapidPubRosSubs
-   */
-  int BuildEkfToRos(const std::string& sub_topic,
-                    const std::string& sub_partition,
-                    const std::string& pub_topic,
-                    const std::string& name);
+  template<typename T, typename ... Args>
+  int BuildRosToRapid(const std::string& name, Args&& ... args);
+
+  template<typename T, typename ... Args>
+  int BuildRapidToRos(Args&& ... args);
 
  protected:
   virtual void Initialize(ros::NodeHandle *nh);
   bool ReadParams();
+  bool ReadSharedItemConf(config_reader::ConfigReader::Table &conf,
+                            std::string &topic_name, bool &enable, float &rate);
 
  private:
+  void Run();
+  bool Trigger(std_srvs::Empty::Request& req, std_srvs::Empty::Response & res);
+
   config_reader::ConfigReader config_params_;
 
   int components_;
+  bool started_;
+  bool run_on_start_;
 
   ros::NodeHandle nh_;
+  ros::ServiceServer trigger_srv_;
 
   std::map<std::string, ff::RosSubRapidPubPtr> ros_sub_rapid_pubs_;
   std::shared_ptr<kn::DdsEntitiesFactorySvc> dds_entities_factory_;
