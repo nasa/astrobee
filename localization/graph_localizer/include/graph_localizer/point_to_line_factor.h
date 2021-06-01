@@ -40,7 +40,9 @@ class PointToLineFactor : public NoiseModelFactor1<gtsam::Pose3> {
       : Base(model, pose_key),
         sensor_t_point_(sensor_t_point),
         world_T_line_(world_T_line),
-        body_T_sensor_(body_T_sensor) {}
+        body_T_sensor_(body_T_sensor),
+        sensor_R_body_(body_T_sensor.inverse().rotation().matrix()),
+        body_t_sensor_(body_T_sensor_.translation()) {}
 
   gtsam::NonlinearFactor::shared_ptr clone() const override {
     return boost::static_pointer_cast<gtsam::NonlinearFactor>(gtsam::NonlinearFactor::shared_ptr(new This(*this)));
@@ -62,23 +64,29 @@ class PointToLineFactor : public NoiseModelFactor1<gtsam::Pose3> {
   }
 
   Vector evaluateError(const Pose3& world_T_body, boost::optional<Matrix&> H = boost::none) const override {
-    // TODO: store line_T_world in cache
-    const Point3 line_t_point = world_T_line_.inverse() * world_T_body * body_T_sensor_ * sensor_t_point_;
+    const Pose3 world_T_sensor = world_T_body * body_T_sensor_;
+    const Pose3 line_T_sensor = world_T_line_.inverse() * world_T_sensor;
     if (H) {
-      // TODO: store this as well
-      const Pose3 sensor_T_body = body_T_sensor_.inverse();
-      const Pose3 line_T_sensor = world_T_line_.inverse() * world_T_body * body_T_sensor_;
+      // GTSAM equivalent:
+      /* gtsam::Matrix H_a;
+       const auto world_T_sensor = world_T_body.transformPoseFrom(body_T_sensor_, H_a);
+       gtsam::Matrix H_b;
+       const auto line_T_sensor = world_T_line_.inverse().transformPoseFrom(world_T_sensor, boost::none, H_b);
+         gtsam::Matrix H_c;
+         const auto line_t_point = line_T_sensor.transformFrom(sensor_t_point_, H_c);
+         H = H_c *H_b* H_a;
+         */
       const Matrix3 line_R_sensor = line_T_sensor.rotation().matrix();
-      const Matrix3 sensor_R_body = sensor_T_body.rotation().matrix();
-      const Point3& body_t_sensor = body_T_sensor_.translation();
-      const Matrix A = -1.0 * line_R_sensor * skewSymmetric(sensor_t_point_) * sensor_R_body;
-      const Matrix B = line_R_sensor * (I_3x3 + -1.0 * skewSymmetric(sensor_R_body * body_t_sensor)) * sensor_R_body;
+      const Matrix A = -1.0 * line_R_sensor *
+                       (skewSymmetric(sensor_t_point_) + skewSymmetric(sensor_R_body_ * body_t_sensor_)) *
+                       sensor_R_body_;
+      const Matrix B = line_R_sensor * sensor_R_body_;
       // Remove last row as error does not account for z value in line_t_point
       // TODO(rsoussan): avoid zero initialization
       *H = Eigen::Matrix<double, 2, 6>::Zero();
       *H << A.block<2, 3>(0, 0), B.block<2, 3>(0, 0);
     }
-    return line_t_point.head<2>();
+    return (line_T_sensor * sensor_t_point_).head<2>();
   }
 
   const Point3& sensor_t_point() const { return sensor_t_point_; }
@@ -93,11 +101,16 @@ class PointToLineFactor : public NoiseModelFactor1<gtsam::Pose3> {
     ar& BOOST_SERIALIZATION_NVP(sensor_t_point_);
     ar& BOOST_SERIALIZATION_NVP(world_T_line_);
     ar& BOOST_SERIALIZATION_NVP(body_T_sensor_);
+    ar& BOOST_SERIALIZATION_NVP(sensor_R_body_);
+    ar& BOOST_SERIALIZATION_NVP(body_t_sensor_);
   }
 
   Point3 sensor_t_point_;
   Pose3 world_T_line_;
   Pose3 body_T_sensor_;
+  // Cached for faster Jacobian calculations
+  Matrix sensor_R_body_;
+  Point3 body_t_sensor_;
 
  public:
   GTSAM_MAKE_ALIGNED_OPERATOR_NEW

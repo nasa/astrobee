@@ -36,7 +36,7 @@ gtsam::Pose3 RandomPose() {
 }  // namespace
 
 namespace sym = gtsam::symbol_shorthand;
-TEST(RotationFactorTester, Jacobian) {
+TEST(PointToLineFactorTester, Jacobian) {
   for (int i = 0; i < 500; ++i) {
     const gtsam::Point3 sensor_t_point = Eigen::Vector3d::Random();
     const gtsam::Pose3 world_T_line = RandomPose();
@@ -46,7 +46,7 @@ TEST(RotationFactorTester, Jacobian) {
     const gtsam::PointToLineFactor factor(sensor_t_point, world_T_line, body_T_sensor, noise, sym::P(0));
     gtsam::Matrix H;
     const auto factor_error = factor.evaluateError(world_T_body, H);
-    const auto numerical_H = gtsam::numericalDerivative11<gtsam::Vector3, gtsam::Pose3>(
+    const auto numerical_H = gtsam::numericalDerivative11<gtsam::Vector, gtsam::Pose3>(
       boost::function<gtsam::Vector(const gtsam::Pose3&)>(
         boost::bind(&gtsam::PointToLineFactor::evaluateError, factor, _1, boost::none)),
       world_T_body, 1e-5);
