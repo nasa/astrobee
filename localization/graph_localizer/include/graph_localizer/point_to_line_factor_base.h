@@ -77,9 +77,8 @@ class PointToLineFactorBase : public NoiseModelFactor1<gtsam::Pose3> {
                        (skewSymmetric(sensor_t_point_) + skewSymmetric(sensor_R_body_ * body_t_sensor_)) *
                        sensor_R_body_;
       const Matrix B = line_R_sensor * sensor_R_body_;
-      // Remove last row as error does not account for z value in line_t_point
       // TODO(rsoussan): avoid zero initialization
-      *H = Eigen::Matrix<double, 2, 6>::Zero();
+      *H = Eigen::Matrix<double, 3, 6>::Zero();
       *H << A, B;
     }
     return line_T_sensor * sensor_t_point_;

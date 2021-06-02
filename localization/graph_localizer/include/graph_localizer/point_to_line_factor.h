@@ -46,7 +46,8 @@ class PointToLineFactor : public PointToLineFactorBase {
   Vector evaluateError(const Pose3& world_T_body, boost::optional<Matrix&> H = boost::none) const override {
     const auto line_t_point = Base::error(world_T_body, H);
     if (H) {
-      *H = H->block<2, 6>(0, 0);
+      // Remove last row as error does not account for z value in line_t_point
+      *H = H->topRows(2).eval();
     }
     return line_t_point.head<2>();
   }
