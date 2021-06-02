@@ -1,5 +1,12 @@
 # Releases
 
+## Release 0.14.3
+
+  * Rotation fallback fix
+  * Unified install instructions and Ubuntu 18 nasa install
+  * Various other minor fixes
+  * Note, Perching does not work in this release, use another version for this.
+
 ## Release 0.14.1
 
   * Dynamic IMU Filtering

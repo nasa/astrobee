@@ -38,7 +38,7 @@ import csv
 
 
 def l2_map(vector3ds):
-  return map(lambda (x, y, z): math.sqrt(x + y + z), zip(vector3ds.xs, vector3ds.ys, vector3ds.zs))
+  return map(lambda (x, y, z): math.sqrt(x*x + y*y + z*z), zip(vector3ds.xs, vector3ds.ys, vector3ds.zs))
 
 
 def add_graph_plots(pdf, sparse_mapping_poses, ar_tag_poses, graph_localization_states,
