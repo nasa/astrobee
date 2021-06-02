@@ -50,6 +50,7 @@ void LoadGraphLocalizerSimulatorParams(config_reader::ConfigReader& config, Grap
 
 void LoadGraphBagParams(config_reader::ConfigReader& config, GraphBagParams& params) {
   params.save_optical_flow_images = mc::LoadBool(config, "save_optical_flow_images");
+  params.log_relative_time = mc::LoadBool(config, "log_relative_time");
   params.nav_cam_params.reset(new camera::CameraParameters(&config, "nav_cam"));
   params.body_T_nav_cam = lc::LoadTransform(config, "nav_cam_transform");
   params.sparse_mapping_min_num_landmarks = mc::LoadInt(config, "loc_adder_min_num_matches");
