@@ -18,6 +18,7 @@
 #ifndef GRAPH_LOCALIZER_GRAPH_LOCALIZER_NODELET_H_
 #define GRAPH_LOCALIZER_GRAPH_LOCALIZER_NODELET_H_
 
+#include <ff_msgs/DepthLandmarks.h>
 #include <ff_msgs/Feature2dArray.h>
 #include <ff_msgs/FlightMode.h>
 #include <ff_msgs/Heartbeat.h>
@@ -93,6 +94,8 @@ class GraphLocalizerNodelet : public ff_util::FreeFlyerNodelet {
 
   void ARVisualLandmarksCallback(const ff_msgs::VisualLandmarks::ConstPtr& visual_landmarks_msg);
 
+  void DepthLandmarksCallback(const ff_msgs::DepthLandmarks::ConstPtr& depth_landmarks_msg);
+
   void ImuCallback(const sensor_msgs::Imu::ConstPtr& imu_msg);
 
   void FlightModeCallback(ff_msgs::FlightMode::ConstPtr const& mode);
@@ -116,6 +119,7 @@ class GraphLocalizerNodelet : public ff_util::FreeFlyerNodelet {
   localization_common::RosTimer vl_timer_ = localization_common::RosTimer("VL msg");
   localization_common::RosTimer of_timer_ = localization_common::RosTimer("OF msg");
   localization_common::RosTimer ar_timer_ = localization_common::RosTimer("AR msg");
+  localization_common::RosTimer depth_timer_ = localization_common::RosTimer("Depth msg");
   localization_common::RosTimer imu_timer_ = localization_common::RosTimer("Imu msg");
   localization_common::Timer callbacks_timer_ = localization_common::Timer("Callbacks");
   localization_common::Timer nodelet_runtime_timer_ = localization_common::Timer("Nodelet Runtime");
