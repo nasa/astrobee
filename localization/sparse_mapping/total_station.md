@@ -1,3 +1,5 @@
+\page total_station Total Station
+
 # Doing a Survey with the Total Station
 
 This will tell you how to just operate the Total Station device. When

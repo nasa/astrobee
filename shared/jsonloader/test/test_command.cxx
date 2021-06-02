@@ -117,31 +117,6 @@ TEST(Command, VaildGripperCommand) {
   ASSERT_EQ(g_cmd->open(), true);
 }
 
-TEST(Command, VaildDataCommand) {
-  const std::string data = u8R"({
-    "type" : "downloadData",
-    "dataMethod" : "Immediate",
-    "blocking" : true,
-    "color" : "#555555",
-    "scopeTerminate" : true,
-    "name" : "3.1 DownloadData",
-    "id" : "0f15c5e7-dc59-457e-9cda-62394754b9de"
-  })";
-  Json::Value v;
-  Json::Reader().parse(data, v, false);
-
-  Command *cmd = Command::Make(v);
-
-  ASSERT_NE(cmd, nullptr);
-  ASSERT_TRUE(cmd->valid());
-  ASSERT_STREQ(cmd->type().data(), jsonloader::kCmdDownload);
-
-  const jsonloader::DataCommand *d_cmd =
-      dynamic_cast<const jsonloader::DataCommand *>(cmd);
-
-  ASSERT_STREQ(d_cmd->data_method().data(), "Immediate");
-}
-
 TEST(Command, ValidGuestScienceCommand) {
   const std::string data = u8R"({
     "type" : "startGuestScience",
@@ -192,32 +167,6 @@ TEST(Command, ValidGuestCustomCommand) {
 
   ASSERT_STREQ(gs_cmd->apk().data(), "gov.nasa.arc.irg.astrobee.air_sampler");
   ASSERT_STREQ(gs_cmd->command().data(), "{name=Take, num=5, time_between=10}");
-}
-
-TEST(Command, VaildGenericCommand) {
-  const std::string data = u8R"({
-    "type" : "genericCommand",
-    "commandName" : "CommandName",
-    "param" : "Parameters",
-    "blocking" : true,
-    "color" : "#555555",
-    "scopeTerminate" : true,
-    "name" : "0.0 GenericCommand",
-    "id" : "1ea5674c-802e-469f-b8a7-be5b7875b71b"
-  })";
-  Json::Value v;
-  Json::Reader().parse(data, v, false);
-
-  Command *cmd = Command::Make(v);
-
-  ASSERT_NE(cmd, nullptr);
-  ASSERT_STREQ(cmd->type().data(), jsonloader::kCmdGenericCmd);
-
-  const jsonloader::GenericCommand *g_cmd =
-      dynamic_cast<const jsonloader::GenericCommand *>(cmd);
-
-  ASSERT_STREQ(g_cmd->name().data(), "CommandName");
-  ASSERT_STREQ(g_cmd->param().data(), "Parameters");
 }
 
 TEST(Command, VaildSetCameraCommand) {

@@ -19,22 +19,24 @@
 #ifndef GRAPH_LOCALIZER_ROTATION_FACTOR_ADDER_H_
 #define GRAPH_LOCALIZER_ROTATION_FACTOR_ADDER_H_
 
-#include <graph_localizer/factor_adder.h>
 #include <graph_localizer/feature_tracker.h>
 #include <graph_localizer/rotation_factor_adder_params.h>
+#include <graph_optimizer/factor_adder.h>
 #include <localization_measurements/feature_points_measurement.h>
 
 #include <vector>
 
 namespace graph_localizer {
-class RotationFactorAdder
-    : public FactorAdder<localization_measurements::FeaturePointsMeasurement, RotationFactorAdderParams> {
-  using Base = FactorAdder<localization_measurements::FeaturePointsMeasurement, RotationFactorAdderParams>;
+class RotationFactorAdder : public graph_optimizer::FactorAdder<localization_measurements::FeaturePointsMeasurement,
+                                                                RotationFactorAdderParams> {
+  using Base =
+    graph_optimizer::FactorAdder<localization_measurements::FeaturePointsMeasurement, RotationFactorAdderParams>;
 
  public:
   RotationFactorAdder(const RotationFactorAdderParams& params, std::shared_ptr<const FeatureTracker> feature_tracker);
 
-  std::vector<FactorsToAdd> AddFactors(const localization_measurements::FeaturePointsMeasurement& measurement) final;
+  std::vector<graph_optimizer::FactorsToAdd> AddFactors(
+    const localization_measurements::FeaturePointsMeasurement& measurement) final;
 
  private:
   std::shared_ptr<const FeatureTracker> feature_tracker_;

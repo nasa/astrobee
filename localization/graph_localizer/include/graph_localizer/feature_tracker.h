@@ -28,20 +28,34 @@
 
 #include <deque>
 #include <map>
+#include <set>
 
 namespace graph_localizer {
-using FeatureTrackMap = std::map<localization_measurements::FeatureId, FeatureTrack>;
+using FeatureTrackIdMap = std::map<localization_measurements::FeatureId, std::shared_ptr<FeatureTrack>>;
+using FeatureTrackLengthMap = std::multimap<int, std::shared_ptr<FeatureTrack>>;
 class FeatureTracker {
  public:
   explicit FeatureTracker(const FeatureTrackerParams& params = FeatureTrackerParams());
   // Update existing tracks and add new tracks.  Remove tracks without
   // detections.
   void UpdateFeatureTracks(const localization_measurements::FeaturePoints& feature_points);
-  const FeatureTrackMap& feature_tracks() const { return feature_tracks_; }
-  void RemovePointsOutsideWindow();
-  void RemoveOldFeaturePoints(localization_common::Time oldest_allowed_time);
+  const FeatureTrackIdMap& feature_tracks() const;
+  const std::set<localization_common::Time>& smart_factor_timestamp_allow_list() const;
+  const FeatureTrackLengthMap& feature_tracks_length_ordered() const;
+  int NumTracksWithAtLeastNPoints(int n) const;
+  void RemoveUndetectedFeatures(const localization_common::Time& feature_point);
+  void RemoveOldFeaturePointsAndSlideWindow(
+    boost::optional<localization_common::Time> oldest_allowed_time = boost::none);
+  void AddOrUpdateTrack(const localization_measurements::FeaturePoint& feature_point);
+  void UpdateLengthMap();
+  void UpdateAllowList(const localization_common::Time& timestamp);
+  void SlideAllowList(const localization_common::Time& oldest_allowed_time);
+  boost::optional<const FeatureTrack&> LongestFeatureTrack() const;
+  size_t size() const;
+  bool empty() const;
+  void Clear();
   boost::optional<localization_common::Time> OldestTimestamp() const;
-  boost::optional<localization_common::Time> latest_timestamp() const;
+  boost::optional<localization_common::Time> LatestTimestamp() const;
   boost::optional<localization_common::Time> PreviousTimestamp() const;
 
  private:
@@ -49,12 +63,15 @@ class FeatureTracker {
   friend class boost::serialization::access;
   template <class ARCHIVE>
   void serialize(ARCHIVE& ar, const unsigned int /*version*/) {
-    ar& BOOST_SERIALIZATION_NVP(feature_tracks_);
+    ar& BOOST_SERIALIZATION_NVP(feature_track_id_map_);
+    ar& BOOST_SERIALIZATION_NVP(feature_track_length_map_);
   }
 
-  FeatureTrackMap feature_tracks_;
+  FeatureTrackIdMap feature_track_id_map_;
+  FeatureTrackLengthMap feature_track_length_map_;
   FeatureTrackerParams params_;
-  boost::optional<localization_common::Time> latest_time_;
+  // TODO(rsoussan): Move ths somewhere else?
+  std::set<localization_common::Time> smart_factor_timestamp_allow_list_;
 };
 }  // namespace graph_localizer
 

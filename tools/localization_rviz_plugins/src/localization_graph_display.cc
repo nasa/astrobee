@@ -43,6 +43,7 @@
 #include "utilities.h"                   // NOLINT
 
 namespace localization_rviz_plugins {
+namespace go = graph_optimizer;
 namespace lc = localization_common;
 
 LocalizationGraphDisplay::LocalizationGraphDisplay() {
@@ -105,7 +106,7 @@ void LocalizationGraphDisplay::imageCallback(const sensor_msgs::ImageConstPtr& i
   img_buffer_.emplace(lc::TimeFromHeader(image_msg->header), image_msg);
 }
 
-void LocalizationGraphDisplay::addOpticalFlowVisual(const graph_localizer::FeatureTrackMap& feature_tracks,
+void LocalizationGraphDisplay::addOpticalFlowVisual(const graph_localizer::FeatureTrackIdMap& feature_tracks,
                                                     const localization_common::Time latest_graph_time) {
   if (!publish_optical_flow_images_->getBool()) return;
   const auto img = getImage(latest_graph_time);
@@ -223,7 +224,7 @@ void LocalizationGraphDisplay::addProjectionVisual(const gtsam::CameraSet<Camera
 
 void LocalizationGraphDisplay::addLocProjectionVisual(
   const std::vector<gtsam::LocProjectionFactor<>*> loc_projection_factors,
-  const graph_localizer::GraphValues& graph_values) {
+  const graph_optimizer::GraphValues& graph_values) {
   if (!publish_loc_projection_factor_images_->getBool()) return;
   lc::Time latest_timestamp = std::numeric_limits<double>::lowest();
   for (const auto loc_projection_factor : loc_projection_factors) {
@@ -323,7 +324,7 @@ void LocalizationGraphDisplay::addSmartFactorsProjectionVisual() {
 }
 
 void LocalizationGraphDisplay::addSmartFactorProjectionVisual(const SmartFactor& smart_factor,
-                                                              const graph_localizer::GraphValues& graph_values) {
+                                                              const graph_optimizer::GraphValues& graph_values) {
   if (!publish_smart_factor_images_->getBool()) return;
   std::vector<cv::Mat> images;
   for (const auto& key : smart_factor.keys()) {
@@ -477,7 +478,7 @@ void LocalizationGraphDisplay::processMessage(const ff_msgs::LocalizationGraph::
   if (latest_graph_localizer_->graph_values().LatestTimestamp())
     addOpticalFlowVisual(latest_graph_localizer_->feature_tracks(),
                          *(latest_graph_localizer_->graph_values().LatestTimestamp()));
-  for (const auto factor : latest_graph_localizer_->factor_graph()) {
+  for (const auto factor : latest_graph_localizer_->graph_factors()) {
     const auto smart_factor = dynamic_cast<SmartFactor*>(factor.get());
     if (smart_factor) {
       latest_smart_factors_.emplace_back(smart_factor);

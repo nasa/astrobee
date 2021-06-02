@@ -1,3 +1,5 @@
+\page granite_lab_registration Granite Lab Registration
+
 # Locations of the control points in the granite lab used for registration
 
 The coordinates of four points on the granite table were measured. They are specified here:

@@ -63,8 +63,12 @@ std::string RosCompressedImageRapidImage::GetRapidMimeType(
   // only two accepted values jpeg or png
   if (ros_format.compare("jpeg") == 0)
     return rapid::MIME_IMAGE_JPEG;
+  if (ros_format.compare("mono8; jpeg compressed ") == 0)
+    return rapid::MIME_IMAGE_JPEG;
   if (ros_format.compare("png") == 0)
     return rapid::MIME_IMAGE_PNG;
+
+  ROS_ERROR_STREAM("DDS ROS Bridge: Unknown camera format: " << ros_format << ".");
   return "";
 }
 

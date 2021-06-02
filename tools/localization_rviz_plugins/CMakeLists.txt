@@ -17,7 +17,8 @@
 
 project(localization_rviz_plugins)
 
-if (USE_ROS AND BUILD_LOC_RVIZ_PLUGINS)
+#TODO(rsoussan): enable this when build works again
+if (USE_ROS AND BUILD_LOC_RVIZ_PLUGINS AND FALSE)
  
  # For Qt
  set(CMAKE_AUTOMOC ON)

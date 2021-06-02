@@ -29,3 +29,4 @@ $APTLY mirror create -architectures=armhf xenial-security http://ports.ubuntu.co
 $APTLY mirror create -architectures=armhf ros http://packages.ros.org/ros/ubuntu xenial main
 
 $APTLY repo create astrobee
+$APTLY repo create bionic-astrobee
