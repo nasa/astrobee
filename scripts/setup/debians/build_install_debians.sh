@@ -38,19 +38,19 @@ elif [ "$DIST" = "$bionic" ]; then
   ${DEBIAN_LOC}/install_luajit.sh
 
   # alvar
-  cp ${DEBIAN_LOC}/files_18_04/alvar_rules ${DEBIAN_LOC}/alvar/rules
-  cp ${DEBIAN_LOC}/files_18_04/alvar_control ${DEBIAN_LOC}/alvar/control
-  cp ${DEBIAN_LOC}/files_18_04/alvar_changelog ${DEBIAN_LOC}/alvar/changelog
+  cp ${DEBIAN_LOC}/files/alvar_rules ${DEBIAN_LOC}/alvar/rules
+  cp ${DEBIAN_LOC}/files/alvar_control ${DEBIAN_LOC}/alvar/control
+  cp ${DEBIAN_LOC}/files/alvar_changelog ${DEBIAN_LOC}/alvar/changelog
   # dlib
-  cp ${DEBIAN_LOC}/files_18_04/dlib_rules ${DEBIAN_LOC}/dlib/rules
-  cp ${DEBIAN_LOC}/files_18_04/dlib_control ${DEBIAN_LOC}/dlib/control
-  cp ${DEBIAN_LOC}/files_18_04/dlib_changelog ${DEBIAN_LOC}/dlib/changelog
+  cp ${DEBIAN_LOC}/files/dlib_rules ${DEBIAN_LOC}/dlib/rules
+  cp ${DEBIAN_LOC}/files/dlib_control ${DEBIAN_LOC}/dlib/control
+  cp ${DEBIAN_LOC}/files/dlib_changelog ${DEBIAN_LOC}/dlib/changelog
   # dbow2
-  cp ${DEBIAN_LOC}/files_18_04/dbow2_rules ${DEBIAN_LOC}/dbow2/rules
-  cp ${DEBIAN_LOC}/files_18_04/dbow2_control ${DEBIAN_LOC}/dbow2/control
-  cp ${DEBIAN_LOC}/files_18_04/dbow2_changelog ${DEBIAN_LOC}/dbow2/changelog
+  cp ${DEBIAN_LOC}/files/dbow2_rules ${DEBIAN_LOC}/dbow2/rules
+  cp ${DEBIAN_LOC}/files/dbow2_control ${DEBIAN_LOC}/dbow2/control
+  cp ${DEBIAN_LOC}/files/dbow2_changelog ${DEBIAN_LOC}/dbow2/changelog
   # gtsam
-  cp ${DEBIAN_LOC}/files_18_04/gtsam_changelog ${DEBIAN_LOC}/gtsam/changelog
+  cp ${DEBIAN_LOC}/files/gtsam_changelog ${DEBIAN_LOC}/gtsam/changelog
   # decomputil
   #jps3d
   sudo apt-get install -y libvtk6.3 libboost-filesystem1.62.0 libboost-system1.62.0
@@ -58,6 +58,29 @@ elif [ "$DIST" = "$bionic" ]; then
   # openmvg
 elif [ "$DIST" = "focal" ]; then
   echo "Ubuntu 20 detected"
+  # Install dependencies
+  ${DEBIAN_LOC}/install_opencv.sh
+  ${DEBIAN_LOC}/install_luajit.sh
+
+  # alvar
+  cp ${DEBIAN_LOC}/files/alvar_rules ${DEBIAN_LOC}/alvar/rules
+  cp ${DEBIAN_LOC}/files/alvar_control ${DEBIAN_LOC}/alvar/control
+  cp ${DEBIAN_LOC}/files/alvar_changelog ${DEBIAN_LOC}/alvar/changelog
+  # dlib
+  cp ${DEBIAN_LOC}/files/dlib_rules ${DEBIAN_LOC}/dlib/rules
+  cp ${DEBIAN_LOC}/files/dlib_control ${DEBIAN_LOC}/dlib/control
+  cp ${DEBIAN_LOC}/files/dlib_changelog ${DEBIAN_LOC}/dlib/changelog
+  # dbow2
+  cp ${DEBIAN_LOC}/files/dbow2_rules ${DEBIAN_LOC}/dbow2/rules
+  cp ${DEBIAN_LOC}/files/dbow2_control ${DEBIAN_LOC}/dbow2/control
+  cp ${DEBIAN_LOC}/files/dbow2_changelog ${DEBIAN_LOC}/dbow2/changelog
+  # gtsam
+  cp ${DEBIAN_LOC}/files/gtsam_changelog ${DEBIAN_LOC}/gtsam/changelog
+  # decomputil
+  #jps3d
+  sudo apt-get install -y libvtk7.1p libboost-filesystem1.71.0 libboost-system1.71.0
+  cp ${DEBIAN_LOC}/files_18_04/jps3d_changelog ${DEBIAN_LOC}/jps3d/changelog
+  # openmvg
 fi
 
 # alvar
