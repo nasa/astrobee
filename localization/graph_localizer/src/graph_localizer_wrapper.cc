@@ -130,8 +130,8 @@ void GraphLocalizerWrapper::VLVisualLandmarksCallback(const ff_msgs::VisualLandm
     graph_localizer_->AddSparseMappingMeasurement(lm::MakeMatchedProjectionsMeasurement(visual_landmarks_msg));
   }
 
-  const gtsam::Pose3 sparse_mapping_global_T_body =
-    lc::GtPose(visual_landmarks_msg, graph_localizer_initializer_.params().calibration.body_T_nav_cam.inverse());
+  const gtsam::Pose3 sparse_mapping_global_T_body = lc::PoseFromMsgWithExtrinsics(
+    visual_landmarks_msg.pose, graph_localizer_initializer_.params().calibration.body_T_nav_cam.inverse());
   const lc::Time timestamp = lc::TimeFromHeader(visual_landmarks_msg.header);
   sparse_mapping_pose_ = std::make_pair(sparse_mapping_global_T_body, timestamp);
 
@@ -273,8 +273,8 @@ void GraphLocalizerWrapper::ResetWorldTDockUsingLoc(const ff_msgs::VisualLandmar
     return;
   }
   // TODO(rsoussan): Extrapolate latest world_T_body loc estimate with imu data?
-  const gtsam::Pose3 dock_T_body =
-    lc::GtPose(visual_landmarks_msg, graph_localizer_initializer_.params().calibration.body_T_dock_cam.inverse());
+  const gtsam::Pose3 dock_T_body = lc::PoseFromMsgWithExtrinsics(
+    visual_landmarks_msg.pose, graph_localizer_initializer_.params().calibration.body_T_dock_cam.inverse());
   estimated_world_T_dock_ = latest_combined_nav_state->pose() * dock_T_body.inverse();
 }
 

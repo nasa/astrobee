@@ -57,10 +57,10 @@ Eigen::Isometry3d EigenPose(const CombinedNavState& combined_nav_state) { return
 
 Eigen::Isometry3d EigenPose(const gtsam::Pose3& pose) { return Eigen::Isometry3d(pose.matrix()); }
 
-gtsam::Pose3 GtPose(const ff_msgs::VisualLandmarks& vl_features, const gtsam::Pose3& sensor_T_body) {
-  const gtsam::Pose3 vl_global_T_sensor = PoseFromMsg(vl_features.pose);
-  const gtsam::Pose3 vl_global_T_body = vl_global_T_sensor * sensor_T_body;
-  return vl_global_T_body;
+gtsam::Pose3 PoseFromMsgWithExtrinsics(const geometry_msgs::Pose& pose, const gtsam::Pose3& sensor_T_body) {
+  const gtsam::Pose3 global_T_sensor = PoseFromMsg(pose);
+  const gtsam::Pose3 global_T_body = global_T_sensor * sensor_T_body;
+  return global_T_body;
 }
 
 void LoadGraphLocalizerConfig(config_reader::ConfigReader& config, const std::string& path_prefix) {
