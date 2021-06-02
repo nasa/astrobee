@@ -199,6 +199,23 @@ void GraphLocalizerWrapper::ARVisualLandmarksCallback(const ff_msgs::VisualLandm
   }
 }
 
+void GraphLocalizerWrapper::DepthLandmarksCallback(const ff_msgs::DepthLandmarks& depth_landmarks_msg) {
+  /*  feature_counts_.ar = visual_landmarks_msg.landmarks.size();
+    if (!ValidVLMsg(visual_landmarks_msg, ar_min_num_landmarks_)) return;
+    if (graph_localizer_) {
+      if (reset_world_T_dock_) {
+        ResetWorldTDockUsingLoc(visual_landmarks_msg);
+        reset_world_T_dock_ = false;
+      }
+      const auto frame_changed_ar_measurements = lm::FrameChangeMatchedProjectionsMeasurement(
+        lm::MakeMatchedProjectionsMeasurement(visual_landmarks_msg), estimated_world_T_dock_);
+      graph_localizer_->AddARTagMeasurement(frame_changed_ar_measurements);
+      ar_tag_pose_ = std::make_pair(frame_changed_ar_measurements.global_T_cam *
+                                      graph_localizer_initializer_.params().calibration.body_T_dock_cam.inverse(),
+                                    frame_changed_ar_measurements.timestamp);
+    }*/
+}
+
 void GraphLocalizerWrapper::ImuCallback(const sensor_msgs::Imu& imu_msg) {
   if (graph_localizer_) {
     graph_localizer_->AddImuMeasurement(lm::ImuMeasurement(imu_msg));
