@@ -285,6 +285,15 @@ boost::optional<geometry_msgs::PoseStamped> GraphLocalizerWrapper::LatestARTagPo
   return PoseMsg(ar_tag_pose_->first, ar_tag_pose_->second);
 }
 
+boost::optional<geometry_msgs::PoseStamped> GraphLocalizerWrapper::LatestHandrailPoseMsg() const {
+  if (!handrail_pose_) {
+    LogWarningEveryN(50, "LatestHandrailPoseMsg: Failed to get latest handrail pose msg.");
+    return boost::none;
+  }
+
+  return PoseMsg(handrail_pose_->first, handrail_pose_->second);
+}
+
 boost::optional<lc::CombinedNavState> GraphLocalizerWrapper::LatestCombinedNavState() const {
   if (!graph_localizer_) {
     LogWarningEveryN(50, "LatestCombinedNavState: Graph localizater not initialized yet.");

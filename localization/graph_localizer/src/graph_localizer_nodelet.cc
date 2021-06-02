@@ -179,7 +179,7 @@ void GraphLocalizerNodelet::DepthLandmarksCallback(const ff_msgs::DepthLandmarks
   if (!localizer_enabled()) return;
   // graph_localizer_wrapper_.DepthLandmarksCallback(*depth_landmarks_msg);
   PublishWorldTHandrailTF();
-  // if (ValidDepthMsg(*depth_landmarks_msg)) PublishDepthPose();
+  if (ValidDepthMsg(*depth_landmarks_msg)) PublishHandrailPose();
 }
 
 void GraphLocalizerNodelet::ImuCallback(const sensor_msgs::Imu::ConstPtr& imu_msg) {
@@ -230,6 +230,15 @@ void GraphLocalizerNodelet::PublishARTagPose() const {
     return;
   }
   ar_tag_pose_pub_.publish(*latest_ar_tag_pose_msg);
+}
+
+void GraphLocalizerNodelet::PublishHandrailPose() const {
+  const auto latest_handrail_pose_msg = graph_localizer_wrapper_.LatestHandrailPoseMsg();
+  if (!latest_handrail_pose_msg) {
+    LogWarning("PublishHandrailPose: Failed to get latest handrail pose msg.");
+    return;
+  }
+  handrail_pose_pub_.publish(*latest_handrail_pose_msg);
 }
 
 void GraphLocalizerNodelet::PublishWorldTBodyTF() {

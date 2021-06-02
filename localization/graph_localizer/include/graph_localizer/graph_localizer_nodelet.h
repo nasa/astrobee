@@ -78,6 +78,8 @@ class GraphLocalizerNodelet : public ff_util::FreeFlyerNodelet {
 
   void PublishARTagPose() const;
 
+  void PublishHandrailPose() const;
+
   void PublishWorldTDockTF();
 
   void PublishWorldTHandrailTF();
@@ -109,7 +111,8 @@ class GraphLocalizerNodelet : public ff_util::FreeFlyerNodelet {
   ros::CallbackQueue private_queue_;
   bool localizer_enabled_ = true;
   ros::Subscriber imu_sub_, of_sub_, vl_sub_, ar_sub_, dl_sub_, flight_mode_sub_;
-  ros::Publisher state_pub_, graph_pub_, ar_tag_pose_pub_, sparse_mapping_pose_pub_, reset_pub_, heartbeat_pub_;
+  ros::Publisher state_pub_, graph_pub_, ar_tag_pose_pub_, handrail_pose_pub_, sparse_mapping_pose_pub_, reset_pub_,
+    heartbeat_pub_;
   ros::ServiceServer reset_srv_, bias_srv_, bias_from_file_srv_, input_mode_srv_;
   tf2_ros::TransformBroadcaster transform_pub_;
   std::string platform_name_;
