@@ -200,8 +200,8 @@ void GraphLocalizerWrapper::ARVisualLandmarksCallback(const ff_msgs::VisualLandm
 }
 
 void GraphLocalizerWrapper::DepthLandmarksCallback(const ff_msgs::DepthLandmarks& depth_landmarks_msg) {
-  /*  feature_counts_.ar = visual_landmarks_msg.landmarks.size();
-    if (!ValidVLMsg(visual_landmarks_msg, ar_min_num_landmarks_)) return;
+  feature_counts_.depth = depth_landmarks_msg.landmarks.size();
+  /*  if (!ValidVLMsg(visual_landmarks_msg, ar_min_num_landmarks_)) return;
     if (graph_localizer_) {
       if (reset_world_T_dock_) {
         ResetWorldTDockUsingLoc(visual_landmarks_msg);
