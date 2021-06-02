@@ -68,6 +68,9 @@ void GraphLocalizerNodelet::SubscribeAndAdvertise(ros::NodeHandle* nh) {
   ar_sub_ =
     private_nh_.subscribe(TOPIC_LOCALIZATION_AR_FEATURES, params_.max_ar_buffer_size,
                           &GraphLocalizerNodelet::ARVisualLandmarksCallback, this, ros::TransportHints().tcpNoDelay());
+  // dl_sub_ =
+  // private_nh_->subscribe(TOPIC_LOCALIZATION_HR_FEATURES, params_.max_dl_buffer_size,
+  //                      &GraphLocalizerNodelet::DepthLandmarksCallback, this, ros::TransportHints().tcpNoDelay());
   of_sub_ =
     private_nh_.subscribe(TOPIC_LOCALIZATION_OF_FEATURES, params_.max_optical_flow_buffer_size,
                           &GraphLocalizerNodelet::OpticalFlowCallback, this, ros::TransportHints().tcpNoDelay());
