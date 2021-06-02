@@ -179,7 +179,7 @@ void GraphLocalizerNodelet::DepthLandmarksCallback(const ff_msgs::DepthLandmarks
   if (!localizer_enabled()) return;
   // graph_localizer_wrapper_.DepthLandmarksCallback(*depth_landmarks_msg);
   // PublishWorldTHandrailTF();
-  // if (ValidVLMsg(*visual_landmarks_msg, params_.ar_tag_loc_adder_min_num_matches)) PublishARTagPose();
+  // if (ValidDepthMsg(*depth_landmarks_msg)) PublishDepthPose();
 }
 
 void GraphLocalizerNodelet::ImuCallback(const sensor_msgs::Imu::ConstPtr& imu_msg) {

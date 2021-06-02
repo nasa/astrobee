@@ -19,6 +19,7 @@
 #ifndef GRAPH_LOCALIZER_UTILITIES_H_
 #define GRAPH_LOCALIZER_UTILITIES_H_
 
+#include <ff_msgs/DepthLandmarks.h>
 #include <ff_msgs/GraphState.h>
 #include <ff_msgs/LocalizationGraph.h>
 #include <ff_msgs/VisualLandmarks.h>
@@ -55,6 +56,8 @@ bool ValidPointSet(const int num_points, const double average_distance_from_mean
 double AverageDistanceFromMean(const std::vector<localization_measurements::FeaturePoint>& points);
 
 bool ValidVLMsg(const ff_msgs::VisualLandmarks& visual_landmarks_msg, const int min_num_landmarks);
+
+bool ValidDepthMsg(const ff_msgs::DepthLandmarks& depth_landmarks_msg);
 
 ff_msgs::GraphState GraphStateMsg(const localization_common::CombinedNavState& combined_nav_state,
                                   const localization_common::CombinedNavStateCovariances& covariances,
