@@ -1,3 +1,5 @@
+\page sparsemapping Sparse Mapping
+
 # Creation of sparse maps for robot localization
 
 ## What is a map
@@ -68,9 +70,8 @@ The bags created on the ISS are likely split into many smaller bags,
 for easy and reliability of transfer. Those can be merged into one bag
 as follows:
 
-    source $BUILD_PATH/devel/setup.bash
-    python $SOURCE_PATH/localization/sparse_mapping/tools/merge_bags.py \
-      <output bag> <input bags> --verbose
+    astrobee_build/devel/lib/localization_node/merge_bags \
+      -output_bag <output bag> <input bags>
 
 ### Extracting images
 
@@ -479,3 +480,9 @@ Instead of taking images out of the map randomly, one can start with a
 reduced map with a small list of desired images which can be set with
 -image_list, and then all images for which localization fails will be
 added back to it.
+
+
+\subpage map_building
+\subpage total_station
+\subpage granite_lab_registration
+\subpage using_faro

@@ -26,7 +26,7 @@
 #include <graph_localizer/feature_counts.h>
 #include <graph_localizer/graph_localizer.h>
 #include <graph_localizer/graph_localizer_initializer.h>
-#include <graph_localizer/graph_stats.h>
+#include <graph_localizer/graph_localizer_stats.h>
 #include <graph_localizer/sanity_checker.h>
 #include <localization_measurements/fan_speed_mode.h>
 #include <localization_measurements/imu_measurement.h>
@@ -79,7 +79,9 @@ class GraphLocalizerWrapper {
 
   void FlightModeCallback(const ff_msgs::FlightMode& flight_mode);
 
-  boost::optional<const FeatureTrackMap&> feature_tracks() const;
+  boost::optional<const FeatureTrackIdMap&> feature_tracks() const;
+
+  boost::optional<const GraphLocalizer&> graph_localizer() const;
 
   void MarkWorldTDockForResettingIfNecessary();
 
@@ -89,7 +91,7 @@ class GraphLocalizerWrapper {
 
   void SaveLocalizationGraphDotFile() const;
 
-  boost::optional<const GraphStats&> graph_stats() const;
+  boost::optional<const GraphLocalizerStats&> graph_localizer_stats() const;
 
   bool publish_localization_graph() const;
 

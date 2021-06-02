@@ -133,5 +133,15 @@ def integrate_velocities(localization_states):
     localization_states.positions.zs[0] + cumulative_z_increment for cumulative_z_increment in cumulative_z_increments
   ]
 
+  # Add start positions
+  integrated_positions.positions.xs.insert(0, localization_states.positions.xs[0])
+  integrated_positions.positions.ys.insert(0, localization_states.positions.ys[0])
+  integrated_positions.positions.zs.insert(0, localization_states.positions.zs[0])
+
+  # Remove last elements (no timestamp for these)
+  del integrated_positions.positions.xs[-1]
+  del integrated_positions.positions.ys[-1]
+  del integrated_positions.positions.zs[-1]
+
   integrated_positions.times = localization_states.times
   return integrated_positions

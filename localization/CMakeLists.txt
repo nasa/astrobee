@@ -16,6 +16,7 @@
 # under the License.
 
 add_subdirectory(camera)
+add_subdirectory(graph_optimizer)
 add_subdirectory(imu_integration)
 add_subdirectory(interest_point)
 add_subdirectory(localization_common)
@@ -31,7 +32,7 @@ if (USE_ROS)
   add_subdirectory(handrail_detect)
   add_subdirectory(localization_manager)
   add_subdirectory(localization_node)
-  if (ENABLE_VIVE_SOLVER)
+  if (ENABLE_VIVE_SOLVER AND ENABLE_VIVE)
     add_subdirectory(vive_localization)
   endif()
 endif (USE_ROS)

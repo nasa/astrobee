@@ -41,16 +41,12 @@ OpState* OpStateReady::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
     if (exec_->AutoReturn(cmd)) {
       return OpStateRepo::Instance()->teleop()->StartupState();
     }
-  } else if (cmd->cmd_name == CommandConstants::CMD_NAME_CLEAR_DATA) {
-    exec_->ClearData(cmd);
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_CUSTOM_GUEST_SCIENCE) {
     exec_->CustomGuestScience(cmd);
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_DOCK) {
     if (exec_->Dock(cmd)) {
       return OpStateRepo::Instance()->teleop()->StartupState();
     }
-  } else if (cmd->cmd_name == CommandConstants::CMD_NAME_DOWNLOAD_DATA) {
-    exec_->DownloadData(cmd);
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_FAULT) {
     if (exec_->Fault(cmd)) {
       return OpStateRepo::Instance()->fault()->StartupState();
@@ -98,6 +94,8 @@ OpState* OpStateReady::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
     exec_->SetCheckZones(cmd);
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_SET_ENABLE_IMMEDIATE) {
     exec_->SetEnableImmediate(cmd);
+  } else if (cmd->cmd_name == CommandConstants::CMD_NAME_SET_ENABLE_REPLAN) {
+    exec_->SetEnableReplan(cmd);
   } else if (cmd->cmd_name ==
                         CommandConstants::CMD_NAME_SET_FLASHLIGHT_BRIGHTNESS) {
     exec_->SetFlashlightBrightness(cmd);
@@ -111,12 +109,8 @@ OpState* OpStateReady::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
     exec_->SetPlan(cmd);
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_SET_PLANNER) {
     exec_->SetPlanner(cmd);
-  } else if (cmd->cmd_name == CommandConstants::CMD_NAME_SET_TIME_SYNC) {
-    exec_->SetTimeSync(cmd);
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_SET_ZONES) {
     exec_->SetZones(cmd);
-  } else if (cmd->cmd_name == CommandConstants::CMD_NAME_SHUTDOWN) {
-    exec_->Shutdown(cmd);
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_SIMPLE_MOVE6DOF) {
     // Make sure we are stopped, not docked or perched, before moving
     if ((exec_->GetMobilityState().state == ff_msgs::MobilityState::STOPPING &&
@@ -155,8 +149,6 @@ OpState* OpStateReady::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
     if (exec_->StopArm(cmd)) {
       return OpStateRepo::Instance()->teleop()->StartupState();
     }
-  } else if (cmd->cmd_name == CommandConstants::CMD_NAME_STOP_DOWNLOAD) {
-    exec_->StopDownload(cmd);
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_STOP_GUEST_SCIENCE) {
     exec_->StopGuestScience(cmd);
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_STOW_ARM) {
@@ -177,8 +169,6 @@ OpState* OpStateReady::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
     }
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_UNTERMINATE) {
     exec_->Unterminate(cmd);
-  } else if (cmd->cmd_name == CommandConstants::CMD_NAME_WIPE_HLP) {
-    exec_->WipeHlp(cmd);
   } else {
     err_msg = "Command " + cmd->cmd_name + " not accepted in operating state " +
         "ready.";

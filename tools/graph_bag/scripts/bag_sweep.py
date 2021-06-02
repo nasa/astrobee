@@ -30,7 +30,8 @@ import sys
 
 class GraphBagParams(object):
 
-  def __init__(self, bagfile, map_file, image_topic, config_path, robot_config_file, world, use_image_features):
+  def __init__(self, bagfile, map_file, image_topic, config_path, robot_config_file, world, use_image_features,
+               groundtruth_bagfile, rmse_rel_start_time, rmse_rel_end_time):
     self.bagfile = bagfile
     self.map_file = map_file
     self.image_topic = image_topic
@@ -38,6 +39,9 @@ class GraphBagParams(object):
     self.robot_config_file = robot_config_file
     self.world = world
     self.use_image_features = use_image_features
+    self.groundtruth_bagfile = groundtruth_bagfile
+    self.rmse_rel_start_time = rmse_rel_start_time
+    self.rmse_rel_end_time = rmse_rel_end_time
 
 
 def load_params(param_file):
@@ -45,7 +49,8 @@ def load_params(param_file):
   with open(param_file) as param_csvfile:
     reader = csv.reader(param_csvfile, delimiter=' ')
     for row in reader:
-      graph_bag_params_list.append(GraphBagParams(row[0], row[1], row[2], row[3], row[4], row[5], row[6]))
+      graph_bag_params_list.append(
+        GraphBagParams(row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8], row[9]))
 
   return graph_bag_params_list
 
@@ -73,6 +78,9 @@ def check_params(graph_bag_params_list):
     if not os.path.isfile(params.map_file):
       print('Map file ' + params.map_file + ' does not exist.')
       sys.exit()
+    if not os.path.isfile(params.groundtruth_bagfile):
+      print('Bagfile ' + params.groundtruth_bagfile + ' does not exist.')
+      sys.exit()
 
 
 # Add traceback so errors are forwarded, otherwise
@@ -86,7 +94,7 @@ def run_graph_bag(params, output_dir):
   run_command = 'rosrun graph_bag run_graph_bag ' + params.bagfile + ' ' + params.map_file + ' ' + params.config_path + ' -i ' + params.image_topic + ' -o ' + output_bag_path + ' -r ' + params.robot_config_file + ' -w ' + params.world + ' -s ' + output_csv_file + ' -f ' + params.use_image_features
   os.system(run_command)
   output_pdf_file = os.path.join(output_dir, bag_name + '_output.pdf')
-  plot_command = 'rosrun graph_bag plot_results_main.py ' + output_bag_path + ' --output-file ' + output_pdf_file + ' --output-csv-file ' + output_csv_file
+  plot_command = 'rosrun graph_bag plot_results_main.py ' + output_bag_path + ' --output-file ' + output_pdf_file + ' --output-csv-file ' + output_csv_file + ' -g ' + params.groundtruth_bagfile + ' --rmse-rel-start-time ' + params.rmse_rel_start_time + ' --rmse-rel-end-time ' + params.rmse_rel_end_time
   os.system(plot_command)
 
 
@@ -100,7 +108,7 @@ def run_graph_bag_helper(zipped_vals):
 def bag_sweep(config_file, output_dir):
   graph_bag_params_list = load_params(config_file)
   check_params(graph_bag_params_list)
-  num_processes = 6
+  num_processes = 15 
   pool = multiprocessing.Pool(num_processes)
   # izip arguments so we can pass as one argument to pool worker
   pool.map(run_graph_bag_helper, itertools.izip(graph_bag_params_list, itertools.repeat(output_dir)))

@@ -105,10 +105,18 @@ boost::optional<lc::Time> ImuIntegrator::IntegrateImuMeasurements(const lc::Time
 }
 
 void ImuIntegrator::RemoveOldMeasurements(const lc::Time new_start_time) {
-  for (auto measurement_it = measurements_.cbegin();
-       measurement_it != measurements_.cend() && measurement_it->first < new_start_time;) {
-    measurement_it = measurements_.erase(measurement_it);
+  const auto lower_bound_it = measurements_.lower_bound(new_start_time);
+  // Every element is too old
+  if (lower_bound_it == measurements_.cend()) {
+    measurements_.clear();
+    return;
   }
+  // No elements are too old
+  if (lower_bound_it == measurements_.cbegin()) return;
+
+  // Keep one before new_start_time so measurements before lower_bound_it can be interpolated if necessary
+  const auto new_oldest_measurement_it = std::prev(lower_bound_it);
+  measurements_.erase(measurements_.begin(), new_oldest_measurement_it);
 }
 
 boost::optional<gtsam::PreintegratedCombinedMeasurements> ImuIntegrator::IntegratedPim(

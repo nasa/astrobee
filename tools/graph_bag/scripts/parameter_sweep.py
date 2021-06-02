@@ -37,7 +37,7 @@ import utilities
 # library call
 @utilities.full_traceback
 def test_values(values, job_id, value_names, output_dir, bag_file, map_file, image_topic, config_path, robot_config,
-                world, use_image_features):
+                world, use_image_features, groundtruth_bagfile, rmse_rel_start_time, rmse_rel_end_time):
   new_output_dir = os.path.join(output_dir, str(job_id))
   os.mkdir(new_output_dir)
   graph_config_filepath = os.path.join(config_path, "config", "graph_localizer.config")
@@ -46,7 +46,6 @@ def test_values(values, job_id, value_names, output_dir, bag_file, map_file, ima
   output_bag = os.path.join(new_output_dir, "results.bag")
   output_stats_file = os.path.join(new_output_dir, "graph_stats.csv")
   graph_config_prefix = new_output_dir + '/'
-
   run_command = 'rosrun graph_bag run_graph_bag ' + bag_file + ' ' + map_file + ' ' + config_path + ' -o ' + output_bag + ' -s ' + output_stats_file + ' -r ' + robot_config + ' -w ' + world + ' -g ' + graph_config_prefix + ' -f ' + str(
     use_image_features)
   if image_topic is not None:
@@ -54,7 +53,8 @@ def test_values(values, job_id, value_names, output_dir, bag_file, map_file, ima
   os.system(run_command)
   output_pdf_file = os.path.join(new_output_dir, str(job_id) + '_output.pdf')
   output_csv_file = os.path.join(new_output_dir, 'graph_stats.csv')
-  plot_command = 'rosrun graph_bag plot_results_main.py ' + output_bag + ' --output-file ' + output_pdf_file + ' --output-csv-file ' + output_csv_file
+  plot_command = 'rosrun graph_bag plot_results_main.py ' + output_bag + ' --output-file ' + output_pdf_file + ' --output-csv-file ' + output_csv_file + ' -g ' + groundtruth_bagfile + ' --rmse-rel-start-time ' + str(
+    rmse_rel_start_time) + ' --rmse-rel-end-time ' + str(rmse_rel_end_time)
   os.system(plot_command)
 
 
@@ -75,10 +75,21 @@ def concat_results(job_ids, directory):
   combined_results.to_csv(combined_results_file, index=False)
 
 
-def parameter_sweep(all_value_combos, value_names, output_dir, bag_file, map_file, image_topic, config_path,
-                    robot_config, world, use_image_features):
+def parameter_sweep(all_value_combos,
+                    value_names,
+                    output_dir,
+                    bag_file,
+                    map_file,
+                    image_topic,
+                    config_path,
+                    robot_config,
+                    world,
+                    use_image_features,
+                    groundtruth_bagfile,
+                    rmse_rel_start_time=0,
+                    rmse_rel_end_time=-1):
   job_ids = list(range(len(all_value_combos)))
-  num_processes = 6
+  num_processes = 15 
   pool = multiprocessing.Pool(num_processes)
   # izip arguments so we can pass as one argument to pool worker
   pool.map(
@@ -86,7 +97,8 @@ def parameter_sweep(all_value_combos, value_names, output_dir, bag_file, map_fil
     itertools.izip(all_value_combos, job_ids, itertools.repeat(value_names), itertools.repeat(output_dir),
                    itertools.repeat(bag_file), itertools.repeat(map_file), itertools.repeat(image_topic),
                    itertools.repeat(config_path), itertools.repeat(robot_config), itertools.repeat(world),
-                   itertools.repeat(use_image_features)))
+                   itertools.repeat(use_image_features), itertools.repeat(groundtruth_bagfile),
+                   itertools.repeat(rmse_rel_start_time), itertools.repeat(rmse_rel_end_time)))
   concat_results(job_ids, output_dir)
 
 
@@ -100,12 +112,10 @@ def make_value_ranges():
   steps = 10 
 
   # tune num smart factors
-  value_ranges.append(np.logspace(-1, -6, steps, endpoint=True))
-  value_names.append('accel_bias_sigma')
-  value_ranges.append(np.logspace(-1, -6, steps, endpoint=True))
-  value_names.append('accel_sigma')
-
-
+  #value_ranges.append(np.logspace(-1, -6, steps, endpoint=True))
+  #value_names.append('accel_bias_sigma')
+  value_ranges.append(np.linspace(0, 500, steps, endpoint=True))
+  value_names.append('smart_projection_adder_feature_track_min_separation')
 
   #q_gyro
   # .001 -> 2 deg
@@ -124,8 +134,17 @@ def save_values(value_names, values, filename, output_dir):
     writer.writerows(values)
 
 
-def make_values_and_parameter_sweep(output_dir, bag_file, map_file, image_topic, config_path, robot_config, world,
-                                    use_image_features):
+def make_values_and_parameter_sweep(output_dir,
+                                    bag_file,
+                                    map_file,
+                                    image_topic,
+                                    config_path,
+                                    robot_config,
+                                    world,
+                                    use_image_features,
+                                    groundtruth_bagfile,
+                                    rmse_rel_start_time=0,
+                                    rmse_rel_end_time=-1):
   output_dir = utilities.create_directory(output_dir)
   print('Output directory for results is {}'.format(output_dir))
 
@@ -136,7 +155,7 @@ def make_values_and_parameter_sweep(output_dir, bag_file, map_file, image_topic,
   save_values(value_names, all_value_combos, 'all_value_combos.csv', output_dir)
 
   parameter_sweep(all_value_combos, value_names, output_dir, bag_file, map_file, image_topic, config_path, robot_config,
-                  world, use_image_features)
+                  world, use_image_features, groundtruth_bagfile, rmse_rel_start_time, rmse_rel_end_time)
   combined_results_file = os.path.join(output_dir, 'param_sweep_combined_results.csv')
   value_combos_file = os.path.join(output_dir, 'all_value_combos.csv')
   results_pdf_file = os.path.join(output_dir, 'param_sweep_results.pdf')
@@ -157,6 +176,7 @@ if __name__ == '__main__':
                       action='store_false',
                       help='Use image features msgs from bagfile or generate features from images.')
 
+  parser.add_argument('-g', '--groundtruth-bagfile', default=None)
   parser.add_argument(
     '--directory',
     default=None,
@@ -164,6 +184,9 @@ if __name__ == '__main__':
     'Full path to output directory where files will be saved. If not specified, timestamped directory will be created in current path.'
   )
   args = parser.parse_args()
+  # Default set groundtruth bagfile to normal bagfile
+  if not args.groundtruth_bagfile:
+    args.groundtruth_bagfile = args.bag_file
 
   make_values_and_parameter_sweep(args.directory, args.bag_file, args.map_file, args.image_topic, args.config_path,
-                                  args.robot_config, args.world, args.use_image_features)
+                                  args.robot_config, args.world, args.use_image_features, args.groundtruth_bagfile)

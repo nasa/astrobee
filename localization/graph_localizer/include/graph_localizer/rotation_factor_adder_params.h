@@ -19,13 +19,13 @@
 #ifndef GRAPH_LOCALIZER_ROTATION_FACTOR_ADDER_PARAMS_H_
 #define GRAPH_LOCALIZER_ROTATION_FACTOR_ADDER_PARAMS_H_
 
-#include <graph_localizer/factor_adder_params.h>
+#include <graph_optimizer/factor_adder_params.h>
 
 #include <gtsam/geometry/Cal3_S2.h>
 #include <gtsam/geometry/Pose3.h>
 
 namespace graph_localizer {
-struct RotationFactorAdderParams : public FactorAdderParams {
+struct RotationFactorAdderParams : public graph_optimizer::FactorAdderParams {
   double min_avg_disparity;
   double rotation_stddev;
   double max_percent_outliers;
