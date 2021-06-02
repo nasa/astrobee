@@ -55,8 +55,22 @@ class PointToLineSegmentFactor : public PointToLineFactorBase {
 
   Vector evaluateError(const Pose3& world_T_body, boost::optional<Matrix&> H = boost::none) const override {
     const auto line_t_point = Base::error(world_T_body, H);
-    // TODO: get line_t_endpoint_a, line_t_endpoint_b using length, see which is closer, use this for z error and zero
-    // out jacobian if necessary
+    const auto line_z_point = line_t_point.z();
+    Point3 error = line_t_point;
+    // Check if z value is in between segment endpoints, zero z error component and Jacobian row if so.
+    // Otherwise add or subtract half line length to the z error to make it reflect the closest distance to
+    // one of the segment endpoints.
+    if (line_z_point >= -1.0 * line_length_ / 2.0 && line_z_point <= line_length_ / 2.0) {
+      error.z() = 0;
+      if (H) {
+        H->block<1, 6>(2, 0) = Eigen::Matrix<double, 1, 6>::Zero();
+      }
+    } else if (line_z_point < -1.0 * line_length_ / 2.0) {
+      error.z() = error.z() + line_length_ / 2.0;
+    } else {
+      error.z() = error.z() - line_length_ / 2.0;
+    }
+    return error;
   }
 
   double line_length() const { return line_length_; }

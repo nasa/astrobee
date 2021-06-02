@@ -56,6 +56,14 @@ if(CATKIN_ENABLE_TESTING)
   target_link_libraries(test_point_to_line_factor
     graph_localizer gtsam
   )
+  add_rostest_gtest(test_point_to_line_segment_factor
+    test/test_point_to_line_segment_factor.test
+    test/test_point_to_line_segment_factor.cc
+  )
+  target_link_libraries(test_point_to_line_segment_factor
+    graph_localizer gtsam
+  )
+
 endif()
 
 install_launch_files()
