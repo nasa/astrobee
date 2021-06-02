@@ -33,7 +33,7 @@ MatchedProjectionsMeasurement MakeMatchedProjectionsMeasurement(const ff_msgs::V
     matched_projections_measurement.matched_projections.emplace_back(image_point, map_point, timestamp);
   }
 
-  matched_projections_measurement.global_T_cam = lc::GtPose(visual_landmarks);
+  matched_projections_measurement.global_T_cam = lc::PoseFromMsg(visual_landmarks.pose);
 
   return matched_projections_measurement;
 }

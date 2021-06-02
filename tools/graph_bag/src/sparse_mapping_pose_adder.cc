@@ -39,7 +39,7 @@ void SparseMappingPoseAdder::AddPoses() {
     if (string_ends_with(msg.getTopic(), TOPIC_LOCALIZATION_ML_FEATURES)) {
       const ff_msgs::VisualLandmarksConstPtr vl_features = msg.instantiate<ff_msgs::VisualLandmarks>();
       if (vl_features->landmarks.size() >= 5) {
-        const auto world_T_nav_cam = lc::GtPose(*vl_features);
+        const auto world_T_nav_cam = lc::PoseFromMsg(vl_features->pose);
         const auto world_T_body = world_T_nav_cam * nav_cam_T_body_;
         // TODO(rsoussan): put this in loc common
         const auto sparse_mapping_pose_msg =
