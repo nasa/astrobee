@@ -31,6 +31,7 @@ At this point you need to decide where you'd like to put the source code
 First, clone the flight software repository and media:
 
     git clone https://github.com/nasa/astrobee.git $SOURCE_PATH
+    pushd $SOURCE_PATH
     git submodule update --init --depth 1 description/media
 
 
@@ -46,12 +47,14 @@ Clone the android repository:
     git clone https://github.com/nasa/astrobee_android.git $ANDROID_PATH
 
 
-### Dependencies Ubuntu 16 + ROS Melodic
+### Dependencies
 
 Next, install all required dependencies:
+
 *Note: `root` access is necessary to install the compiled debian packages below*
+
 *Note: Before running this please ensure that your system is completely updated
-    by running 'sudo apt-get update' and then 'sudo apt-get upgrade'*
+by running 'sudo apt-get update' and then 'sudo apt-get upgrade'*
 
     pushd $SOURCE_PATH
     cd scripts/setup
@@ -60,41 +63,11 @@ Next, install all required dependencies:
     cd debians
     ./build_install_debians.sh
     cd ../
-    ./install_desktop_16_04_packages.sh
+    ./install_desktop_packages.sh
     sudo rosdep init
     rosdep update
     popd
 
-**Important**: you can safely ignore the following error messages, as they are simply letting you know that certain libraries cannot be found. These libraries are for internal NASA use only, and are not required by public users provided that software is launched with DDS disabled.
-
-    E: Unable to locate package libroyale1
-    E: Unable to locate package rti
-    E: Unable to locate package libmiro0
-    E: Unable to locate package libsoracore1
-    E: Unable to locate package libroyale-dev
-    E: Unable to locate package rti-dev
-    E: Unable to locate package libsoracore-dev
-    E: Unable to locate package libmiro-dev
-
-### Dependencies Ubuntu 18 + ROS melodic
-
-Next, install all required dependencies:
-*Note: `root` access is necessary to install the compiled debian packages below*
-*Note: You should instal ROS melodic beforehand following the [Installation Instructions](http://wiki.ros.org/melodic/Installation/Ubuntu)*
-*Note: Before running this please ensure that your system is completely updated
-    by running 'sudo apt-get update' and then 'sudo apt-get upgrade'*
-
-    pushd $SOURCE_PATH
-    cd scripts/setup
-    ./add_ros_repository.sh
-    sudo apt-get update
-    cd debians
-    ./build_install_debians_18_04.sh
-    cd ../
-    ./install_desktop_18_04_packages.sh
-    sudo rosdep init
-    rosdep update
-    popd
 
 **Important**: you can safely ignore the following error messages, as they are simply letting you know that certain libraries cannot be found. These libraries are for internal NASA use only, and are not required by public users provided that software is launched with DDS disabled.
 

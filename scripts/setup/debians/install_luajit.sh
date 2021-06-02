@@ -19,7 +19,7 @@
 
 CURRENT_LOC=$(dirname "$(readlink -f "$0")")
 echo ${CURRENT_LOC}
-# cd /usr/local/lib
+cd ${CURRENT_LOC}
 PACKAGE_NAME=luajit-2.0
 
 if [ -d $PACKAGE_NAME ]; then

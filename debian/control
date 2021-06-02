@@ -28,10 +28,26 @@ Depends: ${misc:Depends}
 Description: Astrobee flight software configuration.
  The Astrobee flight software configuration files.
 
+Package: astrobee-comms
+Section: comm
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+  astrobee-config (>= ${binary:Version}),
+  rti (>=1.0), libmiro0 (>=0.1), libsoracore1 (>=1.0),
+  ros-kinetic-ros-base, ros-kinetic-cpp-common,
+  ros-kinetic-common-msgs, ros-kinetic-nodelet, ros-kinetic-image-transport,
+  ros-kinetic-compressed-image-transport, ros-kinetic-tf2,
+  ros-kinetic-tf2-geometry-msgs, ros-kinetic-tf2-msgs, ros-kinetic-tf2-ros,
+  ros-kinetic-tf2-sensor-msgs,
+  libgoogle-glog0v5
+Description: The communications for Astrobee flight software.
+ The communications portion of the Astrobee flight software.
+
 Package: astrobee0
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
   astrobee-config (>= ${binary:Version}),
+  astrobee-comms (>= ${binary:Version}),
   libalvar2 (>=2.0), libdbow21 (>=0.1), libgtsam (>=4.0), libopenmvg1 (>=1.0), libroyale1 (>=1.0),
   libceres1 (>=1.0), rti (>=1.0), libmiro0 (>=0.1), libsoracore1 (>=1.0),
   libdecomputil0 (>=0.1), libjps3d0 (>=0.1),

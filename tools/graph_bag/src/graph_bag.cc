@@ -89,8 +89,10 @@ void GraphBag::Run() {
   graph_localizer_simulator_->ResetBiasesAndLocalizer();
   lc::Timer graph_bag_timer("Graph Bag Timer");
   graph_bag_timer.Start();
+  const double start_time = live_measurement_simulator_->CurrentTime();
   while (live_measurement_simulator_->ProcessMessage()) {
     const lc::Time current_time = live_measurement_simulator_->CurrentTime();
+    if (params_.log_relative_time) LogInfo("Run: Rel t: " << current_time - start_time);
     const auto flight_mode_msg = live_measurement_simulator_->GetFlightModeMessage(current_time);
     if (flight_mode_msg) {
       graph_localizer_simulator_->BufferFlightModeMsg(*flight_mode_msg);
@@ -175,7 +177,7 @@ void GraphBag::Run() {
   }
   graph_bag_timer.Stop();
   graph_bag_timer.Log();
-  const auto graph_stats = graph_localizer_simulator_->graph_stats();
+  const auto graph_stats = graph_localizer_simulator_->graph_localizer_stats();
   if (!graph_stats) {
     LogError("Run: Failed to get graph stats");
   } else {

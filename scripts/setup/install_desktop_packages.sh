@@ -25,9 +25,10 @@
 
 scriptdir=$(dirname "$(readlink -f "$0")")
 arssrc=/etc/apt/sources.list.d/astrobee-latest.list
+DIST=`cat /etc/os-release | grep -oP "(?<=VERSION_CODENAME=).*"`
 
-pkg_files=${1:-$scriptdir/package.lst}
-echo $pkg_files
+pkg_files=${1:-$scriptdir/packages_base_"${DIST}".lst $scriptdir/packages_desktop_${DIST}.lst}
+echo "$pkg_files ${DIST}"
 
 pkgs=''
 for i in $pkg_files; do
@@ -49,12 +50,12 @@ then
  
   if [ "${NO_TUNNEL}" -eq 1 ]; then
       echo "Getting the custom Debian without tunnel"
-      sudo /bin/bash -c "echo \"deb [arch=amd64] http://astrobee.ndc.nasa.gov/software xenial main\" > $arssrc" || exit 1
-      sudo /bin/bash -c "echo \"deb-src http://astrobee.ndc.nasa.gov/software xenial main\" >> $arssrc" || exit 1
+      sudo /bin/bash -c "echo \"deb [arch=amd64] http://astrobee.ndc.nasa.gov/software ${DIST} main\" > $arssrc" || exit 1
+      sudo /bin/bash -c "echo \"deb-src http://astrobee.ndc.nasa.gov/software ${DIST} main\" >> $arssrc" || exit 1
   else
       echo "Tunnelling to get the custom Debian"
-      sudo /bin/bash -c "echo \"deb [arch=amd64] http://127.0.0.1:8765/software melodic main\" > $arssrc" || exit 1
-      sudo /bin/bash -c "echo \"deb-src http://127.0.0.1:8765/software melodic main\" >> $arssrc" || exit 1
+      sudo /bin/bash -c "echo \"deb [arch=amd64] http://127.0.0.1:8765/software ${DIST} main\" > $arssrc" || exit 1
+      sudo /bin/bash -c "echo \"deb-src http://127.0.0.1:8765/software ${DIST} main\" >> $arssrc" || exit 1
       ssh -N -L 8765:astrobee.ndc.nasa.gov:80 ${username}m.ndc.nasa.gov &
   fi
   
@@ -64,7 +65,7 @@ fi
 
 sudo apt-get update || exit 1
 
-if ! sudo apt-get download -m -y $pkgs; then
+if ! sudo apt-get install -m -y $pkgs; then
   filter_pkgs="libroyale-dev rti-dev libsoracore-dev libmiro-dev libroyale1 rti libmiro0 libsoracore1"
   for p in $filter_pkgs; do
     pkgs=${pkgs//$p/}

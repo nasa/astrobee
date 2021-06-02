@@ -2,13 +2,13 @@ libdbow2 (0.1-5) unstable; urgency=medium
 
   * Ros moved opencv library which broke build, fixed it.
 
- -- Brian Coltin <brian.j.coltin@nasa.gov>  Mon, 30 Apr 2018 13:31:16 -0700
+ -- Brian Coltin <nospam@nospam.org>  Mon, 30 Apr 2018 13:31:16 -0700
 
 libdbow2 (0.1-4) unstable; urgency=medium
 
   * Bump ros-kinetic-opencv version.
 
- -- Brian Coltin <brian.j.coltin@nasa.gov>  Mon, 11 Dec 2017 17:34:43 -0800
+ -- Brian Coltin <nospam@nospam.org>  Mon, 11 Dec 2017 17:34:43 -0800
 
 libdbow2 (0.1-3) unstable; urgency=medium
 

@@ -20,7 +20,7 @@ License: LGPL
   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
 Files: debian/*
-Copyright: 2017 Brian Coltin <brian.j.coltin@nasa.gov>
+Copyright: 2017 Brian Coltin <nospam@nospam.org>
 License: GPL-2+
  This package is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by

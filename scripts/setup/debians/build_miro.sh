@@ -17,6 +17,10 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+# This package depends on rti which is a proprietary package and therefore
+# cannot be shared. This debian build is only useful for NASA maintenence
+# of this repo.
+
 PACKAGE_NAME=libmiro
 ORIG_TAR=libmiro_0.3.2.orig.tar.gz
 DEB_DIR=miro
