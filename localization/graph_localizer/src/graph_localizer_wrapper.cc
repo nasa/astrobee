@@ -263,6 +263,10 @@ void GraphLocalizerWrapper::ResetWorldTDockUsingLoc(const ff_msgs::VisualLandmar
 
 gtsam::Pose3 GraphLocalizerWrapper::estimated_world_T_dock() const { return estimated_world_T_dock_; }
 
+boost::optional<gtsam::Pose3> GraphLocalizerWrapper::estimated_world_T_handrail() const {
+  return estimated_world_T_handrail_;
+}
+
 boost::optional<geometry_msgs::PoseStamped> GraphLocalizerWrapper::LatestSparseMappingPoseMsg() const {
   if (!sparse_mapping_pose_) {
     LogWarningEveryN(50, "LatestSparseMappingPoseMsg: Failed to get latest sparse mapping pose msg.");

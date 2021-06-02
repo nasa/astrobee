@@ -80,6 +80,8 @@ class GraphLocalizerNodelet : public ff_util::FreeFlyerNodelet {
 
   void PublishWorldTDockTF();
 
+  void PublishWorldTHandrailTF();
+
   void PublishWorldTBodyTF();
 
   void PublishReset() const;

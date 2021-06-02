@@ -89,6 +89,8 @@ class GraphLocalizerWrapper {
 
   gtsam::Pose3 estimated_world_T_dock() const;
 
+  boost::optional<gtsam::Pose3> estimated_world_T_handrail() const;
+
   void SaveLocalizationGraphDotFile() const;
 
   boost::optional<const GraphLocalizerStats&> graph_localizer_stats() const;
@@ -117,6 +119,7 @@ class GraphLocalizerWrapper {
   double position_cov_log_det_lost_threshold_;
   double orientation_cov_log_det_lost_threshold_;
   gtsam::Pose3 estimated_world_T_dock_;
+  boost::optional<gtsam::Pose3> estimated_world_T_handrail_;
   bool reset_world_T_dock_;
   bool estimate_world_T_dock_using_loc_;
   int ar_min_num_landmarks_;

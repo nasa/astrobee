@@ -178,7 +178,7 @@ void GraphLocalizerNodelet::DepthLandmarksCallback(const ff_msgs::DepthLandmarks
 
   if (!localizer_enabled()) return;
   // graph_localizer_wrapper_.DepthLandmarksCallback(*depth_landmarks_msg);
-  // PublishWorldTHandrailTF();
+  PublishWorldTHandrailTF();
   // if (ValidDepthMsg(*depth_landmarks_msg)) PublishDepthPose();
 }
 
@@ -249,6 +249,14 @@ void GraphLocalizerNodelet::PublishWorldTDockTF() {
   const auto world_T_dock_tf =
     lc::PoseToTF(world_T_dock, "world", "dock/body", lc::TimeFromRosTime(ros::Time::now()), platform_name_);
   transform_pub_.sendTransform(world_T_dock_tf);
+}
+
+void GraphLocalizerNodelet::PublishWorldTHandrailTF() {
+  const auto world_T_handrail = graph_localizer_wrapper_.estimated_world_T_handrail();
+  if (!world_T_handrail) return;
+  const auto world_T_handrail_tf =
+    lc::PoseToTF(*world_T_handrail, "world", "handrail/body", lc::TimeFromRosTime(ros::Time::now()), platform_name_);
+  transform_pub_.sendTransform(world_T_handrail_tf);
 }
 
 void GraphLocalizerNodelet::PublishReset() const {
