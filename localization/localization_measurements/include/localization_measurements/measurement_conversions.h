@@ -19,12 +19,14 @@
 #ifndef LOCALIZATION_MEASUREMENTS_MEASUREMENT_CONVERSIONS_H_
 #define LOCALIZATION_MEASUREMENTS_MEASUREMENT_CONVERSIONS_H_
 
+#include <ff_msgs/DepthLandmarks.h>
 #include <ff_msgs/Feature2dArray.h>
 #include <ff_msgs/VisualLandmarks.h>
 #include <localization_common/combined_nav_state.h>
 #include <localization_common/combined_nav_state_covariances.h>
 #include <localization_measurements/fan_speed_mode.h>
 #include <localization_measurements/feature_points_measurement.h>
+#include <localization_measurements/handrail_points_measurement.h>
 #include <localization_measurements/imu_measurement.h>
 #include <localization_measurements/matched_projections_measurement.h>
 
@@ -32,6 +34,8 @@
 
 namespace localization_measurements {
 MatchedProjectionsMeasurement MakeMatchedProjectionsMeasurement(const ff_msgs::VisualLandmarks& visual_landmarks);
+
+HandrailPointsMeasurement MakeHandrailPointsMeasurement(const ff_msgs::DepthLandmarks& depth_landmarks);
 
 MatchedProjectionsMeasurement FrameChangeMatchedProjectionsMeasurement(
   const MatchedProjectionsMeasurement& matched_projections_measurement,

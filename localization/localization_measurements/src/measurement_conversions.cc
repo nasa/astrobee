@@ -24,7 +24,7 @@ namespace lc = localization_common;
 MatchedProjectionsMeasurement MakeMatchedProjectionsMeasurement(const ff_msgs::VisualLandmarks& visual_landmarks) {
   MatchedProjectionsMeasurement matched_projections_measurement;
   matched_projections_measurement.matched_projections.reserve(visual_landmarks.landmarks.size());
-  const lc::Time timestamp = lc::GetTime(visual_landmarks.header.stamp.sec, visual_landmarks.header.stamp.nsec);
+  const lc::Time timestamp = lc::TimeFromHeader(visual_landmarks.header);
   matched_projections_measurement.timestamp = timestamp;
 
   for (const auto& landmark : visual_landmarks.landmarks) {
@@ -36,6 +36,19 @@ MatchedProjectionsMeasurement MakeMatchedProjectionsMeasurement(const ff_msgs::V
   matched_projections_measurement.global_T_cam = lc::PoseFromMsg(visual_landmarks.pose);
 
   return matched_projections_measurement;
+}
+
+HandrailPointsMeasurement MakeHandrailPointsMeasurement(const ff_msgs::DepthLandmarks& depth_landmarks) {
+  HandrailPointsMeasurement handrail_points_measurement;
+  handrail_points_measurement.sensor_t_points.reserve(depth_landmarks.landmarks.size());
+  const lc::Time timestamp = lc::TimeFromHeader(depth_landmarks.header);
+  handrail_points_measurement.timestamp = timestamp;
+
+  for (const auto& landmark : depth_landmarks.landmarks) {
+    handrail_points_measurement.sensor_t_points.emplace_back(landmark.u, landmark.v, landmark.w);
+  }
+
+  return handrail_points_measurement;
 }
 
 MatchedProjectionsMeasurement FrameChangeMatchedProjectionsMeasurement(
@@ -52,8 +65,7 @@ MatchedProjectionsMeasurement FrameChangeMatchedProjectionsMeasurement(
 FeaturePointsMeasurement MakeFeaturePointsMeasurement(const ff_msgs::Feature2dArray& optical_flow_feature_points) {
   FeaturePointsMeasurement feature_points_measurement;
   feature_points_measurement.feature_points.reserve(optical_flow_feature_points.feature_array.size());
-  lc::Time timestamp =
-    lc::GetTime(optical_flow_feature_points.header.stamp.sec, optical_flow_feature_points.header.stamp.nsec);
+  lc::Time timestamp = lc::TimeFromHeader(optical_flow_feature_points.header);
   feature_points_measurement.timestamp = timestamp;
   // TODO(rsoussan): put this somewhere else?
   static int image_id = 0;
