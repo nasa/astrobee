@@ -140,6 +140,10 @@ geometry_msgs::PoseStamped PoseMsg(const gtsam::Pose3& global_T_body, const lc::
   return PoseMsg(lc::EigenPose(global_T_body), time);
 }
 
+geometry_msgs::PoseStamped PoseMsg(const TimestampedPose& timestamped_pose) {
+  return PoseMsg(timestamped_pose.pose, timestamped_pose.time);
+}
+
 gtsam::noiseModel::Robust::shared_ptr Robust(const gtsam::SharedNoiseModel& noise, const double huber_k) {
   return gtsam::noiseModel::Robust::Create(gtsam::noiseModel::mEstimator::Huber::Create(huber_k), noise);
 }

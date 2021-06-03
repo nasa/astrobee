@@ -29,6 +29,7 @@
 #include <graph_localizer/graph_localizer.h>
 #include <graph_localizer/graph_localizer_initializer.h>
 #include <graph_localizer/graph_localizer_stats.h>
+#include <graph_localizer/timestamped_pose.h>
 #include <localization_common/combined_nav_state.h>
 #include <localization_common/combined_nav_state_covariances.h>
 #include <localization_measurements/feature_point.h>
@@ -73,6 +74,8 @@ geometry_msgs::PoseStamped PoseMsg(const Eigen::Isometry3d& global_T_body, const
 geometry_msgs::PoseStamped PoseMsg(const Eigen::Isometry3d& global_T_body, const localization_common::Time time);
 
 geometry_msgs::PoseStamped PoseMsg(const gtsam::Pose3& global_T_body, const localization_common::Time time);
+
+geometry_msgs::PoseStamped PoseMsg(const TimestampedPose& timestamped_pose);
 
 gtsam::noiseModel::Robust::shared_ptr Robust(const gtsam::SharedNoiseModel& noise, const double huber_k);
 

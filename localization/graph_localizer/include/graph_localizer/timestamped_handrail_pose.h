@@ -20,9 +20,13 @@
 #define GRAPH_LOCALIZER_TIMESTAMPED_HANDRAIL_POSE_H_
 
 #include <graph_localizer/timestamped_pose.h>
+#include <localization_common/time.h>
 
 namespace graph_localizer {
 struct TimestampedHandrailPose : public TimestampedPose {
+  TimestampedHandrailPose(const gtsam::Pose3& pose, const localization_common::Time time,
+                          const bool accurate_z_position)
+      : TimestampedPose(pose, time), accurate_z_position(accurate_z_position) {}
   // Sometimes the handrail endpoints aren't seen and the z translation component doesn't reflect the center
   // of the handrail
   bool accurate_z_position;

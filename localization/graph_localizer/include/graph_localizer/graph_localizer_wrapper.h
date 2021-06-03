@@ -29,6 +29,8 @@
 #include <graph_localizer/graph_localizer_initializer.h>
 #include <graph_localizer/graph_localizer_stats.h>
 #include <graph_localizer/sanity_checker.h>
+#include <graph_localizer/timestamped_handrail_pose.h>
+#include <graph_localizer/timestamped_pose.h>
 #include <localization_measurements/fan_speed_mode.h>
 #include <localization_measurements/imu_measurement.h>
 #include <localization_measurements/matched_projections_measurement.h>

@@ -25,8 +25,9 @@
 
 namespace graph_localizer {
 struct TimestampedPose {
+  TimestampedPose(const gtsam::Pose3& pose, const localization_common::Time time) : pose(pose), time(time) {}
   gtsam::Pose3 pose;
-  Time time;
+  localization_common::Time time;
 };
 }  // namespace graph_localizer
 
