@@ -29,11 +29,11 @@
 #include <graph_localizer/graph_localizer_initializer.h>
 #include <graph_localizer/graph_localizer_stats.h>
 #include <graph_localizer/sanity_checker.h>
-#include <graph_localizer/timestamped_handrail_pose.h>
-#include <graph_localizer/timestamped_pose.h>
 #include <localization_measurements/fan_speed_mode.h>
 #include <localization_measurements/imu_measurement.h>
 #include <localization_measurements/matched_projections_measurement.h>
+#include <localization_measurements/timestamped_handrail_pose.h>
+#include <localization_measurements/timestamped_pose.h>
 
 #include <geometry_msgs/PoseStamped.h>
 #include <sensor_msgs/Imu.h>
@@ -124,9 +124,9 @@ class GraphLocalizerWrapper {
   boost::optional<gtsam::imuBias::ConstantBias> latest_biases_;
   GraphLocalizerInitializer graph_localizer_initializer_;
   FeatureCounts feature_counts_;
-  boost::optional<TimestampedPose> sparse_mapping_pose_;
-  boost::optional<TimestampedPose> ar_tag_pose_;
-  boost::optional<TimestampedHandrailPose> handrail_pose_;
+  boost::optional<localization_measurements::TimestampedPose> sparse_mapping_pose_;
+  boost::optional<localization_measurements::TimestampedPose> ar_tag_pose_;
+  boost::optional<localization_measurements::TimestampedHandrailPose> handrail_pose_;
   std::unique_ptr<SanityChecker> sanity_checker_;
   double position_cov_log_det_lost_threshold_;
   double orientation_cov_log_det_lost_threshold_;

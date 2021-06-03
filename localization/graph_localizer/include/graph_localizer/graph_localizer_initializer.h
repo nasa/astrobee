@@ -21,10 +21,10 @@
 #include <camera/camera_params.h>
 #include <config_reader/config_reader.h>
 #include <graph_localizer/graph_localizer_params.h>
-#include <graph_localizer/timestamped_pose.h>
 #include <imu_integration/dynamic_imu_filter.h>
 #include <localization_measurements/fan_speed_mode.h>
 #include <localization_measurements/imu_measurement.h>
+#include <localization_measurements/timestamped_pose.h>
 #include <msg_conversions/msg_conversions.h>
 
 #include <gtsam/geometry/Pose3.h>
@@ -39,7 +39,7 @@ class GraphLocalizerInitializer {
   GraphLocalizerInitializer();
   void SetBiases(const gtsam::imuBias::ConstantBias& imu_bias, const bool loaded_from_previous_estimate = false,
                  const bool save_to_file = false);
-  void SetStartPose(const TimestampedPose& timestamped_pose);
+  void SetStartPose(const localization_measurements::TimestampedPose& timestamped_pose);
   void SetFanSpeedMode(const localization_measurements::FanSpeedMode fan_speed_mode);
   void RemoveGravityFromBiasIfPossibleAndNecessary();
   bool ReadyToInitialize() const;

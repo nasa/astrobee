@@ -133,7 +133,7 @@ void GraphLocalizerWrapper::VLVisualLandmarksCallback(const ff_msgs::VisualLandm
   const gtsam::Pose3 sparse_mapping_global_T_body = lc::PoseFromMsgWithExtrinsics(
     visual_landmarks_msg.pose, graph_localizer_initializer_.params().calibration.body_T_nav_cam.inverse());
   const lc::Time timestamp = lc::TimeFromHeader(visual_landmarks_msg.header);
-  sparse_mapping_pose_ = TimestampedPose(sparse_mapping_global_T_body, timestamp);
+  sparse_mapping_pose_ = lm::TimestampedPose(sparse_mapping_global_T_body, timestamp);
 
   // Sanity Check
   if (graph_localizer_ && !CheckPoseSanity(sparse_mapping_global_T_body, timestamp)) {
@@ -193,9 +193,9 @@ void GraphLocalizerWrapper::ARVisualLandmarksCallback(const ff_msgs::VisualLandm
     const auto frame_changed_ar_measurements = lm::FrameChangeMatchedProjectionsMeasurement(
       lm::MakeMatchedProjectionsMeasurement(visual_landmarks_msg), estimated_world_T_dock_);
     graph_localizer_->AddARTagMeasurement(frame_changed_ar_measurements);
-    ar_tag_pose_ = TimestampedPose(frame_changed_ar_measurements.global_T_cam *
-                                     graph_localizer_initializer_.params().calibration.body_T_dock_cam.inverse(),
-                                   frame_changed_ar_measurements.timestamp);
+    ar_tag_pose_ = lm::TimestampedPose(frame_changed_ar_measurements.global_T_cam *
+                                         graph_localizer_initializer_.params().calibration.body_T_dock_cam.inverse(),
+                                       frame_changed_ar_measurements.timestamp);
   }
 }
 
@@ -214,9 +214,9 @@ void GraphLocalizerWrapper::DepthLandmarksCallback(const ff_msgs::DepthLandmarks
       const auto handrail_T_dock_cam = lc::PoseFromMsg(depth_landmarks_msg.local_pose).inverse();
       const bool accurate_z_position = depth_landmarks_msg.end_seen == 1;
       handrail_pose_ =
-        TimestampedHandrailPose(*estimated_world_T_handrail_ * handrail_T_dock_cam *
-                                  graph_localizer_initializer_.params().calibration.body_T_dock_cam.inverse(),
-                                handrail_points_measurement.timestamp, accurate_z_position);
+        lm::TimestampedHandrailPose(*estimated_world_T_handrail_ * handrail_T_dock_cam *
+                                      graph_localizer_initializer_.params().calibration.body_T_dock_cam.inverse(),
+                                    handrail_points_measurement.timestamp, accurate_z_position);
     }
   }
 }

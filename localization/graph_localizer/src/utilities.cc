@@ -140,7 +140,7 @@ geometry_msgs::PoseStamped PoseMsg(const gtsam::Pose3& global_T_body, const lc::
   return PoseMsg(lc::EigenPose(global_T_body), time);
 }
 
-geometry_msgs::PoseStamped PoseMsg(const TimestampedPose& timestamped_pose) {
+geometry_msgs::PoseStamped PoseMsg(const lm::TimestampedPose& timestamped_pose) {
   return PoseMsg(timestamped_pose.pose, timestamped_pose.time);
 }
 

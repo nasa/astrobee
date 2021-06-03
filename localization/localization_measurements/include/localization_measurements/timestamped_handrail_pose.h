@@ -16,19 +16,21 @@
  * under the License.
  */
 
-#ifndef GRAPH_LOCALIZER_TIMESTAMPED_POSE_H_
-#define GRAPH_LOCALIZER_TIMESTAMPED_POSE_H_
+#ifndef LOCALIZATION_MEASUREMENTS_TIMESTAMPED_HANDRAIL_POSE_H_
+#define LOCALIZATION_MEASUREMENTS_TIMESTAMPED_HANDRAIL_POSE_H_
 
+#include <localization_measurements/timestamped_pose.h>
 #include <localization_common/time.h>
 
-#include <gtsam/geometry/Pose3.h>
-
-namespace graph_localizer {
-struct TimestampedPose {
-  TimestampedPose(const gtsam::Pose3& pose, const localization_common::Time time) : pose(pose), time(time) {}
-  gtsam::Pose3 pose;
-  localization_common::Time time;
+namespace localization_measurements {
+struct TimestampedHandrailPose : public TimestampedPose {
+  TimestampedHandrailPose(const gtsam::Pose3& pose, const localization_common::Time time,
+                          const bool accurate_z_position)
+      : TimestampedPose(pose, time), accurate_z_position(accurate_z_position) {}
+  // Sometimes the handrail endpoints aren't seen and the z translation component doesn't reflect the center
+  // of the handrail
+  bool accurate_z_position;
 };
-}  // namespace graph_localizer
+}  // namespace localization_measurements
 
-#endif  // GRAPH_LOCALIZER_TIMESTAMPED_POSE_H_
+#endif  // LOCALIZATION_MEASUREMENTS_TIMESTAMPED_HANDRAIL_POSE_H_
