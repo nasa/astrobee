@@ -203,14 +203,14 @@ void GraphLocalizerWrapper::DepthLandmarksCallback(const ff_msgs::DepthLandmarks
   feature_counts_.depth = depth_landmarks_msg.landmarks.size();
   if (!ValidDepthMsg(depth_landmarks_msg)) return;
   if (graph_localizer_) {
-    // Only reset if handrail ends are seen so that pose is actually centered and valid
-    if (reset_world_T_handrail_ && depth_landmarks_msg.end_seen) {
+    if (reset_world_T_handrail_) {
       ResetWorldTHandrail(depth_landmarks_msg);
       reset_world_T_handrail_ = false;
     }
     const auto handrail_points_measurement = lm::MakeHandrailPointsMeasurement(depth_landmarks_msg);
     // graph_localizer_->AddARTagMeasurement(frame_changed_ar_measurements);
-    if (depth_landmarks_msg.end_seen && estimated_world_T_handrail_) {
+    // TODO(rsoussan): Don't update a pose with endpoints with a new measurement without endpoints?
+    if (estimated_world_T_handrail_) {
       const auto handrail_T_dock_cam = lc::PoseFromMsg(depth_landmarks_msg.local_pose).inverse();
       handrail_pose_ = std::make_pair(*estimated_world_T_handrail_ * handrail_T_dock_cam *
                                         graph_localizer_initializer_.params().calibration.body_T_dock_cam.inverse(),
