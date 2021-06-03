@@ -208,12 +208,14 @@ void GraphLocalizerWrapper::DepthLandmarksCallback(const ff_msgs::DepthLandmarks
       ResetWorldTHandrail(depth_landmarks_msg);
       reset_world_T_handrail_ = false;
     }
-    /*    const auto frame_changed_ar_measurements = lm::FrameChangeMatchedProjectionsMeasurement(
-          lm::MakeMatchedProjectionsMeasurement(visual_landmarks_msg), estimated_world_T_dock_);
-        graph_localizer_->AddARTagMeasurement(frame_changed_ar_measurements);
-        ar_tag_pose_ = std::make_pair(frame_changed_ar_measurements.global_T_cam *
+    const auto handrail_points_measurement = lm::MakeHandrailPointsMeasurement(depth_landmarks_msg);
+    // graph_localizer_->AddARTagMeasurement(frame_changed_ar_measurements);
+    if (depth_landmarks_msg.end_seen && estimated_world_T_handrail_) {
+      const auto handrail_T_dock_cam = lc::PoseFromMsg(depth_landmarks_msg.local_pose).inverse();
+      handrail_pose_ = std::make_pair(*estimated_world_T_handrail_ * handrail_T_dock_cam *
                                         graph_localizer_initializer_.params().calibration.body_T_dock_cam.inverse(),
-                                      frame_changed_ar_measurements.timestamp);*/
+                                      handrail_points_measurement.timestamp);
+    }
   }
 }
 
