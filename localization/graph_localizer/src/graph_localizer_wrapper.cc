@@ -41,6 +41,7 @@ GraphLocalizerWrapper::GraphLocalizerWrapper(const std::string& graph_config_pat
   config.AddFile("transforms.config");
   config.AddFile("cameras.config");
   config.AddFile("geometry.config");
+  config.AddFile("localization/handrail_detect.config");
 
   if (!config.ReadFiles()) {
     LogFatal("Failed to read config files.");

@@ -209,6 +209,11 @@ void LoadFeaturePointNodeUpdaterParams(config_reader::ConfigReader& config, Feat
   params.huber_k = mc::LoadDouble(config, "huber_k");
 }
 
+void LoadHandrailParams(config_reader::ConfigReader& config, HandrailParams& params) {
+  params.length = mc::LoadDouble(config, "handrail_length");
+  params.distance_to_wall = mc::LoadDouble(config, "handrail_wall_min_gap");
+}
+
 void LoadGraphLocalizerParams(config_reader::ConfigReader& config, GraphLocalizerParams& params) {
   LoadCalibrationParams(config, params.calibration);
   LoadCombinedNavStateNodeUpdaterParams(config, params.combined_nav_state_node_updater);
@@ -216,6 +221,7 @@ void LoadGraphLocalizerParams(config_reader::ConfigReader& config, GraphLocalize
   LoadFactorParams(config, params.factor);
   LoadFeaturePointNodeUpdaterParams(config, params.feature_point_node_updater);
   LoadFeatureTrackerParams(config, params.feature_tracker);
+  LoadHandrailParams(config, params.handrail);
   go::LoadGraphOptimizerParams(config, params.graph_optimizer);
   params.huber_k = mc::LoadDouble(config, "huber_k");
   params.max_standstill_feature_track_avg_distance_from_mean =
