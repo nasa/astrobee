@@ -201,19 +201,18 @@ void GraphLocalizerWrapper::ARVisualLandmarksCallback(const ff_msgs::VisualLandm
 
 void GraphLocalizerWrapper::DepthLandmarksCallback(const ff_msgs::DepthLandmarks& depth_landmarks_msg) {
   feature_counts_.depth = depth_landmarks_msg.landmarks.size();
-  /*  if (!ValidVLMsg(visual_landmarks_msg, ar_min_num_landmarks_)) return;
-    if (graph_localizer_) {
-      if (reset_world_T_dock_) {
-        ResetWorldTDockUsingLoc(visual_landmarks_msg);
-        reset_world_T_dock_ = false;
-      }
-      const auto frame_changed_ar_measurements = lm::FrameChangeMatchedProjectionsMeasurement(
-        lm::MakeMatchedProjectionsMeasurement(visual_landmarks_msg), estimated_world_T_dock_);
-      graph_localizer_->AddARTagMeasurement(frame_changed_ar_measurements);
-      ar_tag_pose_ = std::make_pair(frame_changed_ar_measurements.global_T_cam *
-                                      graph_localizer_initializer_.params().calibration.body_T_dock_cam.inverse(),
-                                    frame_changed_ar_measurements.timestamp);
-    }*/
+  if (!ValidDepthMsg(depth_landmarks_msg)) return;
+  /* if (graph_localizer_) {
+     if (reset_world_T_handrail_) {
+       ResetWorldTHandrail(depth_landmarks_msg);
+       reset_world_T_handrail_ = false;
+     }
+     const auto frame_changed_ar_measurements = lm::FrameChangeMatchedProjectionsMeasurement(
+       lm::MakeMatchedProjectionsMeasurement(visual_landmarks_msg), estimated_world_T_dock_);
+     graph_localizer_->AddARTagMeasurement(frame_changed_ar_measurements);
+     ar_tag_pose_ = std::make_pair(frame_changed_ar_measurements.global_T_cam *
+                                     graph_localizer_initializer_.params().calibration.body_T_dock_cam.inverse(),
+                                   frame_changed_ar_measurements.timestamp);*/
 }
 
 void GraphLocalizerWrapper::ImuCallback(const sensor_msgs::Imu& imu_msg) {
@@ -276,6 +275,18 @@ void GraphLocalizerWrapper::ResetWorldTDockUsingLoc(const ff_msgs::VisualLandmar
   const gtsam::Pose3 dock_T_body = lc::PoseFromMsgWithExtrinsics(
     visual_landmarks_msg.pose, graph_localizer_initializer_.params().calibration.body_T_dock_cam.inverse());
   estimated_world_T_dock_ = latest_combined_nav_state->pose() * dock_T_body.inverse();
+}
+
+void GraphLocalizerWrapper::ResetWorldTHandrail(const ff_msgs::DepthLandmarks& depth_landmarks_msg) {
+  const auto latest_combined_nav_state = LatestCombinedNavState();
+  if (!latest_combined_nav_state) {
+    LogError("ResetWorldTDockIfNecessary: Failed to get latest combined nav state.");
+    return;
+  }
+  // TODO(rsoussan): Extrapolate latest world_T_body loc estimate with imu data?
+  const gtsam::Pose3 handrail_T_body = lc::PoseFromMsgWithExtrinsics(
+    depth_landmarks_msg.local_pose, graph_localizer_initializer_.params().calibration.body_T_haz_cam.inverse());
+  estimated_world_T_handrail_ = latest_combined_nav_state->pose() * handrail_T_body.inverse();
 }
 
 gtsam::Pose3 GraphLocalizerWrapper::estimated_world_T_dock() const { return estimated_world_T_dock_; }

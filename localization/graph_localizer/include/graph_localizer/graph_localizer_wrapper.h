@@ -92,6 +92,8 @@ class GraphLocalizerWrapper {
 
   void ResetWorldTDockUsingLoc(const ff_msgs::VisualLandmarks& visual_landmarks_msg);
 
+  void ResetWorldTHandrail(const ff_msgs::DepthLandmarks& depth_landmarks_msg);
+
   gtsam::Pose3 estimated_world_T_dock() const;
 
   boost::optional<gtsam::Pose3> estimated_world_T_handrail() const;
@@ -127,6 +129,7 @@ class GraphLocalizerWrapper {
   gtsam::Pose3 estimated_world_T_dock_;
   boost::optional<gtsam::Pose3> estimated_world_T_handrail_;
   bool reset_world_T_dock_;
+  bool reset_world_T_handrail_;
   bool estimate_world_T_dock_using_loc_;
   int ar_min_num_landmarks_;
   int sparse_mapping_min_num_landmarks_;
