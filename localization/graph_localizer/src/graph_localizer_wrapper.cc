@@ -267,6 +267,8 @@ void GraphLocalizerWrapper::MarkWorldTDockForResettingIfNecessary() {
   if (estimate_world_T_dock_using_loc_) reset_world_T_dock_ = true;
 }
 
+void GraphLocalizerWrapper::MarkWorldTHandrailForResetting() { reset_world_T_handrail_ = true; }
+
 void GraphLocalizerWrapper::ResetWorldTDockUsingLoc(const ff_msgs::VisualLandmarks& visual_landmarks_msg) {
   const auto latest_combined_nav_state = LatestCombinedNavState();
   if (!latest_combined_nav_state) {

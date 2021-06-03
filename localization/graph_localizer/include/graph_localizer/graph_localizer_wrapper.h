@@ -90,6 +90,8 @@ class GraphLocalizerWrapper {
 
   void MarkWorldTDockForResettingIfNecessary();
 
+  void MarkWorldTHandrailForResetting();
+
   void ResetWorldTDockUsingLoc(const ff_msgs::VisualLandmarks& visual_landmarks_msg);
 
   void ResetWorldTHandrail(const ff_msgs::DepthLandmarks& depth_landmarks_msg);
