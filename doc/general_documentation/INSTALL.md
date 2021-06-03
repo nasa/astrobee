@@ -68,6 +68,7 @@ by running 'sudo apt-get update' and then 'sudo apt-get upgrade'*
     rosdep update
     popd
 
+
 **Important**: you can safely ignore the following error messages, as they are simply letting you know that certain libraries cannot be found. These libraries are for internal NASA use only, and are not required by public users provided that software is launched with DDS disabled.
 
     E: Unable to locate package libroyale1
