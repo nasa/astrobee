@@ -217,7 +217,9 @@ void GraphLocalizerWrapper::DepthLandmarksCallback(const ff_msgs::DepthLandmarks
       handrail_pose_ =
         lm::TimestampedHandrailPose(*estimated_world_T_handrail_ * handrail_T_dock_cam *
                                       graph_localizer_initializer_.params().calibration.body_T_dock_cam.inverse(),
-                                    handrail_points_measurement.timestamp, accurate_z_position);
+                                    handrail_points_measurement.timestamp, accurate_z_position,
+                                    graph_localizer_initializer_.params().handrail.length,
+                                    graph_localizer_initializer_.params().handrail.distance_to_wall);
     }
   }
 }

@@ -25,11 +25,16 @@
 namespace localization_measurements {
 struct TimestampedHandrailPose : public TimestampedPose {
   TimestampedHandrailPose(const gtsam::Pose3& pose, const localization_common::Time time,
-                          const bool accurate_z_position)
-      : TimestampedPose(pose, time), accurate_z_position(accurate_z_position) {}
+                          const bool accurate_z_position, const double length, const double distance_to_wall)
+      : TimestampedPose(pose, time),
+        accurate_z_position(accurate_z_position),
+        length(length),
+        distance_to_wall(distance_to_wall) {}
   // Sometimes the handrail endpoints aren't seen and the z translation component doesn't reflect the center
   // of the handrail
   bool accurate_z_position;
+  double length;
+  double distance_to_wall;
 };
 }  // namespace localization_measurements
 
