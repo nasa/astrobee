@@ -124,7 +124,7 @@ class GraphLocalizerWrapper {
   boost::optional<gtsam::imuBias::ConstantBias> latest_biases_;
   GraphLocalizerInitializer graph_localizer_initializer_;
   FeatureCounts feature_counts_;
-  boost::optional<std::pair<gtsam::Pose3, localization_common::Time>> sparse_mapping_pose_;
+  boost::optional<TimestampedPose> sparse_mapping_pose_;
   boost::optional<TimestampedPose> ar_tag_pose_;
   boost::optional<TimestampedHandrailPose> handrail_pose_;
   std::unique_ptr<SanityChecker> sanity_checker_;

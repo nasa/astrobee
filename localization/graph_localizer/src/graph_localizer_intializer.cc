@@ -55,9 +55,9 @@ void GraphLocalizerInitializer::SetBiases(const gtsam::imuBias::ConstantBias& im
   }
 }
 
-void GraphLocalizerInitializer::SetStartPose(const gtsam::Pose3& global_T_body_start, const double timestamp) {
-  params_.graph_initializer.start_time = timestamp;
-  params_.graph_initializer.global_T_body_start = global_T_body_start;
+void GraphLocalizerInitializer::SetStartPose(const TimestampedPose& timestamped_pose) {
+  params_.graph_initializer.start_time = timestamped_pose.time;
+  params_.graph_initializer.global_T_body_start = timestamped_pose.pose;
   has_start_pose_ = true;
   RemoveGravityFromBiasIfPossibleAndNecessary();
 }

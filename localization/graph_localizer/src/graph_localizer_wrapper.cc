@@ -133,7 +133,7 @@ void GraphLocalizerWrapper::VLVisualLandmarksCallback(const ff_msgs::VisualLandm
   const gtsam::Pose3 sparse_mapping_global_T_body = lc::PoseFromMsgWithExtrinsics(
     visual_landmarks_msg.pose, graph_localizer_initializer_.params().calibration.body_T_nav_cam.inverse());
   const lc::Time timestamp = lc::TimeFromHeader(visual_landmarks_msg.header);
-  sparse_mapping_pose_ = std::make_pair(sparse_mapping_global_T_body, timestamp);
+  sparse_mapping_pose_ = TimestampedPose(sparse_mapping_global_T_body, timestamp);
 
   // Sanity Check
   if (graph_localizer_ && !CheckPoseSanity(sparse_mapping_global_T_body, timestamp)) {
@@ -145,7 +145,7 @@ void GraphLocalizerWrapper::VLVisualLandmarksCallback(const ff_msgs::VisualLandm
   if (!graph_localizer_) {
     // Set or update initial pose if a new one is available before the localizer
     // has started running.
-    graph_localizer_initializer_.SetStartPose(sparse_mapping_pose_->first, sparse_mapping_pose_->second);
+    graph_localizer_initializer_.SetStartPose(*sparse_mapping_pose_);
     // Set fan speed mode as well in case this hasn't been set yet
     // TODO(rsoussan): Do this in a cleaner way
     graph_localizer_initializer_.SetFanSpeedMode(fan_speed_mode_);
@@ -309,7 +309,7 @@ boost::optional<geometry_msgs::PoseStamped> GraphLocalizerWrapper::LatestSparseM
     return boost::none;
   }
 
-  return PoseMsg(sparse_mapping_pose_->first, sparse_mapping_pose_->second);
+  return PoseMsg(*sparse_mapping_pose_);
 }
 
 boost::optional<geometry_msgs::PoseStamped> GraphLocalizerWrapper::LatestARTagPoseMsg() const {
