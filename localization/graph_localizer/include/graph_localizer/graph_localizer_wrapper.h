@@ -126,7 +126,7 @@ class GraphLocalizerWrapper {
   FeatureCounts feature_counts_;
   boost::optional<std::pair<gtsam::Pose3, localization_common::Time>> sparse_mapping_pose_;
   boost::optional<TimestampedPose> ar_tag_pose_;
-  boost::optional<std::pair<gtsam::Pose3, localization_common::Time>> handrail_pose_;
+  boost::optional<TimestampedHandrailPose> handrail_pose_;
   std::unique_ptr<SanityChecker> sanity_checker_;
   double position_cov_log_det_lost_threshold_;
   double orientation_cov_log_det_lost_threshold_;

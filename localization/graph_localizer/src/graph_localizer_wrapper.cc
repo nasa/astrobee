@@ -212,9 +212,11 @@ void GraphLocalizerWrapper::DepthLandmarksCallback(const ff_msgs::DepthLandmarks
     // TODO(rsoussan): Don't update a pose with endpoints with a new measurement without endpoints?
     if (estimated_world_T_handrail_) {
       const auto handrail_T_dock_cam = lc::PoseFromMsg(depth_landmarks_msg.local_pose).inverse();
-      handrail_pose_ = std::make_pair(*estimated_world_T_handrail_ * handrail_T_dock_cam *
-                                        graph_localizer_initializer_.params().calibration.body_T_dock_cam.inverse(),
-                                      handrail_points_measurement.timestamp);
+      const bool accurate_z_position = depth_landmarks_msg.end_seen == 1;
+      handrail_pose_ =
+        TimestampedHandrailPose(*estimated_world_T_handrail_ * handrail_T_dock_cam *
+                                  graph_localizer_initializer_.params().calibration.body_T_dock_cam.inverse(),
+                                handrail_points_measurement.timestamp, accurate_z_position);
     }
   }
 }
@@ -325,7 +327,7 @@ boost::optional<geometry_msgs::PoseStamped> GraphLocalizerWrapper::LatestHandrai
     return boost::none;
   }
 
-  return PoseMsg(handrail_pose_->first, handrail_pose_->second);
+  return PoseMsg(*handrail_pose_);
 }
 
 boost::optional<lc::CombinedNavState> GraphLocalizerWrapper::LatestCombinedNavState() const {
