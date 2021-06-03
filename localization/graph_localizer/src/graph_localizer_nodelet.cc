@@ -104,7 +104,12 @@ bool GraphLocalizerNodelet::SetMode(ff_msgs::SetEkfInput::Request& req, ff_msgs:
       last_mode_ != ff_msgs::SetEkfInputRequest::MODE_AR_TAGS) {
     LogInfo("SetMode: Switching to AR_TAG mode.");
     graph_localizer_wrapper_.MarkWorldTDockForResettingIfNecessary();
+  } else if (input_mode == ff_msgs::SetEkfInputRequest::MODE_HANDRAIL &&
+             last_mode_ != ff_msgs::SetEkfInputRequest::MODE_HANDRAIL) {
+    LogInfo("SetMode: Switching to Handrail mode.");
+    graph_localizer_wrapper_.MarkWorldTHandrailForResetting();
   }
+
   last_mode_ = input_mode;
   return true;
 }
