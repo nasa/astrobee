@@ -202,17 +202,19 @@ void GraphLocalizerWrapper::ARVisualLandmarksCallback(const ff_msgs::VisualLandm
 void GraphLocalizerWrapper::DepthLandmarksCallback(const ff_msgs::DepthLandmarks& depth_landmarks_msg) {
   feature_counts_.depth = depth_landmarks_msg.landmarks.size();
   if (!ValidDepthMsg(depth_landmarks_msg)) return;
-  /* if (graph_localizer_) {
-     if (reset_world_T_handrail_) {
-       ResetWorldTHandrail(depth_landmarks_msg);
-       reset_world_T_handrail_ = false;
-     }
-     const auto frame_changed_ar_measurements = lm::FrameChangeMatchedProjectionsMeasurement(
-       lm::MakeMatchedProjectionsMeasurement(visual_landmarks_msg), estimated_world_T_dock_);
-     graph_localizer_->AddARTagMeasurement(frame_changed_ar_measurements);
-     ar_tag_pose_ = std::make_pair(frame_changed_ar_measurements.global_T_cam *
-                                     graph_localizer_initializer_.params().calibration.body_T_dock_cam.inverse(),
-                                   frame_changed_ar_measurements.timestamp);*/
+  if (graph_localizer_) {
+    // Only reset if handrail ends are seen so that pose is actually centered and valid
+    if (reset_world_T_handrail_ && depth_landmarks_msg.end_seen) {
+      ResetWorldTHandrail(depth_landmarks_msg);
+      reset_world_T_handrail_ = false;
+    }
+    /*    const auto frame_changed_ar_measurements = lm::FrameChangeMatchedProjectionsMeasurement(
+          lm::MakeMatchedProjectionsMeasurement(visual_landmarks_msg), estimated_world_T_dock_);
+        graph_localizer_->AddARTagMeasurement(frame_changed_ar_measurements);
+        ar_tag_pose_ = std::make_pair(frame_changed_ar_measurements.global_T_cam *
+                                        graph_localizer_initializer_.params().calibration.body_T_dock_cam.inverse(),
+                                      frame_changed_ar_measurements.timestamp);*/
+  }
 }
 
 void GraphLocalizerWrapper::ImuCallback(const sensor_msgs::Imu& imu_msg) {
