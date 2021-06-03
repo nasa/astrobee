@@ -15,20 +15,28 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef GRAPH_LOCALIZER_GRAPH_VALUES_PARAMS_H_
-#define GRAPH_LOCALIZER_GRAPH_VALUES_PARAMS_H_
 
-#include <gtsam/geometry/Pose3.h>
+#ifndef GRAPH_BAG_IMU_BIAS_TESTER_ADDER_H_
+#define GRAPH_BAG_IMU_BIAS_TESTER_ADDER_H_
 
-namespace graph_localizer {
-struct GraphValuesParams {
-  // Only kept if there are at least min_num_states and not more than max_num_states
-  double ideal_duration;
-  int min_num_states;
-  int max_num_states;
-  // If storing 3d features as states (i.e. bundle adjustment type problems)
-  int min_num_factors_per_feature;
+#include <imu_bias_tester/imu_bias_tester_wrapper.h>
+
+#include <rosbag/bag.h>
+#include <rosbag/view.h>
+
+#include <string>
+
+namespace graph_bag {
+class ImuBiasTesterAdder {
+ public:
+  ImuBiasTesterAdder(const std::string& input_bag_name, const std::string& output_bag_name);
+  void AddPredictions();
+
+ private:
+  imu_bias_tester::ImuBiasTesterWrapper imu_bias_tester_wrapper_;
+  rosbag::Bag input_bag_;
+  rosbag::Bag output_bag_;
 };
-}  // namespace graph_localizer
+}  // end namespace graph_bag
 
-#endif  // GRAPH_LOCALIZER_GRAPH_VALUES_PARAMS_H_
+#endif  // GRAPH_BAG_IMU_BIAS_TESTER_ADDER_H_

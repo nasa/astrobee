@@ -35,8 +35,6 @@ constexpr char kCmdPause[]       = "pausePlan";
 constexpr char kCmdArmPanTilt[]  = "armPanAndTilt";
 constexpr char kCmdStationKeep[] = "stationKeep";
 constexpr char kCmdWait[]        = "wait";
-constexpr char kCmdClearData[]   = "clearData";
-constexpr char kCmdDownload[]    = "downloadData";
 constexpr char kCmdPayloadOn[]   = "payloadOn";
 constexpr char kCmdPowerOn[]     = "powerOnItem";
 constexpr char kCmdPayloadOff[]  = "payloadOff";
@@ -47,7 +45,6 @@ constexpr char kCmdGuestCmd[]    = "guestScience";
 constexpr char kCmdCustomGuest[] = "customGuestScience";
 constexpr char kCmdGripper[]     = "gripperControl";
 constexpr char kCmdFlashlight[]  = "setFlashlightBrightness";
-constexpr char kCmdGenericCmd[]  = "genericCommand";
 constexpr char kCmdIdleProp[]    = "idlePropulsion";
 constexpr char kCmdSetCamera[]   = "setCamera";
 constexpr char kCmdStreamCamera[] = "setCameraStreaming";
@@ -141,16 +138,6 @@ class PowerItemCommand : public Command {
   std::string which_;
 };
 
-class DataCommand : public Command {
- public:
-  explicit DataCommand(Json::Value const& obj);
-
-  std::string const& data_method() const noexcept;
-
- private:
-  std::string data_method_;
-};
-
 class GuestScienceCommand : public Command {
  public:
   explicit GuestScienceCommand(Json::Value const& obj);
@@ -183,18 +170,6 @@ class FlashlightCommand : public Command {
  private:
   std::string which_;
   float brightness_;
-};
-
-class GenericCommand : public Command {
- public:
-  explicit GenericCommand(Json::Value const& obj);
-
-  std::string const& name() const noexcept;
-  std::string const& param() const noexcept;
-
- private:
-  std::string name_;
-  std::string param_;
 };
 
 class IdlePropulsionCommand : public Command {

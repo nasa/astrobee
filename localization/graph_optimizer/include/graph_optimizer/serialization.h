@@ -16,14 +16,15 @@
  * under the License.
  */
 
-#ifndef GRAPH_LOCALIZER_FACTOR_ADDER_PARAMS_H_
-#define GRAPH_LOCALIZER_FACTOR_ADDER_PARAMS_H_
+#ifndef GRAPH_OPTIMIZER_SERIALIZATION_H_
+#define GRAPH_OPTIMIZER_SERIALIZATION_H_
 
-namespace graph_localizer {
-struct FactorAdderParams {
-  bool enabled;
-  double huber_k;
-};
-}  // namespace graph_localizer
+#include <graph_optimizer/graph_optimizer.h>
 
-#endif  // GRAPH_LOCALIZER_FACTOR_ADDER_PARAMS_H_
+#include <string>
+
+namespace graph_optimizer {
+std::string SerializeBinary(const GraphLocalizer& graph_optimizer);
+}  // namespace graph_optimizer
+
+#endif  // GRAPH_OPTIMIZER_SERIALIZATION_H_

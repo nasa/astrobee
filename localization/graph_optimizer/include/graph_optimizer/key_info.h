@@ -16,9 +16,10 @@
  * under the License.
  */
 
-#ifndef GRAPH_LOCALIZER_KEY_INFO_H_
-#define GRAPH_LOCALIZER_KEY_INFO_H_
+#ifndef GRAPH_OPTIMIZER_KEY_INFO_H_
+#define GRAPH_OPTIMIZER_KEY_INFO_H_
 
+#include <graph_optimizer/node_updater_type.h>
 #include <localization_common/time.h>
 
 #include <gtsam/inference/Key.h>
@@ -26,16 +27,25 @@
 #include <functional>
 #include <vector>
 
-namespace graph_localizer {
+namespace graph_optimizer {
+
 using KeyCreatorFunction = std::function<gtsam::Key(std::uint64_t)>;
 class KeyInfo {
  public:
-  KeyInfo(KeyCreatorFunction key_creator_function, const localization_common::Time timestamp)
-      : key_creator_function_(key_creator_function), timestamp_(timestamp), static_(false) {}
+  KeyInfo(KeyCreatorFunction key_creator_function, const NodeUpdaterType node_updater_type,
+          const localization_common::Time timestamp)
+      : key_creator_function_(key_creator_function),
+        node_updater_type_(node_updater_type),
+        timestamp_(timestamp),
+        static_(false) {}
   // Use for static keys
   // TODO(rsoussan): Clean up this interface, use inheritance instead?
-  KeyInfo(KeyCreatorFunction key_creator_function, const int id)
-      : key_creator_function_(key_creator_function), timestamp_(0), id_(id), static_(true) {}
+  KeyInfo(KeyCreatorFunction key_creator_function, const NodeUpdaterType node_updater_type, const int id)
+      : key_creator_function_(key_creator_function),
+        node_updater_type_(node_updater_type),
+        timestamp_(0),
+        id_(id),
+        static_(true) {}
   gtsam::Key UninitializedKey() const { return key_creator_function_(0); }
   gtsam::Key MakeKey(const std::uint64_t key_index) const { return key_creator_function_(key_index); }
   static gtsam::Key UninitializedKey(KeyCreatorFunction key_creator_function) { return key_creator_function(0); }
@@ -44,9 +54,11 @@ class KeyInfo {
   bool is_static() const { return static_; }
   // TODO(rsoussan): This is only available for static keys, clean this up
   int id() const { return id_; }
+  NodeUpdaterType node_updater_type() const { return node_updater_type_; }
 
  private:
   KeyCreatorFunction key_creator_function_;
+  NodeUpdaterType node_updater_type_;
   localization_common::Time timestamp_;
   int id_;
   // Static (not changing with time) key
@@ -54,6 +66,6 @@ class KeyInfo {
 };
 
 using KeyInfos = std::vector<KeyInfo>;
-}  // namespace graph_localizer
+}  // namespace graph_optimizer
 
-#endif  // GRAPH_LOCALIZER_KEY_INFO_H_
+#endif  // GRAPH_OPTIMIZER_KEY_INFO_H_

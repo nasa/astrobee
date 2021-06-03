@@ -15,29 +15,23 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+#ifndef GRAPH_OPTIMIZER_GRAPH_OPTIMIZER_PARAMS_H_
+#define GRAPH_OPTIMIZER_GRAPH_OPTIMIZER_PARAMS_H_
 
-#ifndef GRAPH_LOCALIZER_CUMULATIVE_FACTOR_ADDER_H_
-#define GRAPH_LOCALIZER_CUMULATIVE_FACTOR_ADDER_H_
+#include <string>
 
-#include <graph_localizer/factor_to_add.h>
-
-#include <vector>
-
-namespace graph_localizer {
-template <typename PARAMS>
-class CumulativeFactorAdder {
- public:
-  explicit CumulativeFactorAdder(const PARAMS& params) : params_(params) {}
-
-  virtual ~CumulativeFactorAdder() {}
-
-  virtual std::vector<FactorsToAdd> AddFactors() = 0;
-
-  const PARAMS& params() const { return params_; }
-
- private:
-  PARAMS params_;
+namespace graph_optimizer {
+struct GraphOptimizerParams {
+  bool verbose;
+  bool fatal_failures;
+  bool print_factor_info;
+  bool use_ceres_params;
+  int max_iterations;
+  std::string marginals_factorization;
+  bool add_marginal_factors;
+  double huber_k;
+  int log_rate;
 };
-}  // namespace graph_localizer
+}  // namespace graph_optimizer
 
-#endif  // GRAPH_LOCALIZER_CUMULATIVE_FACTOR_ADDER_H_
+#endif  // GRAPH_OPTIMIZER_GRAPH_OPTIMIZER_PARAMS_H_

@@ -15,29 +15,18 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+#ifndef GRAPH_LOCALIZER_COMBINED_NAV_STATE_GRAPH_VALUES_PARAMS_H_
+#define GRAPH_LOCALIZER_COMBINED_NAV_STATE_GRAPH_VALUES_PARAMS_H_
 
-#ifndef GRAPH_LOCALIZER_FACTOR_ADDER_H_
-#define GRAPH_LOCALIZER_FACTOR_ADDER_H_
-
-#include <graph_localizer/factor_to_add.h>
-
-#include <vector>
+#include <gtsam/geometry/Pose3.h>
 
 namespace graph_localizer {
-template <typename MEASUREMENT, typename PARAMS>
-class FactorAdder {
- public:
-  explicit FactorAdder(const PARAMS& params) : params_(params) {}
-
-  virtual ~FactorAdder() {}
-
-  virtual std::vector<FactorsToAdd> AddFactors(const MEASUREMENT& measurement) = 0;
-
-  const PARAMS& params() const { return params_; }
-
- private:
-  PARAMS params_;
+struct CombinedNavStateGraphValuesParams {
+  // Only kept if there are at least min_num_states and not more than max_num_states
+  double ideal_duration;
+  int min_num_states;
+  int max_num_states;
 };
 }  // namespace graph_localizer
 
-#endif  // GRAPH_LOCALIZER_FACTOR_ADDER_H_
+#endif  // GRAPH_LOCALIZER_COMBINED_NAV_STATE_GRAPH_VALUES_PARAMS_H_

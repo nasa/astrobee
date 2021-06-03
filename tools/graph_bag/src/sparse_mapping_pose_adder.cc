@@ -18,21 +18,11 @@
 
 #include <ff_util/ff_names.h>
 #include <graph_bag/sparse_mapping_pose_adder.h>
+#include <graph_bag/utilities.h>
 #include <graph_localizer/utilities.h>
 #include <localization_common/utilities.h>
 
 #include <ff_msgs/VisualLandmarks.h>
-
-namespace {
-// TODO(rsoussan): Unify this with live measurement simulator, put in utilities
-bool string_ends_with(const std::string& str, const std::string& ending) {
-  if (str.length() >= ending.length()) {
-    return (0 == str.compare(str.length() - ending.length(), ending.length(), ending));
-  } else {
-    return false;
-  }
-}
-}  // namespace
 
 namespace graph_bag {
 namespace lc = localization_common;

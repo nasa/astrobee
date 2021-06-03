@@ -75,23 +75,23 @@ class RobustSmartProjectionPoseFactor : public SmartProjectionPoseFactor<CALIBRA
     // Degenerate result tends to lead to solve failures, so return empty factor in this case
     if (result.valid()) {
       this->computeJacobiansSVD(F, E0, b, cameras, *(this->point()));
-      // TODO(rsoussan): This should be here but leads to a degeneracy.  It is done like this in gtsam
-      // for the jacobiansvd factorization but not the hessian factorization -> why?
-    }       // else if (useForRotationOnly(result)) {  // Rotation only factor
-            // Unit3 backProjected = cameras[0].backprojectPointAtInfinity(this->measured().at(0));
-            // this->computeJacobiansSVD(F, E0, b, cameras, backProjected);
-            // }
-    else {  // Empty factor  // NOLINT
+    } else if (useForRotationOnly(result)) {  // Rotation only factor
+      Unit3 backProjected = cameras[0].backprojectPointAtInfinity(this->measured().at(0));
+      // Cheirality error can still occur with backprojection
+      try {
+        this->computeJacobiansSVD(F, E0, b, cameras, backProjected);
+      } catch (...) {
+        return boost::make_shared<JacobianFactorSVD<Dim, 2>>(this->keys());
+      }
+    } else {  // Empty factor  // NOLINT
       return boost::make_shared<JacobianFactorSVD<Dim, 2>>(this->keys());
     }
     return createRegularJacobianFactorSVD<Dim, ZDim>(this->keys(), F, E0, b);
   }
 
   bool useForRotationOnly(const gtsam::TriangulationResult& result) const {
-    if (!rotation_only_fallback_) return false;
-    // Enable some 'invalid' results as these can still be useful for rotation errors
-    // return (result.degenerate());
-    return (result.behindCamera());
+    // Use rotation only for all failure cases
+    return true;
   }
 
   double error(const Values& values) const override {
@@ -99,8 +99,7 @@ class RobustSmartProjectionPoseFactor : public SmartProjectionPoseFactor<CALIBRA
       try {
         const double total_reprojection_loss = this->totalReprojectionError(this->cameras(values));
         const auto result = this->point();
-        // TODO(rsoussan): This should be here but leads to a degeneracy (see comment in linearize)
-        // if (!result.valid() && !useForRotationOnly(result)) return 0.0;
+        if (!result.valid() && !useForRotationOnly(result)) return 0.0;
         // Multiply by 2 since totalReporjectionError divides mahal distance by 2, and robust_model_->loss
         // expects mahal distance
         const double loss = robust_ ? robustLoss(2.0 * total_reprojection_loss) : total_reprojection_loss;
@@ -122,8 +121,7 @@ class RobustSmartProjectionPoseFactor : public SmartProjectionPoseFactor<CALIBRA
       try {
         const auto point = serialized_point(values);
         const double total_reprojection_loss = this->totalReprojectionError(this->cameras(values), point);
-        // TODO(rsoussan): This should be here but leads to a degeneracy (see comment in linearize)
-        // if (!result.valid() && !useForRotationOnly(result)) return 0.0;
+        if (!point.valid() && !useForRotationOnly(point)) return 0.0;
         // Multiply by 2 since totalReporjectionError divides mahal distance by 2, and robust_model_->loss
         // expects mahal distance
         const double loss = robust_ ? robustLoss(2.0 * total_reprojection_loss) : total_reprojection_loss;
@@ -156,6 +154,26 @@ class RobustSmartProjectionPoseFactor : public SmartProjectionPoseFactor<CALIBRA
     }
   }
 
+  bool valid(const Values& values) const {
+    typename Base::Cameras cameras = this->cameras(values);
+    const auto point = this->triangulateSafe(cameras);
+    if (point.valid()) {
+      return true;
+    } else if (useForRotationOnly(point)) {
+      Unit3 backProjected = cameras[0].backprojectPointAtInfinity(this->measured().at(0));
+      try {
+        cameras.reprojectionError(backProjected, this->measured());
+      } catch (...) {
+        return false;
+      }
+      return true;
+    } else {
+      return false;
+    }
+    // Shouldn't get here
+    return false;
+  }
+
  private:
   template <size_t D, size_t ZDim>
   boost::shared_ptr<RegularJacobianFactor<D>> createRegularJacobianFactorSVD(
@@ -178,7 +196,7 @@ class RobustSmartProjectionPoseFactor : public SmartProjectionPoseFactor<CALIBRA
     }
 
     size_t numKeys = Enull.rows() / ZDim;
-    size_t m2 = ZDim * numKeys - 3;  // TODO(gtsam): is this not just Enull.rows()?
+    size_t m2 = Enull.cols();
     std::vector<KeyMatrix> reduced_matrices;
     reduced_matrices.reserve(numKeys);
     for (size_t k = 0; k < Fblocks.size(); ++k) {

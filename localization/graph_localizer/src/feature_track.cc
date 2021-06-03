@@ -42,9 +42,33 @@ size_t FeatureTrack::size() const { return points_.size(); }
 
 bool FeatureTrack::empty() const { return points_.empty(); }
 
+std::vector<lm::FeaturePoint> FeatureTrack::AllowedPoints(const std::set<lc::Time>& allowed_timestamps) const {
+  std::vector<lm::FeaturePoint> allowed_points;
+  // Start with oldest points
+  for (auto point_it = points_.begin(); point_it != points_.end(); ++point_it) {
+    if (allowed_timestamps.count(point_it->second.timestamp) <= 0) continue;
+    allowed_points.emplace_back(point_it->second);
+  }
+  return allowed_points;
+}
+
+std::vector<lm::FeaturePoint> FeatureTrack::LatestPointsInWindow(const double duration) const {
+  std::vector<lm::FeaturePoint> latest_points;
+  const auto latest_timestamp = LatestTimestamp();
+  if (!latest_timestamp) return {};
+  const lc::Time oldest_allowed_time = *latest_timestamp - duration;
+  // Start with latest points
+  for (auto point_it = points_.rbegin(); point_it != points_.rend(); ++point_it) {
+    if (point_it->second.timestamp < oldest_allowed_time) break;
+    latest_points.push_back(point_it->second);
+  }
+  return latest_points;
+}
+
 std::vector<lm::FeaturePoint> FeatureTrack::LatestPoints(const int spacing) const {
   std::vector<lm::FeaturePoint> latest_points;
   int i = 0;
+  // Start with latest points
   for (auto point_it = points_.rbegin(); point_it != points_.rend(); ++point_it) {
     if (i++ % (spacing + 1) != 0) continue;
     latest_points.push_back(point_it->second);

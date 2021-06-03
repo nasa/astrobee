@@ -1,6 +1,6 @@
 Source: libmiro
 Priority: optional
-Maintainer: Brian Coltin <brian.j.coltin@nasa.gov>
+Maintainer: Brian Coltin <nospam@nospam.org>
 Build-Depends: debhelper (>=9), cmake (>=3.5), rti-dev (>=5.1), libqt4-qt3support (>=4), libace-dev (>=6.3)
 Standards-Version: 3.9.7
 Section: libs

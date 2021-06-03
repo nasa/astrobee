@@ -123,11 +123,9 @@ dependencies, you can use the `NDC_USERNAME` variable.
 If you prefer to install them at a different location, you can use the
 `ARS_DEB_DIR` variable.
 
-```
-export NDC_USERNAME=jdoe
-export ARS_DEB_DIR=$HOME/astrobee_debs
-./add_local_repository.sh
-```
+    export NDC_USERNAME=jdoe
+    export ARS_DEB_DIR=$HOME/astrobee_debs
+    ./add_local_repository.sh
 
 ### Cross-compile setup
 

@@ -26,17 +26,13 @@ sudo apt-get install -y devscripts equivs libproj-dev
 
 # delete old debians (-f avoids 'no such file' warning on first run)
 rm -f *_amd64.deb
+DIST=`cat /etc/os-release | grep -oP "(?<=VERSION_CODENAME=).*"`
 
-# DIST=`cat /etc/os-release | grep -oP "(?<=VERSION_CODENAME=).*"`
-DIST="bionic"
-bionic="bionic"
-echo "$DIST"
 if [ "$DIST" = "xenial" ]; then
   echo "Ubuntu 16 detected"
 elif [ "$DIST" = "$bionic" ]; then
   echo "Ubuntu 18 detected"
   # Install dependencies
-  # ./install_luajit.sh
   #luajit
   cd ${DEBIAN_LOC}/luajit
   sudo mk-build-deps -i -r -t "apt-get --no-install-recommends -y" control
@@ -44,6 +40,13 @@ elif [ "$DIST" = "$bionic" ]; then
   ./build_luajit.sh || exit 1
   sudo dpkg -i libluajit*_amd64.deb || exit 1
 
+  #opencv
+  cd ${DEBIAN_LOC}/opencv
+  sudo mk-build-deps -i -r -t "apt-get --no-install-recommends -y" control
+  cd ${DEBIAN_LOC}
+  ./build_opencv.sh || exit 1
+  cd ${DEBIAN_LOC}/libopencv
+  sudo dpkg -i libopencv*_amd64.deb || exit 1
 
   # alvar
   cp ${DEBIAN_LOC}/files_18_04/alvar_rules ${DEBIAN_LOC}/alvar/rules
@@ -97,11 +100,11 @@ cd ${DEBIAN_LOC}
 sudo dpkg -i libgtsam*_amd64.deb || exit 1
 
 # decomputil
-# cd ${DEBIAN_LOC}/decomputil
-# sudo mk-build-deps -i -r -t "apt-get --no-install-recommends -y" control
-# cd ${DEBIAN_LOC}
-# ./build_decomputil.sh || exit 1
-# sudo dpkg -i libdecomputil*_amd64.deb || exit 1
+cd ${DEBIAN_LOC}/decomputil
+sudo mk-build-deps -i -r -t "apt-get --no-install-recommends -y" control
+cd ${DEBIAN_LOC}
+./build_decomputil.sh || exit 1
+sudo dpkg -i libdecomputil*_amd64.deb || exit 1
 
 # jps3d
 cd ${DEBIAN_LOC}/jps3d
@@ -111,9 +114,9 @@ cd ${DEBIAN_LOC}
 sudo dpkg -i libjps3d*_amd64.deb || exit 1
 
 # openmvg
-# cd ${DEBIAN_LOC}/openmvg
-# sudo mk-build-deps -i -r -t "apt-get --no-install-recommends -y" control
-# cd ${DEBIAN_LOC}
-# ./build_openmvg.sh || exit 1
-# sudo dpkg -i libopenmvg*_amd64.deb || exit 1
+cd ${DEBIAN_LOC}/openmvg
+sudo mk-build-deps -i -r -t "apt-get --no-install-recommends -y" control
+cd ${DEBIAN_LOC}
+./build_openmvg.sh || exit 1
+sudo dpkg -i libopenmvg*_amd64.deb || exit 1
 

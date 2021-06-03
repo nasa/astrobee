@@ -15,44 +15,27 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef GRAPH_LOCALIZER_GRAPH_STATS_H_
-#define GRAPH_LOCALIZER_GRAPH_STATS_H_
+#ifndef GRAPH_LOCALIZER_GRAPH_LOCALIZER_STATS_H_
+#define GRAPH_LOCALIZER_GRAPH_LOCALIZER_STATS_H_
 
-#include <localization_common/averager.h>
-#include <localization_common/timer.h>
-
-#include <vector>
+#include <graph_localizer/combined_nav_state_graph_values.h>
+#include <graph_optimizer/graph_stats.h>
 
 namespace graph_localizer {
-// Forward declaration since GraphLocalizer will have a GraphStats object
-class GraphLocalizer;
-
-class GraphStats {
+class GraphLocalizerStats : public graph_optimizer::GraphStats {
  public:
-  GraphStats();
-  void UpdateErrors(const GraphLocalizer& graph);
-  void UpdateStats(const GraphLocalizer& graph);
-  void Log() const;
-  void LogToFile(std::ofstream& ofstream) const;
-  void LogToCsv(std::ofstream& ofstream) const;
-
-  std::vector<std::reference_wrapper<localization_common::Timer>> timers_;
-  std::vector<std::reference_wrapper<localization_common::Averager>> stats_averagers_;
-  std::vector<std::reference_wrapper<localization_common::Averager>> error_averagers_;
-
-  // Timers
-  localization_common::Timer optimization_timer_ = localization_common::Timer("Optimization");
-  localization_common::Timer update_timer_ = localization_common::Timer("Update");
-  localization_common::Timer marginals_timer_ = localization_common::Timer("Marginals");
-  localization_common::Timer slide_window_timer_ = localization_common::Timer("Slide Window");
-  localization_common::Timer add_buffered_factors_timer_ = localization_common::Timer("Add Buffered Factors");
-  localization_common::Timer log_error_timer_ = localization_common::Timer("Log Error");
-  localization_common::Timer log_stats_timer_ = localization_common::Timer("Log Stats");
+  GraphLocalizerStats();
+  void SetCombinedNavStateGraphValues(
+    std::shared_ptr<const CombinedNavStateGraphValues> combined_nav_state_graph_values);
+  void UpdateErrors(const gtsam::NonlinearFactorGraph& graph_factors) final;
+  void UpdateStats(const gtsam::NonlinearFactorGraph& graph_factors) final;
 
   // Graph Stats Averagers
-  localization_common::Averager iterations_averager_ = localization_common::Averager("Iterations");
   localization_common::Averager num_states_averager_ = localization_common::Averager("Num States");
   localization_common::Averager duration_averager_ = localization_common::Averager("Duration");
+  localization_common::Averager num_marginal_factors_averager_ = localization_common::Averager("Num Marginal Factors");
+  localization_common::Averager num_factors_averager_ = localization_common::Averager("Num Factors");
+  localization_common::Averager num_features_averager_ = localization_common::Averager("Num Features");
   localization_common::Averager num_optical_flow_factors_averager_ =
     localization_common::Averager("Num Optical Flow Factors");
   localization_common::Averager num_loc_proj_factors_averager_ = localization_common::Averager("Num Loc Proj Factors");
@@ -63,11 +46,7 @@ class GraphStats {
     localization_common::Averager("Num Standstill Between Factors");
   localization_common::Averager num_vel_prior_factors_averager_ =
     localization_common::Averager("Num Vel Prior Factors");
-  localization_common::Averager num_marginal_factors_averager_ = localization_common::Averager("Num Marginal Factors");
-  localization_common::Averager num_factors_averager_ = localization_common::Averager("Num Factors");
-  localization_common::Averager num_features_averager_ = localization_common::Averager("Num Features");
   // Factor Error Averagers
-  localization_common::Averager total_error_averager_ = localization_common::Averager("Total Factor Error");
   localization_common::Averager of_error_averager_ = localization_common::Averager("OF Factor Error");
   localization_common::Averager loc_proj_error_averager_ = localization_common::Averager("Loc Proj Factor Error");
   localization_common::Averager loc_pose_error_averager_ = localization_common::Averager("Loc Pose Factor Error");
@@ -80,21 +59,8 @@ class GraphStats {
   localization_common::Averager bias_prior_error_averager_ = localization_common::Averager("Bias Prior Error");
 
  private:
-  template <typename Logger>
-  void LogToFile(const std::vector<std::reference_wrapper<Logger>>& loggers, std::ofstream& ofstream) const {
-    for (const auto& logger : loggers) logger.get().LogToFile(ofstream);
-  }
-
-  template <typename Logger>
-  void LogToCsv(const std::vector<std::reference_wrapper<Logger>>& loggers, std::ofstream& ofstream) const {
-    for (const auto& logger : loggers) logger.get().LogToCsv(ofstream);
-  }
-
-  template <typename Logger>
-  void Log(const std::vector<std::reference_wrapper<Logger>>& loggers) const {
-    for (const auto& logger : loggers) logger.get().Log();
-  }
+  std::shared_ptr<const CombinedNavStateGraphValues> combined_nav_state_graph_values_;
 };
 }  // namespace graph_localizer
 
-#endif  // GRAPH_LOCALIZER_GRAPH_STATS_H_
+#endif  // GRAPH_LOCALIZER_GRAPH_LOCALIZER_STATS_H_

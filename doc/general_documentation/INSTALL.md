@@ -50,9 +50,11 @@ Clone the android repository:
 ### Dependencies
 
 Next, install all required dependencies:
+
 *Note: `root` access is necessary to install the compiled debian packages below*
+
 *Note: Before running this please ensure that your system is completely updated
-    by running 'sudo apt-get update' and then 'sudo apt-get upgrade'*
+by running 'sudo apt-get update' and then 'sudo apt-get upgrade'*
 
     pushd $SOURCE_PATH
     cd scripts/setup
@@ -128,6 +130,11 @@ rebuilt, and not the entire code base.
 
 If you configured your virtual machine with more than the baseline resources,
 you can adjust the number of threads (eg. -j4) to speed up the build.
+
+## Cross Compiling
+
+Please contact your Astrobee point of contact if you need to cross compile the
+code.
 
 For more information on running the simulator and moving the robot, please see
 the [simulation instructions](simulation/sim_overview.md).
