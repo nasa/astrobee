@@ -13,3 +13,5 @@
 
 #override_dh_install:
 #	dh_install --list-missing -X.pyc -X.pyo
+
+override_dh_usrlocal:
