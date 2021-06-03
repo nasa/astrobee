@@ -193,9 +193,9 @@ void GraphLocalizerWrapper::ARVisualLandmarksCallback(const ff_msgs::VisualLandm
     const auto frame_changed_ar_measurements = lm::FrameChangeMatchedProjectionsMeasurement(
       lm::MakeMatchedProjectionsMeasurement(visual_landmarks_msg), estimated_world_T_dock_);
     graph_localizer_->AddARTagMeasurement(frame_changed_ar_measurements);
-    ar_tag_pose_ = std::make_pair(frame_changed_ar_measurements.global_T_cam *
-                                    graph_localizer_initializer_.params().calibration.body_T_dock_cam.inverse(),
-                                  frame_changed_ar_measurements.timestamp);
+    ar_tag_pose_ = TimestampedPose(frame_changed_ar_measurements.global_T_cam *
+                                     graph_localizer_initializer_.params().calibration.body_T_dock_cam.inverse(),
+                                   frame_changed_ar_measurements.timestamp);
   }
 }
 
@@ -316,7 +316,7 @@ boost::optional<geometry_msgs::PoseStamped> GraphLocalizerWrapper::LatestARTagPo
     return boost::none;
   }
 
-  return PoseMsg(ar_tag_pose_->first, ar_tag_pose_->second);
+  return PoseMsg(*ar_tag_pose_);
 }
 
 boost::optional<geometry_msgs::PoseStamped> GraphLocalizerWrapper::LatestHandrailPoseMsg() const {
