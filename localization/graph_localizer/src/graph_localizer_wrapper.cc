@@ -208,7 +208,11 @@ void GraphLocalizerWrapper::DepthLandmarksCallback(const ff_msgs::DepthLandmarks
       ResetWorldTHandrail(depth_landmarks_msg);
       reset_world_T_handrail_ = false;
     }
-    const auto handrail_points_measurement = lm::MakeHandrailPointsMeasurement(depth_landmarks_msg);
+    if (!handrail_pose_) {
+      LogError("DepthLandmarksCallback: No handrail pose available.");
+      return;
+    }
+    const auto handrail_points_measurement = lm::MakeHandrailPointsMeasurement(depth_landmarks_msg, *handrail_pose_);
     // graph_localizer_->AddARTagMeasurement(frame_changed_ar_measurements);
     // TODO(rsoussan): Don't update a pose with endpoints with a new measurement without endpoints?
     if (estimated_world_T_handrail_) {

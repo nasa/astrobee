@@ -38,8 +38,10 @@ MatchedProjectionsMeasurement MakeMatchedProjectionsMeasurement(const ff_msgs::V
   return matched_projections_measurement;
 }
 
-HandrailPointsMeasurement MakeHandrailPointsMeasurement(const ff_msgs::DepthLandmarks& depth_landmarks) {
+HandrailPointsMeasurement MakeHandrailPointsMeasurement(const ff_msgs::DepthLandmarks& depth_landmarks,
+                                                        const TimestampedHandrailPose& handrail_pose) {
   HandrailPointsMeasurement handrail_points_measurement;
+  handrail_points_measurement.handrail_pose = handrail_pose;
   handrail_points_measurement.sensor_t_points.reserve(depth_landmarks.landmarks.size());
   const lc::Time timestamp = lc::TimeFromHeader(depth_landmarks.header);
   handrail_points_measurement.timestamp = timestamp;

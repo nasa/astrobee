@@ -30,6 +30,7 @@ struct TimestampedHandrailPose : public TimestampedPose {
         accurate_z_position(accurate_z_position),
         length(length),
         distance_to_wall(distance_to_wall) {}
+  TimestampedHandrailPose() = default;
   // Sometimes the handrail endpoints aren't seen and the z translation component doesn't reflect the center
   // of the handrail
   bool accurate_z_position;

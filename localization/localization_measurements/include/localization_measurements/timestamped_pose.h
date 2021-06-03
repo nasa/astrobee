@@ -26,6 +26,7 @@
 namespace localization_measurements {
 struct TimestampedPose {
   TimestampedPose(const gtsam::Pose3& pose, const localization_common::Time time) : pose(pose), time(time) {}
+  TimestampedPose() = default;
   gtsam::Pose3 pose;
   localization_common::Time time;
 };
