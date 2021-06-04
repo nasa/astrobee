@@ -32,6 +32,9 @@ struct CombinedNavStateNodeUpdaterParams {
   localization_common::CombinedNavState global_N_body_start;
   bool add_priors;
   CombinedNavStateGraphValuesParams graph_values;
+  bool threshold_bias_uncertainty;
+  double accel_bias_stddev_threshold;
+  double gyro_bias_stddev_threshold;
 };
 }  // namespace graph_localizer
 

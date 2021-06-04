@@ -125,8 +125,9 @@ bool CombinedNavStateNodeUpdater::SlideWindow(const lc::Time oldest_allowed_time
         Robust(gtsam::noiseModel::Gaussian::Covariance(marginals->marginalCovariance(sym::P(*key_index))), huber_k);
       noise.velocity_noise =
         Robust(gtsam::noiseModel::Gaussian::Covariance(marginals->marginalCovariance(sym::V(*key_index))), huber_k);
-      noise.bias_noise =
-        Robust(gtsam::noiseModel::Gaussian::Covariance(marginals->marginalCovariance(sym::B(*key_index))), huber_k);
+      auto bias_covariance = marginals->marginalCovariance(sym::B(*key_index));
+      if (params_.threshold_bias_uncertainty) ThresholdBiasUncertainty(bias_covariance);
+      noise.bias_noise = Robust(gtsam::noiseModel::Gaussian::Covariance(bias_covariance), huber_k);
       AddPriors(*global_N_body_oldest, noise, factors);
     } else {
       // TODO(rsoussan): Add seperate marginal fallback sigmas instead of relying on starting prior sigmas
@@ -135,6 +136,36 @@ bool CombinedNavStateNodeUpdater::SlideWindow(const lc::Time oldest_allowed_time
   }
 
   return true;
+}
+
+void CombinedNavStateNodeUpdater::ThresholdBiasUncertainty(gtsam::Matrix& bias_covariance) const {
+  // Only checking sigmas for now
+  const auto bias_covariance_sigmas = bias_covariance.diagonal().cwiseSqrt();
+  bool valid_sigmas = true;
+  for (int i = 0; i < 3; ++i) {
+    if (bias_covariance_sigmas[i] > params_.accel_bias_stddev_threshold) {
+      valid_sigmas = false;
+      break;
+    }
+  }
+  if (valid_sigmas) {
+    for (int i = 3; i < 6; ++i) {
+      if (bias_covariance_sigmas[i] > params_.gyro_bias_stddev_threshold) {
+        valid_sigmas = false;
+        break;
+      }
+    }
+  }
+  if (valid_sigmas) return;
+  gtsam::Vector6 new_sigmas;
+  for (int i = 0; i < 3; ++i) {
+    new_sigmas[i] = std::min(bias_covariance_sigmas[i], params_.accel_bias_stddev_threshold);
+  }
+  for (int i = 3; i < 6; ++i) {
+    new_sigmas[i] = std::min(bias_covariance_sigmas[i], params_.gyro_bias_stddev_threshold);
+  }
+  const gtsam::Vector6 new_variances = new_sigmas.cwiseAbs2();
+  bias_covariance = new_variances.asDiagonal();
 }
 
 go::NodeUpdaterType CombinedNavStateNodeUpdater::type() const { return go::NodeUpdaterType::CombinedNavState; }

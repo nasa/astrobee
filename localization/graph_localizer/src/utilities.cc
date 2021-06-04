@@ -251,13 +251,14 @@ SharedRobustSmartFactor RemoveSmartFactorMeasurements(const RobustSmartFactor& s
   return new_smart_factor;
 }
 
-int NumSmartFactors(const gtsam::NonlinearFactorGraph& graph_factors, const bool check_valid) {
+int NumSmartFactors(const gtsam::NonlinearFactorGraph& graph_factors, const gtsam::Values& values,
+                    const bool check_valid) {
   int num_of_factors = 0;
   for (const auto& factor : graph_factors) {
     const auto smart_factor = dynamic_cast<const RobustSmartFactor*>(factor.get());
     if (smart_factor) {
       if (check_valid) {
-        if (smart_factor->isValid()) ++num_of_factors;
+        if (smart_factor->valid(values)) ++num_of_factors;
       } else {
         ++num_of_factors;
       }
