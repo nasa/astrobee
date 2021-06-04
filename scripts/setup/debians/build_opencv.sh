@@ -17,16 +17,18 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-CURRENT_LOC=$(dirname "$(readlink -f "$0")")
-echo ${CURRENT_LOC}
-cd ${CURRENT_LOC}
-PACKAGE_NAME=luajit-2.0
+PACKAGE_NAME=libopencv
+ORIG_TAR=libopencv3.3.1_3.3.1.orig.tar.gz
+DEB_DIR=opencv
 
 if [ -d $PACKAGE_NAME ]; then
   rm -rf $PACKAGE_NAME
 fi
-git clone --quiet https://luajit.org/git/luajit-2.0.git $PACKAGE_NAME 2>&1 || exit 1
-cd $PACKAGE_NAME
-make
-sudo make install
-# cd ${CURRENT_LOC}
+git clone --quiet https://github.com/opencv/opencv.git --branch 3.3.1 $PACKAGE_NAME/opencv 2>&1 || exit 1
+git clone --quiet https://github.com/opencv/opencv_contrib.git --branch 3.3.1 $PACKAGE_NAME/contrib 2>&1 || exit 1
+cd $PACKAGE_NAME/opencv
+git archive --prefix=$PACKAGE_NAME/ --output=../$ORIG_TAR --format tar.gz HEAD || exit 1
+cp -r ../../$DEB_DIR debian
+rm -r .github
+debuild -us -uc || exit 1
+cd ../..
