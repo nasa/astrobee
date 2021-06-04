@@ -204,11 +204,7 @@ void GraphLocalizerWrapper::DepthLandmarksCallback(const ff_msgs::DepthLandmarks
   feature_counts_.depth = depth_landmarks_msg.landmarks.size();
   if (!ValidDepthMsg(depth_landmarks_msg)) return;
   if (graph_localizer_) {
-    // TODo: change this to fcn, update if reset available or if old estimate didn't have endpoints and new one does
-    if (reset_world_T_handrail_) {
-      ResetWorldTHandrail(depth_landmarks_msg);
-      reset_world_T_handrail_ = false;
-    }
+    ResetWorldTHandrailIfNecessary(depth_landmarks_msg);
     if (!estimated_world_T_handrail_) {
       LogError("DepthLandmarksCallback: No estimated world_T_handrail pose available.");
       return;
@@ -296,7 +292,13 @@ void GraphLocalizerWrapper::ResetWorldTDockUsingLoc(const ff_msgs::VisualLandmar
   estimated_world_T_dock_ = latest_combined_nav_state->pose() * dock_T_body.inverse();
 }
 
-void GraphLocalizerWrapper::ResetWorldTHandrail(const ff_msgs::DepthLandmarks& depth_landmarks_msg) {
+void GraphLocalizerWrapper::ResetWorldTHandrailIfNecessary(const ff_msgs::DepthLandmarks& depth_landmarks_msg) {
+  const bool accurate_z_position = depth_landmarks_msg.end_seen == 1;
+  // Update old handrail estimate with new one if an accurate z position is now avaible and wasn't previously
+  const bool update_with_new_z_position =
+    accurate_z_position && estimated_world_T_handrail_ && !estimated_world_T_handrail_->accurate_z_position;
+  if (!reset_world_T_handrail_ && !update_with_new_z_position) return;
+
   const auto latest_combined_nav_state = LatestCombinedNavState();
   if (!latest_combined_nav_state) {
     LogError("ResetWorldTDockIfNecessary: Failed to get latest combined nav state.");
@@ -305,11 +307,11 @@ void GraphLocalizerWrapper::ResetWorldTHandrail(const ff_msgs::DepthLandmarks& d
   // TODO(rsoussan): Extrapolate latest world_T_body loc estimate with imu data?
   const gtsam::Pose3 handrail_T_body = lc::PoseFromMsgWithExtrinsics(
     depth_landmarks_msg.local_pose, graph_localizer_initializer_.params().calibration.body_T_haz_cam.inverse());
-  const bool accurate_z_position = depth_landmarks_msg.end_seen == 1;
   estimated_world_T_handrail_ = lm::TimestampedHandrailPose(
     latest_combined_nav_state->pose() * handrail_T_body.inverse(), latest_combined_nav_state->timestamp(),
     accurate_z_position, graph_localizer_initializer_.params().handrail.length,
     graph_localizer_initializer_.params().handrail.distance_to_wall);
+  reset_world_T_handrail_ = false;
 }
 
 gtsam::Pose3 GraphLocalizerWrapper::estimated_world_T_dock() const { return estimated_world_T_dock_; }

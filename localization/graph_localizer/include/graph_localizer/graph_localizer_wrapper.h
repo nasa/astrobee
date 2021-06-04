@@ -96,7 +96,7 @@ class GraphLocalizerWrapper {
 
   void ResetWorldTDockUsingLoc(const ff_msgs::VisualLandmarks& visual_landmarks_msg);
 
-  void ResetWorldTHandrail(const ff_msgs::DepthLandmarks& depth_landmarks_msg);
+  void ResetWorldTHandrailIfNecessary(const ff_msgs::DepthLandmarks& depth_landmarks_msg);
 
   gtsam::Pose3 estimated_world_T_dock() const;
 
