@@ -1,0 +1,67 @@
+#!/usr/bin/make -f
+
+export DEB_BUILD_MAINT_OPTIONS=hardening=+all
+include /usr/share/dpkg/architecture.mk
+
+BUILDDIR = obj-$(DEB_HOST_MULTIARCH)
+
+
+CMAKE_FLAGS = -DCMAKE_BUILD_TYPE=RELEASE \
+	-DCMAKE_INSTALL_PREFIX="/usr/local" \
+	-DINSTALL_C_EXAMPLES=ON \
+	-DINSTALL_PYTHON_EXAMPLES=ON \
+	-DOPENCV_GENERATE_PKGCONFIG=ON \
+	-DOPENCV_EXTRA_MODULES_PATH="$(CURDIR)/../contrib/modules" \
+	-DBUILD_EXAMPLES=ON \
+	-DOPENCV_ENABLED_NONFREE=YES \
+	-DENABLE_PRECOMPILED_HEADERS=OFF
+
+%:
+	dh $@ --with python3 --parallel
+
+override_dh_clean:
+	rm -rvf modules/python/src2/hdr_parser.pyc
+	rm -rvf modules/refman.rst
+
+	dh_clean
+	-rm -rvf modules/python/src2/__pycache__
+
+override_dh_auto_clean:
+	dh_auto_clean -B $(BUILDDIR)
+
+
+override_dh_auto_configure: 
+	dh_auto_configure -B $(BUILDDIR) \
+		-- $(CMAKE_FLAGS) \
+		-DCMAKE_SHARED_LINKER_FLAGS_RELEASE="$(LDFLAGS)" \
+		-DBUILD_SHARED_LIBS=ON -DBUILD_DOCS=ON
+
+
+override_dh_auto_build: 
+	dh_auto_build -B $(BUILDDIR)
+	dh_auto_build -B $(BUILDDIR) -- doxygen
+
+override_dh_auto_test:
+
+override_dh_auto_install:
+	dh_auto_install -B $(BUILDDIR)
+
+override_dh_install:
+	dh_install
+	dh_missing --fail-missing
+
+override_dh_usrlocal:
+
+PKG = opencv
+UVER = $(shell dpkg-parsechangelog -S Version | sed 's,-.*,,')
+DTYPE = +dfsg
+VER  ?= $(subst $(DTYPE),,$(UVER))
+get-orig-source:
+	@echo "# OpenCV Downloading..."
+	uscan --no-conf --verbose --force-download --download-version $(VER) --no-symlink
+	@echo "# Packing..."
+	mk-origtargz --repack --compression xz -S $(DTYPE) -C .. ../opencv_$(VER).orig.tar.gz -v $(VER)
+
+	@echo "# OpenCV contrib Downloading..."
+	uscan --no-conf --verbose --force-download --download-version $(VER) --no-symlink
+	mk-origtargz --repack --compression xz -S $(DTYPE) -C .. ../opencv_$(VER).orig-contrib.tar.gz -v $(VER) -c contrib

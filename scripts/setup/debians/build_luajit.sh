@@ -17,16 +17,16 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-CURRENT_LOC=$(dirname "$(readlink -f "$0")")
-echo ${CURRENT_LOC}
-cd ${CURRENT_LOC}
 PACKAGE_NAME=luajit-2.0
+ORIG_TAR=luajit_2.0.orig.tar.gz
+DEB_DIR=luajit
 
 if [ -d $PACKAGE_NAME ]; then
   rm -rf $PACKAGE_NAME
 fi
 git clone --quiet https://luajit.org/git/luajit-2.0.git $PACKAGE_NAME 2>&1 || exit 1
 cd $PACKAGE_NAME
-make
-sudo make install
-# cd ${CURRENT_LOC}
+git archive --prefix=$PACKAGE_NAME/ --output=../$ORIG_TAR --format tar.gz HEAD || exit 1
+cp -r ../$DEB_DIR debian
+debuild -us -uc || exit 1
+cd ..

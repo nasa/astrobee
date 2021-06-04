@@ -1,0 +1,19 @@
+Source: luajit
+Section: unknown
+Priority: extra
+Maintainer: Marina Moreira <nospam@nospam.org>
+Build-Depends: debhelper (>=9), cmake (>=3.5)
+Standards-Version: 3.9.8
+Homepage: https://luajit.org/
+
+Package: luajit-dev
+Architecture: any
+Depends: luajit, ${misc:Depends}
+Description: LuaJIT is a Just-In-Time Compiler
+ (JIT) for the Lua programming language
+
+Package: luajit
+Architecture: any
+Depends: ${misc:Depends}
+Description: LuaJIT is a Just-In-Time Compiler
+ (JIT) for the Lua programming language
