@@ -23,6 +23,7 @@
 #include <graph_localizer/combined_nav_state_node_updater_params.h>
 #include <graph_localizer/feature_tracker.h>
 #include <graph_localizer/feature_point_node_updater.h>
+#include <graph_localizer/handrail_factor_adder.h>
 #include <graph_localizer/graph_localizer_params.h>
 #include <graph_localizer/graph_localizer_stats.h>
 #include <graph_localizer/robust_smart_projection_pose_factor.h>
@@ -149,6 +150,7 @@ class GraphLocalizer : public graph_optimizer::GraphOptimizer {
 
   // Factor Adders
   std::shared_ptr<LocFactorAdder> ar_tag_loc_factor_adder_;
+  std::shared_ptr<HandrailFactorAdder> handrail_factor_adder_;
   std::shared_ptr<LocFactorAdder> loc_factor_adder_;
   std::shared_ptr<ProjectionFactorAdder> projection_factor_adder_;
   std::shared_ptr<RotationFactorAdder> rotation_factor_adder_;
