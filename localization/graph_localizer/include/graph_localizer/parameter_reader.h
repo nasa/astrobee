@@ -29,6 +29,7 @@
 #include <graph_localizer/graph_localizer_nodelet_params.h>
 #include <graph_localizer/graph_localizer_params.h>
 #include <graph_localizer/handrail_params.h>
+#include <graph_localizer/handrail_factor_adder_params.h>
 #include <graph_localizer/loc_factor_adder_params.h>
 #include <graph_localizer/projection_factor_adder_params.h>
 #include <graph_localizer/rotation_factor_adder_params.h>
@@ -39,6 +40,7 @@
 namespace graph_localizer {
 void LoadCalibrationParams(config_reader::ConfigReader& config, CalibrationParams& params);
 void LoadFactorParams(config_reader::ConfigReader& config, FactorParams& params);
+void LoadHandrailFactorAdderParams(config_reader::ConfigReader& config, HandrailFactorAdderParams& params);
 void LoadLocFactorAdderParams(config_reader::ConfigReader& config, LocFactorAdderParams& params);
 void LoadARTagLocFactorAdderParams(config_reader::ConfigReader& config, LocFactorAdderParams& params);
 void LoadProjectionFactorAdderParams(config_reader::ConfigReader& config, ProjectionFactorAdderParams& params);
