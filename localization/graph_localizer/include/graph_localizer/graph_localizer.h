@@ -41,6 +41,7 @@
 #include <localization_common/time.h>
 #include <localization_measurements/fan_speed_mode.h>
 #include <localization_measurements/feature_points_measurement.h>
+#include <localization_measurements/handrail_points_measurement.h>
 #include <localization_measurements/matched_projections_measurement.h>
 
 #include <gtsam/geometry/Cal3_S2.h>
@@ -90,6 +91,7 @@ class GraphLocalizer : public graph_optimizer::GraphOptimizer {
     const localization_measurements::MatchedProjectionsMeasurement& matched_projections_measurement);
   void AddSparseMappingMeasurement(
     const localization_measurements::MatchedProjectionsMeasurement& matched_projections_measurement);
+  void AddHandrailMeasurement(const localization_measurements::HandrailPointsMeasurement& handrail_points_measurement);
   bool DoPostOptimizeActions() final;
   const FeatureTrackIdMap& feature_tracks() const { return feature_tracker_->feature_tracks(); }
 

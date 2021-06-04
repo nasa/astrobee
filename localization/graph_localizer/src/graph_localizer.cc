@@ -291,6 +291,18 @@ void GraphLocalizer::AddSparseMappingMeasurement(
   }
 }
 
+void GraphLocalizer::AddHandrailMeasurement(const lm::HandrailPointsMeasurement& handrail_points_measurement) {
+  if (!MeasurementRecentEnough(handrail_points_measurement.timestamp)) {
+    LogDebug("AddHandrailPointsMeasurement: Measurement too old - discarding.");
+    return;
+  }
+
+  /*if (params_.factor.handrail_adder.enabled) {
+    LogDebug("AddSparseMappingMeasurement: Adding handrail measurement.");
+    BufferFactors(handrail_factor_adder_->AddFactors(handrail_points_measurement));
+  }*/
+}
+
 void GraphLocalizer::DoPostSlideWindowActions(const localization_common::Time oldest_allowed_time,
                                               const boost::optional<gtsam::Marginals>& marginals) {
   feature_tracker_->RemoveOldFeaturePointsAndSlideWindow(oldest_allowed_time);

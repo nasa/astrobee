@@ -211,7 +211,7 @@ void GraphLocalizerWrapper::DepthLandmarksCallback(const ff_msgs::DepthLandmarks
     }
     const auto handrail_points_measurement =
       lm::MakeHandrailPointsMeasurement(depth_landmarks_msg, *estimated_world_T_handrail_);
-    // graph_localizer_->AddARTagMeasurement(frame_changed_ar_measurements);
+    graph_localizer_->AddHandrailMeasurement(handrail_points_measurement);
     // TODO(rsoussan): Don't update a pose with endpoints with a new measurement without endpoints?
     if (estimated_world_T_handrail_) {
       const auto handrail_T_dock_cam = lc::PoseFromMsg(depth_landmarks_msg.local_pose).inverse();
