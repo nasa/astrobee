@@ -100,6 +100,9 @@ class GraphOptimizer {
   // valid after the SlideWindow call
   virtual void RemoveOldMeasurementsFromCumulativeFactors(const gtsam::KeyVector& old_keys);
 
+  // Optional validity check for graph before optimizing
+  virtual bool ValidGraph() const;
+
   // Adds buffered factors to graph_factors for future optimization
   // Only adds factors that pass ReadyToAddFactors(timestamp) check
   int AddBufferedFactors();

@@ -86,7 +86,8 @@ SharedRobustSmartFactor RemoveSmartFactorMeasurements(const RobustSmartFactor& s
                                                       const SmartProjectionFactorAdderParams& params,
                                                       const gtsam::SmartProjectionParams& smart_projection_params);
 
-int NumSmartFactors(const gtsam::NonlinearFactorGraph& graph_factors, const bool check_valid);
+int NumSmartFactors(const gtsam::NonlinearFactorGraph& graph_factors, const gtsam::Values& values,
+                    const bool check_valid);
 }  // namespace graph_localizer
 
 #endif  // GRAPH_LOCALIZER_UTILITIES_H_

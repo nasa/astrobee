@@ -162,6 +162,8 @@ void GraphOptimizer::BufferCumulativeFactors() {}
 
 void GraphOptimizer::RemoveOldMeasurementsFromCumulativeFactors(const gtsam::KeyVector& old_keys) {}
 
+bool GraphOptimizer::ValidGraph() const { return true; }
+
 void GraphOptimizer::BufferFactors(const std::vector<FactorsToAdd>& factors_to_add_vec) {
   for (const auto& factors_to_add : factors_to_add_vec)
     buffered_factors_to_add_.emplace(factors_to_add.timestamp(), factors_to_add);
@@ -376,6 +378,9 @@ bool GraphOptimizer::Update() {
     } catch (gtsam::IndeterminantLinearSystemException) {
       log(params_.fatal_failures, "Update: Indeterminant linear system error during computation of marginals.");
       marginals_ = boost::none;
+    } catch (const std::exception& exception) {
+      log(params_.fatal_failures, "Update: Computing marginals failed. " + std::string(exception.what()));
+      marginals_ = boost::none;
     } catch (...) {
       log(params_.fatal_failures, "Update: Computing marginals failed.");
       marginals_ = boost::none;
@@ -402,6 +407,11 @@ bool GraphOptimizer::Update() {
     } else {
       levenberg_marquardt_params_.orderingType = gtsam::Ordering::COLAMD;
     }
+  }
+
+  if (!ValidGraph()) {
+    LogError("Update: Invalid graph, not optimizing.");
+    return false;
   }
 
   // Optimize
