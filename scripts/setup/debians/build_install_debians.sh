@@ -38,7 +38,7 @@ elif [ "$DIST" = "bionic" ]; then
   sudo mk-build-deps -i -r -t "apt-get --no-install-recommends -y" control
   cd ${DEBIAN_LOC}
   ./build_luajit.sh || exit 1
-  sudo dpkg -i libluajit*_amd64.deb || exit 1
+  sudo dpkg -i luajit*_amd64.deb || exit 1
 
   # opencv
   cd ${DEBIAN_LOC}/opencv
