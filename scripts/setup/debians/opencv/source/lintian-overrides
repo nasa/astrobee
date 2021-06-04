@@ -1,0 +1,2 @@
+# https://bugs.debian.org/505857 (in lintian)
+debian-watch-file-should-mangle-version

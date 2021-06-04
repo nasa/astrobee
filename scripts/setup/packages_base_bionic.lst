@@ -123,3 +123,5 @@ libsoracore-dev
 libmiro-dev
 libdecomputil-dev
 libjps3d-dev
+libopencv3.3.1
+libopencv-dev3.3.1
