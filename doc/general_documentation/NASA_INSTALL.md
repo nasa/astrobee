@@ -99,14 +99,7 @@ The android module is necessary for guest science code; the avionics and platfor
 module is used when cross-compiling to test on the robot hardware.
 
 ### Dependencies
-For *Ubuntu 18 only*: install openCV and Luajit beforehand with:
-
-    pushd $SOURCE_PATH
-    cd scripts/setup
-    ./debians/install_luajit.sh
-    ./debians/install_opencv.sh
-
-Next, install all remaining dependencies dependencies:
+Install dependencies:
 
     pushd $SOURCE_PATH
     cd scripts/setup
