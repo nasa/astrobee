@@ -1,4 +1,4 @@
-\page sim_issues List of common issues encountered with the simulator
+/page sim-issues Common Simulation Issues
 
 **This is a draft document**
 
@@ -27,11 +27,14 @@ environment in both terminals (see
 [Setting up your environment](#setting-up-your-environment)). In the first
 terminal, run:
 
-    roslaunch astrobee sim.launch default:=false rviz:=true
+    roslaunch astrobee sim.launch default_robot:=false rviz:=true
 
 After everything in the first terminal starts up, in the second terminal, run:
 
     roslaunch astrobee spawn.launch dds:=false robot:=sim_pub
+
+- Note: If you have the dds ros bridge compiled or installed, please omit the
+  dds and robot flags.
 
 If the robot body doesn't show up in RVIZ, please see the
 [Robot Body Doesn't Show up in RVIZ](#robot-body-does-not-show-up-in-RVIZ)
@@ -60,6 +63,32 @@ This is not an error in our system. Please see the [Images](#images) section
 for more information.
 
 ### Heartbeat Fault Detected
+
+#### DDS ROS Bridge
+
+More than likely this is because the dds ros bridge is not running. If so,
+please set the robot flag to sim_pub. If you have the dds ros bridge compiling,
+you can set the dds flag to true. If you want to use a specific robot instead of
+sim_pub, you will need to add the dds ros bridge node to the list of nodes not
+running in the robot config. For example, if you are simulating the robot
+*bumble*, you must open the LUA config file
+*astrobee/config/robots/bumble.config*, and add the node name so that it looks
+something like this
+
+    node_not_running = {"dds_ros_bridge"}
+
+#### Multiple Heartbeat Failures
+
+This is mostly likely due to a performance issue. If running in a virtual
+machine, please make sure that it has access to your graphics card. If you have
+sped up the simulation and are running one or more GUIs, the outgoing heartbeat 
+queue may be too small for the number of messages that must be delivered. You
+can fix this error by increasing the value of variable "heartbeat_queue_size" in
+the robot config. For example, if you are simulating the default simulation
+robot, you must open the LUA config file *astrobee/config/robots/sim.config*,
+and increase the value of this line:
+
+    heartbeat_queue_size = <x>
 
 ### Command Fails due to Robot State
 Cannot move when in ready and not stopped

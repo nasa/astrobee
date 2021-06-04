@@ -138,4 +138,4 @@ Please contact your Astrobee point of contact if you need to cross compile the
 code.
 
 For more information on running the simulator and moving the robot, please see
-the [simulation instructions](simulation/sim_overview.md).
+the [/ref sim-readme].

@@ -22,7 +22,6 @@ setup. For information on how to setup the terminal environment, please see
 the Setting up your Environment section of the
 [simulator readme](../../simulation/sim_overview.md#setting-up-your-environment).
 
-
 ## Basic Usage
 
 ### Dock
@@ -127,17 +126,7 @@ namespace as we don't support this.
 
 ### Reset Bias
 
-This flag is used to reset the bias. We encode gravity in our bias so if you
-launch the simulator with a world different than the previous world, you will
-have to reset the bias. To do this, run:
-
-    rosrun executive teleop_tool -reset_bias
-
-### Reset Bias
-
-This flag is used to reset the bias. We encode gravity in our bias so if you
-launch the simulator with a world different than the previous world, you will
-have to reset the bias. To do this, run:
+This flag is used to reset the bias. To do this, run:
 
     rosrun executive teleop_tool -reset_bias
 
