@@ -18,7 +18,7 @@
 # under the License.
 
 PACKAGE_NAME=libopencv
-ORIG_TAR=opencv_3.3.1.orig.tar.gz
+ORIG_TAR=libopencv3.3.1_3.3.1.orig.tar.gz
 DEB_DIR=opencv
 
 if [ -d $PACKAGE_NAME ]; then

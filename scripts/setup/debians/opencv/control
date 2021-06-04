@@ -1,4 +1,4 @@
-Source: opencv
+Source: libopencv3.3.1
 Priority: optional
 Section: devel
 Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
@@ -43,11 +43,11 @@ Vcs-Git: https://anonscm.debian.org/git/debian-science/packages/opencv.git
 Vcs-Browser: https://anonscm.debian.org/git/debian-science/packages/opencv.git
 Homepage: https://opencv.org
 
-Package: libopencv-dev
+Package: libopencv-dev3.3.1
 Section: libdevel
 Architecture: any
 Depends:
- libopencv (= ${binary:Version}),
+ libopencv3.3.1 (= ${binary:Version}),
  pkg-config,
  ${misc:Depends},
  ${shlibs:Depends},
@@ -65,7 +65,7 @@ Description: development files for opencv
  analysis, structural analysis, motion analysis and object tracking, object
  recognition, camera calibration and 3D reconstruction.
 
-Package: libopencv
+Package: libopencv3.3.1
 Section: libdevel
 Architecture: any
 Multi-Arch: same
