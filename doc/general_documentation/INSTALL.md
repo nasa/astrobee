@@ -4,8 +4,6 @@
 
 Install the 64-bit version of [Ubuntu 16.04](http://releases.ubuntu.com/16.04)
 on a host machine, and make sure that you can checkout and build code.
-If you are using a virtual machine, please use VMware. Virtualbox doesn't
-support some of our Gazebo plugins.
 
     sudo apt-get install build-essential git
 
