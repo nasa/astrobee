@@ -268,8 +268,8 @@ void GraphLocalizerNodelet::PublishWorldTDockTF() {
 void GraphLocalizerNodelet::PublishWorldTHandrailTF() {
   const auto world_T_handrail = graph_localizer_wrapper_.estimated_world_T_handrail();
   if (!world_T_handrail) return;
-  const auto world_T_handrail_tf =
-    lc::PoseToTF(*world_T_handrail, "world", "handrail/body", lc::TimeFromRosTime(ros::Time::now()), platform_name_);
+  const auto world_T_handrail_tf = lc::PoseToTF(world_T_handrail->pose, "world", "handrail/body",
+                                                lc::TimeFromRosTime(ros::Time::now()), platform_name_);
   transform_pub_.sendTransform(world_T_handrail_tf);
 }
 
