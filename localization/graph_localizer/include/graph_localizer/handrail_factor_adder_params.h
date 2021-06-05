@@ -22,7 +22,10 @@
 #include <graph_optimizer/factor_adder_params.h>
 
 namespace graph_localizer {
-struct HandrailFactorAdderParams : public graph_optimizer::FactorAdderParams {};
+struct HandrailFactorAdderParams : public graph_optimizer::FactorAdderParams {
+  double min_num_matches;
+  double point_to_line_stddev;
+};
 }  // namespace graph_localizer
 
 #endif  // GRAPH_LOCALIZER_HANDRAIL_FACTOR_ADDER_PARAMS_H_

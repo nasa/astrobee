@@ -51,6 +51,8 @@ void LoadFactorParams(config_reader::ConfigReader& config, FactorParams& params)
 void LoadHandrailFactorAdderParams(config_reader::ConfigReader& config, HandrailFactorAdderParams& params) {
   params.enabled = mc::LoadBool(config, "handrail_adder_enabled");
   params.huber_k = mc::LoadDouble(config, "huber_k");
+  params.min_num_matches = mc::LoadDouble(config, "handrail_adder_min_num_matches");
+  params.point_to_line_stddev = mc::LoadDouble(config, "handrail_adder_point_to_line_stddev");
 }
 
 void LoadARTagLocFactorAdderParams(config_reader::ConfigReader& config, LocFactorAdderParams& params) {
