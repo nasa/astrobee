@@ -35,7 +35,7 @@ class HandrailFactorAdder : public graph_optimizer::FactorAdder<localization_mea
   HandrailFactorAdder(const HandrailFactorAdderParams& params);
 
   std::vector<graph_optimizer::FactorsToAdd> AddFactors(
-    const localization_measurements::HandrailPointsMeasurement& measurement) final;
+    const localization_measurements::HandrailPointsMeasurement& handrail_points_measurement) final;
 };
 }  // namespace graph_localizer
 

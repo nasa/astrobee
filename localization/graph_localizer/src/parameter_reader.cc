@@ -53,6 +53,7 @@ void LoadHandrailFactorAdderParams(config_reader::ConfigReader& config, Handrail
   params.huber_k = mc::LoadDouble(config, "huber_k");
   params.min_num_matches = mc::LoadDouble(config, "handrail_adder_min_num_matches");
   params.point_to_line_stddev = mc::LoadDouble(config, "handrail_adder_point_to_line_stddev");
+  params.body_T_haz_cam = lc::LoadTransform(config, "haz_cam_transform");
 }
 
 void LoadARTagLocFactorAdderParams(config_reader::ConfigReader& config, LocFactorAdderParams& params) {
