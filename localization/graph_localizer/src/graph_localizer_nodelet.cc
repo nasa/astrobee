@@ -182,7 +182,7 @@ void GraphLocalizerNodelet::DepthLandmarksCallback(const ff_msgs::DepthLandmarks
   depth_timer_.VlogEveryN(100, 2);
 
   if (!localizer_enabled()) return;
-  // graph_localizer_wrapper_.DepthLandmarksCallback(*depth_landmarks_msg);
+  graph_localizer_wrapper_.DepthLandmarksCallback(*depth_landmarks_msg);
   PublishWorldTHandrailTF();
   if (ValidDepthMsg(*depth_landmarks_msg)) PublishHandrailPose();
 }
