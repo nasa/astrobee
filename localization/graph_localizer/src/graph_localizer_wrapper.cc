@@ -306,7 +306,7 @@ void GraphLocalizerWrapper::ResetWorldTHandrailIfNecessary(const ff_msgs::DepthL
   }
   // TODO(rsoussan): Extrapolate latest world_T_body loc estimate with imu data?
   const gtsam::Pose3 handrail_T_body = lc::PoseFromMsgWithExtrinsics(
-    depth_landmarks_msg.local_pose, graph_localizer_initializer_.params().calibration.body_T_haz_cam.inverse());
+    depth_landmarks_msg.local_pose, graph_localizer_initializer_.params().calibration.body_T_perch_cam.inverse());
   estimated_world_T_handrail_ = lm::TimestampedHandrailPose(
     latest_combined_nav_state->pose() * handrail_T_body.inverse(), latest_combined_nav_state->timestamp(),
     accurate_z_position, graph_localizer_initializer_.params().handrail.length,

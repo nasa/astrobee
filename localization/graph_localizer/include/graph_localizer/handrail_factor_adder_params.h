@@ -27,7 +27,7 @@ namespace graph_localizer {
 struct HandrailFactorAdderParams : public graph_optimizer::FactorAdderParams {
   double min_num_matches;
   double point_to_line_stddev;
-  gtsam::Pose3 body_T_haz_cam;
+  gtsam::Pose3 body_T_perch_cam;
 };
 }  // namespace graph_localizer
 

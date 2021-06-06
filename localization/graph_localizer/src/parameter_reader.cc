@@ -32,7 +32,7 @@ namespace mc = msg_conversions;
 void LoadCalibrationParams(config_reader::ConfigReader& config, CalibrationParams& params) {
   params.body_T_dock_cam = lc::LoadTransform(config, "dock_cam_transform");
   params.body_T_nav_cam = lc::LoadTransform(config, "nav_cam_transform");
-  params.body_T_haz_cam = lc::LoadTransform(config, "haz_cam_transform");
+  params.body_T_perch_cam = lc::LoadTransform(config, "perch_cam_transform");
   params.world_T_dock = lc::LoadTransform(config, "world_dock_transform");
   params.nav_cam_intrinsics.reset(new gtsam::Cal3_S2(lc::LoadCameraIntrinsics(config, "nav_cam")));
   params.dock_cam_intrinsics.reset(new gtsam::Cal3_S2(lc::LoadCameraIntrinsics(config, "dock_cam")));
@@ -53,7 +53,7 @@ void LoadHandrailFactorAdderParams(config_reader::ConfigReader& config, Handrail
   params.huber_k = mc::LoadDouble(config, "huber_k");
   params.min_num_matches = mc::LoadDouble(config, "handrail_adder_min_num_matches");
   params.point_to_line_stddev = mc::LoadDouble(config, "handrail_adder_point_to_line_stddev");
-  params.body_T_haz_cam = lc::LoadTransform(config, "haz_cam_transform");
+  params.body_T_perch_cam = lc::LoadTransform(config, "perch_cam_transform");
 }
 
 void LoadARTagLocFactorAdderParams(config_reader::ConfigReader& config, LocFactorAdderParams& params) {
