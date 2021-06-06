@@ -214,7 +214,7 @@ void GraphLocalizerWrapper::DepthLandmarksCallback(const ff_msgs::DepthLandmarks
     graph_localizer_->AddHandrailMeasurement(handrail_points_measurement);
     // TODO(rsoussan): Don't update a pose with endpoints with a new measurement without endpoints?
     if (estimated_world_T_handrail_) {
-      const auto handrail_T_perch_cam = lc::PoseFromMsg(depth_landmarks_msg.local_pose);
+      const auto handrail_T_perch_cam = lc::PoseFromMsg(depth_landmarks_msg.local_pose).inverse();
       // 0 value is default, 1 means endpoints seen, 2 means none seen
       // TODO(rsoussan): Change this once this is changed in handrail node
       const bool accurate_z_position = depth_landmarks_msg.end_seen == 1;
@@ -305,7 +305,7 @@ void GraphLocalizerWrapper::ResetWorldTHandrailIfNecessary(const ff_msgs::DepthL
     return;
   }
   // TODO(rsoussan): Extrapolate latest world_T_body loc estimate with imu data?
-  const auto handrail_T_perch_cam = lc::PoseFromMsg(depth_landmarks_msg.local_pose);
+  const auto handrail_T_perch_cam = lc::PoseFromMsg(depth_landmarks_msg.local_pose).inverse();
   const gtsam::Pose3 handrail_T_body =
     handrail_T_perch_cam * graph_localizer_initializer_.params().calibration.body_T_perch_cam.inverse();
   estimated_world_T_handrail_ = lm::TimestampedHandrailPose(
