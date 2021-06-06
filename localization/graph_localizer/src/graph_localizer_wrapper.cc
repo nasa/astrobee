@@ -35,7 +35,7 @@ namespace lm = localization_measurements;
 namespace mc = msg_conversions;
 
 GraphLocalizerWrapper::GraphLocalizerWrapper(const std::string& graph_config_path_prefix)
-    : reset_world_T_dock_(false), fan_speed_mode_(lm::FanSpeedMode::kNominal) {
+    : reset_world_T_dock_(false), reset_world_T_handrail_(false), fan_speed_mode_(lm::FanSpeedMode::kNominal) {
   config_reader::ConfigReader config;
   lc::LoadGraphLocalizerConfig(config, graph_config_path_prefix);
   config.AddFile("transforms.config");
