@@ -45,7 +45,7 @@ std::vector<go::FactorsToAdd> HandrailFactorAdder::AddFactors(
   go::FactorsToAdd point_to_line_factors_to_add;
   point_to_line_factors_to_add.reserve(num_measurements);
   point_to_line_factors_to_add.SetTimestamp(handrail_points_measurement.timestamp);
-  const gtsam::Vector3 point_to_line_noise_sigmas(
+  const gtsam::Vector2 point_to_line_noise_sigmas(
     (gtsam::Vector(2) << params().point_to_line_stddev, params().point_to_line_stddev).finished());
   const auto point_to_line_noise =
     Robust(gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(point_to_line_noise_sigmas)),
