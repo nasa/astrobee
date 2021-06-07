@@ -17,7 +17,6 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-
 # This package depends on rti which is a proprietary package and therefore
 # cannot be shared. It is not necessary for running the astrobee simulation.
 # This debian build is only useful for NASA maintenence of this repo.

@@ -1,0 +1,15 @@
+all: contours convert_cascade delaunay fback_c morphology motempl	\
+     polar_transforms pyramid_segmentation adaptiveskindetector		\
+     bgfg_codebook blobtrack_sample facedetect find_obj_calonder	\
+     find_obj find_obj_ferns latentsvmdetect mser_sample mushroom	\
+     one_way_sample tree_engine example_cmake/minarea
+
+example_cmake/minarea: example_cmake/minarea.c
+
+CPPFLAGS += $(shell pkg-config opencv --cflags)
+LOADLIBES += $(shell pkg-config opencv --libs)
+LOADLIBES += -lm
+CFLAGS += -Wall
+CXXFLAGS += -Wall
+CFLAGS += -O2
+CXXFLAGS += -O2
