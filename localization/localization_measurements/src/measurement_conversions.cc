@@ -18,9 +18,15 @@
 
 #include <localization_common/utilities.h>
 #include <localization_measurements/measurement_conversions.h>
+#include <msg_conversions/msg_conversions.h>
+
+#include <gtsam/geometry/Point3.h>
+
+#include <geometry_msgs/Point32.h>
 
 namespace localization_measurements {
 namespace lc = localization_common;
+namespace mc = msg_conversions;
 MatchedProjectionsMeasurement MakeMatchedProjectionsMeasurement(const ff_msgs::VisualLandmarks& visual_landmarks) {
   MatchedProjectionsMeasurement matched_projections_measurement;
   matched_projections_measurement.matched_projections.reserve(visual_landmarks.landmarks.size());
@@ -45,20 +51,14 @@ HandrailPointsMeasurement MakeHandrailPointsMeasurement(const ff_msgs::DepthLand
   const lc::Time timestamp = lc::TimeFromHeader(depth_landmarks.header);
   handrail_points_measurement.timestamp = timestamp;
 
-  // TODO(rsoussan): This is hardcoded in the handrail node. The line and plane points should really
-  // be separate fields in the depth landmarks msg.  Remove this if that is updated.
-  constexpr int num_line_points = 4;
-  int index = 0;
-  for (; index < num_line_points; ++index) {
-    const auto& landmark = depth_landmarks.landmarks[index];
-    handrail_points_measurement.sensor_t_line_points.emplace_back(landmark.u, landmark.v, landmark.w);
+  for (const auto& sensor_t_line_point : depth_landmarks.sensor_t_line_points) {
+    handrail_points_measurement.sensor_t_line_points.emplace_back(
+      mc::VectorFromMsg<gtsam::Point3, geometry_msgs::Point32>(sensor_t_line_point));
   }
-  // The next 6 points are plane points
-  for (; index < depth_landmarks.landmarks.size(); ++index) {
-    const auto& landmark = depth_landmarks.landmarks[index];
-    handrail_points_measurement.sensor_t_plane_points.emplace_back(landmark.u, landmark.v, landmark.w);
+  for (const auto& sensor_t_plane_point : depth_landmarks.sensor_t_plane_points) {
+    handrail_points_measurement.sensor_t_plane_points.emplace_back(
+      mc::VectorFromMsg<gtsam::Point3, geometry_msgs::Point32>(sensor_t_plane_point));
   }
-
   return handrail_points_measurement;
 }
 
