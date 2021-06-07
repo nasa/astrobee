@@ -204,7 +204,7 @@ void MarkerTracker::VideoCallback(const sensor_msgs::ImageConstPtr& image_msg) {
   // Convert the image
   cv_bridge::CvImageConstPtr cv_ptr_ =
       cv_bridge::toCvShare(image_msg, sensor_msgs::image_encodings::MONO8);
-  IplImage ipl_image = cvIplImage(cv_ptr_->image);
+  IplImage ipl_image = cv_ptr_->image;
 
   // Detect our AR Tags
   detector_->Detect(&ipl_image, 0.08, 0.2);

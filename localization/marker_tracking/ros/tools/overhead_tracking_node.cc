@@ -188,7 +188,7 @@ class RosMarkerTrackingAdaptor {
   void VideoCallback(const sensor_msgs::ImageConstPtr & image_msg) {
     // Convert the image
     auto cv_ptr = cv_bridge::toCvShare(image_msg, sensor_msgs::image_encodings::MONO8);
-    IplImage ipl_image = cvIplImage(cv_ptr->image);
+    IplImage ipl_image = cv_ptr->image;
 
     // Check that the camera has been loaded
     if (!camera_) {
