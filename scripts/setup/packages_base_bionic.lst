@@ -125,5 +125,3 @@ libdecomputil-dev
 libjps3d-dev
 libopencv3.3.1
 libopencv-dev3.3.1
-luajit
-luajit-dev
