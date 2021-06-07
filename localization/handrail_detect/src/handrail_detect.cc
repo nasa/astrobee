@@ -1544,12 +1544,15 @@ class HandrailDetect : public ff_util::FreeFlyerNodelet {
 
     std::vector<int> feature_idx;
     feature_idx.reserve(tot_features);
+    std::vector<int> line_point_indices;
+    std::vector<int> plane_point_indices;
 
     // Get feature points for each step from handrail
     int line_step = line_inliers.size() / num_line_features;
     int steps = 0;
     for (int i = 0; i < num_line_features && steps < static_cast<int>(line_inliers.size()); ++i) {
       feature_idx.push_back(line_inliers[steps]);
+      line_point_indices.push_back(line_inliers[steps]);
       steps += line_step;
     }
 
@@ -1586,6 +1589,7 @@ class HandrailDetect : public ff_util::FreeFlyerNodelet {
           }
           if (g2g) {
             feature_idx.push_back(plane_inliers[rv]);
+            plane_point_indices.push_back(plane_inliers[rv]);
             break;
           } else if (escape_cnt2 > static_cast<int>(feature_idx.size())) {
             ++escape_cnt;
@@ -1609,6 +1613,15 @@ class HandrailDetect : public ff_util::FreeFlyerNodelet {
       dl_.landmarks[lm_cnt].v = cloud_.points[itr].y;
       dl_.landmarks[lm_cnt].w = cloud_.points[itr].z;
       ++lm_cnt;
+    }
+
+    for (int i = 0; i < line_point_indices.size(); ++i){
+      const int line_point_index = line_point_indices[i];
+      dl_.sensor_t_line_points.push_back(cloud_.points[line_point_index]);
+    }
+    for (int i = 0; i < plane_point_indices.size(); ++i){
+      const int plane_point_index = plane_point_indices[i];
+      dl_.sensor_t_plane_points.push_back(cloud_.points[plane_point_index]);
     }
   }
 
