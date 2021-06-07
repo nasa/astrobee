@@ -428,9 +428,9 @@ class HandrailDetect : public ff_util::FreeFlyerNodelet {
         rolling_window_pos_(0, rolling_window_cnt_) = rolling_window_pos_(0, previous_index);
         rolling_window_pos_(1, rolling_window_cnt_) = rolling_window_pos_(1, previous_index);
         rolling_window_pos_(2, rolling_window_cnt_) = rolling_window_pos_(2, previous_index);
-        dl_.local_pose.position.x = rolling_window_pos_(0, previous_index);
-        dl_.local_pose.position.y = rolling_window_pos_(1, previous_index);
-        dl_.local_pose.position.z = rolling_window_pos_(2, previous_index);
+        dl_.sensor_T_handrail.position.x = rolling_window_pos_(0, previous_index);
+        dl_.sensor_T_handrail.position.y = rolling_window_pos_(1, previous_index);
+        dl_.sensor_T_handrail.position.z = rolling_window_pos_(2, previous_index);
         // Don't publish landmark if it refuses point
         dl_.landmarks.clear();
 
@@ -452,9 +452,9 @@ class HandrailDetect : public ff_util::FreeFlyerNodelet {
         rolling_window_pos_(0, rolling_window_cnt_) = i2h.translation()(0);
         rolling_window_pos_(1, rolling_window_cnt_) = i2h.translation()(1);
         rolling_window_pos_(2, rolling_window_cnt_) = i2h.translation()(2);
-        dl_.local_pose.position.x = i2h.translation()(0);
-        dl_.local_pose.position.y = i2h.translation()(1);
-        dl_.local_pose.position.z = i2h.translation()(2);
+        dl_.sensor_T_handrail.position.x = i2h.translation()(0);
+        dl_.sensor_T_handrail.position.y = i2h.translation()(1);
+        dl_.sensor_T_handrail.position.z = i2h.translation()(2);
       }
     } else {
       // If we don't have 5 positions saved, the outlier rejection averaging filter
@@ -462,14 +462,14 @@ class HandrailDetect : public ff_util::FreeFlyerNodelet {
       rolling_window_pos_(0, rolling_window_cnt_) = i2h.translation()(0);
       rolling_window_pos_(1, rolling_window_cnt_) = i2h.translation()(1);
       rolling_window_pos_(2, rolling_window_cnt_) = i2h.translation()(2);
-      dl_.local_pose.position.x = i2h.translation()(0);
-      dl_.local_pose.position.y = i2h.translation()(1);
-      dl_.local_pose.position.z = i2h.translation()(2);
+      dl_.sensor_T_handrail.position.x = i2h.translation()(0);
+      dl_.sensor_T_handrail.position.y = i2h.translation()(1);
+      dl_.sensor_T_handrail.position.z = i2h.translation()(2);
     }
-    dl_.local_pose.orientation.x = rtoq.x();
-    dl_.local_pose.orientation.y = rtoq.y();
-    dl_.local_pose.orientation.z = rtoq.z();
-    dl_.local_pose.orientation.w = rtoq.w();
+    dl_.sensor_T_handrail.orientation.x = rtoq.x();
+    dl_.sensor_T_handrail.orientation.y = rtoq.y();
+    dl_.sensor_T_handrail.orientation.z = rtoq.z();
+    dl_.sensor_T_handrail.orientation.w = rtoq.w();
 
     rolling_window_cnt_++;
 

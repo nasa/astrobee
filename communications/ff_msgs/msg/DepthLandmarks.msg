@@ -21,7 +21,7 @@ Header header                                  # Image header, with time stamp
 uint32 camera_id                               # Image ID, associated with registration
 uint8 end_seen                                 # Whether the handrail endpoint was detected
 uint8 update_global_pose                       # Whether to update the global pose
-geometry_msgs/Pose local_pose                  # Handrail center in the camera frame TODO(rsoussan): Rename to handrail_T_sensor
-geometry_msgs/Point32[] sensor_t_line_points     # Detected line points
-geometry_msgs/Point32[] sensor_t_plane_points    # Detected plane points
+geometry_msgs/Pose sensor_T_handrail           # Handrail center in the sensor frame
+geometry_msgs/Point32[] sensor_t_line_points   # Detected line points
+geometry_msgs/Point32[] sensor_t_plane_points  # Detected plane points
 ff_msgs/DepthLandmark[] landmarks              # List of landmarks seen TODO(rsoussan): This should be removed
