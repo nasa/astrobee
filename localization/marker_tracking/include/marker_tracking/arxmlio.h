@@ -25,6 +25,7 @@
 #include <map>
 #include <string>
 #include <utility>
+#include <memory>
 
 namespace marker_tracking {
 

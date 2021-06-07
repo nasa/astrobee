@@ -32,6 +32,7 @@
 #include <utility>
 #include <vector>
 #include <limits>
+#include <memory>
 
 EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION(std::array<std::pair<std::pair<int, int>, Eigen::Affine3d>, 3>)
 
