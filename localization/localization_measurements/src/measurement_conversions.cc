@@ -42,12 +42,21 @@ HandrailPointsMeasurement MakeHandrailPointsMeasurement(const ff_msgs::DepthLand
                                                         const TimestampedHandrailPose& handrail_pose) {
   HandrailPointsMeasurement handrail_points_measurement;
   handrail_points_measurement.handrail_pose = handrail_pose;
-  handrail_points_measurement.sensor_t_points.reserve(depth_landmarks.landmarks.size());
   const lc::Time timestamp = lc::TimeFromHeader(depth_landmarks.header);
   handrail_points_measurement.timestamp = timestamp;
 
-  for (const auto& landmark : depth_landmarks.landmarks) {
-    handrail_points_measurement.sensor_t_points.emplace_back(landmark.u, landmark.v, landmark.w);
+  // TODO(rsoussan): This is hardcoded in the handrail node. The line and plane points should really
+  // be separate fields in the depth landmarks msg.  Remove this if that is updated.
+  constexpr int num_line_points = 4;
+  int index = 0;
+  for (; index < num_line_points; ++index) {
+    const auto& landmark = depth_landmarks.landmarks[index];
+    handrail_points_measurement.sensor_t_line_points.emplace_back(landmark.u, landmark.v, landmark.w);
+  }
+  // The next 6 points are plane points
+  for (; index < depth_landmarks.landmarks.size(); ++index) {
+    const auto& landmark = depth_landmarks.landmarks[index];
+    handrail_points_measurement.sensor_t_plane_points.emplace_back(landmark.u, landmark.v, landmark.w);
   }
 
   return handrail_points_measurement;
