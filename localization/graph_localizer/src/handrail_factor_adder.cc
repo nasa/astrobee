@@ -54,7 +54,7 @@ std::vector<go::FactorsToAdd> HandrailFactorAdder::AddFactors(
     const go::KeyInfo key_info(&sym::P, go::NodeUpdaterType::CombinedNavState, handrail_points_measurement.timestamp);
     for (const auto& sensor_t_line_point : handrail_points_measurement.sensor_t_line_points) {
       gtsam::PointToLineFactor::shared_ptr point_to_line_factor(
-        new gtsam::PointToLineFactor(sensor_t_line_point, handrail_points_measurement.handrail_pose.pose,
+        new gtsam::PointToLineFactor(sensor_t_line_point, handrail_points_measurement.sensor_T_handrail.pose,
                                      params().body_T_perch_cam, point_to_line_noise, key_info.UninitializedKey()));
       point_to_line_factors_to_add.push_back({{key_info}, point_to_line_factor});
     }

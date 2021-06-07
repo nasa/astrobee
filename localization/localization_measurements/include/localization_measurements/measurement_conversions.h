@@ -37,7 +37,7 @@ namespace localization_measurements {
 MatchedProjectionsMeasurement MakeMatchedProjectionsMeasurement(const ff_msgs::VisualLandmarks& visual_landmarks);
 
 HandrailPointsMeasurement MakeHandrailPointsMeasurement(const ff_msgs::DepthLandmarks& depth_landmarks,
-                                                        const TimestampedHandrailPose& handrail_pose);
+                                                        const TimestampedHandrailPose& sensor_T_handrail);
 
 MatchedProjectionsMeasurement FrameChangeMatchedProjectionsMeasurement(
   const MatchedProjectionsMeasurement& matched_projections_measurement,

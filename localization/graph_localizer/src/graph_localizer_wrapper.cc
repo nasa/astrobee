@@ -218,7 +218,7 @@ void GraphLocalizerWrapper::DepthLandmarksCallback(const ff_msgs::DepthLandmarks
       // 0 value is default, 1 means endpoints seen, 2 means none seen
       // TODO(rsoussan): Change this once this is changed in handrail node
       const bool accurate_z_position = depth_landmarks_msg.end_seen == 1;
-      handrail_pose_ =
+      sensor_T_handrail_ =
         lm::TimestampedHandrailPose(estimated_world_T_handrail_->pose * handrail_T_perch_cam *
                                       graph_localizer_initializer_.params().calibration.body_T_perch_cam.inverse(),
                                     handrail_points_measurement.timestamp, accurate_z_position,
@@ -340,12 +340,12 @@ boost::optional<geometry_msgs::PoseStamped> GraphLocalizerWrapper::LatestARTagPo
 }
 
 boost::optional<geometry_msgs::PoseStamped> GraphLocalizerWrapper::LatestHandrailPoseMsg() const {
-  if (!handrail_pose_) {
+  if (!sensor_T_handrail_) {
     LogWarningEveryN(50, "LatestHandrailPoseMsg: Failed to get latest handrail pose msg.");
     return boost::none;
   }
 
-  return PoseMsg(*handrail_pose_);
+  return PoseMsg(*sensor_T_handrail_);
 }
 
 boost::optional<lc::CombinedNavState> GraphLocalizerWrapper::LatestCombinedNavState() const {
