@@ -2,7 +2,9 @@
 # This image builds on top of the base melodic image building the code.
 # You must set the docker context to be the repository root directory
 
-FROM astrobee/astrobee:base-latest-melodic
+FROM astrobee/astrobee:base-latest-bionic
+
+ENV USERNAME astrobee
 
 COPY . /src/astrobee
 RUN /src/astrobee/scripts/configure.sh -l -F -D -T -p /opt/astrobee -b /build/astrobee

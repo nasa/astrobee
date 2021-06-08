@@ -2,7 +2,7 @@
 # This image builds on top of the base kinetic image building the code.
 # You must set the docker context to be the repository root directory
 
-FROM astrobee/astrobee:base-latest-kinetic
+FROM astrobee/astrobee:base-latest-xenial
 
 ENV USERNAME astrobee
 
