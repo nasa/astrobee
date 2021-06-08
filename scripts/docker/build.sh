@@ -50,18 +50,18 @@ rootdir=${thisdir}/../..
 echo "Astrobee path: "${rootdir}/
 if [ "$os" = "xenial" ]; then
     docker build ${rootdir}/ \
-                -f ${rootdir}/scripts/docker/astrobee_base_kinetic.Dockerfile \
-                -t astrobee/astrobee:base-latest-kinetic
+                -f ${rootdir}/scripts/docker/astrobee_base_xenial.Dockerfile \
+                -t astrobee/astrobee:base-latest-xenial
     docker build ${rootdir}/ \
-                -f ${rootdir}/scripts/docker/astrobee_kinetic.Dockerfile \
-                -t astrobee/astrobee:latest-kinetic
+                -f ${rootdir}/scripts/docker/astrobee_xenial.Dockerfile \
+                -t astrobee/astrobee:latest-xenial
 elif [ "$os" = "bionic" ]; then
     docker build ${rootdir}/ \
-                -f ${rootdir}/scripts/docker/astrobee_base_melodic.Dockerfile \
-                -t astrobee/astrobee:base-latest-melodic
+                -f ${rootdir}/scripts/docker/astrobee_base_bionic.Dockerfile \
+                -t astrobee/astrobee:base-latest-bionic
     docker build ${rootdir}/ \
-                -f ${rootdir}/scripts/docker/astrobee_melodic.Dockerfile \
-                -t astrobee/astrobee:latest-melodic
+                -f ${rootdir}/scripts/docker/astrobee_bionic.Dockerfile \
+                -t astrobee/astrobee:latest-bionic
 elif [ "$os" = "focal" ]; then
     docker build ${rootdir}/ \
                 -f ${rootdir}/scripts/docker/astrobee_base_focal.Dockerfile \
