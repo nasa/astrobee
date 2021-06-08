@@ -59,13 +59,19 @@ elif [ "$DIST" = "bionic" ]; then
   # decomputil
   # jps3d
   sudo apt-get install -y libvtk6.3 libboost-filesystem1.62.0 libboost-system1.62.0
-  cp ${DEBIAN_LOC}/files_18_04/jps3d_changelog ${DEBIAN_LOC}/jps3d/changelog
+  cp ${DEBIAN_LOC}/files/jps3d_changelog ${DEBIAN_LOC}/jps3d/changelog
   # openmvg
 elif [ "$DIST" = "focal" ]; then
   echo "Ubuntu 20 detected"
   # Install dependencies
-  ${DEBIAN_LOC}/install_opencv.sh
-  ${DEBIAN_LOC}/install_luajit.sh
+
+  # opencv
+  cd ${DEBIAN_LOC}/opencv
+  sudo mk-build-deps -i -r -t "apt-get --no-install-recommends -y" control
+  cd ${DEBIAN_LOC}
+  ./build_opencv.sh || exit 1
+  cd ${DEBIAN_LOC}/libopencv
+  sudo dpkg -i libopencv*_amd64.deb || exit 1
 
   # alvar
   cp ${DEBIAN_LOC}/files/alvar_rules ${DEBIAN_LOC}/alvar/rules
@@ -84,7 +90,7 @@ elif [ "$DIST" = "focal" ]; then
   # decomputil
   #jps3d
   sudo apt-get install -y libvtk7.1p libboost-filesystem1.71.0 libboost-system1.71.0
-  cp ${DEBIAN_LOC}/files_18_04/jps3d_changelog ${DEBIAN_LOC}/jps3d/changelog
+  cp ${DEBIAN_LOC}/files/jps3d_changelog ${DEBIAN_LOC}/jps3d/changelog
   # openmvg
 fi
 
