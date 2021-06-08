@@ -206,7 +206,7 @@ void GraphLocalizerWrapper::DepthLandmarksCallback(const ff_msgs::DepthLandmarks
   if (graph_localizer_) {
     ResetWorldTHandrailIfNecessary(depth_landmarks_msg);
     if (!estimated_world_T_handrail_) {
-      LogError("DepthLandmarksCallback: No estimated world_T_handrail pose available.");
+      LogWarning("DepthLandmarksCallback: No estimated world_T_handrail pose available.");
       return;
     }
     const auto handrail_points_measurement =
