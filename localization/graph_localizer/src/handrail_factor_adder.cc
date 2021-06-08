@@ -18,6 +18,7 @@
 
 #include <graph_localizer/handrail_factor_adder.h>
 #include <graph_localizer/point_to_line_factor.h>
+#include <graph_localizer/point_to_line_segment_factor.h>
 #include <graph_localizer/utilities.h>
 #include <localization_common/logger.h>
 
@@ -44,14 +45,20 @@ void HandrailFactorAdder::AddPointToLineOrLineSegmentFactors(
   const auto point_to_line_noise =
     Robust(gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(point_to_line_noise_sigmas)),
            params().huber_k);
+  const gtsam::Vector3 point_to_line_segment_noise_sigmas(
+    (gtsam::Vector(3) << params().point_to_line_stddev, params().point_to_line_stddev, params().point_to_line_stddev)
+      .finished());
+  const auto point_to_line_segment_noise =
+    Robust(gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(point_to_line_segment_noise_sigmas)),
+           params().huber_k);
   const go::KeyInfo key_info(&sym::P, go::NodeUpdaterType::CombinedNavState, handrail_points_measurement.timestamp);
   for (const auto& sensor_t_line_point : handrail_points_measurement.sensor_t_line_points) {
     if (handrail_points_measurement.sensor_T_handrail.accurate_z_position) {
-      // TODO(rsoussan): Change this to point to line segment!
-      gtsam::PointToLineFactor::shared_ptr point_to_line_factor(
-        new gtsam::PointToLineFactor(sensor_t_line_point, handrail_points_measurement.sensor_T_handrail.pose,
-                                     params().body_T_perch_cam, point_to_line_noise, key_info.UninitializedKey()));
-      point_to_line_or_line_segment_factors_to_add.push_back({{key_info}, point_to_line_factor});
+      gtsam::PointToLineSegmentFactor::shared_ptr point_to_line_segment_factor(new gtsam::PointToLineSegmentFactor(
+        sensor_t_line_point, handrail_points_measurement.sensor_T_handrail.pose, params().body_T_perch_cam,
+        handrail_points_measurement.sensor_T_handrail.length, point_to_line_segment_noise,
+        key_info.UninitializedKey()));
+      point_to_line_or_line_segment_factors_to_add.push_back({{key_info}, point_to_line_segment_factor});
     } else {
       gtsam::PointToLineFactor::shared_ptr point_to_line_factor(
         new gtsam::PointToLineFactor(sensor_t_line_point, handrail_points_measurement.sensor_T_handrail.pose,
