@@ -19,7 +19,7 @@ jobs:
       run: git submodule update --init --depth 1 description/media
 
     - name: Build code for Ubuntu 16
-      run: docker build . -f ./scripts/docker/astrobee_kinetic.Dockerfile -t astrobee/astrobee:latest-xenial
+      run: docker build . -f ./scripts/docker/astrobee_xenial.Dockerfile -t astrobee/astrobee:latest-xenial
 
     - name: Test code
       run: docker build . -f ./scripts/docker/test_astrobee_xenial.Dockerfile -t test
