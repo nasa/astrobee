@@ -1,7 +1,9 @@
 tmp
 astrobee0
+astrobee-comms
 astrobee-dev
 astrobee-config
+astrobee-comms
 files
 debhelper-build-stamp
 *.substvars

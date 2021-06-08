@@ -4,9 +4,7 @@
 
 Install the 64-bit version of
 [Ubuntu16.04](http://releases.ubuntu.com/16.04) on a host machine, and
-make sure that you can checkout and build code.  If you are using a
-virtual machine, please use VMware. Virtualbox doesn't support some of
-our Gazebo plugins.
+make sure that you can checkout and build code.
 
     sudo apt-get install build-essential git
 
@@ -83,12 +81,12 @@ First, clone the flight software repository:
 
     git clone https://github.com/nasa/astrobee.git --branch develop $SOURCE_PATH
     git submodule update --init --depth 1 description/media
+    git submodule update --init --depth 1 submodules/platform
 
 You can either choose which optional submodules to clone and log depth with:
 
     git submodule update --init --depth 1 submodules/android
     git submodule update --init --depth 1 submodules/avionics
-    git submodule update --init --depth 1 submodules/platform
 
 Or checkout all the submodules as:
 
@@ -99,14 +97,13 @@ The android module is necessary for guest science code; the avionics and platfor
 module is used when cross-compiling to test on the robot hardware.
 
 ### Dependencies
-
-Next, install all required dependencies:
+Install dependencies:
 
     pushd $SOURCE_PATH
     cd scripts/setup
     ./add_local_repository.sh
     ./add_ros_repository.sh
-    ./install_desktop_16_04_packages.sh
+    ./install_desktop_packages.sh
     popd
 
 #### Extra options to install the dependencies
@@ -117,11 +114,9 @@ dependencies, you can use the `NDC_USERNAME` variable.
 If you prefer to install them at a different location, you can use the
 `ARS_DEB_DIR` variable.
 
-```
-export NDC_USERNAME=jdoe
-export ARS_DEB_DIR=$HOME/astrobee_debs
-./add_local_repository.sh
-```
+    export NDC_USERNAME=jdoe
+    export ARS_DEB_DIR=$HOME/astrobee_debs
+    ./add_local_repository.sh
 
 ### Cross-compile setup
 

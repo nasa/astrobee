@@ -38,7 +38,7 @@ import csv
 
 
 def l2_map(vector3ds):
-  return map(lambda (x, y, z): math.sqrt(x + y + z), zip(vector3ds.xs, vector3ds.ys, vector3ds.zs))
+  return map(lambda (x, y, z): math.sqrt(x*x + y*y + z*z), zip(vector3ds.xs, vector3ds.ys, vector3ds.zs))
 
 
 def add_graph_plots(pdf, sparse_mapping_poses, ar_tag_poses, graph_localization_states,
@@ -374,6 +374,21 @@ def plot_loc_state_stats(pdf,
                          plot_integrated_velocities=True,
                          rmse_rel_start_time=0,
                          rmse_rel_end_time=-1):
+  plot_loc_state_stats_abs(pdf, localization_states, sparse_mapping_poses, output_csv_file, prefix, atol,
+                           plot_integrated_velocities, rmse_rel_start_time, rmse_rel_end_time)
+  plot_loc_state_stats_rel(pdf, localization_states, sparse_mapping_poses, output_csv_file, prefix, atol,
+                           plot_integrated_velocities, rmse_rel_start_time, rmse_rel_end_time)
+
+
+def plot_loc_state_stats_abs(pdf,
+                             localization_states,
+                             sparse_mapping_poses,
+                             output_csv_file,
+                             prefix='',
+                             atol=0,
+                             plot_integrated_velocities=True,
+                             rmse_rel_start_time=0,
+                             rmse_rel_end_time=-1):
   rmse = rmse_utilities.rmse_timestamped_poses(localization_states, sparse_mapping_poses, True, atol,
                                                rmse_rel_start_time, rmse_rel_end_time)
   integrated_rmse = []
@@ -390,6 +405,39 @@ def plot_loc_state_stats(pdf,
     csv_writer.writerow([prefix + 'orientation_rmse', str(rmse[1])])
     if plot_integrated_velocities:
       csv_writer.writerow([prefix + 'integrated_rmse', str(integrated_rmse[0])])
+  plt.figure()
+  plt.axis('off')
+  plt.text(0.0, 0.5, stats)
+  pdf.savefig()
+
+
+def plot_loc_state_stats_rel(pdf,
+                             localization_states,
+                             sparse_mapping_poses,
+                             output_csv_file,
+                             prefix='',
+                             atol=0,
+                             plot_integrated_velocities=True,
+                             rmse_rel_start_time=0,
+                             rmse_rel_end_time=-1):
+  rmse = rmse_utilities.rmse_timestamped_poses_relative(localization_states, sparse_mapping_poses, True, atol,
+                                                        rmse_rel_start_time, rmse_rel_end_time)
+  integrated_rmse = []
+  if plot_integrated_velocities:
+    integrated_localization_states = utilities.integrate_velocities(localization_states)
+    integrated_rmse = rmse_utilities.rmse_timestamped_poses_relative(integrated_localization_states,
+                                                                     sparse_mapping_poses, False, atol,
+                                                                     rmse_rel_start_time, rmse_rel_end_time)
+  stats = prefix + ' rel pos rmse: ' + str(rmse[0]) + '\n' + 'rel orientation rmse: ' + str(rmse[1])
+  if plot_integrated_velocities:
+    stats += '\n' + 'rel integrated rmse: ' + str(integrated_rmse[0])
+
+  with open(output_csv_file, 'a') as output_csv:
+    csv_writer = csv.writer(output_csv, lineterminator='\n')
+    csv_writer.writerow(['rel_' + prefix + 'rmse', str(rmse[0])])
+    csv_writer.writerow(['rel_' + prefix + 'orientation_rmse', str(rmse[1])])
+    if plot_integrated_velocities:
+      csv_writer.writerow(['rel_' + prefix + 'integrated_rmse', str(integrated_rmse[0])])
   plt.figure()
   plt.axis('off')
   plt.text(0.0, 0.5, stats)

@@ -17,6 +17,7 @@
  */
 
 #include <graph_bag/live_measurement_simulator.h>
+#include <graph_bag/utilities.h>
 #include <localization_common/logger.h>
 
 #include <image_transport/image_transport.h>
@@ -69,14 +70,6 @@ LiveMeasurementSimulator::LiveMeasurementSimulator(const LiveMeasurementSimulato
 
   view_.reset(new rosbag::View(bag_, rosbag::TopicQuery(topics)));
   current_time_ = lc::TimeFromRosTime(view_->getBeginTime());
-}
-
-bool LiveMeasurementSimulator::string_ends_with(const std::string& str, const std::string& ending) {
-  if (str.length() >= ending.length()) {
-    return (0 == str.compare(str.length() - ending.length(), ending.length(), ending));
-  } else {
-    return false;
-  }
 }
 
 ff_msgs::Feature2dArray LiveMeasurementSimulator::GenerateOFFeatures(const sensor_msgs::ImageConstPtr& image_msg) {
