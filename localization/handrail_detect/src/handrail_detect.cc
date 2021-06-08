@@ -284,6 +284,12 @@ class HandrailDetect : public ff_util::FreeFlyerNodelet {
     HandrailCallback();
   }
 
+  void Clear() {
+    dl_.landmarks.clear();
+    dl_.sensor_t_line_points.clear();
+    dl_.sensor_t_plane_points.clear();
+  }
+
   // Performs handrail detection
   void HandrailCallback() {
     // Publish registration
@@ -294,7 +300,7 @@ class HandrailDetect : public ff_util::FreeFlyerNodelet {
     r.camera_id = frame_count_;
     registration_pub_.publish(r);
     ros::spinOnce();
-    dl_.landmarks.clear();
+    Clear();
     dl_.end_seen = 0;
 
     // Publish depth image
@@ -432,7 +438,7 @@ class HandrailDetect : public ff_util::FreeFlyerNodelet {
         dl_.sensor_T_handrail.position.y = rolling_window_pos_(1, previous_index);
         dl_.sensor_T_handrail.position.z = rolling_window_pos_(2, previous_index);
         // Don't publish landmark if it refuses point
-        dl_.landmarks.clear();
+        Clear();
 
         // Since we copy the previous point in the hope of rejecting 1 or two wrong samples
         // We have to stop if we copy too many points in a row. This would imply we are lost
@@ -441,7 +447,7 @@ class HandrailDetect : public ff_util::FreeFlyerNodelet {
           // Restart handrail detect if we are lost
           start_ = false;
           //  Don't publish landmark if we are lost
-          dl_.landmarks.clear();
+          Clear();
           return false;
         }
       } else {
