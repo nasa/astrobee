@@ -262,8 +262,8 @@ class GazeboSensorPluginHazCam : public FreeFlyerSensorPlugin {
     const unsigned char * image_data = camera_->ImageData();
 
     if (!image_data) {
-        //first frame of image data may not be received
-        return;
+      // first frame of image data may not be received
+      return;
     }
     for (size_t i = 0; i < num_floats / num_channels_; i++)
       cloud_data[num_channels_ * i + num_channels_ - 1] = static_cast<float>(image_data[i]);
