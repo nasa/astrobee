@@ -56,6 +56,15 @@ void HandrailFactorAdder::AddPointToLineFactors(const lm::HandrailPointsMeasurem
   factors_to_add.emplace_back(point_to_line_factors_to_add);
 }
 
+void HandrailFactorAdder::AddPointToPlaneFactors(const lm::HandrailPointsMeasurement& handrail_points_measurement,
+                                                 std::vector<go::FactorsToAdd>& factors_to_add) {
+  const int num_plane_measurements = static_cast<int>(handrail_points_measurement.sensor_t_plane_points.size());
+  if (num_plane_measurements < params().min_num_plane_matches) {
+    LogDebug("AddPointToPlaneFactors: Not enough handrail plane measurements.");
+    return;
+  }
+}
+
 std::vector<go::FactorsToAdd> HandrailFactorAdder::AddFactors(
   const lm::HandrailPointsMeasurement& handrail_points_measurement) {
   if (handrail_points_measurement.sensor_t_line_points.empty() &&
@@ -63,16 +72,10 @@ std::vector<go::FactorsToAdd> HandrailFactorAdder::AddFactors(
     LogDebug("AddFactors: Empty measurement.");
     return {};
   }
+
   std::vector<go::FactorsToAdd> factors_to_add;
-
   AddPointToLineFactors(handrail_points_measurement, factors_to_add);
-
-  const int num_plane_measurements = static_cast<int>(handrail_points_measurement.sensor_t_plane_points.size());
-  if (num_plane_measurements < params().min_num_plane_matches) {
-    LogDebug("AddFactors: Not enough handrail plane measurements.");
-  }
-  // TODO(rsoussan): Add point to plane factors
-  // TODO(rsoussan): return both point to line and point to plane factors
+  AddPointToPlaneFactors(handrail_points_measurement, factors_to_add);
   return factors_to_add;
 }
 }  // namespace graph_localizer
