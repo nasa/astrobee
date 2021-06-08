@@ -183,6 +183,12 @@ class HandrailDetect : public ff_util::FreeFlyerNodelet {
     if (!config_.GetReal("max_depth_dist", &max_depth_dist_))
       ROS_FATAL("Unspecified max_depth_dist.");
 
+    if (!config_.GetInt("max_num_line_points", &max_num_line_points_))
+      ROS_FATAL("Unspecified max_num_line_points.");
+
+    if (!config_.GetInt("max_num_plane_points", &max_num_plane_points_))
+      ROS_FATAL("Unspecified max_num_plane_points.");
+
     // Maximum RANSAC iteration for line estimation
     if (!config_.GetInt("RANSAC_line_iteration", &RANSAC_line_iteration_))
       ROS_FATAL("Unspecified RANSAC_line_iteration.");
@@ -1544,9 +1550,7 @@ class HandrailDetect : public ff_util::FreeFlyerNodelet {
 
   void GetFeaturePoints(const std::vector<int>& plane_inliers,
                                         const std::vector<int>& line_inliers) {
-    int num_line_features = 4;
-    int num_plane_features = 6;
-    int tot_features = num_line_features + num_plane_features;
+    int tot_features = max_num_line_points_ + max_num_plane_points_;
 
     std::vector<int> feature_idx;
     feature_idx.reserve(tot_features);
@@ -1554,9 +1558,9 @@ class HandrailDetect : public ff_util::FreeFlyerNodelet {
     std::vector<int> plane_point_indices;
 
     // Get feature points for each step from handrail
-    int line_step = line_inliers.size() / num_line_features;
+    int line_step = line_inliers.size() / max_num_line_points_;
     int steps = 0;
-    for (int i = 0; i < num_line_features && steps < static_cast<int>(line_inliers.size()); ++i) {
+    for (int i = 0; i < max_num_line_points_ && steps < static_cast<int>(line_inliers.size()); ++i) {
       feature_idx.push_back(line_inliers[steps]);
       line_point_indices.push_back(line_inliers[steps]);
       steps += line_step;
@@ -1569,12 +1573,12 @@ class HandrailDetect : public ff_util::FreeFlyerNodelet {
     float fov_y_half_tan = static_cast<float>(tan(fov_y * 0.5 * (M_PI / 180.0)));
     float half_tan = std::min(fov_x_half_tan, fov_y_half_tan);
     float feature_dist_thres = (half_tan * cloud_.points[plane_inliers[plane_inliers.size() / 2]].z)
-                               / sqrt(static_cast<float>((tot_features - num_line_features)));
+                               / sqrt(static_cast<float>((tot_features - max_num_line_points_)));
 
     Eigen::Vector2f rp, tp;
     int rv, escape_cnt = 0, escape_cnt2 = 0;
 
-    for (int i = num_line_features; i < tot_features; ++i) {
+    for (int i = max_num_line_points_; i < tot_features; ++i) {
       bool g2g = false;
       escape_cnt2 = 0;
 
@@ -1888,6 +1892,8 @@ class HandrailDetect : public ff_util::FreeFlyerNodelet {
   float min_measure_gap_;
   float min_depth_dist_;
   float max_depth_dist_;
+  int max_num_line_points_;
+  int max_num_plane_points_;
 
   // RANSAC related parameters
   int RANSAC_line_iteration_;
