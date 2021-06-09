@@ -44,15 +44,42 @@ TEST(PlaneTester, PointToPlaneJacobian) {
   }
 }
 
-TEST(PlaneTester, PointToPlaneDistance) {
+TEST(PlaneTester, PointToPlaneDistanceXAxisPlane) {
   const gtsam::Point3 point(0, 0, 0);
   const gtsam::Vector3 normal(1, 0, 0);
   // Plane perpendicular to x-axis
   const lm::Plane x_axis_plane(point, normal);
+  // In front of plane
   {
-    // In front of plane
     const gtsam::Point3 test_point(1, 0, 0);
     const double distance = x_axis_plane.Distance(test_point);
     EXPECT_DOUBLE_EQ(distance, 1.0);
+  }
+  {
+    const gtsam::Point3 test_point(1, 2, 3);
+    const double distance = x_axis_plane.Distance(test_point);
+    EXPECT_DOUBLE_EQ(distance, 1.0);
+  }
+  // Behind plane
+  {
+    const gtsam::Point3 test_point(-1, 0, 0);
+    const double distance = x_axis_plane.Distance(test_point);
+    EXPECT_DOUBLE_EQ(distance, -1.0);
+  }
+  {
+    const gtsam::Point3 test_point(-1, 2, 3);
+    const double distance = x_axis_plane.Distance(test_point);
+    EXPECT_DOUBLE_EQ(distance, -1.0);
+  }
+  // On plane
+  {
+    const gtsam::Point3 test_point(0, 0, 0);
+    const double distance = x_axis_plane.Distance(test_point);
+    EXPECT_DOUBLE_EQ(distance, 0);
+  }
+  {
+    const gtsam::Point3 test_point(0, 2, 3);
+    const double distance = x_axis_plane.Distance(test_point);
+    EXPECT_DOUBLE_EQ(distance, 0);
   }
 }
