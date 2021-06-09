@@ -52,7 +52,7 @@ class GeneralPlane {
   // Contains plane parameters a,b,c
   gtsam::Vector3 normal_;
   double d_;
-}
+};
 
 // Normalized version of General Plane.
 // Useful for calculating distances from points to plane
@@ -70,10 +70,16 @@ class HessianNormalPlane {
  private:
   gtsam::Vector3 unit_normal_;
   double constant_;
-}
+};
 
-// Default plane is a point normal plane
-typedef Plane = PointNormalPlane;
+class Plane : public HessianNormalPlane {
+ public:
+  // TODO(rsooussan): add optional jacobian!!!
+  double Distance(const gtsam::Point3& point) {
+    const double distance = unit_normal().dot(point) + constant();
+    return distance;
+  }
+};
 }  // namespace localization_measurements
 
 #endif  // LOCALIZATION_MEASUREMENTS_PLANE_H_
