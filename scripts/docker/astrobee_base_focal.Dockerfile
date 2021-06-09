@@ -43,7 +43,8 @@ COPY ./scripts/setup/debians /setup/astrobee/debians
 
 RUN apt-get update \
   && /setup/astrobee/debians/build_install_debians.sh \
-  && rm -rf /var/lib/apt/lists/*
+  && rm -rf /var/lib/apt/lists/* \
+  && rm -rf /setup/astrobee/debians
 
 COPY ./scripts/setup/packages_*.lst /setup/astrobee/
 # note apt-get update is run within the following shell script
@@ -63,7 +64,7 @@ RUN useradd -m $USERNAME && \
         groupmod --gid 1000 $USERNAME
 
 #Add the entrypoint for docker
-RUN echo "#!/bin/bash\nset -e\n\nsource \"/opt/ros/melodic/setup.bash\"\nsource \"/build/astrobee/devel/setup.bash\"\nexport ASTROBEE_CONFIG_DIR=\"/src/astrobee/astrobee/config\"\nexec \"\$@\"" > /astrobee_init.sh && \
+RUN echo "#!/bin/bash\nset -e\n\nsource \"/opt/ros/noetic/setup.bash\"\nsource \"/build/astrobee/devel/setup.bash\"\nexport ASTROBEE_CONFIG_DIR=\"/src/astrobee/astrobee/config\"\nexec \"\$@\"" > /astrobee_init.sh && \
   chmod +x /astrobee_init.sh && \
   rosdep init && \
   rosdep update 2>&1 | egrep -v 'as root|fix-permissions'
