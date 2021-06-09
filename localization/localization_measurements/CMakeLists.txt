@@ -39,4 +39,13 @@ if(CATKIN_ENABLE_TESTING)
   target_link_libraries(test_plane
     localization_measurements gtsam
   )
+  find_package(rostest REQUIRED)
+  add_rostest_gtest(test_measurement_conversions
+    test/test_measurement_conversions.test
+    test/test_measurement_conversions.cc
+  )
+  target_link_libraries(test_measurement_conversions
+    localization_measurements gtsam
+  )
+
 endif()
