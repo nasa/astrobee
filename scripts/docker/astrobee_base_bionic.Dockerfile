@@ -43,13 +43,13 @@ COPY ./scripts/setup/debians /setup/astrobee/debians
 
 RUN apt-get update \
   && /setup/astrobee/debians/build_install_debians.sh \
-  && rm -rf /var/lib/apt/lists/*
+  && rm -rf /var/lib/apt/lists/* \
+  && rm -rf /setup/astrobee/debians
 
 COPY ./scripts/setup/packages_*.lst /setup/astrobee/
 # note apt-get update is run within the following shell script
 RUN /setup/astrobee/install_desktop_packages.sh \
-  && rm -rf /var/lib/apt/lists/* \
-  && rm -rf /setup/astrobee/debians
+  && rm -rf /var/lib/apt/lists/*
 
 #Add new sudo user
 ENV USERNAME astrobee
