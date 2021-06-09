@@ -25,6 +25,7 @@
 namespace localization_measurements {
 class PointNormalPlane {
  public:
+  PointNormalPlane(const gtsam::Point3& point, const gtsam::Vector3& normal) : point_(point), normal_(normal) {}
   const gtsam::Point3& point() const { return point_; }
   const gtsam::Vector3& normal() const { return normal_; }
 
@@ -36,7 +37,6 @@ class PointNormalPlane {
 // Plane parameterized by ax+by+cz = d
 class GeneralPlane {
  public:
-  GeneralPlane() = default;
   GeneralPlane(const PointNormalPlane& point_normal_plane) {
     normal_ = point_normal_plane.normal();
     // Since the point (p) of the point normal parameterization is on the plane, the vector between another point on the
@@ -58,7 +58,6 @@ class GeneralPlane {
 // Useful for calculating distances from points to plane
 class HessianNormalPlane {
  public:
-  HessianNormalPlane() = default;
   HessianNormalPlane(const GeneralPlane& general_plane) {
     const double norm = general_plane.normal().norm();
     unit_normal_ = general_plane.normal() / norm;
@@ -74,8 +73,10 @@ class HessianNormalPlane {
 
 class Plane : public HessianNormalPlane {
  public:
+  Plane(const PointNormalPlane& point_normal_plane) : HessianNormalPlane(point_normal_plane) {}
+  Plane(const gtsam::Point3& point, const gtsam::Vector3& normal) : Plane(PointNormalPlane(point, normal)) {}
   // TODO(rsooussan): add optional jacobian!!!
-  double Distance(const gtsam::Point3& point) {
+  double Distance(const gtsam::Point3& point) const {
     const double distance = unit_normal().dot(point) + constant();
     return distance;
   }

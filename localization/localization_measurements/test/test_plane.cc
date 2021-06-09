@@ -24,6 +24,7 @@
 #include <gtest/gtest.h>
 
 // gtsam::Point3 trans = Eigen::Vector3d::Random();
+namespace lm = localization_measurements;
 
 TEST(PlaneTester, PointToPlaneJacobian) {
   for (int i = 0; i < 500; ++i) {
@@ -43,4 +44,15 @@ TEST(PlaneTester, PointToPlaneJacobian) {
   }
 }
 
-TEST(PlaneTester, PointToPlaneDistance) {}
+TEST(PlaneTester, PointToPlaneDistance) {
+  const gtsam::Point3 point(0, 0, 0);
+  const gtsam::Vector3 normal(1, 0, 0);
+  // Plane perpendicular to x-axis
+  const lm::Plane x_axis_plane(point, normal);
+  {
+    // In front of plane
+    const gtsam::Point3 test_point(1, 0, 0);
+    const double distance = x_axis_plane.Distance(test_point);
+    EXPECT_DOUBLE_EQ(distance, 1.0);
+  }
+}
