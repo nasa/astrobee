@@ -29,6 +29,7 @@
 #include <localization_measurements/handrail_points_measurement.h>
 #include <localization_measurements/imu_measurement.h>
 #include <localization_measurements/matched_projections_measurement.h>
+#include <localization_measurements/plane.h>
 #include <localization_measurements/timestamped_handrail_pose.h>
 
 #include <Eigen/Core>
@@ -38,6 +39,8 @@ MatchedProjectionsMeasurement MakeMatchedProjectionsMeasurement(const ff_msgs::V
 
 HandrailPointsMeasurement MakeHandrailPointsMeasurement(const ff_msgs::DepthLandmarks& depth_landmarks,
                                                         const TimestampedHandrailPose& world_T_handrail);
+
+Plane MakeHandrailPlane(const gtsam::Pose3& world_T_handrail, const double distance_to_wall);
 
 MatchedProjectionsMeasurement FrameChangeMatchedProjectionsMeasurement(
   const MatchedProjectionsMeasurement& matched_projections_measurement,

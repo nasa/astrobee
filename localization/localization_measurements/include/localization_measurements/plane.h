@@ -58,6 +58,7 @@ class GeneralPlane {
 // Useful for calculating distances from points to plane
 class HessianNormalPlane {
  public:
+  HessianNormalPlane() = default;
   HessianNormalPlane(const GeneralPlane& general_plane) {
     const double norm = general_plane.normal().norm();
     unit_normal_ = general_plane.normal() / norm;
@@ -73,6 +74,7 @@ class HessianNormalPlane {
 
 class Plane : public HessianNormalPlane {
  public:
+  Plane() = default;
   Plane(const PointNormalPlane& point_normal_plane) : HessianNormalPlane(point_normal_plane) {}
   Plane(const gtsam::Point3& point, const gtsam::Vector3& normal) : Plane(PointNormalPlane(point, normal)) {}
   double Distance(const gtsam::Point3& point, gtsam::OptionalJacobian<1, 3> d_distance_d_point = boost::none) const {

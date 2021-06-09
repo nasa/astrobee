@@ -44,10 +44,22 @@ MatchedProjectionsMeasurement MakeMatchedProjectionsMeasurement(const ff_msgs::V
   return matched_projections_measurement;
 }
 
+Plane MakeHandrailPlane(const gtsam::Pose3& world_T_handrail, const double distance_to_wall) {
+  // Assumes plane normal is aligned with x-axis of handrail and distance to wall is the distance along the negative x
+  // axis to the wall from the handrail
+  const gtsam::Point3 handrail_t_handrail_plane_point(-1.0 * distance_to_wall, 0.0, 0.0);
+  const gtsam::Point3 handrail_F_handrail_plane_normal(1.0, 0.0, 0.0);
+  const gtsam::Point3 world_t_handrail_plane_point = world_T_handrail * handrail_t_handrail_plane_point;
+  const gtsam::Vector3 world_F_handrail_plane_normal = world_T_handrail.rotation() * handrail_F_handrail_plane_normal;
+  return Plane(world_t_handrail_plane_point, world_F_handrail_plane_normal);
+}
+
 HandrailPointsMeasurement MakeHandrailPointsMeasurement(const ff_msgs::DepthLandmarks& depth_landmarks,
                                                         const TimestampedHandrailPose& world_T_handrail) {
   HandrailPointsMeasurement handrail_points_measurement;
   handrail_points_measurement.world_T_handrail = world_T_handrail;
+  handrail_points_measurement.world_T_handrail_plane =
+    MakeHandrailPlane(world_T_handrail.pose, world_T_handrail.distance_to_wall);
   const lc::Time timestamp = lc::TimeFromHeader(depth_landmarks.header);
   handrail_points_measurement.timestamp = timestamp;
 

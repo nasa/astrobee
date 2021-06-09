@@ -21,6 +21,7 @@
 
 #include <localization_common/time.h>
 #include <localization_measurements/measurement.h>
+#include <localization_measurements/plane.h>
 #include <localization_measurements/timestamped_handrail_pose.h>
 
 #include <gtsam/geometry/Point3.h>
@@ -32,6 +33,7 @@ struct HandrailPointsMeasurement : public Measurement {
   std::vector<gtsam::Point3> sensor_t_line_points;
   std::vector<gtsam::Point3> sensor_t_plane_points;
   TimestampedHandrailPose world_T_handrail;
+  Plane world_T_handrail_plane;
 };
 }  // namespace localization_measurements
 
