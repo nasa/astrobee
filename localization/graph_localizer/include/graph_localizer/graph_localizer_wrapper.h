@@ -124,9 +124,11 @@ class GraphLocalizerWrapper {
   boost::optional<gtsam::imuBias::ConstantBias> latest_biases_;
   GraphLocalizerInitializer graph_localizer_initializer_;
   FeatureCounts feature_counts_;
+  // world_T_body poses using sensor measurements
+  // TODO(rsoussan): Rename these? world_T_body_sensor_name?
   boost::optional<localization_measurements::TimestampedPose> sparse_mapping_pose_;
   boost::optional<localization_measurements::TimestampedPose> ar_tag_pose_;
-  boost::optional<localization_measurements::TimestampedHandrailPose> sensor_T_handrail_;
+  boost::optional<localization_measurements::TimestampedHandrailPose> handrail_pose_;
   std::unique_ptr<SanityChecker> sanity_checker_;
   double position_cov_log_det_lost_threshold_;
   double orientation_cov_log_det_lost_threshold_;

@@ -53,20 +53,19 @@ void HandrailFactorAdder::AddPointToLineOrLineSegmentFactors(
            params().huber_k);
   const go::KeyInfo key_info(&sym::P, go::NodeUpdaterType::CombinedNavState, handrail_points_measurement.timestamp);
   for (const auto& sensor_t_line_point : handrail_points_measurement.sensor_t_line_points) {
-    if (handrail_points_measurement.sensor_T_handrail.accurate_z_position) {
+    if (handrail_points_measurement.world_T_handrail.accurate_z_position) {
       gtsam::PointToLineSegmentFactor::shared_ptr point_to_line_segment_factor(new gtsam::PointToLineSegmentFactor(
-        sensor_t_line_point, handrail_points_measurement.sensor_T_handrail.pose, params().body_T_perch_cam,
-        handrail_points_measurement.sensor_T_handrail.length, point_to_line_segment_noise,
-        key_info.UninitializedKey()));
+        sensor_t_line_point, handrail_points_measurement.world_T_handrail.pose, params().body_T_perch_cam,
+        handrail_points_measurement.world_T_handrail.length, point_to_line_segment_noise, key_info.UninitializedKey()));
       point_to_line_or_line_segment_factors_to_add.push_back({{key_info}, point_to_line_segment_factor});
     } else {
       gtsam::PointToLineFactor::shared_ptr point_to_line_factor(
-        new gtsam::PointToLineFactor(sensor_t_line_point, handrail_points_measurement.sensor_T_handrail.pose,
+        new gtsam::PointToLineFactor(sensor_t_line_point, handrail_points_measurement.world_T_handrail.pose,
                                      params().body_T_perch_cam, point_to_line_noise, key_info.UninitializedKey()));
       point_to_line_or_line_segment_factors_to_add.push_back({{key_info}, point_to_line_factor});
     }
   }
-  if (handrail_points_measurement.sensor_T_handrail.accurate_z_position) {
+  if (handrail_points_measurement.world_T_handrail.accurate_z_position) {
     LogDebug("AddPointToLineOrLineSegmentFactors: Added " << point_to_line_or_line_segment_factors_to_add.size()
                                                           << " point to line segment factors.");
   } else {
