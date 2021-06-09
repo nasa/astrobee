@@ -53,34 +53,34 @@ TEST(PlaneTester, PointToPlaneDistanceXAxisPlane) {
   {
     const gtsam::Point3 test_point(1, 0, 0);
     const double distance = x_axis_plane.Distance(test_point);
-    EXPECT_DOUBLE_EQ(1.0, distance);
+    EXPECT_NEAR(1.0, distance, 1e-6);
   }
   {
     const gtsam::Point3 test_point(1, 2, 3);
     const double distance = x_axis_plane.Distance(test_point);
-    EXPECT_DOUBLE_EQ(1.0, distance);
+    EXPECT_NEAR(1.0, distance, 1e-6);
   }
   // Behind plane
   {
     const gtsam::Point3 test_point(-1, 0, 0);
     const double distance = x_axis_plane.Distance(test_point);
-    EXPECT_DOUBLE_EQ(-1.0, distance);
+    EXPECT_NEAR(-1.0, distance, 1e-6);
   }
   {
     const gtsam::Point3 test_point(-1, 2, 3);
     const double distance = x_axis_plane.Distance(test_point);
-    EXPECT_DOUBLE_EQ(-1.0, distance);
+    EXPECT_NEAR(-1.0, distance, 1e-6);
   }
   // On plane
   {
     const gtsam::Point3 test_point(0, 0, 0);
     const double distance = x_axis_plane.Distance(test_point);
-    EXPECT_DOUBLE_EQ(0, distance);
+    EXPECT_NEAR(0, distance, 1e-6);
   }
   {
     const gtsam::Point3 test_point(0, 2, 3);
     const double distance = x_axis_plane.Distance(test_point);
-    EXPECT_DOUBLE_EQ(0, distance);
+    EXPECT_NEAR(0, distance, 1e-6);
   }
 }
 
@@ -93,34 +93,34 @@ TEST(PlaneTester, PointToPlaneDistanceYAxisPlane) {
   {
     const gtsam::Point3 test_point(0, 2.3, 0);
     const double distance = y_axis_plane.Distance(test_point);
-    EXPECT_DOUBLE_EQ(1.2, distance);
+    EXPECT_NEAR(1.2, distance, 1e-6);
   }
   {
     const gtsam::Point3 test_point(1, 2.3, 3);
     const double distance = y_axis_plane.Distance(test_point);
-    EXPECT_DOUBLE_EQ(1.2, distance);
+    EXPECT_NEAR(1.2, distance, 1e-6);
   }
   // Behind plane
   {
     const gtsam::Point3 test_point(-1, -7.9, 100);
     const double distance = y_axis_plane.Distance(test_point);
-    EXPECT_DOUBLE_EQ(-9, distance);
+    EXPECT_NEAR(-9, distance, 1e-6);
   }
   {
     const gtsam::Point3 test_point(57, -7.9, 42.5);
     const double distance = y_axis_plane.Distance(test_point);
-    EXPECT_DOUBLE_EQ(-9, distance);
+    EXPECT_NEAR(-9, distance, 1e-6);
   }
   // On plane
   {
     const gtsam::Point3 test_point(-3, 1.1, 100);
     const double distance = y_axis_plane.Distance(test_point);
-    EXPECT_DOUBLE_EQ(0, distance);
+    EXPECT_NEAR(0, distance, 1e-6);
   }
   {
     const gtsam::Point3 test_point(21, 1.1, -3.3);
     const double distance = y_axis_plane.Distance(test_point);
-    EXPECT_DOUBLE_EQ(0, distance);
+    EXPECT_NEAR(0, distance, 1e-6);
   }
 }
 TEST(PlaneTester, PointToPlaneDistanceZAxisPlane) {
@@ -132,33 +132,33 @@ TEST(PlaneTester, PointToPlaneDistanceZAxisPlane) {
   {
     const gtsam::Point3 test_point(0, 0, 20);
     const double distance = z_axis_plane.Distance(test_point);
-    EXPECT_DOUBLE_EQ(108.2, distance);
+    EXPECT_NEAR(108.2, distance, 1e-6);
   }
   {
     const gtsam::Point3 test_point(1, 2.3, 23);
     const double distance = z_axis_plane.Distance(test_point);
-    EXPECT_DOUBLE_EQ(111.2, distance);
+    EXPECT_NEAR(111.2, distance, 1e-6);
   }
   // Behind plane
   {
     const gtsam::Point3 test_point(-2, -3.9, -100);
     const double distance = z_axis_plane.Distance(test_point);
-    EXPECT_DOUBLE_EQ(-11.8, distance);
+    EXPECT_NEAR(-11.8, distance, 1e-6);
   }
   {
     const gtsam::Point3 test_point(2.1, 0.23, -89.0);
     const double distance = z_axis_plane.Distance(test_point);
-    EXPECT_DOUBLE_EQ(-0.8, distance);
+    EXPECT_NEAR(-0.8, distance, 1e-6);
   }
   // On plane
   {
     const gtsam::Point3 test_point(-3, 1.1, -88.2);
     const double distance = z_axis_plane.Distance(test_point);
-    EXPECT_DOUBLE_EQ(0, distance);
+    EXPECT_NEAR(0, distance, 1e-6);
   }
   {
     const gtsam::Point3 test_point(21, 1.1, -88.2);
     const double distance = z_axis_plane.Distance(test_point);
-    EXPECT_DOUBLE_EQ(0, distance);
+    EXPECT_NEAR(0, distance, 1e-6);
   }
 }
