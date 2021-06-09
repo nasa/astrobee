@@ -19,14 +19,14 @@
 #ifndef LOCALIZATION_MEASUREMENTS_PLANE_H_
 #define LOCALIZATION_MEASUREMENTS_PLANE_H_
 
+#include <gtsam/base/Vector.h>
 #include <gtsam/geometry/Point3.h>
-#include <gtsam/geometry/Vector.h>
 
 namespace localization_measurements {
 class PointNormalPlane {
  public:
-  const gtsam::Point3& point() { return point_; }
-  const gtsam::Vector3& normal() { return normal_; }
+  const gtsam::Point3& point() const { return point_; }
+  const gtsam::Vector3& normal() const { return normal_; }
 
  private:
   gtsam::Point3 point_;
@@ -45,8 +45,8 @@ class GeneralPlane {
     d_ = -1.0 * normal_.dot(point_normal_plane.point());
   }
 
-  const gtsam::Vector3& normal() { return normal_; }
-  const double& d() { return d_; }
+  const gtsam::Vector3& normal() const { return normal_; }
+  const double& d() const { return d_; }
 
  private:
   // Contains plane parameters a,b,c
@@ -64,8 +64,8 @@ class HessianNormalPlane {
     unit_normal_ = general_plane.normal() / norm;
     constant_ = general_plane.d() / norm;
   }
-  const gtsam::Vector3& unit_normal() { return unit_normal_; }
-  const double& constant() { return constant_; }
+  const gtsam::Vector3& unit_normal() const { return unit_normal_; }
+  const double& constant() const { return constant_; }
 
  private:
   gtsam::Vector3 unit_normal_;

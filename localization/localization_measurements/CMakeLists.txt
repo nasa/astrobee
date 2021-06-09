@@ -29,3 +29,14 @@ create_library(TARGET ${PROJECT_NAME}
   INC ${catkin_INCLUDE_DIRS} 
   DEPS ff_msgs
 )
+
+if(CATKIN_ENABLE_TESTING)
+  find_package(rostest REQUIRED)
+  add_rostest_gtest(test_plane
+    test/test_plane.test
+    test/test_plane.cc
+  )
+  target_link_libraries(test_plane
+    localization_measurements gtsam
+  )
+endif()
