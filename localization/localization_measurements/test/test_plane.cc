@@ -23,24 +23,20 @@
 
 #include <gtest/gtest.h>
 
-// gtsam::Point3 trans = Eigen::Vector3d::Random();
 namespace lm = localization_measurements;
 
 TEST(PlaneTester, PointToPlaneJacobian) {
   for (int i = 0; i < 500; ++i) {
-    /*const gtsam::Point3 sensor_t_point = Eigen::Vector3d::Random();
-    const gtsam::Pose3 world_T_line = RandomPose();
-    const gtsam::Pose3 body_T_sensor = RandomPose();
-    const gtsam::Pose3 world_T_body = RandomPose();
-    const auto noise = gtsam::noiseModel::Unit::Create(2);
-    const gtsam::PointToLineFactor factor(sensor_t_point, world_T_line, body_T_sensor, noise, sym::P(0));
+    const gtsam::Point3 point = Eigen::Vector3d::Random();
+    const gtsam::Point3 plane_point = Eigen::Vector3d::Random();
+    const gtsam::Vector3 plane_normal = Eigen::Vector3d::Random();
+    const lm::Plane plane(plane_point, plane_normal);
     gtsam::Matrix H;
-    const auto factor_error = factor.evaluateError(world_T_body, H);
-    const auto numerical_H = gtsam::numericalDerivative11<gtsam::Vector, gtsam::Pose3>(
-      boost::function<gtsam::Vector(const gtsam::Pose3&)>(
-        boost::bind(&gtsam::PointToLineFactor::evaluateError, factor, _1, boost::none)),
-      world_T_body, 1e-5);
-    ASSERT_TRUE(numerical_H.isApprox(H.matrix(), 1e-6));*/
+    const double distance = plane.Distance(point, H);
+    const auto numerical_H = gtsam::numericalDerivative11<double, gtsam::Point3>(
+      boost::function<double(const gtsam::Point3&)>(boost::bind(&lm::Plane::Distance, plane, _1, boost::none)), point,
+      1e-5);
+    ASSERT_TRUE(numerical_H.isApprox(H.matrix(), 1e-6));
   }
 }
 

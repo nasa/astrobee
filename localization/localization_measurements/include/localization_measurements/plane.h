@@ -75,9 +75,11 @@ class Plane : public HessianNormalPlane {
  public:
   Plane(const PointNormalPlane& point_normal_plane) : HessianNormalPlane(point_normal_plane) {}
   Plane(const gtsam::Point3& point, const gtsam::Vector3& normal) : Plane(PointNormalPlane(point, normal)) {}
-  // TODO(rsooussan): add optional jacobian!!!
-  double Distance(const gtsam::Point3& point) const {
+  double Distance(const gtsam::Point3& point, gtsam::OptionalJacobian<1, 3> d_distance_d_point = boost::none) const {
     const double distance = unit_normal().dot(point) + constant();
+    if (d_distance_d_point) {
+      *d_distance_d_point = unit_normal().cwiseProduct(point);
+    }
     return distance;
   }
 };
