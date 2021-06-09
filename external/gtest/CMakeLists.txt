@@ -28,12 +28,12 @@ CMakeExternalProject(
 
 set(GTEST_INCLUDE_DIRS ${gtest_noros_SOURCE_DIR}/include PARENT_SCOPE)
 if (BUILD_SHARED_LIBS)
-  if(EXISTS "${gtest_noros_BINARY_DIR}/libgtest${CMAKE_SHARED_LIBRARY_SUFFIX}")
-      set(GTEST_LIBRARIES ${gtest_noros_BINARY_DIR}/libgtest${CMAKE_SHARED_LIBRARY_SUFFIX}
-    ${gtest_noros_BINARY_DIR}/libgtest_main${CMAKE_SHARED_LIBRARY_SUFFIX})
-  else()
+  if(EXISTS "${gtest_noros_BINARY_DIR}/lib/libgtest${CMAKE_SHARED_LIBRARY_SUFFIX}")
       set(GTEST_LIBRARIES ${gtest_noros_BINARY_DIR}/lib/libgtest${CMAKE_SHARED_LIBRARY_SUFFIX}
     ${gtest_noros_BINARY_DIR}/lib/libgtest_main${CMAKE_SHARED_LIBRARY_SUFFIX})
+  else()
+      set(GTEST_LIBRARIES ${gtest_noros_BINARY_DIR}/libgtest${CMAKE_SHARED_LIBRARY_SUFFIX}
+    ${gtest_noros_BINARY_DIR}/libgtest_main${CMAKE_SHARED_LIBRARY_SUFFIX})
   endif()
 
 else (BUILD_SHARED_LIBS)
