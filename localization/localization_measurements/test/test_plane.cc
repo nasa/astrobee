@@ -83,3 +83,43 @@ TEST(PlaneTester, PointToPlaneDistanceXAxisPlane) {
     EXPECT_DOUBLE_EQ(distance, 0);
   }
 }
+
+TEST(PlaneTester, PointToPlaneDistanceYAxisPlane) {
+  const gtsam::Point3 point(0, 1.1, 0);
+  const gtsam::Vector3 normal(0, 1, 0);
+  // Plane perpendicular to y-axis
+  const lm::Plane y_axis_plane(point, normal);
+  // In front of plane
+  {
+    const gtsam::Point3 test_point(0, 2.3, 0);
+    const double distance = y_axis_plane.Distance(test_point);
+    EXPECT_DOUBLE_EQ(distance, 1.2);
+  }
+  {
+    const gtsam::Point3 test_point(1, 2.3, 3);
+    const double distance = y_axis_plane.Distance(test_point);
+    EXPECT_DOUBLE_EQ(distance, 1.2);
+  }
+  // Behind plane
+  {
+    const gtsam::Point3 test_point(-1, -7.9, 100);
+    const double distance = y_axis_plane.Distance(test_point);
+    EXPECT_DOUBLE_EQ(distance, -9);
+  }
+  {
+    const gtsam::Point3 test_point(57, -7.9, 42.5);
+    const double distance = y_axis_plane.Distance(test_point);
+    EXPECT_DOUBLE_EQ(distance, -9);
+  }
+  // On plane
+  {
+    const gtsam::Point3 test_point(-3, 1.1, 100);
+    const double distance = y_axis_plane.Distance(test_point);
+    EXPECT_DOUBLE_EQ(distance, 0);
+  }
+  {
+    const gtsam::Point3 test_point(21, 1.1, -3.3);
+    const double distance = y_axis_plane.Distance(test_point);
+    EXPECT_DOUBLE_EQ(distance, 0);
+  }
+}
