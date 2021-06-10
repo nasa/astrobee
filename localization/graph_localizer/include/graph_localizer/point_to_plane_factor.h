@@ -60,21 +60,24 @@ class PointToPlaneFactor : public NoiseModelFactor1<Pose3> {
   }
 
   Vector evaluateError(const Pose3& world_T_body, boost::optional<Matrix&> H = boost::none) const override {
-    OptionalJacobian<6, 6> d_world_T_sensor_d_world_T_body = boost::none;
-    OptionalJacobian<3, 6> d_world_t_point_d_world_T_sensor = boost::none;
-    OptionalJacobian<1, 3> d_distance_d_world_t_point = boost::none;
     if (H) {
-      *d_world_T_sensor_d_world_T_body = Eigen::Matrix<double, 6, 6>::Zero();
-      *d_world_t_point_d_world_T_sensor = Eigen::Matrix<double, 3, 6>::Zero();
-      *d_distance_d_world_t_point = Eigen::Matrix<double, 1, 3>::Zero();
+      Matrix66 d_world_T_sensor_d_world_T_body;
+      Matrix36 d_world_t_point_d_world_T_sensor;
+      Matrix13 d_distance_d_world_t_point;
+      const auto error = getError(world_T_body, d_world_T_sensor_d_world_T_body, d_world_t_point_d_world_T_sensor,
+                                  d_distance_d_world_t_point);
+      *H = d_distance_d_world_t_point * d_world_t_point_d_world_T_sensor * d_world_T_sensor_d_world_T_body;
+      return error;
     }
+    return getError(world_T_body);
+  }
+
+  Vector getError(const Pose3& world_T_body, OptionalJacobian<6, 6> d_world_T_sensor_d_world_T_body = boost::none,
+                  OptionalJacobian<3, 6> d_world_t_point_d_world_T_sensor = boost::none,
+                  OptionalJacobian<1, 3> d_distance_d_world_t_point = boost::none) const {
     const Pose3 world_T_sensor = world_T_body.transformPoseFrom(body_T_sensor_, d_world_T_sensor_d_world_T_body);
     const Point3 world_t_point = world_T_sensor.transformFrom(sensor_t_point_, d_world_t_point_d_world_T_sensor);
     const double distance = world_T_plane_.Distance(world_t_point, d_distance_d_world_t_point);
-    if (H) {
-      *H = Eigen::Matrix<double, 1, 6>::Zero();
-      *H = *d_distance_d_world_t_point * *d_world_t_point_d_world_T_sensor * *d_world_T_sensor_d_world_T_body;
-    }
     Vector error(1);
     error << distance;
     return error;
