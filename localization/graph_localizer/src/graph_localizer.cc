@@ -19,6 +19,10 @@
 #include <graph_localizer/graph_localizer.h>
 #include <graph_localizer/loc_projection_factor.h>
 #include <graph_localizer/loc_pose_factor.h>
+#include <graph_localizer/point_to_handrail_endpoint_factor.h>
+#include <graph_localizer/point_to_line_factor.h>
+#include <graph_localizer/point_to_line_segment_factor.h>
+#include <graph_localizer/point_to_plane_factor.h>
 #include <graph_localizer/pose_rotation_factor.h>
 #include <graph_localizer/utilities.h>
 #include <graph_optimizer/utilities.h>
@@ -359,11 +363,15 @@ void GraphLocalizer::RemoveOldMeasurementsFromCumulativeFactors(const gtsam::Key
 bool GraphLocalizer::ValidGraph() const {
   // If graph consists of only priors and imu factors, consider it invalid and don't optimize.
   // Make sure smart factors are valid before including them.
-  const int num_valid_non_imu_measurement_factors = NumOFFactors(true) +
-                                                    go::NumFactors<gtsam::LocPoseFactor>(graph_factors()) +
-                                                    go::NumFactors<gtsam::LocProjectionFactor<>>(graph_factors()) +
-                                                    go::NumFactors<gtsam::PoseRotationFactor>(graph_factors()) +
-                                                    go::NumFactors<gtsam::BetweenFactor<gtsam::Pose3>>(graph_factors());
+  const int num_valid_non_imu_measurement_factors =
+    NumOFFactors(true) + go::NumFactors<gtsam::LocPoseFactor>(graph_factors()) +
+    go::NumFactors<gtsam::LocProjectionFactor<>>(graph_factors()) +
+    go::NumFactors<gtsam::PointToLineFactor>(graph_factors()) +
+    go::NumFactors<gtsam::PointToLineSegmentFactor>(graph_factors()) +
+    go::NumFactors<gtsam::PointToPlaneFactor>(graph_factors()) +
+    go::NumFactors<gtsam::PointToHandrailEndpointFactor>(graph_factors()) +
+    go::NumFactors<gtsam::PoseRotationFactor>(graph_factors()) +
+    go::NumFactors<gtsam::BetweenFactor<gtsam::Pose3>>(graph_factors());
   return num_valid_non_imu_measurement_factors > 0;
 }
 
