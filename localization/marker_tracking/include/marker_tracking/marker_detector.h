@@ -19,6 +19,7 @@
 #ifndef MARKER_TRACKING_MARKER_DETECTOR_H_
 #define MARKER_TRACKING_MARKER_DETECTOR_H_
 
+// Needed by ALVAR headers
 #ifndef CV__ENABLE_C_API_CTORS
 #define CV__ENABLE_C_API_CTORS
 #endif

@@ -24,6 +24,7 @@
 
 #include <ff_util/ff_names.h>
 
+// Needed by ALVAR headers
 #ifndef CV__ENABLE_C_API_CTORS
 #define CV__ENABLE_C_API_CTORS
 #endif
