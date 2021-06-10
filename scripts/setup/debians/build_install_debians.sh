@@ -28,11 +28,8 @@ sudo apt-get install -y devscripts equivs libproj-dev
 rm -f *_amd64.deb
 DIST=`cat /etc/os-release | grep -oP "(?<=VERSION_CODENAME=).*"`
 
-if [ "$DIST" = "xenial" ]; then
-  echo "Ubuntu 16 detected"
-elif [ "$DIST" = "bionic" ]; then
-  echo "Ubuntu 18 detected"
-  # Install dependencies
+if [ "$DIST" != "xenial" ]; then
+  echo "Ubuntu 16 not detected"
 
   # opencv
   cd ${DEBIAN_LOC}/opencv
@@ -56,42 +53,18 @@ elif [ "$DIST" = "bionic" ]; then
   cp ${DEBIAN_LOC}/files/dbow2_changelog ${DEBIAN_LOC}/dbow2/changelog
   # gtsam
   cp ${DEBIAN_LOC}/files/gtsam_changelog ${DEBIAN_LOC}/gtsam/changelog
-  # decomputil
-  # jps3d
+fi
+
+if [ "$DIST" = "bionic" ]; then
+  echo "Ubuntu 18 detected"
+   # jps3d
   sudo apt-get install -y libvtk6.3 libboost-filesystem1.62.0 libboost-system1.62.0
   cp ${DEBIAN_LOC}/files/jps3d_changelog ${DEBIAN_LOC}/jps3d/changelog
-  # openmvg
 elif [ "$DIST" = "focal" ]; then
   echo "Ubuntu 20 detected"
-  # Install dependencies
-
-  # opencv
-  cd ${DEBIAN_LOC}/opencv
-  sudo mk-build-deps -i -r -t "apt-get --no-install-recommends -y" control
-  cd ${DEBIAN_LOC}
-  ./build_opencv.sh || exit 1
-  cd ${DEBIAN_LOC}/libopencv
-  sudo dpkg -i libopencv*_amd64.deb || exit 1
-
-  # alvar
-  cp ${DEBIAN_LOC}/files/alvar_rules ${DEBIAN_LOC}/alvar/rules
-  cp ${DEBIAN_LOC}/files/alvar_control ${DEBIAN_LOC}/alvar/control
-  cp ${DEBIAN_LOC}/files/alvar_changelog ${DEBIAN_LOC}/alvar/changelog
-  # dlib
-  cp ${DEBIAN_LOC}/files/dlib_rules ${DEBIAN_LOC}/dlib/rules
-  cp ${DEBIAN_LOC}/files/dlib_control ${DEBIAN_LOC}/dlib/control
-  cp ${DEBIAN_LOC}/files/dlib_changelog ${DEBIAN_LOC}/dlib/changelog
-  # dbow2
-  cp ${DEBIAN_LOC}/files/dbow2_rules ${DEBIAN_LOC}/dbow2/rules
-  cp ${DEBIAN_LOC}/files/dbow2_control ${DEBIAN_LOC}/dbow2/control
-  cp ${DEBIAN_LOC}/files/dbow2_changelog ${DEBIAN_LOC}/dbow2/changelog
-  # gtsam
-  cp ${DEBIAN_LOC}/files/gtsam_changelog ${DEBIAN_LOC}/gtsam/changelog
-  # decomputil
   #jps3d
   sudo apt-get install -y libvtk7.1p libboost-filesystem1.71.0 libboost-system1.71.0
   cp ${DEBIAN_LOC}/files/jps3d_changelog ${DEBIAN_LOC}/jps3d/changelog
-  # openmvg
 fi
 
 # alvar
