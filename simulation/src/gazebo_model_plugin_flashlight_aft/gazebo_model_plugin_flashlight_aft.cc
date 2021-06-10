@@ -157,8 +157,13 @@ class GazeboModelPluginFlashlightAft : public FreeFlyerModelPlugin {
     light_.set_spot_inner_angle(0.6);
     light_.set_spot_outer_angle(2.2);
     light_.set_spot_falloff(1.0);
+
+    // For some reason common::Color stopped existing in later versions
+    #if GAZEBO_MAJOR_VERSION < 11
     msgs::Set(light_.mutable_diffuse(), common::Color(0.5, 0.5, 0.5, 1));
     msgs::Set(light_.mutable_specular(), common::Color(0.1, 0.1, 0.1, 1));
+    #endif
+
     #if GAZEBO_MAJOR_VERSION > 7
     msgs::Set(light_.mutable_pose(), pose_ +
        GetModel()->GetLink()->WorldPose());
