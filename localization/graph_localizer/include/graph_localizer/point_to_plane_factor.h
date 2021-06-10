@@ -28,7 +28,7 @@
 #include <string>
 
 namespace gtsam {
-class PointToPlaneFactor : public NoiseModelFactor1<gtsam::Pose3> {
+class PointToPlaneFactor : public NoiseModelFactor1<Pose3> {
   typedef NoiseModelFactor1<Pose3> Base;
   typedef PointToPlaneFactor This;
 
@@ -59,10 +59,10 @@ class PointToPlaneFactor : public NoiseModelFactor1<gtsam::Pose3> {
            traits<Pose3>::Equals(this->body_T_sensor(), e->body_T_sensor(), tol);
   }
 
-  Vector error(const Pose3& world_T_body, boost::optional<Matrix&> H = boost::none) const {
-    boost::optional<gtsam::Matrix> d_world_T_sensor_d_world_T_body = boost::none;
-    boost::optional<gtsam::Matrix> d_world_t_point_d_world_T_sensor = boost::none;
-    boost::optional<gtsam::Matrix> d_distance_d_world_t_point = boost::none;
+  Vector evaluateError(const Pose3& world_T_body, boost::optional<Matrix&> H = boost::none) const override {
+    OptionalJacobian<6, 6> d_world_T_sensor_d_world_T_body = boost::none;
+    OptionalJacobian<3, 6> d_world_t_point_d_world_T_sensor = boost::none;
+    OptionalJacobian<1, 3> d_distance_d_world_t_point = boost::none;
     if (H) {
       *d_world_T_sensor_d_world_T_body = Eigen::Matrix<double, 6, 6>::Zero();
       *d_world_t_point_d_world_T_sensor = Eigen::Matrix<double, 3, 6>::Zero();
@@ -70,12 +70,14 @@ class PointToPlaneFactor : public NoiseModelFactor1<gtsam::Pose3> {
     }
     const Pose3 world_T_sensor = world_T_body.transformPoseFrom(body_T_sensor_, d_world_T_sensor_d_world_T_body);
     const Point3 world_t_point = world_T_sensor.transformFrom(sensor_t_point_, d_world_t_point_d_world_T_sensor);
-    const distance = world_T_plane.Distance(world_t_point, d_distance_d_world_t_point);
+    const double distance = world_T_plane_.Distance(world_t_point, d_distance_d_world_t_point);
     if (H) {
       *H = Eigen::Matrix<double, 1, 6>::Zero();
       *H = *d_distance_d_world_t_point * *d_world_t_point_d_world_T_sensor * *d_world_T_sensor_d_world_T_body;
     }
-    return distance;
+    Vector error(1);
+    error << distance;
+    return error;
   }
 
   const Point3& sensor_t_point() const { return sensor_t_point_; }
@@ -94,7 +96,7 @@ class PointToPlaneFactor : public NoiseModelFactor1<gtsam::Pose3> {
   }
 
   Point3 sensor_t_point_;
-  localization_measurements world_T_plane_;
+  localization_measurements::Plane world_T_plane_;
   Pose3 body_T_sensor_;
 
  public:
