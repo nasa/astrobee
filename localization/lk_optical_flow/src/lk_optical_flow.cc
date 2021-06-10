@@ -19,11 +19,13 @@
 #include <lk_optical_flow/lk_optical_flow.h>
 #include <ff_msgs/CameraRegistration.h>
 
+#include <opencv2/highgui/highgui_c.h>
 #include <opencv2/features2d/features2d.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/video/tracking.hpp>
 #include <ros/ros.h>
+
 
 namespace lk_optical_flow {
 

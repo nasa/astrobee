@@ -1,9 +1,7 @@
-# This will test an Astrobee kinetic docker container.
+# This will test an Astrobee focal docker container.
 # You must set the docker context to be the repository root directory
 
-FROM astrobee/astrobee:latest-kinetic
+FROM astrobee/astrobee:latest-focal
 
 # Run tests
-
-COPY . /src/astrobee
 RUN cd /build/astrobee && make -j`nproc` tests && make -j`nproc` test

@@ -25,11 +25,13 @@ usage()
 {
     echo "usage: sysinfo_page [[[-a file ] [-i]] | [-h]]"
 }
-ubuntu18=0
+os="xenial"
 
 while [ "$1" != "" ]; do
     case $1 in
-        -n | --ubuntu18 )               ubuntu18=1
+        -b | --bionic )                 os="bionic"
+                                        ;;
+        -f | --focal )                  os="focal"
                                         ;;
         -h | --help )           		usage
                                 		exit
@@ -49,7 +51,7 @@ XAUTH=/tmp/.docker.xauth
 touch $XAUTH
 xauth nlist $DISPLAY | sed -e 's/^..../ffff/' | xauth -f $XAUTH nmerge -
 
-if [ $ubuntu18 == 0 ]; then
+if [ "$os" = "xenial" ]; then
 docker run -it --rm --name astrobee \
         --volume=$XSOCK:$XSOCK:rw \
         --volume=$XAUTH:$XAUTH:rw \
@@ -57,15 +59,24 @@ docker run -it --rm --name astrobee \
         --env="DISPLAY" \
         --user="astrobee" \
         --gpus all \
-      astrobee/astrobee:latest-kinetic \
+      astrobee/astrobee:latest-xenial \
     /astrobee_init.sh roslaunch astrobee sim.launch dds:=false
-else
+elif [ "$os" = "bionic" ]; then
 docker run -it --rm --name astrobee \
         --volume=$XSOCK:$XSOCK:rw \
         --volume=$XAUTH:$XAUTH:rw \
         --env="XAUTHORITY=${XAUTH}" \
         --env="DISPLAY" \
         --user="astrobee" \
-      astrobee/astrobee:latest-melodic \
+      astrobee/astrobee:latest-bionic \
+    /astrobee_init.sh roslaunch astrobee sim.launch dds:=false
+elif [ "$os" = "focal" ]; then
+docker run -it --rm --name astrobee \
+        --volume=$XSOCK:$XSOCK:rw \
+        --volume=$XAUTH:$XAUTH:rw \
+        --env="XAUTHORITY=${XAUTH}" \
+        --env="DISPLAY" \
+        --user="astrobee" \
+      astrobee/astrobee:latest-focal \
     /astrobee_init.sh roslaunch astrobee sim.launch dds:=false
 fi
