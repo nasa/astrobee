@@ -24,7 +24,6 @@
 #endif
 #include <opencv2/imgproc.hpp>
 
-
 // A simplified version of the marker detector that doesn't calculate
 // C_T_AR.
 //
