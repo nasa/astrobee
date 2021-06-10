@@ -45,8 +45,7 @@ class PointToPlaneFactor : public NoiseModelFactor1<Pose3> {
   void print(const std::string& s = "", const KeyFormatter& keyFormatter = DefaultKeyFormatter) const override {
     std::cout << s << "PointToPlaneFactor, z = ";
     traits<Point3>::Print(sensor_t_point_);
-    // traits<localization_measurement::Plane>::Print(world_T_plane_);
-    world_T_plane_.print(s);
+    traits<localization_measurements::Plane>::Print(world_T_plane_);
     traits<Pose3>::Print(body_T_sensor_);
     Base::print("", keyFormatter);
   }
@@ -54,8 +53,7 @@ class PointToPlaneFactor : public NoiseModelFactor1<Pose3> {
   bool equals(const NonlinearFactor& p, double tol = 1e-9) const override {
     const This* e = dynamic_cast<const This*>(&p);
     return e && Base::equals(p, tol) && traits<Point3>::Equals(this->sensor_t_point(), e->sensor_t_point(), tol) &&
-           // traits<localization_measurements::Plane>::Equals(this->world_T_plane(), e->world_T_plane(), tol) &&
-           this->world_T_plane().equals(e->world_T_plane(), tol) &&
+           traits<localization_measurements::Plane>::Equals(this->world_T_plane(), e->world_T_plane(), tol) &&
            traits<Pose3>::Equals(this->body_T_sensor(), e->body_T_sensor(), tol);
   }
 

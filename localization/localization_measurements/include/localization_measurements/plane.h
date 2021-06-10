@@ -19,6 +19,7 @@
 #ifndef LOCALIZATION_MEASUREMENTS_PLANE_H_
 #define LOCALIZATION_MEASUREMENTS_PLANE_H_
 
+#include <gtsam/base/Testable.h>
 #include <gtsam/base/Vector.h>
 #include <gtsam/geometry/Point3.h>
 
@@ -110,6 +111,12 @@ class Plane : public HessianNormalPlane {
     ar& BOOST_SERIALIZATION_BASE_OBJECT_NVP(Base);
   }
 };
+
 }  // namespace localization_measurements
+
+namespace gtsam {
+template <>
+struct traits<localization_measurements::Plane> : public Testable<localization_measurements::Plane> {};
+}  // namespace gtsam
 
 #endif  // LOCALIZATION_MEASUREMENTS_PLANE_H_
