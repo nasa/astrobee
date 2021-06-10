@@ -36,7 +36,7 @@ namespace marker_tracking {
   // 3 - TL
   typedef std::map<int, Eigen::Matrix<float, 4, 3>,
                    std::less<int>,
-                   std::allocator<std::pair<int const, Eigen::Matrix<float, 4, 3>> > >
+                   Eigen::aligned_allocator<std::pair<int const, Eigen::Matrix<float, 4, 3>> > >
     ARTagMap;
   void LoadARTagLocation(std::string const& filename,
                          ARTagMap* ar_corner_world_location);
