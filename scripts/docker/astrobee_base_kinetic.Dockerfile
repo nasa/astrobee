@@ -21,6 +21,7 @@ RUN apt-get update \
     lsb-release \
     sudo \
     wget \
+    curl \
   && rm -rf /var/lib/apt/lists/*
 COPY ./scripts/setup/*.sh /setup/astrobee/
 COPY ./scripts/setup/debians /setup/astrobee/debians
