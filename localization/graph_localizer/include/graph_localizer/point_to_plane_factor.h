@@ -45,8 +45,7 @@ class PointToPlaneFactor : public NoiseModelFactor1<Pose3> {
   void print(const std::string& s = "", const KeyFormatter& keyFormatter = DefaultKeyFormatter) const override {
     std::cout << s << "PointToPlaneFactor, z = ";
     traits<Point3>::Print(sensor_t_point_);
-    // TODO(rsoussan): add print for plane!
-    // traits<Pose3>::Print(world_T_plane_);
+    traits<localization_measurement::Plane>::Print(world_T_plane_);
     traits<Pose3>::Print(body_T_sensor_);
     Base::print("", keyFormatter);
   }
@@ -54,8 +53,7 @@ class PointToPlaneFactor : public NoiseModelFactor1<Pose3> {
   bool equals(const NonlinearFactor& p, double tol = 1e-9) const override {
     const This* e = dynamic_cast<const This*>(&p);
     return e && Base::equals(p, tol) && traits<Point3>::Equals(this->sensor_t_point(), e->sensor_t_point(), tol) &&
-           // TODO(rsoussan): add this!
-           // traits<Pose3>::Equals(this->world_T_plane(), e->world_T_plane(), tol) &&
+           traits<localization_measurements::Plane>::Equals(this->world_T_plane(), e->world_T_plane(), tol) &&
            traits<Pose3>::Equals(this->body_T_sensor(), e->body_T_sensor(), tol);
   }
 
@@ -93,8 +91,7 @@ class PointToPlaneFactor : public NoiseModelFactor1<Pose3> {
   void serialize(ARCHIVE& ar, const unsigned int /*version*/) {
     ar& BOOST_SERIALIZATION_BASE_OBJECT_NVP(Base);
     ar& BOOST_SERIALIZATION_NVP(sensor_t_point_);
-    // TODO(rsoussan): add this!
-    // ar& BOOST_SERIALIZATION_NVP(world_T_plane_);
+    ar& BOOST_SERIALIZATION_NVP(world_T_plane_);
     ar& BOOST_SERIALIZATION_NVP(body_T_sensor_);
   }
 

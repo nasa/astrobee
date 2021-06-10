@@ -68,14 +68,24 @@ class HessianNormalPlane {
   const double& constant() const { return constant_; }
 
  private:
+  // Serialization function
+  friend class boost::serialization::access;
+  template <class ARCHIVE>
+  void serialize(ARCHIVE& ar, const unsigned int /*version*/) {
+    ar& BOOST_SERIALIZATION_NVP(unit_normal_);
+    ar& BOOST_SERIALIZATION_NVP(constant_);
+  }
+
   gtsam::Vector3 unit_normal_;
   double constant_;
 };
 
 class Plane : public HessianNormalPlane {
+  typedef HessianNormalPlane Base;
+
  public:
   Plane() = default;
-  Plane(const PointNormalPlane& point_normal_plane) : HessianNormalPlane(point_normal_plane) {}
+  Plane(const PointNormalPlane& point_normal_plane) : Base(point_normal_plane) {}
   Plane(const gtsam::Point3& point, const gtsam::Vector3& normal) : Plane(PointNormalPlane(point, normal)) {}
   double Distance(const gtsam::Point3& point, gtsam::OptionalJacobian<1, 3> d_distance_d_point = boost::none) const {
     const double distance = unit_normal().dot(point) + constant();
@@ -83,6 +93,21 @@ class Plane : public HessianNormalPlane {
       *d_distance_d_point = unit_normal();
     }
     return distance;
+  }
+  void print(const std::string& s = "") const {
+    std::cout << (s.empty() ? s : s + " ") << unit_normal() << ", " << constant() << std::endl;
+  }
+  bool equals(const Plane& plane, double tol = 1e-9) const {
+    return gtsam::traits<gtsam::Vector3>::Equals(unit_normal(), plane.unit_normal(), tol) &&
+           std::abs(constant() - plane.constant()) < tol;
+  }
+
+ private:
+  // Serialization function
+  friend class boost::serialization::access;
+  template <class ARCHIVE>
+  void serialize(ARCHIVE& ar, const unsigned int /*version*/) {
+    ar& BOOST_SERIALIZATION_BASE_OBJECT_NVP(Base);
   }
 };
 }  // namespace localization_measurements
