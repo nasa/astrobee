@@ -1,8 +1,8 @@
-# This will set up an Astrobee kinetic docker container using the non-NASA install instructions.
-# This image builds on top of the base kinetic image building the code.
+# This will set up an Astrobee melodic docker container using the non-NASA install instructions.
+# This image builds on top of the base melodic image building the code.
 # You must set the docker context to be the repository root directory
 
-FROM astrobee/astrobee:base-latest-kinetic
+FROM astrobee/astrobee:base-latest-focal
 
 ENV USERNAME astrobee
 

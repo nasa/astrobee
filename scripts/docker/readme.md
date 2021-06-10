@@ -12,11 +12,13 @@ The docker image for the astrobee FSW is divided throughout 2 docker files.
 
 Available docker files:
 
-	astrobee_base_kinetic - Contains installation of all astrobee dependencies the Ubuntu 16.04 + ROS kinetic setup.
-	astrobee_base_melodic - Contains installation of all astrobee dependencies the Ubuntu 18.04 + ROS melodic setup.
+    astrobee_base_xenial - Contains installation of all astrobee dependencies the Ubuntu 16.04 + ROS kinetic setup.
+    astrobee_base_bionic - Contains installation of all astrobee dependencies the Ubuntu 18.04 + ROS melodic setup.
+    astrobee_base_focal - Contains installation of all astrobee dependencies the Ubuntu 20.04 + ROS noetic setup.
 
-	astrobee_kinetic - Builds the astrobee FSW code on top of astrobee_base_kinetic.
-	astrobee_melodic - Builds the astrobee FSW code on top of astrobee_base_melodic.
+    astrobee_xenial - Builds the astrobee FSW code on top of astrobee_base_xenial.
+    astrobee_bionic - Builds the astrobee FSW code on top of astrobee_base_bionic.
+    astrobee_focal - Builds the astrobee FSW code on top of astrobee_base_focal.
 
 
 ## Building the docker images
@@ -24,14 +26,14 @@ Available docker files:
 To build the docker images, run:
     
     ./build.sh
-The option -n is used for ubuntu 18 docker images
+The option --bionic is used for ubuntu 18 docker images, and --focal is used for ubuntu 20 docker images.
 
 ## Run the container
 
 To run the docker container:
 
     ./run.sh
-The option -n is used for ubuntu 18 docker images
+The option --bionic is used for ubuntu 18 docker images, and --focal is used for ubuntu 20 docker images.
 
 To open another terminal inside the docker container:
 
@@ -67,7 +69,7 @@ Next, download the cross toolchain and install the chroot:
 
 From the root of the repository, run:
 
-	./scripts/docker/cross_compile/cross_compile.sh
+    ./scripts/docker/cross_compile/cross_compile.sh
 
 The code will be cross-compiles inside the docker container in /opt/astrobee, and
 can be copied to the robot.
