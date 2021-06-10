@@ -19,6 +19,7 @@
 #include <graph_localizer/handrail_factor_adder.h>
 #include <graph_localizer/point_to_line_factor.h>
 #include <graph_localizer/point_to_line_segment_factor.h>
+#include <graph_localizer/point_to_plane_factor.h>
 #include <graph_localizer/utilities.h>
 #include <localization_common/logger.h>
 
@@ -82,6 +83,23 @@ void HandrailFactorAdder::AddPointToPlaneFactors(const lm::HandrailPointsMeasure
     LogDebug("AddPointToPlaneFactors: Not enough handrail plane measurements.");
     return;
   }
+
+  go::FactorsToAdd point_to_plane_factors_to_add;
+  point_to_plane_factors_to_add.reserve(num_plane_measurements);
+  point_to_plane_factors_to_add.SetTimestamp(handrail_points_measurement.timestamp);
+  const gtsam::Vector1 point_to_plane_noise_sigmas((gtsam::Vector(1) << params().point_to_plane_stddev).finished());
+  const auto point_to_plane_noise =
+    Robust(gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(point_to_plane_noise_sigmas)),
+           params().huber_k);
+  const go::KeyInfo key_info(&sym::P, go::NodeUpdaterType::CombinedNavState, handrail_points_measurement.timestamp);
+  for (const auto& sensor_t_plane_point : handrail_points_measurement.sensor_t_plane_points) {
+    gtsam::PointToPlaneFactor::shared_ptr point_to_plane_factor(
+      new gtsam::PointToPlaneFactor(sensor_t_plane_point, handrail_points_measurement.world_T_handrail_plane,
+                                    params().body_T_perch_cam, point_to_plane_noise, key_info.UninitializedKey()));
+    point_to_plane_factors_to_add.push_back({{key_info}, point_to_plane_factor});
+  }
+  LogDebug("AddPointToPlaneFactors: Added " << point_to_plane_factors_to_add.size() << " point to plane factors.");
+  factors_to_add.emplace_back(point_to_plane_factors_to_add);
 }
 
 std::vector<go::FactorsToAdd> HandrailFactorAdder::AddFactors(
