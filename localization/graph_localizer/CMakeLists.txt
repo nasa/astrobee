@@ -70,6 +70,14 @@ if(CATKIN_ENABLE_TESTING)
   target_link_libraries(test_point_to_plane_factor
     graph_localizer localization_measurements gtsam
   )
+  add_rostest_gtest(test_point_to_handrail_endpoint_factor
+    test/test_point_to_handrail_endpoint_factor.test
+    test/test_point_to_handrail_endpoint_factor.cc
+  )
+  target_link_libraries(test_point_to_handrail_endpoint_factor
+    graph_localizer gtsam
+  )
+
 endif()
 
 install_launch_files()

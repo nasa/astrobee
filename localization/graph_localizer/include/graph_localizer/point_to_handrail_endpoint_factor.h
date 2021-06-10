@@ -77,8 +77,8 @@ class PointToHandrailEndpointFactor : public NoiseModelFactor1<Pose3> {
                   OptionalJacobian<3, 3> d_local_d_world_t_point = boost::none) const {
     const Pose3 world_T_sensor = world_T_body.transformPoseFrom(body_T_sensor_, d_world_T_sensor_d_world_T_body);
     const Point3 world_t_point = world_T_sensor.transformFrom(sensor_t_point_, d_world_t_point_d_world_T_sensor);
-    const distance_to_endpoint_a = (world_t_point - world_t_endpoint_a_).norm();
-    const distance_to_endpoint_b = (world_t_point - world_t_endpoint_b_).norm();
+    const double distance_to_endpoint_a = (world_t_point - world_t_endpoint_a_).norm();
+    const double distance_to_endpoint_b = (world_t_point - world_t_endpoint_b_).norm();
     // TODO(rsoussan): Find closest endpoint before creating factor and stick to it? Add option to redo correspondence?
     const Point3& world_t_closest_endpoint =
       distance_to_endpoint_a < distance_to_endpoint_b ? world_t_endpoint_a_ : world_t_endpoint_b_;
@@ -90,7 +90,7 @@ class PointToHandrailEndpointFactor : public NoiseModelFactor1<Pose3> {
   // In gtsam terminology, local is the difference in the tangent space between two Lie group elements.
   // In this case this is simply the difference between the two Point3 elements.
   static Point3 local(const Point3& point1, const Point3& point2,
-                      OptionalJacobian<3, 3> d_local_d_point1 = boost::none) const {
+                      OptionalJacobian<3, 3> d_local_d_point1 = boost::none) {
     if (d_local_d_point1) {
       *d_local_d_point1 = I_3x3;
     }
