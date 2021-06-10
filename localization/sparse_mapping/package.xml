@@ -19,10 +19,12 @@
   <build_depend>interest_point</build_depend>
   <build_depend>config_reader</build_depend>
   <build_depend>ff_common</build_depend>
+  <build_depend>localization_common</build_depend>
   <run_depend>roscpp</run_depend>
   <run_depend>camera</run_depend>
   <run_depend>interest_point</run_depend>
   <run_depend>config_reader</run_depend>
   <run_depend>ff_common</run_depend>
+  <run_depend>localization_common</run_depend>
 
 </package>

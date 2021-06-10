@@ -21,8 +21,8 @@
  * It should be included in any file that uses vectors of Eigen objects.
  **/
 
-#ifndef SPARSE_MAPPING_EIGEN_VECTORS_H_
-#define SPARSE_MAPPING_EIGEN_VECTORS_H_
+#ifndef LOCALIZATION_COMMON_EIGEN_VECTORS_H_
+#define LOCALIZATION_COMMON_EIGEN_VECTORS_H_
 
 #include <Eigen/Geometry>
 #include <Eigen/StdVector>
@@ -32,5 +32,5 @@ EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION(Eigen::Vector3d)
 EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION(Eigen::Affine3d)
 EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION(Eigen::Matrix<double, 3, 4>)
 EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION(Eigen::Matrix2Xd)
-#endif  // SPARSE_MAPPING_EIGEN_VECTORS_H_
+#endif  // LOCALIZATION_COMMON_EIGEN_VECTORS_H_
 
