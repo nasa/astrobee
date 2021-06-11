@@ -109,7 +109,7 @@ class PmcActuatorNodelet : public ff_util::FreeFlyerNodelet {
 
     // Update PMC watchdog timer timeout
     update_timeout_srv_ = nh->advertiseService(
-      SERVICE_HARDWARE_PMC_TIMOUT, &PmcActuatorNodelet::IdlingTimoutService, this);
+      SERVICE_HARDWARE_PMC_TIMEOUT, &PmcActuatorNodelet::IdlingTimeoutService, this);
 
     // Watchdog timer
     timer_ = nh->createTimer(
@@ -480,11 +480,11 @@ class PmcActuatorNodelet : public ff_util::FreeFlyerNodelet {
   }
 
   // Update Minimum Control Frequency (and cutoff time)
-  bool IdlingTimoutService(ff_msgs::SetFloat::Request &req,
+  bool IdlingTimeoutService(ff_msgs::SetFloat::Request &req,
                       ff_msgs::SetFloat::Response &res) {  // NOLINT
     double new_timeout = req.data;
     // Check if the new rate is within the safe and default limits
-    if (new_timeout < max_timeout_ && new_timeout >= (20.0/control_rate_hz_)) {
+    if (new_timeout <= max_timeout_ && new_timeout >= (20.0/control_rate_hz_)) {
       watchdog_period_ = ros::Duration(new_timeout);
       timer_.setPeriod(watchdog_period_);
       ROS_INFO("PMC idling timeout updated.");

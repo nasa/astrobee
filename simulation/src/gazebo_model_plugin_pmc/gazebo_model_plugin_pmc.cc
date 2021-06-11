@@ -34,6 +34,7 @@
 // FSW messahes
 #include <ff_msgs/SetBool.h>
 #include <ff_msgs/FamCommand.h>
+#include <ff_msgs/SetFloat.h>
 
 // Autocode inclide
 #include <gnc_autocode/blowers.h>
@@ -177,6 +178,9 @@ class GazeboModelPluginPmc : public FreeFlyerModelPlugin {
     null_command_.goals.push_back(null_goal);
     null_command_.goals.push_back(null_goal);
 
+    // Set timeout
+    watchdog_period_ = ros::Duration(20.0/control_rate_hz_);
+
     // Telemetry publisher
     pub_telemetry_ = nh->advertise<ff_hw_msgs::PmcTelemetry>(
       TOPIC_HARDWARE_PMC_TELEMETRY, 1);
@@ -195,8 +199,12 @@ class GazeboModelPluginPmc : public FreeFlyerModelPlugin {
         &GazeboModelPluginPmc::FamCallback, this);
 
     // Create a watchdog timer to ensure the PMC commands are set
-    timer_watchdog_ = nh->createTimer(ros::Duration(20.0/control_rate_hz_),
+    timer_watchdog_ = nh->createTimer(watchdog_period_,
       &GazeboModelPluginPmc::WatchdogCallback, this, false, true);
+    
+    // Update PMC watchdog timer timeout
+    update_timeout_srv_ = nh->advertiseService(
+      SERVICE_HARDWARE_PMC_TIMEOUT, &GazeboModelPluginPmc::IdlingTimeoutService, this);
 
     // Create a watchdog timer to ensure the PMC commands are set
     timer_command_ = nh->createTimer(ros::Duration(1.0/control_rate_hz_),
@@ -233,6 +241,10 @@ class GazeboModelPluginPmc : public FreeFlyerModelPlugin {
     if (!config_params.GetReal("state_telemetry_scale",
       &state_telemetry_scale_)) {
       ROS_FATAL("PMC Actuator: state_telemetry_scale not specified!");
+      return false;
+    }
+    if (!config_params.GetPosReal("max_timeout", &max_timeout_)) {
+      ROS_FATAL("PMC Actuator: minimum control rate not specified!");
       return false;
     }
     // TODO(asymingt) This is being phased out.
@@ -397,6 +409,23 @@ class GazeboModelPluginPmc : public FreeFlyerModelPlugin {
     return true;
   }
 
+  // Update Minimum Control Frequency (and cutoff time)
+  bool IdlingTimeoutService(ff_msgs::SetFloat::Request &req,
+                      ff_msgs::SetFloat::Response &res) {  // NOLINT
+    double new_timeout = req.data;
+    // Check if the new rate is within the safe and default limits
+    if (new_timeout <= max_timeout_ && new_timeout >= (20.0/control_rate_hz_)) {
+      watchdog_period_ = ros::Duration(new_timeout);
+      timer_.setPeriod(watchdog_period_);
+      ROS_INFO("PMC idling timeout updated.");
+      res.success = true;
+    } else {
+      ROS_INFO("Selected timeout is not within the safe timeout bounds.");
+      res.success = false;
+    }
+    return true;
+  }
+
   // Called on each sensor update event
   void WorldUpdateCallback() {
     if (bypass_blower_model_) {
@@ -424,7 +453,9 @@ class GazeboModelPluginPmc : public FreeFlyerModelPlugin {
   ros::Publisher pub_telemetry_, pub_state_;        // State/telemetry pubs
   ros::Subscriber sub_command_;                     // Command subscriber
   ros::Subscriber sub_fam_;                         // Fam command subscriber
+  ros::ServiceServer update_timeout_srv_;
   ros::Timer timer_command_, timer_watchdog_;       // Timers
+  ros::Duration watchdog_period_;
   #if GAZEBO_MAJOR_VERSION > 7
   ignition::math::Vector3d force_;                  // Current body-frame force
   ignition::math::Vector3d torque_;                 // Current body-frame torque
@@ -443,6 +474,7 @@ class GazeboModelPluginPmc : public FreeFlyerModelPlugin {
   double state_telemetry_scale_;                    // Telemetry scale
   double state_tol_rads_per_sec_;                   // RPM tolerance
   double control_rate_hz_;                          // Control rate
+  double max_timeout_;                              // Maximum timeout allowed for PMC
   std::string frame_id_;                            // Frame
 };
 
