@@ -32,6 +32,7 @@
 namespace localization_measurements {
 struct HandrailPointsMeasurement : public Measurement {
   std::vector<gtsam::Point3> sensor_t_line_points;
+  std::vector<gtsam::Point3> sensor_t_line_endpoints;
   std::vector<gtsam::Point3> sensor_t_plane_points;
   TimestampedHandrailPose world_T_handrail;
   Plane world_T_handrail_plane;

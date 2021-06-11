@@ -293,6 +293,7 @@ class HandrailDetect : public ff_util::FreeFlyerNodelet {
   void Clear() {
     dl_.landmarks.clear();
     dl_.sensor_t_line_points.clear();
+    dl_.sensor_t_line_endpoints.clear();
     dl_.sensor_t_plane_points.clear();
   }
 
@@ -482,6 +483,11 @@ class HandrailDetect : public ff_util::FreeFlyerNodelet {
     dl_.sensor_T_handrail.orientation.y = rtoq.y();
     dl_.sensor_T_handrail.orientation.z = rtoq.z();
     dl_.sensor_T_handrail.orientation.w = rtoq.w();
+
+    // Add endpoints
+    for (const auto& line_endpoint: end_point){
+      dl_.sensor_t_line_endpoints.push_back(line_endpoint);
+    }
 
     rolling_window_cnt_++;
 
