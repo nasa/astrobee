@@ -238,7 +238,7 @@ find that the above command doesn't work, try rebuilding the cache:
 
     rospack profile
 
-For more information on running the simulator and moving the robot, please see the [/ref sim-readme].
+For more information on running the simulator and moving the robot, please see the \ref sim-readme.
 
 ## Running the code on a real robot
 

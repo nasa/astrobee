@@ -1,16 +1,14 @@
 \page teleop Teleoperation Tool Instructions
 
-These instructions assume that you have followed the
-[install instructions](../../INSTALL.md) and the
-[simulation instructions](../../simulation/sim_overview.md).
+These instructions assume that you have followed
+\ref install-nonNASA or \ref install-NASA and \ref running-the-sim.
 
 A teleop tool has been added to allow you to issue some commands and get some
 telemetry from the robot. This should only be used to play with the simulator
 and get a feel for how Astrobee works. As an external user, we consider you to
 be a guest sciencist and we expect you to follow the guest science framework we
 have created. Please see the Guest Science Applications section in the
-[simulation_instructions](../../simulation/sim_overview.md#guest-science-applications) for
-more information.
+\ref running-the-sim documentation for more information.
 
 To use the teleop tool, the user must specify what they want to do through
 flags. This section will take you through the flags the tool offers. Please
@@ -19,8 +17,8 @@ will not be able to use both the dock flag and the move flag. Also you don't
 need to use a mobility flag. You can run the teleop tool just to get telemetry.
 Please make sure the terminal you are using for the tool has its environment
 setup. For information on how to setup the terminal environment, please see
-the Setting up your Environment section of the
-[simulator readme](../../simulation/sim_overview.md#setting-up-your-environment).
+the Setting up your Environment section of the \ref running-the-sim
+documentation.
 
 ## Basic Usage
 
@@ -75,9 +73,8 @@ This flag can be used to stop the robot and is considered a mobility flag. If
 you are using the teleop tool to move the robot and it isn't running in the
 background, you will have to run the teleop tool with the stop flag in another
 terminal whose environment is setup. For information on how to setup the
-terminal, please see the Setting up your Environment section of the
-[simulator readme](../../simulation/sim_overview.md#setting-up-your-environment).
-To stop, run:
+terminal, please see the Setting up your Environment section of the 
+\ref running-the-sim documentation. To stop, run:
 
     rosrun executive teleop_tool -stop
 

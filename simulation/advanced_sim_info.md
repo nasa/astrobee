@@ -1,4 +1,4 @@
-/page advanced-sim-info Advanced Simulation Information
+\page advanced-sim-info Advanced Simulation Information
 
 # Rviz in Localization Only Mode
 

@@ -1,4 +1,4 @@
-/page sim-readme Simulation Readme
+\page sim-readme Simulation Readme
 
 # Simulation
 
@@ -16,10 +16,10 @@ If you you are not cross-compiling, then the build process started with "make" w
 
 ## Running the Simulator
 
-Please see the [/ref running-the-sim] documentation.
+Please see the \ref running-the-sim documentation.
 
 ## Advanced Simulator Information
 
 If you would like more information on running localization only mode,
 collisions, performance, frame consistency, debugging, changing properties, or
-the Astrobee specific plugins, please see the [/ref advanced-sim-info].
+the Astrobee specific plugins, please see the \ref advanced-sim-info.

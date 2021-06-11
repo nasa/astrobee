@@ -1,7 +1,7 @@
-/page running-the-sim Running the Astrobee Simulator
+\page running-the-sim Running the Astrobee Simulator
 
-This documentation assumes you have followed the [/ref install-nonNASA] or the
-[/ref install-NASA] documentation.
+This documentation assumes you have followed the \ref install-nonNASA or the
+\ref install-NASA documentation.
 
 ## Communication Nodes
 
@@ -51,10 +51,10 @@ This command launches both the world and Astrobee. There are things in the
 world that need to be started up before Astrobee is started up. There is a
 small chance that this will not happen and the user will experience issues upon
 start up. If this happens, please see the 'Issues Starting up the Simulator'
-section in [/ref sim-issues].
+section in \ref sim-issues.
 
 **Important**: If you experience issues with the simulator and commanding the
-robot, please see the [/ref sim-issues] before contacting the Astrobee team. 
+robot, please see the \ref sim-issues before contacting the Astrobee team. 
 
 ### Simulator Flags
 
@@ -118,7 +118,7 @@ the position represented in rviz or gds can differ from the position in sviz.*
 
 This flag starts the gnc visualizer. This visualizer is mainly used to see how
 the localization and gnc systems are performing. For more information no gviz,
-please see the [/ref gncvisualizer] documentation.
+please see the \ref gncvisualizer documentation.
 
 #### dds
 
@@ -156,7 +156,7 @@ console:
 
     [ERROR] [<timestamp>] : (ros.Astrobee) Fault with id # occurred. Fault error message: Didn't receive a heartbeat from <node>
 
-Please see the 'Multiple Heartbeat Failures' section in [/ref sim-issues] on how
+Please see the 'Multiple Heartbeat Failures' section in \ref sim-issues on how
 to fix this issue.
 
 #### ns
@@ -166,10 +166,6 @@ about ROS namespaces, please see the ROS documentation. This flag is only needed
 when running multiple robots in simulation. Please see the
 [Launching Multiple Robots](#launching-multiple-robots) section for more
 information. The default namespace is blank.
-
-**Important**: We only support 4 namespaces in simulation; the blank namespace,
-honey, bumble, and queen. Please DO NOT capitalize the namespace as our GUIs
-don't support this.
 
 #### robot
 
@@ -189,7 +185,7 @@ This flag tells ROS to launch the default robot into the world. If you are
 having performance issues starting up the simulator, you may want to launch the
 world without the default robot and then spawn the robot after the simulator
 starts up. For more information on this, please see the 'Issues Starting up the
-Simulator' section in [/ref sim-issues]. To launch the world without the default
+Simulator' section in \ref sim-issues. To launch the world without the default
 robot, please run:
 
     roslaunch astrobee sim.launch default_robot:=false
@@ -293,7 +289,7 @@ follow the guest science framework we have created. Please see the
 information.
 
 For information on how to use the teleop tool, please see the
-[/ref teleop].
+\ref teleop.
 
 ### Guest Science Applications
 
@@ -325,7 +321,7 @@ from the `Panels` menu in RVIZ.
 that these images will not initialize properly and you will be looking at the
 inside of the robot. If this happens, you will need to launch the world and
 Astrobee separately. Please follow the issues starting up the simulator section 
-in [/ref sim-issues] with one caveat. DO NOT start up Astrobee (i.e. don't issue
+in \ref sim-issues with one caveat. DO NOT start up Astrobee (i.e. don't issue
 the second terminal command) until 30 to 40 seconds after RVIZ has started up.
 If you have a low performance computer, this fix may not be the only thing you
 have to do to fix the images. Please try reducing the speed of your simulator
@@ -358,8 +354,8 @@ To spawn robots into the simulator, run:
 please omit the dds and robot flags.*
 
 **Important** If you issue the roslaunch commands too close together, the robot
-may not start up properly. Please allow 15 to 20 seconds in between roslaunch
-commands.
+may not start up properly. Please allow 15 to 20 seconds in between each
+roslaunch command.
 
 Each robot's ROS topics, services and actions are now prefixed with the supplied
 namespace, which allows you to interact with them individually. So, if you are 
@@ -375,4 +371,4 @@ spawning to 3. We will leave it as an exercise for the user to launch more than
 
 # Simulator Issues
 
-Please see [/ref sim-issues].
+Please see \ref sim-issues.
