@@ -72,6 +72,10 @@ HandrailPointsMeasurement MakeHandrailPointsMeasurement(const ff_msgs::DepthLand
   handrail_points_measurement.world_T_handrail = world_T_handrail;
   handrail_points_measurement.world_T_handrail_plane =
     MakeHandrailPlane(world_T_handrail.pose, world_T_handrail.distance_to_wall);
+  if (world_T_handrail.accurate_z_position) {
+    handrail_points_measurement.world_t_handrail_endpoints =
+      MakeHandrailEndpoints(world_T_handrail.pose, world_T_handrail.length);
+  }
   const lc::Time timestamp = lc::TimeFromHeader(depth_landmarks.header);
   handrail_points_measurement.timestamp = timestamp;
 
