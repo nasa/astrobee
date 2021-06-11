@@ -17,6 +17,7 @@
  */
 
 #include <graph_localizer/handrail_factor_adder.h>
+#include <graph_localizer/point_to_handrail_endpoint_factor.h>
 #include <graph_localizer/point_to_line_factor.h>
 #include <graph_localizer/point_to_line_segment_factor.h>
 #include <graph_localizer/point_to_plane_factor.h>
@@ -102,6 +103,38 @@ void HandrailFactorAdder::AddPointToPlaneFactors(const lm::HandrailPointsMeasure
   factors_to_add.emplace_back(point_to_plane_factors_to_add);
 }
 
+void HandrailFactorAdder::AddPointToHandrailEndpointFactors(
+  const lm::HandrailPointsMeasurement& handrail_points_measurement, std::vector<go::FactorsToAdd>& factors_to_add) {
+  const int num_handrail_endpoint_measurements =
+    static_cast<int>(handrail_points_measurement.sensor_t_line_endpoints.size());
+  if (num_handrail_endpoint_measurements == 0) {
+    LogDebug("AddPointToHandrailEndpointFactors: Not enough handrail endpoint measurements.");
+    return;
+  }
+
+  go::FactorsToAdd point_to_handrail_endpoint_factors_to_add;
+  point_to_handrail_endpoint_factors_to_add.reserve(num_handrail_endpoint_measurements);
+  point_to_handrail_endpoint_factors_to_add.SetTimestamp(handrail_points_measurement.timestamp);
+  const gtsam::Vector3 point_to_handrail_endpoint_noise_sigmas(
+    (gtsam::Vector(3) << params().point_to_line_stddev, params().point_to_line_stddev, params().point_to_line_stddev)
+      .finished());
+  const auto point_to_handrail_endpoint_noise = Robust(
+    gtsam::noiseModel::Diagonal::Sigmas(Eigen::Ref<const Eigen::VectorXd>(point_to_handrail_endpoint_noise_sigmas)),
+    params().huber_k);
+  const go::KeyInfo key_info(&sym::P, go::NodeUpdaterType::CombinedNavState, handrail_points_measurement.timestamp);
+  for (const auto& sensor_t_handrail_endpoint : handrail_points_measurement.sensor_t_line_endpoints) {
+    gtsam::PointToHandrailEndpointFactor::shared_ptr point_to_handrail_endpoint_factor(
+      new gtsam::PointToHandrailEndpointFactor(
+        sensor_t_handrail_endpoint, handrail_points_measurement.world_t_handrail_endpoints->first,
+        handrail_points_measurement.world_t_handrail_endpoints->second, params().body_T_perch_cam,
+        point_to_handrail_endpoint_noise, key_info.UninitializedKey()));
+    point_to_handrail_endpoint_factors_to_add.push_back({{key_info}, point_to_handrail_endpoint_factor});
+  }
+  LogDebug("AddPointToHandrailEndpointFactors: Added " << point_to_handrail_endpoint_factors_to_add.size()
+                                                       << " point to handrail endpoint factors.");
+  factors_to_add.emplace_back(point_to_handrail_endpoint_factors_to_add);
+}
+
 std::vector<go::FactorsToAdd> HandrailFactorAdder::AddFactors(
   const lm::HandrailPointsMeasurement& handrail_points_measurement) {
   if (handrail_points_measurement.sensor_t_line_points.empty() &&
@@ -113,6 +146,9 @@ std::vector<go::FactorsToAdd> HandrailFactorAdder::AddFactors(
   std::vector<go::FactorsToAdd> factors_to_add;
   AddPointToLineOrLineSegmentFactors(handrail_points_measurement, factors_to_add);
   AddPointToPlaneFactors(handrail_points_measurement, factors_to_add);
+  if (handrail_points_measurement.world_t_handrail_endpoints) {
+    AddPointToHandrailEndpointFactors(handrail_points_measurement, factors_to_add);
+  }
   return factors_to_add;
 }
 }  // namespace graph_localizer
