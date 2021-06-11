@@ -35,7 +35,8 @@ TEST(SiluTester, Jacobian) {
     const double x = RandomDouble();
     gtsam::Matrix H;
     gl::Silu(x, H);
-    const auto numerical_H = gtsam::numericalDerivative11<double, double>(gl::Silu, x, 1e-5);
+    const auto numerical_H = gtsam::numericalDerivative11<double, double>(
+      boost::function<double(const double)>(boost::bind(&gl::Silu, _1, boost::none)), x);
     ASSERT_TRUE(numerical_H.isApprox(H.matrix(), 1e-6));
   }
 }
