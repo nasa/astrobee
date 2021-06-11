@@ -42,6 +42,9 @@ HandrailPointsMeasurement MakeHandrailPointsMeasurement(const ff_msgs::DepthLand
 
 Plane MakeHandrailPlane(const gtsam::Pose3& world_T_handrail, const double distance_to_wall);
 
+std::pair<gtsam::Point3, gtsam::Point3> MakeHandrailEndpoints(const gtsam::Pose3& world_T_handrail,
+                                                              const double length);
+
 MatchedProjectionsMeasurement FrameChangeMatchedProjectionsMeasurement(
   const MatchedProjectionsMeasurement& matched_projections_measurement,
   const gtsam::Pose3& new_frame_T_measurement_origin);

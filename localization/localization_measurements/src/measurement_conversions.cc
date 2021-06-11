@@ -54,6 +54,18 @@ Plane MakeHandrailPlane(const gtsam::Pose3& world_T_handrail, const double dista
   return Plane(world_t_handrail_plane_point, world_F_handrail_plane_normal);
 }
 
+std::pair<gtsam::Point3, gtsam::Point3> MakeHandrailEndpoints(const gtsam::Pose3& world_T_handrail,
+                                                              const double length) {
+  // Assumes handrail endpoints are on z axis and handrail z is the center of the handrail
+  const gtsam::Point3 handrail_t_handrail_endpoint(0, 0, length / 2.0);
+  const gtsam::Point3 world_F_handrail_t_handrail_endpoint = world_T_handrail.rotation() * handrail_t_handrail_endpoint;
+  const gtsam::Point3 world_t_handrail_endpoint_a =
+    world_T_handrail.translation() + world_F_handrail_t_handrail_endpoint;
+  const gtsam::Point3 world_t_handrail_endpoint_b =
+    world_T_handrail.translation() - world_F_handrail_t_handrail_endpoint;
+  return std::make_pair(world_t_handrail_endpoint_a, world_t_handrail_endpoint_b);
+}
+
 HandrailPointsMeasurement MakeHandrailPointsMeasurement(const ff_msgs::DepthLandmarks& depth_landmarks,
                                                         const TimestampedHandrailPose& world_T_handrail) {
   HandrailPointsMeasurement handrail_points_measurement;
