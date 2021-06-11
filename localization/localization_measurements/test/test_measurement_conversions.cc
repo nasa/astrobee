@@ -66,10 +66,26 @@ TEST(MeasurementsConversionTester, PointToPlaneDistanceMakeHandrailPlane) {
 }
 
 TEST(MeasurementsConversionTester, MakeHandrailEndpoints) {
-  const gtsam::Pose3 world_T_handrail;
   const double length = 0.5;
-  const auto endpoints = lm::MakeHandrailEndpoints(world_T_handrail, length);
-  EXPECT_NEAR(0.25, endpoints.first.z(), 1e-6);
-  EXPECT_NEAR(-0.25, endpoints.second.z(), 1e-6);
-  // TODO: test with rotated world_T_handrail, test with non zero translation component
+  // Not rotated
+  {
+    const gtsam::Pose3 world_T_handrail;
+    const auto endpoints = lm::MakeHandrailEndpoints(world_T_handrail, length);
+    EXPECT_NEAR(0.25, endpoints.first.z(), 1e-6);
+    EXPECT_NEAR(-0.25, endpoints.second.z(), 1e-6);
+  }
+  // Rotated and translated
+  {
+    // Handrail rotated to be along the x axis
+    const gtsam::Rot3 rot_about_y_90_deg(gtsam::Rot3::Ry(M_PI / 2.0));
+    const gtsam::Point3 trans(3, 2, 1);
+    const gtsam::Pose3 world_T_handrail(rot_about_y_90_deg, trans);
+    const auto endpoints = lm::MakeHandrailEndpoints(world_T_handrail, length);
+    EXPECT_NEAR(3.25, endpoints.first.x(), 1e-6);
+    EXPECT_NEAR(2.75, endpoints.second.x(), 1e-6);
+    EXPECT_NEAR(trans.y(), endpoints.first.y(), 1e-6);
+    EXPECT_NEAR(trans.y(), endpoints.second.y(), 1e-6);
+    EXPECT_NEAR(trans.z(), endpoints.first.z(), 1e-6);
+    EXPECT_NEAR(trans.z(), endpoints.second.z(), 1e-6);
+  }
 }
