@@ -32,7 +32,7 @@ ImuAugmentorNodelet::ImuAugmentorNodelet() : ff_util::FreeFlyerNodelet(NODE_IMU_
   loc_nh_.setCallbackQueue(&loc_queue_);
   heartbeat_.node = GetName();
   heartbeat_.nodelet_manager = ros::this_node::getName();
-  last_time_=ros::Time::now();
+  last_time_ = ros::Time::now();
 }
 
 void ImuAugmentorNodelet::Initialize(ros::NodeHandle* nh) {
