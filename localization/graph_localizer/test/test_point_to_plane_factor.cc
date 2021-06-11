@@ -16,6 +16,7 @@
  * under the License.
  */
 
+#include "test_utilities.h"
 #include <graph_localizer/point_to_plane_factor.h>
 #include <localization_common/logger.h>
 #include <localization_measurements/plane.h>
@@ -26,31 +27,15 @@
 
 #include <gtest/gtest.h>
 
-namespace {
-// TODO(rsoussan): move this to a utils fcn
-gtsam::Pose3 RandomPose() {
-  std::random_device dev;
-  std::mt19937 rng(dev());
-  gtsam::Rot3 rot = gtsam::Rot3::Random(rng);
-  gtsam::Point3 trans = Eigen::Vector3d::Random();
-  return gtsam::Pose3(rot, trans);
-}
-
-localization_measurements::Plane RandomPlane() {
-  gtsam::Point3 point = Eigen::Vector3d::Random();
-  gtsam::Vector3 normal = Eigen::Vector3d::Random();
-  return localization_measurements::Plane(point, normal);
-}
-}  // namespace
-
+namespace gl = graph_localizer;
 namespace lm = localization_measurements;
 namespace sym = gtsam::symbol_shorthand;
 TEST(PointToPlaneFactorTester, Jacobian) {
   for (int i = 0; i < 500; ++i) {
-    const gtsam::Point3 sensor_t_point = Eigen::Vector3d::Random();
-    const lm::Plane world_T_handrail_plane = RandomPlane();
-    const gtsam::Pose3 body_T_sensor = RandomPose();
-    const gtsam::Pose3 world_T_body = RandomPose();
+    const gtsam::Point3 sensor_t_point = gl::RandomVector();
+    const lm::Plane world_T_handrail_plane = gl::RandomPlane();
+    const gtsam::Pose3 body_T_sensor = gl::RandomPose();
+    const gtsam::Pose3 world_T_body = gl::RandomPose();
     const auto noise = gtsam::noiseModel::Unit::Create(1);
     const gtsam::PointToPlaneFactor factor(sensor_t_point, world_T_handrail_plane, body_T_sensor, noise, sym::P(0));
     gtsam::Matrix H;

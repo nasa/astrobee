@@ -16,6 +16,7 @@
  * under the License.
  */
 
+#include "test_utilities.h"
 #include <graph_localizer/point_to_handrail_endpoint_factor.h>
 #include <localization_common/logger.h>
 
@@ -25,25 +26,15 @@
 
 #include <gtest/gtest.h>
 
-namespace {
-// TODO(rsoussan): move this to a utils fcn
-gtsam::Pose3 RandomPose() {
-  std::random_device dev;
-  std::mt19937 rng(dev());
-  gtsam::Rot3 rot = gtsam::Rot3::Random(rng);
-  gtsam::Point3 trans = Eigen::Vector3d::Random();
-  return gtsam::Pose3(rot, trans);
-}
-}  // namespace
-
+namespace gl = graph_localizer;
 namespace sym = gtsam::symbol_shorthand;
 TEST(PointToHandrailEndpointFactorTester, Jacobian) {
   for (int i = 0; i < 500; ++i) {
-    const gtsam::Point3 sensor_t_point = Eigen::Vector3d::Random();
-    const gtsam::Point3 world_t_handrail_endpoint_a = Eigen::Vector3d::Random();
-    const gtsam::Point3 world_t_handrail_endpoint_b = Eigen::Vector3d::Random();
-    const gtsam::Pose3 body_T_sensor = RandomPose();
-    const gtsam::Pose3 world_T_body = RandomPose();
+    const gtsam::Point3 sensor_t_point = gl::RandomVector();
+    const gtsam::Point3 world_t_handrail_endpoint_a = gl::RandomVector();
+    const gtsam::Point3 world_t_handrail_endpoint_b = gl::RandomVector();
+    const gtsam::Pose3 body_T_sensor = gl::RandomPose();
+    const gtsam::Pose3 world_T_body = gl::RandomPose();
     const auto noise = gtsam::noiseModel::Unit::Create(3);
     const gtsam::PointToHandrailEndpointFactor factor(sensor_t_point, world_t_handrail_endpoint_a,
                                                       world_t_handrail_endpoint_b, body_T_sensor, noise, sym::P(0));

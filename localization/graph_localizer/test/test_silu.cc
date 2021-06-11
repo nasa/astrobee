@@ -16,6 +16,7 @@
  * under the License.
  */
 
+#include "test_utilities.h"
 #include <graph_localizer/silu.h>
 #include <localization_common/logger.h>
 
@@ -23,16 +24,10 @@
 
 #include <gtest/gtest.h>
 
-double RandomDouble() {
-  std::random_device dev;
-  std::mt19937 rng(dev());
-  return std::uniform_real_distribution<double>(1, 100)(rng);
-}
-
 namespace gl = graph_localizer;
 TEST(SiluTester, Jacobian) {
   for (int i = 0; i < 500; ++i) {
-    const double x = RandomDouble();
+    const double x = gl::RandomDouble();
     gtsam::Matrix H;
     gl::Silu(x, H);
     const auto numerical_H = gtsam::numericalDerivative11<double, double>(

@@ -16,6 +16,7 @@
  * under the License.
  */
 
+#include "test_utilities.h"
 #include <graph_localizer/point_to_line_segment_factor.h>
 #include <localization_common/logger.h>
 
@@ -25,30 +26,15 @@
 
 #include <gtest/gtest.h>
 
-namespace {
-// TODO(rsoussan): move this to a utils fcn
-gtsam::Pose3 RandomPose() {
-  std::random_device dev;
-  std::mt19937 rng(dev());
-  gtsam::Rot3 rot = gtsam::Rot3::Random(rng);
-  gtsam::Point3 trans = Eigen::Vector3d::Random();
-  return gtsam::Pose3(rot, trans);
-}
-double RandomDouble() {
-  std::random_device dev;
-  std::mt19937 rng(dev());
-  return std::uniform_real_distribution<double>(1, 100)(rng);
-}
-}  // namespace
-
+namespace gl = graph_localizer;
 namespace sym = gtsam::symbol_shorthand;
 TEST(PointToLineSegmentFactorTester, Jacobian) {
   for (int i = 0; i < 500; ++i) {
-    const gtsam::Point3 sensor_t_point = Eigen::Vector3d::Random();
-    const gtsam::Pose3 world_T_line = RandomPose();
-    const gtsam::Pose3 body_T_sensor = RandomPose();
-    const gtsam::Pose3 world_T_body = RandomPose();
-    const double line_length = RandomDouble();
+    const gtsam::Point3 sensor_t_point = gl::RandomVector();
+    const gtsam::Pose3 world_T_line = gl::RandomPose();
+    const gtsam::Pose3 body_T_sensor = gl::RandomPose();
+    const gtsam::Pose3 world_T_body = gl::RandomPose();
+    const double line_length = gl::RandomDouble();
     const auto noise = gtsam::noiseModel::Unit::Create(2);
     const gtsam::PointToLineSegmentFactor factor(sensor_t_point, world_T_line, body_T_sensor, line_length, noise,
                                                  sym::P(0));
@@ -64,11 +50,11 @@ TEST(PointToLineSegmentFactorTester, Jacobian) {
 
 TEST(PointToLineSegmentFactorTester, JacobianWithSilu) {
   for (int i = 0; i < 500; ++i) {
-    const gtsam::Point3 sensor_t_point = Eigen::Vector3d::Random();
-    const gtsam::Pose3 world_T_line = RandomPose();
-    const gtsam::Pose3 body_T_sensor = RandomPose();
-    const gtsam::Pose3 world_T_body = RandomPose();
-    const double line_length = RandomDouble();
+    const gtsam::Point3 sensor_t_point = gl::RandomVector();
+    const gtsam::Pose3 world_T_line = gl::RandomPose();
+    const gtsam::Pose3 body_T_sensor = gl::RandomPose();
+    const gtsam::Pose3 world_T_body = gl::RandomPose();
+    const double line_length = gl::RandomDouble();
     const auto noise = gtsam::noiseModel::Unit::Create(2);
     const bool use_silu = true;
     const gtsam::PointToLineSegmentFactor factor(sensor_t_point, world_T_line, body_T_sensor, line_length, noise,
