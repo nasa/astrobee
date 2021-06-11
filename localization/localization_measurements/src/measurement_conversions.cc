@@ -67,6 +67,10 @@ HandrailPointsMeasurement MakeHandrailPointsMeasurement(const ff_msgs::DepthLand
     handrail_points_measurement.sensor_t_line_points.emplace_back(
       mc::VectorFromMsg<gtsam::Point3, geometry_msgs::Point32>(sensor_t_line_point));
   }
+  for (const auto& sensor_t_line_endpoint : depth_landmarks.sensor_t_line_endpoints) {
+    handrail_points_measurement.sensor_t_line_endpoints.emplace_back(
+      mc::VectorFromMsg<gtsam::Point3, geometry_msgs::Point>(sensor_t_line_endpoint));
+  }
   for (const auto& sensor_t_plane_point : depth_landmarks.sensor_t_plane_points) {
     handrail_points_measurement.sensor_t_plane_points.emplace_back(
       mc::VectorFromMsg<gtsam::Point3, geometry_msgs::Point32>(sensor_t_plane_point));
