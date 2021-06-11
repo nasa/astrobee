@@ -63,7 +63,7 @@ def create_plot(pdf, csv_file, value_combos_file, prefix=''):
   last_x_val = x_axis_vals[len(x_axis_vals) - 1]
   # Use log scale if min and max x vals are more than 3 orders of magnitude apart
   if (first_x_val != 0 and last_x_val != 0 and abs(math.log10(last_x_val) - math.log10(first_x_val)) > 3):
-    plt.xscale('log', base=10)
+    plt.xscale('log', basex=10)
     # Extend x axis on either side using a log scale to make data more visible
     if (first_x_val < last_x_val):
       plt.xlim([first_x_val * 0.1, last_x_val * 10.0])
@@ -86,13 +86,22 @@ def create_plots(output_file, csv_file, value_combos_file):
     create_plot(pdf, csv_file, value_combos_file)
     create_plot(pdf, csv_file, value_combos_file, 'orientation_')
     create_plot(pdf, csv_file, value_combos_file, 'integrated_')
+    create_plot(pdf, csv_file, value_combos_file, 'rel_')
+    create_plot(pdf, csv_file, value_combos_file, 'rel_orientation_')
+    create_plot(pdf, csv_file, value_combos_file, 'rel_integrated_')
     # IMU Augmented RMSEs
     create_plot(pdf, csv_file, value_combos_file, 'imu_augmented_')
     create_plot(pdf, csv_file, value_combos_file, 'imu_augmented_orientation_')
     create_plot(pdf, csv_file, value_combos_file, 'imu_augmented_integrated_')
+    create_plot(pdf, csv_file, value_combos_file, 'rel_imu_augmented_')
+    create_plot(pdf, csv_file, value_combos_file, 'rel_imu_augmented_orientation_')
+    create_plot(pdf, csv_file, value_combos_file, 'rel_imu_augmented_integrated_')
+
     # IMU Bias Tester RMSEs
     create_plot(pdf, csv_file, value_combos_file, 'imu_bias_tester_')
     create_plot(pdf, csv_file, value_combos_file, 'imu_bias_tester_orientation_')
+    create_plot(pdf, csv_file, value_combos_file, 'rel_imu_bias_tester_')
+    create_plot(pdf, csv_file, value_combos_file, 'rel_imu_bias_tester_orientation_')
 
 
 if __name__ == '__main__':

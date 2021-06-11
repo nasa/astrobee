@@ -29,8 +29,15 @@ if __name__ == '__main__':
   parser.add_argument('bagfile')
   parser.add_argument('--output-file', default='output.pdf')
   parser.add_argument('--output-csv-file', default='results.csv')
+  parser.add_argument('-g', '--groundtruth-bagfile', default=None)
+  parser.add_argument('--rmse-rel-start-time', type=float, default=0)
+  parser.add_argument('--rmse-rel-end-time', type=float, default=-1)
   args = parser.parse_args()
   if not os.path.isfile(args.bagfile):
     print('Bag file ' + args.bagfile + ' does not exist.')
     sys.exit()
-  plot_results.create_plots(args.bagfile, args.output_file, args.output_csv_file)
+  if args.groundtruth_bagfile and not os.path.isfile(args.groundtruth_bagfile):
+    print('Groundtruth Bag file ' + args.groundtruth_bagfile + ' does not exist.')
+    sys.exit()
+  plot_results.create_plots(args.bagfile, args.output_file, args.output_csv_file, args.groundtruth_bagfile,
+                            args.rmse_rel_start_time, args.rmse_rel_end_time)

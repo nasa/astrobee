@@ -79,12 +79,6 @@ OpState* OpStatePlanExec::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
       if (!exec_->ArmPanAndTilt(cmd)) {
         return OpStateRepo::Instance()->ready()->StartupState();
       }
-    } else if (cmd->cmd_name == CommandConstants::CMD_NAME_CLEAR_DATA) {
-      if (exec_->ClearData(cmd)) {
-        return AckStartPlanItem();
-      } else {
-        return OpStateRepo::Instance()->ready()->StartupState();
-      }
     } else if (cmd->cmd_name ==
                               CommandConstants::CMD_NAME_CUSTOM_GUEST_SCIENCE) {
       if (!exec_->CustomGuestScience(cmd)) {
@@ -92,12 +86,6 @@ OpState* OpStatePlanExec::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
       }
     } else if (cmd->cmd_name == CommandConstants::CMD_NAME_DOCK) {
       if (!exec_->Dock(cmd)) {
-        return OpStateRepo::Instance()->ready()->StartupState();
-      }
-    } else if (cmd->cmd_name == CommandConstants::CMD_NAME_DOWNLOAD_DATA) {
-      if (exec_->DownloadData(cmd)) {
-        return AckStartPlanItem();
-      } else {
         return OpStateRepo::Instance()->ready()->StartupState();
       }
     } else if (cmd->cmd_name == CommandConstants::CMD_NAME_GRIPPER_CONTROL) {
@@ -277,8 +265,6 @@ OpState* OpStatePlanExec::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
       }
     } else if (cmd->cmd_name == CommandConstants::CMD_NAME_STOP_GUEST_SCIENCE) {
       exec_->StopGuestScience(cmd);
-    } else if (cmd->cmd_name == CommandConstants::CMD_NAME_WIPE_HLP) {
-      exec_->WipeHlp(cmd);
     } else {
       err_msg = "Command " + cmd->cmd_name + "not accepted in op state"
           + " plan execution.";

@@ -75,24 +75,13 @@ GraphBag::GraphBag(const std::string& bag_name, const std::string& map_file, con
 }
 
 void GraphBag::SaveOpticalFlowTracksImage(const sensor_msgs::ImageConstPtr& image_msg,
-                                          const graph_localizer::FeatureTrackMap& feature_tracks) {
-  const auto feature_track_image_msg = CreateFeatureTrackImage(image_msg, feature_tracks, *params_.nav_cam_params);
+                                          const GraphLocalizerSimulator& graph_localizer) {
+  std::vector<const SmartFactor*> smart_factors;
+  if (graph_localizer.graph_localizer()) smart_factors = SmartFactors(*(graph_localizer.graph_localizer()));
+  const auto feature_track_image_msg =
+    CreateFeatureTrackImage(image_msg, *(graph_localizer.feature_tracks()), *params_.nav_cam_params, smart_factors);
   if (!feature_track_image_msg) return;
-  SaveMsg(*image_msg, kFeatureTracksImageTopic_);
-}
-
-void GraphBag::SaveImuBiasTesterPredictedStates(
-  const std::vector<lc::CombinedNavState>& imu_bias_tester_predicted_states) {
-  for (const auto& state : imu_bias_tester_predicted_states) {
-    geometry_msgs::PoseStamped pose_msg;
-    lc::PoseToMsg(state.pose(), pose_msg.pose);
-    lc::TimeToHeader(state.timestamp(), pose_msg.header);
-    SaveMsg(pose_msg, TOPIC_IMU_BIAS_TESTER_POSE);
-    geometry_msgs::Vector3Stamped velocity_msg;
-    mc::VectorToMsg(state.velocity(), velocity_msg.vector);
-    lc::TimeToHeader(state.timestamp(), velocity_msg.header);
-    SaveMsg(velocity_msg, TOPIC_IMU_BIAS_TESTER_VELOCITY);
-  }
+  SaveMsg(**feature_track_image_msg, kFeatureTracksImageTopic_, results_bag_);
 }
 
 void GraphBag::Run() {
@@ -100,8 +89,10 @@ void GraphBag::Run() {
   graph_localizer_simulator_->ResetBiasesAndLocalizer();
   lc::Timer graph_bag_timer("Graph Bag Timer");
   graph_bag_timer.Start();
+  const double start_time = live_measurement_simulator_->CurrentTime();
   while (live_measurement_simulator_->ProcessMessage()) {
     const lc::Time current_time = live_measurement_simulator_->CurrentTime();
+    if (params_.log_relative_time) LogInfo("Run: Rel t: " << current_time - start_time);
     const auto flight_mode_msg = live_measurement_simulator_->GetFlightModeMessage(current_time);
     if (flight_mode_msg) {
       graph_localizer_simulator_->BufferFlightModeMsg(*flight_mode_msg);
@@ -118,7 +109,7 @@ void GraphBag::Run() {
       if (!imu_augmented_loc_msg) {
         LogWarningEveryN(50, "Run: Failed to get latest imu augmented loc msg.");
       } else {
-        SaveMsg(*imu_augmented_loc_msg, TOPIC_GNC_EKF);
+        SaveMsg(*imu_augmented_loc_msg, TOPIC_GNC_EKF, results_bag_);
       }
     }
     const auto of_msg = live_measurement_simulator_->GetOFMessage(current_time);
@@ -127,7 +118,7 @@ void GraphBag::Run() {
       if (params_.save_optical_flow_images) {
         const auto img_msg = live_measurement_simulator_->GetImageMessage(lc::TimeFromHeader(of_msg->header));
         if (img_msg && graph_localizer_simulator_->feature_tracks())
-          SaveOpticalFlowTracksImage(*img_msg, *(graph_localizer_simulator_->feature_tracks()));
+          SaveOpticalFlowTracksImage(*img_msg, *graph_localizer_simulator_);
       }
     }
     const auto vl_msg = live_measurement_simulator_->GetVLMessage(current_time);
@@ -136,7 +127,8 @@ void GraphBag::Run() {
       if (gl::ValidVLMsg(*vl_msg, params_.sparse_mapping_min_num_landmarks)) {
         const gtsam::Pose3 sparse_mapping_global_T_body = lc::GtPose(*vl_msg, params_.body_T_nav_cam.inverse());
         const lc::Time timestamp = lc::TimeFromHeader(vl_msg->header);
-        SaveMsg(graph_localizer::PoseMsg(sparse_mapping_global_T_body, timestamp), TOPIC_SPARSE_MAPPING_POSE);
+        SaveMsg(graph_localizer::PoseMsg(sparse_mapping_global_T_body, timestamp), TOPIC_SPARSE_MAPPING_POSE,
+                results_bag_);
       }
     }
     const auto ar_msg = live_measurement_simulator_->GetARMessage(current_time);
@@ -160,7 +152,7 @@ void GraphBag::Run() {
           // wrapper in the graph localizer simulator and LatestARTagPoseMsg returns
           // the last pose that has already been added to the graph localizer wrapper.
           if (last_added_timestamp != timestamp) {
-            SaveMsg(*ar_tag_pose_msg, TOPIC_AR_TAG_POSE);
+            SaveMsg(*ar_tag_pose_msg, TOPIC_AR_TAG_POSE, results_bag_);
             last_added_timestamp = timestamp;
           }
         }
@@ -176,16 +168,16 @@ void GraphBag::Run() {
         LogWarningEveryN(50, "Run: Failed to get localization msg.");
       } else {
         imu_augmentor_wrapper_.LocalizationStateCallback(*localization_msg);
-        SaveMsg(*localization_msg, TOPIC_GRAPH_LOC_STATE);
+        SaveMsg(*localization_msg, TOPIC_GRAPH_LOC_STATE, results_bag_);
         const auto imu_bias_tester_predicted_states =
           imu_bias_tester_wrapper_.LocalizationStateCallback(*localization_msg);
-        SaveImuBiasTesterPredictedStates(imu_bias_tester_predicted_states);
+        SaveImuBiasTesterPredictedStates(imu_bias_tester_predicted_states, results_bag_);
       }
     }
   }
   graph_bag_timer.Stop();
   graph_bag_timer.Log();
-  const auto graph_stats = graph_localizer_simulator_->graph_stats();
+  const auto graph_stats = graph_localizer_simulator_->graph_localizer_stats();
   if (!graph_stats) {
     LogError("Run: Failed to get graph stats");
   } else {

@@ -25,6 +25,7 @@
 
 # Base docker image copies over the toolchain and rootfs, resulting from
 # the NASA_INSTALL.md instructions. Also installs minimum dependencies
+set -e
 
 # Check that the paths are defined
 DIR=$(dirname "$(readlink -f "$0")")

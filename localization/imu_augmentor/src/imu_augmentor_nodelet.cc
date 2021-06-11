@@ -27,8 +27,7 @@
 namespace imu_augmentor {
 namespace lc = localization_common;
 
-ImuAugmentorNodelet::ImuAugmentorNodelet()
-    : ff_util::FreeFlyerNodelet(NODE_IMU_AUG, true), platform_name_(GetPlatform()) {
+ImuAugmentorNodelet::ImuAugmentorNodelet() : ff_util::FreeFlyerNodelet(NODE_IMU_AUG, true) {
   imu_nh_.setCallbackQueue(&imu_queue_);
   loc_nh_.setCallbackQueue(&loc_queue_);
   heartbeat_.node = GetName();
@@ -36,6 +35,10 @@ ImuAugmentorNodelet::ImuAugmentorNodelet()
 }
 
 void ImuAugmentorNodelet::Initialize(ros::NodeHandle* nh) {
+  // Setup the platform name
+  platform_name_ = GetPlatform();
+  platform_name_ = (platform_name_.empty() ? "" : platform_name_ + "/");
+
   SubscribeAndAdvertise(nh);
   Run();
 }
