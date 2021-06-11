@@ -33,7 +33,7 @@ class PointToLineFactor : public PointToLineFactorBase {
   PointToLineFactor() {}
 
   PointToLineFactor(const Point3& sensor_t_point, const Pose3& world_T_line, const Pose3& body_T_sensor,
-                    const SharedNoiseModel& model, Key pose_key)
+                    const SharedNoiseModel& model, Key pose_key, const bool use_silu = false)
       : Base(sensor_t_point, world_T_line, body_T_sensor, model, pose_key) {}
 
   void print(const std::string& s = "", const KeyFormatter& keyFormatter = DefaultKeyFormatter) const override {

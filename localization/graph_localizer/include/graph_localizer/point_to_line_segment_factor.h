@@ -20,6 +20,7 @@
 #define GRAPH_LOCALIZER_POINT_TO_LINE_SEGMENT_FACTOR_H_
 
 #include <graph_localizer/point_to_line_factor_base.h>
+#include <graph_localizer/silu.h>
 
 #include <gtsam/geometry/Pose3.h>
 #include <gtsam/geometry/Point3.h>
@@ -35,8 +36,11 @@ class PointToLineSegmentFactor : public PointToLineFactorBase {
   PointToLineSegmentFactor() {}
 
   PointToLineSegmentFactor(const Point3& sensor_t_point, const Pose3& world_T_line, const Pose3& body_T_sensor,
-                           const double line_length, const SharedNoiseModel& model, Key pose_key)
-      : Base(sensor_t_point, world_T_line, body_T_sensor, model, pose_key), line_length_(line_length) {}
+                           const double line_length, const SharedNoiseModel& model, Key pose_key,
+                           const bool use_silu = false)
+      : Base(sensor_t_point, world_T_line, body_T_sensor, model, pose_key),
+        line_length_(line_length),
+        use_silu_(use_silu) {}
 
   gtsam::NonlinearFactor::shared_ptr clone() const override {
     return boost::static_pointer_cast<gtsam::NonlinearFactor>(gtsam::NonlinearFactor::shared_ptr(new This(*this)));
@@ -70,10 +74,19 @@ class PointToLineSegmentFactor : public PointToLineFactorBase {
     } else {
       error.z() = error.z() - line_length_ / 2.0;
     }
+    if (use_silu_) {
+      if (H) {
+        Matrix11 d_silu_d_z;
+        graph_localizer::Silu(error.z(), d_silu_d_z);
+        H->block<1, 6>(2, 0) = d_silu_d_z * H->block<1, 6>(2, 0);
+      }
+      error.z() = graph_localizer::Silu(error.z());
+    }
     return error;
   }
 
   double line_length() const { return line_length_; }
+  bool use_silu() const { return use_silu_; }
 
  private:
   friend class boost::serialization::access;
@@ -81,9 +94,11 @@ class PointToLineSegmentFactor : public PointToLineFactorBase {
   void serialize(ARCHIVE& ar, const unsigned int /*version*/) {
     ar& BOOST_SERIALIZATION_BASE_OBJECT_NVP(Base);
     ar& BOOST_SERIALIZATION_NVP(line_length_);
+    ar& BOOST_SERIALIZATION_NVP(use_silu_);
   }
 
   double line_length_;
+  bool use_silu_;
 };
 }  // namespace gtsam
 

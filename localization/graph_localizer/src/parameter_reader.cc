@@ -56,6 +56,8 @@ void LoadHandrailFactorAdderParams(config_reader::ConfigReader& config, Handrail
   params.point_to_line_stddev = mc::LoadDouble(config, "handrail_adder_point_to_line_stddev");
   params.point_to_plane_stddev = mc::LoadDouble(config, "handrail_adder_point_to_plane_stddev");
   params.body_T_perch_cam = lc::LoadTransform(config, "perch_cam_transform");
+  params.use_silu_for_point_to_line_segment_factor =
+    mc::LoadBool(config, "handrail_adder_use_silu_for_point_to_line_segment_factor");
 }
 
 void LoadARTagLocFactorAdderParams(config_reader::ConfigReader& config, LocFactorAdderParams& params) {

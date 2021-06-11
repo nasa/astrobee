@@ -30,6 +30,7 @@ struct HandrailFactorAdderParams : public graph_optimizer::FactorAdderParams {
   double point_to_line_stddev;
   double point_to_plane_stddev;
   gtsam::Pose3 body_T_perch_cam;
+  bool use_silu_for_point_to_line_segment_factor;
 };
 }  // namespace graph_localizer
 

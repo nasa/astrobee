@@ -62,6 +62,27 @@ TEST(PointToLineSegmentFactorTester, Jacobian) {
   }
 }
 
+TEST(PointToLineSegmentFactorTester, JacobianWithSilu) {
+  for (int i = 0; i < 500; ++i) {
+    const gtsam::Point3 sensor_t_point = Eigen::Vector3d::Random();
+    const gtsam::Pose3 world_T_line = RandomPose();
+    const gtsam::Pose3 body_T_sensor = RandomPose();
+    const gtsam::Pose3 world_T_body = RandomPose();
+    const double line_length = RandomDouble();
+    const auto noise = gtsam::noiseModel::Unit::Create(2);
+    const bool use_silu = true;
+    const gtsam::PointToLineSegmentFactor factor(sensor_t_point, world_T_line, body_T_sensor, line_length, noise,
+                                                 sym::P(0), use_silu);
+    gtsam::Matrix H;
+    const auto factor_error = factor.evaluateError(world_T_body, H);
+    const auto numerical_H = gtsam::numericalDerivative11<gtsam::Vector, gtsam::Pose3>(
+      boost::function<gtsam::Vector(const gtsam::Pose3&)>(
+        boost::bind(&gtsam::PointToLineSegmentFactor::evaluateError, factor, _1, boost::none)),
+      world_T_body, 1e-5);
+    ASSERT_TRUE(numerical_H.isApprox(H.matrix(), 1e-6));
+  }
+}
+
 TEST(PointToLineSegmentFactorTester, ZeroZErrorInBetweenSegmentEndpoints) {
   const gtsam::Pose3 world_T_line = gtsam::Pose3::identity();
   const gtsam::Pose3 body_T_sensor = gtsam::Pose3::identity();
