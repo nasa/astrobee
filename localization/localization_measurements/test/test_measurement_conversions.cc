@@ -64,3 +64,12 @@ TEST(MeasurementsConversionTester, PointToPlaneDistanceMakeHandrailPlane) {
     EXPECT_NEAR(0, distance, 1e-6);
   }
 }
+
+TEST(MeasurementsConversionTester, MakeHandrailEndpoints) {
+  const gtsam::Pose3 world_T_handrail;
+  const double length = 0.5;
+  const auto endpoints = lm::MakeHandrailEndpoints(world_T_handrail, length);
+  EXPECT_NEAR(0.25, endpoints.first.z(), 1e-6);
+  EXPECT_NEAR(-0.25, endpoints.second.z(), 1e-6);
+  // TODO: test with rotated world_T_handrail, test with non zero translation component
+}
