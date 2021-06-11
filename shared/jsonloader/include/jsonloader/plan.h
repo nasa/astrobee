@@ -120,9 +120,21 @@ class Waypoint {
   Eigen::VectorXf waypoint_;
 };
 
+class ArmWaypoint {
+ public:
+  explicit ArmWaypoint(const std::size_t size = 0);
+
+  Eigen::VectorXf& arm_waypoint() noexcept;
+  Eigen::VectorXf const& carm_waypoint() const noexcept;
+
+ private:
+  Eigen::VectorXf arm_waypoint_;
+};
+
 class Segment : public Milestone {
  public:
   using WaypointSeq = std::vector<Waypoint>;
+  using ArmWaypointSeq = std::vector<ArmWaypoint>;
 
   explicit Segment(Json::Value const& obj);
   Segment();
@@ -138,6 +150,7 @@ class Segment : public Milestone {
   float tolerance() const noexcept;
   std::string const& waypoint_type() const noexcept;
   WaypointSeq const& waypoints() const noexcept;
+  ArmWaypointSeq const& arm_waypoints() const noexcept;
 
  private:
   bool valid_;
@@ -148,6 +161,7 @@ class Segment : public Milestone {
   float tolerance_;
   std::string waypoint_type_;
   WaypointSeq waypoints_;
+  ArmWaypointSeq arm_waypoints_;
 };
 
 class InertiaConfiguration {

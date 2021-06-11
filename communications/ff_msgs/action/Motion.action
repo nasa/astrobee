@@ -35,6 +35,7 @@ string PRECISION  = precision
 
 # EXECUTE ONLY : The segment
 ff_msgs/ControlState[] segment
+sensor_msgs/JointState[] arm
 
 # MOVE ONLY: Desired state sequence
 geometry_msgs/PoseStamped[] states

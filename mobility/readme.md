@@ -89,9 +89,9 @@ than 90 degrees between poses.
 Here is an example list of poses in the Kibo module, written as a file
 named input.txt.
 
-# x    y      z  roll pitch yaw (degrees)
-10.93 -9.2  4.85  0    0    90
-10.93 -6.2  4.85  0    0     0
+    # x    y      z  roll pitch yaw (degrees)
+    10.93 -9.2  4.85  0    0    90
+    10.93 -6.2  4.85  0    0     0
 
 Here the robot will start looking down the length of the module (the
 largest dimension, which is the Y axis), and move by 3 meters. During
@@ -101,18 +101,19 @@ sideways.
 Here is another example:
 
 ### 360 degree yaw rotation at a 45 degree pitch.
-### x    y      z  roll pitch   yaw (degrees)
-10.93 -9.2  4.85   0     0     90 # face forward
-10.93 -9.2  4.85   0    45     90 # pitch up at 45 degrees
-10.93 -9.2  4.85   0    45    180 # yaw rotation
-10.93 -9.2  4.85   0    45    270 # more yaw rotation
-10.93 -9.2  4.85   0    45    360 # more yaw rotation
-10.93 -9.2  4.85   0    45     90 # back to the original yaw
+
+    # x    y      z  roll pitch   yaw (degrees)
+    10.93 -9.2  4.85   0     0     90 # face forward
+    10.93 -9.2  4.85   0    45     90 # pitch up at 45 degrees
+    10.93 -9.2  4.85   0    45    180 # yaw rotation
+    10.93 -9.2  4.85   0    45    270 # more yaw rotation
+    10.93 -9.2  4.85   0    45    360 # more yaw rotation
+    10.93 -9.2  4.85   0    45     90 # back to the original yaw
 
 The planner tool can be invoked as follows:
 
 astrobee_build/native/devel/lib/mobility/plangen -input input.txt \
- -output output.fplan -vel 0.2 -accel 0.017 -omega 0.17 -alpha 0.2
+ -output output.fplan -vel 0.1 -accel 0.01 -omega 0.1 -alpha 0.1
 
 It will write the file output.fplan that can be loaded and tested in GDS.
 
@@ -140,6 +141,17 @@ the value 'roll-pitch-yaw' when the order above is reversed. In total,
 there are six ways of multiplying these rotation matrices.
 
 Other options can be seen by invoking the -help option.
+
+##  Generating a plan from a sequence of poses and arm configuration
+
+
+In addition to robot poses, we can include arm sequences by defining
+an input.txt as:
+
+
+    # x    y      z  roll pitch yaw pan tilt gripper (degrees)
+    10.93 -9.2  4.85  0    0    90  90    0   0
+    10.93 -6.2  4.85  0    0     0   0   90   0
 
 ## Creating acceleration profiles.
 
