@@ -201,7 +201,7 @@ class GazeboModelPluginPmc : public FreeFlyerModelPlugin {
     // Create a watchdog timer to ensure the PMC commands are set
     timer_watchdog_ = nh->createTimer(watchdog_period_,
       &GazeboModelPluginPmc::WatchdogCallback, this, false, true);
-    
+
     // Update PMC watchdog timer timeout
     update_timeout_srv_ = nh->advertiseService(
       SERVICE_HARDWARE_PMC_TIMEOUT, &GazeboModelPluginPmc::IdlingTimeoutService, this);
