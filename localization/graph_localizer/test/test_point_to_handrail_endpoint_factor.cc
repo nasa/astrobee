@@ -56,3 +56,27 @@ TEST(PointToHandrailEndpointFactorTester, Jacobian) {
     ASSERT_TRUE(numerical_H.isApprox(H.matrix(), 1e-6));
   }
 }
+
+TEST(PointToHandrailEndpointFactorTester, SelectingCorrectEndpoint) {
+  const gtsam::Point3 world_t_handrail_endpoint_a(1, 0, 0);
+  const gtsam::Point3 world_t_handrail_endpoint_b(2, 0, 0);
+  const gtsam::Pose3 body_T_sensor = gtsam::Pose3::identity();
+  const gtsam::Pose3 world_T_body = gtsam::Pose3::identity();
+  const auto noise = gtsam::noiseModel::Unit::Create(3);
+  // Closer to endpoint a
+  {
+    const gtsam::Point3 sensor_t_point(1.2, 0, 0);
+    const gtsam::PointToHandrailEndpointFactor factor(sensor_t_point, world_t_handrail_endpoint_a,
+                                                      world_t_handrail_endpoint_b, body_T_sensor, noise, sym::P(0));
+    const auto error = factor.evaluateError(world_T_body);
+    EXPECT_TRUE(error.isApprox(gtsam::Vector3(0.2, 0, 0), 1e-6));
+  }
+  // Closer to endpoint b
+  {
+    const gtsam::Point3 sensor_t_point(1.6, 0, 0);
+    const gtsam::PointToHandrailEndpointFactor factor(sensor_t_point, world_t_handrail_endpoint_a,
+                                                      world_t_handrail_endpoint_b, body_T_sensor, noise, sym::P(0));
+    const auto error = factor.evaluateError(world_T_body);
+    EXPECT_TRUE(error.isApprox(gtsam::Vector3(-0.4, 0, 0), 1e-6));
+  }
+}
