@@ -77,7 +77,13 @@ if(CATKIN_ENABLE_TESTING)
   target_link_libraries(test_point_to_handrail_endpoint_factor
     graph_localizer gtsam
   )
-
+  add_rostest_gtest(test_silu
+    test/test_silu.test
+    test/test_silu.cc
+  )
+  target_link_libraries(test_silu
+    graph_localizer gtsam
+  )
 endif()
 
 install_launch_files()
