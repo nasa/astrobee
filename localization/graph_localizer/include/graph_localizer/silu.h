@@ -24,6 +24,8 @@
 namespace graph_localizer {
 // Sigmoid linear unit function
 double Silu(const double x, gtsam::OptionalJacobian<1, 1> d_silu_d_x = boost::none);
+
+double SiluWithOffset(const double x, const double offset, gtsam::OptionalJacobian<1, 1> d_silu_d_x = boost::none);
 }  // namespace graph_localizer
 
 #endif  // GRAPH_LOCALIZER_SILU_H_
