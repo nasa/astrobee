@@ -1,6 +1,4 @@
-\page sim-readme Simulation Readme
-
-# Simulation
+\page sim-readme Simulation
 
 This package provides the code required to simulate multiple Free-Flyers operating within the International Space Station (ISS). Our code is written as plugins for Gazebo, an open source robot simulator. In essence the plugins mimic the ros messages and services provided by real hardware, and as a result they act as drop-in replacements for the true hardware. Running a simulation is therefore as simple as loading all flight software subsystems except the hardware drivers, and spawning simulated hardware in stead of real drivers.
 
@@ -16,10 +14,13 @@ If you you are not cross-compiling, then the build process started with "make" w
 
 ## Running the Simulator
 
-Please see the \ref running-the-sim documentation.
+Please see the \subpage running-the-sim documentation.
+
 
 ## Advanced Simulator Information
 
 If you would like more information on running localization only mode,
 collisions, performance, frame consistency, debugging, changing properties, or
-the Astrobee specific plugins, please see the \ref advanced-sim-info.
+the Astrobee specific plugins, please see the \subpage advanced-sim-info.
+
+For common simulation issues and workarounds, check \subpage sim-issues
