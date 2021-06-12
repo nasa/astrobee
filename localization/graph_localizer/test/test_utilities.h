@@ -28,6 +28,12 @@ double RandomDouble() {
   return std::uniform_real_distribution<double>(-100, 100)(rng);
 }
 
+double RandomPositiveDouble() {
+  std::random_device dev;
+  std::mt19937 rng(dev());
+  return std::uniform_real_distribution<double>(0, 100)(rng);
+}
+
 gtsam::Vector3 RandomVector() {
   // Eigen::Vector3 is constrained to [-1, 1]
   return RandomDouble() * Eigen::Vector3d::Random();

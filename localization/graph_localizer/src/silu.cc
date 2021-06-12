@@ -31,7 +31,7 @@ double Silu(const double x, gtsam::OptionalJacobian<1, 1> d_silu_d_x) {
 
 double SiluWithOffset(const double x, const double offset, gtsam::OptionalJacobian<1, 1> d_silu_d_x) {
   const double offset_x = x - offset;
-  return Silu(offset_x, d_silu_d_x);
+  return Silu(offset_x, d_silu_d_x) + offset;
 }
 
 double SiluWithOffsetSymmetric(const double x, const double offset, gtsam::OptionalJacobian<1, 1> d_silu_d_x) {
