@@ -35,6 +35,7 @@ TEST(SiluTester, Jacobian) {
     ASSERT_TRUE(numerical_H.isApprox(H.matrix(), 1e-6));
   }
 }
+
 TEST(SiluWithOffsetTester, Jacobian) {
   for (int i = 0; i < 500; ++i) {
     const double x = gl::RandomDouble();
@@ -44,6 +45,20 @@ TEST(SiluWithOffsetTester, Jacobian) {
     const auto numerical_H = gtsam::numericalDerivative21<double, double, double>(
       boost::function<double(const double, const double)>(boost::bind(&gl::SiluWithOffset, _1, _2, boost::none)), x,
       offset);
+    ASSERT_TRUE(numerical_H.isApprox(H.matrix(), 1e-6));
+  }
+}
+
+TEST(SiluWithOffsetSymmetricTester, Jacobian) {
+  for (int i = 0; i < 500; ++i) {
+    const double x = gl::RandomDouble();
+    const double offset = gl::RandomDouble();
+    gtsam::Matrix H;
+    gl::SiluWithOffset(x, offset, H);
+    const auto numerical_H = gtsam::numericalDerivative21<double, double, double>(
+      boost::function<double(const double, const double)>(
+        boost::bind(&gl::SiluWithOffsetSymmetric, _1, _2, boost::none)),
+      x, offset);
     ASSERT_TRUE(numerical_H.isApprox(H.matrix(), 1e-6));
   }
 }

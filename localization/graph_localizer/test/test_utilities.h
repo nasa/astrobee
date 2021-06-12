@@ -25,7 +25,7 @@ namespace graph_localizer {
 double RandomDouble() {
   std::random_device dev;
   std::mt19937 rng(dev());
-  return std::uniform_real_distribution<double>(1, 100)(rng);
+  return std::uniform_real_distribution<double>(-100, 100)(rng);
 }
 
 gtsam::Vector3 RandomVector() {
