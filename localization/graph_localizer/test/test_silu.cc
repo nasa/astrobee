@@ -39,7 +39,7 @@ TEST(SiluTester, Jacobian) {
 TEST(SiluWithOffsetTester, Jacobian) {
   for (int i = 0; i < 500; ++i) {
     const double x = gl::RandomDouble();
-    const double offset = gl::RandomDouble();
+    const double offset = gl::RandomPositiveDouble();
     gtsam::Matrix H;
     gl::SiluWithOffset(x, offset, H);
     const auto numerical_H = gtsam::numericalDerivative21<double, double, double>(
