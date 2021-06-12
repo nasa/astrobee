@@ -26,6 +26,10 @@ namespace graph_localizer {
 double Silu(const double x, gtsam::OptionalJacobian<1, 1> d_silu_d_x = boost::none);
 
 double SiluWithOffset(const double x, const double offset, gtsam::OptionalJacobian<1, 1> d_silu_d_x = boost::none);
+
+// Create symmetric silu that maps negative values to positive so the silu creates a two way ramp: \__/ rather
+// than a single ramp _/ Note that this is discontinous at x = 0.
+double SiluWithOffsetSymmetric(const double x, const double offset, gtsam::OptionalJacobian<1, 1> d_silu_d_x);
 }  // namespace graph_localizer
 
 #endif  // GRAPH_LOCALIZER_SILU_H_
