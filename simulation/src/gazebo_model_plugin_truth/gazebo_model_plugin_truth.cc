@@ -113,7 +113,10 @@ class GazeboModelPluginTruth : public FreeFlyerModelPlugin {
   // Called on every discrete time tick in the simulated world
   void TimerCallback(ros::TimerEvent const& event) {
     msg_.header.stamp = ros::Time::now();
-
+    // If the rate is higher than the sim time, prevent repeated timestamps
+    if (msg_.header.stamp == last_time_)
+      return;
+    last_time_ = msg_.header.stamp;
 
     #if GAZEBO_MAJOR_VERSION > 7
     if (tf_) {
@@ -198,6 +201,7 @@ class GazeboModelPluginTruth : public FreeFlyerModelPlugin {
   ros::Publisher pub_truth_pose_;
   ros::Publisher pub_truth_twist_;
   ros::Timer timer_;
+  ros::Time last_time_;
 };
 
 // Register this plugin with the simulator
