@@ -6,6 +6,8 @@ This folder consists of various sensing algorithms which serve as input to local
 
 \subpage graphlocalizer
 
+\subpage graphoptimizer
+
 \subpage groundtruthlocalizer
 
 \subpage handrail
