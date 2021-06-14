@@ -229,9 +229,7 @@ find that the above command doesn't work, try rebuilding the cache:
 
     rospack profile
 
-A simulator readme was created for guest science users. However this readme may
-be beneficial to interns and/or new members. If you fall into one of these
-categories, please see the [simulation instructions](simulation/sim_overview.md).
+For more information on running the simulator and moving the robot, please see the \ref sim-readme.
 
 ## Running the code on a real robot
 

@@ -19,6 +19,12 @@
 #ifndef MARKER_TRACKING_MARKER_DETECTOR_H_
 #define MARKER_TRACKING_MARKER_DETECTOR_H_
 
+// Needed by ALVAR headers
+#ifndef CV__ENABLE_C_API_CTORS
+#define CV__ENABLE_C_API_CTORS
+#endif
+#include <opencv2/imgproc.hpp>
+
 // A simplified version of the marker detector that doesn't calculate
 // C_T_AR.
 //
