@@ -1307,7 +1307,6 @@ bool Executive::ConfigureMobility(bool move_to_start,
                                                 agent_state_.immediate_enabled);
   choreographer_cfg_->Set<std::string>("planner", agent_state_.planner);
   choreographer_cfg_->Set<bool>("enable_bootstrapping", move_to_start);
-
   choreographer_cfg_->Set<bool>("enable_replanning",
                                               agent_state_.replanning_enabled);
 
