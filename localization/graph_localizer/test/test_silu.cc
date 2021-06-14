@@ -49,15 +49,14 @@ TEST(SiluWithOffsetTester, Jacobian) {
   }
 }
 
-TEST(SiluWithOffsetSymmetricTester, Jacobian) {
+TEST(SiluWithOffsetTwoWayTester, Jacobian) {
   for (int i = 0; i < 500; ++i) {
     const double x = gl::RandomDouble();
     const double offset = gl::RandomPositiveDouble();
     gtsam::Matrix H;
-    const double silu_inverted_x = gl::SiluWithOffsetSymmetric(x, offset, H);
+    gl::SiluWithOffsetTwoWay(x, offset, H);
     const auto numerical_H = gtsam::numericalDerivative21<double, double, double>(
-      boost::function<double(const double, const double)>(
-        boost::bind(&gl::SiluWithOffsetSymmetric, _1, _2, boost::none)),
+      boost::function<double(const double, const double)>(boost::bind(&gl::SiluWithOffsetTwoWay, _1, _2, boost::none)),
       x, offset);
     ASSERT_TRUE(gtsam::equal_with_abs_tol(numerical_H, H.matrix(), 1e-6));
   }

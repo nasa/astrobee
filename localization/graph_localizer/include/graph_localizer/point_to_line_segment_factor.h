@@ -64,23 +64,24 @@ class PointToLineSegmentFactor : public PointToLineFactorBase {
     // Check if z value is in between segment endpoints, zero z error component and Jacobian row if so.
     // Otherwise add or subtract half line length to the z error to make it reflect the closest distance to
     // one of the segment endpoints.
-    if (line_z_point >= -1.0 * line_length_ / 2.0 && line_z_point <= line_length_ / 2.0) {
-      error.z() = 0;
-      if (H) {
-        H->block<1, 6>(2, 0) = Eigen::Matrix<double, 1, 6>::Zero();
+    if (!use_silu_) {
+      if (line_z_point >= -1.0 * line_length_ / 2.0 && line_z_point <= line_length_ / 2.0) {
+        error.z() = 0;
+        if (H) {
+          H->block<1, 6>(2, 0) = Eigen::Matrix<double, 1, 6>::Zero();
+        }
+      } else if (line_z_point < -1.0 * line_length_ / 2.0) {
+        error.z() = error.z() + line_length_ / 2.0;
+      } else {
+        error.z() = error.z() - line_length_ / 2.0;
       }
-    } else if (line_z_point < -1.0 * line_length_ / 2.0) {
-      error.z() = error.z() + line_length_ / 2.0;
     } else {
-      error.z() = error.z() - line_length_ / 2.0;
-    }
-    if (use_silu_) {
       if (H) {
         Matrix11 d_silu_d_z;
-        graph_localizer::Silu(error.z(), d_silu_d_z);
+        error.z() = graph_localizer::SiluWithOffsetTwoWay(error.z(), line_length_ / 2.0, d_silu_d_z);
         H->block<1, 6>(2, 0) = d_silu_d_z * H->block<1, 6>(2, 0);
       }
-      error.z() = graph_localizer::Silu(error.z());
+      error.z() = graph_localizer::SiluWithOffsetTwoWay(error.z(), line_length_ / 2.0);
     }
     return error;
   }

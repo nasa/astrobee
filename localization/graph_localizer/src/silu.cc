@@ -31,14 +31,13 @@ double Silu(const double x, gtsam::OptionalJacobian<1, 1> d_silu_d_x) {
 
 double SiluWithOffset(const double x, const double offset, gtsam::OptionalJacobian<1, 1> d_silu_d_x) {
   const double offset_x = x - offset;
-  return Silu(offset_x, d_silu_d_x) + offset;
+  return Silu(offset_x, d_silu_d_x);
 }
 
-double SiluWithOffsetSymmetric(const double x, const double offset, gtsam::OptionalJacobian<1, 1> d_silu_d_x) {
+double SiluWithOffsetTwoWay(const double x, const double offset, gtsam::OptionalJacobian<1, 1> d_silu_d_x) {
   if (x >= 0) return SiluWithOffset(x, offset, d_silu_d_x);
   const double inverted_x = -1.0 * x;
   const double silu_inverted_x = SiluWithOffset(inverted_x, offset, d_silu_d_x);
-  if (d_silu_d_x) *d_silu_d_x *= -1.0;
   return -1.0 * silu_inverted_x;
 }
 }  // namespace graph_localizer
