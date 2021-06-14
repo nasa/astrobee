@@ -189,3 +189,125 @@ TEST(PointToLineSegmentFactorTester, IncreaseErrorWithIncreasedYDistance) {
   }
   EXPECT_LT(error_1_norm, error_2_norm);
 }
+
+// Tests with Silu
+TEST(PointToLineSegmentFactorTester, ZeroZErrorInBetweenSegmentEndpointsWithSilu) {
+  const gtsam::Pose3 world_T_line = gtsam::Pose3::identity();
+  const gtsam::Pose3 body_T_sensor = gtsam::Pose3::identity();
+  const gtsam::Pose3 world_T_body = gtsam::Pose3::identity();
+  const double line_length = 0.3;
+  const auto noise = gtsam::noiseModel::Unit::Create(2);
+  {
+    const gtsam::Point3 sensor_t_point(1.0, 2.0, 0.1);
+    const gtsam::PointToLineSegmentFactor factor(sensor_t_point, world_T_line, body_T_sensor, line_length, noise,
+                                                 sym::P(0), true);
+    const auto error = factor.evaluateError(world_T_body);
+    EXPECT_NEAR(error.z(), 0, 1e-1);
+  }
+  {
+    const gtsam::Point3 sensor_t_point(1.0, 2.0, -0.1);
+    const gtsam::PointToLineSegmentFactor factor(sensor_t_point, world_T_line, body_T_sensor, line_length, noise,
+                                                 sym::P(0), true);
+    const auto error = factor.evaluateError(world_T_body);
+    EXPECT_NEAR(error.z(), 0, 1e-1);
+  }
+  {
+    const gtsam::Point3 sensor_t_point(1.0, 2.0, 0);
+    const gtsam::PointToLineSegmentFactor factor(sensor_t_point, world_T_line, body_T_sensor, line_length, noise,
+                                                 sym::P(0), true);
+    const auto error = factor.evaluateError(world_T_body);
+    EXPECT_NEAR(error.z(), 0, 1e-1);
+  }
+}
+
+TEST(PointToLineSegmentFactorTester, NonZeroZErrorOutisdeOfSegmentEndpointsWithSilu) {
+  const gtsam::Pose3 world_T_line = gtsam::Pose3::identity();
+  const gtsam::Pose3 body_T_sensor = gtsam::Pose3::identity();
+  const gtsam::Pose3 world_T_body = gtsam::Pose3::identity();
+  const double line_length = 0.3;
+  const auto noise = gtsam::noiseModel::Unit::Create(2);
+  {
+    const gtsam::Point3 sensor_t_point(1.0, 2.0, 1);
+    const gtsam::PointToLineSegmentFactor factor(sensor_t_point, world_T_line, body_T_sensor, line_length, noise,
+                                                 sym::P(0), true);
+    const auto error = factor.evaluateError(world_T_body);
+    EXPECT_NEAR(std::abs(error.z()), 0.85, 3e-1);
+  }
+  {
+    const gtsam::Point3 sensor_t_point(1.0, 2.0, -1);
+    const gtsam::PointToLineSegmentFactor factor(sensor_t_point, world_T_line, body_T_sensor, line_length, noise,
+                                                 sym::P(0), true);
+    const auto error = factor.evaluateError(world_T_body);
+    EXPECT_NEAR(std::abs(error.z()), 0.85, 3e-1);
+  }
+}
+
+TEST(PointToLineSegmentFactorTester, InvariantToRotationAboutZAxisWithSilu) {
+  double error_1_norm;
+  double error_2_norm;
+  const gtsam::Pose3 world_T_line = gtsam::Pose3::identity();
+  const gtsam::Pose3 body_T_sensor = gtsam::Pose3::identity();
+  const gtsam::Pose3 world_T_body = gtsam::Pose3::identity();
+  const double line_length = 0.3;
+  const auto noise = gtsam::noiseModel::Unit::Create(2);
+  const gtsam::Point3 sensor_t_point(1.0, 2.0, 3.0);
+  {
+    const gtsam::PointToLineSegmentFactor factor(sensor_t_point, world_T_line, body_T_sensor, line_length, noise,
+                                                 sym::P(0), true);
+    error_1_norm = (factor.evaluateError(world_T_body)).norm();
+  }
+  {
+    const gtsam::Rot3 z_axis_rotation = gtsam::Rot3::Rz(2.13);
+    const gtsam::Point3 sensor_t_rotated_point = z_axis_rotation * sensor_t_point;
+    const gtsam::PointToLineSegmentFactor factor(sensor_t_rotated_point, world_T_line, body_T_sensor, line_length,
+                                                 noise, sym::P(0), true);
+    error_2_norm = (factor.evaluateError(world_T_body)).norm();
+  }
+  EXPECT_DOUBLE_EQ(error_1_norm, error_2_norm);
+}
+
+TEST(PointToLineSegmentFactorTester, IncreaseErrorWithIncreasedXDistanceWithSilu) {
+  double error_1_norm;
+  double error_2_norm;
+  const gtsam::Pose3 world_T_line = gtsam::Pose3::identity();
+  const gtsam::Pose3 body_T_sensor = gtsam::Pose3::identity();
+  const gtsam::Pose3 world_T_body = gtsam::Pose3::identity();
+  const double line_length = 0.3;
+  const auto noise = gtsam::noiseModel::Unit::Create(2);
+  {
+    const gtsam::Point3 sensor_t_point(1.0, 2.0, 3.0);
+    const gtsam::PointToLineSegmentFactor factor(sensor_t_point, world_T_line, body_T_sensor, line_length, noise,
+                                                 sym::P(0), true);
+    error_1_norm = (factor.evaluateError(world_T_body)).norm();
+  }
+  {
+    const gtsam::Point3 sensor_t_point(30.3, 2.0, 3.0);
+    const gtsam::PointToLineSegmentFactor factor(sensor_t_point, world_T_line, body_T_sensor, line_length, noise,
+                                                 sym::P(0), true);
+    error_2_norm = (factor.evaluateError(world_T_body)).norm();
+  }
+  EXPECT_LT(error_1_norm, error_2_norm);
+}
+
+TEST(PointToLineSegmentFactorTester, IncreaseErrorWithIncreasedYDistanceWithSilu) {
+  double error_1_norm;
+  double error_2_norm;
+  const gtsam::Pose3 world_T_line = gtsam::Pose3::identity();
+  const gtsam::Pose3 body_T_sensor = gtsam::Pose3::identity();
+  const gtsam::Pose3 world_T_body = gtsam::Pose3::identity();
+  const double line_length = 0.3;
+  const auto noise = gtsam::noiseModel::Unit::Create(2);
+  {
+    const gtsam::Point3 sensor_t_point(1.0, 2.0, 3.0);
+    const gtsam::PointToLineSegmentFactor factor(sensor_t_point, world_T_line, body_T_sensor, line_length, noise,
+                                                 sym::P(0), true);
+    error_1_norm = (factor.evaluateError(world_T_body)).norm();
+  }
+  {
+    const gtsam::Point3 sensor_t_point(1.0, -17.2, 3.0);
+    const gtsam::PointToLineSegmentFactor factor(sensor_t_point, world_T_line, body_T_sensor, line_length, noise,
+                                                 sym::P(0), true);
+    error_2_norm = (factor.evaluateError(world_T_body)).norm();
+  }
+  EXPECT_LT(error_1_norm, error_2_norm);
+}
