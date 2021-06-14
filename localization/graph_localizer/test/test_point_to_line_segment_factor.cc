@@ -34,7 +34,7 @@ TEST(PointToLineSegmentFactorTester, Jacobian) {
     const gtsam::Pose3 world_T_line = gl::RandomPose();
     const gtsam::Pose3 body_T_sensor = gl::RandomPose();
     const gtsam::Pose3 world_T_body = gl::RandomPose();
-    const double line_length = gl::RandomDouble();
+    const double line_length = gl::RandomPositiveDouble();
     const auto noise = gtsam::noiseModel::Unit::Create(2);
     const gtsam::PointToLineSegmentFactor factor(sensor_t_point, world_T_line, body_T_sensor, line_length, noise,
                                                  sym::P(0));
@@ -54,7 +54,7 @@ TEST(PointToLineSegmentFactorTester, JacobianWithSilu) {
     const gtsam::Pose3 world_T_line = gl::RandomPose();
     const gtsam::Pose3 body_T_sensor = gl::RandomPose();
     const gtsam::Pose3 world_T_body = gl::RandomPose();
-    const double line_length = gl::RandomDouble();
+    const double line_length = gl::RandomPositiveDouble();
     const auto noise = gtsam::noiseModel::Unit::Create(2);
     const bool use_silu = true;
     const gtsam::PointToLineSegmentFactor factor(sensor_t_point, world_T_line, body_T_sensor, line_length, noise,
