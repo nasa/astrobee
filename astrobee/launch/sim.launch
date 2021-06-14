@@ -41,7 +41,7 @@
   <arg name="sviz" default="false" />           <!-- Start simulation GUI    -->
   <arg name="rqt" default="false" />            <!-- Start user interface    -->
   <arg name="gds" default="false" />            <!-- Enable GDS              -->
-  <arg name="agent1" default="Bsharp"/>         <!-- GDS Agent1              -->
+  <arg name="agent1" default="Queen"/>          <!-- GDS Agent1              -->
   <arg name="agent2" default="Bumble"/>         <!-- GDS Agent2              -->
   <arg name="agent3" default="Honey"/>          <!-- GDS Agent3              -->
   <arg name="vmware" default="true" />          <!-- Enable vmware           -->
@@ -168,7 +168,7 @@
       <arg name="world" value="$(arg world)" />      <!-- Execution context  -->
       <arg name="ns" value="honey" />                <!-- Robot namespace    -->
       <arg name="output" value="$(arg output)" />    <!-- Output for logging -->
-      <arg name="pose" value="0 0 4.8 0 0 0 1" />    <!-- Initial robot pose -->
+      <arg name="pose" value="11 -7 4.8 0 0 0 1" />    <!-- Initial robot pose -->
       <arg name="spurn" value="$(arg spurn)" />      <!-- Prevent node       -->
       <arg name="nodes" value="$(arg nodes)" />      <!-- Launch node group  -->
       <arg name="extra" value="$(arg extra)" />      <!-- Inject extra nodes -->
@@ -188,7 +188,7 @@
       <arg name="ns" value="bumble" />               <!-- Robot namespace    -->
       <arg name="output" value="$(arg output)" />    <!-- Output for logging -->
       <arg if="$(eval arg('bumble_pose') == '')" 
-           name="pose"  value="2 0 4.8 0 0 0 1" />   <!-- Initial robot pose -->
+           name="pose"  value="11 -4 4.8 0 0 0 1" />   <!-- Initial robot pose -->
       <arg unless="$(eval arg('bumble_pose') == '')" 
            name="pose"  value="$(arg bumble_pose)" /> 
       <arg name="spurn" value="$(arg spurn)" />      <!-- Prevent node       -->
@@ -209,7 +209,7 @@
       <arg name="world" value="$(arg world)" />      <!-- Execution context  -->
       <arg name="ns" value="queen" />                <!-- Robot namespace    -->
       <arg name="output" value="$(arg output)" />    <!-- Output for logging   -->
-      <arg name="pose" value="4 0 4.8 0 0 0 1" />    <!-- Initial robot pose -->
+      <arg name="pose" value="11 -10 4.8 0 0 0 1" />    <!-- Initial robot pose -->
       <arg name="spurn" value="$(arg spurn)" />      <!-- Prevent node       -->
       <arg name="nodes" value="$(arg nodes)" />      <!-- Launch node group  -->
       <arg name="extra" value="$(arg extra)" />      <!-- Inject extra nodes -->

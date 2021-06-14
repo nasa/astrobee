@@ -31,7 +31,7 @@ First, clone the flight software repository and media:
     git clone https://github.com/nasa/astrobee.git $SOURCE_PATH
     pushd $SOURCE_PATH
     git submodule update --init --depth 1 description/media
-
+    popd
 
 If you are planning to work with guest science code, you will also need the
 `astrobee_android` repository. You should checkout the repository in the same
@@ -136,4 +136,4 @@ Please contact your Astrobee point of contact if you need to cross compile the
 code.
 
 For more information on running the simulator and moving the robot, please see
-the [simulation instructions](simulation/sim_overview.md).
+the \ref sim-readme.
