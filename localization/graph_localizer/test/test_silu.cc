@@ -103,3 +103,80 @@ TEST(SiluWithOffsetTwoWayTester, Jacobian) {
     ASSERT_TRUE(gtsam::equal_with_abs_tol(numerical_H, H.matrix(), 1e-6));
   }
 }
+
+TEST(SiluWithOffsetTwoWayTester, XMuchGreaterThanOffset) {
+  const double x = 3001.3;
+  const double offset = 5.1;
+  const double silu_x = gl::SiluWithOffsetTwoWay(x, offset);
+  EXPECT_NEAR(x - offset, silu_x, 1e-6);
+}
+
+TEST(SiluWithOffsetTwoWayTester, XGreaterThanOffset) {
+  const double x = 13.2;
+  const double offset = 5.1;
+  const double silu_x = gl::SiluWithOffsetTwoWay(x, offset);
+  EXPECT_NEAR(x - offset, silu_x, 1e-2);
+}
+
+TEST(SiluWithOffsetTwoWayTester, XSlightlyGreaterThanOffset) {
+  const double x = 5.2;
+  const double offset = 5.1;
+  const double silu_x = gl::SiluWithOffsetTwoWay(x, offset);
+  EXPECT_NEAR(x - offset, silu_x, 5e-2);
+}
+
+TEST(SiluWithOffsetTwoWayTester, XSlightlyLessThanOffset) {
+  const double x = 5.0;
+  const double offset = 5.1;
+  const double silu_x = gl::SiluWithOffsetTwoWay(x, offset);
+  EXPECT_NEAR(0.0, silu_x, 5e-2);
+}
+
+TEST(SiluWithOffsetTwoWayTester, XLessThanOffset) {
+  const double x = 1.0;
+  const double offset = 5.1;
+  const double silu_x = gl::SiluWithOffsetTwoWay(x, offset);
+  EXPECT_NEAR(0.0, silu_x, 1e-1);
+}
+
+TEST(SiluWithOffsetTwoWayTester, XMuchLessThanOffset) {
+  const double x = 3.0;
+  const double offset = 1003.3;
+  const double silu_x = gl::SiluWithOffsetTwoWay(x, offset);
+  EXPECT_NEAR(0.0, silu_x, 1e-6);
+}
+
+TEST(SiluWithOffsetTwoWayTester, NegativeXLessThanOffset) {
+  const double x = -13.2;
+  const double offset = 5.1;
+  const double silu_x = gl::SiluWithOffsetTwoWay(x, offset);
+  EXPECT_NEAR(x + offset, silu_x, 1e-2);
+}
+
+TEST(SiluWithOffsetTwoWayTester, NegativeXSlightlyLessThanOffset) {
+  const double x = -5.2;
+  const double offset = 5.1;
+  const double silu_x = gl::SiluWithOffsetTwoWay(x, offset);
+  EXPECT_NEAR(x + offset, silu_x, 5e-2);
+}
+
+TEST(SiluWithOffsetTwoWayTester, NegativeXSlightlyGreaterThanOffset) {
+  const double x = -5.0;
+  const double offset = 5.1;
+  const double silu_x = gl::SiluWithOffsetTwoWay(x, offset);
+  EXPECT_NEAR(0.0, silu_x, 5e-2);
+}
+
+TEST(SiluWithOffsetTwoWayTester, NegativeXGreaterThanOffset) {
+  const double x = -1.0;
+  const double offset = 5.1;
+  const double silu_x = gl::SiluWithOffsetTwoWay(x, offset);
+  EXPECT_NEAR(0.0, silu_x, 1e-1);
+}
+
+TEST(SiluWithOffsetTwoWayTester, NegativeXMuchGreaterThanOffset) {
+  const double x = -3.0;
+  const double offset = 1003.3;
+  const double silu_x = gl::SiluWithOffsetTwoWay(x, offset);
+  EXPECT_NEAR(0.0, silu_x, 1e-6);
+}
