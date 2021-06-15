@@ -268,7 +268,7 @@ void LocalizationGraphPanel::LocalizationGraphCallback(const ff_msgs::Localizati
       ++bias_prior_factors;
     }
   }
-  const auto latest_combined_nav_state = graph_localizer.graph_values().LatestCombinedNavState();
+  const auto latest_combined_nav_state = graph_localizer.LatestCombinedNavState();
   if (latest_combined_nav_state) {
     addVectorToLabel(latest_combined_nav_state->velocity(), "Latest Vel", *latest_velocity_label_, true);
 
