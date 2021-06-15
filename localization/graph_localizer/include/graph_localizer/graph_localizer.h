@@ -138,6 +138,7 @@ class GraphLocalizer : public graph_optimizer::GraphOptimizer {
   void serialize(Archive& ar, const unsigned int file_version) {
     ar& BOOST_SERIALIZATION_BASE_OBJECT_NVP(graph_optimizer::GraphOptimizer);
     ar& BOOST_SERIALIZATION_NVP(feature_tracker_);
+    ar& BOOST_SERIALIZATION_NVP(combined_nav_state_node_updater_);
   }
 
   std::shared_ptr<FeatureTracker> feature_tracker_;
