@@ -102,7 +102,8 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
     TOLERANCE_VEL                  = (1<<15),     // Velocity tolerance failure
     TOLERANCE_OMEGA                = (1<<16),     // Omega tolerance failure
     OBSTACLE_DETECTED              = (1<<17),     // Hazard: obstacle
-    MANUAL_STATE_SET               = (1<<18)     // Setting the state manually with service
+    MANUAL_STATE_SET               = (1<<18),     // Setting the state manually with service
+    REPLAN_TIMEOUT                 = (1<<19)      // Ready to replan again
   };
 
   // The various types of control
@@ -121,7 +122,7 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
                       "Cannot call Idle() action");
         return STATE::IDLE;
       });
-    // [2]
+    // [1]
     fsm_.Add(STATE::STOPPED, STATE::IDLE,
       GOAL_EXEC,
       [this](FSM::Event const& event) -> FSM::State {
@@ -169,7 +170,7 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
         }
         return Result(RESPONSE::NOT_ON_FIRST_POSE);
       });
-    // [3a]
+    // [2]
     fsm_.Add(STATE::BOOTSTRAPPING,
       PLAN_SUCCESS,
       [this](FSM::Event const& event) -> FSM::State {
@@ -188,7 +189,7 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
           return Result(RESPONSE::CONTROL_FAILED);
         return STATE::CONTROLLING;
       });
-    // [4]
+    // [3]
     fsm_.Add(STATE::BOOTSTRAPPING,
       PLAN_FAILED | GOAL_CANCEL,
       [this](FSM::Event const& event) -> FSM::State {
@@ -196,7 +197,7 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
           return Result(RESPONSE::CANCELLED);
         return Result(RESPONSE::PLAN_FAILED);
       });
-    // [5]
+    // [4]
     fsm_.Add(STATE::STOPPED, STATE::IDLE,
       GOAL_MOVE,
       [this](FSM::Event const& event) -> FSM::State {
@@ -220,7 +221,7 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
           return Result(RESPONSE::PLAN_FAILED);
         return STATE::PLANNING;
       });
-    // [6]
+    // [5]
     fsm_.Add(STATE::PLANNING,
       PLAN_SUCCESS,
       [this](FSM::Event const& event) -> FSM::State {
@@ -239,7 +240,7 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
           return Result(RESPONSE::CONTROL_FAILED);
         return STATE::CONTROLLING;
       });
-    // [7]
+    // [6]
     fsm_.Add(STATE::PLANNING,
       PLAN_FAILED | GOAL_CANCEL,
       [this](FSM::Event const& event) -> FSM::State {
@@ -247,7 +248,7 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
           return Result(RESPONSE::CANCELLED);
         return Result(RESPONSE::PLAN_FAILED);
       });
-    // [10]
+    // [7]
     fsm_.Add(STATE::REPLANNING,
       PLAN_SUCCESS,
       [this](FSM::Event const& event) -> FSM::State {
@@ -266,13 +267,13 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
           return Result(RESPONSE::CONTROL_FAILED);
         return STATE::CONTROLLING;
       });
-    // [13]
+    // [8]
     fsm_.Add(STATE::CONTROLLING,
       CONTROL_SUCCESS,
       [this](FSM::Event const& event) -> FSM::State {
         return Result(RESPONSE::SUCCESS);
       });
-    // [14]
+    // [9]
     fsm_.Add(STATE::REPLANNING,
       PLAN_FAILED | GOAL_CANCEL,
       [this](FSM::Event const& event) -> FSM::State {
@@ -291,13 +292,20 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
         }
         states_.insert(states_.begin(), current_pose);
         replan_attempts_++;
-        ros::Duration(1).sleep();  // sleep for a second
+        // Start replan timer
+        timer_replan_.start();
+        return STATE::REPLAN_WAIT;
+      });
+    // [10]
+    fsm_.Add(STATE::REPLAN_WAIT,
+      REPLAN_TIMEOUT,
+      [this](FSM::Event const& event) -> FSM::State {
         if (!Plan(states_)) {
           return Result(RESPONSE::PLAN_FAILED);
         }
         return STATE::REPLANNING;
       });
-    // [15]
+    // [11]
     fsm_.Add(STATE::CONTROLLING,
       CONTROL_FAILED | GOAL_CANCEL,
       [this](FSM::Event const& event) -> FSM::State {
@@ -305,7 +313,7 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
           return Result(RESPONSE::CANCELLED);
         return Result(RESPONSE::CONTROL_FAILED);
       });
-    // [28]
+    // [12]
     fsm_.Add(STATE::CONTROLLING,
       TOLERANCE_POS | TOLERANCE_ATT | TOLERANCE_VEL | TOLERANCE_OMEGA,
       [this](FSM::Event const& event) -> FSM::State {
@@ -323,7 +331,7 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
         }
         return Result(RESPONSE::CONTROL_FAILED);
       });
-    // [16]
+    // [13]
     fsm_.Add(STATE::CONTROLLING, OBSTACLE_DETECTED,
       [this](FSM::Event const& event) -> FSM::State {
         if (cfg_.Get<bool>("enable_replanning")) {
@@ -336,7 +344,7 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
         // If we're not doing replanning
         return Result(RESPONSE::OBSTACLE_DETECTED);
       });
-    // [17]
+    // [14]
     fsm_.Add(STATE::STOPPED, STATE::IDLE,
       GOAL_STOP,
       [this](FSM::Event const& event) -> FSM::State {
@@ -346,7 +354,7 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
           return Result(RESPONSE::CONTROL_FAILED);
         return STATE::STOPPING;
       });
-    // [18]
+    // [15]
     fsm_.Add(STATE::STOPPING,
       CONTROL_SUCCESS,
       [this](FSM::Event const& event) -> FSM::State {
@@ -360,7 +368,7 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
           return Result(RESPONSE::CANCELLED);
         return Result(RESPONSE::CONTROL_FAILED);
       });
-    // [20]
+    // [16]
     fsm_.Add(STATE::STOPPED, STATE::IDLE,
       GOAL_IDLE,
       [this](FSM::Event const& event) -> FSM::State {
@@ -370,13 +378,13 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
           return Result(RESPONSE::CONTROL_FAILED);
         return STATE::IDLING;
       });
-    // [21]
+    // [17]
     fsm_.Add(STATE::IDLING,
       CONTROL_SUCCESS,
       [this](FSM::Event const& event) -> FSM::State {
         return Result(RESPONSE::SUCCESS);
       });
-    // [22]
+    // [18]
     fsm_.Add(STATE::IDLING,
       CONTROL_FAILED | GOAL_CANCEL,
       [this](FSM::Event const& event) -> FSM::State {
@@ -384,7 +392,7 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
           return Result(RESPONSE::CANCELLED);
         return Result(RESPONSE::CONTROL_FAILED);
       });
-    // [23]
+    // [19]
     fsm_.Add(STATE::PREPARING,
       PMC_READY,
       [this](FSM::Event const& event) -> FSM::State {
@@ -392,7 +400,7 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
           return Result(RESPONSE::CONTROL_FAILED);
         return STATE::CONTROLLING;
       });
-    // [24]
+    // [20]
     fsm_.Add(STATE::PREPARING,
       PMC_TIMEOUT | GOAL_CANCEL,
       [this](FSM::Event const& event) -> FSM::State {
@@ -400,7 +408,7 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
           return Result(RESPONSE::CANCELLED);
         return Result(RESPONSE::PMC_FAILED);
       });
-    // [25]
+    // [21]
     fsm_.Add(STATE::STOPPED, STATE::IDLE,
       GOAL_PREP,
       [this](FSM::Event const& event) -> FSM::State {
@@ -408,13 +416,13 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
           return STATE::PREPPING;
         return Result(RESPONSE::SUCCESS);
       });
-    // [26]
+    // [22]
     fsm_.Add(STATE::PREPPING,
       PMC_READY,
       [this](FSM::Event const& event) -> FSM::State {
         return Result(RESPONSE::SUCCESS);
       });
-    // [27]
+    // [23]
     fsm_.Add(STATE::PREPPING,
       PMC_TIMEOUT |  GOAL_CANCEL,
       [this](FSM::Event const& event) -> FSM::State {
@@ -422,7 +430,7 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
           return Result(RESPONSE::CANCELLED);
         return Result(RESPONSE::PMC_FAILED);
       });
-    // [28]
+    // [24]
     fsm_.Add(STATE::HALTING, CONTROL_SUCCESS,
       [this](FSM::Event const& event) -> FSM::State {
         // Get current Astrobee pose
@@ -438,7 +446,7 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
         }
         return STATE::REPLANNING;
       });
-    // [29]
+    // [25]
     fsm_.Add(STATE::HALTING,
       CONTROL_FAILED | GOAL_CANCEL,
       [this](FSM::Event const& event) -> FSM::State {
@@ -498,6 +506,11 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
     // Periodic timer to send feedback to executive to avoid timeout
     timer_feedback_ = nh->createTimer(ros::Rate(2.0),
         &ChoreographerNodelet::FeedbackCallback, this, false, false);
+
+    // Replanning timer
+    timer_replan_ = nh->createTimer(
+      ros::Duration(cfg_.Get<double>("replanning_wait")),
+        &ChoreographerNodelet::ReplanCallback, this, false, false);
 
     // Publish segments to be picked up by rviz
     pub_segment_ = nh->advertise<nav_msgs::Path>(
@@ -1045,6 +1058,10 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
     return fsm_.Update(PLAN_FAILED);
   }
 
+ // Called if the prep fails
+  void ReplanCallback(const ros::TimerEvent&) {
+    return fsm_.Update(REPLAN_TIMEOUT);
+  }
   // SPEED
 
   // Send the flight mode out to subscribers
@@ -1362,7 +1379,7 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
   // Zone management`
   Validator validator_;
   // Timeout on speed preps
-  ros::Timer timer_speed_, timer_feedback_;
+  ros::Timer timer_speed_, timer_feedback_, timer_replan_;
   // TF2
   tf2_ros::Buffer tf_buffer_;
   std::shared_ptr<tf2_ros::TransformListener> tf_listener_;

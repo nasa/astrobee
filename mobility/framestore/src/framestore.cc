@@ -72,6 +72,7 @@ class FrameStore : public ff_util::FreeFlyerNodelet {
     config_reader::ConfigReader::Table group;
     // Get the name of this platform
     std::string platform = GetPlatform();
+    ROS_ERROR_STREAM("FRAMESTORE" << platform);
     // Do the body-frame transforms
     if (config_.GetTable("transforms", &table)) {
       for (int i = 0; i < table.GetSize(); i++) {
