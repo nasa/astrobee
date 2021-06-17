@@ -26,6 +26,9 @@
   <xacro:property name="pay_bot_front" value="$(arg bot_front)"/>
   <xacro:property name="ns" value="$(arg ns)"/>
   <xacro:property name="prefix" value="$(arg prefix)"/>
+  <xacro:if value="${prefix == '/'}">
+    <xacro:property name="prefix" value=""/>
+  </xacro:if>
 
   <!-- BASE GEOMETRY -->
  <link name="${prefix}body">
