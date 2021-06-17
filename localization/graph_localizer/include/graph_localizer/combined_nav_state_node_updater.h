@@ -34,6 +34,7 @@ class CombinedNavStateNodeUpdater
   CombinedNavStateNodeUpdater(const CombinedNavStateNodeUpdaterParams& params,
                               std::shared_ptr<imu_integration::LatestImuIntegrator> latest_imu_integrator,
                               std::shared_ptr<gtsam::Values> values);
+  CombinedNavStateNodeUpdater() = default;
 
   void AddInitialValuesAndPriors(gtsam::NonlinearFactorGraph& factors);
 
