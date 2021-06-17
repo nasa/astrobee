@@ -113,6 +113,8 @@ class GraphLocalizer : public graph_optimizer::GraphOptimizer {
 
   const localization_measurements::FanSpeedMode fan_speed_mode() const;
 
+  const CombinedNavStateGraphValues& combined_nav_state_graph_values() const;
+
  private:
   void DoPostSlideWindowActions(const localization_common::Time oldest_allowed_time,
                                 const boost::optional<gtsam::Marginals>& marginals) final;
