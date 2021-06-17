@@ -1058,7 +1058,7 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
     return fsm_.Update(PLAN_FAILED);
   }
 
- // Called if the prep fails
+  // Called if the prep fails
   void ReplanCallback(const ros::TimerEvent&) {
     return fsm_.Update(REPLAN_TIMEOUT);
   }
