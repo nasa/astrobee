@@ -6,4 +6,11 @@
       Nodelet to act as a translator between dds and ros.
     </description>
   </class>
+  <class name="dds_ros_bridge/AstrobeeAstrobeeBridge"
+    type="dds_ros_bridge::AstrobeeAstrobeeBridge"
+    base_class_type="nodelet::Nodelet">
+    <description>
+      Nodelet to act as a bridge between Astrobees.
+    </description>
+  </class>
 </library>

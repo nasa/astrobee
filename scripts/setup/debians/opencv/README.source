@@ -1,0 +1,23 @@
+opencv source package infomation
+
+- Remove source code
+  OpenCV's debian source package deletes some source codes. 
+
+  The deleted source code is the following directories and files.
+    * modules/nonfree
+    * 3rdparty/*
+    * modules/highgui/src/files_Qt/Milky
+    * lena.jpg and lena.png
+
+  The module/nonfree contains algorithms that may be patented in some countries or have
+  some other limitations on the use.
+  This description is in modules/nonfree/doc/nonfree.rst of original.
+
+  3rdparty directory has some source code and binaries of 3rdparty project
+  (libjpeg, libpng, etc...). Since they use the binary of Debian, I have been removed.
+
+  The Milky icons is not DFSG-free.
+
+  lena.jpg and lena.png is not DFSG-free.
+
+ -- Nobuhiro Iwamatsu <iwamatsu@debian.org> Tue, 08 Dec 2015 23:08:51 +0900

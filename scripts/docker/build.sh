@@ -26,11 +26,14 @@ usage()
 {
     echo "usage: sysinfo_page [[[-a file ] [-i]] | [-h]]"
 }
-ubuntu18=0
+
+os="xenial"
 
 while [ "$1" != "" ]; do
     case $1 in
-        -n | --ubuntu18 )               ubuntu18=1
+        -b | --bionic )                 os="bionic"
+                                        ;;
+        -f | --focal )                  os="focal"
                                         ;;
         -h | --help )           		usage
                                 		exit
@@ -45,19 +48,26 @@ done
 thisdir=$(dirname "$(readlink -f "$0")")
 rootdir=${thisdir}/../..
 echo "Astrobee path: "${rootdir}/
-if [ $ubuntu18 == 0 ]; then
+if [ "$os" = "xenial" ]; then
     docker build ${rootdir}/ \
-                -f ${rootdir}/scripts/docker/astrobee_base_kinetic.Dockerfile \
-                -t astrobee/astrobee:base-latest-kinetic
+                -f ${rootdir}/scripts/docker/astrobee_base_xenial.Dockerfile \
+                -t astrobee/astrobee:base-latest-xenial
     docker build ${rootdir}/ \
-                -f ${rootdir}/scripts/docker/astrobee_kinetic.Dockerfile \
-                -t astrobee/astrobee:latest-kinetic
-else
+                -f ${rootdir}/scripts/docker/astrobee_xenial.Dockerfile \
+                -t astrobee/astrobee:latest-xenial
+elif [ "$os" = "bionic" ]; then
     docker build ${rootdir}/ \
-                -f ${rootdir}/scripts/docker/astrobee_base_melodic.Dockerfile \
-                -t astrobee/astrobee:base-latest-melodic
+                -f ${rootdir}/scripts/docker/astrobee_base_bionic.Dockerfile \
+                -t astrobee/astrobee:base-latest-bionic
     docker build ${rootdir}/ \
-                -f ${rootdir}/scripts/docker/astrobee_melodic.Dockerfile \
-                -t astrobee/astrobee:latest-melodic
+                -f ${rootdir}/scripts/docker/astrobee_bionic.Dockerfile \
+                -t astrobee/astrobee:latest-bionic
+elif [ "$os" = "focal" ]; then
+    docker build ${rootdir}/ \
+                -f ${rootdir}/scripts/docker/astrobee_base_focal.Dockerfile \
+                -t astrobee/astrobee:base-latest-focal
+    docker build ${rootdir}/ \
+                -f ${rootdir}/scripts/docker/astrobee_focal.Dockerfile \
+                -t astrobee/astrobee:latest-focal
 fi
 

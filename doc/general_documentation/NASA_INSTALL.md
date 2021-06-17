@@ -4,9 +4,7 @@
 
 Install the 64-bit version of
 [Ubuntu16.04](http://releases.ubuntu.com/16.04) on a host machine, and
-make sure that you can checkout and build code.  If you are using a
-virtual machine, please use VMware. Virtualbox doesn't support some of
-our Gazebo plugins.
+make sure that you can checkout and build code.
 
     sudo apt-get install build-essential git
 
@@ -99,14 +97,7 @@ The android module is necessary for guest science code; the avionics and platfor
 module is used when cross-compiling to test on the robot hardware.
 
 ### Dependencies
-For *Ubuntu 18 only*: install openCV and Luajit beforehand with:
-
-    pushd $SOURCE_PATH
-    cd scripts/setup
-    ./debians/install_luajit.sh
-    ./debians/install_opencv.sh
-
-Next, install all remaining dependencies dependencies:
+Install dependencies:
 
     pushd $SOURCE_PATH
     cd scripts/setup
@@ -238,9 +229,7 @@ find that the above command doesn't work, try rebuilding the cache:
 
     rospack profile
 
-A simulator readme was created for guest science users. However this readme may
-be beneficial to interns and/or new members. If you fall into one of these
-categories, please see the [simulation instructions](simulation/sim_overview.md).
+For more information on running the simulator and moving the robot, please see the \ref sim-readme.
 
 ## Running the code on a real robot
 

@@ -46,6 +46,8 @@
     <node pkg="nodelet" type="nodelet" args="manager"
           name="mlp_communications" output="$(arg output)"/>
     <node pkg="nodelet" type="nodelet" args="manager"
+          name="mlp_multibridge" output="$(arg output)"/>
+    <node pkg="nodelet" type="nodelet" args="manager"
           name="mlp_serial" output="$(arg output)"/>
     <node pkg="nodelet" type="nodelet" args="manager"
           name="mlp_mobility" output="$(arg output)"/>
@@ -96,7 +98,7 @@
       <arg name="default" value="true" />
     </include>
   </group>
- 
+
   <group if="$(arg ground_truth_localizer)">
     <include file="$(find ff_util)/launch/ff_nodelet.launch">
       <arg name="class" value="ground_truth_localizer/GroundTruthLocalizerNodelet" />
@@ -266,6 +268,16 @@
     <arg name="class" value="dds_ros_bridge/DdsRosBridge" />
     <arg name="name" value="dds_ros_bridge" />
     <arg name="manager" value="mlp_communications" />
+    <arg name="spurn" value="$(arg spurn)" />
+    <arg name="nodes" value="$(arg nodes)" />
+    <arg name="extra" value="$(arg extra)" />
+    <arg name="debug" value="$(arg debug)" />
+    <arg name="default" value="$(arg dds)" />
+  </include>
+  <include file="$(find ff_util)/launch/ff_nodelet.launch">
+    <arg name="class" value="dds_ros_bridge/AstrobeeAstrobeeBridge" />
+    <arg name="name" value="astrobee_astrobee_bridge" />
+    <arg name="manager" value="mlp_multibridge" />
     <arg name="spurn" value="$(arg spurn)" />
     <arg name="nodes" value="$(arg nodes)" />
     <arg name="extra" value="$(arg extra)" />

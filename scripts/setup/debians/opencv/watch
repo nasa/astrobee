@@ -1,0 +1,20 @@
+version=4
+
+opts="\
+compression=xz, \
+repacksuffix=+dfsg, \
+dversionmangle=s/\+(dfsg|ds)\d?$//, \
+filenamemangle=s%(?:.*?)?v?(\d[\d.]*)\.(.+)$%@PACKAGE@_$1.orig.$2%, \
+" \
+  https://github.com/opencv/opencv/tags \
+  (?:.*?/)?v?(\d[\d.]*)@ARCHIVE_EXT@ debian
+
+opts="\
+compression=xz, \
+repacksuffix=+dfsg, \
+component=contrib, \
+dversionmangle=s/\+(dfsg|ds)\d?$//, \
+filenamemangle=s%(?:.*?)?v?(\d[\d.]*)\.(.+)$%@PACKAGE@_$1.orig-contrib.$2%, \
+" \
+ https://github.com/opencv/opencv_contrib/tags \
+  (?:.*?/)?v?(\d[\d.]*)@ARCHIVE_EXT@ same

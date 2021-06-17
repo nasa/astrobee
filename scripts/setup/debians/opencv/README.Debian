@@ -1,0 +1,41 @@
+Notes for the Debian OpenCV packages
+--------------------------------------
+
+The opencv package of Debian is divided every function.
+This is because a user does not install an unnecessary
+unction. For example, the libopencv_video library is not
+necessary when Video function is not necessary.
+
+ - libopencv-core*
+ - libopencv-imgproc*
+ - libopencv-flann*
+ - libopencv-features2d*
+ - libopencv-calib3d*
+ - libopencv-objdetect*
+ - libopencv-legacy*
+ - libopencv-video*
+ - libopencv-ml*
+ - libopencv-gpu*
+ - libopencv-superres*
+ - libopencv-imgproc*
+ - libopencv-highgui*
+ - libopencv-contrib*
+ - python-opencv
+ - and transition packages.
+
+Please install the package including a necessary library 
+when you want to make a package using opencv.
+
+And, opencv provides pkg-config file and cmake config file.
+It is necessary you build it, and to Build-Depneds on 
+libopencv-dev package if the package which you want to use
+pkg-config or cmake config file.
+
+When you build it and do not Build-Depends, please be careful
+because it becomes the build error.
+
+We ask an up stream to divide opencv.pc into every function.[0]
+
+  [0]: https://code.ros.org/trac/opencv/ticket/332
+
+-- Nobuhiro Iwamatsu <iwamatsu@debian.org> Thu, 02 Feb 2012 04:18:49 +0900

@@ -1,7 +1,7 @@
 Source: libjps3d
 Priority: optional
 Maintainer: Brian Coltin <nospam@nospam.org>
-Build-Depends: debhelper (>=9), cmake (>=3.5), libeigen3-dev (>=3.2), libvtk6-dev (>=6.2), libboost-filesystem-dev (>=1.58), libboost-system-dev (>=1.58), libyaml-cpp-dev (>=0.5.2)
+Build-Depends: debhelper (>=9), cmake (>=3.5), libeigen3-dev (>=3.2), libvtk6-dev (>=6.2) | libvtk7-dev (>=7.1), libboost-filesystem-dev (>=1.58), libboost-system-dev (>=1.58), libyaml-cpp-dev (>=0.5.2)
 Standards-Version: 3.9.6
 Section: libs
 Homepage: https://github.com/mwatterson/jps3d
@@ -11,12 +11,12 @@ Homepage: https://github.com/mwatterson/jps3d
 Package: libjps3d-dev
 Section: libdevel
 Architecture: any
-Depends: libjps3d0 (= ${binary:Version}), libvtk6-dev (>=6.2), libboost-filesystem-dev (>=1.58), libboost-system-dev (>=1.58), libyaml-cpp-dev (>=0.5.2), ${misc:Depends}
+Depends: libjps3d0 (= ${binary:Version}), libvtk6-dev (>=6.2) | libvtk7-dev (>=7.1), libboost-filesystem-dev (>=1.58), libboost-system-dev (>=1.58), libyaml-cpp-dev (>=0.5.2), ${misc:Depends}
 Description: Jps3d.
  Jps3d.
 
 Package: libjps3d0
 Architecture: any
-Depends: libvtk6.2 | libvtk6.3, libboost-filesystem1.58.0 | libboost-filesystem1.62.0, libboost-system1.58.0 | libboost-system1.62.0, libyaml-cpp0.5v5 (>=0.5), ${shlibs:Depends}, ${misc:Depends}
+Depends: libvtk6.2 | libvtk6.3 | libvtk7.1p, libboost-filesystem1.58.0 | libboost-filesystem1.62.0 | libboost-filesystem1.71.0, libboost-system1.58.0 | libboost-system1.62.0 | libboost-system1.71.0, libyaml-cpp0.5v5 (>=0.5) | libyaml-cpp0.6, ${shlibs:Depends}, ${misc:Depends}
 Description: Jps3d.
  Jps3d.

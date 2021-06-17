@@ -95,7 +95,9 @@
 #define SUBSYSTEM_COMMUNICATIONS                    "comm"
 
 #define NODE_DDS_ROS_BRIDGE                         "dds_ros_bridge"
+#define NODE_ASTROBEE_ASTROBEE_BRIDGE               "astrobee_astrobee_bridge"
 
+#define SERVICE_COMMUNICATIONS_ASTROBEE_ASTROBEE_BRIDGE_TRIGGER "comm/astrobee_astrobee_bridge/trigger"
 #define SERVICE_COMMUNICATIONS_DDS_SET_TELEM_RATES  "comm/dds/set_telem_rate"
 
 #define TOPIC_COMMUNICATIONS_DDS_COMMAND            "comm/dds/command"
@@ -433,7 +435,7 @@
 #define SERVICE_HARDWARE_LIGHT_AFT_CONTROL          "hw/light_aft/control"
 #define SERVICE_HARDWARE_LASER_ENABLE               "hw/laser/enable"
 #define SERVICE_HARDWARE_PMC_ENABLE                 "hw/pmc/enable"
-#define SERVICE_HARDWARE_PMC_TIMOUT                 "hw/pmc/set_timeout"
+#define SERVICE_HARDWARE_PMC_TIMEOUT                 "hw/pmc/set_timeout"
 
 #define SERVICE_STREAMING_LIGHTS                    "hw/signal_lights/streaming"
 
