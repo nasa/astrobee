@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 #
 # Copyright 2013 Open Source Robotics Foundation
 #
@@ -32,8 +32,8 @@ from geometry_msgs.msg import Point, Pose, Quaternion, Twist, Wrench
 import tf.transformations as tft
 
 def excepthook(*args):
-    print('caught', file=STDERR)
-    print(args, file=STDERR)
+    print('caught', STDERR)
+    print(args, STDERR)
 
 sys.excepthook = excepthook
 
