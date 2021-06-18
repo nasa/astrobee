@@ -275,7 +275,7 @@ class PerchNodelet : public ff_util::FreeFlyerNodelet {
         err_ = RESPONSE::ARM_FAILED;
         err_msg_ = "Failed while deploying the arm";
         Arm(ff_msgs::ArmGoal::ARM_STOW);
-        return STATE::RECOVERY_SWITCHING_TO_ML_LOC;
+        return STATE::RECOVERY_STOWING_ARM;
       });
     // [22]
     fsm_.Add(STATE::PERCHING_OPENING_GRIPPER,
@@ -283,7 +283,7 @@ class PerchNodelet : public ff_util::FreeFlyerNodelet {
         err_ = RESPONSE::ARM_FAILED;
         err_msg_ = "Failed while opening the gripper";
         Arm(ff_msgs::ArmGoal::ARM_STOW);
-        return STATE::RECOVERY_SWITCHING_TO_ML_LOC;
+        return STATE::RECOVERY_STOWING_ARM;
       });
     // [23]
     fsm_.Add(STATE::PERCHING_MOVING_TO_COMPLETE_POSE,
@@ -374,8 +374,8 @@ class PerchNodelet : public ff_util::FreeFlyerNodelet {
       });
     fsm_.Add(STATE::RECOVERY_OPENING_GRIPPER,
       ARM_FAILED, [this](FSM::Event const& event) -> FSM::State {
-        return Result(err_,
-          "Recovery Gripper open failed: " + err_msg_);
+        Result(err_, "Recovery Gripper open failed: " + err_msg_);
+        return STATE::UNPERCHED;
       });
     // [34] - Switching to ML loc in recovery: Success and Fail options
     fsm_.Add(STATE::RECOVERY_SWITCHING_TO_ML_LOC,
@@ -385,8 +385,8 @@ class PerchNodelet : public ff_util::FreeFlyerNodelet {
       });
     fsm_.Add(STATE::RECOVERY_SWITCHING_TO_ML_LOC,
       SWITCH_FAILED, [this](FSM::Event const& event) -> FSM::State {
-        return Result(err_,
-          "Recovery switch to mapped landmarks localization failed: " + err_msg_);
+        Result(err_, "Recovery switch to mapped landmarks localization failed: " + err_msg_);
+        return STATE::UNPERCHED;
       });
     // [35] - Motion to recovery pose: Success and Fail options
     fsm_.Add(STATE::RECOVERY_MOVING_TO_RECOVERY_POSE,
@@ -396,8 +396,8 @@ class PerchNodelet : public ff_util::FreeFlyerNodelet {
       });
     fsm_.Add(STATE::RECOVERY_MOVING_TO_RECOVERY_POSE,
       MOTION_FAILED, [this](FSM::Event const& event) -> FSM::State {
-        return Result(err_,
-          "Recovery motion to recovery pose failed: " + err_msg_);
+        Result(err_, "Recovery motion to recovery pose failed: " + err_msg_);
+        return STATE::UNPERCHED;
       });
     // [36] - Stowing arm in recovery: Success and Fail options
     fsm_.Add(STATE::RECOVERY_STOWING_ARM,
@@ -407,8 +407,8 @@ class PerchNodelet : public ff_util::FreeFlyerNodelet {
       });
     fsm_.Add(STATE::RECOVERY_STOWING_ARM,
       ARM_FAILED, [this](FSM::Event const& event) -> FSM::State {
-        return Result(err_,
-          "Recovery Stowing arm failed: " + err_msg_);
+        Result(err_, "Recovery Stowing arm failed: " + err_msg_);
+        return STATE::UNPERCHED;
       });
 
     //////////////////////////////////////////////
