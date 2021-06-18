@@ -274,8 +274,8 @@ class PerchNodelet : public ff_util::FreeFlyerNodelet {
       ARM_FAILED, [this](FSM::Event const& event) -> FSM::State {
         err_ = RESPONSE::ARM_FAILED;
         err_msg_ = "Failed while deploying the arm";
-        Arm(ff_msgs::ArmGoal::ARM_STOW);
-        return STATE::RECOVERY_STOWING_ARM;
+        Switch(LOCALIZATION_MAPPED_LANDMARKS);
+        return STATE::RECOVERY_SWITCHING_TO_ML_LOC;
       });
     // [22]
     fsm_.Add(STATE::PERCHING_OPENING_GRIPPER,
@@ -368,14 +368,9 @@ class PerchNodelet : public ff_util::FreeFlyerNodelet {
     ///////////////////////
     // [33] - Opening gripper for recovery attempt: Success and Fail options
     fsm_.Add(STATE::RECOVERY_OPENING_GRIPPER,
-      ARM_SUCCESS, [this](FSM::Event const& event) -> FSM::State {
+      ARM_SUCCESS | ARM_FAILED, [this](FSM::Event const& event) -> FSM::State {
         Switch(LOCALIZATION_MAPPED_LANDMARKS);
         return STATE::RECOVERY_SWITCHING_TO_ML_LOC;
-      });
-    fsm_.Add(STATE::RECOVERY_OPENING_GRIPPER,
-      ARM_FAILED, [this](FSM::Event const& event) -> FSM::State {
-        Result(err_, "Recovery Gripper open failed: " + err_msg_);
-        return STATE::UNPERCHED;
       });
     // [34] - Switching to ML loc in recovery: Success and Fail options
     fsm_.Add(STATE::RECOVERY_SWITCHING_TO_ML_LOC,
