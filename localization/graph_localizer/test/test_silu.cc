@@ -16,7 +16,7 @@
  * under the License.
  */
 
-#include "test_utilities.h"
+#include "test_utilities.h"  // NOLINT
 #include <graph_localizer/silu.h>
 #include <localization_common/logger.h>
 

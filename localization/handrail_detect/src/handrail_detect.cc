@@ -485,7 +485,7 @@ class HandrailDetect : public ff_util::FreeFlyerNodelet {
     dl_.sensor_T_handrail.orientation.w = rtoq.w();
 
     // Add endpoints
-    for (const auto& line_endpoint: end_point){
+    for (const auto& line_endpoint: end_point) {
       dl_.sensor_t_line_endpoints.push_back(line_endpoint);
     }
 
@@ -1631,12 +1631,10 @@ class HandrailDetect : public ff_util::FreeFlyerNodelet {
       ++lm_cnt;
     }
 
-    for (int i = 0; i < line_point_indices.size(); ++i){
-      const int line_point_index = line_point_indices[i];
+    for (const auto line_point_index: line_point_indices) {
       dl_.sensor_t_line_points.push_back(cloud_.points[line_point_index]);
     }
-    for (int i = 0; i < plane_point_indices.size(); ++i){
-      const int plane_point_index = plane_point_indices[i];
+    for (const auto plane_point_index: plane_point_indices) {
       dl_.sensor_t_plane_points.push_back(cloud_.points[plane_point_index]);
     }
   }

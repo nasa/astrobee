@@ -34,6 +34,8 @@
 
 #include <Eigen/Core>
 
+#include <utility>
+
 namespace localization_measurements {
 MatchedProjectionsMeasurement MakeMatchedProjectionsMeasurement(const ff_msgs::VisualLandmarks& visual_landmarks);
 

@@ -15,6 +15,10 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
+#ifndef GRAPH_LOCALIZER_TEST_UTILITIES_H_
+#define GRAPH_LOCALIZER_TEST_UTILITIES_H_
+
 #include <localization_measurements/plane.h>
 
 #include <gtsam/geometry/Pose3.h>
@@ -53,3 +57,4 @@ localization_measurements::Plane RandomPlane() {
   return localization_measurements::Plane(point, normal);
 }
 }  // namespace graph_localizer
+#endif  // GRAPH_LOCALIZER_TEST_UTILITIES_H_

@@ -24,6 +24,8 @@
 #include <gtsam/geometry/Pose3.h>
 #include <gtsam/geometry/Point3.h>
 
+#include <string>
+
 namespace gtsam {
 class PointToLineFactor : public PointToLineFactorBase {
   typedef PointToLineFactorBase Base;

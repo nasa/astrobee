@@ -24,6 +24,7 @@
 #include <gtsam/geometry/Point3.h>
 
 #include <iostream>
+#include <string>
 
 namespace localization_measurements {
 class PointNormalPlane {
@@ -40,7 +41,7 @@ class PointNormalPlane {
 // Plane parameterized by ax+by+cz = d
 class GeneralPlane {
  public:
-  GeneralPlane(const PointNormalPlane& point_normal_plane) {
+  explicit GeneralPlane(const PointNormalPlane& point_normal_plane) {
     normal_ = point_normal_plane.normal();
     // Since the point (p) of the point normal parameterization is on the plane, the vector between another point on the
     // plane u = (x,y,z) and p is perpendicular to the normal. Thus (u-p) dot normal = 0 and a(x - p_x) + b(y - p_y) +
@@ -62,7 +63,7 @@ class GeneralPlane {
 class HessianNormalPlane {
  public:
   HessianNormalPlane() = default;
-  HessianNormalPlane(const GeneralPlane& general_plane) {
+  explicit HessianNormalPlane(const GeneralPlane& general_plane) {
     const double norm = general_plane.normal().norm();
     unit_normal_ = general_plane.normal() / norm;
     constant_ = general_plane.d() / norm;
@@ -88,7 +89,7 @@ class Plane : public HessianNormalPlane {
 
  public:
   Plane() = default;
-  Plane(const PointNormalPlane& point_normal_plane) : Base(point_normal_plane) {}
+  explicit Plane(const PointNormalPlane& point_normal_plane) : Base(GeneralPlane(point_normal_plane)) {}
   Plane(const gtsam::Point3& point, const gtsam::Vector3& normal) : Plane(PointNormalPlane(point, normal)) {}
   double Distance(const gtsam::Point3& point, gtsam::OptionalJacobian<1, 3> d_distance_d_point = boost::none) const {
     const double distance = unit_normal().dot(point) + constant();

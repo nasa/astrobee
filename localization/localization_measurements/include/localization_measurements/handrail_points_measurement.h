@@ -27,6 +27,7 @@
 
 #include <gtsam/geometry/Point3.h>
 
+#include <utility>
 #include <vector>
 
 namespace localization_measurements {

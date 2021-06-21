@@ -32,7 +32,7 @@ class HandrailFactorAdder : public graph_optimizer::FactorAdder<localization_mea
     graph_optimizer::FactorAdder<localization_measurements::HandrailPointsMeasurement, HandrailFactorAdderParams>;
 
  public:
-  HandrailFactorAdder(const HandrailFactorAdderParams& params);
+  explicit HandrailFactorAdder(const HandrailFactorAdderParams& params);
 
   std::vector<graph_optimizer::FactorsToAdd> AddFactors(
     const localization_measurements::HandrailPointsMeasurement& handrail_points_measurement) final;
