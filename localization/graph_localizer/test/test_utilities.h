@@ -57,4 +57,4 @@ localization_measurements::Plane RandomPlane() {
   return localization_measurements::Plane(point, normal);
 }
 }  // namespace graph_localizer
-#endif  // GRAPH_LOCALIZER_TEST_UTILITIES_H_
+#endif  // GRAPH_LOCALIZER_TEST_UTILITIES_H_ // NOLINT
