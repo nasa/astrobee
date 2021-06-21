@@ -23,6 +23,8 @@
 #include <gtsam/base/Vector.h>
 #include <gtsam/geometry/Point3.h>
 
+#include <iostream>
+
 namespace localization_measurements {
 class PointNormalPlane {
  public:
