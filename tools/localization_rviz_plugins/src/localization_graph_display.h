@@ -84,7 +84,7 @@ class LocalizationGraphDisplay : public rviz::MessageFilterDisplay<ff_msgs::Loca
   void clearImageBuffer(const localization_common::Time oldest_graph_time);
   sensor_msgs::ImageConstPtr getImage(const localization_common::Time time);
   void addSmartFactorProjectionVisual(const SmartFactor& smart_factor,
-                                      const graph_optimizer::GraphValues& graph_values);
+                                      const graph_localizer::CombinedNavStateGraphValues& graph_values);
   cv::Scalar textColor(const double val, const double green_threshold, const double yellow_threshold);
 
   std::vector<std::unique_ptr<rviz::Axes>> graph_pose_axes_;

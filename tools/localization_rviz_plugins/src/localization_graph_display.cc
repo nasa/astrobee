@@ -323,8 +323,8 @@ void LocalizationGraphDisplay::addSmartFactorsProjectionVisual() {
   addProjectionVisual(cameras, smart_factor->measured(), *landmark_point, images);
 }
 
-void LocalizationGraphDisplay::addSmartFactorProjectionVisual(const SmartFactor& smart_factor,
-                                                              const graph_optimizer::GraphValues& graph_values) {
+void LocalizationGraphDisplay::addSmartFactorProjectionVisual(
+  const SmartFactor& smart_factor, const graph_localizer::CombinedNavStateGraphValues& graph_values) {
   if (!publish_smart_factor_images_->getBool()) return;
   std::vector<cv::Mat> images;
   for (const auto& key : smart_factor.keys()) {
@@ -499,7 +499,8 @@ void LocalizationGraphDisplay::processMessage(const ff_msgs::LocalizationGraph::
     }
   }
   if (largest_error_smart_factor)
-    addSmartFactorProjectionVisual(*largest_error_smart_factor, latest_graph_localizer_->graph_values());
+    addSmartFactorProjectionVisual(*largest_error_smart_factor,
+                                   latest_graph_localizer_->combined_nav_state_graph_values());
 
   if (!loc_projection_factors.empty())
     addLocProjectionVisual(loc_projection_factors, latest_graph_localizer_->combined_nav_state_graph_values());
