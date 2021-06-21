@@ -1709,6 +1709,94 @@ bool Executive::InitializeBias(ff_msgs::CommandStampedPtr const& cmd) {
   return false;
 }
 
+bool Executive::LoadNodelet(ff_msgs::CommandStampedPtr const& cmd) {
+  NODELET_INFO("Executive executing load nodelet command!");
+  bool success = true;
+  std::string err_msg = "Load nodelet parameters must be strings.";
+  ff_msgs::UnloadLoadNodelet unload_load_nodelet_srv;
+  unload_load_nodelet_srv.request.load = true;
+
+  // Don't load a nodelet while moving
+  if (CheckNotMoving(cmd)) {
+    // This command has 4 arguments but only one is required, the nodelet name
+    if (cmd->args.size() < 1 || cmd->args.size() > 4) {
+      err_msg = "Load nodelet must have one argument and no more than four.";
+      success = false;
+    } else {
+      // Extract first argument
+      if (cmd->args[0].data_type != ff_msgs::CommandArg::DATA_TYPE_STRING) {
+        success = false;
+      } else {
+        unload_load_nodelet_srv.request.name = cmd->args[0].s;
+      }
+
+      // Extract second argument if it was provided
+      if (cmd->args.size() >= 2 && success) {
+        if (cmd->args[1].data_type != ff_msgs::CommandArg::DATA_TYPE_STRING) {
+          success = false;
+        } else {
+          unload_load_nodelet_srv.request.manager_name = cmd->args[1].s;
+        }
+      }
+
+      // Extract third argument if it was provided
+      if (cmd->args.size() >= 3 && success) {
+        if (cmd->args[2].data_type != ff_msgs::CommandArg::DATA_TYPE_STRING) {
+          success = false;
+        } else {
+          unload_load_nodelet_srv.request.type = cmd->args[2].s;
+        }
+      }
+
+      // Extract fourth argument if it was provided
+      if (cmd->args.size() == 4 && success) {
+        if (cmd->args[3].data_type != ff_msgs::CommandArg::DATA_TYPE_STRING) {
+          success = false;
+        } else {
+          unload_load_nodelet_srv.request.bond_id = cmd->args[3].s;
+        }
+      }
+    }
+
+    if (success) {
+      // Check to make sure the service is valid and running
+      if (!unload_load_nodelet_client_.exists()) {
+        state_->AckCmd(cmd->cmd_id,
+                       ff_msgs::AckCompletedStatus::EXEC_FAILED,
+                       "Unload/load nodelet service isn't running!");
+        return false;
+      }
+
+      // Call the unload load nodelet service
+      if (!unload_load_nodelet_client_.call(unload_load_nodelet_srv)) {
+        state_->AckCmd(cmd->cmd_id,
+                       ff_msgs::AckCompletedStatus::EXEC_FAILED,
+                       "Unload load nodelet service returned false.");
+        return false;
+      }
+
+      if (unload_load_nodelet_srv.response.result !=
+                            ff_msgs::UnloadLoadNodelet::Response::SUCCESSFUL) {
+        err_msg = "Unload nodelet failed with result ";
+        err_msg += std::to_string(unload_load_nodelet_srv.response.result);
+        state_->AckCmd(cmd->cmd_id,
+                       ff_msgs::AckCompletedStatus::EXEC_FAILED,
+                       err_msg);
+        return false;
+      }
+
+      state_->AckCmd(cmd->cmd_id);
+      return true;
+    } else {
+      state_->AckCmd(cmd->cmd_id,
+                     ff_msgs::AckCompletedStatus::BAD_SYNTAX,
+                     err_msg);
+    }
+  }
+
+  return false;
+}
+
 bool Executive::NoOp(ff_msgs::CommandStampedPtr const& cmd) {
   NODELET_INFO("Executive executing noop command!");
   state_->AckCmd(cmd->cmd_id);
@@ -3348,6 +3436,76 @@ bool Executive::Undock(ff_msgs::CommandStampedPtr const& cmd) {
   return docked;
 }
 
+bool Executive::UnloadNodelet(ff_msgs::CommandStampedPtr const& cmd) {
+  NODELET_INFO("Executive executing unload nodelet command!");
+  bool success = true;
+  std::string err_msg = "Unload nodelet parameters must be strings.";
+  ff_msgs::UnloadLoadNodelet unload_load_nodelet_srv;
+  unload_load_nodelet_srv.request.load = false;
+
+  // Don't unload a nodelet while moving because we may be unloading a mobility
+  // nodelet
+  if (CheckNotMoving(cmd)) {
+    // This command has two arguments but only one is required, the nodelet name
+    if (cmd->args.size() < 1 || cmd->args.size() > 2) {
+      err_msg = "Unload nodelet must have one argument and no more than two.";
+      success = false;
+    } else {
+      // Extract first argument
+      if (cmd->args[0].data_type != ff_msgs::CommandArg::DATA_TYPE_STRING) {
+        success = false;
+      } else {
+        unload_load_nodelet_srv.request.name = cmd->args[0].s;
+      }
+
+      // Extract second argument if it was provided
+      if (cmd->args.size() == 2 && success) {
+        if (cmd->args[1].data_type != ff_msgs::CommandArg::DATA_TYPE_STRING) {
+          success = false;
+        } else {
+          unload_load_nodelet_srv.request.manager_name = cmd->args[1].s;
+        }
+      }
+    }
+
+    if (success) {
+      // Check to make sure the service is valid and running
+      if (!unload_load_nodelet_client_.exists()) {
+        state_->AckCmd(cmd->cmd_id,
+                       ff_msgs::AckCompletedStatus::EXEC_FAILED,
+                       "Unload load nodelet service isn't running!");
+        return false;
+      }
+
+      if (!unload_load_nodelet_client_.call(unload_load_nodelet_srv)) {
+        state_->AckCmd(cmd->cmd_id,
+                       ff_msgs::AckCompletedStatus::EXEC_FAILED,
+                       "Unload load nodelet service returned false.");
+        return false;
+      }
+
+      if (unload_load_nodelet_srv.response.result !=
+                            ff_msgs::UnloadLoadNodelet::Response::SUCCESSFUL) {
+        err_msg = "Unload nodelet failed with result ";
+        err_msg += std::to_string(unload_load_nodelet_srv.response.result);
+        state_->AckCmd(cmd->cmd_id,
+                       ff_msgs::AckCompletedStatus::EXEC_FAILED,
+                       err_msg);
+        return false;
+      }
+
+      state_->AckCmd(cmd->cmd_id);
+      return true;
+    } else {
+      state_->AckCmd(cmd->cmd_id,
+                     ff_msgs::AckCompletedStatus::BAD_SYNTAX,
+                     err_msg);
+    }
+  }
+
+  return false;
+}
+
 bool Executive::Unperch(ff_msgs::CommandStampedPtr const& cmd) {
   NODELET_INFO("Executive executing unperch command!");
   bool perched = false;
@@ -3657,6 +3815,9 @@ void Executive::Initialize(ros::NodeHandle *nh) {
 
   eps_terminate_client_ = nh_.serviceClient<ff_hw_msgs::ClearTerminate>(
                                           SERVICE_HARDWARE_EPS_CLEAR_TERMINATE);
+
+  unload_load_nodelet_client_ = nh_.serviceClient<ff_msgs::UnloadLoadNodelet>(
+                            SERVICE_MANAGEMENT_SYS_MONITOR_UNLOAD_LOAD_NODELET);
 
   // initialize configure clients later, when initialized here, the service is
   // invalid when we try to use it. Must have something to do with startup order
