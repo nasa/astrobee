@@ -32,7 +32,7 @@ TEST(PlaneTester, PointToPlaneJacobian) {
     const gtsam::Vector3 plane_normal = Eigen::Vector3d::Random();
     const lm::Plane plane(plane_point, plane_normal);
     gtsam::Matrix H;
-    const double distance = plane.Distance(point, H);
+    plane.Distance(point, H);
     const auto numerical_H = gtsam::numericalDerivative11<double, gtsam::Point3>(
       boost::function<double(const gtsam::Point3&)>(boost::bind(&lm::Plane::Distance, plane, _1, boost::none)), point,
       1e-5);
