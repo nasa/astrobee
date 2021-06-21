@@ -16,8 +16,8 @@
  * under the License.
  */
 
-#ifndef GRAPH_LOCALIZER_TEST_UTILITIES_H_
-#define GRAPH_LOCALIZER_TEST_UTILITIES_H_
+#ifndef GRAPH_LOCALIZER_TEST_UTILITIES_H_  // NOLINT
+#define GRAPH_LOCALIZER_TEST_UTILITIES_H_  // NOLINT
 
 #include <localization_measurements/plane.h>
 
