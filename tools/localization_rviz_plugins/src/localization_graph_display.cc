@@ -293,14 +293,14 @@ void LocalizationGraphDisplay::addSmartFactorsProjectionVisual() {
     return;
   }
   const auto smart_factor = latest_smart_factors_[smart_factor_index];
-  const auto landmark_point = smart_factor->serialized_point(latest_graph_localizer_->graph_values().values());
+  const auto landmark_point = smart_factor->serialized_point(latest_graph_localizer_->values());
   // TODO(rsoussan): Draw failed landmark points, indicate with point and line colors there was a failure (color red on
   // failure, green on success)
   if (!landmark_point) return;
-  const auto cameras = smart_factor->cameras(latest_graph_localizer_->graph_values().values());
+  const auto cameras = smart_factor->cameras(latest_graph_localizer_->values());
   std::vector<cv::Mat> images;
   for (const auto& key : smart_factor->keys()) {
-    const auto timestamp = latest_graph_localizer_->graph_values().Timestamp(key);
+    const auto timestamp = latest_graph_localizer_->combined_nav_state_graph_values().Timestamp(key);
     if (!timestamp) {
       LogError("addSmartFactorsProjectionVisual: Failed to get timestamp.");
       return;
