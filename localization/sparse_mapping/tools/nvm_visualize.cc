@@ -582,7 +582,7 @@ int main(int argc, char** argv) {
 
     // Create a window that can be resized by the user
     std::string windowName = map_file + ": individual frames";
-    cv::namedWindow(windowName, CV_WINDOW_NORMAL | CV_WINDOW_KEEPRATIO | CV_GUI_EXPANDED);
+    cv::namedWindow(windowName, cv::WINDOW_NORMAL | cv::WINDOW_KEEPRATIO | cv::WINDOW_GUI_EXPANDED);
     g_windowName = &windowName;  // Export this to be used by onMouse
     cv::setMouseCallback(windowName, onMouse, 0);
     cv::imshow(windowName, image);
