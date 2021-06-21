@@ -78,7 +78,7 @@ class LocalizationGraphDisplay : public rviz::MessageFilterDisplay<ff_msgs::Loca
   void addProjectionVisual(const gtsam::CameraSet<Camera>& cameras, const Camera::MeasurementVector& measurements,
                            const gtsam::Point3& world_t_landmark, std::vector<cv::Mat>& images);
   void addLocProjectionVisual(const std::vector<gtsam::LocProjectionFactor<>*> loc_projection_factors,
-                              const graph_optimizer::GraphValues& graph_values);
+                              const graph_localizer::CombinedNavStateGraphValues& graph_values);
   void addOpticalFlowVisual(const graph_localizer::FeatureTrackIdMap& feature_tracks,
                             const localization_common::Time latest_graph_time);
   void clearImageBuffer(const localization_common::Time oldest_graph_time);

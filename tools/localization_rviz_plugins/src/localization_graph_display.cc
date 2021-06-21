@@ -224,7 +224,7 @@ void LocalizationGraphDisplay::addProjectionVisual(const gtsam::CameraSet<Camera
 
 void LocalizationGraphDisplay::addLocProjectionVisual(
   const std::vector<gtsam::LocProjectionFactor<>*> loc_projection_factors,
-  const graph_optimizer::GraphValues& graph_values) {
+  const graph_localizer::CombinedNavStateGraphValues& graph_values) {
   if (!publish_loc_projection_factor_images_->getBool()) return;
   lc::Time latest_timestamp = std::numeric_limits<double>::lowest();
   for (const auto loc_projection_factor : loc_projection_factors) {
@@ -502,7 +502,7 @@ void LocalizationGraphDisplay::processMessage(const ff_msgs::LocalizationGraph::
     addSmartFactorProjectionVisual(*largest_error_smart_factor, latest_graph_localizer_->graph_values());
 
   if (!loc_projection_factors.empty())
-    addLocProjectionVisual(loc_projection_factors, latest_graph_localizer_->graph_values());
+    addLocProjectionVisual(loc_projection_factors, latest_graph_localizer_->combined_nav_state_graph_values());
 
   const auto oldest_timestamp = latest_graph_localizer_->graph_values().OldestTimestamp();
   if (oldest_timestamp) clearImageBuffer(*oldest_timestamp);
