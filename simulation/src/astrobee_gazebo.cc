@@ -331,55 +331,105 @@ Eigen::Affine3d SensorToWorld(gazebo::math::Pose const& world_pose,
 }
 
 void FillCameraInfo(rendering::CameraPtr camera, sensor_msgs::CameraInfo & msg) {
-    msg.width = camera->ImageWidth();
-    msg.height = camera->ImageHeight();
+  msg.width = camera->ImageWidth();
+  msg.height = camera->ImageHeight();
 
-    double hfov = camera->HFOV().Radian();  // horizontal field of view in radians
-    double focal_length = camera->ImageWidth()/(2.0 * tan(hfov/2.0));
-    double opitcal_center_x = msg.width/2.0;
-    double optical_center_y = msg.height/2.0;
+  double hfov = camera->HFOV().Radian();  // horizontal field of view in radians
+  //double focal_length = camera->ImageWidth()/(2.0 * tan(hfov/2.0));
+  double optical_center_x = msg.width/2.0;
+  double optical_center_y = msg.height/2.0;
 
-    // Intrinsics matrix
-    msg.K = {focal_length, 0, opitcal_center_x,
-             0, focal_length, optical_center_y,
-             0, 0, 1};
+  // Intrinsics matrix
+  msg.K = {optical_center_x, 0, optical_center_x,
+           0, optical_center_y, optical_center_y,
+           0, 0, 1};
 
-    // Projection matrix. We won't use this, but initalize it to something.
-    msg.P = {1, 0, 0, 0,
-             0, 1, 0, 0,
-             0, 0, 1, 0};
+  // Projection matrix. We won't use this, but initalize it to something.
+  msg.P = {1, 0, 0, 0,
+           0, 1, 0, 0,
+           0, 0, 1, 0};
 
-    // Rotation matrix. We won't use it.
-    msg.R = {1, 0, 0,
-             0, 1, 0,
-             0, 0, 1};
+  // Rotation matrix. We won't use it.
+  msg.R = {1, 0, 0,
+           0, 1, 0,
+           0, 0, 1};
 
-    rendering::DistortionPtr dPtr = camera->LensDistortion();
+  rendering::DistortionPtr dPtr = camera->LensDistortion();
 
-    // sensor_msgs::CameraInfo can manage only a few distortion
-    // models. Here we assume plumb_bob just to pass along the
-    // coefficients. Out of all the simulated cameras, nav_cam is
-    // fisheye, which uses only K1, and all others have zero
-    // distortion. Hence this code was not tested in the most general
-    // setting.
-    msg.distortion_model = "plumb_bob";
-    if (dPtr) {
-      #if GAZEBO_MAJOR_VERSION > 8
-      msg.D = {camera->LensDistortion()->K1(),
-               camera->LensDistortion()->K2(),
-               camera->LensDistortion()->K3(),
-               camera->LensDistortion()->P1(),
-               camera->LensDistortion()->P2()};
-      #else
-      msg.D = {camera->LensDistortion()->GetK1(),
-               camera->LensDistortion()->GetK2(),
-               camera->LensDistortion()->GetK3(),
-               camera->LensDistortion()->GetP1(),
-               camera->LensDistortion()->GetP2()};
-      #endif
-    } else {
-      msg.D = {0.0, 0.0, 0.0, 0.0, 0.0};
-    }
+  // sensor_msgs::CameraInfo can manage only a few distortion
+  // models. Here we assume plumb_bob just to pass along the
+  // coefficients. Out of all the simulated cameras, nav_cam is
+  // fisheye, which uses only K1, and all others have zero
+  // distortion. Hence this code was not tested in the most general
+  // setting.
+  msg.distortion_model = "plumb_bob";
+  if (dPtr) {
+    #if GAZEBO_MAJOR_VERSION > 8
+    msg.D = {camera->LensDistortion()->K1(),
+             camera->LensDistortion()->K2(),
+             camera->LensDistortion()->K3(),
+             camera->LensDistortion()->P1(),
+             camera->LensDistortion()->P2()};
+    #else
+    msg.D = {camera->LensDistortion()->GetK1(),
+             camera->LensDistortion()->GetK2(),
+             camera->LensDistortion()->GetK3(),
+             camera->LensDistortion()->GetP1(),
+             camera->LensDistortion()->GetP2()};
+    #endif
+  } else {
+    msg.D = {0.0, 0.0, 0.0, 0.0, 0.0};
   }
+}
+
+void FillCameraInfo(rendering::WideAngleCameraPtr camera, sensor_msgs::CameraInfo & msg) {
+  msg.width = camera->ImageWidth();
+  msg.height = camera->ImageHeight();
+
+  double hfov = camera->HFOV().Radian();  // horizontal field of view in radians
+  double focal_length = camera->Lens()->F();
+  if (camera->Lens()->ScaleToHFOV()) {
+    float param = hfov/2/camera->Lens()->C2() + camera->Lens()->C3();
+    focal_length = 1.0f/(camera->Lens()->C1()*param);
+  }
+  focal_length *= msg.width/2.;
+
+  double optical_center_x = msg.width/2.0;
+  double optical_center_y = msg.height/2.0;
+
+  // Intrinsics matrix
+  msg.K = {focal_length, 0, optical_center_x,
+           0, focal_length, optical_center_y,
+           0, 0, 1};
+
+  // Projection matrix. We won't use this, but initalize it to something.
+  msg.P = {1, 0, 0, 0,
+           0, 1, 0, 0,
+           0, 0, 1, 0};
+
+  // Rotation matrix. We won't use it.
+  msg.R = {1, 0, 0,
+           0, 1, 0,
+           0, 0, 1};
+
+  rendering::DistortionPtr dPtr = camera->LensDistortion();
+
+  // sensor_msgs::CameraInfo can manage only a few distortion
+  // models. Here we assume plumb_bob just to pass along the
+  // coefficients. Out of all the simulated cameras, nav_cam is
+  // fisheye, which uses only K1, and all others have zero
+  // distortion. Hence this code was not tested in the most general
+  // setting.
+  msg.distortion_model = "plumb_bob";
+  if (dPtr) {
+    msg.D = {camera->Lens()->C1(),
+             camera->Lens()->C2(),
+             camera->Lens()->C3(),
+             0.0,
+             0.0};
+  } else {
+    msg.D = {0.0, 0.0, 0.0, 0.0, 0.0};
+  }
+}
 
 }  // namespace gazebo

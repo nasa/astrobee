@@ -146,7 +146,11 @@ class GazeboSensorPluginNavCam : public FreeFlyerSensorPlugin {
     // Publish the nav cam intrinsics
     info_msg_.header.frame_id = GetFrame();
     info_msg_.header.stamp = curr_time;  // it is very important to get the time right
-    FillCameraInfo(sensor_->Camera(), info_msg_);  // fill in from the camera pointer
+
+    rendering::CameraPtr cam = sensor_->Camera();
+    boost::shared_ptr<rendering::WideAngleCamera> wide_angle_sensor =
+      boost::dynamic_pointer_cast<rendering::WideAngleCamera>(cam);
+    FillCameraInfo(wide_angle_sensor, info_msg_);  // fill in from the camera pointer
     pub_info_.publish(info_msg_);
 
     // Publish the nav cam image

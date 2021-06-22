@@ -221,4 +221,6 @@
     </include>
   </group>
 
+  <node pkg="rosservice" type="rosservice" name="imu_calibration" args="call --wait /gnc/ekf/init_bias" />
+
 </launch>
