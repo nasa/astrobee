@@ -151,6 +151,8 @@ int main(int argc, char** argv) {
     return -1;
   }
 
+  std::cout << "data processed" << std::endl;
+
   // Copy the data into a CompressedFile (because char and 'unsigned' char)
   // are totally different.
   // NOTE: I also tried setting the msg to 'int8', but ROS made it 'signed',
@@ -160,6 +162,7 @@ int main(int argc, char** argv) {
     cf.file.push_back(static_cast<unsigned char>(c));
   }
 
+  std::cout << "copied to ros" << std::endl;
 
   plan_pub_time = ros::Time::now();
   std::string sub_topic_plan = TOPIC_COMMUNICATIONS_DDS_PLAN;

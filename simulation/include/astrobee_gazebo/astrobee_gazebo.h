@@ -188,6 +188,7 @@ Eigen::Affine3d SensorToWorld(gazebo::math::Pose const& world_pose,
 
 // Read the camera info
 void FillCameraInfo(rendering::CameraPtr camera, sensor_msgs::CameraInfo & info_msg);
+void FillCameraInfo(rendering::WideAngleCameraPtr camera, sensor_msgs::CameraInfo & info_msg);
 
 }  // namespace gazebo
 

@@ -17,6 +17,7 @@
 
 add_subdirectory(ff_msgs)
 add_subdirectory(ff_hw_msgs)
+add_subdirectory(vision_msgs)
 
 if (USE_DDS)
   add_subdirectory(dds_msgs)
