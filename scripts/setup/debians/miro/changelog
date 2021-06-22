@@ -1,0 +1,11 @@
+libmiro (0.3.2-1) unstable; urgency=medium
+
+  * Fix compile error in ubuntu 18.04
+
+ -- Brian Coltin <nospam@nospam.org>  Mon, 04 May 2021 11:45:00 -0700
+
+libmiro (0.3.1-1) unstable; urgency=medium
+
+  * Initial release (Closes: #nnnn)  <nnnn is the bug number of your ITP>
+
+ -- Brian Coltin <nospam@nospam.org>  Mon, 08 May 2017 12:55:37 -0700

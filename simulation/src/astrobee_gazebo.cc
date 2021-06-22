@@ -335,7 +335,7 @@ void FillCameraInfo(rendering::CameraPtr camera, sensor_msgs::CameraInfo & msg) 
   msg.height = camera->ImageHeight();
 
   double hfov = camera->HFOV().Radian();  // horizontal field of view in radians
-  //double focal_length = camera->ImageWidth()/(2.0 * tan(hfov/2.0));
+  // double focal_length = camera->ImageWidth()/(2.0 * tan(hfov/2.0));
   double optical_center_x = msg.width/2.0;
   double optical_center_y = msg.height/2.0;
 

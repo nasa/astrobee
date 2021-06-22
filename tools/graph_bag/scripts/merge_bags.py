@@ -31,7 +31,7 @@ def natural_sort(l):
   return sorted(l, key=alphanum_key)
 
 
-def merge_bag(input_bag_prefix, merged_bag):
+def merge_bag(input_bag_prefix, merged_bag, only_loc_topics=False):
   # Find bagfiles with bag prefix in current directory, fail if none found
   bag_names = [
     bag for bag in os.listdir('.') if os.path.isfile(bag) and bag.startswith(input_bag_prefix) and bag.endswith('.bag')
@@ -48,10 +48,13 @@ def merge_bag(input_bag_prefix, merged_bag):
 
   sorted_bag_names = natural_sort(bag_names)
 
-  topics = [
-    '/hw/imu', '/loc/of/features', '/loc/ml/features', '/loc/ar/features', '/mgt/img_sampler/nav_cam/image_record',
-    '/graph_loc/state', '/gnc/ekf', '/sparse_mapping/pose'
-  ]
+  topics = None
+  if only_loc_topics:
+    topics = [
+      '/hw/imu', '/loc/of/features', '/loc/ml/features', '/loc/ar/features', '/mgt/img_sampler/nav_cam/image_record',
+      '/graph_loc/state', '/gnc/ekf', '/sparse_mapping/pose', '/mob/flight_mode', '/beh/inspection/feedback',
+      '/beh/inspection/goal', '/beh/inspection/result'
+    ]
 
   with rosbag.Bag(merged_bag_name, 'w') as merged_bag:
     for sorted_bag_name in sorted_bag_names:
@@ -64,5 +67,7 @@ if __name__ == '__main__':
   parser = argparse.ArgumentParser()
   parser.add_argument('input_bag_prefix')
   parser.add_argument('--merged-bag', default='')
+  parser.add_argument('--only-loc-topics', dest='only_loc_topics', action='store_true')
+  parser.add_argument('--merged-bag', default='')
   args = parser.parse_args()
-  merge_bag(args.input_bag_prefix, args.merged_bag)
+  merge_bag(args.input_bag_prefix, args.merged_bag, args.only_loc_topics)

@@ -2,13 +2,13 @@ libalvar (2.0-4) unstable; urgency=medium
 
   * Ros updated opencv, changed path, needs updated rpath.
 
- -- Brian Coltin <brian.j.coltin@nasa.gov>  Mon, 30 Apr 2018 13:05:46 -0700
+ -- Brian Coltin <nospam@nospam.org>  Mon, 30 Apr 2018 13:05:46 -0700
 
 libalvar (2.0-3) unstable; urgency=medium
 
   * Bump ros-kinetic-opencv version.
 
- -- Brian Coltin <brian.j.coltin@nasa.gov>  Mon, 11 Dec 2017 17:35:08 -0800
+ -- Brian Coltin <nospam@nospam.org>  Mon, 11 Dec 2017 17:35:08 -0800
 
 libalvar (2.0-2) unstable; urgency=medium
 

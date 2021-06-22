@@ -18,7 +18,7 @@
 cmake_minimum_required(VERSION 3.0)
 project(Astrobee)
 
-set(ASTROBEE_VERSION 0.14.1)
+set(ASTROBEE_VERSION 0.14.3)
 
 # Define our options
 option(USE_CCACHE
@@ -209,9 +209,17 @@ find_package(Gflags REQUIRED)
 ADD_DEFINITIONS(-DFREEFLYER_GFLAGS_NAMESPACE=${GFLAGS_NAMESPACE})
 enable_testing()
 
+if (USE_CTC)
+  find_program(LSB_RELEASE_EXEC lsb_release)
+  execute_process(COMMAND "${LSB_RELEASE_EXEC}" --short --codename OUTPUT_VARIABLE LSB_RELEASE_VERSION_SHORT OUTPUT_STRIP_TRAILING_WHITESPACE)
+  if("${LSB_RELEASE_VERSION_SHORT}" STREQUAL "bionic")
+    set(Protobuf_PROTOC_EXECUTABLE /usr/local/bin/protoc)
+  endif()
+endif (USE_CTC)
+
 find_package(Protobuf REQUIRED)
 if (NOT PROTOBUF_PROTOC_EXECUTABLE)
-  message(FATAL_ERROR "Could not find system's protoc execuable")
+  message(FATAL_ERROR "Could not find system's protoc executable")
 endif (NOT PROTOBUF_PROTOC_EXECUTABLE)
 
 find_package(Ceres REQUIRED)
@@ -239,6 +247,11 @@ if (${OpenCV_VERSION} MATCHES "3.3.1")
     endif()
   endforeach(__cvcomponent)
 endif()
+if (USE_CTC)
+  foreach(__cvcomponent ${OpenCV_LIB_COMPONENTS})
+    set(OpenCV_LIBS ${OpenCV_LIBS} "${OpenCV_INSTALL_PATH}/lib/arm-linux-gnueabihf/lib${__cvcomponent}3.so")
+  endforeach(__cvcomponent)
+endif (USE_CTC)
 set(OpenCV_LIBRARIES ${OpenCV_LIBS})
 
 find_package(dbow2 REQUIRED)
@@ -308,7 +321,13 @@ if (USE_CTC)
 endif (USE_CTC)
 if (USE_ROS)
   set(ENV{ROS_LANG_DISABLE} "genlisp:gennodejs:geneus:$ENV{ROS_LANG_DISABLE}")
-  find_package(catkin2 COMPONENTS roscpp message_generation std_msgs geometry_msgs sensor_msgs cv_bridge image_transport tf tf2 tf2_ros rosbag nodelet rviz)
+
+  if (USE_CTC)
+    find_package(catkin2 COMPONENTS roscpp message_generation std_msgs geometry_msgs sensor_msgs cv_bridge image_transport tf tf2 tf2_ros rosbag nodelet)
+  else ()
+    find_package(catkin2 COMPONENTS roscpp message_generation std_msgs geometry_msgs sensor_msgs cv_bridge image_transport tf tf2 tf2_ros rosbag nodelet rviz)
+  endif (USE_CTC)
+
   find_package(Qt5 ${rviz_QT_VERSION} REQUIRED Core Widgets)
 
   if (IS_BAMBOO_BUILD)

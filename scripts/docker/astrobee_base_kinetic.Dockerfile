@@ -42,7 +42,7 @@ RUN apt-get update \
 
 COPY ./scripts/setup/packages_*.lst /setup/astrobee/
 # note apt-get update is run within the following shell script
-RUN /setup/astrobee/install_desktop_16_04_packages.sh \
+RUN /setup/astrobee/install_desktop_packages.sh \
   && rm -rf /var/lib/apt/lists/*
 
 #Add new sudo user

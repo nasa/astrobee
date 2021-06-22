@@ -38,7 +38,7 @@ import csv
 
 
 def l2_map(vector3ds):
-  return map(lambda (x, y, z): math.sqrt(x + y + z), zip(vector3ds.xs, vector3ds.ys, vector3ds.zs))
+  return map(lambda (x, y, z): math.sqrt(x*x + y*y + z*z), zip(vector3ds.xs, vector3ds.ys, vector3ds.zs))
 
 
 def add_graph_plots(pdf, sparse_mapping_poses, ar_tag_poses, graph_localization_states,
@@ -52,11 +52,7 @@ def add_graph_plots(pdf, sparse_mapping_poses, ar_tag_poses, graph_localization_
                                      markeredgewidth=0.1,
                                      markersize=1.5)
   if ar_tag_poses.times:
-    position_plotter.add_pose_position(ar_tag_poses,
-                                       linestyle='None',
-                                       marker='x',
-                                       markeredgewidth=0.1,
-                                       markersize=1.5)
+    position_plotter.add_pose_position(ar_tag_poses, linestyle='None', marker='x', markeredgewidth=0.1, markersize=1.5)
   position_plotter.add_pose_position(graph_localization_states)
   position_plotter.plot(pdf)
 
@@ -115,11 +111,7 @@ def add_graph_plots(pdf, sparse_mapping_poses, ar_tag_poses, graph_localization_
                                      markeredgewidth=0.1,
                                      markersize=1.5)
   if ar_tag_poses.times:
-    position_plotter.add_pose_position(ar_tag_poses,
-                                       linestyle='None',
-                                       marker='x',
-                                       markeredgewidth=0.1,
-                                       markersize=1.5)
+    position_plotter.add_pose_position(ar_tag_poses, linestyle='None', marker='x', markeredgewidth=0.1, markersize=1.5)
 
   integrated_graph_localization_states = utilities.integrate_velocities(graph_localization_states)
   position_plotter.add_pose_position(integrated_graph_localization_states)
@@ -379,13 +371,31 @@ def plot_loc_state_stats(pdf,
                          output_csv_file,
                          prefix='',
                          atol=0,
-                         plot_integrated_velocities=True):
-  rmse = rmse_utilities.rmse_timestamped_poses(localization_states, sparse_mapping_poses, True, atol)
+                         plot_integrated_velocities=True,
+                         rmse_rel_start_time=0,
+                         rmse_rel_end_time=-1):
+  plot_loc_state_stats_abs(pdf, localization_states, sparse_mapping_poses, output_csv_file, prefix, atol,
+                           plot_integrated_velocities, rmse_rel_start_time, rmse_rel_end_time)
+  plot_loc_state_stats_rel(pdf, localization_states, sparse_mapping_poses, output_csv_file, prefix, atol,
+                           plot_integrated_velocities, rmse_rel_start_time, rmse_rel_end_time)
+
+
+def plot_loc_state_stats_abs(pdf,
+                             localization_states,
+                             sparse_mapping_poses,
+                             output_csv_file,
+                             prefix='',
+                             atol=0,
+                             plot_integrated_velocities=True,
+                             rmse_rel_start_time=0,
+                             rmse_rel_end_time=-1):
+  rmse = rmse_utilities.rmse_timestamped_poses(localization_states, sparse_mapping_poses, True, atol,
+                                               rmse_rel_start_time, rmse_rel_end_time)
   integrated_rmse = []
   if plot_integrated_velocities:
     integrated_localization_states = utilities.integrate_velocities(localization_states)
     integrated_rmse = rmse_utilities.rmse_timestamped_poses(integrated_localization_states, sparse_mapping_poses, False,
-                                                            atol)
+                                                            atol, rmse_rel_start_time, rmse_rel_end_time)
   stats = prefix + ' pos rmse: ' + str(rmse[0]) + '\n' + 'orientation rmse: ' + str(rmse[1])
   if plot_integrated_velocities:
     stats += '\n' + 'integrated rmse: ' + str(integrated_rmse[0])
@@ -395,6 +405,39 @@ def plot_loc_state_stats(pdf,
     csv_writer.writerow([prefix + 'orientation_rmse', str(rmse[1])])
     if plot_integrated_velocities:
       csv_writer.writerow([prefix + 'integrated_rmse', str(integrated_rmse[0])])
+  plt.figure()
+  plt.axis('off')
+  plt.text(0.0, 0.5, stats)
+  pdf.savefig()
+
+
+def plot_loc_state_stats_rel(pdf,
+                             localization_states,
+                             sparse_mapping_poses,
+                             output_csv_file,
+                             prefix='',
+                             atol=0,
+                             plot_integrated_velocities=True,
+                             rmse_rel_start_time=0,
+                             rmse_rel_end_time=-1):
+  rmse = rmse_utilities.rmse_timestamped_poses_relative(localization_states, sparse_mapping_poses, True, atol,
+                                                        rmse_rel_start_time, rmse_rel_end_time)
+  integrated_rmse = []
+  if plot_integrated_velocities:
+    integrated_localization_states = utilities.integrate_velocities(localization_states)
+    integrated_rmse = rmse_utilities.rmse_timestamped_poses_relative(integrated_localization_states,
+                                                                     sparse_mapping_poses, False, atol,
+                                                                     rmse_rel_start_time, rmse_rel_end_time)
+  stats = prefix + ' rel pos rmse: ' + str(rmse[0]) + '\n' + 'rel orientation rmse: ' + str(rmse[1])
+  if plot_integrated_velocities:
+    stats += '\n' + 'rel integrated rmse: ' + str(integrated_rmse[0])
+
+  with open(output_csv_file, 'a') as output_csv:
+    csv_writer = csv.writer(output_csv, lineterminator='\n')
+    csv_writer.writerow(['rel_' + prefix + 'rmse', str(rmse[0])])
+    csv_writer.writerow(['rel_' + prefix + 'orientation_rmse', str(rmse[1])])
+    if plot_integrated_velocities:
+      csv_writer.writerow(['rel_' + prefix + 'integrated_rmse', str(integrated_rmse[0])])
   plt.figure()
   plt.axis('off')
   plt.text(0.0, 0.5, stats)
@@ -481,8 +524,15 @@ def has_topic(bag, topic):
   return topic in topics
 
 
-def create_plots(bagfile, output_pdf_file, output_csv_file='results.csv'):
+# Groundtruth bag must have the same start time as other bagfile, otherwise RMSE calculations will be flawed
+def create_plots(bagfile,
+                 output_pdf_file,
+                 output_csv_file='results.csv',
+                 groundtruth_bagfile=None,
+                 rmse_rel_start_time=0,
+                 rmse_rel_end_time=-1):
   bag = rosbag.Bag(bagfile)
+  groundtruth_bag = rosbag.Bag(groundtruth_bagfile) if groundtruth_bagfile else bag
   bag_start_time = bag.get_start_time()
 
   has_imu_augmented_graph_localization_state = has_topic(bag, '/gnc/ekf')
@@ -490,8 +540,10 @@ def create_plots(bagfile, output_pdf_file, output_csv_file='results.csv'):
   sparse_mapping_poses = poses.Poses('Sparse Mapping', '/sparse_mapping/pose')
   ar_tag_poses = poses.Poses('AR Tag', '/ar_tag/pose')
   imu_bias_tester_poses = poses.Poses('Imu Bias Tester', '/imu_bias_tester/pose')
-  vec_of_poses = [sparse_mapping_poses, ar_tag_poses, imu_bias_tester_poses]
+  vec_of_poses = [ar_tag_poses, imu_bias_tester_poses]
   load_pose_msgs(vec_of_poses, bag, bag_start_time)
+  groundtruth_vec_of_poses = [sparse_mapping_poses]
+  load_pose_msgs(groundtruth_vec_of_poses, groundtruth_bag, bag_start_time)
 
   graph_localization_states = loc_states.LocStates('Graph Localization', '/graph_loc/state')
   imu_augmented_graph_localization_states = loc_states.LocStates('Imu Augmented Graph Localization', '/gnc/ekf')
@@ -514,9 +566,27 @@ def create_plots(bagfile, output_pdf_file, output_csv_file='results.csv'):
                           ar_tag_poses)
     else:
       add_other_loc_plots(pdf, graph_localization_states, graph_localization_states)
-    plot_loc_state_stats(pdf, graph_localization_states, sparse_mapping_poses, output_csv_file)
-    plot_loc_state_stats(pdf, imu_augmented_graph_localization_states, sparse_mapping_poses, output_csv_file,
-                         'imu_augmented_', 0.01)
+    plot_loc_state_stats(pdf,
+                         graph_localization_states,
+                         sparse_mapping_poses,
+                         output_csv_file,
+                         rmse_rel_start_time=rmse_rel_start_time,
+                         rmse_rel_end_time=rmse_rel_end_time)
+    plot_loc_state_stats(pdf,
+                         imu_augmented_graph_localization_states,
+                         sparse_mapping_poses,
+                         output_csv_file,
+                         'imu_augmented_',
+                         0.01,
+                         rmse_rel_start_time=rmse_rel_start_time,
+                         rmse_rel_end_time=rmse_rel_end_time)
     if has_imu_bias_tester_poses:
-      plot_loc_state_stats(pdf, imu_bias_tester_poses, sparse_mapping_poses, output_csv_file, 'imu_bias_tester_', 0.01,
-                           False)
+      plot_loc_state_stats(pdf,
+                           imu_bias_tester_poses,
+                           sparse_mapping_poses,
+                           output_csv_file,
+                           'imu_bias_tester_',
+                           0.01,
+                           False,
+                           rmse_rel_start_time=rmse_rel_start_time,
+                           rmse_rel_end_time=rmse_rel_end_time)

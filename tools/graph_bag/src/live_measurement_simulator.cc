@@ -17,6 +17,7 @@
  */
 
 #include <graph_bag/live_measurement_simulator.h>
+#include <graph_bag/utilities.h>
 #include <localization_common/logger.h>
 
 #include <image_transport/image_transport.h>
@@ -52,14 +53,13 @@ LiveMeasurementSimulator::LiveMeasurementSimulator(const LiveMeasurementSimulato
   std::vector<std::string> topics;
   topics.push_back(std::string("/") + TOPIC_HARDWARE_IMU);
   topics.push_back(TOPIC_HARDWARE_IMU);
+  topics.push_back(std::string("/") + kImageTopic_);
+  topics.push_back(kImageTopic_);
   if (params_.use_image_features) {
     topics.push_back(std::string("/") + TOPIC_LOCALIZATION_OF_FEATURES);
     topics.push_back(TOPIC_LOCALIZATION_OF_FEATURES);
     topics.push_back(std::string("/") + TOPIC_LOCALIZATION_ML_FEATURES);
     topics.push_back(TOPIC_LOCALIZATION_ML_FEATURES);
-  } else {
-    topics.push_back(std::string("/") + kImageTopic_);
-    topics.push_back(kImageTopic_);
   }
   // Only use recorded ar features
   topics.push_back(std::string("/") + TOPIC_LOCALIZATION_AR_FEATURES);
@@ -70,14 +70,6 @@ LiveMeasurementSimulator::LiveMeasurementSimulator(const LiveMeasurementSimulato
 
   view_.reset(new rosbag::View(bag_, rosbag::TopicQuery(topics)));
   current_time_ = lc::TimeFromRosTime(view_->getBeginTime());
-}
-
-bool LiveMeasurementSimulator::string_ends_with(const std::string& str, const std::string& ending) {
-  if (str.length() >= ending.length()) {
-    return (0 == str.compare(str.length() - ending.length(), ending.length(), ending));
-  } else {
-    return false;
-  }
 }
 
 ff_msgs::Feature2dArray LiveMeasurementSimulator::GenerateOFFeatures(const sensor_msgs::ImageConstPtr& image_msg) {
@@ -109,7 +101,6 @@ bool LiveMeasurementSimulator::ProcessMessage() {
   if (*view_it_ == view_->end()) return false;
   const auto& msg = **view_it_;
   current_time_ = lc::TimeFromRosTime(msg.getTime());
-
   if (string_ends_with(msg.getTopic(), TOPIC_HARDWARE_IMU)) {
     sensor_msgs::ImuConstPtr imu_msg = msg.instantiate<sensor_msgs::Imu>();
     imu_buffer_.BufferMessage(*imu_msg);
@@ -120,14 +111,12 @@ bool LiveMeasurementSimulator::ProcessMessage() {
     // Always use ar features until have data with dock cam images
     const ff_msgs::VisualLandmarksConstPtr ar_features = msg.instantiate<ff_msgs::VisualLandmarks>();
     ar_buffer_.BufferMessage(*ar_features);
-  } else if (params_.use_image_features) {
-    if (string_ends_with(msg.getTopic(), TOPIC_LOCALIZATION_OF_FEATURES)) {
-      const ff_msgs::Feature2dArrayConstPtr of_features = msg.instantiate<ff_msgs::Feature2dArray>();
-      of_buffer_.BufferMessage(*of_features);
-    } else if (string_ends_with(msg.getTopic(), TOPIC_LOCALIZATION_ML_FEATURES)) {
-      const ff_msgs::VisualLandmarksConstPtr vl_features = msg.instantiate<ff_msgs::VisualLandmarks>();
-      vl_buffer_.BufferMessage(*vl_features);
-    }
+  } else if (params_.use_image_features && string_ends_with(msg.getTopic(), TOPIC_LOCALIZATION_OF_FEATURES)) {
+    const ff_msgs::Feature2dArrayConstPtr of_features = msg.instantiate<ff_msgs::Feature2dArray>();
+    of_buffer_.BufferMessage(*of_features);
+  } else if (params_.use_image_features && string_ends_with(msg.getTopic(), TOPIC_LOCALIZATION_ML_FEATURES)) {
+    const ff_msgs::VisualLandmarksConstPtr vl_features = msg.instantiate<ff_msgs::VisualLandmarks>();
+    vl_buffer_.BufferMessage(*vl_features);
   } else if (string_ends_with(msg.getTopic(), kImageTopic_)) {
     sensor_msgs::ImageConstPtr image_msg = msg.instantiate<sensor_msgs::Image>();
     if (params_.save_optical_flow_images) {
@@ -142,8 +131,6 @@ bool LiveMeasurementSimulator::ProcessMessage() {
         vl_buffer_.BufferMessage(vl_features);
       }
     }
-  } else {
-    return true;
   }
   return true;
 }

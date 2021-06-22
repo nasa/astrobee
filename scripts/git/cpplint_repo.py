@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import os, imp, fnmatch
 
@@ -25,12 +25,12 @@ def run_cpplint(filename, cpplint_path):
     return cpplint.output
 
 def print_objection():
-    print "   ____  __      _           __  _             __"
-    print "  / __ \/ /_    (_)__  _____/ /_(_)___  ____  / /"
-    print " / / / / __ \  / / _ \/ ___/ __/ / __ \/ __ \/ / "
-    print "/ /_/ / /_/ / / /  __/ /__/ /_/ / /_/ / / / /_/  "
-    print "\____/_.___/_/ /\___/\___/\__/_/\____/_/ /_(_)   "
-    print "          /___/                                  "
+    print("   ____  __      _           __  _             __")
+    print("  / __ \/ /_    (_)__  _____/ /_(_)___  ____  / /")
+    print(" / / / / __ \  / / _ \/ ___/ __/ / __ \/ __ \/ / ")
+    print("/ /_/ / /_/ / / /  __/ /__/ /_/ / /_/ / / / /_/  ")
+    print("\____/_.___/_/ /\___/\___/\__/_/\____/_/ /_(_)   ")
+    print("          /___/                                  ")
 
 def main():
     num_errors = 0
@@ -41,7 +41,7 @@ def main():
     # Lets look for source files and headers in our repo
     for root, dirnames, filenames in os.walk(get_repo_path()):
         if "Software" in root or "external" in root or "gnc/matlab" in root or \
-        "submodules" in root:
+        "submodules" in root or "debian" in root or "build" in root:
             continue
         for filename in filenames:
             if "agast_score" in filename or "brisk" in filename:
@@ -56,13 +56,13 @@ def main():
             
             num_errors += len(output)
             for error in output:
-                print "%s:%s: %s" % ((root + "/" + filename).replace(get_repo_path() + "/", ''), str(error[0]), error[1])
+                print("%s:%s: %s" % ((root + "/" + filename).replace(get_repo_path() + "/", ''), str(error[0]), error[1]))
 
-    print "="*50
+    print("="*50)
     if num_errors > 0:
-        print "  You have %d lint errors" % num_errors
+        print("  You have %d lint errors" % num_errors)
     elif num_errors == 0:
-        print "  Code adheres to style guide lines"
+        print("  Code adheres to style guide lines")
 
     exit(num_errors)
 

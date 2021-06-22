@@ -18,23 +18,13 @@
 
 #include <ff_util/ff_names.h>
 #include <graph_bag/bag_imu_filterer.h>
+#include <graph_bag/utilities.h>
 #include <imu_integration/imu_filter_params.h>
 #include <localization_common/utilities.h>
 #include <localization_measurements/imu_measurement.h>
 #include <msg_conversions/msg_conversions.h>
 
 #include <sensor_msgs/Imu.h>
-
-namespace {
-// TODO(rsoussan): Unify this with live measurement simulator, put in utilities
-bool string_ends_with(const std::string& str, const std::string& ending) {
-  if (str.length() >= ending.length()) {
-    return (0 == str.compare(str.length() - ending.length(), ending.length(), ending));
-  } else {
-    return false;
-  }
-}
-}  // namespace
 
 namespace graph_bag {
 namespace ii = imu_integration;
