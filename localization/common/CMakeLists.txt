@@ -15,37 +15,18 @@
 #License for the specific language governing permissions and limitations
 #under the License.
 
-project(localization_measurements)
+project(common)
 
 catkin_package(
-  LIBRARIES ${PROJECT_NAME} ${GTSAM_LIBRARIES} common localization_common
-  INCLUDE_DIRS include ${GTSAM_INCLUDE_DIR} 
+  LIBRARIES ${PROJECT_NAME}
+  INCLUDE_DIRS include 
   CATKIN_DEPENDS 
-  DEPENDS gtsam ff_msgs 
+  DEPENDS 
 )
 
 create_library(TARGET ${PROJECT_NAME} 
-  LIBS ${catkin_LIBRARIES} common gtsam localization_common 
+  LIBS ${catkin_LIBRARIES} 
   INC ${catkin_INCLUDE_DIRS} 
-  DEPS ff_msgs
+  DEPS 
 )
 
-if(CATKIN_ENABLE_TESTING)
-  find_package(rostest REQUIRED)
-  add_rostest_gtest(test_plane
-    test/test_plane.test
-    test/test_plane.cc
-  )
-  target_link_libraries(test_plane
-    localization_measurements gtsam
-  )
-  find_package(rostest REQUIRED)
-  add_rostest_gtest(test_measurement_conversions
-    test/test_measurement_conversions.test
-    test/test_measurement_conversions.cc
-  )
-  target_link_libraries(test_measurement_conversions
-    localization_measurements gtsam
-  )
-
-endif()

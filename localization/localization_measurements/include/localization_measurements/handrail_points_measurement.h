@@ -19,7 +19,7 @@
 #ifndef LOCALIZATION_MEASUREMENTS_HANDRAIL_POINTS_MEASUREMENT_H_
 #define LOCALIZATION_MEASUREMENTS_HANDRAIL_POINTS_MEASUREMENT_H_
 
-#include <localization_common/eigen_vectors.h>
+#include <common/eigen_vectors.h>
 #include <localization_common/time.h>
 #include <localization_measurements/measurement.h>
 #include <localization_measurements/plane.h>

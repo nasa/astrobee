@@ -19,7 +19,7 @@
 #define SPARSE_MAPPING_REPROJECTION_H_
 
 #include <Eigen/Geometry>
-#include <localization_common/eigen_vectors.h>
+#include <common/eigen_vectors.h>
 #include <ceres/ceres.h>
 
 #include <map>

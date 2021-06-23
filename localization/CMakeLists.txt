@@ -16,6 +16,7 @@
 # under the License.
 
 add_subdirectory(camera)
+add_subdirectory(common)
 add_subdirectory(graph_optimizer)
 add_subdirectory(imu_integration)
 add_subdirectory(interest_point)

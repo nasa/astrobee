@@ -31,7 +31,7 @@ set(LIBS
   interest_point
   config_reader
   ff_common
-  localization_common
+  common
 )
 set(INCLUDES
   ${CERES_INCLUDE_DIRS}
@@ -50,7 +50,7 @@ set(SPARSE_MAPPING_LIBRARIES sparse_mapping ${LIBS})
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES sparse_mapping
-  CATKIN_DEPENDS camera interest_point config_reader ff_common localization_common
+  CATKIN_DEPENDS camera interest_point config_reader ff_common common
 )
 
 create_library(TARGET sparse_mapping
