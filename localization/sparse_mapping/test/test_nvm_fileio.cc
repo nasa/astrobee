@@ -16,7 +16,7 @@
  * under the License.
  */
 
-#include <localization_common/eigen_vectors.h>
+#include <common/eigen_vectors.h>
 #include <sparse_mapping/sparse_mapping.h>
 
 #include <Eigen/Geometry>
