@@ -1,9 +1,9 @@
 \page graphlocalizer Graph Localizer
 
 # Package Overview
-The GraphLocalizer uses the GraphOptimizer (see documentation in GraphOptimizer package) to track the pose, velocity and IMU biases (the set of these three state parameters is referred to as a CombinedNavState) for a robot.  It uses a set of measurements (IMU, optical flow, map-based image features, ar tag detections, 3D handrail and wall plane points) to generate factors that constrain its history of CombinedNavStates.  
+The GraphLocalizer uses the GraphOptimizer (please first read the documentation in the GraphOptimizer package as this package uses many objects from there) to track the pose, velocity and IMU biases (the set of these three state parameters is referred to as a CombinedNavState) for a robot.  It uses a set of measurements (IMU, optical flow, map-based image features, ar tag detections, 3D handrail and wall plane points) to generate factors that constrain its history of CombinedNavStates.  
 ## Code Structure
-The GraphLocalizer package consists of the GraphLocalizer, GraphLocalizerWrapper, and GraphLocalizerNodelet objects.  The GraphLocalizer handles the creation of factors and contains the GraphOptimizer, while the GraphLocalizerWrapper provides an interface that can be used both online with the GraphLocalizerNodelet and offline in a ROS free environement such as is done in the GraphBag tool (see GraphBag package).  The GraphLocalizerWrapper converts ROS messages to localization_measurement objects and subsequently passes these to the GraphLocalizer so that the GraphLocalizer does not contain any ROS code.  Finally, the GraphLocalizerNodelet is a ROS nodelet that subscribes to the required messages and passes these to the GraphLocalizerWrapper.  It also publishes required messages and TFs for online usage. 
+The GraphLocalizer package contains GraphLocalizer, GraphLocalizerWrapper, and GraphLocalizerNodelet objects.  The GraphLocalizer handles the creation of factors and contains the GraphOptimizer, while the GraphLocalizerWrapper provides an interface that can be used both online with the GraphLocalizerNodelet and offline in a ROS free environement as is done in the GraphBag tool (see GraphBag package).  The GraphLocalizerWrapper converts ROS messages to localization_measurement objects and subsequently passes these to the GraphLocalizer so that the GraphLocalizer does not contain any ROS code.  Finally, the GraphLocalizerNodelet is a ROS nodelet that subscribes to the required messages and passes these to the GraphLocalizerWrapper.  It also publishes required messages and TFs for online usage. 
 
 # Background
 For more information on the theory behind the GraphLocalizer and the factors used, please see our paper (TODO(rsoussan): link paper when publicly available).  
@@ -14,10 +14,31 @@ For more information on the theory behind the GraphLocalizer and the factors use
 # Important Classes
 
 ## Graph Localizer
-Fuses measurements to estimate pose, velocity, and biases for a window of time (and optionally for a max number of states, where a state is a pose, velocity and bias estimate at a timestamp).  Creates error functions (factors) for each measurement and minimizes these errors by adjusting the history of state estimates using a nonlinear optimization procedure provided by gtsam.
+The GraphLocalizer is a GraphOptimizer that contains measurement specific FactorAdders and state parameter specific NodeUpdaters.  These are detailed further in the following sections.
 
-## Graph Values
-While the graph localizer contains a factor graph to store factors, state estimates are stored in the GraphValues object.  This provides the option to `slide_window` which maintains the correct duration and number of state parameters for the graph.  
+## FactorAdders
+### LocFactorAdder
+The LocFactorAdder takes map-based image feature measurements and generates either LocProjectionFactors or LocPoseFactors, depeneding on if the LocProjectionFactors suffered cheirality errors or not.
+
+### ProjectionFactorAdder
+The ProjectionFactorAdder creates bundle-adjustment ProjectionFactors for tracked image features. (Not currently used).
+
+### RotationFactorAdder 
+The RotationFactorAdder generates a relative rotation using tracked image features in two successive images.  (Not currently used).
+
+### SmartProjectionCumulativeFactorAdder
+The SmartProjectionCumulativeFactorAdder generates visual odometry smart factors using image feature tracks.  It contains options for minimum disparity allowed for feature tracks, minimum separation in image space for added feature tracks, whether to use a rotation-only factor if created smart factors suffer from cheirality errors, and more. It can generate factors using measurements maximally spaced to include a larger history or only include measurements from a given set (toggle these with the use_allowed_timestamps option).  
+
+### StandstillFactorAdder
+The StandstillFactorAdder creates a zero velocity prior and zero tranform between factor for successive CombinedNavState nodes when standstill is detected.  Standstill detection checks for a minimum average disparity for image feature tracks over time. 
+
+## NodeUpdaters
+
+
+## GraphValues
+
+
+## Other
 
 
 ## Feature Tracker
