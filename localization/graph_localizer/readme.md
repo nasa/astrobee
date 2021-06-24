@@ -55,29 +55,26 @@ The CombinedNavStateNodeUpdater is responsible for inserted and removed Combined
 ### FeaturePointNodeUpdater
 The FeaturePointNodeUpdater maintains feature point nodes for image features.  It removes old point nodes that are no longer being tracked by the graph.  Creation of point nodes occurs in this case in the ProjectionGraphActionCompleter which uses each measurement of a feature track to triangulate a new point node. (TODO(rsoussan): Update this when this is changed) 
 
-## GraphValues
-
-
 ## Other
+### FeatureTracker
+The FeatureTracker maintains feature tracks for image based measurements.  Feature tracks can be queried using feature ids or by returning the n longest feature tracks.  The feature tracker also slides the window for feature tracks to remove old measurements if necessary.
 
+### Sanity Checker
+The SanityChecker validates the current localization pose using a reference pose or by checking that the covariances are within defined bounds.
+### GraphLocalizerInitializer
+The GraphLocalizerInitializer is responsible for loading GraphLocalizer parameters.  It also stores the starting pose for localization and estaimtes initial IMU biases using a set of n consecutive measurements at standstill.
 
-## Feature Tracker
-Optical flow feature tracks are stored in the FeatureTracker class which also support removing old measurements.  
+### GraphLocalizerWrapper
+The GraphLocalizerWrapper contains the GraphLocalizer and GraphLocalizerInitializer.  It passes ROS messages to each of these and also provides interfaces for accessing some GraphLocalizer data, such as messages built using GraphLocalizer values, estimates of the dock and handrail poses wrt the world frame, and more.
 
-
-## Sanity Checker
-The sanity checker optionally checks localization estimates using either the current localization pose compared to some other source (sparse mapping) or the localization pose covariance.
-
-## GraphLocalizerInitializer
-
-## Ros Node
-The ros node subscribes to the measurement topics and publishes a graph localization state message containing state estimates and covariances.  Optionally, the node also publishes a serialized graph localizer that can be used to save the graph localizer and for visualization in rviz using one of the available localization plugins (see localization\_rviz\_plugins).
-
+### GraphLocalizerNodelet
+The GraphLocalizerNodlet subscribes to ROS messages for online use and publishes GraphLocalizer messages and TFs.
 
 # Inputs
 * `/loc/of/features`
 * `/loc/ml/features`
 * `/loc/ar/features`
+* `/loc/handrail/features`
 * `/hw/imu`
 
 # Outputs
