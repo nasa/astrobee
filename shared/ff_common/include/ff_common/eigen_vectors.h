@@ -15,3 +15,21 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
+/**
+ * This header makes vectors using Eigen objects align properly.
+ * It should be included in any file that uses vectors of Eigen objects.
+ **/
+
+#ifndef FF_COMMON_EIGEN_VECTORS_H_
+#define FF_COMMON_EIGEN_VECTORS_H_
+
+#include <Eigen/Geometry>
+#include <Eigen/StdVector>
+
+EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION(Eigen::Vector2d)
+EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION(Eigen::Vector3d)
+EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION(Eigen::Affine3d)
+EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION(Eigen::Matrix<double, 3, 4>)
+EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION(Eigen::Matrix2Xd)
+#endif  // FF_COMMON_EIGEN_VECTORS_H_

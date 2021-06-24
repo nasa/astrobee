@@ -18,14 +18,14 @@
 project(localization_measurements)
 
 catkin_package(
-  LIBRARIES ${PROJECT_NAME} ${GTSAM_LIBRARIES} common localization_common
+  LIBRARIES ${PROJECT_NAME} ${GTSAM_LIBRARIES} ff_common localization_common
   INCLUDE_DIRS include ${GTSAM_INCLUDE_DIR} 
   CATKIN_DEPENDS 
   DEPENDS gtsam ff_msgs 
 )
 
 create_library(TARGET ${PROJECT_NAME} 
-  LIBS ${catkin_LIBRARIES} common gtsam localization_common 
+  LIBS ${catkin_LIBRARIES} ff_common gtsam localization_common 
   INC ${catkin_INCLUDE_DIRS} 
   DEPS ff_msgs
 )

@@ -20,7 +20,7 @@
 #define SPARSE_MAPPING_TENSOR_H_
 
 #include <camera/camera_model.h>
-#include <common/eigen_vectors.h>
+#include <ff_common/eigen_vectors.h>
 #include <Eigen/Geometry>
 #include <ceres/ceres.h>
 

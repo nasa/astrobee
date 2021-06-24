@@ -19,8 +19,8 @@
 #ifndef SPARSE_MAPPING_SPARSE_MAP_H_
 #define SPARSE_MAPPING_SPARSE_MAP_H_
 
+#include <ff_common/eigen_vectors.h>
 #include <interest_point/matching.h>
-#include <common/eigen_vectors.h>
 #include <sparse_mapping/vocab_tree.h>
 #include <sparse_mapping/sparse_mapping.h>
 #include <camera/camera_model.h>
