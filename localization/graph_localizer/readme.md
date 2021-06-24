@@ -32,7 +32,26 @@ The SmartProjectionCumulativeFactorAdder generates visual odometry smart factors
 ### StandstillFactorAdder
 The StandstillFactorAdder creates a zero velocity prior and zero tranform between factor for successive CombinedNavState nodes when standstill is detected.  Standstill detection checks for a minimum average disparity for image feature tracks over time. 
 
+## Factors
+
+### LocPoseFactor
+The LocPoseFactor is simply a gtsam::PriorFactor<gtsam::Pose3> that enables the differention of a pose prior from a localization map-based image feature factor.
+
+### LocProjectionFactor
+The LocProjectionFactor is almost a direct copy of the gtsam::ProjectionFactor except it does not optimize for the 3D feature point location.
+
+### PoseRotationFactor
+The PoseRotationFactor constrains two gtsam::Pose3 nodes using their relative rotation.
+
+### RobustSmartProjectionFactor
+The RobustSmartProjectionFactor adds to the gtsam::SmartProjectionFactor by providing a robust huber kernel.  Additionally, it fixes some issues in the SmartProjectionFactor allowing for a rotation-only fallback when using the JacobianSVD option and allows for proper serialization of the factor.
+
+### (TODO: add handrail factors, jacobian document)
+
 ## NodeUpdaters
+### CombinedNavStateNodeUpdater
+
+### FeaturePointNodeUpdater
 
 
 ## GraphValues
