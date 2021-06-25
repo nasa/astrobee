@@ -20,7 +20,7 @@
 #define SPARSE_MAPPING_SPARSE_MAPPING_H_
 
 #include <camera/camera_params.h>
-#include <sparse_mapping/eigen_vectors.h>
+#include <ff_common/eigen_vectors.h>
 
 #include <Eigen/Geometry>
 

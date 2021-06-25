@@ -51,7 +51,7 @@ class SparseMapTest : public ::testing::Test {
 
     // Write local copies of the images. Why?
     for (size_t cid = 0; cid < img_files.size(); cid++) {
-      cv::Mat image = cv::imread(img_files[cid], CV_LOAD_IMAGE_GRAYSCALE);
+      cv::Mat image = cv::imread(img_files[cid], cv::IMREAD_GRAYSCALE);
       cv::imwrite(local_imgs[cid], image);
     }
 

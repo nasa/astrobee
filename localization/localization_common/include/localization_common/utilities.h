@@ -53,10 +53,7 @@ Eigen::Isometry3d EigenPose(const CombinedNavState& combined_nav_state);
 Eigen::Isometry3d EigenPose(const gtsam::Pose3& pose);
 
 // Returns pose in body frame
-gtsam::Pose3 GtPose(const ff_msgs::VisualLandmarks& vl_features, const gtsam::Pose3& sensor_T_body);
-
-// Returns pose in sensor frame
-gtsam::Pose3 GtPose(const ff_msgs::VisualLandmarks& vl_features);
+gtsam::Pose3 PoseFromMsgWithExtrinsics(const geometry_msgs::Pose& pose, const gtsam::Pose3& sensor_T_body);
 
 // Load either iss or granite graph localizer config depending on environment variable for ASTROBEE_WORLD
 void LoadGraphLocalizerConfig(config_reader::ConfigReader& config, const std::string& path_prefix = "");

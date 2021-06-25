@@ -361,9 +361,9 @@ bool Ekf::HRTagUpdate(const ff_msgs::DepthLandmarks & dl) {
     p.orientation = msg_conversions::array_to_ros_quat(gnc_.kfl_.quat_ISS2B);
 
     Eigen::Affine3d wTb = msg_conversions::ros_pose_to_eigen_transform(p);
-    Eigen::Affine3d hTc = msg_conversions::ros_pose_to_eigen_transform(dl.local_pose);
+    Eigen::Affine3d cTh = msg_conversions::ros_pose_to_eigen_transform(dl.sensor_T_handrail);
     Eigen::Affine3d bTc = perch_cam_to_body_;
-    handrail_to_world_ = wTb * bTc * hTc;
+    handrail_to_world_ = wTb * bTc * cTh;
     ROS_WARN(" [EKF] Recalculated handrail_to_world transform.");
     reset_handrail_pose_ = false;
     updated = true;
@@ -377,14 +377,14 @@ bool Ekf::HRTagUpdate(const ff_msgs::DepthLandmarks & dl) {
     dl_mod.landmarks[i].w = l.z();
   }
   HandrailUpdate(dl);
-  dl_mod.local_pose.position = msg_conversions::eigen_to_ros_point(
-      handrail_to_world_ * msg_conversions::ros_point_to_eigen_vector(dl.local_pose.position));
+  dl_mod.sensor_T_handrail.position = msg_conversions::eigen_to_ros_point(
+      handrail_to_world_ * msg_conversions::ros_point_to_eigen_vector(dl.sensor_T_handrail.position));
   Eigen::Quaterniond rot(handrail_to_world_.linear());
-  dl_mod.local_pose.orientation = msg_conversions::eigen_to_ros_quat(
-      rot * msg_conversions::ros_to_eigen_quat(dl.local_pose.orientation));
+  dl_mod.sensor_T_handrail.orientation = msg_conversions::eigen_to_ros_quat(
+      rot * msg_conversions::ros_to_eigen_quat(dl.sensor_T_handrail.orientation));
 
   if (!output_file_ && reset_ekf_ && dl_mod.landmarks.size() >= 1)
-    ResetPose(perch_cam_to_body_, dl_mod.local_pose);
+    ResetPose(perch_cam_to_body_, dl_mod.sensor_T_handrail);
   cmc_mode_ = ff_msgs::SetEkfInputRequest::MODE_HANDRAIL;
 
   return updated;
@@ -418,13 +418,13 @@ void Ekf::HandrailUpdate(const ff_msgs::DepthLandmarks & dl) {
     hand_.cvs_handrail_update_global_pose_flag = 0;
   }
 
-  hand_.cvs_handrail_local_pos[0] = dl.local_pose.position.x;
-  hand_.cvs_handrail_local_pos[1] = dl.local_pose.position.y;
-  hand_.cvs_handrail_local_pos[2] = dl.local_pose.position.z;
-  hand_.cvs_handrail_local_quat[0] = dl.local_pose.orientation.x;
-  hand_.cvs_handrail_local_quat[1] = dl.local_pose.orientation.y;
-  hand_.cvs_handrail_local_quat[2] = dl.local_pose.orientation.z;
-  hand_.cvs_handrail_local_quat[3] = dl.local_pose.orientation.w;
+  hand_.cvs_handrail_local_pos[0] = dl.sensor_T_handrail.position.x;
+  hand_.cvs_handrail_local_pos[1] = dl.sensor_T_handrail.position.y;
+  hand_.cvs_handrail_local_pos[2] = dl.sensor_T_handrail.position.z;
+  hand_.cvs_handrail_local_quat[0] = dl.sensor_T_handrail.orientation.x;
+  hand_.cvs_handrail_local_quat[1] = dl.sensor_T_handrail.orientation.y;
+  hand_.cvs_handrail_local_quat[2] = dl.sensor_T_handrail.orientation.z;
+  hand_.cvs_handrail_local_quat[3] = dl.sensor_T_handrail.orientation.w;
 
   hand_.cvs_timestamp_sec = dl.header.stamp.sec;
   hand_.cvs_timestamp_nsec = dl.header.stamp.nsec;
