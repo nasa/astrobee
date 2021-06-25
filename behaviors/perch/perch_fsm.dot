@@ -68,7 +68,7 @@ digraph G {
   PERCHING_WAITING_FOR_SPIN_DOWN -> PERCHING_SWITCHING_TO_PL_LOC
     [label="[11]\nE:PMC_OFF\nSwitch(PL)" ];
   PERCHING_SWITCHING_TO_PL_LOC -> PERCHED
-    [label="[12]\nE:MOTION_SUCCESS", color=darkgreen];
+    [label="[12]\nE:SWITCH_SUCCESS", color=darkgreen];
 
   # Nominal unperch
   PERCHED -> UNPERCHING_SWITCHING_TO_ML_LOC
@@ -92,7 +92,7 @@ digraph G {
     [label="[20]\nE:MOTION_FAILED", color=red];
   PERCHING_DEPLOYING_ARM -> RECOVERY_SWITCH_TO_ML_LOC
     [label="[21]\nE:ARM_FAILED", color=red];
-  PERCHING_OPENING_GRIPPER -> RECOVERY_SWITCH_TO_ML_LOC
+  PERCHING_OPENING_GRIPPER -> RECOVERY_STOWING_ARM
     [label="[22]\nE:ARM_FAILED", color=red];
   PERCHING_MOVING_TO_COMPLETE_POSE -> RECOVERY_OPENING_GRIPPER
     [label="[23]\nE:MOTION_FAILED", color=red];
@@ -120,10 +120,18 @@ digraph G {
   # Recovery
   RECOVERY_OPENING_GRIPPER -> RECOVERY_SWITCH_TO_ML_LOC
     [label="[33]\nE:ARM_SUCCESS", color=black];
+  RECOVERY_OPENING_GRIPPER -> RECOVERY_SWITCH_TO_ML_LOC
+    [label="[33]\nE:ARM_FAILED", color=red];
   RECOVERY_SWITCH_TO_ML_LOC -> RECOVERY_MOVING_TO_RECOVERY_POSE
     [label="[34]\nE:SWITCH_SUCCESS", color=black];
+  RECOVERY_SWITCH_TO_ML_LOC -> UNPERCHED
+    [label="[34]\nE:SWITCH_FAILED", color=red];
   RECOVERY_MOVING_TO_RECOVERY_POSE -> RECOVERY_STOWING_ARM
     [label="[35]\nE:MOTION_SUCCESS", color=black];
+  RECOVERY_MOVING_TO_RECOVERY_POSE -> UNPERCHED
+    [label="[35]\nE:MOTION_FAILED", color=red];
   RECOVERY_STOWING_ARM -> UNPERCHED
     [label="[36]\nE:ARM_SUCCESS", color=black];
+  RECOVERY_STOWING_ARM -> UNPERCHED
+    [label="[36]\nE:ARM_FAILED", color=red];
 }

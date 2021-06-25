@@ -88,7 +88,7 @@ void Draw3DFrame(cv::viz::Viz3d* window, const sparse_mapping::SparseMap & map,
   camera_pose.translation(camera_pose.translation() - center);
 
   // Load up the image
-  cv::Mat image = cv::imread(map.GetFrameFilename(cid), CV_LOAD_IMAGE_GRAYSCALE);
+  cv::Mat image = cv::imread(map.GetFrameFilename(cid), cv::IMREAD_GRAYSCALE);
   double f = map.GetCameraParameters().GetFocalLength();
 
   if (!FLAGS_only_3d_points) {
@@ -126,7 +126,7 @@ bool LocalizeFrame(MapViewerState* state, int frame) {
     if (state->num_frames > 0) {
       camera::CameraModel camera(Eigen::Vector3d(), Eigen::Matrix3d::Identity(),
                                  state->map->GetCameraParameters());
-      image = cv::imread(state->frames[frame], CV_LOAD_IMAGE_GRAYSCALE);
+      image = cv::imread(state->frames[frame], cv::IMREAD_GRAYSCALE);
       if (!state->map->Localize(state->frames[frame], &camera, &landmarks)) {
         LOG(ERROR) << "Failed to localize image.";
         state->window->showWidget("localize_pose", cv::viz::WText("", cv::Point2f(0, 0)));
@@ -137,7 +137,7 @@ bool LocalizeFrame(MapViewerState* state, int frame) {
 
       camera_pose = EigenToCVAffine(camera.GetTransform().inverse());
     } else {  // display map
-      image = cv::imread(state->map->GetFrameFilename(frame), CV_LOAD_IMAGE_GRAYSCALE);
+      image = cv::imread(state->map->GetFrameFilename(frame), cv::IMREAD_GRAYSCALE);
       camera_pose = EigenToCVAffine(state->map->GetFrameGlobalTransform(frame).inverse());
       std::map<int, int> fid_to_pid = state->map->GetFrameFidToPidMap(frame);
       for (std::map<int, int>::iterator it = fid_to_pid.begin(); it != fid_to_pid.end(); it++)
@@ -582,7 +582,7 @@ int main(int argc, char** argv) {
 
     // Create a window that can be resized by the user
     std::string windowName = map_file + ": individual frames";
-    cv::namedWindow(windowName, CV_WINDOW_NORMAL | CV_WINDOW_KEEPRATIO | CV_GUI_EXPANDED);
+    cv::namedWindow(windowName, cv::WINDOW_NORMAL | cv::WINDOW_KEEPRATIO | cv::WINDOW_GUI_EXPANDED);
     g_windowName = &windowName;  // Export this to be used by onMouse
     cv::setMouseCallback(windowName, onMouse, 0);
     cv::imshow(windowName, image);

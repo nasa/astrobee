@@ -35,12 +35,13 @@ namespace lm = localization_measurements;
 namespace mc = msg_conversions;
 
 GraphLocalizerWrapper::GraphLocalizerWrapper(const std::string& graph_config_path_prefix)
-    : reset_world_T_dock_(false), fan_speed_mode_(lm::FanSpeedMode::kNominal) {
+    : reset_world_T_dock_(false), reset_world_T_handrail_(false), fan_speed_mode_(lm::FanSpeedMode::kNominal) {
   config_reader::ConfigReader config;
   lc::LoadGraphLocalizerConfig(config, graph_config_path_prefix);
   config.AddFile("transforms.config");
   config.AddFile("cameras.config");
   config.AddFile("geometry.config");
+  config.AddFile("localization/handrail_detect.config");
 
   if (!config.ReadFiles()) {
     LogFatal("Failed to read config files.");
@@ -130,10 +131,10 @@ void GraphLocalizerWrapper::VLVisualLandmarksCallback(const ff_msgs::VisualLandm
     graph_localizer_->AddSparseMappingMeasurement(lm::MakeMatchedProjectionsMeasurement(visual_landmarks_msg));
   }
 
-  const gtsam::Pose3 sparse_mapping_global_T_body =
-    lc::GtPose(visual_landmarks_msg, graph_localizer_initializer_.params().calibration.body_T_nav_cam.inverse());
+  const gtsam::Pose3 sparse_mapping_global_T_body = lc::PoseFromMsgWithExtrinsics(
+    visual_landmarks_msg.pose, graph_localizer_initializer_.params().calibration.body_T_nav_cam.inverse());
   const lc::Time timestamp = lc::TimeFromHeader(visual_landmarks_msg.header);
-  sparse_mapping_pose_ = std::make_pair(sparse_mapping_global_T_body, timestamp);
+  sparse_mapping_pose_ = lm::TimestampedPose(sparse_mapping_global_T_body, timestamp);
 
   // Sanity Check
   if (graph_localizer_ && !CheckPoseSanity(sparse_mapping_global_T_body, timestamp)) {
@@ -145,7 +146,7 @@ void GraphLocalizerWrapper::VLVisualLandmarksCallback(const ff_msgs::VisualLandm
   if (!graph_localizer_) {
     // Set or update initial pose if a new one is available before the localizer
     // has started running.
-    graph_localizer_initializer_.SetStartPose(sparse_mapping_pose_->first, sparse_mapping_pose_->second);
+    graph_localizer_initializer_.SetStartPose(*sparse_mapping_pose_);
     // Set fan speed mode as well in case this hasn't been set yet
     // TODO(rsoussan): Do this in a cleaner way
     graph_localizer_initializer_.SetFanSpeedMode(fan_speed_mode_);
@@ -193,9 +194,37 @@ void GraphLocalizerWrapper::ARVisualLandmarksCallback(const ff_msgs::VisualLandm
     const auto frame_changed_ar_measurements = lm::FrameChangeMatchedProjectionsMeasurement(
       lm::MakeMatchedProjectionsMeasurement(visual_landmarks_msg), estimated_world_T_dock_);
     graph_localizer_->AddARTagMeasurement(frame_changed_ar_measurements);
-    ar_tag_pose_ = std::make_pair(frame_changed_ar_measurements.global_T_cam *
-                                    graph_localizer_initializer_.params().calibration.body_T_dock_cam.inverse(),
-                                  frame_changed_ar_measurements.timestamp);
+    ar_tag_pose_ = lm::TimestampedPose(frame_changed_ar_measurements.global_T_cam *
+                                         graph_localizer_initializer_.params().calibration.body_T_dock_cam.inverse(),
+                                       frame_changed_ar_measurements.timestamp);
+  }
+}
+
+void GraphLocalizerWrapper::DepthLandmarksCallback(const ff_msgs::DepthLandmarks& depth_landmarks_msg) {
+  feature_counts_.depth = depth_landmarks_msg.landmarks.size();
+  if (!ValidDepthMsg(depth_landmarks_msg)) return;
+  if (graph_localizer_) {
+    ResetWorldTHandrailIfNecessary(depth_landmarks_msg);
+    if (!estimated_world_T_handrail_) {
+      LogWarning("DepthLandmarksCallback: No estimated world_T_handrail pose available.");
+      return;
+    }
+    const auto handrail_points_measurement =
+      lm::MakeHandrailPointsMeasurement(depth_landmarks_msg, *estimated_world_T_handrail_);
+    graph_localizer_->AddHandrailMeasurement(handrail_points_measurement);
+    // TODO(rsoussan): Don't update a pose with endpoints with a new measurement without endpoints?
+    if (estimated_world_T_handrail_) {
+      const auto handrail_T_perch_cam = lc::PoseFromMsg(depth_landmarks_msg.sensor_T_handrail).inverse();
+      // 0 value is default, 1 means endpoints seen, 2 means none seen
+      // TODO(rsoussan): Change this once this is changed in handrail node
+      const bool accurate_z_position = depth_landmarks_msg.end_seen == 1;
+      handrail_pose_ =
+        lm::TimestampedHandrailPose(estimated_world_T_handrail_->pose * handrail_T_perch_cam *
+                                      graph_localizer_initializer_.params().calibration.body_T_perch_cam.inverse(),
+                                    handrail_points_measurement.timestamp, accurate_z_position,
+                                    graph_localizer_initializer_.params().handrail.length,
+                                    graph_localizer_initializer_.params().handrail.distance_to_wall);
+    }
   }
 }
 
@@ -249,6 +278,8 @@ void GraphLocalizerWrapper::MarkWorldTDockForResettingIfNecessary() {
   if (estimate_world_T_dock_using_loc_) reset_world_T_dock_ = true;
 }
 
+void GraphLocalizerWrapper::MarkWorldTHandrailForResetting() { reset_world_T_handrail_ = true; }
+
 void GraphLocalizerWrapper::ResetWorldTDockUsingLoc(const ff_msgs::VisualLandmarks& visual_landmarks_msg) {
   const auto latest_combined_nav_state = LatestCombinedNavState();
   if (!latest_combined_nav_state) {
@@ -256,12 +287,39 @@ void GraphLocalizerWrapper::ResetWorldTDockUsingLoc(const ff_msgs::VisualLandmar
     return;
   }
   // TODO(rsoussan): Extrapolate latest world_T_body loc estimate with imu data?
-  const gtsam::Pose3 dock_T_body =
-    lc::GtPose(visual_landmarks_msg, graph_localizer_initializer_.params().calibration.body_T_dock_cam.inverse());
+  const gtsam::Pose3 dock_T_body = lc::PoseFromMsgWithExtrinsics(
+    visual_landmarks_msg.pose, graph_localizer_initializer_.params().calibration.body_T_dock_cam.inverse());
   estimated_world_T_dock_ = latest_combined_nav_state->pose() * dock_T_body.inverse();
 }
 
+void GraphLocalizerWrapper::ResetWorldTHandrailIfNecessary(const ff_msgs::DepthLandmarks& depth_landmarks_msg) {
+  const bool accurate_z_position = depth_landmarks_msg.end_seen == 1;
+  // Update old handrail estimate with new one if an accurate z position is now avaible and wasn't previously
+  const bool update_with_new_z_position =
+    accurate_z_position && estimated_world_T_handrail_ && !estimated_world_T_handrail_->accurate_z_position;
+  if (!reset_world_T_handrail_ && !update_with_new_z_position) return;
+
+  const auto latest_combined_nav_state = LatestCombinedNavState();
+  if (!latest_combined_nav_state) {
+    LogError("ResetWorldTDockIfNecessary: Failed to get latest combined nav state.");
+    return;
+  }
+  // TODO(rsoussan): Extrapolate latest world_T_body loc estimate with imu data?
+  const auto handrail_T_perch_cam = lc::PoseFromMsg(depth_landmarks_msg.sensor_T_handrail).inverse();
+  const gtsam::Pose3 handrail_T_body =
+    handrail_T_perch_cam * graph_localizer_initializer_.params().calibration.body_T_perch_cam.inverse();
+  estimated_world_T_handrail_ = lm::TimestampedHandrailPose(
+    latest_combined_nav_state->pose() * handrail_T_body.inverse(), latest_combined_nav_state->timestamp(),
+    accurate_z_position, graph_localizer_initializer_.params().handrail.length,
+    graph_localizer_initializer_.params().handrail.distance_to_wall);
+  reset_world_T_handrail_ = false;
+}
+
 gtsam::Pose3 GraphLocalizerWrapper::estimated_world_T_dock() const { return estimated_world_T_dock_; }
+
+boost::optional<lm::TimestampedHandrailPose> GraphLocalizerWrapper::estimated_world_T_handrail() const {
+  return estimated_world_T_handrail_;
+}
 
 boost::optional<geometry_msgs::PoseStamped> GraphLocalizerWrapper::LatestSparseMappingPoseMsg() const {
   if (!sparse_mapping_pose_) {
@@ -269,7 +327,7 @@ boost::optional<geometry_msgs::PoseStamped> GraphLocalizerWrapper::LatestSparseM
     return boost::none;
   }
 
-  return PoseMsg(sparse_mapping_pose_->first, sparse_mapping_pose_->second);
+  return PoseMsg(*sparse_mapping_pose_);
 }
 
 boost::optional<geometry_msgs::PoseStamped> GraphLocalizerWrapper::LatestARTagPoseMsg() const {
@@ -278,7 +336,16 @@ boost::optional<geometry_msgs::PoseStamped> GraphLocalizerWrapper::LatestARTagPo
     return boost::none;
   }
 
-  return PoseMsg(ar_tag_pose_->first, ar_tag_pose_->second);
+  return PoseMsg(*ar_tag_pose_);
+}
+
+boost::optional<geometry_msgs::PoseStamped> GraphLocalizerWrapper::LatestHandrailPoseMsg() const {
+  if (!handrail_pose_) {
+    LogWarningEveryN(50, "LatestHandrailPoseMsg: Failed to get latest handrail pose msg.");
+    return boost::none;
+  }
+
+  return PoseMsg(*handrail_pose_);
 }
 
 boost::optional<lc::CombinedNavState> GraphLocalizerWrapper::LatestCombinedNavState() const {
