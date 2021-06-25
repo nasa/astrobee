@@ -35,6 +35,11 @@
 // Factors used in NonlinearFactorGraph
 #include <graph_localizer/loc_pose_factor.h>
 #include <graph_localizer/loc_projection_factor.h>
+#include <graph_localizer/point_to_handrail_endpoint_factor.h>
+#include <graph_localizer/point_to_line_factor.h>
+#include <graph_localizer/point_to_line_segment_factor.h>
+#include <graph_localizer/point_to_plane_factor.h>
+#include <graph_localizer/pose_rotation_factor.h>
 #include <graph_localizer/robust_smart_projection_pose_factor.h>
 #include <gtsam/nonlinear/LinearContainerFactor.h>
 #include <gtsam/nonlinear/NonlinearFactor.h>
@@ -60,6 +65,11 @@ BOOST_CLASS_EXPORT_GUID(gtsam::PriorFactor<gtsam::Vector3>, "gtsam::PriorFactorV
 BOOST_CLASS_EXPORT_GUID(gtsam::PriorFactor<gtsam::imuBias::ConstantBias>, "gtsam::PriorFactorConstantBias");
 BOOST_CLASS_EXPORT_GUID(LocProjectionFactor, "gtsam::LocProjectionFactor");
 BOOST_CLASS_EXPORT_GUID(gtsam::LocPoseFactor, "gtsam::LocPoseFactor");
+BOOST_CLASS_EXPORT_GUID(gtsam::PointToHandrailEndpointFactor, "gtsam::PointToHandrailEndpointFactor");
+BOOST_CLASS_EXPORT_GUID(gtsam::PointToLineFactor, "gtsam::PointToLineFactor");
+BOOST_CLASS_EXPORT_GUID(gtsam::PointToLineSegmentFactor, "gtsam::PointToLineSegmentFactor");
+BOOST_CLASS_EXPORT_GUID(gtsam::PointToPlaneFactor, "gtsam::PointToPlaneFactor");
+BOOST_CLASS_EXPORT_GUID(gtsam::PoseRotationFactor, "gtsam::PoseRotationFactor");
 using ProjectionFactor = gtsam::GenericProjectionFactor<gtsam::Pose3, gtsam::Point3>;
 BOOST_CLASS_EXPORT_GUID(ProjectionFactor, "gtsam::GenericProjectionFactor");
 BOOST_CLASS_EXPORT_GUID(gtsam::RobustSmartProjectionPoseFactor<gtsam::Cal3_S2>,
