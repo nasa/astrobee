@@ -35,6 +35,14 @@ TEST(PointToHandrailEndpointFactorTester, Jacobian) {
     const gtsam::Point3 world_t_handrail_endpoint_b = gl::RandomVector();
     const gtsam::Pose3 body_T_sensor = gl::RandomPose();
     const gtsam::Pose3 world_T_body = gl::RandomPose();
+    // Ignore case where sensor point is directly between two endpoints as this leads to a known
+    // discontinuity in the Jacobian.
+    {
+      const gtsam::Point3 world_t_point = world_T_body * body_T_sensor * sensor_t_point;
+      const double distance_to_endpoint_a = (world_t_point - world_t_handrail_endpoint_a).norm();
+      const double distance_to_endpoint_b = (world_t_point - world_t_handrail_endpoint_b).norm();
+      if (std::abs(distance_to_endpoint_a - distance_to_endpoint_b) < 1e-4) continue;
+    }
     const auto noise = gtsam::noiseModel::Unit::Create(3);
     const gtsam::PointToHandrailEndpointFactor factor(sensor_t_point, world_t_handrail_endpoint_a,
                                                       world_t_handrail_endpoint_b, body_T_sensor, noise, sym::P(0));
