@@ -99,8 +99,7 @@ void ImuAugmentorNodelet::PublishPoseAndTwistAndTransform(const ff_msgs::EkfStat
   transform_msg.header = loc_msg.header;
   transform_msg.header.stamp = ros::Time::now();
   // If the rate is higher than the sim time, prevent repeated timestamps
-  if (transform_msg.header.stamp == last_time_)
-    return;
+  if (transform_msg.header.stamp == last_time_) return;
   last_time_ = transform_msg.header.stamp;
 
   transform_msg.child_frame_id = platform_name_ + "body";
