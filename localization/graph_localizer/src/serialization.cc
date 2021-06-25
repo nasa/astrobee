@@ -16,7 +16,6 @@
  * under the License.
  */
 
-#include <graph_localizer/pose_rotation_factor.h>
 #include <graph_localizer/serialization.h>
 
 #include <gtsam/base/serialization.h>
@@ -78,7 +77,6 @@ BOOST_CLASS_EXPORT_GUID(gtsam::SmartProjectionPoseFactor<gtsam::Cal3_S2>, "gtsam
 BOOST_CLASS_EXPORT_GUID(gtsam::CombinedImuFactor, "gtsam::CombinedImuFactor");
 BOOST_CLASS_EXPORT_GUID(gtsam::LinearContainerFactor, "gtsam::LinearContainerFactor");
 BOOST_CLASS_EXPORT_GUID(gtsam::BetweenFactor<gtsam::Pose3>, "gtsam::BetweenFactorPose3");
-BOOST_CLASS_EXPORT_GUID(gtsam::PoseRotationFactor, "gtsam::PoseRotationFactor");
 
 // Add all possible noise models used by factors
 BOOST_CLASS_EXPORT_GUID(gtsam::noiseModel::Constrained, "gtsam_noiseModel_Constrained");
