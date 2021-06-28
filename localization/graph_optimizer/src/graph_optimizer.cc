@@ -340,7 +340,9 @@ gtsam::NonlinearFactorGraph& GraphOptimizer::graph_factors() { return graph_; }
 
 const boost::optional<gtsam::Marginals>& GraphOptimizer::marginals() const { return marginals_; }
 
-std::shared_ptr<gtsam::Values> GraphOptimizer::values() { return values_; }
+std::shared_ptr<gtsam::Values> GraphOptimizer::shared_values() { return values_; }
+
+const gtsam::Values& GraphOptimizer::values() const { return *values_; }
 
 void GraphOptimizer::SaveGraphDotFile(const std::string& output_path) const {
   std::ofstream of(output_path.c_str());

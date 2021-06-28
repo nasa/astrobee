@@ -20,12 +20,24 @@
 
 #include <gtsam/geometry/Pose3.h>
 
+#include <boost/serialization/serialization.hpp>
+
 namespace graph_localizer {
 struct CombinedNavStateGraphValuesParams {
   // Only kept if there are at least min_num_states and not more than max_num_states
   double ideal_duration;
   int min_num_states;
   int max_num_states;
+
+ private:
+  // Serialization function
+  friend class boost::serialization::access;
+  template <class ARCHIVE>
+  void serialize(ARCHIVE& ar, const unsigned int /*version*/) {
+    ar& BOOST_SERIALIZATION_NVP(ideal_duration);
+    ar& BOOST_SERIALIZATION_NVP(min_num_states);
+    ar& BOOST_SERIALIZATION_NVP(max_num_states);
+  }
 };
 }  // namespace graph_localizer
 

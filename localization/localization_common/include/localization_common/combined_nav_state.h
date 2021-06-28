@@ -33,6 +33,16 @@ struct CombinedNavStateNoise {
   gtsam::SharedNoiseModel pose_noise;
   gtsam::SharedNoiseModel velocity_noise;
   gtsam::SharedNoiseModel bias_noise;
+
+ private:
+  // Serialization function
+  friend class boost::serialization::access;
+  template <class Archive>
+  void serialize(Archive& ar, const unsigned int file_version) {
+    ar& BOOST_SERIALIZATION_NVP(pose_noise);
+    ar& BOOST_SERIALIZATION_NVP(velocity_noise);
+    ar& BOOST_SERIALIZATION_NVP(bias_noise);
+  }
 };
 
 class CombinedNavState {
@@ -48,6 +58,15 @@ class CombinedNavState {
   const gtsam::imuBias::ConstantBias& bias() const { return bias_; }
 
  private:
+  // Serialization function
+  friend class boost::serialization::access;
+  template <class Archive>
+  void serialize(Archive& ar, const unsigned int file_version) {
+    ar& BOOST_SERIALIZATION_NVP(nav_state_);
+    ar& BOOST_SERIALIZATION_NVP(bias_);
+    ar& BOOST_SERIALIZATION_NVP(timestamp_);
+  }
+
   gtsam::NavState nav_state_;
   gtsam::imuBias::ConstantBias bias_;
   Time timestamp_;

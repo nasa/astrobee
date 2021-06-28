@@ -34,6 +34,7 @@ class CombinedNavStateNodeUpdater
   CombinedNavStateNodeUpdater(const CombinedNavStateNodeUpdaterParams& params,
                               std::shared_ptr<imu_integration::LatestImuIntegrator> latest_imu_integrator,
                               std::shared_ptr<gtsam::Values> values);
+  CombinedNavStateNodeUpdater() = default;
 
   void AddInitialValuesAndPriors(gtsam::NonlinearFactorGraph& factors);
 
@@ -87,6 +88,17 @@ class CombinedNavStateNodeUpdater
   bool SplitOldImuFactorAndAddCombinedNavState(const localization_common::Time timestamp,
                                                gtsam::NonlinearFactorGraph& factors,
                                                CombinedNavStateGraphValues& graph_values);
+
+  // Serialization function
+  friend class boost::serialization::access;
+  template <class Archive>
+  void serialize(Archive& ar, const unsigned int file_version) {
+    ar& BOOST_SERIALIZATION_NVP(params_);
+    // ar& BOOST_SERIALIZATION_NVP(latest_imu_integrator_);
+    ar& BOOST_SERIALIZATION_NVP(graph_values_);
+    ar& BOOST_SERIALIZATION_NVP(key_index_);
+    ar& BOOST_SERIALIZATION_NVP(global_N_body_start_noise_);
+  }
 
   CombinedNavStateNodeUpdaterParams params_;
   std::shared_ptr<imu_integration::LatestImuIntegrator> latest_imu_integrator_;

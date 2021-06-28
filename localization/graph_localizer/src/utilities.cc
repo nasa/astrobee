@@ -61,6 +61,10 @@ bool ValidVLMsg(const ff_msgs::VisualLandmarks& visual_landmarks_msg, const int 
   return (static_cast<int>(visual_landmarks_msg.landmarks.size()) >= min_num_landmarks);
 }
 
+bool ValidDepthMsg(const ff_msgs::DepthLandmarks& depth_landmarks_msg) {
+  return (static_cast<int>(depth_landmarks_msg.landmarks.size()) >= 0);
+}
+
 ff_msgs::GraphState GraphStateMsg(const lc::CombinedNavState& combined_nav_state,
                                   const lc::CombinedNavStateCovariances& covariances,
                                   const FeatureCounts& detected_feature_counts, const bool estimating_bias,
@@ -134,6 +138,10 @@ geometry_msgs::PoseStamped PoseMsg(const Eigen::Isometry3d& global_T_body, const
 
 geometry_msgs::PoseStamped PoseMsg(const gtsam::Pose3& global_T_body, const lc::Time time) {
   return PoseMsg(lc::EigenPose(global_T_body), time);
+}
+
+geometry_msgs::PoseStamped PoseMsg(const lm::TimestampedPose& timestamped_pose) {
+  return PoseMsg(timestamped_pose.pose, timestamped_pose.time);
 }
 
 gtsam::noiseModel::Robust::shared_ptr Robust(const gtsam::SharedNoiseModel& noise, const double huber_k) {
