@@ -122,6 +122,7 @@ class CombinedNavStateGraphValues : public graph_optimizer::GraphValues {
   void serialize(ARCHIVE& ar, const unsigned int /*version*/) {
     ar& BOOST_SERIALIZATION_BASE_OBJECT_NVP(graph_optimizer::GraphValues);
     ar& BOOST_SERIALIZATION_NVP(timestamp_key_index_map_);
+    ar& BOOST_SERIALIZATION_NVP(params_);
   }
 
   CombinedNavStateGraphValuesParams params_;

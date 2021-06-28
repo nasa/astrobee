@@ -19,6 +19,7 @@
 #ifndef GRAPH_LOCALIZER_UTILITIES_H_
 #define GRAPH_LOCALIZER_UTILITIES_H_
 
+#include <ff_msgs/DepthLandmarks.h>
 #include <ff_msgs/GraphState.h>
 #include <ff_msgs/LocalizationGraph.h>
 #include <ff_msgs/VisualLandmarks.h>
@@ -32,6 +33,7 @@
 #include <localization_common/combined_nav_state_covariances.h>
 #include <localization_measurements/feature_point.h>
 #include <localization_measurements/imu_measurement.h>
+#include <localization_measurements/timestamped_pose.h>
 
 #include <gtsam/geometry/Pose3.h>
 #include <gtsam/linear/NoiseModel.h>
@@ -56,6 +58,8 @@ double AverageDistanceFromMean(const std::vector<localization_measurements::Feat
 
 bool ValidVLMsg(const ff_msgs::VisualLandmarks& visual_landmarks_msg, const int min_num_landmarks);
 
+bool ValidDepthMsg(const ff_msgs::DepthLandmarks& depth_landmarks_msg);
+
 ff_msgs::GraphState GraphStateMsg(const localization_common::CombinedNavState& combined_nav_state,
                                   const localization_common::CombinedNavStateCovariances& covariances,
                                   const FeatureCounts& detected_feature_counts, const bool estimating_bias,
@@ -70,6 +74,8 @@ geometry_msgs::PoseStamped PoseMsg(const Eigen::Isometry3d& global_T_body, const
 geometry_msgs::PoseStamped PoseMsg(const Eigen::Isometry3d& global_T_body, const localization_common::Time time);
 
 geometry_msgs::PoseStamped PoseMsg(const gtsam::Pose3& global_T_body, const localization_common::Time time);
+
+geometry_msgs::PoseStamped PoseMsg(const localization_measurements::TimestampedPose& timestamped_pose);
 
 gtsam::noiseModel::Robust::shared_ptr Robust(const gtsam::SharedNoiseModel& noise, const double huber_k);
 
