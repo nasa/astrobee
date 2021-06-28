@@ -43,10 +43,20 @@ The LocProjectionFactor is almost a direct copy of the gtsam::ProjectionFactor e
 ### PoseRotationFactor
 The PoseRotationFactor constrains two gtsam::Pose3 nodes using their relative rotation.
 
+### PointToHandrailEndpointFactor.h
+The PointToHandrailEndpointFactor constrains a gtsam::Pose3 using a handrail endpoint detection in the sensor frame compared with the closest handrail endpoint from a know handrail. 
+
+### PointToLineFactor.h
+The PointToLineFactor constrains a gtsam::Pose3 using a point detection in the sensor frame compared with a line in the world frame.
+
+### PointToLineSegmentFactor.h
+The PointToLineSegmentFactor constrains a gtsam::Pose3 using a point detection in the sensor frame compared with a line segment in the world frame.  This factor contains a discontinuity in the Jacobian as there is zero error along the line segment axis if the point is between line segment endpoints and non-zero error otherwise.  An option to use a SILU (Sigmoid Linear Unit) approximation is provided for this case.
+
+###PointToPlaneFactor.h
+The PointToPlaneFactor constrains a gtsam::Pose3 using a point detection in the sensor frame compared with a plane in the world frame.
+
 ### RobustSmartProjectionFactor
 The RobustSmartProjectionFactor adds to the gtsam::SmartProjectionFactor by providing a robust huber kernel.  Additionally, it fixes some issues in the SmartProjectionFactor allowing for a rotation-only fallback when using the JacobianSVD option and allows for proper serialization of the factor.
-
-### (TODO: add handrail factors, jacobian document)
 
 ## NodeUpdaters
 ### CombinedNavStateNodeUpdater
@@ -57,12 +67,12 @@ The FeaturePointNodeUpdater maintains feature point nodes for image features.  I
 
 ## Other
 ### FeatureTracker
-The FeatureTracker maintains feature tracks for image based measurements.  Feature tracks can be queried using feature ids or by returning the n longest feature tracks.  The feature tracker also slides the window for feature tracks to remove old measurements if necessary.
+The FeatureTracker maintains feature tracks for image based measurements.  Feature tracks can be queried using feature ids or by returning the N longest feature tracks.  The feature tracker also slides the window for feature tracks to remove old measurements if necessary.
 
 ### Sanity Checker
 The SanityChecker validates the current localization pose using a reference pose or by checking that the covariances are within defined bounds.
 ### GraphLocalizerInitializer
-The GraphLocalizerInitializer is responsible for loading GraphLocalizer parameters.  It also stores the starting pose for the localizer and estimates initial IMU biases using a set of n consecutive measurements at standstill.
+The GraphLocalizerInitializer is responsible for loading GraphLocalizer parameters.  It also stores the starting pose for the localizer and estimates initial IMU biases using a set of N consecutive measurements at standstill.
 
 ### GraphLocalizerWrapper
 The GraphLocalizerWrapper contains the GraphLocalizer, GraphLocalizerInitializer, and SanityChecker.  It passes ROS messages to each of these and also provides interfaces for accessing some GraphLocalizer data, such as messages built using GraphLocalizer values, estimates of the dock and handrail poses wrt the world frame, and more.
