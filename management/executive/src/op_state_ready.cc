@@ -166,7 +166,7 @@ OpState* OpStateReady::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
       return OpStateRepo::Instance()->teleop()->StartupState();
     }
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_UNLOAD_NODELET) {
-    exec_->UnloadNodelet(cmd); 
+    exec_->UnloadNodelet(cmd);
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_UNPERCH) {
     if (exec_->Unperch(cmd)) {
       return OpStateRepo::Instance()->teleop()->StartupState();
