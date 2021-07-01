@@ -224,6 +224,12 @@ int GraphOptimizer::AddBufferedFactors() {
       factor_to_add_it = valid_factor ? ++factor_to_add_it : factors_to_add.Get().erase(factor_to_add_it);
     }
 
+    if (factors_to_add.empty()) {
+      LogDebug("AddBufferedFactors: Factors to add empty.");
+      factors_to_add_it = buffered_factors_to_add_.erase(factors_to_add_it);
+      continue;
+    }
+
     if (!DoGraphAction(factors_to_add)) {
       LogDebug("AddBufferedFactors: Failed to complete graph action.");
       factors_to_add_it = buffered_factors_to_add_.erase(factors_to_add_it);
