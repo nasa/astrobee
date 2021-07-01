@@ -1777,7 +1777,7 @@ bool Executive::LoadNodelet(ff_msgs::CommandStampedPtr const& cmd) {
 
       if (unload_load_nodelet_srv.response.result !=
                             ff_msgs::UnloadLoadNodelet::Response::SUCCESSFUL) {
-        err_msg = "Unload nodelet failed with result ";
+        err_msg = "Load nodelet failed with result ";
         err_msg += std::to_string(unload_load_nodelet_srv.response.result);
         state_->AckCmd(cmd->cmd_id,
                        ff_msgs::AckCompletedStatus::EXEC_FAILED,
