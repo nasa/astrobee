@@ -34,6 +34,7 @@
 #include <graph_localizer/smart_projection_cumulative_factor_adder.h>
 #include <graph_localizer/smart_projection_graph_action_completer.h>
 #include <graph_localizer/standstill_factor_adder.h>
+#include <graph_localizer/semantic_object_tracker.h>
 #include <graph_optimizer/graph_optimizer.h>
 #include <imu_integration/latest_imu_integrator.h>
 #include <localization_common/combined_nav_state.h>
@@ -42,6 +43,7 @@
 #include <localization_measurements/fan_speed_mode.h>
 #include <localization_measurements/feature_points_measurement.h>
 #include <localization_measurements/matched_projections_measurement.h>
+#include <localization_measurements/semantic_dets_measurement.h>
 
 #include <gtsam/geometry/Cal3_S2.h>
 #include <gtsam/geometry/PinholePose.h>
@@ -90,6 +92,8 @@ class GraphLocalizer : public graph_optimizer::GraphOptimizer {
     const localization_measurements::MatchedProjectionsMeasurement& matched_projections_measurement);
   void AddSparseMappingMeasurement(
     const localization_measurements::MatchedProjectionsMeasurement& matched_projections_measurement);
+  void AddSemanticDetsMeasurement(
+    const localization_measurements::SemanticDetsMeasurement& semantic_dets_measurement);
   bool DoPostOptimizeActions() final;
   const FeatureTrackIdMap& feature_tracks() const { return feature_tracker_->feature_tracks(); }
 
@@ -141,6 +145,7 @@ class GraphLocalizer : public graph_optimizer::GraphOptimizer {
   }
 
   std::shared_ptr<FeatureTracker> feature_tracker_;
+  std::shared_ptr<SemanticObjectTracker> semantic_object_tracker_;
   std::shared_ptr<imu_integration::LatestImuIntegrator> latest_imu_integrator_;
   GraphLocalizerParams params_;
   boost::optional<localization_measurements::FeaturePointsMeasurement> last_optical_flow_measurement_;

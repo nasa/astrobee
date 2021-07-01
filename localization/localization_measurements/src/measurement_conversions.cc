@@ -67,6 +67,22 @@ FeaturePointsMeasurement MakeFeaturePointsMeasurement(const ff_msgs::Feature2dAr
   return feature_points_measurement;
 }
 
+SemanticDetsMeasurement MakeSemanticDetsMeasurement(const vision_msgs::Detection2DArray& detections) {
+  SemanticDetsMeasurement semantic_dets_measurement;
+  semantic_dets_measurement.semantic_dets.reserve(detections.detections.size());
+  lc::Time timestamp =
+    lc::GetTime(detections.header.stamp.sec, detections.header.stamp.nsec);
+  semantic_dets_measurement.timestamp = timestamp;
+
+  for (const auto& det : detections.detections) {
+    //Ignore image_id, not used for anything
+    semantic_dets_measurement.semantic_dets.emplace_back(
+      SemanticDet(det.bbox.center.x, det.bbox.center.y, 1, det.results[0].id, timestamp));
+  }
+
+  return semantic_dets_measurement;
+}
+
 FanSpeedMode ConvertFanSpeedMode(const uint8_t speed) {
   switch (speed) {
     case 0:

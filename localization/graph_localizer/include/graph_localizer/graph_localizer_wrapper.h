@@ -23,6 +23,7 @@
 #include <ff_msgs/FlightMode.h>
 #include <ff_msgs/LocalizationGraph.h>
 #include <ff_msgs/VisualLandmarks.h>
+#include <vision_msgs/Detection2DArray.h>
 #include <graph_localizer/feature_counts.h>
 #include <graph_localizer/graph_localizer.h>
 #include <graph_localizer/graph_localizer_initializer.h>
@@ -74,6 +75,8 @@ class GraphLocalizerWrapper {
   void VLVisualLandmarksCallback(const ff_msgs::VisualLandmarks& visual_landmarks_msg);
 
   void ARVisualLandmarksCallback(const ff_msgs::VisualLandmarks& visual_landmarks_msg);
+
+  void SemanticDetCallback(const vision_msgs::Detection2DArray& detections_msg);
 
   void ImuCallback(const sensor_msgs::Imu& imu_msg);
 

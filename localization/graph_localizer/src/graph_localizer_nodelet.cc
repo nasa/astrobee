@@ -74,6 +74,10 @@ void GraphLocalizerNodelet::SubscribeAndAdvertise(ros::NodeHandle* nh) {
   vl_sub_ =
     private_nh_.subscribe(TOPIC_LOCALIZATION_ML_FEATURES, params_.max_vl_buffer_size,
                           &GraphLocalizerNodelet::VLVisualLandmarksCallback, this, ros::TransportHints().tcpNoDelay());
+  sm_sub_ =
+    private_nh_.subscribe(TOPIC_LOCALIZATION_SM_FEATURES, params_.max_sm_buffer_size,
+                          &GraphLocalizerNodelet::SemanticDetCallback, this, ros::TransportHints().tcpNoDelay());
+
   flight_mode_sub_ =
     private_nh_.subscribe(TOPIC_MOBILITY_FLIGHT_MODE, 10, &GraphLocalizerNodelet::FlightModeCallback, this);
   bias_srv_ =
@@ -157,6 +161,14 @@ void GraphLocalizerNodelet::VLVisualLandmarksCallback(const ff_msgs::VisualLandm
   if (!localizer_enabled()) return;
   graph_localizer_wrapper_.VLVisualLandmarksCallback(*visual_landmarks_msg);
   if (ValidVLMsg(*visual_landmarks_msg, params_.loc_adder_min_num_matches)) PublishSparseMappingPose();
+}
+
+void GraphLocalizerNodelet::SemanticDetCallback(const vision_msgs::Detection2DArray::ConstPtr& semantic_det_array_msg) {
+  sm_timer_.HeaderDiff(semantic_det_array_msg->header);
+  sm_timer_.VlogEveryN(100, 2);
+
+  if (!localizer_enabled()) return;
+  graph_localizer_wrapper_.SemanticDetCallback(*semantic_det_array_msg);
 }
 
 void GraphLocalizerNodelet::ARVisualLandmarksCallback(const ff_msgs::VisualLandmarks::ConstPtr& visual_landmarks_msg) {

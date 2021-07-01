@@ -165,6 +165,10 @@ void LoadFeatureTrackerParams(config_reader::ConfigReader& config, FeatureTracke
   params.smart_projection_adder_measurement_spacing = mc::LoadInt(config, "smart_projection_adder_measurement_spacing");
 }
 
+void LoadSemanticObjectTrackerParams(config_reader::ConfigReader& config, SemanticObjectTrackerParams& params) {
+  params.min_det_dist_thresh = mc::LoadDouble(config, "semantic_object_tracker_min_det_dist_thresh");
+}
+
 void LoadSanityCheckerParams(config_reader::ConfigReader& config, SanityCheckerParams& params) {
   params.num_consecutive_pose_difference_failures_until_insane =
     mc::LoadInt(config, "num_consecutive_pose_difference_failures_until_insane");
@@ -215,6 +219,7 @@ void LoadGraphLocalizerParams(config_reader::ConfigReader& config, GraphLocalize
   LoadFactorParams(config, params.factor);
   LoadFeaturePointNodeUpdaterParams(config, params.feature_point_node_updater);
   LoadFeatureTrackerParams(config, params.feature_tracker);
+  LoadSemanticObjectTrackerParams(config, params.semantic_object_tracker);
   go::LoadGraphOptimizerParams(config, params.graph_optimizer);
   params.huber_k = mc::LoadDouble(config, "huber_k");
   params.max_standstill_feature_track_avg_distance_from_mean =
@@ -231,5 +236,6 @@ void LoadGraphLocalizerNodeletParams(config_reader::ConfigReader& config, GraphL
   params.max_optical_flow_buffer_size = mc::LoadInt(config, "max_optical_flow_buffer_size");
   params.max_vl_buffer_size = mc::LoadInt(config, "max_vl_buffer_size");
   params.max_ar_buffer_size = mc::LoadInt(config, "max_ar_buffer_size");
+  params.max_sm_buffer_size = mc::LoadInt(config, "max_sm_buffer_size");
 }
 }  // namespace graph_localizer

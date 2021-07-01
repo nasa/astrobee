@@ -15,20 +15,20 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef GRAPH_LOCALIZER_GRAPH_LOCALIZER_NODELET_PARAMS_H_
-#define GRAPH_LOCALIZER_GRAPH_LOCALIZER_NODELET_PARAMS_H_
 
-namespace graph_localizer {
-struct GraphLocalizerNodeletParams {
-  int max_imu_buffer_size;
-  int max_optical_flow_buffer_size;
-  int max_vl_buffer_size;
-  int max_ar_buffer_size;
-  int max_sm_buffer_size;
-  // Used to avoid saving ml/ar poses with too few landmark detections
-  int loc_adder_min_num_matches;
-  int ar_tag_loc_adder_min_num_matches;
+#ifndef LOCALIZATION_MEASUREMENTS_SEMANTIC_DETS_MEASUREMENT_H_
+#define LOCALIZATION_MEASUREMENTS_SEMANTIC_DETS_MEASUREMENT_H_
+
+#include <localization_common/time.h>
+#include <localization_measurements/semantic_det.h>
+#include <localization_measurements/measurement.h>
+
+#include <vector>
+
+namespace localization_measurements {
+struct SemanticDetsMeasurement : public Measurement {
+  SemanticDets semantic_dets;
 };
-}  // namespace graph_localizer
+}  // namespace localization_measurements
 
-#endif  // GRAPH_LOCALIZER_GRAPH_LOCALIZER_NODELET_PARAMS_H_
+#endif  // LOCALIZATION_MEASUREMENTS_SEMANTIC_DETS_MEASUREMENT_H_

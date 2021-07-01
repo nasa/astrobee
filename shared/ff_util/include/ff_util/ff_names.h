@@ -297,6 +297,7 @@
 #define TOPIC_LOCALIZATION_HR_IMAGE                 "loc/hr/image"
 #define TOPIC_LOCALIZATION_HR_CLOUD                 "loc/hr/cloud"
 #define TOPIC_LOCALIZATION_HR_MARKER                "loc/hr/marker"
+#define TOPIC_LOCALIZATION_SM_FEATURES              "loc/sm/features"
 
 #define TOPIC_LOCALIZATION_OF_DEBUG                 "loc/of/debug_img"
 

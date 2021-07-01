@@ -50,6 +50,7 @@ namespace lm = localization_measurements;
 GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
     : GraphOptimizer(params.graph_optimizer, std::unique_ptr<GraphLocalizerStats>(new GraphLocalizerStats())),
       feature_tracker_(new FeatureTracker(params.feature_tracker)),
+      semantic_object_tracker_(new SemanticObjectTracker(params.semantic_object_tracker)),
       latest_imu_integrator_(new ii::LatestImuIntegrator(params.graph_initializer)),
       params_(params) {
   latest_imu_integrator_->SetFanSpeedMode(params_.initial_fan_speed_mode);
@@ -241,6 +242,15 @@ bool GraphLocalizer::AddOpticalFlowMeasurement(
   return true;
 }
 
+void GraphLocalizer::AddSemanticDetsMeasurement(const lm::SemanticDetsMeasurement& semantic_dets_measurement) {
+  if (!MeasurementRecentEnough(semantic_dets_measurement.timestamp)) {
+    LogDebug("AddSemanticDetsMeasurement: Measurement too old - discarding.");
+    return;
+  }
+  LogDebug("AddSemanticDetsMeasurement: Tracking features.");
+  semantic_object_tracker_->UpdateObjectTracks(semantic_dets_measurement.semantic_dets);
+}
+
 void GraphLocalizer::CheckForStandstill() {
   // Check for standstill via low disparity for all feature tracks
   double total_average_distance_from_mean = 0;
@@ -294,6 +304,7 @@ void GraphLocalizer::AddSparseMappingMeasurement(
 void GraphLocalizer::DoPostSlideWindowActions(const localization_common::Time oldest_allowed_time,
                                               const boost::optional<gtsam::Marginals>& marginals) {
   feature_tracker_->RemoveOldFeaturePointsAndSlideWindow(oldest_allowed_time);
+  semantic_object_tracker_->RemoveOldObjectsAndSlideWindow(oldest_allowed_time);
   latest_imu_integrator_->RemoveOldMeasurements(oldest_allowed_time);
 }
 

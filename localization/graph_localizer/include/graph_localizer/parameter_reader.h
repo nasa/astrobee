@@ -46,6 +46,7 @@ void LoadSmartProjectionFactorAdderParams(config_reader::ConfigReader& config,
                                           SmartProjectionFactorAdderParams& params);
 void LoadStandstillFactorAdderParams(config_reader::ConfigReader& config, StandstillFactorAdderParams& params);
 void LoadFeatureTrackerParams(config_reader::ConfigReader& config, FeatureTrackerParams& params);
+void LoadSemanticObjectTrackerParams(config_reader::ConfigReader& config, SemanticObjectTrackerParams& params);
 void LoadImuIntegrationParams(config_reader::ConfigReader& config, GraphInitializerParams& params);
 void LoadSanityCheckerParams(config_reader::ConfigReader& config, SanityCheckerParams& params);
 // Loads all params except some (biases and start pose) that are

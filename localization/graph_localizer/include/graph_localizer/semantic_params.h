@@ -1,4 +1,4 @@
-/* Copyright (c) 2017, United States Government, as represented by the
+/* Copyright (c) 2021, United States Government, as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  *
  * All rights reserved.
@@ -15,20 +15,13 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef GRAPH_LOCALIZER_GRAPH_LOCALIZER_NODELET_PARAMS_H_
-#define GRAPH_LOCALIZER_GRAPH_LOCALIZER_NODELET_PARAMS_H_
+#ifndef GRAPH_LOCALIZER_SEMANTIC_PARAMS_H_
+#define GRAPH_LOCALIZER_SEMANTIC_PARAMS_H_
 
 namespace graph_localizer {
-struct GraphLocalizerNodeletParams {
-  int max_imu_buffer_size;
-  int max_optical_flow_buffer_size;
-  int max_vl_buffer_size;
-  int max_ar_buffer_size;
-  int max_sm_buffer_size;
-  // Used to avoid saving ml/ar poses with too few landmark detections
-  int loc_adder_min_num_matches;
-  int ar_tag_loc_adder_min_num_matches;
+struct SemanticParams {
+  
 };
-}  // namespace graph_localizer
+} // namespace graph_localizer
 
-#endif  // GRAPH_LOCALIZER_GRAPH_LOCALIZER_NODELET_PARAMS_H_
+#endif // GRAPH_LOCALIZER_SEMANTIC_PARAMS_H_

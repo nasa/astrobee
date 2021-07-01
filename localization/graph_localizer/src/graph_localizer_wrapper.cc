@@ -152,6 +152,12 @@ void GraphLocalizerWrapper::VLVisualLandmarksCallback(const ff_msgs::VisualLandm
   }
 }
 
+void GraphLocalizerWrapper::SemanticDetCallback(const vision_msgs::Detection2DArray& detections_msg) {
+  if (graph_localizer_) {
+    graph_localizer_->AddSemanticDetsMeasurement(lm::MakeSemanticDetsMeasurement(detections_msg));
+  }
+}
+
 bool GraphLocalizerWrapper::CheckPoseSanity(const gtsam::Pose3& sparse_mapping_pose, const lc::Time timestamp) const {
   if (!graph_localizer_) return true;
   const auto latest_extrapolated_pose_time = graph_localizer_->LatestExtrapolatedPoseTime();
