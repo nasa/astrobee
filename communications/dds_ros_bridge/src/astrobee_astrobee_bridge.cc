@@ -23,7 +23,8 @@ AstrobeeAstrobeeBridge::AstrobeeAstrobeeBridge() :
   ff_util::FreeFlyerNodelet(NODE_ASTROBEE_ASTROBEE_BRIDGE, true),
   components_(0),
   started_(false),
-  agent_name_("Bumble") {
+  agent_name_("Bumble"),
+  read_params_error_("") {
 }
 
 AstrobeeAstrobeeBridge::~AstrobeeAstrobeeBridge() {
@@ -170,25 +171,36 @@ void AstrobeeAstrobeeBridge::Initialize(ros::NodeHandle *nh) {
   dds_entities_factory_->init(dds_params);
 
   trigger_srv_ = nh->advertiseService(
-                      SERVICE_COMMUNICATIONS_ENABLE_ASTROBEE_INTERCOMMS,
-                      &AstrobeeAstrobeeBridge::Start, this);
+                              SERVICE_COMMUNICATIONS_ENABLE_ASTROBEE_INTERCOMMS,
+                              &AstrobeeAstrobeeBridge::Start,
+                              this);
 
   if (run_on_start_) {
-    Run();
+    if (!Run()) {
+      ROS_ERROR_STREAM(read_params_error_);
+    }
   }
 }
 
-bool AstrobeeAstrobeeBridge::Start(std_srvs::Empty::Request& req,
-                                            std_srvs::Empty::Response & res) {
-  Run();
+bool AstrobeeAstrobeeBridge::Start(ff_msgs::ResponseOnly::Request& req,
+                                   ff_msgs::ResponseOnly::Response & res) {
+  if (!Run()) {
+    ROS_ERROR_STREAM(read_params_error_);
+    res.success = false;
+    res.status = read_params_error_;
+  } else {
+    res.success = true;
+  }
+
   return true;
 }
 
-void AstrobeeAstrobeeBridge::Run() {
+bool AstrobeeAstrobeeBridge::Run() {
   if (!started_ && !ReadParams()) {
-    exit(EXIT_FAILURE);
+    return false;
   }
   started_ = true;
+  return true;
 }
 
 bool AstrobeeAstrobeeBridge::ReadParams() {
@@ -200,11 +212,18 @@ bool AstrobeeAstrobeeBridge::ReadParams() {
 
   components_ = 0;
 
+  // Reload files. This allows the config file to be fixed if something is wrong
+  // during run time
+  if (!config_params_.ReadFiles()) {
+    read_params_error_ = "AstrobeeAstrobeeBridge: Error reading config files.";
+    return false;
+  }
   // ROS -> RAPID
   // -----------------------------
   // Load individual shared topics
   if (!config_params_.GetTable("share_topics", &share_topics)) {
-    ROS_FATAL("AstrobeeAstrobeeBridge: share_topics table not specified!");
+    read_params_error_ =
+                  "AstrobeeAstrobeeBridge: share_topics table not specified!";
     return false;
   }
 
@@ -221,14 +240,16 @@ bool AstrobeeAstrobeeBridge::ReadParams() {
                             "", "", nh_);
 
       if (ros_sub_rapid_pubs_.count(item_name) == 0) {
-        ROS_ERROR("AstrobeeAstrobeeBridge: %s not added and it is needed",
-                                                            item_name.c_str());
+        read_params_error_ = "AstrobeeAstrobeeBridge: ";
+        read_params_error_ += item_name.c_str();
+        read_params_error_ += " not added and it is needed.";
         return false;
       }
 
       if (rate < 0) {
-        ROS_ERROR("AstrobeeAstrobeeBridge: %s requires a non-negative rate",
-                                                            item_name.c_str());
+        read_params_error_ = "AstrobeeAstrobeeBridge: ";
+        read_params_error_ += item_name.c_str();
+        read_params_error_ += " requires a non-negative rate.";
         return false;
       }
 
@@ -243,7 +264,8 @@ bool AstrobeeAstrobeeBridge::ReadParams() {
 
   // Load shared topic groups
   if (!config_params_.GetTable("share_topic_groups", &share_topic_groups)) {
-    ROS_FATAL("AstrobeeAstrobeeBridge: share_topic_groups table not specified!");
+    read_params_error_ =
+              "AstrobeeAstrobeeBridge: share_topic_groups table not specified!";
     return false;
   }
 
@@ -270,7 +292,7 @@ bool AstrobeeAstrobeeBridge::ReadParams() {
   // ----------------------
   // Read listeners options
   if (!config_params_.GetTable("agents", &agents)) {
-    ROS_FATAL("AstrobeeAstrobeeBridge: agents not specified!");
+    read_params_error_ = "AstrobeeAstrobeeBridge: agents not specified!";
     return false;
   }
 
@@ -278,15 +300,17 @@ bool AstrobeeAstrobeeBridge::ReadParams() {
     // Agent configuration
     agents.GetTable(i, &item_conf);
     if (!item_conf.GetStr("name", &item_name)) {
-      ROS_FATAL("AstrobeeAstrobeeBridge: agent name not specified!");
+      read_params_error_ = "AstrobeeAstrobeeBridge: agent name not specified!";
       return false;
     }
     if (!item_conf.GetBool("enable", &enable)) {
-      ROS_FATAL("AstrobeeAstrobeeBridge: agent enable not specified!");
+      read_params_error_ =
+                          "AstrobeeAstrobeeBridge: agent enable not specified!";
       return false;
     }
     if (!item_conf.GetTable("topics", &topics)) {
-      ROS_FATAL("AstrobeeAstrobeeBridge: agent topics not specified!");
+      read_params_error_ =
+                          "AstrobeeAstrobeeBridge: agent topics not specified!";
       return false;
     }
 
@@ -305,11 +329,13 @@ bool AstrobeeAstrobeeBridge::ReadParams() {
       // Agent topic configuration
       topics.GetTable(j, &item_conf);
       if (!item_conf.GetStr("name", &topic_name)) {
-        ROS_FATAL("AstrobeeAstrobeeBridge: agent topic name not specified!");
+        read_params_error_ =
+                      "AstrobeeAstrobeeBridge: agent topic name not specified!";
         return false;
       }
       if (!item_conf.GetBool("enable", &topic_enable)) {
-        ROS_FATAL("AstrobeeAstrobeeBridge: agent topic enable not specified!");
+        read_params_error_ =
+                    "AstrobeeAstrobeeBridge: agent topic enable not specified!";
         return false;
       }
 
@@ -339,15 +365,18 @@ bool AstrobeeAstrobeeBridge::ReadSharedItemConf(
                           config_reader::ConfigReader::Table &conf,
                           std::string &topic_name, bool &enable, float &rate) {
   if (!conf.GetStr("name", &topic_name)) {
-    ROS_FATAL("AstrobeeAstrobeeBridge: share topic name not specified!");
+    read_params_error_ =
+                      "AstrobeeAstrobeeBridge: share topic name not specified!";
     return false;
   }
   if (!conf.GetBool("enable", &enable)) {
-    ROS_FATAL("AstrobeeAstrobeeBridge: share topic enable not specified!");
+    read_params_error_ =
+                    "AstrobeeAstrobeeBridge: share topic enable not specified!";
     return false;
   }
   if (!conf.GetReal("rate", &rate)) {
-    ROS_FATAL("AstrobeeAstrobeeBridge: ekf state rate not specified!");
+    read_params_error_ =
+                      "AstrobeeAstrobeeBridge: ekf state rate not specified!";
     return false;
   }
 
