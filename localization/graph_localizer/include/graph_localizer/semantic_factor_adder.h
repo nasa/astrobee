@@ -15,26 +15,26 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef GRAPH_LOCALIZER_FACTOR_PARAMS_H_
-#define GRAPH_LOCALIZER_FACTOR_PARAMS_H_
 
-#include <graph_localizer/loc_factor_adder_params.h>
-#include <graph_localizer/rotation_factor_adder_params.h>
-#include <graph_localizer/projection_factor_adder_params.h>
-#include <graph_localizer/smart_projection_factor_adder_params.h>
-#include <graph_localizer/standstill_factor_adder_params.h>
+#ifndef GRAPH_LOCALIZER_SEMANTIC_FACTOR_ADDER_H_
+#define GRAPH_LOCALIZER_SEMANTIC_FACTOR_ADDER_H_
+
+#include <graph_localizer/semantic_object_tracker.h>
 #include <graph_localizer/semantic_factor_adder_params.h>
+#include <graph_optimizer/cumulative_factor_adder.h>
 
 namespace graph_localizer {
-struct FactorParams {
-  RotationFactorAdderParams rotation_adder;
-  SmartProjectionFactorAdderParams smart_projection_adder;
-  StandstillFactorAdderParams standstill_adder;
-  ProjectionFactorAdderParams projection_adder;
-  LocFactorAdderParams loc_adder;
-  LocFactorAdderParams ar_tag_loc_adder;
-  SemanticFactorAdderParams semantic_adder;
-};
-}  // namespace graph_localizer
+class SemanticFactorAdder : public graph_optimizer::CumulativeFactorAdder<SemanticFactorAdderParams> {
+  using Base = graph_optimizer::CumulativeFactorAdder<SemanticFactorAdderParams>;
+  public:
+    SemanticFactorAdder(const SemanticFactorAdderParams& params,
+                        std::shared_ptr<const SemanticObjectTracker> object_tracker);
 
-#endif  // GRAPH_LOCALIZER_FACTOR_PARAMS_H_
+    std::vector<graph_optimizer::FactorsToAdd> AddFactors() final;
+
+  private:
+    std::shared_ptr<const SemanticObjectTracker> object_tracker_;
+};
+} // namespace graph_localizer
+
+#endif // GRAPH_LOCALIZER_SEMANTIC_FACTOR_ADDER_H_

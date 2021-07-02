@@ -44,6 +44,7 @@ void LoadFactorParams(config_reader::ConfigReader& config, FactorParams& params)
   LoadProjectionFactorAdderParams(config, params.projection_adder);
   LoadSmartProjectionFactorAdderParams(config, params.smart_projection_adder);
   LoadStandstillFactorAdderParams(config, params.standstill_adder);
+  LoadSemanticFactorAdderParams(config, params.semantic_adder);
 }
 
 void LoadARTagLocFactorAdderParams(config_reader::ConfigReader& config, LocFactorAdderParams& params) {
@@ -158,6 +159,15 @@ void LoadStandstillFactorAdderParams(config_reader::ConfigReader& config, Stands
   params.pose_between_factor_rotation_stddev =
     mc::LoadDouble(config, "standstill_adder_pose_between_factor_rotation_stddev");
   params.huber_k = mc::LoadDouble(config, "huber_k");
+}
+
+void LoadSemanticFactorAdderParams(config_reader::ConfigReader& config, SemanticFactorAdderParams& params) {
+  params.enabled = mc::LoadBool(config, "semantic_factor_adder_enabled");
+  params.huber_k = mc::LoadDouble(config, "huber_k");
+  params.body_T_cam = lc::LoadTransform(config, "nav_cam_transform");
+  params.cam_intrinsics.reset(new gtsam::Cal3_S2(lc::LoadCameraIntrinsics(config, "nav_cam")));
+  params.cam_noise =
+    gtsam::noiseModel::Isotropic::Sigma(2, mc::LoadDouble(config, "semantic_factor_adder_nav_cam_noise_stddev"));
 }
 
 void LoadFeatureTrackerParams(config_reader::ConfigReader& config, FeatureTrackerParams& params) {

@@ -34,6 +34,7 @@
 #include <graph_localizer/smart_projection_cumulative_factor_adder.h>
 #include <graph_localizer/smart_projection_graph_action_completer.h>
 #include <graph_localizer/standstill_factor_adder.h>
+#include <graph_localizer/semantic_factor_adder.h>
 #include <graph_localizer/semantic_object_tracker.h>
 #include <graph_optimizer/graph_optimizer.h>
 #include <imu_integration/latest_imu_integrator.h>
@@ -157,6 +158,7 @@ class GraphLocalizer : public graph_optimizer::GraphOptimizer {
   std::shared_ptr<RotationFactorAdder> rotation_factor_adder_;
   std::shared_ptr<SmartProjectionCumulativeFactorAdder> smart_projection_cumulative_factor_adder_;
   std::shared_ptr<StandstillFactorAdder> standstill_factor_adder_;
+  std::shared_ptr<SemanticFactorAdder> semantic_factor_adder_;
 
   // Node Updaters
   std::shared_ptr<CombinedNavStateNodeUpdater> combined_nav_state_node_updater_;
