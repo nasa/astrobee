@@ -1759,11 +1759,9 @@ bool Executive::LoadNodelet(ff_msgs::CommandStampedPtr const& cmd) {
     }
 
     if (success) {
-      // Check to make sure the service is valid and running
-      if (!unload_load_nodelet_client_.exists()) {
-        state_->AckCmd(cmd->cmd_id,
-                       ff_msgs::AckCompletedStatus::EXEC_FAILED,
-                       "Unload/load nodelet service isn't running!");
+      if (!CheckServiceExists(unload_load_nodelet_client_,
+                              "Load/unload nodelet",
+                              cmd->cmd_id)) {
         return false;
       }
 
@@ -3470,6 +3468,12 @@ bool Executive::UnloadNodelet(ff_msgs::CommandStampedPtr const& cmd) {
 
     if (success) {
       // Check to make sure the service is valid and running
+      if (!CheckServiceExists(unload_load_nodelet_client_,
+                              "Load/unload nodelet",
+                              cmd->cmd_id)) {
+        return false;
+      }
+
       if (!unload_load_nodelet_client_.exists()) {
         state_->AckCmd(cmd->cmd_id,
                        ff_msgs::AckCompletedStatus::EXEC_FAILED,
