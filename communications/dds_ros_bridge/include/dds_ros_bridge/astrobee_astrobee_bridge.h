@@ -78,7 +78,7 @@ class AstrobeeAstrobeeBridge : public ff_util::FreeFlyerNodelet {
 
  private:
   void Run();
-  bool Trigger(std_srvs::Empty::Request& req, std_srvs::Empty::Response & res);
+  bool Start(std_srvs::Empty::Request& req, std_srvs::Empty::Response & res);
 
   config_reader::ConfigReader config_params_;
 

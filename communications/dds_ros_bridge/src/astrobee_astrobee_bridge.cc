@@ -170,15 +170,15 @@ void AstrobeeAstrobeeBridge::Initialize(ros::NodeHandle *nh) {
   dds_entities_factory_->init(dds_params);
 
   trigger_srv_ = nh->advertiseService(
-                      SERVICE_COMMUNICATIONS_ASTROBEE_ASTROBEE_BRIDGE_TRIGGER,
-                      &AstrobeeAstrobeeBridge::Trigger, this);
+                      SERVICE_COMMUNICATIONS_ENABLE_ASTROBEE_INTERCOMMS,
+                      &AstrobeeAstrobeeBridge::Start, this);
 
   if (run_on_start_) {
     Run();
   }
 }
 
-bool AstrobeeAstrobeeBridge::Trigger(std_srvs::Empty::Request& req,
+bool AstrobeeAstrobeeBridge::Start(std_srvs::Empty::Request& req,
                                             std_srvs::Empty::Response & res) {
   Run();
   return true;
