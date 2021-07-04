@@ -20,6 +20,10 @@ bool SemanticObjectTrack::empty() const {
   return dets_.empty();
 }
 
+int SemanticObjectTrack::size() const {
+  return dets_.size();
+}
+
 float SemanticObjectTrack::Distance(const localization_measurements::SemanticDet& semantic_det) {
   if (cls_type_ != semantic_det.class_id) return -1;
   const auto latest_det = LatestDet();

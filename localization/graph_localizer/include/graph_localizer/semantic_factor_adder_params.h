@@ -27,9 +27,21 @@
 
 namespace graph_localizer {
   struct SemanticFactorAdderParams : public graph_optimizer::FactorAdderParams {
+    // gtsam SmartProjectionParams
+    bool verbose_cheirality;
+    double landmark_distance_threshold;
+    double dynamic_outlier_rejection_threshold;
+    double retriangulation_threshold;
+    bool rotation_only_fallback;
+    bool enable_EPI;
+
+    bool robust;
+
+    // camera model
     gtsam::Pose3 body_T_cam;
     boost::shared_ptr<gtsam::Cal3_S2> cam_intrinsics;
     gtsam::SharedIsotropic cam_noise;
+    double noise_scale;
   };
 } // namespace graph_localizer
 

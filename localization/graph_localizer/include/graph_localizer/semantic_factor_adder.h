@@ -23,6 +23,8 @@
 #include <graph_localizer/semantic_factor_adder_params.h>
 #include <graph_optimizer/cumulative_factor_adder.h>
 
+#include <gtsam/slam/SmartFactorParams.h>
+
 namespace graph_localizer {
 class SemanticFactorAdder : public graph_optimizer::CumulativeFactorAdder<SemanticFactorAdderParams> {
   using Base = graph_optimizer::CumulativeFactorAdder<SemanticFactorAdderParams>;
@@ -34,6 +36,7 @@ class SemanticFactorAdder : public graph_optimizer::CumulativeFactorAdder<Semant
 
   private:
     std::shared_ptr<const SemanticObjectTracker> object_tracker_;
+    gtsam::SmartProjectionParams smart_projection_params_;
 };
 } // namespace graph_localizer
 

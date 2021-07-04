@@ -114,7 +114,7 @@ CombinedNavStateGraphValues::LowerAndUpperBoundTimestamp(const lc::Time timestam
 
   // lower bound returns first it >= query, call this upper bound
   const auto upper_bound_it = timestamp_key_index_map_.lower_bound(timestamp);
-  if (upper_bound_it == timestamp_key_index_map_.cend()) {
+  if (upper_bound_it == timestamp_key_index_map_.cend() && timestamp > upper_bound_it->first) {
     LogDebug("LowerAndUpperBoundTimestamp: No upper bound timestamp exists.");
     const lc::Time lower_bound_time = (timestamp_key_index_map_.crbegin())->first;
     return {boost::optional<lc::Time>(lower_bound_time), boost::none};

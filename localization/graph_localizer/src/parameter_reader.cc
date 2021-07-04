@@ -163,11 +163,24 @@ void LoadStandstillFactorAdderParams(config_reader::ConfigReader& config, Stands
 
 void LoadSemanticFactorAdderParams(config_reader::ConfigReader& config, SemanticFactorAdderParams& params) {
   params.enabled = mc::LoadBool(config, "semantic_factor_adder_enabled");
+
+  params.verbose_cheirality = mc::LoadBool(config, "semantic_factor_adder_verbose_cheirality");
+  params.landmark_distance_threshold = mc::LoadDouble(config, "semantic_factor_adder_landmark_distance_threshold");
+  params.dynamic_outlier_rejection_threshold =
+    mc::LoadDouble(config, "semantic_factor_adder_dynamic_outlier_rejection_threshold");
+  params.retriangulation_threshold = mc::LoadDouble(config, "semantic_factor_adder_retriangulation_threshold");
+  params.rotation_only_fallback = mc::LoadBool(config, "semantic_factor_adder_rotation_only_fallback");
+  params.enable_EPI = mc::LoadBool(config, "semantic_factor_adder_enable_EPI");
+
+  params.robust = mc::LoadBool(config, "semantic_factor_adder_robust");
   params.huber_k = mc::LoadDouble(config, "huber_k");
   params.body_T_cam = lc::LoadTransform(config, "nav_cam_transform");
-  params.cam_intrinsics.reset(new gtsam::Cal3_S2(lc::LoadCameraIntrinsics(config, "nav_cam")));
+  //params.cam_intrinsics.reset(new gtsam::Cal3_S2(lc::LoadCameraIntrinsics(config, "nav_cam")));
+  //Hack for now, manually spec the calibration matrix
+  params.cam_intrinsics.reset(new gtsam::Cal3_S2(644.3, 644.3, 0, 640., 480.));
   params.cam_noise =
     gtsam::noiseModel::Isotropic::Sigma(2, mc::LoadDouble(config, "semantic_factor_adder_nav_cam_noise_stddev"));
+  params.noise_scale = mc::LoadDouble(config, "semantic_factor_adder_noise_scale");
 }
 
 void LoadFeatureTrackerParams(config_reader::ConfigReader& config, FeatureTrackerParams& params) {

@@ -29,6 +29,7 @@ class SemanticObjectTrack {
     using Detections = std::map<localization_common::Time, localization_measurements::SemanticDet>;
     explicit SemanticObjectTrack(const localization_measurements::SemanticDet& semantic_det);
     bool empty() const;
+    int size() const;
 
     void AddMeasurement(const localization_measurements::SemanticDet& semantic_det);
     void RemoveOldMeasurements(const localization_common::Time oldest_allowed_timestamp);

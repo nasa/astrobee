@@ -33,6 +33,7 @@ class SemanticObjectTracker {
     void UpdateObjectTracks(const localization_measurements::SemanticDets& semantic_dets);
     void RemoveOldObjectsAndSlideWindow(
       boost::optional<localization_common::Time> oldest_allowed_time = boost::none);
+    std::vector<std::shared_ptr<const SemanticObjectTrack>> Tracks() const;
     void visualize();
 
   private:

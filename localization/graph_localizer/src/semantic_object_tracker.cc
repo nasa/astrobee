@@ -56,6 +56,14 @@ void SemanticObjectTracker::UpdateObjectTracks(const lm::SemanticDets& semantic_
   visualize();
 }
 
+std::vector<std::shared_ptr<const SemanticObjectTrack>> SemanticObjectTracker::Tracks() const {
+  std::vector<std::shared_ptr<const SemanticObjectTrack>> track_vec;
+  for (const auto& track : tracks_) {
+    track_vec.push_back(track);
+  }
+  return track_vec;
+}
+
 void SemanticObjectTracker::visualize() {
   cv::Mat viz(960, 1280, CV_8UC1, cv::Scalar(0));
   for (const auto& track : tracks_) {
@@ -81,6 +89,11 @@ void SemanticObjectTracker::RemoveOldObjectsAndSlideWindow(boost::optional<lc::T
     } else {
       it++;
     }
+  }
+
+  //Remove old points from current tracks
+  for (const auto& track : tracks_) {
+    track->RemoveOldMeasurements(*oldest_allowed_time);
   }
 }
 } // namespace graph_localizer
