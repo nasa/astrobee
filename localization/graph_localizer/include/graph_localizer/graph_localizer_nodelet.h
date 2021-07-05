@@ -120,6 +120,9 @@ class GraphLocalizerNodelet : public ff_util::FreeFlyerNodelet {
   GraphLocalizerNodeletParams params_;
   int last_mode_ = -1;
 
+  ros::Time last_time_tf_dock_;
+  ros::Time last_time_tf_handrail_;
+
   // Timers
   localization_common::RosTimer vl_timer_ = localization_common::RosTimer("VL msg");
   localization_common::RosTimer of_timer_ = localization_common::RosTimer("OF msg");
