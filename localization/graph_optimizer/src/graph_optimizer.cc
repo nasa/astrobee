@@ -204,17 +204,30 @@ int GraphOptimizer::AddBufferedFactors() {
   for (auto factors_to_add_it = buffered_factors_to_add_.begin();
        factors_to_add_it != buffered_factors_to_add_.end() && ReadyToAddFactors(factors_to_add_it->first);) {
     auto& factors_to_add = factors_to_add_it->second;
-    for (auto& factor_to_add : factors_to_add.Get()) {
+    for (auto factor_to_add_it = factors_to_add.Get().begin(); factor_to_add_it != factors_to_add.Get().end();) {
+      auto& factor_to_add = *factor_to_add_it;
+      bool valid_factor = true;
       for (const auto& key_info : factor_to_add.key_infos) {
         if (!UpdateNodes(key_info)) {
           LogError("AddBufferedFactors: Failed to update nodes.");
+          valid_factor = false;
+          break;
         }
       }
 
-      if (!Rekey(factor_to_add)) {
+      if (valid_factor && !Rekey(factor_to_add)) {
         LogError("AddBufferedMeasurements: Failed to rekey factor to add.");
-        continue;
+        valid_factor = false;
       }
+
+      // Remove invalid factors leading to errors
+      factor_to_add_it = valid_factor ? ++factor_to_add_it : factors_to_add.Get().erase(factor_to_add_it);
+    }
+
+    if (factors_to_add.empty()) {
+      LogDebug("AddBufferedFactors: Factors to add empty.");
+      factors_to_add_it = buffered_factors_to_add_.erase(factors_to_add_it);
+      continue;
     }
 
     if (!DoGraphAction(factors_to_add)) {
