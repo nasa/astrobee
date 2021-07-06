@@ -443,11 +443,11 @@ module rapid {
       const rapid::String32 SETTINGS_FLASHLIGHT_LOCATION_BACK = "Back";
       const rapid::String32 SETTINGS_FLASHLIGHT_LOCATION_FRONT = "Front";
 
-      const rapid::String32 SETTINGS_FLIGHT_MODE_OFF = "Off";
-      const rapid::String32 SETTINGS_FLIGHT_MODE_QUIET = "Quiet";
-      const rapid::String32 SETTINGS_FLIGHT_MODE_NOMINAL = "Nominal";
-      const rapid::String32 SETTINGS_FLIGHT_MODE_DIFFICULT = "Difficult";
-      const rapid::String32 SETTINGS_FLIGHT_MODE_PRECISION = "Precision";
+      const rapid::String32 SETTINGS_FLIGHT_MODE_OFF = "off";
+      const rapid::String32 SETTINGS_FLIGHT_MODE_QUIET = "quiet";
+      const rapid::String32 SETTINGS_FLIGHT_MODE_NOMINAL = "nominal";
+      const rapid::String32 SETTINGS_FLIGHT_MODE_DIFFICULT = "difficult";
+      const rapid::String32 SETTINGS_FLIGHT_MODE_PRECISION = "precision";
 
       const rapid::String32 SETTINGS_PLANNER_TYPE_TRAPEZOIDAL = "trapezoidal";
       const rapid::String32 SETTINGS_PLANNER_TYPE_QUADRATIC_PROGRAM = "qp";
