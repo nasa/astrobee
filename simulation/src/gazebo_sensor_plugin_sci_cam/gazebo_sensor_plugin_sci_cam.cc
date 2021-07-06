@@ -50,7 +50,7 @@ namespace gazebo {
 class GazeboSensorPluginSciCam : public FreeFlyerSensorPlugin {
  public:
   GazeboSensorPluginSciCam() :
-    FreeFlyerSensorPlugin("sci_cam", "sci_cam", true),
+    FreeFlyerSensorPlugin("sci_cam", "sci_cam", false),
     continuousPictureTaking_(false), takeSinglePicture_(false), rate_(0.0) {}
 
   ~GazeboSensorPluginSciCam() {
