@@ -16,20 +16,20 @@
  * under the License.
  */
 
-#ifndef GRAPH_LOCALIZER_SEMANTIC_FACTOR_ADDER_H_
-#define GRAPH_LOCALIZER_SEMANTIC_FACTOR_ADDER_H_
+#ifndef GRAPH_LOCALIZER_SEMANTIC_FLOW_FACTOR_ADDER_H_
+#define GRAPH_LOCALIZER_SEMANTIC_FLOW_FACTOR_ADDER_H_
 
 #include <graph_localizer/semantic_object_tracker.h>
-#include <graph_localizer/semantic_factor_adder_params.h>
+#include <graph_localizer/semantic_flow_factor_adder_params.h>
 #include <graph_optimizer/cumulative_factor_adder.h>
 
 #include <gtsam/slam/SmartFactorParams.h>
 
 namespace graph_localizer {
-class SemanticFactorAdder : public graph_optimizer::CumulativeFactorAdder<SemanticFactorAdderParams> {
-  using Base = graph_optimizer::CumulativeFactorAdder<SemanticFactorAdderParams>;
+class SemanticFlowFactorAdder : public graph_optimizer::CumulativeFactorAdder<SemanticFlowFactorAdderParams> {
+  using Base = graph_optimizer::CumulativeFactorAdder<SemanticFlowFactorAdderParams>;
   public:
-    SemanticFactorAdder(const SemanticFactorAdderParams& params,
+    SemanticFlowFactorAdder(const SemanticFlowFactorAdderParams& params,
                         std::shared_ptr<const SemanticObjectTracker> object_tracker);
 
     std::vector<graph_optimizer::FactorsToAdd> AddFactors() final;
@@ -40,4 +40,4 @@ class SemanticFactorAdder : public graph_optimizer::CumulativeFactorAdder<Semant
 };
 } // namespace graph_localizer
 
-#endif // GRAPH_LOCALIZER_SEMANTIC_FACTOR_ADDER_H_
+#endif // GRAPH_LOCALIZER_SEMANTIC_FLOW_FACTOR_ADDER_H_

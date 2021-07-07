@@ -84,7 +84,7 @@ GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
   smart_projection_cumulative_factor_adder_.reset(
     new SmartProjectionCumulativeFactorAdder(params_.factor.smart_projection_adder, feature_tracker_));
   standstill_factor_adder_.reset(new StandstillFactorAdder(params_.factor.standstill_adder, feature_tracker_));
-  semantic_factor_adder_.reset(new SemanticFactorAdder(params_.factor.semantic_adder, semantic_object_tracker_));
+  semantic_flow_factor_adder_.reset(new SemanticFlowFactorAdder(params_.factor.semantic_flow_adder, semantic_object_tracker_));
 
   // Initialize Graph Action Completers
   ar_tag_loc_graph_action_completer_.reset(
@@ -316,8 +316,8 @@ void GraphLocalizer::BufferCumulativeFactors() {
     BufferFactors(smart_projection_cumulative_factor_adder_->AddFactors());
   }
 
-  if (params_.factor.semantic_adder.enabled) {
-    BufferFactors(semantic_factor_adder_->AddFactors());
+  if (params_.factor.semantic_flow_adder.enabled) {
+    BufferFactors(semantic_flow_factor_adder_->AddFactors());
   }
 }
 

@@ -1,13 +1,13 @@
-#include <graph_localizer/semantic_factor_adder.h>
+#include <graph_localizer/semantic_flow_factor_adder.h>
 #include <gtsam/slam/SmartProjectionPoseFactor.h>
 #include <graph_localizer/graph_localizer.h>
 
 namespace graph_localizer {
 namespace go = graph_optimizer;
 namespace sym = gtsam::symbol_shorthand;
-SemanticFactorAdder::SemanticFactorAdder(const SemanticFactorAdderParams& params,
-                                         std::shared_ptr<const SemanticObjectTracker> object_tracker)
-                                        : SemanticFactorAdder::Base(params), object_tracker_(object_tracker) {
+SemanticFlowFactorAdder::SemanticFlowFactorAdder(const SemanticFlowFactorAdderParams& params,
+                                                 std::shared_ptr<const SemanticObjectTracker> object_tracker)
+                                                : SemanticFlowFactorAdder::Base(params), object_tracker_(object_tracker) {
   smart_projection_params_.verboseCheirality = params.verbose_cheirality;
   smart_projection_params_.setRankTolerance(1e-9);
   smart_projection_params_.setLandmarkDistanceThreshold(params.landmark_distance_threshold);
@@ -17,7 +17,7 @@ SemanticFactorAdder::SemanticFactorAdder(const SemanticFactorAdderParams& params
   smart_projection_params_.setEnableEPI(params.enable_EPI);
 }
 
-std::vector<go::FactorsToAdd> SemanticFactorAdder::AddFactors() {
+std::vector<go::FactorsToAdd> SemanticFlowFactorAdder::AddFactors() {
   go::FactorsToAdd factors_to_add(go::GraphActionCompleterType::SmartFactor);
 
   const auto tracks = object_tracker_->Tracks();

@@ -150,6 +150,8 @@ bool GraphOptimizer::SlideWindow(const boost::optional<gtsam::Marginals>& margin
   for (auto& node_updater : node_updaters_)
     node_updater->SlideWindow(new_oldest_time, marginals, old_keys_and_factors.first, params_.huber_k, graph_);
 
+  LogDebug("SlideWindow: Currently have " << graph_.nrFactors() << " factors in graph.");
+
   RemoveOldBufferedFactors(new_oldest_time);
   DoPostSlideWindowActions(new_oldest_time, marginals);
   return true;

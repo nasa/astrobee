@@ -16,8 +16,8 @@
  * under the License.
  */
 
-#ifndef GRAPH_LOCALIZER_SEMANTIC_FACTOR_ADDER_PARAMS_H_
-#define GRAPH_LOCALIZER_SEMANTIC_FACTOR_ADDER_PARAMS_H_
+#ifndef GRAPH_LOCALIZER_SEMANTIC_FLOW_FACTOR_ADDER_PARAMS_H_
+#define GRAPH_LOCALIZER_SEMANTIC_FLOW_FACTOR_ADDER_PARAMS_H_
 
 #include <graph_optimizer/factor_adder_params.h>
 
@@ -26,7 +26,7 @@
 #include <gtsam/linear/NoiseModel.h>
 
 namespace graph_localizer {
-  struct SemanticFactorAdderParams : public graph_optimizer::FactorAdderParams {
+  struct SemanticFlowFactorAdderParams : public graph_optimizer::FactorAdderParams {
     // gtsam SmartProjectionParams
     bool verbose_cheirality;
     double landmark_distance_threshold;
@@ -45,4 +45,4 @@ namespace graph_localizer {
   };
 } // namespace graph_localizer
 
-#endif // GRAPH_LOCALIZER_SEMANTIC_FACTOR_ADDER_PARAMS_H_
+#endif // GRAPH_LOCALIZER_SEMANTIC_FLOW_FACTOR_ADDER_PARAMS_H_

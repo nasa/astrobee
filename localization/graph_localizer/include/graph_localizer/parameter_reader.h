@@ -34,7 +34,7 @@
 #include <graph_localizer/sanity_checker_params.h>
 #include <graph_localizer/smart_projection_factor_adder_params.h>
 #include <graph_localizer/standstill_factor_adder_params.h>
-#include <graph_localizer/semantic_factor_adder_params.h>
+#include <graph_localizer/semantic_flow_factor_adder_params.h>
 
 namespace graph_localizer {
 void LoadCalibrationParams(config_reader::ConfigReader& config, CalibrationParams& params);
@@ -46,7 +46,7 @@ void LoadRotationFactorAdderParams(config_reader::ConfigReader& config, Rotation
 void LoadSmartProjectionFactorAdderParams(config_reader::ConfigReader& config,
                                           SmartProjectionFactorAdderParams& params);
 void LoadStandstillFactorAdderParams(config_reader::ConfigReader& config, StandstillFactorAdderParams& params);
-void LoadSemanticFactorAdderParams(config_reader::ConfigReader& config, SemanticFactorAdderParams& params);
+void LoadSemanticFlowFactorAdderParams(config_reader::ConfigReader& config, SemanticFlowFactorAdderParams& params);
 
 void LoadFeatureTrackerParams(config_reader::ConfigReader& config, FeatureTrackerParams& params);
 void LoadSemanticObjectTrackerParams(config_reader::ConfigReader& config, SemanticObjectTrackerParams& params);
