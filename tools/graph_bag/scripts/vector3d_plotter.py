@@ -23,7 +23,10 @@ import vector3ds
 import matplotlib
 matplotlib.use('pdf')
 import matplotlib.pyplot as plt
+import numpy as np
 
+def unwrap_in_degrees(angles):
+  return np.rad2deg(np.unwrap(np.deg2rad(angles)))
 
 class Vector3dPlotter():
 
@@ -55,8 +58,8 @@ class Vector3dPlotter():
                            marker=None,
                            markeredgewidth=None,
                            markersize=1):
-    orientation_plotter = Vector3dYVals(pose.pose_type, pose.times, pose.orientations.yaws, pose.orientations.rolls,
-                                        pose.orientations.pitches,
+    orientation_plotter = Vector3dYVals(pose.pose_type, pose.times, unwrap_in_degrees(pose.orientations.yaws), unwrap_in_degrees(pose.orientations.rolls),
+                                        unwrap_in_degrees(pose.orientations.pitches),
                                         ['Orientation (Yaw)', 'Orientation (Roll)', 'Orientation (Pitch)'], colors,
                                         linestyle, linewidth, marker, markeredgewidth, markersize)
     self.add_y_vals(orientation_plotter)
