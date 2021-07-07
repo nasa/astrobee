@@ -262,6 +262,10 @@ void GraphLocalizerNodelet::PublishWorldTDockTF() {
   const auto world_T_dock = graph_localizer_wrapper_.estimated_world_T_dock();
   const auto world_T_dock_tf =
     lc::PoseToTF(world_T_dock, "world", "dock/body", lc::TimeFromRosTime(ros::Time::now()), platform_name_);
+  // If the rate is higher than the sim time, prevent repeated timestamps
+  if (world_T_dock_tf.header.stamp == last_time_tf_dock_)
+    return;
+  last_time_tf_dock_ = world_T_dock_tf.header.stamp;
   transform_pub_.sendTransform(world_T_dock_tf);
 }
 
@@ -270,6 +274,10 @@ void GraphLocalizerNodelet::PublishWorldTHandrailTF() {
   if (!world_T_handrail) return;
   const auto world_T_handrail_tf = lc::PoseToTF(world_T_handrail->pose, "world", "handrail/body",
                                                 lc::TimeFromRosTime(ros::Time::now()), platform_name_);
+  // If the rate is higher than the sim time, prevent repeated timestamps
+  if (world_T_handrail_tf.header.stamp == last_time_tf_handrail_)
+    return;
+  last_time_tf_handrail_ = world_T_handrail_tf.header.stamp;
   transform_pub_.sendTransform(world_T_handrail_tf);
 }
 
