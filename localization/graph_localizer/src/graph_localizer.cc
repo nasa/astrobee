@@ -77,6 +77,8 @@ GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
     new LocFactorAdder(params_.factor.ar_tag_loc_adder, go::GraphActionCompleterType::ARTagLocProjectionFactor));
   loc_factor_adder_.reset(
     new LocFactorAdder(params_.factor.loc_adder, go::GraphActionCompleterType::LocProjectionFactor));
+  semantic_loc_factor_adder_.reset(
+    new SemanticLocFactorAdder(params_.factor.loc_adder, go::GraphActionCompleterType::SemanticLocProjectionFactor));
   projection_factor_adder_.reset(
     new ProjectionFactorAdder(params_.factor.projection_adder, feature_tracker_,
                               feature_point_node_updater_->shared_feature_point_graph_values()));
@@ -96,6 +98,12 @@ GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
     new LocGraphActionCompleter(params_.factor.loc_adder, go::GraphActionCompleterType::LocProjectionFactor,
                                 combined_nav_state_node_updater_->shared_graph_values()));
   AddGraphActionCompleter(loc_graph_action_completer_);
+
+  semantic_loc_graph_action_completer_.reset(
+    new LocGraphActionCompleter(params_.factor.loc_adder, go::GraphActionCompleterType::SemanticLocProjectionFactor,
+                                combined_nav_state_node_updater_->shared_graph_values()));
+  AddGraphActionCompleter(semantic_loc_graph_action_completer_);
+
   projection_graph_action_completer_.reset(new ProjectionGraphActionCompleter(
     params_.factor.projection_adder, combined_nav_state_node_updater_->shared_graph_values(),
     feature_point_node_updater_->shared_feature_point_graph_values()));
@@ -248,8 +256,14 @@ void GraphLocalizer::AddSemanticDetsMeasurement(const lm::SemanticDetsMeasuremen
     LogDebug("AddSemanticDetsMeasurement: Measurement too old - discarding.");
     return;
   }
-  LogDebug("AddSemanticDetsMeasurement: Tracking objects.");
-  semantic_object_tracker_->UpdateObjectTracks(semantic_dets_measurement.semantic_dets);
+  if (params_.factor.semantic_flow_adder.enabled) {
+    LogDebug("AddSemanticDetsMeasurement: Tracking objects.");
+    semantic_object_tracker_->UpdateObjectTracks(semantic_dets_measurement.semantic_dets);
+  }
+  if (params_.factor.semantic_loc_adder.enabled) {
+    LogDebug("AddSemanticDetsMeasurement: Adding gt semantic factors.");
+    BufferFactors(semantic_loc_factor_adder_->AddFactors(semantic_dets_measurement));
+  }
 }
 
 void GraphLocalizer::CheckForStandstill() {

@@ -16,30 +16,30 @@
  * under the License.
  */
 
-#ifndef GRAPH_LOCALIZER_LOC_FACTOR_ADDER_H_
-#define GRAPH_LOCALIZER_LOC_FACTOR_ADDER_H_
+#ifndef GRAPH_LOCALIZER_SEMANTIC_LOC_FACTOR_ADDER_H_
+#define GRAPH_LOCALIZER_SEMANTIC_LOC_FACTOR_ADDER_H_
 
 #include <graph_localizer/loc_factor_adder_params.h>
+#include <graph_localizer/loc_factor_adder.h>
 #include <graph_optimizer/factor_adder.h>
 #include <localization_common/averager.h>
 #include <localization_measurements/matched_projections_measurement.h>
+#include <localization_measurements/semantic_dets_measurement.h>
 
 #include <vector>
 
 namespace graph_localizer {
-class LocFactorAdder : public graph_optimizer::FactorAdder<localization_measurements::MatchedProjectionsMeasurement,
-                                                           LocFactorAdderParams> {
-  using Base =
-    graph_optimizer::FactorAdder<localization_measurements::MatchedProjectionsMeasurement, LocFactorAdderParams>;
-
+class SemanticLocFactorAdder : public LocFactorAdder {
  public:
-  LocFactorAdder(const LocFactorAdderParams& params,
-                 const graph_optimizer::GraphActionCompleterType graph_action_completer_type);
+  SemanticLocFactorAdder(const LocFactorAdderParams& params,
+                         const graph_optimizer::GraphActionCompleterType graph_action_completer_type);
 
   std::vector<graph_optimizer::FactorsToAdd> AddFactors(
-    const localization_measurements::MatchedProjectionsMeasurement& matched_projections_measurement);
+    const localization_measurements::SemanticDetsMeasurement& semantic_dets);
 
  private:
+  std::map<int, std::vector<Eigen::Affine3d>> object_poses_; // map from class to vector of positions
+
   graph_optimizer::GraphActionCompleterType type() const;
 
   graph_optimizer::GraphActionCompleterType graph_action_completer_type_;
@@ -47,4 +47,4 @@ class LocFactorAdder : public graph_optimizer::FactorAdder<localization_measurem
 };
 }  // namespace graph_localizer
 
-#endif  // GRAPH_LOCALIZER_LOC_FACTOR_ADDER_H_
+#endif  // GRAPH_LOCALIZER_SEMANTIC_LOC_FACTOR_ADDER_H_

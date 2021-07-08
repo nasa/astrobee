@@ -19,6 +19,7 @@
 #define GRAPH_LOCALIZER_FACTOR_PARAMS_H_
 
 #include <graph_localizer/loc_factor_adder_params.h>
+#include <graph_localizer/semantic_loc_factor_adder_params.h>
 #include <graph_localizer/rotation_factor_adder_params.h>
 #include <graph_localizer/projection_factor_adder_params.h>
 #include <graph_localizer/smart_projection_factor_adder_params.h>
@@ -33,6 +34,7 @@ struct FactorParams {
   ProjectionFactorAdderParams projection_adder;
   LocFactorAdderParams loc_adder;
   LocFactorAdderParams ar_tag_loc_adder;
+  SemanticLocFactorAdderParams semantic_loc_adder;
   SemanticFlowFactorAdderParams semantic_flow_adder;
 };
 }  // namespace graph_localizer

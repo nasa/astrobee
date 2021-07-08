@@ -40,11 +40,36 @@ void LoadCalibrationParams(config_reader::ConfigReader& config, CalibrationParam
 void LoadFactorParams(config_reader::ConfigReader& config, FactorParams& params) {
   LoadLocFactorAdderParams(config, params.loc_adder);
   LoadARTagLocFactorAdderParams(config, params.ar_tag_loc_adder);
+  LoadSemanticLocFactorAdderParams(config, params.semantic_loc_adder);
   LoadRotationFactorAdderParams(config, params.rotation_adder);
   LoadProjectionFactorAdderParams(config, params.projection_adder);
   LoadSmartProjectionFactorAdderParams(config, params.smart_projection_adder);
   LoadStandstillFactorAdderParams(config, params.standstill_adder);
   LoadSemanticFlowFactorAdderParams(config, params.semantic_flow_adder);
+}
+
+void LoadSemanticLocFactorAdderParams(config_reader::ConfigReader& config, SemanticLocFactorAdderParams& params) {
+  params.add_pose_priors = mc::LoadBool(config, "semantic_loc_adder_add_pose_priors");
+  params.add_projections = mc::LoadBool(config, "semantic_loc_adder_add_projections");
+  params.enabled = params.add_pose_priors || params.add_projections ? true : false;
+  params.huber_k = mc::LoadDouble(config, "huber_k");
+  params.min_num_matches = mc::LoadInt(config, "semantic_loc_adder_min_num_matches");
+  params.max_num_factors = mc::LoadInt(config, "semantic_loc_adder_max_num_factors");
+  params.prior_translation_stddev = mc::LoadDouble(config, "semantic_loc_adder_prior_translation_stddev");
+  params.prior_quaternion_stddev = mc::LoadDouble(config, "semantic_loc_adder_prior_quaternion_stddev");
+  params.scale_pose_noise_with_num_landmarks =
+    mc::LoadBool(config, "semantic_loc_adder_scale_pose_noise_with_num_landmarks");
+  params.scale_projection_noise_with_num_landmarks =
+    mc::LoadBool(config, "semantic_loc_adder_scale_projection_noise_with_num_landmarks");
+  params.pose_noise_scale = mc::LoadDouble(config, "semantic_loc_adder_pose_noise_scale");
+  params.projection_noise_scale = mc::LoadDouble(config, "semantic_loc_adder_projection_noise_scale");
+  params.max_inlier_weighted_projection_norm =
+    mc::LoadDouble(config, "semantic_loc_adder_max_inlier_weighted_projection_norm");
+  params.weight_projections_with_distance = mc::LoadBool(config, "semantic_loc_adder_weight_projections_with_distance");
+  params.add_prior_if_projections_fail = mc::LoadBool(config, "semantic_loc_adder_add_prior_if_projections_fail");
+  params.body_T_cam = lc::LoadTransform(config, "dock_cam_transform");
+  params.cam_intrinsics.reset(new gtsam::Cal3_S2(lc::LoadCameraIntrinsics(config, "dock_cam")));
+  params.cam_noise = gtsam::noiseModel::Isotropic::Sigma(2, mc::LoadDouble(config, "loc_dock_cam_noise_stddev"));
 }
 
 void LoadARTagLocFactorAdderParams(config_reader::ConfigReader& config, LocFactorAdderParams& params) {

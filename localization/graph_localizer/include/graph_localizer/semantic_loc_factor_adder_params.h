@@ -16,19 +16,18 @@
  * under the License.
  */
 
-#ifndef GRAPH_OPTIMIZER_GRAPH_ACTION_COMPLETER_TYPE_H_
-#define GRAPH_OPTIMIZER_GRAPH_ACTION_COMPLETER_TYPE_H_
+#ifndef GRAPH_LOCALIZER_SEMANTIC_LOC_FACTOR_ADDER_PARAMS_H_
+#define GRAPH_LOCALIZER_SEMANTIC_LOC_FACTOR_ADDER_PARAMS_H_
 
-namespace graph_optimizer {
-// TODO(rsoussan): Generalize this better
-enum class GraphActionCompleterType {
-  ARTagLocProjectionFactor,
-  LocProjectionFactor,
-  SemanticLocProjectionFactor,
-  None,
-  ProjectionFactor,
-  SmartFactor
+#include <graph_localizer/semantic_loc_factor_adder_params.h>
+
+#include <gtsam/geometry/Pose3.h>
+#include <gtsam/geometry/Cal3_S2.h>
+#include <gtsam/linear/NoiseModel.h>
+
+namespace graph_localizer {
+struct SemanticLocFactorAdderParams : public LocFactorAdderParams {
 };
-}  // namespace graph_optimizer
+}  // namespace graph_localizer
 
-#endif  // GRAPH_OPTIMIZER_GRAPH_ACTION_COMPLETER_TYPE_H_
+#endif  // GRAPH_LOCALIZER_SEMANTIC_LOC_FACTOR_ADDER_PARAMS_H_
