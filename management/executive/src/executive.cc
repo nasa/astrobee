@@ -1130,40 +1130,6 @@ bool Executive::ArmControl(ff_msgs::CommandStampedPtr const& cmd) {
   return true;
 }
 
-// Used to check the mobility state for commands that can only be executed when
-// the astrobee is in some sort of stopped state. Send a failed execution ack
-// and return false if mobility state is flying, docking, perching, or stopping.
-bool Executive::CheckNotMoving(ff_msgs::CommandStampedPtr const& cmd) {
-  if (agent_state_.mobility_state.state == ff_msgs::MobilityState::FLYING) {
-    AckMobilityStateIssue(cmd, "flying");
-  } else if (agent_state_.mobility_state.state ==
-                                              ff_msgs::MobilityState::DOCKING &&
-             agent_state_.mobility_state.sub_state != 0) {
-    // Check if astrobee is docking vs. undocking
-    if (agent_state_.mobility_state.sub_state > 0) {
-      AckMobilityStateIssue(cmd, "docking", "docked");
-    } else {
-      AckMobilityStateIssue(cmd, "undocking", "stopped");
-    }
-  } else if (agent_state_.mobility_state.state ==
-                                            ff_msgs::MobilityState::PERCHING &&
-             agent_state_.mobility_state.sub_state != 0) {
-    // Check if astrobee is perching vs. unperching
-    if (agent_state_.mobility_state.sub_state > 0) {
-      AckMobilityStateIssue(cmd, "perching", "perched");
-    } else {
-      AckMobilityStateIssue(cmd, "unperching", "stopped");
-    }
-  } else if (agent_state_.mobility_state.state ==
-                                            ff_msgs::MobilityState::STOPPING &&
-             agent_state_.mobility_state.sub_state == 1) {
-    AckMobilityStateIssue(cmd, "stopping", "stopped");
-  } else {
-    return true;
-  }
-  return false;
-}
-
 bool Executive::CheckServiceExists(ros::ServiceClient& serviceIn,
                                    std::string const& serviceName,
                                    std::string const& cmd_id) {
@@ -1330,6 +1296,41 @@ bool Executive::ConfigureMobility(bool move_to_start,
   return successful;
 }
 
+// Used to check the mobility state for commands that can only be executed when
+// the astrobee is in some sort of stopped state. Send a failed execution ack
+// and return false if mobility state is flying, docking, perching, or stopping.
+bool Executive::FailCommandIfMoving(ff_msgs::CommandStampedPtr const& cmd) {
+  if (agent_state_.mobility_state.state == ff_msgs::MobilityState::FLYING) {
+    AckMobilityStateIssue(cmd, "flying");
+  } else if (agent_state_.mobility_state.state ==
+                                              ff_msgs::MobilityState::DOCKING &&
+             agent_state_.mobility_state.sub_state != 0) {
+    // Check if astrobee is docking vs. undocking
+    if (agent_state_.mobility_state.sub_state > 0) {
+      AckMobilityStateIssue(cmd, "docking", "docked");
+    } else {
+      AckMobilityStateIssue(cmd, "undocking", "stopped");
+    }
+  } else if (agent_state_.mobility_state.state ==
+                                            ff_msgs::MobilityState::PERCHING &&
+             agent_state_.mobility_state.sub_state != 0) {
+    // Check if astrobee is perching vs. unperching
+    if (agent_state_.mobility_state.sub_state > 0) {
+      AckMobilityStateIssue(cmd, "perching", "perched");
+    } else {
+      AckMobilityStateIssue(cmd, "unperching", "stopped");
+    }
+  } else if (agent_state_.mobility_state.state ==
+                                            ff_msgs::MobilityState::STOPPING &&
+             agent_state_.mobility_state.sub_state == 1) {
+    AckMobilityStateIssue(cmd, "stopping", "stopped");
+  } else {
+    return true;
+  }
+  return false;
+}
+
+
 bool Executive::LoadUnloadNodelet(ff_msgs::CommandStampedPtr const& cmd) {
   bool load = true;
   std::string which = "Load";
@@ -1344,7 +1345,7 @@ bool Executive::LoadUnloadNodelet(ff_msgs::CommandStampedPtr const& cmd) {
   unload_load_nodelet_srv.request.load = load;
 
   // Don't load/unload a nodelet while moving
-  if (CheckNotMoving(cmd)) {
+  if (FailCommandIfMoving(cmd)) {
     // Only one argument is required for load/unload nodelet, the nodelet name
     if (num_args < 1) {
       state_->AckCmd(cmd->cmd_id,
@@ -1791,7 +1792,7 @@ bool Executive::InitializeBias(ff_msgs::CommandStampedPtr const& cmd) {
   }
 
   // We also cannot be moving when we initialize the bias
-  if (CheckNotMoving(cmd)) {
+  if (FailCommandIfMoving(cmd)) {
     localization_goal_.command =
                               ff_msgs::LocalizationGoal::COMMAND_ESTIMATE_BIAS;
     // Don't need to specify a pipeline for init bias but clear it just in case
@@ -1874,7 +1875,7 @@ bool Executive::Prepare(ff_msgs::CommandStampedPtr const& cmd) {
 
 bool Executive::ReacquirePosition(ff_msgs::CommandStampedPtr const& cmd) {
   NODELET_INFO("Executive executing reacquire position command!");
-  if (CheckNotMoving(cmd)) {
+  if (FailCommandIfMoving(cmd)) {
     // Reacquire position tries to get astrobee localizing again with mapped
     // landmarks
     localization_goal_.command =
@@ -1888,7 +1889,7 @@ bool Executive::ReacquirePosition(ff_msgs::CommandStampedPtr const& cmd) {
 
 bool Executive::ResetEkf(ff_msgs::CommandStampedPtr const& cmd) {
   NODELET_INFO("Executive executing reset ekf command!");
-  if (CheckNotMoving(cmd)) {
+  if (FailCommandIfMoving(cmd)) {
     return ResetEkf(cmd->cmd_id);
   }
   return false;
@@ -2277,7 +2278,7 @@ bool Executive::SetCameraStreaming(ff_msgs::CommandStampedPtr const& cmd) {
 bool Executive::SetCheckObstacles(ff_msgs::CommandStampedPtr const& cmd) {
   NODELET_INFO("Executive executing set check obstacles command!");
   // Don't set whether to check obstacles when moving
-  if (CheckNotMoving(cmd)) {
+  if (FailCommandIfMoving(cmd)) {
     if (cmd->args.size() != 1 ||
         cmd->args[0].data_type != ff_msgs::CommandArg::DATA_TYPE_BOOL) {
       NODELET_ERROR("Malformed arguments for set check obstacles!");
@@ -2298,7 +2299,7 @@ bool Executive::SetCheckObstacles(ff_msgs::CommandStampedPtr const& cmd) {
 bool Executive::SetCheckZones(ff_msgs::CommandStampedPtr const& cmd) {
   NODELET_INFO("Executive executing set check zones command!");
   // Don't set whether to check zones when moving
-  if (CheckNotMoving(cmd)) {
+  if (FailCommandIfMoving(cmd)) {
     if (cmd->args.size() != 1 ||
         cmd->args[0].data_type != ff_msgs::CommandArg::DATA_TYPE_BOOL) {
       NODELET_ERROR("Malformed arguments for set check zones!");
@@ -2465,7 +2466,7 @@ bool Executive::SetEnableAutoReturn(ff_msgs::CommandStampedPtr const& cmd) {
 
 bool Executive::SetEnableImmediate(ff_msgs::CommandStampedPtr const& cmd) {
   NODELET_INFO("Executive executing set enable immediate command!");
-  if (CheckNotMoving(cmd)) {
+  if (FailCommandIfMoving(cmd)) {
     if (cmd->args.size() != 1 ||
         cmd->args[0].data_type != ff_msgs::CommandArg::DATA_TYPE_BOOL) {
       NODELET_ERROR("Malformed arguments for enable immediate command!");
@@ -2485,7 +2486,7 @@ bool Executive::SetEnableImmediate(ff_msgs::CommandStampedPtr const& cmd) {
 
 bool Executive::SetEnableReplan(ff_msgs::CommandStampedPtr const& cmd) {
   NODELET_INFO("Executive executing set enable replan command!");
-  if (CheckNotMoving(cmd)) {
+  if (FailCommandIfMoving(cmd)) {
     if (cmd->args.size() != 1 ||
         cmd->args[0].data_type != ff_msgs::CommandArg::DATA_TYPE_BOOL) {
       NODELET_ERROR("Malformed arguments for enable replan command!");
@@ -2579,7 +2580,7 @@ bool Executive::SetFlashlightBrightness(ff_msgs::CommandStampedPtr const& cmd) {
 
 bool Executive::SetHolonomicMode(ff_msgs::CommandStampedPtr const& cmd) {
   NODELET_INFO("Executive executing set holonomic mode command!");
-  if (CheckNotMoving(cmd)) {
+  if (FailCommandIfMoving(cmd)) {
     if (cmd->args.size() != 1 ||
         cmd->args[0].data_type != ff_msgs::CommandArg::DATA_TYPE_BOOL) {
       NODELET_ERROR("Malformed arguments for set holonomic mode command!");
@@ -2599,7 +2600,7 @@ bool Executive::SetHolonomicMode(ff_msgs::CommandStampedPtr const& cmd) {
 
 bool Executive::SetInertia(ff_msgs::CommandStampedPtr const& cmd) {
   NODELET_INFO("Executive executing set inertia command!");
-  if (CheckNotMoving(cmd)) {
+  if (FailCommandIfMoving(cmd)) {
     if (cmd->args.size() != 4 ||
         cmd->args[0].data_type != ff_msgs::CommandArg::DATA_TYPE_STRING ||
         cmd->args[1].data_type != ff_msgs::CommandArg::DATA_TYPE_FLOAT ||
@@ -2658,7 +2659,7 @@ bool Executive::SetInertia(ff_msgs::CommandStampedPtr const& cmd) {
 
 bool Executive::SetOperatingLimits(ff_msgs::CommandStampedPtr const& cmd) {
   NODELET_INFO("Executive executing set operating limits command!");
-  if (CheckNotMoving(cmd)) {
+  if (FailCommandIfMoving(cmd)) {
     if (cmd->args.size() != 7 ||
         cmd->args[0].data_type != ff_msgs::CommandArg::DATA_TYPE_STRING ||
         cmd->args[1].data_type != ff_msgs::CommandArg::DATA_TYPE_STRING ||
@@ -2739,7 +2740,7 @@ bool Executive::SetPlan(ff_msgs::CommandStampedPtr const& cmd) {
 bool Executive::SetPlanner(ff_msgs::CommandStampedPtr const& cmd) {
   NODELET_INFO("Executive executing set planner command!");
   // Don't set planner when moving
-  if (CheckNotMoving(cmd)) {
+  if (FailCommandIfMoving(cmd)) {
     if (cmd->args.size() != 1 ||
         cmd->args[0].data_type != ff_msgs::CommandArg::DATA_TYPE_STRING) {
       NODELET_ERROR("Malformed arguments for set planner command!");
@@ -2837,7 +2838,7 @@ bool Executive::SetTelemetryRate(ff_msgs::CommandStampedPtr const& cmd) {
 
 bool Executive::SetZones(ff_msgs::CommandStampedPtr const& cmd) {
   NODELET_INFO("Executive executing set zones command!");
-  if (CheckNotMoving(cmd)) {
+  if (FailCommandIfMoving(cmd)) {
     if (zones_) {
       ff_msgs::SetZones zones_srv;
       std::string file_contents;
@@ -3373,7 +3374,7 @@ bool Executive::StowArm(ff_msgs::CommandStampedPtr const& cmd) {
 
 bool Executive::SwitchLocalization(ff_msgs::CommandStampedPtr const& cmd) {
   NODELET_DEBUG("Executive executing switch localization command!");
-  if (CheckNotMoving(cmd)) {
+  if (FailCommandIfMoving(cmd)) {
     if (cmd->args.size() != 1 ||
         cmd->args[0].data_type != ff_msgs::CommandArg::DATA_TYPE_STRING) {
       state_->AckCmd(cmd->cmd_id,

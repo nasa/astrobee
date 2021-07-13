@@ -175,7 +175,6 @@ class Executive : public ff_util::FreeFlyerNodelet {
                              std::string const& current_mobility_state,
                              std::string const& accepted_mobility_state = "");
   bool ArmControl(ff_msgs::CommandStampedPtr const& cmd);
-  bool CheckNotMoving(ff_msgs::CommandStampedPtr const& cmd);
   bool CheckServiceExists(ros::ServiceClient& serviceIn,
                           std::string const& serviceName,
                           std::string const& cmd_in);
@@ -185,6 +184,7 @@ class Executive : public ff_util::FreeFlyerNodelet {
   bool ConfigureMobility(std::string const& cmd_id);
   bool ConfigureMobility(bool move_to_start,
                          std::string& err_msg);
+  bool FailCommandIfMoving(ff_msgs::CommandStampedPtr const& cmd);
   bool LoadUnloadNodelet(ff_msgs::CommandStampedPtr const& cmd);
   ros::Time MsToSec(std::string timestamp);
   bool PowerItem(ff_msgs::CommandStampedPtr const& cmd, bool on);
