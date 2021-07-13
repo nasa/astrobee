@@ -18,7 +18,7 @@
 <!-- permissions and limitations under the License.                          -->
 
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
-  <link name="carriage">
+  <link name="${prefix}carriage">
     <inertial>
       <mass value="9.8838"/>
       <origin xyz="0 0 -0.02"/>
@@ -45,9 +45,9 @@
       xyz="0 0 0"
       rpy="0 0 0" />
     <parent
-      link="body" />
+      link="${prefix}body" />
     <child
-      link="carriage" />
+      link="${prefix}carriage" />
   </joint>
   <gazebo reference="carriage">
     <kp>100000.0</kp>

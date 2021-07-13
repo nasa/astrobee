@@ -559,7 +559,7 @@ void SparseMap::DetectFeaturesFromFile(std::string const& filename,
                                        bool multithreaded,
                                        cv::Mat* descriptors,
                                        Eigen::Matrix2Xd* keypoints) {
-  cv::Mat image = cv::imread(filename, CV_LOAD_IMAGE_GRAYSCALE);
+  cv::Mat image = cv::imread(filename, cv::IMREAD_GRAYSCALE);
   if (image.rows == 0 || image.cols == 0)
     LOG(FATAL) << "Found empty image in file: " << filename;
 

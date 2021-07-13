@@ -24,6 +24,7 @@
 #include <graph_localizer/feature_point_node_updater_params.h>
 #include <graph_localizer/feature_tracker_params.h>
 #include <graph_localizer/semantic_object_tracker_params.h>
+#include <graph_localizer/handrail_params.h>
 #include <graph_localizer/graph_initializer_params.h>
 #include <graph_optimizer/graph_optimizer_params.h>
 #include <localization_measurements/fan_speed_mode.h>
@@ -41,6 +42,7 @@ struct GraphLocalizerParams {
 
   graph_optimizer::GraphOptimizerParams graph_optimizer;
   GraphInitializerParams graph_initializer;
+  HandrailParams handrail;
   double max_standstill_feature_track_avg_distance_from_mean;
   int standstill_min_num_points_per_track;
   double huber_k;

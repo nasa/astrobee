@@ -23,6 +23,7 @@
 #include <graph_localizer/combined_nav_state_node_updater_params.h>
 #include <graph_localizer/feature_tracker.h>
 #include <graph_localizer/feature_point_node_updater.h>
+#include <graph_localizer/handrail_factor_adder.h>
 #include <graph_localizer/graph_localizer_params.h>
 #include <graph_localizer/graph_localizer_stats.h>
 #include <graph_localizer/robust_smart_projection_pose_factor.h>
@@ -44,6 +45,7 @@
 #include <localization_common/time.h>
 #include <localization_measurements/fan_speed_mode.h>
 #include <localization_measurements/feature_points_measurement.h>
+#include <localization_measurements/handrail_points_measurement.h>
 #include <localization_measurements/matched_projections_measurement.h>
 #include <localization_measurements/semantic_dets_measurement.h>
 
@@ -96,6 +98,7 @@ class GraphLocalizer : public graph_optimizer::GraphOptimizer {
     const localization_measurements::MatchedProjectionsMeasurement& matched_projections_measurement);
   void AddSemanticDetsMeasurement(
     const localization_measurements::SemanticDetsMeasurement& semantic_dets_measurement);
+  void AddHandrailMeasurement(const localization_measurements::HandrailPointsMeasurement& handrail_points_measurement);
   bool DoPostOptimizeActions() final;
   const FeatureTrackIdMap& feature_tracks() const { return feature_tracker_->feature_tracks(); }
 
@@ -118,6 +121,8 @@ class GraphLocalizer : public graph_optimizer::GraphOptimizer {
   void SetFanSpeedMode(const localization_measurements::FanSpeedMode fan_speed_mode);
 
   const localization_measurements::FanSpeedMode fan_speed_mode() const;
+
+  const CombinedNavStateGraphValues& combined_nav_state_graph_values() const;
 
  private:
   void DoPostSlideWindowActions(const localization_common::Time oldest_allowed_time,
@@ -144,6 +149,7 @@ class GraphLocalizer : public graph_optimizer::GraphOptimizer {
   void serialize(Archive& ar, const unsigned int file_version) {
     ar& BOOST_SERIALIZATION_BASE_OBJECT_NVP(graph_optimizer::GraphOptimizer);
     ar& BOOST_SERIALIZATION_NVP(feature_tracker_);
+    ar& BOOST_SERIALIZATION_NVP(combined_nav_state_node_updater_);
   }
 
   std::shared_ptr<FeatureTracker> feature_tracker_;
@@ -154,6 +160,7 @@ class GraphLocalizer : public graph_optimizer::GraphOptimizer {
 
   // Factor Adders
   std::shared_ptr<LocFactorAdder> ar_tag_loc_factor_adder_;
+  std::shared_ptr<HandrailFactorAdder> handrail_factor_adder_;
   std::shared_ptr<LocFactorAdder> loc_factor_adder_;
   std::shared_ptr<SemanticLocFactorAdder> semantic_loc_factor_adder_;
   std::shared_ptr<ProjectionFactorAdder> projection_factor_adder_;

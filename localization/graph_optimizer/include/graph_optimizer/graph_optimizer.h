@@ -66,7 +66,8 @@ class GraphOptimizer {
   const GraphStats* const graph_stats() const;
   GraphStats* graph_stats();
   const boost::optional<gtsam::Marginals>& marginals() const;
-  std::shared_ptr<gtsam::Values> values();
+  std::shared_ptr<gtsam::Values> shared_values();
+  const gtsam::Values& values() const;
 
  private:
   gtsam::NonlinearFactorGraph MarginalFactors(const gtsam::NonlinearFactorGraph& old_factors,

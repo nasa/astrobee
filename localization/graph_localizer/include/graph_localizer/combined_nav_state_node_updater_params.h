@@ -21,6 +21,8 @@
 #include <graph_localizer/combined_nav_state_graph_values_params.h>
 #include <localization_common/combined_nav_state.h>
 
+#include <boost/serialization/serialization.hpp>
+
 namespace graph_localizer {
 struct CombinedNavStateNodeUpdaterParams {
   double starting_prior_translation_stddev;
@@ -35,6 +37,25 @@ struct CombinedNavStateNodeUpdaterParams {
   bool threshold_bias_uncertainty;
   double accel_bias_stddev_threshold;
   double gyro_bias_stddev_threshold;
+
+ private:
+  // Serialization function
+  friend class boost::serialization::access;
+  template <class ARCHIVE>
+  void serialize(ARCHIVE& ar, const unsigned int /*version*/) {
+    ar& BOOST_SERIALIZATION_NVP(starting_prior_translation_stddev);
+    ar& BOOST_SERIALIZATION_NVP(starting_prior_quaternion_stddev);
+    ar& BOOST_SERIALIZATION_NVP(starting_prior_velocity_stddev);
+    ar& BOOST_SERIALIZATION_NVP(starting_prior_accel_bias_stddev);
+    ar& BOOST_SERIALIZATION_NVP(starting_prior_gyro_bias_stddev);
+    ar& BOOST_SERIALIZATION_NVP(huber_k);
+    ar& BOOST_SERIALIZATION_NVP(global_N_body_start);
+    ar& BOOST_SERIALIZATION_NVP(add_priors);
+    ar& BOOST_SERIALIZATION_NVP(graph_values);
+    ar& BOOST_SERIALIZATION_NVP(threshold_bias_uncertainty);
+    ar& BOOST_SERIALIZATION_NVP(accel_bias_stddev_threshold);
+    ar& BOOST_SERIALIZATION_NVP(gyro_bias_stddev_threshold);
+  }
 };
 }  // namespace graph_localizer
 

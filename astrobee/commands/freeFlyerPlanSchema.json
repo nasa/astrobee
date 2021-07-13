@@ -56,11 +56,11 @@
       "valueType": "string",
       "notes": "Setting the flight mode updates the GN&C gains, hard limits, tolerances, etc., as specified in the world config file. See e.g. astrobee/astrobee/config/worlds/iss.config. Note that executing certain operations, such as docking, automatically switches the flight mode as needed. Values:<ul><li>Off: Turns off propulsion.</li><li>Quiet: Sets propulsion impeller speed to QUIET (low speed) with gains and limits tuned to safely fly within the reduced performance.</li><li>Nominal: Sets propulsion impeller speed to NOMINAL (medium speed), with gains and limits tuned for typical utility flying.</li><li>Difficult: Sets propulsion impeller speed to AGGRESSIVE (high speed), with gains and limits tuned for maximum performance.</li><li>Precision: Sets propulsion impeller speed to AGGRESSIVE, with gains and limits tuned for precise motion (slow speed, tight position and attitude tolerances).</li></ul>",
       "choices": [
-        ["Off", "Off"],
-        ["Quiet", "Quiet"],
-        ["Nominal", "Nominal"],
-        ["Difficult", "Difficult"],
-        ["Precision", "Precision"]
+        ["off", "Off"],
+        ["quiet", "Quiet"],
+        ["nominal", "Nominal"],
+        ["difficult", "Difficult"],
+        ["precision", "Precision"]
       ]
     },
 

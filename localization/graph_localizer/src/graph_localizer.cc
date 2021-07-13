@@ -19,6 +19,10 @@
 #include <graph_localizer/graph_localizer.h>
 #include <graph_localizer/loc_projection_factor.h>
 #include <graph_localizer/loc_pose_factor.h>
+#include <graph_localizer/point_to_handrail_endpoint_factor.h>
+#include <graph_localizer/point_to_line_factor.h>
+#include <graph_localizer/point_to_line_segment_factor.h>
+#include <graph_localizer/point_to_plane_factor.h>
 #include <graph_localizer/pose_rotation_factor.h>
 #include <graph_localizer/utilities.h>
 #include <graph_optimizer/utilities.h>
@@ -62,19 +66,20 @@ GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
                                                  params_.graph_initializer.start_time);
   params_.combined_nav_state_node_updater.global_N_body_start = global_N_body_start;
   combined_nav_state_node_updater_.reset(
-    new CombinedNavStateNodeUpdater(params_.combined_nav_state_node_updater, latest_imu_integrator_, values()));
+    new CombinedNavStateNodeUpdater(params_.combined_nav_state_node_updater, latest_imu_integrator_, shared_values()));
   combined_nav_state_node_updater_->AddInitialValuesAndPriors(graph_factors());
   AddNodeUpdater(combined_nav_state_node_updater_);
   // TODO(rsoussan): Clean this up
   dynamic_cast<GraphLocalizerStats*>(graph_stats())
     ->SetCombinedNavStateGraphValues(combined_nav_state_node_updater_->shared_graph_values());
 
-  feature_point_node_updater_.reset(new FeaturePointNodeUpdater(params.feature_point_node_updater, values()));
+  feature_point_node_updater_.reset(new FeaturePointNodeUpdater(params.feature_point_node_updater, shared_values()));
   AddNodeUpdater(feature_point_node_updater_);
 
   // Initialize Factor Adders
   ar_tag_loc_factor_adder_.reset(
     new LocFactorAdder(params_.factor.ar_tag_loc_adder, go::GraphActionCompleterType::ARTagLocProjectionFactor));
+  handrail_factor_adder_.reset(new HandrailFactorAdder(params_.factor.handrail_adder));
   loc_factor_adder_.reset(
     new LocFactorAdder(params_.factor.loc_adder, go::GraphActionCompleterType::LocProjectionFactor));
   semantic_loc_factor_adder_.reset(
@@ -317,6 +322,18 @@ void GraphLocalizer::AddSparseMappingMeasurement(
   }
 }
 
+void GraphLocalizer::AddHandrailMeasurement(const lm::HandrailPointsMeasurement& handrail_points_measurement) {
+  if (!MeasurementRecentEnough(handrail_points_measurement.timestamp)) {
+    LogDebug("AddHandrailPointsMeasurement: Measurement too old - discarding.");
+    return;
+  }
+
+  if (params_.factor.handrail_adder.enabled) {
+    LogDebug("AddSparseMappingMeasurement: Adding handrail measurement.");
+    BufferFactors(handrail_factor_adder_->AddFactors(handrail_points_measurement));
+  }
+}
+
 void GraphLocalizer::DoPostSlideWindowActions(const localization_common::Time oldest_allowed_time,
                                               const boost::optional<gtsam::Marginals>& marginals) {
   feature_tracker_->RemoveOldFeaturePointsAndSlideWindow(oldest_allowed_time);
@@ -377,11 +394,15 @@ void GraphLocalizer::RemoveOldMeasurementsFromCumulativeFactors(const gtsam::Key
 bool GraphLocalizer::ValidGraph() const {
   // If graph consists of only priors and imu factors, consider it invalid and don't optimize.
   // Make sure smart factors are valid before including them.
-  const int num_valid_non_imu_measurement_factors = NumOFFactors(true) +
-                                                    go::NumFactors<gtsam::LocPoseFactor>(graph_factors()) +
-                                                    go::NumFactors<gtsam::LocProjectionFactor<>>(graph_factors()) +
-                                                    go::NumFactors<gtsam::PoseRotationFactor>(graph_factors()) +
-                                                    go::NumFactors<gtsam::BetweenFactor<gtsam::Pose3>>(graph_factors());
+  const int num_valid_non_imu_measurement_factors =
+    NumOFFactors(true) + go::NumFactors<gtsam::LocPoseFactor>(graph_factors()) +
+    go::NumFactors<gtsam::LocProjectionFactor<>>(graph_factors()) +
+    go::NumFactors<gtsam::PointToLineFactor>(graph_factors()) +
+    go::NumFactors<gtsam::PointToLineSegmentFactor>(graph_factors()) +
+    go::NumFactors<gtsam::PointToPlaneFactor>(graph_factors()) +
+    go::NumFactors<gtsam::PointToHandrailEndpointFactor>(graph_factors()) +
+    go::NumFactors<gtsam::PoseRotationFactor>(graph_factors()) +
+    go::NumFactors<gtsam::BetweenFactor<gtsam::Pose3>>(graph_factors());
   return num_valid_non_imu_measurement_factors > 0;
 }
 
@@ -432,6 +453,10 @@ void GraphLocalizer::SetFanSpeedMode(const lm::FanSpeedMode fan_speed_mode) {
 }
 
 const lm::FanSpeedMode GraphLocalizer::fan_speed_mode() const { return latest_imu_integrator_->fan_speed_mode(); }
+
+const CombinedNavStateGraphValues& GraphLocalizer::combined_nav_state_graph_values() const {
+  return combined_nav_state_node_updater_->graph_values();
+}
 
 const GraphLocalizerParams& GraphLocalizer::params() const { return params_; }
 

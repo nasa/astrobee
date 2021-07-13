@@ -32,12 +32,14 @@ namespace mc = msg_conversions;
 void LoadCalibrationParams(config_reader::ConfigReader& config, CalibrationParams& params) {
   params.body_T_dock_cam = lc::LoadTransform(config, "dock_cam_transform");
   params.body_T_nav_cam = lc::LoadTransform(config, "nav_cam_transform");
+  params.body_T_perch_cam = lc::LoadTransform(config, "perch_cam_transform");
   params.world_T_dock = lc::LoadTransform(config, "world_dock_transform");
   params.nav_cam_intrinsics.reset(new gtsam::Cal3_S2(lc::LoadCameraIntrinsics(config, "nav_cam")));
   params.dock_cam_intrinsics.reset(new gtsam::Cal3_S2(lc::LoadCameraIntrinsics(config, "dock_cam")));
 }
 
 void LoadFactorParams(config_reader::ConfigReader& config, FactorParams& params) {
+  LoadHandrailFactorAdderParams(config, params.handrail_adder);
   LoadLocFactorAdderParams(config, params.loc_adder);
   LoadARTagLocFactorAdderParams(config, params.ar_tag_loc_adder);
   LoadSemanticLocFactorAdderParams(config, params.semantic_loc_adder);
@@ -70,6 +72,18 @@ void LoadSemanticLocFactorAdderParams(config_reader::ConfigReader& config, Seman
   params.body_T_cam = lc::LoadTransform(config, "nav_cam_transform");
   params.cam_intrinsics.reset(new gtsam::Cal3_S2(644.3, 644.3, 0, 640., 480.));
   params.cam_noise = gtsam::noiseModel::Isotropic::Sigma(2, mc::LoadDouble(config, "loc_dock_cam_noise_stddev"));
+}
+
+void LoadHandrailFactorAdderParams(config_reader::ConfigReader& config, HandrailFactorAdderParams& params) {
+  params.enabled = mc::LoadBool(config, "handrail_adder_enabled");
+  params.huber_k = mc::LoadDouble(config, "huber_k");
+  params.min_num_line_matches = mc::LoadDouble(config, "handrail_adder_min_num_line_matches");
+  params.min_num_plane_matches = mc::LoadDouble(config, "handrail_adder_min_num_plane_matches");
+  params.point_to_line_stddev = mc::LoadDouble(config, "handrail_adder_point_to_line_stddev");
+  params.point_to_plane_stddev = mc::LoadDouble(config, "handrail_adder_point_to_plane_stddev");
+  params.body_T_perch_cam = lc::LoadTransform(config, "perch_cam_transform");
+  params.use_silu_for_point_to_line_segment_factor =
+    mc::LoadBool(config, "handrail_adder_use_silu_for_point_to_line_segment_factor");
 }
 
 void LoadARTagLocFactorAdderParams(config_reader::ConfigReader& config, LocFactorAdderParams& params) {
@@ -260,6 +274,11 @@ void LoadFeaturePointNodeUpdaterParams(config_reader::ConfigReader& config, Feat
   params.huber_k = mc::LoadDouble(config, "huber_k");
 }
 
+void LoadHandrailParams(config_reader::ConfigReader& config, HandrailParams& params) {
+  params.length = mc::LoadDouble(config, "handrail_length");
+  params.distance_to_wall = mc::LoadDouble(config, "handrail_wall_min_gap");
+}
+
 void LoadGraphLocalizerParams(config_reader::ConfigReader& config, GraphLocalizerParams& params) {
   LoadCalibrationParams(config, params.calibration);
   LoadCombinedNavStateNodeUpdaterParams(config, params.combined_nav_state_node_updater);
@@ -268,6 +287,7 @@ void LoadGraphLocalizerParams(config_reader::ConfigReader& config, GraphLocalize
   LoadFeaturePointNodeUpdaterParams(config, params.feature_point_node_updater);
   LoadFeatureTrackerParams(config, params.feature_tracker);
   LoadSemanticObjectTrackerParams(config, params.semantic_object_tracker);
+  LoadHandrailParams(config, params.handrail);
   go::LoadGraphOptimizerParams(config, params.graph_optimizer);
   params.huber_k = mc::LoadDouble(config, "huber_k");
   params.max_standstill_feature_track_avg_distance_from_mean =
@@ -285,5 +305,6 @@ void LoadGraphLocalizerNodeletParams(config_reader::ConfigReader& config, GraphL
   params.max_vl_buffer_size = mc::LoadInt(config, "max_vl_buffer_size");
   params.max_ar_buffer_size = mc::LoadInt(config, "max_ar_buffer_size");
   params.max_sm_buffer_size = mc::LoadInt(config, "max_sm_buffer_size");
+  params.max_dl_buffer_size = mc::LoadInt(config, "max_dl_buffer_size");
 }
 }  // namespace graph_localizer

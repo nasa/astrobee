@@ -28,6 +28,8 @@
 #include <graph_localizer/graph_initializer_params.h>
 #include <graph_localizer/graph_localizer_nodelet_params.h>
 #include <graph_localizer/graph_localizer_params.h>
+#include <graph_localizer/handrail_params.h>
+#include <graph_localizer/handrail_factor_adder_params.h>
 #include <graph_localizer/loc_factor_adder_params.h>
 #include <graph_localizer/semantic_loc_factor_adder_params.h>
 #include <graph_localizer/projection_factor_adder_params.h>
@@ -40,6 +42,7 @@
 namespace graph_localizer {
 void LoadCalibrationParams(config_reader::ConfigReader& config, CalibrationParams& params);
 void LoadFactorParams(config_reader::ConfigReader& config, FactorParams& params);
+void LoadHandrailFactorAdderParams(config_reader::ConfigReader& config, HandrailFactorAdderParams& params);
 void LoadLocFactorAdderParams(config_reader::ConfigReader& config, LocFactorAdderParams& params);
 void LoadARTagLocFactorAdderParams(config_reader::ConfigReader& config, LocFactorAdderParams& params);
 void LoadSemanticLocFactorAdderParams(config_reader::ConfigReader& config, SemanticLocFactorAdderParams& params);
@@ -62,6 +65,7 @@ void LoadCombinedNavStateGraphValuesParams(config_reader::ConfigReader& config,
 void LoadCombinedNavStateNodeUpdaterParams(config_reader::ConfigReader& config,
                                            CombinedNavStateNodeUpdaterParams& params);
 void LoadFeaturePointNodeUpdaterParams(config_reader::ConfigReader& config, FeaturePointNodeUpdaterParams& params);
+void LoadHandrailParams(config_reader::ConfigReader& config, HandrailParams& params);
 void LoadGraphLocalizerParams(config_reader::ConfigReader& config, GraphLocalizerParams& params);
 void LoadGraphLocalizerNodeletParams(config_reader::ConfigReader& config, GraphLocalizerNodeletParams& params);
 }  // namespace graph_localizer

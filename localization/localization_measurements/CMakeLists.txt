@@ -18,14 +18,34 @@
 project(localization_measurements)
 
 catkin_package(
-  LIBRARIES ${PROJECT_NAME} ${GTSAM_LIBRARIES}  localization_common
+  LIBRARIES ${PROJECT_NAME} ${GTSAM_LIBRARIES} ff_common localization_common
   INCLUDE_DIRS include ${GTSAM_INCLUDE_DIR} 
   CATKIN_DEPENDS 
   DEPENDS gtsam ff_msgs 
 )
 
 create_library(TARGET ${PROJECT_NAME} 
-  LIBS ${catkin_LIBRARIES} gtsam localization_common 
+  LIBS ${catkin_LIBRARIES} ff_common gtsam localization_common 
   INC ${catkin_INCLUDE_DIRS} 
   DEPS ff_msgs
 )
+
+if(CATKIN_ENABLE_TESTING)
+  find_package(rostest REQUIRED)
+  add_rostest_gtest(test_plane
+    test/test_plane.test
+    test/test_plane.cc
+  )
+  target_link_libraries(test_plane
+    localization_measurements gtsam
+  )
+  find_package(rostest REQUIRED)
+  add_rostest_gtest(test_measurement_conversions
+    test/test_measurement_conversions.test
+    test/test_measurement_conversions.cc
+  )
+  target_link_libraries(test_measurement_conversions
+    localization_measurements gtsam
+  )
+
+endif()
