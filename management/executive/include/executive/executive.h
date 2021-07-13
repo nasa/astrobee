@@ -185,6 +185,7 @@ class Executive : public ff_util::FreeFlyerNodelet {
   bool ConfigureMobility(std::string const& cmd_id);
   bool ConfigureMobility(bool move_to_start,
                          std::string& err_msg);
+  bool LoadUnloadNodelet(ff_msgs::CommandStampedPtr const& cmd);
   ros::Time MsToSec(std::string timestamp);
   bool PowerItem(ff_msgs::CommandStampedPtr const& cmd, bool on);
   bool ResetEkf(std::string const& cmd_id);

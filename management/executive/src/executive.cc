@@ -1330,6 +1330,98 @@ bool Executive::ConfigureMobility(bool move_to_start,
   return successful;
 }
 
+bool Executive::LoadUnloadNodelet(ff_msgs::CommandStampedPtr const& cmd) {
+  bool load = true;
+  std::string which = "Load";
+  int num_args = cmd->args.size();
+
+  if (cmd->cmd_name == CommandConstants::CMD_NAME_UNLOAD_NODELET) {
+    load = false;
+    which = "Unload";
+  }
+
+  ff_msgs::UnloadLoadNodelet unload_load_nodelet_srv;
+  unload_load_nodelet_srv.request.load = load;
+
+  // Don't load/unload a nodelet while moving
+  if (CheckNotMoving(cmd)) {
+    // Only one argument is required for load/unload nodelet, the nodelet name
+    if (num_args < 1) {
+      state_->AckCmd(cmd->cmd_id,
+                     ff_msgs::AckCompletedStatus::BAD_SYNTAX,
+                     (which + " nodelet must have one argument."));
+      return false;
+    }
+
+    // The unload nodelet command takes only 1 or 2 arguments
+    if (num_args > 2 && !load) {
+      state_->AckCmd(cmd->cmd_id,
+                     ff_msgs::AckCompletedStatus::BAD_SYNTAX,
+                     (which + " nodelet takes no more than two arguments."));
+      return false;
+    }
+
+    // The load nodelet command takes 1 or up to 4 arguments
+    if (num_args > 4 && load) {
+      state_->AckCmd(cmd->cmd_id,
+                     ff_msgs::AckCompletedStatus::BAD_SYNTAX,
+                     (which + " nodelet takes no more than four arguments."));
+      return false;
+    }
+
+    // Extract arguments
+    for (int i = 0; i < num_args; i++) {
+      if (cmd->args[i].data_type != ff_msgs::CommandArg::DATA_TYPE_STRING) {
+        state_->AckCmd(cmd->cmd_id,
+                       ff_msgs::AckCompletedStatus::BAD_SYNTAX,
+                       (which + " nodelet parameters must be strings."));
+        return false;
+      }
+
+      if (i == 0) {
+        unload_load_nodelet_srv.request.name = cmd->args[0].s;
+      } else if (i == 1) {
+        unload_load_nodelet_srv.request.manager_name = cmd->args[1].s;
+      } else if (i == 2) {
+        unload_load_nodelet_srv.request.type = cmd->args[2].s;
+      } else {
+        unload_load_nodelet_srv.request.bond_id = cmd->args[3].s;
+      }
+    }
+
+    // Check if the load/unload nodelet service is running
+    if (!CheckServiceExists(unload_load_nodelet_client_,
+                            "Load/unload nodelet",
+                            cmd->cmd_id)) {
+      return false;
+    }
+
+    // Call the unload load nodelet service
+    if (!unload_load_nodelet_client_.call(unload_load_nodelet_srv)) {
+      state_->AckCmd(cmd->cmd_id,
+                     ff_msgs::AckCompletedStatus::EXEC_FAILED,
+                     "Unload load nodelet service returned false.");
+      return false;
+    }
+
+    if (unload_load_nodelet_srv.response.result !=
+                            ff_msgs::UnloadLoadNodelet::Response::SUCCESSFUL) {
+      //err_msg = which + " nodelet failed with result ";
+      //err_msg += std::to_string(unload_load_nodelet_srv.response.result);
+      state_->AckCmd(cmd->cmd_id,
+                     ff_msgs::AckCompletedStatus::EXEC_FAILED,
+                     (which + " nodelet failed with result " +
+                      std::to_string(unload_load_nodelet_srv.response.result)));
+      return false;
+    }
+
+    state_->AckCmd(cmd->cmd_id);
+    return true;
+  }
+
+  return false;
+}
+
 ros::Time Executive::MsToSec(std::string timestamp) {
   uint64_t time, secs, nsecs;
   time = std::stoull(timestamp);
@@ -1711,88 +1803,7 @@ bool Executive::InitializeBias(ff_msgs::CommandStampedPtr const& cmd) {
 
 bool Executive::LoadNodelet(ff_msgs::CommandStampedPtr const& cmd) {
   NODELET_INFO("Executive executing load nodelet command!");
-  bool success = true;
-  std::string err_msg = "Load nodelet parameters must be strings.";
-  ff_msgs::UnloadLoadNodelet unload_load_nodelet_srv;
-  unload_load_nodelet_srv.request.load = true;
-
-  // Don't load a nodelet while moving
-  if (CheckNotMoving(cmd)) {
-    // This command has 4 arguments but only one is required, the nodelet name
-    if (cmd->args.size() < 1 || cmd->args.size() > 4) {
-      err_msg = "Load nodelet must have one argument and no more than four.";
-      success = false;
-    } else {
-      // Extract first argument
-      if (cmd->args[0].data_type != ff_msgs::CommandArg::DATA_TYPE_STRING) {
-        success = false;
-      } else {
-        unload_load_nodelet_srv.request.name = cmd->args[0].s;
-      }
-
-      // Extract second argument if it was provided
-      if (cmd->args.size() >= 2 && success) {
-        if (cmd->args[1].data_type != ff_msgs::CommandArg::DATA_TYPE_STRING) {
-          success = false;
-        } else {
-          unload_load_nodelet_srv.request.manager_name = cmd->args[1].s;
-        }
-      }
-
-      // Extract third argument if it was provided
-      if (cmd->args.size() >= 3 && success) {
-        if (cmd->args[2].data_type != ff_msgs::CommandArg::DATA_TYPE_STRING) {
-          success = false;
-        } else {
-          unload_load_nodelet_srv.request.type = cmd->args[2].s;
-        }
-      }
-
-      // Extract fourth argument if it was provided
-      if (cmd->args.size() == 4 && success) {
-        if (cmd->args[3].data_type != ff_msgs::CommandArg::DATA_TYPE_STRING) {
-          success = false;
-        } else {
-          unload_load_nodelet_srv.request.bond_id = cmd->args[3].s;
-        }
-      }
-    }
-
-    if (success) {
-      if (!CheckServiceExists(unload_load_nodelet_client_,
-                              "Load/unload nodelet",
-                              cmd->cmd_id)) {
-        return false;
-      }
-
-      // Call the unload load nodelet service
-      if (!unload_load_nodelet_client_.call(unload_load_nodelet_srv)) {
-        state_->AckCmd(cmd->cmd_id,
-                       ff_msgs::AckCompletedStatus::EXEC_FAILED,
-                       "Unload load nodelet service returned false.");
-        return false;
-      }
-
-      if (unload_load_nodelet_srv.response.result !=
-                            ff_msgs::UnloadLoadNodelet::Response::SUCCESSFUL) {
-        err_msg = "Load nodelet failed with result ";
-        err_msg += std::to_string(unload_load_nodelet_srv.response.result);
-        state_->AckCmd(cmd->cmd_id,
-                       ff_msgs::AckCompletedStatus::EXEC_FAILED,
-                       err_msg);
-        return false;
-      }
-
-      state_->AckCmd(cmd->cmd_id);
-      return true;
-    } else {
-      state_->AckCmd(cmd->cmd_id,
-                     ff_msgs::AckCompletedStatus::BAD_SYNTAX,
-                     err_msg);
-    }
-  }
-
-  return false;
+  return LoadUnloadNodelet(cmd);
 }
 
 bool Executive::NoOp(ff_msgs::CommandStampedPtr const& cmd) {
@@ -3436,78 +3447,7 @@ bool Executive::Undock(ff_msgs::CommandStampedPtr const& cmd) {
 
 bool Executive::UnloadNodelet(ff_msgs::CommandStampedPtr const& cmd) {
   NODELET_INFO("Executive executing unload nodelet command!");
-  bool success = true;
-  std::string err_msg = "Unload nodelet parameters must be strings.";
-  ff_msgs::UnloadLoadNodelet unload_load_nodelet_srv;
-  unload_load_nodelet_srv.request.load = false;
-
-  // Don't unload a nodelet while moving because we may be unloading a mobility
-  // nodelet
-  if (CheckNotMoving(cmd)) {
-    // This command has two arguments but only one is required, the nodelet name
-    if (cmd->args.size() < 1 || cmd->args.size() > 2) {
-      err_msg = "Unload nodelet must have one argument and no more than two.";
-      success = false;
-    } else {
-      // Extract first argument
-      if (cmd->args[0].data_type != ff_msgs::CommandArg::DATA_TYPE_STRING) {
-        success = false;
-      } else {
-        unload_load_nodelet_srv.request.name = cmd->args[0].s;
-      }
-
-      // Extract second argument if it was provided
-      if (cmd->args.size() == 2 && success) {
-        if (cmd->args[1].data_type != ff_msgs::CommandArg::DATA_TYPE_STRING) {
-          success = false;
-        } else {
-          unload_load_nodelet_srv.request.manager_name = cmd->args[1].s;
-        }
-      }
-    }
-
-    if (success) {
-      // Check to make sure the service is valid and running
-      if (!CheckServiceExists(unload_load_nodelet_client_,
-                              "Load/unload nodelet",
-                              cmd->cmd_id)) {
-        return false;
-      }
-
-      if (!unload_load_nodelet_client_.exists()) {
-        state_->AckCmd(cmd->cmd_id,
-                       ff_msgs::AckCompletedStatus::EXEC_FAILED,
-                       "Unload load nodelet service isn't running!");
-        return false;
-      }
-
-      if (!unload_load_nodelet_client_.call(unload_load_nodelet_srv)) {
-        state_->AckCmd(cmd->cmd_id,
-                       ff_msgs::AckCompletedStatus::EXEC_FAILED,
-                       "Unload load nodelet service returned false.");
-        return false;
-      }
-
-      if (unload_load_nodelet_srv.response.result !=
-                            ff_msgs::UnloadLoadNodelet::Response::SUCCESSFUL) {
-        err_msg = "Unload nodelet failed with result ";
-        err_msg += std::to_string(unload_load_nodelet_srv.response.result);
-        state_->AckCmd(cmd->cmd_id,
-                       ff_msgs::AckCompletedStatus::EXEC_FAILED,
-                       err_msg);
-        return false;
-      }
-
-      state_->AckCmd(cmd->cmd_id);
-      return true;
-    } else {
-      state_->AckCmd(cmd->cmd_id,
-                     ff_msgs::AckCompletedStatus::BAD_SYNTAX,
-                     err_msg);
-    }
-  }
-
-  return false;
+  return LoadUnloadNodelet(cmd);
 }
 
 bool Executive::Unperch(ff_msgs::CommandStampedPtr const& cmd) {
