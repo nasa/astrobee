@@ -53,7 +53,6 @@ void SemanticObjectTracker::UpdateObjectTracks(const lm::SemanticDets& semantic_
   }
 
   LogDebug("SemanticObjectTracker: Updated tracks. Now " << tracks_.size() << " tracks");
-  visualize();
 }
 
 std::vector<std::shared_ptr<const SemanticObjectTrack>> SemanticObjectTracker::Tracks() const {

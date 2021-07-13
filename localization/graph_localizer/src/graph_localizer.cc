@@ -78,7 +78,7 @@ GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
   loc_factor_adder_.reset(
     new LocFactorAdder(params_.factor.loc_adder, go::GraphActionCompleterType::LocProjectionFactor));
   semantic_loc_factor_adder_.reset(
-    new SemanticLocFactorAdder(params_.factor.loc_adder, go::GraphActionCompleterType::SemanticLocProjectionFactor));
+    new SemanticLocFactorAdder(params_.factor.semantic_loc_adder, go::GraphActionCompleterType::SemanticLocProjectionFactor));
   projection_factor_adder_.reset(
     new ProjectionFactorAdder(params_.factor.projection_adder, feature_tracker_,
                               feature_point_node_updater_->shared_feature_point_graph_values()));
@@ -262,7 +262,8 @@ void GraphLocalizer::AddSemanticDetsMeasurement(const lm::SemanticDetsMeasuremen
   }
   if (params_.factor.semantic_loc_adder.enabled) {
     LogDebug("AddSemanticDetsMeasurement: Adding gt semantic factors.");
-    BufferFactors(semantic_loc_factor_adder_->AddFactors(semantic_dets_measurement));
+    BufferFactors(semantic_loc_factor_adder_->AddFactors(semantic_dets_measurement, 
+          GetCombinedNavState(semantic_dets_measurement.timestamp)));
   }
 }
 

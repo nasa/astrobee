@@ -67,8 +67,8 @@ void LoadSemanticLocFactorAdderParams(config_reader::ConfigReader& config, Seman
     mc::LoadDouble(config, "semantic_loc_adder_max_inlier_weighted_projection_norm");
   params.weight_projections_with_distance = mc::LoadBool(config, "semantic_loc_adder_weight_projections_with_distance");
   params.add_prior_if_projections_fail = mc::LoadBool(config, "semantic_loc_adder_add_prior_if_projections_fail");
-  params.body_T_cam = lc::LoadTransform(config, "dock_cam_transform");
-  params.cam_intrinsics.reset(new gtsam::Cal3_S2(lc::LoadCameraIntrinsics(config, "dock_cam")));
+  params.body_T_cam = lc::LoadTransform(config, "nav_cam_transform");
+  params.cam_intrinsics.reset(new gtsam::Cal3_S2(644.3, 644.3, 0, 640., 480.));
   params.cam_noise = gtsam::noiseModel::Isotropic::Sigma(2, mc::LoadDouble(config, "loc_dock_cam_noise_stddev"));
 }
 

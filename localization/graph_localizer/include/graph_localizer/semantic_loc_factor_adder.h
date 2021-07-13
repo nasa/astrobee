@@ -23,6 +23,7 @@
 #include <graph_localizer/loc_factor_adder.h>
 #include <graph_optimizer/factor_adder.h>
 #include <localization_common/averager.h>
+#include <localization_common/combined_nav_state.h>
 #include <localization_measurements/matched_projections_measurement.h>
 #include <localization_measurements/semantic_dets_measurement.h>
 
@@ -35,10 +36,11 @@ class SemanticLocFactorAdder : public LocFactorAdder {
                          const graph_optimizer::GraphActionCompleterType graph_action_completer_type);
 
   std::vector<graph_optimizer::FactorsToAdd> AddFactors(
-    const localization_measurements::SemanticDetsMeasurement& semantic_dets);
+    const localization_measurements::SemanticDetsMeasurement& semantic_dets, 
+    const boost::optional<localization_common::CombinedNavState>& cur_state);
 
  private:
-  std::map<int, std::vector<Eigen::Affine3d>> object_poses_; // map from class to vector of positions
+  std::map<int, std::vector<Eigen::Isometry3d>> object_poses_; // map from class to vector of positions
 
   graph_optimizer::GraphActionCompleterType type() const;
 
