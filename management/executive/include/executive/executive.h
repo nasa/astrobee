@@ -55,6 +55,7 @@
 #include <ff_msgs/SetInertia.h>
 #include <ff_msgs/SetRate.h>
 #include <ff_msgs/SetZones.h>
+#include <ff_msgs/UnloadLoadNodelet.h>
 #include <ff_msgs/Zone.h>
 #include <ff_util/config_client.h>
 #include <ff_util/ff_action.h>
@@ -206,6 +207,7 @@ class Executive : public ff_util::FreeFlyerNodelet {
   bool GripperControl(ff_msgs::CommandStampedPtr const& cmd);
   bool IdlePropulsion(ff_msgs::CommandStampedPtr const& cmd);
   bool InitializeBias(ff_msgs::CommandStampedPtr const& cmd);
+  bool LoadNodelet(ff_msgs::CommandStampedPtr const& cmd);
   bool NoOp(ff_msgs::CommandStampedPtr const& cmd);
   bool PausePlan(ff_msgs::CommandStampedPtr const& cmd);
   bool Perch(ff_msgs::CommandStampedPtr const& cmd);
@@ -242,6 +244,7 @@ class Executive : public ff_util::FreeFlyerNodelet {
   bool StowArm(ff_msgs::CommandStampedPtr const& cmd);
   bool SwitchLocalization(ff_msgs::CommandStampedPtr const& cmd);
   bool Undock(ff_msgs::CommandStampedPtr const& cmd);
+  bool UnloadNodelet(ff_msgs::CommandStampedPtr const& cmd);
   bool Unperch(ff_msgs::CommandStampedPtr const& cmd);
   bool Unterminate(ff_msgs::CommandStampedPtr const& cmd);
   bool Wait(ff_msgs::CommandStampedPtr const& cmd);
@@ -305,6 +308,7 @@ class Executive : public ff_util::FreeFlyerNodelet {
   ros::ServiceClient set_inertia_client_, set_rate_client_;
   ros::ServiceClient set_data_client_, enable_recording_client_;
   ros::ServiceClient eps_terminate_client_;
+  ros::ServiceClient unload_load_nodelet_client_;
 
   ros::Subscriber cmd_sub_, dock_state_sub_, fault_state_sub_, gs_ack_sub_;
   ros::Subscriber heartbeat_sub_, motion_sub_, plan_sub_, zones_sub_, data_sub_;

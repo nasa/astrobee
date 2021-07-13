@@ -63,6 +63,8 @@ OpState* OpStateReady::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
     if (exec_->InitializeBias(cmd)) {
       return OpStateRepo::Instance()->teleop()->StartupState();
     }
+  } else if (cmd->cmd_name == CommandConstants::CMD_NAME_LOAD_NODELET) {
+    exec_->LoadNodelet(cmd);
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_PERCH) {
     if (exec_->Perch(cmd)) {
       return OpStateRepo::Instance()->teleop()->StartupState();
@@ -163,6 +165,8 @@ OpState* OpStateReady::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
     if (exec_->Undock(cmd)) {
       return OpStateRepo::Instance()->teleop()->StartupState();
     }
+  } else if (cmd->cmd_name == CommandConstants::CMD_NAME_UNLOAD_NODELET) {
+    exec_->UnloadNodelet(cmd);
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_UNPERCH) {
     if (exec_->Unperch(cmd)) {
       return OpStateRepo::Instance()->teleop()->StartupState();

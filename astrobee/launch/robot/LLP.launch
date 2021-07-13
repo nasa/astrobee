@@ -50,7 +50,7 @@
   <group unless="$(arg ground_truth_localizer)">
     <include file="$(find ff_util)/launch/ff_nodelet.launch">
       <arg name="class" value="imu_augmentor/ImuAugmentorNodelet" />
-      <arg name="name" value="imu_augmentor_nodelet" />
+      <arg name="name" value="imu_aug" />
       <arg name="manager" value="llp_imu_aug" />
       <arg name="spurn" value="$(arg spurn)" />
       <arg name="nodes" value="$(arg nodes)" />
@@ -61,7 +61,7 @@
   </group>
   <include file="$(find ff_util)/launch/ff_nodelet.launch">
     <arg name="class" value="ctl/ctl" />
-    <arg name="name" value="ctl_node" />
+    <arg name="name" value="ctl" />
     <arg name="manager" value="llp_gnc" />
     <arg name="spurn" value="$(arg spurn)" />
     <arg name="nodes" value="$(arg nodes)" />
@@ -71,7 +71,7 @@
   </include>
   <include file="$(find ff_util)/launch/ff_nodelet.launch">
     <arg name="class" value="fam/fam" />
-    <arg name="name" value="fam_node" />
+    <arg name="name" value="fam" />
     <arg name="manager" value="llp_gnc" />
     <arg name="spurn" value="$(arg spurn)" />
     <arg name="nodes" value="$(arg nodes)" />

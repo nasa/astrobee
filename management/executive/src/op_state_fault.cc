@@ -41,6 +41,8 @@ OpState* OpStateFault::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
     exec_->IdlePropulsion(cmd);
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_INITIALIZE_BIAS) {
     exec_->InitializeBias(cmd);
+  } else if (cmd->cmd_name == CommandConstants::CMD_NAME_LOAD_NODELET) {
+    exec_->LoadNodelet(cmd);
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_POWER_OFF_ITEM) {
     exec_->PowerItemOff(cmd);
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_POWER_ON_ITEM) {
@@ -82,6 +84,8 @@ OpState* OpStateFault::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
     exec_->StowArm(cmd);
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_SWITCH_LOCALIZATION) {
     exec_->SwitchLocalization(cmd);
+  } else if (cmd->cmd_name == CommandConstants::CMD_NAME_UNLOAD_NODELET) {
+    exec_->UnloadNodelet(cmd);
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_UNTERMINATE) {
     exec_->Unterminate(cmd);
   } else {

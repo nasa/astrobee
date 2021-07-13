@@ -881,18 +881,13 @@ bool SysMonitor::ReadCommand(config_reader::ConfigReader::Table *entry,
 
 bool SysMonitor::NodeletService(ff_msgs::UnloadLoadNodelet::Request &req,
                                 ff_msgs::UnloadLoadNodelet::Response &res) {
-  bool successful = true;
   if (req.load) {
     res.result = LoadNodelet(req);
   } else {
     res.result = UnloadNodelet(req.name, req.manager_name);
   }
 
-  if (res.result != ff_msgs::UnloadLoadNodelet::Response::SUCCESSFUL) {
-    successful = false;
-    NODELET_ERROR("Unload/load nodelet failed with result %i.", res.result);
-  }
-  return successful;
+  return true;
 }
 
 int SysMonitor::LoadNodelet(ff_msgs::UnloadLoadNodelet::Request &req) {
