@@ -12,8 +12,8 @@ string name           # Name of nodelet. Needed for both unload and load.
 # if the type is specified in the system monitor config.
 string type
 
-# Name of nodelet manager. Needed for load. May not be needed if the system
-# monitor had received a heartbeat before being unloaded.
+# Name of nodelet manager. Needed for both load and unload. May not be needed if
+# the system monitor received a heartbeat before being unloaded.
 string manager_name
 
 string[] remap_source_args  # Leave blank if no source args. Needed for load.

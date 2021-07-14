@@ -160,7 +160,10 @@ void SysMonitor::HeartbeatCallback(ff_msgs::HeartbeatConstPtr const& hb) {
   if (watch_dogs_.count(hb->node) > 0) {
     WatchdogPtr wd = watch_dogs_.at(hb->node);
     wd->ResetTimer();
-    if (wd->nodelet_manager() == "") {
+    // Check if the manager in the heartbeat matches the manager in the config.
+    // If not, replace the manager with what is in the heartbeat since that is
+    // more accurate.
+    if (wd->nodelet_manager() != hb->nodelet_manager) {
       wd->nodelet_manager(hb->nodelet_manager);
     }
 
@@ -700,21 +703,26 @@ bool SysMonitor::ReadParams() {
     }
   }
 
-  // Extract nodelet type and add to watchdog map
-  if (config_params_.CheckValExists("nodelet_types")) {
-    std::string type = "";
+  // Extract nodelet manager and type and add it to watchdog map
+  if (config_params_.CheckValExists("nodelet_info")) {
+    std::string type = "", manager = "";
     config_reader::ConfigReader::Table types_tbl(&config_params_,
-                                                              "nodelet_types");
+                                                              "nodelet_info");
     int types_tbl_size = types_tbl.GetSize() + 1;
     for (i = 1; i < types_tbl_size; i++) {
       config_reader::ConfigReader::Table type_entry(&types_tbl, i);
       if (!type_entry.GetStr("name", &node_name)) {
-        NODELET_WARN("Name not found at %i in types table.", i);
+        NODELET_WARN("Name not found at %i in nodelet info table.", i);
         continue;
       }
 
       if (!type_entry.GetStr("type", &type)) {
-        NODELET_WARN("Type not found at %i in types table.", i);
+        NODELET_WARN("Type not found at %i in nodelet info table.", i);
+        continue;
+      }
+
+      if (!type_entry.GetStr("manager", &manager)) {
+        NODELET_WARN("Manager not found at %i in nodelet info table.", i);
         continue;
       }
 
@@ -733,6 +741,7 @@ bool SysMonitor::ReadParams() {
       // Check to make sure node got added to watchdog maps
       if (watch_dogs_.count(node_name) > 0) {
         watch_dogs_.at(node_name)->nodelet_type(type);
+        watch_dogs_.at(node_name)->nodelet_manager(manager);
       } else {
         NODELET_WARN("Couldn't add type, %s wasn't in fault table.",
                                                             node_name.c_str());
@@ -881,18 +890,13 @@ bool SysMonitor::ReadCommand(config_reader::ConfigReader::Table *entry,
 
 bool SysMonitor::NodeletService(ff_msgs::UnloadLoadNodelet::Request &req,
                                 ff_msgs::UnloadLoadNodelet::Response &res) {
-  bool successful = true;
   if (req.load) {
     res.result = LoadNodelet(req);
   } else {
     res.result = UnloadNodelet(req.name, req.manager_name);
   }
 
-  if (res.result != ff_msgs::UnloadLoadNodelet::Response::SUCCESSFUL) {
-    successful = false;
-    NODELET_ERROR("Unload/load nodelet failed with result %i.", res.result);
-  }
-  return successful;
+  return true;
 }
 
 int SysMonitor::LoadNodelet(ff_msgs::UnloadLoadNodelet::Request &req) {
