@@ -387,7 +387,7 @@ class FreeFlyerActionClient {
 
     // Call the result callback on the client side
     Complete(state_response_, result_);
-    
+
     // Return to waiting for a goal
     state_ = WAITING_FOR_GOAL;
   }
