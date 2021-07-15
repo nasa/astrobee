@@ -217,7 +217,7 @@ class FreeFlyerActionClient {
     timer_poll_ = nh->createTimer(to_poll_,
         &FreeFlyerActionClient::ConnectPollCallback, this, false, false);
     timer_response_delay_ = nh->createTimer(to_response_delay_,
-        &FreeFlyerActionClient::ResultDelayCallback, this, false, false);
+        &FreeFlyerActionClient::ResultDelayCallback, this, true, false);
     // Initialize the action client
     sac_ = std::shared_ptr < actionlib::SimpleActionClient < ActionSpec > > (
       new actionlib::SimpleActionClient < ActionSpec > (*nh, topic, false));
@@ -381,10 +381,6 @@ class FreeFlyerActionClient {
 
   // Called when a result is received
   void ResultDelayCallback(ros::TimerEvent const& event) {
-    // Feedback has been received after a result before. Stop tracking the goal
-    // so that this doesn't happen
-    timer_response_delay_.stop();
-
     // Call the result callback on the client side
     Complete(state_response_, result_);
 
