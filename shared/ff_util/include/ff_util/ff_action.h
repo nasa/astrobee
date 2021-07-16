@@ -379,7 +379,11 @@ class FreeFlyerActionClient {
     StartOptionalTimer(timer_response_delay_, to_response_delay_);
   }
 
-  // Called when a result is received
+  // This delayed callback is necessary because an action is only considered
+  // finished once the ResultCallback returns. This raises the problem where,
+  // if another action of the same type is called in the ResultCallback
+  // or immediately afterwards, it returns failed because the previous action
+  // is technically not finished
   void ResultDelayCallback(ros::TimerEvent const& event) {
     // Call the result callback on the client side
     Complete(state_response_, result_);
