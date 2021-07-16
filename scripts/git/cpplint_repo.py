@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import os, imp, fnmatch
+import os, importlib, fnmatch
 
 num_errors = 0
 
@@ -11,7 +11,7 @@ def get_repo_path():
     return os.path.realpath(os.path.dirname(os.path.realpath(__file__)) + "/../..")
 
 def run_cpplint(filename, cpplint_path):
-    cpplint = imp.load_source('cpplint', cpplint_path)
+    cpplint = importlib.machinery.SourceFileLoader('cpplint', cpplint_path).load_module()
     cpplint._cpplint_state.ResetErrorCounts()
     cpplint.print_stdout = False
     cpplint._line_length = 120
