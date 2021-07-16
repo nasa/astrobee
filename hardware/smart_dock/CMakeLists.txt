@@ -26,6 +26,7 @@ find_package(catkin REQUIRED COMPONENTS
   nodelet
   i2c
   eps_driver
+  dds_msgs
 )
 
 set(DEPS

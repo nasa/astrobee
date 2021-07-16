@@ -25,21 +25,25 @@ find_package(catkin REQUIRED COMPONENTS
   config_reader
   ff_util
   ff_msgs
+  dds_msgs
 )
 
 # System dependencies are found with CMake's conventions
 find_package(Eigen3 REQUIRED)
 
+# without this we find the wrong one in cross compile
+SET(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
+find_package(Qt4 4.6.0 REQUIRED QtXml)
+
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/../dds_msgs/cmake")
+find_package(Miro REQUIRED )
+find_package(RtiDds REQUIRED )
+find_package(Soracore REQUIRED )
+
 catkin_package(
   LIBRARIES dds_ros_bridge
-  CATKIN_DEPENDS roscpp message_runtime std_msgs nav_msgs
+  CATKIN_DEPENDS roscpp message_runtime std_msgs nav_msgs dds_msgs
 )
-
-set(LIBS
-  Qt4::QtXml
-  rapidIo
-  rapidExtAstrobee
-  )
 
 ###########
 ## Build ##
@@ -50,15 +54,19 @@ include_directories(
   include
   ${catkin_INCLUDE_DIRS}
   ${EIGEN3_INCLUDE_DIRS}
+  ${RTIDDS_INCLUDE_DIR}
   ${SORACORE_INCLUDE_DIRS}
-)
-file(GLOB cc_files
-     "src/*.cc"
+  ${MIRO_INCLUDE_DIR}
 )
 
+file(GLOB cc_files
+     "src/util.cc"
+)
 add_library(dds_ros_bridge
   ${cc_files}
 )
+add_dependencies(dds_ros_bridge ${catkin_EXPORTED_TARGETS})
+target_link_libraries(dds_ros_bridge Qt4::QtXml rapidExtAstrobee ${RTIDDS_LIBRARIES} ${catkin_LIBRARIES})
 
 # Determine our module name
 get_filename_component(MODULE_NAME ${CMAKE_CURRENT_SOURCE_DIR} NAME)

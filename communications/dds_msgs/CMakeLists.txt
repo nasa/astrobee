@@ -38,11 +38,25 @@ catkin_package(
 ## Build ##
 ###########
 
+# Specify additional locations of header files
+include_directories(
+  ${catkin_INCLUDE_DIRS}
+  ${CMAKE_CURRENT_BINARY_DIR}
+  ${RTIDDS_INCLUDE_DIR}
+  ${SORACORE_INCLUDE_DIRS}
+  ${CMAKE_SOURCE_DIR}/rapidDds
+)
+
 # message(STATUS "Copying IDL files")
 file(GLOB DDS_IDL_FILES
   "idl/*.idl")
 
 file(COPY ${DDS_IDL_FILES} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+
+file(GLOB DDS_IDL_FILEZ
+  "${SORACORE_IDL_DIR}/rapidDds/*.idl")
+
+file(COPY ${DDS_IDL_FILEZ} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
 set(LIB_NAME "rapidExtAstrobee")
 
@@ -54,9 +68,6 @@ create_dds_msg_targets(
   DIR ${CMAKE_CURRENT_BINARY_DIR}
   INCLUDES "-I${CMAKE_SOURCE_DIR}/rapidDds")
 
-# message(-I${DDS_IDL_FILES}/rapidDds)
-
-
 add_library(${LIB_NAME} ${rapidExtAstrobee_GENERATED})
 target_link_libraries(${LIB_NAME}
   rapidDds
@@ -67,7 +78,8 @@ target_compile_options(${LIB_NAME} PRIVATE -Wno-strict-aliasing)
 target_include_directories(${LIB_NAME} PUBLIC 
   ${CMAKE_CURRENT_BINARY_DIR}
   ${RTIDDS_INCLUDE_DIR}
-  ${SORACORE_INCLUDE_DIRS})
+  ${SORACORE_INCLUDE_DIRS}
+  ${MIRO_INCLUDE_DIR})
 
 #############
 ## Install ##
