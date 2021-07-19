@@ -477,7 +477,7 @@ class PerchNodelet : public ff_util::FreeFlyerNodelet {
     // Setup the platform name
     platform_name_ = GetPlatform();
     platform_name_ = (platform_name_.empty() ? "" : platform_name_ + "/");
-  
+
     // Create a transform buffer to listen for transforms
     tf_listener_ = std::shared_ptr<tf2_ros::TransformListener>(
       new tf2_ros::TransformListener(tf_buffer_));
