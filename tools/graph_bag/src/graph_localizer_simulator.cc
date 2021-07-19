@@ -36,6 +36,10 @@ void GraphLocalizerSimulator::BufferARVisualLandmarksMsg(const ff_msgs::VisualLa
   ar_msg_buffer_.emplace_back(visual_landmarks_msg);
 }
 
+void GraphLocalizerSimulator::BufferSMVisualLandmarksMsg(const vision_msgs::Detection2DArray& visual_landmarks_msg) {
+  sm_msg_buffer_.emplace_back(visual_landmarks_msg);
+}
+
 void GraphLocalizerSimulator::BufferImuMsg(const sensor_msgs::Imu& imu_msg) { imu_msg_buffer_.emplace_back(imu_msg); }
 
 void GraphLocalizerSimulator::BufferFlightModeMsg(const ff_msgs::FlightMode& flight_mode_msg) {
@@ -76,6 +80,11 @@ bool GraphLocalizerSimulator::AddMeasurementsAndUpdateIfReady(const lc::Time& cu
     ARVisualLandmarksCallback(ar_msg);
   }
   ar_msg_buffer_.clear();
+
+  for (const auto& sm_msg : sm_msg_buffer_) {
+    SemanticDetCallback(sm_msg);
+  }
+  sm_msg_buffer_.clear();
 
   Update();
   last_update_time_ = current_time;

@@ -36,7 +36,8 @@ LiveMeasurementSimulator::LiveMeasurementSimulator(const LiveMeasurementSimulato
       flight_mode_buffer_(params.flight_mode),
       of_buffer_(params.of),
       vl_buffer_(params.vl),
-      ar_buffer_(params.ar) {
+      ar_buffer_(params.ar),
+      sm_buffer_(params.sm) {
   config_reader::ConfigReader config;
   config.AddFile("cameras.config");
   config.AddFile("geometry.config");
@@ -60,6 +61,10 @@ LiveMeasurementSimulator::LiveMeasurementSimulator(const LiveMeasurementSimulato
     topics.push_back(TOPIC_LOCALIZATION_OF_FEATURES);
     topics.push_back(std::string("/") + TOPIC_LOCALIZATION_ML_FEATURES);
     topics.push_back(TOPIC_LOCALIZATION_ML_FEATURES);
+  }
+  if (params_.use_semantics) {
+    topics.push_back(std::string("/") + TOPIC_LOCALIZATION_SM_FEATURES);
+    topics.push_back(TOPIC_LOCALIZATION_SM_FEATURES);
   }
   // Only use recorded ar features
   topics.push_back(std::string("/") + TOPIC_LOCALIZATION_AR_FEATURES);
@@ -117,6 +122,9 @@ bool LiveMeasurementSimulator::ProcessMessage() {
   } else if (params_.use_image_features && string_ends_with(msg.getTopic(), TOPIC_LOCALIZATION_ML_FEATURES)) {
     const ff_msgs::VisualLandmarksConstPtr vl_features = msg.instantiate<ff_msgs::VisualLandmarks>();
     vl_buffer_.BufferMessage(*vl_features);
+  } else if (params_.use_semantics && string_ends_with(msg.getTopic(), TOPIC_LOCALIZATION_SM_FEATURES)) {
+    const vision_msgs::Detection2DArrayConstPtr sm_features = msg.instantiate<vision_msgs::Detection2DArray>();
+    sm_buffer_.BufferMessage(*sm_features);
   } else if (string_ends_with(msg.getTopic(), kImageTopic_)) {
     sensor_msgs::ImageConstPtr image_msg = msg.instantiate<sensor_msgs::Image>();
     if (params_.save_optical_flow_images) {
@@ -151,6 +159,9 @@ boost::optional<ff_msgs::VisualLandmarks> LiveMeasurementSimulator::GetVLMessage
 }
 boost::optional<ff_msgs::VisualLandmarks> LiveMeasurementSimulator::GetARMessage(const lc::Time current_time) {
   return ar_buffer_.GetMessage(current_time);
+}
+boost::optional<vision_msgs::Detection2DArray> LiveMeasurementSimulator::GetSMMessage(const lc::Time current_time) {
+  return sm_buffer_.GetMessage(current_time);
 }
 boost::optional<sensor_msgs::ImageConstPtr> LiveMeasurementSimulator::GetImageMessage(const lc::Time current_time) {
   const auto img_it = img_buffer_.find(current_time);

@@ -22,6 +22,7 @@
 #include <ff_msgs/Feature2dArray.h>
 #include <ff_msgs/FlightMode.h>
 #include <ff_msgs/VisualLandmarks.h>
+#include <vision_msgs/Detection2DArray.h>
 #include <graph_bag/graph_localizer_simulator_params.h>
 #include <graph_localizer/graph_localizer_wrapper.h>
 #include <localization_common/time.h>
@@ -42,6 +43,8 @@ class GraphLocalizerSimulator : public graph_localizer::GraphLocalizerWrapper {
 
   void BufferARVisualLandmarksMsg(const ff_msgs::VisualLandmarks& visual_landmarks_msg);
 
+  void BufferSMVisualLandmarksMsg(const vision_msgs::Detection2DArray& visual_landmarks_msg);
+
   void BufferImuMsg(const sensor_msgs::Imu& imu_msg);
 
   void BufferFlightModeMsg(const ff_msgs::FlightMode& flight_mode_msg);
@@ -52,6 +55,7 @@ class GraphLocalizerSimulator : public graph_localizer::GraphLocalizerWrapper {
   std::vector<ff_msgs::Feature2dArray> of_msg_buffer_;
   std::vector<ff_msgs::VisualLandmarks> vl_msg_buffer_;
   std::vector<ff_msgs::VisualLandmarks> ar_msg_buffer_;
+  std::vector<vision_msgs::Detection2DArray> sm_msg_buffer_;
   std::vector<sensor_msgs::Imu> imu_msg_buffer_;
   std::vector<ff_msgs::FlightMode> flight_mode_msg_buffer_;
   boost::optional<localization_common::Time> last_update_time_;

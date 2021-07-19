@@ -24,6 +24,7 @@
 #include <ff_msgs/FlightMode.h>
 #include <ff_msgs/VisualLandmarks.h>
 #include <ff_util/ff_names.h>
+#include <vision_msgs/Detection2DArray.h>
 #include <graph_bag/live_measurement_simulator_params.h>
 #include <graph_bag/message_buffer.h>
 #include <lk_optical_flow/lk_optical_flow.h>
@@ -53,6 +54,7 @@ class LiveMeasurementSimulator {
   boost::optional<ff_msgs::Feature2dArray> GetOFMessage(const localization_common::Time current_time);
   boost::optional<ff_msgs::VisualLandmarks> GetVLMessage(const localization_common::Time current_time);
   boost::optional<ff_msgs::VisualLandmarks> GetARMessage(const localization_common::Time current_time);
+  boost::optional<vision_msgs::Detection2DArray> GetSMMessage(const localization_common::Time current_time);
   boost::optional<ff_msgs::FlightMode> GetFlightModeMessage(const localization_common::Time current_time);
 
  private:
@@ -74,6 +76,7 @@ class LiveMeasurementSimulator {
   MessageBuffer<ff_msgs::Feature2dArray> of_buffer_;
   MessageBuffer<ff_msgs::VisualLandmarks> vl_buffer_;
   MessageBuffer<ff_msgs::VisualLandmarks> ar_buffer_;
+  MessageBuffer<vision_msgs::Detection2DArray> sm_buffer_;
   localization_common::Time current_time_;
 };
 }  // namespace graph_bag

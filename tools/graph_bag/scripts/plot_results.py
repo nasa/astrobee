@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 #
 # Copyright (c) 2017, United States Government, as represented by the
 # Administrator of the National Aeronautics and Space Administration.
@@ -38,7 +38,7 @@ import csv
 
 
 def l2_map(vector3ds):
-  return map(lambda (x, y, z): math.sqrt(x*x + y*y + z*z), zip(vector3ds.xs, vector3ds.ys, vector3ds.zs))
+  return list(map(lambda d: math.sqrt(d[0]*d[0] + d[1]*d[1] + d[2]*d[2]), zip(vector3ds.xs, vector3ds.ys, vector3ds.zs)))
 
 
 def add_graph_plots(pdf, sparse_mapping_poses, ar_tag_poses, graph_localization_states,

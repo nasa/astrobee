@@ -44,7 +44,7 @@ namespace mc = msg_conversions;
 
 GraphBag::GraphBag(const std::string& bag_name, const std::string& map_file, const std::string& image_topic,
                    const std::string& results_bag, const std::string& output_stats_file, const bool use_image_features,
-                   const std::string& graph_config_path_prefix)
+                   const bool use_semantics, const std::string& graph_config_path_prefix)
     : results_bag_(results_bag, rosbag::bagmode::Write),
       imu_bias_tester_wrapper_(graph_config_path_prefix),
       imu_augmentor_wrapper_(graph_config_path_prefix),
@@ -65,6 +65,7 @@ GraphBag::GraphBag(const std::string& bag_name, const std::string& map_file, con
   // i.e. when running a bag sweep or param sweep
   // TODO(rsoussan): clean this up
   params.use_image_features = use_image_features;
+  params.use_semantics = use_semantics;
   live_measurement_simulator_.reset(new LiveMeasurementSimulator(params));
 
   GraphLocalizerSimulatorParams graph_params;
@@ -158,6 +159,10 @@ void GraphBag::Run() {
           }
         }
       }
+    }
+    const auto sm_msg = live_measurement_simulator_->GetSMMessage(current_time);
+    if (sm_msg) {
+      graph_localizer_simulator_->BufferSMVisualLandmarksMsg(*sm_msg);
     }
 
     const bool updated_graph = graph_localizer_simulator_->AddMeasurementsAndUpdateIfReady(current_time);

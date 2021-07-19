@@ -38,6 +38,7 @@ void LoadLiveMeasurementSimulatorParams(config_reader::ConfigReader& config, con
   LoadMessageBufferParams("of", config, params.of);
   LoadMessageBufferParams("vl", config, params.vl);
   LoadMessageBufferParams("ar", config, params.ar);
+  LoadMessageBufferParams("sm", config, params.sm);
   params.save_optical_flow_images = mc::LoadBool(config, "save_optical_flow_images");
   params.bag_name = bag_name;
   params.map_file = map_file;

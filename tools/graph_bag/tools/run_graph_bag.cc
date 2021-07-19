@@ -38,6 +38,7 @@ int main(int argc, char** argv) {
   std::string robot_config_file;
   std::string world;
   bool use_image_features;
+  bool use_semantics;
   std::string graph_config_path_prefix;
   po::options_description desc("Runs graph localization on a bagfile and saves the results to a new bagfile.");
   desc.add_options()("help", "produce help message")("bagfile", po::value<std::string>()->required(), "Input bagfile")(
@@ -51,6 +52,7 @@ int main(int argc, char** argv) {
     "robot-config-file,r", po::value<std::string>(&robot_config_file)->default_value("config/robots/bumble.config"),
     "Robot config file")("world,w", po::value<std::string>(&world)->default_value("iss"), "World name")(
     "use-image-features,f", po::value<bool>(&use_image_features)->default_value(true), "Use image features")(
+    "use-semantics,s", po::value<bool>(&use_semantics)->default_value(true), "Use semantics")(
     "graph-config-path-prefix,g", po::value<std::string>(&graph_config_path_prefix)->default_value(""),
     "Graph config path prefix");
   po::positional_options_description p;
@@ -107,7 +109,7 @@ int main(int argc, char** argv) {
   config_reader::ConfigReader config;
 
   graph_bag::GraphBag graph_bag(input_bag, map_file, image_topic, output_bagfile, output_stats_file, use_image_features,
-                                graph_config_path_prefix);
+                                use_semantics, graph_config_path_prefix);
 #ifdef GOOGLE_PROFILER
   ProfilerStart(boost::filesystem::current_path() + "/graph_bag_prof.txt");
 #endif
