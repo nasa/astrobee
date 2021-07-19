@@ -342,6 +342,16 @@
      <arg name="debug" value="$(arg debug)" />
      <arg name="default" value="true" />
    </include>
+   <include file="$(find ff_util)/launch/ff_nodelet.launch">
+     <arg name="class" value="depth_odometry/DepthOdometryNodelet" />
+     <arg name="name" value="depth_odometry_nodelet" />
+     <arg name="manager" value="mlp_vision" />
+     <arg name="spurn" value="$(arg spurn)" />
+     <arg name="nodes" value="$(arg nodes)" />
+     <arg name="extra" value="$(arg extra)" />
+     <arg name="debug" value="$(arg debug)" />
+     <arg name="default" value="true" />
+   </include>
 
    <!-- DockCam pipeline -->
    <include file="$(find ff_util)/launch/ff_nodelet.launch">

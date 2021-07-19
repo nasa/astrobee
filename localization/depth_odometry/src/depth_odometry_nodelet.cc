@@ -52,9 +52,10 @@ void DepthOdometryNodelet::SubscribeAndAdvertise(ros::NodeHandle* nh) {
 }
 
 void DepthOdometryNodelet::DepthCloudCallback(const sensor_msgs::PointCloud2ConstPtr& depth_cloud_msg) {
-  std::pair<lc::Time, pcl::PointCloud<pcl::PointXYZ>::Ptr> depth_cloud;
+  const lc::Time timestamp = lc::TimeFromHeader(depth_cloud_msg->header);
+  std::pair<lc::Time, pcl::PointCloud<pcl::PointXYZ>::Ptr> depth_cloud{
+    timestamp, pcl::PointCloud<pcl::PointXYZ>::Ptr(new pcl::PointCloud<pcl::PointXYZ>())};
   pcl::fromROSMsg(*depth_cloud_msg, *(depth_cloud.second));
-  depth_cloud.first = lc::TimeFromHeader(depth_cloud_msg->header);
   const auto relative_pose = depth_odometry_.DepthCloudCallback(depth_cloud);
   if (!relative_pose) {
     LogError("DepthCloudCallback: Failed to get relative pose.");
