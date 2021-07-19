@@ -27,12 +27,13 @@ namespace depth_odometry {
 class DepthOdometry {
  public:
   DepthOdometry();
-  void DepthCloudCallback(
-    std::shared_ptr<std::pair<localization_common::Time, pcl::PointCloud<pcl::PointXYZ>>> depth_cloud);
+  void DepthCloudCallback(std::pair<localization_common::Time, pcl::PointCloud<pcl::PointXYZ>::Ptr> depth_cloud);
 
  private:
-  std::shared_ptr<std::pair<localization_common::Time, pcl::PointCloud<pcl::PointXYZ>>> previous_depth_cloud_;
-  std::shared_ptr<std::pair<localization_common::Time, pcl::PointCloud<pcl::PointXYZ>>> latest_depth_cloud_;
+  Eigen::Isometry3d Icp(const pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_a,
+                        const pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_b) const;
+  std::pair<localization_common::Time, pcl::PointCloud<pcl::PointXYZ>::Ptr> previous_depth_cloud_;
+  std::pair<localization_common::Time, pcl::PointCloud<pcl::PointXYZ>::Ptr> latest_depth_cloud_;
 };
 }  // namespace depth_odometry
 

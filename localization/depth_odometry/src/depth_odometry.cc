@@ -19,19 +19,41 @@
 #include <depth_odometry/depth_odometry.h>
 #include <localization_common/logger.h>
 
+#include <pcl/registration/icp.h>
+#include <pcl/search/impl/search.hpp>
+#include <pcl/search/impl/kdtree.hpp>
+#include <pcl/kdtree/impl/kdtree_flann.hpp>
+
 namespace depth_odometry {
 namespace lc = localization_common;
 
 DepthOdometry::DepthOdometry() {}
 
-void DepthOdometry::DepthCloudCallback(
-  std::shared_ptr<std::pair<lc::Time, pcl::PointCloud<pcl::PointXYZ>>> depth_cloud) {
-  if (!previous_depth_cloud_ && !latest_depth_cloud_) latest_depth_cloud_ = depth_cloud;
-  if (depth_cloud->first < latest_depth_cloud_->first) {
+void DepthOdometry::DepthCloudCallback(std::pair<lc::Time, pcl::PointCloud<pcl::PointXYZ>::Ptr> depth_cloud) {
+  if (!previous_depth_cloud_.second && !latest_depth_cloud_.second) latest_depth_cloud_ = depth_cloud;
+  if (depth_cloud.first < latest_depth_cloud_.first) {
     LogWarning("DepthCloudCallback: Out of order measurement received.");
     return;
   }
   previous_depth_cloud_ = latest_depth_cloud_;
   latest_depth_cloud_ = depth_cloud;
+
+  const auto relative_pose = Icp(previous_depth_cloud_.second, latest_depth_cloud_.second);
+}
+
+Eigen::Isometry3d DepthOdometry::Icp(const pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_a,
+                                     const pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_b) const {
+  pcl::IterativeClosestPoint<pcl::PointXYZ, pcl::PointXYZ> icp;
+  icp.setInputSource(cloud_a);
+  icp.setInputTarget(cloud_b);
+
+  pcl::PointCloud<pcl::PointXYZ> result;
+  icp.align(result);
+
+  // TODO(rsoussan): clean this up
+  const Eigen::Isometry3d relative_transform(
+    Eigen::Isometry3f(icp.getFinalTransformation().matrix()).cast<double>());  //.cast<double>();
+  return relative_transform;
+  // TODO(rsoussan): get covariance!!!
 }
 }  // namespace depth_odometry

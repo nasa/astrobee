@@ -51,9 +51,9 @@ void DepthOdometryNodelet::SubscribeAndAdvertise(ros::NodeHandle* nh) {
 }
 
 void DepthOdometryNodelet::DepthCloudCallback(const sensor_msgs::PointCloud2ConstPtr& depth_cloud_msg) {
-  std::shared_ptr<std::pair<lc::Time, pcl::PointCloud<pcl::PointXYZ>>> depth_cloud;
-  pcl::fromROSMsg(*depth_cloud_msg, depth_cloud->second);
-  depth_cloud->first = lc::TimeFromHeader(depth_cloud_msg->header);
+  std::pair<lc::Time, pcl::PointCloud<pcl::PointXYZ>::Ptr> depth_cloud;
+  pcl::fromROSMsg(*depth_cloud_msg, *(depth_cloud.second));
+  depth_cloud.first = lc::TimeFromHeader(depth_cloud_msg->header);
   depth_odometry_.DepthCloudCallback(depth_cloud);
 }
 }  // namespace depth_odometry
