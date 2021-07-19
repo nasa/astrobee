@@ -219,7 +219,7 @@ namespace is_camera {
     if (bayer_enable_) {
       // Allocate space for our Bayer output msg buffer
       for (size_t i = 0; i < kBayerImageMsgBufferLength; i++) {
-        img_msg_buffer_[i].reset(new sensor_msgs::Image());
+        bayer_img_msg_buffer_[i].reset(new sensor_msgs::Image());
         bayer_img_msg_buffer_[i]->width = kImageWidth;
         bayer_img_msg_buffer_[i]->height = kImageHeight;
         bayer_img_msg_buffer_[i]->encoding = "bayer_grgb8";
