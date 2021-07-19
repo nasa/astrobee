@@ -15,31 +15,25 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef DEPTH_ODOMETRY_DEPTH_ODOMETRY_NODELET_H_
-#define DEPTH_ODOMETRY_DEPTH_ODOMETRY_NODELET_H_
+#ifndef DEPTH_ODOMETRY_DEPTH_ODOMETRY_H_
+#define DEPTH_ODOMETRY_DEPTH_ODOMETRY_H_
 
-#include <depth_odometry/depth_odometry.h>
-#include <ff_util/ff_nodelet.h>
+#include <localization_common/time.h>
 
-#include <sensor_msgs/PointCloud2.h>
-#include <ros/node_handle.h>
-#include <ros/publisher.h>
-#include <ros/subscriber.h>
+#include <pcl/point_cloud.h>
+#include <pcl/point_types.h>
 
 namespace depth_odometry {
-class DepthOdometryNodelet : public ff_util::FreeFlyerNodelet {
+class DepthOdometry {
  public:
-  DepthOdometryNodelet();
+  DepthOdometry();
+  void DepthCloudCallback(
+    std::shared_ptr<std::pair<localization_common::Time, pcl::PointCloud<pcl::PointXYZ>>> depth_cloud);
 
  private:
-  void Initialize(ros::NodeHandle* nh) final;
-  void SubscribeAndAdvertise(ros::NodeHandle* nh);
-  void DepthCloudCallback(const sensor_msgs::PointCloud2ConstPtr& depth_cloud_msg);
-
-  DepthOdometry depth_odometry_;
-  ros::Subscriber depth_sub_;
-  ros::Publisher odom_pub_;
+  std::shared_ptr<std::pair<localization_common::Time, pcl::PointCloud<pcl::PointXYZ>>> previous_depth_cloud_;
+  std::shared_ptr<std::pair<localization_common::Time, pcl::PointCloud<pcl::PointXYZ>>> latest_depth_cloud_;
 };
 }  // namespace depth_odometry
 
-#endif  // DEPTH_ODOMETRY_DEPTH_ODOMETRY_NODELET_H_
+#endif  // DEPTH_ODOMETRY_DEPTH_ODOMETRY_H_

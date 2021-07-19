@@ -15,31 +15,23 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef DEPTH_ODOMETRY_DEPTH_ODOMETRY_NODELET_H_
-#define DEPTH_ODOMETRY_DEPTH_ODOMETRY_NODELET_H_
 
 #include <depth_odometry/depth_odometry.h>
-#include <ff_util/ff_nodelet.h>
-
-#include <sensor_msgs/PointCloud2.h>
-#include <ros/node_handle.h>
-#include <ros/publisher.h>
-#include <ros/subscriber.h>
+#include <localization_common/logger.h>
 
 namespace depth_odometry {
-class DepthOdometryNodelet : public ff_util::FreeFlyerNodelet {
- public:
-  DepthOdometryNodelet();
+namespace lc = localization_common;
 
- private:
-  void Initialize(ros::NodeHandle* nh) final;
-  void SubscribeAndAdvertise(ros::NodeHandle* nh);
-  void DepthCloudCallback(const sensor_msgs::PointCloud2ConstPtr& depth_cloud_msg);
+DepthOdometry::DepthOdometry() {}
 
-  DepthOdometry depth_odometry_;
-  ros::Subscriber depth_sub_;
-  ros::Publisher odom_pub_;
-};
+void DepthOdometry::DepthCloudCallback(
+  std::shared_ptr<std::pair<lc::Time, pcl::PointCloud<pcl::PointXYZ>>> depth_cloud) {
+  if (!previous_depth_cloud_ && !latest_depth_cloud_) latest_depth_cloud_ = depth_cloud;
+  if (depth_cloud->first < latest_depth_cloud_->first) {
+    LogWarning("DepthCloudCallback: Out of order measurement received.");
+    return;
+  }
+  previous_depth_cloud_ = latest_depth_cloud_;
+  latest_depth_cloud_ = depth_cloud;
+}
 }  // namespace depth_odometry
-
-#endif  // DEPTH_ODOMETRY_DEPTH_ODOMETRY_NODELET_H_

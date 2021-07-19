@@ -18,6 +18,7 @@
 
 #include <depth_odometry/depth_odometry_nodelet.h>
 #include <ff_util/ff_names.h>
+#include <localization_common/utilities.h>
 
 #include <pcl_conversions/pcl_conversions.h>
 #include <pcl/point_cloud.h>
@@ -26,7 +27,7 @@
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 
 namespace depth_odometry {
-// namespace lc = localization_common;
+namespace lc = localization_common;
 // namespace mc = msg_conversions;
 
 DepthOdometryNodelet::DepthOdometryNodelet() : ff_util::FreeFlyerNodelet(NODE_DEPTH_ODOM, true) {
@@ -50,8 +51,10 @@ void DepthOdometryNodelet::SubscribeAndAdvertise(ros::NodeHandle* nh) {
 }
 
 void DepthOdometryNodelet::DepthCloudCallback(const sensor_msgs::PointCloud2ConstPtr& depth_cloud_msg) {
-  pcl::PointCloud<pcl::PointXYZ> depth_cloud;
-  pcl::fromROSMsg(*depth_cloud_msg, depth_cloud);
+  std::shared_ptr<std::pair<lc::Time, pcl::PointCloud<pcl::PointXYZ>>> depth_cloud;
+  pcl::fromROSMsg(*depth_cloud_msg, depth_cloud->second);
+  depth_cloud->first = lc::TimeFromHeader(depth_cloud_msg->header);
+  depth_odometry_.DepthCloudCallback(depth_cloud);
 }
 }  // namespace depth_odometry
 
