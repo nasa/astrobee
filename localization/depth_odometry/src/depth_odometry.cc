@@ -29,16 +29,17 @@ namespace lc = localization_common;
 
 DepthOdometry::DepthOdometry() {}
 
-void DepthOdometry::DepthCloudCallback(std::pair<lc::Time, pcl::PointCloud<pcl::PointXYZ>::Ptr> depth_cloud) {
+boost::optional<Eigen::Isometry3d> DepthOdometry::DepthCloudCallback(
+  std::pair<lc::Time, pcl::PointCloud<pcl::PointXYZ>::Ptr> depth_cloud) {
   if (!previous_depth_cloud_.second && !latest_depth_cloud_.second) latest_depth_cloud_ = depth_cloud;
   if (depth_cloud.first < latest_depth_cloud_.first) {
     LogWarning("DepthCloudCallback: Out of order measurement received.");
-    return;
+    return boost::none;
   }
   previous_depth_cloud_ = latest_depth_cloud_;
   latest_depth_cloud_ = depth_cloud;
 
-  const auto relative_pose = Icp(previous_depth_cloud_.second, latest_depth_cloud_.second);
+  return Icp(previous_depth_cloud_.second, latest_depth_cloud_.second);
 }
 
 Eigen::Isometry3d DepthOdometry::Icp(const pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_a,

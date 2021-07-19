@@ -18,6 +18,7 @@
 
 #include <depth_odometry/depth_odometry_nodelet.h>
 #include <ff_util/ff_names.h>
+#include <localization_common/logger.h>
 #include <localization_common/utilities.h>
 
 #include <pcl_conversions/pcl_conversions.h>
@@ -54,7 +55,17 @@ void DepthOdometryNodelet::DepthCloudCallback(const sensor_msgs::PointCloud2Cons
   std::pair<lc::Time, pcl::PointCloud<pcl::PointXYZ>::Ptr> depth_cloud;
   pcl::fromROSMsg(*depth_cloud_msg, *(depth_cloud.second));
   depth_cloud.first = lc::TimeFromHeader(depth_cloud_msg->header);
-  depth_odometry_.DepthCloudCallback(depth_cloud);
+  const auto relative_pose = depth_odometry_.DepthCloudCallback(depth_cloud);
+  if (!relative_pose) {
+    LogError("DepthCloudCallback: Failed to get relative pose.");
+    return;
+  }
+
+  geometry_msgs::PoseWithCovarianceStamped pose_msg;
+  lc::PoseToMsg(lc::GtPose(*relative_pose), pose_msg.pose.pose);
+  // TODO(rsoussan): fill in covariance
+  lc::TimeToHeader(depth_cloud.first, pose_msg.header);
+  odom_pub_.publish(pose_msg);
 }
 }  // namespace depth_odometry
 

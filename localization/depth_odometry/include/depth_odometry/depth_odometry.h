@@ -20,6 +20,8 @@
 
 #include <localization_common/time.h>
 
+#include <boost/optional.hpp>
+
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 
@@ -27,7 +29,8 @@ namespace depth_odometry {
 class DepthOdometry {
  public:
   DepthOdometry();
-  void DepthCloudCallback(std::pair<localization_common::Time, pcl::PointCloud<pcl::PointXYZ>::Ptr> depth_cloud);
+  boost::optional<Eigen::Isometry3d> DepthCloudCallback(
+    std::pair<localization_common::Time, pcl::PointCloud<pcl::PointXYZ>::Ptr> depth_cloud);
 
  private:
   Eigen::Isometry3d Icp(const pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_a,
