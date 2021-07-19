@@ -383,7 +383,7 @@ class FreeFlyerActionClient {
   // an action is only considered finished once the ResultCallback returns.
   // This raises the problem where, if another action of the same type is
   // called in the ResultCallback or immediately afterwards, it returns
-  // failed because the previous action is technically not finished and 
+  // failed because the previous action is technically not finished and
   // returns an error.
   void ResultDelayCallback(ros::TimerEvent const& event) {
     // Call the result callback on the client side
