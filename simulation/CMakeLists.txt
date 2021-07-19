@@ -47,7 +47,6 @@ catkin_package(
   INCLUDE_DIRS
     include
   LIBRARIES
-    gazebo_model_plugin_dock
     gazebo_model_plugin_truth
     gazebo_model_plugin_eps
     gazebo_model_plugin_pmc
@@ -118,15 +117,6 @@ add_library(gazebo_model_plugin_eps
 )
 add_dependencies(gazebo_model_plugin_eps ${catkin_EXPORTED_TARGETS})
 target_link_libraries(gazebo_model_plugin_eps
-  ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
-)
-
-# Create a model plugin for the dock
-add_library(gazebo_model_plugin_dock
-  src/gazebo_model_plugin_dock/gazebo_model_plugin_dock.cc
-)
-add_dependencies(gazebo_model_plugin_dock ${catkin_EXPORTED_TARGETS})
-target_link_libraries(gazebo_model_plugin_dock
   ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
 )
 

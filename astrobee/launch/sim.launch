@@ -33,6 +33,7 @@
   <arg name="mlp" default="local" />            <!-- MLP IP address          -->
   <arg name="rec" default="" />                 <!-- Record local data       -->
   <arg name="dds" default="true" />             <!-- Enable DDS              -->
+  <arg name="ground_truth_localizer" default="false" />  <!-- Use Ground Truth Localizer      -->
 
   <!-- General options -->
   <arg name="gviz" default="false" />           <!-- Start GNC visualizer    -->
@@ -40,7 +41,7 @@
   <arg name="sviz" default="false" />           <!-- Start simulation GUI    -->
   <arg name="rqt" default="false" />            <!-- Start user interface    -->
   <arg name="gds" default="false" />            <!-- Enable GDS              -->
-  <arg name="agent1" default="Bsharp"/>         <!-- GDS Agent1              -->
+  <arg name="agent1" default="Queen"/>          <!-- GDS Agent1              -->
   <arg name="agent2" default="Bumble"/>         <!-- GDS Agent2              -->
   <arg name="agent3" default="Honey"/>          <!-- GDS Agent3              -->
   <arg name="vmware" default="true" />          <!-- Enable vmware           -->
@@ -49,11 +50,11 @@
   <arg name="stats" default="false" />          <!-- Message statistics      -->
 
   <!-- Debug-specific options -->
-  <arg name="default" default="true" />         <!-- Insert default robot    -->
+  <arg name="default_robot" default="true" />   <!-- Insert default robot    -->
   <arg if="$(eval arg('world')=='iss' and arg('perch')==0)"
        name="pose"
-       default="9.817 -10.312 4.293 1 0 0 0" /> <!-- iss: docked in JPM berth 2 -->
-       <!-- default="9.816 -9.806 4.293 0 0 0 1"   - iss: docked in JPM berth 1 --> 
+       default="9.816 -9.806 4.293 0 0 0 1" />    <!-- iss: docked in JPM berth 1 --> 
+       <!-- default="9.817 -10.312 4.293 1 0 0 0" /> - iss: docked in JPM berth 2 -->
   <arg if="$(eval arg('world')=='iss' and arg('perch'))"
        name="pose"
        default="10.7 -8.3 5.1 0.707 0 -0.707 0" />           <!-- iss: perch position     -->
@@ -65,7 +66,6 @@
        default="0 0 -0.7 0 0 0 1" />                         <!-- granite: perch position -->
 
   <arg name="bumble_pose" default="" />         <!-- Use to overide bumble's pose -->
-  <arg name="loc_only" default="false"/> <!-- Only running localization nodes for visualization purposes -->
 
   <!-- Multi-robot simulation -->
   <arg name="honey" default="false" />          <!-- Insert a honey robot    -->
@@ -90,9 +90,6 @@
   <!-- Declare our global logging format -->
   <env name="ROSCONSOLE_FORMAT" value="[${severity}] [${time}] : (${logger}) ${message}"/>
 
-  <!-- Use time from bag file, not system time -->
-  <param name="use_sim_time" value="true" if="$(arg loc_only)"/>
-
   <!-- Always launch on the local machine -->
   <group>
     <machine name ="local" address="localhost" default="true"/>
@@ -111,8 +108,7 @@
     </include>
     <include if="$(arg rqt)" file="$(find astrobee)/launch/controller/rqt.launch"/>
     <include if="$(arg rviz)" file="$(find astrobee)/launch/controller/rviz.launch">
-      <arg name="world" value="$(arg world)" unless="$(arg loc_only)"/>
-      <arg name="world" value="$(arg world)_viz" if="$(arg loc_only)"/>
+      <arg name="world" value="$(arg world)"/>
     </include>
     <!-- Launch a recorder for this robot-->
     <include unless="$(eval arg('rec')=='')"
@@ -122,33 +118,31 @@
   </group>
 
   <!-- Allow the simulator to be optionally launched remotely-->
-  <group unless="$(arg loc_only)">
-    <!-- Connect and update environment variables if required -->
-    <machine unless="$(eval arg('sim')=='local')" name="sim_server" default="true"
-             address="$(arg sim)" user="astrobee" password="astrobee" timeout="10"/>
-    <!-- Update the environment variables relating to absolute paths -->
-    <env unless="$(eval arg('sim')=='local')"
-         name="ASTROBEE_CONFIG_DIR" value="/home/astrobee/native/config" />
-    <env unless="$(eval arg('sim')=='local')"
-         name="ASTROBEE_RESOURCE_DIR" value="home/astrobee/native/resources" />
-    <env unless="$(eval arg('sim')=='local')"
-         name="ROSCONSOLE_CONFIG_FILE" value="/home/astrobee/native/resources/logging.config"/>
-    <env unless="$(eval arg('sim')=='local')"
-         name="DISPLAY" value=":0"/>
-    <env unless="$(eval arg('sim')=='local')"
-         name="ROS_IP" value="$(arg sim)"/>
-    <!-- Start the simulator -->
-    <include file="$(find astrobee)/launch/controller/sim_start.launch">
-      <arg name="world" value="$(arg world)" />
-      <arg name="sviz" value="$(arg sviz)" />
-      <arg name="vmware" value="$(arg vmware)" />
-      <arg name="speed" value="$(arg speed)" />
-      <arg name="debug" value="$(arg sdebug)" />
-    </include>
-  </group>
+  <!-- Connect and update environment variables if required -->
+  <machine unless="$(eval arg('sim')=='local')" name="sim_server" default="true"
+           address="$(arg sim)" user="astrobee" password="astrobee" timeout="10"/>
+  <!-- Update the environment variables relating to absolute paths -->
+  <env unless="$(eval arg('sim')=='local')"
+       name="ASTROBEE_CONFIG_DIR" value="/home/astrobee/native/config" />
+  <env unless="$(eval arg('sim')=='local')"
+       name="ASTROBEE_RESOURCE_DIR" value="home/astrobee/native/resources" />
+  <env unless="$(eval arg('sim')=='local')"
+       name="ROSCONSOLE_CONFIG_FILE" value="/home/astrobee/native/resources/logging.config"/>
+  <env unless="$(eval arg('sim')=='local')"
+       name="DISPLAY" value=":0"/>
+  <env unless="$(eval arg('sim')=='local')"
+       name="ROS_IP" value="$(arg sim)"/>
+  <!-- Start the simulator -->
+  <include file="$(find astrobee)/launch/controller/sim_start.launch">
+    <arg name="world" value="$(arg world)" />
+    <arg name="sviz" value="$(arg sviz)" />
+    <arg name="vmware" value="$(arg vmware)" />
+    <arg name="speed" value="$(arg speed)" />
+    <arg name="debug" value="$(arg sdebug)" />
+  </include>
 
   <!-- Auto-inert platform #1 at a desired initial location -->
-  <group if="$(arg default)">
+  <group if="$(arg default_robot)">
     <include file="$(find astrobee)/launch/spawn.launch">
       <arg name="robot" value="$(arg robot)" />      <!-- Type of robot      -->
       <arg name="world" value="$(arg world)" />      <!-- Execution context  -->
@@ -163,6 +157,7 @@
       <arg name="llp" value="$(arg llp)" />          <!-- LLP IP address     -->
       <arg name="mlp" value="$(arg mlp)" />          <!-- MLP IP address     -->
       <arg name="dds" value="$(arg dds)" />          <!-- Enable DDS         -->
+      <arg name="ground_truth_localizer" value="$(arg ground_truth_localizer)" /> <!-- Use Ground Truth Localizer    -->
     </include>
   </group>
 
@@ -173,7 +168,7 @@
       <arg name="world" value="$(arg world)" />      <!-- Execution context  -->
       <arg name="ns" value="honey" />                <!-- Robot namespace    -->
       <arg name="output" value="$(arg output)" />    <!-- Output for logging -->
-      <arg name="pose" value="0 0 4.8 0 0 0 1" />    <!-- Initial robot pose -->
+      <arg name="pose" value="11 -7 4.8 0 0 0 1" />    <!-- Initial robot pose -->
       <arg name="spurn" value="$(arg spurn)" />      <!-- Prevent node       -->
       <arg name="nodes" value="$(arg nodes)" />      <!-- Launch node group  -->
       <arg name="extra" value="$(arg extra)" />      <!-- Inject extra nodes -->
@@ -193,7 +188,7 @@
       <arg name="ns" value="bumble" />               <!-- Robot namespace    -->
       <arg name="output" value="$(arg output)" />    <!-- Output for logging -->
       <arg if="$(eval arg('bumble_pose') == '')" 
-           name="pose"  value="2 0 4.8 0 0 0 1" />   <!-- Initial robot pose -->
+           name="pose"  value="11 -4 4.8 0 0 0 1" />   <!-- Initial robot pose -->
       <arg unless="$(eval arg('bumble_pose') == '')" 
            name="pose"  value="$(arg bumble_pose)" /> 
       <arg name="spurn" value="$(arg spurn)" />      <!-- Prevent node       -->
@@ -214,7 +209,7 @@
       <arg name="world" value="$(arg world)" />      <!-- Execution context  -->
       <arg name="ns" value="queen" />                <!-- Robot namespace    -->
       <arg name="output" value="$(arg output)" />    <!-- Output for logging   -->
-      <arg name="pose" value="4 0 4.8 0 0 0 1" />    <!-- Initial robot pose -->
+      <arg name="pose" value="11 -10 4.8 0 0 0 1" />    <!-- Initial robot pose -->
       <arg name="spurn" value="$(arg spurn)" />      <!-- Prevent node       -->
       <arg name="nodes" value="$(arg nodes)" />      <!-- Launch node group  -->
       <arg name="extra" value="$(arg extra)" />      <!-- Inject extra nodes -->
@@ -225,5 +220,8 @@
       <arg name="dds" value="$(arg dds)" />          <!-- Enable DDS         -->
     </include>
   </group>
+
+  <!-- Default call initialize bias so config file is created if not already present -->
+  <node pkg="rosservice" type="rosservice" name="imu_calibration" args="call --wait /gnc/ekf/init_bias" />
 
 </launch>

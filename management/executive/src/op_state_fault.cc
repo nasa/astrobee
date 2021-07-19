@@ -31,12 +31,8 @@ OpState* OpStateFault::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
 
   if (cmd->cmd_name == CommandConstants::CMD_NAME_ARM_PAN_AND_TILT) {
     exec_->ArmPanAndTilt(cmd);
-  } else if (cmd->cmd_name == CommandConstants::CMD_NAME_CLEAR_DATA) {
-    exec_->ClearData(cmd);
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_CUSTOM_GUEST_SCIENCE) {
     exec_->CustomGuestScience(cmd);
-  } else if (cmd->cmd_name == CommandConstants::CMD_NAME_DOWNLOAD_DATA) {
-    exec_->DownloadData(cmd);
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_FAULT) {
     exec_->Fault(cmd);
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_GRIPPER_CONTROL) {
@@ -45,6 +41,8 @@ OpState* OpStateFault::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
     exec_->IdlePropulsion(cmd);
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_INITIALIZE_BIAS) {
     exec_->InitializeBias(cmd);
+  } else if (cmd->cmd_name == CommandConstants::CMD_NAME_LOAD_NODELET) {
+    exec_->LoadNodelet(cmd);
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_POWER_OFF_ITEM) {
     exec_->PowerItemOff(cmd);
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_POWER_ON_ITEM) {
@@ -59,6 +57,8 @@ OpState* OpStateFault::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
     exec_->SetCheckZones(cmd);
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_SET_ENABLE_IMMEDIATE) {
     exec_->SetEnableImmediate(cmd);
+  } else if (cmd->cmd_name == CommandConstants::CMD_NAME_SET_ENABLE_REPLAN) {
+    exec_->SetEnableReplan(cmd);
   } else if (cmd->cmd_name ==
                         CommandConstants::CMD_NAME_SET_FLASHLIGHT_BRIGHTNESS) {
     exec_->SetFlashlightBrightness(cmd);
@@ -72,28 +72,22 @@ OpState* OpStateFault::HandleCmd(ff_msgs::CommandStampedPtr const& cmd) {
     exec_->SetPlan(cmd);
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_SET_PLANNER) {
     exec_->SetPlanner(cmd);
-  } else if (cmd->cmd_name == CommandConstants::CMD_NAME_SET_TIME_SYNC) {
-    exec_->SetTimeSync(cmd);
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_SET_ZONES) {
     exec_->SetZones(cmd);
-  } else if (cmd->cmd_name == CommandConstants::CMD_NAME_SHUTDOWN) {
-    exec_->Shutdown(cmd);
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_STOP_ALL_MOTION) {
     exec_->StopAllMotion(cmd);
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_STOP_ARM) {
     exec_->StopArm(cmd);
-  } else if (cmd->cmd_name == CommandConstants::CMD_NAME_STOP_DOWNLOAD) {
-    exec_->StopDownload(cmd);
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_STOP_GUEST_SCIENCE) {
     exec_->StopGuestScience(cmd);
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_STOW_ARM) {
     exec_->StowArm(cmd);
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_SWITCH_LOCALIZATION) {
     exec_->SwitchLocalization(cmd);
+  } else if (cmd->cmd_name == CommandConstants::CMD_NAME_UNLOAD_NODELET) {
+    exec_->UnloadNodelet(cmd);
   } else if (cmd->cmd_name == CommandConstants::CMD_NAME_UNTERMINATE) {
     exec_->Unterminate(cmd);
-  } else if (cmd->cmd_name == CommandConstants::CMD_NAME_WIPE_HLP) {
-    exec_->WipeHlp(cmd);
   } else {
     err_msg = "Command " + cmd->cmd_name + " not accepted in op state"
         + " fault.";

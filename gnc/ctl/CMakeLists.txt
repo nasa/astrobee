@@ -61,7 +61,7 @@ add_library(ctl
 add_dependencies(ctl ${catkin_EXPORTED_TARGETS})
 target_link_libraries(ctl ${catkin_LIBRARIES})
 
-if(CATKIN_ENABLE_TESTING)
+if(CATKIN_ENABLE_TESTING AND ENABLE_INTEGRATION_TESTING)
   find_package(rostest REQUIRED)
   add_rostest_gtest(test_ctl test/test_ctl.test
     test/test_ctl_nominal.cc

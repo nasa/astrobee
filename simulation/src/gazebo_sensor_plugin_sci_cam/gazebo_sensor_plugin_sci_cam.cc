@@ -33,6 +33,7 @@
 #include <sensor_msgs/CameraInfo.h>
 #include <ff_msgs/CommandStamped.h>
 #include <ff_msgs/CommandConstants.h>
+#include <ff_msgs/AckStamped.h>
 
 // Open CV Includes
 #include <cv_bridge/cv_bridge.h>
@@ -49,7 +50,7 @@ namespace gazebo {
 class GazeboSensorPluginSciCam : public FreeFlyerSensorPlugin {
  public:
   GazeboSensorPluginSciCam() :
-    FreeFlyerSensorPlugin("sci_cam", "sci_cam", true),
+    FreeFlyerSensorPlugin("sci_cam", "sci_cam", false),
     continuousPictureTaking_(false), takeSinglePicture_(false), rate_(0.0) {}
 
   ~GazeboSensorPluginSciCam() {
@@ -94,12 +95,16 @@ class GazeboSensorPluginSciCam : public FreeFlyerSensorPlugin {
     compression_params_[6] = cv::IMWRITE_JPEG_RST_INTERVAL;
     compression_params_[7] = 0;                              // JPEG restart interval (0-65535)
 
-    // Create subscriber to DDS commands though which the sci cam will be controlled
+    // Create subscriber to commands though which the sci cam will be controlled
     dds_cmd_sub_ = nh->subscribe(TOPIC_COMMAND, 10,
                                  &GazeboSensorPluginSciCam::CmdCallback, this);
+    // Acknowledge publisher to confirm the message was received
+    pub_sci_cam_ack_ = nh->advertise<ff_msgs::AckStamped>(TOPIC_GUEST_SCIENCE_MANAGER_ACK, 10);
 
     // Create publishers for sci cam image, pose, and camera info
-    pub_sci_cam_image_ = nh->advertise<sensor_msgs::CompressedImage>(TOPIC_HARDWARE_SCI_CAM, 2,
+    std::string compressed_topic = TOPIC_HARDWARE_SCI_CAM;
+    compressed_topic += "/compressed";
+    pub_sci_cam_image_ = nh->advertise<sensor_msgs::CompressedImage>(compressed_topic, 2,
       boost::bind(&GazeboSensorPluginSciCam::ToggleCallback, this),
       boost::bind(&GazeboSensorPluginSciCam::ToggleCallback, this));
     pub_sci_cam_pose_ = nh->advertise<geometry_msgs::PoseStamped>(TOPIC_SCI_CAM_SIM_POSE, 10);
@@ -225,6 +230,13 @@ class GazeboSensorPluginSciCam : public FreeFlyerSensorPlugin {
       }
     }
 
+    ff_msgs::AckStamped msg_ack;
+    msg_ack.header.stamp = ros::Time::now();
+    msg_ack.cmd_id = cmd.cmd_id;
+    msg_ack.status.status = ff_msgs::AckStatus::COMPLETED;
+    msg_ack.completed_status.status = ff_msgs::AckCompletedStatus::OK;
+    pub_sci_cam_ack_.publish(msg_ack);
+
     return;
   }
 
@@ -294,7 +306,7 @@ class GazeboSensorPluginSciCam : public FreeFlyerSensorPlugin {
           takeSinglePicture_ = false;
         }
       } else {
-        ROS_ERROR("cv::imencode (png) failed on input image");
+        ROS_ERROR("cv::imencode (jpg) failed on input image");
       }
     }
     catch (cv_bridge::Exception& e) {
@@ -325,6 +337,7 @@ class GazeboSensorPluginSciCam : public FreeFlyerSensorPlugin {
   ros::Publisher pub_sci_cam_pose_;
   ros::Publisher pub_sci_cam_info_;
   ros::Subscriber dds_cmd_sub_;
+  ros::Publisher pub_sci_cam_ack_;
   std::shared_ptr<sensors::CameraSensor> sensor_;
   event::ConnectionPtr update_;
   double rate_;

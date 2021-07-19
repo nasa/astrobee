@@ -1,0 +1,96 @@
+<!-- Copyright (c) 2017, United States Government, as represented by the     -->
+<!-- Administrator of the National Aeronautics and Space Administration.     -->
+<!--                                                                         -->
+<!-- All rights reserved.                                                    -->
+<!--                                                                         -->
+<!-- The Astrobee platform is licensed under the Apache License, Version 2.0 -->
+<!-- (the "License"); you may not use this file except in compliance with    -->
+<!-- the License. You may obtain a copy of the License at                    -->
+<!--                                                                         -->
+<!--     http://www.apache.org/licenses/LICENSE-2.0                          -->
+<!--                                                                         -->
+<!-- Unless required by applicable law or agreed to in writing, software     -->
+<!-- distributed under the License is distributed on an "AS IS" BASIS,       -->
+<!-- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or         -->
+<!-- implied. See the License for the specific language governing            -->
+<!-- permissions and limitations under the License.                          -->
+
+
+<!-- Runs required nodes for localization and the provided bag.  Remaps      -->
+<!-- topics and sets necessary params and configs. Optionally save output to -->
+<!-- a bagfile.                                                              -->
+
+<launch>
+  <!-- Command line arguments -->
+  <arg name="bagfile"/>             
+  <arg name="record" default="false" />
+  <arg name="imu_augmentor" default="false" />
+  <arg name="robot" default="bumble" />
+  <arg name="world" default="iss" />
+  <arg name="localization_manager" default="false" />
+  <arg name="service_calls" default="true" unless="$(arg localization_manager)"/>     
+  <arg name="service_calls" value="false" if="$(arg localization_manager)" />   
+  <arg name="image_features" default="false" />
+
+
+  <!-- Set environment configs that are required to run nodes -->
+  <env name="ASTROBEE_ROBOT" value="$(arg robot)" />
+  <env name="ASTROBEE_WORLD" value="$(arg world)" />
+  <env if="$(eval optenv('ASTROBEE_CONFIG_DIR','')=='')"
+       name="ASTROBEE_CONFIG_DIR" value="$(find astrobee)/config" />
+  <env if="$(eval optenv('ASTROBEE_RESOURCE_DIR','')=='')"
+       name="ASTROBEE_RESOURCE_DIR" value="$(find astrobee)/resources" />
+
+  <!-- Record output if required -->
+  <group if="$(arg record)">
+    <arg name="output_bagfile"/>             
+    <include file="$(find astrobee)/launch/offline_localization/record_localization.launch">
+      <arg name="terminal" value="terminator -x"/>
+      <arg name="output_bagfile" value="$(arg output_bagfile)"/>
+    </include>
+  </group>
+
+  <!-- Run imu augmentor if required -->
+  <group if="$(arg imu_augmentor)">
+    <include file="$(find imu_augmentor)/launch/imu_augmentor.launch">
+      <arg name="terminal" value="terminator -x"/>
+    </include>
+  </group>
+
+  <include file="$(find imu_bias_tester)/launch/imu_bias_tester.launch">
+    <arg name="terminal" value="terminator -x"/>
+  </include>
+
+  <!-- Nodes to run -->
+  <group unless="$(arg image_features)">
+    <include file="$(find lk_optical_flow)/launch/lk_optical_flow.launch">
+      <arg name="terminal" value="terminator -x"/>
+    </include>
+    <include file="$(find localization_node)/launch/localization_node.launch">
+      <arg name="terminal" value="terminator -x"/>
+    </include>
+  </group>
+  <include file="$(find graph_localizer)/launch/graph_localizer.launch">
+    <arg name="terminal" value="terminator -x"/>
+  </include>
+  <group if="$(arg localization_manager)">
+    <include file="$(find localization_manager)/launch/localization_manager.launch">
+      <arg name="terminal" value="terminator -x"/>
+    </include>
+  </group>
+
+  <!-- Play bagfile -->
+  <include file="$(find astrobee)/launch/offline_localization/replay_localization.launch">
+    <arg name="bagfile" value="$(arg bagfile)"/>
+    <arg name="terminal" value="terminator -x"/>
+    <arg name="image_features" value="$(arg image_features)"/>
+  </include>
+
+  <!-- Service calls -->
+  <group if="$(arg service_calls)">
+    <!-- Add 'wait' here so nodes are running before the service calls are made -->
+    <node pkg="rosservice" type="rosservice" name="enable_lk_optical_flow" args="call --wait /loc/of/enable true" /> 
+    <node pkg="rosservice" type="rosservice" name="enable_sparse_mapping" args="call --wait /loc/ml/enable true" />
+    <node pkg="rosservice" type="rosservice" name="imu_calibration" args="call --wait /gnc/ekf/init_bias" />
+  </group>
+</launch>

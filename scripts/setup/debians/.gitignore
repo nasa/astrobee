@@ -9,7 +9,12 @@
 libalvar
 libdeepdive
 libdbow2
+libgtsam
+libgtsamlib
 libdbowdlib
 libopenmvg
 libdecomputil
 libjps3d
+libmiro
+libsoracore
+libopencv

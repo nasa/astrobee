@@ -1,0 +1,11 @@
+<library path="lib/libimu_augmentor">
+  <class name="imu_augmentor/ImuAugmentorNodelet"
+	 type="imu_augmentor::ImuAugmentorNodelet"
+	 base_class_type="nodelet::Nodelet">
+    <description>
+      This nodelet wraps the imu_augmentor 
+    </description>
+  </class>
+</library>
+
+

@@ -1,5 +1,39 @@
 # Releases
 
+## Release 0.14.3
+
+  * Rotation fallback fix
+  * Unified install instructions and Ubuntu 18 nasa install
+  * Various other minor fixes
+  * Note, Perching does not work in this release, use another version for this.
+
+## Release 0.14.1
+
+  * Dynamic IMU Filtering
+  * Added measurement spacing for visual odometry
+  * Tuning configurations
+  * Bug fixes
+  Note: Perching does not work in this release, use another version for this.
+
+## Release 0.14.0
+
+  * Added graph_localizer package
+  * Added supporting packages for graph localizer including imu_augmetor, imu_integation, localization_common, localization_measurements
+  * Added tools for graph localizer including graph_bag and imu_bias_tester
+  * Added rviz plugins for graph localizer and associated packages in localization_rviz_plugins
+  * Added gtsam debian
+  Note: Perching does not work in this release, use another version for this.
+
+## Release 0.13.0
+
+  * Multiple updates to documentation, doxygen is exported to github pages
+  * Adding Github actions to build and test the code and generate documentation
+  * astrobee_media now a submodule
+  * SciCam now generates compressed images
+  * Added memory monitor
+  * Cross compiling with docker
+  * Other fixes
+
 ## Release 0.12.0
 
   * Localization visualization improvements

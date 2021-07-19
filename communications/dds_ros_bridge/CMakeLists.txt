@@ -1,14 +1,14 @@
 # Copyright (c) 2017, United States Government, as represented by the
 # Administrator of the National Aeronautics and Space Administration.
-# 
+#
 # All rights reserved.
-# 
+#
 # The Astrobee platform is licensed under the Apache License, Version 2.0
 # (the "License"); you may not use this file except in compliance with the
 # License. You may obtain a copy of the License at
-# 
+#
 #     http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -41,8 +41,8 @@ find_package(RtiDds REQUIRED )
 find_package(Soracore REQUIRED )
 
 catkin_package(
-  LIBRARIES dds_ros_bridge
-  CATKIN_DEPENDS roscpp message_runtime std_msgs nav_msgs dds_msgs
+  LIBRARIES dds_ros_bridge astrobee_astrobee_bridge
+  CATKIN_DEPENDS roscpp message_runtime std_msgs nav_msgs
 )
 
 ###########
@@ -62,8 +62,17 @@ include_directories(
 file(GLOB cc_files
      "src/util.cc"
 )
-add_library(dds_ros_bridge
-  ${cc_files}
+
+create_library(TARGET astrobee_astrobee_bridge
+  LIBS ${LIBS}
+  INC ${INCLUDES}
+  DEPS ${DEPS}
+)
+
+create_tool_targets(DIR tools
+  LIBS dds_ros_bridge
+  INC ${INCLUDES}
+  DEPS ${DEPS} dds_ros_bridge
 )
 add_dependencies(dds_ros_bridge ${catkin_EXPORTED_TARGETS})
 target_link_libraries(dds_ros_bridge Qt4::QtXml rapidExtAstrobee ${RTIDDS_LIBRARIES} ${catkin_LIBRARIES})

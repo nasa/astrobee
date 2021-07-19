@@ -42,7 +42,8 @@ install(DIRECTORY launch/
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
   PATTERN ".svn" EXCLUDE)
 
-install(PROGRAMS scripts/check_env.sh
+install(PROGRAMS scripts/apk_print_version.sh
+				 scripts/check_env.sh
                  scripts/print_version.sh
                  scripts/cpu_print_version.sh
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})

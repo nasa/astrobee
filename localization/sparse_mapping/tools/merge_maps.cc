@@ -43,7 +43,7 @@
 // merging may move things around a bit.
 
 // outputs
-DEFINE_string(output_map, "merged.map",
+DEFINE_string(output_map, "",
               "Output file containing the merged map.");
 
 DEFINE_int32(num_image_overlaps_at_endpoints, 10,
@@ -73,6 +73,9 @@ int main(int argc, char** argv) {
     if (argv[i] == FLAGS_output_map)
       LOG(FATAL) << "The input and output maps must have different names.";
   }
+
+  if (FLAGS_output_map == "")
+    LOG(FATAL) << "No output map was specified.";
 
   if (FLAGS_num_image_overlaps_at_endpoints <= 0)
     LOG(FATAL) << "Must have num_image_overlaps_at_endpoints > 0.";

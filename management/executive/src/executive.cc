@@ -1130,40 +1130,6 @@ bool Executive::ArmControl(ff_msgs::CommandStampedPtr const& cmd) {
   return true;
 }
 
-// Used to check the mobility state for commands that can only be executed when
-// the astrobee is in some sort of stopped state. Send a failed execution ack
-// and return false if mobility state is flying, docking, perching, or stopping.
-bool Executive::CheckNotMoving(ff_msgs::CommandStampedPtr const& cmd) {
-  if (agent_state_.mobility_state.state == ff_msgs::MobilityState::FLYING) {
-    AckMobilityStateIssue(cmd, "flying");
-  } else if (agent_state_.mobility_state.state ==
-                                              ff_msgs::MobilityState::DOCKING &&
-             agent_state_.mobility_state.sub_state != 0) {
-    // Check if astrobee is docking vs. undocking
-    if (agent_state_.mobility_state.sub_state > 0) {
-      AckMobilityStateIssue(cmd, "docking", "docked");
-    } else {
-      AckMobilityStateIssue(cmd, "undocking", "stopped");
-    }
-  } else if (agent_state_.mobility_state.state ==
-                                            ff_msgs::MobilityState::PERCHING &&
-             agent_state_.mobility_state.sub_state != 0) {
-    // Check if astrobee is perching vs. unperching
-    if (agent_state_.mobility_state.sub_state > 0) {
-      AckMobilityStateIssue(cmd, "perching", "perched");
-    } else {
-      AckMobilityStateIssue(cmd, "unperching", "stopped");
-    }
-  } else if (agent_state_.mobility_state.state ==
-                                            ff_msgs::MobilityState::STOPPING &&
-             agent_state_.mobility_state.sub_state == 1) {
-    AckMobilityStateIssue(cmd, "stopping", "stopped");
-  } else {
-    return true;
-  }
-  return false;
-}
-
 bool Executive::CheckServiceExists(ros::ServiceClient& serviceIn,
                                    std::string const& serviceName,
                                    std::string const& cmd_id) {
@@ -1235,15 +1201,15 @@ bool Executive::ConfigureMobility(std::string const& cmd_id) {
   choreographer_cfg_->Set<bool>("enable_collision_checking",
                                                   agent_state_.check_obstacles);
   choreographer_cfg_->Set<bool>("enable_validation", agent_state_.check_zones);
-  choreographer_cfg_->Set<bool>("enable_timesync",
-                                                agent_state_.time_sync_enabled);
+  choreographer_cfg_->Set<bool>("enable_timesync", false);
   choreographer_cfg_->Set<bool>("enable_immediate",
                                                 agent_state_.immediate_enabled);
   choreographer_cfg_->Set<std::string>("planner", agent_state_.planner);
   // This function is not used for the first segment of a plan so always disable
   // move to start
   choreographer_cfg_->Set<bool>("enable_bootstrapping", false);
-  choreographer_cfg_->Set<bool>("enable_replanning", false);
+  choreographer_cfg_->Set<bool>("enable_replanning",
+                                              agent_state_.replanning_enabled);
 
   // Mapper
   mapper_cfg_->Set<double>("inflate_radius", agent_state_.collision_distance);
@@ -1302,13 +1268,13 @@ bool Executive::ConfigureMobility(bool move_to_start,
   choreographer_cfg_->Set<bool>("enable_collision_checking",
                                                   agent_state_.check_obstacles);
   choreographer_cfg_->Set<bool>("enable_validation", agent_state_.check_zones);
-  choreographer_cfg_->Set<bool>("enable_timesync",
-                                                agent_state_.time_sync_enabled);
+  choreographer_cfg_->Set<bool>("enable_timesync", false);
   choreographer_cfg_->Set<bool>("enable_immediate",
                                                 agent_state_.immediate_enabled);
   choreographer_cfg_->Set<std::string>("planner", agent_state_.planner);
   choreographer_cfg_->Set<bool>("enable_bootstrapping", move_to_start);
-  choreographer_cfg_->Set<bool>("enable_replanning", false);
+  choreographer_cfg_->Set<bool>("enable_replanning",
+                                              agent_state_.replanning_enabled);
 
   // Mapper
   mapper_cfg_->Set<double>("inflate_radius", agent_state_.collision_distance);
@@ -1328,6 +1294,131 @@ bool Executive::ConfigureMobility(bool move_to_start,
   }
 
   return successful;
+}
+
+// Used to check the mobility state for commands that can only be executed when
+// the astrobee is in some sort of stopped state. Send a failed execution ack
+// and return false if mobility state is flying, docking, perching, or stopping.
+bool Executive::FailCommandIfMoving(ff_msgs::CommandStampedPtr const& cmd) {
+  if (agent_state_.mobility_state.state == ff_msgs::MobilityState::FLYING) {
+    AckMobilityStateIssue(cmd, "flying");
+  } else if (agent_state_.mobility_state.state ==
+                                              ff_msgs::MobilityState::DOCKING &&
+             agent_state_.mobility_state.sub_state != 0) {
+    // Check if astrobee is docking vs. undocking
+    if (agent_state_.mobility_state.sub_state > 0) {
+      AckMobilityStateIssue(cmd, "docking", "docked");
+    } else {
+      AckMobilityStateIssue(cmd, "undocking", "stopped");
+    }
+  } else if (agent_state_.mobility_state.state ==
+                                            ff_msgs::MobilityState::PERCHING &&
+             agent_state_.mobility_state.sub_state != 0) {
+    // Check if astrobee is perching vs. unperching
+    if (agent_state_.mobility_state.sub_state > 0) {
+      AckMobilityStateIssue(cmd, "perching", "perched");
+    } else {
+      AckMobilityStateIssue(cmd, "unperching", "stopped");
+    }
+  } else if (agent_state_.mobility_state.state ==
+                                            ff_msgs::MobilityState::STOPPING &&
+             agent_state_.mobility_state.sub_state == 1) {
+    AckMobilityStateIssue(cmd, "stopping", "stopped");
+  } else {
+    return true;
+  }
+  return false;
+}
+
+
+bool Executive::LoadUnloadNodelet(ff_msgs::CommandStampedPtr const& cmd) {
+  bool load = true;
+  std::string which = "Load";
+  int num_args = cmd->args.size();
+
+  if (cmd->cmd_name == CommandConstants::CMD_NAME_UNLOAD_NODELET) {
+    load = false;
+    which = "Unload";
+  }
+
+  ff_msgs::UnloadLoadNodelet unload_load_nodelet_srv;
+  unload_load_nodelet_srv.request.load = load;
+
+  // Don't load/unload a nodelet while moving
+  if (FailCommandIfMoving(cmd)) {
+    // Only one argument is required for load/unload nodelet, the nodelet name
+    if (num_args < 1) {
+      state_->AckCmd(cmd->cmd_id,
+                     ff_msgs::AckCompletedStatus::BAD_SYNTAX,
+                     (which + " nodelet must have one argument."));
+      return false;
+    }
+
+    // The unload nodelet command takes only 1 or 2 arguments
+    if (num_args > 2 && !load) {
+      state_->AckCmd(cmd->cmd_id,
+                     ff_msgs::AckCompletedStatus::BAD_SYNTAX,
+                     (which + " nodelet takes no more than two arguments."));
+      return false;
+    }
+
+    // The load nodelet command takes 1 or up to 4 arguments
+    if (num_args > 4 && load) {
+      state_->AckCmd(cmd->cmd_id,
+                     ff_msgs::AckCompletedStatus::BAD_SYNTAX,
+                     (which + " nodelet takes no more than four arguments."));
+      return false;
+    }
+
+    // Extract arguments
+    for (int i = 0; i < num_args; i++) {
+      if (cmd->args[i].data_type != ff_msgs::CommandArg::DATA_TYPE_STRING) {
+        state_->AckCmd(cmd->cmd_id,
+                       ff_msgs::AckCompletedStatus::BAD_SYNTAX,
+                       (which + " nodelet parameters must be strings."));
+        return false;
+      }
+
+      if (i == 0) {
+        unload_load_nodelet_srv.request.name = cmd->args[0].s;
+      } else if (i == 1) {
+        unload_load_nodelet_srv.request.manager_name = cmd->args[1].s;
+      } else if (i == 2) {
+        unload_load_nodelet_srv.request.type = cmd->args[2].s;
+      } else {
+        unload_load_nodelet_srv.request.bond_id = cmd->args[3].s;
+      }
+    }
+
+    // Check if the load/unload nodelet service is running
+    if (!CheckServiceExists(unload_load_nodelet_client_,
+                            "Load/unload nodelet",
+                            cmd->cmd_id)) {
+      return false;
+    }
+
+    // Call the unload load nodelet service
+    if (!unload_load_nodelet_client_.call(unload_load_nodelet_srv)) {
+      state_->AckCmd(cmd->cmd_id,
+                     ff_msgs::AckCompletedStatus::EXEC_FAILED,
+                     "Unload load nodelet service returned false.");
+      return false;
+    }
+
+    if (unload_load_nodelet_srv.response.result !=
+                            ff_msgs::UnloadLoadNodelet::Response::SUCCESSFUL) {
+      state_->AckCmd(cmd->cmd_id,
+                     ff_msgs::AckCompletedStatus::EXEC_FAILED,
+                     (which + " nodelet failed with result " +
+                      std::to_string(unload_load_nodelet_srv.response.result)));
+      return false;
+    }
+
+    state_->AckCmd(cmd->cmd_id);
+    return true;
+  }
+
+  return false;
 }
 
 ros::Time Executive::MsToSec(std::string timestamp) {
@@ -1557,42 +1648,6 @@ bool Executive::AutoReturn(ff_msgs::CommandStampedPtr const& cmd) {
   return successful;
 }
 
-bool Executive::ClearData(ff_msgs::CommandStampedPtr const& cmd) {
-  NODELET_INFO("Executive executing clear data command!");
-  bool successful = true;
-  uint8_t completed_status = ff_msgs::AckCompletedStatus::OK;
-  std::string err_msg = "";
-
-  // Don't clear data when flying, docking, perching, or trying to stop
-  if (!CheckNotMoving(cmd)) {
-    return false;
-  }
-
-  // Check to make sure command is formatted as expected
-  if (cmd->args.size() != 1 ||
-      cmd->args[0].data_type != ff_msgs::CommandArg::DATA_TYPE_STRING) {
-    successful = false;
-    err_msg = "Malformed arguments for clear data command!";
-  } else if (cmd->args[0].s !=
-                          CommandConstants::PARAM_NAME_DOWNLOAD_METHOD_IMMEDIATE
-      && cmd->args[0].s !=
-                        CommandConstants::PARAM_NAME_DOWNLOAD_METHOD_DELAYED) {
-    successful = false;
-    err_msg = "Data method not recognized. Needs to be immediate or delay.";
-    completed_status = ff_msgs::AckCompletedStatus::BAD_SYNTAX;
-  } else {
-    // TODO(Katie) Stub, change to be actual code, including setting a class
-    // variable to tell if we are downloading data, cannot clear data if
-    // downloading data
-    successful = true;
-    NODELET_ERROR("Clear data not implemented yet!");
-  }
-
-  state_->AckCmd(cmd->cmd_id, completed_status, err_msg);
-
-  return successful;
-}
-
 bool Executive::CustomGuestScience(ff_msgs::CommandStampedPtr const& cmd) {
   NODELET_INFO("Executive executing custom guest science command!");
   // Check command arguments are correcy before sending to the guest science
@@ -1651,46 +1706,6 @@ bool Executive::Dock(ff_msgs::CommandStampedPtr const& cmd) {
                    ff_msgs::AckCompletedStatus::EXEC_FAILED,
                    err_msg);
   }
-  return successful;
-}
-
-bool Executive::DownloadData(ff_msgs::CommandStampedPtr const& cmd) {
-  NODELET_INFO("Executive executing download data command!");
-  bool successful = true;
-  std::string err_msg = "";
-  uint8_t completed_status;
-
-  // Check to make sure command is formatted as expected
-  if (cmd->args.size() != 1 ||
-      cmd->args[0].data_type != ff_msgs::CommandArg::DATA_TYPE_STRING) {
-    successful = false;
-    err_msg = "Malformed arguments for download data command!";
-    completed_status = ff_msgs::AckCompletedStatus::BAD_SYNTAX;
-  } else if (cmd->args[0].s !=
-                          CommandConstants::PARAM_NAME_DOWNLOAD_METHOD_IMMEDIATE
-      && cmd->args[0].s !=
-                        CommandConstants::PARAM_NAME_DOWNLOAD_METHOD_DELAYED) {
-    successful = false;
-    err_msg = "Download method not recognized. Needs to be immediate or delay.";
-    completed_status = ff_msgs::AckCompletedStatus::BAD_SYNTAX;
-  } else if (agent_state_.mobility_state.state !=
-                                              ff_msgs::MobilityState::DOCKING ||
-            (agent_state_.mobility_state.state ==
-                                              ff_msgs::MobilityState::DOCKING &&
-             agent_state_.mobility_state.sub_state != 0)) {
-    // Can only download data when docked
-    successful = false;
-    err_msg = "Not docked! Need to be docked in order to download data.";
-    completed_status = ff_msgs::AckCompletedStatus::EXEC_FAILED;
-  } else {
-    // TODO(Katie) Stub, change to be actual code, including setting a class
-    // variable to tell if we are downloading data and what kind of data
-    successful = true;
-    NODELET_ERROR("Download data not implemented yet!");
-    completed_status = ff_msgs::AckCompletedStatus::OK;
-  }
-
-  state_->AckCmd(cmd->cmd_id, completed_status, err_msg);
   return successful;
 }
 
@@ -1775,7 +1790,7 @@ bool Executive::InitializeBias(ff_msgs::CommandStampedPtr const& cmd) {
   }
 
   // We also cannot be moving when we initialize the bias
-  if (CheckNotMoving(cmd)) {
+  if (FailCommandIfMoving(cmd)) {
     localization_goal_.command =
                               ff_msgs::LocalizationGoal::COMMAND_ESTIMATE_BIAS;
     // Don't need to specify a pipeline for init bias but clear it just in case
@@ -1783,6 +1798,11 @@ bool Executive::InitializeBias(ff_msgs::CommandStampedPtr const& cmd) {
     return StartAction(LOCALIZATION, cmd->cmd_id);
   }
   return false;
+}
+
+bool Executive::LoadNodelet(ff_msgs::CommandStampedPtr const& cmd) {
+  NODELET_INFO("Executive executing load nodelet command!");
+  return LoadUnloadNodelet(cmd);
 }
 
 bool Executive::NoOp(ff_msgs::CommandStampedPtr const& cmd) {
@@ -1853,7 +1873,7 @@ bool Executive::Prepare(ff_msgs::CommandStampedPtr const& cmd) {
 
 bool Executive::ReacquirePosition(ff_msgs::CommandStampedPtr const& cmd) {
   NODELET_INFO("Executive executing reacquire position command!");
-  if (CheckNotMoving(cmd)) {
+  if (FailCommandIfMoving(cmd)) {
     // Reacquire position tries to get astrobee localizing again with mapped
     // landmarks
     localization_goal_.command =
@@ -1867,7 +1887,7 @@ bool Executive::ReacquirePosition(ff_msgs::CommandStampedPtr const& cmd) {
 
 bool Executive::ResetEkf(ff_msgs::CommandStampedPtr const& cmd) {
   NODELET_INFO("Executive executing reset ekf command!");
-  if (CheckNotMoving(cmd)) {
+  if (FailCommandIfMoving(cmd)) {
     return ResetEkf(cmd->cmd_id);
   }
   return false;
@@ -2256,7 +2276,7 @@ bool Executive::SetCameraStreaming(ff_msgs::CommandStampedPtr const& cmd) {
 bool Executive::SetCheckObstacles(ff_msgs::CommandStampedPtr const& cmd) {
   NODELET_INFO("Executive executing set check obstacles command!");
   // Don't set whether to check obstacles when moving
-  if (CheckNotMoving(cmd)) {
+  if (FailCommandIfMoving(cmd)) {
     if (cmd->args.size() != 1 ||
         cmd->args[0].data_type != ff_msgs::CommandArg::DATA_TYPE_BOOL) {
       NODELET_ERROR("Malformed arguments for set check obstacles!");
@@ -2277,7 +2297,7 @@ bool Executive::SetCheckObstacles(ff_msgs::CommandStampedPtr const& cmd) {
 bool Executive::SetCheckZones(ff_msgs::CommandStampedPtr const& cmd) {
   NODELET_INFO("Executive executing set check zones command!");
   // Don't set whether to check zones when moving
-  if (CheckNotMoving(cmd)) {
+  if (FailCommandIfMoving(cmd)) {
     if (cmd->args.size() != 1 ||
         cmd->args[0].data_type != ff_msgs::CommandArg::DATA_TYPE_BOOL) {
       NODELET_ERROR("Malformed arguments for set check zones!");
@@ -2444,7 +2464,7 @@ bool Executive::SetEnableAutoReturn(ff_msgs::CommandStampedPtr const& cmd) {
 
 bool Executive::SetEnableImmediate(ff_msgs::CommandStampedPtr const& cmd) {
   NODELET_INFO("Executive executing set enable immediate command!");
-  if (CheckNotMoving(cmd)) {
+  if (FailCommandIfMoving(cmd)) {
     if (cmd->args.size() != 1 ||
         cmd->args[0].data_type != ff_msgs::CommandArg::DATA_TYPE_BOOL) {
       NODELET_ERROR("Malformed arguments for enable immediate command!");
@@ -2455,6 +2475,26 @@ bool Executive::SetEnableImmediate(ff_msgs::CommandStampedPtr const& cmd) {
     }
 
     agent_state_.immediate_enabled = cmd->args[0].b;
+    PublishAgentState();
+    state_->AckCmd(cmd->cmd_id);
+    return true;
+  }
+  return false;
+}
+
+bool Executive::SetEnableReplan(ff_msgs::CommandStampedPtr const& cmd) {
+  NODELET_INFO("Executive executing set enable replan command!");
+  if (FailCommandIfMoving(cmd)) {
+    if (cmd->args.size() != 1 ||
+        cmd->args[0].data_type != ff_msgs::CommandArg::DATA_TYPE_BOOL) {
+      NODELET_ERROR("Malformed arguments for enable replan command!");
+      state_->AckCmd(cmd->cmd_id,
+                     ff_msgs::AckCompletedStatus::BAD_SYNTAX,
+                     "Malformed arguments for enable replan command!");
+      return false;
+    }
+
+    agent_state_.replanning_enabled = cmd->args[0].b;
     PublishAgentState();
     state_->AckCmd(cmd->cmd_id);
     return true;
@@ -2538,7 +2578,7 @@ bool Executive::SetFlashlightBrightness(ff_msgs::CommandStampedPtr const& cmd) {
 
 bool Executive::SetHolonomicMode(ff_msgs::CommandStampedPtr const& cmd) {
   NODELET_INFO("Executive executing set holonomic mode command!");
-  if (CheckNotMoving(cmd)) {
+  if (FailCommandIfMoving(cmd)) {
     if (cmd->args.size() != 1 ||
         cmd->args[0].data_type != ff_msgs::CommandArg::DATA_TYPE_BOOL) {
       NODELET_ERROR("Malformed arguments for set holonomic mode command!");
@@ -2558,7 +2598,7 @@ bool Executive::SetHolonomicMode(ff_msgs::CommandStampedPtr const& cmd) {
 
 bool Executive::SetInertia(ff_msgs::CommandStampedPtr const& cmd) {
   NODELET_INFO("Executive executing set inertia command!");
-  if (CheckNotMoving(cmd)) {
+  if (FailCommandIfMoving(cmd)) {
     if (cmd->args.size() != 4 ||
         cmd->args[0].data_type != ff_msgs::CommandArg::DATA_TYPE_STRING ||
         cmd->args[1].data_type != ff_msgs::CommandArg::DATA_TYPE_FLOAT ||
@@ -2617,7 +2657,7 @@ bool Executive::SetInertia(ff_msgs::CommandStampedPtr const& cmd) {
 
 bool Executive::SetOperatingLimits(ff_msgs::CommandStampedPtr const& cmd) {
   NODELET_INFO("Executive executing set operating limits command!");
-  if (CheckNotMoving(cmd)) {
+  if (FailCommandIfMoving(cmd)) {
     if (cmd->args.size() != 7 ||
         cmd->args[0].data_type != ff_msgs::CommandArg::DATA_TYPE_STRING ||
         cmd->args[1].data_type != ff_msgs::CommandArg::DATA_TYPE_STRING ||
@@ -2698,7 +2738,7 @@ bool Executive::SetPlan(ff_msgs::CommandStampedPtr const& cmd) {
 bool Executive::SetPlanner(ff_msgs::CommandStampedPtr const& cmd) {
   NODELET_INFO("Executive executing set planner command!");
   // Don't set planner when moving
-  if (CheckNotMoving(cmd)) {
+  if (FailCommandIfMoving(cmd)) {
     if (cmd->args.size() != 1 ||
         cmd->args[0].data_type != ff_msgs::CommandArg::DATA_TYPE_STRING) {
       NODELET_ERROR("Malformed arguments for set planner command!");
@@ -2761,6 +2801,9 @@ bool Executive::SetTelemetryRate(ff_msgs::CommandStampedPtr const& cmd) {
   } else if (cmd->args[0].s ==
                         CommandConstants::PARAM_NAME_TELEMETRY_TYPE_POSITION) {
     set_rate_srv.request.which = ff_msgs::SetRate::Request::POSITION;
+  } else if (cmd->args[0].s ==
+              CommandConstants::PARAM_NAME_TELEMETRY_TYPE_SPARSE_MAPPING_POSE) {
+    set_rate_srv.request.which = ff_msgs::SetRate::Request::SPARSE_MAPPING_POSE;
   } else {
     state_->AckCmd(cmd->cmd_id,
                   ff_msgs::AckCompletedStatus::BAD_SYNTAX,
@@ -2791,29 +2834,9 @@ bool Executive::SetTelemetryRate(ff_msgs::CommandStampedPtr const& cmd) {
   return true;
 }
 
-bool Executive::SetTimeSync(ff_msgs::CommandStampedPtr const& cmd) {
-  NODELET_INFO("Executive executing set time sync command!");
-  // Don't set time sync when moving
-  if (CheckNotMoving(cmd)) {
-    if (cmd->args.size() != 1 ||
-        cmd->args[0].data_type != ff_msgs::CommandArg::DATA_TYPE_BOOL) {
-      state_->AckCmd(cmd->cmd_id,
-                     ff_msgs::AckCompletedStatus::BAD_SYNTAX,
-                     "Malformed arguments for enable time sync command!");
-      return false;
-    }
-
-    agent_state_.time_sync_enabled = cmd->args[0].b;
-    PublishAgentState();
-    state_->AckCmd(cmd->cmd_id);
-    return true;
-  }
-  return false;
-}
-
 bool Executive::SetZones(ff_msgs::CommandStampedPtr const& cmd) {
   NODELET_INFO("Executive executing set zones command!");
-  if (CheckNotMoving(cmd)) {
+  if (FailCommandIfMoving(cmd)) {
     if (zones_) {
       ff_msgs::SetZones zones_srv;
       std::string file_contents;
@@ -2959,20 +2982,6 @@ bool Executive::SetZones(ff_msgs::CommandStampedPtr const& cmd) {
     state_->AckCmd(cmd->cmd_id,
                    ff_msgs::AckCompletedStatus::EXEC_FAILED,
                    "No zones file found.");
-    return false;
-  }
-  return false;
-}
-
-bool Executive::Shutdown(ff_msgs::CommandStampedPtr const& cmd) {
-  NODELET_INFO("Executive executing shutdown command!");
-  // Don't want to shutdown when flying, docking, perching, or trying to stop
-  if (CheckNotMoving(cmd)) {
-    // TODO(Katie) Stub, change to be actual code, ack complete immediately
-    // TODO(Katie) Add code to shutdown the robot
-    state_->AckCmd(cmd->cmd_id,
-                   ff_msgs::AckCompletedStatus::EXEC_FAILED,
-                   "Shutdown not implemented yet! Stay tune!");
     return false;
   }
   return false;
@@ -3290,43 +3299,6 @@ bool Executive::StopArm(ff_msgs::CommandStampedPtr const& cmd) {
   return true;
 }
 
-bool Executive::StopDownload(ff_msgs::CommandStampedPtr const& cmd) {
-  NODELET_INFO("Executive executing stop download command!");
-  std::string err_msg;
-  // Check to make sure command is formatted as expected
-  if (cmd->args.size() != 1 ||
-      cmd->args[0].data_type != ff_msgs::CommandArg::DATA_TYPE_STRING) {
-    err_msg = "Malformed arguments for stop download command!";
-    NODELET_ERROR("%s", err_msg.c_str());
-    state_->AckCmd(cmd->cmd_id,
-                   ff_msgs::AckCompletedStatus::BAD_SYNTAX,
-                   err_msg);
-    return false;
-  }
-
-  if (cmd->args[0].s != CommandConstants::PARAM_NAME_DOWNLOAD_METHOD_IMMEDIATE
-      && cmd->args[0].s !=
-                        CommandConstants::PARAM_NAME_DOWNLOAD_METHOD_DELAYED) {
-    err_msg = "Download method not recognized. Needs to be immediate or delay.";
-    NODELET_ERROR("%s", err_msg.c_str());
-    state_->AckCmd(cmd->cmd_id,
-                   ff_msgs::AckCompletedStatus::BAD_SYNTAX,
-                   err_msg);
-    return false;
-  }
-
-  // TODO(Katie) Can only stop download if download occurring, check class
-  // variables to see if a download is in progress and what kind of data
-  // TODO(Katie) Stub, change to be actual code
-  err_msg = "Stop download not implemented yet!";
-  NODELET_ERROR("%s", err_msg.c_str());
-  state_->AckCmd(cmd->cmd_id,
-                 ff_msgs::AckCompletedStatus::EXEC_FAILED,
-                 err_msg);
-  // err_msg = "Not downloading data! No download to stop.";
-  return false;
-}
-
 bool Executive::StopGuestScience(ff_msgs::CommandStampedPtr const& cmd) {
   NODELET_INFO("Executive executing stop guest science command!");
   // Check command arguments are correct before sending to the guest science
@@ -3400,7 +3372,7 @@ bool Executive::StowArm(ff_msgs::CommandStampedPtr const& cmd) {
 
 bool Executive::SwitchLocalization(ff_msgs::CommandStampedPtr const& cmd) {
   NODELET_DEBUG("Executive executing switch localization command!");
-  if (CheckNotMoving(cmd)) {
+  if (FailCommandIfMoving(cmd)) {
     if (cmd->args.size() != 1 ||
         cmd->args[0].data_type != ff_msgs::CommandArg::DATA_TYPE_STRING) {
       state_->AckCmd(cmd->cmd_id,
@@ -3470,6 +3442,11 @@ bool Executive::Undock(ff_msgs::CommandStampedPtr const& cmd) {
                    err_msg);
   }
   return docked;
+}
+
+bool Executive::UnloadNodelet(ff_msgs::CommandStampedPtr const& cmd) {
+  NODELET_INFO("Executive executing unload nodelet command!");
+  return LoadUnloadNodelet(cmd);
 }
 
 bool Executive::Unperch(ff_msgs::CommandStampedPtr const& cmd) {
@@ -3547,15 +3524,6 @@ bool Executive::Wait(ff_msgs::CommandStampedPtr const& cmd) {
 
   StartWaitTimer(cmd->args[0].f);
   return true;
-}
-
-bool Executive::WipeHlp(ff_msgs::CommandStampedPtr const& cmd) {
-  NODELET_INFO("Executive executing wipe hlp command!");
-  // TODO(Katie) Check if guest science apk is running. If so, don't wipe hlp.
-  state_->AckCmd(cmd->cmd_id,
-                 ff_msgs::AckCompletedStatus::EXEC_FAILED,
-                 "Wipe hlp not implemented yet! Stay tune!");
-  return false;
 }
 
 /************************ Protected *******************************************/
@@ -3791,6 +3759,9 @@ void Executive::Initialize(ros::NodeHandle *nh) {
   eps_terminate_client_ = nh_.serviceClient<ff_hw_msgs::ClearTerminate>(
                                           SERVICE_HARDWARE_EPS_CLEAR_TERMINATE);
 
+  unload_load_nodelet_client_ = nh_.serviceClient<ff_msgs::UnloadLoadNodelet>(
+                            SERVICE_MANAGEMENT_SYS_MONITOR_UNLOAD_LOAD_NODELET);
+
   // initialize configure clients later, when initialized here, the service is
   // invalid when we try to use it. Must have something to do with startup order
   // of executive, choreographer, planner, or mapper
@@ -3825,7 +3796,7 @@ void Executive::Initialize(ros::NodeHandle *nh) {
   agent_state_.check_zones = true;
   agent_state_.auto_return_enabled = true;
   agent_state_.immediate_enabled = true;
-  agent_state_.time_sync_enabled = false;
+  agent_state_.replanning_enabled = false;
   agent_state_.boot_time = ros::Time::now().sec;
 
   PublishAgentState();

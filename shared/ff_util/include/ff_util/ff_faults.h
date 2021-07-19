@@ -48,12 +48,11 @@ enum FaultKeys {
   DISK_USAGE_HIGH,
   HARDWARE_ERROR_FAULT_CODE,
   BAD_GYRO_DATA,
-  CONTROL_CYCLE_OVERRUN,
   IMU_OVERTEMP,
   IMU_ACCEL_ABOVE_LIMITS
 };
 
-constexpr int kFaultKeysSize = 25;
+constexpr int kFaultKeysSize = 24;
 
 static std::string fault_keys[] = {
     "UNKNOWN_FAULT_KEY",
@@ -78,7 +77,6 @@ static std::string fault_keys[] = {
     "DISK_USAGE_HIGH",
     "HARDWARE_ERROR_FAULT_CODE",
     "BAD_GYRO_DATA",
-    "CONTROL_CYCLE_OVERRUN",
     "IMU_OVERTEMP",
     "IMU_ACCEL_ABOVE_LIMITS"
 };

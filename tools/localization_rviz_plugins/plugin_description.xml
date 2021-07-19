@@ -1,0 +1,24 @@
+<library path="lib/librviz_plugin_tutorials">
+  <class name="rviz_plugin_tutorials/Teleop"
+         type="rviz_plugin_tutorials::TeleopPanel"
+         base_class_type="rviz::Panel">
+    <description>
+      A panel widget allowing simple diff-drive style robot base control.
+    </description>
+  </class>
+  <class name="rviz_plugin_tutorials/Imu"
+         type="rviz_plugin_tutorials::ImuDisplay"
+         base_class_type="rviz::Display">
+    <description>
+      Displays direction and scale of accelerations from sensor_msgs/Imu messages.
+    </description>
+    <message_type>sensor_msgs/Imu</message_type>
+  </class>
+  <class name="rviz_plugin_tutorials/PlantFlag"
+         type="rviz_plugin_tutorials::PlantFlagTool"
+         base_class_type="rviz::Tool">
+    <description>
+      Tool for planting flags on the ground plane in rviz.
+    </description>
+  </class>
+</library>

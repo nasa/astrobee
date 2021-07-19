@@ -25,38 +25,44 @@
   <arg name="debug" default=""/>                 <!-- Debug a node set          -->
   <arg name="dds" default="true"/>               <!-- Should DDS be started     -->
   <arg name="output" default="log"/>             <!-- Where nodes should log    -->
-  <arg name="loc_only" default="false"/>              <!-- Only run localization     -->
+  <arg name="ground_truth_localizer" default="false"/>   <!-- Runs ground_truth localizer -->
 
   <!-- Setup nodelet managers -->
   <group if="$(eval optenv('ASTROBEE_NODEGRAPH','')=='')">
     <node pkg="nodelet" type="nodelet" args="manager"
           name="mlp_localization" output="$(arg output)"/>
     <node pkg="nodelet" type="nodelet" args="manager"
+          name="mlp_graph_localization" output="$(arg output)"/>
+    <node pkg="nodelet" type="nodelet" args="manager"
           name="mlp_vision" output="$(arg output)"/>
     <node pkg="nodelet" type="nodelet" args="manager"
           name="mlp_depth_cam" output="$(arg output)"/>
-    <group unless="$(arg loc_only)">
-      <node pkg="nodelet" type="nodelet" args="manager"
+    <node pkg="nodelet" type="nodelet" args="manager"
+          name="mlp_mapper" output="$(arg output)"/>
+    <node pkg="nodelet" type="nodelet" args="manager"
           name="mlp_management" output="$(arg output)"/>
-      <node pkg="nodelet" type="nodelet" args="manager"
+    <node pkg="nodelet" type="nodelet" args="manager"
+          name="mlp_recording" output="$(arg output)"/>
+    <node pkg="nodelet" type="nodelet" args="manager"
           name="mlp_monitors" output="$(arg output)"/>
-      <node pkg="nodelet" type="nodelet" args="manager"
+    <node pkg="nodelet" type="nodelet" args="manager"
           name="mlp_communications" output="$(arg output)"/>
-      <node pkg="nodelet" type="nodelet" args="manager"
+    <node pkg="nodelet" type="nodelet" args="manager"
+          name="mlp_multibridge" output="$(arg output)"/>
+    <node pkg="nodelet" type="nodelet" args="manager"
           name="mlp_serial" output="$(arg output)"/>
-      <node pkg="nodelet" type="nodelet" args="manager"
+    <node pkg="nodelet" type="nodelet" args="manager"
           name="mlp_mobility" output="$(arg output)"/>
-      <node pkg="nodelet" type="nodelet" args="manager"
+    <node pkg="nodelet" type="nodelet" args="manager"
           name="mlp_arm" output="$(arg output)"/>
-      <node pkg="nodelet" type="nodelet" args="manager"
+    <node pkg="nodelet" type="nodelet" args="manager"
           name="mlp_dock" output="$(arg output)"/>
-      <node pkg="nodelet" type="nodelet" args="manager"
+    <node pkg="nodelet" type="nodelet" args="manager"
           name="mlp_perch" output="$(arg output)"/>
-      <node pkg="nodelet" type="nodelet" args="manager"
+    <node pkg="nodelet" type="nodelet" args="manager"
           name="mlp_vive" output="$(arg output)"/>
-      <node pkg="nodelet" type="nodelet" args="manager"
+    <node pkg="nodelet" type="nodelet" args="manager"
           name="mlp_states" output="$(arg output)"/>
-    </group>
   </group>
 
   <!-- Vision / localization -->
@@ -81,11 +87,24 @@
     <arg name="default" value="true" />
   </include>
 
-  <group unless="$(arg loc_only)">
-
+  <!-- Run ground_truth_localizer, otherwise run graph localizer -->
+  <group unless="$(arg ground_truth_localizer)">
     <include file="$(find ff_util)/launch/ff_nodelet.launch">
-      <arg name="class" value="image_sampler/ImageSampler" />
-      <arg name="name" value="image_sampler" />
+      <arg name="class" value="graph_localizer/GraphLocalizerNodelet" />
+      <arg name="name" value="graph_loc" />
+      <arg name="manager" value="mlp_graph_localization" />
+      <arg name="spurn" value="$(arg spurn)" />
+      <arg name="nodes" value="$(arg nodes)" />
+      <arg name="extra" value="$(arg extra)" />
+      <arg name="debug" value="$(arg debug)" />
+      <arg name="default" value="true" />
+    </include>
+  </group>
+
+  <group if="$(arg ground_truth_localizer)">
+    <include file="$(find ff_util)/launch/ff_nodelet.launch">
+      <arg name="class" value="ground_truth_localizer/GroundTruthLocalizerNodelet" />
+      <arg name="name" value="ground_truth_localizer" />
       <arg name="manager" value="mlp_localization" />
       <arg name="spurn" value="$(arg spurn)" />
       <arg name="nodes" value="$(arg nodes)" />
@@ -93,328 +112,315 @@
       <arg name="debug" value="$(arg debug)" />
       <arg name="default" value="true" />
     </include>
-
-    <!-- Mobility -->
-    <include file="$(find ff_util)/launch/ff_nodelet.launch">
-      <arg name="class" value="mapper/MapperNodelet" />
-      <arg name="name" value="mapper" />
-      <arg name="manager" value="mlp_depth_cam" />
-      <arg name="spurn" value="$(arg spurn)" />
-      <arg name="nodes" value="$(arg nodes)" />
-      <arg name="extra" value="$(arg extra)" />
-      <arg name="debug" value="$(arg debug)" />
-      <arg name="default" value="true" />
-    </include>
-
-    <include file="$(find ff_util)/launch/ff_nodelet.launch">
-      <arg name="class" value="planner_qp/Planner" />
-      <arg name="name" value="planner_qp" />
-      <arg name="manager" value="mlp_depth_cam" />
-      <arg name="spurn" value="$(arg spurn)" />
-      <arg name="nodes" value="$(arg nodes)" />
-      <arg name="extra" value="$(arg extra)" />
-      <arg name="debug" value="$(arg debug)" />
-      <arg name="default" value="true" />
-    </include>
-    <include file="$(find ff_util)/launch/ff_nodelet.launch">
-      <arg name="class" value="choreographer/ChoreographerNodelet" />
-      <arg name="name" value="choreographer" />
-      <arg name="manager" value="mlp_mobility" />
-      <arg name="spurn" value="$(arg spurn)" />
-      <arg name="nodes" value="$(arg nodes)" />
-      <arg name="extra" value="$(arg extra)" />
-      <arg name="debug" value="$(arg debug)" />
-      <arg name="default" value="true" />
-    </include>
-    <include file="$(find ff_util)/launch/ff_nodelet.launch">
-      <arg name="class" value="planner_trapezoidal/PlannerTrapezoidalNodelet" />
-      <arg name="name" value="planner_trapezoidal" />
-      <arg name="manager" value="mlp_mobility" />
-      <arg name="spurn" value="$(arg spurn)" />
-      <arg name="nodes" value="$(arg nodes)" />
-      <arg name="extra" value="$(arg extra)" />
-      <arg name="debug" value="$(arg debug)" />
-      <arg name="default" value="true" />
-    </include>
-    <include file="$(find ff_util)/launch/ff_nodelet.launch">
-      <arg name="class" value="mobility/FrameStore" />
-      <arg name="name" value="framestore" />
-      <arg name="manager" value="mlp_mobility" />
-      <arg name="spurn" value="$(arg spurn)" />
-      <arg name="nodes" value="$(arg nodes)" />
-      <arg name="extra" value="$(arg extra)" />
-      <arg name="debug" value="$(arg debug)" />
-      <arg name="default" value="true" />
-    </include>
-
-    <!-- Behaviors -->
-    <include file="$(find ff_util)/launch/ff_nodelet.launch">
-      <arg name="class" value="dock/DockNodelet" />
-      <arg name="name" value="dock" />
-      <arg name="manager" value="mlp_dock" />
-      <arg name="spurn" value="$(arg spurn)" />
-      <arg name="nodes" value="$(arg nodes)" />
-      <arg name="extra" value="$(arg extra)" />
-      <arg name="debug" value="$(arg debug)" />
-      <arg name="default" value="true" />
-    </include>
-    <include file="$(find ff_util)/launch/ff_nodelet.launch">
-      <arg name="class" value="arm/ArmNodelet" />
-      <arg name="name" value="arm" />
-      <arg name="manager" value="mlp_arm" />
-      <arg name="spurn" value="$(arg spurn)" />
-      <arg name="nodes" value="$(arg nodes)" />
-      <arg name="extra" value="$(arg extra)" />
-      <arg name="debug" value="$(arg debug)" />
-      <arg name="default" value="true" />
-    </include>
-    <include file="$(find ff_util)/launch/ff_nodelet.launch">
-      <arg name="class" value="perch/PerchNodelet" />
-      <arg name="name" value="perch" />
-      <arg name="manager" value="mlp_perch" />
-      <arg name="spurn" value="$(arg spurn)" />
-      <arg name="nodes" value="$(arg nodes)" />
-      <arg name="extra" value="$(arg extra)" />
-      <arg name="debug" value="$(arg debug)" />
-      <arg name="default" value="true" />
-    </include>
-
-    <include file="$(find ff_util)/launch/ff_nodelet.launch">
-      <arg name="class" value="states/StatesNodelet" />
-      <arg name="name" value="states" />
-      <arg name="manager" value="mlp_states" />
-      <arg name="spurn" value="$(arg spurn)" />
-      <arg name="nodes" value="$(arg nodes)" />
-      <arg name="extra" value="$(arg extra)" />
-      <arg name="debug" value="$(arg debug)" />
-      <arg name="default" value="true" />
-    </include>
-
-    <!-- Management -->
-    <include file="$(find ff_util)/launch/ff_nodelet.launch">
-      <arg name="class" value="executive/Executive" />
-      <arg name="name" value="executive" />
-      <arg name="manager" value="mlp_management" />
-      <arg name="spurn" value="$(arg spurn)" />
-      <arg name="nodes" value="$(arg nodes)" />
-      <arg name="extra" value="$(arg extra)" />
-      <arg name="debug" value="$(arg debug)" />
-      <arg name="default" value="true" />
-    </include>
-    <include file="$(find ff_util)/launch/ff_nodelet.launch">
-      <arg name="class" value="access_control/AccessControl" />
-      <arg name="name" value="access_control" />
-      <arg name="manager" value="mlp_management" />
-      <arg name="spurn" value="$(arg spurn)" />
-      <arg name="nodes" value="$(arg nodes)" />
-      <arg name="extra" value="$(arg extra)" />
-      <arg name="debug" value="$(arg debug)" />
-      <arg name="default" value="true" />
-    </include>
-    <include file="$(find ff_util)/launch/ff_nodelet.launch">
-      <arg name="class" value="data_bagger/DataBagger" />
-      <arg name="name" value="data_bagger" />
-      <arg name="manager" value="mlp_management" />
-      <arg name="spurn" value="$(arg spurn)" />
-      <arg name="nodes" value="$(arg nodes)" />
-      <arg name="extra" value="$(arg extra)" />
-      <arg name="debug" value="$(arg debug)" />
-      <arg name="default" value="true" />
-    </include>
-
-    <!-- Monitors -->
-    <include file="$(find ff_util)/launch/ff_nodelet.launch">
-      <arg name="class" value="sys_monitor/SysMonitor" />
-      <arg name="name" value="sys_monitor" />
-      <arg name="manager" value="mlp_monitors" />
-      <arg name="spurn" value="$(arg spurn)" />
-      <arg name="nodes" value="$(arg nodes)" />
-      <arg name="extra" value="$(arg extra)" />
-      <arg name="debug" value="$(arg debug)" />
-      <arg name="default" value="true" />
-    </include>
-
-    <!-- Communications -->
-    <include file="$(find ff_util)/launch/ff_nodelet.launch">
-      <arg name="class" value="dds_ros_bridge/DdsRosBridge" />
-      <arg name="name" value="dds_ros_bridge" />
-      <arg name="manager" value="mlp_communications" />
-      <arg name="spurn" value="$(arg spurn)" />
-      <arg name="nodes" value="$(arg nodes)" />
-      <arg name="extra" value="$(arg extra)" />
-      <arg name="debug" value="$(arg debug)" />
-      <arg name="default" value="$(arg dds)" />
-    </include>
-
-    <!-- Perching arm -->
-    <include file="$(find ff_util)/launch/ff_nodelet.launch">
-      <arg name="class" value="perching_arm/PerchingArmNode" />
-      <arg name="name" value="perching_arm" />
-      <arg name="manager" value="mlp_serial" />
-      <arg name="spurn" value="$(arg spurn)" />
-      <arg name="nodes" value="$(arg nodes)" />
-      <arg name="extra" value="$(arg extra)" />
-      <arg name="debug" value="$(arg debug)" />
-      <arg name="default" value="true" />
-    </include>
   </group>
 
-  <!-- Drivers (optional) -->
-  <group if="$(arg drivers)">
+  <include file="$(find ff_util)/launch/ff_nodelet.launch">
+    <arg name="class" value="image_sampler/ImageSampler" />
+    <arg name="name" value="image_sampler" />
+    <arg name="manager" value="mlp_localization" />
+    <arg name="spurn" value="$(arg spurn)" />
+    <arg name="nodes" value="$(arg nodes)" />
+    <arg name="extra" value="$(arg extra)" />
+    <arg name="debug" value="$(arg debug)" />
+    <arg name="default" value="true" />
+  </include>
 
-    <!-- NavCam pipeline -->
-    <include file="$(find ff_util)/launch/ff_nodelet.launch">
-      <arg name="class" value="is_camera/camera" />
-      <arg name="name" value="nav_cam" />
-      <arg name="manager" value="mlp_vision" />
-      <arg name="spurn" value="$(arg spurn)" />
-      <arg name="nodes" value="$(arg nodes)" />
-      <arg name="extra" value="$(arg extra)" />
-      <arg name="debug" value="$(arg debug)" />
-      <arg name="default" value="true" />
-    </include>
-    <include file="$(find ff_util)/launch/ff_nodelet.launch">
-      <arg name="class" value="is_camera/camera" />
-      <arg name="name" value="calibration_nav_cam" />
-      <arg name="manager" value="mlp_vision" />
-      <arg name="spurn" value="$(arg spurn)" />
-      <arg name="nodes" value="$(arg nodes)" />
-      <arg name="extra" value="$(arg extra)" />
-      <arg name="debug" value="$(arg debug)" />
-      <arg name="default" value="false" />
-    </include>
-    <include file="$(find ff_util)/launch/ff_nodelet.launch">
-      <arg name="class" value="localization_node/LocalizationNodelet" />
-      <arg name="name" value="localization_node" />
-      <arg name="manager" value="mlp_vision" />
-      <arg name="spurn" value="$(arg spurn)" />
-      <arg name="nodes" value="$(arg nodes)" />
-      <arg name="extra" value="$(arg extra)" />
-      <arg name="debug" value="$(arg debug)" />
-      <arg name="default" value="true" />
-    </include>
-    <include file="$(find ff_util)/launch/ff_nodelet.launch">
-      <arg name="class" value="lk_optical_flow/LKOpticalFlowNodelet" />
-      <arg name="name" value="optical_flow_nodelet" />
-      <arg name="manager" value="mlp_vision" />
-      <arg name="spurn" value="$(arg spurn)" />
-      <arg name="nodes" value="$(arg nodes)" />
-      <arg name="extra" value="$(arg extra)" />
-      <arg name="debug" value="$(arg debug)" />
-      <arg name="default" value="true" />
-    </include>
+  <!-- Mobility -->
+  <include file="$(find ff_util)/launch/ff_nodelet.launch">
+    <arg name="class" value="mapper/MapperNodelet" />
+    <arg name="name" value="mapper" />
+    <arg name="manager" value="mlp_mapper" />
+    <arg name="spurn" value="$(arg spurn)" />
+    <arg name="nodes" value="$(arg nodes)" />
+    <arg name="extra" value="$(arg extra)" />
+    <arg name="debug" value="$(arg debug)" />
+    <arg name="default" value="true" />
+  </include>
 
-    <!-- DockCam pipeline -->
-    <include file="$(find ff_util)/launch/ff_nodelet.launch">
-      <arg name="class" value="is_camera/camera" />
-      <arg name="name" value="dock_cam" />
-      <arg name="manager" value="mlp_vision" />
-      <arg name="spurn" value="$(arg spurn)" />
-      <arg name="nodes" value="$(arg nodes)" />
-      <arg name="extra" value="$(arg extra)" />
-      <arg name="debug" value="$(arg debug)" />
-      <arg name="default" value="true" />
-    </include>
-    <include file="$(find ff_util)/launch/ff_nodelet.launch">
-      <arg name="class" value="is_camera/camera" />
-      <arg name="name" value="calibration_dock_cam" />
-      <arg name="manager" value="mlp_vision" />
-      <arg name="spurn" value="$(arg spurn)" />
-      <arg name="nodes" value="$(arg nodes)" />
-      <arg name="extra" value="$(arg extra)" />
-      <arg name="debug" value="$(arg debug)" />
-      <arg name="default" value="false" />
-    </include>
-    <include file="$(find ff_util)/launch/ff_nodelet.launch">
-      <arg name="class" value="marker_tracking_node/MarkerTrackingNodelet" />
-      <arg name="name" value="marker_tracking" />
-      <arg name="manager" value="mlp_vision" />
-      <arg name="spurn" value="$(arg spurn)" />
-      <arg name="nodes" value="$(arg nodes)" />
-      <arg name="extra" value="$(arg extra)" />
-      <arg name="debug" value="$(arg debug)" />
-      <arg name="default" value="true" />
-    </include>
+  <include file="$(find ff_util)/launch/ff_nodelet.launch">
+    <arg name="class" value="planner_qp/Planner" />
+    <arg name="name" value="planner_qp" />
+    <arg name="manager" value="mlp_depth_cam" />
+    <arg name="spurn" value="$(arg spurn)" />
+    <arg name="nodes" value="$(arg nodes)" />
+    <arg name="extra" value="$(arg extra)" />
+    <arg name="debug" value="$(arg debug)" />
+    <arg name="default" value="true" />
+  </include>
+  <include file="$(find ff_util)/launch/ff_nodelet.launch">
+    <arg name="class" value="choreographer/ChoreographerNodelet" />
+    <arg name="name" value="choreographer" />
+    <arg name="manager" value="mlp_mobility" />
+    <arg name="spurn" value="$(arg spurn)" />
+    <arg name="nodes" value="$(arg nodes)" />
+    <arg name="extra" value="$(arg extra)" />
+    <arg name="debug" value="$(arg debug)" />
+    <arg name="default" value="true" />
+  </include>
+  <include file="$(find ff_util)/launch/ff_nodelet.launch">
+    <arg name="class" value="planner_trapezoidal/PlannerTrapezoidalNodelet" />
+    <arg name="name" value="planner_trapezoidal" />
+    <arg name="manager" value="mlp_mobility" />
+    <arg name="spurn" value="$(arg spurn)" />
+    <arg name="nodes" value="$(arg nodes)" />
+    <arg name="extra" value="$(arg extra)" />
+    <arg name="debug" value="$(arg debug)" />
+    <arg name="default" value="true" />
+  </include>
+  <include file="$(find ff_util)/launch/ff_nodelet.launch">
+    <arg name="class" value="mobility/FrameStore" />
+    <arg name="name" value="framestore" />
+    <arg name="manager" value="mlp_mobility" />
+    <arg name="spurn" value="$(arg spurn)" />
+    <arg name="nodes" value="$(arg nodes)" />
+    <arg name="extra" value="$(arg extra)" />
+    <arg name="debug" value="$(arg debug)" />
+    <arg name="default" value="true" />
+  </include>
 
-    <!-- Depth camera pipeline -->
-    <include file="$(find ff_util)/launch/ff_nodelet.launch">
-      <arg name="class" value="pico_driver/PicoDriverNodelet" />
-      <arg name="name" value="pico_driver" />
-      <arg name="manager" value="mlp_depth_cam" />
-      <arg name="spurn" value="$(arg spurn)" />
-      <arg name="nodes" value="$(arg nodes)" />
-      <arg name="extra" value="$(arg extra)" />
-      <arg name="debug" value="$(arg debug)" />
-      <arg name="default" value="true" />
-    </include>
+  <!-- Behaviors -->
+  <include file="$(find ff_util)/launch/ff_nodelet.launch">
+    <arg name="class" value="dock/DockNodelet" />
+    <arg name="name" value="dock" />
+    <arg name="manager" value="mlp_dock" />
+    <arg name="spurn" value="$(arg spurn)" />
+    <arg name="nodes" value="$(arg nodes)" />
+    <arg name="extra" value="$(arg extra)" />
+    <arg name="debug" value="$(arg debug)" />
+    <arg name="default" value="true" />
+  </include>
+  <include file="$(find ff_util)/launch/ff_nodelet.launch">
+    <arg name="class" value="arm/ArmNodelet" />
+    <arg name="name" value="arm" />
+    <arg name="manager" value="mlp_arm" />
+    <arg name="spurn" value="$(arg spurn)" />
+    <arg name="nodes" value="$(arg nodes)" />
+    <arg name="extra" value="$(arg extra)" />
+    <arg name="debug" value="$(arg debug)" />
+    <arg name="default" value="true" />
+  </include>
+  <include file="$(find ff_util)/launch/ff_nodelet.launch">
+    <arg name="class" value="perch/PerchNodelet" />
+    <arg name="name" value="perch" />
+    <arg name="manager" value="mlp_perch" />
+    <arg name="spurn" value="$(arg spurn)" />
+    <arg name="nodes" value="$(arg nodes)" />
+    <arg name="extra" value="$(arg extra)" />
+    <arg name="debug" value="$(arg debug)" />
+    <arg name="default" value="true" />
+  </include>
 
-    <!-- Monitors -->
-    <include file="$(find ff_util)/launch/ff_nodelet.launch">
-      <arg name="class" value="cpu_mem_monitor/CpuMemMonitor" />
-      <arg name="name" value="mlp_cpu_mem_monitor" />
-      <arg name="manager" value="mlp_monitors" />
-      <arg name="spurn" value="$(arg spurn)" />
-      <arg name="nodes" value="$(arg nodes)" />
-      <arg name="extra" value="$(arg extra)" />
-      <arg name="debug" value="$(arg debug)" />
-      <arg name="default" value="true" />
-    </include>
-    <include file="$(find ff_util)/launch/ff_nodelet.launch">
-      <arg name="class" value="disk_monitor/DiskMonitor" />
-      <arg name="name" value="mlp_disk_monitor" />
-      <arg name="manager" value="mlp_monitors" />
-      <arg name="spurn" value="$(arg spurn)" />
-      <arg name="nodes" value="$(arg nodes)" />
-      <arg name="extra" value="$(arg extra)" />
-      <arg name="debug" value="$(arg debug)" />
-      <arg name="default" value="true" />
-    </include>
+  <include file="$(find ff_util)/launch/ff_nodelet.launch">
+    <arg name="class" value="states/StatesNodelet" />
+    <arg name="name" value="states" />
+    <arg name="manager" value="mlp_states" />
+    <arg name="spurn" value="$(arg spurn)" />
+    <arg name="nodes" value="$(arg nodes)" />
+    <arg name="extra" value="$(arg extra)" />
+    <arg name="debug" value="$(arg debug)" />
+    <arg name="default" value="true" />
+  </include>
 
-    <!-- Vive (optional) -->
-    <include file="$(find ff_util)/launch/ff_nodelet.launch">
-      <arg name="class" value="vive/ViveNodelet" />
-      <arg name="name" value="vive" />
-      <arg name="manager" value="mlp_vive" />
-      <arg name="spurn" value="$(arg spurn)" />
-      <arg name="nodes" value="$(arg nodes)" />
-      <arg name="extra" value="$(arg extra)" />
-      <arg name="debug" value="$(arg debug)" />
-      <arg name="default" value="false" />
-    </include>
+  <!-- Management -->
+  <include file="$(find ff_util)/launch/ff_nodelet.launch">
+    <arg name="class" value="executive/Executive" />
+    <arg name="name" value="executive" />
+    <arg name="manager" value="mlp_management" />
+    <arg name="spurn" value="$(arg spurn)" />
+    <arg name="nodes" value="$(arg nodes)" />
+    <arg name="extra" value="$(arg extra)" />
+    <arg name="debug" value="$(arg debug)" />
+    <arg name="default" value="true" />
+  </include>
+  <include file="$(find ff_util)/launch/ff_nodelet.launch">
+    <arg name="class" value="access_control/AccessControl" />
+    <arg name="name" value="access_control" />
+    <arg name="manager" value="mlp_management" />
+    <arg name="spurn" value="$(arg spurn)" />
+    <arg name="nodes" value="$(arg nodes)" />
+    <arg name="extra" value="$(arg extra)" />
+    <arg name="debug" value="$(arg debug)" />
+    <arg name="default" value="true" />
+  </include>
+  <include file="$(find ff_util)/launch/ff_nodelet.launch">
+    <arg name="class" value="data_bagger/DataBagger" />
+    <arg name="name" value="data_bagger" />
+    <arg name="manager" value="mlp_recording" />
+    <arg name="spurn" value="$(arg spurn)" />
+    <arg name="nodes" value="$(arg nodes)" />
+    <arg name="extra" value="$(arg extra)" />
+    <arg name="debug" value="$(arg debug)" />
+    <arg name="default" value="true" />
+  </include>
 
-  </group>
+  <!-- Monitors -->
+  <include file="$(find ff_util)/launch/ff_nodelet.launch">
+    <arg name="class" value="sys_monitor/SysMonitor" />
+    <arg name="name" value="sys_monitor" />
+    <arg name="manager" value="mlp_monitors" />
+    <arg name="spurn" value="$(arg spurn)" />
+    <arg name="nodes" value="$(arg nodes)" />
+    <arg name="extra" value="$(arg extra)" />
+    <arg name="debug" value="$(arg debug)" />
+    <arg name="default" value="true" />
+  </include>
 
-  <group if="$(arg loc_only)">
-    <include file="$(find ff_util)/launch/ff_nodelet.launch">
-      <arg name="class" value="localization_node/LocalizationNodelet" />
-      <arg name="name" value="localization_node" />
-      <arg name="manager" value="mlp_vision" />
-      <arg name="spurn" value="$(arg spurn)" />
-      <arg name="nodes" value="$(arg nodes)" />
-      <arg name="extra" value="$(arg extra)" />
-      <arg name="debug" value="$(arg debug)" />
-      <arg name="default" value="true" />
-    </include>
-    <include file="$(find ff_util)/launch/ff_nodelet.launch">
-      <arg name="class" value="lk_optical_flow/LKOpticalFlowNodelet" />
-      <arg name="name" value="optical_flow_nodelet" />
-      <arg name="manager" value="mlp_vision" />
-      <arg name="spurn" value="$(arg spurn)" />
-      <arg name="nodes" value="$(arg nodes)" />
-      <arg name="extra" value="$(arg extra)" />
-      <arg name="debug" value="$(arg debug)" />
-      <arg name="default" value="true" />
-    </include>
-    <include file="$(find ff_util)/launch/ff_nodelet.launch">
-      <arg name="class" value="marker_tracking_node/MarkerTrackingNodelet" />
-      <arg name="name" value="marker_tracking" />
-      <arg name="manager" value="mlp_vision" />
-      <arg name="spurn" value="$(arg spurn)" />
-      <arg name="nodes" value="$(arg nodes)" />
-      <arg name="extra" value="$(arg extra)" />
-      <arg name="debug" value="$(arg debug)" />
-      <arg name="default" value="true" />
-    </include>
+  <!-- Communications -->
+  <include file="$(find ff_util)/launch/ff_nodelet.launch">
+    <arg name="class" value="dds_ros_bridge/DdsRosBridge" />
+    <arg name="name" value="dds_ros_bridge" />
+    <arg name="manager" value="mlp_communications" />
+    <arg name="spurn" value="$(arg spurn)" />
+    <arg name="nodes" value="$(arg nodes)" />
+    <arg name="extra" value="$(arg extra)" />
+    <arg name="debug" value="$(arg debug)" />
+    <arg name="default" value="$(arg dds)" />
+  </include>
+  <include file="$(find ff_util)/launch/ff_nodelet.launch">
+    <arg name="class" value="dds_ros_bridge/AstrobeeAstrobeeBridge" />
+    <arg name="name" value="astrobee_astrobee_bridge" />
+    <arg name="manager" value="mlp_multibridge" />
+    <arg name="spurn" value="$(arg spurn)" />
+    <arg name="nodes" value="$(arg nodes)" />
+    <arg name="extra" value="$(arg extra)" />
+    <arg name="debug" value="$(arg debug)" />
+    <arg name="default" value="$(arg dds)" />
+  </include>
+
+ <!-- Drivers (optional) -->
+ <group if="$(arg drivers)">
+
+  <!-- Perching arm -->
+  <include file="$(find ff_util)/launch/ff_nodelet.launch">
+    <arg name="class" value="perching_arm/PerchingArmNode" />
+    <arg name="name" value="perching_arm" />
+    <arg name="manager" value="mlp_serial" />
+    <arg name="spurn" value="$(arg spurn)" />
+    <arg name="nodes" value="$(arg nodes)" />
+    <arg name="extra" value="$(arg extra)" />
+    <arg name="debug" value="$(arg debug)" />
+    <arg name="default" value="true" />
+  </include>
+   <!-- NavCam pipeline -->
+   <include file="$(find ff_util)/launch/ff_nodelet.launch">
+     <arg name="class" value="is_camera/camera" />
+     <arg name="name" value="nav_cam" />
+     <arg name="manager" value="mlp_vision" />
+     <arg name="spurn" value="$(arg spurn)" />
+     <arg name="nodes" value="$(arg nodes)" />
+     <arg name="extra" value="$(arg extra)" />
+     <arg name="debug" value="$(arg debug)" />
+     <arg name="default" value="true" />
+   </include>
+   <include file="$(find ff_util)/launch/ff_nodelet.launch">
+     <arg name="class" value="is_camera/camera" />
+     <arg name="name" value="calibration_nav_cam" />
+     <arg name="manager" value="mlp_vision" />
+     <arg name="spurn" value="$(arg spurn)" />
+     <arg name="nodes" value="$(arg nodes)" />
+     <arg name="extra" value="$(arg extra)" />
+     <arg name="debug" value="$(arg debug)" />
+     <arg name="default" value="false" />
+   </include>
+   <include file="$(find ff_util)/launch/ff_nodelet.launch">
+     <arg name="class" value="localization_node/LocalizationNodelet" />
+     <arg name="name" value="localization_node" />
+     <arg name="manager" value="mlp_vision" />
+     <arg name="spurn" value="$(arg spurn)" />
+     <arg name="nodes" value="$(arg nodes)" />
+     <arg name="extra" value="$(arg extra)" />
+     <arg name="debug" value="$(arg debug)" />
+     <arg name="default" value="true" />
+   </include>
+   <include file="$(find ff_util)/launch/ff_nodelet.launch">
+     <arg name="class" value="lk_optical_flow/LKOpticalFlowNodelet" />
+     <arg name="name" value="optical_flow_nodelet" />
+     <arg name="manager" value="mlp_vision" />
+     <arg name="spurn" value="$(arg spurn)" />
+     <arg name="nodes" value="$(arg nodes)" />
+     <arg name="extra" value="$(arg extra)" />
+     <arg name="debug" value="$(arg debug)" />
+     <arg name="default" value="true" />
+   </include>
+
+   <!-- DockCam pipeline -->
+   <include file="$(find ff_util)/launch/ff_nodelet.launch">
+     <arg name="class" value="is_camera/camera" />
+     <arg name="name" value="dock_cam" />
+     <arg name="manager" value="mlp_vision" />
+     <arg name="spurn" value="$(arg spurn)" />
+     <arg name="nodes" value="$(arg nodes)" />
+     <arg name="extra" value="$(arg extra)" />
+     <arg name="debug" value="$(arg debug)" />
+     <arg name="default" value="true" />
+   </include>
+   <include file="$(find ff_util)/launch/ff_nodelet.launch">
+     <arg name="class" value="is_camera/camera" />
+     <arg name="name" value="calibration_dock_cam" />
+     <arg name="manager" value="mlp_vision" />
+     <arg name="spurn" value="$(arg spurn)" />
+     <arg name="nodes" value="$(arg nodes)" />
+     <arg name="extra" value="$(arg extra)" />
+     <arg name="debug" value="$(arg debug)" />
+     <arg name="default" value="false" />
+   </include>
+   <include file="$(find ff_util)/launch/ff_nodelet.launch">
+     <arg name="class" value="marker_tracking_node/MarkerTrackingNodelet" />
+     <arg name="name" value="marker_tracking" />
+     <arg name="manager" value="mlp_vision" />
+     <arg name="spurn" value="$(arg spurn)" />
+     <arg name="nodes" value="$(arg nodes)" />
+     <arg name="extra" value="$(arg extra)" />
+     <arg name="debug" value="$(arg debug)" />
+     <arg name="default" value="true" />
+   </include>
+
+   <!-- Depth camera pipeline -->
+   <include file="$(find ff_util)/launch/ff_nodelet.launch">
+     <arg name="class" value="pico_driver/PicoDriverNodelet" />
+     <arg name="name" value="pico_driver" />
+     <arg name="manager" value="mlp_depth_cam" />
+     <arg name="spurn" value="$(arg spurn)" />
+     <arg name="nodes" value="$(arg nodes)" />
+     <arg name="extra" value="$(arg extra)" />
+     <arg name="debug" value="$(arg debug)" />
+     <arg name="default" value="true" />
+   </include>
+
+   <!-- Monitors -->
+   <include file="$(find ff_util)/launch/ff_nodelet.launch">
+     <arg name="class" value="cpu_mem_monitor/CpuMemMonitor" />
+     <arg name="name" value="mlp_cpu_mem_monitor" />
+     <arg name="manager" value="mlp_monitors" />
+     <arg name="spurn" value="$(arg spurn)" />
+     <arg name="nodes" value="$(arg nodes)" />
+     <arg name="extra" value="$(arg extra)" />
+     <arg name="debug" value="$(arg debug)" />
+     <arg name="default" value="true" />
+   </include>
+   <include file="$(find ff_util)/launch/ff_nodelet.launch">
+     <arg name="class" value="disk_monitor/DiskMonitor" />
+     <arg name="name" value="mlp_disk_monitor" />
+     <arg name="manager" value="mlp_monitors" />
+     <arg name="spurn" value="$(arg spurn)" />
+     <arg name="nodes" value="$(arg nodes)" />
+     <arg name="extra" value="$(arg extra)" />
+     <arg name="debug" value="$(arg debug)" />
+     <arg name="default" value="true" />
+   </include>
+
+   <!-- Vive (optional) -->
+   <include file="$(find ff_util)/launch/ff_nodelet.launch">
+     <arg name="class" value="vive/ViveNodelet" />
+     <arg name="name" value="vive" />
+     <arg name="manager" value="mlp_vive" />
+     <arg name="spurn" value="$(arg spurn)" />
+     <arg name="nodes" value="$(arg nodes)" />
+     <arg name="extra" value="$(arg extra)" />
+     <arg name="debug" value="$(arg debug)" />
+     <arg name="default" value="false" />
+   </include>
+
   </group>
 
 </launch>

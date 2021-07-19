@@ -77,6 +77,10 @@ void EkfBagCsv::UpdateEKF(const ff_msgs::EkfState & s) {
     start_time_ = s.header.stamp;
     start_time_set_ = true;
   }
+
+  // Only print ekf results if it has been initialized with a sparse mapping measurement
+  if (!ekf_.HasPoseEstimate()) return;
+
   fprintf(f_, "EKF %g ", (s.header.stamp - start_time_).toSec());
   fprintf(f_, "%g %g %g ", s.pose.position.x, s.pose.position.y, s.pose.position.z);
   Eigen::Vector3f euler = QuatToEuler(s.pose.orientation);
@@ -134,18 +138,20 @@ void EkfBagCsv::UpdateSparseMap(const ff_msgs::VisualLandmarks & vl) {
   const camera::CameraParameters & params = map_.GetCameraParameters();
   fprintf(f_, "VL %g ", (ml_reg_time_ - start_time_).toSec());
   fprintf(f_, "%d ", static_cast<int>(vl.landmarks.size()));
-  Eigen::Vector3f trans = ekf_.GetNavCamToBody().translation().cast<float>();
-  Eigen::Quaternionf q1(0, trans.x(), trans.y(), trans.z());
-  Eigen::Quaternionf q2(vl.pose.orientation.w, vl.pose.orientation.x, vl.pose.orientation.y, vl.pose.orientation.z);
-  Eigen::Quaternionf cam_to_body_q(ekf_.GetNavCamToBody().rotation().cast<float>());
-  cam_to_body_q.w() = -cam_to_body_q.w();
-  q2 = q2 * cam_to_body_q;
-  Eigen::Quaternionf t = (q2 * q1) * q2.conjugate();
-  Eigen::Vector3f r(vl.pose.position.x, vl.pose.position.y, vl.pose.position.z);
-  r -= Eigen::Vector3f(t.x(), t.y(), t.z());
-  fprintf(f_, "%g %g %g ", r.x(), r.y(), r.z());
-  Eigen::Vector3f euler = QuatToEuler(q2);
-  fprintf(f_, "%g %g %g ", euler.x(), euler.y(), euler.z());
+  if (vl.landmarks.size() >= 5) {
+    Eigen::Vector3f trans = ekf_.GetNavCamToBody().translation().cast<float>();
+    Eigen::Quaternionf q1(0, trans.x(), trans.y(), trans.z());
+    Eigen::Quaternionf q2(vl.pose.orientation.w, vl.pose.orientation.x, vl.pose.orientation.y, vl.pose.orientation.z);
+    Eigen::Quaternionf cam_to_body_q(ekf_.GetNavCamToBody().rotation().cast<float>());
+    cam_to_body_q.w() = -cam_to_body_q.w();
+    q2 = q2 * cam_to_body_q;
+    Eigen::Quaternionf t = (q2 * q1) * q2.conjugate();
+    Eigen::Vector3f r(vl.pose.position.x, vl.pose.position.y, vl.pose.position.z);
+    r -= Eigen::Vector3f(t.x(), t.y(), t.z());
+    fprintf(f_, "%g %g %g ", r.x(), r.y(), r.z());
+    Eigen::Vector3f euler = QuatToEuler(q2);
+    fprintf(f_, "%g %g %g ", euler.x(), euler.y(), euler.z());
+  }
   for (unsigned int i = 0; i < vl.landmarks.size(); i++) {
     Eigen::Vector2d input(vl.landmarks[i].u, vl.landmarks[i].v);
     Eigen::Vector2d output;

@@ -16,6 +16,7 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
+set -e
 
 # short help
 usage_string="$scriptname [-h] [-n <use ubuntu 18 installation>]"
@@ -25,14 +26,14 @@ usage()
 {
     echo "usage: sysinfo_page [[[-a file ] [-i]] | [-h]]"
 }
-ubuntu18=0
+
+os="xenial"
 
 while [ "$1" != "" ]; do
     case $1 in
-        -a | --astrobee_source_dir )   shift
-                                		astrobee_source=$1
-                                		;;
-        -n | --ubuntu18 )               ubuntu18=1
+        -b | --bionic )                 os="bionic"
+                                        ;;
+        -f | --focal )                  os="focal"
                                         ;;
         -h | --help )           		usage
                                 		exit
@@ -46,20 +47,27 @@ done
 
 thisdir=$(dirname "$(readlink -f "$0")")
 rootdir=${thisdir}/../..
-echo "Astrobee path: "${astrobee_source:-${rootdir}/}
-if [ $ubuntu18 == 0 ]; then
-    docker build ${astrobee_source:-${rootdir}/} \
-                -f ${astrobee_source:-${rootdir}/}scripts/docker/astrobee_base_kinetic.Dockerfile \
-                -t astrobee/astrobee:base-latest-kinetic
-    docker build ${astrobee_source:-${rootdir}/} \
-                -f ${astrobee_source:-${rootdir}/}scripts/docker/astrobee_kinetic.Dockerfile \
-                -t astrobee/astrobee:latest-kinetic
-else
-    docker build ${astrobee_source:-${rootdir}/} \
-                -f ${astrobee_source:-${rootdir}/}scripts/docker/astrobee_base_melodic.Dockerfile \
-                -t astrobee/astrobee:base-latest-melodic
-    docker build ${astrobee_source:-${rootdir}/} \
-                -f ${astrobee_source:-${rootdir}/}scripts/docker/astrobee_melodic.Dockerfile \
-                -t astrobee/astrobee:latest-melodic
+echo "Astrobee path: "${rootdir}/
+if [ "$os" = "xenial" ]; then
+    docker build ${rootdir}/ \
+                -f ${rootdir}/scripts/docker/astrobee_base_xenial.Dockerfile \
+                -t astrobee/astrobee:base-latest-xenial
+    docker build ${rootdir}/ \
+                -f ${rootdir}/scripts/docker/astrobee_xenial.Dockerfile \
+                -t astrobee/astrobee:latest-xenial
+elif [ "$os" = "bionic" ]; then
+    docker build ${rootdir}/ \
+                -f ${rootdir}/scripts/docker/astrobee_base_bionic.Dockerfile \
+                -t astrobee/astrobee:base-latest-bionic
+    docker build ${rootdir}/ \
+                -f ${rootdir}/scripts/docker/astrobee_bionic.Dockerfile \
+                -t astrobee/astrobee:latest-bionic
+elif [ "$os" = "focal" ]; then
+    docker build ${rootdir}/ \
+                -f ${rootdir}/scripts/docker/astrobee_base_focal.Dockerfile \
+                -t astrobee/astrobee:base-latest-focal
+    docker build ${rootdir}/ \
+                -f ${rootdir}/scripts/docker/astrobee_focal.Dockerfile \
+                -t astrobee/astrobee:latest-focal
 fi
 

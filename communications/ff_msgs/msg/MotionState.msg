@@ -34,6 +34,7 @@ int8 PREPARING           = 8
 int8 CONTROLLING         = 9
 int8 REPLANNING          = 10
 int8 HALTING             = 11
+int8 REPLAN_WAIT         = 12
 
 # A human readble version of the (event) -> [state] transition
 string fsm_event
