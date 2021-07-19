@@ -15,20 +15,55 @@
 #License for the specific language governing permissions and limitations
 #under the License.
 
+cmake_minimum_required(VERSION 2.8.12)
 project(localization_measurements)
 
-catkin_package(
-  LIBRARIES ${PROJECT_NAME} ${GTSAM_LIBRARIES} ff_common localization_common
-  INCLUDE_DIRS include ${GTSAM_INCLUDE_DIR} 
-  CATKIN_DEPENDS 
-  DEPENDS gtsam ff_msgs 
+## Compile as C++14, supported in ROS Kinetic and newer
+add_compile_options(-std=c++14)
+
+find_package(catkin REQUIRED COMPONENTS
+  ff_msgs
+  config_reader
+  localization_common
+  msg_conversions
 )
 
-create_library(TARGET ${PROJECT_NAME} 
-  LIBS ${catkin_LIBRARIES} ff_common gtsam localization_common 
-  INC ${catkin_INCLUDE_DIRS} 
-  DEPS ff_msgs
+
+# System dependencies are found with CMake's conventions
+find_package(Eigen3 REQUIRED)
+
+catkin_package(
+  LIBRARIES ${PROJECT_NAME}
+  INCLUDE_DIRS include
+  CATKIN_DEPENDS ff_msgs config_reader localization_common msg_conversions
 )
+
+###########
+## Build ##
+###########
+
+# Specify additional locations of header files
+include_directories(
+  include
+  ${catkin_INCLUDE_DIRS}
+  ${EIGEN3_INCLUDE_DIRS}
+)
+
+# create_library(TARGET ${PROJECT_NAME} 
+#   LIBS ${catkin_LIBRARIES} ff_common gtsam localization_common 
+#   INC ${catkin_INCLUDE_DIRS} 
+#   DEPS ff_msgs
+# )
+
+
+# Declare C++ libraries
+add_library(${PROJECT_NAME}
+  src/measurement_conversions.cc
+)
+
+add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
+
 
 if(CATKIN_ENABLE_TESTING)
   find_package(rostest REQUIRED)

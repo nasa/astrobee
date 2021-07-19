@@ -15,17 +15,51 @@
 #License for the specific language governing permissions and limitations
 #under the License.
 
+cmake_minimum_required(VERSION 2.8.12)
 project(localization_common)
 
-catkin_package(
-  LIBRARIES ${PROJECT_NAME} ${GTSAM_LIBRARIES} camera config_reader msg_conversions 
-  INCLUDE_DIRS include ${GTSAM_INCLUDE_DIR} ${Boost_INCLUDE_DIRS}  
-  CATKIN_DEPENDS 
-  DEPENDS gtsam 
+## Compile as C++14, supported in ROS Kinetic and newer
+add_compile_options(-std=c++14)
+
+find_package(catkin REQUIRED COMPONENTS
+	camera
+	config_reader
+	msg_conversions
 )
 
-create_library(TARGET ${PROJECT_NAME} 
-  LIBS ${catkin_LIBRARIES} camera config_reader gtsam msg_conversions 
-  INC ${catkin_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS}   
-  DEPS 
+# Find GTSAM
+find_package(GTSAM REQUIRED)
+
+# System dependencies are found with CMake's conventions
+find_package(Eigen3 REQUIRED)
+
+catkin_package(
+  INCLUDE_DIRS include ${GTSAM_INCLUDE_DIR} ${Boost_INCLUDE_DIRS} 
+  LIBRARIES ${PROJECT_NAME} ${GTSAM_LIBRARIES}
+  CATKIN_DEPENDS camera config_reader msg_conversions 
 )
+
+###########
+## Build ##
+###########
+
+# Specify additional locations of header files
+include_directories(
+  include
+  ${catkin_INCLUDE_DIRS}
+  ${EIGEN3_INCLUDE_DIRS}
+)
+
+# Declare C++ libraries
+add_library(${PROJECT_NAME}
+  src/averager.cc
+  src/combined_nav_state.cc
+  src/combined_nav_state_covariances.cc
+  src/rate_timer.cc
+  src/ros_timer.cc
+  src/time.cc
+  src/timer.cc
+  src/utilities.cc
+)
+add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
