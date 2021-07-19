@@ -274,6 +274,7 @@
 #define SUBSYSTEM_LOCALIZATION                      "loc"
 
 #define NODE_HANDRAIL_DETECT                        "handrail_detect"
+#define NODE_DEPTH_ODOM                             "depth_odom"
 #define NODE_OPTICAL_FLOW                           "of"
 #define NODE_LOCALIZATION_MANAGER                   "localization_manager"
 #define NODE_AR_TAGS                                "ar_tags"
@@ -297,6 +298,7 @@
 #define TOPIC_LOCALIZATION_HR_IMAGE                 "loc/hr/image"
 #define TOPIC_LOCALIZATION_HR_CLOUD                 "loc/hr/cloud"
 #define TOPIC_LOCALIZATION_HR_MARKER                "loc/hr/marker"
+#define TOPIC_LOCALIZATION_DEPTH_ODOM               "loc/depth/odom"
 
 #define TOPIC_LOCALIZATION_OF_DEBUG                 "loc/of/debug_img"
 

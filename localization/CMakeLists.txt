@@ -24,6 +24,7 @@ add_subdirectory(localization_measurements)
 add_subdirectory(sparse_mapping)
 
 if (USE_ROS)
+  add_subdirectory(depth_odometry)
   add_subdirectory(graph_localizer)
   add_subdirectory(ground_truth_localizer)
   add_subdirectory(imu_augmentor)
