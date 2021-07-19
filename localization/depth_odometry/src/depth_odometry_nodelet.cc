@@ -19,6 +19,10 @@
 #include <depth_odometry/depth_odometry_nodelet.h>
 #include <ff_util/ff_names.h>
 
+#include <pcl_conversions/pcl_conversions.h>
+#include <pcl/point_cloud.h>
+#include <pcl/point_types.h>
+
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 
 namespace depth_odometry {
@@ -46,8 +50,8 @@ void DepthOdometryNodelet::SubscribeAndAdvertise(ros::NodeHandle* nh) {
 }
 
 void DepthOdometryNodelet::DepthCloudCallback(const sensor_msgs::PointCloud2ConstPtr& depth_cloud_msg) {
-  // sensor_msgs::convertPointCloud2ToPointCloud(*depth_cloud_msg, cloud_);
-  // TODO: convert point cloud to pcl point cloud!!!!!!
+  pcl::PointCloud<pcl::PointXYZ> depth_cloud;
+  pcl::fromROSMsg(*depth_cloud_msg, depth_cloud);
 }
 }  // namespace depth_odometry
 
