@@ -217,7 +217,7 @@ class FreeFlyerActionClient {
     timer_poll_ = nh->createTimer(to_poll_,
         &FreeFlyerActionClient::ConnectPollCallback, this, false, false);
     timer_response_delay_ = nh->createTimer(to_response_delay_,
-        &FreeFlyerActionClient::ResultDelayCallback, this, false, false);
+        &FreeFlyerActionClient::ResultDelayCallback, this, true, false);
     // Initialize the action client
     sac_ = std::shared_ptr < actionlib::SimpleActionClient < ActionSpec > > (
       new actionlib::SimpleActionClient < ActionSpec > (*nh, topic, false));
@@ -379,12 +379,13 @@ class FreeFlyerActionClient {
     StartOptionalTimer(timer_response_delay_, to_response_delay_);
   }
 
-  // Called when a result is received
+  // This delayed callback is necessary because on Ubuntu 20 / ROS noetic,
+  // an action is only considered finished once the ResultCallback returns.
+  // This raises the problem where, if another action of the same type is
+  // called in the ResultCallback or immediately afterwards, it returns
+  // failed because the previous action is technically not finished and
+  // returns an error.
   void ResultDelayCallback(ros::TimerEvent const& event) {
-    // Feedback has been received after a result before. Stop tracking the goal
-    // so that this doesn't happen
-    timer_response_delay_.stop();
-
     // Call the result callback on the client side
     Complete(state_response_, result_);
 
