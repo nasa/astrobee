@@ -595,12 +595,12 @@ def create_plots(bagfile,
                          0.01,
                          rmse_rel_start_time=rmse_rel_start_time,
                          rmse_rel_end_time=rmse_rel_end_time)
-    depth_odom_poses = utilities.make_absolute_poses_from_relative_poses(sparse_mapping_poses, depth_odom_relative_poses, 'Depth Odometry') 
-    plot_positions(pdf,
-                   depth_odom_poses,
-                   sparse_mapping_poses,
-                   ar_tag_poses)
-
+    if depth_odom_relative_poses:
+      depth_odom_poses = utilities.make_absolute_poses_from_relative_poses(sparse_mapping_poses, depth_odom_relative_poses, 'Depth Odometry') 
+      plot_positions(pdf,
+                     depth_odom_poses,
+                     sparse_mapping_poses,
+                     ar_tag_poses)
     if has_imu_bias_tester_poses:
       plot_loc_state_stats(pdf,
                            imu_bias_tester_poses,

@@ -17,9 +17,11 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import vector3ds
 import orientations
+import pose
+import vector3ds
 
+import numpy as np
 import scipy.spatial.transform
 
 
@@ -45,3 +47,6 @@ class Poses(object):
 
   def position_vector(self, index):
     return [self.positions.xs[index], self.positions.ys[index], self.positions.zs[index]]
+
+  def pose(self, index):
+    return pose.Pose(self.orientations.get_rotation(index), np.array(self.position_vector(index)))

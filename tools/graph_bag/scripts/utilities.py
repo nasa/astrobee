@@ -15,6 +15,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import pose
 import poses
 
 import datetime
@@ -116,6 +117,16 @@ def make_absolute_poses_from_relative_poses(absolute_poses, relative_poses, name
   starting_x = absolute_poses.positions.xs[closest_index]
   starting_y = absolute_poses.positions.ys[closest_index]
   starting_z = absolute_poses.positions.zs[closest_index]
+  start_pose = absolute_poses.pose(closest_index)
+  latest_pose = start_pose
+  new_poses = [latest_pose]
+  for index in range(len(relative_poses.times)):
+    relative_pose = relative_poses.pose(index)
+    new_pose = latest_pose * relative_pose
+    new_poses.append(new_pose)
+  # create start pose -> make fcn for this in poses!
+  # appened each rel pose to start pose, return resulting poses!
+    # create static fcn in poses for multiplying pose? make pose class???
   return add_increments_to_absolute_pose(relative_poses.positions.xs, relative_poses.positions.ys, relative_poses.positions.zs, starting_x, starting_y, starting_z, relative_poses.times, name)
 
 def integrate_velocities(localization_states):
