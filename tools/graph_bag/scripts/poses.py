@@ -34,15 +34,24 @@ class Poses(object):
     self.pose_type = pose_type
     self.topic = topic
 
-  def init_from_poses(self, poses_list):
-    
+  def init_from_poses(self, poses_list, times):
+    for pose in poses_list:
+      self.add_pose(pose)
+    self.times = times
+
+  def add_pose(self, pose):
+    self.add_orientation_and_position(pose.orientation, pose.position[0], pose.position[1], pose.position[2])
+
+  def add_orientation_and_position(self, orientation, x, y, z):
+    self.positions.add(x, y, z)
+    euler_angles = orientation.as_euler('ZYX', degrees=True)
+    self.orientations.add(euler_angles[0], euler_angles[1], euler_angles[2])
 
   def add_pose_msg(self, pose_msg, timestamp, bag_start_time=0):
-    self.positions.add(pose_msg.position.x, pose_msg.position.y, pose_msg.position.z)
-    euler_angles = scipy.spatial.transform.Rotation.from_quat(
+    orientation = scipy.spatial.transform.Rotation.from_quat(
       [pose_msg.orientation.x, pose_msg.orientation.y, pose_msg.orientation.z,
-       pose_msg.orientation.w]).as_euler('ZYX', degrees=True)
-    self.orientations.add(euler_angles[0], euler_angles[1], euler_angles[2])
+       pose_msg.orientation.w])
+    self.add_orientation_and_position(orientation, pose_msg.position.x, pose_msg.position.y, pose_msg.position.z)
     self.times.append(timestamp.secs + 1e-9 * timestamp.nsecs - bag_start_time)
 
   def add_msg(self, msg, timestamp, bag_start_time=0):

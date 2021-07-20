@@ -114,16 +114,17 @@ def make_absolute_poses_from_relative_poses(absolute_poses, relative_poses, name
   starting_relative_time = relative_poses.times[0]
   np_times = np.array(absolute_poses.times)
   closest_index = np.argmin(np.abs(np_times - starting_relative_time))
-  starting_x = absolute_poses.positions.xs[closest_index]
-  starting_y = absolute_poses.positions.ys[closest_index]
-  starting_z = absolute_poses.positions.zs[closest_index]
   start_pose = absolute_poses.pose(closest_index)
   latest_pose = start_pose
-  new_poses = [latest_pose]
+  new_poses_list = [latest_pose]
+  new_poses_times = [absolute_poses.times[closest_index]]
   for index in range(len(relative_poses.times)):
     relative_pose = relative_poses.pose(index)
     new_pose = latest_pose * relative_pose
-    new_poses.append(new_pose)
+    new_poses_list.append(new_pose)
+    new_poses_times.append(relative_poses.times[index])
+  new_poses = poses.Poses(name, '')
+  new_poses.init_from_poses(new_poses_list, new_poses_times) 
   return new_poses
 
 def integrate_velocities(localization_states):
