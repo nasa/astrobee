@@ -34,7 +34,10 @@ class Poses(object):
     self.pose_type = pose_type
     self.topic = topic
 
-  def add_pose(self, pose_msg, timestamp, bag_start_time=0):
+  def init_from_poses(self, poses_list):
+    
+
+  def add_pose_msg(self, pose_msg, timestamp, bag_start_time=0):
     self.positions.add(pose_msg.position.x, pose_msg.position.y, pose_msg.position.z)
     euler_angles = scipy.spatial.transform.Rotation.from_quat(
       [pose_msg.orientation.x, pose_msg.orientation.y, pose_msg.orientation.z,
@@ -43,7 +46,7 @@ class Poses(object):
     self.times.append(timestamp.secs + 1e-9 * timestamp.nsecs - bag_start_time)
 
   def add_msg(self, msg, timestamp, bag_start_time=0):
-    self.add_pose(msg.pose, timestamp, bag_start_time)
+    self.add_pose_msg(msg.pose, timestamp, bag_start_time)
 
   def position_vector(self, index):
     return [self.positions.xs[index], self.positions.ys[index], self.positions.zs[index]]
