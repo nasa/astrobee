@@ -103,8 +103,13 @@ def add_graph_plots(pdf, sparse_mapping_poses, ar_tag_poses, graph_localization_
   plt.close()
 
   # Integrated Velocities
+  integrated_graph_localization_states = utilities.integrate_velocities(graph_localization_states)
+  plot_positions(pdf, integrated_graph_localization_states, sparse_mapping_poses, ar_tag_poses)
+
+
+def plot_positions(pdf, position_poses, sparse_mapping_poses, ar_tag_poses):
   position_plotter = vector3d_plotter.Vector3dPlotter('Time (s)', 'Position (m)',
-                                                      'Integrated Graph Velocities vs. Sparse Mapping Position', True)
+                                                      position_poses.pose_type + ' vs. Sparse Mapping Position', True)
   position_plotter.add_pose_position(sparse_mapping_poses,
                                      linestyle='None',
                                      marker='o',
@@ -112,9 +117,7 @@ def add_graph_plots(pdf, sparse_mapping_poses, ar_tag_poses, graph_localization_
                                      markersize=1.5)
   if ar_tag_poses.times:
     position_plotter.add_pose_position(ar_tag_poses, linestyle='None', marker='x', markeredgewidth=0.1, markersize=1.5)
-
-  integrated_graph_localization_states = utilities.integrate_velocities(graph_localization_states)
-  position_plotter.add_pose_position(integrated_graph_localization_states)
+  position_plotter.add_pose_position(position_poses)
   position_plotter.plot(pdf)
 
 
@@ -592,15 +595,11 @@ def create_plots(bagfile,
                          0.01,
                          rmse_rel_start_time=rmse_rel_start_time,
                          rmse_rel_end_time=rmse_rel_end_time)
-    depth_odom_poses = utilities.make_absolute_poses_from_relative_poses(sparse_mapping_poses, depth_odom_relative_poses) 
-    plot_loc_state_stats(pdf,
-                         depth_odom_poses,
-                         sparse_mapping_poses,
-                         output_csv_file,
-                         'depth_odom_',
-                         0.01,
-                         rmse_rel_start_time=rmse_rel_start_time,
-                         rmse_rel_end_time=rmse_rel_end_time)
+    depth_odom_poses = utilities.make_absolute_poses_from_relative_poses(sparse_mapping_poses, depth_odom_relative_poses, 'Depth Odometry') 
+    plot_positions(pdf,
+                   depth_odom_poses,
+                   sparse_mapping_poses,
+                   ar_tag_poses)
 
     if has_imu_bias_tester_poses:
       plot_loc_state_stats(pdf,

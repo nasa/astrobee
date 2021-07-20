@@ -109,14 +109,14 @@ def get_topic_rates(bag_name,
       print('Max time diff: ' + str(max_time_diff))
       print('Stddev time diff: ' + str(stddev_time_diff))
 
-def make_absolute_poses_from_relative_poses(absolute_poses, relative_poses):
+def make_absolute_poses_from_relative_poses(absolute_poses, relative_poses, name):
   starting_relative_time = relative_poses.times[0]
   np_times = np.array(absolute_poses.times)
   closest_index = np.argmin(np.abs(np_times - starting_relative_time))
   starting_x = absolute_poses.positions.xs[closest_index]
   starting_y = absolute_poses.positions.ys[closest_index]
   starting_z = absolute_poses.positions.zs[closest_index]
-  return add_increments_to_absolute_pose(relative_poses.positions.xs, relative_poses.positions.ys, relative_poses.positions.zs, starting_x, starting_y, starting_z, relative_poses.times, 'Relative Poses')
+  return add_increments_to_absolute_pose(relative_poses.positions.xs, relative_poses.positions.ys, relative_poses.positions.zs, starting_x, starting_y, starting_z, relative_poses.times, name)
 
 def integrate_velocities(localization_states):
   delta_times = [j - i for i, j in zip(localization_states.times[:-1], localization_states.times[1:])]
