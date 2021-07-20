@@ -503,6 +503,16 @@ def load_pose_msgs(vec_of_poses, bag, bag_start_time):
         poses.add_msg(msg, msg.header.stamp, bag_start_time)
         break
 
+def load_pose_with_cov_msgs(vec_of_poses, bag, bag_start_time):
+  topics = [poses.topic for poses in vec_of_poses]
+  for topic, msg, t in bag.read_messages(topics):
+    for poses in vec_of_poses:
+      if poses.topic == topic:
+        poses.add_msg(msg.pose, msg.header.stamp, bag_start_time)
+        break
+
+
+
 
 def load_loc_state_msgs(vec_of_loc_states, bag, bag_start_time):
   topics = [loc_states.topic for loc_states in vec_of_loc_states]
@@ -542,6 +552,8 @@ def create_plots(bagfile,
   imu_bias_tester_poses = poses.Poses('Imu Bias Tester', '/imu_bias_tester/pose')
   vec_of_poses = [ar_tag_poses, imu_bias_tester_poses]
   load_pose_msgs(vec_of_poses, bag, bag_start_time)
+  depth_odom_relative_poses = poses.Poses('Depth Odom', '/loc/depth/odom')
+  load_pose_with_cov_msgs([depth_odom_relative_poses], bag, bag_start_time)
   groundtruth_vec_of_poses = [sparse_mapping_poses]
   load_pose_msgs(groundtruth_vec_of_poses, groundtruth_bag, bag_start_time)
 
@@ -580,6 +592,16 @@ def create_plots(bagfile,
                          0.01,
                          rmse_rel_start_time=rmse_rel_start_time,
                          rmse_rel_end_time=rmse_rel_end_time)
+    depth_odom_poses = utilities.make_absolute_poses_from_relative_poses(sparse_mapping_poses, depth_odom_relative_poses) 
+    plot_loc_state_stats(pdf,
+                         depth_odom_poses,
+                         sparse_mapping_poses,
+                         output_csv_file,
+                         'depth_odom_',
+                         0.01,
+                         rmse_rel_start_time=rmse_rel_start_time,
+                         rmse_rel_end_time=rmse_rel_end_time)
+
     if has_imu_bias_tester_poses:
       plot_loc_state_stats(pdf,
                            imu_bias_tester_poses,
