@@ -23,7 +23,7 @@ class Pose:
     self.orientation = orientation
     self.position = position
 
-  def __rmul__(self, pose_b):
+  def __mul__(self, pose_b):
     new_orientation = self.orientation*pose_b.orientation
     new_position = self.orientation.apply(pose_b.position) + self.position 
     return Pose(new_orientation, new_position) 

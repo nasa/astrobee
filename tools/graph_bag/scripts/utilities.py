@@ -115,12 +115,12 @@ def make_absolute_poses_from_relative_poses(absolute_poses, relative_poses, name
   np_times = np.array(absolute_poses.times)
   closest_index = np.argmin(np.abs(np_times - starting_relative_time))
   start_pose = absolute_poses.pose(closest_index)
-  latest_pose = start_pose
-  new_poses_list = [latest_pose]
+  new_pose = start_pose
+  new_poses_list = [start_pose]
   new_poses_times = [absolute_poses.times[closest_index]]
   for index in range(len(relative_poses.times)):
     relative_pose = relative_poses.pose(index)
-    new_pose = latest_pose * relative_pose
+    new_pose = new_pose * relative_pose
     new_poses_list.append(new_pose)
     new_poses_times.append(relative_poses.times[index])
   new_poses = poses.Poses(name, '')
