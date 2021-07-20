@@ -106,7 +106,10 @@ def add_graph_plots(pdf, sparse_mapping_poses, ar_tag_poses, graph_localization_
   integrated_graph_localization_states = utilities.integrate_velocities(graph_localization_states)
   plot_positions(pdf, integrated_graph_localization_states, sparse_mapping_poses, ar_tag_poses)
 
-
+def plot_poses(pdf, poses, sparse_mapping_poses, ar_tag_poses):
+  plot_positions(pdf, poses, sparse_mapping_poses, ar_tag_poses)
+  plot_orientations(pdf, poses, sparse_mapping_poses, ar_tag_poses)
+  
 def plot_positions(pdf, position_poses, sparse_mapping_poses, ar_tag_poses):
   position_plotter = vector3d_plotter.Vector3dPlotter('Time (s)', 'Position (m)',
                                                       position_poses.pose_type + ' vs. Sparse Mapping Position', True)
@@ -120,6 +123,22 @@ def plot_positions(pdf, position_poses, sparse_mapping_poses, ar_tag_poses):
   position_plotter.add_pose_position(position_poses)
   position_plotter.plot(pdf)
 
+def plot_orientations(pdf, poses, sparse_mapping_poses, ar_tag_poses):
+  orientation_plotter = vector3d_plotter.Vector3dPlotter('Time (s)', 'Orientation (deg)',
+                                                         poses.pose_type + ' vs. Sparse Mapping Orientation', True)
+  orientation_plotter.add_pose_orientation(sparse_mapping_poses,
+                                           linestyle='None',
+                                           marker='o',
+                                           markeredgewidth=0.1,
+                                           markersize=1.5)
+  if ar_tag_poses.times:
+    orientation_plotter.add_pose_orientation(ar_tag_poses,
+                                             linestyle='None',
+                                             marker='x',
+                                             markeredgewidth=0.1,
+                                             markersize=1.5)
+  orientation_plotter.add_pose_orientation(poses)
+  orientation_plotter.plot(pdf)
 
 def plot_features(feature_counts,
                   times,
@@ -514,9 +533,6 @@ def load_pose_with_cov_msgs(vec_of_poses, bag, bag_start_time):
         poses.add_msg(msg.pose, msg.header.stamp, bag_start_time)
         break
 
-
-
-
 def load_loc_state_msgs(vec_of_loc_states, bag, bag_start_time):
   topics = [loc_states.topic for loc_states in vec_of_loc_states]
   for topic, msg, t in bag.read_messages(topics):
@@ -597,10 +613,10 @@ def create_plots(bagfile,
                          rmse_rel_end_time=rmse_rel_end_time)
     if depth_odom_relative_poses:
       depth_odom_poses = utilities.make_absolute_poses_from_relative_poses(sparse_mapping_poses, depth_odom_relative_poses, 'Depth Odometry') 
-      plot_positions(pdf,
-                     depth_odom_poses,
-                     sparse_mapping_poses,
-                     ar_tag_poses)
+      plot_poses(pdf,
+                 depth_odom_poses,
+                 sparse_mapping_poses,
+                 ar_tag_poses)
     if has_imu_bias_tester_poses:
       plot_loc_state_stats(pdf,
                            imu_bias_tester_poses,

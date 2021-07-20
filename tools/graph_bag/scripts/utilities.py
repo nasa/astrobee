@@ -124,10 +124,7 @@ def make_absolute_poses_from_relative_poses(absolute_poses, relative_poses, name
     relative_pose = relative_poses.pose(index)
     new_pose = latest_pose * relative_pose
     new_poses.append(new_pose)
-  # create start pose -> make fcn for this in poses!
-  # appened each rel pose to start pose, return resulting poses!
-    # create static fcn in poses for multiplying pose? make pose class???
-  return add_increments_to_absolute_pose(relative_poses.positions.xs, relative_poses.positions.ys, relative_poses.positions.zs, starting_x, starting_y, starting_z, relative_poses.times, name)
+  return new_poses
 
 def integrate_velocities(localization_states):
   delta_times = [j - i for i, j in zip(localization_states.times[:-1], localization_states.times[1:])]
