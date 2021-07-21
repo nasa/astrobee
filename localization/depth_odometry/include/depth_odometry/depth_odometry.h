@@ -25,6 +25,11 @@
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 
+#include <sensor_msgs/PointCloud2.h>
+#include <ros/node_handle.h>
+#include <ros/publisher.h>
+#include <ros/subscriber.h>
+
 namespace depth_odometry {
 class DepthOdometry {
  public:
@@ -37,6 +42,9 @@ class DepthOdometry {
                         const pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_b) const;
   std::pair<localization_common::Time, pcl::PointCloud<pcl::PointXYZ>::Ptr> previous_depth_cloud_;
   std::pair<localization_common::Time, pcl::PointCloud<pcl::PointXYZ>::Ptr> latest_depth_cloud_;
+  Eigen::Isometry3d body_T_haz_cam_;
+  ros::NodeHandle nh_;
+  ros::Publisher pca_pub_, pcb_pub_, pct_pub_;
 };
 }  // namespace depth_odometry
 
