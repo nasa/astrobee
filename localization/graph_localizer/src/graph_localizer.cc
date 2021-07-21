@@ -105,7 +105,7 @@ GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
   AddGraphActionCompleter(loc_graph_action_completer_);
 
   semantic_loc_graph_action_completer_.reset(
-    new LocGraphActionCompleter(params_.factor.loc_adder, go::GraphActionCompleterType::SemanticLocProjectionFactor,
+    new LocGraphActionCompleter(params_.factor.semantic_loc_adder, go::GraphActionCompleterType::SemanticLocProjectionFactor,
                                 combined_nav_state_node_updater_->shared_graph_values()));
   AddGraphActionCompleter(semantic_loc_graph_action_completer_);
 

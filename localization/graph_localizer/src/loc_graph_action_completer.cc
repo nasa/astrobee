@@ -39,8 +39,10 @@ go::GraphActionCompleterType LocGraphActionCompleter::type() const { return grap
 
 bool LocGraphActionCompleter::DoAction(go::FactorsToAdd& factors_to_add, gtsam::NonlinearFactorGraph& graph_factors) {
   auto& factors = factors_to_add.Get();
+  LogInfo("Beginning: " << factors.size());
   boost::optional<gtsam::Key> pose_key;
   boost::optional<gtsam::Pose3> world_T_cam;
+  LogInfo("Max inlier norm: " << params_.max_inlier_weighted_projection_norm);
   for (auto factor_it = factors.begin(); factor_it != factors.end();) {
     auto& factor = factor_it->factor;
     auto projection_factor = dynamic_cast<gtsam::LocProjectionFactor<>*>(factor.get());
@@ -62,8 +64,10 @@ bool LocGraphActionCompleter::DoAction(go::FactorsToAdd& factors_to_add, gtsam::
     const auto cheirality_error = projection_factor->cheiralityError(*world_T_body);
     if (cheirality_error) {
       factor_it = factors.erase(factor_it);
-    } else if (error > params_.max_inlier_weighted_projection_norm) {
+      LogInfo("Cheirality error");
+    } else if (error > params_.max_inlier_weighted_projection_norm && params_.max_inlier_weighted_projection_norm > 0) {
       factor_it = factors.erase(factor_it);
+      LogInfo("Too much error");
     } else {
       if (params_.weight_projections_with_distance) {
         const gtsam::Point3 nav_cam_t_landmark =
@@ -79,6 +83,9 @@ bool LocGraphActionCompleter::DoAction(go::FactorsToAdd& factors_to_add, gtsam::
       ++factor_it;
     }
   }
+
+  LogInfo("End: " << factors.size());
+
   // All factors have been removed due to errors, use loc pose prior instead
   if (factors.empty() && params_.add_prior_if_projections_fail) {
     if (!pose_key || !world_T_cam) {
@@ -99,6 +106,7 @@ bool LocGraphActionCompleter::DoAction(go::FactorsToAdd& factors_to_add, gtsam::
       new gtsam::LocPoseFactor(*pose_key, *world_T_cam * params_.body_T_cam.inverse(), pose_noise));
     factors_to_add.push_back(go::FactorToAdd(
       {go::KeyInfo(&sym::P, go::NodeUpdaterType::CombinedNavState, factors_to_add.timestamp())}, pose_prior_factor));
+    LogError("Added prior factor");
   }
   return true;
 }

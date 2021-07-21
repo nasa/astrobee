@@ -78,7 +78,7 @@ std::vector<go::FactorsToAdd> SemanticLocFactorAdder::AddFactors(
     return std::vector<go::FactorsToAdd>(); // return empty set, no factors
   }
 
-  //cv::Mat viz(960, 1280, CV_8UC1, cv::Scalar(255));
+  cv::Mat viz(960, 1280, CV_8UC3, cv::Scalar(255,255,255));
 
   // Convert state from gtsam to Eigen
   Eigen::Isometry3d world_T_body = lc::EigenPose(*cur_state);
@@ -86,28 +86,32 @@ std::vector<go::FactorsToAdd> SemanticLocFactorAdder::AddFactors(
   lm::MatchedProjectionsMeasurement matched_projections_measurement;
   matched_projections_measurement.timestamp = semantic_dets.timestamp;
   // Outer loop through objects so we only do transform/projection once
-  LogDebug("SemanticLoc: adding sem loc factors");
+  LogError("SemanticLoc: adding sem loc factors");
+  const std::vector<std::string> class_names = {"laptop", "camera", "handrail", "light", "vent"};
+  std::set<const lm::SemanticDet*> used_dets;
   for (const auto& classes : object_poses_) {
     int cls = classes.first;
     for (const auto& world_T_obj : classes.second) {
-      // Transform to camera frame
-      Eigen::Isometry3d cam_T_obj = (world_T_body * lc::EigenPose(params().body_T_cam)).inverse() * world_T_obj;
+      Eigen::Vector2d cam_obj_px;
+      try {
+        gtsam::PinholeCamera<gtsam::Cal3_S2> camera(lc::GtPose(world_T_body).compose(params().body_T_cam), *params().cam_intrinsics);
+        cam_obj_px = camera.project(world_T_obj.translation());
+      } catch (gtsam::CheiralityException e) {
+        // Point behind camera
+        continue;
+      }
 
-      // If point behind camera, don't bother
-      if (cam_T_obj.translation().z() < 0) continue;
-
-      cam_T_obj.translation() /= cam_T_obj.translation().z();
-      Eigen::Vector2d cam_obj_px = params().cam_intrinsics->uncalibrate(cam_T_obj.translation().head<2>());
       float best_dist = std::numeric_limits<float>::max();
       float second_best_dist = std::numeric_limits<float>::max();
       const lm::SemanticDet *best_det = nullptr;
 
-      //cv::circle(viz, cv::Point(cam_obj_px[0], cam_obj_px[1]), 5, cv::Scalar(0), cv::FILLED);
+      cv::circle(viz, cv::Point(cam_obj_px[0], cam_obj_px[1]), 5, cv::Scalar(0,255,0), cv::FILLED);
+      cv::putText(viz, class_names[cls], cv::Point(cam_obj_px[0], cam_obj_px[1]), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0,255,0), 2);
 
       for (const auto& det : semantic_dets.semantic_dets) {
         // gtsam::Point2 is an Eigen::Vector2d typedef
-        float dist = (cam_obj_px.head<2>() - det.image_point).norm();
-        if (dist < best_dist && cls == det.class_id) {
+        float dist = ((cam_obj_px - det.image_point).array()/det.bounding_box.array()).matrix().norm();
+        if (dist < best_dist && cls == det.class_id && cls != 2 && used_dets.count(&det) == 0) {
           second_best_dist = best_dist;
           best_dist = dist;
           best_det = &det;
@@ -115,22 +119,22 @@ std::vector<go::FactorsToAdd> SemanticLocFactorAdder::AddFactors(
       }
 
       // have second_best_dist requirement to avoid any ambiguity
-      if (best_det && best_dist < 50 && second_best_dist > 100) {
-        //cv::circle(viz, cv::Point(best_det->image_point[0], best_det->image_point[1]), 5, cv::Scalar(100), cv::FILLED);
-        //cv::line(viz, cv::Point(best_det->image_point[0], best_det->image_point[1]),
-        //         cv::Point(cam_obj_px[0], cam_obj_px[1]), cv::Scalar(100), 1, cv::LINE_AA);
-        LogDebug("SemanticLoc: adding matched proj measurement with dist: " << best_dist);
+      if (best_det && best_dist < 1 && second_best_dist > 1.5) {
+        used_dets.insert(best_det);
+        cv::Point center = cv::Point(best_det->image_point[0], best_det->image_point[1]);
+        cv::Point size = cv::Point(best_det->bounding_box[0], best_det->bounding_box[1]);
+        cv::rectangle(viz, center - size/2, center + size/2, cv::Scalar(0,0,255), 1);
+        cv::line(viz, cv::Point(best_det->image_point[0], best_det->image_point[1]),
+                 cv::Point(cam_obj_px[0], cam_obj_px[1]), cv::Scalar(255,0,0), 1, cv::LINE_AA);
+        LogError("SemanticLoc: adding matched proj measurement with dist: " << best_dist);
         lm::MatchedProjection mp(best_det->image_point, world_T_obj.translation(), semantic_dets.timestamp);
         matched_projections_measurement.matched_projections.push_back(mp);
-      } else {
-        //unmatched feature pt
-        //cv::circle(viz, cv::Point(cam_obj_px[0], cam_obj_px[1]), 3, cv::Scalar(0), cv::FILLED);
       }
     }
   }
 
-  //cv::imshow("feature tracks", viz);
-  //cv::waitKey(2);
+  cv::imshow("feature tracks", viz);
+  cv::waitKey(2);
 
   // Call superclass function from general LocFactorAdder
   return LocFactorAdder::AddFactors(matched_projections_measurement);

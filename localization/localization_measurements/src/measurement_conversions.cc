@@ -132,7 +132,7 @@ SemanticDetsMeasurement MakeSemanticDetsMeasurement(const vision_msgs::Detection
   for (const auto& det : detections.detections) {
     //Ignore image_id, not used for anything
     semantic_dets_measurement.semantic_dets.emplace_back(
-      SemanticDet(det.bbox.center.x, det.bbox.center.y, 1, det.results[0].id, timestamp));
+      SemanticDet(det.bbox.center.x, det.bbox.center.y, det.bbox.size_x, det.bbox.size_y, 1, det.results[0].id, timestamp));
   }
 
   return semantic_dets_measurement;

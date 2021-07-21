@@ -99,7 +99,7 @@ std::vector<go::FactorsToAdd> LocFactorAdder::AddFactors(
       if (num_loc_projection_factors >= params().max_num_factors) break;
     }
     projection_factors_to_add.SetTimestamp(matched_projections_measurement.timestamp);
-    LogDebug("AddFactors: Added " << num_loc_projection_factors << " loc projection factors.");
+    LogInfo("AddFactors: Added " << num_loc_projection_factors << " loc projection factors.");
     factors_to_add.emplace_back(projection_factors_to_add);
   }
   return factors_to_add;

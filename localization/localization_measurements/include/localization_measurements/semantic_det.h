@@ -30,11 +30,12 @@ using ClassId = int;
 using ImageId = int;
 
 struct SemanticDet {
-  SemanticDet(const double u, const double v, const ImageId image_id, const ClassId class_id,
+  SemanticDet(const double u, const double v, const double w, const double h, const ImageId image_id, const ClassId class_id,
               const localization_common::Time timestamp)
-      : image_point(u, v), image_id(image_id), class_id(class_id), timestamp(timestamp) {}
+      : image_point(u, v), bounding_box(w, h), image_id(image_id), class_id(class_id), timestamp(timestamp) {}
   SemanticDet() {}
   gtsam::Point2 image_point;
+  Eigen::Vector2d bounding_box;
   ImageId image_id;
   ClassId class_id;
   localization_common::Time timestamp;
@@ -45,6 +46,7 @@ struct SemanticDet {
   template <class ARCHIVE>
   void serialize(ARCHIVE& ar, const unsigned int /*version*/) {
     ar& BOOST_SERIALIZATION_NVP(image_point);
+    ar& BOOST_SERIALIZATION_NVP(bounding_box);
     ar& BOOST_SERIALIZATION_NVP(image_id);
     ar& BOOST_SERIALIZATION_NVP(class_id);
     ar& BOOST_SERIALIZATION_NVP(timestamp);
