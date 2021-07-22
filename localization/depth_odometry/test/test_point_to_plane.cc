@@ -17,7 +17,7 @@
  */
 
 #include "test_utilities.h"  // NOLINT
-#include <graph_localizer/point_to_line_segment_factor.h>
+#include <depth_odometry/utilities.h>
 #include <localization_common/logger.h>
 
 #include <gtsam/base/numericalDerivative.h>
@@ -27,22 +27,16 @@
 #include <gtest/gtest.h>
 
 namespace sym = gtsam::symbol_shorthand;
-TEST(PointToLineSegmentFactorTester, Jacobian) {
+namespace dod = depth_odometry;
+TEST(PointToPlane, Jacobian) {
   for (int i = 0; i < 500; ++i) {
-    const gtsam::Point3 sensor_t_point = gl::RandomVector();
-    const gtsam::Pose3 world_T_line = gl::RandomPose();
-    const gtsam::Pose3 body_T_sensor = gl::RandomPose();
-    const gtsam::Pose3 world_T_body = gl::RandomPose();
-    const double line_length = gl::RandomPositiveDouble();
-    const auto noise = gtsam::noiseModel::Unit::Create(2);
-    const gtsam::PointToLineSegmentFactor factor(sensor_t_point, world_T_line, body_T_sensor, line_length, noise,
-                                                 sym::P(0));
-    gtsam::Matrix H;
-    const auto factor_error = factor.evaluateError(world_T_body, H);
+    const gtsam::Point3 point = dod::RandomVector();
+    const gtsam::Vector3 normal = dod::RandomVector();
+    const gtsam::Pose3 relative_transform = dod::RandomPose();
+    const gtsam::Matrix H = dod::Jacobian(point, normal, relative_transform);
     const auto numerical_H = gtsam::numericalDerivative11<gtsam::Vector, gtsam::Pose3>(
-      boost::function<gtsam::Vector(const gtsam::Pose3&)>(
-        boost::bind(&gtsam::PointToLineSegmentFactor::evaluateError, factor, _1, boost::none)),
-      world_T_body, 1e-5);
+      boost::function<gtsam::Vector(const gtsam::Pose3&)>(boost::bind(&depth_odometry::Jacobian, point, normal, _1)),
+      relative_transform, 1e-5);
     ASSERT_TRUE(numerical_H.isApprox(H.matrix(), 1e-6));
   }
 }
