@@ -89,6 +89,8 @@ class GraphLocalizerWrapper {
 
   void FlightModeCallback(const ff_msgs::FlightMode& flight_mode);
 
+  boost::optional<const std::vector<SemanticLocFactorAdder::SemanticMatch>&> semantic_matches() const;
+
   boost::optional<const FeatureTrackIdMap&> feature_tracks() const;
 
   boost::optional<const GraphLocalizer&> graph_localizer() const;

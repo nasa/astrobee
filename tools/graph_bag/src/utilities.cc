@@ -25,7 +25,7 @@
 #include <image_transport/image_transport.h>
 #include <sensor_msgs/image_encodings.h>
 
-#include <opencv2/highgui/highgui_c.h>
+#include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc.hpp>
 
 namespace graph_bag {
@@ -78,6 +78,56 @@ void MarkSmartFactorPoints(const std::vector<const SmartFactor*> smart_factors,
     cv::circle(feature_track_image, distorted_point, 15 /* Radius*/, cv::Scalar(200, 100, 0), -1 /*Filled*/, 8);
   }
 }
+
+boost::optional<sensor_msgs::ImagePtr> CreateSemanticMatchesImage(const sensor_msgs::ImageConstPtr& image_msg,
+                                                                  const std::vector<graph_localizer::SemanticLocFactorAdder::SemanticMatch>& sem_matches,
+                                                                  const cv::Mat& map_x, const cv::Mat& map_y) {
+  cv_bridge::CvImagePtr semantic_match_image;
+  try {
+    semantic_match_image = cv_bridge::toCvCopy(image_msg, sensor_msgs::image_encodings::RGB8);
+  } catch (cv_bridge::Exception& e) {
+    ROS_ERROR("cv_bridge exception: %s", e.what());
+    return boost::none;
+  }
+
+  cv::Mat undist_viz;
+  cv::remap(semantic_match_image->image, undist_viz, map_x, map_y, cv::INTER_LINEAR);
+  cv::Size original_size = semantic_match_image->image.size();
+  cv::Point top_left = (undist_viz.size() - original_size)/2;
+
+  cv::Mat &viz = semantic_match_image->image;
+  viz = undist_viz(cv::Rect(top_left.x, top_left.y, original_size.width, original_size.height));
+
+  // This is rather ugly to hardcode
+  const std::vector<std::string> class_names = {"laptop", "camera", "handrail", "light", "vent"};
+  for (const auto& match : sem_matches) {
+    cv::Point size_half(viz.size().width/2., viz.size().height/2.);
+    cv::Point map_pt;
+
+    if (match.have_map_point) {
+      map_pt = cv::Point(match.map_point_px[0], match.map_point_px[1]) + size_half;
+      cv::circle(viz, map_pt, 5, cv::Scalar(0,255,0), cv::FILLED);
+      cv::putText(viz, class_names[match.cls], map_pt, cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0,255,0), 2);
+    }
+
+    if (match.have_matched_det) {
+      cv::Point center = cv::Point(match.det_center_px[0], match.det_center_px[1]) + size_half;
+      cv::Point size = cv::Point(match.det_bbox_size_px[0], match.det_bbox_size_px[1]);
+      if (match.have_map_point) {
+        cv::rectangle(viz, center - size/2, center + size/2, cv::Scalar(255,0,0), 2);
+        cv::line(viz, center, map_pt, cv::Scalar(0,0,255), 2, cv::LINE_AA);
+      } else {
+        cv::rectangle(viz, center - size/2, center + size/2, cv::Scalar(255,0,0), 1);
+      }
+    }
+  }
+
+  cv::imshow("Semantic Matches", viz);
+  cv::waitKey(2);
+
+  return semantic_match_image->toImageMsg();
+}
+
 
 boost::optional<sensor_msgs::ImagePtr> CreateFeatureTrackImage(const sensor_msgs::ImageConstPtr& image_msg,
                                                                const graph_localizer::FeatureTrackIdMap& feature_tracks,

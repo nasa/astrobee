@@ -21,17 +21,22 @@
 #include <camera/camera_params.h>
 
 #include <gtsam/geometry/Pose3.h>
+#include <opencv2/imgproc.hpp>
 
 #include <memory>
 
 namespace graph_bag {
 struct GraphBagParams {
   bool save_optical_flow_images;
+  bool save_semantic_matches_images;
   bool log_relative_time;
   std::unique_ptr<camera::CameraParameters> nav_cam_params;
   gtsam::Pose3 body_T_nav_cam;
   int ar_min_num_landmarks;
   int sparse_mapping_min_num_landmarks;
+
+  cv::Mat undist_map_x;
+  cv::Mat undist_map_y;
 };
 }  // namespace graph_bag
 

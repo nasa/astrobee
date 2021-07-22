@@ -101,6 +101,8 @@ class GraphLocalizer : public graph_optimizer::GraphOptimizer {
   void AddHandrailMeasurement(const localization_measurements::HandrailPointsMeasurement& handrail_points_measurement);
   bool DoPostOptimizeActions() final;
   const FeatureTrackIdMap& feature_tracks() const { return feature_tracker_->feature_tracks(); }
+  const std::vector<SemanticLocFactorAdder::SemanticMatch>& semantic_matches() const 
+    { return semantic_loc_factor_adder_->last_matches(); }
 
   boost::optional<std::pair<gtsam::imuBias::ConstantBias, localization_common::Time>> LatestBiases() const;
 

@@ -49,6 +49,8 @@ class GraphBag {
   void InitializeGraph();
   void SaveOpticalFlowTracksImage(const sensor_msgs::ImageConstPtr& image_msg,
                                   const GraphLocalizerSimulator& graph_localizer);
+  void SaveSemanticMatchesImage(const sensor_msgs::ImageConstPtr& image_msg,
+                                const GraphLocalizerSimulator& graph_localizer);
   std::unique_ptr<GraphLocalizerSimulator> graph_localizer_simulator_;
   std::unique_ptr<LiveMeasurementSimulator> live_measurement_simulator_;
   rosbag::Bag results_bag_;
@@ -56,6 +58,7 @@ class GraphBag {
   imu_augmentor::ImuAugmentorWrapper imu_augmentor_wrapper_;
   std::string output_stats_file_;
   const std::string kFeatureTracksImageTopic_ = "feature_track_image";
+  const std::string kSemanticMatchesImageTopic_ = "semantic_matches_image";
   GraphBagParams params_;
 };
 }  // end namespace graph_bag

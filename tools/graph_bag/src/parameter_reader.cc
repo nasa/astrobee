@@ -39,10 +39,29 @@ void LoadLiveMeasurementSimulatorParams(config_reader::ConfigReader& config, con
   LoadMessageBufferParams("vl", config, params.vl);
   LoadMessageBufferParams("ar", config, params.ar);
   LoadMessageBufferParams("sm", config, params.sm);
-  params.save_optical_flow_images = mc::LoadBool(config, "save_optical_flow_images");
   params.bag_name = bag_name;
   params.map_file = map_file;
   params.image_topic = image_topic;
+  params.save_images = mc::LoadBool(config, "save_optical_flow_images") ||
+                       mc::LoadBool(config, "save_semantic_matches_images");
+}
+
+void LoadCameraDistMap(GraphBagParams& params) {
+  const auto& img_size = params.nav_cam_params->GetUndistortedSize();
+  cv::Size img_size_cv(img_size[0], img_size[1]);
+
+  params.undist_map_x = cv::Mat(img_size_cv, CV_32FC1);
+  params.undist_map_y = cv::Mat(img_size_cv, CV_32FC1);
+
+  for (int x=0; x<img_size_cv.width; x++) {
+    for (int y=0; y<img_size_cv.height; y++) {
+      Eigen::Vector2d undistorted_point(x, y);
+      Eigen::Vector2d distorted_point;
+      params.nav_cam_params->Convert<camera::UNDISTORTED, camera::DISTORTED>(undistorted_point, &distorted_point);
+      params.undist_map_x.at<float>(y, x) = distorted_point[0];
+      params.undist_map_y.at<float>(y, x) = distorted_point[1];
+    }
+  }
 }
 
 void LoadGraphLocalizerSimulatorParams(config_reader::ConfigReader& config, GraphLocalizerSimulatorParams& params) {
@@ -51,10 +70,12 @@ void LoadGraphLocalizerSimulatorParams(config_reader::ConfigReader& config, Grap
 
 void LoadGraphBagParams(config_reader::ConfigReader& config, GraphBagParams& params) {
   params.save_optical_flow_images = mc::LoadBool(config, "save_optical_flow_images");
+  params.save_semantic_matches_images = mc::LoadBool(config, "save_semantic_matches_images");
   params.log_relative_time = mc::LoadBool(config, "log_relative_time");
   params.nav_cam_params.reset(new camera::CameraParameters(&config, "nav_cam"));
   params.body_T_nav_cam = lc::LoadTransform(config, "nav_cam_transform");
   params.sparse_mapping_min_num_landmarks = mc::LoadInt(config, "loc_adder_min_num_matches");
   params.ar_min_num_landmarks = mc::LoadInt(config, "ar_tag_loc_adder_min_num_matches");
+  LoadCameraDistMap(params);
 }
 }  // namespace graph_bag

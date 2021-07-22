@@ -70,9 +70,9 @@ void LoadSemanticLocFactorAdderParams(config_reader::ConfigReader& config, Seman
   params.weight_projections_with_distance = mc::LoadBool(config, "semantic_loc_adder_weight_projections_with_distance");
   params.add_prior_if_projections_fail = mc::LoadBool(config, "semantic_loc_adder_add_prior_if_projections_fail");
   params.body_T_cam = lc::LoadTransform(config, "nav_cam_transform");
-  //params.cam_intrinsics.reset(new gtsam::Cal3_S2(lc::LoadCameraIntrinsics(config, "nav_cam")));
+  params.cam_intrinsics.reset(new gtsam::Cal3_S2(lc::LoadCameraIntrinsics(config, "nav_cam")));
   //bumble
-  params.cam_intrinsics.reset(new gtsam::Cal3_S2(608.8073, 607.61435, 0, 632.536, 549.083));
+  //params.cam_intrinsics.reset(new gtsam::Cal3_S2(608.8073, 607.61435, 0, 632.536, 549.083));
   //gazebo
   //params.cam_intrinsics.reset(new gtsam::Cal3_S2(644.3, 644.3, 0, 640., 480.));
   params.cam_noise = gtsam::noiseModel::Isotropic::Sigma(2, mc::LoadDouble(config, "loc_nav_cam_noise_stddev"));

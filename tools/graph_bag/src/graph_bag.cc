@@ -85,6 +85,15 @@ void GraphBag::SaveOpticalFlowTracksImage(const sensor_msgs::ImageConstPtr& imag
   SaveMsg(**feature_track_image_msg, kFeatureTracksImageTopic_, results_bag_);
 }
 
+void GraphBag::SaveSemanticMatchesImage(const sensor_msgs::ImageConstPtr& image_msg,
+                                        const GraphLocalizerSimulator& graph_localizer) {
+  const auto semantic_matches_image_msg =
+    CreateSemanticMatchesImage(image_msg, *(graph_localizer.semantic_matches()), 
+                               params_.undist_map_x, params_.undist_map_y);
+  if (!semantic_matches_image_msg) return;
+  SaveMsg(**semantic_matches_image_msg, kSemanticMatchesImageTopic_, results_bag_);
+}
+
 void GraphBag::Run() {
   // Required to start bias estimation
   graph_localizer_simulator_->ResetBiasesAndLocalizer();
@@ -163,6 +172,11 @@ void GraphBag::Run() {
     const auto sm_msg = live_measurement_simulator_->GetSMMessage(current_time);
     if (sm_msg) {
       graph_localizer_simulator_->BufferSMVisualLandmarksMsg(*sm_msg);
+      if (params_.save_semantic_matches_images) {
+        const auto img_msg = live_measurement_simulator_->GetImageMessage(lc::TimeFromHeader(of_msg->header));
+        if (img_msg && graph_localizer_simulator_->semantic_matches())
+          SaveSemanticMatchesImage(*img_msg, *graph_localizer_simulator_);
+      }
     }
 
     const bool updated_graph = graph_localizer_simulator_->AddMeasurementsAndUpdateIfReady(current_time);

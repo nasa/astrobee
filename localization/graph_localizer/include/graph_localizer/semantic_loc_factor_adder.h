@@ -30,6 +30,7 @@
 #include <vector>
 
 namespace graph_localizer {
+
 class SemanticLocFactorAdder : public LocFactorAdder {
  public:
   SemanticLocFactorAdder(const LocFactorAdderParams& params,
@@ -38,9 +39,29 @@ class SemanticLocFactorAdder : public LocFactorAdder {
   std::vector<graph_optimizer::FactorsToAdd> AddFactors(
     const localization_measurements::SemanticDetsMeasurement& semantic_dets, 
     const boost::optional<localization_common::CombinedNavState>& cur_state);
+    
+  typedef struct SemanticMatch {
+    int cls;
+    bool have_map_point;
+    Eigen::Vector2d map_point_px;
+    bool have_matched_det;
+    Eigen::Vector2d det_center_px;
+    Eigen::Vector2d det_bbox_size_px;
+
+    SemanticMatch(int c, Eigen::Vector2d mpp, Eigen::Vector2d dcp, Eigen::Vector2d dbsp) :
+     cls(c), have_map_point(true), map_point_px(mpp), have_matched_det(true), det_center_px(dcp), det_bbox_size_px(dbsp) {} 
+
+    SemanticMatch(int c, Eigen::Vector2d mpp) :
+     cls(c), have_map_point(true), map_point_px(mpp), have_matched_det(false) {} 
+
+    SemanticMatch(int c, Eigen::Vector2d dcp, Eigen::Vector2d dbsp) :
+     cls(c), have_map_point(false), have_matched_det(true), det_center_px(dcp), det_bbox_size_px(dbsp) {} 
+  } SemanticMatch;
+  const std::vector<SemanticMatch>& last_matches() const { return last_matches_; }
 
  private:
   std::map<int, std::vector<Eigen::Isometry3d>> object_poses_; // map from class to vector of positions
+  std::vector<SemanticMatch> last_matches_;
 
   graph_optimizer::GraphActionCompleterType type() const;
 

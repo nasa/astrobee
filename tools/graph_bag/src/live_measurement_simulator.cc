@@ -127,7 +127,7 @@ bool LiveMeasurementSimulator::ProcessMessage() {
     sm_buffer_.BufferMessage(*sm_features);
   } else if (string_ends_with(msg.getTopic(), kImageTopic_)) {
     sensor_msgs::ImageConstPtr image_msg = msg.instantiate<sensor_msgs::Image>();
-    if (params_.save_optical_flow_images) {
+    if (params_.save_images) {
       img_buffer_.emplace(localization_common::TimeFromHeader(image_msg->header), image_msg);
     }
     if (!params_.use_image_features) {
@@ -164,11 +164,37 @@ boost::optional<vision_msgs::Detection2DArray> LiveMeasurementSimulator::GetSMMe
   return sm_buffer_.GetMessage(current_time);
 }
 boost::optional<sensor_msgs::ImageConstPtr> LiveMeasurementSimulator::GetImageMessage(const lc::Time current_time) {
-  const auto img_it = img_buffer_.find(current_time);
-  if (img_it == img_buffer_.end()) return boost::none;
-  const auto current_img = img_it->second;
-  // Clear buffer up to current time
-  img_buffer_.erase(img_buffer_.begin(), img_it);
+  // lower bound is actually later in time (first element not less than current_time)
+  const auto img_it_later = img_buffer_.lower_bound(current_time);
+  const auto img_it_earlier = img_buffer_.upper_bound(current_time);
+
+  sensor_msgs::ImageConstPtr current_img;
+  
+  if (img_it_earlier == img_buffer_.end()) {
+    if (img_it_later == img_buffer_.end()) {
+      return boost::none;
+    } else {
+      current_img = img_it_later->second;
+    }
+  } else {
+    if (img_it_later == img_buffer_.end()) {
+      current_img = img_it_earlier->second;
+      // Clear buffer up to current time
+      img_buffer_.erase(img_buffer_.begin(), img_it_earlier);
+    }
+  }
+
+  if (std::abs(img_it_earlier->first - current_time) < std::abs(img_it_later->first - current_time)) {
+    // earlier is closest
+    current_img = img_it_earlier->second;
+    // Clear buffer up to current time
+    img_buffer_.erase(img_buffer_.begin(), img_it_earlier);
+  } else {
+    // later is closest
+    current_img = img_it_later->second;
+    // Clear buffer up to current time
+    img_buffer_.erase(img_buffer_.begin(), img_it_earlier);
+  }
 
   return current_img;
 }

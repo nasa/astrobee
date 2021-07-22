@@ -36,7 +36,7 @@ struct LiveMeasurementSimulatorParams {
   std::string image_topic;
   bool use_image_features;
   bool use_semantics;
-  bool save_optical_flow_images;
+  bool save_images;
 };
 }  // namespace graph_bag
 
