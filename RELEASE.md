@@ -1,5 +1,12 @@
 # Releases
 
+## Release 0.15.0
+
+  * Perching functional
+  * Ubuntu 20 compatibility
+  * Added astrobee to astrobee coms
+  * Various other fixes/software improvements
+
 ## Release 0.14.3
 
   * Rotation fallback fix
