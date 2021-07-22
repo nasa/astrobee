@@ -59,7 +59,7 @@ int main(int argc, char** argv) {
 
   printf("Removing duplicate images...\n");
   ff_common::PrintProgressBar(stdout, 0.0);
-  image1 = cv::imread(argv[1], CV_LOAD_IMAGE_GRAYSCALE);
+  image1 = cv::imread(argv[1], cv::IMREAD_GRAYSCALE);
   detector.Detect(image1, &storage, &descriptors1);
   int deleted_count = 0;
   for (int i = 1; i < argc; i++) {
@@ -67,7 +67,7 @@ int main(int argc, char** argv) {
       std::vector<cv::DMatch> matches;
       storage.clear();
       descriptors2 = cv::Mat();
-      image2 = cv::imread(argv[j], CV_LOAD_IMAGE_GRAYSCALE);
+      image2 = cv::imread(argv[j], cv::IMREAD_GRAYSCALE);
       detector.Detect(image2, &storage, &descriptors2);
       interest_point::FindMatches(descriptors1, descriptors2, &matches);
       ff_common::PrintProgressBar(stdout, static_cast<float>(j - 1) / (argc - 2));

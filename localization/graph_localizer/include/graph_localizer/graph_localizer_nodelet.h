@@ -18,6 +18,7 @@
 #ifndef GRAPH_LOCALIZER_GRAPH_LOCALIZER_NODELET_H_
 #define GRAPH_LOCALIZER_GRAPH_LOCALIZER_NODELET_H_
 
+#include <ff_msgs/DepthLandmarks.h>
 #include <ff_msgs/Feature2dArray.h>
 #include <ff_msgs/FlightMode.h>
 #include <ff_msgs/Heartbeat.h>
@@ -77,7 +78,11 @@ class GraphLocalizerNodelet : public ff_util::FreeFlyerNodelet {
 
   void PublishARTagPose() const;
 
+  void PublishHandrailPose() const;
+
   void PublishWorldTDockTF();
+
+  void PublishWorldTHandrailTF();
 
   void PublishWorldTBodyTF();
 
@@ -93,6 +98,8 @@ class GraphLocalizerNodelet : public ff_util::FreeFlyerNodelet {
 
   void ARVisualLandmarksCallback(const ff_msgs::VisualLandmarks::ConstPtr& visual_landmarks_msg);
 
+  void DepthLandmarksCallback(const ff_msgs::DepthLandmarks::ConstPtr& depth_landmarks_msg);
+
   void ImuCallback(const sensor_msgs::Imu::ConstPtr& imu_msg);
 
   void FlightModeCallback(ff_msgs::FlightMode::ConstPtr const& mode);
@@ -103,8 +110,9 @@ class GraphLocalizerNodelet : public ff_util::FreeFlyerNodelet {
   ros::NodeHandle private_nh_;
   ros::CallbackQueue private_queue_;
   bool localizer_enabled_ = true;
-  ros::Subscriber imu_sub_, of_sub_, vl_sub_, ar_sub_, flight_mode_sub_;
-  ros::Publisher state_pub_, graph_pub_, ar_tag_pose_pub_, sparse_mapping_pose_pub_, reset_pub_, heartbeat_pub_;
+  ros::Subscriber imu_sub_, of_sub_, vl_sub_, ar_sub_, dl_sub_, flight_mode_sub_;
+  ros::Publisher state_pub_, graph_pub_, ar_tag_pose_pub_, handrail_pose_pub_, sparse_mapping_pose_pub_, reset_pub_,
+    heartbeat_pub_;
   ros::ServiceServer reset_srv_, bias_srv_, bias_from_file_srv_, input_mode_srv_;
   tf2_ros::TransformBroadcaster transform_pub_;
   std::string platform_name_;
@@ -112,10 +120,14 @@ class GraphLocalizerNodelet : public ff_util::FreeFlyerNodelet {
   GraphLocalizerNodeletParams params_;
   int last_mode_ = -1;
 
+  ros::Time last_time_tf_dock_;
+  ros::Time last_time_tf_handrail_;
+
   // Timers
   localization_common::RosTimer vl_timer_ = localization_common::RosTimer("VL msg");
   localization_common::RosTimer of_timer_ = localization_common::RosTimer("OF msg");
   localization_common::RosTimer ar_timer_ = localization_common::RosTimer("AR msg");
+  localization_common::RosTimer depth_timer_ = localization_common::RosTimer("Depth msg");
   localization_common::RosTimer imu_timer_ = localization_common::RosTimer("Imu msg");
   localization_common::Timer callbacks_timer_ = localization_common::Timer("Callbacks");
   localization_common::Timer nodelet_runtime_timer_ = localization_common::Timer("Nodelet Runtime");

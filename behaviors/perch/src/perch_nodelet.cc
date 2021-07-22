@@ -156,6 +156,7 @@ class PerchNodelet : public ff_util::FreeFlyerNodelet {
     // then we can try moving to the approach pose in nominal mode.
     fsm_.Add(STATE::PERCHING_SWITCHING_TO_HR_LOC,
       SWITCH_SUCCESS, [this](FSM::Event const& event) -> FSM::State {
+        SaveApproachPose();
         Move(APPROACH_POSE, ff_msgs::MotionGoal::NOMINAL);
         return STATE::PERCHING_MOVING_TO_APPROACH_POSE;
       });
@@ -274,7 +275,7 @@ class PerchNodelet : public ff_util::FreeFlyerNodelet {
       ARM_FAILED, [this](FSM::Event const& event) -> FSM::State {
         err_ = RESPONSE::ARM_FAILED;
         err_msg_ = "Failed while deploying the arm";
-        Arm(ff_msgs::ArmGoal::ARM_STOW);
+        Switch(LOCALIZATION_MAPPED_LANDMARKS);
         return STATE::RECOVERY_SWITCHING_TO_ML_LOC;
       });
     // [22]
@@ -283,7 +284,7 @@ class PerchNodelet : public ff_util::FreeFlyerNodelet {
         err_ = RESPONSE::ARM_FAILED;
         err_msg_ = "Failed while opening the gripper";
         Arm(ff_msgs::ArmGoal::ARM_STOW);
-        return STATE::RECOVERY_SWITCHING_TO_ML_LOC;
+        return STATE::RECOVERY_STOWING_ARM;
       });
     // [23]
     fsm_.Add(STATE::PERCHING_MOVING_TO_COMPLETE_POSE,
@@ -368,14 +369,9 @@ class PerchNodelet : public ff_util::FreeFlyerNodelet {
     ///////////////////////
     // [33] - Opening gripper for recovery attempt: Success and Fail options
     fsm_.Add(STATE::RECOVERY_OPENING_GRIPPER,
-      ARM_SUCCESS, [this](FSM::Event const& event) -> FSM::State {
+      ARM_SUCCESS | ARM_FAILED, [this](FSM::Event const& event) -> FSM::State {
         Switch(LOCALIZATION_MAPPED_LANDMARKS);
         return STATE::RECOVERY_SWITCHING_TO_ML_LOC;
-      });
-    fsm_.Add(STATE::RECOVERY_OPENING_GRIPPER,
-      ARM_FAILED, [this](FSM::Event const& event) -> FSM::State {
-        return Result(err_,
-          "Recovery Gripper open failed: " + err_msg_);
       });
     // [34] - Switching to ML loc in recovery: Success and Fail options
     fsm_.Add(STATE::RECOVERY_SWITCHING_TO_ML_LOC,
@@ -385,8 +381,8 @@ class PerchNodelet : public ff_util::FreeFlyerNodelet {
       });
     fsm_.Add(STATE::RECOVERY_SWITCHING_TO_ML_LOC,
       SWITCH_FAILED, [this](FSM::Event const& event) -> FSM::State {
-        return Result(err_,
-          "Recovery switch to mapped landmarks localization failed: " + err_msg_);
+        Result(err_, "Recovery switch to mapped landmarks localization failed: " + err_msg_);
+        return STATE::UNPERCHED;
       });
     // [35] - Motion to recovery pose: Success and Fail options
     fsm_.Add(STATE::RECOVERY_MOVING_TO_RECOVERY_POSE,
@@ -396,8 +392,8 @@ class PerchNodelet : public ff_util::FreeFlyerNodelet {
       });
     fsm_.Add(STATE::RECOVERY_MOVING_TO_RECOVERY_POSE,
       MOTION_FAILED, [this](FSM::Event const& event) -> FSM::State {
-        return Result(err_,
-          "Recovery motion to recovery pose failed: " + err_msg_);
+        Result(err_, "Recovery motion to recovery pose failed: " + err_msg_);
+        return STATE::UNPERCHED;
       });
     // [36] - Stowing arm in recovery: Success and Fail options
     fsm_.Add(STATE::RECOVERY_STOWING_ARM,
@@ -407,8 +403,8 @@ class PerchNodelet : public ff_util::FreeFlyerNodelet {
       });
     fsm_.Add(STATE::RECOVERY_STOWING_ARM,
       ARM_FAILED, [this](FSM::Event const& event) -> FSM::State {
-        return Result(err_,
-          "Recovery Stowing arm failed: " + err_msg_);
+        Result(err_, "Recovery Stowing arm failed: " + err_msg_);
+        return STATE::UNPERCHED;
       });
 
     //////////////////////////////////////////////
@@ -477,6 +473,10 @@ class PerchNodelet : public ff_util::FreeFlyerNodelet {
       &PerchNodelet::ReconfigureCallback, this, _1)))
       return AssertFault(ff_util::INITIALIZATION_FAILED,
                          "Could not load config");
+
+    // Setup the platform name
+    platform_name_ = GetPlatform();
+    platform_name_ = (platform_name_.empty() ? "" : platform_name_ + "/");
 
     // Create a transform buffer to listen for transforms
     tf_listener_ = std::shared_ptr<tf2_ros::TransformListener>(
@@ -763,7 +763,7 @@ class PerchNodelet : public ff_util::FreeFlyerNodelet {
    */
   void SaveApproachPose(void) {
     geometry_msgs::TransformStamped tf = tf_buffer_.lookupTransform(
-     "world", "body", ros::Time(0));
+     "world", platform_name_ + "body", ros::Time(0));
 
     ROS_WARN("[Perch] Saving Approach Pose");
 
@@ -817,34 +817,35 @@ class PerchNodelet : public ff_util::FreeFlyerNodelet {
       // then to the complete pose.
       case COMPLETE_POSE:
         // The movement to approach pose is already done twice
-        msg.header.frame_id = "handrail/approach";
+        msg.header.frame_id = platform_name_ + "handrail/approach";
         goal.states.push_back(msg);
-        msg.header.frame_id = "handrail/complete";
+        msg.header.frame_id = platform_name_ + "handrail/complete";
         goal.states.push_back(msg);
         break;
       // Move to the approach pose.
       case APPROACH_POSE:
-        msg.header.frame_id = "handrail/approach";
+        msg.header.frame_id = platform_name_ + "handrail/approach";
+        ROS_ERROR_STREAM("transform " << msg.header.frame_id);
         goal.states.push_back(msg);
         break;
       // Move to the recovery pose. This option is currently used to move to the
       // approach pose, but it is here for potential change in recovery options.
       case RECOVERY_POSE:
-        msg.header.frame_id = "body";
+        msg.header.frame_id = platform_name_ + "body";
         goal.states.push_back(msg);
         break;
       // Move to the perched pose. This option is currently used as a placeholder
       // operation for perched localization. It is implemented for futrure use,
       // if the user wants the robot to have a pan and tilt position for example.
       case PERCHED_POSE:
-        msg.header.frame_id = "body";
+        msg.header.frame_id = platform_name_ + "body";
         goal.states.push_back(msg);
         break;
       // Move to the unperched pose. Placeholder to return to a default pan/tilt
       // option, to make the aft face parallel to the wall supporting the handrail,
       // for example.
       case UNPERCHED_POSE:
-        msg.header.frame_id = "body";
+        msg.header.frame_id = platform_name_ + "body";
         goal.states.push_back(msg);
         break;
       default:
@@ -1030,6 +1031,7 @@ class PerchNodelet : public ff_util::FreeFlyerNodelet {
   Eigen::Vector3d approach_position_;
   int32_t err_;
   std::string err_msg_;
+  std::string platform_name_;
 };
 
 PLUGINLIB_EXPORT_CLASS(perch::PerchNodelet, nodelet::Nodelet);

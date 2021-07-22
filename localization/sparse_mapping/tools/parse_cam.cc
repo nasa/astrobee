@@ -200,7 +200,7 @@ int main(int argc, char** argv) {
     cid_to_cam_t[cid] = cid_to_cam_t[cid].inverse();
 
   // Dummy parameters but which must be set
-  cv::Mat image = cv::imread(good_images[0], CV_LOAD_IMAGE_GRAYSCALE);
+  cv::Mat image = cv::imread(good_images[0], cv::IMREAD_GRAYSCALE);
   camera::CameraParameters params(FLAGS_camera_calibration);
   sparse_mapping::SparseMap map(cid_to_cam_t,
                                 good_images, FLAGS_detector, params);

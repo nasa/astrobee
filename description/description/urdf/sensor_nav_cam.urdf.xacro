@@ -18,7 +18,7 @@
 <!-- permissions and limitations under the License.                          -->
 
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
-  <gazebo reference="body">
+  <gazebo reference="${prefix}body">
     <sensor name="nav_cam" type="wideanglecamera">
       <pose>0 0 0 0 0 0</pose>
       <always_on>true</always_on>
