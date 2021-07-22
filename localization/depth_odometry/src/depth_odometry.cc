@@ -17,6 +17,7 @@
  */
 
 #include <depth_odometry/depth_odometry.h>
+#include <depth_odometry/utilities.h>
 #include <localization_common/logger.h>
 #include <localization_common/utilities.h>
 #include <msg_conversions/msg_conversions.h>
@@ -131,11 +132,9 @@ Eigen::Matrix<double, 1, 6> DepthOdometry::Jacobian(const pcl::PointNormal& sour
                                                     const pcl::PointNormal& target_point,
                                                     const Eigen::Isometry3d& relative_transform) const {
   const gtsam::Pose3 gt_relative_transform = lc::GtPose(relative_transform);
-  gtsam::Matrix H1;
   const gtsam::Point3 gt_point(source_point.x, source_point.y, source_point.z);
-  gt_relative_transform.transformFrom(gt_point, H1);
-  gtsam::Point3 gt_normal(target_point.normal[0], target_point.normal[1], target_point.normal[2]);
-  return gt_normal.transpose() * H1;
+  const gtsam::Point3 gt_normal(target_point.normal[0], target_point.normal[1], target_point.normal[2]);
+  return depth_odometry::Jacobian(gt_point, gt_normal, gt_relative_transform);
 }
 
 Eigen::Matrix<double, 6, 6> DepthOdometry::ComputeCovarianceMatrix(
