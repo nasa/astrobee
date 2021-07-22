@@ -1,3 +1,12 @@
+astrobee (0.15.0) testing; urgency=medium
+
+  * Perching functional
+  * Ubuntu 20 compatibility
+  * Added astrobee to astrobee coms
+  * Various other fixes/software improvements
+
+ -- Astrobee Flight Software <astrobee-fsw@nx.arc.nasa.gov>  Wed, 21 Jul 2021 02:21:10 -0700
+
 astrobee (0.14.3) testing; urgency=medium
 
   * Rotation fallback fix
