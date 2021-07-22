@@ -24,6 +24,7 @@
 
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
+#include <pcl/registration/icp.h>
 
 #include <sensor_msgs/PointCloud2.h>
 #include <ros/node_handle.h>
@@ -40,6 +41,14 @@ class DepthOdometry {
  private:
   Eigen::Isometry3d Icp(const pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_a,
                         const pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_b) const;
+  Eigen::Matrix<double, 6, 6> ComputeCovarianceMatrix(
+    const pcl::IterativeClosestPointWithNormals<pcl::PointNormal, pcl::PointNormal>& icp,
+    const pcl::PointCloud<pcl::PointNormal>::Ptr cloud_a,
+    const pcl::PointCloud<pcl::PointNormal>::Ptr cloud_a_transformed,
+    const Eigen::Isometry3d& relative_transform) const;
+  Eigen::Matrix<double, 1, 6> Jacobian(const pcl::PointNormal& source_point, const pcl::PointNormal& target_point,
+                                       const Eigen::Isometry3d& relative_transform) const;
+
   std::pair<localization_common::Time, pcl::PointCloud<pcl::PointXYZ>::Ptr> previous_depth_cloud_;
   std::pair<localization_common::Time, pcl::PointCloud<pcl::PointXYZ>::Ptr> latest_depth_cloud_;
   Eigen::Isometry3d body_T_haz_cam_;

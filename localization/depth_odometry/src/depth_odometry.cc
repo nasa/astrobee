@@ -18,7 +18,10 @@
 
 #include <depth_odometry/depth_odometry.h>
 #include <localization_common/logger.h>
+#include <localization_common/utilities.h>
 #include <msg_conversions/msg_conversions.h>
+
+#include <gtsam/geometry/Pose3.h>
 
 #include <pcl_conversions/pcl_conversions.h>
 #include <pcl/features/normal_3d.h>
@@ -86,8 +89,8 @@ Eigen::Isometry3d DepthOdometry::Icp(const pcl::PointCloud<pcl::PointXYZ>::Ptr c
   icp.setInputSource(cloud_a_with_normals);
   icp.setInputTarget(cloud_b_with_normals);
   icp.setMaximumIterations(10);
-  pcl::PointCloud<pcl::PointNormal> result;
-  icp.align(result);
+  pcl::PointCloud<pcl::PointNormal>::Ptr result(new pcl::PointCloud<pcl::PointNormal>);
+  icp.align(*result);
 
   {
     sensor_msgs::PointCloud2 ros_cloud_a;
@@ -119,7 +122,42 @@ Eigen::Isometry3d DepthOdometry::Icp(const pcl::PointCloud<pcl::PointXYZ>::Ptr c
   // TODO(rsoussan): clean this up
   const Eigen::Isometry3d relative_transform(
     Eigen::Isometry3f(icp.getFinalTransformation().matrix()).cast<double>());  //.cast<double>();
+  const Eigen::Matrix<double, 6, 6> covariance =
+    ComputeCovarianceMatrix(icp, cloud_a_with_normals, result, relative_transform);
   return relative_transform;
-  // TODO(rsoussan): get covariance!!!
+}
+
+Eigen::Matrix<double, 1, 6> DepthOdometry::Jacobian(const pcl::PointNormal& source_point,
+                                                    const pcl::PointNormal& target_point,
+                                                    const Eigen::Isometry3d& relative_transform) const {
+  const gtsam::Pose3 gt_relative_transform = lc::GtPose(relative_transform);
+  gtsam::Matrix H1;
+  const gtsam::Point3 gt_point(source_point.x, source_point.y, source_point.z);
+  gt_relative_transform.transformFrom(gt_point, H1);
+  gtsam::Point3 gt_normal(target_point.normal[0], target_point.normal[1], target_point.normal[2]);
+  return gt_normal.transpose() * H1;
+}
+
+Eigen::Matrix<double, 6, 6> DepthOdometry::ComputeCovarianceMatrix(
+  const pcl::IterativeClosestPointWithNormals<pcl::PointNormal, pcl::PointNormal>& icp,
+  const pcl::PointCloud<pcl::PointNormal>::Ptr cloud_a,
+  const pcl::PointCloud<pcl::PointNormal>::Ptr cloud_a_transformed, const Eigen::Isometry3d& relative_transform) const {
+  icp.correspondence_estimation_->setInputSource(cloud_a_transformed);
+  pcl::Correspondences correspondences;
+  // Assumes normals for input source aren't needed and there are no correspondence rejectors added to ICP object
+  icp.correspondence_estimation_->determineCorrespondences(correspondences, icp.corr_dist_threshold_);
+  const int num_correspondences = correspondences.size();
+  Eigen::MatrixXd full_jacobian(num_correspondences, 6);
+  const auto& target_cloud = icp.target_;
+  int index = 0;
+  for (const auto correspondence : correspondences) {
+    const auto& input_point = (*cloud_a)[correspondence.index_query];
+    const auto& target_point = (*target_cloud)[correspondence.index_match];
+    const Eigen::Matrix<double, 1, 6> jacobian = Jacobian(input_point, target_point, relative_transform);
+    full_jacobian.block(index++, 0, 1, 6) = jacobian;
+  }
+
+  const Eigen::Matrix<double, 6, 6> covariance = (full_jacobian.transpose() * full_jacobian).inverse();
+  return covariance;
 }
 }  // namespace depth_odometry

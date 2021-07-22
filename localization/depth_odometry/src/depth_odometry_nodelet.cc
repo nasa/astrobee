@@ -62,6 +62,8 @@ void DepthOdometryNodelet::DepthCloudCallback(const sensor_msgs::PointCloud2Cons
     return;
   }
 
+  LogError("rel pose: " << relative_pose->matrix());
+
   geometry_msgs::PoseWithCovarianceStamped pose_msg;
   lc::PoseToMsg(lc::GtPose(*relative_pose), pose_msg.pose.pose);
   // TODO(rsoussan): fill in covariance
