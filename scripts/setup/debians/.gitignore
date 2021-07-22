@@ -17,4 +17,4 @@ libdecomputil
 libjps3d
 libmiro
 libsoracore
-luajit-2.0
+libopencv

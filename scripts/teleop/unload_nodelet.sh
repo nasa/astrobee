@@ -17,16 +17,11 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-CURRENT_LOC=$(dirname "$(readlink -f "$0")")
-echo ${CURRENT_LOC}
-cd ${CURRENT_LOC}
-PACKAGE_NAME=luajit-2.0
+name=$1
+manager_name=$2
 
-if [ -d $PACKAGE_NAME ]; then
-  rm -rf $PACKAGE_NAME
+if [[ $# -eq 1 ]]; then
+  rostopic pub --once /command ff_msgs/CommandStamped '{cmd_name: "unloadNodelet", subsys_name: "Astrobee", args: [{data_type: 5, s: '"$name"'}]}'
+elif [[ $# -eq 2 ]]; then
+  rostopic pub --once /command ff_msgs/CommandStamped '{cmd_name: "unloadNodelet", subsys_name: "Astrobee", args: [{data_type: 5, s: '"$name"'}, {data_type: 5, s: '"$manager_name"'}]}'
 fi
-git clone --quiet https://luajit.org/git/luajit-2.0.git $PACKAGE_NAME 2>&1 || exit 1
-cd $PACKAGE_NAME
-make
-sudo make install
-# cd ${CURRENT_LOC}

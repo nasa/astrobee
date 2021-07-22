@@ -320,7 +320,7 @@ bool P3P(const std::vector<cv::Point3d> & landmarks, const std::vector<cv::Point
     cv::Mat rvec(3, 1, cv::DataType<double>::type, cv::Scalar(0));
     cv::Mat tvec(3, 1, cv::DataType<double>::type, cv::Scalar(0));
     cv::Mat distortion(4, 1, cv::DataType<double>::type, cv::Scalar(0));
-    bool result = cv::solvePnP(landmarks, observations, camera_matrix, distortion, rvec, tvec, false, CV_P3P);
+    bool result = cv::solvePnP(landmarks, observations, camera_matrix, distortion, rvec, tvec, false, cv::SOLVEPNP_P3P);
     if (!result)
       return false;
     cv::cv2eigen(tvec, *pos);

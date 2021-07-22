@@ -22,7 +22,8 @@
     <xacro:property name="prox_effort" value="1.0"/>
     <xacro:property name="dist_effort" value="1.0"/>
     <xacro:property name="grip_effort" value="0.1"/>
-    <link name="${bay}">
+
+    <link name="${prefix}${bay}">
       <self_collide>false</self_collide>
       <inertial>
         <origin
@@ -63,11 +64,11 @@
         xyz="${xyz}"
         rpy="${rpy}" />
       <parent
-        link="body" />
+        link="${prefix}body" />
       <child
-        link="${bay}" />
+        link="${prefix}${bay}" />
     </joint>
-    <link name="${bay}_arm_proximal_link">
+    <link name="${prefix}${bay}_arm_proximal_link">
       <self_collide>false</self_collide>
       <inertial>
         <origin
@@ -108,9 +109,9 @@
         xyz="0.11945 0 0.065"
         rpy="0 1.57079632679 0" />
       <parent
-        link="${bay}" />
+        link="${prefix}${bay}" />
       <child
-        link="${bay}_arm_proximal_link" />
+        link="${prefix}${bay}_arm_proximal_link" />
       <axis
         xyz="0 -1 0" />
       <limit
@@ -119,7 +120,7 @@
         upper="1.57079"
         velocity="0.12" />
     </joint>
-    <link name="${bay}_arm_distal_link">
+    <link name="${prefix}${bay}_arm_distal_link">
       <self_collide>false</self_collide>
       <inertial>
         <origin
@@ -160,9 +161,9 @@
         xyz="-0.1 0 0"
         rpy="0 0 0" />
       <parent
-        link="${bay}_arm_proximal_link" />
+        link="${prefix}${bay}_arm_proximal_link" />
       <child
-        link="${bay}_arm_distal_link" />
+        link="${prefix}${bay}_arm_distal_link" />
       <axis
         xyz="0 0 1" />
       <limit
@@ -171,7 +172,7 @@
         upper="1.57079"
         velocity="0.12" />
     </joint>
-    <link name="${bay}_gripper_left_proximal_link">
+    <link name="${prefix}${bay}_gripper_left_proximal_link">
       <self_collide>false</self_collide>
       <inertial>
         <origin
@@ -212,9 +213,9 @@
         xyz="-0.039 -0.010002 -0.0497"
         rpy="0 0 0" />
       <parent
-        link="${bay}_arm_distal_link" />
+        link="${prefix}${bay}_arm_distal_link" />
       <child
-        link="${bay}_gripper_left_proximal_link" />
+        link="${prefix}${bay}_gripper_left_proximal_link" />
       <axis
         xyz="0 0 1" />
       <limit
@@ -223,7 +224,7 @@
         upper="0.698132"
         velocity="0.12" />
     </joint>
-    <link name="${bay}_gripper_left_distal_link">
+    <link name="${prefix}${bay}_gripper_left_distal_link">
       <self_collide>false</self_collide>
       <inertial>
         <origin
@@ -264,9 +265,9 @@
         xyz="-0.05 0 0"
         rpy="0 0 0" />
       <parent
-        link="${bay}_gripper_left_proximal_link" />
+        link="${prefix}${bay}_gripper_left_proximal_link" />
       <child
-        link="${bay}_gripper_left_distal_link" />
+        link="${prefix}${bay}_gripper_left_distal_link" />
       <axis
         xyz="0 0 1" />
       <limit
@@ -275,7 +276,7 @@
         upper="-0.69813"
         velocity="0.12" />
     </joint>
-    <link name="${bay}_gripper_right_proximal_link">
+    <link name="${prefix}${bay}_gripper_right_proximal_link">
       <self_collide>false</self_collide>
       <inertial>
         <origin
@@ -316,9 +317,9 @@
         xyz="-0.039 0.010002 -0.0497"
         rpy="0 0 0" />
       <parent
-        link="${bay}_arm_distal_link" />
+        link="${prefix}${bay}_arm_distal_link" />
       <child
-        link="${bay}_gripper_right_proximal_link" />
+        link="${prefix}${bay}_gripper_right_proximal_link" />
       <axis
         xyz="0 0 1" />
       <limit
@@ -327,7 +328,7 @@
         upper="-0.349066"
         velocity="0.12" />
     </joint>
-    <link name="${bay}_gripper_right_distal_link">
+    <link name="${prefix}${bay}_gripper_right_distal_link">
       <self_collide>false</self_collide>
       <inertial>
         <origin
@@ -368,9 +369,9 @@
         xyz="-0.05 0 0"
         rpy="0 0 0" />
       <parent
-        link="${bay}_gripper_right_proximal_link" />
+        link="${prefix}${bay}_gripper_right_proximal_link" />
       <child
-        link="${bay}_gripper_right_distal_link" />
+        link="${prefix}${bay}_gripper_right_distal_link" />
       <axis
         xyz="0 0 1" />
       <limit
@@ -389,6 +390,5 @@
         <gripper>0</gripper>
       </plugin>
     </gazebo>
-  -->
   </xacro:macro>
 </robot>

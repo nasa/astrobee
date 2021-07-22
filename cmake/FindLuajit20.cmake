@@ -23,7 +23,7 @@
 #  LUAJIT_VERSION_STRING, the version of Lua found (since CMake 2.8.8)
 
 find_path(LUAJIT_INCLUDE_DIR luajit.h
-  PATH_SUFFIXES include/luajit-2.0 include
+  PATH_SUFFIXES include/luajit-2.0 include/luajit-2.1 include
   PATHS
   ~/Library/Frameworks
   /Library/Frameworks

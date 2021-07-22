@@ -156,9 +156,8 @@ class ArmNodelet : public ff_util::FreeFlyerNodelet {
 
     // STOWED -> DEPLOYING_PANNING
     //   [label="[5]\nGOAL_DEPLOY\nPan(DEPLOY)"];
-    fsm_.Add(STATE::STOWED,
-      GOAL_DEPLOY,
-      [this](FSM::Event const& event) -> FSM::State {
+    fsm_.Add(GOAL_DEPLOY,
+      [this](FSM::State const& state, FSM::Event const& event) -> FSM::State {
         if (!Arm(PAN))
           return Result(RESPONSE::PAN_FAILED);
         return STATE::DEPLOYING_PANNING;

@@ -25,9 +25,13 @@
   <xacro:property name="pay_bot_aft" value="$(arg bot_aft)"/>
   <xacro:property name="pay_bot_front" value="$(arg bot_front)"/>
   <xacro:property name="ns" value="$(arg ns)"/>
+  <xacro:property name="prefix" value="$(arg prefix)"/>
+  <xacro:if value="${prefix == '/'}">
+    <xacro:property name="prefix" value=""/>
+  </xacro:if>
 
   <!-- BASE GEOMETRY -->
- <link name="body">
+ <link name="${prefix}body">
     <self_collide>false</self_collide>
     <!-- body -->
     <visual name="body_visual">
@@ -94,7 +98,7 @@
     </collision>
   </link>
   <!-- This is a workaround for KDL -->
-  <link name="inertial_link">
+  <link name="${prefix}inertial_link">
     <self_collide>false</self_collide>
     <inertial>
       <mass value="9.0877"/>
@@ -104,8 +108,8 @@
   </link>
   <joint name="inertial_joint" type="fixed">
     <origin xyz="0 0 0" rpy="0 0 0" />
-    <parent link="body" />
-    <child link="inertial_link" />
+    <parent link="${prefix}body" />
+    <child link="${prefix}inertial_link" />
   </joint>
 
   <!-- MODEL -->
