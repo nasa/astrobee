@@ -28,7 +28,7 @@ At this point you need to decide where you'd like to put the source code
 
 First, clone the flight software repository and media:
 
-    git clone ssh://git@github.com/nasa/astrobee.git $SOURCE_PATH
+    git clone https://github.com/nasa/astrobee.git $SOURCE_PATH
     pushd $SOURCE_PATH
     git submodule update --init --depth 1 description/media
     popd
@@ -42,7 +42,7 @@ directory you checked out the source code in:
 
 Clone the android repository:
 
-    git clone ssh://git@github.com/nasa/astrobee_android.git $ANDROID_PATH
+    git clone https://github.com/nasa/astrobee_android.git $ANDROID_PATH
 
 
 ### Dependencies

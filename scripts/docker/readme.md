@@ -5,7 +5,7 @@
 Here there are instructions on how to build and run the FSW using Docker.
 First, clone the flight software repository and media:
 
-    git clone ssh://git@github.com/nasa/astrobee.git $SOURCE_PATH
+    git clone https://git@github.com/nasa/astrobee.git $SOURCE_PATH
     git submodule update --init --depth 1 description/media
 
 The docker image for the astrobee FSW is divided throughout 2 docker files. 
