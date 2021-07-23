@@ -272,7 +272,7 @@ If you are interested in running GDS, please follow the
 page on the FreeFlyer FSW Confluence space.
 
 If you plan on working on GDS code, please checkout the bitbucket
-[astrobee_gds repo](https://babelfish.arc.nasa.gov/bitbucket/projects/ASTROBEE/repos/astrobee_gds/browse)
+[astrobee_gds repo](ssh://git@babelfish.arc.nasa.gov:7999/astrobee/astrobee_gds.git)
 and follow the SETUP documentation. If you followed the NASA Astrobee install
 instructions, you will have the RTI libraries already installed. Please make
 sure you set the LD_LIBRARY_PATH to the correct RTI location when following the
