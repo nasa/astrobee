@@ -28,14 +28,21 @@
 
 namespace sym = gtsam::symbol_shorthand;
 namespace dod = depth_odometry;
+
+double PointToPlaneError(const gtsam::Point3& point_1, const gtsam::Point3& point_2, const gtsam::Vector3& normal_2,
+                         const gtsam::Pose3& relative_transform) {
+  return (relative_transform * point_1 - point_2).dot(normal_2);
+}
+
 TEST(PointToPlane, Jacobian) {
   for (int i = 0; i < 500; ++i) {
-    const gtsam::Point3 point = dod::RandomVector();
-    const gtsam::Vector3 normal = dod::RandomVector();
+    const gtsam::Point3 point_1 = dod::RandomVector();
+    const gtsam::Point3 point_2 = dod::RandomVector();
+    const gtsam::Vector3 normal_2 = dod::RandomVector();
     const gtsam::Pose3 relative_transform = dod::RandomPose();
-    const gtsam::Matrix H = dod::Jacobian(point, normal, relative_transform);
-    const auto numerical_H = gtsam::numericalDerivative11<gtsam::Vector, gtsam::Pose3>(
-      boost::function<gtsam::Vector(const gtsam::Pose3&)>(boost::bind(&depth_odometry::Jacobian, point, normal, _1)),
+    const gtsam::Matrix H = dod::Jacobian(point_1, normal_2, relative_transform);
+    const auto numerical_H = gtsam::numericalDerivative11<double, gtsam::Pose3>(
+      boost::function<double(const gtsam::Pose3&)>(boost::bind(&PointToPlaneError, point_1, point_2, normal_2, _1)),
       relative_transform, 1e-5);
     ASSERT_TRUE(numerical_H.isApprox(H.matrix(), 1e-6));
   }
