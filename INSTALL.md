@@ -6,7 +6,7 @@ If you just want to try out the astrobee simulator, you can use one of the docke
 
 Given that Docker (see note) is installed:
 
-	git clone https://github.com/nasa/astrobee.git
+	git clone ssh://git@github.com/nasa/astrobee.git
 	cd astrobee
 	./scripts/docker/run.sh
 
