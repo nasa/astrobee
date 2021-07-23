@@ -1,13 +1,13 @@
 [submodule "submodules/android"]
 	path = submodules/android
-	url = https://github.com/nasa/astrobee_android.git
+	url = ssh://git@github.com/nasa/astrobee_android.git
 [submodule "submodules/avionics"]
 	path = submodules/avionics
-	url = https://babelfish.arc.nasa.gov/bitbucket/scm/astrobee/astrobee_avionics.git
+	url = ssh://git@babelfish.arc.nasa.gov:7999/astrobee/astrobee_avionics.git
 [submodule "submodules/platform"]
 	path = submodules/platform
-	url = https://babelfish.arc.nasa.gov/bitbucket/scm/astrobee/astrobee_platform.git
+	url = ssh://git@babelfish.arc.nasa.gov:7999/astrobee/astrobee_platform.git
 [submodule "description/media"]
 	path = description/media
-	url = https://github.com/nasa/astrobee_media.git
+	url = ssh://git@github.com/nasa/astrobee_media.git
 	shallow = true
