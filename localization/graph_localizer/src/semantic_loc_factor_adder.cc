@@ -17,8 +17,7 @@
  */
 
 #include <graph_localizer/semantic_loc_factor_adder.h>
-#include <graph_localizer/loc_pose_factor.h>
-#include <graph_localizer/loc_projection_factor.h>
+#include <graph_localizer/tolerant_projection_factor.h>
 #include <graph_localizer/utilities.h>
 #include <localization_common/logger.h>
 #include <localization_common/utilities.h>
@@ -32,7 +31,8 @@ namespace lc = localization_common;
 namespace sym = gtsam::symbol_shorthand;
 SemanticLocFactorAdder::SemanticLocFactorAdder(const LocFactorAdderParams& params,
                                                const go::GraphActionCompleterType graph_action_completer_type)
-    : LocFactorAdder(params, graph_action_completer_type) {
+    : SemanticLocFactorAdder::Base(params), graph_action_completer_type_(graph_action_completer_type) {
+
   config_reader::ConfigReader object_loc_config;
   object_loc_config.AddFile("semantic_objects.config");
   if (!object_loc_config.ReadFiles()) {
@@ -69,16 +69,64 @@ SemanticLocFactorAdder::SemanticLocFactorAdder(const LocFactorAdderParams& param
   }
 }
 
-std::vector<go::FactorsToAdd> SemanticLocFactorAdder::AddFactors(
-  const lm::SemanticDetsMeasurement& semantic_dets, const boost::optional<lc::CombinedNavState>& cur_state) {
-  if (!cur_state) {
+void SemanticLocFactorAdder::ComputeFactorsToAdd(std::vector<go::FactorsToAdd> &factors_to_add,
+                                                 lm::MatchedProjectionsMeasurement &measurement) {
+  if (measurement.matched_projections.empty()) {
+    LogDebug("AddFactors: Empty measurement.");
+    return;
+  }
+
+  if (static_cast<int>(measurement.matched_projections.size()) < params().min_num_matches) {
+    LogDebug("AddFactors: Not enough matches in projection measurement.");
+    return;
+  }
+
+  const int num_objects = measurement.matched_projections.size();
+  num_semantic_objects_averager_.Update(num_objects);
+
+  double noise_scale = params().projection_noise_scale;
+  if (params().scale_projection_noise_with_num_landmarks) {
+    noise_scale *= std::pow((num_semantic_objects_averager_.average() / static_cast<double>(num_objects)), 2);
+  }
+
+  int num_tolerant_projection_factors = 0;
+  go::FactorsToAdd projection_factors_to_add(type());
+  projection_factors_to_add.reserve(measurement.matched_projections.size());
+  for (const auto& matched_projection : measurement.matched_projections) {
+    const go::KeyInfo key_info(&sym::P, go::NodeUpdaterType::CombinedNavState,
+                               measurement.timestamp);
+    // TODO(rsoussan): Pass sigma insted of already constructed isotropic noise
+    const gtsam::SharedIsotropic scaled_noise(
+      gtsam::noiseModel::Isotropic::Sigma(2, noise_scale * params().cam_noise->sigma()));
+    gtsam::TolerantProjectionFactor<>::shared_ptr tolerant_projection_factor(new gtsam::TolerantProjectionFactor<>(
+      matched_projection.image_point, matched_projection.map_point, Robust(scaled_noise, params().huber_k),
+      key_info.UninitializedKey(), params().cam_intrinsics, params().body_T_cam));
+
+    projection_factors_to_add.push_back({{key_info}, tolerant_projection_factor});
+    ++num_tolerant_projection_factors;
+    if (num_tolerant_projection_factors >= params().max_num_factors) break;
+  }
+  projection_factors_to_add.SetTimestamp(measurement.timestamp);
+  LogInfo("AddFactors: Added " << num_tolerant_projection_factors << " tolerant projection factors.");
+
+  factors_to_add.emplace_back(projection_factors_to_add);
+}
+
+void SemanticLocFactorAdder::SetCombinedNavState(const boost::optional<localization_common::CombinedNavState>& state) {
+  if (state) {
+    last_combined_nav_state_ = *state;
+  }
+}
+
+std::vector<go::FactorsToAdd> SemanticLocFactorAdder::AddFactors(const lm::SemanticDetsMeasurement& semantic_dets) {
+  if (last_combined_nav_state_.timestamp() != semantic_dets.timestamp) {
     return std::vector<go::FactorsToAdd>(); // return empty set, no factors
   }
 
   last_matches_.clear();
 
   // Convert state from gtsam to Eigen
-  Eigen::Isometry3d world_T_body = lc::EigenPose(*cur_state);
+  Eigen::Isometry3d world_T_body = lc::EigenPose(last_combined_nav_state_);
 
   lm::MatchedProjectionsMeasurement matched_projections_measurement;
   matched_projections_measurement.timestamp = semantic_dets.timestamp;
@@ -132,8 +180,10 @@ std::vector<go::FactorsToAdd> SemanticLocFactorAdder::AddFactors(
     }
   }
 
-  // Call superclass function from general LocFactorAdder
-  return LocFactorAdder::AddFactors(matched_projections_measurement);
+  std::vector<go::FactorsToAdd> factors_to_add;
+  ComputeFactorsToAdd(factors_to_add, matched_projections_measurement);
+
+  return factors_to_add;
 }
 
 go::GraphActionCompleterType SemanticLocFactorAdder::type() const { return graph_action_completer_type_; }

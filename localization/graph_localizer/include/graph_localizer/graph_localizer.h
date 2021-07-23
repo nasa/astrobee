@@ -30,6 +30,7 @@
 #include <graph_localizer/loc_factor_adder.h>
 #include <graph_localizer/semantic_loc_factor_adder.h>
 #include <graph_localizer/loc_graph_action_completer.h>
+#include <graph_localizer/semantic_loc_graph_action_completer.h>
 #include <graph_localizer/projection_graph_action_completer.h>
 #include <graph_localizer/projection_factor_adder.h>
 #include <graph_localizer/rotation_factor_adder.h>
@@ -178,7 +179,7 @@ class GraphLocalizer : public graph_optimizer::GraphOptimizer {
   // Graph Action Completers
   std::shared_ptr<LocGraphActionCompleter> ar_tag_loc_graph_action_completer_;
   std::shared_ptr<LocGraphActionCompleter> loc_graph_action_completer_;
-  std::shared_ptr<LocGraphActionCompleter> semantic_loc_graph_action_completer_;
+  std::shared_ptr<SemanticLocGraphActionCompleter> semantic_loc_graph_action_completer_;
   std::shared_ptr<ProjectionGraphActionCompleter> projection_graph_action_completer_;
   std::shared_ptr<SmartProjectionGraphActionCompleter> smart_projection_graph_action_completer_;
 

@@ -211,7 +211,6 @@ class TolerantProjectionFactor : public NoiseModelFactor1<POSE> {
     ar& BOOST_SERIALIZATION_BASE_OBJECT_NVP(Base);
     ar& BOOST_SERIALIZATION_NVP(measured_);
     ar& BOOST_SERIALIZATION_NVP(landmark_point_);
-    ar& BOOST_SERIALIZATION_NVP(world_T_cam_);
     ar& BOOST_SERIALIZATION_NVP(K_);
     ar& BOOST_SERIALIZATION_NVP(body_P_sensor_);
     ar& BOOST_SERIALIZATION_NVP(throwCheirality_);

@@ -19,9 +19,9 @@
 #ifndef GRAPH_LOCALIZER_SEMANTIC_LOC_FACTOR_ADDER_H_
 #define GRAPH_LOCALIZER_SEMANTIC_LOC_FACTOR_ADDER_H_
 
+#include <graph_optimizer/factor_adder.h>
 #include <graph_localizer/loc_factor_adder_params.h>
 #include <graph_localizer/loc_factor_adder.h>
-#include <graph_optimizer/factor_adder.h>
 #include <localization_common/averager.h>
 #include <localization_common/combined_nav_state.h>
 #include <localization_measurements/matched_projections_measurement.h>
@@ -29,16 +29,22 @@
 
 #include <vector>
 
-namespace graph_localizer {
 
-class SemanticLocFactorAdder : public LocFactorAdder {
+namespace graph_localizer {
+class GraphLocalizer;
+
+class SemanticLocFactorAdder : public graph_optimizer::FactorAdder<localization_measurements::SemanticDetsMeasurement,
+                                                                   LocFactorAdderParams> {
+ using Base =
+  graph_optimizer::FactorAdder<localization_measurements::SemanticDetsMeasurement, LocFactorAdderParams>;
  public:
   SemanticLocFactorAdder(const LocFactorAdderParams& params,
                          const graph_optimizer::GraphActionCompleterType graph_action_completer_type);
 
   std::vector<graph_optimizer::FactorsToAdd> AddFactors(
-    const localization_measurements::SemanticDetsMeasurement& semantic_dets, 
-    const boost::optional<localization_common::CombinedNavState>& cur_state);
+    const localization_measurements::SemanticDetsMeasurement& semantic_dets);
+
+  void SetCombinedNavState(const boost::optional<localization_common::CombinedNavState>& state);
     
   typedef struct SemanticMatch {
     int cls;
@@ -63,10 +69,14 @@ class SemanticLocFactorAdder : public LocFactorAdder {
   std::map<int, std::vector<Eigen::Isometry3d>> object_poses_; // map from class to vector of positions
   std::vector<SemanticMatch> last_matches_;
 
+  void ComputeFactorsToAdd(std::vector<graph_optimizer::FactorsToAdd> &factors_to_add,
+                           localization_measurements::MatchedProjectionsMeasurement &measurement);
   graph_optimizer::GraphActionCompleterType type() const;
 
   graph_optimizer::GraphActionCompleterType graph_action_completer_type_;
-  localization_common::Averager num_landmarks_averager_ = localization_common::Averager("Num Landmarks");
+  localization_common::CombinedNavState last_combined_nav_state_;
+  
+  localization_common::Averager num_semantic_objects_averager_ = localization_common::Averager("Num Semantic Objects");
 };
 }  // namespace graph_localizer
 

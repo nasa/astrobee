@@ -105,8 +105,8 @@ GraphLocalizer::GraphLocalizer(const GraphLocalizerParams& params)
   AddGraphActionCompleter(loc_graph_action_completer_);
 
   semantic_loc_graph_action_completer_.reset(
-    new LocGraphActionCompleter(params_.factor.semantic_loc_adder, go::GraphActionCompleterType::SemanticLocProjectionFactor,
-                                combined_nav_state_node_updater_->shared_graph_values()));
+    new SemanticLocGraphActionCompleter(params_.factor.semantic_loc_adder, go::GraphActionCompleterType::SemanticLocProjectionFactor,
+                                        combined_nav_state_node_updater_->shared_graph_values()));
   AddGraphActionCompleter(semantic_loc_graph_action_completer_);
 
   projection_graph_action_completer_.reset(new ProjectionGraphActionCompleter(
@@ -267,8 +267,8 @@ void GraphLocalizer::AddSemanticDetsMeasurement(const lm::SemanticDetsMeasuremen
   }
   if (params_.factor.semantic_loc_adder.enabled) {
     LogDebug("AddSemanticDetsMeasurement: Adding gt semantic factors.");
-    BufferFactors(semantic_loc_factor_adder_->AddFactors(semantic_dets_measurement, 
-          GetCombinedNavState(semantic_dets_measurement.timestamp)));
+    semantic_loc_factor_adder_->SetCombinedNavState(GetCombinedNavState(semantic_dets_measurement.timestamp));
+    BufferFactors(semantic_loc_factor_adder_->AddFactors(semantic_dets_measurement));
   }
 }
 
