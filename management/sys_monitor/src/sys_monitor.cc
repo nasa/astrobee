@@ -553,7 +553,7 @@ void SysMonitor::StartupTimerCallback(ros::TimerEvent const& te) {
   // Check if nodelets had to be reloaded and set state appropriately
   if (reloaded_nodelets_.size() == 0) {
     // If a critical fault occurred before the startup timer is triggered, the
-    // state might be set to fault or blocked. In this case, we don't want to 
+    // state might be set to fault or blocked. In this case, we don't want to
     // set the state to functional
     if (fault_state_.state == ff_msgs::FaultState::STARTING_UP) {
       fault_state_.state = ff_msgs::FaultState::FUNCTIONAL;
@@ -588,14 +588,14 @@ void SysMonitor::ReloadNodeletTimerCallback(ros::TimerEvent const& te) {
                 reloaded_nodelets_[i]));
       PublishFaultResponse(wd->fault_id());
       wd->hb_fault_occurring(true);
-      nodelets_not_running += " " + reloaded_nodelets_[i] + ","; 
+      nodelets_not_running += " " + reloaded_nodelets_[i] + ",";
     }
   }
 
   // If the system monitor state is still reloading nodelets, that means either
   // all the nodelets were reloaded successfully or all of the critical nodelets
   // are running. So the state can be set to functional.
-  if (fault_state_.state == ff_msgs::FaultState::RELOADING_NODELETS) { 
+  if (fault_state_.state == ff_msgs::FaultState::RELOADING_NODELETS) {
     fault_state_.state = ff_msgs::FaultState::FUNCTIONAL;
     fault_state_.hr_state = "Functional";
     if (nodelets_not_running != "") {
