@@ -33,7 +33,8 @@ class MessageBuffer {
   void BufferMessage(const MessageType& msg) {
     const localization_common::Time timestamp = localization_common::TimeFromHeader(msg.header);
     if (last_measurement_time_ && std::abs(*last_measurement_time_ - timestamp) < params_.min_msg_spacing) {
-      LOG(WARNING) << "BufferMessage: Dropping message that arrived too close to previous message.";
+      LOG(WARNING) << "BufferMessage: Dropping message that arrived too close to previous message. Spacing: " << 
+        std::abs(*last_measurement_time_ - timestamp);
       return;
     }
     msg_buffer_.emplace(timestamp, msg);

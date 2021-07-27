@@ -81,6 +81,7 @@ void GraphBag::SaveOpticalFlowTracksImage(const sensor_msgs::ImageConstPtr& imag
   if (graph_localizer.graph_localizer()) smart_factors = SmartFactors(*(graph_localizer.graph_localizer()));
   const auto feature_track_image_msg =
     CreateFeatureTrackImage(image_msg, *(graph_localizer.feature_tracks()), *params_.nav_cam_params, smart_factors);
+  (*feature_track_image_msg)->header = image_msg->header;
   if (!feature_track_image_msg) return;
   SaveMsg(**feature_track_image_msg, kFeatureTracksImageTopic_, results_bag_);
 }
