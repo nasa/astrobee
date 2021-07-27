@@ -33,6 +33,7 @@ find_package(Eigen3 REQUIRED)
 
 # without this we find the wrong one in cross compile
 SET(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
+SET(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 find_package(Qt4 4.6.0 REQUIRED QtXml)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/../dds_msgs/cmake")
@@ -45,6 +46,9 @@ catkin_package(
   CATKIN_DEPENDS roscpp message_runtime std_msgs nav_msgs
 )
 
+MESSAGE("QT_QT_INCLUDE_DIR ${QT_QT_INCLUDE_DIR}")
+MESSAGE("QT_QTCORE_INCLUDE_DIR ${QT_QTCORE_INCLUDE_DIR}")
+MESSAGE("QT_INCLUDE_DIR ${QT_INCLUDE_DIR}")
 ###########
 ## Build ##
 ###########
@@ -57,32 +61,34 @@ include_directories(
   ${RTIDDS_INCLUDE_DIR}
   ${SORACORE_INCLUDE_DIRS}
   ${MIRO_INCLUDE_DIR}
+  ${QT_INCLUDE_DIR}
+  ${QT_INCLUDE_DIR}/Qt
 )
 
 file(GLOB cc_files
-     "src/util.cc"
+     "src/*.cc"
 )
 
-create_library(TARGET astrobee_astrobee_bridge
-  LIBS ${LIBS}
-  INC ${INCLUDES}
-  DEPS ${DEPS}
-)
-
-create_tool_targets(DIR tools
-  LIBS dds_ros_bridge
-  INC ${INCLUDES}
-  DEPS ${DEPS} dds_ros_bridge
+# Declare C++ libraries
+add_library(dds_ros_bridge
+  ${cc_files}
 )
 add_dependencies(dds_ros_bridge ${catkin_EXPORTED_TARGETS})
-target_link_libraries(dds_ros_bridge Qt4::QtXml rapidExtAstrobee ${RTIDDS_LIBRARIES} ${catkin_LIBRARIES})
+target_link_libraries(dds_ros_bridge ${catkin_LIBRARIES}  Qt4::Core Qt4::Xml)
 
-# Determine our module name
-get_filename_component(MODULE_NAME ${CMAKE_CURRENT_SOURCE_DIR} NAME)
+
+add_library(astrobee_astrobee_bridge
+  src/astrobee_astrobee_bridge.cc
+)
+add_dependencies(astrobee_astrobee_bridge ${catkin_EXPORTED_TARGETS})
+target_link_libraries(astrobee_astrobee_bridge ${catkin_LIBRARIES})
+
 
 #############
 ## Install ##
 #############
+# Determine our module name
+get_filename_component(MODULE_NAME ${CMAKE_CURRENT_SOURCE_DIR} NAME)
 
 install(CODE "execute_process(
   COMMAND mkdir -p share/${MODULE_NAME}
