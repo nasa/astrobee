@@ -39,6 +39,7 @@ class GraphLocalizerStats : public graph_optimizer::GraphStats {
   localization_common::Averager num_optical_flow_factors_averager_ =
     localization_common::Averager("Num Optical Flow Factors");
   localization_common::Averager num_loc_proj_factors_averager_ = localization_common::Averager("Num Loc Proj Factors");
+  localization_common::Averager num_sem_loc_proj_factors_averager_ = localization_common::Averager("Num Sem Loc Proj Factors");
   localization_common::Averager num_loc_pose_factors_averager_ = localization_common::Averager("Num Loc Pose Factors");
   localization_common::Averager num_imu_factors_averager_ = localization_common::Averager("Num Imu Factors");
   localization_common::Averager num_rotation_factors_averager_ = localization_common::Averager("Num Rotation Factors");

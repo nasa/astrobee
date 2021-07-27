@@ -52,7 +52,7 @@ int main(int argc, char** argv) {
     "robot-config-file,r", po::value<std::string>(&robot_config_file)->default_value("config/robots/bumble.config"),
     "Robot config file")("world,w", po::value<std::string>(&world)->default_value("iss"), "World name")(
     "use-image-features,f", po::value<bool>(&use_image_features)->default_value(true), "Use image features")(
-    "use-semantics,s", po::value<bool>(&use_semantics)->default_value(true), "Use semantics")(
+    "use-semantics,d", po::value<bool>(&use_semantics)->default_value(true), "Use semantics")(
     "graph-config-path-prefix,g", po::value<std::string>(&graph_config_path_prefix)->default_value(""),
     "Graph config path prefix");
   po::positional_options_description p;

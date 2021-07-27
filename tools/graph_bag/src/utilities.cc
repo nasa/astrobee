@@ -81,7 +81,7 @@ void MarkSmartFactorPoints(const std::vector<const SmartFactor*> smart_factors,
 
 boost::optional<sensor_msgs::ImagePtr> CreateSemanticMatchesImage(const sensor_msgs::ImageConstPtr& image_msg,
                                                                   const std::vector<graph_localizer::SemanticLocFactorAdder::SemanticMatch>& sem_matches,
-                                                                  const cv::Mat& map_x, const cv::Mat& map_y) {
+                                                                  const cv::Mat& map_x, const cv::Mat& map_y, bool show_img) {
   cv_bridge::CvImagePtr semantic_match_image;
   try {
     semantic_match_image = cv_bridge::toCvCopy(image_msg, sensor_msgs::image_encodings::RGB8);
@@ -122,8 +122,10 @@ boost::optional<sensor_msgs::ImagePtr> CreateSemanticMatchesImage(const sensor_m
     }
   }
 
-  cv::imshow("Semantic Matches", viz);
-  cv::waitKey(2);
+  if (show_img) {
+    cv::imshow("Semantic Matches", viz);
+    cv::waitKey(2);
+  }
 
   return semantic_match_image->toImageMsg();
 }

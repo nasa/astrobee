@@ -25,6 +25,8 @@
 #include <gtsam/nonlinear/NonlinearFactor.h>
 #include <boost/optional.hpp>
 
+#include <graph_localizer/silu.h>
+
 #include <string>
 
 namespace gtsam {
@@ -39,6 +41,7 @@ class TolerantProjectionFactor : public NoiseModelFactor1<POSE> {
  protected:
   // Keep a copy of measurement and calibration for I/O
   Point2 measured_;                      ///< 2D measurement
+  Point2 bbox_;                          ///< 2D bounding box size where we don't have error
   LANDMARK landmark_point_;              ///< Landmark point
   boost::shared_ptr<CALIBRATION> K_;     ///< shared pointer to calibration object
   boost::optional<POSE> body_P_sensor_;  ///< The pose of the sensor in the body frame
@@ -61,7 +64,7 @@ class TolerantProjectionFactor : public NoiseModelFactor1<POSE> {
 
   /// Default constructor
   TolerantProjectionFactor()
-      : measured_(0, 0), landmark_point_(0, 0, 0), throwCheirality_(false), verboseCheirality_(false) {}
+      : measured_(0, 0), bbox_(0, 0), landmark_point_(0, 0, 0), throwCheirality_(false), verboseCheirality_(false) {}
 
   /**
    * Constructor
@@ -74,11 +77,12 @@ class TolerantProjectionFactor : public NoiseModelFactor1<POSE> {
    * @param body_P_sensor is the transform from body to sensor frame (default
    * identity)
    */
-  TolerantProjectionFactor(const Point2& measured, const LANDMARK& landmark_point, const SharedNoiseModel& model,
-                      Key poseKey, const boost::shared_ptr<CALIBRATION>& K,
+  TolerantProjectionFactor(const Point2& measured, const Point2& bbox, const LANDMARK& landmark_point, 
+                      const SharedNoiseModel& model, Key poseKey, const boost::shared_ptr<CALIBRATION>& K,
                       boost::optional<POSE> body_P_sensor = boost::none)
       : Base(model, poseKey),
         measured_(measured),
+        bbox_(bbox),
         landmark_point_(landmark_point),
         K_(K),
         body_P_sensor_(body_P_sensor),
@@ -100,11 +104,13 @@ class TolerantProjectionFactor : public NoiseModelFactor1<POSE> {
    * @param body_P_sensor is the transform from body to sensor frame  (default
    * identity)
    */
-  TolerantProjectionFactor(const Point2& measured, const LANDMARK& landmark_point, const SharedNoiseModel& model,
-                      Key poseKey, const boost::shared_ptr<CALIBRATION>& K, bool throwCheirality,
-                      bool verboseCheirality, boost::optional<POSE> body_P_sensor = boost::none)
+  TolerantProjectionFactor(const Point2& measured, const Point2& bbox, const LANDMARK& landmark_point, 
+                      const SharedNoiseModel& model, Key poseKey, const boost::shared_ptr<CALIBRATION>& K, 
+                      bool throwCheirality, bool verboseCheirality,
+                      boost::optional<POSE> body_P_sensor = boost::none)
       : Base(model, poseKey),
         measured_(measured),
+        bbox_(bbox),
         landmark_point_(landmark_point),
         K_(K),
         body_P_sensor_(body_P_sensor),
@@ -137,6 +143,7 @@ class TolerantProjectionFactor : public NoiseModelFactor1<POSE> {
   virtual bool equals(const NonlinearFactor& p, double tol = 1e-9) const {
     const This* e = dynamic_cast<const This*>(&p);
     return e && Base::equals(p, tol) && traits<Point2>::Equals(this->measured_, e->measured_, tol) &&
+           traits<Point2>::Equals(this->bbox_, e->bbox_, tol) &&
            traits<LANDMARK>::Equals(this->landmark_point_, e->landmark_point_, tol) && this->K_->equals(*e->K_, tol) &&
            ((!body_P_sensor_ && !e->body_P_sensor_) ||
             (body_P_sensor_ && e->body_P_sensor_ && body_P_sensor_->equals(*e->body_P_sensor_)));
@@ -152,14 +159,26 @@ class TolerantProjectionFactor : public NoiseModelFactor1<POSE> {
           PinholeCamera<CALIBRATION> camera(pose.compose(*body_P_sensor_, H0), *K_);
           Point2 reprojectionError(camera.project(landmark_point_, H1, boost::none, boost::none) - measured_);
           *H1 = *H1 * H0;
+
+          Matrix11 d_silu_d_x, d_silu_d_y;
+          reprojectionError.x() = graph_localizer::SiluWithOffsetTwoWay(reprojectionError.x(), bbox_.x() / 2.0, d_silu_d_x);
+          reprojectionError.y() = graph_localizer::SiluWithOffsetTwoWay(reprojectionError.y(), bbox_.y() / 2.0, d_silu_d_y);
+          H1->block<1, 6>(0, 0) = d_silu_d_x * H1->block<1, 6>(0, 0);
+          H1->block<1, 6>(1, 0) = d_silu_d_y * H1->block<1, 6>(1, 0);
           return reprojectionError;
         } else {
           PinholeCamera<CALIBRATION> camera(pose.compose(*body_P_sensor_), *K_);
-          return camera.project(landmark_point_, H1, boost::none, boost::none) - measured_;
+          Point2 reprojectionError(camera.project(landmark_point_, H1, boost::none, boost::none) - measured_);
+          reprojectionError.x() = graph_localizer::SiluWithOffsetTwoWay(reprojectionError.x(), bbox_.x() / 2.0);
+          reprojectionError.y() = graph_localizer::SiluWithOffsetTwoWay(reprojectionError.y(), bbox_.y() / 2.0);
+          return reprojectionError;
         }
       } else {
         PinholeCamera<CALIBRATION> camera(pose, *K_);
-        return camera.project(landmark_point_, H1, boost::none, boost::none) - measured_;
+        Point2 reprojectionError(camera.project(landmark_point_, H1, boost::none, boost::none) - measured_);
+        reprojectionError.x() = graph_localizer::SiluWithOffsetTwoWay(reprojectionError.x(), bbox_.x() / 2.0);
+        reprojectionError.y() = graph_localizer::SiluWithOffsetTwoWay(reprojectionError.y(), bbox_.y() / 2.0);
+        return reprojectionError;
       }
     } catch (CheiralityException& e) {
       if (H1) *H1 = Matrix::Zero(2, 6);
@@ -187,6 +206,8 @@ class TolerantProjectionFactor : public NoiseModelFactor1<POSE> {
 
   /** return the measurement */
   const Point2& measured() const { return measured_; }
+  
+  const Point2& bbox() const { return bbox_; }
 
   const LANDMARK& landmark_point() const { return landmark_point_; }
 

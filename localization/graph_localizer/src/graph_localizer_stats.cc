@@ -17,6 +17,7 @@
  */
 #include <graph_localizer/graph_localizer_stats.h>
 #include <graph_localizer/loc_projection_factor.h>
+#include <graph_localizer/tolerant_projection_factor.h>
 #include <graph_localizer/loc_pose_factor.h>
 #include <graph_localizer/pose_rotation_factor.h>
 #include <graph_localizer/robust_smart_projection_pose_factor.h>
@@ -41,6 +42,7 @@ GraphLocalizerStats::GraphLocalizerStats() {
   AddStatsAverager(num_optical_flow_factors_averager_);
   AddStatsAverager(num_loc_pose_factors_averager_);
   AddStatsAverager(num_loc_proj_factors_averager_);
+  AddStatsAverager(num_sem_loc_proj_factors_averager_);
   AddStatsAverager(num_imu_factors_averager_);
   AddStatsAverager(num_rotation_factors_averager_);
   AddStatsAverager(num_standstill_between_factors_averager_);
@@ -145,6 +147,7 @@ void GraphLocalizerStats::UpdateStats(const gtsam::NonlinearFactorGraph& graph_f
     NumSmartFactors(graph_factors, combined_nav_state_graph_values_->values(), true));
   num_loc_pose_factors_averager_.Update(go::NumFactors<gtsam::LocPoseFactor>(graph_factors));
   num_loc_proj_factors_averager_.Update(go::NumFactors<gtsam::LocProjectionFactor<>>(graph_factors));
+  num_sem_loc_proj_factors_averager_.Update(go::NumFactors<gtsam::TolerantProjectionFactor<>>(graph_factors));
   num_imu_factors_averager_.Update(go::NumFactors<gtsam::CombinedImuFactor>(graph_factors));
   num_rotation_factors_averager_.Update(go::NumFactors<gtsam::PoseRotationFactor>(graph_factors));
   num_standstill_between_factors_averager_.Update(go::NumFactors<gtsam::BetweenFactor<gtsam::Pose3>>(graph_factors));

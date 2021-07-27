@@ -29,6 +29,7 @@ namespace graph_bag {
 struct GraphBagParams {
   bool save_optical_flow_images;
   bool save_semantic_matches_images;
+  bool show_semantic_matches_images;
   bool log_relative_time;
   std::unique_ptr<camera::CameraParameters> nav_cam_params;
   gtsam::Pose3 body_T_nav_cam;

@@ -29,7 +29,12 @@ namespace localization_measurements {
 struct MatchedProjection {
   MatchedProjection(const ImagePoint& image_point, const MapPoint& map_point, const localization_common::Time timestamp)
       : image_point(image_point), map_point(map_point), timestamp(timestamp) {}
+
+  MatchedProjection(const ImagePoint& image_point, const gtsam::Point2& bounding_box, const MapPoint& map_point, 
+      const localization_common::Time timestamp)
+      : image_point(image_point), bounding_box(bounding_box), map_point(map_point), timestamp(timestamp) {}
   ImagePoint image_point;
+  gtsam::Point2 bounding_box;
   MapPoint map_point;
   localization_common::Time timestamp;
 };

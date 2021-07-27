@@ -29,7 +29,7 @@ namespace go = graph_optimizer;
 namespace lm = localization_measurements;
 namespace lc = localization_common;
 namespace sym = gtsam::symbol_shorthand;
-SemanticLocFactorAdder::SemanticLocFactorAdder(const LocFactorAdderParams& params,
+SemanticLocFactorAdder::SemanticLocFactorAdder(const SemanticLocFactorAdderParams& params,
                                                const go::GraphActionCompleterType graph_action_completer_type)
     : SemanticLocFactorAdder::Base(params), graph_action_completer_type_(graph_action_completer_type) {
 
@@ -99,8 +99,8 @@ void SemanticLocFactorAdder::ComputeFactorsToAdd(std::vector<go::FactorsToAdd> &
     const gtsam::SharedIsotropic scaled_noise(
       gtsam::noiseModel::Isotropic::Sigma(2, noise_scale * params().cam_noise->sigma()));
     gtsam::TolerantProjectionFactor<>::shared_ptr tolerant_projection_factor(new gtsam::TolerantProjectionFactor<>(
-      matched_projection.image_point, matched_projection.map_point, Robust(scaled_noise, params().huber_k),
-      key_info.UninitializedKey(), params().cam_intrinsics, params().body_T_cam));
+      matched_projection.image_point, matched_projection.bounding_box*params().cost_tolerance, matched_projection.map_point, 
+      Robust(scaled_noise, params().huber_k), key_info.UninitializedKey(), params().cam_intrinsics, params().body_T_cam));
 
     projection_factors_to_add.push_back({{key_info}, tolerant_projection_factor});
     ++num_tolerant_projection_factors;
@@ -131,14 +131,15 @@ std::vector<go::FactorsToAdd> SemanticLocFactorAdder::AddFactors(const lm::Seman
   lm::MatchedProjectionsMeasurement matched_projections_measurement;
   matched_projections_measurement.timestamp = semantic_dets.timestamp;
   // Outer loop through objects so we only do transform/projection once
-  LogError("SemanticLoc: adding sem loc factors");
+  LogDebug("SemanticLoc: adding sem loc factors");
   std::set<const lm::SemanticDet*> used_dets;
   for (const auto& classes : object_poses_) {
     int cls = classes.first;
     for (const auto& world_T_obj : classes.second) {
       Eigen::Vector2d cam_obj_px;
       try {
-        gtsam::PinholeCamera<gtsam::Cal3_S2> camera(lc::GtPose(world_T_body).compose(params().body_T_cam), *params().cam_intrinsics);
+        const auto world_T_cam = lc::GtPose(world_T_body).compose(params().body_T_cam);
+        gtsam::PinholeCamera<gtsam::Cal3_S2> camera(world_T_cam, *params().cam_intrinsics);
         cam_obj_px = camera.project(world_T_obj.translation());
       } catch (gtsam::CheiralityException e) {
         // Point behind camera
@@ -151,7 +152,13 @@ std::vector<go::FactorsToAdd> SemanticLocFactorAdder::AddFactors(const lm::Seman
 
       for (const auto& det : semantic_dets.semantic_dets) {
         // gtsam::Point2 is an Eigen::Vector2d typedef
-        float dist = ((cam_obj_px - det.image_point).array()/det.bounding_box.array()).matrix().norm();
+        float dist;
+        if (params().scale_matching_distance_with_bbox) {
+          dist = ((cam_obj_px - det.image_point).array()/det.bounding_box.array()).matrix().norm();
+        } else {
+          dist = (cam_obj_px - det.image_point).norm();
+        }
+        // Don't use handrails for now
         if (dist < best_dist && cls == det.class_id && cls != 2 && used_dets.count(&det) == 0) {
           second_best_dist = best_dist;
           best_dist = dist;
@@ -160,12 +167,13 @@ std::vector<go::FactorsToAdd> SemanticLocFactorAdder::AddFactors(const lm::Seman
       }
 
       // have second_best_dist requirement to avoid any ambiguity
-      if (best_det && best_dist < 1 && second_best_dist > 1.5) {
+      if (best_det && best_dist < params().matching_distance_thresh && 
+          second_best_dist > params().matching_distance_thresh * params().matching_distance_second_best_thresh) {
         used_dets.insert(best_det);
         last_matches_.push_back(SemanticMatch(cls, cam_obj_px, best_det->image_point, best_det->bounding_box));
 
-        LogError("SemanticLoc: adding matched proj measurement with dist: " << best_dist);
-        lm::MatchedProjection mp(best_det->image_point, world_T_obj.translation(), semantic_dets.timestamp);
+        LogDebug("SemanticLoc: adding matched proj measurement with dist: " << best_dist);
+        lm::MatchedProjection mp(best_det->image_point, best_det->bounding_box, world_T_obj.translation(), semantic_dets.timestamp);
         matched_projections_measurement.matched_projections.push_back(mp);
       } else {
         last_matches_.push_back(SemanticMatch(cls, cam_obj_px));

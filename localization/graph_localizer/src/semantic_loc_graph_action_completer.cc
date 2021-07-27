@@ -27,7 +27,7 @@ namespace graph_localizer {
 namespace go = graph_optimizer;
 namespace lm = localization_measurements;
 namespace sym = gtsam::symbol_shorthand;
-SemanticLocGraphActionCompleter::SemanticLocGraphActionCompleter(const LocFactorAdderParams& params,
+SemanticLocGraphActionCompleter::SemanticLocGraphActionCompleter(const SemanticLocFactorAdderParams& params,
                                                                  const go::GraphActionCompleterType graph_action_completer_type,
                                                                  std::shared_ptr<CombinedNavStateGraphValues> graph_values)
     : params_(params),
@@ -71,8 +71,8 @@ bool SemanticLocGraphActionCompleter::DoAction(go::FactorsToAdd& factors_to_add,
           gtsam::noiseModel::Isotropic::Sigma(2, params_.projection_noise_scale * 1.0 / nav_cam_t_landmark.z()));
         // Don't use robust cost here to more effectively correct a drift occurance
         gtsam::TolerantProjectionFactor<>::shared_ptr tolerant_projection_factor(new gtsam::TolerantProjectionFactor<>(
-          projection_factor->measured(), projection_factor->landmark_point(), scaled_noise, projection_factor->key(),
-          projection_factor->calibration(), *(projection_factor->body_P_sensor())));
+          projection_factor->measured(), projection_factor->bbox(), projection_factor->landmark_point(), scaled_noise, 
+          projection_factor->key(), projection_factor->calibration(), *(projection_factor->body_P_sensor())));
         factor_it->factor = tolerant_projection_factor;
       }
       ++factor_it;

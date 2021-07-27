@@ -20,14 +20,14 @@
 #define GRAPH_LOCALIZER_SEMANTIC_LOC_GRAPH_ACTION_COMPLETER_H_
 
 #include <graph_localizer/combined_nav_state_graph_values.h>
-#include <graph_localizer/loc_factor_adder_params.h>
+#include <graph_localizer/semantic_loc_factor_adder_params.h>
 #include <graph_optimizer/graph_action_completer.h>
 #include <graph_optimizer/graph_action_completer_type.h>
 
 namespace graph_localizer {
 class SemanticLocGraphActionCompleter : public graph_optimizer::GraphActionCompleter {
  public:
-  SemanticLocGraphActionCompleter(const LocFactorAdderParams& params,
+  SemanticLocGraphActionCompleter(const SemanticLocFactorAdderParams& params,
                                   const graph_optimizer::GraphActionCompleterType graph_action_completer_type,
                                   std::shared_ptr<CombinedNavStateGraphValues> graph_values);
 
@@ -36,7 +36,7 @@ class SemanticLocGraphActionCompleter : public graph_optimizer::GraphActionCompl
   graph_optimizer::GraphActionCompleterType type() const final;
 
  private:
-  LocFactorAdderParams params_;
+  SemanticLocFactorAdderParams params_;
   graph_optimizer::GraphActionCompleterType graph_action_completer_type_;
   std::shared_ptr<CombinedNavStateGraphValues> graph_values_;
 };

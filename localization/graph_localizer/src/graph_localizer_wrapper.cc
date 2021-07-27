@@ -154,6 +154,7 @@ void GraphLocalizerWrapper::VLVisualLandmarksCallback(const ff_msgs::VisualLandm
 }
 
 void GraphLocalizerWrapper::SemanticDetCallback(const vision_msgs::Detection2DArray& detections_msg) {
+  feature_counts_.sm = detections_msg.detections.size();
   if (graph_localizer_) {
     graph_localizer_->AddSemanticDetsMeasurement(lm::MakeSemanticDetsMeasurement(detections_msg));
   }

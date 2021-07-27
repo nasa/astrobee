@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 #
 # Copyright (c) 2017, United States Government, as represented by the
 # Administrator of the National Aeronautics and Space Administration.
@@ -44,7 +44,7 @@ def create_plot(pdf, csv_file, value_combos_file, prefix=''):
     else:
       x_axis_label = value_combos_dataframe.columns[0]
       x_axis_vals = value_combos_dataframe[x_axis_label]
-      if isinstance(x_axis_vals[0], basestring):
+      if isinstance(x_axis_vals[0], str):
         job_count = dataframe.shape[0]
         x_axis_vals = range(job_count)
         x_axis_label = 'Job Id'

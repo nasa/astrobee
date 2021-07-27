@@ -91,6 +91,7 @@ ff_msgs::GraphState GraphStateMsg(const lc::CombinedNavState& combined_nav_state
   loc_msg.num_detected_of_features = detected_feature_counts.of;
   loc_msg.num_detected_ml_features = detected_feature_counts.vl;
   loc_msg.num_detected_ar_features = detected_feature_counts.ar;
+  loc_msg.num_detected_sm_features = detected_feature_counts.sm;
   loc_msg.estimating_bias = estimating_bias;
 
   // Set Graph Stats
@@ -100,6 +101,7 @@ ff_msgs::GraphState GraphStateMsg(const lc::CombinedNavState& combined_nav_state
   loc_msg.num_factors = graph_stats.num_factors_averager_.last_value();
   loc_msg.num_of_factors = graph_stats.num_optical_flow_factors_averager_.last_value();
   loc_msg.num_ml_projection_factors = graph_stats.num_loc_proj_factors_averager_.last_value();
+  loc_msg.num_sm_projection_factors = graph_stats.num_sem_loc_proj_factors_averager_.last_value();
   loc_msg.num_ml_pose_factors = graph_stats.num_loc_pose_factors_averager_.last_value();
   loc_msg.num_states = graph_stats.num_states_averager_.last_value();
   // Other

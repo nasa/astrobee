@@ -89,7 +89,7 @@ void GraphBag::SaveSemanticMatchesImage(const sensor_msgs::ImageConstPtr& image_
                                         const GraphLocalizerSimulator& graph_localizer) {
   const auto semantic_matches_image_msg =
     CreateSemanticMatchesImage(image_msg, *(graph_localizer.semantic_matches()), 
-                               params_.undist_map_x, params_.undist_map_y);
+                               params_.undist_map_x, params_.undist_map_y, params_.show_semantic_matches_images);
   if (!semantic_matches_image_msg) return;
   SaveMsg(**semantic_matches_image_msg, kSemanticMatchesImageTopic_, results_bag_);
 }

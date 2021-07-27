@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 #
 # Copyright (c) 2017, United States Government, as represented by the
 # Administrator of the National Aeronautics and Space Administration.
@@ -48,6 +48,7 @@ def test_values(values, job_id, value_names, output_dir, bag_file, map_file, ima
   graph_config_prefix = new_output_dir + '/'
   run_command = 'rosrun graph_bag run_graph_bag ' + bag_file + ' ' + map_file + ' ' + config_path + ' -o ' + output_bag + ' -s ' + output_stats_file + ' -r ' + robot_config + ' -w ' + world + ' -g ' + graph_config_prefix + ' -f ' + str(
     use_image_features)
+  print(run_command)
   if image_topic is not None:
     run_command += ' -i ' + image_topic
   os.system(run_command)
@@ -89,16 +90,16 @@ def parameter_sweep(all_value_combos,
                     rmse_rel_start_time=0,
                     rmse_rel_end_time=-1):
   job_ids = list(range(len(all_value_combos)))
-  num_processes = 15 
+  num_processes = 12
   pool = multiprocessing.Pool(num_processes)
   # izip arguments so we can pass as one argument to pool worker
   pool.map(
     test_values_helper,
-    itertools.izip(all_value_combos, job_ids, itertools.repeat(value_names), itertools.repeat(output_dir),
-                   itertools.repeat(bag_file), itertools.repeat(map_file), itertools.repeat(image_topic),
-                   itertools.repeat(config_path), itertools.repeat(robot_config), itertools.repeat(world),
-                   itertools.repeat(use_image_features), itertools.repeat(groundtruth_bagfile),
-                   itertools.repeat(rmse_rel_start_time), itertools.repeat(rmse_rel_end_time)))
+    zip(all_value_combos, job_ids, itertools.repeat(value_names), itertools.repeat(output_dir),
+        itertools.repeat(bag_file), itertools.repeat(map_file), itertools.repeat(image_topic),
+        itertools.repeat(config_path), itertools.repeat(robot_config), itertools.repeat(world),
+        itertools.repeat(use_image_features), itertools.repeat(groundtruth_bagfile),
+        itertools.repeat(rmse_rel_start_time), itertools.repeat(rmse_rel_end_time)))
   concat_results(job_ids, output_dir)
 
 
@@ -109,13 +110,16 @@ def make_all_value_combinations(value_ranges):
 def make_value_ranges():
   value_ranges = []
   value_names = []
-  steps = 10 
+  steps = 20 
 
   # tune num smart factors
   #value_ranges.append(np.logspace(-1, -6, steps, endpoint=True))
   #value_names.append('accel_bias_sigma')
-  value_ranges.append(np.linspace(0, 500, steps, endpoint=True))
-  value_names.append('smart_projection_adder_feature_track_min_separation')
+  #value_ranges.append(np.linspace(0, 500, steps, endpoint=True))
+  #value_names.append('smart_projection_adder_feature_track_min_separation')
+
+  value_ranges.append(np.logspace(np.log10(0.01), np.log10(2), steps, endpoint=True))
+  value_names.append('semantic_loc_adder_cost_tolerance')
 
   #q_gyro
   # .001 -> 2 deg

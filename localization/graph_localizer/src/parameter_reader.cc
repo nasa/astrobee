@@ -51,30 +51,22 @@ void LoadFactorParams(config_reader::ConfigReader& config, FactorParams& params)
 }
 
 void LoadSemanticLocFactorAdderParams(config_reader::ConfigReader& config, SemanticLocFactorAdderParams& params) {
-  params.add_pose_priors = mc::LoadBool(config, "semantic_loc_adder_add_pose_priors");
-  params.add_projections = mc::LoadBool(config, "semantic_loc_adder_add_projections");
-  params.enabled = params.add_pose_priors || params.add_projections ? true : false;
+  params.enabled = mc::LoadBool(config, "semantic_loc_adder_enabled");
   params.huber_k = mc::LoadDouble(config, "huber_k");
   params.min_num_matches = mc::LoadInt(config, "semantic_loc_adder_min_num_matches");
   params.max_num_factors = mc::LoadInt(config, "semantic_loc_adder_max_num_factors");
-  params.prior_translation_stddev = mc::LoadDouble(config, "semantic_loc_adder_prior_translation_stddev");
-  params.prior_quaternion_stddev = mc::LoadDouble(config, "semantic_loc_adder_prior_quaternion_stddev");
-  params.scale_pose_noise_with_num_landmarks =
-    mc::LoadBool(config, "semantic_loc_adder_scale_pose_noise_with_num_landmarks");
   params.scale_projection_noise_with_num_landmarks =
     mc::LoadBool(config, "semantic_loc_adder_scale_projection_noise_with_num_landmarks");
-  params.pose_noise_scale = mc::LoadDouble(config, "semantic_loc_adder_pose_noise_scale");
   params.projection_noise_scale = mc::LoadDouble(config, "semantic_loc_adder_projection_noise_scale");
   params.max_inlier_weighted_projection_norm =
     mc::LoadDouble(config, "semantic_loc_adder_max_inlier_weighted_projection_norm");
   params.weight_projections_with_distance = mc::LoadBool(config, "semantic_loc_adder_weight_projections_with_distance");
-  params.add_prior_if_projections_fail = mc::LoadBool(config, "semantic_loc_adder_add_prior_if_projections_fail");
+  params.matching_distance_thresh = mc::LoadDouble(config, "semantic_loc_adder_matching_distance_thresh");
+  params.matching_distance_second_best_thresh = mc::LoadDouble(config, "semantic_loc_adder_matching_distance_second_best_thresh");
+  params.scale_matching_distance_with_bbox = mc::LoadBool(config, "semantic_loc_adder_scale_matching_distance_with_bbox");
+  params.cost_tolerance = mc::LoadDouble(config, "semantic_loc_adder_cost_tolerance");
   params.body_T_cam = lc::LoadTransform(config, "nav_cam_transform");
   params.cam_intrinsics.reset(new gtsam::Cal3_S2(lc::LoadCameraIntrinsics(config, "nav_cam")));
-  //bumble
-  //params.cam_intrinsics.reset(new gtsam::Cal3_S2(608.8073, 607.61435, 0, 632.536, 549.083));
-  //gazebo
-  //params.cam_intrinsics.reset(new gtsam::Cal3_S2(644.3, 644.3, 0, 640., 480.));
   params.cam_noise = gtsam::noiseModel::Isotropic::Sigma(2, mc::LoadDouble(config, "loc_nav_cam_noise_stddev"));
 }
 

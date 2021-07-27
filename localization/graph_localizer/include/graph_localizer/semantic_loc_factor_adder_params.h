@@ -19,14 +19,28 @@
 #ifndef GRAPH_LOCALIZER_SEMANTIC_LOC_FACTOR_ADDER_PARAMS_H_
 #define GRAPH_LOCALIZER_SEMANTIC_LOC_FACTOR_ADDER_PARAMS_H_
 
-#include <graph_localizer/semantic_loc_factor_adder_params.h>
+#include <graph_optimizer/factor_adder_params.h>
 
 #include <gtsam/geometry/Pose3.h>
 #include <gtsam/geometry/Cal3_S2.h>
 #include <gtsam/linear/NoiseModel.h>
 
 namespace graph_localizer {
-struct SemanticLocFactorAdderParams : public LocFactorAdderParams {
+struct SemanticLocFactorAdderParams : public graph_optimizer::FactorAdderParams{
+  bool enabled;
+  int max_num_factors;
+  int min_num_matches;
+  bool scale_projection_noise_with_num_landmarks;
+  double projection_noise_scale;
+  double max_inlier_weighted_projection_norm;
+  bool weight_projections_with_distance;
+  double matching_distance_thresh;
+  double matching_distance_second_best_thresh;
+  bool scale_matching_distance_with_bbox;
+  double cost_tolerance;
+  gtsam::Pose3 body_T_cam;
+  boost::shared_ptr<gtsam::Cal3_S2> cam_intrinsics;
+  gtsam::SharedIsotropic cam_noise;
 };
 }  // namespace graph_localizer
 

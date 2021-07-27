@@ -20,8 +20,7 @@
 #define GRAPH_LOCALIZER_SEMANTIC_LOC_FACTOR_ADDER_H_
 
 #include <graph_optimizer/factor_adder.h>
-#include <graph_localizer/loc_factor_adder_params.h>
-#include <graph_localizer/loc_factor_adder.h>
+#include <graph_localizer/semantic_loc_factor_adder_params.h>
 #include <localization_common/averager.h>
 #include <localization_common/combined_nav_state.h>
 #include <localization_measurements/matched_projections_measurement.h>
@@ -34,11 +33,11 @@ namespace graph_localizer {
 class GraphLocalizer;
 
 class SemanticLocFactorAdder : public graph_optimizer::FactorAdder<localization_measurements::SemanticDetsMeasurement,
-                                                                   LocFactorAdderParams> {
+                                                                   SemanticLocFactorAdderParams> {
  using Base =
-  graph_optimizer::FactorAdder<localization_measurements::SemanticDetsMeasurement, LocFactorAdderParams>;
+  graph_optimizer::FactorAdder<localization_measurements::SemanticDetsMeasurement, SemanticLocFactorAdderParams>;
  public:
-  SemanticLocFactorAdder(const LocFactorAdderParams& params,
+  SemanticLocFactorAdder(const SemanticLocFactorAdderParams& params,
                          const graph_optimizer::GraphActionCompleterType graph_action_completer_type);
 
   std::vector<graph_optimizer::FactorsToAdd> AddFactors(
