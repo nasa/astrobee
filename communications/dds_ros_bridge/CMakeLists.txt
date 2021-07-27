@@ -19,7 +19,7 @@ cmake_minimum_required(VERSION 2.8.3)
 project(dds_ros_bridge)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
-add_compile_options(-std=c++11)
+add_compile_options(-std=c++14)
 
 find_package(catkin REQUIRED COMPONENTS
   config_reader
@@ -43,12 +43,9 @@ find_package(Soracore REQUIRED )
 
 catkin_package(
   LIBRARIES dds_ros_bridge astrobee_astrobee_bridge
-  CATKIN_DEPENDS roscpp message_runtime std_msgs nav_msgs
+  CATKIN_DEPENDS config_reader ff_util ff_msgs dds_msgs
 )
 
-MESSAGE("QT_QT_INCLUDE_DIR ${QT_QT_INCLUDE_DIR}")
-MESSAGE("QT_QTCORE_INCLUDE_DIR ${QT_QTCORE_INCLUDE_DIR}")
-MESSAGE("QT_INCLUDE_DIR ${QT_INCLUDE_DIR}")
 ###########
 ## Build ##
 ###########
@@ -69,12 +66,11 @@ file(GLOB cc_files
      "src/*.cc"
 )
 
-# Declare C++ libraries
-add_library(dds_ros_bridge
-  ${cc_files}
-)
-add_dependencies(dds_ros_bridge ${catkin_EXPORTED_TARGETS})
-target_link_libraries(dds_ros_bridge ${catkin_LIBRARIES}  Qt4::Core Qt4::Xml)
+# # Declare C++ libraries
+# add_library(dds_ros_bridge
+#   ${cc_files}
+# )
+# target_link_libraries(dds_ros_bridge ${catkin_LIBRARIES}  Qt4::Core Qt4::Xml)
 
 
 add_library(astrobee_astrobee_bridge

@@ -30,6 +30,7 @@ find_package(RtiDds REQUIRED )
 find_package(Soracore REQUIRED )
 
 catkin_package(
+  INCLUDE_DIRS ${CMAKE_CURRENT_BINARY_DIR}
   LIBRARIES
     rapidExtAstrobee
 )
