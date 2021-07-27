@@ -53,7 +53,7 @@ DepthOdometry::DepthOdometry() {
   pct_pub_ = nh_.advertise<sensor_msgs::PointCloud2>("pct", 10);
 }
 
-boost::optional<Eigen::Isometry3d> DepthOdometry::DepthCloudCallback(
+boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> DepthOdometry::DepthCloudCallback(
   std::pair<lc::Time, pcl::PointCloud<pcl::PointXYZ>::Ptr> depth_cloud) {
   if (!previous_depth_cloud_.second && !latest_depth_cloud_.second) latest_depth_cloud_ = depth_cloud;
   if (depth_cloud.first < latest_depth_cloud_.first) {
@@ -63,12 +63,18 @@ boost::optional<Eigen::Isometry3d> DepthOdometry::DepthCloudCallback(
   LogError("t: " << std::setprecision(15) << depth_cloud.first);
   previous_depth_cloud_ = latest_depth_cloud_;
   latest_depth_cloud_ = depth_cloud;
+  const auto relative_transform = Icp(latest_depth_cloud_.second, previous_depth_cloud_.second);
+  const Eigen::Isometry3d frame_changed_relative_transform =
+    body_T_haz_cam_ * relative_transform.first * body_T_haz_cam_.inverse();
+  // TODO: rotate covariance matrix!!!! use exp map jacobian!!! sandwich withthis! (translation should be rotated by
+  // rotation matrix)
 
-  return body_T_haz_cam_ * Icp(latest_depth_cloud_.second, previous_depth_cloud_.second) * body_T_haz_cam_.inverse();
+  return std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>{frame_changed_relative_transform,
+                                                                   relative_transform.second};
 }
 
-Eigen::Isometry3d DepthOdometry::Icp(const pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_a,
-                                     const pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_b) const {
+std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>> DepthOdometry::Icp(
+  const pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_a, const pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_b) const {
   pcl::PointCloud<pcl::PointNormal>::Ptr cloud_b_with_normals(new pcl::PointCloud<pcl::PointNormal>);
   pcl::PointCloud<pcl::Normal>::Ptr cloud_b_normals(new pcl::PointCloud<pcl::Normal>);
   pcl::NormalEstimation<pcl::PointXYZ, pcl::Normal> ne;
@@ -125,7 +131,7 @@ Eigen::Isometry3d DepthOdometry::Icp(const pcl::PointCloud<pcl::PointXYZ>::Ptr c
     Eigen::Isometry3f(icp.getFinalTransformation().matrix()).cast<double>());  //.cast<double>();
   const Eigen::Matrix<double, 6, 6> covariance =
     ComputeCovarianceMatrix(icp, cloud_a_with_normals, result, relative_transform);
-  return relative_transform;
+  return {relative_transform, covariance};
 }
 
 Eigen::Matrix<double, 1, 6> DepthOdometry::Jacobian(const pcl::PointNormal& source_point,

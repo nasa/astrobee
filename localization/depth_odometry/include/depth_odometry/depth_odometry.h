@@ -35,12 +35,12 @@ namespace depth_odometry {
 class DepthOdometry {
  public:
   DepthOdometry();
-  boost::optional<Eigen::Isometry3d> DepthCloudCallback(
+  boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> DepthCloudCallback(
     std::pair<localization_common::Time, pcl::PointCloud<pcl::PointXYZ>::Ptr> depth_cloud);
 
  private:
-  Eigen::Isometry3d Icp(const pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_a,
-                        const pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_b) const;
+  std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>> Icp(
+    const pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_a, const pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_b) const;
   Eigen::Matrix<double, 6, 6> ComputeCovarianceMatrix(
     const pcl::IterativeClosestPointWithNormals<pcl::PointNormal, pcl::PointNormal>& icp,
     const pcl::PointCloud<pcl::PointNormal>::Ptr cloud_a,
