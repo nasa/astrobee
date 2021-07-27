@@ -29,7 +29,7 @@
 
 namespace depth_odometry {
 namespace lc = localization_common;
-// namespace mc = msg_conversions;
+namespace mc = msg_conversions;
 
 DepthOdometryNodelet::DepthOdometryNodelet() : ff_util::FreeFlyerNodelet(NODE_DEPTH_ODOM, true) {
   /*config_reader::ConfigReader config;
@@ -65,8 +65,7 @@ void DepthOdometryNodelet::DepthCloudCallback(const sensor_msgs::PointCloud2Cons
   LogError("rel pose: " << relative_pose->first.matrix());
 
   geometry_msgs::PoseWithCovarianceStamped pose_msg;
-  lc::PoseToMsg(lc::GtPose(relative_pose->first), pose_msg.pose.pose);
-  // TODO(rsoussan): fill in covariance
+  mc::EigenPoseCovarianceToMsg(relative_pose->first, relative_pose->second, pose_msg);
   lc::TimeToHeader(depth_cloud.first, pose_msg.header);
   odom_pub_.publish(pose_msg);
 }

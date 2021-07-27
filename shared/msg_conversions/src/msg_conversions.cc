@@ -299,4 +299,9 @@ void VariancesToCovDiag(const Eigen::Vector3d& variances, float* const cov_diag)
 Eigen::Vector3d CovDiagToVariances(const float* const cov_diag) {
   return Eigen::Vector3d(cov_diag[0], cov_diag[1], cov_diag[2]);
 }
+
+void EigenPoseCovarianceToMsg(const Eigen::Isometry3d& pose, const Eigen::Matrix<double, 6, 6>& covariance, geometry_msgs::PoseWithCovarianceStamped& pose_cov_msg){
+  EigenPoseToMsg(pose, pose_cov_msg.pose.pose);
+  EigenCovarianceToMsg(covariance, pose_cov_msg.pose.covariance);
+}
 }  // end namespace msg_conversions

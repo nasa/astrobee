@@ -25,6 +25,7 @@
 #include <Eigen/Geometry>
 
 #include <geometry_msgs/Pose.h>
+#include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <geometry_msgs/Point.h>
 #include <geometry_msgs/Quaternion.h>
 #include <geometry_msgs/Transform.h>
@@ -83,6 +84,7 @@ void EigenPoseToMsg(const Eigen::Isometry3d& pose, geometry_msgs::Pose& msg_pose
 void EigenPoseToMsg(const Eigen::Isometry3d& pose, geometry_msgs::Transform& msg_transform);
 void VariancesToCovDiag(const Eigen::Vector3d& variances, float* const cov_diag);
 Eigen::Vector3d CovDiagToVariances(const float* const cov_diag);
+void EigenPoseCovarianceToMsg(const Eigen::Isometry3d& pose, const Eigen::Matrix<double, 6, 6>& covariance, geometry_msgs::PoseWithCovarianceStamped& pose_cov_msg);
 
 template <typename VectorType, typename MsgVectorType>
 VectorType VectorFromMsg(const MsgVectorType& msg_vector) {
@@ -107,6 +109,15 @@ void RotationToMsg(const RotationType& rotation, MsgRotationType& msg_rotation) 
   msg_rotation.x = rotation.x();
   msg_rotation.y = rotation.y();
   msg_rotation.z = rotation.z();
+}
+
+template <typename ArrayType>
+void EigenCovarianceToMsg(const Eigen::Matrix<double, 6, 6>& covariance, ArrayType& covariance_array){
+  for (int i = 0; i < 3; ++i){
+    for (int j = 0; j < 3; ++j){
+      covariance_array[i*3 + j] = covariance(i, j);
+    }
+  }
 }
 }  // namespace msg_conversions
 
