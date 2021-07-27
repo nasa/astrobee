@@ -106,6 +106,7 @@ def add_graph_plots(pdf, sparse_mapping_poses, ar_tag_poses, graph_localization_
   integrated_graph_localization_states = utilities.integrate_velocities(graph_localization_states)
   plot_positions(pdf, integrated_graph_localization_states, sparse_mapping_poses, ar_tag_poses)
 
+# TODO(rsoussan): Use this for other pose plotting in this script
 def plot_poses(pdf, poses, sparse_mapping_poses, ar_tag_poses):
   plot_positions(pdf, poses, sparse_mapping_poses, ar_tag_poses)
   plot_orientations(pdf, poses, sparse_mapping_poses, ar_tag_poses)
@@ -139,6 +140,22 @@ def plot_orientations(pdf, poses, sparse_mapping_poses, ar_tag_poses):
                                              markersize=1.5)
   orientation_plotter.add_pose_orientation(poses)
   orientation_plotter.plot(pdf)
+
+def plot_covariances(pdf, times, covariances, name):
+  plt.figure()
+  title = name + ' Covariance'
+  plt.plot(times,
+           l2_map(covariances),
+           'r',
+           linewidth=0.5,
+           label=title)
+  plt.title(title)
+  plt.xlabel('Time (s)')
+  plt.ylabel(title)
+  plt.legend(prop={'size': 6})
+  pdf.savefig()
+  plt.close()
+
 
 def plot_features(feature_counts,
                   times,
@@ -530,7 +547,7 @@ def load_pose_with_cov_msgs(vec_of_poses, bag, bag_start_time):
   for topic, msg, t in bag.read_messages(topics):
     for poses in vec_of_poses:
       if poses.topic == topic:
-        poses.add_msg(msg.pose, msg.header.stamp, bag_start_time)
+        poses.add_msg_with_covariance(msg.pose, msg.header.stamp, bag_start_time)
         break
 
 def load_loc_state_msgs(vec_of_loc_states, bag, bag_start_time):
@@ -617,6 +634,8 @@ def create_plots(bagfile,
                  depth_odom_poses,
                  sparse_mapping_poses,
                  ar_tag_poses)
+      plot_covariances(pdf, depth_odom_relative_poses.times, depth_odom_relative_poses.covariances.position, 'Depth Odometry Position')
+      plot_covariances(pdf, depth_odom_relative_poses.times, depth_odom_relative_poses.covariances.orientation, 'Depth Odometry Orientation')
     if has_imu_bias_tester_poses:
       plot_loc_state_stats(pdf,
                            imu_bias_tester_poses,

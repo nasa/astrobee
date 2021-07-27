@@ -19,6 +19,7 @@
 
 import orientations
 import pose
+import pose_covariances
 import vector3ds
 
 import numpy as np
@@ -30,6 +31,7 @@ class Poses(object):
   def __init__(self, pose_type, topic):
     self.positions = vector3ds.Vector3ds()
     self.orientations = orientations.Orientations()
+    self.covariances = pose_covariances.PoseCovariances() 
     self.times = []
     self.pose_type = pose_type
     self.topic = topic
@@ -47,12 +49,19 @@ class Poses(object):
     euler_angles = orientation.as_euler('ZYX', degrees=True)
     self.orientations.add(euler_angles[0], euler_angles[1], euler_angles[2])
 
+  def add_covariance_msg(self, covariance):
+    self.covariances.add(covariance)
+
   def add_pose_msg(self, pose_msg, timestamp, bag_start_time=0):
     orientation = scipy.spatial.transform.Rotation.from_quat(
       [pose_msg.orientation.x, pose_msg.orientation.y, pose_msg.orientation.z,
        pose_msg.orientation.w])
     self.add_orientation_and_position(orientation, pose_msg.position.x, pose_msg.position.y, pose_msg.position.z)
     self.times.append(timestamp.secs + 1e-9 * timestamp.nsecs - bag_start_time)
+
+  def add_msg_with_covariance(self, msg, timestamp, bag_start_time=0):
+    self.add_pose_msg(msg.pose, timestamp, bag_start_time)
+    self.add_covariance_msg(msg.covariance)
 
   def add_msg(self, msg, timestamp, bag_start_time=0):
     self.add_pose_msg(msg.pose, timestamp, bag_start_time)
