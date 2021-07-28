@@ -102,7 +102,7 @@ boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> Depth
   ne.setInputCloud(cloud_b);
   pcl::search::KdTree<pcl::PointXYZ>::Ptr tree(new pcl::search::KdTree<pcl::PointXYZ>());
   ne.setSearchMethod(tree);
-  ne.setRadiusSearch(0.03);
+  ne.setRadiusSearch(params_.search_radius);
   ne.compute(*cloud_b_normals);
   pcl::concatenateFields(*cloud_b, *cloud_b_normals, *cloud_b_with_normals);
 
