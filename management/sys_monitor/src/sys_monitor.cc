@@ -563,7 +563,7 @@ void SysMonitor::StartupTimerCallback(ros::TimerEvent const& te) {
     reload_nodelet_timer_.start();
     fault_state_.state = ff_msgs::FaultState::RELOADING_NODELETS;
     fault_state_.hr_state = "The following nodelets died on startup and are ";
-    fault_state_.hr_state += "being reloading:";
+    fault_state_.hr_state += "being reloaded:";
     for (unsigned int i = 0; i < reloaded_nodelets_.size(); i++) {
       fault_state_.hr_state += " " + reloaded_nodelets_[i] + ",";
     }
