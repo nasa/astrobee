@@ -42,6 +42,8 @@ class DepthOdometry {
  private:
   boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> Icp(
     const pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_a, const pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_b) const;
+  void PublishPointClouds(const pcl::PointCloud<pcl::PointXYZ>& cloud_a, const pcl::PointCloud<pcl::PointXYZ>& cloud_b,
+                          const Eigen::Matrix<float, 4, 4>& relative_transform) const;
   bool CovarianceSane(const Eigen::Matrix<double, 6, 6>& covariance) const;
   Eigen::Matrix<double, 6, 6> ComputeCovarianceMatrix(
     const pcl::IterativeClosestPointWithNormals<pcl::PointNormal, pcl::PointNormal>& icp,
