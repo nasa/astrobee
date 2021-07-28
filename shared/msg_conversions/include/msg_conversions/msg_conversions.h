@@ -113,9 +113,9 @@ void RotationToMsg(const RotationType& rotation, MsgRotationType& msg_rotation) 
 
 template <typename ArrayType>
 void EigenCovarianceToMsg(const Eigen::Matrix<double, 6, 6>& covariance, ArrayType& covariance_array){
-  for (int i = 0; i < 3; ++i){
-    for (int j = 0; j < 3; ++j){
-      covariance_array[i*3 + j] = covariance(i, j);
+  for (int i = 0; i < 6; ++i){
+    for (int j = 0; j < 6; ++j){
+      covariance_array[i*6 + j] = covariance(i, j);
     }
   }
 }
