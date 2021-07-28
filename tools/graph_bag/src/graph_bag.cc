@@ -92,6 +92,7 @@ void GraphBag::SaveSemanticMatchesImage(const sensor_msgs::ImageConstPtr& image_
     CreateSemanticMatchesImage(image_msg, *(graph_localizer.semantic_matches()), 
                                params_.undist_map_x, params_.undist_map_y, params_.show_semantic_matches_images);
   if (!semantic_matches_image_msg) return;
+  (*semantic_matches_image_msg)->header = image_msg->header;
   SaveMsg(**semantic_matches_image_msg, kSemanticMatchesImageTopic_, results_bag_);
 }
 

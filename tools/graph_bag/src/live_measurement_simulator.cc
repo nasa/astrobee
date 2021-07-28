@@ -164,14 +164,20 @@ boost::optional<vision_msgs::Detection2DArray> LiveMeasurementSimulator::GetSMMe
   return sm_buffer_.GetMessage(current_time);
 }
 boost::optional<sensor_msgs::ImageConstPtr> LiveMeasurementSimulator::GetImageMessage(const lc::Time current_time) {
-  // lower bound is actually later in time (first element not less than current_time)
-  const auto img_it_later = img_buffer_.lower_bound(current_time);
-  const auto img_it_earlier = img_buffer_.upper_bound(current_time);
+  // lower_bound is at or later
+  auto img_it_earlier = img_buffer_.lower_bound(current_time);
+  // upper_bound is later
+  auto img_it_later = img_it_earlier;
+
+  if (img_it_earlier != img_buffer_.begin()) {
+    img_it_earlier--;
+  }
 
   sensor_msgs::ImageConstPtr current_img;
   
   if (img_it_earlier == img_buffer_.end()) {
     if (img_it_later == img_buffer_.end()) {
+      ROS_WARN_STREAM("No image found, image buf size " << img_buffer_.size());
       return boost::none;
     } else {
       current_img = img_it_later->second;
