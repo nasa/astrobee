@@ -125,8 +125,8 @@ boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> Depth
   }
 
   const double fitness_score = icp.getFitnessScore();
-  if (fitness_score < params_.fitness_threshold) {
-    LogWarning("Icp: Fitness score too low: " << fitness_score << ".");
+  if (fitness_score > params_.fitness_threshold) {
+    LogWarning("Icp: Fitness score too large: " << fitness_score << ".");
     return boost::none;
   }
 
