@@ -169,6 +169,24 @@ Eigen::Matrix<double, 1, 6> DepthOdometry::Jacobian(const pcl::PointNormal& sour
   return depth_odometry::Jacobian(gt_point, gt_normal, gt_relative_transform);
 }
 
+void DepthOdometry::FilterCorrespondences(const pcl::PointCloud<pcl::PointNormal>& input_cloud,
+                                          const pcl::PointCloud<pcl::PointNormal>& target_cloud,
+                                          pcl::Correspondences& correspondences) const {
+  for (auto correspondence_it = correspondences.begin(); correspondence_it != correspondences.end();) {
+    const auto& input_point = (input_cloud)[correspondence_it->index_query];
+    const auto& target_point = (target_cloud)[correspondence_it->index_match];
+    const bool invalid_correspondence =
+      std::isnan(input_point.x) || std::isnan(input_point.y) || std::isnan(input_point.z) ||
+      std::isnan(target_point.x) || std::isnan(target_point.y) || std::isnan(target_point.z) ||
+      std::isnan(target_point.normal_x) || std::isnan(target_point.normal_y) || std::isnan(target_point.normal_z);
+    if (invalid_correspondence) {
+      correspondence_it = correspondences.erase(correspondence_it);
+      continue;
+    }
+    ++correspondence_it;
+  }
+}
+
 Eigen::Matrix<double, 6, 6> DepthOdometry::ComputeCovarianceMatrix(
   const pcl::IterativeClosestPointWithNormals<pcl::PointNormal, pcl::PointNormal>& icp,
   const pcl::PointCloud<pcl::PointNormal>::Ptr cloud_a,
@@ -177,15 +195,14 @@ Eigen::Matrix<double, 6, 6> DepthOdometry::ComputeCovarianceMatrix(
   pcl::Correspondences correspondences;
   // Assumes normals for input source aren't needed and there are no correspondence rejectors added to ICP object
   icp.correspondence_estimation_->determineCorrespondences(correspondences, icp.corr_dist_threshold_);
+  const auto& target_cloud = icp.target_;
+  FilterCorrespondences(*cloud_a, *target_cloud, correspondences);
   const int num_correspondences = correspondences.size();
   Eigen::MatrixXd full_jacobian(num_correspondences, 6);
-  const auto& target_cloud = icp.target_;
   int index = 0;
   for (const auto correspondence : correspondences) {
     const auto& input_point = (*cloud_a)[correspondence.index_query];
     const auto& target_point = (*target_cloud)[correspondence.index_match];
-    if (std::isnan(target_point.normal_x) || std::isnan(target_point.normal_y) || std::isnan(target_point.normal_z))
-      continue;
     const Eigen::Matrix<double, 1, 6> jacobian = Jacobian(input_point, target_point, relative_transform);
     if (std::isnan(jacobian(0, 0)) || std::isnan(jacobian(0, 1)) || std::isnan(jacobian(0, 2)) ||
         std::isnan(jacobian(0, 3)) || std::isnan(jacobian(0, 4)) || std::isnan(jacobian(0, 5)))
