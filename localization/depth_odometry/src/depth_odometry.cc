@@ -20,7 +20,6 @@
 #include <depth_odometry/utilities.h>
 #include <localization_common/logger.h>
 #include <localization_common/utilities.h>
-#include <msg_conversions/msg_conversions.h>
 
 #include <gtsam/geometry/Pose3.h>
 
@@ -41,14 +40,18 @@ DepthOdometry::DepthOdometry() {
   config_reader::ConfigReader config;
   config.AddFile("transforms.config");
   config.AddFile("geometry.config");
+  config.AddFile("localization/depth_odometry.config");
   if (!config.ReadFiles()) {
     LogFatal("Failed to read config files.");
   }
 
-  body_T_haz_cam_ = msg_conversions::LoadEigenTransform(config, "haz_cam_transform");
-  pca_pub_ = nh_.advertise<sensor_msgs::PointCloud2>("pca", 10);
-  pcb_pub_ = nh_.advertise<sensor_msgs::PointCloud2>("pcb", 10);
-  pct_pub_ = nh_.advertise<sensor_msgs::PointCloud2>("pct", 10);
+  LoadDepthOdometryParams(config, params_);
+
+  if (params_.publish_point_clouds) {
+    pca_pub_ = nh_.advertise<sensor_msgs::PointCloud2>("pca", 10);
+    pcb_pub_ = nh_.advertise<sensor_msgs::PointCloud2>("pcb", 10);
+    pct_pub_ = nh_.advertise<sensor_msgs::PointCloud2>("pct", 10);
+  }
 }
 
 boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> DepthOdometry::DepthCloudCallback(
@@ -61,16 +64,16 @@ boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> Depth
   LogError("t: " << std::setprecision(15) << depth_cloud.first);
   previous_depth_cloud_ = latest_depth_cloud_;
   latest_depth_cloud_ = depth_cloud;
-  const auto relative_transform = Icp(latest_depth_cloud_.second, previous_depth_cloud_.second);
-  const Eigen::Isometry3d frame_changed_relative_transform =
-    body_T_haz_cam_ * relative_transform.first * body_T_haz_cam_.inverse();
-  // TODO: rotate covariance matrix!!!! use exp map jacobian!!! sandwich withthis! (translation should be rotated by
-  // rotation matrix)
+  auto relative_transform = Icp(latest_depth_cloud_.second, previous_depth_cloud_.second);
+  if (params_.frame_change_transform) {
+    relative_transform.first = params_.body_T_haz_cam * relative_transform.first * params_.body_T_haz_cam.inverse();
+    // TODO: rotate covariance matrix!!!! use exp map jacobian!!! sandwich withthis! (translation should be rotated by
+    // rotation matrix)
+  }
 
   LogError("cov: " << std::endl << relative_transform.second.matrix());
 
-  return std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>{frame_changed_relative_transform,
-                                                                   relative_transform.second};
+  return relative_transform;
 }
 
 std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>> DepthOdometry::Icp(
@@ -99,7 +102,7 @@ std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>> DepthOdometry::Icp(
   pcl::PointCloud<pcl::PointNormal>::Ptr result(new pcl::PointCloud<pcl::PointNormal>);
   icp.align(*result);
 
-  {
+  if (params_.publish_point_clouds) {
     sensor_msgs::PointCloud2 ros_cloud_a;
     pcl::toROSMsg(*cloud_a, ros_cloud_a);
     ros_cloud_a.header.stamp = ros::Time::now();
@@ -167,6 +170,9 @@ Eigen::Matrix<double, 6, 6> DepthOdometry::ComputeCovarianceMatrix(
     full_jacobian.block(index++, 0, 1, 6) = jacobian;
   }
   const Eigen::Matrix<double, 6, 6> covariance = (full_jacobian.transpose() * full_jacobian).inverse();
+  const auto position_covariance_norm = covariance.block<3, 3>(0, 0).diagonal().norm();
+  const auto orientation_covariance_norm = covariance.block<3, 3>(3, 3).diagonal().norm();
+  LogError("pcov: " << position_covariance_norm << ", ocov: " << orientation_covariance_norm);
   return covariance;
 }
 }  // namespace depth_odometry

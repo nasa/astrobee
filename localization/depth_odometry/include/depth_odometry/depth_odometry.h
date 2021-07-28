@@ -18,6 +18,7 @@
 #ifndef DEPTH_ODOMETRY_DEPTH_ODOMETRY_H_
 #define DEPTH_ODOMETRY_DEPTH_ODOMETRY_H_
 
+#include <depth_odometry/depth_odometry_params.h>
 #include <localization_common/time.h>
 
 #include <boost/optional.hpp>
@@ -51,7 +52,7 @@ class DepthOdometry {
 
   std::pair<localization_common::Time, pcl::PointCloud<pcl::PointXYZ>::Ptr> previous_depth_cloud_;
   std::pair<localization_common::Time, pcl::PointCloud<pcl::PointXYZ>::Ptr> latest_depth_cloud_;
-  Eigen::Isometry3d body_T_haz_cam_;
+  DepthOdometryParams params_;
   ros::NodeHandle nh_;
   ros::Publisher pca_pub_, pcb_pub_, pct_pub_;
 };

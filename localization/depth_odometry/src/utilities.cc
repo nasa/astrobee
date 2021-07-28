@@ -17,11 +17,23 @@
  */
 
 #include <depth_odometry/utilities.h>
+#include <msg_conversions/msg_conversions.h>
 
 #include <gtsam/geometry/Pose3.h>
 #include <gtsam/geometry/Point3.h>
 
 namespace depth_odometry {
+namespace mc = msg_conversions;
+
+void LoadDepthOdometryParams(config_reader::ConfigReader& config, DepthOdometryParams& params) {
+  params.position_covariance_threshold = mc::LoadDouble(config, "position_covariance_threshold");
+  params.orientation_covariance_threshold = mc::LoadDouble(config, "orientation_covariance_threshold");
+  params.fitness_threshold = mc::LoadDouble(config, "fitness_threshold");
+  params.publish_point_clouds = mc::LoadBool(config, "publish_point_clouds");
+  params.frame_change_transform = mc::LoadBool(config, "frame_change_transform");
+  params.body_T_haz_cam = msg_conversions::LoadEigenTransform(config, "haz_cam_transform");
+}
+
 Eigen::Matrix<double, 1, 6> Jacobian(const gtsam::Point3& point, const gtsam::Vector3& normal,
                                      const gtsam::Pose3& relative_transform) {
   gtsam::Matrix H1;

@@ -15,18 +15,20 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef DEPTH_ODOMETRY_UTILITIES_H_
-#define DEPTH_ODOMETRY_UTILITIES_H_
+#ifndef DEPTH_ODOMETRY_DEPTH_ODOMETRY_PARAMS_H_
+#define DEPTH_ODOMETRY_DEPTH_ODOMETRY_PARAMS_H_
 
-#include <config_reader/config_reader.h>
-#include <depth_odometry/depth_odometry_params.h>
-
-#include <gtsam/geometry/Pose3.h>
-#include <gtsam/geometry/Point3.h>
+#include <Eigen/Geometry>
 
 namespace depth_odometry {
-void LoadDepthOdometryParams(config_reader::ConfigReader& config, DepthOdometryParams& params);
-Eigen::Matrix<double, 1, 6> Jacobian(const gtsam::Point3& point, const gtsam::Vector3& normal,
-                                     const gtsam::Pose3& relative_transform);
+struct DepthOdometryParams {
+  double position_covariance_threshold;
+  double orientation_covariance_threshold;
+  double fitness_threshold;
+  bool publish_point_clouds;
+  bool frame_change_transform;
+  Eigen::Isometry3d body_T_haz_cam;
+};
 }  // namespace depth_odometry
-#endif  // DEPTH_ODOMETRY_UTILITIES_H_
+
+#endif  // DEPTH_ODOMETRY_DEPTH_ODOMETRY_PARAMS_H_
