@@ -46,8 +46,6 @@ DepthOdometry::DepthOdometry() {
   }
 
   body_T_haz_cam_ = msg_conversions::LoadEigenTransform(config, "haz_cam_transform");
-  // body_T_haz_cam_.translation() = Eigen::Vector3d::Zero();
-  LogError("body_T_haz_no_trans: " << body_T_haz_cam_.matrix());
   pca_pub_ = nh_.advertise<sensor_msgs::PointCloud2>("pca", 10);
   pcb_pub_ = nh_.advertise<sensor_msgs::PointCloud2>("pcb", 10);
   pct_pub_ = nh_.advertise<sensor_msgs::PointCloud2>("pct", 10);
@@ -68,6 +66,8 @@ boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> Depth
     body_T_haz_cam_ * relative_transform.first * body_T_haz_cam_.inverse();
   // TODO: rotate covariance matrix!!!! use exp map jacobian!!! sandwich withthis! (translation should be rotated by
   // rotation matrix)
+
+  LogError("cov: " << std::endl << relative_transform.second.matrix());
 
   return std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>{frame_changed_relative_transform,
                                                                    relative_transform.second};
@@ -158,10 +158,14 @@ Eigen::Matrix<double, 6, 6> DepthOdometry::ComputeCovarianceMatrix(
   for (const auto correspondence : correspondences) {
     const auto& input_point = (*cloud_a)[correspondence.index_query];
     const auto& target_point = (*target_cloud)[correspondence.index_match];
+    if (std::isnan(target_point.normal_x) || std::isnan(target_point.normal_y) || std::isnan(target_point.normal_z))
+      continue;
     const Eigen::Matrix<double, 1, 6> jacobian = Jacobian(input_point, target_point, relative_transform);
+    if (std::isnan(jacobian(0, 0)) || std::isnan(jacobian(0, 1)) || std::isnan(jacobian(0, 2)) ||
+        std::isnan(jacobian(0, 3)) || std::isnan(jacobian(0, 4)) || std::isnan(jacobian(0, 5)))
+      continue;
     full_jacobian.block(index++, 0, 1, 6) = jacobian;
   }
-
   const Eigen::Matrix<double, 6, 6> covariance = (full_jacobian.transpose() * full_jacobian).inverse();
   return covariance;
 }
