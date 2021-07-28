@@ -42,6 +42,7 @@ class DepthOdometry {
  private:
   std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>> Icp(
     const pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_a, const pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_b) const;
+  bool CovarianceSane(const Eigen::Matrix<double, 6, 6>& covariance) const;
   Eigen::Matrix<double, 6, 6> ComputeCovarianceMatrix(
     const pcl::IterativeClosestPointWithNormals<pcl::PointNormal, pcl::PointNormal>& icp,
     const pcl::PointCloud<pcl::PointNormal>::Ptr cloud_a,

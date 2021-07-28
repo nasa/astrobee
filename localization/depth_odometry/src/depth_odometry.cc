@@ -65,6 +65,11 @@ boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> Depth
   previous_depth_cloud_ = latest_depth_cloud_;
   latest_depth_cloud_ = depth_cloud;
   auto relative_transform = Icp(latest_depth_cloud_.second, previous_depth_cloud_.second);
+  if (!CovarianceSane(relative_transform.second)) {
+    LogWarning("DepthCloudCallback: Sanity check failed - invalid covariance.");
+    return boost::none;
+  }
+
   if (params_.frame_change_transform) {
     relative_transform.first = params_.body_T_haz_cam * relative_transform.first * params_.body_T_haz_cam.inverse();
     // TODO: rotate covariance matrix!!!! use exp map jacobian!!! sandwich withthis! (translation should be rotated by
@@ -74,6 +79,14 @@ boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> Depth
   LogError("cov: " << std::endl << relative_transform.second.matrix());
 
   return relative_transform;
+}
+
+bool DepthOdometry::CovarianceSane(const Eigen::Matrix<double, 6, 6>& covariance) const {
+  const auto position_covariance_norm = covariance.block<3, 3>(0, 0).diagonal().norm();
+  const auto orientation_covariance_norm = covariance.block<3, 3>(3, 3).diagonal().norm();
+  LogError("pcov: " << position_covariance_norm << ", ocov: " << orientation_covariance_norm);
+  return (position_covariance_norm <= params_.position_covariance_threshold &&
+          orientation_covariance_norm <= params_.orientation_covariance_threshold);
 }
 
 std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>> DepthOdometry::Icp(
@@ -170,9 +183,6 @@ Eigen::Matrix<double, 6, 6> DepthOdometry::ComputeCovarianceMatrix(
     full_jacobian.block(index++, 0, 1, 6) = jacobian;
   }
   const Eigen::Matrix<double, 6, 6> covariance = (full_jacobian.transpose() * full_jacobian).inverse();
-  const auto position_covariance_norm = covariance.block<3, 3>(0, 0).diagonal().norm();
-  const auto orientation_covariance_norm = covariance.block<3, 3>(3, 3).diagonal().norm();
-  LogError("pcov: " << position_covariance_norm << ", ocov: " << orientation_covariance_norm);
   return covariance;
 }
 }  // namespace depth_odometry
