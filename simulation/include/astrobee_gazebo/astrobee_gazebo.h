@@ -68,7 +68,7 @@ class FreeFlyerPlugin : public ff_util::FreeFlyerNodelet {
 
  protected:
   // Initialize the plugin
-  void InitializePlugin(std::string const& robot_name);
+  void InitializePlugin(std::string const& robot_name, std::string const& plugin_name);
 
   // Some plugins might want the world as the parent frame
   void SetParentFrame(std::string const& parent);
