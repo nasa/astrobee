@@ -40,7 +40,7 @@ class DepthOdometry {
     std::pair<localization_common::Time, pcl::PointCloud<pcl::PointXYZ>::Ptr> depth_cloud);
 
  private:
-  std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>> Icp(
+  boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> Icp(
     const pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_a, const pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_b) const;
   bool CovarianceSane(const Eigen::Matrix<double, 6, 6>& covariance) const;
   Eigen::Matrix<double, 6, 6> ComputeCovarianceMatrix(

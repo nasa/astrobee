@@ -65,18 +65,23 @@ boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> Depth
   previous_depth_cloud_ = latest_depth_cloud_;
   latest_depth_cloud_ = depth_cloud;
   auto relative_transform = Icp(latest_depth_cloud_.second, previous_depth_cloud_.second);
-  if (!CovarianceSane(relative_transform.second)) {
+  if (!relative_transform) {
+    LogWarning("DepthCloudCallback: Failed to get relative transform.");
+    return boost::none;
+  }
+
+  if (!CovarianceSane(relative_transform->second)) {
     LogWarning("DepthCloudCallback: Sanity check failed - invalid covariance.");
     return boost::none;
   }
 
   if (params_.frame_change_transform) {
-    relative_transform.first = params_.body_T_haz_cam * relative_transform.first * params_.body_T_haz_cam.inverse();
+    relative_transform->first = params_.body_T_haz_cam * relative_transform->first * params_.body_T_haz_cam.inverse();
     // TODO: rotate covariance matrix!!!! use exp map jacobian!!! sandwich withthis! (translation should be rotated by
     // rotation matrix)
   }
 
-  LogError("cov: " << std::endl << relative_transform.second.matrix());
+  LogError("cov: " << std::endl << relative_transform->second.matrix());
 
   return relative_transform;
 }
@@ -89,7 +94,7 @@ bool DepthOdometry::CovarianceSane(const Eigen::Matrix<double, 6, 6>& covariance
           orientation_covariance_norm <= params_.orientation_covariance_threshold);
 }
 
-std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>> DepthOdometry::Icp(
+boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> DepthOdometry::Icp(
   const pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_a, const pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_b) const {
   pcl::PointCloud<pcl::PointNormal>::Ptr cloud_b_with_normals(new pcl::PointCloud<pcl::PointNormal>);
   pcl::PointCloud<pcl::Normal>::Ptr cloud_b_normals(new pcl::PointCloud<pcl::Normal>);
@@ -100,12 +105,7 @@ std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>> DepthOdometry::Icp(
   ne.setRadiusSearch(0.03);
   ne.compute(*cloud_b_normals);
   pcl::concatenateFields(*cloud_b, *cloud_b_normals, *cloud_b_with_normals);
-  /*for (auto it = cloud_a_with_normals->begin(); it != cloud_a_with_normals->end(); ++it){
-  //for (auto it = cloud_a->begin(); it != cloud_a->end(); ++it){
-    //LogError("p: " << it->x << ", " << it->y << ", " << it->z << ", " << it->normal);
-    LogError("p: " << it->normal[0] << ", " << it->normal[1] << ", " << it->normal[2]);
- // LogError("p: " << it->x << ", " << it->y << ", " << it->z);
-  }*/
+
   pcl::PointCloud<pcl::PointNormal>::Ptr cloud_a_with_normals(new pcl::PointCloud<pcl::PointNormal>);
   pcl::copyPointCloud(*cloud_a, *cloud_a_with_normals);
   pcl::IterativeClosestPointWithNormals<pcl::PointNormal, pcl::PointNormal> icp;
@@ -135,19 +135,23 @@ std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>> DepthOdometry::Icp(
     ros_cloud_t.header.frame_id = "haz_cam";
     pct_pub_.publish(ros_cloud_t);
   }
-  if (icp.hasConverged())
-    LogError("converged!!!");
-  else
-    LogError("failed to converge!!!!!!!");
 
-  LogError("fit score: " << icp.getFitnessScore());
+  if (!icp.hasConverged()) {
+    LogWarning("Icp: Failed to converge.");
+    return boost::none;
+  }
+
+  const double fitness_score = icp.getFitnessScore();
+  if (fitness_score < params_.fitness_threshold) {
+    LogWarning("Icp: Fitness score too low: " << fitness_score << ".");
+    return boost::none;
+  }
 
   // TODO(rsoussan): clean this up
-  const Eigen::Isometry3d relative_transform(
-    Eigen::Isometry3f(icp.getFinalTransformation().matrix()).cast<double>());  //.cast<double>();
+  const Eigen::Isometry3d relative_transform(Eigen::Isometry3f(icp.getFinalTransformation().matrix()).cast<double>());
   const Eigen::Matrix<double, 6, 6> covariance =
     ComputeCovarianceMatrix(icp, cloud_a_with_normals, result, relative_transform);
-  return {relative_transform, covariance};
+  return std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>{relative_transform, covariance};
 }
 
 Eigen::Matrix<double, 1, 6> DepthOdometry::Jacobian(const pcl::PointNormal& source_point,
