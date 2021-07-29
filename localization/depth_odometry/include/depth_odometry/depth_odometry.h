@@ -42,6 +42,8 @@ class DepthOdometry {
  private:
   boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> Icp(
     const pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_a, const pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_b) const;
+  void EstimateNormals(const pcl::PointCloud<pcl::PointXYZ>::Ptr cloud,
+                       pcl::PointCloud<pcl::PointNormal>& cloud_with_normals) const;
   void FilterCorrespondences(const pcl::PointCloud<pcl::PointNormal>& input_cloud,
                              const pcl::PointCloud<pcl::PointNormal>& target_cloud,
                              pcl::Correspondences& correspondences) const;

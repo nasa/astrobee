@@ -26,6 +26,7 @@ struct DepthOdometryParams {
   double orientation_covariance_threshold;
   double fitness_threshold;
   double search_radius;
+  bool symmetric_objective;
   bool publish_point_clouds;
   bool frame_change_transform;
   Eigen::Isometry3d body_T_haz_cam;

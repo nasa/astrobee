@@ -30,6 +30,7 @@ void LoadDepthOdometryParams(config_reader::ConfigReader& config, DepthOdometryP
   params.orientation_covariance_threshold = mc::LoadDouble(config, "orientation_covariance_threshold");
   params.fitness_threshold = mc::LoadDouble(config, "fitness_threshold");
   params.search_radius = mc::LoadDouble(config, "search_radius");
+  params.symmetric_objective = mc::LoadBool(config, "symmetric_objective");
   params.publish_point_clouds = mc::LoadBool(config, "publish_point_clouds");
   params.frame_change_transform = mc::LoadBool(config, "frame_change_transform");
   params.body_T_haz_cam = msg_conversions::LoadEigenTransform(config, "haz_cam_transform");

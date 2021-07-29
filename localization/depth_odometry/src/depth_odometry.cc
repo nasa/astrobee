@@ -82,6 +82,7 @@ boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> Depth
   }
 
   LogError("cov: " << std::endl << relative_transform->second.matrix());
+  if (relative_transform->first.translation().norm() > 0.5) LogError("large position jump!!");
 
   return relative_transform;
 }
@@ -94,21 +95,32 @@ bool DepthOdometry::CovarianceSane(const Eigen::Matrix<double, 6, 6>& covariance
           orientation_covariance_norm <= params_.orientation_covariance_threshold);
 }
 
-boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> DepthOdometry::Icp(
-  const pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_a, const pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_b) const {
-  pcl::PointCloud<pcl::PointNormal>::Ptr cloud_b_with_normals(new pcl::PointCloud<pcl::PointNormal>);
-  pcl::PointCloud<pcl::Normal>::Ptr cloud_b_normals(new pcl::PointCloud<pcl::Normal>);
+void DepthOdometry::EstimateNormals(const pcl::PointCloud<pcl::PointXYZ>::Ptr cloud,
+                                    pcl::PointCloud<pcl::PointNormal>& cloud_with_normals) const {
   pcl::NormalEstimation<pcl::PointXYZ, pcl::Normal> ne;
-  ne.setInputCloud(cloud_b);
+  ne.setInputCloud(cloud);
   pcl::search::KdTree<pcl::PointXYZ>::Ptr tree(new pcl::search::KdTree<pcl::PointXYZ>());
   ne.setSearchMethod(tree);
   ne.setRadiusSearch(params_.search_radius);
-  ne.compute(*cloud_b_normals);
-  pcl::concatenateFields(*cloud_b, *cloud_b_normals, *cloud_b_with_normals);
+  pcl::PointCloud<pcl::Normal>::Ptr cloud_normals(new pcl::PointCloud<pcl::Normal>);
+  ne.compute(*cloud_normals);
+  pcl::concatenateFields(*cloud, *cloud_normals, cloud_with_normals);
+}
+
+boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> DepthOdometry::Icp(
+  const pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_a, const pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_b) const {
+  pcl::PointCloud<pcl::PointNormal>::Ptr cloud_b_with_normals(new pcl::PointCloud<pcl::PointNormal>);
+  EstimateNormals(cloud_b, *cloud_b_with_normals);
 
   pcl::PointCloud<pcl::PointNormal>::Ptr cloud_a_with_normals(new pcl::PointCloud<pcl::PointNormal>);
-  pcl::copyPointCloud(*cloud_a, *cloud_a_with_normals);
+  if (params_.symmetric_objective) {
+    EstimateNormals(cloud_a, *cloud_a_with_normals);
+  } else {
+    pcl::copyPointCloud(*cloud_a, *cloud_a_with_normals);
+  }
+
   pcl::IterativeClosestPointWithNormals<pcl::PointNormal, pcl::PointNormal> icp;
+  // icp.setUseSymmetricObjective(params_.symmetric_objective);
   icp.setInputSource(cloud_a_with_normals);
   icp.setInputTarget(cloud_b_with_normals);
   icp.setMaximumIterations(10);
@@ -120,13 +132,14 @@ boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> Depth
   }
 
   if (!icp.hasConverged()) {
-    LogWarning("Icp: Failed to converge.");
+    LogError("Icp: Failed to converge.");
     return boost::none;
   }
 
   const double fitness_score = icp.getFitnessScore();
+  LogError("fitness: " << fitness_score);
   if (fitness_score > params_.fitness_threshold) {
-    LogWarning("Icp: Fitness score too large: " << fitness_score << ".");
+    LogError("Icp: Fitness score too large: " << fitness_score << ".");
     return boost::none;
   }
 
@@ -198,6 +211,9 @@ Eigen::Matrix<double, 6, 6> DepthOdometry::ComputeCovarianceMatrix(
   const auto& target_cloud = icp.target_;
   FilterCorrespondences(*cloud_a, *target_cloud, correspondences);
   const int num_correspondences = correspondences.size();
+  LogError("a size: " << cloud_a->size());
+  LogError("b size: " << target_cloud->size());
+  LogError("num correspondences: " << num_correspondences);
   Eigen::MatrixXd full_jacobian(num_correspondences, 6);
   int index = 0;
   for (const auto correspondence : correspondences) {
