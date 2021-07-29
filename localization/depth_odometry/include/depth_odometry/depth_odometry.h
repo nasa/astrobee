@@ -23,6 +23,7 @@
 
 #include <boost/optional.hpp>
 
+#include <pcl/features/fpfh.h>
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 #include <pcl/registration/icp.h>
@@ -42,6 +43,10 @@ class DepthOdometry {
  private:
   boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> Icp(
     const pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_a, const pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_b) const;
+  Eigen::Isometry3d RansacIA(const pcl::PointCloud<pcl::PointNormal>::Ptr source_cloud,
+                             const pcl::PointCloud<pcl::PointNormal>::Ptr target_cloud) const;
+  pcl::PointCloud<pcl::FPFHSignature33>::Ptr EstimateHistogramFeatures(
+    const pcl::PointCloud<pcl::PointNormal>::Ptr cloud_with_normals) const;
   void RemoveNans(pcl::PointCloud<pcl::PointNormal>& cloud) const;
   void EstimateNormals(const pcl::PointCloud<pcl::PointXYZ>::Ptr cloud,
                        pcl::PointCloud<pcl::PointNormal>& cloud_with_normals) const;

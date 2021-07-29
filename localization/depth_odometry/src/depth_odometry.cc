@@ -27,8 +27,10 @@
 #include <pcl_conversions/pcl_conversions.h>
 #include <pcl/features/normal_3d.h>
 #include <pcl/features/impl/normal_3d.hpp>
+#include <pcl/features/impl/fpfh.hpp>
 #include <pcl/filters/filter.h>
 #include <pcl/filters/impl/filter.hpp>
+#include <pcl/registration/ia_ransac.h>
 #include <pcl/registration/icp.h>
 #include <pcl/search/impl/search.hpp>
 #include <pcl/search/impl/organized.hpp>
@@ -114,6 +116,43 @@ void DepthOdometry::RemoveNans(pcl::PointCloud<pcl::PointNormal>& cloud) const {
   std::vector<int> dummy_indices;
   pcl::removeNaNFromPointCloud(cloud, cloud, dummy_indices);
   pcl::removeNaNNormalsFromPointCloud(cloud, cloud, dummy_indices);
+}
+
+pcl::PointCloud<pcl::FPFHSignature33>::Ptr DepthOdometry::EstimateHistogramFeatures(
+  const pcl::PointCloud<pcl::PointNormal>::Ptr cloud_with_normals) const {
+  pcl::FPFHEstimation<pcl::PointNormal, pcl::PointNormal, pcl::FPFHSignature33> feature_estimator;
+  feature_estimator.setInputCloud(cloud_with_normals);
+  feature_estimator.setInputNormals(cloud_with_normals);
+  // TODO(rsoussan): Pass in kd tree from normal estimation?
+  pcl::search::KdTree<pcl::PointNormal>::Ptr kd_tree(new pcl::search::KdTree<pcl::PointNormal>);
+  feature_estimator.setSearchMethod(kd_tree);
+  // pcl: IMPORTANT: the radius used here has to be larger than the radius used to estimate the surface normals!!!
+  feature_estimator.setRadiusSearch(0.05);  // 0.2??
+  pcl::PointCloud<pcl::FPFHSignature33>::Ptr features(new pcl::PointCloud<pcl::FPFHSignature33>());
+  feature_estimator.compute(*features);
+  return features;
+}
+
+Eigen::Isometry3d DepthOdometry::RansacIA(const pcl::PointCloud<pcl::PointNormal>::Ptr source_cloud,
+                                          const pcl::PointCloud<pcl::PointNormal>::Ptr target_cloud) const {
+  const auto source_features = EstimateHistogramFeatures(source_cloud);
+  const auto target_features = EstimateHistogramFeatures(target_cloud);
+
+  pcl::SampleConsensusInitialAlignment<pcl::PointNormal, pcl::PointNormal, pcl::FPFHSignature33> sac_ia_aligner;
+  sac_ia_aligner.setInputSource(source_cloud);
+  sac_ia_aligner.setInputTarget(target_cloud);
+  sac_ia_aligner.setSourceFeatures(source_features);
+  sac_ia_aligner.setTargetFeatures(target_features);
+  // scia.setMinSampleDistance(1);
+  // scia.setNumberOfSamples(2);
+  // scia.setCorrespondenceRandomness(20);
+  pcl::PointCloud<pcl::PointNormal>::Ptr result(new pcl::PointCloud<pcl::PointNormal>);
+  sac_ia_aligner.align(*result);
+  // std::cout  <<"sac has converged:"<<scia.hasConverged()<<"  score: "<<scia.getFitnessScore()<<endl;
+  // TODO: make boost optional, set thresholds for ransacia fitness and make sure it converged!
+  const Eigen::Isometry3d relative_transform(
+    Eigen::Isometry3f(sac_ia_aligner.getFinalTransformation().matrix()).cast<double>());
+  return relative_transform;
 }
 
 boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> DepthOdometry::Icp(
