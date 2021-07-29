@@ -17,6 +17,7 @@
  */
 
 #include <depth_odometry/depth_odometry.h>
+#include <depth_odometry/transformation_estimation_symmetric_point_to_plane_lls.h>
 #include <depth_odometry/utilities.h>
 #include <localization_common/logger.h>
 #include <localization_common/utilities.h>
@@ -120,7 +121,12 @@ boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> Depth
   }
 
   pcl::IterativeClosestPointWithNormals<pcl::PointNormal, pcl::PointNormal> icp;
-  // icp.setUseSymmetricObjective(params_.symmetric_objective);
+  if (params_.symmetric_objective) {
+    auto symmetric_transformation_estimation = boost::make_shared<
+      pcl::registration::TransformationEstimationSymmetricPointToPlaneLLS<pcl::PointNormal, pcl::PointNormal>>();
+    //  symmetric_transformation_estimation->setEnforceSameDirectionNormals(params_.enforce_same_direction_normals);
+    icp.transformation_estimation_ = symmetric_transformation_estimation;
+  }
   icp.setInputSource(cloud_a_with_normals);
   icp.setInputTarget(cloud_b_with_normals);
   icp.setMaximumIterations(10);
