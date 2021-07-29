@@ -2711,7 +2711,6 @@ bool Executive::SetPlan(ff_msgs::CommandStampedPtr const& cmd) {
   std::string err_msg;
   if (plan_) {
     if (sequencer::LoadPlan(plan_, &sequencer_)) {
-      NODELET_ERROR_STREAM("Plan name is " << sequencer_.plan_status().name << " size of the plan name is: " << std::to_string(sequencer_.plan_status().name.size()));
       if (sequencer_.plan_status().name.size() < 128) {
         // Set plan execution state to paused, apparently this was the way
         // spheres worked
