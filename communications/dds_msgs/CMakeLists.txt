@@ -25,9 +25,23 @@ find_package(catkin REQUIRED COMPONENTS
 )
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
-find_package(Miro REQUIRED )
-find_package(RtiDds REQUIRED )
-find_package(Soracore REQUIRED )
+
+if (USE_CTC)
+  set(SORACORE_ROOT_DIR ${ARM_CHROOT_DIR}/usr)
+else (USE_CTC)
+  set(SORACORE_ROOT_DIR /usr)
+endif (USE_CTC)
+
+set(MIRO_ROOT_DIR ${SORACORE_ROOT_DIR})
+
+# find_package(QtXml REQUIRED)
+SET(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
+SET(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
+find_package(Qt4 4.6.0 REQUIRED QtXml)
+
+find_package(Miro REQUIRED)
+find_package(RtiDds REQUIRED)
+find_package(Soracore REQUIRED)
 
 catkin_package(
   INCLUDE_DIRS ${CMAKE_CURRENT_BINARY_DIR}
@@ -46,22 +60,23 @@ include_directories(
   ${RTIDDS_INCLUDE_DIR}
   ${SORACORE_INCLUDE_DIRS}
   ${CMAKE_SOURCE_DIR}/rapidDds
+  ${SORACORE_IDL_DIR}/rapidDds
 )
 
 # message(STATUS "Copying IDL files")
 file(GLOB DDS_IDL_FILES
   "idl/*.idl")
-
 file(COPY ${DDS_IDL_FILES} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
 file(GLOB DDS_IDL_FILEZ
   "${SORACORE_IDL_DIR}/rapidDds/*.idl")
-
 file(COPY ${DDS_IDL_FILEZ} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
 set(LIB_NAME "rapidExtAstrobee")
 
 include(CreateDdsMsgTargets)
+
+message("SORACORE_IDL_DIR ${SORACORE_IDL_DIR}")
 
 set(EXTRA_RTIDDS_IDL_ARGS -I${SORACORE_IDL_DIR}/rapidDds)
 create_dds_msg_targets(

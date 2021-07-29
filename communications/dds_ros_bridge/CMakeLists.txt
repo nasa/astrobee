@@ -30,16 +30,27 @@ find_package(catkin REQUIRED COMPONENTS
 
 # System dependencies are found with CMake's conventions
 find_package(Eigen3 REQUIRED)
-
-# without this we find the wrong one in cross compile
-SET(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
-SET(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
-find_package(Qt4 4.6.0 REQUIRED QtXml)
+find_package(Boost 1.54.0 QUIET REQUIRED COMPONENTS filesystem system iostreams thread program_options timer)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/../dds_msgs/cmake")
-find_package(Miro REQUIRED )
-find_package(RtiDds REQUIRED )
-find_package(Soracore REQUIRED )
+
+if (USE_CTC)
+  set(SORACORE_ROOT_DIR ${ARM_CHROOT_DIR}/usr)
+else (USE_CTC)
+  set(SORACORE_ROOT_DIR /usr)
+endif (USE_CTC)
+
+set(MIRO_ROOT_DIR ${SORACORE_ROOT_DIR})
+
+SET(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
+SET(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
+
+# just calls the normal one
+find_package(Qt4 4.6.0 REQUIRED QtXml)
+find_package(Miro REQUIRED)
+find_package(RtiDds REQUIRED)
+find_package(Soracore REQUIRED)
+
 
 catkin_package(
   LIBRARIES dds_ros_bridge astrobee_astrobee_bridge
@@ -60,24 +71,29 @@ include_directories(
   ${MIRO_INCLUDE_DIR}
   ${QT_INCLUDE_DIR}
   ${QT_INCLUDE_DIR}/Qt
+  ${Boost_INCLUDE_DIRS}
 )
 
 file(GLOB cc_files
      "src/*.cc"
 )
 
-# # Declare C++ libraries
-# add_library(dds_ros_bridge
-#   ${cc_files}
-# )
-# target_link_libraries(dds_ros_bridge ${catkin_LIBRARIES}  Qt4::Core Qt4::Xml)
+message("RTIDDS_DEFINES ${RTIDDS_DEFINES}")
+# Declare C++ libraries
+add_library(dds_ros_bridge
+  ${cc_files}
+)
+target_compile_definitions(dds_ros_bridge PUBLIC ${RTIDDS_DEFINE_FLAGS})
+add_dependencies(dds_ros_bridge ${catkin_EXPORTED_TARGETS})
+target_link_libraries(dds_ros_bridge ${catkin_LIBRARIES})
 
 
 add_library(astrobee_astrobee_bridge
   src/astrobee_astrobee_bridge.cc
 )
+target_compile_definitions(astrobee_astrobee_bridge PUBLIC ${RTIDDS_DEFINE_FLAGS})
 add_dependencies(astrobee_astrobee_bridge ${catkin_EXPORTED_TARGETS})
-target_link_libraries(astrobee_astrobee_bridge ${catkin_LIBRARIES})
+target_link_libraries(astrobee_astrobee_bridge Qt4::QtXml rapidIo ${Boost_SYSTEM_LIBRARY} ${Boost_FILESYSTEM_LIBRARY} ${catkin_LIBRARIES})
 
 
 #############
