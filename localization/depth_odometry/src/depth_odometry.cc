@@ -124,7 +124,7 @@ boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> Depth
   if (params_.symmetric_objective) {
     auto symmetric_transformation_estimation = boost::make_shared<
       pcl::registration::TransformationEstimationSymmetricPointToPlaneLLS<pcl::PointNormal, pcl::PointNormal>>();
-    //  symmetric_transformation_estimation->setEnforceSameDirectionNormals(params_.enforce_same_direction_normals);
+    symmetric_transformation_estimation->setEnforceSameDirectionNormals(params_.enforce_same_direction_normals);
     icp.transformation_estimation_ = symmetric_transformation_estimation;
   }
   icp.setInputSource(cloud_a_with_normals);
