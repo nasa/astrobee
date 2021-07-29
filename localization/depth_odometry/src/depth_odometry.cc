@@ -27,6 +27,8 @@
 #include <pcl_conversions/pcl_conversions.h>
 #include <pcl/features/normal_3d.h>
 #include <pcl/features/impl/normal_3d.hpp>
+#include <pcl/filters/filter.h>
+#include <pcl/filters/impl/filter.hpp>
 #include <pcl/registration/icp.h>
 #include <pcl/search/impl/search.hpp>
 #include <pcl/search/impl/organized.hpp>
@@ -108,6 +110,12 @@ void DepthOdometry::EstimateNormals(const pcl::PointCloud<pcl::PointXYZ>::Ptr cl
   pcl::concatenateFields(*cloud, *cloud_normals, cloud_with_normals);
 }
 
+void DepthOdometry::RemoveNans(pcl::PointCloud<pcl::PointNormal>& cloud) const {
+  std::vector<int> dummy_indices;
+  pcl::removeNaNFromPointCloud(cloud, cloud, dummy_indices);
+  pcl::removeNaNNormalsFromPointCloud(cloud, cloud, dummy_indices);
+}
+
 boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> DepthOdometry::Icp(
   const pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_a, const pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_b) const {
   pcl::PointCloud<pcl::PointNormal>::Ptr cloud_b_with_normals(new pcl::PointCloud<pcl::PointNormal>);
@@ -119,6 +127,9 @@ boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> Depth
   } else {
     pcl::copyPointCloud(*cloud_a, *cloud_a_with_normals);
   }
+
+  RemoveNans(*cloud_a_with_normals);
+  RemoveNans(*cloud_b_with_normals);
 
   pcl::IterativeClosestPointWithNormals<pcl::PointNormal, pcl::PointNormal> icp;
   if (params_.symmetric_objective) {
