@@ -25,6 +25,8 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   std_msgs
   nodelet
+  ff_msgs
+  ff_hw_msgs
   ff_util
 )
 
@@ -38,6 +40,7 @@ catkin_package(
     actionlib
     sensor_msgs
     ff_msgs
+    ff_hw_msgs
     ff_util
 )
 

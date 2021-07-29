@@ -25,6 +25,7 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   ff_util
   ff_msgs
+  ff_hw_msgs
   sensor_msgs
   message_generation
 )
@@ -41,7 +42,7 @@ generate_messages(
 
 catkin_package(
   LIBRARIES eps_sim
-  DEPENDS roscpp ff_util ff_msgs
+  DEPENDS roscpp ff_util ff_msgs ff_hw_msgs
 )
 
 ###########

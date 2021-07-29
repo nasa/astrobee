@@ -31,6 +31,7 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   geometry_msgs
   config_reader
+  ff_msgs
   tf2
   tf2_ros
 )
@@ -40,7 +41,7 @@ find_package(Eigen3 REQUIRED)
 catkin_package(
   LIBRARIES ${PROJECT_NAME}
   INCLUDE_DIRS include
-  CATKIN_DEPENDS roscpp message_runtime std_msgs geometry_msgs config_reader
+  CATKIN_DEPENDS roscpp message_runtime std_msgs geometry_msgs config_reader tf2 tf2_ros
 )
 
 ###########

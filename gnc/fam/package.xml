@@ -17,6 +17,7 @@
   <buildtool_depend>catkin</buildtool_depend>
   <build_depend>roscpp</build_depend>
   <build_depend>ff_msgs</build_depend>
+  <build_depend>ff_hw_msgs</build_depend>
   <build_depend>ff_util</build_depend>
   <build_depend>config_reader</build_depend>
   <build_depend>gnc_autocode</build_depend>
@@ -24,6 +25,7 @@
   <run_depend>ff_msgs</run_depend>
   <run_depend>ff_util</run_depend>
   <run_depend>ff_msgs</run_depend>
+  <run_depend>ff_hw_msgs</run_depend>
   <run_depend>config_reader</run_depend>
   <run_depend>gnc_autocode</run_depend>
   <export>

@@ -25,6 +25,7 @@ find_package(catkin REQUIRED COMPONENTS
 	camera
 	config_reader
 	msg_conversions
+  ff_msgs
 )
 
 # Find GTSAM
@@ -36,7 +37,7 @@ find_package(Eigen3 REQUIRED)
 catkin_package(
   INCLUDE_DIRS include ${GTSAM_INCLUDE_DIR} ${Boost_INCLUDE_DIRS} 
   LIBRARIES ${PROJECT_NAME} ${GTSAM_LIBRARIES}
-  CATKIN_DEPENDS camera config_reader msg_conversions 
+  CATKIN_DEPENDS camera config_reader msg_conversions ff_msgs
 )
 
 ###########

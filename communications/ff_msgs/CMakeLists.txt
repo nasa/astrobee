@@ -18,7 +18,7 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(ff_msgs)
 
-find_package(catkin2 REQUIRED COMPONENTS
+find_package(catkin REQUIRED COMPONENTS
   message_generation
   std_msgs
   geometry_msgs
@@ -72,6 +72,7 @@ add_message_files(
   Feature2d.msg
   Feature2dArray.msg
   FlightMode.msg
+  GraphState.msg
   GuestScienceApk.msg
   GuestScienceCommand.msg
   GuestScienceConfig.msg

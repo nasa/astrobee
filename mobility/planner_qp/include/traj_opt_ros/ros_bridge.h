@@ -21,30 +21,30 @@
 
 #include <ros/ros.h>
 #include <traj_opt_basic/traj_data.h>
-#include <traj_opt_msgs/Polynomial.h>
-#include <traj_opt_msgs/Spline.h>
-#include <traj_opt_msgs/Trajectory.h>
-#include <traj_opt_msgs/SolverInfo.h>
+#include <planner_qp/Polynomial.h>
+#include <planner_qp/Spline.h>
+#include <planner_qp/Trajectory.h>
+#include <planner_qp/SolverInfo.h>
 #include <string>
 #include <map>
 
 class TrajRosBridge {
  public:
   // No need to instantiate pesky variables!
-  static traj_opt_msgs::Trajectory convert(const traj_opt::TrajData &data);
-  static traj_opt::TrajData convert(const traj_opt_msgs::Trajectory &msg);
-  static traj_opt_msgs::SolverInfo convert(const traj_opt::SolverInfo &data);
+  static planner_qp::Trajectory convert(const traj_opt::TrajData &data);
+  static traj_opt::TrajData convert(const planner_qp::Trajectory &msg);
+  static planner_qp::SolverInfo convert(const traj_opt::SolverInfo &data);
 
   // make sure to run ros::init() before calling these functions or they won't work
-  static void publish_msg(const traj_opt_msgs::Trajectory &msg,
+  static void publish_msg(const planner_qp::Trajectory &msg,
                           std::string frame_id = "map",
                           std::string topic = "trajectory");
   static void publish_msg(const traj_opt::TrajData &data,
                           std::string frame_id = "map",
                           std::string topic = "trajectory");
-  static void publish_msg(const traj_opt::SolverInfo &data,
+  static void publish_msg(const planner_qp::SolverInfo &data,
                           std::string topic = "solver_info");
-  static void publish_msg(const traj_opt_msgs::SolverInfo &msg,
+  static void publish_msg(const traj_opt::SolverInfo &msg,
                           std::string topic = "solver_info");
 
   static bool are_subscribers(std::string topic);

@@ -17,7 +17,9 @@
   <build_depend>camera</build_depend>
   <build_depend>config_reader</build_depend>
   <build_depend>msg_conversions</build_depend>
+  <build_depend>ff_msgs</build_depend>
   <run_depend>camera</run_depend>
   <run_depend>config_reader</run_depend>
   <run_depend>msg_conversions</run_depend>
+  <run_depend>ff_msgs</run_depend>
 </package>

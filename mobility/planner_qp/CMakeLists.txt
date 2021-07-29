@@ -23,9 +23,9 @@ add_compile_options(-std=c++11)
 
 find_package(catkin REQUIRED COMPONENTS
   mapper
-  planner_trapezoidal
   ff_msgs
   ff_util
+  choreographer
 )
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
@@ -50,17 +50,19 @@ add_message_files(
   Trajectory.msg
 )
 
+generate_messages(
+  DEPENDENCIES std_msgs geometry_msgs sensor_msgs
+)
+
 catkin_package(
   LIBRARIES
     planner_qp
   DEPENDS
   CATKIN_DEPENDS
-    roscpp
-    nodelet
-    pluginlib
-    actionlib
-    tf
+    mapper
+    ff_msgs
     ff_util
+    choreographer
 )
 
 ###########

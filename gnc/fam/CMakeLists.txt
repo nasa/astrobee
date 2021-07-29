@@ -24,6 +24,7 @@ add_compile_options(-std=c++11)
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   ff_msgs
+  ff_hw_msgs
   ff_util
   config_reader
   gnc_autocode
@@ -38,6 +39,7 @@ catkin_package(
   CATKIN_DEPENDS
     roscpp
     ff_msgs
+    ff_hw_msgs
     ff_util
     config_reader
     gnc_autocode

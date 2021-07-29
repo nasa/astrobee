@@ -27,14 +27,14 @@ TrajRosBridge &TrajRosBridge::instance() {
 ros::Publisher TrajRosBridge::getPub(std::string topic) {
   if (instance().pubs_.find(topic) == instance().pubs_.end()) {
     instance().pubs_[topic] =
-        instance().nh_.advertise<traj_opt_msgs::Trajectory>(topic, 1, true);
+        instance().nh_.advertise<planner_qp::Trajectory>(topic, 1, true);
   }
   return instance().pubs_[topic];
 }
 ros::Publisher TrajRosBridge::getInfoPub(std::string topic) {
   if (instance().pubs_.find(topic) == instance().pubs_.end()) {
     instance().pubs_[topic] =
-        instance().nh_.advertise<traj_opt_msgs::SolverInfo>(topic, 1, true);
+        instance().nh_.advertise<planner_qp::SolverInfo>(topic, 1, true);
   }
   return instance().pubs_[topic];
 }
@@ -44,9 +44,9 @@ bool TrajRosBridge::are_subscribers(std::string topic) {
   return pub.getNumSubscribers() > 0;
 }
 
-void TrajRosBridge::publish_msg(const traj_opt_msgs::Trajectory &msg,
+void TrajRosBridge::publish_msg(const planner_qp::Trajectory &msg,
                                 std::string frame_id, std::string topic) {
-  traj_opt_msgs::Trajectory msgc = msg;
+  planner_qp::Trajectory msgc = msg;
   msgc.header.frame_id = frame_id;
   getPub(topic).publish(msgc);
 }
@@ -56,9 +56,9 @@ void TrajRosBridge::publish_msg(const traj_opt::TrajData &data,
 }
 
 // these convert functions can be written more cleanly with templates
-traj_opt_msgs::Trajectory TrajRosBridge::convert(
+planner_qp::Trajectory TrajRosBridge::convert(
     const traj_opt::TrajData &data) {
-  traj_opt_msgs::Trajectory traj;
+  planner_qp::Trajectory traj;
   traj.header.stamp = ros::Time::now();
   traj.header.frame_id = "map";
 
@@ -66,9 +66,9 @@ traj_opt_msgs::Trajectory TrajRosBridge::convert(
   traj.dimensions = data.dimensions;
   // copy all fields
   for (auto spline : data.data) {
-    traj_opt_msgs::Spline s;
+    planner_qp::Spline s;
     for (auto poly : spline.segs) {
-      traj_opt_msgs::Polynomial p;
+      planner_qp::Polynomial p;
       p.degree = poly.degree;
       p.dt = poly.dt;
       p.basis = poly.basis;
@@ -82,7 +82,7 @@ traj_opt_msgs::Trajectory TrajRosBridge::convert(
   return traj;
 }
 traj_opt::TrajData TrajRosBridge::convert(
-    const traj_opt_msgs::Trajectory &msg) {
+    const planner_qp::Trajectory &msg) {
   traj_opt::TrajData data;
   // copy all fields
   data.dimension_names = msg.dimension_names;
@@ -103,9 +103,9 @@ traj_opt::TrajData TrajRosBridge::convert(
   }
   return data;
 }
-traj_opt_msgs::SolverInfo TrajRosBridge::convert(
+planner_qp::SolverInfo TrajRosBridge::convert(
     const traj_opt::SolverInfo &data) {
-  traj_opt_msgs::SolverInfo info;
+  planner_qp::SolverInfo info;
   for (auto &g : data.gap_history) info.gap_history.push_back(g);
   for (auto &g : data.cost_history) info.cost_history.push_back(g);
   for (auto &g : data.slack) info.slack.push_back(g);
@@ -117,7 +117,7 @@ traj_opt_msgs::SolverInfo TrajRosBridge::convert(
   return info;
 }
 
-void TrajRosBridge::publish_msg(const traj_opt_msgs::SolverInfo &msg,
+void TrajRosBridge::publish_msg(const planner_qp::SolverInfo &msg,
                                 std::string topic) {
   getInfoPub(topic).publish(msg);
 }

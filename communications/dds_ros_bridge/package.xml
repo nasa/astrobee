@@ -18,10 +18,12 @@
   <build_depend>config_reader</build_depend>
   <build_depend>ff_util</build_depend>
   <build_depend>ff_msgs</build_depend>
+  <build_depend>ff_hw_msgs</build_depend>
   <build_depend>dds_msgs</build_depend>
   <run_depend>config_reader</run_depend>
   <run_depend>ff_util</run_depend>
   <run_depend>ff_msgs</run_depend>
+  <run_depend>ff_hw_msgs</run_depend>
   <run_depend>dds_msgs</run_depend>
   <export>
     <nodelet plugin="${prefix}/nodelet_plugins.xml" />

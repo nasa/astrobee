@@ -25,6 +25,7 @@ find_package(catkin REQUIRED COMPONENTS
   config_reader
   ff_util
   ff_msgs
+  ff_hw_msgs
   dds_msgs
 )
 
@@ -54,7 +55,7 @@ find_package(Soracore REQUIRED)
 
 catkin_package(
   LIBRARIES dds_ros_bridge astrobee_astrobee_bridge
-  CATKIN_DEPENDS config_reader ff_util ff_msgs dds_msgs
+  CATKIN_DEPENDS config_reader ff_util ff_msgs ff_hw_msgs dds_msgs
 )
 
 ###########

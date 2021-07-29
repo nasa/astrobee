@@ -18,7 +18,7 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(ff_hw_msgs)
 
-find_package(catkin2 REQUIRED COMPONENTS
+find_package(catkin REQUIRED COMPONENTS
   message_generation
   roscpp
   std_msgs
@@ -65,6 +65,7 @@ add_service_files(
   ConfigureSystemLeds.srv
   GetBatteryStatus.srv
   GetBoardInfo.srv
+  GetTemperatures.srv
   Reset.srv
   RingBuzzer.srv
   SetEnabled.srv
