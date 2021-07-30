@@ -143,13 +143,14 @@ Eigen::Matrix4f DepthOdometry::RansacIA(const pcl::PointCloud<pcl::PointNormal>:
   sac_ia_aligner.setInputTarget(target_cloud);
   sac_ia_aligner.setSourceFeatures(source_features);
   sac_ia_aligner.setTargetFeatures(target_features);
-  // scia.setMinSampleDistance(1);
-  // scia.setNumberOfSamples(2);
-  // scia.setCorrespondenceRandomness(20);
+  sac_ia_aligner.setMaximumIterations(10);
+  sac_ia_aligner.setMinSampleDistance(0);
+  sac_ia_aligner.setNumberOfSamples(100);
+  sac_ia_aligner.setCorrespondenceRandomness(1);
   pcl::PointCloud<pcl::PointNormal>::Ptr result(new pcl::PointCloud<pcl::PointNormal>);
   sac_ia_aligner.align(*result);
   // std::cout  <<"sac has converged:"<<scia.hasConverged()<<"  score: "<<scia.getFitnessScore()<<endl;
-  // TODO: make boost optional, set thresholds for ransacia fitness and make sure it converged!
+  // TODO(rsoussan): make boost optional, set thresholds for ransacia fitness and make sure it converged!
   return sac_ia_aligner.getFinalTransformation();
 }
 
