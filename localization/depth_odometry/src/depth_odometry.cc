@@ -30,6 +30,7 @@
 #include <pcl/features/impl/fpfh.hpp>
 #include <pcl/filters/filter.h>
 #include <pcl/filters/impl/filter.hpp>
+#include <pcl/registration/correspondence_rejection_surface_normal.h>
 #include <pcl/registration/ia_ransac.h>
 #include <pcl/registration/icp.h>
 #include <pcl/search/impl/search.hpp>
@@ -181,6 +182,20 @@ boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> Depth
     symmetric_transformation_estimation->setEnforceSameDirectionNormals(params_.enforce_same_direction_normals);
     icp.transformation_estimation_ = symmetric_transformation_estimation;
   }
+
+  if (params_.correspondence_rejector_surface_normal) {
+    pcl::registration::CorrespondenceRejectorSurfaceNormal::Ptr correspondence_rejector_surface_normal(
+      new pcl::registration::CorrespondenceRejectorSurfaceNormal());
+    correspondence_rejector_surface_normal->initializeDataContainer<pcl::PointXYZ, pcl::PointNormal>();
+    correspondence_rejector_surface_normal->setThreshold(params_.correspondence_rejector_surface_normal_threshold);
+    // correspondence_rejector_surface_normal->setInputSource<pcl::PointNormal>(cloud_a_with_normals);
+    correspondence_rejector_surface_normal->setInputNormals<pcl::PointXYZ, pcl::PointNormal>(cloud_a_with_normals);
+    // correspondence_rejector_surface_normal->setInputTarget<pcl::PointNormal>(cloud_b_with_normals);
+    correspondence_rejector_surface_normal->setTargetNormals<pcl::PointXYZ, pcl::PointNormal>(cloud_b_with_normals);
+    // correspondence_rejector_surface_normal->etSearchMethodTarget<pcl::PointNormal>(cloud_b_with_normals);
+    icp.addCorrespondenceRejector(correspondence_rejector_surface_normal);
+  }
+
   icp.setInputSource(cloud_a_with_normals);
   icp.setInputTarget(cloud_b_with_normals);
   icp.setMaximumIterations(10);

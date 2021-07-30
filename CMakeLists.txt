@@ -322,7 +322,7 @@ if (USE_ROS)
     include(BambooFix)
   endif()
 
-  find_package(PCL REQUIRED COMPONENTS common features)
+  find_package(PCL REQUIRED COMPONENTS common features registration)
   find_package(Octomap MODULE REQUIRED)
   #pkg_check_modules(OROCOS_KDL REQUIRED orocos_kdl)
   if (USE_CTC)
