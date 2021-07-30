@@ -133,8 +133,8 @@ pcl::PointCloud<pcl::FPFHSignature33>::Ptr DepthOdometry::EstimateHistogramFeatu
   return features;
 }
 
-Eigen::Isometry3d DepthOdometry::RansacIA(const pcl::PointCloud<pcl::PointNormal>::Ptr source_cloud,
-                                          const pcl::PointCloud<pcl::PointNormal>::Ptr target_cloud) const {
+Eigen::Matrix4f DepthOdometry::RansacIA(const pcl::PointCloud<pcl::PointNormal>::Ptr source_cloud,
+                                        const pcl::PointCloud<pcl::PointNormal>::Ptr target_cloud) const {
   const auto source_features = EstimateHistogramFeatures(source_cloud);
   const auto target_features = EstimateHistogramFeatures(target_cloud);
 
@@ -150,9 +150,7 @@ Eigen::Isometry3d DepthOdometry::RansacIA(const pcl::PointCloud<pcl::PointNormal
   sac_ia_aligner.align(*result);
   // std::cout  <<"sac has converged:"<<scia.hasConverged()<<"  score: "<<scia.getFitnessScore()<<endl;
   // TODO: make boost optional, set thresholds for ransacia fitness and make sure it converged!
-  const Eigen::Isometry3d relative_transform(
-    Eigen::Isometry3f(sac_ia_aligner.getFinalTransformation().matrix()).cast<double>());
-  return relative_transform;
+  return sac_ia_aligner.getFinalTransformation();
 }
 
 boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> DepthOdometry::Icp(
@@ -171,6 +169,11 @@ boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> Depth
   RemoveNans(*cloud_b_with_normals);
 
   pcl::IterativeClosestPointWithNormals<pcl::PointNormal, pcl::PointNormal> icp;
+  Eigen::Matrix4f initial_estimate = Eigen::Matrix4f::Identity();
+  if (params_.inital_estimate_with_ransac_ia) {
+    initial_estimate = RansacIA(cloud_a_with_normals, cloud_b_with_normals);
+  }
+
   if (params_.symmetric_objective) {
     auto symmetric_transformation_estimation = boost::make_shared<
       pcl::registration::TransformationEstimationSymmetricPointToPlaneLLS<pcl::PointNormal, pcl::PointNormal>>();
@@ -181,7 +184,7 @@ boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> Depth
   icp.setInputTarget(cloud_b_with_normals);
   icp.setMaximumIterations(10);
   pcl::PointCloud<pcl::PointNormal>::Ptr result(new pcl::PointCloud<pcl::PointNormal>);
-  icp.align(*result);
+  icp.align(*result, initial_estimate);
 
   if (params_.publish_point_clouds) {
     PublishPointClouds(*cloud_a, *cloud_b, icp.getFinalTransformation());

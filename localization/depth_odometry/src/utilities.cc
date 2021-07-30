@@ -32,6 +32,7 @@ void LoadDepthOdometryParams(config_reader::ConfigReader& config, DepthOdometryP
   params.search_radius = mc::LoadDouble(config, "search_radius");
   params.symmetric_objective = mc::LoadBool(config, "symmetric_objective");
   params.enforce_same_direction_normals = mc::LoadBool(config, "enforce_same_direction_normals");
+  params.inital_estimate_with_ransac_ia = mc::LoadBool(config, "inital_estimate_with_ransac_ia");
   params.publish_point_clouds = mc::LoadBool(config, "publish_point_clouds");
   params.frame_change_transform = mc::LoadBool(config, "frame_change_transform");
   params.body_T_haz_cam = msg_conversions::LoadEigenTransform(config, "haz_cam_transform");

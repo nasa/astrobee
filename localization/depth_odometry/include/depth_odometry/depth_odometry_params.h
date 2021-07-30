@@ -28,6 +28,7 @@ struct DepthOdometryParams {
   double search_radius;
   bool symmetric_objective;
   bool enforce_same_direction_normals;
+  bool inital_estimate_with_ransac_ia;
   bool publish_point_clouds;
   bool frame_change_transform;
   Eigen::Isometry3d body_T_haz_cam;
