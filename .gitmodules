@@ -11,3 +11,7 @@
 	path = description/media
 	url = https://github.com/nasa/astrobee_media.git
 	shallow = true
+[submodule "communications/vision_msgs"]
+	path = communications/vision_msgs
+	url = https://github.com/ros-perception/vision_msgs.git
+	branch = kinetic-devel
