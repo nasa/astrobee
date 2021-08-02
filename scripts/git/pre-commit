@@ -1,8 +1,12 @@
 #!/usr/bin/env python3
 
-import datetime, os, importlib, subprocess
-from operator import itemgetter
+import datetime
+import importlib
+import os
+import subprocess
 from itertools import groupby
+from operator import itemgetter
+
 
 def get_cpplint_path():
     pwd = os.path.realpath(os.path.curdir)

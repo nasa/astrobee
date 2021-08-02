@@ -17,17 +17,20 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from scipy.spatial.transform import Slerp
-from scipy.spatial.transform import Rotation as R
 import matplotlib
+from scipy.spatial.transform import Rotation as R
+from scipy.spatial.transform import Slerp
+
 matplotlib.use('pdf')
-import matplotlib.pyplot as plt
-from matplotlib.backends.backend_pdf import PdfPages
 import argparse
+import copy
+import math
 import os
 import os.path
-import math
-import copy
+
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_pdf import PdfPages
+
 
 def quat_to_euler(q):
     q2q2 = q[1] * q[1]
