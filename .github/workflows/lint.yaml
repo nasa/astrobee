@@ -13,7 +13,6 @@ jobs:
     - name: Check repo for lint errors
       run: ./scripts/git/cpplint_repo.py .
 
-jobs:
   lint_check_python:
     runs-on: ubuntu-latest
 
