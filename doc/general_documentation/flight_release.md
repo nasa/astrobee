@@ -96,5 +96,5 @@ sign it and stage it.
 This section is for reviewers only! After reviewing the pull request and
 verifying that the release passed all sections of the release testing procedure,
 please merge the pull request into develop. You will then need to merge the
-release branch into master as well. After this merge, please create a github
-release.
+develop branch into master (squash and merge). After this merge, please create
+a github release and merge master back into develop (merge commit).
