@@ -1,6 +1,6 @@
 # Check for lint error and auto correct them
 
-name: Check for C++ lint errors
+name: Check for lint errors
 
 on: ['push', 'pull_request']
 
@@ -12,10 +12,6 @@ jobs:
     - uses: actions/checkout@v2
     - name: Check repo for lint errors
       run: ./scripts/git/cpplint_repo.py .
-
-name: Check for python lint errors
-
-on: ['push', 'pull_request']
 
 jobs:
   lint_check_python:
