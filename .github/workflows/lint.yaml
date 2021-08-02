@@ -5,7 +5,7 @@ name: Check for C++ lint errors
 on: ['push', 'pull_request']
 
 jobs:
-  lint_check:
+  lint_check_cpp:
     runs-on: ubuntu-latest
 
     steps:
@@ -18,7 +18,7 @@ name: Check for python lint errors
 on: ['push', 'pull_request']
 
 jobs:
-  lint_check:
+  lint_check_python:
     runs-on: ubuntu-latest
 
     steps:
