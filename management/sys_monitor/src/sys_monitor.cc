@@ -529,7 +529,7 @@ void SysMonitor::StartupTimerCallback(ros::TimerEvent const& te) {
   int load_result;
 
   for (auto it = watch_dogs_.begin(); it != watch_dogs_.end(); ++it) {
-    // Try restarting nodelet if we never received a heartneat from it
+    // Try restarting nodelet if we never received a heartbeat from it
     if (!it->second->heartbeat_started()) {
       // Only need to set the name. Everything else will be looked up from the
       // config
