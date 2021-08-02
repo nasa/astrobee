@@ -30,7 +30,9 @@
 #include <pcl/features/impl/fpfh.hpp>
 #include <pcl/filters/filter.h>
 #include <pcl/filters/impl/filter.hpp>
-#include <pcl/registration/correspondence_rejection_surface_normal.h>
+// TODO(rsoussan): Switch back to this when PCL bug is fixed
+//#include <pcl/registration/correspondence_rejection_surface_normal.h>
+#include <depth_odometry/correspondence_rejection_surface_normal2.h>
 #include <pcl/registration/ia_ransac.h>
 #include <pcl/registration/icp.h>
 #include <pcl/search/impl/search.hpp>
@@ -184,15 +186,12 @@ boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> Depth
   }
 
   if (params_.correspondence_rejector_surface_normal) {
-    pcl::registration::CorrespondenceRejectorSurfaceNormal::Ptr correspondence_rejector_surface_normal(
-      new pcl::registration::CorrespondenceRejectorSurfaceNormal());
+    pcl::registration::CorrespondenceRejectorSurfaceNormal2::Ptr correspondence_rejector_surface_normal(
+      new pcl::registration::CorrespondenceRejectorSurfaceNormal2());
     correspondence_rejector_surface_normal->initializeDataContainer<pcl::PointXYZ, pcl::PointNormal>();
     correspondence_rejector_surface_normal->setThreshold(params_.correspondence_rejector_surface_normal_threshold);
-    // correspondence_rejector_surface_normal->setInputSource<pcl::PointNormal>(cloud_a_with_normals);
     correspondence_rejector_surface_normal->setInputNormals<pcl::PointXYZ, pcl::PointNormal>(cloud_a_with_normals);
-    // correspondence_rejector_surface_normal->setInputTarget<pcl::PointNormal>(cloud_b_with_normals);
     correspondence_rejector_surface_normal->setTargetNormals<pcl::PointXYZ, pcl::PointNormal>(cloud_b_with_normals);
-    // correspondence_rejector_surface_normal->etSearchMethodTarget<pcl::PointNormal>(cloud_b_with_normals);
     icp.addCorrespondenceRejector(correspondence_rejector_surface_normal);
   }
 
@@ -228,24 +227,24 @@ boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> Depth
 void DepthOdometry::PublishPointClouds(const pcl::PointCloud<pcl::PointXYZ>& cloud_a,
                                        const pcl::PointCloud<pcl::PointXYZ>& cloud_b,
                                        const Eigen::Matrix<float, 4, 4>& relative_transform) const {
-  sensor_msgs::PointCloud2 ros_cloud_a;
-  pcl::toROSMsg(cloud_a, ros_cloud_a);
-  ros_cloud_a.header.stamp = ros::Time::now();
-  ros_cloud_a.header.frame_id = "haz_cam";
-  pca_pub_.publish(ros_cloud_a);
-  sensor_msgs::PointCloud2 ros_cloud_b;
-  pcl::toROSMsg(cloud_b, ros_cloud_b);
-  ros_cloud_b.header.stamp = ros::Time::now();
-  ros_cloud_b.header.frame_id = "haz_cam";
-  pcb_pub_.publish(ros_cloud_b);
+  /*  sensor_msgs::PointCloud2 ros_cloud_a;
+    pcl::toROSMsg(cloud_a, ros_cloud_a);
+    ros_cloud_a.header.stamp = ros::Time::now();
+    ros_cloud_a.header.frame_id = "haz_cam";
+    pca_pub_.publish(ros_cloud_a);
+    sensor_msgs::PointCloud2 ros_cloud_b;
+    pcl::toROSMsg(cloud_b, ros_cloud_b);
+    ros_cloud_b.header.stamp = ros::Time::now();
+    ros_cloud_b.header.frame_id = "haz_cam";
+    pcb_pub_.publish(ros_cloud_b);
 
-  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_t(new pcl::PointCloud<pcl::PointXYZ>());
-  pcl::transformPointCloud(cloud_a, *cloud_t, relative_transform);
-  sensor_msgs::PointCloud2 ros_cloud_t;
-  pcl::toROSMsg(*cloud_t, ros_cloud_t);
-  ros_cloud_t.header.stamp = ros::Time::now();
-  ros_cloud_t.header.frame_id = "haz_cam";
-  pct_pub_.publish(ros_cloud_t);
+    pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_t(new pcl::PointCloud<pcl::PointXYZ>());
+    pcl::transformPointCloud(cloud_a, *cloud_t, relative_transform);
+    sensor_msgs::PointCloud2 ros_cloud_t;
+    pcl::toROSMsg(*cloud_t, ros_cloud_t);
+    ros_cloud_t.header.stamp = ros::Time::now();
+    ros_cloud_t.header.frame_id = "haz_cam";
+    pct_pub_.publish(ros_cloud_t);*/
 }
 
 Eigen::Matrix<double, 1, 6> DepthOdometry::Jacobian(const pcl::PointNormal& source_point,
