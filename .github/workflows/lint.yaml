@@ -28,4 +28,4 @@ jobs:
         black . --diff --extend-exclude cmake
     - name: Run isort
       run: |
-        isort !(cmake) --profile black
+        isort . --diff --extend-skip cmake --profile black
