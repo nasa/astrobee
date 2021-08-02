@@ -23,7 +23,9 @@ jobs:
         pip install black
         pip install isort
 
-    - name: Run linters
+    - name: Run black
       run: |
         black . --diff --extend-exclude cmake
+    - name: Run isort
+      run: |
         isort !(cmake) --profile black
