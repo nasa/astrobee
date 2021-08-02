@@ -25,7 +25,7 @@ jobs:
 
     - name: Run black
       run: |
-        black . --diff --extend-exclude cmake
+        black . --diff --extend-exclude cmake --check
     - name: Run isort
       run: |
-        isort . --diff --extend-skip cmake --profile black
+        isort . --diff --extend-skip cmake --profile black --check-only
