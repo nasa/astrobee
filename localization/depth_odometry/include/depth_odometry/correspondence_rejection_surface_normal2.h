@@ -45,7 +45,9 @@
 namespace pcl {
 namespace registration {
 // TODO(rsoussan): This fixes a bug in PCL for setSourceNormals, where PCL hardcodes the normal type to pcl::Normal
-// when it should use NormalT.  Switch back to PCL implementation when this is fixed.
+// when it should use NormalT.  Switch back to PCL implementation when this is fixed. Additionally this should be
+// either fixed in setTargetNormals or requiresTargetNormals should return false (ideally the second, and
+// requires*Points should also be false).
 /**
  * @b CorrespondenceRejectorSurfaceNormal2 implements a simple correspondence
  * rejection method based on the angle between the normals at correspondent points.
@@ -100,9 +102,11 @@ class PCL_EXPORTS CorrespondenceRejectorSurfaceNormal2 : public CorrespondenceRe
 
     // Test each correspondence
     for (size_t i = 0; i < original_correspondences.size(); ++i) {
-      if (boost::static_pointer_cast<DataContainer<pcl::PointXYZ, pcl::PointNormal> >(data_container_)
-            ->getCorrespondenceScoreFromNormals(original_correspondences[i]) > threshold_)
+      // TODO(rsoussan): Abs val?
+      if (std::abs(boost::static_pointer_cast<DataContainer<pcl::PointXYZ, pcl::PointNormal> >(data_container_)
+                     ->getCorrespondenceScoreFromNormals(original_correspondences[i])) > threshold_) {
         remaining_correspondences[number_valid_correspondences++] = original_correspondences[i];
+      }
     }
     remaining_correspondences.resize(number_valid_correspondences);
   }
@@ -257,7 +261,7 @@ class PCL_EXPORTS CorrespondenceRejectorSurfaceNormal2 : public CorrespondenceRe
   }
 
   /** \brief See if this rejector requires source points */
-  bool requiresSourcePoints() const { return (true); }
+  bool requiresSourcePoints() const { return (false); }
 
   /** \brief Blob method for setting the source cloud */
   void setSourcePoints(pcl::PCLPointCloud2::ConstPtr cloud2) {
@@ -268,7 +272,7 @@ class PCL_EXPORTS CorrespondenceRejectorSurfaceNormal2 : public CorrespondenceRe
   }
 
   /** \brief See if this rejector requires a target cloud */
-  bool requiresTargetPoints() const { return (true); }
+  bool requiresTargetPoints() const { return (false); }
 
   /** \brief Method for setting the target cloud */
   void setTargetPoints(pcl::PCLPointCloud2::ConstPtr cloud2) {
@@ -290,14 +294,14 @@ class PCL_EXPORTS CorrespondenceRejectorSurfaceNormal2 : public CorrespondenceRe
   }
 
   /** \brief See if this rejector requires target normals*/
-  bool requiresTargetNormals() const { return (true); }
+  bool requiresTargetNormals() const { return (false); }
 
   /** \brief Method for setting the target normals */
   void setTargetNormals(pcl::PCLPointCloud2::ConstPtr cloud2) {
-    if (!data_container_) initializeDataContainer<PointXYZ, Normal>();
-    PointCloud<Normal>::Ptr cloud(new PointCloud<Normal>);
+    if (!data_container_) initializeDataContainer<PointXYZ, pcl::PointNormal>();
+    PointCloud<pcl::PointNormal>::Ptr cloud(new PointCloud<pcl::PointNormal>);
     fromPCLPointCloud2(*cloud2, *cloud);
-    setTargetNormals<PointXYZ, Normal>(cloud);
+    setTargetNormals<PointXYZ, pcl::PointNormal>(cloud);
   }
 
  protected:
