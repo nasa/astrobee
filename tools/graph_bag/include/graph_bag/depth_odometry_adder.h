@@ -24,6 +24,7 @@
 #include <depth_odometry/depth_odometry_nodelet.h>
 #include <ff_common/utils.h>
 
+#include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <rosbag/view.h>
 
 #include <string>
@@ -35,7 +36,8 @@ class DepthOdometryAdder {
   void AddDepthOdometry();
 
  private:
-  void GenerateDepthOdometry(const sensor_msgs::PointCloud2ConstPtr& depth_cloud_msg);
+  boost::optional<geometry_msgs::PoseWithCovarianceStamped> GenerateDepthOdometry(
+    const sensor_msgs::PointCloud2ConstPtr& depth_cloud_msg);
 
   depth_odometry::DepthOdometry depth_odometry_;
   rosbag::Bag input_bag_;
