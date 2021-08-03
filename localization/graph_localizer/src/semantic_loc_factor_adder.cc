@@ -154,12 +154,12 @@ std::vector<go::FactorsToAdd> SemanticLocFactorAdder::AddFactors(const lm::Seman
         // gtsam::Point2 is an Eigen::Vector2d typedef
         float dist;
         if (params().scale_matching_distance_with_bbox) {
-          dist = ((cam_obj_px - det.image_point).array()/det.bounding_box.array()).matrix().norm();
+          dist = ((cam_obj_px - det.image_point).array()/(det.bounding_box.array()/2.)).matrix().norm();
         } else {
           dist = (cam_obj_px - det.image_point).norm();
         }
         // Don't use handrails for now
-        if (dist < best_dist && cls == det.class_id && cls != 2 && used_dets.count(&det) == 0) {
+        if (dist < best_dist && cls == det.class_id && used_dets.count(&det) == 0) {
           second_best_dist = best_dist;
           best_dist = dist;
           best_det = &det;
