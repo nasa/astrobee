@@ -28,17 +28,14 @@
 #include <pcl/point_types.h>
 #include <pcl/registration/icp.h>
 
-#include <sensor_msgs/PointCloud2.h>
-#include <ros/node_handle.h>
-#include <ros/publisher.h>
-#include <ros/subscriber.h>
-
 namespace depth_odometry {
 class DepthOdometry {
  public:
   DepthOdometry();
   boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> DepthCloudCallback(
     std::pair<localization_common::Time, pcl::PointCloud<pcl::PointXYZ>::Ptr> depth_cloud);
+  pcl::PointCloud<pcl::PointXYZ>::Ptr previous_depth_cloud() const;
+  pcl::PointCloud<pcl::PointXYZ>::Ptr latest_depth_cloud() const;
 
  private:
   boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> Icp(
@@ -53,8 +50,6 @@ class DepthOdometry {
   void FilterCorrespondences(const pcl::PointCloud<pcl::PointNormal>& input_cloud,
                              const pcl::PointCloud<pcl::PointNormal>& target_cloud,
                              pcl::Correspondences& correspondences) const;
-  void PublishPointClouds(const pcl::PointCloud<pcl::PointXYZ>& cloud_a, const pcl::PointCloud<pcl::PointXYZ>& cloud_b,
-                          const Eigen::Matrix<float, 4, 4>& relative_transform) const;
   bool CovarianceSane(const Eigen::Matrix<double, 6, 6>& covariance) const;
   Eigen::Matrix<double, 6, 6> ComputeCovarianceMatrix(
     const pcl::IterativeClosestPointWithNormals<pcl::PointNormal, pcl::PointNormal>& icp,
@@ -67,8 +62,6 @@ class DepthOdometry {
   std::pair<localization_common::Time, pcl::PointCloud<pcl::PointXYZ>::Ptr> previous_depth_cloud_;
   std::pair<localization_common::Time, pcl::PointCloud<pcl::PointXYZ>::Ptr> latest_depth_cloud_;
   DepthOdometryParams params_;
-  // ros::NodeHandle nh_;
-  // ros::Publisher pca_pub_, pcb_pub_, pct_pub_;
 };
 }  // namespace depth_odometry
 

@@ -33,11 +33,12 @@ namespace mc = msg_conversions;
 
 DepthOdometryNodelet::DepthOdometryNodelet() : ff_util::FreeFlyerNodelet(NODE_DEPTH_ODOM, true) {
   /*config_reader::ConfigReader config;
-  lc::LoadDepthOdometryConfig(config);
+  config.AddFile("localization/depth_odometry.config");
   if (!config.ReadFiles()) {
     LogFatal("Failed to read config files.");
   }
-  LoadDepthOdometryNodeletParams(config, params_);*/
+
+  LoadDepthOdometryParams(config, params_);*/
 }
 
 void DepthOdometryNodelet::Initialize(ros::NodeHandle* nh) { SubscribeAndAdvertise(nh); }
@@ -49,6 +50,11 @@ void DepthOdometryNodelet::SubscribeAndAdvertise(ros::NodeHandle* nh) {
   depth_sub_ = nh->subscribe<sensor_msgs::PointCloud2>(depth_cloud_topic, 10, &DepthOdometryNodelet::DepthCloudCallback,
                                                        this, ros::TransportHints().tcpNoDelay());
   odom_pub_ = nh->advertise<geometry_msgs::PoseWithCovarianceStamped>(TOPIC_LOCALIZATION_DEPTH_ODOM, 10);
+  // if (params_.publish_point_clouds) {
+  point_cloud_a_pub_ = nh->advertise<sensor_msgs::PointCloud2>("point_cloud_a", 10);
+  point_cloud_b_pub_ = nh->advertise<sensor_msgs::PointCloud2>("point_cloud_b", 10);
+  point_cloud_result_pub_ = nh->advertise<sensor_msgs::PointCloud2>("point_cloud_result", 10);
+  //}
 }
 
 void DepthOdometryNodelet::DepthCloudCallback(const sensor_msgs::PointCloud2ConstPtr& depth_cloud_msg) {
@@ -68,6 +74,35 @@ void DepthOdometryNodelet::DepthCloudCallback(const sensor_msgs::PointCloud2Cons
   mc::EigenPoseCovarianceToMsg(relative_pose->first, relative_pose->second, pose_msg);
   lc::TimeToHeader(depth_cloud.first, pose_msg.header);
   odom_pub_.publish(pose_msg);
+
+  // if (params_.publish_point_clouds) {
+  PublishPointClouds(*(depth_odometry_.previous_depth_cloud()), *(depth_odometry_.latest_depth_cloud()),
+                     relative_pose->first.matrix().cast<float>());
+  //}
+}
+
+void DepthOdometryNodelet::PublishPointClouds(const pcl::PointCloud<pcl::PointXYZ>& cloud_a,
+                                              const pcl::PointCloud<pcl::PointXYZ>& cloud_b,
+                                              const Eigen::Matrix<float, 4, 4>& relative_transform) const {
+  sensor_msgs::PointCloud2 ros_cloud_a;
+  pcl::toROSMsg(cloud_a, ros_cloud_a);
+  ros_cloud_a.header.stamp = ros::Time::now();
+  ros_cloud_a.header.frame_id = "haz_cam";
+  point_cloud_a_pub_.publish(ros_cloud_a);
+
+  sensor_msgs::PointCloud2 ros_cloud_b;
+  pcl::toROSMsg(cloud_b, ros_cloud_b);
+  ros_cloud_b.header.stamp = ros::Time::now();
+  ros_cloud_b.header.frame_id = "haz_cam";
+  point_cloud_b_pub_.publish(ros_cloud_b);
+
+  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_result(new pcl::PointCloud<pcl::PointXYZ>());
+  pcl::transformPointCloud(cloud_a, *cloud_result, relative_transform);
+  sensor_msgs::PointCloud2 ros_cloud_result;
+  pcl::toROSMsg(*cloud_result, ros_cloud_result);
+  ros_cloud_result.header.stamp = ros::Time::now();
+  ros_cloud_result.header.frame_id = "haz_cam";
+  point_cloud_result_pub_.publish(ros_cloud_result);
 }
 }  // namespace depth_odometry
 

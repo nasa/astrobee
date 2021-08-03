@@ -54,13 +54,11 @@ DepthOdometry::DepthOdometry() {
   }
 
   LoadDepthOdometryParams(config, params_);
-
-  if (params_.publish_point_clouds) {
-    /*  pca_pub_ = nh_.advertise<sensor_msgs::PointCloud2>("pca", 10);
-      pcb_pub_ = nh_.advertise<sensor_msgs::PointCloud2>("pcb", 10);
-      pct_pub_ = nh_.advertise<sensor_msgs::PointCloud2>("pct", 10);*/
-  }
 }
+
+pcl::PointCloud<pcl::PointXYZ>::Ptr DepthOdometry::previous_depth_cloud() const { return previous_depth_cloud_.second; }
+
+pcl::PointCloud<pcl::PointXYZ>::Ptr DepthOdometry::latest_depth_cloud() const { return latest_depth_cloud_.second; }
 
 boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> DepthOdometry::DepthCloudCallback(
   std::pair<lc::Time, pcl::PointCloud<pcl::PointXYZ>::Ptr> depth_cloud) {
@@ -201,10 +199,6 @@ boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> Depth
   pcl::PointCloud<pcl::PointNormal>::Ptr result(new pcl::PointCloud<pcl::PointNormal>);
   icp.align(*result, initial_estimate);
 
-  if (params_.publish_point_clouds) {
-    PublishPointClouds(*cloud_a, *cloud_b, icp.getFinalTransformation());
-  }
-
   if (!icp.hasConverged()) {
     LogError("Icp: Failed to converge.");
     return boost::none;
@@ -222,29 +216,6 @@ boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> Depth
   const Eigen::Matrix<double, 6, 6> covariance =
     ComputeCovarianceMatrix(icp, cloud_a_with_normals, result, relative_transform);
   return std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>{relative_transform, covariance};
-}
-
-void DepthOdometry::PublishPointClouds(const pcl::PointCloud<pcl::PointXYZ>& cloud_a,
-                                       const pcl::PointCloud<pcl::PointXYZ>& cloud_b,
-                                       const Eigen::Matrix<float, 4, 4>& relative_transform) const {
-  /*  sensor_msgs::PointCloud2 ros_cloud_a;
-    pcl::toROSMsg(cloud_a, ros_cloud_a);
-    ros_cloud_a.header.stamp = ros::Time::now();
-    ros_cloud_a.header.frame_id = "haz_cam";
-    pca_pub_.publish(ros_cloud_a);
-    sensor_msgs::PointCloud2 ros_cloud_b;
-    pcl::toROSMsg(cloud_b, ros_cloud_b);
-    ros_cloud_b.header.stamp = ros::Time::now();
-    ros_cloud_b.header.frame_id = "haz_cam";
-    pcb_pub_.publish(ros_cloud_b);
-
-    pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_t(new pcl::PointCloud<pcl::PointXYZ>());
-    pcl::transformPointCloud(cloud_a, *cloud_t, relative_transform);
-    sensor_msgs::PointCloud2 ros_cloud_t;
-    pcl::toROSMsg(*cloud_t, ros_cloud_t);
-    ros_cloud_t.header.stamp = ros::Time::now();
-    ros_cloud_t.header.frame_id = "haz_cam";
-    pct_pub_.publish(ros_cloud_t);*/
 }
 
 Eigen::Matrix<double, 1, 6> DepthOdometry::Jacobian(const pcl::PointNormal& source_point,
