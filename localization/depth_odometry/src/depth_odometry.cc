@@ -87,7 +87,7 @@ boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> Depth
     // rotation matrix)
   }
 
-  LogError("cov: " << std::endl << relative_transform->second.matrix());
+  // LogError("cov: " << std::endl << relative_transform->second.matrix());
   if (relative_transform->first.translation().norm() > 0.5) LogError("large position jump!!");
 
   return relative_transform;
@@ -195,7 +195,7 @@ boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> Depth
 
   icp.setInputSource(cloud_a_with_normals);
   icp.setInputTarget(cloud_b_with_normals);
-  icp.setMaximumIterations(10);
+  icp.setMaximumIterations(params_.max_iterations);
   pcl::PointCloud<pcl::PointNormal>::Ptr result(new pcl::PointCloud<pcl::PointNormal>);
   icp.align(*result, initial_estimate);
 
@@ -210,6 +210,7 @@ boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> Depth
     LogError("Icp: Fitness score too large: " << fitness_score << ".");
     return boost::none;
   }
+  LogError("its: " << icp.nr_iterations_);
 
   // TODO(rsoussan): clean this up
   const Eigen::Isometry3d relative_transform(Eigen::Isometry3f(icp.getFinalTransformation().matrix()).cast<double>());

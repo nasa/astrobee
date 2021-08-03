@@ -26,6 +26,7 @@ struct DepthOdometryParams {
   double orientation_covariance_threshold;
   double fitness_threshold;
   double search_radius;
+  int max_iterations;
   bool symmetric_objective;
   bool enforce_same_direction_normals;
   bool inital_estimate_with_ransac_ia;
