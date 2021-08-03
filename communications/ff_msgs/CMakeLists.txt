@@ -82,6 +82,7 @@ add_message_files(
   Heartbeat.msg
   JointSample.msg
   JointSampleStamped.msg
+  LocalizationGraph.msg
   LocalizationPipeline.msg
   LocalizationState.msg
   MemState.msg

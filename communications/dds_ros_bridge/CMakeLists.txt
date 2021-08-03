@@ -22,6 +22,7 @@ project(dds_ros_bridge)
 add_compile_options(-std=c++14)
 
 find_package(catkin REQUIRED COMPONENTS
+  nodelet
   config_reader
   ff_util
   ff_msgs
@@ -55,7 +56,7 @@ find_package(Soracore REQUIRED)
 
 catkin_package(
   LIBRARIES dds_ros_bridge astrobee_astrobee_bridge
-  CATKIN_DEPENDS config_reader ff_util ff_msgs ff_hw_msgs dds_msgs
+  CATKIN_DEPENDS nodelet config_reader ff_util ff_msgs ff_hw_msgs dds_msgs
 )
 
 ###########

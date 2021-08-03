@@ -37,17 +37,24 @@ find_package(Eigen3 REQUIRED)
 catkin_package(
   INCLUDE_DIRS include ${GTSAM_INCLUDE_DIR} ${Boost_INCLUDE_DIRS} 
   LIBRARIES ${PROJECT_NAME} ${GTSAM_LIBRARIES}
-  CATKIN_DEPENDS camera config_reader msg_conversions ff_msgs
+  CATKIN_DEPENDS
+    camera
+    config_reader
+    msg_conversions
+    ff_msgs
 )
 
 ###########
 ## Build ##
 ###########
 
+message("lll ${GTSAM_LIBRARIES}")
+
 # Specify additional locations of header files
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
+  ${GTSAM_INCLUDE_DIR}
   ${EIGEN3_INCLUDE_DIRS}
 )
 
@@ -63,4 +70,4 @@ add_library(${PROJECT_NAME}
   src/utilities.cc
 )
 add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} ${GTSAM_LIBRARIES} ${catkin_LIBRARIES})

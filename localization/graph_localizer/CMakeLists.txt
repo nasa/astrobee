@@ -18,21 +18,66 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(graph_localizer)
 
-if (USE_ROS)
+## Compile as C++14, supported in ROS Kinetic and newer
+add_compile_options(-std=c++14)
+
+# Find GTSAM
+find_package(GTSAM REQUIRED)
+
+# System dependencies are found with CMake's conventions
+find_package(Eigen3 REQUIRED)
+
+find_package(catkin REQUIRED COMPONENTS
+  nodelet
+  camera
+  config_reader
+  ff_util
+  ff_msgs
+  graph_optimizer
+  imu_integration
+  localization_common
+  localization_measurements
+  msg_conversions
+)
 
 # include ff_nodelet to get ff_util header files since these aren't exposed elsewhere
 catkin_package(
-  LIBRARIES ${PROJECT_NAME} ${GLOG_LIBRARIES} ${GTSAM_LIBRARIES} camera config_reader ff_nodelet graph_optimizer imu_integration localization_common localization_measurements msg_conversions
+  LIBRARIES ${PROJECT_NAME} ${GLOG_LIBRARIES} ${GTSAM_LIBRARIES} 
   INCLUDE_DIRS include ${GLOG_INCLUDE_DIRS} ${GTSAM_INCLUDE_DIR} 
-  CATKIN_DEPENDS roscpp 
-  DEPENDS gtsam ff_msgs 
+  CATKIN_DEPENDS
+    nodelet
+    camera
+    config_reader
+    ff_util
+    ff_msgs
+    graph_optimizer
+    imu_integration
+    localization_common
+    localization_measurements
+    msg_conversions
 )
 
-create_library(TARGET ${PROJECT_NAME} 
-  LIBS ${catkin_LIBRARIES} ${GLOG_LIBRARIES} gtsam camera config_reader ff_nodelet graph_optimizer imu_integration localization_common localization_measurements msg_conversions 
-  INC ${catkin_INCLUDE_DIRS} ${GLOG_INCLUDE_DIRS} 
-  DEPS ff_msgs
+###########
+## Build ##
+###########
+# Specify additional locations of header files
+include_directories(
+  include
+  ${catkin_INCLUDE_DIRS}
+  ${EIGEN3_INCLUDE_DIRS}
 )
+
+file(GLOB cc_files
+     "src/*.cc"
+)
+
+# Declare C++ libraries
+add_library(${PROJECT_NAME}
+  ${cc_files}
+)
+add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
+
 
 if(CATKIN_ENABLE_TESTING)
   find_package(rostest REQUIRED)
@@ -87,6 +132,12 @@ if(CATKIN_ENABLE_TESTING)
   )
 endif()
 
-install_launch_files()
+#############
+## Install ##
+#############
 
-endif (USE_ROS)
+# Mark launch files for installation
+install(DIRECTORY launch/
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
+  PATTERN ".svn" EXCLUDE)
+

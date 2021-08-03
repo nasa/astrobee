@@ -23,6 +23,7 @@ add_compile_options(-std=c++11)
 
 find_package(catkin REQUIRED COMPONENTS
   roscpp
+  nodelet
   ff_msgs
   ff_hw_msgs
   ff_util
@@ -38,6 +39,7 @@ catkin_package(
     fam
   CATKIN_DEPENDS
     roscpp
+    nodelet
     ff_msgs
     ff_hw_msgs
     ff_util
