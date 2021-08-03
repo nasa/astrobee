@@ -58,6 +58,13 @@ void DepthOdometryAdder::AddDepthOdometry() {
                                         static_cast<std::string>(TOPIC_HARDWARE_PICOFLEXX_SUFFIX);
   std::vector<std::string> topics;
   topics.push_back(depth_cloud_topic);
+  topics.push_back(std::string("/") + depth_cloud_topic);
+  topics.push_back(TOPIC_SPARSE_MAPPING_POSE);
+  topics.push_back(std::string("/") + TOPIC_SPARSE_MAPPING_POSE);
+  topics.push_back(TOPIC_GRAPH_LOC_STATE);
+  topics.push_back(std::string("/") + TOPIC_GRAPH_LOC_STATE);
+  topics.push_back(TOPIC_GNC_EKF);
+  topics.push_back(std::string("/") + TOPIC_GNC_EKF);
   rosbag::View view(input_bag_, rosbag::TopicQuery(topics));
   for (const rosbag::MessageInstance msg : view) {
     if (string_ends_with(msg.getTopic(), depth_cloud_topic)) {
@@ -65,7 +72,7 @@ void DepthOdometryAdder::AddDepthOdometry() {
       const auto pose_msg = GenerateDepthOdometry(depth_cloud_msg);
       if (!pose_msg) continue;
       const ros::Time timestamp = lc::RosTimeFromHeader(depth_cloud_msg->header);
-      output_bag_.write("/" + depth_cloud_topic, timestamp, *pose_msg);
+      output_bag_.write(std::string("/") + TOPIC_LOCALIZATION_DEPTH_ODOM, timestamp, *pose_msg);
     } else {
       output_bag_.write(msg.getTopic(), msg.getTime(), msg);
     }
