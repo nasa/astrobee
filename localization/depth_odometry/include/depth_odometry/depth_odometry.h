@@ -67,8 +67,8 @@ class DepthOdometry {
   std::pair<localization_common::Time, pcl::PointCloud<pcl::PointXYZ>::Ptr> previous_depth_cloud_;
   std::pair<localization_common::Time, pcl::PointCloud<pcl::PointXYZ>::Ptr> latest_depth_cloud_;
   DepthOdometryParams params_;
-  ros::NodeHandle nh_;
-  ros::Publisher pca_pub_, pcb_pub_, pct_pub_;
+  // ros::NodeHandle nh_;
+  // ros::Publisher pca_pub_, pcb_pub_, pct_pub_;
 };
 }  // namespace depth_odometry
 

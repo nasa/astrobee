@@ -66,8 +66,9 @@ void DepthOdometryAdder::AddDepthOdometry() {
       if (!pose_msg) continue;
       const ros::Time timestamp = lc::RosTimeFromHeader(depth_cloud_msg->header);
       output_bag_.write("/" + depth_cloud_topic, timestamp, *pose_msg);
-    } else
+    } else {
       output_bag_.write(msg.getTopic(), msg.getTime(), msg);
+    }
   }
 }
 }  // namespace graph_bag

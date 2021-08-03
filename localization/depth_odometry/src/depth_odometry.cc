@@ -56,9 +56,9 @@ DepthOdometry::DepthOdometry() {
   LoadDepthOdometryParams(config, params_);
 
   if (params_.publish_point_clouds) {
-    pca_pub_ = nh_.advertise<sensor_msgs::PointCloud2>("pca", 10);
-    pcb_pub_ = nh_.advertise<sensor_msgs::PointCloud2>("pcb", 10);
-    pct_pub_ = nh_.advertise<sensor_msgs::PointCloud2>("pct", 10);
+    /*  pca_pub_ = nh_.advertise<sensor_msgs::PointCloud2>("pca", 10);
+      pcb_pub_ = nh_.advertise<sensor_msgs::PointCloud2>("pcb", 10);
+      pct_pub_ = nh_.advertise<sensor_msgs::PointCloud2>("pct", 10);*/
   }
 }
 
