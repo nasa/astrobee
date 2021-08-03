@@ -25,6 +25,10 @@
 namespace depth_odometry {
 namespace mc = msg_conversions;
 
+void LoadDepthOdometryNodeletParams(config_reader::ConfigReader& config, DepthOdometryNodeletParams& params) {
+  params.publish_point_clouds = mc::LoadBool(config, "publish_point_clouds");
+}
+
 void LoadDepthOdometryParams(config_reader::ConfigReader& config, DepthOdometryParams& params) {
   params.position_covariance_threshold = mc::LoadDouble(config, "position_covariance_threshold");
   params.orientation_covariance_threshold = mc::LoadDouble(config, "orientation_covariance_threshold");
@@ -36,7 +40,6 @@ void LoadDepthOdometryParams(config_reader::ConfigReader& config, DepthOdometryP
   params.correspondence_rejector_surface_normal = mc::LoadBool(config, "correspondence_rejector_surface_normal");
   params.correspondence_rejector_surface_normal_threshold =
     mc::LoadDouble(config, "correspondence_rejector_surface_normal_threshold");
-  params.publish_point_clouds = mc::LoadBool(config, "publish_point_clouds");
   params.frame_change_transform = mc::LoadBool(config, "frame_change_transform");
   params.body_T_haz_cam = msg_conversions::LoadEigenTransform(config, "haz_cam_transform");
 }

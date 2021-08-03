@@ -31,7 +31,6 @@ struct DepthOdometryParams {
   bool inital_estimate_with_ransac_ia;
   bool correspondence_rejector_surface_normal;
   double correspondence_rejector_surface_normal_threshold;
-  bool publish_point_clouds;
   bool frame_change_transform;
   Eigen::Isometry3d body_T_haz_cam;
 };

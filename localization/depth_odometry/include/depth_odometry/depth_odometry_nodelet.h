@@ -19,6 +19,7 @@
 #define DEPTH_ODOMETRY_DEPTH_ODOMETRY_NODELET_H_
 
 #include <depth_odometry/depth_odometry.h>
+#include <depth_odometry/depth_odometry_nodelet_params.h>
 #include <ff_util/ff_nodelet.h>
 
 #include <sensor_msgs/PointCloud2.h>
@@ -38,6 +39,7 @@ class DepthOdometryNodelet : public ff_util::FreeFlyerNodelet {
   void PublishPointClouds(const pcl::PointCloud<pcl::PointXYZ>& cloud_a, const pcl::PointCloud<pcl::PointXYZ>& cloud_b,
                           const Eigen::Matrix<float, 4, 4>& relative_transform) const;
 
+  DepthOdometryNodeletParams params_;
   DepthOdometry depth_odometry_;
   ros::Subscriber depth_sub_;
   ros::Publisher odom_pub_;
