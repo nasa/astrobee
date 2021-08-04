@@ -151,7 +151,8 @@ The Octomapper takes the following paramers as inputs (defined in mapper.config)
 * `min_range (meters)` - Minimum reliable range of the depth camera.
 * `memory_time (seconds)` - How long the octomap remembers the fading memory
 map. It remembers forever when this variable is <= 0.
-* `inflate_radius (meters)` - Radial inflation size of the octomap.
+* `robot_radius (meters)` - Radius of the robot considered in the planner.
+* `collision_distance (meters)` - Minimum distance margin to maintain away from obstacles.
 * `cam_fov (radians)` - Camera horizontal field-of-view. The octomap will only
 update the map in the volume within the fov of the depth cam.
 * `cam_aspect_ratio` - Depth camera's width divided by height. Used for c
