@@ -42,9 +42,9 @@ class DepthOdometry {
     const pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_a, const pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_b) const;
   Eigen::Matrix4f RansacIA(const pcl::PointCloud<pcl::PointNormal>::Ptr source_cloud,
                            const pcl::PointCloud<pcl::PointNormal>::Ptr target_cloud) const;
+  // TODO(rsoussan): Move these functions to utilities
   pcl::PointCloud<pcl::FPFHSignature33>::Ptr EstimateHistogramFeatures(
     const pcl::PointCloud<pcl::PointNormal>::Ptr cloud_with_normals) const;
-  void RemoveNans(pcl::PointCloud<pcl::PointNormal>& cloud) const;
   void EstimateNormals(const pcl::PointCloud<pcl::PointXYZ>::Ptr cloud,
                        pcl::PointCloud<pcl::PointNormal>& cloud_with_normals) const;
   void FilterCorrespondences(const pcl::PointCloud<pcl::PointNormal>& input_cloud,
