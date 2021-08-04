@@ -1,5 +1,13 @@
 # Releases
 
+## Release 0.15.1
+
+  * Separated config files for DDS communications to avoid conflict
+  * Increased plan name length
+  * Pico proxy was added to the MLP launch file
+  * System monitor now attempts to reload nodelets that die on startup
+  * Other fixes/software and documentation improvements
+
 ## Release 0.15.0
 
   * Perching functional
