@@ -1080,7 +1080,7 @@ class ChoreographerNodelet : public ff_util::FreeFlyerNodelet {
     return false;
   }
 
-  // Called when the sentinel forecasts an upcoming collision
+  // Called when there is a propulsion event
   void PmcStateCallback(ff_hw_msgs::PmcState::ConstPtr const& msg) {
     // If prepping, send a state update to prevent execute and move
     // actions from timing out on the client side

@@ -57,7 +57,7 @@ void MapperNodelet::Initialize(ros::NodeHandle *nh) {
       &MapperNodelet::DiagnosticsCallback, this, false, true);
 
   // load parameters
-  double map_resolution, memory_time, max_range, min_range, inflate_radius;
+  double map_resolution, memory_time, max_range, min_range, collision_distance, robot_radius;
   double cam_fov, aspect_ratio;
   double occupancy_threshold, probability_hit, probability_miss;
   double clamping_threshold_max, clamping_threshold_min;
@@ -67,7 +67,8 @@ void MapperNodelet::Initialize(ros::NodeHandle *nh) {
   max_range = cfg_.Get<double>("max_range");
   min_range = cfg_.Get<double>("min_range");
   memory_time = cfg_.Get<double>("memory_time");
-  inflate_radius = cfg_.Get<double>("inflate_radius");
+  collision_distance = cfg_.Get<double>("collision_distance");
+  robot_radius = cfg_.Get<double>("robot_radius");
   cam_fov = cfg_.Get<double>("cam_fov");
   aspect_ratio = cfg_.Get<double>("cam_aspect_ratio");
   occupancy_threshold = cfg_.Get<double>("occupancy_threshold");
@@ -87,7 +88,7 @@ void MapperNodelet::Initialize(ros::NodeHandle *nh) {
   globals_.octomap.SetMaxRange(max_range);
   globals_.octomap.SetMinRange(min_range);
   globals_.octomap.SetMemory(memory_time);
-  globals_.octomap.SetMapInflation(inflate_radius);
+  globals_.octomap.SetMapInflation(collision_distance + robot_radius);
   globals_.octomap.SetCamFrustum(cam_fov, aspect_ratio);
   globals_.octomap.SetOccupancyThreshold(occupancy_threshold);
   globals_.octomap.SetHitMissProbabilities(probability_hit, probability_miss);
