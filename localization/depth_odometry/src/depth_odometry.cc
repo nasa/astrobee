@@ -20,6 +20,7 @@
 #include <depth_odometry/transformation_estimation_symmetric_point_to_plane_lls.h>
 #include <depth_odometry/utilities.h>
 #include <localization_common/logger.h>
+#include <localization_common/timer.h>
 #include <localization_common/utilities.h>
 
 #include <gtsam/geometry/Pose3.h>
@@ -152,6 +153,8 @@ Eigen::Matrix4f DepthOdometry::RansacIA(const pcl::PointCloud<pcl::PointNormal>:
 
 boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> DepthOdometry::Icp(
   const pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_a, const pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_b) const {
+  static lc::Timer icp_timer("ICP");
+  icp_timer.Start();
   pcl::PointCloud<pcl::PointNormal>::Ptr cloud_b_with_normals(new pcl::PointCloud<pcl::PointNormal>);
   EstimateNormals(cloud_b, *cloud_b_with_normals);
 
@@ -196,6 +199,7 @@ boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> Depth
 
   if (!icp.hasConverged()) {
     LogError("Icp: Failed to converge.");
+    icp_timer.Stop();
     return boost::none;
   }
 
@@ -203,6 +207,7 @@ boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> Depth
   LogError("fitness: " << fitness_score);
   if (fitness_score > params_.fitness_threshold) {
     LogError("Icp: Fitness score too large: " << fitness_score << ".");
+    icp_timer.Stop();
     return boost::none;
   }
   LogError("its: " << icp.nr_iterations_);
@@ -211,6 +216,7 @@ boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> Depth
   const Eigen::Isometry3d relative_transform(Eigen::Isometry3f(icp.getFinalTransformation().matrix()).cast<double>());
   const Eigen::Matrix<double, 6, 6> covariance =
     ComputeCovarianceMatrix(icp, cloud_a_with_normals, result, relative_transform);
+  icp_timer.StopAndLog();
   return std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>{relative_transform, covariance};
 }
 
