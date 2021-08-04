@@ -44,8 +44,8 @@ ff::RosPlanStatusRapidPlanStatus::Callback(
 
   msg.hdr.timeStamp = util::RosTime2RapidTime(status->header.stamp);
 
-  std::strncpy(msg.planName, status->name.data(), 32);
-  msg.planName[31] = '\0';  // ensure null-terminated
+  std::strncpy(msg.planName, status->name.data(), 128);
+  msg.planName[127] = '\0';  // ensure null-terminated
 
   msg.currentPoint = status->point;
   msg.currentCommand = status->command;

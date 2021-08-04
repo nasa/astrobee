@@ -37,13 +37,13 @@
 
 namespace gazebo {
 
-class GazeboModelPluginFlashlightFront : public FreeFlyerModelPlugin {
+class GazeboModelPluginFlashlight : public FreeFlyerModelPlugin {
  public:
-  GazeboModelPluginFlashlightFront() : FreeFlyerModelPlugin("flashlight_front",
-    "flashlight_front", true), rate_(10.0),
+  GazeboModelPluginFlashlight() : FreeFlyerModelPlugin("",
+    "", true), rate_(10.0),
       width_(0.03), height_(0.02), depth_(0.005) {}
 
-  ~GazeboModelPluginFlashlightFront() {
+  ~GazeboModelPluginFlashlight() {
     if (update_) {
       #if GAZEBO_MAJOR_VERSION > 7
       update_.reset();
@@ -66,6 +66,8 @@ class GazeboModelPluginFlashlightFront : public FreeFlyerModelPlugin {
       height_ = sdf->Get<double>("height");
     if (sdf->HasElement("depth"))
       depth_ = sdf->Get<double>("depth");
+    if (sdf->HasElement("plugin_frame"))
+      plugin_frame_ = sdf->Get<std::string>("plugin_frame");
 
     // Use the message system to toggle visibility of visual elements
     gz_ = transport::NodePtr(new transport::Node());
@@ -84,22 +86,22 @@ class GazeboModelPluginFlashlightFront : public FreeFlyerModelPlugin {
 
   // Only send measurements when extrinsics are available
   void OnExtrinsicsReceived(ros::NodeHandle *nh) {
-    srv_ = nh->advertiseService(SERVICE_HARDWARE_LIGHT_FRONT_CONTROL,
-      &GazeboModelPluginFlashlightFront::ToggleCallback, this);
+    srv_ = nh->advertiseService("hw/" + plugin_frame_ + "/control",
+      &GazeboModelPluginFlashlight::ToggleCallback, this);
   }
 
 
   // Manage the extrinsics based on the sensor type
   bool ExtrinsicsCallback(geometry_msgs::TransformStamped const* tf) {
     if (!tf) {
-      ROS_WARN("Front flashlight extrinsics are null");
+      ROS_WARN("Flashlight extrinsics are null");
       return false;
     }
 
     // Create the rviz marker
     marker_.header.stamp = ros::Time::now();
     marker_.header.frame_id = GetFrame();
-    marker_.ns = GetFrame("flashlight_front", "_");
+    marker_.ns = GetFrame(plugin_frame_, "_");
     marker_.id = 0;
     marker_.type = visualization_msgs::Marker::CUBE;
     marker_.action = visualization_msgs::Marker::ADD;
@@ -132,7 +134,7 @@ class GazeboModelPluginFlashlightFront : public FreeFlyerModelPlugin {
       tf->transform.rotation.z);
 
     // Create the Gazebo visual
-    visual_.set_name(GetFrame("flashlight_front_visual", "_"));
+    visual_.set_name(GetFrame(plugin_frame_ + "_visual", "_"));
     visual_.set_parent_name(GetModel()->GetLink()->GetScopedName());
     msgs::Geometry *geometry = visual_.mutable_geometry();
     geometry->set_type(msgs::Geometry::BOX);
@@ -147,7 +149,7 @@ class GazeboModelPluginFlashlightFront : public FreeFlyerModelPlugin {
     pub_visual_->Publish(visual_);
 
     // Create the gazebo light
-    light_.set_name(GetFrame("flashlight_front_light", "_"));
+    light_.set_name(GetFrame(plugin_frame_ + "_front_light", "_"));
     light_.set_type(msgs::Light::SPOT);
     light_.set_attenuation_constant(1.0);
     light_.set_attenuation_linear(0.02);
@@ -175,7 +177,7 @@ class GazeboModelPluginFlashlightFront : public FreeFlyerModelPlugin {
 
     // Modify the new entity to be only visible in the GUI
     update_ = event::Events::ConnectWorldUpdateBegin(std::bind(
-      &GazeboModelPluginFlashlightFront::WorldUpdateBegin, this));
+      &GazeboModelPluginFlashlight::WorldUpdateBegin, this));
 
     // Success
     return true;
@@ -229,9 +231,10 @@ class GazeboModelPluginFlashlightFront : public FreeFlyerModelPlugin {
   msgs::Light light_;
   msgs::Visual visual_;
   ignition::math::Pose3d pose_;
+  std::string plugin_frame_ = "";
 };
 
 // Register this plugin with the simulator
-GZ_REGISTER_MODEL_PLUGIN(GazeboModelPluginFlashlightFront )
+GZ_REGISTER_MODEL_PLUGIN(GazeboModelPluginFlashlight )
 
 }   // namespace gazebo
