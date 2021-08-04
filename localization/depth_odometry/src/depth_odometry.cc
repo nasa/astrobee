@@ -62,6 +62,7 @@ pcl::PointCloud<pcl::PointXYZ>::Ptr DepthOdometry::latest_depth_cloud() const { 
 
 boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> DepthOdometry::DepthCloudCallback(
   std::pair<lc::Time, pcl::PointCloud<pcl::PointXYZ>::Ptr> depth_cloud) {
+  RemoveNansAndZerosFromPointXYZs(*(depth_cloud.second));
   if (!previous_depth_cloud_.second && !latest_depth_cloud_.second) latest_depth_cloud_ = depth_cloud;
   if (depth_cloud.first < latest_depth_cloud_.first) {
     LogWarning("DepthCloudCallback: Out of order measurement received.");

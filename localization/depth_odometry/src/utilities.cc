@@ -51,4 +51,23 @@ Eigen::Matrix<double, 1, 6> Jacobian(const gtsam::Point3& point, const gtsam::Ve
   relative_transform.transformFrom(point, H1);
   return normal.transpose() * H1;
 }
+
+bool ValidPointNormal(const pcl::PointNormal& point) {
+  bool valid_point = true;
+  valid_point &= ValidPoint(point);
+  const bool finite_normal =
+    pcl_isfinite(point.normal_x) && pcl_isfinite(point.normal_y) && pcl_isfinite(point.normal_z);
+  const bool nonzero_normal = point.normal_x != 0 || point.normal_y != 0 || point.normal_z != 0;
+  valid_point &= finite_normal;
+  valid_point &= nonzero_normal;
+  return valid_point;
+}
+
+void RemoveNansAndZerosFromPointXYZs(pcl::PointCloud<pcl::PointXYZ>& cloud) {
+  RemoveNansAndZerosFromPointTypes(ValidPoint<pcl::PointXYZ>, cloud);
+}
+
+void RemoveNansAndZerosFromPointNormals(pcl::PointCloud<pcl::PointNormal>& cloud) {
+  RemoveNansAndZerosFromPointTypes(ValidPointNormal, cloud);
+}
 }  // namespace depth_odometry
