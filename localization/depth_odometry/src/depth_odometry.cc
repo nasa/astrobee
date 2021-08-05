@@ -57,9 +57,14 @@ DepthOdometry::DepthOdometry() {
   LoadDepthOdometryParams(config, params_);
 }
 
-pcl::PointCloud<pcl::PointXYZ>::Ptr DepthOdometry::previous_depth_cloud() const { return previous_depth_cloud_.second; }
+std::pair<localization_common::Time, pcl::PointCloud<pcl::PointXYZ>::Ptr> DepthOdometry::previous_depth_cloud() const {
+  return previous_depth_cloud_;
+}
+std::pair<localization_common::Time, pcl::PointCloud<pcl::PointXYZ>::Ptr> DepthOdometry::latest_depth_cloud() const {
+  return latest_depth_cloud_;
+}
 
-pcl::PointCloud<pcl::PointXYZ>::Ptr DepthOdometry::latest_depth_cloud() const { return latest_depth_cloud_.second; }
+const pcl::Correspondences& DepthOdometry::correspondences() const { return correspondences_; }
 
 boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> DepthOdometry::DepthCloudCallback(
   std::pair<lc::Time, pcl::PointCloud<pcl::PointXYZ>::Ptr> depth_cloud) {
@@ -152,7 +157,7 @@ Eigen::Matrix4f DepthOdometry::RansacIA(const pcl::PointCloud<pcl::PointNormal>:
 }
 
 boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> DepthOdometry::Icp(
-  const pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_a, const pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_b) const {
+  const pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_a, const pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_b) {
   static lc::Timer icp_timer("ICP");
   icp_timer.Start();
   pcl::PointCloud<pcl::PointNormal>::Ptr cloud_b_with_normals(new pcl::PointCloud<pcl::PointNormal>);
@@ -250,20 +255,20 @@ void DepthOdometry::FilterCorrespondences(const pcl::PointCloud<pcl::PointNormal
 Eigen::Matrix<double, 6, 6> DepthOdometry::ComputeCovarianceMatrix(
   const pcl::IterativeClosestPointWithNormals<pcl::PointNormal, pcl::PointNormal>& icp,
   const pcl::PointCloud<pcl::PointNormal>::Ptr cloud_a,
-  const pcl::PointCloud<pcl::PointNormal>::Ptr cloud_a_transformed, const Eigen::Isometry3d& relative_transform) const {
+  const pcl::PointCloud<pcl::PointNormal>::Ptr cloud_a_transformed, const Eigen::Isometry3d& relative_transform) {
   icp.correspondence_estimation_->setInputSource(cloud_a_transformed);
-  pcl::Correspondences correspondences;
+  correspondences_.clear();
   // Assumes normals for input source aren't needed and there are no correspondence rejectors added to ICP object
-  icp.correspondence_estimation_->determineCorrespondences(correspondences, icp.corr_dist_threshold_);
+  icp.correspondence_estimation_->determineCorrespondences(correspondences_, icp.corr_dist_threshold_);
   const auto& target_cloud = icp.target_;
-  FilterCorrespondences(*cloud_a, *target_cloud, correspondences);
-  const int num_correspondences = correspondences.size();
+  FilterCorrespondences(*cloud_a, *target_cloud, correspondences_);
+  const int num_correspondences = correspondences_.size();
   LogError("a size: " << cloud_a->size());
   LogError("b size: " << target_cloud->size());
   LogError("num correspondences: " << num_correspondences);
   Eigen::MatrixXd full_jacobian(num_correspondences, 6);
   int index = 0;
-  for (const auto correspondence : correspondences) {
+  for (const auto correspondence : correspondences_) {
     const auto& input_point = (*cloud_a)[correspondence.index_query];
     const auto& target_point = (*target_cloud)[correspondence.index_match];
     const Eigen::Matrix<double, 1, 6> jacobian = Jacobian(input_point, target_point, relative_transform);

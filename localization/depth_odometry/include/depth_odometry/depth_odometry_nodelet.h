@@ -36,6 +36,8 @@ class DepthOdometryNodelet : public ff_util::FreeFlyerNodelet {
   void Initialize(ros::NodeHandle* nh) final;
   void SubscribeAndAdvertise(ros::NodeHandle* nh);
   void DepthCloudCallback(const sensor_msgs::PointCloud2ConstPtr& depth_cloud_msg);
+  void PublishDepthCorrespondences(const pcl::Correspondences& correspondences, const localization_common::Time time_a,
+                                   const localization_common::Time time_b);
   void PublishPointClouds(const pcl::PointCloud<pcl::PointXYZ>& cloud_a, const pcl::PointCloud<pcl::PointXYZ>& cloud_b,
                           const Eigen::Matrix<float, 4, 4>& relative_transform) const;
 
@@ -43,7 +45,7 @@ class DepthOdometryNodelet : public ff_util::FreeFlyerNodelet {
   DepthOdometry depth_odometry_;
   ros::Subscriber depth_sub_;
   ros::Publisher odom_pub_;
-  ros::Publisher point_cloud_a_pub_, point_cloud_b_pub_, point_cloud_result_pub_;
+  ros::Publisher point_cloud_a_pub_, point_cloud_b_pub_, point_cloud_result_pub_, correspondences_pub_;
 };
 }  // namespace depth_odometry
 

@@ -34,12 +34,13 @@ class DepthOdometry {
   DepthOdometry();
   boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> DepthCloudCallback(
     std::pair<localization_common::Time, pcl::PointCloud<pcl::PointXYZ>::Ptr> depth_cloud);
-  pcl::PointCloud<pcl::PointXYZ>::Ptr previous_depth_cloud() const;
-  pcl::PointCloud<pcl::PointXYZ>::Ptr latest_depth_cloud() const;
+  std::pair<localization_common::Time, pcl::PointCloud<pcl::PointXYZ>::Ptr> previous_depth_cloud() const;
+  std::pair<localization_common::Time, pcl::PointCloud<pcl::PointXYZ>::Ptr> latest_depth_cloud() const;
+  const pcl::Correspondences& correspondences() const;
 
  private:
   boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> Icp(
-    const pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_a, const pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_b) const;
+    const pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_a, const pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_b);
   Eigen::Matrix4f RansacIA(const pcl::PointCloud<pcl::PointNormal>::Ptr source_cloud,
                            const pcl::PointCloud<pcl::PointNormal>::Ptr target_cloud) const;
   // TODO(rsoussan): Move these functions to utilities
@@ -54,13 +55,13 @@ class DepthOdometry {
   Eigen::Matrix<double, 6, 6> ComputeCovarianceMatrix(
     const pcl::IterativeClosestPointWithNormals<pcl::PointNormal, pcl::PointNormal>& icp,
     const pcl::PointCloud<pcl::PointNormal>::Ptr cloud_a,
-    const pcl::PointCloud<pcl::PointNormal>::Ptr cloud_a_transformed,
-    const Eigen::Isometry3d& relative_transform) const;
+    const pcl::PointCloud<pcl::PointNormal>::Ptr cloud_a_transformed, const Eigen::Isometry3d& relative_transform);
   Eigen::Matrix<double, 1, 6> Jacobian(const pcl::PointNormal& source_point, const pcl::PointNormal& target_point,
                                        const Eigen::Isometry3d& relative_transform) const;
 
   std::pair<localization_common::Time, pcl::PointCloud<pcl::PointXYZ>::Ptr> previous_depth_cloud_;
   std::pair<localization_common::Time, pcl::PointCloud<pcl::PointXYZ>::Ptr> latest_depth_cloud_;
+  pcl::Correspondences correspondences_;
   DepthOdometryParams params_;
 };
 }  // namespace depth_odometry

@@ -18,6 +18,7 @@
 
 #include <depth_odometry/depth_odometry_nodelet.h>
 #include <depth_odometry/utilities.h>
+#include <ff_msgs/DepthCorrespondences.h>
 #include <ff_util/ff_names.h>
 #include <localization_common/logger.h>
 #include <localization_common/utilities.h>
@@ -55,6 +56,7 @@ void DepthOdometryNodelet::SubscribeAndAdvertise(ros::NodeHandle* nh) {
     point_cloud_a_pub_ = nh->advertise<sensor_msgs::PointCloud2>("point_cloud_a", 10);
     point_cloud_b_pub_ = nh->advertise<sensor_msgs::PointCloud2>("point_cloud_b", 10);
     point_cloud_result_pub_ = nh->advertise<sensor_msgs::PointCloud2>("point_cloud_result", 10);
+    correspondences_pub_ = nh->advertise<ff_msgs::DepthCorrespondences>("depth_correspondences", 10);
   }
 }
 
@@ -75,11 +77,32 @@ void DepthOdometryNodelet::DepthCloudCallback(const sensor_msgs::PointCloud2Cons
   mc::EigenPoseCovarianceToMsg(relative_pose->first, relative_pose->second, pose_msg);
   lc::TimeToHeader(depth_cloud.first, pose_msg.header);
   odom_pub_.publish(pose_msg);
+  PublishDepthCorrespondences(depth_odometry_.correspondences(), depth_odometry_.latest_depth_cloud().first,
+                              depth_odometry_.previous_depth_cloud().first);
 
   if (params_.publish_point_clouds) {
-    PublishPointClouds(*(depth_odometry_.previous_depth_cloud()), *(depth_odometry_.latest_depth_cloud()),
+    PublishPointClouds(*(depth_odometry_.previous_depth_cloud().second), *(depth_odometry_.latest_depth_cloud().second),
                        relative_pose->first.matrix().cast<float>());
   }
+}
+
+void DepthOdometryNodelet::PublishDepthCorrespondences(const pcl::Correspondences& correspondences,
+                                                       const lc::Time time_a, const lc::Time time_b) {
+  ff_msgs::DepthCorrespondences correspondences_msg;
+  const ros::Time ros_time_a(time_a);
+  const ros::Time ros_time_b(time_b);
+  correspondences_msg.time_a.sec = ros_time_a.sec;
+  correspondences_msg.time_a.nsec = ros_time_a.nsec;
+  correspondences_msg.time_b.sec = ros_time_b.sec;
+  correspondences_msg.time_b.nsec = ros_time_b.nsec;
+
+  for (const auto& correspondence : correspondences) {
+    ff_msgs::DepthCorrespondence correspondence_msg;
+    correspondence_msg.index_a = correspondence.index_query;
+    correspondence_msg.index_b = correspondence.index_match;
+    correspondences_msg.correspondences.push_back(correspondence_msg);
+  }
+  correspondences_pub_.publish(correspondences_msg);
 }
 
 void DepthOdometryNodelet::PublishPointClouds(const pcl::PointCloud<pcl::PointXYZ>& cloud_a,
