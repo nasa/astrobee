@@ -85,7 +85,7 @@ void ff::RosZonesToRapidCompressedFile::Callback(
 
   // Convert zones to json string/file
   std::string zones_file_content = "{\n";
-  
+
   // Put timestamp in file content
   // Convert timestamp from seconds to milliseconds
   uint64_t time_milli = (uint64_t)get_zones_srv.response.timestamp.sec * 1000;
