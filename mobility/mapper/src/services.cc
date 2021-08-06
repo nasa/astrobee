@@ -42,10 +42,10 @@ bool MapperNodelet::UpdateMemoryTime(ff_msgs::SetFloat::Request &req,
   return true;
 }
 
-bool MapperNodelet::MapInflation(ff_msgs::SetFloat::Request &req,
+bool MapperNodelet::CollisionDistance(ff_msgs::SetFloat::Request &req,
                                  ff_msgs::SetFloat::Response &res) {
   mutexes_.octomap.lock();
-  globals_.octomap.SetMapInflation(req.data);
+  globals_.octomap.SetMapInflation(req.data + cfg_.Get<double>("robot_radius"));
   mutexes_.octomap.unlock();
   res.success = true;
   return true;

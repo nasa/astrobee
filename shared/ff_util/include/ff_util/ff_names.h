@@ -235,7 +235,7 @@
 #define SERVICE_MOBILITY_SET_STATE                  "mob/set_state"
 #define SERVICE_MOBILITY_UPDATE_MAP_RESOLUTION      "mob/mapper/update_resolution"
 #define SERVICE_MOBILITY_UPDATE_MEMORY_TIME         "mob/mapper/update_memory_time"
-#define SERVICE_MOBILITY_UPDATE_INFLATION           "mob/mapper/update_inflation_radius"
+#define SERVICE_MOBILITY_UPDATE_COLLISION_DISTANCE  "mob/mapper/update_inflation_radius"
 #define SERVICE_MOBILITY_RESET_MAP                  "mob/mapper/reset_map"
 #define SERVICE_MOBILITY_GET_FREE_MAP               "mob/mapper/get_free_map"
 #define SERVICE_MOBILITY_GET_OBSTACLE_MAP           "mob/mapper/get_obstacle_map"

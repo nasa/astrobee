@@ -127,8 +127,8 @@ class MapperNodelet : public ff_util::FreeFlyerNodelet {
   bool UpdateMemoryTime(ff_msgs::SetFloat::Request &req,
                         ff_msgs::SetFloat::Response &res);
 
-  // Update map inflation
-  bool MapInflation(ff_msgs::SetFloat::Request &req,
+  // Update collision distance
+  bool CollisionDistance(ff_msgs::SetFloat::Request &req,
                     ff_msgs::SetFloat::Response &res);
 
   // Reset the map
@@ -175,7 +175,7 @@ class MapperNodelet : public ff_util::FreeFlyerNodelet {
 
   // Octomap services
   ros::ServiceServer resolution_srv_, memory_time_srv_;
-  ros::ServiceServer map_inflation_srv_, reset_map_srv_;
+  ros::ServiceServer collision_distance_srv_, reset_map_srv_;
 
   // Thread rates (hz)
   double tf_update_rate_, fading_memory_update_rate_;
