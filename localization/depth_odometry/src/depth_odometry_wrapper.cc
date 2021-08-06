@@ -68,9 +68,8 @@ ff_msgs::DepthCorrespondences DepthOdometryWrapper::GetCorrespondencesMsg() cons
 
   for (const auto& correspondence : correspondences) {
     ff_msgs::DepthCorrespondence correspondence_msg;
-    // TODO(rsoussan): reverse this when reverse clouds in icp!
-    correspondence_msg.previous_image_index = correspondence.index_match;
-    correspondence_msg.latest_image_index = correspondence.index_query;
+    correspondence_msg.latest_image_index = correspondence.index_match;
+    correspondence_msg.previous_image_index = correspondence.index_query;
     correspondences_msg.correspondences.push_back(correspondence_msg);
   }
   return correspondences_msg;

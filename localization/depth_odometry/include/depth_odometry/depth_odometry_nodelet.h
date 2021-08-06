@@ -46,7 +46,7 @@ class DepthOdometryNodelet : public ff_util::FreeFlyerNodelet {
   DepthOdometry depth_odometry_;
   ros::Subscriber depth_sub_;
   ros::Publisher odom_pub_;
-  ros::Publisher point_cloud_a_pub_, point_cloud_b_pub_, point_cloud_result_pub_, correspondences_pub_;
+  ros::Publisher source_cloud_pub_, target_cloud_pub_, point_cloud_result_pub_, correspondences_pub_;
 };
 }  // namespace depth_odometry
 

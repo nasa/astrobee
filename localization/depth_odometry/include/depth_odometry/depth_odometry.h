@@ -41,7 +41,7 @@ class DepthOdometry {
 
  private:
   boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> Icp(
-    const pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_a, const pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_b);
+    const pcl::PointCloud<pcl::PointXYZ>::Ptr source_cloud, const pcl::PointCloud<pcl::PointXYZ>::Ptr target_cloud);
   Eigen::Matrix4f RansacIA(const pcl::PointCloud<pcl::PointNormal>::Ptr source_cloud,
                            const pcl::PointCloud<pcl::PointNormal>::Ptr target_cloud) const;
   // TODO(rsoussan): Move these functions to utilities
@@ -55,8 +55,8 @@ class DepthOdometry {
   bool CovarianceSane(const Eigen::Matrix<double, 6, 6>& covariance) const;
   Eigen::Matrix<double, 6, 6> ComputeCovarianceMatrix(
     const pcl::IterativeClosestPointWithNormals<pcl::PointNormal, pcl::PointNormal>& icp,
-    const pcl::PointCloud<pcl::PointNormal>::Ptr cloud_a,
-    const pcl::PointCloud<pcl::PointNormal>::Ptr cloud_a_transformed, const Eigen::Isometry3d& relative_transform);
+    const pcl::PointCloud<pcl::PointNormal>::Ptr source_cloud,
+    const pcl::PointCloud<pcl::PointNormal>::Ptr source_cloud_transformed, const Eigen::Isometry3d& relative_transform);
   Eigen::Matrix<double, 1, 6> Jacobian(const pcl::PointNormal& source_point, const pcl::PointNormal& target_point,
                                        const Eigen::Isometry3d& relative_transform) const;
 

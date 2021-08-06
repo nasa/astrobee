@@ -53,8 +53,8 @@ void DepthOdometryNodelet::SubscribeAndAdvertise(ros::NodeHandle* nh) {
                                                        this, ros::TransportHints().tcpNoDelay());
   odom_pub_ = nh->advertise<geometry_msgs::PoseWithCovarianceStamped>(TOPIC_LOCALIZATION_DEPTH_ODOM, 10);
   if (params_.publish_point_clouds) {
-    point_cloud_a_pub_ = nh->advertise<sensor_msgs::PointCloud2>("point_cloud_a", 10);
-    point_cloud_b_pub_ = nh->advertise<sensor_msgs::PointCloud2>("point_cloud_b", 10);
+    source_cloud_pub_ = nh->advertise<sensor_msgs::PointCloud2>("source_cloud", 10);
+    target_cloud_pub_ = nh->advertise<sensor_msgs::PointCloud2>("target_cloud", 10);
     point_cloud_result_pub_ = nh->advertise<sensor_msgs::PointCloud2>("point_cloud_result", 10);
     correspondences_pub_ = nh->advertise<ff_msgs::DepthCorrespondences>(TOPIC_LOCALIZATION_DEPTH_CORRESPONDENCES, 10);
   }
@@ -108,23 +108,23 @@ void DepthOdometryNodelet::PublishDepthCorrespondences(const pcl::Correspondence
   correspondences_pub_.publish(correspondences_msg);
 }
 
-void DepthOdometryNodelet::PublishPointClouds(const pcl::PointCloud<pcl::PointXYZ>& cloud_a,
-                                              const pcl::PointCloud<pcl::PointXYZ>& cloud_b,
+void DepthOdometryNodelet::PublishPointClouds(const pcl::PointCloud<pcl::PointXYZ>& source_cloud,
+                                              const pcl::PointCloud<pcl::PointXYZ>& target_cloud,
                                               const Eigen::Matrix<float, 4, 4>& relative_transform) const {
-  sensor_msgs::PointCloud2 ros_cloud_a;
-  pcl::toROSMsg(cloud_a, ros_cloud_a);
-  ros_cloud_a.header.stamp = ros::Time::now();
-  ros_cloud_a.header.frame_id = "haz_cam";
-  point_cloud_a_pub_.publish(ros_cloud_a);
+  sensor_msgs::PointCloud2 ros_source_cloud;
+  pcl::toROSMsg(source_cloud, ros_source_cloud);
+  ros_source_cloud.header.stamp = ros::Time::now();
+  ros_source_cloud.header.frame_id = "haz_cam";
+  source_cloud_pub_.publish(ros_source_cloud);
 
-  sensor_msgs::PointCloud2 ros_cloud_b;
-  pcl::toROSMsg(cloud_b, ros_cloud_b);
-  ros_cloud_b.header.stamp = ros::Time::now();
-  ros_cloud_b.header.frame_id = "haz_cam";
-  point_cloud_b_pub_.publish(ros_cloud_b);
+  sensor_msgs::PointCloud2 ros_target_cloud;
+  pcl::toROSMsg(target_cloud, ros_target_cloud);
+  ros_target_cloud.header.stamp = ros::Time::now();
+  ros_target_cloud.header.frame_id = "haz_cam";
+  target_cloud_pub_.publish(ros_target_cloud);
 
   pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_result(new pcl::PointCloud<pcl::PointXYZ>());
-  pcl::transformPointCloud(cloud_a, *cloud_result, relative_transform);
+  pcl::transformPointCloud(source_cloud, *cloud_result, relative_transform);
   sensor_msgs::PointCloud2 ros_cloud_result;
   pcl::toROSMsg(*cloud_result, ros_cloud_result);
   ros_cloud_result.header.stamp = ros::Time::now();
