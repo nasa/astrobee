@@ -56,9 +56,11 @@ class DepthOdometryDisplay : public rviz::MessageFilterDisplay<ff_msgs::DepthCor
   void imageCallback(const sensor_msgs::ImageConstPtr& image_msg);
   void clearImageBuffer(const localization_common::Time oldest_allowed_time);
   void clearDisplay();
+  void createCorrespondencesImage();
   sensor_msgs::ImageConstPtr getImage(const localization_common::Time time);
 
-  std::unique_ptr<rviz::SliderProperty> correspondence_slider_;
+  std::unique_ptr<rviz::SliderProperty> correspondence_index_slider_;
+  ff_msgs::DepthCorrespondences::ConstPtr latest_correspondences_msg_;
   image_transport::Subscriber image_sub_;
   image_transport::Publisher correspondence_image_pub_;
   ros::NodeHandle nh_;

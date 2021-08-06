@@ -34,8 +34,8 @@ namespace localization_rviz_plugins {
 namespace lc = localization_common;
 
 DepthOdometryDisplay::DepthOdometryDisplay() {
-  //  correspondence_slider_.reset(new rviz::SliderProperty(
-  //   "Select Correspondence", 0, "Selecto Correspondence.", this, SLOT(addSmartFactorsProjectionVisual())));
+  correspondence_index_slider_.reset(new rviz::SliderProperty("Select Correspondence", 0, "Select Correspondence.",
+                                                              this, SLOT(createCorrespondencesImage())));
 
   image_transport::ImageTransport image_transport(nh_);
   const std::string image_topic = static_cast<std::string>(TOPIC_HARDWARE_PICOFLEXX_PREFIX) +
@@ -71,9 +71,15 @@ void DepthOdometryDisplay::clearImageBuffer(const localization_common::Time olde
 }
 
 void DepthOdometryDisplay::processMessage(const ff_msgs::DepthCorrespondences::ConstPtr& correspondences_msg) {
+  latest_correspondences_msg_ = correspondences_msg;
+  createCorrespondencesImage();
+}
+
+void DepthOdometryDisplay::createCorrespondencesImage() {
   clearDisplay();
-  const lc::Time previous_time = lc::TimeFromRosTime(correspondences_msg->previous_time);
-  const lc::Time latest_time = lc::TimeFromRosTime(correspondences_msg->latest_time);
+  if (!latest_correspondences_msg_) return;
+  const lc::Time previous_time = lc::TimeFromRosTime(latest_correspondences_msg_->previous_time);
+  const lc::Time latest_time = lc::TimeFromRosTime(latest_correspondences_msg_->latest_time);
   const auto previous_image_msg = getImage(previous_time);
   const auto latest_image_msg = getImage(latest_time);
   if (!previous_image_msg || !latest_image_msg) return;
@@ -107,8 +113,9 @@ void DepthOdometryDisplay::processMessage(const ff_msgs::DepthCorrespondences::C
   const int cols = latest_image.cols;
   correspondence_image.image = cv::Mat(rows * 2, cols, CV_8UC3, cv::Scalar(0, 0, 0));
 
-  const int correspondence_index = 100;
-  const auto correspondence = correspondences_msg->correspondences[correspondence_index];
+  correspondence_index_slider_->setMaximum(latest_correspondences_msg_->correspondences.size() - 1);
+  const int correspondence_index = correspondence_index_slider_->getInt();
+  const auto correspondence = latest_correspondences_msg_->correspondences[correspondence_index];
   const int previous_correspondence_index = correspondence.previous_image_index;
   const int previous_correspondence_row = previous_correspondence_index / cols;
   const int previous_correspondence_col = previous_correspondence_index - cols * previous_correspondence_row;
