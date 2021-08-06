@@ -89,6 +89,8 @@ void DepthOdometryNodelet::DepthCloudCallback(const sensor_msgs::PointCloud2Cons
 void DepthOdometryNodelet::PublishDepthCorrespondences(const pcl::Correspondences& correspondences,
                                                        const lc::Time time_a, const lc::Time time_b) {
   ff_msgs::DepthCorrespondences correspondences_msg;
+  lc::TimeToHeader(time_a, correspondences_msg.header);
+  correspondences_msg.header.frame_id = "haz_cam";
   const ros::Time ros_time_a(time_a);
   const ros::Time ros_time_b(time_b);
   correspondences_msg.time_a.sec = ros_time_a.sec;

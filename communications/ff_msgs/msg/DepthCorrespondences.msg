@@ -15,6 +15,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 #
+
+Header header
 time time_a
 time time_b
 ff_msgs/DepthCorrespondence[] correspondences
