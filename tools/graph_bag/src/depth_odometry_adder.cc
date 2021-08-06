@@ -57,7 +57,8 @@ void DepthOdometryAdder::AddDepthOdometry() {
       output_bag_.write(std::string("/") + TOPIC_LOCALIZATION_DEPTH_ODOM, timestamp, *pose_msg);
       const auto correspondences_msg = depth_odometry_wrapper_.GetCorrespondencesMsg();
       const ros::Time correspondences_timestamp = lc::RosTimeFromHeader(correspondences_msg.header);
-      output_bag_.write(std::string("/") + "depth_correspondences", correspondences_timestamp, correspondences_msg);
+      output_bag_.write(std::string("/") + TOPIC_LOCALIZATION_DEPTH_CORRESPONDENCES, correspondences_timestamp,
+                        correspondences_msg);
     } else {
       output_bag_.write(msg.getTopic(), msg.getTime(), msg);
     }

@@ -56,7 +56,7 @@ void DepthOdometryNodelet::SubscribeAndAdvertise(ros::NodeHandle* nh) {
     point_cloud_a_pub_ = nh->advertise<sensor_msgs::PointCloud2>("point_cloud_a", 10);
     point_cloud_b_pub_ = nh->advertise<sensor_msgs::PointCloud2>("point_cloud_b", 10);
     point_cloud_result_pub_ = nh->advertise<sensor_msgs::PointCloud2>("point_cloud_result", 10);
-    correspondences_pub_ = nh->advertise<ff_msgs::DepthCorrespondences>("depth_correspondences", 10);
+    correspondences_pub_ = nh->advertise<ff_msgs::DepthCorrespondences>(TOPIC_LOCALIZATION_DEPTH_CORRESPONDENCES, 10);
   }
 }
 
