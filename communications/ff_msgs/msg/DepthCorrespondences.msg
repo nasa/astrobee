@@ -17,6 +17,6 @@
 #
 
 Header header
-time time_a
-time time_b
+time previous_time 
+time latest_time
 ff_msgs/DepthCorrespondence[] correspondences

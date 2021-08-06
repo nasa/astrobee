@@ -87,16 +87,16 @@ void DepthOdometryNodelet::DepthCloudCallback(const sensor_msgs::PointCloud2Cons
 }
 
 void DepthOdometryNodelet::PublishDepthCorrespondences(const pcl::Correspondences& correspondences,
-                                                       const lc::Time time_a, const lc::Time time_b) {
+                                                       const lc::Time previous_time, const lc::Time latest_time) {
   ff_msgs::DepthCorrespondences correspondences_msg;
-  lc::TimeToHeader(time_a, correspondences_msg.header);
+  lc::TimeToHeader(latest_time, correspondences_msg.header);
   correspondences_msg.header.frame_id = "haz_cam";
-  const ros::Time ros_time_a(time_a);
-  const ros::Time ros_time_b(time_b);
-  correspondences_msg.time_a.sec = ros_time_a.sec;
-  correspondences_msg.time_a.nsec = ros_time_a.nsec;
-  correspondences_msg.time_b.sec = ros_time_b.sec;
-  correspondences_msg.time_b.nsec = ros_time_b.nsec;
+  const ros::Time ros_previous_time(previous_time);
+  const ros::Time ros_latest_time(latest_time);
+  correspondences_msg.previous_time.sec = ros_previous_time.sec;
+  correspondences_msg.previous_time.nsec = ros_previous_time.nsec;
+  correspondences_msg.latest_time.sec = ros_latest_time.sec;
+  correspondences_msg.latest_time.nsec = ros_latest_time.nsec;
 
   for (const auto& correspondence : correspondences) {
     ff_msgs::DepthCorrespondence correspondence_msg;

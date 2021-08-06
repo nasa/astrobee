@@ -72,10 +72,11 @@ void DepthOdometryDisplay::clearImageBuffer(const localization_common::Time olde
 
 void DepthOdometryDisplay::processMessage(const ff_msgs::DepthCorrespondences::ConstPtr& correspondences_msg) {
   clearDisplay();
-  const lc::Time time_a = lc::TimeFromRosTime(correspondences_msg->time_a);
-  const lc::Time time_b = lc::TimeFromRosTime(correspondences_msg->time_b);
-  const auto image_a = getImage(time_a);
-  if (image_a) correspondence_image_pub_.publish(image_a);
+  const lc::Time previous_time = lc::TimeFromRosTime(correspondences_msg->previous_time);
+  const lc::Time latest_time = lc::TimeFromRosTime(correspondences_msg->latest_time);
+  const auto previous_image = getImage(previous_time);
+  if (previous_image) correspondence_image_pub_.publish(previous_image);
+  clearImageBuffer(previous_time);
 }
 }  // namespace localization_rviz_plugins
 

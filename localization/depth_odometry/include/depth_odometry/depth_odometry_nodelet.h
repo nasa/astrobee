@@ -36,8 +36,9 @@ class DepthOdometryNodelet : public ff_util::FreeFlyerNodelet {
   void Initialize(ros::NodeHandle* nh) final;
   void SubscribeAndAdvertise(ros::NodeHandle* nh);
   void DepthCloudCallback(const sensor_msgs::PointCloud2ConstPtr& depth_cloud_msg);
-  void PublishDepthCorrespondences(const pcl::Correspondences& correspondences, const localization_common::Time time_a,
-                                   const localization_common::Time time_b);
+  void PublishDepthCorrespondences(const pcl::Correspondences& correspondences,
+                                   const localization_common::Time previous_time,
+                                   const localization_common::Time latest_time);
   void PublishPointClouds(const pcl::PointCloud<pcl::PointXYZ>& cloud_a, const pcl::PointCloud<pcl::PointXYZ>& cloud_b,
                           const Eigen::Matrix<float, 4, 4>& relative_transform) const;
 
