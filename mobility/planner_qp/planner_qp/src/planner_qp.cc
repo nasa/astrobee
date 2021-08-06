@@ -990,6 +990,12 @@ class Planner : public planner::PlannerImplementation {
     // OUTPUT_DEBUG("PlannerQP: Keepout point: " << p.transpose());
     OUTPUT_DEBUG("PlannerQP: add3DPoints zones: " << keepout_points_zones.size()
                                     << " mapper: " << keepout_points_mapper.size());
+    // dialate the resolution
+    jps_map_util_->freeUnKnown();
+    jps_map_util_->dilate(map_res_, map_res_);
+    OUTPUT_DEBUG("PlannerQP: Dilating");
+    jps_map_util_->dilating();
+
     // keepout add point includes dilating
     jps_map_util_->add3DPoints(keepout_points_zones);
     jps_map_util_->add3DPoints(keepout_points_mapper);
