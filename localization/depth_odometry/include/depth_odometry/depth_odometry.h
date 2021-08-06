@@ -37,6 +37,7 @@ class DepthOdometry {
   std::pair<localization_common::Time, pcl::PointCloud<pcl::PointXYZ>::Ptr> previous_depth_cloud() const;
   std::pair<localization_common::Time, pcl::PointCloud<pcl::PointXYZ>::Ptr> latest_depth_cloud() const;
   const pcl::Correspondences& correspondences() const;
+  Eigen::Isometry3d latest_relative_transform() const;
 
  private:
   boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> Icp(
@@ -63,6 +64,7 @@ class DepthOdometry {
   std::pair<localization_common::Time, pcl::PointCloud<pcl::PointXYZ>::Ptr> latest_depth_cloud_;
   pcl::Correspondences correspondences_;
   DepthOdometryParams params_;
+  Eigen::Isometry3d latest_relative_transform_;
 };
 }  // namespace depth_odometry
 

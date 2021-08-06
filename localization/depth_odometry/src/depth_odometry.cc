@@ -64,6 +64,8 @@ std::pair<localization_common::Time, pcl::PointCloud<pcl::PointXYZ>::Ptr> DepthO
   return latest_depth_cloud_;
 }
 
+Eigen::Isometry3d DepthOdometry::latest_relative_transform() const { return latest_relative_transform_; }
+
 const pcl::Correspondences& DepthOdometry::correspondences() const { return correspondences_; }
 
 boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> DepthOdometry::DepthCloudCallback(
@@ -96,7 +98,7 @@ boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> Depth
 
   // LogError("cov: " << std::endl << relative_transform->second.matrix());
   if (relative_transform->first.translation().norm() > 0.5) LogError("large position jump!!");
-
+  latest_relative_transform_ = relative_transform->first;
   return relative_transform;
 }
 
