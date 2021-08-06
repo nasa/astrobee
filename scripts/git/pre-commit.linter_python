@@ -21,13 +21,15 @@ files=$(git diff --cached --name-only | grep '\.py$')
 
 # If files is empty exit success
 if [ -z "${files}" ]; then
+	echo "=================================================="
+	echo "  No Python files changed, no checks needed."
 	exit 0
 fi
 
 failed_lint=false
 
 echo "=================================================="
-echo "Analysing with black"
+echo "  Analysing with black"
 # This check the files but they will not be commited
 if `black . --include ${files} --check --quiet`; then
 	echo "Linter black checks passed"
@@ -38,7 +40,7 @@ else
 fi
 
 echo "=================================================="
-echo "Analysing with isort"
+echo "  Analysing with isort"
 if $(isort ${files} --extend-skip cmake --profile black --diff --check-only --quiet >/dev/null); then
 	echo "Linter isort checks passed"
 else
