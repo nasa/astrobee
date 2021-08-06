@@ -74,9 +74,45 @@ void DepthOdometryDisplay::processMessage(const ff_msgs::DepthCorrespondences::C
   clearDisplay();
   const lc::Time previous_time = lc::TimeFromRosTime(correspondences_msg->previous_time);
   const lc::Time latest_time = lc::TimeFromRosTime(correspondences_msg->latest_time);
-  const auto previous_image = getImage(previous_time);
-  if (previous_image) correspondence_image_pub_.publish(previous_image);
+  const auto previous_image_msg = getImage(previous_time);
+  const auto latest_image_msg = getImage(latest_time);
+  if (!previous_image_msg || !latest_image_msg) return;
   clearImageBuffer(previous_time);
+
+  // TODO(rsoussan): make function for this, unify with loc graph display
+  cv_bridge::CvImagePtr previous_cv_image;
+  try {
+    previous_cv_image = cv_bridge::toCvCopy(previous_image_msg, sensor_msgs::image_encodings::RGB8);
+  } catch (cv_bridge::Exception& e) {
+    LogError("cv_bridge exception: " << e.what());
+    return;
+  }
+  const auto& previous_image = previous_cv_image->image;
+
+  cv_bridge::CvImagePtr latest_cv_image;
+  try {
+    latest_cv_image = cv_bridge::toCvCopy(latest_image_msg, sensor_msgs::image_encodings::RGB8);
+  } catch (cv_bridge::Exception& e) {
+    LogError("cv_bridge exception: " << e.what());
+    return;
+  }
+  const auto& latest_image = latest_cv_image->image;
+
+  // Create correspondence image
+  // Draw previous image above latest image, add correspondences as points outlined
+  // by rectangles to each image
+  cv_bridge::CvImage correspondence_image;
+  correspondence_image.encoding = sensor_msgs::image_encodings::RGB8;
+  const int rows = latest_image.rows;
+  const int cols = latest_image.cols;
+  correspondence_image.image = cv::Mat(rows * 2, cols, CV_8UC3, cv::Scalar(0, 0, 0));
+  // cv::circle(images[i], distorted_measurement, 13 /* Radius*/, cv::Scalar(0, 255, 0), -1 /*Filled*/, 8);
+  const cv::Point rectangle_offset(40, 40);
+  // cv::rectangle(images[i], distorted_measurement - rectangle_offset, distorted_measurement + rectangle_offset,
+  //             cv::Scalar(0, 255, 0), 8);
+  previous_image.copyTo(correspondence_image.image(cv::Rect(0, 0, cols, rows)));
+  latest_image.copyTo(correspondence_image.image(cv::Rect(0, rows, cols, rows)));
+  correspondence_image_pub_.publish(correspondence_image.toImageMsg());
 }
 }  // namespace localization_rviz_plugins
 
