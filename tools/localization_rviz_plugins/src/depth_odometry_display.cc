@@ -87,7 +87,7 @@ void DepthOdometryDisplay::processMessage(const ff_msgs::DepthCorrespondences::C
     LogError("cv_bridge exception: " << e.what());
     return;
   }
-  const auto& previous_image = previous_cv_image->image;
+  auto& previous_image = previous_cv_image->image;
 
   cv_bridge::CvImagePtr latest_cv_image;
   try {
@@ -96,7 +96,7 @@ void DepthOdometryDisplay::processMessage(const ff_msgs::DepthCorrespondences::C
     LogError("cv_bridge exception: " << e.what());
     return;
   }
-  const auto& latest_image = latest_cv_image->image;
+  auto& latest_image = latest_cv_image->image;
 
   // Create correspondence image
   // Draw previous image above latest image, add correspondences as points outlined
@@ -106,10 +106,25 @@ void DepthOdometryDisplay::processMessage(const ff_msgs::DepthCorrespondences::C
   const int rows = latest_image.rows;
   const int cols = latest_image.cols;
   correspondence_image.image = cv::Mat(rows * 2, cols, CV_8UC3, cv::Scalar(0, 0, 0));
-  // cv::circle(images[i], distorted_measurement, 13 /* Radius*/, cv::Scalar(0, 255, 0), -1 /*Filled*/, 8);
+
+  const int correspondence_index = 100;
+  const auto correspondence = correspondences_msg->correspondences[correspondence_index];
+  const int previous_correspondence_index = correspondence.previous_image_index;
+  const int previous_correspondence_row = previous_correspondence_index / cols;
+  const int previous_correspondence_col = previous_correspondence_index - cols * previous_correspondence_row;
+  const cv::Point previous_correspondence_image_point(previous_correspondence_col, previous_correspondence_row);
+  const int latest_correspondence_index = correspondence.latest_image_index;
+  const int latest_correspondence_row = latest_correspondence_index / cols;
+  const int latest_correspondence_col = latest_correspondence_index - cols * latest_correspondence_row;
+  const cv::Point latest_correspondence_image_point(latest_correspondence_col, latest_correspondence_row);
   const cv::Point rectangle_offset(40, 40);
-  // cv::rectangle(images[i], distorted_measurement - rectangle_offset, distorted_measurement + rectangle_offset,
-  //             cv::Scalar(0, 255, 0), 8);
+  cv::circle(previous_image, previous_correspondence_image_point, 5 /* Radius*/, cv::Scalar(0, 255, 0), -1 /*Filled*/,
+             8);
+  cv::rectangle(previous_image, previous_correspondence_image_point - rectangle_offset,
+                previous_correspondence_image_point + rectangle_offset, cv::Scalar(0, 255, 0), 8);
+  cv::circle(latest_image, latest_correspondence_image_point, 5 /* Radius*/, cv::Scalar(0, 255, 0), -1 /*Filled*/, 8);
+  cv::rectangle(latest_image, latest_correspondence_image_point - rectangle_offset,
+                latest_correspondence_image_point + rectangle_offset, cv::Scalar(0, 255, 0), 8);
   previous_image.copyTo(correspondence_image.image(cv::Rect(0, 0, cols, rows)));
   latest_image.copyTo(correspondence_image.image(cv::Rect(0, rows, cols, rows)));
   correspondence_image_pub_.publish(correspondence_image.toImageMsg());

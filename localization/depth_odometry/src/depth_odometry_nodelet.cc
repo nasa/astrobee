@@ -100,8 +100,9 @@ void DepthOdometryNodelet::PublishDepthCorrespondences(const pcl::Correspondence
 
   for (const auto& correspondence : correspondences) {
     ff_msgs::DepthCorrespondence correspondence_msg;
-    correspondence_msg.index_a = correspondence.index_query;
-    correspondence_msg.index_b = correspondence.index_match;
+    // TODO(rsoussan): reverse this when reverse clouds in icp!
+    correspondence_msg.previous_image_index = correspondence.index_match;
+    correspondence_msg.latest_image_index = correspondence.index_query;
     correspondences_msg.correspondences.push_back(correspondence_msg);
   }
   correspondences_pub_.publish(correspondences_msg);
