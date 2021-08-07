@@ -64,7 +64,10 @@ void DepthOdometryAdder::AddDepthOdometry() {
       const ros::Time timestamp = lc::RosTimeFromHeader(depth_cloud_msg->header);
       output_bag_.write(std::string("/") + TOPIC_LOCALIZATION_DEPTH_ODOM, timestamp, *pose_msg);
       const auto correspondences_msg = depth_odometry_wrapper_.GetCorrespondencesMsg();
-      const ros::Time correspondences_timestamp = lc::RosTimeFromHeader(correspondences_msg.header);
+      ros::Time correspondences_timestamp = lc::RosTimeFromHeader(correspondences_msg.header);
+      // Add slight delay so correspondence msg is after depth image msg, depth odom rviz plugin
+      // expects depth image to arrive first
+      correspondences_timestamp.sec += 1;
       output_bag_.write(std::string("/") + TOPIC_LOCALIZATION_DEPTH_CORRESPONDENCES, correspondences_timestamp,
                         correspondences_msg);
     } else {
