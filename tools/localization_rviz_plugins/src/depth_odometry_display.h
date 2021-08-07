@@ -49,14 +49,13 @@ class DepthOdometryDisplay : public rviz::MessageFilterDisplay<ff_msgs::DepthCor
   void reset() final;
 
  private Q_SLOTS:  // NOLINT
-                   // void addSmartFactorsProjectionVisual();
+  void createCorrespondencesImage();
 
  private:
   void processMessage(const ff_msgs::DepthCorrespondences::ConstPtr& correspondences_msg);
   void imageCallback(const sensor_msgs::ImageConstPtr& image_msg);
   void clearImageBuffer(const localization_common::Time oldest_allowed_time);
   void clearDisplay();
-  void createCorrespondencesImage();
   sensor_msgs::ImageConstPtr getImage(const localization_common::Time time);
 
   std::unique_ptr<rviz::SliderProperty> correspondence_index_slider_;
