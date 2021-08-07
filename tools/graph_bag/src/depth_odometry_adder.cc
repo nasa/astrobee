@@ -47,6 +47,14 @@ void DepthOdometryAdder::AddDepthOdometry() {
   topics.push_back(std::string("/") + TOPIC_GRAPH_LOC_STATE);
   topics.push_back(TOPIC_GNC_EKF);
   topics.push_back(std::string("/") + TOPIC_GNC_EKF);
+  topics.push_back("/tf");
+  topics.push_back("/tf_static");
+  const std::string image_topic = /*static_cast<std::string>(TOPIC_HARDWARE_PICOFLEXX_PREFIX) +
+                                  static_cast<std::string>(TOPIC_HARDWARE_NAME_HAZ_CAM) +
+                                  static_cast<std::string>(TOPIC_HARDWARE_PICOFLEXX_SUFFIX_DEPTH_IMAGE);*/
+    "hw/depth_haz/extended/amplitude_int";
+  topics.push_back(image_topic);
+  topics.push_back(std::string("/") + image_topic);
   rosbag::View view(input_bag_, rosbag::TopicQuery(topics));
   for (const rosbag::MessageInstance msg : view) {
     if (string_ends_with(msg.getTopic(), depth_cloud_topic)) {

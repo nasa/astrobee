@@ -38,9 +38,10 @@ DepthOdometryDisplay::DepthOdometryDisplay() {
                                                               this, SLOT(createCorrespondencesImage())));
 
   image_transport::ImageTransport image_transport(nh_);
-  const std::string image_topic = static_cast<std::string>(TOPIC_HARDWARE_PICOFLEXX_PREFIX) +
+  const std::string image_topic = /*static_cast<std::string>(TOPIC_HARDWARE_PICOFLEXX_PREFIX) +
                                   static_cast<std::string>(TOPIC_HARDWARE_NAME_HAZ_CAM) +
-                                  static_cast<std::string>(TOPIC_HARDWARE_PICOFLEXX_SUFFIX_DEPTH_IMAGE);
+                                  static_cast<std::string>(TOPIC_HARDWARE_PICOFLEXX_SUFFIX_DEPTH_IMAGE);*/
+    "/hw/depth_haz/extended/amplitude_int";
   image_sub_ = image_transport.subscribe(image_topic, 10, &DepthOdometryDisplay::imageCallback, this);
   correspondence_image_pub_ = image_transport.advertise("/depth_odom/correspondence_image", 1);
 }
