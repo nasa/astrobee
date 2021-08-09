@@ -83,6 +83,8 @@ def main():
         exit(1)
     cpp_files_to_lint = []
     for filename in output.split():
+        # Needed for python3
+        filename = filename.decode('ascii')
         if str(filename).endswith(
             (
                 ".cpp",

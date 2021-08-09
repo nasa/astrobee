@@ -33,8 +33,7 @@ catkin_package(
     gazebo_model_plugin_pmc
     gazebo_model_plugin_perching_arm
     gazebo_model_plugin_laser
-    gazebo_model_plugin_flashlight_front
-    gazebo_model_plugin_flashlight_aft
+    gazebo_model_plugin_flashlight
     gazebo_model_plugin_llp_disk_monitor
     gazebo_model_plugin_llp_cpu_mem_monitor
     gazebo_model_plugin_mlp_disk_monitor
@@ -171,12 +170,12 @@ create_library(
     ff_util
 )
 
-# Create a model plugin for the front flashlight
+# Create a model plugin for the flashlight
 create_library(
   DIR
-    src/gazebo_model_plugin_flashlight_front
+    src/gazebo_model_plugin_flashlight
   TARGET
-    gazebo_model_plugin_flashlight_front
+    gazebo_model_plugin_flashlight
   LIBS
     ${GAZEBO_LIBRARIES}
     ${catkin_LIBRARIES}
@@ -188,25 +187,6 @@ create_library(
     ff_util
     ff_hw_msgs
 )
-
-# Create a model plugin for the aft flashlight
-create_library(
-  DIR
-    src/gazebo_model_plugin_flashlight_aft
-  TARGET
-    gazebo_model_plugin_flashlight_aft
-  LIBS
-    ${GAZEBO_LIBRARIES}
-    ${catkin_LIBRARIES}
-    astrobee_gazebo
-  INC
-    ${GAZEBO_INCLUDE_DIRS}
-    ${catkin_INCLUDE_DIRS}
-  DEPS
-    ff_util
-    ff_hw_msgs
-)
-
 
 # Create a model plugin for the laser
 create_library(
