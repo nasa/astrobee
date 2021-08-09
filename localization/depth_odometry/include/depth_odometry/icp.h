@@ -32,7 +32,6 @@ class ICP {
  public:
   ICP(const ICPParams& params);
   const pcl::Correspondences& correspondences() const;
-  Eigen::Isometry3d latest_relative_transform() const;
   boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> ComputeRelativeTransform(
     const pcl::PointCloud<pcl::PointXYZ>::Ptr source_cloud, const pcl::PointCloud<pcl::PointXYZ>::Ptr target_cloud,
     const Eigen::Isometry3d& initial_estimate = Eigen::Isometry3d::Identity());
@@ -50,7 +49,6 @@ class ICP {
 
   pcl::Correspondences correspondences_;
   ICPParams params_;
-  Eigen::Isometry3d latest_relative_transform_;
 };
 }  // namespace depth_odometry
 

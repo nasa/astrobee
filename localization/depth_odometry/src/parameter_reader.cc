@@ -27,17 +27,10 @@ void LoadDepthOdometryNodeletParams(config_reader::ConfigReader& config, DepthOd
 }
 
 void LoadDepthOdometryParams(config_reader::ConfigReader& config, DepthOdometryParams& params) {
+  LoadICPParams(config, params.icp);
   params.position_covariance_threshold = mc::LoadDouble(config, "position_covariance_threshold");
   params.orientation_covariance_threshold = mc::LoadDouble(config, "orientation_covariance_threshold");
-  params.fitness_threshold = mc::LoadDouble(config, "fitness_threshold");
-  params.search_radius = mc::LoadDouble(config, "search_radius");
-  params.max_iterations = mc::LoadInt(config, "max_iterations");
-  params.symmetric_objective = mc::LoadBool(config, "symmetric_objective");
-  params.enforce_same_direction_normals = mc::LoadBool(config, "enforce_same_direction_normals");
   params.inital_estimate_with_ransac_ia = mc::LoadBool(config, "inital_estimate_with_ransac_ia");
-  params.correspondence_rejector_surface_normal = mc::LoadBool(config, "correspondence_rejector_surface_normal");
-  params.correspondence_rejector_surface_normal_threshold =
-    mc::LoadDouble(config, "correspondence_rejector_surface_normal_threshold");
   params.frame_change_transform = mc::LoadBool(config, "frame_change_transform");
   params.body_T_haz_cam = msg_conversions::LoadEigenTransform(config, "haz_cam_transform");
 }

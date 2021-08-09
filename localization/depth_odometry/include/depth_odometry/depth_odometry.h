@@ -19,6 +19,7 @@
 #define DEPTH_ODOMETRY_DEPTH_ODOMETRY_H_
 
 #include <depth_odometry/depth_odometry_params.h>
+#include <depth_odometry/icp.h>
 #include <localization_common/time.h>
 
 #include <boost/optional.hpp>
@@ -39,22 +40,11 @@ class DepthOdometry {
   Eigen::Isometry3d latest_relative_transform() const;
 
  private:
-  boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> Icp(
-    const pcl::PointCloud<pcl::PointXYZ>::Ptr source_cloud, const pcl::PointCloud<pcl::PointXYZ>::Ptr target_cloud);
-  void FilterCorrespondences(const pcl::PointCloud<pcl::PointNormal>& input_cloud,
-                             const pcl::PointCloud<pcl::PointNormal>& target_cloud,
-                             pcl::Correspondences& correspondences) const;
   bool CovarianceSane(const Eigen::Matrix<double, 6, 6>& covariance) const;
-  Eigen::Matrix<double, 6, 6> ComputeCovarianceMatrix(
-    const pcl::IterativeClosestPointWithNormals<pcl::PointNormal, pcl::PointNormal>& icp,
-    const pcl::PointCloud<pcl::PointNormal>::Ptr source_cloud,
-    const pcl::PointCloud<pcl::PointNormal>::Ptr source_cloud_transformed, const Eigen::Isometry3d& relative_transform);
-  Eigen::Matrix<double, 1, 6> Jacobian(const pcl::PointNormal& source_point, const pcl::PointNormal& target_point,
-                                       const Eigen::Isometry3d& relative_transform) const;
 
+  std::unique_ptr<ICP> icp_;
   std::pair<localization_common::Time, pcl::PointCloud<pcl::PointXYZ>::Ptr> previous_depth_cloud_;
   std::pair<localization_common::Time, pcl::PointCloud<pcl::PointXYZ>::Ptr> latest_depth_cloud_;
-  pcl::Correspondences correspondences_;
   DepthOdometryParams params_;
   Eigen::Isometry3d latest_relative_transform_;
 };

@@ -18,20 +18,16 @@
 #ifndef DEPTH_ODOMETRY_DEPTH_ODOMETRY_PARAMS_H_
 #define DEPTH_ODOMETRY_DEPTH_ODOMETRY_PARAMS_H_
 
+#include <depth_odometry/icp_params.h>
+
 #include <Eigen/Geometry>
 
 namespace depth_odometry {
 struct DepthOdometryParams {
+  ICPParams icp;
   double position_covariance_threshold;
   double orientation_covariance_threshold;
-  double fitness_threshold;
-  double search_radius;
-  int max_iterations;
-  bool symmetric_objective;
-  bool enforce_same_direction_normals;
   bool inital_estimate_with_ransac_ia;
-  bool correspondence_rejector_surface_normal;
-  double correspondence_rejector_surface_normal_threshold;
   bool frame_change_transform;
   Eigen::Isometry3d body_T_haz_cam;
 };
