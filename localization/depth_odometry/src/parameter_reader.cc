@@ -36,6 +36,7 @@ void LoadDepthOdometryParams(config_reader::ConfigReader& config, DepthOdometryP
 }
 
 void LoadICPParams(config_reader::ConfigReader& config, ICPParams& params) {
+  params.fitness_threshold = mc::LoadDouble(config, "fitness_threshold");
   params.search_radius = mc::LoadDouble(config, "search_radius");
   params.max_iterations = mc::LoadInt(config, "max_iterations");
   params.symmetric_objective = mc::LoadBool(config, "symmetric_objective");
