@@ -19,14 +19,15 @@
 # even when running commands through multiprocessing
 # pooling
 def full_traceback(func):
-  import traceback, functools
+    import functools
+    import traceback
 
-  @functools.wraps(func)
-  def wrapper(*args, **kwargs):
-    try:
-      return func(*args, **kwargs)
-    except Exception as e:
-      msg = "{}\n\nOriginal {}".format(e, traceback.format_exc())
-      raise type(e)(msg)
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except Exception as e:
+            msg = "{}\n\nOriginal {}".format(e, traceback.format_exc())
+            raise type(e)(msg)
 
-  return wrapper
+    return wrapper

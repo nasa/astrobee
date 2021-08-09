@@ -18,18 +18,21 @@
 # Author: John Hsu, Dave Coleman
 #
 
-import rospy, sys, os, time
-import string
-import warnings
+import os
 import re
+import string
+import sys
+import time
+import warnings
 
-from gazebo_ros import gazebo_interface
-
+import rospy
+import tf.transformations as tft
 from gazebo_msgs.msg import *
 from gazebo_msgs.srv import *
-from std_srvs.srv import Empty
+from gazebo_ros import gazebo_interface
 from geometry_msgs.msg import Point, Pose, Quaternion, Twist, Wrench
-import tf.transformations as tft
+from std_srvs.srv import Empty
+
 
 def excepthook(*args):
     print('caught', STDERR)

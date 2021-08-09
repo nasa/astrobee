@@ -1,5 +1,5 @@
-# This will set up an Astrobee kinetic docker container using the non-NASA install instructions.
-# This image builds on top of the base kinetic image building the code.
+# This will set up an Astrobee xenial docker container using the non-NASA install instructions.
+# This image builds on top of the base xenial image building the code.
 # You must set the docker context to be the repository root directory
 
 FROM astrobee/astrobee:base-latest-xenial

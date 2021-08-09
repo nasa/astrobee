@@ -19,15 +19,21 @@
 
 import numpy as np
 
+
 def todict(obj):
     if hasattr(obj, "__iter__"):
         return [todict(v) for v in obj]
     elif hasattr(obj, "__dict__"):
-        return dict([(key, todict(value))
-            for key, value in obj.__dict__.iteritems()
-            if not callable(value) and not key.startswith('_')])
+        return dict(
+            [
+                (key, todict(value))
+                for key, value in list(obj.__dict__.items())
+                if not callable(value) and not key.startswith("_")
+            ]
+        )
     else:
         return obj
+
 
 class Common:
     def asDict(self):
@@ -35,49 +41,57 @@ class Common:
 
 
 class Header(Common):
-    def __init__(self, seq = None, stamp = None, frame_id = None):
+    def __init__(self, seq=None, stamp=None, frame_id=None):
         self.seq = seq
         self.stamp = stamp
         self.frame_id = frame_id
 
+
 class Point(Common):
-    def __init__(self, x = 0.0, y = 0.0, z = 0.0):
+    def __init__(self, x=0.0, y=0.0, z=0.0):
         self.x = x
         self.y = y
         self.z = z
 
+
 class Quaternion(Common):
-    def __init__(self, x = 0.0, y = 0.0, z = 0.0, w = 0.0):
+    def __init__(self, x=0.0, y=0.0, z=0.0, w=0.0):
         self.x = x
         self.y = y
         self.z = z
         self.w = w
 
+
 class Pose(Common):
-    def __init__(self, position = Point(), orientation = Quaternion()):
+    def __init__(self, position=Point(), orientation=Quaternion()):
         self.position = position
         self.orientation = orientation
 
+
 class Vector3(Common):
-    def __init__(self, x = 0.0, y = 0.0, z = 0.0):
+    def __init__(self, x=0.0, y=0.0, z=0.0):
         self.x = x
         self.y = y
         self.z = z
 
+
 class Wrench(Common):
-    def __init__(self, force = Vector3(), torque = Vector3()):
+    def __init__(self, force=Vector3(), torque=Vector3()):
         self.force = force
         self.torque = torque
 
+
 class Twist(Common):
-    def __init__(self, linear = Vector3(), angular = Vector3()):
+    def __init__(self, linear=Vector3(), angular=Vector3()):
         self.linear = linear
         self.angular = angular
+
 
 class PoseStamped(Common):
     def __init__(self):
         self.header = Header()
         self.pose = Pose()
+
 
 class EkfState(Common):
     def __init__(self):
@@ -89,7 +103,7 @@ class EkfState(Common):
         self.gyro_bias = Vector3()
         self.accel = Vector3()
         self.accel_bias = Vector3()
-        #self.cov_diag = [0.0] * 15
+        # self.cov_diag = [0.0] * 15
         self.cov_diag = np.zeros(15)
         self.confidence = 0
         self.aug_state_enum = 0
@@ -97,32 +111,33 @@ class EkfState(Common):
         self.of_count = 0
         self.ml_count = 0
         self.hr_global_pose = Pose()
-        #self.ml_mahal_dists = [0.0] * 50
+        # self.ml_mahal_dists = [0.0] * 50
         self.ml_mahal_dists = np.zeros(50)
 
 
 class PmcCommand(Common):
-    def __init__(self, header = Header()):
+    def __init__(self, header=Header()):
         self.header = header
         self.goals = []
 
     class PmcGoal(Common):
-        def __init__(self, motor_speed = None):
+        def __init__(self, motor_speed=None):
             self.motor_speed = motor_speed
             self.nozzle_positions = []
 
     def to_dict(self):
         dic = dict()
-        dic['hdr'] = self.header
-        dic['goals'] = []
+        dic["hdr"] = self.header
+        dic["goals"] = []
 
         for i in range(0, len(self.goals)):
-            goal = {'motorSpeed': self.goals[i].motor_speed, 'nozzlePositions': []}
+            goal = {"motorSpeed": self.goals[i].motor_speed, "nozzlePositions": []}
             for j in range(0, len(self.goals[i].nozzle_positions)):
-                goal['nozzlePositions'].append(self.goals[i].nozzle_positions[j])
-            dic['goals'].append(goal)
+                goal["nozzlePositions"].append(self.goals[i].nozzle_positions[j])
+            dic["goals"].append(goal)
 
         return dic
+
 
 class FamCommand(Common):
     def __init__(self):
@@ -138,12 +153,14 @@ class FamCommand(Common):
         self.attitude_error_mag = 0.0
         self.control_mode = 0
 
+
 class ControlState(Common):
     def __init__(self):
         self.when = None
         self.pose = Pose()
         self.twist = Twist()
         self.accel = Twist()
+
 
 class Log(Common):
     def __init__(self):
