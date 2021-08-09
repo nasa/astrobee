@@ -162,7 +162,7 @@ void DepthOdometryDisplay::publishPointClouds(const ff_msgs::DepthCorrespondence
   const auto previous_point_cloud_msg = getPointCloud(previous_time);
   const auto latest_point_cloud_msg = getPointCloud(latest_time);
   if (!previous_point_cloud_msg || !latest_point_cloud_msg) return;
-  pcl::PointCloud<pcl::PointXYZ>::Ptr previous_point_cloud(new pcl::PointCloud<pcl::PointXYZ>());
+  pcl::PointCloud<pcl::PointXYZI>::Ptr previous_point_cloud(new pcl::PointCloud<pcl::PointXYZI>());
   pcl::fromROSMsg(*previous_point_cloud_msg, *previous_point_cloud);
   sensor_msgs::PointCloud2 previous_point_cloud_correspondence_msg;
   pcl::toROSMsg(*previous_point_cloud, previous_point_cloud_correspondence_msg);
