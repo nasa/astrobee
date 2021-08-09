@@ -116,6 +116,7 @@ class GazeboModelPluginEps : public FreeFlyerModelPlugin {
           // Setup a timer to expire after a givent delay
           timer_delay_.stop();
           timer_delay_.start();
+          ros::Duration(1.0).sleep();
           // Create a virtual link
           Lock(true);
           // We are now in the process of docking

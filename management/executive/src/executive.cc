@@ -2711,20 +2711,32 @@ bool Executive::SetPlan(ff_msgs::CommandStampedPtr const& cmd) {
   std::string err_msg;
   if (plan_) {
     if (sequencer::LoadPlan(plan_, &sequencer_)) {
-      // Set plan execution state to paused, apparently this was the way
-      // spheres worked
-      SetPlanExecState(ff_msgs::ExecState::PAUSED);
-      // Publish plan stuff for ground
-      PublishPlan();
-      PublishPlanStatus(ff_msgs::AckStatus::QUEUED);
-      // Clear plan so that the operator has to upload a new plan after this
-      // plan is done running
-      plan_.reset();
-      state_->AckCmd(cmd->cmd_id);
-      return true;
+      if (sequencer_.plan_status().name.size() < 128) {
+        // Set plan execution state to paused, apparently this was the way
+        // spheres worked
+        SetPlanExecState(ff_msgs::ExecState::PAUSED);
+        // Publish plan stuff for ground
+        PublishPlan();
+        PublishPlanStatus(ff_msgs::AckStatus::QUEUED);
+        // Clear plan so that the operator has to upload a new plan after this
+        // plan is done running
+        plan_.reset();
+        state_->AckCmd(cmd->cmd_id);
+        return true;
+      } else {
+        // If the plan name is greater than 127 characters, ack it as bad syntax
+        // The plan status rapid message only supports plan names that are
+        // no more than 128 characters where the last character is the null
+        // character.
+        err_msg = "Plan name is too long. Size needs to be less than 128 ";
+        err_msg += "characters instead of ";
+        err_msg += std::to_string(sequencer_.plan_status().name.size());
+        err_msg += " characters.";
+      }
+    } else {
+      err_msg = "Invalid syntax in uploaded plan!";
     }
     plan_.reset();
-    err_msg = "Invalid syntax in uploaded plan!";
   } else {
     err_msg = "No plan found! Plan must have failed to upload.";
   }

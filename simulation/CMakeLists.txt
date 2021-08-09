@@ -53,8 +53,7 @@ catkin_package(
     gazebo_model_plugin_pmc
     gazebo_model_plugin_perching_arm
     gazebo_model_plugin_laser
-    gazebo_model_plugin_flashlight_front
-    gazebo_model_plugin_flashlight_aft
+    gazebo_model_plugin_flashlight
     gazebo_model_plugin_llp_disk_monitor
     gazebo_model_plugin_llp_cpu_mem_monitor
     gazebo_model_plugin_mlp_disk_monitor

@@ -80,7 +80,7 @@ void AstrobeeAstrobeeBridge::Initialize(ros::NodeHandle *nh) {
 
   // Make path to QOS and NDDS files
   std::string config_path = ff_common::GetConfigDir();
-  config_path += "/communications/dds/";
+  config_path += "/communications/dds_intercomms/";
 
   // Create fake argv containing only the particaptant name
   // Participant name needs to uniue so combine robot name with timestamp

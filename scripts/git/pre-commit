@@ -67,6 +67,8 @@ def main():
         exit(1)
     cpp_files_to_lint = []
     for filename in output.split():
+        # Needed for python3
+        filename = filename.decode('ascii')
         if str(filename).endswith((".cpp",".cc",".h",".hpp",".cc.in",".c",".c.in",".h.in",
                               ".hpp.in",".cxx",".hxx")):
             if not "external/" in filename and not "Software/" in filename and \
