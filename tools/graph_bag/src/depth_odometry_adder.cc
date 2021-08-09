@@ -55,11 +55,6 @@ void DepthOdometryAdder::AddDepthOdometry() {
     "hw/depth_haz/extended/amplitude_int";
   topics.push_back(image_topic);
   topics.push_back(std::string("/") + image_topic);
-  const std::string point_cloud_topic = static_cast<std::string>(TOPIC_HARDWARE_PICOFLEXX_PREFIX) +
-                                        static_cast<std::string>(TOPIC_HARDWARE_NAME_HAZ_CAM) +
-                                        static_cast<std::string>(TOPIC_HARDWARE_PICOFLEXX_SUFFIX);
-  topics.push_back(point_cloud_topic);
-  topics.push_back(std::string("/") + point_cloud_topic);
   rosbag::View view(input_bag_, rosbag::TopicQuery(topics));
   for (const rosbag::MessageInstance msg : view) {
     if (string_ends_with(msg.getTopic(), depth_cloud_topic)) {
@@ -75,9 +70,8 @@ void DepthOdometryAdder::AddDepthOdometry() {
       correspondences_timestamp.sec += 1;
       output_bag_.write(std::string("/") + TOPIC_LOCALIZATION_DEPTH_CORRESPONDENCES, correspondences_timestamp,
                         correspondences_msg);
-    } else {
-      output_bag_.write(msg.getTopic(), msg.getTime(), msg);
     }
+    output_bag_.write(msg.getTopic(), msg.getTime(), msg);
   }
 }
 }  // namespace graph_bag
