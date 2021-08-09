@@ -26,6 +26,7 @@ find_package(catkin REQUIRED COMPONENTS
   ff_msgs
   ff_util
   choreographer
+  rviz
 )
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
@@ -40,6 +41,9 @@ find_package(JPS3D REQUIRED)
 find_package(IntelMKL REQUIRED)
 find_package(DecompUtil REQUIRED)
 
+find_package(Qt5 ${rviz_QT_VERSION} REQUIRED Core Widgets)
+
+find_package(JPS3D REQUIRED)
 
 # Generate messages in the 'msg' folder
 add_message_files(
@@ -56,13 +60,14 @@ generate_messages(
 
 catkin_package(
   LIBRARIES
-    planner_qp
+    traj_opt_basic traj_opt_pro traj_opt_ros planner_qp
   DEPENDS
   CATKIN_DEPENDS
     mapper
     ff_msgs
     ff_util
     choreographer
+    rviz
 )
 
 ###########
@@ -77,6 +82,8 @@ include_directories(
   ${JPS3D_INCLUDE_DIR}
   ${DECOMP_UTIL_INCLUDE_DIR}
   ${PCL_INCLUDE_DIRS}
+  ${Qt5Gui_INCLUDE_DIRS}
+  ${JPS3D_INCLUDE_DIRS}
 )
 
 # Declare C++ libraries
@@ -100,13 +107,13 @@ add_dependencies(traj_opt_pro ${catkin_EXPORTED_TARGETS})
 target_link_libraries(traj_opt_pro traj_opt_basic ${catkin_LIBRARIES})
 
 # Declare C++ libraries
-add_library(traj_opt_ros
+add_library(traj_opt
+  src/traj_opt_ros/trajectory_display.cpp
+  src/traj_opt_ros/trajectory_visual.cpp
   src/traj_opt_ros/ros_bridge.cpp
-  # src/traj_opt_ros/trajectory_display.cpp
-  # src/traj_opt_ros/trajectory_visual.cpp
 )
-add_dependencies(traj_opt_ros ${catkin_EXPORTED_TARGETS})
-target_link_libraries(traj_opt_ros traj_opt_basic ${catkin_LIBRARIES})
+add_dependencies(traj_opt ${catkin_EXPORTED_TARGETS})
+target_link_libraries(traj_opt traj_opt_basic ${JPS3D_LIBRARIES} ${catkin_LIBRARIES})
 
 
 # Declare C++ libraries
@@ -114,7 +121,7 @@ add_library(planner_qp
   src/planner_qp.cc
 )
 add_dependencies(planner_qp ${catkin_EXPORTED_TARGETS})
-target_link_libraries(planner_qp traj_opt_basic traj_opt_pro traj_opt_ros ${catkin_LIBRARIES})
+target_link_libraries(planner_qp traj_opt_basic traj_opt_pro traj_opt ${catkin_LIBRARIES})
 
 #############
 ## Install ##

@@ -31,6 +31,8 @@ find_package(catkin REQUIRED COMPONENTS
   cmake_modules
 )
 
+find_package(octomap REQUIRED)
+
 # Find Eigen3
 find_package(Eigen3 REQUIRED)
 # Find PCL
@@ -60,6 +62,7 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
   ${EIGEN3_INCLUDE_DIR}
   ${PCL_INCLUDE_DIRS}
+  ${OCTOMAP_INCLUDE_DIRS}
 )
 
 # Declare C++ libraries
@@ -74,7 +77,7 @@ add_library(mapper
   src/visualization_functions.cc
 )
 add_dependencies(mapper ${catkin_EXPORTED_TARGETS})
-target_link_libraries(mapper ${catkin_LIBRARIES})
+target_link_libraries(mapper ${OCTOMAP_LIBRARIES} ${catkin_LIBRARIES})
 
 
 if(CATKIN_ENABLE_TESTING)

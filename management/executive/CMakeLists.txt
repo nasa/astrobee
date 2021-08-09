@@ -76,7 +76,7 @@ add_library(sequencer
   src/utils/sequencer/sequencer.cc
 )
 add_dependencies(sequencer ${catkin_EXPORTED_TARGETS})
-target_link_libraries(sequencer ${catkin_LIBRARIES})
+target_link_libraries(sequencer ${Boost_IOSTREAMS_LIBRARY} ${catkin_LIBRARIES})
 
 # Declare C++ libraries
 add_library(executive
@@ -90,7 +90,7 @@ add_library(executive
   src/op_state_teleop.cc
 )
 add_dependencies(executive ${catkin_EXPORTED_TARGETS})
-target_link_libraries(executive sequencer ${catkin_LIBRARIES})
+target_link_libraries(executive sequencer ${Boost_SYSTEM_LIBRARY} ${catkin_LIBRARIES})
 
 
 ## Declare a C++ executable: ekf_switch_mux

@@ -80,14 +80,13 @@ file(GLOB cc_files
      "src/*.cc"
 )
 
-message("RTIDDS_DEFINES ${RTIDDS_DEFINES}")
 # Declare C++ libraries
 add_library(dds_ros_bridge
   ${cc_files}
 )
 target_compile_definitions(dds_ros_bridge PUBLIC ${RTIDDS_DEFINE_FLAGS})
 add_dependencies(dds_ros_bridge ${catkin_EXPORTED_TARGETS})
-target_link_libraries(dds_ros_bridge ${catkin_LIBRARIES})
+target_link_libraries(dds_ros_bridge rapidIo ${catkin_LIBRARIES})
 
 
 add_library(astrobee_astrobee_bridge

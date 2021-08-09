@@ -42,13 +42,12 @@ catkin_package(
     config_reader
     msg_conversions
     ff_msgs
+  DEPENDS gtsam
 )
 
 ###########
 ## Build ##
 ###########
-
-message("lll ${GTSAM_LIBRARIES}")
 
 # Specify additional locations of header files
 include_directories(
@@ -70,4 +69,4 @@ add_library(${PROJECT_NAME}
   src/utilities.cc
 )
 add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(${PROJECT_NAME} ${GTSAM_LIBRARIES} ${catkin_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} gtsam ${catkin_LIBRARIES})

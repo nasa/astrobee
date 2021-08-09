@@ -27,6 +27,7 @@ find_package(catkin REQUIRED COMPONENTS
   nodelet
   config_reader
   ff_util
+  image_transport
 )
 
 # Find OpenCV3
@@ -34,7 +35,7 @@ find_package(OpenCV 3 REQUIRED)
 
 catkin_package(
   LIBRARIES image_sampler
-  DEPENDS roscpp ff_msgs nodelet config_reader ff_util
+  DEPENDS roscpp ff_msgs nodelet config_reader ff_util image_transport
 )
 
 ###########

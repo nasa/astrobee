@@ -27,11 +27,18 @@ find_package(catkin REQUIRED COMPONENTS
   nodelet
   ff_util
   config_reader
+  rosbag
 )
 
 catkin_package(
-  LIBRARIES data_bagger astrobee_recorder
-  DEPENDS roscpp ff_msgs nodelet ff_util config_reader
+  LIBRARIES data_bagger astrobee_recorder 
+  CATKIN_DEPENDS
+    roscpp
+    ff_msgs
+    nodelet
+    ff_util
+    config_reader
+    rosbag
 )
 
 ###########

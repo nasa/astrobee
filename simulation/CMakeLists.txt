@@ -31,6 +31,7 @@ find_package(catkin REQUIRED COMPONENTS
   sensor_msgs
   ff_msgs
   ff_hw_msgs
+  tf2_geometry_msgs
   ff_util
   gnc_autocode
   camera
@@ -82,6 +83,7 @@ catkin_package(
     sensor_msgs
     ff_msgs
     ff_hw_msgs
+    tf2_geometry_msgs
     ff_util
     gnc_autocode
     camera
@@ -116,7 +118,7 @@ add_library(gazebo_model_plugin_eps
   src/gazebo_model_plugin_eps/gazebo_model_plugin_eps.cc
 )
 add_dependencies(gazebo_model_plugin_eps ${catkin_EXPORTED_TARGETS})
-target_link_libraries(gazebo_model_plugin_eps
+target_link_libraries(gazebo_model_plugin_eps astrobee_gazebo
   ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
 )
 
@@ -125,7 +127,7 @@ add_library(gazebo_model_plugin_drag
   src/gazebo_model_plugin_drag/gazebo_model_plugin_drag.cc
 )
 add_dependencies(gazebo_model_plugin_drag ${catkin_EXPORTED_TARGETS})
-target_link_libraries(gazebo_model_plugin_drag
+target_link_libraries(gazebo_model_plugin_drag astrobee_gazebo
   ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
 )
 
@@ -134,7 +136,7 @@ add_library(gazebo_model_plugin_truth
   src/gazebo_model_plugin_truth/gazebo_model_plugin_truth.cc
 )
 add_dependencies(gazebo_model_plugin_truth ${catkin_EXPORTED_TARGETS})
-target_link_libraries(gazebo_model_plugin_truth
+target_link_libraries(gazebo_model_plugin_truth astrobee_gazebo
   ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
 )
 
@@ -143,7 +145,7 @@ add_library(gazebo_model_plugin_pmc
   src/gazebo_model_plugin_pmc/gazebo_model_plugin_pmc.cc
 )
 add_dependencies(gazebo_model_plugin_pmc ${catkin_EXPORTED_TARGETS})
-target_link_libraries(gazebo_model_plugin_pmc
+target_link_libraries(gazebo_model_plugin_pmc astrobee_gazebo
   ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
 )
 
@@ -152,7 +154,7 @@ add_library(gazebo_model_plugin_perching_arm
   src/gazebo_model_plugin_perching_arm/gazebo_model_plugin_perching_arm.cc
 )
 add_dependencies(gazebo_model_plugin_perching_arm ${catkin_EXPORTED_TARGETS})
-target_link_libraries(gazebo_model_plugin_perching_arm
+target_link_libraries(gazebo_model_plugin_perching_arm astrobee_gazebo
   ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
 )
 
@@ -161,7 +163,7 @@ add_library(gazebo_model_plugin_flashlight_front
   src/gazebo_model_plugin_flashlight_front/gazebo_model_plugin_flashlight_front.cc
 )
 add_dependencies(gazebo_model_plugin_flashlight_front ${catkin_EXPORTED_TARGETS})
-target_link_libraries(gazebo_model_plugin_flashlight_front
+target_link_libraries(gazebo_model_plugin_flashlight_front astrobee_gazebo
   ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
 )
 
@@ -170,7 +172,7 @@ add_library(gazebo_model_plugin_flashlight_aft
   src/gazebo_model_plugin_flashlight_aft/gazebo_model_plugin_flashlight_aft.cc
 )
 add_dependencies(gazebo_model_plugin_flashlight_aft ${catkin_EXPORTED_TARGETS})
-target_link_libraries(gazebo_model_plugin_flashlight_aft
+target_link_libraries(gazebo_model_plugin_flashlight_aft astrobee_gazebo
   ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
 )
 
@@ -179,7 +181,7 @@ add_library(gazebo_model_plugin_laser
   src/gazebo_model_plugin_laser/gazebo_model_plugin_laser.cc
 )
 add_dependencies(gazebo_model_plugin_laser ${catkin_EXPORTED_TARGETS})
-target_link_libraries(gazebo_model_plugin_laser
+target_link_libraries(gazebo_model_plugin_laser astrobee_gazebo
   ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
 )
 
@@ -188,7 +190,7 @@ add_library(gazebo_model_plugin_llp_cpu_mem_monitor
   src/gazebo_model_plugin_llp_cpu_mem_monitor/gazebo_model_plugin_llp_cpu_mem_monitor.cc
 )
 add_dependencies(gazebo_model_plugin_llp_cpu_mem_monitor ${catkin_EXPORTED_TARGETS})
-target_link_libraries(gazebo_model_plugin_llp_cpu_mem_monitor
+target_link_libraries(gazebo_model_plugin_llp_cpu_mem_monitor astrobee_gazebo
   ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
 )
 
@@ -197,7 +199,7 @@ add_library(gazebo_model_plugin_llp_disk_monitor
   src/gazebo_model_plugin_llp_disk_monitor/gazebo_model_plugin_llp_disk_monitor.cc
 )
 add_dependencies(gazebo_model_plugin_llp_disk_monitor ${catkin_EXPORTED_TARGETS})
-target_link_libraries(gazebo_model_plugin_llp_disk_monitor
+target_link_libraries(gazebo_model_plugin_llp_disk_monitor astrobee_gazebo
   ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
 )
 
@@ -206,7 +208,7 @@ add_library(gazebo_model_plugin_mlp_cpu_mem_monitor
   src/gazebo_model_plugin_mlp_cpu_mem_monitor/gazebo_model_plugin_mlp_cpu_mem_monitor.cc
 )
 add_dependencies(gazebo_model_plugin_mlp_cpu_mem_monitor ${catkin_EXPORTED_TARGETS})
-target_link_libraries(gazebo_model_plugin_mlp_cpu_mem_monitor
+target_link_libraries(gazebo_model_plugin_mlp_cpu_mem_monitor astrobee_gazebo
   ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
 )
 
@@ -215,7 +217,7 @@ add_library(gazebo_model_plugin_mlp_disk_monitor
   src/gazebo_model_plugin_mlp_disk_monitor/gazebo_model_plugin_mlp_disk_monitor.cc
 )
 add_dependencies(gazebo_model_plugin_mlp_disk_monitor ${catkin_EXPORTED_TARGETS})
-target_link_libraries(gazebo_model_plugin_mlp_disk_monitor
+target_link_libraries(gazebo_model_plugin_mlp_disk_monitor astrobee_gazebo
   ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
 )
 
@@ -224,7 +226,7 @@ add_library(gazebo_model_plugin_speed_cam
   src/gazebo_model_plugin_speed_cam/gazebo_model_plugin_speed_cam.cc
 )
 add_dependencies(gazebo_model_plugin_speed_cam ${catkin_EXPORTED_TARGETS})
-target_link_libraries(gazebo_model_plugin_speed_cam
+target_link_libraries(gazebo_model_plugin_speed_cam astrobee_gazebo
   ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
 )
 
@@ -233,7 +235,7 @@ add_library(gazebo_model_plugin_signal_lights
   src/gazebo_model_plugin_signal_lights/gazebo_model_plugin_signal_lights.cc
 )
 add_dependencies(gazebo_model_plugin_signal_lights ${catkin_EXPORTED_TARGETS})
-target_link_libraries(gazebo_model_plugin_signal_lights
+target_link_libraries(gazebo_model_plugin_signal_lights astrobee_gazebo
   ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
 )
 
@@ -242,7 +244,7 @@ add_library(gazebo_sensor_plugin_imu
   src/gazebo_sensor_plugin_imu/gazebo_sensor_plugin_imu.cc
 )
 add_dependencies(gazebo_sensor_plugin_imu ${catkin_EXPORTED_TARGETS})
-target_link_libraries(gazebo_sensor_plugin_imu
+target_link_libraries(gazebo_sensor_plugin_imu astrobee_gazebo
   ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
 )
 
@@ -251,7 +253,7 @@ add_library(gazebo_sensor_plugin_perch_cam
   src/gazebo_sensor_plugin_perch_cam/gazebo_sensor_plugin_perch_cam.cc
 )
 add_dependencies(gazebo_sensor_plugin_perch_cam ${catkin_EXPORTED_TARGETS})
-target_link_libraries(gazebo_sensor_plugin_perch_cam
+target_link_libraries(gazebo_sensor_plugin_perch_cam astrobee_gazebo
   ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
 )
 
