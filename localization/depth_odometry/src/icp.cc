@@ -16,10 +16,9 @@
  * under the License.
  */
 
-#include <depth_odometry/depth_odometry.h>
-#include <depth_odometry/transformation_estimation_symmetric_point_to_plane_lls.h>
+#include <depth_odometry/icp.h>
 #include <depth_odometry/point_cloud_utilities.h>
-#include <depth_odometry/utilities.h>
+#include <depth_odometry/transformation_estimation_symmetric_point_to_plane_lls.h>
 #include <localization_common/logger.h>
 #include <localization_common/timer.h>
 #include <localization_common/utilities.h>
@@ -27,84 +26,29 @@
 #include <gtsam/geometry/Pose3.h>
 
 #include <pcl_conversions/pcl_conversions.h>
+#include <pcl/features/normal_3d.h>
+#include <pcl/features/impl/normal_3d.hpp>
 #include <pcl/filters/filter.h>
 #include <pcl/filters/impl/filter.hpp>
 // TODO(rsoussan): Switch back to this when PCL bug is fixed
 //#include <pcl/registration/correspondence_rejection_surface_normal.h>
 #include <depth_odometry/correspondence_rejection_surface_normal2.h>
 #include <pcl/registration/icp.h>
+#include <pcl/search/impl/search.hpp>
+#include <pcl/search/impl/organized.hpp>
+#include <pcl/search/impl/kdtree.hpp>
+#include <pcl/kdtree/impl/kdtree_flann.hpp>
 
 namespace depth_odometry {
 namespace lc = localization_common;
 
-DepthOdometry::DepthOdometry() {
-  // TODO(rsoussan): remove this
-  config_reader::ConfigReader config;
-  config.AddFile("transforms.config");
-  config.AddFile("geometry.config");
-  config.AddFile("localization/depth_odometry.config");
-  if (!config.ReadFiles()) {
-    LogFatal("Failed to read config files.");
-  }
+ICP::ICP(const ICPParams& params) : params_(params) {}
 
-  LoadDepthOdometryParams(config, params_);
-}
+const pcl::Correspondences& ICP::correspondences() const { return correspondences_; }
 
-std::pair<localization_common::Time, pcl::PointCloud<pcl::PointXYZ>::Ptr> DepthOdometry::previous_depth_cloud() const {
-  return previous_depth_cloud_;
-}
-std::pair<localization_common::Time, pcl::PointCloud<pcl::PointXYZ>::Ptr> DepthOdometry::latest_depth_cloud() const {
-  return latest_depth_cloud_;
-}
-
-Eigen::Isometry3d DepthOdometry::latest_relative_transform() const { return latest_relative_transform_; }
-
-const pcl::Correspondences& DepthOdometry::correspondences() const { return correspondences_; }
-
-boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> DepthOdometry::DepthCloudCallback(
-  std::pair<lc::Time, pcl::PointCloud<pcl::PointXYZ>::Ptr> depth_cloud) {
-  RemoveNansAndZerosFromPointXYZs(*(depth_cloud.second));
-  if (!previous_depth_cloud_.second && !latest_depth_cloud_.second) latest_depth_cloud_ = depth_cloud;
-  if (depth_cloud.first < latest_depth_cloud_.first) {
-    LogWarning("DepthCloudCallback: Out of order measurement received.");
-    return boost::none;
-  }
-  LogError("t: " << std::setprecision(15) << depth_cloud.first);
-  previous_depth_cloud_ = latest_depth_cloud_;
-  latest_depth_cloud_ = depth_cloud;
-  auto relative_transform = Icp(previous_depth_cloud_.second, latest_depth_cloud_.second);
-  if (!relative_transform) {
-    LogWarning("DepthCloudCallback: Failed to get relative transform.");
-    return boost::none;
-  }
-
-  if (!CovarianceSane(relative_transform->second)) {
-    LogWarning("DepthCloudCallback: Sanity check failed - invalid covariance.");
-    return boost::none;
-  }
-
-  if (params_.frame_change_transform) {
-    relative_transform->first = params_.body_T_haz_cam * relative_transform->first * params_.body_T_haz_cam.inverse();
-    // TODO: rotate covariance matrix!!!! use exp map jacobian!!! sandwich withthis! (translation should be rotated by
-    // rotation matrix)
-  }
-
-  // LogError("cov: " << std::endl << relative_transform->second.matrix());
-  if (relative_transform->first.translation().norm() > 0.5) LogError("large position jump!!");
-  latest_relative_transform_ = relative_transform->first;
-  return relative_transform;
-}
-
-bool DepthOdometry::CovarianceSane(const Eigen::Matrix<double, 6, 6>& covariance) const {
-  const auto position_covariance_norm = covariance.block<3, 3>(0, 0).diagonal().norm();
-  const auto orientation_covariance_norm = covariance.block<3, 3>(3, 3).diagonal().norm();
-  LogError("pcov: " << position_covariance_norm << ", ocov: " << orientation_covariance_norm);
-  return (position_covariance_norm <= params_.position_covariance_threshold &&
-          orientation_covariance_norm <= params_.orientation_covariance_threshold);
-}
-
-boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> DepthOdometry::Icp(
-  const pcl::PointCloud<pcl::PointXYZ>::Ptr source_cloud, const pcl::PointCloud<pcl::PointXYZ>::Ptr target_cloud) {
+boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> ICP::ComputeRelativeTransform(
+  const pcl::PointCloud<pcl::PointXYZ>::Ptr source_cloud, const pcl::PointCloud<pcl::PointXYZ>::Ptr target_cloud,
+  const Eigen::Isometry3d& initial_estimate) {
   static lc::Timer icp_timer("ICP");
   icp_timer.Start();
   pcl::PointCloud<pcl::PointNormal>::Ptr target_cloud_with_normals(new pcl::PointCloud<pcl::PointNormal>);
@@ -121,11 +65,6 @@ boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> Depth
   RemoveNansAndZerosFromPointNormals(*target_cloud_with_normals);
 
   pcl::IterativeClosestPointWithNormals<pcl::PointNormal, pcl::PointNormal> icp;
-  Eigen::Matrix4f initial_estimate = Eigen::Matrix4f::Identity();
-  if (params_.inital_estimate_with_ransac_ia) {
-    initial_estimate = RansacIA(source_cloud_with_normals, target_cloud_with_normals);
-  }
-
   if (params_.symmetric_objective) {
     auto symmetric_transformation_estimation = boost::make_shared<
       pcl::registration::TransformationEstimationSymmetricPointToPlaneLLS<pcl::PointNormal, pcl::PointNormal>>();
@@ -148,7 +87,7 @@ boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> Depth
   icp.setInputTarget(target_cloud_with_normals);
   icp.setMaximumIterations(params_.max_iterations);
   pcl::PointCloud<pcl::PointNormal>::Ptr result(new pcl::PointCloud<pcl::PointNormal>);
-  icp.align(*result, initial_estimate);
+  icp.align(*result, initial_estimate.matrix().cast<float>());
 
   if (!icp.hasConverged()) {
     LogError("Icp: Failed to converge.");
@@ -175,18 +114,17 @@ boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> Depth
   return std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>{relative_transform, covariance};
 }
 
-Eigen::Matrix<double, 1, 6> DepthOdometry::Jacobian(const pcl::PointNormal& source_point,
-                                                    const pcl::PointNormal& target_point,
-                                                    const Eigen::Isometry3d& relative_transform) const {
+Eigen::Matrix<double, 1, 6> ICP::Jacobian(const pcl::PointNormal& source_point, const pcl::PointNormal& target_point,
+                                          const Eigen::Isometry3d& relative_transform) const {
   const gtsam::Pose3 gt_relative_transform = lc::GtPose(relative_transform);
   const gtsam::Point3 gt_point(source_point.x, source_point.y, source_point.z);
   const gtsam::Point3 gt_normal(target_point.normal[0], target_point.normal[1], target_point.normal[2]);
   return depth_odometry::Jacobian(gt_point, gt_normal, gt_relative_transform);
 }
 
-void DepthOdometry::FilterCorrespondences(const pcl::PointCloud<pcl::PointNormal>& input_cloud,
-                                          const pcl::PointCloud<pcl::PointNormal>& target_cloud,
-                                          pcl::Correspondences& correspondences) const {
+void ICP::FilterCorrespondences(const pcl::PointCloud<pcl::PointNormal>& input_cloud,
+                                const pcl::PointCloud<pcl::PointNormal>& target_cloud,
+                                pcl::Correspondences& correspondences) const {
   for (auto correspondence_it = correspondences.begin(); correspondence_it != correspondences.end();) {
     const auto& input_point = (input_cloud)[correspondence_it->index_query];
     const auto& target_point = (target_cloud)[correspondence_it->index_match];
@@ -202,7 +140,7 @@ void DepthOdometry::FilterCorrespondences(const pcl::PointCloud<pcl::PointNormal
   }
 }
 
-Eigen::Matrix<double, 6, 6> DepthOdometry::ComputeCovarianceMatrix(
+Eigen::Matrix<double, 6, 6> ICP::ComputeCovarianceMatrix(
   const pcl::IterativeClosestPointWithNormals<pcl::PointNormal, pcl::PointNormal>& icp,
   const pcl::PointCloud<pcl::PointNormal>::Ptr source_cloud,
   const pcl::PointCloud<pcl::PointNormal>::Ptr source_cloud_transformed, const Eigen::Isometry3d& relative_transform) {
