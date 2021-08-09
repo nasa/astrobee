@@ -50,8 +50,8 @@ DepthOdometryDisplay::DepthOdometryDisplay() {
   point_cloud_sub_ = nh_.subscribe<sensor_msgs::PointCloud2>(
     point_cloud_topic, 10, &DepthOdometryDisplay::pointCloudCallback, this, ros::TransportHints().tcpNoDelay());
   correspondence_image_pub_ = image_transport.advertise("/depth_odom/correspondence_image", 1);
-  source_cloud_pub_ = nh_.advertise<sensor_msgs::PointCloud2>("source_cloud_with_correspondence", 10);
-  target_cloud_pub_ = nh_.advertise<sensor_msgs::PointCloud2>("target_cloud_with_correspondence", 10);
+  source_point_pub_ = nh_.advertise<geometry_msgs::PointStamped>("source_point_with_correspondence", 10);
+  target_point_pub_ = nh_.advertise<geometry_msgs::PointStamped>("target_point_with_correspondence", 10);
 }
 
 void DepthOdometryDisplay::onInitialize() { MFDClass::onInitialize(); }
@@ -68,7 +68,9 @@ void DepthOdometryDisplay::imageCallback(const sensor_msgs::ImageConstPtr& image
 }
 
 void DepthOdometryDisplay::pointCloudCallback(const sensor_msgs::PointCloud2ConstPtr& point_cloud_msg) {
-  point_cloud_buffer_.emplace(lc::TimeFromHeader(point_cloud_msg->header), point_cloud_msg);
+  pcl::PointCloud<pcl::PointXYZ>::Ptr point_cloud(new pcl::PointCloud<pcl::PointXYZ>());
+  pcl::fromROSMsg(*point_cloud_msg, *point_cloud);
+  point_cloud_buffer_.emplace(lc::TimeFromHeader(point_cloud_msg->header), point_cloud);
 }
 
 sensor_msgs::ImageConstPtr DepthOdometryDisplay::getImage(const localization_common::Time time) {
@@ -83,7 +85,7 @@ void DepthOdometryDisplay::clearImageBuffer(const localization_common::Time olde
   img_buffer_.erase(img_buffer_.begin(), img_it);
 }
 
-sensor_msgs::PointCloud2ConstPtr DepthOdometryDisplay::getPointCloud(const localization_common::Time time) {
+pcl::PointCloud<pcl::PointXYZ>::Ptr DepthOdometryDisplay::getPointCloud(const localization_common::Time time) {
   const auto point_cloud_it = point_cloud_buffer_.find(time);
   if (point_cloud_it == point_cloud_buffer_.end()) return nullptr;
   return point_cloud_it->second;
@@ -154,21 +156,22 @@ void DepthOdometryDisplay::createCorrespondencesImage() {
   previous_image.copyTo(correspondence_image.image(cv::Rect(0, 0, cols, rows)));
   latest_image.copyTo(correspondence_image.image(cv::Rect(0, rows, cols, rows)));
   correspondence_image_pub_.publish(correspondence_image.toImageMsg());
-  publishPointClouds(correspondence, previous_time, latest_time);
+  publishCorrespondencePoints(correspondence, previous_time, latest_time);
 }
 
-void DepthOdometryDisplay::publishPointClouds(const ff_msgs::DepthCorrespondence& correspondence,
-                                              const lc::Time previous_time, const lc::Time latest_time) {
-  const auto previous_point_cloud_msg = getPointCloud(previous_time);
-  const auto latest_point_cloud_msg = getPointCloud(latest_time);
-  if (!previous_point_cloud_msg || !latest_point_cloud_msg) return;
-  pcl::PointCloud<pcl::PointXYZI>::Ptr previous_point_cloud(new pcl::PointCloud<pcl::PointXYZI>());
-  pcl::fromROSMsg(*previous_point_cloud_msg, *previous_point_cloud);
-  sensor_msgs::PointCloud2 previous_point_cloud_correspondence_msg;
-  pcl::toROSMsg(*previous_point_cloud, previous_point_cloud_correspondence_msg);
-  previous_point_cloud_correspondence_msg.header.stamp = ros::Time::now();
-  previous_point_cloud_correspondence_msg.header.frame_id = "haz_cam";
-  source_cloud_pub_.publish(previous_point_cloud_correspondence_msg);
+void DepthOdometryDisplay::publishCorrespondencePoints(const ff_msgs::DepthCorrespondence& correspondence,
+                                                       const lc::Time previous_time, const lc::Time latest_time) {
+  const auto previous_point_cloud = getPointCloud(previous_time);
+  const auto latest_point_cloud = getPointCloud(latest_time);
+  if (!previous_point_cloud || !latest_point_cloud) return;
+  geometry_msgs::PointStamped previous_correspondence_point_msg;
+  const auto previous_correspondence_point = previous_point_cloud->points[correspondence.previous_image_index];
+  previous_correspondence_point_msg.point.x = previous_correspondence_point.x;
+  previous_correspondence_point_msg.point.y = previous_correspondence_point.y;
+  previous_correspondence_point_msg.point.z = previous_correspondence_point.z;
+  previous_correspondence_point_msg.header.stamp = ros::Time::now();
+  previous_correspondence_point_msg.header.frame_id = "haz_cam";
+  source_point_pub_.publish(previous_correspondence_point_msg);
 }
 }  // namespace localization_rviz_plugins
 
