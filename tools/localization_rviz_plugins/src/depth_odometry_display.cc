@@ -72,8 +72,12 @@ void DepthOdometryDisplay::imageCallback(const sensor_msgs::ImageConstPtr& image
 }
 
 void DepthOdometryDisplay::pointCloudCallback(const sensor_msgs::PointCloud2ConstPtr& point_cloud_msg) {
-  pcl::PointCloud<pcl::PointXYZ>::Ptr point_cloud(new pcl::PointCloud<pcl::PointXYZ>());
-  pcl::fromROSMsg(*point_cloud_msg, *point_cloud);
+  pcl::PointCloud<pcl::PointXYZI>::Ptr point_cloud(new pcl::PointCloud<pcl::PointXYZI>());
+  // Bug in PCL, field called intensities rather than intensity, causes conversion to lose intensity
+  // if not renamed
+  sensor_msgs::PointCloud2 point_cloud_msg_fixed = *point_cloud_msg;
+  point_cloud_msg_fixed.fields[3].name = "intensity";
+  pcl::fromROSMsg(point_cloud_msg_fixed, *point_cloud);
   point_cloud_buffer_.emplace(lc::TimeFromHeader(point_cloud_msg->header), point_cloud);
 }
 
@@ -89,7 +93,7 @@ void DepthOdometryDisplay::clearImageBuffer(const localization_common::Time olde
   img_buffer_.erase(img_buffer_.begin(), img_it);
 }
 
-pcl::PointCloud<pcl::PointXYZ>::Ptr DepthOdometryDisplay::getPointCloud(const localization_common::Time time) {
+pcl::PointCloud<pcl::PointXYZI>::Ptr DepthOdometryDisplay::getPointCloud(const localization_common::Time time) {
   const auto point_cloud_it = point_cloud_buffer_.find(time);
   if (point_cloud_it == point_cloud_buffer_.end()) return nullptr;
   return point_cloud_it->second;
