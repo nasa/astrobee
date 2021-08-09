@@ -15,8 +15,8 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef DEPTH_ODOMETRY_UTILITIES_H_
-#define DEPTH_ODOMETRY_UTILITIES_H_
+#ifndef DEPTH_ODOMETRY_PARAMETER_READER_H_
+#define DEPTH_ODOMETRY_PARAMETER_READER_H_
 
 #include <config_reader/config_reader.h>
 #include <depth_odometry/depth_odometry_nodelet_params.h>
@@ -28,4 +28,4 @@ void LoadDepthOdometryNodeletParams(config_reader::ConfigReader& config, DepthOd
 void LoadDepthOdometryParams(config_reader::ConfigReader& config, DepthOdometryParams& params);
 void LoadICPParams(config_reader::ConfigReader& config, ICPParams& params);
 }  // namespace depth_odometry
-#endif  // DEPTH_ODOMETRY_UTILITIES_H_
+#endif  // DEPTH_ODOMETRY_PARAMETER_READER_H_

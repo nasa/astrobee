@@ -16,7 +16,7 @@
  * under the License.
  */
 
-#include <depth_odometry/utilities.h>
+#include <depth_odometry/parameter_reader.h>
 #include <msg_conversions/msg_conversions.h>
 
 namespace depth_odometry {
