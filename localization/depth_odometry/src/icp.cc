@@ -49,6 +49,16 @@ const pcl::Correspondences& ICP::correspondences() const { return correspondence
 boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> ICP::ComputeRelativeTransform(
   const pcl::PointCloud<pcl::PointXYZ>::Ptr source_cloud, const pcl::PointCloud<pcl::PointXYZ>::Ptr target_cloud,
   const Eigen::Isometry3d& initial_estimate) {
+  if (params_.coarse_to_fine) {
+    return RunCoarseToFineICP(source_cloud, target_cloud, initial_estimate);
+  } else {
+    return RunICP(source_cloud, target_cloud, initial_estimate);
+  }
+}
+
+boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> ICP::RunICP(
+  const pcl::PointCloud<pcl::PointXYZ>::Ptr source_cloud, const pcl::PointCloud<pcl::PointXYZ>::Ptr target_cloud,
+  const Eigen::Isometry3d& initial_estimate) {
   static lc::Timer icp_timer("ICP");
   icp_timer.Start();
   pcl::PointCloud<pcl::PointNormal>::Ptr target_cloud_with_normals(new pcl::PointCloud<pcl::PointNormal>);
@@ -112,6 +122,14 @@ boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> ICP::
     ComputeCovarianceMatrix(icp, source_cloud_with_normals, result, relative_transform);
   icp_timer.StopAndLog();
   return std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>{relative_transform, covariance};
+}
+
+boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> ICP::RunCoarseToFineICP(
+  const pcl::PointCloud<pcl::PointXYZ>::Ptr source_cloud, const pcl::PointCloud<pcl::PointXYZ>::Ptr target_cloud,
+  const Eigen::Isometry3d& initial_estimate) {
+  // TODO: add functions to downsample cloud to point cloud utilities!
+  // downsample according to ratios!
+  // feed new initial estimate to next icp iteration
 }
 
 Eigen::Matrix<double, 1, 6> ICP::Jacobian(const pcl::PointNormal& source_point, const pcl::PointNormal& target_point,

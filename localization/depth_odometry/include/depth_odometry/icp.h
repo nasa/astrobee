@@ -37,6 +37,12 @@ class ICP {
     const Eigen::Isometry3d& initial_estimate = Eigen::Isometry3d::Identity());
 
  private:
+  boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> RunICP(
+    const pcl::PointCloud<pcl::PointXYZ>::Ptr source_cloud, const pcl::PointCloud<pcl::PointXYZ>::Ptr target_cloud,
+    const Eigen::Isometry3d& initial_estimate = Eigen::Isometry3d::Identity());
+  boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> RunCoarseToFineICP(
+    const pcl::PointCloud<pcl::PointXYZ>::Ptr source_cloud, const pcl::PointCloud<pcl::PointXYZ>::Ptr target_cloud,
+    const Eigen::Isometry3d& initial_estimate = Eigen::Isometry3d::Identity());
   void FilterCorrespondences(const pcl::PointCloud<pcl::PointNormal>& input_cloud,
                              const pcl::PointCloud<pcl::PointNormal>& target_cloud,
                              pcl::Correspondences& correspondences) const;

@@ -22,6 +22,7 @@
 #include <gtsam/geometry/Point3.h>
 
 #include <pcl/features/fpfh.h>
+#include <pcl/filters/voxel_grid.h>
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 
@@ -64,6 +65,15 @@ void RemoveNansAndZerosFromPointTypes(ValidatorFunction validator, pcl::PointClo
   cloud.height = 1;
   cloud.width = static_cast<uint32_t>(new_index);
   cloud.is_dense = true;
+}
+
+template <typename PointType>
+void DownsamplePointCloud(const typename pcl::PointCloud<PointType>::Ptr cloud, const double leaf_size,
+                          typename pcl::PointCloud<PointType>::Ptr downsampled_cloud) {
+  pcl::VoxelGrid<PointType> voxel_grid;
+  voxel_grid.setInputCloud(cloud);
+  voxel_grid.setLeafSize(leaf_size, leaf_size, leaf_size);
+  voxel_grid.filter(*downsampled_cloud);
 }
 }  // namespace depth_odometry
 #endif  // DEPTH_ODOMETRY_POINT_CLOUD_UTILITIES_H_
