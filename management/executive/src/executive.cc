@@ -1216,7 +1216,7 @@ bool Executive::ConfigureMobility(bool move_to_start, std::string& err_msg) {
   collision_distance_srv.request.data = agent_state_.collision_distance;
 
   // Check to make sure the service is valid and running
-  // TODO Don't use the check service exists function since we don't want to
+  // Don't use the check service exists function since we don't want to
   // ack if we are executing a plan
   if (!set_collision_distance_client_.exists()) {
     err_msg = "Set collision distance service isn't running! ";
@@ -1232,7 +1232,7 @@ bool Executive::ConfigureMobility(bool move_to_start, std::string& err_msg) {
   if (!collision_distance_srv.response.success) {
     err_msg = "Set collision distance service was not successful.";
     return false;
-  } 
+  }
 
   return true;
 }
