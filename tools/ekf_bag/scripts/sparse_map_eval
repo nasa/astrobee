@@ -17,11 +17,12 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import os
+import sys
+import time
+
 import environment
 
-import sys
-import os
-import time
 
 def run_sparse_map_bag(astrobee_map, astrobee_bag):
   os.system('rosrun ekf_bag sparse_map_bag %s %s' % (astrobee_map, astrobee_bag))

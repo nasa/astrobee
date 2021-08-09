@@ -17,9 +17,9 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-class Vector3d:
 
-  def __init__(self, x, y, z):
-    self.x = x
-    self.y = y
-    self.z = z
+class Vector3d:
+    def __init__(self, x, y, z):
+        self.x = x
+        self.y = y
+        self.z = z

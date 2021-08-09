@@ -1,15 +1,15 @@
 #!/usr/bin/env python
 # Copyright (c) 2017, United States Government, as represented by the
 # Administrator of the National Aeronautics and Space Administration.
-# 
+#
 # All rights reserved.
-# 
+#
 # The Astrobee platform is licensed under the Apache License, Version 2.0
 # (the "License"); you may not use this file except in compliance with the
 # License. You may obtain a copy of the License at
-# 
+#
 #     http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -19,27 +19,28 @@
 import os
 import sys
 from os.path import basename
+
 from common import *
 
 # What to search for
-token = '/action/'
+token = "/action/"
 
 # The full path to the file
-path = sys.argv[1];
-idx_dot = path.rfind('.');
-idx_msg = path.find(token);
+path = sys.argv[1]
+idx_dot = path.rfind(".")
+idx_msg = path.find(token)
 package = basename(path[:idx_msg])
-message = basename(path[idx_msg+len(token):idx_dot]);
+message = basename(path[idx_msg + len(token) : idx_dot])
 
 # Load the message template
-template = load_file('./doc/scripts/templates/action.template')
-header = load_file('./doc/scripts/templates/license.template')
+template = load_file("./doc/scripts/templates/action.template")
+header = load_file("./doc/scripts/templates/license.template")
 
 # Load the raw data describing the message
 chunks = split_into_chunks(path)
 if len(chunks) != 3:
-  sys.stderr.write("File '%s' does not have three chunks" % (filename))
-  sys.exit(1)
+    sys.stderr.write("File '%s' does not have three chunks" % (filename))
+    sys.exit(1)
 
 # Remove the license as well as any whitespace padding
 chunks[0] = chunks[0].replace(header, "").rstrip().strip()
@@ -47,29 +48,31 @@ chunks[0] = chunks[0].replace(header, "").rstrip().strip()
 # Find the description
 desc = ""
 goal = ""
-state = 0 # 0: padding, 1: header, 2:data
+state = 0  # 0: padding, 1: header, 2:data
 for line in chunks[0].splitlines():
-  rec = line.replace("#","").rstrip().strip()
-  if len(rec) < 2:
-    state += 1;
-  if len(rec) > 0:
-    if state == 1:
-      desc += line.replace("#","").rstrip().strip() + " " 
-    else:
-      goal += line + "\n" 
+    rec = line.replace("#", "").rstrip().strip()
+    if len(rec) < 2:
+        state += 1
+    if len(rec) > 0:
+        if state == 1:
+            desc += line.replace("#", "").rstrip().strip() + " "
+        else:
+            goal += line + "\n"
 desc = desc.rstrip().strip()
 goal = goal.rstrip().strip()
 
-#This is the data that will be injected into the template
-data = {'file': path,
-        'extension': 'action',
-        'type': 'Action',
-        'package': package,
-        'message': message,
-        'description': desc,
-        'goal': extract_message(goal),
-        'response': extract_message(chunks[1]),
-        'feedback': extract_message(chunks[2]) }
+# This is the data that will be injected into the template
+data = {
+    "file": path,
+    "extension": "action",
+    "type": "Action",
+    "package": package,
+    "message": message,
+    "description": desc,
+    "goal": extract_message(goal),
+    "response": extract_message(chunks[1]),
+    "feedback": extract_message(chunks[2]),
+}
 
 # print description
-print template % data
+print((template % data))
