@@ -43,7 +43,14 @@ DepthOdometryDisplay::DepthOdometryDisplay() {
                                   static_cast<std::string>(TOPIC_HARDWARE_PICOFLEXX_SUFFIX_DEPTH_IMAGE);*/
     "/hw/depth_haz/extended/amplitude_int";
   image_sub_ = image_transport.subscribe(image_topic, 10, &DepthOdometryDisplay::imageCallback, this);
+  const std::string point_cloud_topic = static_cast<std::string>(TOPIC_HARDWARE_PICOFLEXX_PREFIX) +
+                                        static_cast<std::string>(TOPIC_HARDWARE_NAME_HAZ_CAM) +
+                                        static_cast<std::string>(TOPIC_HARDWARE_PICOFLEXX_SUFFIX);
+  point_cloud_sub_ = nh_.subscribe<sensor_msgs::PointCloud2>(
+    point_cloud_topic, 10, &DepthOdometryDisplay::pointCloudCallback, this, ros::TransportHints().tcpNoDelay());
   correspondence_image_pub_ = image_transport.advertise("/depth_odom/correspondence_image", 1);
+  source_cloud_pub_ = nh_.advertise<sensor_msgs::PointCloud2>("source_cloud_with_correspondence", 10);
+  target_cloud_pub_ = nh_.advertise<sensor_msgs::PointCloud2>("target_cloud_with_correspondence", 10);
 }
 
 void DepthOdometryDisplay::onInitialize() { MFDClass::onInitialize(); }
@@ -59,6 +66,10 @@ void DepthOdometryDisplay::imageCallback(const sensor_msgs::ImageConstPtr& image
   img_buffer_.emplace(lc::TimeFromHeader(image_msg->header), image_msg);
 }
 
+void DepthOdometryDisplay::pointCloudCallback(const sensor_msgs::PointCloud2ConstPtr& point_cloud_msg) {
+  point_cloud_buffer_.emplace(lc::TimeFromHeader(point_cloud_msg->header), point_cloud_msg);
+}
+
 sensor_msgs::ImageConstPtr DepthOdometryDisplay::getImage(const localization_common::Time time) {
   const auto img_it = img_buffer_.find(time);
   if (img_it == img_buffer_.end()) return nullptr;
@@ -69,6 +80,12 @@ void DepthOdometryDisplay::clearImageBuffer(const localization_common::Time olde
   const auto img_it = img_buffer_.find(oldest_graph_time);
   if (img_it == img_buffer_.end()) return;
   img_buffer_.erase(img_buffer_.begin(), img_it);
+}
+
+sensor_msgs::PointCloud2ConstPtr DepthOdometryDisplay::getPointCloud(const localization_common::Time time) {
+  const auto point_cloud_it = point_cloud_buffer_.find(time);
+  if (point_cloud_it == point_cloud_buffer_.end()) return nullptr;
+  return point_cloud_it->second;
 }
 
 void DepthOdometryDisplay::processMessage(const ff_msgs::DepthCorrespondences::ConstPtr& correspondences_msg) {
@@ -136,6 +153,15 @@ void DepthOdometryDisplay::createCorrespondencesImage() {
   previous_image.copyTo(correspondence_image.image(cv::Rect(0, 0, cols, rows)));
   latest_image.copyTo(correspondence_image.image(cv::Rect(0, rows, cols, rows)));
   correspondence_image_pub_.publish(correspondence_image.toImageMsg());
+  publishPointClouds(correspondence, previous_time, latest_time);
+}
+
+void DepthOdometryDisplay::publishPointClouds(const ff_msgs::DepthCorrespondence& correspondence,
+                                              const lc::Time previous_time, const lc::Time latest_time) {
+  const auto previous_point_cloud = getPointCloud(previous_time);
+  const auto latest_point_cloud = getPointCloud(latest_time);
+  if (!previous_point_cloud || !latest_point_cloud) return;
+  source_cloud_pub_.publish(*previous_point_cloud);
 }
 }  // namespace localization_rviz_plugins
 

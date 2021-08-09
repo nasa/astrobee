@@ -27,6 +27,7 @@
 #include <image_transport/image_transport.h>
 #include <ros/publisher.h>
 #include <ros/subscriber.h>
+#include <sensor_msgs/PointCloud2.h>
 #include <rviz/message_filter_display.h>
 #include "slider_property.h"  // NOLINT
 #endif
@@ -54,17 +55,24 @@ class DepthOdometryDisplay : public rviz::MessageFilterDisplay<ff_msgs::DepthCor
  private:
   void processMessage(const ff_msgs::DepthCorrespondences::ConstPtr& correspondences_msg);
   void imageCallback(const sensor_msgs::ImageConstPtr& image_msg);
+  void pointCloudCallback(const sensor_msgs::PointCloud2ConstPtr& point_cloud_msg);
+  void publishPointClouds(const ff_msgs::DepthCorrespondence& correspondence,
+                          const localization_common::Time previous_time, const localization_common::Time latest_time);
   void clearImageBuffer(const localization_common::Time oldest_allowed_time);
   void clearDisplay();
   sensor_msgs::ImageConstPtr getImage(const localization_common::Time time);
+  sensor_msgs::PointCloud2ConstPtr getPointCloud(const localization_common::Time time);
 
   std::unique_ptr<rviz::SliderProperty> correspondence_index_slider_;
   ff_msgs::DepthCorrespondences::ConstPtr latest_correspondences_msg_;
   image_transport::Subscriber image_sub_;
+  ros::Subscriber point_cloud_sub_;
+  ros::Publisher source_cloud_pub_, target_cloud_pub_;
   image_transport::Publisher correspondence_image_pub_;
   ros::NodeHandle nh_;
   // TODO(rsoussan): Create seperate class for image buffer, unify with loc graph display
   std::map<localization_common::Time, sensor_msgs::ImageConstPtr> img_buffer_;
+  std::map<localization_common::Time, sensor_msgs::PointCloud2ConstPtr> point_cloud_buffer_;
 };
 }  // namespace localization_rviz_plugins
 #endif  // LOCALIZATION_RVIZ_PLUGINS_DEPTH_ODOMETRY_DISPLAY_H_ NOLINT
