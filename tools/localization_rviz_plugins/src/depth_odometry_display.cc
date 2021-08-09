@@ -178,7 +178,7 @@ void DepthOdometryDisplay::publishCorrespondencePoints(const ff_msgs::DepthCorre
   source_correspondence_point_pub_.publish(previous_correspondence_point_msg);
   {
     const auto source_cloud_msg =
-      lm::MakePointCloudMsg(*previous_point_cloud, lc::TimeFromRosTime(ros::Time::Now()), "haz_cam");
+      lm::MakePointCloudMsg(*previous_point_cloud, lc::TimeFromRosTime(ros::Time::now()), "haz_cam");
     source_point_cloud_pub_.publish(source_cloud_msg);
   }
 }
