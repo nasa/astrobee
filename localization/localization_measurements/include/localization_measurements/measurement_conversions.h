@@ -36,6 +36,7 @@
 
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
+#include <pcl_conversions/pcl_conversions.h>
 
 #include <sensor_msgs/PointCloud2.h>
 
@@ -60,8 +61,15 @@ FeaturePointsMeasurement MakeFeaturePointsMeasurement(const ff_msgs::Feature2dAr
 
 FanSpeedMode ConvertFanSpeedMode(const uint8_t speed);
 
-sensor_msgs::PointCloud2 MakePointCloudMsg(const pcl::PointCloud<pcl::PointXYZ>& cloud,
-                                           const localization_common::Time timestamp, const std::string frame);
+template <typename PointType>
+sensor_msgs::PointCloud2 MakePointCloudMsg(const pcl::PointCloud<PointType>& cloud,
+                                           const localization_common::Time timestamp, const std::string frame) {
+  sensor_msgs::PointCloud2 cloud_msg;
+  pcl::toROSMsg(cloud, cloud_msg);
+  localization_common::TimeToHeader(timestamp, cloud_msg.header);
+  cloud_msg.header.frame_id = "haz_cam";
+  return cloud_msg;
+}
 }  // namespace localization_measurements
 
 #endif  // LOCALIZATION_MEASUREMENTS_MEASUREMENT_CONVERSIONS_H_
