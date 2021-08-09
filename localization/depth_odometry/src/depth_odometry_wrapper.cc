@@ -16,7 +16,6 @@
  * under the License.
  */
 #include <depth_odometry/depth_odometry_wrapper.h>
-#include <depth_odometry/utilities.h>
 #include <ff_msgs/DepthCorrespondences.h>
 #include <ff_util/ff_names.h>
 #include <localization_common/logger.h>

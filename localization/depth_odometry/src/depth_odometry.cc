@@ -19,7 +19,7 @@
 #include <depth_odometry/depth_odometry.h>
 #include <depth_odometry/transformation_estimation_symmetric_point_to_plane_lls.h>
 #include <depth_odometry/point_cloud_utilities.h>
-#include <depth_odometry/utilities.h>
+#include <depth_odometry/parameter_reader.h>
 #include <localization_common/logger.h>
 #include <localization_common/timer.h>
 #include <localization_common/utilities.h>

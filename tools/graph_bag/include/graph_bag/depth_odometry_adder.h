@@ -20,7 +20,6 @@
 #define GRAPH_BAG_DEPTH_ODOMETRY_ADDER_H_
 
 #include <depth_odometry/depth_odometry_wrapper.h>
-#include <depth_odometry/utilities.h>
 #include <ff_common/utils.h>
 
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
