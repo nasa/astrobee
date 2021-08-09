@@ -180,10 +180,23 @@ void DepthOdometryDisplay::publishCorrespondencePoints(const ff_msgs::DepthCorre
   previous_correspondence_point_msg.header.stamp = ros::Time::now();
   previous_correspondence_point_msg.header.frame_id = "haz_cam";
   source_correspondence_point_pub_.publish(previous_correspondence_point_msg);
+
+  geometry_msgs::PointStamped latest_correspondence_point_msg;
+  const auto latest_correspondence_point = latest_point_cloud->points[correspondence.latest_image_index];
+  latest_correspondence_point_msg.point.x = latest_correspondence_point.x;
+  latest_correspondence_point_msg.point.y = latest_correspondence_point.y;
+  latest_correspondence_point_msg.point.z = latest_correspondence_point.z;
+  latest_correspondence_point_msg.header.stamp = ros::Time::now();
+  latest_correspondence_point_msg.header.frame_id = "haz_cam";
+  target_correspondence_point_pub_.publish(latest_correspondence_point_msg);
+
   {
     const auto source_cloud_msg =
       lm::MakePointCloudMsg(*previous_point_cloud, lc::TimeFromRosTime(ros::Time::now()), "haz_cam");
     source_point_cloud_pub_.publish(source_cloud_msg);
+    const auto target_cloud_msg =
+      lm::MakePointCloudMsg(*latest_point_cloud, lc::TimeFromRosTime(ros::Time::now()), "haz_cam");
+    target_point_cloud_pub_.publish(target_cloud_msg);
   }
 }
 }  // namespace localization_rviz_plugins
