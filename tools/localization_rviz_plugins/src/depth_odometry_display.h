@@ -25,6 +25,8 @@
 #include <ff_msgs/DepthCorrespondences.h>
 #include <localization_common/time.h>
 #include <image_transport/image_transport.h>
+#include <pcl/point_cloud.h>
+#include <pcl/point_types.h>
 #include <ros/publisher.h>
 #include <ros/subscriber.h>
 #include <sensor_msgs/PointCloud2.h>

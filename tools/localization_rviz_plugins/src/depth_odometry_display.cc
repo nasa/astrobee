@@ -15,7 +15,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-
+#include <QObject>
 #include <ff_util/ff_names.h>
 #include <localization_common/logger.h>
 #include <localization_common/utilities.h>
@@ -24,6 +24,7 @@
 #include <OGRE/OgreSceneNode.h>
 
 #include <cv_bridge/cv_bridge.h>
+#include <pcl_conversions/pcl_conversions.h>
 #include <rviz/frame_manager.h>
 #include <rviz/visualization_manager.h>
 
@@ -158,10 +159,16 @@ void DepthOdometryDisplay::createCorrespondencesImage() {
 
 void DepthOdometryDisplay::publishPointClouds(const ff_msgs::DepthCorrespondence& correspondence,
                                               const lc::Time previous_time, const lc::Time latest_time) {
-  const auto previous_point_cloud = getPointCloud(previous_time);
-  const auto latest_point_cloud = getPointCloud(latest_time);
-  if (!previous_point_cloud || !latest_point_cloud) return;
-  source_cloud_pub_.publish(*previous_point_cloud);
+  const auto previous_point_cloud_msg = getPointCloud(previous_time);
+  const auto latest_point_cloud_msg = getPointCloud(latest_time);
+  if (!previous_point_cloud_msg || !latest_point_cloud_msg) return;
+  pcl::PointCloud<pcl::PointXYZ>::Ptr previous_point_cloud(new pcl::PointCloud<pcl::PointXYZ>());
+  pcl::fromROSMsg(*previous_point_cloud_msg, *previous_point_cloud);
+  sensor_msgs::PointCloud2 previous_point_cloud_correspondence_msg;
+  pcl::toROSMsg(*previous_point_cloud, previous_point_cloud_correspondence_msg);
+  previous_point_cloud_correspondence_msg.header.stamp = ros::Time::now();
+  previous_point_cloud_correspondence_msg.header.frame_id = "haz_cam";
+  source_cloud_pub_.publish(previous_point_cloud_correspondence_msg);
 }
 }  // namespace localization_rviz_plugins
 
