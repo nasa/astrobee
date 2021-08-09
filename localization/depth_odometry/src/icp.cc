@@ -127,9 +127,29 @@ boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> ICP::
 boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> ICP::RunCoarseToFineICP(
   const pcl::PointCloud<pcl::PointXYZ>::Ptr source_cloud, const pcl::PointCloud<pcl::PointXYZ>::Ptr target_cloud,
   const Eigen::Isometry3d& initial_estimate) {
-  // TODO: add functions to downsample cloud to point cloud utilities!
-  // downsample according to ratios!
-  // feed new initial estimate to next icp iteration
+  boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> latest_relative_transform(
+    std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>{initial_estimate, Eigen::Matrix<double, 6, 6>()});
+  for (int i = 0; i < params_.num_coarse_to_fine_levels; ++i) {
+    pcl::PointCloud<pcl::PointXYZ>::Ptr icp_source_cloud;
+    pcl::PointCloud<pcl::PointXYZ>::Ptr icp_target_cloud;
+    if (i == params_.num_coarse_to_fine_levels - 1 && !params_.downsample_last_coarse_to_fine_iteration) {
+      icp_source_cloud = source_cloud;
+      icp_target_cloud = target_cloud;
+    } else {
+      const double leaf_size_ratio =
+        static_cast<double>(params_.num_coarse_to_fine_levels) / static_cast<double>(i + 1.0);
+      const double leaf_size = leaf_size_ratio * params_.coarse_to_fine_final_leaf_size;
+      // TODO(rsoussan): Why does template deduction fail without this?
+      icp_source_cloud = DownsamplePointCloud<pcl::PointXYZ>(source_cloud, leaf_size);
+      icp_target_cloud = DownsamplePointCloud<pcl::PointXYZ>(target_cloud, leaf_size);
+    }
+    latest_relative_transform = RunICP(icp_source_cloud, icp_target_cloud, latest_relative_transform->first);
+    if (!latest_relative_transform) {
+      LogWarning("RunCoarseToFineICP: Failed to get relative transform.");
+      return boost::none;
+    }
+  }
+  return latest_relative_transform;
 }
 
 Eigen::Matrix<double, 1, 6> ICP::Jacobian(const pcl::PointNormal& source_point, const pcl::PointNormal& target_point,

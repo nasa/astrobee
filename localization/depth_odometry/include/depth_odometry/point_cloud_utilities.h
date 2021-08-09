@@ -68,12 +68,14 @@ void RemoveNansAndZerosFromPointTypes(ValidatorFunction validator, pcl::PointClo
 }
 
 template <typename PointType>
-void DownsamplePointCloud(const typename pcl::PointCloud<PointType>::Ptr cloud, const double leaf_size,
-                          typename pcl::PointCloud<PointType>::Ptr downsampled_cloud) {
+typename pcl::PointCloud<PointType>::Ptr DownsamplePointCloud(const typename pcl::PointCloud<PointType>::Ptr cloud,
+                                                              const double leaf_size) {
+  typename pcl::PointCloud<PointType>::Ptr downsampled_cloud(new pcl::PointCloud<PointType>());
   pcl::VoxelGrid<PointType> voxel_grid;
   voxel_grid.setInputCloud(cloud);
   voxel_grid.setLeafSize(leaf_size, leaf_size, leaf_size);
   voxel_grid.filter(*downsampled_cloud);
+  return downsampled_cloud;
 }
 }  // namespace depth_odometry
 #endif  // DEPTH_ODOMETRY_POINT_CLOUD_UTILITIES_H_
