@@ -71,8 +71,10 @@ boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> ICP::
     pcl::copyPointCloud(*source_cloud, *source_cloud_with_normals);
   }
 
+  LogError("target pre remove size: " << target_cloud_with_normals->points.size());
   RemoveNansAndZerosFromPointNormals(*source_cloud_with_normals);
   RemoveNansAndZerosFromPointNormals(*target_cloud_with_normals);
+  LogError("target post remove size: " << target_cloud_with_normals->points.size());
 
   pcl::IterativeClosestPointWithNormals<pcl::PointNormal, pcl::PointNormal> icp;
   if (params_.symmetric_objective) {
@@ -127,6 +129,8 @@ boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> ICP::
 boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> ICP::RunCoarseToFineICP(
   const pcl::PointCloud<pcl::PointXYZ>::Ptr source_cloud, const pcl::PointCloud<pcl::PointXYZ>::Ptr target_cloud,
   const Eigen::Isometry3d& initial_estimate) {
+  static lc::Timer coarse_to_fine_icp_timer("Coarse To Fine ICP");
+  coarse_to_fine_icp_timer.Start();
   boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> latest_relative_transform(
     std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>{initial_estimate, Eigen::Matrix<double, 6, 6>()});
   for (int i = 0; i < params_.num_coarse_to_fine_levels; ++i) {
@@ -139,16 +143,23 @@ boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> ICP::
       const double leaf_size_ratio =
         static_cast<double>(params_.num_coarse_to_fine_levels) / static_cast<double>(i + 1.0);
       const double leaf_size = leaf_size_ratio * params_.coarse_to_fine_final_leaf_size;
+      LogError("i: " << i << ", leaf size ratio " << leaf_size_ratio << ", leaf size: " << leaf_size);
       // TODO(rsoussan): Why does template deduction fail without this?
       icp_source_cloud = DownsamplePointCloud<pcl::PointXYZ>(source_cloud, leaf_size);
       icp_target_cloud = DownsamplePointCloud<pcl::PointXYZ>(target_cloud, leaf_size);
+      LogError("source pre downsample size: " << source_cloud->points.size()
+                                              << ", post: " << icp_source_cloud->points.size());
+      LogError("target pre downsample size: " << target_cloud->points.size()
+                                              << ", post: " << icp_target_cloud->points.size());
     }
     latest_relative_transform = RunICP(icp_source_cloud, icp_target_cloud, latest_relative_transform->first);
     if (!latest_relative_transform) {
       LogWarning("RunCoarseToFineICP: Failed to get relative transform.");
+      coarse_to_fine_icp_timer.StopAndLog();
       return boost::none;
     }
   }
+  coarse_to_fine_icp_timer.StopAndLog();
   return latest_relative_transform;
 }
 
