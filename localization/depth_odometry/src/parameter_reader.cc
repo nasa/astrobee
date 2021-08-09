@@ -44,5 +44,8 @@ void LoadICPParams(config_reader::ConfigReader& config, ICPParams& params) {
   params.correspondence_rejector_surface_normal = mc::LoadBool(config, "correspondence_rejector_surface_normal");
   params.correspondence_rejector_surface_normal_threshold =
     mc::LoadDouble(config, "correspondence_rejector_surface_normal_threshold");
+  params.coarse_to_fine = mc::LoadBool(config, "coarse_to_fine");
+  params.num_coarse_to_fine_levels = mc::LoadInt(config, "num_coarse_to_fine_levels");
+  params.coarse_to_fine_downsample_ratio = mc::LoadDouble(config, "coarse_to_fine_downsample_ratio");
 }
 }  // namespace depth_odometry

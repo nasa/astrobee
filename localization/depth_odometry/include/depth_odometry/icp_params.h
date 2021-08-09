@@ -27,6 +27,9 @@ struct ICPParams {
   bool enforce_same_direction_normals;
   bool correspondence_rejector_surface_normal;
   double correspondence_rejector_surface_normal_threshold;
+  bool coarse_to_fine;
+  int num_coarse_to_fine_levels;
+  double coarse_to_fine_downsample_ratio;
 };
 }  // namespace depth_odometry
 
