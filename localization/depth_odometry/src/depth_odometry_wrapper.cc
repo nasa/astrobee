@@ -21,6 +21,7 @@
 #include <ff_util/ff_names.h>
 #include <localization_common/logger.h>
 #include <localization_common/utilities.h>
+#include <localization_measurements/measurement_conversions.h>
 
 #include <pcl_conversions/pcl_conversions.h>
 #include <pcl/point_cloud.h>
@@ -30,6 +31,7 @@
 
 namespace depth_odometry {
 namespace lc = localization_common;
+namespace lm = localization_measurements;
 namespace mc = msg_conversions;
 
 boost::optional<geometry_msgs::PoseWithCovarianceStamped> DepthOdometryWrapper::DepthCloudCallback(
@@ -77,12 +79,13 @@ ff_msgs::DepthCorrespondences DepthOdometryWrapper::GetCorrespondencesMsg() cons
 
 sensor_msgs::PointCloud2 DepthOdometryWrapper::GetPreviousPointCloudMsg() const {
   // Use latest timestamp so point clouds can be visualized at same time
-  return MakePointCloudMsg(*(depth_odometry_.previous_depth_cloud().second),
-                           depth_odometry_.latest_depth_cloud().first);
+  return lm::MakePointCloudMsg(*(depth_odometry_.previous_depth_cloud().second),
+                               depth_odometry_.latest_depth_cloud().first, "haz_cam");
 }
 
 sensor_msgs::PointCloud2 DepthOdometryWrapper::GetLatestPointCloudMsg() const {
-  return MakePointCloudMsg(*(depth_odometry_.latest_depth_cloud().second), depth_odometry_.latest_depth_cloud().first);
+  return lm::MakePointCloudMsg(*(depth_odometry_.latest_depth_cloud().second),
+                               depth_odometry_.latest_depth_cloud().first, "haz_cam");
 }
 
 sensor_msgs::PointCloud2 DepthOdometryWrapper::GetTransformedPreviousPointCloudMsg() const {
@@ -90,15 +93,6 @@ sensor_msgs::PointCloud2 DepthOdometryWrapper::GetTransformedPreviousPointCloudM
   const Eigen::Isometry3d latest_relative_transform = depth_odometry_.latest_relative_transform();
   pcl::transformPointCloud(*(depth_odometry_.latest_depth_cloud().second), *transformed_cloud,
                            latest_relative_transform.matrix().cast<float>());
-  return MakePointCloudMsg(*transformed_cloud, depth_odometry_.latest_depth_cloud().first);
-}
-
-sensor_msgs::PointCloud2 DepthOdometryWrapper::MakePointCloudMsg(const pcl::PointCloud<pcl::PointXYZ>& cloud,
-                                                                 const lc::Time timestamp) const {
-  sensor_msgs::PointCloud2 cloud_msg;
-  pcl::toROSMsg(cloud, cloud_msg);
-  lc::TimeToHeader(timestamp, cloud_msg.header);
-  cloud_msg.header.frame_id = "haz_cam";
-  return cloud_msg;
+  return lm::MakePointCloudMsg(*transformed_cloud, depth_odometry_.latest_depth_cloud().first, "haz_cam");
 }
 }  // namespace depth_odometry

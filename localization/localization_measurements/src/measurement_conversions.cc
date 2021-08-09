@@ -22,6 +22,8 @@
 
 #include <gtsam/geometry/Point3.h>
 
+#include <pcl_conversions/pcl_conversions.h>
+
 #include <geometry_msgs/Point32.h>
 
 namespace localization_measurements {
@@ -135,5 +137,14 @@ FanSpeedMode ConvertFanSpeedMode(const uint8_t speed) {
   }
   // Shouldn't get here
   return FanSpeedMode::kOff;
+}
+
+sensor_msgs::PointCloud2 MakePointCloudMsg(const pcl::PointCloud<pcl::PointXYZ>& cloud, const lc::Time timestamp,
+                                           const std::string frame) {
+  sensor_msgs::PointCloud2 cloud_msg;
+  pcl::toROSMsg(cloud, cloud_msg);
+  lc::TimeToHeader(timestamp, cloud_msg.header);
+  cloud_msg.header.frame_id = "haz_cam";
+  return cloud_msg;
 }
 }  // namespace localization_measurements

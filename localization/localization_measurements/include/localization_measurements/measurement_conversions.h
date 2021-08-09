@@ -34,6 +34,11 @@
 
 #include <Eigen/Core>
 
+#include <pcl/point_cloud.h>
+#include <pcl/point_types.h>
+
+#include <sensor_msgs/PointCloud2.h>
+
 #include <utility>
 
 namespace localization_measurements {
@@ -54,6 +59,9 @@ MatchedProjectionsMeasurement FrameChangeMatchedProjectionsMeasurement(
 FeaturePointsMeasurement MakeFeaturePointsMeasurement(const ff_msgs::Feature2dArray& optical_flow_tracks);
 
 FanSpeedMode ConvertFanSpeedMode(const uint8_t speed);
+
+sensor_msgs::PointCloud2 MakePointCloudMsg(const pcl::PointCloud<pcl::PointXYZ>& cloud,
+                                           const localization_common::Time timestamp, const std::string frame);
 }  // namespace localization_measurements
 
 #endif  // LOCALIZATION_MEASUREMENTS_MEASUREMENT_CONVERSIONS_H_

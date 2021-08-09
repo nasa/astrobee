@@ -19,6 +19,7 @@
 #include <ff_util/ff_names.h>
 #include <localization_common/logger.h>
 #include <localization_common/utilities.h>
+#include <localization_measurements/measurement_conversions.h>
 
 #include <OGRE/OgreSceneManager.h>
 #include <OGRE/OgreSceneNode.h>
@@ -33,6 +34,7 @@
 
 namespace localization_rviz_plugins {
 namespace lc = localization_common;
+namespace lm = localization_measurements;
 
 DepthOdometryDisplay::DepthOdometryDisplay() {
   correspondence_index_slider_.reset(new rviz::SliderProperty("Select Correspondence", 0, "Select Correspondence.",
@@ -50,8 +52,10 @@ DepthOdometryDisplay::DepthOdometryDisplay() {
   point_cloud_sub_ = nh_.subscribe<sensor_msgs::PointCloud2>(
     point_cloud_topic, 10, &DepthOdometryDisplay::pointCloudCallback, this, ros::TransportHints().tcpNoDelay());
   correspondence_image_pub_ = image_transport.advertise("/depth_odom/correspondence_image", 1);
-  source_point_pub_ = nh_.advertise<geometry_msgs::PointStamped>("source_point_with_correspondence", 10);
-  target_point_pub_ = nh_.advertise<geometry_msgs::PointStamped>("target_point_with_correspondence", 10);
+  source_correspondence_point_pub_ = nh_.advertise<geometry_msgs::PointStamped>("source_point_with_correspondence", 10);
+  target_correspondence_point_pub_ = nh_.advertise<geometry_msgs::PointStamped>("target_point_with_correspondence", 10);
+  source_point_cloud_pub_ = nh_.advertise<sensor_msgs::PointCloud2>("source_cloud", 10);
+  target_point_cloud_pub_ = nh_.advertise<sensor_msgs::PointCloud2>("target_cloud", 10);
 }
 
 void DepthOdometryDisplay::onInitialize() { MFDClass::onInitialize(); }
@@ -171,7 +175,12 @@ void DepthOdometryDisplay::publishCorrespondencePoints(const ff_msgs::DepthCorre
   previous_correspondence_point_msg.point.z = previous_correspondence_point.z;
   previous_correspondence_point_msg.header.stamp = ros::Time::now();
   previous_correspondence_point_msg.header.frame_id = "haz_cam";
-  source_point_pub_.publish(previous_correspondence_point_msg);
+  source_correspondence_point_pub_.publish(previous_correspondence_point_msg);
+  {
+    const auto source_cloud_msg =
+      lm::MakePointCloudMsg(*previous_point_cloud, lc::TimeFromRosTime(ros::Time::Now()), "haz_cam");
+    source_point_cloud_pub_.publish(source_cloud_msg);
+  }
 }
 }  // namespace localization_rviz_plugins
 

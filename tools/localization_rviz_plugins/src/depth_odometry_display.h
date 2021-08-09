@@ -70,7 +70,8 @@ class DepthOdometryDisplay : public rviz::MessageFilterDisplay<ff_msgs::DepthCor
   ff_msgs::DepthCorrespondences::ConstPtr latest_correspondences_msg_;
   image_transport::Subscriber image_sub_;
   ros::Subscriber point_cloud_sub_;
-  ros::Publisher source_point_pub_, target_point_pub_;
+  ros::Publisher source_correspondence_point_pub_, target_correspondence_point_pub_;
+  ros::Publisher source_point_cloud_pub_, target_point_cloud_pub_;
   image_transport::Publisher correspondence_image_pub_;
   ros::NodeHandle nh_;
   // TODO(rsoussan): Create seperate class for image buffer, unify with loc graph display

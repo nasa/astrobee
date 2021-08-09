@@ -21,14 +21,14 @@ if (USE_ROS)
 
 # include ff_nodelet to get ff_util header files since these aren't exposed elsewhere
 catkin_package(
-  LIBRARIES ${PROJECT_NAME} ${PCL_LIBRARIES} ff_nodelet ${GTSAM_LIBRARIES} localization_common msg_conversions 
+  LIBRARIES ${PROJECT_NAME} ${PCL_LIBRARIES} ff_nodelet ${GTSAM_LIBRARIES} localization_common localization_measurements msg_conversions 
   INCLUDE_DIRS include ${GTSAM_INCLUDE_DIR} ${PCL_INCLUDE_DIRS} ${PCL_CONVERSIONS_INCLUDE_DIRS}  
   CATKIN_DEPENDS roscpp pcl pcl_conversions 
   DEPENDS gtsam ff_msgs 
 )
 
 create_library(TARGET ${PROJECT_NAME} 
-  LIBS ${catkin_LIBRARIES} gtsam ${PCL_LIBRARIES} ff_nodelet localization_common msg_conversions 
+  LIBS ${catkin_LIBRARIES} gtsam ${PCL_LIBRARIES} ff_nodelet localization_common localization_measurements msg_conversions 
   INC ${catkin_INCLUDE_DIRS} ${PCL_INCLUDE_DIRS} ${PCL_CONVERSIONS_INCLUDE_DIRS} 
   DEPS ff_msgs
 )

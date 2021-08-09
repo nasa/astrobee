@@ -39,9 +39,6 @@ class DepthOdometryWrapper {
   sensor_msgs::PointCloud2 GetTransformedPreviousPointCloudMsg() const;
 
  private:
-  sensor_msgs::PointCloud2 MakePointCloudMsg(const pcl::PointCloud<pcl::PointXYZ>& cloud,
-                                             const localization_common::Time timestamp) const;
-
   DepthOdometry depth_odometry_;
 };
 }  // namespace depth_odometry
