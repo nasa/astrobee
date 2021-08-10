@@ -49,8 +49,15 @@ void DepthOdometryNodelet::SubscribeAndAdvertise(ros::NodeHandle* nh) {
   const std::string depth_cloud_topic = static_cast<std::string>(TOPIC_HARDWARE_PICOFLEXX_PREFIX) +
                                         static_cast<std::string>(TOPIC_HARDWARE_NAME_HAZ_CAM) +
                                         static_cast<std::string>(TOPIC_HARDWARE_PICOFLEXX_SUFFIX);
-  depth_sub_ = nh->subscribe<sensor_msgs::PointCloud2>(depth_cloud_topic, 10, &DepthOdometryNodelet::DepthCloudCallback,
-                                                       this, ros::TransportHints().tcpNoDelay());
+  point_cloud_sub_ = nh->subscribe<sensor_msgs::PointCloud2>(
+    depth_cloud_topic, 10, &DepthOdometryNodelet::DepthCloudCallback, this, ros::TransportHints().tcpNoDelay());
+
+  image_transport::ImageTransport image_transport(*nh);
+  const std::string depth_image_topic = /*static_cast<std::string>(TOPIC_HARDWARE_PICOFLEXX_PREFIX) +
+                                  static_cast<std::string>(TOPIC_HARDWARE_NAME_HAZ_CAM) +
+                                  static_cast<std::string>(TOPIC_HARDWARE_PICOFLEXX_SUFFIX_DEPTH_IMAGE);*/
+    "/hw/depth_haz/extended/amplitude_int";
+  depth_image_sub_ = image_transport.subscribe(depth_image_topic, 10, &DepthOdometryNodelet::DepthImageCallback, this);
   odom_pub_ = nh->advertise<geometry_msgs::PoseWithCovarianceStamped>(TOPIC_LOCALIZATION_DEPTH_ODOM, 10);
   if (params_.publish_point_clouds) {
     source_cloud_pub_ = nh->advertise<sensor_msgs::PointCloud2>("source_cloud", 10);
@@ -69,6 +76,10 @@ void DepthOdometryNodelet::DepthCloudCallback(const sensor_msgs::PointCloud2Cons
   if (params_.publish_point_clouds) {
     PublishPointClouds();
   }
+}
+
+void DepthOdometryNodelet::DepthImageCallback(const sensor_msgs::ImageConstPtr& depth_image_msg) {
+  depth_odometry_wrapper_.DepthImageCallback(depth_image_msg);
 }
 
 void DepthOdometryNodelet::PublishPointClouds() const {

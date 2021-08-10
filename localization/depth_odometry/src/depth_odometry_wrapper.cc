@@ -22,6 +22,8 @@
 #include <localization_common/utilities.h>
 #include <localization_measurements/measurement_conversions.h>
 
+#include <cv_bridge/cv_bridge.h>
+
 #include <pcl_conversions/pcl_conversions.h>
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
@@ -51,6 +53,18 @@ boost::optional<geometry_msgs::PoseWithCovarianceStamped> DepthOdometryWrapper::
   mc::EigenPoseCovarianceToMsg(relative_pose->first, relative_pose->second, pose_msg);
   lc::TimeToHeader(depth_cloud.first, pose_msg.header);
   return pose_msg;
+}
+
+void DepthOdometryWrapper::DepthImageCallback(const sensor_msgs::ImageConstPtr& depth_image_msg) {
+  cv_bridge::CvImagePtr cv_depth_image;
+  try {
+    // TODO(rsoussan): Include depth? Greyscale?
+    cv_depth_image = cv_bridge::toCvCopy(depth_image_msg, sensor_msgs::image_encodings::RGB8);
+  } catch (cv_bridge::Exception& e) {
+    LogError("cv_bridge exception: " << e.what());
+    return;
+  }
+  auto& depth_image = cv_depth_image->image;
 }
 
 ff_msgs::DepthCorrespondences DepthOdometryWrapper::GetCorrespondencesMsg() const {
