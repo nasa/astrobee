@@ -33,11 +33,13 @@ namespace depth_odometry {
 class DepthImageAligner {
  public:
   DepthImageAligner(const DepthImageAlignerParams& params);
-  boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> ComputeRelativeTransform(
-    const cv::Mat& previous_image, const cv::Mat& latest_image) const;
+  boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> ComputeRelativeTransform() const;
+  void AddLatestImage(const cv::Mat& latest_image);
 
  private:
   DepthImageAlignerParams params_;
+  cv::Mat previous_image_;
+  cv::Mat latest_image_;
 };
 }  // namespace depth_odometry
 

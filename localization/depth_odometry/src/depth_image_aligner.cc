@@ -24,8 +24,14 @@ namespace depth_odometry {
 
 DepthImageAligner::DepthImageAligner(const DepthImageAlignerParams& params) : params_(params) {}
 
-boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> DepthImageAligner::ComputeRelativeTransform(
-  const cv::Mat& previous_image, const cv::Mat& latest_image) const {
+boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> DepthImageAligner::ComputeRelativeTransform()
+  const {
+  if (previous_image_.empty() || latest_image_.empty()) return boost::none;
   return boost::none;
+}
+
+void DepthImageAligner::AddLatestImage(const cv::Mat& latest_image) {
+  previous_image_ = latest_image_;
+  latest_image_ = latest_image;
 }
 }  // namespace depth_odometry
