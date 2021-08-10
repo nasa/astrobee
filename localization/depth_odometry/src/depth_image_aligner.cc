@@ -19,18 +19,13 @@
 #include <depth_odometry/depth_image_aligner.h>
 #include <localization_common/logger.h>
 #include <localization_common/timer.h>
-#include <localization_common/utilities.h>
-
-#include <gtsam/geometry/Pose3.h>
 
 namespace depth_odometry {
-namespace lc = localization_common;
-namespace lm = localization_measurements;
 
 DepthImageAligner::DepthImageAligner(const DepthImageAlignerParams& params) : params_(params) {}
 
-boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> ComputeRelativeTransform(
-  const lm::ImageMeasurement& previous_image, const lm::ImageMeasurement& latest_image) {
+boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> DepthImageAligner::ComputeRelativeTransform(
+  const cv::Mat& previous_image, const cv::Mat& latest_image) const {
   return boost::none;
 }
 }  // namespace depth_odometry

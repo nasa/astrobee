@@ -18,6 +18,7 @@
 #ifndef DEPTH_ODOMETRY_DEPTH_ODOMETRY_H_
 #define DEPTH_ODOMETRY_DEPTH_ODOMETRY_H_
 
+#include <depth_odometry/depth_image_aligner.h>
 #include <depth_odometry/depth_odometry_params.h>
 #include <depth_odometry/icp.h>
 #include <localization_common/time.h>
@@ -35,7 +36,8 @@ class DepthOdometry {
   DepthOdometry();
   boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> DepthCloudCallback(
     std::pair<localization_common::Time, pcl::PointCloud<pcl::PointXYZ>::Ptr> depth_cloud);
-  void DepthImageCallback(const localization_measurements::ImageMeasurement& depth_image);
+  boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> DepthImageCallback(
+    const localization_measurements::ImageMeasurement& depth_image);
   std::pair<localization_common::Time, pcl::PointCloud<pcl::PointXYZ>::Ptr> previous_depth_cloud() const;
   std::pair<localization_common::Time, pcl::PointCloud<pcl::PointXYZ>::Ptr> latest_depth_cloud() const;
   const pcl::Correspondences& correspondences() const;
@@ -45,6 +47,7 @@ class DepthOdometry {
   bool CovarianceSane(const Eigen::Matrix<double, 6, 6>& covariance) const;
 
   std::unique_ptr<ICP> icp_;
+  std::unique_ptr<DepthImageAligner> depth_image_aligner_;
   std::pair<localization_common::Time, pcl::PointCloud<pcl::PointXYZ>::Ptr> previous_depth_cloud_;
   std::pair<localization_common::Time, pcl::PointCloud<pcl::PointXYZ>::Ptr> latest_depth_cloud_;
   boost::optional<localization_measurements::ImageMeasurement> previous_depth_image_;

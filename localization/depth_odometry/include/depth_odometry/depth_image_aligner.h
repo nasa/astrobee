@@ -18,22 +18,23 @@
 #ifndef DEPTH_ODOMETRY_DEPTH_IMAGE_ALIGNER_H_
 #define DEPTH_ODOMETRY_DEPTH_IMAGE_ALIGNER_H_
 
-#include <depth_odometry/icp_params.h>
+#include <depth_odometry/depth_image_aligner_params.h>
 #include <localization_common/time.h>
 
 #include <boost/optional.hpp>
 
-#include <pcl/point_cloud.h>
-#include <pcl/point_types.h>
-#include <pcl/registration/icp.h>
+#include <opencv2/core.hpp>
+
+#include <Eigen/Geometry>
+
+#include <utility>
 
 namespace depth_odometry {
 class DepthImageAligner {
  public:
   DepthImageAligner(const DepthImageAlignerParams& params);
   boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> ComputeRelativeTransform(
-    const localization_measurements::ImageMeasurement& previous_image,
-    const localization_measurements::ImageMeasurement& latest_image);
+    const cv::Mat& previous_image, const cv::Mat& latest_image) const;
 
  private:
   DepthImageAlignerParams params_;

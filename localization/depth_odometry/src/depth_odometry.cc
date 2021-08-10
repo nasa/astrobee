@@ -17,22 +17,11 @@
  */
 
 #include <depth_odometry/depth_odometry.h>
-#include <depth_odometry/transformation_estimation_symmetric_point_to_plane_lls.h>
 #include <depth_odometry/point_cloud_utilities.h>
 #include <depth_odometry/parameter_reader.h>
 #include <localization_common/logger.h>
 #include <localization_common/timer.h>
 #include <localization_common/utilities.h>
-
-#include <gtsam/geometry/Pose3.h>
-
-#include <pcl_conversions/pcl_conversions.h>
-#include <pcl/filters/filter.h>
-#include <pcl/filters/impl/filter.hpp>
-// TODO(rsoussan): Switch back to this when PCL bug is fixed
-//#include <pcl/registration/correspondence_rejection_surface_normal.h>
-#include <depth_odometry/correspondence_rejection_surface_normal2.h>
-#include <pcl/registration/icp.h>
 
 namespace depth_odometry {
 namespace lc = localization_common;
@@ -49,6 +38,7 @@ DepthOdometry::DepthOdometry() {
   }
 
   LoadDepthOdometryParams(config, params_);
+  depth_image_aligner_.reset(new DepthImageAligner(params_.depth_image_aligner));
   icp_.reset(new ICP(params_.icp));
 }
 
@@ -66,7 +56,10 @@ const pcl::Correspondences& DepthOdometry::correspondences() const { return icp_
 boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> DepthOdometry::DepthCloudCallback(
   std::pair<lc::Time, pcl::PointCloud<pcl::PointXYZ>::Ptr> depth_cloud) {
   RemoveNansAndZerosFromPointXYZs(*(depth_cloud.second));
-  if (!previous_depth_cloud_.second && !latest_depth_cloud_.second) latest_depth_cloud_ = depth_cloud;
+  if (!previous_depth_cloud_.second && !latest_depth_cloud_.second) {
+    latest_depth_cloud_ = depth_cloud;
+    return boost::none;
+  }
   if (depth_cloud.first < latest_depth_cloud_.first) {
     LogWarning("DepthCloudCallback: Out of order measurement received.");
     return boost::none;
@@ -97,7 +90,35 @@ boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> Depth
   return relative_transform;
 }
 
-void DepthOdometry::DepthImageCallback(const lm::ImageMeasurement& depth_image) {}
+boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> DepthOdometry::DepthImageCallback(
+  const lm::ImageMeasurement& depth_image) {
+  if (!previous_depth_image_ && !latest_depth_image_) {
+    latest_depth_image_ = depth_image;
+    return boost::none;
+  }
+  if (depth_image.timestamp < latest_depth_image_->timestamp) {
+    LogWarning("DepthImageCallback: Out of order measurement received.");
+    return boost::none;
+  }
+  LogError("t: " << std::setprecision(15) << depth_image.timestamp);
+  previous_depth_image_ = latest_depth_image_;
+  latest_depth_image_ = depth_image;
+  auto relative_transform =
+    depth_image_aligner_->ComputeRelativeTransform(previous_depth_image_->image, latest_depth_image_->image);
+  if (!relative_transform) {
+    LogWarning("DepthImageCallback: Failed to get relative transform.");
+    return boost::none;
+  }
+
+  if (params_.frame_change_transform) {
+    relative_transform->first = params_.body_T_haz_cam * relative_transform->first * params_.body_T_haz_cam.inverse();
+  }
+
+  // LogError("cov: " << std::endl << relative_transform->second.matrix());
+  // if (relative_transform->first.translation().norm() > 0.5) LogError("large position jump!!");
+  // latest_relative_transform_ = relative_transform->first;
+  return relative_transform;
+}
 
 bool DepthOdometry::CovarianceSane(const Eigen::Matrix<double, 6, 6>& covariance) const {
   const auto position_covariance_norm = covariance.block<3, 3>(0, 0).diagonal().norm();
