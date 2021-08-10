@@ -44,6 +44,7 @@ class DepthImageAligner {
   std::unique_ptr<BriskImage> previous_brisk_image_;
   std::unique_ptr<BriskImage> latest_brisk_image_;
   cv::Ptr<cv::BRISK> brisk_detector_;
+  std::unique_ptr<cv::FlannBasedMatcher> flann_matcher_;
 };
 }  // namespace depth_odometry
 

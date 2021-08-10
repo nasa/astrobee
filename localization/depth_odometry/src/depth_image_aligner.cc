@@ -24,11 +24,14 @@ namespace depth_odometry {
 
 DepthImageAligner::DepthImageAligner(const DepthImageAlignerParams& params) : params_(params) {
   brisk_detector_ = cv::BRISK::create();
+  flann_matcher_.reset(new cv::FlannBasedMatcher(cv::makePtr<cv::flann::LshIndexParams>(12, 20, 2)));
 }
 
 boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> DepthImageAligner::ComputeRelativeTransform()
   const {
   if (!previous_brisk_image_ || !latest_brisk_image_) return boost::none;
+  std::vector<std::vector<cv::DMatch>> matches;
+  flann_matcher_->knnMatch(previous_brisk_image_->descriptors(), latest_brisk_image_->descriptors(), matches, 1);
   return boost::none;
 }
 

@@ -25,6 +25,9 @@ namespace depth_odometry {
 class BriskImage {
  public:
   BriskImage(const cv::Mat& image, const cv::Ptr<cv::BRISK> brisk_detector);
+  const cv::Mat& image() const { return image_; }
+  const std::vector<cv::KeyPoint>& keypoints() const { return keypoints_; }
+  const cv::Mat& descriptors() const { return descriptors_; }
 
  private:
   cv::Mat image_;
