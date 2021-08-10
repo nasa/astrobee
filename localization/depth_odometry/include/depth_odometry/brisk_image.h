@@ -15,25 +15,22 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+#ifndef DEPTH_ODOMETRY_BRISK_IMAGE_H_
+#define DEPTH_ODOMETRY_BRISK_IMAGE_H_
 
-#include <depth_odometry/depth_image_aligner.h>
-#include <localization_common/logger.h>
-#include <localization_common/timer.h>
+#include <opencv2/core.hpp>
+#include <opencv2/features2d.hpp>
 
 namespace depth_odometry {
+class BriskImage {
+ public:
+  BriskImage(const cv::Mat& image, const cv::Ptr<cv::BRISK> brisk_detector);
 
-DepthImageAligner::DepthImageAligner(const DepthImageAlignerParams& params) : params_(params) {
-  brisk_detector_ = cv::BRISK::create();
-}
-
-boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> DepthImageAligner::ComputeRelativeTransform()
-  const {
-  if (!previous_brisk_image_ || !latest_brisk_image_) return boost::none;
-  return boost::none;
-}
-
-void DepthImageAligner::AddLatestImage(const cv::Mat& latest_image) {
-  previous_brisk_image_ = std::move(latest_brisk_image_);
-  latest_brisk_image_.reset(new BriskImage(latest_image, brisk_detector_));
-}
+ private:
+  cv::Mat image_;
+  std::vector<cv::KeyPoint> keypoints_;
+  cv::Mat descriptors_;
+};
 }  // namespace depth_odometry
+
+#endif  // DEPTH_ODOMETRY_BRISK_IMAGE_H_

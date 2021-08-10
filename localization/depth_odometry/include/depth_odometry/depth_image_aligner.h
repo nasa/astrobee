@@ -18,6 +18,7 @@
 #ifndef DEPTH_ODOMETRY_DEPTH_IMAGE_ALIGNER_H_
 #define DEPTH_ODOMETRY_DEPTH_IMAGE_ALIGNER_H_
 
+#include <depth_odometry/brisk_image.h>
 #include <depth_odometry/depth_image_aligner_params.h>
 #include <localization_common/time.h>
 
@@ -28,6 +29,7 @@
 
 #include <Eigen/Geometry>
 
+#include <memory>
 #include <utility>
 
 namespace depth_odometry {
@@ -39,8 +41,8 @@ class DepthImageAligner {
 
  private:
   DepthImageAlignerParams params_;
-  cv::Mat previous_image_;
-  cv::Mat latest_image_;
+  std::unique_ptr<BriskImage> previous_brisk_image_;
+  std::unique_ptr<BriskImage> latest_brisk_image_;
   cv::Ptr<cv::BRISK> brisk_detector_;
 };
 }  // namespace depth_odometry

@@ -16,24 +16,10 @@
  * under the License.
  */
 
-#include <depth_odometry/depth_image_aligner.h>
-#include <localization_common/logger.h>
-#include <localization_common/timer.h>
+#include <depth_odometry/brisk_image.h>
 
 namespace depth_odometry {
-
-DepthImageAligner::DepthImageAligner(const DepthImageAlignerParams& params) : params_(params) {
-  brisk_detector_ = cv::BRISK::create();
-}
-
-boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> DepthImageAligner::ComputeRelativeTransform()
-  const {
-  if (!previous_brisk_image_ || !latest_brisk_image_) return boost::none;
-  return boost::none;
-}
-
-void DepthImageAligner::AddLatestImage(const cv::Mat& latest_image) {
-  previous_brisk_image_ = std::move(latest_brisk_image_);
-  latest_brisk_image_.reset(new BriskImage(latest_image, brisk_detector_));
+BriskImage::BriskImage(const cv::Mat& image, const cv::Ptr<cv::BRISK> brisk_detector) : image_(image) {
+  brisk_detector->detectAndCompute(image_, cv::Mat(), keypoints_, descriptors_);
 }
 }  // namespace depth_odometry
