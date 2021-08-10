@@ -29,6 +29,8 @@ void LoadDepthOdometryNodeletParams(config_reader::ConfigReader& config, DepthOd
 void LoadDepthOdometryParams(config_reader::ConfigReader& config, DepthOdometryParams& params) {
   LoadDepthImageAlignerParams(config, params.depth_image_aligner);
   LoadICPParams(config, params.icp);
+  params.depth_point_cloud_registration_enabled = mc::LoadBool(config, "depth_point_cloud_registration_enabled");
+  params.depth_image_registration_enabled = mc::LoadBool(config, "depth_image_registration_enabled");
   params.position_covariance_threshold = mc::LoadDouble(config, "position_covariance_threshold");
   params.orientation_covariance_threshold = mc::LoadDouble(config, "orientation_covariance_threshold");
   params.inital_estimate_with_ransac_ia = mc::LoadBool(config, "inital_estimate_with_ransac_ia");

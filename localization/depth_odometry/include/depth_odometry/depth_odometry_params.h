@@ -25,6 +25,8 @@
 
 namespace depth_odometry {
 struct DepthOdometryParams {
+  bool depth_point_cloud_registration_enabled;
+  bool depth_image_registration_enabled;
   DepthImageAlignerParams depth_image_aligner;
   ICPParams icp;
   double position_covariance_threshold;

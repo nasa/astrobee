@@ -36,6 +36,7 @@ namespace mc = msg_conversions;
 
 boost::optional<geometry_msgs::PoseWithCovarianceStamped> DepthOdometryWrapper::DepthCloudCallback(
   const sensor_msgs::PointCloud2ConstPtr& depth_cloud_msg) {
+  if (!depth_odometry_.params().depth_point_cloud_registration_enabled) return boost::none;
   const lc::Time timestamp = lc::TimeFromHeader(depth_cloud_msg->header);
   std::pair<lc::Time, pcl::PointCloud<pcl::PointXYZ>::Ptr> depth_cloud{
     timestamp, pcl::PointCloud<pcl::PointXYZ>::Ptr(new pcl::PointCloud<pcl::PointXYZ>())};
@@ -55,6 +56,7 @@ boost::optional<geometry_msgs::PoseWithCovarianceStamped> DepthOdometryWrapper::
 }
 
 void DepthOdometryWrapper::DepthImageCallback(const sensor_msgs::ImageConstPtr& depth_image_msg) {
+  if (!depth_odometry_.params().depth_image_registration_enabled) return;
   const auto depth_image = lm::MakeImageMeasurement(depth_image_msg, sensor_msgs::image_encodings::MONO8);
   if (!depth_image) {
     LogError("DepthImageCallback: Failed to make depth image.");

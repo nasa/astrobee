@@ -42,6 +42,7 @@ class DepthOdometry {
   std::pair<localization_common::Time, pcl::PointCloud<pcl::PointXYZ>::Ptr> latest_depth_cloud() const;
   const pcl::Correspondences& correspondences() const;
   Eigen::Isometry3d latest_relative_transform() const;
+  const DepthOdometryParams& params() const { return params_; }
 
  private:
   bool CovarianceSane(const Eigen::Matrix<double, 6, 6>& covariance) const;
