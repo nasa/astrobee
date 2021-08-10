@@ -24,6 +24,7 @@
 #include <boost/optional.hpp>
 
 #include <opencv2/core.hpp>
+#include <opencv2/features2d.hpp>
 
 #include <Eigen/Geometry>
 
@@ -40,6 +41,7 @@ class DepthImageAligner {
   DepthImageAlignerParams params_;
   cv::Mat previous_image_;
   cv::Mat latest_image_;
+  cv::Ptr<cv::BRISK> brisk_detector_;
 };
 }  // namespace depth_odometry
 

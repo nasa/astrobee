@@ -22,7 +22,9 @@
 
 namespace depth_odometry {
 
-DepthImageAligner::DepthImageAligner(const DepthImageAlignerParams& params) : params_(params) {}
+DepthImageAligner::DepthImageAligner(const DepthImageAlignerParams& params) : params_(params) {
+  brisk_detector_ = cv::BRISK::create();
+}
 
 boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> DepthImageAligner::ComputeRelativeTransform()
   const {
@@ -33,5 +35,8 @@ boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> Depth
 void DepthImageAligner::AddLatestImage(const cv::Mat& latest_image) {
   previous_image_ = latest_image_;
   latest_image_ = latest_image;
+  std::vector<cv::KeyPoint> keypoints;
+  cv::Mat descriptors;
+  brisk_detector_->detectAndCompute(latest_image_, cv::Mat(), keypoints, descriptors);
 }
 }  // namespace depth_odometry
