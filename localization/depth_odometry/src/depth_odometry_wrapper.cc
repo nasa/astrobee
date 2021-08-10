@@ -27,6 +27,7 @@
 #include <pcl/point_types.h>
 
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
+#include <sensor_msgs/image_encodings.h>
 
 namespace depth_odometry {
 namespace lc = localization_common;
@@ -54,7 +55,7 @@ boost::optional<geometry_msgs::PoseWithCovarianceStamped> DepthOdometryWrapper::
 }
 
 void DepthOdometryWrapper::DepthImageCallback(const sensor_msgs::ImageConstPtr& depth_image_msg) {
-  const auto depth_image = lm::MakeImageMeasurement(depth_image_msg);
+  const auto depth_image = lm::MakeImageMeasurement(depth_image_msg, sensor_msgs::image_encodings::MONO8);
   if (!depth_image) {
     LogError("DepthImageCallback: Failed to make depth image.");
     return;

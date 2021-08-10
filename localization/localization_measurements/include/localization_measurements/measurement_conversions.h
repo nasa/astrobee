@@ -72,7 +72,8 @@ sensor_msgs::PointCloud2 MakePointCloudMsg(const pcl::PointCloud<PointType>& clo
   return cloud_msg;
 }
 
-boost::optional<ImageMeasurement> MakeImageMeasurement(const sensor_msgs::ImageConstPtr& image_msg);
+boost::optional<ImageMeasurement> MakeImageMeasurement(const sensor_msgs::ImageConstPtr& image_msg,
+                                                       const std::string& encoding);
 }  // namespace localization_measurements
 
 #endif  // LOCALIZATION_MEASUREMENTS_MEASUREMENT_CONVERSIONS_H_

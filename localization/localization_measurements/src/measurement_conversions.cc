@@ -140,11 +140,11 @@ FanSpeedMode ConvertFanSpeedMode(const uint8_t speed) {
   return FanSpeedMode::kOff;
 }
 
-boost::optional<ImageMeasurement> MakeImageMeasurement(const sensor_msgs::ImageConstPtr& image_msg) {
+boost::optional<ImageMeasurement> MakeImageMeasurement(const sensor_msgs::ImageConstPtr& image_msg,
+                                                       const std::string& encoding) {
   cv_bridge::CvImagePtr cv_image;
   try {
-    // TODO(rsoussan): Include depth? Greyscale?
-    cv_image = cv_bridge::toCvCopy(image_msg, sensor_msgs::image_encodings::RGB8);
+    cv_image = cv_bridge::toCvCopy(image_msg, encoding);
   } catch (cv_bridge::Exception& e) {
     LogError("cv_bridge exception: " << e.what());
     return boost::none;
