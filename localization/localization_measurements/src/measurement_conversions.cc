@@ -16,11 +16,14 @@
  * under the License.
  */
 
+#include <localization_common/logger.h>
 #include <localization_common/utilities.h>
 #include <localization_measurements/measurement_conversions.h>
 #include <msg_conversions/msg_conversions.h>
 
 #include <gtsam/geometry/Point3.h>
+
+#include <cv_bridge/cv_bridge.h>
 
 #include <geometry_msgs/Point32.h>
 
@@ -135,5 +138,18 @@ FanSpeedMode ConvertFanSpeedMode(const uint8_t speed) {
   }
   // Shouldn't get here
   return FanSpeedMode::kOff;
+}
+
+boost::optional<ImageMeasurement> MakeImageMeasurement(const sensor_msgs::ImageConstPtr& image_msg) {
+  cv_bridge::CvImagePtr cv_image;
+  try {
+    // TODO(rsoussan): Include depth? Greyscale?
+    cv_image = cv_bridge::toCvCopy(image_msg, sensor_msgs::image_encodings::RGB8);
+  } catch (cv_bridge::Exception& e) {
+    LogError("cv_bridge exception: " << e.what());
+    return boost::none;
+  }
+  const auto timestamp = lc::TimeFromHeader(image_msg->header);
+  return ImageMeasurement(cv_image->image, timestamp);
 }
 }  // namespace localization_measurements

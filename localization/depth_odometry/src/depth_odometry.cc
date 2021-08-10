@@ -36,6 +36,7 @@
 
 namespace depth_odometry {
 namespace lc = localization_common;
+namespace lm = localization_measurements;
 
 DepthOdometry::DepthOdometry() {
   // TODO(rsoussan): remove this
@@ -96,7 +97,7 @@ boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> Depth
   return relative_transform;
 }
 
-void DepthOdometry::DepthImageCallback(const cv::Mat& depth_image) {}
+void DepthOdometry::DepthImageCallback(const lm::ImageMeasurement& depth_image) {}
 
 bool DepthOdometry::CovarianceSane(const Eigen::Matrix<double, 6, 6>& covariance) const {
   const auto position_covariance_norm = covariance.block<3, 3>(0, 0).diagonal().norm();
