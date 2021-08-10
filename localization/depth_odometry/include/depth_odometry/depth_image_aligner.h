@@ -15,24 +15,29 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef DEPTH_ODOMETRY_DEPTH_ODOMETRY_PARAMS_H_
-#define DEPTH_ODOMETRY_DEPTH_ODOMETRY_PARAMS_H_
+#ifndef DEPTH_ODOMETRY_DEPTH_IMAGE_ALIGNER_H_
+#define DEPTH_ODOMETRY_DEPTH_IMAGE_ALIGNER_H_
 
-#include <depth_odometry/depth_image_aligner_params.h>
 #include <depth_odometry/icp_params.h>
+#include <localization_common/time.h>
 
-#include <Eigen/Geometry>
+#include <boost/optional.hpp>
+
+#include <pcl/point_cloud.h>
+#include <pcl/point_types.h>
+#include <pcl/registration/icp.h>
 
 namespace depth_odometry {
-struct DepthOdometryParams {
-  DepthImageAlignerParams depth_image_aligner;
-  ICPParams icp;
-  double position_covariance_threshold;
-  double orientation_covariance_threshold;
-  bool inital_estimate_with_ransac_ia;
-  bool frame_change_transform;
-  Eigen::Isometry3d body_T_haz_cam;
+class DepthImageAligner {
+ public:
+  DepthImageAligner(const DepthImageAlignerParams& params);
+  boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> ComputeRelativeTransform(
+    const localization_measurements::ImageMeasurement& previous_image,
+    const localization_measurements::ImageMeasurement& latest_image);
+
+ private:
+  DepthImageAlignerParams params_;
 };
 }  // namespace depth_odometry
 
-#endif  // DEPTH_ODOMETRY_DEPTH_ODOMETRY_PARAMS_H_
+#endif  // DEPTH_ODOMETRY_DEPTH_IMAGE_ALIGNER_H_

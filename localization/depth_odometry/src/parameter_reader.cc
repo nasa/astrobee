@@ -27,6 +27,7 @@ void LoadDepthOdometryNodeletParams(config_reader::ConfigReader& config, DepthOd
 }
 
 void LoadDepthOdometryParams(config_reader::ConfigReader& config, DepthOdometryParams& params) {
+  LoadDepthImageAlignerParams(config, params.depth_image_aligner);
   LoadICPParams(config, params.icp);
   params.position_covariance_threshold = mc::LoadDouble(config, "position_covariance_threshold");
   params.orientation_covariance_threshold = mc::LoadDouble(config, "orientation_covariance_threshold");
@@ -34,6 +35,8 @@ void LoadDepthOdometryParams(config_reader::ConfigReader& config, DepthOdometryP
   params.frame_change_transform = mc::LoadBool(config, "frame_change_transform");
   params.body_T_haz_cam = msg_conversions::LoadEigenTransform(config, "haz_cam_transform");
 }
+
+void LoadDepthImageAlignerParams(config_reader::ConfigReader& config, DepthImageAlignerParams& params) {}
 
 void LoadICPParams(config_reader::ConfigReader& config, ICPParams& params) {
   params.fitness_threshold = mc::LoadDouble(config, "fitness_threshold");

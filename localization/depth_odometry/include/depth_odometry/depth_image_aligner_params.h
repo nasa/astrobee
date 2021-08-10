@@ -15,24 +15,11 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-#ifndef DEPTH_ODOMETRY_DEPTH_ODOMETRY_PARAMS_H_
-#define DEPTH_ODOMETRY_DEPTH_ODOMETRY_PARAMS_H_
-
-#include <depth_odometry/depth_image_aligner_params.h>
-#include <depth_odometry/icp_params.h>
-
-#include <Eigen/Geometry>
+#ifndef DEPTH_ODOMETRY_DEPTH_IMAGE_ALIGNER_PARAMS_H_
+#define DEPTH_ODOMETRY_DEPTH_IMAGE_ALIGNER_PARAMS_H_
 
 namespace depth_odometry {
-struct DepthOdometryParams {
-  DepthImageAlignerParams depth_image_aligner;
-  ICPParams icp;
-  double position_covariance_threshold;
-  double orientation_covariance_threshold;
-  bool inital_estimate_with_ransac_ia;
-  bool frame_change_transform;
-  Eigen::Isometry3d body_T_haz_cam;
-};
+struct DepthImageAlignerParams {};
 }  // namespace depth_odometry
 
-#endif  // DEPTH_ODOMETRY_DEPTH_ODOMETRY_PARAMS_H_
+#endif  // DEPTH_ODOMETRY_DEPTH_IMAGE_ALIGNER_PARAMS_H_

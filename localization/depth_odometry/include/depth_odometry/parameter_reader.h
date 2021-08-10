@@ -19,6 +19,7 @@
 #define DEPTH_ODOMETRY_PARAMETER_READER_H_
 
 #include <config_reader/config_reader.h>
+#include <depth_odometry/depth_image_aligner_params.h>
 #include <depth_odometry/depth_odometry_nodelet_params.h>
 #include <depth_odometry/depth_odometry_params.h>
 #include <depth_odometry/icp_params.h>
@@ -26,6 +27,7 @@
 namespace depth_odometry {
 void LoadDepthOdometryNodeletParams(config_reader::ConfigReader& config, DepthOdometryNodeletParams& params);
 void LoadDepthOdometryParams(config_reader::ConfigReader& config, DepthOdometryParams& params);
+void LoadDepthImageAlignerParams(config_reader::ConfigReader& config, DepthImageAlignerParams& params);
 void LoadICPParams(config_reader::ConfigReader& config, ICPParams& params);
 }  // namespace depth_odometry
 #endif  // DEPTH_ODOMETRY_PARAMETER_READER_H_
