@@ -21,9 +21,10 @@
   <gazebo>
     <plugin name="eps_ros" filename="libgazebo_model_plugin_eps.so">>
       <namespace>/${ns}/</namespace>
-      <rate>10.0</rate>          <!-- Rate at which dock state checked  -->
-      <distance>0.05</distance>  <!-- Threshold distance for magnetism  -->
-      <delay>5.0</delay>         <!-- Delay between contact and docking -->
+      <rate>10.0</rate>                    <!-- Rate at which dock state checked  -->
+      <distance_near>0.04</distance_near>  <!-- Threshold distance for magnetism  -->
+      <distance_far>0.05</distance_far>    <!-- Threshold distance for magnetism  -->
+      <delay>5.0</delay>                   <!-- Delay between contact and docking -->
       <battery_top_left>true</battery_top_left>
       <battery_top_right>true</battery_top_right>
       <battery_bottom_left>false</battery_bottom_left>
