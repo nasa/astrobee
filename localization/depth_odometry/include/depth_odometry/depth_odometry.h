@@ -24,6 +24,8 @@
 
 #include <boost/optional.hpp>
 
+#include <opencv2/core.hpp>
+
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 #include <pcl/registration/icp.h>
@@ -34,6 +36,7 @@ class DepthOdometry {
   DepthOdometry();
   boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> DepthCloudCallback(
     std::pair<localization_common::Time, pcl::PointCloud<pcl::PointXYZ>::Ptr> depth_cloud);
+  void DepthImageCallback(const cv::Mat& depth_image);
   std::pair<localization_common::Time, pcl::PointCloud<pcl::PointXYZ>::Ptr> previous_depth_cloud() const;
   std::pair<localization_common::Time, pcl::PointCloud<pcl::PointXYZ>::Ptr> latest_depth_cloud() const;
   const pcl::Correspondences& correspondences() const;

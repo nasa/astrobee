@@ -65,6 +65,7 @@ void DepthOdometryWrapper::DepthImageCallback(const sensor_msgs::ImageConstPtr& 
     return;
   }
   auto& depth_image = cv_depth_image->image;
+  depth_odometry_.DepthImageCallback(depth_image);
 }
 
 ff_msgs::DepthCorrespondences DepthOdometryWrapper::GetCorrespondencesMsg() const {

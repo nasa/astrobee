@@ -96,6 +96,8 @@ boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> Depth
   return relative_transform;
 }
 
+void DepthOdometry::DepthImageCallback(const cv::Mat& depth_image) {}
+
 bool DepthOdometry::CovarianceSane(const Eigen::Matrix<double, 6, 6>& covariance) const {
   const auto position_covariance_norm = covariance.block<3, 3>(0, 0).diagonal().norm();
   const auto orientation_covariance_norm = covariance.block<3, 3>(3, 3).diagonal().norm();
