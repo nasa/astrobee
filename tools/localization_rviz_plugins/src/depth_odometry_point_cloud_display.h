@@ -17,12 +17,12 @@
  */
 
 // Header file must go in src directory for Qt/Rviz plugin
-#ifndef LOCALIZATION_RVIZ_PLUGINS_DEPTH_ODOMETRY_DISPLAY_H_  // NOLINT
-#define LOCALIZATION_RVIZ_PLUGINS_DEPTH_ODOMETRY_DISPLAY_H_  // NOLINT
+#ifndef LOCALIZATION_RVIZ_PLUGINS_DEPTH_ODOMETRY_POINT_CLOUD_DISPLAY_H_  // NOLINT
+#define LOCALIZATION_RVIZ_PLUGINS_DEPTH_ODOMETRY_POINT_CLOUD_DISPLAY_H_  // NOLINT
 
 // Required for Qt
 #ifndef Q_MOC_RUN
-#include <ff_msgs/DepthCorrespondences.h>
+#include <ff_msgs/PointCloudCorrespondences.h>
 #include <localization_common/time.h>
 #include <image_transport/image_transport.h>
 #include <pcl/point_cloud.h>
@@ -40,11 +40,11 @@ class SceneNode;
 }
 
 namespace localization_rviz_plugins {
-class DepthOdometryDisplay : public rviz::MessageFilterDisplay<ff_msgs::DepthCorrespondences> {
+class DepthOdometryPointCloudDisplay : public rviz::MessageFilterDisplay<ff_msgs::PointCloudCorrespondences> {
   Q_OBJECT    // NOLINT
     public :  // NOLINT
-              DepthOdometryDisplay();
-  ~DepthOdometryDisplay() = default;
+              DepthOdometryPointCloudDisplay();
+  ~DepthOdometryPointCloudDisplay() = default;
 
   // private:
  protected:
@@ -55,19 +55,19 @@ class DepthOdometryDisplay : public rviz::MessageFilterDisplay<ff_msgs::DepthCor
   void createCorrespondencesImage();
 
  private:
-  void processMessage(const ff_msgs::DepthCorrespondences::ConstPtr& correspondences_msg);
+  void processMessage(const ff_msgs::PointCloudCorrespondences::ConstPtr& correspondences_msg);
   void imageCallback(const sensor_msgs::ImageConstPtr& image_msg);
   void pointCloudCallback(const sensor_msgs::PointCloud2ConstPtr& point_cloud_msg);
-  void publishCorrespondencePoints(const ff_msgs::DepthCorrespondence& correspondence,
-                                   const localization_common::Time previous_time,
-                                   const localization_common::Time latest_time);
+  void publishCorrespondencePoints(const ff_msgs::PointCloudCorrespondence& correspondence,
+                                   const localization_common::Time source_time,
+                                   const localization_common::Time target_time);
   void clearImageBuffer(const localization_common::Time oldest_allowed_time);
   void clearDisplay();
   sensor_msgs::ImageConstPtr getImage(const localization_common::Time time);
   pcl::PointCloud<pcl::PointXYZI>::Ptr getPointCloud(const localization_common::Time time);
 
   std::unique_ptr<rviz::SliderProperty> correspondence_index_slider_;
-  ff_msgs::DepthCorrespondences::ConstPtr latest_correspondences_msg_;
+  ff_msgs::PointCloudCorrespondences::ConstPtr latest_correspondences_msg_;
   image_transport::Subscriber image_sub_;
   ros::Subscriber point_cloud_sub_;
   ros::Publisher source_correspondence_point_pub_, target_correspondence_point_pub_;
@@ -79,4 +79,4 @@ class DepthOdometryDisplay : public rviz::MessageFilterDisplay<ff_msgs::DepthCor
   std::map<localization_common::Time, pcl::PointCloud<pcl::PointXYZI>::Ptr> point_cloud_buffer_;
 };
 }  // namespace localization_rviz_plugins
-#endif  // LOCALIZATION_RVIZ_PLUGINS_DEPTH_ODOMETRY_DISPLAY_H_ NOLINT
+#endif  // LOCALIZATION_RVIZ_PLUGINS_DEPTH_ODOMETRY_POINT_CLOUD_DISPLAY_H_ NOLINT
