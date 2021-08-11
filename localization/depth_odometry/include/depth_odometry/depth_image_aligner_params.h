@@ -19,7 +19,12 @@
 #define DEPTH_ODOMETRY_DEPTH_IMAGE_ALIGNER_PARAMS_H_
 
 namespace depth_odometry {
-struct DepthImageAlignerParams {};
+struct DepthImageAlignerParams {
+  int max_match_hamming_distance;
+  int flann_table_number;
+  int flann_key_size;
+  int flann_multi_probe_level;
+};
 }  // namespace depth_odometry
 
 #endif  // DEPTH_ODOMETRY_DEPTH_IMAGE_ALIGNER_PARAMS_H_

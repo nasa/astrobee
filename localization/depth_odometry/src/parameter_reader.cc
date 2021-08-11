@@ -40,6 +40,9 @@ void LoadDepthOdometryParams(config_reader::ConfigReader& config, DepthOdometryP
 
 void LoadDepthImageAlignerParams(config_reader::ConfigReader& config, DepthImageAlignerParams& params) {
   params.max_match_hamming_distance = mc::LoadInt(config, "max_match_hamming_distance");
+  params.flann_table_number = mc::LoadInt(config, "flann_table_number");
+  params.flann_key_size = mc::LoadInt(config, "flann_key_size");
+  params.flann_multi_probe_level = mc::LoadInt(config, "flann_multi_probe_level");
 }
 
 void LoadICPParams(config_reader::ConfigReader& config, ICPParams& params) {

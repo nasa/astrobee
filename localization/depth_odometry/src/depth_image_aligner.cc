@@ -25,7 +25,8 @@ namespace lc = localization_common;
 
 DepthImageAligner::DepthImageAligner(const DepthImageAlignerParams& params) : params_(params) {
   brisk_detector_ = cv::BRISK::create();
-  flann_matcher_.reset(new cv::FlannBasedMatcher(cv::makePtr<cv::flann::LshIndexParams>(12, 20, 2)));
+  flann_matcher_.reset(new cv::FlannBasedMatcher(cv::makePtr<cv::flann::LshIndexParams>(
+    params_.flann_table_number, params_.flann_key_size, params_.flann_multi_probe_level)));
 }
 
 boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>>
