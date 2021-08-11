@@ -38,10 +38,15 @@ class DepthOdometry {
     std::pair<localization_common::Time, pcl::PointCloud<pcl::PointXYZ>::Ptr> depth_cloud);
   boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> DepthImageCallback(
     const localization_measurements::ImageMeasurement& depth_image);
-  std::pair<localization_common::Time, pcl::PointCloud<pcl::PointXYZ>::Ptr> previous_depth_cloud() const;
-  std::pair<localization_common::Time, pcl::PointCloud<pcl::PointXYZ>::Ptr> latest_depth_cloud() const;
-  const pcl::Correspondences& correspondences() const;
-  Eigen::Isometry3d latest_relative_transform() const;
+  std::pair<localization_common::Time, pcl::PointCloud<pcl::PointXYZ>::Ptr> previous_depth_cloud() const {
+    return previous_depth_cloud_;
+  }
+  std::pair<localization_common::Time, pcl::PointCloud<pcl::PointXYZ>::Ptr> latest_depth_cloud() const {
+    return latest_depth_cloud_;
+  }
+  const pcl::Correspondences& correspondences() const { return icp_->correspondences(); }
+  const std::vector<std::vector<cv::DMatch>>& matches() const { return depth_image_aligner_->matches(); }
+  Eigen::Isometry3d latest_relative_transform() const { return latest_relative_transform_; }
   const DepthOdometryParams& params() const { return params_; }
 
  private:

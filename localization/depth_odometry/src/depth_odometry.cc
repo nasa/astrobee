@@ -42,17 +42,6 @@ DepthOdometry::DepthOdometry() {
   icp_.reset(new ICP(params_.icp));
 }
 
-std::pair<localization_common::Time, pcl::PointCloud<pcl::PointXYZ>::Ptr> DepthOdometry::previous_depth_cloud() const {
-  return previous_depth_cloud_;
-}
-std::pair<localization_common::Time, pcl::PointCloud<pcl::PointXYZ>::Ptr> DepthOdometry::latest_depth_cloud() const {
-  return latest_depth_cloud_;
-}
-
-Eigen::Isometry3d DepthOdometry::latest_relative_transform() const { return latest_relative_transform_; }
-
-const pcl::Correspondences& DepthOdometry::correspondences() const { return icp_->correspondences(); }
-
 boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> DepthOdometry::DepthCloudCallback(
   std::pair<lc::Time, pcl::PointCloud<pcl::PointXYZ>::Ptr> depth_cloud) {
   RemoveNansAndZerosFromPointXYZs(*(depth_cloud.second));
