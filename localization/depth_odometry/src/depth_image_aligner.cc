@@ -33,12 +33,17 @@ DepthImageAligner::ComputeRelativeTransform() {
   if (!previous_brisk_image_ || !latest_brisk_image_) return boost::none;
   std::vector<cv::DMatch> matches;
   flann_matcher_->match(previous_brisk_image_->descriptors(), latest_brisk_image_->descriptors(), matches);
+  LogError("matches pre filtering: " << matches.size());
+  const auto filtered_end = std::remove_if(matches.begin(), matches.end(), [this](const cv::DMatch& match) {
+    return match.distance > params_.max_match_hamming_distance;
+  });
+  matches.erase(filtered_end, matches.end());
   correspondences_.reset(new ImageCorrespondences(matches, previous_brisk_image_->keypoints(),
                                                   latest_brisk_image_->keypoints(), previous_image_time_,
                                                   latest_image_time_));
   LogError("keypoints a: " << previous_brisk_image_->keypoints().size()
                            << ", b: " << latest_brisk_image_->keypoints().size());
-  LogError("matches: " << matches.size());
+  LogError("matches post filtering: " << matches.size());
   return std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>{Eigen::Isometry3d::Identity(),
                                                                    Eigen::Matrix<double, 6, 6>::Zero()};
 }

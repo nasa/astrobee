@@ -38,7 +38,9 @@ void LoadDepthOdometryParams(config_reader::ConfigReader& config, DepthOdometryP
   params.body_T_haz_cam = msg_conversions::LoadEigenTransform(config, "haz_cam_transform");
 }
 
-void LoadDepthImageAlignerParams(config_reader::ConfigReader& config, DepthImageAlignerParams& params) {}
+void LoadDepthImageAlignerParams(config_reader::ConfigReader& config, DepthImageAlignerParams& params) {
+  params.max_match_hamming_distance = mc::LoadInt(config, "max_match_hamming_distance");
+}
 
 void LoadICPParams(config_reader::ConfigReader& config, ICPParams& params) {
   params.fitness_threshold = mc::LoadDouble(config, "fitness_threshold");
