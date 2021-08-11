@@ -34,6 +34,7 @@
   <run_depend>choreographer</run_depend>
   <run_depend>rviz</run_depend>
   <export>
+    <rviz plugin="${prefix}/rviz_plugins.xml" />
     <nodelet plugin="${prefix}/nodelet_plugins.xml" />
   </export>
 </package>

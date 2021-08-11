@@ -158,20 +158,11 @@ target_link_libraries(gazebo_model_plugin_perching_arm astrobee_gazebo
 )
 
 # Create a model plugin for the front flashlight
-add_library(gazebo_model_plugin_flashlight_front
-  src/gazebo_model_plugin_flashlight_front/gazebo_model_plugin_flashlight_front.cc
+add_library(gazebo_model_plugin_flashlight
+  src/gazebo_model_plugin_flashlight/gazebo_model_plugin_flashlight.cc
 )
-add_dependencies(gazebo_model_plugin_flashlight_front ${catkin_EXPORTED_TARGETS})
-target_link_libraries(gazebo_model_plugin_flashlight_front astrobee_gazebo
-  ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
-)
-
-# Create a model plugin for the aft flashlight
-add_library(gazebo_model_plugin_flashlight_aft
-  src/gazebo_model_plugin_flashlight_aft/gazebo_model_plugin_flashlight_aft.cc
-)
-add_dependencies(gazebo_model_plugin_flashlight_aft ${catkin_EXPORTED_TARGETS})
-target_link_libraries(gazebo_model_plugin_flashlight_aft astrobee_gazebo
+add_dependencies(gazebo_model_plugin_flashlight ${catkin_EXPORTED_TARGETS})
+target_link_libraries(gazebo_model_plugin_flashlight astrobee_gazebo
   ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES}
 )
 

@@ -107,13 +107,13 @@ add_dependencies(traj_opt_pro ${catkin_EXPORTED_TARGETS})
 target_link_libraries(traj_opt_pro traj_opt_basic ${catkin_LIBRARIES})
 
 # Declare C++ libraries
-add_library(traj_opt
+add_library(traj_opt_ros
   src/traj_opt_ros/trajectory_display.cpp
   src/traj_opt_ros/trajectory_visual.cpp
   src/traj_opt_ros/ros_bridge.cpp
 )
-add_dependencies(traj_opt ${catkin_EXPORTED_TARGETS})
-target_link_libraries(traj_opt traj_opt_basic ${JPS3D_LIBRARIES} ${catkin_LIBRARIES})
+add_dependencies(traj_opt_ros ${catkin_EXPORTED_TARGETS})
+target_link_libraries(traj_opt_ros traj_opt_basic ${JPS3D_LIBRARIES} ${catkin_LIBRARIES})
 
 
 # Declare C++ libraries
@@ -121,7 +121,7 @@ add_library(planner_qp
   src/planner_qp.cc
 )
 add_dependencies(planner_qp ${catkin_EXPORTED_TARGETS})
-target_link_libraries(planner_qp traj_opt_basic traj_opt_pro traj_opt ${catkin_LIBRARIES})
+target_link_libraries(planner_qp traj_opt_basic traj_opt_pro traj_opt_ros ${catkin_LIBRARIES})
 
 #############
 ## Install ##
