@@ -39,7 +39,8 @@ DepthImageAligner::ComputeRelativeTransform() {
   LogError("keypoints a: " << previous_brisk_image_->keypoints().size()
                            << ", b: " << latest_brisk_image_->keypoints().size());
   LogError("matches: " << matches.size());
-  return boost::none;
+  return std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>{Eigen::Isometry3d::Identity(),
+                                                                   Eigen::Matrix<double, 6, 6>::Zero()};
 }
 
 void DepthImageAligner::AddLatestImage(const cv::Mat& latest_image, const lc::Time latest_image_time) {
