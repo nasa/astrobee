@@ -33,7 +33,8 @@ class DepthOdometryWrapper {
  public:
   boost::optional<geometry_msgs::PoseWithCovarianceStamped> DepthCloudCallback(
     const sensor_msgs::PointCloud2ConstPtr& depth_cloud_msg);
-  void DepthImageCallback(const sensor_msgs::ImageConstPtr& depth_image_msg);
+  boost::optional<geometry_msgs::PoseWithCovarianceStamped> DepthImageCallback(
+    const sensor_msgs::ImageConstPtr& depth_image_msg);
   ff_msgs::DepthCorrespondences GetCorrespondencesMsg() const;
   sensor_msgs::PointCloud2 GetPreviousPointCloudMsg() const;
   sensor_msgs::PointCloud2 GetLatestPointCloudMsg() const;

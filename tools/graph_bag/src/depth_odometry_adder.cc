@@ -49,20 +49,31 @@ void DepthOdometryAdder::AddDepthOdometry() {
   topics.push_back(std::string("/") + TOPIC_GNC_EKF);
   topics.push_back("/tf");
   topics.push_back("/tf_static");
-  const std::string image_topic = /*static_cast<std::string>(TOPIC_HARDWARE_PICOFLEXX_PREFIX) +
+  const std::string depth_image_topic = /*static_cast<std::string>(TOPIC_HARDWARE_PICOFLEXX_PREFIX) +
                                   static_cast<std::string>(TOPIC_HARDWARE_NAME_HAZ_CAM) +
                                   static_cast<std::string>(TOPIC_HARDWARE_PICOFLEXX_SUFFIX_DEPTH_IMAGE);*/
     "hw/depth_haz/extended/amplitude_int";
-  topics.push_back(image_topic);
-  topics.push_back(std::string("/") + image_topic);
+  topics.push_back(depth_image_topic);
+  topics.push_back(std::string("/") + depth_image_topic);
   rosbag::View view(input_bag_, rosbag::TopicQuery(topics));
   for (const rosbag::MessageInstance msg : view) {
+    bool write_correspondences = false;
     if (string_ends_with(msg.getTopic(), depth_cloud_topic)) {
       const sensor_msgs::PointCloud2ConstPtr& depth_cloud_msg = msg.instantiate<sensor_msgs::PointCloud2>();
       const auto pose_msg = depth_odometry_wrapper_.DepthCloudCallback(depth_cloud_msg);
       if (!pose_msg) continue;
       const ros::Time timestamp = lc::RosTimeFromHeader(depth_cloud_msg->header);
       output_bag_.write(std::string("/") + TOPIC_LOCALIZATION_DEPTH_ODOM, timestamp, *pose_msg);
+      write_correspondences = true;
+    } else if (string_ends_with(msg.getTopic(), depth_image_topic)) {
+      const sensor_msgs::ImageConstPtr& depth_image_msg = msg.instantiate<sensor_msgs::Image>();
+      const auto pose_msg = depth_odometry_wrapper_.DepthImageCallback(depth_image_msg);
+      if (!pose_msg) continue;
+      const ros::Time timestamp = lc::RosTimeFromHeader(depth_image_msg->header);
+      output_bag_.write(std::string("/") + TOPIC_LOCALIZATION_DEPTH_ODOM, timestamp, *pose_msg);
+      write_correspondences = true;
+    }
+    if (write_correspondences) {
       const auto correspondences_msg = depth_odometry_wrapper_.GetCorrespondencesMsg();
       ros::Time correspondences_timestamp = lc::RosTimeFromHeader(correspondences_msg.header);
       // Add slight delay so correspondence msg is after depth image msg, depth odom rviz plugin

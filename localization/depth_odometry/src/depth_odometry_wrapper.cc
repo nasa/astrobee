@@ -55,14 +55,26 @@ boost::optional<geometry_msgs::PoseWithCovarianceStamped> DepthOdometryWrapper::
   return pose_msg;
 }
 
-void DepthOdometryWrapper::DepthImageCallback(const sensor_msgs::ImageConstPtr& depth_image_msg) {
-  if (!depth_odometry_.params().depth_image_registration_enabled) return;
+boost::optional<geometry_msgs::PoseWithCovarianceStamped> DepthOdometryWrapper::DepthImageCallback(
+  const sensor_msgs::ImageConstPtr& depth_image_msg) {
+  if (!depth_odometry_.params().depth_image_registration_enabled) return boost::none;
   const auto depth_image = lm::MakeImageMeasurement(depth_image_msg, sensor_msgs::image_encodings::MONO8);
   if (!depth_image) {
     LogError("DepthImageCallback: Failed to make depth image.");
-    return;
+    return boost::none;
   }
-  depth_odometry_.DepthImageCallback(*depth_image);
+
+  const auto relative_pose = depth_odometry_.DepthImageCallback(*depth_image);
+  if (!relative_pose) {
+    LogError("DepthImageCallback: Failed to get relative pose.");
+    return boost::none;
+  }
+
+  // TODO(rsoussan): Make function that does this, use new PoseWithCovariance type (add both to loc common)
+  geometry_msgs::PoseWithCovarianceStamped pose_msg;
+  mc::EigenPoseCovarianceToMsg(relative_pose->first, relative_pose->second, pose_msg);
+  lc::TimeToHeader(depth_image->timestamp, pose_msg.header);
+  return pose_msg;
 }
 
 ff_msgs::DepthCorrespondences DepthOdometryWrapper::GetCorrespondencesMsg() const {
