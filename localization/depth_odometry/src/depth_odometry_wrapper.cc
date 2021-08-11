@@ -77,7 +77,7 @@ boost::optional<geometry_msgs::PoseWithCovarianceStamped> DepthOdometryWrapper::
   return pose_msg;
 }
 
-ff_msgs::DepthCorrespondences DepthOdometryWrapper::GetCorrespondencesMsg() const {
+ff_msgs::DepthCorrespondences DepthOdometryWrapper::GetPointCloudCorrespondencesMsg() const {
   const auto& correspondences = depth_odometry_.correspondences();
   const auto previous_time = depth_odometry_.previous_depth_cloud().first;
   const auto latest_time = depth_odometry_.latest_depth_cloud().first;
@@ -95,6 +95,30 @@ ff_msgs::DepthCorrespondences DepthOdometryWrapper::GetCorrespondencesMsg() cons
     ff_msgs::DepthCorrespondence correspondence_msg;
     correspondence_msg.latest_image_index = correspondence.index_match;
     correspondence_msg.previous_image_index = correspondence.index_query;
+    correspondences_msg.correspondences.push_back(correspondence_msg);
+  }
+  return correspondences_msg;
+}
+
+ff_msgs::DepthCorrespondences DepthOdometryWrapper::GetDepthImageCorrespondencesMsg() const {
+  const auto& matches = depth_odometry_.matches();
+  const auto previous_time = depth_odometry_.previous_depth_image_time();
+  const auto latest_time = depth_odometry_.latest_depth_image_time();
+  ff_msgs::DepthCorrespondences correspondences_msg;
+  lc::TimeToHeader(latest_time, correspondences_msg.header);
+  correspondences_msg.header.frame_id = "haz_cam";
+  const ros::Time ros_previous_time(previous_time);
+  const ros::Time ros_latest_time(latest_time);
+  correspondences_msg.previous_time.sec = ros_previous_time.sec;
+  correspondences_msg.previous_time.nsec = ros_previous_time.nsec;
+  correspondences_msg.latest_time.sec = ros_latest_time.sec;
+  correspondences_msg.latest_time.nsec = ros_latest_time.nsec;
+
+  for (const auto& match : matches) {
+    if (match.empty()) continue;
+    ff_msgs::DepthCorrespondence correspondence_msg;
+    correspondence_msg.latest_image_index = match.front().queryIdx;
+    correspondence_msg.previous_image_index = match.front().trainIdx;
     correspondences_msg.correspondences.push_back(correspondence_msg);
   }
   return correspondences_msg;

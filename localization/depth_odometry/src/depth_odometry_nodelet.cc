@@ -71,7 +71,7 @@ void DepthOdometryNodelet::DepthCloudCallback(const sensor_msgs::PointCloud2Cons
   const auto pose_msg = depth_odometry_wrapper_.DepthCloudCallback(depth_cloud_msg);
   if (!pose_msg) return;
   odom_pub_.publish(*pose_msg);
-  const auto correspondences_msg = depth_odometry_wrapper_.GetCorrespondencesMsg();
+  const auto correspondences_msg = depth_odometry_wrapper_.GetPointCloudCorrespondencesMsg();
   correspondences_pub_.publish(correspondences_msg);
   if (params_.publish_point_clouds) {
     PublishPointClouds();
@@ -79,7 +79,11 @@ void DepthOdometryNodelet::DepthCloudCallback(const sensor_msgs::PointCloud2Cons
 }
 
 void DepthOdometryNodelet::DepthImageCallback(const sensor_msgs::ImageConstPtr& depth_image_msg) {
-  depth_odometry_wrapper_.DepthImageCallback(depth_image_msg);
+  const auto pose_msg = depth_odometry_wrapper_.DepthImageCallback(depth_image_msg);
+  if (!pose_msg) return;
+  odom_pub_.publish(*pose_msg);
+  const auto correspondences_msg = depth_odometry_wrapper_.GetDepthImageCorrespondencesMsg();
+  correspondences_pub_.publish(correspondences_msg);
 }
 
 void DepthOdometryNodelet::PublishPointClouds() const {
