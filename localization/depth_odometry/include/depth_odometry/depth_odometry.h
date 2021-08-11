@@ -47,7 +47,7 @@ class DepthOdometry {
   localization_common::Time previous_depth_image_time() const { return previous_depth_image_->timestamp; }
   localization_common::Time latest_depth_image_time() const { return latest_depth_image_->timestamp; }
   const pcl::Correspondences& correspondences() const { return icp_->correspondences(); }
-  const std::vector<std::vector<cv::DMatch>>& matches() const { return depth_image_aligner_->matches(); }
+  const std::vector<cv::DMatch>& matches() const { return depth_image_aligner_->matches(); }
   Eigen::Isometry3d latest_relative_transform() const { return latest_relative_transform_; }
   const DepthOdometryParams& params() const { return params_; }
 

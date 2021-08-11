@@ -30,9 +30,8 @@ DepthImageAligner::DepthImageAligner(const DepthImageAlignerParams& params) : pa
 boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>>
 DepthImageAligner::ComputeRelativeTransform() {
   if (!previous_brisk_image_ || !latest_brisk_image_) return boost::none;
-  std::vector<std::vector<cv::DMatch>> matches;
   matches_.clear();
-  flann_matcher_->knnMatch(previous_brisk_image_->descriptors(), latest_brisk_image_->descriptors(), matches_, 1);
+  flann_matcher_->match(previous_brisk_image_->descriptors(), latest_brisk_image_->descriptors(), matches_);
   return boost::none;
 }
 

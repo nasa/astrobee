@@ -38,7 +38,7 @@ class DepthImageAligner {
   DepthImageAligner(const DepthImageAlignerParams& params);
   boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> ComputeRelativeTransform();
   void AddLatestImage(const cv::Mat& latest_image);
-  const std::vector<std::vector<cv::DMatch>>& matches() const { return matches_; }
+  const std::vector<cv::DMatch>& matches() const { return matches_; }
 
  private:
   DepthImageAlignerParams params_;
@@ -46,7 +46,7 @@ class DepthImageAligner {
   std::unique_ptr<BriskImage> latest_brisk_image_;
   cv::Ptr<cv::BRISK> brisk_detector_;
   std::unique_ptr<cv::FlannBasedMatcher> flann_matcher_;
-  std::vector<std::vector<cv::DMatch>> matches_;
+  std::vector<cv::DMatch> matches_;
 };
 }  // namespace depth_odometry
 

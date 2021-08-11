@@ -115,10 +115,9 @@ ff_msgs::DepthCorrespondences DepthOdometryWrapper::GetDepthImageCorrespondences
   correspondences_msg.latest_time.nsec = ros_latest_time.nsec;
 
   for (const auto& match : matches) {
-    if (match.empty()) continue;
     ff_msgs::DepthCorrespondence correspondence_msg;
-    correspondence_msg.latest_image_index = match.front().queryIdx;
-    correspondence_msg.previous_image_index = match.front().trainIdx;
+    correspondence_msg.latest_image_index = match.queryIdx;
+    correspondence_msg.previous_image_index = match.trainIdx;
     correspondences_msg.correspondences.push_back(correspondence_msg);
   }
   return correspondences_msg;
