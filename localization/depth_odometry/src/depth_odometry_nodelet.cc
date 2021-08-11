@@ -18,7 +18,8 @@
 
 #include <depth_odometry/depth_odometry_nodelet.h>
 #include <depth_odometry/parameter_reader.h>
-#include <ff_msgs/DepthCorrespondences.h>
+#include <ff_msgs/ImageCorrespondences.h>
+#include <ff_msgs/PointCloudCorrespondences.h>
 #include <ff_util/ff_names.h>
 #include <localization_common/logger.h>
 #include <localization_common/utilities.h>
@@ -59,11 +60,14 @@ void DepthOdometryNodelet::SubscribeAndAdvertise(ros::NodeHandle* nh) {
     "/hw/depth_haz/extended/amplitude_int";
   depth_image_sub_ = image_transport.subscribe(depth_image_topic, 10, &DepthOdometryNodelet::DepthImageCallback, this);
   odom_pub_ = nh->advertise<geometry_msgs::PoseWithCovarianceStamped>(TOPIC_LOCALIZATION_DEPTH_ODOM, 10);
+  image_correspondences_pub_ =
+    nh->advertise<ff_msgs::ImageCorrespondences>(TOPIC_LOCALIZATION_DEPTH_IMAGE_CORRESPONDENCES, 10);
   if (params_.publish_point_clouds) {
     source_cloud_pub_ = nh->advertise<sensor_msgs::PointCloud2>("source_cloud", 10);
     target_cloud_pub_ = nh->advertise<sensor_msgs::PointCloud2>("target_cloud", 10);
     point_cloud_result_pub_ = nh->advertise<sensor_msgs::PointCloud2>("point_cloud_result", 10);
-    correspondences_pub_ = nh->advertise<ff_msgs::DepthCorrespondences>(TOPIC_LOCALIZATION_DEPTH_CORRESPONDENCES, 10);
+    point_cloud_correspondences_pub_ =
+      nh->advertise<ff_msgs::PointCloudCorrespondences>(TOPIC_LOCALIZATION_DEPTH_POINT_CLOUD_CORRESPONDENCES, 10);
   }
 }
 
@@ -72,7 +76,7 @@ void DepthOdometryNodelet::DepthCloudCallback(const sensor_msgs::PointCloud2Cons
   if (!pose_msg) return;
   odom_pub_.publish(*pose_msg);
   const auto correspondences_msg = depth_odometry_wrapper_.GetPointCloudCorrespondencesMsg();
-  correspondences_pub_.publish(correspondences_msg);
+  point_cloud_correspondences_pub_.publish(correspondences_msg);
   if (params_.publish_point_clouds) {
     PublishPointClouds();
   }
@@ -83,7 +87,7 @@ void DepthOdometryNodelet::DepthImageCallback(const sensor_msgs::ImageConstPtr& 
   if (!pose_msg) return;
   odom_pub_.publish(*pose_msg);
   const auto correspondences_msg = depth_odometry_wrapper_.GetDepthImageCorrespondencesMsg();
-  correspondences_pub_.publish(correspondences_msg);
+  image_correspondences_pub_.publish(correspondences_msg);
 }
 
 void DepthOdometryNodelet::PublishPointClouds() const {

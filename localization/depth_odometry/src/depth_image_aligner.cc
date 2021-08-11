@@ -21,6 +21,7 @@
 #include <localization_common/timer.h>
 
 namespace depth_odometry {
+namespace lc = localization_common;
 
 DepthImageAligner::DepthImageAligner(const DepthImageAlignerParams& params) : params_(params) {
   brisk_detector_ = cv::BRISK::create();
@@ -30,13 +31,21 @@ DepthImageAligner::DepthImageAligner(const DepthImageAlignerParams& params) : pa
 boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>>
 DepthImageAligner::ComputeRelativeTransform() {
   if (!previous_brisk_image_ || !latest_brisk_image_) return boost::none;
-  matches_.clear();
-  flann_matcher_->match(previous_brisk_image_->descriptors(), latest_brisk_image_->descriptors(), matches_);
+  std::vector<cv::DMatch> matches;
+  flann_matcher_->match(previous_brisk_image_->descriptors(), latest_brisk_image_->descriptors(), matches);
+  correspondences_.reset(new ImageCorrespondences(matches, previous_brisk_image_->keypoints(),
+                                                  latest_brisk_image_->keypoints(), previous_image_time_,
+                                                  latest_image_time_));
+  LogError("keypoints a: " << previous_brisk_image_->keypoints().size()
+                           << ", b: " << latest_brisk_image_->keypoints().size());
+  LogError("matches: " << matches.size());
   return boost::none;
 }
 
-void DepthImageAligner::AddLatestImage(const cv::Mat& latest_image) {
+void DepthImageAligner::AddLatestImage(const cv::Mat& latest_image, const lc::Time latest_image_time) {
   previous_brisk_image_ = std::move(latest_brisk_image_);
   latest_brisk_image_.reset(new BriskImage(latest_image, brisk_detector_));
+  previous_image_time_ = latest_image_time_;
+  latest_image_time_ = latest_image_time;
 }
 }  // namespace depth_odometry

@@ -77,47 +77,39 @@ boost::optional<geometry_msgs::PoseWithCovarianceStamped> DepthOdometryWrapper::
   return pose_msg;
 }
 
-ff_msgs::DepthCorrespondences DepthOdometryWrapper::GetPointCloudCorrespondencesMsg() const {
-  const auto& correspondences = depth_odometry_.correspondences();
+ff_msgs::PointCloudCorrespondences DepthOdometryWrapper::GetPointCloudCorrespondencesMsg() const {
+  const auto& correspondences = depth_odometry_.point_cloud_correspondences();
   const auto previous_time = depth_odometry_.previous_depth_cloud().first;
   const auto latest_time = depth_odometry_.latest_depth_cloud().first;
-  ff_msgs::DepthCorrespondences correspondences_msg;
+  ff_msgs::PointCloudCorrespondences correspondences_msg;
   lc::TimeToHeader(latest_time, correspondences_msg.header);
   correspondences_msg.header.frame_id = "haz_cam";
-  const ros::Time ros_previous_time(previous_time);
-  const ros::Time ros_latest_time(latest_time);
-  correspondences_msg.previous_time.sec = ros_previous_time.sec;
-  correspondences_msg.previous_time.nsec = ros_previous_time.nsec;
-  correspondences_msg.latest_time.sec = ros_latest_time.sec;
-  correspondences_msg.latest_time.nsec = ros_latest_time.nsec;
+  correspondences_msg.source_time = ros::Time(previous_time);
+  correspondences_msg.target_time = ros::Time(latest_time);
 
   for (const auto& correspondence : correspondences) {
-    ff_msgs::DepthCorrespondence correspondence_msg;
-    correspondence_msg.latest_image_index = correspondence.index_match;
-    correspondence_msg.previous_image_index = correspondence.index_query;
+    ff_msgs::PointCloudCorrespondence correspondence_msg;
+    correspondence_msg.source_index = correspondence.index_query;
+    correspondence_msg.target_index = correspondence.index_match;
     correspondences_msg.correspondences.push_back(correspondence_msg);
   }
   return correspondences_msg;
 }
 
-ff_msgs::DepthCorrespondences DepthOdometryWrapper::GetDepthImageCorrespondencesMsg() const {
-  const auto& matches = depth_odometry_.matches();
-  const auto previous_time = depth_odometry_.previous_depth_image_time();
-  const auto latest_time = depth_odometry_.latest_depth_image_time();
-  ff_msgs::DepthCorrespondences correspondences_msg;
-  lc::TimeToHeader(latest_time, correspondences_msg.header);
+ff_msgs::ImageCorrespondences DepthOdometryWrapper::GetDepthImageCorrespondencesMsg() const {
+  const auto& correspondences = depth_odometry_.image_correspondences();
+  ff_msgs::ImageCorrespondences correspondences_msg;
+  lc::TimeToHeader(correspondences.target_time(), correspondences_msg.header);
   correspondences_msg.header.frame_id = "haz_cam";
-  const ros::Time ros_previous_time(previous_time);
-  const ros::Time ros_latest_time(latest_time);
-  correspondences_msg.previous_time.sec = ros_previous_time.sec;
-  correspondences_msg.previous_time.nsec = ros_previous_time.nsec;
-  correspondences_msg.latest_time.sec = ros_latest_time.sec;
-  correspondences_msg.latest_time.nsec = ros_latest_time.nsec;
+  correspondences_msg.source_time = ros::Time(correspondences.source_time());
+  correspondences_msg.target_time = ros::Time(correspondences.target_time());
 
-  for (const auto& match : matches) {
-    ff_msgs::DepthCorrespondence correspondence_msg;
-    correspondence_msg.latest_image_index = match.queryIdx;
-    correspondence_msg.previous_image_index = match.trainIdx;
+  for (const auto& correspondence : correspondences.correspondences()) {
+    ff_msgs::ImageCorrespondence correspondence_msg;
+    correspondence_msg.source_point.x = correspondence.source_point.x();
+    correspondence_msg.source_point.y = correspondence.source_point.y();
+    correspondence_msg.target_point.x = correspondence.target_point.x();
+    correspondence_msg.target_point.y = correspondence.target_point.y();
     correspondences_msg.correspondences.push_back(correspondence_msg);
   }
   return correspondences_msg;

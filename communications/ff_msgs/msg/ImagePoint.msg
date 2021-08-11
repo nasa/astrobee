@@ -15,6 +15,6 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 #
-int32 previous_image_index 
-int32 latest_image_index
 
+float32 x
+float32 y

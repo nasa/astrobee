@@ -20,6 +20,7 @@
 
 #include <depth_odometry/brisk_image.h>
 #include <depth_odometry/depth_image_aligner_params.h>
+#include <depth_odometry/image_correspondences.h>
 #include <localization_common/time.h>
 
 #include <boost/optional.hpp>
@@ -37,16 +38,18 @@ class DepthImageAligner {
  public:
   DepthImageAligner(const DepthImageAlignerParams& params);
   boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> ComputeRelativeTransform();
-  void AddLatestImage(const cv::Mat& latest_image);
-  const std::vector<cv::DMatch>& matches() const { return matches_; }
+  void AddLatestImage(const cv::Mat& latest_image, const localization_common::Time latest_image_time);
+  const ImageCorrespondences& correspondences() const { return *correspondences_; }
 
  private:
   DepthImageAlignerParams params_;
   std::unique_ptr<BriskImage> previous_brisk_image_;
   std::unique_ptr<BriskImage> latest_brisk_image_;
+  localization_common::Time previous_image_time_;
+  localization_common::Time latest_image_time_;
   cv::Ptr<cv::BRISK> brisk_detector_;
   std::unique_ptr<cv::FlannBasedMatcher> flann_matcher_;
-  std::vector<cv::DMatch> matches_;
+  std::unique_ptr<ImageCorrespondences> correspondences_;
 };
 }  // namespace depth_odometry
 

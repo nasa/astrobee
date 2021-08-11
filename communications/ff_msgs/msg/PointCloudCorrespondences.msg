@@ -17,6 +17,6 @@
 #
 
 Header header
-time previous_time 
-time latest_time
-ff_msgs/DepthCorrespondence[] correspondences
+time source_time 
+time target_time
+ff_msgs/PointCloudCorrespondence[] correspondences
