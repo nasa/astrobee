@@ -43,6 +43,9 @@ void LoadDepthImageAlignerParams(config_reader::ConfigReader& config, DepthImage
   params.flann_table_number = mc::LoadInt(config, "flann_table_number");
   params.flann_key_size = mc::LoadInt(config, "flann_key_size");
   params.flann_multi_probe_level = mc::LoadInt(config, "flann_multi_probe_level");
+  params.brisk_threshold = mc::LoadInt(config, "brisk_threshold");
+  params.brisk_octaves = mc::LoadInt(config, "brisk_octaves");
+  params.brisk_float_pattern_scale = mc::LoadFloat(config, "brisk_float_pattern_scale");
 }
 
 void LoadICPParams(config_reader::ConfigReader& config, ICPParams& params) {

@@ -77,6 +77,7 @@ bool config_read_vector(config_reader::ConfigReader::Table* t, geometry_msgs::Po
 // Alternative format for loading configs
 Eigen::Isometry3d LoadEigenTransform(config_reader::ConfigReader& config, const std::string& transform_config_name);
 double LoadDouble(config_reader::ConfigReader& config, const std::string& config_name);
+float LoadFloat(config_reader::ConfigReader& config, const std::string& config_name);
 int LoadInt(config_reader::ConfigReader& config, const std::string& config_name);
 bool LoadBool(config_reader::ConfigReader& config, const std::string& config_name);
 std::string LoadString(config_reader::ConfigReader& config, const std::string& config_name);

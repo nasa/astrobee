@@ -256,6 +256,12 @@ Eigen::Isometry3d LoadEigenTransform(config_reader::ConfigReader& config, const 
   return body_T_sensor;
 }
 
+float LoadFloat(config_reader::ConfigReader& config, const std::string& config_name) {
+  float val;
+  if (!config.GetReal(config_name.c_str(), &val)) ROS_FATAL_STREAM("Failed to load " << config_name);
+  return val;
+}
+
 double LoadDouble(config_reader::ConfigReader& config, const std::string& config_name) {
   double val;
   if (!config.GetReal(config_name.c_str(), &val)) ROS_FATAL_STREAM("Failed to load " << config_name);

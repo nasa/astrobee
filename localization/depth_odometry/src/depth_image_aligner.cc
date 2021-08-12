@@ -24,7 +24,8 @@ namespace depth_odometry {
 namespace lc = localization_common;
 
 DepthImageAligner::DepthImageAligner(const DepthImageAlignerParams& params) : params_(params) {
-  brisk_detector_ = cv::BRISK::create();
+  brisk_detector_ =
+    cv::BRISK::create(params_.brisk_threshold, params_.brisk_octaves, params_.brisk_float_pattern_scale);
   flann_matcher_.reset(new cv::FlannBasedMatcher(cv::makePtr<cv::flann::LshIndexParams>(
     params_.flann_table_number, params_.flann_key_size, params_.flann_multi_probe_level)));
 }

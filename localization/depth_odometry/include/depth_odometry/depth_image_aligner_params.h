@@ -21,9 +21,14 @@
 namespace depth_odometry {
 struct DepthImageAlignerParams {
   int max_match_hamming_distance;
+  // Flann params
   int flann_table_number;
   int flann_key_size;
   int flann_multi_probe_level;
+  // Brisk params
+  int brisk_threshold;
+  int brisk_octaves;
+  float brisk_float_pattern_scale;
 };
 }  // namespace depth_odometry
 
