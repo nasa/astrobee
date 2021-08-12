@@ -176,6 +176,7 @@ namespace ff_util {
             || !mode.GetReal("hard_limit_vel", &info.hard_limit_vel)
             || !mode.GetReal("hard_limit_alpha", &info.hard_limit_alpha)
             || !mode.GetReal("hard_limit_accel", &info.hard_limit_accel)
+            || !mode.GetReal("tolerance_pos_setpoint", &info.tolerance_pos_setpoint)
             || !mode.GetReal("tolerance_pos", &info.tolerance_pos)
             || !mode.GetReal("tolerance_att", &info.tolerance_att)
             || !mode.GetReal("tolerance_omega", &info.tolerance_omega)
