@@ -1,4 +1,4 @@
-\page ctl GNC Control Wrapper
+\page ctl Control (CTL)
 
 The control subsystem takes the pose from the EKF, as well as control commands, to
 determine the forces and torques that should be applied to the robot for smooth control.
