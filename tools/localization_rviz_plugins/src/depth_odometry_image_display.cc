@@ -89,24 +89,11 @@ void DepthOdometryImageDisplay::createCorrespondencesImage() {
   if (!source_image_msg || !target_image_msg) return;
   clearImageBuffer(source_time);
 
-  // TODO(rsoussan): make function for this, unify with loc graph display
-  cv_bridge::CvImagePtr source_cv_image;
-  try {
-    source_cv_image = cv_bridge::toCvCopy(source_image_msg, sensor_msgs::image_encodings::RGB8);
-  } catch (cv_bridge::Exception& e) {
-    LogError("cv_bridge exception: " << e.what());
-    return;
-  }
-  auto& source_image = source_cv_image->image;
-
-  cv_bridge::CvImagePtr target_cv_image;
-  try {
-    target_cv_image = cv_bridge::toCvCopy(target_image_msg, sensor_msgs::image_encodings::RGB8);
-  } catch (cv_bridge::Exception& e) {
-    LogError("cv_bridge exception: " << e.what());
-    return;
-  }
-  auto& target_image = target_cv_image->image;
+  const auto source_depth_image = lm::MakeDepthImageMeasurement(source_image_msg);
+  const auto target_depth_image = lm::MakeDepthImageMeasurement(target_image_msg);
+  if (!source_depth_image || !target_depth_image) return;
+  auto& source_image = source_depth_image->intensities;
+  auto& target_image = target_depth_image->intensities;
 
   // Create correspondence image
   // Draw source image above target image, add correspondences as points outlined
