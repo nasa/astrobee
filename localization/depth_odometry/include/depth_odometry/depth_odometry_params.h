@@ -29,6 +29,7 @@ struct DepthOdometryParams {
   bool depth_image_registration_enabled;
   DepthImageAlignerParams depth_image_aligner;
   ICPParams icp;
+  double max_time_diff;
   double position_covariance_threshold;
   double orientation_covariance_threshold;
   bool inital_estimate_with_ransac_ia;

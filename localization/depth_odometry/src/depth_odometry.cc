@@ -56,6 +56,11 @@ boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> Depth
   LogError("t: " << std::setprecision(15) << depth_cloud.first);
   previous_depth_cloud_ = latest_depth_cloud_;
   latest_depth_cloud_ = depth_cloud;
+  const double time_diff = latest_depth_cloud_.first - previous_depth_cloud_.first;
+  if (time_diff > params_.max_time_diff) {
+    LogWarning("DepthCloudCallback: Time difference too large, time diff: " << time_diff);
+    return boost::none;
+  }
   auto relative_transform = icp_->ComputeRelativeTransform(previous_depth_cloud_.second, latest_depth_cloud_.second);
   if (!relative_transform) {
     LogWarning("DepthCloudCallback: Failed to get relative transform.");
@@ -92,6 +97,12 @@ boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> Depth
   LogError("t: " << std::setprecision(15) << depth_image.timestamp);
   previous_depth_image_ = latest_depth_image_;
   latest_depth_image_ = depth_image;
+  const double time_diff = latest_depth_image_->timestamp - previous_depth_image_->timestamp;
+  if (time_diff > params_.max_time_diff) {
+    LogWarning("DepthImageCallback: Time difference too large, time diff: " << time_diff);
+    return boost::none;
+  }
+
   depth_image_aligner_->AddLatestImage(latest_depth_image_->image, latest_depth_image_->timestamp);
   auto relative_transform = depth_image_aligner_->ComputeRelativeTransform();
   if (!relative_transform) {
