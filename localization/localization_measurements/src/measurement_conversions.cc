@@ -152,4 +152,11 @@ boost::optional<ImageMeasurement> MakeImageMeasurement(const sensor_msgs::ImageC
   const auto timestamp = lc::TimeFromHeader(image_msg->header);
   return ImageMeasurement(cv_image->image, timestamp);
 }
+
+PointCloudMeasurement MakePointCloudMeasurement(const sensor_msgs::PointCloud2ConstPtr& depth_cloud_msg) {
+  const lc::Time timestamp = lc::TimeFromHeader(depth_cloud_msg->header);
+  pcl::PointCloud<pcl::PointXYZ>::Ptr depth_cloud(new pcl::PointCloud<pcl::PointXYZ>());
+  pcl::fromROSMsg(*depth_cloud_msg, *depth_cloud);
+  return PointCloudMeasurement(timestamp, depth_cloud);
+}
 }  // namespace localization_measurements
