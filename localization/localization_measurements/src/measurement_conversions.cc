@@ -169,9 +169,8 @@ boost::optional<DepthImageMeasurement> MakeDepthImageMeasurement(const sensor_ms
   cv::Mat amplitude(pico_depth_image.rows, pico_depth_image.cols, CV_32FC1);
   cv::Mat float_intensity(pico_depth_image.rows, pico_depth_image.cols, CV_32FC1);
   cv::Mat float_flags(pico_depth_image.rows, pico_depth_image.cols, CV_32FC1);
-  cv::Mat tmp_output[] = {distance, amplitude, float_intensity, float_flags};
-  const int mapping[] = {0, 0, 1, 1, 2, 2, 3, 3};
-  cv::mixChannels(&pico_depth_image, 1, tmp_output, 4, mapping, 4);
+  cv::Mat channels[] = {distance, amplitude, float_intensity, float_flags};
+  cv::split(pico_depth_image, channels);
   // Convert intensities to unsigned byte as this is expected for feature detectors
   cv::Mat intensity;
   float_intensity.convertTo(intensity, CV_8UC1);

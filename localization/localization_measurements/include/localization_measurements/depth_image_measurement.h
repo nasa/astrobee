@@ -20,6 +20,7 @@
 #define LOCALIZATION_MEASUREMENTS_DEPTH_IMAGE_MEASUREMENT_H_
 
 #include <localization_common/time.h>
+#include <localization_measurements/measurement.h>
 
 #include <opencv2/core.hpp>
 
