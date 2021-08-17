@@ -80,7 +80,7 @@ boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> Depth
 }
 
 boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> DepthOdometry::DepthImageCallback(
-  const lm::ImageMeasurement& depth_image) {
+  const lm::DepthImageMeasurement& depth_image) {
   if (!previous_depth_image_ && !latest_depth_image_) {
     latest_depth_image_ = depth_image;
     return boost::none;
@@ -92,7 +92,7 @@ boost::optional<std::pair<Eigen::Isometry3d, Eigen::Matrix<double, 6, 6>>> Depth
   LogError("t: " << std::setprecision(15) << depth_image.timestamp);
   previous_depth_image_ = latest_depth_image_;
   latest_depth_image_ = depth_image;
-  depth_image_aligner_->AddLatestImage(latest_depth_image_->image, latest_depth_image_->timestamp);
+  depth_image_aligner_->AddLatestImage(latest_depth_image_->intensities, latest_depth_image_->timestamp);
   auto relative_transform = depth_image_aligner_->ComputeRelativeTransform();
   if (!relative_transform) {
     LogWarning("DepthImageCallback: Failed to get relative transform.");

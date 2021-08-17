@@ -165,20 +165,20 @@ boost::optional<DepthImageMeasurement> MakeDepthImageMeasurement(const sensor_ms
   // Picoflexx organizes depth images into 4 channels: distance, amplitude, intensity, flags
   // Each of these are floats except flags, which is a uint32
   const auto& pico_depth_image = cv_depth_image->image;
-  cv::Mat distance(pico_depth_image.rows, pico_depth_image.cols, CV_32FC1);
-  cv::Mat amplitude(pico_depth_image.rows, pico_depth_image.cols, CV_32FC1);
-  cv::Mat float_intensity(pico_depth_image.rows, pico_depth_image.cols, CV_32FC1);
+  cv::Mat distances(pico_depth_image.rows, pico_depth_image.cols, CV_32FC1);
+  cv::Mat amplitudes(pico_depth_image.rows, pico_depth_image.cols, CV_32FC1);
+  cv::Mat float_intensities(pico_depth_image.rows, pico_depth_image.cols, CV_32FC1);
   cv::Mat float_flags(pico_depth_image.rows, pico_depth_image.cols, CV_32FC1);
-  cv::Mat channels[] = {distance, amplitude, float_intensity, float_flags};
+  cv::Mat channels[] = {distances, amplitudes, float_intensities, float_flags};
   cv::split(pico_depth_image, channels);
   // Convert intensities to unsigned byte as this is expected for feature detectors
-  cv::Mat intensity;
-  float_intensity.convertTo(intensity, CV_8UC1);
+  cv::Mat intensities;
+  float_intensities.convertTo(intensities, CV_8UC1);
   // TODO(rsoussan): Avoid intermediate float conversion?
   cv::Mat flags;
   float_flags.convertTo(flags, CV_32SC1);
 
   const auto timestamp = lc::TimeFromHeader(depth_image_msg->header);
-  return DepthImageMeasurement(distance, amplitude, intensity, flags, timestamp);
+  return DepthImageMeasurement(distances, amplitudes, intensities, flags, timestamp);
 }
 }  // namespace localization_measurements

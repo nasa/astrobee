@@ -26,12 +26,12 @@
 
 namespace localization_measurements {
 struct DepthImageMeasurement : public Measurement {
-  DepthImageMeasurement(const cv::Mat& distance, const cv::Mat& amplitude, const cv::Mat& intensity,
+  DepthImageMeasurement(const cv::Mat& distances, const cv::Mat& amplitudes, const cv::Mat& intensities,
                         const cv::Mat& flags, const localization_common::Time timestamp)
-      : Measurement(timestamp), distance(distance), amplitude(amplitude), intensity(intensity), flags(flags) {}
-  cv::Mat distance;
-  cv::Mat amplitude;
-  cv::Mat intensity;
+      : Measurement(timestamp), distances(distances), amplitudes(amplitudes), intensities(intensities), flags(flags) {}
+  cv::Mat distances;
+  cv::Mat amplitudes;
+  cv::Mat intensities;
   cv::Mat flags;
 };
 }  // namespace localization_measurements

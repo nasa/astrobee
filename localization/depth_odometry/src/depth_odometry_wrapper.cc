@@ -58,7 +58,7 @@ boost::optional<geometry_msgs::PoseWithCovarianceStamped> DepthOdometryWrapper::
 boost::optional<geometry_msgs::PoseWithCovarianceStamped> DepthOdometryWrapper::DepthImageCallback(
   const sensor_msgs::ImageConstPtr& depth_image_msg) {
   if (!depth_odometry_.params().depth_image_registration_enabled) return boost::none;
-  const auto depth_image = lm::MakeImageMeasurement(depth_image_msg, sensor_msgs::image_encodings::MONO8);
+  const auto depth_image = lm::MakeDepthImageMeasurement(depth_image_msg);
   if (!depth_image) {
     LogError("DepthImageCallback: Failed to make depth image.");
     return boost::none;
