@@ -23,15 +23,16 @@ catkin_package(
 
 set(DEPS
   ff_msgs
-  )
+)
 
 set(LIBS
+  ${Boost_IOSTREAMS_LIBRARY}
   config_reader
   ff_nodelet
   Qt4::QtXml
   rapidIo
   rapidExtAstrobee
-  )
+)
 
 set(INCLUDES
   ${CMAKE_CURRENT_SOURCE_DIR}/include
